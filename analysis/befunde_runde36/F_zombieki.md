@@ -21,6 +21,7 @@ Datum: 2026-10-10.
 - [x] Punkt 3 Monkey-Blutlache: Messung vorher (Code + Gegenprobe im Riegel)
 - [x] Punkt 3 Monkey-Blutlache: Beleg (FUN_80116f50/FUN_8011be54) / Umsetzung (zombieki_r36.c) / Messung nachher (Riegel 9/9, exe-Bild) / Pin unit_r36_zombieki_affen
 - [x] Nachbesserung 3 (Abnahme 2): M1 Umweg nach Weglaenge (A*), M2 Tasche = Zurueckschnapp-Artefakt + nicht begehbar, Beginn erst beim Haengen (+0x1de), Riegel 46/46, exe zehn Stellen nicht spaeter als v0.8.23, gezielt 163/163
+- [x] Nachbesserung 4 (Abnahme 3): M1 FERN-Stau am Nordwest-Rand (Original per GDB = Stau; PORT-WAHL Vortritt, exe FERN 0), M2 Nah-Wartezeit am Original gemessen (Nordwest-Ecke, Ostgasse: Original wartet ebenso, Riegel pinnt es), Angabe "fern 0" berichtigt
 - [ ] Voll-Suite (Orchestrator im Integrationsbaum)
 
 ---
@@ -938,8 +939,9 @@ anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen 
   (F1245-F1325, `re15_pc_nb4f.exe`) — deshalb ohne Wartezeit (der Vortritt wirkt ohnehin nur, wenn der NAHE keinen geraden Weg hat).
   Zwei NAHE Gorillas (Spur-J-Original griff: e1/e2 ~3925/~4990, Koerperkontakt 3209, +0x1de bis 497, `jnb1/g_griff.txt` selbst
   dekodiert) erfuellen die Bedingung nie und bleiben Original.
-- **Messung nachher:** Sonde `lage` (Stau-Lage): G1 Angriff Bild 58, G2 FERN 0 (danach NAH an der #21-Ecke, s. Mangel 2)
-  (`p_o3_stau_nb4.txt`). exe `re15_pc_nb4g.exe` (= Stand mit Vortritt): (-24452,11938) Slot 2 F828, fest 0; **Slot 3 Angriff F1210
+- **Messung nachher (ZWISCHENSTAND, Vortritt sofort bei Kontakt — endgueltige Fassung und Zahlen im Abschnitt "endgueltige Fassung"
+  unten):** Sonde `lage` (Stau-Lage): G1 Angriff Bild 58, G2 FERN 0 (danach NAH an der #21-Ecke, s. Mangel 2)
+  (`p_o3_stau_nb4.txt` ist inzwischen mit dem Endstand neu erzeugt: Angriff 91/101). exe `re15_pc_nb4g.exe`: (-24452,11938) Slot 2 F828, fest 0; **Slot 3 Angriff F1210
   (vorher nie), FERN 0**, nah 1377 (#21-Ecke); (-22288,11938) Slot 2 F868 fest 95 (nah); Slot 3 F1025, **FERN 4** (vorher 691),
   nah 797.
 
@@ -950,10 +952,12 @@ anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen 
 | O3b Nordwest-Ecke, EIN Gorilla | Leon wie O3; e1 wie O3; e2 weit weg (9434,2189) Sub 0 | **900 Bilder e1 an der #21-Ecke (-23302, 14575..14599), d 3298, Klemme 1, Sicht 1, kein Angriff**; e2 kommt in 900 Bildern nicht naeher als 34000 | exe-Stelle 13: Slot 3 1649 Bilder an derselben Ecke (Abnahme 3) |
 | O4 Ostgasse | Leon (5858,-5716) in der Gasse; e1 (3040,-10330) blind; e2 aus der Szene | **e1 an den Gasseneingang (5793..5878,-8818) d 3093 Sub 3 Sicht 1 Klemme 1, +0x1de bis 749; e2 in der Auswahl (3045,-10323) d 5394 Klemme 1, +0x1de bis 929; 900 Bilder kein Angriff** | exe (6000,-9000): Slot 3 (5876,-8818) d 3102, Slot 2 (3040,-10330) d 5400, 1652/1874 Bilder (Abnahme 3) |
 | O1 Leon (6000,-9000), Gorillas aus der Szene | nur Leon gesetzt | e1 Heavy/Bisse ab ~F100, schiebt Leon DURCH die Ostgasse bis (7880,-1379); ab ~F1600 e1 in der Gassenmitte (6418,-4330) d 3298 Sicht 1 Klemme 1, e2 am Suedeingang (8061,-7080) d 5701; **beide bis F2400 ohne Bewegung (+0x1de bis 2299/2479)** | `szene2 6000 -9000` Original-Regel: G1 Angriff 196, schiebt Leon durch die Gasse bis (8837,-2141); G1 in der Gassenmitte (6418,-4413), G2 (8098,-7138), fest 1473 (`p_o1_6000_originalregel.txt`) |
+| O5 Nordende Nordwest-Gang (exe-Stelle 1) | Leon (-9960,11409); e1 (-13533,11917) Sub 3 (Westkante Wagenblock #2 @ROOM11C0.RDT, z ueber der #2-Oberkante 10849); e2 (-8477,12822) Sub 4 | **e1 900 Bilder (-13527, 11912..11925) d 3602, Sub 3, Sicht 1, Klemme 1, +0x1de 149 -> 749+, kein Angriff**; e2 hielt die Lage nicht (Fusssperre) und stand FERN in der Auswahl bei (-12316,-8452) (+0x1de bis 929) | `lage` mit e2 dort: G1 (-13527, 11912..11920) d 3602..3633 900/900, G2 900 Bilder FERN = **Original Lage fuer Lage** (F600 (-13527,11912) r91 beide); mit Umweg verlaesst G2 seine Stelle, G1 wartet gleich |
 
 - **Ergebnis: das Original wartet an beiden Stoss-Zielen ebenso.** An der Nordwest-Ecke bleibt ein naher Gorilla in der Jagd
   (B[3] steuert gerade auf playerX @0x80117d4c, A[3] hat unter 0x1771 keinen anderen Ausgang als den Biss unter 0xbb8
-  @0x80117a60-74) an der #21-Ecke haengen — allein (O3b) wie zu zweit (O3). In die Ostgasse (2711 breit < 2 x 1600, Pad #36
+  @0x80117a60-74) an der #21-Ecke haengen — allein (O3b) wie zu zweit (O3); am Nordende des Nordwest-Gangs an der Westkante
+  von #2 ebenso (O5, Lage fuer Lage wie der Port). In die Ostgasse (2711 breit < 2 x 1600, Pad #36
   @ROOM11C0.RDT 0x015d8) kommt kein Gorilla zu Fuss; das Original schiebt Leon sogar selbst hinein (O1) und wartet dann davor
   bzw. darin. Dazu Spur J (`jnb1/g_griff.txt`, selbst dekodiert, +0x1d0/+0x1de): im kanonischen Kampf warten e1/e2 mit Sicht-Latch 1
   an der Klemme ~3925/~4990 vor Leon, e2 mit +0x1de bis 497 — dieselbe Original-Nahjagd, die `unit_r35_affen_griff/_szene`
@@ -963,3 +967,119 @@ anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen 
   Nah-Wartezeit bleibt deshalb Original und wird unter "Fuer den Nutzer" benannt. Was die PORT-WAHL aendert, ist nur, dass beide
   Gorillas ueberhaupt an den Nordwest-Rand kommen (Umweg) und sich dort nicht mehr gegenseitig festhalten (Vortritt, Mangel 1).
 
+### NB4 Mangel 1 — endgueltige Fassung des Vortritts (Messreihe, Zufallsgang 52 Seeds x 6000 Bilder, je Lauf eigener Prozess)
+- **Sofort bei Koerperkontakt** (Stand `re15_pc_nb4g.exe`): exe Nordwest-Rand FERN 0 / 4, aber Zufallsgang Anker 400 17975 -> 25676
+  (FERN 3313 -> 9209). Ursache gemessen (Riegel-Modus `eins ... 1` mit LAGE-Zeilen): der Vortritt fuehrte den NAHEN ueber ein
+  0x10-Pad (Umweg-Modus 2) — Seed 0x9075ea6c: Landung vor dem 0x20-Pad #19 bei (-13518,-560), dort 1789 Bilder die
+  Original-Blindsprung-Schleife (+0x7 = 3 @0x80117fe4-80118024); Seed 0x95e8eee7: Gorilla 2346 Bilder in Sub 4 vor dem
+  Ost-Pad-Anlauf (8215,-7955) (Pad-Kante nicht erreicht, FUN_8003b93c-Radius box[6]+100 @0x80117ee0-f00). -> Vortritt nur
+  **zu Fuss (Modus 1) und nur solange NAH**: 22604 (FERN 5534) — immer noch schlechter als NB3.
+- **Schwelle** (PORT-WAHL, Stellgroesse per Messreihe; Anker = R36_FEST_ANKER 400 Manhattan, derselbe Zaehler wie der Umweg-Beginn):
+  Bilder im Anker, die der FERNE vor dem Vortritt steht — `eins <i> 1 6000 <anker> 0 <10+K>` (`F_belege/nb4/seeds/`):
+
+| K | 1 | 8 | 15 | **22** | 30 | 37 | 45 | 60 (= NB3) |
+|---|---|---|---|---|---|---|---|---|
+| Anker 400 | 22057 | 21150 | 17356 | **16352** | 16964 | 18881 | 17806 | 17975 |
+| Anker 40 | 1012 | 257 | 228 | **125** | 221 | 327 | 221 | 221 |
+| Griffe | 254 | 251 | 237 | **242** | 241 | 245 | 240 | 245 |
+
+  Gewaehlt **R36_VORTRITT_START = R36_FEST_START / 2 = 22** (bester Wert beider Anker, INNERHALB der Reihe; die Reihe ist
+  chaotisch — 37 schlechter als 30 und 45 —, deshalb an die bestehende Umweg-Startzeit gebunden statt frei gewaehlt). Mit 45
+  stand Slot 3 an (-24452,11938) 103 Bilder FERN (F1245-F1325) — das Abnahmekriterium (< 90) haette es verfehlt.
+- **Riegel** `unit_r36_zombieki_affen_block` 54/54 (`F_belege/nb4/nb4_affen_riegel.txt`): Block "Stau Nordwest-Rand" — Sonde `lage`
+  (dieselbe Startlage wie GDB O3) je Modus ein eigener Prozess: Original-Regel 900/900 fest, G2 900 FERN (= Original); Stand NB3
+  (Umweg ohne Vortritt) 900/900, G2 900 FERN (= Abnahme 3 "Umweg 0"); mit Vortritt **G1 Angriff Bild 91, G2 Bild 101, FERN 0/0**.
+  16 Seeds AUS 38439 -> AN 5174 (NB3 5725), schlechtester +40 (NB3 +59), Griffe 73 -> 71; sieben Szenen unveraendert gruen.
+
+### NB4 Messung nachher in der exe — alle 14 Stellen der Abnahme 3 (`F_belege/nb4/nb4_exe_14_stellen.txt`)
+Kommandozeile der Abnahme (`RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=<x,z>,1024,0 RE15_EXIT_AT=2700`, Basis-Haken wie
+`F_abn3/run.sh`), keine Eingabe, je Lauf eigener Prozess, Kopie `re15_pc_nb4h.exe` (= Endstand; `re15_pc_nb4i.exe` aus dem letzten Bau
+liefert an (-24452,11938) ein bitgleiches gy.log). Auswertung `fest_nach.py` (= Abnahme-Skript: fest = aktiv, kein Angriff, >= 90
+Bilder im Anker 400, Leon > 3000; fern = d >= 6001; "nach" = nach dem ersten Angriff irgendeines Gorillas). v0.8.23 und NB3 = die
+gy.log-Dateien der Abnahme 3 (`F_abn3/affen_*_{abn0f_basis,abn3f_neu}`), mit demselben Skript ausgewertet. Eintrag: erster Angriff
+Slot 2 / Slot 3 (fest S2/S3; FERN S2/S3; FERN nach dem ersten Angriff S2/S3).
+
+| # | Leon | v0.8.23 | NB3 | **NB4** |
+|---|---|---|---|---|
+| 1 | (-7000,12500) | nie / F1012 (1882/0; 1882/0; 1283/0) | nie / F730 (826/0; 0/0; 0/0) | nie / F730 (826/0; 0/0; 0/0) |
+| 2 | (-14000,2000) | F680 / nie (0/930; 0/930; 0/629) | F680 / nie (0/0; 0/0; 0/0) | F680 / nie (0/0; 0/0; 0/0) |
+| 3 | (6000,-9000) | nie / F324 (1573/1875; 0/0; 0/0) | nie / F324 (1653/1875; 0/0; 0/0) | nie / F324 (1653/1875; 0/0; 0/0) |
+| 4 | (-24000,10000) | nie / nie (1819/1418; 1819/1418; 0/0) | F853 / F1570 (0/1193; 0/1; 0/1) | F853 / F1570 (0/1193; 0/1; 0/1) |
+| 5 | (7000,4000) | nie / F18 (1012/0; 1012/0; 1012/0) | nie / F18 (96/0; 96/0; 96/0) | nie / F18 (96/0; 96/0; 96/0) |
+| 6 | (9000,10000) | nie / F309 (1102/0; 1102/0; 1102/0) | F1175 / F309 (0/0) | F1175 / F309 (0/0) |
+| 7 | (-14746,-4140) | F364 / nie (1835/0; 0/0; 0/0) | F364 / F1021 (179/108; 0/108; 0/108) | F364 / F1021 (179/108; 0/108; 0/108) |
+| 8 | (7200,-4130) | F1246 / F274 (0/670; 0/0) | F1050 / F274 (0/468; 0/0) | F1050 / F274 (0/468; 0/0) |
+| 9 | (-14000,4000) | F704 / nie (0/1088; 0/1088; 0/761) | F704 / F1496 (250/0; 0/0) | F704 / F1496 (250/0; 0/0) |
+| 10 | (-14500,6000) | F694 / F1256 (171/298; 0/298; 0/25) | F694 / F892 (0/0) | F694 / F892 (0/0) |
+| **11** | (-24452,11938) | nie / nie (1821/1588; 1821/1588; 0/0) | F828 / nie (1529/1465; 0/1465; **0/1465**) | **F828 / F1253 (0/1335; 0/0; 0/0)** |
+| **12** | (-22288,11938) | nie / nie (1769/1672; 1769/1672; 0/0) | F868 / F1025 (760/894; 0/691; **0/691**) | **F868 / F1025 (0/833; 0/50; 0/50)** |
+| 13 | (-26500,15500) | nie / F1620 (1841/90; 1841/90; 1080/0) | F842 / nie (0/1650; 0/0) | F842 / nie (0/1650; 0/0) |
+| 14 | (-20000,14500) | nie / F1541 (1482/0; 1482/0; 976/0) | F883 / F896 (0/0) | F883 / F896 (0/0) |
+
+- **Abnahmekriterium Mangel 1 erfuellt:** an beiden Nordwest-Rand-Stellen kein Gorilla >= 90 Bilder FERN nach dem ersten Angriff
+  (11: 0, vorher 1465; 12: 50, vorher 691). Slot 3 greift an Stelle 11 jetzt an (F1253, vorher nie); Slot 2 steht an beiden
+  Stellen nicht mehr (fest 1529 -> 0 bzw. 760 -> 0). Die uebrigen zwoelf Stellen sind gegenueber NB3 unveraendert (erster Angriff und fest-Bilder gleich) —
+  kein Gorilla greift spaeter an als in NB3, keine Stelle spaeter als v0.8.23.
+- Summen 14 Stellen: fest v0.8.23 25936 (FERN 19812) -> NB3 12946 (FERN 2361) -> **NB4 10466 (FERN 255)**. Die 255 FERN-Bilder:
+  Stelle 7 Slot 3 108 (F420-F510 blind an der Ostkante des Wagenblocks #7 (6418,~1500), d ~22000, BEVOR er selbst angreift; der
+  Umweg loest es nach R36_FEST_START + Anlauf, unveraendert seit NB3), Stelle 5 Slot 2 96 (F390-F480 blind bei (-7800,-12700), d
+  ~25000, nach Slot 3s Angriff F18; ebenfalls vom Umweg aufgeloest, seit NB3 unveraendert, v0.8.23 1012), Stelle 12 Slot 3 50,
+  Stelle 4 Slot 3 1. Die beiden Strecken ueber 90 (Stellen 5/7) sind Haengen, die der Umweg nach seiner Startzeit selbst aufloest
+  (Abnahme 3 hat sie gemessen und nicht beanstandet); sie liegen nicht am Nordwest-Rand.
+- Die NAH-Bilder (10211) sind die Original-Nahjagd (Mangel 2), an jeder dieser Lagen im Original gemessen: Ostgassen-Eingang
+  (Stelle 3: O1/O4), #21-Ecke der Nordwest-Ecke (Stellen 4, 11, 12, 13: O3/O3b), Westkante #2 am Nordende des Nordwest-Gangs
+  (Stelle 1: O5).
+
+### NB4 Zufallsgang (52 Seeds x 6000 Bilder, je Lauf eigener Prozess; `F_belege/nb4/seeds/`)
+| Anker | AUS (Original-Regel) | NB3 | **NB4** |
+|---|---|---|---|
+| 400 | 114029 / 226 Griffe | 17975 (nah 14662 / fern 3313) / 245 | **16352 (nah 13583 / fern 2769) / 242** |
+| 40 | 75408 | 221 | **125** |
+| 16 Seeds (Riegel), 400 | 38439 / 73 | 5725 / 74 | **5174 / 71** (schlechtester +40) |
+
+### NB4 Mangel 3 — Voll-Suite
+Im Spurbaum verboten (Auftrag); der Orchestrator faehrt sie EINMAL im Integrationsbaum. Hier gezielt (unten, NB4 Tests).
+
+### NB4 Tests (probes/r36_zombieki.cmake, unveraendert registriert)
+| Test | Mangel | Misst | Ergebnis |
+|---|---|---|---|
+| `unit_r36_zombieki_affen_block` | M1, M2 | wie NB3 (16 Seeds, sieben Szenen, 4b) + NEU: Stau Nordwest-Rand je Modus eigener Prozess (Gegenprobe Original-Regel = GDB-Original 900/900, Gegenprobe Stand NB3 = "Umweg 0", Vortritt: Angriff 91/101, FERN 0/0); Original-Nahwarten gegen die GDB-Lage (Nordwest-Ecke O3b Ende (-23272,14587) / Original (-23302,14597), kein Angriff; Ostgasse O1 Ende (6418,-4399) / Original (6418,-4409); Nordende Nordwest-Gang O5 Ende (-13557,11920) / Original (-13527,11914), kein Angriff) | **54/54** |
+| `unit_r36_zombieki_sicht`, `_eintritt`, `_wecker`, `_szenen`, `_affen` | P1/P3 (erfuellt) | unveraendert (kein P1/P3-Code geaendert) | gruen |
+| Spur-J `unit_r35_affen_*` (20), `unit_maggot_*` (3), `unit_r17_waffen_loop_pin` | Original-Nahjagd | bildgenau gegen GDB | gruen |
+
+**Gezielte Laeufe (keine Voll-Suite im Spurbaum):**
+- Regex der Abnahme 3 (Module/Raeume des Zweig-Diffs), Stand Code = Endstand (nur der Riegel bekam danach den O5-Pin):
+  `ctest --test-dir re15_port/build -R "affen|maggot|re2z|re2_zombie|zombie|dog|hund|crow|kraehe|1030|1040|1140|1210|1100|10d0|10b0|1010|1220|11c0|r35_raeume|r35_inhalt_zombies|r35_cut1150|r35_zgirl|r35_fenster_kraehe|leiche|corpse|r34n_f|r36_zombieki|nav|unit_enemy_|room1070_wake|ai_flavor|re2_room1090|ada_eintritt|r17_waffen_loop|schatten|shadow|grab|griff|victim|re2_crawler|knockdown|stagger|hit_reaction|re2_livepath|re2_hit_repeat|sca_contact90|sca_wall_hit|npc_wall_clamp|r16_aufstehen|r34_reaktion|r34_schaden|unit_damage|re2_gore|r26_mg_blut|re2_stepsize|re2_kfjump|poise|re2_hp_model|room_probe_sweep|r35_granate|r35_redhawk|r35_werfer|r34_granaten" --timeout 600 -j 6 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 200** (8 min 47 s; `F_belege/nb4/nb4_ctest_gezielt.txt`)
+- nach dem letzten Bau (Riegel mit O5-Pin) `ctest --test-dir re15_port/build -R "r36_zombieki|unit_r35_affen|unit_maggot|r17_waffen_loop" --timeout 600 -j 6 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 30**; Riegel direkt `test_r36_zombieki_affen_block riegel` **54/54** (`F_belege/nb4/nb4_affen_riegel.txt`)
+
+### NB4 OFFEN
+- **Nah-Wartezeit an den Stoss-Zielen (Original, gemessen):** Nordwest-Ecke (#21-Ecke) und Ostgasse — das Original wartet dort ebenso
+  (GDB O1/O3/O3b/O4, Tabelle oben; Riegel pinnt Port = Original). Eine Aenderung waere eine bewusste Abweichung vom Original, die die
+  Spur-J-Riegel `griff/szene` (kanonischer Kampf: e1/e2 warten mit Sicht-Latch 1 an der Klemme, +0x1de bis 497) brechen wuerde —
+  nicht gebaut.
+- Stelle 7 (-14746,-4140): Slot 3 108 Bilder FERN blind an der Ostkante von #7, bevor der Umweg nach R36_FEST_START greift (seit NB3
+  unveraendert; Messweg: `fest_nach.py` auf `affen_-14746,-4140_nb4h`).
+- PSX-Laufzeit (aus NB3): Raster + A* je Gorilla und Bild; der Vortritt fuegt je fernem Gorilla nur eine Schleife ueber die Aktoren
+  hinzu. Vor einem PSX-Port fuer ROOM11C0 als Tabelle vorzuberechnen.
+- Vorgaenger-OFFEN (ROOM10B0-Terrasse, Moebel-Tabelle) unveraendert.
+
+### NB4 Fuer den Nutzer
+- Neue Assets: keine. Sprachdateien: keine. Bedienhinweise: keine. Entscheidungsfragen: keine.
+- Spuerbar neu: Zwei Gorillas halten sich am Nordwest-Rand des Parkplatzes nicht mehr gegenseitig fest — wird Leon dort in die Ecke
+  gestossen, geht der vordere Gorilla oben um den Block herum und greift an, der hintere rueckt nach (vorher standen beide bis zum
+  Ende still).
+- **Ausdruecklich, weil es so bleibt: das Original macht es genauso.** Steht Leon in einer Ecke oder Gasse, in die ein Gorilla nicht
+  hineinpasst — die Nordwest-Ecke hinter dem Block, die schmale Ostgasse zwischen den Wagen —, wartet der Gorilla davor, bis Leon
+  wieder herauskommt. Im Original gemessen (Debugger, gleiche Lage): an der Ecke 900 Bilder (30 s) ohne Angriff, vor der Ostgasse
+  900 Bilder ohne Angriff; aus dem normalen Kampf heraus schiebt der Gorilla Leon beim Angriff sogar selbst durch die Ostgasse und
+  wartet dann bis zum Ende der Messung (ueber 800 Bilder, ~27 s). Auch im normalen Kampf nach der
+  Ada/Marvin-Szene wartet im Original ein Gorilla eine Weile an einer Wand, bis Leon sich bewegt.
+
+### NB4 Ergebnis je Mangel (Kurzfassung)
+| Mangel | Ursache | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| 1 FERN-Stau Nordwest-Rand | Gorilla 1 NAH in der Original-Jagd an der #21-Ecke versperrt den einzigen Streifen; Umweg von Gorilla 2 sah nur SCA ("gerader Weg frei") | Original per GDB ab derselben Lage: 900/900 Stau (e2 +0x1de 179 -> 1079); Port-Sonde Original-Regel = NB3 = Befund | PORT-WAHL Vortritt: FERN seit R36_FEST_START/2 Bildern im Anker + Koerperkontakt mit einem NAHEN vor ihm -> der NAHE geht den Umweg zu Fuss (Messreihe 1..60) | exe 11/12 FERN 1465/691 -> 0/50, Slot 3 an 11 greift an (F1253); Riegel Stau mit zwei Gegenproben; "fern 0" berichtigt |
+| 2 Nahe Rest-Blockade | Original-Nahjagd (A[3] unter 0x1771 nur Biss < 0xbb8 @0x80117a60-74, B[3] auf playerX @0x80117d4c) an Ecke/Gasse | GDB O1/O3/O3b/O4: das Original wartet ebenso (900..2400 Bilder); J-Spur griff: Wartende mit Sicht-Latch 1 | keine (Original); benannt unter "Fuer den Nutzer"; Riegel pinnt Port = Original | Riegel O3b/O1 gegen GDB-Lage (Abweichung 32 / 10) |
+| 3 Voll-Suite | — | — | Orchestrator | gezielt (oben) |

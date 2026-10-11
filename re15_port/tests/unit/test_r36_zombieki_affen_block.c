@@ -743,11 +743,14 @@ int main(int argc, char **argv)
              *   O3b Nordwest-Ecke, EIN Gorilla (der zweite weit weg): Original e1 900 Bilder an der #21-Ecke, F900 (-23302,14597)
              *       d 3298, kein Angriff;
              *   O1 Leon (6000,-9000), Gorillas in der Original-Lage F195: Original schiebt Leon durch die Ostgasse bis (7880,-1379),
-             *       e1 in der Gassenmitte (6418,-4409), e2 am Suedeingang (8101,-7143) (VSync 14629), beide ohne Bewegung. */
-            static const int32_t lg[2][16] = {
+             *       e1 in der Gassenmitte (6418,-4409), e2 am Suedeingang (8101,-7143) (VSync 14629), beide ohne Bewegung;
+             *   O5 Nordende Nordwest-Gang (exe-Stelle 1): Original e1 900 Bilder an der Westkante von #2, F900 (-13527,11914) d 3602,
+             *       kein Angriff (e2 stand FERN bei (-12316,-8452) in der Auswahl). */
+            static const int32_t lg[3][16] = {
                 { 900, -26606, 14578, 18, -23302, 14489, 2067, 3, 0, 9434, 2189, 2656, 0, 0, -23302, 14597 },
-                { 2400, 6000, -9000, 1332, -5525, -14883, 2731, 3, 0, -8915, -12487, 93, 3, 0, 6418, -4409 } };
-            for (int i = 0; i < 2; i++) {
+                { 2400, 6000, -9000, 1332, -5525, -14883, 2731, 3, 0, -8915, -12487, 93, 3, 0, 6418, -4409 },
+                { 900, -9960, 11409, 18, -13533, 11917, 89, 3, 0, -12316, -8452, 3151, 4, 0, -13527, 11914 } };
+            for (int i = 0; i < 3; i++) {
                 char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage %d 1 0 %d %d %d %d %d %d %d %d %d %d %d %d %d", argv[0], (int)lg[i][0], (int)lg[i][1],
                                          (int)lg[i][2], (int)lg[i][3], (int)lg[i][4], (int)lg[i][5], (int)lg[i][6], (int)lg[i][7], (int)lg[i][8], (int)lg[i][9],
                                          (int)lg[i][10], (int)lg[i][11], (int)lg[i][12], (int)lg[i][13]);
@@ -759,10 +762,11 @@ int main(int argc, char **argv)
                 }
                 if (pp) pclose(pp);
                 long dx = ex[0] - lg[i][14], dz = ez[0] - lg[i][15];
-                CHECK(fs[0] >= (i ? 1000 : 810) && ff[0] == 0 && dx * dx + dz * dz <= 150L * 150L,
-                      "%s: Gorilla 1 wartet NAH wie das Original (fest %ld, fern %ld, Ende (%d,%d), Original (%d,%d))", i ? "Ostgasse (O1)" : "Nordwest-Ecke (O3b)",
+                static const char *const ort[3] = { "Nordwest-Ecke (O3b)", "Ostgasse (O1)", "Nordende Nordwest-Gang (O5)" };
+                CHECK(fs[0] >= (i == 1 ? 1000 : 810) && ff[0] == 0 && dx * dx + dz * dz <= 150L * 150L,
+                      "%s: Gorilla 1 wartet NAH wie das Original (fest %ld, fern %ld, Ende (%d,%d), Original (%d,%d))", ort[i],
                       fs[0], ff[0], ex[0], ez[0], (int)lg[i][14], (int)lg[i][15]);
-                if (i == 0) CHECK(er2[0] == 0, "Nordwest-Ecke (O3b): Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)");
+                if (i != 1) CHECK(er2[0] == 0, "%s: Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)", ort[i]);
             }
         }
         re15_r36_affen_padsuche_enable(1);

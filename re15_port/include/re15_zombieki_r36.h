@@ -206,7 +206,7 @@ void re15_r36_wurf_klemme_enable(int an);   /* NUR Sonden: 0 = Weg vor NB2 (Gege
  *   @0x80117a60-74, B[3] auf playerX @0x80117d4c) und bleibt (Spur-J-Riegel griff/szene pinnen sie).
  *   VORTRITT (PORT-WAHL): steht ein Gorilla FERN seit R36_VORTRITT_START Bildern im Anker und im Koerperkontakt mit einem
  *   NAHEN Gorilla vor ihm, geht der NAHE den Umweg zu Fuss, bis sein gerader Weg zu Leon frei ist.
- *   MESSUNG: Stau-Sonde beide greifen an (91/101, vorher keiner), exe Nordwest-Rand FERN 1465/691 -> 0/0; Zufallsgang 52 Seeds
+ *   MESSUNG: Stau-Sonde beide greifen an (91/101, vorher keiner), exe Nordwest-Rand FERN 1465/691 -> 0/50; Zufallsgang 52 Seeds
  *   Anker 400 17975 -> 16352, Anker 40 221 -> 125.
  * --------------------------------------------------------------------------------------------------------- */
 

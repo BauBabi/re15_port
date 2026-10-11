@@ -80,5 +80,7 @@ ok:   Stau mit Vortritt: Angriff G1 91 / G2 101, keine FERN-Blockade (0/0 Bilder
 ok:   Nordwest-Ecke (O3b): Gorilla 1 wartet NAH wie das Original (fest 900, fern 0, Ende (-23272,14587), Original (-23302,14597))
 ok:   Nordwest-Ecke (O3b): Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)
 ok:   Ostgasse (O1): Gorilla 1 wartet NAH wie das Original (fest 1368, fern 0, Ende (6418,-4399), Original (6418,-4409))
+ok:   Nordende Nordwest-Gang (O5): Gorilla 1 wartet NAH wie das Original (fest 900, fern 0, Ende (-13557,11920), Original (-13527,11914))
+ok:   Nordende Nordwest-Gang (O5): Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)
 
-52 Pruefungen, 0 Fehler
+54 Pruefungen, 0 Fehler
