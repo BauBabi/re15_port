@@ -40,7 +40,15 @@ die Marke sitzt auf der Pinnwand-Tafel (Staffelei) rechts neben der Tuer zum Gan
 Marken-Huellen (Pixel, gemessen): 3F (231..241, 72..81), 2F (270..289, 120..135), 1F (155..164,
 103..113), B1 (227..250, 65..93), B2 (58..74, 80..93).
 
-### 1.2 Kartenblaetter der fuenf Raeume (re15_map_zones.h, Spalte Blatt)
+### 1.2 Port vorher (Stand 78a4a748, gebaut und gemessen)
+* Keine Karte an den fuenf Stellen: Framedump Lade-Weg je Raum (Nutzer-Cut) = Hintergrund unter der Marke
+  unveraendert (Laeufe "ohne" in 4.1 sind genau dieser Zustand).
+* Kartenblatt: zeichnet nur besuchte Orte — ohne Plan je Etage 0 unbesuchte Kacheln (unit_r36_kartenitems K:
+  im Kartenraum stehend je 1 Kachel); einzige Fundstelle des Ports war der Laborplan ROOM5030 (Flag 3,115),
+  keine Polizei-Etage hatte einen Plan.
+* Etagenwahl nur fuer besuchte Blaetter oder das Hinweis-Ziel (re15_map_blatt_waehlbar).
+
+### 1.3 Kartenblaetter der fuenf Raeume (re15_map_zones.h, Spalte Blatt)
 1140 -> 4 (3F), 10D0 -> 3 (2F), 1030 -> 2 (1F), 1200 -> 1 (B2), 11D0 -> 0 (B1)
 (Blatt-Reihenfolge menu_common.c: "Seite 1 = B2, 0 = B1, 2 = 1F, 3 = 2F, 4 = 3F").
 
@@ -230,3 +238,50 @@ eigenen Raum — 537 Pixel Unterschied, Huelle x120..193 y80..158.
 (Vitrinen-Ereignis, Ueberlapp z -16183..-15800 — davor gewinnt die Vitrine, rechts davon die Karte);
 11D0: 142 / 1407, 0; 1030: alle 5760 Treffer landen in Slot 8 = der Karte.
 
+## 5. Tests
+
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r36_kartenitems` | T Tabelle (Blatt = Zonen-Blatt, Bits 87..91, MD1/TIM parsen, MD1 nur Ecken verschieden, Texte = RE2-Wortlaut, Frage mit 0x03); R Raumstart aller 10 Raeume (Leon+Elza): Prop obj 15 an Lage/Drehung, EVENT-Satz Ereignis 28 sat 0x31, 1030/1031 Telefon -> Slot 39, Installer idempotent; G Bit gesetzt -> nichts, Slot 8 = Telefon; D echter Bild-Ablauf (re15_game_step) 1140 Ja, 1140 Nein, 10D1 (Elza) Ja: Frage 30 -> Bit/Zone weg/Modell (20000,..)/Meldung 31/Blatt besitzt+waehlbar bzw. nichts; K Kartenblatt je Etage ohne Plan 0 unbesuchte Kacheln, mit Plan Zeile 498 (+6/+10/+10/+9/+6 Kacheln), fremdes Blatt erst mit SEINEM Plan waehlbar; S Spielstand-Rundlauf | 192 Pruefungen gruen |
+| `integration_r36_kartenitems_bild` | echte exe, 12 Laeufe: je Raum Lade-Weg mit/ohne Bit, Karte NUR im Marken-Fenster (ausserhalb 0 Pixel), Boot-Haken-Zeile; ROOM1140 echter Weg (Aktion, Ja) -> Ereignis 28, Kartenschirm 3F mit allen Raeumen (>= 268 Pixel mehr) | gruen (207,8 s) |
+
+Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
+* `ctest --test-dir re15_port/build -R "r36_kartenitems" --timeout 1200 --output-on-failure`
+  -> **"100% tests passed, 0 tests failed out of 2"**
+* Regressionsgruppen der beruehrten Module (Karte/Besitz/Hinweis, Prop-Lader/Licht, scd_event_fire-Kette,
+  Raumstart-Installer, die fuenf Raeume):
+  `ctest --test-dir re15_port/build -R "karte|map|besitz|hinweis|r34n_e|r35_inhalt|r34n_a|r34n_d|fenster|cut10f0|r35_cut|1030|1140|10d0|1200|11d0|item_stack|r36_kartenitems" --timeout 600 --output-on-failure`
+  -> REGRESSION_ZEILE
+
+## 6. OFFEN
+* **Groesse** (PORT-WAHL, Entscheidungsfrage 7.2): die Karten sind in die Nutzer-Marken eingepasst (Flaeche
+  391..745 x 260..497 Einheiten); die RE2-Originalgroesse waere 1080 x 720 (2F: 53 x 35 statt 20 x 13 Pixel —
+  sie deckte dort die Fahndungsplakate und das Foto zu).
+* **Licht** (PORT-WAHL, Abschnitt 3.3): Papier so hell wie die hellsten 15 % der Umgebung im Nutzer-Cut,
+  statt des RDT-Figurenlichts (gemessen 31..70 von 128 an allen Waenden, Karte sonst fast schwarz). Kein
+  Original-Gegenstueck — RE1.5 hat an diesen Stellen kein Objekt.
+* **Tiefe** in anderen Cuts: die Bildlage im Nutzer-Cut ist eingepasst; in anderen Cuts folgt sie der
+  gemessenen Ebene. 1140: Tafel-Ebene parallel zur Rueckwand ANGENOMMEN (nur die rechte Kante trianguliert);
+  1030: Wandtiefe aus der Bodenkante (+-1 Bildzeile = +-500 Einheiten) — nur Cut 3/10 sieht die Rueckwand.
+* **ROOM1030 Telefon**: bis zur Aufnahme antwortet im Karten-Rechteck die Karte, sonst ueberall das Telefon.
+* **ROOM1200**: im Ueberlapp mit dem Vitrinen-Ereignis (Slot 2, z -16183..-15800) gewinnt die Vitrine
+  (kleinerer Slot) — vor der Karte (z > -15800) kommt die Karte (gemessen 183 Standorte).
+* **Elza**: Mechanik in allen fuenf xxx1-Raeumen im Unit-Test (Raumstart + Aufnahme in 10D1); Framedumps
+  nur Leon-Varianten (dieselben Kameras/BSS je Variante sind nicht geprueft).
+* RE2s Bank-32-Varianten der Kachelzeilen (503/507) fuehrt der Port nicht (vor dieser Runde schon so).
+
+## 7. Fuer den Nutzer
+* **Neue Assets / Paket-Gate**: KEINE neuen Dateien unter shared_assets — Modell (RE2 karte01) und Texte
+  sind in `re15_port/engine/src/gen/kartenitems_r36.inc` eingebacken (Quelle info/re2leon/PL0/RDT/
+  ROOM3060.RDT, md5-geprueft). Keine Sprachdateien.
+* **Bedienung**: an die markierte Stelle gehen, Aktion: "A police 3F map. / Will you take it?" -> Yes ->
+  "You've taken the / police 3F map.". Danach zeigt die Karte (START, L1) die ganze Etage — nicht besuchte
+  Raeume als Umriss (RE2-Zeile 498), besuchte gefuellt; die Etage ist mit HOCH/RUNTER waehlbar, auch wenn
+  man sie nie betreten hat. Gilt fuer Leon und Elza. Der Zustand liegt im Spielstand (Bank-9-Bits 87..91).
+* **Entscheidungsfragen**
+  1. map3F.bmp zeigt den Konferenzraum ROOM1140 (3F), nicht Irons' Buero ROOM1150 — die 3F-Karte haengt
+     deshalb an der Tafel in ROOM1140 (dort, wo du markiert hast). Richtig so?
+  2. Groesse: eingepasst in deine Marken (ein Blatt Papier). Moechtest du die RE2-Originalgroesse
+     (1,08 x 0,72 m, deutlich groesser)?
+  3. ROOM1030: die Karte haengt im Bereich des Muenztelefon-Textes; bis zur Aufnahme kommt dort die
+     Kartenfrage, daneben weiter der Telefon-Text. Passt das?
