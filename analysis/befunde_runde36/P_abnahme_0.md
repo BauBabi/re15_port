@@ -8,7 +8,16 @@ exe-Kopie `re15_pc_Pabn0_<name>.exe`, RE15_CONTINUE_TEST + Karte, RE15_INPUT_SCR
 RE15_MSG_LOG, RE15_STATE_LOG (Position/Gierung/msg je Bild), RE15_EXIT_AT, Bilder RE15_FRAMEDUMP mit
 RE15_WINDOW_SCALE=1 (beschleunigter Renderer, KEIN Software-Render).
 
-Stand dieses Berichts: IN ARBEIT (wird fortlaufend geschrieben).
+Stand dieses Berichts: **ABGESCHLOSSEN — BESTANDEN** (P1-P5 erfuellt, Gates halten, 0 Maengel; Hinweise H1-H7 in
+Abschnitt 10 sind Wortlaut-/Messweg-Notizen fuer Nutzer und Orchestrator, keine Maengel).
+
+| Punkt | Urteil | Kernbeleg (selbst gemessen) |
+|---|---|---|
+| P1 Roy 1020 erst mit Strom | erfuellt | Tuer-Weg 1010->1020 + Fussweg + Druck: ohne (4,0xF3) kein Koerper/kein Text, mit -> msg 0; Bild p1_250.png |
+| P2 Text an Elzas Zelle (Leon 1210) | erfuellt | Tuer-Weg 11E0->1210 + Fussweg + Druck -> `[msgtext] room=1210 id=20 "The cell door is open..."`; Seite 1/2 im Bild |
+| P3 burnt-out shed (Elza 1091) | erfuellt | Tuer-Weg 1051->1091 (Platz gefeuert) + CONTINUE-Druck am Schuppen -> id 20 "It's a burnt-out shed..."; kein Loescher |
+| P4 Sweep "nie begegnet" | erfuellt | eigener Sweep 206 RDTs/469 Dialogzeilen = dieselben 11 Zeilen; angezeigter Wortlaut in 6030/6031/6000/50B0/30C1 gemessen |
+| P5 Funkraum | erfuellt | 10F0/10F1 msg 0 "It's out of commission"; kein Text mit Elza-vor-Leon; kein Haken gebaut |
 
 ## 0. Gelesen
 * AUFTRAG.md (Nachtrag 14:00 woertlich), VERTRAG.md (Zeile P, 1.1-1.4), Dossier P_story.md.
@@ -20,7 +29,12 @@ Stand dieses Berichts: IN ARBEIT (wird fortlaufend geschrieben).
 
 ## 1. Tests (selbst gefahren)
 * `ctest -R "^unit_r36_story_"` -> 100% tests passed, 0 tests failed out of 6 (103 Pruefungen im Binary, 0 Fehler).
-* `ctest -R "^integration_r36_story_"`: integration_r36_story_leon Passed 367.46 s; _elza laeuft (s.u.).
+* `ctest -R "^integration_r36_story_" --timeout 1500` -> 100% tests passed, 0 tests failed out of 2
+  (integration_r36_story_leon 367.46 s = Lauf-Id a336af60, integration_r36_story_elza 213.12 s = Lauf-Id acfaced8;
+  Logs unter build/tests/integration/r36_story_{leon,elza}_wd/lauf_<id>_p*).
+* Beruehrte Module: 99/99 unit (Abschnitt 8.3); beruehrte exe-Wege
+  `ctest -R "^(integration_weste_load_pin|integration_r34n_e_dokumente_bild|integration_boot_bg_pin|integration_r35_cut1150|integration_r33_speichern)$"`
+  -> 100% tests passed, 0 tests failed out of 5 (682 s, unter Last parallel laufender Fremd-Agenten, ohne Nachfahren).
 
 ## 2. RE-Gate (selbst nachgelesen, nicht aus dem Dossier uebernommen)
 SCD-Dumps mit `re15_port/tools/scd_dump_room.py` (alle 206 RDTs, 0 Walk-Abbrueche "ABBRUCH"), MIPS mit
@@ -38,7 +52,10 @@ SCD-Dumps mit `re15_port/tools/scd_dump_room.py` (alle 206 RDTs, 0 Walk-Abbruech
 | PSX.EXE @0x800397e4 `srl a0,a0,31` / @0x800397ec `addu a0,a0,v0` (Variante Elza = Leon+1) | `800397e4: srl a0,a0,31`, `800397e8: jal 0x80013b60`, `800397ec: addu a0,a0,v0` (Delay-Slot) | stimmt |
 | @0x80021fc8 (Verstecken wie die Aufnahme) | `80021fc8: sw zero,0(at)` mit at = 0x800b3f98 + idx*0x94 (erstes Wort des Objekt-Eintrags) | stimmt (Form) |
 
-Suchlauf im Diff nach "deferred|tunable|interim|for now|faithful|plausibel|TODO": siehe Abschnitt 6.
+Suchlauf im Diff nach "deferred|tunable|interim|for now|faithful|plausibel|TODO": siehe Abschnitt 8.1.
+Weitere selbst gelesene Belege: ROOM1021 @0x01E28 `21 03 5f 01` Ck(3,0x5F) -> @0x01E40 Obj_model_set obj 6 (dieselben
+Bytes wie 1020 @0x01DEE) = Elzas eigenes Leichen-Gate; ROOM6030 sub00 @0x00D28/@0x00D32, sub01 @0x00D6A, Slot 1
+@0x00C52, Slot 5 @0x00CC6, ROOM6000 Slot 3 @0x00DDA (Abschnitt 6.2) — alle wie im Dossier zitiert.
 
 ## 3. P1 — Roy ROOM1020 erst nach dem Strom
 
@@ -54,6 +71,10 @@ Messung (eigene Laeufe, ECHTER Tuer-Weg ROOM1010 -> ROOM1020, Leon zu Fuss vor R
   state.log F241 `pst=4 .. msg(a=1 fsm=1 id=0)`.
 * Bild (Scratch p1_250.png, Bild 250, Cut 10, links ohne / rechts mit Strom): links Gang leer, rechts liegt Roy vor
   Leon, Text "It's" laeuft an.
+* Boot-/CONTINUE-Weg ohne Strom (der Haken in main.c): `lauf.sh p1_cont_ohne "roy cut=10" "A0.3,W8" "400#1020"` ->
+  `[story36] ROOM1020: Strom (4,0xF3)=0 -> Roy noch nicht da`, F60 `pad=8000 PL(-4350,-8700,rot=1024) cam=10
+  msg(a=0)` -> kein Text; Bild 200 (Scratch p1_cont_ohne.png): Gang leer. (Mit Strom = integration P1b, eigener Lauf
+  lauf_a336af60_p1b: `[msgtext] room=1020 id=0 "It's the RPD officer, Roy..."`.)
 * Strom-Bit = Generator: (4,0xF3) einziger Setzer sub18 (Abschnitt 2); kein Port-Code schreibt es.
 * Elzas ROOM1021 unberuehrt (story_r36.c prueft nur 0x1020; unit_r36_story_roy "ROOM1021 mit (3,0x5F): kein Eingriff").
 
@@ -128,8 +149,9 @@ Steuercodes wie re15_msg_decode_text) ueber ALLE 206 ladbaren RDTs (34 weitere s
   30C1 msg 4 ("He's all right" = Antwort darauf), 30C1 msg 7 ("tell him ... we're all right"), 6031 msg 0
   ("Where's Leon?"), 6031 msg 1 ("He wants you to start the train"), 6030 msg 1 ("Where's Elza?"), 6030 msg 12
   ("Keeping the monsters at bay" als Antwort auf "Where's that biker girl?"), 50B0 msg 1 ("Your other friends"),
-  6000 msg 0/3 ("Your friends are already here" / "join your friends") — GENAU die 11 Zeilen der Tabelle des
-  Bau-Agenten (6030 msg 2 wurde zusaetzlich angepasst, damit Sherry Elza als Fremde vorstellt).
+  6000 msg 0/3 ("Your friends are already here" / "join your friends") = 10 Zeilen; zusammen mit der Folge-Anpassung
+  6030 msg 2 (Sherry stellt Elza als Fremde vor, Antwort auf die neue Frage msg 1) GENAU die 11 Zeilen der Tabelle des
+  Bau-Agenten. Kein weiterer Treffer.
 * Geprueft und KEIN Hinweis: 1090 msg 0-6 ("Woman" = Ada, vgl. 1050 msg 6/7 "Ada: ... I need a break" / "I'll take
   you to the medical room"); 2000 msg 2-6 (Leon sah ein kleines Maedchen = Sherry, nicht Elza); 3000 msg 5 ("that
   woman" = Ada, msg 6); 5090/5091 msg 1 ("my friends" — Leons Begleiter am Zug); 6030 msg 3-7 (John/Sherry ueber
@@ -229,3 +251,37 @@ Urteil P5: **erfuellt**.
   Leons 1090 per Unit-Riegel unberuehrt. Id-20-Kollision: keine (Savepoint 0xFE, andere Port-Texte raumgebunden).
 * Same-Room-Tuer (6030 Slot 1) und Raumwechsel ohne Nachrichtenblock (1210/1091: Lader kehrt frueh zurueck, Id 20
   bleibt) beachtet; unit_r36_story_reihenfolge prueft beide Ladereihenfolgen.
+
+## 9. Maengel
+
+Keine. (Jeder Punkt gegen den Wortlaut erfuellt, RE-Gate und Vertrag halten, Tests der Spur und der beruehrten Module
+gruen, selbst gefahren.)
+
+## 10. Hinweise (keine Maengel — Wortlaut-Freigabe ist ohnehin Sache des Nutzers)
+
+* H1 (P4, Wortlaut) ROOM30C1 msg 7 "Will you tell them that me and John and Sherry are here and we're all right?" —
+  "we're all right" klingt wie eine Nachricht an Bekannte; liest sich im Zusammenhang aber als "sag deinen Leuten,
+  dass es hier Ueberlebende gibt". Kein Begegnungs-Hinweis, nur zur Freigabe genannt.
+* H2 (P4, Wortlaut) ROOM6031 msg 1 "Sherry: A policeman! He's fighting off monsters..." — im selben Wagen liegt
+  Marvin (RPD-Uniform, Bild p4e.png); "A policeman!" kann auf Marvin bezogen gelesen werden. Moegliche Alternative
+  fuer den Nutzer: "Another policeman! ...".
+* H3 (P4, Wortlaut) ROOM6030 msg 12 "Leon: I've never met her." — in der Reihenfolge "Wagen zuerst" weiss Leon von
+  Sherry/John, dass Elza draussen kaempft; die Antwort ist wahr, wirkt aber ausweichend. Freigabefrage.
+* H4 (P3, Messweg) Ein FUSSWEG von der Tuer zum Schuppen in 1091 war nicht skriptbar (Kalibrierlauf kal1091: Elza bleibt
+  bei x -9486 an der Hofgeometrie haengen, Aktionstaste loest dort eine Kletter-/Schiebe-Bewegung aus; 4 wache Zombies
+  im Hof). Belegt ist P3 ueber Tuer-Weg + gefeuerten Platz und CONTINUE + echten Druck am Schuppen.
+* H5 (fremd, Spur I) Mein Versuch, 1091 per RE15_DEBUG_JUMP=1091 mit Elza (Figur 4) zu betreten, landete in Leons
+  ROOM1090 (`[debug-menu] JUMP -> 109 REAR EXTERIOR (ROOM1090)`, danach Leons msg 7) — das ist der bekannte
+  Debug-Menue-Befund aus AUFTRAG.md ("Elza in Leons Raeume", Spur I), kein Defekt der Spur P.
+* H6 (Orchestrator) Die neuen Port-Texte der Spuren J/L/Q liegen nicht in diesem Baum; der Sweep der Spur P deckt
+  RDT-Texte + die Overrides ab. Im Integrationsbaum: `ctest -R "^unit_r36_story_sweep$"` und RE15_MSG_LOG
+  (`[msgtext]`) ueber die neuen Szenen (11B0 Marvin, 1151/1101, Schluessel-Texte) gegen "Leon"/"Elza"/Begegnung.
+  Ausserdem RE15_MIN_TESTS beim Zusammenfuehren um 8 anheben (600 im Spurbaum).
+* H7 (Kosmetik, Werkzeug) tools/r36_p/texte_bauen.py:191 enthaelt ein ROHES 0x08-Byte im Literal
+  (`split(b"<BS>")`, sichtbar mit `cat -A` als `^H`) — funktioniert (Werkzeug reproduziert die .inc bytegleich),
+  ist im Editor aber unsichtbar; `b"\x08"` waere lesbarer.
+
+## 11. Messartefakte (Scratch, nicht eingecheckt)
+`...\scratchpad\P_abn0\`: lauf.sh, sweep_texte.py, texte.tsv (1229 Nachrichten), scd_alle/ (206 SCD-Dumps),
+runs/<lauf>/{debug.log,state.log}, Bilder p1_250.png, p1_cont_ohne.png, p2_tuer.png, p2_cont.png, p3_cont.png,
+p4e.png, p4f_a.png, p4f_b.png.
