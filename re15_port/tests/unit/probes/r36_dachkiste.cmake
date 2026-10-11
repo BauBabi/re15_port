@@ -20,3 +20,15 @@ target_compile_definitions(probe_r36_dachkiste PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r36_dachkiste_zensus COMMAND probe_r36_dachkiste pin)
 set_tests_properties(unit_r36_dachkiste_zensus PROPERTIES TIMEOUT 600)
+
+# INTEGRATION (echte exe, Leon UND Elza ueber den ECHTEN WEG ROOM10F0/10F1 -> Tritt -> Tuer slot 1 -> ROOM1090/1091
+# -> Korridor -> Schub gegen die Dach-Kiste; dazu der Schub nach Westen aus der Tasche): RE15_PUSH_LOG (engine/src/
+# dachkiste_r36.c) muss je Versuch SCHUB-GESPERRT mit der Treffer-Zelle des Originals zeigen (Bruestung r3[4] x
+# -7256..4624 z -18560..-16403 bzw. Westwand r3[2] x -9200..-6878), kein SCHUB-OK, kein AUSLOESER (objfall_r36.c),
+# Kiste bleibt auf dem Record (-5960,-9000,-15482) Band 5 — Original: R_belege/orig_lauf5+6/log.txt.
+add_test(NAME integration_r36_dachkiste
+    COMMAND ${CMAKE_COMMAND}
+        -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+        -DWORKDIR=${CMAKE_BINARY_DIR}/r36_dachkiste_wd
+        -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_dachkiste.cmake)
+set_tests_properties(integration_r36_dachkiste PROPERTIES TIMEOUT 1200)

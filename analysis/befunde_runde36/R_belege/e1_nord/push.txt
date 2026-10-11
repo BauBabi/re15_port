@@ -1,0 +1,3 @@
+F89 room=1091 p=1 obj=1 SCHUB-GESPERRT spieler=(-5887,-14207) rot=1024 lage=(-5960,-15482) ziel=(-5960,-15557) band=5
+F174 room=1091 p=1 obj=1 SCHUB-GESPERRT spieler=(-5887,-14207) rot=1024 lage=(-5960,-15482) ziel=(-5960,-15557) band=5
+F234 room=1091 p=1 obj=1 SCHUB-GESPERRT spieler=(-5887,-14207) rot=1024 lage=(-5960,-15482) ziel=(-5960,-15557) band=5

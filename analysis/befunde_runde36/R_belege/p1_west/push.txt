@@ -1,0 +1,4 @@
+F69 room=1090 p=1 obj=1 SCHUB-GESPERRT spieler=(-4684,-15092) rot=2112 lage=(-5960,-15482) ziel=(-6034,-15482) band=5
+  TREFFER-ZELLE r3[2]: x -9200..-6878 z -18524..265 typ 1 u0 0xff u1 0x00 fl 0x53
+F144 room=1090 p=1 obj=1 SCHUB-GESPERRT spieler=(-4684,-14672) rot=2112 lage=(-5960,-15482) ziel=(-6034,-15482) band=5
+  TREFFER-ZELLE r3[2]: x -9200..-6878 z -18524..265 typ 1 u0 0xff u1 0x00 fl 0x53
