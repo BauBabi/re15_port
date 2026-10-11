@@ -40,8 +40,10 @@
  * Startwert = Lage beim Raumaufbau (PORT-WAHL, belegt: der Installer LAB_80040914 schreibt +0x40/+0x44
  * NICHT — Stores @0x8004095c-80040aa8 nur +0/+8/+9/+12/+52..+60/+104..+108/+116/+120/+130 —, der
  * Raumlader FUN_8003ea7c nullt nur +0; im Original steht dort Altspeicher des Pool-Platzes, s. Dossier).
- * Waehrend eines Falls (obj+4 = 1) schreibt FUN_8002c444 @0x8002c6ac-b0 den Spiegel selbst = Lage, der
- * Ruhe-Zweig sieht dann dx = dz = 0; der Port liest den Fallzustand aus objfall_r36 (re15_objfall_info).
+ * Im Bild 13 eines Falls (obj+5 = 1, obj+6 == 0xd @0x8002c660-6c, Bandwechsel) schreibt FUN_8002c444
+ * @0x8002c6ac-b0 den Spiegel selbst = Lage (der Ruhe-Zweig sieht dann dx = dz = 0); in allen anderen
+ * Bildern gilt das letzte Bildende. Der Port liest Fall/Zustand/Zaehler aus objfall_r36 (re15_objfall_info).
+ * Original gemessen (R_belege/orig_2050_fall): HIT 1 Spiegel = Lage, HIT 2 Spiegel = voriges Bildende.
  */
 #ifndef RE15_ZELLSCHUB_R36_H
 #define RE15_ZELLSCHUB_R36_H

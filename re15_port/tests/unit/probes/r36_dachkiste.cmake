@@ -47,9 +47,12 @@ set_tests_properties(unit_r36_dachkiste_zellschub PROPERTIES TIMEOUT 300)
 # Nachbesserung 1 (Punkt 4): fall3050 (ROOM3050 obj 1 geschoben bis in die Absprungzelle r*[46] -> AUSLOESER ->
 # LANDUNG Band 0 = der vorgesehene Fall), weg2040 (2070 Nordgang -> slot 5 @0x00B1C -> 2040 Band 5) und treppe2040
 # (Treppe sce 13 slot 5/6 @0x0133C/@0x01350: Band 5 -> 3) — ROOM2040 ist ohne die Kiste in 2050 erreichbar.
+# Nachbesserung 3 (Abnahme 2 P1/P2): tritt2060 (Ruhe-Zweig LAB_8002c0b8 -> Tritt (-3143,2075), Nord/Ost-Schub, Latch (3,172),
+# Aufstieg, Tuer slot 1 -> ROOM2040 wie im Original orig_2060_glied), echt2050/elza2051 (echte Tuer 2000/2001 slot 4, Y-Test
+# FUN_8002cabc: Band-3-Spieler laeuft durch die Band-0-Kiste, dann Fall).
 add_test(NAME integration_r36_dachkiste
     COMMAND ${CMAKE_COMMAND}
         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
         -DWORKDIR=${CMAKE_BINARY_DIR}/r36_dachkiste_wd
         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_dachkiste.cmake)
-set_tests_properties(integration_r36_dachkiste PROPERTIES TIMEOUT 1200)
+set_tests_properties(integration_r36_dachkiste PROPERTIES TIMEOUT 1800)

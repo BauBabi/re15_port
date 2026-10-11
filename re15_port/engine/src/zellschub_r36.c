@@ -136,12 +136,15 @@ int re15_zellschub_8003b558(const re15_rdt_t *rdt, int p, int32_t *x, int32_t *z
     const int32_t hz = (int32_t)(uint16_t)g_scd.props[p].box_hz;  /* @0x8003b688 lhu v0,10(a3)           */
     const int     band = (int)g_scd.props[p].band;                /* @0x8003b638 lbu v1,130(s1)          */
 
-    /* Spiegel fuer FUN_8003da78: waehrend eines Falls hat FUN_8002c444 ihn gerade auf die Lage gesetzt
-     * (@0x8002c6ac-b0), sonst steht der Wert des letzten Bildendes (@0x8002c0f0-c10c) darin. */
+    /* Spiegel fuer FUN_8003da78: der Wert des letzten Bildendes (@0x8002c0f0-c10c) — AUSSER im Bild 13 eines
+     * Falls (obj+5 = 1, obj+6 == 0xd: `8002c660 lbu v1,6(s1) / 8002c668 ori v0,zero,0xd / 8002c66c bne`), in dem
+     * FUN_8002c444 beim Bandwechsel den Spiegel selbst auf die Lage setzt (`8002c6ac sh a0,64(s1) / 8002c6b0 sh
+     * a1,68(s1)`, zwischen Bodenhoehe @0x8002c6a8 und Band @0x8002c6c4). Original gemessen (orig_2050_fall): HIT 1
+     * (Bild 13, Band 2) Spiegel = Lage (-12915), HIT 2 (naechstes Bild) Spiegel = voriges Bildende (-13068). */
     int32_t sx = (int32_t)(int16_t)s_spiegel_x[p];
     int32_t sz = (int32_t)(int16_t)s_spiegel_z[p];
     { re15_objfall_info_t o;
-      if (re15_objfall_info(p, &o) == 0 && o.fall) { sx = *x; sz = *z; } }
+      if (re15_objfall_info(p, &o) == 0 && o.fall && o.zustand == 1 && o.zaehler == 0xd) { sx = *x; sz = *z; } }
 
     /* Quadrant der Sonde (Lage + Box-Mitte) @0x8003b5dc-5f0, Zellenliste des Quadranten @0x8003b5f4-624 */
     const int q = quadrant_8003b068(*x + cx, *z + cz, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);

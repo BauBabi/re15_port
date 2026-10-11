@@ -381,9 +381,10 @@ oestlich, Schub nach Westen von x -18300 bis -23875; Seitenwechsel nach Norden; 
 * Zensus: obj 6 erreicht mit dem Spieler die Absprungzelle (von Sueden geschoben, Fallrichtung -Z = ueber die Kante
   nach Norden), vor und nach sub02. Ob die Kaskade im Original die Kiste bis Band 0 bringt und ob sie unten gebraucht
   wird (obj 8 @0x01D4C ist die geparkte Band-0-Kiste unter `Ck (5,7)=1`, (5,7) wird in 2050 nirgends gesetzt), ist
-  Teil des STAGE2-Raetsels und hier nicht Auftrag; byte-true belassen. In der Sonde bleibt 2050/2051 deshalb DIAGNOSE
-  (soll = -1, Begruendung im Code: ein Pin hielte eine am Original ungemessene Aussage fest; die Nutzer-Frage ist ueber
-  den Tuer-Graphen beantwortet).
+  Teil des STAGE2-Raetsels und hier nicht Auftrag; byte-true belassen. ⛔ BERICHTIGT (Nachbesserung 3, P3b): seit
+  Nachbesserung 2 pinnt die Sonde 2050/2051 mit soll = 1 (Ausloeser erreichbar, erste Lage in r*[49] +- 450), weil der
+  Fall an der exe (nb2_2050fall_c, nb3_2050echt vom echten Weg) und am Original (orig_2050_d, orig_2050_abn2) gemessen
+  ist; der fruehere Satz "bleibt DIAGNOSE (soll = -1)" galt nur fuer den Stand der Nachbesserung 1.
 
 ## Nachbesserung 1 (Abnahme 0: M1, M2, M3)
 
@@ -566,10 +567,19 @@ Stand beim Start: 47384115 (Abnahme 1). Gebaut (`local_build.sh build` -> LOCAL-
   Zellen / 0 Ausloeser, 3050/3051 13373 / 8 (Start (-3596,1523) = 30E0 slot 6 @0x00ABA), 2050/2051 3898 / 1 mit Pfad —
   stimmt mit Tabelle 4.1 ueberein.
 
-### N5 — ROOM3050 am Original: unter OFFEN gefuehrt
-* Datenlage eindeutig (Super Redhawk slot 6 @0x01EC6 floor 1 nur auf der gefallenen Kiste, Latch sub01 @0x02184-2196);
-  offen bleibt, ob das Original denselben Schubpfad (West bis r*[31], Sued in r*[46]) zulaesst. Messweg: re15_quickload.py
-  --triangle 2 (JUMP 300 ...), Raum 0x305 steppen, orig_2050_push.py-Muster mit K = Pool-Index von obj 1. Eintrag OFFEN.
+### N5 — ROOM3050 am Original: GEMESSEN (Abnahme 2 O2, uebernommen in Nachbesserung 3 / P3c)
+* Datenlage eindeutig (Super Redhawk slot 6 @0x01EC6 floor 1 nur auf der gefallenen Kiste, Latch sub01 @0x02184-2196).
+* Original (`abn2/orig_3050b_abn2/log.txt`, Spielstand `abn2/room3050_orig.sav` per `re15_quickload.py --triangle 2
+  --right 5 --postload 20` = JUMP 305; Auslieferungs-EXE 0800e003): der Debug-Sprung spawnt Leon auf **Band 0 bei
+  (-23996,0,1523)**, nicht an der 30E0-Ankunft — von dort kommt er nicht zur Band-4-Kiste (Bandpruefung @0x8002bf38,
+  Waende; Lauf orig_3050_abn2 abgebrochen). Messweg: Leon per GDB-RAM (+0x34/+0x38/+0x3C, +0x82) auf die 30E0-Ankunft
+  (-3596,-7200,1523) Band 4 (= RE15_PLAYER_POS der exe-Messung), Pool 1 = obj 1 (-18000,-7200,-20800) Band 4, keine
+  Gegner. Ergebnis: Weg (-6449,1526) -> (-6440,-20728) -> (-11880,-20498) -> (-16650,-20315); **WEST 307 SCHUB-OK, 0
+  gesperrt** (x -18000 -> -24070; Port 425 Schuebe bis -24058, dann 1x Westwand r3[31] gesperrt); Nordseite
+  (-22720,-22540) -> (-24058,-22150); **SUED 117 SCHUB-OK, 0 gesperrt, FALL-AUSLOESER obj=(-24070,-7200,-18492)
+  spieler=(-23927,-7200,-19842)** (Halt @0x8002c13c; Port AUSLOESER (-24058,-7200,-18488)); Endlage **(-24070,0,-15631)
+  Band 0** (Port (-24058,0,-15561) Band 0). ROOM3050: Port = Original — derselbe Schubpfad, dieselbe Absprungzelle
+  r*[46] (+450), Landung Band 0.
 
 ## Nachbesserung 3 (Abnahme 2: P1, P2, P3, P4)
 
@@ -663,8 +673,9 @@ jedes Bild @0x8001ce14), `re15_zellschub_install` (Spiegel = Lage beim Raumaufba
 re15_prop_push_tick` (Stand-Objekt @0x8002bef8 ohne FUN_8003b558, `flags & 0x80` @0x8002bf78-84, jeder Zugang zu c0b8
 ruft `re15_zellschub_ruhe`, der Schub-Test @0x8002bfb0 ruft `re15_zellschub_8003b558` auf eine Kopie der Ziel-Lage,
 Spiegel am Ende jedes Eintrags), `game_step_common.c` (1 Zeile vor `re15_objfall_nach_pass`), `scd_room_setup.c`
-(Installer-Zeile am Blockende). Waehrend eines Falls (obj+4 = 1, FUN_8002c444 schreibt den Spiegel selbst
-@0x8002c6ac-b0) rechnet der Ruhe-Zweig mit Spiegel = Lage (liest `re15_objfall_info`).
+(Installer-Zeile am Blockende). Im Bild 13 eines Falls (obj+6 == 0xd @0x8002c660-6c, Bandwechsel) rechnet der
+Ruhe-Zweig mit Spiegel = Lage, weil FUN_8002c444 ihn dort selbst schreibt (@0x8002c6ac-b0, nur in diesem Block); in
+allen anderen Bildern gilt das letzte Bildende (liest `re15_objfall_info`: fall/zustand/zaehler).
 
 ### P2 — Y-Test der Ausschiebung FUN_8002cabc (Spieler/Aktor <-> Objekt)
 
@@ -775,6 +786,70 @@ gesperrt, FALL-AUSLOESER obj=(-24070,-7200,-18492), Endlage (-24070,0,-15631) Ba
   in x -200..1100 z -8850..-7850, floor 1). In Lauf a stand der Tritt bei -7042 (mein Plan schob nur bis -7000): Spieler
   -7417, Sonde -8217 auf Kerbenboden -> Absprung. Der Port-Plan wurde auf den Original-Weg gesetzt (Nord bis z <= -7400):
   Lauf b `nb3_2060glied`, s. u.
+* **exe, 2060-Glied Lauf b (`R_belege/nb3_2060glied`, Plan `wegplan_2060_glied.txt` = Original-Weg, Nord bis z <= -7400):**
+  push.txt **`F1 room=2060 p=2 obj=2 RUHE-AUSSCHIEBUNG lage=(-3125,2075) -> (-3143,2075) band=0 y=0` + `ZELLE [9]: x
+  -2400..3150 z 2150..5350 r=675`** (der Ruhe-Zweig im ersten Bild, dieselbe Zelle wie der Original-Haltepunkt
+  0x80119a68/0x80123984-Muster), wegplan_log `FLAG (3,172) = 0` (F62), `SCHIEB ... (obj.z = -7402)` (F1141; Original
+  -7408), `(obj.x = 337)` (F1507; Original 339), **`FLAG (3,172) = 1`** (F1568; Original nach dem Ost-Schub 1), push.txt
+  657x `p=2 obj=2 SCHUB-OK`, 0 GESPERRT; objfall.txt `F1474 KERBE m0b=2`; AKTION bei (293,-6273) Blick 1024 ->
+  Aufstieg -> (293,-1800,-7421) Band 1; oben GEHE (390,-7900) -> **(349,-1800,-7777)** = Eingrenzung (-7402 - 600 + 225;
+  Original (429,-1800,-7783)); AKTION Blick 976 -> **`[aot] DOOR FIRE slot=1 rect=(450,-8350,hw=650,hh=500)
+  target_cut=15 spawn=(-12850,-5400,1600)`, `loaded room2040.rdt`**, EXIT_AT in ROOM2040. **Port = Original fuer das
+  ganze Glied (Raumstart-Ausschiebung, Nord-/Ost-Schub, Latch, Aufstieg, Tuer).**
+* **exe, 2050 echter Weg Elza (`R_belege/nb3_2051echt_elza`, ROOM2001 -> slot 4 -> ROOM2051, RE15_PSELECT_AUTO_SWITCH=1):**
+  `Spieler-Familie PL04`, `loaded room2001.rdt`, `DOOR FIRE slot=4 ... spawn=(9100,-5400,4100)`, `loaded room2051.rdt`,
+  `GEHE (-100,-6300)` angekommen (17,-6335) (F487), Sued (obj.z -7004), Ost (x 7556), Nord: 851x SCHUB-OK, 0 GESPERRT,
+  `F1910 AUSLOESER wort=0x3202 band=3 pos=(7556,-5400,-11716)`, `F1927 LANDUNG y=-3600 band=2 pos=(7556,-13250)`, Ende
+  `p0 (7556,-3600,-13068) b2`. (Ein erster Elza-Lauf parallel zur Original-Messung blieb bei F0 stehen: der virtuelle
+  Xbox-Pad des DuckStation-Laufs ist XInput-global und wurde vom Port-Fenster als Controller erkannt — exe- und
+  DuckStation-Messungen laufen seither nacheinander.)
+* **Fall der 2050-Kiste: Ruhe-Zweig waehrend und nach dem Fall, Port = Original (bis auf 0).** Port push.txt (Elza, Leon
+  gleich): ab Band 2 (F1923, y -5014) je Bild `RUHE-AUSSCHIEBUNG lage=(7556,-13250) -> (7556,-13068)` mit **ZELLE [22]: x
+  6350..8750 z -14950..-13950 r=900 -> -13032** (Sued-Ausschiebung (z1+r)-czw+18 = -13950+900+13250+18 = 218) und danach
+  **ZELLE [24]: x -2600..9900 z -12150..-4900 r=900 -> -13068** (Nord-Ausschiebung (z0-r)-czw-18 = -12150-900+13032-18 =
+  -36, Code 2, |36| <= 400 @0x8003dba0-c4); der Spalt zwischen beiden Klasse-2-Zellen ist 1800 = 2 x 900 breit, die Kiste
+  kann nur mit 18 Einheiten Ueberdeckung einer Seite ruhen, Bildende immer -13068. **Original (`R_belege/orig_2050_fall.py`
+  -> `orig_2050_fall/log.txt`, Spielstand room2050_orig.sav, Haltepunkt @0x8003da78 je Treffer mit a0 = Zelle, a2 = r):**
+  dieselben zwei Zellen je Bild in derselben Reihenfolge, z. B. `HIT 862: Zelle a0=80119d48 x 6350..8750 z -14950..-13950
+  u0 0xff fl 0x23 r=900 | obj VOR=(7562,-3600,-13068) faellt=0` -> `HIT 863: Zelle a0=80119d60 x -2600..9900 z -12150..-4900
+  r=900 | obj VOR=(7562,-3600,-13032)` (863 Treffer-Stopps gesamt); **Ruhelage ohne Haltepunkte (3x im Abstand von 2 s):
+  `obj=(7562,-3600,-13068) faellt=0 z=3 band=2 spiegel=(7562,-13068)`** = Port (7556,-3600,-13068). Die in
+  R_abnahme_2.md/OFFEN notierte "Endlage -13088 (Original) gegen -13681 (Port)" loest sich damit auf: -13681 war der Port
+  OHNE Ruhe-Zweig, -13088 ein Haltepunkt-Stopp am Eintritt von Zelle [22] (Lage VOR der Ausschiebung, waehrend der
+  Fall-Handler im Nachfedern noch -20 je Bild schob); das Bildende ist in beiden -13068. Spiegel-Semantik im Fall (aus
+  HIT 1/2): im Bild 13 (Bandwechsel, obj+6 == 0xd @0x8002c660-6c) schreibt FUN_8002c444 @0x8002c6ac-b0 den Spiegel = Lage
+  (HIT 1 spiegel (7562,-12915) = Lage), sonst gilt das vorige Bildende (HIT 2 spiegel (7562,-13068) bei Lage -13250) — so
+  auch im Port (zellschub_r36.c, Zaehler aus re15_objfall_info). x weicht um 6 ab (7556 Port / 7562 Original = die
+  Lage, in der der Nord-Schub die Kiste losliess; Schubschritte Spur A/Nachbesserung 2), z identisch.
+* **Regression (gezielt):** s. Tests.
+
+### OFFEN nach Nachbesserung 3 (jeweils mit Adresse)
+
+* **Spiegel-Startwert obj+0x40/+0x44 beim Raumaufbau**: Original = Altspeicher des Pool-Platzes (Installer LAB_80040914
+  schreibt den Spiegel nicht, Raumlader FUN_8003ea7c nullt nur +0); Port = Lage (PORT-WAHL). Folge nur im ersten Bild und
+  nur fuer ein Objekt, das beim Raumaufbau eine Klasse-2-Zelle beruehrt (Zensus Auslieferung: ausschliesslich der
+  2060/2061-Tritt), und nur, wenn der Altspeicher den Code-0-Zweig "bewegt" trifft (@0x8003dc2c-58 -> Rueckstellung auf
+  den Altspeicher @0x8003dc98-cb4): fuer den Tritt liefert jeder Spiegelwert ausserhalb des Quadranten westlich-noerdlich
+  der Lage -3143 (Rechnung in P1); ein Original-Spielstand mit anderem Altspeicher als "unbewegt" liegt nicht vor.
+* **Vertikaler Zweig von FUN_8002cabc @0x8002cc3c-cce4** (frische Y-Ueberlappung -> Ausschiebung in Y statt x/z, braucht die
+  Vor-y-Spiegel +0x42 von Aktor und Objekt) — nicht portiert; Landung auf Objekten laeuft im Port ueber den Kletter-FSM
+  (Spur A). Kein gemessener Fall, in dem der Port deshalb abweicht.
+* **Zaehler obj+0x8C ist im Original ein Byte** (`8002bf60 lbu v0,140(s2) / bf68 addiu v0,v0,1 / bf70 sb v0,140(s2)` —
+  laeuft nach 255 auf 0 ueber, der Port haelt bei 255): wer UP gegen eine gesperrte Kiste ~8,5 s lang haelt, bekommt im
+  Original nach dem Ueberlauf (256 Bilder) einen neuen Schubversuch (Zaehler 0 -> 9), im Port nicht. Spur-A/R-Kette,
+  hier nur benannt (keine Messung, kein Spielweg bekannt).
+* **Zweiter Entity-Durchlauf @0x8002bfec-c034 und Objekt-gegen-Objekt-Pass FUN_8002cdf4 @0x8002c03c-a8** (im angenommenen
+  Schub: Aktoren im Weg setzen den Zaehler auf 10, andere Objekte im Weg sperren) — weiterhin nicht portiert (Kommentar in
+  aot_common.c); ROOM1090/2050/2060/3050 haben je nur ein Typ-4-Objekt im Band bzw. keine Aktoren im Schubweg.
+* **2060-Spielweg**: der Tritt muss bis z <= ~-7400 nach Norden, damit Square oben die Tuer statt des Absprungs nimmt
+  (FUN_8002d474 @0x8002d724-40: Sonde 800 voraus in der Nordwand der Kerbe) — Originalverhalten, keine Port-Grenze;
+  fuer den Nutzer als Bedienhinweis vermerkt.
+* Unveraendert aus Nachbesserung 1/2: Spieler-Schritt 1 Einheit (1.2), Szene ROOM10F0 vom Sprung-Spawn (Hinweis Spur K),
+  ROOM2030-Treppe Band 5 vs. floor-9-Tueren (STAGE2-Spur), ROOM3050 Stufe 2 nur Record-Beleg, 2020-Durchgang am
+  Original nicht gefahren (Messweg: JUMP 202, (3,114) per GDB), Werkzeug-Beobachtung Examine-Druck nach dem Drehende
+  (Lauf c) — alle ohne Bezug zu P1-P4. ERLEDIGT durch Nachbesserung 3: "Ersatzweg nach 2040 nicht Ende-zu-Ende gelaufen"
+  (2060-Glied am Original UND an der exe), "ROOM3050 am Original nicht gemessen" (N5), "Fall-/Kippbahn 2050 Endlage 593
+  daneben" (Ruhe-Zweig; Bildende Port = Original), "Elzas Lauf e1_echt ohne Zellen" (Riegel elza liefert sie).
 
 ## Tests
 
@@ -856,36 +931,22 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   (9,71)=1 (Szene gesehen).
 * Elzas Lauf `e1_echt` entstand mit der Messkopie VOR dem Zellen-Schrieb (push.txt ohne TREFFER-ZELLE); der Riegel-Lauf
   `elza` liefert die Zellen (r3[4]) — s. Tests.
-* **ROOM2050/2051 obj 6 am Original** (4.3, nicht Auftrag, byte-true belassen): ob die Absprung-Kaskade r*[49]/[23]/
-  [77]/[78] die Kiste im Original bis Band 0 bringt und ob sie unten gebraucht wird (obj 8 @0x01D4C unter (5,7)) —
-  kein Spielstand in 2050, STAGE2-Raetsel unfertig. Der Zensus (Modell) findet den Ausloeser; kein Pin darauf.
+* **ROOM2050/2051 obj 6 am Original** (4.3, nicht Auftrag, byte-true belassen): ⛔ ERLEDIGT (Nachbesserung 3): Spielstand room2050_orig.sav, Fall am Original zweimal (orig_2050_d, orig_2050_abn2) und mit Zellen-Protokoll (orig_2050_fall) gemessen; Kaskade bis Band 0 bleibt STAGE2-Raetsel (nicht Auftrag).
 * **ROOM2030-Treppe endet auf Band 5, die Tueren liegen auf floor 9** (4.3, Nachbesserung 1 gemessen): Record slot 8
   @0x01B8E count 2 (Byte 16) hebt von Band 3 (y -5400) auf Band 5 (y -9000); slots 1/2/3 verlangen Band 9 (y -16200,
   Ankuenfte aus 2020/2060/2080 nfloor 9). Ob das Original dieselbe Treppe genauso faehrt (count-Byte @0x800435b8 sce 12)
   und wie der Beta-Raum 2030 Band 5 und 9 verbindet, ist hier nicht gemessen (kein Spielstand in 2030) — Hinweis fuer
   die STAGE2-Spur; fuer die Frage dieser Spur reicht, dass der Weg ueber 2030 Band 3 NICHT belegt ist und gestrichen wurde.
-* **Ersatzweg nach 2040 nicht Ende-zu-Ende gelaufen** (4.3): die Kette 2050 slot 1 -> 2020 (sub03 (3,219)) -> 2030 Band 9
-  -> slot 3 -> 2060 (Tritt, Spur A) -> slot 1 -> 2040 Halle ist Record- und Band-konsistent; gemessen sind die Glieder
-  2060-Tritt (Spur A), 2070-Nordgang -> 2040 und 2040-Treppe (hier). Nicht gelaufen: 2020 Ereignis sub03, 2030 Band-9-
-  Etage von der 2020-Ankunft bis slot 3, die Verbindung Galerie-Ankunft (-19750,-19850) -> Treppenzone (x -1350) in 2040
-  (Galerie-Waende r*[29..35] lassen den Streifen z -21400..-18250 frei; `nb1_2070n` lief 1200 Bilder auf Band 5 ohne
-  Klemme). Die Annahme "zwei Tueren desselben Bands eines Raums sind verbunden" gilt fuer 2070 NICHT (drei Gaenge) und
-  ist fuer 2020/2030/2060 nicht einzeln geprueft.
+* **Ersatzweg nach 2040 nicht Ende-zu-Ende gelaufen** (4.3): ⛔ ERLEDIGT (Nachbesserung 3): 2060-Glied am Original (orig_2060_glied b: Nord/Ost-Schub, Latch, Aufstieg, Tuer -> 2040-Ankunft) und an der exe (nb3_2060glied, Riegel tritt2060) gefahren; 2020-Glied an der exe (nb2_2020durchgang_f, Riegel weg2020), 2030 Band 9 -> slot 3 -> 2060 an der exe (Abnahme 1 R2).
 * **ROOM3050 Stufe 2** (4.2/M3): nach dem gemessenen Fall (Band 0, Endlage (-24058,0,-15561)) der Band-0-Schub in die
   Kerbe slot 7 @0x01F06 (-25000..-22950, -23200..-21150) -> Latch (3,93) -> Fall-Lage @0x01F40 -> Super Redhawk slot 6:
   Record-Beleg, derselbe Latch-Mechanismus wie 5020 (Spur A, exe gemessen); der Abstieg auf Band 0 in 3050 (Ereignis-
   Leiter sub00 Aot slot 2..5 @0x02044-2080 unter (3,82)) ist hier nicht gefahren.
-* **Fall-/Kippbahn der 2050-Kiste nach dem Ausloeser** (N3): Port und Original loesen in derselben Zelle aus (Port
-  (7571,-11706), Original (7562,-11732)) und landen auf Band 2 / y -3600; die Endlage in z weicht um 593 ab (Port -13681,
-  Original -13088) — Fallmechanik FUN_8002c444 (Spur A, objfall_r36.c), hier nur notiert, nicht Auftrag dieser Spur.
+* **Fall-/Kippbahn der 2050-Kiste nach dem Ausloeser** (N3): ⛔ ERLEDIGT (Nachbesserung 3): die 593 waren der fehlende Ruhe-Zweig; Bildende jetzt Port -13068 = Original -13068 (orig_2050_fall RUHELAGE).
 * **Werkzeug-Beobachtung, nicht geprueft:** im Treiber-Lauf nb2_2020durchgang_c zuendete der Examine-Druck 2 Bilder nach
   dem Drehende nicht sichtbar (ohne RE15_MSG_LOG), mit 30 Bildern Wartezeit (Lauf d) ja; ob dieselbe Druckfolge (drei
   Druecke) auch in Lauf c lief, ist nicht belegt — der Riegel wartet 30 Bilder.
-* **ROOM3050 am Original nicht gemessen (N5, Nachbesserung 2):** die Datenlage macht den Fall zum vorgesehenen Weg
-  (Super Redhawk slot 6 @0x01EC6 floor 1 nur auf der gefallenen Kiste, Latch sub01 @0x02184-2196), offen bleibt, ob das
-  Original denselben Schubpfad (West bis r*[31], Sued in r*[46]) zulaesst. Messweg liegt bereit: Spielstand per
-  `re15_quickload.py --triangle 2 --right 5 --postload 20` (Stage 3 beginnt bei JUMP 300; Tipper 0,04 s), dann
-  `orig_2050_push.py`-Muster mit K = Pool-Index von obj 1 und den Stationen West/Sued aus nb1_3050fall_d.
+* **ROOM3050 am Original nicht gemessen (N5, Nachbesserung 2):** ⛔ ERLEDIGT (Nachbesserung 3): Abnahme 2 O2 (orig_3050b_abn2) uebernommen, s. N5.
 * **Ersatzweg nach ROOM2040 ueber ROOM2020 (N2):** der Durchgang im Suedstreifen ist per SCD geschlossen und oeffnet sich
   nur nach dem Hinweis in ROOM2010 (sub02 @0x008CA (3,114)) und dem Ereignis in 2020 (Aot slot 3 sce 3 @0x009AE -> sub02
   @0x00ADE). An der exe gemessen ist der Durchgang nach dem Ereignis (Lauf nb2_2020durchgang, s. Nachbesserung 2 N2);
@@ -895,41 +956,40 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
 
 ## Fuer den Nutzer
 
-**Softlock moeglich? NEIN (ROOM1090/1091: die Dach-Kiste bewegt sich nicht). Port = Original? JA — auch fuer die
-Kisten in ROOM3050 (Fall vorgesehen) und ROOM2050 (Fall im Original gemessen).**
+**Softlock moeglich? NEIN (ROOM1090/1091: die Dach-Kiste bewegt sich nicht). Port = Original? JA — fuer die Kisten in
+ROOM1090/1091 (Schub gesperrt), ROOM3050/3051 (Fall vorgesehen, am Original gemessen), ROOM2050/2051 (Fall im Original
+und im Port, Bildende der Kiste identisch) und fuer den Ersatzweg nach ROOM2040 ueber den Tritt in ROOM2060 (am Original
+und im Port Ende-zu-Ende gefahren, Nachbesserung 3).**
 
 * Die Kiste auf dem Dach von ROOM1090 (Leon) / ROOM1091 (Elza) laesst sich **weder im Original noch im Port bewegen**.
   Am Original (DuckStation, Auslieferungs-EXE, Haltepunkte in der Schubkette) und an der exe (Leon und Elza, Sprung-
   Laeufe in alle vier Richtungen UND der echte Weg aus ROOM10F0/10F1 ueber den Tritt und die Tuer) gemessen: jeder
   Schub nach Norden setzt die Kiste in die Bruestungsmauer, jeder Schub nach Westen in die Westwand, und das Spiel
-  nimmt den Schub dann nicht an (Kiste springt auf ihren Platz zurueck). Von Norden oder Westen kommt man nicht an sie
-  heran (Mauer/Wand), von Osten und Sueden gibt es keine Stellung, aus der ein Schub zaehlt. 0 angenommene Schuebe,
-  0 Fall-Ausloeser, Kiste am Ende immer exakt auf ihrem Platz (-5960,-9000,-15482).
-* Darum kann sie **nicht vom Dach fallen**; der Weg auf die Kiste und ueber die Bruestung durch das Tor nach ROOM1100
-  bleibt immer offen. Die Fallmechanik der Spur A ist davon unberuehrt — sie greift dort, wo das Spiel es vorsieht:
-  - ROOM3050/3051 (Punkt 4): der Fall der Kiste obj 1 ist der vorgesehene Weg — nur vom Dach der gefallenen Kiste
-    erreicht man die **Super Redhawk** (Item slot 6, Floor 1). Beide Tueren des Raums brauchen die Kiste nicht. **An der
-    exe gefahren (Nachbesserung 1):** Leon schiebt die Kiste vom Gang aus nach Westen bis an die Wand und von Norden
-    ueber die Kante — sie faellt, kippt und landet unten (Band 0). Der Fall ist als Riegel festgehalten (`fall3050`).
-  - ROOM2050/2051 (Punkt 4): die Kiste obj 6 ist die Stufe zur Tuer nach ROOM2040 (Halle) und kann ueber die Kante
-    fallen — **im Port UND im Original gemessen (Nachbesserung 2: exe nb2_2050fall_c, Original DuckStation-GDB
-    orig_2050_d, derselbe Weg Sued/Ost/Nord, Fall-Ausloeser in derselben Zelle, Landung Band 2)**. Das ist also kein
-    Port-Softlock, sondern Originalverhalten (byte-true belassen). Faellt sie, ist diese Tuer
-    weg, aber ROOM2040 bleibt erreichbar: ueber ROOM2020 -> ROOM2030 -> ROOM2060 (Tritt) -> Halle (Nachbesserung 2: der
-    Durchgang in ROOM2020 ist ein Raetsel — Hinweis in ROOM2010, dann Aktion in 2020 —, s. "Nachbesserung 2" N2); der
-    Weg ueber ROOM11A0 -> ROOM2070 (Nordgang) -> Galerie -> Treppe -> Halle steht dagegen erst NACH dem ersten
-    Galerie-Besuch offen (zirkulaer, N1) und zaehlt nicht; die Tuer 2070 -> 2040 und die Treppe 2040 sind an der exe
-    gemessen, der Tritt in 2060 von Spur A. **Berichtigung gegenueber dem ersten Stand:** ROOM2070 HAT die Tuer nach 2040 (slot 5),
-    sie liegt aber in einem eigenen, von den anderen Gaengen abgemauerten Teil (Nordgang) — von ROOM2000 aus kommt man
-    nicht dorthin; und der frueher genannte Weg ueber die Treppe in ROOM2030 traegt nicht (sie endet auf Band 5, die
-    Tueren liegen auf Band 9).
-* Keine neuen Assets fuer das Paket-Gate, keine Sprachdateien, keine Bedienhinweise, keine Entscheidungsfrage. Der
-  Port erhaelt nur Messschriebe (RE15_PUSH_LOG, Pfadausgabe der Zensus-Sonde, Wegplan-Treiber RE15_WEGPLAN) und Riegel;
-  kein Verhaltens-Code wurde geaendert (Diff gegen 99398dc7 in re15_port/: aot_common.c 3-Zeilen-Haken, input_pc.c
-  2-Zeilen-Haken, dachkiste_r36.c/.h Messschrieb + Treiber, Tests).
-* Hinweis zum Spielweg (kein Port-Thema): in ROOM2050 kann die Kiste obj 6 — wie im Original — ueber die Kante
-  geschoben werden; danach fuehrt der Weg nach ROOM2040 durch ROOM2020 (Hinweis in ROOM2010 lesen, dann in 2020 an der
-  Nordkante des Suedstreifens handeln), 2030 (Band 9), 2060 (Tritt) in die Halle. Das ist der Beta-Spielweg, nichts
-  wurde veraendert.
-* DuckStation: `settings.ini` nach den Original-Messungen aus der Sicherung zurueckgeschrieben (EnableGDBServer = false,
-  ConfirmPowerOff = true, [Pad1] nur SDL-0 wie vorgefunden).
+  nimmt den Schub dann nicht an (Kiste springt auf ihren Platz zurueck). 0 angenommene Schuebe, 0 Fall-Ausloeser, Kiste
+  am Ende immer exakt auf ihrem Platz (-5960,-9000,-15482). Darum kann sie **nicht vom Dach fallen**; der Weg auf die
+  Kiste und ueber die Bruestung durch das Tor nach ROOM1100 bleibt immer offen.
+* ROOM3050/3051: der Fall der Kiste obj 1 ist der vorgesehene Weg — nur vom Dach der gefallenen Kiste erreicht man die
+  **Super Redhawk** (Item slot 6, Floor 1). An der exe (Riegel `fall3050`) und am Original (Abnahme 2, derselbe Schubpfad,
+  dieselbe Absprungzelle, Landung Band 0) gemessen: Port = Original.
+* ROOM2050/2051: die Kiste obj 6 ist die Stufe zur Tuer nach ROOM2040 (Halle) und kann ueber die Kante fallen — im Port
+  UND im Original gemessen (jetzt auch ueber den ECHTEN Weg durch die Tuer aus ROOM2000/2001, Leon und Elza; vorher
+  klemmte der Port auf dem Weg an einer Kiste auf einer anderen Etage — behoben, Nachbesserung 3 P2). Faellt sie, ist
+  diese Tuer weg; **ROOM2040 bleibt erreichbar ueber ROOM2020 (Hinweis in ROOM2010 lesen, dann in 2020 handeln) ->
+  ROOM2030 -> ROOM2060 -> Tritt in die Kerbe schieben, hinaufsteigen, Tuer -> Halle.** Das Glied in ROOM2060 ist jetzt
+  am Original UND im Port Ende-zu-Ende gefahren (Nachbesserung 3 P1): der Tritt liess sich im Port vorher gar nicht
+  bewegen, weil der Port eine Regel des Originals nicht hatte (jedes ruhende Objekt wird jedes Bild um 18 Einheiten aus
+  einer beruehrten Wandzelle geschoben) — im Original stand der Tritt deshalb 18 Einheiten westlich seines Datensatzes.
+  **Bedienhinweis (Originalverhalten):** den Tritt zuerst von Sueden bis ganz in den Norden der Westgasse schieben
+  (bis er etwa auf Hoehe der Kerbe steht), dann von Westen in die Kerbe; von Sueden hinaufsteigen, oben bis an die
+  Nordkante gehen und mit Blick nach Norden die Aktionstaste druecken — steht der Tritt nicht weit genug im Norden,
+  springt die Figur stattdessen herunter (so auch im Original: die Sonde 800 Einheiten voraus trifft dann noch
+  Kerbenboden statt der Nordwand).
+* Ein Nebeneffekt derselben Regel: die 2050-Kiste liegt nach dem Fall jetzt wie im Original (Bildende z -13068; vorher
+  593 Einheiten daneben), weil sie unten zwischen zwei Wandzellen eingeklemmt je Bild hin- und hergeschoben wird.
+* Verhaltens-Code dieser Nachbesserung (alle Konstanten mit Adresse im Code): Ruhe-Zweig des Objekt-Passes
+  (zellschub_r36.c: FUN_8003b558 mit Nicht-Quadrat-Zweig + FUN_8003da78), Y-Test der Ausschiebung Spieler/NPC <-> Objekt
+  (re15_collision.c, FUN_8002cabc @0x8002cb84-cbc8), Haken in aot_common.c / game_step_common.c / scd_room_setup.c /
+  enemy_ai_common.c. Keine neuen Assets fuer das Paket-Gate, keine Sprachdateien, keine Entscheidungsfrage.
+* DuckStation: `settings.ini` nach jedem Original-Lauf aus der Sicherung zurueckgeschrieben (EnableGDBServer = false,
+  ConfirmPowerOff = true, [Pad1] nur SDL-0 wie vorgefunden; nach den Laeufen orig_2060_glied a/b und orig_2050_fall
+  geprueft).

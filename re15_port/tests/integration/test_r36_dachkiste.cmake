@@ -33,6 +33,7 @@
 #   weg2040 / treppe2040 (Nachbesserung 1, Punkt 4) ROOM2040 ohne die Kiste in 2050: Nordgang 2070 -> slot 5 ->
 #               Galerie Band 5 -> Treppe sce 13 -> Halle Band 3.
 #
+#   tritt2060 / echt2050 / elza2051 (Nachbesserung 3, Abnahme 2 P1/P2): Ruhe-Zweig LAB_8002c0b8 + Y-Test FUN_8002cabc, s. u.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r36_dachkiste.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -351,5 +352,158 @@ _muss("[aot] DOOR FIRE slot=1 rect=(-14200,3300,hw=1000,hh=500) target_cut=13 sp
 _muss("loaded room2030.rdt" _dbg "weg2020: ROOM2030 nicht geladen")
 message(STATUS "r36_dachkiste weg2020: Hinweis (3,114) -> Examine -> Szene -> Luecke frei -> Tuer slot 1 -> ROOM2030 Band 9 (Ersatzweg ohne die 2050-Kiste)")
 
+# ---- Nachbesserung 3 (Abnahme 2, P1): das Ersatzweg-Glied ROOM2060 Ende-zu-Ende — Ruhe-Zweig LAB_8002c0b8 (zellschub_r36.c)
+# schiebt den Tritt obj 2 beim Raumstart aus der Kantenberuehrung mit r0[9] (Record (-3125,2075) -> (-3143,2075),
+# FUN_8003da78 +18 @0x8003dab8), danach Nord-Schub bis z <= -7400, Ost-Schub in die Kerbe slot 2 @0x00E92 -> Latch (3,172)
+# (sub01 @0x01150), Aufstieg von Sueden, oben bis zur Eingrenzung (obj.z - 600 + 225 = -7777), Square -> Tuer slot 1 @0x00DBA
+# -> ROOM2040 (-12850,-5400,1600). ORIGINAL (R_belege/orig_2060_glied/log.txt, DuckStation-GDB): Raumstart (-3143,0,2075),
+# NORD 453 SCHUB-OK -> z -7408, OST 169 -> x 339, (3,172)=1, Aufstieg OBEN, oben (429,-1800,-7783), Square -> TUER AUSGELOEST,
+# Spieler (-12850,-5400,1600) Band 3. Port-Messung R_belege/nb3_2060glied. Bei Tritt z -7042 (Lauf a) nimmt FUN_8002d474 den
+# Absprung (Sonde 800 voraus @0x8002d724-40 auf Kerbenboden) statt der Tuer — deshalb der Nord-Schub bis -7400 wie im Original.
+set(_sub2060 "${_basis}/tritt2060")
+file(MAKE_DIRECTORY "${_sub2060}")
+file(WRITE "${_sub2060}/wegplan.txt" "OBJ 2
+RAUM 2060
+GEGNERWEG
+WARTE 30
+FLAG 3 172
+GEHE 5000 3950 150
+GEHE 5000 -6900 150
+GEHE -4700 -6900 150
+GEHE -4700 3250 150
+GEHE -3100 3300 120
+SCHIEB 1024 Z <= -7400 1200
+WARTE 40
+GEHE -4700 -5000 150
+GEHE -4700 -7400 100
+SCHIEB 0 X >= 300 900
+WARTE 60
+FLAG 3 172
+GEHE 390 -6300 150
+BLICK 1024
+WARTE 30
+AKTION
+WARTE 150
+GEHE 390 -7900 150
+BLICK 1024
+WARTE 30
+AKTION
+WARTE 200
+ENDE
+")
+_lauf(tritt2060 500 ${_grund} "RE15_WEGPLAN=${_sub2060}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
+      RE15_DEBUG_JUMP=2060@250 "RE15_PLAYER_POS=7600,3950,2048,0" "RE15_EXIT_AT=300#2040")
+_muss("loaded room2060.rdt" _dbg "tritt2060: ROOM2060 nicht geladen")
+_muss("p=2 obj=2 RUHE-AUSSCHIEBUNG lage=(-3125,2075) -> (-3143,2075) band=0" _push "tritt2060: Ruhe-Zweig LAB_8002c0b8 hat den Tritt beim Raumstart nicht um 18 aus r0[9] geschoben (FUN_8003b558 @0x8002c0d0 / FUN_8003da78 @0x8003b79c)")
+_muss("ZELLE [9]: x -2400..3150 z 2150..5350 r=675 -> lage (-3143,2075)" _push "tritt2060: Treffer-Zelle der Ruhe-Ausschiebung ist nicht r0[9] mit r = hx 675")
+string(REGEX MATCH "room=2060 spieler=[^
+]*[|] p2 [(]-3143,0,2075[)] b0" _start2060 "${_fall}")
+if("${_start2060}" STREQUAL "")
+    _fehler("tritt2060: Tritt obj 2 steht nach dem Raumstart nicht auf (-3143,0,2075) (objfall.txt)")
+endif()
+set(_wp2060 "")
+if(EXISTS "${_sub}/wegplan_log.txt")
+    file(READ "${_sub}/wegplan_log.txt" _wp2060)
+endif()
+_muss("FLAG (3,172) = 0" _wp2060 "tritt2060: Latch (3,172) beim Raumstart nicht 0")
+_muss("SCHIEB: Bedingung erfuellt (obj.z = -74" _wp2060 "tritt2060: Nord-Schub endet nicht bei Tritt-Mitte z -74xx (Original -7408)")
+string(REGEX MATCH "SCHIEB: Bedingung erfuellt [(]obj[.]x = 3[0-9][0-9][)]" _ost2060 "${_wp2060}")
+if("${_ost2060}" STREQUAL "")
+    _fehler("tritt2060: Ost-Schub endet nicht bei Tritt-Mitte x 3xx in der Kerbe (Original 339) (wegplan_log.txt: ${_wp2060})")
+endif()
+_muss("FLAG (3,172) = 1" _wp2060 "tritt2060: Latch (3,172) nach dem Ost-Schub in die Kerbe nicht gesetzt (sub01 @0x01150; Original (3,172)=1)")
+string(REGEX MATCHALL "room=2060 p=2 obj=2 SCHUB-OK[^
+]*" _ok2060 "${_push}")
+list(LENGTH _ok2060 _n_ok2060)
+if(_n_ok2060 LESS 300)
+    _fehler("tritt2060: nur ${_n_ok2060} angenommene Schuebe an obj 2 (erwartet >= 300: Nord 453 + Ost 169 im Original)")
+endif()
+_darf_nicht("room=2060 p=2 obj=2 SCHUB-GESPERRT" _push "tritt2060: ein Schub am Tritt gesperrt (Original: 0 gesperrt)")
+_muss("[aot] DOOR FIRE slot=1 rect=(450,-8350,hw=650,hh=500) target_cut=15 spawn=(-12850,-5400,1600)" _dbg "tritt2060: Tuer 2060 slot 1 @0x00DBA (floor 1) von der Tritt-Oberkante nicht ausgeloest (Original: TUER, Spieler (-12850,-5400,1600))")
+_muss("loaded room2040.rdt" _dbg "tritt2060: ROOM2040 nicht geladen")
+message(STATUS "r36_dachkiste tritt2060: Raumstart (-3143,2075), ${_n_ok2060} Schuebe, Latch (3,172), Aufstieg, Tuer slot 1 -> ROOM2040 (wie im Original orig_2060_glied)")
+
+# ---- Nachbesserung 3 (Abnahme 2, P2/P3a): ROOM2050 ueber den ECHTEN WEG (ROOM2000 Band 1 -> Tuer slot 4 @0x0169E) fuer Leon
+# UND Elza (ROOM2001 -> ROOM2051). Y-Test FUN_8002cabc @0x8002cb84-cbc8: Leon/Elza auf Band 3 (y -5400) laufen bei z -6300
+# DURCH die Grundflaeche der Band-0-Kiste obj 1 (2052,0,-5552; x 1152..2952) wie das Original (orig_2050_abn2: (9002,-6417)
+# -> (-125,-6291)) — vorher klemmte der Port bei x 3402 = 2952 + 450 (R_abnahme_2.md A1). Danach derselbe Schubweg wie
+# fall2050 bis zum Fall (Messungen R_belege/nb3_2050echt, nb3_2051echt_elza; Original orig_2050_d/orig_2050_abn2).
+macro(_echt2050 _name _raum1 _raum2)
+    set(_subE "${_basis}/${_name}")
+    file(MAKE_DIRECTORY "${_subE}")
+    file(WRITE "${_subE}/wegplan.txt" "OBJ 6
+RAUM ${_raum1}
+GEGNERWEG
+WARTE 30
+GEHE -26250 10300 150
+BLICK 2048
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+RAUM ${_raum2}
+GEGNERWEG
+WARTE 30
+ZELLE 0 50
+ZELLE 0 49
+GEHE 9100 -6300
+GEHE -100 -6300
+GEHE -100 -8400
+GEHE -100 -11200
+GEHE -1000 -10800 120
+SCHIEB 3072 Z >= -7050 400
+WARTE 40
+GEHE -100 -8400
+GEHE -100 -5520
+GEHE -3100 -5520
+GEHE -3100 -6400 100
+SCHIEB 0 X >= 7550 1600
+WARTE 40
+GEHE 6100 -5600
+GEHE 7600 -5600 100
+SCHIEB 1024 Z <= -12000 1200
+WARTE 300
+ENDE
+")
+endmacro()
+_echt2050(echt2050 2000 2050)
+_lauf(echt2050 500 ${_grund} "RE15_WEGPLAN=${_subE}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
+      RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26100,8500,3072,1" "RE15_EXIT_AT=4200")
+macro(_echt2050_pruefen _name _raum2)
+    _muss("[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)" _dbg "${_name}: Tuer 2000/2001 slot 4 @0x0169E nicht ausgeloest")
+    _muss("loaded room${_raum2}.rdt" _dbg "${_name}: ROOM${_raum2} nicht geladen")
+    set(_wpE "")
+    if(EXISTS "${_sub}/wegplan_log.txt")
+        file(READ "${_sub}/wegplan_log.txt" _wpE)
+    endif()
+    string(REGEX MATCH "spieler=[(]-?[0-9][0-9]?[0-9]?,-6[0-9][0-9][0-9][)][^
+]*Befehl 17 beendet: angekommen" _ankunft "${_wpE}")
+    if("${_ankunft}" STREQUAL "")
+        _fehler("${_name}: GEHE (-100,-6300) kommt nicht an — Spieler auf Band 3 klemmt an der Band-0-Kiste obj 1 (Y-Test FUN_8002cabc @0x8002cb84-cbc8 fehlt?) (wegplan_log.txt: ${_wpE})")
+    endif()
+    _darf_nicht("spieler=[(]3402,-6[0-9][0-9][0-9][)]" _wpE "${_name}: Spieler bei x 3402 = Kistenkante + 450 (band-blinde Ausschiebung)")
+    string(REGEX MATCHALL "room=${_raum2} p=0 obj=6 SCHUB-OK[^
+]*" _okE "${_push}")
+    list(LENGTH _okE _n_okE)
+    if(_n_okE LESS 300)
+        _fehler("${_name}: nur ${_n_okE} angenommene Schuebe an obj 6 (erwartet >= 300)")
+    endif()
+    string(REGEX MATCH "room=${_raum2} p=0 AUSLOESER wort=0x3202 band=3 pos=[(]7[56][0-9][0-9],-5400,-11[67][0-9][0-9][)]" _ausE "${_fall}")
+    if("${_ausE}" STREQUAL "")
+        _fehler("${_name}: kein Fall-Ausloeser der Kiste obj 6 in r*[49] (+450) (objfall.txt: ${_fall})")
+    endif()
+    _muss("p=0 LANDUNG y=-3600 band=2" _fall "${_name}: Kiste obj 6 landet nicht auf Band 2")
+    message(STATUS "r36_dachkiste ${_name}: echte Tuer slot 4 -> ROOM${_raum2}, Ankunft '${_ankunft}', ${_n_okE} Schuebe, Ausloeser '${_ausE}' -> Fall, Landung Band 2")
+endmacro()
+_echt2050_pruefen(echt2050 2050)
+
+_echt2050(elza2051 2001 2051)
+_lauf(elza2051 500 ${_grund} RE15_PSELECT_AUTO_SWITCH=1 "RE15_WEGPLAN=${_subE}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
+      RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26100,8500,3072,1" "RE15_EXIT_AT=4200")
+_muss("Spieler-Familie PL04" _dbg "elza2051: Elza nicht gewaehlt (RE15_PSELECT_AUTO_SWITCH)")
+_muss("loaded room2001.rdt" _dbg "elza2051: ROOM2001 nicht geladen")
+_echt2050_pruefen(elza2051 2051)
+
 file(REMOVE "${_exe}")
-message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall, 2050-Fall, 2020-Durchgang + 2040-Weg gemessen")
+message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall, 2050-Fall (auch vom echten Weg, Leon + Elza), 2020-Durchgang, 2040-Weg und das 2060-Glied (Ruhe-Zweig, Latch, Tuer) gemessen")
