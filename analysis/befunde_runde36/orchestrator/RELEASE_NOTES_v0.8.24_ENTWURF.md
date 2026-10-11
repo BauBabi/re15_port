@@ -15,7 +15,9 @@ herunter (ROOM5020/5021: die Kiste faellt auf den Boden, man kann auf sie klette
 **Leons Kleidung** zeigt bei Caution/Danger wieder Blut und Risse. Seit die RE2-KI Standard ist (August),
 setzte kein Gegner mehr Wunden. Jetzt wieder: drei ueberlebte Zombie-Griffe auf dieselbe Seite,
 Hundebisse (so viele Wundpunkte je verlorenem HP wie in RE1.5), Kraehen. Elzas Flecken sitzen jetzt auf
-ihrer eigenen Kleidung.
+ihrer eigenen Kleidung. Zwei Nebenwirkungen: jeder ueberlebte Zombie-Griff spritzt jetzt auch unter der RE2-KI das
+Blut des Originals beim Abwurf; im Kampfbild von ROOM1190 (Leon seitlich) sitzt der erste Hundebiss auf der
+Westen-Rueckseite und wird erst sichtbar, wenn Leon der Kamera den Ruecken zeigt.
 
 **Schuesse.** Keine Waffe trifft mehr durch Tische, Baenke, Saeulen oder ueber den Konferenztisch, wenn
 man davor steht (wie im Original). Fressende Zombies sind unverwundbar, bis sie aufstehen (RE2); sie wachen
