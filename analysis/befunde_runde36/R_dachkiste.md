@@ -548,8 +548,11 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   ROOM1090/1091 obj 1 erreicht KEINE Absprungzelle, Kistenmitte bleibt in z [-15503, -15482] (notwendige Bedingung,
   Spielerfreiheit ueberschaetzt). **Seit Nachbesserung 1 (M3):** ROOM3050/3051 obj 1 soll = 1 — der Zensus MUSS einen
   Ausloeser finden und die erste Lage muss in der um 450 (@0x8002c128) erweiterten Absprungzelle r*[46] @0x00AD4 liegen
-  (x -25450..-22500, z -18500..-16350; gefunden (-23875,-18500)); ROOM2050/2051 obj 6 bleibt begruendete Diagnose
-  (soll = -1, Kommentar im Code). Die Sonde gibt den Schub-Pfad zur ersten Ausloeser-Lage aus.
+  (x -25450..-22500, z -18500..-16350; gefunden (-23875,-18500)). **Seit Nachbesserung 2 (N3):** ROOM2050/2051 obj 6
+  soll = 1 (Auslieferung und nach sub02) — der Zensus MUSS einen Ausloeser finden und die erste Lage muss in der um 450
+  erweiterten Absprungzelle r*[49] @0x00B5C liegen (x 5900..9200, z -14400..-11700; gefunden (7550,-12000)); der Fall
+  ist an der exe gemessen (nb2_2050fall_c) und am Original (orig_2050_*). Die Sonde gibt den Schub-Pfad zur ersten
+  Ausloeser-Lage aus.
 * `integration_r36_dachkiste` (`tests/integration/test_r36_dachkiste.cmake`, echte exe, Messkopie
   `re15_pc_r36r_haken_<id>.exe`, Grundumgebung wie test_r36_inventar.cmake, ein Wiederholungsversuch bei Fenster-Flattern):
   - `leon`: ECHTER WEG ROOM10F0 ((9,71)=1) -> Tritt -> Klettern -> Tuer slot 1 -> ROOM1090 -> Korridor -> 3 Schuebe. MUSS:
@@ -569,8 +572,15 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     spawn=(-19750,-9000,-19850)` + `loaded room2040.rdt`; Galerie (-1350,-19200) Band 5, Viereck in der Treppenzone ->
     MUSS stair_dbg.log `[stair] START dir=DOWN cur_band=5 target_band=3` + climb.txt `room=2040 ... pos=(x,-5400,z) ...
     band=3`. ROOM2040 ist ohne die Kiste in 2050 erreichbar und seine Galerie mit der Halle verbunden.
+  - **`fall2050` (NEU, Nachbesserung 2 / N3, Punkt 4):** Leon per RE15_PLAYER_POS (-1000,-10800) Blick 3072 Band 3, Wegplan
+    (vom Riegel in den Laufordner geschrieben, RE15_WEGPLAN): GEGNERWEG, ZELLE r0[50]/r0[49], SCHIEB Sued bis Kistenmitte
+    z >= -7050, Umweg in die Tasche, SCHIEB Ost bis x >= 7550, Umweg nach Sueden, SCHIEB Nord. MUSS: wegplan_log.txt
+    `ZELLE r0[50] LAUFZEIT: ... u0 0x00` (sub00 @0x01E94), `SCHIEB: Bedingung erfuellt (obj.z = -70xx)`, Ost-Ende
+    `obj.x = 75xx..764x` (Fenster [7550,7650)), push.txt >= 300x `room=2050 p=0 obj=6 SCHUB-OK`, objfall.txt `p=0 AUSLOESER
+    wort=0x3202 band=3 pos=(75xx/76xx,-5400,-116xx/-117xx)` + `p=0 zust 0->1`, letzte Lage p0 NICHT mehr `b3`.
   Er diskriminiert: ein Port, der den 1090-Schub annimmt oder die 1090-Kiste fallen laesst, oder in 3050 den Fall NICHT
-  ausloest, oder 2070 slot 5 / die 2040-Treppe verliert, faellt durch.
+  ausloest, oder die 2050-Kiste nicht bis in die Absprungzelle kommen laesst (z. B. eine zu enge Schubsperre an r*[43]/
+  r*[44]/r*[40] oder eine Laufzeit-Sperre an r*[50]), oder 2070 slot 5 / die 2040-Treppe verliert, faellt durch.
   ⛔ Makro-Falle beim Bau des Riegels (gemessen): Makro-Argumente werden im Makro ein zweites Mal ausgewertet, ein `\\(`
   im Aufruf wurde zur Regex-Gruppe `(` und `\\[x\\]` zum Klammerausdruck — der erste Lauf fand den gesperrten Schub
   "nicht", obwohl push.txt ihn enthielt. Regex-Argumente deshalb ohne Backslash (`[(]`, `[.]`), Klartext per string(FIND).
@@ -617,6 +627,17 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   Kerbe slot 7 @0x01F06 (-25000..-22950, -23200..-21150) -> Latch (3,93) -> Fall-Lage @0x01F40 -> Super Redhawk slot 6:
   Record-Beleg, derselbe Latch-Mechanismus wie 5020 (Spur A, exe gemessen); der Abstieg auf Band 0 in 3050 (Ereignis-
   Leiter sub00 Aot slot 2..5 @0x02044-2080 unter (3,82)) ist hier nicht gefahren.
+* **ROOM3050 am Original nicht gemessen (N5, Nachbesserung 2):** die Datenlage macht den Fall zum vorgesehenen Weg
+  (Super Redhawk slot 6 @0x01EC6 floor 1 nur auf der gefallenen Kiste, Latch sub01 @0x02184-2196), offen bleibt, ob das
+  Original denselben Schubpfad (West bis r*[31], Sued in r*[46]) zulaesst. Messweg liegt bereit: Spielstand per
+  `re15_quickload.py --triangle 2 --right 5 --postload 20` (Stage 3 beginnt bei JUMP 300; Tipper 0,04 s), dann
+  `orig_2050_push.py`-Muster mit K = Pool-Index von obj 1 und den Stationen West/Sued aus nb1_3050fall_d.
+* **Ersatzweg nach ROOM2040 ueber ROOM2020 (N2):** der Durchgang im Suedstreifen ist per SCD geschlossen und oeffnet sich
+  nur nach dem Hinweis in ROOM2010 (sub02 @0x008CA (3,114)) und dem Ereignis in 2020 (Aot slot 3 sce 3 @0x009AE -> sub02
+  @0x00ADE). An der exe gemessen ist der Durchgang nach dem Ereignis (Lauf nb2_2020durchgang, s. Nachbesserung 2 N2);
+  am Original NICHT gemessen (kein Spielstand mit (3,114)=1 in 2020; Messweg: JUMP 202, Flag per GDB setzen, Ereignis am
+  Rechteck ausloesen). Die Glieder 2030 Band 9 -> slot 3 -> 2060 (Abnahme 1 R2) und 2060 Tritt -> slot 1 -> 2040 (Spur A)
+  sind an der exe gemessen; der exe-Haenger in 2060 (R_abnahme_1.md Nachtrag) ist nicht Teil dieser Spur.
 
 ## Fuer den Nutzer
 
