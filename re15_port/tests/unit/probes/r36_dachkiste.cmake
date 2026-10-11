@@ -13,7 +13,8 @@
 #                         in z [-15503, -15482] (Bruestung r2[0] @0x01F20: kein Spieler noerdlich der Kiste
 #                         moeglich); ROOM3050/3051 obj 1 MUSS einen Ausloeser erreichen, erste Lage in der
 #                         Absprungzelle r*[46] @0x00AD4 (+-450 @0x8002c128) — Fall = vorgesehener Weg (Nachbesserung 1,
-#                         M3); ROOM2050/2051 obj 6 begruendete Diagnose (Original ungemessen, Punkt 4 / 4.3).
+#                         M3); ROOM2050/2051 obj 6 soll = 1, erste Lage in r*[49] @0x00B5C +-450 (Nachbesserung 2, N3:
+#                         Fall an der exe und am Original gemessen — orig_2050_d/orig_2050_abn2/orig_2050_fall).
 add_executable(probe_r36_dachkiste
     ${CMAKE_CURRENT_SOURCE_DIR}/probe_r36_dachkiste.c)
 target_link_libraries(probe_r36_dachkiste PRIVATE re15_engine re15_test_support)

@@ -1,0 +1,4 @@
+F669 room=2060 p=2 obj=2 SCHUB-GESPERRT spieler=(-3102,3051) rot=5072 lage=(-3125,2075) ziel=(-3125,2001) band=0
+  TREFFER-ZELLE r0[9]: x -2400..3150 z 2150..5350 typ 1 u0 0xff u1 0x00 fl 0x03
+F1613 room=2060 p=2 obj=2 SCHUB-GESPERRT spieler=(-3012,3052) rot=5264 lage=(-3125,2075) ziel=(-3125,2002) band=0
+  TREFFER-ZELLE r0[9]: x -2400..3150 z 2150..5350 typ 1 u0 0xff u1 0x00 fl 0x03

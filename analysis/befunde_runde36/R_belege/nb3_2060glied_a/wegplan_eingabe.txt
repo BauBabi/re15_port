@@ -1,0 +1,35 @@
+# Nachbesserung 3 (P1): das Ersatzweg-Glied ROOM2060 Ende-zu-Ende — Plan der Abnahme 2 (abn2/wp_2060echt2.txt): aus der
+# 2030-Ankunft (7600,0,3950) Band 0 um den Tritt herum, Nord-Schub von Sueden (Ruhe-Zweig hat ihn beim Raumstart auf
+# x -3143 ausgeschoben), Ost-Schub in die Kerbe slot 2 @0x00E92 -> Latch (3,172) sub01 @0x01150 -> Aufstieg (A) ->
+# Tuer slot 1 @0x00DBA (floor 1) -> ROOM2040 (Halle, Ankunft (-12850,-5400,1600) Band 3).
+OBJ 2
+RAUM 2060
+GEGNERWEG
+WARTE 30
+GEHE 5000 3950 150
+GEHE 5000 -6900 150
+GEHE -4700 -6900 150
+GEHE -4700 3250 150
+GEHE -3100 3300 120
+SCHIEB 1024 Z <= -7000 900
+WARTE 40
+GEHE -4700 -5000 150
+GEHE -4700 -7500 100
+SCHIEB 0 X >= 300 900
+WARTE 60
+GEHE 525 -5900 150
+GEHE 525 -6325 100
+BLICK 1024
+WARTE 20
+AKTION
+WARTE 150
+GEHE 450 -8100 120
+BLICK 1024
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 200
+ENDE

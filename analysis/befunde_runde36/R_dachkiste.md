@@ -58,6 +58,13 @@ das Tor unerreichbar (Softlock). Nutzer-Wortlaut der Spur A: "Das macht ein Fort
   2050-Fall an der exe gefahren (nb2_2050fall_a-c), ROOM2050 im Original per Debug-Menue geladen (room2050_orig.sav) und
   mit orig_2050_push.py gefahren (Diagnosen diag1/diag2, Laeufe a-d; d = vollstaendig), 2020-Durchgang an der exe gefahren
   (nb2_2020durchgang_b-f, Skript-Kontrolle), Sonde/Riegel/Dossier nachgezogen. Abschnitt "Nachbesserung 2".
+* 2026-10-11 ~21:40 Abnahme 2 (11f75e5a): P1-P4. Nachbesserung 3 (ab ~22:00): FUN_8002bd44/FUN_8003b558/FUN_8003da78/
+  FUN_8002cabc/FUN_8003b068/LAB_80040914 selbst disassembliert, zellschub_r36.c (Ruhe-Zweig + Spiegel) und Y-Test gebaut,
+  Pin unit_r36_dachkiste_zellschub, Zensus Port (206 Raeume) und Original (57 Spielstaende, savestate_zellschub_zensus.py),
+  exe-Laeufe nb3_2060glied a/b, nb3_2050echt, nb3_2051echt_elza (ein Elza-Lauf parallel zu DuckStation ungueltig:
+  XInput-Pad global), Original orig_2060_glied a/b (Glied Ende-zu-Ende inkl. Tuer) und orig_2050_fall (Zellen-Protokoll
+  + Ruhelage -13068, Spiegel-Semantik Bild 13), Riegel tritt2060/echt2050/elza2051, Dossier. Commits c4a70513, 39fa3225,
+  455a46e2, Abschluss.
 
 ## Punkt 1 — Messung an der exe (Leon ROOM1090, Elza ROOM1091)
 
@@ -588,7 +595,8 @@ P1 Ruhe-Zweig, P2 Y-Test, P4 Nicht-Quadrat-Zweig, P3 Dossier. Alle Disassemblate
 `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py dis <addr> <n>` aus `info/Re1.5/PSX.EXE` (Auslieferung,
 @0x80026e4c `08 00 e0 03`) gelesen; die Zitate unten sind die Instruktionen, nicht das Decompilat. Scratchpad der
 Abnahme 2 (`abn2/`, Spielstaende room2060_orig.sav/room3050_orig.sav, Skripte, Laeufe) liegt im selben Sitzungsordner
-und wurde direkt nachgelesen.
+und wurde direkt nachgelesen; die hier zitierten Stuecke sind nach `R_belege/` kopiert (room2060_orig.sav, room3050_orig.sav,
+abn2_orig_2060b/log.txt + orig_2060b_push.py, abn2_orig_3050b/log.txt, abn2_2060echt2/push.txt).
 
 ### P1 — Ruhe-Zweig des Objekt-Passes: FUN_8003b558(obj,2) je Bild + Ausschiebung FUN_8003da78
 
@@ -740,7 +748,7 @@ gesperrt, FALL-AUSLOESER obj=(-24070,-7200,-18492), Endlage (-24070,0,-15631) Ba
 
 ### Messung nachher (P1, P2, P4)
 
-* **Pin `unit_r36_dachkiste_zellschub`** (tests/unit/test_r36_dachkiste_zellschub.c, 25 Pruefungen): ROOM2060 obj 2
+* **Pin `unit_r36_dachkiste_zellschub`** (tests/unit/test_r36_dachkiste_zellschub.c, 24 Pruefungen): ROOM2060 obj 2
   Record (-3125,2075) -> nach Bild 1 (-3143,2075), Spiegel (-3143,2075), stabil ueber vier Bilder (davon eines ueber
   `re15_zellschub_nach_pass`), kein anderes Objekt bewegt; FUN_8003da78 Code 0 unbewegt/Code 1/Code 2/Code 3/Code 0
   bewegt (Rueckstellung, Rueckgabe 0)/Code 2 mit |a3| > 400 — alle sechs Zweige mit den Zahlen des Tritts; P4-Zelle;
@@ -788,8 +796,8 @@ gesperrt, FALL-AUSLOESER obj=(-24070,-7200,-18492), Endlage (-24070,0,-15631) Ba
   Lauf b `nb3_2060glied`, s. u.
 * **exe, 2060-Glied Lauf b (`R_belege/nb3_2060glied`, Plan `wegplan_2060_glied.txt` = Original-Weg, Nord bis z <= -7400):**
   push.txt **`F1 room=2060 p=2 obj=2 RUHE-AUSSCHIEBUNG lage=(-3125,2075) -> (-3143,2075) band=0 y=0` + `ZELLE [9]: x
-  -2400..3150 z 2150..5350 r=675`** (der Ruhe-Zweig im ersten Bild, dieselbe Zelle wie der Original-Haltepunkt
-  0x80119a68/0x80123984-Muster), wegplan_log `FLAG (3,172) = 0` (F62), `SCHIEB ... (obj.z = -7402)` (F1141; Original
+  -2400..3150 z 2150..5350 r=675`** (der Ruhe-Zweig im ersten Bild; dieselbe Zelle, die der Original-Haltepunkt
+  in orig_2060b_abn2 als a0=80119a68 beim gesperrten Ost-Schub meldete), wegplan_log `FLAG (3,172) = 0` (F62), `SCHIEB ... (obj.z = -7402)` (F1141; Original
   -7408), `(obj.x = 337)` (F1507; Original 339), **`FLAG (3,172) = 1`** (F1568; Original nach dem Ost-Schub 1), push.txt
   657x `p=2 obj=2 SCHUB-OK`, 0 GESPERRT; objfall.txt `F1474 KERBE m0b=2`; AKTION bei (293,-6273) Blick 1024 ->
   Aufstieg -> (293,-1800,-7421) Band 1; oben GEHE (390,-7900) -> **(349,-1800,-7777)** = Eingrenzung (-7402 - 600 + 225;
@@ -902,6 +910,31 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   ⛔ Makro-Falle beim Bau des Riegels (gemessen): Makro-Argumente werden im Makro ein zweites Mal ausgewertet, ein `\\(`
   im Aufruf wurde zur Regex-Gruppe `(` und `\\[x\\]` zum Klammerausdruck — der erste Lauf fand den gesperrten Schub
   "nicht", obwohl push.txt ihn enthielt. Regex-Argumente deshalb ohne Backslash (`[(]`, `[.]`), Klartext per string(FIND).
+* **Nachbesserung 3 (Abnahme 2: P1/P2/P4), neue Pins (alle in `tests/unit/probes/r36_dachkiste.cmake`):**
+  - `unit_r36_dachkiste_zellschub` (`tests/unit/test_r36_dachkiste_zellschub.c pin`, 24 Pruefungen): (zellschub) ROOM2060
+    obj 2 Record (-3125,2075) -> nach Bild 1 (-3143,2075) + Spiegel (-3143,2075), stabil ueber vier Bilder (eines davon ohne
+    Objekt-Pass ueber `re15_zellschub_nach_pass`), kein anderes Objekt bewegt; FUN_8003da78 synthetisch mit den Zahlen des
+    Tritts: Code 0 unbewegt (kleinerer Betrag), Code 1 (|t0| <= 400 -> x), Code 2 (|a3| <= 400 -> z), Code 3 (kleinerer
+    Betrag), Code 0 bewegt (Rueckstellung auf den Spiegel, Rueckgabe 0), Code 2 mit |a3| > 400 (kleinerer Betrag);
+    (quadrat) Zelle [1] von ROOM2060 x -2100..2950 z -5550..5350, Objektmitte (425,-6190): r = hx GESPERRT, r = hz FREI,
+    100 weiter noerdlich beide gesperrt; (ytest) ROOM2050 Band-0-Kiste obj 1: Spieler y -5400 keine Ausschiebung, y 0 ->
+    x 3402; Aktor dito; Schiebe-Modus Band 3 kein Schub, Band 0 Kiste -> 1950. Diskriminiert: ein Port ohne Ruhe-Zweig
+    (Tritt bleibt -3125), ohne die +18/400/kleinerer-Betrag-Regeln, ohne r = hz oder ohne Y-Test faellt durch.
+  - `test_r36_dachkiste_zellschub diag`: Zensus ueber alle RDTs (206 Raeume, 513 Objekte): nur 2060/2061 obj 2 bewegt.
+  - `integration_r36_dachkiste` um drei Laeufe erweitert (TIMEOUT 1800): **`tritt2060`** (Wegplan = Original-Weg: MUSS push.txt
+    `p=2 obj=2 RUHE-AUSSCHIEBUNG lage=(-3125,2075) -> (-3143,2075)` + `ZELLE [9]: x -2400..3150 z 2150..5350 r=675`,
+    objfall.txt `p2 (-3143,0,2075) b0`, wegplan_log `FLAG (3,172) = 0` -> Nord `obj.z = -74xx` -> Ost `obj.x = 3xx` ->
+    `FLAG (3,172) = 1`, >= 300x SCHUB-OK, kein GESPERRT, `[aot] DOOR FIRE slot=1 rect=(450,-8350,hw=650,hh=500)
+    target_cut=15 spawn=(-12850,-5400,1600)`, `loaded room2040.rdt`); **`echt2050`** (Leon ROOM2000 -> `DOOR FIRE slot=4
+    ... spawn=(9100,-5400,4100)` -> `loaded room2050.rdt`, `GEHE (-100,-6300)` angekommen mit x in -999..999 (Regex), kein
+    `spieler=(3402,-6xxx)`, >= 300x SCHUB-OK, `AUSLOESER wort=0x3202 band=3 pos=(75xx/76xx,-5400,-116xx/-117xx)`,
+    `LANDUNG y=-3600 band=2`); **`elza2051`** (RE15_PSELECT_AUTO_SWITCH=1: `Spieler-Familie PL04`, `loaded room2001.rdt`,
+    dieselben MUSS mit ROOM2051). Messungen: R_belege/nb3_2060glied, nb3_2050echt, nb3_2051echt_elza; Original
+    orig_2060_glied (b), orig_2050_fall.
+* **Gezielte Laeufe, Stand Nachbesserung 3** (Bau `local_build.sh configure` + `build` -> LOCAL-BUILD-OK):
+  - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zellschub|unit_1090_npc_prop_push|unit_r36_dachkiste_zensus"`:
+    `100% tests passed, 0 tests failed out of 3` (7.71 s).
+  - Regression nach Vorgabe des Orchestrators: `ctest --test-dir re15_port/build -R "r36_dachkiste|r36_objfall|r36_klettern|klettern|objfall|1090|10f0|2050|2060|3050|sca_collision|collision|push|prop_|tritt|kiste|kerbe|unit_r36_|r35_" --timeout 900 -j 4` (226 Tests, darunter 29 Integrationslaeufe inkl. `integration_r36_dachkiste` mit elf Laeufen): ERGEBNIS_FOLGT
 * Gezielte Laeufe (KEINE volle Suite im Spurbaum), Stand Nachbesserung 2 (81d02dd3+, Bau LOCAL-BUILD-OK):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
     `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 14.89 sec; mit den 2050-Pins der Sonde).

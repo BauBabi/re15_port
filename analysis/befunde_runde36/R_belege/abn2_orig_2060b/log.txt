@@ -1,0 +1,69 @@
+DuckStation gestartet {'48844'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+  Pool  0: w0 00000099 pos (5775,-4860,5325) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  1: w0 00000099 pos (-5525,-4860,825) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  2: w0 00000001 pos (-3143,0,2075) faellt=0 z=0 band=0 box [50, -900, 0, 675, 900, 600]
+  Pool  3: w0 00000101 pos (-19554,0,22684) faellt=0 z=0 band=0 box [0, -900, 0, 900, 900, 900]
+  Pool  4: w0 00000101 pos (19571,0,-22542) faellt=0 z=0 band=0 box [0, -900, 0, 900, 900, 900]
+  Pool  5: w0 0000000b pos (-24433,10,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  6: w0 0000000b pos (-21333,10,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  7: w0 0000000b pos (-18333,10,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  8: w0 0000000b pos (-15133,10,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  9: w0 00000000 pos (0,0,0) faellt=0 z=0 band=0 box -
+  Pool 10: w0 00000000 pos (0,0,0) faellt=0 z=0 band=0 box -
+  Pool 11: w0 00000000 pos (0,0,0) faellt=0 z=0 band=0 box -
+  Pool 12: w0 00000000 pos (0,0,0) faellt=0 z=0 band=0 box -
+  Pool 13: w0 00000000 pos (0,0,0) faellt=0 z=0 band=0 box -
+  Pool 14: w0 00000000 pos (0,0,0) faellt=0 z=0 band=0 box -
+  Pool 15: w0 00000000 pos (0,0,0) faellt=0 z=0 band=0 box -
+Spieler: (7600, 0, 3950, 0, 0, 0) K = 2 HP: 100
+Entity 0 @800acc2c: w0 0801 typ 0x25 pos (5800, -3600, 6400) -> Aktiv-Bit geloescht
+Entity 1 @800ace20: w0 0801 typ 0x25 pos (-6600, -3600, 800) -> Aktiv-Bit geloescht
+g_active_count @0x800aca4e: 2 -> 0
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Z0 8003da78: b'OK'
+Drehsinn: R 0.4 s -> dBlick = 1056
+START spieler=(7600,0,3950) blick=2112 band=0 sub=3 | obj=(-3143,0,2075) faellt=0 z=0 band=0 n=0
+== Weg wie der Port-Lauf 2060echt2: Ostseite nach Norden, Nordgasse nach Westen, Westgasse nach Sueden (am Tritt westlich vorbei), vor die Suedseite des Tritts ==
+  GEHE (5000,3950): angekommen bei (5015,3968), Schub-Ereignisse unterwegs 0
+  GEHE (5000,-6900): angekommen bei (4920,-6984), Schub-Ereignisse unterwegs 0
+  GEHE (-4700,-6900): angekommen bei (-4640,-6876), Schub-Ereignisse unterwegs 0
+  GEHE (-4700,3250): angekommen bei (-4774,3223), Schub-Ereignisse unterwegs 0
+  GEHE (-3100,3300): angekommen bei (-3055,3338), Schub-Ereignisse unterwegs 0
+== Schub: nach Norden (Blick 1024) bis Tritt-Mitte z <= 1900 oder gesperrt/Stillstand (Port: jeder Schub gesperrt, TREFFER r0[9] x -2400..3150 z 2150..5350) ==
+  GEHE (-3118,3300): angekommen bei (-3055,3338), Schub-Ereignisse unterwegs 0
+NORD Runde 0 VOR spieler=(-3055,0,3338) blick=1056 band=0 sub=3 | obj=(-3143,0,2075) faellt=0 z=0 band=0 n=0
+  SCHUB-OK obj=(-3143, 0, 2000, 0, 0, 0, 9) spieler=(-3093, 0, 3050, 1056, 0, 1) s4/s5=(-3143,2075)
+NORD Runde 0 NACH (Bedingung) spieler=(-3068,0,2902) blick=1048 band=0 sub=8 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=9
+NORD: Schub angenommen 19 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== Gegenprobe: Schub nach Osten aus der Westseite (Blick 0) ==
+  GEHE (-4643,1852): angekommen bei (-4690,1917), Schub-Ereignisse unterwegs 0
+OST Runde 0 VOR spieler=(-4690,0,1917) blick=40 band=0 sub=3 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+  TREFFER-ZELLE a0=80119a68 obj=800b40c0: x -2400..3150 z 2150..5350 typ 1 u0 0xff u1 0x00 fl 0x03 | obj=(-3070, 0, 1852, 0, 0, 0, 9)
+  SCHUB-GESPERRT obj=(-3143, 0, 1852, 0, 0, 0, 9) spieler=(-4145, 0, 1865, 40, 0, 1) s4/s5=(-3143,1852)
+OST Runde 0 NACH (Stillstand) spieler=(-4218,0,1411) blick=40 band=0 sub=1 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=99
+  GEHE (-4643,1852): angekommen bei (-4620,1864), Schub-Ereignisse unterwegs 0
+OST Runde 1 VOR spieler=(-4620,0,1864) blick=-8 band=0 sub=3 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+  TREFFER-ZELLE a0=80119a68 obj=800b40c0: x -2400..3150 z 2150..5350 typ 1 u0 0xff u1 0x00 fl 0x03 | obj=(-3067, 0, 1852, 0, 0, 0, 9)
+  SCHUB-GESPERRT obj=(-3143, 0, 1852, 0, 0, 0, 9) spieler=(-4142, 0, 1869, -8, 0, 1) s4/s5=(-3143,1852)
+OST Runde 1 NACH (Stillstand) spieler=(-4218,0,1884) blick=-8 band=0 sub=1 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=99
+OST: Schub angenommen 0 x, gesperrt 2 x, Fall-Ausloeser 0 x, Ende: Stillstand
+NACH-FALL 0 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 1 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 2 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 3 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 4 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 5 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 6 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 7 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 8 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 9 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 10 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+NACH-FALL 11 spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+ENDE spieler=(-4218,0,1884) blick=-8 band=0 sub=0 | obj=(-3143,0,1852) faellt=0 z=0 band=0 n=0
+Ereignisse gesamt: 21 Fall-Ausloeser: 0 HP: 100
+settings.ini zurueckgeschrieben (EnableGDBServer = false: False)
