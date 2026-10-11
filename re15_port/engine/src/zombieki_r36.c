@@ -195,6 +195,13 @@ static int16_t s_r36_pad_idx[RE15_ACTOR_MAX];
 #define R36_FEST_ANKER 400
 static uint16_t s_r36_1de[RE15_ACTOR_MAX], s_r36_fest[RE15_ACTOR_MAX];
 static int32_t  s_r36_anker_x[RE15_ACTOR_MAX], s_r36_anker_z[RE15_ACTOR_MAX];
+static uint16_t s_r36_nah[RE15_ACTOR_MAX];                                     /* NB5: Bilder NAH im Anker (Jagd, ausser Bissweite) */
+static int32_t  s_r36_nanker_x[RE15_ACTOR_MAX], s_r36_nanker_z[RE15_ACTOR_MAX];
+static uint8_t  s_r36_nahumweg[RE15_ACTOR_MAX];                                /* NB5: Nah-Umweg zum freien Bissplatz aktiv */
+#define R36_NAH_START 354
+static int      s_r36_nah_k = R36_NAH_START;                                   /* NUR Sonden: Schwelle (Messreihe), 0 = aus */
+void re15_r36_affen_nah_enable(int an)                                          /* NUR Sonden: 0 aus (Stand NB4), 1 an, >= 10: Schwelle an - 10 */
+{ s_r36_nah_k = (an >= 10) ? an - 10 : (an ? R36_NAH_START : 0); memset(s_r36_nahumweg, 0, sizeof s_r36_nahumweg); }
 static uint8_t  s_r36_vortritt[RE15_ACTOR_MAX];   /* NB4: NAHER Gorilla, der einem FERN haengenden den einzigen Weg versperrt */
 #define R36_VORTRITT_START (R36_FEST_START / 2)   /* NB4, s. re15_r36_affen_fest_takt */
 static int      s_r36_vortritt_an = 1;            /* NUR Sonden: 0 = Stand NB3 (Gegenprobe Mangel 1 der Abnahme 3) */
@@ -208,7 +215,8 @@ static void r36_padsuche_reset(const re15_actor_t *e)
 {
     long slot = e - g_actors;
     if (slot >= 0 && slot < RE15_ACTOR_MAX) { s_r36_padsuche_aktiv[slot] = 0; s_r36_pad_idx[slot] = -1;
-                                              s_r36_1de[slot] = 0; s_r36_fest[slot] = 0; s_r36_vortritt[slot] = 0; }   /* +0x1de INIT @0x8011706c */
+                                              s_r36_1de[slot] = 0; s_r36_fest[slot] = 0; s_r36_vortritt[slot] = 0; s_r36_nah[slot] = 0;
+                                              s_r36_nahumweg[slot] = 0; }   /* +0x1de INIT @0x8011706c */
 }
 /* NB4 (Abnahme 3, Mangel 1) — STAU ZWEIER GORILLAS. GEMESSEN (exe Leon (-24452,11938)/(-22288,11938), Sonde `lage`, und im
  * ORIGINAL per GDB ab derselben Lage, F_nb4/g_o3_stau.txt): Gorilla 1 steht NAH (d 3298) in der Jagd an der #21-Ecke
@@ -235,6 +243,7 @@ void re15_r36_affen_fest_takt(const re15_actor_t *e)
     s_r36_1de[slot] = e->sca_wall_hit ? (uint16_t)(s_r36_1de[slot] + 1) : 0;          /* +0x1de @0x80117448-6c */
     int sub = e->sub_state_1 & 31;
     if (sub != 3 && sub != 4) s_r36_vortritt[slot] = 0;                               /* NB4: Vortritt endet mit Sub 3/4 (Angriff, Sprung) */
+    if (sub != 3 || e->state != 1) s_r36_nahumweg[slot] = 0;                          /* NB5: Nah-Umweg endet mit der Jagd (Biss, Griff, Treffer) */
     if ((sub != 3 && sub != 4)                                                        /* Anker-Messung: +0x1de setzt bei JEDEM Bild ohne
                                                                                        * Kontakt zurueck — gemessen: Gorilla in der Ecke #20/#21
                                                                                        * (-23302,13100) flackert klemme 1/0, +0x1de kommt nie hoch */
@@ -243,6 +252,10 @@ void re15_r36_affen_fest_takt(const re15_actor_t *e)
         || labs((long)e->x - s_r36_anker_x[slot]) + labs((long)e->z - s_r36_anker_z[slot]) >= R36_FEST_ANKER) {
         s_r36_anker_x[slot] = e->x; s_r36_anker_z[slot] = e->z; s_r36_fest[slot] = 0;
     } else if (s_r36_fest[slot] < 0xffffu) s_r36_fest[slot]++;
+    if (e->state != 1 || sub != 3 || (uint16_t)e->dog_dist >= 0x1771u || (uint16_t)e->dog_dist < 0xbb8u   /* NB5: NAH-Anker (Jagd, ausser Bissweite) */
+        || labs((long)e->x - s_r36_nanker_x[slot]) + labs((long)e->z - s_r36_nanker_z[slot]) >= R36_FEST_ANKER) {
+        s_r36_nanker_x[slot] = e->x; s_r36_nanker_z[slot] = e->z; s_r36_nah[slot] = 0;
+    } else if (s_r36_nah[slot] < 0xffffu) s_r36_nah[slot]++;
     if (!s_r36_padsuche_an || !s_r36_vortritt_an || (sub != 3 && sub != 4) || (uint16_t)e->dog_dist < 0x1771u   /* NB4: FERN ... */
         || s_r36_fest[slot] < (uint16_t)s_r36_vortritt_k) return;                   /* ... und seit R36_VORTRITT_START Bildern im Anker */
     for (int s = 0; s < RE15_ACTOR_MAX; s++) {
@@ -599,6 +612,46 @@ static int r36_uw_route(const re15_actor_t *e, const re15_actor_t *pl, int slot)
     return 1;
 }
 
+/* NB5 (Abnahme 4, Mangel 1): NAH-UMWEG zum naechsten FREIEN BISSPLATZ. Ziel = der Rasterknoten der eigenen Komponente
+ * (zu Fuss), der Leon am naechsten liegt, in Bissweite (< 0xbb8 = a804-Radius @0x80117a60) und von keinem anderen lebenden
+ * Gorilla belegt (Abstand >= Summe der Radien box[6] @0x80121356 = Koerperkontakt). Kein solcher Knoten -> 0 (Original:
+ * der Gorilla wartet). Weg = A* zu Fuss (keine Pads, s. Vortritt), Zielpunkt wie r36_uw_route Modus 1. */
+static int r36_belegt_koerper(int k, int slot)
+{
+    const re15_actor_t *e = &g_actors[slot];
+    for (int s = 0; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *o = &g_actors[s];
+        if (s == slot || !o->active || o->type != 0x27u || o->state != 1) continue;
+        int64_t kx = (int64_t)r36_kx(k) - o->x, kz = (int64_t)r36_kz(k) - o->z, rr = (int64_t)o->hit_radius_min + e->hit_radius_min;
+        if (kx * kx + kz * kz < rr * rr) return 1;
+    }
+    return 0;
+}
+static int r36_nah_route(const re15_actor_t *e, const re15_actor_t *pl, int slot)
+{
+    s_r36_pad_idx[slot] = -1;
+    if (!r36_uw_bauen((int)e->floor, (int32_t)e->hit_radius_min, 4u)) return 0;
+    int g = r36_uw_knoten(e->x, e->z, 3 * s_uw.r / 2, s_uw.r, 4u);
+    if (g < 0) return 0;
+    int t = -1; int64_t bd = 3000LL * 3000LL;                                       /* Bissweite a804(0xbb8,..) @0x80117a60 */
+    for (int k = 0; k < s_uw.nx * s_uw.nz; k++) {
+        if (!s_uw.frei[k] || s_uw.komp[k] != s_uw.komp[g]) continue;
+        int64_t ex = (int64_t)r36_kx(k) - pl->x, ez = (int64_t)r36_kz(k) - pl->z, dk = ex * ex + ez * ez;
+        if (dk < bd && !r36_belegt_koerper(k, slot)) { bd = dk; t = k; }
+    }
+    if (t < 0 || t == g || !r36_uw_astern(g, t, NULL, 0, NULL)) return 0;
+    int len = 0;
+    for (int k = t; k != (int)R36_UW_KEINER && len < R36_UW_MAX; k = s_uw_pred[k]) s_uw_heap[len++] = (uint16_t)k;
+    for (int i = 0; i < len / 2; i++) { uint16_t q = s_uw_heap[i]; s_uw_heap[i] = s_uw_heap[len - 1 - i]; s_uw_heap[len - 1 - i] = q; }
+    int wahl = -1, bis = len - 1;                                                  /* Zielpunkt wie r36_uw_route Modus 1 */
+    while (bis > 1 && (int64_t)bis * s_uw.st > 4 * (int64_t)s_uw.r) bis--;
+    for (int i = bis; i >= 1 && wahl < 0; i--)
+        if (r36_uw_strecke_frei(g, s_uw_heap[i])) wahl = s_uw_heap[i];
+    if (wahl < 0) wahl = s_uw_heap[(len > 1) ? 1 : 0];
+    s_r36_ziel_x[slot] = r36_kx(wahl); s_r36_ziel_z[slot] = r36_kz(wahl);
+    return 1;
+}
+
 /* Mitte des Gorillas in einem 0x10-Pad-Rechteck (Band des Gorillas)? */
 static int r36_im_pad10(const re15_actor_t *e)
 {
@@ -626,6 +679,11 @@ int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub)
                                                                                        * Original-Blindsprung-Schleife vor #19 (Seed 0x9075ea6c, 1789
                                                                                        * Bilder Sub 7) bzw. an den Ost-Pad-Anlauf (Seed 0x95e8eee7,
                                                                                        * 2346 Bilder Sub 4) — FERN gilt der Umweg selbst */
+    }
+    if (sub == 3 && s_r36_nah_k > 0 && (s_r36_nahumweg[slot] || s_r36_nah[slot] >= (uint16_t)s_r36_nah_k)) {   /* NB5: Nah-Umweg */
+        uint8_t m = ((uint16_t)e->dog_dist < 0x1771u && (uint16_t)e->dog_dist >= 0xbb8u) ? (uint8_t)r36_nah_route(e, pl, slot) : 0u;
+        if (m == 1) { s_r36_nahumweg[slot] = 1; s_r36_padsuche_aktiv[slot] = 1; return 0; }
+        if (s_r36_nahumweg[slot]) { s_r36_nahumweg[slot] = 0; s_r36_padsuche_aktiv[slot] = 0; }
     }
     if (sub == 3 && (e->dog_flags & 1)) { s_r36_padsuche_aktiv[slot] = 0; return 0; }   /* Jagd mit Sicht: Original (fern+Sicht -> Sub 4
                                                                                        * @0x80117c48-54) */
@@ -713,6 +771,12 @@ void re15_r36_affen_fest_lesen(int slot, int *h1de, int *fest, int *vortritt)
     *h1de = 0; *fest = 0; *vortritt = 0;
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     *h1de = s_r36_1de[slot]; *fest = s_r36_fest[slot]; *vortritt = s_r36_vortritt[slot];
+}
+
+/* NUR Sonden (NB5): NAH-Anker-Zaehler des Slots lesen. */
+int re15_r36_affen_nah_lesen(int slot)
+{
+    return (slot >= 0 && slot < RE15_ACTOR_MAX) ? (int)s_r36_nah[slot] : 0;
 }
 
 /* NUR Sonden: Umweg-Ziel und Pad des Slots lesen. */

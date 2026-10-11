@@ -301,6 +301,113 @@ static int fails = 0, checks = 0;
 #define CHECK(c, ...) do { checks++; if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } \
                            else { printf("ok:   " __VA_ARGS__); printf("\n"); } } while (0)
 
+/* ---- NB5 (Abnahme 4, Mangel 1): der KANONISCHE Ankunftskampf mit dem Harness des Spur-J-Riegels `szene`
+ * (test_r35_affen.c teil_szene: Bildfolge mit Letterbox/Cine/Settle, PL00-Skelett, Raumeintritt (-22604,14455)) —
+ * dieselbe Bildfolge, damit die Nah-Wartezeit von Slot 2 vor seinem ersten Biss (Original +521 nach der Freigabe,
+ * jnb1/g_orig.txt) hier mit dem NAH-Anker-Zaehler des Ports gemessen werden kann. */
+static re15_emd_skeleton_t  s_pl00_skel;
+static re15_emd_animation_t s_pl00_anim;
+static int                  s_cine_was = 0;
+static int pl00_laden(void)
+{
+    static int ok = -1;
+    if (ok >= 0) return ok;
+    char p[600]; size_t esz = 0, rsz = 0;
+    snprintf(p, sizeof p, "%s/PLD/PL00.EDD", RE15_ASSET_PSX_DIR); uint8_t *edd = slurp(p, &esz);
+    snprintf(p, sizeof p, "%s/PLD/PL00.EMR", RE15_ASSET_PSX_DIR); uint8_t *emr = slurp(p, &rsz);
+    ok = (edd && emr && re15_emd_parse_animation(edd, esz, &s_pl00_anim) == 0 &&
+          re15_emd_parse_skeleton(emr, rsz, &s_pl00_skel) == 0) ? 1 : 0;
+    return ok;
+}
+static void frame_j(uint16_t held, uint16_t edge)
+{
+    const unsigned char *raw; int len, id;
+    scd_vm_tick();
+    re15_actor_step_all_walkers();
+    re15_letterbox_tick(re15_game_flag_get(1, 27));
+    {
+        int cine = re15_cine_active();
+        if (cine) { g_scd.player_mode = 2; g_scd.letterbox_countdown = -1; }
+        else if (s_cine_was) g_scd.letterbox_countdown = 15;
+        s_cine_was = cine;
+        if (g_scd.letterbox_countdown > 0 && --g_scd.letterbox_countdown == 0) {
+            g_scd.player_mode = 0;
+            re15_aot_settle_at(g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+        }
+    }
+    re15_msg_tick(&raw, &len, &id);
+    if (re15_cam_present_tick()) s_shown = (int)g_scd.cam_id;
+    s_ctx.active_cut  = s_shown;
+    s_ctx.pad_current = held;
+    s_ctx.pad_pressed = edge;
+    re15_game_step(&s_ctx);
+    scd_audio_event_t ev;
+    while (scd_audio_queue_pop(&ev)) { }
+}
+static int room_boot_j(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t cut)
+{
+    char rp[600];
+    snprintf(rp, sizeof rp, "%s/STAGE%u/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, (unsigned)(room >> 12), (unsigned)room);
+    free(s_raw); s_raw = slurp(rp, &s_rawsz);
+    if (!s_raw || s_rawsz < 0x100) return -1;
+    if (re15_rdt_parse(s_raw, s_rawsz, &s_rdt) < 0) return -1;
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;
+    memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = cut;
+    re15_game_state_t flags_vorher = g_game;
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    g_game = flags_vorher;
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    re15_player_cmd_reset();
+    re15_pauseflags_clear();
+    g_letterbox_level = 0;
+    g_current_room_id = room; g_room_change.pending = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    pl->x = px; pl->z = pz; pl->rot_y = rot;
+    re15_collision_set_band(0);
+    s_shown = cut; s_cine_was = 0;
+    g_scd.player_mode = 0; g_scd.letterbox_countdown = 0;
+    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    scd_room_reenter(&s_rdt, pl->x, pl->z, cut);
+    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    return 0;
+}
+/* kanon <spur>: Ankunftskampf wie J `szene` bis zum Tod; je Gorilla der groesste NAH-Anker-Zaehler vor seinem ersten
+ * Angriff und insgesamt, Freigabe, erster Angriff je Slot, Bisse (HP-Abfall nach der Freigabe) relativ zur Freigabe. */
+typedef struct { int frei, tod, erst[2], nahmax[2], nahmax_vor[2], nahmax_f[2], nb, biss[64]; } kanon_t;
+static kanon_t kanon(int spur)
+{
+    kanon_t r; memset(&r, 0, sizeof r); r.frei = -1; r.tod = -1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    if (room_boot_j(0x11C0, -22604, 14455, 0, 0) != 0 || !bank_laden_27() || !pl00_laden()) { printf("kanon: Aufbau fehlgeschlagen\n"); return r; }
+    s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim = &s_pl00_anim;
+    int hp_alt = pl->hp, st_alt = pl->state;
+    for (int f = 1; f < 3200; f++) {
+        frame_j(0, 0);
+        if (r.frei < 0 && st_alt == 4 && pl->state == 1 && f > 300) r.frei = f;
+        if (r.frei >= 0 && pl->hp < hp_alt && r.nb < 64) r.biss[r.nb++] = f - r.frei;
+        hp_alt = pl->hp; st_alt = pl->state;
+        for (int k = 0; k < 2; k++) {
+            re15_actor_t *e = aktor_vom_typ(0x27, k); if (!e) continue;
+            int sub = e->sub_state_1 & 31, n = re15_r36_affen_nah_lesen((int)(e - g_actors));
+            if (!r.erst[k] && r.frei >= 0 && (sub == 5 || sub == 6 || sub == 8 || sub == 15)) r.erst[k] = f;
+            if (n > r.nahmax[k]) { r.nahmax[k] = n; r.nahmax_f[k] = f; }
+            if (!r.erst[k] && n > r.nahmax_vor[k]) r.nahmax_vor[k] = n;
+            if (spur > 0 && r.frei >= 0 && (f % spur) == 0) {
+                long long dx = e->x - pl->x, dz = e->z - pl->z;
+                printf("  F%d (+%d) S%d st=%d/%d/%d/%d @(%d,%d) d%d k%d L%d nah%d | Leon (%d,%d) hp %d\n", f, f - r.frei, (int)(e - g_actors), e->state,
+                       e->sub_state_1, e->sub_state_2, e->sub_state_3, (int)e->x, (int)e->z, isqrt64(dx * dx + dz * dz), e->sca_wall_hit != 0,
+                       e->dog_flags & 1, n, (int)pl->x, (int)pl->z, (int)pl->hp);
+            }
+        }
+        if (r.frei >= 0 && pl->hp < 0) { r.tod = f - r.frei; break; }
+    }
+    return r;
+}
+
 int main(int argc, char **argv)
 {
     /* "fest <x> <z> [bilder]": Leon steht still auf (x,z) und blickt auf Gorilla 1 — Spur je 30 Bilder + Summe
@@ -326,13 +433,55 @@ int main(int argc, char **argv)
         printf("       x von -33000 bis 22000, Schritt %d, Radius %d; # = Klemme verschiebt, p/P = 0x10-Pad frei/geklemmt, q/Q = 0x20-Pad\n", st, rad);
         return 0;
     }
+    if (argc > 3 && strcmp(argv[1], "platz") == 0) {   /* NB5 Sonde: platz <lx> <lz> [schritt]: BISSPLAETZE um Leon — alle Lagen,
+                                                          * an denen die Original-Klemme (FUN_8003b0a4-Zwilling, Radius box[6] 1600
+                                                          * @0x80121356, Band 0, Maske 4, Vorlage + 1 wie r36_frei_bei) einen Gorilla
+                                                          * NICHT verschiebt und die naeher als 0xbb8 (a804 @0x80117a60) an Leon liegen;
+                                                          * Durchmesser dieser Menge = groesster Abstand zweier Bissplaetze. Kleiner als
+                                                          * der Koerperabstand zweier Gorillas (2 x 1600, gemessen 3168..3209 Spur J
+                                                          * griff) -> nur EIN Gorilla kann zugleich beissen. */
+        re15_actor_t *gg[2]; re15_actor_t *pp;
+        if (!aufbau(gg, &pp)) return 1;
+        int32_t lx = atoi(argv[2]), lz = atoi(argv[3]); int st = (argc > 4) ? atoi(argv[4]) : 50;
+        static int32_t px[40000], pz[40000]; int n = 0;
+        for (int32_t z = lz - 3000; z <= lz + 3000 && n < 40000; z += st)
+            for (int32_t x = lx - 3000; x <= lx + 3000 && n < 40000; x += st) {
+                long long dx = x - lx, dz = z - lz; if (dx * dx + dz * dz >= 3000LL * 3000LL) continue;
+                int32_t nx = x, nz = z; uint8_t ct = 0; uint16_t at = 0;
+                re15_collision_constrain_contact_band(&g_room_rdt, x + 1, z, &nx, &nz, 1600, 0, 4u, &ct, &at);
+                if (nx == x && nz == z) { px[n] = x; pz[n] = z; n++; }
+            }
+        long long best = -1; int a = -1, b = -1;
+        for (int i = 0; i < n; i++) for (int j = i + 1; j < n; j++) {
+            long long dx = px[i] - px[j], dz = pz[i] - pz[j], d = dx * dx + dz * dz;
+            if (d > best) { best = d; a = i; b = j; }
+        }
+        int32_t xa = 0x7fffffff, xb = -0x7fffffff, za = 0x7fffffff, zb = -0x7fffffff;
+        for (int i = 0; i < n; i++) { if (px[i] < xa) xa = px[i]; if (px[i] > xb) xb = px[i]; if (pz[i] < za) za = pz[i]; if (pz[i] > zb) zb = pz[i]; }
+        printf("PLATZ Leon (%d,%d): %d Bissplaetze (Schritt %d), x %d..%d z %d..%d, Durchmesser %d", (int)lx, (int)lz, n, st,
+               n ? (int)xa : 0, n ? (int)xb : 0, n ? (int)za : 0, n ? (int)zb : 0, best >= 0 ? isqrt64(best) : 0);
+        if (a >= 0) printf(" zwischen (%d,%d) und (%d,%d)", (int)px[a], (int)pz[a], (int)px[b], (int)pz[b]);
+        printf(" -> %s\n", (best >= 0 && best >= 3168LL * 3168LL) ? "zwei Gorillas passen" : (n ? "nur EIN Gorilla" : "kein Gorilla"));
+        return 0;
+    }
+    if (argc > 1 && strcmp(argv[1], "kanon") == 0) {   /* NB5 Sonde: kanon [spur] [0 = Original-Regel] */
+        if (argc > 3) { re15_r36_affen_padsuche_enable(atoi(argv[3]) ? 1 : 0); }
+        if (argc > 4) re15_r36_affen_nah_enable(atoi(argv[4]));   /* NB5: 0 = ohne Nah-Umweg, >= 10: Schwelle - 10 */
+        kanon_t r = kanon((argc > 2) ? atoi(argv[2]) : 0);
+        printf("KANON Freigabe F%d, Tod +%d, Bisse %d:", r.frei, r.tod, r.nb);
+        for (int i = 0; i < r.nb && i < 16; i++) printf(" %d", r.biss[i]);
+        printf("\nKANON S2 erster Angriff F%d (+%d), NAH-Anker max vor dem Angriff %d, gesamt %d (F%d) | S3 erster Angriff F%d (+%d), max vor %d, gesamt %d (F%d)\n",
+               r.erst[0], r.erst[0] - r.frei, r.nahmax_vor[0], r.nahmax[0], r.nahmax_f[0], r.erst[1], r.erst[1] - r.frei, r.nahmax_vor[1], r.nahmax[1], r.nahmax_f[1]);
+        return 0;
+    }
     if (argc > 17 && strcmp(argv[1], "lage") == 0) {   /* NB4 Sonde: lage <bilder> <umweg 0|1> <spur> <lx> <lz> <lyaw> <g1x> <g1z> <g1yaw> <g1sub> <g1sub3>
                                                           * <g2x> <g2z> <g2yaw> <g2sub> <g2sub3> — dieselbe Startlage wie die GDB-Messung des Originals
                                                           * (F_nb4/gdb_affen.py: Lage/Yaw, +0x4..+0x7 := 1/sub/0/sub3, +0x82 := 0, +0x1dc := 0, HP gehalten) */
         int b = atoi(argv[2]), um = atoi(argv[3]), sp = atoi(argv[4]);
         re15_actor_t *g[2]; re15_actor_t *pl;
         if (!aufbau(g, &pl)) return 1;
-        re15_r36_affen_padsuche_enable(um ? 1 : 0); re15_r36_affen_vortritt_enable(um != 3);   /* um: 0 Original-Regel, 1 Umweg (NB4), 3 Umweg ohne Vortritt (NB3) */
+        re15_r36_affen_padsuche_enable(um ? 1 : 0); re15_r36_affen_vortritt_enable(um != 3);   /* um: 0 Original-Regel, 1 Umweg (NB5), 3 Umweg ohne Vortritt (NB3) */
+        re15_r36_affen_nah_enable((um == 3 || um == 4) ? 0 : (um >= 10 ? um : 1));               /* NB5: 4 = Stand NB4 (ohne Nah-Umweg), >= 10: Nah-Schwelle um - 10 */
         pl->x = atoi(argv[5]); pl->z = atoi(argv[6]); pl->rot_y = (int16_t)atoi(argv[7]); pl->y = 0; pl->floor = 0;
         for (int k = 0; k < 2; k++) {
             re15_actor_t *e = g[k]; const int o = 8 + 5 * k;
@@ -342,7 +491,10 @@ int main(int argc, char **argv)
         }
         int erst[2] = { 0, 0 }, fa[2] = { 0, 0 }; long fest[2] = { 0, 0 }, fern[2] = { 0, 0 }, akk_fern[2] = { 0, 0 };
         int32_t ax[2] = { g[0]->x, g[1]->x }, az[2] = { g[0]->z, g[1]->z };
+        int kill_f = (argc > 18) ? atoi(argv[18]) : 0, kill_art = (argc > 19) ? atoi(argv[19]) : 0;   /* NB5: Gorilla 1 faellt in Bild kill_f aus
+                                                                                                    * (art 0: HP 0 = Tod, Leiche bleibt; 1: aktiv = 0) */
         for (int f = 1; f <= b; f++) {
+            if (kill_f > 0 && f == kill_f) { if (kill_art) g[0]->active = 0; else g[0]->hp = 0; }
             frame(0, 0); if (pl->hp < 100) pl->hp = 100;
             for (int k = 0; k < 2; k++) {
                 re15_actor_t *e = g[k]; int sub = e->sub_state_1 & 31;
@@ -443,6 +595,7 @@ int main(int argc, char **argv)
         if (argc > 6) s_zg_lage = atoi(argv[6]);   /* NB3: LAGE-Zeile je blockierter Strecke */
         re15_r36_affen_padsuche_enable(modus ? 1 : 0);
         if (argc > 7) re15_r36_affen_vortritt_enable(atoi(argv[7]));   /* NB4: 0 = ohne Vortritt (Stand NB3) */
+        if (argc > 8) re15_r36_affen_nah_enable(atoi(argv[8]));       /* NB5: 0 = ohne Nah-Umweg (Stand NB4), >= 10: Schwelle - 10 */
         zg_t r = zg_stat(b, zg_seed(i));
         printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld\n",
                zg_seed(i), modus, r.blockiert, r.griffe, r.nah, r.fern, r.los, r.klemme, r.sub[3], r.sub[4], r.sub[7]);
