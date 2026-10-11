@@ -1,0 +1,43 @@
+Tuer-Zensus STAGE2 (tools/scd_dump_room.py je ROOM2*.RDT, Door_aot_set 0x3B: Ziel = Nutzlast-Byte 23, Stage-Index Byte 22, floor Byte 4)
+Tueren NACH 2040/2060/2070:
+  ROOM2000 slot 3 @0x0167E floor 1 -> ROOM2070
+  ROOM2001 slot 3 @0x0167E floor 1 -> ROOM2070
+  ROOM2030 slot 0 @0x01ACA floor 3 -> ROOM2070
+  ROOM2030 slot 3 @0x01B4C floor 9 -> ROOM2060
+  ROOM2031 slot 0 @0x01ACA floor 3 -> ROOM2070
+  ROOM2031 slot 3 @0x01B4C floor 9 -> ROOM2060
+  ROOM2040 slot 1 @0x012BC floor 4 -> ROOM2060
+  ROOM2040 slot 2 @0x012DC floor 5 -> ROOM2040
+  ROOM2040 slot 3 @0x012FC floor 5 -> ROOM2040
+  ROOM2040 slot 4 @0x0131C floor 5 -> ROOM2070
+  ROOM2041 slot 1 @0x012BC floor 4 -> ROOM2060
+  ROOM2041 slot 2 @0x012DC floor 5 -> ROOM2040
+  ROOM2041 slot 3 @0x012FC floor 5 -> ROOM2040
+  ROOM2041 slot 4 @0x0131C floor 5 -> ROOM2070
+  ROOM2050 slot 2 @0x01C8A floor 4 -> ROOM2040
+  ROOM2051 slot 2 @0x01C8A floor 4 -> ROOM2040
+  ROOM2060 slot 1 @0x00DBA floor 1 -> ROOM2040
+  ROOM2061 slot 1 @0x00DBA floor 1 -> ROOM2040
+Tueren AUS 2040/2041/2060/2061/2070/2071:
+  ROOM2040 slot 0 @0x0129C floor 4 -> ROOM2050
+  ROOM2040 slot 1 @0x012BC floor 4 -> ROOM2060
+  ROOM2040 slot 2 @0x012DC floor 5 -> ROOM2040
+  ROOM2040 slot 3 @0x012FC floor 5 -> ROOM2040
+  ROOM2040 slot 4 @0x0131C floor 5 -> ROOM2070
+  ROOM2041 slot 0 @0x0129C floor 4 -> ROOM2050
+  ROOM2041 slot 1 @0x012BC floor 4 -> ROOM2060
+  ROOM2041 slot 2 @0x012DC floor 5 -> ROOM2040
+  ROOM2041 slot 3 @0x012FC floor 5 -> ROOM2040
+  ROOM2041 slot 4 @0x0131C floor 5 -> ROOM2070
+  ROOM2060 slot 0 @0x00D9A floor 0 -> ROOM2030
+  ROOM2060 slot 1 @0x00DBA floor 1 -> ROOM2040
+  ROOM2061 slot 0 @0x00D9A floor 0 -> ROOM2030
+  ROOM2061 slot 1 @0x00DBA floor 1 -> ROOM2040
+  ROOM2070 slot 0 @0x00A3A floor 0 -> ROOM2000
+  ROOM2070 slot 1 @0x00A5A floor 0 -> ROOM2030
+  ROOM2070 slot 2 @0x00A7A floor 0 -> ROOM2030
+  ROOM2070 slot 3 @0x00A9A floor 0 -> ROOM2000
+  ROOM2071 slot 0 @0x00A3A floor 0 -> ROOM2000
+  ROOM2071 slot 1 @0x00A5A floor 0 -> ROOM2030
+  ROOM2071 slot 2 @0x00A7A floor 0 -> ROOM2030
+  ROOM2071 slot 3 @0x00A9A floor 0 -> ROOM2000

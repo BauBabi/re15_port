@@ -46,6 +46,8 @@ das Tor unerreichbar (Softlock). Nutzer-Wortlaut der Spur A: "Das macht ein Fort
   Messschrieb um TREFFER-ZELLE erweitert und neu gebaut (Laeufe nord/west/westseite damit wiederholt). Commit c770688c.
 * 2026-10-11 ~16:45-17:10 Riegel `integration_r36_dachkiste` (leon/elza echter Weg + west) gebaut; erster Lauf scheiterte
   an der Makro-Doppelauswertung der Regex-Argumente (s. Tests), berichtigt; gezielte Unit-Gruppen 18/18 gruen.
+* 2026-10-11 ~17:20 `integration_r36_dachkiste` gruen (1/1, 332.73 s). Punkt 4.3 nachgeprueft (Tuer-Zensus STAGE2:
+  2070 hat KEINE Tuer nach 2040, der Weg ist 2030 -> 2060 -> 2040; Befund unveraendert). Abschluss-Commit.
 
 ## Punkt 1 — Messung an der exe (Leon ROOM1090, Elza ROOM1091)
 
@@ -288,7 +290,7 @@ Tuer-Ankunft des Raums. Ergebnis (Auslieferung, obere Lage):
 * Folge: der Fall (Spur A) oeffnet hier den Weg zur Magnum, er sperrt nichts. Der Zensus belegt, dass der Spieler die
   Kiste wirklich bis zur Absprungzelle bringt (von Norden; Fallrichtung FUN_8002d3d8 = vom Spieler weg = +Z).
 
-### 4.3 ROOM2050/2051 obj 6 — Tuer nach ROOM2040 braucht die Kistenoberkante, aber ROOM2040 hat drei weitere Tueren
+### 4.3 ROOM2050/2051 obj 6 — Tuer nach ROOM2040 braucht die Kistenoberkante, aber ROOM2040 bleibt ueber 2030 -> 2060 erreichbar
 
 * Records (ROOM2050.RDT main00): obj 6 @0x01D0E Band 3 (-1600,-5400,-9348) rot 2048, unbedingt; `Door_aot_set slot 2
   @0x01C8A floor 4` (Rechteck x -8200..-7200, z -6200..-5000) -> ROOM2040 (21700,-5400,-5400) — floor 4 = Band 3 + 1 =
@@ -303,6 +305,13 @@ Tuer-Ankunft des Raums. Ergebnis (Auslieferung, obere Lage):
 * Tueren nach ROOM2040 (Zensus aller STAGE2-RDT, Tuer-Nutzlast Byte 23 == 0x04): ROOM2050/2051 slot 2 (floor 4),
   ROOM2060/2061 slot 1 (floor 1), ROOM2070/2071 slot 5 (floor 0), ROOM2040/2041 selbst slot 2/3 (floor 5, Selbsttueren).
   Die Kiste obj 6 ist also NICHT der einzige Weg nach ROOM2040.
+  NACHGEPRUEFT (Fortsetzung, `R_belege/stage2_tueren_2040.txt`, tools/scd_dump_room.py je ROOM2*.RDT, Door_aot_set
+  0x3B, Ziel = Byte 23, Stage = Byte 22): nach ROOM2040 fuehren ROOM2050/2051 slot 2 @0x01C8A (floor 4, Kiste) und
+  ROOM2060/2061 slot 1 @0x00DBA (floor 1); ROOM2070/2071 hat KEINE Tuer nach 2040 (slots 0..3 -> 2000/2030/2030/2000;
+  der Vorgaenger-Eintrag "2070 slot 5" ist falsch — es ist 2040 slot 4 @0x0131C NACH 2070). Entscheidend ist der
+  Zugang zum Verbund 2040/2060/2070 von AUSSEN: ROOM2030/2031 slot 3 @0x01B4C -> ROOM2060, ROOM2000/2001 slot 3
+  @0x0167E und ROOM2030/2031 slot 0 @0x01ACA -> ROOM2070, und ROOM2040 slot 1 @0x012BC <-> 2060, slot 4 @0x0131C <-> 2070.
+  ROOM2040 bleibt also ueber 2030 -> 2060 -> 2040 erreichbar, ohne die Kiste in 2050. Befund unveraendert.
 * Zensus: obj 6 erreicht mit dem Spieler die Absprungzelle (von Sueden geschoben, Fallrichtung -Z = ueber die Kante
   nach Norden), vor und nach sub02. Ob die Kaskade im Original die Kiste bis Band 0 bringt und ob sie unten gebraucht
   wird (obj 8 @0x01D4C ist die geparkte Band-0-Kiste unter `Ck (5,7)=1`, (5,7) wird in 2050 nirgends gesetzt), ist
@@ -333,7 +342,11 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur" --timeout 900`:
     `100% tests passed, 0 tests failed out of 18` (unit_r36_dachkiste_zensus 8.60 s, unit_r36_objfall, unit_r36_klettern_*,
     unit_1090_room/push/fire/push_anim/climb/stay_on_crate/flame_out/nodraw/npc_prop_push, prop_sca_collision ...).
-  - `ctest --test-dir re15_port/build -R "integration_r36_dachkiste" --timeout 1200`: (Summenzeile s.u., Abschluss)
+  - `ctest --test-dir re15_port/build -R "integration_r36_dachkiste" --timeout 1200 --output-on-failure`:
+    `100% tests passed, 0 tests failed out of 1` (332.73 s; Laufordner `re15_port/build/r36_dachkiste_wd/lauf_ac8dbe0d/
+    {leon,elza,west}`: leon 3x gesperrt r3[4], elza 3x gesperrt r3[4] (`R_belege/e1_echt/push_zellen.txt`), west 2x
+    gesperrt r3[2]; 0 SCHUB-OK, 0 AUSLOESER, Kiste auf dem Record). Der erste Lauf des Riegels (Makro-Falle, s.o.)
+    scheiterte NICHT am Spiel — dessen push.txt enthielt dieselben drei gesperrten Schuebe.
 
 ## OFFEN
 
@@ -370,7 +383,7 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   - ROOM3050/3051 (Punkt 4): der Fall der Kiste obj 1 ist der vorgesehene Weg — nur vom Dach der gefallenen Kiste
     erreicht man die **Super Redhawk** (Item slot 6, Floor 1). Beide Tueren des Raums brauchen die Kiste nicht.
   - ROOM2050/2051 (Punkt 4): die Kiste obj 6 kann ueber die Kante fallen; die Tuer nach ROOM2040 auf ihrer Oberkante
-    waere dann weg, aber ROOM2040 hat drei weitere Tueren (2060/2061, 2070/2071, 2040 selbst) — kein Fortschritt haengt
-    an dieser Kiste.
+    waere dann weg, aber ROOM2040 bleibt ueber ROOM2030 -> ROOM2060 -> ROOM2040 erreichbar (Tuer-Zensus STAGE2, alle
+    Tuer-Records ohne Schluessel) — kein Fortschritt haengt an dieser Kiste.
 * Keine neuen Assets fuer das Paket-Gate, keine Sprachdateien, keine Bedienhinweise, keine Entscheidungsfrage. Der
   Port erhaelt nur einen Messschrieb (RE15_PUSH_LOG) und einen Riegel, der genau diesen Mechanismus festhaelt.
