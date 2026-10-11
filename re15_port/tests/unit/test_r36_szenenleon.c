@@ -728,19 +728,16 @@ static void teil_irons(void)
     PRUEF(tot_a == tot_b && tot_ap == tot_bp && tot_a == 0,
           "tot: Kopf auf der Clip-Pose (Yaw-Akku 0, Pitch-Akku %d = -Keyframe-Neigung), an beiden Standpunkten gleich",
           tot_ap);
-    /* Elza ROOM1151: Spur L legt Irons tot hin -> dieselbe Regel (Todespose gehalten); lebend (Original, Clip 3)
-     * bleibt das Tracking */
+    /* Elza ROOM1151: Eigentuemer Spur L (elza_r36.c: Irons immer tot, Kopf fest in Plc_neck-Form 0x80|0x12).
+     * Integration Runde 36: dieser Haken greift dort nicht mehr ein; geprueft wird nur, dass der Kopf fest bleibt
+     * (kein Blickziel, Akku an beiden Standpunkten gleich). Den frueheren Fall "lebend" gibt es seit Spur L nicht. */
     a = irons_lauf_raum(RE15_SZL_IRONS_ELZA_RAUM, 1, ax_, az_, 150);
     int e_a = a ? a->neck_yaw : 99, e_ap = a ? a->neck_pitch : 99, e_fl = a ? a->neck_flags : -1;
     a = irons_lauf_raum(RE15_SZL_IRONS_ELZA_RAUM, 1, bx_, bz_, 150);
     int e_b = a ? a->neck_yaw : 99, e_bp = a ? a->neck_pitch : 99;
-    a = irons_lauf_raum(RE15_SZL_IRONS_ELZA_RAUM, 0, ax_, az_, 150);
-    int el_fl = a ? a->neck_flags : -1, el_mo = a ? a->motion : -1;
-    printf("  ROOM1151 tot: Flags 0x%02X Akku A (%d,%d) / B (%d,%d) | lebend: Clip %d Flags 0x%02X\n",
-           e_fl, e_a, e_ap, e_b, e_bp, el_mo, el_fl);
-    PRUEF(e_fl == RE15_SZL_HALS_FREI && e_a == e_b && e_ap == e_bp && e_a == 0,
-          "ROOM1151 (Elza, Irons tot gelegt): +0x1b8 = 0x12, Kopf an beiden Standpunkten gleich");
-    PRUEF(el_mo != RE15_IT_IRONS_CLIP_TOT && el_fl == 0x00, "ROOM1151 lebend (Original Clip %d): Tracking bleibt", el_mo);
+    printf("  ROOM1151 tot: Flags 0x%02X Akku A (%d,%d) / B (%d,%d)\n", e_fl, e_a, e_ap, e_b, e_bp);
+    PRUEF((e_fl & 0x7F) == RE15_SZL_HALS_FREI && e_a == e_b && e_ap == e_bp && e_a == 0,
+          "ROOM1151 (Elza, Spur L): kein Blickziel (+0x1b8 & 0x7F = 0x12), Kopf an beiden Standpunkten gleich");
 }
 
 int main(int argc, char **argv)

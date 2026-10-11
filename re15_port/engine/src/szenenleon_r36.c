@@ -337,19 +337,18 @@ int re15_szl_objekt_schub(int p)
  * Kopf auf die Clip-Pose zurueckgleiten (skeleton_common.c Zweig 0x02/0x10). Gilt, sobald Irons tot daliegt:
  * (9,73) gesetzt UND die Todes-Pose (Motion-Sub 0, Clip 2 = RE15_IT_IRONS_CLIP_TOT) steht — waehrend der
  * Sterbeszene vor dem Armfall (Clips 4/3/6/5) bleibt der Blick auf Leon.
- * ROOM1151 (Elza, Spur L legt Irons "von Anfang an tot" hin, NUTZER-VORGABE): dieselbe Regel, sobald dort die
- * Todespose GEHALTEN steht (Clip 2, Motion-Phase 2). Lebend nutzt Irons in ROOM1151 nur Clip 3/6 (sub
- * @0x00EB8 `3f 00 03 00`, @0x00F02 `3f 00 06 00`, @0x00F12 `3f 00 03 00`) — Clip 2 kommt dort lebend nie vor;
- * (9,73) ist ein Leon-Bit und gilt bei Elza nicht. */
+ * ROOM1151 (Elza): Eigentuemer ist Spur L (VERTRAG §1.4) — elza_r36.c legt Irons dort beim Raumaufbau tot hin
+ * und setzt den Kopf selbst fest (Plc_neck-Form 0x80|0x12, Geschwindigkeit 0, Akkus 0). Integration Runde 36:
+ * der fruehere 1151-Zweig dieses Hakens schrieb jedes Bild 0x12 ueber Ls 0x92 (unit_r36_elza_irons rot) und
+ * entfaellt; (9,73) ist ein Leon-Bit und gilt bei Elza ohnehin nicht. */
 static void irons_kopf_tick(void)
 {
     const uint16_t raum = (uint16_t)g_current_room_id;
-    if (raum != RE15_IT_RAUM_1150 && raum != RE15_SZL_IRONS_ELZA_RAUM) return;
+    if (raum != RE15_IT_RAUM_1150) return;
     re15_actor_t *a = &g_actors[RE15_IT_IRONS_SLOT];
     if (!a->active || a->type != RE15_IT_IRONS_TYP) return;
-    if (raum == RE15_IT_RAUM_1150 && !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)) return;
+    if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)) return;
     if (!(a->state == 4 && a->sub_state_1 == 0 && a->motion == RE15_IT_IRONS_CLIP_TOT)) return;
-    if (raum == RE15_SZL_IRONS_ELZA_RAUM && a->sub_state_2 != 2) return;   /* nur die gehaltene Todespose */
     if (a->neck_flags == RE15_SZL_HALS_FREI) return;
     a->neck_flags = RE15_SZL_HALS_FREI;          /* @0x80042618 */
     a->neck_sweep = 0;
