@@ -595,7 +595,15 @@ static int r36_uw_astern(int g, int t, const r36_kante_t *kt, int nk, const uint
  * (Ziel = Pad-Mitte), 0 = Sprung ohne Kante. NB6: aus r36_uw_route herausgeloest (unveraendert), damit der Nah-Umweg
  * denselben Weg nimmt. */
 static int s_uw_sprung_start = -1;   /* NB6: Startknoten des ersten Pad-Sprungs auf dem zuletzt gefolgten Weg (-1 = keiner) */
-static int r36_weg_folgen(const re15_actor_t *e, int slot, int g, int l, const r36_kante_t *kt, int nk)
+/* Gorilla innerhalb des Pad-Rechtecks p, erweitert um r (die Box-Abfrage des Original-Pad-Sprungs: FUN_8003b93c(+0x34, box[6]+100,
+ * +0x82, 0x10) @0x80117ee0-f00 findet das Pad genau dann). */
+static int r36_am_pad(const re15_actor_t *e, int p, int32_t r)
+{
+    const re15_sca_entry_t *c = &g_room_rdt.sca[p];
+    return (uint32_t)(e->x - ((int32_t)c->x - r)) < (uint32_t)((int32_t)c->width + 2 * r) &&
+           (uint32_t)(e->z - ((int32_t)c->z - r)) < (uint32_t)((int32_t)c->density + 2 * r);
+}
+static int r36_weg_folgen(const re15_actor_t *e, int slot, int g, int l, const r36_kante_t *kt, int nk, int nah)
 {
     s_uw_sprung_start = -1;
     int len = 0;                                                                 /* Weg l -> g, dann umdrehen (s_uw_heap als Puffer) */
@@ -613,9 +621,16 @@ static int r36_weg_folgen(const re15_actor_t *e, int slot, int g, int l, const r
         if (p < 0) return 0;
         s_r36_pad_idx[slot] = (int16_t)p; s_uw_sprung_start = s_uw_heap[sprung];
         int64_t ex = (int64_t)r36_kx(s_uw_heap[sprung]) - e->x, ez = (int64_t)r36_kz(s_uw_heap[sprung]) - e->z;
-        if (ex * ex + ez * ez <= (int64_t)s_uw.r * s_uw.r) {                       /* am Anlaufpunkt (NB2: zwei Schritte a 800 = ein
+        if (ex * ex + ez * ez <= (int64_t)s_uw.r * s_uw.r                          /* am Anlaufpunkt (NB2: zwei Schritte a 800 = ein
                                                                                      * Radius): gerader Anlauf auf die Pad-Mitte — die
                                                                                      * Kontaktseite zeigt auf Leons Seite */
+            || (nah && r36_am_pad(e, p, (int32_t)e->hit_radius_min + 100))) {
+            /* NB6 (Nah-Umweg): oder schon AM PAD im Sinne des Original-Sprungs (Box + box[6]+100 @0x80117ee0-f00). GEMESSEN
+             * (exe Stelle 3, Messschiene RE15_AFFEN_LOG, F_belege/nb6/nb6_stelle3_affenlog_vorher.txt): Slot 2 steht in der Gassen-
+             * muendung an der Suedkante von #36 (6418,-6820), der Startknoten der Pad-Kante liegt 1970 entfernt bei (7000,-8700)
+             * (die Gasse ist schmaler als 2 x 1600 -> dort kein freier Rasterknoten) -> "Weg zum Anlauf" fuehrte ihn von Leon WEG,
+             * +0x1d4 kippte ueber 0x1771 (FERN -> Sub 4, Umweg geloescht), an der Kante zaehlte der NAH-Anker neu: Zyklus von
+             * ~150 Bildern ohne Sprung bis zum Laufende (S2 "nie"). */
             const re15_sca_entry_t *c = &g_room_rdt.sca[p];
             s_r36_ziel_x[slot] = (int32_t)c->x + (int32_t)c->width / 2;
             s_r36_ziel_z[slot] = (int32_t)c->z + (int32_t)c->density / 2;
@@ -663,7 +678,7 @@ static int r36_uw_route(const re15_actor_t *e, const re15_actor_t *pl, int slot)
         }
     }
     if (l < 0 || l == g || !r36_uw_astern(g, l, kt, nk, erlaubt)) return 0;        /* schon am naechsten Punkt: Original */
-    return r36_weg_folgen(e, slot, g, l, kt, nk);
+    return r36_weg_folgen(e, slot, g, l, kt, nk, 0);
 }
 
 /* NB5 (Abnahme 4, Mangel 1): NAH-UMWEG zum naechsten FREIEN BISSPLATZ. Ziel = der Rasterknoten der eigenen Komponente
@@ -689,7 +704,8 @@ static int r36_belegt_koerper(int k, int slot)
  * (r36_nah_route sah nur die eigene Fuss-Komponente).
  * s_r36_nah_grund (NUR Sonden): 1 kein Startknoten, 2 kein freier Bissplatz (Anstehen), 3 schon am Bissplatz,
  * 4 kein Weg, 5 Pad vom anderen Gorilla belegt (Anstehen), 10 zu Fuss, 11 ueber ein Pad (Weg zum Anlauf),
- * 12 ueber ein Pad (Anlauf auf die Pad-Mitte), 13 verkeilt in diesem Pad (Sprung mit dem Seitencode, Rueckgabe 3). */
+ * 12 ueber ein Pad (Anlauf auf die Pad-Mitte), 13 verkeilt in diesem Pad (Sprung mit dem Seitencode, Rueckgabe 3),
+ * 14 (NB6b) mit der Mitte in diesem Pad, nicht verkeilt (ebenfalls Sprung mit dem Seitencode, Rueckgabe 3). */
 static int r36_bissplatz(const re15_actor_t *pl, int slot, int kg)   /* naechster freier Bissplatz in Komponente kg (kg = 0: in
                                                                       * jeder ueber s_kerr erreichbaren); -1 = keiner */
 {
@@ -735,7 +751,7 @@ static int r36_nah_route(const re15_actor_t *e, const re15_actor_t *pl, int slot
         s_r36_nah_grund[slot] = (t == g) ? 3 : 4;
         if (t == g || !r36_uw_astern(g, t, NULL, 0, NULL)) return 0;
         s_r36_nah_grund[slot] = 10;
-        return r36_weg_folgen(e, slot, g, t, NULL, 0);
+        return r36_weg_folgen(e, slot, g, t, NULL, 0, 1);
     }
     s_r36_nah_grund[slot] = 2;
     if (!(s_r36_nb6 & 1) || kg <= 0 || kg > R36_KOMP_MAX) return 0;
@@ -751,16 +767,19 @@ static int r36_nah_route(const re15_actor_t *e, const re15_actor_t *pl, int slot
     if (t < 0) return 0;                                                           /* Anstehen: kein freier Bissplatz */
     s_r36_nah_grund[slot] = 4;
     if (!r36_uw_astern(g, t, kt, nk, erlaubt)) return 0;
-    int m = r36_weg_folgen(e, slot, g, t, kt, nk);
+    int m = r36_weg_folgen(e, slot, g, t, kt, nk, 1);
     if (m && s_r36_pad_idx[slot] >= 0 && r36_pad_belegt(s_r36_pad_idx[slot], slot)) {   /* der andere nimmt dasselbe Pad und steht
                                                                                      * naeher an der Mitte (NB2-Regel r36_pad_belegt):
                                                                                      * anstehen statt Umweg ueber ein fernes Pad */
         s_r36_pad_idx[slot] = -1; s_r36_nah_grund[slot] = 5; return 0;
     }
-    if (m && verk && s_r36_pad_idx[slot] >= 0 && s_uw_sprung_start >= 0) {
+    if (m && s_r36_pad_idx[slot] >= 0 && s_uw_sprung_start >= 0) {
         const re15_sca_entry_t *c = &g_room_rdt.sca[s_r36_pad_idx[slot]];
         if ((uint32_t)(e->x - (int32_t)c->x) < (uint32_t)c->width && (uint32_t)(e->z - (int32_t)c->z) < (uint32_t)c->density) {
-            /* VERKEILT in DIESEM Pad (der Weg springt ueber genau dieses Pad): zu Fuss kommt er nicht hinaus, frei kommt er nur
+            /* MIT DER MITTE in DIESEM Pad (der Weg springt ueber genau dieses Pad) — verkeilt (kein Knoten gerade erreichbar) ODER
+             * nicht (NB6b: ohne diese Regel liefe er erst zum Anlaufpunkt ausserhalb der Gasse und spraenge von dort zurueck,
+             * Sonde Gasse einzeln: Angriff erst Bild 313; mit Anlauf-Modus im Pad gaebe es keinen Sprung, weil die Pad-Mitte
+             * 0xf8 keinen Seitencode hat): zu Fuss kommt er verkeilt nicht hinaus, frei kommt er nur
              * per Sprung (im Flug Band +0x82 = 1 @0x80118ab4-af0: die Band-0-Autozellen klemmen nicht). Die Mitte hat keinen
              * Seitencode (Platzhalter 0xf00 @0x8001bf74) — PORT-WAHL: der Code der Seite, von der der Weg das Pad ueberquert
              * (Startknoten der Pad-Kante, r36_seiten_code wie @0x8003ba8c), also der Sprung, den der Gorilla von dort aus
@@ -769,7 +788,7 @@ static int r36_nah_route(const re15_actor_t *e, const re15_actor_t *pl, int slot
             int d = (((int)(s_r36_nah_code[slot] & 0xf0u)) << 4) & 0xfff;
             s_r36_ziel_x[slot] = e->x + (int32_t)(((int64_t)re15_cos_q12(d) * (int64_t)e->hit_radius_min) >> 12);   /* Vorwaerts = (cos, -sin) */
             s_r36_ziel_z[slot] = e->z - (int32_t)(((int64_t)re15_sin_q12(d) * (int64_t)e->hit_radius_min) >> 12);   /* (FUN_800152C8) */
-            s_r36_nah_grund[slot] = 13;
+            s_r36_nah_grund[slot] = (uint8_t)(verk ? 13 : 14);
             return 3;
         }
     }
@@ -953,3 +972,33 @@ int re15_r36_affen_umweg_lesen(int slot, int32_t *x, int32_t *z, int *pad)
     *x = s_r36_ziel_x[slot]; *z = s_r36_ziel_z[slot]; *pad = s_r36_pad_idx[slot];
     return s_r36_padsuche_aktiv[slot];
 }
+
+/* NUR Messschiene (NB6): RE15_AFFEN_LOG=<datei> (env, PC) schreibt je Bild fuer jeden Gorilla (Typ 0x27) den Port-Umweg-Zustand,
+ * den gy.log nicht zeigt: ua = s_r36_padsuche_aktiv, up = Pad, nu = Nah-Umweg aktiv, nah = NAH-Anker-Zaehler, ng = letzte Antwort von
+ * r36_nah_route, h = +0x1de-Zwilling, fest = Anker-Zaehler, vt = Vortritt, dd = +0x1d4. Kein Verhalten (gemessen: gy.log bitgleich). */
+#ifdef RE15_PLATFORM_PC
+#include <stdio.h>
+#include <stdlib.h>
+void re15_r36_affen_log_tick(void)
+{
+    static int s_init = 0; static FILE *s_lg = NULL; static unsigned s_f = 0;
+    if (!s_init) { s_init = 1; const char *p = getenv("RE15_AFFEN_LOG"); if (p && *p) s_lg = fopen(p, "w"); }
+    s_f++;
+    if (!s_lg) return;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int n = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->type != 0x27u) continue;
+        if (!n++) fprintf(s_lg, "F%u PL(%d,%d)", s_f, (int)pl->x, (int)pl->z);
+        fprintf(s_lg, " [%d st=%d/%d/%d/%d @(%d,%d) rot=%d dd=%u L%d k%d ua=%d up=%d z(%d,%d) nu=%d nah=%u ng=%d h=%u fest=%u vt=%d 9f=%02x]",
+                s, (int)e->state, (int)e->sub_state_1, (int)e->sub_state_2, (int)e->sub_state_3, (int)e->x, (int)e->z, (int)e->rot_y,
+                (unsigned)(uint16_t)e->dog_dist, (int)(e->dog_flags & 1), (int)(e->sca_wall_hit != 0), (int)s_r36_padsuche_aktiv[s],
+                (int)s_r36_pad_idx[s], (int)s_r36_ziel_x[s], (int)s_r36_ziel_z[s], (int)s_r36_nahumweg[s], (unsigned)s_r36_nah[s],
+                (int)s_r36_nah_grund[s], (unsigned)s_r36_1de[s], (unsigned)s_r36_fest[s], (int)s_r36_vortritt[s], (unsigned)(uint8_t)e->dog_aux9f);
+    }
+    if (n) { fputc('\n', s_lg); fflush(s_lg); }
+}
+#else
+void re15_r36_affen_log_tick(void) { }
+#endif

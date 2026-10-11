@@ -263,4 +263,6 @@ int  re15_r36_affen_bissplaetze_frei(int slot); /* NUR Sonden (NB6): freie Bissp
 void re15_r36_nav_zonenlos(re15_actor_t *e, const re15_actor_t *pl);
 void re15_r36_nav_zonenlos_enable(int an);   /* NUR Sonden: 0 = alter Weg (Gegenprobe) */
 
+void re15_r36_affen_log_tick(void);           /* NUR Messschiene (NB6): RE15_AFFEN_LOG=<datei> (env, PC), je Bild der Port-Umweg-Zustand je Gorilla; kein Verhalten */
+
 #endif /* RE15_ZOMBIEKI_R36_H */

@@ -239,6 +239,22 @@ static szene2_t szene2(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilde
  * blockierten Bilder. Der Riegel vergleicht damit Port-Wahl AN gegen AUS auf demselben Seed-Satz. */
 typedef struct { long blockiert; int griffe; long sub[32]; long nah, fern, los, klemme; } zg_t;
 static int s_zg_lage = 0;   /* 1: je blockierte Strecke eine LAGE-Zeile (Sonde stat ... 3) */
+static int s_zg_spur_von = 0, s_zg_spur_bis = 0;   /* NB6: Spur je Bild beider Gorillas im Fenster [von, bis] (Sonde eins ... <von> <bis>) */
+static void zg_spur(int f, re15_actor_t *const g[2], const re15_actor_t *pl)
+{
+    printf("F%d", f);
+    for (int k = 0; k < 2; k++) {
+        const re15_actor_t *e = g[k]; int32_t ux = 0, uz = 0; int up = -1, h = 0, fs = 0, vt = 0; uint8_t zc = 0;
+        int ua = re15_r36_affen_umweg_lesen((int)(e - g_actors), &ux, &uz, &up); re15_r36_affen_fest_lesen((int)(e - g_actors), &h, &fs, &vt);
+        int ip = re15_collision_zone_query(&g_room_rdt, e->x, e->z, (int32_t)e->hit_radius_min + 100, (int)e->floor, 0x10u, &zc);
+        long long dx = e->x - pl->x, dz = e->z - pl->z;
+        printf(" | G%d %d %d r%d s%d/%d/%d/%d d%d dd%d k%d h%d fest%d L%d uw%d vt%d nah%d z(%d,%d) ng%d up%d zc%02x 9f%02x", k + 1, (int)e->x, (int)e->z,
+               (int)e->rot_y, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3, isqrt64(dx * dx + dz * dz), (int)(uint16_t)e->dog_dist,
+               e->sca_wall_hit != 0, h, fs, e->dog_flags & 1, ua, vt, re15_r36_affen_nah_lesen((int)(e - g_actors)), (int)ux, (int)uz,
+               re15_r36_affen_nah_grund((int)(e - g_actors)), up, ip ? (int)zc : 0, (unsigned)(uint8_t)e->dog_aux9f);
+    }
+    printf(" | pl %d %d r%d\n", (int)pl->x, (int)pl->z, (int)pl->rot_y);
+}
 static zg_t zg_stat(int bilder, uint32_t seed)
 {
     zg_t r; memset(&r, 0, sizeof r);
@@ -260,6 +276,7 @@ static zg_t zg_stat(int bilder, uint32_t seed)
         if (pl->hp < 100) pl->hp = 100;
         if (gr && !prev_gr) r.griffe++;
         prev_gr = gr;
+        if (s_zg_spur_von && f >= s_zg_spur_von && f <= s_zg_spur_bis) zg_spur(f, g, pl);   /* NB6: Spur je Bild im Fenster */
         for (int k = 0; k < 2; k++) {
             re15_actor_t *e = g[k];
             int sub = e->sub_state_1 & 31;
@@ -503,6 +520,7 @@ int main(int argc, char **argv)
             e->floor = 0; e->dog_blocked_ctr = 0;
         }
         int erst[2] = { 0, 0 }, fa[2] = { 0, 0 }, letzt[2] = { 0, 0 }, nk[2] = { 0, 0 }; long fest[2] = { 0, 0 }, fern[2] = { 0, 0 }, akk_fern[2] = { 0, 0 };
+        long festvor[2] = { 0, 0 };   /* NB6b: davon NAH fest VOR dem ersten Angriff (Mangel-1-Mass der Abnahme 5: "greift nach <= 450 NAH-fest-Bildern an") */
         int32_t ax[2] = { g[0]->x, g[1]->x }, az[2] = { g[0]->z, g[1]->z };
         int kill_f = (argc > 18) ? atoi(argv[18]) : 0, kill_art = (argc > 19) ? atoi(argv[19]) : 0;   /* NB5: Gorilla 1 faellt in Bild kill_f aus
                                                                                                     * (art 0: HP 0 = Tod, Leiche bleibt; 1: aktiv = 0) */
@@ -518,7 +536,9 @@ int main(int argc, char **argv)
                 if (kampf && e->state == 1) { letzt[k] = f; nk[k]++; }   /* NB6: letzter Angriff + Angriffsbilder (Angriff NACH dem Stillstand) */
                 int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= s_zg_anker;
                 if (e->state == 1 && !kampf && !bewegt && d > 3000) { if (!fa[k]) { fa[k] = f; akk_fern[k] = 0; } if (d >= 0x1771) akk_fern[k]++; }
-                else { if (fa[k] && f - fa[k] >= 90) { fest[k] += f - fa[k]; fern[k] += akk_fern[k]; } fa[k] = 0; ax[k] = e->x; az[k] = e->z; }
+                else { if (fa[k] && f - fa[k] >= 90) { fest[k] += f - fa[k]; fern[k] += akk_fern[k];
+                                                        if (!erst[k] || erst[k] == f) festvor[k] += f - fa[k] - akk_fern[k]; }   /* NB6b: Strecke endete vor/mit dem ersten Angriff */
+                       fa[k] = 0; ax[k] = e->x; az[k] = e->z; }
             }
             if (sp > 0 && (f % sp) == 0) {
                 printf("F%d", f);
@@ -533,11 +553,12 @@ int main(int argc, char **argv)
                 printf(" | pl %d %d hp %d\n", (int)pl->x, (int)pl->z, (int)pl->hp);
             }
         }
-        for (int k = 0; k < 2; k++) if (fa[k] && b + 1 - fa[k] >= 90) { fest[k] += b + 1 - fa[k]; fern[k] += akk_fern[k]; }
+        for (int k = 0; k < 2; k++) if (fa[k] && b + 1 - fa[k] >= 90) { fest[k] += b + 1 - fa[k]; fern[k] += akk_fern[k]; if (!erst[k]) festvor[k] += b + 1 - fa[k] - akk_fern[k]; }
         for (int k = 0; k < 2; k++)
             printf("LAGE G%d: erster Angriff %d, fest %ld (Anker %d, Leon > 3000), davon fern %ld, Ende (%d,%d) s%d, letzter Angriff %d, Angriffsbilder %d, Leon (%d,%d), "
-                   "frei %d\n", k + 1, erst[k], fest[k], s_zg_anker, fern[k], (int)g[k]->x, (int)g[k]->z, g[k]->sub_state_1, letzt[k], nk[k], (int)pl->x, (int)pl->z,
-                   re15_r36_affen_bissplaetze_frei((int)(g[k] - g_actors)));   /* NB6: freie Bissplatz-Knoten am Ende (0 = steht an) */
+                   "frei %d, NAH fest vor dem ersten Angriff %ld\n", k + 1, erst[k], fest[k], s_zg_anker, fern[k], (int)g[k]->x, (int)g[k]->z, g[k]->sub_state_1, letzt[k], nk[k],
+                   (int)pl->x, (int)pl->z, re15_r36_affen_bissplaetze_frei((int)(g[k] - g_actors)),   /* NB6: freie Bissplatz-Knoten am Ende (0 = steht an) */
+                   festvor[k]);                                                                       /* NB6b: Mangel-1-Mass */
         return 0;
     }
     if (argc > 3 && strcmp(argv[1], "szene2") == 0) {   /* NB2 Sonde: szene2 <lx> <lz> [gx gz] [bilder] [0 = Umweg aus] */
@@ -616,6 +637,7 @@ int main(int argc, char **argv)
         if (argc > 7) re15_r36_affen_vortritt_enable(atoi(argv[7]));   /* NB4: 0 = ohne Vortritt (Stand NB3) */
         if (argc > 8) re15_r36_affen_nah_enable(atoi(argv[8]));       /* NB5: 0 = ohne Nah-Umweg (Stand NB4), >= 10: Schwelle - 10 */
         if (argc > 9) re15_r36_affen_nb6_enable(atoi(argv[9]));       /* NB6: 0 = Stand NB5 */
+        if (argc > 11) { s_zg_spur_von = atoi(argv[10]); s_zg_spur_bis = atoi(argv[11]); }   /* NB6: Spur je Bild im Fenster [von, bis] */
         zg_t r = zg_stat(b, zg_seed(i));
         printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld\n",
                zg_seed(i), modus, r.blockiert, r.griffe, r.nah, r.fern, r.los, r.klemme, r.sub[3], r.sub[4], r.sub[7]);
@@ -1029,24 +1051,26 @@ int main(int argc, char **argv)
                 { 2400, 6000, -9000, 1332, -5525, -14883, 2731, 3, 0, -8915, -12487, 93, 3, 0 } }; /* O1 im PORT-Modus (Abnahme 5, 2.4) */
             static const char *const ort6[2] = { "Gasse einzeln", "Ostgasse O1" };
             for (int i = 0; i < 2; i++) {
-                int er6[2][2], la6[2][2], ex6[2][2], ez6[2][2], fr6[2][2], lx6[2] = { 0, 0 }, lz6[2] = { 0, 0 }; long fs6[2][2], ff6[2][2];
+                int er6[2][2], la6[2][2], ex6[2][2], ez6[2][2], fr6[2][2], lx6[2] = { 0, 0 }, lz6[2] = { 0, 0 }; long fs6[2][2], ff6[2][2], fv6[2][2];
                 memset(er6, 0, sizeof er6); memset(la6, 0, sizeof la6); memset(fs6, 0xff, sizeof fs6); memset(ff6, 0, sizeof ff6);
-                memset(ex6, 0, sizeof ex6); memset(ez6, 0, sizeof ez6); memset(fr6, 0xff, sizeof fr6);
+                memset(ex6, 0, sizeof ex6); memset(ez6, 0, sizeof ez6); memset(fr6, 0xff, sizeof fr6); memset(fv6, 0xff, sizeof fv6);
                 for (int mi = 0; mi < 2; mi++) {   /* [0] NB6 (Modus 1), [1] Stand NB5 (Modus 6) */
                     char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage %d %d 0 %d %d %d %d %d %d %d %d %d %d %d %d %d", argv[0], (int)lg6[i][0], mi ? 6 : 1,
                                              (int)lg6[i][1], (int)lg6[i][2], (int)lg6[i][3], (int)lg6[i][4], (int)lg6[i][5], (int)lg6[i][6], (int)lg6[i][7],
                                              (int)lg6[i][8], (int)lg6[i][9], (int)lg6[i][10], (int)lg6[i][11], (int)lg6[i][12], (int)lg6[i][13]);
                     FILE *pp = popen(cmd, "r"); char zl[512];
                     while (pp && fgets(zl, sizeof zl, pp)) {
-                        int k, e1, x, z, sb, la, na, lx, lz, fr; long f1, f2;
+                        int k, e1, x, z, sb, la, na, lx, lz, fr; long f1, f2, fv;
                         if (sscanf(zl, "LAGE G%d: erster Angriff %d, fest %ld (Anker %*d, Leon > 3000), davon fern %ld, Ende (%d,%d) s%d, letzter Angriff %d, "
-                                   "Angriffsbilder %d, Leon (%d,%d), frei %d", &k, &e1, &f1, &f2, &x, &z, &sb, &la, &na, &lx, &lz, &fr) == 12 && k >= 1 && k <= 2) {
+                                   "Angriffsbilder %d, Leon (%d,%d), frei %d, NAH fest vor dem ersten Angriff %ld", &k, &e1, &f1, &f2, &x, &z, &sb, &la, &na, &lx, &lz, &fr, &fv) == 13
+                            && k >= 1 && k <= 2) {
                             er6[mi][k - 1] = e1; fs6[mi][k - 1] = f1; ff6[mi][k - 1] = f2; la6[mi][k - 1] = la; ex6[mi][k - 1] = x; ez6[mi][k - 1] = z;
-                            fr6[mi][k - 1] = fr; lx6[mi] = lx; lz6[mi] = lz; }
+                            fr6[mi][k - 1] = fr; fv6[mi][k - 1] = fv; lx6[mi] = lx; lz6[mi] = lz; }
                     }
                     if (pp) pclose(pp);
-                    printf("%s Modus %d: G1 Angriff %d..%d NAH fest %ld | G2 Angriff %d..%d NAH fest %ld (fern %ld) | Leon Ende (%d,%d)\n", ort6[i], mi ? 6 : 1,
-                           er6[mi][0], la6[mi][0], fs6[mi][0] - ff6[mi][0], er6[mi][1], la6[mi][1], fs6[mi][1] - ff6[mi][1], ff6[mi][1], lx6[mi], lz6[mi]);
+                    printf("%s Modus %d: G1 Angriff %d..%d NAH fest %ld (vor dem ersten Angriff %ld) | G2 Angriff %d..%d NAH fest %ld (vor %ld, fern %ld) | Leon Ende (%d,%d)\n",
+                           ort6[i], mi ? 6 : 1, er6[mi][0], la6[mi][0], fs6[mi][0] - ff6[mi][0], fv6[mi][0], er6[mi][1], la6[mi][1], fs6[mi][1] - ff6[mi][1], fv6[mi][1],
+                           ff6[mi][1], lx6[mi], lz6[mi]);
                 }
                 for (int k = 0; k < (i ? 2 : 1); k++)   /* Befund: Gasse G1; O1 G1 + G2 (G2 der Gasse kommt im Stand NB5 von FERN) */
                     CHECK(fs6[1][k] - ff6[1][k] >= 1000 && la6[1][k] <= (int)lg6[i][0] - 1000, "%s Gegenprobe Stand NB5 = Befund: Gorilla %d NAH fest %ld, "
@@ -1054,7 +1078,13 @@ int main(int argc, char **argv)
                 for (int k = 0; k < 2; k++) {
                     long nf = fs6[0][k] - ff6[0][k];
                     if (er6[0][k] > 0) {
-                        CHECK(nf >= 0 && nf <= 450, "%s NB6: Gorilla %d greift an (Bild %d..%d), NAH fest %ld <= 450", ort6[i], k + 1, er6[0][k], la6[0][k], nf);
+                        /* Kriterium der Abnahme 5 (Mangel 1): "greift nach hoechstens 450 Bildern NAH fest an ODER steht nachweislich an".
+                         * NB6b: gemessen wird die NAH-fest-Zeit VOR dem ersten Angriff; eine spaetere Wartezeit ist nur als Anstehen
+                         * zulaessig (am Ende kein freier Bissplatz-Knoten) — O1 nach der Korrektur: G2 springt Bild 900 ueber #36,
+                         * beisst ab 937, steht ab ~1650 an der Wand x 8382 an, Leon in der Ecke (11159,-1181) hinter G1, frei 0. */
+                        CHECK(fv6[0][k] >= 0 && fv6[0][k] <= 450 && (nf <= 450 || fr6[0][k] == 0),
+                              "%s NB6: Gorilla %d greift an (Bild %d..%d), NAH fest vor dem ersten Angriff %ld <= 450; danach %ld (%s)", ort6[i], k + 1, er6[0][k],
+                              la6[0][k], fv6[0][k], nf - fv6[0][k], (nf <= 450) ? "<= 450" : (fr6[0][k] == 0 ? "steht an: freie Bissplatz-Knoten 0" : "FREIE PLAETZE"));
                         continue;
                     }
                     /* greift nicht an: nur zulaessig mit NAH fest <= 450 und nachweislichem Anstehen — am Ende KEIN freier Bissplatz-Knoten
@@ -1070,6 +1100,31 @@ int main(int argc, char **argv)
                     CHECK(nf <= 450 && fr6[0][k] == 0, "%s NB6: Gorilla %d NAH fest %ld <= 450 und steht an (freie Bissplatz-Knoten %d)", ort6[i], k + 1, nf, fr6[0][k]);
                 }
             }
+        }
+        {   /* NB6 (Abnahme 5, Mangel 1, exe-Stelle 8 nachgestellt): VERKEILT MIT DER MITTE im 0x10-Pad #36 — Leon (7320,-7071) suedlich,
+             * Gorilla 1 (6418,-3617) im Pad (Endlage der exe F648, Abnahme 5 3.2: S3 468 Bilder NAH fest). Stand NB5 (Modus 6): kein
+             * Rasterknoten gerade erreichbar (r36_uw_knoten mit Streckenpruefung), die Klemme setzt jeden Schritt auf die Vorlage
+             * zurueck (Kontaktcode 0xf00 @0x8001bf74 = Platzhalter ohne Richtung) -> 900/900 Bilder ohne Bewegung und ohne Angriff.
+             * NB6: Startknoten ohne Streckenpruefung, Weg ueber genau dieses Pad -> Sprung mit dem Code der Seite, von der der Weg das
+             * Pad ueberquert (r36_seiten_code wie `sb v0,144(a0)` @0x8003ba8c; Nordseite 0x48 -> nach Sueden), Ausfuehrung = Original
+             * B[7] (+0x9f/+0x5..7 @0x80117f40-74). Kriterium wie die Ostgasse: Angriff und NAH fest <= 450. */
+            int er8[2] = { 0, 0 }, la8[2] = { 0, 0 }, ng8[2] = { -1, -1 }; long fs8[2] = { -1, -1 }, ff8[2] = { 0, 0 };
+            for (int mi = 0; mi < 2; mi++) {   /* [0] NB6 (Modus 1), [1] Stand NB5 (Modus 6) */
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage 900 %d 30 7320 -7071 0 6418 -3617 857 3 0 -9013 -15461 2656 0 0", argv[0], mi ? 6 : 1);
+                FILE *pp = popen(cmd, "r"); char zl[1024];
+                while (pp && fgets(zl, sizeof zl, pp)) {
+                    int k, e1, la; long f1, f2;
+                    if (sscanf(zl, "LAGE G%d: erster Angriff %d, fest %ld (Anker %*d, Leon > 3000), davon fern %ld, Ende (%*d,%*d) s%*d, letzter Angriff %d,",
+                               &k, &e1, &f1, &f2, &la) == 5 && k == 1) { er8[mi] = e1; fs8[mi] = f1; ff8[mi] = f2; la8[mi] = la; }
+                    char *g1 = strstr(zl, "| G1 "); char *ng = g1 ? strstr(g1, " ng") : NULL;   /* erste Antwort des Nah-Umwegs (Spur je 30 Bilder) */
+                    if (zl[0] == 'F' && ng && ng8[mi] < 0) { int v = atoi(ng + 3); if (v > 0) ng8[mi] = v; }
+                }
+                if (pp) pclose(pp);
+                printf("Stelle 8 verkeilt Modus %d: G1 Angriff %d..%d NAH fest %ld, erster Nah-Umweg-Grund %d\n", mi ? 6 : 1, er8[mi], la8[mi], fs8[mi] - ff8[mi], ng8[mi]);
+            }
+            CHECK(er8[1] == 0 && fs8[1] - ff8[1] >= 900, "Stelle 8 verkeilt Gegenprobe Stand NB5 = Befund: Gorilla 1 kein Angriff, NAH fest %ld (900/900)", fs8[1] - ff8[1]);
+            CHECK(er8[0] > 0 && fs8[0] - ff8[0] <= 450, "Stelle 8 verkeilt NB6: Gorilla 1 greift an (Bild %d..%d), NAH fest %ld <= 450", er8[0], la8[0], fs8[0] - ff8[0]);
+            CHECK(ng8[0] == 13, "Stelle 8 verkeilt NB6: Ausweg = Sprung mit dem Seitencode (Nah-Umweg-Grund 13), gemessen %d", ng8[0]);
         }
         re15_r36_affen_padsuche_enable(1);
     }

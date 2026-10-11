@@ -1,0 +1,12 @@
+# Zufallsgang 52 Seeds x 6000 Bilder, Anker 400: blockiert (griffe) je Seed — nur Seeds, die sich unterscheiden
+# Spalten: Stand NB5 | NB6a (5a02b824) | NB6b (Korrektur Anlauf am Pad); sub7 = Bilder in Sub 7 (Sprung) innerhalb der blockierten Strecken
+0000beef: NB5   126 ( 2, sub7   0) | NB6a   769 (10, sub7   0) | NB6b   769 (10, sub7   0)  d(NB6b-NB5) +643
+0ec6d5ab: NB5     0 ( 3, sub7   0) | NB6a   370 ( 3, sub7 273) | NB6b   370 ( 3, sub7 273)  d(NB6b-NB5) +370
+45c2c492: NB5   254 ( 4, sub7   0) | NB6a    93 ( 5, sub7   0) | NB6b    93 ( 5, sub7   0)  d(NB6b-NB5) -161
+708f5bfa: NB5   228 ( 1, sub7  10) | NB6a   101 ( 2, sub7   0) | NB6b   101 ( 2, sub7   0)  d(NB6b-NB5) -127
+7ed38e72: NB5   261 ( 4, sub7   0) | NB6a   597 ( 5, sub7 426) | NB6b   633 ( 5, sub7 459)  d(NB6b-NB5) +372
+9075ea6c: NB5   307 ( 3, sub7  19) | NB6a   109 ( 4, sub7   0) | NB6b    92 ( 4, sub7  13)  d(NB6b-NB5) -215
+bb4281d4: NB5   354 ( 4, sub7   0) | NB6a   329 ( 4, sub7   0) | NB6b   329 ( 4, sub7   0)  d(NB6b-NB5) -25
+c413afd1: NB5   409 ( 3, sub7   0) | NB6a   461 ( 2, sub7   0) | NB6b   838 ( 3, sub7   9)  d(NB6b-NB5) +429
+e96d42be: NB5     0 ( 4, sub7   0) | NB6a     0 ( 3, sub7   0) | NB6b     0 ( 3, sub7   0)  d(NB6b-NB5) +0
+Summe NB5 16352 / NB6a 17242 / NB6b 17638; Griffe 242 / 252 / 253; NB6b gegen NB5: besser 4, schlechter 4, gleich 44

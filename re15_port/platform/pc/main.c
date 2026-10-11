@@ -7596,6 +7596,7 @@ re_title:;
                 }
                 re15_game_step(&gctx);
                 re15_trage1200_mess();   /* Runde 35 Spur H: Messschiene RE15_GEGNER_Y_LOG (env, kein Verhalten) */
+                re15_r36_affen_log_tick();   /* Runde 36 Spur F: Messschiene RE15_AFFEN_LOG (env, kein Verhalten) */
                 /* Runde 34 C1 (E10): ESP-Tick + RE2-FX-Pumpe HINTER dem Spielschritt und VOR dem
                  * Item-Modal — @0x8001ce0c (Spieler) < @0x8001ce2c (ESP) < @0x8001ce34 (Modal).
                  * Laeuft nur, wenn der SCD-30-Hz-Zweig dieses Bilds den Takt freigegeben hat. */
