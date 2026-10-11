@@ -581,7 +581,8 @@ static const struct { uint16_t raum; uint8_t id; const uint8_t *b; uint8_t n; } 
 
 /* ---- Zustand --------------------------------------------------------------------------------- */
 static int     s_zustand = RE15_IT_AUS;
-static uint8_t s_prog[640];        /* die RAM-Kopie, die die VM ausfuehrt (groesstes Programm 574 B) */
+static uint8_t s_prog[640];        /* die RAM-Kopie, die die VM ausfuehrt (groesstes zusammengesetztes Programm 446 B =
+                                    * 1040 Kopf + Aufstellung + Vorlauf + Tor + Ende; Riegel unit_r36_szene1150_folge) */
 static int     s_prog_len = 0;
 
 static void log_it(const char *was)

@@ -318,3 +318,26 @@ Basisstand 78a4a748 (= v0.8.23 + Runde-36-Auftrag) in K1.1/K2.1/K3.1; kein Bisec
 * Neue Assets fuer das Paket-Gate: KEINE (der Ton liegt eingebacken in `engine/src/gen/knall_bank.inc`). Keine neuen
   Sprachdateien (die Zeilen 10..14 in ROOM11C0 sind unveraendert, `synchro/STAGE1/room11C0/main10..14.wav` wie r35).
 * Bedienung unveraendert: nach der 10F0-Szene ROOM1150 betreten.
+
+## Abschluss
+* Gezielter Lauf (KEINE volle Suite; Stand = Code dieses Abschlusses bis auf zwei Kommentarzeilen und die
+  Programmlaengen-Pruefung im Riegel folge), `ctest --test-dir re15_port/build -R "<Ausdruck>" --timeout 900`:
+  ```
+  -R '^unit_r35_cut1150_|^integration_r35_cut1150$|^unit_r36_szene1150_|^integration_r36_szene1150$|^unit_1030_|^unit_room1040_switch$|^unit_cam_1030_reentry$|^unit_room1150_itembox$|^unit_irons_|^unit_sicherung_1150$|^unit_r30_irons|^integration_r30_irons|^unit_montage_fx$|^probe_r16_tuer1040|^unit_r35_fenster_knall$|^unit_se_bank_routing$|^unit_r34_plattform|^integration_r34n_g_schrift1150$|^unit_r35_cut10f0_|^integration_r35_cut10f0$'
+  100% tests passed, 0 tests failed out of 54
+  ```
+  (darin integration_r35_cut1150 Laeufe A-F, integration_r35_cut10f0, integration_r36_szene1150, die Se_on-Pins
+  unit_se_bank_routing / unit_r34_plattform*, die ROOM1030/1040/1150-Riegel).
+* Nach den letzten Aenderungen (Kommentar re15_irons_tod.h/irons_tod_1150.c, Laengen-Pruefung im Riegel folge: laengstes
+  Laufprogramm 446 B < s_prog[640]) neu gebaut (`=== LOCAL-BUILD-OK (build)`) und die Riegel erneut:
+  ```
+  -R '^unit_r35_cut1150_|^unit_r36_szene1150_'
+  100% tests passed, 0 tests failed out of 16
+  ```
+* Gemeinsame Dateien: KEINE geaendert (nur irons_tod_1150.c, re15_irons_tod.h, gen/knall_bank.inc, tools/r35_l/knall_cut.py,
+  tools/r36_k/*, Riegel test_r35_cut1150.c (Erwartungen an die neue Reihenfolge), test_r36_szene1150.c,
+  tests/integration/test_r36_szene1150.cmake, tests/unit/probes/r36_szene1150.cmake). Keine neuen Assets
+  (Paket-Gate unveraendert), keine neuen Sprachdateien, keine Bank-9-Bits / Nachrichten-IDs / Ereignisse ueber die
+  Zuteilung hinaus (Ereignis 21 wie r35; Bank-5-Bits 0/1 in ROOM11C0 = die Ankunfts-Bits der Original-Subs sub05/sub06).
+* Messwerkzeuge: tools/r36_k/kette_lauf.sh (Kette mit der echten exe, Messkopie), knall_zensus.py (RE2-Raumbaenke),
+  knall_im_mitschnitt.py (Knall-Suche im Ton-Mitschnitt), spektro.py (Wellen/Spektren), sheet.py (Kontaktbogen).

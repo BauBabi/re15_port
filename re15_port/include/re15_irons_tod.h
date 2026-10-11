@@ -205,7 +205,7 @@ void re15_irons_tod_tick(void);
 /* Pruefhaken (kein Spielverhalten). */
 int            re15_irons_tod_zustand(void);
 void           re15_irons_tod_zustand_setzen(int z);      /* Riegel: Schritt vorgeben */
-const uint8_t *re15_irons_tod_programm(int welches, int *out_len);   /* Vorlagen 0..18 (s. .c) */
+const uint8_t *re15_irons_tod_programm(int welches, int *out_len);   /* Vorlagen 0..19 (s. .c) */
 const uint8_t *re15_irons_tod_laufprogramm(int *out_len);            /* RAM-Kopie der VM */
 const uint8_t *re15_irons_tod_meldung(uint16_t room_id, int msg_id, int *out_len);
 int            re15_irons_tod_lebend(int welche /* 0 = 1140, 1 = 1070 */);   /* Zaehlung ueber die Tot-Bits */

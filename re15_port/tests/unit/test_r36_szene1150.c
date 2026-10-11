@@ -246,7 +246,8 @@ static int knall_vor(int i)
 
 /* Die Kette ab 1150 ueber die echten Tuer-Anforderungen fahren; je Raum: Gegner nach dem Raumaufbau (vor dem
  * ersten Bild), Zuwachs auf der zeigenden Kamera. */
-typedef struct { uint16_t raum; int gegner_aufbau; int cut_aufbau; int marvin_aufbau; schritt_t s; } raum_t;
+typedef struct { uint16_t raum; int gegner_aufbau; int cut_aufbau; int marvin_aufbau; int prog_len; schritt_t s; } raum_t;
+static int s_prog_max = 0;   /* laengstes zusammengesetztes Laufprogramm (s_prog[640] in irons_tod_1150.c) */
 static int kette(raum_t *R, int maxr)
 {
     int nr = 0;
@@ -260,6 +261,7 @@ static int kette(raum_t *R, int maxr)
         if (room_boot((uint16_t)ziel, S.x, S.z, S.yaw, (uint8_t)cut) != 0) break;
         R[nr].raum = (uint16_t)ziel; R[nr].gegner_aufbau = aktive_gegner(); R[nr].cut_aufbau = (int)g_scd.cam_id;
         R[nr].marvin_aufbau = g_actors[4].active && g_actors[4].type == 0x40;
+        { int pl = 0; (void)re15_irons_tod_laufprogramm(&pl); R[nr].prog_len = pl; if (pl > s_prog_max) s_prog_max = pl; }
         if (ziel == 0x1150) { for (int f = 0; f < 200; f++) frame(); nr++; break; }   /* Rueckkehr */
         if (!bis_tuer(&R[nr].s, 2500)) { PRUEF(0, "ROOM%04X: keine Tuer", ziel); nr++; break; }
         S = R[nr].s;
@@ -295,6 +297,12 @@ static void teil_folge(void)
     printf("  Raeume:"); for (int i = 0; i < nr; i++) printf(" %04X(Gegner %d, Cut %d)", R[i].raum, R[i].gegner_aufbau, R[i].cut_aufbau); printf("\n");
     PRUEF(nr == 5 && R[0].raum == 0x1130 && R[1].raum == 0x1040 && R[2].raum == 0x1030 && R[3].raum == 0x11C0 && R[4].raum == 0x1150,
           "A: Kette 1150 -> 1130 -> 1040 -> 1030 -> 11C0 -> 1150 (%d Raeume)", nr);
+    /* prog_anhaengen verwirft still, was nicht in s_prog[640] passt: jedes zusammengesetzte Programm muss passen und mit
+     * Evt_end enden (sonst fehlte z.B. der Tuersatz) */
+    {
+        int ok_len = 1; for (int i = 0; i < nr; i++) if (R[i].prog_len <= 0 || R[i].prog_len > 640) ok_len = 0;
+        PRUEF(ok_len && s_prog_max < 640, "A: Laufprogramme passen in s_prog[640] (laengstes %d B)", s_prog_max);
+    }
     if (nr >= 4) {
         PRUEF(R[0].gegner_aufbau == 5 && R[0].cut_aufbau == 0, "A: ROOM1130 nach dem Raumaufbau 5 Zombies, Cut 0 (%d, %d)",
               R[0].gegner_aufbau, R[0].cut_aufbau);
