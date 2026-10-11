@@ -442,6 +442,20 @@ static void teil_aufschliessen(void)
         folge_pruefen("ROOM10D0 Code richtig (KARTE_AUF)", sa, bi, 2);
         PRUEF(re15_game_flag_get(3, 0x32), "ROOM10D0: sub01 hat (3,0x32) nicht gesetzt - Skriptweg nicht gelaufen");
     }
+    /* 5b'. ROOM10D0 Kartenleser: Blue Keycard (9,0x34) da, Platz 1 sce 3 -> sub20 @0x019AE Message_on 7 (Ja/Nein),
+     * Ja (Ck(12,0x1F)==0) -> @0x019C4 Message_on 9 "You've used the Blue Keycard." = KARTE_EIN (nur Karte ein;
+     * Piep + Aufschliessen erst nach dem Code, 5b). Bestaetigt wird mit QUADRAT (Ja ist vorgewaehlt), Text mehrseitig -> alle 8 Bilder druecken. */
+    s_n_flags = 1; s_flags[0][0] = 9; s_flags[0][1] = 0x34;
+    if (room_boot(0x10D0) == 0) {
+        s_spion_n = 0; s_bild = 0;
+        re15_aot_fire_slot(1);
+        for (int f = 0; f < 900 && s_spion_n == 0; f++, s_bild++) {
+            uint16_t e = (f >= 8 && (f % 8) == 0) ? RE15_PAD_BIT_SQUARE : 0;
+            frame(e, e);
+        }
+        static const int sa[1] = { 0 }, bi[1] = { 0 };
+        folge_pruefen("ROOM10D0 Kartenleser Ja (KARTE_EIN)", sa, bi, 1);
+    }
     /* 5c. ROOM3010 Green Keycard: (3,0x3B) = Karte da -> Platz 6 sce 3 -> sub02 Message_on 1 */
     s_n_flags = 1; s_flags[0][0] = 3; s_flags[0][1] = 0x3B;
     if (room_boot(0x3010) == 0) {
