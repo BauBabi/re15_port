@@ -15,6 +15,8 @@
  *      Nein -> nichts genommen, Zone bleibt.
  *   K  Karte: ohne Bit KEINE unbesuchte Kachel (RE2 @0x8006E744), mit Bit Kacheln in Zeile 498
  *      (@0x8006E71C); Blatt erst mit Bit waehlbar (RE2 Bank 35 @0x8006D934, Set(35,n) @0x037E6).
+ *   S  Spielstand: die Bits 87..91 reisen mit g_game.flags (re15_savedata_capture/restore) — kein
+ *      neues Feld, alte Staende laden unveraendert (Bits 0 = keine Karte).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -37,6 +39,7 @@
 #include "re15_map_owned.h"
 #include "re15_map_hint.h"
 #include "re15_kartenitems_r36.h"
+#include "re15_savedata.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -374,6 +377,25 @@ static void teil_k(void)
     CHECK("frischer Stand: keine Besitz-Bits der Polizei-Blaetter", (re15_map_owned_bits() & 0x1Fu) == 0);
 }
 
+static void teil_s(void)
+{
+    printf("=== S: Spielstand-Rundlauf ===\n");
+    re15_savedata_t sd, zurueck;
+    uint16_t raum = 0;
+    re15_game_state_init();
+    g_current_room_id = 0x1140;
+    re15_game_flag_set(RE15_R36K_BANK, 87, 1);
+    re15_game_flag_set(RE15_R36K_BANK, 91, 1);
+    re15_savedata_capture(&sd, 0, 1);
+    zurueck = sd;
+    re15_game_state_init();
+    CHECK("nach dem Zuruecksetzen kein Besitz", (re15_map_owned_bits() & 0x1Fu) == 0);
+    CHECK("Restore ok", re15_savedata_restore(&zurueck, &raum) == 0);
+    CHECK("Bits 87/91 aus dem Spielstand -> Blatt 4 (3F) und 0 (B1) im Besitz, 1..3 nicht",
+          re15_map_owned_page(4) && re15_map_owned_page(0) &&
+          !re15_map_owned_page(1) && !re15_map_owned_page(2) && !re15_map_owned_page(3));
+}
+
 int main(void)
 {
     printf("=== Runde 36 Spur N: Lageplaene zum Aufsammeln ===\n");
@@ -390,6 +412,7 @@ int main(void)
     teil_d(&raeume[0], 0, -2050, -9900);     /* 1140 Leon, NEIN                                    */
     teil_d(&raeume[3], 1, 2130, 22700);      /* 10D1 Elza, vor dem Aushang                         */
     teil_k();
+    teil_s();
     for (int i = 0; i < 10; i++) free(raeume[i].buf);
     if (g_fail) { printf("FAIL\n"); return 1; }
     printf("OK\n");
