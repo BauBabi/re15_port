@@ -156,3 +156,22 @@ gleiches Laufskript). debug.log `e_elza_s0`: `[pl] Spieler-Familie PL04 (charact
 `[ziel1190] ROOM1191 Scheibe 0 angeklickt (Platz 17) -> Nachricht 7 (wenige Einschuesse)`. Bild
 `H_ziel1190/p1_nachher_elza_s0_F650.png`: Elza (PL04) vor Scheibe 0, Untertitel "This target does not have /
 many bullet holes." — bei Elza genau vertauscht.
+Elza Scheibe 1..3 (gleicher LADE-Weg, Laeufe `e_elza_s1..s3`, U-Zeiten 4.45 / 2.85 / 1.25):
+```
+e_elza_s1: [ziel1190] ROOM1191 Scheibe 1 angeklickt (Platz 18) -> Nachricht 6 (viele Einschuesse)
+e_elza_s2: [ziel1190] ROOM1191 Scheibe 2 angeklickt (Platz 19) -> Nachricht 7 (wenige Einschuesse)
+e_elza_s3: [ziel1190] ROOM1191 Scheibe 3 angeklickt (Platz 20) -> Nachricht 6 (viele Einschuesse)
+```
+Kontaktbogen `H_ziel1190/p1_nachher_elza_s0-s3_F690-555.png`: Elza vor Scheibe 0..3, Untertitel "does not have
+many" / "surprisingly large number" / "does not have many" / "surprisingly large number" — Leon Obj 0+2 viele,
+Elza Obj 1+3 viele, wie vom Nutzer verlangt ("genau vertauscht").
+
+**Knopf 0 (Gegenprobe, Knoepfe wieder Original)** — derselbe Lauf wie die Messung vorher (§1.1): `RE15_DEBUG_JUMP=1190@gp
+RE15_PLAYER_POS=-3180,-24500,2048 RE15_SET_FLAG=4:243 RE15_MSG_LOG=1 RE15_PRESS=square@1800,square@1960`, Lauf
+`n_knopf0`. debug.log: `[msg] room=1190 id=0 savepoint=0` (zweimal: Frage + Antwort), KEINE `[ziel1190] ...
+angeklickt`-Zeile. Bild `H_ziel1190/p1_nachher_knopf0_F1850-2090.png`: am Knopf von Kabine 1 kommt jetzt sofort
+"There's a switch here. Push it?" (Schreibmaschine bei F1850), kein Scheiben-Satz mehr — im Gegensatz zum
+Vorher-Bild (§1.1), wo zuerst der Scheiben-Satz stand.
+
+Zeitbasis der Laeufe: JUMP-Laeufe mit `RE15_INPUT_SCRIPT_START=1800` (der Sprung meldet `AUTO-JUMP -> ROOM1190
+(Frame 1768)`), LADE-Laeufe mit `RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=150`.
