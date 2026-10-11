@@ -106,7 +106,7 @@
    "basis": "DOOR0C",
    "blatt": "DOOR0C",
    "ton": "eigen DOOR0C (Holz-Doppeltuer mit Glas)",
-   "rezept": "helles gelbbraunes Holz, je Fluegel hohes schmales Drahtglasfenster, Panikstange gemalt",
+   "rezept": "Runde 36: helles Holz mit WAAGERECHTER RE2-Faser 1:1 (DOOR0D-Fuellungen gedreht), gemaltes Licht ROOM10C04, Drahtglasfenster mit Rahmen/Spiegelung, Panikstange mit Haltern, gebuerstetes Trittblech",
    "griff": "Stangengriff senkrecht (DOOR0C Mesh 1)",
    "stufe": 2
   },
@@ -1510,7 +1510,7 @@
   },
   "T011": {
    "gruppe": "G8",
-   "archiv": "P25G",
+   "archiv": "RE2",
    "grund_r31": "aufzug",
    "seiten": [
     {
@@ -1518,15 +1518,17 @@
      "raum": "ROOM1040",
      "bau": true,
      "variante": 0,
-     "herkunft": "DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)",
+     "herkunft": "Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer",
      "zwilling": false,
      "griff": "unsichtbar"
     }
-   ]
+   ],
+   "basis": "DOOR27",
+   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)"
   },
   "T017": {
    "gruppe": "G8",
-   "archiv": "P25G",
+   "archiv": "RE2",
    "grund_r31": "aufzug",
    "seiten": [
     {
@@ -1534,15 +1536,17 @@
      "raum": "ROOM10C0",
      "bau": true,
      "variante": 0,
-     "herkunft": "DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)",
+     "herkunft": "Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer",
      "zwilling": false,
      "griff": "unsichtbar"
     }
-   ]
+   ],
+   "basis": "DOOR27",
+   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)"
   },
   "T018": {
    "gruppe": "G8",
-   "archiv": "P25G",
+   "archiv": "RE2",
    "grund_r31": "aufzug",
    "seiten": [
     {
@@ -1550,11 +1554,13 @@
      "raum": "ROOM1120",
      "bau": true,
      "variante": 0,
-     "herkunft": "DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)",
+     "herkunft": "Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer",
      "zwilling": false,
      "griff": "unsichtbar"
     }
-   ]
+   ],
+   "basis": "DOOR27",
+   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)"
   },
   "T102": {
    "gruppe": "G9",
@@ -1715,15 +1721,15 @@
   },
   "T084": {
    "gruppe": "G11d",
-   "archiv": "P26W",
+   "archiv": "RE2",
    "grund_r31": "aehnlich",
    "seiten": [
     {
      "id": "S164",
      "raum": "ROOM2090",
      "bau": true,
-     "variante": 3,
-     "herkunft": "einteilig, Rad links -> V3 (T2 2.4 Punkt 3)",
+     "variante": 0,
+     "herkunft": "Runde 36 Spur G: Gross-Schott zweiteilig DOOR26 V0 unveraendert (Skript 3 @Datei 0x05914 obj 0 + obj 1, Rad links); Flaeche 3500 breit = zwei Fluegel",
      "zwilling": false,
      "griff": "links"
     },
@@ -1731,12 +1737,14 @@
      "id": "S165",
      "raum": "ROOM20A0",
      "bau": true,
-     "variante": 2,
-     "herkunft": "Rad unsichtbar -> Komplement V2",
+     "variante": 0,
+     "herkunft": "Runde 36 Spur G: Gegenseite DOOR26 V0 wie RE2 (6020/6030/6040/60C0/60F0/6140/6150/6160/6170 beidseitig V0)",
      "zwilling": false,
      "griff": "unsichtbar"
     }
-   ]
+   ],
+   "basis": "DOOR26",
+   "runde36": "grosse Tuer ROOM2090: vorher P26W V3/V2 (einteilig)"
   },
   "T095": {
    "gruppe": "G11e",

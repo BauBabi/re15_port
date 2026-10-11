@@ -1,0 +1,35 @@
+{
+ "kennung": "P0CD",
+ "basis": "DOOR0C",
+ "datei": 61468,
+ "fnv": 3029562898,
+ "sha1": "37f00db8e481f3f26207d9069dffb24ffb0b907e",
+ "basis_sha1": "b514f72fa64ab5b317881996f876db72fd7f998b",
+ "rezept": "Runde 36: helles Holz mit WAAGERECHTER RE2-Faser 1:1 (DOOR0D-Fuellungen gedreht), gemaltes Licht ROOM10C04, Drahtglasfenster mit Rahmen/Spiegelung, Panikstange mit Haltern, gebuerstetes Trittblech",
+ "protokoll": {
+  "faser_std": 0.0734,
+  "fenster": [
+   26,
+   17,
+   57,
+   137
+  ],
+  "panikstange": [
+   14,
+   147,
+   116,
+   153
+  ],
+  "trittblech_v0": 190,
+  "gekappt": 0,
+  "herkunft": "Faser RE2 DOOR0D (3 Fuellungen, gedreht, nur laengs gestreckt); Farbe/Licht ROOM10C04 linker Fluegel (Port-Dekoder); Lagen Runde 33 S041 c03 + ROOM10C04"
+ },
+ "palette": {
+  "farben_geschuetzt": 57,
+  "farben_blatt": 261,
+  "quantisiert": true,
+  "groesster_fehler_5bit": 2,
+  "texel_unbenutzt": 3778,
+  "palette_belegt": 245
+ }
+}

@@ -264,8 +264,9 @@ check_tree() {           # $1 = fertiger Paketordner
     # Seit Runde 36: Elza-Szenentoene (Spur L, elza_se_pc.c: Aufschliessen ROOM1211, Schuesse/Roy ROOM1021),
     # Tuer-/Schluesseltoene (Spur Q, TUERSE.VBS geaendert: Verschlossen-/Aufschliess-Ton der Parkplatz-Tuer
     # 11B0) und Kendos Schloss-Bank aus RE2 ROOM1010 (Spur J, audio_pc.c re2_schloss_laden: Marvin schliesst
-    # die Werkstatt-Tuer 11B0 ab). Fehlen sie, bleiben diese Szenen stumm.
-    for rs in ELZASE.VBS TUERSE.VBS SCHLOSS1010.EDT SCHLOSS1010.VH SCHLOSS1010.VB; do
+    # die Werkstatt-Tuer 11B0 ab) und die Aufschliess-Toene der Karten-/Ziffernfeld-Tueren (Spur G, KARTSE.VBS:
+    # Karte ein / Piep / Aufschliessen nach RE2 ROOM2110). Fehlen sie, bleiben diese Szenen stumm.
+    for rs in ELZASE.VBS TUERSE.VBS SCHLOSS1010.EDT SCHLOSS1010.VH SCHLOSS1010.VB KARTSE.VBS; do
         [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-36-Szenen waeren stumm)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
     done

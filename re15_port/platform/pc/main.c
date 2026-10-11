@@ -3239,6 +3239,7 @@ int main(int argc, char *argv[])
     /* ⛔ RE2-ERGAENZUNG: die Tuersequenz (Tor ROOM1170) spielt die PC-Szene
      * platform/pc/src/door_scene_pc.c; ohne Anmeldung verfaellt jede Anfrage. */
     { extern void re15_pc_tuerszene_anmelden(void); re15_pc_tuerszene_anmelden(); }
+    { extern void re15_pc_aufschliessen_anmelden(void); re15_pc_aufschliessen_anmelden(); }   /* Runde 36 Spur G */
     re15_audio_init();   /* FE-3: open the audio device early so the opening movie has sound
                           * (idempotent — the later call in the game-init path is a no-op). */
     /* Pruefhaken RE15_TUER_TEST=<Variante>: die Tor-Sequenz einmal direkt spielen und beenden
@@ -3290,6 +3291,8 @@ int main(int argc, char *argv[])
           fflush(stderr);
           return 0;
       } }
+    /* Runde 36 Spur G: Pruefhaken RE15_TUER_ARCHIV=<NN:V,...> (platform/pc/src/tuer_r36_pc.c) */
+    { extern int re15_pc_tuer_archiv_test(void); if (re15_pc_tuer_archiv_test()) return 0; }
 
     /* FE-0.3 / FE-1.3 — top-level mode machine: immer Boot zum TITLE.
      * Der RE15_START_ROOM-Schnellweg ist entfernt (siehe re15_gameflow_init). */
