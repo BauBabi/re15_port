@@ -939,11 +939,44 @@ void re15_collision_prop_contain(int prop_idx, int32_t *x, int32_t *z)
     prop_contain(prop_idx, x, z);
 }
 
+/* ---- FUN_8002cabc @0x8002cb84-cbc8 — der Y-TEST (Runde 36 Spur R, Abnahme 2 P2) ------------------
+ * Nach der x/z-Broadphase (@0x8002cb50-cb70) und fuer a2 != 2 (@0x8002cb78-7c) prueft das Original
+ * die HOEHE, bevor es ausschiebt:
+ *   8002cb84  lh  v1,2(t1)        ; objbox.cy          8002cb88  lw  a1,56(t0)   ; obj.y
+ *   8002cb8c  lh  v0,2(t2)        ; actorbox.cy        8002cb90  lw  a0,56(a3)   ; actor.y
+ *   8002cb94/98 addu              ; objCY = cy+y, actorCY = cy+y
+ *   8002cb9c  lhu a1,8(t2)        ; actorbox.hy        8002cba0  lhu a0,8(t1)    ; objbox.hy
+ *   8002cba4  subu t6,v1,v0       ; dy = objCY - actorCY
+ *   8002cba8  addu a1,a1,a0       ; hySum
+ *   8002cbac  addu t3,t6,a1       ; dy + hySum
+ *   8002cbb0  sll  v0,a1,1        ; 2*hySum
+ *   8002cbb4  sltu v0,v0,t3       ; (u32)(2*hySum) < (u32)(dy + hySum)  <=> |dy| > hySum
+ *   8002cbb8  xori t3,v0,0x1      ; t3 = 1 bei Ueberlappung
+ *   8002cbbc  bne  t3,zero,0x8002cbcc
+ *   8002cbc4  j    0x8002cde4     ; keine Ueberlappung -> Rueckgabe 0 (addu v0,zero,zero @0x8002cbc8)
+ * Die Aktor-Box (t2 = actor+0x78, NICHT die gedrehte +0x7c): Spieler DAT_800acacc -> 0x80073e94 =
+ * {0,-1530,0,450,1530,450} (PSX.EXE Datei-Offset 0x64694 `00 00 06 fa 00 00 c2 01 fa 05 c2 01`); die
+ * NPC-Familie 0x40..0x4d traegt dieselbe Box @0x80121658 (STAGE1.BIN Offset 0x21658, gleiche Bytes).
+ * Gemessen (R_abnahme_2.md A1/O1): Leon auf Band 3 (y -5400) lief im Port bei x 3402 = 2952 + 450 an der
+ * Band-0-Kiste obj 1 (2052,0,-5552) von ROOM2050 fest; das Original laeuft hindurch (dy = 6030 > 2430).
+ * Der Zweig @0x8002cc3c-cce4 (frischer VERTIKALER Eintritt -> Ausschiebung in Y statt x/z) ist NICHT
+ * portiert — er braucht die +0x42-Vor-y-Spiegel von Aktor und Objekt; s. Dossier OFFEN. */
+#define RE15_AKTORBOX_CY  (-1530)   /* 0x80073e94 +2 = 0xfa06 */
+#define RE15_AKTORBOX_HY  ( 1530)   /* 0x80073e94 +8 = 0x05fa */
+static int y_ueberlappt_8002cb84(int i, int32_t actor_y)
+{
+    const int32_t objCY   = (int32_t)g_scd.props[i].box_cy + g_scd.props[i].y;   /* @0x8002cb84/88/94 */
+    const int32_t actorCY = RE15_AKTORBOX_CY + actor_y;                            /* @0x8002cb8c/90/98 */
+    const int32_t hySum   = RE15_AKTORBOX_HY + (int32_t)(uint16_t)g_scd.props[i].box_hy; /* @0x8002cb9c-a0/a8 */
+    const int32_t dy      = objCY - actorCY;                                       /* @0x8002cba4 */
+    return !((uint32_t)(hySum << 1) < (uint32_t)(dy + hySum));                    /* @0x8002cbac-b8 */
+}
+
 /* FUN_8002cabc mit a2 = 0 fuer EIN Objekt: der Aktor weicht, das Objekt bleibt stehen.
  * Achsenwahl |dx*sumZ| gegen |dz*sumX| @0x8002cce8-d10, Schreiben @0x8002cd20-44 (X) bzw.
  * @0x8002cd88-ac (Z). Eine Box mit lauter Null-Halbmassen ist nicht kollidierend (Heli/Rotor
- * in ROOM1170 tragen genau das). */
-static void push_out_of(int i, int32_t *x, int32_t *z)
+ * in ROOM1170 tragen genau das). actor_y = Aktor +0x38 fuer den Y-Test @0x8002cb84-cbc8. */
+static void push_out_of(int i, int32_t *x, int32_t *z, int32_t actor_y)
 {
     int32_t bhx = (int32_t)(uint16_t)g_scd.props[i].box_hx;
     int32_t bhy = (int32_t)(uint16_t)g_scd.props[i].box_hy;
@@ -960,6 +993,7 @@ static void push_out_of(int i, int32_t *x, int32_t *z)
     int32_t adz = dz < 0 ? -dz : dz;
     if (adx > sumX) return;
     if (adz > sumZ) return;
+    if (!y_ueberlappt_8002cb84(i, actor_y)) return;   /* Runde 36 Spur R: @0x8002cbbc/@0x8002cbc4 -> v0 = 0 */
 
     int64_t cz = (int64_t)dx * sumZ; if (cz < 0) cz = -cz;
     int64_t cx = (int64_t)dz * sumX; if (cx < 0) cx = -cx;
@@ -985,10 +1019,11 @@ void re15_collision_objects(int32_t *x, int32_t *z)
      * Ohne das schob der Port den Spieler aus genau der Kiste heraus, auf der er steht
      * (gemessen ROOM1090: z 4266 -> 3403 = Kistenrand-450, in EINEM Frame). */
     const int stand = re15_climb_standing_probe(*x, *z);
+    const int32_t py = g_actors[RE15_ACTOR_SLOT_PLAYER].y;      /* Runde 36 Spur R: Spieler +0x38 @0x8002cb90 */
     for (int i = 0; i < (int)g_scd.prop_count && i < 16; i++) {
         if (!g_scd.props[i].active) continue;
         if (i == stand) { prop_contain(i, x, z); continue; }     /* @0x8002bef8/@0x8002bf0c */
-        push_out_of(i, x, z);
+        push_out_of(i, x, z, py);
     }
 }
 
@@ -1016,11 +1051,11 @@ void re15_collision_objects(int32_t *x, int32_t *z)
  * exakt das PR, mit dem der Port hier rechnet. Der Aufruf ist fuer 0x40..0x4d zahlengleich.
  * Nutzer-Report 2026-08-30: "Ada kann noch durch die Kiste laufen" — der Port hatte von
  * FUN_8002bd44 nur den Spieler-Rumpf ab @0x8002bf14 und damit diese Schleife nie. */
-void re15_collision_objects_actor(int32_t *x, int32_t *z)
+void re15_collision_objects_actor(int32_t *x, int32_t *z, int32_t actor_y)
 {
     for (int i = 0; i < (int)g_scd.prop_count && i < 16; i++) {
         if (!g_scd.props[i].active) continue;
-        push_out_of(i, x, z);
+        push_out_of(i, x, z, actor_y);                   /* Runde 36 Spur R: Y-Test @0x8002cb84-cbc8, Box @0x80121658 */
     }
 }
 
@@ -1050,6 +1085,9 @@ int re15_collision_push_prop(int prop_idx, int32_t actor_x, int32_t actor_z,
     int32_t adz = dz < 0 ? -dz : dz;
     if (adx > t5) return 0;                            /* @0x8002cb58 AABB-Broadphase */
     if (adz > t4) return 0;                            /* @0x8002cb6c */
+    /* Runde 36 Spur R: Y-Test @0x8002cb84-cbc8 (a2 = 1 != 2 @0x8002cb7c). Alle Aufrufer (Schubkette
+     * @0x8002bfa4, Herunterspringen @0x800384e0-50, Szenen-Schub @0x8002bed4) uebergeben den SPIELER. */
+    if (!y_ueberlappt_8002cb84(prop_idx, g_actors[RE15_ACTOR_SLOT_PLAYER].y)) return 0;
 
     int64_t px = (int64_t)dx * t4; if (px < 0) px = -px;   /* |t8*t4| @0x8002cc74/cce8 */
     int64_t pz = (int64_t)dz * t5; if (pz < 0) pz = -pz;   /* |t7*t5| @0x8002ccec/ccfc */

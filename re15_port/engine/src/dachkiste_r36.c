@@ -60,7 +60,7 @@ static int quadrant(int32_t px, int32_t pz, int16_t ceil_x, int16_t ceil_z)
     return (int)((zb | (xb >> 1)) >> 0x1e);
 }
 
-static void treffer_zellen(FILE *f, int32_t cx, int32_t cz, int band, int32_t r, unsigned mask)
+static void treffer_zellen(FILE *f, int32_t cx, int32_t cz, int band, int32_t hx, int32_t hz, unsigned mask)
 {
     const re15_rdt_t *rdt = &g_room_rdt;
     if (!rdt->sca || rdt->sca_count <= 0 || band < 0) return;
@@ -73,11 +73,20 @@ static void treffer_zellen(FILE *f, int32_t cx, int32_t cz, int band, int32_t r,
         const re15_sca_entry_t *e = &rdt->sca[i];
         if (band != (e->floor >> 4)) continue;                                     /* @0x8003b634-644 */
         if ((mask & e->u0) == 0) continue;                                         /* @0x8003b64c-660 */
+        /* Nachbesserung 3 (P4): Nicht-Quadrat-Zweig @0x8003b684-734 — Objektmitte innerhalb der x-Spanne
+         * (Lagecode 2) und ausserhalb der z-Spanne (3 oder 0) -> r = hz, sonst r = hx. */
+        int32_t r = hx;
+        if (hx != hz) {
+            const int32_t x1 = (int32_t)e->x + (int32_t)e->width, z1 = (int32_t)e->z + (int32_t)e->density;
+            const unsigned xcode = (unsigned)(((((uint32_t)(cx - x1)) & 0x80000000u) | ((((uint32_t)(cx - (int32_t)e->x)) & 0x80000000u) >> 1)) >> 30);
+            const unsigned zcode = (unsigned)(((((uint32_t)(cz - z1)) & 0x80000000u) | ((((uint32_t)(cz - (int32_t)e->z)) & 0x80000000u) >> 1)) >> 30);
+            if (xcode == 2u && (zcode == 3u || zcode == 0u)) r = hz;
+        }
         if ((unsigned)(cx - ((int32_t)e->x - r)) < (unsigned)((int32_t)e->width   + r * 2) &&   /* @0x8003b738-768 */
             (unsigned)(cz - ((int32_t)e->z - r)) < (unsigned)((int32_t)e->density + r * 2)) {   /* @0x8003b770-794 */
-            fprintf(f, "  TREFFER-ZELLE r%d[%d]: x %d..%d z %d..%d typ %d u0 0x%02x u1 0x%02x fl 0x%02x\n",
+            fprintf(f, "  TREFFER-ZELLE r%d[%d]: x %d..%d z %d..%d typ %d u0 0x%02x u1 0x%02x fl 0x%02x r=%d\n",
                     q, i - start, (int)e->x, (int)e->x + (int)e->width, (int)e->z, (int)e->z + (int)e->density,
-                    (int)e->type, (unsigned)e->u0, (unsigned)e->u1, (unsigned)e->floor);
+                    (int)e->type, (unsigned)e->u0, (unsigned)e->u1, (unsigned)e->floor, (int)r);
         }
     }
 }
@@ -107,7 +116,8 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
             g_scd.props[prop_idx].x, g_scd.props[prop_idx].z, ziel_x, ziel_z, (int)g_scd.props[prop_idx].band);
     if (gesperrt)
         treffer_zellen(f, ziel_x + g_scd.props[prop_idx].box_cx, ziel_z + g_scd.props[prop_idx].box_cz,
-                       (int)g_scd.props[prop_idx].band, (int32_t)(uint16_t)g_scd.props[prop_idx].box_hx, 2u);
+                       (int)g_scd.props[prop_idx].band, (int32_t)(uint16_t)g_scd.props[prop_idx].box_hx,
+                       (int32_t)(uint16_t)g_scd.props[prop_idx].box_hz, 2u);
     fflush(f);
 }
 

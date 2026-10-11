@@ -14346,7 +14346,7 @@ void re15_actor_prop_pushout(void)
         if (!ac->active) continue;                        /* @0x8002be2c Wort-0 & 1 */
         if (ac->type < 0x40 || ac->type > 0x4d) continue; /* s. Begrenzung oben */
         int32_t ax = ac->x, az = ac->z;
-        re15_collision_objects_actor(&ax, &az);           /* jal 0x8002cabc, a2 = 0 */
+        re15_collision_objects_actor(&ax, &az, ac->y);    /* jal 0x8002cabc, a2 = 0; Runde 36 Spur R: Aktor +0x38 fuer den Y-Test @0x8002cb84-cbc8 */
         ac->x = ax; ac->z = az;
     }
 }

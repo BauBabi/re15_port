@@ -571,6 +571,103 @@ Stand beim Start: 47384115 (Abnahme 1). Gebaut (`local_build.sh build` -> LOCAL-
   offen bleibt, ob das Original denselben Schubpfad (West bis r*[31], Sued in r*[46]) zulaesst. Messweg: re15_quickload.py
   --triangle 2 (JUMP 300 ...), Raum 0x305 steppen, orig_2050_push.py-Muster mit K = Pool-Index von obj 1. Eintrag OFFEN.
 
+## Nachbesserung 3 (Abnahme 2: P1, P2, P3, P4)
+
+Stand beim Start: 11f75e5a (Abnahme 2, Bericht `R_abnahme_2.md`). Reihenfolge wie vom Orchestrator vorgegeben:
+P1 Ruhe-Zweig, P2 Y-Test, P4 Nicht-Quadrat-Zweig, P3 Dossier. Alle Disassemblate selbst mit
+`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py dis <addr> <n>` aus `info/Re1.5/PSX.EXE` (Auslieferung,
+@0x80026e4c `08 00 e0 03`) gelesen; die Zitate unten sind die Instruktionen, nicht das Decompilat. Scratchpad der
+Abnahme 2 (`abn2/`, Spielstaende room2060_orig.sav/room3050_orig.sav, Skripte, Laeufe) liegt im selben Sitzungsordner
+und wurde direkt nachgelesen.
+
+### P1 — Ruhe-Zweig des Objekt-Passes: FUN_8003b558(obj,2) je Bild + Ausschiebung FUN_8003da78
+
+**Ursache.** `re15_prop_push_tick` (aot_common.c) kannte nur den Schub-Zweig (`if (count != 9) continue;`) und schrieb
+bei gesperrtem Schub "nichts". Das Original laeuft fuer JEDEN aktiven Pool-Eintrag, der nicht der angenommene Schub
+mit Substate 8 ist, ueber LAB_8002c0b8 und ruft dort FUN_8003b558(obj, 2) auf die (zurueckgesetzte) Lage — und
+FUN_8003b558 schiebt je getroffener Zelle das Objekt selbst aus der Zelle (FUN_8003da78). Ein Objekt, das eine
+Klasse-2-Zelle beruehrt (halboffener Test: die exakte Kantenberuehrung zaehlt), wird so im ersten Bild um
+Eindringtiefe + 18 verschoben; im Port blieb es fuer immer an der Kante haengen.
+
+**Messung vorher** (Abnahme 2, A6/A7/O3, selbst nachgelesen): Port `abn2/2060echt2/push.txt` =
+`F669 room=2060 p=2 obj=2 SCHUB-GESPERRT spieler=(-3102,3051) rot=5072 lage=(-3125,2075) ziel=(-3125,2001) band=0` +
+`TREFFER-ZELLE r0[9]: x -2400..3150 z 2150..5350`, `F1613 ... ziel=(-3125,2002)`, 0 SCHUB-OK, objfall.txt bis F4500
+`p2 (-3125,0,2075) b0`. Original `abn2/orig_2060b_abn2/log.txt`: `START ... obj=(-3143,0,2075)` (Raumstart, 20 s Ruhe,
+keine Eingabe), `SCHUB-OK obj=(-3143, 0, 2000, ...) spieler=(-3093, 0, 3050, 1056, 0, 1) s4/s5=(-3143,2075)` (Halt
+@0x8002bfc0), `NORD: Schub angenommen 19 x, gesperrt 0 x`, Tritt z 2075 -> 1852.
+
+**Belege (Instruktionen).**
+* Objekt-Pass FUN_8002bd44 (`dis 0x8002bd44 270`): Zugaenge zu LAB_8002c0b8 — `8002bee4 j 0x8002c0b8` (Szenen-Bit
+  0x200, nach `8002bed4 jal 0x8002cabc` a2 = 1 und `8002bedc/bee0 lhu s4,52 / lhu s5,60` = die GESCHOBENE Lage, also
+  bleibt sie), `8002bf80 andi v0,v0,0x80 / 8002bf84 bne v0,zero,0x8002c0b8` (obj+0 Bit 0x80), `8002bf8c lbu v1,140(s2) /
+  8002bf90 ori v0,zero,0x9 / 8002bf94 bne v1,v0,0x8002c0b8` (Zaehler != 9), `8002bfb8 bne v0,zero,0x8002c0b0` ->
+  `8002c0b0 sb s7,140(s2)` (gesperrt, 10) und durchfallend c0b8, `8002bfe0 ori v0,zero,0x8 / 8002bfe4 bne v1,v0,
+  0x8002c0b8` (Substate DAT_800aca59 != 8). LAB_8002c0b8: `8002c0b8 ori a1,zero,0x2 / 8002c0bc sll v0,s4,16 /
+  8002c0c0 sra v0,v0,16 / 8002c0c4 sw v0,52(s2) / 8002c0c8-cc sll/sra s5 / 8002c0d0 jal 0x8003b558 / 8002c0d4 sw
+  v0,60(s2)` — **die Rueckgabe wird nicht gelesen** (`8002c0d8 lui a0,0x800b` ... `8002c0e4 jal 0x8002cabc` a2 = 0).
+  Nur der angenommene Schub im Substate 8 umgeht c0b8 (`8002c0a8 j 0x8002c0d8`), und das Stand-Objekt (`8002bef0 lw
+  v0,0(s6)` = DAT_800ac788, `8002bef8 bne s2,v0,0x8002bf14`, `8002bf04 jal 0x8002cfd4`, `8002bf0c j 0x8002c0ec`) umgeht
+  beides. Spiegel: `8002c0ec lhu v1,56(s2) / 8002c0f0 lhu v0,52(s2) / 8002c0f4 lhu a0,60(s2) / 8002c0f8 sh v1,66(s2) /
+  8002c100 sh v0,64(s2) / 8002c10c sh a0,68(s2)` fuer jeden aktiven Eintrag.
+* FUN_8003b558 (`dis 0x8003b558 160`): Sonde aus obj+0x78 (`8003b5ac lw s3,120(s1)`, `8003b5b8 lhu v0,0(s3)` ->
+  sp+16, `8003b5c4 lhu v0,4(s3)` -> sp+20), `8003b5ec jal 0x8003b068` (a0 = &obj.x, a1 = Sonde, a2/a3 = ceil aus
+  `8003b5e4/e8 lh a2,0(v0) / lh a3,2(v0)` des SCA-Kopfs), Zellenliste `8003b5f4-624` (Zeiger [4+4q], [8+4q]).
+  Je Zelle: `8003b634 lhu v0,8(s0)` (s0 = Zelle+2 -> Zelle+10) `sll 16 / sra 28` (Bandnibble, vorzeichenbehaftet)
+  `8003b644 bne v1,v0` gegen `8003b638 lbu v1,130(s1)`; `8003b64c lhu v0,6(s0)` (Zelle+8) `sll 16 / sra 24` = (s8)u0,
+  `8003b65c and v0,s6,v0 / 8003b660 beq`; `8003b668 lw v0,0(s1) / 8003b670 andi v0,v0,0x8 / 8003b674 bne` (obj+0
+  Bit 3 -> Zelle uebersprungen); `8003b684 lhu v1,6(a3)` hx / `8003b688 lhu v0,10(a3)` hz / `8003b68c lhu t0,6(a3)` r =
+  hx / `8003b690 beq v1,v0,0x8003b738`; Nicht-Quadrat `8003b698-6cc`: a0 = ((cxw-x1)&0x80000000 | (cxw-x0)&0x80000000>>1)
+  >>30 (3 = westlich, 2 = innerhalb, 0 = oestlich), `8003b6d0-704` dito z, `8003b6f8 ori v0,zero,0x2 / 8003b6fc bne
+  a0,v0,0x8003b738` (x != innerhalb -> r = hx), `8003b708 beq v1,a0,0x8003b738` (z auch innerhalb -> hx), `8003b70c
+  sltiu v0,v1,0x3 / 8003b710 beq v0,zero,0x8003b728` / `8003b718 beq v1,zero,0x8003b734` / `8003b728 ori v0,zero,0x3 /
+  8003b72c bne v1,v0,0x8003b738` / **`8003b734 lhu t0,10(a3)`** = r = hz. Rechteck `8003b738-764`: (u32)((cx+obj.x) -
+  (x0-r)) < (u32)(w+2r), `8003b770-790` dito z; **`8003b79c jal 0x8003da78`** (a0 = Zelle `8003b798 addu a0,s2,zero`,
+  a1 = obj `8003b7a0 addu a1,s1,zero`, a2 = r aus `8003b74c andi a2,t0,0xffff`), `8003b7a4 ori s5,s5,0x1`; obj.x/z
+  werden je Zelle neu gelesen (`8003b73c lw v0,52(s1)`, `8003b774 lw v0,60(s1)`). Rueckgabe `8003b7bc andi v0,s5,0xff`.
+* FUN_8003da78 (`dis 0x8003da78 70` + `dis 0x8003db8c 60` + `dis 0x8003dc78 24`): `8003da94 sw a1,-32108(at)` =
+  DAT_800b8294 = obj; `8003da98 addu v0,v0,a0 / da9c addu v0,v0,a2` = x1+r, `8003daa0 lh v1,0(t1) / daa8 addu v1,v1,t2`
+  = cx+obj.x, `8003daac subu / dab0 addiu t0,v0,18` = (x1+r)-cxw+18; `8003daa4 subu a0,a0,a2 / dab4 subu a0,a0,v1 /
+  dab8 addiu a0,a0,-18` = (x0-r)-cxw-18; `8003dabc subu v0,zero,a0 / dac0 slt v0,v0,t0 / dac4 beq v0,zero / dacc addu
+  t0,a0,zero` = kleinerer Betrag. z analog `8003dad0-db10` (a3). Lagecode `8003db14 lh v0,64(a1) / db18 lh v1,68(a1)
+  / db1c subu v0,t2,v0 / db20 xor v0,t0,v0 / db24 srl v0,v0,31 / db28 subu v1,t1,v1 / db2c xor v1,a3,v1 / db30 srl
+  v1,v1,30 / db34 andi v1,v1,0x2 / db38 or v1,v0,v1`. Verzweigung `8003db3c ori v0,zero,0x2 / db40 beq v1,v0,0x8003dba0`
+  (Code 2), `db44 slti v0,v1,3 / db48 beq v0,zero,0x8003db60` (Code 3 -> `db64 beq v1,3,0x8003dbc8`), `db4c ori
+  v0,zero,0x1 / db50 beq v1,v0,0x8003db74` (Code 1), sonst `db58 j 0x8003dc2c` (Code 0). Code 1: `8003db74 bgez t0 /
+  db7c subu / db80 addiu v0,v0,400 / db84 andi 0xffff / db88 sltiu v0,v0,0x321 / db8c beq v0,zero,0x8003dbc8 / db90
+  addu v0,t0,t2 / db94 sw v0,52(a1) / db98 j 0x8003dcb8 / db9c ori v0,zero,0x1`. Code 2: `8003dba0-bc4` dito mit a3 ->
+  `sw v0,60(a1)`. Kleinerer Betrag `8003dbc8-dc28`: |t0| < |a3| -> `dc08 sw v0,52(v1)`, sonst `dc28 sw v0,60(v1)` (obj
+  ueber DAT_800b8294). Code 0 `8003dc2c-58`: `dc38 lh v0,64(a0) / dc3c lw a2,52(a0) / dc44 bne a2,v0,0x8003dc98`, `dc4c
+  lh v0,68(a0) / dc50 lw a1,60(a0) / dc58 bne a1,v0,0x8003dc98`; unbewegt `8003dc60-94` kleinerer Betrag (`dc80 addu
+  v0,t0,a2 / dc88 sw v0,52(a0)` bzw. `dc8c addu v0,a3,a1 / dc94 sw v0,60(a0)`); bewegt `8003dc98-cb4`: `dca4 lh
+  a0,64(v1) / dca8 lh a1,68(v1) / dcac addu v0,zero,zero / dcb0 sw a0,52(v1) / dcb4 sw a1,60(v1)` = Rueckstellung auf
+  den Spiegel, Rueckgabe 0.
+* FUN_8003b068 (`dis 0x8003b068 16`): `lh v0,4(a1) / lw v1,8(a0) / addu / subu v0,v0,a3 / and 0x80000000` (Bit 31 =
+  z+cz < ceil_z), `lh v1,0(a1) / lw a0,0(a0) / addu / subu v1,v1,a2 / and / srl v1,v1,1` (Bit 30 = x+cx < ceil_x),
+  `or / srl v0,v0,30` — identisch zu `quadrant_of` in re15_collision.c, angewandt auf Lage + Box-Mitte.
+* Spiegel-Startwert: der Installer LAB_80040914 (`dis 0x80040914 110`, alle Stores: `8004095c sb a0,8 / 80040968 sb
+  v0,9 / 80040974 sb v0,130 / 8004098c sw zero,0 / 800409a4 sw v0,0 / 800409b0 sw v0,12 / 800409bc sw v0,52 /
+  800409c8 sw v0,56 / 800409d4 sw v0,60 / 800409e0 sh v0,104 / 800409ec sh v0,106 / 800409f8 sw v0,120 / 80040a00 sh
+  v1,108 / 80040a54,a64,aa0 sw v0,116`) schreibt +0x40/+0x44 NICHT; der Raumlader nullt nur +0 (objfall_r36.c, FUN_8003ea7c
+  @0x8003eab0-cc). Im Original steht beim ersten Bild eines Raums also Altspeicher des Pool-Platzes im Spiegel.
+  Rechnung fuer den 2060-Tritt (t0 = -18, a3 = -618): JEDER Spiegelwert fuehrt auf x -3143 — Code 0 unbewegt (Spiegel
+  = Lage) -> kleinerer Betrag; Code 1 (18 <= 400) -> x; Code 2 (618 > 400) -> kleinerer Betrag; Code 3 -> kleinerer
+  Betrag; nur Code 0 BEWEGT (dx gleichsinnig/0 zu -18 UND dz gleichsinnig/0 zu -618, also Altspeicher westlich-noerdlich
+  der Lage) wuerde den Tritt auf den Altspeicher zuruecksetzen. Der Port setzt den Spiegel beim Raumaufbau = Lage
+  (PORT-WAHL, Startbild = "unbewegt"); der Altspeicher-Fall ist unter OFFEN benannt.
+
+**Aenderung.** Neue Datei `engine/src/zellschub_r36.c` + `include/re15_zellschub_r36.h`: `re15_zellschub_8003b558`
+(FUN_8003b558 mit Nicht-Quadrat-Zweig und Ausschiebung je Treffer), `re15_zellschub_8003da78` (die Ausschiebung,
+Spiegel explizit), `re15_zellschub_ruhe` (LAB_8002c0b8 fuer ein Objekt), `re15_zellschub_spiegel` (+0x40/+0x44),
+`re15_zellschub_nach_pass` (Bilder ohne re15_prop_push_tick — Klettern/Treppe/Szene; FUN_8002bd44 laeuft im Original
+jedes Bild @0x8001ce14), `re15_zellschub_install` (Spiegel = Lage beim Raumaufbau). Haken: `aot_common.c
+re15_prop_push_tick` (Stand-Objekt @0x8002bef8 ohne FUN_8003b558, `flags & 0x80` @0x8002bf78-84, jeder Zugang zu c0b8
+ruft `re15_zellschub_ruhe`, der Schub-Test @0x8002bfb0 ruft `re15_zellschub_8003b558` auf eine Kopie der Ziel-Lage,
+Spiegel am Ende jedes Eintrags), `game_step_common.c` (1 Zeile vor `re15_objfall_nach_pass`), `scd_room_setup.c`
+(Installer-Zeile am Blockende). Waehrend eines Falls (obj+4 = 1, FUN_8002c444 schreibt den Spiegel selbst
+@0x8002c6ac-b0) rechnet der Ruhe-Zweig mit Spiegel = Lage (liest `re15_objfall_info`).
+
+**Messung nachher.** (folgt)
+
 ## Tests
 
 Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*/CMakeLists.txt.

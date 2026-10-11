@@ -23,6 +23,22 @@ target_compile_definitions(probe_r36_dachkiste PRIVATE
 add_test(NAME unit_r36_dachkiste_zensus COMMAND probe_r36_dachkiste pin)
 set_tests_properties(unit_r36_dachkiste_zensus PROPERTIES TIMEOUT 600)
 
+# Nachbesserung 3 (Abnahme 2: P1/P2/P4) — Pins der Mechanik (tests/unit/test_r36_dachkiste_zellschub.c):
+#   P1 Ruhe-Zweig LAB_8002c0b8 (FUN_8003b558(obj,2) @0x8002c0d0 + Ausschiebung FUN_8003da78 @0x8003b79c, engine/src/
+#      zellschub_r36.c): ROOM2060 Tritt obj 2 Record (-3125,2075) -> nach Bild 1 (-3143,2075) wie im Original
+#      (room2060_orig.sav Pool 2, R_abnahme_2.md A7/O3); die vier Lagecode-Zweige von FUN_8003da78 synthetisch.
+#   P4 Nicht-Quadrat-Zweig @0x8003b684-734 (r = hz): Lage in ROOM2060, die nur mit r = hz frei ist.
+#   P2 Y-Test FUN_8002cabc @0x8002cb84-cbc8 (re15_collision.c): Band-3-Spieler/-Aktor wird nicht aus der Band-0-Kiste
+#      von ROOM2050 geschoben, Band-0-Spieler wohl (x 3402 = 2952 + 450).
+add_executable(test_r36_dachkiste_zellschub
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_r36_dachkiste_zellschub.c)
+target_link_libraries(test_r36_dachkiste_zellschub PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_dachkiste_zellschub PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r36_dachkiste_zellschub PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r36_dachkiste_zellschub COMMAND test_r36_dachkiste_zellschub pin)
+set_tests_properties(unit_r36_dachkiste_zellschub PROPERTIES TIMEOUT 300)
+
 # INTEGRATION (echte exe, Leon UND Elza ueber den ECHTEN WEG ROOM10F0/10F1 -> Tritt -> Tuer slot 1 -> ROOM1090/1091
 # -> Korridor -> Schub gegen die Dach-Kiste; dazu der Schub nach Westen aus der Tasche): RE15_PUSH_LOG (engine/src/
 # dachkiste_r36.c) muss je Versuch SCHUB-GESPERRT mit der Treffer-Zelle des Originals zeigen (Bruestung r3[4] x
