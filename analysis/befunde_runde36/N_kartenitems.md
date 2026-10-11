@@ -116,19 +116,117 @@ RE2-Steuercodes (Message-FSM ab 0x800303C4, selbst disassembliert): 0xFB -> Zust
 -> 0x8003055c) = Zeilenumbruch des Renderers. RE1.5-Gegenstuecke (port msg_common.c): 04 = Tempo,
 05 = Farbe, 08 = Zeilenumbruch, 03 = Auswahl, 01 = Ende.
 
-## 3. Weltmodell und Lage (in Arbeit)
-Modell: karte01 (md5 99dae133, RE2 ROOM3060.RDT MD1 @0x0045C8, TIM @0x02C6D4; lageplaene.csv) —
-Flaeche 1080 x 720 (Modell-z x Modell-x) auf y = -85, 4 Dreiecke, UV 127 x 85 Texel, 1 CLUT.
-karte02 hat dieselbe Geometrie/Kartenkunst, aber 2 CLUTs + fremde Kunst im TIM -> karte01 gewaehlt.
+## 3. Umsetzung
 
-Ebenen je Raum (Messung, Skripte scratchpad geom.py/place.py, Kameras aus `probe_r34n_e_dokumente kamera`):
-* 1140 Cut 5: Tafel-Ebene z = -8710 (rechte Tafelkante aus Cut 4 + Cut 5 trianguliert:
-  (-1249,-3482,-8764) Fehlabstand 58, (-1169,-1323,-8655) Fehlabstand 45), parallel zur Rueckwand.
-* 10D0 Cut 6: Wand z = 21624 (Boden-Wand-Kante zurueckprojiziert auf y=0: (5113,21738), (2649,21644),
-  (1187,21588); SCA-Grenze 21888 liegt 240 davor).
-* 1030 Cut 3: Rueckwand z = -23580 (Bodenkante Bildzeile 151,5 in Spalten 130..170).
-* 11D0 Cut 0: rechte Wand SCHRAEG (19,8 Grad gegen z; Bodenkante 4 Punkte, Ziegelfugen-Steigung ~1,0
-  bestaetigt ~17,5 Grad).
-* 1200 Cut 2: Ebene der Glasvitrinen-Front x = -26330 (Ecken aus Cut 1 + Cut 2 trianguliert,
-  Fehlabstand 4 / 53); die Marke liegt rechts neben der Vitrine (z -16051..-15274).
+### 3.1 Dateien
+| Datei | Inhalt |
+|---|---|
+| `re15_port/engine/src/kartenitems_r36.c` + `include/re15_kartenitems_r36.h` | Installer (Prop + Zone), Port-Programm Ereignis 28, Texte 30/31, Besitz je Blatt, Licht-Haken |
+| `re15_port/engine/src/gen/kartenitems_r36.inc` | ERZEUGT: RE2-TIM karte01 (unveraendert), 5 MD1 (nur Ecken skaliert), Texte, Lage-Tabelle |
+| `re15_port/tools/r36_kartenitems/karten_export.py` | Generator (Quelle RE2 ROOM3060.RDT, md5-Pruefung, Kameras/Ebenen/Marken, Massstab, Licht) |
+| Haken (je 1-3 Zeilen, "Runde 36 Spur N") | `scd_room_setup.c` (Installer am Blockende), `platform/pc/main.c` (Installer Boot-/CONTINUE-Weg, Prop-Lader MD1+TIM obj 15, Vertexfarbe im Prop-Zeichner), `scd_vm.c` (scd_event_fire-Kette), `re15_map_owned.c` (Besitz), `map_hint_common.c` (Etagenwahl) |
+| Tests | `tests/unit/test_r36_kartenitems.c`, `tests/unit/probe_r36_kartenitems_bmp.c`, `tests/integration/test_r36_kartenitems_bild.cmake`, registriert in `tests/unit/probes/r36_kartenitems.cmake` |
+
+### 3.2 Modell
+karte01 (md5 99dae133, RE2 `ROOM3060.RDT` MD1 @0x0045C8, TIM @0x02C6D4 md5 bf0fbcc7; = extracted_re2_items/
+modelle/karte01_99dae133.*, lageplaene.csv): 4 Dreiecke um (0,-85,0), Flaeche 1080 (Modell-z) x 720 (Modell-x),
+Normale (0,-4096,0) @MD1+0x6C, UV u 0..126 mit +z, v 0..84 mit +x (MD1+0xBC). karte02 hat dieselbe Geometrie und
+Kartenkunst, aber 2 CLUTs und fremde Kunst im TIM -> karte01. Je Raum ein MD1: dieselben Bytes, nur die 5 Ecken
+@0x44 mit s skaliert (Pruefung im Test: ausserhalb 0x44..0x6B kein Byte verschieden).
+
+### 3.3 Lage, Massstab, Drehung, Licht (PORT-WAHL aus den Nutzer-Marken, erzeugt)
+Mitte = Sehstrahl der Markenmitte x Ebene. Massstab s = groesster Wert, bei dem die vier projizierten
+Kartenecken im Nutzer-Cut in der Marken-Huelle liegen (Bildraum; das Ebenen-Mass war auf der schraegen Wand
+11D0 28 % zu hoch: Framedump y 61..97 gegen Marke 65..93). Drehung: Modell +x -> Welt unten, +y -> in die
+Wand, +z -> rechts; Euler nach pc_prop_rot_q12 (Ry*Rx*Rz). Ursprung = Mitte - 85*s*n. Zone 1000 x 1000 um
+Mitte + 300*n (r35-Muster: haeufigste Item-Groesse 69 von 162).
+
+| Raum (Blatt) | Cut | Ebene | Mitte | s -> Flaeche | rot (x,y,z) | Zone (Ecke) / Slot | Licht |
+|---|---|---|---|---|---|---|---|
+| 1140 (4 = 3F) | 5 | z = -8710 (Tafel) | (-2050,-2831,-8710) | 0,503 -> 543 x 362 | (0,1024,1024) | (-2551,-9510) / 40 | (156,155,153) |
+| 10D0 (3 = 2F) | 6 | z = 21624 | (2133,-1928,21624) | 0,362 -> 391 x 260 | (0,3072,1024) | (1634,21424) / 40 | (181,186,180) |
+| 1030 (2 = 1F) | 3 | z = -23580 | (-1691,-2769,-23580) | 0,677 -> 732 x 488 | (0,3072,1024) | (-2192,-23780) / 8 (Telefon -> 39) | (47,70,104) |
+| 1200 (1 = B2) | 2 | x = -26330 (Vitrinenfront) | (-26330,-2572,-15682) | 0,690 -> 745 x 497 | (0,0,1024) | (-26530,-16183) / 40 | (85,85,75) |
+| 11D0 (0 = B1) | 0 | schraeg, n (-0,941;0;0,338) | (1642,-2199,-19130) | 0,638 -> 689 x 459 | (2048,3871,3072) | (860,-19530) / 40 | (74,75,77) |
+
+Ebenen je Raum (Messung, Kameras aus `probe_r34n_e_dokumente kamera`):
+* 1140 Cut 5: Tafel (Staffelei) z = -8710 — rechte Tafelkante aus Cut 4 + Cut 5 trianguliert:
+  (-1249,-3482,-8764) Fehlabstand 58, (-1169,-1323,-8655) Fehlabstand 45; parallel zur Rueckwand angenommen.
+* 10D0 Cut 6: Wand z = 21624 — Bodenkante (y = 0) zurueckprojiziert: (5113,21738), (2649,21644), (1187,21588);
+  die SCA-Grenze 21888 liegt 240 davor (Kollisionsrand).
+* 1030 Cut 3: Rueckwand z = -23580 — Bodenkante Bildzeile 151,5 (Helligkeitssprung in den Spalten 130..170).
+* 11D0 Cut 0: rechte Wand SCHRAEG, 19,8 Grad gegen z (Bodenkante 4 Punkte (2390,-17045) .. (1186,-20393);
+  Ziegelfugen-Steigung ~1,0 im Strukturtensor bestaetigt ~17,5 Grad); die SCA-Grenze x = 1050 ist achsparallel.
+* 1200 Cut 2: Vitrinenfront x = -26330 — obere Vitrinenecken aus Cut 1 + Cut 2 trianguliert (Fehlabstand 4/53)
+  = SCA 6 (x -28256..-26256); die Marke liegt rechts neben der Vitrine (z -16051..-15274).
+
+LICHT: das RDT-Figurenlicht liefert an allen fuenf Stellen 31..70 von 128 (`probe_r34n_e_dokumente licht`,
+1140 Cut 5 (41,39,39)): die Karte war im ersten Framedump ein fast schwarzes Rechteck auf heller Tafel
+(Karte 32/32/29 gegen Tafel 91/83/74). PORT-WAHL: der Papiergrund (Median der Kartenkunst 104,104,96)
+bekommt die Helligkeit der hellsten 15 % der Umgebung im Nutzer-Cut (Fenster = Marken-Huelle um je eine
+Huellenbreite/-hoehe erweitert) — Tint = 128 * Ref / Median, je Kanal; gesetzt als Vertexfarbe im
+Prop-Zeichner (`re15_kartenitems_r36_licht`, nur obj 15 in den Kartenraeumen). Verworfen (gemessen): Mittel
+UNTER der Marke -> auf den dunklen Waenden 11D0/1200 so dunkel wie die Wand, Karte unsichtbar.
+
+### 3.4 Aufnahme (Port-Programm, Ereignis 28)
+```
++00 2b 1e ff ff        Message_on 30 Frage          ROOM5030 sub02 @0x010AC
++04 02 00              Evt_next + Nop                @0x010B0
++06 06 00 2c 00        Ifel_ck (Ende +0x36)          @0x010B2 (Laengen-Regel 0x010B2+4+0x1E = 0x010D4)
++0A 21 0c 1f 00        Ck(12,31,0) = Ja              @0x010B6
++0E 46 SS 00 ..        Aot_reset(Slot,0)             @0x010BA
++18 09 0a 01 00        Sleep 1                       @0x010C4
++1C 22 09 BB 01        Set(9,Bit,1)                  @0x010C8 (Rolle); RE2 Set(33,n) @0x037DA + Set(35,n) @0x037E6
++20 2e 03 0f / 00      Work_set(Objekt 15) + Nop     RE2 @0x037F2/@0x037F5 (RE1.5-Art 3 = Objekt, scd_work_bind)
++24 32 00 20 4e x3     Pos_set(20000,20000,20000)    RE2 @0x037F6
++2C 02 00              Evt_next + Nop                RE2 @0x037FE
++2E 2b 1f ff ff        Message_on 31 Meldung         @0x010CC / RE2 @0x03800
++32 02 00 / 08 00 / 01 00                           @0x010D0 / @0x010D2 / @0x010D4
+```
+Kein Se_on: der Ja/Nein-Kasten des Ports spielt bei der Bestaetigung bereits Kern-SE 6 (Ja) / 5 (Nein)
+(msg_common.c Fall 3, RE2 @0x80030944/@0x8003093c) — dieselben Toene, die RE2 room20B0 im Skript spielt
+(`36 04 06 ..` @0x037CA / `36 04 05 ..` @0x0380A); ein zweites Se_on wuerde doppelt toenen.
+Zone: EVENT wie ROOM5030 sub00 @0x0108A (sce 3, sat 0x31, p0 0x00FF, p1 = 28<<8|0x18), Band 0.
+Texte 30/31 beim Ausloesen eingesetzt (Muster rolltor_1050.c), RE2-Wortlaut aus room2130 sub00/sub12 mit
+RE1.5-Rahmen ROOM2030 msg 2/3 (`04 02`, Name gruen `05 01`..`05 00`, `57`, `08` = RE2 `FC` Zeilenumbruch,
+Ende `1b 03 02 01 00` bzw. `57 01 00`). Etage im Namen ("police 3F map") = PORT-WAHL nach RE2s "police B1 map".
+
+ROOM1030/1031 — VORRANG: Slot 8 ist das Muenztelefon (main00 Aot_set @0x01D2E / @0x01D9C, sce 1, Rechteck
+4096 x 4096 ueber der ganzen Rueckwand). Der Aktions-Scan feuert je Druck den KLEINSTEN treffenden Slot
+(aot_common.c "one action handler per press", FUN_80042bac); in einem hohen Slot waere die Karte dort nie
+erreichbar. Der Telefon-Satz zieht deshalb unveraendert in Slot 39 um, die Karte nimmt Slot 8; nach der
+Aufnahme (Aot_reset(8,0)) antwortet das Telefon wieder ueberall, beim naechsten Raumstart steht es wie
+ausgeliefert in Slot 8 (Bit gesetzt -> kein Umzug). Census: kein RDT-Skript von 1030/1031 spricht Slot 8 nach
+main00 an (Aot_reset nur Slots 4, 6, 17).
+
+### 3.5 Karte und Etagenwahl
+`re15_map_owned_page/bits` (Port-Gegenstueck zu RE2 Bank 33 @0x8006E66C) fragt zusaetzlich die Bits 87..91
+(nicht in `s_map_funde`, deren Riegel test_karte_besitz nur RDT-belegte Fundstellen zulaesst).
+`re15_map_blatt_waehlbar` = bekannt || Hinweis-Ziel || BESITZ (RE2 setzt Bank 35 bei der Aufnahme:
+room20B0 Set(35,2..4) @0x037E6-EE, gelesen @0x8006D934/@0x8006D998).
+
+## 4. Messung nachher
+
+### 4.1 Framedumps (Lade-Weg CONTINUE, RE15_FORCE_CUT = Nutzer-Cut, RE15_WINDOW_SCALE=1)
+Zwei Laeufe je Raum, einziger Unterschied das Bit; `probe_r34n_e_bild` (|dR|+|dG|+|dB| > 30):
+
+| Raum | Pixel im Fenster | Huelle der Aenderung | Nutzer-Marke | ausserhalb |
+|---|---|---|---|---|
+| 1140 Cut 5 | 73 | x230..241 y72..80 | x231..241 y72..81 | 0 |
+| 10D0 Cut 6 | 219 | x270..289 y120..134 | x270..289 y120..135 | 0 |
+| 1030 Cut 3 | 81 | x154..164 y104..111 | x155..164 y103..113 | 0 |
+| 1200 Cut 2 | 177 | x57..73 y79..92 | x58..74 y80..93 | 0 |
+| 11D0 Cut 0 | 169 | x233..245 y65..93 | x227..250 y65..93 | 0 |
+
+### 4.2 Echter Weg (exe, ROOM1140, RE15_INPUT_SCRIPT)
+Spieler (-2050,-9900) Blick zur Tafel: Aktion -> "A police 3F map. / Will you take it? > Yes No" (Name gruen)
+-> Ja -> "You've taken the / police 3F map." (Framedumps F100/F140/F220); debug.log
+"[kartenitems] ROOM1140 Ereignis 28 -> Port-Programm Karte Blatt 4". Danach Statusschirm + L1: Blatt
+"POLICE STATION 3F" zeigt ALLE 3F-Raeume (unbesuchte als Umriss in RE2-Zeile 498), ohne Aufnahme nur den
+eigenen Raum — 537 Pixel Unterschied, Huelle x120..193 y80..158.
+
+### 4.3 Erreichbarkeit (probe_r34n_e_dokumente abdeckung, Raster 100, 64 Blickrichtungen)
+1140: 92 Standorte / 870 Treffer, 0 abgefangen; 10D0: 139 / 1530, 0; 1200: 183 / 2009, 672 von Slot 2
+(Vitrinen-Ereignis, Ueberlapp z -16183..-15800 — davor gewinnt die Vitrine, rechts davon die Karte);
+11D0: 142 / 1407, 0; 1030: alle 5760 Treffer landen in Slot 8 = der Karte.
 

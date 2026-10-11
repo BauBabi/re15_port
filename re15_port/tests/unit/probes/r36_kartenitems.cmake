@@ -16,3 +16,21 @@ endif()
 add_test(NAME unit_r36_kartenitems COMMAND test_r36_kartenitems
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r36_kartenitems PROPERTIES TIMEOUT 300)
+
+# AUSWERTER (kein add_test): Kartenschirm-Abzuege (24-bit BMP) vergleichen.
+add_executable(probe_r36_kartenitems_bmp ${CMAKE_CURRENT_LIST_DIR}/../probe_r36_kartenitems_bmp.c)
+
+#   integration_r36_kartenitems_bild   echte exe: je Raum Lade-Weg mit/ohne Bit -> Karte NUR im Marken-
+#                                      Fenster gezeichnet; ROOM1140 echter Weg (Aktion, Ja) -> Ereignis 28,
+#                                      Kartenschirm 3F zeigt die unbesuchten Raeume.
+if(TARGET re15_pc)
+    add_test(NAME integration_r36_kartenitems_bild
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r35_inhalt_karte>
+                     -DRE15_BILD_TOOL=$<TARGET_FILE:probe_r34n_e_bild>
+                     -DRE15_BMP_TOOL=$<TARGET_FILE:probe_r36_kartenitems_bmp>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_kartenitems_bild_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_kartenitems_bild.cmake)
+    set_tests_properties(integration_r36_kartenitems_bild PROPERTIES TIMEOUT 1200)
+endif()
