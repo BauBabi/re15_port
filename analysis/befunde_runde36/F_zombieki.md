@@ -957,8 +957,14 @@ anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen 
 - **Ergebnis: das Original wartet an beiden Stoss-Zielen ebenso.** An der Nordwest-Ecke bleibt ein naher Gorilla in der Jagd
   (B[3] steuert gerade auf playerX @0x80117d4c, A[3] hat unter 0x1771 keinen anderen Ausgang als den Biss unter 0xbb8
   @0x80117a60-74) an der #21-Ecke haengen — allein (O3b) wie zu zweit (O3); am Nordende des Nordwest-Gangs an der Westkante
-  von #2 ebenso (O5, Lage fuer Lage wie der Port). In die Ostgasse (2711 breit < 2 x 1600, Pad #36
-  @ROOM11C0.RDT 0x015d8) kommt kein Gorilla zu Fuss; das Original schiebt Leon sogar selbst hinein (O1) und wartet dann davor
+  von #2 ebenso (O5, Lage fuer Lage wie der Port). ~~In die Ostgasse (2711 breit < 2 x 1600, Pad #36 @ROOM11C0.RDT 0x015d8) kommt
+  kein Gorilla zu Fuss~~ — **BERICHTIGT in NB5 (Abnahme 4 Mangel 2): falsch.** Gemessen: ein naher Gorilla erreicht Leon in der
+  Ostgasse zu Fuss (Abnahme 4 Sonde V3: 510 Seitenschritt + 166 nach Norden, Biss in Bild 54; NB5 exe-Stelle 3: Slot 3 geht nach
+  dem Nah-Umweg den Kanal x 6800..7600 hinauf und beisst F1220; Bissplaetze fuer Leon (5858,-5716) x 6408..8258 z -8616..-4466,
+  `F_belege/nb5/nb5_bissplaetze.txt`); im GDB-Original O1 steht e1 sogar in der Gassenmitte (6418,-4282..-4421). Der Gorilla
+  bleibt stehen, weil B[3] GERADE auf playerX steuert (`addiu a0,a0,-13688` @0x80117d4c, `jal 0x8001a8f8` @0x80117d50) und A[3]
+  NAH nur den Biss kennt (`ori a0,zero,0xbb8` / `ori a1,zero,0x180` / `jal 0x8001a804` / `bgez v0,0x80117b40` @0x80117a60-74);
+  er haengt an der Klemme knapp ausserhalb des Bissfensters. Das Original schiebt Leon selbst hinein (O1) und wartet dann davor
   bzw. darin. Dazu Spur J (`jnb1/g_griff.txt`, selbst dekodiert, +0x1d0/+0x1de): im kanonischen Kampf warten e1/e2 mit Sicht-Latch 1
   an der Klemme ~3925/~4990 vor Leon, e2 mit +0x1de bis 497 — dieselbe Original-Nahjagd, die `unit_r35_affen_griff/_szene`
   bildgenau pinnen.
@@ -1070,9 +1076,12 @@ Im Spurbaum verboten (Auftrag); der Orchestrator faehrt sie EINMAL im Integratio
 - Spuerbar neu: Zwei Gorillas halten sich am Nordwest-Rand des Parkplatzes nicht mehr gegenseitig fest — wird Leon dort in die Ecke
   gestossen, geht der vordere Gorilla oben um den Block herum und greift an, der hintere rueckt nach (vorher standen beide bis zum
   Ende still).
-- **Ausdruecklich, weil es so bleibt: das Original macht es genauso.** Steht Leon in einer Ecke oder Gasse, in die ein Gorilla nicht
+- ~~Ausdruecklich, weil es so bleibt: das Original macht es genauso. Steht Leon in einer Ecke oder Gasse, in die ein Gorilla nicht
   hineinpasst — die Nordwest-Ecke hinter dem Block, die schmale Ostgasse zwischen den Wagen —, wartet der Gorilla davor, bis Leon
-  wieder herauskommt. Im Original gemessen (Debugger, gleiche Lage): an der Ecke 900 Bilder (30 s) ohne Angriff, vor der Ostgasse
+  wieder herauskommt.~~ **BERICHTIGT in NB5 (Abnahme 4 Mangel 2):** Der Grund war nicht der Platz — ein Gorilla kommt zu Fuss in
+  Bissweite (Ostgasse: Kanal neben dem Eingang; Nordwest-Ecke: ueber den Nordstreifen). Er blieb stehen, weil er im Original
+  stur geradeaus auf Leon zulaeuft und an der Wagenkante haengen bleibt, knapp ausserhalb seiner Bissweite. Seit NB5 sucht er
+  sich nach rund 12 s den Weg zum freien Bissplatz (s. "NB5 Fuer den Nutzer"). Im Original gemessen (Debugger, gleiche Lage): an der Ecke 900 Bilder (30 s) ohne Angriff, vor der Ostgasse
   900 Bilder ohne Angriff; aus dem normalen Kampf heraus schiebt der Gorilla Leon beim Angriff sogar selbst durch die Ostgasse und
   wartet dann bis zum Ende der Messung (ueber 800 Bilder, ~27 s). Auch im normalen Kampf nach der
   Ada/Marvin-Szene wartet im Original ein Gorilla eine Weile an einer Wand, bis Leon sich bewegt.
@@ -1101,3 +1110,143 @@ bleibt im Modus Original-Regel gepinnt.
 | 1 | NAH-Stillstand an den Stoss-Zielen (Stellen 3/4/11/12/13, Tuerweg t11b0kampf 1309) | Messen, WAS den nahen Gorilla haelt (Klemme/Koerper/Biss-Sperre, Route vorhanden?) und was den kanonischen Kampf (J-Riegel szene: S2 wartet ~400 Bilder bei d 3004..3149 vor dem ersten Biss +521) davon unterscheidet; Nah-Umweg mit Gate, das szene/griff nicht beruehrt; Messreihe Gate-Beginn; exe 14 Stellen + Tuerweg |
 | 2 | Begruendung "passt nicht hinein" / "kommt nicht zu Fuss" gemessen falsch | Text an Z. 960-961 und 1073-1077 berichtigen (B[3] gerade auf playerX @0x80117d4c, A[3] nah nur Biss @0x80117a60-74) |
 | 3 | Riegel pinnt Stillstand im PORT-Modus (`lage <b> 1`) | O1/O3b/O5-Gleichheit in den Modus Original-Regel (`lage <b> 0`); im PORT-Modus Pins auf das Kriterium (Angriff, NAH-fest <= Schranke) |
+
+### NB5 Mangel 1 — Messung vorher: WAS den nahen Gorilla haelt (HEAD c541415c, Rohdaten der Abnahme 4 `F_abn4/`, Auswerter `ausw4.py`)
+Spuren je Stelle mit `F_belege/nb5/spur.py` (gy.log -> Lage/Sub/Abstand je Gorilla), NAH-Anker offline mit `F_belege/nb5/nahz.py`
+(dieselbe Zaehlung wie der Port: Sub 3, 0xbb8 <= d < 0x1771, Anker 400 Manhattan):
+
+| Lage | Wer steht | Was ihn haelt | Freier Bissplatz? |
+|---|---|---|---|
+| Stelle 3 (6000,-9000) Slot 3 | F826+1875 am Ostgassen-Eingang (5771..5881,-8818), d 3087..3158 | Wagenkante; B[3] steuert gerade auf playerX, A[3] nah nur Biss | JA: Kanal x 6800..7600 bis z -6400 neben dem Eingang (Raster 400, Bissplaetze x 6408..8258) |
+| Stelle 3 Slot 2 | F1048+1653 bei (3030,-10336), d ~5400, blind | Koerperkontakt zu Slot 3 (dx 2820 / dz 1510 = 3199) | erst, wenn Slot 3 weg ist |
+| Stellen 4/11/12/13 Slot 3 | an der Ostseite von #21 (-23302, 13088..13333), d 3211..5514 | #21 (@ROOM11C0.RDT 0x01524) — Slot 2 greift derweil in der Ecke an (Angriffsbilder 785/810/652/731) | NEIN: einziger Bissplatz von Slot 2 belegt (s. Bissplaetze) |
+| t11b0kampf Slot 2 | auf dem Nordstreifen (-22290..-22473, 16118), d 4604..4725 | Koerperkontakt zu Slot 3 (dx ~3150), Slot 3 beisst Leon aus (-25600,15728) d ~2000 | NEIN: wie oben |
+| kanonischer Kampf Slot 2 (J `szene`) | V-Spitze (-4940..-5052, -14535..-14658), d 3041..3099 vor dem ersten Biss (Original +521) | Wagenkanten der V-Nische; Leon steht IN der Nische | JA: linker V-Grund (-6800,-14400) d ~2070 |
+
+Der kanonische Kampf ist DIESELBE Lage wie Stelle 3 (ein Gorilla 41..158 Einheiten ausserhalb des Bissfensters an der Klemme) —
+und er ist durch die Spur-J-Riegel als Original gepinnt (Biss +521, Takt, Tod +1194; GDB jnb1/g_orig.txt). Ein Nah-Umweg darf
+dort also erst NACH der kanonischen Wartezeit beginnen.
+
+### NB5 RE-Belege (STAGE1.BIN, re15_disasm.py, selbst gelesen)
+- A[3] Biss-Test: `lbu v0,0(a2)` / `bne v0,zero,0x80117b40` @0x80117a54-5c (Spieler in Trefferreaktion -> kein Biss), `ori a0,zero,0xbb8`
+  @0x80117a60, `ori a1,zero,0x180` @0x80117a64, `addiu s0,a2,-95` @0x80117a68 (a2 = Leon +0x93 -> +0x34), `jal 0x8001a804` @0x80117a6c,
+  `bgez v0,0x80117b40` @0x80117a74. Rest von A[3] ohne Zustandswechsel NAH: `lhu v0,468(v1)` / `sltiu v0,v0,0x1771` @0x80117bc0-c8;
+  nur FERN + Sicht: `sltiu v0,v0,0x1771` / `bne v0,zero,0x80117c78` @0x80117c34-38, `lhu v0,464(v1)` / `andi v0,v0,0x1` / `beq` @0x80117c40-4c,
+  `ori v0,zero,0x4` / `sb v0,5(v1)` @0x80117c50-54.
+- B[3]: `lb a1,158(v0)` @0x80117d44, `lui a0,0x800b` / `addiu a0,a0,-13688` (= 0x800aca88 playerX) @0x80117d48-4c, `jal 0x8001a8f8`
+  @0x80117d50 — gerade auf Leon, kein Navigator.
+- Radius box[6]: Bytes ab 0x80121350 `00 00 60 fa 00 00 40 06` -> u16 @0x80121356 = 0x0640 = 1600.
+- Koerperabstand zweier Gorillas: Spur J `griff` (GDB) e1-e2 3168..3209 (= 2 x 1600).
+
+### NB5 Bissplaetze (neue Sonde `platz`, `F_belege/nb5/nb5_bissplaetze.txt`)
+Alle Lagen im Abstand < 0xbb8 um Leon, die die Original-Klemme (Radius 1600, Band 0, Maske 4, Vorlage + 1 wie `r36_frei_bei`) NICHT
+verschiebt (Schritt 50); Durchmesser = groesster Abstand zweier Bissplaetze. Unter 3168 kann nur EIN Gorilla zugleich beissen.
+
+| Leon | Bissplaetze | Bereich | Durchmesser | |
+|---|---|---|---|---|
+| (-26932,17268) Ecke Nord (t11b0kampf) | 279 | x -25782..-24182, z 15718..16118 | **1649** | nur EIN Gorilla |
+| (-26932,14578) Ecke Sued | 279 | x -25782..-24182, z 15728..16128 | **1649** | nur EIN Gorilla |
+| (-26932,15700) Ecke Mitte | 296 | x -25782..-23982 | **1833** | nur EIN Gorilla |
+| (-26600,14578) | 342 | x -25800..-23850 | 1990 | nur EIN Gorilla |
+| (-7107,-12395) kanonisch (exe) | 4030 | x -10057..-5407 | 5809 | zwei passen |
+| (-7138,-12372) kanonisch (J) | 4035 | | 5809 | zwei passen |
+| (5858,-5716) Ostgasse | 1769 | x 6408..8258, z -8616..-4466 | 4154 | Durchmesser reicht; der Kanal ist aber einspurig (s. unten) |
+
+**Folge (Messung, nicht Annahme):** In der Nordwest-Ecke (Stellen 4, 11, 12, 13 und der Tuerweg t11b0kampf: Leon an der Westwand
+x -26932, z 14562..17268) liegt JEDER Bissplatz auf dem 390 breiten Nordstreifen westlich x -23982; der zweite Gorilla muss
+3168 Abstand zum ersten halten und liegt damit immer > 3000 vor Leon. Er KANN dort nicht beissen, solange der erste angreift —
+weder im Original noch im Port, und kein Umweg aendert das. Gegenprobe gemessen (`lage` Stau-Lage O3, 1800 Bilder,
+`F_belege/nb5/anstehen_o3_um415.txt`): Stand NB4 Gorilla 2 fest 1613 an der #21-Ecke; Nah-Umweg MIT Belegt-Test (Endstand) 1613
+(kein freier Bissplatz -> kein Umweg); Nah-Umweg OHNE Belegt-Test (Sonde, Modus 5) zieht Gorilla 2 nur auf den Nordstreifen HINTER
+Gorilla 1 (-22357,15752) und er steht dort 1466 Bilder — genau das t11b0kampf-Bild. Das Kriterium "kein Gorilla > 450 NAH fest"
+ist an diesen fuenf Stellen fuer den ZWEITEN Gorilla nicht durch Angreifen erreichbar (WIDERLEGT fuer diesen Teil); erreichbar waere
+es nur, wenn der Wartende sich ohne Ziel bewegt (Hin-und-her-Laufen) — das waere ein erfundenes Verhalten allein fuer das Messmass
+und ist nicht gebaut.
+
+### NB5 J-Fenster: wann darf ein Nah-Umweg beginnen? (neue Sonde `kanon` = Harness des J-Riegels `szene`, `F_belege/nb5/nb5_kanon_messreihe.txt`)
+- `kanon` reproduziert den J-Riegel bitgleich (Freigabe F1066, Heavy +363, Bisse 468 521 571 ... 1139, Tod +1194 = `test_r35_affen szene`).
+- NAH-Anker von Slot 2 vor seinem ersten Biss: **353** (J-Harness); exe-Tuerweg 11B0->11C0 (t11b0szene) **353**, exe-Sprung (szene11c0)
+  346 (offline, nahz.py); +0x1de-Zwilling (Klemme ohne Unterbrechung) 444.
+- Messreihe Beginn N (Nah-Umweg nach N Bildern im NAH-Anker; Bisse relativ zur Freigabe; Original: 363 468 521 571 624 ... Tod +1194):
+
+| N | Bisse (erste 5) | Tod | kanonischer Kampf |
+|---|---|---|---|
+| 1 | 89 147 205 263 322 | +935 | veraendert (Slot 2 beisst +34) |
+| 45 | 161 219 277 336 373 | +1031 | veraendert |
+| 90 | 279 338 375 412 470 | +1023 | veraendert |
+| 150 | 351 586 628 664 700 | +1092 | veraendert |
+| 200 | 363 469 515 572 619 | +1188 | veraendert |
+| 250 | 363 468 514 570 618 | +1186 | veraendert |
+| 300 | 363 468 513 549 585 | +980 | veraendert |
+| 330 | 363 469 526 700 757 | +1390 | veraendert |
+| 340 | 363 468 527 888 947 | +1421 | veraendert |
+| 343 | 363 468 527 733 770 | +1382 | veraendert |
+| 344 | 363 468 521 571 624 | +1194 | gleich (Umweg-Ziel in dem Bild belegt) |
+| 345 | 363 468 527 695 896 | +1297 | veraendert |
+| 350 / 353 | 363 468 521 571 624 | +1194 | gleich |
+| **354** | 363 468 521 571 624 | +1194 | **gleich (Zaehler erreicht 354 nie vor dem Biss)** |
+
+  Unterhalb 354 haengt das Ergebnis vom Zufall des Bildes ab (344/350/353 gleich, 345 nicht); erst ab 354 ist der kanonische Kampf
+  SICHER unberuehrt. Damit ist die Frage der Abnahme ("Gate-Beginn oberhalb des J-Fensters") gemessen: jeder Beginn unter 354 bricht
+  `unit_r35_affen_szene` (Slot-2-Bisse / Tod), ab 354 bleibt er bitgleich; `unit_r35_affen_griff` (Fenster T378..T495 = 117 Bilder)
+  liegt weit darunter.
+
+### NB5 Umsetzung — PORT-WAHL Nah-Umweg zum freien Bissplatz (zombieki_r36.c, keine neue gemeinsame Datei)
+- NAH-Anker `s_r36_nah`: Gorilla in der Jagd (Sub 3, Zustand 1), Abstand 0xbb8 <= +0x1d4 < 0x1771 (Bissweite a804 @0x80117a60 /
+  Nah-Grenze `sltiu 0x1771` @0x80117bc8), Bilder im Anker R36_FEST_ANKER (400 Manhattan, derselbe wie der Umweg-Beginn seit NB3).
+- `r36_nah_route`: Ziel = Rasterknoten der EIGENEN Komponente (zu Fuss), Leon am naechsten, in Bissweite (< 0xbb8) und von keinem
+  anderen lebenden Gorilla belegt (Abstand >= Summe der Radien box[6] @0x80121356 = Koerperkontakt). Weg = A* zu Fuss (keine Pads —
+  NB4 gemessen: Pads im Vortritt fuehrten in die Original-Blindsprung-Schleife), Zielpunkt wie `r36_uw_route` Modus 1. Kein freier
+  Bissplatz -> 0 = Original (der Gorilla wartet; Anstehen, s. Bissplaetze).
+- Haken in `re15_r36_affen_padsuche_decide` (A[3]-Haken, nach dem Biss-Test): ab `s_r36_nah >= R36_NAH_START` (oder solange aktiv)
+  NAH und ausserhalb der Bissweite -> Steuerziel = Umweg-Punkt (B[3]-Haken `re15_r36_affen_padsuche_ziel`, unveraendert); endet mit
+  Sub != 3 (Biss/Griff/Treffer), mit Bissweite oder wenn kein freier Bissplatz mehr existiert.
+- **R36_NAH_START = 354** (PORT-WAHL, aus der Messung): die laengste gemessene Nah-Wartezeit des kanonischen Ankunftskampfes (353
+  Bilder: J-Harness `szene`, exe-Tuerweg 11B0->11C0; exe-Sprung 346) + 1. Kein Original-Wert — das Original hat NAH keinen Ausgang;
+  der Wert legt nur fest, dass der gepinnte Original-Kampf unberuehrt bleibt (Messreihe oben).
+- Keine Aenderung an enemy_ai_common.c / main.c (die Haken aus NB1-NB4 reichen). Nur-Sonden-Schalter `re15_r36_affen_nah_enable`
+  (0 = Stand NB4, 2 = ohne Belegt-Test, >= 10 = Schwelle - 10) ohne Aufrufer in engine/platform; Leser `re15_r36_affen_nah_lesen`.
+
+### NB5 Messung nachher in der exe (`F_belege/nb5/nb5_exe_14_stellen_ausw.txt`, `nb5_exe_kommandos_kanon.txt`, Kopie `re15_pc_nb5a.exe`)
+Kommandozeilen der Abnahme 4 (Abschnitte 4.1/4.4), je Lauf eigener Prozess, Auswertung mit dem Skript der Abnahme (`F_abn4/ausw4.py`).
+**gy.log bitgleich zu HEAD (abn4f_neu): 12 der 14 Stellen, Flucht West, t11b0kampf, kanonischer Kampf per Sprung (szene11c0) und per
+Tuerweg (t11b0szene).** Veraendert nur Stellen 1 und 3:
+
+| # | Leon | HEAD erster Angriff S2/S3 (fest S2/S3) | **NB5** |
+|---|---|---|---|
+| 1 | (-7000,12500) | nie / F730 (826/0) | **F1627** / F730 (341/250; S3 250 bis zum Laufende F2160) |
+| 3 | (6000,-9000) | nie / F324 (1653/1875) | **F1596** / F324 (**429** davon FERN 45 / **368**) |
+| 4, 11, 12, 13 | Nordwest-Ecke | S3 1193 / 1335 / 833 / 1650 | unveraendert (Anstehen, s. Bissplaetze) |
+| t11b0kampf | Tuerweg, Kampf-Layout | S2 1309 | unveraendert (Anstehen) |
+| uebrige 8 | | | bitgleich |
+
+- Summe 14 Stellen fest (FERN / NAH): v0.8.23 25936 (19812 / 6124) -> NB4 10466 (255 / 10211) -> **NB5 7500 (300 / 7200)**.
+- **Stelle 3 erfuellt das Kriterium** (S2 429, S3 368 <= 450): Slot 3 beginnt F826+354 = F1180 den Nah-Umweg, geht den Kanal
+  hinauf und beisst F1220, schiebt Leon durch die Gasse nach Norden; Slot 2 rueckt bis an den Eingang nach (5204,-8818), wird FERN,
+  als Leon die Gasse verlaesst, und springt mit dem ORIGINAL-Padsprung (Sub 4 @0x80117c50-54, A[4] Path A @0x80117ecc-8011802c)
+  F1580 ueber die Gasse, Angriff F1596/F1600.
+- FERN +45 (255 -> 300): genau diese 45 Bilder von Slot 2 an Stelle 3 (Ende seiner Strecke F1397+158) zwischen "Leon verlaesst die Gasse" und dem
+  Original-Padsprung — kein Stau (vorher stand Slot 2 dort 1653 Bilder NAH ohne Angriff).
+- Stellen 4/11/12/13 und t11b0kampf: der Wartende ist der ZWEITE Gorilla, der einzige Bissplatz ist belegt (Bissplaetze oben) —
+  Kriterium dort fuer ihn gemessen nicht erreichbar.
+- Zufallsgang 52 Seeds x 6000 Bilder (`F_belege/nb5/nb5_zufallsgang.txt`): Anker 400 16352 / 242 Griffe, Anker 40 125 — bitgleich
+  zu NB4 (der Nah-Umweg greift dort nie: keine Nah-Wartezeit erreicht 354 Bilder, weil Leon laeuft).
+
+### NB5 Mangel 2 — Begruendung berichtigt
+An beiden Stellen im Dossier (NB4-Ergebnis Z. 960ff., NB4 "Fuer den Nutzer" Z. 1073ff.) durchgestrichen und berichtigt: nicht
+der Platz haelt den Gorilla, sondern B[3] steuert gerade auf playerX (@0x80117d4c) und A[3] hat NAH nur den Biss (@0x80117a60-74);
+er haengt an der Klemme knapp ausserhalb des Bissfensters. Gemessen: Ostgasse erreichbar (V3 Biss Bild 54; NB5 exe-Stelle 3 Biss
+F1220; Bissplaetze), Nordwest-Ecke ueber den Nordstreifen (Vortritt/Nah-Umweg, O3b Biss Bild 399). Die NB4-Commit-Message
+c541415c ("In die Ostgasse kommt kein Gorilla zu Fuss") ist damit ebenfalls berichtigt (diese Nachbesserung).
+
+### NB5 Mangel 3 — Riegel
+`unit_r36_zombieki_affen_block` (66 Pruefungen, `F_belege/nb5/nb5_affen_riegel.txt`):
+- Original-Gleichheit O1/O3b/O5 jetzt im Modus ORIGINAL-REGEL (`lage <b> 0`): O3b Ende (-23272,14587) / GDB (-23302,14597), kein
+  Angriff; O1 (6418,-4399) / (6418,-4409); O5 (-13557,11920) / (-13527,11914), kein Angriff.
+- PORT-Modus (1) misst die Verbesserung: O3b Angriff Bild 399, NAH fest 371; O5 Angriff 410, fest 377 (<= 450); Gegenprobe Stand NB4
+  (Modus 4) je 900 fest ohne Angriff (= Befund).
+- Bissplaetze: Ecke 1649/1649/1833 < 3168 (EIN Gorilla), V-Nische 5809 (zwei) — der Grund des Anstehens als Pin, nicht der Stillstand.
+- Nachruecken: Gorilla 1 faellt in der Stau-Lage aus (Bild 400) -> Gorilla 2 nimmt den freien Bissplatz und greift an (Bild 991);
+  Stand NB4 nie.
+- J-Fenster: kanonischer Kampf mit Nah-Umweg bitgleich (Heavy + 14 Bisse 15/15, Tod +1194), Slot 2 NAH-Anker 353 < 354.
+- Unveraendert gruen: 16 Seeds AUS 38439 -> AN 5174, sieben Szenen, 4b, Stau-Block (Modus 0/3/1).

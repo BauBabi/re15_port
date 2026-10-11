@@ -1,0 +1,9 @@
+PLATZ Leon (-26932,17268): 279 Bissplaetze (Schritt 50), x -25782..-24182 z 15718..16118, Durchmesser 1649 zwischen (-25782,15718) und (-24182,16118) -> nur EIN Gorilla
+PLATZ Leon (-26932,14578): 279 Bissplaetze (Schritt 50), x -25782..-24182 z 15728..16128, Durchmesser 1649 zwischen (-24182,15728) und (-25782,16128) -> nur EIN Gorilla
+PLATZ Leon (-26932,15700): 296 Bissplaetze (Schritt 50), x -25782..-23982 z 15750..16100, Durchmesser 1833 zwischen (-25782,15750) und (-23982,16100) -> nur EIN Gorilla
+PLATZ Leon (-26600,14578): 342 Bissplaetze (Schritt 50), x -25800..-23850 z 15728..16128, Durchmesser 1990 zwischen (-23850,15728) und (-25800,16128) -> nur EIN Gorilla
+PLATZ Leon (5858,-5716): 1769 Bissplaetze (Schritt 50), x 6408..8258 z -8616..-4466, Durchmesser 4154 zwischen (6608,-8616) und (6408,-4466) -> zwei Gorillas passen
+PLATZ Leon (7880,-1379): 4635 Bissplaetze (Schritt 50), x 6430..10730 z -2829..1571, Durchmesser 4652 zwischen (7080,-2829) und (9280,1271) -> zwei Gorillas passen
+PLATZ Leon (-7107,-12395): 4030 Bissplaetze (Schritt 50), x -10057..-5407 z -15345..-10895, Durchmesser 5809 zwischen (-5407,-14845) und (-9757,-10995) -> zwei Gorillas passen
+PLATZ Leon (-7138,-12372): 4035 Bissplaetze (Schritt 50), x -10088..-5438 z -15322..-10872, Durchmesser 5809 zwischen (-5438,-14822) und (-9788,-10972) -> zwei Gorillas passen
+PLATZ Leon (-9960,11409): 2800 Bissplaetze (Schritt 50), x -12710..-7160 z 12459..14359, Durchmesser 5550 zwischen (-7160,12459) und (-12710,12559) -> zwei Gorillas passen

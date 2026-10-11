@@ -484,7 +484,8 @@ int main(int argc, char **argv)
         re15_actor_t *g[2]; re15_actor_t *pl;
         if (!aufbau(g, &pl)) return 1;
         re15_r36_affen_padsuche_enable(um ? 1 : 0); re15_r36_affen_vortritt_enable(um != 3);   /* um: 0 Original-Regel, 1 Umweg (NB5), 3 Umweg ohne Vortritt (NB3) */
-        re15_r36_affen_nah_enable((um == 3 || um == 4) ? 0 : (um >= 10 ? um : 1));               /* NB5: 4 = Stand NB4 (ohne Nah-Umweg), >= 10: Nah-Schwelle um - 10 */
+        re15_r36_affen_nah_enable((um == 3 || um == 4) ? 0 : (um >= 10 ? um : (um == 5 ? 2 : 1)));   /* NB5: 4 = Stand NB4 (ohne Nah-Umweg), 5 = Nah-Umweg ohne
+                                                                                                   * Belegt-Test, >= 10: Nah-Schwelle um - 10 */
         pl->x = atoi(argv[5]); pl->z = atoi(argv[6]); pl->rot_y = (int16_t)atoi(argv[7]); pl->y = 0; pl->floor = 0;
         for (int k = 0; k < 2; k++) {
             re15_actor_t *e = g[k]; const int o = 8 + 5 * k;

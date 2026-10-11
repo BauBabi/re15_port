@@ -200,8 +200,11 @@ static int32_t  s_r36_nanker_x[RE15_ACTOR_MAX], s_r36_nanker_z[RE15_ACTOR_MAX];
 static uint8_t  s_r36_nahumweg[RE15_ACTOR_MAX];                                /* NB5: Nah-Umweg zum freien Bissplatz aktiv */
 #define R36_NAH_START 354
 static int      s_r36_nah_k = R36_NAH_START;                                   /* NUR Sonden: Schwelle (Messreihe), 0 = aus */
-void re15_r36_affen_nah_enable(int an)                                          /* NUR Sonden: 0 aus (Stand NB4), 1 an, >= 10: Schwelle an - 10 */
-{ s_r36_nah_k = (an >= 10) ? an - 10 : (an ? R36_NAH_START : 0); memset(s_r36_nahumweg, 0, sizeof s_r36_nahumweg); }
+static int      s_r36_nah_belegt_an = 1;                                       /* NUR Sonden: 0 = Bissplaetze ohne Belegt-Test (Gegenprobe) */
+void re15_r36_affen_nah_enable(int an)                                          /* NUR Sonden: 0 aus (Stand NB4), 1 an, 2 an ohne Belegt-Test,
+                                                                                 * >= 10: Schwelle an - 10 */
+{ s_r36_nah_k = (an >= 10) ? an - 10 : (an ? R36_NAH_START : 0); s_r36_nah_belegt_an = (an != 2);
+  memset(s_r36_nahumweg, 0, sizeof s_r36_nahumweg); }
 static uint8_t  s_r36_vortritt[RE15_ACTOR_MAX];   /* NB4: NAHER Gorilla, der einem FERN haengenden den einzigen Weg versperrt */
 #define R36_VORTRITT_START (R36_FEST_START / 2)   /* NB4, s. re15_r36_affen_fest_takt */
 static int      s_r36_vortritt_an = 1;            /* NUR Sonden: 0 = Stand NB3 (Gegenprobe Mangel 1 der Abnahme 3) */
@@ -637,7 +640,7 @@ static int r36_nah_route(const re15_actor_t *e, const re15_actor_t *pl, int slot
     for (int k = 0; k < s_uw.nx * s_uw.nz; k++) {
         if (!s_uw.frei[k] || s_uw.komp[k] != s_uw.komp[g]) continue;
         int64_t ex = (int64_t)r36_kx(k) - pl->x, ez = (int64_t)r36_kz(k) - pl->z, dk = ex * ex + ez * ez;
-        if (dk < bd && !r36_belegt_koerper(k, slot)) { bd = dk; t = k; }
+        if (dk < bd && !(s_r36_nah_belegt_an && r36_belegt_koerper(k, slot))) { bd = dk; t = k; }
     }
     if (t < 0 || t == g || !r36_uw_astern(g, t, NULL, 0, NULL)) return 0;
     int len = 0;
