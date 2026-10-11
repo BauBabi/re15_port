@@ -326,6 +326,49 @@ int main(int argc, char **argv)
         printf("       x von -33000 bis 22000, Schritt %d, Radius %d; # = Klemme verschiebt, p/P = 0x10-Pad frei/geklemmt, q/Q = 0x20-Pad\n", st, rad);
         return 0;
     }
+    if (argc > 17 && strcmp(argv[1], "lage") == 0) {   /* NB4 Sonde: lage <bilder> <umweg 0|1> <spur> <lx> <lz> <lyaw> <g1x> <g1z> <g1yaw> <g1sub> <g1sub3>
+                                                          * <g2x> <g2z> <g2yaw> <g2sub> <g2sub3> — dieselbe Startlage wie die GDB-Messung des Originals
+                                                          * (F_nb4/gdb_affen.py: Lage/Yaw, +0x4..+0x7 := 1/sub/0/sub3, +0x82 := 0, +0x1dc := 0, HP gehalten) */
+        int b = atoi(argv[2]), um = atoi(argv[3]), sp = atoi(argv[4]);
+        re15_actor_t *g[2]; re15_actor_t *pl;
+        if (!aufbau(g, &pl)) return 1;
+        re15_r36_affen_padsuche_enable(um ? 1 : 0); re15_r36_affen_vortritt_enable(um != 3);   /* um: 0 Original-Regel, 1 Umweg (NB4), 3 Umweg ohne Vortritt (NB3) */
+        pl->x = atoi(argv[5]); pl->z = atoi(argv[6]); pl->rot_y = (int16_t)atoi(argv[7]); pl->y = 0; pl->floor = 0;
+        for (int k = 0; k < 2; k++) {
+            re15_actor_t *e = g[k]; const int o = 8 + 5 * k;
+            e->x = atoi(argv[o]); e->z = atoi(argv[o + 1]); e->rot_y = (int16_t)atoi(argv[o + 2]);
+            e->state = 1; e->sub_state_1 = (uint8_t)atoi(argv[o + 3]); e->sub_state_2 = 0; e->sub_state_3 = (uint8_t)atoi(argv[o + 4]);
+            e->floor = 0; e->dog_blocked_ctr = 0;
+        }
+        int erst[2] = { 0, 0 }, fa[2] = { 0, 0 }; long fest[2] = { 0, 0 }, fern[2] = { 0, 0 }, akk_fern[2] = { 0, 0 };
+        int32_t ax[2] = { g[0]->x, g[1]->x }, az[2] = { g[0]->z, g[1]->z };
+        for (int f = 1; f <= b; f++) {
+            frame(0, 0); if (pl->hp < 100) pl->hp = 100;
+            for (int k = 0; k < 2; k++) {
+                re15_actor_t *e = g[k]; int sub = e->sub_state_1 & 31;
+                long long dx = e->x - pl->x, dz = e->z - pl->z; int d = isqrt64(dx * dx + dz * dz);
+                int kampf = (sub == 5 || sub == 6 || sub == 8 || sub == 15);
+                if (!erst[k] && kampf) erst[k] = f;
+                int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= s_zg_anker;
+                if (e->state == 1 && !kampf && !bewegt && d > 3000) { if (!fa[k]) { fa[k] = f; akk_fern[k] = 0; } if (d >= 0x1771) akk_fern[k]++; }
+                else { if (fa[k] && f - fa[k] >= 90) { fest[k] += f - fa[k]; fern[k] += akk_fern[k]; } fa[k] = 0; ax[k] = e->x; az[k] = e->z; }
+            }
+            if (sp > 0 && (f % sp) == 0) {
+                printf("F%d", f);
+                for (int k = 0; k < 2; k++) { re15_actor_t *e = g[k]; int32_t ux = 0, uz = 0; int up = -1; int h = 0, fs = 0, vt = 0;
+                    int ua = re15_r36_affen_umweg_lesen((int)(e - g_actors), &ux, &uz, &up); re15_r36_affen_fest_lesen((int)(e - g_actors), &h, &fs, &vt);
+                    long long dx = e->x - pl->x, dz = e->z - pl->z;
+                    printf(" | G%d %d %d r%d s%d/%d/%d/%d d%d k%d h%d fest%d L%d uw%d vt%d", k + 1, (int)e->x, (int)e->z, (int)e->rot_y, e->state, e->sub_state_1,
+                           e->sub_state_2, e->sub_state_3, isqrt64(dx * dx + dz * dz), e->sca_wall_hit != 0, h, fs, e->dog_flags & 1, ua, vt); }
+                printf(" | pl %d %d hp %d\n", (int)pl->x, (int)pl->z, (int)pl->hp);
+            }
+        }
+        for (int k = 0; k < 2; k++) if (fa[k] && b + 1 - fa[k] >= 90) { fest[k] += b + 1 - fa[k]; fern[k] += akk_fern[k]; }
+        for (int k = 0; k < 2; k++)
+            printf("LAGE G%d: erster Angriff %d, fest %ld (Anker %d, Leon > 3000), davon fern %ld, Ende (%d,%d) s%d\n", k + 1, erst[k], fest[k], s_zg_anker,
+                   fern[k], (int)g[k]->x, (int)g[k]->z, g[k]->sub_state_1);
+        return 0;
+    }
     if (argc > 3 && strcmp(argv[1], "szene2") == 0) {   /* NB2 Sonde: szene2 <lx> <lz> [gx gz] [bilder] [0 = Umweg aus] */
         int32_t lx = atoi(argv[2]), lz = atoi(argv[3]), gx = (argc > 5) ? atoi(argv[4]) : 0, gz = (argc > 5) ? atoi(argv[5]) : 0;
         int b = (argc > 6) ? atoi(argv[6]) : 2400;
@@ -663,6 +706,35 @@ int main(int argc, char **argv)
             }
             CHECK(frei0 > 0 && frei1 == 0, "Nordwest-Tasche (x -29800..-20200, z 5200..11400, Schritt 800): frei mit Vorlage = Knoten %d (NB2-Artefakt), "
                   "mit Vorlage = Knoten + 1 %d", frei0, frei1);
+        }
+        {   /* NB4 (Abnahme 3, Mangel 1): STAU zweier Gorillas am Nordwest-Rand nach dem ersten Angriff (exe Leon (-24452,11938) /
+             * (-22288,11938), Kampf-Layout): Leon in der Ecke (-26606,14578), Gorilla 1 NAH in der Jagd an der #21-Ecke (-23302,14489),
+             * Gorilla 2 FERN in der Auswahl am Nordstreifen (-20579,16118), Koerperkontakt (2 x 1600 @0x80121356). ORIGINAL (GDB
+             * F_nb4/g_o3_stau.txt, r3 s033 ab VSync 10029, DIESELBE Lage per Speicherschreiben): 900/900 Bilder beide ohne Bewegung,
+             * e1 x -23302 d 3298, e2 z 16118 d 6122..6228, e2 +0x1de 179 -> 1079, kein Angriff. Je Modus ein eigener Prozess (`lage`):
+             * 0 = Original-Regel, 3 = Umweg ohne Vortritt (Stand NB3: "gerader Weg frei" -> Umweg 0), 1 = Umweg mit Vortritt (NB4). */
+            long fe[4][2], fn[4][2]; int er[4][2];
+            static const int modi[3] = { 0, 3, 1 };
+            memset(fe, 0xff, sizeof fe); memset(fn, 0xff, sizeof fn); memset(er, 0, sizeof er);
+            for (int i = 0; i < 3; i++) {
+                int m = modi[i];
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage 900 %d 0 -26606 14578 18 -23302 14489 2067 3 0 -20579 16118 1885 4 0", argv[0], m);
+                FILE *pp = popen(cmd, "r"); char zl[512];
+                while (pp && fgets(zl, sizeof zl, pp)) {
+                    int k, e1; long f1, f2;
+                    if (sscanf(zl, "LAGE G%d: erster Angriff %d, fest %ld (Anker %*d, Leon > 3000), davon fern %ld", &k, &e1, &f1, &f2) == 4 && k >= 1 && k <= 2) {
+                        er[m][k - 1] = e1; fe[m][k - 1] = f1; fn[m][k - 1] = f2; }
+                }
+                if (pp) pclose(pp);
+                printf("Stau Nordwest-Rand Modus %d: G1 Angriff %d fest %ld (fern %ld) | G2 Angriff %d fest %ld (fern %ld)\n", m, er[m][0], fe[m][0], fn[m][0],
+                       er[m][1], fe[m][1], fn[m][1]);
+            }
+            CHECK(er[0][0] == 0 && er[0][1] == 0 && fe[0][0] >= 810 && fn[0][1] >= 810,
+                  "Stau Gegenprobe Original-Regel = Original (GDB 900/900 ohne Bewegung): kein Angriff, G1 nah fest %ld, G2 FERN fest %ld", fe[0][0], fn[0][1]);
+            CHECK(er[3][0] == 0 && er[3][1] == 0 && fn[3][1] >= 810,
+                  "Stau Gegenprobe Stand NB3 (Umweg ohne Vortritt, Abnahme 3 'Umweg 0'): kein Angriff, G2 FERN fest %ld", fn[3][1]);
+            CHECK((er[1][0] > 0 || er[1][1] > 0) && fn[1][0] < 90 && fn[1][1] < 90,
+                  "Stau mit Vortritt: Angriff G1 %d / G2 %d, keine FERN-Blockade (%ld/%ld Bilder)", er[1][0], er[1][1], fn[1][0], fn[1][1]);
         }
         re15_r36_affen_padsuche_enable(1);
     }

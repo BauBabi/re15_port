@@ -195,20 +195,40 @@ static int16_t s_r36_pad_idx[RE15_ACTOR_MAX];
 #define R36_FEST_ANKER 400
 static uint16_t s_r36_1de[RE15_ACTOR_MAX], s_r36_fest[RE15_ACTOR_MAX];
 static int32_t  s_r36_anker_x[RE15_ACTOR_MAX], s_r36_anker_z[RE15_ACTOR_MAX];
-void re15_r36_affen_padsuche_enable(int an) { s_r36_padsuche_an = an ? 1 : 0; memset(s_r36_padsuche_aktiv, 0, sizeof s_r36_padsuche_aktiv); }
+static uint8_t  s_r36_vortritt[RE15_ACTOR_MAX];   /* NB4: NAHER Gorilla, der einem FERN haengenden den einzigen Weg versperrt */
+static int      s_r36_vortritt_an = 1;            /* NUR Sonden: 0 = Stand NB3 (Gegenprobe Mangel 1 der Abnahme 3) */
+void re15_r36_affen_vortritt_enable(int an) { s_r36_vortritt_an = an ? 1 : 0; }
+void re15_r36_affen_padsuche_enable(int an) { s_r36_padsuche_an = an ? 1 : 0; memset(s_r36_padsuche_aktiv, 0, sizeof s_r36_padsuche_aktiv);
+                                              memset(s_r36_vortritt, 0, sizeof s_r36_vortritt); }
 int  re15_r36_affen_padsuche_aktiv(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_r36_padsuche_aktiv[slot] : 0; }
 static void r36_padsuche_reset(const re15_actor_t *e)
 {
     long slot = e - g_actors;
     if (slot >= 0 && slot < RE15_ACTOR_MAX) { s_r36_padsuche_aktiv[slot] = 0; s_r36_pad_idx[slot] = -1;
-                                              s_r36_1de[slot] = 0; s_r36_fest[slot] = 0; }   /* +0x1de INIT @0x8011706c */
+                                              s_r36_1de[slot] = 0; s_r36_fest[slot] = 0; s_r36_vortritt[slot] = 0; }   /* +0x1de INIT @0x8011706c */
 }
+/* NB4 (Abnahme 3, Mangel 1) — STAU ZWEIER GORILLAS. GEMESSEN (exe Leon (-24452,11938)/(-22288,11938), Sonde `lage`, und im
+ * ORIGINAL per GDB ab derselben Lage, F_nb4/g_o3_stau.txt): Gorilla 1 steht NAH (d 3298) in der Jagd an der #21-Ecke
+ * (-23302,14489), Gorilla 2 FERN (d 6122..6228) in der Auswahl dahinter am Nordstreifen (-20579,16118), Koerperkontakt
+ * 3165..3209 (2 x 1600 @0x80121356); 900/900 Bilder beide ohne Bewegung, im ORIGINAL wie im Port (e2 +0x1de 179 -> 1079).
+ * Der einzige Weg in Leons Ecke ist der Streifen z 15728..16118 ueber #21 — Gorilla 1 versperrt ihn mit seinem Koerper,
+ * Gorilla 2 kommt an ihm nicht vorbei (dz <= 1629 < 3200). Der Umweg von Gorilla 2 sah nur SCA-Zellen ("gerader Weg frei"
+ * -> Original), die NAHE Original-Jagd von Gorilla 1 (B[3] auf playerX @0x80117d4c) drueckt in die Ecke.
+ * PORT-WAHL (Erweiterung des Umwegs, NUR fuer diesen Stau): steht ein Gorilla FERN (Sub 3/4, +0x1d4 >= 0x1771 @0x80117bc8)
+ * im KOERPERKONTAKT (Radien @0x80121356 + ein Rasterschritt, wie r36_pad_belegt) mit einem Gorilla, der NAH (< 0x1771) und
+ * naeher an Leon in Sub 3/4 steht, bekommt der NAHE den Vortritt: er nimmt den Umweg (kuerzester Weg, r36_uw_route), bis sein
+ * gerader Weg zu Leon frei ist (dann Original, r36_uw_route = 0) oder er Sub 3/4 verlaesst (Angriff). Ohne Wartezeit: mit der
+ * Umweg-Startbedingung (R36_FEST_START Bilder im Anker) stand Gorilla 2 an der exe-Stelle (-24452,11938) noch 103 Bilder FERN
+ * (gemessen F1245-F1325), und der Vortritt wirkt ohnehin nur, wenn der NAHE keinen geraden Weg zu Leon hat. Im Spur-J-Original
+ * (griff: e1/e2 ~3925/~4990, beide NAH, +0x1de bis 497, jnb1/g_griff.txt) gilt die Bedingung nie — zwei NAHE Gorillas bleiben
+ * Original. */
 void re15_r36_affen_fest_takt(const re15_actor_t *e)
 {
     long slot = e - g_actors;
     if (!e || slot < 0 || slot >= RE15_ACTOR_MAX) return;
     s_r36_1de[slot] = e->sca_wall_hit ? (uint16_t)(s_r36_1de[slot] + 1) : 0;          /* +0x1de @0x80117448-6c */
     int sub = e->sub_state_1 & 31;
+    if (sub != 3 && sub != 4) s_r36_vortritt[slot] = 0;                               /* NB4: Vortritt endet mit Sub 3/4 (Angriff, Sprung) */
     if ((sub != 3 && sub != 4)                                                        /* Anker-Messung: +0x1de setzt bei JEDEM Bild ohne
                                                                                        * Kontakt zurueck — gemessen: Gorilla in der Ecke #20/#21
                                                                                        * (-23302,13100) flackert klemme 1/0, +0x1de kommt nie hoch */
@@ -217,6 +237,16 @@ void re15_r36_affen_fest_takt(const re15_actor_t *e)
         || labs((long)e->x - s_r36_anker_x[slot]) + labs((long)e->z - s_r36_anker_z[slot]) >= R36_FEST_ANKER) {
         s_r36_anker_x[slot] = e->x; s_r36_anker_z[slot] = e->z; s_r36_fest[slot] = 0;
     } else if (s_r36_fest[slot] < 0xffffu) s_r36_fest[slot]++;
+    if (!s_r36_padsuche_an || !s_r36_vortritt_an || (sub != 3 && sub != 4) || (uint16_t)e->dog_dist < 0x1771u) return;   /* NB4: FERN -> Blocker? */
+    for (int s = 0; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *q = &g_actors[s];
+        int qs = q->sub_state_1 & 31;
+        if (s == slot || !q->active || q->type != 0x27u || q->state != 1 || (qs != 3 && qs != 4)) continue;
+        if ((uint16_t)q->dog_dist >= 0x1771u || (uint16_t)q->dog_dist >= (uint16_t)e->dog_dist) continue;   /* NAH und vor ihm */
+        int64_t kx = (int64_t)q->x - e->x, kz = (int64_t)q->z - e->z;
+        int64_t rr = (int64_t)q->hit_radius_min + e->hit_radius_min + e->hit_radius_min / 2;   /* Kontakt + Rasterschritt (Radius/2) */
+        if (kx * kx + kz * kz < rr * rr) s_r36_vortritt[s] = 1;
+    }
 }
 
 /* ---- Raster: Begehbarkeit aus der ORIGINAL-Klemme (FUN_8003b0a4-Zwilling re15_collision_constrain_contact_band
@@ -580,6 +610,12 @@ int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub)
 {
     if (!s_r36_padsuche_an || !e || slot < 0 || slot >= RE15_ACTOR_MAX || (sub != 3 && sub != 4)) return 0;
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_r36_vortritt[slot]) {                                                       /* NB4: Vortritt (s. re15_r36_affen_fest_takt) — auch NAH
+                                                                                       * und mit Sicht der Umweg, bis der gerade Weg frei ist */
+        s_r36_padsuche_aktiv[slot] = (uint8_t)r36_uw_route(e, pl, slot);
+        if (!s_r36_padsuche_aktiv[slot]) { s_r36_vortritt[slot] = 0; return 0; }
+        goto sprung;
+    }
     if (sub == 3 && (e->dog_flags & 1)) { s_r36_padsuche_aktiv[slot] = 0; return 0; }   /* Jagd mit Sicht: Original (fern+Sicht -> Sub 4
                                                                                        * @0x80117c48-54) */
     if ((uint16_t)e->dog_dist < 0x1771u && !r36_im_pad10(e)) { s_r36_padsuche_aktiv[slot] = 0; return 0; }
@@ -623,6 +659,7 @@ int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub)
     } else {
         s_r36_padsuche_aktiv[slot] = (uint8_t)r36_uw_route(e, pl, slot);
     }
+sprung:
     if (sub != 3 || s_r36_padsuche_aktiv[slot] != 2) return 0;
     uint8_t zc = 0;                                                               /* am Pad? (wie A[4] @0x80117ee0-f00) */
     if (re15_collision_zone_query(&g_room_rdt, e->x, e->z, (int32_t)e->hit_radius_min + 100, (int)e->floor, 0x10u, &zc)) {
@@ -658,6 +695,14 @@ void re15_r36_nav_zonenlos(re15_actor_t *e, const re15_actor_t *pl)
     if (re15_nav_zone_from_pos((int16_t)e->x, (int16_t)e->z) != 0xffu) return;   /* in einer Zone: Original (FUN_8004aab8 != 0xff) */
     e->steer_x = (int16_t)pl->x;                                                 /* +0x1c4 := Ziel.x @0x8004a90c-914 (Direkt-Form) */
     e->steer_z = (int16_t)pl->z;                                                 /* +0x1c6 := Ziel.z @0x8004a918-924 */
+}
+
+/* NUR Sonden (NB4): +0x1de-Zwilling, Anker-Zaehler und Vortritt des Slots lesen. */
+void re15_r36_affen_fest_lesen(int slot, int *h1de, int *fest, int *vortritt)
+{
+    *h1de = 0; *fest = 0; *vortritt = 0;
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    *h1de = s_r36_1de[slot]; *fest = s_r36_fest[slot]; *vortritt = s_r36_vortritt[slot];
 }
 
 /* NUR Sonden: Umweg-Ziel und Pad des Slots lesen. */

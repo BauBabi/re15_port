@@ -895,3 +895,71 @@ anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen 
 | 2 | Nahe Rest-Blockade (Ostgassen-Eingang (6000,-9000), Nordwest-Ecke/-Rand) am Original nicht gemessen | GDB-Messung des Originals an beiden Stellen (Muster J_affen.md: r3 s033, Lagen per GDB setzen, je Bild beide Gorillas + Leon); Port-Sonde ab derselben Lage dagegen; danach Gate fuer die Nah-Blockade, das `unit_r35_affen_griff/_szene` gruen laesst |
 | 3 | Voll-Suite | Orchestrator; hier gezielt |
 
+### NB4 Messweg Original (DuckStation-GDB, Muster Spur J jnb6/gdbm2.py)
+- Werkzeug `F_belege/nb4/gdb_affen.py`: DuckStation-GDB-Server (Port 2345; `%LOCALAPPDATA%/DuckStation/settings.ini` `[Debug]
+  EnableGDBServer` nur fuer den Lauf auf true, nach dem Prozessende zurueckgeschrieben — nach jedem Lauf geprueft: "settings.ini
+  zurueck: True", Zeile 507 `EnableGDBServer = false`), r3-Savestate `orig_scene/r3/s033_t054.55.sav` direkt geladen (MZD-Disc wie
+  Spur J), Haltepunkt Gorilla-Wurzel 0x80116db8, Patch beim ersten Halt mit cur (0x800ac784) == e2 (0x800ad014) ab VSync 10029
+  (0x800787dc; = Original-Bild F194/195 der Spur J): Lage +0x34/+0x38/+0x3c + Vorlage +0x40/+0x42/+0x44, Yaw +0x6a; Gorilla
+  +0x4..+0x7 := 1/sub/0/sub3, +0x82 := 0, +0x1dc := 0; Leon (0x800aca54) HP +0x9a je Bild auf 100 gehalten (wie der Port-Riegel).
+  Je e2-Halt eine Zeile: e1 (0x800ace20) / e2 Lage, Yaw, Sub, Clip, +0x1d4 (d), +0x1d6 (k), +0x1de (h), +0x1d0 (L), +0x1dc (B).
+- Eichung (`g_kalib`): ohne Patch e1 (-5525,-14883) r2731 Clip 5/10 +0x1dc 9, e2 (-8915,-12487) r93 Clip 5/16 +0x1dc 15 = die
+  Original-Lage F195 des Riegels (`aufbau`, test_r35_affen takt). e1 = Port-Slot 2, e2 = Port-Slot 3.
+- Grenze des Messwegs (gemessen, O4): ein in der JAGD (Sub 3, Clip 5 mit Fusssperre bf50) abgesetzter Gorilla, der im SELBEN Bild
+  noch tickt (e2), springt mit der alten Fussstellung zurueck (e2 10029 (5876,-8818) -> 10031 (-9124,-12478)); e1 (nach seinem Tick
+  gesetzt) und Gorillas in der Auswahl (Sub 4, Clip 6 ohne Fusssperre) halten die Lage. O3/O3b setzen e1 in Sub 3 und e2 in Sub 4
+  bzw. Sub 0 — gueltig. In O4 kam e2 aus der Szene selbst an die Stelle (s. unten).
+
+### NB4 Mangel 1 — FERN-Stau am Nordwest-Rand (Gegenbeleg zu "fern 0" — BERICHTIGT)
+- **Messung vorher** (exe 43220d8d = Abnahme 3, Auswertung `F_belege/nb4/fest_nach.py` = Abnahme-Skript fest_split.py + Teilung
+  "nach dem ersten Angriff"): (-24452,11938) Slot 2 Angriff F828, danach fest 1529 (nah), **Slot 3 nie, fest 1465, davon FERN 1465**;
+  (-22288,11938) Slot 2 F868 fest 760, **Slot 3 F1025 fest 894, FERN 691** — bitgleich zur Abnahme. Sonde `lage` (neu im Riegel,
+  dieselbe Startlage wie die GDB-Messung) Leon (-26606,14578), G1 (-23302,14489) Sub 3, G2 (-20579,16118) Sub 4: Original-Regel und
+  Stand NB3 (Umweg ohne Vortritt) **bitgleich**: 900/900 beide ohne Bewegung, G2 900 Bilder FERN (`p_o3_stau_originalregel.txt` /
+  `p_o3_stau_nb3.txt`, "uw0" je Bild).
+- **Berichtigung:** Die NB3-Angabe "Blockade NACH dem ersten Angriff: FERN 0" galt nur fuer die sieben Riegel-Szenen (Sonden-Start
+  F195, Leon fest); in der exe stand Slot 3 an beiden Nordwest-Rand-Stellen 1465 / 691 Bilder FERN nach dem ersten Angriff (Abnahme
+  3 hatte recht). Die Angabe in Commit 43220d8d ist damit falsch; diese Nachbesserung ersetzt sie.
+- **Original (GDB, `F_belege/nb4/g_o3_stau_je30.txt`, 900 Bilder ab derselben Lage):** e1 (-23302, 14388..14507) Sub 3, d 3298,
+  Sicht-Latch 1, Klemme 1; e2 (-20570..-20659, 16118) Sub 4, d 6122..6228, Klemme 1, **+0x1de 179 -> 1079 ohne Unterbrechung**; kein
+  Angriff, Leon HP 100 unveraendert. **Das Original staut sich hier genauso** — der Stau ist die Original-Regel, sobald BEIDE
+  Gorillas am Nordwest-Rand ankommen (im Original kommen sie dort gar nicht an: v0.8.23 an beiden Stellen nie, Abnahme 3).
+- **Ursache (Code + Messung):** der einzige Weg in Leons Ecke ist der Streifen z 15728..16118 ueber #21 (@ROOM11C0.RDT 0x01524);
+  Gorilla 1 steht NAH (d 3298 < 0x1771) in der Original-Jagd (B[3] auf playerX @0x80117d4c) an der #21-Ecke und versperrt den
+  Streifen mit seinem Koerper (Gorilla 2 muesste mit dz >= 3200 an ihm vorbei, der Streifen erlaubt hoechstens 1629).
+  `r36_uw_route` fuer Gorilla 2 gibt 0 zurueck ("gerader Weg frei", zombieki_r36.c Z. 519): die Knotenstrecke auf dem Streifen ist
+  SCA-frei — der Blocker ist kein SCA, sondern Gorilla 1. Ein Umweg FUER GORILLA 2 kann den Stau nicht loesen (kein anderer Weg in
+  die Ecke); loesen kann ihn nur Gorilla 1.
+- **Aenderung (PORT-WAHL, zombieki_r36.c `re15_r36_affen_fest_takt` + `re15_r36_affen_padsuche_decide`, keine neue Zahl):
+  VORTRITT** — steht ein Gorilla FERN (Sub 3/4, +0x1d4 >= 0x1771 @0x80117bc8) im Koerperkontakt (Radien @0x80121356 + ein
+  Rasterschritt, wie `r36_pad_belegt`) mit einem Gorilla, der NAH und naeher an Leon in Sub 3/4 steht, nimmt der NAHE den Umweg
+  (`r36_uw_route`, kuerzester Weg), bis sein gerader Weg zu Leon frei ist (dann Original) oder er Sub 3/4 verlaesst. Erste Fassung
+  mit der Umweg-Startbedingung (R36_FEST_START 45 Bilder im Anker) liess Slot 3 an (-24452,11938) noch 103 Bilder FERN stehen
+  (F1245-F1325, `re15_pc_nb4f.exe`) — deshalb ohne Wartezeit (der Vortritt wirkt ohnehin nur, wenn der NAHE keinen geraden Weg hat).
+  Zwei NAHE Gorillas (Spur-J-Original griff: e1/e2 ~3925/~4990, Koerperkontakt 3209, +0x1de bis 497, `jnb1/g_griff.txt` selbst
+  dekodiert) erfuellen die Bedingung nie und bleiben Original.
+- **Messung nachher:** Sonde `lage` (Stau-Lage): G1 Angriff Bild 58, G2 FERN 0 (danach NAH an der #21-Ecke, s. Mangel 2)
+  (`p_o3_stau_nb4.txt`). exe `re15_pc_nb4g.exe` (= Stand mit Vortritt): (-24452,11938) Slot 2 F828, fest 0; **Slot 3 Angriff F1210
+  (vorher nie), FERN 0**, nah 1377 (#21-Ecke); (-22288,11938) Slot 2 F868 fest 95 (nah); Slot 3 F1025, **FERN 4** (vorher 691),
+  nah 797.
+
+### NB4 Mangel 2 — Nahe Rest-Blockade: Messung des ORIGINALS (GDB)
+| Lauf | Lage (ab VSync 10029) | Original (GDB) | Port (gleiche Lage, Original-Regel) |
+|---|---|---|---|
+| O3 Nordwest-Ecke, zwei Gorillas | Leon (-26606,14578); e1 (-23302,14489) Sub 3; e2 (-20579,16118) Sub 4 | 900/900 beide ohne Bewegung; e1 d 3298 Klemme 1 Sicht 1; e2 d 6122..6228 | 900/900 (`lage` um 0): G1 d 3304..3307, G2 d 6180..6225 |
+| O3b Nordwest-Ecke, EIN Gorilla | Leon wie O3; e1 wie O3; e2 weit weg (9434,2189) Sub 0 | **900 Bilder e1 an der #21-Ecke (-23302, 14575..14599), d 3298, Klemme 1, Sicht 1, kein Angriff**; e2 kommt in 900 Bildern nicht naeher als 34000 | exe-Stelle 13: Slot 3 1649 Bilder an derselben Ecke (Abnahme 3) |
+| O4 Ostgasse | Leon (5858,-5716) in der Gasse; e1 (3040,-10330) blind; e2 aus der Szene | **e1 an den Gasseneingang (5793..5878,-8818) d 3093 Sub 3 Sicht 1 Klemme 1, +0x1de bis 749; e2 in der Auswahl (3045,-10323) d 5394 Klemme 1, +0x1de bis 929; 900 Bilder kein Angriff** | exe (6000,-9000): Slot 3 (5876,-8818) d 3102, Slot 2 (3040,-10330) d 5400, 1652/1874 Bilder (Abnahme 3) |
+| O1 Leon (6000,-9000), Gorillas aus der Szene | nur Leon gesetzt | e1 Heavy/Bisse ab ~F100, schiebt Leon DURCH die Ostgasse bis (7880,-1379); ab ~F1600 e1 in der Gassenmitte (6418,-4330) d 3298 Sicht 1 Klemme 1, e2 am Suedeingang (8061,-7080) d 5701; **beide bis F2400 ohne Bewegung (+0x1de bis 2299/2479)** | `szene2 6000 -9000` Original-Regel: G1 Angriff 196, schiebt Leon durch die Gasse bis (8837,-2141); G1 in der Gassenmitte (6418,-4413), G2 (8098,-7138), fest 1473 (`p_o1_6000_originalregel.txt`) |
+
+- **Ergebnis: das Original wartet an beiden Stoss-Zielen ebenso.** An der Nordwest-Ecke bleibt ein naher Gorilla in der Jagd
+  (B[3] steuert gerade auf playerX @0x80117d4c, A[3] hat unter 0x1771 keinen anderen Ausgang als den Biss unter 0xbb8
+  @0x80117a60-74) an der #21-Ecke haengen — allein (O3b) wie zu zweit (O3). In die Ostgasse (2711 breit < 2 x 1600, Pad #36
+  @ROOM11C0.RDT 0x015d8) kommt kein Gorilla zu Fuss; das Original schiebt Leon sogar selbst hinein (O1) und wartet dann davor
+  bzw. darin. Dazu Spur J (`jnb1/g_griff.txt`, selbst dekodiert, +0x1d0/+0x1de): im kanonischen Kampf warten e1/e2 mit Sicht-Latch 1
+  an der Klemme ~3925/~4990 vor Leon, e2 mit +0x1de bis 497 — dieselbe Original-Nahjagd, die `unit_r35_affen_griff/_szene`
+  bildgenau pinnen.
+- Ein Gate, das die Nah-Wartezeit senkt, muesste genau diese Original-Lage aendern (NB3 gemessen: Haenge-Beginn auch NAH ->
+  griff/szene rot; die Wartenden im kanonischen Kampf haben wie an der Nordwest-Ecke Sicht-Latch 1 und Klemme 1). Die
+  Nah-Wartezeit bleibt deshalb Original und wird unter "Fuer den Nutzer" benannt. Was die PORT-WAHL aendert, ist nur, dass beide
+  Gorillas ueberhaupt an den Nordwest-Rand kommen (Umweg) und sich dort nicht mehr gegenseitig festhalten (Vortritt, Mangel 1).
+
