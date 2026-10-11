@@ -823,7 +823,7 @@
   "2": {
    "objekte": [
     {
-     "name": "10F0 Cut 2 (Nutzer-Lasso)",
+     "name": "10F0 Cut 2 Teil 01 Stuhl (Nutzer-Lasso)",
      "png": "pri/STAGE1/10F0/02.png",
      "x": 176,
      "y": 115,
@@ -831,6 +831,15 @@
      "oben": 0,
      "grow": 0,
      "spalten": true
+    },
+    {
+     "name": "10F0 Cut 2 Teil 02 Absperrung (Nutzer-Lasso, Runde 36 Spur O)",
+     "png": "pri/STAGE1/10F0/02_02.png",
+     "x": 33,
+     "y": 56,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0
     }
    ]
   },
