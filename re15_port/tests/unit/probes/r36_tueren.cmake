@@ -4,8 +4,9 @@
 #   schott         Punkt 1b: S164/S165 -> DOOR26 V0 zwei Fluegel (Gegenprobe V3 einer); echter Durchgang 2090 -> 20A0
 #   aufschliessen  Punkt 3: KARTSE.VBS = RE2-Wellen bytegleich, RE2-Belegbytes (ROOM2110 sub08, EXE @0x800515f4/f8),
 #                  Folgen, echter Skriptweg ROOM10D0 (Code) / ROOM3010 (Green Keycard) / ROOM1140 (Riegel)
-#   textur         Punkt 2: P0CD-Blatt fein >= 0.10 / form >= 0.30 / scharf >= 1 / hell <= 100, Faser waagerecht,
-#                  Fenster dunkel (vorher fein 0.0818, form 0.1817, hell 114.5; tools/tueren/r36_textur_mass.py)
+#   textur         Punkt 2: P0CD-Blatt fein >= 0.095 / form >= 0.30 / hell <= 100, Faser waagerecht (gy > 2 gx),
+#                  Glas < 0,8 x Holz, gezeigt = gemalt (ROOM10C04-Zeilenprofil, +-10) an 5 Zeilen
+#                  (vorher, dieselbe C-Rechnung: fein 0.0814, form 0.1824, hell 114.5, gy/gx 0.44)
 add_executable(probe_r36_tueren probe_r36_tueren.c)
 target_link_libraries(probe_r36_tueren PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r36_tueren PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR})
