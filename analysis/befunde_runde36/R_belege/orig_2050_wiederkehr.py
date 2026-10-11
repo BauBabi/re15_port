@@ -277,6 +277,31 @@ def main():
             L("%s: Schub angenommen %d x, gesperrt %d x, Fall-Ausloeser %d x, Ende: %s" % (tag, ok, bl, fa, grund))
             return grund
 
+        def raum_fertig(tag, k=None, maxs=60):
+            """Nach dem Tuer-Wechsel warten, bis der Raum FERTIG geladen ist: RDT-Kopf +8 reloziert (Zeiger >= 0x80000000
+            statt Dateioffset) und — mit k — pool[k] aktiv (Wort 0 Bit 0, Installer LAB_80040914). Je Sekunde eine Probe:
+            RDT +8, pool[k] Wort 0 und Lage (zeigt die Nullung FUN_8003ea7c und danach das Neusetzen durch main00)."""
+            t0 = time.time()
+            fertig_n = 0
+            while time.time() - t0 < maxs:
+                lauf(1.0)
+                r = struct.unpack("<I", g.mem(RDT_PTR, 4))[0]
+                z8 = struct.unpack("<I", g.mem(r + 8, 4))[0] if 0x80000000 <= r < 0x80200000 else 0
+                zeile = "  %s t=%4.1f s RDT +8 = %08x" % (tag, time.time() - t0, z8)
+                ok = z8 >= 0x80000000
+                if k is not None:
+                    w0 = struct.unpack("<I", g.mem(POOL + OBJ_SZ * k, 4))[0]
+                    o = obj(k)
+                    zeile += " | Pool %d: w0 %08x pos (%d,%d,%d) band=%d faellt=%d" % (k, w0, o[0], o[1], o[2], o[5], o[3])
+                    ok = ok and (w0 & 1) == 1
+                L(zeile)
+                fertig_n = fertig_n + 1 if ok else 0
+                if fertig_n >= 2:
+                    L("  %s: Raum fertig geladen" % tag)
+                    return True
+            L("  %s: Raum nach %d s NICHT fertig" % (tag, maxs))
+            return False
+
         def druecke_tuer(tag, kopf_vor, ankunft):
             lauf(1.0)
             zustand("%s VOR" % tag)
@@ -335,6 +360,8 @@ def main():
         if kopf2000 is None:
             L("Tuer nach ROOM2000 nicht ausgeloest - Abbruch")
             return 5
+        raum_fertig("ROOM2000")
+        kopf2000 = rdt_kopf()
         L("RDT ROOM2000:", kopf2000)
         gegner_weg("2000")
         drehe_auf(2048, 40)
@@ -345,6 +372,8 @@ def main():
         if kopf_zurueck is None:
             L("Tuer nach ROOM2050 nicht ausgeloest - Abbruch")
             return 6
+        raum_fertig("ROOM2050", K)
+        kopf_zurueck = rdt_kopf()
         L("RDT nach der Rueckkehr: %s (ROOM2050 beim Start: %s) -> %s" % (kopf_zurueck[1], kopf2050[1],
           "GLEICH" if kopf_zurueck[1] == kopf2050[1] else "VERSCHIEDEN"))
         zustand("WIEDERKEHR")

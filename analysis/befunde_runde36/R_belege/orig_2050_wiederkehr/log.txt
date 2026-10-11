@@ -1,0 +1,128 @@
+DuckStation gestartet {'112768'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (9100, -5400, 4100, 0, 3, 0) obj6: (-1600, -5400, -9348, 0, 0, 3, 0) HP: 100 RDT: (2148635440, '0010090000000000f02a1280702b1280')
+  START Pool 0: w0 0000000b pos (-6625,-16200,-1850) spiegel (-6625,-1850) faellt=0 z=0 band=5
+  START Pool 1: w0 00000101 pos (2052,0,-5552) spiegel (2052,-5552) faellt=0 z=0 band=0
+  START Pool 2: w0 00000101 pos (-1256,0,-64) spiegel (-1256,-64) faellt=0 z=0 band=0
+  START Pool 3: w0 00000101 pos (4248,0,1400) spiegel (4248,1400) faellt=0 z=0 band=0
+  START Pool 4: w0 0000000b pos (7996,-16200,4450) spiegel (7996,4450) faellt=0 z=0 band=5
+  START Pool 5: w0 0000000b pos (2975,-16200,-13950) spiegel (2975,-13950) faellt=0 z=0 band=5
+  START Pool 6: w0 00000101 pos (-1600,-5400,-9348) spiegel (-1600,-9348) faellt=0 z=0 band=3
+  START Pool 7: w0 0000000b pos (5475,-16200,-13050) spiegel (5475,-13050) faellt=0 z=0 band=5
+  START Pool 8: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  START Pool 9: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  2050 Entity 0 @800acc2c: w0 0801 typ 0x25 pos (4300, -5400, -6450) -> Aktiv-Bit 0 geloescht
+  2050 Entity 1 @800ace20: w0 0801 typ 0x25 pos (-5000, -5400, -6082) -> Aktiv-Bit 0 geloescht
+  2050 g_active_count @0x800aca4e: 2 -> 0
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Drehsinn: R 0.4 s -> dBlick = 1152
+START spieler=(9100,-5400,4100) blick=2112 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+== Weg zur Nordseite der Kiste ==
+  GEHE (9100,-6300): angekommen bei (9031,-6425), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-6300): angekommen bei (-124,-6294), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-8400): angekommen bei (-87,-8315), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-11200): angekommen bei (-87,-11116), Schub-Ereignisse unterwegs 0
+== Schub 1: nach Sueden bis Kistenmitte z >= -7050 ==
+  GEHE (-1000,-10798): angekommen bei (-1056,-10782), Schub-Ereignisse unterwegs 0
+SUED Runde 0 VOR spieler=(-1056,-5400,-10782) blick=-1008 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1600, -5400, -9274, 0, 0, 3, 9) spieler=(-1047, -5400, -10624, -1008, 3, 1)
+  SCHUB-OK obj6=(-1600, -5400, -8816, 0, 0, 3, 9) spieler=(-1011, -5400, -10166, -1012, 3, 8)
+  SCHUB-OK obj6=(-1600, -5400, -8273, 0, 0, 3, 9) spieler=(-969, -5400, -9623, -1012, 3, 8)
+  SCHUB-OK obj6=(-1600, -5400, -7730, 0, 0, 3, 9) spieler=(-927, -5400, -9080, -1012, 3, 8)
+  SCHUB-OK obj6=(-1600, -5400, -7187, 0, 0, 3, 9) spieler=(-885, -5400, -8537, -1012, 3, 8)
+SUED Runde 0 NACH (Bedingung) spieler=(-904,-5400,-8381) blick=-1012 band=3 sub=8 | obj6=(-1600,-5400,-7031) faellt=0 z=0 band=3 n=9
+SUED: Schub angenommen 117 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== Umweg in die Tasche westlich der Kiste ==
+  GEHE (-100,-8400): angekommen bei (-209,-8376), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-5520): angekommen bei (-96,-5460), Schub-Ereignisse unterwegs 0
+  GEHE (-3100,-5520): angekommen bei (-3200,-5515), Schub-Ereignisse unterwegs 0
+== Schub 2: nach Osten bis Kistenmitte x >= 7550 ==
+  GEHE (-3050,-6431): angekommen bei (-3099,-6529), Schub-Ereignisse unterwegs 0
+OST Runde 0 VOR spieler=(-3099,-5400,-6529) blick=-12340 band=3 sub=3 | obj6=(-1600,-5400,-7031) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1600, -5400, -7031, 0, 0, 3, 9) spieler=(-2950, -5400, -6480, -12261, 3, 8)
+  SCHUB-OK obj6=(-1060, -5400, -7031, 0, 0, 3, 9) spieler=(-2410, -5400, -6532, -12261, 3, 8)
+  SCHUB-OK obj6=(-520, -5400, -7031, 0, 0, 3, 9) spieler=(-1870, -5400, -6584, -12261, 3, 8)
+  SCHUB-OK obj6=(20, -5400, -7031, 0, 0, 3, 9) spieler=(-1330, -5400, -6636, -12261, 3, 8)
+  SCHUB-OK obj6=(560, -5400, -7031, 0, 0, 3, 9) spieler=(-790, -5400, -6688, -12261, 3, 8)
+  SCHUB-OK obj6=(1100, -5400, -7031, 0, 0, 3, 9) spieler=(-250, -5400, -6740, -12261, 3, 8)
+  SCHUB-OK obj6=(1640, -5400, -7031, 0, 0, 3, 9) spieler=(290, -5400, -6792, -12261, 3, 8)
+  SCHUB-OK obj6=(2180, -5400, -7031, 0, 0, 3, 9) spieler=(830, -5400, -6844, -12261, 3, 8)
+  SCHUB-OK obj6=(2720, -5400, -7031, 0, 0, 3, 9) spieler=(1370, -5400, -6896, -12261, 3, 8)
+  SCHUB-OK obj6=(3260, -5400, -7031, 0, 0, 3, 9) spieler=(1910, -5400, -6948, -12261, 3, 8)
+  SCHUB-OK obj6=(3800, -5400, -7031, 0, 0, 3, 9) spieler=(2450, -5400, -7000, -12261, 3, 8)
+  SCHUB-OK obj6=(4340, -5400, -7031, 0, 0, 3, 9) spieler=(2990, -5400, -7052, -12261, 3, 8)
+  SCHUB-OK obj6=(4880, -5400, -7031, 0, 0, 3, 9) spieler=(3530, -5400, -7104, -12261, 3, 8)
+  SCHUB-OK obj6=(5420, -5400, -7031, 0, 0, 3, 9) spieler=(4070, -5400, -7156, -12261, 3, 8)
+  SCHUB-OK obj6=(5960, -5400, -7031, 0, 0, 3, 9) spieler=(4610, -5400, -7208, -12261, 3, 8)
+  SCHUB-OK obj6=(6500, -5400, -7031, 0, 0, 3, 9) spieler=(5150, -5400, -7260, -12261, 3, 8)
+  SCHUB-OK obj6=(7040, -5400, -7031, 0, 0, 3, 9) spieler=(5690, -5400, -7312, -12261, 3, 8)
+OST Runde 0 NACH (Bedingung) spieler=(6219,-5400,-7359) blick=-12261 band=3 sub=8 | obj6=(7569,-5400,-7031) faellt=0 z=0 band=3 n=9
+OST: Schub angenommen 433 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== Umweg nach Sueden der Kiste ==
+  GEHE (6119,-5600): angekommen bei (6195,-5509), Schub-Ereignisse unterwegs 0
+== Schub 3: nach Norden bis Fall-Ausloeser ==
+  GEHE (7569,-5581): angekommen bei (7583,-5473), Schub-Ereignisse unterwegs 0
+NORD Runde 0 VOR spieler=(7583,-5400,-5473) blick=-11301 band=3 sub=3 | obj6=(7569,-5400,-7031) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(7569, -5400, -7106, 0, 0, 3, 9) spieler=(7623, -5400, -5756, -11301, 3, 1)
+  SCHUB-OK obj6=(7569, -5400, -7253, 0, 0, 3, 9) spieler=(7646, -5400, -5903, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -7800, 0, 0, 3, 9) spieler=(7577, -5400, -6450, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -8340, 0, 0, 3, 9) spieler=(7521, -5400, -6990, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -8880, 0, 0, 3, 9) spieler=(7465, -5400, -7530, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -9420, 0, 0, 3, 9) spieler=(7409, -5400, -8070, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -9960, 0, 0, 3, 9) spieler=(7353, -5400, -8610, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -10500, 0, 0, 3, 9) spieler=(7297, -5400, -9150, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -11040, 0, 0, 3, 9) spieler=(7241, -5400, -9690, -11234, 3, 8)
+  SCHUB-OK obj6=(7569, -5400, -11580, 0, 0, 3, 9) spieler=(7185, -5400, -10230, -11234, 3, 8)
+  FALL-AUSLOESER obj6=(7569, -5400, -11732, 0, 0, 3, 8) spieler=(7159, -5400, -10382, -11234, 3, 8)
+NORD Runde 0 NACH (Fall-Ausloeser) spieler=(7159,-5400,-10382) blick=-11234 band=3 sub=8 | obj6=(7569,-5400,-11732) faellt=0 z=0 band=3 n=8
+NORD: Schub angenommen 229 x, gesperrt 0 x, Fall-Ausloeser 1 x, Ende: Fall-Ausloeser
+Haltepunkte entfernt (Ende Schub 3: Fall-Ausloeser); 3 s laufen lassen:
+NACH FALL spieler=(7159,-5400,-10382) blick=-11234 band=3 sub=0 | obj6=(7569,-3600,-13068) faellt=0 z=3 band=2 n=0
+  NACH-FALL Pool 0: w0 0000000b pos (-6625,-16200,-1850) spiegel (-6625,-1850) faellt=0 z=0 band=5
+  NACH-FALL Pool 1: w0 00000101 pos (2052,0,-5552) spiegel (2052,-5552) faellt=0 z=0 band=0
+  NACH-FALL Pool 2: w0 00000101 pos (-1256,0,-64) spiegel (-1256,-64) faellt=0 z=0 band=0
+  NACH-FALL Pool 3: w0 00000101 pos (4248,0,1400) spiegel (4248,1400) faellt=0 z=0 band=0
+  NACH-FALL Pool 4: w0 0000000b pos (7996,-16200,4450) spiegel (7996,4450) faellt=0 z=0 band=5
+  NACH-FALL Pool 5: w0 0000000b pos (2975,-16200,-13950) spiegel (2975,-13950) faellt=0 z=0 band=5
+  NACH-FALL Pool 6: w0 00000101 pos (7569,-3600,-13068) spiegel (7569,-13068) faellt=0 z=3 band=2
+  NACH-FALL Pool 7: w0 0000000b pos (5475,-16200,-13050) spiegel (5475,-13050) faellt=0 z=0 band=5
+  NACH-FALL Pool 8: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  NACH-FALL Pool 9: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+== Zurueck zur Tuer slot 0 @0x01C4A (x 8100..10100 z 4700..6700 floor 3) ==
+  GEHE (7600,-6300): angekommen bei (7514,-6389), Schub-Ereignisse unterwegs 0
+  GEHE (9100,-6300): angekommen bei (9084,-6431), Schub-Ereignisse unterwegs 0
+  GEHE (9100,4300): angekommen bei (9046,4266), Schub-Ereignisse unterwegs 0
+TUER 2050 slot 0 VOR spieler=(9046,-5400,4266) blick=-17378 band=3 sub=0 | obj6=(7569,-3600,-13068) faellt=0 z=3 band=2 n=0
+TUER 2050 slot 0: TUER AUSGELOEST — RDT-Kopf 0010090000000000 -> 001003000000002c, Spieler (-26450, -1800, 10250, 0, 1, 0) (Ankunft (-26450, -1800, 10250))
+  ROOM2000 t= 1.0 s RDT +8 = 8012f4f4
+  ROOM2000 t= 2.0 s RDT +8 = 8012f4f4
+  ROOM2000: Raum fertig geladen
+RDT ROOM2000: (2148635440, '1b1003000000002cf4f4128074f51280')
+  2000 Entity 2 @800ad014: w0 0001 typ 0x16 pos (-24200, 0, -10700) -> Aktiv-Bit 0 geloescht
+  2000 Entity 3 @800ad208: w0 0001 typ 0x16 pos (-22550, 0, -10100) -> Aktiv-Bit 0 geloescht
+  2000 g_active_count @0x800aca4e: 2 -> 0
+TUER 2000 slot 4 VOR spieler=(-26450,-1800,10250) blick=-2016 band=1 sub=0 | obj6=(7569,-3600,-13068) faellt=0 z=3 band=2 n=0
+TUER 2000 slot 4: TUER AUSGELOEST — RDT-Kopf 1b1003000000002c -> 0010090000000000, Spieler (9100, -5400, 4100, 1024, 3, 0) (Ankunft (9100, -5400, 4100))
+  ROOM2050 t= 1.0 s RDT +8 = 80122af0 | Pool 6: w0 00000000 pos (7569,-3600,-13068) band=2 faellt=0
+  ROOM2050 t= 2.0 s RDT +8 = 80122af0 | Pool 6: w0 00000101 pos (-1600,-5400,-9348) band=3 faellt=0
+  ROOM2050 t= 3.0 s RDT +8 = 80122af0 | Pool 6: w0 00000101 pos (-1600,-5400,-9348) band=3 faellt=0
+  ROOM2050: Raum fertig geladen
+RDT nach der Rueckkehr: 0010090000000000f02a1280702b1280 (ROOM2050 beim Start: 0010090000000000f02a1280702b1280) -> GLEICH
+WIEDERKEHR spieler=(9100,-5400,4100) blick=1024 band=3 sub=0 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+  WIEDERKEHR Pool 0: w0 0000000b pos (-6625,-16200,-1850) spiegel (-6625,-1850) faellt=0 z=0 band=5
+  WIEDERKEHR Pool 1: w0 00000101 pos (2052,0,-5552) spiegel (2052,-5552) faellt=0 z=0 band=0
+  WIEDERKEHR Pool 2: w0 00000101 pos (-1256,0,-64) spiegel (-1256,-64) faellt=0 z=0 band=0
+  WIEDERKEHR Pool 3: w0 00000101 pos (4248,0,1400) spiegel (4248,1400) faellt=0 z=0 band=0
+  WIEDERKEHR Pool 4: w0 0000000b pos (7996,-16200,4450) spiegel (7996,4450) faellt=0 z=0 band=5
+  WIEDERKEHR Pool 5: w0 0000000b pos (2975,-16200,-13950) spiegel (2975,-13950) faellt=0 z=0 band=5
+  WIEDERKEHR Pool 6: w0 00000101 pos (-1600,-5400,-9348) spiegel (-1600,-9348) faellt=0 z=0 band=3
+  WIEDERKEHR Pool 7: w0 0000000b pos (5475,-16200,-13050) spiegel (5475,-13050) faellt=0 z=0 band=5
+  WIEDERKEHR Pool 8: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  WIEDERKEHR Pool 9: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+ERGEBNIS: obj 6 nach dem Wiederbetreten (-1600,-5400,-9348) faellt=0 band=3 — Record main00 @0x01D0E (-1600, -5400, -9348) -> AUF DEM RECORD
+Ereignisse gesamt: 780 Fall-Ausloeser: 1 HP: 100
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
