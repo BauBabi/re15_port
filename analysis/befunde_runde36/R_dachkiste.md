@@ -934,7 +934,12 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
 * **Gezielte Laeufe, Stand Nachbesserung 3** (Bau `local_build.sh configure` + `build` -> LOCAL-BUILD-OK):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zellschub|unit_1090_npc_prop_push|unit_r36_dachkiste_zensus"`:
     `100% tests passed, 0 tests failed out of 3` (7.71 s).
-  - Regression nach Vorgabe des Orchestrators: `ctest --test-dir re15_port/build -R "r36_dachkiste|r36_objfall|r36_klettern|klettern|objfall|1090|10f0|2050|2060|3050|sca_collision|collision|push|prop_|tritt|kiste|kerbe|unit_r36_|r35_" --timeout 900 -j 4` (226 Tests, darunter 29 Integrationslaeufe inkl. `integration_r36_dachkiste` mit elf Laeufen): ERGEBNIS_FOLGT
+  - Regression nach Vorgabe des Orchestrators: `ctest --test-dir re15_port/build -R "r36_dachkiste|r36_objfall|r36_klettern|klettern|objfall|1090|10f0|2050|2060|3050|sca_collision|collision|push|prop_|tritt|kiste|kerbe|unit_r36_|r35_" --timeout 900 -j 4` (226 Tests, darunter 29 Integrationslaeufe inkl. `integration_r36_dachkiste` mit elf Laeufen), gefahren 2026-10-11
+    23:26-23:52 im Stand 50edb2be (Fortsetzung nach dem Fable-Limit; der erste Lauf des Vorgaengers brach bei 145/226 ab,
+    0 rot): **`100% tests passed, 0 tests failed out of 226`** / `Total Test time (real) = 1569.68 sec`, darin
+    `225/226 Test #573: integration_r36_dachkiste ................   Passed  1279.87 sec`, `integration_r36_klettern`
+    535.00 s, alle `unit_r36_klettern_*`/`unit_r36_objfall_*` (Spur A) gruen, kein Fenster-Haken rot. Protokoll
+    `R_belege/nb3_regression.log`; Riegel-Laufordner `re15_port/build/r36_dachkiste_wd/lauf_13d906c3` (Inhalt s. "Abschluss").
 * Gezielte Laeufe (KEINE volle Suite im Spurbaum), Stand Nachbesserung 2 (81d02dd3+, Bau LOCAL-BUILD-OK):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
     `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 14.89 sec; mit den 2050-Pins der Sonde).

@@ -34,6 +34,7 @@
 #               Galerie Band 5 -> Treppe sce 13 -> Halle Band 3.
 #
 #   tritt2060 / echt2050 / elza2051 (Nachbesserung 3, Abnahme 2 P1/P2): Ruhe-Zweig LAB_8002c0b8 + Y-Test FUN_8002cabc, s. u.
+#               echt2050 faehrt nach dem Fall zurueck (2050 slot 0 -> 2000 -> slot 4 -> 2050): Kiste wieder auf dem Record.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r36_dachkiste.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -464,12 +465,35 @@ GEHE 6100 -5600
 GEHE 7600 -5600 100
 SCHIEB 1024 Z <= -12000 1200
 WARTE 300
-ENDE
+${ARGN}ENDE
 ")
 endmacro()
-_echt2050(echt2050 2000 2050)
+# Nachbesserung 3 (Abschluss): Leon faehrt nach dem Fall zurueck zur Tuer slot 0 @0x01C4A (floor 3, x 8100..10100
+# z 4700..6700) -> ROOM2000 -> Tuer slot 4 @0x0169E -> ROOM2050 (Wegplan wie R_belege/wegplan_2050_wiederkehr.txt).
+_echt2050(echt2050 2000 2050 "GEHE 7600 -6300
+GEHE 9100 -6300
+GEHE 9100 4300 100
+BLICK 3072
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+RAUM 2000
+GEGNERWEG
+WARTE 30
+BLICK 2048
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+RAUM 2050
+GEGNERWEG
+WARTE 120
+")
 _lauf(echt2050 500 ${_grund} "RE15_WEGPLAN=${_subE}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
-      RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26100,8500,3072,1" "RE15_EXIT_AT=4200")
+      RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-26100,8500,3072,1" "RE15_EXIT_AT=5400")
 macro(_echt2050_pruefen _name _raum2)
     _muss("[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)" _dbg "${_name}: Tuer 2000/2001 slot 4 @0x0169E nicht ausgeloest")
     _muss("loaded room${_raum2}.rdt" _dbg "${_name}: ROOM${_raum2} nicht geladen")
@@ -497,6 +521,29 @@ macro(_echt2050_pruefen _name _raum2)
     message(STATUS "r36_dachkiste ${_name}: echte Tuer slot 4 -> ROOM${_raum2}, Ankunft '${_ankunft}', ${_n_okE} Schuebe, Ausloeser '${_ausE}' -> Fall, Landung Band 2")
 endmacro()
 _echt2050_pruefen(echt2050 2050)
+# Wiederbetreten nach dem Fall: main00 @0x01D0E setzt obj 6 UNBEDINGT neu (Obj_model_set `2d 06 04 00 03 ...`); im Original
+# nullt der Raumlader FUN_8003ea7c @0x8003eab0-cc bei JEDEM Laden pool[i]+0 (Aufruf FUN_800396fc @0x800399a0), und der
+# Installer LAB_80040914 schreibt obj.x/y/z aus dem Record (@0x800409bc/@0x800409c8/@0x800409d4). Gemessen: exe
+# R_belege/nb3_2050wiederkehr (obj 6 wieder (-1600,-5400,-9348) b3), Original R_belege/orig_2050_wiederkehr.
+# Diskriminiert einen Port, der Objektlagen ueber den Raumwechsel haelt (dann laege die Kiste weiter auf Band 2).
+_muss("[aot] DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000) target_cut=10 spawn=(-26450,-1800,10250)" _dbg "echt2050: Tuer 2050 slot 0 @0x01C4A nach dem Fall nicht ausgeloest")
+string(REGEX MATCHALL "loaded room2050[.]rdt" _l2050 "${_dbg}")
+list(LENGTH _l2050 _n_l2050)
+if(_n_l2050 LESS 2)
+    _fehler("echt2050: ROOM2050 nach dem Fall nicht wieder betreten (${_n_l2050}x geladen)")
+endif()
+string(REGEX MATCHALL "room=2050 spieler=[^
+]*[|] p0 [(][-0-9]+,[-0-9]+,[-0-9]+[)] b[0-9]" _lagen2050 "${_fall}")
+list(LENGTH _lagen2050 _n_lagen2050)
+if(_n_lagen2050 LESS 1)
+    _fehler("echt2050: keine Lage p0 in objfall.txt")
+endif()
+list(GET _lagen2050 -1 _letzte2050)
+string(FIND "${_letzte2050}" "p0 (-1600,-5400,-9348) b3" _rec2050)
+if(_rec2050 LESS 0)
+    _fehler("echt2050: obj 6 steht nach dem Wiederbetreten nicht auf dem Record main00 @0x01D0E (-1600,-5400,-9348) b3: '${_letzte2050}'")
+endif()
+message(STATUS "r36_dachkiste echt2050: nach dem Fall Tuer slot 0 -> ROOM2000 -> slot 4 -> ROOM2050 (${_n_l2050}x geladen), obj 6 wieder auf dem Record: '${_letzte2050}'")
 
 _echt2050(elza2051 2001 2051)
 _lauf(elza2051 500 ${_grund} RE15_PSELECT_AUTO_SWITCH=1 "RE15_WEGPLAN=${_subE}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
@@ -506,4 +553,4 @@ _muss("loaded room2001.rdt" _dbg "elza2051: ROOM2001 nicht geladen")
 _echt2050_pruefen(elza2051 2051)
 
 file(REMOVE "${_exe}")
-message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall, 2050-Fall (auch vom echten Weg, Leon + Elza), 2020-Durchgang, 2040-Weg und das 2060-Glied (Ruhe-Zweig, Latch, Tuer) gemessen")
+message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall, 2050-Fall (auch vom echten Weg, Leon + Elza), 2020-Durchgang, 2040-Weg und das 2060-Glied (Ruhe-Zweig, Latch, Tuer) gemessen; nach dem Fall stellt das Wiederbetreten die 2050-Kiste zurueck")

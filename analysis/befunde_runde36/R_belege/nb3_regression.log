@@ -1,0 +1,459 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r36_dachkiste/re15_port/build
+        Start 573: integration_r36_dachkiste
+        Start 322: unit_r22_10f0_figur
+        Start 571: unit_r36_dachkiste_zensus
+        Start 617: unit_r36_klettern_zensus
+  1/226 Test #617: unit_r36_klettern_zensus .................   Passed    0.32 sec
+        Start 485: unit_r35_cut10f0_einmal
+  2/226 Test #485: unit_r35_cut10f0_einmal ..................   Passed    0.18 sec
+        Start 655: unit_r36_szenenleon_abgang10f0
+  3/226 Test #655: unit_r36_szenenleon_abgang10f0 ...........   Passed    0.13 sec
+        Start 484: unit_r35_cut10f0_szene
+  4/226 Test #484: unit_r35_cut10f0_szene ...................   Passed    0.17 sec
+        Start 619: unit_r36_objfall
+  5/226 Test #619: unit_r36_objfall .........................   Passed    0.09 sec
+        Start 280: unit_map_1090
+  6/226 Test #280: unit_map_1090 ............................   Passed    0.06 sec
+        Start 217: unit_plc_back_yaw_1090
+  7/226 Test #217: unit_plc_back_yaw_1090 ...................   Passed    0.04 sec
+        Start 246: unit_1090_flame_out_pin
+  8/226 Test #246: unit_1090_flame_out_pin ..................   Passed    0.03 sec
+        Start 572: unit_r36_dachkiste_zellschub
+  9/226 Test #572: unit_r36_dachkiste_zellschub .............   Passed    0.03 sec
+        Start 238: probe_1090_flinch_anim
+ 10/226 Test #238: probe_1090_flinch_anim ...................   Passed    0.03 sec
+        Start 222: unit_1090_climb_pin
+ 11/226 Test #222: unit_1090_climb_pin ......................   Passed    0.03 sec
+        Start 177: unit_re2_room1090_ab
+ 12/226 Test #177: unit_re2_room1090_ab .....................   Passed    0.02 sec
+        Start 196: unit_1090_room_pin
+ 13/226 Test #196: unit_1090_room_pin .......................   Passed    0.02 sec
+        Start 203: unit_1090_fire_pin
+ 14/226 Test #203: unit_1090_fire_pin .......................   Passed    0.02 sec
+        Start 236: probe_1090_flame_touch
+ 15/226 Test #236: probe_1090_flame_touch ...................   Passed    0.03 sec
+        Start 247: unit_1090_nodraw_pin
+ 16/226 Test #247: unit_1090_nodraw_pin .....................   Passed    0.02 sec
+        Start 615: unit_r36_klettern_10f0_endlage
+ 17/226 Test #615: unit_r36_klettern_10f0_endlage ...........   Passed    0.01 sec
+        Start 233: unit_1090_stay_on_crate
+ 18/226 Test #233: unit_1090_stay_on_crate ..................   Passed    0.03 sec
+        Start 201: unit_1090_push_pin
+ 19/226 Test #201: unit_1090_push_pin .......................   Passed    0.02 sec
+        Start 210: unit_1090_push_anim
+ 20/226 Test #210: unit_1090_push_anim ......................   Passed    0.01 sec
+        Start   9: prop_sca_collision
+ 21/226 Test   #9: prop_sca_collision .......................   Passed    0.02 sec
+        Start  10: prop_point_in_poly
+ 22/226 Test  #10: prop_point_in_poly .......................   Passed    0.02 sec
+        Start 487: unit_r35_cut10f0_bgm
+ 23/226 Test #487: unit_r35_cut10f0_bgm .....................   Passed    0.02 sec
+        Start  11: prop_zone_dispatch
+ 24/226 Test  #11: prop_zone_dispatch .......................   Passed    0.01 sec
+        Start 481: unit_r35_cut10f0_programm
+ 25/226 Test #481: unit_r35_cut10f0_programm ................   Passed    0.01 sec
+        Start 482: unit_r35_cut10f0_texte
+ 26/226 Test #482: unit_r35_cut10f0_texte ...................   Passed    0.01 sec
+        Start 616: unit_r36_klettern_10f0_startlage
+ 27/226 Test #616: unit_r36_klettern_10f0_startlage .........   Passed    0.01 sec
+        Start 486: unit_r35_cut10f0_karte
+ 28/226 Test #486: unit_r35_cut10f0_karte ...................   Passed    0.01 sec
+        Start 483: unit_r35_cut10f0_tuerton
+ 29/226 Test #483: unit_r35_cut10f0_tuerton .................   Passed    0.01 sec
+        Start 248: unit_1090_npc_prop_push
+ 30/226 Test #248: unit_1090_npc_prop_push ..................   Passed    0.01 sec
+        Start   2: prop_rdt_filename
+ 31/226 Test   #2: prop_rdt_filename ........................   Passed    0.01 sec
+        Start   3: prop_rdt_null_offset
+ 32/226 Test   #3: prop_rdt_null_offset .....................   Passed    0.01 sec
+        Start   4: prop_scd_pc_advance
+ 33/226 Test   #4: prop_scd_pc_advance ......................   Passed    0.01 sec
+        Start   5: prop_door_roundtrip
+ 34/226 Test   #5: prop_door_roundtrip ......................   Passed    0.01 sec
+        Start   6: prop_fixpoint_precision
+ 35/226 Test   #6: prop_fixpoint_precision ..................   Passed    0.01 sec
+        Start   7: prop_tank_controls
+ 36/226 Test   #7: prop_tank_controls .......................   Passed    0.01 sec
+        Start   8: prop_input_edge
+ 37/226 Test   #8: prop_input_edge ..........................   Passed    0.01 sec
+        Start  12: prop_bss_chunk
+ 38/226 Test  #12: prop_bss_chunk ...........................   Passed    0.02 sec
+        Start  13: prop_spawn_entered
+ 39/226 Test  #13: prop_spawn_entered .......................   Passed    0.01 sec
+        Start  14: prop_ot_sort
+ 40/226 Test  #14: prop_ot_sort .............................   Passed    0.04 sec
+        Start  15: prop_adpcm_decode
+ 41/226 Test  #15: prop_adpcm_decode ........................   Passed    0.02 sec
+        Start  16: prop_json_roundtrip
+ 42/226 Test  #16: prop_json_roundtrip ......................   Passed    0.02 sec
+        Start  17: prop_savestate_cmp
+ 43/226 Test  #17: prop_savestate_cmp .......................   Passed    0.01 sec
+        Start  52: unit_enemy_body_push
+ 44/226 Test  #52: unit_enemy_body_push .....................   Passed    0.02 sec
+        Start  54: unit_slope_collision
+ 45/226 Test  #54: unit_slope_collision .....................   Passed    0.01 sec
+        Start  65: unit_collision_layers
+ 46/226 Test  #65: unit_collision_layers ....................   Passed    0.01 sec
+        Start 199: unit_prop_texel_key_11f0
+ 47/226 Test #199: unit_prop_texel_key_11f0 .................   Passed    0.01 sec
+        Start 232: unit_re2z_pushoff_crawl
+ 48/226 Test #232: unit_re2z_pushoff_crawl ..................   Passed    0.06 sec
+        Start 313: unit_ada_eintritt_1050
+ 49/226 Test #313: unit_ada_eintritt_1050 ...................   Passed    0.03 sec
+        Start 320: unit_r20_birkin_push_pin
+ 50/226 Test #320: unit_r20_birkin_push_pin .................   Passed    1.12 sec
+        Start 323: eintritt_pose_einmal
+ 51/226 Test #323: eintritt_pose_einmal .....................   Passed    0.03 sec
+        Start 410: integration_r34_plattform_esp_eintritt
+ 52/226 Test #322: unit_r22_10f0_figur ......................   Passed    7.44 sec
+        Start 456: unit_r35_affen_teile
+ 53/226 Test #456: unit_r35_affen_teile .....................   Passed    0.01 sec
+        Start 457: unit_r35_affen_band
+ 54/226 Test #457: unit_r35_affen_band ......................   Passed    0.02 sec
+        Start 458: unit_r35_affen_ada
+ 55/226 Test #458: unit_r35_affen_ada .......................   Passed    0.07 sec
+        Start 459: unit_r35_affen_sprung
+ 56/226 Test #459: unit_r35_affen_sprung ....................   Passed    0.04 sec
+        Start 460: unit_r35_affen_flug
+ 57/226 Test #460: unit_r35_affen_flug ......................   Passed    0.01 sec
+        Start 461: unit_r35_affen_wagen
+ 58/226 Test #461: unit_r35_affen_wagen .....................   Passed    0.05 sec
+        Start 462: unit_r35_affen_brust
+ 59/226 Test #462: unit_r35_affen_brust .....................   Passed    0.01 sec
+        Start 463: unit_r35_affen_kdsonde
+ 60/226 Test #463: unit_r35_affen_kdsonde ...................   Passed    0.02 sec
+        Start 464: unit_r35_affen_biss
+ 61/226 Test #464: unit_r35_affen_biss ......................   Passed    0.01 sec
+        Start 465: unit_r35_affen_frac
+ 62/226 Test #465: unit_r35_affen_frac ......................   Passed    0.01 sec
+        Start 466: unit_r35_affen_anker
+ 63/226 Test #466: unit_r35_affen_anker .....................   Passed    0.01 sec
+        Start 467: unit_r35_affen_takt
+ 64/226 Test #467: unit_r35_affen_takt ......................   Passed    0.06 sec
+        Start 468: unit_r35_affen_griff
+ 65/226 Test #468: unit_r35_affen_griff .....................   Passed    0.45 sec
+        Start 469: unit_r35_affen_npcband
+ 66/226 Test #469: unit_r35_affen_npcband ...................   Passed    0.29 sec
+        Start 470: unit_r35_affen_schrot
+ 67/226 Test #470: unit_r35_affen_schrot ....................   Passed    0.03 sec
+        Start 471: unit_r35_affen_wand
+ 68/226 Test #471: unit_r35_affen_wand ......................   Passed    0.01 sec
+        Start 472: unit_r35_affen_szene
+ 69/226 Test #472: unit_r35_affen_szene .....................   Passed    0.11 sec
+        Start 473: unit_r35_affen_finisher
+ 70/226 Test #571: unit_r36_dachkiste_zensus ................   Passed    8.69 sec
+        Start 474: unit_r35_affen_zonensprung
+ 71/226 Test #473: unit_r35_affen_finisher ..................   Passed    0.03 sec
+        Start 475: unit_r35_affen_kette
+ 72/226 Test #474: unit_r35_affen_zonensprung ...............   Passed    0.03 sec
+        Start 476: unit_r35_android_abgleich
+ 73/226 Test #475: unit_r35_affen_kette .....................   Passed    0.02 sec
+        Start 477: unit_r35_android_anzeige
+ 74/226 Test #476: unit_r35_android_abgleich ................   Passed    0.02 sec
+        Start 478: unit_r35_android_konflikt
+ 75/226 Test #410: integration_r34_plattform_esp_eintritt ...   Passed    9.44 sec
+        Start 479: unit_r35_android_pruefkette
+ 76/226 Test #478: unit_r35_android_konflikt ................   Passed    4.84 sec
+        Start 480: unit_r35_android_bash_mutanten
+ 77/226 Test #477: unit_r35_android_anzeige .................   Passed    7.37 sec
+        Start 488: integration_r35_cut10f0
+ 78/226 Test #479: unit_r35_android_pruefkette ..............   Passed  203.68 sec
+        Start 489: unit_r35_cut1150_tuer1060
+ 79/226 Test #489: unit_r35_cut1150_tuer1060 ................   Passed    0.06 sec
+        Start 490: unit_r35_cut1150_programme
+ 80/226 Test #490: unit_r35_cut1150_programme ...............   Passed    0.03 sec
+        Start 491: unit_r35_cut1150_zaehlung
+ 81/226 Test #491: unit_r35_cut1150_zaehlung ................   Passed    0.06 sec
+        Start 492: unit_r35_cut1150_szene
+ 82/226 Test #492: unit_r35_cut1150_szene ...................   Passed    0.17 sec
+        Start 493: unit_r35_cut1150_montage_1130
+ 83/226 Test #493: unit_r35_cut1150_montage_1130 ............   Passed    0.05 sec
+        Start 494: unit_r35_cut1150_montage_1040
+ 84/226 Test #494: unit_r35_cut1150_montage_1040 ............   Passed    0.30 sec
+        Start 495: unit_r35_cut1150_montage_1040_reihe
+ 85/226 Test #495: unit_r35_cut1150_montage_1040_reihe ......   Passed    0.62 sec
+        Start 496: unit_r35_cut1150_montage_1030
+ 86/226 Test #496: unit_r35_cut1150_montage_1030 ............   Passed    0.43 sec
+        Start 497: unit_r35_cut1150_montage_11c0
+ 87/226 Test #497: unit_r35_cut1150_montage_11c0 ............   Passed    0.10 sec
+        Start 498: unit_r35_cut1150_rueckkehr
+ 88/226 Test #498: unit_r35_cut1150_rueckkehr ...............   Passed    0.03 sec
+        Start 499: unit_r35_cut1150_totenpose
+ 89/226 Test #499: unit_r35_cut1150_totenpose ...............   Passed    0.06 sec
+        Start 500: unit_r35_cut1150_tot_bleibt_tot
+ 90/226 Test #500: unit_r35_cut1150_tot_bleibt_tot ..........   Passed    0.04 sec
+        Start 501: unit_r35_cut1150_knallbank
+ 91/226 Test #501: unit_r35_cut1150_knallbank ...............   Passed    0.01 sec
+        Start 502: integration_r35_cut1150
+ 92/226 Test #488: integration_r35_cut10f0 ..................   Passed  252.66 sec
+        Start 503: unit_r35_fenster_glas
+ 93/226 Test #503: unit_r35_fenster_glas ....................   Passed    0.19 sec
+        Start 504: unit_r35_fenster_kraehe
+ 94/226 Test #504: unit_r35_fenster_kraehe ..................   Passed    0.09 sec
+        Start 505: unit_r35_fenster_ereignis
+ 95/226 Test #505: unit_r35_fenster_ereignis ................   Passed    0.09 sec
+        Start 506: unit_r35_fenster_knall
+ 96/226 Test #506: unit_r35_fenster_knall ...................   Passed    0.11 sec
+        Start 507: unit_r35_fenster_satzform
+ 97/226 Test #507: unit_r35_fenster_satzform ................   Passed    0.18 sec
+        Start 508: integration_r35_fenster
+ 98/226 Test #508: integration_r35_fenster ..................   Passed   32.25 sec
+        Start 510: unit_r35_entladen_beleg
+ 99/226 Test #510: unit_r35_entladen_beleg ..................   Passed    0.12 sec
+        Start 511: unit_r35_entladen_gegner
+100/226 Test #511: unit_r35_entladen_gegner .................   Passed    0.03 sec
+        Start 512: unit_r35_entladen_n1beleg
+101/226 Test #512: unit_r35_entladen_n1beleg ................   Passed    0.02 sec
+        Start 513: unit_r35_entladen_n2beleg
+102/226 Test #513: unit_r35_entladen_n2beleg ................   Passed    0.02 sec
+        Start 514: unit_r35_entladen_n3beleg
+103/226 Test #514: unit_r35_entladen_n3beleg ................   Passed    0.02 sec
+        Start 515: integration_r35_entladen_a
+104/226 Test #515: integration_r35_entladen_a ...............   Passed   23.34 sec
+        Start 516: integration_r35_entladen_b
+105/226 Test #516: integration_r35_entladen_b ...............   Passed   17.17 sec
+        Start 517: integration_r35_entladen_c
+106/226 Test #517: integration_r35_entladen_c ...............   Passed   48.37 sec
+        Start 518: integration_r35_entladen_d
+107/226 Test #480: unit_r35_android_bash_mutanten ...........   Passed  445.85 sec
+        Start 519: integration_r35_entladen_e
+108/226 Test #519: integration_r35_entladen_e ...............   Passed   93.04 sec
+        Start 520: integration_r35_entladen_f
+109/226 Test #518: integration_r35_entladen_d ...............   Passed  291.32 sec
+        Start 521: integration_r35_entladen_g
+110/226 Test #521: integration_r35_entladen_g ...............   Passed    6.55 sec
+        Start 522: integration_r35_entladen_h
+111/226 Test #522: integration_r35_entladen_h ...............   Passed   34.02 sec
+        Start 523: integration_r35_entladen_i
+112/226 Test #523: integration_r35_entladen_i ...............   Passed    4.75 sec
+        Start 524: integration_r35_entladen_j
+113/226 Test #502: integration_r35_cut1150 ..................   Passed  514.21 sec
+        Start 525: integration_r35_entladen_k
+114/226 Test #520: integration_r35_entladen_f ...............   Passed  192.12 sec
+        Start 526: integration_r35_entladen_l
+115/226 Test #525: integration_r35_entladen_k ...............   Passed   20.91 sec
+        Start 527: unit_r35_granate
+116/226 Test #527: unit_r35_granate .........................   Passed    0.93 sec
+        Start 528: integration_r35_granate
+117/226 Test #526: integration_r35_entladen_l ...............   Passed   26.74 sec
+        Start 529: unit_r35_inhalt_doku
+118/226 Test #529: unit_r35_inhalt_doku .....................   Passed    0.04 sec
+        Start 530: unit_r35_inhalt_zombies
+119/226 Test #530: unit_r35_inhalt_zombies ..................   Passed    0.18 sec
+        Start 531: unit_r35_inhalt_items
+120/226 Test #531: unit_r35_inhalt_items ....................   Passed    0.04 sec
+        Start 532: unit_r35_inhalt_tueren
+121/226 Test #532: unit_r35_inhalt_tueren ...................   Passed    0.04 sec
+        Start 533: unit_r35_inventar1050_start
+122/226 Test #533: unit_r35_inventar1050_start ..............   Passed    0.01 sec
+        Start 534: unit_r35_inventar1050_elza
+123/226 Test #534: unit_r35_inventar1050_elza ...............   Passed    0.01 sec
+        Start 535: unit_r35_inventar1050_ablegen
+124/226 Test #535: unit_r35_inventar1050_ablegen ............   Passed    0.01 sec
+        Start 536: unit_r35_inventar1050_altstand
+125/226 Test #536: unit_r35_inventar1050_altstand ...........   Passed    0.01 sec
+        Start 537: unit_r35_inventar1050_altpistole
+126/226 Test #537: unit_r35_inventar1050_altpistole .........   Passed    0.01 sec
+        Start 538: unit_r35_inventar1050_kiste
+127/226 Test #538: unit_r35_inventar1050_kiste ..............   Passed    0.01 sec
+        Start 539: unit_r35_inventar1050_breit
+128/226 Test #539: unit_r35_inventar1050_breit ..............   Passed    0.01 sec
+        Start 540: unit_r35_inventar1050_reserve
+129/226 Test #540: unit_r35_inventar1050_reserve ............   Passed    0.01 sec
+        Start 541: integration_r35_inventar1050
+130/226 Test #524: integration_r35_entladen_j ...............   Passed   52.72 sec
+        Start 542: unit_r35_karte_fahrstuhl
+131/226 Test #542: unit_r35_karte_fahrstuhl .................   Passed    0.06 sec
+        Start 543: unit_r35_karte_b2
+132/226 Test #543: unit_r35_karte_b2 ........................   Passed    0.03 sec
+        Start 544: unit_r35_karte_r1230
+133/226 Test #544: unit_r35_karte_r1230 .....................   Passed    0.04 sec
+        Start 545: unit_r35_karte_r1210
+134/226 Test #545: unit_r35_karte_r1210 .....................   Passed    0.04 sec
+        Start 546: integration_r35_karte
+135/226 Test #541: integration_r35_inventar1050 .............   Passed   77.66 sec
+        Start 547: integration_r35_karte_fahrstuhl
+136/226 Test #546: integration_r35_karte ....................   Passed   76.13 sec
+        Start 548: unit_r35_raeume_hundeschatten
+137/226 Test #548: unit_r35_raeume_hundeschatten ............   Passed    0.03 sec
+        Start 549: unit_r35_raeume_trage
+138/226 Test #549: unit_r35_raeume_trage ....................   Passed    0.04 sec
+        Start 550: unit_r35_raeume_arme
+139/226 Test #550: unit_r35_raeume_arme .....................   Passed    0.07 sec
+        Start 551: unit_r35_redhawk
+140/226 Test #551: unit_r35_redhawk .........................   Passed    0.16 sec
+        Start 552: integration_r35_redhawk
+141/226 Test #552: integration_r35_redhawk ..................   Passed   16.51 sec
+        Start 554: unit_r35_werfer
+142/226 Test #554: unit_r35_werfer ..........................   Passed    0.02 sec
+        Start 555: unit_r35_werfer_kombi
+143/226 Test #555: unit_r35_werfer_kombi ....................   Passed    0.02 sec
+        Start 556: integration_r35_werfer
+144/226 Test #528: integration_r35_granate ..................   Passed  165.48 sec
+        Start 557: integration_r35_werfer_ton
+145/226 Test #557: integration_r35_werfer_ton ...............   Passed   28.60 sec
+        Start 558: integration_r35_werfer_elza
+146/226 Test #558: integration_r35_werfer_elza ..............   Passed   34.41 sec
+        Start 559: integration_r35_werfer_form
+147/226 Test #559: integration_r35_werfer_form ..............   Passed   26.64 sec
+        Start 560: unit_r35_zgirl_zensus
+148/226 Test #560: unit_r35_zgirl_zensus ....................   Passed    0.11 sec
+        Start 561: unit_r35_zgirl_killflag
+149/226 Test #561: unit_r35_zgirl_killflag ..................   Passed    0.02 sec
+        Start 562: unit_r35_zgirl_tuer
+150/226 Test #562: unit_r35_zgirl_tuer ......................   Passed    0.02 sec
+        Start 563: unit_r35_zgirl_ki_re15
+151/226 Test #563: unit_r35_zgirl_ki_re15 ...................   Passed    0.02 sec
+        Start 564: unit_r35_zgirl_ki_re2
+152/226 Test #564: unit_r35_zgirl_ki_re2 ....................   Passed    0.02 sec
+        Start 565: unit_r35_zgirl_tod
+153/226 Test #565: unit_r35_zgirl_tod .......................   Passed    0.01 sec
+        Start 566: unit_r35_zgirl_messer
+154/226 Test #566: unit_r35_zgirl_messer ....................   Passed    0.01 sec
+        Start 567: unit_r35_zgirl_selbsttueren
+155/226 Test #567: unit_r35_zgirl_selbsttueren ..............   Passed    0.80 sec
+        Start 568: unit_r35_zgirl_wiedereintritt
+156/226 Test #568: unit_r35_zgirl_wiedereintritt ............   Passed    0.04 sec
+        Start 569: integration_r35_zgirl
+157/226 Test #556: integration_r35_werfer ...................   Passed  137.84 sec
+        Start 570: integration_r35_zgirl_5090
+158/226 Test #547: integration_r35_karte_fahrstuhl ..........   Passed  184.26 sec
+        Start 574: unit_r36_elza_fenster
+159/226 Test #574: unit_r36_elza_fenster ....................   Passed    0.02 sec
+        Start 575: unit_r36_elza_irons
+160/226 Test #575: unit_r36_elza_irons ......................   Passed    0.02 sec
+        Start 576: unit_r36_elza_unlock
+161/226 Test #576: unit_r36_elza_unlock .....................   Passed    0.05 sec
+        Start 577: unit_r36_elza_schuss
+162/226 Test #577: unit_r36_elza_schuss .....................   Passed    0.06 sec
+        Start 578: unit_r36_elza_roy
+163/226 Test #578: unit_r36_elza_roy ........................   Passed    0.05 sec
+        Start 579: unit_r36_elza_stoehnen
+164/226 Test #579: unit_r36_elza_stoehnen ...................   Passed    0.06 sec
+        Start 580: unit_r36_elza_bank
+165/226 Test #580: unit_r36_elza_bank .......................   Passed    0.02 sec
+        Start 581: unit_r36_elza_signatur
+166/226 Test #581: unit_r36_elza_signatur ...................   Passed    0.01 sec
+        Start 587: unit_r36_gegnerzahl_feld
+167/226 Test #587: unit_r36_gegnerzahl_feld .................   Passed    0.01 sec
+        Start 588: unit_r36_gegnerzahl_raum1030
+168/226 Test #588: unit_r36_gegnerzahl_raum1030 .............   Passed    0.05 sec
+        Start 589: unit_r36_gegnerzahl_raum1031
+169/226 Test #589: unit_r36_gegnerzahl_raum1031 .............   Passed    0.06 sec
+        Start 590: unit_r36_gegnerzahl_raum1040
+170/226 Test #590: unit_r36_gegnerzahl_raum1040 .............   Passed    0.07 sec
+        Start 591: unit_r36_gegnerzahl_raum1041
+171/226 Test #591: unit_r36_gegnerzahl_raum1041 .............   Passed    0.07 sec
+        Start 592: unit_r36_gegnerzahl_raum20b0
+172/226 Test #592: unit_r36_gegnerzahl_raum20b0 .............   Passed    0.01 sec
+        Start 593: unit_r36_gegnerzahl_kein_platz
+173/226 Test #593: unit_r36_gegnerzahl_kein_platz ...........   Passed    0.01 sec
+        Start 595: unit_r36_granate
+174/226 Test #595: unit_r36_granate .........................   Passed    0.08 sec
+        Start 597: unit_r36_inventar
+175/226 Test #597: unit_r36_inventar ........................   Passed    0.02 sec
+        Start 599: unit_r36_karte_treppe
+176/226 Test #599: unit_r36_karte_treppe ....................   Passed    0.02 sec
+        Start 600: unit_r36_karte_marker11d0
+177/226 Test #600: unit_r36_karte_marker11d0 ................   Passed    0.02 sec
+        Start 601: unit_r36_karte_r1190
+178/226 Test #601: unit_r36_karte_r1190 .....................   Passed    0.04 sec
+        Start 602: unit_r36_karte_tuer11c0
+179/226 Test #602: unit_r36_karte_tuer11c0 ..................   Passed    0.01 sec
+        Start 603: unit_r36_karte_teile1110
+180/226 Test #603: unit_r36_karte_teile1110 .................   Passed    0.02 sec
+        Start 604: unit_r36_karte_fahrstuhl
+181/226 Test #604: unit_r36_karte_fahrstuhl .................   Passed    0.03 sec
+        Start 605: unit_r36_karte_kabine
+182/226 Test #605: unit_r36_karte_kabine ....................   Passed    0.02 sec
+        Start 607: unit_r36_kleidung_griff_re2
+183/226 Test #607: unit_r36_kleidung_griff_re2 ..............   Passed    0.03 sec
+        Start 608: unit_r36_kleidung_griff_re15
+184/226 Test #608: unit_r36_kleidung_griff_re15 .............   Passed    0.04 sec
+        Start 609: unit_r36_kleidung_hund
+185/226 Test #609: unit_r36_kleidung_hund ...................   Passed    0.02 sec
+        Start 610: unit_r36_kleidung_kraehe
+186/226 Test #610: unit_r36_kleidung_kraehe .................   Passed    0.04 sec
+        Start 611: unit_r36_kleidung_lut
+187/226 Test #611: unit_r36_kleidung_lut ....................   Passed    0.01 sec
+        Start 618: integration_r36_klettern
+188/226 Test #570: integration_r35_zgirl_5090 ...............   Passed  143.30 sec
+        Start 620: unit_r36_schluessel_raum
+189/226 Test #620: unit_r36_schluessel_raum .................   Passed    0.04 sec
+        Start 621: unit_r36_schluessel_tuer
+190/226 Test #621: unit_r36_schluessel_tuer .................   Passed    0.04 sec
+        Start 622: unit_r36_schluessel_zelle
+191/226 Test #622: unit_r36_schluessel_zelle ................   Passed    0.02 sec
+        Start 623: unit_r36_schluessel_namen
+192/226 Test #623: unit_r36_schluessel_namen ................   Passed    0.01 sec
+        Start 624: unit_r36_schluessel_befreiung
+193/226 Test #624: unit_r36_schluessel_befreiung ............   Passed    0.26 sec
+        Start 627: unit_r36_schuss
+194/226 Test #627: unit_r36_schuss ..........................   Passed    0.01 sec
+        Start 629: unit_r36_blut_pin_eben
+195/226 Test #629: unit_r36_blut_pin_eben ...................   Passed    0.13 sec
+        Start 630: unit_r36_blut_pin_tief
+196/226 Test #630: unit_r36_blut_pin_tief ...................   Passed    0.06 sec
+        Start 631: unit_r36_blut_pin_mg
+197/226 Test #631: unit_r36_blut_pin_mg .....................   Passed    0.16 sec
+        Start 632: unit_r36_blut_pin_rip
+198/226 Test #632: unit_r36_blut_pin_rip ....................   Passed    0.07 sec
+        Start 633: unit_r36_blut_pin_arm
+199/226 Test #633: unit_r36_blut_pin_arm ....................   Passed    0.05 sec
+        Start 634: unit_r36_blut_pin_burst
+200/226 Test #634: unit_r36_blut_pin_burst ..................   Passed    0.05 sec
+        Start 635: unit_r36_blut_pin_glied
+201/226 Test #635: unit_r36_blut_pin_glied ..................   Passed    0.06 sec
+        Start 636: unit_r36_blut_pin_kriecher
+202/226 Test #636: unit_r36_blut_pin_kriecher ...............   Passed    0.20 sec
+        Start 637: unit_r36_blut_pin_kriecher5
+203/226 Test #637: unit_r36_blut_pin_kriecher5 ..............   Passed    0.23 sec
+        Start 638: unit_r36_schuss_kraehe
+204/226 Test #638: unit_r36_schuss_kraehe ...................   Passed    0.02 sec
+        Start 639: unit_r36_story_roy
+205/226 Test #639: unit_r36_story_roy .......................   Passed    0.05 sec
+        Start 640: unit_r36_story_zelle
+206/226 Test #640: unit_r36_story_zelle .....................   Passed    0.02 sec
+        Start 641: unit_r36_story_schuppen
+207/226 Test #641: unit_r36_story_schuppen ..................   Passed    0.03 sec
+        Start 642: unit_r36_story_texte
+208/226 Test #642: unit_r36_story_texte .....................   Passed    0.02 sec
+        Start 643: unit_r36_story_sweep
+209/226 Test #643: unit_r36_story_sweep .....................   Passed    0.04 sec
+        Start 644: unit_r36_story_reihenfolge
+210/226 Test #644: unit_r36_story_reihenfolge ...............   Passed    0.03 sec
+        Start 647: unit_r36_szene1150_knall_re2
+211/226 Test #647: unit_r36_szene1150_knall_re2 .............   Passed    0.01 sec
+        Start 648: unit_r36_szene1150_folge
+212/226 Test #648: unit_r36_szene1150_folge .................   Passed    0.74 sec
+        Start 649: unit_r36_szene1150_dialog11c0
+213/226 Test #649: unit_r36_szene1150_dialog11c0 ............   Passed    0.03 sec
+        Start 651: unit_r36_szenenleon_programm
+214/226 Test #651: unit_r36_szenenleon_programm .............   Passed    0.01 sec
+        Start 652: unit_r36_szenenleon_schub
+215/226 Test #652: unit_r36_szenenleon_schub ................   Passed    0.25 sec
+        Start 653: unit_r36_szenenleon_erweiterung
+216/226 Test #653: unit_r36_szenenleon_erweiterung ..........   Passed    0.23 sec
+        Start 654: unit_r36_szenenleon_tuer
+217/226 Test #654: unit_r36_szenenleon_tuer .................   Passed    0.03 sec
+        Start 656: unit_r36_szenenleon_irons
+218/226 Test #656: unit_r36_szenenleon_irons ................   Passed    0.06 sec
+        Start 658: unit_r36_tueren_fahrstuhl
+219/226 Test #658: unit_r36_tueren_fahrstuhl ................   Passed    0.02 sec
+        Start 659: unit_r36_tueren_schott
+220/226 Test #659: unit_r36_tueren_schott ...................   Passed    0.01 sec
+        Start 660: unit_r36_tueren_aufschliessen
+221/226 Test #660: unit_r36_tueren_aufschliessen ............   Passed    0.06 sec
+        Start 661: unit_r36_tueren_textur
+222/226 Test #661: unit_r36_tueren_textur ...................   Passed    0.02 sec
+        Start 663: unit_r36_ziel1190
+223/226 Test #663: unit_r36_ziel1190 ........................   Passed    0.68 sec
+224/226 Test #569: integration_r35_zgirl ....................   Passed  253.59 sec
+225/226 Test #573: integration_r36_dachkiste ................   Passed  1279.87 sec
+226/226 Test #618: integration_r36_klettern .................   Passed  535.00 sec
+
+100% tests passed, 0 tests failed out of 226
+
+Total Test time (real) = 1569.68 sec
+exit=0
+23:52:54
