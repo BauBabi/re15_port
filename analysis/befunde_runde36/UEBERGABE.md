@@ -10,6 +10,7 @@ Pflichtlektuere vorher: `CLAUDE.md` (STOP-GATE, Build ueber `local_build.sh`), `
 Spur), auf dem Integrationszweig `analysis/befunde_runde36/NACHLAUF.md` (Funde ausserhalb der Spur-Wortlaute).
 
 ## ✅ Fortschritt seit der Uebergabe (fortlaufend, neueste zuerst)
+* 2026-10-12 01:30: Vollstaendigkeitsabgleich wf_207376e1-25b fertig (6 Agenten, nur lesen): 30 Befunde. Umgesetzt: Release-Notes-Entwurf neu (Korrekturen u.a. Roy 1011 sackt NICHT zusammen, F-Saetze, 11B0-Tuer springt, Schluessel-Texte, Elza-Pflichtweg, Antwort "empty extinguisher", R-Absatz nach NB3, Grenzen um Zombie-Treffer/Colt Python/Wunden beim Laden/Pause-Bits/Fahrstuhl-Ausstieg/weitere Tueren ergaenzt, "Zu entscheiden" = 16 Fragen); UEBERGABE §5 auf den Entwurf verwiesen; veraltete Memory-Card-Kommentare berichtigt (732faa98 auf r36/integration). OFFEN VOR DEM RELEASE (nach R-Merge, an der Integrations-exe): (1) Elza-Pflichtweg 1201 -> 1101 -> 1111 -> 10D1 -> 10F1 -> 11E1 -> 1211 einmal Ende-zu-Ende fahren (Q_abnahme_1 H7; der Prison Key liegt jetzt hinter dem Kartenleser — blockiert ein Raetsel, ist Elza festgefahren); (2) exe-Haenger ROOM2060 (-2328,0,-7336) rot 3104 mit dem Skript aus R_abnahme_1.md Nachtrag nachfahren; (3) NACHLAUF um die Hinweise aus I/J/K/P/Q/C/L/N ergaenzen.
 * 2026-10-12 00:40: Parallel zur R-Abnahme 3 laeuft ein NUR-LESE-Vollstaendigkeitsabgleich (Workflow `wf_207376e1-25b`, 6 Agenten: Inventur AUFTRAG.md -> Spuren, vier Spurgruppen Urteile/Fragen/Notes-Luecken, ein Kritiker). Ergebnis fliesst in Release Notes ("Zu entscheiden"/"Grenzen") und die Abschlussmeldung. Kein Bau, keine exe (stoert die Messung nicht). Probe-Merge R -> Integration (git merge-tree): nur scd_room_setup.c (Installer-Zeilen, beide Seiten).
 * 2026-10-12 00:30: R Nachbesserung 3 FERTIG (70f2cd7e): Regression 226/226 gruen, Riegel elf Laeufe (allein 1464 s, TIMEOUT 1800 -> 2700). P1 Ruhe-Zweig + P2 Y-Test + P4 r = hz portiert; NEU gemessen: nach dem Fall der 2050-Kiste und Wiederbetreten liegt sie wieder auf ihrem Platz (main00 @0x01D0E setzt obj 6 unbedingt; FUN_8003ea7c nullt den Pool, LAB_80040914 schreibt die Record-Lage) — an exe UND Original. Antwort: Softlock nach dem 2050-Fall im Port NEIN (zwei Wege), Dach-Kiste NEIN, Port = Original. Abnahme 3 (letzte) laeuft (abnahme:R-dachkiste#3).
 * 2026-10-11 23:35: Rest-Lauf 7 GESTARTET (Modell Opus): Workflow `wf_67a914f7-29a` mit `orchestrator/args_rest7_R.json` (= args_rest6 + stand.R: Fortsetzung der Nachbesserung 3 ab 50edb2be — bauen, Regression 226 voll, Riegel mit elf Laeufen, Dossier, fix-Commit; danach Abnahme 3 = letzte). Journal: `~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-.../subagents/workflows/wf_67a914f7-29a/journal.jsonl`. Bricht es wieder ab: Rest sichern (wip UNGEPRUEFT), stand.R fortschreiben, neu starten. Nach Abnahme 3: R mergen (Abschnitt 3; Konflikte erwartet in aot_common.c/re15_collision.c/game_step_common.c/scd_room_setup.c/enemy_ai_common.c = beide Seiten, von Hand pruefen), dann Abschnitt 4.
@@ -140,16 +141,14 @@ Im Baum `C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration`:
 
 ## 5. Fragen an den Nutzer (in die Abschlussmeldung)
 
-* ROOM1011 main16.5 (Roys Stoehnen): Untertitel steht auf "Roy: groans" — welcher Wortlaut?
-* Freigabe der 11 umgeschriebenen Textzeilen (Tabelle im Release-Notes-Entwurf) + der zwei neuen Spuren-Texte;
-  ROOM50B1 "It's Ada." so lassen? 6000 msg 0/3 auch Original lassen?
-* Tuerknall: ROOM106 (Schlag gegen die Tuer) gewaehlt; Alternative ROOM205 (Holz splittert)?
-* Texte an der Parkplatz-Tuer / Schluessel-Texte (eigene Formulierungen in RE2-Form) ok?
-* ROOM1100 "Leon von halbtransparentem Boden ueberdeckt": die Marker-Datei wurde nie gefunden — wo liegt sie?
-* Spur M hat den Raum "1090 mit Hunde-Luke und Weste" als ROOM1190 belegt — war 1190 gemeint?
-* Marvins Schliess-Geste an der Werkstatt-Tuer ist Clip 20 (linke Hand) — gefaellt sie?
-* Sprachdateien zum Aufnehmen: synchro/STAGE1/room11b0/main20.wav + main21.wav (Marvin), room1210/main20.wav,
-  room1091/main20.wav.
+Massgeblich ist der Abschnitt "Zu entscheiden" im Release-Notes-Entwurf
+(`orchestrator/RELEASE_NOTES_v0.8.24_ENTWURF.md`, Stand nach dem Vollstaendigkeitsabgleich wf_207376e1-25b vom
+2026-10-12: 16 Fragen + optionale). Kurzliste: Marker-Datei ROOM1100; Untertitel main16.5; Freigabe der Texte (30C1,
+6031, 6030, 6000, 50B1); Story-Vorschlaege V6/R2; Parkplatz-Tuer in Leons 11B0-Szene; Werkstatt-Tuer bei Elzas
+Rueckkehr; Tuerknall 106/205; Schluessel-/Tuertexte; Groesse Parking Lot Key; Tischmasken 10F0/10F1 Cut 5/6;
+Karte 1090/1190; Treppenhaus-Blaettern; Labor-Optik DOOR27/26; weitere Tueren (P24B, P06U, P07T, P07G);
+ROOM4000-Tonfolge; Lageplaene (1140, Groesse, 1030); optional Clip 20 / Tuerblatt 10C0 / Schuhrand-Schatten.
+Sprachdateien: room11b0 main20/21, room1210 main20, room1091 main20, room1190/1191 main06/07, optional room1151 main20.
 
 ## 6. Lehren dieser Runde (fuer die naechste Sitzung)
 
