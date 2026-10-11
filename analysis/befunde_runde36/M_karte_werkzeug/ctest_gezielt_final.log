@@ -1,0 +1,118 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r36_karte/re15_port/build
+      Start  17: prop_savestate_cmp
+ 1/56 Test  #17: prop_savestate_cmp ................   Passed    0.02 sec
+      Start  69: unit_savedata
+ 2/56 Test  #69: unit_savedata .....................   Passed    0.02 sec
+      Start  70: unit_savepoint
+ 3/56 Test  #70: unit_savepoint ....................   Passed    0.01 sec
+      Start  88: unit_weste_effekt
+ 4/56 Test  #88: unit_weste_effekt .................   Passed    0.03 sec
+      Start  92: unit_map_re2_system
+ 5/56 Test  #92: unit_map_re2_system ...............   Passed    0.02 sec
+      Start  93: unit_map_floor_visited
+ 6/56 Test  #93: unit_map_floor_visited ............   Passed    0.02 sec
+      Start  94: unit_map_mark_band
+ 7/56 Test  #94: unit_map_mark_band ................   Passed    0.02 sec
+      Start  95: unit_map_orient
+ 8/56 Test  #95: unit_map_orient ...................   Passed    0.01 sec
+      Start  96: unit_map_durchgang
+ 9/56 Test  #96: unit_map_durchgang ................   Passed    0.80 sec
+      Start  97: unit_map_marker_innen
+10/56 Test  #97: unit_map_marker_innen .............   Passed    0.15 sec
+      Start  98: unit_map_etagenzeile
+11/56 Test  #98: unit_map_etagenzeile ..............   Passed    0.01 sec
+      Start  99: unit_map_innenwand
+12/56 Test  #99: unit_map_innenwand ................   Passed    0.02 sec
+      Start 100: unit_map_teilbereich
+13/56 Test #100: unit_map_teilbereich ..............   Passed    0.02 sec
+      Start 101: unit_map_synth
+14/56 Test #101: unit_map_synth ....................   Passed    0.02 sec
+      Start 102: unit_map_zone_bits
+15/56 Test #102: unit_map_zone_bits ................   Passed    0.02 sec
+      Start 106: unit_pad_remap
+16/56 Test #106: unit_pad_remap ....................   Passed    0.01 sec
+      Start 111: unit_re2_room1190_ab
+17/56 Test #111: unit_re2_room1190_ab ..............   Passed    0.03 sec
+      Start 134: probe_elevator_1080
+18/56 Test #134: probe_elevator_1080 ...............   Passed    0.08 sec
+      Start 254: unit_1190_weste
+19/56 Test #254: unit_1190_weste ...................   Passed    0.07 sec
+      Start 255: unit_1190_ruestung
+20/56 Test #255: unit_1190_ruestung ................   Passed    0.03 sec
+      Start 259: unit_map_marke_haengt_an
+21/56 Test #259: unit_map_marke_haengt_an ..........   Passed    0.04 sec
+      Start 261: unit_map_marke_auf_kunst
+22/56 Test #261: unit_map_marke_auf_kunst ..........   Passed    0.03 sec
+      Start 262: unit_map_tuerachse
+23/56 Test #262: unit_map_tuerachse ................   Passed    0.62 sec
+      Start 263: unit_map_etagen_rect
+24/56 Test #263: unit_map_etagen_rect ..............   Passed    0.24 sec
+      Start 269: unit_map_eingemessen
+25/56 Test #269: unit_map_eingemessen ..............   Passed    0.02 sec
+      Start 280: unit_map_1090
+26/56 Test #280: unit_map_1090 .....................   Passed    0.05 sec
+      Start 288: unit_fahrstuhl_1080_etagen
+27/56 Test #288: unit_fahrstuhl_1080_etagen ........   Passed    0.07 sec
+      Start 289: unit_fahrstuhl_4020_etagen
+28/56 Test #289: unit_fahrstuhl_4020_etagen ........   Passed    0.10 sec
+      Start 290: unit_karte_besitz
+29/56 Test #290: unit_karte_besitz .................   Passed    0.04 sec
+      Start 307: integration_weste_load_pin
+30/56 Test #307: integration_weste_load_pin ........   Passed    6.41 sec
+      Start 360: unit_map_marke_zid
+31/56 Test #360: unit_map_marke_zid ................   Passed    0.02 sec
+      Start 361: unit_r30_karte_nutzerstand
+32/56 Test #361: unit_r30_karte_nutzerstand ........   Passed    0.79 sec
+      Start 362: unit_map_speichern_laden
+33/56 Test #362: unit_map_speichern_laden ..........   Passed    1.75 sec
+      Start 394: unit_r33_karte_etage
+34/56 Test #394: unit_r33_karte_etage ..............   Passed    0.02 sec
+      Start 395: unit_r33_karte_markierung
+35/56 Test #395: unit_r33_karte_markierung .........   Passed    0.51 sec
+      Start 396: unit_r33_karte_speicher
+36/56 Test #396: unit_r33_karte_speicher ...........   Passed    0.02 sec
+      Start 397: unit_r33_speichern
+37/56 Test #397: unit_r33_speichern ................   Passed    0.03 sec
+      Start 398: integration_r33_speichern
+38/56 Test #398: integration_r33_speichern .........   Passed   64.71 sec
+      Start 437: unit_r34n_d_adaruf_speicher
+39/56 Test #437: unit_r34n_d_adaruf_speicher .......   Passed    0.03 sec
+      Start 486: unit_r35_cut10f0_karte
+40/56 Test #486: unit_r35_cut10f0_karte ............   Passed    0.01 sec
+      Start 542: unit_r35_karte_fahrstuhl
+41/56 Test #542: unit_r35_karte_fahrstuhl ..........   Passed    0.04 sec
+      Start 543: unit_r35_karte_b2
+42/56 Test #543: unit_r35_karte_b2 .................   Passed    0.02 sec
+      Start 544: unit_r35_karte_r1230
+43/56 Test #544: unit_r35_karte_r1230 ..............   Passed    0.03 sec
+      Start 545: unit_r35_karte_r1210
+44/56 Test #545: unit_r35_karte_r1210 ..............   Passed    0.02 sec
+      Start 546: integration_r35_karte
+45/56 Test #546: integration_r35_karte .............   Passed   74.27 sec
+      Start 547: integration_r35_karte_fahrstuhl
+46/56 Test #547: integration_r35_karte_fahrstuhl ...   Passed  176.01 sec
+      Start 572: unit_r36_karte_treppe
+47/56 Test #572: unit_r36_karte_treppe .............   Passed    0.04 sec
+      Start 573: unit_r36_karte_marker11d0
+48/56 Test #573: unit_r36_karte_marker11d0 .........   Passed    0.02 sec
+      Start 574: unit_r36_karte_r1190
+49/56 Test #574: unit_r36_karte_r1190 ..............   Passed    0.06 sec
+      Start 575: unit_r36_karte_tuer11c0
+50/56 Test #575: unit_r36_karte_tuer11c0 ...........   Passed    0.02 sec
+      Start 576: unit_r36_karte_teile1110
+51/56 Test #576: unit_r36_karte_teile1110 ..........   Passed    0.02 sec
+      Start 577: unit_r36_karte_fahrstuhl
+52/56 Test #577: unit_r36_karte_fahrstuhl ..........   Passed    0.04 sec
+      Start 578: integration_r36_karte
+53/56 Test #578: integration_r36_karte .............   Passed  150.86 sec
+      Start 586: integration_map_uebergang
+54/56 Test #586: integration_map_uebergang .........   Passed    0.78 sec
+      Start 587: integration_map_raum_live
+55/56 Test #587: integration_map_raum_live .........   Passed   11.01 sec
+      Start 598: integration_save_counter_pin
+56/56 Test #598: integration_save_counter_pin ......   Passed   26.90 sec
+
+100% tests passed, 0 tests failed out of 56
+
+Total Test time (real) = 517.16 sec
+EXIT 0

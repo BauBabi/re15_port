@@ -211,6 +211,15 @@ Gemeinsame Dateien (VERTRAG §1.4): `re15_map_zones.h` nur Datenzeilen mit Komme
 `re15_map_zones.c` ist Kartenmodul (M/N), Aenderungen als kommentierte Bloecke. scd_room_setup.c,
 main.c etc. unberuehrt. Kein Patch an shared_assets.
 
+Konflikte mit anderen Spuren (Stand 2026-10-11 04:1x, `git diff` aller r36/*-Zweige gegen die Basis):
+keine andere Spur aendert re15_map_zones.c/.h, karte_fahrstuhl_1080.c, re15_map_owned.c oder die
+beiden angepassten Pins. Spur N (karten-items, r36/kartenitems abd06d8e) hat bisher nur Dossier/
+Messung. Beruehrungspunkt fuer N: wer eine Etagenkarte besitzt (re15_map_owned_page), sieht
+UNBESUCHTE Rechtecke/Teile/Kabinen in RE2s Unbesucht-Zeile (CLUT 498, re15_inv_screen.c) - die
+neuen Zustaende (Teil/Kabine unbesucht) fuegen sich dort ohne Aenderung ein. Bitbelegung in
+visited_floor: Etagen-Tabelle 0..95, Teile 96..111, Kabinen 112..119 (re15_karte_r36.h) - falls N
+Bits im Etagen-Feld braucht: 120..127 sind frei.
+
 Angepasste fremde Pins (begruendet):
 * `tests/unit/test_map_teilbereich.c` (2026-09-07): verlangte schon im Evidence Room "die anderen beiden
   sind GRUEN" = genau der gemeldete Fehler. Jetzt: Teil 0 (Eingang) besucht, Teil 1/2 erst nach Betreten.
@@ -244,15 +253,17 @@ Abzug RE15_INV_FB_SHOT bei RE15_WINDOW_SCALE=1, Bilder `M_karte_bilder/nachher_e
 (x2). Farbklassen im Abzug gemessen: aktuell (48,8,48)/(48,8,64), besucht (16,56,40)/(16,56,56),
 Wand (176,176,176), Tuerbalken (224,168,40), Treppensprosse (240,240,216).
 ```
+Endstand da5ae967 (Abzuege des Abschluss-Laufs, probe_r36_karte farben/marker):
 A 1230 -> Tuer slot 1 -> 10A0 (B1): rect 6 (153,114)-(168,134) sprosse=30 (vorher 0)
          Tuer 11B0/11C0: (171..175,100) gelb=5 (waagerecht), x173 y96..99 / y101..104 gelb=0
 B 1230 -> Tuer slot 0 -> 11D0:      MARKER 128 129 bbox (126,127)-(130,131)  (Tuermarke y124; vorher ~y150)
-C 1230 -> slot 2 -> 1190 Haupthalle: rect 1 rot=2561, rect 2 (145,70)-(158,103) rot+besucht=0
-D 1230 -> slot 4 -> 1190 Ostkammer:  rect 2 rot=463, rect 1 (77,77)-(142,113) rot+besucht=0
+C 1230 -> slot 2 -> 1190 Haupthalle: rect 1 (77,77)-(142,113) rot=2429, rect 2 (145,70)-(158,103) rot+besucht=0
+D 1230 -> slot 4 -> 1190 Ostkammer:  rect 2 rot=463, rect 1 rot+besucht=0
 E 1100 -> slot 1 -> 1110:           Evidence Room rot=1144, kleine Raeume (190..211,123..144) rot+besucht=0
-F Stand nach Fahrt 1F->3F, MAP in 1120: 3F-Kabine (128..135,138..145) rot+besucht=0 (vorher besucht)
+F Fahrt 1F->3F, zu Fuss nach 10C0, MAP auf 2F: 2F-Kabine (110..117,135..142) rot+besucht=0 (vorher besucht)
+H Fahrt 1F->3F, MAP in 1120:        3F-Kabine (128..135,138..145) besucht=60 (Ankunft zaehlt)
 G 1040 -> Fahrstuhltuer -> 1080:    1F-Kabine (110..117,135..142) rot=54
-integration_r36_karte ... Passed 141.65 sec
+integration_r36_karte ... Passed 150.86 sec (8 Laeufe)
 ```
 (Erster Lauf: D scheiterte, weil die Hunde aus ROOM1230 main00 (Else-Zweig Ck(3,0x89), Sce_em_set
 @0x00D08/@0x00D1C) den Spieler vor der Tuer umrissen - Kill-Flags Zone 7 Bit 0x88/0x89 gesetzt; der
@@ -279,7 +290,23 @@ Gegenprobe: `re15_map_zones.c/.h`, `karte_fahrstuhl_1080.c`, `re15_karte_fahrstu
 (Ausgabe `M_karte_werkzeug/gegenprobe_78a4a748.txt`): alle sechs Riegel ROT, je genau am gemeldeten
 Befund.
 
-Gezielte Suite: siehe Abschnitt "Abschluss-Lauf" unten.
+### Abschluss-Lauf (gezielte Suite, KEINE volle Suite - VERTRAG/Auftrag)
+
+Stand da5ae967 (Endstand der Engine; danach nur Dossier/Bilder), im Baum gebaut
+(`local_build.sh build`), Log `M_karte_werkzeug/ctest_gezielt_final.log`:
+```
+ctest --test-dir re15_port/build -R "map|karte|fahrstuhl|elevator|1190|weste|teilbereich|save|speicher|memcard|continue" --timeout 1500 --output-on-failure
+100% tests passed, 0 tests failed out of 56
+Total Test time (real) = 517.16 sec
+```
+Darin: alle unit_map_* (21), unit_r30/r33/r35_karte*, unit_fahrstuhl_1080/4020_etagen,
+probe_elevator_1080, unit_1190_weste/_ruestung, unit_re2_room1190_ab, unit_weste_effekt,
+unit_savedata, unit_savepoint, unit_map_speichern_laden, unit_r33_speichern, unit_r34n_d_adaruf_speicher,
+prop_savestate_cmp, die sechs unit_r36_karte_*, integration_map_raum_live / _uebergang,
+integration_r35_karte (74 s) / _fahrstuhl (176 s), integration_r36_karte (151 s),
+integration_r33_speichern, integration_weste_load_pin, integration_save_counter_pin.
+Kein Fenster-Haken musste nachgefahren werden. Der Lauf davor (Stand d9af50f5, vor der
+Ankunfts-Regel) war ebenfalls 56/56.
 
 ## OFFEN
 
