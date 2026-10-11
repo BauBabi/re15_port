@@ -65,6 +65,9 @@ def plan_r36(plan):
         sp["variante"] = 0
         sp["herkunft"] = HERKUNFT_SCHOTT_A if sp["id"] == "S164" else HERKUNFT_SCHOTT_B
     neu.append("T084")
+    plan["archive"]["P0CD"]["rezept"] = ("Runde 36: helles Holz mit WAAGERECHTER RE2-Faser 1:1 (DOOR0D-Fuellungen gedreht), "
+                                         "gemaltes Licht ROOM10C04, Drahtglasfenster mit Rahmen/Spiegelung, Panikstange "
+                                         "mit Haltern, gebuerstetes Trittblech")
     return neu
 
 

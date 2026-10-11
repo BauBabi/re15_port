@@ -203,7 +203,9 @@ static void teil_archive(void)
         }
         free(d); free(b);
     }
-    PRUEF(varianten_geprueft >= 46, "nur %d Archiv-Varianten geprueft (Stufe 2: 46)", varianten_geprueft);
+    /* Runde 36 Spur G: T011/T017/T018 (P25G V0) und T084 (P26W V2/V3) spielen jetzt RE2-Archive unveraendert
+     * (DOOR27 V0 / DOOR26 V0, plan.json archiv "RE2") -> P25G/P26W haben keine Zeile mehr: 46 - 3 = 43. */
+    PRUEF(varianten_geprueft >= 43, "nur %d Archiv-Varianten geprueft (Stufe 2: 46, seit Runde 36: 43)", varianten_geprueft);
     printf("Port-Archive: %d, Varianten gegen das Basis-Archiv: %d\n", n_eig, varianten_geprueft);
 }
 

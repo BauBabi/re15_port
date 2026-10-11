@@ -34,6 +34,8 @@
 #include "re15_skeleton.h"
 #include "re15_door_seq.h"
 #include "re15_aufschliessen_r36.h"
+#include "re15_tim.h"
+#include <math.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -461,12 +463,120 @@ static void teil_aufschliessen(void)
     re15_aufschliessen_r36_setze_spieler(NULL);
 }
 
+
+/* ---------------------------------------------------------------------------------------------
+ * Teil "textur" (Punkt 2): P0CD (T025 ROOM10C0 <-> ROOM10D0) nicht mehr "herausstechend billig"
+ * Masse wie tools/tueren/r36_textur_mass.py (Blatt v 0..217, Helligkeit L Rec.601):
+ *   fein = std(L - G1 L)/mean L, fleck = std(G1 L - G4 L)/mean L, form = std(G4 L)/mean L.
+ * Vorher (Runde-33-P0CD, git 78a4a748): fein 0.0818 (RE2-Minimum 0.0788), form 0.1817 (RE2-Median 0.3955),
+ * hell 114.5 (hellste Holztuer; RE2-Holz 25..70). Faser vorher senkrechte Flecken, gemalt (ROOM10C04) waagerecht.
+ * ------------------------------------------------------------------------------------------ */
+static void gauss_zeilen(const double *in, double *out, int w, int h, double sg)
+{
+    int r = (int)(3 * sg + 0.5);
+    double k[64]; double su = 0;
+    for (int i = -r; i <= r; i++) { k[i + r] = exp(-(double)(i * i) / (2 * sg * sg)); su += k[i + r]; }
+    for (int i = 0; i <= 2 * r; i++) k[i] /= su;
+    static double tmp[256 * 128];
+    for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+        double a = 0;
+        for (int i = -r; i <= r; i++) { int xx = x + i; if (xx < 0) xx = -xx - 1; if (xx >= w) xx = 2 * w - xx - 1; a += k[i + r] * in[y * w + xx]; }
+        tmp[y * w + x] = a;
+    }
+    for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+        double a = 0;
+        for (int i = -r; i <= r; i++) { int yy = y + i; if (yy < 0) yy = -yy - 1; if (yy >= h) yy = 2 * h - yy - 1; a += k[i + r] * tmp[yy * w + x]; }
+        out[y * w + x] = a;
+    }
+}
+
+static double sd(const double *a, int n) { double m = 0, q = 0; for (int i = 0; i < n; i++) m += a[i]; m /= n;
+    for (int i = 0; i < n; i++) q += (a[i] - m) * (a[i] - m); return sqrt(q / n); }
+
+static const char *s_textur_pfad = NULL;   /* Werkzeug: anderes Archiv messen (probe_r36_tueren textur <DO2>) */
+
+static void teil_textur(void)
+{
+    const re15_tuer_eigen_t *e = NULL;
+    for (int i = 1; i <= re15_door_seq_eigen_anzahl(); i++)
+        if (re15_door_seq_eigen(i) && !strcmp(re15_door_seq_eigen(i)->kennung, "P0CD")) e = re15_door_seq_eigen(i);
+    PRUEF(e != NULL, "Port-Archiv P0CD fehlt in gen/re15_tuer_eigen.inc");
+    if (!e) return;
+    char p[600];
+    if (s_textur_pfad) snprintf(p, sizeof p, "%s", s_textur_pfad);
+    else snprintf(p, sizeof p, "%s/RE15DOOR/P0CD.DO2", RE15_ASSET_SHARED_DIR);
+    size_t n = 0; uint8_t *d = slurp(p, &n);
+    PRUEF(d && (s_textur_pfad || n == e->datei), "P0CD.DO2 fehlt/Groesse");
+    if (!d) return;
+    const uint8_t *m = d + e->sektor * 0x800;
+    uint32_t tim_rel = (uint32_t)m[4] | ((uint32_t)m[5] << 8) | ((uint32_t)m[6] << 16) | ((uint32_t)m[7] << 24);
+    re15_tim_t t;
+    PRUEF(re15_tim_parse(m + tim_rel, (int)(n - (size_t)(m - d) - tim_rel), &t) == 0 && t.bpp == 8 && t.width == 128,
+          "P0CD: TIM nicht lesbar");
+    static double L[218 * 128], g1[218 * 128], g4[218 * 128], fe[218 * 128], fl[218 * 128];
+    const uint8_t *px = (const uint8_t *)t.pixels;
+    double summe = 0;
+    for (int v = 0; v < 218; v++) for (int u = 0; u < 128; u++) {
+        uint16_t c = t.clut[px[v * 128 + u]];
+        double r = ((c & 31) << 3) | ((c & 31) >> 2), g = (((c >> 5) & 31) << 3) | (((c >> 5) & 31) >> 2),
+               b = (((c >> 10) & 31) << 3) | (((c >> 10) & 31) >> 2);
+        L[v * 128 + u] = 0.299 * r + 0.587 * g + 0.114 * b; summe += L[v * 128 + u];
+    }
+    double mittel = summe / (218 * 128);
+    gauss_zeilen(L, g1, 128, 218, 1.0);
+    gauss_zeilen(L, g4, 128, 218, 4.0);
+    for (int i = 0; i < 218 * 128; i++) { fe[i] = L[i] - g1[i]; fl[i] = g1[i] - g4[i]; }
+    double fein = sd(fe, 218 * 128) / mittel, fleck = sd(fl, 218 * 128) / mittel, form = sd(g4, 218 * 128) / mittel;
+    /* Faserrichtung im Holz rechts vom Fenster (u 62..119, v 20..139): Zeilenwechsel (gy) gegen Spaltenwechsel (gx) */
+    double gx = 0, gy = 0;
+    for (int v = 20; v < 140; v++) for (int u = 62; u < 120; u++) {
+        gx += fabs(L[v * 128 + u + 1] - L[v * 128 + u]);
+        gy += fabs(L[(v + 1) * 128 + u] - L[v * 128 + u]);
+    }
+    /* Fenster dunkler als das Holz daneben (gemalt: Glas 34/36/32 gegen Holz 90/69/44 in ROOM10C04) */
+    double glas = 0, holz = 0;
+    for (int v = 40; v < 120; v++) { glas += L[v * 128 + 40]; holz += L[v * 128 + 90]; }
+    printf("P0CD: fein %.4f fleck %.4f form %.4f scharf %.3f hell %.1f | Faser gy/gx %.2f | Glas/Holz %.2f\n",
+           fein, fleck, form, fein / fleck, mittel, gy / gx, glas / holz);
+    /* Schranken gegen den Runde-33-Stand (dieselbe Rechnung, `probe_r36_tueren textur <alt.DO2>`):
+     * vorher fein 0.0814 fleck 0.0915 form 0.1824 scharf 0.890 hell 114.5 Faser gy/gx 0.44 Glas/Holz 0.48 */
+    PRUEF(fein >= 0.095, "P0CD fein %.4f < 0.095 (vorher 0.0814)", fein);
+    PRUEF(form >= 0.30, "P0CD form %.4f < 0.30 (vorher 0.1824, RE2-Median 0.3955)", form);
+    PRUEF(mittel <= 100.0, "P0CD hell %.1f > 100 (vorher 114.5)", mittel);
+    PRUEF(gy > 2.0 * gx, "P0CD Faser nicht waagerecht wie ROOM10C04 (gy/gx %.2f, vorher 0.44)", gy / gx);
+    PRUEF(glas < 0.8 * holz, "P0CD Fenster nicht dunkler als das Holz (%.2f)", glas / holz);
+    /* gezeigt = gemalt: Texel * 73/128 (Blattflaeche c = 73) gegen das ROOM10C04-Zeilenprofil des linken Fluegels
+     * (tools/tueren/r36_rezept_p0cd.py PROFIL_*), Messspalten u 85..103, Median je 5 Zeilen, +-10 je Kanal */
+    static const int py[5] = { 70, 86, 102, 118, 138 };
+    static const double prgb[5][3] = { {99, 84, 68}, {89, 67, 43}, {78, 56, 29}, {69, 49, 24}, {45, 31, 11} };
+    for (int k = 0; k < 5 && !s_textur_pfad; k++) {
+        int v = (int)((py[k] + 1.5 - 69) * 218.0 / 95.0 + 0.5);
+        double ka[3];
+        for (int c = 0; c < 3; c++) {
+            double w[5 * 19]; int nw = 0;
+            for (int vv = v - 2; vv <= v + 2; vv++) for (int u = 85; u < 104; u++) {
+                uint16_t col = t.clut[px[vv * 128 + u]];
+                int x5 = (col >> (5 * c)) & 31;
+                w[nw++] = (double)((x5 << 3) | (x5 >> 2));
+            }
+            for (int i = 1; i < nw; i++) for (int j = i; j > 0 && w[j] < w[j - 1]; j--) { double h = w[j]; w[j] = w[j - 1]; w[j - 1] = h; }
+            ka[c] = w[nw / 2] * 73.0 / 128.0;
+        }
+        printf("  y%d v%3d gezeigt (%.0f %.0f %.0f) gemalt (%.0f %.0f %.0f)\n", py[k], v, ka[0], ka[1], ka[2],
+               prgb[k][0], prgb[k][1], prgb[k][2]);
+        PRUEF(fabs(ka[0] - prgb[k][0]) <= 10 && fabs(ka[1] - prgb[k][1]) <= 10 && fabs(ka[2] - prgb[k][2]) <= 10,
+              "P0CD v%d: gezeigt weicht vom gemalten ROOM10C04-Profil ab", v);
+    }
+    free(d);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "fahrstuhl";
     if (!strcmp(teil, "fahrstuhl")) teil_fahrstuhl();
     else if (!strcmp(teil, "schott")) teil_schott();
     else if (!strcmp(teil, "aufschliessen")) teil_aufschliessen();
+    else if (!strcmp(teil, "textur")) { if (argc > 2) s_textur_pfad = argv[2]; teil_textur(); }
     else { printf("unbekannter Teil %s\n", teil); return 2; }
     printf("%s: %s (%d Fehler)\n", teil, g_fehler ? "ROT" : "GRUEN", g_fehler);
     return g_fehler ? 1 : 0;

@@ -28,8 +28,8 @@ static const re15_tuer_eigen_t re15_tuer_eigen[30] = {
     { "P1DL", 0x1D, 23928, 36100, 12, 60676, 0xD8DF3E9Cu, 0 },
     /* 10: P04B = DOOR04 + Textur 'Blau -> braunes Holz (Farbton, Lage der Kassetten und Maserung bleiben)' (Ton F2 (01 04 09 11, Holz)) */
     { "P04B", 0x04, 23928, 44984, 12, 69560, 0xC23A92B4u, 0 },
-    /* 11: P0CD = DOOR0C + Textur 'helles gelbbraunes Holz, je Fluegel hohes schmales Drahtglasfenster, Panikstange gemalt' (Ton eigen DOOR0C (Holz-Doppeltuer mit Glas)) */
-    { "P0CD", 0x0C, 23880, 36892, 12, 61468, 0xBCFF74C5u, 0 },
+    /* 11: P0CD = DOOR0C + Textur 'Runde 36: helles Holz mit WAAGERECHTER RE2-Faser 1:1 (DOOR0D-Fuellungen gedreht), gemaltes Licht ROOM10C04, Drahtglasfenster mit Rahmen/Spiegelung, Panikstange mit Haltern, gebuerstetes Trittblech' (Ton eigen DOOR0C (Holz-Doppeltuer mit Glas)) */
+    { "P0CD", 0x0C, 23880, 36892, 12, 61468, 0xB4937612u, 0 },
     /* 12: P16M = DOOR16 + Textur 'Silberrohr -> Messing (goldgelb, ROOM12607.bmp), Lichtverlauf der Rohre bleibt' (Ton eigen DOOR16 (4 Sprossen, kein Schliesston)) */
     { "P16M", 0x16, 11000, 46572, 6, 58860, 0xF3556E1Cu, 0 },
     /* 13: P16R = DOOR16 + Textur 'Silberrohr -> dunkles Rostbraun (ROOM11A00.bmp)' (Ton eigen DOOR16) */

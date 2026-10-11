@@ -576,8 +576,8 @@ def rezept_P04B(basis):
 # 96 px; Fenster 20..45 % der Fluegelbreite von der Fuge, 8..63 % der Hoehe; Panikstange bei 69 % Hoehe
 # von 11 % bis 90 % der Fluegelbreite. Texturlage (Fuge = u klein): Fenster u 26..57 v 17..137, Stange
 # v 147..153 u 14..115.
-@rezept("P0CD")
-def rezept_P0CD(basis):
+# Runde 33-Fassung (Rueckschau): ersetzt in Runde 36 Spur G durch r36_rezept_p0cd.rezept (unten registriert).
+def rezept_P0CD_r33(basis):
     pfad = hintergrund("10C0", 3)
     holz, n = farbe_bild(pfad, (145, 60, 158, 100))           # Fluegelflaeche zwischen Fenster und Rand
     glas, _ = farbe_bild(pfad, (161, 62, 166, 86))
@@ -604,6 +604,14 @@ def rezept_P0CD(basis):
     proto.update(fenster=[26, 17, 57, 137], panikstange=[14, 147, 116, 153], gekappt=gek,
                  herkunft="S041 c03 Vollbild: Fenster 20..45 %% Breite ab Fuge, 8..63 %% Hoehe; Stange 69 %%")
     return out, proto
+
+
+@rezept("P0CD")
+def rezept_P0CD(basis):
+    """Runde 36 Spur G (Nutzer: Textur 10C0<->10D0 "herausstechend billig"): RE2-Faser 1:1 statt hochgezogener
+    Flecken, gemaltes Licht, Relief - tools/tueren/r36_rezept_p0cd.py."""
+    import r36_rezept_p0cd
+    return r36_rezept_p0cd.rezept(basis)
 
 
 # ---------------------------------------------------------------------------------------------
