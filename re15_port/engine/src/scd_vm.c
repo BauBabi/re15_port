@@ -53,6 +53,7 @@
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Szene ROOM10F0 (cut_10f0.c) */
 #include "re15_irons_tod.h"  /* Runde 35 Spur L: Irons-Todesszene + Montage (irons_tod_1150.c) */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: Fenster ROOM1120 (fenster_1120.c) */
+#include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte, Ereignis 28 (kartenitems_r36.c) */
 #include "re15_zombie_abstand.h" /* Runde 35 Spur F: Zombie-Abstand ROOM1010/1220 (zombie_abstand_r35.c) */
 #include "re15_ziel1190.h"   /* Runde 35 Spur H: Zielscheiben-Texte ROOM1190 (ziel_1190.c) */
 #include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
@@ -632,6 +633,7 @@ int scd_event_fire(uint8_t event_id)
      * Rueckkehr / Nachspawn; sonst NULL. Disjunkt zu A (2) und D (13). */
     if (!pc) pc = re15_irons_tod_ereignis((uint16_t)g_current_room_id, event_id);
     if (!pc) pc = re15_fenster1120_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 35 Spur M */
+    if (!pc) pc = re15_kartenitems_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur N: Karte, Ereignis 28 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {

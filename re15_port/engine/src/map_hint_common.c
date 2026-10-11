@@ -59,6 +59,7 @@
 #include "re15_audio.h"
 #include "re15_room.h"
 #include "re15_scd.h"         /* re15_game_flag_get — Szenen-Flag des Hinweises (Runde 33) */
+#include "re15_map_owned.h"   /* Runde 36 Spur N: re15_map_owned_page (Etagenwahl nach Aufnahme) */
 #include "re15_engine.h"     /* g_engine.frame_count — nur fuer die Messschiene */
 
 #include "gen/re2_hint_bank.inc"   /* RE2_HINT_EDT_SIZE / _VBD_OFF / _VBD_SIZE / RE2_HINT_SE */
@@ -264,7 +265,9 @@ int re15_map_ziel_blatt_frei(unsigned page)
 
 int re15_map_blatt_waehlbar(unsigned page)
 {
-    return re15_map_page_known(page) || re15_map_ziel_blatt_frei(page);
+    /* Runde 36 Spur N: ein Blatt im BESITZ ist waehlbar — RE2 setzt bei der Aufnahme Bank 35 (Etagen-
+     * wahl) zusammen mit Bank 33 (room20B0 sub10 Set(35,2..4) @0x037E6-EE, gelesen @0x8006D934). */
+    return re15_map_page_known(page) || re15_map_ziel_blatt_frei(page) || re15_map_owned_page(page);
 }
 
 /* Runde 35 Spur K: das k-te (0-basiert) markierte Ziel — mehrere Ziele zugleich (ROOM11C0 und
