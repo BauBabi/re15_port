@@ -19,7 +19,19 @@ Punkte:
 
 ## Stand
 
-(laufend) — Baum sauber auf 78a4a748 gestartet (Fortsetzung: kein Vorgaenger-Commit vorhanden), Baseline
+**FERTIG (2026-10-11):** I1-I4 gemessen, belegt, gebaut, nachgemessen; Riegel unit_r36_inventar +
+integration_r36_inventar gruen, gezielte Laeufe 35/35 (unit) + 10/10 (integration) gruen (Abschnitt Tests).
+
+Kurzfassung:
+* I1/I2 Memory Card: Speichern zieht 1 ab, die letzte verschwindet (RE2 MEM_CARD.BIN @0x801c118c-0x801c11e0;
+  Abzug im geschriebenen Block, Live-Inventar erst nach Erfolg; Platz weg = @0x8004aee4-af2c + FUN_8004dadc).
+* I3 Handgranaten 0x09/0x0A/0x0B: bei 0 sofort aus dem Inventar (NUTZER-VORGABE, RE1.5 entfernt sie nicht:
+  FUN_8004eae4 @0x8004eb44-60), ausgeruestet -> abgelegt (0x80, @0x8004ad44-4c), Waffe -> Messer nach dem Wurf
+  (Commit-Regel @0x80046654-88). Leere Memory Cards aus jeder Quelle ebenso.
+* I4 Debug-Menue: Sprungziel = Basis | Elza-Bit (@0x800397e4 `srl a0,a0,31` / @0x800397ec `addu`), Elza
+  landet in ROOM1071/1151 statt 1070/1150.
+
+Verlauf: Baum sauber auf 78a4a748 gestartet (Fortsetzung: kein Vorgaenger-Commit vorhanden), Baseline
 gebaut (`local_build.sh configure` + `build`, LOCAL-BUILD-OK). Messwerkzeug:
 `re15_port/tools/r36_i/messlauf.sh <name> <timeout> KEY=WERT ...` (Messkopie `re15_pc_r36i.exe` neben der
 exe, Arbeitsordner `re15_port/build/r36i_mess/<name>/`).
@@ -270,8 +282,67 @@ F100..F125                 Explosion
 Statusschirm F340 (`I_belege/i3_nachher_statusschirm_F340.png`): Item list nur Browning + Patronen, KEINE
 Granate; Equip Arms = Messer (Darstellung fuer 0x80, Runde 35 Spur E). Vorher: Granate "0" in beiden Kaesten.
 
+### Gegenprobe Brandgranate (Lauf `i3_nachher_brand`, RE15_GIVE=11:1 RE15_EQUIP=11)
+```
+[inventar-r36] F20 Platz 2 Id 0b Menge 0 -> entfernt (Ausruest-Platz 0x80, Waffe 11)
+[inventar-r36] F111 Waffe 11 (leer, abgelegt) -> 1 (Messer-Rueckfall 0x80)
+gr.log: SPAWN granate art=4 (1x)
+```
+Saeure-/Brandgranate laufen durch denselben Abzug (Entlade-Handler 0x80033B58/78) und denselben Tick.
+
 ## Tests
+
+Neue Riegel (Registrierung `tests/unit/probes/r36_inventar.cmake`):
+* **unit_r36_inventar** (`tests/unit/test_r36_inventar.c`) — MECHANIK je Nutzer-Punkt:
+  (A) letzte Memory Card: Block-Abzug == Live-Abzug Platz fuer Platz, verdichtet, Ausruest-Platz zieht mit,
+  Pruefsumme neu; (B) x3 -> x2; (C) ohne Karte nichts; (D) leere ausgeruestete Handgranate -> weg, 0x80,
+  Messer; (E) leere Saeure-Granate + leere Karte -> beide weg, Browning-Index zieht zweimal mit; (F) Granate
+  im Effekt-Pool (CORE00.ESP) -> Platz sofort weg, Waffe erst nach dem Effekt; (G) volle Granate bleibt;
+  (H) Debug-Menue ueber re15_debug_menu_tick mit Lade-Flanke: alle 101 belegten Sprung-Saetze x 2 Charaktere
+  -> Leon xxx0 / Elza xxx1, Datei vorhanden; Elza 107 -> ROOM1071.
+* **integration_r36_inventar** (`tests/integration/test_r36_inventar.cmake`, echte exe, Messkopie
+  `re15_pc_r36i_haken_*.exe`): s2 Karte x2 -> x1 (Log + Kartenblock), s1 letzte Karte -> Platz weg, Browning
+  rueckt nach und bleibt ausgeruestet (Block 03:15 15:50, Platz 0, Waffe 3), g letzte Handgranate: Projektil
+  gespawnt, Platz weg F20 (nach Abzug F19, vor START F280), Messer ab F111, Bank W01; e1 Elza -> ROOM1151,
+  e0 Leon -> ROOM1150. Diskriminiert gegen den Vorher-Stand (gemessen i1_vorher_karte / i3_vorher /
+  i4_vorher: "card=kept", Granate 0 bleibt, Elza ROOM1070/1150).
+
+Angepasst: integration_r33_speichern (B: letzte Karte verbraucht, Block 00 00), integration_r35_werfer_elza
+(EXIT_AT#1001).
+
+Gezielte Laeufe (KEINE volle Suite, Vertrag), woertlich:
+```
+ctest --test-dir re15_port/build -R "^(unit_debug_menu|unit_savedata|unit_savepoint|unit_inv_fsm|unit_inv_grant|unit_item_use|unit_item_modal|unit_item_icon|unit_item_stack_press|unit_r33_speichern|unit_r34_wurf|unit_r35_granate|unit_r30_granate|unit_r35_inventar1050_.*|unit_r35_werfer.*|unit_r36_inventar|unit_load_after_death|unit_elza_zweig|unit_r30_elza_selbsttuer|unit_itembox_.*|unit_room1150_itembox|unit_r26_inventar|unit_r21_discard_wegwerfen|unit_map_speichern_laden|unit_r33_karte_speicher|unit_r34n_d_adaruf_speicher)$" --timeout 600
+100% tests passed, 0 tests failed out of 35
+
+ctest --test-dir re15_port/build -R "^(integration_r33_speichern|integration_r35_werfer_elza|integration_r36_inventar|integration_save_counter_pin|integration_r35_granate|integration_r34_granaten|integration_r30_granate_laden|integration_elza_vollstart|integration_r35_inventar1050|integration_weste_load_pin)$" --timeout 900
+100% tests passed, 0 tests failed out of 10
+```
+(Erster Lauf von integration_r36_inventar rot an MEINEM Pruefstand: Block-Vergleich mit 2-Byte-Plaetzen statt
+4-Byte-Schritt {Id, Menge, Flag, +3}; Soll korrigiert, danach gruen.)
 
 ## OFFEN
 
+* Keine offenen Punkte aus I1-I4.
+* Hinweis (nicht Spur I): der Zeitpunkt des Waffenwechsels nach der letzten Granate ist PORT-WAHL (Ende des
+  Zielzustands + Granatenplatz verschwunden); das Original wechselt die Waffe nur im Statusschirm. Wer ihn
+  anders will (z.B. sofort nach dem Projektil auch bei gehaltenem R1), aendert nur Bedingung (b) in
+  `re15_inventar_r36_tick`.
+* Kistenplaetze (ITEM BOX) werden nicht geraeumt: der Auftrag nennt das Spieler-Inventar; eine 0er-Granate kann
+  dort ohnehin nicht mehr entstehen (sie verschwindet vorher aus dem Inventar).
+
 ## Fuer den Nutzer
+
+* **Neue Assets fuer das Paket-Gate:** keine (kein shared_assets/-Zuwachs, keine gen/*.inc).
+* **Sprachdateien:** keine.
+* **Bedienhinweise:**
+  - Speichern am Telefon/Computer verbraucht jetzt eine Memory Card (Anzeige im Statusschirm faellt von 2 auf
+    1; die letzte Karte verschwindet). Wer den Speicherschirm abbricht, behaelt die Karte (RE2-Verhalten).
+  - Wirft Leon/Elza die letzte Hand-/Saeure-/Brandgranate, ist sie sofort aus dem Inventar; Leon haelt nach
+    dem Wurf (sobald R1 losgelassen und die Granate explodiert ist) das Messer (Rueckfall "nichts
+    ausgeruestet").
+  - Debug-Menue (SELECT, Raum waehlen, VIERECK): mit Elza laedt der Sprung die xxx1-Raeume (z.B. ROOM1071,
+    ROOM1151), mit Leon wie bisher xxx0. 71 der 120 Raumpaare sind als Datei bytegleich — dort sieht man den
+    Unterschied nur an Elza-Zweigen des Ports (z.B. Fenster ROOM1121, Irons ROOM1151), in den uebrigen 49 auch
+    am Rauminhalt.
+* **Entscheidungsfragen:** keine.
