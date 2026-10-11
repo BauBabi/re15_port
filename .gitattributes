@@ -34,3 +34,6 @@ re15_port/shared_assets/RE15DOOR/** -text
 # Heute schuetzt sie nur Gits NUL-Heuristik (Byte 2 bzw. 1 = 00) — wie DOOR/RE15DOOR: NIE normalisieren.
 re15_port/shared_assets/RE2/CORE00.ESP -text
 re15_port/shared_assets/RE2/TEX.TIM -text
+
+# Workflow-Skripte (Claude-Code-Workflow-Werkzeug lehnt CRLF ab, Runde 36) — immer LF.
+analysis/befunde_runde36/orchestrator/*.js text eol=lf
