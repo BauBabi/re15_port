@@ -17,6 +17,10 @@
  *      (@0x8006E71C); Blatt erst mit Bit waehlbar (RE2 Bank 35 @0x8006D934, Set(35,n) @0x037E6).
  *   S  Spielstand: die Bits 87..91 reisen mit g_game.flags (re15_savedata_capture/restore) — kein
  *      neues Feld, alte Staende laden unveraendert (Bits 0 = keine Karte).
+ *   A  (Nachbesserung 1, Licht) Attribut-Wort Pool+0x0c: die VM speichert Obj_model_set pc[8..9]
+ *      (LAB_80040914 @0x800409a8/@0x800409b0) — ROOM1200 obj 0/1 = 0x0010 (@0x007DA/@0x00804),
+ *      ROOM1140 obj 0 = 0x0000 (@0x00B28); die Karte traegt 0x0010 (RE2 room20B0 @0x03158 /
+ *      room2130 @0x00FDC) = der Flach-Zweig von FUN_8002c18c @0x8002c2f4 (kein Raumlicht, 0x808080).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -194,7 +198,19 @@ static void teil_rg(raum_t *r)
         CHECK("Prop-Lage = Tabelle", PP.x == z->x && PP.y == z->y && PP.z == z->z);
         CHECK("Prop-Drehung = Tabelle", PP.rot_x == z->rot_x && PP.rot_y == z->rot_y && PP.rot_z == z->rot_z);
         CHECK("Prop-Flags 0x000B, Weltraum", PP.flags == RE15_R36K_PROP_FLAGS && PP.parent_obj == -1);
+        CHECK("Prop-Attribut 0x0010 = Flach-Bit (RE2 room20B0 @0x03158, FUN_8002c18c @0x8002c2f4)",
+              PP.attr == RE15_R36K_PROP_ATTR && (PP.attr & 0x10));
 #undef PP
+    }
+    /* A: Attribut-Wort der RDT-Objekte = Obj_model_set pc[8..9] (LAB_80040914 @0x800409a8/b0) */
+    if ((r->id & 0xFFFE) == 0x1200) {
+        int p0 = prop_slot(0), p1 = prop_slot(1);
+        CHECK("ROOM1200 obj 0 attr 0x0010 (main00 @0x007DA pc[8..9] = 10 00)", p0 >= 0 && g_scd.props[p0].attr == 0x0010);
+        CHECK("ROOM1200 obj 1 attr 0x0010 (main00 @0x00804 pc[8..9] = 10 00)", p1 >= 0 && g_scd.props[p1].attr == 0x0010);
+    }
+    if ((r->id & 0xFFFE) == 0x1140) {
+        int p0 = prop_slot(0);
+        CHECK("ROOM1140 obj 0 attr 0x0000 (sub00 @0x00B28 pc[8..9] = 00 00) -> NCCT-Zweig", p0 >= 0 && g_scd.props[p0].attr == 0x0000);
     }
     const re15_aot_t *a = &g_aot.slots[z->aot_slot];
     snprintf(nm, sizeof nm, "Slot %d = EVENT Ereignis 28, sat 0x31, Rechteck 1000x1000", z->aot_slot);

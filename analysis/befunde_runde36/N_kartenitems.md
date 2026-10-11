@@ -295,3 +295,96 @@ Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
      (1,08 x 0,72 m, deutlich groesser)?
   3. ROOM1030: die Karte haengt im Bereich des Muenztelefon-Textes; bis zur Aufnahme kommt dort die
      Kartenfrage, daneben weiter der Telefon-Text. Passt das?
+
+## 8. Nachbesserung 1 (nach Abnahme 0, `N_abnahme_0.md` M1 Licht) — 2026-10-11
+
+Stand vorher: 2a741535 (Code 3c0737c0). Scratch `%TEMP%/claude/.../scratchpad/N_nb1/` (zensus_0x2d*.py,
+edit1.py, lauf.sh, vorher.sh, paar1030.sh, runs/). Abnahme-Urteile zu den Punkten 1-2 bleiben unberuehrt
+(ihre Riegel: `integration_r36_kartenitems_bild` Teil 1/2, `unit_r36_kartenitems` T/R/G/D/K/S).
+
+### 8.1 Mangel M1 — Ursache
+Der Prop-Zeichner in `platform/pc/main.c` kannte fuer Objekte nur den NCCT-Weg (`re15_light_shade_vertex`,
+Raumlicht des aktiven Cuts). Die RDT-Lichtsaetze von ROOM1140/10D0/11D0 sind reine Ambient-Saetze
+(Abnahme 4: 1140 Lichtblock @0x38C alle Lichter aus, Ambient (83,78,78) -> Vertexfarbe (41,39,39) =
+32 % fuer JEDE Normale), die Karte war damit "fast schwarz" (Dossier 3.3). Statt den Original-Mechanismus
+fuer ein unbeleuchtetes Objekt zu suchen, hatte die Spur eine Konstante je Raum aus dem Hintergrundbild
+erfunden (Spalte `licht`, BG_REF "hellste 15 %", Haken `re15_kartenitems_r36_licht`) — ohne Adresse.
+Der Mechanismus existiert (Abschnitt 8.3): das Attribut-Wort Pool+0x0c des Objekts, Bit 0x10 = FLACH.
+
+### 8.2 Messung vorher (Stand 3c0737c0, alte exe md5 6f16291b = Messkopie der Abnahme)
+Uebernommen aus Abnahme 0 Abschnitt 4 (nicht wiederholt): Karte 1140 Cut 5 Median-Summe 320 gegen Leons
+hellsten Pixel 210 daneben; 1030 Karte B:R 2,05 neben Leon 1,10; Haken cut-unabhaengig trotz Raumlicht 38..89.
+Eigene Messung mit dem neuen Auswerter `probe_r36_kartenitems_licht` (Kartenpixel = Diff MIT/OHNE Bit im
+Marken-Fenster +-3; "PALETTE k von n" = wie viele davon EXAKT eine Farbe der 256er-CLUT der RE2-TIM sind,
+5 Bit << 3 wie `rgb555_to_argb8888`) auf den Framedumps des Abnahme-Laufs `lauf_35afb981_*` (alte exe,
+Lade-Weg F100, Nutzer-Cut; Lauf `4fed10ed` identisch):
+
+| Raum (Cut) | Haken-Tint | Kartenpixel | Mittel RGB (Summe) | in der Palette |
+|---|---|---|---|---|
+| 1140 (5) | (156,155,153) | 73 | (105,107,96) 310 | **73 von 73** |
+| 10D0 (6) | (181,186,180) | 219 | (101,104,94) 299 | **219 von 219** |
+| 1030 (3) | (47,70,104) | 81 | (37,57,77) 172 | 0 von 81 |
+| 1200 (2) | (85,85,75) | 177 | (68,70,56) 194 | 1 von 177 |
+| 11D0 (0) | (74,75,77) | 169 | (61,64,59) 185 | 0 von 169 |
+
+Befund dazu (gemessen, nicht vermutet): in 1140 und 10D0 hatte der Haken NIE gewirkt — `psx_prim_to_sdl_vert`
+(render_pc.c:2616, `(v*255+64)/128`, Saettigung 255) bildet jede Tint > 128 auf 255 = neutral ab; die beiden
+Karten wurden schon vorher exakt mit Texturfarbe gezeichnet (jeder Pixel eine Palettenfarbe). Das ist genau
+das Bild des Flach-Weges. In 1030/1200/11D0 (Tint < 128) war die Karte verdunkelt bzw. blau getoent.
+
+### 8.3 RE-Belege (selbst disassembliert, ghidra1_V2.txt; Decompilate RE_15_Quellcode_V2)
+Objekt-Zeichner FUN_8002c18c, je Pool-Eintrag (Schrittweite 0x94):
+```
+8002c2ac 0c 00 22 8e   lw    v0,0xc(s1)        ; Pool+0x0c = Attribut-Wort
+8002c2b4 02 00 42 30   andi  v0,v0,0x2         ; Bit 0x2 -> s2 = Halbtransparenz (Parameter 4, Prim-Code 0x36)
+8002c2c0 05 00 62 14   bne   v1,v0(=3),LAB_8002c2d8   ; Typ 3 -> FUN_8003e64c (@0x8002c2c8)
+8002c2dc ..            jal   FUN_80014368       ; Objekt-Cull (Region-Viereck)
+8002c2ec 0c 00 22 8e   lw    v0,0xc(s1)
+8002c2f4 10 00 42 30   andi  v0,v0,0x10        ; Bit 0x10
+8002c2f8 19 00 40 10   beq   v0,zero,LAB_8002c360   ; 0 -> NCCT-beleuchtet: FUN_800254a0 @0x8002c380, FUN_800256b0 @0x8002c3b0
+8002c2fc 70 00 30 26   _addiu s0,s1,0x70       ; sonst a2 = obj+0x70 (Farbe)
+8002c320 c3 8b 00 0c   jal   FUN_80022f0c      ; FLACH: Dreiecke
+8002c350 26 8c 00 0c   jal   FUN_80023098      ; FLACH: Vierecke
+```
+FUN_80022f0c (RE_15_Quellcode_V2/FUN_80022f0c.c:24-53): `param_3->cd = param_4 << 1 | 0x34; gte_ldrgb(param_3)`,
+je Dreieck `*(CVECTOR *)(param_2 + 1) = *param_3` — die Primitivfarbe ist die KONSTANTE obj+0x70, kein ncct.
+FUN_8002b898.c:16 (Objekt-Init): `*(undefined4 *)(&DAT_800b4008 + iVar1) = 0x808080` -> obj+0x70 = 0x808080
+= PSX-neutral (Texel x 0x80/0x80 = unveraendert).
+Das Attribut-Wort kommt aus dem Obj_model_set-Opcode, LAB_80040914:
+```
+800409a8 08 00 c2 84   lh    v0,0x8(a2)        ; pc[8..9]
+800409b0 0c 00 a2 ac   sw    v0,0xc(a1)        ; -> Pool+0x0c (DAT_800b3fa4)
+```
+(erreicht aus beiden Zweigen @0x80040980/@0x80040988, also auch bei der Zweit-Installation).
+RE2 (Ziel fuer den RE2-Gegenstand): FUN_800363f0.c:41-54 `if ((puVar4[4] & 0x10) == 0) FUN_80027bec/FUN_80027dbc
+(beleuchtet) else FUN_8002d0e8/FUN_8002d244 (unbeleuchtet)`; FUN_80035710.c:16 `(&DAT_800d03a0)[param_1*0x7e] =
+0x808080`. Die beiden RE2-Polizeiplaene tragen im Obj_model_set das Attributwort 0x0010 (room20B0 obj 8 @0x03158
+`2d 08 00 00 00 00 00 00 00 00 0a 00 10 00 ...`, room2130 obj 0 @0x00FDC `2d 00 .. 0a 00 10 00 ...`; Abnahme 4.1).
+Die RE2-Handler-Zuordnung Opcode-Wort -> Pool+0x10 wurde per Muster im RE2-Dump gesucht (drei Muster: `lh 0xc(a2)`
+-> `sw 0x10(a1)`, `lhu 0xa(a2)` + `ori 1`, Positionswort -> `sw 0x38`) und NICHT gefunden; sie bleibt wie in
+der Abnahme positionell (Enable-Wort, dann Attribut-Wort, wie RE1.5 pc[6..7]/pc[8..9]). Fuer die Konstante der
+Karte reicht RE1.5 selbst: ROOM1200 obj 0/1 (@0x007DA/@0x00804, dieselbe Wand wie die B2-Karte) tragen 0x0010.
+
+Zensus (zensus_0x2d_typ.py, alle 240 RDTs in shared_assets/PSX, 672 Obj_model_set, 0 Abbrueche):
+type 0: 328x 0x0000, 169x 0x0010, 15x 0x0012, 6x 0x000E, 2x 0x0006; type 3: 22x 0x0012, 54x 0x001A; type 4: 76x
+0x0000. Das Flach-Bit 0x10 tragen 260 Objekte in 46 Raeumen — 184 vom Typ != 3 auf dem Zweig @0x8002c2f8
+(1040(3) 1041(3) 1090(3) 1091(1) 1190(1) 1191(1) 11A0(2) 11A1(2) 11B0(4) 11B1(3) 11C0(1) 11C1(1) 11E0(1)
+11E1(1) 1200(3) 1201(3) 1210(1) 1211(1) 20A0(2) 20A1(2) 20B0(8) 20B1(8) 4000(6) 4001(7) 4030(1) 4031(1)
+4040(5) 4041(5) 4080(5) 4081(5) 5040(4) 5041(4) 5060(8) 5061(8) 5070(8) 5071(8) 50A0(11) 50A1(11) 5100(4)
+5101(4) 5130(4) 5131(4) 5140(2) 5141(2) 6000(6) 6001(6)) und alle 76 Typ-3-Objekte (die das Original ohnehin
+ueber FUN_8003e64c -> FUN_80022f0c flach zeichnet). Der Port zeichnete bis jetzt ALLE 672 ueber NCCT —
+eine vorbestehende Abweichung, die nicht diese Spur eingefuehrt hat; der generische Zweig behebt sie mit.
+
+### 8.4 Umsetzung (Commit 0a13946d + Folgecommits)
+| Datei | Aenderung |
+|---|---|
+| `include/re15_scd.h` | Prop-Feld `uint16_t attr` = Pool+0x0c (Kommentar mit den Adressen oben, Zensus) |
+| `engine/src/scd_vm.c` op_obj_model_set | 1 Zeile: `attr = pc[8] \| pc[9] << 8` (@0x800409a8/@0x800409b0) |
+| `platform/pc/main.c` Prop-Zeichner | Dreieck: der 3-Zeilen-Karten-Haken ersetzt durch `if (attr & 0x10) Vertexfarbe 0x80` (FUN_8002c18c @0x8002c2f4 -> FUN_80022f0c @0x8002c320, 0x808080); Viereck: dieselben 2 Zeilen (FUN_80023098 @0x8002c350) |
+| `include/re15_kartenitems_r36.h` | `licht[3]` und `re15_kartenitems_r36_licht` entfernt; `RE15_R36K_PROP_ATTR 0x0010` + Beleg-Absatz LICHT |
+| `engine/src/kartenitems_r36.c` | Installer setzt `attr = RE15_R36K_PROP_ATTR`; Licht-Funktion entfernt |
+| `tools/r36_kartenitems/karten_export.py` + `gen/kartenitems_r36.inc` | BG_REF, "hellste 15 %", Textur-Median, Tint entfernt; inc neu erzeugt (Diff = nur die Tabelle, MD1/TIM/Texte bytegleich) |
+| Tests | `unit_r36_kartenitems` Teil A (Attribut-Wort) + Prop-Attribut-Pruefung in R; neuer Auswerter `probe_r36_kartenitems_licht`; `integration_r36_kartenitems_bild`: Farbpruefung je Raum + ROOM1030 Cut 0 (zweiter Cut, anderes Raumlicht) |
+
+Keine neue Konstante ohne Adresse: 0x10 (@0x8002c2f4), 0x80 = 0x808080 (FUN_8002b898.c:16), 0x0010 (RE2
+@0x03158/@0x00FDC, RE1.5 @0x007DA). Der SDL-Weg bildet 0x80 ueber `psx_prim_to_sdl_vert` auf 255 ab (= Texel x 1).
