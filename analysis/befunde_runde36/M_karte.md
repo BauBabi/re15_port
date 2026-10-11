@@ -318,6 +318,9 @@ Ankunfts-Regel) war ebenfalls 56/56.
   Kachel im Gang-Ring. Die 1190-Zeile @0x80076978 legt die Ostkammer auf x159..174 (nicht auf rect 2);
   benutzt wird die Bbox-Streckung (Tuer an der gemalten Nische, Marker bis 4 px an die Waende).
 * R35-OFFEN 3 (Gang 1180/1230 schematisch, 11B0-Tuer unter dem Zweig gemalt) unveraendert.
+* (Nachbesserung 1) Treppenhaeuser und andere Orte mit Gast-Zeilen machen ihre fremden Etagenblaetter
+  ueber das raumweite Zonen-Bit anwaehlbar, auch wenn dort nichts gezeichnet wird - gemessen,
+  fuer die Fahrstuhlkabinen behoben, allgemein offen (Details N1.7).
 
 ## Fuer den Nutzer
 
@@ -346,6 +349,10 @@ Ankunfts-Regel) war ebenfalls 56/56.
   drei Etagen gemeinsam markiert; welche du wirklich benutzt hast, steht nirgends). Seit
   Nachbesserung 1 gilt das auch fuer ganz alte Staende (Format v7/v8 vor Runde 30).
 * Keine neuen Assets, keine Sprachdateien, kein neues Speicherformat (v9 bleibt).
+* Frage (Nachbesserung 1, Nebenbefund): Wer das Treppenhaus ROOM1060 nur im Erdgeschoss betritt,
+  kann auf der Karte schon zu 2F und 3F blaettern - dort ist dann nichts eingezeichnet. Fuer den
+  Fahrstuhl ist das jetzt abgestellt (2F/3F erst, wenn du mit ihm dort warst). Soll das fuer
+  Treppenhaeuser genauso gelten (Etage erst anwaehlbar, wenn du auf ihr warst)?
 
 ## Stand / Fortschritt
 
@@ -390,10 +397,10 @@ alle Kabinen-Bits 112..114 (4020: 115..117).
 - [x] Code-Stelle gelesen, Ursache am Code bestaetigt (+ zwei Nebenpfade derselben Ursache, s.u.)
 - [x] Messung vorher (Sonde + echte exe, Debug-Sprung)
 - [x] RE-Beleg selbst disassembliert (Seiten-Setzer Kabine 1080 / 4020)
-- [ ] Aenderung
+- [x] Aenderung (N1.4)
 - [x] Riegel `unit_r36_karte_kabine` (Debug-Sprung / v8-Hebung) - am alten Stand ROT (s.u.)
-- [ ] Messung nachher (Sonde + echte exe)
-- [ ] gezielte Tests gruen
+- [x] Messung nachher (Sonde + echte exe, N1.5)
+- [x] gezielte Tests gruen (N1.6: 74/74)
 
 ### N1.1 Ursache (am Code, HEAD 5064c3e8)
 Debug-Sprung 1100 -> 1080: `re15_map_zone_update(0x1080)` -> `re15_karte_fahrstuhl_blatt(0x1080)` =
@@ -524,3 +531,49 @@ Blatt 2F  Kasten (109,134)-(118,143) rot=0  besucht=0 wand=0   <- vorher besucht
 ```
 Bilder `M_karte_bilder/nb1_nachher_debugsprung_1F_x2.png` (Kabine aktuell auf "POLICE STATION 1F")
 und `nb1_nachher_debugsprung_2xHOCH_x2.png` ("POLICE STATION 2F", nur der 1100-Gang, keine Kabine).
+
+### N1.6 Tests
+| Test | misst | 5064c3e8 (vorher) | jetzt |
+|---|---|---|---|
+| NEU `unit_r36_karte_kabine` (Riegel 7, `probe_r36_karte kabine`) | Debug-Sprung 1100 -> 1080 und 4010 -> 4020 mit Spawn aus dem DEBUG.BIN-Satz: gezeigtes Blatt, Zustand aller drei Kabinen-Rechtecke, Kabinen-Bits 112..117, `re15_map_page_known` der fremden Etagen, Fahrt danach (Ankunft 3F); v8-Hebung ohne Kabinen-Bits | ROT, 7 von 8 FAIL (`nb1_kabine_vorher.txt`) | 8/8 PASS |
+| `integration_r36_karte` + Laeufe I0/I1/I2 | echte exe: Spielstand 1100, LOAD, `RE15_DEBUG_JUMP=1080@gp`, MAP: I0 1F-Kabine rot >= 10, I1 2F-Kasten rot+besucht = 0, I2 3F-Stelle leer und Abzug I2 == I1 (`probe_r36_karte gleich`) | Messung derselben Laeufe: 2F/3F besucht=64, I1/I2 1065 Pixel anders | Passed (191 s, Lauf vom 2026-10-11) |
+| `unit_map_speichern_laden` (Pin 2026-09-27, angepasst) | v8: Kabine ohne Etagen-Bit (e1080 3 -> 0, Summe 4 -> 1); D2-Abdeckung >= 24 statt >= 25 - gemessen (voruebergehende Ausgabe der Bits): 0 1 2 6..14 16 20..26 (20 Etagen-Bits) + 96 99 (Teile 1110/5090) + 112 115 (Kabinen auf Blatt 2/8) = 24; vorher 28 (alle 6 Kabinen-Bits) | - | PASS |
+
+ABSCHLUSS-LAUF (Stand 9f42d87e = Endstand der Engine und der Tests, im Baum gebaut mit
+`local_build.sh build`; KEINE volle Suite), Log `M_karte_werkzeug/nb1_ctest_gezielt.log`:
+```
+ctest --test-dir re15_port/build -R "map|karte|fahrstuhl|elevator|1190|11a0|11d0|1110|10a0|weste|teilbereich|save|speicher|memcard|continue|hint|hinweis|zone|inv_screen|marke|mark|debug_menu|ebene|blatt" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 74
+Total Test time (real) = 570.71 sec
+```
+Darin u.a. die sieben `unit_r36_karte_*` (neu: `_kabine`), `integration_r36_karte` (191,05 s, mit
+I0/I1/I2), `integration_r35_karte` (73,92 s) / `_fahrstuhl` (177,20 s), `unit_fahrstuhl_1080/4020_etagen`,
+`probe_elevator_1080`, `unit_debug_menu`, `unit_r30_hinweis_*`, `unit_r33_karte_*`,
+`unit_map_speichern_laden`, `integration_r33_speichern`, `integration_weste_load_pin`,
+`integration_save_counter_pin`, `integration_map_raum_live` / `_uebergang`. Kein Fenster-Haken
+musste nachgefahren werden.
+
+Gezielter Lauf 1 (nach der Engine-Aenderung, vor der D2-Anpassung), Log Scratchpad `nb1/ctest1.log`:
+`99% tests passed, 1 tests failed out of 74` - einzig `unit_map_speichern_laden` an
+`D2 ABDECKUNG ... - 24` (Schranke 25, s.o.); alle Fenster-Haken und Integrationslaeufe gruen
+(integration_r35_karte 74 s, integration_r35_karte_fahrstuhl 175 s, integration_r36_karte 191 s,
+integration_map_raum_live, integration_save_counter_pin, integration_weste_load_pin,
+integration_r33_speichern).
+
+### N1.7 OFFEN / Hinweise der Abnahme
+* NEBENBEFUND (gemessen, nicht geaendert - kein Nutzerbefund): dieselbe Blatt-Bekannt-Regel gilt
+  fuer ALLE Orte mit Gast-Zeilen (Treppenhaeuser 1060/10A0, 1090, 10F0, 1170, 4070, 50D0). Messung
+  `probe_r36_karte messung`, Block "Nebenbefund": ROOM1060 nur auf 1F (Band 0) begangen ->
+  `Blatt 3 (2F) bekannt 1, 1060-Zeichnung 3/1 unbesucht | Blatt 4 (3F) bekannt 1, 1060-Zeichnung 4/1
+  unbesucht` - 2F und 3F sind anwaehlbar, ohne dass dort etwas gezeichnet wird (Ursache: erste
+  Schleife in `re15_map_page_known` zaehlt Gast-Zeilen ueber das raumweite Zonen-Bit, `zone_bit`).
+  Fuer die Kabinen behoben (M1); die allgemeine Regel ("Gast-Zeile nur ueber ihr Etagen-Bit", wie
+  beim Zeichnen) waere eine Zeile (`if (s_map_zones[i].etage) continue;`), aendert aber das
+  Blaettern an jedem Treppenhaus - Entscheidung beim Nutzer/Orchestrator.
+* H1 (11D0 Zwinger-Gang) - unveraendert, s. OFFEN oben.
+* H2 (echte Fahrt Panel/Cursor/VIERECK als Riegel) - nicht gebaut: die Fahrt selbst ist das
+  Fahrstuhl-Modul, nicht die Karte; die Kartenseite ist abgedeckt durch Riegel 6 (Ankunft = Raumfolge
+  Kabine -> Etagenraum) + integration H (3F-Kabine nach Ankunft) und jetzt Riegel 7 + integration I
+  (Etage unbekannt).
+* H3 (11A0-Marker in der Kerbe der L-Kachel) - nicht Spur M (Projektion vor dem Zweig), unveraendert.
+* H4 ("ROOM 1090" = ROOM1190?) - Rueckfrage an den Nutzer bleibt (s. "Fuer den Nutzer").
