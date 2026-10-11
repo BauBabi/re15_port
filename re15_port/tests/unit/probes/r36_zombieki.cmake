@@ -55,6 +55,9 @@ set_tests_properties(unit_r36_zombieki_affen PROPERTIES TIMEOUT 120)
 #                                  Sonden: `fest <x> <z> [bilder] [gx gz [+0x7]]` = Szene, `[bilder] [seed] [0|1]` = Zufallsgang,
 #                                  `eins <i> <0|1> <bilder> [anker]`, `szene2 <lx> <lz> [gx gz] [bilder] [0|1] [spur]`,
 #                                  `weit <gx> <gz> <lx> <lz>` (Path-B-Weitsprung erzwungen).
+#                                  NB6 (Abnahme 5): Ostgasse "Gasse einzeln"/O1 (Nah-Umweg ueber das 0x10-Pad #36, Gegenprobe
+#                                  Modus 6 = Stand NB5), Nachruecken <= 450 Bilder nach dem Tod (Gegenprobe Stand NB5 588);
+#                                  Sonden `lage ... [kill_f kill_art [nb6-bits]]`, `platz <lx> <lz> [schritt] [ox oz]`.
 add_executable(test_r36_zombieki_affen_block ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_affen_block.c)
 target_link_libraries(test_r36_zombieki_affen_block PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_zombieki_affen_block PRIVATE ${CMAKE_SOURCE_DIR}/include)
