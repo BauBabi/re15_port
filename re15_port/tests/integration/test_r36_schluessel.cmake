@@ -46,7 +46,10 @@ function(lauf _name _karte _envs _out)
     if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
         message(FATAL_ERROR "r36_schluessel[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
     endif()
-    re15_start_spiel(_rv 240
+    if(NOT DEFINED LAUF_TIMEOUT)
+        set(LAUF_TIMEOUT 240)
+    endif()
+    re15_start_spiel(_rv ${LAUF_TIMEOUT}
         RE15_NO_INTRO=1
         RE15_NOAUDIO=1
         SDL_AUDIODRIVER=dummy
@@ -89,6 +92,8 @@ if(NUR STREQUAL "befreiung")
     foreach(_f RANGE 40 100)
         string(APPEND _pad "${_f}:U,")
     endforeach()
+    # ~2000 Spielbilder in Echtzeit (gemessen 75 s, unter Last 83 s) -> eigener Zeitdeckel fuer diesen Lauf
+    set(LAUF_TIMEOUT 480)
     lauf(befreiung "1211;-19355;-17300;1024;elza;flag:3:0x8B;flag:4:0x24;flag:4:0xEC;flag:9:83;leer;give:0x42:1"
          "RE15_PAD_AT=${_pad}1980:A;RE15_EXIT_AT=1995#1211;RE15_MSG_LOG=1;RE15_DISCARD_LOG=discard.log" _lh)
     muss(befreiung "${_lh}" "CONTINUE: resumed in room 1211")

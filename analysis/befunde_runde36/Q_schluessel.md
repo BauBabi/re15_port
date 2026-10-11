@@ -423,3 +423,15 @@ Angepasst: `unit_r36_schluessel_tuer` Pruefzeile B (Text der H4-Begruendung, Pru
 - Deine Sprachaufnahme `synchro/STAGE1/room1211/main09.wav` (master 565da62b) dauert 1,74 s = 52 Bilder und ist
   vor dem Ende der 99-Bilder-Standzeit von msg 9 fertig — die Abfrage schneidet sie nicht ab.
 - Keine neuen Assets, keine neuen Texte/Ids/Bits.
+
+### N1.8 Summenzeilen (gezielt, keine volle Suite)
+Gebaut mit `bash re15_port/tools/local_build.sh build` (LOCAL-BUILD-OK). Lauf A = alle Gruppen der vom Zweig
+beruehrten Module (dieselbe Auswahl wie die Abnahme 0, jetzt mit den zwei neuen Tests), `-j 2` unter Fremdlast
+anderer Agenten, -R woertlich:
+`r36_schluessel|r21_discard|r30_tuer|r31_tuer_ton|door|unit_inv_|unit_item_|itembox|pri_inventar_riegel|r26_inventar|r35_inventar1050|item_name_census|android_n1_inventar|sicherung|r35_cut10f0|r22_10f0|r35_inhalt|r34n_e_dokumente|r30_irons_tisch|unit_msg|action_msg_gate|r33_tuer|rolltor|adaruf|r35_cut1150|fenster|elza|keydoor|aot_sce_census|flag_census|itps|prompt|zgirl_tuer|zgirl_selbsttueren|10f0|11b0|1011|1211`
+-> **`100% tests passed, 0 tests failed out of 118`** (812,96 s; integration_r36_schluessel 133 s,
+integration_r36_schluessel_befreiung 83 s, integration_r35_cut10f0 242 s, integration_r35_cut1150 512 s,
+integration_elza_vollstart 101 s, unit_r21_discard_wegwerfen 9 s). Kein Fenster-Haken rot.
+Lauf B (nach dem eigenen Zeitdeckel LAUF_TIMEOUT 480 fuer den 2000-Bilder-Lauf im Integrations-Skript),
+-R woertlich: `^integration_r36_schluessel$|^integration_r36_schluessel_befreiung$`
+-> **`100% tests passed, 0 tests failed out of 2`** (befreiung 82,8 s, schluessel 121,8 s).
