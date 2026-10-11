@@ -1083,3 +1083,21 @@ Im Spurbaum verboten (Auftrag); der Orchestrator faehrt sie EINMAL im Integratio
 | 1 FERN-Stau Nordwest-Rand | Gorilla 1 NAH in der Original-Jagd an der #21-Ecke versperrt den einzigen Streifen; Umweg von Gorilla 2 sah nur SCA ("gerader Weg frei") | Original per GDB ab derselben Lage: 900/900 Stau (e2 +0x1de 179 -> 1079); Port-Sonde Original-Regel = NB3 = Befund | PORT-WAHL Vortritt: FERN seit R36_FEST_START/2 Bildern im Anker + Koerperkontakt mit einem NAHEN vor ihm -> der NAHE geht den Umweg zu Fuss (Messreihe 1..60) | exe 11/12 FERN 1465/691 -> 0/50, Slot 3 an 11 greift an (F1253); Riegel Stau mit zwei Gegenproben; "fern 0" berichtigt |
 | 2 Nahe Rest-Blockade | Original-Nahjagd (A[3] unter 0x1771 nur Biss < 0xbb8 @0x80117a60-74, B[3] auf playerX @0x80117d4c) an Ecke/Gasse | GDB O1/O3/O3b/O4: das Original wartet ebenso (900..2400 Bilder); J-Spur griff: Wartende mit Sicht-Latch 1 | keine (Original); benannt unter "Fuer den Nutzer"; Riegel pinnt Port = Original | Riegel O3b/O1 gegen GDB-Lage (Abweichung 32 / 10) |
 | 3 Voll-Suite | — | — | Orchestrator | gezielt (oben) |
+
+---
+
+## Nachbesserung 5 (nach Abnahme 4, 2026-10-11) — fortlaufend
+
+Grundlage: `F_abnahme_4.md` (Stand c541415c/0b12bbf6: P1 erfuellt, P2 teilweise, P3 erfuellt; Maengel 1-3). P1/P3 nicht
+anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen), Spur-J-Riegel `unit_r35_affen_*` (bildgenau
+gegen GDB, laufen mit aktiver PORT-WAHL) gruen. Ziel-Kriterium (Abnahme 4 Mangel 1 + Orchestrator): an den exe-Stellen 3, 4, 11,
+12, 13 und im Tuerweg `t11b0kampf` steht kein Gorilla in SUMME mehr als 450 Bilder NAH fest (Definition Abnahme 4.1: aktiv, kein
+Angriff Sub 5/6/8/15, Leon > 3000, >= 90 Bilder im 400er-Anker); Gesamt (HEAD 10466) und FERN (255) an den 14 Stellen steigen
+nicht. Aufhebung des am GDB-Original gemessenen NAH-Wartens = PORT-WAHL (Nutzer "irgendwie verbessern"); die Original-Gleichheit
+bleibt im Modus Original-Regel gepinnt.
+
+| Mangel | Kern | Weg |
+|---|---|---|
+| 1 | NAH-Stillstand an den Stoss-Zielen (Stellen 3/4/11/12/13, Tuerweg t11b0kampf 1309) | Messen, WAS den nahen Gorilla haelt (Klemme/Koerper/Biss-Sperre, Route vorhanden?) und was den kanonischen Kampf (J-Riegel szene: S2 wartet ~400 Bilder bei d 3004..3149 vor dem ersten Biss +521) davon unterscheidet; Nah-Umweg mit Gate, das szene/griff nicht beruehrt; Messreihe Gate-Beginn; exe 14 Stellen + Tuerweg |
+| 2 | Begruendung "passt nicht hinein" / "kommt nicht zu Fuss" gemessen falsch | Text an Z. 960-961 und 1073-1077 berichtigen (B[3] gerade auf playerX @0x80117d4c, A[3] nah nur Biss @0x80117a60-74) |
+| 3 | Riegel pinnt Stillstand im PORT-Modus (`lage <b> 1`) | O1/O3b/O5-Gleichheit in den Modus Original-Regel (`lage <b> 0`); im PORT-Modus Pins auf das Kriterium (Angriff, NAH-fest <= Schranke) |
