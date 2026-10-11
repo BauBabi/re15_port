@@ -1,0 +1,9 @@
+DuckStation gestartet {'85788'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (-5282, -9000, -1514, 672, 5, 0) obj0: (-9836, -1800, 4753, 0, 0, 1, 0) obj1: (-5960, -9000, -15482, 0, 0, 5, 0)
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

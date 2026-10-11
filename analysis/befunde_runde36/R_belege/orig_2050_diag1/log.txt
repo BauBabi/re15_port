@@ -1,0 +1,38 @@
+DuckStation gestartet {'18572'}
+GDB verbunden
+Stopp: b'S02'
+  RIGHT gehalten 0.5s: Padwort 0x0000 Blick 0 pos (9100, -5400, 4100)
+Stopp: b'S02'
+  RIGHT gehalten 1.0s: Padwort 0x2002 Blick 384 pos (9100, -5400, 4100)
+Stopp: b'S02'
+  RIGHT gehalten 1.5s: Padwort 0x2002 Blick 1824 pos (9100, -5400, 4100)
+Stopp: b'S02'
+  RIGHT gehalten 2.0s: Padwort 0x2002 Blick 3264 pos (9100, -5400, 4100)
+Stopp: b'S02'
+  UP gehalten 0.5s: Padwort 0x0011 Blick 3264 pos (9457, -5400, 4598)
+Stopp: b'S02'
+  UP gehalten 1.0s: Padwort 0x0011 Blick 3264 pos (9454, -5400, 4598)
+Stopp: b'S02'
+  UP gehalten 1.5s: Padwort 0x0011 Blick 3264 pos (9457, -5400, 4596)
+Stopp: b'S02'
+  UP gehalten 2.0s: Padwort 0x0011 Blick 3264 pos (9454, -5400, 4601)
+Stopp: b'S02'
+  X/Square gehalten 0.5s: Padwort 0x40c0 Blick 3264 pos (9433, -5400, 4595)
+Stopp: b'S02'
+  X/Square gehalten 1.0s: Padwort 0x40c0 Blick 0 pos (-26450, -1800, 10250)
+Stopp: b'S02'
+  X/Square gehalten 1.5s: Padwort 0x40c0 Blick 0 pos (-26450, -1800, 10250)
+Stopp: b'S02'
+  X/Square gehalten 2.0s: Padwort 0x40c0 Blick 0 pos (-26450, -1800, 10250)
+Stopp: b'S02'
+losgelassen: Padwort 0x0000
+Stopp: b'S02'
+RIGHT 3 s frei: Padwort 0x2000 Blick 0
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+DUCKLOG: I/SDL: Using Controller DB from resources.
+DUCKLOG: I/SDL: Enhanced controller reports are disabled.
+DUCKLOG: I/SDL: 872 controller mappings are loaded.
+DUCKLOG: I/SDL: Controller 2 inserted
+DUCKLOG: I/InputManager: Device 'SDL-0' connected: 'XInput Controller'
+DUCKLOG: I/SDL: Controller 1 inserted
+DUCKLOG: I/InputManager: Device 'SDL-1' connected: 'XInput Controller'

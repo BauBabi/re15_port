@@ -1,0 +1,4 @@
+[STAIRREG] slot=8 type=12 chain=128 side=1 count=2 corner=-6050 extent=3700 centre=(-4200,-7700) half=(1850,700)
+[stairzone] slot=8 pos=(-4200,-7700) band=128 event=1 hw=1850 hh=700
+[stairzone] player band=3 pos=(-1800,-5400,-7700) rot=2048
+[stair] START dir=UP cur_band=3 target_band=5 (straight to gait, no turn)

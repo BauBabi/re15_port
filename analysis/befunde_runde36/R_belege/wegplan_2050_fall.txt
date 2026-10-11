@@ -1,0 +1,26 @@
+# Runde 36 Spur R, Nachbesserung 2 (N3): ROOM2050 obj 6 (Band 3, Record (-1600,-5400,-9348) @0x01D0E) zur
+# Absprungzelle r*[49] x 6350..8750 z -13950..-12150 (Wort 0x3202) fahren. Geometrie (sca_dump.py ROOM2050 3):
+#   Sued bis Kistenmitte z >= -7150 (r*[43] z -8750..-8050 sperrt die Kiste bei z < -7150, @0x8003b770-794 halboffen),
+#   Ost aus der Tasche x <= -2950 / z (-6632,-5368) bis x in [7550,7650) (r*[44] x <= 6650 / r*[40] x >= 8550),
+#   Nord von Sueden bis z <= -11700 (= Absprungzelle + 450 @0x8002c12c).
+OBJ 6
+RAUM 2050
+GEGNERWEG
+WARTE 30
+ZELLE 0 50
+ZELLE 0 49
+ZELLE 0 51
+GEHE -1000 -10800 120
+SCHIEB 3072 Z >= -7050 400
+WARTE 40
+GEHE -100 -8400
+GEHE -100 -5520
+GEHE -3100 -5520
+GEHE -3100 -6400 100
+SCHIEB 0 X >= 7550 1600
+WARTE 40
+GEHE 6100 -5600
+GEHE 7600 -5600 100
+SCHIEB 1024 Z <= -12000 1200
+WARTE 300
+ENDE

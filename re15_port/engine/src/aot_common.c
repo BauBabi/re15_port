@@ -33,6 +33,8 @@
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (RE15_FILES_FIRST_ITEM_ID) */
 #include "re15_menu.h"       /* Runde 30: re15_menu_request_doc — Aufheben oeffnet den Leser */
 #include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
+#include "re15_climb.h"      /* Runde 36 Spur R: re15_climb_standing_probe = DAT_800ac788 @0x8002bef0 */
+#include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 (FUN_8003b558 + FUN_8003da78), zellschub_r36.c */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
@@ -1723,15 +1725,23 @@ void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
 
     const int pband = re15_collision_debug_band(); /* DAT_800acad6 */
     const int in_sub8 = re15_player_push_substate();
+    const int stand = re15_climb_standing_probe(pl->x, pl->z);   /* Runde 36 Spur R: DAT_800ac788 @0x8002bef0-f8 */
+    re15_zellschub_pass_lief();                                   /* Runde 36 Spur R: Ruhe-Zweig laeuft hier */
 
     for (int p = (int)g_scd.prop_count - 1; p >= 0; p--) {   /* rueckwaerts @0x8002bdb0-c8 */
         if (p >= 16) continue;
         if (!g_scd.props[p].active) continue;                 /* @0x8002bdcc obj[+0]&1 */
+        int ruhe = 0;   /* Runde 36 Spur R: 1 = Zugang zu LAB_8002c0b8 (FUN_8003b558(obj,2) @0x8002c0d0 auf die Lage) */
         { extern int re15_szl_objekt_schub(int);             /* Runde 36 Spur J: Bit 0x200 @0x8002bec0 */
-          if (re15_szl_objekt_schub(p)) continue; }          /* -> FUN_8002cabc(Spieler,obj,1) @0x8002bed4 */
+          if (re15_szl_objekt_schub(p)) ruhe = 2; }          /* -> FUN_8002cabc(Spieler,obj,1) @0x8002bed4, `j 0x8002c0b8` @0x8002bee4 */
+        if (ruhe == 0 && p == stand) {                        /* Runde 36 Spur R: @0x8002bef8 Stand-Objekt -> FUN_8002cfd4 -> `j 0x8002c0ec` (kein FUN_8003b558) */
+            re15_zellschub_spiegel(p);                        /* @0x8002c0f0-c10c */
+            continue;
+        }
         const int32_t sx = g_scd.props[p].x;                  /* @0x8002beec Sicherung */
         const int32_t sz = g_scd.props[p].z;
 
+        if (ruhe == 0) {
         int ok = 1;
         if (g_scd.props[p].obj_type != 4)          ok = 0;    /* @0x8002bf14 */
         else if (!(pad_held & RE15_PAD_BIT_UP))    ok = 0;    /* @0x8002bf24 (virt. Bit 0) */
@@ -1741,22 +1751,34 @@ void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
         if (ok) { if (s_prop_push_count[p] < 255) s_prop_push_count[p]++; }  /* @0x8002bf68 */
         else    { s_prop_push_count[p] = 0; }                                /* @0x8002bf74 */
 
-        if (s_prop_push_count[p] != 9) continue;              /* @0x8002bf8c */
+        if (g_scd.props[p].flags & 0x80u)          ruhe = 1;  /* Runde 36 Spur R: @0x8002bf78-84 obj+0 & 0x80 -> 0x8002c0b8 */
+        else if (s_prop_push_count[p] != 9)        ruhe = 1;  /* @0x8002bf8c-94 -> 0x8002c0b8 */
+        }
 
+        if (ruhe == 0) {
         int32_t nx = sx, nz = sz;
         (void)re15_collision_push_prop(p, pl->x, pl->z, &nx, &nz);   /* @0x8002bfa4 */
-        /* @0x8002bfb0 FUN_8003b558(obj, 2): Solid-Klasse 2, Radius = obj[+0x78][6] (box_hx). */
-        if (re15_collision_box_blocked(rdt, nx + g_scd.props[p].box_cx,
-                                            nz + g_scd.props[p].box_cz,
-                                       (int)g_scd.props[p].band,
-                                       (int32_t)(uint16_t)g_scd.props[p].box_hx, 2u)) {
+        /* @0x8002bfb0 FUN_8003b558(obj, 2): Solid-Klasse 2, r = hx bzw. hz (Nicht-Quadrat-Zweig @0x8003b684-734,
+         * Runde 36 Spur R, zellschub_r36.c). Die Ausschiebung FUN_8003da78 laeuft auf der Kopie und wird wie die
+         * Ruecksetzung @0x8002c0bc-d4 verworfen; die Rueckgabe (irgendeine Zelle getroffen) ist davon unabhaengig. */
+        int32_t tx = nx, tz = nz;
+        const int gesperrt = re15_zellschub_8003b558(rdt, p, &tx, &tz, 2u);
+        { extern void re15_dachkiste_schub_log(int, int32_t, int32_t, int);   /* Runde 36 Spur R: RE15_PUSH_LOG */
+          re15_dachkiste_schub_log(p, nx, nz, gesperrt); }
+        if (gesperrt) {
             s_prop_push_count[p] = 10;                        /* @0x8002c0b0 (s7 = 10) */
-            continue;                                         /* Ruecksetzung = nichts schreiben */
-        }
+            ruhe = 1;                                         /* Ruecksetzung @0x8002c0bc-d4 = nichts schreiben, dann FUN_8003b558 @0x8002c0d0 */
+        } else {
         s_prop_push_count[p] = 8;                             /* @0x8002bfc0 */
         s_prop_push_contact  = 1;                             /* @0x8002bfd4 |= 0x2000 */
-        if (!in_sub8) continue;                               /* @0x8002bfe4 -> Ruecksetzung */
-        g_scd.props[p].x = nx;                                /* Schub bleibt (kein Restore) */
+        if (!in_sub8) ruhe = 1;                               /* @0x8002bfe4 -> Ruecksetzung + FUN_8003b558 @0x8002c0d0 */
+        else {
+        g_scd.props[p].x = nx;                                /* Schub bleibt (kein Restore, @0x8002c0a8 -> @0x8002c0d8) */
         g_scd.props[p].z = nz;
+        }
+        }
+        }
+        if (ruhe) re15_zellschub_ruhe(rdt, p);               /* Runde 36 Spur R: LAB_8002c0b8 `jal 0x8003b558` @0x8002c0d0 mit Ausschiebung FUN_8003da78 @0x8003b79c */
+        re15_zellschub_spiegel(p);                            /* Runde 36 Spur R: Spiegel obj+0x40/+0x44 @0x8002c0f0-c10c */
     }
 }

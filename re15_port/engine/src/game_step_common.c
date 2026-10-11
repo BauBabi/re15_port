@@ -45,6 +45,7 @@
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13, Irons-Kopf, 11B0-Erweiterung */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
+#include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 ohne Spieler-Schub (zellschub_r36.c) */
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
@@ -2351,6 +2352,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * er der Bewegung um ein Bild hinterher. Begruendung + Bytes: re15_actor_prop_pushout. */
     if (c->rdt_ok)
         re15_actor_prop_pushout();
+    if (c->rdt_ok)   /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 (FUN_8003b558(obj,2) @0x8002c0d0) in Bildern ohne re15_prop_push_tick */
+        re15_zellschub_nach_pass(c->rdt);
     if (c->rdt_ok)   /* Runde 36 Spur A: Ende von FUN_8002bd44 (Ausloeser @0x8002c0fc-c14c, +0x88 @0x8002c154) + Wasser-Stempel @0x8001ce1c */
         re15_objfall_nach_pass(c->rdt);
 

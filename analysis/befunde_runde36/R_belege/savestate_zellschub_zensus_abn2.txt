@@ -1,0 +1,7 @@
+room2060_orig.sav                                  ROOM2060/ROOM2061  n=9 Spieler=(7600,0,3950) b0 stand=00000000
+   Pool  2: w0 00000001 typ 4 band 0 pos (-3143, 0, 2075) rec (-3125, 0, 2075) spiegel (-3143,2075) cnt 0 fall 0 box [50, -900, 0, 675, 900, 600] VERSCHOBEN d=(-18,0)
+   Pool  3: w0 00000101 typ 4 band 0 pos (-19554, 0, 22684) rec (-19554, 0, 22684) spiegel (-19554,22684) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] 
+   Pool  4: w0 00000101 typ 4 band 0 pos (19571, 0, -22542) rec (19571, 0, -22542) spiegel (19571,-22542) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] 
+room3050_orig.sav                                  ROOM3050/ROOM3051  n=4 Spieler=(-23996,0,1523) b0 stand=00000000
+   Pool  1: w0 00000101 typ 4 band 4 pos (-18000, -7200, -20800) rec (-18000, -7200, -20800) spiegel (-18000,-20800) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] 
+SUMME: 2 Spielstaende, 12 aktive Objekte, 1 verschoben, 0 mit Treffer-jetzt

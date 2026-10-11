@@ -167,7 +167,7 @@ int main(void)
     /* --- (4) GEGENPROBE SPIELER: dieselbe Kiste haelt auch ihn ----------------------- */
     {
         int32_t px = bx, pz = bz;
-        re15_collision_objects_actor(&px, &pz);
+        re15_collision_objects_actor(&px, &pz, n->y);   /* Runde 36 Spur R: Aktor-y fuer den Y-Test @0x8002cb84-cbc8 */
         int32_t pdx = px - bx, pdz = pz - bz;
         if (pdx < 0) pdx = -pdx;
         if (pdz < 0) pdz = -pdz;

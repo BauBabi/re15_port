@@ -1,0 +1,118 @@
+DuckStation gestartet {'98612'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (9100, -5400, 4100, 0, 3, 0) obj6: (-1600, -5400, -9348, 0, 0, 3, 0) HP: 100 RDT: (2148635440, '0010090000000000f02a1280702b1280')
+  START Pool 0: w0 0000000b pos (-6625,-16200,-1850) spiegel (-6625,-1850) faellt=0 z=0 band=5
+  START Pool 1: w0 00000101 pos (2052,0,-5552) spiegel (2052,-5552) faellt=0 z=0 band=0
+  START Pool 2: w0 00000101 pos (-1256,0,-64) spiegel (-1256,-64) faellt=0 z=0 band=0
+  START Pool 3: w0 00000101 pos (4248,0,1400) spiegel (4248,1400) faellt=0 z=0 band=0
+  START Pool 4: w0 0000000b pos (7996,-16200,4450) spiegel (7996,4450) faellt=0 z=0 band=5
+  START Pool 5: w0 0000000b pos (2975,-16200,-13950) spiegel (2975,-13950) faellt=0 z=0 band=5
+  START Pool 6: w0 00000101 pos (-1600,-5400,-9348) spiegel (-1600,-9348) faellt=0 z=0 band=3
+  START Pool 7: w0 0000000b pos (5475,-16200,-13050) spiegel (5475,-13050) faellt=0 z=0 band=5
+  START Pool 8: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  START Pool 9: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  2050 Entity 0 @800acc2c: w0 0801 typ 0x25 pos (4300, -5400, -6450) -> Aktiv-Bit 0 geloescht
+  2050 Entity 1 @800ace20: w0 0801 typ 0x25 pos (-5000, -5400, -6082) -> Aktiv-Bit 0 geloescht
+  2050 g_active_count @0x800aca4e: 2 -> 0
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Drehsinn: R 0.4 s -> dBlick = 1152
+START spieler=(9100,-5400,4100) blick=2112 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+== Weg zur Nordseite der Kiste ==
+  GEHE (9100,-6300): angekommen bei (9031,-6425), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-6300): angekommen bei (-204,-6308), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-8400): angekommen bei (-54,-8301), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-11200): angekommen bei (-54,-11166), Schub-Ereignisse unterwegs 0
+== Schub 1: nach Sueden bis Kistenmitte z >= -7050 ==
+  GEHE (-1000,-10798): angekommen bei (-963,-10799), Schub-Ereignisse unterwegs 0
+SUED Runde 0 VOR spieler=(-963,-5400,-10799) blick=7200 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1600, -5400, -9274, 0, 0, 3, 9) spieler=(-934, -5400, -10624, 7200, 3, 1)
+  SCHUB-OK obj6=(-1600, -5400, -8819, 0, 0, 3, 9) spieler=(-888, -5400, -10169, 7192, 3, 8)
+  SCHUB-OK obj6=(-1600, -5400, -8278, 0, 0, 3, 9) spieler=(-836, -5400, -9628, 7192, 3, 8)
+  SCHUB-OK obj6=(-1600, -5400, -7737, 0, 0, 3, 9) spieler=(-784, -5400, -9087, 7192, 3, 8)
+  SCHUB-OK obj6=(-1600, -5400, -7196, 0, 0, 3, 9) spieler=(-732, -5400, -8546, 7192, 3, 8)
+SUED Runde 0 NACH (Bedingung) spieler=(-747,-5400,-8390) blick=7192 band=3 sub=8 | obj6=(-1600,-5400,-7040) faellt=0 z=0 band=3 n=9
+SUED: Schub angenommen 117 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== Umweg in die Tasche westlich der Kiste ==
+  GEHE (-100,-8400): angekommen bei (-284,-8390), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-5520): angekommen bei (-86,-5470), Schub-Ereignisse unterwegs 0
+  GEHE (-3100,-5520): angekommen bei (-3195,-5553), Schub-Ereignisse unterwegs 0
+== Schub 2: nach Osten bis Kistenmitte x >= 7550 ==
+  GEHE (-3050,-6440): angekommen bei (-3018,-6538), Schub-Ereignisse unterwegs 0
+OST Runde 0 VOR spieler=(-3018,-5400,-6538) blick=4120 band=3 sub=3 | obj6=(-1600,-5400,-7040) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1600, -5400, -7040, 0, 0, 3, 9) spieler=(-2950, -5400, -6566, 4114, 3, 8)
+  SCHUB-OK obj6=(-1059, -5400, -7040, 0, 0, 3, 9) spieler=(-2409, -5400, -6613, 4114, 3, 8)
+  SCHUB-OK obj6=(-518, -5400, -7040, 0, 0, 3, 9) spieler=(-1868, -5400, -6660, 4114, 3, 8)
+  SCHUB-OK obj6=(23, -5400, -7040, 0, 0, 3, 9) spieler=(-1327, -5400, -6707, 4114, 3, 8)
+  SCHUB-OK obj6=(564, -5400, -7040, 0, 0, 3, 9) spieler=(-786, -5400, -6754, 4114, 3, 8)
+  SCHUB-OK obj6=(1105, -5400, -7040, 0, 0, 3, 9) spieler=(-245, -5400, -6801, 4114, 3, 8)
+  SCHUB-OK obj6=(1646, -5400, -7040, 0, 0, 3, 9) spieler=(296, -5400, -6848, 4114, 3, 8)
+  SCHUB-OK obj6=(2187, -5400, -7040, 0, 0, 3, 9) spieler=(837, -5400, -6895, 4114, 3, 8)
+  SCHUB-OK obj6=(2728, -5400, -7040, 0, 0, 3, 9) spieler=(1378, -5400, -6942, 4114, 3, 8)
+  SCHUB-OK obj6=(3269, -5400, -7040, 0, 0, 3, 9) spieler=(1919, -5400, -6989, 4114, 3, 8)
+  SCHUB-OK obj6=(3810, -5400, -7040, 0, 0, 3, 9) spieler=(2460, -5400, -7036, 4114, 3, 8)
+  SCHUB-OK obj6=(4351, -5400, -7040, 0, 0, 3, 9) spieler=(3001, -5400, -7083, 4114, 3, 8)
+  SCHUB-OK obj6=(4892, -5400, -7040, 0, 0, 3, 9) spieler=(3542, -5400, -7130, 4114, 3, 8)
+  SCHUB-OK obj6=(5433, -5400, -7040, 0, 0, 3, 9) spieler=(4083, -5400, -7177, 4114, 3, 8)
+  SCHUB-OK obj6=(5974, -5400, -7040, 0, 0, 3, 9) spieler=(4624, -5400, -7224, 4114, 3, 8)
+  SCHUB-OK obj6=(6515, -5400, -7040, 0, 0, 3, 9) spieler=(5165, -5400, -7271, 4114, 3, 8)
+  SCHUB-OK obj6=(7056, -5400, -7040, 0, 0, 3, 9) spieler=(5706, -5400, -7318, 4114, 3, 8)
+OST Runde 0 NACH (Bedingung) spieler=(6214,-5400,-7357) blick=4114 band=3 sub=8 | obj6=(7564,-5400,-7040) faellt=0 z=0 band=3 n=9
+OST: Schub angenommen 425 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== Umweg nach Sueden der Kiste ==
+  GEHE (6114,-5600): angekommen bei (6166,-5527), Schub-Ereignisse unterwegs 0
+== Schub 3: nach Norden bis Fall-Ausloeser ==
+  GEHE (7564,-5590): angekommen bei (7529,-5690), Schub-Ereignisse unterwegs 0
+NORD Runde 0 VOR spieler=(7529,-5400,-5690) blick=5122 band=3 sub=3 | obj6=(7564,-5400,-7040) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(7564, -5400, -7040, 0, 0, 3, 9) spieler=(7520, -5400, -5690, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -7582, 0, 0, 3, 9) spieler=(7488, -5400, -6232, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -8124, 0, 0, 3, 9) spieler=(7456, -5400, -6774, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -8666, 0, 0, 3, 9) spieler=(7424, -5400, -7316, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -9208, 0, 0, 3, 9) spieler=(7392, -5400, -7858, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -9750, 0, 0, 3, 9) spieler=(7360, -5400, -8400, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -10292, 0, 0, 3, 9) spieler=(7328, -5400, -8942, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -10834, 0, 0, 3, 9) spieler=(7296, -5400, -9484, 5122, 3, 8)
+  SCHUB-OK obj6=(7564, -5400, -11376, 0, 0, 3, 9) spieler=(7264, -5400, -10026, 5122, 3, 8)
+  FALL-AUSLOESER obj6=(7564, -5400, -11708, 0, 0, 3, 8) spieler=(7272, -5400, -10358, 5122, 3, 8)
+NORD Runde 0 NACH (Fall-Ausloeser) spieler=(7272,-5400,-10358) blick=5122 band=3 sub=8 | obj6=(7564,-5400,-11708) faellt=0 z=0 band=3 n=8
+NORD: Schub angenommen 221 x, gesperrt 0 x, Fall-Ausloeser 1 x, Ende: Fall-Ausloeser
+Haltepunkte entfernt (Ende Schub 3: Fall-Ausloeser); 3 s laufen lassen:
+NACH FALL spieler=(7272,-5400,-10358) blick=5122 band=3 sub=0 | obj6=(7564,-3600,-13068) faellt=0 z=3 band=2 n=0
+  NACH-FALL Pool 0: w0 0000000b pos (-6625,-16200,-1850) spiegel (-6625,-1850) faellt=0 z=0 band=5
+  NACH-FALL Pool 1: w0 00000101 pos (2052,0,-5552) spiegel (2052,-5552) faellt=0 z=0 band=0
+  NACH-FALL Pool 2: w0 00000101 pos (-1256,0,-64) spiegel (-1256,-64) faellt=0 z=0 band=0
+  NACH-FALL Pool 3: w0 00000101 pos (4248,0,1400) spiegel (4248,1400) faellt=0 z=0 band=0
+  NACH-FALL Pool 4: w0 0000000b pos (7996,-16200,4450) spiegel (7996,4450) faellt=0 z=0 band=5
+  NACH-FALL Pool 5: w0 0000000b pos (2975,-16200,-13950) spiegel (2975,-13950) faellt=0 z=0 band=5
+  NACH-FALL Pool 6: w0 00000101 pos (7564,-3600,-13068) spiegel (7564,-13068) faellt=0 z=3 band=2
+  NACH-FALL Pool 7: w0 0000000b pos (5475,-16200,-13050) spiegel (5475,-13050) faellt=0 z=0 band=5
+  NACH-FALL Pool 8: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  NACH-FALL Pool 9: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+== Zurueck zur Tuer slot 0 @0x01C4A (x 8100..10100 z 4700..6700 floor 3) ==
+  GEHE (7600,-6300): angekommen bei (7654,-6427), Schub-Ereignisse unterwegs 0
+  GEHE (9100,-6300): angekommen bei (9089,-6221), Schub-Ereignisse unterwegs 0
+  GEHE (9100,4300): angekommen bei (9209,4325), Schub-Ereignisse unterwegs 0
+TUER 2050 slot 0 VOR spieler=(9209,-5400,4325) blick=3106 band=3 sub=0 | obj6=(7564,-3600,-13068) faellt=0 z=3 band=2 n=0
+TUER 2050 slot 0: TUER AUSGELOEST — RDT-Kopf 0010090000000000 -> 001003000000002c, Spieler (-26450, -1800, 10250, 0, 1, 0) (Ankunft (-26450, -1800, 10250))
+RDT ROOM2000: (2148635440, '001003000000002cc461010044620100')
+  2000 g_active_count @0x800aca4e: 0 -> 0
+TUER 2000 slot 4 VOR spieler=(-26450,-1800,10250) blick=-2016 band=1 sub=0 | obj6=(7564,-3600,-13068) faellt=0 z=3 band=2 n=0
+TUER 2000 slot 4: TUER AUSGELOEST — RDT-Kopf 001003000000002c -> 0010090000000000, Spieler (9100, -5400, 4100, 1024, 3, 0) (Ankunft (9100, -5400, 4100))
+RDT nach der Rueckkehr: 0010090000000000c097000040980000 (ROOM2050 beim Start: 0010090000000000f02a1280702b1280) -> VERSCHIEDEN
+WIEDERKEHR spieler=(9100,-5400,4100) blick=1024 band=3 sub=0 | obj6=(7564,-3600,-13068) faellt=0 z=3 band=2 n=0
+  WIEDERKEHR Pool 0: w0 00000000 pos (-19800,-900,10800) spiegel (-19800,10800) faellt=0 z=0 band=2
+  WIEDERKEHR Pool 1: w0 00000000 pos (-25200,-900,-19800) spiegel (-25200,-19800) faellt=0 z=0 band=2
+  WIEDERKEHR Pool 2: w0 00000000 pos (-22450,-5400,16600) spiegel (-22450,16600) faellt=0 z=0 band=2
+  WIEDERKEHR Pool 3: w0 00000000 pos (4248,0,1400) spiegel (4248,1400) faellt=0 z=0 band=0
+  WIEDERKEHR Pool 4: w0 00000000 pos (7996,-16200,4450) spiegel (7996,4450) faellt=0 z=0 band=5
+  WIEDERKEHR Pool 5: w0 00000000 pos (2975,-16200,-13950) spiegel (2975,-13950) faellt=0 z=0 band=5
+  WIEDERKEHR Pool 6: w0 00000000 pos (7564,-3600,-13068) spiegel (7564,-13068) faellt=0 z=3 band=2
+  WIEDERKEHR Pool 7: w0 00000000 pos (5475,-16200,-13050) spiegel (5475,-13050) faellt=0 z=0 band=5
+  WIEDERKEHR Pool 8: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+  WIEDERKEHR Pool 9: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0
+ERGEBNIS: obj 6 nach dem Wiederbetreten (7564,-3600,-13068) faellt=0 band=2 — Record main00 @0x01D0E (-1600, -5400, -9348) -> NICHT auf dem Record
+Ereignisse gesamt: 764 Fall-Ausloeser: 1 HP: 100
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

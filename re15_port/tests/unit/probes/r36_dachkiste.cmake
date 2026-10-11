@@ -1,0 +1,63 @@
+# Runde 36 / Spur R — "dachkiste": kann die Dach-Kiste obj 1 in ROOM1090/1091 (die einzige Stufe zum Tor nach
+# ROOM1100, Tuer slot 1 @0x0213A Band 6) durch Schieben mit dem Spieler eine Absprungzelle erreichen und
+# fallen (Objekt-Fall FUN_8002c444, Spur A)? Dossier analysis/befunde_runde36/R_dachkiste.md.
+#
+#   probe_r36_dachkiste   Freiraum-Zensus MIT SPIELER (gemeinsame Suche Kistenzelle x Spielerseite) mit den
+#                         Praedikaten der Schubkette FUN_8002bd44 (@0x8002bf38 Band, @0x8002bf50 Reichweite
+#                         FUN_8002d1e8 563/900, @0x8002bfa4 FUN_8002cabc(.,.,1) Kiste = Spieler +- (hx+450) auf der
+#                         Achse des groesseren |d| @0x8002cce8-d10, @0x8002bfb0 FUN_8003b558(obj,2) u0 & 2
+#                         @0x8003b64c-660 mit r = hx @0x8003b68c-690, Ausschiebung @0x8002c0d8-e8) und des
+#                         Objekt-Pass-Ausloesers (@0x8002c120-134 FUN_8003b7f0(.,0x1c2,Band) & 2). Spieler-
+#                         Freiheit absichtlich ueberschaetzt (notwendige Bedingung).
+#     unit_r36_dachkiste_zensus   Riegel: ROOM1090/1091 obj 1 erreicht KEINE Absprungzelle, Kistenmitte bleibt
+#                         in z [-15503, -15482] (Bruestung r2[0] @0x01F20: kein Spieler noerdlich der Kiste
+#                         moeglich); ROOM3050/3051 obj 1 MUSS einen Ausloeser erreichen, erste Lage in der
+#                         Absprungzelle r*[46] @0x00AD4 (+-450 @0x8002c128) — Fall = vorgesehener Weg (Nachbesserung 1,
+#                         M3); ROOM2050/2051 obj 6 soll = 1, erste Lage in r*[49] @0x00B5C +-450 (Nachbesserung 2, N3:
+#                         Fall an der exe und am Original gemessen — orig_2050_d/orig_2050_abn2/orig_2050_fall).
+add_executable(probe_r36_dachkiste
+    ${CMAKE_CURRENT_SOURCE_DIR}/probe_r36_dachkiste.c)
+target_link_libraries(probe_r36_dachkiste PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r36_dachkiste PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r36_dachkiste PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r36_dachkiste_zensus COMMAND probe_r36_dachkiste pin)
+set_tests_properties(unit_r36_dachkiste_zensus PROPERTIES TIMEOUT 600)
+
+# Nachbesserung 3 (Abnahme 2: P1/P2/P4) — Pins der Mechanik (tests/unit/test_r36_dachkiste_zellschub.c):
+#   P1 Ruhe-Zweig LAB_8002c0b8 (FUN_8003b558(obj,2) @0x8002c0d0 + Ausschiebung FUN_8003da78 @0x8003b79c, engine/src/
+#      zellschub_r36.c): ROOM2060 Tritt obj 2 Record (-3125,2075) -> nach Bild 1 (-3143,2075) wie im Original
+#      (room2060_orig.sav Pool 2, R_abnahme_2.md A7/O3); die vier Lagecode-Zweige von FUN_8003da78 synthetisch.
+#   P4 Nicht-Quadrat-Zweig @0x8003b684-734 (r = hz): Lage in ROOM2060, die nur mit r = hz frei ist.
+#   P2 Y-Test FUN_8002cabc @0x8002cb84-cbc8 (re15_collision.c): Band-3-Spieler/-Aktor wird nicht aus der Band-0-Kiste
+#      von ROOM2050 geschoben, Band-0-Spieler wohl (x 3402 = 2952 + 450).
+add_executable(test_r36_dachkiste_zellschub
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_r36_dachkiste_zellschub.c)
+target_link_libraries(test_r36_dachkiste_zellschub PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_dachkiste_zellschub PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r36_dachkiste_zellschub PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r36_dachkiste_zellschub COMMAND test_r36_dachkiste_zellschub pin)
+set_tests_properties(unit_r36_dachkiste_zellschub PROPERTIES TIMEOUT 300)
+
+# INTEGRATION (echte exe, Leon UND Elza ueber den ECHTEN WEG ROOM10F0/10F1 -> Tritt -> Tuer slot 1 -> ROOM1090/1091
+# -> Korridor -> Schub gegen die Dach-Kiste; dazu der Schub nach Westen aus der Tasche): RE15_PUSH_LOG (engine/src/
+# dachkiste_r36.c) muss je Versuch SCHUB-GESPERRT mit der Treffer-Zelle des Originals zeigen (Bruestung r3[4] x
+# -7256..4624 z -18560..-16403 bzw. Westwand r3[2] x -9200..-6878), kein SCHUB-OK, kein AUSLOESER (objfall_r36.c),
+# Kiste bleibt auf dem Record (-5960,-9000,-15482) Band 5 — Original: R_belege/orig_lauf5+6/log.txt.
+# Nachbesserung 1 (Punkt 4): fall3050 (ROOM3050 obj 1 geschoben bis in die Absprungzelle r*[46] -> AUSLOESER ->
+# LANDUNG Band 0 = der vorgesehene Fall), weg2040 (2070 Nordgang -> slot 5 @0x00B1C -> 2040 Band 5) und treppe2040
+# (Treppe sce 13 slot 5/6 @0x0133C/@0x01350: Band 5 -> 3) — ROOM2040 ist ohne die Kiste in 2050 erreichbar.
+# Nachbesserung 3 (Abnahme 2 P1/P2): tritt2060 (Ruhe-Zweig LAB_8002c0b8 -> Tritt (-3143,2075), Nord/Ost-Schub, Latch (3,172),
+# Aufstieg, Tuer slot 1 -> ROOM2040 wie im Original orig_2060_glied), echt2050/elza2051 (echte Tuer 2000/2001 slot 4, Y-Test
+# FUN_8002cabc: Band-3-Spieler laeuft durch die Band-0-Kiste, dann Fall); echt2050 faehrt seit dem Abschluss nach dem Fall
+# zurueck (2050 slot 0 -> 2000 -> slot 4 -> 2050) und verlangt die Kiste wieder auf dem Record main00 @0x01D0E.
+# TIMEOUT: gemessen 1279.87 s fuer elf Laeufe unter ctest -j 4 (ohne Rueckkehr) und 1463.54 s allein MIT Rueckkehr
+# (echt2050 285 s: RE15_EXIT_AT zaehlt g_engine.frame_count, das bei jedem Raumladen neu beginnt — nach dem dritten
+# Raumladen laeuft der Lauf bis Bild 5400 des Wiederbetretens). 2700 s lassen der vollen Suite Luft.
+add_test(NAME integration_r36_dachkiste
+    COMMAND ${CMAKE_COMMAND}
+        -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+        -DWORKDIR=${CMAKE_BINARY_DIR}/r36_dachkiste_wd
+        -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_dachkiste.cmake)
+set_tests_properties(integration_r36_dachkiste PROPERTIES TIMEOUT 2700)

@@ -1,0 +1,152 @@
+=== ROOM3000: 2 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3000 main00 @0x01462 slot  0 sce 2 floor 0 rect x -30000..-29990 z -10000..-9990 -> ROOM11A0 cut  0 nfloor 1 spawn (-50,-1800,24200) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3000 main00 @0x01482 slot  1 sce 2 floor 0 rect x -5890..-5220 z -18270..-16770 -> ROOM3010 cut  1 nfloor 0 spawn (-23168,0,11769) dir 4192 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3001: 2 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3001 main00 @0x01462 slot  0 sce 2 floor 0 rect x -30000..-29990 z -10000..-9990 -> ROOM11A0 cut  0 nfloor 1 spawn (-50,-1800,24200) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3001 main00 @0x01482 slot  1 sce 2 floor 0 rect x -5890..-5220 z -18270..-16770 -> ROOM3010 cut  1 nfloor 0 spawn (-23168,0,11769) dir 4192 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3010: 6 Tuer-Records, 1 Treppen-AOTs, 0 Typ-4-Objekte, 1 Item-AOTs
+  ROOM3010 main00 @0x01FD2 slot  0 sce 2 floor 0 rect x -25000..-23400 z 10620..12440 -> ROOM3000 cut  3 nfloor 0 spawn (-6544,0,-17239) dir -2000 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3010 main00 @0x01FF2 slot  1 sce 2 floor 0 rect x -7268..-5858 z 8910..10710 -> ROOM3060 cut  0 nfloor 0 spawn (-26027,0,-22532) dir 4112 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3010 main00 @0x02012 slot  2 sce 2 floor 1 rect x 0..0 z 0..0 -> ROOM30E0 cut  0 nfloor 0 spawn (-19406,0,-22938) dir 2000 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3010 main00 @0x0203A slot  3 sce 2 floor 0 rect x -7200..-5800 z -19200..-17400 -> ROOM3020 cut  7 nfloor 0 spawn (-26300,0,-22550) dir 0 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,71)=0
+  ROOM3010 main00 @0x0205E slot  3 sce 2 floor 0 rect x -7200..-5800 z -19200..-17400 -> ROOM30D0 cut 15 nfloor 0 spawn (-26300,0,-22550) dir 0 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,71)=0)
+  ROOM3010 main00 @0x020EA slot  6 sce 2 floor 1 rect x -27200..-26300 z -20880..-18760 -> ROOM30E0 cut  0 nfloor 0 spawn (-19406,0,-22938) dir 2000 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,59)=0) / NOT(Ck(3,60)=0)
+  ROOM3010 main00 @0x02080 TREPPE slot 4 sce 13 floor 128 rect x -22480..-20560 z -18820..-17320
+  ROOM3010 main00 @0x02094 ITEM slot 5 floor 1 item 0x16 x7 rect x -10533..-9973 z 826..1456
+=== ROOM3011: 6 Tuer-Records, 1 Treppen-AOTs, 0 Typ-4-Objekte, 1 Item-AOTs
+  ROOM3011 main00 @0x01FD2 slot  0 sce 2 floor 0 rect x -25000..-23400 z 10620..12440 -> ROOM3000 cut  3 nfloor 0 spawn (-6544,0,-17239) dir -2000 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3011 main00 @0x01FF2 slot  1 sce 2 floor 0 rect x -7268..-5858 z 8910..10710 -> ROOM3060 cut  0 nfloor 0 spawn (-26027,0,-22532) dir 4112 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3011 main00 @0x02012 slot  2 sce 2 floor 1 rect x 0..0 z 0..0 -> ROOM30E0 cut  0 nfloor 0 spawn (-19406,0,-22938) dir 2000 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3011 main00 @0x0203A slot  3 sce 2 floor 0 rect x -7200..-5800 z -19200..-17400 -> ROOM3020 cut  7 nfloor 0 spawn (-26300,0,-22550) dir 0 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,71)=0
+  ROOM3011 main00 @0x0205E slot  3 sce 2 floor 0 rect x -7200..-5800 z -19200..-17400 -> ROOM30D0 cut 15 nfloor 0 spawn (-26300,0,-22550) dir 0 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,71)=0)
+  ROOM3011 main00 @0x020EA slot  6 sce 2 floor 1 rect x -27200..-26300 z -20880..-18760 -> ROOM30E0 cut  0 nfloor 0 spawn (-19406,0,-22938) dir 2000 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,59)=0) / NOT(Ck(3,60)=0)
+  ROOM3011 main00 @0x02080 TREPPE slot 4 sce 13 floor 128 rect x -22480..-20560 z -18820..-17320
+  ROOM3011 main00 @0x02094 ITEM slot 5 floor 1 item 0x16 x7 rect x -10533..-9973 z 826..1456
+=== ROOM3020: 2 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3020 main00 @0x00B3A slot  0 sce 2 floor 0 rect x -27050..-26450 z -23450..-21550 -> ROOM3010 cut  6 nfloor 0 spawn (-7400,0,-18400) dir -1872 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3020 main00 @0x00B6E slot  2 sce 2 floor 0 rect x 0..0 z 0..0 -> ROOM30C0 cut  0 nfloor 0 spawn (-11250,0,-10900) dir 3072 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3021: 1 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3021 main00 @0x00B3A slot  0 sce 2 floor 0 rect x -27050..-26450 z -23450..-21550 -> ROOM3010 cut  6 nfloor 0 spawn (-7400,0,-18400) dir -1872 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3030: 3 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3030 main00 @0x001D2 slot  0 sce 2 floor 0 rect x -27700..-23700 z -17000..-16000 -> ROOM30E0 cut  6 nfloor 0 spawn (7025,0,2700) dir 3072 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3030 main00 @0x001FA slot  1 sce 2 floor 0 rect x -27700..-23700 z -27300..-26300 -> ROOM30C0 cut  6 nfloor 4 spawn (-11850,-7200,450) dir 1024 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,71)=0
+  ROOM3030 main00 @0x0021E slot  1 sce 2 floor 0 rect x -27700..-23700 z -27300..-26300 -> ROOM30D0 cut 13 nfloor 4 spawn (-11850,-7200,450) dir 1024 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,71)=0)
+=== ROOM3031: 3 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3031 main00 @0x001D2 slot  0 sce 2 floor 0 rect x -27700..-23700 z -17000..-16000 -> ROOM30E0 cut  6 nfloor 0 spawn (7025,0,2700) dir 3072 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3031 main00 @0x001FA slot  1 sce 2 floor 0 rect x -27700..-23700 z -27300..-26300 -> ROOM30C0 cut  6 nfloor 4 spawn (-11850,-7200,450) dir 1024 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,71)=0
+  ROOM3031 main00 @0x0021E slot  1 sce 2 floor 0 rect x -27700..-23700 z -27300..-26300 -> ROOM30D0 cut 13 nfloor 4 spawn (-11850,-7200,450) dir 1024 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,71)=0)
+=== ROOM3040: 3 Tuer-Records, 4 Treppen-AOTs, 0 Typ-4-Objekte, 1 Item-AOTs
+  ROOM3040 main00 @0x0125A slot  0 sce 0 floor 0 rect x -10650..-6950 z -27300..-26600 -> ROOM3060 cut  4 nfloor 0 spawn (2063,0,-17192) dir 1320 rest [00 00 00 00 00 00]  BEDINGT: Ck(4,196)=0
+  ROOM3040 main00 @0x0127E slot  0 sce 2 floor 0 rect x -10650..-6950 z -27300..-26600 -> ROOM3060 cut  4 nfloor 0 spawn (2063,0,-17192) dir 1320 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(4,196)=0)
+  ROOM3040 main00 @0x012A0 slot  1 sce 2 floor 0 rect x -27300..-26550 z -5900..-4050 -> ROOM3050 cut  0 nfloor 0 spawn (-23996,0,1523) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3040 main00 @0x012C0 TREPPE slot 2 sce 12 floor 0 rect x -23850..-21600 z -13950..-12450
+  ROOM3040 main00 @0x012D4 TREPPE slot 3 sce 12 floor 1 rect x -23850..-21600 z -13950..-12450
+  ROOM3040 main00 @0x012E8 TREPPE slot 4 sce 12 floor 0 rect x -10525..-8650 z -14050..-13100
+  ROOM3040 main00 @0x012FC TREPPE slot 5 sce 12 floor 1 rect x -10525..-8650 z -14050..-13100
+  ROOM3040 sub00 @0x014B2 ITEM slot 9 floor 0 item 0x36 x1 rect x -13350..-12350 z -25250..-24250
+=== ROOM3041: 3 Tuer-Records, 4 Treppen-AOTs, 0 Typ-4-Objekte, 1 Item-AOTs
+  ROOM3041 main00 @0x0125A slot  0 sce 0 floor 0 rect x -10650..-6950 z -27300..-26600 -> ROOM3060 cut  4 nfloor 0 spawn (2063,0,-17192) dir 1320 rest [00 00 00 00 00 00]  BEDINGT: Ck(4,196)=0
+  ROOM3041 main00 @0x0127E slot  0 sce 2 floor 0 rect x -10650..-6950 z -27300..-26600 -> ROOM3060 cut  4 nfloor 0 spawn (2063,0,-17192) dir 1320 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(4,196)=0)
+  ROOM3041 main00 @0x012A0 slot  1 sce 2 floor 0 rect x -27300..-26550 z -5900..-4050 -> ROOM3050 cut  0 nfloor 0 spawn (-23996,0,1523) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3041 main00 @0x012C0 TREPPE slot 2 sce 12 floor 0 rect x -23850..-21600 z -13950..-12450
+  ROOM3041 main00 @0x012D4 TREPPE slot 3 sce 12 floor 1 rect x -23850..-21600 z -13950..-12450
+  ROOM3041 main00 @0x012E8 TREPPE slot 4 sce 12 floor 0 rect x -10525..-8650 z -14050..-13100
+  ROOM3041 main00 @0x012FC TREPPE slot 5 sce 12 floor 1 rect x -10525..-8650 z -14050..-13100
+  ROOM3041 sub00 @0x014B2 ITEM slot 9 floor 0 item 0x36 x1 rect x -13350..-12350 z -25250..-24250
+=== ROOM3050: 2 Tuer-Records, 0 Treppen-AOTs, 3 Typ-4-Objekte, 1 Item-AOTs
+  ROOM3050 main00 @0x01E86 slot  0 sce 2 floor 0 rect x -25046..-22856 z 1873..2493 -> ROOM3040 cut  1 nfloor 0 spawn (-26350,0,-5100) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3050 main00 @0x01EA6 slot  1 sce 2 floor 4 rect x -4596..-2456 z 1823..2343 -> ROOM30E0 cut  6 nfloor 0 spawn (4225,0,4550) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3050 main00 @0x01F1A OBJ4 obj 1 band 4 pos (-18000,-7200,-20800) h(900,900,900)  BEDINGT: Ck(3,93)=0
+  ROOM3050 main00 @0x01F40 OBJ4 obj 1 band 0 pos (-24000,0,-22200) h(900,900,900)  BEDINGT: NOT(Ck(3,93)=0)
+  ROOM3050 main00 @0x01FDC OBJ4 obj 3 band 0 pos (-19554,0,22684) h(900,900,900)  BEDINGT: NOT(Ck(3,178)=0) / Ck(3,179)=0
+  ROOM3050 main00 @0x01EC6 ITEM slot 6 floor 1 item 0x07 x6 rect x -24800..-23000 z -23700..-22900
+=== ROOM3051: 2 Tuer-Records, 0 Treppen-AOTs, 3 Typ-4-Objekte, 1 Item-AOTs
+  ROOM3051 main00 @0x01E86 slot  0 sce 2 floor 0 rect x -25046..-22856 z 1873..2493 -> ROOM3040 cut  1 nfloor 0 spawn (-26350,0,-5100) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3051 main00 @0x01EA6 slot  1 sce 2 floor 4 rect x -4596..-2456 z 1823..2343 -> ROOM30E0 cut  6 nfloor 0 spawn (4225,0,4550) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3051 main00 @0x01F1A OBJ4 obj 1 band 4 pos (-18000,-7200,-20800) h(900,900,900)  BEDINGT: Ck(3,93)=0
+  ROOM3051 main00 @0x01F40 OBJ4 obj 1 band 0 pos (-24000,0,-22200) h(900,900,900)  BEDINGT: NOT(Ck(3,93)=0)
+  ROOM3051 main00 @0x01FDC OBJ4 obj 3 band 0 pos (-19554,0,22684) h(900,900,900)  BEDINGT: NOT(Ck(3,178)=0) / Ck(3,179)=0
+  ROOM3051 main00 @0x01EC6 ITEM slot 6 floor 1 item 0x07 x6 rect x -24800..-23000 z -23700..-22900
+=== ROOM3060: 4 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3060 main00 @0x00E76 slot  0 sce 2 floor 0 rect x -27900..-26400 z -23500..-21300 -> ROOM3010 cut  0 nfloor 0 spawn (-7578,0,10065) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3060 main00 @0x00E96 slot  1 sce 2 floor 0 rect x -4500..-1900 z -27300..-26000 -> ROOM3090 cut  0 nfloor 0 spawn (-24731,0,887) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3060 main00 @0x00ED6 slot  2 sce 2 floor 0 rect x 1500..4700 z -17200..-15900 -> ROOM3040 cut  9 nfloor 0 spawn (-8900,0,-26300) dir 3072 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(4,196)=0)
+  ROOM3060 main00 @0x00EF8 slot  3 sce 2 floor 7 rect x 0..0 z 0..0 -> ROOM3020 cut  6 nfloor 0 spawn (-11250,0,-13250) dir 3072 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3061: 4 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3061 main00 @0x00E76 slot  0 sce 2 floor 0 rect x -27900..-26400 z -23500..-21300 -> ROOM3010 cut  0 nfloor 0 spawn (-7578,0,10065) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3061 main00 @0x00E96 slot  1 sce 2 floor 0 rect x -4500..-1900 z -27300..-26000 -> ROOM3090 cut  0 nfloor 0 spawn (-24731,0,887) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3061 main00 @0x00ED6 slot  2 sce 2 floor 0 rect x 1500..4700 z -17200..-15900 -> ROOM3040 cut  9 nfloor 0 spawn (-8900,0,-26300) dir 3072 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(4,196)=0)
+  ROOM3061 main00 @0x00EF8 slot  3 sce 2 floor 7 rect x 0..0 z 0..0 -> ROOM30C0 cut 10 nfloor 0 spawn (-19100,0,-1350) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3070: 2 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3070 main00 @0x03302 slot  0 sce 2 floor 0 rect x -27400..-26200 z -13660..-10260 -> ROOM3080 cut  0 nfloor 0 spawn (-25850,0,-25900) dir 930 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3070 main00 @0x03322 slot  1 sce 2 floor 0 rect x -13500..-11300 z -19700..-18500 -> ROOM30E0 cut  1 nfloor 0 spawn (-25660,0,-22130) dir 384 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3071: 2 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3071 main00 @0x0330A slot  0 sce 2 floor 0 rect x -27400..-26200 z -13660..-10260 -> ROOM3080 cut  0 nfloor 0 spawn (-25850,0,-25900) dir 930 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3071 main00 @0x0332A slot  1 sce 2 floor 0 rect x -13500..-11300 z -19700..-18500 -> ROOM30E0 cut  5 nfloor 0 spawn (-25660,0,-22130) dir 384 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3080: 1 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3080 main00 @0x0072A slot  0 sce 2 floor 0 rect x 0..0 z 0..0 -> ROOM4000 cut  1 nfloor 0 spawn (-7600,0,-6760) dir 1920 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3081: 1 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3081 main00 @0x0072A slot  0 sce 2 floor 0 rect x 0..0 z 0..0 -> ROOM4000 cut  1 nfloor 0 spawn (-7600,0,-6760) dir 1920 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM3090: 5 Tuer-Records, 0 Treppen-AOTs, 1 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3090 main00 @0x0132A slot  0 sce 2 floor 0 rect x -27090..-26500 z -1740..-300 -> ROOM30C0 cut  1 nfloor 0 spawn (-6400,0,-400) dir 2048 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,71)=0
+  ROOM3090 main00 @0x0134E slot  0 sce 2 floor 0 rect x -27090..-26500 z -1740..-300 -> ROOM30D0 cut  6 nfloor 0 spawn (-6400,0,-400) dir 2048 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,71)=0)
+  ROOM3090 main00 @0x01370 slot  1 sce 2 floor 0 rect x -25610..-23720 z 1300..2050 -> ROOM3060 cut  3 nfloor 0 spawn (-2812,0,-26085) dir 2784 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3090 main00 @0x01390 slot  2 sce 2 floor 0 rect x -13890..-12380 z -9350..-8780 -> ROOM30A0 cut  0 nfloor 0 spawn (-25500,0,11700) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3090 main00 @0x013B0 slot  3 sce 2 floor 0 rect x -24700..-23950 z -25200..-23460 -> ROOM30B0 cut  0 nfloor 0 spawn (-23100,0,-24400) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3090 main00 @0x0140C OBJ4 obj 0 band 0 pos (-23550,0,-8024) h(900,900,900)
+=== ROOM3091: 5 Tuer-Records, 0 Treppen-AOTs, 2 Typ-4-Objekte, 0 Item-AOTs
+  ROOM3091 main00 @0x01332 slot  0 sce 2 floor 0 rect x -27090..-26500 z -1740..-300 -> ROOM30C0 cut  1 nfloor 0 spawn (-6400,0,-400) dir 2048 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,71)=0
+  ROOM3091 main00 @0x01356 slot  0 sce 2 floor 0 rect x -27090..-26500 z -1740..-300 -> ROOM30D0 cut  6 nfloor 0 spawn (-6400,0,-400) dir 2048 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,71)=0)
+  ROOM3091 main00 @0x01378 slot  1 sce 2 floor 0 rect x -25610..-23720 z 1300..2050 -> ROOM3060 cut  3 nfloor 0 spawn (-2812,0,-26085) dir 2784 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3091 main00 @0x01398 slot  2 sce 2 floor 0 rect x -13890..-12380 z -9350..-8780 -> ROOM30A0 cut  0 nfloor 0 spawn (-25500,0,11700) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3091 main00 @0x013B8 slot  3 sce 2 floor 0 rect x -24700..-23950 z -25200..-23460 -> ROOM30B0 cut  0 nfloor 0 spawn (-23100,0,-24400) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM3091 sub00 @0x01448 OBJ4 obj 0 band 0 pos (-23550,0,-8024) h(900,900,900)
+  ROOM3091 sub00 @0x01508 OBJ4 obj 1 band 1 pos (-15072,950,-1010) h(0,0,0)  BEDINGT: Ck(4,16)=0
+=== ROOM30A0: 1 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 1 Item-AOTs
+  ROOM30A0 main00 @0x00722 slot  0 sce 2 floor 0 rect x -27050..-26050 z 10900..12700 -> ROOM3090 cut  7 nfloor 0 spawn (-13584,0,-9698) dir 1360 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30A0 main00 @0x00742 ITEM slot 1 floor 0 item 0x46 x1 rect x -27200..-26200 z 18000..19000
+=== ROOM30A1: 1 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 1 Item-AOTs
+  ROOM30A1 main00 @0x00722 slot  0 sce 2 floor 0 rect x -27050..-26050 z 10900..12700 -> ROOM3090 cut  7 nfloor 0 spawn (-13584,0,-9698) dir 1360 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30A1 main00 @0x00742 ITEM slot 1 floor 0 item 0x46 x1 rect x -27200..-26200 z 18000..19000
+=== ROOM30B0: 1 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM30B0 main00 @0x00912 slot  0 sce 2 floor 0 rect x -24350..-23350 z -25400..-23400 -> ROOM3090 cut  5 nfloor 0 spawn (-25033,0,-23750) dir -1688 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM30B1: 1 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM30B1 main00 @0x00912 slot  0 sce 2 floor 0 rect x -24350..-23350 z -25400..-23400 -> ROOM3090 cut  5 nfloor 0 spawn (-25033,0,-23750) dir -1688 rest [00 00 00 00 00 00]  unbedingt
+=== ROOM30C0: 2 Tuer-Records, 2 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM30C0 main00 @0x00B5A slot  0 sce 2 floor 0 rect x -6100..-5400 z -1200..600 -> ROOM3090 cut  0 nfloor 0 spawn (-26275,0,-875) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30C0 main00 @0x00B7A slot  1 sce 2 floor 4 rect x -12700..-10900 z 700..1400 -> ROOM3030 cut  1 nfloor 0 spawn (-25323,0,-25886) dir -1056 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30C0 main00 @0x00BAE TREPPE slot 3 sce 12 floor 0 rect x -21250..-20450 z -400..1000
+  ROOM30C0 main00 @0x00BC2 TREPPE slot 4 sce 12 floor 4 rect x -14550..-13750 z -400..1000
+=== ROOM30C1: 2 Tuer-Records, 2 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM30C1 main00 @0x00B5A slot  0 sce 2 floor 0 rect x -6100..-5400 z -1200..600 -> ROOM3090 cut  0 nfloor 0 spawn (-26275,0,-875) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30C1 main00 @0x00B7A slot  1 sce 2 floor 4 rect x -12700..-10900 z 700..1400 -> ROOM3030 cut  1 nfloor 0 spawn (-25323,0,-25886) dir -1056 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30C1 main00 @0x00BAE TREPPE slot 3 sce 12 floor 0 rect x -21250..-20450 z -400..1000
+  ROOM30C1 main00 @0x00BC2 TREPPE slot 4 sce 12 floor 4 rect x -14550..-13750 z -400..1000
+=== ROOM30D0: 3 Tuer-Records, 2 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM30D0 main00 @0x01246 slot  0 sce 2 floor 0 rect x -27050..-26450 z -23450..-21550 -> ROOM3010 cut  6 nfloor 0 spawn (-7400,0,-18400) dir -1872 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30D0 main00 @0x01266 slot  1 sce 2 floor 0 rect x -6100..-5400 z -1200..600 -> ROOM3090 cut  0 nfloor 0 spawn (-26275,0,-875) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30D0 main00 @0x01286 slot  2 sce 2 floor 4 rect x -12700..-10900 z 700..1400 -> ROOM3030 cut  1 nfloor 0 spawn (-25323,0,-25886) dir -1056 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30D0 main00 @0x012A6 TREPPE slot 3 sce 12 floor 0 rect x -21250..-20450 z -400..1000
+  ROOM30D0 main00 @0x012BA TREPPE slot 4 sce 12 floor 4 rect x -14550..-13750 z -400..1000
+=== ROOM30D1: 3 Tuer-Records, 2 Treppen-AOTs, 0 Typ-4-Objekte, 0 Item-AOTs
+  ROOM30D1 main00 @0x01246 slot  0 sce 2 floor 0 rect x -27050..-26450 z -23450..-21550 -> ROOM3010 cut  6 nfloor 0 spawn (-7400,0,-18400) dir -1872 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30D1 main00 @0x01266 slot  1 sce 2 floor 0 rect x -6100..-5400 z -1200..600 -> ROOM3090 cut  0 nfloor 0 spawn (-26275,0,-875) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30D1 main00 @0x01286 slot  2 sce 2 floor 4 rect x -12700..-10900 z 700..1400 -> ROOM3030 cut  1 nfloor 0 spawn (-25323,0,-25886) dir -1056 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30D1 main00 @0x012A6 TREPPE slot 3 sce 12 floor 0 rect x -21250..-20450 z -400..1000
+  ROOM30D1 main00 @0x012BA TREPPE slot 4 sce 12 floor 4 rect x -14550..-13750 z -400..1000
+=== ROOM30E0: 5 Tuer-Records, 0 Treppen-AOTs, 1 Typ-4-Objekte, 2 Item-AOTs
+  ROOM30E0 main00 @0x009F2 slot  0 sce 2 floor 0 rect x -18900..-18100 z -23500..-22180 -> ROOM3010 cut  5 nfloor 1 spawn (-25190,-1800,-20200) dir 3645 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E0 main00 @0x00A12 slot  1 sce 2 floor 0 rect x -27100..-24400 z -21800..-20600 -> ROOM3070 cut  0 nfloor 0 spawn (-11840,0,-18140) dir 3360 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E0 main00 @0x00A32 slot  2 sce 2 floor 0 rect x 0..0 z 0..0 -> ROOM30E0 cut  5 nfloor 0 spawn (-25100,0,-26500) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E0 main00 @0x00ABA slot  6 sce 2 floor 0 rect x 3375..4025 z 3650..5600 -> ROOM3050 cut  8 nfloor 4 spawn (-3596,-7200,1523) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E0 main00 @0x00ADA slot  7 sce 2 floor 0 rect x 6225..8025 z 1900..2500 -> ROOM3030 cut  0 nfloor 0 spawn (-25497,0,-17066) dir 1048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E0 main00 @0x00A96 OBJ4 obj 0 band 0 pos (-19554,0,22684) h(900,900,900)  BEDINGT: Ck(3,156)=0
+  ROOM30E0 main00 @0x00AFA ITEM slot 8 floor 0 item 0x24 x1 rect x 26300..27300 z 13900..14900
+  ROOM30E0 main00 @0x00B10 ITEM slot 9 floor 0 item 0x17 x6 rect x 25100..26100 z 13600..14600
+=== ROOM30E1: 4 Tuer-Records, 0 Treppen-AOTs, 0 Typ-4-Objekte, 2 Item-AOTs
+  ROOM30E1 main00 @0x009F6 slot  0 sce 2 floor 0 rect x -18900..-18100 z -23500..-22180 -> ROOM3010 cut  5 nfloor 1 spawn (-25190,-1800,-20200) dir 3645 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E1 main00 @0x00A16 slot  1 sce 2 floor 0 rect x -27100..-24400 z -21800..-20600 -> ROOM3070 cut  0 nfloor 0 spawn (-11840,0,-18140) dir 3360 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E1 main00 @0x00A36 slot  2 sce 2 floor 0 rect x 3375..4025 z 3650..5600 -> ROOM3050 cut  8 nfloor 4 spawn (-3596,-7200,1523) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E1 main00 @0x00A56 slot  3 sce 2 floor 0 rect x 6225..8025 z 1900..2500 -> ROOM3030 cut  0 nfloor 0 spawn (-25497,0,-17066) dir 1048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM30E1 main00 @0x00A76 ITEM slot 4 floor 0 item 0x24 x1 rect x 26300..27300 z 13900..14900
+  ROOM30E1 main00 @0x00A8C ITEM slot 5 floor 0 item 0x17 x6 rect x 25100..26100 z 13600..14600

@@ -1,0 +1,20 @@
+DuckStation gestartet {'85788'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (-5282, -9000, -1514, 672, 5, 0) obj0: (-9836, -1800, 4753, 0, 0, 1, 0) obj1: (-5960, -9000, -15482, 0, 0, 5, 0)
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+Traceback (most recent call last):
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r36_dachkiste\analysis\befunde_runde36\R_belege\orig_1090_push.py", line 325, in <module>
+    sys.exit(main())
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r36_dachkiste\analysis\befunde_runde36\R_belege\orig_1090_push.py", line 222, in main
+    p1 = pl()
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r36_dachkiste\analysis\befunde_runde36\R_belege\orig_1090_push.py", line 175, in pl
+    e = g.mem(PL, 0x90)
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r36_dachkiste\analysis\befunde_runde36\R_belege\orig_1090_push.py", line 74, in mem
+    raise IOError("m %08x,%x -> %r" % (addr, k, r[:20]))
+OSError: m 800aca54,90 -> b'S02'
+rc=1

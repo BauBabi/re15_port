@@ -1,0 +1,16 @@
+DuckStation gestartet {'120504'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (9100, -5400, 4100, 0, 3, 0) obj6: (-1600, -5400, -9348, 0, 0, 3, 0) HP: 100
+Entity 0 @800acc2c: w0 0801 typ 0x25 pos (4300, -5400, -6450) -> w0 0800 (Aktiv-Bit 0 geloescht)
+Entity 1 @800ace20: w0 0801 typ 0x25 pos (-5000, -5400, -6082) -> w0 0800 (Aktiv-Bit 0 geloescht)
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Z0 8003da78: b'OK'
+Drehsinn: R 1.2 s -> dBlick = 0
+Drehsinn: R 1.2 s -> dBlick = 0
+Drehsinn: R 1.2 s -> dBlick = 0
+Pad kommt nicht an (kein Drehen) - Abbruch
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
