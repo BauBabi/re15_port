@@ -41,7 +41,7 @@ static const folge_t k_folgen[4] = {
 #endif
 
 static re15_auf_spieler_t s_spieler = NULL;
-static struct { int aktiv, art, bild, naechster; unsigned room; int msg; } s_lauf;
+static struct { int aktiv, frisch, art, bild, naechster; unsigned room; int msg; } s_lauf;
 
 unsigned g_re15_auf_zaehler = 0;
 int      g_re15_auf_letzter = -1;
@@ -119,7 +119,7 @@ int re15_aufschliessen_r36_notice(unsigned room_id, uint8_t msg_id, int weg)
         const re15_auf_stelle_t *s = &re15_auf_stellen[i];
         if (s->room != (uint16_t)room_id || s->msg != msg_id) continue;
         if (!(s->wege & weg)) return -1;
-        s_lauf.aktiv = 1; s_lauf.art = s->art; s_lauf.bild = 0; s_lauf.naechster = 0;
+        s_lauf.aktiv = 1; s_lauf.frisch = 1; s_lauf.art = s->art; s_lauf.bild = 0; s_lauf.naechster = 0;
         s_lauf.room = room_id; s_lauf.msg = msg_id;
         faellige_spielen();                 /* Bild 0 im selben Bild wie der Text (RE2 @0x800515ec/@0x800515f8) */
         return s->art;
@@ -130,6 +130,10 @@ int re15_aufschliessen_r36_notice(unsigned room_id, uint8_t msg_id, int weg)
 void re15_aufschliessen_r36_tick(void)
 {
     if (!s_lauf.aktiv) return;
+    /* Das Bild, in dem die Nachricht aufging, zaehlt als Bild 0 (der Haken in scd_vm.c laeuft im selben
+     * Spielschritt VOR diesem Tick): erst das NAECHSTE Bild ist +1 - sonst kaeme der Piep nach 14 statt
+     * 15 Bildern (gemessen: probe_r36_tueren aufschliessen, ROOM10D0 +14 / ROOM3010 +14/+29). */
+    if (s_lauf.frisch) { s_lauf.frisch = 0; return; }
     s_lauf.bild++;
     faellige_spielen();
 }
