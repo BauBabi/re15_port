@@ -17,10 +17,10 @@ Punkte: K1 = Tuerknall-Ton (RE2), K2 = 11C0-Dialog Marvin/Ada einander zugewandt
 - [x] Dossier angelegt
 - [x] Bestand gelesen (irons_tod_1150.c, knall_bank.inc, L_cut1150.md §0-§10, AUFTRAG r35 Z.79-90)
 - [x] K1 RE2-Beleg (Zensus der Kandidaten-Raumbaenke, Se_on-Stellen, Wellen/Spektren) — §K1.2
-- [ ] K1 Messung vorher / Umsetzung / Messung nachher
-- [ ] K2 Messung vorher / Beleg / Umsetzung / Messung nachher
-- [ ] K3 Messung vorher / Beleg / Umsetzung / Messung nachher
-- [ ] Tests (probes/r36_szene1150.cmake)
+- [x] K1 Messung vorher (K1.1) / Umsetzung (K1.3) / Messung nachher
+- [x] K2 Messung vorher (K2.1) / Beleg (K2.2) / Umsetzung (K2.3) / Messung nachher
+- [x] K3 Messung vorher (K3.1) / Beleg (K3.2) / Umsetzung (K3.3, K3.4) / Messung nachher
+- [x] Tests (probes/r36_szene1150.cmake: unit_r36_szene1150_knall_re2/_folge/_dialog11c0, integration_r36_szene1150)
 
 ## Bestand (Runde 35, Spur L — gelesen, nicht vermutet)
 
@@ -277,3 +277,44 @@ am Ende von 1130 statt in Bild 21 von 1040).
 | unit_r35_cut1150_* (13) | Riegel der Spur L r35, an die neue Reihenfolge angepasst: programme (Vorlage 19), montage_1130 (am Ende Satz 1), montage_1040 (am Ende Satz 0; ohne 1070 Cut 12; 18-tot-Fall zaehlt Raum-/Auffuell-Records im Raumaufbau), montage_1030 (keine Knall-Bank im Raum, +3 Kriecher, Tuer-Cut 12, Nachspawn im Raumaufbau), knallbank (RE2 ROOM1060) | gruen |
 
 Gezielter Lauf: s. "Abschluss" unten (ctest-Summenzeile woertlich).
+
+## Regression? (Bisect)
+Keiner der drei Punkte ist eine Regression: alle drei beschreiben den Stand, den Spur L in Runde 35 gebaut hat
+(Knall-Bank Satz 0 = DOOR04 Door_exit seit 059664db/e0c7101c, Knall/Spawn-Folge der Montage-Programme seit 059664db,
+11C0-Programm seit 059664db/6ce309e5) — der Nutzer beanstandet "noch falsch", nicht "wieder falsch". Gemessen am
+Basisstand 78a4a748 (= v0.8.23 + Runde-36-Auftrag) in K1.1/K2.1/K3.1; kein Bisect noetig.
+
+## OFFEN (mit Adresse und naechstem Messweg)
+* **Port-Abweichung Pause-Wort beim Raumwechsel (gefunden in K3.4, NICHT in dieser Spur behoben):**
+  re15_room_transition_present() (room_common.c) ruft re15_pauseflags_clear() NACH dem Laden des Raums; das Original
+  loescht vor dem Raumlader (`8001ca44 sw zero,g_pauseflags` -> `8001ca54 jal 0x8001d600`) und traegt die Bits, die
+  der Init-Lauf setzt, ueber die Blende (`8001cbcc lw t1,g_pauseflags` / `8001cbfc sw t1,0x8008f628` ->
+  `8001cc84`/`8001cc94`). Folge im Port: setzt der Init-Lauf eines Raums Set(2,0)/(2,2)/(2,7) (z.B. ein sub00, das
+  eine Szene schon beim Betreten mit Pad-Sperre beginnt), fehlen diese Bits nach der Blende (gemessen hier:
+  `pf=00000007` statt `01000007`). re15_room_apply_pending loescht bereits an der richtigen Stelle (vor dem Laden);
+  das zweite Loeschen in present() waere zu entfernen. Gemeinsame Datei mit spielweiter Wirkung -> eigener Schritt:
+  Zensus aller Init-Lauf-Set(2,x) (main00/sub00 + deren Evt_exec) ueber die 240 RDTs, dann Fix + Pin. Diese Spur
+  umgeht es im Modul (Riegel erst im ersten Spieltakt, K3.4) und aendert room_common.c nicht.
+* Hoeren am Lautsprecher (K1): dieser Rechner hat kein Audio-Endgeraet; gemessen ist der gemischte Ausgang
+  (RE15_AUDIO_CAP_SYNC-Mitschnitt, Kreuzkorrelation + Huellkurve).
+* Spur J (cut_10f0.c, nicht diese Spur) spielt bei Marvins Eintritt in ROOM10F0 ebenfalls einen Door_exit-Satz
+  (DOOR13, "Tuerknall-SE" r35 K) — wenn der Nutzer dort denselben Eindruck "nur Tuer schliessen" hat, ist es derselbe
+  Befund; die Knall-Bank dieser Spur (RE2 ROOM1060 0x0a) waere die Vorlage.
+
+## Fuer den Nutzer
+* **Tuerknall (K1):** der Knall, wenn die Zombies aus dem Besprechungsraum (1140 -> 1130) bzw. aus 1070 (-> 1030)
+  durchbrechen, ist jetzt der RE2-Ton "Zombies schlagen gegen die Tuer" (RE2 ROOM106 = "Cabin sounds - Zombies breaking
+  in" aus deiner Liste: der eine harte Schlag gegen die Huettentuer, ROOM1060 sub05 Se_on 0x0a) — zwei schwere Schlaege,
+  rund 6 dB lauter als der alte Schliesston. Der Knall "so wie bei der Cutscene von ROOM 1030" (Rolltor 1040, Tor 1030)
+  bleibt. **Entscheidungsfrage:** Alternative waere RE2 ROOM205 "Zombies smashing through wood" (die Bretter-Barrikade
+  bricht, Holz splittert, Satz 0x0b) — wenn dir das besser gefaellt, ist es ein Eintrag im Generator
+  `re15_port/tools/r35_l/knall_cut.py`.
+* **Reihenfolge (K3):** erst der Knall (noch im alten Bild: Leon bei Irons bzw. der vorige Montage-Raum), dann steht die
+  Kamera auf den Zombies — sie sind schon da, wenn das Bild aufblendet; nichts erscheint mehr aus dem Nichts. In 1030:
+  Knall noch auf dem Gang bei der 1070-Tuer, dann der Schnitt aufs aufgebrochene Tor, die Zombies kriechen schon.
+* **11C0 (K2):** Ada dreht sich zu Marvin und fragt ihn, Marvin sieht sie an, dreht sich zu ihr und nickt ("Yes!...."),
+  blickt bei "Oh, no, Leon!" zum Gebaeude, dreht sich zu Ada zurueck ("I have to help him, sorry!" + Arm), rennt los,
+  Ada sieht ihm nach ("Marvin!..." + Arm).
+* Neue Assets fuer das Paket-Gate: KEINE (der Ton liegt eingebacken in `engine/src/gen/knall_bank.inc`). Keine neuen
+  Sprachdateien (die Zeilen 10..14 in ROOM11C0 sind unveraendert, `synchro/STAGE1/room11C0/main10..14.wav` wie r35).
+* Bedienung unveraendert: nach der 10F0-Szene ROOM1150 betreten.
