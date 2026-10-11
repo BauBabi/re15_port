@@ -184,10 +184,11 @@ Alle sechs Befunde reproduziert. Bildpunkt Punkt 4 im Sweep-Abzug (Blatt 0): Wan
 | 3 | dto. s_map_marks | (0,1,116,116,..,27) entfaellt; (151,69) zid 26 -> **110**; (139,76) gepaart mit zid 26 (auf_partner 1) | R3 |
 | 3 | `engine/src/re15_map_zones.c` s_etage_bit | Bit 26 `{0x11A0,0,3,6}` angehaengt (Bit 15 unbenutzt) | Pin unit_map_speichern_laden |
 | 4 | `re15_map_zones.h` s_map_marks | (172,100) kind 1 -> **(173,100) kind 2** | R4 |
-| 5 | NEU `engine/src/karte_r36.c` + `include/re15_karte_r36.h` | Bit-Tabelle je Teil (explizit, nur anhaengen), Bits 96..103 im Etagen-Feld visited_floor (v9, kein neues Format), Eingangs-Flag | R5, RE2-Form R-Grundlage |
-| 5 | `re15_map_zones.c` | `teil_drin`/`teile_merken` (Bit setzen, solange der Spieler in der Teil-Weltbox steht, +-250 wie AKTUELL); `teil_zustand`: besucht = Teil-Bit, Zonen-Bit nur fuer Eingang/ohne Tabellenzeile; Etagen-Bit-Kapazitaet 128 -> 96; reveal_page setzt Teil-Bits | R5 |
+| 5 | NEU `engine/src/karte_r36.c` + `include/re15_karte_r36.h` | Bit-Tabelle je Teil (explizit, nur anhaengen), Bits 96..103 (Platz bis 111) im Etagen-Feld visited_floor (v9, kein neues Format), Eingangs-Flag | R5, RE2-Form R-Grundlage |
+| 5 | `re15_map_zones.c` | `teil_drin`/`teile_merken` (Bit setzen, solange der Spieler in der Teil-Weltbox steht, +-250 wie AKTUELL); `teil_zustand`: besucht = Teil-Bit, Zonen-Bit nur fuer Eingang/ohne Tabellenzeile; reveal_page setzt Teil-Bits | R5 |
 | 6 | `re15_map_zones.c` re15_map_visited_mark_at | "gleiche Baender"-Regel nur noch bei UNBEKANNTER Kabinen-Etage (`re15_karte_fahrstuhl_blatt(...) < 0`) | R6 |
 | 6 | `engine/src/karte_fahrstuhl_1080.c` + Header | 4020: Vorraum 4000/5000/50C0 -> Blatt 8/9/10, sonst Bits (3,0x93/0x94/0x95) | R6 |
+| 6 | `karte_r36.c` + `re15_map_zones.c` etage_bit() | Kabinen-Zeilen (1080 Blatt 2/3/4, 4020 Blatt 8/9/10) bekommen EIGENE Bits 112..117; die alten 3/4/5 und 17/18/19 sind unbenutzt. Grund: die alten wurden immer gemeinsam gesetzt und stehen so in den Spielstaenden - "auf allen Etagen eingestiegen" ist davon nicht zu unterscheiden; ein alter Stand zeigt die Kabine erst nach dem naechsten Einstieg auf der Etage (nichts geraten). Feldgroesse 128 (re15_map_floor_bit_kapazitaet wieder 128) | R6 |
 
 Gemeinsame Dateien (VERTRAG §1.4): `re15_map_zones.h` nur Datenzeilen mit Kommentar "Runde 36 Spur M";
 `re15_map_zones.c` ist Kartenmodul (M/N), Aenderungen als kommentierte Bloecke. scd_room_setup.c,
@@ -220,6 +221,60 @@ Punkt 6  1080 aus 1F (1040): 1F rect 9 AKTUELL | 2F rect 4 unbesucht | 3F rect 0
          4020 aus 4000: Blatt 8 rect 2 AKTUELL | Blatt 9 rect 13 unbesucht | Blatt 10 rect 3 unbesucht
 ```
 
+## Messung nachher - ECHTE exe (`integration_r36_karte`, Spielstand + LOAD + Tuer per Aktionstaste + MAP)
+
+Abzug RE15_INV_FB_SHOT bei RE15_WINDOW_SCALE=1, Bilder `M_karte_bilder/nachher_echtlauf_{A..G}.png`
+(x2). Farbklassen im Abzug gemessen: aktuell (48,8,48)/(48,8,64), besucht (16,56,40)/(16,56,56),
+Wand (176,176,176), Tuerbalken (224,168,40), Treppensprosse (240,240,216).
+```
+A 1230 -> Tuer slot 1 -> 10A0 (B1): rect 6 (153,114)-(168,134) sprosse=30 (vorher 0)
+         Tuer 11B0/11C0: (171..175,100) gelb=5 (waagerecht), x173 y96..99 / y101..104 gelb=0
+B 1230 -> Tuer slot 0 -> 11D0:      MARKER 128 129 bbox (126,127)-(130,131)  (Tuermarke y124; vorher ~y150)
+C 1230 -> slot 2 -> 1190 Haupthalle: rect 1 rot=2561, rect 2 (145,70)-(158,103) rot+besucht=0
+D 1230 -> slot 4 -> 1190 Ostkammer:  rect 2 rot=463, rect 1 (77,77)-(142,113) rot+besucht=0
+E 1100 -> slot 1 -> 1110:           Evidence Room rot=1144, kleine Raeume (190..211,123..144) rot+besucht=0
+F Stand nach Fahrt 1F->3F, MAP in 1120: 3F-Kabine (128..135,138..145) rot+besucht=0 (vorher besucht)
+G 1040 -> Fahrstuhltuer -> 1080:    1F-Kabine (110..117,135..142) rot=54
+integration_r36_karte ... Passed 141.65 sec
+```
+(Erster Lauf: D scheiterte, weil die Hunde aus ROOM1230 main00 (Else-Zweig Ck(3,0x89), Sce_em_set
+@0x00D08/@0x00D1C) den Spieler vor der Tuer umrissen - Kill-Flags Zone 7 Bit 0x88/0x89 gesetzt; der
+zweite Lauf zaehlte im Haupthallen-Kasten 22 "besucht"-Punkte des Gang-Rings (y115..117, x>=120) -
+Kasten auf y<=113 begrenzt. Beides Messfehler der Schiene, nicht der Karte.)
+
+## Tests
+
+Neu (`tests/unit/probes/r36_karte.cmake`, Quelle `tests/unit/test_r36_karte.c` /
+`tests/integration/test_r36_karte.cmake`):
+
+| Test | misst | 78a4a748 (Gegenprobe build_bisect) | jetzt |
+|---|---|---|---|
+| unit_r36_karte_treppe | echter Weg 1230 -> 10A0 B1; genau 2 Treppen auf Blatt 0 rect 6, je <= 1 px auf der Projektion eines Band-4-STAIR-AOT aus g_aot, Sprossen auf gemaltem Innenraum; nur-1F -> keine; B2/1F je 2 | ROT ("sichtbar - 0") | gruen |
+| unit_r36_karte_marker11d0 | echter Weg 1230 -> 11D0: Marker <= 6 px unter der Tuermarke, Sprung <= 8 px, an der 1260-Tuer <= 4 px ueber der gemalten Suedwand | ROT ((129,151), Sprung 28 px) | gruen |
+| unit_r36_karte_r1190 | zwei Zonen/zwei Bits; Haupthalle NUR rect 1 (auch an den Zielscheiben), Ostkammer NUR rect 2 (Marker an der gemalten Nische), danach Haupthalle besucht; 11A0 auf Blatt 6, B1 rect 1 bleibt unbesucht | ROT (9 FAIL) | gruen |
+| unit_r36_karte_tuer11c0 | Marke 11B0<->11C0 waagerecht, alle 5 Punkte auf der gemalten Wandzeile beider Kacheln, ueber der Nische | ROT (kind 1) | gruen |
+| unit_r36_karte_teile1110 | echter Weg 1100 -> 1110 + Selbst-Tueren: kleine Raeume unbesucht bis betreten; Speichern/Laden; alter Stand (nur Zonen-Bit) | ROT (5 FAIL) | gruen |
+| unit_r36_karte_fahrstuhl | echter Weg 1040 -> Kabine -> 1120 -> Kabine: nur Einstiegs-Etagen besucht; Speichern/Laden; alter Stand mit Bits 3/4/5; Feld-Belegung; 4020 aus 5000 | ROT (5 FAIL) | gruen |
+| integration_r36_karte | echte exe, 7 Laeufe A..G (s.o.) | - | gruen (141.65 s) |
+
+Gegenprobe: `re15_map_zones.c/.h`, `karte_fahrstuhl_1080.c`, `re15_karte_fahrstuhl.h` voruebergehend auf
+78a4a748, eigenes Bauverzeichnis `re15_port/build_bisect`, Riegel gefahren, danach `git checkout HEAD --`
+(Ausgabe `M_karte_werkzeug/gegenprobe_78a4a748.txt`): alle sechs Riegel ROT, je genau am gemeldeten
+Befund.
+
+Gezielte Suite: siehe Abschnitt "Abschluss-Lauf" unten.
+
+## OFFEN
+
+* Der Zwinger-Block von ROOM11D0 noerdlich der Tuerwand (z -16500..-10950, Kaefig-Gang) hat in der
+  Kachel keinen Platz (der gemalte Kasten endet an der Tuerwand); dort klemmt der Marker an die
+  Oberkante. Die Kachel ist ein leerer Platzhalter des Prototyps (MAP01.PIX uv(128,56)); eine
+  bessere Lage braeuchte eine neue Kachel - nicht Teil des Auftrags.
+* Blatt 0 rect 2 (Ostkammer) ist schematisch: die Kammer liegt in der Welt oestlich der Halle, die
+  Kachel im Gang-Ring. Die 1190-Zeile @0x80076978 legt die Ostkammer auf x159..174 (nicht auf rect 2);
+  benutzt wird die Bbox-Streckung (Tuer an der gemalten Nische, Marker bis 4 px an die Waende).
+* R35-OFFEN 3 (Gang 1180/1230 schematisch, 11B0-Tuer unter dem Zweig gemalt) unveraendert.
+
 ## Fuer den Nutzer
 
 * Punkt 3: Du schreibst "ROOM 1090" - die Hunde, die durch die Luke springen, und die Weste sind in
@@ -236,7 +291,9 @@ Punkt 6  1080 aus 1F (1040): 1F rect 9 AKTUELL | 2F rect 4 unbesucht | 3F rect 0
   mehreren Etagenkarten steht, auf allen gleichzeitig besucht - hier gilt deine Vorgabe.
 * Alte Spielstaende: die kleinen Raeume in ROOM1110 erscheinen erst wieder, wenn du sie
   betrittst (der alte Stand weiss nicht, ob du drin warst); der Evidence Room bleibt sichtbar.
-  Ebenso die Ostkammer von ROOM1190 und die Fahrstuhlkabinen der anderen Etagen.
+  Ebenso die Ostkammer von ROOM1190. Die Fahrstuhlkabine erscheint in einem alten Stand auf
+  KEINER Etage, bis du wieder einsteigst - dann nur auf dieser Etage (der alte Stand hatte alle
+  drei Etagen gemeinsam markiert; welche du wirklich benutzt hast, steht nirgends).
 * Keine neuen Assets, keine Sprachdateien, kein neues Speicherformat (v9 bleibt).
 
 ## Stand / Fortschritt
