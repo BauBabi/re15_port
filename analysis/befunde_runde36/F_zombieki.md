@@ -1272,13 +1272,24 @@ c541415c ("In die Ostgasse kommt kein Gorilla zu Fuss") ist damit ebenfalls beri
   einzigen Bissplatz haelt (Bissplaetze: Durchmesser 1649..1833 < 3168) — im Original ebenso. Das Abnahme-4-Kriterium ist dort fuer den
   zweiten Gorilla nicht durch Angreifen erreichbar (gemessen, Gegenprobe ohne Belegt-Test: nur Umzug hinter den ersten). Nicht gebaut:
   zielloses Hin-und-her-Laufen allein fuer das Messmass.
-- **Gleiten an Schraegkanten** setzt den NAH-Anker (400) zurueck: Sonde `lage 900 1 1 5858 -5716 0 5876 -8818 3077 3 0 9434 2189 2656 0 0`
+- ~~**Gleiten an Schraegkanten** setzt den NAH-Anker (400) zurueck: Sonde `lage 900 1 1 5858 -5716 0 5876 -8818 3077 3 0 9434 2189 2656 0 0`
   (EIN Gorilla am Ostgassen-Eingang, GDB-Lage O4) gleitet F301-F330 um ~1000 nach Westen und pendelt dort um 300..400 — der Zaehler
   kommt nicht auf 354, fest 892 (lage-Mass). In der exe (Stelle 3) gleitet er nicht und der Nah-Umweg loest. Naechster Weg: Anker an
   den Abstand zu Leon koppeln (seitliches Gleiten ohne Annaeherung = kein Fortschritt) — dann aber das J-Fenster mit derselben
-  Zaehlung neu messen (der +0x1de-Zwilling ohne Anker erreicht im kanonischen Kampf 444).
-- **Gassenmitte** (GDB O1, exe-Stelle 8 Slot 3 468 Bilder bei (6418,-3617)): Gorilla mit Sicht im 0x10-Pad verkeilt; sein Rasterknoten
-  liegt in der Suedkomponente, kein Bissplatz erreichbar -> kein Umweg (Original O1 ebenso; seit NB3 unveraendert).
+  Zaehlung neu messen (der +0x1de-Zwilling ohne Anker erreicht im kanonischen Kampf 444).~~
+  **BERICHTIGT (NB6, Abnahme 5 Mangel 3; gemessen):** dieselbe Sonde im Modus Stand NB5 (`lage 900 6 1 ...`, Spur je Bild,
+  `F_belege/nb6/nb6_gleiten_stand_nb5.txt`): G1 gleitet F301..F307 von (5869,-8818) nach (4992,-8945) (Resets F303/F307, ein weiterer
+  F422), danach steigt der NAH-Zaehler ungestoert — **354 in F776, 478 in F900**; ab F777 antwortet `r36_nah_route` in JEDEM Bild mit
+  Grund 2 = "kein freier Bissplatz" (124 von 124 Bildern). Die Sonde hat nicht "EIN Gorilla": G2 (Start (9434,2189)) springt F300 in die
+  Gasse und beisst Leon (5268,-5719) ab F330 fortlaufend (265 Angriffsbilder) aus (7132..7767, -6216..-6821). Bissplaetze um Leon
+  (`platz 5268 -5719 50`): 1431, x 6418..7968, z -8469..-4469, Durchmesser 4000 — ohne Koerperkontakt zu G2 (`platz 5268 -5719 50 7139
+  -6520`): **0**. Der Fall ist ANSTEHEN (G2 belegt den einspurigen Bissstreifen), kein Gleit-Problem; der damals genannte "naechste Weg"
+  (Anker an den Abstand koppeln) haette ihn nicht geaendert. NB6 laesst ihn bewusst so (G1 892, frei 0).
+- ~~**Gassenmitte** (GDB O1, exe-Stelle 8 Slot 3 468 Bilder bei (6418,-3617)): Gorilla mit Sicht im 0x10-Pad verkeilt; sein Rasterknoten
+  liegt in der Suedkomponente, kein Bissplatz erreichbar -> kein Umweg (Original O1 ebenso; seit NB3 unveraendert).~~
+  **BERICHTIGT (NB6):** gemessen betraf das im PORT-Modus BEIDE Gorillas (O1: G1 1368 / G2 1615 NAH fest ohne Angriff, Abnahme 5 2.4) und
+  einen einzelnen Gorilla bis ~1530 Bilder (2.5); "wie im Original" war kein Grund, es so zu lassen (der Auftrag verlangt die
+  Verbesserung). Behoben in NB6 (Mangel 1, Abschnitt "Nachbesserung 6").
 - **Kanonischer Ankunftskampf**: Slot 2 wartet weiter ~12 s an der V-Spitze (Original, Spur-J-Riegel `szene`); der Nah-Umweg beginnt
   bewusst erst danach (354).
 - PSX-Laufzeit: der Nah-Umweg prueft je Bild alle Rasterknoten (~5000) auf Bissweite + Belegung und rechnet A* — vor einem PSX-Port
@@ -1293,7 +1304,12 @@ c541415c ("In die Ostgasse kommt kein Gorilla zu Fuss") ist damit ebenfalls beri
 - Bleibt wie im Original: der erste Kampf direkt nach der Ada/Marvin-Szene (der erste Gorilla wartet dort etwa 12 s an der
   Wagenkante, bis der zweite Leon anspringt — diese Szene ist Bild fuer Bild am Original gemessen und festgeschrieben).
 - Anstehen: In der Nordwest-Ecke hinter dem Block passt nur EIN Gorilla in Bissweite. Greift dort einer an, wartet der zweite, bis
-  Platz ist; faellt der erste aus oder laeuft Leon aus der Ecke, kommt der zweite nach.
+  Platz ist; ~~faellt der erste aus oder laeuft Leon aus der Ecke, kommt der zweite nach.~~
+  **BERICHTIGT (NB6, Abnahme 5 Mangel 3):** faellt der erste aus, kam der zweite im Stand NB5 erst nach einer zweiten Wartezeit nach —
+  gemessen 588 Bilder (~20 s) nach dem Tod des ersten (Sonde Nachruecken: Tod F400, Biss F988), in der exe (`nw12_schuss`) ~375 Bilder
+  Stillstand nach dem Tod, 532 Bilder NAH fest. Ausserdem blieb ein Gorilla, der in der schmalen Gasse zwischen den Wagen (Ostseite)
+  feststeckte, dort unbegrenzt stehen (~1530 Bilder = 51 s; zwei Gorillas 1368/1615 Bilder). Beides ist in NB6 behoben ("Nachbesserung 6,
+  Fuer den Nutzer").
 - Berichtigung zu NB4: dort stand, ein Gorilla "passe nicht hinein". Das war falsch — er blieb an der Wagenkante haengen, weil er im
   Original stur geradeaus auf Leon zulaeuft.
 
@@ -1317,3 +1333,24 @@ J-Fenster (`kanon`: Heavy +363, Bisse 468 521 571 ..., Tod +1194, Slot-2-NAH-Ank
 | 1 | NAHER Gorilla, den nur das 0x10-Pad #36 (ROOM11C0.RDT 0x015d8) von Leon trennt, steht unbegrenzt (Gasse einzeln ~1530, O1 PORT G1 1368 / G2 1615, exe-Stelle 8 S3 468) | beide Lagen: jeder nahe Gorilla greift nach <= 450 NAH-fest an oder steht nachweislich an (kein freier Bissplatz); exe-Stelle 8 S3 <= 450; J-Pins unveraendert; Riegel mit Gegenprobe NB5 | Messen, WO er steht (Pad-Mitte/Pad-Kante, Kontaktcode, Sicht), Original-Sprungpfad A[4] Path A @0x80117ecc-8011802c lesen (Bedingungen, Richtung, Landung); Nah-Umweg auch ueber 0x10-Pads (A* mit Pad-Kanten wie `r36_uw_route`), Sprung = Original |
 | 2 | 354-Bilder-Wartezeit beginnt nach Anker-Reset (Rutschen an der Kante) und nach dem Tod des Partners neu (Nachruecken 588, exe nw12_schuss S2 532) | Nachruecken <= 450 nach dem Tod; exe nw12_schuss kein Gorilla > 450 NAH fest; J-Fenster bitgleich; Riegel prueft die Schranke | Messen, WAS den Zaehler zuruecksetzt (Spur je Bild); Zaehlung an den Fortschritt zu Leon koppeln bzw. Anstehen-Zeit anrechnen; J-Fenster mit derselben Zaehlung neu messen |
 | 3 | Dossier: NB5-OFFEN "Gleiten" gemessen falsch (Anstehen hinter G2), NB5 "Fuer den Nutzer" ohne Verzoegerung/Gassenmitte | beide Stellen nach Messung berichtigt | durchstreichen + berichtigen (Messwerte der Abnahme 5 2.2 und eigene) |
+
+### NB6 Messung vorher (Stand NB5 = HEAD 8030e41f; Sonden je eigener Prozess, `F_belege/nb6/`)
+Die Sonde `lage` hat seit NB6 den Modus 6 = Stand NB5 (alle NB6-Erweiterungen aus, `re15_r36_affen_nb6_enable(0)`); die Spur je Bild
+zeigt zusaetzlich `ng` (Antwort von `r36_nah_route`: 1 kein Startknoten, 2 kein freier Bissplatz, 3 schon am Platz, 4 kein Weg, 5 Pad vom
+anderen belegt, 10 zu Fuss, 11/12 ueber ein Pad, 13 verkeilt-Sprung), `up` (Pad) und `zc` (Kontaktcode der 0x10-Zone).
+
+| Lage (Abnahme 5) | Stand NB5 (Modus 6) | Ursache (gemessen) |
+|---|---|---|
+| Gasse einzeln `lage 2400 6 .. 7873 -1412 0 6418 -4333 3373 3 0 -9013 -15461 2656 0 0` | G1 kein Angriff, NAH fest 2258 (lage-Mass 2291) — bitgleich zur Abnahme 5 | G1 mitten im Pad #36, eigene Fuss-Komponente ohne Bissplatz -> `r36_nah_route` 0 (Grund 2) |
+| O1 `lage 2400 6 .. 6000 -9000 1332 -5525 -14883 2731 3 0 -8915 -12487 93 3 0` | G1 1368 / G2 1615 NAH fest, G2 nie, G1 letzter Angriff F1032 — bitgleich zur Abnahme 5 | beide Gorillas suedlich/in Pad #36, Leon (7873,-1412) noerdlich; Bissplaetze um Leon 4557 (zwei passen), aber nur ueber das Pad |
+| exe-Stelle 8, nachgestellt `lage 900 1 30 7320 -7071 0 6418 -3617 857 3 0 -9013 -15461 2656 0 0` (Endlage der exe F648) | G1 900/900 Bilder bei (6418,-3617), `ng 1` = KEIN Startknoten | G1 mit der Mitte im Pad #36 VERKEILT: `r36_uw_knoten` findet keinen freien Knoten, den er gerade erreicht; auch nach dem Umdrehen nach Norden (Yaw 857 -> 3175) bewegt er sich 900 Bilder nicht (die Klemme setzt jeden Schritt auf die Vorlage zurueck) |
+| Nachruecken `lage 1200 6 10 -26606 14578 18 -23302 14489 2067 3 0 -20579 16118 1885 4 0 400 2` | G2 Biss F988 = 588 Bilder nach dem Tod von G1 (F400) | NAH-Anker-Resets durch Gleiten an der #21-Kante nach dem Tod (F480/F502/F527/F579), Zaehlung von vorn |
+| exe `nw12_schuss` (Abnahme 5 jobsC) | S2 532 NAH fest (F1464+141, F1605+391) | S3 stirbt F1620, S2 gleitet an der #21-Nordkante, Zaehlung von vorn |
+
+Warum nicht einfach "Gleiten zaehlt nicht als Fortschritt"? Gemessen am kanonischen Kampf (Sonde `kanon 1 1 1`, Spur je Bild,
+`F_belege/nb6/nb6_kanon_zaehlregeln.txt`, Auswertung `zaehl.py`/`zaehl2.py`): Slot 2 steht dort ab +30 an der V-Spitze (d 3093 -> 3080)
+und KRIECHT bis +108 an der Kante entlang (Abstand aendert sich um 13); der Lage-Anker (400) setzt dabei einmal zurueck (+108), daher
+353. Jede Fortschritts-Zaehlung, die Gleiten nicht als Fortschritt wertet, kommt dort VOR dem ersten Biss auf 434 (reiner Abstand)
+bzw. 434..438 (Lage-Anker mit Abstands-Fortschritt >= 100/200/300) — mit Schwelle 354 aenderte sie den gepinnten Original-Kampf,
+mit Schwelle >= 435 waere der Nah-Umweg an jeder anderen Stelle 81 Bilder spaeter (Stelle 3: 368 -> ~449). Deshalb bleibt die
+Lage-Zaehlung; NB6 behebt die gemessene Ursache selbst: den Tod des Partners (Mangel 2) und das Pad (Mangel 1).
