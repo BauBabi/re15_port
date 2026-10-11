@@ -178,7 +178,6 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 * Lageplaene: die 3F-Karte haengt in ROOM1140 (Ihre Marke map3F.bmp zeigt den Konferenzraum) - richtig so?
   Groesse ist in Ihre Marken eingepasst (ein Blatt); die RE2-Originalgroesse waere ~2,8x groesser - lieber die?
   ROOM1030: im Karten-Rechteck antwortet bis zur Aufnahme die Karte, daneben und danach das Muenztelefon - passt das?
-@@ENTSCHEIDEN@@
 
 ## Grenzen
 * Gorillas ROOM11C0 (Spur F): steht ein Gorilla mit der Mitte im West-Sprungfeld #47 und Leon dahinter, springt er
@@ -204,4 +203,8 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
   dort an der Oberkante (Platzhalter-Kachel des Prototyps).
 * Fahrstuhl: beim AUSSTIEG aus der Kabine (ROOM1080 -> Etage) gibt es weiter keine Tuersequenz; RE2 spielt dort
   DOOR27 (ROOM6010). Nicht beauftragt, nachruestbar.
-@@GRENZEN_REST@@
+* Objekte mit dem Halbtransparenz-Bit 0x2 (FUN_8002c18c @0x8002c2b4 -> FUN_80022f0c, Prim-Code 0x36, STP-Texel-
+  Mischung) werden im Port weiter ueber NCCT gezeichnet, nicht halbtransparent - 91 flache Objekte, vorbestehend,
+  Raumliste im N-Dossier 8.8.
+* Mit Elza zeigt der Statusschirm weiter Leons Dienstausweis (vorbestehend, nicht beauftragt).
+* Dach-Kiste ROOM1090/1091: keine Grenze - Softlock ausgeschlossen (s. oben).
