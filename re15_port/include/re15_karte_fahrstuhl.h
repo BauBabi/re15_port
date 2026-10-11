@@ -12,8 +12,8 @@
 #ifndef RE15_KARTE_FAHRSTUHL_H
 #define RE15_KARTE_FAHRSTUHL_H
 
-/* Blatt, auf dem die Kabine von `room` gerade steht; -1 = kein Fahrstuhl oder Etage unbekannt
- * (dann bleibt die Etagenwahl wie bisher). Quelle 1: der Raum, aus dem man in die Kabine kam
+/* Blatt, auf dem die Kabine von `room` gerade steht; -1 = kein Fahrstuhl (seit Nachbesserung 1
+ * nicht mehr "Etage unbekannt", s. Quelle 3). Quelle 1: der Raum, aus dem man in die Kabine kam
  * (Spiegel von DAT_800b0fe6, FUN_8001d600 @0x8001d938) - aus ihm betritt man sie, dort steht
  * sie. Quelle 2: Bank 3 Bit 54/55/56. Die Bits allein reichen NICHT: die Etagenraeume setzen
  * sie in sub01 nur unter Ck(4,243,1) ("Reservestrom an", ROOM11F0 sub18 @0x016F6) und nur bei
@@ -21,7 +21,10 @@
  * (Cut 3) oder vor dem Strom betritt, faende sonst die Kabine auf der falschen Etage.
  * Runde 36 Spur M: ebenso fuer den zweiten Fahrstuhl ROOM4020 (Blatt 8/9/10 aus ROOM4000/5000/
  * 50C0, Bank 3 Bit 0x93/0x94/0x95; Belege im .c). Der Wert bindet seit Runde 36 auch das
- * BESUCHT-Bit der Kabine an diese eine Etage (re15_map_visited_mark_at). */
+ * BESUCHT-Bit der Kabine an diese eine Etage (re15_map_visited_mark_at).
+ * Quelle 3 (Nachbesserung 1, Abnahme 0 M1): ist die Etage UNBEKANNT (Debug-Sprung ohne Etagenraum
+ * davor, kein Bit), gilt das Blatt des Original-Seiten-Setzers - 1080 -> 2 (@0x8004b684/@0x8004b88c),
+ * 4020 -> 8 (@0x8004bdb4/@0x8004bdbc). Fuer eine Kabine liefert die Funktion also IMMER ein Blatt. */
 int re15_karte_fahrstuhl_blatt(unsigned room);
 
 /* Raumwechsel melden (aus re15_map_zone_update: je Bild und am Raumlade-Punkt). */

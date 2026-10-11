@@ -415,15 +415,22 @@ int main(void)
             } else {
                 snprintf(t, sizeof t, "v8: die Zonen-Bits bleiben - %d", bitzahl(sd.visited, 32));
                 CHECK(t, bitzahl(sd.visited, 32) == 2);
-                snprintf(t, sizeof t, "v8 einbaendiger Ort (Fahrstuhl ROOM1080): Etagen-Bit := "
-                         "Zonen-Bit, alle 3 Blaetter - %d", e1080);
-                CHECK(t, e1080 == 3);
+                /* Runde 36 Spur M, Nachbesserung 1 (Nutzer 2026-10-10: "Die Fahrstuhl Etagen
+                 * werden als besucht angezeigt, obwohl ich auf den verschiedenen Etagen noch
+                 * nicht im Fahrstuhl war"): hier stand "Etagen-Bit := Zonen-Bit, alle 3
+                 * Blaetter" (e1080 == 3) - genau das gemeldete Bild fuer einen gehobenen
+                 * v8-Stand. Die Kabine traegt seit Runde 36 ein Bit je Etage (re15_karte_r36.h);
+                 * der v8-Block sagt nicht, auf welcher Etage man in ihr war -> keins, wie bei den
+                 * alten v9-Bits 3/4/5 (Riegel unit_r36_karte_fahrstuhl / _kabine). */
+                snprintf(t, sizeof t, "v8 Fahrstuhlkabine ROOM1080: Etage unbekannt -> KEIN "
+                         "Kabinen-Etagen-Bit (vorher alle 3 Blaetter) - %d", e1080);
+                CHECK(t, e1080 == 0);
                 snprintf(t, sizeof t, "v8 mehrbaendiger Ort (Treppenhaus ROOM1060): NUR die "
                          "Haupt-Zeile (1F) gilt als begangen - %d Bit(s)", e1060);
                 CHECK(t, e1060 == 1 && e1060_haupt == 1);
                 snprintf(t, sizeof t, "v8: sonst kein Etagen-Bit - gesamt %d",
                          bitzahl(sd.visited_floor, 16));
-                CHECK(t, bitzahl(sd.visited_floor, 16) == 4);
+                CHECK(t, bitzahl(sd.visited_floor, 16) == 1);
             }
             /* Negativ-Kontrolle: ein verfaelschter Alt-Block wird abgewiesen. */
             roh[12] ^= 1;

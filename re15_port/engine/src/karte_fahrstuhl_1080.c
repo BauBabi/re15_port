@@ -81,7 +81,11 @@ int re15_karte_fahrstuhl_blatt(unsigned room)
         if (re15_game_flag_get(3, 0x93)) return 8;
         if (re15_game_flag_get(3, 0x94)) return 9;
         if (re15_game_flag_get(3, 0x95)) return 10;
-        return -1;
+        /* (3) Nachbesserung 1 (Abnahme 0 M1): Etage UNBEKANNT (Debug-Sprung ohne Etagenraum davor,
+         * kein Bit 0x93..0x95) -> das Blatt des ORIGINALS. Stage-Tabelle @0x80074c0c[3] = 0x8004bc9c,
+         * Raumindex 2 -> @0x80011184[2] = 0x8004bcf8 -> Fall-Kette -> `ori v1,zero,0x8` @0x8004bdb4,
+         * `sb v1,0x260e(at)` @0x8004bdbc; der Setzer liest weder Bank 3 noch DAT_800b0fe6. */
+        return 8;
     }
     if ((room & ~1u) != 0x1080u) return -1;
     /* (1) Man betritt die Kabine IMMER aus einem Etagenraum - dort steht sie also. */
@@ -96,7 +100,16 @@ int re15_karte_fahrstuhl_blatt(unsigned room)
     if (re15_game_flag_get(3, 54)) return 2;   /* ROOM1040 @0x15D6 `22 03 36 01` */
     if (re15_game_flag_get(3, 55)) return 3;   /* ROOM10C0 @0x0FEE `22 03 37 01` */
     if (re15_game_flag_get(3, 56)) return 4;   /* ROOM1120 @0x0D6C `22 03 38 01` */
-    return -1;
+    /* (3) Nachbesserung 1 (Abnahme 0 M1, Nutzer: "Die Fahrstuhl Etagen werden als besucht
+     * angezeigt, obwohl ich auf den verschiedenen Etagen noch nicht im Fahrstuhl war"): Etage
+     * UNBEKANNT - Debug-Menue JUMP "108 ELEVATOR" aus einem Raum, der kein Etagenraum ist, ohne
+     * Bit 54/55/56. Bisher -1, und die "gleiche Baender"-Regel setzte dann die Kabine auf ALLEN drei
+     * Etagen als besucht. Jetzt das Blatt des ORIGINALS: Stage-Tabelle @0x80074c0c[0] = 0x8004b568,
+     * Raumindex 8 -> @0x8001103c[8] = 0x8004b63c -> Fall-Kette -> `j 0x8004b888` mit
+     * `ori v0,zero,0x2` @0x8004b684 im Delay-Slot -> `sb v0,0x260e(at)` @0x8004b88c (Blatt 2 = 1F).
+     * Auch im Original ist die Etage dann unbestimmt: sub10 ("Tuer auf") feuert nur unter
+     * Ck(3,54/55/56,1) @0x08AC/0x08BC/0x08CC. */
+    return 2;
 }
 
 /* Klemmfenster des Spieler-Markers in der Kabine (Nachbesserung 1, Abnahme 0 M1).

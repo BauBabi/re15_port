@@ -432,11 +432,20 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
          * (FUN_80049e48 -> jal 0x8006931c @0x8004a39c, Bank 9 @0x80069390/0x80069394).
          * NUTZER-VORGABE gegen RE2: dort teilt ein Raum, der auf mehreren Karten gezeichnet ist,
          * EIN Bit (Raumkacheln @0x800aaa38 +0x0C: ROOM601 auf Area 13/16/18, ROOM505 auf
-         * 10/12/13/16). Nur bei UNBEKANNTER Etage bleibt es bei der alten Regel. */
-        if (gleich && erst >= 0 && re15_karte_fahrstuhl_blatt(s_map_zones[i].room) < 0)
+         * 10/12/13/16).
+         * ⛔ Nachbesserung 1 (Abnahme 0 M1): die Kabinen-Zeilen fallen NIE unter diese Regel, auch
+         * nicht bei unbekannter Etage. Der Debug-Menue-Sprung "108 ELEVATOR" aus ROOM1100 (kein
+         * Etagenraum, Bit 54/55/56 leer) setzte hier alle drei Kabinen-Bits - 2F und 3F standen als
+         * besucht auf der Karte. Die Etage liefert jetzt immer re15_karte_fahrstuhl_blatt (unbekannt
+         * = Blatt des Original-Seiten-Setzers, 1080 -> 2 @0x8004b684, 4020 -> 8 @0x8004bdb4), und
+         * floor_row oben hat GENAU dessen Zeile gesetzt. Uebrig bleibt die Regel fuer Orte, deren
+         * Zeilen alle dasselbe Band tragen und KEINE Kabine sind (ROOM3080: eine Zeile). */
+        if (gleich && erst >= 0)
             for (j = 0; j < FLOOR_COUNT; j++) {
                 if (s_map_floors[j].room != s_map_zones[i].room) continue;
                 if ((int)s_map_floors[j].zone != s_map_zones[i].idx) continue;
+                if (re15_karte_r36_fahrstuhl_bit(s_map_floors[j].room, s_map_floors[j].page) >= 0)
+                    continue;                          /* Kabine: nur die Etage aus floor_row */
                 etage_setzen(j);
             }
     }
@@ -447,9 +456,15 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
  * Aus den Zonen-Bits `visited` werden hier die Etagen-Bits `out` abgeleitet.
  *
  * (1) EINBAENDIGE ORTE — EXAKT. Tragen alle Etagenzeilen eines Ortes dasselbe Band
- *     (Fahrstuhl ROOM1080, ROOM4020, ROOM3080), setzt re15_map_visited_mark_at oben
- *     ALLE seine Etagen-Bits zusammen mit dem Zonen-Bit. Dort gilt also streng
- *     Etagen-Bit := Zonen-Bit; nichts ist geraten.
+ *     (ROOM3080), setzt re15_map_visited_mark_at oben ALLE seine Etagen-Bits zusammen
+ *     mit dem Zonen-Bit. Dort gilt also streng Etagen-Bit := Zonen-Bit; nichts ist geraten.
+ *     ⛔ NICHT die Fahrstuhlkabinen ROOM1080/ROOM4020 (Runde 36 Spur M, Nachbesserung 1):
+ *     seit Runde 36 traegt die Kabine ein Bit je Etage, auf der man in ihr war (NUTZER-VORGABE
+ *     "Die Fahrstuhl Etagen werden als besucht angezeigt, obwohl ich auf den verschiedenen
+ *     Etagen noch nicht im Fahrstuhl war"). Ein v8-Block sagt nur "in der Kabine gewesen",
+ *     nicht auf welcher Etage - die Hebung setzte bisher alle drei Kabinen-Bits (112..114 bzw.
+ *     115..117). Jetzt keins: die Kabine erscheint wieder, sobald man auf einer Etage einsteigt,
+ *     wie bei den alten v9-Bits 3/4/5 und 17/18/19 (re15_karte_r36.h).
  *
  * (2) MEHRBAENDIGE ORTE — ⛔ PORT-ENTSCHEIDUNG, NUR FUER DIE HEBUNG, KEIN
  *     ORIGINAL-VERHALTEN UND KEINE ORIGINAL-ADRESSE. Welche Etage begangen war, steht
@@ -490,6 +505,8 @@ void re15_map_visited_floor_heben(const uint8_t visited[32], uint8_t out[16])
             int e;
             if (s_map_floors[j].room != zn->room) continue;
             if ((int)s_map_floors[j].zone != zn->idx) continue;
+            if (re15_karte_r36_fahrstuhl_bit(s_map_floors[j].room, s_map_floors[j].page) >= 0)
+                continue;                              /* Kabine: Etage unbekannt, s.o. (1) */
             if (!gleich &&                             /* (2) nur die HAUPT-Zeile */
                 ((unsigned)s_map_floors[j].page != zn->page ||
                  (unsigned)s_map_floors[j].rect != zn->rect)) continue;
@@ -661,9 +678,11 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
          *     fuehrt, braucht das Bit ihres Bands;
          *   - Raeume ohne Etagenzeile (etage_hier == 0) bleiben unveraendert.
          * Der Schema-Durchgang macht es seit 2026-09-02 genauso
-         * (re15_inv_screen.c). Der Fahrstuhl bleibt auf allen drei Blaettern
-         * sichtbar, weil die "gleiche Baender"-Regel in re15_map_visited_mark_at
-         * seine drei Etagenbits gemeinsam setzt - dokumentierte Absicht. */
+         * (re15_inv_screen.c). Die Fahrstuhlkabine steht seit Runde 36 Spur M
+         * (Nachbesserung 1) NUR auf den Blaettern, deren Kabinen-Bit gesetzt ist
+         * (Etage des Einstiegs / der Ankunft, bei unbekannter Etage das Blatt des
+         * Original-Seiten-Setzers) - die fruehere "alle drei Blaetter"-Absicht ist
+         * gestrichen (NUTZER-VORGABE, re15_karte_r36.h). */
         if (state < RE15_MAP_RECT_VISITED &&
             ((eigen && !zn->etage && (!etage_hier || etage_besucht)
                     && re15_map_zone_visited(zn)) || etage_besucht))
@@ -998,9 +1017,18 @@ const re15_map_zone_t *re15_map_zone_by_index(int i)
 int re15_map_page_known(unsigned page)
 {
     int i;
-    for (i = 0; i < ZONE_COUNT; i++)
-        if (s_map_zones[i].page == page && re15_map_zone_visited(&s_map_zones[i]))
-            return 1;
+    for (i = 0; i < ZONE_COUNT; i++) {
+        if (s_map_zones[i].page != page) continue;
+        /* ⛔ Runde 36 Spur M, Nachbesserung 1 (Abnahme 0 M1: "3F wird dadurch sogar als Blatt
+         * anwaehlbar"): eine Zonenzeile der Fahrstuhlkabine macht ein Blatt NICHT ueber das
+         * Zonen-Bit bekannt. Das Zonen-Bit ist EIN Bit je Raum (zone_bit) und gilt auch fuer ihre
+         * Gast-Zeilen auf Blatt 3/4 (8..10) - ein Besuch der Kabine auf irgendeiner Etage machte so
+         * 2F und 3F anwaehlbar, mit nichts darauf. Die Kabine zaehlt nur ueber das Kabinen-Bit
+         * DIESES Blattes (Etagen-Schleife unten) - dieselbe Bedingung, unter der sie gezeichnet
+         * wird (re15_map_rect_state). */
+        if (re15_karte_r36_fahrstuhl_bit(s_map_zones[i].room, (int)page) >= 0) continue;
+        if (re15_map_zone_visited(&s_map_zones[i])) return 1;
+    }
     /* Ein Blatt ist auch dann bekannt, wenn man einen Raum darauf ueber seine ETAGE
      * betreten hat - ROOM1060s 3F-Teil ist der einzige Grund, warum Seite 4 vor
      * ROOM1120 ueberhaupt erreichbar wird. Ohne diesen Zweig bot das Hoch/Runter im
