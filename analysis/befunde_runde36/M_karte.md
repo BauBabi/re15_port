@@ -220,6 +220,25 @@ Punkt 6  1080 aus 1F (1040): 1F rect 9 AKTUELL | 2F rect 4 unbesucht | 3F rect 0
          4020 aus 4000: Blatt 8 rect 2 AKTUELL | Blatt 9 rect 13 unbesucht | Blatt 10 rect 3 unbesucht
 ```
 
+## Fuer den Nutzer
+
+* Punkt 3: Du schreibst "ROOM 1090" - die Hunde, die durch die Luke springen, und die Weste sind in
+  ROOM1190 (Schiessstand, Untergeschoss B1). ROOM1090 ist der Hinterhof mit dem brennenden
+  Transporter (keine Hunde, keine Weste). Umgesetzt ist es fuer ROOM1190: die Halle mit den
+  Zielscheiben/Hunden ist jetzt der grosse Kasten links, die Kammer mit der Weste der schmale
+  Kasten im Gang-Ring; jeder leuchtet nur, wenn du drin bist, und wird erst besucht, wenn du
+  drin warst. Falls du doch ROOM1090 meinst: bitte mit einem Screenshot der Karte melden.
+* Dafuer musste ROOM11A0 (der Raum mit der Leiter in die Kanalisation, erreichbar erst aus den
+  Drains) von Blatt B1 auf sein eigenes Kartenstueck im Blatt "DRAINS B2" umziehen - auf B1 gibt
+  es fuer ihn kein Rechteck (die Original-Kartenzeile legt ihn ueber den Blattrand).
+* Fahrstuhl: die Kabine wird nur auf der Etage als besucht gezeichnet, auf der du eingestiegen
+  bist. Das gilt auch fuer den zweiten Fahrstuhl ROOM4020 (Labor). In RE2 wird ein Raum, der auf
+  mehreren Etagenkarten steht, auf allen gleichzeitig besucht - hier gilt deine Vorgabe.
+* Alte Spielstaende: die kleinen Raeume in ROOM1110 erscheinen erst wieder, wenn du sie
+  betrittst (der alte Stand weiss nicht, ob du drin warst); der Evidence Room bleibt sichtbar.
+  Ebenso die Ostkammer von ROOM1190 und die Fahrstuhlkabinen der anderen Etagen.
+* Keine neuen Assets, keine Sprachdateien, kein neues Speicherformat (v9 bleibt).
+
 ## Stand / Fortschritt
 
 - [x] Lektuere (AUFTRAG, VERTRAG, R35 G_karte + Abnahmen, Memories karte-*)

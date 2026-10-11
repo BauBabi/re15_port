@@ -129,11 +129,14 @@ else()
     pruefe(B 0 EQUAL 1 "11D0: Marker im Abzug gefunden")
 endif()
 
+# Kasten der Haupthalle (rect 1, gemalt x76..143 y76..118) OHNE die Zeilen y114..118: dort liegt
+# der untere Ring-Teil der Gang-Kachel (rect 0) darueber (erster Lauf 2026-10-11: 22 "besucht"-Punkte
+# des Gangs in y115..117 bei x>=120 - der Gang ist im Lauf D besucht).
 # ---- C: P3 1190 Haupthalle --------------------------------------------------------------------
 # ROOM1230 vor der Haupthallen-Tuer (slot 2 @0x00B54, Trigger (-9266,8888) 2297x934), Rueck-Spawn
 # (-8133,10226), Blick -z.
 karte_lauf(C "1230;-8133;0;10226;1024;besucht:1230:-8133:10226" "W1,A0.3,W1,A0.3" 1190)
-farben(C h 77 77 142 117)
+farben(C h 77 77 142 113)
 farben(C o 145 70 158 103)
 math(EXPR _o_alles "${o_rot} + ${o_besucht}")
 pruefe(C h_rot GREATER_EQUAL 200 "1190 Haupthalle: rot in rect 1 - ${h_rot}")
@@ -148,7 +151,7 @@ pruefe(C _o_alles EQUAL 0 "1190 Haupthalle: rect 2 (Ostkammer) ungezeichnet - ${
 karte_lauf(D "1230;142;0;13001;1024;besucht:1230:142:13001;flag:3:137;flag:7:136;flag:7:137"
            "W1,A0.3,W1,A0.3" 1190)
 farben(D o 145 70 158 103)
-farben(D h 77 77 142 117)
+farben(D h 77 77 142 113)
 math(EXPR _h_alles "${h_rot} + ${h_besucht}")
 pruefe(D o_rot GREATER_EQUAL 100 "1190 Ostkammer: rot in rect 2 - ${o_rot}")
 pruefe(D _h_alles EQUAL 0 "1190 Ostkammer: rect 1 (Haupthalle) ungezeichnet - ${_h_alles}")

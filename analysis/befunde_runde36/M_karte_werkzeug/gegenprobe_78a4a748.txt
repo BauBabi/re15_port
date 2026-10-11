@@ -1,0 +1,44 @@
+##### treppe
+  PASS: ROOM10A0 hat eine Zeile auf Blatt 0 (B1)
+  PASS: nur 1F begangen: auf B1 keine sichtbare 10A0-Treppe - sind 0
+  PASS: Ankunft: die Karte zeigt B1 (Blatt 0), aktuell nur rect 6
+  PASS: das RDT fuehrt zwei Treppenlaeufe auf Band 4 (6<->4, 4<->3) - 2
+  FAIL: auf B1 sind GENAU die zwei Treppen sichtbar - 0
+  PASS: jede B1-Treppe sitzt (<= 1 px) auf der Projektion ihres Band-4-STAIR-AOT
+  PASS: jede Sprosse liegt auf gemaltem Innenraum der B1-Kachel (MAP01.PIX uv(128,16))
+  PASS: B2 und 1F tragen weiter je zwei 10A0-Treppen
+##### marker11d0
+  PASS: Ankunft in 11D0: Blatt 0, aktuell nur rect 5
+  FAIL: Ankunft: Marker (129,151) hoechstens 6 px unter der Tuermarke (129,124) und <= 2 px seitlich (vorher (129,151) = Mitte)
+  FAIL: Sprung beim Durchgang Gang -> 11D0 <= 8 px (Gang (130,123), Raum (129,151))
+  FAIL: an der 1260-Tuer (Suedwand, Spielerradius 450 vor der Wand): Marker y 173 <= 4 px ueber der gemalten Suedwand y172
+##### r1190
+  FAIL: zwei verschiedene Zonen mit verschiedenen Besucht-Bits
+  FAIL: Haupthalle: Blatt 0, aktuell NUR rect 1
+  FAIL: Haupthalle: Ostkammer (rect 2) noch UNBESUCHT
+  FAIL: Haupthalle: Marker (148,81) auf gemalter Flaeche von rect 1
+  FAIL: Haupthalle an den Zielscheiben (-20000,-20000): weiter NUR rect 1
+  PASS: Ostkammer: Blatt 0, aktuell NUR rect 2
+  FAIL: Ostkammer: Haupthalle (rect 1) jetzt BESUCHT
+  FAIL: Ostkammer: Marker (156,83) an der gemalten Tuernische (152..156,70..74)
+  PASS: an der Weste: weiter NUR rect 2
+  FAIL: ROOM11A0 (Band 3) zeigt Blatt 6, nicht B1
+  FAIL: ROOM11A0 begangen: B1 rect 1 bleibt UNBESUCHT
+##### tuer11c0
+  FAIL: der Balken ist WAAGERECHT (kind 0/2) - kind 1
+  PASS: alle 5 Balkenpunkte (170..174,100) liegen auf der gemalten Wand zwischen 11B0 und 11C0
+  PASS: Balkenmitte x172 ueber der gemalten Nische x171..175
+  PASS: genau eine Marke 11B0<->11C0 - 1
+##### teile1110
+  PASS: Ankunft im Evidence Room: Teil 0 AKTUELL
+  FAIL: Ankunft: die kleinen Raeume (Teil 1/2) sind UNBESUCHT (der gemeldete Fehler: besucht)
+  FAIL: im kleinen Raum oben: Teil 1 AKTUELL, Evidence Room besucht, unterer Raum UNBESUCHT
+  FAIL: zurueck im Evidence Room: oberer Raum BESUCHT, unterer weiter UNBESUCHT
+  FAIL: nach Speichern/Laden: Teil 0 besucht, 1 besucht, 2 besucht (soll besucht/besucht/unbesucht)
+  FAIL: alter Stand (nur Zonen-Bit): Evidence Room besucht, kleine Raeume unbesucht
+##### fahrstuhl
+  FAIL: aus 1F eingestiegen: 1F-Kabine AKTUELL, 2F besucht, 3F besucht
+  FAIL: auf 3F ausgestiegen: 3F-Kabine besucht, 2F-Kabine besucht (nie dort eingestiegen)
+  FAIL: aus 3F eingestiegen: Blatt 4, 3F-Kabine AKTUELL, 2F weiter UNBESUCHT
+  FAIL: nach Speichern/Laden: 1F + 3F besucht, 2F unbesucht
+  FAIL: 4020 aus ROOM5000: Blatt 8, Blatt 9 besucht, Blatt 8 AKTUELL, Blatt 10 besucht
