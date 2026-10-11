@@ -93,9 +93,9 @@ s_etage_bit[] = {
     { 0x1060, 0,  0,  2 },   /* Bit  0  Treppenhaus 1F                */
     { 0x1060, 0,  4,  3 },   /* Bit  1  Treppenhaus 2F                */
     { 0x1060, 0,  8,  4 },   /* Bit  2  Treppenhaus 3F                */
-    { 0x1080, 0,  0,  2 },   /* Bit  3  Fahrstuhl 1F                  */
-    { 0x1080, 0,  0,  3 },   /* Bit  4  Fahrstuhl 2F                  */
-    { 0x1080, 0,  0,  4 },   /* Bit  5  Fahrstuhl 3F                  */
+    { 0x1080, 0,  0,  2 },   /* Bit  3  Fahrstuhl 1F  (seit Runde 36 unbenutzt -> Bit 112) */
+    { 0x1080, 0,  0,  3 },   /* Bit  4  Fahrstuhl 2F  (seit Runde 36 unbenutzt -> Bit 113) */
+    { 0x1080, 0,  0,  4 },   /* Bit  5  Fahrstuhl 3F  (seit Runde 36 unbenutzt -> Bit 114) */
     { 0x1090, 0,  1,  2 },   /* Bit  6                                */
     { 0x1090, 0,  6,  3 },   /* Bit  7  obere Ebene                   */
     { 0x10A0, 0,  1,  1 },   /* Bit  8                                */
@@ -107,9 +107,9 @@ s_etage_bit[] = {
     { 0x11A0, 0,  0,  6 },   /* Bit 14                                */
     { 0x11A0, 0,  3,  0 },   /* Bit 15                                */
     { 0x3080, 0,  0,  7 },   /* Bit 16                                */
-    { 0x4020, 0,  0,  8 },   /* Bit 17                                */
-    { 0x4020, 0,  0,  9 },   /* Bit 18                                */
-    { 0x4020, 0,  0, 10 },   /* Bit 19                                */
+    { 0x4020, 0,  0,  8 },   /* Bit 17  (seit Runde 36 unbenutzt -> Bit 115) */
+    { 0x4020, 0,  0,  9 },   /* Bit 18  (seit Runde 36 unbenutzt -> Bit 116) */
+    { 0x4020, 0,  0, 10 },   /* Bit 19  (seit Runde 36 unbenutzt -> Bit 117) */
     { 0x4070, 0,  0, 11 },   /* Bit 20                                */
     { 0x4070, 0,  8,  9 },   /* Bit 21                                */
     { 0x4070, 0, 12,  8 },   /* Bit 22                                */
@@ -119,7 +119,8 @@ s_etage_bit[] = {
     { 0x11A0, 0,  3,  6 },   /* Bit 26  Runde 36 Spur M: 11A0 Band 3 auf seiner Drains-Kachel
                               *         (Bit 15 {0x11A0,0,3,0} ist seitdem unbenutzt) */
     /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: Bits 0..95 (RE15_KARTE_R36_TEIL_BASIS); ab Bit 96
-     * liegen im selben Feld die Teilbereich-Bits (Runde 36 Spur M, re15_karte_r36.h). */
+     * liegen im selben Feld die Teilbereich-Bits, ab 112 die Fahrstuhl-Etagen-Bits (Runde 36
+     * Spur M, re15_karte_r36.h; etage_bit() lenkt die Kabinen-Zeilen dorthin um). */
 };
 #define ETAGE_BIT_COUNT ((int)(sizeof s_etage_bit / sizeof s_etage_bit[0]))
 
@@ -135,8 +136,13 @@ static int etage_bit(int j)
         if (s_etage_bit[i].room == (unsigned short)room &&
             s_etage_bit[i].zone == s_map_floors[j].zone &&
             s_etage_bit[i].band == s_map_floors[j].band &&
-            s_etage_bit[i].page == s_map_floors[j].page)
-            return i;
+            s_etage_bit[i].page == s_map_floors[j].page) {
+            /* Runde 36 Spur M: Fahrstuhl-Kabinen tragen ein EIGENES Bit je Etage (re15_karte_r36.h)
+             * - die alten Bits 3/4/5 und 17/18/19 wurden immer gemeinsam gesetzt und sind in einem
+             * Spielstand nicht von "auf allen Etagen eingestiegen" zu unterscheiden. */
+            int fb = re15_karte_r36_fahrstuhl_bit(room, s_map_floors[j].page);
+            return (fb >= 0) ? fb : i;
+        }
     return -1;
 }
 
@@ -156,8 +162,10 @@ static void etage_setzen(int j)
  * hat die Bit-Tabelle, und wie viele Bits fasst das Feld? */
 int re15_map_floor_bit_test(int floor_zeile) { return etage_bit(floor_zeile); }
 int re15_map_floor_bit_count(void) { return ETAGE_BIT_COUNT; }
-/* Runde 36 Spur M: die Etagen-Bits enden vor den Teilbereich-Bits (re15_karte_r36.h). */
-int re15_map_floor_bit_kapazitaet(void) { return RE15_KARTE_R36_TEIL_BASIS; }
+/* Groesse des ganzen Feldes (128). Runde 36 Spur M: darin liegen die Tabellen-Bits 0..95, die
+ * Teilbereich-Bits 96..111 und die Fahrstuhl-Etagen-Bits 112..119 (re15_karte_r36.h); dass die
+ * Tabelle unter 96 bleibt, haelt unit_r36_karte_fahrstuhl fest. */
+int re15_map_floor_bit_kapazitaet(void) { return 8 * (int)sizeof s_visited_floor; }
 int re15_map_floor_count(void) { return FLOOR_COUNT; }
 
 void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited);

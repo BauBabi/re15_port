@@ -23,9 +23,35 @@ s_teil_bit[] = {
     { 9, 7, 213, 144, 0 },   /* Bit 101 */
     { 9, 7, 213, 108, 0 },   /* Bit 102 */
     { 9, 7, 213, 136, 0 },   /* Bit 103 */
-    /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: Bit 96..127 = 32 Zeilen. */
+    /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: Bit 96..111 = 16 Zeilen. */
 };
 #define TEIL_BIT_N ((int)(sizeof s_teil_bit / sizeof s_teil_bit[0]))
+
+/* Fahrstuhl-Etagen-Bits (Belege re15_karte_r36.h und include/re15_karte_fahrstuhl.h): je Kabine
+ * und Blatt, auf dem sie gezeichnet ist (s_map_floors: 1080 -> Blatt 2/3/4, 4020 -> 8/9/10).
+ * Bit = RE15_KARTE_R36_FAHRSTUHL_BASIS + Zeilenindex. Nur anhaengen. */
+static const struct { unsigned short room; unsigned char page; } s_fahrstuhl_bit[] = {
+    { 0x1080,  2 },   /* Bit 112  Kabine 1F (Einstieg ROOM1040)  */
+    { 0x1080,  3 },   /* Bit 113  Kabine 2F (Einstieg ROOM10C0)  */
+    { 0x1080,  4 },   /* Bit 114  Kabine 3F (Einstieg ROOM1120)  */
+    { 0x4020,  8 },   /* Bit 115  Kabine Blatt 8  (ROOM4000)     */
+    { 0x4020,  9 },   /* Bit 116  Kabine Blatt 9  (ROOM5000)     */
+    { 0x4020, 10 },   /* Bit 117  Kabine Blatt 10 (ROOM50C0)     */
+    /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: Bit 112..119 = 8 Zeilen. */
+};
+#define FAHRSTUHL_BIT_N ((int)(sizeof s_fahrstuhl_bit / sizeof s_fahrstuhl_bit[0]))
+
+int re15_karte_r36_fahrstuhl_bit(unsigned room, int page)
+{
+    int i;
+    room &= ~1u;                                   /* Variante = derselbe Ort */
+    for (i = 0; i < FAHRSTUHL_BIT_N; i++)
+        if (s_fahrstuhl_bit[i].room == room && s_fahrstuhl_bit[i].page == page)
+            return RE15_KARTE_R36_FAHRSTUHL_BASIS + i;
+    return -1;
+}
+
+int re15_karte_r36_fahrstuhl_bit_count(void) { return FAHRSTUHL_BIT_N; }
 
 int re15_karte_r36_teil_bit(int page, int rect, int tx, int ty, int *eingang)
 {

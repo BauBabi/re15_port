@@ -43,6 +43,7 @@
 #include "re15_msg.h"
 #include "re15_savedata.h"
 #include "re15_memcard.h"
+#include "re15_karte_r36.h"   /* Bit-Bereiche des Etagen-Felds (Riegel 6) */
 
 static int g_fail = 0;
 extern int re15_map_zone_bit_test(int zonen_index);   /* re15_map_zones.c (Riegel-Zugriff) */
@@ -694,6 +695,33 @@ static int teil_fahrstuhl(void)
           re15_map_rect_state(2, 9) == RE15_MAP_RECT_VISITED &&
           re15_map_rect_state(4, 0) == RE15_MAP_RECT_VISITED &&
           re15_map_rect_state(3, 4) == RE15_MAP_RECT_UNVISITED);
+    /* ALTER SPIELSTAND: die frueheren Kabinen-Bits 3/4/5 (immer gemeinsam gesetzt) zaehlen nicht
+     * mehr - die Kabine erscheint erst wieder, wenn man auf der Etage einsteigt. */
+    {
+        uint8_t alt[16];
+        memset(alt, 0, sizeof alt);
+        alt[0] = (uint8_t)((1u << 3) | (1u << 4) | (1u << 5));
+        re15_map_visited_reset();
+        re15_map_visited_mark(0x1080);
+        re15_map_visited_floor_import(alt);
+        miss(0x1120, 1300, 7300, 0, &m);
+        snprintf(t, sizeof t, "alter Stand (alte Kabinen-Bits 3/4/5): 1F %s, 2F %s, 3F %s - keine "
+                 "Kabine als besucht", zustand(re15_map_rect_state(2, 9)),
+                 zustand(re15_map_rect_state(3, 4)), zustand(re15_map_rect_state(4, 0)));
+        CHECK(t, re15_map_rect_state(2, 9) != RE15_MAP_RECT_VISITED &&
+                 re15_map_rect_state(3, 4) != RE15_MAP_RECT_VISITED &&
+                 re15_map_rect_state(4, 0) != RE15_MAP_RECT_VISITED);
+    }
+    /* Feld-Belegung: Tabellen-Bits < 96 <= Teil-Bits < 112 <= Fahrstuhl-Bits < 128 */
+    snprintf(t, sizeof t, "Etagen-Tabelle (%d Bits) bleibt unter den Teil-Bits (%d), Teil-Tabelle "
+             "(%d) unter den Fahrstuhl-Bits (%d), Fahrstuhl-Tabelle (%d) im Feld (%d)",
+             re15_map_floor_bit_count(), RE15_KARTE_R36_TEIL_BASIS, re15_karte_r36_teil_bit_count(),
+             RE15_KARTE_R36_FAHRSTUHL_BASIS, re15_karte_r36_fahrstuhl_bit_count(),
+             re15_map_floor_bit_kapazitaet());
+    CHECK(t, re15_map_floor_bit_count() <= RE15_KARTE_R36_TEIL_BASIS &&
+             RE15_KARTE_R36_TEIL_BASIS + re15_karte_r36_teil_bit_count() <= RE15_KARTE_R36_FAHRSTUHL_BASIS &&
+             RE15_KARTE_R36_FAHRSTUHL_BASIS + re15_karte_r36_fahrstuhl_bit_count() <=
+                 re15_map_floor_bit_kapazitaet());
     /* Der zweite Fahrstuhl ROOM4020 (Blatt 8/9/10): aus ROOM5000 (Tuer slot 3 @0x008A4) */
     re15_map_visited_reset();
     re15_game_flag_set(3, 0x93, 0); re15_game_flag_set(3, 0x94, 0); re15_game_flag_set(3, 0x95, 0);
