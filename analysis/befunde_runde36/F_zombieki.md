@@ -1515,3 +1515,122 @@ immer offen). Das Zurueckschnappen der Landung ist Port-Verhalten der Flugklemme
 (`r36_am_pad`, Box + hit_radius_min + 100), ausserhalb, Kontaktcode gleich dem des Startknotens; `r36_nah_route`: mit der Mitte im Pad
 Grund 13 (verkeilt) oder Grund 14 (nicht verkeilt, nur wenn `s_r36_g14_pad1[slot] != pad + 1`), danach Merker gesetzt; beim naechsten
 Aufruf ausserhalb des Pads geloescht; Reset im INIT.
+
+### NB6 Messung nachher in der exe — Endstand NB6g (Kopie `re15_pc_nb6l.exe` = Bau 30c2ecb3 13:04, md5 c76387e9…; 33 Laeufe wie Abnahme 5)
+Je Lauf eigener Prozess und Ordner (Scratch `F_nb6l`, `run.sh` Muster F_nb6g, Kommandozeilen `F_belege/nb6/nb6_exe_kommandos.txt`), Auswerter
+`ausw5.py` der Abnahme 5, Auswertung `F_belege/nb6/nb6_exe_nb6l_auswertung.txt` (Skript `ausw_nb6l.sh`; die beim Sitzungslimit committete
+Datei `nb6_exe_nb6l_auswertung_vorlaeufig.txt` lief, waehrend tuer1040/t1220c/r1010a noch liefen — ihre "anders"-Zeilen dort und
+"Framedumps 0" (Skript suchte .bmp/.png, die Dumps sind .ppm) sind damit hinfaellig). Vergleich byteweise (`cmp`) gegen die Laeufe der
+Abnahme 5 (`F_abn5/*_abn5f_neu`, HEAD e856447f) und gegen den Stand NB6c (`F_nb6h`).
+
+**14 Stellen** (Kampf-Layout `RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=<x,z>,1024,0 RE15_EXIT_AT=2700`, keine Eingabe):
+
+| # | Leon | Abnahme 5: erster Angriff S2 / S3, fest S2 / S3 (FERN) | NB6g: erster Angriff S2 / S3, fest S2 / S3 (FERN) | gy.log gegen Abnahme 5 |
+|---|---|---|---|---|
+| 1 | (-7000,12500) | F1627 / F730, 341 / 250 | F1627 / F730, 341 / 250 | gleich |
+| 2 | (-14000,2000) | F680 / nie, 0 / 0 | gleich | gleich |
+| 3 | (6000,-9000) | F1596 / F324, 429 (45) / 368 | **F1651 / F324, 271 (0) / 368** | anders (= NB6c) |
+| 4 | (-24000,10000) | F853 / F1570, 0 / 1193 (1) | gleich | gleich |
+| 5 | (7000,4000) | nie / F18, 96 (96) / 0 | gleich | gleich |
+| 6 | (9000,10000) | F1175 / F309, 0 / 0 | gleich | gleich |
+| 7 | (-14746,-4140) | F364 / F1021, 179 / 108 (108) | **F364 / nie, 0 / 108 (108)** (NB6c: 250 / 108) | anders (s. u.) |
+| 8 | (7200,-4130) | F1050 / F274, 0 / 468 | **F1204 / F274, 0 / 0** | anders (= NB6c) |
+| 9 | (-14000,4000) | F704 / F1496, 250 / 0 | gleich | gleich |
+| 10 | (-14500,6000) | F694 / F892, 0 / 0 | gleich | gleich |
+| 11 | (-24452,11938) | F828 / F1253, 0 / 1335 | gleich | gleich |
+| 12 | (-22288,11938) | F868 / F1025, 0 / 833 (50) | gleich | gleich |
+| 13 | (-26500,15500) | F842 / nie, 0 / 1650 | gleich | gleich |
+| 14 | (-20000,14500) | F883 / F896, 0 / 0 | gleich | gleich |
+
+Summe fest **7500 (FERN 300 / NAH 7200) -> 6695 (FERN 255 / NAH 6440)** — beides mit `ausw5.py` aus den Rohdaten; weder die Gesamt-Blockade
+noch FERN steigt (der NB5-Zuwachs FERN +45 an Stelle 3 ist weg: S2 geht ueber das Pad statt an der Muendung ueber 0x1771 zu kippen).
+Stelle 8 (Kriterium Mangel 1): S3 468 -> **0** (Angriff F274, Grund 13 = verkeilt, Sprung mit dem Nordseiten-Code).
+
+**Schuss-Laeufe und Tuerwege** (Gegenwehr `RE15_GIVE=7:250 RE15_EQUIP=7 RE15_INPUT_SCRIPT=W0.1,(MA0.1,M0.6)x110,W1`, Abnahme 5 Abschnitt 4):
+
+| Lauf | Abnahme 5 | NB6g | gy.log |
+|---|---|---|---|
+| nw12_schuss (Leon (-22288,11938)) | S2 F868, **532 NAH** (F1464+141, F1605+391) / S3 F1144, 0 | S2 F868, **141 NAH** (nur F1464+141 VOR dem Tod von S3 F1620; danach Nachruecken, von Leon erschossen) / S3 F1144, 0 | anders (= NB6c) |
+| nw4_schuss | F853 / F1342, 0 / 105 | F853 / F1357, 0 / 105 (F1028+105 hinter S2 in HURT) | anders (= NB6c) |
+| nw11_schuss | F828 / F1291, 0 / 0 | gleich | gleich |
+| nw13_schuss | F840 / F1623, 0 / 341 | F840 / **F1509**, 0 / **249** (F1020+249, Anstehen hinter S2 bis zu dessen Tod) | anders (= NB6c) |
+| stelle3_schuss | F1002 / F324, 0 / 0 | gleich | gleich |
+| t11b0kampf_schuss (echter Tuerweg) | F1416 / F862, 0 / 0 | F1415 / F862, 0 / 0 | anders (= NB6c) |
+| t11b0szene_schuss (echter Tuerweg) | F1276 / F1434, 0 / 0 | gleich | gleich |
+| t11b0kampf (ohne Gegenwehr) | S2 nie, 1309 NAH (Anstehen Nordstreifen) / S3 F866 | gleich | gleich |
+| t11b0szene / szene11c0 (kanonisch) | S2 408 / 398 (= Original) | gleich | gleich (gy + st) |
+| flucht_west | F277 / F1084, 0 / 0 | gleich | gleich (gy + st) |
+
+Kriterium Mangel 2 in der exe: nw12_schuss kein Gorilla > 450 NAH fest (S2 141, S3 0).
+
+**P1 / P3 unveraendert**: r1040w, r10b0, tuer1010, tuer1040, t1220a, t1220c gy.log (und st.log, wo vorhanden) **gleich** zur Abnahme 5;
+p3lache gy.log, st.log und **alle 51 Framedumps (.ppm) gleich**. r1010a: der Vorgaenger-Lauf (F_nb6l, 13:xx) wich im R1010-Teil ab F16 ab
+(Zombie Slot 1 `t158` 144 -> 137 statt 142; 958 statt 780 Zeilen). Ursache gemessen (`F_belege/nb6/nb6_r1010a_controller.txt`): t158 ist das
+Griff-Haltebudget des RE2-Zombies, `t158 -= 2 + 5 * mash` (enemy_ai_common.c, @0x80102868-7C), `mash` = Tastenflanke des ECHTEN Eingabegeraets
+(`re15_mash_pressed`, `s_pad_pressed_edge & 0xf0f0`; der Lauf hat kein RE15_INPUT_SCRIPT) — das debug.log des Laufs zeigt waehrend des Laufs
+`[pad] Controller abgezogen` / `"XInput Controller"` (ein Xbox-Controller wurde an- und abgesteckt; Abnahme 5: nur die Erkennung beim Start).
+Wiederholung ohne Controller-Eingriff (Scratch `F_nb6m`, dieselbe Kommandozeile): HEAD-exe **R1010-Teil 780 Zeilen bitgleich** zur Abnahme 5
+(F16 t158=142), ebenso die Abnahme-5-exe. P1-Code ist seit Abnahme 2 unveraendert; keine Verschlechterung.
+
+**Stelle 7 (-14746,-4140) — die einzige Aenderung NB6c -> NB6g in der exe** (Messschiene `nb6_stelle7_affenlog_nb6g.txt`): S2 steht F899 mit der
+Mitte in Pad #47 bei (-16239,-3479), Leon (-15759,-6944) suedlich (+0x1d4 3491), NAH-Anker 29; F916 Grund 14 (nah 45 erreicht, Weg ueber #47,
+Startseite Nord, Code 0x48) -> Sub 7 mit 9f=48, Flug F925-951 **ohne Ortswechsel** ((-16310,-3544) -> (-16391,-3618): die Flugklemme haelt ihn
+am Start — Port-Verhalten der Landungsklemme, nicht RE'd, OFFEN wie NB4), F934 Sub 8 = der Original-FINISHER aus dem Flug
+(@0x80118cc8-d68: Bild 0x13, Leon HP < 50, Trefferreaktion 0, a804(0x1388, 0xc0) = Leon in 5000 im Kegel, +0x1dc = 0 -> Sub 8 B[8] @0x80118ddc,
+Se(7)) — Leon hat nach 236 Bissbildern < 50 HP und stirbt (Todesanimation bis F1204 = R1240). Abnahme 5 an derselben Stelle: S2 179 NAH fest,
+Leon stirbt F1636 (ohne Eingabe stirbt er in beiden Faellen). Ab F1001 KEIN zweiter Sprung (Merker `s_r36_g14_pad1`): Grund 11 = zu Fuss zum
+Startknoten (-14600,900), F1071 Anlauf (Grund 12), F1085 +0x1d4 > 0x1771 -> FERN-Umweg. S2 fest **0** (Abnahme 5 179, NB6c 250 mit Sprung alle
+~85 Bilder bis zum Tod).
+
+**Zufallsgang 52 Seeds x 6000 Bilder, Endstand** (`seeds/zg_a400_nb6g_{0,3}.txt`, `zg_a40_nb6g_{0,3}.txt`, Summen `zg_summen_nb6g.txt`; Zeilen =
+NB6c bis auf die Reihenfolge): bits 3 Anker 400 **17655**, Anker 40 **0**, Griffe **252**; bits 0 (Gegenprobe Stand NB5) 16352 / 125 / 242 bitgleich.
+
+**Sonden, Endstand** (`nb6g_lage_*.txt`, `nb6g_kanon.txt`, alle bitgleich zu NB6c): Gasse einzeln G1 Angriff **157** (fest 0; Stand NB5: nie,
+NAH fest 2258); O1 G1 Angriff **195** (fest 0) / G2 Angriff **937** nach **248** NAH fest, danach 323 Bilder Anstehen an der Wand x 8382 (`frei 0`,
+Leon in der Ecke (11159,-1181) hinter G1); Stelle-3-Endlage G2 **175**; Stelle 8 verkeilt G1 **112** (Grund 13; Stand NB5 900/900 ohne Angriff);
+Nachruecken G2 Biss **F505 = 105 Bilder nach dem Tod** (Stand NB5 F988 = 588); kanon: Freigabe F1066, Tod +1194, Bisse 363 468 521 571 624
+674 727 778 830 882 933 986 1036 1090 1139 1194, Slot-2-NAH-Anker 353 — **bitgleich** (bits 3 und bits 0).
+
+### NB6 Tests (probes/r36_zombieki.cmake, Registrierung unveraendert — 6 Tests, keine neue Testdatei)
+
+| Test | Ergebnis Endstand (Bau 13:04 = 30c2ecb3; 2. Bau nach der Kommentar-Berichtigung des Headers s. "NB6 Gezielte Tests") |
+|---|---|
+| `unit_r36_zombieki_affen_block` (Riegel direkt) | **77 Pruefungen, 0 Fehler** (`nb6_riegel_direkt9.txt`). Neu seit NB5 (66): Nachruecken NB6 <= 450 Bilder nach dem Tod (gemessen 105) + Gegenprobe Stand NB5 > 850 (588); Ostgasse "Gasse einzeln" und O1 je Gorilla: Angriff und NAH fest VOR dem ersten Angriff <= 450, danach <= 450 oder Anstehen (`frei 0`), Gegenprobe Stand NB5 >= 1000 NAH fest ohne Angriff in den letzten 1000 Bildern; Stelle 8 verkeilt: Angriff, NAH fest <= 450, Grund 13, Gegenprobe Stand NB5 900/900 ohne Angriff |
+| ctest `r36_zombieki_affen` + `r35_affen` + `maggot` | **100% tests passed, 0 tests failed out of 25** (`nb6_ctest_riegel_lauf8.txt`, 38,8 s) — darin alle 20 `unit_r35_affen_*` (J-Pins, bildgenau gegen GDB) |
+| Sonden (Messung, kein Pin) | `lage ... [kill_f kill_art [nb6-bits]]` (Modus 6 = Stand NB5), `platz <lx> <lz> [schritt] [ox oz]`, `eins ... <nb6> [spur_von spur_bis]`, `kanon`; Messschiene `RE15_AFFEN_LOG=<datei>` (PC, env; gy.log dabei bitgleich) |
+
+### NB6 OFFEN (ersetzt "NB5 OFFEN")
+1. **Flugklemme / Zurueckschnappen der Landung** (Stelle 7, Zufallsgang-Sprungschleifen-Klasse, auch im Original-Modus 896/702): der
+   Original-Pad-Sprung aus einer Pad-Mitte bleibt in der Port-Landungsklemme am Start haengen. Nicht neu RE'd (Original-Landung @0x80118c3c-cc4
+   gegen die Port-Klemme `re15_collision_constrain_contact_band` im Flug/bei der Landung). NB6g begrenzt die Wirkung (Grund 14 genau einmal je
+   Pad-Aufenthalt); der Original-Finisher (@0x80118cc8-d68) kann Leon mit < 50 HP aus dem haengenden Flug toeten.
+2. **Zufallsgang Anker 400**: 16352 (NB5) -> 17655 (+8 %) durch zwei weitere Seeds in dieser vorbestehenden Klasse (0x7ed38e72, 0x0ec6d5ab;
+   je Seed 4 besser / 4 schlechter / 44 bitgleich); Anker 40 (Stillstand >= 90 Bilder) 125 -> **0**, Griffe 242 -> 252.
+3. **Nordwest-Tasche**: Anstehen des zweiten Gorillas geometrisch erzwungen (Abnahme 5, 2.1: nur EIN Bissplatz-Bereich); Stellen 4/11/12/13 und
+   t11b0kampf unveraendert (1193/1335/833/1650/1309). Mit Gegenwehr: nw13 S3 249, nw12 S2 141, nw4 S3 105 — Anstehen hinter dem Partner, < 450.
+4. **Stellgroessen (PORT-WAHL)**: R36_NAH_START = 354 (J-Fenster, Messreihe NB5), R36_FEST_START = 45 fuer den Pad-Weg (NB3-Beginn des
+   FERN-Umwegs; mit 354 auch fuer das Pad: O1 549/888, gemessen `nb6_lage_vorher_nachher.txt`), Anker 400 (NB3).
+5. **PSX-Laufzeit** (Rasterscan + A* je Bild) unveraendert offen (NB5 OFFEN, Plan dort).
+
+### NB6 Fuer den Nutzer (ersetzt "NB5 Fuer den Nutzer")
+- **Ostgasse (Sprungfeld #36 hinter dem Auto)**: ein Affe, den nur das Auto von Leon trennt, bleibt nicht mehr stehen — er laeuft zur
+  Pad-Kante oder springt aus dem Feld heraus und greift an (Gasse einzeln: Angriff nach 157 Bildern statt nie; O1: beide greifen an, der zweite
+  nach 248 Bildern Wartezeit; exe-Stelle 8: 0 statt 468 Bilder Stillstand). Steht Leon danach in der Nordost-Ecke hinter dem ersten Affen, steht
+  der zweite an (kein freier Bissplatz) — wie bisher in der Nordwest-Ecke.
+- **Nachruecken**: stirbt der beissende Affe, kommt der wartende sofort nach (105 statt 588 Bilder nach dem Tod; mit Gegenwehr nw12: 141 statt 532
+  Bilder Stillstand).
+- **Grenze (dokumentiert)**: steht ein Affe mit der Mitte im West-Sprungfeld #47 und Leon dahinter, springt er einmal und bleibt dabei am Start
+  haengen (Port-Landungsklemme); hat Leon < 50 HP, trifft ihn der Original-Sprungangriff trotzdem (Reichweite 5000). Danach laeuft der Affe
+  zu Fuss zum Anlaufpunkt. Im Zufallsgang gibt es diese Sprungschleifen in 9 von 52 Seeds (Original-Modus ebenso), kein Affe steht aber noch
+  >= 90 Bilder still.
+- **Nordwest-Ecke**: der zweite Affe steht an, solange der erste beisst — nur EIN Bissplatz (Geometrie, gemessen).
+- Keine neuen Assets fuer das Paket-Gate, keine Sprachdateien, keine Bedienhinweise; keine offene Entscheidungsfrage.
+
+### NB6 Ergebnis je Mangel (Kurzfassung)
+
+| Mangel Abnahme 5 | Stand NB6g | Beleg |
+|---|---|---|
+| 1 Ostgasse: naher Gorilla hinter Pad #36 steht unbegrenzt | **behoben**: Gasse einzeln G1 Angriff 157 (NAH fest vor dem Angriff 0), O1 G1 195 / G2 937 nach 248 NAH fest (danach Anstehen, `frei 0`), exe-Stelle 8 S3 468 -> 0; J-Pins 20/20, kanon bitgleich; Riegel mit Gegenprobe Stand NB5 (Gasse 2258 / O1 1368/1615 / Stelle 8 900) | Sonden nb6g_lage_*, nb6_stelle3/7_affenlog_*, exe nb6l, Riegel 77/77 |
+| 2 Wartezeit zaehlt nach dem Tod des Partners / Gleiten neu | **behoben**: Nachruecken Biss 105 Bilder nach dem Tod (588), exe nw12_schuss S2 141 (532), kein Gorilla > 450; Riegel prueft <= 450 nach dem Tod + Gegenprobe NB5 | nb6g_lage_nachruecken_m1.txt, exe nb6l, Riegel |
+| 3 Dossier NB5-OFFEN "Gleiten" / Nutzertext | **behoben** (d9c0d09e): Gleiten = Anstehen hinter G2 (Spur je Bild), Nutzertext mit Verzoegerung und Gassenmitte | Dossier NB5 OFFEN / Fuer den Nutzer (durchgestrichen + berichtigt) |
+| Hinweis Orchestrator: P1/P3 nicht verschlechtern, 7500 / FERN 300 nicht steigen | P1 6 Laeufe + r1010a (Wiederholung) bitgleich, P3 51/51 Framedumps bitgleich; 14 Stellen 7500 -> 6695, FERN 300 -> 255 | nb6_exe_nb6l_auswertung.txt, nb6_r1010a_controller.txt |

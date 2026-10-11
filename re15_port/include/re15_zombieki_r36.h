@@ -253,9 +253,12 @@ int  re15_r36_affen_bissplaetze_frei(int slot); /* NUR Sonden (NB6): freie Bissp
  * nicht erst am Raster-Startknoten der Pad-Kante. GEMESSEN (exe Stelle 3, Messschiene RE15_AFFEN_LOG): in der Ostgasse (1550 breit
  * < 2 x 1600) liegt dieser Knoten 1970 ausserhalb der Muendung; der Gorilla an der Pad-Kante lief von Leon weg, kippte ueber 0x1771
  * (FERN, Umweg geloescht) und zaehlte an der Kante neu — S2 griff nie an. Die Regel gilt nur AUSSERHALB des Pads auf der Startseite
- * des Wegs (Kontaktcode FUN_8001bf04 @0x8001bfa4/ac/e8/ec gleich dem des Startknotens); mit der Mitte im Pad (0xf8) laeuft er wie
- * NB6a zum Startknoten (der Sprung aus der Mitte, Grund 14, wurde an exe-Stelle 7 zurueckgeschnappt und verworfen). Nachher: Stelle 3
- * S2 Angriff F1651 (vorher nie), Stelle 7 wie NB6a. */
+ * des Wegs (Kontaktcode FUN_8001bf04 @0x8001bfa4/ac/e8/ec gleich dem des Startknotens). NB6g: mit der MITTE im Pad (0xf8,
+ * Platzhalter @0x8001bf74) springt er mit dem Seitencode des Startknotens genau EINMAL je Pad-Aufenthalt (Grund 14; Merker
+ * s_r36_g14_pad1, geloescht beim Verlassen des Pads), danach zu Fuss zum Startknoten wie NB6a. GEMESSEN: Gasse einzeln G1 Angriff
+ * 157 (ohne Grund 14: nie, 2258 FERN); exe-Stelle 7 (Pad #47): der eine Sprung bleibt in der Flugklemme am Start haengen
+ * (Port-Verhalten, OFFEN), der Original-Finisher a804(0x1388,0xc0) -> Sub 8 (@0x80118ddc) trifft Leon trotzdem; Wiederholung
+ * alle ~85 Bilder (NB6c) entfaellt. Nachher: Stelle 3 S2 Angriff F1651 (vorher nie), Stelle 8 S3 0 (vorher 468). */
 
 /* ---- Nachbesserung 1, Mangel 2 (ROOM10B0 Terrasse): ZONENLOSER RE2-Zombie --------------------------
  * GEMESSEN (test_r36_zombieki_eintritt spur 10B0 1260 7 1 1): Steuerziel steer = (0,0) — die Terrasse liegt
