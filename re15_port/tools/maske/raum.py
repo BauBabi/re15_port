@@ -53,8 +53,6 @@ CD = "re15_port/shared_assets/PSX"
 # im Bericht als Nachfrage. (10F0 C4/C5: Nutzer 2026-09-09 "Ok, einwandfrei"; 1100 C1/C2:
 # reine Quader-Waende ohne Nutzer-PNG.)
 P2_UNANGETASTET = {
-    ("ROOM1100", 1): "nur Quader-Waende (kein Nutzer-PNG)",
-    ("ROOM1100", 2): "nur Quader-Waende (kein Nutzer-PNG)",
 }
 
 # ⛔ ALTE KETTE, ABER NEU GEBAUT (Runde 22, 2026-09-21). ROOM10F0 C4/C5 standen bis hierher
@@ -69,6 +67,15 @@ P2_UNANGETASTET = {
 P2_ALTE_KETTE = {
     ("ROOM10F0", 4): "Nutzer-Lassos (tiefe=szene) + Buerostuhl-Quader (nur_kunst)",
     ("ROOM10F0", 5): "Nutzer-Lassos (tiefe=szene) + Buerostuhl-Quader (nur_kunst)",
+    # ⛔ Runde 36 Spur O (2026-10-11): ROOM1100 C1/C2 standen in P2_UNANGETASTET ("nur Quader-Waende, kein
+    # Nutzer-PNG"). Die Quader trugen die Zellenflaeche x=-15600 als Wand, die gezeichnete Wandbasis liegt aber
+    # 85..135 Einheiten dahinter — ein Bodenstreifen mit Wandtiefe, der den halbtransparenten Spielerschatten
+    # und am Boden liegende Figuren zublittete (Nutzer-Befund "Leon mit einer Halbtransparenz ueberdeckt mit
+    # Boden", Dossier analysis/befunde_runde36/O_pri.md §2). Die Quaderbreiten in auswahl.json sind auf die
+    # gemessene Basis gesetzt; die Cuts laufen ueber die alte Kette (Quader-Silhouette + Kollisionstiefe,
+    # anwenden.bau_objektweise) und schreiben jetzt auch PBM/STAND (unit_pri_silhouette, unit_pri_kopfschnitt).
+    ("ROOM1100", 1): "Quader-Waende auf der gemessenen Wandbasis (Runde 36 Spur O)",
+    ("ROOM1100", 2): "Quader-Waende auf der gemessenen Wandbasis (Runde 36 Spur O)",
 }
 P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}
 

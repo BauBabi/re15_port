@@ -727,7 +727,7 @@
      "quader": [
       -17600,
       -23200,
-      2000,
+      1890,
       11100,
       -4000
      ],
@@ -739,7 +739,7 @@
      "quader": [
       -28900,
       -14100,
-      13300,
+      13190,
       2000,
       -4000
      ],
@@ -747,7 +747,7 @@
      "grow": 0
     }
    ],
-   "_warum": "⛔ 2026-09-08 MARKE F595: \"die Zombies um die Ecke sind alle durch die Wand sichtbar\". ROOM1100 hat im Original KEINE Masken und C2 kein Regions-Viereck (RVD leer) - nichts verdeckt oder cullt die Gegner im Querflur. Die beiden Eckwaende sind Kollisionszellen (RDT); als QUADER mit voller Wandhoehe (-4000, die Waende gehen bis zur Decke, Kamera bei y=-3078) liefern sie Silhouette UND Tiefe ohne Freistellung. Gemessen: Zombie 5 (-20275,-10713, Tiefe 195) liegt hinter BEIDEN Zellen (Fussstrahl schneidet sie); Zombie 4 steht in der OEFFNUNG (x>-15600) und bleibt zu Recht sichtbar; Zombie 3 liegt im sichtbaren Flur. ALLGEMEIN: dieselbe Technik traegt fuer jeden Winkel, dessen Wand eine Zelle ist - auf Zuruf je Marke nachziehbar."
+   "_warum": "⛔ 2026-09-08 MARKE F595: \"die Zombies um die Ecke sind alle durch die Wand sichtbar\". ROOM1100 hat im Original KEINE Masken und C2 kein Regions-Viereck (RVD leer) - nichts verdeckt oder cullt die Gegner im Querflur. Die beiden Eckwaende sind Kollisionszellen (RDT); als QUADER mit voller Wandhoehe (-4000, die Waende gehen bis zur Decke, Kamera bei y=-3078) liefern sie Silhouette UND Tiefe ohne Freistellung. Gemessen: Zombie 5 (-20275,-10713, Tiefe 195) liegt hinter BEIDEN Zellen (Fussstrahl schneidet sie); Zombie 4 steht in der OEFFNUNG (x>-15600) und bleibt zu Recht sichtbar; Zombie 3 liegt im sichtbaren Flur. ALLGEMEIN: dieselbe Technik traegt fuer jeden Winkel, dessen Wand eine Zelle ist - auf Zuruf je Marke nachziehbar.\n⛔ 2026-10-11 Runde 36 Spur O (Nutzer: \"Leon mit einer Halbtransparenz ueberdeckt mit Boden\"): die Zellenflaeche x=-15600 liegt VOR der gezeichneten Wandbasis (gemessen am Hintergrund ueber die Boden/Sockel-Kante je Spalte: Cut 1 x=-15664..-15690, Cut 2 x=-15708..-15737); der Quader trug damit einen 85..135 Einheiten breiten BODEN-Streifen vor der Wand mit Wandtiefe (Cut 1: 1203, Cut 2: 1591 Maskenpixel, deren Bodenpunkt begehbarer Flur ist). Diese Bodenpixel blitteten den halbtransparenten Spielerschatten (ABR2-Quad FUN_8001b064) und den Kopf des kriechenden Zombies an der Suedecke zu. Ostflaeche jetzt auf der gemessenen Basis: Cut 1 x=-15690 (Westwand w 1910, Suedblock w 7010), Cut 2 x=-15710 (Westwand w 1890, Nordwand w 13190). Gegenprobe F595 (Zombie 5 (-20275,-10713) hinter der Wand): Strahl schneidet x=-15710 bei z=-17769, weiter verdeckt."
   },
   "1": {
    "objekte": [
@@ -756,7 +756,7 @@
      "quader": [
       -17600,
       -23200,
-      2000,
+      1910,
       11100,
       -4000
      ],
@@ -768,7 +768,7 @@
      "quader": [
       -22700,
       -23201,
-      7100,
+      7010,
       1897,
       -4000
      ],
@@ -788,7 +788,7 @@
      "grow": 0
     }
    ],
-   "_warum": "⛔ 2026-09-09 MARKE F205 (C1, Blick nach Sueden, masken=0): dieselbe Loesung wie C2 - die Flurwaende sind Zellen, als Quader (volle Hoehe) verdecken sie die Gegner im Nachbarflur. Leere Silhouetten kosten nichts; der Bau meldet die Bildpunkte je Wand."
+   "_warum": "⛔ 2026-09-09 MARKE F205 (C1, Blick nach Sueden, masken=0): dieselbe Loesung wie C2 - die Flurwaende sind Zellen, als Quader (volle Hoehe) verdecken sie die Gegner im Nachbarflur. Leere Silhouetten kosten nichts; der Bau meldet die Bildpunkte je Wand.\n⛔ 2026-10-11 Runde 36 Spur O (Nutzer: \"Leon mit einer Halbtransparenz ueberdeckt mit Boden\"): die Zellenflaeche x=-15600 liegt VOR der gezeichneten Wandbasis (gemessen am Hintergrund ueber die Boden/Sockel-Kante je Spalte: Cut 1 x=-15664..-15690, Cut 2 x=-15708..-15737); der Quader trug damit einen 85..135 Einheiten breiten BODEN-Streifen vor der Wand mit Wandtiefe (Cut 1: 1203, Cut 2: 1591 Maskenpixel, deren Bodenpunkt begehbarer Flur ist). Diese Bodenpixel blitteten den halbtransparenten Spielerschatten (ABR2-Quad FUN_8001b064) und den Kopf des kriechenden Zombies an der Suedecke zu. Ostflaeche jetzt auf der gemessenen Basis: Cut 1 x=-15690 (Westwand w 1910, Suedblock w 7010), Cut 2 x=-15710 (Westwand w 1890, Nordwand w 13190). Gegenprobe F595 (Zombie 5 (-20275,-10713) hinter der Wand): Strahl schneidet x=-15710 bei z=-17769, weiter verdeckt."
   }
  },
  "ROOM10F0": {

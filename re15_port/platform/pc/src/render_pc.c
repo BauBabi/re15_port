@@ -31,6 +31,7 @@
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "touch_overlay_pc.h" /* On-Screen-Pad (Android: an; Desktop: RE15_TOUCH_OVERLAY=1) */
 #include "re15_entladen.h"    /* Runde 35 Spur I: Generation je Cache + Entladen (Block vor re15_render_pc_set_pri_atlas) */
+#include "re15_pri_schatten_r36.h"  /* Runde 36 Spur O: Schatten in der OT-Ordnung der Masken/Dreiecke */
 extern unsigned g_current_room_id;   /* nur fuer die RE15_PRI_LOG-Messschiene */
 /* Der gezeigte Cut. Ohne ihn ist eine Maskenmessung nicht zuzuordnen: unsere
  * nachgezeichneten Masken liegen je Cut vor, und "0 Masken" kann heissen "Cut ohne
@@ -69,6 +70,19 @@ typedef struct { SDL_Vertex v[6]; } shadow_quad_t;
 #define SHADOW_QUAD_MAX 16
 static shadow_quad_t s_shadow_quads[SHADOW_QUAD_MAX];
 static int           s_shadow_quad_count = 0;
+/* Runde 36 Spur O (re15_pri_schatten_r36.h): OT-Bucket je Schatten (Summe der vier Ecken-Kamera-z
+ * >> 8, @0x8001b2d8) und Spieler-Kennung (Gleichstand-Regel). vz < 0 = untagged = alter Weg
+ * ("Step 1.5", vor allen Dreiecken und Masken). Gesetzt fuer das NAECHSTE Quad ueber
+ * re15_render_pc_shadow_tiefe(), verbraucht sich beim Einreihen. */
+static int32_t       s_shadow_vz[SHADOW_QUAD_MAX];
+static uint8_t       s_shadow_spieler[SHADOW_QUAD_MAX];
+static int32_t       s_shadow_next_vz = -1;
+static int           s_shadow_next_spieler = 0;
+void re15_render_pc_shadow_tiefe(int32_t vz_summe4, int ist_spieler)
+{
+    s_shadow_next_vz = vz_summe4;
+    s_shadow_next_spieler = ist_spieler ? 1 : 0;
+}
 
 /* ── Item-get pickup MODAL overlay (byte-true FUN_8001db28) ─────────────────
  * The picked-up item's 112×72 picture zooming/spinning/flipping in, drawn as a
@@ -441,6 +455,8 @@ static int            s_sb_gueltig = 0;
 static uint32_t       s_sb_text[SCREEN_XRES * SCREEN_YRES];   /* Untertitel-Ebene */
 static int            s_sb_text_used = 0;
 static shadow_quad_t  s_sb_shadow[SHADOW_QUAD_MAX];            /* Figurenschatten */
+static int32_t        s_sb_shadow_vz[SHADOW_QUAD_MAX];         /* Runde 36 Spur O: deren OT-Tags */
+static uint8_t        s_sb_shadow_spieler[SHADOW_QUAD_MAX];
 static int            s_sb_shadow_n = 0;
 
 /* Temporary buffer used to emit the sorted-by-depth tri list to SDL.
@@ -541,7 +557,11 @@ int re15_render_pc_standbild_wiederholen(void)
     memcpy(s_framebuffer, s_sb_fb, sizeof s_sb_fb);
     if (s_sb_text_used) { memcpy(s_text_overlay, s_sb_text, sizeof s_sb_text); s_text_overlay_used = s_sb_text_used; }
     s_shadow_quad_count = s_sb_shadow_n;
-    if (s_sb_shadow_n > 0) memcpy(s_shadow_quads, s_sb_shadow, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
+    if (s_sb_shadow_n > 0) {
+        memcpy(s_shadow_quads, s_sb_shadow, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
+        memcpy(s_shadow_vz, s_sb_shadow_vz, (size_t)s_sb_shadow_n * sizeof s_shadow_vz[0]);          /* Runde 36 Spur O */
+        memcpy(s_shadow_spieler, s_sb_shadow_spieler, (size_t)s_sb_shadow_n * sizeof s_shadow_spieler[0]);
+    }
     s_textri_count = s_sb_count;
     if (s_sb_count > 0) {
         memcpy(s_textri_queue, s_sb_queue, (size_t)s_sb_count * sizeof s_textri_queue[0]);
@@ -712,6 +732,9 @@ void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
                         {(float)x2,(float)y2}, {(float)x3,(float)y3} };
     SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
     const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    s_shadow_vz[s_shadow_quad_count] = s_shadow_next_vz;             /* Runde 36 Spur O: Tag */
+    s_shadow_spieler[s_shadow_quad_count] = (uint8_t)s_shadow_next_spieler;
+    s_shadow_next_vz = -1; s_shadow_next_spieler = 0;
     shadow_quad_t *q = &s_shadow_quads[s_shadow_quad_count++];
     for (int i = 0; i < 6; i++) {
         q->v[i].position  = p[idx[i]];
@@ -730,6 +753,9 @@ void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
     SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
     /* quad corners in space: 0(-X,+Z) 2(+X,+Z) 3(+X,-Z) 1(-X,-Z) → tris (0,2,3),(0,3,1) */
     const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    s_shadow_vz[s_shadow_quad_count] = s_shadow_next_vz;             /* Runde 36 Spur O: Tag */
+    s_shadow_spieler[s_shadow_quad_count] = (uint8_t)s_shadow_next_spieler;
+    s_shadow_next_vz = -1; s_shadow_next_spieler = 0;
     shadow_quad_t *q = &s_shadow_quads[s_shadow_quad_count++];
     for (int i = 0; i < 6; i++) {
         q->v[i].position  = p[idx[i]];
@@ -879,6 +905,36 @@ int re15_render_pc_title_row_probe(int *drawn, int *row, uint32_t *hash, uint32_
     return ok;
 }
 
+/* Runde 36 Spur O (re15_pri_schatten_r36.h): Masken und GETAGGTE Schatten in der OT-Ordnung
+ * nachziehen, soweit sie VOR dem naechsten Dreieck (tri_depth) liegen; ende=1 zieht alles nach.
+ * Beide Listen sind fern-zuerst sortiert; liegen Maske und Schatten gleichzeitig an, kommt zuerst,
+ * was UNTER dem anderen liegt (Original: OT-Bucket, bei Gleichstand die Einhaenge-Reihenfolge). */
+static void pc_masken_schatten_flush(int *mi, int mask_n, const int *mask_order,
+                                     int *si, int sh_n, const int *sh_order,
+                                     float tri_depth, int ende)
+{
+    for (;;) {
+        int m_due = (*mi < mask_n) &&
+                    (ende || re15_pri_mask_camera_z(s_pri_rects[mask_order[*mi]].depth) > tri_depth);
+        int s_due = 0, sb = 0, sp = 0;
+        if (*si < sh_n) {
+            int k = sh_order[*si];
+            sb = re15_schatten_bucket(s_shadow_vz[k]); sp = s_shadow_spieler[k];
+            s_due = ende || re15_schatten_dreieck_darueber((long)tri_depth, sb, sp);
+        }
+        if (!m_due && !s_due) return;
+        if (m_due && (!s_due || !re15_schatten_maske_darueber(s_pri_rects[mask_order[*mi]].depth, sb, sp))) {
+            const re15_pri_rect_t *r = &s_pri_rects[mask_order[(*mi)++]];
+            SDL_Rect src = { r->src_x, r->src_y, r->w, r->h };
+            SDL_Rect dst = { r->dst_x, r->dst_y, r->w, r->h };
+            SDL_RenderCopy(s_renderer, s_pri_atlas_tex, &src, &dst);
+        } else {
+            int k = sh_order[(*si)++];
+            SDL_RenderGeometry(s_renderer, s_shadow_tex, s_shadow_quads[k].v, 6, NULL, 0);
+        }
+    }
+}
+
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -921,15 +977,24 @@ void re15_render_end_frame(void)
     /* Step 1.5: RE1.5 character shadows — subtractive blob quads on the floor.
      * Drawn after the BG (darken the helipad) and before the character tris
      * (so the actor occludes its own feet). Matches PSX FUN_8001b064. */
-    if (s_shadow_tex && s_shadow_quad_count > 0 && !getenv("RE15_NO_SHADOW")) {  /* A/B: suppress for isolation diff */
+    /* Runde 36 Spur O: nur UNTAGGED Schatten hier; getaggte (OT-Bucket bekannt) laufen unten in
+     * der Tiefenordnung mit Masken und Dreiecken (re15_pri_schatten_r36.h). RE15_NO_SHADOW
+     * unterdrueckt beide. Die Liste bleibt bis nach Step 2 stehen (Standbild-Kopie + Ordnung). */
+    static int s_no_shadow_env = -1;
+    if (s_no_shadow_env < 0) s_no_shadow_env = getenv("RE15_NO_SHADOW") ? 1 : 0;   /* A/B: suppress for isolation diff */
+    if (s_shadow_tex && s_shadow_quad_count > 0 && !s_no_shadow_env) {
         for (int i = 0; i < s_shadow_quad_count; i++)
-            SDL_RenderGeometry(s_renderer, s_shadow_tex,
-                               s_shadow_quads[i].v, 6, NULL, 0);
+            if (s_shadow_vz[i] < 0)
+                SDL_RenderGeometry(s_renderer, s_shadow_tex,
+                                   s_shadow_quads[i].v, 6, NULL, 0);
     }
     /* STANDBILD: Schatten dieses Bildes aufbewahren (s. Deklaration) */
     s_sb_shadow_n = s_shadow_quad_count;
-    if (s_sb_shadow_n > 0) memcpy(s_sb_shadow, s_shadow_quads, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
-    s_shadow_quad_count = 0;
+    if (s_sb_shadow_n > 0) {
+        memcpy(s_sb_shadow, s_shadow_quads, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
+        memcpy(s_sb_shadow_vz, s_shadow_vz, (size_t)s_sb_shadow_n * sizeof s_shadow_vz[0]);
+        memcpy(s_sb_shadow_spieler, s_shadow_spieler, (size_t)s_sb_shadow_n * sizeof s_shadow_spieler[0]);
+    }
 
     /* PLAYER-SELECT backdrop (SELECTH.TIM) — drawn as the BACKGROUND here, BEFORE the 3D models
      * (textri, Step 2 below) so Leon(PL00)/Elza(PL01) render ON TOP of the rooftop/debris scene.
@@ -1060,6 +1125,17 @@ void re15_render_end_frame(void)
          * GROESSER als tri_depth ist — bei Gleichheit gewinnt die Figur. Das alte ">="
          * mit depth*64 verdeckte einen Bucket zu frueh. */
         int mi = 0;
+        /* Runde 36 Spur O: getaggte Schatten (OT-Bucket bekannt) fern-zuerst in die Ordnung;
+         * untagged wurden oben in Step 1.5 gezeichnet. */
+        int sh_order[SHADOW_QUAD_MAX], sh_n = 0, si = 0;
+        if (s_shadow_tex && !s_no_shadow_env) {
+            for (int k = 0; k < s_shadow_quad_count; k++) if (s_shadow_vz[k] >= 0) sh_order[sh_n++] = k;
+            for (int a = 1; a < sh_n; a++) {
+                int k = sh_order[a], kb = re15_schatten_bucket(s_shadow_vz[k]), b = a - 1;
+                while (b >= 0 && re15_schatten_bucket(s_shadow_vz[sh_order[b]]) < kb) { sh_order[b + 1] = sh_order[b]; b--; }
+                sh_order[b + 1] = k;
+            }
+        }
         if (s_textri_count > 0 && s_tim_texture) {
             /* ABR2 (B - F) subtraktiv wie der Shadow-Blob (einmal komponiert). */
             static SDL_BlendMode s_tri_sub_blend = SDL_BLENDMODE_INVALID;
@@ -1076,7 +1152,12 @@ void re15_render_end_frame(void)
                 uint8_t bl = (i < s_textri_count) ? s_textri_blend[order[i]] : 0;
                 int mask_due = (mi < mask_n) &&
                     (re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) > tri_depth);
-                if (i == s_textri_count || s != cur_slot || bl != cur_blend || mask_due) {
+                /* Runde 36 Spur O: ein Schatten ist faellig, sobald das naechste Dreieck UEBER ihm liegt. */
+                int shadow_due = (si < sh_n) && (i == s_textri_count ||
+                    re15_schatten_dreieck_darueber((long)tri_depth,
+                                                   re15_schatten_bucket(s_shadow_vz[sh_order[si]]),
+                                                   s_shadow_spieler[sh_order[si]]));
+                if (i == s_textri_count || s != cur_slot || bl != cur_blend || mask_due || shadow_due) {
                     int n = i - batch_start;
                     if (n > 0 && s_tim_slots[cur_slot].loaded) {
                         for (int j = 0; j < n; j++) {
@@ -1103,23 +1184,15 @@ void re15_render_end_frame(void)
                     batch_start = i;
                     cur_slot = s;
                     cur_blend = bl;
-                    while (mi < mask_n &&
-                           re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) > tri_depth) {
-                        const re15_pri_rect_t *r = &s_pri_rects[mask_order[mi++]];
-                        SDL_Rect src = { r->src_x, r->src_y, r->w, r->h };
-                        SDL_Rect dst = { r->dst_x, r->dst_y, r->w, r->h };
-                        SDL_RenderCopy(s_renderer, s_pri_atlas_tex, &src, &dst);
-                    }
+                    /* Masken UND getaggte Schatten, die vor dem naechsten Dreieck liegen (Runde 36 Spur O). */
+                    pc_masken_schatten_flush(&mi, mask_n, mask_order, &si, sh_n, sh_order,
+                                             tri_depth, i == s_textri_count);
                 }
             }
         }
-        /* Remaining masks (nearest, or the no-tris case) — blit on top. */
-        while (mi < mask_n) {
-            const re15_pri_rect_t *r = &s_pri_rects[mask_order[mi++]];
-            SDL_Rect src = { r->src_x, r->src_y, r->w, r->h };
-            SDL_Rect dst = { r->dst_x, r->dst_y, r->w, r->h };
-            SDL_RenderCopy(s_renderer, s_pri_atlas_tex, &src, &dst);
-        }
+        /* Remaining masks and tagged shadows (nearest, or the no-tris case) — in OT order on top. */
+        pc_masken_schatten_flush(&mi, mask_n, mask_order, &si, sh_n, sh_order, -1e30f, 1);
+        s_shadow_quad_count = 0;   /* Runde 36 Spur O: Schattenliste erst NACH der Ordnung leeren */
     }
 
     s_dbg_last_textri_count = s_textri_count;

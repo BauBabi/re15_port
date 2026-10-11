@@ -77,6 +77,7 @@ static inline int RNDI(float f) {
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
+#include "re15_pri_schatten_r36.h"   /* Runde 36 Spur O: Schatten-Tag fuer die OT-Ordnung */
 #include "re15_collision.h"
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
@@ -8854,12 +8855,14 @@ re_title:;
                 for (int i = 0; i < 9; i++) sbm[i] = sh_rot[i];
                 for (int i = 0; i < 3; i++) sbt[i] = sh_trans[i];
                 int sx[4], sy[4], sok = 1;
+                int32_t sh_vz_summe = 0;   /* Runde 36 Spur O: AVSZ4-Summe der vier Ecken (re15_pri_schatten_r36.h) */
                 for (int v = 0; v < 4; v++) {
                     int32_t _x = sh_corner[v][0], _y = sh_corner[v][1], _z = sh_corner[v][2];
                     int32_t _vx = (int32_t)(((int64_t)_x*sbm[0] + (int64_t)_y*sbm[1] + (int64_t)_z*sbm[2]) >> 12) + sbt[0];
                     int32_t _vy = (int32_t)(((int64_t)_x*sbm[3] + (int64_t)_y*sbm[4] + (int64_t)_z*sbm[5]) >> 12) + sbt[1];
                     int32_t _vz = (int32_t)(((int64_t)_x*sbm[6] + (int64_t)_y*sbm[7] + (int64_t)_z*sbm[8]) >> 12) + sbt[2];
                     if (_vz < 64) { sok = 0; break; }   /* H28 near-clip */
+                    sh_vz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;   /* SZ-Klemme 0..65535 wie die GTE */
                     int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
                     int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
                     uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
@@ -8879,6 +8882,8 @@ re_title:;
                                 g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y, SH_HALF_X, SH_HALF_Z,
                                 sx[0],sy[0],sx[1],sy[1],sx[2],sy[2],sx[3],sy[3], maxx-minx, maxy-miny);
                     }
+                    /* Runde 36 Spur O: Spieler-Schatten in die OT-Ordnung (FUN_8001b064 @0x8001b2d8). */
+                    re15_render_pc_shadow_tiefe(sh_vz_summe, 1);
                     if (re15_player_is_dead() && g_death_pool > 0)
                         /* BLOOD POOL (byte-true LAB_8003694c): the shadow quad turns dark-red
                          * (subtractive color 0x38/0xff/0xff @0x8003699c-b8) — the SIZE growth
@@ -9747,12 +9752,14 @@ re_title:;
                     for (int i = 0; i < 9; i++) nm[i] = nsh_rot[i];
                     for (int i = 0; i < 3; i++) nt[i] = nsh_trans[i];
                     int nsx[4], nsy[4], nok = 1;
+                    int32_t nsh_vz_summe = 0;   /* Runde 36 Spur O: AVSZ4-Summe (Gleichstand: unten) */
                     for (int v = 0; v < 4; v++) {
                         int32_t _x = nsh_c[v][0], _y = nsh_c[v][1], _z = nsh_c[v][2];
                         int32_t _vx = (int32_t)(((int64_t)_x*nm[0] + (int64_t)_y*nm[1] + (int64_t)_z*nm[2]) >> 12) + nt[0];
                         int32_t _vy = (int32_t)(((int64_t)_x*nm[3] + (int64_t)_y*nm[4] + (int64_t)_z*nm[5]) >> 12) + nt[1];
                         int32_t _vz = (int32_t)(((int64_t)_x*nm[6] + (int64_t)_y*nm[7] + (int64_t)_z*nm[8]) >> 12) + nt[2];
                         if (_vz < 64) { nok = 0; break; }
+                        nsh_vz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;
                         int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
                         int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
                         uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
@@ -9761,6 +9768,7 @@ re_title:;
                         nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
                     }
                     if (nok && !crow_no_record) {
+                        re15_render_pc_shadow_tiefe(nsh_vz_summe, 0);   /* Runde 36 Spur O */
                         if (corpse_pool || crow_tinted)
                             re15_render_shadow_quad_c(nsx[0], nsy[0], nsx[1], nsy[1],
                                                       nsx[2], nsy[2], nsx[3], nsy[3],
