@@ -161,8 +161,9 @@ Stufe zum Tor nach ROOM1100; seit die Objekte fallen koennen, stand die Frage, o
 versperren kann. Sie laesst sich **weder im Original noch im Port bewegen** (am Original mit Haltepunkten in der
 Schubkette @0x8002bf14-c0e8 gemessen, im Port mit Leon und Elza ueber den echten Weg aus 10F0/10F1): jeder Schub
 setzt sie in die Bruestung oder die Westwand, das Spiel nimmt ihn nicht an (Sperre @0x8002c0b0) - kein Softlock.
-Die Kisten in ROOM3050 (Fall = vorgesehener Weg zur Super Redhawk) und ROOM2050/2051 fallen wie im Original. Faellt
-die 2050-Kiste, steht sie beim naechsten Betreten wieder auf ihrem Platz (Original und Port, Raumskript @0x01D0E);
+Die Kisten in ROOM3050 und ROOM2050/2051 fallen wie im Original (in 3050 ist das der vorgesehene Weg zur Super
+Redhawk - im Port liegt sie allerdings auch ohne die Kiste in Reichweite, s. Grenzen). Faellt die 2050-Kiste, steht
+sie beim naechsten Betreten wieder auf ihrem Platz (Original und Port, Raumskript @0x01D0E);
 ROOM2040 ist ausserdem ueber 2020 -> 2030 -> 2060 erreichbar. Neu dabei, wie im Original: ein ruhendes Objekt wird
 jedes Bild aus einer beruehrten Wand geschoben (Eindringtiefe + 18, FUN_8003b558 @0x8002c0d0 / FUN_8003da78
 @0x8003b79c) - deshalb laesst sich der Tritt in ROOM2060 jetzt schieben (vorher unbeweglich), und die gefallene
@@ -277,6 +278,11 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel; der Port bindet jede Datei na
   Folge). Nicht portiert: der senkrechte Zweig des Hoehentests (FUN_8002cabc @0x8002cc3c-cce4), der zweite
   Entity-Durchlauf (@0x8002bfec-c034) und Objekt gegen Objekt (FUN_8002cdf4). Der Durchgang 2020 -> 2030 -> 2060 ist
   nur im Port gefahren, nicht am Original.
+* Items auf erhoehten Flaechen lassen sich im Port vom falschen Stockwerk aufnehmen - das Original prueft dabei das
+  Band der Figur (@0x80042cac-ccc); so liegt die Super Redhawk in ROOM3050 auch ohne die gefallene Kiste in Reichweite
+  (12 Items in 2030/2040/2090/3010/3050 betroffen). Der Lift in ROOM3050 setzt im Port das Kollisionsband nicht
+  (Member 0x12, Original @0x80041228), der vorgesehene Weg ueber die Kerbe bricht dort ab. Beides war schon in v0.8.23 so
+  und wird gemeinsam behoben.
 * 20 Gegner je Raum: in ROOM20B0/20B1 schreibt das Original die Slots 20..34 hinter sein Feld; der Port verwirft sie.
   Das PSX-Ziel braucht 5 x sizeof(re15_actor_t) mehr RAM, ungemessen (kein PSn00bSDK).
 * Elza ROOM1021: Roy sackt beim Schuss nicht sichtbar zusammen, ein Muendungsfeuer fehlt (RE2 setzt eines, ROOM40A0).
