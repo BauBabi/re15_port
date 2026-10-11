@@ -7,7 +7,8 @@
  * Elza ueber den Charakter des Spielstands (re15_savedata.c `out->character` / Restore), also mit der
  * Elza-RDT wie im Spiel (Dateiindex + Elza-Bit @0x800397ec), nicht ueber einen Raumsprung.
  *
- * Aufruf: probe_r36_ziel1190_karte <kartendatei> <1190|1191> [strom] [pos=<x>,<z>,<rot>]
+ * Aufruf: probe_r36_ziel1190_karte <kartendatei> <1190|1191|1090|1091> [strom] [pos=<x>,<z>,<rot> | pos=<x>,<y>,<z>,<rot>]
+ *   (1090/1091 nur fuer die Hof-/Dach-Messung der Spur H Punkt 2: Lage mit y, Band aus y = -y/1800.)
  *   Spielerlage (Vorgabe) (-2800,0,-10900) Blick -x (rot 2048): Stand-Seite des Durchgangs am Tresenende
  *   (SCA r0[0] @0x01C1C endet bei z=-11504, Suedwand r0[1] @0x01C28 bei z=-10280) — von dort laeuft der
  *   Riegel zu den Scheiben. pos= setzt eine andere Lage (z.B. 620 vor Knopf 0: -3180,-24500,2048).
@@ -31,15 +32,17 @@ int main(int argc, char **argv)
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
     unsigned room = (argc > 2) ? (unsigned)strtoul(argv[2], NULL, 16) : 0x1190u;
     int strom = 0;
-    long px = -2800, pz = -10900, prot = 2048;
+    long px = -2800, py = 0, pz = -10900, prot = 2048;
     for (int a = 3; a < argc; a++) {
         if (strcmp(argv[a], "strom") == 0) strom = 1;
+        else if (strncmp(argv[a], "pos=", 4) == 0 &&
+                 sscanf(argv[a] + 4, "%ld,%ld,%ld,%ld", &px, &py, &pz, &prot) == 4) { /* Lage mit y */ }
         else if (strncmp(argv[a], "pos=", 4) == 0 &&
                  sscanf(argv[a] + 4, "%ld,%ld,%ld", &px, &pz, &prot) == 3) { /* Lage gesetzt */ }
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
-    if (room != 0x1190u && room != 0x1191u) {
-        printf("FAIL: Raum 0x%04X ist nicht der Schiessstand (1190/1191)\n", room);
+    if (room != 0x1190u && room != 0x1191u && room != 0x1090u && room != 0x1091u) {
+        printf("FAIL: Raum 0x%04X ist weder Schiessstand (1190/1191) noch Hof (1090/1091)\n", room);
         return 2;
     }
 
@@ -52,7 +55,8 @@ int main(int argc, char **argv)
     g_gameflow.character = (room & 1u) ? 4 : 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100;
-    pl->x = (int32_t)px; pl->y = 0; pl->z = (int32_t)pz; pl->rot_y = (int16_t)prot;
+    pl->x = (int32_t)px; pl->y = (int32_t)py; pl->z = (int32_t)pz; pl->rot_y = (int16_t)prot;
+    pl->floor = (uint8_t)(-(py / 1800));   /* Band aus y wie re15_collision_band_from_y */
     if (strom) re15_game_flag_set(4, 243, 1);
 
     re15_savedata_t sd;

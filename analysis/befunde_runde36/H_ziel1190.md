@@ -175,3 +175,89 @@ Vorher-Bild (§1.1), wo zuerst der Scheiben-Satz stand.
 
 Zeitbasis der Laeufe: JUMP-Laeufe mit `RE15_INPUT_SCRIPT_START=1800` (der Sprung meldet `AUTO-JUMP -> ROOM1190
 (Frame 1768)`), LADE-Laeufe mit `RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=150`.
+
+Berichtigung Zeitbasis: ALLE Laeufe mit `RE15_INPUT_SCRIPT_BASIS=spiel` (Spielbilder); der Bildzaehler
+(g_engine.frame_count, Basis von EXIT_AT/FRAMEDUMP/Skript) beginnt mit JEDEM Raumladen bei 0 — JUMP-Laeufe
+`START=1800` zaehlt also ab dem Laden des Sprungziels, LADE-Laeufe `START=150` ab dem CONTINUE-Laden.
+
+### 1.5 Tests
+
+* `unit_r36_ziel1190` (tests/unit/test_r36_ziel1190.c, probes/r36_ziel1190.cmake): Mechanik-Riegel, s. 1.3.
+* NEU `integration_r36_ziel1190_scheiben` (tests/integration/test_r36_ziel1190_scheiben.cmake, registriert in
+  probes/r36_ziel1190.cmake): neun exe-Laeufe ueber den LADE-Weg (Speicherkarte aus probe_r36_ziel1190_karte,
+  CONTINUE): L0..L3 Leon ROOM1190 Scheibe 0..3 -> Nachricht 6/7/6/7, E0..E3 Elza ROOM1191 (PL04 geladen) ->
+  7/6/7/6, K Leon mit Strom 620 vor Knopf 0 -> `[msg] room=1190 id=0` und kein Scheiben-Satz. Eigener exe-Name
+  (re15_pc_r36h_haken_<id>.exe, Muster test_r34n_b_cursor.cmake), Arbeitsordner r36_ziel1190_wd.
+  Erster Lauf: `1/1 Test #572: integration_r36_ziel1190_scheiben ...   Passed  237.49 sec` —
+  `100% tests passed, 0 tests failed out of 1` (ctest -R "integration_r36_ziel1190_scheiben").
+* `probe_r36_ziel1190_karte` (Mess-Werkzeug, kein add_test): Speicherkarte 1190/1191 (Scheiben) und — nur fuer
+  die Messung in Punkt 2 — 1090/1091 mit Lage `pos=x,y,z,rot` (Band aus y wie re15_collision_band_from_y).
+
+---
+
+## Punkt 2 — Die Kiste in ROOM1090: was sie ist und wozu sie dient
+
+Vorweg (Verwechslungs-Pruefung): ROOM1190 (Schiessstand) hat KEIN Typ-4-Objekt (scd_dump_room: 0 Treffer
+"type=4"); die Frage betrifft also ROOM1090/1091 (Hof hinter dem Revier mit dem brennenden Schuppen). Dort
+stehen ZWEI Kisten.
+
+### 2.1 Bestand (ROOM1090.RDT / ROOM1091.RDT, Datei-Offsets; scd_dump_room.py, raum_geo.py, rdt_msgdump.py)
+
+* **Kisten** = Obj_model_set Typ 4 (schieb- und kletterbar), Flags pc[6..7] `00 01` | 1 = 0x0101 (Kletterbit
+  0x100, FUN_8002d2c0 `& 0x101` @0x8002d358; Installer LAB_80040914 @0x80040990-a4), Box c(0,-900,0) h(900,900,900):
+  * **obj 0** main00 @0x0216E (1091: @0x021BE): Band 1, (-8136,-1800,4753) = HOF (untere Ebene, y -1800).
+  * **obj 1** main00 @0x02190 (1091: @0x021E0): Band 5, (-5960,-9000,-15482) = DACH (obere Ebene, y -9000).
+* **Ebenen** (SCA @0x1DD0; Bandbyte = floor>>4; Spielerband = -y/1800, re15_collision_band_from_y /
+  DAT_800acad6): Dachplatte = Zelle r2[9] @0x01F8C (x -10000..4500, z -17500..-3600, Byte 0x43 -> Band 4, Oberkante
+  Band 5 = y -9000: gemessen steht der Spieler dort mit `band=5`); Nordbruestung des Dachs r2[0] @0x01F20 (x -7256..4624,
+  z -18560..-16403, Byte 0x53 -> Oberkante Band 6) und Nordmauer r2[10] @0x01F98 (Byte 0x63); Hofboden r0[3] @0x01E0C
+  (x -15243..10285, z -6284..8458, Byte 0x03 -> Oberkante Band 1 = y -1800).
+* **Tueren**: slot 0 @0x0211A floor 1 (Hof), Rechteck (-12430,2260,4700,1600), Nutzlast `8a 4d 00 00 e4 a8 00 0c 00 05 06 00`
+  -> ROOM1050 (19850,0,-22300) Cut 6; **slot 1 @0x0213A floor 6**, Rechteck x -7920..-3720, z -21440..-15940,
+  Nutzlast `5c ae 00 00 a0 d7 00 04 00 10 05 00` -> **ROOM1100** (-20900,0,-10336), dir 1024, Cut 5, floor 0;
+  Selbsttuer slot 3 @0x02352 (Szenen-Warp nach (1252,-1800,-2529), nur per `Aot_on 3` sub06 @0x02726).
+* **Wege herein**: ROOM10F0/10F1 slot 1 @0x00F52 -> (-13600,-9000,1300) floor 5 = DACH (dort kommt man nach dem
+  Klettern in 10F0 an, Spur A); ROOM1050/1051 slot 5 @0x00B7A -> (-10100,-1800,4200) floor 1 = HOF. **Kein Weg
+  zurueck aus ROOM1100** (dessen Tueren @0x0099A -> ROOM10D0 und @0x009BA -> ROOM1110; Zensus aller STAGE1-RDT:
+  nur 10F0/10F1, 1050/1051 und die Selbsttuer fuehren nach Raum 0x09).
+* **Skript zu den Kisten**: genau EIN Record nennt eine Kiste. Aot_set slot 3 @0x0215A (1091: slot 2 @0x0215A),
+  sce 3, sat 0x41 (0x40 Mitte-Test/Beruehrung + 0x01 Spieler, kein 0x10 = ohne Taste), **floor 5**, Rechteck
+  x -15500..3572, z -17124..4465 = die ganze Dachflaeche, Nutzlast `ff 00 18 07` -> sub07 (1091: `18 02` -> sub02):
+  `Aot_reset 3` @0x0272C, `Work_set 2e 03 00` @0x02736 (Objekt 0), `Member_set 34 00 94 d9` @0x0273A -> **Kiste 0
+  x := -9836** (1091: @0x02232/@0x0223C/@0x02240). Keine Flagge, keine Bedingung: feuert bei jedem Betreten der
+  Dachflaeche einmal (dann loescht es sich selbst). Sonst nichts: keine AOT auf Band 2 oder 6 ausser Tuer 1, keine
+  Item-AOT (nItem 0, keine Item_aot_set), keine Flagge, keine Szene nutzt eine Kiste (sub02/sub03 = Frau im Schuppen
+  und Rettung, sub06 = Feuerloescher, Nachrichten 0..9 — alles auf Band 1 im Hof).
+
+### 2.2 Kiste 1 (Dach) = die Stufe ueber die Bruestung zum Tor nach ROOM1100 — gemessen
+
+* Die Tuer 1 verlangt **Band 6** (Band-Gate des AOT-Scans FUN_80042cac: Spielerband DAT_800acad6 == rec[2],
+  aot_common.c:1270); auf dem Dach ist der Spieler Band 5. Band 6 = y -10800 = die Oberkante der Kiste 1
+  (Klettern Substate 9: Y -= 1800 @0x800381e4, Band += 1 @0x80038200-08). Die Kiste steht mit ihrer Nordkante
+  (z -16382) an der Bruestung (-16403) und unter dem Suedrand des Tuerrechtecks (-15940).
+* **exe, Lauf k1090_tor3** (JUMP 1090, Spieler (-5960,-12000) Blick -z = rot 1024, Skript U1.5 / A / W4 / U1.5 / A):
+  climb.txt `T5050 pos=(-5960,-9000,-14132) band=5 sub=9 kind=0x81 obj=1` (Kletter-Sonde FUN_8002d474 findet
+  Kiste 1; Halt davor = -14582 + 450) -> `T5081 pos=(-5960,-10800,-15280) band=6 stand=1` (oben, y -10800,
+  Band 6) -> auf der Kiste vorgegangen bis `pos=(-5960,-10800,-15932)` -> Aktion `pad=8000` -> debug.log
+  `[aot] DOOR FIRE slot=1 rect=(-5820,-18690,hw=2100,hh=2750) target_cut=5 spawn=(-20900,0,-10336)`,
+  `[tuer] Sequenz Archiv 2 DOOR36 ...`, `[room] PC loaded room1100.rdt`, climb.txt `T5228 room=1100
+  pos=(-20900,0,-10336) band=0`. (Lauf k1090_tor2 ohne den Schritt nach vorn: Aktion bei z -15280 -> Vorwaertspunkt
+  620 @0x80042bd0 = -15900, 40 vor dem Rechteck -> noch kein Tor; der Schritt auf der Kiste bringt den Punkt hinein.)
+* **Folge**: Vom Dach (Ankunft aus ROOM10F0) gibt es genau EINEN Weg weiter: auf die Kiste klettern und ueber die
+  Bruestung durch das Tor nach ROOM1100 (einseitig, kein Rueckweg). Tuer 0 (floor 1) liegt im Hof und ist vom Dach
+  nicht erreichbar; der einzige andere Ausgang ist der Rueckweg nach 10F0. **Die Kiste 1 ist also Pflicht-Requisite
+  fuer den Fortgang.**
+* Hinweis: die Kiste ist schiebbar (FUN_8002bd44 @0x8002bf14-0x8002bfe4) und seit Spur A (objfall_r36.c, Original
+  FUN_8002c444) fallfaehig: Spur A zaehlte fuer obj 1 acht Absprungzellen auf dem Dach (erste (-9328,3376); Landung
+  Band 3, y -5400 = Oberkante der Mauerzelle r1[18] @0x01F08 Byte 0x23). Wer sie vom Dach schiebt, verliert den Weg
+  zum Tor (Original-Mechanik, kein Rueckweg) — Hinweis fuer den Nutzer, kein Fix.
+
+### 2.3 Kiste 0 (Hof): in den Daten ohne Zweck
+
+* Steht im Hof neben der Ankunft aus ROOM1050 (-10100,4200) und noerdlich der Tuer 0. Das Skript verschiebt sie beim
+  Betreten der Dachflaeche um 1700 nach Westen (x -9836) — **gemessen exe** (Lauf k1090_tor2, JUMP-Spawn (-10200,-9000,1400)
+  liegt im Rechteck): `[prop-member F6] prop[0] obj=0x00 m=0 -> val=-9836` sofort nach dem Laden. Eine Folge dieser
+  Verschiebung gibt es nicht: kein Record haengt an ihrer Lage.
+* Sie ist kletterbar (Band 1 -> 2, y -3600; oben Eingrenzung FUN_8002cfd4, Pin unit_1090_stay_on_crate) und schiebbar
+  (Pin unit_1090_push_pin), erreicht aber nichts: auf Band 2 gibt es keine AOT, keine Flagge, keine Szene, keinen
+  Gegenstand. Beleg: Bestand 2.1 (alle Records von 1090/1091 gelesen).

@@ -18,3 +18,15 @@ set_tests_properties(unit_r36_ziel1190 PROPERTIES TIMEOUT 120)
 add_executable(probe_r36_ziel1190_karte probe_r36_ziel1190_karte.c)
 target_link_libraries(probe_r36_ziel1190_karte PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r36_ziel1190_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# exe-Riegel ueber den LADE-Weg (Speicherkarte Leon 1190 / Elza 1191, CONTINUE, echter Laufweg zu jeder
+# Scheibe, Knopf 0 = Original): tests/integration/test_r36_ziel1190_scheiben.cmake.
+if(TARGET re15_pc)
+    add_test(NAME integration_r36_ziel1190_scheiben
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_ziel1190_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_ziel1190_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_ziel1190_scheiben.cmake)
+    set_tests_properties(integration_r36_ziel1190_scheiben PROPERTIES TIMEOUT 1500)
+endif()
