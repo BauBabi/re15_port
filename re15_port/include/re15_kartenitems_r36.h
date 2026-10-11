@@ -46,6 +46,10 @@ typedef struct {
     int32_t  x, y, z;          /* Prop-Ursprung (Welt)                                                  */
     int16_t  rot_x, rot_y, rot_z;   /* Pool +0x68/+0x6A/+0x6C (scd_vm.c Member 3..5)                    */
     int32_t  rect_x, rect_z;   /* Ecke des Aufhebe-Rechtecks, Groesse RE15_R36K_RECT                    */
+    uint8_t  licht[3];         /* Vertexfarbe (128 = neutral) = 128 * Licht-Referenz / Textur-Median
+                                * (PORT-WAHL aus Messung: Papiergrund so hell wie die hellsten 15 % der
+                                * Umgebung im Nutzer-Cut; das RDT-Figurenlicht gibt an den Waenden 31..70,
+                                * 1140 Cut 5 (41,39,39) = 2,8x dunkler als die Tafel)                   */
 } re15_kartenitem_r36_t;
 
 #define RE15_R36K_ANZAHL       5
@@ -80,6 +84,10 @@ const uint8_t *re15_kartenitems_r36_tim_bytes(uint16_t room_id, int *out_size);
  * Bank 33 @0x8006E66C). */
 int      re15_kartenitems_r36_blatt_besitz(unsigned page);
 uint32_t re15_kartenitems_r36_besitz_bits(void);
+
+/* HAKEN Prop-Zeichner (platform/pc/main.c): Vertexfarbe des Karten-Props statt des RDT-Figurenlichts;
+ * 1 = gesetzt (nur obj RE15_R36K_OBJ in einem Kartenraum), sonst 0 und nichts veraendert. */
+int re15_kartenitems_r36_licht(uint16_t room_id, int obj_id, uint8_t *r, uint8_t *g, uint8_t *b);
 
 /* Sonden/Riegel. */
 int                          re15_kartenitems_r36_anzahl(void);

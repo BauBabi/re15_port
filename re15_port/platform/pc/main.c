@@ -10834,6 +10834,9 @@ re_title:;
                                 pg0 = pg1 = pg2 = g_re15_light_tint[1];
                                 pb0 = pb1 = pb2 = g_re15_light_tint[2];
                             }
+                            { uint8_t kr, kg, kb;   /* Runde 36 Spur N: Lageplan-Karte im Licht der Wandstelle */
+                              if (re15_kartenitems_r36_licht((uint16_t)g_current_room_id, oid, &kr, &kg, &kb)) {
+                                  pr0 = pr1 = pr2 = kr; pg0 = pg1 = pg2 = kg; pb0 = pb1 = pb2 = kb; } }
                             re15_render_textured_tri_lit(
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,

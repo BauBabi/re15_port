@@ -199,6 +199,16 @@ const uint8_t *re15_kartenitems_r36_ereignis(uint16_t room_id, uint8_t event_id)
     return re15_kartenitems_r36_programm(room_id, NULL);
 }
 
+int re15_kartenitems_r36_licht(uint16_t room_id, int obj_id, uint8_t *r, uint8_t *g, uint8_t *b)
+{
+    int k = index_des_raums(room_id);
+    if (k < 0 || obj_id != RE15_R36K_OBJ) return 0;
+    if (r) *r = k_r36k_lage[k].licht[0];
+    if (g) *g = k_r36k_lage[k].licht[1];
+    if (b) *b = k_r36k_lage[k].licht[2];
+    return 1;
+}
+
 int re15_kartenitems_r36_obj_id(uint16_t room_id)
 {
     return index_des_raums(room_id) >= 0 ? RE15_R36K_OBJ : -1;
