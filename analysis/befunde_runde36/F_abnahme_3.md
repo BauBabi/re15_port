@@ -4,7 +4,12 @@ Datum: 2026-10-11. Pruefer: unabhaengige Abnahme 3 (kein Code geaendert). Baum `
 Zweig `r36/zombieki`, Stand **43220d8d** (Basis master 78a4a748). Massgeblich: AUFTRAG.md (Wortlaut), VERTRAG.md,
 Vorgaenger-Abnahme `F_abnahme_2.md` (Stand 4285214f: P1 erfuellt, P2 teilweise, P3 erfuellt; Maengel 1-3).
 
-> **ERGEBNIS:** (wird fortlaufend geschrieben — Zwischenstand)
+> **ERGEBNIS: NICHT BESTANDEN.** P1 erfuellt, P2 teilweise, P3 erfuellt. Bau, gezielte Regression (200/200), Spur-Riegel
+> (46/46 u. a.), RE-Zitate (alle selbst gelesen) und Vertrag halten. Abnahme-2-Mangel 1 (Nordwest-Gang) ist behoben, die
+> Widerlegung von Mangel 2 (Taschenplaetze liegen in den Zellen #13/#20/#21) stimmt. Offen (Abschnitt 6): am erreichbaren
+> Nordwest-Rand stauen sich nach dem ersten Angriff beide Gorillas (einer nah, der zweite FERN dahinter, Umweg 0 — Gegenbeleg
+> zu "fern 0"), und die nahe Rest-Blockade an den Stoss-Zielen (Ostgassen-Eingang, Nordwest-Ecke) bleibt lang und ist am
+> Original nicht gemessen.
 
 ## 0. Stand, Bau, Messmittel
 
@@ -61,6 +66,40 @@ Darin alle 6 Spur-Tests (`unit_r36_zombieki_{wecker,szenen,affen,sicht,affen_blo
 nachgefahren (`ctest -V`): wecker 2/2 (45 Zombies, 0 stehen mit Sicht), szenen 5/5 (erneuter Angriff Bild 419/366/84/153/282),
 affen 9/9 (Tod Bild 90, 1700/1800, 91 Takte, Ende 2428/2528, Gegenprobe ohne Haken = Befund) — bitgleich zu Abnahme 2.
 
+## 2a. Punkt 1 — "Zombies ... bleiben hier ewig beteiligungslos stehen, obwohl ich ziemlich in Ihrer Naehe vor ihnen bin, fast vor ihrer Nase. Auch wenn sie innerhalb eines Raumes sind."
+
+P1-Code seit Abnahme 2 unveraendert (Abschnitt 0). Gemessen wird deshalb (a) ob das Verhalten am HEAD-Stand bitgleich zum
+Abnahme-2-Stand ist (dort P1 erfuellt, mit Tuerweg, Lage-Zensus aller Stages, Abnahme-0/1-Faellen) und (b) ein zusaetzlicher
+echter Tuerweg.
+- exe HEAD, Kommandozeilen der Abnahme 2 (Basis `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp
+  RE15_TITLE_SHOT_AF=2 RE15_GEGNER_Y_LOG=gy.log`), gy.log byteweise gegen die NB2-Laeufe der Abnahme 2 (`cmp`):
+  - ROOM1040 Westgang (`RE15_AI_FLAVOR=re2 RE15_DEBUG_JUMP=1040@250 RE15_PLAYER_POS=-29900,6000,0,0 RE15_EXIT_AT=900`):
+    **bitgleich** (1151 Zeilen) — Ostgang ohne Sicht durch die Wand, Westgang-Zombies sehen Leon.
+  - ROOM10B0 Terrasse (`RE15_DEBUG_JUMP=10B0@250 RE15_PLAYER_POS=-17000,-8500,2048,0 RE15_EXIT_AT=2400`): **bitgleich** (2651
+    Zeilen); F2400 alle vier an der Kante vor Leon (x -18450/-17651/-16850/-16047, z -11832, d 3319..3633, los 1, st1/1/1).
+  - **Echter Tuerweg ROOM1020 -> ROOM1010** (`RE15_AI_FLAVOR=re2 RE15_DEBUG_JUMP=1020@250 RE15_PLAYER_POS=-2950,-17700,1024,0
+    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=20 RE15_INPUT_SCRIPT=U0.5,W0.3,A0.1,W8,U0.7,W60 RE15_EXIT_AT=2600`):
+    **bitgleich** (5082 Zeilen); 44 Bilder 1020, 765 Bilder 1010 (per Tuer), dann Tod -> 1240. In 1010: F60 beide los 1,
+    Slot 2 Griff (st1/3) F60-F120, Slot 1 Griff F240-F300, danach erneut Gang/Griff (Slot 2 F480 st1/3, F540 Sub 6, F660 Sub 8).
+- Pruefer-Sonde Lage-Zensus ALLE Stages + Elza-Varianten (`F_abn3/probe_eintritt_alle3.c` = Kopie der Abnahme-2-Sonde, gegen die
+  HEAD-Bibliotheken gelinkt): 410 Eintritte, **638 Faelle: PASSIV 1, KLEMME 1** — beide ROOM1091<-10F1 (Elza Band 5 / Zombies
+  Band 1, andere Ebene, wie Abnahme 2); Taschenfall ROOM1010 mit Wurf-Klemme 0 Bilder auf der Stelle, Gegenprobe 450;
+  ROOM10B0 3643 (Gegenprobe 13025). Fallzeilen bitgleich zur Abnahme 2.
+- Abnahme-1-Fall ROOM1010 (`RE15_AI_FLAVOR=re2 RE15_DEBUG_JUMP=1010@250 RE15_PLAYER_POS=3750,4300,1024,0 RE15_EXIT_AT=1500#1010`;
+  der Lauf endet erst am Zeitlimit, weil Leon stirbt und `#1010` nie mehr gilt — wie in Abnahme 2): der R1010-Teil (780 Zeilen)
+  **bitgleich**; Slot 1 Griff F60, Wurf endet bei (3433,2983) VOR dem Keil, Sub 5 F120-F420, **erneuter Griff F480**, F540 Sub 6;
+  Slot 2 los 1 ab F60, Griff F240-F300.
+- **Zusaetzlicher echter Tuerweg ROOM1020 -> ROOM1040** (neu; Tuer-AOT aot2 (-27150,-8200) aus `test_r36_zombieki_eintritt aot
+  1020`; `RE15_AI_FLAVOR=re2 RE15_DEBUG_JUMP=1020@250 RE15_PLAYER_POS=-26300,-8200,2048,0 RE15_INPUT_SCRIPT_BASIS=spiel
+  RE15_INPUT_SCRIPT_START=20 RE15_INPUT_SCRIPT=U0.3,W0.3,A0.1,W8,U1.5,W60 RE15_STATE_LOG=st.log RE15_EXIT_AT=2600`, HEAD und
+  v0.8.23): 38 Bilder 1020, 1534 Bilder 1040 (per Tuer), Leon (-24869,16500); alle fuenf Zombies gehen sofort (st1/1/1), Slot 1/2
+  mit Sicht von 15000 her den Gang herauf, Slot 2 Griff (st1/3/3) F810, Slot 1/2 Sub 5 F900, Slot 4 Griff F1170, Slot 2
+  erneuter Griff F1260; Leon stirbt. HEAD und v0.8.23 unterscheiden sich nur in 35 Zeilen im Sicht-Bit (Punkt-1-Haken), nicht in Lage/Zustand.
+- **Urteil P1: erfuellt.** Kein Zombie mit Leon vor der Nase bleibt passiv: Tuerwege 1020->1010 und 1020->1040 sofortige
+  Reaktion und Griffe, Abnahme-0/1-Faelle behoben, Lage-Zensus aller Stages beider Szenarien ohne neuen Fall; HEAD bitgleich zum
+  Stand, den Abnahme 2 mit "erfuellt" bewertet hat. Hinweise (wie Abnahme 2, kein Mangel): ROOM10B0-Terrassen-Zombies treten
+  3,3..3,6 m vor Leon an der Kante (Abstieg per Daten unmoeglich); ROOM1091<-10F1 Ebenen-Abweichung (nicht Spur F).
+
 ## 3a. Punkt 3 — "Bei den Monkeys in ROOM 11C0 laeuft das Blut nicht aus wenn sie tot sind."
 
 - Code seit Abnahme 2 unveraendert (main.c-Haken, `re15_r36_affen_lache_{init,tick,render}`, INIT-/Leichen-Haken in
@@ -97,5 +136,147 @@ affen 9/9 (Tod Bild 90, 1700/1800, 91 Takte, Ende 2428/2528, Gegenprobe ohne Hak
 | 40 | 75408 | **221** | 41 / 0 / 11 | +0 | 226 -> 245 |
 
   Bitgleich zum Dossier NB3. Die FERNE Blockade (Leon >= 0x1771) faellt um 96,5 %, die NAHE (Original-Nahjagd) von 19663 auf
-  14662 (die Original-Regel blockiert nah also MEHR als NB3). Gegenueber NB2 (Abnahme 2: Anker 400 15857, Anker 40 1329) ist
-  Anker 400 um 2118 Bilder hoeher, Anker 40 um 1108 niedriger.
+  14662 (-25 %). Gegenueber NB2 (Abnahme 2: Anker 400 15857, Anker 40 1329) ist Anker 400 um 2118 Bilder hoeher, Anker 40 um
+  1108 niedriger. Rest Anker 400: 82 % nah.
+
+### 3.2 exe Kampf-Layout, Leon steht (14 Stellen x 3 Staende, je eigener Prozess)
+`RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=<x,z>,1024,0 RE15_EXIT_AT=2700` (+ Basis-Haken), keine Eingabe; alle
+42 Laeufe selbst gefahren (`F_abn3/affen_<x,z>_<exe>/`, `runs.log`, je rc=0). Auswertung = Skript der Abnahme 2
+(`F_abn3/affen_ausw.py`, Kopie: erster Angriff = Sub 5/6/8/15; fest = aktiv, kein Angriff, >= 90 Bilder im Anker 400, Leon > 3000)
++ Aufteilung nah/fern (`F_abn3/fest_split.py`: fest-Bilder mit d >= 6001). Stellen 1-10 = Abnahme 2, 11-14 = neu: die zu Fuss
+erreichbaren Nordwest-Raender (11/12 = Riegel-Szenen 6/7, 13 = Nordwest-Ecke, 14 = Nordstreifen West).
+
+| # | Leon | v0.8.23 Slot 2 / 3 (fest; davon fern) | NB2 | **NB3 (HEAD)** |
+|---|---|---|---|---|
+| 1 | (-7000,12500) | nie / F1012 (1882/0; 1882/0) | F1514 / F606 (0/0) | **nie / F730** (825/0; 0/0) |
+| 2 | (-14000,2000) NW-Gang | **F680** / nie (0/930; 0/930) | F2438 / F1600 (246/99) | **F680 / nie** (0/0) |
+| 3 | (6000,-9000) | nie / F324 (1572/1874; 0/0) | F1246 / F339 (102/309) | **nie / F324 (1652/1874; 0/0)** |
+| 4 | (-24000,10000)* | nie / nie (1818/1418; alle fern) | F1913 / F851 (719/0) | **F853 / F1570** (0/1192; 0/1) |
+| 5 | (7000,4000) | nie / F18 (1011/0) | nie / F18 (98/0) | **nie / F18** (96/0; 96/0) |
+| 6 | (9000,10000) | nie / F309 (1102/0) | F1045 / F309 (0/0) | **F1175 / F309** (0/0) |
+| 7 | (-14746,-4140) West-Pad | F364 / nie (1834/0; 0/0) | F364 / F1186 (344/0) | **F364 / F1021** (179/108; 0/108) |
+| 8 | (7200,-4130) Ost-Pad | F1246 / F274 (0/670) | F981 / F274 (0/396) | **F1050 / F274** (0/468; 0/0) |
+| 9 | (-14000,4000) NW-Gang | **F704** / nie (0/1088) | F1939 / F1577 (242/0) | **F704 / F1496** (249/0) |
+| 10 | (-14500,6000) NW-Gang | **F694** / F1256 (171/298) | F1806 / F1534 (107/0) | **F694 / F892** (0/0) |
+| 11 | (-24452,11938) NW-Rand | nie / nie (1820/1588; alle fern) | F1471 / F853 (0/1384) | **F828 / nie (1528/1464; 0/1465)** |
+| 12 | (-22288,11938) NW-Rand | nie / nie (1768/1671; alle fern) | F1892 / F828 (890/0) | **F868 / F1025 (759/893; 0/691)** |
+| 13 | (-26500,15500) NW-Ecke | nie / **F1620** (1840/90; alle fern) | nie / F747 (787/0) | **F842 / nie (0/1649; 0/0)** |
+| 14 | (-20000,14500) | nie / F1541 (1482/0) | F1534 / F778 (0/0) | **F883 / F896** (0/0) |
+
+\* RE15_PLAYER_POS setzt Leon dort in die Zelle #20; er steht ab F300 auf (-24000,11938) (wie Riegel 4b).
+
+- **Abnahme-2-Mangel 1 (Nordwest-Gang) behoben:** Slot 2 an 2/9/10 F680/F704/F694 = v0.8.23 (bitgleiche Spur an Stelle 2),
+  Slot 3 greift an 9/10 neu bzw. frueher an (nie -> F1496, F1256 -> F892). An keiner der zehn Abnahme-2-Stellen greift ein
+  Gorilla spaeter an als in v0.8.23 (Dossier-Tabelle NB3 erste Angriffe exakt bestaetigt).
+- Summe fest, Stellen 1-10: v0.8.23 15668 (fern 9549) -> NB2 2662 (fern 43) -> **NB3 6643 (fern 205)**; alle 14 Stellen:
+  25927 (19812) -> 5723 (44) -> **12936 (2361)**. Gegen v0.8.23 -58 % bzw. -50 %, gegen NB2 das 2,3-Fache.
+- **Echter Ablauf** (Ada/Marvin-Szene, `RE15_SET_FLAG=4:243,3:130 RE15_DEBUG_JUMP=11C0@250 RE15_PLAYER_POS=-7000,12500,2048,0
+  RE15_STATE_LOG=st.log RE15_EXIT_AT=1700`, Leon nach der Szene (-7107,-12395) rot 651): v0.8.23 / NB2 / NB3 Spur bitgleich —
+  Slot 2 aus dem Wagen F900, Sub 3 ab F1100, wartet F1200-F1500 bei (-5043,-14629) d 3041 ohne Sicht, Sub 5 F1600; Slot 3
+  Sprung F1400, Sub 5 F1600.
+- **Flucht durch die Westgasse** (Leon (-14500,-9000) rot 3072, `RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=20
+  RE15_INPUT_SCRIPT=W15,XU6,W60`, `F_abn3/flucht_west_<exe>/`): nach dem ersten Griff (Slot 2 F277) rennt Leon durch die
+  Westgasse auf den Nordstreifen (F600 (-15729,14335), F750 (-15726,17215)); Slot 2 folgt in allen Staenden; Slot 3 (Start
+  Ostgasse): v0.8.23 erster Angriff F1399 (fest 144/132), NB2 F968, **NB3 F1084 (fest 0/0)**.
+
+### 3.3 Nordwest-Rand nach dem ersten Angriff: Stau zweier Gorillas (exe + Pruefer-Sonde)
+- Die Abnahme-2-Taschenplaetze (-26000,7000)/(-27000,12000)/(-22000,7000) liegen in #13/#20/#21 (Daten oben, Riegel 4b) —
+  **die Widerlegung des Bau-Agenten stimmt**; fuer Leon erreichbar ist der Rand z >= 11938 und die Ecke x -26950..-24200,
+  z >= 14560 (Leon-Raster `F_abn3/raster_leon_800.txt`).
+- An den erreichbaren Raendern 11/12 (= Riegel-Szenen 6/7) laeuft in der exe: Slot 2 kommt per Umweg (F750 Sub 4 bei
+  (-16172,7326)), greift an (F828 bzw. F868), stoesst Leon in die Ecke (-26606,14578) bzw. (-26438,14578); danach **steht Slot 2
+  in Sub 3 an der #21-Ecke (-23302,14489) d 3305 (nah) und Slot 3 in Sub 4 an der Nordwand (-20579,16118) d 6180..6235 (FERN),
+  ohne Bewegung (Stelle 11 F1260-F2700, Stelle 12 F2100-F2700)**; Gorilla-Abstand 3166..3209 (Koerperkontakt 2 x 1600 @0x80121356). Stelle 11: Slot 3 fern
+  festgefahren 1465 Bilder, Stelle 12: 691.
+- Pruefer-Sonde `F_abn3/probe_stau.c` (bindet den Spur-Riegel als Bibliothek ein, setzt Leon (-26606,14578), G1 (-23302,14489)
+  Sub 3, G2 (-20579,16118) Sub 4; Ausgabe `stau_umweg_an.txt` / `stau_umweg_aus.txt`): **900 von 900 Bildern beide im Anker
+  400, kein Angriff — mit Umweg UND ohne (Original-Regel)**; G2 `d1d4=6165..6228` (>= 0x1771), `klemme1d6=1`, Sicht 1,
+  **`Umweg 0` in jedem Bild**. Ursache im Code: `r36_uw_route` kehrt mit 0 zurueck ("gerader Weg zu Leon frei -> Original",
+  zombieki_r36.c Z. 519): der Test `r36_uw_strecke_frei(g, l)` prueft die Knotenstrecke entlang des Nordstreifens z 16100 nur
+  gegen SCA-Zellen; der zweite Gorilla, der genau dort an der #21-Ecke wartet, zaehlt nicht. Das Original-B[4] steuert dann
+  auf Leons LAGE (rot 1885 = WSW, in G1 hinein), nicht auf den Knoten.
+- Stelle 13 (Nordwest-Ecke): Slot 2 greift per Umweg und Streifen wiederholt an (F842 ff.), Slot 3 wartet 1649 Bilder in Sub 3
+  an der #21-Ecke (-23302,13088..13306) d 3600..4500 (nah, ohne Angriff). v0.8.23: Slot 3 greift dort an (F1620), Slot 2 steht
+  fern in der Westgasse. Je Gorilla gezaehlt greift Slot 3 in NB3 spaeter an (nie) als in v0.8.23; der erste Angriff auf
+  Leon kommt frueher (F842 statt F1620).
+- Die Riegel-Pruefung "keine FERN-Blockade nach dem ersten Angriff" gilt fuer die sieben Riegel-Szenen (Sonden-Start F195,
+  Leon fest); an denselben Leon-Lagen in der exe (Kampf-Layout-Start) gilt sie nicht (oben).
+
+### 3.4 Urteil Punkt 2: **teilweise**
+Verbessert: Zufallsgang -84 % (fern -96,5 %), Griffe 226 -> 245; keine Abnahme-2-Stelle mit spaeterem Angriff; Nordwest-Gang
+wie v0.8.23; Flucht durch die Westgasse und Nordwest-Raender: die Gorillas kommen jetzt hin (v0.8.23 nie). Dem Wortlaut
+"noch oft blockiert" stehen gemessene, reproduzierbare Rest-Blockaden entgegen, die genau dort auftreten, wohin ein Angriff
+Leon stoesst: (1) Nordwest-Rand: nach dem ersten Angriff stehen BEIDE Gorillas still (Stelle 11: 1528/1464 Bilder, ~50 s; Stelle 12: 759/893), einer nah
+an der #21-Ecke, der andere FERN dahinter im Koerperkontakt — der Umweg loest das FERNE Haengen nicht (`Umweg 0`), entgegen der
+Angabe "Blockade nach dem ersten Angriff: fern 0"; (2) Ostgassen-Eingang (6000,-9000): beide Gorillas 1652/1874 Bilder nah
+festgefahren (= v0.8.23); (3) Nahjagd insgesamt nur -25 % (Zufallsgang), an den 14 exe-Stellen bleiben 12936 fest-Bilder
+(bezogen auf 14 x 2 Gorillas x 2700 Bilder: 17 %; v0.8.23 34 %, NB2 7,6 %). Dass die Nahjagd an diesen Stellen Original-Verhalten ist, ist statisch
+(A[3]/B[3] @0x80117b40-c74/@0x80117d4c) und durch die Spur-J-GDB-Spur EINER Szene belegt, an den gemessenen Stellen aber nicht
+(GDB-Messung steht laut Dossier aus).
+
+## 4. Gates
+
+- **Bau:** OK (`local_build.sh configure` + `build`, "ninja: no work to do", exe = HEAD, Abschnitt 0).
+- **Spur-Tests / gezielte Regression:** 200/200 gruen (Abschnitt 2); `unit_r36_zombieki_affen_block riegel` direkt 46/46. Je
+  Nutzer-Punkt ein messender Riegel mit Gegenprobe (P1 sicht/eintritt/wecker/szenen, P2 affen_block, P3 affen). Luecke P2: der
+  Riegel prueft "keine FERN-Blockade nach dem ersten Angriff" nur fuer seine sieben Szenen (Sonden-Start F195, Leon fest); an
+  den Leon-Lagen der Szenen 6/7 mit dem exe-Startlayout gilt es nicht (Abschnitt 3.3, Mangel 1).
+- **RE-Gate:** alle neuen Zitate selbst gelesen und stimmen (Abschnitt 1, u. a. @0x80117448-6c / @0x8011706c, @0x8003be34-54 /
+  @0x8003be8c-a0, @0x80118ac0-af0, @0x80117bc8, ROOM11C0.RDT 0x014c4/0x01518/0x01524/0x015d8/0x0165c); Adressen auch in den
+  Commit-Messages 0a06f8c4 / 43220d8d. 0 Guess-Tells im Code-Diff, keine Env-Schalter als Abschluss; neue Stellgroessen
+  (45/400) als PORT-WAHL mit Messreihe gekennzeichnet.
+- **Fix erklaert den Befund?** Abnahme-2-Mangel 1: ja (ungewichtete Komponentensuche -> A*; exe Nordwest-Gang = v0.8.23).
+  Abnahme-2-Mangel 2: die Widerlegung stimmt (Plaetze in #13/#20/#21, Leon erreicht sie nicht; Raster-Artefakt mit
+  Vorlage = Knoten 87 -> 0); die Verallgemeinerung "Rest = Original-Nahjagd, fern 0" stimmt in der exe nicht (Mangel 1).
+- **Vertrag:** Pfade `git diff 78a4a748..HEAD --name-only`: nur analysis/befunde_runde36/F_*, engine/src/{enemy_ai_common.c,
+  enemy_ai_re2_zombie.c, zombieki_r36.c}, include/re15_zombieki_r36.h, platform/pc/main.c, tests/unit/probes/r36_zombieki.cmake,
+  tests/unit/test_r36_zombieki_* — keine release/, platform/android/, shared_assets/PSX/, Test-CMakeLists, RELEASE_NOTES.
+  Gemeinsame Dateien: enemy_ai_common.c +32/-11 (Haken je 1-2 Zeilen, zwei Exporte 5/6 Zeilen im Sichtfilter-Bereich, Spur F =
+  Eigentuemer laut VERTRAG 1.4; NB3 +1 Zeile), enemy_ai_re2_zombie.c +2/-1, main.c +4. Keine Bank-9-Bits, Nachrichten-IDs,
+  Ereignisse (zombieki_r36.c ohne flag_set/msg_install/scd_event_fire). Tests nur ueber `probes/r36_zombieki.cmake`.
+- **Nebenwirkungen:** Zombie-Raeume bitgleich zum Abnahme-2-Stand (Abschnitt 2a); ROOM11C1 (Elza) hat keine Gorillas
+  (Abnahme 2, Sonde `probe_affen_raum`); Gorilla-Zweig nur ROOM11C0. Echter Ablauf der Ada/Marvin-Szene bitgleich zu v0.8.23.
+- **Volle Suite:** im Spurbaum nicht gefahren (Auftrag) — Orchestrator im Integrationsbaum.
+
+## 5. Urteile je Nutzer-Punkt (gegen den Wortlaut)
+
+| Punkt | Urteil | Kernbeleg |
+|---|---|---|
+| 1 Zombies bleiben ewig beteiligungslos stehen, fast vor der Nase, auch innerhalb eines Raumes | **erfuellt** | P1-Code seit Abnahme 2 unveraendert; exe HEAD bitgleich zur NB2-exe (ROOM1010 Abnahme-Fall, Tuerweg 1020->1010, ROOM1040 Westgang, ROOM10B0); neuer Tuerweg 1020->1040: alle fuenf Zombies sofort, Griffe F810/F1170/F1260; Lage-Zensus alle Stages + Elza 638 Faelle ohne neuen Fall. |
+| 2 Monkeys ROOM11C0 oft blockiert — verbessern | **teilweise** | Verbessert: Zufallsgang 114029 -> 17975 (fern -96,5 %), Nordwest-Gang = v0.8.23, keine Abnahme-2-Stelle spaeter, Westgassen-Flucht fest 0. Nicht erfuellt: Nordwest-Rand (Stellen 11/12, Riegel-Lagen 6/7) nach dem ersten Angriff Stau — ein Gorilla nah an der #21-Ecke, der zweite FERN dahinter 1465/691 Bilder, Umweg 0 in jedem Bild (Sonde 900/900 an = aus); Ostgassen-Eingang beide 1652/1874 Bilder nah fest; Nahjagd im Zufallsgang nur -25 %; 14 exe-Stellen 12936 fest-Bilder (17 % der Gorilla-Zeit). |
+| 3 Blut der toten Monkeys laeuft nicht aus | **erfuellt** | exe HEAD: Leiche ab ~F294, Lache 292 -> 494 rot-dunkle Pixel ueber ~91 Bilder, dann konstant (bitgleich NB2 bis F480); Bildstreifen selbst angesehen; Riegel 9/9. |
+
+## 6. Maengel (nummeriert, nachpruefbar)
+
+1. **P2 FERN-Stau am Nordwest-Rand nach dem ersten Angriff (Gegenbeleg zu "Blockade nach dem ersten Angriff: fern 0").**
+   exe `RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-24452,11938,1024,0 RE15_EXIT_AT=2700` (und `-22288,11938`):
+   Slot 2 greift F828 (F868) an und stoesst Leon in die Ecke (-26606,14578); danach Slot 2 Sub 3 an der #21-Ecke (-23302,14489)
+   d 3305, Slot 3 Sub 4 an der Nordwand (-20579,16118) d 6180..6235, beide ohne Bewegung (F1260-F2700 bzw. F2100-F2700), Gorilla-Abstand
+   3166..3209 (Koerperkontakt); Slot 3 FERN festgefahren 1465 (691) Bilder. Sonde `F_abn3/probe_stau.c` (Leon (-26606,14578),
+   G1 (-23302,14489) Sub 3, G2 (-20579,16118) Sub 4): 900/900 Bilder beide fest, kein Angriff, mit Umweg = ohne Umweg; G2
+   `d1d4` 6165..6228, `klemme1d6=1`, `Umweg 0` je Bild. Ursache: `r36_uw_route` (zombieki_r36.c Z. 519) gibt 0 zurueck, weil
+   `r36_uw_strecke_frei(g, l)` die Knotenstrecke auf dem Nordstreifen z 16100 nur gegen SCA-Zellen prueft — der dort wartende
+   zweite Gorilla zaehlt nicht —, und das Original-B[4] steuert dann auf Leons Lage (rot 1885) in G1 hinein. Abnahmekriterium:
+   an beiden exe-Stellen kein Gorilla >= 90 Bilder FERN festgefahren nach dem ersten Angriff; ein Riegel pinnt die Stau-Lage
+   (Gegenprobe = Befund); Dossier/Commit-Angabe "fern 0" berichtigen.
+2. **P2 Nahe Rest-Blockade an den Stoss-Zielen nicht am Original belegt und nicht verringert.** Stelle (6000,-9000): beide
+   Gorillas 1652/1874 Bilder nah fest (Slot 3 (5876,-8818) d 3102, Slot 2 (3040,-10330) d 5400, Sub 3, Sicht 0; = v0.8.23
+   1572/1874); Nordwest-Ecke/-Rand (Stellen 4/11/12/13): der zweite Gorilla wartet 1100-1650 Bilder in Sub 3 an der #21-Ecke
+   (-23302,13088..14500) d 3300..4500; Zufallsgang nah 19663 -> 14662. Die Begruendung "Original-Nahjagd" stuetzt sich auf
+   A[3]/B[3] statisch und die Spur-J-GDB-Spur EINER Szene (griff/szene); an diesen Stellen ist das Original nicht gemessen
+   (Dossier NB3 OFFEN). Abnahmekriterium: GDB-/DuckStation-Messung des Originals an (6000,-9000) und an der Nordwest-Ecke
+   (Muster J_affen.md) — wartet das Original dort ebenso, im Dossier und unter "Fuer den Nutzer" ausdruecklich benennen; sonst
+   (oder zusaetzlich) die nah-fest-Bilder an den Stellen 3/4/11/12/13 mit einem Gate senken, das die Spur-J-Riegel
+   (`unit_r35_affen_griff/_szene`, bildgenau gegen GDB) gruen laesst, gemessen an denselben exe-Kommandozeilen.
+3. **Voll-Suite** fuer den Endstand: vom Orchestrator im Integrationsbaum zu fahren (gezielte 200 Tests hier gruen).
+
+Hinweise (kein Mangel): (a) Stelle 13 (-26500,15500): je Gorilla gezaehlt greift Slot 3 in NB3 nie an (v0.8.23 F1620); der
+erste Angriff auf Leon kommt dort frueher (F842 statt F1620), die Zahl der angreifenden Gorillas ist gleich (1). (b) NB3
+blockiert an den 14 exe-Stellen 2,3-mal so viele Bilder wie NB2 (12936 gegen 5723) — der Preis der engeren Startbedingung;
+im Dossier als Abwaegung gefuehrt. (c) `R36_FEST_START 45` liegt am Rand der Messreihe (gemessen mit Schritt Radius/4,
+eingebaut Radius/2). (d) PSX-Laufzeit: A* je Gorilla und Bild, statische Puffer ~144 KB (nachgerechnet: 4 x 12288 Byte +
+4 x 24576 Byte) — als OFFEN mit Plan (Tabelle fuer ROOM11C0) gefuehrt. (e) ROOM10B0-Terrasse und ROOM1091-Ebene wie Abnahme 2.
+(f) Nicht selbst nachgeprueft (ginge nur mit Code-Aenderung): die Angabe, ein Umlenken auch NAH (Haenge-Beginn bei Leon > 3000)
+mache `unit_r35_affen_griff/_szene` rot. Gemessen ist nur, dass beide mit dem HEAD-Stand gruen sind.
+(g) Messmittel im Pruefer-Scratch `F_abn3/` (nicht eingecheckt): `run.sh`, `affen_ausw.py`, `fest_split.py`, `tabelle.py`,
+`lache_px.py`, `probe_stau.c`, `probe_eintritt_alle3.c`, `cc.sh`, Rohdaten je Lauf (`gy.log`, `st.log`, Framedumps).
