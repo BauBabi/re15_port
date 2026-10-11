@@ -3282,6 +3282,8 @@ int main(int argc, char *argv[])
           fflush(stderr);
           return 0;
       } }
+    /* Runde 36 Spur G: Pruefhaken RE15_TUER_ARCHIV=<NN:V,...> (platform/pc/src/tuer_r36_pc.c) */
+    { extern int re15_pc_tuer_archiv_test(void); if (re15_pc_tuer_archiv_test()) return 0; }
 
     /* FE-0.3 / FE-1.3 — top-level mode machine: immer Boot zum TITLE.
      * Der RE15_START_ROOM-Schnellweg ist entfernt (siehe re15_gameflow_init). */
