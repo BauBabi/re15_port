@@ -399,3 +399,27 @@ Neu (registriert nur in `tests/unit/probes/r36_schluessel.cmake`):
   `frage=8`, `weg=1` und `pausepad=0` in F1995 (Szene zu Ende). 75 s, gruen. Eigener ctest-Eintrag
   (`-DNUR=befreiung`), damit der bestehende `integration_r36_schluessel` unveraendert bleibt.
 Angepasst: `unit_r36_schluessel_tuer` Pruefzeile B (Text der H4-Begruendung, Pruefung selbst unveraendert).
+
+### N1.6 OFFEN nach Nachbesserung 1
+- **H1 Sichtbarkeit** (Weltmodell 9/10 Bildpunkte in Cut 0) — unveraendert; eine Vergroesserung waere eine
+  Abweichung vom RE2-Modell (152 x 76) und bleibt Nutzerentscheidung (Abschnitt 6).
+- **Randfall Item-Box**: liegt der Prison Key beim Ablauf der Befreiung NICHT im Inventar (z.B. in der Box), oeffnet
+  die Zelle trotzdem ((4,0xEC) steht seit der Aufnahme, ROOM1211 sub00 @0x01DEA prueft das Flag, nicht das
+  Inventar) und es kommt keine Abfrage — RE2 @0x80051634 `bltz s1` haengt ohne Treffer keine Fortsetzung ein
+  (Riegel `befreiung` Fall O). Der Schluessel bleibt dann in der Box. Gleiches Verhalten wie jeder RE1.5-Schluessel
+  im Port (die Kartenleser pruefen das Aufnahme-Bit, re15_item_discard.h Punkt 4).
+- **H5** (Messluecke der Abnahme, Druck auf die Parkplatz-Tuer NACH der Sherry-Szene an der exe): nicht nachgemessen;
+  statisch abgesichert wie in der Abnahme (sub04/sub05 ohne Aot_set/Aot_reset, sub01 nur ohne Strom).
+- **H6** (Beobachtung ausserhalb der Spur, nur am Code gelesen, NICHT geaendert): der Statusschirm zeigt im Elza-Spiel
+  Leons Ausweis, weil `platform/pc/src/inv_render_pc.c` (Lader, Kommentar Z. 285 "Leon (character @0x800ACA5C = 0)
+  -> STPIC_00") immer `ITEM/STPIC_00.TIM` laedt; `STPIC_01..0F.TIM` liegen im Asset-Baum. Kein Artefakt des
+  Kartenwerkzeugs. Fuer den Orchestrator (Eigentuemer Statusschirm), nicht Spur Q.
+- **H3** TUERSE.VBS beim Zusammenfuehren (unveraendert, Abschnitt 6).
+
+### N1.7 Fuer den Nutzer (Nachbesserung 1)
+- **Prison Key (Elza)**: am Ende der Befreiungsszene in ROOM1211 — nach "Elza: John. Wait!" — fragt das Spiel
+  "You don't need this key any more. Discard it?" (wie jeder benutzte Schluessel, RE2-Regel). Ja wirft den Prison
+  Key weg, Nein behaelt ihn; danach laeuft die Szene zu Ende (John geht, Elza ist wieder frei).
+- Deine Sprachaufnahme `synchro/STAGE1/room1211/main09.wav` (master 565da62b) dauert 1,74 s = 52 Bilder und ist
+  vor dem Ende der 99-Bilder-Standzeit von msg 9 fertig — die Abfrage schneidet sie nicht ab.
+- Keine neuen Assets, keine neuen Texte/Ids/Bits.
