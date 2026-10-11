@@ -60,12 +60,19 @@ function(karte_lauf _name _kartenargs _skript _oeffnen_raum)
         "RE15_EXIT_AT=200#${_oeffnen_raum}"
         "${_exe_kopie}")
     if(NOT EXISTS "${WORKDIR}/karte.bmp")
-        message(FATAL_ERROR "r36_karte[${_name}]: kein Kartenabzug (exit=${_rv}, ${WORKDIR})")
+        message(STATUS "r36_karte[${_name}] FAIL: kein Kartenabzug (exit=${_rv}, ${WORKDIR})")
+        set(_fehler "${_fehler} ${_name}-ohne-Abzug" PARENT_SCOPE)
     endif()
 endfunction()
 
 # Farbzaehlung im Kasten: setzt <praefix>_rot/_besucht/_gelb/_sprosse/_wand im Aufrufer.
 function(farben _name _praefix _x0 _y0 _x1 _y1)
+    if(NOT EXISTS "${_basis}_${_name}/karte.bmp")
+        foreach(_k rot besucht gelb sprosse wand)
+            set(${_praefix}_${_k} -1 PARENT_SCOPE)
+        endforeach()
+        return()
+    endif()
     execute_process(COMMAND "${RE15_PROBE}" farben "${_basis}_${_name}/karte.bmp" ${_x0} ${_y0} ${_x1} ${_y1}
                     RESULT_VARIABLE _rv OUTPUT_VARIABLE _out)
     if(NOT _rv EQUAL 0 OR NOT _out MATCHES "rot=([0-9]+) besucht=([0-9]+) gelb=([0-9]+) sprosse=([0-9]+) wand=([0-9]+)")
@@ -80,8 +87,9 @@ function(farben _name _praefix _x0 _y0 _x1 _y1)
     message(STATUS "r36_karte[${_name}] ${_praefix}: ${_out}")
 endfunction()
 
-macro(pruefe _name _bedingung _text)
-    if(${_bedingung})
+# pruefe(<lauf> <wert> <OP> <soll> <text>) - <wert> ist ein Variablenname oder eine Zahl
+macro(pruefe _name _a _op _b _text)
+    if(${_a} ${_op} ${_b})
         message(STATUS "r36_karte[${_name}] PASS: ${_text}")
     else()
         message(STATUS "r36_karte[${_name}] FAIL: ${_text}")
@@ -96,13 +104,13 @@ endmacro()
 karte_lauf(A "1230;-358;0;-6536;1024;besucht:11B0:-26483:-18094;besucht:11C0:-25552:-25331;besucht:1230:-358:-6536"
            "W1,A0.3,W1,A0.3" 10A0)
 farben(A tr 153 114 168 134)
-pruefe(A "tr_sprosse GREATER_EQUAL 25" "B1: Treppensprossen im 10A0-Absatz (rect 6) - ${tr_sprosse} Pixel (vorher 0)")
+pruefe(A tr_sprosse GREATER_EQUAL 25 "B1: Treppensprossen im 10A0-Absatz (rect 6) - ${tr_sprosse} Pixel (vorher 0)")
 farben(A tw 171 100 175 100)
-pruefe(A "tw_gelb EQUAL 5" "B1: Tuer 11B0/11C0 als waagerechter Balken x171..175 auf der Wandzeile y100 - ${tw_gelb} von 5")
+pruefe(A tw_gelb EQUAL 5 "B1: Tuer 11B0/11C0 als waagerechter Balken x171..175 auf der Wandzeile y100 - ${tw_gelb} von 5")
 farben(A to 173 96 173 99)
 farben(A tu 173 101 173 104)
 math(EXPR _quer "${to_gelb} + ${tu_gelb}")
-pruefe(A "_quer EQUAL 0" "B1: KEIN senkrechter Balken quer durch die Wand bei x173 (vorher y98..102) - ${_quer}")
+pruefe(A _quer EQUAL 0 "B1: KEIN senkrechter Balken quer durch die Wand bei x173 (vorher y98..102) - ${_quer}")
 
 # ---- B: P2 Marker ROOM11D0 an der Tuer ------------------------------------------------------
 # ROOM1230 vor der 11D0-Tuer (slot 0 @0x00B12, Trigger (-6041,-17561) 2409x1444; nach Ck(4,243)
@@ -116,9 +124,9 @@ message(STATUS "r36_karte[B] ${_outm}")
 if(_rvm EQUAL 0 AND _outm MATCHES "^MARKER ([0-9]+) ([0-9]+)")
     set(_my ${CMAKE_MATCH_2})
     # Tuermarke (129,124) auf der Oberkante; Ring-Mitte = Marker - 1 (TEX.TIM @0x14910).
-    pruefe(B "_my LESS_EQUAL 133" "11D0: Marker-Ring y ${_my} direkt unter der Tuer y124 (vorher Mitte ~y150)")
+    pruefe(B _my LESS_EQUAL 133 "11D0: Marker-Ring y ${_my} direkt unter der Tuer y124 (vorher Mitte ~y150)")
 else()
-    pruefe(B "0" "11D0: Marker im Abzug gefunden")
+    pruefe(B 0 EQUAL 1 "11D0: Marker im Abzug gefunden")
 endif()
 
 # ---- C: P3 1190 Haupthalle --------------------------------------------------------------------
@@ -128,29 +136,37 @@ karte_lauf(C "1230;-8133;0;10226;1024;besucht:1230:-8133:10226" "W1,A0.3,W1,A0.3
 farben(C h 77 77 142 117)
 farben(C o 145 70 158 103)
 math(EXPR _o_alles "${o_rot} + ${o_besucht}")
-pruefe(C "h_rot GREATER_EQUAL 200" "1190 Haupthalle: rot in rect 1 - ${h_rot}")
-pruefe(C "_o_alles EQUAL 0" "1190 Haupthalle: rect 2 (Ostkammer) ungezeichnet - ${_o_alles}")
+pruefe(C h_rot GREATER_EQUAL 200 "1190 Haupthalle: rot in rect 1 - ${h_rot}")
+pruefe(C _o_alles EQUAL 0 "1190 Haupthalle: rect 2 (Ostkammer) ungezeichnet - ${_o_alles}")
 
 # ---- D: P3 1190 Ostkammer ---------------------------------------------------------------------
 # ROOM1230 vor der Ostkammer-Tuer (slot 4 @0x00CE6, Trigger (-1052,11694) 2297x934; Else-Zweig
-# von Ck(3,0x89) @0x00B98 -> flag 3:137), Rueck-Spawn (142,13001), Blick -z.
-karte_lauf(D "1230;142;0;13001;1024;besucht:1230:142:13001;flag:3:137" "W1,A0.3,W1,A0.3" 1190)
+# von Ck(3,0x89) @0x00B98 -> flag 3:137), Rueck-Spawn (142,13001), Blick -z. Im selben Zweig setzt
+# main00 zwei Hunde (Sce_em_set @0x00D08 / @0x00D1C, Kill-Flag pc[7] = 0x88 / 0x89 in Zone 7,
+# re15_em_status_zone) - erster Lauf 2026-10-11: sie rissen den Spieler vor der Tuer um. Als
+# erledigt gesetzt (flag 7:136 / 7:137), wie nach dem Kampf.
+karte_lauf(D "1230;142;0;13001;1024;besucht:1230:142:13001;flag:3:137;flag:7:136;flag:7:137"
+           "W1,A0.3,W1,A0.3" 1190)
 farben(D o 145 70 158 103)
 farben(D h 77 77 142 117)
 math(EXPR _h_alles "${h_rot} + ${h_besucht}")
-pruefe(D "o_rot GREATER_EQUAL 100" "1190 Ostkammer: rot in rect 2 - ${o_rot}")
-pruefe(D "_h_alles EQUAL 0" "1190 Ostkammer: rect 1 (Haupthalle) ungezeichnet - ${_h_alles}")
+pruefe(D o_rot GREATER_EQUAL 100 "1190 Ostkammer: rot in rect 2 - ${o_rot}")
+pruefe(D _h_alles EQUAL 0 "1190 Ostkammer: rect 1 (Haupthalle) ungezeichnet - ${_h_alles}")
 
 # ---- E: P5 ROOM1110 Teilbereiche -------------------------------------------------------------
 # ROOM1100 vor der 1110-Tuer (slot 1 @0x009BA, Trigger (-27330,-11736) 900x1600), Rueck-Spawn
 # (-26130,-11036), Blick -x (Yaw 2048).
-karte_lauf(E "1100;-26130;0;-11036;2048;besucht:1100:-26130:-11036" "W1,A0.3,W1,A0.3" 1110)
+# Die Tuer steht erst nach Ck(3,0x67) @0x00AC8 und Ck(4,0xE8) @0x00B06 (ROOM1100 sub00, sonst
+# Aot_reset slot 1 sce 0 @0x00ACC/@0x00B0A); die fuenf Zombies des Raums (Sce_em_set @0x00A5E..
+# 0x00AAE, Kill-Flags pc[7] 0x55..0x59 Zone 7) als erledigt gesetzt.
+karte_lauf(E "1100;-26130;0;-11036;2048;besucht:1100:-26130:-11036;flag:3:103;flag:4:232;flag:7:85;flag:7:86;flag:7:87;flag:7:88;flag:7:89"
+           "W1,A0.3,W1,A0.3" 1110)
 farben(E t0 147 115 186 143)
 farben(E t1 190 123 211 132)
 farben(E t2 190 135 211 144)
 math(EXPR _t12 "${t1_rot} + ${t1_besucht} + ${t2_rot} + ${t2_besucht}")
-pruefe(E "t0_rot GREATER_EQUAL 200" "1110: Evidence Room rot - ${t0_rot}")
-pruefe(E "_t12 EQUAL 0" "1110: die kleinen Tuerbereiche ungezeichnet (vorher besucht) - ${_t12}")
+pruefe(E t0_rot GREATER_EQUAL 200 "1110: Evidence Room rot - ${t0_rot}")
+pruefe(E _t12 EQUAL 0 "1110: die kleinen Tuerbereiche ungezeichnet (vorher besucht) - ${_t12}")
 
 # ---- F: P6 Fahrstuhl -- Stand nach der Fahrt 1F -> 3F ------------------------------------------
 # Reihenfolge wie im Spiel: ROOM1040 (1F), Kabine (aus 1F betreten), ROOM1120 (3F, ausgestiegen;
@@ -160,13 +176,13 @@ karte_lauf(F "1120;1300;0;7300;1024;besucht:1040:-21786:-10500;besucht:1080:-136
            "" 1120)
 farben(F k 128 138 135 145)
 math(EXPR _k_alles "${k_rot} + ${k_besucht}")
-pruefe(F "_k_alles EQUAL 0" "3F-Kabine nach Fahrt aus 1F ungezeichnet (vorher besucht) - ${_k_alles}")
+pruefe(F _k_alles EQUAL 0 "3F-Kabine nach Fahrt aus 1F ungezeichnet (vorher besucht) - ${_k_alles}")
 
 # ---- G: Gegenprobe echter Weg in die Kabine (1F) ----------------------------------------------
 # ROOM1040 in der Fahrstuhltuer (slot 0 @0x01096), Blick +z (Yaw 3072), Reservestrom (4,243).
 karte_lauf(G "1040;-21786;0;-10500;3072;besucht:1040:-21786:-10500;flag:4:243" "W1,A0.3,W1,A0.3" 1080)
 farben(G k 110 135 117 142)
-pruefe(G "k_rot GREATER_EQUAL 10" "Kabine aus 1F betreten: 1F-Kabine rot - ${k_rot}")
+pruefe(G k_rot GREATER_EQUAL 10 "Kabine aus 1F betreten: 1F-Kabine rot - ${k_rot}")
 
 file(REMOVE "${_exe_kopie}")
 if(NOT "${_fehler}" STREQUAL "")
