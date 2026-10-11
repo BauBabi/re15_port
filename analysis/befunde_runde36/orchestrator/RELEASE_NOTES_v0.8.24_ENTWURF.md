@@ -93,6 +93,16 @@ ROOM1100: der halbtransparente Figurenschatten wurde am Wandfuss (Cut 1 und 2) v
 ueberdeckt, ebenso der Zombiekopf an der Suedecke - behoben. Dazu liegt der Figurenschatten jetzt in jedem Raum in
 der Zeichenordnung des Originals (Schatten-Bucket aus den vier Ecken, PSX.EXE @0x8001b2d8); im gleichen Bucket
 aendert das die Schuhunterkante um einige Pixel.
+
+**Lageplaene zum Aufsammeln.** Die RE2-Polizeikarte (karte01) haengt an Ihren fuenf Marken: 3F in ROOM1140
+(map3F.bmp zeigt den Konferenzraum, nicht Irons' Buero), 2F in ROOM10D0, 1F in ROOM1030, B2 in ROOM1200, B1 in
+ROOM11D0 - fuer Leon und Elza. Aktionstaste davor: "A police 3F map. / Will you take it?" -> Yes -> "You've taken
+the / police 3F map." Danach zeigt die Karte die ganze Etage wie in RE2: besuchte Raeume gefuellt, unbesuchte als
+Umriss, die Etage ist mit HOCH/RUNTER waehlbar, auch wenn Sie sie nie betreten haben; der Stand liegt im
+Spielstand. Die Karte selbst wird wie im Original "flach" ohne Raumlicht gezeichnet (Attribut-Bit 0x10). Dieser
+Original-Weg war im Port vorher nicht da - deshalb erscheinen jetzt auch 169 andere flache Objekte (Rolltor
+ROOM11E0, Zellentuer ROOM1210, Schubladen ROOM1200, Objekte in 1090/1190/11A0/11B0/11C0 und spaeteren Stages) in
+Texturhelligkeit statt fast schwarz.
 @@WEITERE@@
 
 ## Zur Freigabe: umgeschriebene Texte
@@ -141,6 +151,9 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
   Revier-Fahrstuhl dieser Art. Passt die Labor-Optik im Revier, oder soll die gemalte RE1.5-Farbe zurueck?
 * ROOM4000 (Blue Master Keycard): die neue Folge Klack/Piep/Aufschliessen liegt ueber dem Tor-Motor-Ton des
   Originals - beim Spielen pruefen, ob das stoert.
+* Lageplaene: die 3F-Karte haengt in ROOM1140 (Ihre Marke map3F.bmp zeigt den Konferenzraum) - richtig so?
+  Groesse ist in Ihre Marken eingepasst (ein Blatt); die RE2-Originalgroesse waere ~2,8x groesser - lieber die?
+  ROOM1030: im Karten-Rechteck antwortet bis zur Aufnahme die Karte, daneben und danach das Muenztelefon - passt das?
 @@ENTSCHEIDEN@@
 
 ## Grenzen
