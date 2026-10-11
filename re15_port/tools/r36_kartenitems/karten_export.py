@@ -16,8 +16,10 @@ LAGE (PORT-WAHL aus den Nutzer-Marken, NUTZER-VORGABE = Ort der roten Marke):
   Je Raum ein Cut, in dem der Nutzer markiert hat (Cut aus dem Bildvergleich, Dossier 1.1), dessen
   Kameramatrix (re15_camera_build_view, ausgegeben von `probe_r34n_e_dokumente kamera RAUM`), die
   gemessene Flaechen-Ebene unter der Marke (Dossier 3), die Marken-Huelle (Pixel).
-  Mitte = Sehstrahl der Markenmitte geschnitten mit der Ebene; Massstab s = min(Markenbreite/1080,
-  Markenhoehe/720) auf der Ebene (die Karte liegt INNERHALB der Marke, Seitenverhaeltnis 3:2 bleibt);
+  Mitte = Sehstrahl der Markenmitte geschnitten mit der Ebene; Massstab s = groesster Wert, fuer den
+  die vier projizierten Kartenecken im Nutzer-Cut INNERHALB der Marken-Huelle liegen (Bildraum, +-0,5 px;
+  die Karte liegt in der Marke, Seitenverhaeltnis 3:2 bleibt; auf der schraegen Wand 11D0 waere ein
+  Ebenen-Mass 28 % zu hoch geworden, gemessen im Framedump y 61..97 gegen Marke 65..93);
   das MD1 wird gleichmaessig um s skaliert (nur die 5 Ecken, UV/Normalen/Topologie unveraendert).
   Drehung: Modell +x -> Welt unten (0,1,0), Modell +y -> in die Wand (-n), Modell +z -> rechts
   (unten x vorwaerts), zerlegt in die Euler-Winkel von pc_prop_rot_q12 (Ry*Rx*Rz, platform/pc/main.c).
@@ -119,6 +121,32 @@ def textur_median(tim):
     return np.median(np.array(farben, float), axis=0)
 
 
+def projiziere(raum, p):
+    _, R, T, H = CAMS[raum]
+    R = np.array(R, float).reshape(3, 3) / 4096.0
+    v = R @ p + np.array(T, float)
+    return 160.0 + H * v[0] / v[2], 120.0 + H * v[1] / v[2]
+
+
+def massstab_in_marke(raum, mitte, rechts, unten):
+    x0, y0, x1, y1 = MARKEN[raum]
+    def passt(s):
+        for a in (-540.0, 540.0):
+            for b in (-360.0, 360.0):
+                sx, sy = projiziere(raum, mitte + a * s * rechts + b * s * unten)
+                if sx < x0 - 0.5 or sx > x1 + 1.5 or sy < y0 - 0.5 or sy > y1 + 1.5:
+                    return False
+        return True
+    lo, hi = 0.01, 3.0
+    for _ in range(60):
+        mi = (lo + hi) / 2
+        if passt(mi):
+            lo = mi
+        else:
+            hi = mi
+    return lo
+
+
 def strahl(raum, sx, sy):
     _, R, T, H = CAMS[raum]
     R = np.array(R, float).reshape(3, 3) / 4096.0
@@ -212,7 +240,7 @@ def main():
         M = np.column_stack([unten, vor, rechts])
         breite = abs(((P["tr"] - P["tl"]) @ rechts + (P["br"] - P["bl"]) @ rechts) / 2.0)
         hoehe = abs(((P["bl"] - P["tl"])[1] + (P["br"] - P["tr"])[1]) / 2.0)
-        s = min(breite / 1080.0, hoehe / 720.0)
+        s = massstab_in_marke(raum, P["c"], rechts, unten)
         rx, ry, rz = euler(M)
         assert np.abs(wieder(rx, ry, rz) - M).max() < 1e-9
         urs = P["c"] - 85.0 * s * n
