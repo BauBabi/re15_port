@@ -270,6 +270,12 @@ check_tree() {           # $1 = fertiger Paketordner
         [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-36-Szenen waeren stumm)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
     done
+    # Seit Runde 36 (Spur O, PRI): die Masken-Erzeugnisse der Nutzer-PRIs fuer ROOM10F0 Cut 2 (Absperrung) und ROOM1100
+    # (Wandfuss) liegen im kopierten PSX-Baum (shared_assets/PSX/MASKS); fehlen sie, verdeckt die Absperrung Marvin nicht.
+    for rs in MASKS/ROOM10F0.MSK MASKS/ROOM10F0_PRI02.TIM MASKS/ROOM1100.MSK MASKS/ROOM1100_PRI01.TIM MASKS/ROOM1100_PRI02.TIM; do
+        [[ -s "$out/shared_assets/PSX/$rs" ]] || die "PRI-Maske fehlt/leer im Paket: shared_assets/PSX/$rs (Runde 36 Spur O)"
+        cmp -s "$ASSETS/$rs" "$out/shared_assets/PSX/$rs" || die "PRI-Maske im Paket weicht vom Quellbaum ab: shared_assets/PSX/$rs"
+    done
     # Seit Runde 31: die RE2-Tuersequenzen der 184 abgedeckten Tuerseiten lesen ihr Archiv
     # UNVERAENDERT aus shared_assets/RE2/DOOR/DOORxx.DO2 (door_scene_pc.c re2_archiv_lesen,
     # Modellteil + Tonteil). Fehlt eine Datei, laeuft an diesen Tueren der RE1.5-Uebergang
