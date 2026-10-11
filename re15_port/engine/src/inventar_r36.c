@@ -10,6 +10,7 @@
 #include "re15_menu.h"        /* re15_menu_gameplay_frozen                                       */
 #include "re15_esp.h"         /* re15_esp_fx_get / granate_art                                    */
 #include "re15_messer.h"      /* RE15_MESSER_ID / RE15_MESSER_NICHTS (Runde 35 Spur E)            */
+#include "re15_engine.h"      /* g_engine.frame_count — nur das Protokoll                         */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -75,6 +76,13 @@ int re15_inventar_r36_karte_verbrauchen(void)
     if (n > 0) n--;                                         /* @0x801c11ac (Waechter wie oben) */
     g_inv.slots[k].qty = n;
     if (n == 0) re15_inv_remove_slot(k);                    /* @0x801c11d0-e0 = RE1.5 @0x8004aee4-af2c */
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[inventar-r36] Memory Card verbraucht: Platz %d Rest %u%s | Inventar", k, (unsigned)n,
+            n ? "" : " -> Platz entfernt");
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
+        fprintf(stderr, " %02x:%u", (unsigned)g_inv.slots[i].id, (unsigned)g_inv.slots[i].qty);
+    fprintf(stderr, " | Ausruest-Platz 0x%02x\n", (unsigned)re15_inv_equipped_slot());
+#endif
     return (int)n;
 }
 
@@ -107,9 +115,9 @@ int re15_inventar_r36_tick(void)
                                                              * ist danach der Nachfolger -> nicht i++ */
         weg++;
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[inventar-r36] Platz %d Id %02x Menge 0 -> entfernt (Ausruest-Platz 0x%02x, "
-                        "Waffe %d)\n", i, (unsigned)id, (unsigned)re15_inv_equipped_slot(),
-                re15_player_equipped_weapon());
+        fprintf(stderr, "[inventar-r36] F%u Platz %d Id %02x Menge 0 -> entfernt (Ausruest-Platz 0x%02x, "
+                        "Waffe %d)\n", (unsigned)g_engine.frame_count, i, (unsigned)id,
+                (unsigned)re15_inv_equipped_slot(), re15_player_equipped_weapon());
 #endif
     }
     /* (b) Waffe nachziehen, sobald der Wurf vorbei ist: die Wurf-FSM liest die Waffe jedes Bild
@@ -124,8 +132,8 @@ int re15_inventar_r36_tick(void)
                                                              * nageln wie re15_messer_startinventar */
         re15_audio_prime_weapon(RE15_MESSER_ID);            /* Bank `jal 0x80043d8c` @0x800466c4 */
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[inventar-r36] Waffe %d (leer, abgelegt) -> %d (Messer-Rueckfall 0x80)\n",
-                alt, re15_player_equipped_weapon());
+        fprintf(stderr, "[inventar-r36] F%u Waffe %d (leer, abgelegt) -> %d (Messer-Rueckfall 0x80)\n",
+                (unsigned)g_engine.frame_count, alt, re15_player_equipped_weapon());
 #endif
         (void)alt;
     }

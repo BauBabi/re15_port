@@ -2,16 +2,17 @@
 #     Dossier: analysis/befunde_runde33/speichern_memory_card.md
 #     RE2-Vorbild: AOT-Typ 9 -> 0x80051AB0, Farbband 0x1E nur im Inventar (FUN_800696CC @0x80051b34),
 #     ohne Farbband Meldung (0x100,0) @0x8009EFCC, mit Farbband Meldung (0x100,1) @0x8009F01F +
-#     Ja/Nein, JA -> Speicherbildschirm (@0x80051bd0-dc). Port: Memory Card (0x21) statt Farbband,
-#     KEIN Verbrauch (PORT-WAHL, Nutzerwunsch).
+#     Ja/Nein, JA -> Speicherbildschirm (@0x80051bd0-dc). Port: Memory Card (0x21) statt Farbband.
+#     Seit Runde 36 Spur I MIT Verbrauch wie RE2 (MEM_CARD.BIN @0x801c118c-e0, Nutzerauftrag).
 #
 #   unit_r33_speichern          Engine-Riegel: Texte an allen 16 Speicherstellen (RDT-Anfang +
 #                               RE2-Schluss), ROOM1150 ohne Karte / Karte nur in der Kiste /
 #                               mit Karte JA / mit Karte NEIN, Skript-Freeze waehrend des Textes.
 #   integration_r33_speichern   echte exe (Spielstand in ROOM1150, echtes Untersuchen des Telefons
 #                               ueber AOT-Slot 3, Tasten ueber RE15_PAD_AT): ohne Karte kein
-#                               Speichern; mit Karte + JA gespeichert, Karte danach noch da (Log
-#                               UND geschriebener Kartenblock); mit Karte + NEIN kein Speichern.
+#                               Speichern; mit Karte + JA gespeichert, die EINE Karte danach
+#                               verbraucht (Log UND geschriebener Kartenblock, Runde 36); mit
+#                               Karte + NEIN kein Speichern.
 add_executable(probe_r33_speichern probe_r33_speichern.c)
 target_link_libraries(probe_r33_speichern PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r33_speichern PRIVATE ${CMAKE_SOURCE_DIR}/include)

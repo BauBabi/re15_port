@@ -25,7 +25,8 @@ set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_
          RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1000@250 "RE15_PLAYER_POS=21850,-13400,2048" RE15_AI_FLAVOR=re2
          "RE15_GIVE=15:6" "RE15_EQUIP=15" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1
          "RE15_INPUT_SCRIPT=M0.6,MA1.5,M1.0,W4" RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log RE15_WPN_DBG=1
-         "RE15_EXIT_AT=150#1000")
+         "RE15_EXIT_AT=150#1001")   # Runde 36 Spur I: Elza springt per Debug-Menue in ROOM1001 (Elza-Bit
+                                    # des Raumladers @0x800397e4/@0x800397ec), nicht mehr in Leons ROOM1000
 re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
 if("${_rv}" STREQUAL "1" OR "${_rv}" STREQUAL "-1" OR NOT EXISTS "${_dir}/wf.log")
     message(STATUS "${_tag}: Lauf ohne Ergebnis (exit=${_rv}) -> EIN Wiederholungsversuch")
