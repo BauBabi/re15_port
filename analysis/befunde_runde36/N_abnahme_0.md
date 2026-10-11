@@ -92,4 +92,76 @@ TIM md5 bf0fbcc7 = `extracted_re2_items/modelle/karte01_99dae133.{md1,tim}` (sel
 * Weltmodell nach der Aufnahme weg: Integrationslauf `weg_auf` F270 Tafel ohne Blatt, `weg_kein` mit Blatt
   (`N_abn0/t_weg_raum_zoom.png`).
 
-(in Arbeit)
+### 1.5 ROOM1030 Muenztelefon (Nebenwirkung des Slot-Umzugs), an der exe
+`RE15_AOT_DUMP=1`, Spielstand 1030 (CONTINUE):
+* ohne Bit 89: `[aot]  8 GENERIC Mitte(-1692,-23280) halb(500,500) ev=28` und `[aot] 39 MESSAGE
+  Mitte(-2208,-23844) halb(2048,2048) ev=3` (Telefon-Satz unveraendert umgezogen). Spieler (-3500,-22660)
+  Blick -z (im Telefon-Rechteck, neben der Karte), Aktion F60: state.log `msg(a=1 fsm=1 id=3)` = "A payphone.
+  The line appears to be down..." (`runs/p_tel`).
+* mit Bit 89: `[aot]  8 MESSAGE ... ev=3` wie ausgeliefert, keine Karte; Spieler AUF der Kartenstelle
+  (-1691,-22660), Aktion F60: `msg(a=1 fsm=1 id=3)` (`runs/p_nach`).
+* RDT-Zensus selbst: `scd_dump_room.py` ROOM1030/1031 — Slot 8 nur in main00 `Aot_set` @0x01D2E/@0x01D9C
+  (`2c 08 01 31 .. 60 ef dc 9a 00 10 00 10 03 00`), Aot_reset nur Slots 4/6/17, Aot_on nur 18/19 (1031); kein
+  RDT der zehn Raeume benutzt Slot >= 20 oder nOmodel > 8 -> Slot 39/40 und obj 15 sind frei.
+
+### 1.6 Karte in den anderen Kamera-Cuts (Tiefe/Ebene)
+Projektion der Kartenmitte durch alle VIEW-Matrizen (`probe_r34n_e_dokumente kamera`), dann je Kandidaten-Cut ein
+Framedump mit Karte (`RE15_FORCE_CUT`, `runs/cut_*`), gegen den nackten Hintergrund (`probe_bg_dump`):
+1030 Cut 0 (Blatt an der Rueckwand zwischen den Aushaengen), 1200 Cut 1 (auf der Ziegelwand rechts der
+Vitrine), 11D0 Cut 2 (nah, liegt auf der Wand) — jeweils plausibel auf der Flaeche, nichts schwebt. In 10D0 Cut
+4/5/7 und 1030 Cut 7 wird das Blatt nicht gezeichnet (Region-Cull des Cuts, Engine-Verhalten fuer jedes Prop);
+11D0 Cut 3 verdeckt Leon die Stelle. (`N_abn0/z_*.png`)
+
+## 2. Urteil je Nutzer-Punkt (gegen den Wortlaut)
+
+| # | Wortlaut (kurz) | Urteil | Beleg |
+|---|---|---|---|
+| 1 | Karte01/02 extrahieren, an map3F.bmp haengen, 3F freischalten wie RE2, mit Text | erfuellt | 1.0 (map3F = ROOM1140 Cut 5, 8,5 vs >= 113,8), 1.1 a/b, 1.2 (1140: Frage/Ja/Meldung, Kartenschirm 3F komplett), 1.3 (karte01 md5-gleich), 1.4 (ganze Etage + Etagenwahl) |
+| 2a | 2F in ROOM10D0 bei map2F.bmp | erfuellt | 1.1 a/b (Pinnwand unter dem Foto), 1.2 (10D0), Elza-Figur 1.1 d |
+| 2b | 1F in ROOM1030 bei map1F.bmp | erfuellt | 1.1 a/b/d (Leon + Elza 1031 echter Weg), 1.2 (1030), 1.5 (Telefon bleibt erreichbar) |
+| 2c | B2 in ROOM1200 bei mapB2.bmp | erfuellt | 1.1 a/b, 1.2 (1200), 1.6 (Cut 1) |
+| 2d | B1 in ROOM11D0 bei mapB1.bmp | erfuellt | 1.1 a/b/c (ECHTER Tuer-Weg 1180 -> 11D0 inkl. Aufnahme), 1.2 (11D0) |
+
+Ort, Aufnahme, Text und Freischaltung sind in allen fuenf Raeumen an der exe gemessen. Das Urteil "erfuellt"
+betrifft den Wortlaut; die Darstellung (Licht) ist ein eigener Mangel (Abschnitt 4, M1).
+
+## 3. Gates
+
+### 3.1 RE-Gate — Stichproben selbst disassembliert (richtige Binaerdatei)
+| Zitat im Diff | selbst gelesen | Ergebnis |
+|---|---|---|
+| RE2 FUN_8006E120 @0x8006E66C Bank-33-Test | ghidra_re2_Leon.txt: `8006e664 lui a0,0x800d` / `8006e668 addiu a0,a0,0x4924` / `8006e66c jal FUN_80077360`, `8006e674 beq v0,zero,LAB_8006e730` | stimmt |
+| @0x8006E71C CLUT 498 | `8006e718 jal FUN_80077360` (Bank 32 @0x8006e710) / `8006e71c _li s5,0x1f2`; Variante `8006e72c _li s5,0x1f7` | stimmt |
+| @0x8006E744 ohne Plan nicht zeichnen | `8006e738..40` Bank 9 (0x800d490c), `8006e744 beq v0,zero,LAB_8006e768` | stimmt |
+| Etagenwahl @0x8006D934/@0x8006D998 | `8006d934 jal FUN_80077360` + `8006d938 _addiu a0,..,0x4d94 =>DAT_800d4908`; `8006d994 addiu a0,a0,0x4908`, `8006d998 jal` | stimmt |
+| Banken 33/35 | `800a794c 24 49 0d 80` -> 0x800D4924, `800a7954 08 .. -> 800d4908`, Bank 9 `800a78ec 0c 49 0d 80` | stimmt |
+| RE2 room20B0 sub10 @0x037BA..0x0381A | `xxd ROOM20B0.RDT`: `2b00 0000 00ff 0200 0600 4400 210b 1f00 3604 0601 ...` `2221 0201`..`2223 0401` `2e04 08 00` `3200 204e 204e 204e` `0200 2b00 1100 00ff 0700 1200 3604 0501 ...` `0100` | stimmt |
+| RE1.5 ROOM5030 sub02 @0x010AC / sub00 @0x0108A | `xxd` (md5 = info/Re1.5): `2b00 ffff 0200 0600 1e00 210c 1f00 4605 .. 090a 0100 2203 7301 2b01 ffff 0200 0800 0100`; `2c05 03b1 .. ff00 1802` | stimmt |
+| ROOM1030 Telefon @0x01D2E / 1031 @0x01D9C | `2c 08 01 31 00 00 60 ef dc 9a 00 10 00 10 03 00 ff ff 00 00` | stimmt |
+| Obj_model_set-Flags @0x80040998 | ghidra1_V2.txt `80040990 lhu v0,0x6(a2)` / `80040998 ori v0,v0,0x1` / `800409a4 sw v0,0x0(a1)` | stimmt |
+| "kleinster Slot gewinnt" (FUN_80042bac) | RE_15_Quellcode_V2/FUN_80042bac.c: Zeigertabelle DAT_800ac9b0 aufsteigend, Aktions-Treffer `return (*handler)(..)` beim ersten Treffer; Vorwaertspunkt 0x26c = 620 | stimmt |
+
+Wortsuche im Code-Diff (deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME): 0 Treffer; kein neues
+getenv im Engine-/Plattform-Code. Konstanten: Bits/Ereignis/IDs = VERTRAG, Programmbytes je Zeile mit @0x,
+Lage/Massstab/Rechteck/Slots als PORT-WAHL bzw. Zensus gekennzeichnet — bis auf das Licht (M1).
+
+### 3.2 Vertrag
+* Bank-9-Bits 87..91 (zugeteilt N), Ereignis 28 (N), Nachrichten 30/31 (VERTRAG 1.2 erlaubt Reserve 30/31;
+  RDT-Zahl selbst gezaehlt: 1140 6, 1141 15, 10D0 28, 10D1 12, 1030 18, 1031 24, 1200/1201 0, 11D0/11D1 5 —
+  30/31 ueberall frei; keine andere Port-Quelle setzt 30/31 in diesen Raeumen).
+* Ereignis 28: kein frueherer Haken der scd_event_fire-Kette (rolltor/adaruf/cut10f0/irons_tod/fenster1120)
+  liefert in diesen Raeumen ein Programm fuer 28.
+* Pfade (`git diff 78a4a748 --name-only`): nur engine/src, include, platform/pc/main.c, tests/unit/probes/
+  r36_kartenitems.cmake (GLOB), eigene Tests, tools/r36_kartenitems, Dossier. Kein release/, platform/android/,
+  shared_assets/PSX/, keine Test-CMakeLists.
+* Gemeinsame Dateien: scd_room_setup.c 1 Zeile + include (Blockende, "Runde 36 Spur N"), scd_vm.c 1 Zeile +
+  include, re15_map_owned.c 2 Zeilen, map_hint_common.c 1 Zeile + include, main.c: include, CONTINUE-Installer 1
+  Zeile, Licht-Haken 3 Zeilen, Prop-Lader-Block 6 Zeilen (r35-Muster; knapp ueber "1-5 Zeilen").
+* Tests: `unit_r36_kartenitems` (201 Pruefungen, selbst gelaufen: 201 PASS, 0 FAIL) und
+  `integration_r36_kartenitems_bild` (echte exe) — `ctest -R r36_kartenitems`: "100% tests passed, 0 tests
+  failed out of 2" (442 s).
+* Nebenwirkung Etagenwahl: re15_map_blatt_waehlbar gilt jetzt auch fuer den Laborplan (Flag 3,115). RE1.5 hat
+  ueberhaupt kein Blaettern (menu_common.c: PORT-ERGAENZUNG nach RE2); RE2 setzt auch beim Laborplan Bank 35
+  (lageplaene.csv room6120) — konsistent.
+
+(in Arbeit: Regressionsgruppen)
