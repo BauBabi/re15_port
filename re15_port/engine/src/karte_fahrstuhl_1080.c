@@ -15,6 +15,40 @@ void re15_karte_raum_gesehen(unsigned room)
     if (room != s_raum_jetzt) { s_raum_vorher = s_raum_jetzt; s_raum_jetzt = room; }
 }
 
+/* Runde 36 Spur M: Laden/Neues Spiel - der Vorraum-Spiegel steht nicht im Spielstand (auch
+ * DAT_800b0fe6 nicht im Original-Speicherblock, Runde 35 G OFFEN 5); ohne Vergessen galt der Raum
+ * der VORIGEN Sitzung als Vorraum (Kabine -> geladener Etagenraum = falsche Ankunft). */
+void re15_karte_raum_vergessen(void) { s_raum_jetzt = 0; s_raum_vorher = 0; }
+
+/* Runde 36 Spur M (Nutzer: "Die Fahrstuhl Etagen werden als besucht angezeigt, obwohl ich auf den
+ * verschiedenen Etagen noch nicht im Fahrstuhl war"): ANKUNFT mit dem Fahrstuhl. Faehrt man in
+ * der Kabine auf eine Etage und steigt dort aus, war man auf DIESER Etage im Fahrstuhl. Das
+ * Original wechselt dazu aus der Kabine per Skript-Tuer in den Etagenraum (ROOM1080 main00
+ * @0x0482/@0x04A2/@0x04C2 -> 1040/10C0/1120; ROOM4020 @0x0063A/@0x0065A/@0x0067A -> 4000/5000/
+ * 50C0), und der Etagenraum vermerkt die Kabine dann selbst auf seiner Etage (ROOM1040 @0x15D6
+ * `22 03 36 01`, ROOM4000 @0x013CC `22 03 93 01` usw.). Liefert das Blatt der Kabine, wenn `room`
+ * ein Etagenraum ist und der Raum davor seine Kabine war, sonst -1; *kabine = die Kabine. Blatt
+ * je Etagenraum aus dem Seiten-Setzer wie oben (@0x8004b684/@0x8004b6f8/@0x8004b758,
+ * @0x8004bdb4/@0x8004bf50/@0x8004bee4). */
+int re15_karte_fahrstuhl_ankunft(unsigned room, unsigned *kabine)
+{
+    unsigned r = room & ~1u, vor = s_raum_vorher & ~1u;
+    if (s_raum_jetzt != room) return -1;
+    if (vor == 0x1080u) {
+        if (kabine) *kabine = 0x1080u;
+        if (r == 0x1040u) return 2;
+        if (r == 0x10C0u) return 3;
+        if (r == 0x1120u) return 4;
+    }
+    if (vor == 0x4020u) {
+        if (kabine) *kabine = 0x4020u;
+        if (r == 0x4000u) return 8;
+        if (r == 0x5000u) return 9;
+        if (r == 0x50C0u) return 10;
+    }
+    return -1;
+}
+
 /* ⛔ PORT-WAHL (Abnahme 0, G2): das ORIGINAL waehlt das Blatt der Kabine NICHT nach dem
  * Vorraum. Der Seiten-Setzer FUN_8004b568 schickt Raumindex 8 (ROOM1080) ueber die Fall-Kette
  * 0..11 IMMER auf Blatt 2 (`ori v0,zero,0x2` @0x8004b684, `sb v0,0x260e` @0x8004b88c), und die

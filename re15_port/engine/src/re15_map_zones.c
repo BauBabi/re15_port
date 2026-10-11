@@ -169,7 +169,8 @@ int re15_map_floor_bit_kapazitaet(void) { return 8 * (int)sizeof s_visited_floor
 int re15_map_floor_count(void) { return FLOOR_COUNT; }
 
 void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited);
-                                    memset(s_visited_floor, 0, sizeof s_visited_floor); }
+                                    memset(s_visited_floor, 0, sizeof s_visited_floor);
+                                    re15_karte_raum_vergessen(); /* Runde 36 Spur M */ }
 void re15_map_visited_export(uint8_t out[32]) { memcpy(out, s_visited, 32); }
 /* ⛔ DER IMPORT LOESCHT DIE ETAGEN-BITS IMMER ZUERST (Runde 30, Nebenbefund D2).
  * Der LOAD-GAME-Zweig (platform/pc/main.c) ruft re15_gameflow_new_game nicht, also
@@ -182,6 +183,9 @@ void re15_map_visited_import(const uint8_t in[32])
 {
     memcpy(s_visited, in, 32);
     memset(s_visited_floor, 0, sizeof s_visited_floor);
+    /* Runde 36 Spur M: der Raum der vorigen Sitzung ist kein Vorraum des geladenen Stands -
+     * sonst galt "Kabine -> geladener Etagenraum" als Fahrstuhl-Ankunft. */
+    re15_karte_raum_vergessen();
 }
 void re15_map_visited_floor_export(uint8_t out[16]) { memcpy(out, s_visited_floor, 16); }
 void re15_map_visited_floor_import(const uint8_t in[16]) { memcpy(s_visited_floor, in, 16); }
@@ -678,6 +682,12 @@ static const re15_map_zone_t *s_cur_zone;
 void re15_map_zone_update(unsigned room, int32_t x, int32_t z)
 {
     re15_karte_raum_gesehen(room);   /* Runde 35 Spur G: alter Raum fuer die Fahrstuhl-Etage */
+    {   /* Runde 36 Spur M: mit dem Fahrstuhl auf dieser Etage ausgestiegen -> die Kabine war hier */
+        unsigned kab = 0;
+        int ab = re15_karte_fahrstuhl_ankunft(room, &kab);
+        int fbit = (ab >= 0) ? re15_karte_r36_fahrstuhl_bit(kab, ab) : -1;
+        if (fbit >= 0) s_visited_floor[fbit >> 3] |= (uint8_t)(1u << (fbit & 7));
+    }
     s_cur_zone = re15_map_zone_at(room, x, z);
     if (s_cur_zone) re15_map_visited_mark_at(room, x, z);
 }

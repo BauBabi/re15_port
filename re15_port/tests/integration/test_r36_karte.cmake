@@ -10,8 +10,9 @@
 #   C  1230 -> Haupthallen-Tuer -> 1190: rot NUR in rect 1, rect 2 ungezeichnet (P3)
 #   D  1230 -> Ostkammer-Tuer -> 1190: rot NUR in rect 2, rect 1 ungezeichnet (P3)
 #   E  1100 -> Tuer -> 1110: Evidence Room rot, die kleinen Raeume UNGEZEICHNET (P5)
-#   F  Spielstand nach der Fahrt 1F -> 3F (1040, Kabine aus 1F, 1120) -> MAP in 1120: die
-#      3F-Kabine ist UNGEZEICHNET (P6); G 1040 -> Tuer -> Kabine: 1F-Kabine rot (Gegenprobe Weg)
+#   F  Spielstand nach der Fahrt 1F -> 3F und zu Fuss auf 2F -> MAP in 10C0: die 2F-Kabine
+#      ist UNGEZEICHNET (P6); H dieselbe Fahrt, MAP in 1120: 3F-Kabine besucht (Ankunft);
+#   G  1040 -> Tuer -> Kabine: 1F-Kabine rot (Gegenprobe Weg)
 # Dossier: analysis/befunde_runde36/M_karte.md
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PROBE=<probe_r36_karte> -DWORKDIR=<dir> -P test_r36_karte.cmake
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -171,15 +172,24 @@ math(EXPR _t12 "${t1_rot} + ${t1_besucht} + ${t2_rot} + ${t2_besucht}")
 pruefe(E t0_rot GREATER_EQUAL 200 "1110: Evidence Room rot - ${t0_rot}")
 pruefe(E _t12 EQUAL 0 "1110: die kleinen Tuerbereiche ungezeichnet (vorher besucht) - ${_t12}")
 
-# ---- F: P6 Fahrstuhl -- Stand nach der Fahrt 1F -> 3F ------------------------------------------
-# Reihenfolge wie im Spiel: ROOM1040 (1F), Kabine (aus 1F betreten), ROOM1120 (3F, ausgestiegen;
-# Kabinen-Tuer 2 @0x04C2 -> Spawn (1300,0,7300)). MAP in ROOM1120 = Blatt 4: die 3F-Kabine
-# rect 0 (127,137) 16x16 (gemalt x127..136 y137..146) war nie besucht.
-karte_lauf(F "1120;1300;0;7300;1024;besucht:1040:-21786:-10500;besucht:1080:-13650:-900;besucht:1120:1300:7300"
-           "" 1120)
-farben(F k 128 138 135 145)
+# ---- F: P6 Fahrstuhl -- Fahrt 1F -> 3F, dann zu Fuss auf 2F ------------------------------------
+# Reihenfolge wie im Spiel: ROOM1040 (1F), Kabine (aus 1F betreten), ROOM1120 (3F, mit dem Fahrstuhl
+# angekommen; Kabinen-Tuer 2 @0x04C2 -> Spawn (1300,0,7300)), dann ROOM10C0 (2F, nicht mit dem
+# Fahrstuhl; Spawn aus ROOM10D0 (-6700,0,-2100)). MAP in ROOM10C0 = Blatt 3: die 2F-Kabine (Ersatz-
+# rect 4 (109,134,16,16), gemalter Innenraum x110..117 y135..142) war nie besucht.
+karte_lauf(F "10C0;-6700;0;-2100;1024;besucht:1040:-21786:-10500;besucht:1080:-13650:-900;besucht:1120:1300:7300;besucht:10C0:-6700:-2100"
+           "" 10C0)
+farben(F k 110 135 117 142)
 math(EXPR _k_alles "${k_rot} + ${k_besucht}")
-pruefe(F _k_alles EQUAL 0 "3F-Kabine nach Fahrt aus 1F ungezeichnet (vorher besucht) - ${_k_alles}")
+pruefe(F _k_alles EQUAL 0 "2F-Kabine (nie mit dem Fahrstuhl auf 2F) ungezeichnet (vorher besucht) - ${_k_alles}")
+
+# ---- H: P6 Gegenstueck -- mit dem Fahrstuhl auf 3F angekommen ----------------------------------
+# Derselbe Weg bis ROOM1120; MAP dort = Blatt 4: die 3F-Kabine (rect 0 (127,137), gemalter Innenraum
+# x128..135 y138..145) IST besucht - man kam mit ihr an.
+karte_lauf(H "1120;1300;0;7300;1024;besucht:1040:-21786:-10500;besucht:1080:-13650:-900;besucht:1120:1300:7300"
+           "" 1120)
+farben(H k 128 138 135 145)
+pruefe(H k_besucht GREATER_EQUAL 10 "3F-Kabine nach Ankunft mit dem Fahrstuhl besucht - ${k_besucht}")
 
 # ---- G: Gegenprobe echter Weg in die Kabine (1F) ----------------------------------------------
 # ROOM1040 in der Fahrstuhltuer (slot 0 @0x01096), Blick +z (Yaw 3072), Reservestrom (4,243).

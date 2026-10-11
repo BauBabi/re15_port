@@ -27,6 +27,13 @@ int re15_karte_fahrstuhl_blatt(unsigned room);
 /* Raumwechsel melden (aus re15_map_zone_update: je Bild und am Raumlade-Punkt). */
 void re15_karte_raum_gesehen(unsigned room);
 
+/* Runde 36 Spur M: Vorraum-Spiegel loeschen (Laden / neues Spiel; re15_map_visited_import/_reset). */
+void re15_karte_raum_vergessen(void);
+
+/* Runde 36 Spur M: Blatt der Kabine, wenn `room` ein Etagenraum ist, in den man GERADE aus seiner
+ * Kabine ausgestiegen ist (Ankunft mit dem Fahrstuhl), sonst -1; *kabine = 0x1080 / 0x4020. */
+int re15_karte_fahrstuhl_ankunft(unsigned room, unsigned *kabine);
+
 /* Nachbesserung 1: Klemmfenster des Markers in der Kabine = gemalter Innenraum (+Glyph-
  * Versatz) statt Rechteck+4. Liefert 1 und setzt die Grenzen nur fuer ROOM1080/1081;
  * (rx,ry) = Ursprung des Kabinen-Rechtecks des gezeigten Blatts. Belege im .c. */

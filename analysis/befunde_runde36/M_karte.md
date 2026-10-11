@@ -179,7 +179,15 @@ Alle sechs Befunde reproduziert. Bildpunkt Punkt 4 im Sweep-Abzug (Blatt 0): Wan
   @0x00A34 `22 03 95 01`, Leser ROOM4020 sub07 @0x00906 `21 03 93 00`).
 * NUTZER-VORGABE gegen RE2: RE2 setzt EIN Bit je Raum (s.o., ROOM601 auf drei Blaettern). Der
   Nutzer verlangt "besucht" je Etage, auf der er im Fahrstuhl war. Uebertragen wird RE2s FORM
-  (Bit beim Betreten setzen, je Kachel pruefen), Schluessel = (Kabine, Etage des Einstiegs).
+  (Bit beim Betreten setzen, je Kachel pruefen), Schluessel = (Kabine, Etage).
+* "Auf der Etage im Fahrstuhl" heisst: dort EINGESTIEGEN oder dort mit ihm ANGEKOMMEN. Die Fahrt
+  endet im Original mit einer Skript-Tuer aus der Kabine direkt in den Etagenraum (ROOM1080 main00
+  @0x0482/@0x04A2/@0x04C2, Null-Rechteck, per Aot_on gefeuert; analysis/befunde_2026-09-26/
+  fahrstuhl-faehrt-nicht.md §2.1), und der Etagenraum vermerkt die Kabine dann selbst auf seiner
+  Etage (Bits 54/55/56 bzw. 0x93..0x95 unter dem Ankunfts-Cut). Port: Raumfolge Kabine ->
+  Etagenraum (Vorraum-Spiegel FUN_8001d600 @0x8001d938, Runde 35) setzt das Bit dieser Etage.
+  Laden ist keine Ankunft: der Spiegel wird beim Laden/Neustart geloescht (er steht auch im
+  Original nicht im Speicherblock, Runde 35 G OFFEN 5).
 
 ## Umsetzung (Dateien, Konstanten)
 
@@ -196,6 +204,7 @@ Alle sechs Befunde reproduziert. Bildpunkt Punkt 4 im Sweep-Abzug (Blatt 0): Wan
 | 5 | `re15_map_zones.c` | `teil_drin`/`teile_merken` (Bit setzen, solange der Spieler in der Teil-Weltbox steht, +-250 wie AKTUELL); `teil_zustand`: besucht = Teil-Bit, Zonen-Bit nur fuer Eingang/ohne Tabellenzeile; reveal_page setzt Teil-Bits | R5 |
 | 6 | `re15_map_zones.c` re15_map_visited_mark_at | "gleiche Baender"-Regel nur noch bei UNBEKANNTER Kabinen-Etage (`re15_karte_fahrstuhl_blatt(...) < 0`) | R6 |
 | 6 | `engine/src/karte_fahrstuhl_1080.c` + Header | 4020: Vorraum 4000/5000/50C0 -> Blatt 8/9/10, sonst Bits (3,0x93/0x94/0x95) | R6 |
+| 6 | `karte_fahrstuhl_1080.c` `re15_karte_fahrstuhl_ankunft` / `re15_karte_raum_vergessen` + Haken in re15_map_zone_update / re15_map_visited_reset / re15_map_visited_import | Ankunft mit dem Fahrstuhl (Raumfolge Kabine -> Etagenraum) setzt das Kabinen-Bit dieser Etage; Laden/Neustart loescht den Vorraum-Spiegel | R6 |
 | 6 | `karte_r36.c` + `re15_map_zones.c` etage_bit() | Kabinen-Zeilen (1080 Blatt 2/3/4, 4020 Blatt 8/9/10) bekommen EIGENE Bits 112..117; die alten 3/4/5 und 17/18/19 sind unbenutzt. Grund: die alten wurden immer gemeinsam gesetzt und stehen so in den Spielstaenden - "auf allen Etagen eingestiegen" ist davon nicht zu unterscheiden; ein alter Stand zeigt die Kabine erst nach dem naechsten Einstieg auf der Etage (nichts geraten). Feldgroesse 128 (re15_map_floor_bit_kapazitaet wieder 128) | R6 |
 
 Gemeinsame Dateien (VERTRAG §1.4): `re15_map_zones.h` nur Datenzeilen mit Kommentar "Runde 36 Spur M";
@@ -262,8 +271,8 @@ Neu (`tests/unit/probes/r36_karte.cmake`, Quelle `tests/unit/test_r36_karte.c` /
 | unit_r36_karte_r1190 | zwei Zonen/zwei Bits; Haupthalle NUR rect 1 (auch an den Zielscheiben), Ostkammer NUR rect 2 (Marker an der gemalten Nische), danach Haupthalle besucht; 11A0 auf Blatt 6, B1 rect 1 bleibt unbesucht | ROT (9 FAIL) | gruen |
 | unit_r36_karte_tuer11c0 | Marke 11B0<->11C0 waagerecht, alle 5 Punkte auf der gemalten Wandzeile beider Kacheln, ueber der Nische | ROT (kind 1) | gruen |
 | unit_r36_karte_teile1110 | echter Weg 1100 -> 1110 + Selbst-Tueren: kleine Raeume unbesucht bis betreten; Speichern/Laden; alter Stand (nur Zonen-Bit) | ROT (5 FAIL) | gruen |
-| unit_r36_karte_fahrstuhl | echter Weg 1040 -> Kabine -> 1120 -> Kabine: nur Einstiegs-Etagen besucht; Speichern/Laden; alter Stand mit Bits 3/4/5; Feld-Belegung; 4020 aus 5000 | ROT (5 FAIL) | gruen |
-| integration_r36_karte | echte exe, 7 Laeufe A..G (s.o.) | - | gruen (141.65 s) |
+| unit_r36_karte_fahrstuhl | echter Weg 1040 -> Kabine: nur 1F; Laden ist keine Ankunft; Kabine -> 1120: 3F besucht (Ankunft), 2F nicht; zu Fuss 10C0: 2F bleibt unbesucht; 1120 -> Kabine: 3F aktuell; Speichern/Laden; alter Stand mit Bits 3/4/5; Feld-Belegung; 4020 aus 5000 | ROT (5 FAIL, Stand vor der Ankunfts-Regel) | gruen |
+| integration_r36_karte | echte exe, 8 Laeufe A..H (s.o.) | - | gruen |
 
 Gegenprobe: `re15_map_zones.c/.h`, `karte_fahrstuhl_1080.c`, `re15_karte_fahrstuhl.h` voruebergehend auf
 78a4a748, eigenes Bauverzeichnis `re15_port/build_bisect`, Riegel gefahren, danach `git checkout HEAD --`
@@ -294,9 +303,10 @@ Gezielte Suite: siehe Abschnitt "Abschluss-Lauf" unten.
 * Dafuer musste ROOM11A0 (der Raum mit der Leiter in die Kanalisation, erreichbar erst aus den
   Drains) von Blatt B1 auf sein eigenes Kartenstueck im Blatt "DRAINS B2" umziehen - auf B1 gibt
   es fuer ihn kein Rechteck (die Original-Kartenzeile legt ihn ueber den Blattrand).
-* Fahrstuhl: die Kabine wird nur auf der Etage als besucht gezeichnet, auf der du eingestiegen
-  bist. Das gilt auch fuer den zweiten Fahrstuhl ROOM4020 (Labor). In RE2 wird ein Raum, der auf
-  mehreren Etagenkarten steht, auf allen gleichzeitig besucht - hier gilt deine Vorgabe.
+* Fahrstuhl: die Kabine wird nur auf den Etagen als besucht gezeichnet, auf denen du eingestiegen
+  oder mit ihr angekommen bist (1F -> 3F: 1F und 3F, nicht 2F). Das gilt auch fuer den zweiten
+  Fahrstuhl ROOM4020 (Labor). In RE2 wird ein Raum, der auf mehreren Etagenkarten steht, auf
+  allen gleichzeitig besucht - hier gilt deine Vorgabe.
 * Alte Spielstaende: die kleinen Raeume in ROOM1110 erscheinen erst wieder, wenn du sie
   betrittst (der alte Stand weiss nicht, ob du drin warst); der Evidence Room bleibt sichtbar.
   Ebenso die Ostkammer von ROOM1190. Die Fahrstuhlkabine erscheint in einem alten Stand auf

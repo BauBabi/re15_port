@@ -479,6 +479,17 @@ static int teil_marker11d0(void)
     snprintf(t, sizeof t, "an der 1260-Tuer (Suedwand, Spielerradius 450 vor der Wand): Marker y %d "
              "<= 4 px ueber der gemalten Suedwand y172", unten.my);
     CHECK(t, unten.my <= 172 && unten.my >= 168 && texel(0, 5, unten.mx, 172) == 4);
+    /* Die ANDERE Tuer: aus der Kanalisation ROOM1260 (Tuer slot 3 @0x0118A -> Spawn (3900,-22000)).
+     * Vorher (Huellen-Kasten) (141,171); jetzt im unteren Sechstel an der Tuermarke (137,172). */
+    re15_map_visited_reset();
+    if (durch_tuer(0x1260, 21850, -7300, -1, 0x11D0, 3900, -22000, 0, &gang, &m, &ax, &az)) {
+        druck("11D0 Ankunft aus 1260", 0x11D0, ax, az, &m);
+        snprintf(t, sizeof t, "Ankunft aus 1260: Marker (%d,%d) an der unteren Tuermarke (137,172): "
+                 "<= 4 px seitlich, y 160..172", m.mx, m.my);
+        CHECK(t, abs(m.mx - 137) <= 4 && m.my >= 160 && m.my <= 172);
+    } else {
+        CHECK("Tuer ROOM1260 -> ROOM11D0 gefunden", 0);
+    }
     return g_fail;
 }
 
@@ -531,6 +542,16 @@ static int teil_r1190(void)
     CHECK("ROOM11A0 (Band 3) zeigt Blatt 6, nicht B1", m.page == 6 && nur_aktuell(&m, 2));
     CHECK("ROOM11A0 begangen: B1 rect 1 bleibt UNBESUCHT",
           re15_map_rect_state(0, 1) == RE15_MAP_RECT_UNVISITED);
+    /* Wortlaut des Nutzers "ROOM 1090": dessen zwei Bereiche (Hof Band 1 mit Tuer -> 1050
+     * @0x0211A, Dachterrasse Band 6 mit Tuer -> 1100 @0x0213A) liegen schon getrennt auf 1F/2F -
+     * festgehalten, damit die Zuordnung zu ROOM1190 (Hunde/Luke/Weste, Dossier R0) pruefbar bleibt. */
+    re15_map_visited_reset();
+    miss(0x1090, -10080, 4000, 1, &m);
+    druck("1090 Hof (Band 1)", 0x1090, -10080, 4000, &m);
+    CHECK("ROOM1090 Hof: Blatt 2 (1F), NUR rect 5", m.page == 2 && nur_aktuell(&m, 5));
+    miss(0x1090, -5820, -17500, 6, &m);
+    druck("1090 Dach (Band 6)", 0x1090, -5820, -17500, &m);
+    CHECK("ROOM1090 Dach: Blatt 3 (2F), NUR rect 7", m.page == 3 && nur_aktuell(&m, 7));
     return g_fail;
 }
 
@@ -672,13 +693,32 @@ static int teil_fahrstuhl(void)
     CHECK(t, m.page == 2 && re15_map_rect_state(2, 9) == RE15_MAP_RECT_CURRENT &&
              re15_map_rect_state(3, 4) == RE15_MAP_RECT_UNVISITED &&
              re15_map_rect_state(4, 0) == RE15_MAP_RECT_UNVISITED);
-    /* Fahrt nach 3F: Ausstieg in ROOM1120 (Kabinen-Tuer 2 @0x04C2 -> Spawn (1300,0,7300)) */
+    /* LADEN ist keine Ankunft: Stand "nur 1F" sichern, wieder laden und im 3F-Etagenraum stehen
+     * (der Raum der vorigen Sitzung war die Kabine) - die 3F-Kabine bleibt unbesucht. */
+    {
+        uint8_t z1[32], f1[16];
+        re15_map_visited_export(z1); re15_map_visited_floor_export(f1);
+        re15_map_visited_import(z1); re15_map_visited_floor_import(f1);
+        miss(0x1120, 1300, 7300, 0, &m);
+        snprintf(t, sizeof t, "Stand aus der Kabine geladen, im 3F-Raum: 3F-Kabine %s (keine Fahrt)",
+                 zustand(re15_map_rect_state(4, 0)));
+        CHECK(t, re15_map_rect_state(4, 0) == RE15_MAP_RECT_UNVISITED);
+    }
+    /* Fahrt nach 3F: aus der Kabine (1F) in ROOM1120 aussteigen (Kabinen-Tuer 2 @0x04C2 -> Spawn
+     * (1300,0,7300)) - wer mit dem Fahrstuhl ankommt, WAR auf 3F im Fahrstuhl. */
+    if (!durch_tuer(0x1040, -21786, -10300, 0, 0x1080, -13650, -900, 0, &vor, &m, &ax, &az)) {
+        CHECK("Tuer ROOM1040 -> ROOM1080 (2)", 0); return 1;
+    }
     miss(0x1120, 1300, 7300, 0, &m);
-    snprintf(t, sizeof t, "auf 3F ausgestiegen: 3F-Kabine %s, 2F-Kabine %s (nie dort eingestiegen)",
+    snprintf(t, sizeof t, "mit dem Fahrstuhl auf 3F angekommen: 3F-Kabine %s, 2F-Kabine %s (nie dort)",
              zustand(re15_map_rect_state(4, 0)), zustand(re15_map_rect_state(3, 4)));
-    CHECK(t, re15_map_rect_state(4, 0) == RE15_MAP_RECT_UNVISITED &&
+    CHECK(t, re15_map_rect_state(4, 0) == RE15_MAP_RECT_VISITED &&
              re15_map_rect_state(3, 4) == RE15_MAP_RECT_UNVISITED &&
              re15_map_rect_state(2, 9) == RE15_MAP_RECT_VISITED);
+    /* zu Fuss weiter auf 2F (ROOM10C0, Vorraum 1120 = keine Kabine): 2F-Kabine bleibt unbesucht */
+    miss(0x10C0, -6700, -2100, 0, &m);
+    snprintf(t, sizeof t, "zu Fuss auf 2F: 2F-Kabine %s", zustand(re15_map_rect_state(3, 4)));
+    CHECK(t, m.page == 3 && re15_map_rect_state(3, 4) == RE15_MAP_RECT_UNVISITED);
     /* auf 3F wieder einsteigen: jetzt (und nur jetzt) wird die 3F-Kabine besucht */
     if (!durch_tuer(0x1120, 1300, 6400, 0, 0x1080, -13650, -900, 0, &vor, &m, &ax, &az)) {
         CHECK("Tuer ROOM1120 -> ROOM1080", 0); return 1;
