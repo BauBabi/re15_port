@@ -10834,9 +10834,11 @@ re_title:;
                                 pg0 = pg1 = pg2 = g_re15_light_tint[1];
                                 pb0 = pb1 = pb2 = g_re15_light_tint[2];
                             }
-                            { uint8_t kr, kg, kb;   /* Runde 36 Spur N: Lageplan-Karte im Licht der Wandstelle */
-                              if (re15_kartenitems_r36_licht((uint16_t)g_current_room_id, oid, &kr, &kg, &kb)) {
-                                  pr0 = pr1 = pr2 = kr; pg0 = pg1 = pg2 = kg; pb0 = pb1 = pb2 = kb; } }
+                            if (g_scd.props[pi].attr & 0x10)   /* FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10`: FLACH statt NCCT ->
+                                                                 * FUN_80022f0c @0x8002c320 mit Farbe obj+0x70 = 0x808080 (FUN_8002b898.c:16,
+                                                                 * Textur unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h).
+                                                                 * Runde 36 Spur N (Nachbesserung 1). */
+                                pr0 = pr1 = pr2 = pg0 = pg1 = pg2 = pb0 = pb1 = pb2 = 0x80;
                             re15_render_textured_tri_lit(
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
@@ -10899,6 +10901,8 @@ re_title:;
                                 pqg0=pqg1=pqg2=pqg3=g_re15_light_tint[1];
                                 pqb0=pqb1=pqb2=pqb3=g_re15_light_tint[2];
                             }
+                            if (g_scd.props[pi].attr & 0x10)   /* wie beim Dreieck: FUN_80023098 @0x8002c350, flach 0x808080. Runde 36 Spur N. */
+                                pqr0=pqr1=pqr2=pqr3=pqg0=pqg1=pqg2=pqg3=pqb0=pqb1=pqb2=pqb3=0x80;
                             re15_render_textured_tri_lit(
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,

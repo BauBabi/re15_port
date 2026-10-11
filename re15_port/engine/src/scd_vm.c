@@ -4258,6 +4258,10 @@ static int op_obj_model_set(scd_thread_t *t)
                                 ? 0u   /* @0x8004098c `sw zero,0x0(a1)` */
                                 : (uint16_t)(((uint16_t)t->pc[6] |
                                               ((uint16_t)t->pc[7] << 8)) | 1u);
+        /* ATTRIBUT-WORT pc[8..9] -> Pool+0x0c (LAB_80040914 @0x800409a8 `lh v0,0x8(a2)` /
+         * @0x800409b0 `sw v0,0xc(a1)`, in BEIDEN Zweigen, auch bei der Zweit-Installation):
+         * Flach-Bit 0x10 / Halbtransparenz 0x2 des Zeichners FUN_8002c18c (re15_scd.h). Runde 36 Spur N. */
+        g_scd.props[i].attr   = (uint16_t)((uint16_t)t->pc[8] | ((uint16_t)t->pc[9] << 8));
 #ifdef RE15_PLATFORM_PC
         fprintf(stderr, "[scd] Obj_model_set[%d] id=0x%02X type=%u pos=(%d,%d,%d) rot=(%d,%d,%d)%s\n",
                 i, obj_id, obj_type, px, py, pz, rx, ry, rz,

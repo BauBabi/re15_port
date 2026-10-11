@@ -406,6 +406,21 @@ typedef struct {
          * FUN_8002d474 @0x8002d59c/@0x8002d680 und FUN_8002d100 @0x8002d170
          * (`& 1` = aktiv). */
         uint16_t flags;
+        /* ATTRIBUT-WORT = Pool+0x0c, Obj_model_set pc[8..9]. Byte-true LAB_80040914:
+         *     800409a8  lh  v0,0x8(a2)            ; pc[8..9] (vorzeichenbehaftet)
+         *     800409b0  sw  v0,0xc(a1)            ; -> Pool+0x0c (DAT_800b3fa4)
+         * (geschrieben in BEIDEN Zweigen, auch bei der Zweit-Installation). Gelesen vom
+         * Objekt-Zeichner FUN_8002c18c: @0x8002c2ac/@0x8002c2b4 `lw v0,0xc(s1)` / `andi v0,v0,0x2`
+         * = halbtransparent (Prim-Code 0x36 statt 0x34, Parameter 4 von FUN_800254a0/FUN_80022f0c;
+         * im Port NICHT umgesetzt), @0x8002c2ec/@0x8002c2f4/@0x8002c2f8 `lw v0,0xc(s1)` /
+         * `andi v0,v0,0x10` / `beq v0,zero,LAB_8002c360`: 0 -> NCCT-beleuchtet (FUN_800254a0
+         * @0x8002c380 / FUN_800256b0 @0x8002c3b0), sonst FLACH ohne Raumlicht (FUN_80022f0c
+         * @0x8002c320 / FUN_80023098 @0x8002c350 mit a2 = obj+0x70, Farbe 0x808080 aus FUN_8002b898
+         * = Textur unveraendert). Zensus aller 240 RDTs (672 Obj_model_set, Runde 36 Spur N):
+         * 404x 0x0000, 169x 0x0010, 37x 0x0012, 54x 0x001A, 6x 0x000E, 2x 0x0006 — das Flach-Bit
+         * tragen 260 Objekte in 46 Raeumen (alle 76 Typ-3-Objekte darunter; Typ 3 zeichnet das
+         * Original ohnehin ueber FUN_8003e64c -> FUN_80022f0c flach). */
+        uint16_t attr;
         /* ELTERN-OBJEKT = Obj_model_set pc[5], Anhaenge-Form. Byte-true LAB_80040914:
          *     80040a04  andi v1,a0,0xc0        ; a0 = pc[5] (gelesen @0x8004097c)
          *     80040a48  -> 0x80072d4c          ; 0x00 = Einheitsmatrix (Weltraum)

@@ -25,14 +25,9 @@ LAGE (PORT-WAHL aus den Nutzer-Marken, NUTZER-VORGABE = Ort der roten Marke):
   (unten x vorwaerts), zerlegt in die Euler-Winkel von pc_prop_rot_q12 (Ry*Rx*Rz, platform/pc/main.c).
   Ursprung = Mitte - 85*s*n (die Flaeche liegt bei Modell-y = -85*s, also 85*s vor dem Ursprung).
   Aufhebe-Rechteck 1000 x 1000 (r35-Muster, haeufigste Item-Groesse) um Mitte + 300*n.
-  LICHT (PORT-WAHL aus Messung): das Figurenlicht der RDT liefert an den Waenden 31..70 von 128
-  (probe_r34n_e_dokumente licht; 1140 Cut 5 Tafel: (41,39,39) -> Karte 2,8x dunkler als die Tafel im
-  Hintergrund). Die Karte ist PAPIER: ihr Papiergrund bekommt die Helligkeit der hellsten Flaechen
-  (Zettel, Schilder, Tafel, Rahmen) in ihrer unmittelbaren Umgebung unter demselben Licht:
-  Tint = 128 * Ref / Median(Kartentextur), Ref = Mittel der hellsten 15 % (Summe R+G+B) im Fenster
-  "Marken-Huelle um je eine Huellenbreite/-hoehe erweitert" des Nutzer-Cuts, je Kanal.
-  (Verworfen, gemessen: Mittel UNTER der Marke -> auf dunklen Waenden 11D0/1200 so dunkel wie die
-  Wand, Karte im Framedump unsichtbar.)
+  LICHT: keine Spalte mehr (Nachbesserung 1). Die Karte traegt das Flach-Attribut 0x0010
+  (RE15_R36K_PROP_ATTR, re15_kartenitems_r36.h) und wird vom Prop-Zeichner wie RE1.5 FUN_8002c18c
+  @0x8002c2f4 -> FUN_80022f0c (0x808080) bzw. RE2 FUN_800363f0 ohne Raumlicht gezeichnet.
 
 Aufruf: python re15_port/tools/r36_kartenitems/karten_export.py [--schreiben]
 """
@@ -83,12 +78,6 @@ EBENEN = {
     0x11D0: _ebene_11d0(),                         # schraege rechte Wand (19,8 Grad)
     0x1200: (np.array([1.0, 0, 0]), -26330.0),     # Vitrinen-Front x = -26330 (Cut 1 + Cut 2)
 }
-# ---- Licht-Referenz (RGB 0..255) im Nutzer-Cut: Engine-BSS-Dekoder probe_bg_dump (alle 428 STAGE1-
-# Bilder); Mittel der hellsten 15 % im Fenster um die Marke (Dossier 3.3):
-#   1140 Cut 5 Fenster (220,62)-(252,91)   10D0 Cut 6 (250,104)-(309,151)   1030 Cut 3 (145,92)-(174,124)
-#   1200 Cut 2 (41,66)-(91,107)            11D0 Cut 0 (203,36)-(274,122)
-BG_REF = {0x1140: (127, 126, 115), 0x10D0: (147, 151, 135), 0x1030: (38, 57, 78),
-          0x1200: (69, 69, 56), 0x11D0: (60, 61, 58)}
 # ---- Raum -> Blatt / Bit / Etage (Bank-9-Bits: VERTRAG.md 1.1 Spur N) ---------------------------
 # Blatt aus re15_map_zones.h (Spalte 6), Etagenname = Kartenblatt-Titel (menu_common.c ORDER-Kommentar)
 RAEUME = [  # (raum, blatt, bit, etage, aot_slot, verdraengt_nach)
@@ -99,26 +88,6 @@ RAEUME = [  # (raum, blatt, bit, etage, aot_slot, verdraengt_nach)
     (0x1200, 1, 90, "B2", 40, 0xFF),
     (0x11D0, 0, 91, "B1", 40, 0xFF),
 ]
-
-
-def textur_median(tim):
-    """Median-Farbe (= Papiergrund) der Kartenkunst (UV u 0..126, v 0..84, CLUT 0, deckende Texel)."""
-    import struct
-    flags = struct.unpack_from("<I", tim, 4)[0]
-    assert flags & 3 == 1 and flags & 8, "8bpp mit CLUT erwartet"
-    blen, _, _, cw, _ = struct.unpack_from("<IHHHH", tim, 8)
-    clut = [struct.unpack_from("<H", tim, 20 + 2 * i)[0] for i in range(cw)]
-    off = 8 + blen
-    _, _, _, iw, _ = struct.unpack_from("<IHHHH", tim, off)
-    px = tim[off + 12:]
-    farben = []
-    for v in range(85):
-        for u in range(127):
-            c = clut[px[v * iw * 2 + u]]
-            if c == 0:
-                continue
-            farben.append(((c & 31) << 3, ((c >> 5) & 31) << 3, ((c >> 10) & 31) << 3))
-    return np.median(np.array(farben, float), axis=0)
 
 
 def projiziere(raum, p):
@@ -226,8 +195,6 @@ def main():
     ecken = [np.frombuffer(md1[VERT_OFF + 8 * i:VERT_OFF + 8 * i + 6], dtype="<i2").astype(float)
              for i in range(VERT_N)]
     zeilen, md1s, texte = [], [], []
-    tex_m = textur_median(tim)
-    print("Kartentextur Median (CLUT 0, u0..126 v0..84): %.1f %.1f %.1f" % tuple(tex_m))
     for (raum, blatt, bit, etage, slot, verdr) in RAEUME:
         n, c = EBENEN[raum]
         x0, y0, x1, y1 = MARKEN[raum]
@@ -251,17 +218,16 @@ def main():
             sk[VERT_OFF + 8 * i:VERT_OFF + 8 * i + 6] = np.array(v, dtype="<i2").tobytes()
         md1s.append(bytes(sk))
         texte.append((frage(etage), genommen(etage)))
-        tint = [max(0, min(255, int(round(128.0 * BG_REF[raum][i] / tex_m[i])))) for i in range(3)]
         zeilen.append(dict(raum=raum, blatt=blatt, bit=bit, etage=etage, slot=slot, verdr=verdr,
                            x=int(round(urs[0])), y=int(round(urs[1])), z=int(round(urs[2])),
                            rx=q12(rx), ry=q12(ry), rz=q12(rz),
                            rx0=int(round(rmitte[0])) - 500, rz0=int(round(rmitte[2])) - 500,
-                           s=s, breite=breite, hoehe=hoehe, mitte=P["c"], tint=tint))
+                           s=s, breite=breite, hoehe=hoehe, mitte=P["c"]))
         print("ROOM%04X %s Blatt %d Bit %d | Mitte (%d,%d,%d) Marke %.0f x %.0f -> s %.4f (%.0f x %.0f) "
-              "| Ursprung (%d,%d,%d) rot (%d,%d,%d) | Rechteck (%d,%d) 1000x1000 Slot %d | Licht %s"
+              "| Ursprung (%d,%d,%d) rot (%d,%d,%d) | Rechteck (%d,%d) 1000x1000 Slot %d"
               % (raum, etage, blatt, bit, P["c"][0], P["c"][1], P["c"][2], breite, hoehe, s, 1080 * s, 720 * s,
                  zeilen[-1]["x"], zeilen[-1]["y"], zeilen[-1]["z"], zeilen[-1]["rx"], zeilen[-1]["ry"],
-                 zeilen[-1]["rz"], zeilen[-1]["rx0"], zeilen[-1]["rz0"], slot, tint))
+                 zeilen[-1]["rz"], zeilen[-1]["rx0"], zeilen[-1]["rz0"], slot))
     if not schreiben:
         return
 
@@ -303,13 +269,13 @@ def main():
     L.append("static const unsigned char k_r36k_genommen_len[%d] = { %s };"
              % (len(texte), ", ".join(str(len(g)) for _, g in texte)))
     L.append("")
-    L.append("/* raum, blatt, bit, aot_slot, verdraengt_nach, x, y, z, rot_x, rot_y, rot_z, rect_x, rect_z (1000x1000),")
-    L.append(" * licht r,g,b (Tint = 128 * Licht-Referenz der Umgebung / Textur-Median %.0f,%.0f,%.0f) */" % tuple(tex_m))
+    L.append("/* raum, blatt, bit, aot_slot, verdraengt_nach, x, y, z, rot_x, rot_y, rot_z, rect_x, rect_z (1000x1000).")
+    L.append(" * Licht: Flach-Attribut RE15_R36K_PROP_ATTR im Installer, keine Spalte (Nachbesserung 1). */")
     L.append("static const re15_kartenitem_r36_t k_r36k_lage[%d] = {" % len(zeilen))
     for z in zeilen:
-        L.append("    { 0x%04X, %d, %d, %d, 0x%02X, %d, %d, %d, %d, %d, %d, %d, %d, { %d, %d, %d } },   /* %s Mitte (%d,%d,%d) */"
+        L.append("    { 0x%04X, %d, %d, %d, 0x%02X, %d, %d, %d, %d, %d, %d, %d, %d },   /* %s Mitte (%d,%d,%d) */"
                  % (z["raum"], z["blatt"], z["bit"], z["slot"], z["verdr"], z["x"], z["y"], z["z"],
-                    z["rx"], z["ry"], z["rz"], z["rx0"], z["rz0"], z["tint"][0], z["tint"][1], z["tint"][2], z["etage"],
+                    z["rx"], z["ry"], z["rz"], z["rx0"], z["rz0"], z["etage"],
                     round(z["mitte"][0]), round(z["mitte"][1]), round(z["mitte"][2])))
     L.append("};")
     open(ZIEL, "w", newline="\n").write("\n".join(L) + "\n")

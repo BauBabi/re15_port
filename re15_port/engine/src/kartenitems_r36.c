@@ -2,7 +2,9 @@
  * RE1.5 Rebuilt — Lageplaene zum Aufsammeln (Runde 36 Spur N). Herleitung, Belege und alle
  * Konstanten: include/re15_kartenitems_r36.h und analysis/befunde_runde36/N_kartenitems.md.
  * Vorbild der Datei-Form: inhalt_r35.c (Prop + Zone beim Raumstart), rolltor_1050.c (Port-Programm
- * mit Ja/Nein-Frage, Texte beim Ausloesen).
+ * mit Ja/Nein-Frage, Texte beim Ausloesen). Licht: KEIN Haken mehr — die Karte traegt das Flach-Attribut
+ * RE15_R36K_PROP_ATTR und wird vom Prop-Zeichner wie jedes Objekt mit Pool+0x0c-Bit 0x10 gezeichnet
+ * (FUN_8002c18c @0x8002c2f4 -> FUN_80022f0c, 0x808080; Nachbesserung 1).
  */
 #include "re15_kartenitems_r36.h"
 
@@ -92,6 +94,9 @@ void re15_kartenitems_r36_install(uint16_t room_id)
         g_scd.props[i].rot_y = g->rot_y;
         g_scd.props[i].rot_z = g->rot_z;
         g_scd.props[i].flags = RE15_R36K_PROP_FLAGS;       /* 0x000A | 1 @0x80040998         */
+        g_scd.props[i].attr  = RE15_R36K_PROP_ATTR;        /* 0x0010 Flach-Bit (Pool+0x0c @0x800409b0):
+                                                            * RE2 room20B0 @0x03158 / room2130 @0x00FDC,
+                                                            * Zeichner FUN_8002c18c @0x8002c2f4         */
     }
 
     /* ZONE — EVENT-Satz wie ROOM5030 sub00 @0x0108A (sce 3, sat 0x31, p0 0x00FF, p1 = Sub<<8|0x18). */
@@ -197,16 +202,6 @@ const uint8_t *re15_kartenitems_r36_ereignis(uint16_t room_id, uint8_t event_id)
             (unsigned)room_id, (unsigned)event_id, k_r36k_lage[k].blatt);
 #endif
     return re15_kartenitems_r36_programm(room_id, NULL);
-}
-
-int re15_kartenitems_r36_licht(uint16_t room_id, int obj_id, uint8_t *r, uint8_t *g, uint8_t *b)
-{
-    int k = index_des_raums(room_id);
-    if (k < 0 || obj_id != RE15_R36K_OBJ) return 0;
-    if (r) *r = k_r36k_lage[k].licht[0];
-    if (g) *g = k_r36k_lage[k].licht[1];
-    if (b) *b = k_r36k_lage[k].licht[2];
-    return 1;
 }
 
 int re15_kartenitems_r36_obj_id(uint16_t room_id)

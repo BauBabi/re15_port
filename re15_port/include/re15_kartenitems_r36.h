@@ -27,6 +27,16 @@
  *   ETAGENWAHL — RE2 Bank 35 (0x800D4908): `jal 0x80077360` @0x8006D934 / @0x8006D998; die Aufnahme
  *     setzt sie (room20B0 @0x037E6-EE). Port: re15_map_blatt_waehlbar fragt den Besitz mit ab.
  *   TEXT — RE2 room2130 sub00 / sub12 (Bytes Dossier 2.4), RE1.5-Rahmen ROOM2030 msg 2/3.
+ *   LICHT — RE1.5 FUN_8002c18c (Objekt-Zeichner): `lw v0,0xc(s1)` @0x8002c2ec, `andi v0,v0,0x10`
+ *     @0x8002c2f4, `beq` @0x8002c2f8: Attribut-Bit 0x10 (Pool+0x0c = Obj_model_set pc[8..9],
+ *     LAB_80040914 @0x800409a8/@0x800409b0) -> FLACH ohne Raumlicht ueber FUN_80022f0c @0x8002c320
+ *     (a2 = obj+0x70 = 0x808080 aus FUN_8002b898.c:16 = Textur unveraendert), sonst NCCT. RE2 zeichnet
+ *     seine Wandplaene genau so: room20B0 obj 8 @0x03158 und room2130 obj 0 @0x00FDC tragen das
+ *     Attributwort 0x0010 (FUN_800363f0.c:41-54 `puVar4[4] & 0x10` -> FUN_8002d0e8/FUN_8002d244
+ *     unbeleuchtet; FUN_80035710.c:16 0x808080). In RE1.5 tragen 260 Objekte in 46 Raeumen dasselbe
+ *     Bit, darunter ROOM1200 obj 0/1 (@0x007DA/@0x00804) an derselben Wand wie die B2-Karte. Die
+ *     Karte erhaelt deshalb attr = RE15_R36K_PROP_ATTR; der Prop-Zeichner (platform/pc/main.c) fuehrt
+ *     den Flach-Zweig fuer JEDES Objekt mit dem Bit (Nachbesserung 1, Dossier Abschnitt 8).
  *
  * PORT-WAHL (Messung, Dossier 3): Ebene, Mitte, Massstab (Karte innerhalb der Marke, 3:2), Drehung,
  *   Aufhebe-Rechteck 1000 x 1000 um Mitte + 300 Einheiten zur Raumseite — alles erzeugt von
@@ -46,10 +56,6 @@ typedef struct {
     int32_t  x, y, z;          /* Prop-Ursprung (Welt)                                                  */
     int16_t  rot_x, rot_y, rot_z;   /* Pool +0x68/+0x6A/+0x6C (scd_vm.c Member 3..5)                    */
     int32_t  rect_x, rect_z;   /* Ecke des Aufhebe-Rechtecks, Groesse RE15_R36K_RECT                    */
-    uint8_t  licht[3];         /* Vertexfarbe (128 = neutral) = 128 * Licht-Referenz / Textur-Median
-                                * (PORT-WAHL aus Messung: Papiergrund so hell wie die hellsten 15 % der
-                                * Umgebung im Nutzer-Cut; das RDT-Figurenlicht gibt an den Waenden 31..70,
-                                * 1140 Cut 5 (41,39,39) = 2,8x dunkler als die Tafel)                   */
 } re15_kartenitem_r36_t;
 
 #define RE15_R36K_ANZAHL       5
@@ -64,6 +70,10 @@ typedef struct {
 #define RE15_R36K_AOT_SAT      0x31      /* Aktion+vorne+Spieler wie ROOM5030 (0xB1 = 0x31|Viereck)      */
 #define RE15_R36K_AOT_P0       0x00FFu   /* ROOM5030 sub00 Payload +0 `ff 00`                            */
 #define RE15_R36K_PROP_FLAGS   0x000B    /* 0x000A | 1 (@0x80040998), wie r35 RE15_R35I_PROP_FLAGS       */
+#define RE15_R36K_PROP_ATTR    0x0010    /* Pool+0x0c Flach-Bit (Obj_model_set pc[8..9] @0x800409a8/b0):
+                                          * RE2 room20B0 obj 8 @0x03158 / room2130 obj 0 @0x00FDC = 0x0010;
+                                          * RE1.5 ROOM1200 obj 0/1 @0x007DA/@0x00804 = 0x0010; Zeichner
+                                          * FUN_8002c18c @0x8002c2f4 -> FUN_80022f0c flach, 0x808080      */
 #define RE15_R36K_PROP_BAND    1         /* wie r35 RE15_R35I_PROP_BAND (100 von 121 Item-Props)          */
 
 /* Prop + Aufhebe-Zone beim Raumstart anlegen (nur solange das Bank-9-Bit fehlt). Gerufen an BEIDEN
@@ -84,10 +94,6 @@ const uint8_t *re15_kartenitems_r36_tim_bytes(uint16_t room_id, int *out_size);
  * Bank 33 @0x8006E66C). */
 int      re15_kartenitems_r36_blatt_besitz(unsigned page);
 uint32_t re15_kartenitems_r36_besitz_bits(void);
-
-/* HAKEN Prop-Zeichner (platform/pc/main.c): Vertexfarbe des Karten-Props statt des RDT-Figurenlichts;
- * 1 = gesetzt (nur obj RE15_R36K_OBJ in einem Kartenraum), sonst 0 und nichts veraendert. */
-int re15_kartenitems_r36_licht(uint16_t room_id, int obj_id, uint8_t *r, uint8_t *g, uint8_t *b);
 
 /* Sonden/Riegel. */
 int                          re15_kartenitems_r36_anzahl(void);

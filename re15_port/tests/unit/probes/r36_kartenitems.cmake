@@ -34,3 +34,9 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_kartenitems_bild.cmake)
     set_tests_properties(integration_r36_kartenitems_bild PROPERTIES TIMEOUT 1200)
 endif()
+
+# AUSWERTER (kein add_test, Nachbesserung 1): Farbe der gezeichneten Karte = Palettenfarben der RE2-TIM
+# (Flach-Weg FUN_8002c18c @0x8002c2f4 -> FUN_80022f0c, 0x808080), Mittel und Huelle im Marken-Fenster.
+add_executable(probe_r36_kartenitems_licht ${CMAKE_CURRENT_LIST_DIR}/../probe_r36_kartenitems_licht.c)
+target_link_libraries(probe_r36_kartenitems_licht PRIVATE re15_engine)
+target_include_directories(probe_r36_kartenitems_licht PRIVATE ${CMAKE_SOURCE_DIR}/include)
