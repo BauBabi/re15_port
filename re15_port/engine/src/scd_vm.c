@@ -57,6 +57,7 @@
 #include "re15_ziel1190.h"   /* Runde 35 Spur H: Zielscheiben-Texte ROOM1190 (ziel_1190.c) */
 #include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
 #include "re15_elza_r36.h"   /* Runde 36 Spur L: Anker-Toene/Stimme Elza-Szenen (elza_r36.c) */
+#include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Erweiterung ROOM11B0 sub06 (szenenleon_r36.c) */
 
 scd_vm_t g_scd;
 
@@ -635,6 +636,7 @@ int scd_event_fire(uint8_t event_id)
      * Rueckkehr / Nachspawn; sonst NULL. Disjunkt zu A (2) und D (13). */
     if (!pc) pc = re15_irons_tod_ereignis((uint16_t)g_current_room_id, event_id);
     if (!pc) pc = re15_fenster1120_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 35 Spur M */
+    if (!pc) pc = re15_szl_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 36 Spur J: 22/23 in ROOM11B0 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -2594,6 +2596,8 @@ static int op_plc_dest(scd_thread_t *t)
                     extern void re15_player_aim_interrupt(void);
                     re15_player_aim_interrupt();
                     if (mode == 0x06) re15_player_event_reach_begin();
+                    else if (mode == 0x13) { extern void re15_szl_schub_spieler_start(void);   /* Runde 36 Spur J: */
+                        re15_szl_schub_spieler_start(); }   /* Schub-Sub @0x80052864 (0x80073e30[19]) */
                 }
             }
 #ifdef RE15_PLATFORM_PC
@@ -3422,6 +3426,9 @@ static int op_member_set(scd_thread_t *t)
             case 0x03: case 0x0E: g_scd.props[pi].rot_x = (int16_t)value; break;
             case 0x04: case 0x0F: g_scd.props[pi].rot_y = (int16_t)value; break;
             case 0x05: case 0x10: g_scd.props[pi].rot_z = (int16_t)value; break;
+            /* Runde 36 Spur J: Id 6 = Objekt-Wort 0 (`sw a2,0(a0)` @0x800411c8) — ROOM11B0 @0x01706 0x0201
+             * (Bit 0x200 = Schub durch den Spieler, szenenleon_r36.c), @0x017D6 0x0081. */
+            case 0x06: g_scd.props[pi].flags = (uint16_t)value; break;
             default: break;
             }
 #ifdef RE15_PLATFORM_PC
@@ -4350,6 +4357,8 @@ static int op_unknown(scd_thread_t *t)
  * Dispatch per port type in re15_aot_fire_slot(). */
 int op_aot_on(scd_thread_t *t)
 {
+    /* Runde 36 Spur J: ROOM11B0 sub06 @0x017EA `47 05` -> erst Marvins Erweiterung (szenenleon_r36.c) */
+    if (re15_szl_aot_on_umleitung(&t->pc, s_current_rdt ? s_current_rdt->sub_scd[RE15_SZL_SUB] : NULL)) return 1;
     uint8_t slot = t->pc[1];
     if (slot < RE15_AOT_MAX) {
         g_aot.slots[slot].active = 1;

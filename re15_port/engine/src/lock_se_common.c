@@ -112,6 +112,8 @@ static void tuerse_log(unsigned room, int msg, int art, int weg, int satz)
 
 int re15_lock_se_notice(unsigned room_id, uint8_t msg_id, int weg)
 {
+    { extern int re15_szl_lock_stelle(unsigned *, uint8_t *);   /* Runde 36 Spur J: ROOM11B0 msg 22 = Elzas */
+      (void)re15_szl_lock_stelle(&room_id, &msg_id); }             /* ROOM11B1 msg 12 (Zeile 0x11B1 unten)     */
     for (int i = 0; i < RE15_LOCK_SE_SITE_COUNT; i++) {
         const re15_lock_se_site_t *s = &re15_lock_se_sites[i];
         if (s->room != (uint16_t)room_id || s->msg != msg_id) continue;

@@ -243,7 +243,13 @@ zeile(MSG["m_yeah"], "Marvin", [(15, "Arm strecken"), G16], MARVIN, "Marvin: Yea
 zeile(MSG["l_okay"], "Leon", [(15, "Arm strecken (zu Marvin: you go with Ada)"), G16], LEON, "Leon: Okay, Marvin, you go with Ada to the parking lot and wait there.")
 zeile(MSG["l_irons"], "Leon", [(17, "Arm-Schwung (I'm going to get Chief Irons)")], LEON, "Leon: I'm going to get Chief Irons, and I'll be right behind you!")
 zeile(MSG["m_alright"], "Marvin", [(15, "Arm strecken (Take care Leon!)"), G16], MARVIN, "Marvin: Alright! Sounds like a plan. Take care Leon!")
-# Marvin und Ada rennen hintereinander zur Tuer
+# Marvin und Ada rennen hintereinander zur Tuer.
+# Runde 36 Spur J (NUTZER-VORGABE AUFTRAG.md Z.72: "Bleibe lieber mit der Kamera wenn Marvin und Ada den Raum
+# verlassen auf Leon fixiert. und mache an der Stelle nur einen 'Tuer schliessen' Sound zum schluss."):
+# KEIN Cut_chg 0 mehr - die Dialogkamera Cut 2 (RDT @0x0A0 pos (5874,-3618,1851), Blick +88 Grad nach Norden)
+# bleibt stehen. Die Tuer (8400,-350) liegt HINTER dieser Kamera (z -350 < 1851): beide laufen aus dem Bild, das
+# Parken (Pos_set, Form ROOM10D0 sub21 @0x01D9E) geschieht erst an der Tuer = ausserhalb des Bildes, und der
+# Tuerton (Se_on Port-Bank 0x0E Satz 1 = RE2 DOOR13 Door_exit, dieselbe Tuer) kommt zum Schluss.
 MARVIN(); neck_release("Marvin: Kopf loslassen")
 dest(5, BIT_MARVIN, WP_X, WP_Z, "Marvin: Plc_dest Modus 5 (rennen) zum Wegpunkt")
 sleep(25)
@@ -251,17 +257,14 @@ ADA(); neck_release("Ada: Kopf loslassen")
 dest(5, BIT_ADA, ADA_WP_X, ADA_WP_Z, "Ada: Plc_dest Modus 5 (rennen) hinterher")
 work_player(); neck_pt(WP_X, WP_Z, "Leon: schaut ihnen nach")
 wait(BIT_MARVIN, "Marvin am Wegpunkt")
-cut_chg(0, "Cut_chg 0  Abgang durch die Tuer")
-MARVIN(); dest(5, BIT_MARVIN, SPAWN_X, SPAWN_Z, "Marvin: Plc_dest Modus 5 (rennen) zur Tuer")
+MARVIN(); dest(5, BIT_MARVIN, SPAWN_X, SPAWN_Z, "Marvin: Plc_dest Modus 5 (rennen) zur Tuer (Kamera bleibt Cut 2 auf Leon)")
 wait(BIT_ADA, "Ada am Wegpunkt")
 ADA(); dest(5, BIT_ADA, SPAWN_X, SPAWN_Z, "Ada: Plc_dest Modus 5 (rennen) zur Tuer")
 wait(BIT_MARVIN, "Marvin an der Tuer")
-MARVIN(); pos_set(PARK_X, 0, PARK_Z, "Marvin: Pos_set geparkt (durch die Tuer verschwunden)")
+MARVIN(); pos_set(PARK_X, 0, PARK_Z, "Marvin: Pos_set geparkt (an der Tuer, ausserhalb des Bildes)")
 wait(BIT_ADA, "Ada an der Tuer")
-ADA(); pos_set(PARK_X, 0, PARK_Z, "Ada: Pos_set geparkt")
-se_on(SE_BANK, SE_TUERKNALL, "Se_on Tuer faellt hinter ihnen zu (RE2 DOOR13 Door_exit)")
-sleep(10)
-cut_chg(2, "Cut_chg 2  zurueck zu Leon (gemessen: nach Cut 0 laege Leon ausserhalb jedes 0->x RVD-Bands, Kamera bliebe stehen)")
+ADA(); pos_set(PARK_X, 0, PARK_Z, "Ada: Pos_set geparkt (an der Tuer, ausserhalb des Bildes)")
+se_on(SE_BANK, SE_TUERKNALL, "Se_on Tuer faellt hinter ihnen zu (RE2 DOOR13 Door_exit) - nur der Ton, zum Schluss")
 sleep(45, "Sleep 45  'kurz weiter Cutscene Balken'")
 work_player(); neck_release("Leon: Kopf loslassen")
 plc_ret()

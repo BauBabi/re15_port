@@ -1725,6 +1725,8 @@ void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
     for (int p = (int)g_scd.prop_count - 1; p >= 0; p--) {   /* rueckwaerts @0x8002bdb0-c8 */
         if (p >= 16) continue;
         if (!g_scd.props[p].active) continue;                 /* @0x8002bdcc obj[+0]&1 */
+        { extern int re15_szl_objekt_schub(int);             /* Runde 36 Spur J: Bit 0x200 @0x8002bec0 */
+          if (re15_szl_objekt_schub(p)) continue; }          /* -> FUN_8002cabc(Spieler,obj,1) @0x8002bed4 */
         const int32_t sx = g_scd.props[p].x;                  /* @0x8002beec Sicherung */
         const int32_t sz = g_scd.props[p].z;
 

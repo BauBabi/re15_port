@@ -4798,6 +4798,8 @@ re_title:;
     }
     if (!s_preintro && rdt_ok && rdt.sub_scd[0]) {
         scd_thread_start(1, rdt.sub_scd[0]);
+        { extern void re15_szl_init_lauf(uint16_t);   /* Runde 36 Spur J: Ereignis 23 im Init-Lauf hinter sub00 */
+          re15_szl_init_lauf((uint16_t)g_current_room_id); }
         s_sub00_spawned = 1;
         /* sub00 SOFORT einmal laufen lassen — als INIT-Lauf, nicht als Gameplay-Frame.
          * Im Original startet die SCD-Raum-Init FUN_8003ef6c Slot 1 mit sub00 (a1 = 0,
@@ -4887,6 +4889,8 @@ re_title:;
     { extern void re15_tuer1060_install(uint16_t); extern void re15_irons_tod_install(uint16_t);
       re15_tuer1060_install((uint16_t)g_current_room_id);
       re15_irons_tod_install((uint16_t)g_current_room_id); }
+    { extern void re15_szl_install(uint16_t);   /* Runde 36 Spur J: Boot-/CONTINUE-Weg wie oben (ROOM11B0 Werkstatt-Tuer) */
+      re15_szl_install((uint16_t)g_current_room_id); }
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — derselbe Grund wie Sicherung, Schreibtisch und
      * Granate darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter (Original: EIN
      * Raumlader FUN_800396fc, `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem
@@ -8630,6 +8634,8 @@ re_title:;
                 extern int re15_player_event_reach_clip(void);
                 extern int re15_player_aim_active(void);
                 int erc = re15_player_event_reach_clip();
+                { extern int re15_szl_schub_spieler_wclip(void);   /* Runde 36 Spur J: Sub 0x13 [0/1] = Clip 5 */
+                  if (erc < 0) erc = re15_szl_schub_spieler_wclip(); }   /* auf +0x170 (@0x8005294c) */
                 if (erc >= 0 && wact_ok && re15_player_victim_state() == 0 &&
                     !re15_player_aim_active()) {
                     p_skel = wact_skel;

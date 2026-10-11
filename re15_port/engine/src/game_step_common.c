@@ -42,6 +42,7 @@
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Szenen-Ende ROOM10F0 (re15_cut10f0_tick) */
+#include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13, Irons-Kopf, 11B0-Erweiterung */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
 
@@ -381,7 +382,8 @@ void re15_player_event_reach_begin(void)
     pl->anim_freeze = 0;
     pl->walk_active = 0;
 }
-void re15_player_event_reach_end(void)  { s_ev_reach = 0; }
+void re15_player_event_reach_end(void)  { s_ev_reach = 0;
+    re15_szl_schub_spieler_ende(); }   /* Runde 36 Spur J: jeder neue Plc-Befehl ersetzt auch Sub 0x13 */
 
 /* KOMMANDOREGISTER-RESET — das Port-Gegenstueck zum WORT-Store `sw zero,0x800aca58` @0x80031518
  * (FUN_800314b0, der Spieler-Load; einziger Caller ist der RAUMLADER FUN_800396fc, jal @0x80039788)
@@ -1240,6 +1242,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Menue sie angenommen hat (s_stage == 0 && !s_alive); sonst bleibt sie stehen
      * (RE2: Bit 0x8000 bleibt bis zum Start des Status-Tasks, @0x80025BA8-E0). */
     re15_cut10f0_tick();   /* Runde 35 Spur K: Szenen-Ende ROOM10F0 -> Kartenhinweis + MAIN01 (re15_cut10f0.h) */
+    re15_szl_tick();       /* Runde 36 Spur J: Irons-Kopf nach dem Tod, ROOM11B0-Erweiterung (re15_szenenleon_r36.h) */
     if (re15_map_hint_pending() >= 0 &&
         re15_menu_request_map_hint(re15_map_hint_pending()))
         re15_map_hint_take();
@@ -1633,6 +1636,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         int aim_decide = re15_player_aim_active();
         int32_t ox = pl->x, oz = pl->z;
         re15_player_tick(c->cam_view, c->pad_current);
+        re15_szl_schub_spieler_tick();   /* Runde 36 Spur J: Plc_dest Modus 0x13 (@0x80052864), vor dem Objekt-Pass */
         /* ENTITY BODY COLLISION (byte-true FUN_80031c44 order: cmd-FSM move -> FUN_8002b544 body
          * push-out -> FUN_8003b0a4 walls, so the WALLS win): push the player out of every live
          * enemy cylinder (450 + 400) — the "walk through zombies" fix. */

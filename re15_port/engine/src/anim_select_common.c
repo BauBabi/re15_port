@@ -317,7 +317,8 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
      * Clips. 27 von 27 Schiebe-Bildern trugen die falsche Cliplaenge. */
     {
         extern int re15_player_push_substate(void);
-        if (is_player && banks->pl00_ok && re15_player_push_substate()) {
+        extern int re15_szl_schub_spieler_pl00(void);   /* Runde 36 Spur J: Sub 0x13 [2..7] posiert +0x84/+0x16c */
+        if (is_player && banks->pl00_ok && (re15_player_push_substate() || re15_szl_schub_spieler_pl00() >= 0)) {
             out->skel = banks->pl00_skel;
             out->anim = banks->pl00_anim;
             out->clip_override = m;      /* +0x94 ist im Original der DIREKTE Clip-Index */
