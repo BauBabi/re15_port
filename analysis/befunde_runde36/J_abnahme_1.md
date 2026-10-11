@@ -7,7 +7,13 @@ zeigt diese 66 wav deshalb als "geloescht", der Drei-Punkt-Diff `master...HEAD` 
 Massstab: AUFTRAG.md (Wortlaut + Nachtrag 14:00 + Nachtrag "abends" Spur J Punkt 2), VERTRAG.md, CLAUDE.md (RE-Gate),
 Maengel M1-M4 der Abnahme 0.
 
-STAND: IN ARBEIT (fortlaufend geschrieben).
+STAND: ABGESCHLOSSEN 2026-10-11.
+
+## Ergebnis: BESTANDEN
+
+Alle vier Punkte am gebauten Stand (c532feca) ueber den ECHTEN Weg gemessen: 1 erfuellt, 2 erfuellt (inkl. Nachtrag
+"erst schliessen, dann abschliessen"), 3 erfuellt, 4 erfuellt. Maengel M1-M4 der Abnahme 0 behoben. RE-Gate haelt (11
+Stichproben), Vertrag haelt, gezielte Tests 159/159 gruen. Keine offenen Maengel; Hinweise H1-H8 in §7.
 
 ## 0. Bau
 
@@ -293,3 +299,88 @@ RE15_NECK_TRACE=... RE15_FRAMEDUMP=150:<ziel>/f_000150.ppm RE15_EXIT_AT=160#1150
   0x12 (Bit 0x80 faellt weg). `re15_npc_neck_spawn_init` (game_step_common.c:937) laeuft nur bei `neck_bone == 0` und im
   Spielschritt VOR `re15_szl_tick` — im ersten Bild schuetzt Ls 0x80 die Flags, danach ist bone 8 und die Init laeuft nie
   wieder. Ergebnis 0x12, kein Tracking. Im Integrationsbaum nachzumessen (Hinweis H3).
+
+### 5.3 Nebenwirkungen (selbst gemessen)
+- **ROOM11B1 (Elza)**: `lauf.sh h_11b1 200 RE15_GOTO_ROOM=11b1 RE15_SET_FLAG=4:0xf3 RE15_FRAMEDUMP=100-300/50
+  RE15_EXIT_AT=300#11b1` -> 300 Bilder cam=0, Tuerbild ZU (d_zu 0.0 gegen BSS 0), 0 Zeilen `[szl-r36]` (Spur-J-Code
+  bleibt dort stumm). Riegel `unit_r36_szenenleon_tuer`: 11B1 Platz 8 = msg 12, kein Port-Programm (PASS).
+- **ROOM11B0 ohne (9,84)** (vor der Szene, Original): Riegel `tuer` Gegenprobe "Zonen getauscht, gezeigt Bild 8" (PASS);
+  `re15_szl_init_lauf` kehrt ohne Bit 84 sofort zurueck (Code gelesen).
+- **Parkplatz-Tuer 11B0 -> 11C0**: weder Erweiterung noch Ereignis 23 enthalten ein Door_aot_set/Aot_set auf Slot 1
+  (Programm-Listing `gen/szl11b0_szene.inc` gelesen).
+- **Tuerbank**: die Erweiterung laedt DOOR1A in die RE2-Tuerbank (Port-Bank 0x0E); danach verlaesst die Szene den Raum
+  ueber den Gully ohne Tuersequenz, jede spaetere Tuer laedt ihr eigenes Archiv; ROOM10F0 (cut_10f0.c) laedt seinen
+  Tonteil beim Raumaufbau selbst — im 10F0-Lauf (Punkt 3) spielte der Abgangs-Ton mit dem 10F0-Satz (vag=1 note=61
+  16397 Hz), nicht mit DOOR1A.
+
+### 5.4 Gezielte Tests (selbst gefahren, KEINE volle Suite — Auftrag)
+`ctest --test-dir re15_port/build -R "<regex>" --timeout 900 --output-on-failure`, Regex = die 157 des Bau-Agenten (Dossier
+N1.5: Spur + Module scd_vm/aot/enemy_ai/anim_select/game_step/lock_se/audio/cut_10f0/irons_tod + Lade-/Boot-Riegel) plus
+`unit_r34n_f_leiche_laden|unit_map_speichern_laden` (Lade-Weg) = 159 Tests (Regex-Datei `J_abn1/regex.txt`), woertlich:
+```
+100% tests passed, 0 tests failed out of 159
+Total Test time (real) = 1373.79 sec
+```
+darunter integration_r36_szenenleon 161.78 s (A..E), integration_r35_cut10f0 245.47 s, integration_r35_cut1150 512.71 s,
+integration_elza_vollstart 100.16 s, integration_r30_granate_laden 91.76 s, integration_r30_sicherung_laden 39.83 s,
+integration_weste_load_pin 6.55 s, integration_boot_bg_pin 3.24 s. Kein Fenster-Haken musste nachgefahren werden.
+- Unit-Teile zusaetzlich einzeln (Ausgaben im Notizblock `J_abn1/unit_*.txt`), je `PASS (0 Fehler)`:
+  `schub` "Leon 0x11=1 0x12=1 rueck=1 Ende B1552 z -21535 -> -19999 | Marvin 0x11=1 0x12=1 Ende B1553 | Container z -20918 ->
+  -19549 Flags waehrend 0x0201 Ende 0x0081 | snd0 0 -> 8"; `erweiterung` "Schliessen (Clip 20) B2191 < Tuer-zu-Ton (0x0E/1)
+  B2206, Bild 2 gezeigt B2206 < Abschliessen (Clip 15) B2241 < Abschliess-Ton (0x3A/0x0A) B2261"; `tuer` "(9,84)=1, Eintritt
+  Cut 8: nach dem Init-Lauf Zelle u0 0xFF fl 0x03, Zonen 1, Cut 2 (work_vars[0x0A] 2)", Ost/West "Bilder mit 7/8: 0";
+  `abgang10f0` "Zeile 23 B2466 | Cut danach 2, Wechsel 0 | Marvin geparkt B2651 (vorher im Bild 0) | Ada geparkt B2676
+  (vorher im Bild 0) | Tuerton B2676 (1x)"; `irons` "lebend A -615 / B -491 ... tot ... A (0,-153) / B (0,-153)".
+- integration_r36_szenenleon (Arbeitsordner `build/tests/integration/r36_szenenleon_wd/lauf_8e996dc8_*`): A2 debug.log
+  F2378 Schliessen < F2393 Tuer-zu-Ton < F2428 Abschliessen < F2448 Abschliess-Ton; state.log B 731 / C 371 / D 151 Zeilen,
+  davon mit cam 8/7: 0 / 0 / 0.
+- Riegel je Punkt vorhanden und messend (Assertions gelesen): Punkt 1 `schub` + integration A; Punkt 2 `programm`
+  (Bytefolge gegen die RDT-Datei), `erweiterung` (Bildnummern, Zonen-Zustand gegen die ausgelieferte RVD, Kamerafolge
+  6-10-8-2-4-6), `tuer` (Init-Lauf, Ost/West, Gegenprobe ohne Bit 84, 11B1), integration A/A2/B/C/D/E (E = Gegenprobe:
+  ohne Bit 84 sieht die Messung Cut 8); Punkt 3 `abgang10f0`; Punkt 4 `irons` (lebend-Gegenprobe).
+
+## 6. Maengel der Abnahme 0 — Stand
+
+| Mangel (Abnahme 0) | Stand | Beleg hier |
+|---|---|---|
+| M1 Tuer bleibt im Bild offen | behoben | 2.1 (ab F2392 ZU), 2.2 (Echtweg-Rueckkehr, Folge 6-5-4-3-2, 0 Bilder 7/8), 2.3 (Ost/West je 421 Bilder ZU), 2.4 (CONTINUE) |
+| M2 Nachtrag: erst schliessen, dann abschliessen | behoben | 2.1 Bildnummern F2376 < F2391 < F2426 < F2446 + Framedump-Serie; 2.2 zweiter Lauf F2380 < F2395 < F2430 < F2450 |
+| M3 Falschaussage im Dossier | behoben | J_szenenleon.md §2.3 (Z.288), OFFEN 1 (Z.318), "Fuer den Nutzer" (Z.345) durchgestrichen + berichtigt; im Code keine Spur der Behauptung (git grep) |
+| M4 kein Riegel fuer das Tuerbild | behoben | 5.4 (Assertions gelesen, Tests gruen, Gegenprobe E vorhanden) |
+
+## 7. Ergebnis
+
+| Punkt | Urteil | Kern |
+|---|---|---|
+| 1 Container-Schieben 11B0 | erfuellt | Echtweg 11C0->11B0: Leon + Marvin Sub 0x13 synchron (0x11/0x12/0x11-rueck), +1536/+1517, Container wandert, Gully frei |
+| 2 Erweiterung Werkstatt-Tuer | erfuellt | Hold on -> Lauf -> Schliessen (Clip 20, Bild 8->2, DOOR1A-Tuer-zu-Ton) F2376<F2391 -> Abschliessen (Kendo Clip 15, SCHLOSS1010) F2426<F2446 -> Tuer zu (jedes Bild, Echtweg-Rueckkehr, Ost/West, CONTINUE) mit Elzas Text+Ton -> Rueckweg -> "I just want to make sure..." |
+| 3 10F0-Abgang | erfuellt | Echtweg 10D0->10F0: Cut 2 ab F911 bis Ende, Parken F2670/F2687 bei 0 geaenderten Pixeln, ein Tuer-zu-Ton F2687 |
+| 4 Irons-Kopf nach dem Tod | erfuellt | Echtweg 1130->1150: fl 0x00 -> 0x12 F894, Akku 424 Bilder konstant; tot A/B 0 px, lebend A/B 165 px am Kopf |
+
+Gates: RE-Gate haelt (11 Stichproben selbst disassembliert/gelesen, 0 Rate-Woerter, Fix erklaert den Befund), Vertrag
+haelt, gezielte Tests 159/159 gruen. **Keine offenen Maengel.**
+
+Hinweise (kein Mangel, fuer Orchestrator/Nutzer):
+- H1 Dossier N1.1/Commit c532feca schreiben "Kamera RDT @0x00A0 == @0x0160" (und 0x0060/0x0140, 0x00E0/0x01A0): die
+  Kamera-Geometrie ist byte-gleich, die 32-Byte-Saetze unterscheiden sich aber im Wort +0x1C (Masken-/Sprite-Zeiger, z.B.
+  2032 vs 2188). Aussage "gleiche Kamera, anderes Bild" stimmt; "==" ist ungenau.
+- H2 Probe-Merge in r36/integration (99b397e7): 4 Konflikte, alle trivial (beide Seiten behalten) — 5.2.
+- H3 ROOM1151: J (`irons_kopf_tick`) und L (`re15_elza_r36_install`, neck 0x80|0x12) wirken auf denselben toten Irons;
+  statisch vertraeglich (Endstand 0x12, kein Tracking) — im Integrationsbaum messen (neck.log ROOM1151, zwei Standpunkte).
+- H4 Grenzen, im Dossier als OFFEN mit Adresse + Messweg: Tuerblatt springt (nur Hintergrundbild, OFFEN 5), Kendos
+  Nachwippen ohne Plc_cnt/Plc_stop (OFFEN 2, PORT-WAHL Sleep 35), Schloss-Ton nicht positional (OFFEN 3), Elza-Zeitleiste
+  (OFFEN 4, Spur P).
+- H5 Paket-Gate (nur Orchestrator): `shared_assets/RE2/SCHLOSS1010.EDT/.VH/.VB` muessen ins Paket (selbst geprueft: byte-
+  gleich RE2 ROOM1010.RDT @0xA044/@0xA104/@0xAF24); der Tuer-zu-Ton ist eingebacken (`gen/szl11b0_tuerton.inc`).
+- H6 integration_r36_szenenleon D/E (CONTINUE) prueft einen Spielstand IN ROOM11B0, den es im Spiel nicht gibt (keine
+  Schreibmaschine in 11B0) — Robustheit des Boot-Wegs, kein Spielweg.
+- H7 Zwei-Punkt-Diff gegen master zeigt 66 synchro/*.wav als geloescht (master 565da62b nach der Merge-Basis); beim
+  Zusammenfuehren keine Rolle (Drei-Punkt-Diff beruehrt synchro/ nicht), aber bei einem `git diff master`-Review nicht
+  verwechseln.
+- H8 Bestaetigt (Hinweis des Bau-Agenten, nicht Spur J): ROOM1050 @0x00C8A ist `21 03 6e 01` (Ck), das Evt_exec steht
+  @0x00CA2 `04 ff 18 03` — der Kommentar der Spur K in scd_room_setup.c zitiert die falsche Stelle.
+
+Belegbilder (Notizblock `J_abn1/`, nicht im Repo): `bg_tuer_2_8_0_7.png`, `bg_tuer_0_7.png`, `a_schliessen_1.png`,
+`a_schliessen_2.png`, `a_frames_2316_2360.png`, `bc_tuer_text_F370.png`, `r_weg_sheet.png`, `p1_schub_sheet.png`,
+`p3_abgang_sheet.png`, `p4_irons_AB.png`; Mess-Ausgaben `a_tuerbild.txt`, `b_tuerbild.txt`, `c_tuerbild.txt`,
+`d_tuerbild.txt`, `r_tuerbild.txt`, `ctest_gezielt.log`.
