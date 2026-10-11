@@ -65,6 +65,12 @@ das Tor unerreichbar (Softlock). Nutzer-Wortlaut der Spur A: "Das macht ein Fort
   XInput-Pad global), Original orig_2060_glied a/b (Glied Ende-zu-Ende inkl. Tuer) und orig_2050_fall (Zellen-Protokoll
   + Ruhelage -13068, Spiegel-Semantik Bild 13), Riegel tritt2060/echt2050/elza2051, Dossier. Commits c4a70513, 39fa3225,
   455a46e2, Abschluss.
+* 2026-10-11 ~23:25 Fortsetzung (Vorgaenger vom Fable-Limit ~23:15 beendet, Stand 50edb2be, alles committet): Bau
+  `local_build.sh configure` + `build` -> LOCAL-BUILD-OK (`ninja: no work to do`; exe 23:02:50 nach der letzten
+  Quellaenderung zellschub_r36.c 23:02:06 = Stand 50edb2be). Gezielte Regression VOLLSTAENDIG (226/226, s. Tests), Riegel mit
+  elf Laeufen selbst gelesen (s. "Abschluss"). Neue Messung "Wiederbetreten nach dem Fall der 2050-Kiste" an der exe
+  (nb3_2050wiederkehr) und am Original (orig_2050_wiederkehr); Riegel-Lauf echt2050 um die Rueckkehr erweitert und erneut
+  gefahren; Dossier abgeschlossen. Commits 02c53c0a, 860d7aa1, 30386001, Abschluss.
 
 ## Punkt 1 — Messung an der exe (Leon ROOM1090, Elza ROOM1091)
 
@@ -829,10 +835,95 @@ gesperrt, FALL-AUSLOESER obj=(-24070,-7200,-18492), Endlage (-24070,0,-15631) Ba
   (HIT 1 spiegel (7562,-12915) = Lage), sonst gilt das vorige Bildende (HIT 2 spiegel (7562,-13068) bei Lage -13250) — so
   auch im Port (zellschub_r36.c, Zaehler aus re15_objfall_info). x weicht um 6 ab (7556 Port / 7562 Original = die
   Lage, in der der Nord-Schub die Kiste losliess; Schubschritte Spur A/Nachbesserung 2), z identisch.
-* **Regression (gezielt):** s. Tests.
+* **Regression (gezielt):** `100% tests passed, 0 tests failed out of 226` (Ausdruck und Zeilen s. Tests).
+
+### Abschluss — Riegel `integration_r36_dachkiste` mit elf Laeufen (Regression, Laufordner `lauf_13d906c3`, selbst gelesen)
+* `leon` / `elza` (echter Weg 10F0/10F1 -> Tritt -> Tuer slot 1 -> 1090/1091): je **3x `p=1 obj=1 SCHUB-GESPERRT ... lage=(-5960,-15482)
+  ziel=(-5960,-15556) band=5`** mit `TREFFER-ZELLE r3[4]: x -7256..4624 z -18560..-16403 typ 1 u0 0xff ... r=900`, 0 SCHUB-OK an obj 1,
+  0 AUSLOESER, letzte Lage `p1 (-5960,-9000,-15482) b5`; `elza` mit `Spieler-Familie PL04`, `loaded room10f1.rdt` / `room1091.rdt`.
+  Keine RUHE-AUSSCHIEBUNG der Dach-Kiste (ihre Ruhelage liegt 21 Einheiten vor r3[4]: (u32)(-15482 - (-18560 - 900)) = 3978 >= 3957).
+* `west`: 2x GESPERRT `ziel=(-6034,-15482)` an `r3[2]: x -9200..-6878`, 0 OK, Kiste auf dem Record.
+* `fall3050`: 425x SCHUB-OK, 1x GESPERRT an der Westwand `r3[31]: x -27000..-25000`, `F1383 ... AUSLOESER wort=0x4002 band=4
+  pos=(-24058,-7200,-18488)`, `BODEN ... band 4 -> 0`, `LANDUNG y=0 band=0`, Ende `p1 (-24058,0,-15561) b0`; 0 RUHE-AUSSCHIEBUNG.
+* `weg2040`: `DOOR FIRE slot=5 rect=(5500,-19200,hw=500,hh=1000) target_cut=12 spawn=(-19750,-9000,-19850)`, `loaded room2040.rdt`
+  (danach die Galerie-Tuer slot 3 im selben Raum, wie im Lauf der Abnahme 2 `lauf_1dc98da6` — unveraendert).
+* `treppe2040`: `[STAIRREG] slot=5 type=13 ... count=2`, `[stair] START dir=DOWN cur_band=5 target_band=3`, `T951 room=2040 ...
+  pos=(-1359,-5400,-10068) ... band=3`.
+* `fall2050`: `ZELLE r0[50] LAUFZEIT: ... u0 0x00 ... fl 0x33`, `ZELLE r0[49] ... u0 0x01 u1 0x02 fl 0x32`, Sued `obj.z = -7037`,
+  Ost `obj.x = 7553`, 797x SCHUB-OK, 0 GESPERRT, `F1289 ... AUSLOESER wort=0x3202 band=3 pos=(7553,-5400,-11706)`, `BODEN ...
+  band 3 -> 2`, `LANDUNG y=-3600 band=2 pos=(7553,-13250)`, Ende `p0 (7553,-3600,-13068) b2` (Ruhe-Zweig, = Original -13068).
+* `weg2020`: `ZELLE r0[15] ... u0 0xff ... fl 0x13` -> `[msg] room=2020 id=0`, `id=1` -> `Cut_chg(3)`/`(4)`/`(3)` -> `ZELLE r0[15]
+  ... u0 0x00 u1 0x00 fl 0x10` -> `[msg] room=2020 id=2` -> `DOOR FIRE slot=1 rect=(-14200,3300,hw=1000,hh=500) target_cut=13
+  spawn=(-450,-16200,-9700)` -> `loaded room2030.rdt`.
+* `tritt2060`: `F1 room=2060 p=2 obj=2 RUHE-AUSSCHIEBUNG lage=(-3125,2075) -> (-3143,2075) band=0 y=0` + `ZELLE [9]: x -2400..3150
+  z 2150..5350 r=675`, `FLAG (3,172) = 0`, Nord `obj.z = -7402`, Ost `obj.x = 337`, `FLAG (3,172) = 1`, 657x SCHUB-OK, 0 GESPERRT,
+  `DOOR FIRE slot=1 rect=(450,-8350,hw=650,hh=500) target_cut=15 spawn=(-12850,-5400,1600)`, `loaded room2040.rdt`.
+* `echt2050`: `DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)`, `loaded room2050.rdt`,
+  `F487 ... spieler=(17,-6335) ... Befehl 17 beendet: angekommen` (durch die Band-0-Kiste, Y-Test), Sued `-7036`, Ost `7553`,
+  812x SCHUB-OK, 0 GESPERRT, `F1874 ... AUSLOESER wort=0x3202 band=3 pos=(7553,-5400,-11705)`, `LANDUNG y=-3600 band=2
+  pos=(7553,-13250)`, Ende `p0 (7553,-3600,-13068) b2`.
+* `elza2051`: `Spieler-Familie PL04`, `loaded room2001.rdt`, slot 4 -> `loaded room2051.rdt`, `(17,-6335)` angekommen, Sued `-7004`,
+  Ost `7556`, 851x SCHUB-OK, 0 GESPERRT, `F1910 ... AUSLOESER wort=0x3202 band=3 pos=(7556,-5400,-11716)`, `LANDUNG ... (7556,-13250)`,
+  Ende `p0 (7556,-3600,-13068) b2`.
+
+### Abschluss — Wiederbetreten nach dem Fall der 2050-Kiste (Antwort auf "Softlock nach dem Fall: ja/nein")
+
+Die Abnahme 2 hat den Port-Softlock (P1) mit dem gesperrten 2060-Glied begruendet und dabei vorausgesetzt, dass die
+gefallene Kiste unten bleibt; ob das Wiederbetreten des Raums sie zuruecksetzt, war weder an der exe noch am Original
+gemessen. Darum hier MESSEN, bevor die Antwort im Abschnitt "Fuer den Nutzer" steht.
+
+* **SCD (xxd + `scd_dump_room.py ROOM2050.RDT`):** main00 (0x01C4A..0x01D74) = `Door_aot_set` slot 0/1/2, `Aot_set` slot
+  3/4/5, 2x `Sce_em_set` (Spinnen), **@0x01D0E `2d 06 04 00 03 00 00 01 00 00 c0 f9 e8 ea 7c db 00 00 00 08 ...` =
+  `Obj_model_set` obj 6 type 4 Band 3 (-1600,-5400,-9348) rot 2048, UNBEDINGT** (kein Ifel davor; das einzige Ifel @0x01D30
+  `Ck (5,7)=1` gilt obj 8). ROOM2051.RDT ist byteidentisch (cmp, Abnahme 2).
+* **Original-Mechanismus (selbst disassembliert):** der Raumlader FUN_800396fc ruft bei JEDEM Laden `800399a0 jal
+  0x8003ea7c`; FUN_8003ea7c nullt das Wort 0 aller 32 Pool-Eintraege (`8003eab0 lui at,0x800b / 8003eab4 addiu
+  at,at,16280` = 0x800b3f98 / `8003eabc sw zero,0(at)` / `8003eac4 sltiu v0,s0,0x20` / `8003eacc addiu v1,v1,148`); main00
+  setzt obj 6 danach ueber den Installer LAB_80040914 neu (`800409bc sw v0,52` / `800409c8 sw v0,56` / `800409d4 sw
+  v0,60` = obj.x/y/z aus dem Record). Einen zweiten Speicherort fuer Objektlagen gibt es nicht (Runde 16, scd_vm.c:462-484:
+  Persistenz nur ueber das Taken-Bit der Items). Port: `scd_room_reenter` (`memset(&g_scd, 0, ...)`, dann main00).
+* **exe (`R_belege/nb3_2050wiederkehr`, Wegplan `wegplan_2050_wiederkehr.txt` = echter Weg wie nb3_2050echt + Rueckkehr):**
+  `DOOR FIRE slot=4 ... spawn=(9100,-5400,4100)`, `loaded room2050.rdt`, 812x `p=0 obj=6 SCHUB-OK`, 0 GESPERRT, **`F1872
+  room=2050 p=0 AUSLOESER wort=0x3202 band=3 pos=(7553,-5400,-11705)`**, Ruhelage `F2174 obj0=(7553,-3600,-13068) b2`;
+  zurueck GEHE (7600,-6300) -> (9100,-6300) -> (9092,4205), Blick 3072, AKTION -> **`[aot] DOOR FIRE slot=0
+  rect=(9100,5700,hw=1000,hh=1000) target_cut=10 spawn=(-26450,-1800,10250)`**, `loaded room2000.rdt`; Blick 2048, AKTION ->
+  `DOOR FIRE slot=4 ... spawn=(9100,-5400,4100)`, `loaded room2050.rdt`: wegplan `F126 room=2050 ... obj0=(-1600,-5400,-9348)
+  b3 | RAUM 2050 geladen`, objfall.txt bis zum Ende `F5400 room=2050 spieler=(9100,-5400,4100) ... | p0 (-1600,-5400,-9348) b3
+  r(0,2048,0)`. **Die Kiste steht nach dem Wiederbetreten wieder auf ihrem Record — die Stufe zur Tuer slot 2 ist zurueck.**
+* **Original (`R_belege/orig_2050_wiederkehr.py` -> `orig_2050_wiederkehr/log.txt`, DuckStation-GDB, Auslieferungs-EXE
+  `@0x80026e4c 0800e003`, Spielstand room2050_orig.sav):** derselbe Weg und dieselben Schuebe wie orig_2050_fall (Spinnen ueber
+  Aktiv-Bit + g_active_count), SUED 117 / OST 433 / **NORD 229 SCHUB-OK, 0 gesperrt, `FALL-AUSLOESER obj6=(7569,-5400,-11732)`**
+  (Halt @0x8002c13c), danach ohne Haltepunkte `NACH FALL ... obj6=(7569,-3600,-13068) faellt=0 z=3 band=2`; zurueck (7514,-6389)
+  -> (9084,-6431) -> (9046,4266), Blick 3072, SQUARE -> **`TUER 2050 slot 0: TUER AUSGELOEST — RDT-Kopf 0010090000000000 ->
+  001003000000002c, Spieler (-26450, -1800, 10250, ...)`** (ROOM2000; dort die zwei Typ-0x16-Gegner ueber das Aktiv-Bit
+  abgeschaltet), Blick 2048, SQUARE -> **`TUER 2000 slot 4: ... Spieler (9100, -5400, 4100, ...)`**; danach je Sekunde eine
+  Probe: **`ROOM2050 t= 1.0 s RDT +8 = 80122af0 | Pool 6: w0 00000000 pos (7569,-3600,-13068) band=2`** (der Raumlader hat das
+  Pool-Wort genullt, FUN_8003ea7c `8003eabc sw zero,0(at)`; die Lage ist noch die alte) -> **`t= 2.0 s ... Pool 6: w0 00000101
+  pos (-1600,-5400,-9348) band=3`** (main00 @0x01D0E ueber den Installer LAB_80040914) -> `ERGEBNIS: obj 6 nach dem
+  Wiederbetreten (-1600,-5400,-9348) faellt=0 band=3 — ... AUF DEM RECORD`; der Pool 0..7 steht wieder wie beim Start (Pool
+  1/2/3 die Band-0-Kisten, 0/4/5/7 geparkte Modelle). **Port = Original.** Lauf a (`orig_2050_wiederkehr_a/log.txt`) las den
+  Pool 2 s nach dem Tuerwechsel noch MITTEN im Raumladen (RDT-Kopf +8 = Dateioffset 0x97c0 statt 0x80122af0, alle Pool-Worte 0)
+  und meldete deshalb "NICHT auf dem Record" — verworfen, nicht als Befund gewertet; das Skript wartet seither auf die
+  RDT-Relokation und das Pool-Aktivbit (`raum_fertig`). settings.ini danach zurueck (`EnableGDBServer = false: True`).
+* **Pin:** Riegel-Lauf `echt2050` faehrt seit diesem Abschluss nach dem Fall zurueck (2050 slot 0 -> 2000 -> slot 4 -> 2050)
+  und verlangt `DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000) target_cut=10 spawn=(-26450,-1800,10250)`, >= 2x `loaded
+  room2050.rdt` und als LETZTE Kistenlage in objfall.txt `p0 (-1600,-5400,-9348) b3` — ein Port, der Objektlagen ueber den
+  Raumwechsel hielte, faellt durch (die Kiste laege weiter auf Band 2).
 
 ### OFFEN nach Nachbesserung 3 (jeweils mit Adresse)
 
+* **P4 ohne Spielfall:** der Nicht-Quadrat-Zweig von FUN_8003b558 @0x8003b684-734 ist portiert und synthetisch gepinnt
+  (`unit_r36_dachkiste_zellschub` quadrat: ROOM2060 Zelle [1] x -2100..2950 z -5550..5350, Tritt-Mitte (425,-6190): r = hx
+  sperrt, r = hz gibt frei). Ein im Spiel gemessener Fall, in dem r = hz den Ausgang aendert, ist nicht bekannt: auf allen
+  gemessenen Wegen (1090/1091, 2050/2051, 2060, 3050) rechnete jeder gesperrte Schub und jede Ruhe-Ausschiebung mit r = hx
+  (Kisten 900/900 quadratisch; 2060-Tritt 675/600 mit Mitte ausserhalb der x-Spanne der Zelle; push.txt `r=900`/`r=675`).
+* **3050-Kiste, Endlage nach dem Fall:** Port `p1 (-24058,0,-15561) b0` (Riegel `fall3050`, lauf_13d906c3) gegen Original
+  (-24070,0,-15631) Band 0 (`R_belege/abn2_orig_3050b/log.txt` NACH-FALL 1-11). x 12 = Ende des West-Schubs (Port bis an die
+  Westwand r3[31], Original-Skript bis x <= -24050); z 70 = Fallweite (Port 2927 ab AUSLOESER z -18488, Original 2861 ab
+  -18492). Ohne Zellkontakt (0 RUHE-AUSSCHIEBUNG) — also nicht der Ruhe-Zweig dieser Nachbesserung, sondern die Fallbahn
+  FUN_8002c444 (objfall_r36.c, Spur A); die kurze 2050-Fallbahn ist dagegen bis zur Landung bildgleich (Port LANDUNG
+  z -13250, Original HIT 2 Lage -13250 in orig_2050_fall). Fuer den Fortschritt ohne Bedeutung: in 3050 wird die Kiste danach
+  auf Band 0 in die Kerbe slot 7 @0x01F06 geschoben (Stufe 2, s. OFFEN unten).
 * **Spiegel-Startwert obj+0x40/+0x44 beim Raumaufbau**: Original = Altspeicher des Pool-Platzes (Installer LAB_80040914
   schreibt den Spiegel nicht, Raumlader FUN_8003ea7c nullt nur +0); Port = Lage (PORT-WAHL). Folge nur im ersten Bild und
   nur fuer ein Objekt, das beim Raumaufbau eine Klasse-2-Zelle beruehrt (Zensus Auslieferung: ausschliesslich der
@@ -931,6 +1022,12 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     `LANDUNG y=-3600 band=2`); **`elza2051`** (RE15_PSELECT_AUTO_SWITCH=1: `Spieler-Familie PL04`, `loaded room2001.rdt`,
     dieselben MUSS mit ROOM2051). Messungen: R_belege/nb3_2060glied, nb3_2050echt, nb3_2051echt_elza; Original
     orig_2060_glied (b), orig_2050_fall.
+  - **Abschluss (Wiederbetreten):** `echt2050` faehrt nach dem Fall zurueck (Wegplan + `GEHE 7600 -6300 / 9100 -6300 /
+    9100 4300 / BLICK 3072 / AKTION / RAUM 2000 / BLICK 2048 / AKTION / RAUM 2050`, EXIT_AT 5400) und verlangt zusaetzlich
+    `[aot] DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000) target_cut=10 spawn=(-26450,-1800,10250)`, >= 2x `loaded
+    room2050.rdt` und als LETZTE Kistenlage in objfall.txt `p0 (-1600,-5400,-9348) b3` (main00 @0x01D0E). Messungen: exe
+    R_belege/nb3_2050wiederkehr, Original orig_2050_wiederkehr. Diskriminiert einen Port, der Objektlagen ueber den
+    Raumwechsel haelt.
 * **Gezielte Laeufe, Stand Nachbesserung 3** (Bau `local_build.sh configure` + `build` -> LOCAL-BUILD-OK):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zellschub|unit_1090_npc_prop_push|unit_r36_dachkiste_zensus"`:
     `100% tests passed, 0 tests failed out of 3` (7.71 s).
@@ -940,6 +1037,7 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     `225/226 Test #573: integration_r36_dachkiste ................   Passed  1279.87 sec`, `integration_r36_klettern`
     535.00 s, alle `unit_r36_klettern_*`/`unit_r36_objfall_*` (Spur A) gruen, kein Fenster-Haken rot. Protokoll
     `R_belege/nb3_regression.log`; Riegel-Laufordner `re15_port/build/r36_dachkiste_wd/lauf_13d906c3` (Inhalt s. "Abschluss").
+  - @@RIEGEL2@@
 * Gezielte Laeufe (KEINE volle Suite im Spurbaum), Stand Nachbesserung 2 (81d02dd3+, Bau LOCAL-BUILD-OK):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
     `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 14.89 sec; mit den 2050-Pins der Sonde).
@@ -994,10 +1092,19 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
 
 ## Fuer den Nutzer
 
-**Softlock moeglich? NEIN (ROOM1090/1091: die Dach-Kiste bewegt sich nicht). Port = Original? JA — fuer die Kisten in
-ROOM1090/1091 (Schub gesperrt), ROOM3050/3051 (Fall vorgesehen, am Original gemessen), ROOM2050/2051 (Fall im Original
-und im Port, Bildende der Kiste identisch) und fuer den Ersatzweg nach ROOM2040 ueber den Tritt in ROOM2060 (am Original
-und im Port Ende-zu-Ende gefahren, Nachbesserung 3).**
+**Softlock moeglich? NEIN — weder durch die Dach-Kiste (ROOM1090/1091) noch nach dem Fall der Kiste in ROOM2050/2051.**
+* ROOM1090/1091: die Dach-Kiste bewegt sich nicht (jeder Schub gesperrt, Original und Port) — das Tor nach ROOM1100
+  bleibt immer erreichbar.
+* ROOM2050/2051, **Softlock nach dem Fall der Kiste im Port: NEIN** (gemessen, zwei unabhaengige Wege): (1) wer den Raum
+  verlaesst und wieder betritt, findet die Kiste wieder auf ihrem Platz — das Raumskript setzt sie bei jedem Betreten
+  neu (Port `nb3_2050wiederkehr` + Riegel `echt2050`, Original `orig_2050_wiederkehr`, beide mit Leon; ROOM2051
+  byteidentisch); (2) ROOM2040 ist ausserdem ueber
+  ROOM2020 -> 2030 -> 2060 (Tritt) erreichbar (Port Riegel `weg2020` + `tritt2060`, Original `orig_2060_glied` b).
+**Port = Original? JA** — fuer die Kisten in ROOM1090/1091 (Schub gesperrt), ROOM3050/3051 (Fall vorgesehen),
+ROOM2050/2051 (Ausloeser, Landeband, Ruhelage z -13068, Wiederbetreten) und den Weg ueber den Tritt in ROOM2060 (Ende-zu-Ende,
+Nachbesserung 3). Zwei Restabweichungen ohne Folge fuer den Fortschritt sind unter OFFEN benannt: die Endlage der
+3050-Kiste nach dem Fall liegt im Port 70 Einheiten weiter (Fallbahn, Spur A), die 2050-Kiste 6 Einheiten in x (Lage, in
+der der Schub endete).
 
 * Die Kiste auf dem Dach von ROOM1090 (Leon) / ROOM1091 (Elza) laesst sich **weder im Original noch im Port bewegen**.
   Am Original (DuckStation, Auslieferungs-EXE, Haltepunkte in der Schubkette) und an der exe (Leon und Elza, Sprung-
@@ -1012,8 +1119,11 @@ und im Port Ende-zu-Ende gefahren, Nachbesserung 3).**
 * ROOM2050/2051: die Kiste obj 6 ist die Stufe zur Tuer nach ROOM2040 (Halle) und kann ueber die Kante fallen — im Port
   UND im Original gemessen (jetzt auch ueber den ECHTEN Weg durch die Tuer aus ROOM2000/2001, Leon und Elza; vorher
   klemmte der Port auf dem Weg an einer Kiste auf einer anderen Etage — behoben, Nachbesserung 3 P2). Faellt sie, ist
-  diese Tuer weg; **ROOM2040 bleibt erreichbar ueber ROOM2020 (Hinweis in ROOM2010 lesen, dann in 2020 handeln) ->
-  ROOM2030 -> ROOM2060 -> Tritt in die Kerbe schieben, hinaufsteigen, Tuer -> Halle.** Das Glied in ROOM2060 ist jetzt
+  diese Tuer nur weg, bis man den Raum verlaesst: **beim naechsten Betreten steht die Kiste wieder an ihrem Platz** (im
+  Port und im Original mit Leon gemessen; Elzas ROOM2051 ist byteidentisch, main00 @0x01D0E gleich). Und **ROOM2040 bleibt
+  ausserdem erreichbar ueber
+  ROOM2020 (Hinweis in ROOM2010 lesen, dann in 2020 handeln) -> ROOM2030 -> ROOM2060 -> Tritt in die Kerbe schieben,
+  hinaufsteigen, Tuer -> Halle.** Das Glied in ROOM2060 ist jetzt
   am Original UND im Port Ende-zu-Ende gefahren (Nachbesserung 3 P1): der Tritt liess sich im Port vorher gar nicht
   bewegen, weil der Port eine Regel des Originals nicht hatte (jedes ruhende Objekt wird jedes Bild um 18 Einheiten aus
   einer beruehrten Wandzelle geschoben) — im Original stand der Tritt deshalb 18 Einheiten westlich seines Datensatzes.
