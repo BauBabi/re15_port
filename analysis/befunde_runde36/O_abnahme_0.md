@@ -219,7 +219,6 @@ den Ecken bleiben verdeckt (F595/F205), der Zombiekopf an der Suedecke ist frei 
 belegt: Maskenkante auf der gemalten Wandbasis (2.1, Daten) und Schatten in der OT-Ordnung (RE-Gate 1-4, Original
 gestuetzt 2.5). Cuts 0 und 3..12 tragen keine Masken (2.1) — dort kann nichts ueberdecken.
 
-**Urteil Punkt 2:** (wird nach 2.5 gesetzt)
 
 ---
 
