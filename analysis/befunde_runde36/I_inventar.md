@@ -54,6 +54,25 @@ Geschriebener Block (Platz 1, Inventar @Datei 0x4128): `21 01` = Memory Card x1.
 **REPRODUZIERT:** Speichern verbraucht die Karte nicht (Runde-33-PORT-WAHL "kein Verbrauch",
 main.c:5056-5058 / ee17ca0a), die Anzahl bleibt 1.
 
+### I3 letzte Handgranate (Lauf `i3_vorher`, Stand 78a4a748)
+`RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=1140@250 RE15_PLAYER_POS=-4311,-19289,0
+RE15_AI_FLAVOR=re2 RE15_GIVE=9:1 RE15_EQUIP=9 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1
+RE15_INPUT_SCRIPT=M0.6,MA0.2,M2.5,W6,S0.1,W3 RE15_FRAMEDUMP=300-400/20:inv RE15_EXIT_AT=400#1140`
+(Wurf-Rezept von integration_r35_granate "wand", aber EINE Granate; START erst bei F280 > Sprungbild 250,
+damit es nicht schon im Startraum als klebrige Anforderung liegen bleibt — Messfalle des ersten Laufs:
+"S" im Startraum oeffnete das Inventar in ROOM1140 bei F15 und verschluckte den Wurf).
+state.log (ROOM1140, mg = Menge des ausgeruesteten Platzes):
+```
+F15 pad=0800 ac=8 mg=1     (Zielen)
+F19 pad=8800 ac=7 mg=0     (Abzug: FUN_8004eae4 zieht im Abzugsbild ab)
+F41 ... fx=1 mg=0          (Projektil Rueckstoss-Bild 22)
+F100..F125 fx 2..4..0      (Explosion)
+F280 pad=0008 mg=0         (START)
+```
+Statusschirm F340 (`I_belege/i3_vorher_statusschirm_F340.png`): "Equip Arms" = Handgranate mit **0**,
+Item list Platz 2 = Handgranate mit **0**. **REPRODUZIERT:** die leere Granate bleibt im Inventar und
+ausgeruestet.
+
 ## RE-Belege
 
 ## Umsetzung
