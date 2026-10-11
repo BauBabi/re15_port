@@ -1,6 +1,9 @@
 # Runde 36 Spur N "kartenitems" — Abnahme 0 (unabhaengig)
 
-Baum `.claude/worktrees/r36_kartenitems`, Zweig `r36/kartenitems`, HEAD 3c0737c0, Basis 78a4a748.
+Baum `.claude/worktrees/r36_kartenitems`, Zweig `r36/kartenitems`, Code-HEAD 3c0737c0 (danach nur
+Bericht-Commits), Basis 78a4a748. Abschnitte 0-3.2 vom 2026-10-11 ~05:30-06:30 (Abbruch Wochenlimit);
+3.3, 4, 5 Fortsetzung 2026-10-11 ~11:00-12:00 (Scratch `N_abn0b/`: m1_mess.py, figur_mess.py, runs/leon5_*,
+leon5_l1_x3.png, ctest_regr.log).
 Gemessen am selbst gebauten Stand (`local_build.sh configure` + `build`: "LOCAL-BUILD-OK", ninja "no work
 to do" = exe 04:37 entspricht HEAD; nach 04:37 aenderten die Commits nur Tests/Dossier). Messkopie
 `build/platform/pc/re15_pc_abn0n_kartenitems.exe` (md5 6f16291b = re15_pc.exe). Scratch:
@@ -164,8 +167,25 @@ Lage/Massstab/Rechteck/Slots als PORT-WAHL bzw. Zensus gekennzeichnet — bis au
   ueberhaupt kein Blaettern (menu_common.c: PORT-ERGAENZUNG nach RE2); RE2 setzt auch beim Laborplan Bank 35
   (lageplaene.csv room6120) — konsistent.
 
-### 3.3 Regressionsgruppen (Fortsetzung der Abnahme nach dem Wochenlimit, 2026-10-11)
-(wird nach dem Lauf eingetragen — siehe unten, Abschnitt 3.3a)
+### 3.3 Regressionsgruppen (Fortsetzung der Abnahme nach dem Wochenlimit, 2026-10-11 ~11:05-11:53)
+Stand neu gebaut (`local_build.sh configure` + `build`: "LOCAL-BUILD-OK", ninja "no work to do"; exe
+04:37 md5 6f16291b = Messkopie; letzter Code-Commit 3c0737c0 05:22 aenderte nur Tests/Dossier, danach nur
+Berichte). Gezielter Lauf (KEINE volle Suite, VERTRAG 1.5), Regex in `N_abn0b/regr_regex.txt`:
+`karte|map|besitz|hinweis|r34n_e|r35_inhalt|r34n_a|r34n_d|fenster|cut10f0|r35_cut|1030|1140|10d0|1200|11d0|
+item_stack|r36_kartenitems|irons_tisch|aot|msg_|action_msg|prop_|boot_bg|dark_start|relatch|save_counter|
+weste_load|savepoint|continue` = alle Module/Raeume, die der Diff beruehrt (Karte/Besitz/Hinweis,
+Raumstart-Installer scd_room_setup, scd_event_fire-Kette, Prop-Lader/Licht + Boot-/CONTINUE-Weg in main.c,
+AOT/Nachrichten, die fuenf Raeume) + die flatterigen Fenster-Haken des Boot-/CONTINUE-Weges.
+`ctest --test-dir re15_port/build -R "<Regex>" --timeout 600 --output-on-failure`
+-> **"100% tests passed, 0 tests failed out of 134"**, Total Test time 1694,04 s, CTEST_EXIT=0
+(`N_abn0b/ctest_regr.log`). Darin 16 exe-Haken, alle im ERSTEN Lauf gruen, obwohl die Maschine zeitgleich
+die Abnahmen anderer Spuren fuhr (tasklist: 4x re15_pc_nb6f, 2x re15_pc_h36mess, re15_pc_g36abn0):
+integration_weste_load_pin 6,8 s, r30_irons_tisch_laden/bild/licht 33/38/38 s, r34n_e_dokumente_bild 95,8 s,
+r35_cut10f0 240,7 s, r35_cut1150 507,2 s (Timeout 900), r35_fenster 31,0 s, r35_karte 74,2 s,
+r35_karte_fahrstuhl 175,4 s, **r36_kartenitems_bild 359,3 s**, map_uebergang 1,5 s, map_raum_live 12,7 s,
+boot_bg_pin 3,5 s, dark_start_pin 9,0 s, relatch_pin 23,3 s, save_counter_pin 16,5 s; unit_r36_kartenitems
+0,09 s (201 Pruefungen). Kein Nachfahren noetig, keine Regression. (Die zuvor abgebrochene Abnahme war bei
+99/120 derselben Gruppe ebenfalls ohne Rot stehengeblieben, `N_abn0/ctest_regr.log`.)
 
 ## 4. Maengel
 
@@ -255,8 +275,10 @@ RE1.5 FUN_8002b898 (Objekt-Init, RE_15_Quellcode_V2/FUN_8002b898.c:16, Katalog Z
 `*(undefined4 *)(&DAT_800b4008 + iVar1) = 0x808080;` -> obj+0x70 = 0x808080 = NEUTRAL (128 je Kanal, Textur
 unveraendert; FUN_80022f0c laedt es per gte_ldrgb, kein NCCT). Byte-true ist die Karte also im Flach-Weg
 GENAU so hell wie ihre Textur (Median (104,104,96)) — in jedem Cut, ohne Raumlicht, ohne Blaustich — bzw. im
-NCCT-Weg so hell wie jede Figur am Ort. Beides hat eine Adresse; (156,155,153)/(181,186,180)/(47,70,104)/
-(85,85,75)/(74,75,77) haben keine. Zuordnung RE2-Wort w5 -> RE2-Pool+0x10 (puVar4[4]) ist nicht einzeln
+NCCT-Weg so hell wie jede Figur am Ort. RE2 identisch: FUN_80035710 (RE2_Quellcode_V2/FUN_80035710.c:16, Objekt-Init, Pool-Basis DAT_800d0324,
+Stride 0x1F8): `(&DAT_800d03a0)[param_1 * 0x7e] = 0x808080;` = RE2-Pool +0x7C neutral; der Flach-Zeichner
+FUN_8002d0e8 ist laut Katalog Z. 233 "RE2 UNLIT direct prim-emit loop (no color)". Beides hat eine Adresse;
+(156,155,153)/(181,186,180)/(47,70,104)/(85,85,75)/(74,75,77) haben keine. Zuordnung RE2-Wort w5 -> RE2-Pool+0x10 (puVar4[4]) ist nicht einzeln
 nachgezogen (RE2-Handler nicht aufgesucht); die RE1.5-Zuordnung pc[8..9] -> Pool+0x0c ist katalogisiert
 (0x80040914), der RE1.5-Dispatcher liest genau dieses Wort (FUN_8002c18c.c:41).
 Hinweis fuer den Nachbau: der Port speichert das Flag-Wort pc[8..9] im Prop nicht (re15_scd.h: `flags` =
