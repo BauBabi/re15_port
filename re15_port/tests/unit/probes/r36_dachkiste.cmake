@@ -11,7 +11,9 @@
 #                         Freiheit absichtlich ueberschaetzt (notwendige Bedingung).
 #     unit_r36_dachkiste_zensus   Riegel: ROOM1090/1091 obj 1 erreicht KEINE Absprungzelle, Kistenmitte bleibt
 #                         in z [-15503, -15482] (Bruestung r2[0] @0x01F20: kein Spieler noerdlich der Kiste
-#                         moeglich); ROOM3050/3051 obj 1 und ROOM2050/2051 obj 6 als Diagnose (Punkt 4).
+#                         moeglich); ROOM3050/3051 obj 1 MUSS einen Ausloeser erreichen, erste Lage in der
+#                         Absprungzelle r*[46] @0x00AD4 (+-450 @0x8002c128) — Fall = vorgesehener Weg (Nachbesserung 1,
+#                         M3); ROOM2050/2051 obj 6 begruendete Diagnose (Original ungemessen, Punkt 4 / 4.3).
 add_executable(probe_r36_dachkiste
     ${CMAKE_CURRENT_SOURCE_DIR}/probe_r36_dachkiste.c)
 target_link_libraries(probe_r36_dachkiste PRIVATE re15_engine re15_test_support)
@@ -26,6 +28,9 @@ set_tests_properties(unit_r36_dachkiste_zensus PROPERTIES TIMEOUT 600)
 # dachkiste_r36.c) muss je Versuch SCHUB-GESPERRT mit der Treffer-Zelle des Originals zeigen (Bruestung r3[4] x
 # -7256..4624 z -18560..-16403 bzw. Westwand r3[2] x -9200..-6878), kein SCHUB-OK, kein AUSLOESER (objfall_r36.c),
 # Kiste bleibt auf dem Record (-5960,-9000,-15482) Band 5 — Original: R_belege/orig_lauf5+6/log.txt.
+# Nachbesserung 1 (Punkt 4): fall3050 (ROOM3050 obj 1 geschoben bis in die Absprungzelle r*[46] -> AUSLOESER ->
+# LANDUNG Band 0 = der vorgesehene Fall), weg2040 (2070 Nordgang -> slot 5 @0x00B1C -> 2040 Band 5) und treppe2040
+# (Treppe sce 13 slot 5/6 @0x0133C/@0x01350: Band 5 -> 3) — ROOM2040 ist ohne die Kiste in 2050 erreichbar.
 add_test(NAME integration_r36_dachkiste
     COMMAND ${CMAKE_COMMAND}
         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

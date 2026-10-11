@@ -48,6 +48,12 @@ das Tor unerreichbar (Softlock). Nutzer-Wortlaut der Spur A: "Das macht ein Fort
   an der Makro-Doppelauswertung der Regex-Argumente (s. Tests), berichtigt; gezielte Unit-Gruppen 18/18 gruen.
 * 2026-10-11 ~17:20 `integration_r36_dachkiste` gruen (1/1, 332.73 s). Punkt 4.3 nachgeprueft (Tuer-Zensus STAGE2:
   2070 hat KEINE Tuer nach 2040, der Weg ist 2030 -> 2060 -> 2040; Befund unveraendert). Abschluss-Commit.
+  ⛔ BERICHTIGT in Nachbesserung 1: beide Aussagen waren falsch (M1/M2) — s. 4.3 und "Nachbesserung 1".
+* 2026-10-11 ~17:35 Abnahme 0 (03a64b28): Punkte 1-3 erfuellt, Punkt 4 teilweise (M1 Zensus unvollstaendig, M2 Weg
+  unbelegt, M3 kein Pin). Nachbesserung 1: Tuer-Zensus neu (alle Records, Ifel-Kontext), ROOM2070 = drei Gaenge (SCA),
+  exe-Laeufe nb1_2000_2070m / nb1_2070n / nb1_2040treppe / nb1_2030treppe, 3050-Kiste bis zum Fall gefahren (nb1_3050fall_d,
+  Vorversuche a-c Kalibrierung), Sonde mit Pfadausgabe + 3050-Pin, Riegel um fall3050/weg2040/treppe2040 erweitert,
+  Dossier 4.1/4.3/Nachbesserung 1/Tests/OFFEN/Fuer den Nutzer. Commits c92f4d53 (wip) + Abschluss.
 
 ## Punkt 1 — Messung an der exe (Leon ROOM1090, Elza ROOM1091)
 
@@ -271,10 +277,15 @@ Tuer-Ankunft des Raums. Ergebnis (Auslieferung, obere Lage):
 
 | Raum / Objekt | Band | Start Spieler | erreichbare Kistenzellen | Ausloeser | Kistenlage (Mitte) |
 |---|---|---|---|---|---|
-| 1090 / 1091 obj 1 | 5 | (-13600,1300) aus 10F0/10F1 | 9 | **0** | x [-5978,-5959) z [-15503,-15481) — Seiten W und N ohne Schubstellung |
-| 3050 / 3051 obj 1 | 4 | (-3596,1523) aus 30E0 | 12729 | **7** (erste (-23875,-18500), Spieler NOERDLICH) | x [-24100,-1800) z [-22350,1123) |
-| 2050 / 2051 obj 6 | 3 | (9100,4100) aus 2000/20B0 | 3575 | **1** ((7550,-12000), Spieler SUEDLICH) | x [-6650,9000) z [-11700,-5800) |
-| 2050 obj 6 nach sub02 (Zelle 0x33 u0 0, 0x32 u0 0xff) | 3 | (9100,4100) und (-6800,-5650) | 3575 | 1 (dito) | dito |
+| 1090 / 1091 obj 1 | 5 | (-13600,1300) aus 10F0/10F1 | 12 | **0** | x [-5978,-5959) z [-15503,-15481) — Seiten W und N ohne Schubstellung |
+| 3050 / 3051 obj 1 | 4 | (-3596,1523) aus 30E0 | 13373 | **8** (erste (-23875,-18500), Spieler NOERDLICH) | x [-24100,-1800) z [-22350,1123) |
+| 2050 / 2051 obj 6 | 3 | (9100,4100) aus 2000/20B0 | 3898 | **1** ((7550,-12000), Spieler SUEDLICH) | x [-6650,9000) z [-11700,-5800) |
+| 2050 obj 6 nach sub02 (Zelle 0x33 u0 0, 0x32 u0 0xff) | 3 | (9100,4100) und (-6800,-5650) | 3898 | 1 (dito) | dito |
+
+(Zahlen seit Nachbesserung 1: die Sonde fuehrt den Seitenwechsel auf derselben Kistenzelle als eigenen Zustand und gibt
+den Schub-PFAD zur ersten Ausloeser-Lage aus; vorher 9 / 12729 (7) / 3575 (1) — gleiche Aussage. Pfad 3050: Spieler
+oestlich, Schub nach Westen von x -18300 bis -23875; Seitenwechsel nach Norden; Schub nach Sueden von z -20800 bis -18500
+= Absprungzelle. Pfad 2050: N/W/N/W-Schuebe bis (7550,-7150), dann von Sueden nach Norden bis (7550,-12000).)
 
 ### 4.2 ROOM3050/3051 obj 1 — der Fall ist der VORGESEHENE Weg, kein Fortschritt haengt an der oberen Lage
 
@@ -290,10 +301,10 @@ Tuer-Ankunft des Raums. Ergebnis (Auslieferung, obere Lage):
 * Folge: der Fall (Spur A) oeffnet hier den Weg zur Magnum, er sperrt nichts. Der Zensus belegt, dass der Spieler die
   Kiste wirklich bis zur Absprungzelle bringt (von Norden; Fallrichtung FUN_8002d3d8 = vom Spieler weg = +Z).
 
-### 4.3 ROOM2050/2051 obj 6 — Tuer nach ROOM2040 braucht die Kistenoberkante, aber ROOM2040 bleibt ueber 2030 -> 2060 erreichbar
+### 4.3 ROOM2050/2051 obj 6 — Tuer nach ROOM2040 braucht die Kistenoberkante; ROOM2040 (Halle) ist ohne die Kiste erreichbar (BERICHTIGT, Nachbesserung 1)
 
 * Records (ROOM2050.RDT main00): obj 6 @0x01D0E Band 3 (-1600,-5400,-9348) rot 2048, unbedingt; `Door_aot_set slot 2
-  @0x01C8A floor 4` (Rechteck x -8200..-7200, z -6200..-5000) -> ROOM2040 (21700,-5400,-5400) — floor 4 = Band 3 + 1 =
+  @0x01C8A floor 4` (Rechteck x -8200..-7200, z -6200..-5000) -> ROOM2040 (21700,-5400,-5400) Band 3 — floor 4 = Band 3 + 1 =
   Oberkante der Kiste obj 6 (dieselbe Mechanik wie in 1090). Die Tuer-Flaeche liegt WESTLICH der Band-3-Wand r*[51]
   (x -7550..-6150, z -4500..850), die sub02 @0x02294-22A4 per `Sca_id_set r*[0x33] u0 = 0` erst oeffnet (Raetsel: drei
   Kisten obj 1/2/3 (Band 0) in die Kerben slot 3/4/5 -> (5,0..2) -> sub01 @0x0201A `Aot_reset 6 -> sub02`).
@@ -302,29 +313,133 @@ Tuer-Ankunft des Raums. Ergebnis (Auslieferung, obere Lage):
   Kante: Aot slot 7 @0x01E3C/@0x01EC6 (floor 3, x 6800..8300, z -12000..-11200; sce 0 bzw. sce 1 Nachricht nach (3,104))
   und slot 6 @0x01E28 (floor 3, x 4700..5500, z -11550..-10750, sce 3 -> sub04: Nachricht, (3,104), obj 4 Member 1 (y)
   -16200 -> -1400, Kameras). sub02 sperrt nach dem Raetsel r*[0x32] (x 6650..8550, z -12150..-11650) mit u0 0xff.
-* Tueren nach ROOM2040 (Zensus aller STAGE2-RDT, Tuer-Nutzlast Byte 23 == 0x04): ROOM2050/2051 slot 2 (floor 4),
-  ROOM2060/2061 slot 1 (floor 1), ROOM2070/2071 slot 5 (floor 0), ROOM2040/2041 selbst slot 2/3 (floor 5, Selbsttueren).
-  Die Kiste obj 6 ist also NICHT der einzige Weg nach ROOM2040.
-  NACHGEPRUEFT (Fortsetzung, `R_belege/stage2_tueren_2040.txt`, tools/scd_dump_room.py je ROOM2*.RDT, Door_aot_set
-  0x3B, Ziel = Byte 23, Stage = Byte 22): nach ROOM2040 fuehren ROOM2050/2051 slot 2 @0x01C8A (floor 4, Kiste) und
-  ROOM2060/2061 slot 1 @0x00DBA (floor 1); ROOM2070/2071 hat KEINE Tuer nach 2040 (slots 0..3 -> 2000/2030/2030/2000;
-  der Vorgaenger-Eintrag "2070 slot 5" ist falsch — es ist 2040 slot 4 @0x0131C NACH 2070). Entscheidend ist der
-  Zugang zum Verbund 2040/2060/2070 von AUSSEN: ROOM2030/2031 slot 3 @0x01B4C -> ROOM2060, ROOM2000/2001 slot 3
-  @0x0167E und ROOM2030/2031 slot 0 @0x01ACA -> ROOM2070, und ROOM2040 slot 1 @0x012BC <-> 2060, slot 4 @0x0131C <-> 2070.
-  ROOM2040 bleibt also ueber 2030 -> 2060 -> 2040 erreichbar, ohne die Kiste in 2050. Befund unveraendert.
+* Was an der Kiste haengt: NUR die Tuer slot 2 (2050 -> 2040 Halle). Alle anderen Tueren von 2050 (slot 0 @0x01C4A floor 3
+  -> 2000, slot 1 @0x01C6A floor 3 -> 2020) liegen auf dem Spielerband 3.
+* **Tuer-Zensus STAGE2 (BERICHTIGT, `R_belege/tueren_zensus.py` -> `stage2_tueren.txt`, alle Door_aot_set aus main UND subs
+  mit Bedingungskontext; Auszug `stage2_tueren_2040.txt`):** nach ROOM2040 fuehren ROOM2050/2051 slot 2 @0x01C8A (floor 4,
+  Kiste; Ankunft Halle Band 3 (21700,-5400,-5400)), ROOM2060/2061 slot 1 @0x00DBA (floor 1; Ankunft Halle Band 3
+  (-12850,-5400,1600)) und **ROOM2070/2071 slot 5 @0x00B1C** `3b 05 02 31 00 00 88 13 18 b1 e8 03 d0 07 da b2 d8 dc 76 b2
+  00 00 01 04 0c 05 ...` (floor 0, UNBEDINGT — nach dem Ifel/Else-Block @0x00ABA-0B1A, vor dem Switch @0x00B3C; Ankunft
+  GALERIE Band 5 (-19750,-9000,-19850), cut 12); Gegenstueck ROOM2040 slot 4 @0x0131C (floor 5 -> 2070 cut 9). Der
+  Vorgaenger-Eintrag "2070 slot 5" war richtig; die Aussage des Stands f487909d ("2070 hat KEINE Tuer nach 2040") war
+  falsch, weil der alte Zensus nur die vorderen Records des main00 nahm (Abnahme 0, M1).
+* **ROOM2070 besteht aus DREI getrennt ummauerten Gaengen** (SCA Band 0, `sca_dump.py ROOM2070.RDT 0`): Mittelgang
+  z -8200..-4600 (Waende r0[0..3]: slot 0 @0x00A3A -> 2000, slot 1 @0x00A5A -> 2030), Suedgang z 4650..8100 (r0[4..7]:
+  slot 2 -> 2030, slot 3 -> 2000), Nordgang z -21000..-17450 (r0[8..11]: slot 4 @0x00AD6/@0x00AFA -> ROOM11A0 (STAGE1;
+  sce 0 + Ereignis slot 7 solange (3,151)=0, gesetzt in 2070 sub02 @0x00CE4), slot 5 @0x00B1C -> 2040). Slot 5 ist also
+  NUR aus dem Nordgang erreichbar — Ankunft aus ROOM11A0 slot 0 @0x00F5A (-18650,0,-19300) — und NICHT ueber ROOM2000
+  slot 3 @0x0167E, dessen Ankunft (-18650,0,-6450) im Mittelgang liegt. An der exe gemessen: `R_belege/nb1_2000_2070m`
+  (JUMP 2000, Spieler (-20800,-6200) Band 1 Blick 0: `DOOR FIRE slot=3 rect=(-19800,-6200,hw=500,hh=2000) target_cut=3
+  spawn=(-18650,0,-6450)`, `loaded room2070.rdt`, Spieler danach bei (-7112,0,-7732) Band 0 im Mittelgang) und
+  `R_belege/nb1_2070n` (JUMP 2070, Spieler (-18650,-19300) Band 0 Blick 0 = 11A0-Ankunft: nach 300 Bildern Osten
+  `DOOR FIRE slot=5 rect=(5500,-19200,hw=500,hh=1000) target_cut=12 spawn=(-19750,-9000,-19850)`, `loaded room2040.rdt`,
+  Spieler in 2040 1200 Bilder lang Band 5). Der in Abnahme 0 vorgeschlagene Weg "2000 slot 3 -> 2070 -> slot 5 -> 2040"
+  ist deshalb KEIN Laufweg (M1-Nachbesserung: die Records stimmen, die Mauer trennt sie).
+* **Band-Wechsel in den Raeumen (Abnahme 0, M2):**
+  - ROOM2040: Treppe `Aot_set sce 13` slot 5 @0x0133C (floor 3) / slot 6 @0x01350 (floor 5), gleiches Rechteck x -2350..-350
+    z -18250..-13950 = die beiden Enden EINER Treppe (Port stair_common.c, re15_aot.h: sce 12/13). An der exe gemessen
+    `R_belege/nb1_2040treppe` (JUMP 2040, Spieler (-1350,-19200) Band 5 Blick 3072, Viereck in der Zone): stair_dbg.log
+    `[STAIRREG] slot=5 type=13 ... centre=(-1350,-16100) half=(1000,2150)`, `[stair] START dir=DOWN cur_band=5
+    target_band=3`, climb.txt danach `pos=(-1359,-5400,-13782) ... band=3` und zu Fuss weiter bis (-1359,-5400,-10068)
+    Band 3 = die Halle. Galerie (Band 5, Ankunft aus 2070) und Halle (Band 3, Ankunft der Kisten-Tuer aus 2050 und der
+    Tuer aus 2060) sind verbunden.
+  - ROOM2060: Tritt obj 2 (3,172): 0 -> (-3125,0,2075) @0x00EA6, 1 -> (475,0,-7375) @0x00ECC — an der Tuer slot 1 @0x00DBA
+    (floor 1, x -200..1100 z -8850..-7850): Band 0 -> 1 durch Klettern. Von Spur A an der exe gemessen (A_klettern.md
+    Z. 231: `ROOM2060 flag=1 obj=2 ... oben=(525,-1800,-7473) band=1(soll 1) -> OBEN`; Sonde probe_r36_klettern_zensus
+    beide Lagen) — nicht wiederholt.
+  - ROOM2030: EINE Treppe slot 8 @0x01B8E `2c 08 0c 31 80 00 5e e8 30 df 74 0e 78 05 01 00 02 00 00 00` = sce 12, Band-Byte
+    0x80 (Wildcard, @0x80042cac-cd4, Port seit v0.7.79), Rechteck x -6050..-2350 z -8400..-7000, count 2 (Byte 16). An der
+    exe gemessen `R_belege/nb1_2030treppe` (Spieler (-1800,-7700) Band 3 Blick 2048 = Hallenseite): `[stair] START
+    dir=UP cur_band=3 target_band=5`, climb.txt danach `pos=(-6155,-9000,-7693) ... band=5`. **Band 5, nicht 9** — die
+    Tueren slot 1/2/3 von 2030 liegen auf floor 9 (y -16200), die Treppe hebt per Record um 2 Baender (y -5400 -> -9000).
+    Der im Stand f487909d genannte Ersatzweg "2070 (Mittelgang) -> 2030 (Band 3) -> Treppe -> slot 3 -> 2060" ist damit
+    an der Treppe von 2030 NICHT belegt (Abnahme 0, M2 — bestaetigt) und wird gestrichen; Band 9 in 2030 erreicht man nur
+    durch Tueren (2020 slot 1 nfloor 9, 2060 slot 0 nfloor 9, 2080 slot 0 nfloor 9).
+* **Weg nach ROOM2040 (Halle) ohne die Kiste obj 6** — Tuer-Graph auf (Raum, Band) mit den gemessenen Band-Wechseln
+  (`tueren_zensus.py --graph ROOM2000/B1 ROOM2040/B3 --ohne ROOM2050:2 ROOM2051:2`, 2070 nach Gaengen geteilt):
+  `ROOM2000 slot 4 @0x0169E (floor 1) -> 2050 Band 3` -> `ROOM2050 slot 1 @0x01C6A (floor 3) -> 2020 Band 1` ->
+  `ROOM2020 slot 1 @0x0088A (floor 1) -> 2030 Band 9` (bis (3,219)=1 steht an der Stelle das Ereignis slot 4 sce 3
+  @0x00852 -> sub03 @0x00B1C-B3A: `Aot_reset 4 / Set (3,219)=1 / Message_on 2 / Aot_reset 1 (sce 2)` — die Tuer oeffnet
+  sich beim ERSTEN Benutzen von innen, kein Schluessel) -> `ROOM2030 slot 3 @0x01B4C (floor 9) -> 2060 Band 0` -> Tritt
+  obj 2 (Spur A) -> `ROOM2060 slot 1 @0x00DBA (floor 1) -> 2040 Band 3 (Halle)`. Jede Tuer liegt auf dem Ankunftsband der
+  vorigen; der einzige Band-Wechsel im Raum ist der Tritt in 2060 (gemessen, Spur A). Dazu der zweite Zugang in die
+  Galerie: ROOM11A0 slot 0 @0x00F5A ((3,151)=1) -> 2070 Nordgang -> slot 5 -> 2040 Band 5 -> Treppe -> Halle (beide
+  Glieder hier an der exe gemessen). Mit der Kiste: 2000 -> 2050 -> Klettern obj 6 -> slot 2 -> 2040 Band 3 (3 Kanten).
+  Der Graph nimmt an, dass zwei Tueren desselben Bands eines Raums verbunden sind (fuer 2070 widerlegt und von Hand
+  geteilt; fuer die uebrigen Raeume des Wegs nicht einzeln gelaufen — OFFEN).
 * Zensus: obj 6 erreicht mit dem Spieler die Absprungzelle (von Sueden geschoben, Fallrichtung -Z = ueber die Kante
   nach Norden), vor und nach sub02. Ob die Kaskade im Original die Kiste bis Band 0 bringt und ob sie unten gebraucht
   wird (obj 8 @0x01D4C ist die geparkte Band-0-Kiste unter `Ck (5,7)=1`, (5,7) wird in 2050 nirgends gesetzt), ist
-  Teil des STAGE2-Raetsels und hier nicht Auftrag; byte-true belassen (Original-Mechanik, Tuer anderweitig erreichbar).
+  Teil des STAGE2-Raetsels und hier nicht Auftrag; byte-true belassen. In der Sonde bleibt 2050/2051 deshalb DIAGNOSE
+  (soll = -1, Begruendung im Code: ein Pin hielte eine am Original ungemessene Aussage fest; die Nutzer-Frage ist ueber
+  den Tuer-Graphen beantwortet).
+
+## Nachbesserung 1 (Abnahme 0: M1, M2, M3)
+
+### M1 — 4.3 "NACHGEPRUEFT" war falsch, Zensusdatei unvollstaendig
+* Ursache: der Zensus des Stands f487909d (`stage2_tueren_2040.txt`) nahm je RDT nur die vorderen Door_aot_set des
+  main00 und brach am ersten Ifel ab; die Records ROOM2070/2071 @0x00AD6 (slot 4 sce 0, `Ck(3,151)=0`), @0x00AFA (slot 4
+  sce 2, sonst) und @0x00B1C (slot 5 -> 2040, unbedingt) hinter dem Block fehlten, daraus die falsche Aussage "2070 hat
+  keine Tuer nach 2040".
+* Messung vorher: `stage2_tueren_2040.txt` (f487909d) listet fuer 2070/2071 nur slots 0..3.
+* Beleg: `python tools/scd_dump_room.py ROOM2070.RDT` main00 @0x00B1C (Bytes oben), @0x00ABA `Ifel_ck 06 00 3c 00`
+  (Falsch-Ziel 0x00AFA), @0x00AF6 `Else_ck 07 00 26 00` (Ziel 0x00B1C) — slot 5 steht hinter beiden; ROOM2071 identisch.
+* Aenderung: neuer Zensus `R_belege/tueren_zensus.py` (alle Records aus main und allen subs, Ifel/Else/Case-Kontext,
+  Nutzlast decodiert: floor, Rechteck, Ziel, cut, nfloor, Spawn), Ausgaben `stage1_tueren.txt` (505 Zeilen),
+  `stage2_tueren.txt` (162), `stage3_tueren.txt` (152), Auszug `stage2_tueren_2040.txt` neu geschrieben (14 Records
+  2070/2071 statt 8). Dossier 4.3 berichtigt (oben).
+* Messung nachher: `grep 'ROOM2070 main00 @0x00B1C' stage2_tueren_2040.txt` -> `slot 5 sce 2 floor 0 ... -> ROOM2040
+  cut 12 nfloor 5 spawn (-19750,-9000,-19850) ... unbedingt`. Zusaetzlich gemessen, dass der von der Abnahme
+  vorgeschlagene Laufweg 2000 slot 3 -> 2070 -> slot 5 an der Mauer scheitert (nb1_2000_2070m / nb1_2070n, 4.3).
+
+### M2 — Ersatzweg 2030 -> 2060 -> 2040 war nicht belegt
+* Ursache: der Stand f487909d argumentierte nur mit Raum-Tueren, ohne die Baender (2030 Ankunft 3, Tuer slot 3 floor 9;
+  2060 Ankunft 0, Tuer slot 1 floor 1).
+* Messung vorher: keine (nur Records).
+* Beleg: Treppen-Records 2040 slot 5/6 @0x0133C/@0x01350 (sce 13, floor 3/5, gleiches Rechteck), 2030 slot 8 @0x01B8E
+  (sce 12, Band 0x80, count 2); Tritt 2060 obj 2 @0x00EA6/@0x00ECC (Spur A, A_klettern.md Z. 231); 2020 sub03 @0x00B1C-B3A
+  (Set (3,219)=1 oeffnet 2020 slot 1 @0x0088A).
+* Aenderung: der Satz "2030 -> 2060 -> 2040" ist gestrichen; 4.3 nennt den band-konsistenten Weg 2050 -> 2020 -> 2030
+  (Band 9) -> 2060 (Tritt) -> 2040 Halle und den Galerie-Zugang 11A0 -> 2070 Nordgang -> 2040 -> Treppe -> Halle.
+* Messung nachher (exe, `R_belege/nb1_*`): 2070 Nordgang -> slot 5 -> 2040 Band 5 (nb1_2070n); 2040 Treppe Band 5 -> 3
+  (nb1_2040treppe); 2030 Treppe Band 3 -> 5, NICHT 9 (nb1_2030treppe) — der alte Weg ist damit widerlegt, nicht belegt.
+  Riegel `integration_r36_dachkiste` Laeufe `weg2040` und `treppe2040` halten die beiden gemessenen Glieder.
+
+### M3 — kein Pin fuer Punkt 4
+* Ursache: `probe_r36_dachkiste.c` fuehrte 3050/3051 und 2050/2051 mit soll = -1; der Fall war an der exe nicht gefahren.
+* Messung vorher: Zensus 3050 "7 Ausloeser, erste Lage (-23875,-18500)" ohne Pin; kein exe-Lauf.
+* Beleg (Mechanik, Spur A + eigene Messung): Objekt-Pass @0x8002c120-134 (`FUN_8003b7f0(&obj+0x34, 0x1c2, obj+0x82) & 2`),
+  Absprungzelle r*[46] @0x00AD4 x -25000..-22950 z -18050..-16800 Wort 0x4002 (u0 0x01 sperrt nur den Spieler), Westwand
+  r*[31] x -27000..-25000 (Schubsperre FUN_8003b558 Klasse 2), Fall FUN_8002c444 (objfall_r36.c), Kerbe slot 7 @0x01F06
+  + Latch sub01 @0x02184-2196 (`Member_cmp 15 == 7` = obj+0x0B Kerben-Index) + Fall-Lage @0x01F40 + Super Redhawk slot 6
+  @0x01EC6 floor 1.
+* Aenderung: 3050/3051 soll = 1 PLUS Pruefung, dass die erste Ausloeser-Lage in der um 450 (@0x8002c128) erweiterten
+  Absprungzelle r*[46] liegt; 2050/2051 bleiben begruendete Diagnose (Kommentar im Code, 4.3). Sonde gibt den Schub-Pfad
+  aus (Vorgaenger-Verfolgung). Neuer Riegel-Lauf `fall3050` in `test_r36_dachkiste.cmake` (echte exe).
+* Messung nachher (exe, `R_belege/nb1_3050fall_d`; Vorversuche a-c = Skript-Kalibrierung: Mauer r*[41] bei z -18850..
+  -17850 umgangen, Schubtempo ~20 Einheiten/Bild gemessen, Umweg noerdlich der Kiste bis z -22717): Leon aus der
+  30E0-Ankunft (-3596,1523) Band 4 den Gang nach Norden (x -6482) bis z -20708, nach Westen gegen die Kiste: `F618 ...
+  SCHUB-OK spieler=(-16724,-20276) rot=2080 lage=(-18000,-20800) ziel=(-18074,-20800)`, 297 Schuebe West bis
+  `lage=(-24058,-20800)`, dann `F914 SCHUB-GESPERRT ... ziel=(-24108,-20800)` + `TREFFER-ZELLE r3[31]: x -27000..-25000`
+  (Westwand, wie 1090: Sperre statt Durchdringung); Umweg Nord (z -22717) / West (x -24532) / Blick 3096; 129 Schuebe
+  Sued ab `F1261 ... spieler=(-24454,-22076) rot=3128 lage=(-24058,-20800) ziel=(-24058,-20726)`; `F1383 room=3050 p=1
+  AUSLOESER wort=0x4002 band=4 pos=(-24058,-7200,-18488) spieler=(-24425,-19838) richt=(0,1)` (-18488 = Zellkante -18050
+  - 450 + Schritt), Fallzustand `zust 0->1 ... 1->2 ... 2->3`, `F1396 BODEN FUN_8001c6e8=0 band 4 -> 0`, `F1405 LANDUNG y=0
+  band=0 pos=(-24058,-15601)`, Endlage `p1 (-24058,0,-15561) b0 r(-1029,0,0)` (umgekippt, Band 0). 425 + 129 SCHUB-OK,
+  1 GESPERRT (Wand), 1 AUSLOESER. Die zweite Stufe des Raetsels (Band-0-Schub in Kerbe 7 -> (3,93) -> Redhawk) ist
+  Record-Beleg (Latch wie 5020, dort von Spur A gemessen), hier nicht gefahren (OFFEN).
 
 ## Tests
 
 Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*/CMakeLists.txt.
 
-* `unit_r36_dachkiste_zensus` (`probe_r36_dachkiste pin`, Vorgaenger, 4.1): Zensus MIT Spieler ueber die Praedikate der
-  Schubkette — ROOM1090/1091 obj 1 erreicht KEINE Absprungzelle, Kistenmitte bleibt in z [-15503, -15482] (notwendige
-  Bedingung, Spielerfreiheit ueberschaetzt); ROOM3050/3051 obj 1 und ROOM2050/2051 obj 6 erreichen eine (Punkt 4).
-* `integration_r36_dachkiste` (NEU, `tests/integration/test_r36_dachkiste.cmake`, echte exe, Messkopie
+* `unit_r36_dachkiste_zensus` (`probe_r36_dachkiste pin`, 4.1): Zensus MIT Spieler ueber die Praedikate der Schubkette —
+  ROOM1090/1091 obj 1 erreicht KEINE Absprungzelle, Kistenmitte bleibt in z [-15503, -15482] (notwendige Bedingung,
+  Spielerfreiheit ueberschaetzt). **Seit Nachbesserung 1 (M3):** ROOM3050/3051 obj 1 soll = 1 — der Zensus MUSS einen
+  Ausloeser finden und die erste Lage muss in der um 450 (@0x8002c128) erweiterten Absprungzelle r*[46] @0x00AD4 liegen
+  (x -25450..-22500, z -18500..-16350; gefunden (-23875,-18500)); ROOM2050/2051 obj 6 bleibt begruendete Diagnose
+  (soll = -1, Kommentar im Code). Die Sonde gibt den Schub-Pfad zur ersten Ausloeser-Lage aus.
+* `integration_r36_dachkiste` (`tests/integration/test_r36_dachkiste.cmake`, echte exe, Messkopie
   `re15_pc_r36r_haken_<id>.exe`, Grundumgebung wie test_r36_inventar.cmake, ein Wiederholungsversuch bei Fenster-Flattern):
   - `leon`: ECHTER WEG ROOM10F0 ((9,71)=1) -> Tritt -> Klettern -> Tuer slot 1 -> ROOM1090 -> Korridor -> 3 Schuebe. MUSS:
     `loaded room10f0.rdt`, kein `[cut10f0] ... Szene gestartet`, `[aot] DOOR FIRE slot=1 rect=(-4750,-1750,hw=600,hh=500)
@@ -334,19 +449,27 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   - `elza`: derselbe Weg mit RE15_PSELECT_AUTO_SWITCH=1 (`Spieler-Familie PL04`, ROOM10F1 -> ROOM1091), dieselben MUSS.
   - `west`: Leon, Sprung 1090, Tasche (-4610,-15155) Blick 2112: `SCHUB-GESPERRT ... ziel=(-60xx,-15482)` +
     `TREFFER-ZELLE ... x -9200..-6878 z -18524..265`, kein SCHUB-OK, kein Fall, Record.
-  Er diskriminiert: ein Port, der den Schub annimmt oder die Kiste fallen laesst, faellt durch.
+  - **`fall3050` (NEU, Nachbesserung 1 / M3, Punkt 4):** Leon aus der 30E0-Ankunft (-3596,1523) Band 4, Skript wie
+    `R_belege/nb1_3050fall_d`: MUSS >= 100x `room=3050 p=1 obj=1 SCHUB-OK`, `p=1 AUSLOESER wort=0x4002 band=4
+    pos=(-24xxx,-7200,-18xxx)`, `p=1 LANDUNG y=0 band=0`, letzte Lage `p1 (x,0,z) b0`. Der vorgesehene Fall der 3050-Kiste
+    laeuft im Port (Objekt-Pass @0x8002c120-134 -> FUN_8002c444).
+  - **`weg2040` / `treppe2040` (NEU, Nachbesserung 1 / M1+M2, Punkt 4):** Nordgang 2070 (11A0-Ankunft (-18650,-19300)
+    Band 0) nach Osten -> MUSS `[aot] DOOR FIRE slot=5 rect=(5500,-19200,hw=500,hh=1000) target_cut=12
+    spawn=(-19750,-9000,-19850)` + `loaded room2040.rdt`; Galerie (-1350,-19200) Band 5, Viereck in der Treppenzone ->
+    MUSS stair_dbg.log `[stair] START dir=DOWN cur_band=5 target_band=3` + climb.txt `room=2040 ... pos=(x,-5400,z) ...
+    band=3`. ROOM2040 ist ohne die Kiste in 2050 erreichbar und seine Galerie mit der Halle verbunden.
+  Er diskriminiert: ein Port, der den 1090-Schub annimmt oder die 1090-Kiste fallen laesst, oder in 3050 den Fall NICHT
+  ausloest, oder 2070 slot 5 / die 2040-Treppe verliert, faellt durch.
   ⛔ Makro-Falle beim Bau des Riegels (gemessen): Makro-Argumente werden im Makro ein zweites Mal ausgewertet, ein `\\(`
   im Aufruf wurde zur Regex-Gruppe `(` und `\\[x\\]` zum Klammerausdruck — der erste Lauf fand den gesperrten Schub
   "nicht", obwohl push.txt ihn enthielt. Regex-Argumente deshalb ohne Backslash (`[(]`, `[.]`), Klartext per string(FIND).
-* Gezielte Laeufe (KEINE volle Suite im Spurbaum):
-  - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur" --timeout 900`:
-    `100% tests passed, 0 tests failed out of 18` (unit_r36_dachkiste_zensus 8.60 s, unit_r36_objfall, unit_r36_klettern_*,
-    unit_1090_room/push/fire/push_anim/climb/stay_on_crate/flame_out/nodraw/npc_prop_push, prop_sca_collision ...).
+* Gezielte Laeufe (KEINE volle Suite im Spurbaum), Stand Nachbesserung 1:
+  - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
+    `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 17.36 sec; unit_r36_dachkiste_zensus 8.80 s
+    einzeln, mit den 3050-Pins).
   - `ctest --test-dir re15_port/build -R "integration_r36_dachkiste" --timeout 1200 --output-on-failure`:
-    `100% tests passed, 0 tests failed out of 1` (332.73 s; Laufordner `re15_port/build/r36_dachkiste_wd/lauf_ac8dbe0d/
-    {leon,elza,west}`: leon 3x gesperrt r3[4], elza 3x gesperrt r3[4] (`R_belege/e1_echt/push_zellen.txt`), west 2x
-    gesperrt r3[2]; 0 SCHUB-OK, 0 AUSLOESER, Kiste auf dem Record). Der erste Lauf des Riegels (Makro-Falle, s.o.)
-    scheiterte NICHT am Spiel — dessen push.txt enthielt dieselben drei gesperrten Schuebe.
+    `100% tests passed, 0 tests failed out of 1` (Passed 574.09 sec, Laufordner re15_port/build/r36_dachkiste_wd/lauf_f39bdbcb; sechs Laeufe leon/elza/west/fall3050/weg2040/treppe2040).
+  - Stand f487909d (Abnahme 0, zum Vergleich): Unit-Gruppe 18/18 bzw. 31/31, Riegel 1/1 (332.73 s / 301.13 s).
 
 ## OFFEN
 
@@ -364,8 +487,25 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   (9,71)=1 (Szene gesehen).
 * Elzas Lauf `e1_echt` entstand mit der Messkopie VOR dem Zellen-Schrieb (push.txt ohne TREFFER-ZELLE); der Riegel-Lauf
   `elza` liefert die Zellen (r3[4]) — s. Tests.
-* Nicht Auftrag, byte-true belassen (4.3): ob die Absprung-Kaskade in ROOM2050/2051 die Kiste obj 6 im Original bis
-  Band 0 bringt und ob sie unten gebraucht wird (STAGE2-Raetsel; ROOM2040 hat drei weitere Tueren).
+* **ROOM2050/2051 obj 6 am Original** (4.3, nicht Auftrag, byte-true belassen): ob die Absprung-Kaskade r*[49]/[23]/
+  [77]/[78] die Kiste im Original bis Band 0 bringt und ob sie unten gebraucht wird (obj 8 @0x01D4C unter (5,7)) —
+  kein Spielstand in 2050, STAGE2-Raetsel unfertig. Der Zensus (Modell) findet den Ausloeser; kein Pin darauf.
+* **ROOM2030-Treppe endet auf Band 5, die Tueren liegen auf floor 9** (4.3, Nachbesserung 1 gemessen): Record slot 8
+  @0x01B8E count 2 (Byte 16) hebt von Band 3 (y -5400) auf Band 5 (y -9000); slots 1/2/3 verlangen Band 9 (y -16200,
+  Ankuenfte aus 2020/2060/2080 nfloor 9). Ob das Original dieselbe Treppe genauso faehrt (count-Byte @0x800435b8 sce 12)
+  und wie der Beta-Raum 2030 Band 5 und 9 verbindet, ist hier nicht gemessen (kein Spielstand in 2030) — Hinweis fuer
+  die STAGE2-Spur; fuer die Frage dieser Spur reicht, dass der Weg ueber 2030 Band 3 NICHT belegt ist und gestrichen wurde.
+* **Ersatzweg nach 2040 nicht Ende-zu-Ende gelaufen** (4.3): die Kette 2050 slot 1 -> 2020 (sub03 (3,219)) -> 2030 Band 9
+  -> slot 3 -> 2060 (Tritt, Spur A) -> slot 1 -> 2040 Halle ist Record- und Band-konsistent; gemessen sind die Glieder
+  2060-Tritt (Spur A), 2070-Nordgang -> 2040 und 2040-Treppe (hier). Nicht gelaufen: 2020 Ereignis sub03, 2030 Band-9-
+  Etage von der 2020-Ankunft bis slot 3, die Verbindung Galerie-Ankunft (-19750,-19850) -> Treppenzone (x -1350) in 2040
+  (Galerie-Waende r*[29..35] lassen den Streifen z -21400..-18250 frei; `nb1_2070n` lief 1200 Bilder auf Band 5 ohne
+  Klemme). Die Annahme "zwei Tueren desselben Bands eines Raums sind verbunden" gilt fuer 2070 NICHT (drei Gaenge) und
+  ist fuer 2020/2030/2060 nicht einzeln geprueft.
+* **ROOM3050 Stufe 2** (4.2/M3): nach dem gemessenen Fall (Band 0, Endlage (-24058,0,-15561)) der Band-0-Schub in die
+  Kerbe slot 7 @0x01F06 (-25000..-22950, -23200..-21150) -> Latch (3,93) -> Fall-Lage @0x01F40 -> Super Redhawk slot 6:
+  Record-Beleg, derselbe Latch-Mechanismus wie 5020 (Spur A, exe gemessen); der Abstieg auf Band 0 in 3050 (Ereignis-
+  Leiter sub00 Aot slot 2..5 @0x02044-2080 unter (3,82)) ist hier nicht gefahren.
 
 ## Fuer den Nutzer
 
@@ -381,9 +521,17 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
 * Darum kann sie **nicht vom Dach fallen**; der Weg auf die Kiste und ueber die Bruestung durch das Tor nach ROOM1100
   bleibt immer offen. Die Fallmechanik der Spur A ist davon unberuehrt — sie greift dort, wo das Spiel es vorsieht:
   - ROOM3050/3051 (Punkt 4): der Fall der Kiste obj 1 ist der vorgesehene Weg — nur vom Dach der gefallenen Kiste
-    erreicht man die **Super Redhawk** (Item slot 6, Floor 1). Beide Tueren des Raums brauchen die Kiste nicht.
-  - ROOM2050/2051 (Punkt 4): die Kiste obj 6 kann ueber die Kante fallen; die Tuer nach ROOM2040 auf ihrer Oberkante
-    waere dann weg, aber ROOM2040 bleibt ueber ROOM2030 -> ROOM2060 -> ROOM2040 erreichbar (Tuer-Zensus STAGE2, alle
-    Tuer-Records ohne Schluessel) — kein Fortschritt haengt an dieser Kiste.
+    erreicht man die **Super Redhawk** (Item slot 6, Floor 1). Beide Tueren des Raums brauchen die Kiste nicht. **An der
+    exe gefahren (Nachbesserung 1):** Leon schiebt die Kiste vom Gang aus nach Westen bis an die Wand und von Norden
+    ueber die Kante — sie faellt, kippt und landet unten (Band 0). Der Fall ist als Riegel festgehalten (`fall3050`).
+  - ROOM2050/2051 (Punkt 4): die Kiste obj 6 ist die Stufe zur Tuer nach ROOM2040 (Halle) und kann im Port ueber die
+    Kante fallen (ob das Original das zulaesst, ist nicht gemessen — kein Spielstand dort). Faellt sie, ist diese Tuer
+    weg, aber ROOM2040 bleibt erreichbar: ueber ROOM2020 -> ROOM2030 -> ROOM2060 (Tritt) -> Halle, und ueber ROOM11A0 ->
+    ROOM2070 (Nordgang) -> Galerie -> Treppe -> Halle; die Tuer 2070 -> 2040 und die Treppe 2040 sind an der exe gemessen,
+    der Tritt in 2060 von Spur A. **Berichtigung gegenueber dem ersten Stand:** ROOM2070 HAT die Tuer nach 2040 (slot 5),
+    sie liegt aber in einem eigenen, von den anderen Gaengen abgemauerten Teil (Nordgang) — von ROOM2000 aus kommt man
+    nicht dorthin; und der frueher genannte Weg ueber die Treppe in ROOM2030 traegt nicht (sie endet auf Band 5, die
+    Tueren liegen auf Band 9).
 * Keine neuen Assets fuer das Paket-Gate, keine Sprachdateien, keine Bedienhinweise, keine Entscheidungsfrage. Der
-  Port erhaelt nur einen Messschrieb (RE15_PUSH_LOG) und einen Riegel, der genau diesen Mechanismus festhaelt.
+  Port erhaelt nur Messschriebe (RE15_PUSH_LOG, Pfadausgabe der Zensus-Sonde) und Riegel; kein Verhaltens-Code wurde
+  geaendert (Diff gegen 99398dc7 in re15_port/: aot_common.c 3-Zeilen-Haken, dachkiste_r36.c/.h Messschrieb, Tests).
