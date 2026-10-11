@@ -1,0 +1,88 @@
+DuckStation gestartet {'91776'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (9100, -5400, 4100, 0, 3, 0) obj6: (-1600, -5400, -9348, 0, 0, 3, 0) HP: 100
+Entity 0 @800acc2c: w0 0801 typ 0x25 pos (4300, -5400, -6450) -> w0 0800 (Aktiv-Bit 0 geloescht)
+Entity 1 @800ace20: w0 0801 typ 0x25 pos (-5000, -5400, -6082) -> w0 0800 (Aktiv-Bit 0 geloescht)
+g_active_count @0x800aca4e: 2 -> 0
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Z0 8003da78: b'OK'
+Drehsinn: R 0.4 s -> dBlick = 1152
+START spieler=(9100,-5400,4100) blick=2208 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+== Weg zur Nordseite der Kiste (Ostkorridor x 8818..9432, dann z -6300 nach Westen) ==
+  GEHE (9100,-6300): angekommen bei (9017,-6393), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-6300): angekommen bei (-166,-6289), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-8400): angekommen bei (-58,-8358), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-11200): angekommen bei (-104,-11227), Schub-Ereignisse unterwegs 0
+== Schub 1: nach Sueden bis Kistenmitte z >= -7050 (r*[43] z -8750..-8050 verlangt z >= -7150) ==
+  GEHE (-1000,-10798): angekommen bei (-1027,-10771), Schub-Ereignisse unterwegs 0
+SUED Runde 0 VOR spieler=(-1027,-5400,-10771) blick=-13296 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1600, -5400, -9274, 0, 0, 3, 9) spieler=(-1017, -5400, -10624, -13296, 3, 1) s4/s5=(-1600,-9348)
+  SCHUB-OK obj6=(-1600, -5400, -8816, 0, 0, 3, 9) spieler=(-981, -5400, -10166, -13300, 3, 8) s4/s5=(-1600,-8839)
+  SCHUB-OK obj6=(-1600, -5400, -8273, 0, 0, 3, 9) spieler=(-939, -5400, -9623, -13300, 3, 8) s4/s5=(-1600,-8296)
+  SCHUB-OK obj6=(-1600, -5400, -7730, 0, 0, 3, 9) spieler=(-897, -5400, -9080, -13300, 3, 8) s4/s5=(-1600,-7753)
+  SCHUB-OK obj6=(-1600, -5400, -7187, 0, 0, 3, 9) spieler=(-855, -5400, -8537, -13300, 3, 8) s4/s5=(-1600,-7210)
+SUED Runde 0 NACH (Bedingung) spieler=(-874,-5400,-8381) blick=-13300 band=3 sub=8 | obj6=(-1600,-5400,-7031) faellt=0 z=0 band=3 n=9
+SUED: Schub angenommen 117 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== Umweg in die Tasche westlich der Kiste (x <= -2950, z (-6632,-5368)) ==
+  GEHE (-100,-8400): angekommen bei (-263,-8426), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-5520): angekommen bei (-67,-5572), Schub-Ereignisse unterwegs 0
+  GEHE (-3100,-5520): angekommen bei (-3098,-5502), Schub-Ereignisse unterwegs 0
+== Schub 2: nach Osten bis Kistenmitte x >= 7550 (Fenster [7550,7650) zwischen r*[44] und r*[40]) ==
+  GEHE (-3050,-6431): angekommen bei (-3050,-6491), Schub-Ereignisse unterwegs 0
+OST Runde 0 VOR spieler=(-3050,-5400,-6491) blick=-16420 band=3 sub=3 | obj6=(-1600,-5400,-7031) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1600, -5400, -7031, 0, 0, 3, 9) spieler=(-2950, -5400, -6455, -16354, 3, 8) s4/s5=(-1600,-7031)
+  SCHUB-OK obj6=(-1059, -5400, -7031, 0, 0, 3, 9) spieler=(-2409, -5400, -6511, -16354, 3, 8) s4/s5=(-1069,-7031)
+  SCHUB-OK obj6=(-518, -5400, -7031, 0, 0, 3, 9) spieler=(-1868, -5400, -6567, -16354, 3, 8) s4/s5=(-528,-7031)
+  SCHUB-OK obj6=(23, -5400, -7031, 0, 0, 3, 9) spieler=(-1327, -5400, -6623, -16354, 3, 8) s4/s5=(13,-7031)
+  SCHUB-OK obj6=(564, -5400, -7031, 0, 0, 3, 9) spieler=(-786, -5400, -6679, -16354, 3, 8) s4/s5=(554,-7031)
+  SCHUB-OK obj6=(1105, -5400, -7031, 0, 0, 3, 9) spieler=(-245, -5400, -6735, -16354, 3, 8) s4/s5=(1095,-7031)
+  SCHUB-OK obj6=(1646, -5400, -7031, 0, 0, 3, 9) spieler=(296, -5400, -6791, -16354, 3, 8) s4/s5=(1636,-7031)
+  SCHUB-OK obj6=(2187, -5400, -7031, 0, 0, 3, 9) spieler=(837, -5400, -6847, -16354, 3, 8) s4/s5=(2177,-7031)
+  SCHUB-OK obj6=(2728, -5400, -7031, 0, 0, 3, 9) spieler=(1378, -5400, -6903, -16354, 3, 8) s4/s5=(2718,-7031)
+  SCHUB-OK obj6=(3269, -5400, -7031, 0, 0, 3, 9) spieler=(1919, -5400, -6959, -16354, 3, 8) s4/s5=(3259,-7031)
+  SCHUB-OK obj6=(3810, -5400, -7031, 0, 0, 3, 9) spieler=(2460, -5400, -7015, -16354, 3, 8) s4/s5=(3800,-7031)
+  SCHUB-OK obj6=(4351, -5400, -7031, 0, 0, 3, 9) spieler=(3001, -5400, -7071, -16354, 3, 8) s4/s5=(4341,-7031)
+  SCHUB-OK obj6=(4892, -5400, -7031, 0, 0, 3, 9) spieler=(3542, -5400, -7127, -16354, 3, 8) s4/s5=(4882,-7031)
+  SCHUB-OK obj6=(5433, -5400, -7031, 0, 0, 3, 9) spieler=(4083, -5400, -7183, -16354, 3, 8) s4/s5=(5423,-7031)
+  SCHUB-OK obj6=(5974, -5400, -7031, 0, 0, 3, 9) spieler=(4624, -5400, -7239, -16354, 3, 8) s4/s5=(5964,-7031)
+  SCHUB-OK obj6=(6515, -5400, -7031, 0, 0, 3, 9) spieler=(5165, -5400, -7295, -16354, 3, 8) s4/s5=(6505,-7031)
+  SCHUB-OK obj6=(7056, -5400, -7031, 0, 0, 3, 9) spieler=(5706, -5400, -7351, -16354, 3, 8) s4/s5=(7046,-7031)
+OST Runde 0 NACH (Bedingung) spieler=(6212,-5400,-7398) blick=-16354 band=3 sub=8 | obj6=(7562,-5400,-7031) faellt=0 z=0 band=3 n=9
+OST: Schub angenommen 432 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== Umweg nach Sueden der Kiste ==
+  GEHE (6112,-5600): angekommen bei (6069,-5651), Schub-Ereignisse unterwegs 0
+== Schub 3: nach Norden bis z <= -12000 oder Fall-Ausloeser (Absprungzelle r*[49] z -13950..-12150, +450) ==
+  GEHE (7562,-5581): angekommen bei (7579,-5651), Schub-Ereignisse unterwegs 0
+NORD Runde 0 VOR spieler=(7579,-5400,-5651) blick=-19474 band=3 sub=3 | obj6=(7562,-5400,-7031) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(7562, -5400, -7031, 0, 0, 3, 9) spieler=(7595, -5400, -5681, -19223, 3, 8) s4/s5=(7562,-7031)
+  SCHUB-OK obj6=(7562, -5400, -7254, 0, 0, 3, 9) spieler=(7620, -5400, -5904, -19431, 3, 8) s4/s5=(7562,-7198)
+  SCHUB-OK obj6=(7562, -5400, -7800, 0, 0, 3, 9) spieler=(7557, -5400, -6450, -19431, 3, 8) s4/s5=(7562,-7753)
+  SCHUB-OK obj6=(7562, -5400, -8340, 0, 0, 3, 9) spieler=(7506, -5400, -6990, -19431, 3, 8) s4/s5=(7562,-8293)
+  SCHUB-OK obj6=(7562, -5400, -8880, 0, 0, 3, 9) spieler=(7455, -5400, -7530, -19431, 3, 8) s4/s5=(7562,-8833)
+  SCHUB-OK obj6=(7562, -5400, -9420, 0, 0, 3, 9) spieler=(7404, -5400, -8070, -19431, 3, 8) s4/s5=(7562,-9373)
+  SCHUB-OK obj6=(7562, -5400, -9960, 0, 0, 3, 9) spieler=(7353, -5400, -8610, -19431, 3, 8) s4/s5=(7562,-9913)
+  SCHUB-OK obj6=(7562, -5400, -10500, 0, 0, 3, 9) spieler=(7302, -5400, -9150, -19431, 3, 8) s4/s5=(7562,-10453)
+  SCHUB-OK obj6=(7562, -5400, -11040, 0, 0, 3, 9) spieler=(7251, -5400, -9690, -19431, 3, 8) s4/s5=(7562,-10993)
+  SCHUB-OK obj6=(7562, -5400, -11580, 0, 0, 3, 9) spieler=(7200, -5400, -10230, -19431, 3, 8) s4/s5=(7562,-11533)
+  FALL-AUSLOESER obj6=(7562, -5400, -11732, 0, 0, 3, 8) spieler=(7175, -5400, -10382, -19431, 3, 8) s4/s5=(7562,-11683)
+NORD Runde 0 NACH (Fall-Ausloeser) spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=8 | obj6=(7562,-5400,-11732) faellt=0 z=0 band=3 n=8
+NORD: Schub angenommen 230 x, gesperrt 0 x, Fall-Ausloeser 1 x, Ende: Fall-Ausloeser
+NACH-FALL 0 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-5014,-12915) faellt=1 z=1 band=2 n=0
+NACH-FALL 1 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-4854,-13250) faellt=1 z=1 band=2 n=0
+NACH-FALL 2 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-4854,-13032) faellt=1 z=1 band=2 n=0
+NACH-FALL 3 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-4534,-13250) faellt=1 z=1 band=2 n=0
+NACH-FALL 4 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-4534,-13032) faellt=1 z=1 band=2 n=0
+NACH-FALL 5 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-4054,-13250) faellt=1 z=1 band=2 n=0
+NACH-FALL 6 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-4054,-13032) faellt=1 z=1 band=2 n=0
+NACH-FALL 7 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-3600,-13250) faellt=1 z=2 band=2 n=0
+NACH-FALL 8 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-3600,-13032) faellt=1 z=2 band=2 n=0
+NACH-FALL 9 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-3630,-13088) faellt=1 z=3 band=2 n=0
+NACH-FALL 10 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-3630,-13032) faellt=1 z=3 band=2 n=0
+NACH-FALL 11 spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-3600,-13088) faellt=0 z=3 band=2 n=0
+ENDE spieler=(7175,-5400,-10382) blick=-19431 band=3 sub=0 | obj6=(7562,-3600,-13088) faellt=0 z=3 band=2 n=0
+Ereignisse gesamt: 780 Fall-Ausloeser: 1 HP: 100
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
