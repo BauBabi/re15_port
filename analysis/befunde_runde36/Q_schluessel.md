@@ -312,7 +312,12 @@ Wegwerf-Abfrage und bleibt dauerhaft im Inventar (Lauf Z3_nach_szene). Dazu der 
 "v0 = 0 -> kein Durchgang" ungenau). Alle als erfuellt bewerteten Punkte bleiben unangetastet (ihre Riegel
 werden mitgefahren).
 
-### N1.0 Plan
+**Ergebnis Nachbesserung 1:** M1 behoben — der Prison Key fragt nach der letzten Szenen-Zeile von ROOM1211 sub02
+(msg 9 @0x0226A) "You don't need this key any more. Discard it?" (exe: Abfrage F1870 im Bild, in dem msg 9
+ausredet; Ja -> Statusschirm leer). H4 berichtigt. Riegel `unit_r36_schluessel_befreiung` (10/10, Rueckbau 5 rot)
+und `integration_r36_schluessel_befreiung` (echte exe) neu; gezielt 118/118 gruen (N1.8).
+
+### N1.0 Plan (erledigt)
 1. Messung vorher am gebauten Stand (HEAD 6af69ce2): Lauf Z3 nachfahren, Zeitlinie von sub02 (msg 9 auf/zu,
    Szenenende Set(1,0x1B)=0 / Plc_ret / Evt_end), Inventar danach.
 2. Belege: ROOM1211 sub02 Bytes (Message_on-Masken, Ablauf nach msg 9), Leser von (4,0xEC)/(4,0xFC),
