@@ -64,6 +64,14 @@ extern unsigned g_current_room_id;
                                LE16(x), LE16(0), LE16(z), LE16(yaw), 0x00, (rm), (ct), 0,0,0,0,0,0,0
 #define OP_AOT_ON          0x47, RE15_IT_TUER_SLOT
 #define OP_END             0x01, 0x00
+/* Runde 36 Spur K (K3): Szenen-Riegel (Pad-Sperre + Letterbox, ROOM1150 sub08 @0x01114/@0x01118) erst NACH dem ersten
+ * Abschnitt: was der im Raumaufbau setzt, loescht der Port in re15_room_transition_present (re15_pauseflags_clear()
+ * NACH dem Laden; im Original liegt der Loesch-Store @0x8001ca44 VOR dem Raumlader @0x8001ca54, und der State-3-Rumpf
+ * rettet die Init-Lauf-Bits @0x8001cbcc/@0x8001cbfc ueber die Blende) - gemessen: pf=00000007 statt 01000007 ab Bild 6.
+ * Deshalb endet der erste Abschnitt mit Sleep 1 (Sleeping zaehlt 1 -> 0 noch im Raumaufbau und gibt ab, @0x8003f428/
+ * @0x8003f488), die Riegel laufen im ERSTEN Spieltakt nach der Blende (Bild 6) - wie bisher. */
+#define OP_ABSCHNITT_ENDE  OP_SLEEP(1)
+#define OP_RIEGEL          OP_SET(2, 7, 1), OP_SET(1, 27, 1)
 #define DOOR_LEN           32
 #define DOOR_OFF_ROOM      23
 #define DOOR_OFF_CUT       24
@@ -169,8 +177,8 @@ static const uint8_t k_p_szene[] = {
  * Zeiten = PORT-WAHL: Tuer wie bisher 175 Bilder nach dem ersten Takt (r35: 15 + 10 + 150), davon 45 nach dem Knall
  * (wie k_p_szene). */
 static const uint8_t k_p_1130[] = {
-    OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     EM_1130_LISTE,                                          /* Raumaufbau: vor dem ersten Bild */
+    OP_ABSCHNITT_ENDE, OP_RIEGEL,                           /* Riegel im ersten Spieltakt (Bild 6) */
     OP_SLEEP(130),
     OP_KNALL(RE15_IT_SIG_KNALL_1030), OP_SLEEP(45),        /* Knall des 1040-Schritts, noch auf Cut 0 */
     OP_DOOR(RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 0x04, RE15_IT_CUT_1040),
@@ -219,7 +227,6 @@ static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres
  * Cut_chg 1 der Runde 35 entfaellt (das erste Bild IST Cut 1). GEMESSEN vorher (Lauf vor_1040): Cut 1 ab Bild 0, die
  * Raum-Zombies an ihren Raum-Plaetzen, in Bild 6 auf die Aufstell-Plaetze versetzt, Knall erst in Bild 21. */
 static const uint8_t k_p_1040_kopf[] = {
-    OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     OP_ZAEHLER_1040,                                        /* Nachbesserung 2: verworfene Records geben ihren Platz zurueck */
     EM_1040_LISTE,                                          /* erst erscheinen, dann im selben Takt aufstellen */
 };
@@ -253,7 +260,8 @@ static const uint8_t k_p_1040_aufstellen[] = {
 /* Runde 36 Spur K (K3): der Knall dieses Schritts liegt jetzt am Ende des vorigen (k_p_1130 bzw. k_p_szene, wenn 1140
  * leer ist); hier bleibt nur der Vorlauf bis zur Tor-Fahrt (r35: 15 + 20 Bilder = PORT-WAHL, unveraendert). */
 static const uint8_t k_p_1040_vorlauf[] = {
-    OP_SLEEP(35),
+    OP_ABSCHNITT_ENDE, OP_RIEGEL,                           /* Ende des Raumaufbaus; Riegel im ersten Spieltakt */
+    OP_SLEEP(34),                                           /* 1 + 34 = 35 */
 };
 static const uint8_t k_p_1040_tor[] = {
     0x36, 0x02, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* @0x019B2 */
@@ -330,7 +338,6 @@ static const uint8_t k_p_1040_nach[] = { OP_ZAEHLER_1040, EM_1040_LISTE, OP_END 
     OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -18500, 1024), \
     OP_EM(0, 0x16, 0x0d, 0x01, 79, -11500, -18800, 1024)
 static const uint8_t k_p_1030_kopf[] = {
-    OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     0x24, 0x12, LE16(20),                                   /* Save(0x12,20): Gleichzeitig-Limit */
 };
 /* Runde 36 Spur K (K3): GEMESSEN vorher (Lauf vor_1030): Cut 7 ab Bild 0, Knall in Bild 21, die 1070-Kopien erscheinen
@@ -343,7 +350,8 @@ static const uint8_t k_p_1030_kopf[] = {
  * im Raumaufbau, das erste Bild zeigt Cut 12 (Tuer-Cut). */
 static const uint8_t k_p_1030_tuer[] = {
     EM_1070_LISTE,                                          /* Raumaufbau: vor dem ersten Bild (Cut 7) */
-    OP_SLEEP(175),
+    OP_ABSCHNITT_ENDE, OP_RIEGEL,                           /* Riegel im ersten Spieltakt */
+    OP_SLEEP(174),                                          /* 1 + 174 = 175 */
 };
 static const uint8_t k_p_1030_tor[] = {
     0x36, 0x02, 0x0c, 0x00, 0x00, 0x00, 0xcc, 0xdd, 0xf8, 0xf8, 0xf0, 0xa7,   /* sub08 @0x02776: der Knall */
@@ -362,7 +370,9 @@ static const uint8_t k_p_1030_bruch[] = {
 };
 static const uint8_t k_p_1030_kriechen[] = {
     EM_KRIECHER_LISTE,                                      /* erscheinen im Warte-Rechteck hinter dem Tor */
-    OP_SLEEP(2),                                            /* ein Bild fuer den AOT-Stempel (Scan nach der VM, @0x8001ce1c) */
+    /* ein Bild fuer den AOT-Stempel (Scan nach der VM, @0x8001ce1c) = r35 Sleep 2; Runde 36 Spur K: als 1 + 1 mit den
+     * Riegeln dazwischen (ohne Cut-7-Teil endet hier der erste Abschnitt im Raumaufbau, OP_ABSCHNITT_ENDE). */
+    OP_ABSCHNITT_ENDE, OP_RIEGEL, OP_SLEEP(1),
     0x24, 0x05, 0x00, 0x00, 0x24, 0x07, 0x00, 0x00,                           /* sub08 @0x02796/@0x0279A */
     0x18, 0x09, 0x18, 0x09, 0x18, 0x09, 0x18, 0x09,         /* sub08 @0x0279E/@0x027A4/@0x027B4/@0x027BA: Gosub sub09 x4 */
     OP_SLEEP(20),                                                             /* sub08 @0x027A6 */
@@ -420,9 +430,9 @@ static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
 #define OP_TURN(f,x,z) OP_DEST(9, (f), (x), (z))                                     /* 11C0 sub02 @0x01890 / @0x018CA */
 #define OP_GOSUB(n)    0x18, (n)                                                     /* 11C0 sub02 @0x01898 / @0x018D2 */
 static const uint8_t k_p_11c0[] = {
-    OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     OP_EM(3, 0x40, 0x40, 0x00, 0xff, IT_MARVIN_X, IT_MARVIN_Z, 475),   /* Marvin, Slot 3 = Aktor 4 — Raumaufbau (K3) */
-    OP_SLEEP(30),
+    OP_ABSCHNITT_ENDE, OP_RIEGEL,
+    OP_SLEEP(29),                                           /* 1 + 29 = 30 */
     /* (1) beide zum Gebaeude */
     OP_WORK(2, 3), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x00, IT_TUER11C0_X, IT_TUER11C0_Z),
     OP_SLEEP(10),
