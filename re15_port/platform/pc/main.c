@@ -10834,10 +10834,16 @@ re_title:;
                                 pg0 = pg1 = pg2 = g_re15_light_tint[1];
                                 pb0 = pb1 = pb2 = g_re15_light_tint[2];
                             }
-                            if (g_scd.props[pi].attr & 0x10)   /* FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10`: FLACH statt NCCT ->
-                                                                 * FUN_80022f0c @0x8002c320 mit Farbe obj+0x70 = 0x808080 (FUN_8002b898.c:16,
-                                                                 * Textur unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h).
-                                                                 * Runde 36 Spur N (Nachbesserung 1). */
+                            if ((g_scd.props[pi].attr & 0x12) == 0x10)
+                                /* FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10`: FLACH statt NCCT -> FUN_80022f0c
+                                 * @0x8002c320 mit Farbe obj+0x70 = 0x808080 (FUN_8002b898.c:16, Textur
+                                 * unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h). NUR deckende
+                                 * Objekte: Bit 0x2 (@0x8002c2b4, Prim-Code 0x36 = halbtransparent je STP-Texel)
+                                 * kann dieser Zeichner nicht (Texel-Alpha immer 0xFF, render_pc.c ABE-Kommentar);
+                                 * die 91 flach+halbtransparenten Objekte (Zensus re15_scd.h; ihre Texel tragen zu
+                                 * 100 % das STP-Bit, das Original mischt sie 50/50) bleiben bis zur Portierung von
+                                 * Parameter 4 auf dem bisherigen Weg — flach-deckend waere doppelt so hell wie das
+                                 * Original. Runde 36 Spur N (Nachbesserung 1, Dossier 8.7). */
                                 pr0 = pr1 = pr2 = pg0 = pg1 = pg2 = pb0 = pb1 = pb2 = 0x80;
                             re15_render_textured_tri_lit(
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
@@ -10901,7 +10907,8 @@ re_title:;
                                 pqg0=pqg1=pqg2=pqg3=g_re15_light_tint[1];
                                 pqb0=pqb1=pqb2=pqb3=g_re15_light_tint[2];
                             }
-                            if (g_scd.props[pi].attr & 0x10)   /* wie beim Dreieck: FUN_80023098 @0x8002c350, flach 0x808080. Runde 36 Spur N. */
+                            if ((g_scd.props[pi].attr & 0x12) == 0x10)   /* wie beim Dreieck: FUN_80023098 @0x8002c350, flach 0x808080,
+                                                                           * nur deckende Objekte. Runde 36 Spur N. */
                                 pqr0=pqr1=pqr2=pqr3=pqg0=pqg1=pqg2=pqg3=pqb0=pqb1=pqb2=pqb3=0x80;
                             re15_render_textured_tri_lit(
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,

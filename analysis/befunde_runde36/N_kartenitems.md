@@ -129,11 +129,11 @@ RE2-Steuercodes (Message-FSM ab 0x800303C4, selbst disassembliert): 0xFB -> Zust
 ### 3.1 Dateien
 | Datei | Inhalt |
 |---|---|
-| `re15_port/engine/src/kartenitems_r36.c` + `include/re15_kartenitems_r36.h` | Installer (Prop + Zone), Port-Programm Ereignis 28, Texte 30/31, Besitz je Blatt, Licht-Haken |
+| `re15_port/engine/src/kartenitems_r36.c` + `include/re15_kartenitems_r36.h` | Installer (Prop + Zone, Attribut 0x0010), Port-Programm Ereignis 28, Texte 30/31, Besitz je Blatt |
 | `re15_port/engine/src/gen/kartenitems_r36.inc` | ERZEUGT: RE2-TIM karte01 (unveraendert), 5 MD1 (nur Ecken skaliert), Texte, Lage-Tabelle |
-| `re15_port/tools/r36_kartenitems/karten_export.py` | Generator (Quelle RE2 ROOM3060.RDT, md5-Pruefung, Kameras/Ebenen/Marken, Massstab, Licht) |
-| Haken (je 1-3 Zeilen, "Runde 36 Spur N") | `scd_room_setup.c` (Installer am Blockende), `platform/pc/main.c` (Installer Boot-/CONTINUE-Weg, Prop-Lader MD1+TIM obj 15, Vertexfarbe im Prop-Zeichner), `scd_vm.c` (scd_event_fire-Kette), `re15_map_owned.c` (Besitz), `map_hint_common.c` (Etagenwahl) |
-| Tests | `tests/unit/test_r36_kartenitems.c`, `tests/unit/probe_r36_kartenitems_bmp.c`, `tests/integration/test_r36_kartenitems_bild.cmake`, registriert in `tests/unit/probes/r36_kartenitems.cmake` |
+| `re15_port/tools/r36_kartenitems/karten_export.py` | Generator (Quelle RE2 ROOM3060.RDT, md5-Pruefung, Kameras/Ebenen/Marken, Massstab) |
+| Haken (je 1-3 Zeilen, "Runde 36 Spur N") | `scd_room_setup.c` (Installer am Blockende), `platform/pc/main.c` (Installer Boot-/CONTINUE-Weg, Prop-Lader MD1+TIM obj 15; seit Nachbesserung 1 der generische Flach-Zweig `attr & 0x12 == 0x10` im Prop-Zeichner statt eines Karten-Hakens), `scd_vm.c` (scd_event_fire-Kette; Obj_model_set speichert pc[8..9]), `re15_scd.h` (Prop-Feld `attr`), `re15_map_owned.c` (Besitz), `map_hint_common.c` (Etagenwahl) |
+| Tests | `tests/unit/test_r36_kartenitems.c`, `tests/unit/probe_r36_kartenitems_bmp.c`, `tests/unit/probe_r36_kartenitems_licht.c` (Nachbesserung 1), `tests/integration/test_r36_kartenitems_bild.cmake`, registriert in `tests/unit/probes/r36_kartenitems.cmake` |
 
 ### 3.2 Modell
 karte01 (md5 99dae133, RE2 `ROOM3060.RDT` MD1 @0x0045C8, TIM @0x02C6D4 md5 bf0fbcc7; = extracted_re2_items/
@@ -142,20 +142,22 @@ Normale (0,-4096,0) @MD1+0x6C, UV u 0..126 mit +z, v 0..84 mit +x (MD1+0xBC). ka
 Kartenkunst, aber 2 CLUTs und fremde Kunst im TIM -> karte01. Je Raum ein MD1: dieselben Bytes, nur die 5 Ecken
 @0x44 mit s skaliert (Pruefung im Test: ausserhalb 0x44..0x6B kein Byte verschieden).
 
-### 3.3 Lage, Massstab, Drehung, Licht (PORT-WAHL aus den Nutzer-Marken, erzeugt)
+### 3.3 Lage, Massstab, Drehung (PORT-WAHL aus den Nutzer-Marken, erzeugt) — Licht: seit Nachbesserung 1 Abschnitt 8
 Mitte = Sehstrahl der Markenmitte x Ebene. Massstab s = groesster Wert, bei dem die vier projizierten
 Kartenecken im Nutzer-Cut in der Marken-Huelle liegen (Bildraum; das Ebenen-Mass war auf der schraegen Wand
 11D0 28 % zu hoch: Framedump y 61..97 gegen Marke 65..93). Drehung: Modell +x -> Welt unten, +y -> in die
 Wand, +z -> rechts; Euler nach pc_prop_rot_q12 (Ry*Rx*Rz). Ursprung = Mitte - 85*s*n. Zone 1000 x 1000 um
 Mitte + 300*n (r35-Muster: haeufigste Item-Groesse 69 von 162).
 
-| Raum (Blatt) | Cut | Ebene | Mitte | s -> Flaeche | rot (x,y,z) | Zone (Ecke) / Slot | Licht |
-|---|---|---|---|---|---|---|---|
-| 1140 (4 = 3F) | 5 | z = -8710 (Tafel) | (-2050,-2831,-8710) | 0,503 -> 543 x 362 | (0,1024,1024) | (-2551,-9510) / 40 | (156,155,153) |
-| 10D0 (3 = 2F) | 6 | z = 21624 | (2133,-1928,21624) | 0,362 -> 391 x 260 | (0,3072,1024) | (1634,21424) / 40 | (181,186,180) |
-| 1030 (2 = 1F) | 3 | z = -23580 | (-1691,-2769,-23580) | 0,677 -> 732 x 488 | (0,3072,1024) | (-2192,-23780) / 8 (Telefon -> 39) | (47,70,104) |
-| 1200 (1 = B2) | 2 | x = -26330 (Vitrinenfront) | (-26330,-2572,-15682) | 0,690 -> 745 x 497 | (0,0,1024) | (-26530,-16183) / 40 | (85,85,75) |
-| 11D0 (0 = B1) | 0 | schraeg, n (-0,941;0;0,338) | (1642,-2199,-19130) | 0,638 -> 689 x 459 | (2048,3871,3072) | (860,-19530) / 40 | (74,75,77) |
+| Raum (Blatt) | Cut | Ebene | Mitte | s -> Flaeche | rot (x,y,z) | Zone (Ecke) / Slot |
+|---|---|---|---|---|---|---|
+| 1140 (4 = 3F) | 5 | z = -8710 (Tafel) | (-2050,-2831,-8710) | 0,503 -> 543 x 362 | (0,1024,1024) | (-2551,-9510) / 40 |
+| 10D0 (3 = 2F) | 6 | z = 21624 | (2133,-1928,21624) | 0,362 -> 391 x 260 | (0,3072,1024) | (1634,21424) / 40 |
+| 1030 (2 = 1F) | 3 | z = -23580 | (-1691,-2769,-23580) | 0,677 -> 732 x 488 | (0,3072,1024) | (-2192,-23780) / 8 (Telefon -> 39) |
+| 1200 (1 = B2) | 2 | x = -26330 (Vitrinenfront) | (-26330,-2572,-15682) | 0,690 -> 745 x 497 | (0,0,1024) | (-26530,-16183) / 40 |
+| 11D0 (0 = B1) | 0 | schraeg, n (-0,941;0;0,338) | (1642,-2199,-19130) | 0,638 -> 689 x 459 | (2048,3871,3072) | (860,-19530) / 40 |
+(Die frueher hier gefuehrte Spalte "Licht" (156,155,153)/(181,186,180)/(47,70,104)/(85,85,75)/(74,75,77) war
+der Mangel M1 der Abnahme 0 und ist entfernt — Abschnitt 8.)
 
 Ebenen je Raum (Messung, Kameras aus `probe_r34n_e_dokumente kamera`):
 * 1140 Cut 5: Tafel (Staffelei) z = -8710 — rechte Tafelkante aus Cut 4 + Cut 5 trianguliert:
@@ -168,13 +170,13 @@ Ebenen je Raum (Messung, Kameras aus `probe_r34n_e_dokumente kamera`):
 * 1200 Cut 2: Vitrinenfront x = -26330 — obere Vitrinenecken aus Cut 1 + Cut 2 trianguliert (Fehlabstand 4/53)
   = SCA 6 (x -28256..-26256); die Marke liegt rechts neben der Vitrine (z -16051..-15274).
 
-LICHT: das RDT-Figurenlicht liefert an allen fuenf Stellen 31..70 von 128 (`probe_r34n_e_dokumente licht`,
-1140 Cut 5 (41,39,39)): die Karte war im ersten Framedump ein fast schwarzes Rechteck auf heller Tafel
-(Karte 32/32/29 gegen Tafel 91/83/74). PORT-WAHL: der Papiergrund (Median der Kartenkunst 104,104,96)
-bekommt die Helligkeit der hellsten 15 % der Umgebung im Nutzer-Cut (Fenster = Marken-Huelle um je eine
-Huellenbreite/-hoehe erweitert) — Tint = 128 * Ref / Median, je Kanal; gesetzt als Vertexfarbe im
-Prop-Zeichner (`re15_kartenitems_r36_licht`, nur obj 15 in den Kartenraeumen). Verworfen (gemessen): Mittel
-UNTER der Marke -> auf den dunklen Waenden 11D0/1200 so dunkel wie die Wand, Karte unsichtbar.
+LICHT (Stand nach Nachbesserung 1, Abschnitt 8): die Karte traegt das Attribut-Wort 0x0010 (Pool+0x0c,
+Flach-Bit wie die RE2-Wandplaene room20B0 @0x03158 / room2130 @0x00FDC und wie RE1.5 ROOM1200 obj 0/1
+@0x007DA/@0x00804) und wird vom Prop-Zeichner wie im Original ohne Raumlicht gezeichnet (FUN_8002c18c
+@0x8002c2f4 -> FUN_80022f0c @0x8002c320, Farbe obj+0x70 = 0x808080). Die urspruengliche Fassung dieser
+Spur hatte hier eine Tint-Konstante je Raum aus dem Hintergrundbild ("hellste 15 %") erfunden — Mangel M1
+der Abnahme 0, behoben in Abschnitt 8; das RDT-Figurenlicht liefert an allen fuenf Stellen 31..70 von 128,
+mit NCCT waere die Karte ein fast schwarzes Rechteck (1140 Cut 5: Karte 32/32/29 gegen Tafel 91/83/74).
 
 ### 3.4 Aufnahme (Port-Programm, Ereignis 28)
 ```
@@ -267,9 +269,9 @@ Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
 * **Groesse** (PORT-WAHL, Entscheidungsfrage 7.2): die Karten sind in die Nutzer-Marken eingepasst (Flaeche
   391..745 x 260..497 Einheiten); die RE2-Originalgroesse waere 1080 x 720 (2F: rund 2,8-mal so gross, gut 55 x 40
   statt 20 x 15 Pixel — sie deckte dort die Fahndungsplakate und das Foto zu).
-* **Licht** (PORT-WAHL, Abschnitt 3.3): Papier so hell wie die hellsten 15 % der Umgebung im Nutzer-Cut,
-  statt des RDT-Figurenlichts (gemessen 31..70 von 128 an allen Waenden, Karte sonst fast schwarz). Kein
-  Original-Gegenstueck — RE1.5 hat an diesen Stellen kein Objekt.
+* **Licht**: erledigt in Nachbesserung 1 (Abschnitt 8) — Flach-Attribut 0x0010 statt Tint-Konstante. OFFEN
+  daraus: das Halbtransparenz-Bit 0x2 des Attribut-Worts (FUN_8002c18c @0x8002c2b4 -> Prim-Code 0x36, je
+  STP-Texel) ist im Port fuer Objekte weiterhin nicht umgesetzt (Abschnitt 8.7).
 * **Tiefe** in anderen Cuts: die Bildlage im Nutzer-Cut ist eingepasst; in anderen Cuts folgt sie der
   gemessenen Ebene. 1140: Tafel-Ebene parallel zur Rueckwand ANGENOMMEN (nur die rechte Kante trianguliert);
   1030: Wandtiefe aus der Bodenkante (+-1 Bildzeile = +-500 Einheiten) — nur Cut 3/10 sieht die Rueckwand.

@@ -8,6 +8,12 @@
 #        ausserhalb 0 — die Karte haengt an der Marke;
 #     c) danach Statusschirm + L1 (Kartenschirm des eigenen Blatts, RE15_INV_FB_SHOT): MIT Bit zeigt das Blatt
 #        mindestens MIN_KARTE Pixel mehr — die unbesuchten Raeume der Etage (RE2 CLUT-Zeile 498).
+#     d) (Nachbesserung 1, Licht) JEDER Kartenpixel ist EXAKT eine Farbe der 256er-Palette der RE2-TIM
+#        (probe_r36_kartenitems_licht): die Karte traegt das Flach-Attribut 0x0010 (Pool+0x0c) und wird wie
+#        im Original ohne Raumlicht gezeichnet (FUN_8002c18c @0x8002c2f4 -> FUN_80022f0c @0x8002c320,
+#        Farbe obj+0x70 = 0x808080). Mit NCCT (1140: 41/128) oder einer Tint-Konstante laegen die Pixel
+#        ausserhalb der Palette. ROOM1030 zusaetzlich in Cut 0 (Raumlicht an der Karte (89,89,94) statt
+#        (54,54,59) in Cut 3, Abnahme 0 Abschnitt 4): dieselbe Palette, dieselbe mittlere Helligkeit.
 # Teil 2 (ROOM1140, echter Weg): Spieler vor der Tafel, RE15_INPUT_SCRIPT: Aktion -> Frage -> Ja ->
 #   Meldung -> Statusschirm -> L1 Karte. Geprueft: Ereignis 28 lief ("-> Port-Programm"), und der
 #   Kartenschirm (RE15_INV_FB_SHOT) zeigt gegenueber dem Lauf ohne Aufnahme mindestens MIN_KARTE
@@ -16,9 +22,9 @@
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r35_inhalt_karte>
 #               -DRE15_BILD_TOOL=<probe_r34n_e_bild> -DRE15_BMP_TOOL=<probe_r36_kartenitems_bmp>
-#               -DWORKDIR=<dir> -P test_r36_kartenitems_bild.cmake
+#               -DRE15_LICHT_TOOL=<probe_r36_kartenitems_licht> -DWORKDIR=<dir> -P test_r36_kartenitems_bild.cmake
 
-foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_BILD_TOOL RE15_BMP_TOOL)
+foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_BILD_TOOL RE15_BMP_TOOL RE15_LICHT_TOOL)
     if(NOT ${_v} OR NOT EXISTS "${${_v}}")
         message(FATAL_ERROR "kartenitems_bild: ${_v} fehlt/existiert nicht: '${${_v}}'")
     endif()
@@ -84,7 +90,11 @@ set(_faelle
     "2f|10D0|2000|-6000|0|6|88|267|117|292|138|110|311"
     "1f|1030|-18000|-12000|0|3|89|152|100|167|116|40|452"
     "b2|1200|-20000|-26000|0|2|90|55|77|77|96|88|381"
-    "b1|11D0|-3000|-21000|0|0|91|224|58|253|100|84|433")
+    "b1|11D0|-3000|-21000|0|0|91|224|58|253|100|84|433"
+    "1f0|1030|-18000|-12000|0|0|89|88|104|101|115|24|452")
+# Sechster Fall (Nachbesserung 1): ROOM1030 im Cut 0 — die Karte an der Rueckwand zwischen den Aushaengen,
+# gemessen 2026-10-11 (neue exe, Lade-Weg F100): 48 Pixel, Huelle x91..98 y107..112, Mittel (105,107,96),
+# 48 von 48 Palettenfarben. Fenster = Huelle +-3, Schwelle = die Haelfte.
 # Letzte Spalte MIN_KARTE: Kartenschirm mit/ohne Plan-Bit, gemessen 2026-10-11 (Dossier 4.4): 3F 537,
 # 2F 623, 1F 905, B2 763, B1 866 Pixel, ausserhalb des Kartenfelds je 0. Schwelle = die Haelfte.
 set(_karte_skript "W3,S0.3,W2,Q0.3,W4")
@@ -130,6 +140,21 @@ foreach(_f ${_faelle})
     if(NOT _outb MATCHES "AUSSEN: 0$")
         string(APPEND _fehler "${_n} ROOM${_raum}: Unterschied ausserhalb des Marken-Fensters: ${_outb}\n")
     endif()
+    # d) Farbe der Karte = Palettenfarben der RE2-TIM (Flach-Weg, kein Raumlicht). Gemessen 2026-10-11 (neue
+    #    exe, Messkopie): 1F Cut 3 88 von 88, 1F Cut 0 48 von 48 Palettenpixel (uebrige Raeume: Dossier 8.5); Mittel
+    #    1F Cut 3 (101,102,93) Summe 297, Cut 0 (105,107,96) Summe 310 (dasselbe Blatt, anderes
+    #    Raumlicht) — gegen die alte exe: 1F (37,57,77) 0/81, B2 (68,70,56) 1/177, B1 (61,64,59) 0/169.
+    execute_process(COMMAND "${RE15_LICHT_TOOL}" "${_dir_mit}/raum.ppm" "${_dir_ohne}/raum.ppm"
+                            ${_x0} ${_y0} ${_x1} ${_y1} ${_raum} ${_min}
+                    TIMEOUT 60 RESULT_VARIABLE _rvl OUTPUT_VARIABLE _outl)
+    string(STRIP "${_outl}" _outl)
+    message(STATUS "kartenitems_bild ${_n} ROOM${_raum} Cut ${_cut} Licht: ${_outl}")
+    if(NOT _rvl EQUAL 0)
+        string(APPEND _fehler "${_n} ROOM${_raum}: Kartenpixel sind keine Palettenfarben (Raumlicht/Tint statt Flach-Weg): ${_outl}\n")
+    endif()
+    if(_outl MATCHES "Summe ([0-9]+)")
+        set(_summe_${_n} "${CMAKE_MATCH_1}")
+    endif()
     # Kartenschirm je Etage: MIT Plan-Bit zusaetzlich alle unbesuchten Raeume des Blatts (RE2 @0x8006E71C)
     if(NOT EXISTS "${_dir_mit}/karte.bmp" OR NOT EXISTS "${_dir_ohne}/karte.bmp")
         string(APPEND _fehler "${_n} ROOM${_raum}: kein Kartenschirm-Abzug\n")
@@ -144,6 +169,24 @@ foreach(_f ${_faelle})
         endif()
     endif()
 endforeach()
+
+# ROOM1030 Cut 3 gegen Cut 0 (Raumlicht (54,54,59) gegen (89,89,94), Faktor 1,65 — Abnahme 0 Abschnitt 4):
+# ohne Raumlicht ist die Karte in beiden Cuts gleich hell. Gemessen 2026-10-11: Summe 297 (Cut 3, 88 Pixel)
+# und 310 (Cut 0, 48 Pixel); Abstand 13. Zulaessig: 1/10 der Summe (29) fuer die Texel-Abtastung bei
+# verschiedener Bildgroesse — ein NCCT-Unterschied von 1,65 waere ein Abstand von rund 120.
+if(DEFINED _summe_1f AND DEFINED _summe_1f0)
+    math(EXPR _abstand "${_summe_1f} - ${_summe_1f0}")
+    if(_abstand LESS 0)
+        math(EXPR _abstand "0 - ${_abstand}")
+    endif()
+    math(EXPR _zul "${_summe_1f} / 10")
+    message(STATUS "kartenitems_bild 1F Cut 3 Summe ${_summe_1f} gegen Cut 0 Summe ${_summe_1f0}: Abstand ${_abstand} (zulaessig ${_zul})")
+    if(_abstand GREATER _zul)
+        string(APPEND _fehler "1F: Karte in Cut 3 und Cut 0 verschieden hell (${_summe_1f} gegen ${_summe_1f0}) — Raumlicht statt Flach-Weg\n")
+    endif()
+else()
+    string(APPEND _fehler "1F: Helligkeit in Cut 3/Cut 0 nicht gemessen\n")
+endif()
 
 # ---- Teil 2: echter Weg in ROOM1140 -----------------------------------------------------------------
 # Spieler (-2050,-9900) Blick +z (rot 3071, Zone x -2551..-1551 z -9510..-8510; unit_r36_kartenitems D).
@@ -176,4 +219,4 @@ endif()
 if(_fehler)
     message(FATAL_ERROR "kartenitems_bild: das SICHTBARE Ergebnis stimmt nicht.\n${_fehler}")
 endif()
-message(STATUS "kartenitems_bild: alle fuenf Karten an der Marke gezeichnet, Aufnahme am echten Weg schaltet 3F frei")
+message(STATUS "kartenitems_bild: alle fuenf Karten an der Marke gezeichnet (Palettenfarben, kein Raumlicht), Aufnahme am echten Weg schaltet 3F frei")
