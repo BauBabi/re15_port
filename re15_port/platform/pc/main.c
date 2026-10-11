@@ -5049,8 +5049,9 @@ re_title:;
          * RE2-Farbband-Ablauf (re15_savepoint_examine) — ohne Memory Card (Item 0x21) nur den
          * Hinweis, mit Karte die Frage. re15_savepoint_poll meldet das JA genau einmal
          * (RE2 @0x80051bb4-dc: Antwortbit 0 = 0 -> Speicherbildschirm), dann oeffnet hier der
-         * Bildschirm. Die Karte wird NICHT verbraucht (PORT-WAHL, Nutzerwunsch; RE2 verbraucht
-         * das Farbband in MEM_CARD.BIN @0x801C118C-0x801C11E0).
+         * Bildschirm. Seit Runde 36 (Spur I) wird die Karte beim Speichern verbraucht wie das
+         * RE2-Farbband (MEM_CARD.BIN @0x801C118C-0x801C11E0; re15_inventar_r36_karte_verbrauchen,
+         * Abzug unten vor dem Bau des Blocks).
          * Dossier: analysis/befunde_runde33/speichern_memory_card.md. */
         if (re15_savepoint_poll()) re15_savepoint_set_pending(1);
         /* TEST-HAKEN (kein Spielverhalten): RE15_SAVE_TEST_AGAIN=<frame> feuert einen ZWEITEN

@@ -74,8 +74,8 @@ uint8_t re15_savepoint_loc(void);                    /* der gelatchte Index (0/1
  * ("If I had an Ink Ribbon, I could save my progress..."), mit Farbband Meldung (0x100,1)
  * @0x8009F01F ("... Will you use the Ink Ribbon?" + Ja/Nein) und fordert bei Ja den
  * Speicherbildschirm an (@0x80051bd0-dc). Der Port ersetzt das Farbband durch die
- * Memory Card (Item 0x21). Die Karte wird NICHT verbraucht — PORT-WAHL auf Nutzerwunsch
- * (RE2 verbraucht in MEM_CARD.BIN @0x801C118C-0x801C11E0). */
+ * Memory Card (Item 0x21). Seit Runde 36 (Spur I) wird sie beim Speichern verbraucht wie
+ * das RE2-Farbband (MEM_CARD.BIN @0x801C118C-0x801C11E0; re15_inventar_r36_karte_verbrauchen). */
 #define RE15_SAVEPOINT_CARD_ITEM 0x21   /* "Memory Card": Namenstabelle @0x800C495C[0x21] ->
                                          * DEBUG.BIN @0x800C4BEA `29 41 49 4b 4e 55 00 1f 3d 4e 40` */
 #define RE15_SAVEPOINT_MSG_ID    0xFE   /* PORT-Platz in der Nachrichtentabelle fuer den
