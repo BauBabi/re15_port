@@ -24,8 +24,11 @@
  * Aufruf: probe_r36_karte <teil>
  *   messung   Mess-Ausgabe (kein Urteil) fuer alle sechs Punkte
  *   treppe | marker11d0 | r1190 | tuer11c0 | teile1110 | fahrstuhl   Riegel je Punkt
+ *   kabine    Riegel 7 (Nachbesserung 1, Abnahme 0 M1): Kabine bei UNBEKANNTER Etage
+ *             (Debug-Menue-Sprung "108 ELEVATOR" / 4020, v8-Hebung)
  *   bild <bmp> ...   Bildauswertung fuer tests/integration/test_r36_karte.cmake
  * ========================================================================== */
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +47,7 @@
 #include "re15_savedata.h"
 #include "re15_memcard.h"
 #include "re15_karte_r36.h"   /* Bit-Bereiche des Etagen-Felds (Riegel 6) */
+#include "re15_debug_menu.h"  /* Riegel 7: Debug-Menue-Sprung (Nachbesserung 1) */
 
 static int g_fail = 0;
 extern int re15_map_zone_bit_test(int zonen_index);   /* re15_map_zones.c (Riegel-Zugriff) */
@@ -777,6 +781,154 @@ static int teil_fahrstuhl(void)
     return g_fail;
 }
 
+/* ---- Riegel 7 (Nachbesserung 1, Abnahme 0 M1): Kabine bei UNBEKANNTER Etage --------------------
+ * Abnahme 0: Debug-Menue JUMP "108 ELEVATOR" (RE15_DEBUG_JUMP=1080@gp) aus ROOM1100 ohne
+ * Bank-3-Bits 54/55/56 -> die Karte zeigte die Kabine auf 2F UND 3F als besucht, das 3F-Blatt wurde
+ * dadurch anwaehlbar. Hier derselbe Weg: Spawn aus dem DEBUG.BIN-Tabellensatz
+ * (re15_debug_menu_jump_spawn = JUMP-Executor FUN_8001d600, X @0x8001d6a8 / Z @0x8001d720 /
+ * Band @0x8001d798), davor ein Raum, der KEIN Etagenraum der Kabine ist, keine Etagen-Bits des Spiels
+ * (scd_vm_init in betrete() loescht alle Flags). Soll: die Kabine steht NUR auf dem Blatt des
+ * Seiten-Setzers (1080: Blatt 2, `ori v0,zero,0x2` @0x8004b684 -> `sb v0,0x260e` @0x8004b88c;
+ * 4020: Blatt 8, `ori v1,zero,0x8` @0x8004bdb4 -> `sb v1,0x260e` @0x8004bdbc), die anderen Etagen
+ * bleiben unbesucht und als Blatt unbekannt; ein v8-Stand (Zonen-Bit ohne Etage) setzt kein
+ * Kabinen-Etagen-Bit. */
+static int debug_sprung(unsigned ziel, unsigned von, int32_t vx, int32_t vz, mess_t *m,
+                        int32_t *sx, int32_t *sz)
+{
+    static uint8_t *dbin;
+    static size_t dbsz;
+    int band = 0;
+    if (!dbin) {
+        char p[600];
+        snprintf(p, sizeof p, "%s/BIN/DEBUG.BIN", RE15_ASSET_PSX_DIR);
+        dbin = slurp(p, &dbsz);
+        if (!dbin) return 0;
+        re15_debug_menu_reset();
+        re15_debug_menu_set_bin(dbin, (unsigned)dbsz);
+    }
+    if (!re15_debug_menu_point_at(ziel) || !re15_debug_menu_jump_spawn(sx, sz, &band)) return 0;
+    if (!betrete(von, vx, vz, 0)) return 0;
+    miss_hier(von, vx, vz, m);
+    if (!betrete(ziel, *sx, *sz, band)) return 0;
+    miss_hier(ziel, *sx, *sz, m);
+    return 1;
+}
+
+static int floor_bit_an(int b)
+{
+    uint8_t f[16];
+    if (b < 0) return -1;
+    re15_map_visited_floor_export(f);
+    return (f[b >> 3] >> (b & 7)) & 1;
+}
+
+static uint32_t byte_summe(const void *p, size_t n)
+{
+    const uint8_t *b = (const uint8_t *)p;
+    uint32_t s = 0;
+    while (n--) s += *b++;
+    return s;
+}
+
+/* Bit der HAUPT-Zonenzeile (ohne Etagen-Marke) eines Raums, -1 = keine. */
+static int haupt_zonenbit(unsigned room)
+{
+    int i;
+    for (i = 0; i < re15_map_zone_count(); i++) {
+        const re15_map_zone_t *zn = re15_map_zone_by_index(i);
+        if (zn && zn->room == room && !zn->etage) return re15_map_zone_bit_test(i);
+    }
+    return -1;
+}
+
+static int teil_kabine(void)
+{
+    mess_t m;
+    int32_t sx = 0, sz = 0;
+    char t[320];
+    const int k1 = re15_karte_r36_fahrstuhl_bit(0x1080, 2), k2 = re15_karte_r36_fahrstuhl_bit(0x1080, 3),
+              k3 = re15_karte_r36_fahrstuhl_bit(0x1080, 4), l8 = re15_karte_r36_fahrstuhl_bit(0x4020, 8),
+              l9 = re15_karte_r36_fahrstuhl_bit(0x4020, 9), l10 = re15_karte_r36_fahrstuhl_bit(0x4020, 10);
+    printf("=== Riegel 7: Kabine bei unbekannter Etage (Debug-Sprung, v8-Hebung; Abnahme 0 M1) ===\n");
+    s_nflags = 0;
+
+    /* (a) JUMP "108 ELEVATOR" aus ROOM1100 (2F-Gang, Blatt 3 - kein Etagenraum der Kabine) */
+    re15_map_visited_reset();
+    if (!debug_sprung(0x1080, 0x1100, -26130, -11036, &m, &sx, &sz)) {
+        CHECK("Debug-Sprung ROOM1100 -> ROOM1080 (DEBUG.BIN-Satz)", 0); return 1;
+    }
+    snprintf(t, sizeof t, "JUMP 108 ELEVATOR aus ROOM1100, Spawn DEBUG.BIN (%d,%d): gezeigt Blatt %d, "
+             "1F-Kabine %s, 2F-Kabine %s, 3F-Kabine %s", (int)sx, (int)sz, m.page,
+             zustand(re15_map_rect_state(2, 9)), zustand(re15_map_rect_state(3, 4)),
+             zustand(re15_map_rect_state(4, 0)));
+    CHECK(t, m.page == 2 && re15_map_rect_state(2, 9) == RE15_MAP_RECT_CURRENT &&
+             re15_map_rect_state(3, 4) == RE15_MAP_RECT_UNVISITED &&
+             re15_map_rect_state(4, 0) == RE15_MAP_RECT_UNVISITED);
+    snprintf(t, sizeof t, "Kabinen-Etagen-Bits nach dem Sprung: 1F(%d)=%d 2F(%d)=%d 3F(%d)=%d - nur das "
+             "Blatt des Seiten-Setzers (Blatt 2 @0x8004b684)", k1, floor_bit_an(k1), k2, floor_bit_an(k2),
+             k3, floor_bit_an(k3));
+    CHECK(t, floor_bit_an(k1) == 1 && floor_bit_an(k2) == 0 && floor_bit_an(k3) == 0);
+    snprintf(t, sizeof t, "3F-Blatt (4) nach dem Sprung NICHT anwaehlbar (nie auf 3F) - bekannt %d",
+             re15_map_page_known(4));
+    CHECK(t, !re15_map_page_known(4));
+    /* Fahrt nach 3F: aus der Kabine in ROOM1120 (Kabinen-Tuer 2 @0x04C2 -> Spawn (1300,0,7300)) */
+    miss(0x1120, 1300, 7300, 0, &m);
+    snprintf(t, sizeof t, "danach mit dem Fahrstuhl auf 3F angekommen: 3F-Kabine %s, 2F-Kabine %s, "
+             "1F-Kabine %s", zustand(re15_map_rect_state(4, 0)), zustand(re15_map_rect_state(3, 4)),
+             zustand(re15_map_rect_state(2, 9)));
+    CHECK(t, re15_map_rect_state(4, 0) == RE15_MAP_RECT_VISITED &&
+             re15_map_rect_state(3, 4) == RE15_MAP_RECT_UNVISITED &&
+             re15_map_rect_state(2, 9) == RE15_MAP_RECT_VISITED);
+
+    /* (b) der zweite Fahrstuhl: JUMP nach ROOM4020 aus ROOM4010 (Blatt 8, kein Etagenraum) */
+    re15_map_visited_reset();
+    re15_game_flag_set(3, 0x93, 0); re15_game_flag_set(3, 0x94, 0); re15_game_flag_set(3, 0x95, 0);
+    if (!debug_sprung(0x4020, 0x4010, -22574, -21278, &m, &sx, &sz)) {
+        CHECK("Debug-Sprung ROOM4010 -> ROOM4020 (DEBUG.BIN-Satz)", 0); return 1;
+    }
+    snprintf(t, sizeof t, "JUMP 4020 aus ROOM4010, Spawn DEBUG.BIN (%d,%d): gezeigt Blatt %d, Blatt 8 %s, "
+             "Blatt 9 %s, Blatt 10 %s", (int)sx, (int)sz, m.page, zustand(re15_map_rect_state(8, 2)),
+             zustand(re15_map_rect_state(9, 13)), zustand(re15_map_rect_state(10, 3)));
+    CHECK(t, m.page == 8 && re15_map_rect_state(8, 2) == RE15_MAP_RECT_CURRENT &&
+             re15_map_rect_state(9, 13) == RE15_MAP_RECT_UNVISITED &&
+             re15_map_rect_state(10, 3) == RE15_MAP_RECT_UNVISITED);
+    snprintf(t, sizeof t, "4020-Etagen-Bits: Blatt 8 (%d)=%d, 9 (%d)=%d, 10 (%d)=%d - nur Blatt 8 "
+             "(@0x8004bdb4); Blatt 9/10 bekannt %d/%d", l8, floor_bit_an(l8), l9, floor_bit_an(l9), l10,
+             floor_bit_an(l10), re15_map_page_known(9), re15_map_page_known(10));
+    CHECK(t, floor_bit_an(l8) == 1 && floor_bit_an(l9) == 0 && floor_bit_an(l10) == 0 &&
+             !re15_map_page_known(9) && !re15_map_page_known(10));
+
+    /* (c) v8-Stand (Zonen-Bits ohne Etagen-Feld): die Kabinen waren besucht, die Etage steht
+     * nirgends - kein Kabinen-Etagen-Bit (wie die alten v9-Bits 3/4/5, Riegel 6). */
+    {
+        static uint8_t roh[sizeof(re15_savedata_t)];
+        re15_savedata_t sd;
+        uint32_t ck;
+        size_t off = offsetof(re15_savedata_t, visited_floor);
+        int z80 = haupt_zonenbit(0x1080), z20 = haupt_zonenbit(0x4020), b, n = 0;
+        memset(&sd, 0, sizeof sd);
+        sd.magic = RE15_SAVE_MAGIC; sd.version = 8; sd.room = 0x1150; sd.player_hp = 100;
+        if (z80 >= 0) sd.visited[z80 >> 3] |= (uint8_t)(1u << (z80 & 7));
+        if (z20 >= 0) sd.visited[z20 >> 3] |= (uint8_t)(1u << (z20 & 7));
+        memset(roh, 0xA5, sizeof roh);           /* Alt-Block: Pruefwort bei visited_floor */
+        memcpy(roh, &sd, off);
+        ck = byte_summe(roh, off);
+        memcpy(roh + off, &ck, sizeof ck);
+        memcpy(&sd, roh, sizeof sd);
+        CHECK("v8-Stand mit Kabinen-Zonen-Bits (1080/4020) wird angenommen und gehoben",
+              z80 >= 0 && z20 >= 0 && re15_savedata_validate(&sd) == 0 &&
+              sd.version == RE15_SAVE_VERSION);
+        for (b = RE15_KARTE_R36_FAHRSTUHL_BASIS;
+             b < RE15_KARTE_R36_FAHRSTUHL_BASIS + re15_karte_r36_fahrstuhl_bit_count(); b++)
+            if ((sd.visited_floor[b >> 3] >> (b & 7)) & 1) n++;
+        snprintf(t, sizeof t, "v8-Hebung: Kabinen-Etagen-Bits %d..%d gesetzt %d (vorher alle 6)",
+                 RE15_KARTE_R36_FAHRSTUHL_BASIS,
+                 RE15_KARTE_R36_FAHRSTUHL_BASIS + re15_karte_r36_fahrstuhl_bit_count() - 1, n);
+        CHECK(t, n == 0);
+    }
+    return g_fail;
+}
+
 /* ===================================================================================
  * WERKZEUG fuer den echten Lauf (tests/integration/test_r36_karte.cmake)
  * =================================================================================== */
@@ -945,6 +1097,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "tuer11c0")) return teil_tuer11c0();
     if (!strcmp(teil, "teile1110")) return teil_teile1110();
     if (!strcmp(teil, "fahrstuhl")) return teil_fahrstuhl();
+    if (!strcmp(teil, "kabine")) return teil_kabine();
     printf("unbekannter Teil %s\n", teil);
     return 2;
 }

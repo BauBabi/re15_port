@@ -380,10 +380,86 @@ obwohl der Spieler dort nie im Fahrstuhl war. Vermutete Ursache laut Abnahme: be
 alle Kabinen-Bits 112..114 (4020: 115..117).
 
 ### Fortschritt Nachbesserung 1
-- [ ] Code-Stelle gelesen, Ursache am Code bestaetigt
-- [ ] Messung vorher (Sonde + echte exe, Debug-Sprung)
-- [ ] RE-Beleg selbst disassembliert (Seiten-Setzer Kabine 1080 / 4020, Etagen-Bits der Kabine)
+- [x] Code-Stelle gelesen, Ursache am Code bestaetigt (+ zwei Nebenpfade derselben Ursache, s.u.)
+- [x] Messung vorher (Sonde + echte exe, Debug-Sprung)
+- [x] RE-Beleg selbst disassembliert (Seiten-Setzer Kabine 1080 / 4020)
 - [ ] Aenderung
-- [ ] Riegel (Debug-Sprung / Kabine ohne Etagenraum davor), Gegenprobe am alten Stand ROT
+- [x] Riegel `unit_r36_karte_kabine` (Debug-Sprung / v8-Hebung) - am alten Stand ROT (s.u.)
 - [ ] Messung nachher (Sonde + echte exe)
 - [ ] gezielte Tests gruen
+
+### N1.1 Ursache (am Code, HEAD 5064c3e8)
+Debug-Sprung 1100 -> 1080: `re15_map_zone_update(0x1080)` -> `re15_karte_fahrstuhl_blatt(0x1080)` =
+-1 (Vorraum 1100 ist kein Etagenraum, Bank 3 Bit 54/55/56 leer) -> `floor_row` nimmt die erste
+der drei Band-0-Zeilen (Blatt 2) -> Bit 112; danach die "gleiche Baender"-Schleife
+(`re15_map_visited_mark_at`, re15_map_zones.c:436-441) -> Bits 112, 113, 114. Fuer 4020 ebenso
+(115..117). Zwei weitere Pfade fuehren auf dasselbe Bild "Kabine auf einer Etage, wo man nie war":
+* `re15_map_page_known` (Kartenblatt anwaehlbar) zaehlt jede Zonenzeile mit Zonen-Bit, auch die
+  GAST-Zeilen der Kabine auf Blatt 3/4 (8/9/10) - sie teilen das Zonen-Bit der Kabine (zone_bit nach
+  Raumnummer). Ein Besuch der Kabine machte damit 2F und 3F anwaehlbar, unabhaengig von den
+  Kabinen-Bits (Abnahme: "3F wird dadurch sogar als Blatt anwaehlbar"). Gemessen unten: bekannt 1.
+* `re15_map_visited_floor_heben` (v7/v8-Stand -> v9): "einbaendige Orte exakt" setzte fuer die
+  Kabinen-Zonenzeile ALLE Etagenzeilen - seit Runde 36 sind das die Kabinen-Bits 112..117. Ein
+  v8-Stand mit besuchter Kabine zeigte sie damit auf allen Etagen (und das Dossier sagte unter
+  "Fuer den Nutzer" das Gegenteil: "erscheint in einem alten Stand auf KEINER Etage").
+
+### N1.2 Messung vorher
+Riegel `probe_r36_karte kabine` am unveraenderten Motor (Ausgabe
+`M_karte_werkzeug/nb1_kabine_vorher.txt`):
+```
+FAIL: JUMP 108 ELEVATOR aus ROOM1100, Spawn DEBUG.BIN (-13650,-900): gezeigt Blatt 2, 1F-Kabine AKTUELL, 2F-Kabine besucht, 3F-Kabine besucht
+FAIL: Kabinen-Etagen-Bits nach dem Sprung: 1F(112)=1 2F(113)=1 3F(114)=1 - nur das Blatt des Seiten-Setzers (Blatt 2 @0x8004b684)
+FAIL: 3F-Blatt (4) nach dem Sprung NICHT anwaehlbar (nie auf 3F) - bekannt 1
+FAIL: danach mit dem Fahrstuhl auf 3F angekommen: 3F-Kabine besucht, 2F-Kabine besucht, 1F-Kabine besucht
+FAIL: JUMP 4020 aus ROOM4010, Spawn DEBUG.BIN (-21400,-23400): gezeigt Blatt 8, Blatt 8 AKTUELL, Blatt 9 besucht, Blatt 10 besucht
+FAIL: 4020-Etagen-Bits: Blatt 8 (115)=1, 9 (116)=1, 10 (117)=1 - nur Blatt 8 (@0x8004bdb4); Blatt 9/10 bekannt 1/1
+PASS: v8-Stand mit Kabinen-Zonen-Bits (1080/4020) wird angenommen und gehoben
+FAIL: v8-Hebung: Kabinen-Etagen-Bits 112..117 gesetzt 6 (vorher alle 6)
+```
+Echte exe (Weg der Abnahme, `M_karte_werkzeug/nb1_debuglauf.sh`): Spielstand ROOM1100 (-26130,-11036)
+ohne Flags, LOAD, `RE15_DEBUG_JUMP=1080@gp` (Log: `[debug-menu] JUMP -> 108 ELEVATOR (ROOM1080)
+spawn=(-13650,0,-900) cut=0`), MAP in der Kabine, Abzug je Blatt (`RE15_PAD_AT` -, `100:U`,
+`100:U,108:U`), Farbklassen mit `probe_r36_karte farben` (`nb1_exe_vorher.txt`):
+```
+Blatt 1F  Kasten (109,134)-(118,143) rot=54 besucht=0          <- Kabine aktuell
+Blatt 2F  Kasten (109,134)-(118,143) rot=0  besucht=64         <- 2F-Kabine BESUCHT (nie dort)
+Blatt 3F  Kasten (127,137)-(136,146) rot=0  besucht=64         <- 3F-Kabine BESUCHT, einziger Kasten
+```
+Bilder `M_karte_bilder/nb1_vorher_debugsprung_2F_x2.png` / `_3F_x2.png` (3F: "POLICE STATION 3F" mit
+der Kabine als einzigem gruenen Kasten). = Befund der Abnahme reproduziert.
+
+### N1.3 RE-Beleg (selbst disassembliert, `re15_disasm.py` auf info/Re1.5/PSX.EXE)
+Der Kartenschirm waehlt das Blatt ueber eine Stage-Tabelle (ghidra1_V2.txt, FUN_8004998c-Umgebung):
+```
+80049968  lui v0,0x800b ; 8004996c lh v0,0x0fe0(v0)      ; DAT_800b0fe0 = Stage
+8004997c  sll v0,v0,2   ; 80049984 addiu at,at,0x4c0c     ; Tabelle @0x80074c0c
+8004998c  lw v0,0(at)   ; 80049994 jalr v0
+@0x80074c0c: [0] 0x8004b568  [1] 0x8004b8a0  [2] 0x8004b9d4  [3] 0x8004bc9c  [4] 0x8004bdd4  [5] 0x8004bf70
+```
+Stage 0 (ROOM1xxx), Seiten-Setzer 0x8004b568:
+```
+8004b568  lui v1,0x800b ; 8004b56c lh v1,0x0fe2(v1)      ; DAT_800b0fe2 = Raumindex
+8004b574  sltiu v0,v1,0x26 ; 8004b578 beq v0,zero,0x8004b898
+8004b584  addiu at,at,0x103c ... 8004b594 jr v0           ; Tabelle @0x8001103c
+@0x8001103c[8] = 0x8004b63c   (ROOM1080 = Raumindex 8) -> Fall-Kette 8,9,10,11 (je sb v0,0x260d)
+8004b678  lui v1,0x800b ; 8004b67c lbu v1,0x0fe2(v1)
+8004b680  j 0x8004b888
+8004b684  ori v0,zero,0x2                                 ; Delay-Slot: Blatt 2
+8004b888  lui at,0x800b ; 8004b88c sb v0,0x260e(at)      ; DAT_800b260e = Blatt
+8004b894  sb v1,0x260d(at) ; 8004b898 jr ra
+```
+Stage 3 (ROOM4xxx), Seiten-Setzer 0x8004bc9c:
+```
+8004bc9c  lui v1,0x800b ; 8004bca0 lh v1,0x0fe2(v1) ; 8004bca8 sltiu v0,v1,0xc
+8004bcb8  addiu at,at,0x1184 ... 8004bcc8 jr v0           ; Tabelle @0x80011184
+@0x80011184[2] = 0x8004bcf8   (ROOM4020 = Raumindex 2) -> Fall-Kette 2..11
+8004bdb0  lbu v0,0x0fe2(v0)
+8004bdb4  ori v1,zero,0x8                                 ; Blatt 8
+8004bdbc  sb v1,0x260e(at) ; 8004bdc0 addiu v0,v0,65 ; 8004bdc8 sb v0,0x260d(at) ; 8004bdcc jr ra
+```
+Beide Wege lesen WEDER Bank 3 (54/55/56 bzw. 0x93..0x95) NOCH den alten Raum DAT_800b0fe6: das
+Original zeigt die Kabine IMMER auf Blatt 2 bzw. 8. Der Port waehlt bei bekannter Etage das Blatt
+dieser Etage (Runde 35 G, PORT-WAHL); bei UNBEKANNTER Etage ist das Blatt des Originals die belegte
+Wahl. Die Etage selbst ist dann auch im Original unbestimmt: ROOM1080 sub10 ("Tuer auf der
+aktuellen Etage") feuert nur unter Ck(3,54/55/56,1) (@0x08AC/0x08BC/0x08CC,
+analysis/befunde_2026-09-26/fahrstuhl-faehrt-nicht.md §2.4) - ohne Bit tut sie nichts.

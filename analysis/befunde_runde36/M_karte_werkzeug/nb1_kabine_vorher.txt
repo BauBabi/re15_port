@@ -1,0 +1,9 @@
+=== Riegel 7: Kabine bei unbekannter Etage (Debug-Sprung, v8-Hebung; Abnahme 0 M1) ===
+  FAIL: JUMP 108 ELEVATOR aus ROOM1100, Spawn DEBUG.BIN (-13650,-900): gezeigt Blatt 2, 1F-Kabine AKTUELL, 2F-Kabine besucht, 3F-Kabine besucht
+  FAIL: Kabinen-Etagen-Bits nach dem Sprung: 1F(112)=1 2F(113)=1 3F(114)=1 - nur das Blatt des Seiten-Setzers (Blatt 2 @0x8004b684)
+  FAIL: 3F-Blatt (4) nach dem Sprung NICHT anwaehlbar (nie auf 3F) - bekannt 1
+  FAIL: danach mit dem Fahrstuhl auf 3F angekommen: 3F-Kabine besucht, 2F-Kabine besucht, 1F-Kabine besucht
+  FAIL: JUMP 4020 aus ROOM4010, Spawn DEBUG.BIN (-21400,-23400): gezeigt Blatt 8, Blatt 8 AKTUELL, Blatt 9 besucht, Blatt 10 besucht
+  FAIL: 4020-Etagen-Bits: Blatt 8 (115)=1, 9 (116)=1, 10 (117)=1 - nur Blatt 8 (@0x8004bdb4); Blatt 9/10 bekannt 1/1
+  PASS: v8-Stand mit Kabinen-Zonen-Bits (1080/4020) wird angenommen und gehoben
+  FAIL: v8-Hebung: Kabinen-Etagen-Bits 112..117 gesetzt 6 (vorher alle 6)

@@ -24,7 +24,11 @@ endif()
 #     unit_r36_karte_tuer11c0    P4: Marke 11B0<->11C0 waagerecht, alle 5 Punkte auf der gemalten Wand
 #     unit_r36_karte_teile1110   P5: kleine Raeume erst nach Betreten besucht; Speichern/Laden; alter Stand
 #     unit_r36_karte_fahrstuhl   P6: Kabine nur auf der Einstiegs-Etage besucht (1080 und 4020)
-foreach(_r36m_teil treppe marker11d0 r1190 tuer11c0 teile1110 fahrstuhl)
+#     unit_r36_karte_kabine      P6 (Nachbesserung 1, Abnahme 0 M1): Etage UNBEKANNT (Debug-Sprung
+#                                "108 ELEVATOR" aus ROOM1100 / 4020 aus ROOM4010, Spawn aus DEBUG.BIN):
+#                                Kabine nur auf dem Blatt des Seiten-Setzers (2 bzw. 8), andere Etagen
+#                                unbesucht und als Blatt nicht anwaehlbar; v8-Hebung ohne Kabinen-Bits
+foreach(_r36m_teil treppe marker11d0 r1190 tuer11c0 teile1110 fahrstuhl kabine)
     add_test(NAME unit_r36_karte_${_r36m_teil} COMMAND probe_r36_karte ${_r36m_teil})
     set_tests_properties(unit_r36_karte_${_r36m_teil} PROPERTIES TIMEOUT 120)
 endforeach()
