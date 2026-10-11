@@ -4,6 +4,7 @@
  *=======================================================================*/
 #include "re15_map_owned.h"
 #include "re15_scd.h"        /* re15_game_flag_get */
+#include "re15_kartenitems_r36.h"  /* Runde 36 Spur N: Polizei-Lageplaene (Bank-9-Bits 87..91) */
 
 /*-------------------------------------------------------------------------
  * DIE FUNDSTELLEN — GESUCHT, NICHT GESETZT.
@@ -90,7 +91,9 @@ int re15_map_owned_page(unsigned page)
         if (s_map_funde[i].page == page &&
             re15_game_flag_get(s_map_funde[i].bank, s_map_funde[i].bit))
             return 1;
-    return 0;
+    /* Runde 36 Spur N: die fuenf Polizei-Lageplaene (NUTZER-VORGABE, keine RDT-Fundstelle — deshalb
+     * NICHT in s_map_funde, deren Riegel nur RDT-belegte Stellen zulaesst). */
+    return re15_kartenitems_r36_blatt_besitz(page);
 }
 
 uint32_t re15_map_owned_bits(void)
@@ -101,5 +104,5 @@ uint32_t re15_map_owned_bits(void)
         if (s_map_funde[i].page < 32 &&
             re15_game_flag_get(s_map_funde[i].bank, s_map_funde[i].bit))
             m |= (uint32_t)1u << s_map_funde[i].page;
-    return m;
+    return m | re15_kartenitems_r36_besitz_bits();   /* Runde 36 Spur N */
 }

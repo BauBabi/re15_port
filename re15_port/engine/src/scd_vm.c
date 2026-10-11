@@ -54,6 +54,7 @@
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Szene ROOM10F0 (cut_10f0.c) */
 #include "re15_irons_tod.h"  /* Runde 35 Spur L: Irons-Todesszene + Montage (irons_tod_1150.c) */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: Fenster ROOM1120 (fenster_1120.c) */
+#include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte, Ereignis 28 (kartenitems_r36.c) */
 #include "re15_zombie_abstand.h" /* Runde 35 Spur F: Zombie-Abstand ROOM1010/1220 (zombie_abstand_r35.c) */
 #include "re15_ziel1190.h"   /* Runde 35/36 Spur H: Zielscheiben-Texte ROOM1190/1191 (ziel_1190.c) */
 #include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
@@ -642,6 +643,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_fenster1120_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 35 Spur M */
     if (!pc) pc = re15_szl_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 36 Spur J: 22/23 in ROOM11B0 */
     if (!pc) pc = re15_schluessel_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur Q: 11B0 Ereignis 25 */
+    if (!pc) pc = re15_kartenitems_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur N: Karte, Ereignis 28 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -4274,6 +4276,10 @@ static int op_obj_model_set(scd_thread_t *t)
                                 ? 0u   /* @0x8004098c `sw zero,0x0(a1)` */
                                 : (uint16_t)(((uint16_t)t->pc[6] |
                                               ((uint16_t)t->pc[7] << 8)) | 1u);
+        /* ATTRIBUT-WORT pc[8..9] -> Pool+0x0c (LAB_80040914 @0x800409a8 `lh v0,0x8(a2)` /
+         * @0x800409b0 `sw v0,0xc(a1)`, in BEIDEN Zweigen, auch bei der Zweit-Installation):
+         * Flach-Bit 0x10 / Halbtransparenz 0x2 des Zeichners FUN_8002c18c (re15_scd.h). Runde 36 Spur N. */
+        g_scd.props[i].attr   = (uint16_t)((uint16_t)t->pc[8] | ((uint16_t)t->pc[9] << 8));
 #ifdef RE15_PLATFORM_PC
         fprintf(stderr, "[scd] Obj_model_set[%d] id=0x%02X type=%u pos=(%d,%d,%d) rot=(%d,%d,%d)%s\n",
                 i, obj_id, obj_type, px, py, pz, rx, ry, rz,
