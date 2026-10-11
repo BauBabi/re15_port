@@ -626,7 +626,7 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
     `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 14.89 sec; mit den 2050-Pins der Sonde).
   - `ctest --test-dir re15_port/build -R "integration_r36_dachkiste" --timeout 1800 --output-on-failure`:
-    INTEGRATION_ERGEBNIS_NB2 (acht Laeufe leon/elza/west/fall3050/weg2040/treppe2040/fall2050/weg2020).
+    `1/1 Test #572: integration_r36_dachkiste ........   Passed  804.83 sec` / `100% tests passed, 0 tests failed out of 1` (acht Laeufe leon/elza/west/fall3050/weg2040/treppe2040/fall2050/weg2020, Laufordner re15_port/build/r36_dachkiste_wd/lauf_eac1e567).
 * Gezielte Laeufe, Stand Nachbesserung 1 (zum Vergleich):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
     `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 17.36 sec; unit_r36_dachkiste_zensus 8.80 s
