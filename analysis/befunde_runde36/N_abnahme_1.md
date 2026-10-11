@@ -187,6 +187,11 @@ Der Zweig gilt fuer JEDES Objekt mit Attribut-Wort `(attr & 0x12) == 0x10` — s
 | 1210 (6) | obj 0 Zellentuer `0a 00 10 00` @0x01E4E | 4341 | (21,19,14) S55 -> (52,46,35) S134 | vorher dunkelbraune Flaeche, nachher die Tuer mit Gitterfenster in der Helligkeit des gemalten Hintergrunds |
 | 11E0 (5) | obj 0 Rolltor `fc 03 10 00` @0x016E6 | 5152 | (5,5,6) S16 -> (20,22,24) S67 | vorher fast schwarzer Block im Gang, nachher das gewellte Tor mit Lamellen |
 | 1200 (2) | obj 0/1 Schubladen-Fronten `0a 00 10 00` @0x007DA/@0x00804 | 2204 | (18,18,12) S49 -> (44,43,30) S119 | vorher fast schwarze Kaesten vor den gemalten Schraenken, nachher gleiche Helligkeit wie der Hintergrund |
+| 11B0 (5) | obj 2 (0x0010); die Kiste obj 0 (0x0012, halbtransparent) | 192 (Huelle x209..221 y160..177) | (15,18,13) S47 -> (33,40,28) S102 | nur das kleine Objekt obj 2 aendert sich; die Kiste (Bit 0x2) bleibt wie bisher — die Port-Entscheidung `(attr & 0x12) == 0x10` greift |
+
+(Der erste Lauf von 11B0 mit der neuen exe blieb in der Initialisierung haengen — debug.log 409 Byte, kein Sprung,
+exit 124 nach 240 s; das ist das Start-Flattern unter Last aus VERTRAG 1.5 (zeitgleich liefen Integrations-Suite
+und Spur-F-Laeufe anderer Sitzungen, 7 re15_pc-Prozesse); der Nachlauf lief im ersten Versuch in 47 s durch.)
 
 Das ist die Folge des Original-Mechanismus (Objekte mit Bit 0x10 ohne Raumlicht, Farbe 0x808080), nicht eine
 Spur-Konstante; die Spur hat die vorbestehende Abweichung (Port zeichnete alle 672 Obj_model_set ueber NCCT)
