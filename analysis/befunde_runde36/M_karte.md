@@ -409,6 +409,11 @@ der drei Band-0-Zeilen (Blatt 2) -> Bit 112; danach die "gleiche Baender"-Schlei
   Kabinen-Zonenzeile ALLE Etagenzeilen - seit Runde 36 sind das die Kabinen-Bits 112..117. Ein
   v8-Stand mit besuchter Kabine zeigte sie damit auf allen Etagen (und das Dossier sagte unter
   "Fuer den Nutzer" das Gegenteil: "erscheint in einem alten Stand auf KEINER Etage").
+Herkunft (git log -S, keine Regression aus v0.8.21..23, daher kein Bisect): die "gleiche
+Baender"-Schleife stammt aus 9b489408 ("Treppenhaus und Fahrstuhl waren vertauscht"), die
+Gast-Zeilen der Kabine aus 2fedfc46 ("Orte auf allen ihren Etagen setzen"), die Blatt-Bekannt-
+Schleife aus 9a285905 ("Ebenen-Blaettern"). Spur M (15fc56a5) band die Kabine an die Etage, liess
+die alte Regel aber fuer "Etage unbekannt" stehen - genau dieser Rest ist M1.
 
 ### N1.2 Messung vorher
 Riegel `probe_r36_karte kabine` am unveraenderten Motor (Ausgabe

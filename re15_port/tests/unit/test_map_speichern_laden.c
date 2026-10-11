@@ -324,9 +324,14 @@ int main(void)
             begehe_zeile(i);
         }
         {   unsigned char e[16]; re15_map_visited_floor_export(e);
+            /* Runde 36 Spur M, Nachbesserung 1: die Schleife oben betritt die Kabinen ROOM1080/
+             * ROOM4020 nicht aus einem Etagenraum (Etage unbekannt) - sie tragen dann nur noch das
+             * Bit des Original-Blatts (2 bzw. 8, Seiten-Setzer @0x8004b684 / @0x8004bdb4) statt
+             * aller drei. Zaehlung: 20 Etagen-Bits der uebrigen Leon-Zeilen + 2 Kabinen-Bits + 2
+             * Teil-Bits (ROOM1110/ROOM5090, re15_karte_r36.h) = 24 (vorher 20 + 6 + 2 = 28). */
             snprintf(t, sizeof t, "D2 ABDECKUNG: die laufende Sitzung traegt Etagen-Bits - %d",
                      bitzahl(e, 16));
-            CHECK(t, bitzahl(e, 16) >= 25); }
+            CHECK(t, bitzahl(e, 16) >= 24); }
         /* ... und dann wird der alte Stand geladen, OHNE Neustart (kein reset) */
         memset(&zur, 0, sizeof zur);
         CHECK("D2 der alte Stand wird gelesen", re15_memcard_load(KARTE, 0, &zur) == 0);

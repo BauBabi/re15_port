@@ -285,6 +285,17 @@ static int teil_messung(void)
     printf("    4020 aus 4000 (Blatt 8): Blatt 8 rect 2 %s | Blatt 9 rect 13 %s | Blatt 10 rect 3 %s\n",
            zustand(re15_map_rect_state(8, 2)), zustand(re15_map_rect_state(9, 13)),
            zustand(re15_map_rect_state(10, 3)));
+
+    /* Nachbesserung 1, NEBENBEFUND (nur Messung): andere Orte mit Gast-Zeilen machen ihr fremdes
+     * Etagenblatt ueber das raumweite Zonen-Bit anwaehlbar (re15_map_page_known), auch wenn dort
+     * nichts gezeichnet wird. Beispiel Treppenhaus ROOM1060 nur auf 1F (Band 0) begangen. */
+    printf("=== Nebenbefund: Blatt anwaehlbar ueber eine Gast-Zeile (ROOM1060 nur 1F) ===\n");
+    re15_map_visited_reset();
+    miss(0x1060, 22000, 22000, 0, &m);
+    printf("    1060 Band 0: gezeigt Blatt %d | Blatt 3 (2F) bekannt %d, 1060-Zeichnung 3/1 %s | "
+           "Blatt 4 (3F) bekannt %d, 1060-Zeichnung 4/1 %s\n", m.page, re15_map_page_known(3),
+           zustand(re15_map_rect_state(3, 1)), re15_map_page_known(4),
+           zustand(re15_map_rect_state(4, 1)));
     return 0;
 }
 
