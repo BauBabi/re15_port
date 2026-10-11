@@ -105,3 +105,54 @@ bei Blick -x). "Scheibe 1 und 3 von links" = Obj 0 und Obj 2.
 * Folge fuer den Bau: ein Text-Platz, der an Obj n haengt, ist im Original EIN Aot_set mit super = 0x80|n und
   einem Rechteck RELATIV zum Objekt — er faehrt mit der Scheibe mit (hinten wie vorn).
 
+
+### 1.3 Umsetzung (Commits ac70f38f, f833268f; Fortsetzung 2026-10-11)
+
+* `include/re15_ziel1190.h` (umgebaut): Herleitung im Kopf; Konstanten `RE15_ZIEL1190_SLOT0` 17 (PORT-WAHL:
+  erste freie Plaetze nach dem letzten Raumplatz 16, sub14 @0x02D90), `HALB_X` 300 / `HALB_Z` 1200 (= w 600
+  `58 02` @0x02284 / d 2400 `60 09` @0x02286 des Vorbild-Records main00 @0x0227A, halbiert), `SAT` 0x31
+  @0x0227D, `BAND` 0 @0x0227E, `PAUSE` 0xffff @0x0228A, Nachrichten 6 = viele / 7 = wenige (VERTRAG 1.2).
+* `engine/src/ziel_1190.c` (umgebaut): `re15_ziel1190_viele(room, obj)` (Leon Obj 0+2 = sub01 Loesung A
+  @0x02438-0x02468; Elza-RDT `(room & 0xF) == 1` @0x800397ec -> vertauscht = Loesung B @0x02478-0x024A8),
+  `_text` (Kopf `04 02` + Satz + `01 00` = Form von msg 2 @0x2E5E, Umbruch 0x08 @0x2E79), `_install`
+  (vier sce-1-Plaetze 17..20, Mitte = Lage der Scheibe aus dem Prop-Pool, nie ueber einen aktiven
+  Raum-Platz), `_folgen` (super-Anbindung: Platzmitte = Objekt-x/z vor jedem Scan, @0x80042d7c /
+  @0x80042db4 / @0x80042e60-0x80042e84), `_show` (Text ablegen, Stimme `synchro/STAGE1/room<Raum>/main06|07.wav`,
+  Oeffnen wie der sce-1-Weg, `work_vars[0]` = getroffener Platz @0x80042f3c fuer das Log).
+* Haken (je eine Zeile): `aot_common.c` re15_aot_scan -> `re15_ziel1190_folgen()`; `scd_room_setup.c`
+  Installer-Block -> `re15_ziel1190_install()`; `platform/pc/main.c` Boot-/CONTINUE-Weg (ohne
+  scd_room_reenter) -> `re15_ziel1190_install()`; `scd_vm.c` re15_scd_show_message -> `re15_ziel1190_show()`
+  (nur Id 6/7). Der Runde-35-Haken in `op_message_on` (Knopf msg 0 -> Scheiben-Satz) ist ENTFERNT: die
+  Knoepfe laufen wieder ueber den ausgelieferten Weg (sub02..05 `Message_on 2b 00 00 00` bzw. sce-1 msg 2).
+* Tests: `tests/unit/test_r36_ziel1190.c` (unit_r36_ziel1190, probes/r36_ziel1190.cmake) — Mechanik-Riegel
+  (A) Plaetze, (B) 2 Raeume x 3 Zustaende x 4 Scheiben hinten, (C) Knoepfe = Original-Nachricht Byte fuer
+  Byte, (D) Platz faehrt mit der Scheibe, (E) Betreten mit Scheibe vorn. `test_r35_raeume_ziel.c` entfernt
+  (prueften den zurueckgenommenen Knopf-Text). `probe_r36_ziel1190_karte.c` = Mess-Werkzeug (Speicherkarte
+  Leon ROOM1190 / Elza ROOM1191 fuer den LADE-Weg, kein add_test).
+* Kein Asset-Patch; keine neuen Daten unter gen/ oder shared_assets/.
+
+### 1.4 Messung nachher (gebaute exe des Zweigs, Stand f833268f + Merge master 2da98280)
+
+**Leon, echter Laufweg vom Durchgang am Tresenende zu jeder Scheibe** (JUMP-Weg: `RE15_DEBUG_JUMP=1190@gp
+RE15_PLAYER_POS=-2800,-10900,2048 RE15_INPUT_SCRIPT_START=1800 RE15_INPUT_SCRIPT=XU3.5,L0.36667,U<t>,R0.36667,U1,A0.1,W6`,
+t = 6.05 / 4.45 / 2.85 / 1.25 fuer Scheibe 0..3, Laeufe `n_leon_s0..s3`, von der Vorgaenger-Sitzung gefahren,
+hier ausgewertet). debug.log je Lauf:
+```
+n_leon_s0: [ziel1190] ROOM1190 Scheibe 0 angeklickt (Platz 17) -> Nachricht 6 (viele Einschuesse)
+n_leon_s1: [ziel1190] ROOM1190 Scheibe 1 angeklickt (Platz 18) -> Nachricht 7 (wenige Einschuesse)
+n_leon_s2: [ziel1190] ROOM1190 Scheibe 2 angeklickt (Platz 19) -> Nachricht 6 (viele Einschuesse)
+n_leon_s3: [ziel1190] ROOM1190 Scheibe 3 angeklickt (Platz 20) -> Nachricht 7 (wenige Einschuesse)
+```
+Bild `H_ziel1190/p1_nachher_leon_s0-s3_F2309-2165.png` (Kontaktbogen, je das letzte Bild des Laufs, Cut 4 =
+Nahsicht hinten): Leon steht vor der jeweiligen Scheibe, Untertitel "This target has a surprisingly / large
+number of bullet holes." (Scheibe 0 und 2) bzw. "This target does not have / many bullet holes." (1 und 3).
+Keine Ja/Nein-Frage, kein Original-Knopftext.
+
+**Elza, LADE-Weg** (Speicherkarte aus `probe_r36_ziel1190_karte.exe re15_card.mcr 1191`, Charakter 4;
+`RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=150`,
+gleiches Laufskript). debug.log `e_elza_s0`: `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`,
+`[save] CONTINUE: resumed in room 1191 (hp=100)`, Plaetze `Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige)`,
+`1 -> 18 (6, viele)`, `2 -> 19 (7, wenige)`, `3 -> 20 (6, viele)`, dann
+`[ziel1190] ROOM1191 Scheibe 0 angeklickt (Platz 17) -> Nachricht 7 (wenige Einschuesse)`. Bild
+`H_ziel1190/p1_nachher_elza_s0_F650.png`: Elza (PL04) vor Scheibe 0, Untertitel "This target does not have /
+many bullet holes." — bei Elza genau vertauscht.
