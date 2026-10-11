@@ -54,6 +54,10 @@ das Tor unerreichbar (Softlock). Nutzer-Wortlaut der Spur A: "Das macht ein Fort
   exe-Laeufe nb1_2000_2070m / nb1_2070n / nb1_2040treppe / nb1_2030treppe, 3050-Kiste bis zum Fall gefahren (nb1_3050fall_d,
   Vorversuche a-c Kalibrierung), Sonde mit Pfadausgabe + 3050-Pin, Riegel um fall3050/weg2040/treppe2040 erweitert,
   Dossier 4.1/4.3/Nachbesserung 1/Tests/OFFEN/Fuer den Nutzer. Commits c92f4d53 (wip) + Abschluss.
+* 2026-10-11 ~18:50 Abnahme 1 (47384115): N1-N5. Nachbesserung 2 (ab ~19:00): Wegplan-Treiber RE15_WEGPLAN gebaut,
+  2050-Fall an der exe gefahren (nb2_2050fall_a-c), ROOM2050 im Original per Debug-Menue geladen (room2050_orig.sav) und
+  mit orig_2050_push.py gefahren (Diagnosen diag1/diag2, Laeufe a-d; d = vollstaendig), 2020-Durchgang an der exe gefahren
+  (nb2_2020durchgang_b-f, Skript-Kontrolle), Sonde/Riegel/Dossier nachgezogen. Abschnitt "Nachbesserung 2".
 
 ## Punkt 1 — Messung an der exe (Leon ROOM1090, Elza ROOM1091)
 
@@ -491,7 +495,21 @@ Stand beim Start: 47384115 (Abnahme 1). Gebaut (`local_build.sh build` -> LOCAL-
   Aktionen ohne Gegenstand und ohne Kiste: Hinweis in 2010 lesen, dann in 2020 am Suedstreifen handeln.
 * Aenderung: kein Code (der Port ist hier byte-true). Dossier 4.3 / "Fuer den Nutzer" berichtigt; Messung des
   Durchgangs an der exe mit dem Wegplan-Treiber (Lauf `nb2_2020durchgang`, unten).
-* Messung nachher: (wird nach dem Lauf eingetragen)
+* Messung nachher (exe, Wegplan-Treiber, `R_belege/nb2_2020durchgang_f/` (wegplan.txt, debug.log); Vorlaeufe b-e =
+  Kalibrierung: Examine-Blick NORD (Punkt 620 voraus (2698,-4002) im exakten Rechteck, Blick Sued lag mit -2762
+  draussen), drei Druecke fuer sub02 (Message_on 0 / Evt_next / Message_on 1 / Evt_next / Ck (12,31) — der Skript-
+  Kontrolllauf `nb2_2020skript` mit RE15_INPUT_SCRIPT A0.1 x3 zeigte dieselbe Folge), Tuer-Blick +Z (Rechteck z 2800..
+  3800 an der +z-Kante des Streifens)). Spieler per RE15_PLAYER_POS an der 2050-Ankunft (11350,-3150) Band 1, (3,114)=1
+  per RE15_SET_FLAG (= Hinweis in ROOM2010 gelesen): `ZELLE r0[15] LAUFZEIT: ... u0 0xff ... fl 0x13` beim Raumstart
+  (= Sca_id_set @0x0098E-099E bzw. @0x00A06-0A16); GEHE (2600,-3450), BLICK 1024, AKTION x3 -> `[msg] room=2020 id=0`,
+  `id=1`, dann die Szene `[scd F423] Cut_chg(3)`, `F551 Cut_chg(4)`, `F621 Cut_chg(3)`, Letterbox zu F635, obj 1 nach
+  (-1452,1684,14316) geparkt; danach `ZELLE r0[15] LAUFZEIT: ... u0 0x00 u1 0x00 fl 0x10` (= @0x00ADE-0AEE und
+  Sca_floor_set @0x00AF2-0B02); GEHE (-1300,-3400) -> (-1291,2290) DURCH die Luecke in den Nordstreifen -> (-13708,2523)
+  -> (-14222,2832) an der Tuer; BLICK 3072, AKTION: `[msg] id=2` (sub03 @0x00B1C: Aot_reset 4, Set (3,219)=1, Message_on 2,
+  Aot_reset 1 sce 2), AKTION, AKTION -> `[aot] DOOR FIRE slot=1 rect=(-14200,3300,hw=1000,hh=500) target_cut=13
+  spawn=(-450,-16200,-9700)` -> `[room] PC loaded room2030.rdt` (Band 9) -> `EXIT_AT: Bild 300 in Raum 2030`. Der Ersatzweg
+  2050 -> 2020 -> 2030 ist damit an der exe gangbar (das Glied 2030 Band 9 -> slot 3 -> 2060 hat die Abnahme 1 selbst
+  gemessen (R2), 2060 Tritt -> slot 1 -> 2040 die Spur A). Am Original ist der 2020-Durchgang nicht gemessen (OFFEN).
 
 ### N3 — ROOM2050/2051 obj 6: an der exe GEMESSEN, die Kiste erreicht die Absprungzelle und faellt
 * Geometrie (sca_dump.py ROOM2050.RDT 3, Band 3, in allen 5 Regionen gleich): Kiste Record (-1600,-5400,-9348) @0x01D0E
@@ -516,7 +534,18 @@ Stand beim Start: 47384115 (Abnahme 1). Gebaut (`local_build.sh build` -> LOCAL-
   Endlage `p0 (7571,-3600,-13681) b2 r(-1038,0,2048)` = auf Band 2 (y -3600, die erste Stufe der Kaskade r*[23] 0x2102)
   gelandet, nicht mehr auf Band 3. **Der Port laesst die 2050-Kiste ueber die Kante fallen; danach fehlt die Stufe fuer
   die Tuer slot 2 @0x01C8A (floor 4) nach ROOM2040.**
-* Original: (wird nach dem Lauf eingetragen — Werkzeug `R_belege/orig_2050_push.py`, Spielstand
+* **Original (DuckStation-GDB, `R_belege/orig_2050_d/log.txt`): die Kiste laesst sich bis in die Absprungzelle schieben
+  und faellt — Port = Original.** Derselbe Weg wie an der exe, geschlossen geregelt: Leon von der Tuer-Ankunft (9100,4100)
+  durch den Ostkorridor (x 8818..9432) und entlang z -6300 nach Westen, hinter die Kiste (-1027,-10771); SUED Runde 0:
+  117x SCHUB-OK (@0x8002bfc0), Kistenmitte z -9348 -> -7031 (Bedingung); Umweg in die Tasche (-3050,-6491); OST Runde 0:
+  432x SCHUB-OK, 0 gesperrt, x -1600 -> 7562 (im Fenster [7550,7650)); Umweg nach Sueden (7579,-5651); NORD Runde 0:
+  230x SCHUB-OK, dann `FALL-AUSLOESER obj6=(7562,-5400,-11732) spieler=(7175,-10382)` = Halt @0x8002c13c (Objekt-Pass
+  FUN_8003b7f0(.,0x1c2,3) & 2 -> FUN_8002d3d8), 0 TREFFER-ZELLE; danach faellt=1, y -5400 -> -4534 -> -4054 -> -3600,
+  Band 3 -> 2, Endlage obj6 (7562,-3600,-13088) faellt=0 Band 2. Summe 779 angenommene Schuebe, 0 gesperrt, 1 Fall-
+  Ausloeser, HP 100 (Spinnen ueber Aktiv-Bit + g_active_count abgeschaltet, s. u.). Port zum Vergleich: AUSLOESER bei
+  (7571,-5400,-11706), Landung (7571,-3600,-13681) Band 2 — dieselbe Zelle, dieselbe Kante, dieselbe Landehoehe; die
+  Endlage in z weicht um 593 ab (Fall-/Kippbahn FUN_8002c444, Spur A — hier nur notiert, OFFEN).
+  Werkzeug `R_belege/orig_2050_push.py`, Spielstand
   `R_belege/room2050_orig.sav` per Debug-Menue JUMP 205 SEPTIC POOL (re15_quickload.py --triangle 1 --right 5, kurze
   Tipper 0,04 s; mit 0,08 s lief die Liste per Auto-Repeat ans Ende = JUMP 102), Auslieferungs-EXE @0x80026e4c 0800e003,
   Leon an der Tuer-Ankunft (9100,-5400,4100) Band 3, obj 6 = Pool-Index 6 (-1600,-5400,-9348)).
@@ -641,7 +670,8 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
 
 ## Fuer den Nutzer
 
-**Softlock moeglich? NEIN. Port = Original? JA.**
+**Softlock moeglich? NEIN (ROOM1090/1091: die Dach-Kiste bewegt sich nicht). Port = Original? JA — auch fuer die
+Kisten in ROOM3050 (Fall vorgesehen) und ROOM2050 (Fall im Original gemessen).**
 
 * Die Kiste auf dem Dach von ROOM1090 (Leon) / ROOM1091 (Elza) laesst sich **weder im Original noch im Port bewegen**.
   Am Original (DuckStation, Auslieferungs-EXE, Haltepunkte in der Schubkette) und an der exe (Leon und Elza, Sprung-
@@ -656,8 +686,10 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     erreicht man die **Super Redhawk** (Item slot 6, Floor 1). Beide Tueren des Raums brauchen die Kiste nicht. **An der
     exe gefahren (Nachbesserung 1):** Leon schiebt die Kiste vom Gang aus nach Westen bis an die Wand und von Norden
     ueber die Kante — sie faellt, kippt und landet unten (Band 0). Der Fall ist als Riegel festgehalten (`fall3050`).
-  - ROOM2050/2051 (Punkt 4): die Kiste obj 6 ist die Stufe zur Tuer nach ROOM2040 (Halle) und kann im Port ueber die
-    Kante fallen (ob das Original das zulaesst, ist nicht gemessen — kein Spielstand dort). Faellt sie, ist diese Tuer
+  - ROOM2050/2051 (Punkt 4): die Kiste obj 6 ist die Stufe zur Tuer nach ROOM2040 (Halle) und kann ueber die Kante
+    fallen — **im Port UND im Original gemessen (Nachbesserung 2: exe nb2_2050fall_c, Original DuckStation-GDB
+    orig_2050_d, derselbe Weg Sued/Ost/Nord, Fall-Ausloeser in derselben Zelle, Landung Band 2)**. Das ist also kein
+    Port-Softlock, sondern Originalverhalten (byte-true belassen). Faellt sie, ist diese Tuer
     weg, aber ROOM2040 bleibt erreichbar: ueber ROOM2020 -> ROOM2030 -> ROOM2060 (Tritt) -> Halle (Nachbesserung 2: der
     Durchgang in ROOM2020 ist ein Raetsel — Hinweis in ROOM2010, dann Aktion in 2020 —, s. "Nachbesserung 2" N2); der
     Weg ueber ROOM11A0 -> ROOM2070 (Nordgang) -> Galerie -> Treppe -> Halle steht dagegen erst NACH dem ersten

@@ -296,5 +296,60 @@ if(NOT "${_noch3}" STREQUAL "")
 endif()
 message(STATUS "r36_dachkiste fall2050: ${_n_ok2050} angenommene Schuebe, Ausloeser '${_aus2050}', Ende '${_letzte2050}' — die 2050-Kiste faellt ueber die Kante (wie im Original gemessen, R_belege/orig_2050_*)")
 
+# ---- Punkt 4 (Nachbesserung 2, N2): der Ersatzweg nach ROOM2040 ohne die 2050-Kiste fuehrt durch ROOM2020. Die Luecke
+# r*[15] (x -2350..-250) ist beim Raumstart per SCD zu (sub00 @0x0098E/@0x00A06 Sca_id_set 37 0x 0f ff; Original-Handler
+# LAB_8004175c `sb a1,9(v0)` @0x8004179c = u0; Spielerwand FUN_8003b0a4 Maske 1) und oeffnet sich nach dem Hinweis aus
+# ROOM2010 ((3,114), sub02 @0x008CA) durch das Ereignis Aot slot 3 sce 3 @0x009AE (GENERIC, Flags 0x31: Punkt 620 voraus
+# im exakten Rechteck x 2200..3000 z -4150..-3350, FUN_80042bac @0x80042bd0) -> sub02 @0x00A5C (drei Druecke: msg 0, msg 1,
+# Szene) -> Sca_id_set 37 0x 0f 00 @0x00ADE + Sca_floor_set 0x10 @0x00AF2. Danach Nordstreifen -> Tuer slot 4/1 @0x00852/
+# @0x0088A (sub03 @0x00B1C: (3,219)=1, msg 2, Aot_reset 1 sce 2) -> ROOM2030 Band 9. Messung R_belege/nb2_2020durchgang_f.
+set(_sub2020 "${_basis}/weg2020")
+file(MAKE_DIRECTORY "${_sub2020}")
+file(WRITE "${_sub2020}/wegplan.txt" "OBJ 1
+RAUM 2020
+WARTE 30
+ZELLE 0 15
+GEHE 2600 -3450 120
+BLICK 1024
+WARTE 30
+AKTION
+WARTE 90
+AKTION
+WARTE 90
+AKTION
+WARTE 400
+ZELLE 0 15
+GEHE -1300 -3400 120
+GEHE -1300 2300 150
+GEHE -13800 2500 200
+GEHE -14200 3150 120
+BLICK 3072
+WARTE 30
+AKTION
+WARTE 90
+AKTION
+WARTE 90
+AKTION
+WARTE 90
+AKTION
+WARTE 200
+ENDE
+")
+_lauf(weg2020 400 ${_grund} "RE15_WEGPLAN=${_sub2020}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt RE15_MSG_LOG=1
+      RE15_SET_FLAG=3:114 RE15_DEBUG_JUMP=2020@250 "RE15_PLAYER_POS=11350,-3150,2048,1" "RE15_EXIT_AT=300#2030")
+_muss("loaded room2020.rdt" _dbg "weg2020: ROOM2020 nicht geladen")
+set(_wp2020 "")
+if(EXISTS "${_sub}/wegplan_log.txt")
+    file(READ "${_sub}/wegplan_log.txt" _wp2020)
+endif()
+_muss("ZELLE r0[15] LAUFZEIT: x -2350..-250 z -3850..3300 typ 1 u0 0xff u1 0x00 fl 0x13" _wp2020 "weg2020: Luecke r*[15] beim Raumstart nicht per Sca_id_set (sub00 @0x0098E/@0x00A06, @0x8004179c) gesperrt")
+_muss("[msg] room=2020 id=0" _dbg "weg2020: Examine Aot slot 3 sce 3 @0x009AE (sub02 Message_on 0) hat nicht gezuendet")
+_muss("Cut_chg(3)" _dbg "weg2020: Szene sub02 (Cut_chg 3 @0x00A7E) lief nicht")
+_muss("ZELLE r0[15] LAUFZEIT: x -2350..-250 z -3850..3300 typ 1 u0 0x00 u1 0x00 fl 0x10" _wp2020 "weg2020: Luecke r*[15] nach sub02 nicht frei (Sca_id_set 0 @0x00ADE / Sca_floor_set 0x10 @0x00AF2)")
+_muss("[msg] room=2020 id=2" _dbg "weg2020: Tuer-Ereignis sub03 @0x00B1C (Message_on 2) hat nicht gezuendet")
+_muss("[aot] DOOR FIRE slot=1 rect=(-14200,3300,hw=1000,hh=500) target_cut=13 spawn=(-450,-16200,-9700)" _dbg "weg2020: Tuer 2020 slot 1 @0x0088A nach ROOM2030 nicht ausgeloest")
+_muss("loaded room2030.rdt" _dbg "weg2020: ROOM2030 nicht geladen")
+message(STATUS "r36_dachkiste weg2020: Hinweis (3,114) -> Examine -> Szene -> Luecke frei -> Tuer slot 1 -> ROOM2030 Band 9 (Ersatzweg ohne die 2050-Kiste)")
+
 file(REMOVE "${_exe}")
-message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall, 2050-Fall + 2040-Weg gemessen")
+message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall, 2050-Fall, 2020-Durchgang + 2040-Weg gemessen")
