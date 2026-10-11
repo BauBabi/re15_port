@@ -199,3 +199,81 @@ Kamera Ansicht und dann die Zombies aus dem Nichts"): Kamera (Tuer-Cut ab Bild 1
 * Mess-Haken (kein Spielverhalten): Ereignisfolge `re15_irons_tod_folge` + debug.log `[irons-tod] Folge #n K|S|C ...`
   (Knall beim Abspielen, Spawn = Gegner beim ersten Bild bzw. Zuwachs im Takt, Kamera = Tuer-Cut beim ersten Bild bzw.
   Cut_chg) und `[irons-tod] ROOMxxxx: erstes Bild mit n Gegnern (Init-Lauf a + erster Abschnitt b)`.
+
+### K3.4 Nachtrag: Szenen-Riegel nach dem ersten Abschnitt (gemessen, belegt)
+Erste Fassung setzte Set(2,7,1)/Set(1,27,1) im ersten Abschnitt (Raumaufbau). GEMESSEN (Lauf nach_1130, state.log):
+ab Bild 6 `pf=00000007` statt `pf=01000007` = die Pad-Sperre (Zone 2 Bit 7 = Pause-Wort-Bit 0x01000000,
+game_state.c / FUN_80030444 @0x800304f8) fehlte nach der Blende. Ursache (selbst disassembliert): das Original loescht
+das Pause-Wort VOR dem Raumlader (`8001ca44 sw zero,g_pauseflags` -> `8001ca54 jal 0x8001d600`) und rettet, was der
+Init-Lauf setzt, ueber die Blende (`8001cbcc lw t1,g_pauseflags` -> `8001cbfc sw t1,0x8008f628` ->
+`8001cc84 lw v0,0x8008f628` / `8001cc94 sw v0,g_pauseflags`); der Port loescht in re15_room_transition_present()
+(room_common.c) ein ZWEITES Mal NACH dem Laden (re15_pauseflags_clear()). Abhilfe IM MODUL (keine Aenderung an
+room_common.c): der erste Abschnitt endet mit `09 0a 01 00` (Sleep 1: Sleeping zaehlt 1 -> 0 noch im Raumaufbau,
+@0x8003f428/@0x8003f488), die Riegel laufen im ersten Spieltakt nach der Blende (Bild 6) — genau wie vor der
+Aenderung. Nachher: `pf=01000007` ab Bild 6 in allen vier Raeumen (Lauf end_*, unten). Die Port-Abweichung selbst steht
+unter OFFEN (betrifft jeden Raum, dessen Init-Lauf Set(2,x) setzt).
+
+## Messung nachher (echte exe, Endstand, Messkopie `re15_pc_r36k_end.exe`, Laeufe `end_*`)
+
+### K1 nachher
+`knall_im_mitschnitt.py end_11c0/cap.raw` (ganze Kette bis 11C0 Bild 480, RE15_AUDIO_CAP_SYNC):
+```
+Mitschnitt: 5249370 Abtastwerte = 119.0 s = 3571 Spielbilder
+DOOR04   (16397 Hz): kein Treffer >= 0,5
+RE2_1060 (11025 Hz): t=63.60 s Bild 1908 r=0.934 Huelle-max 6617; t=83.30 s Bild 2499 r=0.915 Huelle-max 6709
+R1030    (11025 Hz): t=69.67 s Bild 2090 r=0.983 Huelle-max 4270; t=90.83 s Bild 2725 r=0.896 Huelle-max 4466
+```
+= der Door_exit-Ton ist weg; der Tuerknall ist jetzt RE2 ROOM1060 0x0a (Ende der Szene 1150 = Knall vor 1130; Ende
+1040 = Knall vor 1030 Cut 7). Korrelation 0,93 statt 0,997, weil zwei Lagen mit Feinstimmung 0/1 uebereinander liegen
+(wie in RE2). Lautstaerke im Mix: Huellkurven-Maximum 6617 gegen 3335 vorher (+6,0 dB). debug.log je Knall:
+`[se] Stimme: se=0 layer=0 vag=0 note=67 fine=0 center=91 vol=127 pitch=0x400 (11025 Hz) -> SE-Stimme -16` und
+`layer=1 ... fine=1 ... -> SE-Stimme -15` (Direkt-Zweig wie RE2 byte3 0x20). Hoeren am Lautsprecher: dieser Rechner
+hat kein Audio-Endgeraet (wie r35) — gemessen ist der gemischte Ausgang.
+
+### K2 nachher
+Lauf end_11c0 (Bilder 0..440 je 10..40, `K_belege/k2_nach_11c0.png`; Ausschnitt-Vergleich vorher/nachher
+`K_belege/k2_vor_nach_zoom.png`): F30 beide mit dem Ruecken zur Kamera, Marvin steht schon da; F60 beide zum Gebaeude;
+F90..F170 Ada im Profil Marvin zugewandt mit Geste ("What was this noise? Did you hear that?"), Marvins Kopf zu ihr;
+F200/F230 Marvin hat sich zu Ada gedreht, beide sehen sich an ("Yes!...."); F260/F290 "Oh, no, Leon!" Marvin zum
+Gebaeude, Adas Kopf bei ihm; F320 Marvin dreht sich zurueck; F350 "I have to help him, sorry!" Arm zu Ada; F380 rennt
+los; F410/F440 Ada zur Tuer gewandt, Arm: "Marvin!...". neck.log (Integrationshaken): `PLC_NECK slot=1 mode=1
+tgt=(-8163,0,-13748)` (Ada -> Marvin), `slot=4 mode=1 tgt=(-8965,0,-14347)` (Marvin -> Ada), `slot=4 mode=3` (Nicken),
+`slot=1 mode=1 tgt=(-25100,0,17250)` (Ada sieht ihm nach). Riegel dialog11c0: je Zeile in den ersten 45 Bildern
+(Anzeigedauer msg 12/13 = 72/71 Bilder, danach laeuft schon der naechste Schritt) Koerper im Ausrichtungs-Kegel der
+Engine (re15_ai_arc_test 0x60) und Kopf auf dem Partner: 45/45 in allen geprueften Faellen.
+
+### K3 nachher
+state.log je Raum (Laeufe end_1130 / end_1040 / end_1030 / end_11c0, letzter Besuch):
+```
+ROOM1130 (F1..F170): F1 cam=0 gegner=5 pf=FF000007; F6 cam=0 gegner=5 pf=01000007
+ROOM1040 (F1..F120): F1 cam=1 gegner=5 pf=FF000007; F6 cam=1 gegner=5 pf=01000007
+ROOM1030 (F1..F260): F1 cam=7 gegner=11 pf=FF000007; F6 cam=7 gegner=11 pf=01000007; F190 cam=7 gegner=14; F212 cam=12
+ROOM11C0 (F1..F480): F1 cam=13 gegner=4 pf=FF000007; F6 cam=13 gegner=4 pf=01000007
+```
+debug.log-Ereignisfolge (end_11c0):
+```
+#1 K ROOM1150 T1284 Knall Satz 0
+#2 S ROOM1130 T1328 Spawn + 5 (Raumaufbau, vor dem ersten Bild)      #3 C ROOM1130 T1328 Kamera Cut 0 (Raumaufbau)
+#4 K ROOM1130 T1460 Knall Satz 1
+#5 S ROOM1040 T1504 Spawn + 5 (Raumaufbau)                           #6 C ROOM1040 T1504 Kamera Cut 1 (Raumaufbau)
+#7 K ROOM1040 T1865 Knall Satz 0
+#8 S ROOM1030 T1909 Spawn + 11 (Raumaufbau)                          #9 C ROOM1030 T1909 Kamera Cut 7 (Raumaufbau)
+#10 K ROOM1030 T2084 Knall Satz 2 (Original-Se_on @0x02776)  #11 S ROOM1030 T2094 Spawn + 3  #12 C ROOM1030 T2116 Kamera Cut 12
+#13 S ROOM11C0 T2451 Spawn + 4 (Raumaufbau)                          #14 C ROOM11C0 T2451 Kamera Cut 13 (Raumaufbau)
+```
+Bilder: `K_belege/k3_nach_1130.png` (ab dem ersten hellen Bild F6 stehen die fuenf Zombies im Flur — vorher erst F32),
+`K_belege/k3_nach_1030.png` (die Kopien stehen ab dem ersten Bild an der 1070-Tuer; Knall und Kriecher-Spawn auf Cut 7,
+F216 Cut 12 mit den liegenden/kriechenden Zombies; vorher F32 bzw. F196 "aus dem Nichts"),
+`K_belege/k3_1040_vor_nach.png` (Zombies hinter dem geschlossenen Tor in beiden Faellen unsichtbar; der Knall kommt jetzt
+am Ende von 1130 statt in Bild 21 von 1040).
+
+## Tests (Namen, Ergebnis)
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r36_szene1150_knall_re2 | K1: RE2 ROOM1060 sub05 @0x00F48 = Se_on 0x0a, EDT @0x03F80 `00 00 85 20`, Bank-VAG 1 == RDT @0x066B8 (8768 B) bytegleich, Satz 0 = 2 Lagen (Tone 0/1), Satz 1 = Tone 2, nicht DOOR04 | gruen |
+| unit_r36_szene1150_folge | K3: ganze Kette ueber die echten Tuer-Anforderungen in drei Faellen (A alle leben, B 1140/1070 leer, C Tor schon offen): je Raum Knall < Spawn < Kamera (Folge-Index und Takt), Spawn + Kamera im Raumaufbau, Zombies nach dem Raumaufbau da (1130: 5, 1040: 5, 1030: 11), kein Zuwachs auf der zeigenden Kamera (1030-Kriecher auf Cut 7), Knall-Bank 3x (A) / 2x (B) | gruen (vorher: Knall in 1130 Bild 21 nach dem Kamerabild, Spawn Bild 31) |
+| unit_r36_szene1150_dialog11c0 | K2: je Zeile 10..14 Koerper (re15_ai_arc_test, Kegel 0x60 @0x80076c41) und Kopf (Plc_neck Modus 1) auf dem Partner bzw. zum Gebaeude | gruen (45/45 je Fall) |
+| integration_r36_szene1150 | echte exe, Spielstand + CONTINUE + Tuer: K1 Logzeile Satz 0 = RE2 ROOM1060; K3 Folge-Zeilen in der Reihenfolge, erstes Bild je Montage-Raum mit den Zombies (state.log `Besuch 2: F1 cam=0 Gegner 5; Besuch 3: F1 cam=1 Gegner 5; Besuch 4: F1 cam=7 Gegner 11; Besuch 5: F1 cam=13 Gegner 4`), Pad-Sperre pf=01.. in Bild 10; K2 neck.log/debug.log | gruen (115 s) |
+| unit_r35_cut1150_* (13) | Riegel der Spur L r35, an die neue Reihenfolge angepasst: programme (Vorlage 19), montage_1130 (am Ende Satz 1), montage_1040 (am Ende Satz 0; ohne 1070 Cut 12; 18-tot-Fall zaehlt Raum-/Auffuell-Records im Raumaufbau), montage_1030 (keine Knall-Bank im Raum, +3 Kriecher, Tuer-Cut 12, Nachspawn im Raumaufbau), knallbank (RE2 ROOM1060) | gruen |
+
+Gezielter Lauf: s. "Abschluss" unten (ctest-Summenzeile woertlich).
