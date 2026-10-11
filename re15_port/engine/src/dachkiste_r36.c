@@ -33,6 +33,7 @@
  *   SCHIEB yaw X|Z >=|<= wert [max]   auf yaw drehen, UP halten, bis Objekt-Koordinate die Bedingung erfuellt,
  *                                das Objekt faellt (y aendert sich), die Schubkette dreimal sperrt oder max Bilder
  *   AKTION                       Aktionstaste (Quadrat) 3 Bilder
+ *   AOTS                         aktive AOT-Slots (Typ, Ereignis, Flags, Band, Rechteck) ins Log
  *   ENDE
  * Log: RE15_WEGPLAN_LOG=<datei> (Default wegplan.txt im Arbeitsordner).
  */
@@ -43,6 +44,7 @@
 
 #include "re15_dachkiste_r36.h"
 #include "re15_actor.h"
+#include "re15_aot.h"
 #include "re15_engine.h"
 #include "re15_rdt.h"
 #include "re15_room.h"
@@ -119,7 +121,7 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
 #define WP_LEFT   0x0080u
 #define WP_SQUARE 0x8000u
 
-enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_ENDE };
+enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_ENDE };
 
 typedef struct {
     int kind;
@@ -212,6 +214,7 @@ static void wp_parse(const char *pfad)
                                             cmd.a = a & 4095; cmd.b = (s1[0] == 'Z' || s1[0] == 'z') ? 1 : 0;
                                             cmd.c = (s2[0] == '<') ? 1 : 0; cmd.d = d; cmd.e = e; }
         else if (!strcmp(w, "AKTION"))    { cmd.kind = WP_AKTION; }
+        else if (!strcmp(w, "AOTS"))      { cmd.kind = WP_AOTS; }
         else if (!strcmp(w, "ENDE"))      { cmd.kind = WP_ENDE; }
         else continue;
         s_wp[s_wp_n++] = cmd;
@@ -243,6 +246,7 @@ static void wp_start(const wp_cmd_t *c)
     case WP_SCHIEB: wp_log("SCHIEB blick %d bis obj.%c %s %d (max %d Bilder)", c->a, c->b ? 'z' : 'x',
                            c->c ? "<=" : ">=", c->d, c->e); break;
     case WP_AKTION: wp_log("AKTION"); break;
+    case WP_AOTS:  wp_log("AOTS"); break;
     default: break;
     }
 }
@@ -348,6 +352,16 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
     case WP_AKTION:
         out = WP_SQUARE;
         if (++s_wp_zaehler >= 3) wp_naechster("gedrueckt");
+        break;
+    case WP_AOTS:   /* Laufzeit-AOT-Tabelle (Diagnose: welche Aot_set/Door_aot_set-Slots sind installiert) */
+        for (int i = 0; i < RE15_AOT_MAX; i++) {
+            const re15_aot_t *a = &g_aot.slots[i];
+            if (!a->active) continue;
+            wp_log("  AOT slot %d typ %d ev %d flags 0x%02x band %d mitte (%d,%d) halb (%d,%d) quad %d", i,
+                   (int)a->type, (int)a->event_id, (unsigned)a->sce_flags, (int)a->band,
+                   a->x, a->z, a->half_w, a->half_h, (int)a->has_quad);
+        }
+        wp_naechster("gelistet");
         break;
     case WP_GEHE: {
         const int32_t dx = c->a - pl->x, dz = c->b - pl->z;

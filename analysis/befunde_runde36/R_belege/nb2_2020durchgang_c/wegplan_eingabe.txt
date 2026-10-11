@@ -1,0 +1,31 @@
+# Runde 36 Spur R, Nachbesserung 2 (N2): ROOM2020 — vom Suedstreifen (Ankunft aus ROOM2050 slot 1 @0x01C6A: (11350,-1800,-3150)
+# Band 1) durch die Luecke r*[15] (x -2350..-250) in den Nordstreifen zur Tuer slot 1 (x -15200..-13200 z 2800..3800) -> 2030.
+# Die Luecke ist beim Raumstart per Sca_id_set zu (sub00 @0x0098E/@0x00A06: 37 0x 0f ff, Original-Handler @0x8004175c
+# sb a1,9(v0) @0x8004179c) und oeffnet sich durch das Ereignis Aot slot 3 sce 3 @0x009AE (x 2200..3000 z -4150..-3350,
+# nur mit (3,114)=1 aus ROOM2010 sub02 @0x008CA) -> sub02 @0x00ADE: 37 0x 0f 00.
+OBJ 1
+RAUM 2020
+WARTE 30
+AOTS
+ZELLE 0 15
+GEHE 2600 -3450 120
+BLICK 1024
+AKTION
+WARTE 120
+AKTION
+WARTE 400
+ZELLE 0 15
+GEHE -1300 -3400 120
+GEHE -1300 2300 150
+GEHE -13800 2500 200
+GEHE -14200 3150 120
+BLICK 1024
+AKTION
+WARTE 90
+AKTION
+WARTE 90
+AKTION
+WARTE 90
+AKTION
+WARTE 200
+ENDE

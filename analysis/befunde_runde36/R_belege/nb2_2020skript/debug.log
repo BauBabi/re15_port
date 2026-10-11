@@ -1,0 +1,165 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r36_dachkiste/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r36_dachkiste/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] Controller: "Xbox 360 Controller" (Slot 0)
+[input-script] RE15_INPUT_SCRIPT="W3,A0.1,W4,A0.1,W4,A0.1,W4" -> 459 ticks @ 30 fps, start frame 1
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1240.RDT (163744 bytes)
+[rdt] nCut=9 nDoor=0 nItem=0 zones=9 main_scd=34B sub=4 props=0
+[esp] room 1240: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 17 meshes
+[w01] PL00W01 weapon-track: 15 bones, 14 clips, 222 kf
+[w03] PL00W03 gun-track: 15 bones, 14 clips, 248 kf
+[wpn] loaded 21/21 PL00W** in-hand meshes (textured from body-skin slot 0)
+[skel] PL00: 15 bones, 24 clips, 712 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1240.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 222 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 248 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL00W**.PLW
+[messer] Startinventar Charakter 0: 03 x15 15 x50 | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 9 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1240 = (-26214,0,-3861) yaw=0
+[parity] player teleported to (2698,-3382) rot=1040
+[scd] thread start slot=0 first_op=0x3B
+[setflag] flag(3,114/0x72) = 1
+[scd] thread start slot=1 first_op=0x04
+[scd] thread start slot=10 first_op=0x22
+[evt] F0 room=1240 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd F0] Cut_chg(0)
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x3A0 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[walk] F60 cut=0 mo=200 af=60 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[walk] F90 cut=0 mo=200 af=90 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[input-script] Tick 90 -> F91 Tasten 0x8000
+[walk] F120 cut=0 mo=200 af=120 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[walk] F150 cut=0 mo=200 af=150 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[scd F161] Cut_chg(1)
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x3A4 masks=0 fg_atlas=0
+[walk] F180 cut=1 mo=200 af=180 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[msg] room=1240 id=0 savepoint=0
+[walk] F210 cut=1 mo=200 af=210 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[input-script] Tick 213 -> F214 Tasten 0x8000
+[walk] F240 cut=1 mo=200 af=240 frz=0 | pl pos=(2698,0,-3382) rot=1040
+[debug-menu] AUTO-JUMP -> ROOM2020 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (2698,-3382) rot=1040 band=1
+[debug-menu] JUMP -> 202 ZOMBIE TUNNEL  (ROOM2020) spawn=(2698,-1800,-3382) cut=0
+[room] PC loaded room2020.rdt (322276 bytes)
+[esp] room 2020: 7 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x06) -> slot 37: 256x128
+[esp] effect TIM (id 0x07) -> slot 38: 256x32
+[esp] effect TIM (id 0x0b) -> slot 39: 256x104
+[esp] effect TIM (id 0x0c) -> slot 40: 256x184
+[esp] effect TIM (id 0x0d) -> slot 41: 256x88
+[esp] effect TIM (id 0x0f) -> slot 42: 256x96
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-3950,-900,-225) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-1452,-1784,-584) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1452,1684,14316) rot=(0,0,0)
+[rbj] room 2020 cinematic overlay: 1 clips, 40 kf
+[enemy] RE2 EM016 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[tim] WARNUNG slot 11: 256x512 8bpp — 29.5% der Texel dekodieren zu OPAKEM Schwarz und 0 sind transparent. Textur/CLUT pruefen (so sahen die vier Schwarzer-Klotz-Bugs aus).
+[enemy] Hybrid EM16: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[prop-render] pi=0 oid=0x00 pos=(-3950,-900,-225) rot=(0,1024,0) meshes=1
+[prop-render] pi=1 oid=0x01 pos=(-1452,-1784,-584) rot=(0,0,0) meshes=1
+[pri] cut=0 pri_offset=0x3F0 masks=0 fg_atlas=0
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[walk] F30 cut=0 mo=200 af=24 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F60 cut=0 mo=200 af=54 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[bone]  0: rel=(0,-1810,0) world=(2698,-3610,-3382)
+[F60] cut=0 sd=208
+  cut.pos=(3550,-5328,-651)
+  cut.target=(10174,-2646,-2361)
+  cut.fov=26684
+  VT=(257,6282,-1411)
+  VR0=(-1025,0,-3972) VR1=(-1453,3816,374) VR2=(3700,1498,-955)
+  Player=(2698,-1800,-3382) rot_y=1040
+  pose[0].trans=(0,-1810,0)
+  bone_world=(2698,-3610,-3382)
+  combined_trans=(2861,1652,494)
+  combined_rot[0..2]=(3996,0,-927)
+  proj sx=1365 sy=816
+[bone]  1: rel=(-29,-1829,0) world=(2698,-3629,-3354)
+[bone]  2: rel=(-28,-1709,-192) world=(2506,-3509,-3350)
+[bone]  3: rel=(-15,-972,-216) world=(2482,-2772,-3362)
+[bone]  4: rel=(-71,-159,-255) world=(2444,-1959,-3305)
+[bone]  5: rel=(-26,-1704,191) world=(2889,-3504,-3361)
+[bone]  6: rel=(-13,-967,221) world=(2919,-2767,-3375)
+[bone]  7: rel=(-67,-159,257) world=(2956,-1959,-3322)
+[bone]  8: rel=(-98,-2514,0) world=(2700,-4314,-3285)
+[bone]  9: rel=(-59,-2502,-369) world=(2330,-4302,-3314)
+[bone] 10: rel=(-122,-2083,-413) world=(2288,-3883,-3250)
+[bone] 11: rel=(-12,-1692,-452) world=(2246,-3492,-3359)
+[bone] 12: rel=(-59,-2502,369) world=(3068,-4302,-3333)
+[bone] 13: rel=(-122,-2083,406) world=(3106,-3883,-3271)
+[bone] 14: rel=(-11,-1691,439) world=(3137,-3491,-3382)
+[walk] F90 cut=0 mo=200 af=84 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[input-script] Tick 90 -> F91 Tasten 0x8000
+[scd] thread start slot=10 first_op=0x2B
+[msg] room=2020 id=0 savepoint=0
+[msgtext] room=2020 id=0 "It's a square hole."
+[walk] F120 cut=0 mo=200 af=85 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F150 cut=0 mo=200 af=85 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F180 cut=0 mo=200 af=85 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F210 cut=0 mo=200 af=85 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[input-script] Tick 213 -> F214 Tasten 0x8000
+[msg] room=2020 id=1 savepoint=0
+[msgtext] room=2020 id=1 "Will you use the Crank?"
+[walk] F240 cut=0 mo=200 af=86 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F270 cut=0 mo=200 af=86 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F300 cut=0 mo=200 af=86 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F330 cut=0 mo=200 af=86 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[input-script] Tick 336 -> F337 Tasten 0x8000
+[msg] room=2020 id=1 savepoint=0
+[scd F340] Cut_chg(3)
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x3FC masks=0 fg_atlas=0
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[scd F360] Plc_flg(subop=0, mask=0x0004) → slot=0 anim_flags=0x0004
+[walk] F360 cut=3 mo=0 af=0 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F390 cut=3 mo=0 af=30 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F420 cut=3 mo=0 af=60 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F450 cut=3 mo=0 af=90 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[scd F468] Cut_chg(4)
+[light] cut 4 tint=(128,128,128)
+[pri] cut=4 pri_offset=0x400 masks=0 fg_atlas=0
+[walk] F480 cut=4 mo=0 af=120 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F510 cut=4 mo=0 af=150 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[prop-member F536] prop[1] obj=0x01 m=2 → val=14316
+[prop-member F536] prop[2] obj=0x02 m=2 → val=-584
+[prop-render] pi=2 oid=0x02 pos=(-1452,1684,-584) rot=(0,0,0) meshes=1
+[scd F538] Cut_chg(3)
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x3FC masks=0 fg_atlas=0
+[walk] F540 cut=3 mo=200 af=2 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[scd F552] letterbox closed -> gameplay (player_mode=0)
+[walk] F570 cut=3 mo=211 af=13 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F600 cut=3 mo=211 af=43 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F630 cut=3 mo=211 af=73 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F660 cut=3 mo=211 af=103 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[walk] F690 cut=3 mo=211 af=133 frz=0 | pl pos=(3650,-1800,-3018) rot=1024
+[flow] EXIT_AT: Bild 700 in Raum 2020 erreicht -> exit

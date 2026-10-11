@@ -1,0 +1,845 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r36_dachkiste/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r36_dachkiste/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] Controller: "Xbox 360 Controller" (Slot 0)
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1240.RDT (163744 bytes)
+[rdt] nCut=9 nDoor=0 nItem=0 zones=9 main_scd=34B sub=4 props=0
+[esp] room 1240: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 17 meshes
+[w01] PL00W01 weapon-track: 15 bones, 14 clips, 222 kf
+[w03] PL00W03 gun-track: 15 bones, 14 clips, 248 kf
+[wpn] loaded 21/21 PL00W** in-hand meshes (textured from body-skin slot 0)
+[skel] PL00: 15 bones, 24 clips, 712 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1240.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 222 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 248 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL00W**.PLW
+[messer] Startinventar Charakter 0: 03 x15 15 x50 | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 9 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1240 = (-26214,0,-3861) yaw=0
+[parity] player teleported to (11350,-3150) rot=2048
+[scd] thread start slot=0 first_op=0x3B
+[setflag] flag(3,114/0x72) = 1
+[scd] thread start slot=1 first_op=0x04
+[scd] thread start slot=10 first_op=0x22
+[evt] F0 room=1240 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd F0] Cut_chg(0)
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x3A0 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[push] F0 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[push] F1 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F2 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F3 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F4 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F5 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F6 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F7 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F8 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F9 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F10 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F11 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F12 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F13 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F14 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F15 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F16 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F17 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F18 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F19 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F20 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F21 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F22 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F23 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F24 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F25 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F26 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F27 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F28 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F29 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F30 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F31 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F32 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F33 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F34 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F35 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F36 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F37 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F38 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F39 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F40 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F41 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F42 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F43 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F44 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F45 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F46 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F47 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F48 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F49 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F50 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F51 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F52 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F53 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F54 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F55 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F56 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F57 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F58 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F59 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F60 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F60 cut=0 mo=200 af=60 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F61 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F62 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F63 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F64 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F65 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F66 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F67 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F68 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F69 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F70 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F71 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F72 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F73 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F74 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F75 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F76 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F77 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F78 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F79 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F80 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F81 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F82 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F83 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F84 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F85 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F86 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F87 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F88 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F89 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F90 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F90 cut=0 mo=200 af=90 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F91 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F92 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F93 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F94 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F95 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F96 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F97 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F98 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F99 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F100 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F101 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F102 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F103 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F104 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F105 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F106 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F107 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F108 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F109 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F110 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F111 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F112 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F113 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F114 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F115 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F116 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F117 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F118 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F119 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F120 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F120 cut=0 mo=200 af=120 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F121 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F122 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F123 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F124 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F125 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F126 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F127 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F128 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F129 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F130 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F131 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F132 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F133 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F134 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F135 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F136 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F137 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F138 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F139 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F140 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F141 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F142 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F143 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F144 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F145 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F146 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F147 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F148 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F149 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F150 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F150 cut=0 mo=200 af=150 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F151 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F152 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F153 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F154 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F155 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F156 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F157 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F158 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F159 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F160 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[scd F161] Cut_chg(1)
+[push] F161 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x3A4 masks=0 fg_atlas=0
+[push] F162 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F163 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F164 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F165 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F166 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F167 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F168 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F169 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F170 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F171 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F172 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F173 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F174 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F175 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F176 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F177 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F178 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F179 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F180 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F180 cut=1 mo=200 af=180 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F181 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F182 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F183 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F184 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F185 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F186 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F187 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F188 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F189 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F190 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F191 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F192 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F193 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F194 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F195 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F196 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F197 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F198 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F199 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F200 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F201 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F202 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F203 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F204 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F205 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F206 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F207 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F208 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F209 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F210 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F210 cut=1 mo=200 af=210 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F211 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F212 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F213 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F214 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F215 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F216 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F217 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F218 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F219 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F220 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F221 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F222 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F223 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F224 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F225 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F226 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F227 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F228 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F229 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F230 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F231 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F232 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F233 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F234 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F235 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F236 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F237 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F238 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F239 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F240 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F240 cut=1 mo=200 af=240 frz=0 | pl pos=(11350,0,-3150) rot=2048
+[push] F241 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F242 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F243 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F244 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F245 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F246 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F247 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F248 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F249 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[debug-menu] AUTO-JUMP -> ROOM2020 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (11350,-3150) rot=2048 band=1
+[debug-menu] JUMP -> 202 ZOMBIE TUNNEL  (ROOM2020) spawn=(11350,-1800,-3150) cut=0
+[push] F250 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[room] PC loaded room2020.rdt (322276 bytes)
+[esp] room 2020: 7 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x06) -> slot 37: 256x128
+[esp] effect TIM (id 0x07) -> slot 38: 256x32
+[esp] effect TIM (id 0x0b) -> slot 39: 256x104
+[esp] effect TIM (id 0x0c) -> slot 40: 256x184
+[esp] effect TIM (id 0x0d) -> slot 41: 256x88
+[esp] effect TIM (id 0x0f) -> slot 42: 256x96
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-3950,-900,-225) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-1452,-1784,-584) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1452,1684,14316) rot=(0,0,0)
+[rbj] room 2020 cinematic overlay: 1 clips, 40 kf
+[enemy] RE2 EM016 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[tim] WARNUNG slot 11: 256x512 8bpp — 29.5% der Texel dekodieren zu OPAKEM Schwarz und 0 sind transparent. Textur/CLUT pruefen (so sahen die vier Schwarzer-Klotz-Bugs aus).
+[enemy] Hybrid EM16: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[prop-render] pi=0 oid=0x00 pos=(-3950,-900,-225) rot=(0,1024,0) meshes=1
+[prop-render] pi=1 oid=0x01 pos=(-1452,-1784,-584) rot=(0,0,0) meshes=1
+[pri] cut=0 pri_offset=0x3F0 masks=0 fg_atlas=0
+[push] F6 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F7 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F8 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F9 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F10 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F11 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F12 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F13 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F14 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[push] F15 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F16 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F17 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F18 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F19 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F20 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F21 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F22 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F23 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F24 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F25 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F26 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F27 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F28 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F29 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F30 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F30 cut=0 mo=200 af=24 frz=0 | pl pos=(11350,-1800,-3150) rot=2048
+[push] F31 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F32 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F33 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F34 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F35 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F36 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F37 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F38 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F39 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F40 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F41 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F42 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F43 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F44 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F45 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F46 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F47 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F48 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F49 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F50 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F51 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F52 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F53 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F54 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F55 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F56 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F57 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F58 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F59 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F60 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[walk] F60 cut=0 mo=200 af=54 frz=0 | pl pos=(11350,-1800,-3150) rot=2048
+[bone]  0: rel=(0,-1810,0) world=(11350,-3610,-3150)
+[F60] cut=0 sd=208
+  cut.pos=(3550,-5328,-651)
+  cut.target=(10174,-2646,-2361)
+  cut.fov=26684
+  VT=(257,6282,-1411)
+  VR0=(-1025,0,-3972) VR1=(-1453,3816,374) VR2=(3700,1498,-955)
+  Player=(11350,-1800,-3150) rot_y=2048
+  pose[0].trans=(0,-1810,0)
+  bone_world=(11350,-3610,-3150)
+  combined_trans=(471,-1396,8255)
+  combined_rot[0..2]=(1025,0,3972)
+  proj sx=172 sy=85
+[bone]  1: rel=(-29,-1829,0) world=(11379,-3629,-3150)
+[bone]  2: rel=(-28,-1709,-192) world=(11378,-3509,-2958)
+[bone]  3: rel=(-15,-972,-216) world=(11365,-2772,-2934)
+[bone]  4: rel=(-71,-159,-255) world=(11421,-1959,-2895)
+[bone]  5: rel=(-26,-1704,191) world=(11376,-3504,-3341)
+[bone]  6: rel=(-13,-967,221) world=(11363,-2767,-3371)
+[bone]  7: rel=(-67,-159,257) world=(11417,-1959,-3407)
+[bone]  8: rel=(-98,-2514,0) world=(11448,-4314,-3150)
+[bone]  9: rel=(-59,-2502,-369) world=(11409,-4302,-2781)
+[bone] 10: rel=(-122,-2083,-413) world=(11472,-3883,-2737)
+[bone] 11: rel=(-12,-1692,-452) world=(11362,-3492,-2698)
+[bone] 12: rel=(-59,-2502,369) world=(11409,-4302,-3519)
+[bone] 13: rel=(-122,-2083,406) world=(11472,-3883,-3556)
+[bone] 14: rel=(-11,-1691,439) world=(11361,-3491,-3589)
+[push] F61 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F62 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F63 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F64 vor=(11350,-3150) tick=(11350,-3150) schub=(11350,-3150) d=(0,0) klemme=(11350,-3150) dk=(0,0)
+[push] F65 vor=(11350,-3150) tick=(11275,-3150) schub=(11275,-3150) d=(0,0) klemme=(11275,-3150) dk=(0,0)
+[push] F66 vor=(11275,-3150) tick=(11200,-3150) schub=(11200,-3150) d=(0,0) klemme=(11200,-3150) dk=(0,0)
+[push] F67 vor=(11200,-3150) tick=(11125,-3150) schub=(11125,-3150) d=(0,0) klemme=(11125,-3150) dk=(0,0)
+[push] F68 vor=(11125,-3150) tick=(11050,-3150) schub=(11050,-3150) d=(0,0) klemme=(11050,-3150) dk=(0,0)
+[push] F69 vor=(11050,-3150) tick=(10975,-3150) schub=(10975,-3150) d=(0,0) klemme=(10975,-3150) dk=(0,0)
+[push] F70 vor=(10975,-3150) tick=(10900,-3150) schub=(10900,-3150) d=(0,0) klemme=(10900,-3150) dk=(0,0)
+[push] F71 vor=(10900,-3150) tick=(10825,-3150) schub=(10825,-3150) d=(0,0) klemme=(10825,-3150) dk=(0,0)
+[push] F72 vor=(10825,-3150) tick=(10750,-3150) schub=(10750,-3150) d=(0,0) klemme=(10750,-3150) dk=(0,0)
+[push] F73 vor=(10750,-3150) tick=(10675,-3150) schub=(10675,-3150) d=(0,0) klemme=(10675,-3150) dk=(0,0)
+[push] F74 vor=(10675,-3150) tick=(10600,-3150) schub=(10600,-3150) d=(0,0) klemme=(10600,-3150) dk=(0,0)
+[push] F75 vor=(10600,-3150) tick=(10525,-3150) schub=(10525,-3150) d=(0,0) klemme=(10525,-3150) dk=(0,0)
+[push] F76 vor=(10525,-3150) tick=(10450,-3150) schub=(10450,-3150) d=(0,0) klemme=(10450,-3150) dk=(0,0)
+[push] F77 vor=(10450,-3150) tick=(10375,-3150) schub=(10375,-3150) d=(0,0) klemme=(10375,-3150) dk=(0,0)
+[push] F78 vor=(10375,-3150) tick=(10300,-3150) schub=(10300,-3150) d=(0,0) klemme=(10300,-3150) dk=(0,0)
+[push] F79 vor=(10300,-3150) tick=(10225,-3150) schub=(10225,-3150) d=(0,0) klemme=(10225,-3150) dk=(0,0)
+[push] F80 vor=(10225,-3150) tick=(10150,-3150) schub=(10150,-3150) d=(0,0) klemme=(10150,-3150) dk=(0,0)
+[push] F81 vor=(10150,-3150) tick=(10075,-3150) schub=(10075,-3150) d=(0,0) klemme=(10075,-3150) dk=(0,0)
+[push] F82 vor=(10075,-3150) tick=(10000,-3150) schub=(10000,-3150) d=(0,0) klemme=(10000,-3150) dk=(0,0)
+[push] F83 vor=(10000,-3150) tick=(9925,-3150) schub=(9925,-3150) d=(0,0) klemme=(9925,-3150) dk=(0,0)
+[push] F84 vor=(9925,-3150) tick=(9850,-3150) schub=(9850,-3150) d=(0,0) klemme=(9850,-3150) dk=(0,0)
+[push] F85 vor=(9850,-3150) tick=(9775,-3150) schub=(9775,-3150) d=(0,0) klemme=(9775,-3150) dk=(0,0)
+[push] F86 vor=(9775,-3150) tick=(9700,-3150) schub=(9700,-3150) d=(0,0) klemme=(9700,-3150) dk=(0,0)
+[push] F87 vor=(9700,-3150) tick=(9625,-3150) schub=(9625,-3150) d=(0,0) klemme=(9625,-3150) dk=(0,0)
+[push] F88 vor=(9625,-3150) tick=(9550,-3150) schub=(9550,-3150) d=(0,0) klemme=(9550,-3150) dk=(0,0)
+[push] F89 vor=(9550,-3150) tick=(9475,-3150) schub=(9475,-3150) d=(0,0) klemme=(9475,-3150) dk=(0,0)
+[push] F90 vor=(9475,-3150) tick=(9400,-3150) schub=(9400,-3150) d=(0,0) klemme=(9400,-3150) dk=(0,0)
+[walk] F90 cut=0 mo=105 af=25 frz=0 | pl pos=(9400,-1800,-3150) rot=2048
+[push] F91 vor=(9400,-3150) tick=(9325,-3150) schub=(9325,-3150) d=(0,0) klemme=(9325,-3150) dk=(0,0)
+[push] F92 vor=(9325,-3150) tick=(9250,-3150) schub=(9250,-3150) d=(0,0) klemme=(9250,-3150) dk=(0,0)
+[push] F93 vor=(9250,-3150) tick=(9175,-3150) schub=(9175,-3150) d=(0,0) klemme=(9175,-3150) dk=(0,0)
+[push] F94 vor=(9175,-3150) tick=(9100,-3150) schub=(9100,-3150) d=(0,0) klemme=(9100,-3150) dk=(0,0)
+[push] F95 vor=(9100,-3150) tick=(9025,-3150) schub=(9025,-3150) d=(0,0) klemme=(9025,-3150) dk=(0,0)
+[push] F96 vor=(9025,-3150) tick=(8950,-3150) schub=(8950,-3150) d=(0,0) klemme=(8950,-3150) dk=(0,0)
+[light] cut 2 tint=(128,128,128)
+[pri] cut=2 pri_offset=0x3F8 masks=0 fg_atlas=0
+[push] F97 vor=(8950,-3150) tick=(8875,-3150) schub=(8875,-3150) d=(0,0) klemme=(8875,-3150) dk=(0,0)
+[push] F98 vor=(8875,-3150) tick=(8800,-3150) schub=(8800,-3150) d=(0,0) klemme=(8800,-3150) dk=(0,0)
+[push] F99 vor=(8800,-3150) tick=(8725,-3150) schub=(8725,-3150) d=(0,0) klemme=(8725,-3150) dk=(0,0)
+[push] F100 vor=(8725,-3150) tick=(8650,-3150) schub=(8650,-3150) d=(0,0) klemme=(8650,-3150) dk=(0,0)
+[push] F101 vor=(8650,-3150) tick=(8575,-3150) schub=(8575,-3150) d=(0,0) klemme=(8575,-3150) dk=(0,0)
+[push] F102 vor=(8575,-3150) tick=(8500,-3150) schub=(8500,-3150) d=(0,0) klemme=(8500,-3150) dk=(0,0)
+[push] F103 vor=(8500,-3150) tick=(8425,-3150) schub=(8425,-3150) d=(0,0) klemme=(8425,-3150) dk=(0,0)
+[push] F104 vor=(8425,-3150) tick=(8350,-3150) schub=(8350,-3150) d=(0,0) klemme=(8350,-3150) dk=(0,0)
+[push] F105 vor=(8350,-3150) tick=(8275,-3150) schub=(8275,-3150) d=(0,0) klemme=(8275,-3150) dk=(0,0)
+[push] F106 vor=(8275,-3150) tick=(8200,-3150) schub=(8200,-3150) d=(0,0) klemme=(8200,-3150) dk=(0,0)
+[push] F107 vor=(8200,-3150) tick=(8125,-3150) schub=(8125,-3150) d=(0,0) klemme=(8125,-3150) dk=(0,0)
+[push] F108 vor=(8125,-3150) tick=(8050,-3150) schub=(8050,-3150) d=(0,0) klemme=(8050,-3150) dk=(0,0)
+[push] F109 vor=(8050,-3150) tick=(7975,-3150) schub=(7975,-3150) d=(0,0) klemme=(7975,-3150) dk=(0,0)
+[push] F110 vor=(7975,-3150) tick=(7900,-3150) schub=(7900,-3150) d=(0,0) klemme=(7900,-3150) dk=(0,0)
+[push] F111 vor=(7900,-3150) tick=(7825,-3150) schub=(7825,-3150) d=(0,0) klemme=(7825,-3150) dk=(0,0)
+[push] F112 vor=(7825,-3150) tick=(7750,-3150) schub=(7750,-3150) d=(0,0) klemme=(7750,-3150) dk=(0,0)
+[push] F113 vor=(7750,-3150) tick=(7675,-3150) schub=(7675,-3150) d=(0,0) klemme=(7675,-3150) dk=(0,0)
+[push] F114 vor=(7675,-3150) tick=(7600,-3150) schub=(7600,-3150) d=(0,0) klemme=(7600,-3150) dk=(0,0)
+[push] F115 vor=(7600,-3150) tick=(7525,-3150) schub=(7525,-3150) d=(0,0) klemme=(7525,-3150) dk=(0,0)
+[push] F116 vor=(7525,-3150) tick=(7450,-3150) schub=(7450,-3150) d=(0,0) klemme=(7450,-3150) dk=(0,0)
+[push] F117 vor=(7450,-3150) tick=(7375,-3150) schub=(7375,-3150) d=(0,0) klemme=(7375,-3150) dk=(0,0)
+[push] F118 vor=(7375,-3150) tick=(7300,-3150) schub=(7300,-3150) d=(0,0) klemme=(7300,-3150) dk=(0,0)
+[push] F119 vor=(7300,-3150) tick=(7225,-3150) schub=(7225,-3150) d=(0,0) klemme=(7225,-3150) dk=(0,0)
+[push] F120 vor=(7225,-3150) tick=(7150,-3150) schub=(7150,-3150) d=(0,0) klemme=(7150,-3150) dk=(0,0)
+[walk] F120 cut=2 mo=105 af=55 frz=0 | pl pos=(7150,-1800,-3150) rot=2048
+[push] F121 vor=(7150,-3150) tick=(7075,-3150) schub=(7075,-3150) d=(0,0) klemme=(7075,-3150) dk=(0,0)
+[push] F122 vor=(7075,-3150) tick=(7000,-3150) schub=(7000,-3150) d=(0,0) klemme=(7000,-3150) dk=(0,0)
+[push] F123 vor=(7000,-3150) tick=(6925,-3150) schub=(6925,-3150) d=(0,0) klemme=(6925,-3150) dk=(0,0)
+[push] F124 vor=(6925,-3150) tick=(6850,-3150) schub=(6850,-3150) d=(0,0) klemme=(6850,-3150) dk=(0,0)
+[push] F125 vor=(6850,-3150) tick=(6775,-3150) schub=(6775,-3150) d=(0,0) klemme=(6775,-3150) dk=(0,0)
+[push] F126 vor=(6775,-3150) tick=(6700,-3150) schub=(6700,-3150) d=(0,0) klemme=(6700,-3150) dk=(0,0)
+[push] F127 vor=(6700,-3150) tick=(6625,-3150) schub=(6625,-3150) d=(0,0) klemme=(6625,-3150) dk=(0,0)
+[push] F128 vor=(6625,-3150) tick=(6550,-3150) schub=(6550,-3150) d=(0,0) klemme=(6550,-3150) dk=(0,0)
+[push] F129 vor=(6550,-3150) tick=(6475,-3150) schub=(6475,-3150) d=(0,0) klemme=(6475,-3150) dk=(0,0)
+[push] F130 vor=(6475,-3150) tick=(6400,-3150) schub=(6400,-3150) d=(0,0) klemme=(6400,-3150) dk=(0,0)
+[push] F131 vor=(6400,-3150) tick=(6325,-3150) schub=(6325,-3150) d=(0,0) klemme=(6325,-3150) dk=(0,0)
+[push] F132 vor=(6325,-3150) tick=(6250,-3150) schub=(6250,-3150) d=(0,0) klemme=(6250,-3150) dk=(0,0)
+[push] F133 vor=(6250,-3150) tick=(6175,-3150) schub=(6175,-3150) d=(0,0) klemme=(6175,-3150) dk=(0,0)
+[push] F134 vor=(6175,-3150) tick=(6100,-3150) schub=(6100,-3150) d=(0,0) klemme=(6100,-3150) dk=(0,0)
+[push] F135 vor=(6100,-3150) tick=(6025,-3150) schub=(6025,-3150) d=(0,0) klemme=(6025,-3150) dk=(0,0)
+[push] F136 vor=(6025,-3150) tick=(5950,-3150) schub=(5950,-3150) d=(0,0) klemme=(5950,-3150) dk=(0,0)
+[push] F137 vor=(5950,-3150) tick=(5875,-3150) schub=(5875,-3150) d=(0,0) klemme=(5875,-3150) dk=(0,0)
+[push] F138 vor=(5875,-3150) tick=(5800,-3150) schub=(5800,-3150) d=(0,0) klemme=(5800,-3150) dk=(0,0)
+[push] F139 vor=(5800,-3150) tick=(5725,-3150) schub=(5725,-3150) d=(0,0) klemme=(5725,-3150) dk=(0,0)
+[push] F140 vor=(5725,-3150) tick=(5650,-3150) schub=(5650,-3150) d=(0,0) klemme=(5650,-3150) dk=(0,0)
+[push] F141 vor=(5650,-3150) tick=(5575,-3150) schub=(5575,-3150) d=(0,0) klemme=(5575,-3150) dk=(0,0)
+[push] F142 vor=(5575,-3150) tick=(5500,-3150) schub=(5500,-3150) d=(0,0) klemme=(5500,-3150) dk=(0,0)
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x3FC masks=0 fg_atlas=0
+[push] F143 vor=(5500,-3150) tick=(5425,-3150) schub=(5425,-3150) d=(0,0) klemme=(5425,-3150) dk=(0,0)
+[push] F144 vor=(5425,-3150) tick=(5350,-3150) schub=(5350,-3150) d=(0,0) klemme=(5350,-3150) dk=(0,0)
+[push] F145 vor=(5350,-3150) tick=(5275,-3150) schub=(5275,-3150) d=(0,0) klemme=(5275,-3150) dk=(0,0)
+[push] F146 vor=(5275,-3150) tick=(5200,-3150) schub=(5200,-3150) d=(0,0) klemme=(5200,-3150) dk=(0,0)
+[push] F147 vor=(5200,-3150) tick=(5125,-3150) schub=(5125,-3150) d=(0,0) klemme=(5125,-3150) dk=(0,0)
+[push] F148 vor=(5125,-3150) tick=(5050,-3150) schub=(5050,-3150) d=(0,0) klemme=(5050,-3150) dk=(0,0)
+[push] F149 vor=(5050,-3150) tick=(4975,-3150) schub=(4975,-3150) d=(0,0) klemme=(4975,-3150) dk=(0,0)
+[push] F150 vor=(4975,-3150) tick=(4900,-3150) schub=(4900,-3150) d=(0,0) klemme=(4900,-3150) dk=(0,0)
+[walk] F150 cut=3 mo=105 af=85 frz=0 | pl pos=(4900,-1800,-3150) rot=2048
+[push] F151 vor=(4900,-3150) tick=(4825,-3150) schub=(4825,-3150) d=(0,0) klemme=(4825,-3150) dk=(0,0)
+[push] F152 vor=(4825,-3150) tick=(4750,-3150) schub=(4750,-3150) d=(0,0) klemme=(4750,-3150) dk=(0,0)
+[push] F153 vor=(4750,-3150) tick=(4675,-3150) schub=(4675,-3150) d=(0,0) klemme=(4675,-3150) dk=(0,0)
+[push] F154 vor=(4675,-3150) tick=(4600,-3150) schub=(4600,-3150) d=(0,0) klemme=(4600,-3150) dk=(0,0)
+[push] F155 vor=(4600,-3150) tick=(4526,-3155) schub=(4526,-3155) d=(0,0) klemme=(4526,-3155) dk=(0,0)
+[push] F156 vor=(4526,-3155) tick=(4452,-3160) schub=(4452,-3160) d=(0,0) klemme=(4452,-3160) dk=(0,0)
+[push] F157 vor=(4452,-3160) tick=(4378,-3165) schub=(4378,-3165) d=(0,0) klemme=(4378,-3165) dk=(0,0)
+[push] F158 vor=(4378,-3165) tick=(4304,-3170) schub=(4304,-3170) d=(0,0) klemme=(4304,-3170) dk=(0,0)
+[push] F159 vor=(4304,-3170) tick=(4230,-3175) schub=(4230,-3175) d=(0,0) klemme=(4230,-3175) dk=(0,0)
+[push] F160 vor=(4230,-3175) tick=(4156,-3180) schub=(4156,-3180) d=(0,0) klemme=(4156,-3180) dk=(0,0)
+[push] F161 vor=(4156,-3180) tick=(4082,-3185) schub=(4082,-3185) d=(0,0) klemme=(4082,-3185) dk=(0,0)
+[push] F162 vor=(4082,-3185) tick=(4008,-3190) schub=(4008,-3190) d=(0,0) klemme=(4008,-3190) dk=(0,0)
+[push] F163 vor=(4008,-3190) tick=(3934,-3195) schub=(3934,-3195) d=(0,0) klemme=(3934,-3195) dk=(0,0)
+[push] F164 vor=(3934,-3195) tick=(3860,-3200) schub=(3860,-3200) d=(0,0) klemme=(3860,-3200) dk=(0,0)
+[push] F165 vor=(3860,-3200) tick=(3786,-3205) schub=(3786,-3205) d=(0,0) klemme=(3786,-3205) dk=(0,0)
+[push] F166 vor=(3786,-3205) tick=(3712,-3210) schub=(3712,-3210) d=(0,0) klemme=(3712,-3210) dk=(0,0)
+[push] F167 vor=(3712,-3210) tick=(3638,-3215) schub=(3638,-3215) d=(0,0) klemme=(3638,-3215) dk=(0,0)
+[push] F168 vor=(3638,-3215) tick=(3564,-3225) schub=(3564,-3225) d=(0,0) klemme=(3564,-3225) dk=(0,0)
+[push] F169 vor=(3564,-3225) tick=(3490,-3235) schub=(3490,-3235) d=(0,0) klemme=(3490,-3235) dk=(0,0)
+[push] F170 vor=(3490,-3235) tick=(3416,-3245) schub=(3416,-3245) d=(0,0) klemme=(3416,-3245) dk=(0,0)
+[push] F171 vor=(3416,-3245) tick=(3342,-3255) schub=(3342,-3255) d=(0,0) klemme=(3342,-3255) dk=(0,0)
+[push] F172 vor=(3342,-3255) tick=(3268,-3265) schub=(3268,-3265) d=(0,0) klemme=(3268,-3265) dk=(0,0)
+[push] F173 vor=(3268,-3265) tick=(3194,-3275) schub=(3194,-3275) d=(0,0) klemme=(3194,-3275) dk=(0,0)
+[push] F174 vor=(3194,-3275) tick=(3120,-3285) schub=(3120,-3285) d=(0,0) klemme=(3120,-3285) dk=(0,0)
+[push] F175 vor=(3120,-3285) tick=(3047,-3301) schub=(3047,-3301) d=(0,0) klemme=(3047,-3301) dk=(0,0)
+[push] F176 vor=(3047,-3301) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F177 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F178 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F179 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F180 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[walk] F180 cut=3 mo=200 af=3 frz=0 | pl pos=(2974,-1800,-3317) rot=1904
+[push] F181 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F182 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F183 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F184 vor=(2974,-3317) tick=(2974,-3317) schub=(2974,-3317) d=(0,0) klemme=(2974,-3317) dk=(0,0)
+[push] F185 vor=(2974,-3317) tick=(2905,-3343) schub=(2905,-3343) d=(0,0) klemme=(2905,-3343) dk=(0,0)
+[push] F186 vor=(2905,-3343) tick=(2836,-3369) schub=(2836,-3369) d=(0,0) klemme=(2836,-3369) dk=(0,0)
+[push] F187 vor=(2836,-3369) tick=(2767,-3395) schub=(2767,-3395) d=(0,0) klemme=(2767,-3395) dk=(0,0)
+[push] F188 vor=(2767,-3395) tick=(2698,-3421) schub=(2698,-3421) d=(0,0) klemme=(2698,-3382) dk=(0,39)
+[push] F189 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F190 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F191 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F192 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F193 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F194 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F195 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F196 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F197 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F198 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F199 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F200 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F201 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F202 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F203 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[push] F204 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[scd] thread start slot=10 first_op=0x2B
+[walk] F210 cut=3 mo=200 af=2 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F240 cut=3 mo=200 af=2 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F270 cut=3 mo=200 af=2 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F300 cut=3 mo=200 af=2 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[push] F328 vor=(2698,-3382) tick=(2698,-3382) schub=(2698,-3382) d=(0,0) klemme=(2698,-3382) dk=(0,0)
+[walk] F330 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F360 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F390 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F420 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F450 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F480 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F510 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F540 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F570 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F600 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F630 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F660 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F690 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F720 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F750 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F780 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F810 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F840 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F870 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F900 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F930 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F960 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F990 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1020 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1050 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1080 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1110 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1140 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1170 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1200 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1230 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1260 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1290 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1320 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1350 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1380 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1410 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1440 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1470 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1500 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1530 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1560 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1590 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1620 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1650 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1680 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[F1700-leon-root] world=(2698,-1800,-3382) view=(-3105,-591,8711) sd=208 screen=(85.9,105.9) cam_pos=(10456,-6184,956) cam_tgt=(-15424,3868,-3056) cut=3 visible=1
+[walk] F1710 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1740 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[F1750-leon-root] world=(2698,-1800,-3382) view=(-3105,-591,8711) sd=208 screen=(85.9,105.9) cam_pos=(10456,-6184,956) cam_tgt=(-15424,3868,-3056) cut=3 visible=1
+[walk] F1770 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1800 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[F1800-leon-root] world=(2698,-1800,-3382) view=(-3105,-591,8711) sd=208 screen=(85.9,105.9) cam_pos=(10456,-6184,956) cam_tgt=(-15424,3868,-3056) cut=3 visible=1
+[walk] F1830 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1860 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1890 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1920 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1950 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F1980 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2010 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2040 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2070 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2100 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2130 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2160 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2190 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2220 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2250 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2280 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2310 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2340 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2370 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2400 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2430 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2460 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2490 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2520 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2550 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2580 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2610 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2640 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2670 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2700 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2730 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2760 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2790 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2820 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2850 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2880 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2910 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2940 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F2970 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3000 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3030 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3060 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3090 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3120 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3150 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3180 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3210 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3240 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3270 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3300 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3330 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3360 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3390 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3420 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3450 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3480 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3510 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3540 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3570 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3600 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3630 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3660 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3690 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3720 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3750 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3780 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3810 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3840 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3870 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3900 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3930 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3960 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F3990 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4020 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4050 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4080 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4110 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4140 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4170 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4200 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4230 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4260 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4290 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4320 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4350 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4380 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4410 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4440 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4470 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4500 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4530 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4560 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4590 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4620 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4650 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4680 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4710 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4740 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4770 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4800 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4830 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4860 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4890 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4920 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4950 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F4980 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5010 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5040 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5070 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5100 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5130 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5160 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5190 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5220 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5250 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5280 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5310 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5340 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5370 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5400 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5430 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5460 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5490 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5520 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5550 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5580 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5610 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5640 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5670 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5700 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5730 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5760 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5790 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5820 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5850 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5880 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5910 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5940 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F5970 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6000 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6030 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6060 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6090 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6120 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6150 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6180 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6210 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6240 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6270 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6300 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6330 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6360 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6390 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6420 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6450 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6480 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6510 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6540 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6570 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6600 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6630 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6660 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6690 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6720 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6750 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6780 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6810 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6840 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6870 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6900 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6930 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6960 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F6990 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7020 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7050 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7080 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7110 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7140 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7170 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7200 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7230 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7260 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7290 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7320 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7350 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7380 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7410 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7440 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7470 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7500 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7530 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7560 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7590 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7620 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7650 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7680 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7710 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7740 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7770 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7800 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7830 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7860 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7890 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7920 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7950 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F7980 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F8010 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F8040 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F8070 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F8100 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F8130 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F8160 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
+[walk] F8190 cut=3 mo=200 af=3 frz=0 | pl pos=(2698,-1800,-3382) rot=1040
