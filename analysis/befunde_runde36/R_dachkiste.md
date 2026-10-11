@@ -63,7 +63,30 @@ Werkzeug-Befunde (gemessen, `R_belege/orig_diag*/log.txt`):
   RIGHT 1 s -> Blick 672 -> 3456 (= +2784 = +96/Bild, derselbe Drehsinn wie der Port).
 * Die Emulation laeuft nach `c` (Haltepunkt FUN_8002bd44 @0x8002bd44 trifft je Bild, `S05`).
 
-(Messlauf folgt)
+### 2.1 Messung am Original — Ergebnis (`R_belege/orig_lauf5/log.txt` alle Plaene, `orig_lauf6/log.txt` NORD mit Treffer-Zelle)
+
+Leon aus dem Spielstand ((-5282,-1514) Band 5, Blick 672) durch den Korridor x -6878..-4814 nach Norden vor die
+Kiste, dann die vier moeglichen Angriffe (jeder Schubversuch = Zaehler obj+0x8C == 9, `SCHUB-GESPERRT` = Halt
+@0x8002c0b0 VOR der Ruecksetzung, `TREFFER-ZELLE` = Halt in FUN_8003da78, a0 = die sperrende Zelle):
+
+| Plan | Spieler beim Versuch (x,z,Blick) | Kisten-Ziel-Lage (FUN_8002cabc) | FUN_8003b558 | Treffer-Zelle | Kiste danach |
+|---|---|---|---|---|---|
+| NORD (von Sueden, UP 4 s) | (-5887,-14208, 1024) | (-5960,**-15558**) = Spieler z - 1350 | gesperrt | **0x80123984 = r3[4] Bruestung** x -7256..4624 z -18560..-16403 u0 0xff fl 0x53 | (-5960,-15482) (Ruecksetzung) |
+| NORD-2 (loslassen, erneut) | (-5551,-14204, 1024) | (-5960,-15554) | gesperrt | r3[4] | (-5960,-15482) |
+| WEST (von Osten, x -4685, z -15095, Blick 2112) | (-4685,-15095) | (-6035,-15482) = Spieler x - 1350 -> von FUN_8003da78 auf -5960 zurueckgeschoben | gesperrt (lauf5) | r3[2] Westwand (Ziel x < -5978) | (-5960,-15482) |
+| WESTSEITE (x -6412 an der Wand, Blick 1024, UP 3 s) | (-6412,-14208) | (-5960,-15558) | gesperrt | r3[4] | (-5960,-15482); Spieler bleibt bei z -14132 |
+| OST-VERSUCH (von x -6410, Blick 0, UP 3 s) | laeuft an der Suedflanke entlang bis x 518 | — kein Versuch (Reichweite verfehlt) | — | — | (-5960,-15482) |
+| SUED (Nordtasche x -4250 z -15900, UP 2 s, dann Blick 2560) | Spieler z >= -15953 (Bruestung), kein Versuch | — | — | — | (-5960,-15482) |
+
+Ergebnisse: **0 angenommene Schuebe, 0 Fall-Ausloeser**; die Kiste steht am Ende exakt auf dem Record
+(-5960,-9000,-15482), obj+0x04 = 0, Band 5. Zwischenbefund zur Zahl -15485 in `SCHUB-GESPERRT`: FUN_8003da78
+(Aufruf @0x8003b79c bei jedem Zellentreffer, a0 = Zelle, a1 = Objekt) schiebt das Objekt auf die Zellkante plus 18
+(`addiu t0,v0,18` @0x8003dab0 — dieselbe +0x12-Haut wie push_rect): -16403 + 900 + 18 = -15485; die Ruecksetzung
+@0x8002c0b8-d4 macht das ohnehin rueckgaengig (s4/s5 = (-5960,-15482) im Halt). Der Schub ist im Original also nicht
+"21 Einheiten bis zur Bruestung", sondern von Anfang an ganz gesperrt, weil der erste Schubschritt (Spieler-Schritt
+~76 > 21 Luft) die Kiste in die Bruestungszelle setzt.
+Spieler-Boxen (gelesen): +0x78 @0x80073e94 = (0,-1530,0,450,1530,450) (FUN_8002cabc nimmt hx = 450 @0x8002cb3c-4c),
++0x7C @0x800b2354 = (0,-1530,0,0,0,0) (Mitte cx/cz = 0 @0x8002cb10/@0x8002cb28). Also Kiste = Spieler +- 1350 wie im Port.
 
 ## RE-Belege
 

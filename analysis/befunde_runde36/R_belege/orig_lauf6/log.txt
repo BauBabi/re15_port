@@ -1,0 +1,29 @@
+DuckStation gestartet {'114288'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (-5282, -9000, -1514, 672, 5, 0) obj0: (-9836, -1800, 4753, 0, 0, 1, 0) obj1: (-5960, -9000, -15482, 0, 0, 5, 0)
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Z0 8003da78: b'OK'
+Spieler-Box +0x78: (0, -1530, 0, 450, 1530, 450) +0x7C @800b2354: (0, -1530, 0, 0, 0, 0)
+obj1 +0x7C @00000000: 0
+Drehsinn: R 0.6 s -> dBlick = 384
+START spieler=(-5282,-9000,-1514) blick=1056 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+== Plan NORD: von Sueden gegen die Kiste schieben (Bruestung r2[0] z -16403) ==
+NORD VOR spieler=(-5926,-9000,-13697) blick=-11296 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+  TREFFER-ZELLE a0=80123984 obj=800b402c: x -7256..4624 z -18560..-16403 typ 1 u0 0xff u1 0x00 fl 0x53 | obj1=(-5960, -9000, -15558, 0, 0, 5, 9)
+  SCHUB-GESPERRT obj1=(-5960, -9000, -15485, 0, 0, 5, 9) spieler=(-5887, -9000, -14208, -11296, 5, 1) s4/s5=(-5960,-15482)
+NORD NACH spieler=(-5553,-9000,-14132) blick=-11296 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=117
+NORD: Schub angenommen 0 x, gesperrt 1 x, Fall-Ausloeser 0 x
+NORD-2 VOR spieler=(-5621,-9000,-12959) blick=-11296 band=5 sub=4 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+  TREFFER-ZELLE a0=80123984 obj=800b402c: x -7256..4624 z -18560..-16403 typ 1 u0 0xff u1 0x00 fl 0x53 | obj1=(-5960, -9000, -15554, 0, 0, 5, 9)
+  SCHUB-GESPERRT obj1=(-5960, -9000, -15485, 0, 0, 5, 9) spieler=(-5551, -9000, -14204, -11296, 5, 1) s4/s5=(-5960,-15482)
+NORD-2 NACH spieler=(-5378,-9000,-14132) blick=-11296 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=65
+NORD-2: Schub angenommen 0 x, gesperrt 1 x, Fall-Ausloeser 0 x
+ENDE spieler=(-5378,-9000,-14132) blick=-11296 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=65
+Ereignisse gesamt: 2
+   ('SCHUB-GESPERRT', (-5960, -9000, -15485, 0, 0, 5, 9), (-5887, -9000, -14208, -11296, 5, 1))
+   ('SCHUB-GESPERRT', (-5960, -9000, -15485, 0, 0, 5, 9), (-5551, -9000, -14204, -11296, 5, 1))
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

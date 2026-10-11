@@ -17,7 +17,7 @@ STATE = r"C:\workspace\git\reAi_v2\stage_saves\room1090_orig.sav"
 INI = os.path.expandvars(r"%LOCALAPPDATA%\DuckStation\settings.ini")
 PORT = 2345
 PL, POOL, OBJ_SZ = 0x800ACA54, 0x800B3F98, 0x94
-BP_OK, BP_BLOCK, BP_FALL = 0x8002BFC0, 0x8002C0B0, 0x8002C13C
+BP_OK, BP_BLOCK, BP_FALL, BP_HIT = 0x8002BFC0, 0x8002C0B0, 0x8002C13C, 0x8003DA78
 
 
 class Gdb:
@@ -107,13 +107,15 @@ class Gdb:
         except TimeoutError:
             return None
 
+    def regs(s):
+        raw = bytes.fromhex(s.cmd("g").decode())
+        n = len(raw) // 4
+        return list(struct.unpack("<%dI" % n, raw[:n * 4]))
+
     def pc(s):
-        regs = s.cmd("g")
-        raw = bytes.fromhex(regs.decode())
+        r = s.regs()
         # DuckStation-GDB: 32 GPR + sr, lo, hi, bad, cause, pc (Index 37)
-        if len(raw) >= 38 * 4:
-            return struct.unpack_from("<I", raw, 37 * 4)[0]
-        return 0
+        return r[37] if len(r) >= 38 else 0
 
 
 def ini_set(path, section, key, value):
@@ -222,8 +224,13 @@ def main():
 
         L("EXE-Stub @0x80026e4c:", g.mem(0x80026E4C, 4).hex(), "(Auslieferung 0800e003)")
         L("Spieler:", pl(), "obj0:", obj(0), "obj1:", obj(1))
-        for a in (BP_OK, BP_BLOCK, BP_FALL):
+        for a in (BP_OK, BP_BLOCK, BP_FALL, BP_HIT):
             L("Z0 %08x:" % a, g.cmd("Z0,%x,4" % a))
+        bx = struct.unpack("<I", g.mem(PL + 0x7C, 4))[0]
+        L("Spieler-Box +0x78:", struct.unpack("<6h", g.mem(struct.unpack("<I", g.mem(PL + 0x78, 4))[0], 12)),
+          "+0x7C @%08x:" % bx, struct.unpack("<6h", g.mem(bx, 12)) if 0x80000000 <= bx < 0x80200000 else bx)
+        o1b = struct.unpack("<I", g.mem(POOL + OBJ_SZ + 0x7C, 4))[0]
+        L("obj1 +0x7C @%08x:" % o1b, struct.unpack("<6h", g.mem(o1b, 12)) if 0x80000000 <= o1b < 0x80200000 else o1b)
         ereignisse = []
 
         def lauf(sekunden, *btns):
@@ -238,12 +245,22 @@ def main():
                 r = g.wait_stop(min(left, 0.5))
                 if r is None:
                     continue
-                pc = g.pc()
-                tag = {BP_OK: "SCHUB-OK", BP_BLOCK: "SCHUB-GESPERRT", BP_FALL: "FALL-AUSLOESER"}.get(pc, "stop@%08x" % pc)
+                rg = g.regs()
+                pc = rg[37] if len(rg) >= 38 else 0
+                tag = {BP_OK: "SCHUB-OK", BP_BLOCK: "SCHUB-GESPERRT", BP_FALL: "FALL-AUSLOESER", BP_HIT: "TREFFER-ZELLE"}.get(pc, "stop@%08x" % pc)
                 o1 = obj(1)
                 p = pl()
-                ereignisse.append((tag, o1, p))
-                L("  %s obj1=%s spieler=%s" % (tag, o1, p))
+                if pc == BP_HIT:
+                    a0, a1 = rg[4], rg[5]
+                    zelle = g.mem(a0, 12)
+                    w, d, x, z, t, u0, u1, fl = struct.unpack("<HHhhBBBB", zelle)
+                    L("  TREFFER-ZELLE a0=%08x obj=%08x: x %d..%d z %d..%d typ %d u0 0x%02x u1 0x%02x fl 0x%02x | obj1=%s" % (
+                        a0, a1, x, x + w, z, z + d, t, u0, u1, fl, o1))
+                else:
+                    s4, s5 = rg[20], rg[21]
+                    ereignisse.append((tag, o1, p))
+                    L("  %s obj1=%s spieler=%s s4/s5=(%d,%d)" % (tag, o1, p, (s4 & 0xffff) - (0x10000 if s4 & 0x8000 else 0),
+                                                                  (s5 & 0xffff) - (0x10000 if s5 & 0x8000 else 0)))
                 g.cont()
             r = g.stop()
             pad()
@@ -256,21 +273,38 @@ def main():
                 tag, p[0], p[1], p[2], p[3], p[4], p[5], o1[0], o1[1], o1[2], o1[3], o1[4], o1[5], o1[6]))
             return p, o1
 
-        p0 = pl()
-        lauf(0.2, B.XUSB_GAMEPAD_DPAD_RIGHT)
-        p1 = pl()
-        dr = ((p1[3] - p0[3] + 2048) % 4096) - 2048
-        L("Drehsinn: R 0.2 s -> dBlick = %d" % dr)
-        r_sign = 1 if dr > 0 else -1
+        # Drehsinn messen: 0.6 s R (nach einem Stopp braucht die Eingabe einige Bilder, 0.2 s ergab 0).
+        r_sign = 0
+        for _ in range(3):
+            p0 = pl()
+            lauf(0.6, B.XUSB_GAMEPAD_DPAD_RIGHT)
+            p1 = pl()
+            dr = ((p1[3] - p0[3] + 2048) % 4096) - 2048
+            L("Drehsinn: R 0.6 s -> dBlick = %d" % dr)
+            if abs(dr) > 100:
+                r_sign = 1 if dr > 0 else -1
+                break
+        if r_sign == 0:
+            L("Pad kommt nicht an (kein Drehen) - Abbruch")
+            return 4
 
-        def drehe_auf(ziel, tol=40):
-            for _ in range(40):
+        def drehe_auf(ziel, tol=120):
+            """Drehen ~96 Einheiten je Bild (gemessen: R 1 s = +2784); Haltezeit proportional, kurze Tipper
+            fuer den Rest. Drehsinn nur bei eindeutig falscher Richtung umkehren."""
+            nonlocal r_sign
+            for _ in range(30):
                 p = pl()
                 err = ((ziel - p[3] + 2048) % 4096) - 2048
                 if abs(err) <= tol:
                     return p
                 btn = B.XUSB_GAMEPAD_DPAD_RIGHT if (err * r_sign) > 0 else B.XUSB_GAMEPAD_DPAD_LEFT
-                lauf(min(0.6, max(0.05, abs(err) / 4096.0 * 2.2)), btn)
+                dauer = min(0.8, max(0.035, (abs(err) - 60) / 2880.0))
+                lauf(dauer, btn)
+                p2 = pl()
+                err2 = ((ziel - p2[3] + 2048) % 4096) - 2048
+                if dauer >= 0.2 and abs(err2) > abs(err) + 300:
+                    r_sign = -r_sign
+                    L("  Drehsinn umgekehrt (err %d -> %d)" % (err, err2))
             return pl()
 
         def ziel_blick(x, z):
@@ -291,7 +325,7 @@ def main():
 
         def schiebe(blick, sekunden, tag):
             """Blick einstellen, UP halten (Schub), Ereignisse zaehlen."""
-            drehe_auf(blick, 24)
+            drehe_auf(blick, 100)
             n0 = len(ereignisse)
             zustand("%s VOR" % tag)
             lauf(sekunden, B.XUSB_GAMEPAD_DPAD_UP)
@@ -322,7 +356,7 @@ def main():
             lauf(0.8, B.XUSB_GAMEPAD_DPAD_DOWN)
             gehe_zu(-4300, -13500, 200)
             gehe_zu(-6300, -13900, 150)
-            drehe_auf(1024, 24)
+            drehe_auf(1024, 100)
             zustand("WESTSEITE VOR")
             lauf(3.0, B.XUSB_GAMEPAD_DPAD_UP)
             zustand("WESTSEITE NACH (UP 3 s nach Norden bei x~-6400)")
@@ -332,7 +366,7 @@ def main():
             lauf(0.8, B.XUSB_GAMEPAD_DPAD_DOWN)
             gehe_zu(-4250, -14000, 200)
             gehe_zu(-4250, -15900, 120)
-            drehe_auf(1024, 24)
+            drehe_auf(1024, 100)
             zustand("NORDTASCHE VOR")
             lauf(2.0, B.XUSB_GAMEPAD_DPAD_UP)
             zustand("NORDTASCHE NACH (UP 2 s nach Norden)")
@@ -341,7 +375,7 @@ def main():
         L("Ereignisse gesamt:", len(ereignisse))
         for e in ereignisse:
             L("  ", e)
-        for a in (BP_OK, BP_BLOCK, BP_FALL):
+        for a in (BP_OK, BP_BLOCK, BP_FALL, BP_HIT):
             g.cmd("z0,%x,4" % a)
         g.cont()
         time.sleep(0.3)

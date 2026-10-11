@@ -1,0 +1,47 @@
+DuckStation gestartet {'115408'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (-5282, -9000, -1514, 672, 5, 0) obj0: (-9836, -1800, 4753, 0, 0, 1, 0) obj1: (-5960, -9000, -15482, 0, 0, 5, 0)
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Drehsinn: R 0.6 s -> dBlick = 864
+START spieler=(-5282,-9000,-1514) blick=1536 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+== Plan NORD: von Sueden gegen die Kiste schieben (Bruestung r2[0] z -16403) ==
+NORD VOR spieler=(-5683,-9000,-13049) blick=29664 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+  SCHUB-GESPERRT obj1=(-5960, -9000, -15485, 0, 0, 5, 9) spieler=(-5620, -9000, -14209, 29664, 5, 1)
+NORD NACH spieler=(-5317,-9000,-14132) blick=29664 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=110
+NORD: Schub angenommen 0 x, gesperrt 1 x, Fall-Ausloeser 0 x
+NORD-2 VOR spieler=(-5385,-9000,-12959) blick=29664 band=5 sub=4 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+  SCHUB-GESPERRT obj1=(-5960, -9000, -15485, 0, 0, 5, 9) spieler=(-5318, -9000, -14204, 29664, 5, 1)
+NORD-2 NACH spieler=(-5151,-9000,-14132) blick=29664 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=65
+NORD-2: Schub angenommen 0 x, gesperrt 1 x, Fall-Ausloeser 0 x
+== Plan WEST: von Osten (Tasche x -4610..-3850) gegen die Kiste schieben (Wand r3[2] x <= -6878) ==
+WEST VOR spieler=(-4610,-9000,-15155) blick=14400 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+  SCHUB-GESPERRT obj1=(-5960, -9000, -15482, 0, 0, 5, 9) spieler=(-4685, -9000, -15095, 14400, 5, 1)
+WEST NACH spieler=(-4610,-9000,-14315) blick=14400 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+WEST: Schub angenommen 0 x, gesperrt 1 x, Fall-Ausloeser 0 x
+WEST-2 VOR spieler=(-3368,-9000,-14441) blick=14400 band=5 sub=4 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+WEST-2 NACH spieler=(-6410,-9000,-13721) blick=14400 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+WEST-2: Schub angenommen 0 x, gesperrt 0 x, Fall-Ausloeser 0 x
+== Plan WESTSEITE: zwischen Wand und Kiste kommen (x -6428, z -15482) und nach Osten schieben? ==
+WESTSEITE VOR spieler=(-6410,-9000,-13919) blick=-19440 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+  SCHUB-GESPERRT obj1=(-5960, -9000, -15485, 0, 0, 5, 9) spieler=(-6412, -9000, -14208, -19440, 5, 1)
+WESTSEITE NACH (UP 3 s nach Norden bei x~-6400) spieler=(-6410,-9000,-14132) blick=-19440 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=89
+OST-VERSUCH VOR spieler=(-6410,-9000,-14132) blick=-20448 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+OST-VERSUCH NACH spieler=(518,-9000,-14402) blick=-20448 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+OST-VERSUCH: Schub angenommen 0 x, gesperrt 0 x, Fall-Ausloeser 0 x
+== Plan SUED: Nordseite der Kiste erreichen? (Spieler z < -16832 noetig; Bruestung erlaubt z >= -15953) ==
+NORDTASCHE VOR spieler=(-3853,-9000,-15852) blick=5056 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+NORDTASCHE NACH (UP 2 s nach Norden) spieler=(-3861,-9000,-15935) blick=5056 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+SUED-DIAGONAL VOR spieler=(-3861,-9000,-15935) blick=6640 band=5 sub=3 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+SUED-DIAGONAL NACH spieler=(-6410,-9000,-11532) blick=6640 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+SUED-DIAGONAL: Schub angenommen 0 x, gesperrt 0 x, Fall-Ausloeser 0 x
+ENDE spieler=(-6410,-9000,-11532) blick=6640 band=5 sub=1 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+Ereignisse gesamt: 4
+   ('SCHUB-GESPERRT', (-5960, -9000, -15485, 0, 0, 5, 9), (-5620, -9000, -14209, 29664, 5, 1))
+   ('SCHUB-GESPERRT', (-5960, -9000, -15485, 0, 0, 5, 9), (-5318, -9000, -14204, 29664, 5, 1))
+   ('SCHUB-GESPERRT', (-5960, -9000, -15482, 0, 0, 5, 9), (-4685, -9000, -15095, 14400, 5, 1))
+   ('SCHUB-GESPERRT', (-5960, -9000, -15485, 0, 0, 5, 9), (-6412, -9000, -14208, -19440, 5, 1))
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
