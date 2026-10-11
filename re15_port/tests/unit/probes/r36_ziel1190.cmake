@@ -12,3 +12,9 @@ target_compile_definitions(test_r36_ziel1190 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r36_ziel1190 COMMAND test_r36_ziel1190)
 set_tests_properties(unit_r36_ziel1190 PROPERTIES TIMEOUT 120)
+
+# MESS-WERKZEUG (kein add_test): Speicherkarte im Schiessstand fuer den exe-Riegel (Leon ROOM1190 / Elza
+# ROOM1191 ueber den Charakter des Spielstands, CONTINUE-Weg).
+add_executable(probe_r36_ziel1190_karte probe_r36_ziel1190_karte.c)
+target_link_libraries(probe_r36_ziel1190_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r36_ziel1190_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
