@@ -1,0 +1,31 @@
+# exe Stelle 7 (RE15_PLAYER_POS=-14746,-4140), Endstand NB6g (re15_pc_nb6l.exe): Grund 14 genau einmal je Pad-Aufenthalt.
+# gy F916 erster Sprung aus der Pad-Mitte (ng 14, 9f=48), F925-951 Flug/Landung zurueckgeschnappt, Sub 8 Sprungangriff trifft Leon (toedlich: Todesanimation bis F1204 = Raumwechsel R1240);
+# ab F1001 KEIN zweiter Sprung: ng 11 (zu Fuss zum Startknoten (-14600,900)), F1071 ng 12 Anlauf, F1085 FERN -> FERN-Umweg. S2 fest 0 (Abnahme 5: 179, NB6c: 250).
+## Messschiene S2 (Uebergaenge, gy = aff - 241)
+gy F899  [2 st=1/3/1/0 @(-16239,-3479) rot=933 dd=3491 L1 k1 ua=0 up=-1 z(0,0) nu=0 nah=29 ng=0 h=569 fest=0 vt=0 9f=c8] 
+gy F916  [2 st=1/7/1/1 @(-16310,-3544) rot=963 dd=3481 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=0 ng=14 h=586 fest=0 vt=0 9f=48] 
+gy F925  [2 st=1/7/2/1 @(-16360,-3590) rot=1024 dd=3405 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=0 ng=14 h=595 fest=0 vt=0 9f=48] 
+gy F929  [2 st=1/7/2/1 @(-16360,-3590) rot=1024 dd=3405 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=0 ng=14 h=599 fest=0 vt=0 9f=48] 
+gy F934  [2 st=1/8/0/0 @(-16360,-3590) rot=1024 dd=3405 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=0 ng=14 h=604 fest=0 vt=0 9f=48] 
+gy F935  [2 st=1/8/1/0 @(-16360,-3590) rot=1024 dd=3405 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=0 ng=14 h=605 fest=0 vt=0 9f=48] 
+gy F951  [2 st=1/8/2/0 @(-16391,-3618) rot=1024 dd=3405 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=0 ng=14 h=621 fest=0 vt=0 9f=48] 
+gy F955  [2 st=1/4/0/0 @(-16219,-3461) rot=1024 dd=3463 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=0 ng=14 h=625 fest=0 vt=0 9f=48] 
+gy F956  [2 st=1/3/1/0 @(-16174,-3419) rot=988 dd=3510 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=1 ng=14 h=626 fest=0 vt=0 9f=48] 
+gy F959  [2 st=1/3/1/0 @(-16175,-3294) rot=949 dd=3647 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=4 ng=14 h=629 fest=0 vt=0 9f=48] 
+gy F989  [2 st=1/3/1/0 @(-16277,-3514) rot=925 dd=3463 L1 k1 ua=0 up=47 z(-16251,-5090) nu=0 nah=34 ng=14 h=659 fest=0 vt=0 9f=48] 
+gy F1001  [2 st=1/3/1/0 @(-16222,-3464) rot=918 dd=3510 L1 k1 ua=1 up=47 z(-14600,900) nu=1 nah=46 ng=11 h=671 fest=0 vt=0 9f=48] 
+gy F1019  [2 st=1/3/1/0 @(-16220,-3462) rot=540 dd=3510 L1 k1 ua=1 up=47 z(-14600,900) nu=1 nah=64 ng=11 h=689 fest=0 vt=0 9f=48] 
+gy F1049  [2 st=1/3/1/0 @(-15580,-2877) rot=4006 dd=4015 L1 k1 ua=1 up=47 z(-14600,900) nu=1 nah=0 ng=11 h=719 fest=0 vt=0 9f=48] 
+gy F1071  [2 st=1/3/1/0 @(-14198,-1598) rot=3586 dd=5514 L0 k1 ua=2 up=47 z(-14747,-4140) nu=1 nah=3 ng=12 h=741 fest=0 vt=0 9f=48] 
+gy F1079  [2 st=1/3/1/0 @(-14072,-1499) rot=3754 dd=5632 L0 k1 ua=2 up=47 z(-14747,-4140) nu=1 nah=1 ng=12 h=749 fest=0 vt=0 9f=48] 
+gy F1085  [2 st=1/3/1/0 @(-13736,-1192) rot=3838 dd=6014 L0 k1 ua=1 up=47 z(-14600,900) nu=0 nah=0 ng=12 h=755 fest=1 vt=0 9f=48] 
+gy F1103  [2 st=1/3/1/0 @(-13518,-146) rot=3502 dd=7057 L0 k1 ua=2 up=47 z(-14747,-4140) nu=0 nah=0 ng=12 h=773 fest=1 vt=0 9f=48] 
+gy F1109  [2 st=1/3/1/0 @(-13518,313) rot=3628 dd=7542 L0 k1 ua=2 up=47 z(-14747,-4140) nu=0 nah=0 ng=12 h=779 fest=2 vt=0 9f=48] 
+gy F1129  [2 st=1/3/1/0 @(-13518,645) rot=4048 dd=7898 L1 k1 ua=0 up=47 z(-14747,-4140) nu=0 nah=0 ng=12 h=799 fest=5 vt=0 9f=48] 
+gy F1139  [2 st=1/3/1/0 @(-13518,565) rot=162 dd=7848 L1 k1 ua=0 up=47 z(-14747,-4140) nu=0 nah=0 ng=12 h=809 fest=15 vt=0 9f=48] 
+gy F1169  [2 st=1/3/1/0 @(-13518,-731) rot=792 dd=6656 L1 k1 ua=0 up=47 z(-14747,-4140) nu=0 nah=0 ng=12 h=839 fest=1 vt=0 9f=48] 
+gy F1199  [2 st=1/3/1/0 @(-14497,-1887) rot=1189 dd=5246 L1 k1 ua=0 up=47 z(-14747,-4140) nu=0 nah=0 ng=12 h=869 fest=0 vt=0 9f=48] 
+## Leon: PL(-15759,-6944) unveraendert bis F1204, dann R1240 F0 (Tod/Continue); ausw5:
+gy.log | F1..F1204
+   S2 Angriff F364 (Angriffsbilder 236) fest 0 = NAH 0 + FERN 0
+   S3 Angriff nie (Angriffsbilder 0) fest 108 = NAH 0 + FERN 108
