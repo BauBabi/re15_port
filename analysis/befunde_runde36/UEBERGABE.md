@@ -10,6 +10,7 @@ Pflichtlektuere vorher: `CLAUDE.md` (STOP-GATE, Build ueber `local_build.sh`), `
 Spur), auf dem Integrationszweig `analysis/befunde_runde36/NACHLAUF.md` (Funde ausserhalb der Spur-Wortlaute).
 
 ## ✅ Fortschritt seit der Uebergabe (fortlaufend, neueste zuerst)
+* 2026-10-11 16:15: FABLE-SITZUNGSLIMIT ~13:20 (Reset 16:10) beendete F (NB6, bis 30c2ecb3 NB6g) und R (bis 4911c7b4: ORIGINAL laesst die Dach-Kiste 1090 NICHT bewegen; Port-Zensus mit Spieler 0 Ausloeser). Reste als wip UNGEPRUEFT gesichert (F b2177510, R 085940e6 inkl. ungebauter aot_common.c-Aenderung); 15 verwaiste Monitore + eine stehende Mess-exe beendet; DuckStation EnableGDBServer = false geprueft. N kartenitems Abnahme 1 BESTANDEN -> in r36/integration GEMERGT (cb1d5f59; 3 Konflikte beide Seiten), Bau + Tests laufen. Naechster Schritt: Rest-Lauf 5 mit orchestrator/args_rest5_FR.json (F NB6-Fortsetzung, R Bau-Fortsetzung).
 * 2026-10-11 13:35: O INTEGRIERT (gezielt 611/611 gruen) + MASKS-Paket-Gate (75a65020). Integriert 15/17. N: Abnahme 1 laeuft (nach Licht-Nachbesserung). F NB6 und R laufen.
 * 2026-10-11 13:20: O pri Abnahme 0 BESTANDEN, in r36/integration GEMERGT (6e40fe1c; render_pc.c Konflikt mit E = beide Seiten), Bau + Tests laufen; NACHLAUF 38-42, Release-Notes PRI-Absatz. Offen: N (NB1 Licht), F (NB6), R (Bau).
 * 2026-10-11 13:05: H INTEGRIERT (9a75d143, gezielt 606/606 gruen). Integriert jetzt 14/17: A B C D E G H I J K L M P Q. Offen: N (NB1 Licht), O (Abnahme 0), F (NB6), R (neu).
