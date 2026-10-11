@@ -525,5 +525,46 @@ DASSELBE Bit (gleiche Basis, gleiche Wort-/Masken-Rechnung). Der Port fuehrt Ban
 0x80021fd4 (`lhu a1,4(s0)` @0x80021fcc mit s0 = Record+12 bzw. +20 -> Record+16/+24 = pc[18]/pc[26],
 `jal 0x8004ef90` @0x80021fd8) setzen das Bit AUS DEM Item_aot_set-Satz — keine eigenen Bitnummern.
 
-### 9.2 P1 Messung vorher
+### 9.2 P1 Messung vorher (Stand 7a0fd453 + neuer Test, exe-unabhaengig an der Engine)
+Neuer Test `unit_r36_kartenbits` (tests/unit/test_r36_kartenbits.c, registriert in tests/unit/probes/r36_kartenbits.cmake),
+Teil V, am UNVERAENDERTEN Spur-N-Stand gebaut und gefahren. Ablauf je Plan: Raum des Plans starten (scd_room_reenter mit
+allen Port-Installern), Ereignis 28 feuern (scd_event_fire = was der Aktions-Scan des EVENT-Satzes tut), Ja/Nein mit JA
+beantworten (virtuelles Bestaetigen-Bit 0x4000), Faden bis zum Ende; danach mit DEMSELBEN Bank-9-Stand die Stage-2-Raeume
+starten. Die Saetze, gegen die gemessen wird (Bytes im RDT geprueft):
+* ROOM2040/2041 main00 @0x01364 `50 07 09 31 03 00 a4 06 62 c6 e8 03 e8 03 32 00 01 00 5b 00 ff 00` = Slot 7, Item 0x32
+  "Head of Akuma" (Name aus der byte-true Namensbank DEBUG.BIN @0x800c495c/@0x800c4a28), Taken-Bit u16 pc[18] = 0x5b = **91**
+* ROOM2090/2091 main00 @0x00A12 `50 05 09 31 01 00 e6 14 c4 be e8 03 e8 03 3f 00 01 00 5a 00 00 00` = Slot 5, Item 0x3F
+  "Pocket Watch", Taken-Bit = 0x5a = **90**, Weltmodell obj 0 (pc[20])
+
+Ergebnis (ctest-Ausgabe, gekuerzt):
+```
+ok:   ROOM2040 Slot 7: frisch scharf (1), mit Bit (9,91) still (1) — Gegenprobe der Messung     (ebenso 2041, 2090/2091 mit 90)
+ok:   Plan Blatt 4 (ROOM1140): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,87)  -> alle 4 Saetze scharf
+ok:   Plan Blatt 3 (ROOM10D0): ... (9,88) -> alle 4 scharf;  Plan Blatt 2 (ROOM1030): ... (9,89) -> alle 4 scharf
+ok:   Plan Blatt 1 (ROOM1200): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,90)
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2090 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2091 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+ok:   Plan Blatt 0 (ROOM11D0): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,91)
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2040 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2041 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL: Original-Items 0x32/0x3F genommen (Bits 90/91): Besitz der Polizei-Blaetter 0..4 = 0x03
+FAIL:   ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+FAIL:   ROOM11D0: Plan Blatt 0 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+```
+Befund damit an der Engine bestaetigt, in BEIDE Richtungen:
+* Lageplan B2 (ROOM1200) genommen -> in ROOM2090/2091 fehlt die Taschenuhr (Satz still, Weltmodell obj 0 versteckt,
+  Port op_item_aot_set = Original @0x800406f4/@0x800406f8-718); Lageplan B1 (ROOM11D0) -> in ROOM2040/2041 fehlt
+  "Head of Akuma". 3F/2F/1F (87/88/89) treffen keinen dieser Saetze.
+* Item 0x3F bzw. 0x32 genommen (Bits 90/91) -> Kartenblatt B2 (Seite 1) und B1 (Seite 0) gelten als besessen
+  (Besitz-Maske 0x03), und die Plaene in ROOM1200/11D0 werden gar nicht erst angelegt.
+* Softlock? Kein Skript prueft die Bits 90/91 (Ck/Set-Zensus 9.3), keiner der beiden Gegenstaende hat eine
+  Benutzungsstelle unter den 20 "You've used the X"-Meldungen (gen/discard_sites.inc). Einzige Textstelle zu einem der
+  beiden: ROOM2001 id 11 @0x2081 "Elza: My, that's a nice pocket watch!" (rdt_msgdump.py). Die Folge ist also ein
+  FEHLENDES Original-Item + falscher Kartenbesitz; ein harter Softlock ist nicht belegt.
+* Messfalle (beim Bau des Tests gefunden): `scd_vm_init` ruft `re15_game_state_init` (scd_vm.c) und nullt damit alle
+  Flags — ein Test, der zwei Raeume nacheinander mit scd_vm_init startet, misst sonst einen frischen Stand (erste Fassung
+  meldete faelschlich "mit Bit still (0)"). Der Test bewahrt g_game um scd_vm_init herum auf (Raumwechsel des Spiels
+  nullt die Flags nicht, scd_room_setup.c "scd_vm_init MINUS re15_game_state_init").
+
+### 9.3 P2 Zensus
 (folgt)
