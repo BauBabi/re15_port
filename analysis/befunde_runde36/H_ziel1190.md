@@ -18,11 +18,11 @@ Keine Bank-9-Bits.
 
 * [x] Punkt 1: Messung vorher (Knopf-Text r35 an der exe) — §1.1
 * [x] Punkt 1: RE ROOM1190/1191 — Scheiben, Bahn begehbar, Kamera-Zuordnung, Elza-Variante, AOT-Form — §1.2
-* [ ] Punkt 1: Umbau (Knoepfe zurueck auf Original, Texte an die Scheiben)
-* [ ] Punkt 1: Messung nachher + Pins
-* [ ] Punkt 2: Kiste ROOM1090 Zensus + Antwort
+* [x] Punkt 1: Umbau (Knoepfe zurueck auf Original, Texte an die Scheiben) — §1.3
+* [x] Punkt 1: Messung nachher + Pins — §1.4, §1.5 (unit_r36_ziel1190, integration_r36_ziel1190_scheiben)
+* [x] Punkt 2: Kiste ROOM1090 Zensus + Antwort — §2.1-2.4 (gemessen: Kiste 1 -> Band 6 -> Tuer 1 -> ROOM1100)
 
-Werkzeuge (Scratchpad, nicht versioniert): `lauf.sh` (Messkopie `re15_pc_h36mess.exe` neben der exe, eigenes
+Werkzeuge (Scratchpad, nicht versioniert; Fortsetzung 2026-10-11 unter H36/: `h_lauf.sh`, `h_lauf_karte.sh`, `bandkarte.py`): `lauf.sh` (Messkopie `re15_pc_h36mess.exe` neben der exe, eigenes
 Arbeitsverzeichnis, RE15_NO_INTRO/NOAUDIO/WINDOW_SCALE=1/TITLE_SHOT_AF=2), `py/raum_geo.py` (SCA/Kamera/RVD-Dump),
 `py/zensus_super.py` (AOT-super- und Obj-Typ-Zensus ueber alle 240 RDT), `py/blatt.py` (Kontaktbogen).
 
@@ -261,3 +261,57 @@ stehen ZWEI Kisten.
 * Sie ist kletterbar (Band 1 -> 2, y -3600; oben Eingrenzung FUN_8002cfd4, Pin unit_1090_stay_on_crate) und schiebbar
   (Pin unit_1090_push_pin), erreicht aber nichts: auf Band 2 gibt es keine AOT, keine Flagge, keine Szene, keinen
   Gegenstand. Beleg: Bestand 2.1 (alle Records von 1090/1091 gelesen).
+* **exe, Lauf k1090_hof2** (LADE-Weg: Karte `probe_r36_ziel1190_karte re15_card.mcr 1090 pos=-8136,-1800,6150,1024`,
+  also Leon im HOF (Band 1) suedlich der Kiste 0, Blick -z; Skript U0.2 / A / W4 / A): climb.txt
+  `T166 pos=(-8136,-1800,6103) band=1 sub=9 kind=0x81 obj=0` (Klettern auf Kiste 0) -> `T197 pos=(-8136,-3600,4955)
+  band=2 stand=0` (oben, y -3600, Band 2) -> zweite Aktion `T288`: NICHTS (keine Tuer, keine Nachricht, kein Ereignis
+  im debug.log). Die Kiste blieb bei x -8136 (Ankunft im Hof feuert den Band-5-Record nicht).
+
+## Suite (gezielt)
+
+`ctest --test-dir re15_port/build -R "^(unit_r36_ziel1190|integration_r36_ziel1190_scheiben|unit_1190_weste|unit_1190_ruestung|unit_re2_room1190_ab|unit_r35_raeume_.*|unit_aot_.*|unit_scd_.*|prop_scd_pc_advance|unit_npc_scd_pose|unit_action_msg_gate|unit_msg_dialog|integration_save_counter_pin)$" --timeout 1500 --output-on-failure`
+-> `100% tests passed, 0 tests failed out of 22` (Total Test time (real) = 252.41 sec; darin
+`integration_r36_ziel1190_scheiben ... Passed 236.22 sec`, `integration_save_counter_pin ... Passed 14.66 sec`).
+
+### 2.4 Antwort fuer den Nutzer (Kurzfassung)
+
+Die Kiste auf dem DACH von ROOM1090 (dort, wo man aus ROOM10F0 ankommt) ist kein Deko-Objekt, sondern die
+Stufe ueber die Bruestung: auf die Kiste klettern (Aktionstaste davor), auf der Kiste einen Schritt zur Mauer
+und dort die Aktionstaste — das Tor zur Gasse (ROOM1100) geht nur von der Kiste aus auf, weil sein
+Tuer-Record das Band 6 (= Kistenoberkante, y -10800) verlangt. Es ist der einzige Weg vom Dach weiter, und er ist
+einseitig (aus ROOM1100 fuehrt keine Tuer zurueck). Wer die Kiste vom Dach schiebt (sie faellt seit Spur A wie im
+Original), kommt nicht mehr ans Tor. Die zweite Kiste unten im HOF (bei der Tuer nach ROOM1050) hat in den
+Raumdaten keinen Zweck: sie ist schieb- und kletterbar, oben ist aber nichts (keine Zone, keine Flagge, kein
+Gegenstand); das Raumskript rueckt sie nur beim Betreten des Dachs um 1700 nach Westen — ohne Folge. Vermutlich
+ein nicht fertig gebautes Raetsel des Prototyps.
+
+## Tests (gezielt, kein voller Suitenlauf im Spurbaum)
+
+Gruppe = eigene Tests + Module des Diffs (aot_common.c, scd_room_setup.c, scd_vm.c, main.c Boot-/CONTINUE-Weg,
+probes/r35_raeume.cmake): siehe Zeile unten (woertliche ctest-Summe).
+
+## OFFEN
+
+* Spur A (objfall_r36.c, integriert) hat den Fall der Dach-Kiste obj 1 nur in der Sonde gefahren, nicht an der
+  exe; wenn sie faellt, ist das Tor nach ROOM1100 unerreichbar (Original-Mechanik FUN_8002c444, kein Rueckweg).
+  Ob das Original die Kiste in dieser Lage ueberhaupt bis zur Kante laesst (FUN_8003b558-Schubpruefung je
+  Schritt), ist nicht gemessen — Spur A zaehlt 8 erreichbare Absprungzellen. Kein Fix in dieser Spur
+  (Frage des Nutzers war der Zweck, nicht ein Fehler).
+* FUN_8002dc48 (Spieler faellt von einer 0x100-Kiste an deren Kante, Substate 0xd) bleibt unportiert (Spur A OFFEN);
+  im Port haelt die Eingrenzung FUN_8002cfd4 den Spieler auf der Kiste. Fuer das Tor reicht der Schritt auf der
+  Kiste (gemessen).
+* Stimmen `synchro/STAGE1/room1190/main06.wav`, `main07.wav` (Leon) und `synchro/STAGE1/room1191/main06.wav`,
+  `main07.wav` (Elza) fehlen weiterhin — ohne Datei bleibt der Satz stumm mit Untertitel (ziel_1190.c).
+
+## Fuer den Nutzer
+
+* Bedienung ROOM1190/1191: die beiden Saetze kommen jetzt HINTEN an den Zielscheiben (am Tresenende vorbei, die
+  Bahn entlang, vor der Scheibe Aktionstaste); Leon: Scheibe ganz links und die 3. von links = "surprisingly
+  large number", die anderen = "does not have many"; Elza: genau umgekehrt. Die vier Schalter vorn verhalten sich
+  wieder wie ausgeliefert ("There's a switch here. Push it?" / ohne Strom "There's a driver ..." / nach den
+  Hunden msg 2).
+* Sprachdateien (optional, sonst stumm mit Untertitel): `synchro/STAGE1/room1190/main06.wav` = Leon "This target
+  has a surprisingly large number of bullet holes.", `main07.wav` = Leon "This target does not have many bullet
+  holes."; `synchro/STAGE1/room1191/main06.wav` / `main07.wav` = dieselben Saetze mit Elza.
+* Neue Assets fuer das Paket-Gate: keine (kein Asset-Patch, keine gen/-Daten).
+* ROOM1090: Antwort in 2.4.
