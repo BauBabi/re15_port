@@ -1069,12 +1069,35 @@ static int teil_marker(int argc, char **argv)
     return 0;
 }
 
+/* gleich <bmp1> <bmp2> -> "GLEICH <n>" = Zahl der Pixel, die sich unterscheiden (Nachbesserung 1:
+ * zeigt der zweite HOCH-Druck dasselbe Blatt, ist das naechste Blatt nicht anwaehlbar). */
+static int teil_gleich(int argc, char **argv)
+{
+    int w1, h1, w2, h2, n = 0;
+    size_t i;
+    unsigned char *a, *b;
+    if (argc < 4) { printf("FAIL: gleich <bmp1> <bmp2>\n"); return 2; }
+    a = bmp_laden(argv[2], &w1, &h1);
+    b = bmp_laden(argv[3], &w2, &h2);
+    if (!a || !b || w1 != w2 || h1 != h2) {
+        printf("FAIL: %s / %s nicht lesbar oder verschieden gross\n", argv[2], argv[3]);
+        free(a); free(b);
+        return 1;
+    }
+    for (i = 0; i < (size_t)w1 * (size_t)h1; i++)
+        if (memcmp(a + 3u * i, b + 3u * i, 3) != 0) n++;
+    free(a); free(b);
+    printf("GLEICH %d\n", n);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "messung";
     if (!strcmp(teil, "karte")) return teil_karte(argc, argv);
     if (!strcmp(teil, "farben")) return teil_farben(argc, argv);
     if (!strcmp(teil, "marker")) return teil_marker(argc, argv);
+    if (!strcmp(teil, "gleich")) return teil_gleich(argc, argv);
     re15_map_visited_reset();
     re15_inv_map_stage_init(0, 6);
     if (!strcmp(teil, "messung")) return teil_messung();

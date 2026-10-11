@@ -13,6 +13,8 @@
 #   F  Spielstand nach der Fahrt 1F -> 3F und zu Fuss auf 2F -> MAP in 10C0: die 2F-Kabine
 #      ist UNGEZEICHNET (P6); H dieselbe Fahrt, MAP in 1120: 3F-Kabine besucht (Ankunft);
 #   G  1040 -> Tuer -> Kabine: 1F-Kabine rot (Gegenprobe Weg)
+#   I  (Nachbesserung 1, Abnahme 0 M1) Debug-Menue-Sprung "108 ELEVATOR" aus ROOM1100 ohne Etagen-
+#      Bits: Kabine nur auf 1F (Blatt des Original-Seiten-Setzers), 2F-Kasten leer, 3F nicht anwaehlbar
 # Dossier: analysis/befunde_runde36/M_karte.md
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PROBE=<probe_r36_karte> -DWORKDIR=<dir> -P test_r36_karte.cmake
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -196,6 +198,64 @@ pruefe(H k_besucht GREATER_EQUAL 10 "3F-Kabine nach Ankunft mit dem Fahrstuhl be
 karte_lauf(G "1040;-21786;0;-10500;3072;besucht:1040:-21786:-10500;flag:4:243" "W1,A0.3,W1,A0.3" 1080)
 farben(G k 110 135 117 142)
 pruefe(G k_rot GREATER_EQUAL 10 "Kabine aus 1F betreten: 1F-Kabine rot - ${k_rot}")
+
+# ---- I: P6 Nachbesserung 1 (Abnahme 0 M1) -- Debug-Menue-Sprung "108 ELEVATOR" ---------------
+# Spielstand ROOM1100 (2F-Gang, kein Etagenraum der Kabine) OHNE Bank-3-Bit 54/55/56, LOAD, dann
+# RE15_DEBUG_JUMP=1080@gp (= Quadrat in der JUMP-Zeile, Spawn aus dem DEBUG.BIN-Satz), MAP in der
+# Kabine. I0 Blatt 1F, I1 einmal HOCH (2F), I2 zweimal HOCH. Vorher (5064c3e8): 2F- und 3F-Kabine
+# besucht=64, I2 zeigte das Blatt 3F mit der Kabine als einzigem Kasten. Soll: Kabine nur auf dem
+# Blatt des Original-Seiten-Setzers (Blatt 2, `ori v0,zero,0x2` @0x8004b684 -> `sb` @0x8004b88c),
+# 2F-Kasten leer, 3F nicht anwaehlbar (I2 == I1).
+function(debug_lauf _name _pad)
+    set(WORKDIR "${_basis}_${_name}")
+    file(MAKE_DIRECTORY "${WORKDIR}")
+    file(REMOVE "${WORKDIR}/re15_card.mcr" "${WORKDIR}/debug.log" "${WORKDIR}/karte.bmp")
+    execute_process(COMMAND "${RE15_PROBE}" karte "re15_card.mcr" 1100 -26130 0 -11036 2048
+                            "besucht:1100:-26130:-11036"
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60
+                    RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+    if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
+        message(FATAL_ERROR "r36_karte[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
+    endif()
+    set(_padenv "")
+    if(NOT "${_pad}" STREQUAL "")
+        set(_padenv "RE15_PAD_AT=${_pad}")
+    endif()
+    re15_start_spiel(_rv 240
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+        RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+        "RE15_DEBUG_JUMP=1080@gp" ${_padenv}
+        "RE15_INV_OPEN_AT=40#1080" RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=85
+        "RE15_EXIT_AT=170#1080"
+        "${_exe_kopie}")
+    if(NOT EXISTS "${WORKDIR}/karte.bmp")
+        message(STATUS "r36_karte[${_name}] FAIL: kein Kartenabzug (exit=${_rv}, ${WORKDIR})")
+        set(_fehler "${_fehler} ${_name}-ohne-Abzug" PARENT_SCOPE)
+    endif()
+endfunction()
+debug_lauf(I0 "")
+debug_lauf(I1 "100:U")
+debug_lauf(I2 "100:U,108:U")
+farben(I0 k 110 135 117 142)
+pruefe(I0 k_rot GREATER_EQUAL 10 "Debug-Sprung in die Kabine: 1F-Kabine (Blatt 2) rot - ${k_rot}")
+farben(I1 k 109 134 118 143)
+math(EXPR _i1 "${k_rot} + ${k_besucht}")
+pruefe(I1 _i1 EQUAL 0 "Debug-Sprung: 2F-Kabine ungezeichnet (vorher besucht=64) - ${_i1}")
+farben(I2 k 127 137 136 146)
+math(EXPR _i2 "${k_rot} + ${k_besucht}")
+pruefe(I2 _i2 EQUAL 0 "Debug-Sprung: kein Kabinen-Kasten an der 3F-Stelle (vorher besucht=64) - ${_i2}")
+if(EXISTS "${_basis}_I1/karte.bmp" AND EXISTS "${_basis}_I2/karte.bmp")
+    execute_process(COMMAND "${RE15_PROBE}" gleich "${_basis}_I1/karte.bmp" "${_basis}_I2/karte.bmp"
+                    RESULT_VARIABLE _rvg OUTPUT_VARIABLE _outg)
+    string(STRIP "${_outg}" _outg)
+    message(STATUS "r36_karte[I2] ${_outg}")
+    if(_rvg EQUAL 0 AND _outg MATCHES "^GLEICH ([0-9]+)")
+        set(_gl ${CMAKE_MATCH_1})
+        pruefe(I2 _gl EQUAL 0 "Debug-Sprung: zweites HOCH bleibt auf 2F, Blatt 3F nicht anwaehlbar - ${_gl} Pixel anders")
+    else()
+        pruefe(I2 0 EQUAL 1 "Debug-Sprung: Abzuege I1/I2 vergleichbar")
+    endif()
+endif()
 
 file(REMOVE "${_exe_kopie}")
 if(NOT "${_fehler}" STREQUAL "")
