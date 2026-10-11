@@ -75,6 +75,16 @@ grosse Tuer ROOM2090 <-> 20A0 das zweiteilige RE2-Schott (DOOR26). Die Tuer 10C0
 (helles Holz mit Faser, Drahtglas, Panikstange, Trittblech) statt der "billigen". Karten- und Ziffernfeld-Tueren:
 beim Erfolg ein Piep, eine halbe Sekunde spaeter das Aufschliessen, wie in RE2 (ROOM2110); Riegel von der
 Innenseite mit dem RE2-Entriegeln.
+
+**Schiessstand ROOM1190.** Die beiden Saetze stehen jetzt hinten an den Zielscheiben (am Tresenende vorbei, die
+Bahn entlang, vor der Scheibe Aktionstaste): Leon ganz links und 3. von links "surprisingly large number",
+die anderen "does not have many"; bei Elza genau umgekehrt. Die vier Schalter vorn verhalten sich wieder wie
+ausgeliefert.
+**Ihre Frage zur Kiste in ROOM1090:** die Kiste auf dem DACH (Ankunft aus ROOM10F0) ist die Stufe ueber die
+Bruestung: auf die Kiste klettern, einen Schritt zur Mauer, Aktionstaste - das Tor zur Gasse (ROOM1100) geht
+nur von der Kiste aus auf (sein Tuer-Record verlangt die Kistenoberkante, Band 6). Die zweite Kiste unten im
+Hof hat in den Raumdaten keinen Zweck (oben ist nichts; das Skript rueckt sie nur um 1700 nach Westen) -
+vermutlich ein unfertiges Raetsel des Prototyps.
 @@WEITERE@@
 
 ## Zur Freigabe: umgeschriebene Texte
@@ -102,6 +112,9 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 * synchro/STAGE1/room11b0/ main20.wav ("Hold on.") und main21.wav ("I just want to make sure / we don't have
   any unwanted followers.") - Marvin.
 * synchro/STAGE1/room1210/main20.wav (Leon, offene Zelle) und synchro/STAGE1/room1091/main20.wav (Elza, Schuppen).
+* synchro/STAGE1/room1190/main06.wav ("This target has a surprisingly large number of bullet holes.") und
+  main07.wav ("This target does not have many bullet holes.") - Leon; dieselben Saetze fuer Elza unter
+  synchro/STAGE1/room1191/main06.wav und main07.wav.
 
 ## Zu entscheiden
 
