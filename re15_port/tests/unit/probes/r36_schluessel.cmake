@@ -39,4 +39,13 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_schluessel_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_schluessel.cmake)
     set_tests_properties(integration_r36_schluessel PROPERTIES TIMEOUT 1500)
+    # Nachbesserung 1 (Mangel M1): ROOM1211 Befreiungsszene bis msg 9 -> "Discard it?" fuer den Prison Key, Ja -> weg
+    add_test(NAME integration_r36_schluessel_befreiung
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_schluessel_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_schluessel_bf_wd
+                     -DNUR=befreiung
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_schluessel.cmake)
+    set_tests_properties(integration_r36_schluessel_befreiung PROPERTIES TIMEOUT 600)
 endif()

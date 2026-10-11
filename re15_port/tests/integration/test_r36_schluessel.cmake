@@ -78,6 +78,48 @@ function(darf_nicht _name _lh _text)
     endif()
 endfunction()
 
+# --- befreiung (Nachbesserung 1, Mangel M1; eigener ctest-Eintrag mit -DNUR=befreiung) ---
+# Elza in ROOM1211 vor dem Ausloeser der Befreiungsszene (Slot 6, sub00 @0x01E22), Prison Key genommen
+# ((4,0xEC), (9,83)) und als EINZIGER Gegenstand im Inventar. U F40..F100 -> Szene sub02 laeuft; msg 9
+# "Elza: John. Wait!" (@0x0226A) auf F1771, zu F1870 -> im selben Bild die Wegwerf-Abfrage fuer 0x42
+# (RE2 @0x800517f4/@0x80051834), Text fertig F1957; Viereck F1980 = Ja -> weg; Szenenende F1983
+# (Set(2,7)=0 @0x0229A). Gemessen in Dossier N1.4 (Laeufe N_Z3_mess / N_Z3_ja).
+if(NUR STREQUAL "befreiung")
+    set(_pad "")
+    foreach(_f RANGE 40 100)
+        string(APPEND _pad "${_f}:U,")
+    endforeach()
+    lauf(befreiung "1211;-19355;-17300;1024;elza;flag:3:0x8B;flag:4:0x24;flag:4:0xEC;flag:9:83;leer;give:0x42:1"
+         "RE15_PAD_AT=${_pad}1980:A;RE15_EXIT_AT=1995#1211;RE15_MSG_LOG=1;RE15_DISCARD_LOG=discard.log" _lh)
+    muss(befreiung "${_lh}" "CONTINUE: resumed in room 1211")
+    muss(befreiung "${_lh}" "[msg] room=1211 id=9")
+    muss(befreiung "${_lh}" "EXIT_AT: Bild 1995 in Raum 1211")
+    set(_dl "${_basis}_befreiung/discard.log")
+    if(NOT EXISTS "${_dl}")
+        message(FATAL_ERROR "r36_schluessel[befreiung]: kein discard.log (${_dl})")
+    endif()
+    file(READ "${_dl}" _d)
+    string(FIND "${_d}" "frage=8 gegenstand=0x42" _p_frage)
+    if(_p_frage LESS 0)
+        message(FATAL_ERROR "r36_schluessel[befreiung]: keine Wegwerf-Abfrage fuer 0x42 (${_dl})")
+    endif()
+    string(REGEX MATCH "msg_aktiv=1[^\n]*frage=8" _frueh "${_d}")
+    if(_frueh)
+        message(FATAL_ERROR "r36_schluessel[befreiung]: Abfrage, waehrend eine Nachricht steht (${_dl})")
+    endif()
+    string(REGEX MATCH "F[0-9]+ raum=1211 msg_aktiv=0[^\n]*frage=8 gegenstand=0x42" _bild "${_d}")
+    string(REGEX MATCH "^F[0-9]+" _bild "${_bild}")
+    string(FIND "${_d}" "weg=1" _p_weg)
+    string(REGEX MATCH "F1995 raum=1211[^\n]*weg=1[^\n]*pausepad=0" _ende "${_d}")
+    if(_p_weg LESS 0 OR NOT _ende)
+        message(FATAL_ERROR "r36_schluessel[befreiung]: Ja hat den Prison Key nicht weggeworfen oder die Szene "
+                            "ist nicht zu Ende (weg=1 / pausepad=0 in F1995 fehlt, ${_dl})")
+    endif()
+    message(STATUS "r36_schluessel[befreiung] OK: Abfrage fuer 0x42 nach msg 9 (${_bild}), Ja -> weggeworfen, "
+                   "Szene zu Ende")
+    return()
+endif()
+
 # Vor der Parkplatz-Tuer (Rechteck x -26730..-24230, z -29940..-26440; begehbar z > -26720), Blick -z
 # (yaw 1024): 620 voraus = (-25480,-26620) im Rechteck. Strom (4,0xF3), Sherry-Szene erledigt (3,0x82)
 # (sub01 @0x011BA startet sie sonst bei (3,0x82)==0).
