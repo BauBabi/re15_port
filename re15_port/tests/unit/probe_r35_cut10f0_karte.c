@@ -24,6 +24,8 @@
  *             (-26730,-29940,2500,3500), Ziel-Byte 0x1c): Spieler (-25480,0,-26100) Gierung 1024 (= -Z), Vorwaerts-
  *             620-Punkt (-25480,-26720) im Rechteck. Flags (4,243)=1 Strom an (sonst macht sub01 @0x01216 die Tuer
  *             zum Text-Platz), (3,130)=1 Strom-Szene sub04 schon gesehen (sub01 @0x011AE). Mit "gesehen" kombinieren.
+ *             Runde 36 Spur Q: dazu (9,93)=1 = Parkplatz-Tuer schon mit dem Parking Lot Key aufgeschlossen
+ *             (re15_schluessel_r36.h) — ohne Bit 93 sperrt der Port die Tuer bis zum Schluessel aus ROOM10F0.
  *   in1150    Stand in ROOM1150 mit (3,94)=1 (erste Irons-Szene gesehen, main00 @0x00DE6) — der Raumaufbau am
  *             Lade-Weg setzt mit (9,71)=1 den Latch (9,72). Mit "gesehen" kombinieren.
  *
@@ -81,7 +83,8 @@ int main(int argc, char **argv)
     else              { pl->x = 1900; pl->y = 0; pl->z = -7000; pl->rot_y = 2048; }
     re15_game_flag_set(3, 50, 1);
     re15_game_flag_set(4, 247, 1);
-    if (vor11c0) { re15_game_flag_set(4, 243, 1); re15_game_flag_set(3, 130, 1); }
+    if (vor11c0) { re15_game_flag_set(4, 243, 1); re15_game_flag_set(3, 130, 1);
+                   re15_game_flag_set(9, 93, 1); }   /* Runde 36 Spur Q: Tuer aufgeschlossen */
     if (in1150)  re15_game_flag_set(3, 94, 1);
     if (gesehen) re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
     if (montage) re15_game_flag_set(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT, 1);

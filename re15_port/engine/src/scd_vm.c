@@ -58,6 +58,7 @@
 #include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
 #include "re15_elza_r36.h"   /* Runde 36 Spur L: Anker-Toene/Stimme Elza-Szenen (elza_r36.c) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Erweiterung ROOM11B0 sub06 (szenenleon_r36.c) */
+#include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Parkplatz-Tuer 11B0 + Roy 1011 (schluessel_r36.c) */
 
 scd_vm_t g_scd;
 
@@ -615,6 +616,8 @@ int scd_event_fire(uint8_t event_id)
      * vestigial — scd_event_register is never called, so it was always NULL and the
      * generic-AOT event path was dead. The real RE1.5 AOT event runs sub_scd[event_id]:
      * e.g. ROOM1130's switch fires event 2 → sub_scd[2] = the message + door-open sub.) */
+    /* Runde 36 Spur Q: ROOM1011 Roy-Ereignis 6 (Prison key) -> 7 (Zettel), re15_schluessel_r36.h. */
+    event_id = re15_schluessel_r36_umleiten((uint16_t)g_current_room_id, event_id);
     for (unsigned k = 0; k < sizeof(s_power_gates) / sizeof(s_power_gates[0]); k++) {
         if (s_power_gates[k].room == g_current_room_id && s_power_gates[k].event == event_id &&
             !re15_game_flag_get(s_power_gates[k].flag_zone, s_power_gates[k].flag_idx)) {
@@ -637,6 +640,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_irons_tod_ereignis((uint16_t)g_current_room_id, event_id);
     if (!pc) pc = re15_fenster1120_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 35 Spur M */
     if (!pc) pc = re15_szl_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 36 Spur J: 22/23 in ROOM11B0 */
+    if (!pc) pc = re15_schluessel_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur Q: 11B0 Ereignis 25 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {

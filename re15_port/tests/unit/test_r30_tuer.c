@@ -106,11 +106,13 @@ static void teil_bank(void)
     size_t n = 0;
     uint8_t *vbs = slurp(p, &n);
     if (!vbs) { printf("  FEHLER: %s nicht lesbar\n", p); g_fail++; return; }
-    /* 29976 B = re2_door_se_cut.py-Ausgabe (md5 777e1f43e65f3c68941a635d12886a63; vor der
-     * Nachbesserung 23832 B ohne Satz 3). */
-    CHECK(n == 29976u && n == rec.vbd_off + rec.vbd_size, "Dateigroesse %zu (TOC %u)", n,
+    /* 42808 B = re2_door_se_cut.py --mit-aufschliessen (md5 9ce7576443eecfb46355339994b89b35);
+     * Runde 36 Spur Q haengt die zwei vorbereiteten Aufschliess-Saetze an (4 AUF_KEY = RE2 ROOM1140
+     * Satz 0x25, Tuer-Handler @0x80051658; 5 AUF_HIER = ROOM20A0 Satz 0x26, @0x800515f8), Saetze 0..3
+     * bytegleich. Vorher 29976 B (md5 777e1f43e65f3c68941a635d12886a63), davor 23832 B ohne Satz 3. */
+    CHECK(n == 42808u && n == rec.vbd_off + rec.vbd_size, "Dateigroesse %zu (TOC %u)", n,
           rec.vbd_off + rec.vbd_size);
-    CHECK(rec.edt_size == 3144u && rec.vbd_size == 26832u && rec.se_count == 4 &&
+    CHECK(rec.edt_size == 3144u && rec.vbd_size == 39664u && rec.se_count == 6 &&
           rec.se_zu_p == 3, "TOC edt %u vbd %u saetze %d zu_p %d", rec.edt_size, rec.vbd_size,
           rec.se_count, rec.se_zu_p);
 
@@ -122,7 +124,7 @@ static void teil_bank(void)
     if (re15_vab_parse(edt + vh_off, rec.edt_size - vh_off, &vab) != 0) {
         printf("  FEHLER: re15_vab_parse\n"); g_fail++; free(vbs); return;
     }
-    CHECK(vab.vag_count == 4, "vag_count %d != 4", vab.vag_count);
+    CHECK(vab.vag_count == 6, "vag_count %d != 6", vab.vag_count);
 
     /* Soll aus den RE2-Bytes (info/re2leon/PL0/RDT, Datei-Offsets, s. re2_door_se_cut.py):
      *   ZU_A ROOM1140 Satz 0x16: EDT @0x01448 00 00 74 16, Tone @0x01DB0, VAG @0x02870  7184 B
@@ -142,7 +144,7 @@ static void teil_bank(void)
     static const struct {
         int se; uint8_t roh[4]; int voice, prio; unsigned vol, center, shift, note, bytes;
         unsigned pitch; int samples;
-    } soll[4] = {
+    } soll[6] = {
         { RE2_DOOR_SE_ZU_A, {0x00,0x00,0x04,0x16},   6, 4, 110, 85,  42, 66,  7184, 0x589, 12544 },
         { RE2_DOOR_SE_ZU_B, {0x00,0x00,0x14,0x16},   6, 4, 105, 91,   0, 67,  3232, 0x400,  5628 },
         { RE2_DOOR_SE_ZU_E, {0x00,0x00,0x24,0x00}, -16, 4, 127, 84,  57, 66, 10272, 0x5f3, 17948 },
@@ -150,9 +152,14 @@ static void teil_bank(void)
          * note2pitch2(72, 57, 102, 57): (57+57)>>3 = 14, sem 30, Oktave -3,
          * DAT_80077520[6*16+14] >> 3 = 0x2f9 (8193 Hz) -> 1,309 s. */
         { RE2_DOOR_SE_ZU_P, {0x00,0x00,0x33,0x00}, -16, 3, 127, 102, 57, 72,  6144, 0x2f9, 10724 },
+        /* Runde 36 Spur Q (probe_r30_tuerse_bank): AUF_KEY RE2 ROOM1140 Satz 0x25 (EDT @0x01484
+         * 00 00 84 16, Tone @0x01DD0, VAG @0x04480) und AUF_HIER ROOM20A0 Satz 0x26 (EDT @0x02474
+         * 00 00 64 16, Tone @0x02D7C, VAG @0x07D8C). */
+        { RE2_DOOR_SE_AUF_KEY,  {0x00,0x00,0x44,0x16}, 6, 4, 127, 89, 109, 67, 5264, 0x4f3,  9184 },
+        { RE2_DOOR_SE_AUF_HIER, {0x00,0x00,0x54,0x16}, 6, 4, 127, 83,  57, 65, 7568, 0x5f3, 13216 },
     };
     const uint8_t *vb = vbs + rec.vbd_off;
-    for (int k = 0; k < 4; k++) {
+    for (int k = 0; k < 6; k++) {
         int se = soll[k].se;
         CHECK(memcmp(edt + se * 4, soll[k].roh, 4) == 0, "Satz %d Rohsatz %02x %02x %02x %02x",
               se, edt[se*4], edt[se*4+1], edt[se*4+2], edt[se*4+3]);
@@ -184,8 +191,8 @@ static void teil_bank(void)
                len > 0 ? (double)len / (double)((44100u * pitch) >> 12) : 0.0);
         free(pcm);
     }
-    /* Kein weiterer Satz belegt (SE-Map 0x20 B = 8 Saetze, 4..7 muessen leer sein). */
-    for (int se = 4; se < (int)(vh_off / 4); se++) {
+    /* Kein weiterer Satz belegt (SE-Map 0x20 B = 8 Saetze, 6..7 muessen leer sein). */
+    for (int se = 6; se < (int)(vh_off / 4); se++) {
         re15_edt_rec_t r;
         CHECK(re15_edt_decode(edt, se, &r) != 0 || r.empty, "Satz %d unerwartet belegt", se);
     }

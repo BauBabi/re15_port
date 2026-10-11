@@ -38,6 +38,7 @@
                                   * ARCHIV der Originalbytes (s. emit_file_list). */
 #include "re15_files.h"          /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
+#include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
 
 /* Die Archiv-Tabellen bleiben im Uebersetzungslauf REFERENZIERT, damit ihr Wegfall aus
  * dem Spiel keine "unbenutzt"-Warnung wird und der Zensus sie weiter abgleichen kann
@@ -61,6 +62,7 @@ const uint8_t *re15_inv_file_archiv_name(int id)
 const uint8_t *re15_inv_desc_entry(int id)
 {
     if (id < 0 || id >= RE15_INV_DESC_NIDS) return 0;
+    { const uint8_t *q = re15_schluessel_r36_desc((uint8_t)id); if (q) return q; }   /* Runde 36 Spur Q */
     return re15_inv_desc_blob + re15_inv_desc_off[id];
 }
 int re15_inv_desc_nids(void) { return RE15_INV_DESC_NIDS; }
@@ -1108,7 +1110,8 @@ static void emit_name_at(emit_t *e, int id, int x0, int y0)
     const uint8_t *p;
     int x = x0, code, guard = 64;
     if (id <= 0 || id >= RE15_INV_NAME_NIDS) return;
-    p = re15_inv_name_blob + re15_inv_name_off[id];
+    p = re15_schluessel_r36_name((uint8_t)id);                   /* Runde 36 Spur Q */
+    if (!p) p = re15_inv_name_blob + re15_inv_name_off[id];
     while ((code = name_next_code(&p)) != 7 && guard-- > 0) {
         sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
              x, y0, 16, 16, (code & 0xf) << 4, ((code >> 4) << 4) + 0x20,
@@ -1123,7 +1126,8 @@ static void emit_name(emit_t *e, int id)
     const uint8_t *p;
     int x = 0x18, code, guard = 64;              /* a0=0x18 @0x800c65ac; guard = port safety */
     if (id < 0 || id >= RE15_INV_NAME_NIDS) return;
-    p = re15_inv_name_blob + re15_inv_name_off[id];
+    p = re15_schluessel_r36_name((uint8_t)id);                   /* Runde 36 Spur Q */
+    if (!p) p = re15_inv_name_blob + re15_inv_name_off[id];
     while ((code = name_next_code(&p)) != 7 && guard-- > 0) {   /* terminator @0x80028ce4-ce8 */
         /* 16x16 SPRT, prim word 0x7c808080 (rgb neutral) @0x80028d14-1c; glyph cell
          * u=(code&0xf)<<4, v=((code>>4)<<4)+0x20 @0x80028d04-3c on the message-FONT
