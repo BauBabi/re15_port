@@ -45,3 +45,10 @@ OST VOR spieler=(-3133,-5400,-6471) blick=-4039 band=3 sub=3 | obj6=(-1600,-5400
   SCHUB-GESPERRT obj6=(1532, -5400, -7340, 0, 0, 3, 9) spieler=(227, -5400, -6821, -4071, 3, 8) s4/s5=(1534,-7340)
   TREFFER-ZELLE a0=80119e44 obj=800b4310: x 2450..6650 z -8750..-8050 typ 1 u0 0xff u1 0x00 fl 0x33 | obj6=(1615, -5400, -7340, 0, 0, 3, 9)
   SCHUB-GESPERRT obj6=(1532, -5400, -7340, 0, 0, 3, 9) spieler=(265, -5400, -7597, -4071, 3, 1) s4/s5=(1534,-7340)
+OST NACH (Zeit) spieler=(4632,-5400,-11250) blick=-4071 band=3 sub=1 | obj6=(1534,-5400,-7340) faellt=0 z=0 band=3 n=0
+OST: Schub angenommen 150 x, gesperrt 2 x, Fall-Ausloeser 0 x, Ende: Zeit
+== Umweg nach Sueden der Kiste ==
+  GEHE (6100,-5600): NICHT angekommen, Rest 3904 bei (4632,-9218)
+  GEHE (7600,-5600): NICHT angekommen, Rest 4679 bei (4632,-9218)
+== Schub 3: nach Norden bis z <= -12000 oder Fall-Ausloeser (Absprungzelle r*[49] z -13950..-12150, +450) ==
+NORD VOR spieler=(4632,-5400,-9218) blick=-3111 band=3 sub=3 | obj6=(1534,-5400,-7340) faellt=0 z=0 band=3 n=0
