@@ -367,3 +367,23 @@ Riegel 2 zusaetzlich: Ankunft aus der Kanalisation (ROOM1260 Tuer slot 3 @0x0118
 -> Marker (141,164) an der unteren Tuermarke (137,172) (vorher (141,171)). Riegel 3 zusaetzlich:
 ROOM1090 (Wortlaut) Hof Band 1 -> Blatt 2 NUR rect 5, Dach Band 6 -> Blatt 3 NUR rect 7 - die beiden
 Bereiche von 1090 waren schon getrennt.
+
+## Nachbesserung 1 (nach Abnahme 0, `M_abnahme_0.md`)
+
+Basis: HEAD 5064c3e8 (Abnahme 0), Baum geprueft (status leer). Ein Mangel:
+
+**M1 (Punkt 6, Debug-Menue-Sprung in den Fahrstuhl).** Wortlaut Abnahme: JUMP "108 ELEVATOR"
+(`RE15_DEBUG_JUMP=1080@gp`) aus ROOM1100 ohne Bank-3-Bits 54/55/56 -> Karte zeigt die Kabine auf 2F
+(Kasten (109,134)-(118,143), 55+9 besucht-Pixel) und auf 3F ((127,137)-(136,146), 56+8 px) als besucht,
+obwohl der Spieler dort nie im Fahrstuhl war. Vermutete Ursache laut Abnahme: bei
+`re15_karte_fahrstuhl_blatt() < 0` setzt die alte "gleiche Baender"-Schleife (re15_map_zones.c:436-441)
+alle Kabinen-Bits 112..114 (4020: 115..117).
+
+### Fortschritt Nachbesserung 1
+- [ ] Code-Stelle gelesen, Ursache am Code bestaetigt
+- [ ] Messung vorher (Sonde + echte exe, Debug-Sprung)
+- [ ] RE-Beleg selbst disassembliert (Seiten-Setzer Kabine 1080 / 4020, Etagen-Bits der Kabine)
+- [ ] Aenderung
+- [ ] Riegel (Debug-Sprung / Kabine ohne Etagenraum davor), Gegenprobe am alten Stand ROT
+- [ ] Messung nachher (Sonde + echte exe)
+- [ ] gezielte Tests gruen
