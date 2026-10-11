@@ -182,7 +182,93 @@ Ink Ribbon (0x1E).
 
 ## Umsetzung
 
+Neue Dateien:
+* `re15_port/include/re15_inventar_r36.h`, `re15_port/engine/src/inventar_r36.c` — die ganze Logik:
+  * `re15_inventar_r36_karte_im_block(sd)`: Memory Card im ZU SCHREIBENDEN Block -1 (`addiu v0,v0,-1`
+    @0x801c11ac), bei 0 Id/Flag := 0 (@0x801c11d0/@0x801c11dc) + Verdichten mit Ausruest-Platz
+    (@0x801c11e0 / FUN_8004dadc @0x8004dbac-c8), Pruefsumme neu.
+  * `re15_inventar_r36_karte_verbrauchen()`: derselbe Abzug im Live-Inventar NACH erfolgreichem Schreiben
+    (re15_inv_remove_slot = @0x8004aee4-af2c + FUN_8004dadc). Abbruch/Fehler im Speicherschirm -> nichts
+    verbraucht (RE2: der Zweig wird nie erreicht bzw. @0x801c1290-12bc nimmt ihn zurueck). Protokoll
+    `[inventar-r36] Memory Card verbraucht: Platz k Rest n | Inventar ...`.
+  * `re15_inventar_r36_tick()` je Spielbild unmittelbar VOR dem START-Poll: (a) jeder Platz mit Memory Card
+    (0x21) oder Handgranate (0x09/0x0A/0x0B) und Menge 0 wird entfernt (war er ausgeruestet: erst 25c8 :=
+    0x80 wie UNEQUIP @0x8004ad44-4c); (b) ist danach nichts ausgeruestet, die Waffen-Id aber noch eine
+    Granate, und ist der Wurf vorbei (re15_player_aim_active() == 0 und kein Granatenplatz mehr im
+    Effekt-Pool — die ARMS-Bank der Granate traegt den Abprall-Ton Satz 0x0A @0x80018410-28), dann
+    Commit-Regel 0x80 -> Messer (@0x8004666c/@0x80046688) + Bank (@0x800466c4). Laeuft nicht bei offenem
+    Statusschirm (re15_menu_gameplay_frozen). Protokoll `[inventar-r36] F<n> Platz ... entfernt` /
+    `[inventar-r36] F<n> Waffe 9 (leer, abgelegt) -> 1`.
+* Tests: `re15_port/tests/unit/test_r36_inventar.c`, `re15_port/tests/unit/probe_r36_inventar_karte.c`
+  (Kartenwerkzeug), `re15_port/tests/integration/test_r36_inventar.cmake`, Registrierung
+  `re15_port/tests/unit/probes/r36_inventar.cmake`.
+* Messwerkzeug `re15_port/tools/r36_i/messlauf.sh`.
+
+Haken in gemeinsamen Dateien:
+* `engine/src/game_step_common.c` (2 Zeilen, direkt vor `re15_menu_start_poll`): `re15_inventar_r36_tick()`.
+* `platform/pc/main.c`: Include; Speicherfluss `mc = re15_inventar_r36_karte_im_block(&sd)` vor
+  `pc_run_memcard_screen`, nach Erfolg `re15_inventar_r36_karte_verbrauchen()`, Log `card=used` /
+  `card=used-last, slot removed` statt `card=kept` (der Runde-33-Kommentar "KEIN Kartenverbrauch" ist
+  ersetzt); Debug-Sprung `droom = re15_debug_menu_ziel_id()` statt `load_room << 4`.
+* `engine/src/debug_menu_common.c` + `include/re15_debug_menu.h` (Spur I = Debug-Menue):
+  `re15_debug_menu_ziel_id()` = `re15_room_for_char(load_room << 4)` (Elza-Bit @0x800397e4/ec).
+
+Konstanten (alle mit Beleg): Item 0x21 (Namenstabelle DEBUG.BIN @0x800C4BEA), Granaten 0x09..0x0B (Entlade-
+Handler 0x80033B38/58/78), 0x80 = nichts ausgeruestet (@0x8004ad44 / @0x8004665c), 1 = Messer
+(@0x8004666c). Zeitpunkt des Waffenwechsels = PORT-WAHL (nach dem Wurf, s. RE-Belege I3 "WANN").
+
+Angepasste Riegel (Verhalten auf Nutzerwunsch geaendert):
+* `tests/integration/test_r33_speichern.cmake` Lauf B: statt "card=kept (slot 0 qty 1)" / Block `21 01`
+  jetzt "card=used-last, slot removed (slot 0 qty 0)" / Block `00 00` (die eine Karte ist verbraucht);
+  Kommentar in `tests/unit/probes/r33_speichern.cmake` nachgezogen.
+* `tests/integration/test_r35_werfer_elza.cmake`: Elza springt per `RE15_DEBUG_JUMP=1000` jetzt in ROOM1001
+  -> `RE15_EXIT_AT=150#1001` statt `#1000` (sonst haengt der raumgebundene Ausstieg).
+
 ## Messung nachher
+
+Alle Laeufe mit der gebauten exe (Messkopie), Arbeitsordner `re15_port/build/r36i_mess/<name>/`.
+
+### I4 Debug-Menue (Laeufe `i4_nachher`, `i4_nachher_1150`, `i4_nachher_leon`)
+```
+i4_nachher       Elza: [debug-menu] JUMP -> 107 LOBBY OFFICE   (ROOM1071) ... [room] PC loaded room1071.rdt
+i4_nachher_1150  Elza: [debug-menu] JUMP -> 115 CHIEF OFFICE   (ROOM1151) ... [room] PC loaded room1151.rdt (202392 bytes)
+i4_nachher_leon  Leon: [debug-menu] JUMP -> 115 CHIEF OFFICE   (ROOM1150) ... [room] PC loaded room1150.rdt (194080 bytes)
+```
+Vorher landete Elza in ROOM1070 (i4_vorher). Hinweis: ROOM1070.RDT und ROOM1071.RDT sind BYTEGLEICH (71 der
+120 Raumpaare sind es, 49 unterscheiden sich, z.B. 1150/1151 194080 vs 202392 Bytes) — sichtbar wird der
+Fehler deshalb in den 49 verschiedenen Raeumen und ueberall dort, wo der Port an der Raum-Id haengt
+(Elza-Zweige xxx1, z.B. Spur L ROOM1121/1151). Der Nutzer-Weg (SELECT, Raum waehlen, VIERECK) ist derselbe
+Code-Pfad (re15_debug_menu_tick mit Lade-Flanke @0x80014A38).
+
+### I1/I2 Memory Card (Laeufe `i1_nachher_s2`, `i1_nachher_s1`; Kartenwerkzeug probe_r36_inventar_karte)
+Karte x2 (Platz 0), Browning ausgeruestet (Platz 1), Patronen (Platz 2):
+```
+[inventar-r36] Memory Card verbraucht: Platz 0 Rest 1 | Inventar 21:1 03:15 15:50 00:0 ... | Ausruest-Platz 0x01
+[save] saved (room 1150) slot n=2 -> next=3; card=used (slot 0 qty 1)
+Block @0x4128: 21 01 00 00 03 0f 00 00 15 32 00 00
+```
+Statusschirm F520: Memory Card mit "1" (`I_belege/i1_nachher_karte_x2_zu_x1_statusschirm_F520.png`, Ausschnitt
+`I_belege/i1_nachher_karte_x1_zoom.png`).
+Letzte Karte x1:
+```
+[inventar-r36] Memory Card verbraucht: Platz 0 Rest 0 -> Platz entfernt | Inventar 03:15 15:50 00:0 ... | Ausruest-Platz 0x00
+[save] saved (room 1150) slot n=2 -> next=3; card=used-last, slot removed (slot 0 qty 0)
+```
+Statusschirm F520 (`I_belege/i2_nachher_letzte_karte_statusschirm_F520.png`): keine Memory Card, Browning
+(15) rueckt in Platz 0 und bleibt ausgeruestet (Equip Arms = Browning).
+
+### I3 letzte Handgranate (Lauf `i3_nachher`, Rezept wie `i3_vorher`)
+```
+F19 pad=8800 mg=0          Abzug (FUN_8004eae4-Zwilling zieht ab)
+[inventar-r36] F20 Platz 2 Id 09 Menge 0 -> entfernt (Ausruest-Platz 0x80, Waffe 9)
+F20 mg=-1                  (nichts ausgeruestet)
+F41 fx=1                   Projektil gespawnt (gr.log "SPAWN granate art=2") — der Wurf laeuft zu Ende
+F100..F125                 Explosion
+[inventar-r36] F111 Waffe 9 (leer, abgelegt) -> 1 (Messer-Rueckfall 0x80)
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+```
+Statusschirm F340 (`I_belege/i3_nachher_statusschirm_F340.png`): Item list nur Browning + Patronen, KEINE
+Granate; Equip Arms = Messer (Darstellung fuer 0x80, Runde 35 Spur E). Vorher: Granate "0" in beiden Kaesten.
 
 ## Tests
 

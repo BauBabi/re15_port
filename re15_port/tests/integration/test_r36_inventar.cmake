@@ -9,10 +9,10 @@
 # LAEUFE
 #   s2  Spielstand ROOM1150 vor dem Telefon, Memory Card x2 in Platz 0, Browning ausgeruestet in Platz 1.
 #       VIERECK am Telefon (Runde-33-Weg), JA -> Speicherschirm -> Platz 1.
-#       MUSS: "card=used (slot 0 qty 1)"; geschriebener Block: Inventar 21 01 03 0f 15 32 (Karte x1).
+#       MUSS: "card=used (slot 0 qty 1)"; geschriebener Block: Inventar 21:1 03:15 15:50 (Karte x1).
 #   s1  wie s2 mit der LETZTEN Karte (x1).
 #       MUSS: "card=used-last, slot removed (slot 0 qty 0)", Live-Inventar "03:15 15:50", geschriebener
-#       Block: Inventar 03 0f 15 32 00 00 (Browning rueckt nach, RE2 @0x801c11d0-e0 / FUN_8004dadc),
+#       Block: Inventar 03:15 15:50 leer (Browning rueckt nach, RE2 @0x801c11d0-e0 / FUN_8004dadc),
 #       Ausruest-Platz 0 (zieht mit, @0x8004dbac-c8), Waffe 3.
 #   g   letzte Handgranate in ROOM1140 werfen (Rezept integration_r35_granate "wand", RE15_GIVE=9:1),
 #       START erst nach dem Wurf.
@@ -138,25 +138,26 @@ endfunction()
 # +36 = 0x4124, inv +40 = 0x4128 (re15_savedata.h).
 _speichern(s2 2 _log_s2)
 _muss(_log_s2 "card=used (slot 0 qty 1)" "s2: zwei Memory Cards -> nach dem Speichern nicht 1 (RE2 @0x801c11ac)")
-file(READ "${_basis}_s2/re15_card.mcr" _inv OFFSET 16680 LIMIT 6 HEX)
-if(NOT _inv STREQUAL "2101030f1532")
-    _fehler("s2: geschriebener Block Inventar '${_inv}', Soll 2101030f1532 (Karte x1 MIT abgezogen, RE2: Abzug vor dem Blockbau)")
+# Platz = 4 Bytes {Id, Menge, Flag, +3} (re15_inv_slot_t, Schritt 4 wie 0x800b10ac).
+file(READ "${_basis}_s2/re15_card.mcr" _inv OFFSET 16680 LIMIT 12 HEX)
+if(NOT _inv STREQUAL "21010000030f000015320000")
+    _fehler("s2: geschriebener Block Inventar '${_inv}', Soll 21010000 030f0000 15320000 (Karte x1 MIT abgezogen, RE2: Abzug vor dem Blockbau)")
 endif()
-message(STATUS "r36_inventar s2: Memory Card x2 -> x1 (Log + Kartenblock 21 01 03 0f 15 32)")
+message(STATUS "r36_inventar s2: Memory Card x2 -> x1 (Log + Kartenblock 21:1 03:15 15:50)")
 
 _speichern(s1 1 _log_s1)
 _muss(_log_s1 "card=used-last, slot removed (slot 0 qty 0)" "s1: letzte Memory Card nicht verbraucht/entfernt")
 _muss(_log_s1 "Memory Card verbraucht: Platz 0 Rest 0 -> Platz entfernt | Inventar 03:15 15:50 00:0"
       "s1: Live-Inventar nach dem Speichern nicht verdichtet (FUN_8004dadc)")
-file(READ "${_basis}_s1/re15_card.mcr" _inv OFFSET 16680 LIMIT 6 HEX)
-if(NOT _inv STREQUAL "030f15320000")
-    _fehler("s1: geschriebener Block Inventar '${_inv}', Soll 030f15320000 (Karte weg, Browning rueckt nach)")
+file(READ "${_basis}_s1/re15_card.mcr" _inv OFFSET 16680 LIMIT 12 HEX)
+if(NOT _inv STREQUAL "030f00001532000000000000")
+    _fehler("s1: geschriebener Block Inventar '${_inv}', Soll 030f0000 15320000 00000000 (Karte weg, Browning rueckt nach)")
 endif()
 file(READ "${_basis}_s1/re15_card.mcr" _eq OFFSET 16675 LIMIT 2 HEX)
 if(NOT _eq STREQUAL "0003")
     _fehler("s1: Block Ausruest-Platz/Waffe '${_eq}', Soll 0003 (Platz 0 = Browning, Waffe 3; @0x8004dbac-c8)")
 endif()
-message(STATUS "r36_inventar s1: letzte Memory Card -> Platz weg, Browning Platz 0 ausgeruestet (Block 03 0f 15 32 00 00, 00 03)")
+message(STATUS "r36_inventar s1: letzte Memory Card -> Platz weg, Browning Platz 0 ausgeruestet (Block 03:15 15:50 leer, Platz 0 / Waffe 3)")
 
 # ---- Handgranate -------------------------------------------------------------------------------
 set(_wd "${_basis}_g")
