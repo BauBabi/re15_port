@@ -30,6 +30,7 @@ der Gefaengnisschluessel nicht bei Roy, sondern im Communications Room. KEIN lee
 - [x] Riegel unit_r36_schluessel_{raum,tuer,zelle,namen}
 - [x] Echte exe: integration_r36_schluessel (Abschnitt 4/5)
 - [x] Wegwerf-Kette Parking Lot Key (RE2 @0x80051670)
+- [x] Nachbesserung 1: Wegwerf-Abfrage Prison Key am Ende der Befreiungsszene ROOM1211 (Mangel M1), H4 berichtigt
 
 ## 1. Messung vorher (Stand 78a4a748)
 
@@ -86,7 +87,10 @@ ghidra_re2_Leon.txt Z. 169432-169573 (info/re2leon/PSX.EXE), selbst gelesen:
   80051654 25 02 04 3c  lui  a0,0x225 / 80051658 jal 0x8005ba28   ; Se_on(2,0x25) Aufschliessen
   80051670 b0 82 22 ac  sw   LAB_80051718    ; Wegwerf-Fortsetzung
   80051690 c3 dc 01 0c  jal  FUN_8007730c    ; Schlossbit setzen
-  80051698 be 45 01 08  j    LAB_800516f8 / _clear v0   ; v0 = 0: KEIN Durchgang bei diesem Druck
+  80051698 be 45 01 08  j    LAB_800516f8 / _clear v0   ; KEIN Durchgang bei diesem Druck: der Sprung laesst
+                                                      ; den Uebergangs-Block 800516cc..800516f4 aus
+                                                      ; (sb 1 -> 0x800df348, Freeze); v0 ist in allen
+                                                      ; Zweigen 0 (berichtigt in Nachbesserung 1, H4)
 800516a0 16 02 04 3c  lui  a0,0x216 / 800516a4 jal 0x8005ba28    ; Se_on(2,0x16) Verschlossen
 800516b4 b4 ff 06 26  addiu a2,s0,-0x4c / 800516b8 jal FUN_8002fe38 ; Text key_type - 0x4C
 ```
@@ -195,7 +199,7 @@ Ziel/Cut/Richtung bleiben in door_params). Druck -> scd_event_fire(25) -> `re15_
 (Haken in der Programm-Kette) fuehrt RE2s Tuer-Handler aus:
 - Parking Lot Key im **Inventar** (re15_inv_find_item = FUN_800696cc-Gegenstueck): msg 29 + Ton AUF_KEY +
   (9,93) = 1 + Slot 1 zurueck zur Original-Tuer (Aot_reset-Semantik, next_pos) — kein Durchgang bei diesem
-  Druck (@0x80051698 v0 = 0); der naechste Druck geht nach ROOM11C0.
+  Druck (@0x80051698 `j 0x800516f8` ueber den Uebergangs-Block @0x800516cc; berichtigt N1/H4); der naechste Druck geht nach ROOM11C0.
 - sonst: Ton ZU_A + msg 28.
 Rueckgabe ein leeres Programm (`01 00` Evt_end). ROOM11B1 (Elza) bleibt unberuehrt.
 - **Wegwerf-Kette** (RE2 @0x80051670 nach Text 5 @0x8005164c): der vorhandene Port-Mechanismus
@@ -277,10 +281,10 @@ Lauf 1 gelten also fuer denselben Motor-Stand.
   liegt deshalb auf der Konsole.
 - Der Schluessel ist klein (Cut 0 9 Bildpunkte): RE2-Originalmodell 152 x 76 und keine 10F0-Kamera naeher als
   vz ~2600 an einer Platte. Kein Glanz-/Markierungseffekt gebaut (RE2 hat keinen).
-- Prison Key: KEINE "You've used..."-Zeile und KEINE Wegwerf-Abfrage an der Zelle — die Befreiung ist die
-  Original-Szene ROOM1211 sub02 (Spur L haengt dort den Aufschliess-Ton ein); eine Abfrage mitten in die Szene
-  zu legen waere eine eigene Choreografie-Entscheidung (Vorschlag: Benutzungsstelle (1211, msg 9) = Ende der
-  Szene). Der Schluessel bleibt im Inventar.
+- ~~Prison Key: keine Wegwerf-Abfrage an der Zelle, der Schluessel bleibt im Inventar~~ -> **erledigt in
+  Nachbesserung 1** (Mangel M1): Benutzungsstelle (ROOM1211, msg 9) = Ende der Befreiungsszene, Abschnitt N1.
+  Eine "You've used the Prison Key."-Zeile gibt es weiterhin nicht (die Befreiung ist die Original-Szene, Spur L
+  haengt dort den Aufschliess-Ton ein); die Abfrage folgt der letzten Szenen-Zeile "Elza: John. Wait!".
 - Elza braucht fuer den Prison Key jetzt den Funkraum-Nebenweg (Minidisc 1201 -> Stimmschloss 1101 -> Blue
   Keycard 1111 -> Kartenleser 10D1, story_leon_elza/ablauf_elza.md Nebenwege) — Folge der Nutzer-Vorgabe.
 - TUERSE.VBS ist eine geteilte Datei: falls Spur G (Karten-"Piep"/Aufschliess-Toene) dieselbe Bank erweitert,
@@ -292,7 +296,8 @@ Lauf 1 gelten also fuer denselben Motor-Stand.
   "P. Room Key" (schwarzer Kunststoffkopf, rotes Emblem: der Autoschluessel-Look).
 - **Prison Key** (Elza): dieselbe Stelle in ROOM10F1. Modell/Icon/Bild = RE2 "Cabin Key" (grosser Eisenring mit
   Bartschluessel). Roy (ROOM1011) haelt nur noch den Zettel "0513"; mit dem Prison Key oeffnet die Zelle in
-  ROOM1211 wie bisher.
+  ROOM1211 wie bisher. Am Ende der Befreiungsszene (nach "Elza: John. Wait!") kommt "You don't need this key any
+  more. Discard it?" — Ja wirft den Prison Key weg, Nein behaelt ihn (Nachbesserung 1).
 - **Parkplatz-Tuer ROOM11B0 -> 11C0** (nur Leon, sobald Strom da ist): ohne Schluessel "It's locked." / "The door
   is marked "Parking Lot."" mit RE2-Verschlossen-Ton; mit Schluessel "You've used the Parking Lot Key." mit
   RE2-Aufschliess-Ton, danach "You don't need this key any more. Discard it?"; der naechste Druck oeffnet die Tuer.
@@ -378,3 +383,19 @@ flag:9:83 leer give:0x42:1` + CONTINUE, `RE15_PAD_AT` U F40..F100, START F2400, 
 - Unit-Riegel `test_r36_schluessel befreiung` (Szene am echten VM + Spielschritt, John-Bank): msg 9 auf 1709 / zu
   1808, Abfrage 1808 fuer 0x42, Vorentscheid mit Besitz bei freiem Belegt-Bit, Ja -> 0x42 weg, Szenenende 1899 nach
   der Antwort; Nein -> bleibt (Anzahl 1, @0x800517c4); ohne Schluessel im Inventar keine Abfrage, Ende 1809.
+
+### N1.5 Tests (Nachbesserung 1)
+Neu (registriert nur in `tests/unit/probes/r36_schluessel.cmake`):
+- `unit_r36_schluessel_befreiung` — ROOM1211 sub02 am echten VM + Spielschritt (Bild-Reihenfolge main.c, John-Bank
+  0x49, Abfrage-FSM wie main.c: sichtbar -> kein Spielbild, aktiv -> Tick nach dem Bild). Prueft die Bytes der
+  Stelle (@0x0226A/@0x01F76/@0x0259B/@0x01F9C/@0x0229A), die zwei Port-Stellen, Abfrage fuer 0x42 im Bild, in dem
+  msg 9 ausgeredet hat (nicht frueher), Vorentscheid bei freiem Belegt-Bit, Szene steht waehrend der Abfrage
+  (Pad-Sperre an, John da), Ja -> 0x42 weg + (4,0xEC)/(4,0xFC)/(9,83) bleiben + Szene laeuft danach zu Ende,
+  Nein -> bleibt (Anzahl 1), ohne Schluessel im Inventar keine Abfrage. 10/10 gruen.
+  **Rueckbau** (Stelle 1211 per `0 &&` abgeschaltet, gebaut, gefahren): 5 von 10 Pruefungen rot (Port-Stellen,
+  Abfrage, Ja, Szenenende nach Antwort, Nein) — der Riegel faengt den Mangel. Danach zurueckgebaut, 10/10.
+- `integration_r36_schluessel_befreiung` — ECHTE exe (Kartenwerkzeug + CONTINUE in 1211, U F40..F100, Viereck
+  F1980): `[msg] room=1211 id=9`, discard.log `frage=8 gegenstand=0x42` (erstes Bild F1870), nie `msg_aktiv=1` mit
+  `frage=8`, `weg=1` und `pausepad=0` in F1995 (Szene zu Ende). 75 s, gruen. Eigener ctest-Eintrag
+  (`-DNUR=befreiung`), damit der bestehende `integration_r36_schluessel` unveraendert bleibt.
+Angepasst: `unit_r36_schluessel_tuer` Pruefzeile B (Text der H4-Begruendung, Pruefung selbst unveraendert).
