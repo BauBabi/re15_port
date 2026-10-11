@@ -478,3 +478,52 @@ dem bisherigen Weg, bis Parameter 4 portiert ist. Die Karte (0x0010) ist davon u
   gezeichnet werden (Flach-Attribut; z.B. Rolltor ROOM11E0, Zellentuer ROOM1210, Schubladen ROOM1200,
   Objekte in 1090/1190/11A0/11B0/11C0 und in den Stages 2/4/5/6), erscheinen jetzt in Texturhelligkeit statt
   fast schwarz. Halbtransparente Objekte (Wasser/Glas) sind unveraendert.
+
+## 9. Nachtrag Bank-9-Kollision (Zweig `r36/kartenbits`, Basis r36/integration 7a0fd453) — 2026-10-12
+
+Baum `.claude/worktrees/r36_kartenbits`. Wird fortlaufend geschrieben (Sitzungslimit) — ein Nachfolger macht beim
+ersten Unterabschnitt ohne Ergebnis weiter. Commits je Schritt (`wip(r36-kartenbits): ...`), am Ende `fix(...)`.
+
+### 9.0 Befund und Auftrag (Orchestrator, aus R_abnahme_3.md H3 + eigenem Zensus)
+Spur N speichert "Karte genommen" in Bank-9-Bits 87..91 (3F=87 ROOM1140, 2F=88 ROOM10D0, 1F=89 ROOM1030,
+B2=90 ROOM1200, B1=91 ROOM11D0). Bank 9 ist im Original die Zone der Item-TAKEN-Bits. Die Bits 90 und 91 sind
+Taken-Bits ORIGINALER Items in Stage 2 -> wer in Stage 1 den Lageplan B2/B1 nimmt, findet diese Items nicht;
+umgekehrt meldet ein Spielstand mit genommenem Item die Karte als besessen. Punkte: P1 Kollision an der Engine
+messen, P2 Zensus Original + Port, P3 Fix (zwei freie Bits), P4 Riegel-Test, P5 Alt-Spielstaende, P6 Regression.
+
+### 9.1 RE-Belege (selbst disassembliert, `re15_disasm.py` auf info/Re1.5/PSX.EXE)
+**Item_aot_set (Opcode 0x50, Sprungtabelle 0x800744a8[0x50] = 0x80040644)** — der Taken-Test beim Anlegen:
+```
+80040654 lw   a2,28(a0)        ; a2 = pc
+8004065c lbu  v0,3(a2)         ; pc[3]
+80040664 andi v0,v0,0x80       ; Langform?
+80040668 beq  v0,zero,0x80040680
+80040670 lhu  a1,26(a2)        ; LANG: Bit = u16 pc[26..27]
+80040674 lbu  s1,28(a2)        ;       Prop  = pc[28]
+80040680 lhu  a1,18(a2)        ; KURZ: Bit = u16 pc[18..19]
+80040684 lbu  s1,20(a2)        ;       Prop  = pc[20]
+800406d4 lui  a0,0x8007
+800406d8 lw   a0,18056(a0)     ; a0 = *(0x80074688) = 0x800b1078 = Flag-Tabelle 0x80074664[9]
+800406dc jal  0x8004efe4       ; Bit-Test
+800406e4 beq  v0,zero,0x8004071c ; Bit 0 -> Satz bleibt scharf
+800406f4 sb   zero,0(v0)       ; Bit 1 -> rec[0] (sce) = 0: Satz still
+800406f8..80040718 sw v1(0x80000000),0x800b3f98+s1*148 ; Modell pool[s1] versteckt
+```
+**FUN_8004efe4 (Bit-Test):** `srl v1,a1,5` / `sll v1,v1,2` / `addu v1,v1,a0` / `andi a1,a1,0x1f` /
+`lui v0,0x8000` / `lw v1,0(v1)` / `srlv v0,v0,a1` / `jr ra` / `and v0,v0,v1` — Wort = Basis + (Bit>>5)*4,
+Maske 0x80000000 >> (Bit & 31).
+**Ck (0x21) @0x8003fcf4:** `lbu a2,1(v0)` Bank = pc[1], `lhu a1,2(v0)` Bit = pc[2], Wort `(a1>>3)&0x1c`,
+Maske `0x80000000 >> (a1 & 0x1f)` (@0x8003fd38-40), Tabelle `0x80074664 + Bank*4` (@0x8003fd20-2c).
+**Set (0x22) @0x8003fdd0:** `lbu v1,1(v0)` Bank, `lbu a1,2(v0)` Bit, `lbu a2,3(v0)` Op (0 loeschen @0x8003fe4c,
+1 setzen @0x8003fe64, 7 umschalten @0x8003fe78), Wort `(Bit>>5)*4` (@0x8003fdf0-f4), dieselbe Tabelle 0x80074664.
+**Flag-Tabelle 0x80074664** (`re15_disasm.py table`): [9] = 0x80074688 -> **0x800b1078**, [10] -> 0x800b1098
+=> Bank 9 = 0x800b1078..0x800b1097 = 256 Bits. Item_aot_set-Taken-Bit, Ck(9,n) und Set(9,n) adressieren
+DASSELBE Bit (gleiche Basis, gleiche Wort-/Masken-Rechnung). Der Port fuehrt Bank 9 als `g_game.flags`-Zone 9
+(`re15_game_flag_get(9,..)`; op_item_aot_set scd_vm.c "TAKEN-BIT persistence" liest `re15_game_flag_get(9, tk_bit)`).
+**Weitere Leser/Schreiber von 0x800b1078 in der EXE** (XREF ghidra1_V2.txt Z. 493170: 8001e0d4, 80021fd4,
+800406d8, 80074688): 0x8001e0d4 (Aufnahme-Modal, `jal 0x8004ef90` @0x8001e0d0, Bit = Record-Feld) und
+0x80021fd4 (`lhu a1,4(s0)` @0x80021fcc mit s0 = Record+12 bzw. +20 -> Record+16/+24 = pc[18]/pc[26],
+`jal 0x8004ef90` @0x80021fd8) setzen das Bit AUS DEM Item_aot_set-Satz — keine eigenen Bitnummern.
+
+### 9.2 P1 Messung vorher
+(folgt)
