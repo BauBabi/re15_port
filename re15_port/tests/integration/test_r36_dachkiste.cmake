@@ -229,5 +229,72 @@ if("${_b3}" STREQUAL "")
 endif()
 message(STATUS "r36_dachkiste weg2040/treppe2040: Nordgang -> 2040 Galerie (Band 5) -> Treppe -> Halle (Band 3)")
 
+# ---- Punkt 4 (Nachbesserung 2, N3): ROOM2050 obj 6 (Band 3, Record (-1600,-5400,-9348) @0x01D0E) erreicht die
+# Absprungzelle r*[49] @0x00B5C (x 6350..8750 z -13950..-12150, Wort 0x3202) und faellt — geschlossen geregelt ueber den
+# Wegplan-Treiber RE15_WEGPLAN (dachkiste_r36.c; Messung R_belege/nb2_2050fall_c, Original R_belege/orig_2050_*):
+# Sued bis Kistenmitte z >= -7050 (r*[43] z -8750..-8050 sperrt die Kiste bei z < -7150), Ost aus der Tasche
+# x <= -2950 / z (-6632,-5368) bis x in [7550,7650) (r*[44] x <= 6650 / r*[40] x >= 8550), Nord von Sueden bis zum
+# Objekt-Pass (Absprungzelle + 450 @0x8002c12c). Die beiden Adult Spider (0x25) werden fuer die Messung freigegeben
+# (GEGNERWEG = re15_actor_free; am Original Aktiv-Bit des Entity-Worts, Guard @0x8001a564-568).
+set(_sub2050 "${_basis}/fall2050")
+file(MAKE_DIRECTORY "${_sub2050}")
+file(WRITE "${_sub2050}/wegplan.txt" "OBJ 6
+RAUM 2050
+GEGNERWEG
+WARTE 30
+ZELLE 0 50
+ZELLE 0 49
+GEHE -1000 -10800 120
+SCHIEB 3072 Z >= -7050 400
+WARTE 40
+GEHE -100 -8400
+GEHE -100 -5520
+GEHE -3100 -5520
+GEHE -3100 -6400 100
+SCHIEB 0 X >= 7550 1600
+WARTE 40
+GEHE 6100 -5600
+GEHE 7600 -5600 100
+SCHIEB 1024 Z <= -12000 1200
+WARTE 300
+ENDE
+")
+_lauf(fall2050 600 ${_grund} "RE15_WEGPLAN=${_sub2050}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
+      RE15_DEBUG_JUMP=2050@250 "RE15_PLAYER_POS=-1000,-10800,3072,3" "RE15_EXIT_AT=2600")
+_muss("loaded room2050.rdt" _dbg "fall2050: ROOM2050 nicht geladen")
+set(_wp "")
+if(EXISTS "${_sub}/wegplan_log.txt")
+    file(READ "${_sub}/wegplan_log.txt" _wp)
+endif()
+_muss("ZELLE r0[50] LAUFZEIT: x 6650..8550 z -12150..-11650 typ 1 u0 0x00" _wp "fall2050: Zelle r*[50] (0x32) zur Laufzeit nicht frei (sub00 @0x01E94 Sca_id_set 0x32 = 0, Original-Handler @0x8004179c sb a1,9(v0))")
+_muss("SCHIEB: Bedingung erfuellt (obj.z = -70" _wp "fall2050: Sued-Schub endet nicht bei Kistenmitte z -70xx")
+string(REGEX MATCH "SCHIEB: Bedingung erfuellt [(]obj[.]x = 7(5[5-9][0-9]|6[0-4][0-9])[)]" _ost "${_wp}")
+if("${_ost}" STREQUAL "")
+    _fehler("fall2050: Ost-Schub endet nicht im Fenster x [7550,7650) (wegplan_log.txt: ${_wp})")
+endif()
+string(REGEX MATCHALL "room=2050 p=0 obj=6 SCHUB-OK[^
+]*" _ok2050 "${_push}")
+list(LENGTH _ok2050 _n_ok2050)
+if(_n_ok2050 LESS 300)
+    _fehler("fall2050: nur ${_n_ok2050} angenommene Schuebe an obj 6 (erwartet >= 300: Sued, Ost, Nord)")
+endif()
+string(REGEX MATCH "room=2050 p=0 AUSLOESER wort=0x3202 band=3 pos=[(]7[56][0-9][0-9],-5400,-11[67][0-9][0-9][)]" _aus2050 "${_fall}")
+if("${_aus2050}" STREQUAL "")
+    _fehler("fall2050: kein Fall-Ausloeser der Kiste obj 6 in der Absprungzelle r*[49] (+450) (objfall.txt: ${_fall})")
+endif()
+_muss("room=2050 p=0 zust 0->1" _fall "fall2050: Kiste obj 6 faellt nach dem Ausloeser nicht")
+string(REGEX MATCHALL "room=2050 spieler=[^
+]*[|] p0 [(][-0-9]+,[-0-9]+,[-0-9]+[)] b[0-9]" _lagen2050 "${_fall}")
+list(LENGTH _lagen2050 _n_lagen2050)
+if(_n_lagen2050 LESS 1)
+    _fehler("fall2050: keine Kistenlage p0 in objfall.txt")
+endif()
+list(GET _lagen2050 -1 _letzte2050)
+string(REGEX MATCH "p0 [(][-0-9]+,[-0-9]+,[-0-9]+[)] b3" _noch3 "${_letzte2050}")
+if(NOT "${_noch3}" STREQUAL "")
+    _fehler("fall2050: Kiste obj 6 am Ende noch auf Band 3 (kein Fall): '${_letzte2050}'")
+endif()
+message(STATUS "r36_dachkiste fall2050: ${_n_ok2050} angenommene Schuebe, Ausloeser '${_aus2050}', Ende '${_letzte2050}' — die 2050-Kiste faellt ueber die Kante (wie im Original gemessen, R_belege/orig_2050_*)")
+
 file(REMOVE "${_exe}")
-message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall + 2040-Weg gemessen")
+message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt; 3050-Fall, 2050-Fall + 2040-Weg gemessen")

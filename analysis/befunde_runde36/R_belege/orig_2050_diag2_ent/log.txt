@@ -1,0 +1,11 @@
+DuckStation gestartet {'118644'} mode ent
+GDB verbunden
+Stopp: b'S02'
+Entity 0: w0 0801 -> 0800
+Entity 1: w0 0801 -> 0800
+Stopp: b'S02' RIGHT 0.5s: Padwort 0x2002 Blick 0
+Stopp: b'S02' RIGHT 1.0s: Padwort 0x2002 Blick 0
+Stopp: b'S02' RIGHT 1.5s: Padwort 0x2002 Blick 0
+Stopp: b'S02' RIGHT 2.0s: Padwort 0x2002 Blick 0
+Stopp: b'S02' RIGHT 2.5s: Padwort 0x2002 Blick 0
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

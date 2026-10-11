@@ -362,9 +362,14 @@ oestlich, Schub nach Westen von x -18300 bis -23875; Seitenwechsel nach Norden; 
   @0x00852 -> sub03 @0x00B1C-B3A: `Aot_reset 4 / Set (3,219)=1 / Message_on 2 / Aot_reset 1 (sce 2)` — die Tuer oeffnet
   sich beim ERSTEN Benutzen von innen, kein Schluessel) -> `ROOM2030 slot 3 @0x01B4C (floor 9) -> 2060 Band 0` -> Tritt
   obj 2 (Spur A) -> `ROOM2060 slot 1 @0x00DBA (floor 1) -> 2040 Band 3 (Halle)`. Jede Tuer liegt auf dem Ankunftsband der
-  vorigen; der einzige Band-Wechsel im Raum ist der Tritt in 2060 (gemessen, Spur A). Dazu der zweite Zugang in die
-  Galerie: ROOM11A0 slot 0 @0x00F5A ((3,151)=1) -> 2070 Nordgang -> slot 5 -> 2040 Band 5 -> Treppe -> Halle (beide
-  Glieder hier an der exe gemessen). Mit der Kiste: 2000 -> 2050 -> Klettern obj 6 -> slot 2 -> 2040 Band 3 (3 Kanten).
+  vorigen; der einzige Band-Wechsel im Raum ist der Tritt in 2060 (gemessen, Spur A). ⛔ BERICHTIGT (Nachbesserung 2, N1):
+  der frueher hier genannte "zweite Zugang" ROOM11A0 slot 0 @0x00F5A -> 2070 Nordgang -> slot 5 -> 2040 ist ZIRKULAER —
+  11A0 slot 0 verlangt (3,151)=1, und (3,151) wird in STAGE1-3 nur in ROOM2070/2071 sub02 @0x00CE4 gesetzt (Ereignis Aot
+  slot 7 sce 3 @0x00AC2 IM Nordgang), der Nordgang wird zum ersten Mal nur aus ROOM2040 slot 4 @0x0131C (Galerie) betreten.
+  Er steht also erst NACH dem ersten Galerie-Besuch offen und taugt nicht als Weg nach 2040 fuer einen Spieler, dessen
+  Kiste vorher gefallen ist. Die beiden an der exe gemessenen Glieder (2070 Nordgang -> slot 5 -> 2040 Band 5, Treppe
+  Band 5 -> 3) bleiben als Verbindungen richtig, sind aber kein Ersatzweg. Mit der Kiste: 2000 -> 2050 -> Klettern obj 6
+  -> slot 2 -> 2040 Band 3 (3 Kanten).
   Der Graph nimmt an, dass zwei Tueren desselben Bands eines Raums verbunden sind (fuer 2070 widerlegt und von Hand
   geteilt; fuer die uebrigen Raeume des Wegs nicht einzeln gelaufen — OFFEN).
 * Zensus: obj 6 erreicht mit dem Spieler die Absprungzelle (von Sueden geschoben, Fallrichtung -Z = ueber die Kante
@@ -428,6 +433,112 @@ oestlich, Schub nach Westen von x -18300 bis -23875; Seitenwechsel nach Norden; 
   band=0 pos=(-24058,-15601)`, Endlage `p1 (-24058,0,-15561) b0 r(-1029,0,0)` (umgekippt, Band 0). 425 + 129 SCHUB-OK,
   1 GESPERRT (Wand), 1 AUSLOESER. Die zweite Stufe des Raetsels (Band-0-Schub in Kerbe 7 -> (3,93) -> Redhawk) ist
   Record-Beleg (Latch wie 5020, dort von Spur A gemessen), hier nicht gefahren (OFFEN).
+
+## Nachbesserung 2 (Abnahme 1: N1, N2, N3, N4, N5)
+
+Stand beim Start: 47384115 (Abnahme 1). Gebaut (`local_build.sh build` -> LOCAL-BUILD-OK), Messkopie
+`re15_pc_r36r_nb2.exe`, Startskript `R_belege/lauf_nb2.sh <lauf> <wegplan> KEY=WERT`.
+
+### Werkzeug: Wegplan-Treiber RE15_WEGPLAN (engine/src/dachkiste_r36.c, Haken input_pc.c)
+* Ursache fuer das Werkzeug: die Abnahme konnte den 2050-Fall mit dem offenen Skript RE15_INPUT_SCRIPT nicht fahren
+  (R_abnahme_1.md R4c/R4d: Anlauf-/Auslauf-Animation mo=8 mit Wurzelbewegung, Drehungen in mo=17 geschluckt — die
+  berechneten Stellungen werden nach mehreren Drehungen nicht getroffen). Das Original-Messskript ist dagegen
+  geschlossen geregelt (orig_1090_push.py: Lage/Blick aus der RAM lesen, Pad stellen). Der Port bekommt dasselbe:
+  `RE15_WEGPLAN=<datei>` liest je Bild Spielerlage, Blick (+0x6A) und Objektlage und erzeugt die Pad-Bits
+  (Befehle OBJ/RAUM/WARTE/GEGNERWEG/ZELLE/GEHE/BLICK/SCHIEB/AKTION/ENDE, Kopf von dachkiste_r36.c). Haken: 2 Zeilen in
+  `platform/pc/src/input_pc.c` hinter der RE15_INPUT_SCRIPT-Ersetzung ("Runde 36 Spur R"). Reine Mess-Steuerung wie
+  RE15_INPUT_SCRIPT, ohne Env ein frueher Ruecksprung; kein Spiel-Code liest sie; kein Verhalten.
+* Gemessene Eigenheiten, die der Treiber beruecksichtigt (Laeufe nb2_2050fall_a/b): `OBJ n` ist die Obj_model_set-
+  Nummer, der Pool-Slot ist die Installationsreihenfolge (ROOM2050 obj 6 = Slot 0 — in Lauf a wurde Slot 6 = obj 5
+  verfolgt, der Schub lief trotzdem bis zur Sperre an r*[32] z -4900 bei Kistenmitte -5841 = -4900 - 900 - 41);
+  Gehen ~74/Bild nach 12 Bildern Anlauf, Auslauf ~444 nach dem Loslassen -> Loslass-Abstand 40 + 35 x min(Bilder,12),
+  Vorbeilaufen (Abstand waechst) -> loslassen; Drehen 96/Bild, R erhoeht rot_y; Schub: die Kiste bewegt sich nur in
+  Teilen des Schub-Clips (mo=18, 25 Bilder): Sued-Schub 119 Bilder / 2236 Einheiten (55 Bilder Schritt 0, Schritte
+  9..50), Ost-Schub 591 Bilder / 5513 Einheiten (432 Bilder Schritt 0, Schritte 3..49) — groesster Schritt 50 < 100 =
+  Breite des Fensters [7550,7650), die Kiste landet also sicher darin, wenn der Treiber beim ersten x >= 7550 loslaesst.
+* GEGNERWEG: ROOM2050 hat zwei Adult Spider (Sce_em_set @0x01CE6/@0x01CFA, Typ 0x25, (4300,-6450)/(-5000,-6082)), die Leon
+  nach ~700 Bildern toeten (A_abnahme_3.md, Lauf r2050_a). Fuer die Messung der Schubkette (liest nur Spieler, Objekt
+  und SCA) werden sie beim Raumstart freigegeben (re15_actor_free, active = 0). Gegenstueck am Original s. N3.
+
+### N1 — "zweiter Zugang" ueber ROOM11A0 ist zirkulaer
+* Ursache: 4.3 und "Fuer den Nutzer" nannten 11A0 slot 0 @0x00F5A -> 2070 Nordgang -> slot 5 -> 2040 als Weg ohne
+  Kiste; 11A0 slot 0 steht unter (3,151)=1, gesetzt nur in ROOM2070/2071 sub02 @0x00CE4 (Ereignis im Nordgang), und der
+  Nordgang wird zuerst nur aus 2040 slot 4 @0x0131C (Galerie) betreten (Abnahme 1, selbst nachgelesen: Flag-Scan ueber
+  STAGE1-3 mit scd_dump_room.py findet `22 03 97 01` nur in 2070/2071).
+* Aenderung: 4.3 und "Fuer den Nutzer" berichtigt (Weg als zirkulaer gekennzeichnet, kein Ersatzweg). Keine Messung
+  noetig, keine Code-Aenderung.
+
+### N2 — ROOM2020: die Luecke r*[15] ist per SCD geschlossen (kein Port-Defekt), der Durchgang ist ein Raetsel
+* Messung vorher (Abnahme 1, R1/R1b): Spieler bleibt bei x 218 = Ostkante -250 von r0[15] + 450 + 18 stehen; in die
+  Luecke gesetzt wird er beim Laden auf z -4318 herausgeschoben; die RDT traegt fuer r0[15] @0x004F8 u0 0x00.
+* Beleg (Mechanismus): die RDT-Bytes sind nicht der Laufzeitwert. ROOM2020 sub00 (Raumstart) setzt bei (3,114)=0
+  `Sca_id_set 37 00 0f ff / 37 01 0f ff / ... / 37 04 0f ff` @0x0098E-099E und bei (3,114)=1, (3,113)=0 dasselbe
+  @0x00A06-0A16 — Zelle 0x0f = r*[15] in allen fuenf Regionen bekommt u0 = 0xff. Original-Handler des Opcodes 0x37
+  = LAB_8004175c (selbst disassembliert): `lbu v1,1(a2)` Region, `lw v0,32(v0)` Tabelle hinter DAT_800ac778,
+  `lw v1,0(v1)` = Zellenfeld der Region (Index Region+1 @0x80041774-7c), `lbu a1,2(a2)` Index x 12 (@0x80041780-88),
+  `lbu a1,3(a2)` Wert, **`sb a1,9(v0)` @0x8004179c** = Byte +9 der 12-Byte-Zelle = u0 (Layout wie sca_dump.py: w,d,x,z,
+  typ,u0,u1,floor). Danach sperrt die Zelle den Spieler ueber FUN_8003b0a4 (Maske 1 & u0, Port
+  collision_constrain_impl re15_collision.c:727) — beides byte-true, der Port tut dasselbe (`op_sca_id_set` scd_vm.c:
+  `e->u0 = t->pc[3]`). An der exe zur Laufzeit gemessen (Lauf `nb2_2020durchgang`, Befehl ZELLE): r0[15] u0 = 0xff
+  beim Raumstart (s. Messung nachher).
+* Wann oeffnet sich die Luecke: sub02 @0x00A5C (Ereignis Aot slot 3 sce 3 @0x009AE, Rechteck x 2200..3000 z -4150..
+  -3350 floor 1 = im Suedstreifen, nur bei (3,114)=1 und (3,113)=0) -> Nachrichten 0/1, (12,31)=0 (Dialog bestaetigt;
+  (12,31) ist in allen Raeumen das Dialog-Ergebnis hinter Message_on, kein Gegenstand), Set (3,113)=1, Szene (Cut 3/4,
+  obj 1 faehrt mit Speed_set/Add_speed weg, obj 2 kommt an die Stelle (-1452,1684,-584)), dann `37 0x 0f 00` @0x00ADE-
+  0AEE (u0 = 0) + `39 0x 0f 10` (floor 0x10). (3,114) wird nur in ROOM2010/2011 sub02 @0x008CA gesetzt (Ereignis Aot
+  slot 4 sce 3 @0x00880, x 2700..3700 z -1550..-550 floor 0, Nachricht, (12,31)=0, obj 3 faehrt weg) — ROOM2010 haengt
+  unbedingt an ROOM2000 slot 2 @0x0165E (und an 20B0/20B1 slot 2). Der Durchgang in 2020 ist also ein Raetsel aus zwei
+  Aktionen ohne Gegenstand und ohne Kiste: Hinweis in 2010 lesen, dann in 2020 am Suedstreifen handeln.
+* Aenderung: kein Code (der Port ist hier byte-true). Dossier 4.3 / "Fuer den Nutzer" berichtigt; Messung des
+  Durchgangs an der exe mit dem Wegplan-Treiber (Lauf `nb2_2020durchgang`, unten).
+* Messung nachher: (wird nach dem Lauf eingetragen)
+
+### N3 — ROOM2050/2051 obj 6: an der exe GEMESSEN, die Kiste erreicht die Absprungzelle und faellt
+* Geometrie (sca_dump.py ROOM2050.RDT 3, Band 3, in allen 5 Regionen gleich): Kiste Record (-1600,-5400,-9348) @0x01D0E
+  Box h(900,900,900); Spalte zwischen r*[38] (x <= -2600, z -14000..-8100), r*[46] (x -2600..-1500 z -12500..-11300),
+  r*[39] (z <= -12500) und r*[41]/[43] (x >= 1250 bzw. 2450); nach Sueden frei bis Kistenmitte z -5800 (r*[32] z -4900);
+  nach Osten nur fuer Kistenmitte z in [-7150, -5800] (r*[43] x 2450..6650 z -8750..-8050: halboffen @0x8003b770-794,
+  -7150 + 9650 = 2500 ist nicht < 2500); am Ostende das Fenster x in [7550, 7650) zwischen r*[44] (x 5100..6650) und
+  r*[40] (x 8550..9900); von dort nach Norden frei (r*[50] u0 0x00 zur Laufzeit, s. u.) bis in die Absprungzelle r*[49]
+  @0x00B5C x 6350..8750 z -13950..-12150 (Wort 0x3202, u0 0x01 sperrt nur den Spieler), Objekt-Pass ab Kistenmitte
+  z <= -11700 (+450 @0x8002c12c). Spielerstellungen: noerdlich der Kiste (-1000,-10800) (r*[46] aufgeblasen x <= -1032
+  greift nicht); Tasche westlich x <= -2950, z (-6632,-5368) (r*[45] z -8100..-7100 und r*[32] je + 450 + 18); suedlich
+  der Kiste bei z -5600 (r*[30]/[32] aufgeblasen z >= -5368).
+* Laufzeit-Zellen (Treiber ZELLE, nb2_2050fall_c): r0[50] (0x32) x 6650..8550 z -12150..-11650 **u0 0x00** (sub00
+  @0x01E94-1EA4 `37 0x 32 00` bei (3,109)=0, (3,104)=0 — Auslieferungszustand beim ersten Betreten; nach dem Hebel-
+  Ereignis sub04 @0x02346 bzw. nach dem Raetsel sub02 @0x022A8 wird sie 0xff), r0[49] u0 0x01 u1 0x02 fl 0x32, r0[51]
+  (0x33) u0 0xff.
+* Messung (exe, `R_belege/nb2_2050fall_c/wegplan.txt`, push.txt, objfall.txt; Spieler per RE15_PLAYER_POS (-1000,-10800)
+  Blick 3072 Band 3, Spinnen freigegeben): SCHIEB Sued F67-F196 -> Kistenmitte z -7037 (120 SCHUB-OK); Umweg Ost/Sued/
+  West in die Tasche (-3108,-6351) (vier GEHE, alle angekommen); SCHIEB Ost F449-F1225 -> x 7571 (592 SCHUB-OK, 0
+  gesperrt); Umweg nach Sueden (7583,-5597); SCHIEB Nord ab F1384: `F1624 room=2050 p=0 AUSLOESER wort=0x3202 band=3
+  pos=(7571,-5400,-11706) spieler=(7380,-10356) richt=(0,-1)`, `F1625 zust 0->1 n=1`, Kippen rot x -2040 -> -1767 ...,
+  Endlage `p0 (7571,-3600,-13681) b2 r(-1038,0,2048)` = auf Band 2 (y -3600, die erste Stufe der Kaskade r*[23] 0x2102)
+  gelandet, nicht mehr auf Band 3. **Der Port laesst die 2050-Kiste ueber die Kante fallen; danach fehlt die Stufe fuer
+  die Tuer slot 2 @0x01C8A (floor 4) nach ROOM2040.**
+* Original: (wird nach dem Lauf eingetragen — Werkzeug `R_belege/orig_2050_push.py`, Spielstand
+  `R_belege/room2050_orig.sav` per Debug-Menue JUMP 205 SEPTIC POOL (re15_quickload.py --triangle 1 --right 5, kurze
+  Tipper 0,04 s; mit 0,08 s lief die Liste per Auto-Repeat ans Ende = JUMP 102), Auslieferungs-EXE @0x80026e4c 0800e003,
+  Leon an der Tuer-Ankunft (9100,-5400,4100) Band 3, obj 6 = Pool-Index 6 (-1600,-5400,-9348)).
+  Werkzeug-Befunde: (a) der virtuelle Pad kommt erst ~0,5-1 s nach dem ERSTEN Druck an (orig_2050_diag1: Padwort 0 bei
+  0,5 s, 0x2002 ab 1,0 s, Blick +1440 je 0,5 s = 96/Bild) -> Drehtest 1,2 s halten; (b) Spinnen abschalten: die Entity-
+  Schleife FUN_8001a50c prueft @0x8001a55c-568 `lw v0,0(entity) / andi 1 / beq zero -> 0x8001a5a0` (Aktiv-Bit) und ruft
+  den Handler @0x8001a580-588 UNGEPRUEFT (`lw v0,0(v0) / jalr v0` — den Dispatch-Eintrag 0x80072c40 zu nullen waere ein
+  jalr 0); sie zaehlt aber nur AKTIVE Entities (`addiu s0,s0,1` im Delay-Slot des jalr @0x8001a58c) und laeuft, bis
+  s0 == g_active_count (`lbu s1,-13746(s1)` = 0x800aca4e @0x8001a528, Vergleich @0x8001a5b0-b8). Nur das Aktiv-Bit zu
+  loeschen (w0 0x0801 -> 0x0800) laesst die Schleife ueber den Pool hinauslaufen — gemessen orig_2050_diag2_ent: Padwort
+  0x2002 kommt an, Leon dreht nicht; mit g_active_count 2 -> 0 (orig_2050_diag2_ent2) dreht er (Blick 480 ... 6240).
+  Das ist das Gegenstueck zu re15_actor_free (active = 0; der Port filtert den Pool ohne Zaehler).
+
+### N4 — Beleg-Datei zensus_diag.txt neu geschrieben
+* `R_belege/zensus_diag.txt` = Ausgabe von `probe_r36_dachkiste.exe diag` (Stand dieser Nachbesserung): 1090/1091 12
+  Zellen / 0 Ausloeser, 3050/3051 13373 / 8 (Start (-3596,1523) = 30E0 slot 6 @0x00ABA), 2050/2051 3898 / 1 mit Pfad —
+  stimmt mit Tabelle 4.1 ueberein.
+
+### N5 — ROOM3050 am Original: unter OFFEN gefuehrt
+* Datenlage eindeutig (Super Redhawk slot 6 @0x01EC6 floor 1 nur auf der gefallenen Kiste, Latch sub01 @0x02184-2196);
+  offen bleibt, ob das Original denselben Schubpfad (West bis r*[31], Sued in r*[46]) zulaesst. Messweg: re15_quickload.py
+  --triangle 2 (JUMP 300 ...), Raum 0x305 steppen, orig_2050_push.py-Muster mit K = Pool-Index von obj 1. Eintrag OFFEN.
 
 ## Tests
 
@@ -526,9 +637,11 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     ueber die Kante — sie faellt, kippt und landet unten (Band 0). Der Fall ist als Riegel festgehalten (`fall3050`).
   - ROOM2050/2051 (Punkt 4): die Kiste obj 6 ist die Stufe zur Tuer nach ROOM2040 (Halle) und kann im Port ueber die
     Kante fallen (ob das Original das zulaesst, ist nicht gemessen — kein Spielstand dort). Faellt sie, ist diese Tuer
-    weg, aber ROOM2040 bleibt erreichbar: ueber ROOM2020 -> ROOM2030 -> ROOM2060 (Tritt) -> Halle, und ueber ROOM11A0 ->
-    ROOM2070 (Nordgang) -> Galerie -> Treppe -> Halle; die Tuer 2070 -> 2040 und die Treppe 2040 sind an der exe gemessen,
-    der Tritt in 2060 von Spur A. **Berichtigung gegenueber dem ersten Stand:** ROOM2070 HAT die Tuer nach 2040 (slot 5),
+    weg, aber ROOM2040 bleibt erreichbar: ueber ROOM2020 -> ROOM2030 -> ROOM2060 (Tritt) -> Halle (Nachbesserung 2: der
+    Durchgang in ROOM2020 ist ein Raetsel — Hinweis in ROOM2010, dann Aktion in 2020 —, s. "Nachbesserung 2" N2); der
+    Weg ueber ROOM11A0 -> ROOM2070 (Nordgang) -> Galerie -> Treppe -> Halle steht dagegen erst NACH dem ersten
+    Galerie-Besuch offen (zirkulaer, N1) und zaehlt nicht; die Tuer 2070 -> 2040 und die Treppe 2040 sind an der exe
+    gemessen, der Tritt in 2060 von Spur A. **Berichtigung gegenueber dem ersten Stand:** ROOM2070 HAT die Tuer nach 2040 (slot 5),
     sie liegt aber in einem eigenen, von den anderen Gaengen abgemauerten Teil (Nordgang) — von ROOM2000 aus kommt man
     nicht dorthin; und der frueher genannte Weg ueber die Treppe in ROOM2030 traegt nicht (sie endet auf Band 5, die
     Tueren liegen auf Band 9).

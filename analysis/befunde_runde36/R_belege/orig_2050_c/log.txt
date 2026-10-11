@@ -1,0 +1,47 @@
+DuckStation gestartet {'107400'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (9100, -5400, 4100, 0, 3, 0) obj6: (-1600, -5400, -9348, 0, 0, 3, 0) HP: 100
+Entity 0 @800acc2c: w0 0801 typ 0x25 pos (4300, -5400, -6450) -> w0 0800 (Aktiv-Bit 0 geloescht)
+Entity 1 @800ace20: w0 0801 typ 0x25 pos (-5000, -5400, -6082) -> w0 0800 (Aktiv-Bit 0 geloescht)
+g_active_count @0x800aca4e: 2 -> 0
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Z0 8003da78: b'OK'
+Drehsinn: R 1.2 s -> dBlick = -1888
+START spieler=(9100,-5400,4100) blick=2208 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+== Weg zur Nordseite der Kiste (Ostkorridor x 8818..9432, dann z -6300 nach Westen) ==
+  Drehsinn umgekehrt (err -1184 -> 1856)
+  GEHE (9100,-6300): angekommen bei (9146,-6464), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-6300): angekommen bei (-18,-6355), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-8400): angekommen bei (-51,-8399), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-11200): angekommen bei (-11,-11245), Schub-Ereignisse unterwegs 0
+  GEHE (-1000,-10900): angekommen bei (-883,-10988), Schub-Ereignisse unterwegs 0
+== Schub 1: nach Sueden bis Kistenmitte z >= -7050 (r*[43] z -8750..-8050 verlangt z >= -7150) ==
+SUED VOR spieler=(-883,-5400,-10988) blick=7152 band=3 sub=3 | obj6=(-1600,-5400,-9348) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1600, -5400, -9270, 0, 0, 3, 9) spieler=(-906, -5400, -10620, 7152, 3, 1) s4/s5=(-1600,-9348)
+  SCHUB-OK obj6=(-1600, -5400, -9180, 0, 0, 3, 9) spieler=(-935, -5400, -10530, 7193, 3, 8) s4/s5=(-1600,-9229)
+  SCHUB-OK obj6=(-1600, -5400, -8622, 0, 0, 3, 9) spieler=(-870, -5400, -9972, 7193, 3, 8) s4/s5=(-1600,-8661)
+  SCHUB-OK obj6=(-1600, -5400, -8080, 0, 0, 3, 9) spieler=(-817, -5400, -9430, 7193, 3, 8) s4/s5=(-1600,-8119)
+  SCHUB-OK obj6=(-1600, -5400, -7538, 0, 0, 3, 9) spieler=(-764, -5400, -8888, 7193, 3, 8) s4/s5=(-1600,-7577)
+SUED NACH (Zeit) spieler=(3200,-5400,-5368) blick=7193 band=3 sub=1 | obj6=(-1600,-5400,-7340) faellt=0 z=0 band=3 n=0
+SUED: Schub angenommen 105 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Zeit
+== Umweg in die Tasche westlich der Kiste (x <= -2950, z (-6632,-5368)) ==
+  GEHE (-100,-8400): angekommen bei (-250,-8391), Schub-Ereignisse unterwegs 0
+  GEHE (-100,-5520): angekommen bei (-118,-5518), Schub-Ereignisse unterwegs 0
+  GEHE (-3100,-5520): angekommen bei (-3107,-5517), Schub-Ereignisse unterwegs 0
+  GEHE (-3100,-6400): angekommen bei (-3133,-6471), Schub-Ereignisse unterwegs 0
+== Schub 2: nach Osten bis Kistenmitte x >= 7550 (Fenster [7550,7650) zwischen r*[44] und r*[40]) ==
+OST VOR spieler=(-3133,-5400,-6471) blick=-4039 band=3 sub=3 | obj6=(-1600,-5400,-7340) faellt=0 z=0 band=3 n=0
+  SCHUB-OK obj6=(-1378, -5400, -7340, 0, 0, 3, 9) spieler=(-2728, -5400, -6510, -4071, 3, 8) s4/s5=(-1433,-7340)
+  SCHUB-OK obj6=(-830, -5400, -7340, 0, 0, 3, 9) spieler=(-2180, -5400, -6573, -4071, 3, 8) s4/s5=(-877,-7340)
+  SCHUB-OK obj6=(-289, -5400, -7340, 0, 0, 3, 9) spieler=(-1639, -5400, -6624, -4071, 3, 8) s4/s5=(-336,-7340)
+  SCHUB-OK obj6=(252, -5400, -7340, 0, 0, 3, 9) spieler=(-1098, -5400, -6675, -4071, 3, 8) s4/s5=(205,-7340)
+  SCHUB-OK obj6=(793, -5400, -7340, 0, 0, 3, 9) spieler=(-557, -5400, -6726, -4071, 3, 8) s4/s5=(746,-7340)
+  SCHUB-OK obj6=(1334, -5400, -7340, 0, 0, 3, 9) spieler=(-16, -5400, -6777, -4071, 3, 8) s4/s5=(1287,-7340)
+  TREFFER-ZELLE a0=80119e44 obj=800b4310: x 2450..6650 z -8750..-8050 typ 1 u0 0xff u1 0x00 fl 0x33 | obj6=(1577, -5400, -7340, 0, 0, 3, 9)
+  SCHUB-GESPERRT obj6=(1532, -5400, -7340, 0, 0, 3, 9) spieler=(227, -5400, -6821, -4071, 3, 8) s4/s5=(1534,-7340)
+  TREFFER-ZELLE a0=80119e44 obj=800b4310: x 2450..6650 z -8750..-8050 typ 1 u0 0xff u1 0x00 fl 0x33 | obj6=(1615, -5400, -7340, 0, 0, 3, 9)
+  SCHUB-GESPERRT obj6=(1532, -5400, -7340, 0, 0, 3, 9) spieler=(265, -5400, -7597, -4071, 3, 1) s4/s5=(1534,-7340)

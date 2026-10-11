@@ -381,14 +381,15 @@ int main(int argc, char **argv)
         { "STAGE3", "ROOM3051", 0x3051, 1, -3596, 1523, 0, {{0,0,0}}, 1 },
         /* ROOM2050/2051 obj 6 (Band 3): Ankunft aus ROOM2000/20B0 (Door slot 4 -> (9100,-5400,4100) floor 3); einmal
          * Auslieferung, einmal nach sub02 (Sca_id_set r*[0x33] u0 = 0 @0x02294-22A4, r*[0x32] u0 = 0xff @0x022A8-22B8).
-         * DIAGNOSE (soll = -1), begruendet (Nachbesserung 1, M3): ob das Original die Kiste ueber die Absprung-
-         * Kaskade r*[49] 0x3202 -> Band 0 fallen laesst, ist nicht gemessen (kein Spielstand in 2050, STAGE2-Raetsel
-         * unfertig) — ein Pin wuerde eine ungemessene Aussage festhalten. Die Nutzer-Frage (haengt Fortschritt an
-         * der Kiste?) ist ueber den Tuer-Zensus beantwortet (R_dachkiste.md 4.3), nicht ueber den Fall. */
-        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 0, {{0,0,0}}, -1 },
-        { "STAGE2", "ROOM2051", 0x2051, 6, 9100, 4100, 0, {{0,0,0}}, -1 },
-        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, -1 },
-        { "STAGE2", "ROOM2050", 0x2050, 6, -6800, -5650, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, -1 },
+         * PIN (soll = 1, Nachbesserung 2 / N3): an der exe GEMESSEN (R_belege/nb2_2050fall_c, Wegplan-Treiber):
+         * Sued bis Kistenmitte z -7037, Ost aus der Tasche bis x 7571 (Fenster [7550,7650) zwischen r*[44] und r*[40]),
+         * Nord von Sueden -> F1624 AUSLOESER wort=0x3202 pos=(7571,-5400,-11706) -> Fall -> Landung Band 2. Der Zensus
+         * MUSS einen Ausloeser finden, und die erste Lage liegt in der um 450 (@0x8002c12c) erweiterten Absprungzelle
+         * r*[49] @0x00B5C x 6350..8750 z -13950..-12150 (Wort 0x3202, u0 0x01 sperrt nur den Spieler). */
+        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 0, {{0,0,0}}, 1 },
+        { "STAGE2", "ROOM2051", 0x2051, 6, 9100, 4100, 0, {{0,0,0}}, 1 },
+        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, 1 },
+        { "STAGE2", "ROOM2050", 0x2050, 6, -6800, -5650, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, 1 },
     };
     for (size_t i = 0; i < sizeof F / sizeof F[0]; i++) {
         int32_t ex, ez, bb[4];
@@ -405,6 +406,11 @@ int main(int argc, char **argv)
         if (n < 0 && f.soll >= 0) PRUEF(0, "%s: Zensus nicht moeglich (%d)", f.room, n);
         if (n >= 0 && f.soll == 0) PRUEF(n == 0, "%s obj %d: Ausloeser MIT Spieler erreichbar (%d), erste Lage (%d,%d)", f.room, f.obj_id, n, ex, ez);
         if (n >= 0 && f.soll == 1) PRUEF(n > 0, "%s obj %d: Ausloeser mit Spieler NICHT erreichbar", f.room, f.obj_id);
+        if (n > 0 && f.soll == 1 && f.id >= 0x2050 && f.id <= 0x2051) {
+            /* Absprungzelle r*[49] @0x00B5C x 6350..8750 z -13950..-12150, Objektlage mit Radius 450 (@0x8002c12c). */
+            PRUEF(ex >= 6350 - 450 && ex <= 8750 + 450 && ez >= -13950 - 450 && ez <= -12150 + 450,
+                  "%s obj %d: erste Ausloeser-Lage (%d,%d) nicht in der Absprungzelle r*[49] (+-450)", f.room, f.obj_id, ex, ez);
+        }
         if (n > 0 && f.soll == 1 && f.id >= 0x3050 && f.id <= 0x3051) {
             /* Absprungzelle r*[46] @0x00AD4 x -25000..-22950 z -18050..-16800, Objektlage mit Radius 450 (@0x8002c128). */
             PRUEF(ex >= -25000 - 450 && ex <= -22950 + 450 && ez >= -18050 - 450 && ez <= -16800 + 450,
