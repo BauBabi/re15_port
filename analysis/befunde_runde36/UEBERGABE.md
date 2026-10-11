@@ -9,6 +9,16 @@ Pflichtlektuere vorher: `CLAUDE.md` (STOP-GATE, Build ueber `local_build.sh`), `
 (Wortlaut des Nutzers + Nachtraege 14:00 und abends), `analysis/befunde_runde36/VERTRAG.md` (Bits/IDs/Ereignisse/Dateien je
 Spur), auf dem Integrationszweig `analysis/befunde_runde36/NACHLAUF.md` (Funde ausserhalb der Spur-Wortlaute).
 
+## ✅ Fortschritt seit der Uebergabe (fortlaufend, neueste zuerst)
+* 2026-10-11 12:05: G tueren in r36/integration GEMERGT (9361d9c3; Konflikte .gitattributes/game_step_common.c/audio_pc.c = beide Seiten behalten) + Paket-Gate KARTSE.VBS; Bau + gezielte Tests laufen. NACHLAUF 29-32 (G), Release-Notes-Entwurf Tueren-Absatz/Fragen/Grenze.
+* 2026-10-11 11:50: G tueren Abnahme 0 BESTANDEN (Bericht 73a856f1, keine Maengel, Hinweise H1-H7) -> Merge in r36/integration + Paket-Gate KARTSE.VBS laufen. N kartenitems Abnahme 0: Mangel M1 = erfundene Licht-Konstanten der Karten-Props (statt Original-Weg FUN_8002c18c NCCT/Flach) -> Nachbesserung 1 im Workflow. F/H/O arbeiten.
+* 2026-10-11 11:45: M karte INTEGRIERT (db644dac, gezielt 604/604 gruen); M-Hinweise in NACHLAUF.md 23-28, Karte-Absatz + 2 Fragen im Release-Notes-Entwurf.
+* 2026-10-11 11:25 (neuer Account, Fable): M karte in r36/integration gemergt (konfliktfrei); Bau + gezielte Tests laufen.
+  Rest-Lauf 4 gestartet: Workflow `wf_74d1d9dc-c24` mit `orchestrator/args_rest4_FGNHO.json` (F Nachbesserung 6,
+  G/N Abnahme-Fortsetzung mit Teilbericht, H Bau-Fortsetzung, O Bau; 5 Plaetze, Modell = Sitzung/Fable).
+  Monitor: `~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-.../subagents/workflows/wf_74d1d9dc-c24/journal.jsonl`.
+  Naechste Schritte unveraendert: Abschnitt 3 je bestandener Spur (G braucht Paket-Gate-Eintrag KARTSE.VBS + P0CD.DO2-Pruefung), dann Abschnitt 4.
+
 ## 0. Lage in Kuerze
 
 17 Spuren A..Q (Liste in VERTRAG.md §0). Jede Spur: eigener Arbeitsbaum, Bau-Agent → unabhaengige

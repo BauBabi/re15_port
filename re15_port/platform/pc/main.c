@@ -4933,6 +4933,8 @@ re_title:;
     { extern void re15_story_r36_install(uint16_t); re15_story_r36_install((uint16_t)g_current_room_id); }
     /* Runde 36 Spur Q: Schluessel 10F0/10F1 + Parkplatz-Tuer 11B0 — derselbe Grund (Boot-/CONTINUE-Weg). */
     re15_schluessel_r36_install((uint16_t)g_current_room_id);
+    /* Runde 36 Spur H: Scheiben-Texte ROOM1190/1191 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter). */
+    { extern void re15_ziel1190_install(uint16_t); re15_ziel1190_install((uint16_t)g_current_room_id); }
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

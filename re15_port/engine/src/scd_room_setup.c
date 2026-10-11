@@ -36,6 +36,7 @@
 #include "re15_story_r36.h"    /* Runde 36 Spur P: Roy 1020 / Zelle 1210 / Schuppen 1091 (story_r36.c) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: ROOM11B0 Werkstatt-Tuer (szenenleon_r36.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Schluessel 10F0/10F1 + Parkplatz-Tuer 11B0 */
+#include "re15_ziel1190.h"     /* Runde 36 Spur H: Scheiben-Texte ROOM1190/1191 (ziel_1190.c) */
 
 extern scd_vm_t g_scd;
 
@@ -483,6 +484,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_story_r36_install((uint16_t)g_current_room_id);     /* Runde 36 Spur P: Roy 1020 nach Strom, Text-Plaetze 1210/1091 (re15_story_r36.h) */
     re15_szl_install((uint16_t)g_current_room_id);   /* Runde 36 Spur J: ROOM11B0 Texte 20..22 + Werkstatt-Tuer zu (9,84) */
     re15_schluessel_r36_install((uint16_t)g_current_room_id); /* Runde 36 Spur Q: Schluessel 10F0/10F1, Tuer 11B0 (re15_schluessel_r36.h) */
+    re15_ziel1190_install((uint16_t)g_current_room_id);      /* Runde 36 Spur H: Scheiben-Texte ROOM1190/1191 (re15_ziel1190.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

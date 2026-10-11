@@ -1,77 +1,76 @@
 /*
- * RE1.5 Rebuilt — Zielscheiben-Texte im Schiessstand ROOM1190/1191 (Runde 35 Spur H, Punkt 2).
+ * RE1.5 Rebuilt — Zielscheiben-Texte im Schiessstand ROOM1190/1191 (Runde 36 Spur H; Erstbau Runde 35).
  *
- * NUTZER-VORGABE (AUFTRAG.md Runde 35, woertlich): "in ROOM 1190 bei der Zielscheibe ganz links und
- * bei der 3. Zielscheibe von links, das dort der Text ergaenzt wird: 'This target has a surprisingly
- * large number of bullet holes.'. Die anderen beiden Zielscheiben sollen den Text haben 'This target
- * does not have many bullet holes'".  Dossier: analysis/befunde_runde35/H_raeume.md, Punkt 2.
+ * NUTZER-VORGABE (AUFTRAG.md Runde 36, woertlich): "Die Texte: 'This target has a surprisingly large
+ * number of bullet holes.' und 'This target does not have many bullet holes' sollen sich hinten bei den
+ * Zielscheiben befinden, wenn man sie anklickt, nicht vorne bei den Knoepfen, die die Zielscheiben
+ * bewegen lassen... Bei Elza sind es genau die anderen zwei Zielscheiben, deshalb muessen die Texte da
+ * genau vertauscht sein."  Dossier: analysis/befunde_runde36/H_ziel1190.md (Punkt 1).
  *
- * WELCHE SCHEIBE WELCHE IST — aus der KAMERA gemessen, nicht aus der Slot-Nummer geraten:
- *   Die vier Scheiben sind Obj 0..3 (sub13 Obj_model_set @RDT 0x0297E/0x029A0/0x029C2/0x029E4,
- *   x=-21340, z=-24516/-20916/-17316/-13716); jede Schiene gehoert zu EINEM Schalter-AOT (Slot n,
- *   main00 @0x02226/0x0223A/0x0224E/0x02262, Rechteck x=-4400 w=600, z=-25700/-22000/-18500/-14900
- *   d=2400) — sub02..05 `Work_set 2e 03 0n` bewegt Obj n. Projektion der Scheibenmitte durch die
- *   Raumkameras (FUN_80053ca4-Nachbau tools/maske/geom.py cut_view, RDT+0x24 Kamerablock) und
- *   Framedump je Cut (Dossier-Bild p2_kameras_cut5_6_7_9.png): in Cut 5 (Blick den Stand hinunter),
- *   Cut 6 (Kabinen 3/4), Cut 7 (Kabinen 1/2) und Cut 9 liegen die Scheiben IMMER in der Reihenfolge
- *   Obj 0, 1, 2, 3 von links nach rechts.  => "ganz links" = Slot 0, "3. von links" = Slot 2.
- *   Gegenprobe Raetsel (sub01 @0x02448-0x02468): die Hunde kommen bei Scheibe 0 UND 2 vorn
- *   (Bank 5 Bit 4 = Slot 0 @sub02 0x024F4, Bit 5 = Slot 2 @sub04 0x025E4) und 1/3 hinten — die beiden
- *   "vielen Einschuesse" sind genau die Loesung des Leon-Raetsels ((3,111) == 0).
+ * RUNDE 35 ZURUECKGENOMMEN: die Knoepfe (main00 Aot_set slot 0..3 @0x02226.., sce 5 -> sub02..05 msg 0
+ * bzw. sce 1 msg 2) laufen wieder byte-true ueber den Original-Weg — kein Haken mehr in op_message_on.
  *
- * FORM (belegt) — der Text ist eine eigene Port-Nachricht mit zwei Seiten:
- *   Seite 1 = der Scheiben-Satz, Seite 2 = die unveraenderte Original-Nachricht des Platzes:
- *     msg 0 "There's a switch here. Push it?" (Ja/Nein; sub02..05 @0x024BA/0x02532/0x025AA/0x02622
- *           und sub12 @0x02892, `2b 00 80 ff`)
- *     msg 2 "I have nothing else to do here." (sce-1-Platz nach dem Hunde-Ereignis: main00 Else-Zweig
- *           @0x0227A.. und sub10 Aot_reset @0x027B4.., Nutzlast `02 00 ff ff`)
- *   Seitenumbruch `02 00` vor einer Ja/Nein-Frage `03` = ROOM1190 msg 4 @0x2EAF ("...armor / that
- *   should fit you." 02 00 "Will you equip it?" 03 02 01) — dieselbe Raum-Datei hat genau diese Form.
- *   Kopf `04 02` = Kopf von msg 0/2 (@0x2E14 / @0x2E5E), Zeilenumbruch 0x08 wie msg 2 ("to do" 08
- *   "here.", @0x2E79). Glyphen: Tabelle msg_common.c re15_msg_glyph (A-Z 0x1D.., a-z 0x3D.., '.'
- *   0x57) — gegengelesen an msg 0 ("There's" = 30 44 41 4e 41 3a 4f @0x2E16).
- *   Zeilenbreiten (include/font_width.h = DEBUG.BIN[0x4416+code]): "This target has a surprisingly"
- *   202 px / "large number of bullet holes." 195 px; "This target does not have" 174 px / "many
- *   bullet holes." 120 px (in einem Stueck 401 bzw. 298 px > 271 px = 99 % aller Zeilen des Bestands).
- *   Satzende "." auch beim zweiten Satz: Nutzer schreibt ihn beim ersten aus, der zweite im Gleichlauf
- *   (Praezedenz leiche_1110_1230.c L8: 1193 von 1227 ausgelieferten Nachrichten enden auf Satzzeichen).
+ * DIE SCHEIBEN: Obj 0..3 (sub13 Obj_model_set @RDT 0x0297E/0x029A0/0x029C2/0x029E4, in 1190 und 1191
+ * bytegleich), x=-21340 (hinten), z=-24516/-20916/-17316/-13716. Die Knoepfe fahren Obj n bis x=-5220
+ * vor den Tresen (sub06/sub08 Add_speed, sub00 Member_set @0x02336.. beim Betreten mit (4,n)=1).
+ * Die Bahn ist begehbar (Durchgang am Tresenende, SCA r0[0] @0x01C1C endet bei z=-11504, Suedwand
+ * r0[1] @0x01C28 bei z=-10280; gemessen: Leon steht vor S0..S2 bei x=-20845, vor S3 bei x=-20792).
  *
- * IDs (VERTRAG.md 1.2: ROOM1190/1191 -> 6..11): 6 = viele Einschuesse, 7 = wenige. Der Text wird bei
- * JEDEM Oeffnen neu unter der Id abgelegt (Seite 2 = die gerade faellige Original-Nachricht), die
- * Stimme ist damit je Satz EINE Datei: synchro/STAGE1/room1190/main06.wav bzw. main07.wav.
+ * WELCHE SCHEIBE WELCHE IST (Kamera, Runde 35): von links nach rechts Obj 0,1,2,3 (Cut 5/6/7/9).
+ *   Leon (ROOM1190): Obj 0 + 2 = "viele" (Nutzer "Scheibe 1 und 3"), Obj 1 + 3 = "wenige".
+ *   Elza (ROOM1191): genau vertauscht. Das Raetsel bestaetigt es: Loesung A (Leon, (3,111)=0) = Obj 0+2
+ *   vorn (sub01 @0x02438-0x02468), Loesung B (Elza, (3,112)=1 aus ROOM1241 @0x0055E) = Obj 1+3 vorn
+ *   (sub01 @0x02478-0x024A8). Elza spielt die "1"-RDT: `addu a0,a0,v0` @0x800397ec.
  *
- * WELCHER PLATZ — work_vars[0] = Slot, gestempelt vom Aktions-Scan beim Ausloesen
- * (FORWARD-Treffer `sh ...,0x800B0FD0` @0x80042f3c, Port aot_common.c `g_scd.work_vars[0] = i`);
- * genau diese Variable liest auch sub01 (`Switch 13 00` @0x023C4). Geprueft wird zusaetzlich, dass
- * der Slot ein aktiver Platz mit dem Scheiben-Rechteck ist (linke Kante x=-4400).
+ * FORM (belegt) — vier Text-Plaetze, die an ihrer Scheibe HAENGEN:
+ *   * sce 1 MESSAGE wie das Vorbild im selben Raum, main00 @0x0227A
+ *     `2c 00 01 31 00 00 d0 ee 9c 9b 58 02 60 09 02 00 ff ff 00 00`: sat 0x31 (Aktion + Vorwaertspunkt
+ *     620, FUN_80042bac `ori v0,zero,0x26c` @0x80042bd0), Band 0, w=600 (`58 02`), d=2400 (`60 09`),
+ *     Nutzlast msg-Nummer + Pausenmaske 0xffff (Handler LAB_80043084, @0x80043098/@0x800430a4).
+ *   * ANHAENGEN an Obj n = das "super"-Byte des Records (Aot_set pc[5]) mit Bit 0x80: FUN_80042bac
+ *     `lbu v1,3(s0)` @0x80042cd4, Objekt-Pool 0x800b3f98 Stride 0x94, Versatz = Objekt-x/z
+ *     (`lhu` 0x800b3fcc @0x80042d7c / 0x800b3fd4 @0x80042db4), Rechteck-Ecke = Versatz + rec x/z
+ *     (@0x80042e60-0x80042e84). Der Port fuehrt dieses Byte fuer Plaetze nicht (kein ausgelieferter
+ *     Record nutzt es, Zensus 240 RDT) — re15_ziel1190_folgen() rechnet DIESELBE Summe vor jedem Scan
+ *     fuer genau diese vier Plaetze: Rechteck relativ zum Objekt = Mitte auf der Scheibe, +-300/+-1200.
+ *   * Text: Kopf `04 02` + Satz (Zeilenumbruch 0x08) + Ende `01 00` = Form von ROOM1190 msg 2
+ *     @0x2E5E ("I have nothing else to do" 08 "here." 01 00). Glyphen re15_msg_glyph.
+ *
+ * PORT-WAHL (gekennzeichnet): Platznummern 17..20 (erste freie nach dem letzten Raumplatz 16, sub14
+ * @0x02D90; die RVD-Kamerazonen belegen die Plaetze von 63 abwaerts); Nachrichten-Ids 6/7 (VERTRAG 1.2);
+ * Satzende "." auch beim zweiten Satz (Gleichlauf, Runde 35); Stimme synchro/STAGE1/room<Raum>/main06.wav
+ * bzw. main07.wav (Muster leiche_1110_1230.c) — fehlt die Datei, stumm mit Untertitel.
  */
 #ifndef RE15_ZIEL1190_H
 #define RE15_ZIEL1190_H
 
 #include <stdint.h>
 
-#define RE15_ZIEL1190_RAUM        0x1190u  /* RE15_ROOM_BASE: 1190 und 1191 */
-#define RE15_ZIEL1190_MSG_SCHALTER 0u      /* msg 0 "There's a switch here. Push it?" @0x2E14 */
-#define RE15_ZIEL1190_MSG_NICHTS   2u      /* msg 2 "I have nothing else to do here." @0x2E5E */
-#define RE15_ZIEL1190_MSG_VIELE    6u      /* Port-Id (VERTRAG 1.2) */
-#define RE15_ZIEL1190_MSG_WENIGE   7u      /* Port-Id (VERTRAG 1.2) */
-#define RE15_ZIEL1190_KANTE_X     (-4400)  /* Aot_set-Rechteck x, main00 @0x0222C `d0 ee` */
+#define RE15_ZIEL1190_RAUM        0x1190u  /* RE15_ROOM_BASE: 1190 (Leon) und 1191 (Elza)          */
+#define RE15_ZIEL1190_MSG_VIELE    6u      /* Port-Id (VERTRAG 1.2: 1190/1191 -> 6..11)              */
+#define RE15_ZIEL1190_MSG_WENIGE   7u      /* Port-Id                                               */
+#define RE15_ZIEL1190_SLOT0       17       /* PORT-WAHL: Plaetze 17..20 = Scheibe 0..3              */
+#define RE15_ZIEL1190_HALB_X      300      /* w=600 `58 02` main00 @0x02284 (Vorbild @0x0227A) / 2  */
+#define RE15_ZIEL1190_HALB_Z      1200     /* d=2400 `60 09` main00 @0x02286 / 2                    */
+#define RE15_ZIEL1190_SAT         0x31u    /* sat main00 @0x0227D                                   */
+#define RE15_ZIEL1190_BAND        0u       /* floor main00 @0x0227E                                 */
+#define RE15_ZIEL1190_PAUSE       0xFFFFu  /* Nutzlast u16@+2 main00 @0x0228A `ff ff`               */
 
-/* 1 = Slot 0..3 traegt "viele Einschuesse" (Slot 0 und 2), 0 = "wenige" (Slot 1 und 3), -1 = kein Platz. */
-int re15_ziel1190_viele(int slot);
+/* 1 = Scheibe obj (0..3) traegt im Raum room_id "viele Einschuesse", 0 = "wenige", -1 = kein Fall. */
+int re15_ziel1190_viele(unsigned room_id, int obj);
 
-/* Der Scheiben-Platz, an dem gerade ausgeloest wurde (0..3), sonst -1 (anderer Raum, anderer Platz). */
-int re15_ziel1190_slot(void);
+/* Baut den Text (Kopf 04 02 + Satz + 01 00). viele = 1/0. Liefert die Laenge, 0 bei zu kleinem cap. */
+int re15_ziel1190_text(int viele, uint8_t *out, int cap);
 
-/* Baut die Zwei-Seiten-Nachricht (Satz + Original-Nachricht `orig_msg` des Raums) nach out.
- * Liefert die Laenge, 0 bei Fehler. Fuer Tests offen. */
-int re15_ziel1190_bauen(int slot, unsigned orig_msg, uint8_t *out, int cap);
+/* Raumaufbau (scd_room_setup.c Installer-Block + main.c Boot-/CONTINUE-Weg): legt die vier
+ * Text-Plaetze an ihre Scheiben. Tut in jedem anderen Raum nichts. */
+void re15_ziel1190_install(uint16_t room_id);
 
-/* Haken in op_message_on (scd_vm.c), VOR dem Ja/Nein-Zweig: 0 = nicht zustaendig, 1 = fertig
- * (pc += 4), 2 = parken (PC nicht weiter) — dieselbe Park-Semantik wie der Ja/Nein-Zweig. */
-int re15_ziel1190_message_on(const uint8_t *pc, uint32_t pause_mask);
+/* Vor jedem AOT-Scan (aot_common.c re15_aot_scan): die vier Plaetze auf die aktuelle Lage ihrer
+ * Scheibe setzen (super-Anbindung @0x80042cd4-0x80042e84). Tut in jedem anderen Raum nichts. */
+void re15_ziel1190_folgen(void);
 
-/* Haken in re15_scd_show_message (sce-1-Platz): 1 = gezeigt, 0 = nicht zustaendig. */
+/* Haken in re15_scd_show_message (sce-1-Weg): Text 6/7 ablegen, Stimme, oeffnen. 1 = gezeigt. */
 int re15_ziel1190_show(uint8_t index, uint32_t pause_mask);
 
 #endif /* RE15_ZIEL1190_H */

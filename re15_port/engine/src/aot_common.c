@@ -32,6 +32,7 @@
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (RE15_FILES_FIRST_ITEM_ID) */
 #include "re15_menu.h"       /* Runde 30: re15_menu_request_doc — Aufheben oeffnet den Leser */
+#include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
@@ -1029,6 +1030,7 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
     /* Reset per-frame event flag at scan start. Main loop reads it
      * between scan() and the next frame, dispatching to SCD. */
     g_aot.fired_event_id_this_frame = 0;
+    re15_ziel1190_folgen();   /* Runde 36 Spur H: super-Anbindung @0x80042cd4-0x80042e84 (re15_ziel1190.h) */
 
     /* BYTE-TRUE (RE'd 2026-06-14): the original AOT scan FUN_80042bac resolves the ONE
      * zone the player overlaps and fires a SINGLE action handler per press — it does NOT
