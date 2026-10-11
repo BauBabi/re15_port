@@ -1,43 +1,75 @@
-Tuer-Zensus STAGE2 (tools/scd_dump_room.py je ROOM2*.RDT, Door_aot_set 0x3B: Ziel = Nutzlast-Byte 23, Stage-Index Byte 22, floor Byte 4)
-Tueren NACH 2040/2060/2070:
-  ROOM2000 slot 3 @0x0167E floor 1 -> ROOM2070
-  ROOM2001 slot 3 @0x0167E floor 1 -> ROOM2070
-  ROOM2030 slot 0 @0x01ACA floor 3 -> ROOM2070
-  ROOM2030 slot 3 @0x01B4C floor 9 -> ROOM2060
-  ROOM2031 slot 0 @0x01ACA floor 3 -> ROOM2070
-  ROOM2031 slot 3 @0x01B4C floor 9 -> ROOM2060
-  ROOM2040 slot 1 @0x012BC floor 4 -> ROOM2060
-  ROOM2040 slot 2 @0x012DC floor 5 -> ROOM2040
-  ROOM2040 slot 3 @0x012FC floor 5 -> ROOM2040
-  ROOM2040 slot 4 @0x0131C floor 5 -> ROOM2070
-  ROOM2041 slot 1 @0x012BC floor 4 -> ROOM2060
-  ROOM2041 slot 2 @0x012DC floor 5 -> ROOM2040
-  ROOM2041 slot 3 @0x012FC floor 5 -> ROOM2040
-  ROOM2041 slot 4 @0x0131C floor 5 -> ROOM2070
-  ROOM2050 slot 2 @0x01C8A floor 4 -> ROOM2040
-  ROOM2051 slot 2 @0x01C8A floor 4 -> ROOM2040
-  ROOM2060 slot 1 @0x00DBA floor 1 -> ROOM2040
-  ROOM2061 slot 1 @0x00DBA floor 1 -> ROOM2040
-Tueren AUS 2040/2041/2060/2061/2070/2071:
-  ROOM2040 slot 0 @0x0129C floor 4 -> ROOM2050
-  ROOM2040 slot 1 @0x012BC floor 4 -> ROOM2060
-  ROOM2040 slot 2 @0x012DC floor 5 -> ROOM2040
-  ROOM2040 slot 3 @0x012FC floor 5 -> ROOM2040
-  ROOM2040 slot 4 @0x0131C floor 5 -> ROOM2070
-  ROOM2041 slot 0 @0x0129C floor 4 -> ROOM2050
-  ROOM2041 slot 1 @0x012BC floor 4 -> ROOM2060
-  ROOM2041 slot 2 @0x012DC floor 5 -> ROOM2040
-  ROOM2041 slot 3 @0x012FC floor 5 -> ROOM2040
-  ROOM2041 slot 4 @0x0131C floor 5 -> ROOM2070
-  ROOM2060 slot 0 @0x00D9A floor 0 -> ROOM2030
-  ROOM2060 slot 1 @0x00DBA floor 1 -> ROOM2040
-  ROOM2061 slot 0 @0x00D9A floor 0 -> ROOM2030
-  ROOM2061 slot 1 @0x00DBA floor 1 -> ROOM2040
-  ROOM2070 slot 0 @0x00A3A floor 0 -> ROOM2000
-  ROOM2070 slot 1 @0x00A5A floor 0 -> ROOM2030
-  ROOM2070 slot 2 @0x00A7A floor 0 -> ROOM2030
-  ROOM2070 slot 3 @0x00A9A floor 0 -> ROOM2000
-  ROOM2071 slot 0 @0x00A3A floor 0 -> ROOM2000
-  ROOM2071 slot 1 @0x00A5A floor 0 -> ROOM2030
-  ROOM2071 slot 2 @0x00A7A floor 0 -> ROOM2030
-  ROOM2071 slot 3 @0x00A9A floor 0 -> ROOM2000
+# Tuer-Zensus STAGE2 (Runde 36 Spur R, Nachbesserung 1 M1): ALLE Door_aot_set-Records (main + subs, mit Bedingungs-
+# kontext) aus R_belege/tueren_zensus.py (Walker = tools/scd_dump_room.py). Vollstaendige Liste aller Stages:
+# stage1_tueren.txt / stage2_tueren.txt / stage3_tueren.txt. Diese Datei: alles, was ROOM2040/2060/2070 beruehrt.
+# BERICHTIGT gegenueber dem Stand f487909d: ROOM2070/2071 slot 4 @0x00AD6 (sce 0, Ck(3,151)=0) / @0x00AFA (sce 2,
+# sonst) -> ROOM11A0 und slot 5 @0x00B1C -> ROOM2040 (unbedingt) fehlten, weil der alte Zensus nur die vorderen
+# Records des main00 nahm. ROOM2070 besteht aus DREI getrennt ummauerten Gaengen (SCA Band 0 r0[0..3] Mittelgang
+# z -8200..-4600 mit slot 0/1, r0[4..7] Suedgang z 4650..8100 mit slot 2/3, r0[8..11] Nordgang z -21000..-17450
+# mit slot 4/5) — slot 5 nach 2040 ist NUR aus dem Nordgang (Ankunft aus ROOM11A0 slot 0) erreichbar, nicht aus
+# ROOM2000 slot 3 (Ankunft (-18650,0,-6450) = Mittelgang; an der exe gemessen: R_belege/nb1_2000_2070m).
+
+Tueren NACH oder AUS 2040/2041/2060/2061/2070/2071 (Record, floor = Band der Tuer, nfloor = Band bei Ankunft):
+  ROOM2000 main00 @0x0167E slot  3 sce 2 floor 1 rect x -20300..-19300 z -8200..-4200 -> ROOM2070 cut  3 nfloor 0 spawn (-18650,0,-6450) dir -4128 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2001 main00 @0x0167E slot  3 sce 2 floor 1 rect x -20300..-19300 z -8200..-4200 -> ROOM2070 cut  3 nfloor 0 spawn (-18650,0,-6450) dir -4128 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2030 main00 @0x01ACA slot  0 sce 2 floor 3 rect x 6850..7850 z -1950..1550 -> ROOM2070 cut  0 nfloor 0 spawn (4800,0,-6300) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2030 main00 @0x01B4C slot  3 sce 2 floor 9 rect x -8200..-7200 z -8150..-6350 -> ROOM2060 cut  0 nfloor 0 spawn (7600,0,3950) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2031 main00 @0x01ACA slot  0 sce 2 floor 3 rect x 6850..7850 z -1950..1550 -> ROOM2070 cut  0 nfloor 0 spawn (4800,0,-6300) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2031 main00 @0x01B4C slot  3 sce 2 floor 9 rect x -8200..-7200 z -8150..-6350 -> ROOM2060 cut  0 nfloor 0 spawn (7600,0,3950) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2040 main00 @0x0129C slot  0 sce 2 floor 4 rect x 23300..24300 z -6050..-5050 -> ROOM2050 cut  3 nfloor 3 spawn (-6800,-5400,-5650) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2040 main00 @0x012BC slot  1 sce 2 floor 4 rect x -13300..-12300 z 1800..2800 -> ROOM2060 cut  3 nfloor 0 spawn (450,0,-6150) dir 3072 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2040 main00 @0x012DC slot  2 sce 2 floor 5 rect x -2800..-2000 z -20800..-18800 -> ROOM2040 cut 11 nfloor 5 spawn (-3900,-9000,-19850) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2040 main00 @0x012FC slot  3 sce 2 floor 5 rect x -3650..-2850 z -20800..-18800 -> ROOM2040 cut 10 nfloor 5 spawn (-1800,-9000,-19850) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2040 main00 @0x0131C slot  4 sce 2 floor 5 rect x -20950..-19950 z -20800..-18800 -> ROOM2070 cut  9 nfloor 0 spawn (4650,0,-19200) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2040 main00 @0x0133C TREPPE slot 5 sce 13 floor 3 rect x -2350..-350 z -18250..-13950
+  ROOM2040 main00 @0x01350 TREPPE slot 6 sce 13 floor 5 rect x -2350..-350 z -18250..-13950
+  ROOM2040 main00 @0x01364 ITEM slot 7 floor 3 item 0x32 x1 rect x 1700..2700 z -14750..-13750
+  ROOM2040 sub00 @0x014F8 ITEM slot 13 floor 0 item 0x23 x1 rect x 0..0 z 0..0
+  ROOM2041 main00 @0x0129C slot  0 sce 2 floor 4 rect x 23300..24300 z -6050..-5050 -> ROOM2050 cut  3 nfloor 3 spawn (-6800,-5400,-5650) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2041 main00 @0x012BC slot  1 sce 2 floor 4 rect x -13300..-12300 z 1800..2800 -> ROOM2060 cut  3 nfloor 0 spawn (450,0,-6150) dir 3072 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2041 main00 @0x012DC slot  2 sce 2 floor 5 rect x -2800..-2000 z -20800..-18800 -> ROOM2040 cut 11 nfloor 5 spawn (-3900,-9000,-19850) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2041 main00 @0x012FC slot  3 sce 2 floor 5 rect x -3650..-2850 z -20800..-18800 -> ROOM2040 cut 10 nfloor 5 spawn (-1800,-9000,-19850) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2041 main00 @0x0131C slot  4 sce 2 floor 5 rect x -20950..-19950 z -20800..-18800 -> ROOM2070 cut  9 nfloor 0 spawn (4650,0,-19200) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2041 main00 @0x0133C TREPPE slot 5 sce 13 floor 3 rect x -2350..-350 z -18250..-13950
+  ROOM2041 main00 @0x01350 TREPPE slot 6 sce 13 floor 5 rect x -2350..-350 z -18250..-13950
+  ROOM2041 main00 @0x01364 ITEM slot 7 floor 3 item 0x32 x1 rect x 1700..2700 z -14750..-13750
+  ROOM2041 sub00 @0x014F8 ITEM slot 13 floor 0 item 0x23 x1 rect x 0..0 z 0..0
+  ROOM2050 main00 @0x01C8A slot  2 sce 2 floor 4 rect x -8200..-7200 z -6200..-5000 -> ROOM2040 cut  0 nfloor 3 spawn (21700,-5400,-5400) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2051 main00 @0x01C8A slot  2 sce 2 floor 4 rect x -8200..-7200 z -6200..-5000 -> ROOM2040 cut  0 nfloor 3 spawn (21700,-5400,-5400) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2060 main00 @0x00D9A slot  0 sce 2 floor 0 rect x 7950..8950 z 2950..4950 -> ROOM2030 cut 13 nfloor 9 spawn (-6950,-16200,-7200) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2060 main00 @0x00DBA slot  1 sce 2 floor 1 rect x -200..1100 z -8850..-7850 -> ROOM2040 cut 15 nfloor 3 spawn (-12850,-5400,1600) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2061 main00 @0x00D9A slot  0 sce 2 floor 0 rect x 7950..8950 z 2950..4950 -> ROOM2030 cut 13 nfloor 9 spawn (-6950,-16200,-7200) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2061 main00 @0x00DBA slot  1 sce 2 floor 1 rect x -200..1100 z -8850..-7850 -> ROOM2040 cut 15 nfloor 3 spawn (-12850,-5400,1600) dir 1024 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2070 main00 @0x00A3A slot  0 sce 2 floor 0 rect x -19950..-18950 z -7900..-4900 -> ROOM2000 cut 13 nfloor 1 spawn (-20650,-1800,-6200) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2070 main00 @0x00A5A slot  1 sce 2 floor 0 rect x 5000..6000 z -7900..-4900 -> ROOM2030 cut  0 nfloor 3 spawn (6550,-5400,-100) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2070 main00 @0x00A7A slot  2 sce 2 floor 0 rect x -19950..-18950 z 4900..7900 -> ROOM2030 cut  0 nfloor 3 spawn (6550,-5400,-100) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2070 main00 @0x00A9A slot  3 sce 2 floor 0 rect x 5750..6750 z 4900..7900 -> ROOM2000 cut 13 nfloor 1 spawn (-20650,-1800,-6200) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2070 main00 @0x00AD6 slot  4 sce 0 floor 0 rect x -19900..-18900 z -20250..-18250 -> ROOM11A0 cut  7 nfloor 0 spawn (6500,0,-3200) dir 3072 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,151)=0
+  ROOM2070 main00 @0x00AFA slot  4 sce 2 floor 0 rect x -19900..-18900 z -20250..-18250 -> ROOM11A0 cut  7 nfloor 0 spawn (6500,0,-3200) dir 3072 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,151)=0)
+  ROOM2070 main00 @0x00B1C slot  5 sce 2 floor 0 rect x 5000..6000 z -20200..-18200 -> ROOM2040 cut 12 nfloor 5 spawn (-19750,-9000,-19850) dir 0 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2071 main00 @0x00A3A slot  0 sce 2 floor 0 rect x -19950..-18950 z -7900..-4900 -> ROOM2000 cut 13 nfloor 1 spawn (-20650,-1800,-6200) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2071 main00 @0x00A5A slot  1 sce 2 floor 0 rect x 5000..6000 z -7900..-4900 -> ROOM2030 cut  0 nfloor 3 spawn (6550,-5400,-100) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2071 main00 @0x00A7A slot  2 sce 2 floor 0 rect x -19950..-18950 z 4900..7900 -> ROOM2030 cut  0 nfloor 3 spawn (6550,-5400,-100) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2071 main00 @0x00A9A slot  3 sce 2 floor 0 rect x 5750..6750 z 4900..7900 -> ROOM2000 cut 13 nfloor 1 spawn (-20650,-1800,-6200) dir 2048 rest [00 00 00 00 00 00]  unbedingt
+  ROOM2071 main00 @0x00AD6 slot  4 sce 0 floor 0 rect x -19900..-18900 z -20250..-18250 -> ROOM11A0 cut  7 nfloor 0 spawn (6500,0,-3200) dir 3072 rest [00 00 00 00 00 00]  BEDINGT: Ck(3,151)=0
+  ROOM2071 main00 @0x00AFA slot  4 sce 2 floor 0 rect x -19900..-18900 z -20250..-18250 -> ROOM11A0 cut  7 nfloor 0 spawn (6500,0,-3200) dir 3072 rest [00 00 00 00 00 00]  BEDINGT: NOT(Ck(3,151)=0)
+  ROOM2071 main00 @0x00B1C slot  5 sce 2 floor 0 rect x 5000..6000 z -20200..-18200 -> ROOM2040 cut 12 nfloor 5 spawn (-19750,-9000,-19850) dir 0 rest [00 00 00 00 00 00]  unbedingt
+
+Treppen-AOTs / Typ-4-Objekte (Band-Wechsel im Raum):
+  ROOM2040 main00 @0x0133C TREPPE slot 5 sce 13 floor 3 rect x -2350..-350 z -18250..-13950
+  ROOM2040 main00 @0x01350 TREPPE slot 6 sce 13 floor 5 rect x -2350..-350 z -18250..-13950
+  ROOM2040 main00 @0x0137A OBJ4 obj 1 band 3 pos (-16575,-5400,1700) h(675,900,600)
+  ROOM2040 main00 @0x0139C OBJ4 obj 2 band 3 pos (22925,-5400,-5400) h(675,900,600)
+  ROOM2040 sub00 @0x0147E OBJ4 obj 0 band 0 pos (-19554,0,22684) h(900,900,900)  BEDINGT: NOT(Ck(3,146)=0) / Ck(3,53)=0
+  ROOM2041 main00 @0x0133C TREPPE slot 5 sce 13 floor 3 rect x -2350..-350 z -18250..-13950
+  ROOM2041 main00 @0x01350 TREPPE slot 6 sce 13 floor 5 rect x -2350..-350 z -18250..-13950
+  ROOM2041 main00 @0x0137A OBJ4 obj 1 band 3 pos (-16575,-5400,1700) h(675,900,600)
+  ROOM2041 main00 @0x0139C OBJ4 obj 2 band 3 pos (22925,-5400,-5400) h(675,900,600)
+  ROOM2041 sub00 @0x0147E OBJ4 obj 0 band 0 pos (-19554,0,22684) h(900,900,900)  BEDINGT: NOT(Ck(3,146)=0) / Ck(3,53)=0
+  ROOM2060 main00 @0x00EA6 OBJ4 obj 2 band 0 pos (-3125,0,2075) h(675,900,600)  BEDINGT: Ck(3,172)=0
+  ROOM2060 main00 @0x00ECC OBJ4 obj 2 band 0 pos (475,0,-7375) h(675,900,600)  BEDINGT: NOT(Ck(3,172)=0)
+  ROOM2060 main00 @0x00EF0 OBJ4 obj 3 band 0 pos (-19554,0,22684) h(900,900,900)
+  ROOM2060 main00 @0x00F12 OBJ4 obj 4 band 0 pos (19571,0,-22542) h(900,900,900)
+  ROOM2061 main00 @0x00EA6 OBJ4 obj 2 band 0 pos (-3125,0,2075) h(675,900,600)  BEDINGT: Ck(3,172)=0
+  ROOM2061 main00 @0x00ECC OBJ4 obj 2 band 0 pos (475,0,-7375) h(675,900,600)  BEDINGT: NOT(Ck(3,172)=0)
+  ROOM2061 main00 @0x00EF0 OBJ4 obj 3 band 0 pos (-19554,0,22684) h(900,900,900)
+  ROOM2061 main00 @0x00F12 OBJ4 obj 4 band 0 pos (19571,0,-22542) h(900,900,900)

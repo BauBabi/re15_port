@@ -272,6 +272,8 @@ static int zensus(const fall_t *F, int32_t *erst_x, int32_t *erst_z, int32_t bbo
     uint8_t *vis  = (uint8_t *)calloc((size_t)W * (size_t)H * 4, 1);
     int32_t *lab  = (int32_t *)malloc(sizeof(int32_t) * 5 * (size_t)W * (size_t)H);   /* Labels je Zelle (Cache) */
     uint8_t *labok = (uint8_t *)calloc((size_t)W * (size_t)H, 1);
+    int *par = (int *)malloc(sizeof(int) * (size_t)W * (size_t)H * 4);   /* Vorgaenger-Zustand (Pfadausgabe) */
+    for (size_t t = 0; t < (size_t)W * (size_t)H * 4; t++) par[t] = -1;
     for (int j = 0; j < H; j++)
         for (int i = 0; i < W; i++) {
             frei[(size_t)j * W + i] = !re15_collision_box_blocked(&s_rdt, xs[i] + bcx, zs[j] + bcz, k.band, r, 2u);
@@ -306,6 +308,9 @@ static int zensus(const fall_t *F, int32_t *erst_x, int32_t *erst_z, int32_t bbo
         n_zell++;
         for (int s2 = 0; s2 < 4; s2++) {
             if (L[s2] < 0 || L[s2] != L[s]) continue;           /* Seite s2 nicht aus der Lage des Spielers erreichbar */
+            if (s2 != s && !vis[(size_t)c * 4 + s2]) {          /* Seitenwechsel auf derselben Zelle (Pfadausgabe) */
+                vis[(size_t)c * 4 + s2] = 1; par[(c << 2) | s2] = st; q[qt++] = (c << 2) | s2;
+            }
             /* Schub von Seite s2: Kiste wandert vom Spieler weg (0 W -> +X, 1 O -> -X, 2 N -> +Z, 3 S -> -Z). */
             static const int di[4] = { 1, -1, 0, 0 }, dj[4] = { 0, 0, 1, -1 };
             const int ni = i + di[s2], nj = j + dj[s2];
@@ -315,7 +320,29 @@ static int zensus(const fall_t *F, int32_t *erst_x, int32_t *erst_z, int32_t bbo
             if (aus[nc]) {                                       /* Objekt-Pass: Ausloeser @0x8002c130 -> Fall */
                 if (n_aus++ == 0) { *erst_x = xs[ni]; *erst_z = zs[nj];
                     printf("    AUSLOESER erreichbar: Kiste (%d,%d) von Seite %c geschoben (Spieler bleibt dort)\n",
-                           xs[ni], zs[nj], "WONS"[s2]); }
+                           xs[ni], zs[nj], "WONS"[s2]);
+                    /* Pfad (Diagnose, fuer den Messlauf an der exe): Schub-Segmente von der Startlage bis hierher,
+                     * gleiche Seite zusammengefasst; Seitenwechsel = Spieler geht um die Kiste herum. */
+                    static int chain[65536]; int n = 0; int cur = st;
+                    while (cur >= 0 && n < 65536) { chain[n++] = cur; cur = par[cur]; }
+                    int seg_s = -1, seg_x0 = 0, seg_z0 = 0, last_x = 0, last_z = 0;
+                    for (int t = n - 1; t >= 0; t--) {
+                        const int cc = chain[t] >> 2, ss = chain[t] & 3, ci = cc % W, cj = cc / W;
+                        const int32_t x = xs[ci] + bcx, z = zs[cj] + bcz;    /* Kistenmitte (Box) */
+                        if (t == n - 1) { seg_s = ss; seg_x0 = x; seg_z0 = z; last_x = x; last_z = z; continue; }
+                        if (ss != seg_s) {
+                            if (last_x != seg_x0 || last_z != seg_z0)
+                                printf("      Schub von %c: Kistenmitte (%d,%d) -> (%d,%d)\n", "WONS"[seg_s], seg_x0, seg_z0, last_x, last_z);
+                            printf("      Seitenwechsel %c -> %c bei Kistenmitte (%d,%d)\n", "WONS"[seg_s], "WONS"[ss], x, z);
+                            seg_s = ss; seg_x0 = x; seg_z0 = z;
+                        }
+                        last_x = x; last_z = z;
+                    }
+                    if (last_x != seg_x0 || last_z != seg_z0)
+                        printf("      Schub von %c: Kistenmitte (%d,%d) -> (%d,%d)\n", "WONS"[seg_s], seg_x0, seg_z0, last_x, last_z);
+                    printf("      Schub von %c: Kistenmitte (%d,%d) -> (%d,%d) = AUSLOESER-Zelle (Objektlage x [%d,%d) z [%d,%d))\n",
+                           "WONS"[s2], last_x, last_z, xs[ni] + bcx, zs[nj] + bcz, xs[ni], xs[ni + 1], zs[nj], zs[nj + 1]);
+                }
                 continue;
             }
             if (vis[(size_t)nc * 4 + s2]) continue;
@@ -326,12 +353,12 @@ static int zensus(const fall_t *F, int32_t *erst_x, int32_t *erst_z, int32_t bbo
                 seiten_labels(&s_rdt, &k, INT32_MIN, 0, &lab[(size_t)nc * 5]); labok[nc] = 1; n_lab++;
             }
             if (lab[(size_t)nc * 5 + s2] < 0) continue;
-            vis[(size_t)nc * 4 + s2] = 1; q[qt++] = (nc << 2) | s2;
+            vis[(size_t)nc * 4 + s2] = 1; par[(nc << 2) | s2] = st; q[qt++] = (nc << 2) | s2;
         }
     }
     printf("    erreichbare Kistenzellen (mit Spieler): %d, davon Ausloeser-Uebergaenge: %d; Kistenlage x [%d, %d) z [%d, %d)\n",
            n_zell, n_aus, bbox[0], bbox[1], bbox[2], bbox[3]);
-    free(frei); free(aus); free(vis); free(lab); free(labok); free(q);
+    free(frei); free(aus); free(vis); free(lab); free(labok); free(q); free(par);
     return n_aus;
 }
 
@@ -344,11 +371,20 @@ int main(int argc, char **argv)
         /* ROOM1090/1091 obj 1 (Dach, Band 5): Ankunft aus ROOM10F0/10F1 (Door slot 1 @0x00F52 -> (-13600,1300)). */
         { "STAGE1", "ROOM1090", 0x1090, 1, -13600, 1300, 0, {{0,0,0}}, 0 },
         { "STAGE1", "ROOM1091", 0x1091, 1, -13600, 1300, 0, {{0,0,0}}, 0 },
-        /* ROOM3050/3051 obj 1 (Band 4): Ankunft aus ROOM30E0 (Door slot 6 -> (-3596,-7200,1523) floor 4). */
-        { "STAGE3", "ROOM3050", 0x3050, 1, -3596, 1523, 0, {{0,0,0}}, -1 },
-        { "STAGE3", "ROOM3051", 0x3051, 1, -3596, 1523, 0, {{0,0,0}}, -1 },
+        /* ROOM3050/3051 obj 1 (Band 4): Ankunft aus ROOM30E0 (Door slot 6 @0x00ABA -> (-3596,-7200,1523) floor 4).
+         * PIN (Nachbesserung 1, M3): der Fall ist der VORGESEHENE Weg (Fall-Lage @0x01F40 unter (3,93), Kerbe slot 7
+         * @0x01F06, Latch sub01 @0x02184-2196, Super Redhawk slot 6 @0x01EC6 floor 1) -> der Zensus MUSS einen
+         * Ausloeser finden, und die erste Lage liegt in der um 450 erweiterten Absprungzelle r*[46] @0x00AD4
+         * (x -25000..-22950 z -18050..-16800, Wort 0x4002; FUN_8003b7f0-Radius 450 @0x8002c128). An der exe
+         * gemessen (R_belege/nb1_3050fall_*): Schub West, dann Sued -> AUSLOESER -> Fall auf Band 0. */
+        { "STAGE3", "ROOM3050", 0x3050, 1, -3596, 1523, 0, {{0,0,0}}, 1 },
+        { "STAGE3", "ROOM3051", 0x3051, 1, -3596, 1523, 0, {{0,0,0}}, 1 },
         /* ROOM2050/2051 obj 6 (Band 3): Ankunft aus ROOM2000/20B0 (Door slot 4 -> (9100,-5400,4100) floor 3); einmal
-         * Auslieferung, einmal nach sub02 (Sca_id_set r*[0x33] u0 = 0 @0x02294-22A4, r*[0x32] u0 = 0xff @0x022A8-22B8). */
+         * Auslieferung, einmal nach sub02 (Sca_id_set r*[0x33] u0 = 0 @0x02294-22A4, r*[0x32] u0 = 0xff @0x022A8-22B8).
+         * DIAGNOSE (soll = -1), begruendet (Nachbesserung 1, M3): ob das Original die Kiste ueber die Absprung-
+         * Kaskade r*[49] 0x3202 -> Band 0 fallen laesst, ist nicht gemessen (kein Spielstand in 2050, STAGE2-Raetsel
+         * unfertig) — ein Pin wuerde eine ungemessene Aussage festhalten. Die Nutzer-Frage (haengt Fortschritt an
+         * der Kiste?) ist ueber den Tuer-Zensus beantwortet (R_dachkiste.md 4.3), nicht ueber den Fall. */
         { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 0, {{0,0,0}}, -1 },
         { "STAGE2", "ROOM2051", 0x2051, 6, 9100, 4100, 0, {{0,0,0}}, -1 },
         { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, -1 },
@@ -369,6 +405,11 @@ int main(int argc, char **argv)
         if (n < 0 && f.soll >= 0) PRUEF(0, "%s: Zensus nicht moeglich (%d)", f.room, n);
         if (n >= 0 && f.soll == 0) PRUEF(n == 0, "%s obj %d: Ausloeser MIT Spieler erreichbar (%d), erste Lage (%d,%d)", f.room, f.obj_id, n, ex, ez);
         if (n >= 0 && f.soll == 1) PRUEF(n > 0, "%s obj %d: Ausloeser mit Spieler NICHT erreichbar", f.room, f.obj_id);
+        if (n > 0 && f.soll == 1 && f.id >= 0x3050 && f.id <= 0x3051) {
+            /* Absprungzelle r*[46] @0x00AD4 x -25000..-22950 z -18050..-16800, Objektlage mit Radius 450 (@0x8002c128). */
+            PRUEF(ex >= -25000 - 450 && ex <= -22950 + 450 && ez >= -18050 - 450 && ez <= -16800 + 450,
+                  "%s obj %d: erste Ausloeser-Lage (%d,%d) nicht in der Absprungzelle r*[46] (+-450)", f.room, f.obj_id, ex, ez);
+        }
         if (n >= 0 && f.soll == 0) {
             /* ROOM1090/1091: die Kiste bleibt an der Bruestung: Mitte z >= -15503 nie groesser als der Record
              * (kein Schub nach Sueden moeglich), x in [-5978, -4300). */

@@ -1,0 +1,6 @@
+[STAIRREG] slot=5 type=13 chain=3 side=1 count=2 corner=-18250 extent=4300 centre=(-1350,-16100) half=(1000,2150)
+[STAIRREG] slot=6 type=13 chain=5 side=1 count=2 corner=-18250 extent=4300 centre=(-1350,-16100) half=(1000,2150)
+[stairzone] slot=5 pos=(-1350,-16100) band=3 event=1 hw=1000 hh=2150
+[stairzone] slot=6 pos=(-1350,-16100) band=5 event=1 hw=1000 hh=2150
+[stairzone] player band=5 pos=(-1350,-9000,-18368) rot=3072
+[stair] START dir=DOWN cur_band=5 target_band=3 (straight to gait, no turn)
