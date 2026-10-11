@@ -61,6 +61,20 @@ liegt in ROOM1011, nicht 1101.
 Leon findet in ROOM1210 die offene Zelle ("The cell door is open... / Whoever was locked up here is gone."),
 Elza in ROOM1091 den ausgebrannten Schuppen ("It's a burnt-out shed. / Someone must have put out the fire.").
 Elf Textzeilen, die eine Begegnung andeuteten, sind umgeschrieben (Tabelle unten).
+
+**Karte.** Im Treppenhaus ROOM10A0 sind auf B1 die Treppen eingezeichnet. In ROOM11D0 steht der Marker nach der
+Tuer am Eingang, nicht in der Mitte. Der Raum mit Hunde-Luke und Weste ist ROOM1190 (Schiessstand B1), nicht
+ROOM1090: Halle und Westen-Kammer sind zwei getrennte Kaesten, jeder leuchtet nur, wenn man drin ist. Die Tuer
+von ROOM11C0 liegt waagerecht auf der Wand. Die kleinen Raeume von ROOM1110 und die Fahrstuhlkabine gelten erst
+als besucht, wenn man drin war (Fahrstuhl 1F -> 3F: nur 1F und 3F). Dafuer musste ROOM11A0 (Leiter zur
+Kanalisation) auf das Blatt "DRAINS B2" umziehen - auf B1 gibt es fuer ihn kein Rechteck. Alte Spielstaende zeigen
+diese Teilbereiche erst wieder, wenn man sie erneut betritt.
+
+**Tueren.** Der Fahrstuhl ROOM1080 spielt die RE2-Fahrstuhltuer (DOOR27: zwei Fluegel schieben auseinander), die
+grosse Tuer ROOM2090 <-> 20A0 das zweiteilige RE2-Schott (DOOR26). Die Tuer 10C0 <-> 10D0 hat eine neue Textur
+(helles Holz mit Faser, Drahtglas, Panikstange, Trittblech) statt der "billigen". Karten- und Ziffernfeld-Tueren:
+beim Erfolg ein Piep, eine halbe Sekunde spaeter das Aufschliessen, wie in RE2 (ROOM2110); Riegel von der
+Innenseite mit dem RE2-Entriegeln.
 @@WEITERE@@
 
 ## Zur Freigabe: umgeschriebene Texte
@@ -98,7 +112,33 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 * Tuerknall: Alternative waere RE2 ROOM205 "Zombies smashing through wood" (Holz splittert) statt ROOM106.
 * Texte an der Parkplatz-Tuer und zu den Schluesseln sind eigene Formulierungen in RE2-Form - bei Wunsch
   anderen Wortlaut nennen.
+* Karte: Sie schrieben "ROOM 1090" fuer den Raum mit Hunde-Luke und Weste - gebaut ist es fuer ROOM1190
+  (Schiessstand B1), ROOM1090 ist der Hinterhof. War 1190 gemeint?
+* Karte: Wer das Treppenhaus ROOM1060 nur im Erdgeschoss betritt, kann schon zu 2F/3F blaettern (leer). Fuer den
+  Fahrstuhl ist das abgestellt - soll es fuer Treppenhaeuser genauso gelten?
+* Tueren: DOOR27/DOOR26 sind RE2-LABOR-Tueren (oliv-grau mit Bedienfeld / rostrotes Schott "TYPE-P") - RE2 hat keinen
+  Revier-Fahrstuhl dieser Art. Passt die Labor-Optik im Revier, oder soll die gemalte RE1.5-Farbe zurueck?
+* ROOM4000 (Blue Master Keycard): die neue Folge Klack/Piep/Aufschliessen liegt ueber dem Tor-Motor-Ton des
+  Originals - beim Spielen pruefen, ob das stoert.
 @@ENTSCHEIDEN@@
 
 ## Grenzen
-@@GRENZEN@@
+* Gorillas ROOM11C0 (Spur F): @@F_GRENZE@@
+* RE2-Hunde: der Claim, mit dem in RE2 nur ein Hund zugleich beisst (PL+0x1D3 |= 0x80, @0x801051f8/0x80105200,
+  Pruefung @0x80104e5c-68), fehlt im Port - mehrere Hunde koennen in wenigen Bildern nacheinander zubeissen.
+* Kleidung: die Wundstempel der Stages 3-5 (FUN_80112784 / FUN_8010de24 / FUN_8010dfa4) und Birkins eigene
+  Stempel (STAGE5) sind weiter nicht portiert; die RE2-Kraehe kennt nur den Griff, nicht Dive/Strike.
+* Fressende RE2-Zombies tropfen beim Fressen noch kein Blut (@0x80103C8C); die Feuer-Emitter der Brandgranate
+  tragen einen Welt- statt Anker-Versatz (0,200,0). Der Kopfabriss des Kriechers wirft Fleischbrocken (Id 8) -
+  in Raeumen ohne Raum-Id 5 nur das Hals-Blut.
+* Der liegende Spawn-Zombie (EXEC[7]) ist weiter treffbar, bevor er aufsteht (RE2 sperrt ihn).
+* Kisten: der Spieler faellt nicht von Objekten mit Bit 0x100 herunter (FUN_8002dc48, Substate 0xd) - er steht
+  an der Kante. In ROOM2060 schiebt die Spinne Leon nach dem Aufstieg vom Tritt (y -1800), Original ungemessen.
+* 20 Gegner je Raum: in ROOM20B0/20B1 schreibt das Original die Slots 20..34 hinter sein Feld; der Port
+  verwirft sie. Das PSX-Ziel braucht 5 x sizeof(re15_actor_t) mehr RAM, ungemessen (kein PSn00bSDK).
+* Elza ROOM1021: Roy sackt beim Schuss nicht sichtbar zusammen (Original noch nicht gemessen).
+* Karte ROOM11D0: der Zwinger-Gang noerdlich der Tuerwand hat in der Kachel keinen Platz, der Marker klemmt
+  dort an der Oberkante (Platzhalter-Kachel des Prototyps).
+* Fahrstuhl: beim AUSSTIEG aus der Kabine (ROOM1080 -> Etage) gibt es weiter keine Tuersequenz; RE2 spielt dort
+  DOOR27 (ROOM6010). Nicht beauftragt, nachruestbar.
+@@GRENZEN_REST@@
