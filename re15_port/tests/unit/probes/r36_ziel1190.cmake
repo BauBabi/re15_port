@@ -1,0 +1,14 @@
+# Runde 36 Spur H "ziel1190" — Zielscheiben-Texte HINTEN an den Scheiben (ROOM1190 Leon / ROOM1191 Elza
+# vertauscht), Knoepfe wieder Original. Dossier analysis/befunde_runde36/H_ziel1190.md, Konstanten
+# include/re15_ziel1190.h.
+
+# Mechanik-Riegel: echte ROOM1190/1191.RDT, Raumaufbau wie im Spiel (Installer-Block), Aktion an den GEMESSENEN
+# Haltepositionen vor jeder Scheibe (2 Raeume x 3 Raumzustaende x 4 Scheiben), Knopf-Seite gegen die
+# Original-Nachrichten, Platz faehrt mit der Scheibe (Fahrt per Knopf, Betreten mit Scheibe vorn).
+add_executable(test_r36_ziel1190 test_r36_ziel1190.c)
+target_link_libraries(test_r36_ziel1190 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_ziel1190 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r36_ziel1190 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r36_ziel1190 COMMAND test_r36_ziel1190)
+set_tests_properties(unit_r36_ziel1190 PROPERTIES TIMEOUT 120)
