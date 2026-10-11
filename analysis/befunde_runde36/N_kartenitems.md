@@ -390,3 +390,91 @@ eine vorbestehende Abweichung, die nicht diese Spur eingefuehrt hat; der generis
 
 Keine neue Konstante ohne Adresse: 0x10 (@0x8002c2f4), 0x80 = 0x808080 (FUN_8002b898.c:16), 0x0010 (RE2
 @0x03158/@0x00FDC, RE1.5 @0x007DA). Der SDL-Weg bildet 0x80 ueber `psx_prim_to_sdl_vert` auf 255 ab (= Texel x 1).
+
+### 8.5 Messung nachher (exe ab178a50 = Messkopie `re15_pc_nb1n_kartenitems.exe`; Lade-Weg CONTINUE, F100,
+RE15_WINDOW_SCALE=1, Auswerter `probe_r36_kartenitems_licht` auf den Paaren MIT/OHNE Bit des Integrationslaufs)
+
+| Raum (Cut) | Raumlicht an der Karte (Abnahme 0, NCCT) | Kartenpixel | Mittel RGB (Summe) | in der Palette |
+|---|---|---|---|---|
+| 1140 (5) | (41,39,39) | 73 | (105,107,96) 310 | 73 von 73 |
+| 10D0 (6) | (41,39,39) | 219 | (101,104,94) 299 | 219 von 219 |
+| 1030 (3) | (54,54,59) | 88 | (101,102,93) 297 | 88 von 88 |
+| 1030 (0) | (89,89,94) | 48 | (105,107,96) 310 | 48 von 48 |
+| 1200 (2) | (70,70,70) | 201 | (100,102,93) 296 | 201 von 201 |
+| 11D0 (0) | (36,41,41) | 221 | (102,105,96) 304 | 221 von 221 |
+
+Jeder Kartenpixel ist eine Palettenfarbe der RE2-TIM — die Karte wird ohne Raumlicht gezeichnet; ihre
+Helligkeit (Summe 296..310) ist in allen sechs Ansichten dieselbe bis auf die Texel-Abtastung, obwohl das
+Raumlicht an den Stellen zwischen 36 und 89 von 128 liegt (1030 Cut 3 gegen Cut 0: 297 gegen 310, Abstand
+13, bei 1,65-fachem Raumlicht; mit NCCT laege der Abstand bei rund 120). Die Karte ist damit so hell wie
+ihre Textur: genau das Bild, das RE2 fuer seine Wandplaene zeichnet (FUN_800363f0 unbeleuchtet) und das
+RE1.5 fuer jedes Objekt mit dem Flach-Bit zeichnet (FUN_8002c18c @0x8002c2f4). Dass sie in 1140 Cut 5 heller
+als Leon daneben ist (Abnahme 0: Leon NCCT bei 41/128), ist die Folge des Original-Mechanismus — eine Figur
+wird beleuchtet, ein Flach-Objekt nicht — und keine Port-Konstante mehr. Erster Lauf mit der generischen
+Fassung (exe 18f177fe, `lauf_71545489_*`, 441,43 s gruen) und Endstand (exe ab178a50, Lauf im
+Regressionsblock 8.6, `lauf_7ae9aa6a_*`, 430,93 s gruen) liefern fuer die Karte dieselben Zahlen — nachgemessen mit dem Auswerter auf beiden Laeufen, Tabelle oben identisch (die Karte traegt 0x0010, Bit 0x2 = 0).
+Bild: `N_nb1/v_1030_karte.png` (links alte exe Cut 3, blau getoent; Mitte neue exe Cut 3; rechts Cut 0 —
+die Karte haengt als helles Blatt zwischen den Aushaengen, so hell wie die gemalten Zettel daneben).
+
+### 8.6 Tests
+| Test | neu/geaendert | Ergebnis |
+|---|---|---|
+| `unit_r36_kartenitems` | R: Karten-Prop `attr == 0x0010` (10 Raeume); A: VM speichert pc[8..9] — ROOM1200/1201 obj 0/1 = 0x0010 (@0x007DA/@0x00804), ROOM1140/1141 obj 0 = 0x0000 (@0x00B28) | 217 Pruefungen gruen (vorher 201) |
+| `integration_r36_kartenitems_bild` | je Raum zusaetzlich d) jeder Kartenpixel eine Palettenfarbe (`probe_r36_kartenitems_licht`, exit 0 nur bei PALETTE == n), sechster Fall ROOM1030 Cut 0 (Fenster x88..101 y104..115, Schwelle 24), Summen Cut 3/Cut 0 hoechstens 1/10 auseinander | gruen: `ctest -R "^integration_r36_kartenitems_bild$"` -> "100% tests passed, 0 tests failed out of 1" (441,43 s, exe 18f177fe); Endstand im Regressionsblock unten |
+
+Gezielte Laeufe (KEINE volle Suite):
+* `ctest --test-dir re15_port/build -R "^unit_r36_kartenitems$" --timeout 300` -> "100% tests passed, 0 tests failed out of 1" (0,11 s)
+* Regressionsblock = Regex der Abnahme 0 (3.3) + die Raeume/Module, deren Objekte den Flach-Zweig nehmen
+  (1040/1090/1190/11A0/11B0/11C0/11E0/1210/1260, climb, obj_model, scd_, r34n_b, affen, gitter, espr):
+  `ctest --test-dir re15_port/build -R "karte|map|besitz|hinweis|r34n_e|r35_inhalt|r34n_a|r34n_d|fenster|cut10f0|r35_cut|1030|1140|10d0|1200|11d0|item_stack|r36_kartenitems|irons_tisch|aot|msg_|action_msg|prop_|boot_bg|dark_start|relatch|save_counter|weste_load|savepoint|continue|1040|1090|1190|11a0|11b0|11c0|11e0|1210|1260|climb|obj_model|scd_|r34n_b|affen|gitter|espr" --timeout 900 --output-on-failure`
+  -> **"100% tests passed, 0 tests failed out of 196"** (Total Test time 1897,46 s, CTEST_EXIT=0, `N_nb1/ctest_regr.log`; alle 196 im ERSTEN Lauf gruen, darin die exe-Haken integration_weste_load_pin 6,5 s, r34n_e_dokumente_bild 105,4 s, r35_cut1150 528,6 s, r35_karte 84,7 s, **r36_kartenitems_bild 430,9 s** (exe ab178a50), boot_bg_pin 3,0 s, dark_start_pin 2,5 s)
+
+### 8.7 Nebenwirkung: Objekte mit dem Flach-Bit in anderen Raeumen (gemessen, alte gegen neue exe)
+Der Zweig ist generisch (so hatte es die Abnahme verlangt: "Zweig '& 0x10' im Prop-Zeichner"); er betrifft
+alle 169 Objekte mit Attribut 0x0010 (Zensus 8.3). Stichprobe per Debug-Sprung (RE15_DEBUG_JUMP=<raum>@250,
+RE15_FORCE_CUT, Framedump F700, alte exe 6f16291b gegen neue; `ppmdiff.py`, |dR|+|dG|+|dB| > 30):
+
+| Raum (Cut) | Objekt | attr | Pixel | Mittel vorher -> nachher | Bild |
+|---|---|---|---|---|---|
+| 1200 (2) | obj 0/1 Leichenschubladen-Fronten | 0x0010 | 2204 | (19,18,13) S49 -> (45,44,31) S120 | `v_1200_2.png`: vorher fast schwarze Kaesten vor den gemalten Schraenken, nachher dieselbe Helligkeit wie der gemalte Hintergrund |
+| 1200 (1) | dito | 0x0010 | 1323 | S63 -> S155 | |
+| 11B0 (0) | obj 1 (fern) | 0x0010 | 30 | S508 -> S566 | |
+| 1210 (6) | obj 0 Zellentuer | 0x0010 | 4341 | (22,19,15) S55 -> (52,46,36) S134 | `v_1210_6.png`: Tuer mit sichtbarem Gitterfenster statt dunkelbrauner Flaeche |
+| 11C0 (12) | obj 0 | 0x0010 | 52 | S27 -> S107 | |
+| 11E0 (5) | obj 0 Rolltor (en 0x03FC) | 0x0010 | 5152 | (5,6,6) S17 -> (20,22,24) S67 | `v_11E0_5.png`: vorher ein fast schwarzer Block im Gang, nachher das gewellte Tor mit Textur |
+| 11B0 (5) | obj 0 Kiste (4,6 % STP-Texel) | 0x0012 | 1098 generisch | S51 -> S146 generisch; Endstand (nur deckend): 192 Pixel = obj 2 (0x0010, sx 215/sy 174) S48 -> S103, die Kiste unveraendert | `v_11B0_5.png` |
+| 5030 (2) | obj 1..11 Roehren, Typ 3 (34 % STP + 66 % schwarz) | 0x0012 | 767 generisch | S198 -> S290 generisch; Endstand (nur deckend): DIFF 0 Pixel, unveraendert | |
+| 1040 (2/3) | obj 1-3 Glasflaechen (0 % STP) | 0x0012 | — (Raum beim Sprung dunkel, F400-700 schwarz) | — | |
+
+Urteil aus den Bildern: die 0x0010-Objekte waren mit NCCT in den Ambient-Raeumen fast schwarze Kloetze vor
+hellem gemaltem Hintergrund (Rolltor 11E0, Schubladen 1200, Zellentuer 1210); flach gezeichnet haben sie die
+Helligkeit ihrer Textur und fuegen sich in den vorgerenderten Hintergrund ein — das ist der Original-Weg.
+Bit 0x2 (halbtransparent): FUN_8002c18c gibt es als Parameter 4 an FUN_80022f0c weiter (Prim-Code 0x36),
+die PSX mischt dann NUR Texel mit STP-Bit (psx-spx, Texel 0x8000..0xFFFF). STP-Zensus (`zensus_stp.py`,
+TIM je obj_id aus der RDT+0x30-Tabelle): alle Typ-3-Objekte (11A0 obj 2/3, 1260 obj 0/1, 2000-20B0, 5030 obj
+1-11) tragen zu 100 % STP-Texel (5030: 34 % + 66 % Schwarz = durchsichtig), 5060 obj 2-4 zu 50 %, die Kiste
+11B0 obj 0 zu 4,6 %, 1040 obj 1-3 und 20A0 obj 4-6 zu 0 %. Der Port-Zeichner gibt jedem Texel Alpha 0xFF
+(render_pc.c `rgb555_to_argb8888`, ABE-Kommentar beim Slot-Upload) und mischt nur je Primitiv (s_tri_blend);
+eine STP-genaue Mischung ist Zeichner-Arbeit ausserhalb dieser Spur. Flach-deckend haette die 100-%-STP-
+Objekte (Wasserflaechen/Glas) etwa doppelt so hell gezeigt wie das Original (Original = 0,5 Textur + 0,5
+Hintergrund), die bisherige NCCT-Darstellung lag dort zufaellig naeher. PORT-ENTSCHEIDUNG (gekennzeichnet,
+main.c): der Flach-Zweig gilt fuer `(attr & 0x12) == 0x10`; die 91 flach+halbtransparenten Objekte bleiben auf
+dem bisherigen Weg, bis Parameter 4 portiert ist. Die Karte (0x0010) ist davon unberuehrt.
+
+### 8.8 OFFEN (aus der Nachbesserung)
+* Halbtransparenz-Bit 0x2 des Attribut-Worts fuer Objekte (FUN_8002c18c @0x8002c2b4 -> FUN_80022f0c Parameter
+  4 -> Prim-Code 0x36, STP-Texel-Mischung; ABR aus dem tpage-Wort der MD1-Polygone): 91 Objekte in 1040/1041,
+  11A0/11A1, 11B0/11B1, 1260/1261, 2000/2001, 2020/2021, 2040/2041, 2050/2051, 2070/2071, 2080/2081,
+  2090/2091, 20A0/20A1, 20B0/20B1, 5030/5031, 5060/5061 — darunter 12 mit 0 % STP-Texeln (1040/1041 obj 1-3,
+  20A0/20A1 obj 4-6), die das Original deckend und flach zeigt und die deshalb jetzt noch zu dunkel sind
+  (NCCT). Eigene Spur: Texel-Alpha aus dem STP-Bit + Blend je Primitiv.
+* Typ-3-Weg FUN_8003e64c (Kachel-Verdeckung der Fixtures) weiterhin nicht gesondert portiert (vorbestehend).
+* RE2-Handler-Zuordnung Opcode-Wort [12..13] -> Pool+0x10 nicht aufgesucht (positionell, Abnahme 4.1).
+* 1040 obj 1-3 nicht gemessen (Raum beim Debug-Sprung dunkel).
+
+### 8.9 Fuer den Nutzer (Ergaenzung zu Abschnitt 7)
+* Keine neuen Assets, keine Sprachdateien.
+* Sichtbare Aenderung ausserhalb der Karten (Release-Notes-Hinweis): Objekte, die im Original ohne Raumlicht
+  gezeichnet werden (Flach-Attribut; z.B. Rolltor ROOM11E0, Zellentuer ROOM1210, Schubladen ROOM1200,
+  Objekte in 1090/1190/11A0/11B0/11C0 und in den Stages 2/4/5/6), erscheinen jetzt in Texturhelligkeit statt
+  fast schwarz. Halbtransparente Objekte (Wasser/Glas) sind unveraendert.
