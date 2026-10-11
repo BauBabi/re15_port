@@ -126,7 +126,7 @@ FUN_8003b558 @0x8003b634-794) und am Port (Leon und Elza, Schuebe aus allen Rich
 ROOM10F0/10F1 ueber Tritt, Tuer und Korridor): sie laesst sich **weder im Original noch im Port bewegen** - jeder Schub
 setzt sie in die Bruestung oder die Westwand, und das Spiel nimmt ihn nicht an (Sperre @0x8002c0b0). Kein Softlock,
 kein Fix noetig; ein Riegel haelt den Mechanismus fest. Die Kisten in ROOM3050 (Fall = vorgesehener Weg zur Super
-Redhawk) und ROOM2050 (die Tuer nach 2040 auf der Kiste faellt mit, 2040 bleibt ueber 2030 -> 2060 erreichbar)
+Redhawk) und ROOM2050 (die Tuer nach 2040 auf der Kiste faellt mit, 2040 bleibt ueber ROOM2070 erreichbar - Tuer slot 5 @0x00B1C, unbedingt)
 fallen wie vorgesehen.
 
 ## Zur Freigabe: umgeschriebene Texte
