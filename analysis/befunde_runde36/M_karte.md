@@ -218,7 +218,7 @@ Angepasste fremde Pins (begruendet):
   (Mitte seiner Weltbox) - ein Punkt je Zone traf nur einen Teil; eine Innenwand zwischen zwei
   unbesuchten Teilen wird richtig nicht gezeichnet.
 
-## Messung nachher (`probe_r36_karte messung`, Stand 15fc56a5)
+## Messung nachher (`probe_r36_karte messung`, Stand 15fc56a5; Fahrstuhl-Ankunft s. Riegel 6 unten)
 
 ```
 Punkt 1  10A0 B1: Treppenmarken (sichtbar) auf Blatt 0: 2 -> #176 (158,128) kind 4, #177 (163,125) kind 4
@@ -319,5 +319,24 @@ Gezielte Suite: siehe Abschnitt "Abschluss-Lauf" unten.
 - [x] Lektuere (AUFTRAG, VERTRAG, R35 G_karte + Abnahmen, Memories karte-*)
 - [x] Messung vorher (alle 6 reproduziert)
 - [x] P1..P6 umgesetzt (Daten + Latch), Messung nachher am Kartenpfad
-- [x] Riegel unit_r36_karte_* (6) gruen
-- [ ] integration_r36_karte (echte exe) gruen, Gegenprobe alter Stand, gezielte Suite, Abschluss
+- [x] Riegel unit_r36_karte_* (6) gruen, Gegenprobe am alten Motor ROT
+- [x] integration_r36_karte (echte exe) gruen
+- [x] gezielte Suite (siehe Abschluss-Lauf)
+
+## Riegel 6 nach der Ankunfts-Regel (`probe_r36_karte fahrstuhl`, Stand da5ae967)
+
+```
+PASS: aus 1F eingestiegen: 1F-Kabine AKTUELL, 2F unbesucht, 3F unbesucht
+PASS: Stand aus der Kabine geladen, im 3F-Raum: 3F-Kabine unbesucht (keine Fahrt)
+PASS: mit dem Fahrstuhl auf 3F angekommen: 3F-Kabine besucht, 2F-Kabine unbesucht (nie dort)
+PASS: zu Fuss auf 2F: 2F-Kabine unbesucht
+PASS: aus 3F eingestiegen: Blatt 4, 3F-Kabine AKTUELL, 2F weiter UNBESUCHT
+PASS: nach Speichern/Laden: 1F + 3F besucht, 2F unbesucht
+PASS: alter Stand (alte Kabinen-Bits 3/4/5): 1F unbesucht, 2F unbesucht, 3F unbesucht - keine Kabine als besucht
+PASS: Etagen-Tabelle (27 Bits) bleibt unter den Teil-Bits (96), Teil-Tabelle (8) unter den Fahrstuhl-Bits (112), Fahrstuhl-Tabelle (6) im Feld (128)
+PASS: 4020 aus ROOM5000: Blatt 9, Blatt 9 AKTUELL, Blatt 8 unbesucht, Blatt 10 unbesucht
+```
+Riegel 2 zusaetzlich: Ankunft aus der Kanalisation (ROOM1260 Tuer slot 3 @0x0118A -> (3900,-22000))
+-> Marker (141,164) an der unteren Tuermarke (137,172) (vorher (141,171)). Riegel 3 zusaetzlich:
+ROOM1090 (Wortlaut) Hof Band 1 -> Blatt 2 NUR rect 5, Dach Band 6 -> Blatt 3 NUR rect 7 - die beiden
+Bereiche von 1090 waren schon getrennt.
