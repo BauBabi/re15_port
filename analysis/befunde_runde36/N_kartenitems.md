@@ -566,5 +566,50 @@ Befund damit an der Engine bestaetigt, in BEIDE Richtungen:
   meldete faelschlich "mit Bit still (0)"). Der Test bewahrt g_game um scd_vm_init herum auf (Raumwechsel des Spiels
   nullt die Flags nicht, scd_room_setup.c "scd_vm_init MINUS re15_game_state_init").
 
-### 9.3 P2 Zensus
+### 9.3 P2 Zensus (Original + Port) — Datei `analysis/befunde_runde36/N_belege/bank9_zensus.txt`
+Werkzeug `re15_port/tools/r36_kartenbits/bank9_zensus.py` (Laengentabelle = scd_walk_lib = scd_vm.c s_opcode_sizes;
+Teile original | exe | port), Ausgabe mit Auswertungskopf eingecheckt.
+
+**Wer im Original Bank 9 anfasst — vollstaendig belegt, nicht nur die Skripte:**
+* Die Flag-Tabelle 0x80074664 wird in der EXE an genau fuenf Stellen indiziert (ghidra1_V2.txt `PTR_DAT_80074664
+  XREF[5]`): Ck 0x21 @0x8003fd2c, Flag-Ck2 0x58 @0x8003fda0, Set 0x22 @0x8003fe04, Flag-Set2 0x59 @0x8003fed0,
+  AOT-FLAG_CHG sce 4 LAB_80043120 @0x80043140 (`lhu v1,0(a0)` Bank, `lhu a1,2(a0)` Bit, `lhu a0,4(a0)` an/aus
+  @0x80043120-28). Eintrag [9] direkt: nur Item_aot_set @0x800406d8.
+* `DAT_800b1078 XREF[4]`: 0x8001e0d4, 0x80021fd4, 0x800406d8, 0x80074688 — die zwei Aufnahme-Wege setzen das Bit aus
+  dem Item-Satz (`lhu a1,4(s0)` @0x80021fcc, s0 = Satz+12/+20).
+* Die 105 Aufrufe der Bit-Helfer FUN_8004ef90/efb8/efe4 in EXE + STAGE1..5.BIN: in den Overlay-Dekompilaten nur die
+  Basen 0x800b1028 (Bank 5), 0x800b1038 (Bank 7), 0x800b1058 (Bank 8); `unaff_s0+0x48a4` = Bank 5 (gleiches Muster wie
+  PSX.EXE @0x80051784, Ghidra `a0=>DAT_800b1028`); der Direkt-Scan (lui/addiu-Paare) findet in keinem Overlay
+  0x800b1078 oder die Tabelle.
+=> Original-Bank-9-Bits = Item_aot_set-Taken-Bits + Ck/Set(9,n) + FLAG_CHG(9,n) (+ 0x58/0x59 mit Bank 9: keine).
+
+**Ergebnis Original** (206 RDTs mit Kopf + 34 Stummel, 40674 Opcodes, **0 Desync**, 164 Item_aot_set = dieselbe Zahl
+wie der C-Zensus in r21_discard TEIL C): 54 x Ck(9,n), 1 x Set(9,21,1) (ROOM3091 sub06 @0x016C2), 0 x 0x58/0x59 mit
+Bank 9, FLAG_CHG nur Bank 5 (26 Saetze), kein Taken-Bit >= 256. **85 von 256 Bits belegt** (Zahl wie der Runde-30-
+Zensus r30_idw_zensus.py): `2 6 10 11 12 14 15 16 18 19 20 21 22 52 85 86 90 91 92 98 99 104 105 108 109 134 135 136
+138 140..144 146..155 162..169 180..198 216 217 218 223..231 252 253`. Einziges reines Skript-Bit: 21; alle anderen
+sind Item-Taken-Bits. Frei: `0..1, 3..5, 7..9, 13, 17, 23..51, 53..84, 87..89, 93..97, 100..103, 106..107, 110..133,
+137, 139, 145, 156..161, 170..179, 199..215, 219..222, 232..251, 254..255`.
+
+**Ergebnis Port** (grep include/ engine/src platform/pc + Tabellen-Makros; Runde 30 bis 36): 53 Sicherung, 54/55
+Irons-Tisch, 56 Granate, 57..60 Dokumente, 61/62 Leichen, 63 Rolltor, 65 Ada-Ruf, 71 10F0-Szene, 72 10F0 Ziel 2,
+73 Irons-Tod, 74/75/76 Spawns, 79 Fenster 1120, 80/81 r35-Inhalt, 82/83 Q-Schluessel, 84 J-Werkstatt-Tuer,
+**87..91 N-Lageplaene**, 93 Q-Parkplatz-Tuer. (Item-Modal / menu_common / op_item_aot_set benutzen das Bit des
+Satzes.) Spur R (nach der Basis gemergt, ba384fac) bringt kein Bank-9-Bit (diff 7a0fd453..r36/integration geprueft).
+
+**Schnitt = {90, 91}** — genau der Befund. Zusaetzlich: die VERTRAG-Reserven **85 (J), 86 (L), 92 (P) sind Original-
+Taken-Bits** und duerfen nie vergeben werden: 85 = ROOM3040/3041 sub00 @0x014B2 Item 0x36 "Green Keycard"
+(Ck(9,85,1) sub01 @0x014CE), 86 = ROOM4040/4041 main00 @0x00F66 Item 0x41 "Spark Plug", 92 = ROOM3050/3051 main00
+@0x01EC6 Item 0x07 "Super Redhawk" x6 — kein Port-Code benutzt sie (Zensus).
+Der VERTRAG-Zensus vom 2026-10-10 hatte nur `re15_port/include/*.h` gezaehlt (VERTRAG 1.1 Z. 34) — die Original-
+Belegung fehlte ganz; daher "Frei: 64, 66-70, 77, 78, 82-255".
+
+**Wahl B2/B1 = 77/78** (frei in beiden): im Original-Block 53..84, den der Port seit Runde 30 fuer eigene Bits nutzt;
+in keiner Port-Version je Bank-9-Bit (`git log --all -G` ueber `#define *BIT* 77|78|0x4D|0x4E`,
+`re15_game_flag_*(9, 77|78)`, SCD `0x21/0x22, 0x09, 0x4D/0x4E`: 0 Treffer; Tags v0.8.21/v0.8.22/v0.8.23: 0 Treffer —
+Gegenprobe der Suche: dieselbe Suche findet `RE15_R36Q_TUER_BIT 93` in c5a6d7d4). VERTRAG Runde 35 1.1 hatte 77/78 als
+L-Reserve gefuehrt ("77 = 1060->1040-Dialog nur falls noetig, 78 Reserve") — nie belegt. (64, 66..70 waeren ebenso frei;
+64 kommt in der Geschichte nur als Bank-4-Bit RE15_CUT10F0_ZIEL1_ERREICHT_BIT vor.) 87/88/89 bleiben: im Original frei.
+
+### 9.4 P3 Fix
 (folgt)
