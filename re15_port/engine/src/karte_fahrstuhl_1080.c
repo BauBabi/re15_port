@@ -15,6 +15,40 @@ void re15_karte_raum_gesehen(unsigned room)
     if (room != s_raum_jetzt) { s_raum_vorher = s_raum_jetzt; s_raum_jetzt = room; }
 }
 
+/* Runde 36 Spur M: Laden/Neues Spiel - der Vorraum-Spiegel steht nicht im Spielstand (auch
+ * DAT_800b0fe6 nicht im Original-Speicherblock, Runde 35 G OFFEN 5); ohne Vergessen galt der Raum
+ * der VORIGEN Sitzung als Vorraum (Kabine -> geladener Etagenraum = falsche Ankunft). */
+void re15_karte_raum_vergessen(void) { s_raum_jetzt = 0; s_raum_vorher = 0; }
+
+/* Runde 36 Spur M (Nutzer: "Die Fahrstuhl Etagen werden als besucht angezeigt, obwohl ich auf den
+ * verschiedenen Etagen noch nicht im Fahrstuhl war"): ANKUNFT mit dem Fahrstuhl. Faehrt man in
+ * der Kabine auf eine Etage und steigt dort aus, war man auf DIESER Etage im Fahrstuhl. Das
+ * Original wechselt dazu aus der Kabine per Skript-Tuer in den Etagenraum (ROOM1080 main00
+ * @0x0482/@0x04A2/@0x04C2 -> 1040/10C0/1120; ROOM4020 @0x0063A/@0x0065A/@0x0067A -> 4000/5000/
+ * 50C0), und der Etagenraum vermerkt die Kabine dann selbst auf seiner Etage (ROOM1040 @0x15D6
+ * `22 03 36 01`, ROOM4000 @0x013CC `22 03 93 01` usw.). Liefert das Blatt der Kabine, wenn `room`
+ * ein Etagenraum ist und der Raum davor seine Kabine war, sonst -1; *kabine = die Kabine. Blatt
+ * je Etagenraum aus dem Seiten-Setzer wie oben (@0x8004b684/@0x8004b6f8/@0x8004b758,
+ * @0x8004bdb4/@0x8004bf50/@0x8004bee4). */
+int re15_karte_fahrstuhl_ankunft(unsigned room, unsigned *kabine)
+{
+    unsigned r = room & ~1u, vor = s_raum_vorher & ~1u;
+    if (s_raum_jetzt != room) return -1;
+    if (vor == 0x1080u) {
+        if (kabine) *kabine = 0x1080u;
+        if (r == 0x1040u) return 2;
+        if (r == 0x10C0u) return 3;
+        if (r == 0x1120u) return 4;
+    }
+    if (vor == 0x4020u) {
+        if (kabine) *kabine = 0x4020u;
+        if (r == 0x4000u) return 8;
+        if (r == 0x5000u) return 9;
+        if (r == 0x50C0u) return 10;
+    }
+    return -1;
+}
+
 /* ⛔ PORT-WAHL (Abnahme 0, G2): das ORIGINAL waehlt das Blatt der Kabine NICHT nach dem
  * Vorraum. Der Seiten-Setzer FUN_8004b568 schickt Raumindex 8 (ROOM1080) ueber die Fall-Kette
  * 0..11 IMMER auf Blatt 2 (`ori v0,zero,0x2` @0x8004b684, `sb v0,0x260e` @0x8004b88c), und die
@@ -25,6 +59,34 @@ void re15_karte_raum_gesehen(unsigned room)
 int re15_karte_fahrstuhl_blatt(unsigned room)
 {
     unsigned vor;
+    /* Runde 36 Spur M (Nutzer: "Die Fahrstuhl Etagen werden als besucht angezeigt, obwohl ich
+     * auf den verschiedenen Etagen noch nicht im Fahrstuhl war"): der ZWEITE Fahrstuhl des Spiels,
+     * ROOM4020, liegt genauso auf drei Blaettern (s_map_floors: Band 0 -> Blatt 8/9/10) und hatte
+     * dasselbe Gemeinsam-Besucht. Eingestiegen wird nur aus seinen drei Etagenraeumen (Tuer-Datensaetze
+     * ROOM4000 @0x0107A slot 0 / ROOM5000 @0x008A4 slot 3 / ROOM50C0 @0x0094A slot 1 -> 4020 Spawn
+     * (-21400,0,-23400); Rueckweg ROOM4020 main @0x0063A/0x0065A/0x0067A). Blatt je Etagenraum
+     * aus dem Seiten-Setzer: Stage 3 -> `ori v1,zero,0x8` @0x8004bdb4, ROOM5000 (Stage 4 Raum 0,
+     * Tabelle @0x800111b4) -> `ori v1,zero,0x9` @0x8004bf50, ROOM50C0 (Raum 12) -> `ori v1,
+     * zero,0xa` @0x8004bee4. Etagen-Bits des Spiels (wie 54/55/56 fuer 1080): Bank 3 Bit
+     * 0x93/0x94/0x95 - ROOM4000 @0x013CC `22 03 93 01`, ROOM5000 @0x008FC `22 03 94 01`,
+     * ROOM50C0 @0x00A34 `22 03 95 01` (je die anderen beiden geloescht); ROOM4020 sub07 @0x00906
+     * liest `21 03 93 00`. */
+    if ((room & ~1u) == 0x4020u) {
+        vor = s_raum_vorher & ~1u;
+        if (s_raum_jetzt == room) {
+            if (vor == 0x4000u) return 8;
+            if (vor == 0x5000u) return 9;
+            if (vor == 0x50C0u) return 10;
+        }
+        if (re15_game_flag_get(3, 0x93)) return 8;
+        if (re15_game_flag_get(3, 0x94)) return 9;
+        if (re15_game_flag_get(3, 0x95)) return 10;
+        /* (3) Nachbesserung 1 (Abnahme 0 M1): Etage UNBEKANNT (Debug-Sprung ohne Etagenraum davor,
+         * kein Bit 0x93..0x95) -> das Blatt des ORIGINALS. Stage-Tabelle @0x80074c0c[3] = 0x8004bc9c,
+         * Raumindex 2 -> @0x80011184[2] = 0x8004bcf8 -> Fall-Kette -> `ori v1,zero,0x8` @0x8004bdb4,
+         * `sb v1,0x260e(at)` @0x8004bdbc; der Setzer liest weder Bank 3 noch DAT_800b0fe6. */
+        return 8;
+    }
     if ((room & ~1u) != 0x1080u) return -1;
     /* (1) Man betritt die Kabine IMMER aus einem Etagenraum - dort steht sie also. */
     vor = s_raum_vorher & ~1u;
@@ -38,7 +100,16 @@ int re15_karte_fahrstuhl_blatt(unsigned room)
     if (re15_game_flag_get(3, 54)) return 2;   /* ROOM1040 @0x15D6 `22 03 36 01` */
     if (re15_game_flag_get(3, 55)) return 3;   /* ROOM10C0 @0x0FEE `22 03 37 01` */
     if (re15_game_flag_get(3, 56)) return 4;   /* ROOM1120 @0x0D6C `22 03 38 01` */
-    return -1;
+    /* (3) Nachbesserung 1 (Abnahme 0 M1, Nutzer: "Die Fahrstuhl Etagen werden als besucht
+     * angezeigt, obwohl ich auf den verschiedenen Etagen noch nicht im Fahrstuhl war"): Etage
+     * UNBEKANNT - Debug-Menue JUMP "108 ELEVATOR" aus einem Raum, der kein Etagenraum ist, ohne
+     * Bit 54/55/56. Bisher -1, und die "gleiche Baender"-Regel setzte dann die Kabine auf ALLEN drei
+     * Etagen als besucht. Jetzt das Blatt des ORIGINALS: Stage-Tabelle @0x80074c0c[0] = 0x8004b568,
+     * Raumindex 8 -> @0x8001103c[8] = 0x8004b63c -> Fall-Kette -> `j 0x8004b888` mit
+     * `ori v0,zero,0x2` @0x8004b684 im Delay-Slot -> `sb v0,0x260e(at)` @0x8004b88c (Blatt 2 = 1F).
+     * Auch im Original ist die Etage dann unbestimmt: sub10 ("Tuer auf") feuert nur unter
+     * Ck(3,54/55/56,1) @0x08AC/0x08BC/0x08CC. */
+    return 2;
 }
 
 /* Klemmfenster des Spieler-Markers in der Kabine (Nachbesserung 1, Abnahme 0 M1).

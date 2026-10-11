@@ -213,16 +213,60 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1231,  -5628, -16384,  -4157,  -4197,  0,   0, 3, 108,     2,   131,  4950,   547, 0, 0,   0, 0 },
     { 0x1230,   2190,  16804,   5514,  31058,  0,   0, 4, 109,    98,    86,  1915,   408, 0, 0,   0, 0 },
     { 0x1231,   2190,  16804,   5514,  31058,  0,   0, 4, 109,    98,    86,  1915,   408, 0, 0,   0, 0 },
-    { 0x1190, -26804, -29504,  22224,  -7112,  0,   2, 0,  26,    75,   127,  1920,  2301, 0, 0,   0, 0 },
-    { 0x1191, -26804, -29504,  22224,  -7112,  0,   2, 0,  26,    75,   127,  1920,  2301, 0, 0,   0, 0 },
-    { 0x11A0, -22175,  -5850,  31000,  26950,  0,   1, 0,  27,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x11A1, -22175,  -5850,  31000,  26950,  0,   1, 0,  27,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* Runde 36 Spur M (Nutzer: "Bei ROOM 1090 auf der Map, gibt es 2 Tueren, eine am Ende des
+     * Ganges, wo die Hunde durch die Luke kommen, und eine wo man die Weste bekommt. Das muss als 2
+     * separate Bereich in der Map eingeblendet sein und sauber getrennt." - gemessen ist das ROOM1190:
+     * Hunde Sce_em_set Typ 0x20 @0x02900.., Luke Obj 4 @0x02A06 (sub13), Weste sub14 Aot slot 16
+     * @0x02D90 -> sub15 Set(3,0x75) @0x02DD0; ROOM1090.RDT hat weder Hunde noch Weste).
+     * ROOM1190 sind ZWEI getrennte Bereiche (Flutfuellung im Port-Kollisionsmodell, Dossier R3):
+     * Haupthalle (Tuer slot 4 @0x028B2, Spawn aus dem Gang (3174,-11182)) und Ostkammer (Tuer slot 6
+     * @0x02B1C, Spawn aus ROOM1230 slot 4 @0x00CE6 (19515,-12109)) - nicht verbunden. Vorher EINE
+     * Zone auf rect 2: beide Bereiche leuchteten im selben 16x40-Kasten.
+     *   idx0 Haupthalle -> Blatt 0 rect 1 (76,76,72,48): die AUSGELIEFERTE Zeile @0x80076978
+     *        (75,127,1920,2301) projiziert sie dorthin (Innenwaende -> x89..142 y79..115), und die
+     *        Gang-Tuer (Nische (137..141,71..75) der Gangkachel) liegt auf ihrer Oberkante y76.
+     *        Kasten = SCA-Innenkanten: x -24536 (@0x1C70) .. 4624 (@0x1C34), z -26498 (@0x1C7C)
+     *        .. -10280 (@0x1C28); Zeile unveraendert.
+     *   idx1 Ostkammer -> Blatt 0 rect 2 (144,69,16,40): einzige Kachel mit Tuernische oben rechts
+     *        (MAP01.PIX uv(160..164,17..21) = Schirm (152..156,70..74)) - die Tuer liegt in der
+     *        Nordwand rechts (18200..20800). Ohne Zeile (Bbox-Streckung, PORT-ERGAENZUNG wie alle
+     *        Stub-Raeume); Kasten = SCA-Innenkanten x 13998 (@0x1D00) .. 21360 (@0x1CE8), z -25472
+     *        (@0x1D24) .. -11432 (@0x1CDC). zid 110 = naechste freie (0..109 belegt), Besucht-Bit
+     *        2n+1 des Raums (zone_bit, idx 1). */
+    { 0x1190, -24536, -26498,   4624, -10280,  0,   1, 0,  26,    75,   127,  1920,  2301, 0, 0,   0, 0 },
+    { 0x1191, -24536, -26498,   4624, -10280,  0,   1, 0,  26,    75,   127,  1920,  2301, 0, 0,   0, 0 },
+    { 0x1190,  13998, -25472,  21360, -11432,  0,   2, 1, 110,     0,     0,     0,     0, 0, 0,   0, 0 },
+    { 0x1191,  13998, -25472,  21360, -11432,  0,   2, 1, 110,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* Runde 36 Spur M: ROOM11A0 VERLAESST Blatt 0 rect 1 (dort liegt jetzt die 1190-Haupthalle).
+     * Seine ausgelieferte Zeile @0x80076980 (138,113,1776,2048) projiziert ihn auf y -2..62 =
+     * UEBER alle sieben B1-Rechtecke, und er hat keine Tuer zu einem B1-Raum (Tueren: 2070, 3000,
+     * 20A0, Selbst-Tueren; ROOM11A0.RDT). Seine Kachel ist Blatt 6 ("DRAINS B2") rect 2, wo er
+     * schon als Gast-Zeile stand - die wird hiermit die Hauptzeile (die Gast-Zeilen unten entfallen,
+     * die Etagenzeile Band 3 zeigt jetzt ebenfalls auf Blatt 6 rect 2). */
+    { 0x11A0, -22175,  -5850,  31000,  26950,  6,   2, 0,  27,     0,     0,     0,     0, 0, 0,   0, 0 },
+    { 0x11A1, -22175,  -5850,  31000,  26950,  6,   2, 0,  27,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x11B0, -29100, -29100,   3800, -13200,  0,   3, 0,  28,   159,   110,  2272,  1954, 0, 0,   0, 0 },
     { 0x11B1, -29100, -29100,   3800, -13200,  0,   3, 0,  28,   159,   110,  2272,  1954, 0, 0,   0, 0 },
     { 0x11C0, -32200, -31100,  21640,  25999,  0,   4, 0,  29,   158,   195,  2272,  1954, 0, 0,   0, 0 },
     { 0x11C1, -32200, -31100,  21640,  25999,  0,   4, 0,  29,   158,   195,  2272,  1954, 0, 0,   0, 0 },
-    { 0x11D0, -11950, -24050,   7750, -10950,  0,   5, 0,  30,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x11D1, -11950, -24050,   7750, -10950,  0,   5, 0,  30,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* Runde 36 Spur M (Nutzer: "In ROOM 11D0 lande ich auf der Map direkt in der Mitte, sobald
+     * ich durch die Tuer gehe, statt am Tuereingang zu stehen"). GEMESSEN: Ankunft (-300,-17400)
+     * (Spawn der Gang-Tuer, ROOM1180/1230 slot 0 @0x009EE/@0x00AEE) -> Marker (129,151) = Mitte
+     * von rect 5, auf der Gang-Seite stand er an der Tuer (130,123). URSACHE: der Kasten war die
+     * SCA-Huelle bis z -10950 - der Zwinger-Block reicht 5500 Einheiten NOERDLICH ueber die
+     * Tuerwand hinaus, die Bbox-Streckung legte die Tuer deshalb in die Mitte. Die Kachel
+     * (MAP01.PIX uv(128,56), ein leerer Kasten, Waende v56 / v104 = Schirm y124 / y172, Spalten
+     * u128 / u181 = x96 / x149) zeigt die Gang-Tuer als OBERKANTE. Die Stadt-Zeile @0x80076998 ist
+     * der Stub {0,0,1,1} (Original zeigt hier gar keinen Marker); PORT-ERGAENZUNG wie alle
+     * Stub-Raeume: Kasten so, dass die WAENDE auf die gemalten Waende fallen -
+     *   z oben  = -16500 = Innenkante der Tuerwand @0x08CC (x -2200..7750, z -16500..-15500)
+     *   z unten = -24050 = Aussenkante der Suedwand @0x08A8 (z -24050..-23050): die Kachel
+     *             bemalt nur 49 der 56 Zeilen, damit faellt die Innenkante -23050 genau auf y172
+     *   x       = -11950..7750 unveraendert (Huelle): Ostwand-Innenkante 6750 (@0x089C) -> x149.
+     * Wirkung: Ankunft -> (129,130) direkt unter der Tuermarke (129,124); 1260-Tuer x137 wie
+     * ihre Marke (137,172). Der Zwinger-Gang noerdlich der Tuerwand klemmt an die Oberkante. */
+    { 0x11D0, -11950, -24050,   7750, -16500,  0,   5, 0,  30,     0,     0,     0,     0, 0, 0,   0, 0 },
+    { 0x11D1, -11950, -24050,   7750, -16500,  0,   5, 0,  30,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x11E0, -32312, -30800,  31100,  31150,  1,   0, 0,  31,    91,   157,  2304,  2240, 0, 0,   0, 0 },
     { 0x11E1, -32312, -30800,  31100,  31150,  1,   0, 0,  31,    91,   157,  2304,  2240, 0, 0,   0, 0 },
     /* Runde 35 Spur G (Nutzer: "In ROOM 11F0 / ROOM 1200 taucht nicht auf der Karte auf,
@@ -431,8 +475,8 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x10F1,  -9800,  -5400,  11300,  16800,  2,   8, 0,  15,     0,     0,     0,     0, 1, 1,   0, 1 },
     { 0x1170, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x1171, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x11A0, -22175,  -5850,  31000,  26950,  6,   2, 0,  27,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x11A1, -22175,  -5850,  31000,  26950,  6,   2, 0,  27,     0,     0,     0,     0, 0, 0,   0, 1 },
+    /* Runde 36 Spur M: die beiden 11A0-Gast-Zeilen (Blatt 6 rect 2, etage 1) sind ENTFALLEN -
+     * Blatt 6 rect 2 ist jetzt die HAUPTzeile von ROOM11A0 (s.o. bei ROOM1190). */
     { 0x4070, -14950, -28550,  -2100, -15750, 11,   3, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x4071, -14950, -28550,  -2100, -15750, 11,   3, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x4070, -14950, -28550,  -2100, -15750,  9,   1, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
@@ -477,10 +521,22 @@ typedef struct { unsigned char page, rect; short mx, my;
                  unsigned char kind, zid, zid2, auf_partner;
                } re15_map_mark_t;
 static const re15_map_mark_t s_map_marks[] = {
-    {  0,  1,  116,  116, 2,  27, 255, 0 },
-    {  0,  2,  151,   69, 0,  26, 106, 1 },   /* Runde 35 Spur G: gepaart mit Gang 1180/1230 */
+    /* Runde 36 Spur M: die Marke (0,1,116,116,2,27) ist ENTFALLEN - ROOM11A0 liegt nicht mehr auf
+     * Blatt 0 rect 1 (s. Zonen-Zeilen ROOM1190/ROOM11A0); sie stand als Tuer an der Suedwand der
+     * 1190-Haupthalle, die dort keine Tuer hat (ROOM1190: nur slot 4 @0x028B2 / slot 6 @0x02B1C).
+     * Die Ostkammer-Tuer (151,69) gehoert jetzt der Ostkammer (zid 110 statt 26). */
+    {  0,  2,  151,   69, 0, 110, 106, 1 },   /* Runde 35 Spur G: gepaart mit Gang 1180/1230 */
     {  0,  3,  168,   82, 3,  28, 255, 0 },
-    {  0,  3,  172,  100, 1,  28,  29, 1 },
+    /* Runde 36 Spur M (Nutzer: "Die Tuer von ROOM 11C0 ist auf der Map um 90 Grad verdreht"):
+     * war (172,100) kind 1 = SENKRECHTER Balken quer durch die WAAGERECHTE Wand y100 zwischen
+     * 11B0 (rect 3, Unterkante MAP01.PIX uv v104) und 11C0 (rect 4, Oberkante v16). Das Original
+     * MALT die Tuer waagerecht: Nische in der Nordwand der 11C0-Kachel, MAP01.PIX uv(187..191,
+     * 17..21) (u187 v17 = oberes Nibble von Datei-Byte 0x8DD = 4) = Schirm (171..175,101..105), Katalog
+     * analysis/kartensymbole/symbolkatalog.csv "Wand N, waagerecht". Beide Tuer-Datensaetze
+     * projizieren mit der ausgelieferten 11B0-Zeile @0x80076988 (159,110,2272,1954) auf x173
+     * (11B0 slot 1 Mitte (-25480,-28190) -> (173,103)). Jetzt kind 2 (Suedwand von 11B0 =
+     * waagerecht, Zeichner liest nur die Achse, re15_inv_screen.c) bei (173,100). */
+    {  0,  3,  173,  100, 2,  28,  29, 1 },
     {  0,  3,  233,   88, 1,  28, 255, 0 },
     {  0,  5,  129,  124, 0,  30, 108, 1 },   /* Runde 35 Spur G: gepaart mit Gang 1180/1230 */
     {  0,  5,  137,  172, 2,  30, 255, 0 },
@@ -493,7 +549,9 @@ static const re15_map_mark_t s_map_marks[] = {
      * gepaart (auf_partner), statt eine zweite daraufzulegen. Die 11B0-Tuer bekommt KEINE Gang-Marke: die Kachel malt sie
      * UNTER dem Zweig (y78..86), der Gang laeuft in der Welt dort nach Norden weiter - ein
      * Zug dorthin liesse den Marker beim Nordwaertsgehen nach UNTEN rutschen. */
-    {  0,  0,  139,   76, 2, 106, 255, 0 },
+    /* Runde 36 Spur M: die Haupthallen-Tuer ist jetzt GEPAART mit der 1190-Haupthalle (zid 26,
+     * Blatt 0 rect 1, deren Oberkante y76 die Marke traegt -> auf_partner 1). */
+    {  0,  0,  139,   76, 2, 106,  26, 1 },
     {  0,  0,  157,  113, 2, 107, 255, 0 },
     {  1,  0,  105,  109, 2,  31,  32, 1 },
     {  1,  0,  165,  139, 0,  31,  33, 1 },
@@ -757,6 +815,23 @@ static const re15_map_mark_t s_map_marks[] = {
     { 12,  7,  256,  110, 2,  95,  99, 1 },
     { 12,  7,  262,  117, 3,  99,  99, 1 },
     { 12,  7,  265,  118, 5,  99, 255, 0 },
+    /* Runde 36 Spur M (Nutzer: "Im Treppenhaus 10A0 auf Etage B1 fehlen die Treppen
+     * eingezeichnet"). GEMESSEN: 1F (Blatt 2 rect 6) und B2 (Blatt 1 rect 9) tragen je ZWEI
+     * Treppenmarken, B1 (Blatt 0 rect 6, Runde 35 Spur G als Gast-Zeile Band 4 von Hand
+     * angelegt) KEINE - der Generator kannte Band 4 -> Blatt 0 nicht. Dieselbe Regel wie der
+     * Generator (gen_map_zones.py: jedes Treppenende auf das Blatt SEINES Bandes, gepaarte Enden
+     * am gemeinsamen Weltpunkt, Glyph kind 4 = Achse Z, sce 13 - Handler LAB_800435cc liest z
+     * @0x800435dc-e0): die beiden Treppenenden auf Band 4 in ROOM10A0.RDT sind
+     *   Aot_set slot 6 sce 13 Band 4 @0x00E7C (24000,20100,2700,4500) = Lauf 6<->4 (von 1F)
+     *   Aot_set slot 7 sce 13 Band 4 @0x00E90 (20100,19500,2700,2300) = Lauf 4<->3 (nach B2)
+     * Mitten (25350,22350) / (21450,20650) mit der B1-Zeile (Bbox x17850..29100 z15550..28300
+     * auf rect 6 (153,114,16,24), re15_map_zone_marker) -> (163,125) / (158,128); beide im
+     * gemalten Innenraum (MAP01.PIX uv(128,16): Index 1 in x154..167 y115..133).
+     * VORBILD RE2: jede Etage traegt ihr Treppenhaus MIT Treppe in der eigenen Kachel (RE2
+     * Raumkacheln @0x800aaa38 + MAPS.PIX, z.B. Area 2 Kachel 7 vis 37 / Area 3 Kachel 6 vis 16,
+     * Dossier R1). */
+    {  0,  6,  158,  128, 4,  10, 255, 0 },
+    {  0,  6,  163,  125, 4,  10, 255, 0 },
 };
 
 /* INNENWAENDE in Karten-Pixeln: Linie (x0,y0)-(x1,y1) im Rechteck der Zone.
@@ -841,8 +916,12 @@ static const re15_map_floor_t s_map_floors[] = {
     { 0x1171, 1,  4,  5,  0 },
     { 0x11A0, 0,  0,  6,  2 },
     { 0x11A1, 0,  0,  6,  2 },
-    { 0x11A0, 0,  3,  0,  1 },
-    { 0x11A1, 0,  3,  0,  1 },
+    /* Runde 36 Spur M: war Band 3 -> Blatt 0 rect 1 (jetzt die 1190-Haupthalle). ROOM11A0 liegt
+     * auf beiden Baendern auf seiner Drains-Kachel Blatt 6 rect 2 (Zonen-Zeile s.o.). Zeile an
+     * ihrem Platz geaendert (Pin unit_map_speichern_laden: Zeile 48 = ROOM50D0), neues
+     * Etagen-Bit 26 in s_etage_bit (re15_map_zones.c), Bit 15 bleibt unbenutzt. */
+    { 0x11A0, 0,  3,  6,  2 },
+    { 0x11A1, 0,  3,  6,  2 },
     { 0x3080, 0,  0,  7,  8 },
     { 0x3081, 0,  0,  7,  8 },
     { 0x4020, 0,  0,  8,  2 },

@@ -324,9 +324,14 @@ int main(void)
             begehe_zeile(i);
         }
         {   unsigned char e[16]; re15_map_visited_floor_export(e);
+            /* Runde 36 Spur M, Nachbesserung 1: die Schleife oben betritt die Kabinen ROOM1080/
+             * ROOM4020 nicht aus einem Etagenraum (Etage unbekannt) - sie tragen dann nur noch das
+             * Bit des Original-Blatts (2 bzw. 8, Seiten-Setzer @0x8004b684 / @0x8004bdb4) statt
+             * aller drei. Zaehlung: 20 Etagen-Bits der uebrigen Leon-Zeilen + 2 Kabinen-Bits + 2
+             * Teil-Bits (ROOM1110/ROOM5090, re15_karte_r36.h) = 24 (vorher 20 + 6 + 2 = 28). */
             snprintf(t, sizeof t, "D2 ABDECKUNG: die laufende Sitzung traegt Etagen-Bits - %d",
                      bitzahl(e, 16));
-            CHECK(t, bitzahl(e, 16) >= 25); }
+            CHECK(t, bitzahl(e, 16) >= 24); }
         /* ... und dann wird der alte Stand geladen, OHNE Neustart (kein reset) */
         memset(&zur, 0, sizeof zur);
         CHECK("D2 der alte Stand wird gelesen", re15_memcard_load(KARTE, 0, &zur) == 0);
@@ -415,15 +420,22 @@ int main(void)
             } else {
                 snprintf(t, sizeof t, "v8: die Zonen-Bits bleiben - %d", bitzahl(sd.visited, 32));
                 CHECK(t, bitzahl(sd.visited, 32) == 2);
-                snprintf(t, sizeof t, "v8 einbaendiger Ort (Fahrstuhl ROOM1080): Etagen-Bit := "
-                         "Zonen-Bit, alle 3 Blaetter - %d", e1080);
-                CHECK(t, e1080 == 3);
+                /* Runde 36 Spur M, Nachbesserung 1 (Nutzer 2026-10-10: "Die Fahrstuhl Etagen
+                 * werden als besucht angezeigt, obwohl ich auf den verschiedenen Etagen noch
+                 * nicht im Fahrstuhl war"): hier stand "Etagen-Bit := Zonen-Bit, alle 3
+                 * Blaetter" (e1080 == 3) - genau das gemeldete Bild fuer einen gehobenen
+                 * v8-Stand. Die Kabine traegt seit Runde 36 ein Bit je Etage (re15_karte_r36.h);
+                 * der v8-Block sagt nicht, auf welcher Etage man in ihr war -> keins, wie bei den
+                 * alten v9-Bits 3/4/5 (Riegel unit_r36_karte_fahrstuhl / _kabine). */
+                snprintf(t, sizeof t, "v8 Fahrstuhlkabine ROOM1080: Etage unbekannt -> KEIN "
+                         "Kabinen-Etagen-Bit (vorher alle 3 Blaetter) - %d", e1080);
+                CHECK(t, e1080 == 0);
                 snprintf(t, sizeof t, "v8 mehrbaendiger Ort (Treppenhaus ROOM1060): NUR die "
                          "Haupt-Zeile (1F) gilt als begangen - %d Bit(s)", e1060);
                 CHECK(t, e1060 == 1 && e1060_haupt == 1);
                 snprintf(t, sizeof t, "v8: sonst kein Etagen-Bit - gesamt %d",
                          bitzahl(sd.visited_floor, 16));
-                CHECK(t, bitzahl(sd.visited_floor, 16) == 4);
+                CHECK(t, bitzahl(sd.visited_floor, 16) == 1);
             }
             /* Negativ-Kontrolle: ein verfaelschter Alt-Block wird abgewiesen. */
             roh[12] ^= 1;

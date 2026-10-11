@@ -1,0 +1,5 @@
+FARBEN 320x240 (109,134)-(118,143) rot=54 besucht=0 gelb=0 sprosse=0 wand=33
+FARBEN 320x240 (109,134)-(118,143) rot=0 besucht=0 gelb=0 sprosse=0 wand=0
+FARBEN 320x240 (127,137)-(136,146) rot=0 besucht=0 gelb=0 sprosse=0 wand=0
+b1 vs b2: GLEICH 0
+vorher b1 vs b2: GLEICH 1065

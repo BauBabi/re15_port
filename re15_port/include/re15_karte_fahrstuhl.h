@@ -12,17 +12,30 @@
 #ifndef RE15_KARTE_FAHRSTUHL_H
 #define RE15_KARTE_FAHRSTUHL_H
 
-/* Blatt, auf dem die Kabine von `room` gerade steht; -1 = kein Fahrstuhl oder Etage unbekannt
- * (dann bleibt die Etagenwahl wie bisher). Quelle 1: der Raum, aus dem man in die Kabine kam
+/* Blatt, auf dem die Kabine von `room` gerade steht; -1 = kein Fahrstuhl (seit Nachbesserung 1
+ * nicht mehr "Etage unbekannt", s. Quelle 3). Quelle 1: der Raum, aus dem man in die Kabine kam
  * (Spiegel von DAT_800b0fe6, FUN_8001d600 @0x8001d938) - aus ihm betritt man sie, dort steht
  * sie. Quelle 2: Bank 3 Bit 54/55/56. Die Bits allein reichen NICHT: die Etagenraeume setzen
  * sie in sub01 nur unter Ck(4,243,1) ("Reservestrom an", ROOM11F0 sub18 @0x016F6) und nur bei
  * Eintritts-Cut 5/0/0 (`23 00 0a 00 05 00` ROOM1040 @0x15D0 usw.) - wer 3F aus ROOM1130
- * (Cut 3) oder vor dem Strom betritt, faende sonst die Kabine auf der falschen Etage. */
+ * (Cut 3) oder vor dem Strom betritt, faende sonst die Kabine auf der falschen Etage.
+ * Runde 36 Spur M: ebenso fuer den zweiten Fahrstuhl ROOM4020 (Blatt 8/9/10 aus ROOM4000/5000/
+ * 50C0, Bank 3 Bit 0x93/0x94/0x95; Belege im .c). Der Wert bindet seit Runde 36 auch das
+ * BESUCHT-Bit der Kabine an diese eine Etage (re15_map_visited_mark_at).
+ * Quelle 3 (Nachbesserung 1, Abnahme 0 M1): ist die Etage UNBEKANNT (Debug-Sprung ohne Etagenraum
+ * davor, kein Bit), gilt das Blatt des Original-Seiten-Setzers - 1080 -> 2 (@0x8004b684/@0x8004b88c),
+ * 4020 -> 8 (@0x8004bdb4/@0x8004bdbc). Fuer eine Kabine liefert die Funktion also IMMER ein Blatt. */
 int re15_karte_fahrstuhl_blatt(unsigned room);
 
 /* Raumwechsel melden (aus re15_map_zone_update: je Bild und am Raumlade-Punkt). */
 void re15_karte_raum_gesehen(unsigned room);
+
+/* Runde 36 Spur M: Vorraum-Spiegel loeschen (Laden / neues Spiel; re15_map_visited_import/_reset). */
+void re15_karte_raum_vergessen(void);
+
+/* Runde 36 Spur M: Blatt der Kabine, wenn `room` ein Etagenraum ist, in den man GERADE aus seiner
+ * Kabine ausgestiegen ist (Ankunft mit dem Fahrstuhl), sonst -1; *kabine = 0x1080 / 0x4020. */
+int re15_karte_fahrstuhl_ankunft(unsigned room, unsigned *kabine);
 
 /* Nachbesserung 1: Klemmfenster des Markers in der Kabine = gemalter Innenraum (+Glyph-
  * Versatz) statt Rechteck+4. Liefert 1 und setzt die Grenzen nur fuer ROOM1080/1081;
