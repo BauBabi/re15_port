@@ -15,7 +15,9 @@ herunter (ROOM5020/5021: die Kiste faellt auf den Boden, man kann auf sie klette
 **Leons Kleidung** zeigt bei Caution/Danger wieder Blut und Risse. Seit die RE2-KI Standard ist (August),
 setzte kein Gegner mehr Wunden. Jetzt wieder: drei ueberlebte Zombie-Griffe auf dieselbe Seite,
 Hundebisse (so viele Wundpunkte je verlorenem HP wie in RE1.5), Kraehen. Elzas Flecken sitzen jetzt auf
-ihrer eigenen Kleidung.
+ihrer eigenen Kleidung. Zwei Nebenwirkungen: jeder ueberlebte Zombie-Griff spritzt jetzt auch unter der RE2-KI das
+Blut des Originals beim Abwurf; im Kampfbild von ROOM1190 (Leon seitlich) sitzt der erste Hundebiss auf der
+Westen-Rueckseite und wird erst sichtbar, wenn Leon der Kamera den Ruecken zeigt.
 
 **Schuesse.** Keine Waffe trifft mehr durch Tische, Baenke, Saeulen oder ueber den Konferenztisch, wenn
 man davor steht (wie im Original). Fressende Zombies sind unverwundbar, bis sie aufstehen (RE2); sie wachen
@@ -75,6 +77,32 @@ grosse Tuer ROOM2090 <-> 20A0 das zweiteilige RE2-Schott (DOOR26). Die Tuer 10C0
 (helles Holz mit Faser, Drahtglas, Panikstange, Trittblech) statt der "billigen". Karten- und Ziffernfeld-Tueren:
 beim Erfolg ein Piep, eine halbe Sekunde spaeter das Aufschliessen, wie in RE2 (ROOM2110); Riegel von der
 Innenseite mit dem RE2-Entriegeln.
+
+**Schiessstand ROOM1190.** Die beiden Saetze stehen jetzt hinten an den Zielscheiben (am Tresenende vorbei, die
+Bahn entlang, vor der Scheibe Aktionstaste): Leon ganz links und 3. von links "surprisingly large number",
+die anderen "does not have many"; bei Elza genau umgekehrt. Die vier Schalter vorn verhalten sich wieder wie
+ausgeliefert.
+**Ihre Frage zur Kiste in ROOM1090:** die Kiste auf dem DACH (Ankunft aus ROOM10F0) ist die Stufe ueber die
+Bruestung: auf die Kiste klettern, einen Schritt zur Mauer, Aktionstaste - das Tor zur Gasse (ROOM1100) geht
+nur von der Kiste aus auf (sein Tuer-Record verlangt die Kistenoberkante, Band 6). Die zweite Kiste unten im
+Hof hat in den Raumdaten keinen Zweck (oben ist nichts; das Skript rueckt sie nur um 1700 nach Westen) -
+vermutlich ein unfertiges Raetsel des Prototyps.
+
+**Masken (PRI).** Ihre Maske fuer ROOM10F0 Cut 2 ist drin: die Absperrung verdeckt Marvin in der neuen Szene.
+ROOM1100: der halbtransparente Figurenschatten wurde am Wandfuss (Cut 1 und 2) von Bodenpixeln der Wandmaske
+ueberdeckt, ebenso der Zombiekopf an der Suedecke - behoben. Dazu liegt der Figurenschatten jetzt in jedem Raum in
+der Zeichenordnung des Originals (Schatten-Bucket aus den vier Ecken, PSX.EXE @0x8001b2d8); im gleichen Bucket
+aendert das die Schuhunterkante um einige Pixel.
+
+**Lageplaene zum Aufsammeln.** Die RE2-Polizeikarte (karte01) haengt an Ihren fuenf Marken: 3F in ROOM1140
+(map3F.bmp zeigt den Konferenzraum, nicht Irons' Buero), 2F in ROOM10D0, 1F in ROOM1030, B2 in ROOM1200, B1 in
+ROOM11D0 - fuer Leon und Elza. Aktionstaste davor: "A police 3F map. / Will you take it?" -> Yes -> "You've taken
+the / police 3F map." Danach zeigt die Karte die ganze Etage wie in RE2: besuchte Raeume gefuellt, unbesuchte als
+Umriss, die Etage ist mit HOCH/RUNTER waehlbar, auch wenn Sie sie nie betreten haben; der Stand liegt im
+Spielstand. Die Karte selbst wird wie im Original "flach" ohne Raumlicht gezeichnet (Attribut-Bit 0x10). Dieser
+Original-Weg war im Port vorher nicht da - deshalb erscheinen jetzt auch 169 andere flache Objekte (Rolltor
+ROOM11E0, Zellentuer ROOM1210, Schubladen ROOM1200, Objekte in 1090/1190/11A0/11B0/11C0 und spaeteren Stages) in
+Texturhelligkeit statt fast schwarz.
 @@WEITERE@@
 
 ## Zur Freigabe: umgeschriebene Texte
@@ -102,6 +130,9 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 * synchro/STAGE1/room11b0/ main20.wav ("Hold on.") und main21.wav ("I just want to make sure / we don't have
   any unwanted followers.") - Marvin.
 * synchro/STAGE1/room1210/main20.wav (Leon, offene Zelle) und synchro/STAGE1/room1091/main20.wav (Elza, Schuppen).
+* synchro/STAGE1/room1190/main06.wav ("This target has a surprisingly large number of bullet holes.") und
+  main07.wav ("This target does not have many bullet holes.") - Leon; dieselben Saetze fuer Elza unter
+  synchro/STAGE1/room1191/main06.wav und main07.wav.
 
 ## Zu entscheiden
 
@@ -120,6 +151,9 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
   Revier-Fahrstuhl dieser Art. Passt die Labor-Optik im Revier, oder soll die gemalte RE1.5-Farbe zurueck?
 * ROOM4000 (Blue Master Keycard): die neue Folge Klack/Piep/Aufschliessen liegt ueber dem Tor-Motor-Ton des
   Originals - beim Spielen pruefen, ob das stoert.
+* Lageplaene: die 3F-Karte haengt in ROOM1140 (Ihre Marke map3F.bmp zeigt den Konferenzraum) - richtig so?
+  Groesse ist in Ihre Marken eingepasst (ein Blatt); die RE2-Originalgroesse waere ~2,8x groesser - lieber die?
+  ROOM1030: im Karten-Rechteck antwortet bis zur Aufnahme die Karte, daneben und danach das Muenztelefon - passt das?
 @@ENTSCHEIDEN@@
 
 ## Grenzen
