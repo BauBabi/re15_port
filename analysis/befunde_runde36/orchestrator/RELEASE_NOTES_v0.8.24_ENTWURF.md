@@ -103,7 +103,31 @@ Spielstand. Die Karte selbst wird wie im Original "flach" ohne Raumlicht gezeich
 Original-Weg war im Port vorher nicht da - deshalb erscheinen jetzt auch 169 andere flache Objekte (Rolltor
 ROOM11E0, Zellentuer ROOM1210, Schubladen ROOM1200, Objekte in 1090/1190/11A0/11B0/11C0 und spaeteren Stages) in
 Texturhelligkeit statt fast schwarz.
-@@WEITERE@@
+**Zombies und Gorillas (Spur F).**
+* Zombies sehen Leon jetzt auch ueber niedrige Moebel (Verhoertisch, Stuehle, Tresen, Terrassenkante, Gitterstaebe)
+  wie in RE2 - nur Waende und hohe Objekte (Capcoms Sicht-Klasse 3 je Zelle, RE2 EMZ0 @0x8010082c-30 / FUN_80050858)
+  nehmen die Sicht - und kommen um den Tisch herum; durch Waende mit angehaengten Gegenstaenden (Gaenge 1040) sehen
+  sie nicht mehr. Ein nach dem Griff weggestossener Zombie faellt nicht mehr in die Ecke zwischen Stuhl und Schrank
+  (Verhoerraum 1010), aus der er nicht mehr herauskam. Die vier Zombies auf der Terrasse im Vorhof 10B0 stellen sich an
+  der Kante vor Leon (herunter koennen sie weder in RE1.5 noch in RE2).
+* Gorillas ROOM11C0 ("irgendwie verbessern" - das Original hat hier kein Verhalten, das man nachbauen koennte): ein
+  Gorilla, der an einem Wagen oder in der engen Gasse zwischen den Wagen festhaengt, sucht nach rund 12 Sekunden zu
+  Fuss den Weg zu einem freien Platz neben Leon oder springt ueber das Sprungfeld (der Original-Sprung, Path A
+  @0x80117ed4-f74) statt stehenzubleiben. Hinter dem Auto (Ostgasse) greift er jetzt nach 157 Bildern an statt nie;
+  stirbt der beissende Gorilla, rueckt der wartende sofort nach (105 statt 588 Bilder). An 14 Messstellen sank die Zeit,
+  die Gorillas feststecken, von 25936 (v0.8.23) auf 6695 Bilder, in der Ferne von 19812 auf 255. Der erste Kampf
+  direkt nach der Ada/Marvin-Szene bleibt Bild fuer Bild wie im Original (J-Fenster 363/468/521, Tod +1194).
+* Die Gorilla-Leiche laesst Blut aus (FUN_80116f50 / FUN_8011be54, ~90 Bilder = 0x5a @0x8011be80).
+
+**Dach-Kiste ROOM1090/1091 (Spur R, aus einem Befund der Spur H).** Die Kiste auf dem Dach ist die einzige Stufe zum
+Tor nach ROOM1100; seit die Objekte fallen koennen (Klettern), stand die Frage, ob sie vom Dach fallen und den Weg
+versperren kann. Gemessen am Original (DuckStation, Auslieferungs-EXE, Haltepunkte in der Schubkette @0x8002bf14-c0e8,
+FUN_8003b558 @0x8003b634-794) und am Port (Leon und Elza, Schuebe aus allen Richtungen und der echte Weg aus
+ROOM10F0/10F1 ueber Tritt, Tuer und Korridor): sie laesst sich **weder im Original noch im Port bewegen** - jeder Schub
+setzt sie in die Bruestung oder die Westwand, und das Spiel nimmt ihn nicht an (Sperre @0x8002c0b0). Kein Softlock,
+kein Fix noetig; ein Riegel haelt den Mechanismus fest. Die Kisten in ROOM3050 (Fall = vorgesehener Weg zur Super
+Redhawk) und ROOM2050 (die Tuer nach 2040 auf der Kiste faellt mit, 2040 bleibt ueber 2030 -> 2060 erreichbar)
+fallen wie vorgesehen.
 
 ## Zur Freigabe: umgeschriebene Texte
 
@@ -157,7 +181,12 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 @@ENTSCHEIDEN@@
 
 ## Grenzen
-* Gorillas ROOM11C0 (Spur F): @@F_GRENZE@@
+* Gorillas ROOM11C0 (Spur F): steht ein Gorilla mit der Mitte im West-Sprungfeld #47 und Leon dahinter, springt er
+  einmal und bleibt dabei am Start haengen (Port-Landungsklemme; die Original-Landung @0x80118c3c-cc4 ist gegen die
+  Flug-Kontaktklemme nicht neu RE'd) - hat Leon < 50 HP, trifft ihn der Original-Sprungangriff trotzdem; danach laeuft
+  der Gorilla zu Fuss weiter. In der Nordwest-Ecke und hinter dem ersten Gorilla in der Nordost-Ecke steht der zweite
+  an, solange der erste beisst (nur EIN Bissplatz, Geometrie gemessen). Die Umweg-Suche (Rasterscan + A* je Bild) ist
+  auf dem PSX-Ziel ungemessen (kein PSn00bSDK).
 * RE2-Hunde: der Claim, mit dem in RE2 nur ein Hund zugleich beisst (PL+0x1D3 |= 0x80, @0x801051f8/0x80105200,
   Pruefung @0x80104e5c-68), fehlt im Port - mehrere Hunde koennen in wenigen Bildern nacheinander zubeissen.
 * Kleidung: die Wundstempel der Stages 3-5 (FUN_80112784 / FUN_8010de24 / FUN_8010dfa4) und Birkins eigene
