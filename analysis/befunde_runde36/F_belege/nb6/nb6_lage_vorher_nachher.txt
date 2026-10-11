@@ -1,0 +1,65 @@
+# NB6 Sonde lage (test_r36_zombieki_affen_block), je Lauf eigener Prozess. Modus 6 = Stand NB5, Modus 1 = NB6.
+# 'Fassung a' = erste NB6-Fassung (Pad-Weg erst ab 354, ohne Verkeilt-Sprung) — verworfen; 'Endfassung' = Commit-Stand.
+
+## Gasse einzeln: lage 2400 <m> 30 7873 -1412 0 6418 -4333 3373 3 0 -9013 -15461 2656 0 0
+# Stand NB5:
+LAGE G1: erster Angriff 0, fest 2291 (Anker 400, Leon > 3000), davon fern 33, Ende (8382,-1178) s3
+LAGE G2: erster Angriff 1197, fest 250 (Anker 400, Leon > 3000), davon fern 250, Ende (10822,1020) s5
+# Fassung a:
+LAGE G1: erster Angriff 618, fest 380 (Anker 400, Leon > 3000), davon fern 0, Ende (6643,-1860) s3
+LAGE G2: erster Angriff 1172, fest 250 (Anker 400, Leon > 3000), davon fern 250, Ende (6633,1343) s5
+# Endfassung:
+LAGE G1: erster Angriff 313, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (7281,-1866) s5
+LAGE G2: erster Angriff 0, fest 250 (Anker 400, Leon > 3000), davon fern 250, Ende (5250,-8818) s4
+
+## O1: lage 2400 <m> 30 6000 -9000 1332 -5525 -14883 2731 3 0 -8915 -12487 93 3 0
+# Stand NB5:
+LAGE G1: erster Angriff 195, fest 1368 (Anker 400, Leon > 3000), davon fern 0, Ende (6418,-4399) s3
+LAGE G2: erster Angriff 0, fest 1615 (Anker 400, Leon > 3000), davon fern 0, Ende (8093,-7130) s3
+# Fassung a:
+LAGE G1: erster Angriff 195, fest 549 (Anker 400, Leon > 3000), davon fern 0, Ende (6418,-3617) s3
+LAGE G2: erster Angriff 2359, fest 888 (Anker 400, Leon > 3000), davon fern 58, Ende (5287,-9107) s3
+# Endfassung:
+LAGE G1: erster Angriff 195, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (9336,9456) s3
+LAGE G2: erster Angriff 937, fest 248 (Anker 400, Leon > 3000), davon fern 0, Ende (10301,5668) s5
+
+## Nachruecken: lage 1200 <m> 10 -26606 14578 18 -23302 14489 2067 3 0 -20579 16118 1885 4 0 400 2 (G1 stirbt F400)
+# Stand NB5:
+LAGE G1: erster Angriff 91, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (-25211,15783) s0
+LAGE G2: erster Angriff 101, fest 677 (Anker 400, Leon > 3000), davon fern 0, Ende (-24226,16097) s5
+# Endfassung:
+LAGE G1: erster Angriff 91, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (-25329,15855) s0
+LAGE G2: erster Angriff 101, fest 246 (Anker 400, Leon > 3000), davon fern 0, Ende (-24027,15936) s5
+F390  G2 (-23302,13094) s1/3/1/0 d3972 nah nah67 ng ng2
+F400  G2 (-23302,13070) s1/3/1/0 d3970 nah nah355 ng ng10
+F410  G2 (-23271,13101) s1/3/1/0 d3991 nah nah365 ng ng10
+F420  G2 (-23280,13178) s1/3/1/0 d3954 nah nah375 ng ng10
+F430  G2 (-23053,13390) s1/3/1/0 d4094 nah nah4 ng ng10
+F440  G2 (-22688,13794) s1/3/1/0 d4346 nah nah1 ng ng10
+F450  G2 (-22421,14149) s1/3/1/0 d4543 nah nah6 ng ng10
+F460  G2 (-22393,14481) s1/3/1/0 d4549 nah nah3 ng ng10
+F470  G2 (-22320,14921) s1/3/1/0 d4637 nah nah5 ng ng10
+F480  G2 (-23099,15485) s1/3/1/0 d3952 nah nah1 ng ng10
+F490  G2 (-23457,15756) s1/3/1/0 d3683 nah nah8 ng ng10
+F500  G2 (-24049,15844) s1/3/1/0 d3163 nah nah1 ng ng10
+F510  G2 (-25526,16047) s1/5/1/0 d2051 nah nah0 ng ng10
+F520  G2 (-25348,16126) s1/5/1/0 d2214 nah nah0 ng ng10
+
+## exe-Stelle 8 nachgestellt: lage 900 1 30 7320 -7071 0 6418 -3617 857 3 0 -9013 -15461 2656 0 0
+# Fassung a (ng 1 = kein Startknoten, 600 Bilder):
+LAGE G1: erster Angriff 0, fest 600 (Anker 400, Leon > 3000), davon fern 0, Ende (6418,-3617) s3, letzter Angriff 0, Angriffsbilder 0, Leon (7320,-7071), frei 10
+# Zwischenfassung (Startknoten ohne Streckenpruefung, Weg zum Anlauf ng 11): G1 dreht nach Norden, bewegt sich 900 Bilder NICHT:
+LAGE G1: erster Angriff 0, fest 900 (Anker 400, Leon > 3000), davon fern 0, Ende (6418,-3617) s3, letzter Angriff 0, Angriffsbilder 0, Leon (7320,-7071), frei 10
+F30  G1 (6418,-3617) r857 s1/3/1/0 d3569 ng0 up-1
+F60  G1 (6418,-3617) r489 s1/3/1/0 d3569 ng11 up36
+F90  G1 (6418,-3617) r3930 s1/3/1/0 d3569 ng11 up36
+F120  G1 (6418,-3617) r3426 s1/3/1/0 d3569 ng11 up36
+F900  G1 (6418,-3617) r3175 s1/3/1/0 d3569 ng11 up36
+# Endfassung (verkeilt: Sprung mit dem Code der Nordseite 0x48 -> Sueden, ng 13):
+LAGE G1: erster Angriff 112, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (6728,-6954) s3, letzter Angriff 867, Angriffsbilder 340, Leon (5250,-5527), frei 5
+F30  G1 (6418,-3617) r857 s1/3/1/0 d3569 ng0 up-1
+F60  G1 (6418,-4958) r1024 s1/7/2/1 d2297 ng13 up36
+F90  G1 (6498,-11841) r732 s1/4/1/0 d4839 ng13 up36
+F120  G1 (7394,-9186) r3295 s1/6/1/0 d2115 ng13 up36
+F150  G1 (8127,-7471) r3295 s1/6/1/0 d2082 ng13 up36
+F180  G1 (8186,-7279) r2692 s1/3/1/0 d2039 ng13 up36

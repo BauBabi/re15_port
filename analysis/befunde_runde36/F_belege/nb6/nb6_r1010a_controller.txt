@@ -1,0 +1,47 @@
+# NB6 (Endstand NB6g): r1010a (P1, ROOM1010, Abnahme-1-Fall) — Abweichung des Vorgaenger-Laufs (F_nb6l, 13:xx) erklaert und widerlegt
+# Kommandozeile (alle Laeufe, nur die exe wechselt):
+re15_pc_nb6l.exe RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_GEGNER_Y_LOG=gy.log RE15_AI_FLAVOR=re2 RE15_DEBUG_JUMP=1010@250 RE15_PLAYER_POS=3750,4300,1024,0 RE15_EXIT_AT=1500#1010
+
+## 1. Vorgaenger-Lauf F_nb6l/r1010a_nb6l (exe nb6l = HEAD-Code): R1010-Teil 958 Zeilen statt 780, erste Abweichung gy.log Zeile 267 = R1010 F16 (F1..F15 bitgleich, F13 setzt t158=148 in beiden)
+### Abnahme 5 (abn5f_neu) R1010 F12..F20, Zombie Slot 1:
+F12 R1010	[1 t=10 st=1/3/2/0 mo=11 af=4 @(3760,0,3511) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=0 t15a=101 cd=0
+F13 R1010	[1 t=10 st=1/3/3/0 mo=12 af=0 @(3760,0,3511) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=148 t15a=101 cd=0
+F14 R1010	[1 t=10 st=1/3/3/0 mo=12 af=1 @(3764,0,3538) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=146 t15a=101 cd=0
+F15 R1010	[1 t=10 st=1/3/3/0 mo=12 af=2 @(3772,0,3595) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=144 t15a=101 cd=0
+F16 R1010	[1 t=10 st=1/3/3/0 mo=12 af=3 @(3772,0,3595) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=142 t15a=101 cd=0
+F17 R1010	[1 t=10 st=1/3/3/0 mo=12 af=4 @(3783,0,3676) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=140 t15a=101 cd=0
+F18 R1010	[1 t=10 st=1/3/3/0 mo=12 af=5 @(3783,0,3676) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=138 t15a=101 cd=0
+F19 R1010	[1 t=10 st=1/3/3/0 mo=12 af=6 @(3790,0,3762) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=136 t15a=101 cd=0
+F20 R1010	[1 t=10 st=1/3/3/0 mo=12 af=7 @(3790,0,3762) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=134 t15a=101 cd=0
+### Vorgaenger-Lauf nb6l R1010 F12..F20, Zombie Slot 1 (F16: 144 -> 137 = -7 statt -2):
+F12 R1010	[1 t=10 st=1/3/2/0 mo=11 af=4 @(3760,0,3511) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=0 t15a=101 cd=0
+F13 R1010	[1 t=10 st=1/3/3/0 mo=12 af=0 @(3760,0,3511) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=148 t15a=101 cd=0
+F14 R1010	[1 t=10 st=1/3/3/0 mo=12 af=1 @(3764,0,3538) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=146 t15a=101 cd=0
+F15 R1010	[1 t=10 st=1/3/3/0 mo=12 af=2 @(3772,0,3595) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=144 t15a=101 cd=0
+F16 R1010	[1 t=10 st=1/3/3/0 mo=12 af=3 @(3772,0,3595) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=137 t15a=101 cd=0
+F17 R1010	[1 t=10 st=1/3/3/0 mo=12 af=4 @(3783,0,3676) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=135 t15a=101 cd=0
+F18 R1010	[1 t=10 st=1/3/3/0 mo=12 af=5 @(3783,0,3676) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=133 t15a=101 cd=0
+F19 R1010	[1 t=10 st=1/3/3/0 mo=12 af=6 @(3790,0,3762) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=131 t15a=101 cd=0
+F20 R1010	[1 t=10 st=1/3/3/0 mo=12 af=7 @(3790,0,3762) b0 f1ba=0 f1c0=0000 rot=3072 los=1 t158=129 t15a=101 cd=0
+
+## 2. Mechanismus (Code, seit Abnahme 2 unveraendert): t158 = Griff-Haltebudget des RE2-Zombies, enemy_ai_common.c:
+12915:                e->re2z_t158 = RE15_WRITHER_HOLD_BUDGET; /* +0x158 = 148 @0x80102828-2C */
+12923:                int mash = re15_re2z_mash();                            /* FUN_8001598C @0x80102860 */
+12924:                e->re2z_t158 = (int16_t)(e->re2z_t158 - (2 + 5 * mash));/* @0x80102868-7C */
+563:static int re15_mash_pressed(void) { return (s_pad_pressed_edge & 0xf0f0u) != 0; }
+2567:int  re15_re2z_mash(void)       { return re15_mash_pressed(); }
+# -> -7 in EINEM Bild = mash 1 = Tastenflanke (D-Pad/Face-Taste, s_pad_pressed_edge & 0xf0f0) des ECHTEN Eingabegeraets (der Lauf hat kein RE15_INPUT_SCRIPT).
+
+## 3. Eingabegeraet waehrend des Vorgaenger-Laufs (debug.log, [pad]-Zeilen; Abnahme 5: 1 Zeile = nur Erkennung beim Start):
+5:[pad] Controller: "Xbox 360 Controller" (Slot 0)
+475:[pad] Controller abgezogen
+476:[pad] Controller: "Xbox 360 Controller" (Slot 0)
+1195:[pad] Controller abgezogen
+1196:[pad] Controller: "XInput Controller" (Slot 0)
+# Abnahme-5-Lauf:
+5:[pad] Controller: "Xbox 360 Controller" (Slot 0)
+
+## 4. Wiederholung (Scratch F_nb6m, 2026-10-11 ~16:17, Controller nicht angefasst, run.sh Muster F_nb6g, je Lauf eigener Prozess), R1010-Teil gegen Abnahme 5 (780 Zeilen):
+nb6l: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 Slot 1 t158=142; [pad]-Zeilen 1; runs.log: r1010a nb6l rc=124 901s
+abn5f_neu: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 Slot 1 t158=142; [pad]-Zeilen 1; runs.log: r1010a abn5f_neu rc=124 901s
+# md5 re15_pc_nb6l.exe (Messkopie, Bau 30c2ecb3 13:04) = c76387e9d472; re15_pc.exe nach dem Rebuild der Header-Kommentar-Berichtigung (16:34:53) = 4e2b8d37cd90 — Code identisch: git diff 30c2ecb3..HEAD -- re15_port aendert nur Kommentarzeilen in include/re15_zombieki_r36.h (+6/-3)

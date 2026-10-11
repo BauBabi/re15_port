@@ -117,6 +117,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
+#include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
@@ -7641,6 +7642,7 @@ re_title:;
                 }
                 re15_game_step(&gctx);
                 re15_trage1200_mess();   /* Runde 35 Spur H: Messschiene RE15_GEGNER_Y_LOG (env, kein Verhalten) */
+                re15_r36_affen_log_tick();   /* Runde 36 Spur F: Messschiene RE15_AFFEN_LOG (env, kein Verhalten) */
                 /* Runde 34 C1 (E10): ESP-Tick + RE2-FX-Pumpe HINTER dem Spielschritt und VOR dem
                  * Item-Modal — @0x8001ce0c (Spieler) < @0x8001ce2c (ESP) < @0x8001ce34 (Modal).
                  * Laeuft nur, wenn der SCD-30-Hz-Zweig dieses Bilds den Takt freigegeben hat. */
@@ -9734,6 +9736,9 @@ re_title:;
                             }
                         }
                     }
+                    /* Runde 36 Spur F: GORILLA 0x27 — Record +0xBC/+0xBE (1700/1800 @0x801171e8/f0) und
+                     * Lache der Leiche (0x00ffff38 + 8/Takt @0x8011bed0-bf14); vorher 500x600-Standard. */
+                    re15_r36_affen_lache_render(npc, &nhx, &nhz, &corpse_pool, &sh_r, &sh_g, &sh_b);
                     if (npc->type == 0x21 && npc->crow_shadow_w != 0) {
                         /* Krähe: Groesse/Farbe kommen KOMPLETT aus der AI (Prim-Feld-Port von
                          * +0xbc/+0xbe/+0xc4/+0xec bzw. rec+0x04/+0x06/+0x1C/+0x44). */

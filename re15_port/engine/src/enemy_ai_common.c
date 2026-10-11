@@ -44,6 +44,7 @@
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
+#include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -3051,6 +3052,20 @@ int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
     return 1;
 }
 
+/* Runde 36 Spur F NB1: der Kreuzungstest von re15_los_ray_blocked fuer EINE Zelle (FUN_8003dcc4: /0x12, beide Diagonalen). */
+int re15_r36_los_zelle_kreuzt(int32_t ex, int32_t ez, int32_t px, int32_t pz, const re15_sca_entry_t *c)
+{
+    int32_t x0 = (int32_t)c->x / 0x12, z0 = (int32_t)c->z / 0x12, x1 = ((int32_t)c->x + (int32_t)c->width) / 0x12, z1 = ((int32_t)c->z + (int32_t)c->density) / 0x12;
+    return los_seg_straddles_diag(ex / 0x12, ez / 0x12, px / 0x12, pz / 0x12, x1, z0, x0, z1) || los_seg_straddles_diag(ex / 0x12, ez / 0x12, px / 0x12, pz / 0x12, x0, z0, x1, z1);
+}
+/* Runde 36 Spur F (Sonde): nur der RE1.5-Sichtstrahl FUN_8003dcc4 (Nibble-3-Zellen, 4 Regionen) von e nach (px,pz). */
+int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz)
+{
+    re15_actor_t ziel = { 0 }; ziel.x = px; ziel.z = pz;
+    for (int k = 0; k < 4; k++) if (re15_los_ray_blocked(e, &ziel, k, e->sca_mask ? e->sca_mask : 4u)) return 1;
+    return 0;
+}
+
 /* CORPSE / PRONE-SETTLE (root state 7 = FUN_80109554, shared m0/m1; raw-disasm'd C7 2026-07-05):
  * a killed zombie does NOT freeze — it lies in clip 0x15 (face-down) / 0x14 (face-up, after the
  * backward fall 0xb or when downed +0x9&0x80), its blood pool spreads (+0xbc/+0xbe += 8/frame for
@@ -5726,6 +5741,7 @@ int re15_enemy_ai_live_tick(int slot)
                              (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
                           e->ai_wp_node, (int)(e->ai_flags & 8u));
     e->ai_flags &= (uint16_t)~8u;                        /* the @0x8010a9f8 one-shot clear */
+    re15_r36_nav_zonenlos(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);   /* Runde 36 Spur F (Nachbesserung 1, M2): zonenlos -> Ziel = Spieler (Form FUN_8004A808 @0x8004a90c-924) */
 
     /* PORT OPTION (WELLE B): with the RE2 AI flavor the WHOLE state dispatch is the RE2 brain
      * (re15_re2z_tick, enemy_ai_re2_zombie.c) — root prolog + decision-then-executor exactly as
@@ -8885,13 +8901,10 @@ static void re15_maggot_ai_tick(int slot)
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
         /* Runde 35 Spur J: +0x1ba hat KEINEN INIT-Store (FUN_80116f50, kein 442(.)) — Seed @0x80042210 */
         /* SCHATTEN-RECORD (+0xBC/+0xBE): FUN_8001af5c legt a2/a3 als Halbworte ab
-         * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record
-         * entity+0xB0; der Hunde-INIT uebergibt `ori a2,zero,0x3e8` = 1000
-         * @0x8010dabc und `ori a3,zero,0x1f4` = 500 @0x8010dac8. Ohne diese Felder
-         * griff der Standard-Charakterschatten und die Leiche bekam nie ihre Lache. */
-        e->crow_shadow_w = 1000;                              /* +0xBC @0x8010dabc */
-        e->crow_shadow_h = 500;                               /* +0xBE @0x8010dac8 */
-        e->crow_pool     = 0;
+         * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record entity+0xB0.
+         * ⛔ Runde 36 Spur F: hier standen die HUNDE-Werte 1000/500 (@0x8010dabc/dac8) — der
+         * Gorilla-INIT uebergibt rec+6 (0x80121356 = 1600) + 100 / + 200 @0x801171d8-f0, s. re15_zombieki_r36.h. */
+        re15_r36_affen_lache_init(e);                         /* Runde 36 Spur F: +0xBC = 1700, +0xBE = 1800 @0x801171e8/f0 */
         /* RENDER-SCALE: Flag 0x800 an @0x80117138 (ori v0,v0,0x800) + +0x166 = 0x1b33
          * (= 6963/4096 = 1.6999 ~ 1.7x) @0x80117148-4c; Override wenn Spawn-Byte +0x9
          * Bit 0x40 (@0x80117164 andi 0x40): Scale = ((+0x9 & 0xf) + 10) * 0x1000 / 10
@@ -8983,6 +8996,7 @@ static void re15_maggot_ai_tick(int slot)
             } else if (e->dog_flags & 1) {
                 re15_dog_sub(e, 4); e->sub_state_3 = 0; ab = 1; break;   /* far+LOS -> SELECTOR @0x80117c2c-74 */
             }
+            if (re15_r36_affen_padsuche_decide(e, slot, 3)) { ab = 1; break; }   /* Runde 36 Spur F Punkt 2 (PORT-WAHL): blind + Klemme -> Pad -> 0x10-Sprung (Sub 7) */
             /* B[3] crawl */
         b3:;
             uint32_t a0_b3 = re15_affen_b3_a0(e, pl);   /* Runde 35 Spur J (7b): a0 aus A[3] */
@@ -8997,7 +9011,8 @@ static void re15_maggot_ai_tick(int slot)
             {   /* fresh random slew 6-37 EVERY tick (audit #5) @0x80117d1c-34, a8f8 @0x80117d50 */
                 int slew = (int)(re15_affen_rng_a0(&a0_b3) & 0x1f) + 6;
                 e->grab_kill_ctr = (int16_t)slew;
-                re15_enemy_steer_point(e, pl->x, pl->z, slew);
+                int32_t st_x, st_z; re15_r36_affen_padsuche_ziel(e, slot, 3, pl->x, pl->z, &st_x, &st_z);   /* Runde 36 Spur F Punkt 2: playerX (@0x80117d4c) oder Pad-Mitte */
+                re15_enemy_steer_point(e, st_x, st_z, slew);
             }
             re15_maggot_anim(e);
             {   /* locator root-motion, window <0x18 (sighted clip 5) / <0x29 (blind clip 4)
@@ -9079,6 +9094,7 @@ static void re15_maggot_ai_tick(int slot)
                 re15_dog_sub(e, 7); e->sub_state_3 = 0; ab = 1; break;   /* @0x801180cc-f8 (clip by B[7] entry) */
             }
             /* B[4] heavy-approach (audit #4) */
+            (void)re15_r36_affen_padsuche_decide(e, slot, 4);   /* Runde 36 Spur F NB1 (PORT-WAHL): fern + Klemme + Pad zwischen G und L -> Pad-Weg (Sprung = A[4] Path A) */
         b4:;
             if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_maggot_clip(e, 6); }   /* clip 6 @0x80118128-60 */
             uint32_t a0_b4 = re15_affen_psx_entity(e) + 0x34u; int b4_fest = !((e->dog_flags & 1) && !re15_dog_blocked(e) && dist >= 6001);   /* Runde 35 Spur J (7) */
@@ -9086,7 +9102,8 @@ static void re15_maggot_ai_tick(int slot)
             {   int slew = (int)((b4_fest ? re15_affen_rng_a0(&a0_b4) : re15_engine_rand8()) & 0x1f) + 64;           /* +0x9e = 64-95 @0x80118184-94 */
                 if (dist < 2000) slew += 24;                                 /* +24 inside 2000 @0x801181a4-c4 */
                 e->grab_kill_ctr = (int16_t)slew;
-                re15_enemy_steer_point(e, pl->x, pl->z, slew);               /* a8f8 @0x801181e0 */
+                int32_t st_x, st_z; re15_r36_affen_padsuche_ziel(e, slot, 4, pl->x, pl->z, &st_x, &st_z);   /* Runde 36 Spur F NB1: playerX oder Pad-Weg */
+                re15_enemy_steer_point(e, st_x, st_z, slew);                 /* a8f8 @0x801181e0 */
             }
             re15_maggot_anim(e);
             if (((int)e->anim_frame % 13) == 1) re15_audio_room_se(8);       /* footstep every 13 @0x80118204-4c */
@@ -9396,6 +9413,7 @@ static void re15_maggot_ai_tick(int slot)
          * @0x80117448-6c has no consumer in the shipped subs.) */
         if (e->dog_blocked_ctr) e->dog_blocked_ctr--;
         if (e->mag_pin_cd) e->mag_pin_cd--;
+        re15_r36_affen_fest_takt(e);   /* Runde 36 Spur F NB3: +0x1de @0x80117448-6c (Klemmen-Haengen) — Beginn des Umwegs (PORT-WAHL) */
         break;
     }
 
@@ -9552,8 +9570,10 @@ static void re15_maggot_ai_tick(int slot)
         }
         if (e->sub_state_3 == 1) {
             /* per tick: +0xc4/+0xec = (x & 0xff000000) | 0x00ffff38 corpse tint and pool spread
-             * +0xbc/+0xbe += 8 @0x8011bed0-bf14 — model-pool color/pool channel, render-side (the
-             * same channel as the zombie corpse pool, re15_enemy_corpse_settle) */
+             * +0xbc/+0xbe += 8 @0x8011bed0-bf14 — ⛔ Runde 36 Spur F: stand hier nur als Kommentar
+             * ("render-side"), wurde aber nie geschrieben, und der Renderer las die Felder fuer 0x27
+             * nicht -> "Blut laeuft nicht aus" (Nutzer). Jetzt AI-seitig wie beim Hund (case 7 oben). */
+            re15_r36_affen_lache_tick(e);                     /* Runde 36 Spur F: Tinte + += 8 @0x8011bed0-bf14 */
             int16_t t = e->grab_kill_ctr; e->grab_kill_ctr = (int16_t)(t - 1);   /* unconditional dec @0x8011bf24-34 */
             if (t == 0) e->sub_state_3 = 2;                   /* @0x8011bf38-44 */
         }
@@ -14568,6 +14588,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * und der Ausweich-Zustand +0x5=0xa (@0x80103478/@0x80103518). */
             re15_enemy_sca_clamp(e, sweep_ox, sweep_oz,
                                  e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x80100624 (Zombie liest das FELD; 8 = Kriecher passiert die Tor-Zelle 0xF7) */
+            re15_r36_wurf_klemme(e, sweep_ox, sweep_oz);   /* Runde 36 Spur F NB2 (PORT-WAHL): Wurf P7/P8 endet nicht in unaufloesbarer Lage (Form @0x8003ced4-ceec) */
         }
         else if (t == 0x21) {   /* CROW (type 0x21) — 3D flight AI (Wave 1: INIT + cruise).
                                  * Own branch: flies in 3D, NOT ground-clamped, no body-push. */

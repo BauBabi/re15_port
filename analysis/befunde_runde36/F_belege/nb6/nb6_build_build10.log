@@ -1,0 +1,17 @@
+
+=== [local_build] Preflight — Toolchain messen
+    PATH   = /c/msys64/mingw64/bin:/c/Program Files/CMake/bin:/c/Python310/Scripts:/usr/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem
+    CC     = C:/msys64/mingw64/bin/gcc.exe
+    cmake  = /c/Program Files/CMake/bin/cmake
+    ninja  = /c/Python310/Scripts/ninja
+    ctest  = /c/Program Files/CMake/bin/ctest
+    cc1    = C:/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/16.2.0/cc1.exe
+    cc1 --version EXIT=0  -> Toolchain OK
+    Mini-Compile OK (95539 Bytes exe)
+
+=== [local_build] build — re15_port/build
+ninja: no work to do.
+    build OK
+
+=== LOCAL-BUILD-OK (build)
+BUILD_RC=0

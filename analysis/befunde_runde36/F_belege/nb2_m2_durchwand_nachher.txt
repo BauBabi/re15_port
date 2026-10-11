@@ -1,0 +1,4 @@
+  1010 #5   x    -50..  2450 z   1550..  5900 ( 2500x 4350) Oberkante  -1600:   260 Plaetze geoeffnet (260 im Kegel)
+  1010 #12  x   1850..  3050 z   4100..  5300 ( 1200x 1200) Oberkante  -2000:   295 Plaetze geoeffnet (295 im Kegel)
+  1220 #18  x -27600..-25650 z -11700.. -8050 ( 1950x 3650) Oberkante  -1000:    40 Plaetze geoeffnet (40 im Kegel)
+DURCHWAND: 182 Zombies, 72900 Plaetze, Hoehenregel oeffnet 74 (davon ueber ROOM1040 #4: 0)

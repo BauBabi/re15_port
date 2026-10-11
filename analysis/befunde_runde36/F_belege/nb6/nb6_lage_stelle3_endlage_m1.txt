@@ -1,0 +1,25 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+F30 | G1 6418 -3617 r2779 s1/3/1/0 d2664 dd2660 k1 h29 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6418 -6824 r2937 s1/3/1/0 d5726 dd5724 k1 h29 fest0 L1 uw0 vt0 nah29 z(0,0) ng0 up-1 zcc8 | pl 5268 -1214 hp 100
+F60 | G1 6418 -3616 r2779 s1/5/1/0 d2663 dd2660 k1 h59 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6488 -6826 r3250 s1/3/1/0 d5743 dd5724 k1 h59 fest0 L1 uw1 vt0 nah59 z(7000,-8700) ng11 up36 zcc8 | pl 5268 -1214 hp 100
+F90 | G1 6418 -3616 r2779 s1/3/1/0 d2663 dd2660 k1 h89 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 7754 -6590 r3883 s1/3/1/0 d5922 dd5904 k1 h89 fest0 L1 uw1 vt0 nah3 z(7000,-8700) ng11 up36 zcc8 | pl 5268 -1214 hp 100
+F120 | G1 6418 -3616 r2779 s1/5/1/0 d2663 dd2660 k1 h119 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 7682 -5200 r3072 s1/7/2/1 d4659 dd4884 k0 h0 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1214 hp 100
+F150 | G1 6418 -3617 r2779 s1/3/1/0 d2664 dd2660 k1 h149 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 7648 750 r2868 s1/3/1/0 d3085 dd3061 k1 h13 fest0 L1 uw0 vt0 nah2 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1214 hp 100
+F180 | G1 6418 -3615 r2779 s1/5/1/0 d2662 dd2660 k1 h179 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6457 2417 r2185 s1/3/1/0 d3820 dd3814 k0 h7 fest0 L1 uw0 vt0 nah8 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1214 hp 100
+F210 | G1 6418 -3616 r2779 s1/3/1/0 d2663 dd2660 k1 h209 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6418 1742 r1559 s1/3/1/0 d3171 dd3238 k1 h25 fest0 L1 uw0 vt0 nah2 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1214 hp 100
+F240 | G1 6418 -3616 r2779 s1/3/1/0 d2663 dd2660 k1 h239 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6938 1112 r1475 s1/3/0/0 d2863 dd2862 k1 h55 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1214 hp 100
+F270 | G1 6418 -3618 r2779 s1/5/1/0 d2659 dd2648 k1 h269 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6447 460 r1423 s1/3/1/0 d2052 dd2048 k1 h85 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1220 hp 100
+F300 | G1 6418 -3616 r2775 s1/3/1/0 d2637 dd2635 k1 h299 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6520 373 r1427 s1/5/1/0 d2050 dd2048 k1 h115 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5261 -1246 hp 100
+F330 | G1 6418 -3615 r2775 s1/5/1/0 d2632 dd2623 k1 h329 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6583 325 r1479 s1/3/1/0 d2049 dd2079 k1 h145 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1247 hp 100
+F360 | G1 6418 -3616 r2771 s1/3/1/0 d2618 dd2610 k1 h359 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6567 307 r1477 s1/3/1/0 d2049 dd2048 k1 h175 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5256 -1269 hp 100
+F390 | G1 6418 -3617 r2771 s1/3/1/0 d2600 dd2598 k1 h389 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 7022 672 r1503 s1/3/1/0 d2627 dd2534 k1 h205 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1285 hp 100
+F420 | G1 6418 -3617 r2771 s1/5/1/0 d2589 dd2585 k1 h419 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6625 241 r1495 s1/3/1/0 d2053 dd2048 k1 h235 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5266 -1298 hp 100
+F450 | G1 6418 -3616 r2765 s1/3/1/0 d2568 dd2560 k1 h449 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6449 393 r1495 s1/5/1/0 d2089 dd2048 k1 h265 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5259 -1324 hp 100
+F480 | G1 6418 -3616 r2769 s1/5/1/0 d2562 dd2560 k1 h479 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6656 180 r1509 s1/3/1/0 d2050 dd2048 k1 h295 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5265 -1327 hp 100
+F510 | G1 6418 -3616 r2761 s1/3/1/0 d2548 dd2547 k1 h509 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6640 162 r1507 s1/3/1/0 d2050 dd2048 k1 h325 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5254 -1349 hp 100
+F540 | G1 6418 -3617 r2763 s1/3/1/0 d2530 dd2521 k1 h539 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 7161 614 r1523 s1/3/1/0 d2737 dd2684 k1 h355 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1363 hp 100
+F570 | G1 6418 -3628 r2763 s1/5/1/0 d2527 dd2508 k1 h569 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6675 111 r1519 s1/3/1/0 d2052 dd2048 k1 h385 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5264 -1379 hp 100
+F600 | G1 6418 -3616 r2759 s1/3/1/0 d2493 dd2482 k1 h599 fest0 L1 uw0 vt0 nah0 z(0,0) ng0 up-1 zcf8 | G2 6567 474 r1517 s1/5/1/0 d2282 dd2141 k1 h415 fest0 L1 uw0 vt0 nah0 z(7000,-8700) ng11 up36 zc00 | pl 5268 -1403 hp 100
+LAGE G1: erster Angriff 1, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (6418,-3616) s3, letzter Angriff 572, Angriffsbilder 225, Leon (5268,-1403), frei 0
+LAGE G2: erster Angriff 215, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (6567,474) s5, letzter Angriff 600, Angriffsbilder 141, Leon (5268,-1403), frei 4

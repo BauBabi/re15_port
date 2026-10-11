@@ -1,0 +1,6 @@
+um 4: LAGE G1: erster Angriff 91, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (-24957,15948) s3
+um 4: LAGE G2: erster Angriff 101, fest 1613 (Anker 400, Leon > 3000), davon fern 0, Ende (-23302,13172) s3
+um 1: LAGE G1: erster Angriff 91, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (-24957,15948) s3
+um 1: LAGE G2: erster Angriff 101, fest 1613 (Anker 400, Leon > 3000), davon fern 0, Ende (-23302,13172) s3
+um 5: LAGE G1: erster Angriff 91, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (-25545,16073) s3
+um 5: LAGE G2: erster Angriff 101, fest 1466 (Anker 400, Leon > 3000), davon fern 0, Ende (-22357,15752) s3

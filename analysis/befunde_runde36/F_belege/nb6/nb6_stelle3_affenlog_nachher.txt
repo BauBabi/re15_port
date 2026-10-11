@@ -1,0 +1,40 @@
+# exe Stelle 3, Stand NB6b (Korrektur Anlauf am Pad, re15_pc_nb6g.exe): Slot 2 Uebergaenge ab gy F1400
+gy F1409  [2 st=1/3/1/0 @(5146,-8818) rot=3137 dd=5418 L1 k1 ua=0 up=-1 z(7000,-8700) nu=0 nah=30 ng=2 h=1139 fest=0 vt=0 9f=00] 
+gy F1424  [2 st=1/3/1/0 @(5266,-8818) rot=3125 dd=5394 L1 k1 ua=0 up=-1 z(7000,-8700) nu=0 nah=45 ng=2 h=1154 fest=0 vt=0 9f=00] 
+gy F1425  [2 st=1/3/1/0 @(5271,-8818) rot=3141 dd=5394 L1 k1 ua=1 up=36 z(7000,-8700) nu=1 nah=46 ng=11 h=1155 fest=0 vt=0 9f=00] 
+gy F1433  [2 st=1/3/1/0 @(5486,-8818) rot=3307 dd=5394 L1 k1 ua=2 up=36 z(7200,-4130) nu=1 nah=0 ng=12 h=1163 fest=0 vt=0 9f=00] 
+gy F1439  [2 st=1/3/1/0 @(5701,-8818) rot=3279 dd=5394 L1 k1 ua=2 up=36 z(7200,-4130) nu=1 nah=6 ng=12 h=1169 fest=0 vt=0 9f=00] 
+gy F1454  [2 st=1/3/1/0 @(5899,-8818) rot=3253 dd=5860 L1 k1 ua=2 up=36 z(7200,-4130) nu=1 nah=11 ng=12 h=1184 fest=0 vt=0 9f=00] 
+gy F1469  [2 st=1/3/1/0 @(6117,-8818) rot=3225 dd=5926 L1 k1 ua=2 up=36 z(7200,-4130) nu=1 nah=5 ng=12 h=1199 fest=0 vt=0 9f=00] 
+gy F1483  [2 st=1/4/1/0 @(6378,-8818) rot=3191 dd=6014 L1 k1 ua=2 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1213 fest=1 vt=0 9f=00] 
+gy F1484  [2 st=1/4/1/0 @(6391,-8818) rot=3118 dd=5948 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1214 fest=0 vt=0 9f=00] 
+gy F1499  [2 st=1/4/1/0 @(6418,-7904) rot=2973 dd=5120 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1229 fest=0 vt=0 9f=00] 
+gy F1511  [2 st=1/3/1/0 @(6462,-7974) rot=2977 dd=5345 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=1 ng=12 h=1241 fest=0 vt=0 9f=00] 
+gy F1514  [2 st=1/3/1/0 @(6589,-8540) rot=2971 dd=6122 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1244 fest=1 vt=0 9f=00] 
+gy F1529  [2 st=1/3/1/0 @(6409,-8022) rot=2983 dd=5837 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=7 ng=12 h=1259 fest=0 vt=0 9f=00] 
+gy F1544  [2 st=1/3/1/0 @(6418,-7479) rot=2977 dd=5221 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=7 ng=12 h=1274 fest=0 vt=0 9f=00] 
+gy F1559  [2 st=1/3/1/0 @(6410,-7471) rot=2973 dd=5221 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=22 ng=12 h=1289 fest=0 vt=0 9f=00] 
+gy F1574  [2 st=1/3/1/0 @(6404,-7895) rot=2989 dd=6144 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1304 fest=2 vt=0 9f=00] 
+gy F1589  [2 st=1/3/1/0 @(6429,-6881) rot=2969 dd=5196 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=2 ng=12 h=1319 fest=0 vt=0 9f=00] 
+gy F1604  [2 st=1/3/1/0 @(6418,-6818) rot=2971 dd=5145 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=17 ng=12 h=1334 fest=0 vt=0 9f=00] 
+gy F1619  [2 st=1/3/1/0 @(6418,-6825) rot=2969 dd=5145 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=32 ng=12 h=1349 fest=0 vt=0 9f=00] 
+gy F1633  [2 st=1/7/1/1 @(6418,-6826) rot=3011 dd=5655 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1363 fest=0 vt=0 9f=c8] 
+gy F1634  [2 st=1/7/1/1 @(6409,-6820) rot=3043 dd=5655 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1364 fest=0 vt=0 9f=c8] 
+gy F1642  [2 st=1/7/2/1 @(6409,-6824) rot=3072 dd=5655 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1372 fest=0 vt=0 9f=c8] 
+gy F1649  [2 st=1/7/2/1 @(6409,-6017) rot=3072 dd=5120 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=0 fest=0 vt=0 9f=c8] 
+gy F1651  [2 st=1/8/0/0 @(6409,-5481) rot=3072 dd=4579 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=0 fest=0 vt=0 9f=c8] 
+gy F1652  [2 st=1/8/1/0 @(6409,-5213) rot=3072 dd=4314 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=0 fest=0 vt=0 9f=c8] 
+gy F1664  [2 st=1/8/1/0 @(7682,-513) rot=3072 dd=2111 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=1 fest=0 vt=0 9f=c8] 
+gy F1668  [2 st=1/8/2/0 @(7682,559) rot=3072 dd=2547 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=0 fest=0 vt=0 9f=c8] 
+gy F1672  [2 st=1/4/0/0 @(7682,859) rot=3072 dd=2918 L1 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=4 fest=0 vt=0 9f=c8] 
+gy F1673  [2 st=1/4/1/0 @(7660,1054) rot=2999 dd=2918 L0 k1 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=5 fest=0 vt=0 9f=c8] 
+gy F1679  [2 st=1/4/1/0 @(7101,2069) rot=2561 dd=3537 L0 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=11 fest=0 vt=0 9f=c8] 
+gy F1689  [2 st=1/3/1/0 @(6627,2556) rot=1868 dd=3753 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=0 ng=12 h=5 fest=0 vt=0 9f=c8] 
+gy F1694  [2 st=1/3/1/0 @(8116,2984) rot=1763 dd=4857 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=2 ng=12 h=0 fest=0 vt=0 9f=c8] 
+gy F1709  [2 st=1/3/1/0 @(7222,2293) rot=1448 dd=3916 L1 k0 ua=0 up=36 z(7200,-4130) nu=0 nah=4 ng=12 h=0 fest=0 vt=0 9f=c8] 
+gy.log | F1..F1920
+   S2 Angriff F1651 (Angriffsbilder 21) fest 271 = NAH 271 + FERN 0
+      F1048+152 G(2998,-10335) d5129..5449 Leon (5858,-5716)->(5858,-5716) anderer S3 st1/sub3 (5855,-8866)->(6396,-8818)
+      F1278+119 G(4802,-8842) d4072..5371 Leon (5791,-4891)->(5677,-3468) anderer S3 st1/sub5 (7451,-6509)->(7300,-5865)
+   S3 Angriff F324 (Angriffsbilder 415) fest 368 = NAH 368 + FERN 0
+      F826+368 G(5771,-8824) d3087..3158 Leon (5858,-5716)->(5858,-5716) anderer S2 st1/sub3 (-492,-12034)->(3086,-10318)

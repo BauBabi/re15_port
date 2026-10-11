@@ -1,0 +1,12 @@
+## seed 0xc413afd1 idx 33 nb6=3
+LAGE c413afd1 g1 -16212 -4891 leon -13087 -1675 dauer 170 los 170 ab F434 sub3 161 sub4 0 sub7 9
+LAGE c413afd1 g0 -19916 13072 leon -22923 11961 dauer 146 los 146 ab F1213 sub3 146 sub4 0 sub7 0
+LAGE c413afd1 g1 -11475 -15304 leon -15183 -16627 dauer 141 los 141 ab F4027 sub3 0 sub4 141 sub7 0
+LAGE c413afd1 g0 -12946 -12501 leon -9781 -16627 dauer 176 los 176 ab F4018 sub3 0 sub4 176 sub7 0
+LAGE c413afd1 g1 -5972 -14399 leon -3706 -12289 dauer 205 los 205 ab F4784 sub3 205 sub4 0 sub7 0
+EINS seed 0xc413afd1 modus 1 blockiert 838 griffe 3 nah 706 fern 132 los 838 klemme 814 sub3 512 sub4 317 sub7 9
+## seed 0xc413afd1 idx 33 nb6=0
+LAGE c413afd1 g1 -16212 -4891 leon -14233 -2713 dauer 187 los 187 ab F434 sub3 187 sub4 0 sub7 0
+LAGE c413afd1 g1 -20469 13088 leon -26598 14578 dauer 94 los 94 ab F1242 sub3 89 sub4 5 sub7 0
+LAGE c413afd1 g1 8382 -1092 leon 11972 2002 dauer 128 los 128 ab F3002 sub3 128 sub4 0 sub7 0
+EINS seed 0xc413afd1 modus 1 blockiert 409 griffe 3 nah 353 fern 56 los 409 klemme 368 sub3 404 sub4 5 sub7 0

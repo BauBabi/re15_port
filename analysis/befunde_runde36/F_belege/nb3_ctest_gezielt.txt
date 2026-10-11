@@ -1,0 +1,331 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/build
+        Start 502: integration_r35_cut1150
+        Start 570: integration_r35_zgirl
+        Start 571: integration_r35_zgirl_5090
+        Start 577: unit_r36_zombieki_eintritt
+        Start 575: unit_r36_zombieki_sicht
+        Start 576: unit_r36_zombieki_affen_block
+  1/163 Test #575: unit_r36_zombieki_sicht ...............   Passed   21.15 sec
+        Start 197: unit_re2_zombie_abc
+  2/163 Test #577: unit_r36_zombieki_eintritt ............   Passed   23.07 sec
+        Start 206: unit_1030_stuck_who
+  3/163 Test #576: unit_r36_zombieki_affen_block .........   Passed   25.19 sec
+        Start 242: unit_re2z_bandlock_pin
+  4/163 Test #197: unit_re2_zombie_abc ...................   Passed    7.39 sec
+        Start 194: unit_re2_lyer_1140
+  5/163 Test #242: unit_re2z_bandlock_pin ................   Passed    3.44 sec
+        Start 204: unit_1030_crawl_live
+  6/163 Test #204: unit_1030_crawl_live ..................   Passed    1.61 sec
+        Start 205: unit_1030_trigger_chain
+  7/163 Test #206: unit_1030_stuck_who ...................   Passed    7.29 sec
+        Start 345: unit_r30_hund_tod
+  8/163 Test #194: unit_re2_lyer_1140 ....................   Passed    2.11 sec
+        Start 347: unit_r30_hund_tod_elza
+  9/163 Test #205: unit_1030_trigger_chain ...............   Passed    1.58 sec
+        Start 572: unit_r36_zombieki_wecker
+ 10/163 Test #345: unit_r30_hund_tod .....................   Passed    1.58 sec
+        Start 172: unit_zombie_getup_se
+ 11/163 Test #347: unit_r30_hund_tod_elza ................   Passed    1.52 sec
+        Start 568: unit_r35_zgirl_selbsttueren
+ 12/163 Test #572: unit_r36_zombieki_wecker ..............   Passed    1.26 sec
+        Start 243: unit_re2z_rise_hittable
+ 13/163 Test #568: unit_r35_zgirl_selbsttueren ...........   Passed    0.99 sec
+        Start 190: unit_re15_zombie_death_anim
+ 14/163 Test #172: unit_zombie_getup_se ..................   Passed    1.26 sec
+        Start 468: unit_r35_affen_griff
+ 15/163 Test #468: unit_r35_affen_griff ..................   Passed    0.70 sec
+        Start 241: unit_re2z_finisher_bite
+ 16/163 Test #190: unit_re15_zombie_death_anim ...........   Passed    0.78 sec
+        Start 549: unit_r35_raeume_ziel
+ 17/163 Test #243: unit_re2z_rise_hittable ...............   Passed    0.95 sec
+        Start 469: unit_r35_affen_npcband
+ 18/163 Test #241: unit_re2z_finisher_bite ...............   Passed    0.48 sec
+        Start 495: unit_r35_cut1150_montage_1040_reihe
+ 19/163 Test #549: unit_r35_raeume_ziel ..................   Passed    0.44 sec
+        Start 496: unit_r35_cut1150_montage_1030
+ 20/163 Test #469: unit_r35_affen_npcband ................   Passed    0.42 sec
+        Start 332: unit_r27_hund_wandtrieb
+ 21/163 Test #332: unit_r27_hund_wandtrieb ...............   Passed    0.25 sec
+        Start 193: unit_re15_re2z_gore_se
+ 22/163 Test #495: unit_r35_cut1150_montage_1040_reihe ...   Passed    0.38 sec
+        Start 530: unit_r35_inhalt_zombies
+ 23/163 Test #496: unit_r35_cut1150_montage_1030 .........   Passed    0.37 sec
+        Start 125: unit_zombie_10d0_reentry_a
+ 24/163 Test #530: unit_r35_inhalt_zombies ...............   Passed    0.23 sec
+        Start 494: unit_r35_cut1150_montage_1040
+ 25/163 Test #125: unit_zombie_10d0_reentry_a ............   Passed    0.21 sec
+        Start 240: unit_re2z_grab_core_se
+ 26/163 Test #193: unit_re15_re2z_gore_se ................   Passed    0.33 sec
+        Start 231: unit_re2z_devour_anchor
+ 27/163 Test #240: unit_re2z_grab_core_se ................   Passed    0.20 sec
+        Start 126: unit_zombie_10d0_reentry_b
+ 28/163 Test #494: unit_r35_cut1150_montage_1040 .........   Passed    0.23 sec
+        Start 458: unit_r35_affen_ada
+ 29/163 Test #231: unit_re2z_devour_anchor ...............   Passed    0.19 sec
+        Start 492: unit_r35_cut1150_szene
+ 30/163 Test #458: unit_r35_affen_ada ....................   Passed    0.11 sec
+        Start 467: unit_r35_affen_takt
+ 31/163 Test #492: unit_r35_cut1150_szene ................   Passed    0.12 sec
+        Start 448: unit_r34n_f_leiche_varianten
+ 32/163 Test #126: unit_zombie_10d0_reentry_b ............   Passed    0.20 sec
+        Start 551: unit_r35_raeume_arme
+ 33/163 Test #467: unit_r35_affen_takt ...................   Passed    0.10 sec
+        Start 561: unit_r35_zgirl_zensus
+ 34/163 Test #448: unit_r34n_f_leiche_varianten ..........   Passed    0.11 sec
+        Start 379: r30_hund_hitbox_stauchung
+ 35/163 Test #551: unit_r35_raeume_arme ..................   Passed    0.12 sec
+        Start 232: unit_re2z_pushoff_crawl
+ 36/163 Test #561: unit_r35_zgirl_zensus .................   Passed    0.13 sec
+        Start 132: unit_cam_1030_reentry
+ 37/163 Test #379: r30_hund_hitbox_stauchung .............   Passed    0.12 sec
+        Start 472: unit_r35_affen_szene
+ 38/163 Test #232: unit_re2z_pushoff_crawl ...............   Passed    0.11 sec
+        Start 211: unit_re2_zombie_teardeath
+ 39/163 Test #132: unit_cam_1030_reentry .................   Passed    0.10 sec
+        Start 186: unit_re2_dog_hp_reroll
+ 40/163 Test #211: unit_re2_zombie_teardeath .............   Passed    0.08 sec
+        Start 451: unit_r34n_f_leiche_stimme
+ 41/163 Test #186: unit_re2_dog_hp_reroll ................   Passed    0.07 sec
+        Start 470: unit_r35_affen_schrot
+ 42/163 Test #472: unit_r35_affen_szene ..................   Passed    0.15 sec
+        Start 297: probe_r16_tuer1040_A
+ 43/163 Test #470: unit_r35_affen_schrot .................   Passed    0.03 sec
+        Start 191: unit_re2_zombie_death_fall
+ 44/163 Test #451: unit_r34n_f_leiche_stimme .............   Passed    0.06 sec
+        Start 461: unit_r35_affen_wagen
+ 45/163 Test #191: unit_re2_zombie_death_fall ............   Passed    0.05 sec
+        Start 459: unit_r35_affen_sprung
+ 46/163 Test #297: probe_r16_tuer1040_A ..................   Passed    0.07 sec
+        Start 298: probe_r16_tuer1040_B
+ 47/163 Test #461: unit_r35_affen_wagen ..................   Passed    0.06 sec
+        Start 574: unit_r36_zombieki_affen
+ 48/163 Test #459: unit_r35_affen_sprung .................   Passed    0.06 sec
+        Start 453: unit_r34n_f_leiche_latch
+ 49/163 Test #298: probe_r16_tuer1040_B ..................   Passed    0.06 sec
+        Start 150: unit_lane_b1_t45_room1100
+ 50/163 Test #574: unit_r36_zombieki_affen ...............   Passed    0.06 sec
+        Start 299: probe_r16_tuer1040_F
+ 51/163 Test #453: unit_r34n_f_leiche_latch ..............   Passed    0.06 sec
+        Start 189: unit_re2_crow_se_bank
+ 52/163 Test #150: unit_lane_b1_t45_room1100 .............   Passed    0.06 sec
+        Start 573: unit_r36_zombieki_szenen
+ 53/163 Test #299: probe_r16_tuer1040_F ..................   Passed    0.06 sec
+        Start 180: unit_re2_hit_repeat_crow_spider
+ 54/163 Test #189: unit_re2_crow_se_bank .................   Passed    0.06 sec
+        Start 253: unit_1210_gitterhaende
+ 55/163 Test #573: unit_r36_zombieki_szenen ..............   Passed    0.06 sec
+        Start 161: unit_zombie_se_ab_10d0
+ 56/163 Test #180: unit_re2_hit_repeat_crow_spider .......   Passed    0.05 sec
+        Start 313: unit_ada_eintritt_1050
+ 57/163 Test #313: unit_ada_eintritt_1050 ................   Passed    0.02 sec
+        Start 291: unit_1210_arme_re2
+ 58/163 Test #253: unit_1210_gitterhaende ................   Passed    0.05 sec
+        Start 121: probe_crow_kill
+ 59/163 Test #161: unit_zombie_se_ab_10d0 ................   Passed    0.05 sec
+        Start 550: unit_r35_raeume_trage
+ 60/163 Test #291: unit_1210_arme_re2 ....................   Passed    0.05 sec
+        Start 266: unit_maggot_zone_leap
+ 61/163 Test #121: probe_crow_kill .......................   Passed    0.05 sec
+        Start 447: unit_r34n_f_leiche_voll
+ 62/163 Test #266: unit_maggot_zone_leap .................   Passed    0.02 sec
+        Start 122: unit_crow_death_corpse
+ 63/163 Test #550: unit_r35_raeume_trage .................   Passed    0.06 sec
+        Start 444: unit_r34n_f_leiche_nein_1230
+ 64/163 Test #447: unit_r34n_f_leiche_voll ...............   Passed    0.05 sec
+        Start 300: probe_r16_tuer1040_N
+ 65/163 Test #122: unit_crow_death_corpse ................   Passed    0.05 sec
+        Start 130: unit_room1070_wake
+ 66/163 Test #444: unit_r34n_f_leiche_nein_1230 ..........   Passed    0.05 sec
+        Start 569: unit_r35_zgirl_wiedereintritt
+ 67/163 Test #300: probe_r16_tuer1040_N ..................   Passed    0.04 sec
+        Start 446: unit_r34n_f_leiche_ja_1230
+ 68/163 Test #130: unit_room1070_wake ....................   Passed    0.04 sec
+        Start 195: unit_1140_straight_shot
+ 69/163 Test #569: unit_r35_zgirl_wiedereintritt .........   Passed    0.04 sec
+        Start 473: unit_r35_affen_finisher
+ 70/163 Test #446: unit_r34n_f_leiche_ja_1230 ............   Passed    0.05 sec
+        Start 187: unit_re2_dog_playdead_gate
+ 71/163 Test #473: unit_r35_affen_finisher ...............   Passed    0.04 sec
+        Start 239: probe_re2z_stomp
+ 72/163 Test #195: unit_1140_straight_shot ...............   Passed    0.06 sec
+        Start 139: unit_gegenprobe_hund_luftzeile
+ 73/163 Test #187: unit_re2_dog_playdead_gate ............   Passed    0.03 sec
+        Start 545: unit_r35_karte_r1210
+ 74/163 Test #139: unit_gegenprobe_hund_luftzeile ........   Passed    0.03 sec
+        Start 457: unit_r35_affen_band
+ 75/163 Test #239: probe_re2z_stomp ......................   Passed    0.04 sec
+        Start  31: unit_maggot_ai
+ 76/163 Test #545: unit_r35_karte_r1210 ..................   Passed    0.03 sec
+        Start 450: unit_r34n_f_leiche_andere
+ 77/163 Test #457: unit_r35_affen_band ...................   Passed    0.03 sec
+        Start 293: unit_re2z_crawl_hurt_reentry
+ 78/163 Test  #31: unit_maggot_ai ........................   Passed    0.04 sec
+        Start 224: unit_re2_dog_grab_anchor
+ 79/163 Test #293: unit_re2z_crawl_hurt_reentry ..........   Passed    0.04 sec
+        Start 237: probe_10d0_situp_handoff
+ 80/163 Test #450: unit_r34n_f_leiche_andere .............   Passed    0.06 sec
+        Start 312: unit_r17_waffen_loop_pin
+ 81/163 Test #224: unit_re2_dog_grab_anchor ..............   Passed    0.05 sec
+        Start 136: unit_1030_spawncap
+ 82/163 Test #237: probe_10d0_situp_handoff ..............   Passed    0.04 sec
+ 83/163 Test #312: unit_r17_waffen_loop_pin ..............   Passed    0.03 sec
+        Start 497: unit_r35_cut1150_montage_11c0
+        Start 207: unit_1030_bandsweep
+ 84/163 Test #136: unit_1030_spawncap ....................   Passed    0.03 sec
+        Start  89: unit_maggot_bone_square
+ 85/163 Test #207: unit_1030_bandsweep ...................   Passed    0.03 sec
+        Start 279: unit_1210_arme
+ 86/163 Test #497: unit_r35_cut1150_montage_11c0 .........   Passed    0.04 sec
+        Start 200: unit_re2_victim_collapse
+ 87/163 Test  #89: unit_maggot_bone_square ...............   Passed    0.04 sec
+        Start 109: unit_re2_room1140_ab
+ 88/163 Test #279: unit_1210_arme ........................   Passed    0.04 sec
+        Start 452: unit_r34n_f_leiche_nachhall
+ 89/163 Test #200: unit_re2_victim_collapse ..............   Passed    0.03 sec
+        Start 548: unit_r35_raeume_hundeschatten
+ 90/163 Test #109: unit_re2_room1140_ab ..................   Passed    0.03 sec
+        Start 218: unit_re2z_death_getup
+ 91/163 Test #548: unit_r35_raeume_hundeschatten .........   Passed    0.02 sec
+        Start 221: unit_re2_dog_jaw_contact
+ 92/163 Test #452: unit_r34n_f_leiche_nachhall ...........   Passed    0.04 sec
+        Start 223: unit_re2_crow_shadow_release
+ 93/163 Test #218: unit_re2z_death_getup .................   Passed    0.03 sec
+        Start 466: unit_r35_affen_anker
+ 94/163 Test #221: unit_re2_dog_jaw_contact ..............   Passed    0.03 sec
+        Start 235: unit_ai_flavor_mixed
+ 95/163 Test #223: unit_re2_crow_shadow_release ..........   Passed    0.03 sec
+        Start 499: unit_r35_cut1150_totenpose
+ 96/163 Test #466: unit_r35_affen_anker ..................   Passed    0.02 sec
+        Start 192: unit_re15_re2z_import
+ 97/163 Test #499: unit_r35_cut1150_totenpose ............   Passed    0.02 sec
+        Start 108: unit_re2_zombie_ai
+ 98/163 Test #235: unit_ai_flavor_mixed ..................   Passed    0.04 sec
+        Start 498: unit_r35_cut1150_rueckkehr
+ 99/163 Test #192: unit_re15_re2z_import .................   Passed    0.03 sec
+        Start 131: unit_room1040_switch
+100/163 Test #108: unit_re2_zombie_ai ....................   Passed    0.03 sec
+        Start 264: unit_re2_crow_kill_cmd3
+101/163 Test #498: unit_r35_cut1150_rueckkehr ............   Passed    0.03 sec
+        Start 117: unit_zombie_hit_fixes
+102/163 Test #131: unit_room1040_switch ..................   Passed    0.03 sec
+        Start 234: unit_re2z_bump_walk
+103/163 Test #117: unit_zombie_hit_fixes .................   Passed    0.02 sec
+104/163 Test #264: unit_re2_crow_kill_cmd3 ...............   Passed    0.03 sec
+        Start 294: unit_re2z_crawler_spawn_wait
+        Start 158: unit_zombie_idle_clip
+105/163 Test #234: unit_re2z_bump_walk ...................   Passed    0.03 sec
+        Start 214: unit_dog_grab_anchor
+106/163 Test #158: unit_zombie_idle_clip .................   Passed    0.02 sec
+        Start 449: unit_r34n_f_leiche_laden
+107/163 Test #294: unit_re2z_crawler_spawn_wait ..........   Passed    0.04 sec
+        Start  43: unit_zombie_pose
+108/163 Test #214: unit_dog_grab_anchor ..................   Passed    0.03 sec
+        Start 112: unit_re2_crow_ai
+109/163 Test  #43: unit_zombie_pose ......................   Passed    0.02 sec
+        Start  50: unit_enemy_shootable
+110/163 Test #449: unit_r34n_f_leiche_laden ..............   Passed    0.04 sec
+        Start 564: unit_r35_zgirl_ki_re15
+111/163 Test #112: unit_re2_crow_ai ......................   Passed    0.03 sec
+        Start 500: unit_r35_cut1150_tot_bleibt_tot
+112/163 Test  #50: unit_enemy_shootable ..................   Passed    0.02 sec
+        Start  25: unit_enemy_ai
+113/163 Test #564: unit_r35_zgirl_ki_re15 ................   Passed    0.03 sec
+        Start 141: unit_dog_devour
+114/163 Test #500: unit_r35_cut1150_tot_bleibt_tot .......   Passed    0.03 sec
+        Start 565: unit_r35_zgirl_ki_re2
+115/163 Test  #25: unit_enemy_ai .........................   Passed    0.03 sec
+        Start 493: unit_r35_cut1150_montage_1130
+116/163 Test #141: unit_dog_devour .......................   Passed    0.03 sec
+        Start  27: unit_room1140_combat
+117/163 Test #565: unit_r35_zgirl_ki_re2 .................   Passed    0.03 sec
+        Start 220: unit_re2z_corpse_pool
+118/163 Test #493: unit_r35_cut1150_montage_1130 .........   Passed    0.03 sec
+        Start 346: unit_r30_hund_tod_n2
+119/163 Test  #27: unit_room1140_combat ..................   Passed    0.03 sec
+        Start 157: unit_zombie_bank_rule
+120/163 Test #220: unit_re2z_corpse_pool .................   Passed    0.03 sec
+        Start  52: unit_enemy_body_push
+121/163 Test #157: unit_zombie_bank_rule .................   Passed    0.02 sec
+        Start 489: unit_r35_cut1150_tuer1060
+122/163 Test #346: unit_r30_hund_tod_n2 ..................   Passed    0.04 sec
+        Start  85: unit_dog_aim_band
+123/163 Test  #52: unit_enemy_body_push ..................   Passed    0.03 sec
+        Start  81: unit_enemy_attack_reach
+124/163 Test #489: unit_r35_cut1150_tuer1060 .............   Passed    0.03 sec
+        Start 138: unit_re2_dog_hitwindow
+125/163 Test  #85: unit_dog_aim_band .....................   Passed    0.04 sec
+        Start 443: unit_r34n_f_leiche_nein_1110
+126/163 Test  #81: unit_enemy_attack_reach ...............   Passed    0.03 sec
+        Start  29: unit_crow_ai
+127/163 Test #138: unit_re2_dog_hitwindow ................   Passed    0.03 sec
+        Start 471: unit_r35_affen_wand
+128/163 Test #443: unit_r34n_f_leiche_nein_1110 ..........   Passed    0.03 sec
+        Start 475: unit_r35_affen_kette
+129/163 Test  #29: unit_crow_ai ..........................   Passed    0.03 sec
+        Start 265: unit_re2z_spawn_seed
+130/163 Test #471: unit_r35_affen_wand ...................   Passed    0.03 sec
+        Start 177: unit_re2_room1090_ab
+131/163 Test #475: unit_r35_affen_kette ..................   Passed    0.03 sec
+        Start 463: unit_r35_affen_kdsonde
+132/163 Test #265: unit_re2z_spawn_seed ..................   Passed    0.03 sec
+        Start 442: unit_r34n_f_leiche_texte
+133/163 Test #177: unit_re2_room1090_ab ..................   Passed    0.03 sec
+        Start 110: unit_re2_dog_ai
+134/163 Test #463: unit_r35_affen_kdsonde ................   Passed    0.03 sec
+        Start 504: unit_r35_fenster_kraehe
+135/163 Test #442: unit_r34n_f_leiche_texte ..............   Passed    0.03 sec
+        Start 491: unit_r35_cut1150_zaehlung
+136/163 Test #110: unit_re2_dog_ai .......................   Passed    0.03 sec
+        Start 188: unit_re2_zombie_hitfilter
+137/163 Test #504: unit_r35_fenster_kraehe ...............   Passed    0.03 sec
+        Start 140: unit_dog_hit
+138/163 Test #491: unit_r35_cut1150_zaehlung .............   Passed    0.03 sec
+        Start  26: unit_room1140_spawn
+139/163 Test #188: unit_re2_zombie_hitfilter .............   Passed    0.04 sec
+        Start 456: unit_r35_affen_teile
+140/163 Test #140: unit_dog_hit ..........................   Passed    0.03 sec
+        Start 464: unit_r35_affen_biss
+141/163 Test  #26: unit_room1140_spawn ...................   Passed    0.03 sec
+        Start 474: unit_r35_affen_zonensprung
+142/163 Test #456: unit_r35_affen_teile ..................   Passed    0.02 sec
+        Start 460: unit_r35_affen_flug
+143/163 Test #464: unit_r35_affen_biss ...................   Passed    0.02 sec
+        Start 490: unit_r35_cut1150_programme
+144/163 Test #460: unit_r35_affen_flug ...................   Passed    0.01 sec
+        Start 116: unit_crow_fixes
+145/163 Test #490: unit_r35_cut1150_programme ............   Passed    0.02 sec
+        Start 563: unit_r35_zgirl_tuer
+146/163 Test #474: unit_r35_affen_zonensprung ............   Passed    0.05 sec
+        Start 316: r19_marke1_10d0_c1
+147/163 Test #116: unit_crow_fixes .......................   Passed    0.04 sec
+        Start 567: unit_r35_zgirl_messer
+148/163 Test #563: unit_r35_zgirl_tuer ...................   Passed    0.03 sec
+        Start 566: unit_r35_zgirl_tod
+149/163 Test #316: r19_marke1_10d0_c1 ....................   Passed    0.03 sec
+        Start 159: unit_zombie_step_sfx
+150/163 Test #567: unit_r35_zgirl_messer .................   Passed    0.03 sec
+151/163 Test #566: unit_r35_zgirl_tod ....................   Passed    0.02 sec
+        Start 445: unit_r34n_f_leiche_ja_1110
+        Start 160: unit_zombie_knock_sfx
+152/163 Test #159: unit_zombie_step_sfx ..................   Passed    0.03 sec
+        Start 465: unit_r35_affen_frac
+153/163 Test #445: unit_r34n_f_leiche_ja_1110 ............   Passed    0.03 sec
+        Start  28: unit_dog_ai
+154/163 Test #160: unit_zombie_knock_sfx .................   Passed    0.03 sec
+        Start 562: unit_r35_zgirl_killflag
+155/163 Test #465: unit_r35_affen_frac ...................   Passed    0.03 sec
+        Start 215: unit_re2_zombie_pose_bank
+156/163 Test  #28: unit_dog_ai ...........................   Passed    0.03 sec
+        Start 501: unit_r35_cut1150_knallbank
+157/163 Test #562: unit_r35_zgirl_killflag ...............   Passed    0.03 sec
+        Start 462: unit_r35_affen_brust
+158/163 Test #215: unit_re2_zombie_pose_bank .............   Passed    0.03 sec
+159/163 Test #501: unit_r35_cut1150_knallbank ............   Passed    0.02 sec
+160/163 Test #462: unit_r35_affen_brust ..................   Passed    0.01 sec
+161/163 Test #571: integration_r35_zgirl_5090 ............   Passed  144.72 sec
+162/163 Test #570: integration_r35_zgirl .................   Passed  254.99 sec
+163/163 Test #502: integration_r35_cut1150 ...............   Passed  508.25 sec
+
+100% tests passed, 0 tests failed out of 163
+
+Total Test time (real) = 508.29 sec

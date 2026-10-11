@@ -1,0 +1,28 @@
+Szene | ORIGINAL-Regel G1 / G2 (erst, blockiert, nach) | UMWEG G1 / G2
+A1   |  430 b    0 n    0 / nie  b 2345 n    0 |  431 b    0 n    0 /  352 b    0 n    0
+A2   |  458 b    0 n    0 / nie  b 2349 n    0 |  543 b    0 n    0 /  350 b    0 n    0
+A3   |  433 b    0 n    0 / nie  b 2346 n    0 |  663 b    0 n    0 /  358 b    0 n    0
+B01  | nie  b 2333 n    0 / nie  b 2334 n    0 |  737 b 1261 n 1261 /  481 b 1304 n 1304
+B02  |  427 b    0 n    0 /  270 b    0 n    0 |  427 b    0 n    0 /  270 b    0 n    0
+B03  |  196 b  144 n  144 / nie  b 1473 n    0 |  196 b  144 n  144 / nie  b 1473 n    0
+B04  | nie  b 2111 n    0 / nie  b 2149 n    0 |  572 b    0 n    0 /  360 b 1804 n 1804
+B05  | nie  b 2356 n    0 / nie  b 2388 n    0 |  299 b    0 n    0 /  526 b    0 n    0
+B06  | nie  b 2376 n    0 / nie  b 2388 n    0 |  345 b    0 n    0 /  544 b    0 n    0
+B07  | nie  b 1842 n    0 /  192 b 1841 n 1841 |  277 b 1778 n 1778 /  193 b 1912 n 1912
+B08  |  310 b    0 n    0 /  574 b    0 n    0 |  239 b    0 n    0 /  418 b    0 n    0
+B09  |  908 b  486 n  486 /  283 b    0 n    0 |  908 b  477 n  477 /  283 b    0 n    0
+B10  |  481 b    0 n    0 /  284 b    0 n    0 |  481 b    0 n    0 /  284 b    0 n    0
+C1   | nie  b 2075 n    0 / nie  b 2172 n    0 | nie  b 1735 n    0 / nie  b 1959 n    0
+C2   | nie  b 2069 n    0 / nie  b 2157 n    0 | nie  b 1693 n    0 / nie  b 1920 n    0
+C3   | nie  b 2113 n    0 / nie  b 2156 n    0 | nie  b 1963 n    0 / nie  b 2048 n    0
+C4   | nie  b 2113 n    0 / nie  b 2146 n    0 |  468 b    0 n    0 /  336 b 1902 n 1902
+D1   | nie  b 2117 n    0 / nie  b 2154 n    0 |  601 b    0 n    0 /  361 b 1808 n 1808
+D2   | nie  b 2113 n    0 / nie  b 2146 n    0 |  480 b    0 n    0 /  340 b 1840 n 1840
+D3   | 1075 b 1202 n 1101 /  221 b    0 n    0 | 1075 b 1202 n 1101 /  221 b    0 n    0
+D4   | nie  b 2087 n    0 / nie  b 2125 n    0 |  394 b 1063 n 1063 /  316 b    0 n    0
+D5   | nie  b 2117 n    0 / nie  b 2160 n    0 | nie  b 1810 n    0 /  369 b    0 n    0
+D6   | nie  b 2117 n    0 / nie  b 2156 n    0 | nie  b 1786 n    0 /  361 b    0 n    0
+E1   | nie  b 1881 n    0 / nie  b 2347 n    0 |  291 b    0 n    0 /  721 b  350 n  350
+E2   | nie  b 2349 n    0 / nie  b 2354 n    0 | nie  b 1433 n    0 /  485 b    0 n    0
+E3   | nie  b 2324 n    0 / nie  b 2348 n    0 |  928 b    0 n    0 /  283 b    0 n    0
+Summe blockiert: ORIGINAL 84359  UMWEG 34665

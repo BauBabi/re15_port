@@ -1,0 +1,65 @@
+## seed 0x0000beef idx 1 nb6=3
+LAGE 0000beef g1 5701 -8818 leon 7040 -3613 dauer 151 los 151 ab F1121 sub3 151 sub4 0 sub7 0
+LAGE 0000beef g1 -21957 16118 leon -25020 17268 dauer 125 los 125 ab F3231 sub3 125 sub4 0 sub7 0
+LAGE 0000beef g0 -23302 13556 leon -26932 15496 dauer 101 los 79 ab F3794 sub3 101 sub4 0 sub7 0
+LAGE 0000beef g0 -23302 13425 leon -26932 17268 dauer 152 los 133 ab F4174 sub3 152 sub4 0 sub7 0
+LAGE 0000beef g0 -23269 13088 leon -26933 17269 dauer 99 los 99 ab F5302 sub3 99 sub4 0 sub7 0
+LAGE 0000beef g1 -21917 16118 leon -25447 17268 dauer 141 los 141 ab F5819 sub3 141 sub4 0 sub7 0
+EINS seed 0x0000beef modus 1 blockiert 769 griffe 10 nah 769 fern 0 los 728 klemme 624 sub3 769 sub4 0 sub7 0
+## seed 0x0000beef idx 1 nb6=0
+LAGE 0000beef g1 5270 -8818 leon 7040 -3613 dauer 126 los 126 ab F1110 sub3 126 sub4 0 sub7 0
+EINS seed 0x0000beef modus 1 blockiert 126 griffe 2 nah 126 fern 0 los 126 klemme 126 sub3 126 sub4 0 sub7 0
+## seed 0x7ed38e72 idx 18 nb6=3
+LAGE 7ed38e72 g1 -13518 -441 leon -15056 -10208 dauer 154 los 154 ab F511 sub3 0 sub4 154 sub7 0
+LAGE 7ed38e72 g0 -13518 -778 leon -13870 -12606 dauer 443 los 19 ab F3289 sub3 0 sub4 17 sub7 426
+EINS seed 0x7ed38e72 modus 1 blockiert 597 griffe 5 nah 0 fern 597 los 173 klemme 597 sub3 0 sub4 171 sub7 426
+## seed 0x7ed38e72 idx 18 nb6=0
+LAGE 7ed38e72 g1 -13518 -441 leon -15056 -10208 dauer 154 los 154 ab F511 sub3 0 sub4 154 sub7 0
+LAGE 7ed38e72 g0 -16189 -275 leon -14692 -5218 dauer 107 los 107 ab F2908 sub3 107 sub4 0 sub7 0
+EINS seed 0x7ed38e72 modus 1 blockiert 261 griffe 4 nah 103 fern 158 los 261 klemme 261 sub3 107 sub4 154 sub7 0
+## seed 0xbb4281d4 idx 20 nb6=3
+LAGE bb4281d4 g0 -20122 13077 leon -24264 11938 dauer 192 los 192 ab F1218 sub3 192 sub4 0 sub7 0
+LAGE bb4281d4 g0 6682 -420 leon 5268 -5835 dauer 137 los 137 ab F5705 sub3 137 sub4 0 sub7 0
+EINS seed 0xbb4281d4 modus 1 blockiert 329 griffe 4 nah 328 fern 1 los 329 klemme 295 sub3 329 sub4 0 sub7 0
+## seed 0xbb4281d4 idx 20 nb6=0
+LAGE bb4281d4 g0 -20122 13077 leon -24264 11938 dauer 192 los 192 ab F1218 sub3 192 sub4 0 sub7 0
+LAGE bb4281d4 g0 6682 -420 leon 5268 -6715 dauer 162 los 162 ab F5705 sub3 157 sub4 5 sub7 0
+EINS seed 0xbb4281d4 modus 1 blockiert 354 griffe 4 nah 346 fern 8 los 354 klemme 320 sub3 349 sub4 5 sub7 0
+## seed 0x708f5bfa idx 26 nb6=3
+LAGE 708f5bfa g1 6417 978 leon 5799 -5170 dauer 101 los 101 ab F1565 sub3 101 sub4 0 sub7 0
+EINS seed 0x708f5bfa modus 1 blockiert 101 griffe 2 nah 101 fern 0 los 101 klemme 101 sub3 101 sub4 0 sub7 0
+## seed 0x708f5bfa idx 26 nb6=0
+LAGE 708f5bfa g1 6417 978 leon 5617 -5249 dauer 102 los 102 ab F1565 sub3 102 sub4 0 sub7 0
+LAGE 708f5bfa g0 6418 -3617 leon -3808 -12366 dauer 126 los 71 ab F3930 sub3 116 sub4 0 sub7 10
+EINS seed 0x708f5bfa modus 1 blockiert 228 griffe 1 nah 176 fern 52 los 173 klemme 227 sub3 218 sub4 0 sub7 10
+## seed 0x0ec6d5ab idx 27 nb6=3
+LAGE 0ec6d5ab g0 -13518 -254 leon -14679 -10970 dauer 166 los 118 ab F2242 sub3 0 sub4 85 sub7 81
+LAGE 0ec6d5ab g1 -13518 -783 leon -14184 -11973 dauer 204 los 29 ab F2770 sub3 0 sub4 12 sub7 192
+EINS seed 0x0ec6d5ab modus 1 blockiert 370 griffe 3 nah 219 fern 151 los 147 klemme 370 sub3 0 sub4 97 sub7 273
+## seed 0x0ec6d5ab idx 27 nb6=0
+EINS seed 0x0ec6d5ab modus 1 blockiert 0 griffe 3 nah 0 fern 0 los 0 klemme 0 sub3 0 sub4 0 sub7 0
+## seed 0xc413afd1 idx 33 nb6=3
+LAGE c413afd1 g1 -16212 -4891 leon -13087 -1675 dauer 170 los 170 ab F434 sub3 170 sub4 0 sub7 0
+LAGE c413afd1 g0 -11440 -15370 leon -15044 -16627 dauer 131 los 131 ab F4038 sub3 0 sub4 131 sub7 0
+LAGE c413afd1 g1 -12892 -12656 leon -13262 -16627 dauer 160 los 160 ab F4018 sub3 0 sub4 160 sub7 0
+EINS seed 0xc413afd1 modus 1 blockiert 461 griffe 2 nah 383 fern 78 los 461 klemme 461 sub3 170 sub4 291 sub7 0
+## seed 0xc413afd1 idx 33 nb6=0
+LAGE c413afd1 g1 -16212 -4891 leon -14233 -2713 dauer 187 los 187 ab F434 sub3 187 sub4 0 sub7 0
+LAGE c413afd1 g1 -20469 13088 leon -26598 14578 dauer 94 los 94 ab F1242 sub3 89 sub4 5 sub7 0
+LAGE c413afd1 g1 8382 -1092 leon 11972 2002 dauer 128 los 128 ab F3002 sub3 128 sub4 0 sub7 0
+EINS seed 0xc413afd1 modus 1 blockiert 409 griffe 3 nah 353 fern 56 los 409 klemme 368 sub3 404 sub4 5 sub7 0
+## seed 0x9075ea6c idx 44 nb6=3
+LAGE 9075ea6c g0 9522 -782 leon 5730 -5470 dauer 109 los 109 ab F3045 sub3 109 sub4 0 sub7 0
+EINS seed 0x9075ea6c modus 1 blockiert 109 griffe 4 nah 109 fern 0 los 109 klemme 109 sub3 109 sub4 0 sub7 0
+## seed 0x9075ea6c idx 44 nb6=0
+LAGE 9075ea6c g0 9522 -782 leon 5367 -7637 dauer 120 los 120 ab F3045 sub3 110 sub4 1 sub7 9
+LAGE 9075ea6c g0 -13741 -1195 leon -15021 -5574 dauer 96 los 96 ab F5340 sub3 96 sub4 0 sub7 0
+LAGE 9075ea6c g0 -13720 -1177 leon -15014 -9470 dauer 91 los 91 ab F5458 sub3 80 sub4 1 sub7 10
+EINS seed 0x9075ea6c modus 1 blockiert 307 griffe 3 nah 286 fern 21 los 307 klemme 306 sub3 286 sub4 2 sub7 19
+## seed 0x45c2c492 idx 50 nb6=3
+LAGE 45c2c492 g0 8194 -7704 leon 8493 -4068 dauer 93 los 93 ab F670 sub3 93 sub4 0 sub7 0
+EINS seed 0x45c2c492 modus 1 blockiert 93 griffe 5 nah 93 fern 0 los 93 klemme 93 sub3 93 sub4 0 sub7 0
+## seed 0x45c2c492 idx 50 nb6=0
+LAGE 45c2c492 g0 8194 -7704 leon 8493 -4068 dauer 93 los 93 ab F670 sub3 93 sub4 0 sub7 0
+LAGE 45c2c492 g1 6495 -307 leon 8432 -7376 dauer 161 los 161 ab F1223 sub3 152 sub4 9 sub7 0
+EINS seed 0x45c2c492 modus 1 blockiert 254 griffe 4 nah 245 fern 9 los 254 klemme 254 sub3 245 sub4 9 sub7 0

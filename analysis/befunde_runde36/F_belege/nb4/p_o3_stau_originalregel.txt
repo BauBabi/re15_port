@@ -1,0 +1,8 @@
+F150 | G1 -23302 14506 r2061 s1/3/1/0 d3304 k1 h70 fest0 L1 uw0 vt0 | G2 -20574 16118 r1885 s1/4/1/0 d6225 k1 h149 fest149 L1 uw0 vt0 | pl -26606 14578 hp 100
+F300 | G1 -23302 14503 r2065 s1/3/1/0 d3304 k1 h26 fest0 L1 uw0 vt0 | G2 -20574 16118 r1885 s1/4/1/0 d6225 k1 h299 fest299 L1 uw0 vt0 | pl -26606 14578 hp 100
+F450 | G1 -23302 14489 r2067 s1/3/1/0 d3305 k1 h20 fest0 L1 uw0 vt0 | G2 -20579 16118 r1885 s1/4/1/0 d6220 k1 h449 fest449 L1 uw0 vt0 | pl -26606 14578 hp 100
+F600 | G1 -23302 14467 r2071 s1/3/1/0 d3305 k1 h14 fest0 L1 uw0 vt0 | G2 -20598 16118 r1885 s1/4/1/0 d6202 k1 h599 fest599 L1 uw0 vt0 | pl -26606 14578 hp 100
+F750 | G1 -23302 14438 r2075 s1/3/1/0 d3306 k1 h8 fest0 L1 uw0 vt0 | G2 -20620 16118 r1885 s1/4/1/0 d6180 k1 h749 fest749 L1 uw0 vt0 | pl -26606 14578 hp 100
+F900 | G1 -23302 14437 r2075 s1/3/1/0 d3307 k1 h2 fest0 L1 uw0 vt0 | G2 -20620 16118 r1885 s1/4/1/0 d6180 k1 h899 fest899 L1 uw0 vt0 | pl -26606 14578 hp 100
+LAGE G1: erster Angriff 0, fest 900 (Anker 400, Leon > 3000), davon fern 0, Ende (-23302,14437) s3
+LAGE G2: erster Angriff 0, fest 900 (Anker 400, Leon > 3000), davon fern 900, Ende (-20620,16118) s4

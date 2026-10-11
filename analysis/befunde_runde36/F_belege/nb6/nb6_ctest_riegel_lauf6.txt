@@ -1,0 +1,56 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/build
+      Start  31: unit_maggot_ai
+ 1/25 Test  #31: unit_maggot_ai ...................   Passed    0.03 sec
+      Start  89: unit_maggot_bone_square
+ 2/25 Test  #89: unit_maggot_bone_square ..........   Passed    0.02 sec
+      Start 266: unit_maggot_zone_leap
+ 3/25 Test #266: unit_maggot_zone_leap ............   Passed    0.02 sec
+      Start 456: unit_r35_affen_teile
+ 4/25 Test #456: unit_r35_affen_teile .............   Passed    0.02 sec
+      Start 457: unit_r35_affen_band
+ 5/25 Test #457: unit_r35_affen_band ..............   Passed    0.03 sec
+      Start 458: unit_r35_affen_ada
+ 6/25 Test #458: unit_r35_affen_ada ...............   Passed    0.17 sec
+      Start 459: unit_r35_affen_sprung
+ 7/25 Test #459: unit_r35_affen_sprung ............   Passed    0.07 sec
+      Start 460: unit_r35_affen_flug
+ 8/25 Test #460: unit_r35_affen_flug ..............   Passed    0.01 sec
+      Start 461: unit_r35_affen_wagen
+ 9/25 Test #461: unit_r35_affen_wagen .............   Passed    0.07 sec
+      Start 462: unit_r35_affen_brust
+10/25 Test #462: unit_r35_affen_brust .............   Passed    0.02 sec
+      Start 463: unit_r35_affen_kdsonde
+11/25 Test #463: unit_r35_affen_kdsonde ...........   Passed    0.02 sec
+      Start 464: unit_r35_affen_biss
+12/25 Test #464: unit_r35_affen_biss ..............   Passed    0.01 sec
+      Start 465: unit_r35_affen_frac
+13/25 Test #465: unit_r35_affen_frac ..............   Passed    0.01 sec
+      Start 466: unit_r35_affen_anker
+14/25 Test #466: unit_r35_affen_anker .............   Passed    0.02 sec
+      Start 467: unit_r35_affen_takt
+15/25 Test #467: unit_r35_affen_takt ..............   Passed    0.09 sec
+      Start 468: unit_r35_affen_griff
+16/25 Test #468: unit_r35_affen_griff .............   Passed    0.73 sec
+      Start 469: unit_r35_affen_npcband
+17/25 Test #469: unit_r35_affen_npcband ...........   Passed    0.35 sec
+      Start 470: unit_r35_affen_schrot
+18/25 Test #470: unit_r35_affen_schrot ............   Passed    0.04 sec
+      Start 471: unit_r35_affen_wand
+19/25 Test #471: unit_r35_affen_wand ..............   Passed    0.02 sec
+      Start 472: unit_r35_affen_szene
+20/25 Test #472: unit_r35_affen_szene .............   Passed    0.16 sec
+      Start 473: unit_r35_affen_finisher
+21/25 Test #473: unit_r35_affen_finisher ..........   Passed    0.03 sec
+      Start 474: unit_r35_affen_zonensprung
+22/25 Test #474: unit_r35_affen_zonensprung .......   Passed    0.03 sec
+      Start 475: unit_r35_affen_kette
+23/25 Test #475: unit_r35_affen_kette .............   Passed    0.01 sec
+      Start 574: unit_r36_zombieki_affen
+24/25 Test #574: unit_r36_zombieki_affen ..........   Passed    0.04 sec
+      Start 576: unit_r36_zombieki_affen_block
+25/25 Test #576: unit_r36_zombieki_affen_block ....   Passed   19.65 sec
+
+100% tests passed, 0 tests failed out of 25
+
+Total Test time (real) =  21.73 sec
+CTEST_RC=0

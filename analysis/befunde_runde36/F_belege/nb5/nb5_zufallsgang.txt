@@ -1,0 +1,5 @@
+# Zufallsgang 52 Seeds x 6000 Bilder (eins <i> 1 6000 <anker> 0 1 <nah>), je Lauf eigener Prozess
+zg_nah0_a40.txt blockiert 125 griffe 242 nah 74 fern 51 seeds 52
+zg_nah0_a400.txt blockiert 16352 griffe 242 nah 13583 fern 2769 seeds 52
+zg_nah1_a40.txt blockiert 125 griffe 242 nah 74 fern 51 seeds 52
+zg_nah1_a400.txt blockiert 16352 griffe 242 nah 13583 fern 2769 seeds 52

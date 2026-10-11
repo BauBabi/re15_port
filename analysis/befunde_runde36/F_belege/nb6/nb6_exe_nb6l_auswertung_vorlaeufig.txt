@@ -1,0 +1,175 @@
+## 14 Stellen (nb6l), Auswerter ausw5.py der Abnahme 5
+affen_-7000,12500_nb6l | F1..F2160
+   S2 Angriff F1627 (Angriffsbilder 154) fest 341 = NAH 341 + FERN 0
+      F1254+341 G(-13527,11922) d3556..3673 Leon (-9919,11378)->(-9971,11418) anderer S3 st1/sub3 (-8406,12806)->(-8121,13132)
+   S3 Angriff F730 (Angriffsbilder 444) fest 250 = NAH 250 + FERN 0
+      F1911+250 G(-10041,12712) d4369..4461 Leon (-13343,9764)->(-13343,9764) anderer S2 st1/sub3 (-13245,12956)->(-13347,12467)
+affen_-14000,2000_nb6l | F1..F1870
+   S2 Angriff F680 (Angriffsbilder 415) fest 0 = NAH 0 + FERN 0
+   S3 Angriff nie (Angriffsbilder 0) fest 0 = NAH 0 + FERN 0
+affen_6000,-9000_nb6l | F1..F1920
+   S2 Angriff F1651 (Angriffsbilder 21) fest 271 = NAH 271 + FERN 0
+      F1048+152 G(2998,-10335) d5129..5449 Leon (5858,-5716)->(5858,-5716) anderer S3 st1/sub3 (5855,-8866)->(6396,-8818)
+      F1278+119 G(4802,-8842) d4072..5371 Leon (5791,-4891)->(5677,-3468) anderer S3 st1/sub5 (7451,-6509)->(7300,-5865)
+   S3 Angriff F324 (Angriffsbilder 415) fest 368 = NAH 368 + FERN 0
+      F826+368 G(5771,-8824) d3087..3158 Leon (5858,-5716)->(5858,-5716) anderer S2 st1/sub3 (-492,-12034)->(3086,-10318)
+affen_-24000,10000_nb6l | F1..F2700
+   S2 Angriff F853 (Angriffsbilder 785) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1570 (Angriffsbilder 104) fest 1193 = NAH 1192 + FERN 1
+      F1207+101 G(-20311,13088) d3933..4479 Leon (-24452,11938)->(-24452,11938) anderer S2 st1/sub3 (-23302,14186)->(-23294,14888)
+      F1326+172 G(-20322,13088) d3522..6232 Leon (-24452,11938)->(-24452,11938) anderer S2 st1/sub5 (-23302,14211)->(-22754,15467)
+      F1781+920 G(-23302,13088) d3211..5514 Leon (-25177,15695)->(-26932,15712) anderer S2 st1/sub3 (-24290,16118)->(-24899,16002)
+affen_7000,4000_nb6l | F1..F1407
+   S2 Angriff nie (Angriffsbilder 0) fest 96 = NAH 0 + FERN 96
+      F396+96 G(-7813,-12848) d25055..25284 Leon (6544,7954)->(6206,8369) anderer S3 st1/sub3 (7092,4565)->(6682,6375)
+   S3 Angriff F18 (Angriffsbilder 529) fest 0 = NAH 0 + FERN 0
+affen_9000,10000_nb6l | F1..F1639
+   S2 Angriff F1175 (Angriffsbilder 144) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F309 (Angriffsbilder 465) fest 0 = NAH 0 + FERN 0
+affen_-14746,-4140_nb6l | F1..F1204
+   S2 Angriff F364 (Angriffsbilder 236) fest 0 = NAH 0 + FERN 0
+   S3 Angriff nie (Angriffsbilder 0) fest 108 = NAH 0 + FERN 108
+      F406+108 G(6418,1676) d22329..22804 Leon (-15305,-3681)->(-15589,-3937) anderer S2 st1/sub3 (-16186,-1379)->(-15700,-1457)
+affen_7200,-4130_nb6l | F1..F1506
+   S2 Angriff F1204 (Angriffsbilder 46) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F274 (Angriffsbilder 380) fest 0 = NAH 0 + FERN 0
+affen_-14000,4000_nb6l | F1..F2162
+   S2 Angriff F704 (Angriffsbilder 419) fest 250 = NAH 250 + FERN 0
+      F1913+250 G(-13760,11653) d3766..3880 Leon (-9945,11447)->(-9945,11447) anderer S3 st1/sub3 (-11162,13692)->(-10929,13250)
+   S3 Angriff F1496 (Angriffsbilder 194) fest 0 = NAH 0 + FERN 0
+affen_-14500,6000_nb6l | F1..F2520
+   S2 Angriff F694 (Angriffsbilder 567) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F892 (Angriffsbilder 616) fest 0 = NAH 0 + FERN 0
+affen_-24452,11938_nb6l | F1..F2700
+   S2 Angriff F828 (Angriffsbilder 810) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1253 (Angriffsbilder 80) fest 1335 = NAH 1335 + FERN 0
+      F1366+1335 G(-23061,13333) d3358..5472 Leon (-26932,15419)->(-26932,15707) anderer S2 st1/sub3 (-25266,16118)->(-24863,16003)
+affen_-22288,11938_nb6l | F1..F2675
+   S2 Angriff F868 (Angriffsbilder 652) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1025 (Angriffsbilder 320) fest 833 = NAH 783 + FERN 50
+      F1682+118 G(-20698,13088) d3056..6041 Leon (-23751,13544)->(-26213,14578) anderer S2 st1/sub5 (-23296,14884)->(-23302,14309)
+      F1865+151 G(-20688,13122) d5598..6065 Leon (-26438,14578)->(-26438,14578) anderer S2 st1/sub3 (-23302,15183)->(-23302,15292)
+      F2112+92 G(-23061,13412) d3194..5397 Leon (-26574,14578)->(-26940,15490) anderer S2 st1/sub2 (-25011,16060)->(-24928,15891)
+      F2204+472 G(-23302,13082) d3833..4405 Leon (-26941,15490)->(-26939,14571) anderer S2 st1/sub3 (-24923,15871)->(-25270,15767)
+affen_-26500,15500_nb6l | F1..F2582
+   S2 Angriff F842 (Angriffsbilder 731) fest 0 = NAH 0 + FERN 0
+   S3 Angriff nie (Angriffsbilder 0) fest 1650 = NAH 1650 + FERN 0
+      F933+132 G(-23258,13628) d3332..5280 Leon (-26933,14575)->(-26939,15446) anderer S2 st1/sub2 (-25433,15976)->(-24960,15992)
+      F1065+1518 G(-23302,13217) d3368..5476 Leon (-26940,15446)->(-26932,15066) anderer S2 st1/sub3 (-24957,15976)->(-25048,15876)
+affen_-20000,14500_nb6l | F1..F2248
+   S2 Angriff F883 (Angriffsbilder 488) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F896 (Angriffsbilder 449) fest 0 = NAH 0 + FERN 0
+## Summen 14 Stellen
+| Leon | erster Angriff S2 / S3 | NAH fest S2 / S3 (FERN) |
+|---|---|---|
+| (-7000,12500) | F1627 / F730 | 341 / 250 (FERN 0 / 0) |
+| (-14000,2000) | F680 / nie | 0 / 0 (FERN 0 / 0) |
+| (6000,-9000) | F1651 / F324 | 271 / 368 (FERN 0 / 0) |
+| (-24000,10000) | F853 / F1570 | 0 / 1192 (FERN 0 / 1) |
+| (7000,4000) | nie / F18 | 0 / 0 (FERN 96 / 0) |
+| (9000,10000) | F1175 / F309 | 0 / 0 (FERN 0 / 0) |
+| (-14746,-4140) | F364 / nie | 0 / 0 (FERN 0 / 108) |
+| (7200,-4130) | F1204 / F274 | 0 / 0 (FERN 0 / 0) |
+| (-14000,4000) | F704 / F1496 | 250 / 0 (FERN 0 / 0) |
+| (-14500,6000) | F694 / F892 | 0 / 0 (FERN 0 / 0) |
+| (-24452,11938) | F828 / F1253 | 0 / 1335 (FERN 0 / 0) |
+| (-22288,11938) | F868 / F1025 | 0 / 783 (FERN 0 / 50) |
+| (-26500,15500) | F842 / nie | 0 / 1650 (FERN 0 / 0) |
+| (-20000,14500) | F883 / F896 | 0 / 0 (FERN 0 / 0) |
+Summe fest 6695 (FERN 255 / NAH 6440)
+## Schuss-Laeufe + Tuerwege (nb6l)
+nw12_schuss_nb6l | F1..F2471
+   S2 Angriff F868 (Angriffsbilder 177) fest 141 = NAH 141 + FERN 0
+      F1464+141 G(-25094,15728) d3802..3883 Leon (-24464,11926)->(-24461,11929) anderer S3 st1/sub6 (-22863,13210)->(-22556,13088)
+   S3 Angriff F1144 (Angriffsbilder 157) fest 0 = NAH 0 + FERN 0
+nw4_schuss_nb6l | F1..F2519
+   S2 Angriff F853 (Angriffsbilder 145) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1357 (Angriffsbilder 135) fest 105 = NAH 105 + FERN 0
+      F1028+105 G(-20376,13088) d3849..4516 Leon (-24048,11933)->(-24462,11920) anderer S2 st2/sub7 (-23172,13798)->(-23134,15168)
+nw11_schuss_nb6l | F1..F2458
+   S2 Angriff F828 (Angriffsbilder 158) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1291 (Angriffsbilder 142) fest 0 = NAH 0 + FERN 0
+nw13_schuss_nb6l | F1..F2410
+   S2 Angriff F840 (Angriffsbilder 206) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1509 (Angriffsbilder 21) fest 249 = NAH 249 + FERN 0
+      F1020+249 G(-23282,13203) d3008..5200 Leon (-25671,15049)->(-26933,15369) anderer S2 st1/sub7 (-24921,15958)->(-25782,15728)
+stelle3_schuss_nb6l | F1..F2116
+   S2 Angriff F1002 (Angriffsbilder 31) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F324 (Angriffsbilder 114) fest 0 = NAH 0 + FERN 0
+t11b0kampf_schuss_nb6l | F1..F2221
+   S2 Angriff F1415 (Angriffsbilder 25) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F862 (Angriffsbilder 160) fest 0 = NAH 0 + FERN 0
+t11b0szene_schuss_nb6l | F1..F2533
+   S2 Angriff F1276 (Angriffsbilder 65) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1434 (Angriffsbilder 77) fest 0 = NAH 0 + FERN 0
+t11b0kampf_nb6l | F1..F2473
+   S2 Angriff nie (Angriffsbilder 0) fest 1309 = NAH 1309 + FERN 0
+      F1130+465 G(-22332,16118) d3329..4756 Leon (-26939,17275)->(-25444,16182) anderer S3 st1/sub15 (-25524,15798)->(-25201,15728)
+      F1606+164 G(-22134,16133) d3787..4721 Leon (-25964,17268)->(-26932,17268) anderer S3 st1/sub5 (-25515,15728)->(-25750,15728)
+      F1770+197 G(-22576,16118) d3707..4690 Leon (-26932,17268)->(-25923,16257) anderer S3 st1/sub15 (-25760,15728)->(-25327,15728)
+      F1991+483 G(-22290,16118) d3841..4725 Leon (-25993,17268)->(-26932,17268) anderer S3 st1/sub3 (-25508,15728)->(-25607,15728)
+   S3 Angriff F866 (Angriffsbilder 652) fest 0 = NAH 0 + FERN 0
+t11b0szene_nb6l | F1..F2541
+   S2 Angriff F1551 (Angriffsbilder 375) fest 408 = NAH 408 + FERN 0
+      F1143+408 G(-4936,-14532) d3009..3149 Leon (-7148,-12363)->(-7027,-12367) anderer S3 st1/sub5 (-3617,-17798)->(-9033,-12016)
+   S3 Angriff F1430 (Angriffsbilder 415) fest 0 = NAH 0 + FERN 0
+szene11c0_nb6l | F1..F1700
+   S2 Angriff F1537 (Angriffsbilder 91) fest 398 = NAH 398 + FERN 0
+      F1139+398 G(-4942,-14537) d3004..3099 Leon (-7107,-12395)->(-7047,-12391) anderer S3 st1/sub3 (-3617,-17798)->(-9073,-12065)
+   S3 Angriff F1423 (Angriffsbilder 115) fest 0 = NAH 0 + FERN 0
+flucht_west_nb6l | F1..F2112
+   S2 Angriff F277 (Angriffsbilder 538) fest 0 = NAH 0 + FERN 0
+   S3 Angriff F1084 (Angriffsbilder 333) fest 0 = NAH 0 + FERN 0
+## cmp gegen Abnahme 5 (abn5f_neu) / Vorgaenger (nb6b)
+szene11c0 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+szene11c0 st.log: Abnahme5 GLEICH | nb6b GLEICH
+t11b0szene gy.log: Abnahme5 GLEICH | nb6b GLEICH
+t11b0szene st.log: Abnahme5 GLEICH | nb6b GLEICH
+t11b0kampf gy.log: Abnahme5 GLEICH | nb6b GLEICH
+t11b0kampf st.log: Abnahme5 GLEICH | nb6b GLEICH
+flucht_west gy.log: Abnahme5 GLEICH | nb6b GLEICH
+flucht_west st.log: Abnahme5 GLEICH | nb6b GLEICH
+p3lache gy.log: Abnahme5 GLEICH | nb6b GLEICH
+p3lache st.log: Abnahme5 GLEICH | nb6b GLEICH
+r1040w gy.log: Abnahme5 GLEICH | nb6b GLEICH
+r10b0 gy.log: Abnahme5 GLEICH | nb6b ?
+tuer1010 gy.log: Abnahme5 GLEICH | nb6b ?
+tuer1040 gy.log: Abnahme5 anders | nb6b ?
+tuer1040 st.log: Abnahme5 anders | nb6b ?
+t1220a gy.log: Abnahme5 GLEICH | nb6b ?
+t1220a st.log: Abnahme5 GLEICH | nb6b ?
+t1220c gy.log: Abnahme5 anders | nb6b ?
+t1220c st.log: Abnahme5 anders | nb6b ?
+affen_-24000,10000 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-24452,11938 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-22288,11938 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-26500,15500 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-7000,12500 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-14000,2000 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_7000,4000 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_9000,10000 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-14746,-4140 gy.log: Abnahme5 anders | nb6b anders
+affen_-14000,4000 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-14500,6000 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_-20000,14500 gy.log: Abnahme5 GLEICH | nb6b GLEICH
+affen_6000,-9000 gy.log: Abnahme5 anders | nb6b anders
+affen_7200,-4130 gy.log: Abnahme5 anders | nb6b GLEICH
+nw12_schuss gy.log: Abnahme5 anders | nb6b GLEICH
+nw12_schuss st.log: Abnahme5 anders | nb6b GLEICH
+nw4_schuss gy.log: Abnahme5 anders | nb6b GLEICH
+nw4_schuss st.log: Abnahme5 anders | nb6b GLEICH
+nw11_schuss gy.log: Abnahme5 GLEICH | nb6b GLEICH
+nw11_schuss st.log: Abnahme5 GLEICH | nb6b GLEICH
+nw13_schuss gy.log: Abnahme5 anders | nb6b GLEICH
+nw13_schuss st.log: Abnahme5 anders | nb6b GLEICH
+stelle3_schuss gy.log: Abnahme5 GLEICH | nb6b GLEICH
+stelle3_schuss st.log: Abnahme5 GLEICH | nb6b GLEICH
+t11b0kampf_schuss gy.log: Abnahme5 anders | nb6b GLEICH
+t11b0kampf_schuss st.log: Abnahme5 anders | nb6b GLEICH
+t11b0szene_schuss gy.log: Abnahme5 GLEICH | nb6b GLEICH
+t11b0szene_schuss st.log: Abnahme5 GLEICH | nb6b GLEICH
+## p3lache Framedumps gegen Abnahme 5
+Framedumps 0, bitgleich 0
+## r1010a R1010-Teil gegen Abnahme 5
+958
+R1010-Teil anders

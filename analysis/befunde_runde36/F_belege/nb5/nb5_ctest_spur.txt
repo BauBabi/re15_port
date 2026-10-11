@@ -1,0 +1,65 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/build
+      Start 577: unit_r36_zombieki_eintritt
+      Start 575: unit_r36_zombieki_sicht
+      Start 576: unit_r36_zombieki_affen_block
+      Start 468: unit_r35_affen_griff
+      Start 572: unit_r36_zombieki_wecker
+      Start 469: unit_r35_affen_npcband
+ 1/30 Test #469: unit_r35_affen_npcband ...........   Passed    0.41 sec
+      Start 458: unit_r35_affen_ada
+ 2/30 Test #458: unit_r35_affen_ada ...............   Passed    0.15 sec
+      Start 472: unit_r35_affen_szene
+ 3/30 Test #468: unit_r35_affen_griff .............   Passed    0.69 sec
+      Start 467: unit_r35_affen_takt
+ 4/30 Test #472: unit_r35_affen_szene .............   Passed    0.15 sec
+      Start  31: unit_maggot_ai
+ 5/30 Test  #31: unit_maggot_ai ...................   Passed    0.02 sec
+      Start 312: unit_r17_waffen_loop_pin
+ 6/30 Test #312: unit_r17_waffen_loop_pin .........   Passed    0.01 sec
+      Start 461: unit_r35_affen_wagen
+ 7/30 Test #467: unit_r35_affen_takt ..............   Passed    0.10 sec
+      Start 459: unit_r35_affen_sprung
+ 8/30 Test #461: unit_r35_affen_wagen .............   Passed    0.06 sec
+      Start 470: unit_r35_affen_schrot
+ 9/30 Test #459: unit_r35_affen_sprung ............   Passed    0.06 sec
+      Start 457: unit_r35_affen_band
+10/30 Test #470: unit_r35_affen_schrot ............   Passed    0.04 sec
+      Start 473: unit_r35_affen_finisher
+11/30 Test #457: unit_r35_affen_band ..............   Passed    0.03 sec
+      Start 266: unit_maggot_zone_leap
+12/30 Test #473: unit_r35_affen_finisher ..........   Passed    0.03 sec
+      Start 474: unit_r35_affen_zonensprung
+13/30 Test #266: unit_maggot_zone_leap ............   Passed    0.02 sec
+      Start 466: unit_r35_affen_anker
+14/30 Test #466: unit_r35_affen_anker .............   Passed    0.02 sec
+      Start  89: unit_maggot_bone_square
+15/30 Test #474: unit_r35_affen_zonensprung .......   Passed    0.04 sec
+      Start 463: unit_r35_affen_kdsonde
+16/30 Test  #89: unit_maggot_bone_square ..........   Passed    0.02 sec
+      Start 573: unit_r36_zombieki_szenen
+17/30 Test #463: unit_r35_affen_kdsonde ...........   Passed    0.02 sec
+      Start 460: unit_r35_affen_flug
+18/30 Test #460: unit_r35_affen_flug ..............   Passed    0.01 sec
+      Start 471: unit_r35_affen_wand
+19/30 Test #471: unit_r35_affen_wand ..............   Passed    0.02 sec
+      Start 465: unit_r35_affen_frac
+20/30 Test #465: unit_r35_affen_frac ..............   Passed    0.01 sec
+      Start 475: unit_r35_affen_kette
+21/30 Test #573: unit_r36_zombieki_szenen .........   Passed    0.06 sec
+      Start 464: unit_r35_affen_biss
+22/30 Test #475: unit_r35_affen_kette .............   Passed    0.02 sec
+      Start 456: unit_r35_affen_teile
+23/30 Test #464: unit_r35_affen_biss ..............   Passed    0.02 sec
+      Start 462: unit_r35_affen_brust
+24/30 Test #456: unit_r35_affen_teile .............   Passed    0.02 sec
+      Start 574: unit_r36_zombieki_affen
+25/30 Test #462: unit_r35_affen_brust .............   Passed    0.02 sec
+26/30 Test #574: unit_r36_zombieki_affen ..........   Passed    0.05 sec
+27/30 Test #572: unit_r36_zombieki_wecker .........   Passed    1.25 sec
+28/30 Test #575: unit_r36_zombieki_sicht ..........   Passed   17.06 sec
+29/30 Test #577: unit_r36_zombieki_eintritt .......   Passed   18.17 sec
+30/30 Test #576: unit_r36_zombieki_affen_block ....   Passed   19.34 sec
+
+100% tests passed, 0 tests failed out of 30
+
+Total Test time (real) =  19.38 sec

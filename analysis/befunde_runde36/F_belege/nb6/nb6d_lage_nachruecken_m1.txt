@@ -1,0 +1,5 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+LAGE G1: erster Angriff 91, fest 0 (Anker 400, Leon > 3000), davon fern 0, Ende (-25329,15855) s0, letzter Angriff 367, Angriffsbilder 154, Leon (-26932,14886), frei 0, NAH fest vor dem ersten Angriff 0
+LAGE G2: erster Angriff 101, fest 246 (Anker 400, Leon > 3000), davon fern 0, Ende (-24027,15936) s5, letzter Angriff 1200, Angriffsbilder 393, Leon (-26932,14886), frei 3, NAH fest vor dem ersten Angriff 0

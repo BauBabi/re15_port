@@ -1,0 +1,60 @@
+  1200 cut0 slot3 Leon@(-21358,-14854) d=3847 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-16054) d=4841 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-15654) d=4604 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-15254) d=4390 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-14854) d=4204 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20558,-15654) d=4939 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20558,-15254) d=4741 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20558,-14854) d=4569 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20158,-14854) d=4939 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16470,-11083) d=4049 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16470,-10683) d=4427 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16470,-10283) d=4808 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16070,-11083) d=3929 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16070,-10683) d=4317 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16070,-10283) d=4707 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15670,-11083) d=3847 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15670,-10683) d=4242 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15670,-10283) d=4638 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15270,-10283) d=4604 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16300,-21000) d=4841 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-22451) d=4939 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-22051) d=4569 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-21651) d=4204 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-21251) d=3847 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-20851) d=3498 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-20451) d=3162 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-14700,-21800) d=4808 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-22051) d=4427 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-21651) d=4049 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-21251) d=3676 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-20851) d=3310 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-14300,-21800) d=4707 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-15675,-22051) d=4317 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-15675,-21651) d=3929 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-15675,-21251) d=3544 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-15200,-7900) d=4242 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-14800,-8300) d=4808 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-14800,-7900) d=4534 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-14400,-7900) d=4841 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot2 Leon@(-15600,-7700) d=4939 zell=1 ray=1  #7 t1 nib3 u0=ff #14 t1 nib3 u0=ff #31 t1 nib3 u0=ff #38 t1 nib3 u0=ff #55 t1 nib3 u0=ff
+
+45 Zombies, 3360 Plaetze im Vorderkegel < 0x1388 in einer BLK-Zone (2928 ausserhalb verworfen): Zell-Strahl blockt 1011 (30.1%), RE1.5-Strahl (Nibble 3) blockt 386 (11.5%), nur Zell-Strahl 625 (18.6%); STEHT 49 (1.5%): davon nur-Zell-Strahl 0, beide frei 0, Nibble-3 49; Klassen: hinter WAND 49, nur hinter belegten MOEBELN 0
+ok:   Zensus deckt 45 stehende Zombies
+ok:   Raster deckt 3360 Leon-Plaetze (in BLK-Zonen, Abstand < 0x1388)
+ok:   kein Zombie steht 480 Bilder, wo nur der Zell-Rechteck-Strahl die Sicht nimmt (0)
+ok:   kein Zombie steht 480 Bilder bei freier Sicht (0)
+ok:   kein Zombie steht 480 Bilder NUR hinter belegten Moebeln (0)
+ok:   jeder stehende Zombie-Platz (49) liegt hinter einer Nibble-3-Zelle ohne belegte Hoehe = Wand (49)
+ok:   Gegenprobe NB1-Abbildung: Hoehenregel oeffnet 1829 Plaetze, davon 1814 ueber die Wand ROOM1040 #4 (Befund Abnahme 1)
+  1010 #5   x    -50..  2450 z   1550..  5900 ( 2500x 4350) Oberkante  -1600:    52 Plaetze geoeffnet (52 im Kegel)
+  1010 #12  x   1850..  3050 z   4100..  5300 ( 1200x 1200) Oberkante  -2000:    59 Plaetze geoeffnet (59 im Kegel)
+  1220 #18  x -27600..-25650 z -11700.. -8050 ( 1950x 3650) Oberkante  -1000:     8 Plaetze geoeffnet (8 im Kegel)
+DURCHWAND: 182 Zombies, 72900 Plaetze, Hoehenregel oeffnet 74 (davon ueber ROOM1040 #4: 0)
+ok:   NB2: 0 Plaetze ueber die Wand ROOM1040 #4 geoeffnet (0; gesamt 74)
+ok:   NB2: die Hoehenregel oeffnet 74 Plaetze nur ueber belegte Moebel-Zellen (3 Zellen, fremd 0)
+ok:   Gegenprobe ROOM1040 Leon im Westgang, NB1-Abbildung: 2 von 2 Ostgang-Zombies 'sehen' ihn durch die Wand
+ok:   ROOM1040 Leon im Westgang, NB2: 0 von 2 Ostgang-Zombies sehen ihn (0 = Wand haelt)
+
+15 Pruefungen, 0 Fehler
+exit 0

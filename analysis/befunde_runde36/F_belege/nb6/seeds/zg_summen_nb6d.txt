@@ -1,0 +1,4 @@
+zg_a400_nb6d_3.txt     n=52 blockiert 17278 griffe 251 nah 13950 fern 3328
+zg_a400_nb6d_0.txt     n=52 blockiert 16352 griffe 242 nah 13583 fern 2769
+zg_a40_nb6d_3.txt      n=52 blockiert 0 griffe 251 nah 0 fern 0
+zg_a40_nb6d_0.txt      n=52 blockiert 125 griffe 242 nah 74 fern 51
