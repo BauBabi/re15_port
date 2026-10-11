@@ -29,6 +29,7 @@
  */
 #include "re15_debug_menu.h"
 #include "debug_jump_table.h"
+#include "re15_gameflow.h"   /* re15_room_for_char — Elza-Bit des Raumladers (Runde 36 Spur I) */
 #include <string.h>
 
 /* Pad-Bits, wie das Original sie am Wort 0x800AC760 prueft. */
@@ -130,6 +131,19 @@ int re15_debug_menu_jump_spawn(int32_t *x, int32_t *z, int *band)
     if (z)    *z = (int16_t)((unsigned)s_tbl[off + 4] | ((unsigned)s_tbl[off + 5] << 8));
     if (band) *band = (int)s_tbl[off + 6];
     return 1;
+}
+
+/* Runde 36 Spur I (Nutzer: "schickst du, wenn man mit Elza spielt Elza in Leons Raeume. Wenn man mit
+ * Elza spielt, sind die Raeume mit '1' hinten korrekt, zum Beispiel ROOM 1071"). Der JUMP-Executor
+ * schreibt nur Stage/Raum (@0x8001d660 `sh v0,4066(at)` -> DAT_800b0fe2, @0x8001d808 -> DAT_800b0fe0)
+ * und springt in denselben Raumlader wie jede Tuer (`j 0x8001d988` @0x8001d824, `jal 0x800396fc`
+ * @0x8001d988); der waehlt die Datei = Basisindex + Elza-Bit (`srl a0,a0,31` @0x800397e4,
+ * `addu a0,a0,v0` @0x800397ec; Stage-0-Tabelle @0x8007429c in Schritten von 3 = BSS/Leon/Elza).
+ * Im Port ist die Datei-Variante die unterste Hex-Ziffer der Raum-Id -> re15_room_for_char. Alle 101
+ * belegten Sprung-Saetze haben beide Varianten (Zensus im Dossier I_inventar.md). */
+uint16_t re15_debug_menu_ziel_id(void)
+{
+    return re15_room_for_char((unsigned)s_dbg.load_room << 4);
 }
 
 /* ==== D-Pad-Auto-Repeat (byte-true FUN_80030444-Tail + Config FUN_80030640) ======================

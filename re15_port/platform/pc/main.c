@@ -127,6 +127,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_savedata.h"     /* FE-4 game-state save block */
 #include "re15_memcard.h"      /* FE-4 byte-true PSX .mcr backend */
 #include "re15_savepoint.h"    /* FE-4 phone save-point pending signal */
+#include "re15_inventar_r36.h" /* Runde 36 Spur I: Memory Card beim Speichern verbrauchen */
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 
@@ -5059,7 +5060,7 @@ re_title:;
             g_scd.message_fsm_active     = 0;
             g_scd.message_display_frames = 0;
             g_scd.message_query          = 0;
-            int mc = re15_savepoint_card_slot();   /* nur fuer das Protokoll — kein Verbrauch mehr */
+            int mc = -1;                           /* Platz der Memory Card im geschriebenen Block (Runde 36) */
             re15_savedata_t sd;
             /* BYTE-TRUE Zaehler-Semantik (analysis/save_counter.md SC-1/SC-3, CONFIRMED):
              * Der Save speichert den LIVE-Zaehler DAT_800b0fbd PRE-Inkrement (GSB-memcpy
@@ -5078,17 +5079,21 @@ re_title:;
              * camera_cut from the live cam_id; override with the latched cut + recompute the checksum. */
             { int gc = re15_savepoint_saved_cut();
               if (gc >= 0) { sd.camera_cut = (uint8_t)gc; sd.checksum = re15_savedata_checksum(&sd); } }
-            /* KEIN Kartenverbrauch (Runde 33, PORT-WAHL auf Nutzerwunsch): der gesicherte Block
-             * traegt das Inventar unveraendert, die Memory Card bleibt drin. (Frueher: qty-- im
-             * Block und im Live-Inventar, RE2-Farbband-Analog MEM_CARD.BIN @0x801C11AC.) */
+            /* KARTENVERBRAUCH (Runde 36 Spur I, Nutzer: "Mit Nutzung von Memory Cards beim Speichern
+             * soll sich die Anzahl reduzieren"; hebt die Runde-33-PORT-WAHL "kein Verbrauch" auf):
+             * RE2 MEM_CARD.BIN @0x801c118c-0x801c11e0 — Abzug VOR dem Bau des Blocks, bei 0 Platz weg;
+             * Schreibfehler/Abbruch -> nichts verbraucht (@0x801c1290-12bc). Im Port: Block vorab,
+             * Live-Inventar erst nach Erfolg (re15_inventar_r36.h). */
+            mc = re15_inventar_r36_karte_im_block(&sd);
             if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
                 s_save_counter = (uint16_t)(scount + 1);   /* DAT_800b0fbd++ NUR nach Erfolg
                                                             * (@0x80026488-9c, Post-Inkrement) */
+                int rest = (mc >= 0) ? re15_inventar_r36_karte_verbrauchen() : -1;
                 /* n = die GESCHRIEBENE Nummer (Pre-Inkrement, @0x800261c4-d8/@0x80026eac-f0),
                  * next = der Sitzungs-Zaehler danach (Post-Inkrement @0x80026488-9c). */
                 fprintf(stderr, "[save] saved (room %04x) slot n=%d -> next=%u; card=%s (slot %d qty %d)\n",
                         g_current_room_id, scount, (unsigned)s_save_counter,
-                        mc >= 0 ? "kept" : "none", mc, mc >= 0 ? (int)g_inv.slots[mc].qty : 0);
+                        mc < 0 ? "none" : (rest > 0 ? "used" : "used-last, slot removed"), mc, rest);
                 /* TEST-HAKEN (kein Spielverhalten): RE15_SAVE_TEST_EXIT_AFTER=<n> beendet den
                  * Prozess, sobald n Saves geschrieben sind — deterministisches Lauf-Ende fuer
                  * den Zaehler-Pin (die Karte ist hier bereits geschlossen geschrieben). */
@@ -7417,7 +7422,9 @@ re_title:;
                     } else {
                         if (re15_debug_menu_tick(dbg_held, dbg_edge)) {
                             const re15_debug_menu_t *dm = re15_debug_menu_state();
-                            unsigned  droom = (unsigned)dm->load_room << 4;   /* 0x114 -> ROOM1140 */
+                            unsigned  droom = re15_debug_menu_ziel_id();      /* 0x114 -> ROOM1140, mit Elza ROOM1141
+                                                                               * (Runde 36 Spur I: Elza-Bit des Raumladers
+                                                                               * @0x800397e4/ec, re15_debug_menu.h) */
                             int32_t   dx = 0, dy = 0, dz = 0;
                             int16_t   dyaw = 0;
                             int       dcut = 0, dband = 0;

@@ -9,8 +9,12 @@
 # (@0x80051b34/@0x80051b38). Ohne Farbband Meldung (0x100,0) @0x8009EFCC, kein Speichern
 # (@0x80051b68-b98). Mit Farbband Meldung (0x100,1) @0x8009F01F + Ja/Nein; JA ->
 # Speicherbildschirm (@0x80051bc4-dc), NEIN -> zurueck (@0x80051be8-f4). Der Port ersetzt
-# das Farbband durch die Memory Card (Item 0x21) und verbraucht sie NICHT (PORT-WAHL,
-# Nutzerwunsch; RE2 verbraucht in MEM_CARD.BIN @0x801C118C-0x801C11E0).
+# das Farbband durch die Memory Card (Item 0x21). ⛔ RUNDE 36 SPUR I: seit dem Nutzerauftrag
+# "Mit Nutzung von Memory Cards beim Speichern soll sich die Anzahl reduzieren. Sind Memory Cards
+# ... 0 sollen sie aus dem Player inventory verschwinden" verbraucht der Port sie wie RE2 das
+# Farbband (MEM_CARD.BIN @0x801C118C-0x801C11E0; die Runde-33-PORT-WAHL "kein Verbrauch" ist
+# aufgehoben, Dossier analysis/befunde_runde36/I_inventar.md). Lauf B prueft deshalb jetzt den
+# Verbrauch der EINEN Karte (Platz weg); x2 -> x1 prueft integration_r36_inventar.
 #
 # GEMESSEN VOR DEM BAU (echte exe, Spielstand des Nutzers ROOM1150, VIERECK am Telefon):
 #     [msg] room=1150 id=1 SAVEPOINT (menu, message suppressed)
@@ -23,14 +27,15 @@
 #   A  OHNE Karte: 150 A (untersuchen), 200 A (Seite), 330 A (schliessen).
 #      MUSS: "card_slot=-1 -> HINWEIS"; DARF NICHT: "FRAGE", "[save] saved".
 #   B  MIT Karte, JA: 150 A, 200 A, 290 A (Seiten), 370 A (Ja ist vorbelegt).
-#      MUSS: "FRAGE", "Antwort: JA", "[save] saved", "card=kept (slot 0 qty 1)" UND im
-#      geschriebenen Kartenblock (Platz 1) Inventarplatz 0 = 21 01 (Karte mitgespeichert).
+#      MUSS: "FRAGE", "Antwort: JA", "[save] saved", "card=used-last, slot removed (slot 0 qty 0)"
+#      UND im geschriebenen Kartenblock (Platz 1) Inventarplatz 0 = 00 00 (die letzte Karte ist
+#      verbraucht und aus dem Block verschwunden, RE2 @0x801c11d0-e0; Runde 36).
 #   C  MIT Karte, NEIN: wie B, dazu 360 R (Cursor auf NEIN), 380 A.
 #      MUSS: "FRAGE", "Antwort: NEIN"; DARF NICHT: "[save] saved".
 #
 # Er DISKRIMINIERT: der Vorher-Stand (Sofort-Menue) scheitert in A ("[save] saved" ohne
-# Karte) und in B/C (kein "FRAGE"); ein Verbrauch wie in RE2 scheitert in B
-# ("card=kept (slot 0 qty 1)" fehlt, Block traegt 00 00).
+# Karte) und in B/C (kein "FRAGE"); der Runde-33-Stand OHNE Verbrauch scheitert in B
+# ("card=used-last ..." fehlt, Block traegt 21 01).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r33_speichern_karte>
 #               -DWORKDIR=<dir> -P test_r33_speichern.cmake
@@ -63,7 +68,7 @@ _hex("-> FRAGE"                   _h_frage)
 _hex("Antwort: JA"                _h_ja)
 _hex("Antwort: NEIN"              _h_nein)
 _hex("[save] saved"               _h_saved)
-_hex("card=kept (slot 0 qty 1)"   _h_kept)
+_hex("card=used-last, slot removed (slot 0 qty 0)" _h_kept)
 
 # Ein Lauf: Karte schreiben (mit/ohne Memory Card), exe fahren, debug.log als HEX liefern
 # (debug.log enthaelt Binaer-Bytes; file(STRINGS) verschluckt dahinter stumm alles).
@@ -126,14 +131,14 @@ r33_lauf(b "karte" "150:A,200:A,290:A,370:A" _log_b)
 _muss(_log_b _h_frage "B: mit Memory Card kam keine Frage (RE2 Meldung (0x100,1) @0x8009F01F)")
 _muss(_log_b _h_ja    "B: die Antwort JA kam nicht an")
 _muss(_log_b _h_saved "B: nach JA wurde nicht gespeichert (RE2 @0x80051bc4-dc)")
-_muss(_log_b _h_kept  "B: die Memory Card ist nach dem Speichern nicht mehr unveraendert da (PORT-WAHL: kein Verbrauch)")
+_muss(_log_b _h_kept  "B: die letzte Memory Card wurde beim Speichern nicht verbraucht/entfernt (Runde 36, RE2 @0x801c11ac-e0)")
 # Kartenblock Platz 1 = Block 2: Spielstand @0x4000+0x100, Inventar @+40 -> Datei 0x4128.
 file(READ "${_basis}_b/re15_card.mcr" _inv0 OFFSET 16680 LIMIT 2 HEX)   # 16680 = 0x4128
-if(NOT _inv0 STREQUAL "2101")
+if(NOT _inv0 STREQUAL "0000")
     message(FATAL_ERROR "r33_speichern: B: der geschriebene Spielstand traegt in Inventarplatz 0 "
-                        "'${_inv0}', Soll '2101' (Memory Card x1 mitgespeichert, nicht verbraucht)")
+                        "'${_inv0}', Soll '0000' (letzte Memory Card verbraucht, Platz weg — Runde 36)")
 endif()
-message(STATUS "r33_speichern B: mit Karte + JA gespeichert, Karte bleibt (Log + Kartenblock 21 01)")
+message(STATUS "r33_speichern B: mit Karte + JA gespeichert, letzte Karte verbraucht (Log + Kartenblock 00 00)")
 
 # --- C: mit Memory Card, NEIN -------------------------------------------------
 r33_lauf(c "karte" "150:A,200:A,290:A,360:R,380:A" _log_c)
