@@ -1246,6 +1246,8 @@ void re15_game_step(const re15_game_ctx_t *c)
         s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 &&
                               !re15_player_is_grabbed() && !re15_player_is_dead() &&
                               !in_cinematic && !re15_stair_active()) ? 1 : 0;
+        { extern int re15_inventar_r36_tick(void);   /* Runde 36 Spur I: leere Memory Cards/Handgranaten */
+          re15_inventar_r36_tick(); }                /* raeumen VOR dem START-Poll (re15_inventar_r36.h) */
         re15_menu_start_poll(c->pad_pressed, s_inv_open_allowed);
     } else {
         s_inv_open_allowed = 0;

@@ -57,6 +57,12 @@ const char *re15_debug_menu_room_name(void);
  * @0x8001d720, Band = byte@+6 @0x8001d798 — der Debug-Zweig von FUN_8001d600 liest den Spawn
  * aus dem DEBUG.BIN-Tabellensatz SELBST). Rueckgabe 1 = Satz vorhanden (nur mit set_bin). */
 int re15_debug_menu_jump_spawn(int32_t *x, int32_t *z, int *band);
+/* Runde 36 Spur I: volle Port-Raum-Id des Sprungziels (->load_room 0x107 -> 0x1070/0x1071). Das Menue
+ * kennt nur Stage/Index (@0x8001d654-60 -> DAT_800b0fe2, @0x8001d808 -> DAT_800b0fe0); die DATEI waehlt
+ * der Raumlader FUN_800396fc aus Basisindex + Elza-Bit (`srl a0,a0,31` @0x800397e4, `addu a0,a0,v0`
+ * @0x800397ec, erreicht ueber `j 0x8001d988` @0x8001d824 / `jal 0x800396fc` @0x8001d988). Mit Elza
+ * also immer die xxx1-Raeume (re15_room_for_char, re15_gameflow.h). */
+uint16_t re15_debug_menu_ziel_id(void);
 uint16_t re15_debug_menu_pad(uint16_t phys);
 const re15_debug_menu_t *re15_debug_menu_state(void);
 
