@@ -1,0 +1,406 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+ROOM11C0 6000 Bilder, Seed 0x1234567: Leon-Weg 535226, Griffe 8, Bisse(hp<40) 0; Gorillas: (-19245,15370) hp 180 / (-14431,15529) hp 180
+== Gorilla 1: 0 blockierte Strecken >= 90 Bilder
+== Gorilla 2: 0 blockierte Strecken >= 90 Bilder
+blockierte Bilder gesamt: 0 von 12000 (0.0%)
+  Seed 0x01234567: AUS 342 blockiert / 9 Griffe | AN 382 / 8
+  Seed 0x0000beef: AUS 3367 blockiert / 3 Griffe | AN 769 / 10
+  Seed 0x9b5bf362: AUS 3391 blockiert / 7 Griffe | AN 404 / 4
+  Seed 0x39936d13: AUS 2613 blockiert / 3 Griffe | AN 378 / 10
+  Seed 0xd7cae6c4: AUS 4955 blockiert / 8 Griffe | AN 107 / 3
+  Seed 0x76026075: AUS 3094 blockiert / 2 Griffe | AN 835 / 3
+  Seed 0x1439da26: AUS 1261 blockiert / 3 Griffe | AN 562 / 4
+  Seed 0xb27153d7: AUS 2307 blockiert / 3 Griffe | AN 407 / 6
+  Seed 0x50a8cd88: AUS 3379 blockiert / 3 Griffe | AN 94 / 0
+  Seed 0xeee04739: AUS 1223 blockiert / 8 Griffe | AN 638 / 5
+  Seed 0x8d17c0ea: AUS 1697 blockiert / 6 Griffe | AN 252 / 5
+  Seed 0x2b4f3a9b: AUS 4196 blockiert / 1 Griffe | AN 969 / 7
+  Seed 0xc986b44c: AUS 1508 blockiert / 4 Griffe | AN 0 / 5
+  Seed 0x67be2dfd: AUS 100 blockiert / 6 Griffe | AN 0 / 1
+  Seed 0x05f5a7ae: AUS 3754 blockiert / 4 Griffe | AN 354 / 3
+  Seed 0xa42d215f: AUS 1252 blockiert / 3 Griffe | AN 275 / 0
+ok:   16 Zufallsgaenge je AUS und AN gelaufen (16)
+ok:   Gegenprobe Original-Regel: 38439 blockierte Gorilla-Bilder (Befund 'noch oft blockiert')
+FAIL: Umweg: blockierte Bilder (Anker 400) 6426 <= 1/6 von 38439
+ok:   kein Seed mehr als 600 Bilder schlechter (schlechtester 0x01234567: +40)
+ok:   Griffe AN 74 >= 80% von AUS 73 (die Gorillas erreichen Leon)
+Szene 1 Leon (-7000,12500): ORIGINAL-REGEL G1 0 / G2 0 (blockiert 1881/2347) | UMWEG G1 291 / G2 721, blockiert 0/350, nach dem ersten Angriff 0/350 (fern 0/4), Spruenge 3/3 (blind 2/2), Pad #36 0/0
+ok:   Szene 1 Gegenprobe (Original-Regel): keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 1 Umweg: erster Angriff auf Leon Bild 291 (Original-Regel 0)
+ok:   Szene 1 Umweg: 2 Gorilla(s) greifen an (>= 2)
+ok:   Szene 1 Umweg: keine FERN-Blockade nach dem ersten Angriff (0/4 Bilder; nah 0/346 = Original-Nahjagd)
+ok:   Szene 1 Umweg: keine Blind-Sprung-Schleife (blind 2 / 2; Abnahme 1: 48)
+Szene 2 Leon (-7000,12500): ORIGINAL-REGEL G1 0 / G2 0 (blockiert 2349/2354) | UMWEG G1 1506 / G2 485, blockiert 854/572, nach dem ersten Angriff 365/572 (fern 0/30), Spruenge 1/3 (blind 0/2), Pad #36 1/0
+ok:   Szene 2 Gegenprobe (Original-Regel): keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 2 Umweg: erster Angriff auf Leon Bild 485 (Original-Regel 0)
+ok:   Szene 2 Umweg: 2 Gorilla(s) greifen an (>= 1)
+ok:   Szene 2 Umweg: keine FERN-Blockade nach dem ersten Angriff (0/30 Bilder; nah 365/542 = Original-Nahjagd)
+ok:   Szene 2 Umweg: keine Blind-Sprung-Schleife (blind 0 / 2; Abnahme 1: 48)
+Szene 3 Leon (7000,4000): ORIGINAL-REGEL G1 0 / G2 0 (blockiert 2324/2348) | UMWEG G1 928 / G2 283, blockiert 0/0, nach dem ersten Angriff 0/0 (fern 0/0), Spruenge 1/1 (blind 0/0), Pad #36 1/1
+ok:   Szene 3 Gegenprobe (Original-Regel): keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 3 Umweg: erster Angriff auf Leon Bild 283 (Original-Regel 0)
+ok:   Szene 3 Umweg: 2 Gorilla(s) greifen an (>= 2)
+ok:   Szene 3 Umweg: keine FERN-Blockade nach dem ersten Angriff (0/0 Bilder; nah 0/0 = Original-Nahjagd)
+ok:   Szene 3 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48)
+Szene 4 Leon (-24000,10000): ORIGINAL-REGEL G1 0 / G2 0 (blockiert 2111/2149) | UMWEG G1 572 / G2 360, blockiert 0/1804, nach dem ersten Angriff 0/1804 (fern 0/0), Spruenge 1/1 (blind 0/0), Pad #36 0/0
+ok:   Szene 4 Gegenprobe (Original-Regel): keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 4 Umweg: erster Angriff auf Leon Bild 360 (Original-Regel 0)
+ok:   Szene 4 Umweg: 2 Gorilla(s) greifen an (>= 2)
+ok:   Szene 4 Umweg: keine FERN-Blockade nach dem ersten Angriff (0/0 Bilder; nah 0/1804 = Original-Nahjagd)
+ok:   Szene 4 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48)
+Szene 5 Leon (-14000,2000): ORIGINAL-REGEL G1 430 / G2 0 (blockiert 0/2[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+345) | UMWEG G1 431 / G2 352, blockiert 0/0, nach dem ersten Angriff 0/0 (fern 0/0), Spruenge 1/1 (blind 0/0), Pad #36 0/0
+ok:   Szene 5 Gegenprobe (Original-Regel): Gorilla 1 greift an (Bild 430), Gorilla 2 nie (0)
+ok:   Szene 5 Umweg: erster Angriff auf Leon Bild 352 (Original-Regel 430)
+ok:   Szene 5 Umweg: 2 Gorilla(s) greifen an (>= 2)
+ok:   Szene 5 Umweg: keine FERN-Blockade nach dem ersten Angriff (0/0 Bilder; nah 0/0 = Original-Nahjagd)
+ok:   Szene 5 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48)
+ok:   Szene 5 Umweg nach Weglaenge: kein Gorilla laeuft ueber das Ost-Pad #36 (NB2: Gorilla 1 ueber #36, nie)
+Szene 6 Leon (-24452,11938): ORIGINAL-REGEL G1 0 / G2 0 (blockiert 2117/2154) | UMWEG G1 601 / G2 361, blockiert 0/1808, nach dem ersten Angriff 0/1808 (fern 0/0), Spruenge 1/1 (blind 0/0), Pad #36 0/0
+ok:   Szene 6 Gegenprobe (Original-Regel): keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 6 Umweg: erster Angriff auf Leon Bild 361 (Original-Regel 0)
+ok:   Szene 6 Umweg: 2 Gorilla(s) greifen an (>= 2)
+ok:   Szene 6 Umweg: keine FERN-Blockade nach dem ersten Angriff (0/0 Bilder; nah 0/1808 = Original-Nahjagd)
+ok:   Szene 6 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48)
+Szene 7 Leon (-22288,11938): ORIGINAL-REGEL G1 0 / G2 0 (blockiert 2113/2146) | UMWEG G1 480 / G2 340, blockiert 0/1840, nach dem ersten Angriff 0/1840 (fern 0/0), Spruenge 2/1 (blind 0/0), Pad #36 0/0
+ok:   Szene 7 Gegenprobe (Original-Regel): keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 7 Umweg: erster Angriff auf Leon Bild 340 (Original-Regel 0)
+ok:   Szene 7 Umweg: 2 Gorilla(s) greifen an (>= 2)
+ok:   Szene 7 Umweg: keine FERN-Blockade nach dem ersten Angriff (0/0 Bilder; nah 0/1840 = Original-Nahjagd)
+ok:   Szene 7 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48)
+ok:   Leon rennt 600 Bilder auf (-26000,7000) zu: naechster Punkt (-24452,11938), 5174 entfernt (z >= 11938 / x >= -17322 = Zellkanten + 450 + 0x12)
+ok:   Leon rennt 600 Bilder auf (-27000,12000) zu: naechster Punkt (-24452,12011), 2548 entfernt (z >= 11938 / x >= -17322 = Zellkanten + 450 + 0x12)
+ok:   Leon rennt 600 Bilder auf (-24000,10000) zu: naechster Punkt (-24000,11938), 1938 entfernt (z >= 11938 / x >= -17322 = Zellkanten + 450 + 0x12)
+ok:   Leon rennt 600 Bilder auf (-22000,7000) zu: naechster Punkt (-17322,6999), 4678 entfernt (z >= 11938 / x >= -17322 = Zellkanten + 450 + 0x12)
+ok:   Nordwest-Tasche (x -29800..-20200, z 5200..11400, Schritt 800): frei mit Vorlage = Knoten 87 (NB2-Artefakt), mit Vorlage = Knoten + 1 0
+Stau Nordwest-Rand Modus 0: G1 Angriff 0 fest 900 (fern 0) | G2 Angriff 0 fest 900 (fern 900)
+Stau Nordwest-Rand Modus 3: G1 Angriff 0 fest 900 (fern 0) | G2 Angriff 0 fest 900 (fern 900)
+Stau Nordwest-Rand Modus 1: G1 Angriff 91 fest 0 (fern 0) | G2 Angriff 101 fest 713 (fern 0)
+ok:   Stau Gegenprobe Original-Regel = Original (GDB 900/900 ohne Bewegung): kein Angriff, G1 nah fest 900, G2 FERN fest 900
+ok:   Stau Gegenprobe Stand NB3 (Umweg ohne Vortritt, Abnahme 3 'Umweg 0'): kein Angriff, G2 FERN fest 900
+ok:   Stau mit Vortritt: Angriff G1 91 / G2 101, keine FERN-Blockade (0/0 Bilder)
+Nahwarten Nordwest-Ecke (O3b) Modus 0: G1 Angriff 0, fest 900, fern 0, Ende (-23272,14587)
+ok:   Nordwest-Ecke (O3b) Modus Original-Regel: Gorilla 1 wartet NAH wie das Original (fest 900, fern 0, Ende (-23272,14587), Original (-23302,14597))
+ok:   Nordwest-Ecke (O3b) Modus Original-Regel: Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)
+Nahwarten Nordwest-Ecke (O3b) Modus 4: G1 Angriff 0, fest 900, fern 0, Ende (-23272,14587)
+Nahwarten Nordwest-Ecke (O3b) Modus 1: G1 Angriff 399, fest 371, fern 0, Ende (-24881,15831)
+Nahwarten Ostgasse (O1) Modus 0: G1 Angriff 195, fest 1368, fern 0, Ende (6418,-4399)
+ok:   Ostgasse (O1) Modus Original-Regel: Gorilla 1 wartet NAH wie das Original (fest 1368, fern 0, Ende (6418,-4399), Original (6418,-4409))
+Nahwarten Ostgasse (O1) Modus 4: G1 Angriff 195, fest 1368, fern 0, Ende (6418,-4399)
+Nahwarten Ostgasse (O1) Modus 1: G1 Angriff 195, fes[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[prop-member F0] prop[0] obj=0x00 m=0 → val=-840
+[prop-member F0] prop[0] obj=0x00 m=1 → val=-2930
+[prop-member F0] prop[0] obj=0x00 m=2 → val=-19110
+[prop-member F0] prop[0] obj=0x00 m=3 → val=-72
+[prop-member F0] prop[0] obj=0x00 m=4 → val=-1400
+[prop-member F0] prop[0] obj=0x00 m=5 → val=48
+[scd] thread start slot=10 first_op=0x22
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-15893,12430) flag=0) walk_active=1
+[scd] Plc_dest(slot=0 mode=0x05 dest=(-15893,12430) flag=0) walk_active=1
+[scd] Plc_dest(slot=0 mode=0x05 dest=(-15893,-6270) flag=0) walk_active=1
+[scd] Plc_dest(slot=0 mode=0x05 dest=(-6965,-12493) flag=0) walk_active=1
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-8965,-14347) flag=0) walk_active=1
+[scd F0] Cut_chg(13)
+[scd] Plc_motion(entity=0, motion=15, flags=0x00) → slot=0
+[scd] Plc_motion(entity=0, motion=19, flags=0x00) → slot=0
+[scd] Plc_motion(entity=0, motion=23, flags=0x00) → slot=0
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-6965,-12493)) -> state4/sub9 (Sub-VM-WALK)
+[scd] Plc_motion(entity=0, motion=19, flags=0x00) → slot=1
+[scd] Plc_motion(entity=0, motion=19, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=1
+[scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[scd] Plc_motion(entity=0, motion=16, flags=0x00) → slot=1
+[scd] Plc_motion(entity=0, motion=16, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[scd] Plc_motion(entity=0, motion=24, flags=0x00) → slot=1
+[scd] Plc_motion(entity=0, motion=15, flags=0x00) → slot=0
+[scd] Plc_motion(entity=0, motion=15, flags=0x00) → slot=0
+[scd F0] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-3617,-17798) flag=0) walk_active=1
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-3617,-17798)) -> state4/sub9 (Sub-VM-WALK)
+[scd F0] Cut_chg(12)
+[scd F0] Cut_chg(5)
+[scd] Plc_motion(entity=0, motion=15, flags=0x00) → slot=0
+[scd] Plc_motion(entity=0, motion=17, flags=0x00) → slot=0
+[scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=1
+[scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-18214,-7229)) -> state4/sub9 (Sub-VM-WALK)
+[scd] thread start slot=11 first_op=0x2E
+[scd] Plc_dest(slot=1 mode=0x05 dest=(-18214,-7229)) -> state4/sub5 (Sub-VM-WALK)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+t 0, fern 0, Ende (9336,9456)
+Nahwarten Nordende Nordwest-Gang (O5) Modus 0: G1 Angriff 0, fest 900, fern 0, Ende (-13557,11920)
+ok:   Nordende Nordwest-Gang (O5) Modus Original-Regel: Gorilla 1 wartet NAH wie das Original (fest 900, fern 0, Ende (-13557,11920), Original (-13527,11914))
+ok:   Nordende Nordwest-Gang (O5) Modus Original-Regel: Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)
+Nahwarten Nordende Nordwest-Gang (O5) Modus 4: G1 Angriff 0, fest 900, fern 0, Ende (-13557,11920)
+Nahwarten Nordende Nordwest-Gang (O5) Modus 1: G1 Angriff 410, fest 377, fern 0, Ende (-9693,12845)
+ok:   Nordwest-Ecke (O3b) Gegenprobe Stand NB4: kein Angriff, fest 900 (Befund)
+ok:   Nordwest-Ecke (O3b) Nah-Umweg: Gorilla 1 greift an (Bild 399), NAH fest 371 <= 450
+ok:   Nordende Nordwest-Gang (O5) Gegenprobe Stand NB4: kein Angriff, fest 900 (Befund)
+ok:   Nordende Nordwest-Gang (O5) Nah-Umweg: Gorilla 1 greift an (Bild 410), NAH fest 377 <= 450
+ok:   Bissplaetze Leon (-26932,17268) Nordwest-Ecke: 279, Durchmesser 1649 < 3168 (nur EIN Gorilla)
+ok:   Bissplaetze Leon (-26932,14578) Nordwest-Ecke: 279, Durchmesser 1649 < 3168 (nur EIN Gorilla)
+ok:   Bissplaetze Leon (-26932,15700) Nordwest-Ecke: 296, Durchmesser 1833 < 3168 (nur EIN Gorilla)
+ok:   Bissplaetze Leon (-7107,-12395) kanonischer Kampf: 4030, Durchmesser 5809 >= 3168 (zwei Gorillas passen)
+ok:   Bissplaetze Leon (-7138,-12372) kanonischer Kampf: 4035, Durchmesser 5809 >= 3168 (zwei Gorillas passen)
+Nachruecken (Gorilla 1 F400 getoetet): Stand NB4 Gorilla 2 Angriff ab F401: 0 | Stand NB5: 988 | NB6: 505
+ok:   Nachruecken Gegenprobe Stand NB4: Gorilla 2 bleibt an der #21-Ecke (kein Angriff nach dem Ausfall)
+ok:   Nachruecken Gegenprobe Stand NB5 = Befund (Abnahme 5: Biss F988): Angriff erst Bild 988, 588 Bilder nach dem Tod
+ok:   Nachruecken NB6: Gorilla 2 nimmt den freien Bissplatz und greift Bild 505 an = 105 Bilder nach dem Tod (<= 450)
+ok:   J-Fenster: kanonischer Kampf mit Nah-Umweg bitgleich (Heavy + 14 Bisse 15/15 = Original, Tod +1194); Slot 2 NAH-Anker vor dem ersten Biss 353 < R36_NAH_START 354
+Gasse einzeln Modus 1: G1 Angriff 277..2399 NAH fest 0 (vor dem ersten Angriff 0) | G2 Angriff 0..0 NAH fest 0 (vor 0, fern 250) | Leon Ende (5268,-1435)
+Gasse einzeln Modus 6: G1 Angriff 0..0 NAH fest 2258 (vor dem ersten Angriff 2258) | G2 Angriff 1197..2400 NAH fest 0 (vor 0, fern 250) | Leon Ende (11986,-693)
+ok:   Gasse einzeln Gegenprobe Stand NB5 = Befund: Gorilla 1 NAH fest 2258, letzter Angriff Bild 0 (in den letzten 1000 Bildern keiner)
+ok:   Gasse einzeln NB6: Gorilla 1 greift an (Bild 277..2399), NAH fest vor dem ersten Angriff 0 <= 450; danach 0 (<= 450)
+Gasse einzeln NB6 Gorilla 2 greift nicht an: freie Bissplatz-Knoten 0 | Sonde platz um Leon (5268,-1435) ohne Koerperkontakt zu Gorilla 1 (7618,-1930): 25 Plaetze, Durchmesser 335
+ok:   Gasse einzeln NB6: Gorilla 2 NAH fest 0 <= 450 und steht an (freie Bissplatz-Knoten 0)
+Ostgasse O1 Modus 1: G1 Angriff 195..2366 NAH fest 0 (vor dem ersten Angriff 0) | G2 Angriff 937..2400 NAH fest 248 (vor 248, fern 0) | Leon Ende (11275,8784)
+Ostgasse O1 Modus 6: G1 Angriff 195..1032 NAH fest 1368 (vor dem ersten Angriff 0) | G2 Angriff 0..0 NAH fest 1615 (vor 1615, fern 0) | Leon Ende (7873,-1412)
+ok:   Ostgasse O1 Gegenprobe Stand NB5 = Befund: Gorilla 1 NAH fest 1368, letzter Angriff Bild 1032 (in den letzten 1000 Bildern keiner)
+ok:   Ostgasse O1 Gegenprobe Stand NB5 = Befund: Gorilla 2 NAH fest 1615, letzter Angriff Bild 0 (in den letzten 1000 Bildern keiner)
+ok:   Ostgasse O1 NB6: Gorilla 1 greift an (Bild 195..2366), NAH fest vor dem ersten Angriff 0 <= 450; danach 0 (<= 450)
+ok:   Ostgasse O1 NB6: Gorilla 2 greift an (Bild 937..2400), NAH fest vor dem ersten Angriff 248 <= 450; danach 0 (<= 450)
+Stelle 8 verkeilt Modus 1: G1 Angriff 112..867 NAH fest 0, erster Nah-Umweg-Grund 13
+Stelle 8 verkeilt Modus 6: G1 Angriff 0..0 NAH fest 900, erster Nah-Umweg-Grund 1
+ok:   Stelle 8 verkeilt Gegenprobe Stand NB5 = Befund: Gorilla 1 kein Angriff, NAH fest 900 (900/900)
+ok:   Stelle 8 verkeilt NB6: Gorilla 1 greift an (Bild 112..867), NAH fest 0 <= 450
+ok:   Stelle 8 verkeilt NB6: Ausweg = Sprung mit dem Seitencode (Nah-Umweg-Grund 13), gemessen 13
+
+77 Pruefungen, 1 Fehler
+RC=1

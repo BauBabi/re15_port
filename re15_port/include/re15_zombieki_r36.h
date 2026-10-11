@@ -252,8 +252,10 @@ int  re15_r36_affen_bissplaetze_frei(int slot); /* NUR Sonden (NB6): freie Bissp
  * im Sinne der Box-Abfrage des Original-Pad-Sprungs erreicht hat (FUN_8003b93c(+0x34, box[6]+100, +0x82, 0x10) @0x80117ee0-f00),
  * nicht erst am Raster-Startknoten der Pad-Kante. GEMESSEN (exe Stelle 3, Messschiene RE15_AFFEN_LOG): in der Ostgasse (1550 breit
  * < 2 x 1600) liegt dieser Knoten 1970 ausserhalb der Muendung; der Gorilla an der Pad-Kante lief von Leon weg, kippte ueber 0x1771
- * (FERN, Umweg geloescht) und zaehlte an der Kante neu — S2 griff nie an. Mit der Mitte im Pad (Code 0xf8 ohne Seite @0x8001bf74)
- * springt er wie der Verkeilte mit dem Seitencode der Startseite (Grund 14). Nachher: Stelle 3 S2 Angriff F1651, Gasse einzeln 157. */
+ * (FERN, Umweg geloescht) und zaehlte an der Kante neu — S2 griff nie an. Die Regel gilt nur AUSSERHALB des Pads auf der Startseite
+ * des Wegs (Kontaktcode FUN_8001bf04 @0x8001bfa4/ac/e8/ec gleich dem des Startknotens); mit der Mitte im Pad (0xf8) laeuft er wie
+ * NB6a zum Startknoten (der Sprung aus der Mitte, Grund 14, wurde an exe-Stelle 7 zurueckgeschnappt und verworfen). Nachher: Stelle 3
+ * S2 Angriff F1651 (vorher nie), Stelle 7 wie NB6a. */
 
 /* ---- Nachbesserung 1, Mangel 2 (ROOM10B0 Terrasse): ZONENLOSER RE2-Zombie --------------------------
  * GEMESSEN (test_r36_zombieki_eintritt spur 10B0 1260 7 1 1): Steuerziel steer = (0,0) — die Terrasse liegt

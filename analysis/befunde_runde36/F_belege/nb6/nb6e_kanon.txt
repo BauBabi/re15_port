@@ -1,0 +1,7 @@
+# kanon NB6e bits 3 / 0
+KANON Freigabe F1066, Tod +1194, Bisse 16: 363 468 521 571 624 674 727 778 830 882 933 986 1036 1090 1139 1194
+KANON S2 erster Angriff F1528 (+462), NAH-Anker max vor dem Angriff 353, gesamt 353 (F1527) | S3 erster Angriff F1408 (+342), max vor 0, gesamt 3 (F1554)
+KANON +0x1de-Zwilling max nach der Freigabe vor dem ersten Angriff: S2 444, S3 25
+KANON Freigabe F1066, Tod +1194, Bisse 16: 363 468 521 571 624 674 727 778 830 882 933 986 1036 1090 1139 1194
+KANON S2 erster Angriff F1528 (+462), NAH-Anker max vor dem Angriff 353, gesamt 353 (F1527) | S3 erster Angriff F1408 (+342), max vor 0, gesamt 3 (F1554)
+KANON +0x1de-Zwilling max nach der Freigabe vor dem ersten Angriff: S2 444, S3 25

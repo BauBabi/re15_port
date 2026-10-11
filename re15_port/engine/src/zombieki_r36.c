@@ -178,6 +178,7 @@ static int     s_r36_padsuche_an = 1;                  /* NUR Sonden: 0 = Origin
 static uint8_t s_r36_padsuche_aktiv[RE15_ACTOR_MAX];   /* 0 = aus, 1 = Umweg zu Fuss, 2 = Anlauf auf ein Pad (Sprung = Original) */
 static int32_t s_r36_ziel_x[RE15_ACTOR_MAX], s_r36_ziel_z[RE15_ACTOR_MAX];
 static int16_t s_r36_pad_idx[RE15_ACTOR_MAX];
+static int16_t s_r36_g14_pad1[RE15_ACTOR_MAX];   /* NB6g: Pad + 1, in dem der Sprung aus der Mitte (Grund 14) schon einmal versucht wurde (0 = keins) */
 /* NB3 (Abnahme 2, Maengel 1/2): das KLEMMEN-HAENGEN, das der Umweg aufloesen soll, zaehlt das Original selbst — der
  * Gehirn-Schwanz des Gorillas (Zustand 1, nach dem A/B-Wechsel) fuehrt +0x1de: `lhu v0,470(v1)` (+0x1d6 = Rueckgabe der
  * Klemme FUN_8003b0a4) / `beq v0,zero` @0x80117448-50, `lhu v0,478(v1)` / `addiu v0,v0,1` / `sh v0,478(v1)` @0x80117458-68
@@ -237,7 +238,7 @@ int  re15_r36_affen_padsuche_aktiv(int slot) { return (slot >= 0 && slot < RE15_
 static void r36_padsuche_reset(const re15_actor_t *e)
 {
     long slot = e - g_actors;
-    if (slot >= 0 && slot < RE15_ACTOR_MAX) { s_r36_padsuche_aktiv[slot] = 0; s_r36_pad_idx[slot] = -1;
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) { s_r36_padsuche_aktiv[slot] = 0; s_r36_pad_idx[slot] = -1; s_r36_g14_pad1[slot] = 0;
                                               s_r36_1de[slot] = 0; s_r36_fest[slot] = 0; s_r36_vortritt[slot] = 0; s_r36_nah[slot] = 0;
                                               s_r36_nahumweg[slot] = 0; s_r36_tot[slot] = 0; s_r36_nah_grund[slot] = 0; }   /* +0x1de INIT @0x8011706c */
 }
@@ -627,10 +628,17 @@ static int r36_weg_folgen(const re15_actor_t *e, int slot, int g, int l, const r
                                                                                      * Radius): gerader Anlauf auf die Pad-Mitte — die
                                                                                      * Kontaktseite zeigt auf Leons Seite */
         if (!am && nah && r36_am_pad(e, p, (int32_t)e->hit_radius_min + 100)) {
+            /* NB6b/g (nur Nah-Umweg): oder schon AM PAD im Sinne des Original-Sprungs (Box FUN_8003b93c(+0x34, box[6]+100, +0x82, 0x10)
+             * @0x80117ee0-f00), AUSSERHALB und auf der Startseite des Wegs (Kontaktcode FUN_8001bf04 @0x8001bfa4/ac/e8/ec wie @0x8003ba8c
+             * gleich dem des Startknotens; sonst spraenge der Original-Sprung mit dem Code der falschen Seite quer ueber das Pad).
+             * GEMESSEN (exe Stelle 3, Messschiene RE15_AFFEN_LOG, F_belege/nb6/nb6_stelle3_affenlog_vorher.txt): Slot 2 steht in der
+             * Gassenmuendung an der Suedkante von #36 (6418,-6820), der Startknoten der Pad-Kante liegt 1970 entfernt ausserhalb der
+             * Gasse (1550 breit < 2 x 1600) -> "Weg zum Anlauf" fuehrte ihn von Leon WEG, +0x1d4 kippte ueber 0x1771 (FERN -> Sub 4,
+             * Umweg geloescht), an der Kante zaehlte der NAH-Anker neu: Zyklus ~150 Bilder ohne Sprung (S2 "nie").
+             * VERWORFEN (gemessen, Dossier NB6d-f): dieselbe Regel fuer den FERN-Umweg (Zufallsgang Anker 400 17242 -> 20975) und ein
+             * Gedaechtnis "einmal Anlauf, immer Anlauf" (-> 21168, Stillstaende in Sub 4 am Pad, Anker 40 0 -> 537). */
             uint8_t sg = r36_seiten_code(e->x, e->z, c), ss = r36_seiten_code(r36_kx(s_uw_heap[sprung]), r36_kz(s_uw_heap[sprung]), c);
-            am = (sg == ss) || (sg & 0xf0u) == 0xf0u;                                /* nur auf DERSELBEN Seite wie der Startknoten (sonst
-                                                                                     * spraenge der Original-Sprung mit dem Code der falschen
-                                                                                     * Seite quer ueber das Pad) oder mit der Mitte im Pad */
+            am = (sg == ss) && (sg & 0xf0u) != 0xf0u;
         }
         if (am) {
             /* NB6 (Nah-Umweg): oder schon AM PAD im Sinne des Original-Sprungs (Box + box[6]+100 @0x80117ee0-f00). GEMESSEN
@@ -711,8 +719,8 @@ static int r36_belegt_koerper(int k, int slot)
  * (r36_nah_route sah nur die eigene Fuss-Komponente).
  * s_r36_nah_grund (NUR Sonden): 1 kein Startknoten, 2 kein freier Bissplatz (Anstehen), 3 schon am Bissplatz,
  * 4 kein Weg, 5 Pad vom anderen Gorilla belegt (Anstehen), 10 zu Fuss, 11 ueber ein Pad (Weg zum Anlauf),
- * 12 ueber ein Pad (Anlauf auf die Pad-Mitte), 13 verkeilt in diesem Pad (Sprung mit dem Seitencode, Rueckgabe 3),
- * 14 (NB6b) mit der Mitte in diesem Pad, nicht verkeilt (ebenfalls Sprung mit dem Seitencode, Rueckgabe 3). */
+ * 12 ueber ein Pad (Anlauf auf die Pad-Mitte), 13 verkeilt in diesem Pad (Sprung mit dem Seitencode, Rueckgabe 3);
+ * 14 (NB6b/g) mit der Mitte in diesem Pad, nicht verkeilt — Sprung mit dem Seitencode, genau EINMAL je Pad-Aufenthalt (Rueckgabe 3). */
 static int r36_bissplatz(const re15_actor_t *pl, int slot, int kg)   /* naechster freier Bissplatz in Komponente kg (kg = 0: in
                                                                       * jeder ueber s_kerr erreichbaren); -1 = keiner */
 {
@@ -782,12 +790,14 @@ static int r36_nah_route(const re15_actor_t *e, const re15_actor_t *pl, int slot
     }
     if (m && s_r36_pad_idx[slot] >= 0 && s_uw_sprung_start >= 0) {
         const re15_sca_entry_t *c = &g_room_rdt.sca[s_r36_pad_idx[slot]];
-        if ((uint32_t)(e->x - (int32_t)c->x) < (uint32_t)c->width && (uint32_t)(e->z - (int32_t)c->z) < (uint32_t)c->density) {
-            /* MIT DER MITTE in DIESEM Pad (der Weg springt ueber genau dieses Pad) — verkeilt (kein Knoten gerade erreichbar) ODER
-             * nicht (NB6b: ohne diese Regel liefe er erst zum Anlaufpunkt ausserhalb der Gasse und spraenge von dort zurueck,
-             * Sonde Gasse einzeln: Angriff erst Bild 313; mit Anlauf-Modus im Pad gaebe es keinen Sprung, weil die Pad-Mitte
-             * 0xf8 keinen Seitencode hat): zu Fuss kommt er verkeilt nicht hinaus, frei kommt er nur
-             * per Sprung (im Flug Band +0x82 = 1 @0x80118ab4-af0: die Band-0-Autozellen klemmen nicht). Die Mitte hat keinen
+        int drin = (uint32_t)(e->x - (int32_t)c->x) < (uint32_t)c->width && (uint32_t)(e->z - (int32_t)c->z) < (uint32_t)c->density;
+        if (!drin) s_r36_g14_pad1[slot] = 0;                                        /* ausserhalb: Merker des Mitten-Sprungs loeschen */
+        if (drin && (verk || s_r36_g14_pad1[slot] != (int16_t)(s_r36_pad_idx[slot] + 1))) {
+            /* MIT DER MITTE in DIESEM Pad (der Weg springt ueber genau dieses Pad): verkeilt (Grund 13, kein Knoten gerade erreichbar;
+             * zu Fuss kommt er nicht hinaus) oder nicht verkeilt (Grund 14, NB6g: genau EINMAL je Pad-Aufenthalt — gemessen an
+             * exe-Stelle 7, Pad #47 bei x -16346, nb6_stelle7_affenlog_nb6c.txt: der Sprung wurde vom Landeplatz auf die Startlage
+             * zurueckgeschnappt und wiederholte sich alle ~85 Bilder; beim zweiten Mal laeuft er wie NB6a zu Fuss zum Startknoten).
+             * Frei kommt er nur per Sprung (im Flug Band +0x82 = 1 @0x80118ab4-af0: die Band-0-Autozellen klemmen nicht). Die Mitte hat keinen
              * Seitencode (Platzhalter 0xf00 @0x8001bf74) — PORT-WAHL: der Code der Seite, von der der Weg das Pad ueberquert
              * (Startknoten der Pad-Kante, r36_seiten_code wie @0x8003ba8c), also der Sprung, den der Gorilla von dort aus
              * gemacht haette; Ausfuehrung = Original B[7] (Windup-Drehung, Start, Flug, Landung). */
@@ -796,6 +806,7 @@ static int r36_nah_route(const re15_actor_t *e, const re15_actor_t *pl, int slot
             s_r36_ziel_x[slot] = e->x + (int32_t)(((int64_t)re15_cos_q12(d) * (int64_t)e->hit_radius_min) >> 12);   /* Vorwaerts = (cos, -sin) */
             s_r36_ziel_z[slot] = e->z - (int32_t)(((int64_t)re15_sin_q12(d) * (int64_t)e->hit_radius_min) >> 12);   /* (FUN_800152C8) */
             s_r36_nah_grund[slot] = (uint8_t)(verk ? 13 : 14);
+            if (!verk) s_r36_g14_pad1[slot] = (int16_t)(s_r36_pad_idx[slot] + 1);   /* NB6g: Grund 14 genau EINMAL je Pad-Aufenthalt */
             return 3;
         }
     }

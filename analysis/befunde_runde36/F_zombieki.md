@@ -1490,3 +1490,28 @@ kanon bitgleich (`nb6c_kanon.txt`), Riegel 77/77 (`nb6_riegel_direkt5.txt`), cte
 Anker 400: 17655 (NB6b 17638; ein Seed 0x9075ea6c 92 -> 109, Griffe 4 -> 3 — dort lag der Gorilla an einer anderen Seite als der
 Startknoten und laeuft nun zum Startknoten), Anker 40: 0, Griffe 252 (`seeds/zg_summen_nb6c.txt`). Die exe-Messreihe (33 Laeufe) wurde
 mit diesem Stand neu gefahren (Kopie `re15_pc_nb6h.exe`, Abschnitt "NB6 Messung nachher in der exe").
+
+### NB6d-g — Befund Stelle 7 in der exe, vier gemessene Varianten, Endstand (Grund 14 genau einmal je Pad-Aufenthalt)
+**Messung (exe-Messreihe nb6h = Stand NB6c, `F_belege/nb6/nb6_exe_nb6h_auswertung.txt`)**: 14 Stellen fest 7500 -> 6945 (FERN 300 -> 255),
+Stelle 8 468 -> 0, Stelle 3 S2 F1651/271, nw12_schuss 141, P1/P3/kanon bitgleich — aber **Stelle 7 (-14746,-4140)**: S2 fest 179 -> 250,
+S3 greift nie an, Leon stirbt F1204 statt F1636. Messschiene (`nb6_stelle7_affenlog_nb6c.txt`): S2 steht mit der Mitte in Pad #47
+bei (-16239,-3479), Leon (-15759,-6944) suedlich; Grund 14 springt mit dem Nordseiten-Code (9f=48) nach Sueden, der Flug erreicht den
+Landeplatz (-13420,-8822), die Landung wird auf die Startlage (-16346,-3577) **zurueckgeschnappt**, der Sprungangriff (Sub 8) trifft
+Leon trotzdem; Zyklus alle ~85 Bilder bis zu Leons Tod — ein Sprung auf der Stelle (derselbe Rueckschnapp wie in der Zufallsgang-
+Sprungschleifen-Klasse, Seed 27 ab F2409).
+
+**Vier Varianten gemessen** (je: Bau, Sonden Gasse/O1/Stelle-3-Endlage/Stelle 8/Nachruecken/kanon, Riegel, Zufallsgang 52 Seeds):
+| Stand | Regel | Gasse einzeln | Zufallsgang Anker 400 / Anker 40 / Griffe | Befund |
+|---|---|---|---|---|
+| NB6d | Anlauf am Pad nur NAH/aussen/Startseite, KEIN Grund 14 | **G1 nie, 2258 FERN** (`nb6d_lage_gasse_m1_spur30.txt`) | 17655 / 0 / 252 | nach dem Anlauf aus ESE-Blick kippt G1 FERN; der FERN-Umweg pendelt am Radius des Startknotens (7000,-8700) je ~30 Bilder zwischen Ziel SW (uw1) und NNW (uw2), die Drehung erreicht nie das Yaw-Fenster; Riegel 2 Fehler |
+| NB6e | + Gedaechtnis "einmal Anlauf am Pad, immer Anlauf" (NAH und FERN) | G1 277 | **21168 / 537 / 247** | Gorillas bleiben in Sub 4 am Pad im Anlauf stehen (Seeds 0x45c2c492 352, 0x7ed38e72 185); NB5-Gegenprobe (bits 0) nicht mehr bitgleich (17127/496) — verworfen |
+| NB6f | Anlauf am Pad auch FERN (Engine-Zonenabfrage + Startseite, ohne Gedaechtnis) | G1 277 | **20975 / 352 / 242** | Seed 0x4b35c90d +2510, Stillstand 0x45c2c492 352 in Sub 4 (ohne Sicht) — verworfen |
+| **NB6g (Endstand)** | NB6d + Grund 14 genau EINMAL je Pad-Aufenthalt (`s_r36_g14_pad1`, geloescht beim Verlassen des Pads) | G1 **157** | **17655 / 0 / 252** (bits 0 = NB5 bitgleich 16352/125) | Sonden bitgleich zu NB6b/c; Riegel 77/77; ctest 25/25; Stelle 7: erster Sprung schnappt zurueck, danach zu Fuss zum Startknoten wie NB6a (exe-Messreihe nb6l unten) |
+
+**RE-Beleg**: unveraendert (Box-Abfrage FUN_8003b93c(+0x34, box[6]+100, +0x82, 0x10) @0x80117ee0-f00; Kontaktcode FUN_8001bf04
+@0x8001bfa4/ac/e8/ec wie `sb v0,144(a0)` @0x8003ba8c; Yaw-Fenster @0x80117f18-38; +0x1e2 = 4 nur im INIT @0x80117098-9c, also Path A
+immer offen). Das Zurueckschnappen der Landung ist Port-Verhalten der Flugklemme (nicht neu RE'd; OFFEN).
+**Umsetzung (zombieki_r36.c)**: `r36_weg_folgen(..., nah)`: "am Anlaufpunkt" = Radius zum Startknoten ODER (nur Nah-Umweg) am Pad
+(`r36_am_pad`, Box + hit_radius_min + 100), ausserhalb, Kontaktcode gleich dem des Startknotens; `r36_nah_route`: mit der Mitte im Pad
+Grund 13 (verkeilt) oder Grund 14 (nicht verkeilt, nur wenn `s_r36_g14_pad1[slot] != pad + 1`), danach Merker gesetzt; beim naechsten
+Aufruf ausserhalb des Pads geloescht; Reset im INIT.
