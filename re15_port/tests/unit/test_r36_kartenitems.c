@@ -4,7 +4,7 @@
  * Jeder Teil misst die MECHANIK am echten Port-Code (echte RDT, scd_room_reenter mit allen
  * Port-Installern, echter Bild-Ablauf re15_game_step -> Aktions-Scan -> scd_event_fire ->
  * Port-Programm -> Ja/Nein-FSM):
- *   T  Tabelle: 5 Zeilen, Blatt = Blatt der Raumzone (re15_map_zones.h), Bits 87..91 (VERTRAG
+ *   T  Tabelle: 5 Zeilen, Blatt = Blatt der Raumzone (re15_map_zones.h), Bits 87/88/89/77/78 (VERTRAG
  *      1.1), MD1/TIM parsen, die 5 MD1 unterscheiden sich NUR in den Ecken (@0x44, 40 Byte),
  *      Texte = RE2-Wortlaut (room2130 sub00/sub12-Rahmen), Frage hat die Auswahl (0x03).
  *   R  Raumstart Leon UND Elza (xxx0/xxx1): Prop obj 15 an Lage/Drehung der Tabelle, EVENT-Satz
@@ -15,7 +15,7 @@
  *      Nein -> nichts genommen, Zone bleibt.
  *   K  Karte: ohne Bit KEINE unbesuchte Kachel (RE2 @0x8006E744), mit Bit Kacheln in Zeile 498
  *      (@0x8006E71C); Blatt erst mit Bit waehlbar (RE2 Bank 35 @0x8006D934, Set(35,n) @0x037E6).
- *   S  Spielstand: die Bits 87..91 reisen mit g_game.flags (re15_savedata_capture/restore) — kein
+ *   S  Spielstand: die Bits 87/88/89/77/78 reisen mit g_game.flags (re15_savedata_capture/restore) — kein
  *      neues Feld, alte Staende laden unveraendert (Bits 0 = keine Karte).
  *   A  (Nachbesserung 1, Licht) Attribut-Wort Pool+0x0c: die VM speichert Obj_model_set pc[8..9]
  *      (LAB_80040914 @0x800409a8/@0x800409b0) — ROOM1200 obj 0/1 = 0x0010 (@0x007DA/@0x00804),
@@ -121,7 +121,9 @@ static void teil_t(void)
 {
     printf("=== T: Tabelle, Modelle, Texte ===\n");
     static const uint16_t raeume[5] = { 0x1140, 0x10D0, 0x1030, 0x1200, 0x11D0 };
-    static const uint8_t  bits[5]   = { 87, 88, 89, 90, 91 };   /* VERTRAG.md 1.1 Spur N */
+    static const uint8_t  bits[5]   = { 87, 88, 89, 77, 78 };   /* VERTRAG.md 1.1 Spur N; B2/B1 = 77/78 seit dem
+                                                                 * Nachtrag kartenbits (90/91 = Original-Taken-Bits
+                                                                 * ROOM2090 @0x00A12 / ROOM2040 @0x01364)       */
     static const char    *etage[5]  = { "3F", "2F", "1F", "B2", "B1" };
     CHECK("5 Zeilen", re15_kartenitems_r36_anzahl() == 5);
     for (int i = 0; i < 5 && i < re15_kartenitems_r36_anzahl(); i++) {
@@ -419,13 +421,13 @@ static void teil_s(void)
     re15_game_state_init();
     g_current_room_id = 0x1140;
     re15_game_flag_set(RE15_R36K_BANK, 87, 1);
-    re15_game_flag_set(RE15_R36K_BANK, 91, 1);
+    re15_game_flag_set(RE15_R36K_BANK, 78, 1);   /* B1 (Nachtrag kartenbits: 78 statt 91) */
     re15_savedata_capture(&sd, 0, 1);
     zurueck = sd;
     re15_game_state_init();
     CHECK("nach dem Zuruecksetzen kein Besitz", (re15_map_owned_bits() & 0x1Fu) == 0);
     CHECK("Restore ok", re15_savedata_restore(&zurueck, &raum) == 0);
-    CHECK("Bits 87/91 aus dem Spielstand -> Blatt 4 (3F) und 0 (B1) im Besitz, 1..3 nicht",
+    CHECK("Bits 87/78 aus dem Spielstand -> Blatt 4 (3F) und 0 (B1) im Besitz, 1..3 nicht",
           re15_map_owned_page(4) && re15_map_owned_page(0) &&
           !re15_map_owned_page(1) && !re15_map_owned_page(2) && !re15_map_owned_page(3));
 }

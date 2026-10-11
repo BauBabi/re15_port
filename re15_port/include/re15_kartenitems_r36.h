@@ -41,6 +41,19 @@
  * PORT-WAHL (Messung, Dossier 3): Ebene, Mitte, Massstab (Karte innerhalb der Marke, 3:2), Drehung,
  *   Aufhebe-Rechteck 1000 x 1000 um Mitte + 300 Einheiten zur Raumseite — alles erzeugt von
  *   re15_port/tools/r36_kartenitems/karten_export.py -> engine/src/gen/kartenitems_r36.inc.
+ *
+ * BANK-9-BITS "Plan genommen" (Nachtrag kartenbits, Dossier Abschnitt 9): 3F = 87, 2F = 88, 1F = 89,
+ *   B2 = 77, B1 = 78. Bank 9 = 0x800b1078 (Flag-Tabelle 0x80074664[9] @0x80074688) ist im Original die Zone
+ *   der Item-TAKEN-Bits: Item_aot_set @0x80040644 liest das Bit als u16 pc[18] (@0x80040680, Langform pc[26]
+ *   @0x80040670) und legt den Satz still, wenn es steht (`jal 0x8004efe4` @0x800406dc, `sb zero,0(v0)`
+ *   @0x800406f4); Ck @0x8003fcf4 / Set @0x8003fdd0 treffen ueber dieselbe Tabelle dasselbe Bit. Ein
+ *   Lageplan-Bit darf deshalb KEIN Original-Bit sein. Zensus (analysis/befunde_runde36/N_belege/
+ *   bank9_zensus.txt): 85 von 256 Bits belegt, frei u.a. 53..84 und 87..89. B2/B1 lagen bis zum Nachtrag
+ *   auf 90/91 = ROOM2090/2091 main00 @0x00A12 Item 0x3F (Bit 0x5a) und ROOM2040/2041 main00 @0x01364
+ *   Item 0x32 (Bit 0x5b) — wer den Plan nahm, fand diese Items in Stage 2 nicht. 77/78: im Original frei,
+ *   in keiner Port-Version je benutzt (git log --all, Tags v0.8.21-23). NICHT frei, obwohl im VERTRAG 1.1
+ *   als Reserve gefuehrt: 85 (Green Keycard ROOM3040 @0x014B2), 86 (Spark Plug ROOM4040 @0x00F66),
+ *   92 (Super Redhawk ROOM3050 @0x01EC6). Riegel: unit_r36_kartenbits.
  */
 #ifndef RE15_KARTENITEMS_R36_H
 #define RE15_KARTENITEMS_R36_H
@@ -50,7 +63,7 @@
 typedef struct {
     uint16_t raum;             /* Leon-Variante; Elza = raum | 1 (derselbe Ort)                        */
     uint8_t  blatt;            /* Kartenblatt (re15_map_zones.h): 4 = 3F, 3 = 2F, 2 = 1F, 1 = B2, 0 = B1 */
-    uint8_t  bit;              /* Bank-9-Bit (VERTRAG.md 1.1 Spur N: 87..91)                            */
+    uint8_t  bit;              /* Bank-9-Bit: 87/88/89/77/78 (Kopf BANK-9-BITS; nie ein Original-Bit)   */
     uint8_t  aot_slot;         /* Slot des Aufhebe-Ereignisses                                         */
     uint8_t  verdraengt_nach;  /* 0xFF = keiner; sonst: der Satz in aot_slot zieht dorthin um (Vorrang) */
     int32_t  x, y, z;          /* Prop-Ursprung (Welt)                                                  */
@@ -90,7 +103,7 @@ int            re15_kartenitems_r36_obj_id(uint16_t room_id);
 const uint8_t *re15_kartenitems_r36_md1_bytes(uint16_t room_id, int *out_size);
 const uint8_t *re15_kartenitems_r36_tim_bytes(uint16_t room_id, int *out_size);
 
-/* HAKEN re15_map_owned.c: Besitz eines Kartenblatts aus den Bank-9-Bits 87..91 (Gegenstueck zu RE2
+/* HAKEN re15_map_owned.c: Besitz eines Kartenblatts aus den Bank-9-Bits 87/88/89/77/78 (Gegenstueck zu RE2
  * Bank 33 @0x8006E66C). */
 int      re15_kartenitems_r36_blatt_besitz(unsigned page);
 uint32_t re15_kartenitems_r36_besitz_bits(void);

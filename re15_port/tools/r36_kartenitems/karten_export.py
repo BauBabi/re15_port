@@ -80,13 +80,19 @@ EBENEN = {
 }
 # ---- Raum -> Blatt / Bit / Etage (Bank-9-Bits: VERTRAG.md 1.1 Spur N) ---------------------------
 # Blatt aus re15_map_zones.h (Spalte 6), Etagenname = Kartenblatt-Titel (menu_common.c ORDER-Kommentar)
+# BANK-9-BITS (Nachtrag kartenbits, Dossier 9): Bank 9 = 0x800b1078 (Flag-Tabelle 0x80074664[9] @0x80074688) ist im
+# Original die Zone der Item-TAKEN-Bits (Item_aot_set @0x80040644: u16 pc[18] @0x80040680, Test FUN_8004efe4
+# @0x800406dc). Ein Lageplan-Bit darf kein Original-Bit sein (Zensus N_belege/bank9_zensus.txt: 85 von 256 belegt).
+# 87/88/89 sind im Original frei. B2/B1 lagen auf 90/91 = ROOM2090/2091 @0x00A12 Item 0x3F (Bit 0x5a) bzw.
+# ROOM2040/2041 @0x01364 Item 0x32 (Bit 0x5b) -> jetzt 77/78: im Original frei (Block 53..84), in keiner
+# Port-Version je benutzt (git log --all, Tags v0.8.21-23).
 RAEUME = [  # (raum, blatt, bit, etage, aot_slot, verdraengt_nach)
     (0x1140, 4, 87, "3F", 40, 0xFF),
     (0x10D0, 3, 88, "2F", 40, 0xFF),
     (0x1030, 2, 89, "1F", 8, 39),    # Slot 8 = Muenztelefon-Satz (Aot_set @0x01D2E, 4096x4096) wird
                                      # nach Slot 39 verschoben, die Karte nimmt Slot 8 (Vorrang)
-    (0x1200, 1, 90, "B2", 40, 0xFF),
-    (0x11D0, 0, 91, "B1", 40, 0xFF),
+    (0x1200, 1, 77, "B2", 40, 0xFF),   # war 90 = Taken-Bit ROOM2090/2091 @0x00A12 (Item 0x3F)
+    (0x11D0, 0, 78, "B1", 40, 0xFF),   # war 91 = Taken-Bit ROOM2040/2041 @0x01364 (Item 0x32)
 ]
 
 

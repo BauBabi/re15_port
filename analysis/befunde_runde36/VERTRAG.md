@@ -34,14 +34,26 @@ anlegen, fortlaufend schreiben, frueh committen — das Sitzungslimit beendet al
 Belegt (Zensus 2026-10-10, re15_port/include/*.h): 53-63 (Runde 34), 65 (Ada-Ruf), 71/72 (K r35), 73-76
 (L r35), 79 (Fenster 1120), 80/81 (F r35). Frei: 64, 66-70, 77, 78, 82-255.
 
+⛔ NACHTRAG 2026-10-12 (Zweig r36/kartenbits, Zensus `analysis/befunde_runde36/N_belege/bank9_zensus.txt`, Dossier
+N_kartenitems.md Abschnitt 9): der Zensus oben zaehlte NUR den Port. Bank 9 = 0x800b1078 (Flag-Tabelle 0x80074664[9]
+@0x80074688) ist im ORIGINAL die Zone der Item-TAKEN-Bits (Item_aot_set @0x80040644: Bit = u16 pc[18] @0x80040680,
+Test FUN_8004efe4 @0x800406dc, gesetzt -> Satz still @0x800406f4). 85 von 256 Bits sind Original-Bits (164
+Item_aot_set + Ck/Set(9,n) in 206 RDTs), darunter **85, 86, 90, 91, 92 — NICHT frei**: 85 = ROOM3040/3041 Item 0x36
+Green Keycard (@0x014B2), 86 = ROOM4040/4041 Item 0x41 Spark Plug (@0x00F66), 90 = ROOM2090/2091 Item 0x3F Pocket
+Watch (@0x00A12), 91 = ROOM2040/2041 Item 0x32 Head of Akuma (@0x01364), 92 = ROOM3050/3051 Item 0x07 Super Redhawk
+(@0x01EC6). Frei in Original UND Port (Stand nach dem Nachtrag): 0..1, 3..5, 7..9, 13, 17, 23..51, 64, 66..70, 94..97,
+100..103, 106, 107, 110..133, 137, 139, 145, 156..161, 170..179, 199..215, 219..222, 232..251, 254, 255 (Bit 0 nicht
+fuer Item-Saetze: das Aufnahme-Modal setzt nur `if (s_taken)`). Riegel: unit_r36_kartenbits (jedes Port-Bit gegen
+den Original-Satz aus allen RDTs).
+
 | Bits | Spur | Verwendung |
 |---|---|---|
 | 82, 83 | Q | 82 = Parking-Lot-Schluessel genommen (Leon 10F0), 83 = Prison Key genommen (Elza 10F1) |
-| 84, 85 | J | 84 = Marvin hat die Werkstatt-Tuer in 11B0 verschlossen (Szene gelaufen; seit 14:00 NUR diese Tuer), 85 Reserve |
-| 86 | L | Reserve (Elza-Zustaende bevorzugt aus dem Szenario-Flag ableiten) |
-| 87-91 | N | 87 = Karte 3F, 88 = 2F, 89 = 1F, 90 = B2, 91 = B1 genommen/freigeschaltet |
-| 92 | P | Reserve fuer die Story-Spur (P1 haengt am ORIGINAL-Strom-Bit, braucht kein eigenes; nur mit Begruendung im Dossier) |
-| 93-95 | — | Reserve (nur mit Begruendung im Dossier) |
+| 84, ~~85~~ | J | 84 = Marvin hat die Werkstatt-Tuer in 11B0 verschlossen (Szene gelaufen; seit 14:00 NUR diese Tuer), 85 Reserve — ⛔ gestrichen: 85 = Original-Taken-Bit (Green Keycard ROOM3040 @0x014B2), nie benutzt |
+| ~~86~~ | L | Reserve (Elza-Zustaende bevorzugt aus dem Szenario-Flag ableiten) — ⛔ gestrichen: 86 = Original-Taken-Bit (Spark Plug ROOM4040 @0x00F66), nie benutzt |
+| 87-89, 77, 78 | N | 87 = Karte 3F, 88 = 2F, 89 = 1F, **77 = B2, 78 = B1** genommen/freigeschaltet (Nachtrag kartenbits 2026-10-12: B2/B1 lagen auf 90/91 = Original-Taken-Bits ROOM2090/2091 @0x00A12 bzw. ROOM2040/2041 @0x01364) |
+| ~~92~~ | P | Reserve fuer die Story-Spur (P1 haengt am ORIGINAL-Strom-Bit, braucht kein eigenes; nur mit Begruendung im Dossier) — ⛔ gestrichen: 92 = Original-Taken-Bit (Super Redhawk ROOM3050 @0x01EC6), nie benutzt |
+| 93-95 | — | Reserve (nur mit Begruendung im Dossier) — 93 seit Runde 36 Q (Parkplatz-Tuer); 93..97 im Original frei |
 
 Vorhandene Flags duerfen GELESEN werden ((3,94) erste Irons-Szene, (9,71) 10F0-Szene gesehen, (9,73) Irons
 tot, (9,79) Fenster 1120 kaputt, (4,64) Parkplatz erreicht, Szenario-/Charakter-Flag des Spielers).

@@ -4,7 +4,7 @@
  *=======================================================================*/
 #include "re15_map_owned.h"
 #include "re15_scd.h"        /* re15_game_flag_get */
-#include "re15_kartenitems_r36.h"  /* Runde 36 Spur N: Polizei-Lageplaene (Bank-9-Bits 87..91) */
+#include "re15_kartenitems_r36.h"  /* Runde 36 Spur N: Polizei-Lageplaene (Bank-9-Bits 87/88/89/77/78) */
 
 /*-------------------------------------------------------------------------
  * DIE FUNDSTELLEN — GESUCHT, NICHT GESETZT.

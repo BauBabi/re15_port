@@ -16,7 +16,8 @@ Dossier wird fortlaufend geschrieben (Sitzungslimit).
 > - Map B1 soll im Room 11D0 sein bei mapB1.bmp
 
 Zuteilung (VERTRAG.md): Bank-9-Bits 87 = 3F, 88 = 2F, 89 = 1F, 90 = B2, 91 = B1; Ereignis 28;
-Nachrichten-IDs je Raum 2 ab 28.
+Nachrichten-IDs je Raum 2 ab 28. ⛔ Seit dem Nachtrag kartenbits (Abschnitt 9): **B2 = 77, B1 = 78** — 90/91 sind
+Original-Item-Taken-Bits (ROOM2090/2091 @0x00A12, ROOM2040/2041 @0x01364).
 
 ## 1. Messung vorher
 
@@ -211,6 +212,7 @@ main00 an (Aot_reset nur Slots 4, 6, 17).
 
 ### 3.5 Karte und Etagenwahl
 `re15_map_owned_page/bits` (Port-Gegenstueck zu RE2 Bank 33 @0x8006E66C) fragt zusaetzlich die Bits 87..91
+(seit Abschnitt 9: 87/88/89/77/78)
 (nicht in `s_map_funde`, deren Riegel test_karte_besitz nur RDT-belegte Fundstellen zulaesst).
 `re15_map_blatt_waehlbar` = bekannt || Hinweis-Ziel || BESITZ (RE2 setzt Bank 35 bei der Aufnahme:
 room20B0 Set(35,2..4) @0x037E6-EE, gelesen @0x8006D934/@0x8006D998).
@@ -289,7 +291,8 @@ Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
 * **Bedienung**: an die markierte Stelle gehen, Aktion: "A police 3F map. / Will you take it?" -> Yes ->
   "You've taken the / police 3F map.". Danach zeigt die Karte (START, L1) die ganze Etage — nicht besuchte
   Raeume als Umriss (RE2-Zeile 498), besuchte gefuellt; die Etage ist mit HOCH/RUNTER waehlbar, auch wenn
-  man sie nie betreten hat. Gilt fuer Leon und Elza. Der Zustand liegt im Spielstand (Bank-9-Bits 87..91).
+  man sie nie betreten hat. Gilt fuer Leon und Elza. Der Zustand liegt im Spielstand (Bank-9-Bits 87..91; seit
+  Abschnitt 9: 87/88/89/77/78).
 * **Entscheidungsfragen**
   1. map3F.bmp zeigt den Konferenzraum ROOM1140 (3F), nicht Irons' Buero ROOM1150 — die 3F-Karte haengt
      deshalb an der Tafel in ROOM1140 (dort, wo du markiert hast). Richtig so?
@@ -611,5 +614,31 @@ Gegenprobe der Suche: dieselbe Suche findet `RE15_R36Q_TUER_BIT 93` in c5a6d7d4)
 L-Reserve gefuehrt ("77 = 1060->1040-Dialog nur falls noetig, 78 Reserve") — nie belegt. (64, 66..70 waeren ebenso frei;
 64 kommt in der Geschichte nur als Bank-4-Bit RE15_CUT10F0_ZIEL1_ERREICHT_BIT vor.) 87/88/89 bleiben: im Original frei.
 
-### 9.4 P3 Fix
+### 9.4 P3 Fix — B2 = 77, B1 = 78
+Geaendert (nur das Bit; Lage, Modell, Texte, Programm unveraendert):
+| Datei | Aenderung |
+|---|---|
+| `re15_port/tools/r36_kartenitems/karten_export.py` | RAEUME: ROOM1200 B2 90 -> **77**, ROOM11D0 B1 91 -> **78**; Kommentar mit Taken-Test @0x80040680/@0x800406dc, Tabelle 0x80074664[9] @0x80074688, Zensus, alte Bits @0x00A12 / @0x01364 |
+| `re15_port/engine/src/gen/kartenitems_r36.inc` | NEU ERZEUGT (`karten_export.py --schreiben`); `git diff`: genau die zwei Zeilen `k_r36k_lage[3]`/`[4]`, nur Feld 3 (90 -> 77, 91 -> 78). Gegenprobe: der Generator erzeugt den Stand VOR der Aenderung bytegleich (Lauf auf 7a0fd453-Stand: kein Inhalts-Diff) |
+| `re15_port/include/re15_kartenitems_r36.h` | Kopf-Absatz "BANK-9-BITS" (Herleitung mit Adressen, Liste der nicht freien Reserve-Bits); Feld `bit` und Haken-Kommentar 87/88/89/77/78 |
+| `re15_port/engine/src/re15_map_owned.c` | Kommentar 87/88/89/77/78 |
+| `re15_port/tests/unit/test_r36_kartenitems.c` | `bits[5] = { 87, 88, 89, 77, 78 }`, Teil S setzt 87 + **78** (B1), Kommentare |
+| `re15_port/tests/integration/test_r36_kartenitems_bild.cmake` | Feld 7 der Zeilen b2/b1: 77/78; Kopfkommentar |
+| `analysis/befunde_runde36/VERTRAG.md` 1.1 | N-Zeile 87-89, 77, 78; Nachtrag: 85/86/90/91/92 sind Original-Taken-Bits (J/L/P-Reserven 85/86/92 gestrichen), Liste "frei in Original UND Port" |
+
+Warum 77/78 und nicht anders: Abschnitt 9.3 (frei im Original-Block 53..84, nie im Port). 87/88/89 bleiben (im Original
+frei) — ein Umzug aller fuenf wuerde Staende mit genommenem 3F/2F/1F-Plan ohne Not entwerten.
+
+Messung nachher (unit_r36_kartenbits Teil V, derselbe Test wie 9.2, jetzt gruen):
+```
+ok:   Plan Blatt 1 (ROOM1200): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,77)
+ok:     nach Plan Blatt 1 (Bit 9,77): ROOM2090 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) scharf   (ebenso 2091, 2040, 2041)
+ok:   Plan Blatt 0 (ROOM11D0): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,78)
+ok:     nach Plan Blatt 0 (Bit 9,78): ROOM2040 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) scharf   (ebenso 2041, 2090, 2091)
+ok:   Original-Items 0x32/0x3F genommen (Bits 90/91): Besitz der Polizei-Blaetter 0..4 = 0x00
+ok:     ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)    (ebenso alle fuenf)
+```
+unit_r36_kartenitems: 217 PASS, 0 FAIL (Zeile 3: ROOM1200 Bit 77, Zeile 4: ROOM11D0 Bit 78; Teil S Bits 87/78 -> Blatt 4 + 0).
+
+### 9.5 P4 Riegel
 (folgt)
