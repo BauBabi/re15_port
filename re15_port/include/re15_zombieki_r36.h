@@ -236,6 +236,9 @@ void re15_r36_affen_fest_lesen(int slot, int *h1de, int *fest, int *vortritt);  
 void re15_r36_affen_vortritt_enable(int an);   /* NUR Sonden (NB4): 0 = Stand NB3 ohne Vortritt (Gegenprobe) */
 int  re15_r36_affen_nah_lesen(int slot);        /* NUR Sonden (NB5): Bilder NAH im Anker (Jagd, ausser Bissweite) */
 void re15_r36_affen_nah_enable(int an);         /* NUR Sonden (NB5): 0 = Stand NB4 ohne Nah-Umweg (Gegenprobe), >= 10: Schwelle an - 10 */
+void re15_r36_affen_nb6_enable(int bits);       /* NUR Sonden (NB6): Bit 0 Nah-Umweg ueber 0x10-Pads, Bit 1 Nachruecken; 0 = Stand NB5 */
+int  re15_r36_affen_nah_grund(int slot);        /* NUR Sonden (NB6): letzte Antwort von r36_nah_route (Codes in zombieki_r36.c) */
+int  re15_r36_affen_bissplaetze_frei(int slot); /* NUR Sonden (NB6): freie Bissplatz-Knoten des Umweg-Rasters (0 = steht an) */
 
 /* ---- Nachbesserung 1, Mangel 2 (ROOM10B0 Terrasse): ZONENLOSER RE2-Zombie --------------------------
  * GEMESSEN (test_r36_zombieki_eintritt spur 10B0 1260 7 1 1): Steuerziel steer = (0,0) — die Terrasse liegt
