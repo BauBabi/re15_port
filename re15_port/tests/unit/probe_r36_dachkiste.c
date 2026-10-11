@@ -228,7 +228,7 @@ static void seiten_labels(const re15_rdt_t *rdt, const kiste_t *k, int32_t sx, i
 typedef struct {
     const char *stage, *room; uint16_t id; int obj_id;
     int32_t sx, sz;                      /* Spieler-Startlage (Tuer-Ankunft) */
-    int n_patch; struct { uint8_t region, index, u0; } patch[4];   /* Sca_id_set-Vorgriff (ROOM2050 sub02) */
+    int n_patch; struct { uint8_t region, index, u0; } patch[8];   /* Sca_id_set-Vorgriff (ROOM2050 sub02) */
     int soll;                            /* 1 = Ausloeser erreichbar erwartet, 0 = unerreichbar erwartet, -1 = Diagnose */
 } fall_t;
 
@@ -344,14 +344,15 @@ int main(int argc, char **argv)
         /* ROOM1090/1091 obj 1 (Dach, Band 5): Ankunft aus ROOM10F0/10F1 (Door slot 1 @0x00F52 -> (-13600,1300)). */
         { "STAGE1", "ROOM1090", 0x1090, 1, -13600, 1300, 0, {{0,0,0}}, 0 },
         { "STAGE1", "ROOM1091", 0x1091, 1, -13600, 1300, 0, {{0,0,0}}, 0 },
-        /* ROOM3050/3051 obj 1 (Band 4): Ankunft an der Band-4-Tuer slot 1 @0x01EA6 (Rechteck-Mitte). */
-        { "STAGE3", "ROOM3050", 0x3050, 1, -3526, 2083, 0, {{0,0,0}}, -1 },
-        { "STAGE3", "ROOM3051", 0x3051, 1, -3526, 2083, 0, {{0,0,0}}, -1 },
-        /* ROOM2050/2051 obj 6 (Band 3): Ankunft an der Band-3-Tuer slot 0 @0x01C4A (Rechteck-Mitte); einmal
-         * Auslieferung, einmal nach sub02 (Sca_id_set r*[0x33] u0 = 0, r*[0x32] u0 = 0xff @0x02294-22B8). */
-        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 5700, 0, {{0,0,0}}, -1 },
-        { "STAGE2", "ROOM2051", 0x2051, 6, 9100, 5700, 0, {{0,0,0}}, -1 },
-        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 5700, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, -1 },
+        /* ROOM3050/3051 obj 1 (Band 4): Ankunft aus ROOM30E0 (Door slot 6 -> (-3596,-7200,1523) floor 4). */
+        { "STAGE3", "ROOM3050", 0x3050, 1, -3596, 1523, 0, {{0,0,0}}, -1 },
+        { "STAGE3", "ROOM3051", 0x3051, 1, -3596, 1523, 0, {{0,0,0}}, -1 },
+        /* ROOM2050/2051 obj 6 (Band 3): Ankunft aus ROOM2000/20B0 (Door slot 4 -> (9100,-5400,4100) floor 3); einmal
+         * Auslieferung, einmal nach sub02 (Sca_id_set r*[0x33] u0 = 0 @0x02294-22A4, r*[0x32] u0 = 0xff @0x022A8-22B8). */
+        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 0, {{0,0,0}}, -1 },
+        { "STAGE2", "ROOM2051", 0x2051, 6, 9100, 4100, 0, {{0,0,0}}, -1 },
+        { "STAGE2", "ROOM2050", 0x2050, 6, 9100, 4100, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, -1 },
+        { "STAGE2", "ROOM2050", 0x2050, 6, -6800, -5650, 4, {{0,0x33,0},{1,0x33,0},{2,0x33,0},{3,0x33,0}}, -1 },
     };
     for (size_t i = 0; i < sizeof F / sizeof F[0]; i++) {
         int32_t ex, ez, bb[4];

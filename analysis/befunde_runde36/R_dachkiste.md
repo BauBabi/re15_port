@@ -135,7 +135,54 @@ verlassen, wenn sie nach Sueden geschoben wird. Erwartung: Kiste bleibt in x [-5
 
 ## Punkt 4 — ROOM3050/3051 obj 1, ROOM2050/2051 obj 6
 
-(folgt)
+### 4.1 Zensus MIT Spieler (Sonde `tests/unit/probe_r36_dachkiste.c`, `R_belege/zensus_diag.txt`)
+
+Die Freiraum-Zensus der Spur A flutet nur die Kiste. Diese Sonde fuehrt den Spieler mit: Zustand (Kistenzelle,
+Spielerseite), Schub nur von der Gegenseite (Kiste = Spieler +- (hx+450), @0x8002cd30-44/@0x8002cd98-ac), Spieler-
+Wandklemme Radius 450 Maske 1 (grosszuegig 432), Schubstellung axial 1350..1463 (Reichweite 900 + 563 voraus,
+@0x8002d204/@0x8002d224), seitlich bis +-1238, Spieler-Freiraum je Kistenlage exakt komprimiert geflutet. Start =
+Tuer-Ankunft des Raums. Ergebnis (Auslieferung, obere Lage):
+
+| Raum / Objekt | Band | Start Spieler | erreichbare Kistenzellen | Ausloeser | Kistenlage (Mitte) |
+|---|---|---|---|---|---|
+| 1090 / 1091 obj 1 | 5 | (-13600,1300) aus 10F0/10F1 | 9 | **0** | x [-5978,-5959) z [-15503,-15481) — Seiten W und N ohne Schubstellung |
+| 3050 / 3051 obj 1 | 4 | (-3596,1523) aus 30E0 | 12729 | **7** (erste (-23875,-18500), Spieler NOERDLICH) | x [-24100,-1800) z [-22350,1123) |
+| 2050 / 2051 obj 6 | 3 | (9100,4100) aus 2000/20B0 | 3575 | **1** ((7550,-12000), Spieler SUEDLICH) | x [-6650,9000) z [-11700,-5800) |
+| 2050 obj 6 nach sub02 (Zelle 0x33 u0 0, 0x32 u0 0xff) | 3 | (9100,4100) und (-6800,-5650) | 3575 | 1 (dito) | dito |
+
+### 4.2 ROOM3050/3051 obj 1 — der Fall ist der VORGESEHENE Weg, kein Fortschritt haengt an der oberen Lage
+
+* Records (ROOM3050.RDT): obj 1 oben @0x01F1A Band 4 (-18000,-7200,-20800); unter `Ck (3,93)=1` @0x01F40 Band 0
+  (-24000,0,-22200) = die GEFALLENE Lage; Latch sub01 @0x02184-2196: `Ck (3,93)=0 / Work_set 3,1 / Member_cmp 15 == 7 /
+  Set (3,93)=1` — Kerbe = Aot slot 7 @0x01F06 (sce 5, floor 0, Rechteck x -25000..-22950, z -23200..-21150, unter
+  `Ck (3,93)=0` @0x01F02). Absprungzelle Band 4: r*[46] x -25000..-22950 z -18050..-16800 Wort 0x4002 (u0 0x01 = sperrt
+  nur den Spieler).
+* Was haengt an der Kiste: `Item_aot_set slot 6 @0x01EC6` floor 1 (= Oberkante der gefallenen Kiste, y -1800) Rechteck
+  x -24800..-23000, z -23700..-22900, Item 0x07 = **SUPER REDHAWK** (s_item_names[7]), Menge 6 — nur vom Dach der
+  gefallenen Kiste erreichbar. Beide Tueren brauchen die Kiste NICHT: slot 0 @0x01E86 floor 0 -> ROOM3040, slot 1
+  @0x01EA6 floor 4 (Kistenband selbst, keine Oberkante) -> ROOM30E0.
+* Folge: der Fall (Spur A) oeffnet hier den Weg zur Magnum, er sperrt nichts. Der Zensus belegt, dass der Spieler die
+  Kiste wirklich bis zur Absprungzelle bringt (von Norden; Fallrichtung FUN_8002d3d8 = vom Spieler weg = +Z).
+
+### 4.3 ROOM2050/2051 obj 6 — Tuer nach ROOM2040 braucht die Kistenoberkante, aber ROOM2040 hat drei weitere Tueren
+
+* Records (ROOM2050.RDT main00): obj 6 @0x01D0E Band 3 (-1600,-5400,-9348) rot 2048, unbedingt; `Door_aot_set slot 2
+  @0x01C8A floor 4` (Rechteck x -8200..-7200, z -6200..-5000) -> ROOM2040 (21700,-5400,-5400) — floor 4 = Band 3 + 1 =
+  Oberkante der Kiste obj 6 (dieselbe Mechanik wie in 1090). Die Tuer-Flaeche liegt WESTLICH der Band-3-Wand r*[51]
+  (x -7550..-6150, z -4500..850), die sub02 @0x02294-22A4 per `Sca_id_set r*[0x33] u0 = 0` erst oeffnet (Raetsel: drei
+  Kisten obj 1/2/3 (Band 0) in die Kerben slot 3/4/5 -> (5,0..2) -> sub01 @0x0201A `Aot_reset 6 -> sub02`).
+* Absprung: Band-3-Zelle r*[49] x 6350..8750 z -13950..-12150 Wort 0x3202; darunter r*[23] Band 2 x 4550..6350 Wort 0x2102
+  und r*[77]/[78] Band 1 Wort 0x1002 — eine KASKADE von Absprungzellen bis Band 0: die Kiste soll dort hinunter. An der
+  Kante: Aot slot 7 @0x01E3C/@0x01EC6 (floor 3, x 6800..8300, z -12000..-11200; sce 0 bzw. sce 1 Nachricht nach (3,104))
+  und slot 6 @0x01E28 (floor 3, x 4700..5500, z -11550..-10750, sce 3 -> sub04: Nachricht, (3,104), obj 4 Member 1 (y)
+  -16200 -> -1400, Kameras). sub02 sperrt nach dem Raetsel r*[0x32] (x 6650..8550, z -12150..-11650) mit u0 0xff.
+* Tueren nach ROOM2040 (Zensus aller STAGE2-RDT, Tuer-Nutzlast Byte 23 == 0x04): ROOM2050/2051 slot 2 (floor 4),
+  ROOM2060/2061 slot 1 (floor 1), ROOM2070/2071 slot 5 (floor 0), ROOM2040/2041 selbst slot 2/3 (floor 5, Selbsttueren).
+  Die Kiste obj 6 ist also NICHT der einzige Weg nach ROOM2040.
+* Zensus: obj 6 erreicht mit dem Spieler die Absprungzelle (von Sueden geschoben, Fallrichtung -Z = ueber die Kante
+  nach Norden), vor und nach sub02. Ob die Kaskade im Original die Kiste bis Band 0 bringt und ob sie unten gebraucht
+  wird (obj 8 @0x01D4C ist die geparkte Band-0-Kiste unter `Ck (5,7)=1`, (5,7) wird in 2050 nirgends gesetzt), ist
+  Teil des STAGE2-Raetsels und hier nicht Auftrag; byte-true belassen (Original-Mechanik, Tuer anderweitig erreichbar).
 
 ## Tests
 

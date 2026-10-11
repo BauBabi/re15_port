@@ -1,0 +1,68 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+--- ROOM1090 obj 1 Band 5 Start Kiste (-5960,-15482) Spieler (-13600,1300): Seitenlabels W/O/N/S = -1/2/-1/2, Spieler 2
+    erreichbare Kistenzellen (mit Spieler): 9, davon Ausloeser-Uebergaenge: 0; Kistenlage x [-5978, -5959) z [-15503, -15481)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(2410,-2653,-210) rot=(64,1856,0)
+[story36] ROOM1091: Text-Platz Slot 5 (Viereck ROOM1090 @0x0230E) -> msg 20
+--- ROOM1091 obj 1 Band 5 Start Kiste (-5960,-15482) Spieler (-13600,1300): Seitenlabels W/O/N/S = -1/2/-1/2, Spieler 2
+    erreichbare Kistenzellen (mit Spieler): 9, davon Ausloeser-Uebergaenge: 0; Kistenlage x [-5978, -5959) z [-15503, -15481)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x02 type=0 pos=(-24100,-3600,-23800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-18000,-7200,-20800) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x00 type=0 pos=(520,-7200,-6430) rot=(0,2048,0)
+--- ROOM3050 obj 1 Band 4 Start Kiste (-18000,-20800) Spieler (-3526,2083): Seitenlabels W/O/N/S = 2/2/2/2, Spieler -1
+    Spieler-Startlage gesperrt -> keine Suche
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x02 type=0 pos=(-24100,-3600,-23800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-18000,-7200,-20800) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x00 type=0 pos=(520,-7200,-6430) rot=(0,2048,0)
+--- ROOM3051 obj 1 Band 4 Start Kiste (-18000,-20800) Spieler (-3526,2083): Seitenlabels W/O/N/S = 2/2/2/2, Spieler -1
+    Spieler-Startlage gesperrt -> keine Suche
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x06 type=4 pos=(-1600,-5400,-9348) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(-6625,-16200,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x01 type=4 pos=(2052,0,-5552) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x02 type=4 pos=(-1256,0,-64) rot=(0,1024,0)
+[scd] Obj_model_set[4] id=0x03 type=4 pos=(4248,0,1400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x04 type=3 pos=(7996,-16200,4450) rot=(0,2048,0)
+[scd] Obj_model_set[6] id=0x05 type=3 pos=(2975,-16200,-13950) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(5475,-16200,-13050) rot=(0,0,0)
+--- ROOM2050 obj 6 Band 3 Start Kiste (-1600,-9348) Spieler (9100,5700): Seitenlabels W/O/N/S = -1/2/2/2, Spieler -1
+    Spieler-Startlage gesperrt -> keine Suche
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x06 type=4 pos=(-1600,-5400,-9348) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(-6625,-16200,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x01 type=4 pos=(2052,0,-5552) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x02 type=4 pos=(-1256,0,-64) rot=(0,1024,0)
+[scd] Obj_model_set[4] id=0x03 type=4 pos=(4248,0,1400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x04 type=3 pos=(7996,-16200,4450) rot=(0,2048,0)
+[scd] Obj_model_set[6] id=0x05 type=3 pos=(2975,-16200,-13950) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(5475,-16200,-13050) rot=(0,0,0)
+--- ROOM2051 obj 6 Band 3 Start Kiste (-1600,-9348) Spieler (9100,5700): Seitenlabels W/O/N/S = -1/2/2/2, Spieler -1
+    Spieler-Startlage gesperrt -> keine Suche
+--- (nach sub02: Zelle 0x33 frei, Zelle 0x32 gesperrt)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x06 type=4 pos=(-1600,-5400,-9348) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(-6625,-16200,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x01 type=4 pos=(2052,0,-5552) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x02 type=4 pos=(-1256,0,-64) rot=(0,1024,0)
+[scd] Obj_model_set[4] id=0x03 type=4 pos=(4248,0,1400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x04 type=3 pos=(7996,-16200,4450) rot=(0,2048,0)
+[scd] Obj_model_set[6] id=0x05 type=3 pos=(2975,-16200,-13950) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(5475,-16200,-13050) rot=(0,0,0)
+--- ROOM2050 obj 6 Band 3 Start Kiste (-1600,-9348) Spieler (9100,5700): Seitenlabels W/O/N/S = -1/2/2/2, Spieler -1
+    Spieler-Startlage gesperrt -> keine Suche
+rc=0
