@@ -4911,6 +4911,9 @@ re_title:;
     re15_fenster1120_install((uint16_t)g_current_room_id);
     /* Runde 36 Spur L: Irons tot ROOM1151 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter). */
     { extern void re15_elza_r36_install(uint16_t); re15_elza_r36_install((uint16_t)g_current_room_id); }
+    /* Runde 36 Spur P: derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter), nach dem Restore der
+     * Flags ((4,0xF3) entscheidet ueber Roy in 1020). Herleitung: include/re15_story_r36.h. */
+    { extern void re15_story_r36_install(uint16_t); re15_story_r36_install((uint16_t)g_current_room_id); }
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

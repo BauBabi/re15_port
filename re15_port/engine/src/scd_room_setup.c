@@ -33,6 +33,7 @@
 #include "re15_elza_r36.h"     /* Runde 36 Spur L: Elza-Szenario (elza_r36.c) */
 #include "re15_inhalt_r35.h"   /* Runde 35 Spur F: Memory Card 1010 + Schrot 1090 (inhalt_r35.c) */
 #include "re15_objfall_r36.h"  /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
+#include "re15_story_r36.h"    /* Runde 36 Spur P: Roy 1020 / Zelle 1210 / Schuppen 1091 (story_r36.c) */
 
 extern scd_vm_t g_scd;
 
@@ -476,6 +477,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_fenster1120_install((uint16_t)g_current_room_id);   /* Runde 35 Spur M: Fenster ROOM1120 (re15_fenster1120.h) */
     re15_objfall_install((uint16_t)g_current_room_id);       /* Runde 36 Spur A: Objekt-Fall ruht (re15_objfall_r36.h) */
     re15_elza_r36_install((uint16_t)g_current_room_id);      /* Runde 36 Spur L: Irons tot ROOM1151 (re15_elza_r36.h) */
+    re15_story_r36_install((uint16_t)g_current_room_id);     /* Runde 36 Spur P: Roy 1020 nach Strom, Text-Plaetze 1210/1091 (re15_story_r36.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und
