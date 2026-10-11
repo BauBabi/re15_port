@@ -1,0 +1,45 @@
+affen_-14000,2000_nb5a | F1..F1870 erster Angriff 680
+   S2 Angriff F680 (Angriffsbilder 415) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff nie (Angriffsbilder 0) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+affen_-14000,4000_nb5a | F1..F2162 erster Angriff 704
+   S2 Angriff F704 (Angriffsbilder 419) fest 250 fern 0 | nach 1. Angriff 250 fern 0 | laengste F1913+250 @(-13760,11653) d3766..3880
+   S3 Angriff F1496 (Angriffsbilder 194) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+affen_-14500,6000_nb5a | F1..F2520 erster Angriff 694
+   S2 Angriff F694 (Angriffsbilder 567) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff F892 (Angriffsbilder 616) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+affen_-14746,-4140_nb5a | F1..F1636 erster Angriff 364
+   S2 Angriff F364 (Angriffsbilder 365) fest 179 fern 0 | nach 1. Angriff 179 fern 0 | laengste F866+179 @(-15999,-3259) d3462..3692
+   S3 Angriff F1021 (Angriffsbilder 190) fest 108 fern 108 | nach 1. Angriff 108 fern 108 | laengste F406+108 @(6418,1676) d22329..22804
+affen_-20000,14500_nb5a | F1..F2248 erster Angriff 883
+   S2 Angriff F883 (Angriffsbilder 488) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff F896 (Angriffsbilder 449) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+affen_-22288,11938_nb5a | F1..F2675 erster Angriff 868
+   S2 Angriff F868 (Angriffsbilder 652) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff F1025 (Angriffsbilder 320) fest 833 fern 50 | nach 1. Angriff 833 fern 50 | laengste F2204+472 @(-23302,13082) d3833..4405
+affen_-24000,10000_nb5a | F1..F2700 erster Angriff 853
+   S2 Angriff F853 (Angriffsbilder 785) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff F1570 (Angriffsbilder 104) fest 1193 fern 1 | nach 1. Angriff 1193 fern 1 | laengste F1781+920 @(-23302,13088) d3211..5514
+affen_-24452,11938_nb5a | F1..F2700 erster Angriff 828
+   S2 Angriff F828 (Angriffsbilder 810) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff F1253 (Angriffsbilder 80) fest 1335 fern 0 | nach 1. Angriff 1335 fern 0 | laengste F1366+1335 @(-23061,13333) d3358..5472
+affen_-26500,15500_nb5a | F1..F2582 erster Angriff 842
+   S2 Angriff F842 (Angriffsbilder 731) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff nie (Angriffsbilder 0) fest 1650 fern 0 | nach 1. Angriff 1650 fern 0 | laengste F1065+1518 @(-23302,13217) d3368..5476
+affen_-7000,12500_nb5a | F1..F2160 erster Angriff 730
+   S2 Angriff F1627 (Angriffsbilder 154) fest 341 fern 0 | nach 1. Angriff 341 fern 0 | laengste F1254+341 @(-13527,11922) d3556..3673
+   S3 Angriff F730 (Angriffsbilder 444) fest 250 fern 0 | nach 1. Angriff 250 fern 0 | laengste F1911+250 @(-10041,12712) d4369..4461
+affen_6000,-9000_nb5a | F1..F1865 erster Angriff 324
+   S2 Angriff F1596 (Angriffsbilder 21) fest 429 fern 45 | nach 1. Angriff 429 fern 45 | laengste F1397+158 @(5204,-8818) d5415..6501
+   S3 Angriff F324 (Angriffsbilder 365) fest 368 fern 0 | nach 1. Angriff 368 fern 0 | laengste F826+368 @(5771,-8824) d3087..3158
+affen_7000,4000_nb5a | F1..F1407 erster Angriff 18
+   S2 Angriff nie (Angriffsbilder 0) fest 96 fern 96 | nach 1. Angriff 96 fern 96 | laengste F396+96 @(-7813,-12848) d25055..25284
+   S3 Angriff F18 (Angriffsbilder 529) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+affen_7200,-4130_nb5a | F1..F1799 erster Angriff 274
+   S2 Angriff F1050 (Angriffsbilder 250) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff F274 (Angriffsbilder 390) fest 468 fern 0 | nach 1. Angriff 468 fern 0 | laengste F648+468 @(6418,-3617) d3016..3570
+affen_9000,10000_nb5a | F1..F1639 erster Angriff 309
+   S2 Angriff F1175 (Angriffsbilder 144) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+   S3 Angriff F309 (Angriffsbilder 465) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -
+t11b0kampf_nb5a | F1..F2473 erster Angriff 866
+   S2 Angriff nie (Angriffsbilder 0) fest 1309 fern 0 | nach 1. Angriff 1309 fern 0 | laengste F1991+483 @(-22290,16118) d3841..4725
+   S3 Angriff F866 (Angriffsbilder 652) fest 0 fern 0 | nach 1. Angriff 0 fern 0 | laengste -

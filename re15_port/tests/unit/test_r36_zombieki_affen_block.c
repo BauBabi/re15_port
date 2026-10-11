@@ -376,7 +376,7 @@ static int room_boot_j(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8
 }
 /* kanon <spur>: Ankunftskampf wie J `szene` bis zum Tod; je Gorilla der groesste NAH-Anker-Zaehler vor seinem ersten
  * Angriff und insgesamt, Freigabe, erster Angriff je Slot, Bisse (HP-Abfall nach der Freigabe) relativ zur Freigabe. */
-typedef struct { int frei, tod, erst[2], nahmax[2], nahmax_vor[2], nahmax_f[2], nb, biss[64]; } kanon_t;
+typedef struct { int frei, tod, erst[2], nahmax[2], nahmax_vor[2], nahmax_f[2], nb, biss[64], h1de_vor[2]; } kanon_t;
 static kanon_t kanon(int spur)
 {
     kanon_t r; memset(&r, 0, sizeof r); r.frei = -1; r.tod = -1;
@@ -396,6 +396,8 @@ static kanon_t kanon(int spur)
             if (!r.erst[k] && r.frei >= 0 && (sub == 5 || sub == 6 || sub == 8 || sub == 15)) r.erst[k] = f;
             if (n > r.nahmax[k]) { r.nahmax[k] = n; r.nahmax_f[k] = f; }
             if (!r.erst[k] && n > r.nahmax_vor[k]) r.nahmax_vor[k] = n;
+            { int h = 0, fs = 0, vt = 0; re15_r36_affen_fest_lesen((int)(e - g_actors), &h, &fs, &vt);
+              if (!r.erst[k] && r.frei >= 0 && h > r.h1de_vor[k]) r.h1de_vor[k] = h; }
             if (spur > 0 && r.frei >= 0 && (f % spur) == 0) {
                 long long dx = e->x - pl->x, dz = e->z - pl->z;
                 printf("  F%d (+%d) S%d st=%d/%d/%d/%d @(%d,%d) d%d k%d L%d nah%d | Leon (%d,%d) hp %d\n", f, f - r.frei, (int)(e - g_actors), e->state,
@@ -472,6 +474,7 @@ int main(int argc, char **argv)
         for (int i = 0; i < r.nb && i < 16; i++) printf(" %d", r.biss[i]);
         printf("\nKANON S2 erster Angriff F%d (+%d), NAH-Anker max vor dem Angriff %d, gesamt %d (F%d) | S3 erster Angriff F%d (+%d), max vor %d, gesamt %d (F%d)\n",
                r.erst[0], r.erst[0] - r.frei, r.nahmax_vor[0], r.nahmax[0], r.nahmax_f[0], r.erst[1], r.erst[1] - r.frei, r.nahmax_vor[1], r.nahmax[1], r.nahmax_f[1]);
+        printf("KANON +0x1de-Zwilling max nach der Freigabe vor dem ersten Angriff: S2 %d, S3 %d\n", r.h1de_vor[0], r.h1de_vor[1]);
         return 0;
     }
     if (argc > 17 && strcmp(argv[1], "lage") == 0) {   /* NB4 Sonde: lage <bilder> <umweg 0|1> <spur> <lx> <lz> <lyaw> <g1x> <g1z> <g1yaw> <g1sub> <g1sub3>
@@ -510,8 +513,9 @@ int main(int argc, char **argv)
                 for (int k = 0; k < 2; k++) { re15_actor_t *e = g[k]; int32_t ux = 0, uz = 0; int up = -1; int h = 0, fs = 0, vt = 0;
                     int ua = re15_r36_affen_umweg_lesen((int)(e - g_actors), &ux, &uz, &up); re15_r36_affen_fest_lesen((int)(e - g_actors), &h, &fs, &vt);
                     long long dx = e->x - pl->x, dz = e->z - pl->z;
-                    printf(" | G%d %d %d r%d s%d/%d/%d/%d d%d k%d h%d fest%d L%d uw%d vt%d", k + 1, (int)e->x, (int)e->z, (int)e->rot_y, e->state, e->sub_state_1,
-                           e->sub_state_2, e->sub_state_3, isqrt64(dx * dx + dz * dz), e->sca_wall_hit != 0, h, fs, e->dog_flags & 1, ua, vt); }
+                    printf(" | G%d %d %d r%d s%d/%d/%d/%d d%d dd%d k%d h%d fest%d L%d uw%d vt%d nah%d z(%d,%d)", k + 1, (int)e->x, (int)e->z, (int)e->rot_y, e->state, e->sub_state_1,
+                           e->sub_state_2, e->sub_state_3, isqrt64(dx * dx + dz * dz), (int)(uint16_t)e->dog_dist, e->sca_wall_hit != 0, h, fs, e->dog_flags & 1, ua, vt,
+                           re15_r36_affen_nah_lesen((int)(e - g_actors)), (int)ux, (int)uz); }
                 printf(" | pl %d %d hp %d\n", (int)pl->x, (int)pl->z, (int)pl->hp);
             }
         }
@@ -891,22 +895,27 @@ int main(int argc, char **argv)
             CHECK((er[1][0] > 0 || er[1][1] > 0) && fn[1][0] < 90 && fn[1][1] < 90,
                   "Stau mit Vortritt: Angriff G1 %d / G2 %d, keine FERN-Blockade (%ld/%ld Bilder)", er[1][0], er[1][1], fn[1][0], fn[1][1]);
         }
-        {   /* NB4 (Abnahme 3, Mangel 2): die NAHE Rest-Blockade an den Stoss-Zielen ist ORIGINAL — der Port (mit Umweg + Vortritt)
-             * endet ab derselben Lage wie die GDB-Messung des Originals (F_nb4/gdb_affen.py, r3 s033 ab VSync 10029):
+        {   /* NB4 (Abnahme 3, Mangel 2) -> NB5 (Abnahme 4, Mangel 3): ORIGINAL-GLEICHHEIT im Modus ORIGINAL-REGEL (`lage <b> 0`) —
+             * die Port-Regel ohne Umweg endet ab derselben Lage wie die GDB-Messung des Originals (F_nb4/gdb_affen.py, r3 s033 ab VSync
+             * 10029):
              *   O3b Nordwest-Ecke, EIN Gorilla (der zweite weit weg): Original e1 900 Bilder an der #21-Ecke, F900 (-23302,14597)
              *       d 3298, kein Angriff;
              *   O1 Leon (6000,-9000), Gorillas in der Original-Lage F195: Original schiebt Leon durch die Ostgasse bis (7880,-1379),
              *       e1 in der Gassenmitte (6418,-4409), e2 am Suedeingang (8101,-7143) (VSync 14629), beide ohne Bewegung;
              *   O5 Nordende Nordwest-Gang (exe-Stelle 1): Original e1 900 Bilder an der Westkante von #2, F900 (-13527,11914) d 3602,
-             *       kein Angriff (e2 stand FERN bei (-12316,-8452) in der Auswahl). */
+             *       kein Angriff (e2 stand FERN bei (-12316,-8452) in der Auswahl).
+             * Bis NB4 lief dieser Block im PORT-Modus (`lage <b> 1`) und schrieb den Stillstand als Soll fest (Abnahme 4 Mangel 3). */
             static const int32_t lg[3][16] = {
                 { 900, -26606, 14578, 18, -23302, 14489, 2067, 3, 0, 9434, 2189, 2656, 0, 0, -23302, 14597 },
                 { 2400, 6000, -9000, 1332, -5525, -14883, 2731, 3, 0, -8915, -12487, 93, 3, 0, 6418, -4409 },
                 { 900, -9960, 11409, 18, -13533, 11917, 89, 3, 0, -12316, -8452, 3151, 4, 0, -13527, 11914 } };
-            for (int i = 0; i < 3; i++) {
-                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage %d 1 0 %d %d %d %d %d %d %d %d %d %d %d %d %d", argv[0], (int)lg[i][0], (int)lg[i][1],
-                                         (int)lg[i][2], (int)lg[i][3], (int)lg[i][4], (int)lg[i][5], (int)lg[i][6], (int)lg[i][7], (int)lg[i][8], (int)lg[i][9],
-                                         (int)lg[i][10], (int)lg[i][11], (int)lg[i][12], (int)lg[i][13]);
+            static const char *const ort[3] = { "Nordwest-Ecke (O3b)", "Ostgasse (O1)", "Nordende Nordwest-Gang (O5)" };
+            int er_m[3][3]; long fs_m[3][3];   /* [Lage][Modus 0 / 4 / 1] fuer Gorilla 1 */
+            static const int modi[3] = { 0, 4, 1 };
+            for (int i = 0; i < 3; i++) for (int mi = 0; mi < 3; mi++) {
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage %d %d 0 %d %d %d %d %d %d %d %d %d %d %d %d %d", argv[0], (int)lg[i][0], modi[mi],
+                                         (int)lg[i][1], (int)lg[i][2], (int)lg[i][3], (int)lg[i][4], (int)lg[i][5], (int)lg[i][6], (int)lg[i][7], (int)lg[i][8],
+                                         (int)lg[i][9], (int)lg[i][10], (int)lg[i][11], (int)lg[i][12], (int)lg[i][13]);
                 FILE *pp = popen(cmd, "r"); char zl[512]; int er2[2] = { -1, -1 }, ex[2] = { 0, 0 }, ez[2] = { 0, 0 }; long fs[2] = { -1, -1 }, ff[2] = { -1, -1 };
                 while (pp && fgets(zl, sizeof zl, pp)) {
                     int k, e1, x, z; long f1, f2;
@@ -914,13 +923,78 @@ int main(int argc, char **argv)
                         er2[k - 1] = e1; fs[k - 1] = f1; ff[k - 1] = f2; ex[k - 1] = x; ez[k - 1] = z; }
                 }
                 if (pp) pclose(pp);
+                er_m[i][mi] = er2[0]; fs_m[i][mi] = fs[0];
+                printf("Nahwarten %s Modus %d: G1 Angriff %d, fest %ld, fern %ld, Ende (%d,%d)\n", ort[i], modi[mi], er2[0], fs[0], ff[0], ex[0], ez[0]);
+                if (mi != 0) continue;
                 long dx = ex[0] - lg[i][14], dz = ez[0] - lg[i][15];
-                static const char *const ort[3] = { "Nordwest-Ecke (O3b)", "Ostgasse (O1)", "Nordende Nordwest-Gang (O5)" };
                 CHECK(fs[0] >= (i == 1 ? 1000 : 810) && ff[0] == 0 && dx * dx + dz * dz <= 150L * 150L,
-                      "%s: Gorilla 1 wartet NAH wie das Original (fest %ld, fern %ld, Ende (%d,%d), Original (%d,%d))", ort[i],
+                      "%s Modus Original-Regel: Gorilla 1 wartet NAH wie das Original (fest %ld, fern %ld, Ende (%d,%d), Original (%d,%d))", ort[i],
                       fs[0], ff[0], ex[0], ez[0], (int)lg[i][14], (int)lg[i][15]);
-                if (i != 1) CHECK(er2[0] == 0, "%s: Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)", ort[i]);
+                if (i != 1) CHECK(er2[0] == 0, "%s Modus Original-Regel: Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)", ort[i]);
             }
+            /* NB5 (Abnahme 4, Mangel 1) — PORT-WAHL Nah-Umweg zum freien Bissplatz (zombieki_r36.c r36_nah_route): EIN naher Gorilla an
+             * der Klemme ausserhalb der Bissweite (0xbb8 @0x80117a60) geht nach R36_NAH_START Bildern im Anker zu Fuss zum naechsten
+             * freien Bissplatz. Gegenprobe = Stand NB4 (Modus 4: Umweg + Vortritt, ohne Nah-Umweg) = Befund. Schranke 450 = Kriterium
+             * der Abnahme 4 (kanonischer Original-Kampf 408). */
+            for (int i = 0; i < 3; i += 2) {
+                CHECK(er_m[i][1] == 0 && fs_m[i][1] >= 810, "%s Gegenprobe Stand NB4: kein Angriff, fest %ld (Befund)", ort[i], fs_m[i][1]);
+                CHECK(er_m[i][2] > 0 && fs_m[i][2] >= 0 && fs_m[i][2] <= 450, "%s Nah-Umweg: Gorilla 1 greift an (Bild %d), NAH fest %ld <= 450", ort[i],
+                      er_m[i][2], fs_m[i][2]);
+            }
+        }
+        {   /* NB5 (Abnahme 4, Mangel 1): ANSTEHEN in der Nordwest-Ecke — nur EIN Bissplatz. Sonde `platz` (Original-Klemme, Radius box[6]
+             * 1600 @0x80121356, Bissweite 0xbb8 @0x80117a60): fuer Leon an der Westwand der Ecke liegen alle Bissplaetze in einem Bereich
+             * mit Durchmesser < 3168 (Koerperabstand zweier Gorillas, Spur J griff 3168..3209) -> zwei Gorillas koennen dort nicht
+             * zugleich beissen (exe-Stellen 4/11/12/13, Tuerweg t11b0kampf). Gegenprobe: im kanonischen Kampf (V-Nische) passen zwei. */
+            static const int32_t lp[5][3] = { { -26932, 17268, 0 }, { -26932, 14578, 0 }, { -26932, 15700, 0 }, { -7107, -12395, 1 }, { -7138, -12372, 1 } };
+            for (int i = 0; i < 5; i++) {
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" platz %d %d 50", argv[0], (int)lp[i][0], (int)lp[i][1]);
+                FILE *pp = popen(cmd, "r"); char zl[512]; int n = -1, dm = -1;
+                while (pp && fgets(zl, sizeof zl, pp)) {
+                    int lx, lz, st2;
+                    if (sscanf(zl, "PLATZ Leon (%d,%d): %d Bissplaetze (Schritt %d), x %*d..%*d z %*d..%*d, Durchmesser %d", &lx, &lz, &n, &st2, &dm) == 5) break;
+                }
+                if (pp) pclose(pp);
+                if (lp[i][2]) CHECK(n > 0 && dm >= 3168, "Bissplaetze Leon (%d,%d) kanonischer Kampf: %d, Durchmesser %d >= 3168 (zwei Gorillas passen)", (int)lp[i][0], (int)lp[i][1], n, dm);
+                else          CHECK(n > 0 && dm < 3168, "Bissplaetze Leon (%d,%d) Nordwest-Ecke: %d, Durchmesser %d < 3168 (nur EIN Gorilla)", (int)lp[i][0], (int)lp[i][1], n, dm);
+            }
+            /* NACHRUECKEN: Stau-Lage O3 (Gorilla 1 greift in der Ecke an, Gorilla 2 steht an der #21-Ecke), Gorilla 1 faellt in Bild 400 aus
+             * (aktiv = 0): mit Nah-Umweg nimmt Gorilla 2 den frei gewordenen Bissplatz; Stand NB4 (Modus 4) bleibt er an der #21-Ecke. */
+            int ag[2] = { 0, 0 };
+            for (int m = 0; m < 2; m++) {
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage 1200 %d 1 -26606 14578 18 -23302 14489 2067 3 0 -20579 16118 1885 4 0 400 1", argv[0], m ? 1 : 4);
+                FILE *pp = popen(cmd, "r"); char zl[1024];
+                while (pp && fgets(zl, sizeof zl, pp)) {   /* Angriff von Gorilla 2 NACH dem Ausfall (Spur je Bild: Sub 5/6/8/15 ab F401) */
+                    int f; char *g2 = strstr(zl, "| G2 ");
+                    if (sscanf(zl, "F%d", &f) == 1 && f > 400 && g2 && !ag[m]) {
+                        int st, s1;
+                        if (sscanf(g2, "| G2 %*d %*d r%*d s%d/%d", &st, &s1) == 2 && (s1 == 5 || s1 == 6 || s1 == 8 || s1 == 15)) ag[m] = f;
+                    }
+                }
+                if (pp) pclose(pp);
+            }
+            printf("Nachruecken (Gorilla 1 faellt F400 aus): Stand NB4 Gorilla 2 Angriff ab F401: %d | mit Nah-Umweg: %d\n", ag[0], ag[1]);
+            CHECK(ag[0] == 0, "Nachruecken Gegenprobe Stand NB4: Gorilla 2 bleibt an der #21-Ecke (kein Angriff nach dem Ausfall)");
+            CHECK(ag[1] > 400, "Nachruecken mit Nah-Umweg: Gorilla 2 nimmt den freien Bissplatz und greift an (Bild %d)", ag[1]);
+        }
+        {   /* NB5: J-FENSTER — der kanonische Ankunftskampf (Harness des J-Riegels szene) bleibt bitgleich: Slot 2 wartet vor seinem
+             * ersten Biss hoechstens 353 Bilder im NAH-Anker (< R36_NAH_START = 354); Heavy + Bisse mit Nah-Umweg = Original-Liste
+             * (jnb1/g_orig.txt, J szene: +363 Heavy, 468, 521, ... 1139, Tod +1194). */
+            char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" kanon 0 1 1", argv[0]);
+            FILE *pp = popen(cmd, "r"); char zl[1024]; int tod = -1, bi[16]; int nahv = -1; memset(bi, 0, sizeof bi);
+            while (pp && fgets(zl, sizeof zl, pp)) {
+                if (!strncmp(zl, "KANON Freigabe", 14)) {
+                    char *q = strstr(zl, "Tod +"); if (q) tod = atoi(q + 5);
+                    q = strstr(zl, "Bisse "); if (q) q = strchr(q, ':');
+                    for (int i = 0; q && i < 16; i++) bi[i] = (int)strtol(q + 1, &q, 10);
+                }
+                if (!strncmp(zl, "KANON S2", 8)) { char *q = strstr(zl, "max vor dem Angriff "); if (q) nahv = atoi(q + 20); }
+            }
+            if (pp) pclose(pp);
+            static const int orig[15] = { 363, 468, 521, 571, 624, 674, 727, 778, 830, 882, 933, 986, 1036, 1090, 1139 };
+            int gl = 0; for (int i = 0; i < 15; i++) gl += (bi[i] == orig[i]);
+            CHECK(nahv == 353 && tod == 1194 && gl == 15, "J-Fenster: kanonischer Kampf mit Nah-Umweg bitgleich (Heavy + 14 Bisse %d/15 = Original, Tod +%d); "
+                  "Slot 2 NAH-Anker vor dem ersten Biss %d < R36_NAH_START 354", gl, tod, nahv);
         }
         re15_r36_affen_padsuche_enable(1);
     }
