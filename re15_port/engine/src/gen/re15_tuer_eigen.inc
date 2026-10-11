@@ -3,7 +3,10 @@
  * ⛔ PORT-WAHL, KEINE Original-Adresse: port-eigene Tuerarchive im RE2-Aufbau (Tonteil, SCD, MD1
  * bytegleich dem Basis-Archiv, nur die TIM neu) und ihre Zuordnung zu RE1.5-Tuerseiten.
  * Dateien: shared_assets/RE15DOOR/<kennung>.DO2; Groessen wie die RE2-Tabelle @0x8009a520
- * (Tonteil, Modellteil, Sektor), fnv = FNV-1a 32 ueber die ganze Datei. */
+ * (Tonteil, Modellteil, Sektor), fnv = FNV-1a 32 ueber die ganze Datei.
+ * Runde 36 Spur G (tools/tueren/r36_tueren_bauen.py, analysis/befunde_runde36/G_tueren.md): Zeilen S013 S040
+ * S057 (Fahrstuhl -> DOOR27 V0) und S164 S165 (grosse Tuer 2090 -> DOOR26 V0) sowie der Eintrag P0CD (neue
+ * Textur) gezielt nachgefuehrt; plan.json traegt dieselbe Wahl (archiv "RE2"). */
 static const re15_tuer_eigen_t re15_tuer_eigen[30] = {
     /* 1: P07G = DOOR07 + Textur 'Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1); Stufe 2: silbernes Rechteckschild unter dem Druecker gemalt (gemessen, Pilot-Punkt a)' (Ton F3 (06 07 08 22 2F, Blechtuer)) */
     { "P07G", 0x07, 19608, 35428, 10, 55908, 0x982915E5u, 0 },
@@ -71,7 +74,9 @@ static const re15_tuer_eigen_t re15_tuer_eigen[30] = {
 /* Zuordnung RE1.5-Tuerseite -> Port-Archiv (Spalten wie gen/tuer_zuordnung.inc; re2_nr = Basis-Archiv
  * = var 15, eigen = Index+1 in re15_tuer_eigen[]). Variante nach tueren_02_re2.md 2.4 (Herkunft je Zeile).
  * eigen = 0 in dieser Tabelle: G12-Durchgang ohne Tuerblatt -> RE2-Archiv OHNE Objekt (DOOR36, Blende + Ton),
- * Wahl nach Huellkurve (tools/tueren/tuer_g12_ton.py, analysis/befunde_runde33/tueren_rest_bau.md). */
+ * Wahl nach Huellkurve (tools/tueren/tuer_g12_ton.py, analysis/befunde_runde33/tueren_rest_bau.md).
+ * Runde 36 Spur G: eigen = 0 auch fuer Seiten mit RE2-Archiv UNVERAENDERT (plan.json archiv "RE2":
+ * Fahrstuhl ROOM1080 = DOOR27 V0, Gross-Schott ROOM2090/20A0 = DOOR26 V0; analysis/befunde_runde36/G_tueren.md). */
 static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[220] = {
     /* S000 T002 ROOM1000 -> ROOM1050 | ROOM1000.RDT@0xBBE main00 Slot 0 | P07G (Basis DOOR07) V1 (Griff rechts -> V1 (T2 2.4 Punkt 1)) */
     { 0x1000, 0, 0,  22850, -13400,   500,  1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 0, 2, 0x00BBE, 1 },
@@ -105,14 +110,14 @@ static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[220] = {
     { 0x1030, 0, 0, -26900,  -3650,   600,  1050, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 10, 6, 0x01CAA, 1 },
     /* S010 T006 ROOM1031 -> ROOM1040 | ROOM1031.RDT@0x1D18 main00 Slot 2 | P07G (Basis DOOR07) V1 (Griff rechts -> V1 (T2 2.4 Punkt 1)) */
     { 0x1031, 0, 0, -26900,  -3650,   600,  1050, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 10, 6, 0x01D18, 1 },
-    /* S013 T011 ROOM1040 -> ROOM1080 | ROOM1040.RDT@0x1096 main00 Slot 0 | P25G (Basis DOOR25) V0 (DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)) */
-    { 0x1040, 0, 0, -21786, -10300,  1150,   700, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x25, 0, 0, 0xFF, 13, 11, 0x01096, 16 },
+    /* S013 T011 ROOM1040 -> ROOM1080 | ROOM1040.RDT@0x1096 main00 Slot 0 | RE2 (Basis DOOR27) V0 (Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer) */
+    { 0x1040, 0, 0, -21786, -10300,  1150,   700, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x27, 0, 0, 0xFF, 13, 11, 0x01096, 0 },
     /* S014 T006 ROOM1040 -> ROOM1030 | ROOM1040.RDT@0x10B8 main00 Slot 1 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x1040, 0, 0, -19650,  -3800,   750,  1100, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 14, 6, 0x010B8, 1 },
     /* S015 T012 ROOM1040 -> ROOM1060 | ROOM1040.RDT@0x10D8 main00 Slot 2 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x1040, 0, 0, -19650, -13000,   750,  1100, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 15, 12, 0x010D8, 1 },
-    /* S013 T011 ROOM1041 -> ROOM1080 | ROOM1041.RDT@0x1096 main00 Slot 0 | P25G (Basis DOOR25) V0 (DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)) */
-    { 0x1041, 0, 0, -21786, -10300,  1150,   700, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x25, 0, 0, 0xFF, 13, 11, 0x01096, 16 },
+    /* S013 T011 ROOM1041 -> ROOM1080 | ROOM1041.RDT@0x1096 main00 Slot 0 | RE2 (Basis DOOR27) V0 (Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer) */
+    { 0x1041, 0, 0, -21786, -10300,  1150,   700, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x27, 0, 0, 0xFF, 13, 11, 0x01096, 0 },
     /* S014 T006 ROOM1041 -> ROOM1030 | ROOM1041.RDT@0x10B8 main00 Slot 1 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x1041, 0, 0, -19650,  -3800,   750,  1100, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 14, 6, 0x010B8, 1 },
     /* S015 T012 ROOM1041 -> ROOM1060 | ROOM1041.RDT@0x10D8 main00 Slot 2 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
@@ -179,14 +184,14 @@ static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[220] = {
     { 0x10B1, 0, 0, -21370,   4610,   750,  1050, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x16, 5, 0, 0xFF, 38, 23, 0x016F2, 12 },
     /* S039 T016 ROOM10C0 -> ROOM1060 | ROOM10C0.RDT@0xE42 main00 Slot 0 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x10C0, 0, 0,   -600,   9550,   500,  1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 39, 16, 0x00E42, 1 },
-    /* S040 T017 ROOM10C0 -> ROOM1080 | ROOM10C0.RDT@0xE82 main00 Slot 1 | P25G (Basis DOOR25) V0 (DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)) */
-    { 0x10C0, 0, 0,   1500,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x25, 0, 0, 0xFF, 40, 17, 0x00E82, 16 },
+    /* S040 T017 ROOM10C0 -> ROOM1080 | ROOM10C0.RDT@0xE82 main00 Slot 1 | RE2 (Basis DOOR27) V0 (Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer) */
+    { 0x10C0, 0, 0,   1500,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x27, 0, 0, 0xFF, 40, 17, 0x00E82, 0 },
     /* S041 T025 ROOM10C0 -> ROOM10D0 | ROOM10C0.RDT@0xEA4 main00 Slot 2 | P0CD (Basis DOOR0C) V1 (0C beide Fluegel Seite A weg/hin) */
     { 0x10C0, 0, 0,  -7600,  -2250,   500,  2000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x0C, 1, 0, 0xFF, 41, 25, 0x00EA4, 11 },
     /* S039 T016 ROOM10C1 -> ROOM1060 | ROOM10C1.RDT@0xE42 main00 Slot 0 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x10C1, 0, 0,   -600,   9550,   500,  1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 39, 16, 0x00E42, 1 },
-    /* S040 T017 ROOM10C1 -> ROOM1080 | ROOM10C1.RDT@0xE82 main00 Slot 1 | P25G (Basis DOOR25) V0 (DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)) */
-    { 0x10C1, 0, 0,   1500,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x25, 0, 0, 0xFF, 40, 17, 0x00E82, 16 },
+    /* S040 T017 ROOM10C1 -> ROOM1080 | ROOM10C1.RDT@0xE82 main00 Slot 1 | RE2 (Basis DOOR27) V0 (Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer) */
+    { 0x10C1, 0, 0,   1500,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x27, 0, 0, 0xFF, 40, 17, 0x00E82, 0 },
     /* S041 T025 ROOM10C1 -> ROOM10D0 | ROOM10C1.RDT@0xEA4 main00 Slot 2 | P0CD (Basis DOOR0C) V1 (0C beide Fluegel Seite A weg/hin) */
     { 0x10C1, 0, 0,  -7600,  -2250,   500,  2000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x0C, 1, 0, 0xFF, 41, 25, 0x00EA4, 11 },
     /* S044 T025 ROOM10D0 -> ROOM10C0 | ROOM10D0.RDT@0x11B6 main00 Slot 15 | P0CD (Basis DOOR0C) V0 (0C beide Fluegel Seite B weg/hin) */
@@ -207,12 +212,12 @@ static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[220] = {
     { 0x1101, 0, 0, -21330, -24790,   400,  1250, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0x07, 49, 26, 0x0099A, 7 },
     /* S056 T015 ROOM1120 -> ROOM1060 | ROOM1120.RDT@0xC76 main00 Slot 0 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x1120, 0, 0,   -700,   9550,   500,  1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 56, 15, 0x00C76, 1 },
-    /* S057 T018 ROOM1120 -> ROOM1080 | ROOM1120.RDT@0xCB6 main00 Slot 1 | P25G (Basis DOOR25) V0 (DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)) */
-    { 0x1120, 0, 0,   1300,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x25, 0, 0, 0xFF, 57, 18, 0x00CB6, 16 },
+    /* S057 T018 ROOM1120 -> ROOM1080 | ROOM1120.RDT@0xCB6 main00 Slot 1 | RE2 (Basis DOOR27) V0 (Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer) */
+    { 0x1120, 0, 0,   1300,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x27, 0, 0, 0xFF, 57, 18, 0x00CB6, 0 },
     /* S056 T015 ROOM1121 -> ROOM1060 | ROOM1121.RDT@0xC76 main00 Slot 0 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x1121, 0, 0,   -700,   9550,   500,  1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 56, 15, 0x00C76, 1 },
-    /* S057 T018 ROOM1121 -> ROOM1080 | ROOM1121.RDT@0xCB6 main00 Slot 1 | P25G (Basis DOOR25) V0 (DOOR25 nur V0 (RE2 beide Seiten V0 bzw. V0..V3 gleich)) */
-    { 0x1121, 0, 0,   1300,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x25, 0, 0, 0xFF, 57, 18, 0x00CB6, 16 },
+    /* S057 T018 ROOM1121 -> ROOM1080 | ROOM1121.RDT@0xCB6 main00 Slot 1 | RE2 (Basis DOOR27) V0 (Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer) */
+    { 0x1121, 0, 0,   1300,   6400,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x27, 0, 0, 0xFF, 57, 18, 0x00CB6, 0 },
     /* S059 T035 ROOM1130 -> ROOM1140 | ROOM1130.RDT@0x88E main00 Slot 0 | P04B (Basis DOOR04) V2 (Fluegel rechts -> V2 (T2 2.4 Punkt 2)) */
     { 0x1130, 0, 0,   -300, -13900,   500,  2000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x04, 2, 0, 0xFF, 59, 35, 0x0088E, 10 },
     /* S059 T035 ROOM1131 -> ROOM1140 | ROOM1131.RDT@0x88E main00 Slot 0 | P04B (Basis DOOR04) V2 (Fluegel rechts -> V2 (T2 2.4 Punkt 2)) */
@@ -357,18 +362,18 @@ static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[220] = {
     { 0x2071, 0, 0, -19450,   6400,   500,  1500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1B, 3, 0, 0x23, 157, 81, 0x00A7A, 6 },
     /* S158 T082 ROOM2071 -> ROOM2000 | ROOM2071.RDT@0xA9A main00 Slot 3 | P1BD (Basis DOOR1B) V3 (1B beide Fluegel Seite A (wie T028)) */
     { 0x2071, 0, 0,   6250,   6400,   500,  1500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1B, 3, 0, 0x23, 158, 82, 0x00A9A, 6 },
-    /* S164 T084 ROOM2090 -> ROOM20A0 | ROOM2090.RDT@0x9B6 main00 Slot 1 | P26W (Basis DOOR26) V3 (einteilig, Rad links -> V3 (T2 2.4 Punkt 3)) */
-    { 0x2090, 0, 1,   7250, -16350,   500,  1750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 3, 0, 0xFF, 164, 84, 0x009B6, 22 },
-    /* S164 T084 ROOM2091 -> ROOM20A0 | ROOM2091.RDT@0x9B6 main00 Slot 1 | P26W (Basis DOOR26) V3 (einteilig, Rad links -> V3 (T2 2.4 Punkt 3)) */
-    { 0x2091, 0, 1,   7250, -16350,   500,  1750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 3, 0, 0xFF, 164, 84, 0x009B6, 22 },
-    /* S165 T084 ROOM20A0 -> ROOM2090 | ROOM20A0.RDT@0x1746 main00 Slot 0 | P26W (Basis DOOR26) V2 (Rad unsichtbar -> Komplement V2) */
-    { 0x20A0, 0, 2,   4950,   5000,  1500,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 2, 0, 0xFF, 165, 84, 0x01746, 22 },
+    /* S164 T084 ROOM2090 -> ROOM20A0 | ROOM2090.RDT@0x9B6 main00 Slot 1 | RE2 (Basis DOOR26) V0 (Runde 36 Spur G: Gross-Schott zweiteilig DOOR26 V0 unveraendert (Skript 3 @Datei 0x05914 obj 0 + obj 1, Rad links); Flaeche 3500 breit = zwei Fluegel) */
+    { 0x2090, 0, 1,   7250, -16350,   500,  1750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 0, 0, 0xFF, 164, 84, 0x009B6, 0 },
+    /* S164 T084 ROOM2091 -> ROOM20A0 | ROOM2091.RDT@0x9B6 main00 Slot 1 | RE2 (Basis DOOR26) V0 (Runde 36 Spur G: Gross-Schott zweiteilig DOOR26 V0 unveraendert (Skript 3 @Datei 0x05914 obj 0 + obj 1, Rad links); Flaeche 3500 breit = zwei Fluegel) */
+    { 0x2091, 0, 1,   7250, -16350,   500,  1750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 0, 0, 0xFF, 164, 84, 0x009B6, 0 },
+    /* S165 T084 ROOM20A0 -> ROOM2090 | ROOM20A0.RDT@0x1746 main00 Slot 0 | RE2 (Basis DOOR26) V0 (Runde 36 Spur G: Gegenseite DOOR26 V0 wie RE2 (6020/6030/6040/60C0/60F0/6140/6150/6160/6170 beidseitig V0)) */
+    { 0x20A0, 0, 2,   4950,   5000,  1500,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 0, 0, 0xFF, 165, 84, 0x01746, 0 },
     /* S166 T085 ROOM20A0 -> ROOM20A0 | ROOM20A0.RDT@0x1766 main00 Slot 1 | OBJEKTLOS (Basis DOOR36) V0 (kein Tuerobjekt -> DOOR36 V0 (Blende + Ton)) */
     { 0x20A0, 0, 2,  16500, -21050,   500,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x36, 0, 0, 0xFF, 166, 85, 0x01766, 0 },
     /* S167 T050 ROOM20A0 -> ROOM11A0 | ROOM20A0.RDT@0x17A2 main00 Slot 2, ROOM20A0.RDT@0x17C6 main00 Slot 2 | P1AP (Basis DOOR1A) V1 (Griff rechts -> V1 (T2 2.4 Punkt 1)) */
     { 0x20A0, 0, 2,  25800,     50,  1000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1A, 1, 0, 0xFF, 167, 50, 0x017A2, 20 },
-    /* S165 T084 ROOM20A1 -> ROOM2090 | ROOM20A1.RDT@0x1746 main00 Slot 0 | P26W (Basis DOOR26) V2 (Rad unsichtbar -> Komplement V2) */
-    { 0x20A1, 0, 2,   4950,   5000,  1500,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 2, 0, 0xFF, 165, 84, 0x01746, 22 },
+    /* S165 T084 ROOM20A1 -> ROOM2090 | ROOM20A1.RDT@0x1746 main00 Slot 0 | RE2 (Basis DOOR26) V0 (Runde 36 Spur G: Gegenseite DOOR26 V0 wie RE2 (6020/6030/6040/60C0/60F0/6140/6150/6160/6170 beidseitig V0)) */
+    { 0x20A1, 0, 2,   4950,   5000,  1500,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x26, 0, 0, 0xFF, 165, 84, 0x01746, 0 },
     /* S166 T085 ROOM20A1 -> ROOM20A0 | ROOM20A1.RDT@0x1766 main00 Slot 1 | OBJEKTLOS (Basis DOOR36) V0 (kein Tuerobjekt -> DOOR36 V0 (Blende + Ton)) */
     { 0x20A1, 0, 2,  16500, -21050,   500,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x36, 0, 0, 0xFF, 166, 85, 0x01766, 0 },
     /* S167 T050 ROOM20A1 -> ROOM11A0 | ROOM20A1.RDT@0x17A2 main00 Slot 2, ROOM20A1.RDT@0x17C6 main00 Slot 2 | P1AP (Basis DOOR1A) V1 (Griff rechts -> V1 (T2 2.4 Punkt 1)) */

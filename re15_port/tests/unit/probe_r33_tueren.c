@@ -422,7 +422,15 @@ static void teil_zuordnung(void)
     for (int i = n31; i < n; i++) {
         const re15_tuer_zeile_t *t = re15_door_seq_zeile(i);
         eig++;
-        if (!t->eigen) {
+        /* Runde 36 Spur G (analysis/befunde_runde36/G_tueren.md): diese Seiten spielen ein RE2-Archiv UNVERAENDERT
+         * (plan.json archiv "RE2", eigen 0): Fahrstuhl S013/S040/S057 = DOOR27 V0, grosse Tuer S164/S165 = DOOR26 V0. */
+        int r36_re2 = !t->eigen && (t->seite == 13 || t->seite == 40 || t->seite == 57 || t->seite == 164 || t->seite == 165);
+        if (r36_re2) {
+            int ar = 0, mo = 0, se = 0, gr = 0;
+            PRUEF(((t->seite == 164 || t->seite == 165) ? t->re2_nr == 0x26 : t->re2_nr == 0x27) && t->variante == 0
+                  && t->spender == RE15_DOOR_KEIN_SPENDER && re15_door_seq_re2_archiv(t->re2_nr, &ar, &mo, &se, &gr) == 0,
+                  "Zeile %d S%03u: Runde-36-RE2-Zeile nicht DOOR27/DOOR26 V0", i, t->seite);
+        } else if (!t->eigen) {
             /* G12: Durchgang ohne Tuerblatt -> RE2-Archiv ohne Objekt DOOR36 V0 (Datei in shared_assets/RE2/DOOR) */
             int ar = 0, mo = 0, se = 0, gr = 0;
             PRUEF(t->re2_nr == 0x36 && t->variante == 0 && t->spender == RE15_DOOR_KEIN_SPENDER

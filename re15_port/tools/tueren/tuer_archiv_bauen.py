@@ -551,8 +551,10 @@ def zeilen_bauen(plan, gebaut):
             if not sp.get("bau") or "variante" not in sp:
                 continue
             arch = sp.get("archiv", e["archiv"])        # Stufe 2: eigenes Archiv je anders gemalter Seite
-            if arch == "OBJEKTLOS":
-                basis_nr, tausch = int(e["basis"][4:], 16), None    # G12: RE2-Archiv ohne Objekt, eigen 0
+            if arch in ("OBJEKTLOS", "RE2"):
+                # G12: RE2-Archiv ohne Objekt; Runde 36 Spur G "RE2": RE2-Archiv UNVERAENDERT (Datei
+                # shared_assets/RE2/DOOR, Basis je Seite oder Tuer) - beide eigen 0
+                basis_nr, tausch = int(sp.get("basis", e["basis"])[4:], 16), None
             elif arch in gebaut:
                 basis_nr, tausch = gebaut[arch]["basis_nr"], plan["archive"][arch].get("tausch")
             else:
@@ -678,7 +680,9 @@ def inc_schreiben(eintraege, zeilen, pfad, tausche=(), geplant=()):
     L.append("/* Zuordnung RE1.5-Tuerseite -> Port-Archiv (Spalten wie gen/tuer_zuordnung.inc; re2_nr = Basis-Archiv")
     L.append(" * = var 15, eigen = Index+1 in re15_tuer_eigen[]). Variante nach tueren_02_re2.md 2.4 (Herkunft je Zeile).")
     L.append(" * eigen = 0 in dieser Tabelle: G12-Durchgang ohne Tuerblatt -> RE2-Archiv OHNE Objekt (DOOR36, Blende + Ton),")
-    L.append(" * Wahl nach Huellkurve (tools/tueren/tuer_g12_ton.py, analysis/befunde_runde33/tueren_rest_bau.md). */")
+    L.append(" * Wahl nach Huellkurve (tools/tueren/tuer_g12_ton.py, analysis/befunde_runde33/tueren_rest_bau.md).")
+    L.append(" * Runde 36 Spur G: eigen = 0 auch fuer Seiten mit RE2-Archiv UNVERAENDERT (plan.json archiv \"RE2\":")
+    L.append(" * Fahrstuhl ROOM1080 = DOOR27 V0, Gross-Schott ROOM2090/20A0 = DOOR26 V0; analysis/befunde_runde36/G_tueren.md). */")
     L.append("static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[%d] = {" % max(1, len(zeilen)))
     for z in zeilen:
         ofs = ", ".join("%s@0x%X %s Slot %d" % (x[0], x[1], x[3], x[2]) for x in z["saetze"])
