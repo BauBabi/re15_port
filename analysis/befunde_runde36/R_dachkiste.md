@@ -260,8 +260,10 @@ der Dach-Kiste gemessen:
 | angenommen -> 8 @0x8002bfc0, Kontaktbit @0x8002bfd4, nur Substate 8 haelt den Schub @0x8002bfe4 | `= 8; s_prop_push_contact = 1; if (!in_sub8) continue;` | B2 |
 
 Kein Fix noetig, keine neue Konstante, kein Verhaltens-Code geaendert. Geaendert/neu (alles Diagnose und Riegel):
-* NEU `engine/src/dachkiste_r36.c`, `include/re15_dachkiste_r36.h` — Messschrieb RE15_PUSH_LOG (1.1).
+* NEU `engine/src/dachkiste_r36.c`, `include/re15_dachkiste_r36.h` — Messschrieb RE15_PUSH_LOG (1.1); seit Nachbesserung 2
+  auch der Wegplan-Treiber RE15_WEGPLAN (geschlossen geregelte Mess-Steuerung, Abschnitt "Nachbesserung 2").
 * `engine/src/aot_common.c` re15_prop_push_tick: 3 Zeilen Haken ("Runde 36 Spur R: RE15_PUSH_LOG") hinter FUN_8003b558.
+* `platform/pc/src/input_pc.c`: 2 Zeilen Haken ("Runde 36 Spur R: RE15_WEGPLAN") hinter der RE15_INPUT_SCRIPT-Ersetzung.
 * `tests/unit/probe_r36_dachkiste.c` (Vorgaenger, Zensus mit Spieler, 4.1) + `tests/unit/probes/r36_dachkiste.cmake`
   (+ `integration_r36_dachkiste`), NEU `tests/integration/test_r36_dachkiste.cmake` (Tests).
 * `analysis/befunde_runde36/R_belege/lauf_exe.sh` (Startskript), Laufordner `p1_*`, `e1_*`.
@@ -607,13 +609,25 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     `ZELLE r0[50] LAUFZEIT: ... u0 0x00` (sub00 @0x01E94), `SCHIEB: Bedingung erfuellt (obj.z = -70xx)`, Ost-Ende
     `obj.x = 75xx..764x` (Fenster [7550,7650)), push.txt >= 300x `room=2050 p=0 obj=6 SCHUB-OK`, objfall.txt `p=0 AUSLOESER
     wort=0x3202 band=3 pos=(75xx/76xx,-5400,-116xx/-117xx)` + `p=0 zust 0->1`, letzte Lage p0 NICHT mehr `b3`.
+  - **`weg2020` (NEU, Nachbesserung 2 / N2, Punkt 4):** Leon an der 2050-Ankunft (11350,-3150) Band 1, (3,114)=1 per
+    RE15_SET_FLAG, Wegplan (RE15_WEGPLAN): ZELLE r0[15], GEHE (2600,-3450), BLICK 1024, AKTION x3, ZELLE r0[15], GEHE durch
+    die Luecke in den Nordstreifen bis (-14200,3150), BLICK 3072, AKTION x4. MUSS: `ZELLE r0[15] ... u0 0xff ... fl 0x13`
+    beim Start, `[msg] room=2020 id=0`, `Cut_chg(3)`, danach `ZELLE r0[15] ... u0 0x00 u1 0x00 fl 0x10`, `[msg] room=2020
+    id=2`, `[aot] DOOR FIRE slot=1 rect=(-14200,3300,hw=1000,hh=500) target_cut=13 spawn=(-450,-16200,-9700)`, `loaded
+    room2030.rdt`.
   Er diskriminiert: ein Port, der den 1090-Schub annimmt oder die 1090-Kiste fallen laesst, oder in 3050 den Fall NICHT
   ausloest, oder die 2050-Kiste nicht bis in die Absprungzelle kommen laesst (z. B. eine zu enge Schubsperre an r*[43]/
-  r*[44]/r*[40] oder eine Laufzeit-Sperre an r*[50]), oder 2070 slot 5 / die 2040-Treppe verliert, faellt durch.
+  r*[44]/r*[40] oder eine Laufzeit-Sperre an r*[50]), oder die 2020-Luecke nicht per Sca_id_set schliesst/oeffnet, oder
+  2070 slot 5 / die 2040-Treppe verliert, faellt durch.
   ⛔ Makro-Falle beim Bau des Riegels (gemessen): Makro-Argumente werden im Makro ein zweites Mal ausgewertet, ein `\\(`
   im Aufruf wurde zur Regex-Gruppe `(` und `\\[x\\]` zum Klammerausdruck — der erste Lauf fand den gesperrten Schub
   "nicht", obwohl push.txt ihn enthielt. Regex-Argumente deshalb ohne Backslash (`[(]`, `[.]`), Klartext per string(FIND).
-* Gezielte Laeufe (KEINE volle Suite im Spurbaum), Stand Nachbesserung 1:
+* Gezielte Laeufe (KEINE volle Suite im Spurbaum), Stand Nachbesserung 2 (81d02dd3+, Bau LOCAL-BUILD-OK):
+  - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
+    `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 14.89 sec; mit den 2050-Pins der Sonde).
+  - `ctest --test-dir re15_port/build -R "integration_r36_dachkiste" --timeout 1800 --output-on-failure`:
+    INTEGRATION_ERGEBNIS_NB2 (acht Laeufe leon/elza/west/fall3050/weg2040/treppe2040/fall2050/weg2020).
+* Gezielte Laeufe, Stand Nachbesserung 1 (zum Vergleich):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
     `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 17.36 sec; unit_r36_dachkiste_zensus 8.80 s
     einzeln, mit den 3050-Pins).
@@ -656,6 +670,12 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   Kerbe slot 7 @0x01F06 (-25000..-22950, -23200..-21150) -> Latch (3,93) -> Fall-Lage @0x01F40 -> Super Redhawk slot 6:
   Record-Beleg, derselbe Latch-Mechanismus wie 5020 (Spur A, exe gemessen); der Abstieg auf Band 0 in 3050 (Ereignis-
   Leiter sub00 Aot slot 2..5 @0x02044-2080 unter (3,82)) ist hier nicht gefahren.
+* **Fall-/Kippbahn der 2050-Kiste nach dem Ausloeser** (N3): Port und Original loesen in derselben Zelle aus (Port
+  (7571,-11706), Original (7562,-11732)) und landen auf Band 2 / y -3600; die Endlage in z weicht um 593 ab (Port -13681,
+  Original -13088) — Fallmechanik FUN_8002c444 (Spur A, objfall_r36.c), hier nur notiert, nicht Auftrag dieser Spur.
+* **Werkzeug-Beobachtung, nicht geprueft:** im Treiber-Lauf nb2_2020durchgang_c zuendete der Examine-Druck 2 Bilder nach
+  dem Drehende nicht sichtbar (ohne RE15_MSG_LOG), mit 30 Bildern Wartezeit (Lauf d) ja; ob dieselbe Druckfolge (drei
+  Druecke) auch in Lauf c lief, ist nicht belegt — der Riegel wartet 30 Bilder.
 * **ROOM3050 am Original nicht gemessen (N5, Nachbesserung 2):** die Datenlage macht den Fall zum vorgesehenen Weg
   (Super Redhawk slot 6 @0x01EC6 floor 1 nur auf der gefallenen Kiste, Latch sub01 @0x02184-2196), offen bleibt, ob das
   Original denselben Schubpfad (West bis r*[31], Sued in r*[46]) zulaesst. Messweg liegt bereit: Spielstand per
@@ -699,5 +719,12 @@ Kisten in ROOM3050 (Fall vorgesehen) und ROOM2050 (Fall im Original gemessen).**
     nicht dorthin; und der frueher genannte Weg ueber die Treppe in ROOM2030 traegt nicht (sie endet auf Band 5, die
     Tueren liegen auf Band 9).
 * Keine neuen Assets fuer das Paket-Gate, keine Sprachdateien, keine Bedienhinweise, keine Entscheidungsfrage. Der
-  Port erhaelt nur Messschriebe (RE15_PUSH_LOG, Pfadausgabe der Zensus-Sonde) und Riegel; kein Verhaltens-Code wurde
-  geaendert (Diff gegen 99398dc7 in re15_port/: aot_common.c 3-Zeilen-Haken, dachkiste_r36.c/.h Messschrieb, Tests).
+  Port erhaelt nur Messschriebe (RE15_PUSH_LOG, Pfadausgabe der Zensus-Sonde, Wegplan-Treiber RE15_WEGPLAN) und Riegel;
+  kein Verhaltens-Code wurde geaendert (Diff gegen 99398dc7 in re15_port/: aot_common.c 3-Zeilen-Haken, input_pc.c
+  2-Zeilen-Haken, dachkiste_r36.c/.h Messschrieb + Treiber, Tests).
+* Hinweis zum Spielweg (kein Port-Thema): in ROOM2050 kann die Kiste obj 6 — wie im Original — ueber die Kante
+  geschoben werden; danach fuehrt der Weg nach ROOM2040 durch ROOM2020 (Hinweis in ROOM2010 lesen, dann in 2020 an der
+  Nordkante des Suedstreifens handeln), 2030 (Band 9), 2060 (Tritt) in die Halle. Das ist der Beta-Spielweg, nichts
+  wurde veraendert.
+* DuckStation: `settings.ini` nach den Original-Messungen aus der Sicherung zurueckgeschrieben (EnableGDBServer = false,
+  ConfirmPowerOff = true, [Pad1] nur SDL-0 wie vorgefunden).
