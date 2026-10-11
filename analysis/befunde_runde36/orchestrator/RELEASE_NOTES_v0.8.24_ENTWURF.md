@@ -87,6 +87,12 @@ Bruestung: auf die Kiste klettern, einen Schritt zur Mauer, Aktionstaste - das T
 nur von der Kiste aus auf (sein Tuer-Record verlangt die Kistenoberkante, Band 6). Die zweite Kiste unten im
 Hof hat in den Raumdaten keinen Zweck (oben ist nichts; das Skript rueckt sie nur um 1700 nach Westen) -
 vermutlich ein unfertiges Raetsel des Prototyps.
+
+**Masken (PRI).** Ihre Maske fuer ROOM10F0 Cut 2 ist drin: die Absperrung verdeckt Marvin in der neuen Szene.
+ROOM1100: der halbtransparente Figurenschatten wurde am Wandfuss (Cut 1 und 2) von Bodenpixeln der Wandmaske
+ueberdeckt, ebenso der Zombiekopf an der Suedecke - behoben. Dazu liegt der Figurenschatten jetzt in jedem Raum in
+der Zeichenordnung des Originals (Schatten-Bucket aus den vier Ecken, PSX.EXE @0x8001b2d8); im gleichen Bucket
+aendert das die Schuhunterkante um einige Pixel.
 @@WEITERE@@
 
 ## Zur Freigabe: umgeschriebene Texte
