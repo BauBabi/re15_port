@@ -880,3 +880,18 @@ der Abnahme-2-Tabelle.
 | 1 Umleitung Ost-Pad | ungewichtete Komponenten-Suche, erste Pad-Kante in SCA-Reihenfolge (#36 @0x015d8 vor #47 @0x0165c) | Code + Sonde (Pad 36 ab F60) | A* nach Weglaenge; Beginn erst beim Haengen (+0x1de @0x80117448-6c) | exe NW-Gang Slot 2 F680/F704/F694 = v0.8.23, Slot 3 nie->nie / nie->F1496 / F1256->F892; Riegel Szene 5 |
 | 2 Nordwest-Tasche | Plaetze IN den Zellen #13/#20/#21 (nur per RE15_PLAYER_POS); "Tasche" im Raster = Zurueckschnapp-Artefakt @0x8003be8c-a0; Startknoten ohne Erreichbarkeit | leonlauf (1938..5174 entfernt), klemme-Sonde, Raster 286/708 | Frei-Test Vorlage+1, Kanten, Startknoten gerade erreichbar, Leon-Seite | Riegel 4b; Taschenrand beide Angriff; Blockade NACH dem ersten Angriff: FERN 0, Rest NAH = Original (Spur J) |
 | 3 Voll-Suite | — | — | Orchestrator | gezielt 163/163 |
+
+---
+
+## Nachbesserung 4 (nach Abnahme 3, 2026-10-11) — fortlaufend
+
+Grundlage: `F_abnahme_3.md` (Stand 43220d8d/5a724df3: P1 erfuellt, P2 teilweise, P3 erfuellt; Maengel 1-3). P1/P3 nicht
+anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen halten), Spur-J-Riegel `unit_r35_affen_*`
+(bildgenau gegen GDB) gruen halten.
+
+| Mangel | Kern | Weg |
+|---|---|---|
+| 1 | FERN-Stau am Nordwest-Rand nach dem ersten Angriff: Slot 3 (Sub 4, d ~6200) drueckt in Slot 2 (Sub 3 an der #21-Ecke, d ~3300); `r36_uw_route` gibt 0 zurueck ("gerader Weg zu Leon frei"), der Streckentest kennt nur SCA-Zellen, nicht den zweiten Gorilla | Stau reproduzieren (Sonde probe_stau, exe 11/12); Original an derselben Lage messen (GDB); Streckentest/Route mit Koerperbelegung des anderen Gorillas; Riegel mit Gegenprobe; Angabe "fern 0" berichtigen |
+| 2 | Nahe Rest-Blockade (Ostgassen-Eingang (6000,-9000), Nordwest-Ecke/-Rand) am Original nicht gemessen | GDB-Messung des Originals an beiden Stellen (Muster J_affen.md: r3 s033, Lagen per GDB setzen, je Bild beide Gorillas + Leon); Port-Sonde ab derselben Lage dagegen; danach Gate fuer die Nah-Blockade, das `unit_r35_affen_griff/_szene` gruen laesst |
+| 3 | Voll-Suite | Orchestrator; hier gezielt |
+
