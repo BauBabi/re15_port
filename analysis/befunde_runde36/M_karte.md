@@ -118,6 +118,14 @@ Alle sechs Befunde reproduziert. Bildpunkt Punkt 4 im Sweep-Abzug (Blatt 0): Wan
   Marken. B1 bekommt die beiden Band-4-Enden @0x00E7C/@0x00E90, projiziert mit der B1-Abbildung.
 * B1-Kachel MAP01.PIX uv(128,16) 16x24: Wand Zeile v16/v36 und Spalte 0/15 (Index 4), Innen Index
   1 in x154..167 y115..133 (kachel.py).
+* Herkunft (statt Bisect - es ist keine Regression einer vorhandenen Treppe): bis v0.8.22 zeigte der
+  B1-Absatz (Band 4) das B2-Blatt (naechstes Band der Etagentabelle: |4-1| < |4-8|) MIT dessen zwei
+  Treppen; seit 0549cfae (Runde 35 Spur G, in v0.8.23) steht er richtig auf B1 - aber ohne Marken.
+* Die uebrigen fuenf Befunde bestehen seit Einfuehrung der jeweiligen Port-Ergaenzung (git log -S):
+  11D0-Kasten bis z -10950 seit dem Zonenmodell 70683f1d (v0.3.43); 1190 als EINE Zone auf Blatt 0
+  rect 2 seit der Kunst-Umstellung f77126ff (v0.5.4); Marke (172,100) kind 1 seit 4a3c983b (v0.7.32);
+  Teilbereiche mit Zonen-Bit seit 2026-09-07; gemeinsame Kabinen-Etagen-Bits seit Runde 30 (v9) -
+  keine Regression aus v0.8.21..v0.8.23, deshalb kein Bisect.
 
 ### R2 ROOM11D0
 * ROOM11D0.RDT SCA (Band 0, Zellen @0x089C..): Tuerwand zum Gang @0x08CC (x -2200..7750,
