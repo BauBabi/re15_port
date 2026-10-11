@@ -164,4 +164,130 @@ Lage/Massstab/Rechteck/Slots als PORT-WAHL bzw. Zensus gekennzeichnet — bis au
   ueberhaupt kein Blaettern (menu_common.c: PORT-ERGAENZUNG nach RE2); RE2 setzt auch beim Laborplan Bank 35
   (lageplaene.csv room6120) — konsistent.
 
-(in Arbeit: Regressionsgruppen)
+### 3.3 Regressionsgruppen (Fortsetzung der Abnahme nach dem Wochenlimit, 2026-10-11)
+(wird nach dem Lauf eingetragen — siehe unten, Abschnitt 3.3a)
+
+## 4. Maengel
+
+### M1 — Licht der Karten-Props: dritte, erfundene Lichtquelle statt eines Original-Weges (RE-Gate)
+Betrifft: `platform/pc/main.c` (Haken im Prop-Zeichner, 3 Zeilen: `re15_kartenitems_r36_licht` ueberschreibt
+`pr0..pb2`), `kartenitems_r36.c` (`re15_kartenitems_r36_licht`), `gen/kartenitems_r36.inc` (Spalte `licht`:
+1140 (156,155,153), 10D0 (181,186,180), 1030 (47,70,104), 1200 (85,85,75), 11D0 (74,75,77)),
+`tools/r36_kartenitems/karten_export.py` (`BG_REF`, "hellste 15 %").
+
+**Was das Original tut (selbst gelesen):** FUN_8002c18c (RE_15_Quellcode_V2/FUN_8002c18c.c:26-56, Katalog
+"Prop render dispatch") zeichnet JEDES Objekt des Pools so: `FUN_80053fc0(&DAT_800b3ff4+obj)` = Lichtsatz
+des aktiven Cuts am Objektort (DAT_800b0fe4, Katalog Z. 219: Kamera-Cut == Licht-Cut), dann
+`if ((pool+0x0c & 0x10) == 0) FUN_800254a0(...)` = NCCT-beleuchtet, `else FUN_80022f0c(...)` = FLACH ohne
+NCCT, Farbe = Konstante obj+0x70 (Katalog Z. 215). Pool+0x0c ist das Flag-Wort pc[8..9] des Obj_model_set
+(Katalog 0x80040914). Zwei Wege, beide mit Adresse. Der Port zeichnet Props ueber den NCCT-Weg
+(`re15_light_setup_actor`/`re15_light_shade_vertex`, byte-true zu FUN_80053fc0/FUN_800542dc, main.c
+"Lichtsatz des AKTIVEN Cuts (byte-true, FUN_8002c18c)"); den Flag-0x10-Weg fuehrt er fuer Props nicht
+(main.c: kein Zweig auf FUN_80022f0c im Prop-Block).
+
+**Was die Spur tut:** fuer obj 15 in den fuenf Raeumen ersetzt der Haken die NCCT-Vertexfarbe durch eine
+Konstante je Raum = 128 * Ref / Median(Kartentextur), Ref = Mittel der hellsten 15 % eines Fensters im
+BSS-Hintergrundbild des Nutzer-Cuts (karten_export.py Z. 28-33, 86-91). Kein Original-Gegenstueck, kein @0x;
+"15 %" und die Fenstergroesse ("Huelle um je eine Huellenbreite erweitert") sind Zahlen nach Gefuehl
+(CLAUDE.md Guess-Tell "runde Zahl nach Gefuehl"); gekennzeichnet als PORT-WAHL, ist aber weder Position noch
+Text noch Choreografie (VERTRAG 1.6), sondern eine Render-Konstante mit vorhandenem Original-Mechanismus.
+
+**Messung byte-true (probe_r34n_e_dokumente `licht` = re15_light_setup_actor + shade_vertex je Achsnormale;
+Lichtblock der RDT selbst geparst, RDT+0x2C, 40 B/Cut):**
+* ROOM1140 (Lichtblock @0x38C): alle 10 Cuts Lichter AUS (Farbe (0,0,0), Helligkeit 0, Typ (0,1,0)),
+  Ambient (83,78,78) -> Vertexfarbe (41,39,39) fuer JEDE Normale — an der Karte (-2050,-2831,-8710) wie an
+  Leons Stand (-2050,0,-9900) wie in der Raummitte (-2050,-1000,-5000). Jede Figur im Raum wird mit 41/128
+  gezeichnet. Haken: (156,155,153)/128 = 3,8x.
+* ROOM10D0 an der Karte (2133,-1928,21624), Normale +Z: (41,39,39) in Cut 0-10/12/13, Cut 11 (31,31,31).
+  Haken (181,186,180) = 4,4x.
+* ROOM1030 an der Karte (-1691,-2769,-23580), Normale +Z (Lichtblock @0x4DC: Punktlichter L0/L1 in
+  Reichweite, cutabhaengig): Cut 0/2/4/6 (89,89,94), Cut 3 = Nutzer-Cut (54,54,59), Cut 7 (38,38,43),
+  Cut 9-12 (44,44,49). Das Original-Licht wechselt mit dem Cut um den Faktor 2,3; der Haken bleibt in
+  jedem Cut (47,70,104) und traegt einen Blaustich B:R = 2,2 gegen 1,09 des Raumlichts (Ambient (76,76,86)).
+* ROOM1200 an der Karte (-26330,-2572,-15682), Normale +X: Cut 0 (40,40,40), Cut 1-3 (70,70,70); Haken
+  (85,85,75).
+* ROOM11D0 an der Karte (1642,-2199,-19130): (36,41,41) in allen 14 Cuts; Haken (74,75,77) = 2,1x.
+
+**Messung am Bild (RE15_WINDOW_SCALE=1, Messkopie, CONTINUE-Spielstand aus probe_r35_inhalt_karte;
+`N_abn0b/m1_mess.py` / `figur_mess.py`, Karte = Diff mit/ohne Bit im Marken-Fenster +-3 px):**
+* Nutzer-Cuts (Integrationslauf lauf_f1ceb6f7): Karte MIT Mittel RGB 3F (106,107,97) auf Wand (90,83,73);
+  2F (101,104,95) auf (70,66,45); 1F (38,57,78) auf (21,32,43); B2 (68,70,56) auf (45,40,30); B1 (61,64,60)
+  auf (40,40,36). Im +-3-px-Fenster ist die Karte in 2F (Summe 300 gegen Maximum 210), 1F (173 gegen 147)
+  und B1 (185 gegen 182) heller als jeder Hintergrundpixel neben ihr.
+* ROOM1140 Cut 5, Leon bei (-1000,-9700) rechts neben der Tafel (Lauf `N_abn0b/runs/leon5_l1`, Karte
+  unverdeckt: 0 Diff-Pixel im Marken-Fenster): Leon (860 Pixel, Huelle x256..285 y74..133) Mittel (19,22,27)
+  Summe 68, hellste 10 % (52,42,38) Summe 132, hellstes 1 % 184, Maximum 210 — die Karte daneben Mittel
+  Summe 310, Median 320: heller als Leons hellster Pixel, 2,4x heller als seine hellsten 10 %
+  (`N_abn0b/leon5_l1_x3.png`). Mit dem NCCT-Weg laege die Karte bei 104*41/128 = (33,33,31) auf der Tafel
+  (90,83,73): so dunkel wie Leon — das ist das Original-Verhalten eines Objekts an dieser Stelle (der Befund,
+  den die Spur "fast schwarz" nannte, Dossier 3.3). Der Fix ERKLAERT den Befund nicht: er beantwortet nicht,
+  warum das Licht dort so ist (Antwort: die RDT-Lichtsaetze von 1140/10D0/11D0 sind reine Ambient-Saetze),
+  sondern ueberdeckt ihn mit einer Konstante.
+* ROOM1030 Cut 3 (Lauf j3_1030 F150 gegen lauf_f1ceb6f7_1f_mit): Leon hellste 10 % (69,67,75) B:R 1,10;
+  Karte (38,57,78) B:R 2,05 — die Karte ist blau, Leon daneben nicht.
+
+**Forderung (nachpruefbar):** die Vertexfarbe der Karte kommt aus einem der beiden Original-Wege — NCCT
+(dann ist die Karte so hell wie jede Figur am selben Ort; Test: Karte-Mittel/Leon-Mittel im selben Cut
+<= 1,2) ODER der Flag-0x10-Weg FUN_80022f0c mit belegtem obj+0x70 (dann Konstante MIT Adresse, cut-
+unabhaengig per Original) — und der Haken in main.c entfaellt bzw. traegt die Adresse. Welcher Weg: am
+RE2-Gegenstueck belegen (room20B0 obj 8 Obj_model_set-Attributwort, Bit 0x10?) — Abschnitt 4.1.
+
+#### 4.1 RE2 zeichnet seine Wandplaene FLACH (selbst aus den RDT-Bytes und dem RE2-Decompile gelesen)
+RE2 Obj_model_set (0x2D, 38 Bytes: op, id, 18 Woerter) der beiden Polizei-Lageplaene:
+* room20B0 obj 8 @0x03158 (lageplaene.csv sub00@0x03158): `2d 08 00 00 00 00 00 00 00 00 0a 00 10 00 20 4e
+  20 4e 20 4e 00 00 c0 f8 00 00 ..` -> Woerter w4 = 0x000A, **w5 = 0x0010**, Lage (20000,20000,20000) (geparkt,
+  wie lageplaene.csv), dir_y = -1856.
+* room2130 obj 0 @0x00FDC (B1-Plan): `2d 00 00 00 00 00 00 00 00 00 0a 00 10 00 fc bd 50 fb 60 d7 00 00 80 fc ..`
+  -> w4 = 0x000A, **w5 = 0x0010**, Lage (-16900,-1200,-10400) = lageplaene.csv.
+Dieselbe Wortfolge wie RE1.5 pc[6..7] (Enable-Wort, Port RE15_R36K_PROP_FLAGS 0x000A|1) und pc[8..9]
+(Flag-Wort -> Pool+0x0c, Katalog 0x80040914). RE2-Dispatcher FUN_800363f0 (RE2_Quellcode_V2/FUN_800363f0.c:
+41-54, Gegenstueck zu RE1.5 FUN_8002c18c): `if ((puVar4[4] & 0x10) == 0) { FUN_80027bec/FUN_80027dbc
+(beleuchtet) } else { FUN_8002d0e8/FUN_8002d244 (flach) }`. Das heisst: beide RE2-Wandplaene tragen das
+Flach-Bit 0x10 und werden von RE2 OHNE Raumlicht gezeichnet — das ist der Original-Mechanismus fuer genau
+diesen Gegenstand ("Beta -> Retail: RE2 ist das Ziel"), mit Adresse. Die Spur hat ihn nicht gesucht
+(Dossier 6: "Kein Original-Gegenstueck — RE1.5 hat an diesen Stellen kein Objekt") und stattdessen eine
+Konstante aus dem Hintergrundbild erfunden. Der byte-true Bau: Karten-Prop mit Flag-Wort 0x0010 ueber den
+Flach-Weg zeichnen (Port: der Prop-Zeichner in main.c fuehrt diesen Zweig noch nicht — FUN_80022f0c:
+Farbe = obj+0x70, siehe 4.2), nicht ueber eine Vertexfarbe aus "hellste 15 %".
+
+#### 4.2 Die Farbe des Flach-Weges hat eine Adresse
+RE1.5 FUN_8002b898 (Objekt-Init, RE_15_Quellcode_V2/FUN_8002b898.c:16, Katalog Z. 216):
+`*(undefined4 *)(&DAT_800b4008 + iVar1) = 0x808080;` -> obj+0x70 = 0x808080 = NEUTRAL (128 je Kanal, Textur
+unveraendert; FUN_80022f0c laedt es per gte_ldrgb, kein NCCT). Byte-true ist die Karte also im Flach-Weg
+GENAU so hell wie ihre Textur (Median (104,104,96)) — in jedem Cut, ohne Raumlicht, ohne Blaustich — bzw. im
+NCCT-Weg so hell wie jede Figur am Ort. Beides hat eine Adresse; (156,155,153)/(181,186,180)/(47,70,104)/
+(85,85,75)/(74,75,77) haben keine. Zuordnung RE2-Wort w5 -> RE2-Pool+0x10 (puVar4[4]) ist nicht einzeln
+nachgezogen (RE2-Handler nicht aufgesucht); die RE1.5-Zuordnung pc[8..9] -> Pool+0x0c ist katalogisiert
+(0x80040914), der RE1.5-Dispatcher liest genau dieses Wort (FUN_8002c18c.c:41).
+Hinweis fuer den Nachbau: der Port speichert das Flag-Wort pc[8..9] im Prop nicht (re15_scd.h: `flags` =
+Pool+0x00 Enable-Wort) und der Prop-Zeichner in main.c hat keinen Flach-Zweig — beides ist nachzuziehen
+(Prop-Feld fuer Pool+0x0c, Zweig `& 0x10` -> flache Farbe 0x808080 statt re15_light_shade_vertex), dann
+entfaellt der Licht-Haken samt `licht`-Spalte und BG_REF. Ein Test der Spur fuer die Licht-Konstante
+existiert nicht (test_r36_kartenitems.c: 0 Treffer "licht"); der Nachbau braucht einen (Karte-Mittel im
+Framedump = Texturfarbe +-Rundung, in zwei verschiedenen Cuts gleich).
+
+Keine weiteren Maengel: Punkte 1-2 sind gegen den Wortlaut erfuellt (Abschnitt 2), Vertrag (3.2) und die
+uebrigen RE-Gate-Stichproben (3.1) halten; Regressionsgruppen Abschnitt 3.3a.
+
+## 5. Ergebnis
+| Punkt | Urteil | Kurzbeleg |
+|---|---|---|
+| 1 Karte01/02 an map3F.bmp, 3F freischalten wie RE2, mit Text | erfuellt | 1.0-1.4: ROOM1140 Cut 5 Tafel, karte01 md5-gleich, Frage/Ja/Meldung, Blatt 3F komplett + waehlbar (RE2 Bank 33/35) |
+| 2a 2F ROOM10D0 (map2F.bmp) | erfuellt | 1.1/1.2 |
+| 2b 1F ROOM1030 (map1F.bmp) | erfuellt | 1.1/1.2/1.5 (Leon + Elza 1031, Telefon bleibt) |
+| 2c B2 ROOM1200 (mapB2.bmp) | erfuellt | 1.1/1.2/1.6 |
+| 2d B1 ROOM11D0 (mapB1.bmp) | erfuellt | 1.1 c (echter Tuer-Weg 1180 -> 11D0), 1.2 |
+
+Gates: Vertrag haelt (3.2). RE-Gate haelt NICHT vollstaendig: M1 — die Licht-Konstanten der fuenf Karten-Props
+(main.c-Haken, `licht`-Spalte, BG_REF "hellste 15 %") ersetzen einen vorhandenen Original-Mechanismus
+(FUN_8002c18c: NCCT oder Flag 0x10 -> FUN_80022f0c mit 0x808080 aus FUN_8002b898; RE2 zeichnet seine
+Wandplaene mit Attribut 0x0010 flach, FUN_800363f0) durch Zahlen nach Gefuehl ohne Adresse; gemessen: Karte
+in 1140 Cut 5 heller als Leons hellster Pixel daneben (Median-Summe 320 gegen Maximum 210), in 1030 blau
+(B:R 2,05) neben neutralem Leon (1,10), cut-unabhaengig trotz cutabhaengigem Raumlicht (38..89).
+
+**Abnahme: NICHT bestanden** (bestanden = nur wenn alle Punkte erfuellt UND alle Gates halten). Nachbesserung:
+M1 — Karten-Prop ueber den Flach-Weg (Flag-Wort 0x0010 -> 0x808080) oder byte-true NCCT zeichnen, Haken
+und BG_REF entfernen, Test fuer die Kartenhelligkeit (zwei Cuts) ergaenzen. Alles andere kann unveraendert
+bleiben; die drei Entscheidungsfragen des Dossiers (3F = ROOM1140, Groesse, Telefon-Ueberlapp) gehen an den
+Nutzer.
+
