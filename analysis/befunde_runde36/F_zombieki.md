@@ -1401,3 +1401,79 @@ Lage-Zaehlung; NB6 behebt die gemessene Ursache selbst: den Tod des Partners (Ma
   `re15_r36_affen_bissplaetze_frei` (freie Bissplatz-Knoten ausser Koerperkontakt = "steht nachweislich an" bei 0). Sonde `lage`:
   Modus 6 = Stand NB5, Spur mit `ng`/`up`/`zc`, LAGE-Zeile mit letztem Angriff/Angriffsbildern/Leon-Endlage/`frei`; `platz <lx> <lz>
   [schritt] [ox oz]` schliesst Koerperkontakt zu (ox,oz) aus.
+
+### NB6 Bau (Fortsetzung nach dem Wochenlimit, 2026-10-11 11:1x, anderer Account)
+`local_build.sh configure` + `build` am Stand 94d762de: OK (`F_belege/nb6/nb6_build_configure.log`, `nb6_build_build.log`; die drei
+Warnungen liegen in main.c 8668/9964/10343 ausserhalb des Spur-F-Diffs). Riegel `unit_r36_zombieki_affen_block` direkt 74/74
+(`nb6_riegel_direkt.txt`), ctest `r36_zombieki_affen|r35_affen|maggot` 25/25 (`nb6_ctest_riegel_lauf1.txt`). Die exe-Laeufe des
+Vorgaengers (`re15_pc_nb6b.exe`, Scratch F_nb6) sind gy.log-bitgleich zu den eigenen Laeufen der frischen Kopie `re15_pc_nb6f.exe`
+(Stelle 8, Stelle 3, nw12_schuss, szene11c0, t11b0szene, t11b0kampf) — derselbe Code.
+
+### NB6 Messung nachher — Sonden am Stand NB6a (= 5a02b824/94d762de; `F_belege/nb6/nb6_lage_*.txt`, je Lauf eigener Prozess)
+| Lage | Stand NB5 (Modus 6) | NB6a (Modus 1) |
+|---|---|---|
+| Gasse einzeln | G1 kein Angriff, NAH fest 2258 | G1 Angriff **313**, fest 0 — Grund 11: er laeuft erst nach Sueden zum Anlaufpunkt (7000,-8700) hinaus und springt F210 nach Norden |
+| O1 | G1 1368 / G2 1615, G2 nie | G1 195 / fest 0; G2 Angriff **937**, fest 248 (Nah-Umweg ueber #36 ab nah 45) |
+| exe-Stelle 8 nachgestellt | G1 900/900, kein Angriff (`ng 1`: kein Startknoten) | G1 Angriff **112**, fest 0 — Grund 13: verkeilt, Sprung mit dem Code der Nordseite 0x48 nach Sueden |
+| Nachruecken (G1 stirbt F400) | G2 Biss F988 = 588 nach dem Tod | G2 Biss **F505 = 105** nach dem Tod |
+| kanon (J-Fenster) | 363 468 521 ..., Tod +1194, Anker 353 | **bitgleich** |
+
+### NB6 Zufallsgang 52 Seeds x 6000 Bilder (`F_belege/nb6/seeds/`, Sonde `eins <i> 1 6000 <anker> 0 1 1 <nb6-bits>`, je Lauf eigener Prozess)
+| Stand | Anker 400 blockiert | Griffe | Anker 40 (Stillstand) |
+|---|---|---|---|
+| NB5 (bits 0; bitgleich zu NB4 `s400d_k22.txt`) | 16352 | 242 | 125 |
+| NB6a (bits 3, Stand 5a02b824) | 17242 | 252 | **0** |
+| NB6b (bits 3, Stand c9f3a8eb, s. u.) | 17638 | 253 | **0** |
+
+Kein Gorilla steht mit NB6 noch >= 90 Bilder STILL (Anker 40: 125 -> 0). Das Anker-400-Mass steigt um 890/1286 Bilder: je Seed
+(`zg_diff_nb5_nb6a_nb6b.txt`) 4 besser / 4 schlechter / 44 bitgleich. Die zwei groessten Zuwaechse gemessen mit der neuen Spur je Bild
+(`eins ... <von> <bis>`, `zg_seed18_nb6_spur_F3000_3740.txt`, `zg_seed27_nb6_spur_F2100_2980.txt`): Seed 0x7ed38e72 (261 -> 597/633) und
+0x0ec6d5ab (0 -> 370) landen in der **vorbestehenden Sprungschleifen-Klasse** — Pad #47 mit der Mitte (Kontaktcode 0xf8), Original-
+Sprung in Richtung 0xf00 (A[4] Path A, bzw. die NB1-Regel "verkeilt -> in Code-Richtung springen"), Landung wieder in einer Pad-Mitte
+oder vor dem 0x20-Pad #19 bei (-13518,..), dort der Original-Blindsprung (+0x7 = 3 @0x80117fe4-80118024, NB4 dokumentiert) bzw. der
+an der Klemme x -15173 zurueckgeworfene Sprung (Sub 7/2/1 ohne Ortswechsel, Seed 27 ab F2409 zehnmal). Dieselbe Klasse zeigt der
+Stand NB5 in 7 Seeds bitgleich (0x76026075 sub7 504, 0xa42d215f 494, 0xacfe4f5c 263, 0x4b35c90d 234, 0x05f5a7ae 228, 0xe3fa3e43 186,
+0x3cf19695 83) und der Original-Modus (modus 0) mit 896/702. NB6 erzeugt keinen neuen Mechanismus, sondern fuehrt ueber die
+veraenderte Bahn (erster Angriff per Pad-Sprung, Leon laeuft danach anders) zwei weitere Seeds hinein. Seed 0xbeef (126 -> 769): sechs
+Strecken je 99..152 Bilder, fuenf davon das bekannte Anstehen in der Nordwest-Tasche (Griffe 2 -> 10). Seed 0xc413afd1 (409 -> 838):
+fuenf Strecken 141..205, Jagd mit Sicht an der Klemme (Original), kein Haenger. Sub-4-Erweiterungen gegen die Sprungschleifen hat NB1
+gemessen und verworfen (Sprungketten / Hin-und-her); sie bleiben OFFEN (Original-Klasse).
+
+### NB6b — Befund Stelle 3 in der exe und Korrektur (Stand c9f3a8eb)
+**Messung vorher** (exe Kopie `re15_pc_nb6f.exe`, 14 Stellen wie Abnahme 5, `F_belege/nb6/nb6a_exe_14_stellen_ausw5.txt`): Stelle 8
+S3 468 -> **0** (Angriff F274), nw12_schuss S2 532 -> **141** NAH fest (nur noch die Strecke F1464+141 VOR dem Tod von S3), kanon
+szene11c0/t11b0szene, t11b0kampf und die vier Nordwest-Stellen gy.log-bitgleich zu Abnahme 5 — ABER **Stelle 3 (6000,-9000): S2 greift
+NIE an** (Abnahme 5: F1596; fest 367 statt 429), Leon stirbt F1947 durch S3 allein.
+
+**Ursache (gemessen, neue Messschiene `RE15_AFFEN_LOG=<datei>`: je Bild je Gorilla ua/up/nu/nah/ng, gy.log dabei bitgleich;
+`nb6_stelle3_affenlog_vorher.txt`)**: S3 steht ab F1580 mit der Mitte in Pad #36 (6418,-3617) und beisst Leon von dort (ua=0, up=-1 —
+er belegt das Pad NICHT; die erste Hypothese `r36_pad_belegt` ist damit widerlegt). S2 steht NAH (+0x1d4 5655) in der Gassenmuendung an
+der Suedkante von #36 bei (6418,-6820), Kontaktcode 0xc8. Mit nah 45 antwortet `r36_nah_route` Grund 11 = "Weg zum Anlauf" mit Ziel
+(7000,-8700): der Raster-Startknoten der Pad-Kante liegt 1970 entfernt AUSSERHALB der Gasse, weil die Gasse (x 6418..7968, 1550 breit)
+schmaler ist als zwei Gorilla-Radien (2 x 1600 @0x80121356) und das Raster (Vorlage + Klemme) dort keinen freien Knoten hat. S2 laeuft
+also von Leon WEG nach Suedosten, +0x1d4 kippt ueber 0x1771 (@0x80117bc8) -> FERN -> Sub 4, die NAH-Regel loescht den Umweg; zurueck
+an der Kante (Original B[3] gerade auf playerX @0x80117d4c) zaehlt der NAH-Anker von 0: Zyklus F1425/F1633/F1779/F1920, kein Sprung bis
+zum Laufende. Im frischen Sondenzustand (`lage 600 1 30 5615 -1214 2048 6418 -3616 2861 3 0 6429 -6881 2969 3 0`) springt G2 dagegen
+F120 und greift F215 an — die exe-Bahn bringt S2 naeher an die Kante (dd 5655 statt 5724) und Leon weiter weg, so dass der Umweg zum
+Anlaufpunkt ueber 0x1771 fuehrt.
+
+**RE-Beleg der Korrektur**: der Original-Pad-Sprung findet das Pad per Box-Abfrage FUN_8003b93c(+0x34, box[6]+100, +0x82, 0x10)
+(`ori a3,zero,0x10` @0x80117ee0, `lhu a1,6(v0)` @0x80117ef4, `jal 0x8003b93c` @0x80117efc, `addiu a1,a1,100` @0x80117f00) — "am Pad" ist
+im Original ein Rechteck um das Pad, erweitert um box[6]+100, nicht ein Rasterknoten.
+
+**Umsetzung (PORT-WAHL, zombieki_r36.c)**: `r36_weg_folgen(..., nah)` — im Nah-Umweg gilt "am Anlaufpunkt" auch, wenn der Gorilla das
+Pad im Sinne genau dieser Box-Abfrage erreicht hat (`r36_am_pad`, Radius hit_radius_min + 100): gerader Anlauf auf die Pad-Mitte,
+Sprung = Original (Yaw-Fenster @0x80117f18-38, +0x9f/+0x5..7 @0x80117f40-74). Steht er dabei mit der MITTE in diesem Pad (Code 0xf8 =
+Platzhalter ohne Seite @0x8001bf74; im Anlauf-Modus gaebe es keinen Sprung), springt er wie der Verkeilte mit dem Seitencode der
+Startseite (Grund 14; vorher nur verkeilt = Grund 13). Der FERN-Umweg (`r36_uw_route`, nah = 0) ist unveraendert.
+
+**Messung nachher (Sonden `nb6b_lage_*_m1_spur30.txt`, Riegel `nb6_riegel_direkt4.txt`)**: exe Stelle 3 (Kopie `re15_pc_nb6g.exe`,
+`nb6_stelle3_affenlog_nachher.txt`): **S2 Angriff F1651**, fest 271 (NB5 429, NB6a 367/nie), S3 F324 / 368 unveraendert; Gasse einzeln
+G1 Angriff **157** (NB6a 313; Grund 14: Sprung aus der Pad-Mitte nach Norden); Stelle-3-Endlage G2 **175** (215); Stelle 8 112 (gleich,
+Grund 13); Nachruecken 505 (gleich); O1 G1 195 / G2 **937** nach **248** NAH fest, danach 323 Bilder Anstehen an der Wand x 8382
+(Leon in der Ecke (11159,-1181) hinter G1, `frei 0`; die Spur `nb6b_lage_o1_m1_spur30.txt` zeigt ab F1650 Grund 2 = kein freier
+Bissplatz); kanon bitgleich (363 468 521 ..., Tod +1194, Anker 353); unit_r35_affen_* 20/20.
+
+**Riegel (NB6b)**: die Ostgasse-Pins messen jetzt die NAH-fest-Zeit VOR dem ersten Angriff (<= 450; das Mangel-1-Mass der Abnahme 5
+"greift nach hoechstens 450 Bildern NAH fest an") und lassen eine spaetere Wartezeit nur als Anstehen zu (`frei 0`) oder <= 450;
+neuer Pin "Stelle 8 verkeilt" (Gegenprobe Stand NB5 900/900 ohne Angriff; NB6 Angriff 112, Grund 13). 77 Pruefungen, 0 Fehler.
