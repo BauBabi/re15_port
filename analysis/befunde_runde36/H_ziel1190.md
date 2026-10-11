@@ -315,3 +315,8 @@ probes/r35_raeume.cmake): siehe Zeile unten (woertliche ctest-Summe).
   holes."; `synchro/STAGE1/room1191/main06.wav` / `main07.wav` = dieselben Saetze mit Elza.
 * Neue Assets fuer das Paket-Gate: keine (kein Asset-Patch, keine gen/-Daten).
 * ROOM1090: Antwort in 2.4.
+
+* Bild `H_ziel1190/p2_kiste1_dach_tor_cut2_F1850-2030.png` (Lauf k1090_tor5 = tor3 mit `RE15_FORCE_CUT=2`, der
+  Tor-Kamera @RDT Cut 2 (-6588,-11088,-9054) -> (-4320,-11664,-15642)): F1850 Leon vor der Kiste 1 an der Nordmauer
+  (Lueftungsgitter), F1880 Klettern, F1920..2030 auf der Kiste (Band 6), danach Aktion -> `DOOR FIRE slot=1` ->
+  ROOM1100 (debug.log dieses Laufs identisch zu tor3). Bild `p2_dach_ankunft_F2400.png`: das Dach bei der Ankunft (Cut 8).
