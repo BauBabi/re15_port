@@ -443,6 +443,8 @@ void re15_input_tick(void)
          * (bestehende Skripte unveraendert), mit P ist es der Ausgang des Umschalters. */
         bits |= (uint16_t)(touch & RE15_PAD_R1);
     }
+    /* Runde 36 Spur R: RE15_WEGPLAN — geschlossen geregelter Messlauf (engine/src/dachkiste_r36.c), nur mit Env. */
+    { extern int re15_dachkiste_wegplan_pad(uint16_t *b); (void)re15_dachkiste_wegplan_pad(&bits); }
 
     g_engine.pad_current = bits;
 

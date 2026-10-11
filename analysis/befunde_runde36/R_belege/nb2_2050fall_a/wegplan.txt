@@ -1,0 +1,155 @@
+RE15_WEGPLAN C:/workspace/git/reAi_v2/.claude/worktrees/r36_dachkiste/analysis/befunde_runde36/R_belege/nb2_2050fall_a/wegplan_eingabe.txt: 21 Befehle
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj6=(0,0,0) b0 | OBJ 6
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj6=(0,0,0) b0 |   -> Befehl 0 beendet: gesetzt
+F1 room=2050 spieler=(-1000,-10800) rot=3072 mo=210 pm=0 obj6=(2975,-16200,-13950) b5 | RAUM 2050 geladen, Spieler frei
+F30 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 1 beendet: Raum bereit
+F31 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | GEGNERWEG
+F31 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   Gegner Slot 1 Typ 0x25 (3732,-7010) freigegeben
+F31 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   Gegner Slot 2 Typ 0x25 (-5000,-6082) freigegeben
+F31 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 2 beendet: 2 Gegner weg
+F32 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | WARTE 30
+F61 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 3 beendet: gewartet
+F62 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | ZELLE r0[50]
+F62 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   ZELLE r0[50] LAUFZEIT: x 6650..8550 z -12150..-11650 typ 1 u0 0x00 u1 0x00 fl 0x33
+F62 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 4 beendet: gelesen
+F63 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | ZELLE r0[49]
+F63 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   ZELLE r0[49] LAUFZEIT: x 6350..8750 z -13950..-12150 typ 1 u0 0x01 u1 0x02 fl 0x32
+F63 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 5 beendet: gelesen
+F64 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | ZELLE r0[51]
+F64 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   ZELLE r0[51] LAUFZEIT: x -7550..-6150 z -4500..850 typ 1 u0 0xff u1 0x00 fl 0x33
+F64 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 6 beendet: gelesen
+F65 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-1000,-10800) tol 120
+F65 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 7 beendet: angekommen
+F66 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 3072 bis obj.z >= -7050 (max 400 Bilder)
+F67 room=2050 spieler=(-1000,-10800) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   SCHIEB: Blick steht, UP ab jetzt
+F289 room=2050 spieler=(-1035,-7191) rot=3072 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   SCHIEB: Spieler steht 40 Bilder (Klemme)
+F289 room=2050 spieler=(-1035,-7191) rot=3072 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 8 beendet: Klemme
+F290 room=2050 spieler=(-1035,-7191) rot=3072 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | WARTE 40
+F329 room=2050 spieler=(-1035,-7191) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 9 beendet: gewartet
+F330 room=2050 spieler=(-1035,-7191) rot=3072 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F331 room=2050 spieler=(-1035,-7191) rot=3168 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F332 room=2050 spieler=(-1035,-7191) rot=3264 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F333 room=2050 spieler=(-1035,-7191) rot=3360 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F334 room=2050 spieler=(-1035,-7191) rot=3456 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F335 room=2050 spieler=(-1035,-7191) rot=3552 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F336 room=2050 spieler=(-1035,-7191) rot=3648 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F337 room=2050 spieler=(-1035,-7191) rot=3744 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F338 room=2050 spieler=(-1035,-7191) rot=3840 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F339 room=2050 spieler=(-1035,-7191) rot=3936 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F340 room=2050 spieler=(-1035,-7191) rot=4032 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F341 room=2050 spieler=(-1035,-7191) rot=4128 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F342 room=2050 spieler=(-1035,-7191) rot=4224 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F343 room=2050 spieler=(-1035,-7191) rot=4320 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F344 room=2050 spieler=(-1035,-7191) rot=4416 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F345 room=2050 spieler=(-1035,-7191) rot=4512 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F346 room=2050 spieler=(-1035,-7191) rot=4608 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F347 room=2050 spieler=(-1035,-7191) rot=4704 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-8400) tol 150
+F410 room=2050 spieler=(-375,-8091) rot=4704 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   GEHE: nach 8 Runden Rest 414
+F410 room=2050 spieler=(-375,-8091) rot=4704 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 10 beendet: Runden erschoepft
+F411 room=2050 spieler=(-375,-8091) rot=4704 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F412 room=2050 spieler=(-375,-8091) rot=4608 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F413 room=2050 spieler=(-375,-8091) rot=4512 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F414 room=2050 spieler=(-375,-8091) rot=4416 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F415 room=2050 spieler=(-375,-8091) rot=4320 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F416 room=2050 spieler=(-375,-8091) rot=4224 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F417 room=2050 spieler=(-375,-8091) rot=4128 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F418 room=2050 spieler=(-375,-8091) rot=4032 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F419 room=2050 spieler=(-375,-8091) rot=3936 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F420 room=2050 spieler=(-375,-8091) rot=3840 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F421 room=2050 spieler=(-375,-8091) rot=3744 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F422 room=2050 spieler=(-375,-8091) rot=3648 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F423 room=2050 spieler=(-375,-8091) rot=3552 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F424 room=2050 spieler=(-375,-8091) rot=3456 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F425 room=2050 spieler=(-375,-8091) rot=3360 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F426 room=2050 spieler=(-375,-8091) rot=3264 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F427 room=2050 spieler=(-375,-8091) rot=3168 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-100,-5520) tol 150
+F505 room=2050 spieler=(-74,-5945) rot=3024 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   GEHE: nach 8 Runden Rest 426
+F505 room=2050 spieler=(-74,-5945) rot=3024 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 11 beendet: Runden erschoepft
+F506 room=2050 spieler=(-74,-5945) rot=3024 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F507 room=2050 spieler=(-74,-5945) rot=2928 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F508 room=2050 spieler=(-74,-5945) rot=2832 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F509 room=2050 spieler=(-74,-5945) rot=2736 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F510 room=2050 spieler=(-74,-5945) rot=2640 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F511 room=2050 spieler=(-74,-5945) rot=2544 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F512 room=2050 spieler=(-74,-5945) rot=2448 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F513 room=2050 spieler=(-74,-5945) rot=2352 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F514 room=2050 spieler=(-74,-5945) rot=2256 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F515 room=2050 spieler=(-74,-5945) rot=2160 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-5520) tol 150
+F541 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 |   KLEMME beim Gehen nach (-3100,-5520): Rest 2868
+F541 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 12 beendet: Klemme
+F542 room=2050 spieler=(-250,-5837) rot=2075 mo=18 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F543 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F544 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F545 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F546 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F547 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F548 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F549 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F550 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F551 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F552 room=2050 spieler=(-250,-5837) rot=2075 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F553 room=2050 spieler=(-250,-5837) rot=1979 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (-3100,-6400) tol 100
+F579 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 |   KLEMME beim Gehen nach (-3100,-6400): Rest 2894
+F579 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 13 beendet: Klemme
+F580 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F581 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F582 room=2050 spieler=(-250,-5900) rot=2079 mo=18 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F583 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F584 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F585 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F586 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F587 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F588 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F589 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F590 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F591 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F592 room=2050 spieler=(-250,-5900) rot=2079 mo=17 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F593 room=2050 spieler=(-250,-5900) rot=2175 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F594 room=2050 spieler=(-250,-5900) rot=2271 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F595 room=2050 spieler=(-250,-5900) rot=2367 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F596 room=2050 spieler=(-250,-5900) rot=2463 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F597 room=2050 spieler=(-250,-5900) rot=2559 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F598 room=2050 spieler=(-250,-5900) rot=2655 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F599 room=2050 spieler=(-250,-5900) rot=2751 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F600 room=2050 spieler=(-250,-5900) rot=2847 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F601 room=2050 spieler=(-250,-5900) rot=2943 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F602 room=2050 spieler=(-250,-5900) rot=3039 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F603 room=2050 spieler=(-250,-5900) rot=3135 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F604 room=2050 spieler=(-250,-5900) rot=3231 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F605 room=2050 spieler=(-250,-5900) rot=3327 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F606 room=2050 spieler=(-250,-5900) rot=3423 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F607 room=2050 spieler=(-250,-5900) rot=3519 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F608 room=2050 spieler=(-250,-5900) rot=3615 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F609 room=2050 spieler=(-250,-5900) rot=3711 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F610 room=2050 spieler=(-250,-5900) rot=3807 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F611 room=2050 spieler=(-250,-5900) rot=3903 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F612 room=2050 spieler=(-250,-5900) rot=3999 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F613 room=2050 spieler=(-250,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 0 bis obj.x >= 7550 (max 600 Bilder)
+F614 room=2050 spieler=(-250,-5900) rot=4095 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   SCHIEB: Blick steht, UP ab jetzt
+F668 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   SCHIEB: Spieler steht 40 Bilder (Klemme)
+F668 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 14 beendet: Klemme
+F669 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | WARTE 40
+F708 room=2050 spieler=(702,-5900) rot=4095 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 15 beendet: gewartet
+F709 room=2050 spieler=(702,-5900) rot=4095 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (6100,-5600) tol 150
+F725 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   KLEMME beim Gehen nach (6100,-5600): Rest 5406
+F725 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 16 beendet: Klemme
+F726 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | GEHE (7600,-5600) tol 100
+F742 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   KLEMME beim Gehen nach (7600,-5600): Rest 6905
+F742 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 17 beendet: Klemme
+F743 room=2050 spieler=(702,-5900) rot=4095 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F744 room=2050 spieler=(702,-5900) rot=4191 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F745 room=2050 spieler=(702,-5900) rot=4287 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F746 room=2050 spieler=(702,-5900) rot=4383 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F747 room=2050 spieler=(702,-5900) rot=4479 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F748 room=2050 spieler=(702,-5900) rot=4575 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F749 room=2050 spieler=(702,-5900) rot=4671 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F750 room=2050 spieler=(702,-5900) rot=4767 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F751 room=2050 spieler=(702,-5900) rot=4863 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F752 room=2050 spieler=(702,-5900) rot=4959 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F753 room=2050 spieler=(702,-5900) rot=5055 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F754 room=2050 spieler=(702,-5900) rot=5151 mo=105 pm=0 obj6=(2975,-16200,-13950) b5 | SCHIEB blick 1024 bis obj.z <= -12000 (max 600 Bilder)
+F755 room=2050 spieler=(702,-5900) rot=5151 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   SCHIEB: Blick steht, UP ab jetzt
+F756 room=2050 spieler=(702,-5900) rot=5151 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   SCHIEB: Bedingung erfuellt (obj.z = -13950)
+F756 room=2050 spieler=(702,-5900) rot=5151 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 18 beendet: Bedingung
+F757 room=2050 spieler=(702,-5900) rot=5151 mo=200 pm=0 obj6=(2975,-16200,-13950) b5 | WARTE 300
+F1056 room=2050 spieler=(702,-5900) rot=5151 mo=212 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 19 beendet: gewartet
