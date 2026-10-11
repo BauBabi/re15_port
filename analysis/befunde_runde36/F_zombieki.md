@@ -1354,3 +1354,50 @@ und KRIECHT bis +108 an der Kante entlang (Abstand aendert sich um 13); der Lage
 bzw. 434..438 (Lage-Anker mit Abstands-Fortschritt >= 100/200/300) — mit Schwelle 354 aenderte sie den gepinnten Original-Kampf,
 mit Schwelle >= 435 waere der Nah-Umweg an jeder anderen Stelle 81 Bilder spaeter (Stelle 3: 368 -> ~449). Deshalb bleibt die
 Lage-Zaehlung; NB6 behebt die gemessene Ursache selbst: den Tod des Partners (Mangel 2) und das Pad (Mangel 1).
+
+### NB6 RE-Belege (selbst gelesen, re15_disasm.py; STAGE1.BIN roh @0x80100000, PSX.EXE)
+- **Gorilla-Zustaende**: Wurzel `lbu v0,4(v1)` / `sll v0,v0,2` / `lui at,0x8012` / `addiu at,at,5064` / `lw v0,0(at)` / `jalr v0`
+  @0x80116e00-20 -> Tabelle @0x801213c8: [0] 0x80116f50 INIT, [1] 0x80117254 ACTIVE, [2] 0x8011af5c HURT, **[3] 0x8011b6fc DEATH**,
+  [4]/[5] 0x8011bdec, [6] 0x8011c598, **[7] 0x8011be54 CORPSE**.
+- **Abstand +0x1d4**: `jal 0x80065f60` (SquareRoot0) / `sh v0,468(v1)` @0x80117300-14 (nur im ACTIVE-Gehirn; im Tod bleibt der letzte
+  Wert). Bissweite a804(0xbb8, 0x180): `ori a0,zero,0xbb8` @0x80117a60 (Abnahme 5 Abschnitt 1, Sprungziel FUN_8001a804 gelesen).
+- **Pad-Sprung A[4] Path A** (0x80117e9c..): `lbu v0,482(v1)` (+0x1e2) / `beq v0,zero,0x80118028` @0x80117ed4-dc; `ori a3,zero,0x10`
+  @0x80117ee0, `lbu a2,130(v1)` (+0x82) @0x80117ee4, `lhu a1,6(v0)` (box[6]) @0x80117ef4, `addiu a0,a0,52` (+0x34) @0x80117ef8,
+  `jal 0x8003b93c` @0x80117efc, `addiu a1,a1,100` @0x80117f00; Yaw-Fenster `lbu a1,144(a0)` (+0x90) / `lh v1,106(a0)` / `andi v0,a1,0xf0` /
+  `sll v0,v0,4` / `subu` / `addiu v0,v0,512` / `andi v0,v0,0xfff` / `slti v0,v0,1024` @0x80117f18-34; Sprung `sb a1,159(a0)` (+0x9f)
+  @0x80117f40, `ori v0,zero,0x7` / `sb v0,5(v1)` @0x80117f3c/50, `sb zero,6(v0)` @0x80117f60, `ori v0,zero,0x1` / `sb v0,7(v1)`
+  @0x80117f6c-74. Ausfuehrung B[7]: +0x7 != 0 -> `lbu v0,159(v1)` / `andi 0xf0` / `sll 4` / `sh v0,106(v1)` (Yaw = Code) /
+  `sb a0,130(v0)` (+0x82 Band) @0x80118ac0-af0 — im Flug klemmen die Band-0-Wagenzellen nicht (Port-Doku re15_collision.c).
+- **Kontaktcode** FUN_8001bf04 (PSX.EXE): Vorgabe `ori t2,zero,0xf00` @0x8001bf74 (Mitte/Ecke = Platzhalter), links `addu t2,zero,zero`
+  @0x8001bfa4 (0x000), rechts `ori t2,zero,0x800` @0x8001bfac, davor `ori t2,zero,0xc00` @0x8001bfe8, dahinter `ori t2,zero,0x400`
+  @0x8001bfec, `jr ra` / `addu v0,t2,zero` @0x8001bff0-f4; FUN_8003b93c legt (Code >> 4) + 8 + (u1 & 3) nach +0x90 (`sb v0,144(a0)`
+  @0x8003ba8c, Port re15_collision_zone_query). Fuer Pad #36 (u1 0x10): Sued 0xc8 -> Sprung nach Norden, Nord 0x48 -> nach Sueden.
+- **Pad #36** (ROOM11C0.RDT 0x015d8, SCA-Eintrag 12 Byte, selbst geparst): x 4900..9500, z -6080..-2180, u1 0x10, Band 0 (floor 0x02).
+
+### NB6 Umsetzung (zombieki_r36.c, keine neue gemeinsame Datei; Header-Doku NB6)
+- **Mangel 1 — Nah-Umweg ueber 0x10-Pads (PORT-WAHL)**: `r36_nah_route` sucht wie bisher zuerst den naechsten freien Bissplatz in der
+  EIGENEN Fuss-Komponente (Grund 10). Gibt es dort keinen, nimmt er (neu) den naechsten freien Bissplatz in LEONS Komponente
+  (Leon-Knoten wie `r36_uw_route`: Strecke frei fuer die Spieler-Klemme, Radius 450, Maske 1 — ein Knoten < 0xbb8 hinter einer Wand waere
+  ein Biss durch die Wand), erreichbar ueber die Pad-Kanten des FERN-Umwegs (`r36_uw_kanten`, A* `r36_uw_astern`), und folgt dem Weg
+  mit derselben, aus `r36_uw_route` unveraendert herausgeloesten Funktion `r36_weg_folgen` (Weg zum Anlauf = Grund 11, Anlauf auf die
+  Pad-Mitte = Grund 12). Der Sprung ist der Original-Pad-Sprung (`r36_pad_sprung_code`: Yaw-Fenster @0x80117f18-38, +0x9f/+0x5..7
+  @0x80117f40-74), im Nah-Umweg nur mit einem SEITENcode (0xf8 = Mitte ohne Richtung springt nicht). Nimmt der andere Gorilla dasselbe
+  Pad und steht naeher an der Mitte (NB2-Regel `r36_pad_belegt`), steht er an (Grund 5) statt ueber ein fernes Pad zu laufen
+  (gemessen ohne diese Regel: O1-G2 nahm Pad #47 im Westen, wurde FERN und irrte 500 Bilder).
+- **Beginn**: zu Fuss weiter erst ab R36_NAH_START = 354 (J-Fenster: der kanonische Kampf hat einen Fuss-Weg, Slot 2 wartet 353), ueber
+  ein Pad ab R36_FEST_START = 45 — derselbe Beginn wie der FERN-Umweg (NB3): ohne Fuss-Weg haengt der nahe Gorilla genauso wie ein ferner.
+  Erste Fassung mit 354 auch fuer das Pad (gemessen, `F_belege/nb6/nb6_lage_vorher_nachher.txt`): O1 G1 549 / G2 888 NAH fest (Leon
+  wird durch die Gasse hin- und hergeschoben, jede Runde kostete erneut 354 Bilder) -> mit 45: 0 / 248.
+- **Verkeilt** (Mitte im Pad und KEIN Knoten gerade erreichbar, exe-Stelle 8): Startknoten ohne Streckenpruefung, und fuehrt der Weg
+  ueber genau dieses Pad, dreht er in die Sprungrichtung und springt mit dem Code der Pad-Seite, von der der Weg das Pad ueberquert
+  (`r36_seiten_code` = FUN_8001bf04 + @0x8003ba8c am Startknoten der Pad-Kante; Grund 13). PORT-WAHL: die Mitte hat keinen Code
+  (0xf00), zu Fuss kommt er nicht frei (Sonde: 900/900 Bilder ohne Bewegung, auch nach dem Umdrehen zum Ausgang), nur der Sprung
+  wechselt das Band (+0x82 @0x80118af0).
+- **Mangel 2 — Nachruecken**: `re15_r36_affen_fest_takt` erkennt den Tod eines Gorillas (Zustand 3/7, einmal je Tod, `s_r36_tot`).
+  Stand er in Bissweite (+0x1d4 < 0xbb8), wird ein Bissplatz frei: jeder Gorilla, der gerade NAH in der Jagd wartet (Sub 3,
+  0xbb8 <= +0x1d4 < 0x1771), bekommt die Wartezeit als abgelaufen (NAH-Zaehler := R36_NAH_START, Anker := jetzige Lage). Kein Eingriff in
+  den kanonischen Kampf (dort stirbt kein Gorilla vor Leon).
+- Nur-Sonden: `re15_r36_affen_nb6_enable(bits)` (0 = Stand NB5; kein Aufrufer in engine/platform), `re15_r36_affen_nah_grund`,
+  `re15_r36_affen_bissplaetze_frei` (freie Bissplatz-Knoten ausser Koerperkontakt = "steht nachweislich an" bei 0). Sonde `lage`:
+  Modus 6 = Stand NB5, Spur mit `ng`/`up`/`zc`, LAGE-Zeile mit letztem Angriff/Angriffsbildern/Leon-Endlage/`frei`; `platz <lx> <lz>
+  [schritt] [ox oz]` schliesst Koerperkontakt zu (ox,oz) aus.

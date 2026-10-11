@@ -689,7 +689,7 @@ static int r36_belegt_koerper(int k, int slot)
  * (r36_nah_route sah nur die eigene Fuss-Komponente).
  * s_r36_nah_grund (NUR Sonden): 1 kein Startknoten, 2 kein freier Bissplatz (Anstehen), 3 schon am Bissplatz,
  * 4 kein Weg, 5 Pad vom anderen Gorilla belegt (Anstehen), 10 zu Fuss, 11 ueber ein Pad (Weg zum Anlauf),
- * 12 ueber ein Pad (Anlauf auf die Pad-Mitte). */
+ * 12 ueber ein Pad (Anlauf auf die Pad-Mitte), 13 verkeilt in diesem Pad (Sprung mit dem Seitencode, Rueckgabe 3). */
 static int r36_bissplatz(const re15_actor_t *pl, int slot, int kg)   /* naechster freier Bissplatz in Komponente kg (kg = 0: in
                                                                       * jeder ueber s_kerr erreichbaren); -1 = keiner */
 {

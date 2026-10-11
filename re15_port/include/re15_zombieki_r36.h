@@ -215,6 +215,15 @@ void re15_r36_wurf_klemme_enable(int an);   /* NUR Sonden: 0 = Weg vor NB2 (Gege
  *   (353, Spur-J-Riegel szene) + 1. Kein freier Bissplatz -> Original (Anstehen: in der Nordwest-Ecke passt nur EIN Gorilla in
  *   Bissweite, Durchmesser der Bissplaetze 1649..1833 < 3168).
  *   MESSUNG: exe Stelle 3 Slot 2/3 fest 1653/1875 -> 429/368, 14 Stellen 10466 -> 7500; kanonischer Kampf bitgleich.
+ * NACHBESSERUNG 6 (Abnahme 5, Maengel 1/2), Belege in zombieki_r36.c (r36_nah_route, r36_pad_sprung_code, re15_r36_affen_fest_takt):
+ *   OSTGASSE (PORT-WAHL): hat die eigene Fuss-Komponente keinen freien Bissplatz, nimmt der Nah-Umweg den naechsten freien Bissplatz
+ *   auf LEONS Seite ueber die 0x10-Pads (A* mit den Pad-Kanten des FERN-Umwegs); Sprung = Original A[4] Path A (@0x80117ee0-80118074)
+ *   nur mit Seitencode (0xf00 = Platzhalter @0x8001bf74), Beginn ab R36_FEST_START wie der FERN-Umweg (zu Fuss weiter ab 354 =
+ *   J-Fenster). VERKEILT (Mitte im Pad, kein Knoten gerade erreichbar) springt er mit dem Code der Pad-Seite, ueber die sein Weg
+ *   fuehrt (Codes @0x8003ba8c / @0x8001bfa4-bfec). NACHRUECKEN: stirbt ein Gorilla, der in Bissweite stand (+0x1d4 < 0xbb8), gilt
+ *   die Nah-Wartezeit jedes NAH wartenden Gorillas als abgelaufen (Zustand 3/7, Tabelle @0x801213c8).
+ *   MESSUNG: Gasse einzeln G1 kein Angriff (NAH fest 2258) -> Angriff F313 (0); O1 G1/G2 1368/1615 -> 0/248, beide greifen an;
+ *   Nachruecken Biss 588 -> 105 Bilder nach dem Tod; kanonischer Kampf bitgleich.
  * --------------------------------------------------------------------------------------------------------- */
 
 /* Haken in re15_maggot_ai_tick A[3] (nach dem Biss-Test, vor B[3]); sub = 3 (andere Werte: Rueckgabe 0, keine
