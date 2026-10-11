@@ -198,6 +198,16 @@ void re15_r36_wurf_klemme_enable(int an);   /* NUR Sonden: 0 = Weg vor NB2 (Gege
  *       der Jagd an einer 0x10-Pad-Kante mit Weg ueber das Pad; NAH bleibt Original (Spur-J-Riegel griff/szene).
  *   MESSUNG: Sonde Nordwest-Gang erster Angriff 352 (Original-Regel 430), kein Gorilla ueber #36; Zufallsgang 52 Seeds
  *   Anker 400 AUS 114029 -> 17975, Anker 40 75408 -> 221; exe zehn Stellen: Dossier NB3.
+ * NACHBESSERUNG 4 (Abnahme 3, Maengel 1/2), Belege in zombieki_r36.c (re15_r36_affen_fest_takt):
+ *   ORIGINAL GEMESSEN (DuckStation-GDB, r3 s033, Haltepunkt 0x80116db8, Lagen per Speicherschreiben ab VSync 10029): der
+ *   Stau zweier Gorillas am Nordwest-Rand (einer NAH an der #21-Ecke, einer FERN dahinter, Koerperkontakt) haelt im Original
+ *   900/900 Bilder (e2 +0x1de 179 -> 1079); ein einzelner naher Gorilla an der #21-Ecke wartet 900 Bilder, in der Ostgasse
+ *   (Pad #36, 2711 < 2 x 1600) warten beide — die Nah-Wartezeit ist Original (A[3] unter 0x1771 nur Biss < 0xbb8
+ *   @0x80117a60-74, B[3] auf playerX @0x80117d4c) und bleibt (Spur-J-Riegel griff/szene pinnen sie).
+ *   VORTRITT (PORT-WAHL): steht ein Gorilla FERN seit R36_VORTRITT_START Bildern im Anker und im Koerperkontakt mit einem
+ *   NAHEN Gorilla vor ihm, geht der NAHE den Umweg zu Fuss, bis sein gerader Weg zu Leon frei ist.
+ *   MESSUNG: Stau-Sonde beide greifen an (91/101, vorher keiner), exe Nordwest-Rand FERN 1465/691 -> 0/0; Zufallsgang 52 Seeds
+ *   Anker 400 17975 -> 16352, Anker 40 221 -> 125.
  * --------------------------------------------------------------------------------------------------------- */
 
 /* Haken in re15_maggot_ai_tick A[3] (nach dem Biss-Test, vor B[3]); sub = 3 (andere Werte: Rueckgabe 0, keine

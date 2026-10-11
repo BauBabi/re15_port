@@ -196,8 +196,11 @@ static int16_t s_r36_pad_idx[RE15_ACTOR_MAX];
 static uint16_t s_r36_1de[RE15_ACTOR_MAX], s_r36_fest[RE15_ACTOR_MAX];
 static int32_t  s_r36_anker_x[RE15_ACTOR_MAX], s_r36_anker_z[RE15_ACTOR_MAX];
 static uint8_t  s_r36_vortritt[RE15_ACTOR_MAX];   /* NB4: NAHER Gorilla, der einem FERN haengenden den einzigen Weg versperrt */
+#define R36_VORTRITT_START (R36_FEST_START / 2)   /* NB4, s. re15_r36_affen_fest_takt */
 static int      s_r36_vortritt_an = 1;            /* NUR Sonden: 0 = Stand NB3 (Gegenprobe Mangel 1 der Abnahme 3) */
-void re15_r36_affen_vortritt_enable(int an) { s_r36_vortritt_an = an ? 1 : 0; }
+static int      s_r36_vortritt_k = R36_VORTRITT_START;
+void re15_r36_affen_vortritt_enable(int an)      /* NUR Sonden: 0 aus, 1 an, >= 10: an mit Schwelle an - 10 (Messreihe im Dossier) */
+{ s_r36_vortritt_an = an ? 1 : 0; s_r36_vortritt_k = (an >= 10) ? an - 10 : R36_VORTRITT_START; }
 void re15_r36_affen_padsuche_enable(int an) { s_r36_padsuche_an = an ? 1 : 0; memset(s_r36_padsuche_aktiv, 0, sizeof s_r36_padsuche_aktiv);
                                               memset(s_r36_vortritt, 0, sizeof s_r36_vortritt); }
 int  re15_r36_affen_padsuche_aktiv(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_r36_padsuche_aktiv[slot] : 0; }
@@ -215,13 +218,16 @@ static void r36_padsuche_reset(const re15_actor_t *e)
  * Gorilla 2 kommt an ihm nicht vorbei (dz <= 1629 < 3200). Der Umweg von Gorilla 2 sah nur SCA-Zellen ("gerader Weg frei"
  * -> Original), die NAHE Original-Jagd von Gorilla 1 (B[3] auf playerX @0x80117d4c) drueckt in die Ecke.
  * PORT-WAHL (Erweiterung des Umwegs, NUR fuer diesen Stau): steht ein Gorilla FERN (Sub 3/4, +0x1d4 >= 0x1771 @0x80117bc8)
- * im KOERPERKONTAKT (Radien @0x80121356 + ein Rasterschritt, wie r36_pad_belegt) mit einem Gorilla, der NAH (< 0x1771) und
- * naeher an Leon in Sub 3/4 steht, bekommt der NAHE den Vortritt: er nimmt den Umweg (kuerzester Weg, r36_uw_route), bis sein
- * gerader Weg zu Leon frei ist (dann Original, r36_uw_route = 0) oder er Sub 3/4 verlaesst (Angriff). Ohne Wartezeit: mit der
- * Umweg-Startbedingung (R36_FEST_START Bilder im Anker) stand Gorilla 2 an der exe-Stelle (-24452,11938) noch 103 Bilder FERN
- * (gemessen F1245-F1325), und der Vortritt wirkt ohnehin nur, wenn der NAHE keinen geraden Weg zu Leon hat. Im Spur-J-Original
- * (griff: e1/e2 ~3925/~4990, beide NAH, +0x1de bis 497, jnb1/g_griff.txt) gilt die Bedingung nie — zwei NAHE Gorillas bleiben
- * Original. */
+ * seit R36_VORTRITT_START Bildern im Anker R36_FEST_ANKER und im KOERPERKONTAKT (Radien @0x80121356 + ein Rasterschritt, wie
+ * r36_pad_belegt) mit einem Gorilla, der NAH (< 0x1771) und naeher an Leon in Sub 3/4 steht, bekommt der NAHE den Vortritt: er
+ * geht den Umweg ZU FUSS (r36_uw_route Modus 1, kuerzester Weg), bis sein gerader Weg zu Leon frei ist (dann Original), er
+ * selbst FERN wird oder Sub 3/4 verlaesst (Angriff). R36_VORTRITT_START = halbe Umweg-Startzeit, Messreihe (Zufallsgang 52
+ * Seeds x 6000 Bilder, Anker 400 / 40; Stand NB3 17975 / 221): Schwelle 1 / 8 / 15 / 22 / 30 / 37 / 45 / 60 -> 22057 / 21150 /
+ * 17356 / 16352 / 16964 / 18881 / 17806 / 17975 bzw. 1012 / 257 / 228 / 125 / 221 / 327 / 221 / 221; mit 45 stand Gorilla 2 an
+ * der exe-Stelle (-24452,11938) noch 103 Bilder FERN (F1245-F1325). Ueber ein Pad (Modus 2) fuehrte der Vortritt in die
+ * Original-Blindsprung-Schleife vor #19 bzw. an den Ost-Pad-Anlauf (gemessen, s. decide) — deshalb nur zu Fuss. Im
+ * Spur-J-Original (griff: e1/e2 ~3925/~4990, beide NAH, +0x1de bis 497, jnb1/g_griff.txt) gilt die Bedingung nie — zwei NAHE
+ * Gorillas bleiben Original. */
 void re15_r36_affen_fest_takt(const re15_actor_t *e)
 {
     long slot = e - g_actors;
@@ -237,7 +243,8 @@ void re15_r36_affen_fest_takt(const re15_actor_t *e)
         || labs((long)e->x - s_r36_anker_x[slot]) + labs((long)e->z - s_r36_anker_z[slot]) >= R36_FEST_ANKER) {
         s_r36_anker_x[slot] = e->x; s_r36_anker_z[slot] = e->z; s_r36_fest[slot] = 0;
     } else if (s_r36_fest[slot] < 0xffffu) s_r36_fest[slot]++;
-    if (!s_r36_padsuche_an || !s_r36_vortritt_an || (sub != 3 && sub != 4) || (uint16_t)e->dog_dist < 0x1771u) return;   /* NB4: FERN -> Blocker? */
+    if (!s_r36_padsuche_an || !s_r36_vortritt_an || (sub != 3 && sub != 4) || (uint16_t)e->dog_dist < 0x1771u   /* NB4: FERN ... */
+        || s_r36_fest[slot] < (uint16_t)s_r36_vortritt_k) return;                   /* ... und seit R36_VORTRITT_START Bildern im Anker */
     for (int s = 0; s < RE15_ACTOR_MAX; s++) {
         const re15_actor_t *q = &g_actors[s];
         int qs = q->sub_state_1 & 31;
@@ -611,10 +618,14 @@ int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub)
     if (!s_r36_padsuche_an || !e || slot < 0 || slot >= RE15_ACTOR_MAX || (sub != 3 && sub != 4)) return 0;
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (s_r36_vortritt[slot]) {                                                       /* NB4: Vortritt (s. re15_r36_affen_fest_takt) — auch NAH
-                                                                                       * und mit Sicht der Umweg, bis der gerade Weg frei ist */
-        s_r36_padsuche_aktiv[slot] = (uint8_t)r36_uw_route(e, pl, slot);
-        if (!s_r36_padsuche_aktiv[slot]) { s_r36_vortritt[slot] = 0; return 0; }
-        goto sprung;
+                                                                                       * und mit Sicht der Umweg zu Fuss, bis der gerade Weg frei ist */
+        uint8_t m = ((uint16_t)e->dog_dist < 0x1771u) ? (uint8_t)r36_uw_route(e, pl, slot) : 0u;
+        if (m == 1) { s_r36_padsuche_aktiv[slot] = 1; return 0; }
+        s_r36_vortritt[slot] = 0; s_r36_padsuche_aktiv[slot] = 0;                     /* NUR zu Fuss und NUR solange NAH: gemessen (Zufallsgang 52
+                                                                                       * Seeds) fuehrte ein Vortritt ueber ein Pad (Modus 2) in die
+                                                                                       * Original-Blindsprung-Schleife vor #19 (Seed 0x9075ea6c, 1789
+                                                                                       * Bilder Sub 7) bzw. an den Ost-Pad-Anlauf (Seed 0x95e8eee7,
+                                                                                       * 2346 Bilder Sub 4) — FERN gilt der Umweg selbst */
     }
     if (sub == 3 && (e->dog_flags & 1)) { s_r36_padsuche_aktiv[slot] = 0; return 0; }   /* Jagd mit Sicht: Original (fern+Sicht -> Sub 4
                                                                                        * @0x80117c48-54) */
@@ -659,7 +670,6 @@ int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub)
     } else {
         s_r36_padsuche_aktiv[slot] = (uint8_t)r36_uw_route(e, pl, slot);
     }
-sprung:
     if (sub != 3 || s_r36_padsuche_aktiv[slot] != 2) return 0;
     uint8_t zc = 0;                                                               /* am Pad? (wie A[4] @0x80117ee0-f00) */
     if (re15_collision_zone_query(&g_room_rdt, e->x, e->z, (int32_t)e->hit_radius_min + 100, (int)e->floor, 0x10u, &zc)) {

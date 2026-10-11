@@ -442,6 +442,7 @@ int main(int argc, char **argv)
         if (argc > 5) s_zg_anker = atoi(argv[5]);
         if (argc > 6) s_zg_lage = atoi(argv[6]);   /* NB3: LAGE-Zeile je blockierter Strecke */
         re15_r36_affen_padsuche_enable(modus ? 1 : 0);
+        if (argc > 7) re15_r36_affen_vortritt_enable(atoi(argv[7]));   /* NB4: 0 = ohne Vortritt (Stand NB3) */
         zg_t r = zg_stat(b, zg_seed(i));
         printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld\n",
                zg_seed(i), modus, r.blockiert, r.griffe, r.nah, r.fern, r.los, r.klemme, r.sub[3], r.sub[4], r.sub[7]);
@@ -607,7 +608,8 @@ int main(int argc, char **argv)
          * Messung 2026-10-10 (Dossier NB1, Anker 40): AUS 28653 blockierte Bilder / 73 Griffe, AN 721 / 80, schlechtester +194.
          * NB2 (Abnahme 1, Mangel 4): Anker 400 (Spruenge/Pendeln auf der Stelle zaehlen jetzt als blockiert):
          * AUS 38439 / 73 Griffe, AN 4568 / 76 (11,9 %), kein Seed schlechter (schlechtester -100).
-         * NB3 (Abnahme 2): AUS 38439 / 73, AN 5725 / 74 (14,9 %), schlechtester +59. */
+         * NB3 (Abnahme 2): AUS 38439 / 73, AN 5725 / 74 (14,9 %), schlechtester +59.
+         * NB4 (Abnahme 3, Vortritt): AN 5174 / 71 (13,5 %), schlechtester +40. */
         long su_aus = 0, su_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000; uint32_t s_schl = 0;
         for (int i = 0; i < 16; i++) {
             long bl[2] = { -1, -1 }; int gr[2] = { 0, 0 };
@@ -735,6 +737,33 @@ int main(int argc, char **argv)
                   "Stau Gegenprobe Stand NB3 (Umweg ohne Vortritt, Abnahme 3 'Umweg 0'): kein Angriff, G2 FERN fest %ld", fn[3][1]);
             CHECK((er[1][0] > 0 || er[1][1] > 0) && fn[1][0] < 90 && fn[1][1] < 90,
                   "Stau mit Vortritt: Angriff G1 %d / G2 %d, keine FERN-Blockade (%ld/%ld Bilder)", er[1][0], er[1][1], fn[1][0], fn[1][1]);
+        }
+        {   /* NB4 (Abnahme 3, Mangel 2): die NAHE Rest-Blockade an den Stoss-Zielen ist ORIGINAL — der Port (mit Umweg + Vortritt)
+             * endet ab derselben Lage wie die GDB-Messung des Originals (F_nb4/gdb_affen.py, r3 s033 ab VSync 10029):
+             *   O3b Nordwest-Ecke, EIN Gorilla (der zweite weit weg): Original e1 900 Bilder an der #21-Ecke, F900 (-23302,14597)
+             *       d 3298, kein Angriff;
+             *   O1 Leon (6000,-9000), Gorillas in der Original-Lage F195: Original schiebt Leon durch die Ostgasse bis (7880,-1379),
+             *       e1 in der Gassenmitte (6418,-4409), e2 am Suedeingang (8101,-7143) (VSync 14629), beide ohne Bewegung. */
+            static const int32_t lg[2][16] = {
+                { 900, -26606, 14578, 18, -23302, 14489, 2067, 3, 0, 9434, 2189, 2656, 0, 0, -23302, 14597 },
+                { 2400, 6000, -9000, 1332, -5525, -14883, 2731, 3, 0, -8915, -12487, 93, 3, 0, 6418, -4409 } };
+            for (int i = 0; i < 2; i++) {
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage %d 1 0 %d %d %d %d %d %d %d %d %d %d %d %d %d", argv[0], (int)lg[i][0], (int)lg[i][1],
+                                         (int)lg[i][2], (int)lg[i][3], (int)lg[i][4], (int)lg[i][5], (int)lg[i][6], (int)lg[i][7], (int)lg[i][8], (int)lg[i][9],
+                                         (int)lg[i][10], (int)lg[i][11], (int)lg[i][12], (int)lg[i][13]);
+                FILE *pp = popen(cmd, "r"); char zl[512]; int er2[2] = { -1, -1 }, ex[2] = { 0, 0 }, ez[2] = { 0, 0 }; long fs[2] = { -1, -1 }, ff[2] = { -1, -1 };
+                while (pp && fgets(zl, sizeof zl, pp)) {
+                    int k, e1, x, z; long f1, f2;
+                    if (sscanf(zl, "LAGE G%d: erster Angriff %d, fest %ld (Anker %*d, Leon > 3000), davon fern %ld, Ende (%d,%d)", &k, &e1, &f1, &f2, &x, &z) == 6 && k >= 1 && k <= 2) {
+                        er2[k - 1] = e1; fs[k - 1] = f1; ff[k - 1] = f2; ex[k - 1] = x; ez[k - 1] = z; }
+                }
+                if (pp) pclose(pp);
+                long dx = ex[0] - lg[i][14], dz = ez[0] - lg[i][15];
+                CHECK(fs[0] >= (i ? 1000 : 810) && ff[0] == 0 && dx * dx + dz * dz <= 150L * 150L,
+                      "%s: Gorilla 1 wartet NAH wie das Original (fest %ld, fern %ld, Ende (%d,%d), Original (%d,%d))", i ? "Ostgasse (O1)" : "Nordwest-Ecke (O3b)",
+                      fs[0], ff[0], ex[0], ez[0], (int)lg[i][14], (int)lg[i][15]);
+                if (i == 0) CHECK(er2[0] == 0, "Nordwest-Ecke (O3b): Gorilla 1 greift in 900 Bildern nicht an (Original: kein Angriff, Leon HP 100)");
+            }
         }
         re15_r36_affen_padsuche_enable(1);
     }
