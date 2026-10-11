@@ -32,6 +32,7 @@ class Gdb:
                     raise
                 time.sleep(1)
         s.buf = b""
+        s.stops = []
 
     def _read(s, timeout):
         s.sk.settimeout(timeout)
@@ -60,10 +61,17 @@ class Gdb:
                 pass
 
     def cmd(s, data, timeout=10.0):
+        """Befehl senden; unaufgeforderte Stopp-Antworten (S02 nach ^C, T05 Haltepunkt) werden
+        weggelesen und in s.stops gesammelt — DuckStation antwortet auf ^C sehr wohl mit 'S02'."""
         if isinstance(data, str):
             data = data.encode()
         s.sk.sendall(b"$" + data + b"#%02x" % (sum(data) & 0xFF))
-        return s.recv(timeout)
+        while True:
+            r = s.recv(timeout)
+            if data not in (b"?",) and len(r) >= 3 and r[:1] in (b"S", b"T") and r[1:3].isalnum() and (data[:1] not in b"g"):
+                s.stops.append(r)
+                continue
+            return r
 
     def mem(s, addr, n):
         out = b""
@@ -78,10 +86,16 @@ class Gdb:
         return out
 
     def stop(s):
-        """Anhalten: ^C (DuckStation antwortet darauf nicht), dann '?' liefert den Stopp."""
+        """Anhalten: ^C -> DuckStation antwortet 'S02' (weglesen), dann '?' bestaetigt den Stopp."""
         s.sk.sendall(b"\x03")
-        time.sleep(0.25)
-        return s.cmd("?")
+        try:
+            r = s.recv(2.0)
+            s.stops.append(r)
+        except TimeoutError:
+            pass
+        r = s.cmd("?")
+        s.stops.clear()
+        return r
 
     def cont(s):
         s.sk.sendall(b"$c#63")
@@ -114,6 +128,29 @@ def ini_set(path, section, key, value):
     if not done:
         raise KeyError(key)
     open(path, "w", encoding="utf-8").write("\n".join(lines) + "\n")
+
+
+def pad_bind_alle(path, n=3):
+    """[Pad1]-Bindungen, die SDL-0/<x> nennen, zusaetzlich an SDL-1..SDL-(n-1) binden (gemessen 2026-10-11:
+    zwei XInput-Geraete am Bus, der eigene vgamepad-Pad wurde SDL-1 und kam nie im Spiel an)."""
+    lines = open(path, encoding="utf-8").read().splitlines()
+    sec = None
+    for i, l in enumerate(lines):
+        if l.startswith("["):
+            sec = l.strip()
+            continue
+        if sec != "[Pad1]" or "SDL-0/" not in l or "=" not in l:
+            continue
+        key, val = l.split("=", 1)
+        parts = [p.strip() for p in val.split("&")]
+        sdl = [p for p in parts if p.startswith("SDL-0/")]
+        for p in sdl:
+            for k in range(1, n):
+                q = p.replace("SDL-0/", "SDL-%d/" % k)
+                if q not in parts:
+                    parts.append(q)
+        lines[i] = "%s= %s" % (key, " & ".join(parts))
+    open(path, "w", encoding="utf-8").write(chr(10).join(lines) + chr(10))
 
 
 def pids():
@@ -158,6 +195,8 @@ def main():
     eigene = set()
     try:
         ini_set(INI, "Debug", "EnableGDBServer", "true")
+        ini_set(INI, "Main", "ConfirmPowerOff", "false")   # sonst haengt das geordnete Schliessen im Dialog
+        pad_bind_alle(INI)
         vor = pids()
         subprocess.Popen([DUCK, "-batch", "-statefile", STATE, CUE], cwd=out)
         for _ in range(20):

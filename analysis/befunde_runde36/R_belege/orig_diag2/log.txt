@@ -1,0 +1,45 @@
+DuckStation {'97288'}
+GDB verbunden
+Fenster: []
+stop: b'S02'
+PL (-5282, -1514, 672) pad 000000000000000000000000
+Z0 bd44: b'OK'
+Stopp nach c (<=5 s): b'S05'
+zweiter Stopp: b'S05'
+z0: b'OK'
+stop: b'S02'
+PL (-5282, -1514, 672)
+UP gehalten 0: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+UP gehalten 1: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+UP gehalten 2: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+losgelassen: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+RIGHT gehalten: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+settings.ini zurueck: True
+  DSLOG: I/SDL: Using Controller DB from resources.
+  DSLOG: I/SDL: Enhanced controller reports are disabled.
+  DSLOG: I/SDL: XBox HIDAPI is disabled.
+  DSLOG: I/SDL: RawInput is disabled, DirectInput is enabled, XInput is enabled, WGI is disabled, GameInput is disabled.
+  DSLOG: I/SDL: 872 controller mappings are loaded.
+  DSLOG: I/Pad: Memory card slot 0: C:\Users\mjoedicke\AppData\Local\DuckStation\memcards\Biohazard 1.5 (MZD Mod) Update 25-01-2025_1.mcd
+  DSLOG: I/Pad: Memory card slot 1: <unplugged>
+  DSLOG: I/Pad: Memory card slot 2: <unplugged>
+  DSLOG: I/Pad: Memory card slot 3: <unplugged>
+  DSLOG: I/Pad: Memory card slot 4: <unplugged>
+  DSLOG: I/Pad: Memory card slot 5: <unplugged>
+  DSLOG: I/Pad: Memory card slot 6: <unplugged>
+  DSLOG: I/Pad: Memory card slot 7: <unplugged>
+  DSLOG: I/System: Loading state from 'C:\workspace\git\reAi_v2\stage_saves\room1090_orig.sav'...
+  DSLOG: I/GDBServer: GDB server is now listening on 127.0.0.1:2345.
+  DSLOG: I/SDL: Controller 2 inserted
+  DSLOG: I/InputManager: Device 'SDL-0' connected: 'XInput Controller'
+  DSLOG: I/InputManager: Gamepad button type set to Xbox
+  DSLOG: I/SDL: Controller 1 inserted
+  DSLOG: I/InputManager: Device 'SDL-1' connected: 'XInput Controller'
+  DSLOG: I/GDBServer: Client 127.0.0.1:59972 connected.
+  DSLOG: I/System: Saving state to 'C:\Users\mjoedicke\AppData\Local\DuckStation\savestates\HASH-957757946319438E_resume.sav'...
+  DSLOG: I/GDBServer: Disconnecting 1 GDB clients...
+  DSLOG: I/GDBServer: Client 127.0.0.1:59972 disconnected: Connection explicitly closed.
+  DSLOG: I/GDBServer: Stopping GDB server.
+  DSLOG: I/System: Save state compression: screenshot 196608 => 90010 bytes, data 3819109 => 1349568 bytes
+  DSLOG: I/InputManager: Device 'SDL-0' disconnected
+  DSLOG: I/InputManager: Device 'SDL-1' disconnected

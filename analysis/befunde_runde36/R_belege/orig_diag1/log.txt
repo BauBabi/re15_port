@@ -1,0 +1,16 @@
+DuckStation {'103636'}
+GDB verbunden
+stop: b'S02'
+PL (-5282, -1514, 672) pad 000000000000000000000000
+Z0 bd44: b'OK'
+Stopp nach c (<=5 s): b'S05'
+zweiter Stopp: b'S05'
+z0: b'OK'
+stop: b'S02'
+PL (-5282, -1514, 672)
+UP gehalten 0: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+UP gehalten 1: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+UP gehalten 2: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+losgelassen: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+RIGHT gehalten: stop b'S02' pad 000000000000000000000000 PL (-5282, -1514, 672)
+settings.ini zurueck: True
