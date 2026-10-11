@@ -24,7 +24,12 @@
 #include "gen/r36_aufschliessen.inc"  /* re15_auf_stellen[], RE15_AUF_ART_*, RE15_AUF_STELLEN */
 #include "gen/re2_karten_bank.inc"    /* RE2_KARTE_* (Satz-TOC KARTSE.VBS) */
 
-/* RE2 ROOM2110 sub08: Sleep 15 (`09` + `0a 0f 00` @Datei 0x01B58 und 0x01B8C) zwischen den drei Se_on. */
+/* RE2 ROOM2110 sub08: Sleep 15 (`09` + `0a 0f 00` @Datei 0x01B58 und 0x01B8C) zwischen den drei Se_on.
+ * Abstand in Spielbildern = genau 15 (RE2 PSX.EXE, Opcode-Tabelle @0x800A74C8: 0x09 -> 0x800539dc, 0x0A -> 0x80053a24):
+ *   Sleep    @0x800539f4 sw pc+1, @0x80053a10 lhu a0,2(a2) / @0x80053a18 sh = Zaehler 15, @0x80053a20 return 1
+ *            (Sleeping laeuft im SELBEN Bild weiter)
+ *   Sleeping @0x80053a50 Zaehler-1; bei 0 @0x80053a6c pc+3; IMMER @0x80053a88 return 2 (Bildende)
+ * -> Se_on im Bild T, Zaehler 14 in T ... 0 in T+14, naechster Se_on in T+15 (= scd_vm.c op_sleeping, RE1.5 @0x8003F428). */
 #define RE2_KARTE_SLEEP 15
 
 typedef struct { int n; int satz[3]; int bild[3]; } folge_t;

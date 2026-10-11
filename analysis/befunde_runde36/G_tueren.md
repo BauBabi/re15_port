@@ -195,7 +195,25 @@ sub08 @0x01B2C Cut_chg 12   @0x01B2E Aot_reset 46 08 01 31 ..   (Platz 8 wird Tu
       @0x01B90 36 02 0b 00 ..  Se_on(2,0x0B)
 ```
 Se_on 0x36 @0x80056428 -> `jal 0x8005ba28` @0x80056530, a0 = Bank<<24 | Satz<<16 (@0x80056518..24); Bank 2 =
-Raumbank (FUN_80059e54 @0x80059f44 0x800dbb80 = [RDT+8]). Wellen (`tools/tueren/r36_kartenton_analyse.py`):
+Raumbank (FUN_80059e54 @0x80059f44 0x800dbb80 = [RDT+8]).
+
+Abstand "Sleep 15" in Spielbildern (RE2 PSX.EXE, Opcode-Tabelle @0x800A74C8: Eintrag 0x09 = 0x800539dc, 0x0A =
+0x80053a24; mit capstone selbst disassembliert):
+```
+Sleep    0x800539f4 sw v0,0x1c(a0)      pc+1
+         0x80053a10 lhu a0,2(a2)        Zaehler = 15
+         0x80053a18 sh a0,(v0)
+         0x80053a20 addiu v0,zero,1     return 1 -> Sleeping laeuft im selben Bild
+Sleeping 0x80053a50 addiu v0,v0,-1      Zaehler-1
+         0x80053a5c bnez v0,0x80053a84
+         0x80053a6c addiu v0,v0,3       (bei 0) pc+3
+         0x80053a84 jr ra / 0x80053a88 addiu v0,zero,2   IMMER return 2 = Bildende
+```
+-> Se_on im Bild T, Zaehler 14 (T) ... 0 (T+14), naechster Se_on im Bild T+15. RE1.5 hat dieselben Handler
+instruktionsgleich (@0x8003F3E0 / @0x8003F428, Rueckgabe `ori` statt `addiu`) = `scd_vm.c op_sleeping`. Daher
+`RE2_KARTE_SLEEP 15` -> Bild +15 / +30 (`engine/src/aufschliessen_r36.c`).
+
+Wellen (`tools/tueren/r36_kartenton_analyse.py`):
 
 | Satz | EDT @Datei | Welle | Profil | Rolle |
 |---|---|---|---|---|
@@ -294,6 +312,10 @@ ctest --test-dir "<baum>/re15_port/build" --timeout 600 --output-on-failure -j 3
 Ergebnis (Stand 2026-10-11, Baum auf d03b8dd2 + Dossier/Werkzeug, Protokoll `build/r36_tueren/ctest_gezielt_final.log`):
 ```
 100% tests passed, 0 tests failed out of 59
+```
+Nach dem letzten Code-Commit (nur Kommentar in `aufschliessen_r36.c`: Sleep-Beleg) neu gebaut und `-R "r36_tueren"`:
+```
+100% tests passed, 0 tests failed out of 5
 ```
 Darin u. a. `integration_r36_tueren` (34 s), `integration_r35_karte_fahrstuhl` (185 s), `integration_keydoor`,
 `integration_door_lock`, `integration_door_traversal`, `unit_r33_tueren_*`, `unit_door_seq`, `unit_r30_tuerse_bank`.
