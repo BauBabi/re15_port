@@ -9,6 +9,13 @@ Pflichtlektuere vorher: `CLAUDE.md` (STOP-GATE, Build ueber `local_build.sh`), `
 (Wortlaut des Nutzers + Nachtraege 14:00 und abends), `analysis/befunde_runde36/VERTRAG.md` (Bits/IDs/Ereignisse/Dateien je
 Spur), auf dem Integrationszweig `analysis/befunde_runde36/NACHLAUF.md` (Funde ausserhalb der Spur-Wortlaute).
 
+## ✅ Fortschritt seit der Uebergabe (fortlaufend, neueste zuerst)
+* 2026-10-11 11:25 (neuer Account, Fable): M karte in r36/integration gemergt (konfliktfrei); Bau + gezielte Tests laufen.
+  Rest-Lauf 4 gestartet: Workflow `wf_74d1d9dc-c24` mit `orchestrator/args_rest4_FGNHO.json` (F Nachbesserung 6,
+  G/N Abnahme-Fortsetzung mit Teilbericht, H Bau-Fortsetzung, O Bau; 5 Plaetze, Modell = Sitzung/Fable).
+  Monitor: `~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-.../subagents/workflows/wf_74d1d9dc-c24/journal.jsonl`.
+  Naechste Schritte unveraendert: Abschnitt 3 je bestandener Spur (G braucht Paket-Gate-Eintrag KARTSE.VBS + P0CD.DO2-Pruefung), dann Abschnitt 4.
+
 ## 0. Lage in Kuerze
 
 17 Spuren A..Q (Liste in VERTRAG.md §0). Jede Spur: eigener Arbeitsbaum, Bau-Agent → unabhaengige
