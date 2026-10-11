@@ -42,6 +42,7 @@
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Szenen-Ende ROOM10F0 (re15_cut10f0_tick) */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
+#include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -1060,6 +1061,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * bleibt nach Evt_next stehen). Tut ausserhalb der zwei Leichen nichts. Herleitung:
      * include/re15_leiche.h. */
     if (c->rdt_ok) re15_leiche_tick();
+    re15_aufschliessen_r36_tick();   /* Runde 36 Spur G: faellige RE2-Aufschliess-Toene (auch bei offener Nachricht) */
 
     if (re15_item_modal_active()) return;
 

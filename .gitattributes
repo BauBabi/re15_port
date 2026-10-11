@@ -34,3 +34,5 @@ re15_port/shared_assets/RE15DOOR/** -text
 # Heute schuetzt sie nur Gits NUL-Heuristik (Byte 2 bzw. 1 = 00) — wie DOOR/RE15DOOR: NIE normalisieren.
 re15_port/shared_assets/RE2/CORE00.ESP -text
 re15_port/shared_assets/RE2/TEX.TIM -text
+# RE2-Aufschliess-Toene (Runde 36 Spur G): Mini-Bank aus RE2-Raumbank-Wellen (re15_port/tools/re2_karten_se_cut.py).
+re15_port/shared_assets/RE2/KARTSE.VBS -text

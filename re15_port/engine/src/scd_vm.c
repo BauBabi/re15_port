@@ -43,6 +43,7 @@
 #include "re15_map_hint.h"  /* RE2-ERGAENZUNG: Kartenhinweis (engine/src/map_hint_common.c) */
 #include "re15_hebetisch.h" /* Runde 31: Ruhe oben des Hebetischs ROOM1150/1151 (hebetisch_1150.c) */
 #include "re15_lock_se.h"   /* RE2-ERGAENZUNG: "Tuer verschlossen"-Ton (engine/src/lock_se_common.c) */
+#include "re15_aufschliessen_r36.h"   /* Runde 36 Spur G: RE2-Aufschliess-Toene (engine/src/aufschliessen_r36.c) */
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
@@ -1566,6 +1567,7 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
      * @0x800516b8 `jal 0x8002fe38` (Text) liegen im selben Bild. RE1.5s LAB_80043084 hat an
      * dieser Stelle keinen Ton (@0x800430a0 einziger Aufruf = 0x80027e68). */
     re15_lock_se_notice(g_current_room_id, index, RE15_LOCK_WEG_AOT);
+    re15_aufschliessen_r36_notice(g_current_room_id, index, RE15_AUF_WEG_AOT);   /* Runde 36 Spur G */
     if (re15_ziel1190_show(index, pause_mask)) return;   /* Runde 35 Spur H: ROOM1190 Scheiben, msg 2 */
     re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
@@ -1849,6 +1851,7 @@ static int op_message_on(scd_thread_t *t)
      * durch (t->pc += 4 am Ende). Skript-Wege mit EIGENEM RE1.5-Se_on (ROOM4000 sub02
      * @Datei 0x0142E Se_on(2,0x0f)) stehen nicht in der Tabelle und bleiben RE1.5. */
     re15_lock_se_notice(g_current_room_id, t->pc[1], RE15_LOCK_WEG_SKRIPT);
+    re15_aufschliessen_r36_notice(g_current_room_id, t->pc[1], RE15_AUF_WEG_SKRIPT);   /* Runde 36 Spur G: Piep + Aufschliessen (RE2 ROOM2110 sub08) */
 
     if (re15_room_full_text(g_current_room_id)) {
         /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:

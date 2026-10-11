@@ -3231,6 +3231,7 @@ int main(int argc, char *argv[])
     /* ⛔ RE2-ERGAENZUNG: die Tuersequenz (Tor ROOM1170) spielt die PC-Szene
      * platform/pc/src/door_scene_pc.c; ohne Anmeldung verfaellt jede Anfrage. */
     { extern void re15_pc_tuerszene_anmelden(void); re15_pc_tuerszene_anmelden(); }
+    { extern void re15_pc_aufschliessen_anmelden(void); re15_pc_aufschliessen_anmelden(); }   /* Runde 36 Spur G */
     re15_audio_init();   /* FE-3: open the audio device early so the opening movie has sound
                           * (idempotent — the later call in the game-init path is a no-op). */
     /* Pruefhaken RE15_TUER_TEST=<Variante>: die Tor-Sequenz einmal direkt spielen und beenden

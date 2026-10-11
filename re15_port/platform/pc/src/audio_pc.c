@@ -34,6 +34,7 @@
 #include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
+#include "re15_aufschliessen_r36.h"  /* Runde 36 Spur G: Satz-TOC der Mini-Bank KARTSE.VBS */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
@@ -4084,4 +4085,68 @@ int re15_audio_se_stimme_aktiv(int v)
 {
     if (v < 0 || v >= RE15_SE_VOICE_COUNT) return 0;
     return s_active[v].active ? 1 : 0;
+}
+
+/* ===== Runde 36 Spur G: Bank-Slot RE2-AUFSCHLIESSEN (KARTSE.VBS) ===========================
+ * ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL. Belege im Kopf von include/re15_aufschliessen_r36.h: RE1.5 ist beim
+ * Aufschliessen stumm; RE2 spielt an der Kartenleser-Tuer ROOM2110 sub08 Se_on(2,0x0C) / Sleep 15 / Se_on(2,0x0D)
+ * PIEP / Sleep 15 / Se_on(2,0x0B) (@Datei 0x01B4C/0x01B5C/0x01B90) und beim Riegel von dieser Seite
+ * @0x800515f8 Se_on(2,0x26). Kopie des TUERSE-Slots 5c: dasselbe Satzformat
+ * [SE-Map @0 .. vh_off)[VH "pBAV"][Trailer, u32 vh_off @edt_size-8][VBD] (FUN_8005a09c), Groessen aus
+ * re15_karte_bank_rec() (gen/re2_karten_bank.inc, tools/re2_karten_se_cut.py), derselbe VAB-Code wie RE1.5,
+ * Pegel wie der TUERSE-Slot (Ton-vol, nicht positional: Se_on-Bezug 0 bzw. @0x800515fc a1 = 0). */
+static int        s_karte_loaded = 0;
+static int        s_karte_failed = 0;
+static re15_vab_t s_karte_vab;
+static uint8_t   *s_karte_edt = NULL;
+static int16_t   *s_karte_decoded[RE15_VAB_MAX_SAMPLES];
+static int        s_karte_decoded_len[RE15_VAB_MAX_SAMPLES];
+
+static int load_re2_karte_se_pc(void)
+{
+    if (s_karte_loaded) return 1;
+    if (s_karte_failed) return 0;
+    s_karte_failed = 1;                      /* nur EIN Versuch, danach still stumm */
+    re15_karte_bank_rec_t rec;
+    re15_karte_bank_rec(&rec);
+    int sz = 0;
+    uint8_t *vbs = re15_pc_read_re2("KARTSE.VBS", &sz);
+    if (!vbs) {
+        fprintf(stderr, "[kartse] shared_assets/RE2/KARTSE.VBS fehlt -> Aufschliessen stumm\n");
+        return 0;
+    }
+    if ((unsigned)sz < rec.vbd_off + rec.vbd_size || rec.edt_size < 12) { free(vbs); return 0; }
+    uint8_t *edt = (uint8_t *)malloc(rec.edt_size);
+    if (!edt) { free(vbs); return 0; }
+    memcpy(edt, vbs + rec.edt_off, rec.edt_size);
+    uint32_t vh_off = (uint32_t)edt[rec.edt_size-8]         | ((uint32_t)edt[rec.edt_size-7] << 8)
+                    | ((uint32_t)edt[rec.edt_size-6] << 16) | ((uint32_t)edt[rec.edt_size-5] << 24);
+    if (vh_off + 0x20u > rec.edt_size ||
+        re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &s_karte_vab) != 0) {
+        free(edt); free(vbs); return 0;
+    }
+    const uint8_t *vb = vbs + rec.vbd_off;
+    for (int i = 0; i < s_karte_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = s_karte_vab.samples[i].offset, vsz = s_karte_vab.samples[i].size;
+        if (off + vsz > rec.vbd_size) continue;
+        size_t cap = (vsz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_karte_decoded[i]     = pcm;
+        s_karte_decoded_len[i] = re15_vag_adpcm_decode(vb + off, vsz, pcm, cap);
+    }
+    free(vbs);
+    s_karte_edt    = edt;
+    s_karte_loaded = 1;
+    s_karte_failed = 0;
+    return 1;
+}
+
+/* Satz der Mini-Bank (RE2_KARTE_SE_*). Gerufen aus engine/src/aufschliessen_r36.c ueber den Spieler, den
+ * platform/pc/src/tuer_r36_pc.c anmeldet. */
+void re15_audio_re2_karte_se(int se_id)
+{
+    if (!g_audio.initialized) return;
+    if (!load_re2_karte_se_pc()) return;
+    se_play_layers(s_karte_edt, &s_karte_vab, s_karte_decoded, s_karte_decoded_len, se_id);
 }

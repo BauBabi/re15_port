@@ -18,8 +18,17 @@
 #include <string.h>
 
 #include "re15_door_seq.h"
+#include "re15_aufschliessen_r36.h"
 
 extern re15_door_seq_anfrage_t g_door_seq_anfrage;
+
+/* Runde 36 Spur G (Punkt 3): den PC-Spieler der Mini-Bank KARTSE.VBS bei der Engine anmelden
+ * (engine/src/aufschliessen_r36.c bleibt plattformfrei; PSX/Tests: nicht angemeldet = stumm). */
+void re15_audio_re2_karte_se(int se_id);   /* platform/pc/src/audio_pc.c */
+void re15_pc_aufschliessen_anmelden(void)
+{
+    re15_aufschliessen_r36_setze_spieler(re15_audio_re2_karte_se);
+}
 
 static int eigen_nach_kennung(const char *k, int n)
 {
