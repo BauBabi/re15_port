@@ -61,6 +61,14 @@ liegt in ROOM1011, nicht 1101.
 Leon findet in ROOM1210 die offene Zelle ("The cell door is open... / Whoever was locked up here is gone."),
 Elza in ROOM1091 den ausgebrannten Schuppen ("It's a burnt-out shed. / Someone must have put out the fire.").
 Elf Textzeilen, die eine Begegnung andeuteten, sind umgeschrieben (Tabelle unten).
+
+**Karte.** Im Treppenhaus ROOM10A0 sind auf B1 die Treppen eingezeichnet. In ROOM11D0 steht der Marker nach der
+Tuer am Eingang, nicht in der Mitte. Der Raum mit Hunde-Luke und Weste ist ROOM1190 (Schiessstand B1), nicht
+ROOM1090: Halle und Westen-Kammer sind zwei getrennte Kaesten, jeder leuchtet nur, wenn man drin ist. Die Tuer
+von ROOM11C0 liegt waagerecht auf der Wand. Die kleinen Raeume von ROOM1110 und die Fahrstuhlkabine gelten erst
+als besucht, wenn man drin war (Fahrstuhl 1F -> 3F: nur 1F und 3F). Dafuer musste ROOM11A0 (Leiter zur
+Kanalisation) auf das Blatt "DRAINS B2" umziehen - auf B1 gibt es fuer ihn kein Rechteck. Alte Spielstaende zeigen
+diese Teilbereiche erst wieder, wenn man sie erneut betritt.
 @@WEITERE@@
 
 ## Zur Freigabe: umgeschriebene Texte
@@ -98,6 +106,10 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 * Tuerknall: Alternative waere RE2 ROOM205 "Zombies smashing through wood" (Holz splittert) statt ROOM106.
 * Texte an der Parkplatz-Tuer und zu den Schluesseln sind eigene Formulierungen in RE2-Form - bei Wunsch
   anderen Wortlaut nennen.
+* Karte: Sie schrieben "ROOM 1090" fuer den Raum mit Hunde-Luke und Weste - gebaut ist es fuer ROOM1190
+  (Schiessstand B1), ROOM1090 ist der Hinterhof. War 1190 gemeint?
+* Karte: Wer das Treppenhaus ROOM1060 nur im Erdgeschoss betritt, kann schon zu 2F/3F blaettern (leer). Fuer den
+  Fahrstuhl ist das abgestellt - soll es fuer Treppenhaeuser genauso gelten?
 @@ENTSCHEIDEN@@
 
 ## Grenzen
