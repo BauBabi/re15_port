@@ -113,4 +113,20 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 @@ENTSCHEIDEN@@
 
 ## Grenzen
-@@GRENZEN@@
+* Gorillas ROOM11C0 (Spur F): @@F_GRENZE@@
+* RE2-Hunde: der Claim, mit dem in RE2 nur ein Hund zugleich beisst (PL+0x1D3 |= 0x80, @0x801051f8/0x80105200,
+  Pruefung @0x80104e5c-68), fehlt im Port - mehrere Hunde koennen in wenigen Bildern nacheinander zubeissen.
+* Kleidung: die Wundstempel der Stages 3-5 (FUN_80112784 / FUN_8010de24 / FUN_8010dfa4) und Birkins eigene
+  Stempel (STAGE5) sind weiter nicht portiert; die RE2-Kraehe kennt nur den Griff, nicht Dive/Strike.
+* Fressende RE2-Zombies tropfen beim Fressen noch kein Blut (@0x80103C8C); die Feuer-Emitter der Brandgranate
+  tragen einen Welt- statt Anker-Versatz (0,200,0). Der Kopfabriss des Kriechers wirft Fleischbrocken (Id 8) -
+  in Raeumen ohne Raum-Id 5 nur das Hals-Blut.
+* Der liegende Spawn-Zombie (EXEC[7]) ist weiter treffbar, bevor er aufsteht (RE2 sperrt ihn).
+* Kisten: der Spieler faellt nicht von Objekten mit Bit 0x100 herunter (FUN_8002dc48, Substate 0xd) - er steht
+  an der Kante. In ROOM2060 schiebt die Spinne Leon nach dem Aufstieg vom Tritt (y -1800), Original ungemessen.
+* 20 Gegner je Raum: in ROOM20B0/20B1 schreibt das Original die Slots 20..34 hinter sein Feld; der Port
+  verwirft sie. Das PSX-Ziel braucht 5 x sizeof(re15_actor_t) mehr RAM, ungemessen (kein PSn00bSDK).
+* Elza ROOM1021: Roy sackt beim Schuss nicht sichtbar zusammen (Original noch nicht gemessen).
+* Karte ROOM11D0: der Zwinger-Gang noerdlich der Tuerwand hat in der Kachel keinen Platz, der Marker klemmt
+  dort an der Oberkante (Platzhalter-Kachel des Prototyps).
+@@GRENZEN_REST@@
