@@ -1746,10 +1746,13 @@ void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
         int32_t nx = sx, nz = sz;
         (void)re15_collision_push_prop(p, pl->x, pl->z, &nx, &nz);   /* @0x8002bfa4 */
         /* @0x8002bfb0 FUN_8003b558(obj, 2): Solid-Klasse 2, Radius = obj[+0x78][6] (box_hx). */
-        if (re15_collision_box_blocked(rdt, nx + g_scd.props[p].box_cx,
+        const int gesperrt = re15_collision_box_blocked(rdt, nx + g_scd.props[p].box_cx,
                                             nz + g_scd.props[p].box_cz,
                                        (int)g_scd.props[p].band,
-                                       (int32_t)(uint16_t)g_scd.props[p].box_hx, 2u)) {
+                                       (int32_t)(uint16_t)g_scd.props[p].box_hx, 2u);
+        { extern void re15_dachkiste_schub_log(int, int32_t, int32_t, int);   /* Runde 36 Spur R: RE15_PUSH_LOG */
+          re15_dachkiste_schub_log(p, nx, nz, gesperrt); }
+        if (gesperrt) {
             s_prop_push_count[p] = 10;                        /* @0x8002c0b0 (s7 = 10) */
             continue;                                         /* Ruecksetzung = nichts schreiben */
         }

@@ -1,0 +1,18 @@
+DuckStation gestartet {'108640'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler: (-5282, -9000, -1514, 672, 5, 0) obj0: (-9836, -1800, 4753, 0, 0, 1, 0) obj1: (-5960, -9000, -15482, 0, 0, 5, 0)
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Drehsinn: R 0.2 s -> dBlick = 0
+START spieler=(-5282,-9000,-1514) blick=672 band=5 sub=0 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+== Plan NORD: von Sueden gegen die Kiste schieben (Bruestung r2[0] z -16403) ==
+NORD VOR spieler=(-5282,-9000,-1514) blick=672 band=5 sub=0 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+NORD NACH spieler=(-5282,-9000,-1514) blick=672 band=5 sub=0 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+NORD: Schub angenommen 0 x, gesperrt 0 x, Fall-Ausloeser 0 x
+NORD-2 VOR spieler=(-5282,-9000,-1514) blick=672 band=5 sub=0 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+NORD-2 NACH spieler=(-5282,-9000,-1514) blick=672 band=5 sub=0 | obj1=(-5960,-9000,-15482) faellt=0 z=0 band=5 n=0
+NORD-2: Schub angenommen 0 x, gesperrt 0 x, Fall-Ausloeser 0 x
+== Plan WEST: von Osten (Tasche x -4610..-3850) gegen die Kiste schieben (Wand r3[2] x <= -6878) ==
