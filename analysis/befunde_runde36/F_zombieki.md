@@ -1634,3 +1634,19 @@ Nachruecken G2 Biss **F505 = 105 Bilder nach dem Tod** (Stand NB5 F988 = 588); k
 | 2 Wartezeit zaehlt nach dem Tod des Partners / Gleiten neu | **behoben**: Nachruecken Biss 105 Bilder nach dem Tod (588), exe nw12_schuss S2 141 (532), kein Gorilla > 450; Riegel prueft <= 450 nach dem Tod + Gegenprobe NB5 | nb6g_lage_nachruecken_m1.txt, exe nb6l, Riegel |
 | 3 Dossier NB5-OFFEN "Gleiten" / Nutzertext | **behoben** (d9c0d09e): Gleiten = Anstehen hinter G2 (Spur je Bild), Nutzertext mit Verzoegerung und Gassenmitte | Dossier NB5 OFFEN / Fuer den Nutzer (durchgestrichen + berichtigt) |
 | Hinweis Orchestrator: P1/P3 nicht verschlechtern, 7500 / FERN 300 nicht steigen | P1 6 Laeufe + r1010a (Wiederholung) bitgleich, P3 51/51 Framedumps bitgleich; 14 Stellen 7500 -> 6695, FERN 300 -> 255 | nb6_exe_nb6l_auswertung.txt, nb6_r1010a_controller.txt |
+
+### NB6 Gezielte Tests (keine Voll-Suite im Spurbaum; Endstand nach der Kommentar-Berichtigung des Headers, Bau `nb6_build_build14.log` 16:34)
+Regex der Abnahme 5 (`F_belege/nb6/regex_abnahme5.txt`, `ctest -N -R` = 232 von 598): `ctest --test-dir re15_port/build -R "<regex>"
+--timeout 600 -j 6 --output-on-failure` (16:35-16:43, parallel liefen vier fremde `re15_pc_r36r.exe` einer anderen Spur) ->
+**100% tests passed, 0 tests failed out of 232** (Total Test time (real) = 507.48 sec; `F_belege/nb6/nb6_ctest_gezielt_nb6g.txt`).
+Darin alle 6 Spur-Tests (`unit_r36_zombieki_{wecker,szenen,affen,sicht,affen_block,eintritt}`), alle 20 `unit_r35_affen_*` (Spur J),
+`unit_maggot_*`, `integration_r35_cut1150`, `integration_r35_zgirl`; kein Fenster-Haken rot, kein Nachfahren noetig.
+-R-Ausdruck woertlich: `affen|maggot|re2z|re2_zombie|zombie|dog|hund|crow|kraehe|1030|1040|1140|1210|1100|10d0|10b0|1010|1220|11c0|r35_raeume|
+r35_inhalt_zombies|r35_cut1150|r35_zgirl|r35_fenster_kraehe|leiche|corpse|r34n_f|r36_zombieki|nav|unit_enemy_|room1070_wake|ai_flavor|
+re2_room1090|ada_eintritt|r17_waffen_loop|schatten|shadow|grab|griff|victim|re2_crawler|knockdown|stagger|hit_reaction|re2_livepath|
+re2_hit_repeat|sca_contact90|sca_wall_hit|npc_wall_clamp|r16_aufstehen|r34_reaktion|r34_schaden|unit_damage|re2_gore|r26_mg_blut|
+re2_stepsize|re2_kfjump|poise|re2_hp_model|room_probe_sweep|r35_granate|r35_redhawk|r35_werfer|r34_granaten|spider_ai|adult_spider|
+cockroach|unit_npc_ai|zgirl_ai|birkin|writher|alligator|fx_emitter|tyrant|ivy_ai|re2_spider|baby_spider|gator|g5_|spinne|autofire|
+r35_entladen_gegner` (eine Zeile in der Datei).
+exe nach diesem Bau: md5 4e2b8d37cd90 (Messkopie `re15_pc_nb6l.exe` c76387e9d472 = Bau 30c2ecb3; `git diff 30c2ecb3..HEAD -- re15_port`
+aendert nur Kommentarzeilen in `include/re15_zombieki_r36.h`, +6/-3).

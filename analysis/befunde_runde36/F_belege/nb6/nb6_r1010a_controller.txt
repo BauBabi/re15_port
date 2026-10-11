@@ -44,4 +44,4 @@ F20 R1010	[1 t=10 st=1/3/3/0 mo=12 af=7 @(3790,0,3762) b0 f1ba=0 f1c0=0000 rot=3
 ## 4. Wiederholung (Scratch F_nb6m, 2026-10-11 ~16:17, Controller nicht angefasst, run.sh Muster F_nb6g, je Lauf eigener Prozess), R1010-Teil gegen Abnahme 5 (780 Zeilen):
 nb6l: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 Slot 1 t158=142; [pad]-Zeilen 1; runs.log: r1010a nb6l rc=124 901s
 abn5f_neu: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 Slot 1 t158=142; [pad]-Zeilen 1; runs.log: r1010a abn5f_neu rc=124 901s
-# md5 re15_pc_nb6l.exe (Messkopie, Bau 30c2ecb3 13:04) = c76387e9d472; re15_pc.exe nach dem Kommentar-Rebuild = c76387e9d472
+# md5 re15_pc_nb6l.exe (Messkopie, Bau 30c2ecb3 13:04) = c76387e9d472; re15_pc.exe nach dem Rebuild der Header-Kommentar-Berichtigung (16:34:53) = 4e2b8d37cd90 — Code identisch: git diff 30c2ecb3..HEAD -- re15_port aendert nur Kommentarzeilen in include/re15_zombieki_r36.h (+6/-3)
