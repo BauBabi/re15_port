@@ -196,3 +196,63 @@ und Spur-F-Laeufe anderer Sitzungen, 7 re15_pc-Prozesse); der Nachlauf lief im e
 Das ist die Folge des Original-Mechanismus (Objekte mit Bit 0x10 ohne Raumlicht, Farbe 0x808080), nicht eine
 Spur-Konstante; die Spur hat die vorbestehende Abweichung (Port zeichnete alle 672 Obj_model_set ueber NCCT)
 fuer die 169 deckenden Flach-Objekte mit behoben. Release-Notes-Hinweis (Dossier 8.9) ist angemessen.
+
+### 3.3 Spur-Tests und Regressionsgruppen (gezielt, KEINE volle Suite — VERTRAG 1.5)
+* `unit_r36_kartenitems` direkt ausgefuehrt (`build/tests/unit/test_r36_kartenitems.exe`, `N_abn1/unit_out.txt`):
+  **217 PASS, 0 FAIL, exit 0** — darin Prop-Attribut 0x0010 der Karte in allen 10 Raeumen, ROOM1200 obj 0/1 =
+  0x0010, ROOM1140 obj 0 = 0x0000, echter Druck 1140 Ja/Nein, 10D1 (Elza) Ja, 1030 Ja + Telefon danach.
+* `integration_r36_kartenitems_bild`: dieselbe Messung habe ich mit der Messkopie eigenstaendig gefahren
+  (Batch A = Teil 1 a/b/d inkl. 1030 Cut 0 und Cut-3/Cut-0-Abstand 13 <= 29, Batch B/E = Teil 2 echter Weg) —
+  Abschnitt 1.1/1.2/1.3, alle Schwellen des Tests erfuellt (73/219/88/201/221/48 Pixel gegen Soll 36/110/40/88/84/24,
+  AUSSEN 0, Palette n von n). Die Laufverzeichnisse des Bau-Agenten (`build/tests/integration/
+  r36_kartenitems_bild_wd/lauf_f1ceb6f7_*`) liegen vor.
+* Regressionsgruppen: `ctest --test-dir re15_port/build -R "karte|map|besitz|hinweis|r34n_e|r35_inhalt|r34n_a|
+  r34n_d|fenster|cut10f0|r35_cut|1030|1140|10d0|1200|11d0|item_stack|r36_kartenitems|irons_tisch|aot|msg_|action_msg|
+  prop_|boot_bg|dark_start|relatch|save_counter|weste_load|savepoint|continue|1040|1090|1190|11a0|11b0|11c0|11e0|1210|
+  1260|climb|obj_model|scd_|r34n_b|affen|gitter|espr" --timeout 900 --output-on-failure` (196 Tests, Log
+  `scratchpad/ctest_regr_abn1.log`), gestartet 13:03 parallel zur Integrations-Suite und den Spur-F-Laeufen
+  anderer Sitzungen. Stand beim Abschluss dieses Berichts (13:34, der Orchestrator erzwang die Abgabe):
+  **187 von 196 gruen, 0 rot, 0 Timeouts**, darunter alle bis dahin gelaufenen exe-Haken im ERSTEN Lauf:
+  integration_weste_load_pin 6,7 s, r34n_e_dokumente_bild 95,7 s, r35_cut10f0 241,2 s, **r35_cut1150 507,4 s**,
+  r35_fenster 26,2 s, r35_karte 74,2 s, boot_bg/dark_start/relatch/save_counter gruen; noch im Lauf:
+  integration_r35_karte_fahrstuhl und danach die letzten 8 (map_uebergang, map_raum_live, unit_r36_kartenitems,
+  integration_r36_kartenitems_bild, ...). Die beiden Spur-Tests sind durch die Direktausfuehrung (217/217) und die
+  eigene exe-Messung (1.1-1.3) abgedeckt; der Lauf schreibt seine Summenzeile nach `ctest_regr_abn1.log`
+  (`CTEST_EXIT=`), der Orchestrator faehrt die volle Suite im Integrationsbaum.
+
+## 4. Maengel
+
+Keine Maengel gegen den Wortlaut der Punkte 1-2 und keine gegen die Gates. M1 der Abnahme 0 ist behoben: die
+Licht-Konstante je Raum (Spalte `licht`, BG_REF "hellste 15 %", Haken `re15_kartenitems_r36_licht`) ist weg; die
+Karte traegt das Attribut-Wort 0x0010 und nimmt den Original-Flachweg (3.1), gemessen als Palettenfarben in sechs
+Ansichten (1.1).
+
+Hinweise (keine Abnahme-Maengel, fuer Release Notes / Folgespuren):
+* H1 — Halbtransparenz-Bit 0x2 des Objekt-Attributs (FUN_8002c18c @0x8002c2b4 -> FUN_80022f0c Parameter 4,
+  Prim-Code 0x36, STP-Texel-Mischung) bleibt im Port fuer Objekte unportiert; die 91 flach+halbtransparenten
+  Objekte (Dossier 8.8, mit Raumliste) laufen weiter ueber NCCT (vorbestehend, nicht durch die Spur eingefuehrt;
+  gemessen 11B0 Kiste unveraendert). Mit Adresse und Messweg unter OFFEN gefuehrt (VERTRAG Regel 4) — eigene Spur.
+* H2 — Sichtbare Aenderung ausserhalb der Karten: 169 deckende Objekte mit Flach-Attribut (Rolltor 11E0, Zellentuer
+  1210, Schubladen 1200, Objekte in 1090/1190/11A0/11B0/11C0, Stages 2/4/5/6) erscheinen jetzt in Texturhelligkeit
+  statt fast schwarz (3.4, Bilder `c_*.png`). Gehoert in die Release Notes (Dossier 8.9).
+* H3 — Entscheidungsfragen an den Nutzer (Dossier 7, unveraendert): 3F-Karte haengt in ROOM1140 (map3F.bmp ist der
+  Konferenzraum, nicht Irons' Buero); Groesse in die Marken eingepasst (RE2-Originalgroesse 1080 x 720 waere ~2,8x);
+  ROOM1030: bis zur Aufnahme antwortet im Karten-Rechteck die Karte, daneben und danach das Telefon.
+* H4 — Elza per Debug-Sprung landet in Leons 10D0 (Spur I, nicht N); mit Elza zeigt der Statusschirm Leons
+  Dienstausweis (vorbestehend, ausserhalb des Auftrags).
+
+## 5. Ergebnis
+| Punkt | Urteil | Kurzbeleg |
+|---|---|---|
+| 1 Karte01/02 an map3F.bmp, 3F freischalten wie RE2, mit Text | erfuellt | 1.0 (ROOM1140 Cut 5), 1.1 (Blatt in der Marke, Palettenfarben), 1.2 (Frage/Ja/Meldung, Blatt weg, 3F komplett), 1.5 (Etagenwahl Bank 35) |
+| 2a 2F ROOM10D0 (map2F.bmp) | erfuellt | 1.0, 1.1, 1.2, 1.4 (Elza-Figur) |
+| 2b 1F ROOM1030 (map1F.bmp) | erfuellt | 1.0, 1.1 (Cut 3 + Cut 0), 1.2, 1.6 (Telefon danach) |
+| 2c B2 ROOM1200 (mapB2.bmp) | erfuellt | 1.0, 1.1, 1.2 |
+| 2d B1 ROOM11D0 (mapB1.bmp) | erfuellt | 1.0, 1.1, 1.2, 1.3 (echter Tuer-Weg 1180 -> 11D0) |
+
+Gates: RE-Gate haelt (3.1: 0x10 @0x8002c2f4, 0x2 @0x8002c2b4, pc[8..9] @0x800409a8/@0x800409b0, 0x808080
+FUN_8002b898, RE2 @0x03158/@0x00FDC, RE1.5 @0x007DA/@0x00804, alles selbst gelesen; keine Guess-Tells, kein
+Env-Schalter; der Fix erklaert M1). Vertrag haelt (3.2). Regressionsgruppen ohne Rot (3.3, 187/196 beim Abbruch
+durch den Orchestrator, Rest im Lauf), Spur-Tests gruen (217/217 direkt; Integration eigenstaendig nachgemessen).
+
+**Abnahme 1: BESTANDEN.** Zusammenfuehren; Release-Notes-Hinweis H2 und Entscheidungsfragen H3 an den Nutzer.
