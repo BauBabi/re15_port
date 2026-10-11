@@ -5,7 +5,9 @@
 #     a) der Boot-/CONTINUE-Haken hat die Karte angelegt ("[kartenitems] ROOMxxxx: Karte ..."), mit Bit nicht;
 #     b) im Framedump des Nutzer-Cuts (RE15_FORCE_CUT, RE15_WINDOW_SCALE=1 -> 320x240) unterscheiden sich
 #        die Laeufe NUR im Fenster um die Nutzer-Marke (Marken-Huelle +-3 px): dort mindestens MIN Pixel,
-#        ausserhalb 0 — die Karte haengt an der Marke.
+#        ausserhalb 0 — die Karte haengt an der Marke;
+#     c) danach Statusschirm + L1 (Kartenschirm des eigenen Blatts, RE15_INV_FB_SHOT): MIT Bit zeigt das Blatt
+#        mindestens MIN_KARTE Pixel mehr — die unbesuchten Raeume der Etage (RE2 CLUT-Zeile 498).
 # Teil 2 (ROOM1140, echter Weg): Spieler vor der Tafel, RE15_INPUT_SCRIPT: Aktion -> Frage -> Ja ->
 #   Meldung -> Statusschirm -> L1 Karte. Geprueft: Ereignis 28 lief ("-> Port-Programm"), und der
 #   Kartenschirm (RE15_INV_FB_SHOT) zeigt gegenueber dem Lauf ohne Aufnahme mindestens MIN_KARTE
@@ -78,11 +80,12 @@ endfunction()
 # (Dossier 5.2, Lade-Weg F100): 1140 73, 10D0 219, 1030 81, 1200 177, 11D0 169 Pixel, ausserhalb je 0.
 # Schwelle = rund die Haelfte.
 set(_faelle
-    "3f|1140|-8000|-11000|0|5|87|228|69|244|84|36"
-    "2f|10D0|2000|-6000|0|6|88|267|117|292|138|110"
-    "1f|1030|-18000|-12000|0|3|89|152|100|167|116|40"
-    "b2|1200|-20000|-26000|0|2|90|55|77|77|96|88"
-    "b1|11D0|-3000|-21000|0|0|91|224|58|253|100|84")
+    "3f|1140|-8000|-11000|0|5|87|228|69|244|84|36|1"
+    "2f|10D0|2000|-6000|0|6|88|267|117|292|138|110|1"
+    "1f|1030|-18000|-12000|0|3|89|152|100|167|116|40|1"
+    "b2|1200|-20000|-26000|0|2|90|55|77|77|96|88|1"
+    "b1|11D0|-3000|-21000|0|0|91|224|58|253|100|84|1")
+set(_karte_skript "W3,S0.3,W2,Q0.3,W4")
 
 set(_fehler "")
 foreach(_f ${_faelle})
@@ -99,11 +102,13 @@ foreach(_f ${_faelle})
     list(GET _t 9 _x1)
     list(GET _t 10 _y1)
     list(GET _t 11 _min)
+    list(GET _t 12 _min_karte)
     hexof("[kartenitems] ROOM${_raum}: Karte" _hk)
-    lauf(${_n}_mit ${_raum} ${_x} ${_z} ${_rot} ${_cut} "" "" 0 100)
+    # Nach dem Raumbild (F100) Statusschirm + L1: Kartenschirm des eigenen Blatts (inv-Bild 140).
+    lauf(${_n}_mit ${_raum} ${_x} ${_z} ${_rot} ${_cut} "" "${_karte_skript}" 140 100)
     set(_dir_mit "${LAUF_DIR}")
     string(FIND "${LAUF_LOG}" "${_hk}" _p_mit)
-    lauf(${_n}_ohne ${_raum} ${_x} ${_z} ${_rot} ${_cut} "bit:${_bit}" "" 0 100)
+    lauf(${_n}_ohne ${_raum} ${_x} ${_z} ${_rot} ${_cut} "bit:${_bit}" "${_karte_skript}" 140 100)
     set(_dir_ohne "${LAUF_DIR}")
     string(FIND "${LAUF_LOG}" "${_hk}" _p_ohne)
     if(_p_mit LESS 0)
@@ -122,6 +127,19 @@ foreach(_f ${_faelle})
     endif()
     if(NOT _outb MATCHES "AUSSEN: 0$")
         string(APPEND _fehler "${_n} ROOM${_raum}: Unterschied ausserhalb des Marken-Fensters: ${_outb}\n")
+    endif()
+    # Kartenschirm je Etage: MIT Plan-Bit zusaetzlich alle unbesuchten Raeume des Blatts (RE2 @0x8006E71C)
+    if(NOT EXISTS "${_dir_mit}/karte.bmp" OR NOT EXISTS "${_dir_ohne}/karte.bmp")
+        string(APPEND _fehler "${_n} ROOM${_raum}: kein Kartenschirm-Abzug\n")
+    else()
+        execute_process(COMMAND "${RE15_BMP_TOOL}" "${_dir_ohne}/karte.bmp" "${_dir_mit}/karte.bmp"
+                                20 50 300 215 ${_min_karte}
+                        TIMEOUT 60 RESULT_VARIABLE _rvm OUTPUT_VARIABLE _outm)
+        string(STRIP "${_outm}" _outm)
+        message(STATUS "kartenitems_bild ${_n} Kartenschirm mit/ohne Plan: ${_outm}")
+        if(NOT _rvm EQUAL 0)
+            string(APPEND _fehler "${_n} ROOM${_raum}: Plan-Bit zeichnet die Etage nicht: ${_outm}\n")
+        endif()
     endif()
 endforeach()
 

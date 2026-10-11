@@ -212,6 +212,8 @@ main00 an (Aot_reset nur Slots 4, 6, 17).
 (nicht in `s_map_funde`, deren Riegel test_karte_besitz nur RDT-belegte Fundstellen zulaesst).
 `re15_map_blatt_waehlbar` = bekannt || Hinweis-Ziel || BESITZ (RE2 setzt Bank 35 bei der Aufnahme:
 room20B0 Set(35,2..4) @0x037E6-EE, gelesen @0x8006D934/@0x8006D998).
+Nebenwirkung (beabsichtigt, RE2-gleich): auch der Laborplan ROOM5030 (Flag 3,115, Blaetter 9/10/11) macht seine
+Blaetter jetzt waehlbar — RE2 setzt beim Laborplan ebenfalls Bank 35 (room6120 Set(35,0x0D..0x11), lageplaene.csv).
 
 ## 4. Messung nachher
 

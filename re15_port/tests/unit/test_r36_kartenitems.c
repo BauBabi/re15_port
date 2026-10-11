@@ -306,6 +306,24 @@ static void teil_d(raum_t *r, int ja, int32_t px, int32_t pz)
         CHECK(nm, meldung);
         snprintf(nm, sizeof nm, "JA -> Blatt %d im Besitz und waehlbar", z->blatt);
         CHECK(nm, re15_map_owned_page(z->blatt) && re15_map_blatt_waehlbar(z->blatt));
+        if (z->verdraengt_nach < RE15_AOT_MAX) {
+            /* ROOM1030/1031: nach der Aufnahme antwortet an derselben Stelle wieder das Telefon (Slot 39).
+             * Erst die Meldung 31 wegdruecken (Ende-Code 01 00 = auf Taste warten). */
+            for (int f = 0; f < 200 && g_scd.message_active; f++) bild(f % 20 == 0 ? RE15_PAD_BIT_SQUARE : 0,
+                                                                      f % 20 == 0 ? RE15_PAD_BIT_SQUARE : 0);
+            for (int f = 0; f < 30; f++) bild(0, 0);
+            CHECK("Meldung 31 weggedrueckt", !g_scd.message_active);
+            CHECK("Telefon-Satz steht nach der Aufnahme weiter in Slot 39",
+                  g_aot.slots[z->verdraengt_nach].active && g_aot.slots[z->verdraengt_nach].type == RE15_AOT_TYPE_MESSAGE);
+            int tel = (int)g_aot.slots[z->verdraengt_nach].event_id, gesehen = 0;
+            bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+            for (int f = 0; f < 60; f++) {
+                if (g_scd.message_active && (int)g_scd.message_id == tel) gesehen = 1;
+                bild(0, 0);
+            }
+            snprintf(nm, sizeof nm, "zweiter Druck an derselben Stelle -> Telefon-Text (Nachricht %d)", tel);
+            CHECK(nm, gesehen);
+        }
     } else {
         CHECK("NEIN -> Bit bleibt 0", !re15_game_flag_get(RE15_R36K_BANK, z->bit));
         CHECK("NEIN -> Zone bleibt scharf",
@@ -411,6 +429,7 @@ int main(void)
     teil_d(&raeume[0], 1, -2050, -9900);     /* 1140 Leon, vor der Tafel                          */
     teil_d(&raeume[0], 0, -2050, -9900);     /* 1140 Leon, NEIN                                    */
     teil_d(&raeume[3], 1, 2130, 22700);      /* 10D1 Elza, vor dem Aushang                         */
+    teil_d(&raeume[4], 1, -1690, -22900);    /* 1030 Leon, vor der Rueckwand (Slot 8, Telefon -> 39) */
     teil_k();
     teil_s();
     for (int i = 0; i < 10; i++) free(raeume[i].buf);
