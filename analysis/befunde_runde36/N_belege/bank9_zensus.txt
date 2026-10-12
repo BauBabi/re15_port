@@ -1,0 +1,525 @@
+BANK-9-ZENSUS (Runde 36, Nachtrag zu Spur N, Zweig r36/kartenbits) - Stand NACH dem Fix (P3): Port-Teil zeigt
+87/88/89/77/78. Der Stand VOR dem Fix (Spur-N-Tabelle 87..91) steht in Commit 4ac3636d (einziger Unterschied der
+Rohausgabe: die zwei Zeilen ROOM1200/ROOM11D0 der Spur-N-Tabelle).
+Werkzeug: re15_port/tools/r36_kartenbits/bank9_zensus.py (Laengentabelle = scd_walk_lib = scd_vm.c s_opcode_sizes)
+Aufruf:   PYTHONIOENCODING=utf-8 python re15_port/tools/r36_kartenbits/bank9_zensus.py   (Teile original | exe | port)
+Dossier:  analysis/befunde_runde36/N_kartenitems.md Abschnitt 9.3
+
+=====================================================================================================================
+AUSWERTUNG
+=====================================================================================================================
+Bank 9 = 0x800b1078..0x800b1097 (Flag-Tabelle 0x80074664[9] @0x80074688; 256 Bit, Wort = Bit>>5,
+Maske 0x80000000 >> (Bit&31) - FUN_8004ef90 setzen / FUN_8004efb8 loeschen / FUN_8004efe4 testen).
+
+WER IM ORIGINAL BANK 9 ANFASST (vollstaendig):
+  * SCD: Ck 0x21 (@0x8003fd2c), Set 0x22 (@0x8003fe04), Flag-Ck2 0x58 (@0x8003fda0), Flag-Set2 0x59 (@0x8003fed0),
+    AOT-FLAG_CHG sce 4 (LAB_80043120, @0x80043140) - die fuenf Leser der Tabelle 0x80074664 (Ghidra-XREF[5]).
+  * Item_aot_set 0x50 (@0x800406d8 liest Tabelle[9]): Taken-Bit = u16 pc[18] (@0x80040680) / pc[26] (@0x80040670).
+  * Aufnahme (@0x8001e0d4 Modal, @0x80021fd4): setzen das Bit AUS DEM Item-Satz (FUN_8004ef90 @0x8001e0d0/@0x80021fd8).
+  * Keine EXE-Funktion und kein Overlay (STAGE1..6/DEBUG/TITLE.BIN) adressiert Bank 9 mit einer eigenen Bitnummer:
+    Ghidra-XREF DAT_800b1078 = {8001e0d4, 80021fd4, 800406d8, 80074688}; die Overlay-Aufrufe der Bit-Helfer
+    benutzen nur die Basen 0x800b1028 (Bank 5), 0x800b1038 (Bank 7), 0x800b1058 (Bank 8) - siehe Teil EXE unten.
+  => Original-Bits der Bank 9 = Item_aot_set-Bits + Ck/Set(9,n) + FLAG_CHG(9,n). Gemessen:
+     206 RDTs mit Kopf (+34 Stummel), 40674 Opcodes, 0 Desync; 164 Item_aot_set (alle Taken-Bits < 256),
+     54 x Ck(9,n), 1 x Set(9,21,1) (ROOM3091 sub06 @0x016C2), 0x58/0x59 mit Bank 9: 0, FLAG_CHG nur Bank 5 (26).
+     BELEGT: 85 von 256 Bits. Einziges reines Skript-Bit: 21 (ROOM3091); alle anderen sind Item-Taken-Bits.
+     FREI: 0..1, 3..5, 7..9, 13, 17, 23..51, 53..84, 87..89, 93..97, 100..103, 106..107, 110..133, 137, 139, 145,
+           156..161, 170..179, 199..215, 219..222, 232..251, 254..255.
+
+WER IM PORT BANK 9 BENUTZT (Teil PORT unten = grep-Beleg; Bit -> Quelle):
+  53 Sicherung genommen            RE15_SICHERUNG_TAKEN_BIT      (sicherung_1150.c)          Runde 30/34
+  54 Irons Diary genommen          RE15_IRONS_DIARY_TAKEN_BIT    (irons_tisch_1150.c)        Runde 30
+  55 Memory Card Irons-Tisch       RE15_IRONS_KARTE_TAKEN_BIT    (irons_tisch_1150.c)        Runde 30
+  56 Granate 1150 genommen         RE15_GRANATE_TAKEN_BIT        (granate_1150.c)            Runde 30
+  57..60 Dokumente 1-4 genommen    RE15_DOK1..4_BIT              (dokumente_r34.c)           Runde 34
+  61, 62 Leichen-Munition 1110/1230 RE15_LEICHE_1110/1230_BIT    (leiche_1110_1230.c)        Runde 34
+  63 Sicherung eingesetzt (Rolltor) RE15_ROLLTOR_EINGESETZT_BIT  (rolltor_1050.c, Set @+2A)  Runde 34
+  65 Ada-Ruf gesehen               RE15_ADARUF_GESEHEN_BIT       (adaruf_1050.c, Set @+00)   Runde 34
+  71 10F0-Szene gesehen            RE15_CUT10F0_GESEHEN_BIT (=RE15_IT_K_BIT=RE15_TUER1060_K_BIT) (cut10f0_szene.inc)  Runde 35
+  72 10F0 Ziel 2 besucht           RE15_CUT10F0_ZIEL2_BESUCHT_BIT (cut_10f0.c)               Runde 35
+  73 Irons-Todesszene gesehen      RE15_IT_BIT_GESEHEN (=CUT10F0_BGM_START=FENSTER_TOR=TUER1060_TOD) Runde 35
+  74, 75, 76 Spawns 1130/1040/1030 RE15_IT_BIT_1130/1040/1030    (irons_tod_1150.c)          Runde 35
+  79 Fenster 1120 kaputt           RE15_FENSTER_BIT              (fenster_1120.c)            Runde 35
+  80 Memory Card ROOM1010          RE15_R35I_KARTE_BIT           (inhalt_r35.c)              Runde 35
+  81 Schrot ROOM1090               RE15_R35I_SCHROT_BIT          (inhalt_r35.c)              Runde 35
+  82 Parking-Lot-Key genommen      RE15_R36Q_PARK_BIT            (schluessel_r36.c)          Runde 36 Q
+  83 Prison Key genommen           RE15_R36Q_PRISON_BIT          (schluessel_r36.c)          Runde 36 Q
+  84 Werkstatt-Tuer verschlossen   RE15_SZL_BIT_ZU               (szl11b0_szene.inc Set 0x54) Runde 36 J
+  87, 88, 89 Lageplaene 3F/2F/1F k_r36k_lage Feld 3             (gen/kartenitems_r36.inc)   Runde 36 N
+  77, 78 Lageplaene B2/B1         k_r36k_lage Feld 3 (vor dem Fix 90/91)                     Runde 36 N, Nachtrag
+  93 Parkplatz-Tuer aufgeschlossen RE15_R36Q_TUER_BIT            (schluessel_r36.c)          Runde 36 Q
+  (Item-Modal/menu_common/op_item_aot_set setzen bzw. testen das Bit DES SATZES = Original- oder Installer-Bit.
+   RE15_R36Q_STROM_BIT 0xF3 / RE15_R36Q_ZELLE_BIT 0xEC sind Bank 4; RE15_IT_BIT_1140_0/1070_0/1040_0 Bank 7.)
+  Spur R (seit ba384fac in r36/integration, nicht in der Basis 7a0fd453 dieses Zweigs): kein Bank-9-Bit (diff geprueft).
+
+SCHNITT ORIGINAL x PORT: vor dem Fix {90, 91}, nach dem Fix {} (leer; Riegel unit_r36_kartenbits Teil P)
+  90 = ROOM2090/2091 main00 @0x00A12 Item_aot_set Slot 5 Item 0x3F "Pocket Watch"   <- Spur N B2 (ROOM1200)
+  91 = ROOM2040/2041 main00 @0x01364 Item_aot_set Slot 7 Item 0x32 "Head of Akuma"  <- Spur N B1 (ROOM11D0)
+VERTRAG.md 1.1 fuehrte ausserdem als RESERVE (kein Code benutzt sie): 85 (J), 86 (L), 92 (P) - alle drei sind
+Original-Taken-Bits und NICHT frei:
+  85 = ROOM3040/3041 sub00 @0x014B2 Item 0x36 "Green Keycard" (Ck(9,85,1) sub01 @0x014CE)
+  86 = ROOM4040/4041 main00 @0x00F66 Item 0x41 "Spark Plug"   (Ck(9,86,1) sub01 @0x01014)
+  92 = ROOM3050/3051 main00 @0x01EC6 Item 0x07 "Super Redhawk" x6 (Ck(9,92,0) sub01 @0x0223C)
+FREI IN BEIDEN (Kandidaten fuer B2/B1): 64, 66..70, 77, 78 (Block 53..84), 94..97, 100..103, 106, 107, 110..133, ...
+GEWAEHLT: 77 (B2), 78 (B1) - im Original-Block 53..84, den der Port seit Runde 30 fuer eigene Bits nutzt; in KEINER
+  Version je als Bank-9-Bit benutzt (git log --all -G ueber #define *BIT* 77/78, re15_game_flag_*(9,77/78),
+  SCD 0x21/0x22 Bank 9 Bit 0x4D/0x4E: 0 Treffer; Tags v0.8.21/22/23: 0 Treffer). VERTRAG Runde 35 1.1 hatte 77/78
+  als Reserve der Spur L gefuehrt ("77 = 1060->1040-Dialog nur falls noetig, 78 Reserve") - nie belegt.
+
+=====================================================================================================================
+ROHAUSGABE bank9_zensus.py (original, exe, port)
+=====================================================================================================================
+== ORIGINAL: Bank-9-Bits in allen ausgelieferten RDTs (shared_assets/PSX/STAGE*/ROOM*.RDT) ==
+RDT-Dateien: 240, davon mit Kopf (>= 0x48 B): 206
+Abdeckung: 40674 Opcodes, 0 Desync-Stopps, 164 Item_aot_set, 54 Ck(9,..), 1 Set(9,..)
+Flag-Ck2 0x58 mit Bank 9: 0 []
+Flag-Set2 0x59 mit Bank 9: 0 []
+FLAG_CHG-Saetze (Aot_set/Aot_reset sce 4) je Bank: {5: 26}
+Item_aot_set mit Bit >= 256 (liefe in Bank 10 ueber): 0 []
+
+BELEGT im Original: 85 von 256 Bits
+  2 6 10 11 12 14 15 16 18 19 20 21 22 52 85 86 90 91 92 98 99 104 105 108 109 134 135 136 138 140 141 142 143 144 146 147 148 149 150 151 152 153 154 155 162 163 164 165 166 167 168 169 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 216 217 218 223 224 225 226 227 228 229 230 231 252 253
+FREI im Original (Bloecke): 0..1, 3..5, 7..9, 13, 17, 23..51, 53..84, 87..89, 93..97, 100..103, 106..107, 110..133, 137, 139, 145, 156..161, 170..179, 199..215, 219..222, 232..251, 254..255
+
+JE BIT (alle Quellen):
+  Bit   2: 2 Stelle(n)
+           ROOM1020 main00 @0x01D6A Item_aot_set Slot 3 Item 0x15 x15 Prop 4
+           ROOM1021 main00 @0x01D6A Item_aot_set Slot 3 Item 0x15 x15 Prop 4
+  Bit   6: 2 Stelle(n)
+           ROOM4010 main00 @0x00592 Item_aot_set Slot 9 Item 0x47 x1 Prop 1
+           ROOM4010 sub01 @0x006E0 Ck(9,6,1)
+  Bit  10: 5 Stelle(n)
+           ROOM11B0 main00 @0x00FF2 Item_aot_set Slot 4 Item 0x30 x1 Prop 1
+           ROOM11B0 sub01 @0x011DE Ck(9,10,1)
+           ROOM11B1 main00 @0x00FE4 Item_aot_set Slot 4 Item 0x30 x1 Prop 1
+           ROOM11B1 sub01 @0x0116A Ck(9,10,1)
+           ROOM11B1 sub01 @0x0117A Ck(9,10,1)
+  Bit  11: 2 Stelle(n)
+           ROOM4010 main00 @0x005A8 Item_aot_set Slot 10 Item 0x22 x1 Prop 2
+           ROOM4011 main00 @0x0056A Item_aot_set Slot 7 Item 0x22 x1 Prop 2
+  Bit  12: 2 Stelle(n)
+           ROOM4010 main00 @0x005BE Item_aot_set Slot 11 Item 0x16 x7 Prop 3
+           ROOM4011 main00 @0x00580 Item_aot_set Slot 8 Item 0x16 x7 Prop 3
+  Bit  14: 6 Stelle(n)
+           ROOM40A0 main00 @0x00E4E Item_aot_set Slot 7 Item 0x22 x1 Prop 255
+           ROOM40A0 main00 @0x00E68 Ck(9,14,1)
+           ROOM40A0 sub02 @0x00FE8 Ck(9,14,1)
+           ROOM40A1 main00 @0x00E4E Item_aot_set Slot 7 Item 0x22 x1 Prop 255
+           ROOM40A1 main00 @0x00E68 Ck(9,14,1)
+           ROOM40A1 sub02 @0x00FE8 Ck(9,14,1)
+  Bit  15: 6 Stelle(n)
+           ROOM40A0 main00 @0x00E78 Item_aot_set Slot 8 Item 0x26 x1 Prop 255
+           ROOM40A0 main00 @0x00E92 Ck(9,15,1)
+           ROOM40A0 sub02 @0x01006 Ck(9,15,1)
+           ROOM40A1 main00 @0x00E78 Item_aot_set Slot 8 Item 0x26 x1 Prop 255
+           ROOM40A1 main00 @0x00E92 Ck(9,15,1)
+           ROOM40A1 sub02 @0x01006 Ck(9,15,1)
+  Bit  16: 6 Stelle(n)
+           ROOM40A0 main00 @0x00EA2 Item_aot_set Slot 9 Item 0x22 x1 Prop 255
+           ROOM40A0 main00 @0x00EBC Ck(9,16,1)
+           ROOM40A0 sub02 @0x01024 Ck(9,16,1)
+           ROOM40A1 main00 @0x00EA2 Item_aot_set Slot 9 Item 0x22 x1 Prop 255
+           ROOM40A1 main00 @0x00EBC Ck(9,16,1)
+           ROOM40A1 sub02 @0x01024 Ck(9,16,1)
+  Bit  18: 2 Stelle(n)
+           ROOM5010 main00 @0x0041E Item_aot_set Slot 6 Item 0x22 x1 Prop 1
+           ROOM5011 main00 @0x00432 Item_aot_set Slot 8 Item 0x22 x1 Prop 1
+  Bit  19: 2 Stelle(n)
+           ROOM5010 main00 @0x00434 Item_aot_set Slot 7 Item 0x16 x7 Prop 2
+           ROOM5011 main00 @0x00448 Item_aot_set Slot 9 Item 0x16 x7 Prop 2
+  Bit  20: 2 Stelle(n)
+           ROOM3010 main00 @0x02094 Item_aot_set Slot 5 Item 0x16 x7 Prop 255
+           ROOM3011 main00 @0x02094 Item_aot_set Slot 5 Item 0x16 x7 Prop 255
+  Bit  21: 3 Stelle(n)
+           ROOM3091 sub02 @0x01596 Ck(9,21,0)
+           ROOM3091 sub06 @0x016B8 Ck(9,21,0)
+           ROOM3091 sub06 @0x016C2 Set(9,21,1)
+  Bit  22: 2 Stelle(n)
+           ROOM5060 main00 @0x02C70 Item_aot_set Slot 16 Item 0x17 x6 Prop 8
+           ROOM5061 main00 @0x02C70 Item_aot_set Slot 16 Item 0x17 x6 Prop 8
+  Bit  52: 4 Stelle(n)
+           ROOM10D0 sub20 @0x019C0 Ck(9,52,1)
+           ROOM10D1 sub20 @0x019AA Ck(9,52,1)
+           ROOM1110 main00 @0x00B2E Item_aot_set Slot 8 Item 0x38 x1 Prop 2
+           ROOM1111 main00 @0x00B2E Item_aot_set Slot 8 Item 0x38 x1 Prop 2
+  Bit  85: 4 Stelle(n)
+           ROOM3040 sub00 @0x014B2 Item_aot_set Slot 9 Item 0x36 x1 Prop 1
+           ROOM3040 sub01 @0x014CE Ck(9,85,1)
+           ROOM3041 sub00 @0x014B2 Item_aot_set Slot 9 Item 0x36 x1 Prop 1
+           ROOM3041 sub01 @0x014CE Ck(9,85,1)
+  Bit  86: 4 Stelle(n)
+           ROOM4040 main00 @0x00F66 Item_aot_set Slot 6 Item 0x41 x1 Prop 3
+           ROOM4040 sub01 @0x01014 Ck(9,86,1)
+           ROOM4041 main00 @0x00F66 Item_aot_set Slot 6 Item 0x41 x1 Prop 3
+           ROOM4041 sub01 @0x01014 Ck(9,86,1)
+  Bit  90: 2 Stelle(n)
+           ROOM2090 main00 @0x00A12 Item_aot_set Slot 5 Item 0x3F x1 Prop 0
+           ROOM2091 main00 @0x00A12 Item_aot_set Slot 5 Item 0x3F x1 Prop 0
+  Bit  91: 2 Stelle(n)
+           ROOM2040 main00 @0x01364 Item_aot_set Slot 7 Item 0x32 x1 Prop 255
+           ROOM2041 main00 @0x01364 Item_aot_set Slot 7 Item 0x32 x1 Prop 255
+  Bit  92: 4 Stelle(n)
+           ROOM3050 main00 @0x01EC6 Item_aot_set Slot 6 Item 0x07 x6 Prop 2
+           ROOM3050 sub01 @0x0223C Ck(9,92,0)
+           ROOM3051 main00 @0x01EC6 Item_aot_set Slot 6 Item 0x07 x6 Prop 2
+           ROOM3051 sub01 @0x0223C Ck(9,92,0)
+  Bit  98: 2 Stelle(n)
+           ROOM1110 main00 @0x00B5A Item_aot_set Slot 10 Item 0x13 x100 Prop 3
+           ROOM1111 main00 @0x00B5A Item_aot_set Slot 10 Item 0x13 x100 Prop 3
+  Bit  99: 8 Stelle(n)
+           ROOM11F0 main00 @0x00CFA Item_aot_set Slot 14 Item 0x15 x30 Prop 1
+           ROOM11F0 sub19 @0x017C8 Ck(9,99,0)
+           ROOM11F0 sub19 @0x017DE Ck(9,99,0)
+           ROOM11F0 sub19 @0x017F0 Ck(9,99,0)
+           ROOM11F1 main00 @0x00CFA Item_aot_set Slot 14 Item 0x15 x30 Prop 1
+           ROOM11F1 sub19 @0x017C8 Ck(9,99,0)
+           ROOM11F1 sub19 @0x017DE Ck(9,99,0)
+           ROOM11F1 sub19 @0x017F0 Ck(9,99,0)
+  Bit 104: 8 Stelle(n)
+           ROOM1200 sub00 @0x00932 Item_aot_set Slot 3 Item 0x44 x1 Prop 255
+           ROOM1200 sub01 @0x0094E Ck(9,104,1)
+           ROOM1200 sub03 @0x009FC Ck(9,104,0)
+           ROOM1200 sub03 @0x00A08 Ck(9,104,1)
+           ROOM1201 sub00 @0x00932 Item_aot_set Slot 3 Item 0x44 x1 Prop 255
+           ROOM1201 sub01 @0x0094E Ck(9,104,1)
+           ROOM1201 sub03 @0x009FC Ck(9,104,0)
+           ROOM1201 sub03 @0x00A08 Ck(9,104,1)
+  Bit 105: 2 Stelle(n)
+           ROOM1200 sub00 @0x00908 Item_aot_set Slot 1 Item 0x16 x14 Prop 255
+           ROOM1201 sub00 @0x00908 Item_aot_set Slot 1 Item 0x16 x14 Prop 255
+  Bit 108: 2 Stelle(n)
+           ROOM2030 main00 @0x01BC0 Item_aot_set Slot 10 Item 0x16 x14 Prop 255
+           ROOM2031 main00 @0x01BC0 Item_aot_set Slot 10 Item 0x16 x14 Prop 255
+  Bit 109: 2 Stelle(n)
+           ROOM2030 main00 @0x01BD6 Item_aot_set Slot 11 Item 0x0D x12 Prop 3
+           ROOM2031 main00 @0x01BD6 Item_aot_set Slot 11 Item 0x0D x12 Prop 3
+  Bit 134: 3 Stelle(n)
+           ROOM1000 sub00 @0x00C24 Item_aot_set Slot 3 Item 0x31 x1 Prop 255
+           ROOM1000 sub01 @0x00D00 Ck(9,134,1)
+           ROOM1001 sub00 @0x00C24 Item_aot_set Slot 3 Item 0x15 x30 Prop 255
+  Bit 135: 1 Stelle(n)
+           ROOM5020 sub00 @0x012C0 Item_aot_set Slot 3 Item 0x17 x12 Prop 255
+  Bit 136: 6 Stelle(n)
+           ROOM1190 sub13 @0x02A30 Item_aot_set Slot 5 Item 0x37 x1 Prop 6
+           ROOM1190 sub13 @0x02AA2 Item_aot_set Slot 5 Item 0x37 x1 Prop 6
+           ROOM1191 sub13 @0x02A30 Item_aot_set Slot 5 Item 0x37 x1 Prop 6
+           ROOM1191 sub13 @0x02AA2 Item_aot_set Slot 5 Item 0x37 x1 Prop 6
+           ROOM1230 sub20 @0x01488 Ck(9,136,1)
+           ROOM1231 sub20 @0x01488 Ck(9,136,1)
+  Bit 138: 3 Stelle(n)
+           ROOM1011 main00 @0x00954 Item_aot_set Slot 2 Item 0x39 x1 Prop 0
+           ROOM11E0 sub20 @0x01FA8 Ck(9,138,1)
+           ROOM11E1 sub20 @0x01FA8 Ck(9,138,1)
+  Bit 140: 1 Stelle(n)
+           ROOM1010 sub00 @0x00996 Item_aot_set Slot 2 Item 0x22 x1 Prop 0
+  Bit 141: 2 Stelle(n)
+           ROOM1010 sub00 @0x009AC Item_aot_set Slot 3 Item 0x15 x15 Prop 1
+           ROOM1011 main00 @0x0096A Item_aot_set Slot 3 Item 0x15 x15 Prop 1
+  Bit 142: 2 Stelle(n)
+           ROOM1010 sub00 @0x009C2 Item_aot_set Slot 4 Item 0x16 x7 Prop 2
+           ROOM1011 main00 @0x00980 Item_aot_set Slot 4 Item 0x16 x7 Prop 2
+  Bit 143: 2 Stelle(n)
+           ROOM1110 main00 @0x00B44 Item_aot_set Slot 9 Item 0x22 x1 Prop 255
+           ROOM1111 main00 @0x00B44 Item_aot_set Slot 9 Item 0x22 x1 Prop 255
+  Bit 144: 2 Stelle(n)
+           ROOM1070 main00 @0x0156E Item_aot_set Slot 13 Item 0x15 x15 Prop 0
+           ROOM1071 main00 @0x0156E Item_aot_set Slot 13 Item 0x15 x15 Prop 0
+  Bit 146: 2 Stelle(n)
+           ROOM1190 sub14 @0x02B62 Item_aot_set Slot 7 Item 0x15 x15 Prop 7
+           ROOM1191 sub14 @0x02B62 Item_aot_set Slot 7 Item 0x15 x15 Prop 7
+  Bit 147: 2 Stelle(n)
+           ROOM1190 sub14 @0x02B78 Item_aot_set Slot 8 Item 0x15 x15 Prop 8
+           ROOM1191 sub14 @0x02B78 Item_aot_set Slot 8 Item 0x15 x15 Prop 8
+  Bit 148: 2 Stelle(n)
+           ROOM1190 sub14 @0x02B8E Item_aot_set Slot 9 Item 0x15 x15 Prop 9
+           ROOM1191 sub14 @0x02B8E Item_aot_set Slot 9 Item 0x15 x15 Prop 9
+  Bit 149: 2 Stelle(n)
+           ROOM1190 sub14 @0x02BA4 Item_aot_set Slot 10 Item 0x15 x15 Prop 10
+           ROOM1191 sub14 @0x02BA4 Item_aot_set Slot 10 Item 0x15 x15 Prop 10
+  Bit 150: 2 Stelle(n)
+           ROOM1190 sub14 @0x02BBA Item_aot_set Slot 11 Item 0x16 x7 Prop 11
+           ROOM1191 sub14 @0x02BBA Item_aot_set Slot 11 Item 0x16 x7 Prop 11
+  Bit 151: 2 Stelle(n)
+           ROOM1190 sub14 @0x02BD0 Item_aot_set Slot 12 Item 0x16 x7 Prop 12
+           ROOM1191 sub14 @0x02BD0 Item_aot_set Slot 12 Item 0x16 x7 Prop 12
+  Bit 152: 2 Stelle(n)
+           ROOM1190 sub14 @0x02BE6 Item_aot_set Slot 13 Item 0x16 x7 Prop 13
+           ROOM1191 sub14 @0x02BE6 Item_aot_set Slot 13 Item 0x16 x7 Prop 13
+  Bit 153: 2 Stelle(n)
+           ROOM1190 sub14 @0x02BFC Item_aot_set Slot 14 Item 0x0C x100 Prop 14
+           ROOM1191 sub14 @0x02BFC Item_aot_set Slot 14 Item 0x0C x100 Prop 14
+  Bit 154: 4 Stelle(n)
+           ROOM2040 sub00 @0x014F8 Item_aot_set Slot 13 Item 0x23 x1 Prop 255
+           ROOM2040 sub01 @0x015F2 Ck(9,154,1)
+           ROOM2041 sub00 @0x014F8 Item_aot_set Slot 13 Item 0x23 x1 Prop 255
+           ROOM2041 sub01 @0x015F2 Ck(9,154,1)
+  Bit 155: 8 Stelle(n)
+           ROOM11D0 sub00 @0x016C8 Item_aot_set Slot 10 Item 0x05 x15 Prop 255
+           ROOM11D0 sub03 @0x0189A Ck(9,155,0)
+           ROOM11D0 sub03 @0x018B2 Ck(9,155,1)
+           ROOM11D0 sub03 @0x018D2 Ck(9,155,0)
+           ROOM11D1 sub00 @0x016C8 Item_aot_set Slot 10 Item 0x05 x15 Prop 255
+           ROOM11D1 sub03 @0x0189A Ck(9,155,0)
+           ROOM11D1 sub03 @0x018B2 Ck(9,155,1)
+           ROOM11D1 sub03 @0x018D2 Ck(9,155,0)
+  Bit 162: 2 Stelle(n)
+           ROOM10F0 main00 @0x01012 Item_aot_set Slot 11 Item 0x15 x30 Prop 1
+           ROOM10F1 main00 @0x01012 Item_aot_set Slot 11 Item 0x15 x30 Prop 1
+  Bit 163: 2 Stelle(n)
+           ROOM10F0 main00 @0x01028 Item_aot_set Slot 12 Item 0x15 x30 Prop 2
+           ROOM10F1 main00 @0x01028 Item_aot_set Slot 12 Item 0x15 x30 Prop 2
+  Bit 164: 2 Stelle(n)
+           ROOM10F0 main00 @0x0103E Item_aot_set Slot 13 Item 0x08 x7 Prop 3
+           ROOM10F1 main00 @0x0103E Item_aot_set Slot 13 Item 0x08 x7 Prop 3
+  Bit 165: 2 Stelle(n)
+           ROOM1051 main00 @0x00C22 Item_aot_set Slot 12 Item 0x04 x15 Prop 255
+           ROOM1051 sub01 @0x00CB6 Ck(9,165,1)
+  Bit 166: 2 Stelle(n)
+           ROOM1000 sub00 @0x00C3A Item_aot_set Slot 4 Item 0x24 x1 Prop 0
+           ROOM1001 sub00 @0x00C3A Item_aot_set Slot 4 Item 0x24 x1 Prop 0
+  Bit 167: 2 Stelle(n)
+           ROOM1000 sub00 @0x00C50 Item_aot_set Slot 5 Item 0x25 x1 Prop 1
+           ROOM1001 sub00 @0x00C50 Item_aot_set Slot 5 Item 0x25 x1 Prop 1
+  Bit 168: 1 Stelle(n)
+           ROOM1140 sub00 @0x00B94 Item_aot_set Slot 7 Item 0x15 x30 Prop 255
+  Bit 169: 2 Stelle(n)
+           ROOM10E0 main00 @0x00D08 Item_aot_set Slot 11 Item 0x15 x30 Prop 255
+           ROOM10E1 main00 @0x00D08 Item_aot_set Slot 11 Item 0x15 x30 Prop 255
+  Bit 180: 4 Stelle(n)
+           ROOM30A0 main00 @0x00742 Item_aot_set Slot 1 Item 0x46 x1 Prop 1
+           ROOM30A0 sub01 @0x00860 Ck(9,180,1)
+           ROOM30A1 main00 @0x00742 Item_aot_set Slot 1 Item 0x46 x1 Prop 1
+           ROOM30A1 sub01 @0x00860 Ck(9,180,1)
+  Bit 181: 2 Stelle(n)
+           ROOM1210 main00 @0x01E70 Item_aot_set Slot 7 Item 0x15 x15 Prop 255
+           ROOM1211 main00 @0x01DA8 Item_aot_set Slot 9 Item 0x15 x15 Prop 255
+  Bit 182: 2 Stelle(n)
+           ROOM1210 main00 @0x01E86 Item_aot_set Slot 8 Item 0x15 x15 Prop 255
+           ROOM1211 main00 @0x01DBE Item_aot_set Slot 10 Item 0x15 x15 Prop 255
+  Bit 183: 2 Stelle(n)
+           ROOM1220 main00 @0x00ED8 Item_aot_set Slot 5 Item 0x24 x1 Prop 0
+           ROOM1221 main00 @0x00ED8 Item_aot_set Slot 5 Item 0x24 x1 Prop 0
+  Bit 184: 2 Stelle(n)
+           ROOM1220 main00 @0x00EEE Item_aot_set Slot 6 Item 0x25 x1 Prop 1
+           ROOM1221 main00 @0x00EEE Item_aot_set Slot 6 Item 0x25 x1 Prop 1
+  Bit 185: 2 Stelle(n)
+           ROOM4050 main00 @0x01E74 Item_aot_set Slot 30 Item 0x24 x1 Prop 0
+           ROOM4051 main00 @0x01E74 Item_aot_set Slot 30 Item 0x24 x1 Prop 0
+  Bit 186: 2 Stelle(n)
+           ROOM4050 main00 @0x01EC8 Item_aot_set Slot 30 Item 0x26 x1 Prop 1
+           ROOM4051 main00 @0x01EC8 Item_aot_set Slot 30 Item 0x26 x1 Prop 1
+  Bit 187: 2 Stelle(n)
+           ROOM4050 main00 @0x01F1C Item_aot_set Slot 30 Item 0x23 x1 Prop 3
+           ROOM4051 main00 @0x01F1C Item_aot_set Slot 30 Item 0x23 x1 Prop 3
+  Bit 188: 2 Stelle(n)
+           ROOM40B0 main00 @0x00724 Item_aot_set Slot 5 Item 0x17 x6 Prop 0
+           ROOM40B1 main00 @0x00724 Item_aot_set Slot 5 Item 0x17 x6 Prop 0
+  Bit 189: 2 Stelle(n)
+           ROOM40B0 main00 @0x0073A Item_aot_set Slot 6 Item 0x17 x6 Prop 1
+           ROOM40B1 main00 @0x0073A Item_aot_set Slot 6 Item 0x17 x6 Prop 1
+  Bit 190: 2 Stelle(n)
+           ROOM40B0 main00 @0x00750 Item_aot_set Slot 7 Item 0x24 x1 Prop 2
+           ROOM40B1 main00 @0x00750 Item_aot_set Slot 7 Item 0x24 x1 Prop 2
+  Bit 191: 2 Stelle(n)
+           ROOM40B0 main00 @0x00766 Item_aot_set Slot 8 Item 0x25 x1 Prop 3
+           ROOM40B1 main00 @0x00766 Item_aot_set Slot 8 Item 0x25 x1 Prop 3
+  Bit 192: 2 Stelle(n)
+           ROOM40B0 main00 @0x0077C Item_aot_set Slot 9 Item 0x26 x1 Prop 4
+           ROOM40B1 main00 @0x0077C Item_aot_set Slot 9 Item 0x26 x1 Prop 4
+  Bit 193: 2 Stelle(n)
+           ROOM1220 main00 @0x00F04 Item_aot_set Slot 7 Item 0x26 x1 Prop 2
+           ROOM1221 main00 @0x00F04 Item_aot_set Slot 7 Item 0x26 x1 Prop 2
+  Bit 194: 2 Stelle(n)
+           ROOM30E0 main00 @0x00AFA Item_aot_set Slot 8 Item 0x24 x1 Prop 1
+           ROOM30E1 main00 @0x00A76 Item_aot_set Slot 4 Item 0x24 x1 Prop 1
+  Bit 195: 2 Stelle(n)
+           ROOM30E0 main00 @0x00B10 Item_aot_set Slot 9 Item 0x17 x6 Prop 2
+           ROOM30E1 main00 @0x00A8C Item_aot_set Slot 5 Item 0x17 x6 Prop 2
+  Bit 196: 2 Stelle(n)
+           ROOM4050 main00 @0x01F70 Item_aot_set Slot 30 Item 0x25 x1 Prop 2
+           ROOM4051 main00 @0x01F70 Item_aot_set Slot 30 Item 0x25 x1 Prop 2
+  Bit 197: 2 Stelle(n)
+           ROOM4050 main00 @0x01FB0 Item_aot_set Slot 30 Item 0x23 x1 Prop 4
+           ROOM4051 main00 @0x01FB0 Item_aot_set Slot 30 Item 0x23 x1 Prop 4
+  Bit 198: 2 Stelle(n)
+           ROOM4050 main00 @0x01FF0 Item_aot_set Slot 30 Item 0x22 x1 Prop 5
+           ROOM4051 main00 @0x01FF0 Item_aot_set Slot 30 Item 0x22 x1 Prop 5
+  Bit 216: 2 Stelle(n)
+           ROOM2010 main00 @0x00766 Item_aot_set Slot 1 Item 0x16 x7 Prop 1
+           ROOM2011 main00 @0x00766 Item_aot_set Slot 1 Item 0x16 x7 Prop 1
+  Bit 217: 2 Stelle(n)
+           ROOM2010 main00 @0x0077C Item_aot_set Slot 2 Item 0x16 x7 Prop 2
+           ROOM2011 main00 @0x0077C Item_aot_set Slot 2 Item 0x16 x7 Prop 2
+  Bit 218: 2 Stelle(n)
+           ROOM2010 main00 @0x00792 Item_aot_set Slot 3 Item 0x22 x1 Prop 4
+           ROOM2011 main00 @0x00792 Item_aot_set Slot 3 Item 0x22 x1 Prop 4
+  Bit 223: 2 Stelle(n)
+           ROOM10E0 main00 @0x00C7A Item_aot_set Slot 3 Item 0x15 x15 Prop 255
+           ROOM10E1 main00 @0x00C7A Item_aot_set Slot 3 Item 0x15 x15 Prop 255
+  Bit 224: 2 Stelle(n)
+           ROOM10E0 main00 @0x00C4E Item_aot_set Slot 1 Item 0x22 x1 Prop 255
+           ROOM10E1 main00 @0x00C4E Item_aot_set Slot 1 Item 0x22 x1 Prop 255
+  Bit 225: 2 Stelle(n)
+           ROOM10E0 main00 @0x00C64 Item_aot_set Slot 2 Item 0x23 x1 Prop 255
+           ROOM10E1 main00 @0x00C64 Item_aot_set Slot 2 Item 0x23 x1 Prop 255
+  Bit 226: 2 Stelle(n)
+           ROOM11B0 main00 @0x01056 Item_aot_set Slot 6 Item 0x16 x7 Prop 2
+           ROOM11B1 main00 @0x0101A Item_aot_set Slot 6 Item 0x16 x7 Prop 2
+  Bit 227: 2 Stelle(n)
+           ROOM1020 main00 @0x01D80 Item_aot_set Slot 4 Item 0x15 x15 Prop 5
+           ROOM1021 main00 @0x01D80 Item_aot_set Slot 4 Item 0x15 x15 Prop 5
+  Bit 228: 2 Stelle(n)
+           ROOM1050 main00 @0x00B9A Item_aot_set Slot 6 Item 0x15 x30 Prop 255
+           ROOM1051 main00 @0x00B9A Item_aot_set Slot 6 Item 0x15 x30 Prop 255
+  Bit 229: 2 Stelle(n)
+           ROOM10F0 main00 @0x01054 Item_aot_set Slot 14 Item 0x22 x1 Prop 255
+           ROOM10F1 main00 @0x01054 Item_aot_set Slot 14 Item 0x22 x1 Prop 255
+  Bit 230: 2 Stelle(n)
+           ROOM1110 main00 @0x00B02 Item_aot_set Slot 6 Item 0x16 x14 Prop 0
+           ROOM1111 main00 @0x00B02 Item_aot_set Slot 6 Item 0x16 x14 Prop 0
+  Bit 231: 2 Stelle(n)
+           ROOM1110 main00 @0x00B18 Item_aot_set Slot 7 Item 0x15 x30 Prop 1
+           ROOM1111 main00 @0x00B18 Item_aot_set Slot 7 Item 0x15 x30 Prop 1
+  Bit 252: 2 Stelle(n)
+           ROOM11D0 main00 @0x0160E Item_aot_set Slot 7 Item 0x15 x30 Prop 0
+           ROOM11D1 main00 @0x0160E Item_aot_set Slot 7 Item 0x15 x30 Prop 0
+  Bit 253: 2 Stelle(n)
+           ROOM11D0 main00 @0x01624 Item_aot_set Slot 8 Item 0x16 x7 Prop 1
+           ROOM11D1 main00 @0x01624 Item_aot_set Slot 8 Item 0x16 x7 Prop 1
+
+== EXE + OVERLAYS: direkte Adressen von Bank 9 (0x800B1078..97), Tabelle[9] (0x80074688), Tabelle (0x80074664) ==
+  PSX.EXE 0x80021FD4  -> 0x800B1078  (Bank-9-Speicher)
+  PSX.EXE 0x8003FD24  -> 0x80074664  (Tabelle 0x80074664)
+  PSX.EXE 0x8003FD98  -> 0x80074664  (Tabelle 0x80074664)
+  PSX.EXE 0x8003FDFC  -> 0x80074664  (Tabelle 0x80074664)
+  PSX.EXE 0x8003FEC8  -> 0x80074664  (Tabelle 0x80074664)
+  PSX.EXE 0x800406D8  -> 0x80074688  (Tabelle[9])
+  PSX.EXE 0x80043138  -> 0x80074664  (Tabelle 0x80074664)
+  ghidra1_V2.txt XREF-Zeilen:
+    PTR_DAT_80074664                                XREF[5]:     8003fd2c(*), 8003fda0(*),
+    8003fe04(*), 8003fed0(*),
+    80043140(*)
+    PTR_DAT_80074688                                XREF[1]:     800406d8(R)
+    DAT_800b1078                                    XREF[4]:     8001e0d4(*), 80021fd4(*),
+    800406d8(*), 80074688(*)
+  Overlay-Dekompilate (RE_15_Quellcode_Overlays/STAGE1..6_overlay.c), Bank-Basis je Aufruf der Bit-Helfer:
+     75 x FUN_8004ef90(0x800b1058, ...)
+      8 x FUN_8004ef90(0x800b1038, ...)
+      6 x FUN_8004efe4(0x800b1028, ...)
+      6 x FUN_8004ef90(0x800b1028, ...)
+      5 x FUN_8004ef90(puVar4 + 0x78, ...)
+      5 x FUN_8004ef90(puVar5 + 0x78, ...)
+      2 x FUN_8004efb8(0x800b1028, ...)
+      1 x FUN_8004efb8((Register des Aufrufers), ...)
+      1 x FUN_8004efe4(unaff_s0 + 0x48a4, ...)
+    (0x800b1028 = Bank 5, 0x800b1038 = Bank 7, 0x800b1058 = Bank 8; puVar+0x78 = 0x800b0fe0+0x78 = Bank 8; unaff_s0+0x48a4 = 0x800ac784+0x48a4 = Bank 5 wie PSX.EXE @0x80051784 (Ghidra a0=>DAT_800b1028); Bank 9 = 0x800b1078 kommt NICHT vor)
+  (7 Treffer; Lesart: PSX.EXE 0x8003fd2c/0x8003fda0/0x8003fe04/0x8003fed0/0x80043140 = die fuenf Tabellen-Leser, 0x800406d8 = Item_aot_set, 0x8001e0d4/0x80021fd4 = Aufnahme mit Bit aus dem Satz)
+
+== PORT: Bank-9-Zugriffe im Quelltext (re15_port/include, engine/src, platform/pc) ==
+Makros mit Wert 9 und BANK/ZONE im Namen: RE15_ADARUF_GESEHEN_BANK, RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_FENSTER_BANK, RE15_IT_BANK, RE15_IT_K_BANK, RE15_R36K_BANK, RE15_ROLLTOR_EINGESETZT_BANK, RE15_SZL_BANK_ZU, RE15_TUER1060_K_BANK, RE15_TUER1060_TOD_BANK
+
+Zugriffsstellen (re15_game_flag_get/set mit Bank 9; SCD-Port-Programme 0x21/0x22/OP_SET mit Bank 9):
+  include/re15_item_discard.h:98  flag_set(9, s_taken)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/adaruf_1050.c:29  SCD 0x22 Bank 0x09 Bit 0x41  = Bit 65
+  engine/src/adaruf_1050.c:232  flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT)  = Bit 65
+  engine/src/adaruf_1050.c:248  flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT)  = Bit 65
+  engine/src/adaruf_1050.c:272  flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT)  = Bit 65
+  engine/src/cut_10f0.c:202  flag_get(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT)  = Bit 71
+  engine/src/cut_10f0.c:237  flag_get(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT)  = Bit 72
+  engine/src/cut_10f0.c:238  flag_set(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT)  = Bit 72
+  engine/src/cut_10f0.c:286  flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT)  = Bit 73
+  engine/src/cut_10f0.c:365  flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT)  = Bit 73
+  engine/src/dokumente_r34.c:73  flag_get(9, d->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/dokumente_r34.c:155  flag_get(9, d->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/fenster_1120.c:62  SCD 0x22 Bank RE15_FENSTER_BANK Bit RE15_FENSTER_BIT  = Bit 79
+  engine/src/fenster_1120.c:144  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_TOR_BIT)  = Bit 73
+  engine/src/fenster_1120.c:145  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:165  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_TOR_BIT)  = Bit 73
+  engine/src/fenster_1120.c:166  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:202  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:255  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:284  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/granate_1150.c:75  flag_get(9, RE15_GRANATE_TAKEN_BIT)  = Bit 56
+  engine/src/granate_1150.c:120  flag_get(9, RE15_GRANATE_TAKEN_BIT)  = Bit 56
+  engine/src/granate_1150.c:144  flag_get(9, RE15_GRANATE_TAKEN_BIT)  = Bit 56
+  engine/src/inhalt_r35.c:56  flag_get(9, g->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/irons_tisch_1150.c:55  flag_get(9, g->taken_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/irons_tod_1150.c:99  SCD OP_SET Bank RE15_IT_BANK Bit RE15_IT_BIT_GESEHEN  = Bit 73
+  engine/src/irons_tod_1150.c:718  flag_set(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:719  flag_set(RE15_IT_BANK, RE15_IT_BIT_1040)  = Bit 75
+  engine/src/irons_tod_1150.c:720  flag_set(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:908  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:926  flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:938  flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:962  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:966  flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)  = Bit 75
+  engine/src/irons_tod_1150.c:972  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/irons_tod_1150.c:975  flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:1007  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/irons_tod_1150.c:1227  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/irons_tod_1150.c:1232  flag_get(RE15_IT_K_BANK, RE15_IT_K_BIT)  = Bit 71
+  engine/src/irons_tod_1150.c:1245  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1252  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1257  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1264  flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)  = Bit 75
+  engine/src/irons_tod_1150.c:1276  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/item_modal_common.c:341  flag_set(9, s_taken)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:79  flag_get(RE15_R36K_BANK, g->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:144  SCD 0x22 Bank RE15_R36K_BANK Bit 0xEE  = Bit 238  (Platzhalter: PRG_BIT wird beim Ausloesen mit k_r36k_lage[k].bit ueberschrieben)
+  engine/src/kartenitems_r36.c:195  flag_get(RE15_R36K_BANK, k_r36k_lage[k].bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:232  flag_get(RE15_R36K_BANK, k_r36k_lage[k].bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:241  flag_get(RE15_R36K_BANK, k_r36k_lage[k].bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/leiche_1110_1230.c:157  flag_get(9, l->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/leiche_1110_1230.c:206  flag_get(9, s_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/leiche_1110_1230.c:239  flag_get(9, s_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/menu_common.c:1989  flag_set(9, s_doc_taken)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/rolltor_1050.c:108  SCD 0x22 Bank 0x09 Bit 0x3f  = Bit 63
+  engine/src/rolltor_1050.c:166  flag_get(RE15_ROLLTOR_EINGESETZT_BANK, RE15_ROLLTOR_EINGESETZT_BIT)  = Bit 63
+  engine/src/scd_vm.c:4117  flag_get(9, tk_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/schluessel_r36.c:146  flag_get(9, bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/schluessel_r36.c:184  flag_get(9, RE15_R36Q_TUER_BIT)  = Bit 93
+  engine/src/schluessel_r36.c:247  flag_set(9, RE15_R36Q_TUER_BIT)  = Bit 93
+  engine/src/sicherung_1150.c:106  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/sicherung_1150.c:152  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/sicherung_1150.c:169  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/sicherung_1150.c:196  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/szenenleon_r36.c:350  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/szenenleon_r36.c:375  flag_get(RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU)  = Bit 84
+  engine/src/tuer1060_1040.c:46  flag_get(RE15_TUER1060_TOD_BANK, RE15_TUER1060_TOD_BIT)  = Bit 73
+  engine/src/tuer1060_1040.c:47  flag_get(RE15_TUER1060_K_BANK, RE15_TUER1060_K_BIT)  = Bit 71
+  engine/src/tuer1060_1040.c:78  flag_get(9, 73)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/tuer1060_1040.c:78  flag_get(9, 71)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/gen/cut10f0_szene.inc:6  SCD 0x22 Bank 0x09 Bit 0x47  = Bit 71
+  engine/src/gen/szl11b0_szene.inc:81  SCD 0x22 Bank 0x09 Bit 0x54  = Bit 84
+  platform/pc/main.c:5327  flag_get(9, RE15_IRONS_DIARY_TAKEN_BIT)  = Bit 54
+  platform/pc/main.c:5328  flag_get(9, RE15_IRONS_KARTE_TAKEN_BIT)  = Bit 55
+
+Bank-9-Zugriffe mit Bit aus einer Tabelle/einem Satz - die *_BIT-Makros, die dieselbe Datei verwendet:
+  engine/src/dokumente_r34.c  [d->bit]
+      RE15_DOK1_BIT=57, RE15_DOK2_BIT=58, RE15_DOK3_BIT=59, RE15_DOK4_BIT=60
+  engine/src/inhalt_r35.c  [g->bit]
+      RE15_R35I_KARTE_BIT=80, RE15_R35I_SCHROT_BIT=81
+  engine/src/irons_tisch_1150.c  [g->taken_bit]
+      RE15_IRONS_DIARY_TAKEN_BIT=54, RE15_IRONS_KARTE_TAKEN_BIT=55
+  engine/src/item_modal_common.c  [s_taken]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/kartenitems_r36.c  [g->bit, k_r36k_lage[k].bit]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/leiche_1110_1230.c  [l->bit, s_bit]
+      RE15_LEICHE_1110_BIT=61, RE15_LEICHE_1230_BIT=62
+  engine/src/menu_common.c  [s_doc_taken]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/scd_vm.c  [tk_bit]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/schluessel_r36.c  [bit]
+      RE15_R36Q_PARK_BIT=82, RE15_R36Q_PRISON_BIT=83, RE15_R36Q_STROM_BIT=243, RE15_R36Q_TUER_BIT=93, RE15_R36Q_ZELLE_BIT=236
+  include/re15_item_discard.h  [s_taken]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+
+Spur-N-Tabelle engine/src/gen/kartenitems_r36.inc (k_r36k_lage, Feld 3 = Bank-9-Bit):
+  ROOM1140 Blatt 4 -> Bit 87
+  ROOM10D0 Blatt 3 -> Bit 88
+  ROOM1030 Blatt 2 -> Bit 89
+  ROOM1200 Blatt 1 -> Bit 77
+  ROOM11D0 Blatt 0 -> Bit 78
+

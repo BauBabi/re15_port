@@ -16,7 +16,8 @@ Dossier wird fortlaufend geschrieben (Sitzungslimit).
 > - Map B1 soll im Room 11D0 sein bei mapB1.bmp
 
 Zuteilung (VERTRAG.md): Bank-9-Bits 87 = 3F, 88 = 2F, 89 = 1F, 90 = B2, 91 = B1; Ereignis 28;
-Nachrichten-IDs je Raum 2 ab 28.
+Nachrichten-IDs je Raum 2 ab 28. ⛔ Seit dem Nachtrag kartenbits (Abschnitt 9): **B2 = 77, B1 = 78** — 90/91 sind
+Original-Item-Taken-Bits (ROOM2090/2091 @0x00A12, ROOM2040/2041 @0x01364).
 
 ## 1. Messung vorher
 
@@ -211,6 +212,7 @@ main00 an (Aot_reset nur Slots 4, 6, 17).
 
 ### 3.5 Karte und Etagenwahl
 `re15_map_owned_page/bits` (Port-Gegenstueck zu RE2 Bank 33 @0x8006E66C) fragt zusaetzlich die Bits 87..91
+(seit Abschnitt 9: 87/88/89/77/78)
 (nicht in `s_map_funde`, deren Riegel test_karte_besitz nur RDT-belegte Fundstellen zulaesst).
 `re15_map_blatt_waehlbar` = bekannt || Hinweis-Ziel || BESITZ (RE2 setzt Bank 35 bei der Aufnahme:
 room20B0 Set(35,2..4) @0x037E6-EE, gelesen @0x8006D934/@0x8006D998).
@@ -254,6 +256,7 @@ gefuellt), ohne Plan nur der eigene Raum — fuer alle fuenf Blaetter (3F/2F/1F/
 |---|---|---|
 | `unit_r36_kartenitems` | T Tabelle (Blatt = Zonen-Blatt, Bits 87..91, MD1/TIM parsen, MD1 nur Ecken verschieden, Texte = RE2-Wortlaut, Frage mit 0x03); R Raumstart aller 10 Raeume (Leon+Elza): Prop obj 15 an Lage/Drehung, EVENT-Satz Ereignis 28 sat 0x31, 1030/1031 Telefon -> Slot 39, Installer idempotent; G Bit gesetzt -> nichts, Slot 8 = Telefon; D echter Bild-Ablauf (re15_game_step) 1140 Ja, 1140 Nein, 10D1 (Elza) Ja, 1030 Ja: Frage 30 -> Bit/Zone weg/Modell (20000,..)/Meldung 31/Blatt besitzt+waehlbar bzw. nichts; 1030 danach an derselben Stelle Telefon-Text (Nachricht 3 aus Slot 39); K Kartenblatt je Etage ohne Plan 0 unbesuchte Kacheln, mit Plan Zeile 498 (+6/+10/+10/+9/+6 Kacheln), fremdes Blatt erst mit SEINEM Plan waehlbar; S Spielstand-Rundlauf | 201 Pruefungen gruen |
 | `integration_r36_kartenitems_bild` | echte exe, 12 Laeufe: je Raum Lade-Weg mit/ohne Bit, Karte NUR im Marken-Fenster (ausserhalb 0 Pixel), Boot-Haken-Zeile, danach Kartenschirm des Blatts: MIT Bit die ganze Etage; ROOM1140 echter Weg (Aktion, Ja) -> Ereignis 28, Kartenschirm 3F mit allen Raeumen (>= 268 Pixel mehr) | gruen (437,7 s; Schwellen kalibriert: Wand-Fenster je ~Haelfte, Kartenschirm 3F 268 / 2F 311 / 1F 452 / B2 381 / B1 433) |
+| `unit_r36_kartenbits` (Nachtrag, Abschnitt 9) | Z Zensus der Bank-9-Bits des Originals (alle RDTs, 85 Bits; Gegenproben 206 RDTs / 40674 Opcodes / 164 Item_aot_set / bekannte Bits); P alle Port-Bank-9-Bits (Makros + live k_r36k_lage) ausserhalb des Original-Satzes, Gegenprobe alte Belegung -> {90, 91}; V Plan nehmen (echtes Port-Programm) -> Stage-2-Items 0x32/0x3F bleiben; S Alt-Spielstaende (Nutzerkarte, v0.8.23-Stand) | 141 ok, 0 FAIL |
 
 Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
 * `ctest --test-dir re15_port/build -R "r36_kartenitems" --timeout 1200 --output-on-failure`
@@ -289,7 +292,8 @@ Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
 * **Bedienung**: an die markierte Stelle gehen, Aktion: "A police 3F map. / Will you take it?" -> Yes ->
   "You've taken the / police 3F map.". Danach zeigt die Karte (START, L1) die ganze Etage — nicht besuchte
   Raeume als Umriss (RE2-Zeile 498), besuchte gefuellt; die Etage ist mit HOCH/RUNTER waehlbar, auch wenn
-  man sie nie betreten hat. Gilt fuer Leon und Elza. Der Zustand liegt im Spielstand (Bank-9-Bits 87..91).
+  man sie nie betreten hat. Gilt fuer Leon und Elza. Der Zustand liegt im Spielstand (Bank-9-Bits 87..91; seit
+  Abschnitt 9: 87/88/89/77/78).
 * **Entscheidungsfragen**
   1. map3F.bmp zeigt den Konferenzraum ROOM1140 (3F), nicht Irons' Buero ROOM1150 — die 3F-Karte haengt
      deshalb an der Tafel in ROOM1140 (dort, wo du markiert hast). Richtig so?
@@ -478,3 +482,282 @@ dem bisherigen Weg, bis Parameter 4 portiert ist. Die Karte (0x0010) ist davon u
   gezeichnet werden (Flach-Attribut; z.B. Rolltor ROOM11E0, Zellentuer ROOM1210, Schubladen ROOM1200,
   Objekte in 1090/1190/11A0/11B0/11C0 und in den Stages 2/4/5/6), erscheinen jetzt in Texturhelligkeit statt
   fast schwarz. Halbtransparente Objekte (Wasser/Glas) sind unveraendert.
+
+## 9. Nachtrag Bank-9-Kollision (Zweig `r36/kartenbits`, Basis r36/integration 7a0fd453) — 2026-10-12
+
+Baum `.claude/worktrees/r36_kartenbits`. Wird fortlaufend geschrieben (Sitzungslimit) — ein Nachfolger macht beim
+ersten Unterabschnitt ohne Ergebnis weiter. Commits je Schritt (`wip(r36-kartenbits): ...`), am Ende `fix(...)`.
+
+### 9.0 Befund und Auftrag (Orchestrator, aus R_abnahme_3.md H3 + eigenem Zensus)
+Spur N speichert "Karte genommen" in Bank-9-Bits 87..91 (3F=87 ROOM1140, 2F=88 ROOM10D0, 1F=89 ROOM1030,
+B2=90 ROOM1200, B1=91 ROOM11D0). Bank 9 ist im Original die Zone der Item-TAKEN-Bits. Die Bits 90 und 91 sind
+Taken-Bits ORIGINALER Items in Stage 2 -> wer in Stage 1 den Lageplan B2/B1 nimmt, findet diese Items nicht;
+umgekehrt meldet ein Spielstand mit genommenem Item die Karte als besessen. Punkte: P1 Kollision an der Engine
+messen, P2 Zensus Original + Port, P3 Fix (zwei freie Bits), P4 Riegel-Test, P5 Alt-Spielstaende, P6 Regression.
+
+### 9.1 RE-Belege (selbst disassembliert, `re15_disasm.py` auf info/Re1.5/PSX.EXE)
+**Item_aot_set (Opcode 0x50, Sprungtabelle 0x800744a8[0x50] = 0x80040644)** — der Taken-Test beim Anlegen:
+```
+80040654 lw   a2,28(a0)        ; a2 = pc
+8004065c lbu  v0,3(a2)         ; pc[3]
+80040664 andi v0,v0,0x80       ; Langform?
+80040668 beq  v0,zero,0x80040680
+80040670 lhu  a1,26(a2)        ; LANG: Bit = u16 pc[26..27]
+80040674 lbu  s1,28(a2)        ;       Prop  = pc[28]
+80040680 lhu  a1,18(a2)        ; KURZ: Bit = u16 pc[18..19]
+80040684 lbu  s1,20(a2)        ;       Prop  = pc[20]
+800406d4 lui  a0,0x8007
+800406d8 lw   a0,18056(a0)     ; a0 = *(0x80074688) = 0x800b1078 = Flag-Tabelle 0x80074664[9]
+800406dc jal  0x8004efe4       ; Bit-Test
+800406e4 beq  v0,zero,0x8004071c ; Bit 0 -> Satz bleibt scharf
+800406f4 sb   zero,0(v0)       ; Bit 1 -> rec[0] (sce) = 0: Satz still
+800406f8..80040718 sw v1(0x80000000),0x800b3f98+s1*148 ; Modell pool[s1] versteckt
+```
+**FUN_8004efe4 (Bit-Test):** `srl v1,a1,5` / `sll v1,v1,2` / `addu v1,v1,a0` / `andi a1,a1,0x1f` /
+`lui v0,0x8000` / `lw v1,0(v1)` / `srlv v0,v0,a1` / `jr ra` / `and v0,v0,v1` — Wort = Basis + (Bit>>5)*4,
+Maske 0x80000000 >> (Bit & 31).
+**Ck (0x21) @0x8003fcf4:** `lbu a2,1(v0)` Bank = pc[1], `lhu a1,2(v0)` Bit = pc[2], Wort `(a1>>3)&0x1c`,
+Maske `0x80000000 >> (a1 & 0x1f)` (@0x8003fd38-40), Tabelle `0x80074664 + Bank*4` (@0x8003fd20-2c).
+**Set (0x22) @0x8003fdd0:** `lbu v1,1(v0)` Bank, `lbu a1,2(v0)` Bit, `lbu a2,3(v0)` Op (0 loeschen @0x8003fe4c,
+1 setzen @0x8003fe64, 7 umschalten @0x8003fe78), Wort `(Bit>>5)*4` (@0x8003fdf0-f4), dieselbe Tabelle 0x80074664.
+**Flag-Tabelle 0x80074664** (`re15_disasm.py table`): [9] = 0x80074688 -> **0x800b1078**, [10] -> 0x800b1098
+=> Bank 9 = 0x800b1078..0x800b1097 = 256 Bits. Item_aot_set-Taken-Bit, Ck(9,n) und Set(9,n) adressieren
+DASSELBE Bit (gleiche Basis, gleiche Wort-/Masken-Rechnung). Der Port fuehrt Bank 9 als `g_game.flags`-Zone 9
+(`re15_game_flag_get(9,..)`; op_item_aot_set scd_vm.c "TAKEN-BIT persistence" liest `re15_game_flag_get(9, tk_bit)`).
+**Weitere Leser/Schreiber von 0x800b1078 in der EXE** (XREF ghidra1_V2.txt Z. 493170: 8001e0d4, 80021fd4,
+800406d8, 80074688): 0x8001e0d4 (Aufnahme-Modal, `jal 0x8004ef90` @0x8001e0d0, Bit = Record-Feld) und
+0x80021fd4 (`lhu a1,4(s0)` @0x80021fcc mit s0 = Record+12 bzw. +20 -> Record+16/+24 = pc[18]/pc[26],
+`jal 0x8004ef90` @0x80021fd8) setzen das Bit AUS DEM Item_aot_set-Satz — keine eigenen Bitnummern.
+
+### 9.2 P1 Messung vorher (Stand 7a0fd453 + neuer Test, exe-unabhaengig an der Engine)
+Neuer Test `unit_r36_kartenbits` (tests/unit/test_r36_kartenbits.c, registriert in tests/unit/probes/r36_kartenbits.cmake),
+Teil V, am UNVERAENDERTEN Spur-N-Stand gebaut und gefahren. Ablauf je Plan: Raum des Plans starten (scd_room_reenter mit
+allen Port-Installern), Ereignis 28 feuern (scd_event_fire = was der Aktions-Scan des EVENT-Satzes tut), Ja/Nein mit JA
+beantworten (virtuelles Bestaetigen-Bit 0x4000), Faden bis zum Ende; danach mit DEMSELBEN Bank-9-Stand die Stage-2-Raeume
+starten. Die Saetze, gegen die gemessen wird (Bytes im RDT geprueft):
+* ROOM2040/2041 main00 @0x01364 `50 07 09 31 03 00 a4 06 62 c6 e8 03 e8 03 32 00 01 00 5b 00 ff 00` = Slot 7, Item 0x32
+  "Head of Akuma" (Name aus der byte-true Namensbank DEBUG.BIN @0x800c495c/@0x800c4a28), Taken-Bit u16 pc[18] = 0x5b = **91**
+* ROOM2090/2091 main00 @0x00A12 `50 05 09 31 01 00 e6 14 c4 be e8 03 e8 03 3f 00 01 00 5a 00 00 00` = Slot 5, Item 0x3F
+  "Pocket Watch", Taken-Bit = 0x5a = **90**, Weltmodell obj 0 (pc[20])
+
+Ergebnis (ctest-Ausgabe, gekuerzt):
+```
+ok:   ROOM2040 Slot 7: frisch scharf (1), mit Bit (9,91) still (1) — Gegenprobe der Messung     (ebenso 2041, 2090/2091 mit 90)
+ok:   Plan Blatt 4 (ROOM1140): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,87)  -> alle 4 Saetze scharf
+ok:   Plan Blatt 3 (ROOM10D0): ... (9,88) -> alle 4 scharf;  Plan Blatt 2 (ROOM1030): ... (9,89) -> alle 4 scharf
+ok:   Plan Blatt 1 (ROOM1200): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,90)
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2090 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2091 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+ok:   Plan Blatt 0 (ROOM11D0): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,91)
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2040 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2041 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL: Original-Items 0x32/0x3F genommen (Bits 90/91): Besitz der Polizei-Blaetter 0..4 = 0x03
+FAIL:   ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+FAIL:   ROOM11D0: Plan Blatt 0 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+```
+Befund damit an der Engine bestaetigt, in BEIDE Richtungen:
+* Lageplan B2 (ROOM1200) genommen -> in ROOM2090/2091 fehlt die Taschenuhr (Satz still, Weltmodell obj 0 versteckt,
+  Port op_item_aot_set = Original @0x800406f4/@0x800406f8-718); Lageplan B1 (ROOM11D0) -> in ROOM2040/2041 fehlt
+  "Head of Akuma". 3F/2F/1F (87/88/89) treffen keinen dieser Saetze.
+* Item 0x3F bzw. 0x32 genommen (Bits 90/91) -> Kartenblatt B2 (Seite 1) und B1 (Seite 0) gelten als besessen
+  (Besitz-Maske 0x03), und die Plaene in ROOM1200/11D0 werden gar nicht erst angelegt.
+* Softlock? Kein Skript prueft die Bits 90/91 (Ck/Set-Zensus 9.3), keiner der beiden Gegenstaende hat eine
+  Benutzungsstelle unter den 20 "You've used the X"-Meldungen (gen/discard_sites.inc). Einzige Textstelle zu einem der
+  beiden: ROOM2001 id 11 @0x2081 "Elza: My, that's a nice pocket watch!" (rdt_msgdump.py). Die Folge ist also ein
+  FEHLENDES Original-Item + falscher Kartenbesitz; ein harter Softlock ist nicht belegt.
+* Messfalle (beim Bau des Tests gefunden): `scd_vm_init` ruft `re15_game_state_init` (scd_vm.c) und nullt damit alle
+  Flags — ein Test, der zwei Raeume nacheinander mit scd_vm_init startet, misst sonst einen frischen Stand (erste Fassung
+  meldete faelschlich "mit Bit still (0)"). Der Test bewahrt g_game um scd_vm_init herum auf (Raumwechsel des Spiels
+  nullt die Flags nicht, scd_room_setup.c "scd_vm_init MINUS re15_game_state_init").
+
+### 9.3 P2 Zensus (Original + Port) — Datei `analysis/befunde_runde36/N_belege/bank9_zensus.txt`
+Werkzeug `re15_port/tools/r36_kartenbits/bank9_zensus.py` (Laengentabelle = scd_walk_lib = scd_vm.c s_opcode_sizes;
+Teile original | exe | port), Ausgabe mit Auswertungskopf eingecheckt.
+
+**Wer im Original Bank 9 anfasst — vollstaendig belegt, nicht nur die Skripte:**
+* Die Flag-Tabelle 0x80074664 wird in der EXE an genau fuenf Stellen indiziert (ghidra1_V2.txt `PTR_DAT_80074664
+  XREF[5]`): Ck 0x21 @0x8003fd2c, Flag-Ck2 0x58 @0x8003fda0, Set 0x22 @0x8003fe04, Flag-Set2 0x59 @0x8003fed0,
+  AOT-FLAG_CHG sce 4 LAB_80043120 @0x80043140 (`lhu v1,0(a0)` Bank, `lhu a1,2(a0)` Bit, `lhu a0,4(a0)` an/aus
+  @0x80043120-28). Eintrag [9] direkt: nur Item_aot_set @0x800406d8.
+* `DAT_800b1078 XREF[4]`: 0x8001e0d4, 0x80021fd4, 0x800406d8, 0x80074688 — die zwei Aufnahme-Wege setzen das Bit aus
+  dem Item-Satz (`lhu a1,4(s0)` @0x80021fcc, s0 = Satz+12/+20).
+* Die 105 Aufrufe der Bit-Helfer FUN_8004ef90/efb8/efe4 in EXE + STAGE1..5.BIN: in den Overlay-Dekompilaten nur die
+  Basen 0x800b1028 (Bank 5), 0x800b1038 (Bank 7), 0x800b1058 (Bank 8); `unaff_s0+0x48a4` = Bank 5 (gleiches Muster wie
+  PSX.EXE @0x80051784, Ghidra `a0=>DAT_800b1028`); der Direkt-Scan (lui/addiu-Paare) findet in keinem Overlay
+  0x800b1078 oder die Tabelle.
+=> Original-Bank-9-Bits = Item_aot_set-Taken-Bits + Ck/Set(9,n) + FLAG_CHG(9,n) (+ 0x58/0x59 mit Bank 9: keine).
+
+**Ergebnis Original** (206 RDTs mit Kopf + 34 Stummel, 40674 Opcodes, **0 Desync**, 164 Item_aot_set = dieselbe Zahl
+wie der C-Zensus in r21_discard TEIL C): 54 x Ck(9,n), 1 x Set(9,21,1) (ROOM3091 sub06 @0x016C2), 0 x 0x58/0x59 mit
+Bank 9, FLAG_CHG nur Bank 5 (26 Saetze), kein Taken-Bit >= 256. **85 von 256 Bits belegt** (Zahl wie der Runde-30-
+Zensus r30_idw_zensus.py): `2 6 10 11 12 14 15 16 18 19 20 21 22 52 85 86 90 91 92 98 99 104 105 108 109 134 135 136
+138 140..144 146..155 162..169 180..198 216 217 218 223..231 252 253`. Einziges reines Skript-Bit: 21; alle anderen
+sind Item-Taken-Bits. Frei: `0..1, 3..5, 7..9, 13, 17, 23..51, 53..84, 87..89, 93..97, 100..103, 106..107, 110..133,
+137, 139, 145, 156..161, 170..179, 199..215, 219..222, 232..251, 254..255`.
+
+**Ergebnis Port** (grep include/ engine/src platform/pc + Tabellen-Makros; Runde 30 bis 36): 53 Sicherung, 54/55
+Irons-Tisch, 56 Granate, 57..60 Dokumente, 61/62 Leichen, 63 Rolltor, 65 Ada-Ruf, 71 10F0-Szene, 72 10F0 Ziel 2,
+73 Irons-Tod, 74/75/76 Spawns, 79 Fenster 1120, 80/81 r35-Inhalt, 82/83 Q-Schluessel, 84 J-Werkstatt-Tuer,
+**87..91 N-Lageplaene**, 93 Q-Parkplatz-Tuer. (Item-Modal / menu_common / op_item_aot_set benutzen das Bit des
+Satzes.) Spur R (nach der Basis gemergt, ba384fac) bringt kein Bank-9-Bit (diff 7a0fd453..r36/integration geprueft).
+
+**Schnitt = {90, 91}** — genau der Befund. Zusaetzlich: die VERTRAG-Reserven **85 (J), 86 (L), 92 (P) sind Original-
+Taken-Bits** und duerfen nie vergeben werden: 85 = ROOM3040/3041 sub00 @0x014B2 Item 0x36 "Green Keycard"
+(Ck(9,85,1) sub01 @0x014CE), 86 = ROOM4040/4041 main00 @0x00F66 Item 0x41 "Spark Plug", 92 = ROOM3050/3051 main00
+@0x01EC6 Item 0x07 "Super Redhawk" x6 — kein Port-Code benutzt sie (Zensus).
+Der VERTRAG-Zensus vom 2026-10-10 hatte nur `re15_port/include/*.h` gezaehlt (VERTRAG 1.1 Z. 34) — die Original-
+Belegung fehlte ganz; daher "Frei: 64, 66-70, 77, 78, 82-255".
+
+**Wahl B2/B1 = 77/78** (frei in beiden): im Original-Block 53..84, den der Port seit Runde 30 fuer eigene Bits nutzt;
+in keiner Port-Version je Bank-9-Bit (`git log --all -G` ueber `#define *BIT* 77|78|0x4D|0x4E`,
+`re15_game_flag_*(9, 77|78)`, SCD `0x21/0x22, 0x09, 0x4D/0x4E`: 0 Treffer; Tags v0.8.21/v0.8.22/v0.8.23: 0 Treffer —
+Gegenprobe der Suche: dieselbe Suche findet `RE15_R36Q_TUER_BIT 93` in c5a6d7d4). VERTRAG Runde 35 1.1 hatte 77/78 als
+L-Reserve gefuehrt ("77 = 1060->1040-Dialog nur falls noetig, 78 Reserve") — nie belegt. (64, 66..70 waeren ebenso frei;
+64 kommt in der Geschichte nur als Bank-4-Bit RE15_CUT10F0_ZIEL1_ERREICHT_BIT vor.) 87/88/89 bleiben: im Original frei.
+
+### 9.4 P3 Fix — B2 = 77, B1 = 78
+Geaendert (nur das Bit; Lage, Modell, Texte, Programm unveraendert):
+| Datei | Aenderung |
+|---|---|
+| `re15_port/tools/r36_kartenitems/karten_export.py` | RAEUME: ROOM1200 B2 90 -> **77**, ROOM11D0 B1 91 -> **78**; Kommentar mit Taken-Test @0x80040680/@0x800406dc, Tabelle 0x80074664[9] @0x80074688, Zensus, alte Bits @0x00A12 / @0x01364 |
+| `re15_port/engine/src/gen/kartenitems_r36.inc` | NEU ERZEUGT (`karten_export.py --schreiben`); `git diff`: genau die zwei Zeilen `k_r36k_lage[3]`/`[4]`, nur Feld 3 (90 -> 77, 91 -> 78). Gegenprobe: der Generator erzeugt den Stand VOR der Aenderung bytegleich (Lauf auf 7a0fd453-Stand: kein Inhalts-Diff) |
+| `re15_port/include/re15_kartenitems_r36.h` | Kopf-Absatz "BANK-9-BITS" (Herleitung mit Adressen, Liste der nicht freien Reserve-Bits); Feld `bit` und Haken-Kommentar 87/88/89/77/78 |
+| `re15_port/engine/src/re15_map_owned.c` | Kommentar 87/88/89/77/78 |
+| `re15_port/tests/unit/test_r36_kartenitems.c` | `bits[5] = { 87, 88, 89, 77, 78 }`, Teil S setzt 87 + **78** (B1), Kommentare |
+| `re15_port/tests/integration/test_r36_kartenitems_bild.cmake` | Feld 7 der Zeilen b2/b1: 77/78; Kopfkommentar |
+| `analysis/befunde_runde36/VERTRAG.md` 1.1 | N-Zeile 87-89, 77, 78; Nachtrag: 85/86/90/91/92 sind Original-Taken-Bits (J/L/P-Reserven 85/86/92 gestrichen), Liste "frei in Original UND Port" |
+
+Warum 77/78 und nicht anders: Abschnitt 9.3 (frei im Original-Block 53..84, nie im Port). 87/88/89 bleiben (im Original
+frei) — ein Umzug aller fuenf wuerde Staende mit genommenem 3F/2F/1F-Plan ohne Not entwerten.
+
+Messung nachher (unit_r36_kartenbits Teil V, derselbe Test wie 9.2, jetzt gruen):
+```
+ok:   Plan Blatt 1 (ROOM1200): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,77)
+ok:     nach Plan Blatt 1 (Bit 9,77): ROOM2090 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) scharf   (ebenso 2091, 2040, 2041)
+ok:   Plan Blatt 0 (ROOM11D0): Port-Programm Ereignis 28 lief zu Ende, setzte 1 Bank-9-Bit(s): (9,78)
+ok:     nach Plan Blatt 0 (Bit 9,78): ROOM2040 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) scharf   (ebenso 2041, 2090, 2091)
+ok:   Original-Items 0x32/0x3F genommen (Bits 90/91): Besitz der Polizei-Blaetter 0..4 = 0x00
+ok:     ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)    (ebenso alle fuenf)
+```
+unit_r36_kartenitems: 217 PASS, 0 FAIL (Zeile 3: ROOM1200 Bit 77, Zeile 4: ROOM11D0 Bit 78; Teil S Bits 87/78 -> Blatt 4 + 0).
+
+### 9.5 P4 Riegel — `unit_r36_kartenbits` (tests/unit/test_r36_kartenbits.c, tests/unit/probes/r36_kartenbits.cmake)
+Drei Teile, alle an echten Daten / echtem Port-Code:
+* **Z Zensus des Originals** (a/b): alle ausgelieferten RDTs (STAGE1..6, Leon- und Elza-Varianten), main- und sub-SCD,
+  Laengen aus `scd_opcode_size_at` (scd_vm.c, schon fuer r21_discard exportiert und genau die Lese-Funktion fuer
+  `s_opcode_sizes`, die der Auftrag erlaubt — **scd_vm.c blieb unveraendert**), Sektionsende/Regionen/Vorwaertsziel-Regel
+  1:1 wie scd_dump_room.py. Gesammelt: Item_aot_set-Bit (u16 pc[18]/pc[26]), Ck(9,n), Set(9,n), FLAG_CHG-Saetze mit Bank 9
+  (Aot_set/Aot_reset sce 4); 0x58/0x59 mit Bank 9 sind verboten (Bit erst zur Laufzeit). Gegenproben: 206 RDTs, **1579
+  Regionen** (= Runde-30-Zensus "1579 SCD-Bloecke"), **40674 Opcodes** (= bank9_zensus.py, zweite unabhaengige
+  Implementierung), 0 Desync, 164 Item_aot_set, 85 Bits; die bekannten Bits 85, 86, 90, 91, 92 sowie 52/136/138
+  (Keycard-Tore) und 21 (Skript-Bit ROOM3091) werden gefunden.
+* **P Port** (c/d): explizite Liste aller 30 Bank-9-Eintraege des Ports mit Makro + Quelle (Werte aus den Koepfen
+  re15_sicherung.h, re15_irons_tisch.h, re15_granate.h, re15_dokumente.h, re15_leiche.h, re15_rolltor.h, re15_adaruf.h,
+  re15_cut10f0.h, re15_irons_tod.h, re15_fenster1120.h, re15_inhalt_r35.h, re15_schluessel_r36.h, re15_szenenleon_r36.h,
+  re15_tuer1060.h; je Eintrag Bank == 9 geprueft) + die 5 Lageplan-Bits LIVE aus `k_r36k_lage`: keines im Original-Satz,
+  kein Lageplan-Bit gleich einem anderen Port-Bit. GEGENPROBE im Test: die alte Spur-N-Belegung {87..91} durch DIESELBE
+  Pruefung -> genau {90, 91}.
+* **V Verhalten** (Abschnitt 9.2): Plan ueber das echte Port-Programm nehmen -> Stage-2-Items bleiben scharf;
+  Rueckrichtung.
+
+Ergebnis Endstand: `100% tests passed, 0 tests failed out of 1` (127 ok, 0 FAIL).
+
+**Gegenprobe (d) am gebauten Code** — `gen/kartenitems_r36.inc` voruebergehend auf die alte Belegung (B2 90, B1 91)
+zurueckgesetzt, gebaut, Riegel gefahren (exit 1), danach .inc wiederhergestellt (bytegleich zum Commit, cmp), neu
+gebaut, Riegel gruen (exit 0). Ausgabe mit der alten Belegung (alle 10 FAIL):
+```
+FAIL: Bit  90 Lageplan Blatt 1 ROOM1200 (k_r36k_lage, Spur N) — KOLLISION mit ROOM2090 main00 @0x00A12 Item_aot_set
+FAIL: Bit  91 Lageplan Blatt 0 ROOM11D0 (k_r36k_lage, Spur N) — KOLLISION mit ROOM2040 main00 @0x01364 Item_aot_set
+FAIL: 35 Port-Bits gegen 85 Original-Bits: 2 Kollision(en)
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2090 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2091 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2040 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2041 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL: Original-Items 0x32/0x3F genommen (Bits 90/91): Besitz der Polizei-Blaetter 0..4 = 0x03
+FAIL:   ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+FAIL:   ROOM11D0: Plan Blatt 0 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+```
+Nebenbefund (bestaetigt den Port): op_item_aot_set liest das Taken-Bit nur als uint8 pc[18]/pc[26], das Original als
+u16 (`lhu` @0x80040680/@0x80040670). Zulaessig, weil KEIN ausgelieferter Satz ein Bit >= 256 traegt (Riegel Z prueft
+"kein Item-Taken-Bit >= 256"; ein solches Bit liefe im Original ueber Bank 9 hinaus in Bank 10 = 0x800b1098).
+Grenze des Riegels: Teil P kennt nur die Port-Bits, die in seiner Liste stehen. Ein NEUES Port-Bit muss dort eingetragen
+werden (Kommentar an der Liste; bank9_zensus.py Teil port findet alle Zugriffsstellen per grep).
+
+### 9.6 P5 Alt-Spielstaende
+**Die neuen Bits 77/78 koennen in keinem bisherigen Spielstand stehen:**
+* Original: kein Item_aot_set, kein Ck/Set, kein FLAG_CHG mit 77/78, kein 0x58/0x59 mit Bank 9 (Zensus 9.3, Riegel Z) —
+  die ausgelieferten Skripte, die der Port-VM ausfuehrt, setzen sie nie; die EXE setzt Bank 9 nur mit dem Bit eines
+  Item-Satzes (@0x8001e0d0 / @0x80021fd8).
+* Port: in KEINER Version je als Bank-9-Bit benutzt — `git log --all -G` (alle Zweige, auch r35/*, r34n/*) ueber
+  `#define RE15_*BIT* 77|78|0x4D|0x4E`, `re15_game_flag_(get|set)(9, 77|78)`, SCD-Bytes `0x21/0x22, 0x09/9, 0x4D/0x4E/77/78`:
+  0 Treffer (Gegenprobe der Suche: sie findet `RE15_R36Q_TUER_BIT 93` in c5a6d7d4); `git grep` in den Tags v0.8.21,
+  v0.8.22, v0.8.23: 0 Treffer. Einzige Ausnahme waeren die Test-Schalter `RE15_SET_FLAG`/`RE15_SET_FLAG_AT`
+  (platform/pc/main.c Zeile 4778 / 7302, setzen beliebige Bits) — kein Spielweg.
+* Gemessen an echten Karten (Riegel Teil S, nur gelesen): die eingecheckte Nutzerkarte 2026-09-27 (Fixture
+  probes/r30_karte_nutzer_2026-09-27.mcr, 4 Plaetze) und eine Kopie der aktuellen Karte neben der exe des Hauptbaums
+  (re15_port/build/platform/pc/re15_card.mcr, Stand 2026-10-05, md5 4990b84f, 5 Plaetze; Aufruf
+  `RE15_R36KB_KARTE=<karte> test_r36_kartenbits.exe`): in keinem Platz 77 oder 78 gesetzt. Gesetzte Bank-9-Bits dort nur
+  Original-Item-Bits und Port-Bits der Liste (53..63, 65, 80), z.B. Platz 3 (ROOM1071): `2 10 53 54 55 56 57 60 62 63 80
+  99 104 105 134 136 138 ...`.
+* Spur N war nie in einem Release und nie in master (kartenitems_r36.c fehlt in v0.8.21/22/23 und master f3f7584b; nur
+  r36/integration seit cb1d5f59) — die alten Lageplan-Bits 90/91 koennen nur interne Integrations-Testlaeufe gesetzt
+  haben. Ein solcher interner Stand (B2/B1-Plan mit 90/91 genommen) zeigt nach dem Fix: Plan haengt wieder (77/78 = 0),
+  laesst sich erneut nehmen; die Taschenuhr / "Head of Akuma" bleiben dort verschwunden (90/91 gesetzt) — nur
+  Testsstaende, kein Nutzerstand betroffen.
+
+**Was ein v0.8.23-Spielstand mit genommenem Item 0x32/0x3F jetzt zeigt** (Spielstand-Format v9, re15_savedata.h/.c seit
+v0.8.23 unveraendert — `git diff v0.8.23 HEAD` leer): Riegel Teil S2 schreibt einen Stand mit Bits 90/91 ueber die ECHTE
+Speicherkarte (re15_memcard_save -> re15_memcard_load -> re15_savedata_restore) und misst:
+```
+ok:   Spielstand-Format v9 = v0.8.23 (RE15_SAVE_VERSION 9, re15_savedata.h/.c seit v0.8.23 unveraendert)
+ok:   Stand mit Items 0x3F/0x32 genommen ueber die Speicherkarte geschrieben und geladen (Bits 90/91 gesetzt)
+ok:   nach dem Laden: kein Polizei-Blatt im Besitz (Maske 0x00) — mit der alten Belegung waere es 0x03
+ok:   nach dem Laden: Plan Blatt 1 haengt in ROOM1200 (aufnehmbar, setzt dann Bit 77)
+ok:   nach dem Laden: Plan Blatt 0 haengt in ROOM11D0 (aufnehmbar, setzt dann Bit 78)
+ok:   nach dem Laden: ROOM2040 Item 0x32 bleibt genommen (Satz still, @0x800406f4)   (ebenso 2041, 2090, 2091)
+```
+Die alte Belegung haette denselben Stand als "B1 + B2 besessen" gezeigt (Maske 0x03, Abschnitt 9.2 Rueckrichtung) und die
+beiden Plaene gar nicht angelegt.
+Riegel-Endstand: 141 ok, 0 FAIL.
+
+### 9.7 P6 Regression (gezielt, KEINE volle Suite)
+Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (Endstand, inkl. Re-Configure fuer die
+neue probes-Datei).
+```
+PATH="/c/msys64/mingw64/bin:$PATH" ctest --test-dir re15_port/build   -R "r36_kartenitems|kartenitem|r36_kartenbits|map_|karte|r33_karte|r35_karte|unit_r36_|item" --timeout 900 -j 4
+...
+121/123 Test #547: integration_r35_karte_fahrstuhl ....   Passed  185.82 sec
+122/123 Test #603: integration_r36_karte ..............   Passed  190.91 sec
+123/123 Test #606: integration_r36_kartenitems_bild ...   Passed  473.71 sec
+
+100% tests passed, 0 tests failed out of 123
+
+Total Test time (real) = 476.00 sec
+```
+Darin u.a. unit_r36_kartenbits, unit_r36_kartenitems, alle unit_r36_* (Spuren A..R), unit_r33_karte_*, unit_r35_karte_*,
+integration_r35_karte, integration_r36_karte, integration_map_uebergang, integration_map_raum_live,
+integration_item_name_census. Die exe des Laufs integration_r36_kartenitems_bild schreibt mit den neuen Bits
+(debug.log `lauf_*_b2_mit`: `[kartenitems] ROOM1200: Karte Blatt 1 (Bit 9,77) ...`, `lauf_*_b1_mit`: `ROOM11D0: Karte
+Blatt 0 (Bit 9,78) ...`; die Laeufe mit gesetztem Bit 77/78 legen keine Karte an). Parallel lief auf der Maschine eine
+fremde Sitzung (ctest + re15_pc_r36r_haken-exe); kein Test flatterte.
+
+### 9.8 OFFEN
+* `RE15_MIN_TESTS` (re15_port/tools/local_build.sh) steht weiter auf 592; dieser Zweig bringt +1 Test
+  (unit_r36_kartenbits, Suite hier 694). Anheben ist Sache der Integration (VERTRAG 1.5).
+* Der Riegel Teil P kennt nur die Port-Bits seiner Liste. Wer ein NEUES Bank-9-Bit vergibt, traegt es dort ein
+  (Kommentar an `k_port[]`) und in VERTRAG 1.1; `bank9_zensus.py port` listet alle Zugriffsstellen.
+* Nicht Teil dieses Auftrags: Port-eigene Zustandsbits in ANDEREN Banken (z.B. Bank 7 Tot-Bits der Montage
+  RE15_IT_* 40..43, 46..49, 75..79 laut re15_irons_tod.h, eigener Zensus aller Sce_em_set im irons_tod-Dossier §2.3; Bank 3/4 Lesezugriffe auf Original-Flags) — derselbe
+  Kollisions-Typ waere dort mit dem Muster von bank9_zensus.py je Bank pruefbar.
+* Interne r36-Integrationsstaende, in denen der B2/B1-Plan mit den alten Bits 90/91 genommen wurde, behalten ihr
+  verschwundenes Stage-2-Item (Bit bleibt gesetzt); der Plan haengt dort wieder. Kein Nutzerstand betroffen (9.6).
+
+### 9.9 Fuer den Nutzer
+* Was war: die Lageplaene **B2** (ROOM1200) und **B1** (ROOM11D0) merkten sich "genommen" auf denselben Speicherplaetzen
+  wie zwei Original-Gegenstaende in Stage 2 — die **Taschenuhr** in ROOM2090 und **"Head of Akuma"** in ROOM2040. Wer den
+  Plan nahm, fand den Gegenstand spaeter nicht mehr; wer den Gegenstand zuerst nahm, hatte die Etagenkarte schon, ohne
+  den Plan je gesehen zu haben.
+* Jetzt: die beiden Plaene haben eigene, freie Plaetze (77/78). 3F/2F/1F waren nie betroffen.
+* Spielstaende: unveraendert ladbar (gleiches Format). Kein veroeffentlichter Stand ist betroffen — die Lageplaene gab es
+  in keiner bisher ausgelieferten Version (erst ab v0.8.24).
+* Keine neuen Dateien, keine Sprachdateien, keine sichtbare Aenderung an den Karten selbst.
