@@ -1,0 +1,34 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r37d/n2090_unten/wegplan_eingabe.txt: 15 Befehle
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj6=(0,0,0) b0 | OBJ 0
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj0=(0,0,0) b0 |   -> Befehl 0 beendet: gesetzt
+F1 room=2090 spieler=(6300,-16250) rot=2048 mo=210 pm=0 obj0=(5750,-1800,-16300) b2 | RAUM 2090 geladen, Spieler frei (obj 0 = Slot 0)
+F30 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 1 beendet: Raum bereit
+F31 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | GEGNERWEG
+F31 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   Gegner Slot 1 Typ 0x25 (719,-8609) freigegeben
+F31 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   Gegner Slot 2 Typ 0x25 (-2300,-23896) freigegeben
+F31 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   Gegner Slot 20 Typ 0x23 (-7200,-9200) freigegeben
+F31 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 2 beendet: 3 Gegner weg
+F32 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | WARTE 30
+F61 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 3 beendet: gewartet
+F62 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | FLAG (9,90)
+F62 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   FLAG (9,90) = 0
+F62 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 4 beendet: gelesen
+F63 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | BLICK 2048
+F64 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 5 beendet: Blick steht
+F65 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | WARTE 20
+F84 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 6 beendet: gewartet
+F85 room=2090 spieler=(7668,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | AKTION
+F87 room=2090 spieler=(7668,-16250) rot=2048 mo=230 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 7 beendet: gedrueckt
+F88 room=2090 spieler=(7668,-16250) rot=2048 mo=231 pm=0 obj0=(5750,-1800,-16300) b2 | WARTE 60
+F147 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 8 beendet: gewartet
+F148 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | AKTION
+F150 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 9 beendet: gedrueckt
+F151 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | WARTE 60
+F210 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 10 beendet: gewartet
+F211 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | AKTION
+F213 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 11 beendet: gedrueckt
+F214 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | WARTE 100
+F313 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 12 beendet: gewartet
+F314 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 | FLAG (9,90)
+F314 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   FLAG (9,90) = 0
+F314 room=2090 spieler=(6520,-16250) rot=2048 mo=200 pm=0 obj0=(5750,-1800,-16300) b2 |   -> Befehl 13 beendet: gelesen

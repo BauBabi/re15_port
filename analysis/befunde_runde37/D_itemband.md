@@ -169,7 +169,44 @@ Keine Konstante ohne Beleg: 18 = Member-Id (@0x80010c8c[18] -> @0x80041228), 0x8
 Port-synthetische ITEM-Saetze (dokumente_r34, inhalt_r35, irons_tisch_1150, schluessel_r36) setzen ihr Band selbst
 (0 bzw. ROOM1090-Schrot 5 = Dachband) und liegen auf ihrem Spielerband — vom Gate nicht betroffen (geprueft).
 
-## 5. Messung nachher
+## 5. Messung nachher (exe nach dem Fix, Messkopie re15_pc_r37d.exe, `D_belege/lauf_d.sh`, RE15_ITEMBAND_LOG)
+
+Laufordner Scratchpad `r37d/<lauf>/`; Auszuege (wegplan.txt, itemband.txt, climb-Auszug) in `D_belege/<lauf>/`.
+
+### 5.1 ROOM3050 — der Nutzer-Fall (Super Redhawk, floor 1, tk 92)
+* **`nachher_3050_oben`** (derselbe Wegplan wie 1.1, obere Ebene Band 4, Kiste unberuehrt): itemband.txt
+  `F807/F870/F933 room=3050 ITEM slot 6 floor 1 item 0x07 tk 92 spieler-band 4 spieler=(-24026,-7200,-22770) -> GESPERRT
+  (@0x80042ccc bne Band)`; wegplan.txt **`F1036 FLAG (9,92) = 0`** (vorher: 1).
+* **`nachher_3050_stufe2`** (vorgesehener Weg, Wegplan der Spur-R-Abnahme `wp_3050_stufe2.txt`: West-Schub, Sued-Schub
+  bis zum Fall, Lift, unten zur Kiste, Schub nach Norden in die Kerbe, Klettern, Aufnahme):
+  `F1233 SCHIEB: Objekt-y -7200 -> -7192 (Fall)` -> Kiste `(-24058,0,-15591) b0`; Lift AKTION F2200 -> itemband.txt
+  **`MEMBER 0x12 Spieler: Kollisionsband 4 -> 0 (@0x80041228) y=0`**, climb.txt `T2400 ... pos=(-2038,-2400,-8179) ...
+  band=4` -> `T2450 ... pos=(-2038,0,-8179) ... band=0`; `F2601 FLAG (3,82) = 1`; danach unten OHNE Klemme
+  (`F2738 ... (-7990,-8145) angekommen`, `F3108 ... (-24026,-14241) angekommen` — vorher `F2825 GEHE: nach 8 Runden
+  Rest 344` an der Band-4-Wand x -7657); `F3451 SCHIEB: Bedingung erfuellt (obj.z = -22225)`, **`F3512 FLAG (3,93) = 1`**
+  (Latch sub01 @0x02184-2196); Klettern auf die Kiste (AKTION F3537, mo=230); **`F3805 ITEM slot 6 floor 1 ... spieler-band
+  1 spieler=(-24072,-1800,-22732) -> FREI`**, **`F4034 FLAG (9,92) = 1`**.
+  -> Der vorgesehene Weg ist an der exe Ende-zu-Ende gangbar (vorher: Klemme nach dem Lift, Aufnahme von y 0 mit Band 4).
+
+### 5.2 ROOM3010 — Steg (SHOTGUN SHELLS x7, floor 1, tk 20)
+* **`n3010_unten`** (Band 0 UNTER dem Steg, `RE15_PLAYER_POS=-10700,844,0,0`, Blick Ost, AKTION x3): itemband.txt 3x
+  `ITEM slot 5 floor 1 item 0x16 tk 20 spieler-band 0 spieler=(-10700,0,844) -> GESPERRT`; `F314 FLAG (9,20) = 0`.
+  (Die Band-0-Flaeche unter dem Steg hat keine Band-0-Zelle — vor dem Fix griff der Spieler hier durch den Steg.)
+* **`n3010_weg`** (Ankunft der 3020/30D0-Tuer (-7400,0,-18400) Band 0 -> Nordkante des Stegs, Blick Sued, AKTION =
+  Klettern an r0[4]): climb.txt `T464 ... pos=(-10322,0,-11175) rot=3072 band=0 sub=9` (Kletter-Substate) -> Steg;
+  `F552 ... (-10707,834) angekommen`, Blick Ost, **`F582 ITEM slot 5 floor 1 ... spieler-band 1 spieler=(-10707,-1800,834)
+  -> FREI`**, **`F811 FLAG (9,20) = 1`**.
+
+### 5.3 ROOM2090 — Plattform (Pocket Watch, floor 1, tk 90)
+* **`n2090_weg`** (ECHTE Tuer: `RE15_DEBUG_JUMP=20A0`, Spieler an der Tuer slot 0 @0x01746 (floor 2) Band 2 = Ankunftsstelle
+  der 2090-Tuer, AKTION): debug.log `[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2
+  spawn=(6300,-1800,-16250)`, `[tuer] Sequenz ... DOOR26`, `loaded room2090.rdt`; Blick West, **`F87 ITEM slot 5 floor 1
+  item 0x3F tk 90 spieler-band 1 spieler=(6300,-1800,-16250) -> FREI`**, `F316 FLAG (9,90) = 1`.
+* **`n2090_unten`** (Band 0 im Wasser an derselben x/z, Blick West): der erste Druck startet NICHT die Aufnahme, sondern das
+  Klettern auf die Plattform (Kletter-Sonde FUN_8002d474 laeuft @0x80031fd0 VOR dem AOT-Scan; Zelle r0[5] Band 0 u1 0x01):
+  climb.txt 31 Bilder `band=0 sub=9`, dann `band=1`; erst danach `F148 ... spieler-band 1 ... -> FREI`. Ein Band-0-Spieler
+  erreicht das Rechteck geometrisch nicht (r0[5] umschliesst die Plattform) — in 2090 war der Defekt im Spiel nicht
+  sichtbar; das Gate fuer diesen Satz belegt der Riegel (Teil G: Band 0/2/4 -> kein Modal).
 
 ## 6. Tests
 
