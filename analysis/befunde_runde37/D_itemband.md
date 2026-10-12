@@ -345,3 +345,11 @@ nachgefahren werden.
   setzen jetzt auch das Stockwerk der Kollision — vorher stand Leon nach der Fahrt "im falschen Stockwerk" (ROOM3050: Klemme
   an unsichtbaren Waenden unten).
 * Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bedienaenderung, keine Entscheidungsfrage.
+
+## 9. Abschluss
+
+Zweig `r37/itemband` (Basis master f1e019ca), Code-Commit 6aeb2086 (die zwei Haken + itemband_r37.c), Riegel 8c44bdee /
+4c0221e4 / a4331e65, Belege und Dossier in den uebrigen wip-Commits; letzter Commit `fix(r37-itemband)` (dieser Abschnitt).
+Gemeinsame Dateien: `re15_port/engine/src/aot_common.c` (+3 Zeilen: Include, Kommentar, Aufruf nach dem GENERIC-Gate),
+`re15_port/engine/src/actor_common.c` (+3/-1: Include, case 18 mit Aufruf). Keine Installer-Zeile in scd_room_setup.c noetig
+(kein Raum-Installer), keine neuen Assets, keine Sprachdateien, keine neuen Bank-9-Bits, keine Port-Text-Ids.
