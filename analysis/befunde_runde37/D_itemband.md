@@ -484,17 +484,6 @@ bzw. RE2-Zone sat 0x41; sonst ist der Druck verbraucht und nichts passiert (RE2 
 * `re15_port/include/re15_itemband_r37.h`: Abschnitt (3) mit allen Belegen. Keine neue Konstante ohne Satz-Offset; keine Flags,
   keine Text-Ids, keine Slots belegt. Der Satz (sat 0x31), das Band-Gate (1) und Member 0x12 (2) bleiben unveraendert.
 
-### NB1.5 Messung nachher (exe 589a37de, Messkopie re15_pc_r37d_nb1.exe; Auszuege `D_belege/nb1/n_*`)
-Gleiche Befehle und Wegplaene wie NB1.1.
-| Lauf | Druck ausserhalb | Druck in der Kabine | Ergebnis |
-|---|---|---|---|
-| `n_auf_eingang` (Leon) | `F254 LIFT slot 5 sub 2 spieler=(6605,-5400,10770) band 3 mitte im Ausloeser nein -> GESPERRT`, `F657 (3,222) = 0` (keine Fahrt, Spieler unveraendert) | `F717 ... (6605,-5400,11970) ... ja -> FAEHRT`, `F808 MEMBER 0x12 3 -> 6` | `F1254 (6605,13695)`, `F1400 (-637,14499)`, `F1443 ITEM slot 11 ... spieler-band 6 -> FREI`, **`F1672 FLAG (9,109) = 1`** |
-| `n_ab_sued` (Leon) | `F844 LIFT slot 4 sub 2 spieler=(6605,-10800,13245) band 6 ... nein -> GESPERRT`, `F1247 (3,222) = 1` (keine Fahrt) | `F1308 ... (6597,-10800,12061) ... ja -> FAEHRT`, `F1399 MEMBER 0x12 6 -> 3` | `F1949 (6641,2227)`, `F1995 (6535,11)`, **`[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750)`**, **`loaded room2070.rdt`** |
-| `n_auf_eingang_elza` (`RE15_PSELECT_AUTO_SWITCH=1`, `PL04 ... Elza-Bit=1`, `loaded room2031.rdt`) | `F254 room=2031 LIFT slot 5 ... nein -> GESPERRT` | `F717 ... ja -> FAEHRT`, `F808 MEMBER 0x12 3 -> 6` | `F1443 ... -> FREI`, **`F1672 FLAG (9,109) = 1`** |
-| `n_ab_sued_elza` | `F844 room=2031 LIFT slot 4 ... nein -> GESPERRT` | `F1308 ... ja -> FAEHRT`, `F1399 MEMBER 0x12 6 -> 3` | **`DOOR FIRE slot=0`**, **`loaded room2071.rdt`** |
--> Beide Fallen sind fuer beide Figuren weg; der vorgesehene Weg (Fahrt aus der Kabine) faehrt unveraendert, die SPAS-12
-bleibt erreichbar und der Raum ueber die Tuer slot 0 verlassbar.
-
 ### NB1.4 Fallen-Zensus aller Lifte (unit_r37_itemband Teil F, echte Port-Kollision; Ausgabe `D_belege/nb1/unit_r37_itemband_nb1.log`)
 Je Fahrt: Raum mit der Lift-Stellung starten (echtes sub00), Ausloesestellen = jeder Standplatz im 25er-Raster um das
 Ausloese-Rechteck (+/-700), frei und erreichbar auf dem Startband, dessen Punkt 620 voraus (sat 0x20, @0x80042ef8; 256
@@ -514,6 +503,17 @@ der vorgesehenen Fahrt (an der exe gefahrene Druckstelle). Fuer Lift A muss die 
 Deckt sich mit der Zellanalyse der Abnahme (114 / 323 Stellen an Lift A, sonst 0; deren 25er-Raster mit anderem Rand). Erster
 Zensus-Lauf ohne die Skriptwirkung der Fahrt zeigte an 3050 626/760 Schein-Fallen (Schachtzelle r*[21] vor der Fahrt noch
 solide) — deshalb flutet der Riegel das Zielband NACH der echten Fahrt.
+
+### NB1.5 Messung nachher (exe 589a37de, Messkopie re15_pc_r37d_nb1.exe; Auszuege `D_belege/nb1/n_*`)
+Gleiche Befehle und Wegplaene wie NB1.1.
+| Lauf | Druck ausserhalb | Druck in der Kabine | Ergebnis |
+|---|---|---|---|
+| `n_auf_eingang` (Leon) | `F254 LIFT slot 5 sub 2 spieler=(6605,-5400,10770) band 3 mitte im Ausloeser nein -> GESPERRT`, `F657 (3,222) = 0` (keine Fahrt, Spieler unveraendert) | `F717 ... (6605,-5400,11970) ... ja -> FAEHRT`, `F808 MEMBER 0x12 3 -> 6` | `F1254 (6605,13695)`, `F1400 (-637,14499)`, `F1443 ITEM slot 11 ... spieler-band 6 -> FREI`, **`F1672 FLAG (9,109) = 1`** |
+| `n_ab_sued` (Leon) | `F844 LIFT slot 4 sub 2 spieler=(6605,-10800,13245) band 6 ... nein -> GESPERRT`, `F1247 (3,222) = 1` (keine Fahrt) | `F1308 ... (6597,-10800,12061) ... ja -> FAEHRT`, `F1399 MEMBER 0x12 6 -> 3` | `F1949 (6641,2227)`, `F1995 (6535,11)`, **`[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750)`**, **`loaded room2070.rdt`** |
+| `n_auf_eingang_elza` (`RE15_PSELECT_AUTO_SWITCH=1`, `PL04 ... Elza-Bit=1`, `loaded room2031.rdt`) | `F254 room=2031 LIFT slot 5 ... nein -> GESPERRT` | `F717 ... ja -> FAEHRT`, `F808 MEMBER 0x12 3 -> 6` | `F1443 ... -> FREI`, **`F1672 FLAG (9,109) = 1`** |
+| `n_ab_sued_elza` | `F844 room=2031 LIFT slot 4 ... nein -> GESPERRT` | `F1308 ... ja -> FAEHRT`, `F1399 MEMBER 0x12 6 -> 3` | **`DOOR FIRE slot=0`**, **`loaded room2071.rdt`** |
+-> Beide Fallen sind fuer beide Figuren weg; der vorgesehene Weg (Fahrt aus der Kabine) faehrt unveraendert, die SPAS-12
+bleibt erreichbar und der Raum ueber die Tuer slot 0 verlassbar.
 
 ### NB1.6 Tests (registriert nur in `re15_port/tests/unit/probes/r37_itemband.cmake`)
 * `unit_r37_itemband` neu Teil **L** (Sperre ueber den echten `re15_aot_scan`, ROOM2030 und ROOM2031: Satz slot 5/4 =
