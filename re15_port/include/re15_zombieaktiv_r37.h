@@ -36,18 +36,19 @@
  *         (@0x80101ba0-c4) und 0x701 bei dist < 0x7D0 ausserhalb 0x2c8 (@0x80101bd4-f0); der Sichtsensor FUN_8001bc08
  *         -> FUN_8001b84c(0x5e8) prueft nur Kegel + Nibble-3-Strahl @0x8001b87c-8e8) = der AKTIVE Zombie der RE1.5-Daten
  *                                                                  -> RE2 6 (NEU, diese Datei)
- *         Dieselbe Klasse in Stage 4 (ROOM4050: Zombie-Girl Typ 0x13 und Zombies), Binaerdatei STAGE4.BIN (Runde 37
- *         Nachbesserung 1 — hier standen vorher die Adressen der STAGE1.BIN-Kopie des Girl-Codes @0x80120230/0x80120264,
- *         die ROOM4050 nicht laedt): Raumlader @0x800397a4-ec, Stage-Byte 3 / Raum 5 -> @0x8007438c[3] -> Datei 912 =
- *         ROOM4050.RDT (221128 Byte); Overlay-Wechsel @0x80039a30 -> @0x800299a4(2, 3+1) -> Ladesatz @0x80073c0c =
- *         Datei 3 (Dateitabelle @0x8006f454: 0x1A620 Byte = STAGE4.BIN) nach 0x80100000, Installation 0x80118380.
+ *         Dieselbe Klasse in Stage 4 (ROOM4050/4051: die zwei Zombie-Girls Typ 0x13 grid 0x00, main00 @0x01EB4 /
+ *         @0x01F5C), Binaerdatei STAGE4.BIN (Runde 37 Nachbesserung 1 — hier standen vorher die Adressen der
+ *         STAGE1.BIN-Kopie des Girl-Codes @0x80120230/0x80120264, die ROOM4050 nicht laedt): Raumlader @0x800397a4-ec,
+ *         Stage-Byte 3 / Raum 5 -> @0x8007438c[3] -> Datei 912 = ROOM4050.RDT (221128 Byte); Overlay-Wechsel @0x80039a30
+ *         -> @0x800299a4(2, 3+1) -> Ladesatz @0x80073c0c = Datei 3 (Dateitabelle @0x8006f454: 0x1A620 Byte = STAGE4.BIN)
+ *         nach 0x80100000, Installation 0x80118380.
  *         STAGE4.BIN: 0x80072bac[0x13] = 0x8010a87c (`addiu v1,v1,-22404` @0x80118390, `sw v1,0x2bf8(at)` @0x80118478);
  *         Zustand 1 = 0x8010b228 (@0x80119734) -> Modus +0x9 & 0xf ueber @0x80119758 (`lbu v0,9(v0)` @0x8010b648,
  *         `addiu at,at,-26792` @0x8010b65c, `jalr` @0x8010b66c); Modus 0 = 0x8010b688 -> DECIDE @0x8011978c[+0x5]
  *         (`lbu v0,5(v0)` @0x8010b6cc, `addiu at,at,-26740` @0x8010b6dc, `jalr v0` @0x8010b6ec); Eintrag [0] =
- *         0x80101b18 = STAGE1 FUN_80101b64 Wort fuer Wort (70/70 bis `jr ra` @0x80101c28). Die Stage-4-Zombies
- *         (0x80072bac[0x10] = 0x801003d8) erreichen dieselbe 0x80101b18 ueber @0x80118d34[0] = 0x80101640 ->
- *         DECIDE @0x80118d68 (`addiu at,at,-29336` @0x80101660).
+ *         0x80101b18 = STAGE1 FUN_80101b64 Wort fuer Wort (70/70 bis `jr ra` @0x80101c28). Auch der Modus 0 der
+ *         Stage-4-Zombies (0x80072bac[0x10] = 0x801003d8) erreicht dieselbe 0x80101b18: @0x80118d34[0] = 0x80101640
+ *         -> DECIDE @0x80118d68 (`addiu at,at,-29336` @0x80101660).
  *   0x02  schlafender Steher, DECIDE FUN_80101c7c (STAGE1.BIN @0x8011f960[0]): ENGAGE nur bei dist < 0xFA0
  *                                                                  -> RE2 0 (unveraendert)
  * Die RE2-KI hat fuer aufrechte Zombies genau diese zwei Klassen (0 / 6); die Abbildung legt die RE1.5-Daten-Klasse
