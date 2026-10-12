@@ -11,7 +11,10 @@ Belegbilder: `analysis/befunde_runde37/E_belege/`. Messlaeufe: `re15_port/build/
 > unlock sound kommt.
 
 Punkte:
-- **E1** Lampe am Code-Panel: blau, solange der Code (noch) nicht richtig eingegeben ist; gruen, sobald er richtig ist.
+- **E1** Lampe am Code-Panel — in der Fassung von Nachtrag 3/3b (AUFTRAG.md; der urspruengliche Wortlaut "blau ... gruen"
+  ist damit ersetzt): die rot gemalte Lampe leuchtet rot, solange der Code nicht richtig ist ("rot = geschlossen"); ist er
+  richtig, leuchtet die andere gemalte Lampe in ihrer Farbe (2F Corridor 10D0/10D1 blau, SECUGUARD gruen). Gebaut und
+  geprueft ist diese Fassung (§2.4, Abnahme 0).
 - **E2** Kamera bleibt auf dem Panel, waehrend Piep und Aufschliess-Ton kommen.
 
 ---

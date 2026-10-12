@@ -3,7 +3,9 @@
 #             RE2 ROOM2110/4070 sub08), Kunst LAMPE2130.TIM == RE2 room2110/esp16.tim, Port-Tabelle
 #   kamera    E2: echter Skriptweg (Cursor + Quadrat, Codes 4312/0513/5632), Piep + Aufschliessen bei Panel-Cut, Kamera
 #             erst danach zurueck; Gegenprobe ohne Haken; Nachricht frueh zu -> sub19 wartet
-#   lampe     E1: blau bis zum Piep-Bild, gruen ab dem naechsten, Lage/Kante/Zellfolge, falscher Code bleibt blau
+#   lampe     E1 (Nachtrag 3/3b): die rot gemalte Lampe leuchtet rot bis zum Piep-Bild, ab dem naechsten die andere
+#             gemalte Lampe in ihrer Farbe (10D0/10D1 blau, SECUGUARD gruen), Lage/Kante/Zellfolge, falscher Code
+#             bleibt rot
 #   zeichner  E1 im Bild: echter PC-Zeichner (codepanel_r37_pc.c einkompiliert) auf dem echten MDEC-Hintergrund
 # Eigene Datei (nicht tests/unit/CMakeLists.txt), s. probes/README.md.
 add_executable(probe_r37_codepanel

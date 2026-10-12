@@ -157,7 +157,11 @@ int re15_codepanel_r37_pc(void *thread)
     if (s_halt && t->pc == s_x + RE15_CP_X_NACH_MSG) {
         /* X+10: die Nachricht ist zu (Evt_next X+8 gab erst nach dem Schliessen frei). Kamera erst zurueck, wenn die
          * Folge der Nachricht gespielt ist (Aufschliessen = letzter Ton). Notbremse: hoechstens letztes Bild + 2
-         * Wartebilder (die Folge laeuft je Spielbild weiter, aufschliessen_r36_tick). */
+         * Wartebilder (die Folge laeuft je Spielbild weiter, aufschliessen_r36_tick).
+         * PORT-WAHL (Abnahme E#0 H1): die Notbremse hat kein Original-Gegenstueck. RE2 ROOM2110 @0x01B9C setzt die
+         * Kamera direkt hinter dem Aufschliess-Se_on zurueck; der Port wartet auf den Folgezaehler und haelt die Kamera
+         * hoechstens bis 2 Bilder nach dem letzten Ton der Folge, damit ein stehender Zaehler die Kamera nie festhaelt.
+         * In allen Messlaeufen der Abnahme griff sie nicht ("gewartet 0 Bilder"). */
         unsigned gespielt = g_re15_auf_zaehler - s_auf0;
         if ((int)gespielt < s_folge_n && s_warte < s_folge_letztes + 2) { s_warte++; return 2; }
         scd_thread_t tmp = *t;
