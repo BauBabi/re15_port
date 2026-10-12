@@ -178,3 +178,16 @@ abgenommener Stand der Spur H 9c2a825d):
    @0x80101544-a0 und P2 erst im naechsten Takt (`j 0x801016ac` @0x8010159c); der Port springt im selben Takt nach P2/P3.
 Dazu ein Zensus der uebrigen OFFEN-Marken der RE2-Zombie-KI, die Bewegung/Angriff betreffen (je Marke: Adresse, wirkt auf die
 Aktivitaet ja/nein); was die Aktivitaet betrifft, mitschliessen oder mit Adresse begruenden, warum nicht.
+
+## Nachtrag 9 — 2026-10-12 (woertlich, Item-Kiste)
+
+> In der Kiste müssen die Icons offenbar so weit wie möglich rechts liegen, damit sie nicht vom Text überdeckt werden. Außerdem ist mir aufgefallen, das beim scrollen/bewegen in der Kiste währendessen die Items oberhalb des Kastens liegen. Das darf nicht sein, der Kasten muss layertechnisch über den Items liegen.
+
+Lesart -> Spur M kiste (Item-Box-Bildschirm, RE2-Layout seit 2026-08-30, re15_inv_screen.c Block 7b "DIE BOX ALS LISTE"):
+1. In der Box-Liste ueberdecken lange Item-Namen (links ab NAME_X 16) die Item-Symbole (ICON_X 158). Die Symbole sollen so weit
+   wie moeglich nach rechts (bis vor die Mengen-Ziffern/den Scrollbalken), so dass kein Name ein Symbol ueberdeckt — Zensus
+   aller Item-Namen (Pixelbreite im Port-Zeichensatz) gegen die Symbol-Lage; RE2-Vorlage pruefen (RE2: Symbol x 155 in seinem
+   breiteren Panel; RE2 kuerzt/setzt Namen wie?).
+2. Beim Scrollen gleiten die Zeilen (box_pixoff) und liegen waehrenddessen UEBER dem Rahmen ("Kasten") des Listen-Panels. Der
+   Rahmen muss ueber den Items liegen: Zeilen, die beim Gleiten aus dem Fenster ragen, werden vom Rahmen verdeckt bzw.
+   abgeschnitten — wie RE2 (Listen-Zeichenschleife FUN_800710dc, Rahmen-Sprites @0x800a9c38).
