@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_j.js"
-BASIS = "419380dc"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_k.js"
+BASIS = "3feb3a78"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -138,6 +138,21 @@ SPUREN = [
    "ghidra_re2_Leon.txt, EM10-Griff/Biss, Teile-Flags +0x?? fuer abgerissene/baumelnde Arme) belegen, welche Teile RE2 waehrend des Bisses zeigt "
    "und wie der baumelnde Arm mitgeht; wo moeglich RE2 an DuckStation messen. Schritt 3: Fehlendes byte-true nachbauen. Riegel je Variante "
    "(Teile-Sichtbarkeit je Bild des Bisses), Runde-36-Riegel (Kleidung/Griff-Blut B, Schuss C) gruen halten.")),
+ dict(id="K", thema="roy", baum="r37_roy",
+  punkte=["Bei Elzas Szenario stimmt weder das Modell von Roy noch all seine Animationen. Außerdem wiederholen sich seine Animationen wieder ständig, wie wir schon ungefähr 500x vorher bei Leon gefixed haben....."],
+  hinweise=("Roy = NPC-Typ 0x47 (analysis/story_leon_elza/B_figuren.md §1.1: dasselbe Typ-Byte wie Elliot in Leons ROOM1170 sub15 @0x017D2): "
+   "ROOM1011 sub00 @0x009F6 Roy (-2000,0,7450) verwundet, Dialog sub02 msg 0-17 (Ihre Aufnahme main16.5 laeuft, wenn er bewusstlos wird), danach "
+   "sub00 @0x00A3E Roy bewusstlos (AOT Slot 5 -> sub06 Prison Key/Zettel); ROOM1021 main00 @0x01E0A Roy als Zombie (-4614,0,-16919), Plc_dest "
+   "@0x020B2 auf John zu, John schiesst (Runde 36 Spur L: zwei Schuesse + Todeslaut), Roy Clip 1/7 @0x020DE = Fallen. Runde 36 L-Abnahme: Roy "
+   "sackt in 1021 nicht sichtbar zusammen, in 1011 richtet er sich F1946..F1958 auf und bleibt aufrecht (NACHLAUF #21/#67) — derselbe Fehler. "
+   "MODELL: die Modelle liegen in shared_assets/PSX/EMD/CDEMD0.EMS und CDEMD1.EMS (vermutlich je Spieler-Familie — PRUEFEN, welches EMD/EMS das "
+   "Original fuer Typ 0x47 in Elzas Raeumen laedt (Lader in der EXE, Spieler-Familie PL04, Index), und was der Port laedt (emd/ems-Lader, "
+   "enemy_common.c / npc-Code)). ANIMATIONEN: Clip-Nummern der Skripte (Plc_motion/Plc_flg/Plc_dest in 1011/1021) gegen die Bank des richtigen "
+   "Modells; Dauerschleife = dieselbe Fehlerklasse wie frueher bei Leons NPCs — die Lehren nachlesen (Memory: reai-v2-platzhalter-als-verhalten "
+   "'Ada Clip 0 = Laufzyklus', reai-v2-npc-crossfade-decay, reai-v2-npc-global-yield, reai-v2-runde18-ada-eintritt; Dossiers analysis/befunde_runde18*, "
+   "Plc_motion-Ende/Halten des letzten Bilds). Am Original messen (DuckStation-Savestate mit Elza in 1011/1021 — stage_saves/ sauber, sonst per "
+   "Debug-Menue JUMP mit Elza; GDB wie Spur R), Framedumps Original gegen Port je Szenenabschnitt. Riegel: Modell-Kennung je Raum, Clip je "
+   "Szenenabschnitt, kein Clip laeuft ueber sein Ende hinaus in Schleife (wo das Original haelt), Elliot bei Leon (1170) unveraendert.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()

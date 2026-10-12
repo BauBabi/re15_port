@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-12 16:10: Nachtrag 7 -> Spur K roy (Elzas Roy: Modell + Animationen + Dauerschleife; Hinweis: Modelle in CDEMD0/1.EMS, Typ 0x47 = Elliot bei Leon). Baum `.claude/worktrees/r37_roy` (Basis 3feb3a78), EIGENER Workflow `wf_54d1fd6b-93b` (`orchestrator/r37_k.js`). ⛔ NUTZER-BEOBACHTUNG am laufenden Testlauf (~13:05): "in STAGE2 kann Leon den Elevator nicht verlassen und irgendwo in der Luft rumlaufen" — gemessen: das war der Testlauf der C-Nachbesserung in ROOM2030 (Lift A, y -5400 -> -10800; r37_fahrstuhl_n1_wd), deren Baum den Band-Fix der Spur D (Member 0x12 setzt das Kollisionsband) NICHT enthaelt = der vorbestehende Fehler, den D behebt. INTEGRATIONS-PFLICHT: nach dem Merge von D und C an der Integrations-exe 2030 Lift A und B fahren, aussteigen, Boden-Hoehe/Band und Tueren pruefen (und 3050/50D0).
 * 2026-10-12 15:45: E INTEGRIERT (r37/integration 330bdd29, gezielt 604/604 gruen).
 * 2026-10-12 15:20: E codepanel Abnahme 0 BESTANDEN (E_abnahme_0.md) -> Integrationsbaum `.claude/worktrees/r37_integration` (Zweig r37/integration von master 39ff3c31) angelegt, E GEMERGT (330bdd29; Konflikt nur AUFTRAG.md = master-Fassung, die alle Nachtraege traegt). Bau + gezielte Tests laufen (/tmp/r37int_e.txt). Damit startet F im Hauptlauf. H zombieaktiv Bau FERTIG (RE2-INIT machte aus jedem RE1.5-Deskriptor ausser 0x0d 'Stehen'; RE2 Deskriptor 6 = Gang ab Spawn, am RE2-Original gemessen; grid 0x00 -> RE2-Gang 0x0101; Montage-Nachspawn 1130 als Durchbruch grid 0x0d) — Abnahme H laeuft.
 * 2026-10-12 15:00: A Abnahme 0: Leon ROOM1100 ERFUELLT (Nachbau = Nutzer-Marke F892/F240 bildgenau, neue Masken 0 Punkte); M1 blockierend: Elzas ROOM1101 (RDT bytegleich) hat KEINE Masken — systemisch: in STAGE1 fehlen fuer ALLE Elza-Raeume die MASKS-Dateien (Lader nimmt die volle Raum-Id); M2 klein (Leons Stiefelspitze an der Westwand jetzt verdeckt, geometrisch richtig, in den Nutzertext). Orchestrator-Freigabe VERTRAG 1.7 (22812fe9 / A-Baum 0ae925a6): Masken-Rueckfall Elza -> Leon bei gleicher Kamera + Hintergrund, Zensus aller Paare. Nachbesserung A#1 laeuft.
@@ -38,6 +39,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | G beretta | r37_beretta | Beretta M93R: jeder Schuss des Feuerstosses trifft (Glock 18 pruefen) | gestartet |
 | H zombieaktiv | r37_zombieaktiv | Zombies GENERELL aktiv wie in RE2 (Beispiel Montage nach Irons' Tod) | gestartet (eigener Workflow) |
 | I feuerloescher | r37_feuerloescher | Feuerloescher-Modell; leer am Boden 1091 (Elza) / 1090 nach dem Loeschen (Leon); Loescher aus dem Spind 1000 verlegen | gestartet (eigener Workflow) |
+| K roy | r37_roy | Elzas Roy: Modell + Animationen wie im Original, keine Dauerschleife | gestartet (eigener Workflow wf_54d1fd6b-93b) |
 | J bissarm | r37_bissarm | beim Zombie-Biss fehlt teilweise der dranhaengende Arm (wie RE2) | gestartet (eigener Workflow wf_88717cb9-5e3) |
 
 ## 2. Bei einem Abbruch (Sitzungs-/Wochenlimit)
