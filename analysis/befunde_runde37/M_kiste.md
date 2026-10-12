@@ -199,3 +199,22 @@ Disc" bis x 173, schmales Symbol ab 179 -> kleinste Luecke **5 px**; 2-Feld-Name
 Nach der Integration mit Spur I: "Empty Fire Extinguisher" (Leon, nach dem Loeschen) bis x 177 -> Luecke 1 px
 (rechnerisch aus k_name_leer r37/feuerloescher; der Zensus-Zustand "alle Flags Leon" setzt (3,0x81) und erfasst den
 Namen dann automatisch).
+
+## 5. Tests (probes/r37_kiste.cmake, nur dort registriert)
+
+- **unit_r37_kiste** (test_r37_kiste.c, Engine + echte Kisten-FSM, 0,2 s): (A) Zensus ALLER Item-Ids 1..255 in drei
+  Spielzustaenden (Anfang / alle Flags + Leon / alle Flags + Elza): 101 Namen, rechtestes GEMALTES Namenspixel
+  (TEX.TIM-Glyphen wie inv_render_pc.c) links vom Symbol, Symbol buendig am Fensterrand 204, Ziffern im Symbol
+  (y Zeilenoberkante+11) und in der Op-Liste ueber ihm, Namen ab x 16; (B) 57 Bilder (Ruhe + 3x RUNTER + 3x HOCH +
+  HOCH ueber die Ring-Naht 0 -> 63): vier Rahmen-Teile = Tabelle, 1:1 auf dem Panel, Teile + Fenster = Panel;
+  Reihenfolge Band < Griff < Rahmen-Teile < alle Zeilen-Ops < Panel-Grund; jede Zeilen-Op im Panel; Symbole
+  waagerecht im Fenster; Versatz -+3 je Bild (RE2 @0x80070118/@0x800702a4); einlaufende Zeile in 24 HOCH- und 18
+  RUNTER-Gleitbildern; (C) Auswahl-Band, Scrollgriff, Panel-Ops unveraendert.
+  **Gegenprobe**: derselbe Riegel gegen den alten Block 7b (re15_inv_screen.c aus 70030492, nur Testziel neu
+  gelinkt): exit 1, 1138 FAIL-Zeilen (Symbol x 158..182 nicht am Rand, Ziffern y 98 statt 104, Name -16 px im
+  Symbol, keine Rahmen-Teile, keine einlaufende Zeile); (C) gruen = Band/Griff/Panel waren schon so.
+- **integration_r37_kiste** (echte exe, 58 s): drei Laeufe Leon 1150 / Elza 1151 / Leon 2010 auf dem echten Weg
+  (Spielstand, CONTINUE, Viereck am Kisten-AOT), Framedumps F95..F130 -> probe_r37_kiste_bild: 31/31 Bilder Rahmen
+  bitgleich BOXPANEL.BIN, Ruhebild Symbol ab 179/155 mit freier Spalte davor, einlaufende Zeile F107/F127.
+  Gegenprobe mit den Vorher-Bildern: KISTE-BILD FEHLER 38.
+- Werkzeuge: probe_r37_kiste_karte (Spielstand vor der Kiste, Kiste mit den laengsten Namen), probe_r37_kiste_bild.
