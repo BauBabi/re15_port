@@ -30,6 +30,7 @@
                               * differs, behind the re15_room_apply_pending ctx. */
 #include "re15_player.h"     /* RE15_PAD_BIT_UP + re15_player_push_substate (Schiebe-Handshake) */
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
+#include "re15_itemband_r37.h" /* Runde 37 Spur D: Band-Gate @0x80042cac-ccc auch fuer ITEM */
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (RE15_FILES_FIRST_ITEM_ID) */
 #include "re15_menu.h"       /* Runde 30: re15_menu_request_doc — Aufheben oeffnet den Leser */
 #include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
@@ -1323,6 +1324,8 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 gen_reach = 0; inside = 0;   /* band mismatch -> gate the fire this frame */
             }
         }
+        /* Runde 37 Spur D: @0x80042cac-ccc laeuft fuer JEDEN Satz vor dem sce-Dispatch — auch ITEM (re15_itemband_r37.h). */
+        if (a->type == RE15_AOT_TYPE_ITEM) re15_itemband_r37_gate(i, &gen_reach, &inside);
         /* sce=4 FLAG_CHG (wf_f536e1ee step 3+4): the 3-POOL test per the record's pool-mask bits
          * (byte-true FUN_800436a8: player mask 1 / every active enemy mask 2 / every object mask
          * 4). 10 shipped zones are enemy-ONLY (0x42, e.g. the ROOM1030 zombie-window flags) — the
