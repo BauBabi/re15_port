@@ -1,0 +1,412 @@
+RE2-RDTs: 250, SCD-Bloecke: 2568; Keep_Item_ck 10, Sce_item_lost 34, Sce_item_ck_lost 5
+
+ROOM10B0 sub05 @0x01A24 Keep_Item_ck 0x35 Blue Card Key
+   unter: Ck(1,0x01)==1@0x01A1C
+   @0x01A26 op06 00 1c 00
+   @0x01A2A Ck(4,0xAB)==0
+   @0x01A2E op06 00 12 00
+   @0x01A38 Set(4,0xAB)=1
+   @0x01A3C Evt_exec ff 18 0d
+   @0x01A42 op08 00
+   @0x01A44 op08 00
+   @0x01A46 op08 00
+
+ROOM10B0 sub10 @0x01C2C Sce_item_lost 0x33 Red Jewel
+   @0x01C58 Cut_chg 03
+   @0x01C5C op06 00 22 00
+   @0x01C60 Ck(4,0x12)==1
+   @0x01C64 op06 00 18 00
+   @0x01C68 Ck(4,0x13)==1
+   @0x01C6C op06 00 0e 00
+   @0x01C70 Ck(4,0x2B)==0
+   @0x01C74 Set(4,0x2B)=1
+   @0x01C78 Evt_exec ff 18 0c
+   @0x01C7C op08 00
+   @0x01C7E op08 00
+   @0x01C80 op08 00
+   ...
+
+ROOM10B0 sub11 @0x01C9E Sce_item_lost 0x33 Red Jewel
+   @0x01CCA Cut_chg 03
+   @0x01CCE op06 00 22 00
+   @0x01CD2 Ck(4,0x12)==1
+   @0x01CD6 op06 00 18 00
+   @0x01CDA Ck(4,0x13)==1
+   @0x01CDE op06 00 0e 00
+   @0x01CE2 Ck(4,0x2B)==0
+   @0x01CE6 Set(4,0x2B)=1
+   @0x01CEA Evt_exec ff 18 0c
+   @0x01CEE op08 00
+   @0x01CF0 op08 00
+   @0x01CF2 op08 00
+   ...
+
+ROOM1110 sub04 @0x029E2 Sce_item_lost 0x4A G. Cogwheel
+   @0x029EA Cut_chg 06
+   @0x029F2 op06 00 0e 00
+   @0x029F6 Ck(5,0x00)==0
+   @0x02A02 op08 00
+   @0x02A05 Set(5,0x00)=0
+   @0x02A09 Set(2,0x07)=0
+   @0x02A0E op01 00
+
+ROOM1110 sub13 @0x02F66 Sce_item_lost 0x43 Crank
+   @0x02F68 Set(1,0x10)=1
+   @0x02F6C Set(1,0x1B)=0
+   @0x02F70 Set(2,0x07)=0
+   @0x02F74 op01 00
+
+ROOM2000 sub08 @0x02C96 Sce_item_lost 0x47 Unicorn Medal
+   unter: Ck(0,0x16)==1@0x02AA6
+   @0x02C98 Cut_chg 08
+   @0x02CA2 Set(2,0x07)=0
+   @0x02CA6 op01 00
+
+ROOM2040 sub14 @0x021FE Sce_item_lost 0x56 Cord
+   @0x02200 Cut_chg 09
+   @0x02238 Evt_exec ff 18 14
+   @0x02240 Evt_exec ff 18 10
+   @0x02248 Evt_exec ff 18 11
+   @0x02250 Evt_exec ff 18 12
+   @0x02259 Set(2,0x07)=0
+   @0x0225D Set(2,0x02)=0
+   @0x02261 Set(1,0x1B)=0
+   @0x02266 op01 00
+
+ROOM2080 sub09 @0x016D4 Sce_item_lost 0x44 Film
+   @0x016D9 Set(2,0x07)=0
+   @0x016DE op01 00
+
+ROOM2080 sub10 @0x016E8 Sce_item_lost 0x45 Film
+   @0x016ED Set(2,0x07)=0
+   @0x016F2 op01 00
+
+ROOM2080 sub11 @0x016FC Sce_item_lost 0x46 Film
+   @0x01701 Set(2,0x07)=0
+   @0x01706 op01 00
+
+ROOM2080 sub12 @0x01710 Sce_item_lost 0x50 Film
+   @0x01715 Set(2,0x07)=0
+   @0x0171A op01 00
+
+ROOM2080 sub13 @0x0172C Keep_Item_ck 0x53 Special Key
+   unter: Ck(4,0xAF)==0@0x01724
+   @0x0172E Message_on 2 ',Will you use the / <F9>.special key<F9> {1B}<FB>  '
+   @0x01736 op06 00 34 00
+   @0x0173A Ck(11,0x1F)==0
+   @0x0173E Sce_item_lost 0x53 Special Key
+   @0x01740 Set(4,0xAF)=1
+   @0x01744 Message_on 3 ",You've used the / <F9>.special key<F9> . "
+   @0x01758 op06 00 0a 00
+   @0x0175C Ck(1,0x00)==0
+   @0x01762 op07 00 08 00
+   @0x0176A op07 00 12 00
+   @0x0177C op07 00 0e 00
+   ELSE:
+     @0x01780 Message_on 1 ", / It's locked.  A special kind of key / is required. "
+
+ROOM2080 sub13 @0x0173E Sce_item_lost 0x53 Special Key
+   unter: Ck(4,0xAF)==0@0x01724 & Keep_Item_ck(0x53 Special Key)@0x0172C & Ck(11,0x1F)==0@0x0173A
+   @0x01740 Set(4,0xAF)=1
+   @0x01744 Message_on 3 ",You've used the / <F9>.special key<F9> . "
+   @0x01758 op06 00 0a 00
+   @0x0175C Ck(1,0x00)==0
+   @0x01762 op07 00 08 00
+   @0x0176A op07 00 12 00
+
+ROOM20F0 sub04 @0x01B34 Sce_item_lost 0x56 Cord
+   @0x01B36 Cut_chg 07
+   @0x01B40 Set(5,0x00)=1
+   @0x01B44 Evt_exec ff 18 0d
+   @0x01B48 Set(29,0x0A)=1
+   @0x01B58 Evt_exec ff 18 09
+   @0x01B5C Evt_exec ff 18 08
+   @0x01BB6 Evt_exec ff 18 07
+   @0x01BC4 Evt_exec ff 18 06
+   @0x01BD7 Set(1,0x1B)=0
+   @0x01BDB Set(2,0x02)=0
+   @0x01BDF Set(2,0x07)=0
+   @0x01BE4 op01 00
+   ...
+
+ROOM2110 sub06 @0x01AEA Sce_item_lost 0x34 Red Card Key
+   unter: Ck(4,0x0E)==0@0x01AC6 & Cmp(00 00 00 09 00)@0x01ACE & Cmp(00 02 00 34 00)@0x01AD8 & Ck(4,0x3C)==1@0x01AE2
+   @0x01AEC Evt_exec ff 18 08
+   @0x01AF0 op07 00 0c 00
+   ELSE:
+     @0x01AF4 Message_on 1 ',The power to the card  / reader is off. '
+
+ROOM21A0 sub14 @0x02656 Sce_item_lost 0x4B Manhole Opener
+   @0x0266E Set(2,0x07)=0
+   @0x02672 Set(2,0x02)=0
+   @0x02676 op06 00 26 00
+   @0x0267A Ck(6,0x4F)==0
+   @0x0269E op08 00
+   @0x026A0 op06 00 26 00
+   @0x026A4 Ck(6,0x50)==0
+   @0x026C8 op08 00
+   @0x026CA op01 00
+
+ROOM3030 sub04 @0x0190A Sce_item_lost 0x3B Bishop Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x65)==0@0x018F0 & Cmp(00 02 00 3b 00)@0x018F8 & Ck(4,0x39)==0@0x01902
+   @0x0190C Evt_exec ff 18 05
+   @0x01910 op07 00 24 00
+   ELSE:
+     @0x01914 op06 00 0e 00
+     @0x01918 Ck(6,0x62)==0
+     @0x0191C Message_on 0 ",There's no time to check  / it{1A} "
+     @0x01922 op07 00 10 00
+     @0x01926 Set(3,0x65)=1
+     @0x0192A Sce_item_lost 0x3B Bishop Plug
+     @0x0192C Evt_exec ff 18 05
+
+ROOM3030 sub04 @0x0192A Sce_item_lost 0x3B Bishop Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x65)==0@0x018F0 & Cmp(00 02 00 3b 00)@0x018F8 & NOT Ck(4,0x39)==0@0x01902 & NOT Ck(6,0x62)==0@0x01918
+   @0x0192C Evt_exec ff 18 05
+
+ROOM3030 sub04 @0x01956 Sce_item_lost 0x3C Rook Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x66)==0@0x0193C & Cmp(00 02 00 3c 00)@0x01944 & Ck(4,0x39)==0@0x0194E
+   @0x01958 Evt_exec ff 18 06
+   @0x0195C op07 00 24 00
+   ELSE:
+     @0x01960 op06 00 0e 00
+     @0x01964 Ck(6,0x62)==0
+     @0x01968 Message_on 0 ",There's no time to check  / it{1A} "
+     @0x0196E op07 00 10 00
+     @0x01972 Set(3,0x66)=1
+     @0x01976 Sce_item_lost 0x3C Rook Plug
+     @0x01978 Evt_exec ff 18 06
+
+ROOM3030 sub04 @0x01976 Sce_item_lost 0x3C Rook Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x66)==0@0x0193C & Cmp(00 02 00 3c 00)@0x01944 & NOT Ck(4,0x39)==0@0x0194E & NOT Ck(6,0x62)==0@0x01964
+   @0x01978 Evt_exec ff 18 06
+
+ROOM3030 sub04 @0x019A2 Sce_item_lost 0x3D Knight Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x67)==0@0x01988 & Cmp(00 02 00 3d 00)@0x01990 & Ck(4,0x39)==0@0x0199A
+   @0x019A4 Evt_exec ff 18 07
+   @0x019A8 op07 00 24 00
+   ELSE:
+     @0x019AC op06 00 0e 00
+     @0x019B0 Ck(6,0x62)==0
+     @0x019B4 Message_on 0 ",There's no time to check  / it{1A} "
+     @0x019BA op07 00 10 00
+     @0x019BE Set(3,0x67)=1
+     @0x019C2 Sce_item_lost 0x3D Knight Plug
+     @0x019C4 Evt_exec ff 18 07
+
+ROOM3030 sub04 @0x019C2 Sce_item_lost 0x3D Knight Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x67)==0@0x01988 & Cmp(00 02 00 3d 00)@0x01990 & NOT Ck(4,0x39)==0@0x0199A & NOT Ck(6,0x62)==0@0x019B0
+   @0x019C4 Evt_exec ff 18 07
+
+ROOM3030 sub04 @0x019EE Sce_item_lost 0x3E King Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x68)==0@0x019D4 & Cmp(00 02 00 3e 00)@0x019DC & Ck(4,0x39)==0@0x019E6
+   @0x019F0 Evt_exec ff 18 08
+   @0x019F4 op07 00 24 00
+   ELSE:
+     @0x019F8 op06 00 0e 00
+     @0x019FC Ck(6,0x62)==0
+     @0x01A00 Message_on 0 ",There's no time to check  / it{1A} "
+     @0x01A06 op07 00 10 00
+     @0x01A0A Set(3,0x68)=1
+     @0x01A0E Sce_item_lost 0x3E King Plug
+     @0x01A10 Evt_exec ff 18 08
+
+ROOM3030 sub04 @0x01A0E Sce_item_lost 0x3E King Plug
+   unter: Cmp(00 00 00 06 00)@0x018E6 & Ck(3,0x68)==0@0x019D4 & Cmp(00 02 00 3e 00)@0x019DC & NOT Ck(4,0x39)==0@0x019E6 & NOT Ck(6,0x62)==0@0x019FC
+   @0x01A10 Evt_exec ff 18 08
+
+ROOM4010 sub06 @0x0276C Keep_Item_ck 0x1F Small Key
+   unter: Ck(1,0x00)==0@0x02764
+   @0x0276E Set(5,0x20)=1
+   @0x02772 op08 00
+
+ROOM4010 sub06 @0x027AA Sce_item_ck_lost 0x1F Small Key
+   unter: Ck(5,0x20)==1@0x02782 & Ck(11,0x1F)==0@0x02792 & Ck(1,0x00)==0@0x027A6
+   @0x027AE Message_on 13 ', / You used the <F9>.small key<F9> . /  '
+   @0x027B4 op07 00 0c 00
+   ELSE:
+     @0x027B8 Message_on 14 ', / You used the <F9>.lockpick<F9> . /  '
+
+ROOM4070 sub04 @0x008F4 Sce_item_lost 0x48 Eagle Medal
+   unter: Cmp(00 02 00 48 00)@0x008EE
+   @0x008F6 Evt_exec ff 18 06
+   @0x008FA op08 00
+
+ROOM4070 sub04 @0x00906 Sce_item_lost 0x49 Wolf Medal
+   unter: Cmp(00 02 00 49 00)@0x00900
+   @0x00908 Evt_exec ff 18 07
+   @0x0090C op08 00
+
+ROOM5030 sub11 @0x00DDA Sce_item_lost 0x5E C. Panel Key
+   @0x00DE6 Set(2,0x07)=1
+   @0x00DEA Set(1,0x1B)=1
+   @0x00E2E Set(4,0x62)=1
+   @0x00E9C Message_on 6 '  / .F'
+   @0x00ED2 Set(4,0x40)=0
+   @0x00ED6 Set(9,0x5D)=1
+   @0x00EE2 Set(2,0x07)=0
+   @0x00EE6 Set(1,0x1B)=0
+   @0x00EEA op01 00
+
+ROOM5040 sub05 @0x01F38 Sce_item_lost 0x5D C. Panel Key
+   @0x01F3A Cut_chg 08
+   @0x01F4C Set(2,0x07)=0
+   @0x01F50 op01 00
+
+ROOM6010 sub00 @0x0058A Keep_Item_ck 0x62 Master Key
+   unter: Ck(3,0xC1)==0@0x0056E
+   @0x0058C op06 00 34 00
+   @0x00590 Ck(4,0x8B)==0
+   @0x005BC Evt_exec 03 18 1b
+   @0x005C0 op07 00 1a 00
+   @0x005DA op07 00 1a 00
+
+ROOM6010 sub26 @0x0127A Sce_item_ck_lost 0x62 Master Key
+   unter: Ck(11,0x1F)==0@0x01272
+   @0x0129A op06 00 18 00
+   @0x0129E Ck(3,0xC1)==0
+   @0x012B2 op07 00 14 00
+   @0x012C6 op07 00 0c 00
+   ELSE:
+     @0x012CA Cut_chg 00
+
+ROOM6010 sub27 @0x012F5 Sce_item_ck_lost 0x62 Master Key
+   unter: Ck(4,0x8B)==0@0x012D8 & Cmp(00 02 05 62 00)@0x012E4
+   @0x01314 op06 00 18 00
+   @0x01318 Ck(3,0xC1)==0
+   @0x0132C op07 00 14 00
+   @0x01340 op08 00
+
+ROOM6080 sub05 @0x028E6 Sce_item_lost 0x4C Main Fuse
+   @0x028F6 Cut_chg 06
+   @0x02914 Set(2,0x07)=1
+   @0x02918 Set(1,0x1B)=1
+   @0x02997 Set(23,0x05)=0
+   @0x0299B Cut_chg 03
+   @0x029C4 Cut_chg 00
+   @0x029D0 Set(2,0x07)=0
+   @0x029D4 Set(1,0x1B)=0
+   @0x029D8 op01 00
+
+ROOM60D0 sub06 @0x00C92 Sce_item_lost 0x4D Fuse Case
+   unter: Member_cmp(00 0f 02 34 03)@0x00C18 & Member_cmp(00 0f 03 86 06)@0x00C4A & Member_cmp(00 0f 02 00 04)@0x00C6C
+   @0x00CCB Set(1,0x1B)=0
+   @0x00CCF Set(2,0x07)=0
+   @0x00CD4 op01 00
+
+ROOM6110 sub05 @0x0334C Sce_item_lost 0x4C Main Fuse
+   @0x0335C Cut_chg 06
+   @0x0337A Set(2,0x07)=1
+   @0x0337E Set(1,0x1B)=1
+   @0x033FD Set(23,0x05)=0
+   @0x03401 Cut_chg 03
+   @0x0342A Cut_chg 00
+   @0x03436 Set(2,0x07)=0
+   @0x0343A Set(1,0x1B)=0
+   @0x0343E op01 00
+
+ROOM6150 sub02 @0x02D4E Sce_item_lost 0x3F W. Box Key
+   unter: Ck(4,0x9F)==1@0x02D3C
+   @0x02D5A Cut_chg 00
+   @0x02D5C op07 00 60 00
+   ELSE:
+     @0x02D60 op06 00 4a 00
+     @0x02D64 Keep_Item_ck 0x3F W. Box Key
+     @0x02D66 Message_on 10 ',Will you use the <F9>.Weapon / Box Key<F9> {1B}<FB>d '
+     @0x02D70 op06 00 36 00
+     @0x02D74 Ck(11,0x1F)==0
+     @0x02D78 Set(4,0x9F)=1
+     @0x02D88 Sce_item_lost 0x3F W. Box Key
+     @0x02D8E Cut_chg 0d
+     @0x02DA6 Cut_chg 00
+     @0x02DA8 op08 00
+     @0x02DAA op07 00 10 00
+     @0x02DAE Message_on 0 ',I could open it if I had / the key. '
+     ...
+
+ROOM6150 sub02 @0x02D64 Keep_Item_ck 0x3F W. Box Key
+   unter: NOT Ck(4,0x9F)==1@0x02D3C
+   @0x02D66 Message_on 10 ',Will you use the <F9>.Weapon / Box Key<F9> {1B}<FB>d '
+   @0x02D70 op06 00 36 00
+   @0x02D74 Ck(11,0x1F)==0
+   @0x02D78 Set(4,0x9F)=1
+   @0x02D88 Sce_item_lost 0x3F W. Box Key
+   @0x02D8E Cut_chg 0d
+   @0x02DA6 Cut_chg 00
+   @0x02DA8 op08 00
+   @0x02DAA op07 00 10 00
+   ELSE:
+     @0x02DAE Message_on 0 ',I could open it if I had / the key. '
+
+ROOM6150 sub02 @0x02D88 Sce_item_lost 0x3F W. Box Key
+   unter: NOT Ck(4,0x9F)==1@0x02D3C & Keep_Item_ck(0x3F W. Box Key)@0x02D64 & Ck(11,0x1F)==0@0x02D74
+   @0x02D8E Cut_chg 0d
+   @0x02DA6 Cut_chg 00
+   @0x02DA8 op08 00
+
+ROOM6160 sub04 @0x02160 Sce_item_lost 0x60 MO disk
+   @0x0216E Set(4,0x95)=1
+   @0x02190 Message_on 3 ',{09}Verification disk  / confirmed.{0A} '
+   @0x0219F Cut_chg 07
+   @0x0222A Set(2,0x03)=0
+   @0x0222E Set(2,0x07)=0
+   @0x02232 Set(1,0x1B)=0
+   @0x02236 op01 00
+
+ROOM7020 sub01 @0x01312 Keep_Item_ck 0x54 Joint S Plug
+   unter: Ck(4,0x88)==0@0x01300 & Cmp(00 02 00 54 00)@0x01308
+   @0x01314 Keep_Item_ck 0x55 Joint N Plug
+   @0x01316 Evt_exec ff 18 04
+   @0x0131A op07 00 0a 00
+   ELSE:
+     @0x0131E Evt_exec ff 18 05
+
+ROOM7020 sub01 @0x01314 Keep_Item_ck 0x55 Joint N Plug
+   unter: Ck(4,0x88)==0@0x01300 & Cmp(00 02 00 54 00)@0x01308 & Keep_Item_ck(0x54 Joint S Plug)@0x01312
+   @0x01316 Evt_exec ff 18 04
+   @0x0131A op07 00 0a 00
+   ELSE:
+     @0x0131E Evt_exec ff 18 05
+
+ROOM7020 sub01 @0x01334 Keep_Item_ck 0x54 Joint S Plug
+   unter: Ck(4,0x88)==0@0x01300 & Cmp(00 02 00 55 00)@0x0132A
+   @0x01336 Keep_Item_ck 0x55 Joint N Plug
+   @0x01338 Evt_exec ff 18 04
+   @0x0133C op07 00 0a 00
+   ELSE:
+     @0x01340 Evt_exec ff 18 05
+
+ROOM7020 sub01 @0x01336 Keep_Item_ck 0x55 Joint N Plug
+   unter: Ck(4,0x88)==0@0x01300 & Cmp(00 02 00 55 00)@0x0132A & Keep_Item_ck(0x54 Joint S Plug)@0x01334
+   @0x01338 Evt_exec ff 18 04
+   @0x0133C op07 00 0a 00
+   ELSE:
+     @0x01340 Evt_exec ff 18 05
+
+ROOM7020 sub04 @0x01476 Sce_item_lost 0x54 Joint S Plug
+   @0x01478 Sce_item_lost 0x55 Joint N Plug
+   @0x014A2 Set(2,0x07)=1
+   @0x014BA Cut_chg 03
+   @0x014BC Set(2,0x07)=0
+   @0x014F8 Message_on 1 ',{09}The emergency mode has / been activated. /   The power supply will be / cut temporarily. /   Th'
+   @0x01530 Cut_chg 0f
+   @0x01540 Set(2,0x07)=1
+   @0x01544 Evt_exec ff 18 07
+   @0x01548 op01 00
+
+ROOM7020 sub04 @0x01478 Sce_item_lost 0x55 Joint N Plug
+   @0x014A2 Set(2,0x07)=1
+   @0x014BA Cut_chg 03
+   @0x014BC Set(2,0x07)=0
+   @0x014F8 Message_on 1 ',{09}The emergency mode has / been activated. /   The power supply will be / cut temporarily. /   Th'
+   @0x01530 Cut_chg 0f
+   @0x01540 Set(2,0x07)=1
+   @0x01544 Evt_exec ff 18 07
+   @0x01548 op01 00
+
+ROOMA020 main00 @0x01876 Keep_Item_ck 0x06 C. Magnum
+
+ROOMD0A0 sub01 @0x02668 Sce_item_ck_lost 0x01 Knife
+
+ROOMD0A0 sub01 @0x02684 Sce_item_ck_lost 0x01 Knife
+   unter: Sce_Item_ck_Lost(01 00)@0x02668
