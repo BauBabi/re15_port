@@ -58,9 +58,54 @@ Die tote Menge ist genau die Menge "R15M-Sektion ohne eigenen Atlas": jede diese
   (`git log -L /re15_pri_load_cut_atlas_ex/ 53741fe5..HEAD`) — v0.8.21..v0.8.24 tragen die Regel unveraendert.
 
 
-## 2. RE-Belege / Herkunft
+## 2. RE-Belege (PSX.EXE Auslieferungsstand, sha256 e6b340fd12ec43be.., `@0x80026e4c = 08 00 e0 03`; `re15_disasm.py dis/bytes`,
+Namen der Bibliotheksaufrufe aus ghidra1_V2.txt (PsyQ-Signaturen))
 
-(folgt)
+**Welchen Atlas tastet eine Maske im Original ab? Immer den Vordergrund-Atlas des Cuts aus dem BSS-Block.**
+1. Der BSS-Lader entpackt den SLD-Block des Cuts und laedt das TIM an eine FESTE VRAM-Stelle:
+   `80021db8 jal 0x800c47e8` (SLD-Entpacker, Ziel 0x801a5800), `80021de8 ori v0,zero,0x15` (`15 00 02 34`) +
+   `80021df0 sh v0,0(s0)` (`00 00 02 a6`, s0 = 0x800aca4c) + `80021dec jal 0x8004ee78` (`9e 3b 01 0c`, a0 = 0x801a5800).
+   FUN_8004ee78: `8004ee84 jal OpenTIM` / `8004ee8c jal ReadTIM`, dann wird die Bildlage des TIM UEBERSCHRIEBEN:
+   `8004eea8 sll a0,v1,6` (`80 21 03 00`, v1 = 0x15 -> 1344), `8004eeb8 addiu a0,a0,-1024` (`00 fc 84 24`, >= 16 -> x = 320),
+   `8004eebc sh a0,0(v0)` (`00 00 44 a4`, rect.x), `8004eed0 sll v0,v0,8` (`00 12 02 00`) / `8004eed4 sh v0,2(v1)`
+   (`02 00 62 a4`, rect.y = 256), `8004eee0 jal LoadImage` (`22 a3 01 0c`). -> Atlas des Cuts liegt bei VRAM (320,256).
+   (Das TIM selbst traegt Bild @(0,0), CLUT @(0,480) — gemessen an ROOM3040 Cut 0/2, 5020 Cut 0, 6010 Cut 0, 1220 Cut 0, 1221 Cut 1:
+   flag 0x9, CLUT 256x1 @(0,480) = CLUT-Wort 0x7800, Bild 128x256 Halbworte = 256x256 8-bpp.)
+2. Jede Maske ist ein SPRT, das genau diese Seite abtastet (FUN_800392d4 baut, FUN_80039590 haengt ein):
+   `80039408 lbu s7,0(a2)` (`00 00 d7 90`, Masken-Byte 0 = srcX), `80039418 lbu fp,-9(s2)` (`f7 ff 5e 92`, s2 = a2+10 ->
+   Byte 1 = srcY), `800394dc sb s7,-2(s0)` (`fe ff 17 a2`, u0) / `800394e0 sb fp,-1(s0)` (`ff ff 1e a2`, v0),
+   `80039498 ori v0,zero,0x7800` (`00 78 02 34`) + `800394fc sh v0,0(s1)` / `80039500 sh v0,0(s0)` (CLUT 0x7800 = VRAM (0,480)),
+   `80039630 ori a3,zero,0x95` (`95 00 07 34`) -> `80039634 jal SetDrawMode` (`16 a6 01 0c`, tpage 0x95 = 8 bpp, x 5*64 = 320,
+   y 256 — dieselbe Stelle wie 1.), `80039640 jal MargePrim`, `80039660 jal AddPrim`.
+   -> u/v einer Maske sind im Original IMMER Koordinaten im BSS-Atlas des gezeigten Cuts; es gibt keinen zweiten Atlas.
+3. Folgerung fuer die Port-Masken (R15M, NUTZER-VORGABE fuer NULL-Sektionen):
+   - Generator 2026-09-03 (gen_masken.py, alle 216 Stage-3..6-Sektionen + ROOM1221): Masken-Byte = src im BSS-Atlas — exakt
+     der Original-Mechanismus (Atlas @0x80021dec/@0x8004eee0, Abtastung @0x800394dc/@0x80039630). Diese Masken gehoeren
+     zum BSS-Atlas.
+   - Freistellungen (Maskeneditor tools/maske, eigener Atlas `MASKS/ROOM%04X_PRI%02d.TIM`): PORT-ERWEITERUNG, weil srcX/srcY
+     u8 sind (@0x80039408/@0x80039418) und der Hintergrund (320 breit) damit nicht adressierbar ist; ihre Rechtecke tragen
+     src im EIGENEN Atlas. Nur fuer sie gilt die Regel aus 53741fe5.
+   - Entscheidungsmerkmal je Sektion: liegt der eigene Atlas des Cuts vor -> eigener Atlas; sonst -> BSS-Atlas (= Original).
+     Gemessen statt angenommen in 2.1.
+
+### 2.1 Blit-Pruefung (wie pruef_gen.py: Masken durch den Atlas auf den dekodierten Hintergrund, Abweichung je gemaltem Punkt
+als Summe |dR|+|dG|+|dB| (0..765); Hintergrund = probe_bg_dump (Engine-MDEC-Dekoder, 1119 Bilder); Pixelclip wie SDL_RenderCopy)
+
+| Menge | Sektionen | gemalte Punkte | Abweichung Mittel je Sektion (Mittelwert / Median / Max) | p95 max | Anteil > 48 max |
+|---|---|---|---|---|---|
+| ohne eigenen Atlas -> BSS-Atlas (alle) | 224 | 2 280 589 | 12.63 / 12.50 / 23.05 | 52 | 6.51 % |
+| davon Stages 3..6 | 216 | 2 248 596 | 12.87 / 12.64 / 23.05 (ROOM5090/5091 Cut 12) | 52 | 6.51 % |
+| davon ROOM1221 | 8 | 31 993 | 6.26 / 6.31 / 6.92 | 14 | 0 % |
+| mit eigenem Atlas -> eigener Atlas | 99 | 1 236 765 | 6.27 / 6.32 / 8.61 | 19 | 0.54 % |
+| GEGENPROBE ROOM1220 Cut 0/2/4/6/8 -> eigener Atlas | 5 | 24 259 | 5.06 / 4.92 / 5.84 | 10 | 0 % |
+| GEGENPROBE ROOM1220 Cut 0/2/4/6/8 -> BSS-Atlas (falsch) | 5 | 14 182 | 77.71 / 82.75 / 85.32 | 265 | 65.34 % |
+
+- Die 224 toten Sektionen passen zum BSS-Atlas (12.63 = der Wert des Generators vom 2026-09-03, "Mittel 12.67" ueber 234 Cuts;
+  8-bpp-Palettenrundung). Keine Maske greift ueber den Atlasrand (0), keine Sektion ohne gemalte Punkte.
+- Die Probe trennt: dieselbe Rechnung mit dem FALSCHEN Atlas (ROOM1220, Freistellungen mit eigenem Atlas, durch den BSS-Atlas)
+  ergibt 77.7 im Mittel und 65 % Punkte > 48 — genau der Fehler, gegen den 53741fe5 abgesichert hat. Fuer die Freistellungen
+  bleibt der eigene Atlas richtig.
+
 
 ## 3. Umsetzung
 
