@@ -31,19 +31,22 @@
  *   in z -23520..-23000); kein Ueberlapp mit Slot 5 (x >= 18100) und Slot 6 (x <= 16650).
  *   Slot 13: in ROOM1050 belegt 0..10 (Original), 15 (Dokument, re15_dokumente.h), 52.. Kamerazonen.
  * ROOM1090 (Leon, nach dem Loeschen UND weggeworfen) / ROOM1091 (Elza, immer): liegend auf dem Boden
- *   (Band 1 = y -1800, Feuer Sce_em_set @0x02214.. y 0xf8f8) an der Feuerstelle vor dem Wagen (7 Feuer
- *   x 1374..3104 z -3498..2040). (2100,600): in Cut 4/5/6 ohne Maske (probe_r34n_e_dokumente `sicht`;
- *   der erste Versuch (700,-1300) lag in Cut 4 unter Maske 21, (2300,0) in Cut 5 unter Maske 15 =
- *   Stossstange), Cut 6 = Eintritts-Cut der Selbst-Tuer @0x02352 (Rettungsszene). rot_y 3250 = diagonal
- *   zu den Blickachsen von Cut 5 (Lot 3760) und Cut 6 (Lot 2733). Untersuchen-Platz 1000 x 1000 um das
- *   Prop; ROOM1091 Slot 3 (< Slot 5 = Schuppen-Text der Runde 36, Vorrang des kleinsten Slots
- *   FUN_80042bac; der Messpunkt der Runde 36 (620,250) liegt NICHT darin), ROOM1090 Slot 5 (nach dem
- *   Loeschen legt sub00 keinen Slot 2/3-Satz an). */
+ *   (Band 1 = y -1800, Feuer Sce_em_set @0x02214.. y 0xf8f8) vor der Seitentuer des Wagens, aus der die
+ *   Frau in der Rettungsszene steigt (sub03 Ada-Start (2602,-2233) @0x02554), zwischen den Feuern
+ *   (2052,-1334) @0x02214 und (2375,-2333) @0x02228 — dort stand Leon beim Loeschen (Viereck Slot 2
+ *   @0x02336). (2500,-1300) liegt in Cut 4/5/6/7 im Bild und unter KEINER Maske (probe_r34n_e_dokumente
+ *   `sicht`); verworfen: (700,-1300) Cut 4 Maske 21, (2300,0) Cut 5 Maske 15, (2100,600) in Cut 7 unter
+ *   dem Bildrand, (2700,-1000)/(2900,-1200) Cut 5 Maske 14. Cut 7 = Hauptbild der Rettungsszene
+ *   (Cut_chg F985 im Lauf), Cut 6 = Wagentuer ("There! Are you okay?"). rot_y 3250 = diagonal zu den
+ *   Blickachsen von Cut 5 (Lot 3760) und Cut 6 (Lot 2733). Untersuchen-Platz 1000 x 1000 um das Prop;
+ *   ROOM1091 Slot 3 (< Slot 5 = Schuppen-Text der Runde 36, Vorrang des kleinsten Slots FUN_80042bac;
+ *   der Messpunkt der Runde 36 (620,250) liegt NICHT darin), ROOM1090 Slot 5 (nach dem Loeschen legt
+ *   sub00 keinen Slot 2/3-Satz an). */
 static const re15_fl37_lage_t k_lagen[] = {
     /* raum    art                tor                        slot zone band   x      y       z    rot_y  rect_x rect_z  w     d   */
     { 0x1050, RE15_FL37_STEHEND, RE15_FL37_NICHT_GENOMMEN,   13,  1,   0, 17200, -1150, -23775,    0, 16700, -23900, 1000, 1000 },
-    { 0x1090, RE15_FL37_LIEGEND, RE15_FL37_FEUER_AUS,         5,  0,   1,  2100, -1800,    600, 3250,  1600,    100, 1000, 1000 },
-    { 0x1091, RE15_FL37_LIEGEND, RE15_FL37_IMMER,             3,  0,   1,  2100, -1800,    600, 3250,  1600,    100, 1000, 1000 },
+    { 0x1090, RE15_FL37_LIEGEND, RE15_FL37_FEUER_AUS,         5,  0,   1,  2500, -1800,  -1300, 3250,  2000,  -1800, 1000, 1000 },
+    { 0x1091, RE15_FL37_LIEGEND, RE15_FL37_IMMER,             3,  0,   1,  2500, -1800,  -1300, 3250,  2000,  -1800, 1000, 1000 },
 };
 #define N_LAGEN ((int)(sizeof k_lagen / sizeof k_lagen[0]))
 
@@ -110,7 +113,10 @@ static void text_ablegen(void)
 static void spind_umwidmen(void)
 {
     const int s = RE15_FL37_SPIND_SLOT;
-    if (g_aot.slots[s].active && !(g_aot.slots[s].type == RE15_AOT_TYPE_ITEM &&
+    /* Der Original-Satz ist ITEM — oder NONE, wenn das Taken-Bit schon steht (Port-Gegenstueck zu
+     * `sb zero,0(v0)` @0x800406f4, scd_vm.c op_item_aot_set); in beiden Faellen traegt er Item 0x31. */
+    if (g_aot.slots[s].active && !((g_aot.slots[s].type == RE15_AOT_TYPE_ITEM ||
+                                    g_aot.slots[s].type == RE15_AOT_TYPE_NONE) &&
                                    g_aot.item_params[s].item_type == RE15_FL37_ITEM))
         return;                                   /* fremder Satz im Slot: nichts anfassen */
     re15_aot_set(s, RE15_AOT_TYPE_MESSAGE, RE15_FL37_SPIND_MSG, 20500 + 400, -800 + 400, 400, 400);
