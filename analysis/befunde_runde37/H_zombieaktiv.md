@@ -51,9 +51,66 @@ nach 150..405 Bildern (@0x80101544-7C), sonst nur Zufalls-Wander (@0x8010151C-40
 >= 8800 Abstand an ihnen vorbei (1120-Tuer z -2150, naechster Zombie z -10800) -> sie bleiben stehen. Das ist genau der
 Nutzer-Befund "bleiben einfach nur stumpf alle im Gang stehen".
 
+### M2 — echte exe, ROOM1030 / ROOM1040 nach der Montage (Karte mit allen Montage-Bits: 9:71 3:94 9:73-76 4:4-5 4:15
+7:0xd3-0xd7 7:0xc6-0xca, Leon am Eintritt aus 1040 bzw. 1060)
+
+* 1030 (Leon (-26214,-3861), Eintritt aus 1040): die 1070-Kopien (grid 0x00 -> RE2 Stehen) liegen 3800..7600 vor Leon und
+  wachen in Bild 1..328 (DECISION[0] bzw. Selbstwecker); Raum-Records (0x0d) und Kriecher (0x0d) gehen ab Bild 0. Leon
+  stirbt ohne Gegenwehr nach ~600 Bildern. -> 1030 ist bereits bedrohlich (die Kopien stehen NAH an der Tuer).
+* 1040 (Leon (-21008,-13134), Eintritt aus 1060): alle fuenf (0x0d) gehen ab Bild 0 (Folge `1/1@0`), Leon stirbt nach ~900.
+* Fazit M1+M2: "stumpf im Gang stehen" ist ROOM1130 (grid 0x02, weit weg vom Weg). 1040/1030 sind aktiv, weil ihre
+  Records 0x0d tragen bzw. nah an der Tuer stehen.
+
 ## RE-Belege
 
-(folgt)
+### R1 — RE2 Retail: der Spawn-Deskriptor entscheidet, ob ein Zombie sofort losgeht (EMZ0.BIN, re2_disasm.py)
+
+Sce_em_set (RE2 Opcode 0x44, 22 Byte, Handler 0x8005714C = Tabelle 0x800A74C8[0x44]): `lhu v0,4(v1)` @0x8005734c /
+`sh v0,270(s0)` @0x80057354 -> **+0x10E = pc[4..5]** (Deskriptor), Typ `lbu v0,3(v1)` / `sb v0,8(s0)` @0x80057334-3c.
+RE2-INIT 0x8010065C (Tabelle 0x8010C830[0]) wertet `+0x10E & 0x3F` aus:
+* Grundwort `addiu v0,zero,1` / `sw v0,4(s2)` @0x801006ac-b8 = 0x0001 = Zustand 1 / Unterzustand 0 = **Stehen** (EXEC[0]).
+* Deskriptor 2 -> 0x701 Liegen (Clip 22) @0x801009c4-f0; 4 -> 0x701 (Clip 23) @0x801009f4-a10; 5/7 -> Leiche (HP -1,
+  +0x10E 0x4002/0x4004) @0x80100a14-aa4; 8 -> 0x801 Fressen (Clip 18) @0x80100ac0-adc; ungerade -> Kriecher @0x80100ae0ff;
+  10 -> 0xF01 @0x80100ba0-c38.
+* **Deskriptor 6 -> `addiu v0,zero,257` / `sw v0,4(s2)` @0x80100ab8-abc = 0x0101 = Zustand 1 / Unterzustand 1 = GANG**:
+  der Zombie geht ab dem ersten Takt auf Leon zu (EXEC[1] 0x80101A40, Ziel = Navigator FUN_8004A808 auf die
+  Spielerlage, Wurzel @0x801002d0-358), aus JEDER Entfernung; die Gang-Leiter DECISION[1] 0x80101714 kennt keinen
+  Rueckweg ins Stehen (9 `sw ...,4(s0)`, keiner schreibt 0x0001).
+* Ein stehender Zombie (Deskriptor 0) wird nur wach bei dist < 0x1388 (5000) + Vorderkegel 1024 + Sicht
+  (@0x801012f0-31c), oder nach +0x158 = rand+150 (150..405 Bilder, rand 0..255 @0x80101478-88) bei dist < 0x1D4C (7500)
+  + Sicht (@0x80101544-7c); sonst nur Zufalls-Wander (@0x8010151c-40 / P3 @0x801015e0-16a8, Ausgaenge dist < 0xBB8
+  @0x80101650-70 bzw. < 0x1D4C mit Sicht @0x80101674-a8). dist = +0x1F0 = SquareRoot0(dx^2+dz^2) (EXE @0x800265a4-e0).
+
+**RE2-Zensus der Zombie-Sce_em_set (Typ 0x10..0x1F, alle 495 RE2-RDTs, Walker r30_re2_scd.py, Skript
+scratchpad/h/re2_emset_zensus.py):** 433 Saetze; Deskriptor 0 (Stehen) 214, **6 (Gang) 140 = 32 %**, 8 (Fressen) 13, 2/4
+(Liegen) 36, 1/3 (Kriecher) 19, 5/7 (Leiche) 4, 10: 7. Fast jeder RE2-Raum MISCHT 0 und 6 ("teilweise aktiv"), z.B.
+ROOM1100 7 von 15 Gang, ROOM1140 (sub00) 7 von 15, ROOM20A0 16 von 18, ROOM20F0 9 von 10, ROOM2070 9 von 12,
+ROOM5080 6 von 8; reine Steh-Raeume z.B. ROOM10F0 (7), ROOM2040 (14), F080 (6).
+
+### R2 — RE1.5: welche Deskriptoren "aktiv" sind (STAGE1.BIN, re15_disasm.py)
+
+RE1.5-Zensus Zombie-Sce_em_set (Typ 0x10/11/12/13/16/18, alle 240 RDTs, 419 Saetze): grid 0x0d 142, 0x00 72, 0x02 91,
+Liegen/Fressen/Kriecher/Sitzer den Rest.
+* **0x0d** (INIT @0x80100f20-54: `ori v0,zero,0x201` / `sw v0,4(v1)` @0x80100f40-44, +0x9 := 0) = sofort ENGAGE -> der Port
+  bildet es schon auf RE2 0x0101 = Deskriptor 6 ab (re2z_init `sel == 0x0d`). Raeume: 1030/1040 (die durchs Tor
+  kommen), 1200.
+* **0x00** = Kampf-Untermodus 0, DECIDE FUN_80101b64 (@0x8011f840[0]): `jal arc_test(0x5f4)` @0x80101b8c, dann
+  `sll v0,a0,16 / bne -> Ende` @0x80101bf4-f8 (Spieler im Weitkegel +-0x5f4) und `lhu v0,472(v1) / andi 0x10 / beq`
+  @0x80101c0c-18 (Sicht-Bit) -> `ori v0,zero,0x201 / sw v0,4(v1)` @0x80101c1c-20 = ENGAGE — **OHNE Abstandsgrenze**
+  (der einzige Abstandstest des Zweigs ist `sltiu 0x2711` @0x80101c38 fuer den 1/8-Wander-Wurf). Der Sichtsensor
+  FUN_8001bc08 -> FUN_8001b84c(0x5e8, Spieler) prueft nur Kegel +-0x5e8 + Nibble-3-Strahl (@0x8001b87c-8e8), keine
+  Entfernung. => RE1.5-Zombies mit grid 0x00 greifen aus JEDER Entfernung an, sobald sie Leon sehen = die RE1.5-Form
+  eines AKTIVEN Zombies.
+* **0x02** = DECIDE FUN_80101c7c (@0x8011f960[0]): ENGAGE nur bei dist < 0xFA0 (4000) = schlafender Steher.
+* Der RE2-Port (re2z_init) bildet 0x00 UND 0x02 beide auf RE2-Stehen (0x0001) ab: grid-0x00-Zombies sind unter der
+  RE2-KI damit PASSIVER als im RE1.5-Original (wach nur < 5000/7500 statt aus jeder Entfernung).
+
+### R3 — RE2 im Original (DuckStation-Spielstaende SLUS-00748, RAM per re2_ss.py)
+
+`SLUS-00748_4.sav` (Stufe 0 Raum 20 = ROOM1140): Zombie Typ 0x10, **+0x10E = 0x0006, Zustandswort +0x4 = 0x00010101
+(Zustand 1, Unterzustand 1 = GANG)**, Abstand +0x1F0 = 7489, Sicht +0x154 = 0x0800. `SLUS-00748_6.sav` (Stufe 1 Raum 10
+= ROOM20A0, Raumeintritt): Zombie Typ 0x1F, +0x10E = 0x0006 an (-15699,3739) = ROOM20A0 sub00 @0x00A3E (Satzgruppe 2:
+sechs Saetze, alle Deskriptor 6), Leon (-15554,-15268) = 19000 entfernt, Zustandswort noch 0 (INIT im naechsten Takt).
 
 ## Umsetzung
 
