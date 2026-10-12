@@ -266,3 +266,54 @@ rot-dominant, Bild 900 (offen) blau gemaltes Glas blau-dominant; 1230 Bild 230 r
 
 Lampenwechsel: Bild nach dem Piep-Takt (F820 Piep -> F821 offen; 1230 F241 -> F242) — die Hintergrund-Ebene wird in main.c
 VOR dem VM-Takt gezeichnet (wie Zeiger, Generator-Lampen, Cut-Wechsel: F1011 Cut_old -> F1012 Raumbild).
+
+---
+
+## 5. Tests
+
+Neu (`re15_port/tests/unit/probes/r37_codepanel.cmake`):
+
+| Test | misst |
+|---|---|
+| `unit_r37_codepanel_anker` | sub19-Schwanz/sub17-Cut/sub01-Flag in allen sechs RDTs; RE1.5 ROOM1100 @0x00CBA (Kamera nach der Nachricht); RE2 ROOM2110 @0x01B5C/@0x01B68/@0x01B6C/@0x01B90/@0x01B9C, ROOM4070 @0x008C6/@0x0088C/@0x00DC2/@0x00DD2/@0x00DD4, ROOM2130 @0x01772..@0x017CC; LAMPE2130.TIM == room2110/esp16.tim, CLUT-Zeilen 0/1/2; Port-Tabelle == unabhaengige Sollzahlen (Cut, Flag, X, Lampenmitten, Farbzeilen, Form) |
+| `unit_r37_codepanel_kamera` | E2 headless am ECHTEN Skriptweg aller sechs Raeume (sub17, Code per Cursor + Viereck: 4312 / 0513 / 5632): Piep bei Panel-Cut, Aufschliessen +15 bei Panel-Cut, Kamera erst danach auf den Cut von vorher, Endzustand wie Original; GEGENPROBE ohne Haken (= Befund vorher: Kamera im Piep-Bild weg); Nachricht frueh zu -> sub19 wartet |
+| `unit_r37_codepanel_lampe` | E1 headless: rot (zu) vom Panel-Auf bis zum Piep-Bild, offen ab dem naechsten Bild, Lage/Kante/Farbzeile in jedem Bild (0 Abweichungen), nie ausserhalb des Panel-Cuts; falscher Code 9999 -> "Wrong code" bei roter Lampe, nie offen; Zellfolgen; anderer Raum/Cut -> keine Lampe |
+| `unit_r37_codepanel_zeichner` | echter PC-Zeichner auf dem echten Hintergrund: leuchtende Lampe in der Farbe des gemalten Glases dominant (>= 30), Farbton <= 20 Grad vom gemalten Glas, heller (>= +100), andere Lampe bitgleich, ausserhalb des Panel-Cuts nichts |
+| `integration_r37_codepanel` | echte exe: B 10D0 echter Weg (Kartenleser + Ja + 4312 per D-Pad), C 1230 SECUGUARD, D 10D0 falscher Code — Logzeilen, Piep/Aufschliessen-Bilder gegen cut.log (Panel-Cut am Aufschliess-Bild, Kamera danach), Framedumps (rot/blau/gruen dominant am gemalten Glas) |
+
+Gezielte Laeufe: siehe 5.1 (Ergebnis wird nach dem Lauf eingetragen).
+
+---
+
+## 6. OFFEN / Grenzen
+
+* **ROOM11E0/11E1 ("Prisons", Yellow Keycard) ist im normalen Spiel nie offen zu bekommen:** das Schloss-Flag (3,139) setzt
+  schon der Neuspiel-Startraum ROOM1240 sub02 @0x0055A `22 03 8b 01` (vgl. include/re15_item_discard.h); main00 nimmt dann
+  den Else-Zweig (fertige Tuer), das Tastenfeld erscheint dort nie. Lampe und Kamera sind fuer 11E0/11E1 trotzdem gebaut
+  und headless gemessen (Flag geloescht), in der exe aber nur per Haken erreichbar (dort zeigt das Panel sofort "offen").
+* **Wegwerf-Abfrage auf dem Panel:** die Runde-21/22-Abfrage "You don't need this key anymore" kommt direkt nach "You've
+  opened the lock." und laeuft jetzt noch in der Panel-Ansicht (sub19 laeuft erst nach ihr weiter, erst dann geht die
+  Kamera zurueck). Vorher stand sie in der Raumansicht. Logik/Antwort unveraendert (unit_r21_discard_wegwerfen gruen).
+* **Nachricht in weniger als 15 Bildern geschlossen (Taste gehalten):** sub19 wartet bis zum Aufschliess-Ton (gemessen 2
+  Bilder); in dieser Zeit ist die Eingabe noch gesperrt (Set(2,7,0) folgt erst hinter X+10), die Welt laeuft.
+* **Bildversatz +1** fuer Lampenwechsel und Kamera-Rueckkehr gegenueber dem Skript-Takt (Port-Struktur, s. 4.2); RE2 zeigt
+  die Lampe im Takt des Piep-Se_on.
+* **Hof der runden Lampe** (48/64 px) ist nach RE2 4070 hergeleitet und ueberdeckt die Tasten 1..3 leicht (weicher Schein).
+* **Paralleler Schreiber:** waehrend der Spur hat ein zweiter Agent uncommittet in diesem Baum gearbeitet (s. 2.4); der
+  Orchestrator ist informiert. Falls er weiterlaeuft, muss vor der Integration abgeglichen werden.
+
+---
+
+## 7. Fuer den Nutzer
+
+* **Was man sieht/hoert:** Code-Panels in "2F Corridor" (Funkraum, Blue Keycard, 4312) und "B1 Corridor" (Waffenkammer,
+  Red Keycard, 5632): solange der Code nicht richtig ist, leuchtet die ROTE Lampe rot (auch bei "Wrong code, try again.").
+  Ist der Code richtig, geht sie aus und es leuchtet im 2F Corridor die BLAUE, am SECUGUARD-Panel die GRUENE Lampe; die
+  Kamera bleibt dabei auf dem Panel — Piep, eine halbe Sekunde spaeter das Aufschliessen, dazu "You've opened the lock."
+  (und ggf. die Frage zum Wegwerfen der Karte). Erst danach schaltet die Kamera in den Raum zurueck.
+* **Neue Assets:** keine (die Leuchtkunst ist `shared_assets/RE2/LAMPE2130.TIM` = RE2 room2110/esp16.tim, seit Runde 34
+  im Paket-Gate; die Toene `shared_assets/RE2/KARTSE.VBS` seit Runde 36).
+* **Sprachdateien:** keine.
+* **Bau/Paket:** neue Datei `platform/pc/src/codepanel_r37_pc.c` -> Android-GLOB-Cache neu konfigurieren
+  (reai-v2-android-glob-cache); RE15_MIN_TESTS +5 (4 unit + 1 integration).
+* **Messhaken:** `RE15_CODEPANEL_LOG=<datei>` (Lampenzustand, Kamera halten/zurueck je Bild).
