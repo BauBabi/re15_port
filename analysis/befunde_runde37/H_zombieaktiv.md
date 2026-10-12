@@ -133,7 +133,51 @@ tragen (R1-Zensus).
 
 ## Umsetzung
 
-(folgt)
+**Entscheidung (Mechanismus, nicht Zahl):** RE2 macht Zombies "teilweise aktiv", indem rund ein Drittel der Spawn-Saetze
+Deskriptor 6 tragen (Gang ab Spawn, R1/R4). RE1.5-Raeume tragen keine RE2-Deskriptoren, aber ihre eigene Klasse "aktiv":
+grid 0x00 greift im Original aus JEDER Entfernung an, sobald er Leon sieht (R2), grid 0x02 nur unter 4000. Die RE2-KI des
+Ports kannte fuer beide nur RE2-Stehen. Die Abbildung legt die RE1.5-Klasse "aktiv" auf die RE2-Klasse "aktiv":
+
+| RE1.5 grid (Sce_em_set pc[3]) | RE1.5-Original | RE2-KI v0.8.24 | RE2-KI jetzt |
+|---|---|---|---|
+| 0x0d (142 Saetze; 1030/1040/1200) | ENGAGE ab INIT @0x80100f40-44 | Gang 0x0101 | Gang 0x0101 (unveraendert) |
+| **0x00 (72; 1010/1020/1070/1100/1180/11E0/11F0/1250 + Elza, 4050)** | ENGAGE auf Sicht ohne Abstandsgrenze @0x80101bf4-c20 | Stehen 0x0001 | **Gang 0x0101 = RE2-Deskriptor 6** |
+| 0x02 (91; 1090/10B0/10D0/10E0/1140-Wiederkehr/1220 ...) | ENGAGE nur < 0xFA0 (FUN_80101c7c) | Stehen | Stehen (unveraendert) |
+| Liegen/Fressen/Kriecher/Sitzer | Skript-/Naehe-Wecker | unveraendert | unveraendert |
+
+Ergebnis-Anteil: von den aufrechten RE1.5-Saetzen gehen jetzt 0x0d + 0x00 = 214 von 305 ab Spawn (RE2: 140 von 354); je
+Raum mischen Liegende/Fresser/Kriecher und Schlaefer weiter mit (z.B. 1020: 4 Gang + 4 Liegende; 10E0: 4 Steher + 4
+Fresser + 2 Liegende).
+
+**Dateien:**
+* NEU `re15_port/include/re15_zombieaktiv_r37.h` + `re15_port/engine/src/zombieaktiv_r37.c`: Marke je Aktor-Platz beim
+  Sce_em_set (nur grid 0x00, nur Zombie-Familie re15_re2z_owns_type, nicht waehrend eines Montage-Schritts =
+  re15_irons_tod_zustand() != RE15_IT_AUS), verbraucht im RE2-INIT mit Pruefung Typ + Spawn-Lage (der INIT laeuft im
+  ersten KI-Takt vor jeder Bewegung). Konstanten: RE15_R37_RE2_WORT_GANG 0x0101 @0x80100ab8-abc, RE15_R37_RE2_WORT_STEHEN
+  0x0001 @0x801006ac-b8, RE15_R37_RE15_AKTIV 0x00 (@0x8011f80c[0] -> DECIDE @0x8011f840[0] = FUN_80101b64).
+* Haken `scd_vm.c` op_sce_em_set (1 Zeile + Include): `re15_r37_em_set(actor_slot, a, behavior)`.
+* Haken `enemy_ai_re2_zombie.c` re2z_init (2 Zeilen + Include): vor dem Grundwort 0x0001 `else if (re15_r37_re2_gang(slot,
+  e)) re15_ai_set_state_word(e, RE15_R37_RE2_WORT_GANG)`.
+* `irons_tod_1150.c` (Montage-Modul): Nachspawn 1130 (Programm 10, spaeteres Betreten) in der RE1.5-Durchbruch-Form grid
+  0x0d (`EM_1130_NACH`, Form der Raum-Records ROOM1040 main00 @0x011FC.. / ROOM1030 main00 @0x01DE6.., die durchs
+  Rolltor/Tor kommen; INIT @0x80100f40-44 = ENGAGE; unter der RE2-KI re2z_init sel 0x0d -> 0x0101); Typen/Tot-Bits/Lagen
+  unveraendert. Der Montage-SCHRITT (k_p_1130, Spieler geparkt) behaelt die Stehform 0x02. Gegenprobe-Liste
+  `k_p_1130_nach_v0824` nur bei `re15_r37_zombieaktiv_enable(0)` (Sonden).
+* Riegel-Anpassung `tests/unit/test_r36_zombieki_sicht.c` (Runde 36 Spur F): der Zensus misst das Sicht-Bit STEHENDER
+  Zombies; seit der Abbildung reagieren grid-0x00-Zombies in Bild 1 unabhaengig von der Sicht (gemessen: Gegenprobe
+  ROOM1010 vor NB1 0 statt > 0 Plaetze -> rot). Der Zensus laeuft deshalb mit `re15_r37_zombieaktiv_enable(0)` und prueft
+  dieselben Zombies wie bisher als Steher (danach 15/15 gruen).
+
+## Messung nachher
+
+### N1 — echte exe, ROOM1130 nach der Montage (gleicher Weg wie M1 Lauf a, Bau f3fd3855)
+Alle fuenf Montage-Zombies (jetzt grid 0x0d) gehen im ersten KI-Takt nach der Blende (Bild 6) in den Gang (Folge
+`0/0/0@1 1/1@6`) und laufen aus 25000..31000 Abstand auf Leon zu (Wege 25000..49000 Einheiten in ~1450 Bildern); der
+erste greift in Bild 896, Leon (ohne Eingabe) stirbt nach ~1200 Bildern. Vorher (M1): keiner im Gang in 1800 Bildern.
+
+### N2 — echte exe, ROOM1030 nach der Montage (wie M2)
+Die 1070-Kopien (grid 0x00) gehen ab Bild 0 in den Gang (`1/1@0`) statt erst bei < 5000/7500 zu wachen (vorher Bild
+1..328); Raum-Records/Kriecher unveraendert.
 
 ## Messung nachher
 
