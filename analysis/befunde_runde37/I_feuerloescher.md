@@ -339,3 +339,16 @@ Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine
 4. GROESSE / HOEHE: 0,47 m hoch, 13 cm Durchmesser (10-lb-Klasse), an der Wand 0,68-1,14 m ueber dem Boden.
 5. SPIND: "Nothing unusual." (Raumtext msg 0 der uebrigen Untersuchen-Plaetze in ROOM1000) oder ein eigener Satz wie
    "The locker is empty."?
+
+## Nachbesserung 1 (nach Abnahme 0, `I_abnahme_0.md`)
+
+Auftrag: M1 (blockierend, Nachtrag 4b + Punkt 3) und M2 (Doku) beheben; die als erfuellt bewerteten Punkte (Modell,
+Elza 1091, Fundort 1050/Spind 1000, Nachtrag 4c) nicht verschlechtern. Der Auftrag, der den Workflow ausgeloest hat
+(Nachtrag 3b, Leuchtfarbe der Code-Panels), gehoert weiter zur Spur E codepanel (AUFTRAG.md Nachtrag 3b, VERTRAG.md
+Abschnitt 0) — Spur I fasst keine Panel-Datei an.
+
+### N1.M1 — leerer Loescher liegt in ROOM1090 auch ohne JA (Item-Box-Weg)
+(in Arbeit)
+
+### N1.M2 — Abschnittsverweis im Kommentar feuerloescher_r37.c:82
+(in Arbeit)
