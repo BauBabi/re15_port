@@ -22,7 +22,8 @@ int re15_s11c0_winkel_diff(int a, int b);
 /* MESS-HAKEN RE15_S11C0_LOG=<pfad> (env-gegatet, kein Spielverhalten): eine Zeile je Spielbild, solange
  * Programm 4 in ROOM11C0 laeuft — Untertitel (aktiv/Id), je Figur (A = Aktor 1 Ada, M = Aktor 4 Marvin)
  * Ort, Gier, Clip, Unter-Modus, Kopf-Flags +0x1b8, Kopf-Zielpunkt +0x160/+0x164, Kopf-Akku (part+0x94)
- * und die Gier zum Partner. Aufgerufen aus re15_irons_tod_tick. */
+ * die Gier zum Partner und der Kopf-Ort (head_world = Ursprung des Kopf-Blicks der Kopf-FSM, skeleton_common.c).
+ * Aufgerufen aus re15_irons_tod_tick. */
 void re15_s11c0_mess_takt(void);
 
 #endif /* RE15_SZENE11C0_R37_H */

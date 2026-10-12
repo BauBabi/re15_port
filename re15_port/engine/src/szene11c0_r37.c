@@ -39,9 +39,10 @@ void re15_s11c0_mess_takt(void)
         const re15_actor_t *a = fig[i], *p = fig[1 - i];
         if (!a->active) { fprintf(f, " %c(-)", i ? 'M' : 'A'); continue; }
         int gp = p->active ? re15_s11c0_gier(a->x, a->z, p->x, p->z) : -1;
-        fprintf(f, " %c(p=(%d,%d) r=%d mo=%d s=%d nf=%02x nt=(%d,%d) acc=%d gp=%d)", i ? 'M' : 'A',
+        fprintf(f, " %c(p=(%d,%d) r=%d mo=%d s=%d nf=%02x nt=(%d,%d) acc=%d gp=%d h=(%d,%d))", i ? 'M' : 'A',
                 (int)a->x, (int)a->z, (int)(a->rot_y & 0x0fff), (int)a->motion, (int)a->sub_state_1,
-                (unsigned)a->neck_flags, (int)a->neck_tx, (int)a->neck_tz, (int)a->neck_yaw, gp);
+                (unsigned)a->neck_flags, (int)a->neck_tx, (int)a->neck_tz, (int)a->neck_yaw, gp,
+                (int)a->head_world[0], (int)a->head_world[2]);
     }
     fputc('\n', f); fflush(f);
 #endif
