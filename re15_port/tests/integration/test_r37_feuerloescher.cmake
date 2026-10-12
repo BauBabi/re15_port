@@ -17,6 +17,9 @@ cmake_minimum_required(VERSION 3.16)
 #   F  Spielstand + CONTINUE in ROOM1090 (Feuer aus, Loescher abgelegt) -> liegt und wird gezeichnet
 #   G  dasselbe mit dem Loescher im Inventar -> liegt NICHT (kein Doppel)
 #   H  Elza Tuer-Weg ROOM1051 -> ROOM1091 -> liegt; in ROOM1051 haengt keiner
+#   I  Nachtrag 4b: NEIN an der Wegwerf-Abfrage -> Leon behaelt ihn, nichts liegt, die Rettungsszene laeuft weiter
+#   J/K Nachtrag 4c: nach Spielstand/CONTINUE heisst der behaltene Loescher "Empty Fire Extinguisher" (Name im
+#      Statusschirm, CHECK-Text "An empty fire extinguisher."); L Gegenprobe vor dem Loeschen: Original-Name
 #
 # Bilder je Lauf per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) im Arbeitsordner; geprueft wird das LOG.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r37_feuerloescher_karte> -DWORKDIR=<dir>
@@ -98,7 +101,8 @@ function(fl_lauf _name _raum _kartenargs _skript _ende _extra _out)
         message(FATAL_ERROR "r37_feuerloescher[${_name}]: Spielstand in ROOM${_raum} nicht geladen (exit=${_rv}, ${WORKDIR})")
     endif()
     string(FIND "${_dbg}" "EXIT_AT: Bild" _p)
-    if(_p LESS 0)
+    string(FIND "${_dbg}" "[inv] acceptance shot" _p2)      # Statusschirm-Haken RE15_INV_SHOT endet selbst
+    if(_p LESS 0 AND _p2 LESS 0)
         message(FATAL_ERROR "r37_feuerloescher[${_name}]: Endbild nicht erreicht - Lauf vorher abgerissen "
                             "(exit=${_rv}, ${WORKDIR})")
     endif()
@@ -164,6 +168,33 @@ pruef_nicht(G _g "oid=0x05")
 fl_lauf(h 1051 "1051;19850;-22300;1024;cut:6;elza" "W1,A0.5,W12" 520 "" _h)
 pruef(H _h "[feuerloescher] ROOM1091: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300)")
 pruef_nicht(H _h "[feuerloescher] ROOM1051")
+
+# --- I: Nachtrag 4b NEIN an der Wegwerf-Abfrage (exe): Leon behaelt den Loescher, nichts liegt ---------
+# Spielstand ROOM1090 am Messpunkt (0,250) Blick +X mit Loescher, (3,0x85), (3,0x80) (Hilferuf vorbei, sonst
+# startet sub01 @0x02406 die Rufszene). A@30 Feuer (msg 7), A@93 weiter, A@291/474 Ja auf msg 8; X schliesst
+# msg 9 (@597..663), X@696 = NEIN an der fertig getippten Abfrage (gemessen: Abfrage bereit ab ~Bild 740).
+fl_lauf(i 1090 "1090;0;250;0;y:-1800;cut:13;flag:9:0x86;flag:3:0x85;flag:3:0x80;give:0x31:1"
+    "W1,A0.1,W2,A0.1,W6.5,A0.1,W6,A0.1,W2,X0.1,W1,X0.1,W1,X0.1,W3,X0.1,W8"
+    1000 "" _i)
+pruef(I _i "id=8 \"Will you use the Fire Extinguisher?\"")
+pruef(I _i "[feuerloescher] ROOM1090: kein Loescher (Leon traegt ihn noch (Item 0x31 im Inventar))")
+pruef(I _i "id=9 \"You've used the Fire Extinguisher.\"")
+pruef(I _i "id=3 \"Leon: There! Are you okay?\"")
+pruef_nicht(I _i "Loescher weggeworfen")
+pruef_nicht(I _i "Loescher liegt leer am Boden")
+
+# --- J/K: Nachtrag 4c "Empty Fire Extinguisher" nach Spielstand/CONTINUE (Statusschirm-Haken) -----------
+fl_lauf(j 1090 "1090;-10100;4200;3072;y:-1800;cut:3;flag:9:0x86;flag:3:0x85;flag:3:0x81;flag:3:0xbb;flag:3:0x6e;leer;give:0x31:1"
+    "W1" 600 "RE15_INV_SHOT=grid.bmp;RE15_INV_GRID_SHOT=1" _j)
+pruef(J _j "[feuerloescher] ROOM1090: kein Loescher (Leon traegt ihn noch (Item 0x31 im Inventar))")
+pruef(J _j "[feuerloescher] Name Item 0x31: Empty Fire Extinguisher")
+fl_lauf(k 1090 "1090;-10100;4200;3072;y:-1800;cut:3;flag:9:0x86;flag:3:0x85;flag:3:0x81;flag:3:0xbb;flag:3:0x6e;leer;give:0x31:1"
+    "W1" 600 "RE15_INV_SHOT=chk.bmp;RE15_INV_CHECK_SHOT=1" _k)
+pruef(K _k "[feuerloescher] CHECK-Text Item 0x31: An empty fire extinguisher.")
+# Gegenprobe: VOR dem Loeschen heisst er noch "Fire Extinguisher" (kein Ersatz-Name)
+fl_lauf(l 1090 "1090;-10100;4200;3072;y:-1800;cut:3;flag:9:0x86;flag:3:0x85;leer;give:0x31:1"
+    "W1" 600 "RE15_INV_SHOT=grid.bmp;RE15_INV_GRID_SHOT=1" _l)
+pruef_nicht(L _l "Empty Fire Extinguisher")
 
 file(REMOVE "${_exe_kopie}")
 if(_fehler)
