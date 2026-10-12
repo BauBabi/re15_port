@@ -17,7 +17,7 @@ Wortlaut des Nutzers (AUFTRAG.md Nachtrag 9):
 - [x] Bau: `local_build.sh configure` + `build` -> LOCAL-BUILD-OK, "ninja: no work to do" (exe 15:16 juenger als letzte
       Code-Aenderung 14:52; nach 5cde2afa nur Test-Skripte geaendert)
 - [x] RE-Gate (Stichproben, §3)
-- [ ] gezielte Tests
+- [x] gezielte Tests (§4)
 - [x] Messung M1 an der exe (§1)
 - [x] Messung M2 an der exe (§2)
 - [x] Vertrag / Nebenwirkungen (§5)
@@ -81,12 +81,15 @@ y >= 181 / "SONST".
 | Leon 1150 HINGEHEN: Start 1000 Einheiten vor der Kiste (-26650,-12100), `RE15_INPUT_SCRIPT=U0.8,W0.6,A0.034,W1.6,A0.034,W0.3,D0.034,W1.0,U0.034,W1.0` (Laufen, Viereck am AOT, Box-Seite, RUNTER, HOCH) | F40..F260 je 5. Bild = 45 (Kiste ab F100 offen, Gleiten in F145 / F175) | 45/45 Bilder 1805 px | 0 |
 | Gegenprobe VORHER (Hauptbaum-exe 09:02), gleicher Lauf wie Zeile 1 | F99..F130 | Ruhe 1875, im Gleiten bis 3292 (F107) | F104 558 px, F107 1535 px (x 16..206, y bis 35 = ueber dem Kopfband "ITEM BOX") |
 
+Vorher/Nachher-Blatt `M_abn0/vorher_nachher_F99_F107.png` (gleicher Spielstand, gleiche Tasten): VORHER F107 liegt die Zeile "Minidisc Player w/ Disc" samt Symbol UEBER dem Schriftzug "ITEM BOX", unten klafft eine Luecke; NACHHER F107 ist der Schriftzug unversehrt, die Zeile ist unter dem Kopfband verschwunden (2 px Rest im Fenster wie RE2 bei Versatz 18 von 20), unten laeuft "Communications Card" ein.
 Sichtpruefung (Ausschnitte 2-fach, Scratchpad `M_abn0/leon1150_panel_F99_104_107_125.png`, `halten1150_sheet.png`):
 beim Gleiten verschwindet die obere Zeile unter dem Kopfband "ITEM BOX", die untere kommt unter dem Fussband hervor;
 Schriftzug, Pfeile und Rahmen bleiben unversehrt; der gelbe Griff wandert (bei 62 am unteren Ende).
 Ruhebild vorher gegen nachher: ausserhalb des Listen-Panels 0 Pixel anders (F99/F110/F130), im Panel ausserhalb des
 Fensters nur x 204..206 (dort lag vorher das 2-Feld-Symbol auf dem Rahmen) — keine Nebenwirkung auf Textbox, Gitter,
 Cursor, Chrome.
+
+Gleit-Takt unveraendert: Verschiebung der Namensspalte gegen F99 (eigene Kreuzkorrelation, Restabweichung 0.000) F102..F107 = -3/-6/-9/-12/-15/-18 px, F108 (Commit) = -20 px — RE2 +-3 je Bild (@0x800702ac `addiu v0,v0,-3`), die Zeilen gleiten starr.
 
 **Urteil M2: erfuellt.**
 
@@ -165,7 +168,7 @@ Op-Enum re15_inv_screen.h) + die Op-Listen-Leser test_r30_hinweis/test_r30_pfeil
 (item_name_census, r36_schluessel_namen, discard, item_icon/item_modal, re2doc_bildebene, r30_sicherung_bild):
 `ctest -R "r37_kiste|itembox|inv_|inventar|map_|karte|dokument|dachkiste|kartenitems|r30_hinweis|r30_pfeil|r30_sicherung_bild|item_name_census|re2doc_bildebene|schluessel_namen|discard|item_icon|item_modal" --timeout 900 -j 3 --output-on-failure`
 (85 Tests, 14 mehr als der Lauf des Bau-Agenten).
-(Ergebnis ausstehend — Lauf laeuft noch, 84/85 gruen beim Zwischenstand)
+**`100% tests passed, 0 tests failed out of 85`** (Total Test time (real) = 1472.08 sec). Darin u.a. unit_r37_kiste, integration_r37_kiste (Passed 65.70 s), unit_itembox_screen, unit_itembox_transfer, unit_room1150_itembox, unit_inv_fsm, alle unit_map_*, unit/integration_r3x_karte*, integration_r34n_e_dokumente_bild, integration_r36_kartenitems_bild, integration_map_raum_live, integration_r35_inventar1050, integration_r36_inventar, unit_r30_hinweis_*, unit_r30_pfeil, unit_karte_besitz, integration_item_name_census, integration_r30_sicherung_bild, integration_r36_dachkiste (Passed 1472.06 s).
 
 ## 5. Vertrag (VERTRAG.md) und Nebenwirkungen
 
@@ -189,7 +192,7 @@ Op-Enum re15_inv_screen.h) + die Op-Listen-Leser test_r30_hinweis/test_r30_pfeil
 
 ## 6. Maengel
 
-MAENGEL_LISTE
+Keine. (Beide Nutzer-Punkte an der exe erfuellt, RE-Gate gehalten, Vertrag eingehalten, Riegel messend, gezielter Lauf gruen.)
 
 ## 7. Hinweise (keine Maengel dieser Spur, fuer Orchestrator/Nutzer)
 
@@ -208,4 +211,10 @@ MAENGEL_LISTE
 
 ## 8. Fazit
 
-FAZIT_TEXT
+| Punkt | Urteil | Kernbeleg |
+|---|---|---|
+| M1 Symbole so weit rechts wie moeglich, kein Name ueberdeckt sie | **erfuellt** | exe-Bilder 1150 Leon / 1151 Elza / 2010 Leon: Symbole x 179..203 (schmal) / 155..203 (2-Feld) = buendig an der letzten Fensterspalte 203; laengster Name 0x44 endet x 173 (5 px frei, vorher 16 px im Symbol); alle 101 Namen per Riegel und eigener Nachrechnung links vom Symbol (nach Merge Spur I: 177, 1 px frei) |
+| M2 Kasten liegt beim Scrollen ueber den Items | **erfuellt** | 534 eigene Bilder (Einzeltasten, gehaltene Taste, Hingehen, Elza, STAGE2): Panel ausserhalb des Listenfensters in JEDEM Bild bitgleich zum Ruhezustand/BOXPANEL (1805 px Chrome/Gitter/Griff konstant), 0 Pixel "sonst"; vorher bis 1535 px ueber dem Kopfband |
+
+Gates: Bau OK, RE-Gate gehalten (12 Stichproben selbst disassembliert, alle stimmen), Vertrag eingehalten, Riegel messend
+(Gegenproben rot/gruen selbst gefahren), gezielter Lauf 85/85 gruen. **bestanden = ja.**
