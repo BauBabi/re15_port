@@ -20,7 +20,7 @@ richtigen Farbe leuchten das Panel ...") — der gehoert laut AUFTRAG.md/VERTRAG
 Bau-Agenten E uebermittelt. Spur I fasst die Code-Panels NICHT an.
 
 ## Stand
-(laufend)
+Alle vier Punkte gebaut und an der exe abgenommen (Abschnitte 3-5). Offene Entscheidungen fuer den Nutzer: Abschnitt 7.
 
 ## 1. Messung vorher (Stand master 64ba31e0, Baum gebaut 2026-10-12)
 
@@ -28,7 +28,7 @@ Raumstart mit allen Port-Installern (`probe_r34n_e_dokumente aots <Raum>`, echte
 
 * ROOM1000 (Leon): `AOT slot= 3 ITEM x[20500..21300] z[-800..0] item=0x31 x1 bit=134 prop=255` — die
   Aufnahme ist eine reine Zone ohne Modell (prop 255 = 0xFF), in Cut 0-2 (Umkleide, Spindreihen; Bild
-  `I_belege/vorher_1000_umkleide.png`). Props: obj 0/1 Medizinkoffer, obj 2 Dokument (Runde 34).
+  `I_belege/vorher_1000_umkleide_cut0.png`, offener Spind Mitte rechts). Props: obj 0/1 Medizinkoffer, obj 2 Dokument (Runde 34).
 * ROOM1090 (Leon, Feuer brennt): Slots 0-4 (Tueren, Text msg 7 Viereck, AUTO, Schrot r35), Props obj 0,1
   (Typ 4), obj 3 (Wagen-Teil), obj 4 (Schrot). Nach dem Loeschen legt der Raum KEINEN Loescher hin.
 * ROOM1091 (Elza): Slots 0,1,2,4,5 (Schuppen-Text Runde 36 Spur P), Props obj 0,1,2,4 — kein Loescher.
@@ -116,3 +116,120 @@ enthalten (Abschnitt 4), Untersuchen-Platz in ROOM1091 braucht einen Slot < 5 (S
 ### 2.7 Nachtrag 3b (der Auftrag, der diesen Lauf ausgeloest hat)
 "Es muss schon in der richtigen Farbe leuchten das Panel..." gehoert laut AUFTRAG.md (Nachtrag 3b) / VERTRAG.md zur
 Spur E codepanel und wurde dem Bau-Agenten E uebermittelt. Spur I hat keine Panel-Datei angefasst.
+
+## 3. Umsetzung
+
+### 3.1 Modell (Punkt 1) — `re15_port/tools/r37_feuerloescher/feuerloescher_modell.py` -> `engine/src/gen/feuerloescher_r37.inc`
+PORT-WAHL (es gibt kein Original-Modell). Einzige Original-Vorlage = Item-Bild ITPS.ITP Block 0x31 @file 0x093000
+(0x31 * ITPS_STRIDE 0x3000, engine/src/itps_common.c), 112x72 8bpp; daraus GEMESSEN (Ausgabe des Werkzeugs):
+* Achse der Koerperpixel (PCA): 29,4 Grad; Koerper t -25,8..25,4 px. Breite QUER zur Achse (0,05-px-Abtastung je 2 px):
+  Median 17,05 px; Zylinder (>= 90 % Breite) t -20..20 = 40 px -> Laenge/Durchmesser 2,346; Schulter 5,8 px, Boden 5,4 px;
+  Hebelpixel s -13,8..11,3 px (Hebel ~1,55 R ab der Achse), Chrom = hellere Haelfte der grauen Hebelpixel.
+* Massstab: Leon PL00.PLD Nullpose 3022 Einheiten (`tor/tor_massstab.py` spielermodell; Trefferkasten @0x80073e94 = 3060)
+  = 1,78 m -> 1697,8 Einheiten/m; Durchmesser 13 cm (10-lb-Klasse) -> R = 110; Mantel 586 (Fase 35), Kuppel 75, Kopf 127
+  -> Gesamthoehe 792 = 0,47 m (Riegel: 0,40..0,60 m). Zehnkant wie RE2 ROOM60D0 Prop 2 (Laborflasche).
+* Netz: 235 Punkte, 10 Dreiecke (Boden), 138 Vierecke; Mantel (3 Baender, radiale Normalen), Fase, Kuppel (4 Ringe),
+  Hals, Ventil-Kasten (Chrom), Griff + zweiteiliger Hebel (Chrom; Seite aus dem Bild: von der Etikettseite gesehen
+  rechts-oberhalb der Achse), schwarzer Schlauch mit Duese zur Gegenseite. Zwei Lagen DESSELBEN Netzes:
+  `stehend` (Ursprung Bodenmitte, Achse -Y; Wand) und `liegend` (Ursprung Mitte auf der Auflage y=0, Achse X,
+  Etikett oben; Boden) — keine 90-Grad-Prop-Drehung noetig (Lehre der Sicherung, sicherung_engine_export.py).
+* Textur 128x128 8bpp + CLUT: Mantel = das ITPS-Bild entlang der Achse abgewickelt (Etikett, Flecken, Baender), quer
+  ent-schattiert (Helligkeitsprofil je Querlage der roten Pixel normiert); Helligkeit x0,899 = Weiss der Original-
+  Spraydose ROOM4050 TIM @0x2DDA8 (99,5-Perzentil R+G+B = 656; ITPS-Weiss nach dem Ent-Schatten 730); Farbfelder
+  Rot/Dunkelrot (Mantelmittel), Chrom, Metall, Schwarz. CLUT-Index 0 frei, kein weiteres 0x0000.
+* Format wie gen/sicherung_prop.inc: MD1-Kopf 65/0/2, Normalen Q12 nach aussen, Vierecke in Z-Ordnung, TIM @VRAM(0,0),
+  CLUT @VRAM(0,480), clut 0x7800 / page 0x80. Licht: Attribut 0 = NCCT wie jedes Gegenstands-Modell (2.5).
+* Bilder: `I_belege/modell_stehend.png`, `modell_liegend.png`, `modell_textur.png`, `modell_vergleich_itps.png`
+  (Original-Bild neben dem Modell in derselben Achse und Groesse).
+
+### 3.2 Fundort Leon (Punkt 4) — ROOM1050 "EAST CORRIDOR", Wand rechts der Notausgangs-Tuer, Cut 6
+PORT-WAHL (der Nutzer kann ihn verschieben; Alternativen in Abschnitt 7). Begruendung mit Bild
+(`I_belege/nachher_1050_wand_cut6.png`): die Doppeltuer mit EXIT-Schild in Cut 6 IST die Tuer nach ROOM1090
+(Door_aot_set Slot 5 @0x00B7A, Rechteck x 18100..21600 z -23900..-22900, Ziel Raum 0x09 Cut 3). Leon kommt nach dem
+Hilferuf an der 10A0-Tuer (Ada-Ruf, Runde 34 Nacht) genau hier vorbei; ein Loescher neben dem Notausgang ist der
+uebliche Platz. Rechts der Tuer ist die gemalte Wand leer (Muenztelefon links, Zeitungsstaender rechts unten).
+* Lage: x 17200 (Bild x ~222, zwischen Tuerrahmen x ~205 und Zeitungsstaender x ~230), Wandebene z ~ -23900 (die
+  Tuerunterkante im Hintergrund deckt sich mit der Projektion bei z -23900; die Kollisionszelle x 12700..26100
+  z -24350..-23377 liegt VOR der gemalten Wand) -> Prop z -23775 (R + 15 vor der Wand), Unterkante y -1150 (0,68 m),
+  Oberkante -1942 (1,14 m; NFPA 10: Oberkante <= 1,53 m), rot_y 0 = Etikett zum Raum. Keine Maske ueber dem Punkt in
+  Cut 6 (105 Masken), Cut 3, Cut 4 (`probe_r34n_e_dokumente sicht 1050 17200 -1600 -23250`).
+* Aufnahme: Slot 13 (frei; belegt 0..10 Original, 15 Dokument, 52.. Kamerazonen), Item 0x31 x1, Taken-Bit (9,0x86) —
+  DERSELBE Satz wie ROOM1000 @0x00C24, nur mit tk_prop 5 (das Modell verschwindet bei der Aufnahme, @0x80021fc8).
+  Rechteck 1000x1000 x 16700..17700 z -23900..-22900 (z-Spanne wie die Tuer daneben: der Spieler steht vor der
+  Kollisionskante z -23377, der Pruefpunkt 620 voraus @0x80042bd0 faellt dann in z -23520..-23000). Kein Ueberlapp mit
+  Slot 5 (Tuer, ab x 18100) und Slot 6 (30 Patronen, bis x 16650).
+* (3,0x85): Haken in item_modal_common.c (Aufnahme bestaetigt, Taken-Bit gesetzt) -> re15_feuerloescher_r37_genommen:
+  Item 0x31 + Bit 0x86 -> Set(3,0x85)=1 = ROOM1000 sub01 @0x00D0C. Spielstaende bleiben gueltig (dieselben Bits).
+
+### 3.3 Spind ROOM1000 (Punkt 4)
+Leon (0x1000): Slot 3 (Original-Aufnahme @0x00C24) wird zum Raumtext msg 0 "Nothing unusual." mit dem Rechteck der
+Aufnahme (20500,-800) 800x800, sat 0x31, Band 0, Pause 0xFFFF — dieselbe Satzform wie die Plaetze 6..9 @0x00CAA.. Gilt
+auch mit gesetztem Taken-Bit (der Port fuehrt den Satz dann als NONE, Gegenstueck zu `sb zero,0(v0)` @0x800406f4).
+Elza (0x1001): unberuehrt (30 Patronen, Item 0x15).
+
+### 3.4 Der leere Loescher (Punkte 2 und 3) — ROOM1091 Elza / ROOM1090 Leon
+* Lage (2500,-1800,-1300), liegend, rot_y 3250: vor der Seitentuer des Wagens, aus der die Frau in der Rettungsszene
+  steigt (sub03 Ada-Start (2602,-2233) @0x02554), zwischen den Feuern (2052,-1334) @0x02214 und (2375,-2333) @0x02228 —
+  dort stand Leon beim Loeschen (Viereck Slot 2 @0x02336). Im Bild in Cut 4/5/6/7 und unter keiner Maske (`sicht`);
+  verworfen: (700,-1300) Cut 4 Maske 21, (2300,0) Cut 5 Maske 15 (Stossstange), (2100,600) in Cut 7 unter dem
+  Bildrand (Cut 7 = Hauptbild der Rettungsszene, gemessen Cut_chg-Folge 5 -> 7 -> 6 -> 7), (2700,-1000)/(2900,-1200)
+  Cut 5 Maske 14. rot_y 3250 = diagonal zu den Blickachsen von Cut 5 (Lot 3760) und Cut 6 (Lot 2733).
+* Untersuchen (PORT-WAHL zur Freigabe): msg 29 "It's an empty fire extinguisher." (36 B, Form ROOM1000 msg 0 @0x0D22),
+  Platz 1000x1000 um das Prop. ROOM1091 Slot 3 (< Slot 5 = Schuppen-Text der Runde 36 -> Vorrang am Loescher; der
+  Messpunkt der Runde 36 (0,250) -> (620,250) liegt nicht darin), ROOM1090 Slot 6 (Slot 5 bleibt frei, Riegel
+  unit_r36_story_schuppen).
+* ELZA ROOM1091: immer (der Platz ist bei ihr schon geloescht, 2.4).
+* LEON ROOM1090: Tor = (3,0x81)==1 (DAUERHAFT, 2.3 — NICHT (3,0x84), das sub03 @0x024CE loescht) UND Item 0x31 nicht im
+  Inventar. Grund fuer die zweite Bedingung (PORT-WAHL, an der exe gemessen): nach dem Loeschen fragt die Port-Wegwerf-
+  Abfrage der Runde 25 bei msg 9 "You've used the Fire Extinguisher." (gen/discard_sites.inc Zeile ROOM1090/9/0x31)
+  "You don't need this item any more. Discard it?". JA = Leon legt ihn hin -> Haken in item_discard_common.c (Ja-Zweig
+  nach re15_inv_remove_slot) -> re15_feuerloescher_r37_weggeworfen -> der Loescher liegt SOFORT da (Installer mit
+  offenem Tor; das Modell ist beim Raumstart schon geladen). NEIN = Leon behaelt ihn (RE1.5-Verhalten: kein Opcode
+  entfernt Gegenstaende), dann liegt keiner da. Der erste Lauf (Tor nur (3,0x81)) zeigte genau dieses Doppel: Loescher
+  am Boden UND im Inventar, waehrend die Wegwerf-Frage offen stand.
+
+### 3.5 Dateien
+Neu: `engine/src/feuerloescher_r37.c`, `include/re15_feuerloescher_r37.h`, `engine/src/gen/feuerloescher_r37.inc`,
+`tools/r37_feuerloescher/feuerloescher_modell.py`, `tools/r37_feuerloescher/kamera.py`,
+`tests/unit/test_r37_feuerloescher.c`, `tests/unit/probe_r37_feuerloescher_karte.c`,
+`tests/unit/probes/r37_feuerloescher.cmake`, `tests/integration/test_r37_feuerloescher.cmake`.
+Haken (je 1-2 Zeilen, Kommentar "Runde 37 Spur I"): `engine/src/scd_room_setup.c` (Include + Installer direkt nach
+re15_inhalt_r35_install, VOR re15_dokumente_install wie Runde 35 — am Blockende waere das Dokument-Prop nicht mehr das
+letzte, Riegel unit_r34n_e_dokumente "hinten angehaengt" rot), `platform/pc/main.c` (Include, Prop-Lader obj 5 nach
+dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room_setup.c),
+`engine/src/item_modal_common.c` (Include + re15_feuerloescher_r37_genommen), `engine/src/item_discard_common.c`
+(Include + re15_feuerloescher_r37_weggeworfen). Keine Bank-9-Bits neu belegt (nur die Original-Bits (9,0x86), (3,0x85),
+(3,0x81)), Nachrichten-Id 29 (VERTRAG 1.2), Prop obj 5 (TIM-Slot 9), kein Patch an shared_assets.
+
+## 4. Messung nachher
+* `probe_r34n_e_dokumente aots` (echter Raumstart mit allen Installern): 1050 `AOT slot=13 ITEM x[16700..17700]
+  z[-23900..-22900] item=0x31 x1 bit=134 prop=5`, `PROP obj_id=5 pos=(17200,-1150,-23775)`; 1091 `slot= 3 MESSAGE
+  band=0x01 evt=29 x[2000..3000] z[-1800..-800]`, Slot 5 bleibt msg 20; 1000 `slot= 3 MESSAGE evt=0 x[20500..21300]
+  z[-800..0]`; 1090 vor dem Loeschen `[feuerloescher] ROOM1090: kein Loescher (Feuer brennt noch, (3,0x81)=0)`.
+* exe Ende-zu-Ende (integration_r37_feuerloescher Lauf A, CONTINUE ROOM1050, Eingabeskript): Aktion an der Wand ->
+  "Will you take the Fire Extinguisher? Yes No" mit dem ITPS-Bild (`I_belege/nachher_1050_aufnahme_modal.png`) -> Ja ->
+  `[feuerloescher] Aufnahme Item 0x31 (9,0x86) -> Set(3,0x85)=1`; Sprung ROOM1090 (Feuer brennt, kein Loescher) ->
+  Aktion -> `id=7 "I must hurry up ..."`, `id=8 "Will you use the Fire Extinguisher?"` -> Ja -> Selbst-Tuer ->
+  `ROOM1090: kein Loescher (Leon traegt ihn noch (Item 0x31 im Inventar))` -> `id=9 "You've used the Fire Extinguisher."`
+  -> Wegwerf-Ja -> `Loescher weggeworfen -> liegt in ROOM1090` -> `Loescher liegt leer am Boden obj 5 bei
+  (2500,-1800,-1300) rot_y 3250, Zone Slot 6` -> `[prop-render] oid=0x05 pos=(2500,-1800,-1300) rot=(0,3250,0)`; danach
+  laeuft die Rettungsszene (msg 3..6). Bild Cut 7 direkt nach dem Ja: `I_belege/nachher_1090_cut7_weggeworfen.png` und
+  `nachher_1090_cut7_zoom.png`.
+* exe Tuer-Weg (Lauf B): ROOM1050 mit (9,0x86)/(3,0x85)/(3,0x81), Loescher abgelegt, Aktion an der Notausgangs-Tuer ->
+  ROOM1090 -> `Loescher liegt leer am Boden` (Wiederbetreten).
+* exe Elza (Lauf C, Zombies 0xF8..0xFB als erledigt — sonst packt Zombie 3 sie vor dem Druck): `ROOM1091: Loescher liegt
+  leer am Boden`, Aktion -> `id=29 "It's an empty fire extinguisher."`; Bild `I_belege/nachher_1091_elza_cut6.png`
+  (Elza vor der offenen Wagentuer, der Loescher liegt vor ihr). Cut 5 beider Varianten:
+  `I_belege/nachher_1090_1091_cut5.png` (klein an der rechten Stossstange; Cut 5 ist die Fernkamera).
+* exe Spind (Lauf D): `room=1000 id=0 "Nothing unusual."`, keine Aufnahme.
+* exe Wand (Lauf E): `oid=0x05 pos=(17200,-1150,-23775)` gezeichnet; Bild `I_belege/nachher_1050_wand_cut6.png`.
+
+## 5. Tests
+* NEU `unit_r37_feuerloescher_{modell,raum,aufnahme,loeschen,elza,spind,spielstand}` (tests/unit/test_r37_feuerloescher.c,
+  Mechanik am echten Port-Code) und `integration_r37_feuerloescher` (echte exe, Laeufe A-E).
+* Beruehrte Gruppen (ctest -R, Ausdruck woertlich):
+  `^(unit_r37_feuerloescher|unit_aot_edge|unit_scd_aot_opcodes|unit_savedata|unit_item_modal|unit_item_stack_press|unit_aot_sce_census|unit_sicherung_1150|unit_re2_room1090_ab|unit_1090_|probe_1090_|unit_plc_back_yaw_1090|unit_map_1090|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r21_discard_wegwerfen|unit_r27_ada_cutscene_1050|unit_r30_|unit_r34n_a_rolltor|unit_r34n_d_adaruf|unit_r34n_e_dokumente|unit_r35_granate|unit_r35_inhalt|unit_r35_inventar1050|unit_room1050_sicherung|unit_r36_granate|unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_schluessel|unit_r36_story)`
+  -> `100% tests passed, 0 tests failed out of 101`.
+  Zwischenstand: mit dem Installer am Blockende und dem 1090-Platz in Slot 5 waren unit_r34n_e_dokumente ("Dokument
+  hinten angehaengt") und unit_r36_story_schuppen ("Leon 1090 nach dem Loeschen: kein Text-Platz in Slot 2/5") rot ->
+  Code angepasst (Installer vor den Dokumenten wie r35, Slot 6); beide Alt-Riegel unveraendert gruen.
