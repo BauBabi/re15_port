@@ -62,3 +62,16 @@ ROT, solange zu ist (Code falsch/noch nicht eingegeben), BLAU sobald der Code ri
 jedes Panel zeigt seinen "geschlossen"-Zustand und seinen "offen"-Zustand mit den dort gemalten Lampen (fuer die uebrigen
 Panels bleibt blau = falsch, gruen = richtig, falls so gemalt). Welcher Raum "Korridor 2" ist, belegt Spur E im Dossier
 (`E_codepanel.md`). -> Spur E codepanel.
+
+## Nachtrag 3b (Nutzer, 2026-10-12)
+
+Woertlich (zweite Korrektur zu #9 Code-Panels, vom Orchestrator waehrend der Spur E uebermittelt):
+
+> Es muss schon in der richtigen Farbe leuchten das Panel... hintergrund rot - rot leuchten - hintergrund blau - blau leuchten...
+
+Lesart (Orchestrator): Die Leucht-Farbe kommt aus der gemalten Lampe im Panel-Hintergrund — ist die Lampe im Hintergrund rot
+gemalt, leuchtet sie ROT; ist sie blau gemalt, leuchtet sie BLAU (gruen entsprechend). Also keine fremde Einheitsfarbe
+ueberblenden, sondern die vorhandene Lampe in IHRER Farbe aufleuchten lassen (Texel der gemalten Lampe aufhellen bzw. eine
+Leucht-Textur in genau diesem Farbton; belegen mit Pixelwerten aus dem Hintergrund und Framedumps je Zustand). Zusammen mit
+Nachtrag 3: rot = geschlossen (Code falsch/noch nicht eingegeben) leuchtet rot, offen (Code richtig) leuchtet die andere Lampe
+in ihrer gemalten Farbe (z.B. blau). -> Spur E codepanel.
