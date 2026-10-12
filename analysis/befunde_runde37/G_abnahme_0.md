@@ -204,7 +204,7 @@ RE15_AI_FLAVOR=re15: drei Treffer. Ursache: `riegel_loesen()` ueberspringt jeden
 Die als Ersatz genannte RE2-Trefferpause (+0x1D3) wird aber nur fuer die Zombie-Familie und 0x20/0x21/0x25/0x26
 nachgerechnet (re15_damage.c:3925, game_step_common.c:2384-2395); 0x23/0x27/0x29/0x2b/0x30 behalten den RE1.5-Riegel
 +0x93 bis zum Ende ihrer Hurt-Kette (Tyrant-Zweig enemy_ai_common.c:13839/13849, Kakerlake :11482). Betroffen: Gorilla
-(11C0/1141), Kakerlaken (15 Raeume), 0x2b (9 Raeume), Birkin 0x30 (8 Raeume). Nachpruefung: Laeufe t2b_w5_def_a /
+(11C0/1141), Kakerlaken (15 Raeume), 0x2b (9 Raeume), Birkin 0x30 (6 Raeume, ohne das G5-Modul 5090/5091). Nachpruefung: Laeufe t2b_w5_def_a /
 roach_w5_def (1c) bzw. Sonde 1f (RE2-Zeilen 0x23/0x27/0x29/0x2b/0x30 = "Treffer 1"). Das Kriterium fuer "RE2-Pause
 regelt selbst" muss das sein, was wirklich laeuft (Aktor im RE2-Pausenfilter: `re15_re2z_owns_type` bzw. 0x20/0x21/
 0x25/0x26 mit RE2-Gehirn), nicht der Flavor.
