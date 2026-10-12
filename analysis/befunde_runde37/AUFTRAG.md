@@ -255,3 +255,16 @@ Lesart -> Spur O: Beim Schluss "Ada: Marvin!..." (ROOM11C0 msg 14) dreht sich Ad
 Koerper folgen seiner Position, waehrend er zur Tuer rennt (statt sich einmal fest zur Tuer zu drehen). Vokabular wie in
 Nachtrag 11 (Plc_neck Modus 1 / Plc_dest Modus 9 Drehen auf seine laufend aktualisierte Lage bzw. das Folge-Ziel; RE2-
 Vorbild fuer "einer Figur nachsehen" belegen); keine ruckartigen Spruenge, Drehrate wie die uebrigen Drehungen der Szene.
+
+## Orchestrator-Auftrag Q — 2026-10-12 (Folge der RE2-Item-Box, gefunden von Spur I Nachbesserung 1)
+
+Grund: Spur I (I_feuerloescher.md, Nachbesserung 1, offen) mass: legt Leon den Feuerloescher VOR dem Loeschen in die
+Item-Box, kann er das Feuer in ROOM1090 trotzdem loeschen ("Will you use the Fire Extinguisher?" -> Yes, Rettungsszene) —
+ROOM1090 sub00 @0x02306 `21 03 85 00` prueft nur das Aufnahme-Bit (3,0x85), nie das Inventar. Im Original (RE1.5 hat
+keine Item-Box) war "Bit gesetzt" gleichbedeutend mit "Item im Inventar" (ausser verbraucht/weggeworfen); mit der
+RE2-Item-Box des Ports (Nutzer-Auftrag 2026-08-30) nicht mehr. Beta -> Retail: in RE2 benutzt man ein Item nur, wenn man
+es TRAEGT. -> Spur Q kistenregel: Zensus ALLER Original-Abfragen (alle RDTs, Leon und Elza), die den BESITZ eines Items
+ueber ein Bit statt ueber das Inventar pruefen (Aufnahme-/Taken-Bits als Besitz-Ersatz vor einer Item-Benutzung,
+Item-Abfragen an Tueren/Raetseln); je Fall belegen, ob das Item in der Box liegen kann, und wie RE2 dieselbe Art Abfrage
+macht (Besitz-Pruefung im RE2-SCD/EXE belegen). Wo die Box den Fall oeffnet: wie RE2 das Item im Inventar verlangen
+(eine Port-Regel an EINER Stelle, je Fall per Tabelle), mit RE2-Text, wenn es fehlt. Basis = abgenommener Stand der Spur I.
