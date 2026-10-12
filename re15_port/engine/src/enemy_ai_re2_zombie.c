@@ -287,10 +287,11 @@ int re15_re15_re2z_import_owns(unsigned type)
  * turns monotonically onto you, and inside 3000 it turns at 8+16 per frame. RE1.5 instead flips the
  * sign at every gait segment boundary regardless of distance — which is exactly the "drunk" walk.
  *
- * ⚠️ DEFERRED, NOT byte-true yet: the steer point (+0x1C4/+0x1C6) is produced by the RE2 navigator
- * FUN_8004A808, called from the root BEFORE the dispatch (@0x80100354). That navigator is not ported,
- * so this uses the PLAYER position as the steer target. For open-floor pursuit the two coincide; they
- * differ around corners/obstacles. Marked here so nobody mistakes it for a finished port. */
+ * STEUERZIEL (Zensus Runde 37 Spur L): +0x1C4/+0x1C6 schreibt im Original der RE2-Navigator FUN_8004A808
+ * (Wurzel @0x80100354). RE1.5-Raeume tragen RE1.5-Zonen; der Port nimmt deshalb den RE1.5-Navigator
+ * FUN_80039e7c (re15_nav_update_steer, Prolog in enemy_ai_common.c) und fuer zonenlose Lagen die direkte
+ * Form @0x8004a90c-924 (Runde 36 Spur F, re15_r36_nav_zonenlos). Die alte Notiz "nimmt die Spielerlage"
+ * war veraltet. Bekannte Grenze: Wegpunkte, die in einer soliden Zelle liegen (L-Dossier N3, ROOM1030). */
 #define RE2Z_DIST_LOCKON   0x1389u   /* 5001 @0x80101bb4 */
 #define RE2Z_DIST_CLOSE    0x0bb8u   /* 3000 @0x80101c94 */
 #define RE2Z_TURN_BASE     8         /*      @0x80101bbc */
@@ -390,9 +391,8 @@ void re15_re2z_rng_reset(void) { s_re2_rng = 0xD2706CA4u;     /* room load — k
  *   80101b90: sh   v1,344(s1)
  * The init/expiry asymmetry (full byte vs & 0x1f) is in the bytes, not a typo on my part.
  *
- * NOT ported (read, but their consumers are unidentified — flagged rather than invented):
- *   +0x16A = (rand & 0x1f) + 30   @0x80101AD4-E8
- *   +0x14D = (rand & 0x1f)        @0x80101B04-0C
+ * (Zensus Runde 37 Spur L: die frueher hier als "NOT ported" gefuehrten Seeds +0x16A = (rand & 0x1f) + 30
+ *  @0x80101AD4-E8 und +0x14D = (rand & 0x1f) @0x80101B04-0C sind seit dem B3-Fix in re2z_exec_walk P0 drin.)
  */
 void re15_re2z_gait_init(re15_actor_t *e)
 {
@@ -1357,6 +1357,35 @@ static void re2z_hit_latch_release(re15_actor_t *e)
     e->hit_react &= (uint8_t)~1u;                                  /* andi 0xfe @0x80105fa4 */
 }
 
+/* Runde 37 Spur L — die drei Produzenten von `+0x4 = 0x201` (Schalter nur fuer Sonden/Gegenproben,
+ * include/re15_re2zombie_r37.h). Jeder Produzent schreibt nur das Wort; der Executor des neuen Unter-
+ * zustands laeuft im Original erst im NAECHSTEN Takt (EXEC[1] kehrt ueber den Epilog @0x80101f64 zurueck,
+ * der ACTIVE-Root @0x801011A8-EC ruft DECISION und EXECUTOR je Takt genau einmal). */
+static unsigned s_r37_prod = RE15_R37L_ALLES;                    /* das Original: alles scharf */
+static unsigned s_r37_zaehler[3];
+static int8_t   s_r37_letzter[RE15_ACTOR_MAX];                      /* Sonden: Produzent des letzten Wechsels */
+void     re15_re2z_r37_produzenten(unsigned mask) { s_r37_prod = mask & RE15_R37L_ALLES; }
+unsigned re15_re2z_r37_produzenten_maske(void)    { return s_r37_prod; }
+void     re15_re2z_r37_zaehler_reset(void)
+{
+    s_r37_zaehler[0] = s_r37_zaehler[1] = s_r37_zaehler[2] = 0u;
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) s_r37_letzter[i] = -1;
+}
+unsigned re15_re2z_r37_zaehler(int p)      { return (p >= 0 && p < 3) ? s_r37_zaehler[p] : 0u; }
+int      re15_re2z_r37_letzter_produzent(int slot)
+{
+    return (slot >= 0 && slot < RE15_ACTOR_MAX) ? (int)s_r37_letzter[slot] : -1;
+}
+static void r2z_r37_auf_0x201(re15_actor_t *e, int produzent)
+{
+    if (e->state != 1u || e->sub_state_1 != 2u) {
+        s_r37_zaehler[produzent]++;
+        {   ptrdiff_t slot = e - g_actors;
+            if (slot >= 0 && slot < RE15_ACTOR_MAX) s_r37_letzter[slot] = (int8_t)produzent; }
+    }
+    re15_ai_set_state_word(e, 0x201);                              /* addiu v0,zero,513 / sw v0,4 */
+}
+
 /* ============================== ACTIVE: DECISIONS ========================================== */
 
 /* DECISION[0] @0x80101294 (stand) — self-disasm'd 2026-08-10:
@@ -1385,7 +1414,8 @@ static void re2z_decide_stand(re15_actor_t *e, re15_actor_t *pl)
      * `addiu v0,zero,3073` / `sw v0,4(s0)` @0x801013cc-d0). Block 2 dagegen `bne v0,zero,0x80101380`
      * @0x8010136c = Commit bei == 0. Der Port hatte Block 3 wie Block 2 (== 0). */
     if (dist < 0x7d0u && a1024 != 0 && (mv & 0x17u) && e->re2z_los154
-        && (re2z_rand() & 1u) != 0u)
+        && (((re2z_rand() & 1u) != 0u) == ((s_r37_prod & RE15_R37L_B) != 0u)))   /* Sonden-Maske: ohne Bit (b)
+                                                                    * der Stand bis Runde 37 (== 0) */
         re15_ai_set_state_word(e, 0xC01);                          /* @0x801013CC-D0 */
 }
 
@@ -1466,13 +1496,16 @@ static void re2z_exec_stand(re15_actor_t *e, re15_actor_t *pl)
          * Epilog (`beq v0,zero,0x801016ac` @0x80101588 bzw. `j 0x801016ac` @0x8010159c), der
          * Phasen-Dispatch @0x80101410-50 liest +0x6 == 2 erst beim naechsten Aufruf. Der Port
          * sperrte den Wecker nach dem Wurf und fiel im selben Takt nach P2/P3 durch. */
-        if (e->re2z_t158 == 0) {                                   /* lh 344 / bne @0x80101544-4C */
-            if (e->ai_dist < 0x1d4cu && e->re2z_los154)            /* sltiu 0x1d4c @0x8010155C; +0x154&0x800 @0x80101570 */
-                re15_ai_set_state_word(e, 0x101);                  /* sw 257,4 @0x80101578-7C */
-            return;                                                /* +0x158 == 0 -> Epilog @0x80101580-88 */
+        if (e->sub_state_2 == 1 || (s_r37_prod & RE15_R37L_C)) {   /* Sonden-Maske ohne Bit (c): der Stand
+                                                                    * bis Runde 37 (Wecker-Sperre im Wurf-Takt) */
+            if (e->re2z_t158 == 0) {                               /* lh 344 / bne @0x80101544-4C */
+                if (e->ai_dist < 0x1d4cu && e->re2z_los154)        /* sltiu 0x1d4c @0x8010155C; +0x154&0x800 @0x80101570 */
+                    re15_ai_set_state_word(e, 0x101);              /* sw 257,4 @0x80101578-7C */
+                return;                                            /* +0x158 == 0 -> Epilog @0x80101580-88 */
+            }
+            e->re2z_t158--;                                        /* @0x80101590-A0 */
+            return;                                                /* j 0x801016ac @0x8010159c */
         }
-        e->re2z_t158--;                                            /* @0x80101590-A0 */
-        return;                                                    /* j 0x801016ac @0x8010159c */
     }
     if (e->sub_state_2 == 2) {                                     /* P2 @0x801015A4-DC */
         e->sub_state_2 = 3;
@@ -1611,35 +1644,6 @@ static int re2z_dot_tick(re15_actor_t *e, int mit_zucken)
     return 0;
 }
 
-/* Runde 37 Spur L — die drei Produzenten von `+0x4 = 0x201` (Schalter nur fuer Sonden/Gegenproben,
- * include/re15_re2zombie_r37.h). Jeder Produzent schreibt nur das Wort; der Executor des neuen Unter-
- * zustands laeuft im Original erst im NAECHSTEN Takt (EXEC[1] kehrt ueber den Epilog @0x80101f64 zurueck,
- * der ACTIVE-Root @0x801011A8-EC ruft DECISION und EXECUTOR je Takt genau einmal). */
-static unsigned s_r37_prod = RE15_R37L_PROD_ALLE;               /* das Original: alle drei scharf */
-static unsigned s_r37_zaehler[3];
-static int8_t   s_r37_letzter[RE15_ACTOR_MAX];                      /* Sonden: Produzent des letzten Wechsels */
-void     re15_re2z_r37_produzenten(unsigned mask) { s_r37_prod = mask & RE15_R37L_PROD_ALLE; }
-unsigned re15_re2z_r37_produzenten_maske(void)    { return s_r37_prod; }
-void     re15_re2z_r37_zaehler_reset(void)
-{
-    s_r37_zaehler[0] = s_r37_zaehler[1] = s_r37_zaehler[2] = 0u;
-    for (int i = 0; i < RE15_ACTOR_MAX; i++) s_r37_letzter[i] = -1;
-}
-unsigned re15_re2z_r37_zaehler(int p)      { return (p >= 0 && p < 3) ? s_r37_zaehler[p] : 0u; }
-int      re15_re2z_r37_letzter_produzent(int slot)
-{
-    return (slot >= 0 && slot < RE15_ACTOR_MAX) ? (int)s_r37_letzter[slot] : -1;
-}
-static void r2z_r37_auf_0x201(re15_actor_t *e, int produzent)
-{
-    if (e->state != 1u || e->sub_state_1 != 2u) {
-        s_r37_zaehler[produzent]++;
-        {   ptrdiff_t slot = e - g_actors;
-            if (slot >= 0 && slot < RE15_ACTOR_MAX) s_r37_letzter[slot] = (int8_t)produzent; }
-    }
-    re15_ai_set_state_word(e, 0x201);                              /* addiu v0,zero,513 / sw v0,4 */
-}
-
 static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
@@ -1680,14 +1684,10 @@ static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
      * application in the port. NOT the RE1.5 foot-lock: pair-1 clips 0/2 carry the forward
      * translation in the kf root fields (byte-read: clip 0 sx 2/47/121/209...). */
     re15_re2z_move_root(e);                                        /* e7c @0x80101CBC + 152c8 @0x80101D60 */
-    /* +0x15A-TIMER-Block @0x80101D68-DBC (= Produzent (1) des 0x201-Gangs, s. OFFEN-Block
-     * unten): Dekrement; (alt-1)==0 -> Reseed (rand>>3)+100 @0x80101D84-98 + ZWEITER Draw
-     * rand&3 @0x80101D94-A0 [+ dist<0x1388 -> +0x4=0x201 @0x80101DB8-BC]. B3-Politik
-     * (verify (f) Risiko 4): die ZWEI Ablauf-Draws laufen fuer die Strom-Paritaet MIT —
-     * NUR der finale 0x201-Commit bleibt gedrosselt, solange der (1)+(2)-Nahkampf-
-     * Zusammenbruch (3523->0, Bisektion unten) unaufgeklaert ist. Vorher wurde +0x15A im
-     * Gang weder geseedet noch getickt -> ab dem ersten Original-Ablauf (~101-132 Ticks)
-     * war jeder Vergleichs-Strom verschoben. */
+    /* +0x15A-TIMER-Block @0x80101D68-DBC (= Produzent (1) des 0x201-Gangs, s. Block unten):
+     * Dekrement; (alt-1)==0 -> Reseed (rand>>3)+100 @0x80101D84-98 + ZWEITER Draw
+     * rand&3 @0x80101D94-A0 + dist<0x1388 -> +0x4=0x201 @0x80101DB8-BC. Seit Runde 37 Spur L
+     * scharf (bis dahin war nur der Commit gedrosselt, die zwei Wuerfe liefen schon mit). */
     e->re2z_t15a--;
     if (e->re2z_t15a == 0) {
         e->re2z_t15a = (int16_t)((int)(re2z_rand() >> 3) + 100);   /* Reseed-Draw */
@@ -1718,47 +1718,20 @@ static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
         r2z_r37_auf_0x201(e, 2);
 
     /* ========================================================================================
-     * ⛔ OFFEN, VOLLSTAENDIG DISASSEMBLIERT, BEWUSST NOCH NICHT SCHARF:
-     *    DIE DREI PRODUZENTEN VON `+0x4 = 0x201` (EXEC[2], der Gang mit den erhobenen Armen).
-     *
-     * Der Port fuehrte EXEC[2] bis 2026-08-22 als "Entry OPEN, toter Code". Das ist WIDERLEGT —
-     * der Gang-Executor selbst committet den Zustand an drei Stellen (neu disassembliert aus
-     * EMZ0.BIN, jede Zeile unten zitiert):
-     *
-     * (1) TIMER-UEBERGANG @0x80101D68-DBC (der Seed dazu steht in P0 @0x80101B10-20:
-     *     `jal rand / sra v0,v0,3 / addiu v0,v0,100 / sh v0,346` = +0x15A = (rand>>3)+100):
-     *       80101d68  lhu  v0,346(s1)                        ; +0x15A
-     *       80101d70  addiu v0,v0,-1        80101d74  sh v0,346(s1)
-     *       80101d78/7c sll v0,v0,16 / bne v0,zero,0x80101dc0 ; erst wenn (alt-1)&0xffff == 0
-     *       80101d84  jal  rand   80101d8c sra v0,v0,3  80101d90 addiu v0,v0,100
-     *       80101d98  sh   v0,346(s1)                        ; +0x15A neu
-     *       80101d94  jal  rand                               ; ZWEITER Wurf
-     *       80101d9c/a0 andi v0,v0,0x3 / bne                  ; 1 von 4
-     *       80101da8/b0 lw v0,496 / sltiu v0,v0,0x1388        ; dist < 5000
-     *       80101db8/bc addiu v0,zero,513 / sw v0,4(s1)       ; +0x4 = 0x201
-     * (2) NAHBEREICH @0x80101EC4-F10:
-     *       80101ecc  sltiu v0,v0,0x7d0                       ; dist < 2000
-     *       80101ee8  jal 0x80015614 (a3 = 512) ; bne         ; Spieler im +-512-Kegel
-     *       80101efc/04/08 lbu 0x800cfdcb / andi 0x80 / bne   ; Spieler nicht beansprucht
-     *       80101f0c/10 addiu v0,zero,513 / sw v0,4(s1)       ; +0x4 = 0x201
-     * (3) SPIELER RENNT @0x80101F14-F60:
-     *       80101f18/20 lhu 0x800cfbf6 / andi 0x4             ; cfbf6 Bit 2 = RENNEN
-     *       80101f34  sltiu v0,v0,0x9c4                       ; dist < 2500
-     *       80101f50  jal 0x80015614 (a3 = 1324) ; bne        ; Spieler im +-1324-Kegel
-     *       80101f5c/60 addiu v0,zero,513 / sw v0,4(s1)       ; +0x4 = 0x201
-     *
-     * WARUM SIE (NOCH) NICHT DRIN SIND — GEMESSEN, nicht vermutet: mit (1)+(2) scharf faellt die
-     * POSITIV-KONTROLLE NAHKAMPF in test_re2_zombie_abc von 3523 auf 0 Treffer (Pistole bleibt
-     * bei ~1700). Bisektion ueber die drei Bloecke einzeln: nur (1) an -> 3756, nur (2) an ->
-     * 3589, (1)+(2) zusammen -> 0. Der Mechanismus dieser Kombination ist NICHT aufgeklaert,
-     * und "Mechanismus nicht gefunden = NICHT fertig" gilt auch fuer eine byte-belegte
-     * Ergaenzung: ein unverstandener Zusammenbruch des Nahkampfs waere schlimmer als die
-     * Luecke. Der EXEC[2]-Executor selbst (unten) ist davon unabhaengig scharf — er wird ueber
-     * die Treffer-Erholungs-Leitern (@0x801060F4 / @0x80105B24 / @0x80107418 / @0x801081BC)
-     * erreicht, und genau dort trat der Nutzer-Befund auf.
-     * NAECHSTER SCHRITT: den 0-Treffer-Zusammenbruch mit (1)+(2) aufklaeren (Verdacht: der
-     * Anmarschweg endet ausserhalb des +-0x400-Spielerkegels, weil EXEC[2] nur mit +-16
-     * steuert statt mit der Gang-Rate 8+16) — danach die drei Bloecke scharf schalten.
+     * DIE DREI PRODUZENTEN VON `+0x4 = 0x201` (EXEC[2], der Gang mit den erhobenen Armen) —
+     * SCHARF SEIT RUNDE 37 SPUR L (Dossier analysis/befunde_runde37/L_re2zombie.md).
+     * (1) TIMER @0x80101D68-DBC (oben), (2) NAHBEREICH @0x80101EC4-F10, (3) SPIELER RENNT
+     * @0x80101F14-F60 (beide oben direkt nach dem DoT, Zeilen dort zitiert).
+     * RE2-Original gemessen (DuckStation-GDB jeder Takt, ROOM20A0, L_belege): Wechsel 0x101 ->
+     * 0x201 bei +0x1F0 1999/1987 durch (2) und bei 3565 durch (1), Griff aus dem Gang bei
+     * +0x1F0 1180/1152; Weg je Takt 0x201 44,1 gegen 0x101 32,2.
+     * DER FRUEHERE "NAHKAMPF-ZUSAMMENBRUCH 3523 -> 0" (Grund, warum die Produzenten seit
+     * 187fd244 aus waren) war ein MESSAUFBAU-ARTEFAKT, kein KI-Verhalten: in test_re2_zombie_abc
+     * oeffnete ein Griff an einem Gegenstand das Item-Get-Modal (SQUARE-Flanke ohne R1 = Aktion),
+     * frame() fuhr es damals nicht leer, re15_game_step stand fuer den Rest des Prozesses still
+     * -> der Messer-Sweep (nach dem Pistolen-Sweep im selben Prozess) sah 0 Treffer. Nachgebaut
+     * an 187fd244 (Seed 58 Bild 497 Modal 0 -> 1, danach modal=1 in jedem Seed); behoben mit
+     * 182db277 (Modal-Leerfahren). Heute: Messer 368 -> 373, Pistole 1795 -> 1775.
      * ======================================================================================*/
 }
 
@@ -1824,8 +1797,8 @@ static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
  *   80102598-b0  jal 0x80015614 (a3=1024) ; beq v0,zero -> Epilog     ; im Kegel -> BLEIBEN
  *   801025b8-cc  lh v0,344 ; slti 120 ; beq -> Epilog ; sw 257,4      ; sonst ab 60 verbrauchten
  *                                                                      Bildern zurueck in den Gang
- * NICHT modelliert (benannt, nicht erfunden): der Drei-Bild-Zweig @0x801023F8-468
- * (+0x10E & 0x80 || +0x21A & 0x8000 -> 0x801016C8 + 0x8002A9C8).
+ * Der Drei-Bild-Zweig @0x801023F8-468 (+0x10E & 0x80 || +0x21A & 0x8000 -> 0x801016C8 + 0x8002A9C8)
+ * ist seit dem B4-Fix drin (re2z_fat_cadence_tick(e, 0) unten; Zensus Runde 37 Spur L).
  * ⛔ RUNDE 34 B5 — KORRIGIERT: die Zweige @0x80102474-54C (+0x21A & 0x800 / & 0x1000) sind KEIN
  * "Kanten-Sturz/Jitter", sondern der Brand-/Saeure-DoT (1 HP je 8 Bilder, Tod 0x0A03/0x0B03);
  * gebaut in re2z_dot_tick, Aufruf unten nach re15_re2z_move_root. */
@@ -2258,8 +2231,8 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
  *   P1..P5 (0x80103370..0x8010352C): fall plays out -> P6 (internals: FX/SE, unmodeled OPEN).
  *   P6 @0x80103568: phase=7 @0x80103580, +0x21A|=0x10 CRAWL MARKER @0x8010358C, ground-lie clip
  *      param[0x44+4+side] (8/9) rate 0xF @0x80103574-A8, 1/4 moan SE 11 cd 150 @0x801035F0-610.
- *   P7 @0x80103628: ground hold (shadow grower = render, skip). Duration: param u16 @0x8010004C
- *      = 90 (MAPPED as the lie time — P7's exact advance is not RE'd, OPEN).
+ *   P7 @0x80103628: ground hold — der Liege-Clip laeuft aus (advance(256) @0x801036A0-A4, Review #6;
+ *      die alte "90 MAPPED"-Notiz ist erledigt, Zensus Runde 37 Spur L).
  *   P8 @0x801036F4: commit 0x101 @0x801036F4-F8. */
 /* ⛔ DER GEMEINSAME SCHWANZ DER STURZ-PHASEN @0x80103548 — DIE LIEGEZEIT.
  * Angesprungen von P3 (beide Zweige), P4/P5. Er zaehlt +0x15A herunter und schaltet erst bei
@@ -3184,7 +3157,8 @@ static void re2z_exec_getup(re15_actor_t *e)
  *     kam im Port sofort der WALK-Clip — Laufanimation, waehrend die Fortbewegung noch aus der
  *     abklingenden Zusammenbruch-Phase stammte.
  *
- * ⛔ OFFEN, mit Adressen benannt (NICHT geraten, NICHT genommen): der KRIECHER-TEST in P1.
+ * ERLEDIGT seit Welle 5 (Zensus Runde 37 Spur L): der KRIECHER-TEST in P1 ist in re2z_exec_eleven scharf
+ * (@0x80104530-B8 -> re15_re2z_enter_crawler); der folgende Altbefund bleibt als Herleitung stehen.
  *   80104530: jal 0x80015614(PL.x,PL.z,256)   ; Peilung
  *   8010453c: bne v0,zero -> Epilog
  *   80104544/4c: +0x1F0 < 0x708
@@ -3813,7 +3787,8 @@ static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
     case 0:  re2z_decide_stand(e, pl); break;                      /* 0x80101294 */
     case 1:  re2z_decide_walk_apply(e, pl); break;                 /* 0x80101714 (the ladder) */
     case 2:  re2z_decide_bump(e, pl); break;                       /* 0x80101F7C */
-    case 12: re2z_decide_lunge(e, pl); break;                      /* 0x8010460C (Runde 37 Spur L) */
+    case 12: if (s_r37_prod & RE15_R37L_D12) re2z_decide_lunge(e, pl);   /* 0x8010460C (Runde 37 Spur L) */
+             break;
     default: break;                                                /* [3..11],[13..15] = `jr ra`-Stubs
                                                                     * (0x801025e4/0x80103170/...,
                                                                     * Runde 37 Spur L je Eintrag geprueft) */

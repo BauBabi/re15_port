@@ -23,10 +23,10 @@ wie @0x80101540-a0 / @0x8010159c. Dazu Zensus der uebrigen OFFEN-Marken (Bewegun
 
 - [x] Schritt 0: Lektuere (AUFTRAG/VERTRAG, H-Dossier OFFEN, H_abnahme_0 H1, Code-OFFEN-Block, test_re2_zombie_abc)
 - [x] Schritt 1a: Nahkampf-Zusammenbruch reproduziert und AUFGEKLAERT (Messaufbau-Artefakt, s. M1)
-- [ ] Schritt 1b: RE2-Original gegenmessen (DuckStation-GDB, jeder Takt)
-- [ ] Schritt 2: RE-Belege (EMZ0.BIN selbst disassembliert)
-- [ ] Schritt 3: Ursache beheben, dann (1)(2)(3) + (b) + (c) scharf
-- [ ] Schritt 4: Zensus OFFEN-Marken
+- [x] Schritt 1b: RE2-Original gegengemessen (DuckStation-GDB, jeder Takt, M2)
+- [x] Schritt 2: RE-Belege (EMZ0.BIN selbst disassembliert, R1-R4)
+- [x] Schritt 3: (1)(2)(3) + (b) + (c) scharf; dazu DECISION[12] (Zensus-Fund)
+- [x] Schritt 4: Zensus OFFEN-Marken
 - [ ] Schritt 5: Strom-Messung + verschobene Riegel
 - [ ] Schritt 6: Messung nachher (exe), Tests
 
@@ -102,3 +102,124 @@ steuert") ist damit widerlegt: EXEC[2] steuert im Original genau mit +-16 (`jal 
 @0x8010236c-70, s.u.), und der Nahkampf traf mit Drain auch mit (2) (3500).
 Die Ursache ist an der Stelle behoben, an der sie lag (182db277, Testaufbau). Fuer Spur L bleibt: die Produzenten nach dem
 Original einsetzen und den Nahkampf am heutigen Stand nachmessen (M0: keine Verschlechterung).
+
+### M2 — RE2-Original gegengemessen (DuckStation-GDB, JEDER Takt, `L_belege/re2_gdb_0x201.py`)
+
+Spielstand SLUS-00748_6.sav (ROOM20A0, sechs Zombies Deskriptor 6 wie Spur H R4), Haltepunkt EXE-Gegnerschleife @0x800265E0
+(`sw v0,496(s0)`), 900 Takte je Zombie (5400 Proben, 79 s), Leon steht. settings.ini und resume.sav gesichert und
+zurueckgeschrieben. Rohdaten `L_belege/re2_original_room20a0_jeder_takt.txt.gz`, Auswertung `L_belege/re2_0x201_ausw.py`
+(Peilung = -atan2(dz,dx) in 4096-Teilung, empirisch: 3508 von 4188 Gang-Takten zeigen innerhalb +-128 auf das Steuerziel).
+
+| Zombie | Takt | von | +0x1F0 im Takt | Spieler im Kegel | Produzent | danach |
+|---|---|---|---|---|---|---|
+| 8014777c | 421 | 0x00010101 | 1999 | +-512 ja (Peilung 1119, Gier 1119) | (2) Nahbereich | 16 Takte 0x201, dann GRIFF 0x301 bei +0x1F0 1180 |
+| 80156d64 | 773 | 0x00010101 | 1987 | ja (963/961) | (2) | 4 Takte, dann 0x101 (Spieler beansprucht) |
+| 8016634c | 696 | 0x00010101 | 3565 | ja (1271/1273) | (1) Timer: +0x15A 1 -> 125 | 80 Takte 0x201, dann GRIFF bei 1152 |
+
+Weg je Takt: Gang 0x101 32,2 (4213 Takte), Arme-hoch-Gang 0x201 44,1 (94 Takte). Alle Zustandswechsel der 5400 Proben:
+1/1->1/2 3x, 1/2->1/3 2x, 1/2->1/1 1x, 1/3->1/5 2x, 1/5->1/1 3x, 1/1->1/9 5x (Rueckstoss-Domino eines abgeworfenen Greifers,
+`sw 0x901` @0x80102E90 — im Port vorhanden, enemy_ai_re2_zombie.c re2z_exec_grab), 1/9->1/5 5x.
+=> **So macht es RE2:** ein gehender Zombie hebt die Arme (0x201), sobald Leon im ersten Takt unter 2000 vor ihm steht
+(Produzent (2)) oder wenn sein +0x15A-Timer unter 5000 ablaeuft und 1/4 faellt (Produzent (1)); aus dem Arme-hoch-Gang greift er
+im ersten Takt unter 1200. Produzent (3) (Leon rennt) kommt im Lauf nicht vor (Leon steht) — statisch belegt (R1).
+
+## RE-Belege (EMZ0.BIN = RE2-Zombie-Overlay @0x80100000, re2_disasm.py, selbst disassembliert)
+
+### R1 — EXEC[1] (Gang, 0x80101A40, Tabelle 0x8010C8CC[1]): die drei Produzenten von +0x4 = 0x201
+```
+(1) 80101d68 lhu v0,346(s1) / 80101d70 addiu v0,v0,-1 / 80101d74 sh v0,346(s1) / 80101d78 sll v0,v0,16
+    80101d7c bne v0,zero,0x80101dc0 / 80101d84 jal 0x80015fe8 / 80101d8c sra v0,v0,3 / 80101d90 addiu v0,v0,100
+    80101d94 jal 0x80015fe8 / 80101d98 sh v0,346(s1) (Delay-Slot) / 80101d9c andi v0,v0,0x3 / 80101da0 bne -> 0x80101dc0
+    80101da8 lw v0,496(s1) / 80101db0 sltiu v0,v0,0x1388 / 80101db4 beq -> 0x80101dc0 / 80101db8 addiu v0,zero,513 / 80101dbc sw v0,4(s1)
+(2) 80101ec4 lw v0,496(s1) / 80101ecc sltiu v0,v0,0x7d0 / 80101ed0 beq -> 0x80101f14
+    80101ed8-e4 a1/a2 = 0x800cfc30/0x800cfc38 (Spieler x/z) / 80101ee8 jal 0x80015614 / 80101eec addiu a3,zero,512
+    80101ef0 bne v0,zero -> 0x80101f14 / 80101efc lbu 0x800cfdcb / 80101f04 andi 0x80 / 80101f08 bne -> 0x80101f14
+    80101f0c addiu v0,zero,513 / 80101f10 sw v0,4(s1)
+(3) 80101f18 lhu 0x800cfbf6 / 80101f20 andi v0,v0,0x4 / 80101f24 beq -> Epilog 0x80101f64
+    80101f2c lw v0,496(s1) / 80101f34 sltiu v0,v0,0x9c4 / 80101f38 beq -> Epilog
+    80101f50 jal 0x80015614 / 80101f54 addiu a3,zero,1324 / 80101f58 bne -> Epilog / 80101f5c addiu v0,zero,513 / 80101f60 sw v0,4(s1)
+```
+Kegeltest 0x80015614 (RE2 PSX.EXE, selbst gelesen @0x80015614-94): Rueckgabe 0, wenn ((Peilung - Gier + h) & 0xfff) < 2h, sonst
++-h = Port re15_ai_arc_test. Steuerung 0x80015558 (@0x80015558-610): negative Rate = weg vom Ziel (Peilung + 2048) = Port
+re15_enemy_steer_point. Reihenfolge im Takt: (1) vor dem Brand-/Saeure-DoT @0x80101DC0-EC0, (2)/(3) danach; kein Rueckkehrweg
+zwischen (2) und (3), jeder Produzent schreibt nur das Wort (0x201 -> +0x6 = 0: EXEC[2] P0 laeuft im naechsten Takt).
+EXEC[2] (0x80102260, Arme-hoch-Gang) selbst nachgeprueft (@0x80102260-5E0): P0 Clip 0xF0004 + walkclip, +0x158 = (r&0x3f)+180,
+Startbild (r&0x1f), +0x15A = (r&0x1f)+45; P1 Steuerung +-16 @0x80102354/@0x8010236c, Wurzelbewegung @0x801023dc/@0x8010246c,
+Ausstieg @0x80102550-cc — deckt sich Zeile fuer Zeile mit re2z_exec_bump (seit 187fd244). Der Verdacht "steuert nur +-16 statt
+8+16" ist damit KEIN Fehler: das Original steuert im Arme-hoch-Gang genau mit +-16.
+
+### R2 — DECISION[0] Block 3 (0x80101294, Tabelle 0x8010C88C[0])
+```
+801013bc jal 0x80015fe8 / 801013c4 andi v0,v0,0x1 / 801013c8 beq v0,zero,0x801013d4 / 801013cc addiu v0,zero,3073 / 801013d0 sw v0,4(s0)
+```
+= Commit 0xC01 bei (rand & 1) == 1. Block 2 dagegen `andi v0,v0,0x1` @0x80101368 / `bne v0,zero,0x80101380` @0x8010136c = Commit bei
+== 0. Der Port hatte beide Bloecke auf == 0.
+
+### R3 — EXEC[0] P1 (0x801013F4): Wander-Wurf und Selbstwecker im SELBEN Takt
+```
+8010151c lh v0,346(s0) / 80101524 bne v0,zero,0x80101544 / 8010152c jal 0x80015fe8 / 80101534 andi v0,v0,0x1
+80101538 bne v0,zero,0x80101544 / 8010153c addiu v0,zero,2 / 80101540 sb v0,6(s0)            ; +0x6 = 2, KEIN Sprung
+80101544 lh v0,344(s0) / 8010154c bne v0,zero,0x80101590                                    ; Selbstwecker
+80101554 lw v0,496(s0) / 8010155c sltiu v0,v0,0x1d4c / 80101560 beq / 80101568 lhu v0,340(s0) / 80101570 andi 0x800 / 80101574 beq
+80101578 addiu v0,zero,257 / 8010157c sw v0,4(s0)                                           ; ganzes Wort -> +0x6 = 0
+80101580 lh v0,344(s0) / 80101588 beq v0,zero,0x801016ac                                    ; Epilog
+80101590 lhu v0,344(s0) / 80101598 addiu v0,v0,-1 / 8010159c j 0x801016ac / 801015a0 sh v0,344(s0)
+```
+P2 (@0x801015a4) nur ueber den Phasen-Dispatch @0x80101410-50 (+0x6 == 2), also im naechsten Takt.
+
+### R4 — DECISION[12] (0x8010460C) ist KEIN Stub (Zensus-Fund, s. Schritt 4)
+`table 0x8010c88c 16`: [0] 0x80101294, [1] 0x80101714, [2] 0x80101f7c, [3..11] und [13..15] je `jr ra`/`nop` (0x801025e4,
+0x80103170, 0x80103180, 0x8010394c, 0x80103778, 0x80103b6c, 0x80103e40, 0x80104174, 0x80104394, 0x80104920, 0x80104d6c,
+0x80104e4c), aber **[12] = 0x8010460c = eine echte Entscheidung**:
+```
+8010462c lbu v0,6(s0) / 80104634 bne v0,v1(3) -> 0x801046a0          ; nur Phase 3 (Stoss, Clip 0x1B)
+80104630 lw a0,496(s0) / 8010463c sltiu v0,a0,0x514 / 80104640 beq   ; +0x1F0 < 1300
+80104648-58 lbu 0x800cfdcb / andi 0x80 / bne                          ; Spieler nicht beansprucht
+80104660-6c lbu v0,333(s0) / sltiu v0,v0,0xb / beq                    ; Stoss-Bild +0x14D < 11
+80104674-84 lbu v1,262(s0) / lbu 0x800cfcfe / bne                     ; gleiche Etage
+8010468c-9c lbu 0x800cfc00 / xori 0xf / sltu a1,zero,v0               ; Spieler+0x8 != 15
+801046a8-d8 +0x21A & 0x20 == 0 && 0x80015758(self,PL,+0x76+256,256) == 0 -> addiu v0,zero,769 / sw v0,4(s0) ; GRIFF
+801046dc-e8 PL+0x1D3 |= 0x80
+801046ec-1c +0x21A & 0x40 == 0 && 0x80015758(self,PL,+0x76-256,256) == 0 -> 769 / sw ; GRIFF
+80104720-2c PL+0x1D3 |= 0x80
+```
+Der Port fuehrte [12] unter `default: break` — ein Ausfall-Stoss (0xC01, DECISION[0] Bloecke 2/3, DECISION[1] D/E, DECISION[2] C)
+endete IMMER in 0x101 und nie im Griff. Das betrifft "greifen und beissen wie in RE2" direkt.
+
+## Umsetzung
+
+Datei `re15_port/engine/src/enemy_ai_re2_zombie.c` (VERTRAG Ausnahme Spur L), Kommentar "Runde 37 Spur L" + @0x je Zeile:
+* Produzent (1) in re2z_exec_walk (+0x15A-Block, Wuerfe waren schon da): `+0x4 = 0x201` @0x80101DB8-BC.
+* Produzenten (2)/(3) nach dem DoT-Block: dist < 0x7D0 && arc512 == 0 && !re15_player_is_grabbed() / cfbf6 & 4 (Port: Spieler-
+  Motion 100 = RUN, re2z_cfbf6) && dist < 0x9C4 && arc1324 == 0 -> 0x201.
+* (b) re2z_decide_stand Block 3: Commit bei (rand & 1) != 0.
+* (c) re2z_exec_stand P1: der Wecker laeuft in jedem P1-Takt (auch im Wurf-Takt) und endet immer im Epilog; P2 im naechsten Takt.
+* DECISION[12] re2z_decide_lunge + `case 12` in re2z_active.
+* Sonden-Schalter (NUR Gegenproben): `re15_re2z_r37_produzenten(maske)` in NEU `re15_port/include/re15_re2zombie_r37.h`,
+  Bits (1)/(2)/(3)/(b)/(c)/D12, Standard RE15_R37L_ALLES = Original; Maske 0 = exakt der Stand bis Runde 37 (gemessen: Messer-
+  Sweep Maske 0 = 368 Treffer / 26146 Griff-Bilder / 171 Bilder s1=2 = Basis-Build e399ee3f bitgleich). Dazu Zaehler je
+  Produzent, Produzent des letzten Wechsels je Platz, `re15_re2z_rng_peek()` (Wurf vorhersehen ohne den Strom zu bewegen).
+* Stale-Kommentar korrigiert: Kopf OFFEN-Block "BEWUSST NICHT SCHARF" ersetzt (Ursache aufgeklaert, s. M1).
+Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids, keine neue .c-Datei (nur ein neuer Header).
+
+## Schritt 4 — Zensus der OFFEN-Marken der RE2-Zombie-KI (Bewegung/Angriff)
+
+| Marke (enemy_ai_re2_zombie.c) | Adresse | wirkt auf Aktivitaet? | Ergebnis |
+|---|---|---|---|
+| 0x201-Produzenten (1)(2)(3) | @0x80101D68-DBC / EC4-F10 / F14-F60 | JA (Annaeherung mit erhobenen Armen, Griff) | geschlossen (R1) |
+| DECISION[0] Block 3 | @0x801013c8 | ja (Ausfall aus dem Stand) | geschlossen (R2) |
+| EXEC[0] P1 Wecker/Wurf | @0x80101540-a0, @0x8010159c | ja (Aufwachen/Wandern) | geschlossen (R3) |
+| DECISION[12] `default: break` ("stubs / not RE'd") | @0x8010460C | JA (Griff aus dem Ausfall) | geschlossen (R4) |
+| DECISION[3..11],[13..15] | 0x801025e4 ... 0x80104e4c | nein | `jr ra`-Stubs (je Eintrag geprueft) |
+| Kriecher-Test P1 (~Z.3187 "OFFEN ... NICHT genommen") | @0x80104530-B8 | ja | ERLEDIGT seit Welle 5 (re2z_exec_eleven, `re15_re2z_enter_crawler`); Kopfkommentar war veraltet |
+| Kriecher mit +0x5 > 2 (~Z.3670) | Griff-Wurf `sw 0x501` @0x80102D24-2C | nein (Folgezustand NACH einem Griff eines Kriechers; Annaeherung/Griff selbst byte-true) | bleibt OFFEN mit Adresse (im Original unerreichbar: Tabelle 0x8010C918 hat 3 Worte) |
+| Steuerziel = RE2-Navigator FUN_8004A808 "nicht portiert" (~Z.290) | @0x80100354 | ja (Weg um Hindernisse) | Port nimmt den RE1.5-Navigator FUN_80039e7c (re15_nav_update_steer) + zonenlos-Form @0x8004a90c-924 (Runde 36 F) — RE1.5-Raumdaten tragen RE1.5-Zonen; kein RE2-Zwilling moeglich. Kommentar veraltet ("nimmt die Spielerlage"). Befund N3 (Tasche 1030) gehoert hierher |
+| Gait-Draws +0x16A/+0x14D "NOT ported" (~Z.393) | @0x80101AD4-E8 / @0x80101B04-0C | ja (Strom) | ERLEDIGT (B3-Fix: Draw 3/4 in re2z_exec_walk P0); Kommentar veraltet |
+| EXEC[2] Drei-Bild-Zweig "NICHT modelliert" (~Z.1827) | @0x801023F8-468 | nein (Kadenz) | ERLEDIGT (B4-Fix re2z_fat_cadence_tick(e,0)); Kommentar veraltet |
+| fill_gates Block A / C / K, PL+0x8 == 15 | @0x8010200C / +0x1D4 / @0x80102208 / @0x80102108 | nein | inert mit Beleg (kein Schreiber im Zombie-Overlay bzw. RE1.5-Raumdaten / Spieler-HP nie -32768 / Spieler-Id nie 15) |
+| Liege-Wecker (EXEC[7] "WAKE not RE'd") | @0x801038D8/0x80103900 | ja (Liegende) | PORT-MAPPING mit RE1.5-Beleg (Nibble 7/8 ohne Wecker, DECIDE-Stub 0x801039F4; Skript-Wecker 0x89/0x8A) — RE1.5-Raumdaten, bleibt |
+| Fresser-Wecker (EXEC[8] "conditions not RE'd") | @0x80103D94 | ja (Fresser) | PORT-MAPPING RE1.5-Fresser dist < 0xFA0 (STAGE1.BIN @0x80103990-98), RE2-Weg Bank-B @0x80104F0C ohne Produzent — bleibt |
+| Knockdown P7 "Liegezeit 90 MAPPED" (~Z.2262) | @0x80103628 | nein | ERLEDIGT (Review #6: Clip laeuft aus); Kommentar veraltet |
+| EXEC[11] gerade Takte +0x144 >> 2 (~Z.3296) | @0x801044D0-E0 | nein (Ausrollen beim Zusammenbruch) | bleibt OFFEN mit Adresse |
+| EXEC[10] Haemmern / EXEC[15] Bank B | 0x8010417C / 0x80104E54 | nein | inert (+0x1D4-Bits bzw. kein Produzent) |
+| Gore/Teile-Physik (Wand/Boden/Skalierung), Rumble, Praesentation | @0x80028CAC u.a. | nein | Praesentation, bleibt |

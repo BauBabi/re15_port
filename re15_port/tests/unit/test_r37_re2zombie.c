@@ -338,7 +338,7 @@ static int s_pin_slot = -1;
 static int pin_umgebung(void)
 {
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
-    re15_re2z_r37_produzenten(RE15_R37L_PROD_ALLE);
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
     g_room_rdt_ok = 0;
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
@@ -441,12 +441,12 @@ static void pin_prod2(void)
     re15_player_victim_force_end();
     re15_player_victim_reset();
     PIN(!bean, "(2) Gegenprobe Spieler beansprucht: (2) committet nicht");
-    re15_re2z_r37_produzenten(RE15_R37L_PROD_ALLE & ~RE15_R37L_PROD_NAH);
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES & ~RE15_R37L_PROD_NAH);
     e = pin_stellen(0x00010101u, 1500, 0, 0);
     pin_takt();
     PIN(!(e->state == 1 && e->sub_state_1 == 2), "(2) Gegenprobe Maske ohne (2) (Stand bis Runde 37): kein 0x201 (%u/%u)",
         e->state, e->sub_state_1);
-    re15_re2z_r37_produzenten(RE15_R37L_PROD_ALLE);
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
 }
 
 /* (3) RENNEN @0x80101F14-F60: 0x800CFBF6 & 4 (Port: Spieler-Motion 100), dist < 0x9C4, Spieler im +-1324-Kegel. */
@@ -494,6 +494,18 @@ static void pin_b(void)
     PIN(wurf, "(b) ohne Commit genau EIN Wurf im Takt (Block 3 @0x801013bc)");
     PIN(regel && ja > 0 && nein > 0, "(b) Block 3 committet 0xC01 genau bei (rand & 1) == 1 (`beq v0,zero,0x801013d4` @0x801013c8): %d ja, %d nein",
         ja, nein);
+    /* Gegenprobe Stand bis Runde 37 (Bit (b) aus): Commit bei (rand & 1) == 0 — der umgekehrte Wurf. */
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES & ~RE15_R37L_B);
+    int alt = 1;
+    for (int k = 0; k < 32; k++) {
+        re15_actor_t *e = pin_stellen(0x00010001u, -1500, 0, 105);
+        rng_auf(k);
+        uint32_t r0 = re15_re2z_rng_peek(0);
+        pin_takt();
+        if ((e->state == 1 && e->sub_state_1 == 12) != ((r0 & 1u) == 0u)) alt = 0;
+    }
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
+    PIN(alt, "(b) Gegenprobe Stand bis Runde 37: dieselben Wuerfe committen umgekehrt ((rand & 1) == 0)");
 }
 
 /* (c) EXEC[0] P1: Wander-Wurf @0x8010152c-40 und Selbstwecker @0x80101544-a0 im SELBEN Takt, P2 erst im naechsten. */
@@ -523,6 +535,15 @@ static void pin_c(void)
     PIN(regel && n_wurf > 0 && n_kein > 0, "(c) Wurf-Takt: +0x6 = 2 bleibt stehen, +0x158 10 -> 9 im selben Takt (%d Wuerfe, %d ohne)", n_wurf, n_kein);
     PIN(wuerfe, "(c) im Wurf-Takt genau EIN Wurf (kein P2-Wurf rand+150 / Zonen-Wurf im selben Takt)");
     PIN(nachher, "(c) P2 im NAECHSTEN Takt: +0x6 = 3 (faellt nach P3), +0x158 = rand + 150 (@0x801015b8-c8), in P3 einmal dekrementiert");
+    {   re15_re2z_r37_produzenten(RE15_R37L_ALLES & ~RE15_R37L_C);   /* Gegenprobe Stand bis Runde 37 */
+        int k = 0; for (; k < 32; k++) { rng_auf(k); if ((re15_re2z_rng_peek(0) & 1u) == 0u) break; }
+        re15_actor_t *e = pin_stellen(0x00010001u, -12000, 0, 0);
+        e->re2z_t15a = 1; e->re2z_t158 = 10;
+        rng_auf(k);
+        pin_takt();
+        re15_re2z_r37_produzenten(RE15_R37L_ALLES);
+        PIN(e->sub_state_2 == 3, "(c) Gegenprobe Stand bis Runde 37: Wurf-Takt faellt im SELBEN Takt nach P2/P3 (+0x6 = %u)", e->sub_state_2);
+    }
     /* Der Wecker gewinnt gegen den Wurf: +0x158 == 0, dist < 0x1D4C, Sicht -> `sw 257,4` @0x8010157c (ganzes Wort). */
     int gewinnt = 1, n = 0;
     for (int k = 0; k < 32; k++) {
@@ -575,6 +596,12 @@ static void pin_d12(void)
     e = pin_lunge(1000, 0, 5, 1);
     pin_takt();
     PIN(!(e->state == 1 && e->sub_state_1 == 3), "D12 Gegenprobe Phase 1 (bne v0,3 @0x80104634): kein Griff (%u/%u)", e->state, e->sub_state_1);
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES & ~RE15_R37L_D12);
+    e = pin_lunge(dx_grenze(0x514) - 1, 0, 5, 3);
+    pin_takt();
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
+    PIN(!(e->state == 1 && e->sub_state_1 == 3), "D12 Gegenprobe Stand bis Runde 37 (`default: break`): kein Griff aus dem Stoss (%u/%u)",
+        e->state, e->sub_state_1);
 }
 
 /* Nahkampf-Positivkontrolle: Messer-Sweep (test_re2_zombie_abc-Aufbau) mit allen Produzenten vs. Maske 0. */
@@ -582,10 +609,10 @@ static void pin_nahkampf(void)
 {
     long t[2] = { 0, 0 };
     for (int m = 0; m < 2; m++)
-        for (int seed = 0; seed < 64; seed++) { lauf_t o; lauf(&o, seed, 900, 1, m ? RE15_R37L_PROD_ALLE : 0u, -1, -1); t[m] += o.hits; }
-    re15_re2z_r37_produzenten(RE15_R37L_PROD_ALLE);
-    PIN(t[1] > 250, "Nahkampf (Messer, 64 Seeds x 900 Bilder) mit allen Produzenten: %ld Treffer (Schranke test_re2_zombie_abc > 250)", t[1]);
-    PIN(t[1] * 100 >= t[0] * 95, "Nahkampf nicht schlechter als ohne Produzenten: %ld gegen %ld (>= 95 %%)", t[1], t[0]);
+        for (int seed = 0; seed < 64; seed++) { lauf_t o; lauf(&o, seed, 900, 1, m ? RE15_R37L_ALLES : 0u, -1, -1); t[m] += o.hits; }
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
+    PIN(t[1] > 250, "Nahkampf (Messer, 64 Seeds x 900 Bilder) mit Spur L: %ld Treffer (Schranke test_re2_zombie_abc > 250)", t[1]);
+    PIN(t[1] * 100 >= t[0] * 95, "Nahkampf nicht schlechter als der Stand bis Runde 37 (Maske 0): %ld gegen %ld (>= 95 %%)", t[1], t[0]);
 }
 
 /* RE2-Muster im Raum: gehende Zombies wechseln vor Leon in den Arme-hoch-Gang und greifen aus ihm (RE2-Original gemessen:
@@ -593,7 +620,7 @@ static void pin_nahkampf(void)
 static void pin_raum(uint16_t raum, int32_t x, int32_t z, int montage)
 {
     static gang_t o, g;
-    gang_lauf(&o, RE15_R37L_PROD_ALLE, raum, x, z, 0, 900, montage, 0, 0);
+    gang_lauf(&o, RE15_R37L_ALLES, raum, x, z, 0, 900, montage, 0, 0);
     gang_lauf(&g, 0u, raum, x, z, 0, 900, montage, 0, 0);
     long w = 0, p2 = 0, dsum = 0, griff = 0, t201 = 0;
     for (int sl = 1; sl < RE15_ACTOR_MAX; sl++) {
@@ -603,7 +630,7 @@ static void pin_raum(uint16_t raum, int32_t x, int32_t z, int montage)
     PIN(w && dsum / w < 2000 && dsum / w > 1500, "ROOM%04X: mittleres +0x1F0 im Wechsel-Takt %ld (< 0x7D0; RE2-Original 1987/1999)", raum, w ? dsum / w : 0L);
     PIN(griff >= 1, "ROOM%04X: aus dem Arme-hoch-Gang wird gegriffen (%ld Griffe aus 0x201, %ld Takte im Gang)", raum, griff, t201);
     PIN(wg == 0, "ROOM%04X Gegenprobe Maske 0 (Stand bis Runde 37): kein Arme-hoch-Gang vor Leon (%ld)", raum, wg);
-    re15_re2z_r37_produzenten(RE15_R37L_PROD_ALLE);
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
 }
 
 int main(int argc, char **argv)
@@ -654,7 +681,7 @@ int main(int argc, char **argv)
         return 0;
     }
     if (!strcmp(modus, "gang")) {
-        unsigned maske = argc > 2 ? (unsigned)strtoul(argv[2], NULL, 0) : RE15_R37L_PROD_ALLE;
+        unsigned maske = argc > 2 ? (unsigned)strtoul(argv[2], NULL, 0) : RE15_R37L_ALLES;
         uint16_t raum  = argc > 3 ? (uint16_t)strtoul(argv[3], NULL, 16) : 0x1130;
         int32_t  x     = argc > 4 ? atoi(argv[4]) : -5900;
         int32_t  z     = argc > 5 ? atoi(argv[5]) : 16350;

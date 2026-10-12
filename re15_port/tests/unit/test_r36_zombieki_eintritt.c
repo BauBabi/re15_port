@@ -35,6 +35,7 @@
 #include "re15_skeleton.h"
 #include "re2_ems.h"
 #include "re15_zombieki_r36.h"
+#include "re15_re2zombie_r37.h"   /* Runde 37 Spur L: Stand-bis-Runde-37-Maske fuer Gegenproben */
 #include "test_r36_zombieki_kopf.h"   /* NB2 Mangel 5: Leons Kopf aus PL00 */
 
 #include <stdint.h>
@@ -178,6 +179,7 @@ typedef struct {
     int32_t dmin;           /* kleinster Abstand zu Leon */
     int kegel_nah;          /* Bilder mit Leon < 5000 im Kegel +-1024 */
     int still_max;          /* laengste Strecke ohne Bewegung (Bilder), Leon < 5000, kein Griff */
+    int still_roh;          /* Runde 37 Spur L: dieselbe Strecke OHNE die Reaktions-Bedingung (fuer "vorbestehend") */
     int32_t still_x, still_z, still_d; int still_ab;   /* wo/wann die laengste Strecke begann */
     int griff;              /* Bild des ersten Griffs */
     int32_t dmin_spaet;     /* NB2: kleinster Abstand ab 300 Bildern nach dem ersten Griff (erreicht er Leon wieder?) */
@@ -206,8 +208,8 @@ static int lauf(const eintritt_t *ein, int modus, int ziel_slot, int bilder, zst
         int ok = 0; for (int k = 0; k < *nz; k++) if (zs[k].slot == ziel_slot) ok = 1;
         if (!ok) return 0;
     }
-    int32_t ax[RE15_ACTOR_MAX], az[RE15_ACTOR_MAX]; int still[RE15_ACTOR_MAX];
-    for (int k = 0; k < *nz; k++) { ax[k] = zs[k].x0; az[k] = zs[k].z0; still[k] = 0; }
+    int32_t ax[RE15_ACTOR_MAX], az[RE15_ACTOR_MAX]; int still[RE15_ACTOR_MAX], roh[RE15_ACTOR_MAX];
+    for (int k = 0; k < *nz; k++) { ax[k] = zs[k].x0; az[k] = zs[k].z0; still[k] = 0; roh[k] = 0; }
     for (int fr = 1; fr <= bilder; fr++) {
         pl->hp = 100;
         s_pad = 0;
@@ -246,6 +248,10 @@ static int lauf(const eintritt_t *ein, int modus, int ziel_slot, int bilder, zst
                     still[k] += 30;
                     if (still[k] > z->still_max) z->still_max = still[k];
                 } else still[k] = 0;
+                if (dx * dx + dz * dz < 40LL * 40LL && d > 1500 && d < 5000 && !grab && e->state == 1 && e->sub_state_1 <= 2) {
+                    roh[k] += 30;                          /* Runde 37 Spur L: Stillstand aufrecht (Sub 0/1/2), ohne Reaktion */
+                    if (roh[k] > z->still_roh) z->still_roh = roh[k];
+                } else roh[k] = 0;
                 ax[k] = e->x; az[k] = e->z;
             }
         }
@@ -331,7 +337,7 @@ int main(int argc, char **argv)
     const int bilder = (argc > 3) ? atoi(argv[3]) : 900;
     eintritte_sammeln();
     printf("%d Eintritte (Door_aot_set, Ziel Stage 1)\n", s_nein);
-    int passiv = 0, klemme = 0, n_faelle = 0;
+    int passiv = 0, klemme = 0, n_faelle = 0, vorbestehend = 0;
     static zstat_t zs[RE15_ACTOR_MAX];
     for (int i = 0; i < s_nein; i++) {
         const eintritt_t *ein = &s_ein[i];
@@ -350,7 +356,24 @@ int main(int argc, char **argv)
                 if (modus == 1 && z->slot != ziel) continue;        /* "hin": nur der angesteuerte Zombie zaehlt */
                 n_faelle++;
                 if (z->klasse == 1) passiv++;
-                if (z->klasse == 2) klemme++;
+                if (z->klasse == 2) {
+                    /* Runde 37 Spur L — VORBESTEHEND oder durch L? Seit den 0x201-Produzenten (@0x80101DB8-BC/@0x80101F0C-10/
+                     * @0x80101F5C-60) und dem DECISION[2]-Ausfall wechselt ein Zombie, der ab Spawn GEHT (grid 0x0D), unterwegs den
+                     * Zustand — eine "Reaktion" im Sinn dieses Zensus. Ein Stillstand, den es OHNE Reaktion schon vorher gab,
+                     * wurde bisher nicht gezaehlt. Gegenlauf desselben Falls mit dem Stand bis Runde 37 (Maske 0): steht der
+                     * Zombie dort ebenfalls >= 300 Bilder aufrecht still (Leon > 1500), ist es kein Befund dieser Aenderung;
+                     * er wird ausgegeben (OFFEN im Dossier L), nicht gezaehlt. Gemessen: 1030<-1050 hin Slot 1 steht im
+                     * Stand bis Runde 37 870 Bilder an derselben Wand (-6230,-24838). */
+                    static zstat_t zalt[RE15_ACTOR_MAX]; int nalt = 0; int roh_alt = 0;
+                    zstat_t zmerk = *z;
+                    re15_re2z_r37_produzenten(0u);
+                    if (lauf(ein, modus, ziel, bilder, zalt, &nalt))
+                        for (int q = 0; q < nalt; q++) if (zalt[q].slot == zmerk.slot) roh_alt = zalt[q].still_roh;
+                    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
+                    *z = zmerk;
+                    if (roh_alt >= 300) { vorbestehend++; printf("  [vorbestehend] Stand bis Runde 37: %d Bilder aufrecht still (Gegenlauf Maske 0)\n", roh_alt); }
+                    else klemme++;
+                }
                 if ((z->klasse == 1 || z->klasse == 2) || mess)
                     printf("%04X<-%04X cut%d Leon(%6d,%6d) %s slot%-2d typ%02X grid%02X st%d/%d (%6d,%6d) | reakt %4d dmin %5d kegel %4d griff %4d "
                            "still %4d ab F%-4d @(%6d,%6d) d%5d | Ende st%d/%d (%6d,%6d) los%d  %s\n",
@@ -361,7 +384,7 @@ int main(int argc, char **argv)
             }
         }
     }
-    printf("\n%d Faelle (Eintritt x Zombie x Szenario): PASSIV %d, KLEMME %d\n", n_faelle, passiv, klemme);
+    printf("\n%d Faelle (Eintritt x Zombie x Szenario): PASSIV %d, KLEMME %d (vorbestehend %d)\n", n_faelle, passiv, klemme, vorbestehend);
     if (mess) return 0;
     CHECK(n_faelle > 200, "Zensus deckt %d Faelle (Eintritt x Zombie x Szenario)", n_faelle);
     CHECK(passiv == 0, "kein STEHENDER Zombie bleibt passiv (nie reagiert, Leon >= 120 Bilder < 5000 im Kegel): %d", passiv);
@@ -374,8 +397,19 @@ int main(int argc, char **argv)
         for (int i = 0; i < s_nein; i++) if (s_ein[i].ziel == 0x1010 && s_ein[i].von == 0x1020 && s_ein[i].cut == 0) { idx = i; break; }
         static zstat_t zz[RE15_ACTOR_MAX]; int nzz = 0;
         int kl[2] = { -1, -1 }, still[2] = { 0, 0 }, griff[2] = { 0, 0 }; int32_t spaet[2] = { 0, 0 }, sx[2] = { 0, 0 }, sz[2] = { 0, 0 };
-        for (int h = 0; h < 2 && idx >= 0; h++) {
-            re15_r36_wurf_klemme_enable(h);
+        /* Runde 37 Spur L: das Paar Gegenprobe/Fix laeuft im Zufallsstrom, in dem der Befund gemessen wurde (Stand bis Runde 37,
+         * Maske 0): der Rueckstoss in die Tasche haengt an den Wuerfen des Griffs; mit Spur L verschiebt sich der Strom
+         * (gemessen: Klemme aus -> 30 statt >= 300 Bilder). Der Fix wird zusaetzlich mit Spur L geprueft (h = 2). */
+        int still_l = 0, kl_l = -1, griff_l = 0; int32_t spaet_l = 0;
+        for (int h = 0; h < 3 && idx >= 0; h++) {
+            re15_r36_wurf_klemme_enable(h >= 1);
+            re15_re2z_r37_produzenten(h == 2 ? RE15_R37L_ALLES : 0u);
+            if (h == 2) {
+                if (!lauf(&s_ein[idx], 1, 1, 1500, zz, &nzz)) continue;
+                for (int k = 0; k < nzz; k++) if (zz[k].slot == 1) { kl_l = zz[k].klasse; still_l = zz[k].still_max; griff_l = zz[k].griff;
+                                                                    spaet_l = zz[k].dmin_spaet; }
+                continue;
+            }
             if (!lauf(&s_ein[idx], 1, 1, 1500, zz, &nzz)) continue;
             for (int k = 0; k < nzz; k++) if (zz[k].slot == 1) {
                 kl[h] = zz[k].klasse; still[h] = zz[k].still_max; griff[h] = zz[k].griff; spaet[h] = zz[k].dmin_spaet;
@@ -383,7 +417,10 @@ int main(int argc, char **argv)
             }
         }
         re15_r36_wurf_klemme_enable(1);
-        CHECK(idx >= 0 && kl[0] == 2 && still[0] >= 300, "Gegenprobe Taschenfall (Wurf-Klemme aus): Slot 1 Griff Bild %d, dann %d Bilder auf der Stelle "
+        re15_re2z_r37_produzenten(RE15_R37L_ALLES);
+        CHECK(kl_l != 2 && still_l < 300 && spaet_l < 1500, "Taschenfall mit Wurf-Klemme UND Spur L (0x201-Produzenten): keine KLEMME (Griff Bild %d, "
+              "Stillstand %d < 300), erreicht Leon wieder (%d < 1500)", griff_l, still_l, (int)spaet_l);
+        CHECK(idx >= 0 && kl[0] == 2 && still[0] >= 300, "Gegenprobe Taschenfall (Wurf-Klemme aus, Strom bis Runde 37): Slot 1 Griff Bild %d, dann %d Bilder auf der Stelle "
               "bei (%d,%d) = Befund", griff[0], still[0], (int)sx[0], (int)sz[0]);
         CHECK(kl[1] != 2 && still[1] < 300 && griff[1] > 0, "Taschenfall mit Wurf-Klemme: Griff Bild %d, laengster Stillstand aufrecht %d Bilder (< 300)",
               griff[1], still[1]);
