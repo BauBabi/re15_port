@@ -261,3 +261,13 @@ Unit-Lauf.)
 * Neue Assets fuer das Paket-Gate: keine. Neue Sprachdateien: keine. Keine Bank-9-Bits, keine Text-Ids.
 * Fuer den Release-Bau: neue Quelldatei `re15_port/engine/src/zombieaktiv_r37.c` (Android: GLOB-Cache neu konfigurieren);
   +4 Tests (3 unit, 1 integration).
+
+## Nachbesserung 1 (nach Abnahme 0, `H_abnahme_0.md`)
+
+Zwei Maengel, beide Text/Zitat, kein Verhalten. Stand: in Arbeit.
+
+### M1 — Zombie-Girl-Zitat in der falschen Binaerdatei
+(folgt)
+
+### M2 — zwei Saetze in "Fuer den Nutzer" widersprechen der Messung
+(folgt)
