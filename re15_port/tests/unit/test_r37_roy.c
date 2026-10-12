@@ -368,7 +368,7 @@ static void teil_leon1170(void)
 
 
 /* ---- spur: Auswertung eines RE15_ANIM_TRACE der echten exe (Integration test_r37_roy.cmake) ------------------
- * Zeile: bild aktor typ motion clip fc cur slot fc_uhr loco rev legacy (anim_select_common.c). Geprueft fuer Typ 0x47:
+ * Zeile: bild aktor typ motion clip fc cur slot fc_uhr loco rev (11 Felder, anim_select_common.c). Geprueft fuer Typ 0x47:
  *   - clip == motion (kein Modulo-Klemmen auf einen fremden Clip-Satz) und fc == fc_uhr (Bild und Uhr dieselbe Bank)
  *   - Clip -> Bildzahl = die Original-Banken des Raums (1011: RBJ-Record 1; 1021: CDEMD1 Loco/eigene Bank)
  *   - Einmal-Clips (ohne Skript-Schleife): vorwaerts nie zurueck, rueckwaerts nie vor = HALTEN statt Schleife
