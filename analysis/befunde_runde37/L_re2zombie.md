@@ -301,6 +301,8 @@ Ausfall, Spieler-Griffe). Montage-Karte = `9:71 3:94 9:73-76 4:4-5 4:15 7:0xd3-0
 | E7 Leon 1100 (aufrechte Form, Bit (4,0xE8)) | Karte 1100 | 2 (849, 1991) | 2 Griffe | 0 / 0 | 3x (F82) |
 | E8 **Elza** 1181 | Elza-Karte (probe_r36_elza_karte) | 1 (1995) | Griff | 0 / 0 | 1x (F311) |
 | E11 Leon 1130 mit MESSER an der Tuer (R1 + Schlaege) | Karte 1150 + Tuer | — | — | — | **3 Messertreffer** am Fetten (Typ 0x11, HP 250 -> 247 -> 244 -> 241, Reaktion 2/1) |
+BEISSEN (Spieler-HP im selben Besuch): E1 100 -> 40 ab F909, E2 -> -20 ab F474, E3 -> -20 ab F346, E4 -> -20 ab F97, E5 -> 40
+ab F245, E6 -> -20 ab F114, E7 -> -20 ab F103, E8 (Elza) -> 60 ab F332 — die Griffe enden im Biss wie in RE2.
 Weg je Bild im Arme-hoch-Gang 25..58 (Typ/Bank), im Gang 20..31 (RE2-Original 44,1 / 32,2).
 Bild (Framedump, exe, Fensterskalierung 1): `L_belege/exe_1130_arme_hoch_F864_F872_F880.png` — Chief-Office-Tuer, Bild 864
 der fette Zombie im Gang (Arme unten), Bild 872/880 im Arme-hoch-Gang (Clip 6 = Loco 4 + walkclip 2) kurz vor dem Griff (F888).
@@ -317,7 +319,7 @@ Neu (re15_port/tests/unit/probes/r37_re2zombie.cmake, Quelle tests/unit/test_r37
 | unit_r37_re2zombie_b | Block 3 je Wurf (32 Lagen): Commit genau bei (rand&1)==1; ein Wurf; Gegenprobe Stand bis Runde 37 umgekehrt | 3/3 |
 | unit_r37_re2zombie_c | Wurf-Takt: +0x6 = 2 bleibt, +0x158 10 -> 9, ein Wurf; P2 im naechsten Takt; Wecker schlaegt den Wurf; Gegenproben | 6/6 |
 | unit_r37_re2zombie_d12 | DECISION[12]: Griff aus dem Stoss bei 0x513 / Bild 5; Gegenproben 0x514 / Bild 11 / hinten / Phase 1 / Stand bis Runde 37 | 6/6 |
-| unit_r37_re2zombie_nahkampf | Messer-Sweep: > 250 und >= 95 % vom Stand bis Runde 37 (369 gegen 368) | 2/2 |
+| unit_r37_re2zombie_nahkampf | Messer-Sweep: > 250 und >= 95 % vom Stand bis Runde 37 (373 gegen 368) | 2/2 |
 | unit_r37_re2zombie_raum1130 | Nutzer-Beispiel: Wechsel vor Leon (+0x1F0 1993), Griff aus 0x201; Gegenprobe Maske 0 keiner | 4/4 |
 | unit_r37_re2zombie_raum1180 | Normalspiel: dasselbe (2 Wechsel, 2 Griffe) | 4/4 |
 | integration_r37_re2zombie | echte exe, Karte 1150 + CONTINUE + Tuer -> 1130, Leon steht 1100 Bilder: Wechsel bei +0x1F0 1991 < 0x7D0, Griff aus 0x201 | gruen (52 s) |
@@ -326,3 +328,32 @@ integration_r34_granaten (Fenster 220 -> 360), integration_r35_granate (EXIT_AT 
 Zeile 9 waehlt per Wurf Bersten oder Zerreissen (`beq s0,zero` @0x80108d10, 1 von 4 Zerreissen); im Strom nach Spur L zerreisst
 Gegner 3 (Leiche ab Bild 258 = X+139: P1 Clip 4, P5/P6 (rand&0x1f)+15 @0x80109214-1C, P3 Clip 1), vorher bersten beide (165).
 Gemessen mit 360: "Gegner 2 Leiche ab Bild 165, Gegner 3 Leiche ab Bild 258" — kein Haenger.
+
+## OFFEN
+
+* **Navigator-Tasche ROOM1030 (vorbestehend, nicht durch L):** Zombie Slot 1 (Typ 0x16, grid 0x0D) steht im "hin"-Zensus
+  (Leon geht von der Tuer aus 1050 auf ihn zu und bleibt an der Tresen-/Wandzelle haengen) an der Wand (-6230,-24838); das
+  Steuerziel des Navigators (-4984,-23860) liegt IN der soliden Zelle (Raster `test_r36_zombieki_eintritt raster 1030 1 125`:
+  solide z -24734..-22484, x -8117..-3600). Basis-Build: 870 Bilder Stillstand an derselben Stelle. Der Navigator
+  (re15_nav_update_steer = FUN_80039e7c-Zwilling, nav_zone_common.c) ist nicht Teil der Spur L; Vorschlag fuer eine eigene Spur:
+  Zonen-/Verbindungspunkt von ROOM1030 gegen das Original pruefen (RE1.5 STAGE1/ROOM1030.RDT BLK-Daten, FUN_80039e7c).
+* Kriecher mit +0x5 > 2 nach dem Griff-Wurf `sw 0x501` @0x80102D24-2C (im Original unerreichbar, Vorbedingung nicht gefunden) —
+  betrifft nicht die Annaeherung/den Griff (Zensus).
+* EXEC[11] gerade Takte `+0x144 >> 2` @0x801044D0-E0 (Ausrollen beim Zusammenbruch) — keine Aktivitaet (Zensus).
+* Der Nahkampf-Zusammenbruch ist aufgeklaert (M1), nichts offen.
+
+## Fuer den Nutzer
+
+* **Was jetzt anders ist (RE2-KI, Standard; Leon und Elza; jeder Raum):** wie in RE2 heben gehende Zombies die Arme und kommen
+  schneller auf Leon zu, sobald er knapp vor ihnen steht (unter ~2 m im Blickfeld), gelegentlich auch schon auf ~5 m (Zufall
+  1 zu 4 alle 3-4 Sekunden), und wenn Leon an ihnen VORBEIRENNT (unter ~2,5 m, im weiten Blickfeld). Aus diesem Gang greifen sie
+  zu. Im RE2-Original nachgemessen (Leon steht im Gang ROOM20A0): Arme hoch bei 2,0 m bzw. 3,6 m, Griff bei 1,2 m.
+* Ein Zombie, der aus dem Stand oder im Gang nach Leon schnappt (Ausfall), kann ihn jetzt dabei auch packen — wie in RE2.
+* Stehende Zombies: zwei kleine Korrekturen (welcher Zufallswurf den Ausfall ausloest, und dass ein Zombie, der gerade zu
+  wandern beginnt, im selben Moment noch aufwachen kann) — kaum sichtbar.
+* Nahkampf/Messer: unveraendert wirksam (gemessen 368 -> 373 Treffer im Messer-Sweep). Der alte Grund, warum diese RE2-Regeln
+  seit August aus waren ("Messer trifft nicht mehr"), war ein Fehler im Messaufbau, nicht im Spiel.
+* Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids. Neue Datei nur
+  `re15_port/include/re15_re2zombie_r37.h` (Header, keine neue .c — Android-GLOB unberuehrt); +9 Unit-Tests, +1 Integration
+  (RE15_MIN_TESTS +10).
+* Entscheidungsfrage: keine.
