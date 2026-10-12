@@ -15,6 +15,7 @@ committen, nur eigene Pfade adden.
 | D | itemband / r37_itemband | #8 Items auf erhoehten Flaechen nur vom richtigen Band aufnehmbar (Band-Gate + Member 0x12), alle betroffenen Items bleiben auf dem vorgesehenen Weg erreichbar |
 | E | codepanel / r37_codepanel | #9 Code-Panels: blaues Licht unten solange der Code falsch ist, gruenes bei richtigem Code; Kamera bleibt waehrend Piep + Aufschliessen auf dem Panel |
 | F | sperre1050 / r37_sperre1050 | #10 "Chief first"-Sperre zusaetzlich an der Tuer ROOM1050 -> 10A0 (Ada-Szenen-Tuer), #5 ROOM50B1 Elza-Text ohne Ada-Bezug |
+| G | beretta / r37_beretta | Nachtrag: Beretta M93R — jeder Schuss des 3-Schuss-Feuerstosses trifft (Glock 18 mit demselben Burst-Handler pruefen) |
 
 Nicht gebaut (Nutzer): Blutlache an Roys Platz (R2), Prison-Key-Hinweis fuer Elza, V6 (Montage-Folgen bei Elza) — ohne
 Zustimmung nichts davon anfassen. Die Werkstatt-Tuer 11B0 bleibt wie in v0.8.24.
@@ -42,7 +43,8 @@ engine/src). AOT-Slots nur umwidmen, wie re15_tuer1060.h/re15_adaruf.h es tun (n
 ### 1.4 Gemeinsame Dateien (nur kleine Haken, 1-5 Zeilen, Kommentar "Runde 37 Spur X")
 scd_room_setup.c (Installer-Zeile am ENDE des Blocks), scd_vm.c (Message_on-/Ereignis-Haken), platform/pc/main.c,
 aot_common.c + actor_common.c + re15_collision.c (D), door_scene_pc.c / door_seq_*.c / gen/re15_tuer_eigen.inc /
-gen/tuer_zuordnung.inc (C), audio_pc.c + panel_lampen_pc.c (E), render_pc.c + shared_assets/PSX/MASKS/ROOM1100.* (A).
+gen/tuer_zuordnung.inc (C), audio_pc.c + panel_lampen_pc.c (E), render_pc.c + shared_assets/PSX/MASKS/ROOM1100.* (A), Schuss-/Waffen-Code
+(player_common.c, schuss_r36.c, Treffer-Resolver) (G).
 Neue Logik in NEUEN Dateien engine/src/<thema>_r37.c + include/re15_<thema>_r37.h.
 
 ### 1.5 Tests

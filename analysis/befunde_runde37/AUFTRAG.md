@@ -39,3 +39,12 @@
 Nicht beantwortete Fragen aus v0.8.24 ("Zu entscheiden": Tuerknall 106/205, Groesse Parking Lot Key, Tischmasken 10F0,
 Lageplaene 1140/Groesse/1030, Treppenhaus-Blaettern, weitere Tueren, ROOM4000-Tonfolge, Story-Vorschlag V6 Montage-Folgen
 bei Elza, Karte 1090/1190, Untertitel main16.5) bleiben wie gebaut; V6 wird nicht gebaut, solange der Nutzer nicht zustimmt.
+
+## Nachtrag 2026-10-12 (waehrend des Aufbaus der Runde, woertlich)
+
+> Weitere findings - bei der Beretta M93R muss - wenn sie schon mehrfach schießt, das auch gelten das die Gegner mehrfach getroffen werden. Werden sie nur ein einziges mal getroffen bei 3 Schuss, ist es nur Schussverschwendung.
+
+Lesart: Der 3-Schuss-Feuerstoss der Beretta M93R (Waffe 5; Glock 18 = Waffe 6 hat denselben Burst-Handler 0x800338A8)
+verbraucht 3 Schuss, trifft den Gegner aber nur einmal. Jeder Schuss des Feuerstosses soll treffen (Schaden + Treffer-
+reaktion/Blut je Schuss). Zuerst messen, dann am Original belegen, ob RE1.5 je Schuss trifft (dann Port = Original
+nachziehen) oder nur einmal (dann NUTZER-VORGABE). -> Spur G beretta.
