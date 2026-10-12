@@ -110,3 +110,15 @@ Lesart -> Spur I feuerloescher:
 4. Leons Feuerloescher liegt heute im Spind von ROOM1000 (Bath-Lockers; sub00 @0x00C24 Item 0x31, Taken (9,0x86); sub01
    @0x00D0C Set(3,0x85)) — an einen anderen, passenden Ort verlegen (sichtbar mit dem neuen Modell; Ort begruendet waehlen,
    der Nutzer kann ihn danach verschieben).
+
+## Nachtrag 4b — 2026-10-12 (woertlich, Praezisierung zu Nachtrag 4, vom Koordinator uebermittelt)
+
+> ah, it can only lay there - if leon when he is asked to discard it select "yes".
+
+Lesart (Koordinator) fuer Punkt 3 (Leon ROOM1090): Der leere Loescher liegt dort NUR, wenn Leon an der Wegwerf-Abfrage
+nach dem Loeschen mit JA antwortet (Port-Wegwerf-Abfrage, engine/src/gen/discard_sites.inc Zeile
+`{ 0x1090, 9, 0x31, 0, 0 }` = nach msg 9 "You've used the Fire Extinguisher.", engine/src/item_discard_common.c).
+Antwortet er NEIN, bleibt der Loescher im Inventar und es liegt nichts am Boden (auch nicht nach Wiederbetreten). Das
+Erscheinen haengt am Ja der Abfrage (dauerhaft: am Ergebnis, das der Wegwerf-Weg ohnehin speichert, sonst ein Bit laut
+VERTRAG.md 1.1 — Bank 9 Bit 96/97, im Riegel test_r36_kartenbits.c k_port[] eintragen). Elza ROOM1091: unveraendert,
+liegt immer. Riegel: Ja -> Prop da (auch nach Raumwechsel/Spielstand), Nein -> kein Prop, Loescher bleibt im Inventar.
