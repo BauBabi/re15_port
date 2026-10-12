@@ -281,7 +281,23 @@ Neu (`re15_port/tests/unit/probes/r37_codepanel.cmake`):
 | `unit_r37_codepanel_zeichner` | echter PC-Zeichner auf dem echten Hintergrund: leuchtende Lampe in der Farbe des gemalten Glases dominant (>= 30), Farbton <= 20 Grad vom gemalten Glas, heller (>= +100), andere Lampe bitgleich, ausserhalb des Panel-Cuts nichts |
 | `integration_r37_codepanel` | echte exe: B 10D0 echter Weg (Kartenleser + Ja + 4312 per D-Pad), C 1230 SECUGUARD, D 10D0 falscher Code — Logzeilen, Piep/Aufschliessen-Bilder gegen cut.log (Panel-Cut am Aufschliess-Bild, Kamera danach), Framedumps (rot/blau/gruen dominant am gemalten Glas) |
 
-Gezielte Laeufe: siehe 5.1 (Ergebnis wird nach dem Lauf eingetragen).
+### 5.1 Gezielte Laeufe (KEINE volle Suite)
+
+Regex = eigene Tests + Testgruppen der beruehrten Module/Raeume (SCD-VM-Haken: SCD/AOT/Nachrichten/Kamera; Raeume
+10D0/1230/11E0; Aufschliess-Toene Runde 36; Wegwerf-Abfrage; Panel/Generator-Lampen; PC-Hauptschleife: Entladen,
+headless, Tueren):
+```
+ctest --test-dir "<baum>/re15_port/build" -R "r37_codepanel|r36_tueren|r21_discard|unit_cut_old_displayed|unit_cam_selfheal|unit_zombie_10d0|unit_msg_dialog|unit_action_msg_gate|unit_scd_key_ck|unit_aot_|unit_scd_aot_opcodes|r34n_c_generator|r31_generator|r26_panel_11f0|r27_panel_schalterwerte|r34n_f_leiche|r35_entladen|integration_keydoor|integration_door_lock|r35_karte_r1230|unit_camera_view|integration_headless_run|unit_espr_11e0|unit_zombie_se_ab_10d0|r19_marke1_10d0" --timeout 600 --output-on-failure -j 3
+```
+Ergebnis (Stand aee83230 + Dossier, Protokoll `re15_port/build/r37_codepanel/ctest_gezielt.log`):
+```
+100% tests passed, 0 tests failed out of 62
+```
+Nach dem letzten Quell-Commit (Kopf-Kommentar in `re15_codepanel_r37.h`) neu gebaut und `-R "r37_codepanel"`:
+```
+100% tests passed, 0 tests failed out of 5
+```
+Bank-9-Bits / Nachrichten-Ids / Ereignisse: keine belegt.
 
 ---
 

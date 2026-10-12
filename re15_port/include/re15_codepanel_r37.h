@@ -47,8 +47,8 @@
  *   2 GRUEN (Unterindex>>3, Spawner @0x8001c9e0..0x8001c9fc). Zellen/Anim-Saetze aus ROOM2130 effect.esp (Saetze
  *   @0x10.., Zellen @0x70..; == ROOM2110 effect.esp @0xC04.. / @0xC64..): rund = Strom 4, Saetze 7..11 (Zelle 5 S 0x18,
  *   7, 6, 7, Schleife); Quadrat = Strom 2, Saetze 4..6 (Zelle 3, 4, Schleife).
- * Farbton gemessen (Dossier §3, HSV ueber das gemalte Glas): 10D0 rot gemalt 14 Grad -> leuchtend 1 Grad, 10D0 blau
- *   212 -> 220, SECUGUARD rot 2 -> 1, gruen 121 -> 120; RE2-Zeilen 0/1/2 = 356..0 / 225..231 / 120 Grad.
+ * Farbton gemessen (Dossier §4.2, HSV des Mittels ueber das gemalte Glas, Riegel unit_r37_codepanel_zeichner): 10D0 rot
+ *   gemalt 14 Grad -> leuchtend 358..2, 10D0 blau 213 -> 212..221, SECUGUARD rot 3 -> 357..1, gruen 121 -> 120.
  * Form folgt der gemalten Lampe: 10D0 rund (RE2 4070), SECUGUARD eckig 14 x 18 -> Quadrat-Zelle (Strom 2, RE2 2130
  *   Schalterlampe @0x01294 `64 01 16 02`, dort ROT; die gruene Quadrat-Lampe zeigt RE2 nicht -> Kombination wie die
  *   Generator-Lampe, re15_panel_zeiger.h).
