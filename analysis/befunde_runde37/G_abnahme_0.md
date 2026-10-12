@@ -10,7 +10,7 @@ re15_beretta_r37.h 15:59, game_step_common.c 15:28, re15_damage.c 15:28; Baum sa
 ## Ergebnis: NICHT BESTANDEN
 | Pruefung | Urteil |
 |---|---|
-| Punkt 1 (Beretta M93R: jeder Schuss des Feuerstosses trifft) | **teilweise** — Zombies (Leon/Elza, beide KI-Modi), Hund/Spinne und alle Typen unter RE1.5-KI: drei Treffer E/E+3/E+6. Unter der STANDARD-KI (RE2) treffen die Gegner mit RE1.5-Gehirn weiter nur EINMAL (an der exe gemessen 0x2b ROOM5040 und Kakerlake 0x29 ROOM3040; Gorilla 0x27, Birkin 0x30, Alligator 0x23 gleiche Code-Lage, Sonde 1f); dort schadet der Stoss jetzt sogar weniger als vorher (gemessen 0x2b 20 -> 10, 0x29 25 -> 14) |
+| Punkt 1 (Beretta M93R: jeder Schuss des Feuerstosses trifft) | **teilweise** — Zombies (Leon/Elza, beide KI-Modi), Spinne/Hund (RE2-Pause 0) und alle Typen unter RE1.5-KI: drei Treffer E/E+3/E+6. Unter der STANDARD-KI (RE2) treffen die Gegner mit RE1.5-Gehirn weiter nur EINMAL (an der exe gemessen 0x2b ROOM5040 und Kakerlake 0x29 ROOM3040; Gorilla 0x27, Birkin 0x30, Alligator 0x23 gleiche Code-Lage, Sonde 1f); dort schadet der Stoss jetzt sogar weniger als vorher (gemessen 0x2b 20 -> 10, 0x29 25 -> 14) |
 | RE-Gate (Konstanten mit @0x, 7 Stellen selbst disassembliert) | haelt |
 | Vertrag (Pfade, Ressourcen, Haken, Tests nur ueber probes/) | haelt (Testluecke s. M3) |
 | Gezielte Tests (eigener Lauf) | 47/47 Unit (Regex des Bau-Agenten ohne integration_*), 43/43 Gegner-Typ-Tests, 5/5 exe-Integration (inkl. integration_r37_beretta) — alle gruen, keiner deckt M1/M2 ab |
@@ -124,12 +124,13 @@ Sonde dieselbe Code-Lage wie fuer die an der exe gemessenen 0x29/0x2b (kein Filt
 Umfang der betroffenen Klasse (eigener Zensus der Sce_em_set-Saetze 0x44, Typ auf +2, RE1.5-Satz 20 B, LE-Lage +8..+13,
 ueber alle `shared_assets/PSX/STAGE*/ROOM*.RDT`): Gorilla 0x27 in 11C0/1141 (8 Saetze), Kakerlake 0x29 in 15 Raeumen
 (3040/3041/4000/4040/4041/4080/4081/5000/5001/5031/50A0/50A1/50B0/5100/5101, 32 Saetze), Typ 0x2b in 9 Raeumen
-(4001/5040/5041/5070/5071/5110/5111/5130/5131, 28 Saetze), Birkin 0x30 in 8 Raeumen (3070/3071/5080/5081/5090/5091/
-50E0/50F1, 12 Saetze). Das ist ein grosser Teil der Gegner der Stages 3-5 — dort bleibt der Feuerstoss im
+(4001/5040/5041/5070/5071/5110/5111/5130/5131, 28 Saetze), Birkin 0x30 in 6 Raeumen (3070/3071/5080/5081/50E0/50F1; die Saetze in 5090/5091 werden zum
+G5-Modul 0x36 umgetypt, scd_vm.c op_sce_em_set — eigenes RE2-Modul, hier nicht geprueft). Das ist ein grosser Teil der Gegner der Stages 3-5 — dort bleibt der Feuerstoss im
 Standard-Modus "Schussverschwendung".
 
 ### 1g. Urteil Punkt 1: **teilweise**
-Erfuellt fuer Zombies (Leon und Elza, beide KI-Modi), Hund/Spinne (RE2-Pause 0) und alle Typen unter RE1.5-KI;
+Erfuellt fuer Zombies (Leon und Elza, beide KI-Modi, an der exe gemessen), Spinne (RE2-Pause 0, Sonde 3 Treffer),
+Hund (RE2-Pause 0, nur Code gelesen) und alle Typen unter RE1.5-KI (exe 0x2b/0x29, Sonde alle);
 die Kraehe stirbt an Kugel 1. NICHT erfuellt fuer die Gegner mit RE1.5-Gehirn unter der STANDARD-KI (RE2-Flavor):
 gemessen 0x2b (ROOM5040) und 0x29 (ROOM3040) je Stoss 1 Treffer bei 3 Patronen — und durch die Schadensspalte 3
 schadet der Stoss dort weniger als vor der Spur (0x2b 20 -> 10, 0x29 25 -> 14, Basis-exe gegen Spur-exe gemessen).
