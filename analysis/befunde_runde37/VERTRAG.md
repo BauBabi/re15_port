@@ -20,6 +20,7 @@ committen, nur eigene Pfade adden.
 | I | feuerloescher / r37_feuerloescher | Nachtrag 4: Feuerloescher-Modell bauen; leer am Boden bei Elza (1091) und bei Leon nach dem Loeschen (1090); Leons Loescher aus dem Spind 1000 an einen besseren Ort |
 | J | bissarm / r37_bissarm | Nachtrag 6: beim Zombie-Biss fehlt teilweise der dranhaengende Arm (am Spieler haengender Zombie-Arm bzw. baumelnder angeschossener Arm) — wie RE2 |
 | K | roy / r37_roy | Nachtrag 7: Roy in Elzas Szenario — Modell + alle Animationen wie im Original, keine Dauerschleife |
+| L | re2zombie / r37_re2zombie | Orchestrator-Auftrag L (zu Nachtrag 2 + Ergaenzung): die drei vorbestehenden Abweichungen der RE2-Zombie-KI schliessen (0x201-Produzenten @0x80101D68/EC4/F14, DECISION[0] @0x801013c8, EXEC[0] P1 @0x80101540-a0), Nahkampf-Zusammenbruch aufklaeren; Basis = Stand der Spur H 9c2a825d |
 
 Nicht gebaut (Nutzer): Blutlache an Roys Platz (R2), Prison-Key-Hinweis fuer Elza, V6 (Montage-Folgen bei Elza) — ohne
 Zustimmung nichts davon anfassen. Die Werkstatt-Tuer 11B0 bleibt wie in v0.8.24.
@@ -52,6 +53,7 @@ aot_common.c + actor_common.c + re15_collision.c (D), door_scene_pc.c / door_seq
 gen/tuer_zuordnung.inc (C), audio_pc.c + panel_lampen_pc.c (E), render_pc.c + shared_assets/PSX/MASKS/ROOM1100.* (A), Schuss-/Waffen-Code
 (player_common.c, schuss_r36.c, Treffer-Resolver) (G), enemy_ai_re2_zombie.c / enemy_ai_common.c / irons_tod_1150.c (H).
 Neue Logik in NEUEN Dateien engine/src/<thema>_r37.c + include/re15_<thema>_r37.h.
+Ausnahme Spur L: die Reparatur IST die RE2-Zombie-KI — L aendert enemy_ai_re2_zombie.c (DECISION[0], EXEC[0], EXEC[1], EXEC[2]) direkt an Ort und Stelle (Kommentar "Runde 37 Spur L" + @0x je Zeile). Die Griff-/Biss-Teile (Spur J) und re2z_init (Haken der Spur H) nur lesen. Jeder Riegel, der am gemeinsamen RE2-Zufallsstrom haengt und sich durch L verschiebt, steht mit altem/neuem Wert und Begruendung im Dossier (die Integration braucht die Liste).
 
 ### 1.5 Tests
 Neue Tests nur ueber `re15_port/tests/unit/probes/r37_<thema>.cmake` (GLOB). Portabel fuer den Linux-Release-Bau:

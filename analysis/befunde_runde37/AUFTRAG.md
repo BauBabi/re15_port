@@ -162,3 +162,19 @@ behaupten, Elza und Ada koennten sich nicht begegnen; dass Elza den NAMEN Ada ke
 Beim Sweep "sagt/liest Elza 'Ada'" nur dort aendern, wo Elza Ada am Aussehen erkennen muesste. Der Bau der Spur F traegt
 genau diesen Wortlaut ("It's a woman. She's dead." / "It looks like one of those" / "gorillas killed her.", F-Baum 6bf10b9b);
 die Abnahme prueft ihn gegen diesen Nachtrag, die Begruendung in Code/Dossier soll den Grund des Nutzers tragen.
+
+## Orchestrator-Auftrag L — 2026-10-12 (zu Nachtrag 2 + Ergaenzung, "schaue einfach nach wie Resident Evil 2 das macht")
+
+Grund: Die Abnahme H#0 (H_abnahme_0.md, Hinweis H1) und das Dossier der Spur H (H_zombieaktiv.md "OFFEN") belegen drei
+VORBESTEHENDE Abweichungen der RE2-Zombie-KI des Ports vom RE2-Original (EMZ0.BIN). Der Nutzer verlangt das RE2-Verhalten
+GENERELL fuer alle Zombies; diese Abweichungen gehoeren dazu und werden in dieser Runde geschlossen (Spur L re2zombie, Basis =
+abgenommener Stand der Spur H 9c2a825d):
+1. Die drei Produzenten des Arme-hoch-Gangs `+0x4 = 0x201` (EXEC[2]) im Gang-Executor sind seit 2026-08 abgeschaltet:
+   (1) Timer @0x80101D68-DBC, (2) Nahbereich @0x80101EC4-F10, (3) Spieler rennt @0x80101F14-F60. Mit (1)+(2) fiel die
+   Positiv-Kontrolle Nahkampf in test_re2_zombie_abc von 3523 auf 0 (Mechanismus nie aufgeklaert). -> aufklaeren und
+   byte-true scharf schalten; in RE2 heben die Zombies dabei die Arme und kommen auf Leon zu.
+2. DECISION[0] Block 3: Original committet bei (rand & 1) == 1 (`beq v0,zero,0x801013d4` @0x801013c8), der Port bei == 0.
+3. EXEC[0] P1: nach dem Wander-Wurf (`sb v0,6(s0)` @0x80101540) laeuft im Original im selben Takt der Selbstwecker
+   @0x80101544-a0 und P2 erst im naechsten Takt (`j 0x801016ac` @0x8010159c); der Port springt im selben Takt nach P2/P3.
+Dazu ein Zensus der uebrigen OFFEN-Marken der RE2-Zombie-KI, die Bewegung/Angriff betreffen (je Marke: Adresse, wirkt auf die
+Aktivitaet ja/nein); was die Aktivitaet betrifft, mitschliessen oder mit Adresse begruenden, warum nicht.
