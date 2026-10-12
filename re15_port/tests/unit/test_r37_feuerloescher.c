@@ -360,10 +360,12 @@ static void teil_raum(void)
     CHECK(p >= 0 && g_scd.props[p].active && g_scd.props[p].x == 2500 && g_scd.props[p].y == -1800 &&
           g_scd.props[p].z == -1300 && g_scd.props[p].rot_y == 3250,
           "R 1090 Feuer aus (3,0x81), Loescher abgelegt: Prop liegt (2500,-1800,-1300) rot_y 3250");
-    a = &g_aot.slots[5];
+    a = &g_aot.slots[6];
     CHECK(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == 29 && a->band == 1 && a->sce_flags == 0x31 &&
           a->pause_mask16 == 0xFFFF && re15_msg_get_text(29) && strcmp(re15_msg_get_text(29), "It's an empty fire extinguisher.") == 0,
-          "R 1090: Slot 5 Untersuchen msg 29, Band 1, sat 0x31, Pause 0xFFFF");
+          "R 1090: Slot 6 Untersuchen msg 29, Band 1, sat 0x31, Pause 0xFFFF");
+    CHECK(!(g_aot.slots[5].active && g_aot.slots[5].type == RE15_AOT_TYPE_MESSAGE),
+          "R 1090: Slot 5 bleibt frei (Runde 36 unit_r36_story_schuppen: kein Text-Platz bei Leon)");
     CHECK(!g_aot.slots[2].active || g_aot.slots[2].type == RE15_AOT_TYPE_EXAMINE_WORKVAR || g_aot.slots[2].event_id != 7,
           "R 1090 Feuer aus: kein Feuer-Text mehr in Slot 2 (Original)");
 
@@ -493,8 +495,8 @@ static void teil_loeschen(void)
     CHECK(menge(RE15_FL37_ITEM) == 0 && p >= 0 && g_scd.props[p].active && g_scd.props[p].x == 2500 &&
           g_scd.props[p].z == -1300,
           "L Ja: Loescher aus dem Inventar UND liegt sofort am Boden (2500,-1800,-1300)");
-    CHECK(g_aot.slots[5].active && g_aot.slots[5].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[5].event_id == 29,
-          "L Ja: Untersuchen-Platz Slot 5 msg 29 angelegt");
+    CHECK(g_aot.slots[6].active && g_aot.slots[6].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[6].event_id == 29,
+          "L Ja: Untersuchen-Platz Slot 6 msg 29 angelegt");
     CHECK(re15_game_flag_get(3, 0x81) && !re15_game_flag_get(3, 0x84),
           "L Ja: (3,0x81) bleibt, (3,0x84) von sub03 @0x024CE geloescht (Einmal-Zeichen)");
     /* Wiederbetreten (Tuer ROOM1050 -> 1090, Spawn @0x00B7A (-10100,-1800,4200)) */

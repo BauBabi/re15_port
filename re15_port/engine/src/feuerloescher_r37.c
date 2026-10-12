@@ -40,12 +40,13 @@
  *   (Cut_chg F985 im Lauf), Cut 6 = Wagentuer ("There! Are you okay?"). rot_y 3250 = diagonal zu den
  *   Blickachsen von Cut 5 (Lot 3760) und Cut 6 (Lot 2733). Untersuchen-Platz 1000 x 1000 um das Prop;
  *   ROOM1091 Slot 3 (< Slot 5 = Schuppen-Text der Runde 36, Vorrang des kleinsten Slots FUN_80042bac;
- *   der Messpunkt der Runde 36 (620,250) liegt NICHT darin), ROOM1090 Slot 5 (nach dem Loeschen legt
- *   sub00 keinen Slot 2/3-Satz an). */
+ *   der Messpunkt der Runde 36 (620,250) liegt NICHT darin), ROOM1090 Slot 6 (nach dem Loeschen legt
+ *   sub00 keinen Slot 2/3-Satz an; Slot 5 bleibt wie in Runde 36 frei — Riegel unit_r36_story_schuppen
+ *   prueft dort "kein Text-Platz" fuer Leon). */
 static const re15_fl37_lage_t k_lagen[] = {
     /* raum    art                tor                        slot zone band   x      y       z    rot_y  rect_x rect_z  w     d   */
     { 0x1050, RE15_FL37_STEHEND, RE15_FL37_NICHT_GENOMMEN,   13,  1,   0, 17200, -1150, -23775,    0, 16700, -23900, 1000, 1000 },
-    { 0x1090, RE15_FL37_LIEGEND, RE15_FL37_FEUER_AUS,         5,  0,   1,  2500, -1800,  -1300, 3250,  2000,  -1800, 1000, 1000 },
+    { 0x1090, RE15_FL37_LIEGEND, RE15_FL37_FEUER_AUS,         6,  0,   1,  2500, -1800,  -1300, 3250,  2000,  -1800, 1000, 1000 },
     { 0x1091, RE15_FL37_LIEGEND, RE15_FL37_IMMER,             3,  0,   1,  2500, -1800,  -1300, 3250,  2000,  -1800, 1000, 1000 },
 };
 #define N_LAGEN ((int)(sizeof k_lagen / sizeof k_lagen[0]))

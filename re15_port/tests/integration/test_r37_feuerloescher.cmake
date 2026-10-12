@@ -117,7 +117,7 @@ pruef(A _a "id=8 \"Will you use the Fire Extinguisher?\"")
 pruef(A _a "[feuerloescher] ROOM1090: kein Loescher (Leon traegt ihn noch (Item 0x31 im Inventar))")
 pruef(A _a "id=9 \"You've used the Fire Extinguisher.\"")
 pruef(A _a "[feuerloescher] Loescher weggeworfen -> liegt in ROOM1090")
-pruef(A _a "[feuerloescher] ROOM1090: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300) rot_y 3250, Zone Slot 5")
+pruef(A _a "[feuerloescher] ROOM1090: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300) rot_y 3250, Zone Slot 6")
 pruef(A _a "oid=0x05 pos=(2500,-1800,-1300) rot=(0,3250,0)")
 
 # --- B: Tuer-Weg 1050 -> 1090 mit abgelegtem Loescher ----------------------------------------------

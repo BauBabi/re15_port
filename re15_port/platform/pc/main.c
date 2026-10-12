@@ -4928,6 +4928,7 @@ re_title:;
     /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — VOR den Dokumenten, damit das Dokument-Prop
      * wie bisher als LETZTES angehaengt wird (Riegel unit_r34n_e_dokumente "hinten angehaengt"). */
     re15_inhalt_r35_install((uint16_t)g_current_room_id);
+    re15_feuerloescher_r37_install((uint16_t)g_current_room_id); /* Runde 37 Spur I: Feuerloescher, derselbe Grund; VOR den Dokumenten wie r35 */
     re15_dokumente_install((uint16_t)g_current_room_id);
     if (re15_dokumente_obj_id((uint16_t)g_current_room_id) >= 0)
         for (int k = 0; k < (int)g_scd.prop_count; k++)
@@ -4952,7 +4953,6 @@ re_title:;
     /* Runde 36 Spur H: Scheiben-Texte ROOM1190/1191 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter). */
     { extern void re15_ziel1190_install(uint16_t); re15_ziel1190_install((uint16_t)g_current_room_id); }
     re15_kartenitems_r36_install((uint16_t)g_current_room_id);   /* Runde 36 Spur N: Lageplan-Karte, derselbe Grund */
-    re15_feuerloescher_r37_install((uint16_t)g_current_room_id); /* Runde 37 Spur I: Feuerloescher, derselbe Grund */
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
