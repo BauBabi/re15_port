@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_o.js"
-BASIS = "07bb463a"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_n.js"
+BASIS = "99b4b13f"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -221,6 +221,28 @@ SPUREN = [
    "Sprech-Abschnitt Gier/Kopf des Sprechers zeigt auf den anderen (Toleranz begruenden), groesste Einzeldrehung je Figur unter 90 Grad bzw. "
    "begruendet, keine Drehung um ~180 Grad; integration_r35_cut1150 und integration_r36_szene1150 (Dialog-11C0-Riegel unit_r36_szene1150_dialog11c0) "
    "gruen halten bzw. mit Beleg anpassen. Bildbeweis: Vorher/Nachher-Streifen im Dossier.")),
+
+ dict(id="N", thema="elzaems", baum="r37_elzaems", basis="99b4b13f",
+  punkte=["Bei Elzas Szenario stimmt weder das Modell von Roy noch all seine Animationen. Außerdem wiederholen sich seine Animationen wieder ständig, wie wir schon ungefähr 500x vorher bei Leon gefixed haben..... (Nachtrag 7 — fuer Roy durch Spur K erledigt; Spur N schliesst dieselbe Fehlerklasse fuer ALLE uebrigen Typen)",
+          "Orchestrator-Auftrag N (AUFTRAG.md): in Elzas Szenario laedt der Port jeden Gegner-/NPC-Typ wie das Original aus CDEMD1.EMS (FUN_80022300: Elza-Bit bltz @0x80022334 -> Datei 0x27 @0x800223ac, TOC @0x80073178), nicht aus Leons CDEMD0-Daten; sichtbar u.a. 0x30 Birkin (anderes Modell in ROOM3071/5081/5091/50F1) und 0x42 (anderes Modell in ROOM11B1 @0x01058, ROOM3091 @0x014F4); Aktions-/Opfer-Banken der Zombies 0x10-0x18, Kraehe, 0x27, 0x29, 0x2b. Leon bleibt bytegleich."],
+  hinweise=("BASIS: dein Baum steht auf 99b4b13f = abgenommener Stand der Spur K (238bb610) + AUFTRAG/VERTRAG vom master-Stand. Lies in deinem Baum "
+   "analysis/befunde_runde37/K_roy.md (v.a. §6.1 OFFEN 1, Zensus der Typ-Unterschiede, K_belege/emstab.py, emsdiff.py, k6_*) und K_abnahme_0.md, "
+   "dazu J_bissarm.md (OFFEN 2: RE1.5-Flavor mit Elza, Hand 229..284 statt 20..65 ueber der Schulter mit der Leon-Bank). CODE der Spur K: "
+   "engine/src/roy_r37.c + include/re15_roy_r37.h (Weiche nach dem Elza-Bit), engine/src/gen/ems_toc_r37.inc (BEIDE TOCs), "
+   "platform/pc/src/roy_pc.c (Lader aus CDEMD1), Haken platform/pc/main.c pc_enemy_read_re15_emd (~Z.851), enemy_common.c, anim_select_common.c, "
+   "enemy_ai_common.c. SCHRITT 1 ZENSUS: je Typ (alle Typen beider TOCs) Byte-Vergleich CDEMD0 gegen CDEMD1 je dir-Eintrag (Mesh, EDD/EMR-Banken, "
+   "TIM): was unterscheidet sich, wo kommt der Typ in Elzas Raeumen vor (alle Elza-RDTs, Sce_em_set/Typ-Zensus), welche Port-Pfade lesen welchen "
+   "dir-Eintrag (RE1.5-KI-Flavor, RE2-KI-Hybrid re2_hybrid_apply, NPC-Bibliothek, Opfer-Banken des Spielers). SCHRITT 2 ORIGINAL: am Original "
+   "messen, was es fuer Elza laedt (DuckStation-Spielstaende mit Elza wie K — Elza-Bit, Banken im RAM gegen CDEMD1; sauber = nicht "
+   "PATCHED-EXE_*), mindestens fuer 0x30 Birkin und 0x42 und einen Zombie-Typ; RE-Belege fuer den Lader (FUN_80022300 ganz lesen: gilt die Weiche "
+   "fuer JEDEN Typ? Sonderfaelle?). SCHRITT 3 BAUEN: die K-Weiche auf alle Typen verallgemeinern (ein Lade-Weg: Elza -> CDEMD1-Blob des Typs, "
+   "Leon -> wie bisher), Speicher/Entladen (Runde 35 Spur I entladen_pc.c) beachten; Roy (K) und Elliot (Leon 1170) bytegleich halten. "
+   "Beruehrt H (Zombie-Spawn), J (Griff-Arm: Opfer-Bezug Elza in bissarm_r37.c rechnet heute mit Leons Bank + Schulter-Differenz — mit der "
+   "CDEMD1-Opfer-Bank pruefen, ob das bleibt oder wegfaellt; im RE2-KI-Standard nur messen) und L (RE2-KI) — deren Code nur lesen, Wechselwirkung "
+   "im Dossier nennen. AN DER EXE (Elza, echte Wege bzw. Spielstand+CONTINUE): Birkin 0x30 in 3071/5081/5091/50F1 (Modell wie das Original), 0x42 in "
+   "11B1/3091, ein Zombie-Griff an Elza mit RE1.5-KI (Hand auf IHRER Schulter, J-Messung 20..65), Kraehen-/0x27-Opfer; Framedumps Original gegen Port. "
+   "RIEGEL ueber probes/r37_elzaems.cmake: je Typ Quelle (CDEMD0/CDEMD1) nach Szenario, Bytegleichheit der geladenen Banken mit dem Original-Blob, "
+   "Leon unveraendert (Gegenprobe), Roy-Riegel der Spur K gruen. Neue Assets: keine (CDEMD1.EMS liegt im Paket).")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
