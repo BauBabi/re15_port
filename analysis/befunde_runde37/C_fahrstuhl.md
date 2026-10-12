@@ -312,3 +312,16 @@ SCD ROOM2030 (`tools/scd_dump_room.py`): ZWEI Hubplattformen (obj 1 und obj 2) =
 * Lift B: obj 2 (-10675, y, 4050), y -5400 (Ebene 3) <-> -16200 (Ebene 9), Platz 6/7 (-10550,2850,1500,1500);
   Fahrt sub04 @0x01F0A + sub05 @0x01FA4, For 0x5A x 2 Bilder = 180 Bilder.
 Keines der Fahrskripte traegt ein Se_on (0x36).
+
+### N1-1 Messung vorher (Stand 06bf9b12, Messkopie `re15_pc_r37c_n1.exe`, Ordner `build/r37_fahrstuhl/n1/`)
+(a) `RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=3080@120 RE15_EXIT_AT=60#4000` (erste Fahrt, (4,96)=0,
+sub02 mit Ada-Szene, Gitterfluegel sub03..08):
+```
+[debug-menu] JUMP -> 308 WAREHOUSE LIFT (ROOM3080) spawn=(-25000,0,-25000) cut=0
+[room] PC loaded room3080.rdt (240472 bytes)
+[aot] DOOR FIRE slot=0 rect=(0,0,hw=0,hh=0) target_cut=1 spawn=(-7600,0,-6760)
+[room] PC loaded room4000.rdt (288632 bytes)          <- KEINE "[tuer] Sequenz"-Zeile (Befund 5a reproduziert)
+```
+(b) `RE15_DEBUG_JUMP=2030@120 RE15_SET_FLAG=3:126 (Generator) RE15_FORCE_EVENT=2@260 (sub02 = Lift A) RE15_SE_DEBUG=1
+RE15_AUDIO_CAP_SYNC=v_2030.raw RE15_EXIT_AT=520`: `[force-event] scd_event_fire(2) at F260` -> `[scd F351] Cut_chg(10)`
+(Fahrt 90 Bilder + 1), im ganzen Lauf KEINE `[se]`-Zeile = kein einziger SE (Befund 5b reproduziert).
