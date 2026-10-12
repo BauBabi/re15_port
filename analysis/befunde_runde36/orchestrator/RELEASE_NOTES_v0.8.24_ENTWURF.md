@@ -170,7 +170,9 @@ sie beim naechsten Betreten wieder auf ihrem Platz (Original und Port, Raumskrip
 ROOM2040 ist ausserdem ueber 2020 -> 2030 -> 2060 erreichbar. Neu dabei, wie im Original: ein ruhendes Objekt wird
 jedes Bild aus einer beruehrten Wand geschoben (Eindringtiefe + 18, FUN_8003b558 @0x8002c0d0 / FUN_8003da78
 @0x8003b79c) - deshalb laesst sich der Tritt in ROOM2060 jetzt schieben (vorher unbeweglich), und die gefallene
-2050-Kiste liegt wie im Original (vorher 593 Einheiten daneben). Leon und Elza bleiben in ROOM2050 nicht mehr an
+2050-Kiste liegt wie im Original (vorher 593 Einheiten daneben). Dasselbe gilt fuer die Cursor der Schalterfelder
+(Generator ROOM11F0 und die anderen Panel-Raetsel): sie bleiben jetzt wie im Original am Rahmen des Feldes stehen,
+statt darueber hinauszufahren (am Original gemessen, 14 Cursor). Leon und Elza bleiben in ROOM2050 nicht mehr an
 einer Kiste auf einer anderen Hoehe haengen (Hoehentest FUN_8002cabc @0x8002cb84-cbc8). Bedienhinweis ROOM2060: den
 Tritt erst von Sueden ganz nach Norden in die Westgasse schieben, dann von Westen in die Kerbe; oben an der Nordkante
 mit Blick nach Norden die Aktionstaste - steht er nicht weit genug im Norden, springt die Figur herunter (wie im
