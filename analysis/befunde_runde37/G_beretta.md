@@ -162,7 +162,7 @@ Ihre FORM kommt aus RE2 Retail (Beta -> Retail), wo der Feuerstoss der Custom Ha
   "ein Resolve = ganzer Stoss"-Schaden; Begruendung im Kommentar).
 * Keine neuen Assets, keine Sprachdateien, kein Flag/Bank-9-Bit.
 
-## 4. Messung nachher (exe, eigener Bau mit 3f17b7db-Code; dieselben Laeufe wie 1.1, `mess_r37g/nachher_*`)
+## 4. Messung nachher (exe, eigener Bau, Code-Stand = Commit 3f17b7db; dieselben Laeufe wie 1.1, `mess_r37g/nachher_*`)
 | Lauf | Munition | Treffer (Bild, dHP) | HP | Blut id=0 (Alter 1) | FX-Kinder |
 |---|---|---|---|---|---|
 | nachher_w5_re2 (Leon, RE2) | 15 -> 12 (F61) | F61 -16, F64 -16, F67 -16 | 250 -> 202 | F61, F64, F67 | F61/F64/F67 |
@@ -198,6 +198,17 @@ je -16). Das ist die RE1.5-Kandidatenregel, keine Luecke: jede Kugel trifft.
   (58 -> 10), Browning F61 -16, Munition 15 -> 12 / 14. Am Stand f1e019ca liefert derselbe Aufbau EINEN Abzug (1.1) — der
   Riegel waere dort rot.
 * Angepasst: `unit_re2_hp_model` (Erwartungs-Index 5/6 -> Spalte 3, s. 3.2) — gruen.
+
+### 5.1 Gezielte Laeufe (keine volle Suite im Spurbaum)
+Regex A (eigene Tests + alle Schuss-/Schadens-/Waffen-Gruppen, die game_step_common.c / re15_damage.c beruehren), Stand
+nach dem letzten Bau (Code wie Commit-Kopf):
+`ctest --test-dir re15_port/build -R "^(unit_r37_beretta|integration_r37_beretta|unit_r36_schuss|unit_r36_schuss_kraehe|unit_r36_elza_schuss|unit_re2_hp_model|unit_re2_weapon_rows|unit_re2_baby_spider_dmg|m93r_nachladen|unit_enemy_shootable|unit_room1140_combat|unit_damage|unit_weapon_select|unit_hit_reaction|unit_re2_hit_reaction|unit_re2_hit_repeat|unit_re2_hit_repeat_crow_spider|unit_r17_munition_pin|unit_r17_waffen_loop_pin|unit_autofire_pin|unit_zombie_hit_fixes|unit_re2_zombie_hitfilter|unit_r16_trefferhoehe_pin|unit_r16_aufstehen_schuss|unit_schrot_trennung|unit_r36_blut_pin_.*|unit_dog_hit|unit_re2_dog_hitwindow|unit_writher_hit_feedback|unit_aim_all_around|unit_aim_lower_exit|unit_r35_werfer|unit_r35_werfer_kombi|unit_r36_granate|unit_r35_granate|unit_r30_granate|unit_dog_aim_band|unit_re2z_rise_hittable|unit_sca_wall_hit|unit_r35_affen_schrot)$" --timeout 600`
+-> **`100% tests passed, 0 tests failed out of 48`** (Total 107.80 sec).
+Regex B (exe-Laeufe der beruehrten Schusspfade, Runde-36-C-Riegel inklusive; Code-Stand identisch, danach nur ein
+Kommentar im Header geaendert): `ctest --test-dir re15_port/build -R "^(integration_r37_beretta|integration_r36_schuss|integration_r36_elza_schuss|integration_r35_werfer|integration_r36_granate)$" --timeout 900`
+-> **`100% tests passed, 0 tests failed out of 5`** (r35_werfer 175.89 s, r36_elza_schuss 58.04 s, r36_granate 118.62 s,
+r36_schuss 181.04 s, r37_beretta 117.60 s).
+Auswertung aller Messlaeufe (vorher/nachher, Leon/Elza): `G_beretta_mess/auswertung_laeufe.txt`.
 
 ## 6. OFFEN
 * Nichts aus dem Wortlaut. Bewusst NICHT gebaut (RE1.5 bleibt): Abbruch des Feuerstosses beim Loslassen des Abzugs (RE2
