@@ -5,11 +5,11 @@
  * Herleitung, Belege und alle Konstanten: include/re15_sperre1050_r37.h und
  * analysis/befunde_runde37/F_sperre1050.md. Kein Asset-Patch: die RDT bleibt byte-true, der Port widmet nach
  * dem Init-Lauf von main00 (und nach re15_adaruf_install) den Tuer-Slot so um, wie es ein Aot_reset tut —
- * dieselbe Bauart wie tuer1060_1040.c, mit DENSELBEN Nachrichten-Bytes und DERSELBEN Bedingung.
+ * dieselbe Bauart wie tuer1060_1040.c, mit DENSELBEN Nachrichten-Bytes und denselben Story-Bits.
  */
 #include "re15_sperre1050_r37.h"
 
-#include "re15_tuer1060.h"   /* re15_tuer1060_sperre_aktiv, re15_tuer1060_meldung — eine Bedingung, ein Text */
+#include "re15_tuer1060.h"   /* re15_tuer1060_meldung — derselbe Text */
 #include "re15_aot.h"
 #include "re15_msg.h"
 #include "re15_scd.h"
@@ -25,7 +25,8 @@ int re15_sperre1050_r37_aktiv(void)
 {
     /* Vor der Ada-Rettung gilt allein die Ada-Logik (re15_adaruf.h) — hier nichts. */
     if (!re15_game_flag_get(RE15_S1050_ADA_BANK, RE15_S1050_ADA_BIT)) return 0;
-    return re15_tuer1060_sperre_aktiv();
+    if (!re15_game_flag_get(RE15_S1050_PLAN_BANK, RE15_S1050_PLAN_BIT)) return 0;   /* Plan noch nicht gefasst */
+    return re15_game_flag_get(RE15_S1050_TOD_BANK, RE15_S1050_TOD_BIT) ? 0 : 1;     /* Chief geholt -> frei    */
 }
 
 void re15_sperre1050_r37_install(uint16_t room_id)

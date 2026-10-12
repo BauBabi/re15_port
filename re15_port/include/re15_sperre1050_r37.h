@@ -26,17 +26,22 @@
  * sce, rec[1] = (rec[1]&0x80)+flags @0x8004076c-78, Nutzlast @0x80040788-a8, rec[2] = Band unberuehrt).
  *
  * BEDINGUNG (PORT-WAHL, Herleitung im Dossier "Bedingung"):
- *   gesperrt <=> Raum 0x1050  UND  (3,0xBB) = 1  UND  re15_tuer1060_sperre_aktiv()
- *   re15_tuer1060_sperre_aktiv() = (9,73)=0 UND ((9,71)=1 ODER (3,94)=0)  — DIESELBE Funktion wie an der
- *   1060-Tuer ("zusaetzlich", "denselben Text"): beide Sperren koennen nie auseinanderlaufen.
- *   (3,0xBB)=0 (Ada noch nicht gerettet, "Fruehspiel"): nichts — dort gilt allein re15_adaruf.h (Szene
- *   Ereignis 13 bzw. Sperrtext msg 25). Der Installer laeuft NACH re15_adaruf_install und fasst Slot 4
- *   nur an, wenn er dann noch die Original-Tuer ist.
+ *   gesperrt <=> Raum 0x1050  UND  (3,0xBB) = 1  UND  (9,71) = 1  UND  (9,73) = 0
+ *   = "solange Leon den Chief noch holen muss" (Wortlaut "bevor dem Ende wo er noch zu Irons muss"): vom Plan
+ *   "I'm going to get Chief Irons" (10F0-Szene, (9,71), re15_cut10f0.h) bis zur Irons-Todesszene ((9,73), deren
+ *   ERSTES Opcode, re15_irons_tod.h) — dieselben Bits, mit denen die 1060-Sperre diesen Abschnitt erkennt
+ *   (re15_tuer1060.h RE15_TUER1060_K_* / RE15_TUER1060_TOD_*); dort sind beide Sperren gleich.
+ *   (3,0xBB)=0 (Ada noch nicht gerettet): nichts — dort gilt allein re15_adaruf.h (Szene Ereignis 13 bzw.
+ *   Sperrtext msg 25). (9,71)=0 (Frueh-/Mittelspiel): nichts — die Original-Tuer bleibt (Riegel
+ *   unit_r34n_d_adaruf_frei: (3,0xBB)=1 -> ROOM10A0). Der dritte Fall der 1060-Sperre "(3,94)=0" (noch nie beim
+ *   Chief) gehoert zum Abstieg aus den oberen Etagen und ist mit (3,0xBB)=1 im Spiel nicht erreichbar (Dossier).
+ *   Der Installer laeuft NACH re15_adaruf_install und fasst Slot 4 nur an, wenn er dann noch die Original-Tuer ist.
  */
 #ifndef RE15_SPERRE1050_R37_H
 #define RE15_SPERRE1050_R37_H
 
 #include <stdint.h>
+#include "re15_tuer1060.h"   /* RE15_TUER1060_K_* / RE15_TUER1060_TOD_* (Flag-Nummern), Nachrichten-Bytes */
 
 /* Der Raum: ROOM1050 (Leon). ROOM1051 (Elza) bleibt offen — Elzas Spiel kennt weder die 10F0-Szene noch
  * die Irons-Szenen, und (3,0xBB) wird nur in ROOM1090 sub03 @0x024D2 gesetzt (re15_adaruf.h). */
@@ -59,6 +64,12 @@
 #define RE15_S1050_SCE_TEXT      1
 #define RE15_S1050_FLAGS         0x31
 #define RE15_S1050_MASKE         0xffff
+
+/* Der Abschnitt "Chief holen": dieselben Bits wie die 1060-Sperre (re15_tuer1060.h). */
+#define RE15_S1050_PLAN_BANK     RE15_TUER1060_K_BANK     /* (9,71) 10F0-Szene gesehen (Spur K, Runde 35)       */
+#define RE15_S1050_PLAN_BIT      RE15_TUER1060_K_BIT
+#define RE15_S1050_TOD_BANK      RE15_TUER1060_TOD_BANK   /* (9,73) Irons-Todesszene gesehen (Spur L, Runde 35) */
+#define RE15_S1050_TOD_BIT       RE15_TUER1060_TOD_BIT
 
 /* Nachrichten-Id: VERTRAG Runde 37 §1.2, Spur F = ROOM1050 Port-Id 26..28. Belegt in ROOM1050: 0..8 (RDT,
  * Tabelle @0x00E44 off[0] = `12 00`), 20/21 (re15_rolltor.h), 22..25 (re15_adaruf.h). Der Text sind die

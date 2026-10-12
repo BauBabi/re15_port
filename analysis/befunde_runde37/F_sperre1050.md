@@ -136,21 +136,27 @@ Irons-Todesszene (laeuft erst NACH (9,73)=1). Das Debug-Menue (SELECT, Original-
 
 ### Bedingung (PORT-WAHL, begruendet)
 
-`gesperrt <=> Raum 0x1050 UND (3,0xBB)=1 UND re15_tuer1060_sperre_aktiv()`,
-`re15_tuer1060_sperre_aktiv() = (9,73)=0 UND ((9,71)=1 ODER (3,94)=0)` — dieselbe Funktion wie an der 1060-Tuer.
+`gesperrt <=> Raum 0x1050 UND (3,0xBB)=1 UND (9,71)=1 UND (9,73)=0`
 
-* "zusaetzlich" + "denselben Text": EINE Bedingung fuer beide Tueren; die beiden Sperren koennen nie
-  auseinanderlaufen (die 1060-Sperre hat der Nutzer in Runde 35 abgenommen).
-* **(3,0xBB)=0 (Fruehspiel): nichts** — dort gilt allein die Ada-Logik (re15_adaruf.h: Szene Ereignis 13 bzw.
-  Sperrtext msg 25); der Installer laeuft NACH re15_adaruf_install und fasst Slot 4 nur an, wenn adaruf ihn als
-  Original-Tuer gelassen hat ((3,0xBB)=1 -> adaruf kehrt sofort zurueck, adaruf_1050.c:217).
-* Mittelspiel (Ada gerettet, 10F0-Szene noch nicht): (9,71)=0, (3,94)=1 -> frei (Keller-Wege fuer Zange,
-  Minidisc, Generator bleiben offen).
-* Endspiel ((9,71)=1, (9,73)=0) -> Text "I have to get the Chief first..."; nach der Irons-Todesszene ((9,73)=1,
-  erstes Opcode der Szene) -> frei.
-* Der Teil "(3,94)=0" kann mit (3,0xBB)=1 im normalen Spiel nicht vorkommen: der Suedteil von 1050 (Ada, Feuer,
-  10A0) ist vor der Rettung nur durch das Rolltor erreichbar (A_rolltor.md), die Sicherung liegt in ROOM1150 (Irons'
-  Buero, erste Szene (3,94) beim Betreten), der Fahrstuhl braucht Strom aus 11F0 und das Gitter 10F0 die Blue
-  Keycard aus 1110 — beides nur ueber den Keller. Er bleibt drin, damit 1050 nie offen ist, wenn 1060 zu ist.
+* "solange Leon den Chief noch holen muss" / "bevor dem Ende wo er noch zu Irons muss" = der Abschnitt vom Plan
+  "I'm going to get Chief Irons" (10F0-Szene; Set(9,71) ist ihr ERSTES Opcode, re15_cut10f0.h) bis zur
+  Irons-Todesszene (Set(9,73) ist ihr ERSTES Opcode, re15_irons_tod.h). Es sind dieselben Bits, mit denen die
+  1060-Sperre genau diesen Abschnitt erkennt (re15_tuer1060.h RE15_TUER1060_K_* / _TOD_*); dort sind beide
+  Sperren deckungsgleich, der Text sind dieselben Bytes (re15_tuer1060_meldung).
+* **(3,0xBB)=0 (Ada noch nicht gerettet): nichts** — dort gilt allein die Ada-Logik (re15_adaruf.h: Szene
+  Ereignis 13 bzw. Sperrtext msg 25). Der Installer laeuft NACH re15_adaruf_install und fasst Slot 4 nur an, wenn
+  er dann noch die Original-Tuer ist ((3,0xBB)=1 -> adaruf kehrt sofort zurueck, adaruf_1050.c:217).
+* **(9,71)=0 (Frueh-/Mittelspiel): nichts** — nach der Rettung bleibt die Original-Tuer (Keller-Wege fuer Zange,
+  Minidisc, Generator; Riegel unit_r34n_d_adaruf_frei: (3,0xBB)=1 -> ROOM10A0 bleibt gruen).
+* Nach der Irons-Todesszene ((9,73)=1): frei — der Weg zum Parkplatz.
+* Bewusst NICHT uebernommen: der dritte Fall der 1060-Sperre "(3,94)=0" (noch nie beim Chief). Er betrifft den
+  Abstieg aus den oberen Etagen vor dem ersten Besuch; an der 1050-Tuer steht Leon schon unten. Mit (3,0xBB)=1 ist er
+  im Spiel nicht erreichbar: der Suedteil von 1050 (Ada, Feuer, 10A0) ist vor der Rettung nur durch das Rolltor
+  erreichbar (A_rolltor.md), die Sicherung liegt in ROOM1150 (Irons' Buero, erste Szene (3,94) beim Betreten), der
+  Fahrstuhl braucht Strom aus 11F0 und das Gitter 10F0 die Blue Keycard aus 1110 — beides nur ueber den Keller.
+  Mit ihm haette das Mittelspiel-Gegenstueck des Riegels unit_r34n_d_adaruf_frei ((3,0xBB)=1 ohne (3,94)) die
+  Tuer verloren — "Fruehspiel darf NICHT gesperrt werden".
+* (9,71)=1 mit (3,0xBB)=0 kommt im Spiel nicht vor (10F0 braucht die Blue Keycard aus 1110 = Keller-Weg ueber
+  10A0); sollte es doch, sperrt dort die Ada-Logik — keine Luecke.
 * Elza (ROOM1051) bleibt offen: eigene Raum-Id; Elzas Spiel kennt weder die 10F0-Szene noch die Irons-Szenen
   (re15_tuer1060.h).
