@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_p.js"
-BASIS = "bddd6b31"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_q.js"
+BASIS = "6f360fb3"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -267,6 +267,25 @@ SPUREN = [
    "'verdeckt', flache Maske verdeckt nichts, Masken nur wo man hinkommt, ⛔ Nutzer-PRI ohne Hash-Liste = Basis rot (pri_hashes.py im selben "
    "Commit, falls Hash-Listen betroffen). RIEGEL ueber probes/r37_masken36.cmake: Zensus (je Datei/Cut Atlas-Quelle, kein toter Cut), "
    "Blit-Pruefung, Verdeckungs-Pins je Stage mit Gegenprobe; Spur-A-Riegel (r37_pri1100*, pri_masken, r36_pri*) gruen.")),
+
+ dict(id="Q", thema="kistenregel", baum="r37_kistenregel", basis="6f360fb3",
+  punkte=["Orchestrator-Auftrag Q (AUFTRAG.md): mit der RE2-Item-Box des Ports darf kein Item mehr benutzt werden, das man nicht TRAEGT. Erster Fall (gemessen von Spur I): Feuerloescher in die Item-Box legen, dann loescht Leon das Feuer in ROOM1090 trotzdem (sub00 @0x02306 `21 03 85 00` prueft nur das Aufnahme-Bit (3,0x85)). Ziel wie RE2: das Item muss im Inventar sein, sonst RE2-gleiche Reaktion; Zensus ALLER solchen Bit-statt-Inventar-Abfragen (Leon und Elza, alle Stages) und je Fall die Entscheidung mit Beleg.",
+          "Zusammenhang zum Nutzer: Item-Box nach RE2 (Nutzer-Auftrag 2026-08-30); Feuerloescher (Nachtrag 4/4b/4c): leer am Boden nur nach 'Yes', bei 'No' 'Empty Fire Extinguisher' im Inventar."],
+  hinweise=("BASIS: dein Baum steht auf 6f360fb3 = abgenommener Stand der Spur I (1d338f4e) + AUFTRAG/VERTRAG vom master-Stand. Lies in deinem Baum "
+   "analysis/befunde_runde37/I_feuerloescher.md (v.a. Nachbesserung 1: Zensus der Wege, die 0x31 aus dem Inventar nehmen; RE2 FUN_800703b8 Box-Tausch "
+   "@0x800706c8/@0x80070710; Wegwerf-Ja @0x80051774) und I_abnahme_1.md. CODE: engine/src/re15_itembox.c (RE2-Box, g_itembox), feuerloescher_r37.c "
+   "(Tor 1090), scd_vm.c (Ck-Opcode = Flag-Abfrage), item_prompt_common.c / item_modal_common.c (Item-Benutzung/Abfragen). SCHRITT 1 ZENSUS (alle RDTs, "
+   "Leon + Elza, scd_dump_room.py / SCD-Walker): jede Stelle, an der ein Raumskript einen Item-Besitz ueber ein Bit prueft — Aufnahme-Bits (Set beim "
+   "Aufheben wie (3,0x85) in ROOM1000 sub01 @0x00D0C) bzw. Taken-Bits (Bank 9) als Bedingung einer Item-BENUTZUNG (Frage 'Will you use ...?', Raetsel, "
+   "Tuer mit Item); dazu, welche Abfragen das Original selbst ueber das INVENTAR macht (Item-Besitz-Opcode/EXE-Routine FUN_8004dfec @0x8004dff0/"
+   "@0x8004e014 u.a.). Je Fall: kann das Item in der Box liegen (laesst die Box es zu? Schluesselitems?), ist das Verhalten heute falsch (an der exe "
+   "nachweisen). SCHRITT 2 RE2: wie prueft RE2 dieselbe Art Benutzung (Besitz-Abfrage im RE2-SCD-Opcodesatz oder EXE, RE2_Quellcode_*, ghidra_re2_Leon.txt, "
+   "z.B. Feuerloescher-/Kurbel-/Schluessel-Raetsel in RE2) und was zeigt RE2, wenn man das Item nicht traegt (Text, keine Frage)? Selbst disassemblieren, "
+   "jede Konstante @0x. SCHRITT 3 BAUEN: kistenregel_r37.c — eine Tabelle {Raum, Abfrage-Stelle, Item} und ein Haken an der Stelle, wo das Original "
+   "das Bit prueft: Abfrage gilt nur, wenn das Item im INVENTAR ist (Box zaehlt nicht), sonst RE2-Verhalten; 1090 als erster Fall (dort Tor der Spur I "
+   "unberuehrt lassen: der Boden-Loescher bleibt an 'Yes' gebunden). Keine Wirkung, wo die Box das Item gar nicht aufnehmen kann. RIEGEL ueber "
+   "probes/r37_kistenregel.cmake: Zensus (je Fall Entscheidung), 1090 mit Loescher in der Box -> keine Loesch-Frage, mit Loescher im Inventar -> wie "
+   "bisher (Gegenprobe), integration_r37_feuerloescher gruen. Texte nur mit RE2-Beleg; Ids nach VERTRAG 1.2 begruenden (grep MSG_ID).")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
