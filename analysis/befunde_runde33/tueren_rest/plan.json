@@ -261,6 +261,22 @@
    "rezept": "Holz-/Rostrahmen, oben + unten Maschendraht (DOOR14-Raute, Loecher Texel 0), Mittelriegel",
    "griff": "Druecker flach (DOOR07 Mesh 1)",
    "stufe": 2
+  },
+  "P27F": {
+   "basis": "DOOR27",
+   "rezept": "Flurseite: gemalte Fluegel ROOM10C00 + ROOM11200 (je zwei, entzerrt, gemittelt)",
+   "ton": "eigen DOOR27",
+   "griff": "keiner",
+   "bau": "tools/fahrstuhl_r37/fahrstuhl_archiv_bauen.py",
+   "md1_eigen": 2
+  },
+  "P27C": {
+   "basis": "DOOR27",
+   "rezept": "Kabinenseite: gemalte Fluegel ROOM10800 Cut 0 (zwei, entzerrt, gemittelt)",
+   "ton": "eigen DOOR27",
+   "griff": "keiner",
+   "bau": "tools/fahrstuhl_r37/fahrstuhl_archiv_bauen.py",
+   "md1_eigen": 2
   }
  },
  "gruppen": [
@@ -1510,7 +1526,7 @@
   },
   "T011": {
    "gruppe": "G8",
-   "archiv": "RE2",
+   "archiv": "P27F",
    "grund_r31": "aufzug",
    "seiten": [
     {
@@ -1518,17 +1534,18 @@
      "raum": "ROOM1040",
      "bau": true,
      "variante": 0,
-     "herkunft": "Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer",
+     "herkunft": "Runde 37 Spur C: Port-Archiv P27F (Basis DOOR27 = RE2-Fahrstuhltuer, RE2 ROOM6010 @0x004C2 V0; MD1 neu: zwei glatte Fluegel mit gerader Fuge wie RE1.5 ROOM10C00/ROOM11200/ROOM10800)",
      "zwilling": false,
      "griff": "unsichtbar"
     }
    ],
    "basis": "DOOR27",
-   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)"
+   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)",
+   "runde37": "Fahrstuhl ROOM1080: vorher DOOR27 V0 unveraendert (Runde 36, verzahnte Labortuer) - jetzt Port-Archiv P27F mit NEUEM MD1, gebaut von tools/fahrstuhl_r37/fahrstuhl_archiv_bauen.py (nicht ueber tuer_archiv_bauen: dessen Pruefung verlangt MD1 = Basis-Meshes als Anfang)"
   },
   "T017": {
    "gruppe": "G8",
-   "archiv": "RE2",
+   "archiv": "P27F",
    "grund_r31": "aufzug",
    "seiten": [
     {
@@ -1536,17 +1553,18 @@
      "raum": "ROOM10C0",
      "bau": true,
      "variante": 0,
-     "herkunft": "Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer",
+     "herkunft": "Runde 37 Spur C: Port-Archiv P27F (Basis DOOR27 = RE2-Fahrstuhltuer, RE2 ROOM6010 @0x004C2 V0; MD1 neu: zwei glatte Fluegel mit gerader Fuge wie RE1.5 ROOM10C00/ROOM11200/ROOM10800)",
      "zwilling": false,
      "griff": "unsichtbar"
     }
    ],
    "basis": "DOOR27",
-   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)"
+   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)",
+   "runde37": "Fahrstuhl ROOM1080: vorher DOOR27 V0 unveraendert (Runde 36, verzahnte Labortuer) - jetzt Port-Archiv P27F mit NEUEM MD1, gebaut von tools/fahrstuhl_r37/fahrstuhl_archiv_bauen.py (nicht ueber tuer_archiv_bauen: dessen Pruefung verlangt MD1 = Basis-Meshes als Anfang)"
   },
   "T018": {
    "gruppe": "G8",
-   "archiv": "RE2",
+   "archiv": "P27F",
    "grund_r31": "aufzug",
    "seiten": [
     {
@@ -1554,13 +1572,14 @@
      "raum": "ROOM1120",
      "bau": true,
      "variante": 0,
-     "herkunft": "Runde 36 Spur G: RE2-Fahrstuhltuer DOOR27 V0 unveraendert (RE2 ROOM6010 A-2-Kabine @0x004C2/@0x004E2/@0x00502 V0, Gegenseiten 6020 @0x00872 / 6060 @0x00E7C V0); RE1.5 ROOM10800 malt eine zweifluegelige, mittig oeffnende Schiebetuer",
+     "herkunft": "Runde 37 Spur C: Port-Archiv P27F (Basis DOOR27 = RE2-Fahrstuhltuer, RE2 ROOM6010 @0x004C2 V0; MD1 neu: zwei glatte Fluegel mit gerader Fuge wie RE1.5 ROOM10C00/ROOM11200/ROOM10800)",
      "zwilling": false,
      "griff": "unsichtbar"
     }
    ],
    "basis": "DOOR27",
-   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)"
+   "runde36": "Fahrstuhl ROOM1080: vorher P25G (DOOR25 Hubtuer, faehrt hoch)",
+   "runde37": "Fahrstuhl ROOM1080: vorher DOOR27 V0 unveraendert (Runde 36, verzahnte Labortuer) - jetzt Port-Archiv P27F mit NEUEM MD1, gebaut von tools/fahrstuhl_r37/fahrstuhl_archiv_bauen.py (nicht ueber tuer_archiv_bauen: dessen Pruefung verlangt MD1 = Basis-Meshes als Anfang)"
   },
   "T102": {
    "gruppe": "G9",

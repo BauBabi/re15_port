@@ -35,6 +35,7 @@
 #include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
 #include "re15_climb.h"      /* Runde 36 Spur R: re15_climb_standing_probe = DAT_800ac788 @0x8002bef0 */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 (FUN_8003b558 + FUN_8003da78), zellschub_r36.c */
+#include "re15_fahrstuhl_r37.h" /* Runde 37 Spur C: Tuersequenz beim Aussteigen aus den Fahrstuhlkabinen */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
@@ -627,6 +628,9 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z)
 static void tuer_sequenz_anfragen(const re15_aot_t *a, const re15_aot_door_params_t *d)
 {
     re15_door_seq_anfrage_t q;
+    /* Runde 37 Spur C: Kabinen-Ausstieg ROOM1080/4020 (Null-Rechteck per Aot_on, RE2 ROOM6010 sub02 @0x0075A
+     * spielt dort DOOR27 V0 - auch bei player_mode 2), fahrstuhl_r37.c */
+    if (re15_fahrstuhl_r37_ausstieg(g_current_room_id, a, d, &q)) { g_door_seq_anfrage = q; return; }
     int archiv = re15_door_seq_zuordnen_flaeche(g_current_room_id, a->has_quad ? 1 : 0,
                                                 a->x, a->z, a->half_w, a->half_h,
                                                 a->xs, a->zs, d->band, &q);
