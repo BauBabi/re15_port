@@ -213,8 +213,31 @@ Gegen den Wortlaut des Nutzers:
 
 ## OFFEN
 
-(folgt)
+* **Kein Entity-Folge-Blick in RE1.5.** Ada sieht Marvin beim Weglaufen mit einem festen Weltpunkt (Tuer-Mitte) nach;
+  RE1.5 kennt keinen Plc_neck-Modus "auf eine Figur" (Handler @0x80041e98: Modus >= 5 setzt nur 0x80; RE2 hat dafuer
+  Modus 5). Mit der Klemme 0x2c8 bleibt ihr Blick 7..32 Grad neben dem laufenden Marvin (Koerper 61..87 Grad). Ein
+  mitlaufender Blick waere eine Folge von Plc_neck-Punkten entlang seines Weges — nicht gebaut (keine Vorlage im Original).
+* **Marvin = Aktor 4 (Work_set(2,3)) ist vorbestehend (r35) fest verdrahtet:** der Platz ergibt sich, weil die zwei
+  Gorilla-Records ROOM11C0 sub00 @0x01784/@0x01798 (gleiche Bedingung (4,64)=0, Tot-Bits (7,96)/(7,97)) vor ihm stehen.
+  Unter (4,64)=0 (Bedingung der ganzen 11C0-Montage, re15_irons_tod_ohne_11c0) sind die Gorillas noch nicht
+  bekaempft (ihr Kampf gehoert zur Ada-Ankunftsszene sub02/sub07, die (4,64)=1 setzt) — der Fall "Gorillas tot, Ada noch
+  da" ist im normalen Ablauf nicht erreichbar; nicht geaendert.
+* Die Port-Abweichung "SCD-Work_set haelt einen NPC vor seinem INIT an" (re15_scd_slot_event_controlled, gemeinsame
+  Datei enemy_ai_common.c) ist hier im Programm umgangen (Work_set(1,0)), nicht an der Wurzel behoben — sie ist ein
+  Port-Konstrukt (der Original-NPC-Root tickt unabhaengig vom SCD); ein Eingriff dort betraefe jede Szene.
 
 ## Fuer den Nutzer
 
-(folgt)
+* **11C0 nach Irons' Tod (Ada/Marvin):** Ada und Marvin stehen vom ersten Bild an einander zugewandt (Profil zur
+  Kamera). Auf den Knall drehen nur die Koepfe zum Gebaeude (zur Kamera hin), der Koerper bleibt. Danach sehen sie
+  sich wieder an; Ada fragt, Marvin nickt "Yes!....", sagt "Oh, no, Leon!" und "I have to help him, sorry!" (Arm) — bei
+  allen drei Zeilen sieht er Ada an. Erst wenn seine letzte Zeile abgelaufen ist, dreht er sich um und rennt zur Tuer
+  (die einzige Koerperdrehung der Szene, ~98 Grad, weil die Tuer hinter der Kamera liegt). Ada dreht sich nicht mehr:
+  sie sieht ihm mit dem Kopf nach und ruft "Marvin!..." (Arm). Vorher/Nachher: `analysis/befunde_runde37/O_belege/
+  o_vor_nach_streifen.png`.
+* Neue Assets fuer das Paket-Gate: KEINE. Sprachdateien: KEINE neuen (Zeilen 10..14 unveraendert).
+* Bedienung unveraendert: nach der 10F0-Szene ROOM1150 betreten (Irons-Szene), die Montage endet in 11C0.
+* Mess-Haken fuer eigene Nachmessungen: `RE15_S11C0_LOG=<datei>` (je Bild Gier/Kopf beider Figuren),
+  Auswertung `python re15_port/tools/r37_o/szene_mess.py <ordner>`.
+* Entscheidungsfragen: keine.
+
