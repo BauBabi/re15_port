@@ -293,3 +293,22 @@ unit_r37_fahrstuhl_archiv/_einstieg/_ausstieg). Ein Zwischenlauf vor den zwei Au
   exe gemessen inkl. Ton und im Durchlauf Einstieg -> Kabine -> Ausstieg.
 * Tests: 3 neue Unit-Riegel + 1 Integration (Gegenprobe ohne Haken ROT), 3 fremde Riegel auf die neue Voraussetzung
   nachgezogen; gezielt `100% tests passed, 0 tests failed out of 63`.
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-12)
+
+Auftrag: Maengel 1/2 der Abnahme 0 = AUFTRAG.md Nachtrag 5 (woertlich: "ja, dann mache den noch. Mir ist auch
+aufgefallen in den Stage2 kleineres aufzügen fehlt noch das sound. Den sollte man auch aus Resident Evil 2
+extrahieren."). (a) Ausstieg Lastenaufzug ROOM3080 -> ROOM4000 mit Tuersequenz, (b) Ton der kleineren Aufzuege in
+STAGE2. #6/#7 (P27F/P27C, fahrstuhl_r37.c, aot_common-Haken, Riegel) bleiben unveraendert.
+Stand: IN ARBEIT (fortlaufend).
+
+### N1-0 Raeume bestimmen (b)
+STAGE2 = Kanal (debug_jump_table.h Stage 1 = Spiel-STAGE2). Nachrichten aller zwoelf STAGE2-Raeume
+(`tools/rdt_msgdump.py`): nur ROOM2030/2031 "TREATMENT POOL" spricht von einem Aufzug, msg 1 @0x2038 "The elevator is
+not responding...Maybe it should be activated / from somewhere." (Strom kommt aus ROOM2060 "ENGINE ROOM", Generator).
+SCD ROOM2030 (`tools/scd_dump_room.py`): ZWEI Hubplattformen (obj 1 und obj 2) = "kleinere Aufzuege" (Mehrzahl):
+* Lift A: obj 1 (6725, y, 12050), y -5400 (Ebene 3) <-> -10800 (Ebene 6), Rechtecke Platz 4/5 (5850,11350,1500,1500);
+  Fahrt sub02 @0x01E30 (Spieler) + sub03 @0x01ECA (Plattform), Speed_set y -120/+120, For 0x2D x 2 Bilder = 90 Bilder.
+* Lift B: obj 2 (-10675, y, 4050), y -5400 (Ebene 3) <-> -16200 (Ebene 9), Platz 6/7 (-10550,2850,1500,1500);
+  Fahrt sub04 @0x01F0A + sub05 @0x01FA4, For 0x5A x 2 Bilder = 180 Bilder.
+Keines der Fahrskripte traegt ein Se_on (0x36).
