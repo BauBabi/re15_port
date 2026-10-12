@@ -1,0 +1,134 @@
+STAGE1/ROOM1080.RDT @0x004FA obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x0069E, Add_speed@0x006AA, Add_speed@0x006B6, Add_speed@0x006C2
+STAGE1/ROOM1081.RDT @0x004FA obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x0069E, Add_speed@0x006AA, Add_speed@0x006B6, Add_speed@0x006C2
+STAGE1/ROOM1090.RDT @0x0216E obj 0 typ 4 band 1 +0=0101 lage (-8136,-1800,4753) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM1090.RDT @0x02190 obj 1 typ 4 band 5 +0=0101 lage (-5960,-9000,-15482) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM1091.RDT @0x021BE obj 0 typ 4 band 1 +0=0101 lage (-8136,-1800,4753) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM1091.RDT @0x021E0 obj 1 typ 4 band 5 +0=0101 lage (-5960,-9000,-15482) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM10D0.RDT @0x0114E obj 1 typ 4 band 0 +0=0101 lage (-19554,0,-23216) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x0153A, Add_speed@0x01546, Add_speed@0x01552, Add_speed@0x0155E ...
+STAGE1/ROOM10D1.RDT @0x0114E obj 1 typ 4 band 0 +0=0101 lage (-19554,0,-23216) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01524, Add_speed@0x01530, Add_speed@0x0153C, Add_speed@0x01548 ...
+STAGE1/ROOM10F0.RDT @0x010F4 obj 0 typ 4 band 0 +0=0001 lage (-6050,0,4950) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM10F0.RDT @0x0111A obj 0 typ 4 band 0 +0=0001 lage (-4850,0,-850) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM10F1.RDT @0x010F4 obj 0 typ 4 band 0 +0=0001 lage (-6050,0,4950) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM10F1.RDT @0x0111A obj 0 typ 4 band 0 +0=0001 lage (-4850,0,-850) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM1100.RDT @0x00B64 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x00D28, Add_speed@0x00D34, Add_speed@0x00D40, Add_speed@0x00D4C
+STAGE1/ROOM1101.RDT @0x00B64 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x00D28, Add_speed@0x00D34, Add_speed@0x00D40, Add_speed@0x00D4C
+STAGE1/ROOM1150.RDT @0x00E66 obj 3 typ 0 band 1 +0=0001 lage (-24300,0,-11700) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM1151.RDT @0x00E48 obj 3 typ 0 band 1 +0=0001 lage (-24300,0,-11700) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11A0.RDT @0x01058 obj 0 typ 4 band 3 +0=0001 lage (10050,-5400,8800) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11A0.RDT @0x0107E obj 0 typ 4 band 0 +0=0001 lage (-19300,0,3300) box c(0,-900,0) h(900,900,900) | Start-Treffer: r1[4] @0x00938 x -22175..-20175 z -5850..8075 | SCD bewegt: -
+STAGE1/ROOM11A1.RDT @0x01058 obj 0 typ 4 band 3 +0=0001 lage (10050,-5400,8800) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11A1.RDT @0x0107E obj 0 typ 4 band 0 +0=0001 lage (-19300,0,3300) box c(0,-900,0) h(900,900,900) | Start-Treffer: r1[4] @0x00938 x -22175..-20175 z -5850..8075 | SCD bewegt: -
+STAGE1/ROOM11B0.RDT @0x010C4 obj 0 typ 0 band 1 +0=0081 lage (-2168,0,-20918) box c(1800,-1350,1080) h(1800,1350,1080) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11B0.RDT @0x010EA obj 0 typ 0 band 1 +0=0081 lage (-2168,0,-19368) box c(1800,-1350,1080) h(1800,1350,1080) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11B0.RDT @0x0110E obj 1 typ 0 band 1 +0=0003 lage (-22838,0,-20368) box c(0,0,0) h(0,0,0) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11B0.RDT @0x01130 obj 2 typ 0 band 1 +0=0003 lage (-7463,0,-24868) box c(0,0,0) h(0,0,0) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11B1.RDT @0x01080 obj 0 typ 0 band 1 +0=0081 lage (-2168,0,-20918) box c(1800,-1350,1080) h(1800,1350,1080) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11B1.RDT @0x010A2 obj 1 typ 0 band 1 +0=0003 lage (-22838,0,-20368) box c(0,0,0) h(0,0,0) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11B1.RDT @0x010C4 obj 2 typ 0 band 1 +0=0003 lage (-7463,0,-24868) box c(0,0,0) h(0,0,0) | Start-Treffer: - | SCD bewegt: -
+STAGE1/ROOM11E0.RDT @0x0169E obj 2 typ 4 band 0 +0=0101 lage (19446,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01B22, Add_speed@0x01B2E, Add_speed@0x01B3A, Add_speed@0x01B46 ...
+STAGE1/ROOM11E0.RDT @0x017F8 obj 1 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x02084, Add_speed@0x02090, Add_speed@0x0209C, Add_speed@0x020A8
+STAGE1/ROOM11E1.RDT @0x0169E obj 2 typ 4 band 0 +0=0101 lage (19446,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01B22, Add_speed@0x01B2E, Add_speed@0x01B3A, Add_speed@0x01B46 ...
+STAGE1/ROOM11E1.RDT @0x017F8 obj 1 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x02084, Add_speed@0x02090, Add_speed@0x0209C, Add_speed@0x020A8
+STAGE1/ROOM11F0.RDT @0x00E54 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x012FA, Add_speed@0x01306, Add_speed@0x01312, Add_speed@0x0131E ...
+STAGE1/ROOM11F1.RDT @0x00E54 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x012FA, Add_speed@0x01306, Add_speed@0x01312, Add_speed@0x0131E ...
+STAGE1/ROOM1230.RDT @0x00CC0 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,-23216) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01002, Add_speed@0x0100E, Add_speed@0x0101A, Add_speed@0x01026 ...
+STAGE1/ROOM1231.RDT @0x00CC0 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,-23216) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01002, Add_speed@0x0100E, Add_speed@0x0101A, Add_speed@0x01026 ...
+STAGE1/ROOM1270.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE1/ROOM1271.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM2010.RDT @0x007E4 obj 0 typ 0 band 1 +0=0001 lage (4412,0,-6772) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2011.RDT @0x007E4 obj 0 typ 0 band 1 +0=0001 lage (4412,0,-6772) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2040.RDT @0x0137A obj 1 typ 4 band 3 +0=0001 lage (-16575,-5400,1700) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2040.RDT @0x0139C obj 2 typ 4 band 3 +0=0001 lage (22925,-5400,-5400) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2040.RDT @0x0147E obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x016C0, Add_speed@0x016CC, Add_speed@0x016D8, Add_speed@0x016E4
+STAGE2/ROOM2041.RDT @0x0137A obj 1 typ 4 band 3 +0=0001 lage (-16575,-5400,1700) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2041.RDT @0x0139C obj 2 typ 4 band 3 +0=0001 lage (22925,-5400,-5400) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2041.RDT @0x0147E obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x016C0, Add_speed@0x016CC, Add_speed@0x016D8, Add_speed@0x016E4
+STAGE2/ROOM2050.RDT @0x01D0E obj 6 typ 4 band 3 +0=0101 lage (-1600,-5400,-9348) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2050.RDT @0x01D4C obj 8 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x023CA, Add_speed@0x023D6, Add_speed@0x023E2, Add_speed@0x023EE ...
+STAGE2/ROOM2050.RDT @0x01DB4 obj 1 typ 4 band 0 +0=0101 lage (2052,0,-5552) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2050.RDT @0x01DD6 obj 2 typ 4 band 0 +0=0101 lage (-1256,0,-64) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2050.RDT @0x01DF8 obj 3 typ 4 band 0 +0=0101 lage (4248,0,1400) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2051.RDT @0x01D0E obj 6 typ 4 band 3 +0=0101 lage (-1600,-5400,-9348) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2051.RDT @0x01D4C obj 8 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x023CA, Add_speed@0x023D6, Add_speed@0x023E2, Add_speed@0x023EE ...
+STAGE2/ROOM2051.RDT @0x01DB4 obj 1 typ 4 band 0 +0=0101 lage (2052,0,-5552) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2051.RDT @0x01DD6 obj 2 typ 4 band 0 +0=0101 lage (-1256,0,-64) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2051.RDT @0x01DF8 obj 3 typ 4 band 0 +0=0101 lage (4248,0,1400) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2060.RDT @0x00EA6 obj 2 typ 4 band 0 +0=0001 lage (-3125,0,2075) box c(50,-900,0) h(675,900,600) | Start-Treffer: r0[9] @0x00738 x -2400..3150 z 2150..5350 | SCD bewegt: -
+STAGE2/ROOM2060.RDT @0x00ECC obj 2 typ 4 band 0 +0=0001 lage (475,0,-7375) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2060.RDT @0x00EF0 obj 3 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01492, Add_speed@0x0149E, Add_speed@0x014AA, Add_speed@0x014B6 ...
+STAGE2/ROOM2060.RDT @0x00F12 obj 4 typ 4 band 0 +0=0101 lage (19571,0,-22542) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01650, Add_speed@0x0165C, Add_speed@0x01668, Add_speed@0x01674
+STAGE2/ROOM2061.RDT @0x00EA6 obj 2 typ 4 band 0 +0=0001 lage (-3125,0,2075) box c(50,-900,0) h(675,900,600) | Start-Treffer: r0[9] @0x00738 x -2400..3150 z 2150..5350 | SCD bewegt: -
+STAGE2/ROOM2061.RDT @0x00ECC obj 2 typ 4 band 0 +0=0001 lage (475,0,-7375) box c(50,-900,0) h(675,900,600) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM2061.RDT @0x00EF0 obj 3 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01492, Add_speed@0x0149E, Add_speed@0x014AA, Add_speed@0x014B6 ...
+STAGE2/ROOM2061.RDT @0x00F12 obj 4 typ 4 band 0 +0=0101 lage (19571,0,-22542) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01650, Add_speed@0x0165C, Add_speed@0x01668, Add_speed@0x01674
+STAGE2/ROOM20A0.RDT @0x01854 obj 0 typ 4 band 4 +0=0001 lage (12250,-7200,-12400) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM20A0.RDT @0x0187A obj 0 typ 4 band 0 +0=0001 lage (23150,0,-24400) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM20A1.RDT @0x01854 obj 0 typ 4 band 4 +0=0001 lage (12250,-7200,-12400) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM20A1.RDT @0x0187A obj 0 typ 4 band 0 +0=0001 lage (23150,0,-24400) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE2/ROOM20C0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM20C1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM20D0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM20D1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM20E0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM20E1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM20F0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE2/ROOM20F1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE3/ROOM3050.RDT @0x01F1A obj 1 typ 4 band 4 +0=0101 lage (-18000,-7200,-20800) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM3050.RDT @0x01F40 obj 1 typ 4 band 0 +0=0101 lage (-24000,0,-22200) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM3050.RDT @0x01FDC obj 3 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x025BC, Add_speed@0x025C8, Add_speed@0x025D4, Add_speed@0x025E0
+STAGE3/ROOM3051.RDT @0x01F1A obj 1 typ 4 band 4 +0=0101 lage (-18000,-7200,-20800) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM3051.RDT @0x01F40 obj 1 typ 4 band 0 +0=0101 lage (-24000,0,-22200) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM3051.RDT @0x01FDC obj 3 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x025BC, Add_speed@0x025C8, Add_speed@0x025D4, Add_speed@0x025E0
+STAGE3/ROOM3090.RDT @0x0140C obj 0 typ 4 band 0 +0=0101 lage (-23550,0,-8024) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM3091.RDT @0x01448 obj 0 typ 4 band 0 +0=0101 lage (-23550,0,-8024) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM3091.RDT @0x01508 obj 1 typ 4 band 1 +0=0081 lage (-15072,950,-1010) box c(0,-1800,0) h(0,0,0) | Start-Treffer: - | SCD bewegt: Add_speed@0x01E66, Pos_set@0x01786, Pos_set@0x01E4C
+STAGE3/ROOM30A0.RDT @0x0080C obj 0 typ 0 band 1 +0=0001 lage (-18450,0,19550) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM30A1.RDT @0x0080C obj 0 typ 0 band 1 +0=0001 lage (-18450,0,19550) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM30B0.RDT @0x0095A obj 0 typ 0 band 1 +0=0001 lage (-22925,0,-15125) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM30B1.RDT @0x0095A obj 0 typ 0 band 1 +0=0001 lage (-22925,0,-15125) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE3/ROOM30E0.RDT @0x00A96 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x01010, Add_speed@0x0101C, Add_speed@0x01028, Add_speed@0x01034
+STAGE3/ROOM30F0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE3/ROOM30F1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM4010.RDT @0x005D4 obj 0 typ 0 band 1 +0=0001 lage (-21660,0,-26030) box c(0,0,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE4/ROOM4011.RDT @0x005BE obj 0 typ 0 band 1 +0=0001 lage (-21660,0,-26030) box c(0,0,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE4/ROOM4020.RDT @0x006B6 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x008AA, Add_speed@0x008B6, Add_speed@0x008C2, Add_speed@0x008CE
+STAGE4/ROOM4021.RDT @0x006B6 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x008AA, Add_speed@0x008B6, Add_speed@0x008C2, Add_speed@0x008CE
+STAGE4/ROOM4060.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM4061.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40C0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40C1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40D0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40D1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40E0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40E1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40F0.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE4/ROOM40F1.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE5/ROOM5010.RDT @0x00472 obj 0 typ 0 band 1 +0=0001 lage (-23282,0,-15638) box c(0,0,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM5011.RDT @0x00472 obj 0 typ 0 band 1 +0=0001 lage (-23282,0,-15638) box c(0,0,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM5020.RDT @0x01242 obj 0 typ 4 band 4 +0=0001 lage (-11000,-7200,-23150) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM5020.RDT @0x01268 obj 0 typ 4 band 0 +0=0001 lage (-3400,0,-25300) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM5021.RDT @0x01262 obj 0 typ 4 band 4 +0=0001 lage (-11000,-7200,-23150) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM5021.RDT @0x01288 obj 0 typ 4 band 0 +0=0001 lage (-3400,0,-25300) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM5050.RDT @0x00794 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x00908, Add_speed@0x00914, Add_speed@0x00920, Add_speed@0x0092C
+STAGE5/ROOM5051.RDT @0x00794 obj 0 typ 4 band 0 +0=0101 lage (-19554,0,22684) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: Add_speed@0x00908, Add_speed@0x00914, Add_speed@0x00920, Add_speed@0x0092C
+STAGE5/ROOM50D0.RDT @0x01276 obj 0 typ 4 band 0 +0=0101 lage (-18200,0,-19650) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM50D0.RDT @0x0129C obj 0 typ 4 band 0 +0=0101 lage (-13950,0,-3210) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM50D0.RDT @0x012C0 obj 1 typ 0 band 4 +0=0001 lage (-24200,-5400,-26050) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM50D1.RDT @0x01276 obj 0 typ 4 band 0 +0=0101 lage (-18200,0,-19650) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM50D1.RDT @0x0129C obj 0 typ 4 band 0 +0=0101 lage (-13950,0,-3210) box c(0,-900,0) h(900,900,900) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM50D1.RDT @0x012C0 obj 1 typ 0 band 4 +0=0001 lage (-24200,-5400,-26050) box c(0,-1080,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE5/ROOM5150.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE5/ROOM5151.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE5/ROOM5160.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE5/ROOM5161.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE5/ROOM5170.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE5/ROOM5171.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE6/ROOM6030.RDT @0x00CEE obj 0 typ 0 band 1 +0=0001 lage (-17800,0,-25900) box c(0,0,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE6/ROOM6031.RDT @0x00CEE obj 0 typ 0 band 1 +0=0001 lage (-17800,0,-25900) box c(0,0,0) h(900,1080,720) | Start-Treffer: - | SCD bewegt: -
+STAGE6/ROOM6050.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE6/ROOM6051.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE6/ROOM6060.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE6/ROOM6061.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE6/ROOM6070.RDT: 4 Bytes - kein RDT, uebersprungen
+STAGE6/ROOM6071.RDT: 4 Bytes - kein RDT, uebersprungen
+Summe: 206 Raeume, 672 Obj_model_set, davon 99 OHNE Bit 3 (@0x8003b668-674 -> ausschiebbar)
