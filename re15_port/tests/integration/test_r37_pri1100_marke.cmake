@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.16)
 # Dossier analysis/befunde_runde37/A_pri1100.md. Nutzer (AUFTRAG.md #1): "Room 1100 das Problem ist immer noch
 # da, siehe Zombie auf den F9 Marker." Marke befund_1100_F892_marke1.bmp: Leon (-14914,0,-25645) rot 4488,
 # Cut 1, Zombie 1 liegt an der Suedecke (-16157,0,-23876) rot 1024 — Kopf und Arm stecken HINTER der Westwand
-# (der Kopf in der Zelle Suedblock) und wurden ueber die Wand gemalt (Kachel-Maximum t=161, Schluessel 10378).
+# (der Kopf in der Kollisionszelle Suedblock; die Wand liegt 468..2329 Kamera-z davor) und wurden ueber die Wand gemalt (Kachel-Maximum t=161, Schluessel 10378).
 # Marke befund_1100_F240_marke1.bmp: derselbe Zombie an seiner Spawnlage (-16453,0,-23817), nur der Kopf schwebte.
 #
 # Je Szene drei Laeufe (Sprung nach ROOM1100, RE15_FORCE_CUT=1, Framedump Bild 150):

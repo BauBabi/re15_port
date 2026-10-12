@@ -3,7 +3,7 @@
 #
 # Nutzer (AUFTRAG.md #1): "Room 1100 das Problem ist immer noch da, siehe Zombie auf den F9 Marker."
 # Marke befund_1100_F892_marke1.bmp: ROOM1100 Cut 1, Zombie 1 liegt an der Suedecke, Kopf und Arm stecken
-# HINTER der Westwand (Kopf in der Zelle Suedblock) und wurden ueber die Wand gemalt. Ursache: die Gitter-
+# HINTER der Westwand (Kopf in der Kollisionszelle Suedblock) und wurden ueber die Wand gemalt. Ursache: die Gitter-
 # kacheln der alten Maskenkette trugen das MAXIMUM der Wandtiefe (Kachel (166,129) t=161 bei Wandtiefe
 # 7118..10275). Jetzt Phase-2-Bau (Rechtecke je Tiefenstufe, Cut 1 Stufe 4 / Cut 2 Stufe 3).
 #

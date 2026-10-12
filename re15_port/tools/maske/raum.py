@@ -77,8 +77,8 @@ P2_ALTE_KETTE = {
     # ⛔ Runde 37 Spur A (2026-10-12, Nutzer-Marke befund_1100_F892_marke1.bmp "siehe Zombie"): ROOM1100 C1/C2
     # laufen NICHT mehr ueber die alte Kette, sondern ueber bau_p2 (Rechtecke je Tiefenstufe). Die alte Kette gab
     # jeder Gitterkachel das MAXIMUM der Quadertiefe; an der Wandecke faellt die Tiefe in einer 24er-Kachel von
-    # 10275 auf 7118 (Schluessel t=161 = 10378), und der Kopf des liegenden Zombies 1 — 1500..2500 Einheiten HINTER
-    # der Wand — wurde ueber die Wand gemalt (Leckband bis 3253). bau_p2 traegt je Rechteck nur EINE Tiefenstufe
+    # 10275 auf 7118 (Schluessel t=161 = 10378), und Kopf und Arm des liegenden Zombies 1 — 468..2329 Kamera-z HINTER
+    # der Wand — wurden ueber die Wand gemalt (Leckband bis 3253). bau_p2 traegt je Rechteck nur EINE Tiefenstufe
     # (Stufe 4 = hoechstens 256 Einheiten). Dossier analysis/befunde_runde37/A_pri1100.md.
 }
 P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}

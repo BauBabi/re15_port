@@ -4,8 +4,8 @@
  *
  * Nutzer (AUFTRAG.md #1): "Room 1100 das Problem ist immer noch da, siehe Zombie auf den F9 Marker."
  * Marke befund_1100_F892_marke1.bmp: Cut 1, Zombie 1 liegt an der Suedecke (-16157,0,-23876), Arm und Kopf
- * werden ueber die rechte Wand gemalt, obwohl sie 1500..2500 Kamera-z HINTER der Wandflaeche liegen (der Kopf
- * steckt in der Zelle Suedblock). Ursache: die Gitterkacheln der alten Kette trugen das MAXIMUM der Wandtiefe
+ * werden ueber die rechte Wand gemalt, obwohl die Wand an ihren Punkten 468..2329 Kamera-z DAVOR liegt (der Kopf
+ * liegt in der Kollisionszelle Suedblock, z -22747..-23113). Ursache: die Gitterkacheln der alten Kette trugen das MAXIMUM der Wandtiefe
  * (Kachel (166,129) 24x24 t=161, Wandtiefe darin 7118..10275) -> alles bis 3253 hinter der Wand leckte durch.
  *
  *   test_r37_pri1100 leck    Cut 1 und Cut 2, ein Gitter von Weltpunkten (Schritt 100, Hoehen 0/-500/-1000/-1500):
