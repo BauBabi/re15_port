@@ -26,6 +26,7 @@
 #include "re15_actor.h"
 #include "re15_collision.h"   /* Etage = Band aus der Spieler-Y */          /* Spieler-Band (+0x82) fuer die Etagen-Umschaltung */
 #include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
+#include "re15_kiste_r37.h"       /* Runde 37 Spur M: Kisten-Liste — Symbol rechts, Rahmen ueber den Zeilen */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
 #include "gen/inv_desc_bank.inc" /* item-desc bank @0x800c50de (wave 4; entry idx = item id) */
@@ -124,6 +125,9 @@ static uint8_t mu8(uint32_t addr) { return *RE15_INV_MAP_PTR(addr); }
 #define RE15_BOX_PANEL_Y   25
 #define RE15_BOX_PANEL_DY  (RE15_BOX_PANEL_Y - 13)   /* Versatz gegen das Original */
 #define RE15_BOX_TEXT_Y    (RE15_BOX_PANEL_Y + 156)  /* direkt unter dem Panel */
+#if RE15_KISTE_PANEL_Y != RE15_BOX_PANEL_Y || RE15_KISTE_PANEL_H != 156   /* Runde 37 Spur M: Rahmen-Teile */
+#error "re15_kiste_r37.h: Panel-Lage weicht vom PANEL-Op ab"
+#endif
 /* Grundlinie des Namens IN der Textbox: im Original steht die Schrift bei y 181,
  * die Box beginnt bei 169 — also 12 px unter ihrer Oberkante. */
 #define RE15_BOX_TEXT_BASE (RE15_BOX_TEXT_Y + 12)
@@ -1716,7 +1720,8 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         const int LIST_X0 = 12;                 /* linker Rand der Zeilen          */
         const int LIST_X1 = 204;                /* rechter Rand der Zeilen         */
         const int NAME_X  = 16;                 /* Name links (RE2: boxX + 7)      */
-        const int ICON_X  = 158;                /* Symbol rechts (RE2: x 155)      */
+        /* (ICON_X 158 entfaellt — Runde 37 Spur M: jedes Symbol endet buendig am Fensterrand,
+         * x = RE15_KISTE_SYMBOL_RECHTS - Breite, Beleg re15_kiste_r37.h.) */
         const int BAR_X   = 208;                /* Scrollbalken (RE2: x 207)       */
         const int ROW0_Y  = 41 + RE15_BOX_PANEL_DY;
         const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
@@ -1742,42 +1747,15 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 else     { o->r = 96;  o->g = 64; o->b = 16; }   /* passiv: braun */
             }
         }
-        int k;
-        for (k = 0; k < RE15_BOX_WINDOW && k < 5; k++) {
-            int slot = (st->box_scroll + k) & (RE15_BOX_SLOTS - 1);
-            const re15_inv_slot_t *bs = &g_itembox.slots[slot];
-            int ry = ROW0_Y + k * ROW_DY + st->box_pixoff;   /* Scroll-Gleiten */
-            re15_inv_op_t *o;
-            (void)o;   /* RE2 hat einen DURCHGEHENDEN Listengrund (24,24,40) —
-                        * gemessen im Original; die frueher gezeichneten Streifen
-                        * je Zeile gibt es dort nicht. */
-            /* Name links; leerer Platz bleibt leer (RE2 schreibt dort seinen
-             * "leer"-Text, den RE1.5 nicht kennt). */
-            if (bs->id != 0) emit_name_at(&e, bs->id, NAME_X, ry + 2);
-            /* Symbol + Menge rechts in der Zeile */
-            if (bs->id != 0) {
-                /* ⛔ RE2s Zeilen-Symbol ist 25x19 (2-Feld-Waffen 49x19) und passt damit
-                 * in das 20-px-Raster. Unsere Kachel ist 40x30 — bei 20 px Zeilenabstand
-                 * ueberlappten die Symbole benachbarter Zeilen (Nutzer 2026-08-30: "auch
-                 * die Item Images ueberlagern sich"). Deshalb wird sie hier auf RE2s
-                 * Zeilenhoehe gestaucht. */
-                box_cell_icon_sized(&e, ICON_X, ry, RE15_BOX_ICON_W, RE15_BOX_ICON_H,
-                                    bs->id, bs->flags);
-                /* Mengen-Ziffern IN der Zeile: box_digits setzt seine Grundlinie auf
-                 * cy + 20, was bei 20 px Zeilenabstand in die naechste Zeile ragte
-                 * (Nutzer 2026-08-31). Deshalb 20 px hoeher ansetzen. */
-                /* Die Ziffern sassen genau auf der Zeilenoberkante und wurden vom
-                 * Auswahlbalken angeschnitten (Nutzer 2026-08-31). Jetzt 5 px tiefer,
-                 * also mittig in der 20-px-Zeile. */
-                box_digits(&e, ICON_X + RE15_BOX_ICON_W + 2, ry - 15, bs->id, bs->qty);
-            }
-        }
         /* SCROLLBALKEN — Farben aus dem laufenden RE2 gemessen (Spalte x=208):
          *   y 20..23  (240, 56, 24)  ORANGER Pfeil oben
          *   y 26..35  (232,248, 72)  GELBER Griff (die Ringposition)
          *   y 36..153 ( 40, 40, 40)  Schiene
          *   y156..159 (240, 56, 24)  ORANGER Pfeil unten
-         * Es ist EIN zusammenhaengender Griff, keine Einzelmarken. */
+         * Es ist EIN zusammenhaengender Griff, keine Einzelmarken.
+         * Runde 37 Spur M: der Griff steht jetzt VOR den Rahmen-Teilen (liegt ueber der Schiene) — RE2
+         * haengt die 5 Marken in OT-Eintrag 2 VOR den 16 Rahmen-Sprites ein (FUN_800710dc), AddPrim haengt
+         * vorn an, die GPU zeichnet die Marken also NACH der Schiene. Lage und Farbe unveraendert. */
         {
             const int TRACK_Y0 = 42 + RE15_BOX_PANEL_DY, TRACK_H = 100;
             int grip_h = (TRACK_H * RE15_BOX_WINDOW) / RE15_BOX_SLOTS;   /* Fenster/Ring */
@@ -1791,6 +1769,63 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 o->x = (int16_t)BAR_X; o->y = (int16_t)grip_y;
                 o->w = 6; o->h = (int16_t)grip_h;
                 o->r = 232; o->g = 248; o->b = 72;      /* gemessenes Gelb */
+            }
+        }
+        /* RAHMEN UEBER DEN ZEILEN (Runde 37 Spur M, Nutzer Nachtrag 9: "der Kasten muss layertechnisch ueber
+         * den Items liegen"). RE2 schneidet nichts ab, es ZEICHNET den Rahmen darueber: die 16 Rahmen-Sprites
+         * (Kopf-/Fussband je 20 hoch) liegen in OT-Eintrag 2, Symbole + Namen in 6, Ziffern in 3, die GPU
+         * zeichnet 7 -> 0 (Belege re15_kiste_r37.h, Dossier §2.1). Was beim Gleiten (+-3 je Bild, 18 px) aus
+         * dem Fenster ragt, verschwindet unter Kopf- bzw. Fussband. Im Port ist der Rahmen Teil desselben
+         * Panel-Bilds wie der Listengrund — darum hier die vier Rahmen-Teile (Bild OHNE das Listenfenster)
+         * als eigene Ops VOR den Zeilen (Op-Liste wird von hinten gerastert, frueher = oben); der volle
+         * Panel-Op mit dem Listengrund bleibt darunter. Pixel 1:1 aus demselben Bild an derselben Stelle. */
+        {
+            int t;
+            for (t = 0; t < RE15_KISTE_RAHMEN_TEILE && e.n < e.max; t++) {
+                re15_inv_op_t *o = &e.ops[e.n++];
+                const re15_kiste_r37_teil_t *tl = &re15_kiste_r37_rahmen[t];
+                o->kind = RE15_INV_OP_PANELTEIL; o->page = 0; o->clut = 0; o->abe = 0;
+                o->u = tl->u; o->v = tl->v;
+                o->x = (int16_t)(RE15_KISTE_PANEL_X + tl->u);
+                o->y = (int16_t)(RE15_KISTE_PANEL_Y + tl->v);
+                o->w = tl->w; o->h = tl->h;
+                o->r = 128; o->g = 128; o->b = 128;
+            }
+        }
+        /* DIE ZEILEN. Beim Gleiten zeichnet RE2 zusaetzlich die EINLAUFENDE Zeile — Zeile -1 (HOCH, Platz
+         * scroll-1) bzw. Zeile 5 (RUNTER, Platz scroll+5), mit Name, Symbol und Ziffern (Belege
+         * re15_kiste_r37.h). Sie kommt unter dem Kopf- bzw. Fussband hervor. Der Versatz traegt die Richtung:
+         * > 0 = HOCH (Zustand 2, +3 je Bild), < 0 = RUNTER (Zustand 3). Bei Versatz 0 laege sie ganz unter
+         * dem 20 px hohen Band — dort wird sie nicht ausgegeben. */
+        {
+            int k;
+            int k0 = (st->box_pixoff > 0) ? RE15_KISTE_EINLAUF_HOCH : 0;
+            int k1 = (st->box_pixoff < 0) ? RE15_KISTE_EINLAUF_RUNTER : 4;
+            for (k = k0; k <= k1; k++) {
+                int slot = (st->box_scroll + k) & (RE15_BOX_SLOTS - 1);
+                const re15_inv_slot_t *bs = &g_itembox.slots[slot];
+                int ry = ROW0_Y + k * ROW_DY + st->box_pixoff;   /* Scroll-Gleiten */
+                /* RE2 hat einen DURCHGEHENDEN Listengrund (24,24,40) — gemessen im Original; die frueher
+                 * gezeichneten Streifen je Zeile gibt es dort nicht. Leerer Platz bleibt leer (RE2 schreibt
+                 * dort seinen "leer"-Text, den RE1.5 nicht kennt). */
+                if (bs->id == 0) continue;
+                {
+                    /* ⛔ RE2s Zeilen-Symbol ist 25x19 (2-Feld-Waffen 49x19) und passt damit in das 20-px-Raster
+                     * (Nutzer 2026-08-30: "auch die Item Images ueberlagern sich"). Runde 37 Spur M: das Symbol
+                     * endet buendig am rechten Fensterrand (RE15_KISTE_SYMBOL_RECHTS = boxX+0xc5, @0x80071238),
+                     * so weit rechts wie moeglich — kein Name reicht hinein (Zensus aller Namen, Dossier §1). */
+                    int sym_w = (bs->flags == RE15_BOX_KIND_WIDE) ? (RE15_BOX_ICON_W * 2 - 1)
+                                                                  : RE15_BOX_ICON_W;
+                    int sym_x = RE15_KISTE_SYMBOL_RECHTS - sym_w;
+                    /* Mengen-Ziffern IM Symbol unten links und UEBER ihm (RE2: x = linke Symbolkante,
+                     * y = Zeilenoberkante + 11, FUN_80072c6c; Ziffern OT 3 ueber Symbol OT 6). box_digits
+                     * zeichnet bei (cx + 3 + 6i, cy + 20) — daher cx = x - 3, cy = y - 20. */
+                    box_digits(&e, sym_x + RE15_KISTE_ZIFFER_DX - 3, ry + RE15_KISTE_ZIFFER_DY - 20,
+                               bs->id, bs->qty);
+                    emit_name_at(&e, bs->id, NAME_X, ry + 2);           /* RE2: Zeilenoberkante + 2 */
+                    box_cell_icon_sized(&e, sym_x, ry, RE15_BOX_ICON_W, RE15_BOX_ICON_H,
+                                        bs->id, bs->flags);
+                }
             }
         }
     }
