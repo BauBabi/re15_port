@@ -223,13 +223,62 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
   `I_belege/nachher_1090_1091_cut5.png` (klein an der rechten Stossstange; Cut 5 ist die Fernkamera).
 * exe Spind (Lauf D): `room=1000 id=0 "Nothing unusual."`, keine Aufnahme.
 * exe Wand (Lauf E): `oid=0x05 pos=(17200,-1150,-23775)` gezeichnet; Bild `I_belege/nachher_1050_wand_cut6.png`.
+* exe Spielstand (Lauf F, CONTINUE in ROOM1090 mit (9,0x86)/(3,0x85)/(3,0x81)/(3,0xBB)/(3,0x6E), Loescher abgelegt):
+  `ROOM1090: Loescher liegt leer am Boden ... Zone Slot 6`, `[prop-render] pi=4 oid=0x05 pos=(2500,-1800,-1300)`;
+  Lauf G (dasselbe, Loescher im Inventar): `ROOM1090: kein Loescher (Leon traegt ihn noch (Item 0x31 im Inventar))`,
+  kein prop-render obj 5.
+* exe Elza Tuer-Weg (Lauf H, CONTINUE ROOM1051 vor der Notausgangs-Tuer, Aktion): `PC loaded room1091.rdt` ->
+  `ROOM1091: Loescher liegt leer am Boden`; in ROOM1051 haengt keiner (Elzas Variante bekommt keinen Wand-Loescher —
+  Leon war zuerst da und hat ihn genommen).
 
 ## 5. Tests
 * NEU `unit_r37_feuerloescher_{modell,raum,aufnahme,loeschen,elza,spind,spielstand}` (tests/unit/test_r37_feuerloescher.c,
-  Mechanik am echten Port-Code) und `integration_r37_feuerloescher` (echte exe, Laeufe A-E).
+  Mechanik am echten Port-Code) und `integration_r37_feuerloescher` (echte exe, Laeufe A-H).
+* exe-Gruppen (ctest -R, Ausdruck woertlich):
+  `^(integration_r37_feuerloescher|integration_r36_story_leon|integration_r36_story_elza|integration_r35_inventar1050|integration_r34n_e_dokumente_bild|integration_r36_schluessel_befreiung)$`
+  -> `100% tests passed, 0 tests failed out of 6` (1083 s); danach `integration_r37_feuerloescher` um die Laeufe F/G/H
+  erweitert: `^integration_r37_feuerloescher$` -> `100% tests passed, 0 tests failed out of 1`.
 * Beruehrte Gruppen (ctest -R, Ausdruck woertlich):
   `^(unit_r37_feuerloescher|unit_aot_edge|unit_scd_aot_opcodes|unit_savedata|unit_item_modal|unit_item_stack_press|unit_aot_sce_census|unit_sicherung_1150|unit_re2_room1090_ab|unit_1090_|probe_1090_|unit_plc_back_yaw_1090|unit_map_1090|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r21_discard_wegwerfen|unit_r27_ada_cutscene_1050|unit_r30_|unit_r34n_a_rolltor|unit_r34n_d_adaruf|unit_r34n_e_dokumente|unit_r35_granate|unit_r35_inhalt|unit_r35_inventar1050|unit_room1050_sicherung|unit_r36_granate|unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_schluessel|unit_r36_story)`
   -> `100% tests passed, 0 tests failed out of 101`.
   Zwischenstand: mit dem Installer am Blockende und dem 1090-Platz in Slot 5 waren unit_r34n_e_dokumente ("Dokument
   hinten angehaengt") und unit_r36_story_schuppen ("Leon 1090 nach dem Loeschen: kein Text-Platz in Slot 2/5") rot ->
   Code angepasst (Installer vor den Dokumenten wie r35, Slot 6); beide Alt-Riegel unveraendert gruen.
+
+## 6. OFFEN
+* Nichts Funktionales. Ehrliche Grenzen der Messung:
+  - Das Modell ist ein Neubau (PORT-WAHL); seine Masse stammen aus dem Item-Bild (2D-Verhaeltnis; ist der Koerper im
+    Bild geneigt, waere der echte Loescher etwas laenger) und aus der Leon-Groesse 1,78 m. Kein Original zum Vergleich.
+  - In Cut 5 (Fernkamera der Gasse) ist der liegende Loescher nur ~10 x 6 Bildpunkte gross; deutlich zu sehen ist er
+    in Cut 6 (Wagentuer) und Cut 7 (Rettungsszene).
+  - Die Wandhalterung selbst ist nicht modelliert (bei ~14 Bildpunkten Hoehe nicht erkennbar); nach der Aufnahme ist
+    die Wand leer wie gemalt.
+* Volle Suite NICHT gefahren (Spurbaum-Regel); die gezielten Laeufe stehen in Abschnitt 5.
+
+## 7. Fuer den Nutzer
+
+### Neue Assets / Paket-Gate
+Keine neue Datei: Netz, Textur und Text sind in die exe gebacken (`engine/src/gen/feuerloescher_r37.inc`, erzeugt von
+`tools/r37_feuerloescher/feuerloescher_modell.py` aus `shared_assets/PSX/ITEM/ITPS.ITP`). Kein Paket-Gate-Eintrag noetig.
+
+### Sprachdateien
+Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine Stimme).
+
+### Bedienhinweise
+* Leon: der Feuerloescher haengt im Ostflur (ROOM1050, Kamera mit der Notausgangs-Tuer) rechts neben der Tuer zum
+  Hinterhof. Davor stellen, Aktionstaste -> "Will you take the Fire Extinguisher?" -> Ja.
+* Am Feuer (ROOM1090) wie bisher benutzen. Danach fragt das Spiel "You don't need this item any more. Discard it?":
+  Ja = Leon legt den leeren Loescher vor der Wagentuer ab (er bleibt dort liegen, auch beim Wiederkommen und nach dem
+  Laden); Nein = Leon behaelt ihn, dann liegt keiner da.
+* Elza: der leere Loescher liegt in ROOM1091 vor der Wagentuer; Aktionstaste davor -> "It's an empty fire extinguisher."
+* Der Spind in der Umkleide (ROOM1000) antwortet jetzt mit "Nothing unusual." wie die anderen Spinde.
+
+### Zu entscheiden
+1. FUNDORT: Ostflur 1050, Wand rechts der Notausgangs-Tuer (Bild `I_belege/nachher_1050_wand_cut6.png`). Andere
+   moegliche Plaetze: an der Wand der Umkleide 1000 (sichtbar statt im Spind), in der Lobby 1030, auf dem Boden neben
+   der Tuer. Sag, wohin er soll.
+2. WEGWERFEN: Soll der leere Loescher auch liegen, wenn Leon bei "Discard it?" Nein waehlt (dann haette er ihn doppelt:
+   im Inventar und am Boden)? Oder soll der Loescher nach dem Benutzen ohne Frage abgelegt werden?
+3. TEXT: "It's an empty fire extinguisher." beim Untersuchen (Leon nach dem Ablegen, Elza) — Wortlaut ok?
+4. GROESSE / HOEHE: 0,47 m hoch, 13 cm Durchmesser (10-lb-Klasse), an der Wand 0,68-1,14 m ueber dem Boden.
+5. SPIND: "Nothing unusual." (der Text der anderen Spinde) oder ein eigener Satz wie "The locker is empty."?

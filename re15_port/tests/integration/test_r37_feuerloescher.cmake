@@ -14,6 +14,9 @@ cmake_minimum_required(VERSION 3.16)
 #   C  ELZA ROOM1091: Spielstand neben dem Loescher -> liegt von Anfang an; Aktion -> msg 29
 #   D  SPIND ROOM1000 Leon: Aktion am Spind -> "Nothing unusual.", keine Aufnahme
 #   E  ROOM1050 Leon ohne Aufnahme (Bild): Loescher haengt an der Wand und wird gezeichnet
+#   F  Spielstand + CONTINUE in ROOM1090 (Feuer aus, Loescher abgelegt) -> liegt und wird gezeichnet
+#   G  dasselbe mit dem Loescher im Inventar -> liegt NICHT (kein Doppel)
+#   H  Elza Tuer-Weg ROOM1051 -> ROOM1091 -> liegt; in ROOM1051 haengt keiner
 #
 # Bilder je Lauf per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) im Arbeitsordner; geprueft wird das LOG.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r37_feuerloescher_karte> -DWORKDIR=<dir>
@@ -146,6 +149,21 @@ pruef_nicht(D _d "Aufnahme Item 0x31")
 # --- E: Bild ROOM1050 ------------------------------------------------------------------------------
 fl_lauf(e 1050 "1050;18900;-20800;0;cut:6" "W3" 140 "RE15_FRAMEDUMP=120-120/50:fd_" _e)
 pruef(E _e "oid=0x05 pos=(17200,-1150,-23775)")
+
+# --- F/G: Spielstand + CONTINUE direkt in ROOM1090 (Leon, Feuer aus, Rettung durch) -------------------
+fl_lauf(f 1090 "1090;0;250;0;y:-1800;cut:5;flag:9:0x86;flag:3:0x85;flag:3:0x81;flag:3:0xbb;flag:3:0x6e"
+    "W2" 100 "" _f)
+pruef(F _f "[feuerloescher] ROOM1090: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300)")
+pruef(F _f "oid=0x05 pos=(2500,-1800,-1300)")
+fl_lauf(g 1090 "1090;0;250;0;y:-1800;cut:5;flag:9:0x86;flag:3:0x85;flag:3:0x81;flag:3:0xbb;flag:3:0x6e;give:0x31:1"
+    "W2" 100 "" _g)
+pruef(G _g "[feuerloescher] ROOM1090: kein Loescher (Leon traegt ihn noch (Item 0x31 im Inventar))")
+pruef_nicht(G _g "oid=0x05")
+
+# --- H: Elza Tuer-Weg ROOM1051 -> ROOM1091 ---------------------------------------------------------
+fl_lauf(h 1051 "1051;19850;-22300;1024;cut:6;elza" "W1,A0.5,W12" 520 "" _h)
+pruef(H _h "[feuerloescher] ROOM1091: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300)")
+pruef_nicht(H _h "[feuerloescher] ROOM1051")
 
 file(REMOVE "${_exe_kopie}")
 if(_fehler)
