@@ -1,0 +1,35 @@
+# NB1: ROOM2030 Lift A ABWAERTS von knapp suedlich der oberen Kabine (Rueckweg von der SPAS-12, Blick Nord 1024,
+# Punkt 620 voraus im Ausloeser slot 4). Vorher: aus der Kabine hoch (vorgesehene Fahrt), nach Sueden bis z ~13300.
+# Danach: in die Kabine, erneut AKTION (vorgesehene Fahrt abwaerts), nach Norden zur Tuer slot 0 (Rechteck um (6850,-1950)),
+# Blick Ost, AKTION -> ROOM2070.
+OBJ 1
+RAUM 2031
+GEGNERWEG
+WARTE 30
+FLAG 3 222
+GEHE 6600 12000 100
+BLICK 3072
+WARTE 20
+AKTION
+WARTE 400
+FLAG 3 222
+GEHE 6600 13300 60
+BLICK 1024
+WARTE 20
+AKTION
+WARTE 400
+FLAG 3 222
+GEHE 6600 12000 100
+BLICK 1024
+WARTE 20
+AKTION
+WARTE 400
+FLAG 3 222
+GEHE 6600 2100 150
+GEHE 6550 -100 150
+BLICK 0
+WARTE 20
+AKTION
+RAUM 2071
+WARTE 30
+ENDE

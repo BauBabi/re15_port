@@ -363,8 +363,8 @@ Lift-Ausloesung ausserhalb der Kabine.
 ### NB1.0 Stand
 - [x] Messung vorher an der exe (Falle auf/ab reproduziert, NB1.1)
 - [x] RE-Belege: RE1.5 Lift A (Ausloeser sat 0x31 = nur Punkt 620 voraus) / RE2 Retail-Vorbild (NB1.2)
-- [ ] Umsetzung
-- [ ] Messung nachher (Leon + Elza, beide Richtungen; vorgesehener Weg bleibt)
+- [x] Umsetzung (NB1.3, Code-Commit 589a37de)
+- [x] Messung nachher (Leon + Elza, beide Richtungen; vorgesehener Weg bleibt) (NB1.5)
 - [ ] Riegel + Gegenprobe
 - [ ] Dossier §5.5/§7/§8 berichtigt
 
@@ -439,7 +439,9 @@ Auszug `D_belege/nb1/re2_6030_sub00_10_12.txt`):
 * Zensus ALLER RE2-Schreiber des Spielerbands (Work_set(1,0) + Member_set 0x11, `D_belege/nb1/re2_floor_scan.py`, Ausgabe
   `re2_floor_scan.txt`): 1120 sub17 `0x03678` (Skript-Sturz mit Add_speed-Bahn, kein Lift), 3040 sub24 `0x01B54` +
   `Pos_set (-7435,0,-24500)` `0x01B58`, 4100 sub03 `0x01452` nach `Pos_set (3732,0,-19807)` `0x01446`, 5040 sub11 `0x020EC` nach
-  `Pos_set (10090,0,-10932)` `0x020E4`, 5060 sub03 (Lift, Mitte-Ausloeser), 6030/F030 sub10/sub12 (Lift, Mitte-Zone). -> In Retail
+  `Pos_set (10090,0,-10932)` `0x020E4`, 5060 sub03 (Lift, Mitte-Ausloeser), 6030/F030 sub10/sub12 (Lift, Mitte-Zone); 1120 sub39 `0x041A2` / sub44 `0x0429E` ohne eigenes
+  Work_set werden per Gosub (`18 27` / `18 2c`) aus sub35..38 / sub40..43 nach `Work_set 2e 03 nn` (Art 3, nicht der Spieler)
+  gerufen; 3060/6170/5040 sub00+sub04 schreiben an Art 4/3/2. -> In Retail
   aendert KEIN Skript das Spielerband, ohne den Spieler an eine feste Stelle zu setzen oder seine Mitte auf der Plattform zu verlangen.
 
 **(c) Folgerung (PORT-WAHL nach RE2-Vorbild, Beta -> Retail):** Lift A in ROOM2030/2031 faehrt nur, wenn die Spielermitte im
@@ -447,3 +449,28 @@ Ausloese-Rechteck des Satzes (= Kabine, aus dem Satz selbst `0x01CE6`/`0x01D20`)
 bzw. RE2-Zone sat 0x41; sonst ist der Druck verbraucht und nichts passiert (RE2 sub10 `0x02F78 Evt_end`). Der Satz selbst (sat
 0x31, Punkt 620 voraus), das Band-Gate und Member 0x12 bleiben byte-true. Nur Lift A: das ist der einzige Lift mit Fallenstellen
 (Zensus NB1.4, echte Port-Kollision).
+
+### NB1.3 Umsetzung (Code-Commit 589a37de)
+* `re15_port/engine/src/itemband_r37.c`: Tabelle `k_liftsperre` = die ausgelieferten Saetze ROOM2030/2031 sub00 `0x01CE6`
+  (slot 5, floor 3) und `0x01D20` (slot 4, floor 6) mit Rechteck (5850,11350,1500,1500) (Satzbytes +6..+13) und Unterprogramm 2
+  (Satzbyte +17); `re15_itemband_r37_liftsperre(slot, mitte)`: passt Raum, Slot, Typ GENERIC, Unterprogramm UND Rechteck (Mitte +
+  halbe Ausdehnung wie op_aot_set), dann gesperrt = !mitte (RE2 6030 sub10 `0x02F74`/`0x02F78`). Messschrieb-Zeile
+  `LIFT slot s sub 2 spieler=(x,y,z) band b mitte im Ausloeser ja|nein -> FAEHRT|GESPERRT (RE2 6030 sub10 @0x02F78)`.
+  `re15_itemband_r37_ist_liftsperre(raum, slot)` und `re15_itemband_r37_liftsperre_zahl()` fuer den Riegel.
+* `re15_port/engine/src/aot_common.c` (+2 Zeilen, Kommentar "Runde 37 Spur D NB1"): im Feuer-Zweig der Ereignis-Saetze
+  (`default:` -> `fired_event_id_this_frame`) `if (re15_itemband_r37_liftsperre(i, inside)) break;`. `inside` ist der Mitte-Test
+  des Scans fuer diesen Satz (Rechteck aus dem Satz). `action_fired` ist an der Stelle schon 1: der Druck ist VERBRAUCHT wie in
+  RE2 (sub10 startet und endet sofort), kein anderer Satz feuert mit demselben Druck.
+* `re15_port/include/re15_itemband_r37.h`: Abschnitt (3) mit allen Belegen. Keine neue Konstante ohne Satz-Offset; keine Flags,
+  keine Text-Ids, keine Slots belegt. Der Satz (sat 0x31), das Band-Gate (1) und Member 0x12 (2) bleiben unveraendert.
+
+### NB1.5 Messung nachher (exe 589a37de, Messkopie re15_pc_r37d_nb1.exe; Auszuege `D_belege/nb1/n_*`)
+Gleiche Befehle und Wegplaene wie NB1.1.
+| Lauf | Druck ausserhalb | Druck in der Kabine | Ergebnis |
+|---|---|---|---|
+| `n_auf_eingang` (Leon) | `F254 LIFT slot 5 sub 2 spieler=(6605,-5400,10770) band 3 mitte im Ausloeser nein -> GESPERRT`, `F657 (3,222) = 0` (keine Fahrt, Spieler unveraendert) | `F717 ... (6605,-5400,11970) ... ja -> FAEHRT`, `F808 MEMBER 0x12 3 -> 6` | `F1254 (6605,13695)`, `F1400 (-637,14499)`, `F1443 ITEM slot 11 ... spieler-band 6 -> FREI`, **`F1672 FLAG (9,109) = 1`** |
+| `n_ab_sued` (Leon) | `F844 LIFT slot 4 sub 2 spieler=(6605,-10800,13245) band 6 ... nein -> GESPERRT`, `F1247 (3,222) = 1` (keine Fahrt) | `F1308 ... (6597,-10800,12061) ... ja -> FAEHRT`, `F1399 MEMBER 0x12 6 -> 3` | `F1949 (6641,2227)`, `F1995 (6535,11)`, **`[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750)`**, **`loaded room2070.rdt`** |
+| `n_auf_eingang_elza` (`RE15_PSELECT_AUTO_SWITCH=1`, `PL04 ... Elza-Bit=1`, `loaded room2031.rdt`) | `F254 room=2031 LIFT slot 5 ... nein -> GESPERRT` | `F717 ... ja -> FAEHRT`, `F808 MEMBER 0x12 3 -> 6` | `F1443 ... -> FREI`, **`F1672 FLAG (9,109) = 1`** |
+| `n_ab_sued_elza` | `F844 room=2031 LIFT slot 4 ... nein -> GESPERRT` | `F1308 ... ja -> FAEHRT`, `F1399 MEMBER 0x12 6 -> 3` | **`DOOR FIRE slot=0`**, **`loaded room2071.rdt`** |
+-> Beide Fallen sind fuer beide Figuren weg; der vorgesehene Weg (Fahrt aus der Kabine) faehrt unveraendert, die SPAS-12
+bleibt erreichbar und der Raum ueber die Tuer slot 0 verlassbar.
