@@ -245,6 +245,9 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
   hinten angehaengt") und unit_r36_story_schuppen ("Leon 1090 nach dem Loeschen: kein Text-Platz in Slot 2/5") rot ->
   Code angepasst (Installer vor den Dokumenten wie r35, Slot 6); beide Alt-Riegel unveraendert gruen.
 
+* ENDSTAND (letzter Code-Stand dieses Zweigs, Bau + ein Lauf): `^(unit_r37_feuerloescher|integration_r37_feuerloescher|unit_aot_edge|unit_scd_aot_opcodes|unit_savedata|unit_item_modal|unit_item_stack_press|unit_aot_sce_census|unit_sicherung_1150|unit_re2_room1090_ab|unit_1090_|probe_1090_|unit_plc_back_yaw_1090|unit_map_1090|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r21_discard_wegwerfen|unit_r27_ada_cutscene_1050|unit_r30_|unit_r34n_a_rolltor|unit_r34n_d_adaruf|unit_r34n_e_dokumente|unit_r35_granate|unit_r35_inhalt|unit_r35_inventar1050|unit_room1050_sicherung|unit_r36_granate|unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_schluessel|unit_r36_story)`
+  -> `100% tests passed, 0 tests failed out of 102`.
+
 ## 6. OFFEN
 * Nichts Funktionales. Ehrliche Grenzen der Messung:
   - Das Modell ist ein Neubau (PORT-WAHL); seine Masse stammen aus dem Item-Bild (2D-Verhaeltnis; ist der Koerper im
@@ -254,6 +257,10 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
   - Die Wandhalterung selbst ist nicht modelliert (bei ~14 Bildpunkten Hoehe nicht erkennbar); nach der Aufnahme ist
     die Wand leer wie gemalt.
 * Volle Suite NICHT gefahren (Spurbaum-Regel); die gezielten Laeufe stehen in Abschnitt 5.
+* Fuer die Integration/Release: neue Quelldatei `engine/src/feuerloescher_r37.c` (GLOB) — der Android-Bau friert die
+  GLOB-Liste im app/.cxx-Cache ein (Memory reai-v2-android-glob-cache), also dort neu konfigurieren. Merge-Stellen:
+  `scd_room_setup.c` / `platform/pc/main.c` je eine Zeile direkt NACH re15_inhalt_r35_install (nicht am Blockende,
+  Grund 3.5), `item_modal_common.c` / `item_discard_common.c` je Include + eine Zeile neben den Runde-36-Haken.
 
 ## 7. Fuer den Nutzer
 
