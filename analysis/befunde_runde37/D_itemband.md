@@ -353,3 +353,17 @@ Zweig `r37/itemband` (Basis master f1e019ca), Code-Commit 6aeb2086 (die zwei Hak
 Gemeinsame Dateien: `re15_port/engine/src/aot_common.c` (+3 Zeilen: Include, Kommentar, Aufruf nach dem GENERIC-Gate),
 `re15_port/engine/src/actor_common.c` (+3/-1: Include, case 18 mit Aufruf). Keine Installer-Zeile in scd_room_setup.c noetig
 (kein Raum-Installer), keine neuen Assets, keine Sprachdateien, keine neuen Bank-9-Bits, keine Port-Text-Ids.
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-12) — fortlaufend
+
+Maengel aus `D_abnahme_0.md` §8: (1) Softlock ROOM2030/2031 Lift A AUFWAERTS aus dem Kabineneingang, (2) dasselbe ABWAERTS
+knapp suedlich der oberen Kabine, (3) Dossier §5.5/§7/§8 verharmlosen bzw. verschweigen die Falle, (4) kein Riegel fuer die
+Lift-Ausloesung ausserhalb der Kabine.
+
+### NB1.0 Stand
+- [ ] Messung vorher an der exe (Falle auf/ab reproduziert)
+- [ ] RE-Belege: RE1.5 Lift A (Ausloeser sat 0x31 = nur Punkt 620 voraus) / RE2 Retail-Vorbild
+- [ ] Umsetzung
+- [ ] Messung nachher (Leon + Elza, beide Richtungen; vorgesehener Weg bleibt)
+- [ ] Riegel + Gegenprobe
+- [ ] Dossier §5.5/§7/§8 berichtigt
