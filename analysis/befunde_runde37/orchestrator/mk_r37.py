@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_m.js"
-BASIS = "70030492"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_o.js"
+BASIS = "07bb463a"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -197,6 +197,30 @@ SPUREN = [
    "Auswahl-Band, Ziffern, Scrollbalken, Cursor, Inventar-Gitter rechts unveraendert. RIEGEL ueber probes/r37_kiste.cmake: Namen-Symbol-Ueberlappung = 0 "
    "fuer ALLE Item-Ids, kein Zeilen-Pixel ueber dem Rahmen bzw. ausserhalb des Fensters in jedem Gleit-Bild, Rahmen-Pixel unveraendert; test_itembox_screen, "
    "test_itembox_transfer, test_room1150_itembox gruen halten. Paket: keine neuen Assets erwartet.")),
+
+ dict(id="O", thema="szene11c0", baum="r37_szene11c0",
+  punkte=["Und die Dialogszene mit Ada/Marvin nach Irons Tod ist auch noch nicht so geil von den Animationen....",
+          "Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut."],
+  hinweise=("SZENE = Programm 4 der Irons-Szene: re15_port/engine/src/irons_tod_1150.c k_p_11c0 (~Z.391-470; Herleitung im Kommentar: Runde 35 Spur L "
+   "analysis/befunde_runde35/L_cut1150.md, Runde 36 Spur K2 analysis/befunde_runde36/K_*.md + K_belege/k2_*). Heutiger Ablauf: (1) beide drehen sich "
+   "zum Gebaeude (Tuer Slot 0 @0x01712, Mitte (-25100,17250) — liegt HINTER der Kamera Cut 13 = RID ROOM11C0 @0x200), (2) Ada dreht sich zu Marvin, "
+   "Marvin nur mit dem Kopf (OP_NECK1), (3) Marvin dreht sich zu Ada + Nicken, (4) 'Oh, no, Leon!' wieder zum Gebaeude gedreht, (5) zu Ada, Arm, "
+   "(6) rennt (Modus 5), (7) Ada sieht nach + 'Marvin!...'. Orte: Ada (-8965,-14347) (ROOM11C0 sub00 @0x01770), Marvin (-8163,-13748) Spawn-Gier 475 "
+   "(OP_EM). Vokabular aus dem Original-Dialog dieses Raums (ROOM11C0 sub02 Leon<->Ada: Plc_neck Modus 1 `41 01 x 0 z 64 00` @0x01886/@0x018C0, "
+   "Plc_dest Modus 9 Drehen @0x01890/@0x018CA, Ankunfts-Warten sub05/sub06 @0x01C3E/@0x01C50, Nicken sub03 @0x01BB2-BCA). SCHRITT 1 MESSEN an der "
+   "exe (echter Weg wie integration_r35_cut1150 Lauf A: probe_r35_cut1150_karte 1130 'nach10f0;ersteszene', CONTINUE, Tuer, Szene; RE15_FRAMEDUMP "
+   "Serie mit RE15_WINDOW_SCALE=1 im 11C0-Abschnitt; dazu je Bild Gierwinkel + Kopfdrehung (Plc_neck-Zustand) von Ada und Marvin loggen): jede Drehung "
+   "mit Bild, Start-/Endwinkel, Dauer — die Beschreibung des Nutzers Punkt fuer Punkt belegen (falsche Anfangsrichtung, 180-Grad-Drehung, 90-Grad-"
+   "Drehung Adas, Marvin spricht ohne Ada anzusehen). Pruefen, ob Plc_neck bei Marvin (Typ 0x40, NPC-Bibliothek) sichtbar wirkt (Kopfknochen dreht sich "
+   "im Bild?) und wie die Anfangs-Gier von Ada entsteht. SCHRITT 2 VORBILD: RE2-Dialogszenen zweier NPCs/Spieler (RE2_Quellcode_Overlays/, info/re2leon "
+   "RDT-SCD, z.B. Leon/Ada- oder Marvin-Szenen): wie halten sie sich zugewandt, wie reagieren sie auf ein Geraeusch (Kopf vs. Koerper), wie lange "
+   "drehen sie. SCHRITT 3 BAUEN: Anfangs-Gier beider so, dass sie sich zugewandt sind (Winkel aus den Positionen, atan2-Form des Ports zitieren); "
+   "Knall-Reaktion nur Kopf/kurze Koerperdrehung, keine 180 Grad; wer spricht, sieht den anderen an (Kopf + Koerper), auch Marvin bei allen drei "
+   "Zeilen bis zum Losrennen; Ada sieht ihm nach. Beats, Texte, Gesten, Laufziel und Schnitt zurueck nach 1150 bleiben; Takte PORT-WAHL. NICHT "
+   "anfassen: andere Programme in irons_tod_1150.c (Spur H: Nachspawn 1130), k_msg28 (Nachtrag 10). RIEGEL ueber probes/r37_szene11c0.cmake: je "
+   "Sprech-Abschnitt Gier/Kopf des Sprechers zeigt auf den anderen (Toleranz begruenden), groesste Einzeldrehung je Figur unter 90 Grad bzw. "
+   "begruendet, keine Drehung um ~180 Grad; integration_r35_cut1150 und integration_r36_szene1150 (Dialog-11C0-Riegel unit_r36_szene1150_dialog11c0) "
+   "gruen halten bzw. mit Beleg anpassen. Bildbeweis: Vorher/Nachher-Streifen im Dossier.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
