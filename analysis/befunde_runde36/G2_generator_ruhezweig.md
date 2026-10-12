@@ -189,3 +189,78 @@ gleich nach: je Bild +-200 auf obj+0x34/+0x3C NACH der SCD und VOR dem Objekt-Pa
 80040f7c sw v0,60(a1)`), kein Pad (die Schubkette @0x8002bf24 greift nie), je Richtung bis 15 Bilder Stillstand.
 Gegenprobe der Nachbildung: ROOM11F0 liefert damit am Original exakt dieselben Zahlen wie die ECHTE SCD-Fahrt
 (orig_cursor_lauf1): 33/66/52/101 Bilder, Endlagen 29232/16068/-29782/-9668, gleiche erste Ausschiebungen.
+
+Pruefung je Raum vor der Fahrt (`orig_zensus/log.txt`): EXE-Stub `0800e003`, alle SCA-Zellen im RAM == RDT-Datei bis auf
+`u0`/`floor`, die Sca_id_set (0x37) / Sca_floor_set (0x39) beim Raumaufbau umsetzt (z. B. ROOM11E0 Zelle 0/22/44/66/88
+u0 0x00 -> 0xff = sub00 @0x017B0..0x017C0 `37 0r 00 ff`; ROOM3050 Zellen 21/112/... u0+floor; der Port setzt dieselben
+Opcodes um: scd_vm.c `op_sca_id_set` / `op_sca_floor_set`), Cursor-Pool-Platz = obj: `+0=0101 typ 4 band 0`. Cursor, die
+das SCD nur in einem Else-Zweig installiert, mit Spielflag (Bank 3 = 0x800b0ff8, Tabelle @0x80074664[3]) vor dem
+Laden — im Port dieselben Flags vor `scd_room_reenter`.
+
+| Raum / obj | Flags | Rahmen | Original (log Zeile) | OBEN | UNTEN | LINKS | RECHTS | Port |
+|---|---|---|---|---|---|---|---|---|
+| 1080 obj 0 (Fahrstuhl) | — | A | Z.10 | 33 / z 29232 | 66 / z 16068 | 52 / x -29782 | 101 / x -9668 | = |
+| 10D0 obj 1 | — | B | Z.18 | 34 / z -16568 | 66 / z -29732 | 52 / x -29782 | 101 / x -9668 | = |
+| 10D1 obj 1 (Elza) | — | B | nicht ladbar (Leon-JUMP); SCA + Cursor-Bytes @0x0114E == 10D0 | | | | | = 10D0 |
+| 1100 obj 0 | 3:103=1 | A | Z.106 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 11E0 obj 1 | 3:127=1 (3:139=0) | A | Z.135 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 11E0 obj 2 | 3:139=0 | C | Z.135 | 33 / z 29232 | 66 / z 16068 | 52 / x 9068 | 101 / x 29182 | = |
+| 11F0 obj 0 (Generator) | — | A | Z.1 (+ echte SCD-Fahrt) | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 1230 obj 0 | — | B | Z.34 | 34 / -16568 | 66 / -29732 | 52 / -29782 | 101 / -9668 | = |
+| 2040 obj 0 | 3:146=1 | A | Z.115 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 2050 obj 8 | — | — | Z.178: Pool 8 `+0=0000` | nicht installiert (Ck(5,7)==1 @0x01D34, Bank 5 geleert @0x8003ed74) | | | | = (nicht da) |
+| 2060 obj 3 | — | A | Z.48 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 2060 obj 4 | — | D | Z.48 | 33 / z -15968 | 66 / z -29132 | **51** / x 9418 | 101 / x 29532 | = |
+| 3050 obj 3 | 3:178=1 | A | Z.154 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 30E0 obj 0 | — | A | Z.64 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 4020 obj 0 (Fahrstuhl) | — | A | Z.72 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+| 5050 obj 0 | — | A | Z.80 | 33 / 29232 | 66 / 16068 | 52 / -29782 | 101 / -9668 | = |
+
+Rahmen A: x -31700..-7750 z 14150..31150; B: x -31700..-7750 z -31650..-14650; C: x 7150..31100 z 14150..31150; D: x
+7500..31450 z -31050..-14050 (jeweils vier Klasse-2-Zellen Band 0, Zelladressen je Treffer im Log). Je Richtung stimmen
+auch die ersten Ausschiebungen ueberein (z. B. 2060 obj 4 LINKS: Original `(9371,-29132) -> (9418,-29132)`, Port dito).
+**Ergebnis Zensus: jeder Panel-Cursor des Spiels wird im Original UND im Port beim Erreichen seines Rahmens in jedem Bild
+ausgeschoben; die Werte sind bitgleich (15 Cursor, 60 Richtungen). Kein weiterer Raum hat eine Port-Abweichung.** Im
+Spielverlauf tritt der Schub genau dann auf, wenn der Spieler den Cursor an den Feldrand faehrt — dort bleibt er stehen
+(Original-Verhalten). Hebetisch 1150 und Cursor-Raster 4000 haben keine schiebbaren Objekte (Z1).
+
+## P3 — Riegel mit Original-Beleg angepasst (kein Code-Fix)
+
+Der Port-Code (zellschub_r36.c, aot_common.c, game_step_common.c) bleibt unveraendert: er tut, was das Original tut.
+Angepasst sind die Riegel, die "der Cursor faehrt unbegrenzt" angenommen hatten; ihre eigentliche Aussage (nach einem
+Zwischenschalter KEINE Eingabesperre — Nutzer-Vorgabe Runde 34 Nacht "man soll sich frei bewegen koennen Ausser ganz am
+Ende") bleibt erhalten und wird jetzt im Schalterfeld geprueft:
+
+* `tests/unit/r31_generator.c`
+  - Konstanten `ORIG_RAHMEN_*`, `ORIG_FAHRT_*`, `ORIG_START_*`, `CURSOR_SCHRITT` als Zahlen mit Log-Zeile / Byte-Offset
+    (nicht aus dem Port gerechnet — Lehre Runde 31, selbstbestaetigende Metrik).
+  - Teil D(1): vorher UNTEN an den Rahmen (Original z 16068), dann Schalter 7 und 49 Bilder HOCH: jedes Bild +200,
+    dz = 9600, 0 Sperrbilder, Zeiger 20.
+  - Teil D(1b) neu: weiter HOCH bis zum Stand: z = 29232 (Original B033), >= 15 Bilder Stand, 0 Sperrbilder, kein Bild
+    jenseits des Rahmens. Danach 20 Bilder UNTEN, damit "Cursor steht trotz HOCH" in D(2) nicht am Rahmen gilt.
+  - Teil G neu: dieselbe Fahrt wie die Original-Messung mit der ECHTEN Eingabe (sub02..05): OBEN 33 / UNTEN 66 / LINKS 52 /
+    RECHTS 101 Fahrbilder, Endlagen wie das Original, keine Sperre, kein Schalter umgelegt.
+* `tests/unit/probe_r34n_c_generator.c` Teil A: 30 Bilder UNTEN, ab Bild 30 OBEN (ab der Zelle von Schalter 7 reicht eine
+  Richtung nur 42 bzw. 23 Bilder bis zum Rahmen); neu: Cursor bleibt in z 16068..29232.
+* `tests/unit/probe_r36_g2_cursor_rahmen.c` + `probes/r36_g2_generator.cmake` neu: ctest `unit_r36_g2_cursor_rahmen`
+  (Argument `pin`) — Tabelle Z3 als Riegel (91 Pruefungen).
+
+Messung nachher (Bau `LOCAL-BUILD-OK`): `r31_generator` ALLES GRUEN — D: `Vorlauf UNTEN: Cursor bei (-19554,16068)`,
+`dz=9600, Stillstandsbilder 0, Sperrbilder 0, Zeiger 20`, `weiter HOCH: Cursor steht bei z=29232 (15 Bilder Stillstand),
+Sperrbilder 0, ueber dem Rahmen 0`; G: `OBEN start (-19554,22684) bewegt 33 ende (-19554,29232) Sperrbilder 0 | Original:
+bewegt 33 ende (-19554,29232)` (UNTEN/LINKS/RECHTS dito). `probe_r34n_c_generator` ALLES GRUEN — A: `Schalterbit im Bild
+15, Zeiger 20 im Bild 34; 51 Fahrt+Ruhe-Bilder: Cursor stand 0-mal, Sperre 0-mal`. `probe_r36_g2_cursor_rahmen pin`
+ALLES GRUEN (91 OK).
+
+**Rueckbau-Nachweis** (`G2_belege/mutation.sh`, je Mutation `local_build.sh build`, drei Riegel gefahren, Datei per
+`git checkout` zurueck, am Ende sauberer Bau `LOCAL-BUILD-OK`; Protokoll `G2_belege/mutation.log`):
+
+| Mutation | r31_generator | probe_r34n_c_generator | unit_r36_g2_cursor_rahmen |
+|---|---|---|---|
+| g1 Ruhe-Zweig aus (`re15_zellschub_ruhe` kehrt sofort zurueck = Stand vor Spur R) | 7 FAIL (D-Vorlauf, D(1b) x2, G x4) | 0 FAIL (A bleibt im Feld, prueft die Sperre) | 60 FAIL (alle Richtungen aller Cursor) |
+| g2 alte Runde-31-Zwischensperre wieder an | 3 FAIL (D(1): Cursor steht, dz, Sperrbilder) | 7 FAIL (A, B, C, D, G) | 0 FAIL |
+| g3 Endsperre aus (`sperrt()` = 0) | 4 FAIL (D(2) inkl. "Cursor steht trotz HOCH", B k+31) | 12 FAIL (B 11F0/11F1) | 0 FAIL |
+
+Jeder Riegel faellt genau auf seine Aussage: der Rahmen (g1) nur in den neuen Rahmen-Pruefungen, die Zwischensperre (g2)
+und die Endsperre (g3) in den Sperr-Pruefungen; D(2) "Cursor steht trotz HOCH" bleibt wirksam (g3 faellt dort), weil
+der Cursor vor D(2) 20 Bilder vom Rahmen weggefahren wird.

@@ -1,0 +1,107 @@
+=== g1: Ruhe-Zweig aus (re15_zellschub_ruhe kehrt sofort zurueck)
+  r31_generator: rc=1  7 FAIL
+       [FAIL] Vorlauf: der Cursor steht am unteren Rahmen (Original z 16068, B114)
+       [FAIL] der Stillstand ist der obere Rahmen des Originals (z 29232, B033), nicht eine Sperre
+       [FAIL] der Cursor war in keinem Bild jenseits des Rahmens
+       [FAIL] OBEN: 33 Fahrbilder, Stand am Rahmen[scd] thread start slot=10 first_op=0x2E
+       [FAIL] UNTEN: 66 Fahrbilder, Stand am Rahmen (-19554,16068) wie das Original, keine Sperre
+       [FAIL] LINKS: 52 Fahrbilder, Stand am Rahmen (-29782,16068) wie das Original, keine Sperre
+       [FAIL] RECHTS: 101 Fahrbilder, Stand am Rahmen (-9668,16068) wie das Original, keine Sperre
+  probe_r34n_c_generator: rc=0  0 FAIL
+  probe_r36_g2_cursor_rahmen: rc=1  60 FAIL
+       [FAIL] ROOM1080 obj 0 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM1080 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM1080 obj 0 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM1080 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM10D0 obj 1 OBEN = Original: 34 Bilder, Endlage (-19554,-16568), Ausschiebung (-19554,-16416)->(-19554,-16568)
+       [FAIL] ROOM10D0 obj 1 UNTEN = Original: 66 Bilder, Endlage (-19554,-29732), Ausschiebung (-19554,-29768)->(-19554,-29732)
+       [FAIL] ROOM10D0 obj 1 LINKS = Original: 52 Bilder, Endlage (-29782,-29732), Ausschiebung (-29954,-29732)->(-29782,-29732)
+       [FAIL] ROOM10D0 obj 1 RECHTS = Original: 101 Bilder, Endlage (-9668,-29732), Ausschiebung (-9582,-29732)->(-9668,-29732)
+       [FAIL] ROOM10D1 obj 1 OBEN = Original: 34 Bilder, Endlage (-19554,-16568), Ausschiebung (-19554,-16416)->(-19554,-16568)
+       [FAIL] ROOM10D1 obj 1 UNTEN = Original: 66 Bilder, Endlage (-19554,-29732), Ausschiebung (-19554,-29768)->(-19554,-29732)
+       [FAIL] ROOM10D1 obj 1 LINKS = Original: 52 Bilder, Endlage (-29782,-29732), Ausschiebung (-29954,-29732)->(-29782,-29732)
+       [FAIL] ROOM10D1 obj 1 RECHTS = Original: 101 Bilder, Endlage (-9668,-29732), Ausschiebung (-9582,-29732)->(-9668,-29732)
+       [FAIL] ROOM1100 obj 0 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM1100 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM1100 obj 0 LIN[scd] thread start slot=0 first_op=0x3B
+       [FAIL] ROOM1100 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM11E0 obj 1 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM11E0 obj 1 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM11E0 obj 1 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM11E0 obj 1 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM11E0 obj 2 OBEN = Original: 33 Bilder, Endlage (19446,29232), Ausschiebung (19446,29284)->(19446,29232)
+       [FAIL] ROOM11E0 obj 2 UNTEN = Original: 66 Bilder, Endlage (19446,16068), Ausschiebung (19446,16032)->(19446,16068)
+       [FAIL] ROOM11E0 obj 2 LINKS = Original: 52 Bilder, Endlage (9068,16068), Ausschiebung (9046,16068)->(9068,16068)
+       [FAIL] ROOM11E0 obj 2 RECHTS = Original: 101 Bilder, Endlage (29182,16068), Ausschiebung (29268,16068)->(29182,16068)
+       [FAIL] ROOM11F0 obj 0 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM11F0 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM11F0 obj 0 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM11F0 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM1230 obj 0 OBEN = Original: 34 Bilder, Endlage (-19554,-16568), Ausschiebung (-19554,-16416)->(-19554,-16568)
+       [FAIL] ROOM1230 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,-29732)[scd] thread start slot=0 first_op=0x54
+       [FAIL] ROOM1230 obj 0 LINKS = Original: 52 Bilder, Endlage (-29782,-29732), Ausschiebung (-29954,-29732)->(-29782,-29732)
+       [FAIL] ROOM1230 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,-29732), Ausschiebung (-9582,-29732)->(-9668,-29732)
+       [FAIL] ROOM2040 obj 0 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM2040 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM2040 obj 0 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM2040 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM2060 obj 3 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM2060 obj 3 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM2060 obj 3 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM2060 obj 3 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM2060 obj 4 OBEN = Original: 33 Bilder, Endlage (19571,-15968), Ausschiebung (19571,-15942)->(19571,-15968)
+       [FAIL] ROOM2060 obj 4 UNTEN = Original: 66 Bilder, Endlage (19571,-29132), Ausschiebung (19571,-29168)->(19571,-29132)
+       [FAIL] ROOM2060 obj 4 LINKS = Original: 51 Bilder, Endlage (9418,-29132), Ausschiebung (9371,-29132)->(9418,-29132)
+       [FAIL] ROOM2060 obj 4 RECHTS = Original: 101 Bilder, Endlage (29532,-29132), Ausschiebung (29618,-29132)->(29532,-29132)
+       [FAIL] ROOM3050 obj 3 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM3050 obj 3 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM3050 obj 3 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM3050 obj 3 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM30E0 obj 0 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM30E0 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM30E0 obj 0 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM30E0 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM4020 obj 0 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM4020 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM4020 obj 0 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM4020 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+       [FAIL] ROOM5050 obj 0 OBEN = Original: 33 Bilder, Endlage (-19554,29232), Ausschiebung (-19554,29284)->(-19554,29232)
+       [FAIL] ROOM5050 obj 0 UNTEN = Original: 66 Bilder, Endlage (-19554,16068), Ausschiebung (-19554,16032)->(-19554,16068)
+       [FAIL] ROOM5050 obj 0 LINKS = Original: 52 Bilder, Endlage (-29782,16068), Ausschiebung (-29954,16068)->(-29782,16068)
+       [FAIL] ROOM5050 obj 0 RECHTS = Original: 101 Bilder, Endlage (-9668,16068), Ausschiebung (-9582,16068)->(-9668,16068)
+=== g2: alte Runde-31-Zwischensperre wieder an
+  r31_generator: rc=1  3 FAIL
+       [FAIL] nach einem Zwischenschalter bewegt sich der Cursor in jedem Bild (keine Sperre)
+       [FAIL] und zwar +200 je Bild ab dem zweiten (sub02 @0x012F6): dz = 48*200
+       [FAIL] und die Sperre stand in keinem Bild
+  probe_r34n_c_generator: rc=1  7 FAIL
+       [FAIL] in JEDEM Bild der Fahrt und der 30 Ruhebilder bewegt sich der Cursor
+       [FAIL] und nie eine Sperre
+       [FAIL] vor b* in KEINEM Bild eine Sperre (7, 9, 3, 1 frei, Zeiger faehrt dabei)
+       [FAIL] keine Sperre, keine Abnahme
+       [FAIL] nie gesperrt, nie abgenommen
+       [FAIL] vor b* in KEINEM Bild eine Sperre (7, 9, 3, 1 frei, Zeiger faehrt dabei)
+       [FAIL] ROOM11F1: Zwischenschalter sperrt nicht
+  probe_r36_g2_cursor_rahmen: rc=0  0 FAIL
+=== g3: Endsperre aus (sperrt() liefert immer 0)
+  r31_generator: rc=1  4 FAIL
+       [FAIL] Endsperre: gesperrt in jedem Bild ab Maske 0x155 bis zur Abnahme
+       [FAIL] Endsperre: der Cursor steht trotz HOCH
+       [FAIL] Endsperre: gehaltenes Quadrat legt keinen Schalter um
+       [FAIL] Abnahme genau im Bild k+31 (RE2 sleep 30 @0x0171D)
+  probe_r34n_c_generator: rc=1  12 FAIL
+       [FAIL] im Bild b* gesperrt (LIVE-Maske)
+       [FAIL] die Sperre steht in JEDEM Bild von b* bis zur Abnahme
+       [FAIL] der Cursor steht trotz gehaltenem HOCH (bis einschliesslich Abnahmebild)
+       [FAIL] gehaltenes Quadrat legt keinen Schalter um
+       [FAIL] Abnahme genau im Bild k+31 (RE2 sleep 30 @0x0171D)
+       [FAIL] beide Lampen gruen im Abnahmebild und danach (Bits 13..22 bleiben, sub18 @0x016FA..0x0172A)
+       [FAIL] im Bild b* gesperrt (LIVE-Maske)
+       [FAIL] die Sperre steht in JEDEM Bild von b* bis zur Abnahme
+       [FAIL] der Cursor steht trotz gehaltenem HOCH (bis einschliesslich Abnahmebild)
+       [FAIL] gehaltenes Quadrat legt keinen Schalter um
+       [FAIL] Abnahme genau im Bild k+31 (RE2 sleep 30 @0x0171D)
+       [FAIL] beide Lampen gruen im Abnahmebild und danach (Bits 13..22 bleiben, sub18 @0x016FA..0x0172A)
+  probe_r36_g2_cursor_rahmen: rc=0  0 FAIL
+=== sauberer Bau
+  LOCAL-BUILD-OK

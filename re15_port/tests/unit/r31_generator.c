@@ -41,6 +41,10 @@
  * Runde 34 Nacht (Teil D neu, Nachweis in analysis/befunde_runde34_nacht/C_generator.md §9.4):
  *   Endsperre aus (sperrt() = 0)                 => D ROT (Cursor faehrt bei Maske 0x155)
  *   alte Runde-31-Zwischensperre wieder an       => D ROT (Cursor steht nach Schalter 7)
+ * Runde 36 G2 (gefahren, analysis/befunde_runde36/G2_belege/mutation.sh, Ergebnis im Dossier G2 P3):
+ *   Ruhe-Zweig aus (re15_zellschub_ruhe kehrt zurueck) => D-Vorlauf, D(1b) und G ROT (7 FAIL: der Cursor
+ *                                                faehrt durch den Rahmen); probe_r36_g2_cursor_rahmen 60 FAIL
+ *   alte Runde-31-Zwischensperre wieder an       => D(1) ROT (3 FAIL), r34n A ROT
  */
 #include <stdint.h>
 #include <stdio.h>
