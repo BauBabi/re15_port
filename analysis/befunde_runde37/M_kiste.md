@@ -218,3 +218,32 @@ Namen dann automatisch).
   bitgleich BOXPANEL.BIN, Ruhebild Symbol ab 179/155 mit freier Spalte davor, einlaufende Zeile F107/F127.
   Gegenprobe mit den Vorher-Bildern: KISTE-BILD FEHLER 38.
 - Werkzeuge: probe_r37_kiste_karte (Spielstand vor der Kiste, Kiste mit den laengsten Namen), probe_r37_kiste_bild.
+
+## 6. OFFEN (nicht Teil von Nachtrag 9, nicht angefasst)
+
+- Vorbestehend: das 2-Feld-Symbol der Kisten-Liste (box_cell_icon_sized, Breite 49) tastet in inv_render_pc.c die
+  SCHMALE ITEMALL-Kachel (40 Texel) ab; Spalten 40..48 wiederholen Spalte 39 (sichtbar als verlaengerter Lauf rechts,
+  `M_belege/nachher_1150_zeilen_zoom.png` Zeile 2). RE2 zeichnet das breite Zeilensymbol aus ZWEI 20x30-Cache-Spalten
+  (u1 = 0x78 = 120 Texel, `li t1,0x78` @0x80071838 / Zuweisung @0x80071848; zweite Kachel fuer Id 14..18 in
+  FUN_80069c40 @0x80069cd8-d64). Der Port hat die 80x30-Kunst (ITPS, Pfad w==80 im ITEMTILE-Zweig). Lage und Ebene
+  (Nutzer-Punkte) sind davon unabhaengig — Kandidat fuer eine eigene Nachbesserung, wenn der Nutzer es wuenscht.
+- Integration: Spur I ("Empty Fire Extinguisher", 177 px) passt mit 1 px Luecke vor das schmale Symbol (179); der
+  Zensus-Zustand "alle Flags Leon" deckt den Namen nach dem Merge automatisch ab. Das Include von re15_kiste_r37.h
+  steht neben re15_itembox.h (Spur I fuegt nach re15_schluessel_r36.h ein) — `git merge-tree` gegen r37/feuerloescher:
+  re15_inv_screen.c automatisch zusammengefuehrt, Konflikt nur in AUFTRAG.md (master-Fassung nehmen).
+- Elza "vorher" nicht eigens gemessen: build_box_mode (re15_inv_screen.c Z. 1618..1888) und re15_itembox.c haben
+  keinen Figuren-/Raum-Zweig (grep char_variant/character/g_gameflow/current_room: 0 Treffer) — Leons Vorher-Messung
+  ist derselbe Codeweg; nachher sind Leon UND Elza gemessen (§4).
+
+## 7. Fuer den Nutzer
+
+- Neue Assets: **keine** (Paket-Gate unveraendert; BOXPANEL.BIN wird nur zusaetzlich ausschnittweise gezeichnet).
+  Sprachdateien: keine.
+- Sichtbar neu in der Kiste:
+  1. Die Symbole stehen ganz rechts, buendig am rechten Rand der Liste (schmale ab x 179, Waffen ab x 155); der
+     laengste Name ("Minidisc Player w/ Disc") endet 5 px davor — kein Name ueberdeckt mehr ein Symbol.
+  2. Die Mengenzahl steht jetzt unten links IM Symbol (so zeigt es RE2 in der Kiste und RE1.5 in der Item-Liste
+     rechts) — rechts neben dem Symbol ist kein Platz mehr.
+  3. Beim Blaettern gleiten die Zeilen UNTER den Rahmen: oben verschwinden sie unter dem "ITEM BOX"-Band, unten unter
+     dem Fussband, und die naechste Zeile kommt wie in RE2 unter dem Band hervor (vorher blieb dort eine Luecke).
+- Bedienung unveraendert. Keine Entscheidungsfrage.
