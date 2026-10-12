@@ -1,4 +1,4 @@
-# ⛔ RUNDE 36 — UEBERGABE (Stand 2026-10-11 09:40, Wochenlimit Opus erreicht, Reset 17.10. 08:00)
+# ✅ RUNDE 36 — UEBERGABE (ABGESCHLOSSEN 2026-10-12: v0.8.24 veroeffentlicht; Text unten = Verlauf)
 
 Dieses Dokument ist fuer den NAECHSTEN Account/die naechste Sitzung geschrieben, ohne Kontext der alten.
 Alles liegt LOKAL auf dieser Maschine (Zweige `r36/*`, Arbeitsbaeume unter `C:/workspace/git/reAi_v2/.claude/worktrees/r36_*`).
@@ -10,6 +10,7 @@ Pflichtlektuere vorher: `CLAUDE.md` (STOP-GATE, Build ueber `local_build.sh`), `
 Spur), auf dem Integrationszweig `analysis/befunde_runde36/NACHLAUF.md` (Funde ausserhalb der Spur-Wortlaute).
 
 ## ✅ Fortschritt seit der Uebergabe (fortlaufend, neueste zuerst)
+* 2026-10-12 10:15: ✅ RELEASE v0.8.24 VEROEFFENTLICHT — UEBERGABE ABGESCHLOSSEN. Linux-Bau 2 698/698 (RE15_CTEST_JOBS=3, glibc 2.29), make_package rc=0 (alle Gates, je Satz 3715/3715, Laufzeit-Gate 26/26), Archiv C:workspaceRe15Datae15_packages_archiv0.8.24 (sha256sum -c 7/7), v0.8.23 dort entfernt; Release-Commit e8b3958f, Tag v0.8.24, gepusht (origin master = e8b3958f). Alle r36-Arbeitsbaeume entfernt (Zweige bleiben), CLAUDE.md-Hinweis entfernt. Offene Fragen an den Nutzer: release/RELEASE_NOTES.md v0.8.24 "Zu entscheiden"; Folgearbeit: NACHLAUF.md (u.a. #70 Fahrstuhl-Ausstieg DOOR27, #73/#74 Item-Band-Gate + Member 0x12, #59 Pause-Bits beim Raumwechsel).
 * 2026-10-12 09:30: ANDROID OK: build_android.sh --version v0.8.24 rc=0, ANDROID-BUILD-OK release/re15_port_v0.8.24_android.apk (379951560 B, sha256 b99d3c14...), Gates: Selbsttest 261/261, APK-ASSET-GATE-OK 3715 Dateien, Pruefung OK. Linux-Bau 2 GESTARTET (RE15_CTEST_JOBS=3, /tmp/r36_linux_deck2.txt). Danach: make_package (PATH="$PATH:/c/msys64/usr/bin" bash release/make_package.sh --version v0.8.24), Archiv, Release-Commit, Tag, Push.
 * 2026-10-12 09:20: Linux/Deck-Release-Bau 1 ROT (696/698, ctest 7488 s seriell): unit_r36_zombieki_affen_block SEGFAULT (popen ohne Deklaration unter -std=c11) und integration_r36_gegnerzahl (Skript ohne cmake_minimum_required -> CMake 3.28 im Container wertet while(TRUE) als falsch). Beide Tests portabel gemacht (6fe54ff3, nur Tests), unter Windows gruen. Android-Bau laeuft (/tmp/r36_android.txt). Danach Linux-Bau 2 mit RE15_CTEST_JOBS=3 (laengster Test integration_r36_dachkiste 1305 s; seriell waeren es wieder ~2 h). Bei einem Flatterer unter Parallelitaet: seriell wiederholen.
 * 2026-10-12 07:10: Hauptbaum-exe neu gebaut (LOCAL-BUILD-OK). Windows-Release: build_win_cross.sh rc=0, WIN-CROSS-BUILD-OK 5212414 Bytes (release/win_out/re15_pc.exe, 94 s). Linux/Deck-Bau laeuft (build_linux_deck.sh, inkl. Container-Suite; /tmp/r36_linux_deck.txt). Danach build_android.sh --version v0.8.24, dann make_package.

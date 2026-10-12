@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> ⛔ **OFFENE ÜBERGABE (Runde 36, seit 2026-10-11):** Die Runde ist halb fertig und wurde vom Wochenlimit
-> unterbrochen. ZUERST `analysis/befunde_runde36/UEBERGABE.md` lesen und dort weitermachen (offene Spuren,
-> Integration, Release v0.8.24). Diese Zeile entfernen, wenn v0.8.24 veröffentlicht ist.
-
 ## Project Overview
 
 `reAi_v2` ist der bewusst aufgeräumte Neu-Aufbau des Resident-Evil-1.5-Projekts (unveröffentlichter RE2-PSX-Prototyp). Vorgänger: `C:/workspace/git/reAi` (war zu groß/unübersichtlich). Das Projekt hat zwei Teile:
