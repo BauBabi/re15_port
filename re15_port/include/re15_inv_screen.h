@@ -38,6 +38,11 @@ enum {
                              * Pfeilen und den leeren Listengrund. (x,y) = obere
                              * linke Ecke. Der Inhalt (Namen, Symbole, Mengen,
                              * Auswahlbalken, gelber Griff) wird DARUEBER gezeichnet. */
+    RE15_INV_OP_PANELTEIL = 7, /* Runde 37 Spur M: AUSSCHNITT eines RE2-Box-Panels — page = Bild
+                             * (0 Listen-Panel, 1 Textbox), (u,v) = Ursprung im Bild, (w,h) = Groesse,
+                             * (x,y) = Schirmlage. Traegt die vier Rahmen-Teile (re15_kiste_r37.h), die
+                             * UEBER den gleitenden Zeilen liegen (RE2: Rahmen OT-Eintrag 2 ueber Symbolen/
+                             * Namen 6 und Ziffern 3, Beleg im Header). */
     RE15_INV_OP_FILL = 4,   /* DECKENDES Rechteck (x,y)+(w,h) in exakter RGB-Farbe.
                              * Gebraucht fuer das aus RE2 gemessene Box-Panel: die
                              * LINE-Ops sind ABE-additiv ((dst+src)>>4) und kommen

@@ -1037,6 +1037,22 @@ static void raster_op(const re15_inv_op_t *o)
                     s_fb5[y][x] = img[py * pw + pxx];
                 }
         }
+    } else if (o->kind == RE15_INV_OP_PANELTEIL) {
+        /* Runde 37 Spur M: Ausschnitt (u,v)+(w,h) desselben Panel-Bilds 1:1 nach (x,y) — die Rahmen-Teile,
+         * die UEBER den gleitenden Zeilen liegen (RE2 OT-Eintrag 2 ueber 6/3, Beleg re15_kiste_r37.h). */
+        extern const uint16_t *re15_inv_boxpanel(int which, int *w, int *h);
+        int pw = 0, ph = 0;
+        const uint16_t *img = re15_inv_boxpanel(o->page, &pw, &ph);
+        if (img) {
+            for (int py = 0; py < o->h; py++)
+                for (int pxx = 0; pxx < o->w; pxx++) {
+                    int sx = o->u + pxx, sy = o->v + py;
+                    int x = o->x + pxx, y = o->y + py;
+                    if (sx >= pw || sy >= ph) continue;
+                    if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                    s_fb5[y][x] = img[sy * pw + sx];
+                }
+        }
     } else if (o->kind == RE15_INV_OP_FILL) {
         /* Deckendes Rechteck in exakter Farbe. RGB888 -> RGB555.
          * abe=1 = 50/50-Mix mit dem Untergrund (PSX ABR 0) - eingefuehrt fuer den
