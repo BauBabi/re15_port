@@ -741,9 +741,72 @@ static void teil_verdeckung(void)
           stage_v[3] > 0 && stage_v[4] > 0 && stage_v[5] > 0 && stage_v[6] > 0);
 }
 
+/* ---- suche (Werkzeug, kein Riegel): Szenen je Cut nach dem Ausschluss ---------------------------------------------- */
+static void such_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri0, const ergebnis_t *E0, void *ctx)
+{
+    static raum_t R2; static uint8_t deck[240][320]; static uint16_t tief[240][320];
+    re15_pri_cut_t pri = *pri0; atlas_t bss; re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4];
+    int has_q, m, x, y, k, b, gx, gz, bh = -1, bv = -1, hx = 0, hz = 0, hb = 0, vx = 0, vz2 = 0, vb = 0;
+    (void) E0; (void) ctx;
+    if ((raum & 1u) || (raum >> 12) < 3) return;
+    re15_masken36_filter(raum, cut, &pri);
+    if (!atlas_bss(raum, cut, &bss)) return;
+    if (!raum_laden(&R2, raum) || re15_camera_build_view(&R2.rdt.cuts[cut], &v) != 0) { free(bss.roh); free(R2.roh); return; }
+    kamera_ort(&v, cam);
+    has_q = re15_rdt_get_region_quad(&R2.rdt, cut, qx, qz);
+    memset(deck, 0, sizeof deck); memset(tief, 0, sizeof tief);
+    {
+        const uint8_t *idx = (const uint8_t *) bss.tim.pixels;
+        for (m = 0; m < pri.draw_count; m++) {
+            const re15_pri_mask_t *q = &pri.masks[m];
+            int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY;
+            for (y = 0; y < q->height; y++)
+                for (x = 0; x < q->width; x++) {
+                    int ax = q->srcX + x, ay = q->srcY + y, tx = dx + x, ty = dy + y;
+                    if (ax >= bss.tim.width || ay >= bss.tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                    if (!idx[ay * bss.tim.width + ax]) continue;
+                    deck[ty][tx] = 1;
+                    if (!tief[ty][tx] || q->depth < tief[ty][tx]) tief[ty][tx] = q->depth;
+                }
+        }
+    }
+    lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+    if (ll > 0) { lx /= ll; lz /= ll; }
+    for (b = 0; b < 16; b++)
+        for (gx = 0; gx < R2.nx; gx++)
+            for (gz = 0; gz < R2.nz; gz++) {
+                int wx = R2.x0 + gx * SCHRITT, wz = R2.z0 + gz * SCHRITT, on = 0, cov = 0, occ = 0, fo = 0, fc = 0, hp;
+                double f1x, f1y, f1z, h1x, h1y, h1z;
+                if (!R2.err[b][gx][gz] || (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz))) continue;
+                if (!proj(&v, wx, -(double) b * BAND_Y, wz, &f1x, &f1y, &f1z) ||
+                    !proj(&v, wx, -(double) b * BAND_Y - FIGUR_HOCH, wz, &h1x, &h1y, &h1z)) continue;
+                hp = (int) (f1y - h1y);
+                for (k = 0; k < 81; k++) {
+                    double h = -(double) b * BAND_Y - (FIGUR_HOCH / 9.0) * ((k / 9) + 0.5), o = ((k % 9) - 4) * (FIGUR_HALB / 4.0);
+                    double sx, sy, vzz;
+                    if (!proj(&v, wx + o * lx, h, wz + o * lz, &sx, &sy, &vzz)) continue;
+                    if (sx < 0 || sy < 0 || sx >= 320 || sy >= 240) continue;
+                    on++;
+                    if (!deck[(int) sy][(int) sx]) continue;
+                    cov++; if (k == 4) fc = 1;
+                    if (re15_pri_mask_occludes(tief[(int) sy][(int) sx], (long) vzz)) { occ++; if (k == 4) fo = 1; }
+                }
+                if (on < 72) continue;
+                if (fo && occ * 10 >= on * 6 && hp * 1000 + occ > bh) { bh = hp * 1000 + occ; hx = wx; hz = wz; hb = b; }
+                if (!fc && occ == 0 && cov >= 20 && hp * 1000 + cov > bv) { bv = hp * 1000 + cov; vx = wx; vz2 = wz; vb = b; }
+            }
+    printf("  ROOM%04X Cut %2d: %2d Masken nach Ausschluss | HINTER %s", raum, cut, pri.draw_count, bh >= 0 ? "" : "-");
+    if (bh >= 0) printf("(%d,%d) Band %d, %d px, %d verdeckt", hx, hz, hb, bh / 1000, bh % 1000);
+    printf(" | DAVOR %s", bv >= 0 ? "" : "-");
+    if (bv >= 0) printf("(%d,%d) Band %d, %d px, %d auf Maske", vx, vz2, vb, bv / 1000, bv % 1000);
+    printf("\n");
+    free(bss.roh); free(R2.roh); R2.roh = NULL;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
+    if (!strcmp(teil, "suche")) { saaten_sammeln(); alle_sektionen(0, 1, such_zeile, NULL); printf("OK\n"); return 0; }
     if (!strcmp(teil, "zensus")) teil_zensus();
     else if (!strcmp(teil, "ausschluss")) teil_ausschluss();
     else if (!strcmp(teil, "verdeckung")) teil_verdeckung();

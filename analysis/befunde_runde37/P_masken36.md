@@ -109,7 +109,48 @@ als Summe |dR|+|dG|+|dB| (0..765); Hintergrund = probe_bg_dump (Engine-MDEC-Deko
 
 ## 3. Umsetzung
 
-(folgt)
+### 3.1 Lader-Regel (bg_pc.c, include/re15_masken36_r37.h)
+`re15_pri_atlas_quelle(nachgezeichnet, eigener_atlas_da)`: R15M MIT eigenem Atlas -> eigener Atlas (unveraendert, schuetzt
+u.a. ROOM1220 Cut 0/2/4/6/8, deren BSS-Atlas laut 2.1 falsch waere); R15M OHNE eigenen Atlas -> BSS-Atlas des Cuts (Wege 1/2
+in re15_pri_load_cut_atlas_ex: Laufzeit-Auszug aus dem Block, Rueckfall BSS/ROOM%04X/PRI%02d.TIM) = Original-Mechanismus
+(§2). Weg 3 (MASKS-Atlas als letzter Rueckfall) nur noch fuer Original-Sektionen (fuer R15M schon im Zweig gesucht). Neue
+Logzeile `[pri] ROOMxxxx Cut n: Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)`. Elza-Zwilling
+(Spur A): der eigene Atlas wird weiter ueber `re15_pri_masken_raum` gesucht, der BSS-Auszug ist ohnehin je Raumpaar gleich
+(Original @0x80021c90 Raum ohne Variantenziffer). Erste Messung: ROOM3040 Cut 0 `masks=19 fg_atlas=1` (vorher 0).
+
+### 3.2 Befund beim Nachmessen: die Generator-Daten verdecken Figuren auch VOR Objekten
+An der exe gemessen (Laeufe `s3040h`, `h3050c5`, Bilder `p37/img/h3050c5.png`, `s3040h.png`): ROOM3050 Cut 5, Leon
+(-13300,-16368) steht frei im Gang VOR der Maschine (Fuesse deutlich unter deren Unterkante) — mit BSS-Atlas wird er bis auf
+den Kopf geloescht (597 von 1318 Figurpunkten uebermalt, Schatten bleibt stehen); ROOM3040 Cut 1 (-22500,-11400): Beine
+hinter der Kiste weg, Fuesse darunter sichtbar. Ursachen in den Daten (Masken-Bild je Cut, `p37/img/montage_aus.png`):
+BODEN in der Auswahl (ROOM30E0 Cut 7, ROOM3050 Cut 6, ROOM5050 Cut 2 — Bodenflaechen als "Vordergrund"),
+HINTERGRUND in der Auswahl (3050 Cut 5) und das Tiefenband des Generators (gen_masken.py DEPTH_SAFETY 0.90: die Maske liegt
+10 % naeher als der Bodenkontakt -> wer knapp vor einem Objekt steht, verschwindet; z.B. Spinde 30A0 Cut 0). Genau diese
+Fehlerklasse hat der Nutzer am 2026-09-03 gemeldet ("Leon verschwindet fast vollstaendig", Commit 6c29d834:
+"Eine fehlende Maske laesst alles wie bisher, eine falsche uebermalt den Spieler") — fuer STAGE1 wurde damals auf
+Freistellungen umgebaut, die Stages 3..6 sind seitdem unveraendert. Ein reiner Rueckbau "wie am 2026-09-03" erfuellt
+deshalb das Ziel "Figuren VOR einem Objekt werden nicht verdeckt" NICHT.
+
+### 3.3 Ausschluss der Fehlverdecker (engine/src/masken36_r37.c, gen/masken36_ausschluss_r37.inc)
+Ohne MASKS/* anzufassen (Vertrag): der Lader laesst je Generator-Sektion genau die Rechtecke weg, die an einem erreichbaren
+Stehplatz einen Figurpunkt verdecken, ohne dass zwischen Kamera und Figurpunkt eine solide Kollisionszelle steht.
+- Verdeckt: Original-Urteil `re15_pri_mask_occludes(depth, vz)` = depth < (1023*vz)>>16 (@0x8002565c otz>>4, ZSF3=341
+  @0x80066c70, Masken-OT = depth @0x80039650..60).
+- Objekt davor: die Grundriss-Strecke Kamera -> Figurpunkt kreuzt eine solide Zelle des Bands (u0 & 1, floor>>4 == Band;
+  FUN_8003b0a4 / re15_collision.c Kopf: die SCA-Zellen sind die Waende und Gegenstaende). Zellen, in denen Kamera oder
+  Figurpunkt stehen, zaehlen nicht.
+- Erreichbar: Gitter 100; frei = ausserhalb jeder soliden Zelle des Bands um den Spielerradius PR 450 aufgeblasen
+  (DAT_80073e94[6], re15_collision.c `#define PR 450`); Flutfuellung je Band ab allen AOT-Mitten des Raums mit eigenem Band
+  (Engine-SCD main00+sub00, 4+300 Takte wie probe_1190_props; ohne GENERIC/CAM_SWITCH/AUTO_EVENT) und den Ankuenften aller
+  Tueren aller Raeume (Band aus Ziel-y); nur innerhalb der Kamerazonen des Bands (RVD zone.floor == Band oder 0xFF); je Cut
+  nur im Regionsviereck (Akteur-Cull FUN_8002c18c, re15_rdt_get_region_quad). Band-Boden y = -Band*0x708.
+- Figur = Leon, an der exe gemessen (RE15_TRILOG + Rueckprojektion, §4): Hoehe 3000, halbe Breite 350; 9 x 9 Punkte.
+- Iteration: vorderstes Rechteck an einem fehlverdeckten Punkt raus, bis keine Fehlverdeckung bleibt.
+- Ergebnis (`test_r37_masken36 erzeuge`, Saaten 1979): 224 Sektionen, 6609 Masken, **993 ausgeschlossen**; 32 Sektionen
+  ohne Stehplatz im Modell (dort bleibt alles wie gebaut, OFFEN).
+- Haken: `platform/pc/main.c` R15M-Zweig (2 Zeilen: `re15_masken36_filter(re15_pri_masken_raum(raum), cut, &pri)`),
+  `platform/psx/main.c` (Gleichlauf, ungebaut). Die Freistellungs-Sektionen (eigener Atlas) stehen nicht in der Tabelle.
+
 
 ## 4. Messung nachher
 
