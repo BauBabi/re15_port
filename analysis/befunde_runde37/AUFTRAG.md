@@ -56,3 +56,12 @@ nachziehen) oder nur einmal (dann NUTZER-VORGABE). -> Spur G beretta.
 Antwort auf die Zusammenfassung der Lesart (Spuren A-G wie oben; Sperre ROOM1050: vor Adas Rettung bleibt die Ada-Szene,
 danach der Chief-Text nur in der Endphase — nach der 10F0-Szene und bevor Irons geholt ist; Fruehspiel ungesperrt;
 Werkstatt bleibt, neue Texte uebernommen, keine Blutlache, kein Elza-Hinweis, V6 nur auf ausdruecklichen Wunsch).
+
+## Nachtrag 2 — 2026-10-12 (woertlich)
+
+> Ein weiteres Problem das ich immernoch habe - die Zombies sind immer noch zu passiv. Beispielsweise, am Ende von STAGE1 Leon, wenn wir die ganzen Zombies spawnen nach Irons tod - die Zombies bleiben einfach nur Stumpf alle im Gang stehen. So sind sie keine Bedrohung .... In Resident Evil 2 bewegen sie sich doch auch teilweise aktiv im Gang.
+
+Lesart: Die Zombies der Montage nach Irons' Tod (re15_irons_tod.h: 1130 / 1040 / 1030, Spawn-Bits (9,74)/(9,75)/(9,76), dazu
+1070) stehen danach nur im Gang. Ziel (Beta -> Retail): Verhalten wie RE2 — Zombies bewegen sich teilweise aktiv im Gang auf
+Leon zu. Runde 36 Spur F Punkt 1 (Sicht ueber niedrige Moebel) galt als erfuellt; hier gezielt die Montage-Zombies und das
+RE2-Gangverhalten messen. -> Spur H zombieaktiv.
