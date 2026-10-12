@@ -112,6 +112,25 @@ Liegen/Fressen/Kriecher/Sitzer den Rest.
 = ROOM20A0, Raumeintritt): Zombie Typ 0x1F, +0x10E = 0x0006 an (-15699,3739) = ROOM20A0 sub00 @0x00A3E (Satzgruppe 2:
 sechs Saetze, alle Deskriptor 6), Leon (-15554,-15268) = 19000 entfernt, Zustandswort noch 0 (INIT im naechsten Takt).
 
+### R4 — RE2 im Original GEMESSEN (DuckStation-GDB, `H_belege/re2_gdb_zombie.py`, Spielstand SLUS-00748_6 = ROOM20A0)
+
+Haltepunkt auf der EXE-Gegnerschleife @0x800265E0 (`sw v0,496(s0)` = Abstand +0x1F0, s0 = Entity, einmal je Gegner und
+Bild), je Takt Zustandswort/Deskriptor/Lage/Abstand/Sicht; 600 Takte je Zombie. settings.ini (EnableGDBServer,
+SaveStateOnExit) und SLUS-00748_resume.sav gesichert und zurueckgeschrieben.
+
+**Lauf 1 (Original unveraendert, alle sechs Deskriptor 6), `H_belege/re2_original_room20a0_takte.txt`:** alle sechs
+stehen ab Takt 0 auf Zustandswort 0x0101 (INIT @0x80100ab8-abc), ab **Takt 2 auf 0x00010101 (Gang, Phase 1)**, und gehen
+aus 13660..18992 Abstand auf Leon zu: Abstand nach 100 Takten -1536..-3218 (18992->16636, 13660->10442, 16124->14588,
+16384->14002, 14372->12072, 18544->16508), d.h. **15..32 Einheiten je Takt**; der erste greift nach ~500 Takten
+(0x00030301 bei d=446), alle sechs sind nach 600 Takten 2600..6200 vor Leon.
+**Lauf 2 (Gegenprobe Deskriptor 0: beim ersten Takt +0x4 := 0x0001, +0x10E := 0 — der Zustand, den der INIT
+@0x801006ac-b8 fuer Deskriptor 0 hinterlaesst), `H_belege/re2_original_room20a0_deskriptor0_takte.txt`:** dieselben
+sechs Zombies an denselben Plaetzen bleiben 600 Takte auf 0x00010001 (Stehen P1), Abstand unveraendert 13584..18992;
+zwei wuerfeln den Wander (0x00030001, @0x8010151c-40) und schlurfen 600..3400 Einheiten zufaellig.
+=> **Im RE2-Original ist "stumpf stehen" bei Deskriptor 0 genau das Verhalten des Ports, und "aktiv im Gang" ist
+Deskriptor 6.** RE2 macht seine Zombies dadurch teilweise aktiv, dass rund ein Drittel der Spawn-Saetze Deskriptor 6
+tragen (R1-Zensus).
+
 ## Umsetzung
 
 (folgt)
