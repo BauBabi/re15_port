@@ -32,7 +32,7 @@ Leon zu); die Montage nach Irons' Tod ist das Beispiel.
 Weg: Spielstand + CONTINUE + echte Tuer. Karte `probe_r36_gegnerzahl_karte re15_card.mcr 1150 -17150 -11960 0 9:71 3:94
 9:73-76` (ROOM1150 vor der Tuer Slot 0 @0x00D5E nach 1130, Montage gesehen: (9,73)-(9,76)), Aktionstaste -> Tuer ->
 ROOM1130 (debug.log `Nachspawn 1130 (Programm 10)` = k_p_1130_nach = EM_1130_LISTE, grid 0x02), RE2-KI (Default),
-`RE15_STATE_LOG`. Auswerter `scratchpad/h/ausw.py` (je Zombie Zustandsfolge st/ss1/ss2, Weg, Abstand).
+`RE15_STATE_LOG`. Auswerter `H_belege/ausw.py` (je Zombie Zustandsfolge st/ss1/ss2, Weg, Abstand).
 
 **Lauf a (Leon bleibt an der Tuer (-5900,16350), 1800 Bilder = 60 s):** alle fuenf Zombies (Typ 0x16/0x10/0x10/0x11/0x11,
 grid 0x02) bleiben in Zustand 1 / Unterzustand 0 (RE2 EXEC[0] Stehen): Folge `0/0 -> 1/0/0 @6 -> 1/0/1 @7` (Stehen P1),
@@ -83,7 +83,7 @@ RE2-INIT 0x8010065C (Tabelle 0x8010C830[0]) wertet `+0x10E & 0x3F` aus:
   @0x80101650-70 bzw. < 0x1D4C mit Sicht @0x80101674-a8). dist = +0x1F0 = SquareRoot0(dx^2+dz^2) (EXE @0x800265a4-e0).
 
 **RE2-Zensus der Zombie-Sce_em_set (Typ 0x10..0x1F, alle 495 RE2-RDTs, Walker r30_re2_scd.py, Skript
-scratchpad/h/re2_emset_zensus.py):** 433 Saetze; Deskriptor 0 (Stehen) 214, **6 (Gang) 140 = 32 %**, 8 (Fressen) 13, 2/4
+H_belege/re2_emset_zensus.py):** 433 Saetze; Deskriptor 0 (Stehen) 214, **6 (Gang) 140 = 32 %**, 8 (Fressen) 13, 2/4
 (Liegen) 36, 1/3 (Kriecher) 19, 5/7 (Leiche) 4, 10: 7. Fast jeder RE2-Raum MISCHT 0 und 6 ("teilweise aktiv"), z.B.
 ROOM1100 7 von 15 Gang, ROOM1140 (sub00) 7 von 15, ROOM20A0 16 von 18, ROOM20F0 9 von 10, ROOM2070 9 von 12,
 ROOM5080 6 von 8; reine Steh-Raeume z.B. ROOM10F0 (7), ROOM2040 (14), F080 (6).
