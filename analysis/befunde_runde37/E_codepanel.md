@@ -179,3 +179,90 @@ ROOM2130 @0x08, 492 B gleich): Zellen @+0x70 `00 00 f0 f0` .. `80 00 f0 f0` (0..
 * Hinweis zum Ablauf: waehrend dieser Spur hat ein zweiter Agent (Orchestrator-Nachbesserung) die drei Code-Dateien im Baum
   bereits auf Nachtrag 3/3b umgestellt (uncommittet, 11:32..11:34; `logf_` mit `%s` kompilierte nicht). Ich habe die
   Aenderung uebernommen, den Uebersetzungsfehler behoben und Tests/Messungen darauf umgestellt.
+
+---
+
+## 3. Umsetzung
+
+| Datei | Inhalt |
+|---|---|
+| `re15_port/include/re15_codepanel_r37.h` (neu) | Belege (Kopf), Tabelle `re15_cp_panel_t`, Lampen-/Kamera-API |
+| `re15_port/engine/src/codepanel_r37.c` (neu) | Tabelle der sechs Raeume, Anker X (18-Byte-Signatur), Kamera-Halt, Lampenzustand + Zellfolge |
+| `re15_port/platform/pc/src/codepanel_r37_pc.c` (neu) | ESP-TIM-Dekoder (Zellen 3..7, CLUT-Zeilen 0/1/2) + additiver Zeichner |
+| `re15_port/engine/src/scd_vm.c` (Haken) | `#include`; `re15_codepanel_r37_raum_scan(...)` in `scd_register_current_rdt` (1 Zeile + Kommentar); Dispatcher vor dem Opcode: `if (g_re15_codepanel_anker_n) { int cp = re15_codepanel_r37_pc(t); if (cp == 2) break; if (cp == 1) continue; }` (1 Zeile + Kommentar) — Wachposten 0 in allen anderen Raeumen |
+| `re15_port/platform/pc/main.c` (Haken) | 1 Zeile + Kommentar hinter den Generator-Lampen: `re15_codepanel_r37_pc_zeichnen(s_last_cut_idx)` (Hintergrund-Ebene, vor 3D/Text) |
+| `re15_port/tests/unit/probes/r37_codepanel.cmake`, `tests/unit/probe_r37_codepanel.c`, `tests/integration/test_r37_codepanel.cmake` | Riegel (Abschnitt 5) |
+| `re15_port/tools/r37_e/re2_lampen_projektion.py`, `lampen_vorschau.py` | RE2-Projektion der Schlosslampen, Vorschau (Belegwerkzeuge) |
+
+**E2 (Kamera).** Steht der Faden auf X (Cut_old in sub19), werden X..X+3 (`2a 00 3c 01`) uebersprungen; Message_on 5 (X+4)
+laeuft im selben Takt (Piep +0 wie bisher). Erreicht sub19 X+10 (`22 01 1b 00`, erst nach dem Schliessen der Nachricht,
+Evt_next X+8 unter der Pausemaske 0xffff), laufen die ORIGINAL-Handler `op_cut_old` (0x8004032c) und `op_cut_auto`
+(0x800403ac) auf den Original-Bytes X und X+2 — aber erst, wenn die Aufschliess-Folge dieser Nachricht gespielt ist
+(Zahl der Toene aus `re15_aufschliessen_r36_folge` = 2: Piep +0, Aufschliessen +15, RE2 ROOM2110 Sleep 15 @0x01B58/@0x01B8C);
+bis dahin wartet sub19 an X+10 (Notbremse: letztes Folgebild + 2 Wartebilder). Reihenfolge damit wie RE1.5 ROOM1100
+(Nachricht, dann Kamera) und mindestens so lang wie RE2 ROOM2110 (Kamera nach dem Aufschliess-Se_on). Flags, Plaetze,
+Tuer, Nachricht unveraendert.
+
+**E1 (Lampe).** Zustand je Bild aus dem Schloss-Flag (3,50)/(3,139)/(3,137) (sub01 Set(3,F,1) im Takt des Evt_exec sub19
+= Piep-Takt), nur wenn der angezeigte Cut der Panel-Cut ist. Konstanten:
+
+| Konstante | Wert | Beleg |
+|---|---|---|
+| Panel-Cut | 11 / 15 / 9 | sub17 @0x018D6/@0x018C0 `29 0b`, @0x01EBE `29 0f`, @0x0139E `29 09` |
+| Schloss-Flag | (3,50) / (3,139) / (3,137) | sub01 @0x0152A/@0x01514 `22 03 32 01`, @0x01A8A `22 03 8b 01`, @0x00FF2 `22 03 89 01` |
+| X | 0x0199A / 0x01984 / 0x01F82 / 0x01462 | 18-Byte-Signatur, alle sechs RDTs (Riegel anker) |
+| Lampenmitten (halbe Pixel) | 10D0 rot (243,153), blau (337,153); SECUGUARD rot (257,349), gruen (361,349) | Glasmasken der Panel-Cuts (§0) |
+| Farbzeile zu / offen | 0 rot / 10D0: 1 blau, SECUGUARD: 2 gruen | Nachtrag 3/3b; Unterindex>>3 @0x8001c9e0..0x8001c9fc; RE2 4070 @0x008C6/@0x0088C, 2130 @0x01774/@0x017A8 |
+| Zellfolge rund / eckig | 5 (S 0x18), 7, 6, 7 / 3, 4 | ESP-0x16-Anim-Saetze 7..11 `05 01 01 18` .. `07 01 ff 20` / 4..6 `03 01 01 20` .. `04 01 ff 20` |
+| Kante rund | 2 px je Texel (Zelle 5: 48 px, 6/7: 64 px) | RE2 4070 Cut 6: S*scale16*H/(SZ*256) (FUN_80077ed0 @0x80077f14..0x8007800c), scale16 0x0900 @0x00DC2+6 -> 31,0 px auf Glas 7x6 bzw. 30,2 px auf 8x6; x Glasverhaeltnis (10/7+10/6)/2 bzw. (12/8+10/6)/2 -> 48 |
+| Kante eckig | 26 px | RE2 2130 Schalterlampe 25,8 px auf Glas 17x15 (RE15_PANEL_LAMPE_KANTE-Herleitung) x (14/17+18/15)/2 |
+| Mischung | B+F additiv, Index 0 durchsichtig | Flags 0xBA03 & 0x1000 -> Prim 0x2E @0x80077a44..0x80077a50, TPAGE |= 0x20 @0x8001dc48..0x8001dc60 (wie Generator-Lampe) |
+
+---
+
+## 4. Messung nachher
+
+### 4.1 E2 — Kamera (echte exe)
+
+Lauf `n2_10d0_echt` (Stand aee83230, ECHTER WEG: Blue Keycard im Inventar, Kartenleser per RE15_FIRE_AOT=1 -> sub20,
+"Ja", "You've used the Blue Keycard.", Tastenfeld, 4-3-1-2 per D-Pad + Viereck, Nachricht 5, Wegwerf-Abfrage):
+```
+cp.log  F433  lampe ZU: Zeile 0 (0 rot, 1 blau, 2 gruen) Cut 11 Flag (3,50)
+        F820  kamera halten: sub19 @0x0199A Cut_old/Cut_auto verschoben (Folge 2 Toene, letzter +15)
+        F821  lampe OFFEN: Zeile 1 (0 rot, 1 blau, 2 gruen) Cut 11 Flag (3,50)
+        F1011 kamera zurueck: Toene 2/2, gewartet 0 Bilder
+auf.log F373 KARTE_EIN / F820 PIEP +0 / F835 AUF_E +15
+cut.log F815..F1010 bg=10d0#11 (Panel), F1011 req=0, F1012 bg=10d0#0 (Raum)
+```
+Ton (RE15_AUDIO_CAP_SYNC, `tools/tueren/r36_cap_ticks.py`, Versatz Tick = F + 123): Ticks 943..957 Anteil 1350..1550 Hz
+0,30..0,70 (Piep, F820..F834), ab Tick 958 (F835) Aufschliessen, Spitze 2332 bei Tick 964 (F841) mit 96 % unter 250 Hz.
+**Beide Toene kommen, waehrend der Panel-Cut 11 angezeigt wird**; die Kamera geht nach dem Schliessen von Nachricht und
+Wegwerf-Abfrage zurueck (vorher: F231 Piep / F232 Raum, §1).
+
+Nachricht frueh geschlossen (Viereck ab dem Piep gehalten, Lauf `n10d0_halten`, Kamera-Logik identisch zum heutigen Stand):
+`F231 kamera halten`, Nachricht zu in F245 (sub19 @0x19A3), `F247 kamera zurueck: Toene 2/2, gewartet 2 Bilder`, AUF_E F246
+— sub19 wartet bis zum Aufschliessen. Mit Viereck alle 2 Bilder (Lauf `n10d0_mash`) ging die Nachricht erst in F258 zu.
+
+ROOM1230 (`n2_1230`, Tastenfeld per RE15_SUBSTART=17, Ziffern-Riegel per RE15_SET_FLAG_AT): F241 halten + PIEP, F256 AUF_E,
+F322 zurueck, F323 Raumansicht.
+
+### 4.2 E1 — Lampen (echte exe + Zeichner-Riegel)
+
+Bild `E_belege/e1_e2_nachher_10d0_1230_falsch.png` (Zeile 1/2: 10D0 echter Weg F440, F818 rot | F822, F836 (Aufschliessen),
+F906 ("You've opened the lock."), F950 (Wegwerf-Abfrage), F1010 blau | F1014 Raum; Zeile 3: 1230 F230 rot | F244, F256,
+F320 gruen; Zeile 4: 10D0 falscher Code 9999 F300/F500 ("Wrong code, try again.") rot, F536 zu, F540 Raum).
+
+Mittel ueber das gemalte Glas (Riegel zeichner, echter PC-Zeichner auf dem echten MDEC-Hintergrund, vier Bilder = alle Zellen):
+
+| Panel / Zustand | gemaltes Glas | Farbton | leuchtend (Zellen) | Farbton |
+|---|---|---|---|---|
+| 10D0 zu (rot gemalt) | (70,40,31) | 14 | (241,79,73) / (180,48,47) / (242,64,70) | 2 / 0 / 358 |
+| 10D0 offen (blau gemalt) | (62,77,95) | 213 | (122,172,229) / (86,125,208) / (109,161,225) | 212 / 221 / 213 |
+| SECUGUARD zu (rot gemalt) | (46,10,8) | 3 | (232,52,50) / (212,29,38) | 1 / 357 |
+| SECUGUARD offen (gruen gemalt) | (8,51,9) | 121 | (64,225,65) / (38,199,38) | 120 / 120 |
+
+Die jeweils andere gemalte Lampe bleibt bitgleich. In den Framedumps der exe: Bild 700 (zu) rot gemaltes Glas Mittel
+rot-dominant, Bild 900 (offen) blau gemaltes Glas blau-dominant; 1230 Bild 230 rot / Bild 300 gruen (Riegel integration).
+
+Lampenwechsel: Bild nach dem Piep-Takt (F820 Piep -> F821 offen; 1230 F241 -> F242) — die Hintergrund-Ebene wird in main.c
+VOR dem VM-Takt gezeichnet (wie Zeiger, Generator-Lampen, Cut-Wechsel: F1011 Cut_old -> F1012 Raumbild).
