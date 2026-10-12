@@ -100,10 +100,11 @@ re15_start_spiel(_rv 300
     "RE15_TUER_BOGEN=${WORKDIR}/bogen"
     "${RE15_PC_EXE}")
 file(READ "${WORKDIR}/debug.log" _dbg)
-g_muss(c "${_dbg}" "\\[tuer-seite\\] S040 ROOM10C0 DOOR27 V0 Spender FF\n")
+# Runde 37 Spur C (analysis/befunde_runde37/C_fahrstuhl.md): S040 spielt jetzt das Port-Archiv P27F (Basis DOOR27)
+g_muss(c "${_dbg}" "\\[tuer-seite\\] S040 ROOM10C0 DOOR27 V0 Spender FF Port-Archiv P27F\n")
 g_muss(c "${_dbg}" "\\[tuer-seite\\] S164 ROOM2090 DOOR26 V0 Spender FF\n")
 g_muss(c "${_dbg}" "\\[tuer-seite\\] S041 ROOM10C0 DOOR0C V1 Spender FF Port-Archiv P0CD")
-g_muss(c "${_dbg}" "\\[tuer\\] Sequenz Archiv 2 DOOR27 Variante 0 Bit7 0 Tuer 39 Seite S040")
+g_muss(c "${_dbg}" "\\[tuer\\] Sequenz Archiv 2 DOOR27 Port-Archiv P27F Variante 0 Bit7 0 Tuer 39 Seite S040")
 g_muss(c "${_dbg}" "\\[tuer\\] Sequenz Archiv 2 DOOR26 Variante 0 Bit7 0 Tuer 38 Seite S164")
 foreach(_s S040 S164 S041)
     if(NOT EXISTS "${WORKDIR}/bogen/${_s}_mitte.ppm")
