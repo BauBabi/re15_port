@@ -45,7 +45,7 @@ uint8_t *re15_roy_pc_emd(uint8_t type, size_t *out_len)
     uint32_t sektor = 0, laenge = 0;
     if (re15_ems_archiv_fuer_typ(type) != RE15_EMS_ARCHIV_ELZA) {
         if (re15_char_variant() && re15_ems_toc(RE15_EMS_ARCHIV_LEON, type, &sektor, &laenge))
-            fprintf(stderr, "[elzaems] Typ 0x%02X aus EMD/CDEMD0.EMS Sektor %u (%u B) — Elza-Bit 0 beim "
+            fprintf(stderr, "[elzaems] Typ 0x%02X aus EMD/CDEMD0.EMS Sektor %u (%u B) - Elza-Bit 0 beim "
                             "Sce_em_set (Skript-Flag (1,0), @0x8002233c)\n",
                     (unsigned)type, (unsigned)sektor, (unsigned)laenge);
         return NULL;
@@ -62,14 +62,14 @@ uint8_t *re15_roy_pc_emd(uint8_t type, size_t *out_len)
         fclose(f);
         if (ok) {
             if (out_len) *out_len = laenge;
-            fprintf(stderr, "[%s] Typ 0x%02X aus %s Sektor %u (%u B) crc %08X — Elza-Archiv (@0x800223ac)\n",
+            fprintf(stderr, "[%s] Typ 0x%02X aus %s Sektor %u (%u B) crc %08X - Elza-Archiv (@0x800223ac)\n",
                     type == RE15_ROY_TYP ? "roy" : "elzaems", (unsigned)type, rel, (unsigned)sektor,
                     (unsigned)laenge, (unsigned)re15_elzaems_crc32(buf, laenge));
             return buf;
         }
         free(buf);
     }
-    fprintf(stderr, "[elzaems] %s nicht lesbar — Typ 0x%02X faellt auf das Leon-Archiv zurueck\n",
+    fprintf(stderr, "[elzaems] %s nicht lesbar - Typ 0x%02X faellt auf das Leon-Archiv zurueck\n",
             rel, (unsigned)type);
     return NULL;
 }
