@@ -138,6 +138,10 @@ Irons-Todesszene (laeuft erst NACH (9,73)=1). Das Debug-Menue (SELECT, Original-
 
 `gesperrt <=> Raum 0x1050 UND (3,0xBB)=1 UND (9,71)=1 UND (9,73)=0`
 
+Vom Nutzer bestaetigt (master AUFTRAG.md "Bestaetigung 2026-10-12", woertlich "ja, perfekt." auf die Lesart "Sperre
+ROOM1050: vor Adas Rettung bleibt die Ada-Szene, danach der Chief-Text nur in der Endphase — nach der 10F0-Szene und
+bevor Irons geholt ist; Fruehspiel ungesperrt").
+
 * "solange Leon den Chief noch holen muss" / "bevor dem Ende wo er noch zu Irons muss" = der Abschnitt vom Plan
   "I'm going to get Chief Irons" (10F0-Szene; Set(9,71) ist ihr ERSTES Opcode, re15_cut10f0.h) bis zur
   Irons-Todesszene (Set(9,73) ist ihr ERSTES Opcode, re15_irons_tod.h). Es sind dieselben Bits, mit denen die
