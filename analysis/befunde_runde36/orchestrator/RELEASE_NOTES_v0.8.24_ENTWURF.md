@@ -73,7 +73,10 @@ ROOM10F0 auf der Konsole links neben der Tuer von 10D0 (RE2-Modell "P. Room Key"
 Parking Lot Key." mit RE2-Aufschliess-Ton, danach die Wegwerf-Frage; erst der naechste Druck oeffnet die Tuer.
 Elza: der Prison Key liegt an derselben Stelle in ROOM10F1 (RE2-Modell "Cabin Key"), nicht mehr bei Roy; nach der
 Befreiung fragt das Spiel, ob Sie ihn wegwerfen wollen. Fuer Elza wird damit der bisherige Nebenweg Pflicht:
-Minidisc (1201) -> Stimmschloss (1101) -> Blue Keycard (1111) -> Kartenleser (10D1) -> Funkraum (10F1).
+Minidisc (1201, hinter dem Draht-Gitter in 11E1) -> Stimmschloss (1101; in 10D1 vorher den Rolltor-Schalter
+druecken) -> Blue Keycard (1111) -> Kartenleser (10D1, Code 4312 aus Marvin's Notes in ROOM1021) -> Funkraum (10F1).
+Diesen Weg ist ein Pruefer einmal komplett mit Elza gegangen, bis zur Befreiung von John - er ist gangbar (ohne Kampf
+rund 10 Minuten, etwa 29 Gegner unterwegs).
 
 **Elza.** ROOM1121: das Fenster ist von Anfang an kaputt, eine Kraehe mehr. ROOM1151: Irons liegt tot da ("He has
 already passed..."). ROOM1211: Aufschliess-Ton beim Befreien. ROOM1021: zwei Schuesse und Roys Todeslaut.
@@ -215,6 +218,8 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel; der Port bindet jede Datei na
   laesst sich auf Marvin im Wagen beziehen (Alternative "Another policeman!"); 6030 "I've never met her." wirkt
   ausweichend; 6000 (Annette) lieber im Original lassen, weil der Hinweis dort am schwaechsten ist? Ausserdem
   ROOM50B1 "It's Ada." - Elza kennt Ada nicht; so lassen oder z.B. "A woman... Could this be Marvin's 'Ada'?"
+* Elza: Im Original gab Roy ihr den Prison Key; jetzt liegt er im Funkraum, aber kein Text im Spiel schickt sie dorthin.
+  Soll Roy (oder ein Zettel) einen Hinweis geben, z.B. dass die Beamten den Schluessel in den Funkraum gebracht haben?
 * Zwei Vorschlaege der Story-Beratung sind weder gebaut noch abgelehnt: bei Elza die Folgen der Montage (Rolltor 1041
   offen mit Zombies, Tor 1031 aufgebrochen, Rest-Zombies in 1131), passend zu "Irons tot" und "Fenster 1121 kaputt";
   bei Leon eine Blutlache an Roys Platz in 1010 mit Text. Gewuenscht?
