@@ -126,8 +126,9 @@ Folge je Skriptstelle (Roy):
     sub02 @0x020DE Plc_motion(1,7,0): Sub 1 -> CDEMD1 dir[1] Clip 7 = 113 Bilder, +0x1c4 = 0 -> einmal + Halten.
 
 ### 2.2a AM ORIGINAL GEMESSEN — Savestates des Nutzers (DuckStation, MZD-Disc, unveraenderte EXE)
-Quelle: %LOCALAPPDATA%/DuckStation/savestates/HASH-957757946319438E_{1,2,3,5}.sav (Elza-Durchlauf des Nutzers
-7./8.10.; nur gelesen, Kopien im scratchpad; md5 4b254b79.. / a7b970d5.. / e5c87e78.. / c87ebb0e..). Saubere EXE
+Quelle: %LOCALAPPDATA%/DuckStation/savestates/HASH-957757946319438E_{1,2,3,5}.sav (Elza-Spielstaende vom 7./8.10. —
+vermutlich der Elza-Durchlauf des Nutzers; die Herkunft ist fuer den Beleg unerheblich, weil EXE und Elza-Bit unten
+geprueft sind; nur gelesen, Kopien im scratchpad; md5 4b254b79.. / a7b970d5.. / e5c87e78.. / c87ebb0e..). Saubere EXE
 (@0x80026e4c = 08 00 e0 03), DAT_800aca3c Bit 31 = 1 (Elza) in allen vier. Auswertung K_belege/orig_ram_beweis.py
 und orig_ram_entity.py (re15_ss.Ram; Gegner i = 0x800acc2c + i*0x1F4, RDT-Zeiger 0x800ac778):
 
@@ -222,7 +223,9 @@ nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
    bei Elza fuer Elza gemacht), 0x13 dito, 0x18/0x21/0x27/0x29/0x2b Opfer-Bank, 0x20/0x25 EMR-Inhalt,
    **0x30 Birkin: anderes Modell (MD1 31364 -> 37028 B, Krallen an den Beinen, Loco-Clip 1 68 -> 27)**,
    **0x42: anderes Modell (MD1 19868 -> 28164 B, TIM 99872 -> 66592 B; rote Figur statt Ada — ROOM3091 Elza)**.
-   Bild K_belege/k6_offen_elza_archiv_typ42_typ30.png. Gleich: 0x1a, 0x24, 0x26, 0x2d, 0x36, 0x40, 0x45, 0x49, 0x4b,
+   Bild K_belege/k6_offen_elza_archiv_typ42_typ30.png. Betroffene Elza-Raeume (scd_dump_room.py, Sce_em_set):
+   0x42 ROOM11B1 @0x01058, ROOM3091 @0x014F4; 0x30 ROOM3071 @0x03434/@0x0347A, ROOM5081 @0x00742, ROOM5091 @0x01232,
+   ROOM50F1 @0x009AC/@0x009D4; dazu jeder Zombie-/Kraehen-/Spinnen-Raum bei Elza (Opfer-Bank). Gleich: 0x1a, 0x24, 0x26, 0x2d, 0x36, 0x40, 0x45, 0x49, 0x4b,
    0x4d. Die Infrastruktur steht (re15_ems_toc fuer beide Archive); die Ausweitung braucht je Typ eine eigene Messung
    (fest verdrahtete CDEMD0-Cliplaengen in der KI, z.B. s_dog_clip_len, Opfer-Clips des Griffs) und beruehrt die
    Spuren H (Zombies) und J (Biss) dieser Runde — deshalb hier NICHT gebaut.
@@ -246,7 +249,8 @@ nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
 
 ## 7. Fuer den Nutzer
 
-* **Neue Assets (Paket-Gate)**: keine neuen Dateien. Roy liest jetzt shared_assets/PSX/EMD/CDEMD1.EMS (4739072 B; liegt
+* **Neue Assets (Paket-Gate)**: keine neuen Dateien. Roy liest jetzt shared_assets/PSX/EMD/CDEMD1.EMS (4739072 B,
+  md5 a3ff26b3f184409a82c22cd1b19194d3 — Original-Datei, unveraendert; liegt
   seit jeher im Paket — das v0.8.24-zip enthaelt sie, Android kopiert den ganzen PSX-Baum).
 * **Neue Quelldateien** (Android-Configure frisch, Memory reai-v2-android-glob-cache): engine/src/roy_r37.c,
   platform/pc/src/roy_pc.c (+ engine/src/gen/ems_toc_r37.inc, include/re15_roy_r37.h).
