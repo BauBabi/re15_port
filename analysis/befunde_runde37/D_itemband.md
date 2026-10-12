@@ -262,6 +262,18 @@ Laufordner Scratchpad `r37d/<lauf>/`; Auszuege (wegplan.txt, itemband.txt, climb
   Band 3 am OST-Ende (-1800,-7700), dem Band-1-Ende der Treppe; Seite 1 + Ost-Haelfte = Aufstieg. Vom Absatz (West) fuehrt die
   Treppe im Port wie im Original auf Band 1.)
 
+### 5.7 Nebenbefund Member 0x12 an der exe: ROOM50D0-Lift (Tueren floor 0 nach der Abfahrt)
+* **`n50d0_lift`** (Ankunft aus 50C0 (-23437,-5400,-4400) Band 3 -> Lift slot 5 (sce 3 -> sub04, Frage "There's a button here.
+  Push it?" JA) -> nach Osten zur Tuer slot 1 @0x011FA (floor 0) -> 50F0): itemband.txt **`F587 room=50D0 MEMBER 0x12 Spieler:
+  Kollisionsband 3 -> 0 (@0x80041228) y=0`**; `F987 FLAG (3,83) = 1`; `F1128 (-9101,-14880) angekommen`, `F1235 (-2964,-14864)
+  angekommen`; debug.log **`[aot] DOOR FIRE slot=1 rect=(-2021,-14842,hw=329,hh=1058) target_cut=1 spawn=(-24550,0,-23650)`**,
+  `loaded room50f0.rdt`.
+* **GEGENPROBE `n50d0_lift_ohne_haken`** (derselbe Lauf, NUR der Haken in actor_common.c case 18 auskommentiert, exe neu
+  gebaut, danach wiederhergestellt und neu gebaut): nach der Abfahrt (`F987 FLAG (3,83) = 1`, y 0) climb.txt `T1751 room=50D0
+  ... pos=(-17297,0,-14319) ... band=3` — der Spieler klemmt auf y 0 an der BAND-3-Wand r0[27] (x -16829..-14773; -16829 - 450
+  = -17279), keine Tuer, kein Raumwechsel. Der Stand vor dem Fix machte damit die unteren 50D0-Tueren (slot 1 -> 50F0,
+  slot 3 -> 5100) nach einer Abfahrt unerreichbar (bis zur erneuten Auffahrt).
+
 ## 6. Tests (registriert NUR in `re15_port/tests/unit/probes/r37_itemband.cmake`)
 
 * **`unit_r37_itemband`** (`tests/unit/test_r37_itemband.c`, 0,33 s):
@@ -279,6 +291,24 @@ Laufordner Scratchpad `r37d/<lauf>/`; Auszuege (wegplan.txt, itemband.txt, climb
   weg2090 / galerie2040 / weg2040 / spas2030 / spasb3 / schrot2030 / schrotb3 (je falsches Band GESPERRT + Taken-Bit 0,
   vorgesehener Weg FREI + Taken-Bit 1; Lift-Laeufe verlangen die MEMBER-Zeile, der Treppenlauf `[stair] START dir=DOWN
   cur_band=3 target_band=1`, weg2090 die echte Tuer-Zeile `DOOR FIRE slot=0 ... spawn=(6300,-1800,-16250)`).
+  Ergebnis (eigener Lauf, `D_belege/integ_lauf_88ef3bd9/`): `ctest --test-dir re15_port/build -R "^integration_r37_itemband$"
+  --timeout 3000 --output-on-failure` -> `1/1 Test #679: integration_r37_itemband .........   Passed  821.83 sec` /
+  **`100% tests passed, 0 tests failed out of 1`**; je Lauf: oben3050 3 GESPERRT (9,92)=0 | weg3050 MEMBER 4 -> 0, FREI,
+  (9,92)=1 | elza3051 `loaded room3051.rdt`, 3 GESPERRT, (9,92)=0 | unten3010 3 GESPERRT (9,20)=0 | weg3010 FREI (9,20)=1 |
+  weg2090 FREI (9,90)=1 | galerie2040 3 GESPERRT (9,91)=0 | weg2040 FREI (9,91)=1 | spas2030 MEMBER 3 -> 6, FREI (9,109)=1 |
+  spasb3 3 GESPERRT (9,109)=0 | schrot2030 FREI (9,108)=1 | schrotb3 3 GESPERRT (9,108)=0.
+
+### 6.1 Gezielte Regression (Spurbaum, keine volle Suite; Gruppen jedes Moduls, das der Diff beruehrt)
+Diff (`git diff f1e019ca --name-only -- re15_port`): engine/src/aot_common.c (AOT-Scan: Items, Tueren, Ereignisse),
+engine/src/actor_common.c (Member-Zugriffe der SCD -> Kollisionsband: Treppen/Klettern/Schub/Fahrstuehle), neue Dateien.
+Befehl (Regex auch in `D_belege/unit/regression_ctest.log`):
+`ctest --test-dir re15_port/build -R "r37_itemband|aot|item|inventar|itembox|member|scd_|band|stair|klett|climb|dachkiste|objfall|push|fahrstuhl|elevator|1170|1090|10f0|3050|2050|2060|irons_tisch|dokumente|inhalt|schluessel|kartenitems|kartenbits|r36_karte|elza_vollstart|kleidung_spielweg|r16_objekte" -E "^integration_r37_itemband$" --timeout 3000 -j 3 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 120`** (`Total Test time (real) = 1536.11 sec`), darin die Spur-R/A-Riegel
+`unit_r36_dachkiste_zensus` / `unit_r36_dachkiste_zellschub` / `integration_r36_dachkiste` (Passed 1359.68 sec) /
+`unit_r36_klettern_*` / `integration_r36_klettern` (Passed 503.78 sec) / `unit_r36_objfall`, dazu `integration_elza_vollstart`,
+`integration_r36_kleidung_spielweg`, `integration_r36_inventar`, `integration_r36_schluessel*`, `integration_r30_irons_tisch_*`,
+`unit_aot_*`, `unit_member`, `unit_scd_*`, `unit_stair_*`, `unit_fahrstuhl_*`, `unit_r37_itemband`. Kein Fenster-Haken musste
+nachgefahren werden.
 
 ## 7. OFFEN
 
@@ -289,7 +319,7 @@ Laufordner Scratchpad `r37d/<lauf>/`; Auszuege (wegplan.txt, itemband.txt, climb
   Messlaufs; im Spiel steht man IN der Kabine).
 * Member 0x13 (+0x1ba) am Spieler: der Port schreibt `g_actors[0].dog_floor_y`, der Kletter-Code fuehrt +0x1ba als eigenen
   Spiegel `s_floor_y` (climb_common.c). Ohne Folge fuer diesen Auftrag: s_floor_y wird vor jedem Lesen gesetzt (@0x80038494).
-* ROOM50D0-Lift: Bandwechsel nur im Riegel (Teil M) gemessen, nicht an der exe gefahren (Tueren floor 3 nach der Auffahrt).
+* ROOM50D0-Lift: an der exe die ABFAHRT gefahren (5.7); die Auffahrt (Tueren floor 3) nur im Riegel (Teil M: 0 -> 3).
 
 ## 8. Fuer den Nutzer
 

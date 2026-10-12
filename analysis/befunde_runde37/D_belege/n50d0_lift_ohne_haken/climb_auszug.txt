@@ -1,0 +1,1 @@
+T1751 room=50D0 pm=0 pad=0010 pos=(-17297,0,-14319) rot=-32 band=3 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=105 af=500 frac=0 push=-1 rc_b8=0 rc_bnd=0 t4=0 t4pos=(-18200,-19650) t4fl=0x0101
