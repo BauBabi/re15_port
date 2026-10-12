@@ -26,6 +26,13 @@
  *      @0x012BE..0x012E2), steht der Cursor und Quadrat legt nichts um, bis zur Abnahme.
  *   E  Wiedereintritt nach dem Loesen: Zeiger sofort 80, keine Sperre, kein zweiter Ton.
  *   F  ROOM11F1 (Elzas Variante) verhaelt sich wie ROOM11F0.
+ *   G  RAHMEN DES SCHALTERFELDS (Runde 36 G2): der Cursor faehrt nicht unbegrenzt. Das Original schiebt
+ *      ihn in jedem Bild aus vier Klasse-2-Zellen um das Schalterfeld (Ruhe-Zweig LAB_8002c0b8 `jal
+ *      0x8003b558` @0x8002c0d0, Ausschiebung FUN_8003da78 `jal` @0x8003b79c); dieselbe Fahrt wie am
+ *      Original (OBEN, UNTEN, LINKS, RECHTS, je bis 15 Bilder Stillstand) endet an denselben Kanten
+ *      nach derselben Zahl Fahrbilder. Teil D faehrt seit G2 VOR der 49-Bilder-Probe an den unteren
+ *      Rahmen, weil 49 Bilder HOCH ab der Startlage z 22684 nach 33 Bildern an den oberen Rahmen
+ *      laufen (Original B033) — der Stillstand dort ist die Ausschiebung, keine Sperre.
  *
  * RUECKBAU-NACHWEIS (in dieser Runde gefahren, Ergebnis im Dossier §6):
  *   op_evt_exec-Haken entfernt                   => B ROT (Abnahme im Bild nach dem Bit)
@@ -69,6 +76,31 @@ extern unsigned g_re15_panel_bestaet_zaehler;
  * 30 -> 0 lief mit dem Makro gruen durch, weil auch die Erwartung auf k+1 schrumpfte).
  * RE2 ROOM2130.RDT sub04 @0x0171C `09` + @0x0171D `0a 1e 00` = sleep 0x1E. */
 #define RE2_SLEEP_BILDER 30
+
+/* Runde 36 G2 — der RAHMEN des Schalterfelds, AM ORIGINAL GEMESSEN (DuckStation + GDB, Auslieferungs-EXE
+ * @0x80026e4c `08 00 e0 03`; Spielstand analysis/befunde_runde36/G2_belege/room11f0_orig.sav, Lauf
+ * G2_belege/orig_cursor_lauf1/log.txt: echte SCD-Fahrt sub02..05 @0x012F2..0x0131E, Raetsel scharf wie sub16
+ * @0x015C2..0x015F2, Haltepunkte @0x8002bd44 / @0x8003da78 / @0x8002c158). Zellen: ROOM11F0 SCA, Klasse 2
+ * (`u0 0xff`, FUN_8003b558 @0x8003b64c-660), Band 0 (`fl 0x03`, @0x8003b634-644), in jedem der fuenf Bereiche
+ * gleich (Bereich 1 = RDT @0x009DC..0x00A00). Endlage = Kante + r 900 + 18 (FUN_8003da78 @0x8003dab0/@0x8003dab8).
+ *   OBEN    B033 `nach-SCD (-19554,29284) -> nach-Pass (-19554,29232)`, Zelle @0x801223b0 r1[16] z 30150..31150
+ *   UNTEN   B114 `(-19554,16032) -> (-19554,16068)`,  Zelle @0x8012238c r1[13] z 14150..15150
+ *   LINKS   B181 `(-29954,16068) -> (-29782,16068)`,  Zelle @0x80122398 r1[14] x -31700..-30700
+ *   RECHTS  B297 `(-9582,16068)  -> (-9668,16068)`,   Zelle @0x801222d8 r0[15] x -8750..-7750
+ * Bilanz je Phase (Bilder mit Bewegung bis 15 Bilder Stillstand): OBEN 33 ab (-19554,22684), UNTEN 66, LINKS 52,
+ * RECHTS 101 (Auswertung des Laufs, G2_generator_ruhezweig.md P2.2). Als ZAHLEN, nicht aus dem Port gerechnet
+ * (Lehre Runde 31: selbstbestaetigende Metrik). */
+#define ORIG_RAHMEN_OBEN_Z      29232
+#define ORIG_RAHMEN_UNTEN_Z     16068
+#define ORIG_RAHMEN_LINKS_X   (-29782)
+#define ORIG_RAHMEN_RECHTS_X   (-9668)
+#define ORIG_START_X          (-19554)   /* Obj_model_set @0x00E54 pc[10..11] `9e b3` */
+#define ORIG_START_Z            22684    /* Obj_model_set @0x00E54 pc[14..15] `9c 58` */
+#define ORIG_FAHRT_OBEN            33
+#define ORIG_FAHRT_UNTEN           66
+#define ORIG_FAHRT_LINKS           52
+#define ORIG_FAHRT_RECHTS         101
+#define CURSOR_SCHRITT            200    /* sub02 @0x012F6 `2f 02 c8 00` Speed_set(2,+200) */
 
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
@@ -303,7 +335,16 @@ static void teil_d(void)
     if (ci < 0) return;
 
     /* (1) ZWISCHEN-Schalter 7 (+20): Fahrt 20 Bilder, dann 30 Ruhe. Die ganze Zeit HOCH
-     * halten — der Cursor faehrt (sub02 @0x012F6 Speed_set(2,+200)), keine Sperre. */
+     * halten — der Cursor faehrt (sub02 @0x012F6 Speed_set(2,+200)), keine Sperre.
+     * Runde 36 G2: 49 Bilder HOCH passen nur vom UNTEREN Rahmen aus ins Schalterfeld (16068 + 48*200 =
+     * 25668 < 29232); ab der Startlage z 22684 steht der Cursor im Original nach 33 Bildern am oberen
+     * Rahmen (orig_cursor_lauf1 B033, Konstanten oben). Darum zuerst UNTEN an den Rahmen fahren. */
+    for (int f = 0; f < 120; f++)
+        frame(RE15_PAD_BIT_DOWN, (uint16_t)(f == 0 ? RE15_PAD_BIT_DOWN : 0));
+    for (int f = 0; f < 3; f++) frame(0, 0);
+    printf("  Vorlauf UNTEN: Cursor bei (%d,%d)\n", (int)g_scd.props[ci].x, (int)g_scd.props[ci].z);
+    CHECK("Vorlauf: der Cursor steht am unteren Rahmen (Original z 16068, B114)",
+          g_scd.props[ci].z == ORIG_RAHMEN_UNTEN_Z);
     maske_setzen(1u << 6);
     int32_t z1 = g_scd.props[ci].z;
     int sperr_bilder = 0, bilder = 0, steh = 0;
@@ -319,8 +360,29 @@ static void teil_d(void)
            re15_panel_zeiger_wert());
     CHECK("nach einem Zwischenschalter bewegt sich der Cursor in jedem Bild (keine Sperre)",
           steh == 0 && g_scd.props[ci].z - z1 > 0);
+    CHECK("und zwar +200 je Bild ab dem zweiten (sub02 @0x012F6): dz = 48*200",
+          g_scd.props[ci].z - z1 == 48 * CURSOR_SCHRITT);
     CHECK("und die Sperre stand in keinem Bild", sperr_bilder == 0);
     CHECK("der Zeiger ist trotzdem auf 20 gefahren (1 Punkt je Bild, @0x01216)", re15_panel_zeiger_wert() == 20);
+
+    /* (1b) Runde 36 G2: weiter HOCH bis zum Stillstand — der Cursor steht am OBEREN RAHMEN, genau an der
+     * Lage des Originals (B033: 29284 -> 29232), und die Panel-Sperre ist dabei in keinem Bild an. */
+    int sperr_b = 0, steh_b = 0, ueber = 0;
+    for (int f = 0; f < 120 && steh_b < 15; f++) {
+        int32_t zv = g_scd.props[ci].z;
+        frame(RE15_PAD_BIT_UP, 0);
+        if (re15_panel_zeiger_sperrt()) sperr_b++;
+        if (g_scd.props[ci].z > ORIG_RAHMEN_OBEN_Z) ueber++;
+        steh_b = (g_scd.props[ci].z == zv) ? steh_b + 1 : 0;
+    }
+    printf("  weiter HOCH: Cursor steht bei z=%d (%d Bilder Stillstand), Sperrbilder %d, ueber dem Rahmen %d\n",
+           (int)g_scd.props[ci].z, steh_b, sperr_b, ueber);
+    CHECK("der Stillstand ist der obere Rahmen des Originals (z 29232, B033), nicht eine Sperre",
+          g_scd.props[ci].z == ORIG_RAHMEN_OBEN_Z && steh_b >= 15 && sperr_b == 0);
+    CHECK("der Cursor war in keinem Bild jenseits des Rahmens", ueber == 0);
+    /* wieder ins Feld (20 Bilder UNTEN), damit "steht trotz HOCH" in (2) nicht schon am Rahmen gilt */
+    for (int f = 0; f < 20; f++) frame(RE15_PAD_BIT_DOWN, (uint16_t)(f == 0 ? RE15_PAD_BIT_DOWN : 0));
+    for (int f = 0; f < 3; f++) frame(0, 0);
 
     /* (2) ENDSPERRE: 60 einschwingen, dann Schalter 5 -> Maske = Loesung 0x155. Ab diesem
      * Bild HOCH+QUADRAT halten: Cursor steht, kein Schalterwechsel, Sperre in jedem Bild bis
@@ -395,6 +457,61 @@ static void teil_f(void)
     re15_game_flag_set(4, 238, 0); re15_game_flag_set(4, 243, 0);
 }
 
+/* ================= G: Rahmen des Schalterfelds (Runde 36 G2) ===================== */
+/* Taste halten, bis der Cursor nach dem Anlaufen 15 Bilder steht — wie die Original-Messung
+ * (G2_belege/orig_11f0_cursor.py phase(): steh_ende 15), danach 5 Bilder ohne Taste.
+ * Rueckgabe: Bilder mit Bewegung. */
+static int halte_bis_stand(uint16_t taste, int ci, int *sperr)
+{
+    int bewegt = 0, steh = 0;
+    *sperr = 0;
+    for (int f = 0; f < 200 && steh < 15; f++) {
+        const int32_t vx = g_scd.props[ci].x, vz = g_scd.props[ci].z;
+        frame(taste, (uint16_t)(f == 0 ? taste : 0));
+        if (re15_panel_zeiger_sperrt()) (*sperr)++;
+        if (g_scd.props[ci].x != vx || g_scd.props[ci].z != vz) { bewegt++; steh = 0; }
+        else if (bewegt > 0) steh++;
+    }
+    for (int f = 0; f < 5; f++) frame(0, 0);
+    return bewegt;
+}
+
+static void teil_g(void)
+{
+    printf("\n=== G: Rahmen des Schalterfelds = Original (Runde 36 G2; Ruhe-Zweig @0x8002c0d0, FUN_8003da78 @0x8003b79c) ===\n");
+    if (!room_boot(0x11F0)) { printf("FAIL: RDT fehlt\n"); g_fail++; return; }
+    re15_game_flag_set(4, 238, 0);
+    raetsel_scharf();
+    maske_setzen(0);
+    einschwingen();
+    int ci = cursor_prop();
+    CHECK("Cursor-Prop obj 0 vorhanden (@0x00E54)", ci >= 0);
+    if (ci < 0) return;
+    CHECK("Startlage = Obj_model_set @0x00E54 pc[10..11]/[14..15] (-19554, 22684)",
+          g_scd.props[ci].x == ORIG_START_X && g_scd.props[ci].z == ORIG_START_Z);
+    CHECK("obj+0 = 0x0101 (pc[6..7] `00 01` | 1, @0x80040990-9a4): Bit 3 frei, die Zellen zaehlen (@0x8003b668-674)",
+          g_scd.props[ci].flags == 0x0101u);
+    static const struct { const char *name; uint16_t taste; int fahrt; int32_t x, z; } P[4] = {
+        { "OBEN",   RE15_PAD_BIT_UP,    ORIG_FAHRT_OBEN,   ORIG_START_X,         ORIG_RAHMEN_OBEN_Z  },
+        { "UNTEN",  RE15_PAD_BIT_DOWN,  ORIG_FAHRT_UNTEN,  ORIG_START_X,         ORIG_RAHMEN_UNTEN_Z },
+        { "LINKS",  RE15_PAD_BIT_LEFT,  ORIG_FAHRT_LINKS,  ORIG_RAHMEN_LINKS_X,  ORIG_RAHMEN_UNTEN_Z },
+        { "RECHTS", RE15_PAD_BIT_RIGHT, ORIG_FAHRT_RECHTS, ORIG_RAHMEN_RECHTS_X, ORIG_RAHMEN_UNTEN_Z },
+    };
+    for (int d = 0; d < 4; d++) {
+        int sperr = 0;
+        const int32_t sx = g_scd.props[ci].x, sz = g_scd.props[ci].z;
+        const int n = halte_bis_stand(P[d].taste, ci, &sperr);
+        printf("  %-6s start (%d,%d) bewegt %3d ende (%d,%d) Sperrbilder %d | Original: bewegt %3d ende (%d,%d)\n",
+               P[d].name, (int)sx, (int)sz, n, (int)g_scd.props[ci].x, (int)g_scd.props[ci].z, sperr,
+               P[d].fahrt, (int)P[d].x, (int)P[d].z);
+        char t[200];
+        snprintf(t, sizeof t, "%s: %d Fahrbilder, Stand am Rahmen (%d,%d) wie das Original, keine Sperre",
+                 P[d].name, P[d].fahrt, (int)P[d].x, (int)P[d].z);
+        CHECK(t, n == P[d].fahrt && g_scd.props[ci].x == P[d].x && g_scd.props[ci].z == P[d].z && sperr == 0);
+    }
+    CHECK("dabei kein Schalter umgelegt (Fahrt ohne Quadrat)", maske_lesen() == 0u);
+}
+
 int main(void)
 {
     printf("=== RIEGEL r31: Generator ROOM11F0 — Abnahme erst bei stehendem Zeiger ===\n");
@@ -404,6 +521,7 @@ int main(void)
     teil_d();
     teil_e();
     teil_f();
+    teil_g();
     printf("\n%s (%d Fehler)\n", g_fail ? "FEHLER" : "ALLES GRUEN", g_fail);
     return g_fail ? 1 : 0;
 }

@@ -13,9 +13,12 @@
  *    jeweilige Licht ... wieder aus gehen."
  *
  * SOLL (Belege: include/re15_panel_zeiger.h, analysis/befunde_runde34_nacht/C_generator.md):
- *   A  FREIE FAHRT: Schalter 7 per echter Cursorfahrt + Quadrat, danach UNTEN gehalten: der
- *      Cursor bewegt sich in JEDEM Bild der Zeigerfahrt (0 -> 20) und der 30 Ruhebilder,
- *      keine Sperre; der Zeiger erreicht trotzdem 20.
+ *   A  FREIE FAHRT: Schalter 7 per echter Cursorfahrt + Quadrat, danach UNTEN, ab Bild 30 OBEN
+ *      gehalten: der Cursor bewegt sich in JEDEM Bild der Zeigerfahrt (0 -> 20) und der 30
+ *      Ruhebilder, keine Sperre; der Zeiger erreicht trotzdem 20. (Runde 36 G2: die Richtung
+ *      wechselt, weil das Original den Cursor an den Rahmenzellen des Schalterfelds anhaelt —
+ *      UNTEN ab z 16068, OBEN ab z 29232, am Original gemessen; eine Richtung allein laeuft ab der
+ *      Zelle von Schalter 7 nach 42 Bildern an den Rahmen. Der Rahmen selbst: unit_r31_generator G.)
  *   B  ENDSPERRE: 7, 9, 3, 1 ohne Warten, dann 5 (alles echter Eingabepfad) -> vor dem Bild
  *      b* (Maske = Loesung 0x155) nie gesperrt; ab b* bis zur Abnahme gesperrt, Cursor steht
  *      trotz HOCH+QUADRAT, kein Schalterwechsel; Abnahme (4:238) genau im Bild k+31
@@ -255,11 +258,19 @@ static void teil_a(void)
     if (ci < 0) return;
     CHECK("Cursor erreicht die Zelle von Schalter 7 (Slot 8 @0x00DF0)", cursor_zu(7));
     quadrat();
-    /* bis zum Schalterbit (Kippung 16 Bilder, dann @0x014C0 `22 05 13 01`) — dabei UNTEN halten */
+    /* bis zum Schalterbit (Kippung 16 Bilder, dann @0x014C0 `22 05 13 01`) — dabei eine Richtungstaste
+     * halten. Runde 36 G2: der Cursor faehrt nicht unbegrenzt — das Original schiebt ihn je Bild aus den
+     * Rahmenzellen des Schalterfelds (Ruhe-Zweig `jal 0x8003b558` @0x8002c0d0, FUN_8003da78 @0x8003b79c;
+     * am Original gemessen: UNTEN steht er ab z 16068, OBEN ab z 29232 — analysis/befunde_runde36/
+     * G2_generator_ruhezweig.md, G2_belege/orig_cursor_lauf1 B114/B033). Ab z 24484 (Zelle von Schalter 7)
+     * reichen 74 Bilder in EINER Richtung nicht (UNTEN 42, OBEN 23 Bilder bis zum Rahmen); darum 30 Bilder
+     * UNTEN (24484 -> 18484), dann OBEN (18484 + 44*200 = 27284 < 29232): jedes Bild bewegt, solange
+     * nichts sperrt — dasselbe, was der Riegel vor G2 mit einer Richtung pruefte. */
     int b = -1, bilder = 0, steh = 0, gesperrt = 0, w20 = -1;
     int32_t zvor = g_scd.props[ci].z;
     for (int f = 0; f < KIPP_BILDER + 4 + 20 + RE2_SLEEP_BILDER + 5; f++) {
-        frame_z(RE15_PAD_BIT_DOWN, (uint16_t)(f == 0 ? RE15_PAD_BIT_DOWN : 0));
+        const uint16_t taste = (uint16_t)(f < 30 ? RE15_PAD_BIT_DOWN : RE15_PAD_BIT_UP);
+        frame_z(taste, (uint16_t)((f == 0 || f == 30) ? taste : 0));
         int32_t z = g_scd.props[ci].z;
         if (b < 0 && (maske_lesen() & 0x40u)) b = f;
         if (b >= 0 && f <= b + 20 + RE2_SLEEP_BILDER) {
@@ -276,7 +287,9 @@ static void teil_a(void)
     CHECK("der Zeiger erreicht trotzdem die 20 (20 Punkte, 1 je Bild @0x01216)", w20 == b + 19);
     CHECK("in JEDEM Bild der Fahrt und der 30 Ruhebilder bewegt sich der Cursor", bilder == 51 && steh == 0);
     CHECK("und nie eine Sperre", gesperrt == 0);
-    CHECK("nur Schalter 7 umgelegt (UNTEN ohne Quadrat schaltet nichts)", maske_lesen() == 0x040u);
+    CHECK("nur Schalter 7 umgelegt (UNTEN/OBEN ohne Quadrat schaltet nichts)", maske_lesen() == 0x040u);
+    CHECK("der Cursor blieb im Schalterfeld (Original-Rahmen z 16068..29232, G2)",
+          g_scd.props[ci].z >= 16068 && g_scd.props[ci].z <= 29232);
 }
 
 /* ================= B: Endsperre ================================================== */
