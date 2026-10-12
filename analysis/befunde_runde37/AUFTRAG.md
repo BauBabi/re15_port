@@ -118,3 +118,10 @@ Lesart -> Spur I feuerloescher:
 Lesart: Bei Leon liegt der leere Loescher in ROOM1090 NUR, wenn er an der Wegwerf-Abfrage nach dem Loeschen (Port-Abfrage
 gen/discard_sites.inc `{ 0x1090, 9, 0x31, 0, 0 }`) "Yes" waehlt; bei "No" bleibt er im Inventar und am Boden liegt nichts.
 Elza 1091 unveraendert (liegt immer). Dem Bau-Agenten I per Nachricht uebermittelt.
+
+## Nachtrag 4c — 2026-10-12 (woertlich, zu Spur I)
+
+> If he doesn't he has the text empty fire extinguisher in the player inventory.
+
+Lesart: Bei "No" an der Wegwerf-Abfrage behaelt Leon den Loescher; im Inventar heisst er dann "Empty Fire Extinguisher"
+(Name/Untersuchen-Text zeigen, dass er leer ist; Zustand bleibt im Spielstand). Dem Bau-Agenten I per Nachricht uebermittelt.
