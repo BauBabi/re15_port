@@ -35,6 +35,7 @@
 #include "re2_ems.h"
 #include "re15_skeleton.h"
 #include "re15_ems.h"
+#include "re15_bissarm_r37.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -572,6 +573,144 @@ static int teil_skel(int argc, char **argv)
     return 0;
 }
 
+/* ---- vergleich: Port-Griff gegen das RE2-ORIGINAL (RAM-Fixture) -----------------------------------
+ * vergleich <frames.bin> <vorn|hinten> [mit|ohne]
+ * Port: ROOM1140, ein Greifer (Typ 0x10, Hybrid wie in der exe), Griff von vorn/hinten auf freier Flaeche; je
+ * Griffbild die GEZEICHNETE Pose (re15_skel_compute_pose + re15_bissarm_r37_handkontakt, derselbe Aufruf wie
+ * main.c) -> Vektor Zombie-Hand 11/14 minus Leons Schultergelenk 12/9 (Welt, Leon = Opfer-Pose PL00 + Opfer-
+ * Keyframes). Original: dieselben Vektoren aus der RAM (Part +0x5C), Halt mit Clipwort-Bild k+1 <-> Port-Bild k
+ * (am Haltepunkt stammen die Part-Matrizen vom Zeichnen des Vorbilds, Runde 35 H_raeume.md Abschnitt 6a).
+ * Mass je Bild: Abstand Port-Vektor zu RE2-Vektor fuer beide Haende; "ohne" = Handkontakt aus (Stand vorher). */
+typedef struct { int ok; int16_t yaw; int32_t h11[3], h14[3], l12[3], l9[3], l8[3]; } griffbild_t;
+/* Welt-Vektor in den Rahmen des Greifers (Ryaw^T, Ryaw wie re15_skel_bone_to_world) — die Spielstaende haben
+ * verschiedene Blickrichtungen, verglichen wird die Formation, nicht die Weltachse. */
+static void in_greiferrahmen(int16_t yaw, int32_t v[3])
+{
+    int64_t cs = re15_cos_q12(yaw), sn = re15_sin_q12(yaw);
+    int32_t x = (int32_t)((cs * v[0] - sn * v[2]) >> 12), z = (int32_t)((sn * v[0] + cs * v[2]) >> 12);
+    v[0] = x; v[2] = z;
+}
+static griffbild_t s_re2bild[64], s_portbild[64];
+static int vergleich_re2_laden(const char *pfad)
+{
+    size_t n = 0; uint8_t *d = slurp(pfad, &n);
+    if (!d) return 0;
+    const size_t ENT = 0x248, PS = 0xAC, REC = 12 + ENT + 16 * PS + ENT + 17 * PS;
+    int cnt = 0;
+    for (size_t o = 0; o + REC <= n; o += REC) {
+        if (memcmp(d + o, "R2B1", 4) != 0) break;
+        const uint8_t *lp = d + o + 12 + ENT, *ze = d + o + 12 + ENT + 16 * PS, *zp = ze + ENT;
+        uint32_t cw; memcpy(&cw, ze + 0x14C, 4);
+        if ((cw & 0xFFu) != 12u) continue;                     /* nur der Biss-Loop (Clip 12) */
+        int k = (int)((cw >> 8) & 0xFFu) - 1;                  /* Clipwort k+1 <-> Port-Bild k */
+        if (k < 0 || k >= 64) continue;
+        griffbild_t *g = &s_re2bild[k];
+        memcpy(&g->yaw, ze + 0x76, 2);
+        memcpy(g->h11, zp + 11 * PS + 0x5C, 12); memcpy(g->h14, zp + 14 * PS + 0x5C, 12);
+        memcpy(g->l12, lp + 12 * PS + 0x5C, 12); memcpy(g->l9, lp + 9 * PS + 0x5C, 12); memcpy(g->l8, lp + 8 * PS + 0x5C, 12);
+        g->ok = 1; cnt++;
+    }
+    free(d);
+    return cnt;
+}
+static int s_vgl_bilder, s_vgl_max11, s_vgl_max14, s_vgl_mit11, s_vgl_mit14;
+static int vergleich_lauf(const char *fixture, int hinten, int mit, int ausgabe)
+{
+    memset(s_re2bild, 0, sizeof s_re2bild); memset(s_portbild, 0, sizeof s_portbild);
+    int nre2 = vergleich_re2_laden(fixture);
+    if (nre2 <= 0) { printf("SKIP: RE2-Fixture %s fehlt/leer\n", fixture); return 77; }
+    int rc = raum_laden(0x1140);
+    if (rc) return rc;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    re15_collision_set_band(0); re15_player_set_aim_clip_len(12); re15_inv_load_briefing();
+    int zA = -1;                                               /* Greifer = erster Typ 0x10 (wie im RE2-Spielstand) */
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == 0x10 && zA < 0) zA = s;
+    if (zA < 0) { printf("FAIL: kein Typ 0x10\n"); return 1; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (s != zA && g_actors[s].active && re15_re2z_owns_type(g_actors[s].type)) g_actors[s].active = 0;
+    re15_actor_t *z = &g_actors[zA];
+    re15_enemy_bank_t *zb = re15_enemy_find(z->type);
+    pl00_laden();
+    if (!zb || !zb->ok || !s_pl00_ok) { printf("SKIP: Bank/PL00 fehlt\n"); return 77; }
+    const int32_t px = -1000, pz = -19600; const int rot = 0, abst = 900;
+    int32_t sn = re15_sin_q12(rot), cs = re15_cos_q12(rot);
+    int vz = hinten ? -1 : 1;
+    pl->x = px; pl->z = pz; pl->rot_y = (int16_t)rot;
+    z->x = px + vz * (int32_t)(((int64_t)cs * abst) >> 12); z->z = pz - vz * (int32_t)(((int64_t)sn * abst) >> 12);
+    z->y = 0; z->rot_y = (int16_t)((rot + (hinten ? 0 : 2048)) & 0x0fff);
+    int erster = -1;
+    for (int f = 0; f < 400; f++) {
+        int v = re15_player_victim_state();
+        if (v == 0 && !(pl->hit_react & 1)) { pl->x = px; pl->z = pz; pl->rot_y = (int16_t)rot; }
+        if (pl->hp < 60) pl->hp = 100;
+        frame(0, 0);
+        v = re15_player_victim_state();
+        if (v != 1) { if (erster >= 0 && f > erster + 40) break; continue; }
+        if (erster < 0) erster = f;
+        if (z->state != 1 || z->sub_state_1 != 3 || z->motion != 12) continue;
+        int k = (int)z->anim_frame;
+        if (k < 0 || k >= 64 || s_portbild[k].ok) continue;
+        static re15_skel_pose_t ZP[RE15_EMD_MAX_BONES], LP[RE15_EMD_MAX_BONES];
+        int kz = kf_von(&zb->anim, z->motion, z->anim_frame);
+        void *sav = g_anim_pose_actor; g_anim_pose_actor = NULL;
+        int okz = (kz >= 0 && re15_skel_compute_pose(&zb->skel, kz, ZP) == 0);
+        re15_enemy_bank_t *vb = re15_enemy_find(re15_player_victim_type());
+        static re15_emd_skeleton_t vs; vs = s_pl00;
+        int okl = 0;
+        if (vb && vb->victim_ok) {
+            vs.keyframe_data = vb->skel_victim.keyframe_data; vs.keyframe_data_size = vb->skel_victim.keyframe_data_size;
+            vs.keyframe_count = vb->skel_victim.keyframe_count; vs.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
+            int kl = kf_von(&vb->anim_victim, pl->motion, pl->anim_frame);
+            okl = (kl >= 0 && re15_skel_compute_pose(&vs, kl, LP) == 0);
+        }
+        g_anim_pose_actor = sav;
+        if (!okz || !okl) continue;
+        if (mit) re15_bissarm_r37_handkontakt(z, &zb->skel, kz, ZP, zb->skel.bone_count);
+        griffbild_t *g = &s_portbild[k];
+        g->yaw = z->rot_y;
+        re15_skel_bone_to_world(ZP[11].trans, z->rot_y, z->x, z->y, z->z, g->h11);
+        re15_skel_bone_to_world(ZP[14].trans, z->rot_y, z->x, z->y, z->z, g->h14);
+        re15_skel_bone_to_world(LP[12].trans, pl->rot_y, pl->x, pl->y, pl->z, g->l12);
+        re15_skel_bone_to_world(LP[9].trans, pl->rot_y, pl->x, pl->y, pl->z, g->l9);
+        re15_skel_bone_to_world(LP[8].trans, pl->rot_y, pl->x, pl->y, pl->z, g->l8);
+        g->ok = 1;
+    }
+    int bilder = 0, max11 = 0, max14 = 0, summe11 = 0, summe14 = 0;
+    for (int k = 0; k < 64; k++) {
+        if (!s_portbild[k].ok || !s_re2bild[k].ok) continue;
+        const griffbild_t *a = &s_portbild[k], *b = &s_re2bild[k];
+        int32_t va[3], vb2[3], wa[3], wb[3];
+        for (int i = 0; i < 3; i++) { va[i] = a->h11[i] - a->l12[i]; vb2[i] = b->h11[i] - b->l12[i];
+                                      wa[i] = a->h14[i] - a->l9[i];  wb[i] = b->h14[i] - b->l9[i]; }
+        in_greiferrahmen(a->yaw, va); in_greiferrahmen(a->yaw, wa);
+        in_greiferrahmen(b->yaw, vb2); in_greiferrahmen(b->yaw, wb);
+        int d11 = abst3(va, vb2), d14 = abst3(wa, wb);
+        if (ausgabe)
+            printf("  Biss-Bild %2d | Hand11-L12 Port (%5d,%5d,%5d) RE2 (%5d,%5d,%5d) Diff %4d | Hand14-L9 Port (%5d,%5d,%5d) RE2 (%5d,%5d,%5d) Diff %4d\n",
+                   k, va[0], va[1], va[2], vb2[0], vb2[1], vb2[2], d11, wa[0], wa[1], wa[2], wb[0], wb[1], wb[2], d14);
+        bilder++; summe11 += d11; summe14 += d14;
+        if (d11 > max11) max11 = d11;
+        if (d14 > max14) max14 = d14;
+    }
+    s_vgl_bilder = bilder; s_vgl_max11 = max11; s_vgl_max14 = max14;
+    s_vgl_mit11 = bilder ? summe11 / bilder : -1; s_vgl_mit14 = bilder ? summe14 / bilder : -1;
+    printf("VERGLEICH %s %s: %d Biss-Bilder gegen RE2 (Fixture %d Halts) | Hand 11 mittel %d max %d | Hand 14 mittel %d max %d\n",
+           hinten ? "HINTEN" : "VORN", mit ? "MIT Handkontakt" : "OHNE Handkontakt", bilder, nre2,
+           s_vgl_mit11, max11, s_vgl_mit14, max14);
+    return 0;
+}
+static int teil_vergleich(int argc, char **argv)
+{
+    if (argc < 4) { printf("vergleich <frames.bin> <vorn|hinten> [mit|ohne]\n"); return 2; }
+    int hinten = (argv[3][0] == 'h');
+    int mit = !(argc > 4 && argv[4][0] == 'o');
+    int rc = vergleich_lauf(argv[2], hinten, mit, 1);
+    if (rc) return rc;
+    return s_vgl_bilder > 0 ? 0 : 1;
+}
+
 /* karte <datei> <raum-hex> <char 0|4> <x> <y> <z> <rot> <hp> <cut> <waffe|0> <flags|->
  * Schreibt Slot 0 einer PSX-Karte (wie test_r36_kleidung karte) — zusaetzlich die ausgeruestete Waffe
  * (Briefing-Inventar: 1 Messer, 3 Browning) und Spielflags "zone:bit,..." (z.B. die Kill-Flags der
@@ -628,6 +767,7 @@ int main(int argc, char **argv)
     if (strcmp(teil, "karte") == 0) return teil_karte(argc, argv);
     if (strcmp(teil, "re2gt") == 0) return teil_re2gt(argc, argv);
     if (strcmp(teil, "skel") == 0) return teil_skel(argc, argv);
+    if (strcmp(teil, "vergleich") == 0) return teil_vergleich(argc, argv);
     printf("Teile: griff | karte\n");
     return 2;
 }
