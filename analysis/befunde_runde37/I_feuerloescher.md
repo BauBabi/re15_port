@@ -348,7 +348,60 @@ Elza 1091, Fundort 1050/Spind 1000, Nachtrag 4c) nicht verschlechtern. Der Auftr
 Abschnitt 0) — Spur I fasst keine Panel-Datei an.
 
 ### N1.M1 — leerer Loescher liegt in ROOM1090 auch ohne JA (Item-Box-Weg)
-(in Arbeit)
+
+**Ursache (Code):** `feuerloescher_r37.c` `tor_offen()` Fall `RE15_FL37_FEUER_AUS` = `(3,0x81) &&
+re15_inv_find_item(0x31) < 0`. `re15_inv_find_item` ist das Gegenstueck zu RE1.5 FUN_8004dfec und sucht NUR im
+Inventar; die ITEM BOX (`g_itembox.slots[64]`, re15_itembox.h) ist ein eigenes Feld. "Nicht im Inventar" ist damit
+kein Beleg fuer "an der Wegwerf-Abfrage Ja gesagt".
+
+**Messung vorher (gebauter Stand = Code c0d3033d, exe 13:14:43 juenger als die letzte Code-Aenderung 13:13:32; Messkopie
+`re15_pc_r37i_nb1_mess.exe`, Lauf-Skript wie die Abnahme, Rohdaten Scratchpad `inb1/`):**
+* Lauf v8 = L8 der Abnahme: Karte ROOM1050 (19850,-22300) rot 1024 Cut 6, `flag:9:0x86 flag:3:0x85 flag:3:0x80
+  flag:3:0x81 leer give:0x31:1`, `RE15_BOX_TEST=1`, Skript `W1,A0.1,W0.7,A0.1,W1,X0.1,W0.7,X0.1,W2,A0.5,W6`,
+  Ende `200#1090`:
+  ```
+  [save] CONTINUE: resumed in room 1050 (hp=100)
+  [feuerloescher] ROOM1050: kein Loescher (schon genommen, (9,0x86)=1)
+  [feuerloescher] Name Item 0x31: Empty Fire Extinguisher
+  [room] PC loaded room1090.rdt (336440 bytes)
+  [feuerloescher] ROOM1090: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300) rot_y 3250, Zone Slot 6 Untersuchen msg 29
+  ```
+* Lauf v8v (dieselbe Eingabe, Ende `135#1050`, Bild F130): ITEM BOX zeigt "Empty Fire Extinguisher", die Item-Liste
+  (Inventar) ist leer (`I_belege/nb1_vorher_box_F130.png`). => Der Loescher liegt in ROOM1090 UND in der Box: M1
+  reproduziert.
+
+**RE-Belege (selbst disassembliert):**
+* RE1.5 FUN_8004dfec (PSX.EXE, `re15_disasm.py dis 0x8004dfec 22`) — die Inventar-Suche kennt nur das Inventar:
+  ```
+  8004dff0  lbu  v0,4028(v0)       ; Zaehler 0x800b0fbc
+  8004e014  addiu at,at,4268       ; Basis 0x800b10ac (Inventar-Id, Schritt 4)
+  8004e01c  lbu  v0,0(at)          ; Id lesen
+  8004e024  bne  v0,a0,0x8004e034  ; Id == gesucht? sonst naechster Platz
+  ```
+* RE2 FUN_800703b8 (Leon PSX.EXE, `re2_disasm.py dis 0x800703b8 420`) — Einlagern ist ein TAUSCH zwischen zwei
+  Feldern (Basis s4 = 0x800cc1e8 @0x800703d8; +0x10000-30636 = 0x800d4a3c Inventar, +0x10000-30592 = 0x800d4a68 Box):
+  ```
+  80070400  lbu  v0,-30636(at)     ; Inventar-Id[Cursor] -> sp+16 (@0x80070408)
+  800706b8  lbu  v0,-30592(at)     ; Box-Id[Platz]
+  800706c8  sb   v0,-30636(at)     ; -> Inventar[Cursor]
+  80070700  lbu  v0,16(sp)         ; alte Inventar-Id
+  80070710  sb   v0,-30592(at)     ; -> Box[Platz]
+  ```
+  Der Gegenstand verlaesst das Inventar und liegt danach im Box-Feld — er ist NICHT weg.
+* RE2 Wegwerf-"Ja" (dieselbe Datei, `dis 0x80051750 26`): `80051774 sb zero,-30636(at)` (Inventar-Id := 0),
+  `80051794 sb zero,-30634(at)` (Groesse), `80051798 jal 0x80069714` (Verdichten) — das Box-Feld (-30592) wird nicht
+  beschrieben. Nur dieser Weg nimmt den Gegenstand aus BEIDEN Feldern.
+* Zensus der Port-Wege, die Item 0x31 aus `g_inv` nehmen (grep re15_inv_remove_slot / `.id = 0` in engine/ + platform/):
+  Wegwerf-Ja `item_discard_common.c:353`; Kiste `re15_itembox_transfer` (Fall 0, `bs->id = old_inv.id`); Heilen
+  `menu_common.c:712` nur ueber s_c3 = 3 fuer Ids 0x22..0x2F ohne 0x25 (`sltiu 0xe` @0x8004ab48, 0x31 -> "cant-use"
+  s_c3 = 6 @0x8004ab6c); Kombinieren nie (Item-Tabelle @0x80074DA8 Zeile 0x31 @0x80074FF4 = `01 00 00 00 88 4c 07 80
+  00 00 00 00`, Paarzahl @+9 = 0; kein Paar der Tabelle nennt 0x31 als Partner oder Ergebnis — Zensus-Skript
+  `inb1/kombi_zensus.py`); `inventar_r36.c` nur Karte 0x21/Granaten mit Menge 0; `rolltor_1050.c` nur im eigenen
+  Programm `k_mit`; `messer_rueckfall.c` nur Messer 0x01; Neues Spiel/Laden setzen Flags mit zurueck. => Ist (3,0x81)
+  gesetzt und 0x31 weder im Inventar noch in der Box, dann hat Leon an der Wegwerf-Abfrage Ja gesagt.
+
+**Wahl:** Abhilfe (a) der Abnahme — das Tor fragt zusaetzlich die Box. Kein neues Bit (VERTRAG 1.1 teilt Spur I keins
+zu; Inventar UND Box reisen mit dem Spielstand: `re15_savedata.c:211` `re15_itembox_export(out->box)`, `:294` import).
 
 ### N1.M2 — Abschnittsverweis im Kommentar feuerloescher_r37.c:82
 (in Arbeit)
