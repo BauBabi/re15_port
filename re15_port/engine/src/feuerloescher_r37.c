@@ -14,6 +14,7 @@
 #include "re15_msg.h"
 #include "re15_inventory.h"   /* re15_inv_find_item (FUN_8004dfec) */
 #include "re15_room.h"        /* g_current_room_id */
+#include "re15_gameflow.h"    /* re15_char_variant (Leon 0 / Elza 1) */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -244,4 +245,48 @@ const uint8_t *re15_feuerloescher_r37_text(int *out_len)
 {
     if (out_len) *out_len = (int)sizeof k_fl_msg_leer;
     return k_fl_msg_leer;
+}
+
+/* ---- Nachtrag 4c: der behaltene Loescher heisst "Empty Fire Extinguisher" -------------------------------
+ * NUTZER-VORGABE (AUFTRAG.md Nachtrag 4c): "If he doesn't he has the text empty fire extinguisher in the player
+ * inventory." Zustand "leer" = Leon (re15_char_variant() == 0) UND Feuer aus (3,0x81) — das Bit setzt NUR sub06
+ * @0x0271E, also genau dann, wenn Leon den Loescher benutzt hat. Kein neues Bit: Flags + Inventar reisen mit dem
+ * Spielstand (re15_savedata), "leer" ist daraus abgeleitet. Vor dem Loeschen bleibt der Original-Name.
+ * NAME = zwei Original-Glyphenfolgen: "Empty " aus dem Item-Namen 0x1C "Empty Grenade Shells" (DEBUG.BIN @0x4BA7
+ * `21 49 4c 50 55 00`, das RE1.5-Vorbild fuer einen leeren Gegenstand) + "Fire Extinguisher" = Name 0x31
+ * (DEBUG.BIN @0x4CDC `22 45 4e 41 00 21 54 50 45 4a 43 51 45 4f 44 41 4e`), 0x07-Ende wie die Namensbank.
+ * 162 px (include/font_width.h) — laengster Original-Name "Minidisc Player w/ Disc" 158 px.
+ * CHECK-Text (PORT-WAHL zur Freigabe): "An empty fire extinguisher." (186 px), Ende `01 00` wie die Beschreibungsbank. */
+static const uint8_t k_name_leer[24] = {          /* "Empty Fire Extinguisher" */
+    0x21,0x49,0x4c,0x50,0x55,0x00,0x22,0x45,0x4e,0x41,0x00,0x21,0x54,0x50,0x45,0x4a,
+    0x43,0x51,0x45,0x4f,0x44,0x41,0x4e,0x07,
+};
+static const uint8_t k_desc_leer[29] = {          /* "An empty fire extinguisher." */
+    0x1d,0x4a,0x00,0x41,0x49,0x4c,0x50,0x55,0x00,0x42,0x45,0x4e,0x41,0x00,0x41,0x54,
+    0x50,0x45,0x4a,0x43,0x51,0x45,0x4f,0x44,0x41,0x4e,0x57,0x01,0x00,
+};
+
+int re15_feuerloescher_r37_leer(void)
+{
+    return re15_char_variant() == 0 && re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT);
+}
+
+const uint8_t *re15_feuerloescher_r37_name(uint8_t item_id)
+{
+    if (item_id != RE15_FL37_ITEM || !re15_feuerloescher_r37_leer()) return NULL;
+#ifdef RE15_PLATFORM_PC
+    {   static int s_einmal = 0;   /* Messzeile fuer den exe-Riegel, einmal je Prozess (Getter laeuft je Bild) */
+        if (!s_einmal) { s_einmal = 1; fprintf(stderr, "[feuerloescher] Name Item 0x31: Empty Fire Extinguisher\n"); } }
+#endif
+    return k_name_leer;
+}
+
+const uint8_t *re15_feuerloescher_r37_desc(uint8_t item_id)
+{
+    if (item_id != RE15_FL37_ITEM || !re15_feuerloescher_r37_leer()) return NULL;
+#ifdef RE15_PLATFORM_PC
+    {   static int s_einmal = 0;
+        if (!s_einmal) { s_einmal = 1; fprintf(stderr, "[feuerloescher] CHECK-Text Item 0x31: An empty fire extinguisher.\n"); } }
+#endif
+    return k_desc_leer;
 }

@@ -46,6 +46,8 @@
 #include "re15_enemy.h"
 #include "re15_fade.h"
 #include "re15_savedata.h"
+#include "re15_item_prompt.h"
+#include "re15_inv_screen.h"
 
 extern re15_aot_state_t g_aot;
 extern uint8_t          g_aot_action_pressed;
@@ -508,6 +510,8 @@ static void teil_loeschen(void)
     loeschen_fahren(&r90, 0x8000u, "Nein");
     CHECK(menge(RE15_FL37_ITEM) == 1 && slot_von(RE15_FL37_OBJ) < 0,
           "L Nein: Leon behaelt den Loescher, keiner liegt (kein Doppel)");
+    CHECK(re15_feuerloescher_r37_name(RE15_FL37_ITEM) != NULL && re15_feuerloescher_r37_desc(RE15_FL37_ITEM) != NULL,
+          "L Nein: der behaltene Loescher heisst \"Empty Fire Extinguisher\" (Nachtrag 4c)");
     start(&r90, -10100, -1800, 4200, 3072, NULL, NULL, 0, 0);
     CHECK(slot_von(RE15_FL37_OBJ) < 0, "L Nein: auch beim Wiederbetreten liegt keiner");
 }
@@ -559,6 +563,82 @@ static void teil_spind(void)
     CHECK(!re15_game_flag_get(9, 0x86) && menge(RE15_FL37_ITEM) == 0, "S 1000: kein Loescher aus dem Spind");
 }
 
+/* ========================================================================================== leer */
+/* Nachtrag 4c: "If he doesn't he has the text empty fire extinguisher in the player inventory." */
+typedef struct { uint8_t g[160]; int n; } glyphen_t;
+static void glyph_cb(void *ctx, unsigned char code, int attr, int newline)
+{
+    glyphen_t *G = (glyphen_t *)ctx;
+    (void)attr;
+    if (!newline && G->n < (int)sizeof G->g) G->g[G->n++] = code;
+}
+static int enthaelt(const glyphen_t *G, const uint8_t *nadel, int len)
+{
+    for (int i = 0; i + len <= G->n; i++) if (memcmp(G->g + i, nadel, (size_t)len) == 0) return 1;
+    return 0;
+}
+
+static void teil_leer(void)
+{
+    raum_t r90;
+    printf("\n[leer]\n");
+    /* Erwartung unabhaengig vom Modul aufgeschrieben: "Empty " = DEBUG.BIN @0x4BA7 (Name 0x1C "Empty Grenade
+     * Shells"), "Fire Extinguisher" = DEBUG.BIN @0x4CDC (Name 0x31). */
+    static const uint8_t k_empty[6]  = { 0x21, 0x49, 0x4c, 0x50, 0x55, 0x00 };
+    static const uint8_t k_fire[17]  = { 0x22, 0x45, 0x4e, 0x41, 0x00, 0x21, 0x54, 0x50, 0x45, 0x4a, 0x43, 0x51,
+                                         0x45, 0x4f, 0x44, 0x41, 0x4e };
+    uint8_t k_voll[23];
+    memcpy(k_voll, k_empty, 6); memcpy(k_voll + 6, k_fire, 17);
+
+    re15_game_state_init(); re15_inv_init();
+    g_gameflow.character = 0;
+    const uint8_t *orig_desc = re15_inv_desc_entry(RE15_FL37_ITEM);
+    glyphen_t vor; memset(&vor, 0, sizeof vor);
+    re15_item_prompt_walk(1, RE15_FL37_ITEM, 999, glyph_cb, &vor);
+    CHECK(re15_feuerloescher_r37_name(RE15_FL37_ITEM) == NULL && re15_feuerloescher_r37_desc(RE15_FL37_ITEM) == NULL &&
+          enthaelt(&vor, k_fire, 17) && !enthaelt(&vor, k_voll, 23),
+          "4c Leon vor dem Loeschen: Original-Name \"Fire Extinguisher\" (Abfrage), kein Ersatz");
+
+    re15_game_flag_set(3, 0x81, 1);
+    const uint8_t *nm = re15_feuerloescher_r37_name(RE15_FL37_ITEM);
+    int nlen = 0;
+    while (nm && nm[nlen] != 0x07 && nlen < 64) nlen++;
+    CHECK(nm && nlen == 23 && memcmp(nm, k_voll, 23) == 0,
+          "4c Leon nach dem Loeschen (3,0x81): Name = \"Empty \" (@0x4BA7) + \"Fire Extinguisher\" (@0x4CDC), 0x07-Ende");
+    glyphen_t nach; memset(&nach, 0, sizeof nach);
+    re15_item_prompt_walk(1, RE15_FL37_ITEM, 999, glyph_cb, &nach);
+    CHECK(enthaelt(&nach, k_voll, 23), "4c Abfrage-Text traegt \"Empty Fire Extinguisher\" (Haken item_prompt_common.c)");
+    const uint8_t *d = re15_inv_desc_entry(RE15_FL37_ITEM);
+    int dl = 0;
+    while (d && !(d[dl] == 0x01 && d[dl + 1] == 0x00) && dl < 120) dl++;
+    {   /* als Nachricht dekodieren: Kopf 04 02 + Text + 01 00 */
+        uint8_t m[160]; m[0] = 0x04; m[1] = 0x02;
+        memcpy(m + 2, d, (size_t)dl + 2);
+        re15_msg_install_text(28, m, (size_t)dl + 4);
+    }
+    const char *dt = re15_msg_get_text(28);
+    CHECK(d && d != orig_desc && dt && strcmp(dt, "An empty fire extinguisher.") == 0,
+          "4c CHECK-Text (re15_inv_desc_entry, Haken re15_inv_screen.c) = \"%s\"", dt ? dt : "(null)");
+    CHECK(re15_feuerloescher_r37_name(0x30) == NULL && re15_feuerloescher_r37_desc(0x22) == NULL,
+          "4c andere Gegenstaende unberuehrt");
+    g_gameflow.character = 4;
+    CHECK(re15_feuerloescher_r37_name(RE15_FL37_ITEM) == NULL && re15_inv_desc_entry(RE15_FL37_ITEM) == orig_desc,
+          "4c Elza (eigene Bedeutung von (3,0x81), ROOM10B1): kein Ersatz");
+    g_gameflow.character = 0;
+
+    /* Spielstand: Nein an der Abfrage -> Loescher im Inventar; nach Speichern/Laden weiter "Empty ..." */
+    if (raum_laden(&r90, 0x1090)) return;
+    start(&r90, -10100, -1800, 4200, 3072, K_FEUER_AUS, K_LOESCHER, 0, 1);
+    re15_savedata_t sd;
+    re15_savedata_capture(&sd, 0, 1);
+    re15_game_state_init(); re15_inv_init();
+    CHECK(re15_feuerloescher_r37_name(RE15_FL37_ITEM) == NULL, "4c nach dem Zuruecksetzen: kein Ersatz");
+    uint16_t rr = 0;
+    int ok = re15_savedata_restore(&sd, &rr) == 0;
+    CHECK(ok && menge(RE15_FL37_ITEM) == 1 && re15_feuerloescher_r37_name(RE15_FL37_ITEM) != NULL,
+          "4c nach Laden: Loescher im Inventar heisst wieder \"Empty Fire Extinguisher\"");
+}
+
 /* =================================================================================== spielstand */
 static void teil_spielstand(void)
 {
@@ -594,6 +674,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "elza"))       teil_elza();
     if (alle || !strcmp(teil, "spind"))      teil_spind();
     if (alle || !strcmp(teil, "spielstand")) teil_spielstand();
+    if (alle || !strcmp(teil, "leer"))       teil_leer();
     printf("\n%d Pruefungen, %d Fehler\n", checks, fails);
     return fails ? 1 : 0;
 }

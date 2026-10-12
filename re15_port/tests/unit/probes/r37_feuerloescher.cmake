@@ -8,6 +8,8 @@
 #   unit_r37_feuerloescher_elza       1091 Druck -> msg 29; Messpunkt Runde 36 -> weiter msg 20
 #   unit_r37_feuerloescher_spind      1000 Spind -> msg 0, kein Modal
 #   unit_r37_feuerloescher_spielstand Flags + Inventar reisen mit dem Spielstand
+#   unit_r37_feuerloescher_leer       Nachtrag 4c: behaltener Loescher heisst "Empty Fire Extinguisher" (Name/CHECK-Text,
+#                                     Abfrage-Name), nur Leon nach (3,0x81), auch nach Speichern/Laden
 add_executable(test_r37_feuerloescher ${CMAKE_CURRENT_LIST_DIR}/../test_r37_feuerloescher.c)
 target_link_libraries(test_r37_feuerloescher PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r37_feuerloescher PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/engine/src)
@@ -16,7 +18,7 @@ target_compile_definitions(test_r37_feuerloescher PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r37_feuerloescher PRIVATE m)
 endif()
-foreach(_teil modell raum aufnahme loeschen elza spind spielstand)
+foreach(_teil modell raum aufnahme loeschen elza spind spielstand leer)
     add_test(NAME unit_r37_feuerloescher_${_teil} COMMAND test_r37_feuerloescher ${_teil}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r37_feuerloescher_${_teil} PROPERTIES TIMEOUT 300)

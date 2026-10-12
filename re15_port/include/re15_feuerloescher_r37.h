@@ -102,6 +102,14 @@ int            re15_feuerloescher_r37_obj_id(uint16_t room_id);
 const uint8_t *re15_feuerloescher_r37_md1_bytes(uint16_t room_id, int *out_size);
 const uint8_t *re15_feuerloescher_r37_tim_bytes(uint16_t room_id, int *out_size);
 
+/* Nachtrag 4c: behaelt Leon den benutzten Loescher (Wegwerf-Nein), heisst er "Empty Fire Extinguisher" und traegt
+ * den CHECK-Text "An empty fire extinguisher." (PORT-WAHL). Zustand = Leon UND (3,0x81) (sub06 @0x0271E). Formate
+ * wie die Namensbank (0x07-Ende) / Beschreibungsbank (`01 00`-Ende). NULL fuer jede andere Id / vor dem Loeschen.
+ * HAKEN re15_inv_screen.c (Name + CHECK-Text) und item_prompt_common.c (Name in Abfragen). */
+int            re15_feuerloescher_r37_leer(void);
+const uint8_t *re15_feuerloescher_r37_name(uint8_t item_id);
+const uint8_t *re15_feuerloescher_r37_desc(uint8_t item_id);
+
 /* Sonden/Riegel. */
 int                     re15_feuerloescher_r37_anzahl(void);
 const re15_fl37_lage_t *re15_feuerloescher_r37_zeile(int i);
