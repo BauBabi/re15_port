@@ -123,6 +123,9 @@ static uint8_t mu8(uint32_t addr) { return *RE15_INV_MAP_PTR(addr); }
 #define RE15_BOX_PANEL_Y   25
 #define RE15_BOX_PANEL_DY  (RE15_BOX_PANEL_Y - 13)   /* Versatz gegen das Original */
 #define RE15_BOX_TEXT_Y    (RE15_BOX_PANEL_Y + 156)  /* direkt unter dem Panel */
+#if RE15_KISTE_PANEL_Y != RE15_BOX_PANEL_Y || RE15_KISTE_PANEL_H != 156   /* Runde 37 Spur M: Rahmen-Teile */
+#error "re15_kiste_r37.h: Panel-Lage weicht vom PANEL-Op ab"
+#endif
 /* Grundlinie des Namens IN der Textbox: im Original steht die Schrift bei y 181,
  * die Box beginnt bei 169 — also 12 px unter ihrer Oberkante. */
 #define RE15_BOX_TEXT_BASE (RE15_BOX_TEXT_Y + 12)
@@ -1780,7 +1783,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 o->kind = RE15_INV_OP_PANELTEIL; o->page = 0; o->clut = 0; o->abe = 0;
                 o->u = tl->u; o->v = tl->v;
                 o->x = (int16_t)(RE15_KISTE_PANEL_X + tl->u);
-                o->y = (int16_t)(RE15_BOX_PANEL_Y + tl->v);
+                o->y = (int16_t)(RE15_KISTE_PANEL_Y + tl->v);
                 o->w = tl->w; o->h = tl->h;
                 o->r = 128; o->g = 128; o->b = 128;
             }

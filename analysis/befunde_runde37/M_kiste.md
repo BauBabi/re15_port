@@ -125,3 +125,41 @@ blittet das RE2-Panel 1:1 bei x 6 (Bild-Ursprung = RE2 (6,13)), also Port-x = RE
 - Namen liegen in RE2 ueber dem Symbol (2.1); RE2s Proportionalschrift (Vorschub-Tabelle 0x8009de34, Flag 0x4000)
   bleibt vor x 153. Der Port nutzt RE1.5s breitere Schrift (bis 173 px) — deshalb ueberdeckt der Name dort das
   Symbol. Die Abhilfe ist die LAGE (kein Name erreicht das Symbol), nicht die Ebene.
+- Kein Clip: SetDrawArea/DR_AREA kommt im Menue-Code (0x80068000-0x80080000) nicht vor (PutDrawEnv nur
+  @0x8002b9b0/@0x8003274c in der Hauptschleife); die 12-Byte-Prims der Liste sind DR_MODE (`jal SetDrawMode`
+  @0x8006f9b4 fuer 0x800d6bd8, Texturfenster NULL `sw zero,0x10(sp)` @0x8006f9ac).
+
+## 3. Umsetzung
+
+Dateien: `re15_port/engine/src/re15_inv_screen.c` (Block 7b, Haken "Runde 37 Spur M"), `re15_port/include/re15_kiste_r37.h`
+(neu, alle Konstanten mit Beleg), `re15_port/include/re15_inv_screen.h` (+ Op `RE15_INV_OP_PANELTEIL = 7`),
+`re15_port/platform/pc/src/inv_render_pc.c` (+ Rasterzweig PANELTEIL, 16 Zeilen). Keine neuen Assets.
+
+| Konstante (re15_kiste_r37.h) | Wert | Beleg |
+|---|---|---|
+| Fenster Bild-x 7..197 / Bild-y 27..127 | Port x 13..203 / y 52..152 | boxX+6; boxX+0xc4 `addiu v0,t1,0xc4` @0x80071adc; Kopfband (6,6)+20 / Fussband (6,127) aus @0x800a9c38; BOXPANEL.BIN Listengrund gemessen |
+| RE15_KISTE_SYMBOL_RECHTS | 204 (exklusiv) | boxX+0xc5 `addiu s6,t1,0xc5` @0x80071238 |
+| RE15_KISTE_ZIFFER_DX / _DY | 0 / 11 | FUN_80072c6c Tabelle @0x800aae2c (-67,-18+20k) + Ursprung (220,70) @0x80074b88/@0x80074b90 |
+| RE15_KISTE_EINLAUF_HOCH / _RUNTER | -1 / 5 | Name @0x80070128-74 / @0x800702b4-0304; Symbol local_50 -0x14 / 100; Ziffern `li s7,-0x26` @0x80072e74 / `li s7,0x52` @0x80072e48 |
+| Rahmen-Teile (oben/unten/links/rechts) | Panel-Bild ohne Fenster | RE2 Rahmen OT-Eintrag 2 ueber 6/3 (§2.1) |
+
+**M2 (Rahmen ueber den Items).** Op-Reihenfolge im Block 7b jetzt (frueher = oben): Auswahl-Band -> Scrollgriff ->
+**vier Rahmen-Teile** (PANELTEIL, Panel-Bild ohne Listenfenster, 1:1 an derselben Stelle) -> Zeilen -> (danach)
+Textbox und voller Panel-Op mit dem Listengrund. Damit liegt der Rahmen wie in RE2 ueber Symbolen, Namen und
+Ziffern; was beim Gleiten aus dem Fenster ragt, verschwindet unter Kopf- bzw. Fussband (beide 20 px = eine Zeile).
+Der Griff steht VOR den Rahmen-Teilen, weil RE2 die Scrollmarken vor den 16 Rahmen-Sprites in Eintrag 2 einhaengt
+(AddPrim vorn -> Marken ueber der Schiene). Die EINLAUFENDE Zeile (RE2 Zustand 2: Platz scroll-1 als Zeile -1,
+Zustand 3: scroll+5 als Zeile 5) wird mitgezeichnet (Name, Ziffern, Symbol), solange der Versatz != 0 ist; bei
+Versatz 0 laege sie vollstaendig unter dem 20 px hohen Band (Port y 33..51 unter 32..51 bzw. 153..171 unter
+153..172), das Bild ist dort identisch. Leere Plaetze bleiben leer wie die 5 Zeilen (RE1.5 kennt RE2s "leer"-Text nicht).
+
+**M1 (Symbol so weit rechts wie moeglich).** Jedes Symbol endet buendig am rechten Fensterrand: x = 204 - Breite
+(schmal 25 px -> x 179..203, 2-Feld 49 px -> x 155..203). NUTZER-VORGABE fuer die schmalen Symbole (RE2 setzt
+beide Breiten an dieselbe linke Kante 153 und laesst schmalen Symbolen 24 px Luft); die Grenze rechts ist RE2s
+Fensterkante boxX+0xc5. Die Mengen-Ziffern ziehen mit ins Symbol, unten links und ueber dem Symbol, wie RE2
+(FUN_80072c6c: x = linke Symbolkante, y = Zeilenoberkante + 11) und wie RE1.5s eigenes Inventar (Ziffern unten
+links im Symbol, FUN_80048f28) — rechts neben dem Symbol ist kein Platz mehr (vorher x 188..206, jetzt Fensterrand).
+Namen unveraendert ab x 16.
+
+Unveraendert (Riegel C, Bildvergleich §4): Auswahl-Band (x 12..203, y 92/112, Farben), Scrollgriff (Lage/Farbe),
+Textbox, Inventar-Gitter rechts, Cursor, Namens-x 16, Kopf-/Fussband-Pixel.

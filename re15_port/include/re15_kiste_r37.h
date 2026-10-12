@@ -20,6 +20,7 @@
 
 /* Lage des Listen-Panels (BOXPANEL.BIN 214x156) auf dem Port-Schirm — wie der PANEL-Op in re15_inv_screen.c. */
 #define RE15_KISTE_PANEL_X        6
+#define RE15_KISTE_PANEL_Y        25     /* = RE15_BOX_PANEL_Y (re15_inv_screen.c, dort gegengeprueft) */
 #define RE15_KISTE_PANEL_W        214
 #define RE15_KISTE_PANEL_H        156
 
