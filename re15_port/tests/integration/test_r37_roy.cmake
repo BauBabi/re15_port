@@ -74,7 +74,9 @@ endmacro()
 set(_basis RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_NOAUDIO=1 RE15_ENEMY_DIAG=1)
 
 if(TEIL STREQUAL "szene1011")
-    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" 1021 -4000 -18000 2695
+    # (3,0xC9) = 1: ROOM1021 ohne Zombies (main00 @0x01E68 Ck(3,0xC9)==0) -> Roy ist der erste Aktor 1 des Laufs und
+    # bekommt die (je Aktor-Index einmalige) RE15_ENEMY_DIAG-Zeile in ROOM1011.
+    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" 1021 -4000 -18000 2695 3:0xC9
                     WORKING_DIRECTORY "${_dir}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
     if(NOT _rvk EQUAL 0)
         fail("Kartenwerkzeug exit=${_rvk}: ${_outk}")
@@ -94,7 +96,9 @@ elseif(TEIL STREQUAL "szene1021")
     roy_geladen()
     spur_pruefen(1021)
 elseif(TEIL STREQUAL "leon1170")
-    lauf(900 ${_basis} RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_GOTO_ROOM=1170 "RE15_EXIT_AT=700#1170")
+    # ECHTER Weg Leon: Neuspiel -> Montage ROOM1240 -> Tuer -> ROOM1170 (Erzaehler sub11 -> Selbst-Tuer -> sub15 Elliot).
+    # (RE15_GOTO_ROOM=1170 ueberspringt die Montage; dort setzt kein sub11 das Elliot-Gate (4,0xF2) — gemessen 2500 Bilder.)
+    lauf(900 ${_basis} RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_ANIM_TRACE=anim.log "RE15_EXIT_AT=1200#1170")
     file(STRINGS "${_dir}/debug.log" _ell REGEX "\\[elliot\\] PL05 loaded: .*\\(Raum 1170, Spawn 0x47\\)")
     file(STRINGS "${_dir}/debug.log" _roy REGEX "\\[roy\\]")
     file(STRINGS "${_dir}/debug.log" _diag REGEX "\\[enemy-diag\\] actor[0-9]+ type=0x47 model=")
@@ -107,6 +111,7 @@ elseif(TEIL STREQUAL "leon1170")
     if(NOT "${_diag}" MATCHES "model=elliot")
         fail("Elliot zeichnet nicht ueber den Elliot-Zweig: '${_diag}'")
     endif()
+    spur_pruefen(1170)
     message(STATUS "${_tag}: Elliot unveraendert (${_ell}; ${_diag})")
 else()
     fail("unbekannter TEIL")

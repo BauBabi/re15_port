@@ -150,11 +150,57 @@ Record 1 (sitzend, Hand an der Wunde, 28 Bilder). Ursache = dieselbe wie K2 (Ell
 
 ## 3. Umsetzung
 
-(folgt)
+Ursache aller drei Teilpunkte: der Port behandelte JEDEN Typ 0x47 als Elliot (Phase 4.5.13-R23 / Runde 35 Spur I):
+ELLIOT.*-Modell (= CDEMD0-Blob), Ueberlagerung mit RBJ-Record 0 (= Spieler-Record), Ausnahme im Marker-Binder (O3),
+Elliot-Gestenbank im Executor-Kanal. Bei Elza ist Typ 0x47 aber Roy (anderes Archiv, eigener Record).
 
-## 4. Messung nachher
+Neue Dateien:
+* include/re15_roy_r37.h + engine/src/roy_r37.c — Archivwahl wie FUN_80022300: re15_ems_archiv_aktiv() = Elza-Bit
+  (bltz @0x80022334; Port-Zwilling re15_char_variant), re15_ems_toc() = TOC @0x80072f38 / @0x80073178 (Index
+  Typ-0x10 @0x80022338), re15_ems_archiv_datei() = Datei 0x26/0x27 (@0x8002233c/@0x800223ac),
+  re15_typ47_ist_elliot() (nur LEONS 0x47), re15_roy_aus_elza_archiv() (Umfang: Elzas 0x47).
+* engine/src/gen/ems_toc_r37.inc — beide TOCs roh aus der EXE (64 x {Sektor, Laenge}), erzeugt von
+  re15_port/tools/r37_k/gen_ems_toc_r37.py (Byte-Anker 0x47 Leon 1644/127640, Elza 1639/142272; 0x10 0/214496, 0/214816).
+* platform/pc/src/roy_pc.c — re15_roy_pc_emd(): liest Elzas 0x47 aus EMD/CDEMD1.EMS (fseek Sektor*2048, 142272 B),
+  sonst NULL (bisheriger Weg).
 
-(folgt)
+Haken in gemeinsamen Dateien (je 1-3 Zeilen, Kommentar "Runde 37 Spur K"):
+* platform/pc/main.c pc_enemy_read_re15_emd: zuerst re15_roy_pc_emd (Elza-Archiv); Elliot-Lader
+  re15_elliot_pc_sicherstellen nur noch bei re15_typ47_ist_elliot (2 Stellen: Roster-Vorladen + Render-Schleife).
+* engine/src/anim_select_common.c: Elliot-Zweig nur fuer Leons 0x47; Elzas 0x47 nimmt den allgemeinen Gegner-Zweig
+  (Registry-Bank = CDEMD1-Blob, eigener TIM-Slot).
+* engine/src/enemy_ai_common.c re15_npc_channel_anim: Elliot-Gestenbank nur fuer Leons 0x47.
+* engine/src/enemy_common.c rbj_resolve_slot: Ausnahme O3 nur fuer Leons 0x47 -> Roy bindet ROOM1011 rec1 wie im
+  Original (FUN_8001b3f8 @0x8001b498/@0x8001b4b4).
+
+Keine Konstante ohne Adresse: Sektor/Laenge stehen nicht im Code, sondern kommen aus der TOC der EXE; 2048 = CD-Sektor
+(Einheit der TOC-Sektoren; Blob-Lage im Nutzer-RAM == CDEMD1-Datei @Sektor 1639*2048 bytegleich, §2.2a).
+Leon-Pfad praedikatsgleich: character 0 -> re15_typ47_ist_elliot(0x47) == alte Bedingung `type == 0x47`.
+
+## 4. Messung nachher (eigener Bau r37/roy)
+
+Gleiche Laeufe wie §1 (n1011 = echter Weg, n1021 = Szene ueber Ereignis 2), dazu n1011b/n1011c (Wiederbetreten
+nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
+* debug.log: "[roy] Typ 0x47 aus EMD/CDEMD1.EMS Sektor 1639 (142272 B) — Elza-Archiv (@0x800223ac)",
+  "[enemy] EM47 loaded: 15 meshes, 15 bones, 24 clips -> slot 11"; KEINE "[elliot]"-Zeile mehr.
+* RE15_ANIM_TRACE 1011 (Roy, Typ 71): 0: 5/28 (Schleife) | 299: 7/30 | 399: 5/28 | 502: 6/78 | 602: 5 | 705: 7 |
+  806: 6 | 906: 10/60 | 1006: 5 | 1310: 7 | 1411: 6 | 1511: 5 | 1614: 10 | 1715: 7 | 1816: 9/100 -> Bild 99 ab 1914,
+  haelt bis Laufende (2400). Gesten vorwaerts bis fc-1 + halten, rueckwaerts (Plc_flg 0x80) bis 0 + halten.
+  fc_render == fc_uhr in jeder Zeile. = Original-RAM (Clip 5/28 Schleife; Clip 9 Phase 2 auf Bild 99).
+* RE15_ANIM_TRACE 1021 (Roy, Typ 71): 0..547 Clip 23/30 (Skript-Schleife), 548..727 Clip 5/61 (Gang, Halbtakt
+  +0x1c4 0x10), 728: Clip 7/113 -> Bild 112 ab 839, haelt bis Laufende (501 Zeilen 7/112).
+* 1011 Wiederbetreten: sub05 Plc_motion(0,13)+Plc_flg 4 -> Clip 13/2 Bilder (Schleife wie Skript), Roy liegt
+  bewusstlos (K_belege/k4_port_nachher_1011_bewusstlos.png, RE15_FORCE_CUT=2).
+* Bilder (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1):
+  - K_belege/k5_vorher_nachher_1011.png: VORHER (Bau aus master 3feb3a78, gleiche Eingaben) Elliot-Modell, kniet/
+    steht, bei "Roy: *groans*" und "Roy, wake up!" AUFRECHT; NACHHER Roy in RPD-Uniform sitzt verwundet an der Wand,
+    sackt bei "*groans*" zusammen und liegt bei "Roy, wake up!".
+  - K_belege/k5_vorher_nachher_1021.png: VORHER Elliot geht auf John zu und bleibt stehen; NACHHER Roy (Weste
+    "POLICE") geht, sackt nach dem zweiten Schuss auf die Knie und faellt aufs Gesicht, bleibt liegen.
+  - K_belege/k4_port_nachher_1011.png / k4_port_nachher_1021_sturz.png (Einzelbilder gross).
+* Gegenprobe Leon 1170 (echter Weg Neuspiel -> Montage -> Tuer -> 1170, RE15_FPS=240): Bau aus master 3feb3a78 und
+  Bau r37/roy liefern eine BYTEGLEICHE Elliot-Spur (317 Zeilen Typ 71, cmp gleich), dieselben debug.log-Zeilen
+  ("[elliot] PL05 loaded ... (Raum 1170, Spawn 0x47)", "[enemy-diag] actor1 type=0x47 model=elliot").
 
 ## 5. Tests
 
@@ -162,8 +208,32 @@ Record 1 (sitzend, Hand an der Wunde, 28 Bilder). Ursache = dieselbe wie K2 (Ell
 
 ## 6. OFFEN
 
-(folgt)
+1. **Elza-Archiv fuer ALLE Typen (Befund ausserhalb Spur K, an den Orchestrator)**: FUN_80022300 waehlt bei Elza fuer
+   JEDEN Typ CDEMD1.EMS; der Port laedt ausser Roy weiter CDEMD0. Unterschiede je Typ (K_belege/emsdiff.py):
+   0x10/0x11/0x12/0x16 eigene Bank dir[3] (Clips 1,2,4,5,9,10,29) + Opfer-Bank dir[5] (Griff-Animation AM SPIELER —
+   bei Elza fuer Elza gemacht), 0x13 dito, 0x18/0x21/0x27/0x29/0x2b Opfer-Bank, 0x20/0x25 EMR-Inhalt,
+   **0x30 Birkin: anderes Modell (MD1 31364 -> 37028 B, Krallen an den Beinen, Loco-Clip 1 68 -> 27)**,
+   **0x42: anderes Modell (MD1 19868 -> 28164 B, TIM 99872 -> 66592 B; rote Figur statt Ada — ROOM3091 Elza)**.
+   Bild K_belege/k6_offen_elza_archiv_typ42_typ30.png. Gleich: 0x1a, 0x24, 0x26, 0x2d, 0x36, 0x40, 0x45, 0x49, 0x4b,
+   0x4d. Die Infrastruktur steht (re15_ems_toc fuer beide Archive); die Ausweitung braucht je Typ eine eigene Messung
+   (fest verdrahtete CDEMD0-Cliplaengen in der KI, z.B. s_dog_clip_len, Opfer-Clips des Griffs) und beruehrt die
+   Spuren H (Zombies) und J (Biss) dieser Runde — deshalb hier NICHT gebaut.
+2. Elliot (Leon): Takt != Bild bei seinen Gesten (Clip 15: Bild 20 aus dem REC0-Overlay, Uhr aus der eigenen Bank) ist
+   der Stand vor Runde 37 und bleibt (Auftrag: Elliot unveraendert); Spur bytegleich gegen master gemessen.
+3. Ein eigener DuckStation-Lauf mit Bildschirmaufnahme der Roy-Szene steht aus: der Pad-Speicher-Hotkey schrieb
+   nichts, und Slot-Speichern haette die Spielstaende des Nutzers (Slot 1-10) ueberschrieben. Belegt ist das
+   Original ueber die RAM-Staende der Nutzer-Spielstaende (§2.2a: Modell, Kanal, Clip, Halten); Roy liegt dort in
+   den gespeicherten Kameras ausserhalb des Bildes.
 
 ## 7. Fuer den Nutzer
 
-(folgt)
+* **Neue Assets (Paket-Gate)**: keine neuen Dateien. Roy liest jetzt shared_assets/PSX/EMD/CDEMD1.EMS (4739072 B; liegt
+  seit jeher im Paket — das v0.8.24-zip enthaelt sie, Android kopiert den ganzen PSX-Baum).
+* **Neue Quelldateien** (Android-Configure frisch, Memory reai-v2-android-glob-cache): engine/src/roy_r37.c,
+  platform/pc/src/roy_pc.c (+ engine/src/gen/ems_toc_r37.inc, include/re15_roy_r37.h).
+  **RE15_MIN_TESTS +8** (5 Unit + 3 Integration).
+* **Sprachdateien**: keine.
+* **Bedienhinweis**: nichts Neues. Roy ist im Elza-Szenario jetzt der verwundete Polizist in Uniform, sitzt in
+  ROOM1011 an der Wand, sackt bei "*groans*" zusammen und liegt danach; in ROOM1021 schlurft er auf John zu und faellt.
+* **An den Orchestrator** (keine Wahlfrage an den Nutzer): OFFEN 1 als eigene Spur der naechsten Runde (Elza-Archiv
+  fuer alle Typen, u.a. Birkin 0x30 und Typ 0x42 in ROOM3091).

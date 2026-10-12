@@ -236,7 +236,7 @@ static void teil_toc(void)
         for (int k = 0; k < 4; k++) {
             char p[600]; snprintf(p, sizeof p, "%s/PLD/ELLIOT.%s", RE15_ASSET_PSX_DIR, teile[k].datei);
             size_t fn = 0; uint8_t *f = slurp(p, &fn);
-            size_t lo = dir[teile[k].von], hi = teile[k].bis < 0 ? n : dir[teile[k].bis];
+            size_t lo = dir[teile[k].von], hi = teile[k].bis < 0 ? d0 : dir[teile[k].bis];   /* TIM endet am Verzeichnis */
             if (f && hi - lo == fn && !memcmp(b + lo, f, fn)) gleich++;
             else printf("  (ELLIOT.%s: %u B, Blob %u B)\n", teile[k].datei, (unsigned)fn, (unsigned)(hi - lo));
             free(f);
@@ -377,6 +377,28 @@ static int spur(const char *pfad, const char *raum)
 {
     printf("== spur %s (%s) ==\n", raum, pfad);
     int is1011 = !strcmp(raum, "1011");
+    if (!strcmp(raum, "1170")) {
+        FILE *g = fopen(pfad, "r");
+        PRUEF(g != NULL, "Spur lesbar");
+        if (!g) return 1;
+        char zz[256]; int n = 0, c15 = 0, c15ok = 0, c2 = 0, c2ok = 0, uhr = 0;
+        while (fgets(zz, sizeof zz, g)) {
+            unsigned bild, cur; int akt, typ, mo, clip, fcc, slot, fcu, loco, rev;
+            if (sscanf(zz, "%u %d %d %d %d %d %u %d %d %d %d", &bild, &akt, &typ, &mo, &clip, &fcc, &cur, &slot,
+                       &fcu, &loco, &rev) != 11 || typ != 0x47) continue;
+            n++;
+            if (fcc != fcu) uhr++;
+            if (mo == 15) { c15++; if (fcc == 20) c15ok++; }
+            if (mo == 2)  { c2++;  if (fcc == 52) c2ok++; }
+        }
+        fclose(g);
+        /* Uhr != Bild bei Elliots Gesten ist der VORBESTEHENDE Leon-Stand (O3-Ausnahme: der Takt liest Clip 15 der
+         * eigenen Bank, das Bild das REC0-Overlay; Kommentar re15_actor_clip_len) — hier nur gemeldet, nicht veraendert. */
+        PRUEF(n > 100, "Elliot: %d Spurzeilen (Uhr != Bild in %d Zeilen = Leon-Stand vor Runde 37, unveraendert)", n, uhr);
+        PRUEF(c15 > 0 && c15ok == c15, "Elliot-Geste Clip 15 = 20 Bilder (RBJ-REC0 auf ELLIOT, %d/%d Zeilen)", c15ok, c15);
+        PRUEF(c2 > 0 && c2ok == c2, "Elliot Clip 2 = 52 Bilder (EM047-Bank 1 CDEMD0, %d/%d Zeilen)", c2ok, c2);
+        return 0;
+    }
     /* erwartete Bildzahl je Clip (-1 = darf nicht vorkommen); schleife = Clip mit Plc_flg 4 im Skript */
     int soll[32], schleife[32];
     for (int i = 0; i < 32; i++) { soll[i] = -1; schleife[i] = 0; }
@@ -391,9 +413,10 @@ static int spur(const char *pfad, const char *raum)
     int n = 0, fremd = 0, uhr = 0, falsch = 0, rueck = 0, gesehen[32] = {0};
     int pm = -1, pr = -1, ps = -1, letzter_clip = -1, letzter_slot = -1, schluss_ende = 0, schluss_max = -1;
     while (fgets(z, sizeof z, f)) {
-        unsigned bild; int akt, typ, mo, clip, fcc, slot, fcu, loco, rev, leg; unsigned cur;
-        if (sscanf(z, "%u %d %d %d %d %d %u %d %d %d %d %d", &bild, &akt, &typ, &mo, &clip, &fcc, &cur, &slot,
-                   &fcu, &loco, &rev, &leg) != 12 || typ != 0x47) continue;
+        unsigned bild; int akt, typ, mo, clip, fcc, slot, fcu, loco, rev; unsigned cur;
+        /* 11 Felder: der Formatstring in anim_select_common.c hat 11 Konversionen (legacy wird nicht gedruckt) */
+        if (sscanf(z, "%u %d %d %d %d %d %u %d %d %d %d", &bild, &akt, &typ, &mo, &clip, &fcc, &cur, &slot,
+                   &fcu, &loco, &rev) != 11 || typ != 0x47) continue;
         n++;
         if (clip != mo) fremd++;
         if (fcc != fcu) uhr++;
