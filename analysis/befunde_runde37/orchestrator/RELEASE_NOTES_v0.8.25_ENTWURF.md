@@ -27,6 +27,15 @@ Elza kennt Ada nicht vom Sehen. Den Namen Ada hoert sie nur von Marvin (ROOM30C1
 Leon..." statt "Be a hero... Leon..." - er nimmt Leons Plan mit dem Streifenwagen auf, der Arm faellt wie bisher.
 Eine Sprachaufnahme fuer diese Zeile gibt es nicht (optional: synchro/STAGE1/room1150/main28.wav).
 
+**Fahrstuehle** (Spur C). ROOM1080: die Tuer der Fahrstuhl-Sequenz ist jetzt eine eigene Fahrstuhltuer in der Optik
+des gemalten Revier-Fahrstuhls (zwei glatte Fluegel) - keine der 55 RE2-Tueren passte; Ton und Ablauf wie die RE2-
+Fahrstuhltuer. Beim Aussteigen laeuft jetzt ebenfalls die Tuersequenz (ROOM1080 und Labor-Fahrstuhl ROOM4020, wie RE2
+ROOM6010). Der Lastenaufzug ROOM3080 -> 4000 endet jetzt mit der Sequenz der RE2-Hubbuehne (ROOM6170 -> 7000): das
+Schacht-Fachwerk faehrt etwa 15 Sekunden hinab, die Fahrt dauert damit laenger als bisher. Auch die Fahrt hinauf
+(4000 -> 3070) zeigt jetzt das bewegte Fachwerk statt eines Standbilds. Die Hubplattformen in ROOM2030 haben jetzt den
+Ton der RE2-Hubplattform (ROOM6030): Klick, Motor, Stopp-Schlag kurz nach der Ankunft; Plattform A faehrt kuerzer als in
+RE2, ihr Motorton ist deshalb gekuerzt.
+
 <!-- weitere Spuren: A pri1100, C fahrstuhl, D itemband, F sperre1050, G beretta, H zombieaktiv, I feuerloescher,
      J bissarm, K roy — Abschnitt erst nach bestandener Abnahme + Integration -->
 
