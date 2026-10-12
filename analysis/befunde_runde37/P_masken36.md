@@ -172,7 +172,43 @@ Stehplatz einen Figurpunkt verdecken, ohne dass zwischen Kamera und Figurpunkt e
 
 ## 4. Messung nachher
 
-(folgt)
+### 4.1 Szenen (Szenenfinder `test_r37_masken36 suche`: erreichbare Stehplaetze nach §3.3, HINTER = Fuss und >= 60 % der
+Figur unter Masken, DAVOR = Figur ueberlappt die Maskenflaeche, Fuss frei, nichts verdeckt; groesste Figur im Bild)
+Je Szene vier Laeufe (Leon, `RE15_DEBUG_JUMP=<raum>@250 RE15_PLAYER_POS=<x>,<z>,0 RE15_FORCE_CUT=<cut>`, Framedump Bild 120,
+`RE15_WINDOW_SCALE=1`): A = final (P), N = nur Lader-Regel ohne Ausschluss (Zwischenstand), B = final mit `RE15_NO_PRI=1`,
+V = vorher-exe (bddd6b31). Dazu C = ohne Figur (Leon ausserhalb des Regionsvierecks, `RE15_NO_PRI=1`).
+Figurpunkte S = |B - C| > 24 (Kanalmaximum) im Figurfenster (Projektion der Figur, Hoehe 3000 / +-350, +4), uebermalt =
+S und |X - B| > 24. Lage = nach der Kollision gemessen (`RE15_STATE_LOG`).
+
+| Szene | Raum/Cut, Lage | Figurpunkte | final (P) | ohne Ausschluss | vorher |
+|---|---|---|---|---|---|
+| HINTER h3050c2 | 3050 C2 (-22000,-20768) | 1234 | **1123 (91 %)** | 1123 | 0 |
+| HINTER h30A0c3 | 30A0 C3 (-19800,19763) | 2824* | **1933** | 1933 | 0 |
+| HINTER h4040c4 | 4040 C4 (-23200,-922) | 208 | **146 (70 %)** | 146 | 0 |
+| HINTER h4080c1 | 4080 C1 (21875,-5210) | 186* | **182** | 182 | 0 |
+| HINTER h5020c0 | 5020 C0 (-6933,-22525) | 794* | **741** | 741 | 0 |
+| HINTER h5020c9 | 5020 C9 (-13133,-21625) | 322 | **199 (62 %)** | 199 | 0 |
+| HINTER h6010c12 | 6010 C12 (-18612,-7920) | 1440 | **820 (57 %)** | 820 | 0 |
+| HINTER h6010c13 | 6010 C13 (-18812,-20920) | 1250* | **903** | 903 | 0 |
+| DAVOR v3050c2 | 3050 C2 (-20400,-14368) | 684 | **0** | 0 | 0 |
+| DAVOR v30A0c4 | 30A0 C4 (-21843,17763) | 8210* | **0** | 0 | 0 |
+| DAVOR v4040c7 | 4040 C7 (-7200,-20022) | 1170 | **0** | 0 | 0 |
+| DAVOR v40A0c7 | 40A0 C7 (-17592,-24095) | 3442* | **0** | 0 | 0 |
+| DAVOR v5020c9 | 5020 C9 (-12133,-13325) | 5007 | **0** | 0 | 0 |
+| DAVOR v6010c12 | 6010 C12 (-14412,-5720) | 9489 | **0** | 0 | 0 |
+| DAVOR v6000c3 | 6000 C3 (4933,-6384) Band 2 | 4495* | **0** | 0 | 0 |
+| FREI f3050c5 | 3050 C5 (-13300,-16368) | 903* | **0** | **538** (bis auf den Kopf geloescht) | 0 |
+| FREI f3040c1 | 3040 C1 (-22500,-11400) | 222* | **9** | 87 (Beine hinter der Kiste weg) | 0 |
+
+(* Figurpunkte gegen das Hintergrundbild statt gegen einen Lauf ohne Figur gezaehlt — leicht ueberzaehlt, die Spalten
+"uebermalt" sind davon unabhaengig.) In allen 18 Szenen ist die vorher-exe bitgleich zu B (§1.4).
+- HINTER: die Masken verdecken Leon wieder (57..98 %; der Rest ist der Teil der Figur, der ueber/neben dem Objekt steht).
+- DAVOR: kein einziger Punkt von Leon wird uebermalt.
+- FREI: die Fehlverdecker sind weg (538 -> 0, 87 -> 9; die 9 Punkte in 3040 C1 sind Saumpunkte der verbliebenen Kistenmaske
+  am Fussende, s. OFFEN).
+- Bilder (A | N | B | V, 3-fach): `p37/img/final_montage1.png` (f3050c5, f3040c1, h3050c2, h5020c0), Einzelbilder
+  `p37/img/z_<szene>.png`.
+
 
 ## 5. Tests
 
