@@ -5,6 +5,7 @@
  * ============================================================================================= */
 #include "re15_roy_r37.h"
 #include "re15_gameflow.h"
+#include "re15_elzaems_r37.h"   /* Runde 37 Spur N: Elza-Bit = SCD-Flag (1,0), vom Skript umschaltbar */
 
 /* Beide TOCs roh aus der EXE (tools/r37_k/gen_ems_toc_r37.py): {sektor, laenge} je Typ 0x10..0x4F,
  * CDEMD0 @0x80072f38 (Leon), CDEMD1 @0x80073178 (Elza). */
@@ -12,9 +13,10 @@
 
 int re15_ems_archiv_aktiv(void)
 {
-    /* DAT_800aca3c Bit 31 — im Port aus dem Charakter-Byte abgeleitet wie im Original
-     * (re15_gameflow.h re15_char_variant, TITLE.BIN @0x801024a8/@0x801024e4). */
-    return re15_char_variant() ? RE15_EMS_ARCHIV_ELZA : RE15_EMS_ARCHIV_LEON;
+    /* DAT_800aca3c Bit 31 — aus dem Charakter-Byte abgeleitet wie im Original (re15_gameflow.h
+     * re15_char_variant, TITLE.BIN @0x801024a8/@0x801024e4); Runde 37 Spur N: dasselbe Bit ist SCD-Flag (1,0)
+     * (Bank-Tabelle @0x80074664[1] = 0x800aca3c) und wird von vier Raumskripten umgeschaltet -> re15_elzabit. */
+    return re15_elzabit() ? RE15_EMS_ARCHIV_ELZA : RE15_EMS_ARCHIV_LEON;
 }
 
 int re15_ems_toc(int archiv, uint8_t type, uint32_t *sektor, uint32_t *laenge)
@@ -35,10 +37,11 @@ const char *re15_ems_archiv_datei(int archiv)
 
 int re15_typ47_ist_elliot(uint8_t type)
 {
-    return type == RE15_ROY_TYP && re15_ems_archiv_aktiv() == RE15_EMS_ARCHIV_LEON;
+    /* Runde 37 Spur N: das Archiv, aus dem die 0x47-Bank des Raums stammt (gemerkt beim Sce_em_set). */
+    return type == RE15_ROY_TYP && re15_ems_archiv_fuer_typ(type) == RE15_EMS_ARCHIV_LEON;
 }
 
 int re15_roy_aus_elza_archiv(uint8_t type)
 {
-    return type == RE15_ROY_TYP && re15_ems_archiv_aktiv() == RE15_EMS_ARCHIV_ELZA;
+    return type == RE15_ROY_TYP && re15_ems_archiv_fuer_typ(type) == RE15_EMS_ARCHIV_ELZA;
 }

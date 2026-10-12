@@ -3821,6 +3821,8 @@ static int op_sce_em_set(scd_thread_t *t)
         a->em_flag_id = persist;            /* +0x1C6 latch (0x80042170) — the death-commit's flag index */
         a->active = 1;
         a->type   = type;
+        { extern void re15_ems_sce_em_set_merken(uint8_t);   /* Runde 37 Spur N: Archiv JETZT (FUN_80022300 */
+          re15_ems_sce_em_set_merken(type); }                /* @0x80042328, bltz @0x80022334) je Typ merken */
         re15_enemy_apply_hitbox(a, type);   /* byte-true +0x78 hitbox dims (savestate-verified) */
         /* BYTE-TRUE (LAB_800420a0, ghidra1_V2.txt:152547/152580; RE'd 2026-06-29): the
          * Sce_em_set behavior byte pc[3] is the entity's grid_id (+0x9) — the AI sub-dispatch
