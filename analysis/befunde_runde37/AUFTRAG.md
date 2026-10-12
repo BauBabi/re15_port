@@ -48,3 +48,12 @@ Lesart: Der 3-Schuss-Feuerstoss der Beretta M93R (Waffe 5; Glock 18 = Waffe 6 ha
 verbraucht 3 Schuss, trifft den Gegner aber nur einmal. Jeder Schuss des Feuerstosses soll treffen (Schaden + Treffer-
 reaktion/Blut je Schuss). Zuerst messen, dann am Original belegen, ob RE1.5 je Schuss trifft (dann Port = Original
 nachziehen) oder nur einmal (dann NUTZER-VORGABE). -> Spur G beretta.
+
+## Nachtrag 5 — 2026-10-12 (woertlich, zu Spur C)
+
+> ja, dann mache den noch. Mir ist auch aufgefallen in den Stage2 kleineres aufzügen fehlt noch das sound. Den sollte man auch aus Resident Evil 2 extrahieren.
+
+Lesart: (a) "den" = der Ausstieg aus dem Lastenaufzug ROOM3080 (WAREHOUSE LIFT) -> ROOM4000, der in Spur C noch ohne
+Tuersequenz ist (Null-Rechteck-Tuer @0x0072A, Aot_on @0x00A22) — Sequenz aus RE2 herleiten und bauen. (b) Die kleineren
+Aufzuege in STAGE2 haben keinen Ton — den passenden Aufzug-Ton aus RE2 extrahieren (RE2_SOUND_LISTE.md, shared_assets/RE2/
+ELEVSE.VBS u.a.) und dort abspielen, wo RE2 ihn spielt.
