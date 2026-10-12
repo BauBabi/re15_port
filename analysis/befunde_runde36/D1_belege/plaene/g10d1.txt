@@ -1,0 +1,9 @@
+# Gegenprobe (synthetisch): 10D1 ohne Rolltor-Schalter (4,0xF7)=0 -> Rolltor sperrt den Weg zur Tuer 1101
+RAUM 10D1
+GEGNERWEG
+FLAG 4 247
+GEHE 6877 15000 150
+GEHE 6877 23500 150
+GEHE -18600 23500 120
+WARTE 10
+ENDE

@@ -1,0 +1,456 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/d1/runs/a2/wegplan_eingabe.txt: 38 Befehle
+F1 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | RAUM 11E1 geladen, Spieler frei (obj 6 = Slot 6)
+F30 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 0 beendet: Raum bereit
+F31 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | GEGNERWEG
+F31 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 1 Typ 0x10 (-11000,-14000) freigegeben
+F31 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 2 Typ 0x10 (-10000,-15500) freigegeben
+F31 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 3 Typ 0x10 (-11000,-16000) freigegeben
+F31 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 4 Typ 0x10 (-10000,-17500) freigegeben
+F31 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 1 beendet: 4 Gegner weg
+F32 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F33 room=11E1 spieler=(9100,4200) rot=96 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F34 room=11E1 spieler=(9100,4200) rot=192 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F35 room=11E1 spieler=(9100,4200) rot=288 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F36 room=11E1 spieler=(9100,4200) rot=384 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F37 room=11E1 spieler=(9100,4200) rot=480 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F38 room=11E1 spieler=(9100,4200) rot=576 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F39 room=11E1 spieler=(9100,4200) rot=672 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F40 room=11E1 spieler=(9100,4200) rot=768 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F41 room=11E1 spieler=(9100,4200) rot=864 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F42 room=11E1 spieler=(9100,4200) rot=960 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (9520,-4268) tol 150
+F169 room=11E1 spieler=(9545,-4154) rot=1200 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 2 beendet: angekommen
+F170 room=11E1 spieler=(9545,-4154) rot=1200 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F171 room=11E1 spieler=(9545,-4154) rot=1296 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F172 room=11E1 spieler=(9545,-4154) rot=1392 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F173 room=11E1 spieler=(9545,-4154) rot=1488 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F174 room=11E1 spieler=(9545,-4154) rot=1584 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F175 room=11E1 spieler=(9545,-4154) rot=1680 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F176 room=11E1 spieler=(9545,-4154) rot=1776 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F177 room=11E1 spieler=(9545,-4154) rot=1872 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F178 room=11E1 spieler=(9545,-4154) rot=1968 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F179 room=11E1 spieler=(9545,-4154) rot=2064 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F465 room=11E1 spieler=(-10562,-4223) rot=1824 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 3 beendet: angekommen
+F466 room=11E1 spieler=(-10562,-4223) rot=1824 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F467 room=11E1 spieler=(-10562,-4223) rot=1728 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F468 room=11E1 spieler=(-10562,-4223) rot=1632 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F469 room=11E1 spieler=(-10562,-4223) rot=1536 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F470 room=11E1 spieler=(-10562,-4223) rot=1440 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F471 room=11E1 spieler=(-10562,-4223) rot=1344 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F472 room=11E1 spieler=(-10562,-4223) rot=1248 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F473 room=11E1 spieler=(-10562,-4223) rot=1152 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F474 room=11E1 spieler=(-10562,-4223) rot=1056 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F772 room=11E1 spieler=(-10738,-25200) rot=768 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 4 beendet: angekommen
+F773 room=11E1 spieler=(-10738,-25200) rot=768 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F774 room=11E1 spieler=(-10738,-25200) rot=672 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F775 room=11E1 spieler=(-10738,-25200) rot=576 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F776 room=11E1 spieler=(-10738,-25200) rot=480 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F777 room=11E1 spieler=(-10738,-25200) rot=384 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F778 room=11E1 spieler=(-10738,-25200) rot=288 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F779 room=11E1 spieler=(-10738,-25200) rot=192 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F780 room=11E1 spieler=(-10738,-25200) rot=96 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F781 room=11E1 spieler=(-10738,-25200) rot=0 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (2000,-25328) tol 150
+F972 room=11E1 spieler=(1995,-25321) rot=144 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 5 beendet: angekommen
+F973 room=11E1 spieler=(1995,-25321) rot=144 mo=200 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F974 room=11E1 spieler=(1995,-25321) rot=48 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F975 room=11E1 spieler=(1995,-25321) rot=-48 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F976 room=11E1 spieler=(1995,-25321) rot=-144 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F977 room=11E1 spieler=(1995,-25321) rot=-240 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F978 room=11E1 spieler=(1995,-25321) rot=-336 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F979 room=11E1 spieler=(1995,-25321) rot=-432 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F980 room=11E1 spieler=(1995,-25321) rot=-528 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F981 room=11E1 spieler=(1995,-25321) rot=-624 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F982 room=11E1 spieler=(1995,-25321) rot=-720 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F983 room=11E1 spieler=(1995,-25321) rot=-816 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F984 room=11E1 spieler=(1995,-25321) rot=-912 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F985 room=11E1 spieler=(1995,-25321) rot=-1008 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 3072
+F986 room=11E1 spieler=(1995,-25321) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 6 beendet: Blick steht
+F987 room=11E1 spieler=(1995,-25321) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 5
+F991 room=11E1 spieler=(1995,-25321) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 7 beendet: gewartet
+F992 room=11E1 spieler=(1995,-25321) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F2 room=1201 spieler=(-20154,-25245) rot=3040 mo=210 pm=0 obj6=(0,0,0) b0 |   -> Befehl 8 beendet: gedrueckt
+F3 room=1201 spieler=(-20154,-25245) rot=3040 mo=210 pm=0 obj6=(0,0,0) b0 | RAUM 1201 geladen, Spieler frei (obj 6 = Slot 6)
+F32 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 9 beendet: Raum bereit
+F33 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 | GEGNERWEG
+F33 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 1 Typ 0x10 (-20950,-21700) freigegeben
+F33 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 2 Typ 0x10 (-24249,-18579) freigegeben
+F33 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 3 Typ 0x10 (-24758,-13054) freigegeben
+F33 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 4 Typ 0x10 (-19622,-16118) freigegeben
+F33 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 10 beendet: 4 Gegner weg
+F34 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (9,104)
+F34 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (9,104) = 0
+F34 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 11 beendet: gelesen
+F35 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (3,103)
+F35 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (3,103) = 0
+F35 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 12 beendet: gelesen
+F36 room=1201 spieler=(-20154,-25245) rot=3040 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F171 room=1201 spieler=(-20851,-16329) rot=2800 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 13 beendet: angekommen
+F172 room=1201 spieler=(-20851,-16329) rot=2800 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F173 room=1201 spieler=(-20851,-16329) rot=2704 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F174 room=1201 spieler=(-20851,-16329) rot=2608 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F175 room=1201 spieler=(-20851,-16329) rot=2512 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F176 room=1201 spieler=(-20851,-16329) rot=2416 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F177 room=1201 spieler=(-20851,-16329) rot=2320 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F178 room=1201 spieler=(-20851,-16329) rot=2224 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F179 room=1201 spieler=(-20851,-16329) rot=2128 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F180 room=1201 spieler=(-20851,-16329) rot=2032 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-25700,-16400) tol 100
+F265 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 14 beendet: angekommen
+F266 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | BLICK 2048
+F267 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 15 beendet: Blick steht
+F268 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 5
+F272 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 16 beendet: gewartet
+F273 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F466 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 17 beendet: gedrueckt
+F467 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 60
+F526 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 18 beendet: gewartet
+F527 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (9,104)
+F527 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (9,104) = 1
+F527 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 19 beendet: gelesen
+F528 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (3,103)
+F528 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (3,103) = 1
+F528 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 20 beendet: gelesen
+F529 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,17)
+F529 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,17) = 1
+F529 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 21 beendet: gelesen
+F530 room=1201 spieler=(-25661,-16394) rot=2032 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F531 room=1201 spieler=(-25661,-16394) rot=2128 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F532 room=1201 spieler=(-25661,-16394) rot=2224 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F533 room=1201 spieler=(-25661,-16394) rot=2320 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F534 room=1201 spieler=(-25661,-16394) rot=2416 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F535 room=1201 spieler=(-25661,-16394) rot=2512 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F536 room=1201 spieler=(-25661,-16394) rot=2608 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F537 room=1201 spieler=(-25661,-16394) rot=2704 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F538 room=1201 spieler=(-25661,-16394) rot=2800 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F539 room=1201 spieler=(-25661,-16394) rot=2896 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F540 room=1201 spieler=(-25661,-16394) rot=2992 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F541 room=1201 spieler=(-25661,-16394) rot=3088 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F542 room=1201 spieler=(-25661,-16394) rot=3184 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F543 room=1201 spieler=(-25661,-16394) rot=3280 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F544 room=1201 spieler=(-25661,-16394) rot=3376 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F545 room=1201 spieler=(-25661,-16394) rot=3472 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F546 room=1201 spieler=(-25661,-16394) rot=3568 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F547 room=1201 spieler=(-25661,-16394) rot=3664 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F548 room=1201 spieler=(-25661,-16394) rot=3760 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F549 room=1201 spieler=(-25661,-16394) rot=3856 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F550 room=1201 spieler=(-25661,-16394) rot=3952 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F551 room=1201 spieler=(-25661,-16394) rot=4048 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20900,-16200) tol 150
+F627 room=1201 spieler=(-20994,-16166) rot=4192 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 22 beendet: angekommen
+F628 room=1201 spieler=(-20994,-16166) rot=4192 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F629 room=1201 spieler=(-20994,-16166) rot=4288 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F630 room=1201 spieler=(-20994,-16166) rot=4384 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F631 room=1201 spieler=(-20994,-16166) rot=4480 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F632 room=1201 spieler=(-20994,-16166) rot=4576 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F633 room=1201 spieler=(-20994,-16166) rot=4672 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F634 room=1201 spieler=(-20994,-16166) rot=4768 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F635 room=1201 spieler=(-20994,-16166) rot=4864 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F636 room=1201 spieler=(-20994,-16166) rot=4960 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F637 room=1201 spieler=(-20994,-16166) rot=5056 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20045,-26250) tol 100
+F785 room=1201 spieler=(-20049,-26156) rot=5056 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 23 beendet: angekommen
+F786 room=1201 spieler=(-20049,-26156) rot=5056 mo=200 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F787 room=1201 spieler=(-20049,-26156) rot=5056 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 24 beendet: Blick steht
+F788 room=1201 spieler=(-20049,-26156) rot=5056 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 5
+F792 room=1201 spieler=(-20049,-26156) rot=5056 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 25 beendet: gewartet
+F793 room=1201 spieler=(-20049,-26156) rot=5056 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F2 room=11E1 spieler=(2062,-24428) rot=-2621 mo=210 pm=0 obj6=(0,0,0) b0 |   -> Befehl 26 beendet: gedrueckt
+F3 room=11E1 spieler=(2062,-24428) rot=-2621 mo=210 pm=0 obj6=(0,0,0) b0 | RAUM 11E1 geladen, Spieler frei (obj 6 = Slot 6)
+F32 room=11E1 spieler=(2062,-24428) rot=-2621 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 27 beendet: Raum bereit
+F33 room=11E1 spieler=(2062,-24428) rot=-2621 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F34 room=11E1 spieler=(2062,-24428) rot=-2525 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F35 room=11E1 spieler=(2062,-24428) rot=-2429 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F36 room=11E1 spieler=(2062,-24428) rot=-2333 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F37 room=11E1 spieler=(2062,-24428) rot=-2237 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F38 room=11E1 spieler=(2062,-24428) rot=-2141 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-25328) tol 150
+F223 room=11E1 spieler=(-10599,-25364) rot=-1853 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 28 beendet: angekommen
+F224 room=11E1 spieler=(-10599,-25364) rot=-1853 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F225 room=11E1 spieler=(-10599,-25364) rot=-1757 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F226 room=11E1 spieler=(-10599,-25364) rot=-1661 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F227 room=11E1 spieler=(-10599,-25364) rot=-1565 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F228 room=11E1 spieler=(-10599,-25364) rot=-1469 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F229 room=11E1 spieler=(-10599,-25364) rot=-1373 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F230 room=11E1 spieler=(-10599,-25364) rot=-1277 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F231 room=11E1 spieler=(-10599,-25364) rot=-1181 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F232 room=11E1 spieler=(-10599,-25364) rot=-1085 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-10685,-4268) tol 150
+F706 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 |   KLEMME beim Gehen nach (-10685,-4268): Rest 12210
+F706 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 |   -> Befehl 29 beendet: Klemme
+F707 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F708 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F709 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F710 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F711 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F712 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F713 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F714 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F715 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F716 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F717 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F718 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F719 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F720 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F721 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F722 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F723 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F724 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F725 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F726 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F727 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F728 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F729 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F730 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F731 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F732 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F733 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F734 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F735 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F736 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F737 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F738 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F739 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F740 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F741 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F742 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F743 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F744 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F745 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F746 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F747 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F748 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F749 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F750 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F751 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F752 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F753 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F754 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F755 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F756 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F757 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F758 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F759 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F760 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F761 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F762 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F763 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F764 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F765 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F766 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F767 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F768 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F769 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F770 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F771 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F772 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F773 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F774 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F775 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F776 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F777 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F778 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F779 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F780 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F781 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F782 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F783 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F784 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F785 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F786 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F787 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F788 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F789 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F790 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F791 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F792 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F793 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F794 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F795 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F796 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F797 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F798 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F799 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F800 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F801 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F802 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F803 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F804 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F805 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F806 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F807 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F808 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F809 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F810 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F811 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F812 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F813 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F814 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F815 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F816 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F817 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F818 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F819 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F820 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F821 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F822 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F823 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F824 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F825 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F826 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F827 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F828 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F829 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F830 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F831 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F832 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F833 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F834 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F835 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F836 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F837 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F838 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F839 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F840 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F841 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F842 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F843 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F844 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F845 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F846 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F847 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F848 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F849 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F850 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F851 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F852 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F853 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F854 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F855 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F856 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F857 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F858 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F859 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F860 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F861 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F862 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F863 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F864 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F865 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F866 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F867 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F868 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F869 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F870 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F871 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F872 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F873 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F874 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F875 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F876 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F877 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F878 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F879 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F880 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F881 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F882 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F883 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F884 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F885 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F886 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F887 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F888 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F889 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F890 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F891 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F892 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F893 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F894 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F895 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F896 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F897 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F898 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F899 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F900 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F901 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F902 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F903 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F904 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F905 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F906 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F907 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F908 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F909 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F910 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F911 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F912 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F913 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F914 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F915 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F916 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F917 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F918 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F919 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F920 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F921 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F922 room=11E1 spieler=(-10667,-16478) rot=3039 mo=13 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F0 room=11E1 spieler=(9100,4200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F1 room=11E1 spieler=(9100,4200) rot=96 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F2 room=11E1 spieler=(9100,4200) rot=192 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F3 room=11E1 spieler=(9100,4200) rot=288 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F4 room=11E1 spieler=(9100,4200) rot=384 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F5 room=11E1 spieler=(9100,4200) rot=480 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F6 room=11E1 spieler=(9100,4200) rot=576 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F7 room=11E1 spieler=(9100,4200) rot=672 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F8 room=11E1 spieler=(9100,4200) rot=768 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F9 room=11E1 spieler=(9100,4200) rot=864 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F10 room=11E1 spieler=(9100,4200) rot=960 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F11 room=11E1 spieler=(9100,4200) rot=1056 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F12 room=11E1 spieler=(9100,4200) rot=1152 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F13 room=11E1 spieler=(9100,4200) rot=1248 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F14 room=11E1 spieler=(9100,4200) rot=1344 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (4750,-4268) tol 120
+F211 room=11E1 spieler=(4869,-4255) rot=2016 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 30 beendet: angekommen
+F212 room=11E1 spieler=(4869,-4255) rot=2016 mo=200 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F213 room=11E1 spieler=(4869,-4255) rot=1920 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F214 room=11E1 spieler=(4869,-4255) rot=1824 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F215 room=11E1 spieler=(4869,-4255) rot=1728 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F216 room=11E1 spieler=(4869,-4255) rot=1632 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F217 room=11E1 spieler=(4869,-4255) rot=1536 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F218 room=11E1 spieler=(4869,-4255) rot=1440 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F219 room=11E1 spieler=(4869,-4255) rot=1344 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F220 room=11E1 spieler=(4869,-4255) rot=1248 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F221 room=11E1 spieler=(4869,-4255) rot=1152 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F222 room=11E1 spieler=(4869,-4255) rot=1056 mo=105 pm=0 obj6=(0,0,0) b0 | BLICK 1024
+F223 room=11E1 spieler=(4869,-4255) rot=1056 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 31 beendet: Blick steht
+F224 room=11E1 spieler=(4869,-4255) rot=1056 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 5
+F228 room=11E1 spieler=(4869,-4255) rot=1056 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 32 beendet: gewartet
+F229 room=11E1 spieler=(4869,-4255) rot=1056 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F2 room=10A1 spieler=(21200,25500) rot=1024 mo=210 pm=0 obj6=(0,0,0) b0 |   -> Befehl 33 beendet: gedrueckt
+F3 room=10A1 spieler=(21200,25500) rot=1024 mo=210 pm=0 obj6=(0,0,0) b0 | RAUM 10A1 geladen, Spieler frei (obj 6 = Slot 6)
+F32 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 34 beendet: Raum bereit
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 | AOTS
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 0 typ 1 ev 0 flags 0x31 band 0 mitte (27050,24900) halb (350,1000) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 1 typ 1 ev 0 flags 0x31 band 0 mitte (21250,26350) halb (1000,350) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 2 typ 1 ev 0 flags 0x31 band 0 mitte (21250,26350) halb (1000,350) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 3 typ 4 ev 0 flags 0x00 band 8 mitte (21450,21650) halb (1350,2150) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 4 typ 4 ev 0 flags 0x00 band 6 mitte (21450,21650) halb (1350,2150) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 5 typ 4 ev 1 flags 0x00 band 6 mitte (25350,22350) halb (1350,2250) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 6 typ 4 ev 1 flags 0x00 band 4 mitte (25350,22350) halb (1350,2250) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 7 typ 4 ev 0 flags 0x00 band 4 mitte (21450,20650) halb (1350,1150) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 8 typ 4 ev 0 flags 0x00 band 3 mitte (21450,20650) halb (1350,1150) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 9 typ 4 ev 1 flags 0x00 band 3 mitte (25350,22350) halb (1350,2250) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 10 typ 4 ev 1 flags 0x00 band 1 mitte (25350,22350) halb (1350,2250) quad 0
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 46 typ 3 ev 8 flags 0x00 band 255 mitte (21500,24400) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 47 typ 3 ev 9 flags 0x00 band 255 mitte (21500,23400) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 48 typ 3 ev 7 flags 0x00 band 255 mitte (23750,25250) halb (250,1250) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 49 typ 3 ev 8 flags 0x00 band 255 mitte (23250,25250) halb (250,1250) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 50 typ 3 ev 6 flags 0x00 band 255 mitte (25500,22500) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 51 typ 3 ev 7 flags 0x00 band 255 mitte (25500,23500) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 52 typ 3 ev 5 flags 0x00 band 255 mitte (25500,20000) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 53 typ 3 ev 6 flags 0x00 band 255 mitte (25500,21000) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 54 typ 3 ev 4 flags 0x00 band 255 mitte (23250,18500) halb (250,1500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 55 typ 3 ev 5 flags 0x00 band 255 mitte (23750,18500) halb (250,1500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 56 typ 3 ev 3 flags 0x00 band 255 mitte (21500,21000) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 57 typ 3 ev 4 flags 0x00 band 255 mitte (21500,20000) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 58 typ 3 ev 2 flags 0x00 band 255 mitte (21500,24500) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 59 typ 3 ev 3 flags 0x00 band 255 mitte (21500,23500) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 60 typ 3 ev 1 flags 0x00 band 255 mitte (25500,21500) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 61 typ 3 ev 2 flags 0x00 band 255 mitte (25500,22500) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 62 typ 3 ev 0 flags 0x00 band 255 mitte (21500,22000) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   AOT slot 63 typ 3 ev 1 flags 0x00 band 255 mitte (21500,21000) halb (2000,500) quad 1
+F33 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 35 beendet: gelistet
+F34 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 30
+F63 room=10A1 spieler=(21200,25500) rot=1024 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 36 beendet: gewartet

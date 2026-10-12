@@ -1,0 +1,1 @@
+F0 pad=0000 PL(20600,12350,rot=2048,hp=100) pst=0 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=0 msg(a=0 fsm=0 id=0 q=0) pf=00000000 pm=0 gr=0

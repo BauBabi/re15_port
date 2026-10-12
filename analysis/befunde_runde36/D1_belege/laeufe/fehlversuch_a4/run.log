@@ -1,0 +1,2 @@
+TIMEOUT 900 s -> taskkill /PID 140404
+exit=1 nach 900s

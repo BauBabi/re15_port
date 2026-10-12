@@ -1,0 +1,9 @@
+# Gegenprobe (synthetisch): 11E1 ohne Drahtschnitt (4,0x24)=0 -> Gitter sperrt den Gang zur Tuer 1201
+RAUM 11E1
+GEGNERWEG
+FLAG 4 36
+GEHE -10685 -4268 150
+GEHE -10685 -25328 150
+GEHE 2000 -25328 150
+WARTE 10
+ENDE

@@ -1,0 +1,13 @@
+[stairzone] player band=0 pos=(16094,0,-13701) rot=-16
+[STAIRREG] slot=3 type=13 chain=8 side=0 count=2 corner=19500 extent=4300 centre=(21450,21650) half=(1350,2150)
+[STAIRREG] slot=4 type=13 chain=6 side=0 count=2 corner=19500 extent=4300 centre=(21450,21650) half=(1350,2150)
+[STAIRREG] slot=5 type=13 chain=6 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[STAIRREG] slot=6 type=13 chain=4 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[STAIRREG] slot=7 type=13 chain=4 side=0 count=1 corner=19500 extent=2300 centre=(21450,20650) half=(1350,1150)
+[STAIRREG] slot=8 type=13 chain=3 side=0 count=1 corner=19500 extent=2300 centre=(21450,20650) half=(1350,1150)
+[STAIRREG] slot=9 type=13 chain=3 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[STAIRREG] slot=10 type=13 chain=1 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[stair] START dir=DOWN cur_band=8 target_band=6 (straight to gait, no turn)
+[stair] START dir=DOWN cur_band=6 target_band=4 (straight to gait, no turn)
+[stair] START dir=DOWN cur_band=4 target_band=3 (straight to gait, no turn)
+[stair] START dir=DOWN cur_band=3 target_band=1 (straight to gait, no turn)

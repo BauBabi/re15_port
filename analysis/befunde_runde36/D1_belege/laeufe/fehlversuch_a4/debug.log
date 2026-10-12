@@ -1,0 +1,1168 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] Controller: "Xbox 360 Controller" (Slot 0)
+[input-script] RE15_INPUT_SCRIPT="W1" -> 30 ticks @ 30 fps, start frame 90
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM10A1.RDT (101164 bytes)
+[rdt] nCut=10 nDoor=0 nItem=0 zones=28 main_scd=306B sub=2 props=0
+[esp] room 10A1: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 21 meshes
+[pl-part] PL04W01.EDD aus PLD/PL04W01.PLW geschnitten (+8, 1336 B)
+[pl-part] PL04W01.EMR aus PLD/PL04W01.PLW geschnitten (+1344, 17368 B)
+[w01] PL04W01 weapon-track: 15 bones, 14 clips, 217 kf
+[w03] PL04W03 gun-track: 15 bones, 14 clips, 243 kf
+[wpn] loaded 21/21 PL04W** in-hand meshes (textured from body-skin slot 0)
+[pl-part] PL04.EDD aus PLD/PL04.PLD geschnitten (+8, 3156 B)
+[skel] PL04: 15 bones, 24 clips, 705 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM10A1.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 217 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 243 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL04W**.PLW
+[messer] Startinventar Charakter 4: | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 10 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM10A1 = (26200,-14400,24800) yaw=2048
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 10a1 (hp=100)
+[scd] thread start slot=1 first_op=0x01
+[light] cut 8 tint=(128,128,128)
+[pri] cut=8 pri_offset=0x584 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[walk] F0 cut=8 mo=200 af=0 frz=0 | pl pos=(21200,-1800,25500) rot=1024
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[walk] F30 cut=8 mo=200 af=30 frz=0 | pl pos=(21200,-1800,25500) rot=1024
+[walk] F60 cut=8 mo=105 af=16 frz=0 | pl pos=(22458,-1800,25381) rot=64
+[bone]  0: rel=(0,-1696,0) world=(22458,-3496,25381)
+[F60] cut=8 sd=208
+  cut.pos=(20973,-5522,20841)
+  cut.target=(25975,22,32231)
+  cut.fov=26684
+  VT=(-10847,16302,-22937)
+  VR0=(3758,0,-1650) VR1=(-674,3743,-1534) VR2=(1507,1671,3434)
+  Player=(22458,-1800,25381) rot_y=64
+  pose[0].trans=(0,-1696,0)
+  bone_world=(22458,-3496,25381)
+  combined_trans=(-467,-94,5178)
+  combined_rot[0..2]=(3895,-109,-1287)
+  proj sx=141 sy=116
+[bone]  1: rel=(0,-1696,0) world=(22458,-3496,25381)
+[bone]  2: rel=(-19,-1489,-128) world=(22426,-3289,25255)
+[bone]  3: rel=(-8,-881,-112) world=(22439,-2681,25270)
+[bone]  4: rel=(-235,-100,-98) world=(22214,-1900,25306)
+[bone]  5: rel=(-27,-1507,150) world=(22445,-3307,25532)
+[bone]  6: rel=(214,-949,154) world=(22686,-2749,25513)
+[bone]  7: rel=(129,-141,152) world=(22601,-1941,25519)
+[bone]  8: rel=(-4,-2320,-1) world=(22453,-4120,25380)
+[bone]  9: rel=(-24,-2268,-286) world=(22406,-4068,25098)
+[bone] 10: rel=(-35,-1859,-280) world=(22395,-3659,25105)
+[bone] 11: rel=(7,-1501,-317) world=(22433,-3301,25064)
+[bone] 12: rel=(-26,-2268,284) world=(22459,-4068,25666)
+[bone] 13: rel=(-56,-1861,308) world=(22432,-3661,25692)
+[bone] 14: rel=(-39,-1500,325) world=(22451,-3300,25708)
+[light] cut 7 tint=(128,128,128)
+[pri] cut=7 pri_offset=0x580 masks=0 fg_atlas=0
+[walk] F90 cut=7 mo=105 af=46 frz=0 | pl pos=(24670,-1800,25131) rot=112
+[walk] F120 cut=7 mo=105 af=0 frz=0 | pl pos=(25303,-1800,24919) rot=352
+[walk] F150 cut=7 mo=221 af=14 frz=0 | pl pos=(25315,-2189,24214) rot=1024
+[light] cut 6 tint=(128,128,128)
+[pri] cut=6 pri_offset=0x57C masks=0 fg_atlas=0
+[walk] F180 cut=6 mo=221 af=14 frz=0 | pl pos=(25304,-4000,22318) rot=1024
+[light] cut 5 tint=(128,128,128)
+[pri] cut=5 pri_offset=0x578 masks=0 fg_atlas=0
+[walk] F210 cut=5 mo=200 af=11 frz=0 | pl pos=(25280,-5400,19782) rot=1024
+[walk] F240 cut=5 mo=200 af=41 frz=0 | pl pos=(25280,-5400,19782) rot=1024
+[walk] F270 cut=5 mo=200 af=71 frz=0 | pl pos=(25280,-5400,19782) rot=1024
+[walk] F300 cut=5 mo=200 af=3 frz=0 | pl pos=(25280,-5400,19257) rot=1024
+[walk] F330 cut=5 mo=105 af=7 frz=0 | pl pos=(24688,-5400,19051) rot=1984
+[light] cut 4 tint=(128,128,128)
+[pri] cut=4 pri_offset=0x574 masks=0 fg_atlas=0
+[walk] F360 cut=4 mo=105 af=37 frz=0 | pl pos=(22468,-5400,18901) rot=2032
+[walk] F390 cut=4 mo=200 af=1 frz=0 | pl pos=(21511,-5400,18983) rot=2176
+[walk] F420 cut=4 mo=221 af=9 frz=0 | pl pos=(21508,-5345,19444) rot=3072
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x570 masks=0 fg_atlas=0
+[walk] F450 cut=3 mo=200 af=6 frz=0 | pl pos=(21523,-7200,22068) rot=3072
+[walk] F480 cut=3 mo=200 af=36 frz=0 | pl pos=(21523,-7200,22068) rot=3072
+[walk] F510 cut=3 mo=200 af=66 frz=0 | pl pos=(21523,-7200,22068) rot=3072
+[walk] F540 cut=3 mo=200 af=96 frz=0 | pl pos=(21523,-7200,22068) rot=3072
+[walk] F570 cut=3 mo=105 af=5 frz=0 | pl pos=(21523,-7200,22518) rot=3072
+[light] cut 2 tint=(128,128,128)
+[pri] cut=2 pri_offset=0x56C masks=0 fg_atlas=0
+[walk] F600 cut=2 mo=200 af=1 frz=0 | pl pos=(21518,-7200,24617) rot=3024
+[walk] F630 cut=2 mo=105 af=0 frz=0 | pl pos=(21528,-7200,24910) rot=4080
+[walk] F660 cut=2 mo=105 af=30 frz=0 | pl pos=(22532,-7200,24940) rot=4080
+[walk] F690 cut=2 mo=105 af=60 frz=0 | pl pos=(24086,-7200,24970) rot=4080
+[walk] F720 cut=2 mo=200 af=6 frz=0 | pl pos=(25192,-7200,24917) rot=4224
+[walk] F750 cut=2 mo=221 af=4 frz=0 | pl pos=(25337,-7178,24626) rot=1024
+[walk] F780 cut=2 mo=221 af=4 frz=0 | pl pos=(25326,-8989,22730) rot=1024
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x568 masks=0 fg_atlas=0
+[walk] F810 cut=1 mo=200 af=1 frz=0 | pl pos=(25316,-10800,19782) rot=1024
+[walk] F840 cut=1 mo=200 af=31 frz=0 | pl pos=(25316,-10800,19782) rot=1024
+[walk] F870 cut=1 mo=200 af=61 frz=0 | pl pos=(25316,-10800,19782) rot=1024
+[walk] F900 cut=1 mo=105 af=0 frz=0 | pl pos=(25316,-10800,19707) rot=1024
+[walk] F930 cut=1 mo=105 af=8 frz=0 | pl pos=(25294,-10800,19109) rot=1984
+[walk] F960 cut=1 mo=105 af=27 frz=0 | pl pos=(23222,-10800,18913) rot=1984
+[walk] F990 cut=1 mo=105 af=3 frz=0 | pl pos=(21598,-10800,18965) rot=2176
+[walk] F1020 cut=1 mo=200 af=6 frz=0 | pl pos=(21452,-10800,18993) rot=3040
+[walk] F1050 cut=1 mo=221 af=28 frz=0 | pl pos=(21454,-11890,20697) rot=3072
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x564 masks=0 fg_atlas=0
+[walk] F1080 cut=0 mo=221 af=28 frz=0 | pl pos=(21465,-13701,22593) rot=3072
+[walk] F1110 cut=0 mo=200 af=25 frz=0 | pl pos=(21475,-14400,24068) rot=3072
+[walk] F1140 cut=0 mo=200 af=55 frz=0 | pl pos=(21475,-14400,24068) rot=3072
+[walk] F1170 cut=0 mo=200 af=85 frz=0 | pl pos=(21475,-14400,24068) rot=3072
+[walk] F1200 cut=0 mo=200 af=2 frz=0 | pl pos=(21475,-14400,25193) rot=3072
+[walk] F1230 cut=0 mo=105 af=15 frz=0 | pl pos=(22659,-14400,25305) rot=4032
+[walk] F1260 cut=0 mo=105 af=45 frz=0 | pl pos=(24879,-14400,25437) rot=4080
+[walk] F1290 cut=0 mo=200 af=4 frz=0 | pl pos=(26129,-14400,25326) rot=4272
+[aot] DOOR FIRE slot=0 rect=(27050,24900,hw=350,hh=1000) target_cut=4 spawn=(16100,0,-13700)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S033 T013 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[room] PC loaded room1051.rdt (243976 bytes)
+[esp] room 1051: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(14775,0,-10125) rot=(0,1199,0)
+[rbj] room 1051 has no RBJ (RBJ/ROOM1051.RBJ) — Leon auf PL00-Basis zurueckgesetzt (Arena-Reset @0x80039738)
+[prop-render] pi=0 oid=0x01 pos=(14775,0,-10125) rot=(0,1199,0) meshes=1
+[pri] cut=4 pri_offset=0x50C masks=0 fg_atlas=0
+[walk] F30 cut=4 mo=200 af=24 frz=0 | pl pos=(16100,0,-13700) rot=2048
+[walk] F60 cut=4 mo=105 af=16 frz=0 | pl pos=(15624,0,-12527) rot=2816
+[bone]  0: rel=(0,-1696,0) world=(15624,-1696,-12527)
+[F60] cut=4 sd=208
+  cut.pos=(14999,-3549,-8140)
+  cut.target=(15618,-2173,-12830)
+  cut.fov=26684
+  VT=(13832,6227,-8671)
+  VR0=(-4069,0,-537) VR1=(-151,3937,1139) VR2=(516,1147,-3912)
+  Player=(15624,0,-12527) rot_y=2816
+  pose[0].trans=(0,-1696,0)
+  bone_world=(15624,-1696,-12527)
+  combined_trans=(-47,537,4786)
+  combined_rot[0..2]=(1067,-29,3961)
+  proj sx=158 sy=143
+[bone]  1: rel=(0,-1696,0) world=(15624,-1696,-12527)
+[bone]  2: rel=(-19,-1489,-128) world=(15749,-1489,-12496)
+[bone]  3: rel=(-8,-881,-112) world=(15730,-881,-12492)
+[bone]  4: rel=(-235,-100,-98) world=(15804,-100,-12707)
+[bone]  5: rel=(-27,-1507,150) world=(15495,-1507,-12610)
+[bone]  6: rel=(214,-949,154) world=(15400,-949,-12389)
+[bone]  7: rel=(129,-141,152) world=(15434,-141,-12466)
+[bone]  8: rel=(-4,-2320,-1) world=(15626,-2320,-12531)
+[bone]  9: rel=(-24,-2268,-286) world=(15897,-2268,-12441)
+[bone] 10: rel=(-35,-1859,-280) world=(15896,-1859,-12453)
+[bone] 11: rel=(7,-1501,-317) world=(15914,-1501,-12400)
+[bone] 12: rel=(-26,-2268,284) world=(15371,-2268,-12660)
+[bone] 13: rel=(-56,-1861,308) world=(15360,-1861,-12697)
+[bone] 14: rel=(-39,-1500,325) world=(15338,-1500,-12687)
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x508 masks=0 fg_atlas=0
+[prop-render] pi=1 oid=0x02 pos=(16474,-360,-6592) rot=(0,0,0) meshes=1
+[walk] F90 cut=3 mo=200 af=4 frz=0 | pl pos=(14924,0,-10802) rot=2816
+[walk] F120 cut=3 mo=105 af=2 frz=0 | pl pos=(14705,0,-10196) rot=3104
+[walk] F150 cut=3 mo=105 af=32 frz=0 | pl pos=(14795,0,-7976) rot=3104
+[walk] F180 cut=3 mo=105 af=62 frz=0 | pl pos=(14885,0,-5756) rot=3104
+[walk] F210 cut=3 mo=105 af=92 frz=0 | pl pos=(14975,0,-3536) rot=3104
+[walk] F240 cut=3 mo=105 af=122 frz=0 | pl pos=(15065,0,-1316) rot=3104
+[light] cut 2 tint=(128,128,128)
+[pri] cut=2 pri_offset=0x504 masks=0 fg_atlas=0
+[walk] F270 cut=2 mo=105 af=152 frz=0 | pl pos=(15155,0,904) rot=3104
+[walk] F300 cut=2 mo=105 af=182 frz=0 | pl pos=(15245,0,3124) rot=3104
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x500 masks=0 fg_atlas=0
+[walk] F330 cut=1 mo=105 af=212 frz=0 | pl pos=(15331,0,5344) rot=3056
+[walk] F360 cut=1 mo=105 af=242 frz=0 | pl pos=(15283,0,7564) rot=3008
+[walk] F390 cut=1 mo=200 af=1 frz=0 | pl pos=(15061,0,9179) rot=2816
+[walk] F420 cut=1 mo=105 af=1 frz=0 | pl pos=(14999,0,9697) rot=3584
+[walk] F450 cut=1 mo=105 af=31 frz=0 | pl pos=(16589,0,11257) rot=3584
+[walk] F480 cut=1 mo=200 af=4 frz=0 | pl pos=(17101,0,11793) rot=3488
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x4FC masks=0 fg_atlas=0
+[walk] F510 cut=0 mo=105 af=21 frz=0 | pl pos=(18729,0,11859) rot=4064
+[walk] F540 cut=0 mo=200 af=4 frz=0 | pl pos=(20579,0,11934) rot=4064
+[aot] DOOR FIRE slot=0 rect=(21650,12350,hw=500,hh=1000) target_cut=2 spawn=(1172,0,-12558)
+[tuer] Sequenz Archiv 2 DOOR13 Variante 0 Bit7 0 Tuer 19 Seite S017 T010 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 286 Bilder + 1 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[room] PC loaded room1031.rdt (219120 bytes)
+[esp] room 1031: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-5436,-5400,-18000) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[evt] F567 room=1031 Evt_exec sub=11 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x22
+[evt] F567 room=1031 Evt_exec sub=13 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=12 first_op=0x18
+[evt] F567 room=1031 Evt_exec sub=2 cond=0xff -> slot 12 (aktive Event-Slots 3) flag(3,0x80)=0
+[scd F567] Cut_chg(4)
+[kartenitems] ROOM1031: Karte Blatt 2 (Bit 9,89) Prop obj 15 bei (-1692,-2769,-23638), Zone Slot 8 (Muenztelefon -> Slot 39)
+[tim] WARNUNG slot 35: 128x128 8bpp — 32.8% der Texel dekodieren zu OPAKEM Schwarz und 0 sind transparent. Textur/CLUT pruefen (so sahen die vier Schwarzer-Klotz-Bugs aus).
+[rbj] room 1031 cinematic overlay: 13 clips, 316 kf
+[enemy] RE2 EM016 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[tim] WARNUNG slot 11: 256x512 8bpp — 29.5% der Texel dekodieren zu OPAKEM Schwarz und 0 sind transparent. Textur/CLUT pruefen (so sahen die vier Schwarzer-Klotz-Bugs aus).
+[enemy] Hybrid EM16: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[pri] cut=4 pri_offset=0xE48 masks=40 fg_atlas=1
+[scd] Plc_motion(entity=0, motion=11, flags=0x00) → slot=0
+[scd F6] Plc_flg(subop=0, mask=0x0004) → slot=0 anim_flags=0x0004
+[walk] F30 cut=4 mo=200 af=23 frz=0 | pl pos=(-13097,0,-21855) rot=1024
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[scd F46] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F60 cut=4 mo=0 af=14 frz=0 | pl pos=(-13097,0,-21855) rot=1024
+[scd F76] Cut_chg(6)
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-9097,-21855) flag=32) walk_active=1
+[light] cut 6 tint=(128,128,128)
+[pri] cut=6 pri_offset=0x1178 masks=22 fg_atlas=1
+[walk] F90 cut=6 mo=4 af=12 frz=0 | pl pos=(-12735,0,-21742) rot=283
+[scd] Plc_dest(slot=0 mode=0x04 dest=(-9097,-21855) flag=32) walk_active=1
+[walk] F120 cut=6 mo=4 af=27 frz=0 | pl pos=(-12810,0,-21562) rot=59
+[walk] F150 cut=6 mo=4 af=19 frz=0 | pl pos=(-12734,0,-21724) rot=37
+[walk] F180 cut=6 mo=200 af=0 frz=0 | pl pos=(-13348,0,-21971) rot=4077
+[walk] F210 cut=6 mo=200 af=29 frz=0 | pl pos=(-11128,0,-21911) rot=4077
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-9097,-24855) flag=32) walk_active=1
+[walk] F240 cut=6 mo=1 af=4 frz=0 | pl pos=(-9130,0,-21857) rot=265
+[scd] Plc_motion(entity=0, motion=9, flags=0x00) → slot=0
+[scd] Plc_motion(entity=0, motion=12, flags=0x00) → slot=0
+[walk] F270 cut=6 mo=4 af=1 frz=0 | pl pos=(-8921,0,-21808) rot=1049
+[walk] F300 cut=6 mo=4 af=31 frz=0 | pl pos=(-8980,0,-21663) rot=1049
+[walk] F330 cut=6 mo=4 af=23 frz=0 | pl pos=(-8791,0,-21802) rot=1049
+[walk] F360 cut=6 mo=5 af=19 frz=0 | pl pos=(-9026,0,-20636) rot=1049
+[msg] room=1031 id=18 savepoint=0
+[msgtext] room=1031 id=18 "Elza: That was close, this must contain them for some time..."
+[scd] Plc_motion(entity=0, motion=10, flags=0x00) → slot=0
+[scd F370] Plc_flg(subop=0, mask=0x0004) → slot=0 anim_flags=0x0004
+[knee] F370 cut=6 mo=10 af=0 frac=7 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F371 cut=6 mo=10 af=1 frac=6 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F372 cut=6 mo=10 af=2 frac=5 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F373 cut=6 mo=10 af=3 frac=4 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F374 cut=6 mo=10 af=4 frac=3 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F375 cut=6 mo=10 af=5 frac=2 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F376 cut=6 mo=10 af=6 frac=1 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F377 cut=6 mo=10 af=7 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F378 cut=6 mo=10 af=8 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F379 cut=6 mo=10 af=9 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F380 cut=6 mo=10 af=10 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F381 cut=6 mo=10 af=11 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F382 cut=6 mo=10 af=12 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F383 cut=6 mo=10 af=13 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F384 cut=6 mo=10 af=14 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F385 cut=6 mo=10 af=15 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F386 cut=6 mo=10 af=16 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F387 cut=6 mo=10 af=17 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F388 cut=6 mo=10 af=18 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F389 cut=6 mo=10 af=19 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F390 cut=6 mo=10 af=20 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[walk] F390 cut=6 mo=10 af=20 frz=0 | pl pos=(-9149,0,-21143) rot=1049
+[knee] F391 cut=6 mo=10 af=21 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F392 cut=6 mo=10 af=22 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F393 cut=6 mo=10 af=23 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F394 cut=6 mo=10 af=24 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F395 cut=6 mo=10 af=25 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F396 cut=6 mo=10 af=26 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F397 cut=6 mo=10 af=27 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F398 cut=6 mo=10 af=28 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F399 cut=6 mo=10 af=29 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F400 cut=6 mo=10 af=30 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F401 cut=6 mo=10 af=31 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F402 cut=6 mo=10 af=32 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[knee] F403 cut=6 mo=10 af=33 frac=0 | pl pos=(-9149,0,-21143) active=1 rot=1049
+[walk] F420 cut=6 mo=4 af=11 frz=0 | pl pos=(-9082,0,-20895) rot=575
+[walk] F450 cut=6 mo=4 af=3 frz=0 | pl pos=(-9042,0,-20941) rot=575
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-9097,-17855) flag=32) walk_active=1
+[walk] F480 cut=6 mo=15 af=17 frz=0 | pl pos=(-8731,0,-20357) rot=3615
+[scd F487] Cut_chg(0)
+[msg] room=1031 id=19 savepoint=0
+[msgtext] room=1031 id=19 "Elza: Hey, is anyone here?!"
+[scd] Plc_dest(slot=0 mode=0x04 dest=(-9097,-17855) flag=32) walk_active=1
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x740 masks=51 fg_atlas=1
+[walk] F510 cut=0 mo=15 af=24 frz=0 | pl pos=(-9255,0,-20153) rot=3117
+[walk] F540 cut=0 mo=15 af=54 frz=0 | pl pos=(-9262,0,-20249) rot=3117
+[walk] F570 cut=0 mo=15 af=84 frz=0 | pl pos=(-9267,0,-20327) rot=3117
+[walk] F600 cut=0 mo=15 af=114 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F630 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F660 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F690 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F720 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F750 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F780 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F810 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[walk] F840 cut=0 mo=15 af=115 frz=0 | pl pos=(-9258,0,-20186) rot=3117
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM11E1.RDT (209684 bytes)
+[rdt] nCut=16 nDoor=0 nItem=0 zones=40 main_scd=586B sub=28 props=3
+[esp] room 11E1: 3 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] effect TIM (id 0x11) -> slot 38: 256x40
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 21 meshes
+[md1] heli body (RDT prop2): 1 meshes
+[tim] heli TIM (RDT prop2) in slot 2: 128x256
+[pl-part] PL04W01.EDD aus PLD/PL04W01.PLW geschnitten (+8, 1336 B)
+[pl-part] PL04W01.EMR aus PLD/PL04W01.PLW geschnitten (+1344, 17368 B)
+[w01] PL04W01 weapon-track: 15 bones, 14 clips, 217 kf
+[w03] PL04W03 gun-track: 15 bones, 14 clips, 243 kf
+[wpn] loaded 21/21 PL04W** in-hand meshes (textured from body-skin slot 0)
+[pl-part] PL04.EDD aus PLD/PL04.PLD geschnitten (+8, 3156 B)
+[skel] PL04: 15 bones, 24 clips, 705 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM11E1.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 217 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 243 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL04W**.PLW
+[messer] Startinventar Charakter 4: | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 16 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM11E1 = (5112,0,-5348) yaw=3072
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 11e1 (hp=100)
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-9072,0,-11954) rot=(3072,-1024,-1024)
+[scd] thread start slot=1 first_op=0x06
+[prop-member F864] prop[0] obj=0x00 m=1 → val=-6550
+[scd] thread start slot=10 first_op=0x06
+[evt] F864 room=11e1 Evt_exec sub=27 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[pri] cut=0 pri_offset=0x81C masks=0 fg_atlas=0
+[enemy] RE2 EM010 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[enemy] Hybrid EM10: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(9100,0,4200) rot=0
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[scd F14] letterbox closed -> gameplay (player_mode=0)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F60 cut=0 mo=200 af=60 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F90 cut=0 mo=200 af=90 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F120 cut=0 mo=210 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F150 cut=0 mo=211 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F180 cut=0 mo=211 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F210 cut=0 mo=211 af=78 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F240 cut=0 mo=211 af=108 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F270 cut=0 mo=211 af=138 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F300 cut=0 mo=211 af=168 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F330 cut=0 mo=211 af=198 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F360 cut=0 mo=211 af=228 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F390 cut=0 mo=211 af=258 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F420 cut=0 mo=211 af=288 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F450 cut=0 mo=212 af=3 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F480 cut=0 mo=212 af=33 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F510 cut=0 mo=211 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F540 cut=0 mo=211 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F570 cut=0 mo=211 af=73 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F600 cut=0 mo=211 af=103 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F630 cut=0 mo=211 af=133 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F660 cut=0 mo=211 af=163 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F690 cut=0 mo=212 af=22 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F720 cut=0 mo=211 af=2 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F750 cut=0 mo=211 af=32 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F780 cut=0 mo=211 af=62 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F810 cut=0 mo=211 af=92 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F840 cut=0 mo=211 af=122 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F870 cut=0 mo=212 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F900 cut=0 mo=212 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F930 cut=0 mo=211 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F960 cut=0 mo=211 af=54 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F990 cut=0 mo=212 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1020 cut=0 mo=212 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1050 cut=0 mo=211 af=23 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1080 cut=0 mo=211 af=53 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1110 cut=0 mo=211 af=83 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1140 cut=0 mo=211 af=113 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1170 cut=0 mo=211 af=143 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1200 cut=0 mo=211 af=173 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1230 cut=0 mo=212 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1260 cut=0 mo=212 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1290 cut=0 mo=211 af=20 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1320 cut=0 mo=211 af=50 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1350 cut=0 mo=211 af=80 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1380 cut=0 mo=211 af=110 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1410 cut=0 mo=211 af=140 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1440 cut=0 mo=211 af=170 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1470 cut=0 mo=212 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1500 cut=0 mo=212 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1530 cut=0 mo=211 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1560 cut=0 mo=211 af=58 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1590 cut=0 mo=211 af=88 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1620 cut=0 mo=211 af=118 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1650 cut=0 mo=211 af=148 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1680 cut=0 mo=212 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1710 cut=0 mo=212 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1740 cut=0 mo=211 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1770 cut=0 mo=211 af=58 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1800 cut=0 mo=211 af=88 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1830 cut=0 mo=212 af=2 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1860 cut=0 mo=212 af=32 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1890 cut=0 mo=211 af=12 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1920 cut=0 mo=211 af=42 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1950 cut=0 mo=211 af=72 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F1980 cut=0 mo=211 af=102 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2010 cut=0 mo=211 af=132 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2040 cut=0 mo=211 af=162 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2070 cut=0 mo=211 af=192 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2100 cut=0 mo=211 af=222 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2130 cut=0 mo=211 af=252 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2160 cut=0 mo=211 af=282 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2190 cut=0 mo=212 af=29 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2220 cut=0 mo=211 af=9 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2250 cut=0 mo=211 af=39 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2280 cut=0 mo=211 af=69 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2310 cut=0 mo=211 af=99 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2340 cut=0 mo=212 af=22 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2370 cut=0 mo=211 af=2 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2400 cut=0 mo=211 af=32 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2430 cut=0 mo=211 af=62 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2460 cut=0 mo=211 af=92 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2490 cut=0 mo=211 af=122 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2520 cut=0 mo=211 af=152 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2550 cut=0 mo=211 af=182 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2580 cut=0 mo=211 af=212 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2610 cut=0 mo=211 af=242 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2640 cut=0 mo=212 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2670 cut=0 mo=212 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2700 cut=0 mo=211 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2730 cut=0 mo=211 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2760 cut=0 mo=212 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2790 cut=0 mo=212 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2820 cut=0 mo=211 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2850 cut=0 mo=211 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2880 cut=0 mo=211 af=77 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2910 cut=0 mo=211 af=107 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2940 cut=0 mo=211 af=137 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F2970 cut=0 mo=211 af=167 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3000 cut=0 mo=212 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3030 cut=0 mo=212 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3060 cut=0 mo=211 af=16 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3090 cut=0 mo=211 af=46 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3120 cut=0 mo=211 af=76 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3150 cut=0 mo=211 af=106 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3180 cut=0 mo=211 af=136 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3210 cut=0 mo=211 af=166 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3240 cut=0 mo=212 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3270 cut=0 mo=212 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3300 cut=0 mo=211 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3330 cut=0 mo=211 af=58 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3360 cut=0 mo=211 af=88 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3390 cut=0 mo=211 af=118 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3420 cut=0 mo=211 af=148 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3450 cut=0 mo=212 af=26 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3480 cut=0 mo=211 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3510 cut=0 mo=211 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3540 cut=0 mo=211 af=66 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3570 cut=0 mo=211 af=96 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3600 cut=0 mo=212 af=26 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3630 cut=0 mo=211 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3660 cut=0 mo=211 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3690 cut=0 mo=211 af=66 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3720 cut=0 mo=211 af=96 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3750 cut=0 mo=211 af=126 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3780 cut=0 mo=211 af=156 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3810 cut=0 mo=211 af=186 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3840 cut=0 mo=211 af=216 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3870 cut=0 mo=211 af=246 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3900 cut=0 mo=212 af=25 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3930 cut=0 mo=211 af=5 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3960 cut=0 mo=211 af=35 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F3990 cut=0 mo=211 af=65 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4020 cut=0 mo=211 af=95 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4050 cut=0 mo=211 af=125 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4080 cut=0 mo=211 af=155 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4110 cut=0 mo=211 af=185 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4140 cut=0 mo=211 af=215 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4170 cut=0 mo=211 af=245 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4200 cut=0 mo=211 af=275 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4230 cut=0 mo=212 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4260 cut=0 mo=212 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4290 cut=0 mo=211 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4320 cut=0 mo=211 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4350 cut=0 mo=211 af=77 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4380 cut=0 mo=211 af=107 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4410 cut=0 mo=212 af=0 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4440 cut=0 mo=212 af=30 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4470 cut=0 mo=211 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4500 cut=0 mo=211 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4530 cut=0 mo=212 af=1 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4560 cut=0 mo=212 af=31 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4590 cut=0 mo=211 af=11 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4620 cut=0 mo=211 af=41 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4650 cut=0 mo=211 af=71 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4680 cut=0 mo=211 af=101 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4710 cut=0 mo=211 af=131 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4740 cut=0 mo=211 af=161 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4770 cut=0 mo=212 af=2 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4800 cut=0 mo=212 af=32 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4830 cut=0 mo=211 af=12 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4860 cut=0 mo=211 af=42 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4890 cut=0 mo=211 af=72 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4920 cut=0 mo=211 af=102 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4950 cut=0 mo=211 af=132 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F4980 cut=0 mo=211 af=162 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5010 cut=0 mo=212 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5040 cut=0 mo=212 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5070 cut=0 mo=211 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5100 cut=0 mo=211 af=58 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5130 cut=0 mo=211 af=88 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5160 cut=0 mo=211 af=118 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5190 cut=0 mo=212 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5220 cut=0 mo=212 af=34 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5250 cut=0 mo=211 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5280 cut=0 mo=211 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5310 cut=0 mo=211 af=74 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5340 cut=0 mo=212 af=21 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5370 cut=0 mo=211 af=1 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5400 cut=0 mo=211 af=31 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5430 cut=0 mo=211 af=61 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5460 cut=0 mo=211 af=91 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5490 cut=0 mo=211 af=121 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5520 cut=0 mo=211 af=151 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5550 cut=0 mo=211 af=181 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5580 cut=0 mo=211 af=211 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5610 cut=0 mo=212 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5640 cut=0 mo=211 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5670 cut=0 mo=211 af=34 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5700 cut=0 mo=211 af=64 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5730 cut=0 mo=211 af=94 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5760 cut=0 mo=211 af=124 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5790 cut=0 mo=211 af=154 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5820 cut=0 mo=211 af=184 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5850 cut=0 mo=211 af=214 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5880 cut=0 mo=212 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5910 cut=0 mo=212 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5940 cut=0 mo=211 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F5970 cut=0 mo=211 af=54 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6000 cut=0 mo=211 af=84 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6030 cut=0 mo=211 af=114 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6060 cut=0 mo=211 af=144 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6090 cut=0 mo=211 af=174 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6120 cut=0 mo=211 af=204 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6150 cut=0 mo=211 af=234 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6180 cut=0 mo=212 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6210 cut=0 mo=212 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6240 cut=0 mo=211 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6270 cut=0 mo=211 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6300 cut=0 mo=211 af=77 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6330 cut=0 mo=211 af=107 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6360 cut=0 mo=211 af=137 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6390 cut=0 mo=211 af=167 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6420 cut=0 mo=211 af=197 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6450 cut=0 mo=211 af=227 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6480 cut=0 mo=211 af=257 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6510 cut=0 mo=211 af=287 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6540 cut=0 mo=212 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6570 cut=0 mo=212 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6600 cut=0 mo=211 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6630 cut=0 mo=211 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6660 cut=0 mo=211 af=77 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6690 cut=0 mo=211 af=107 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6720 cut=0 mo=211 af=137 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6750 cut=0 mo=212 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6780 cut=0 mo=212 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6810 cut=0 mo=211 af=16 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6840 cut=0 mo=211 af=46 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6870 cut=0 mo=211 af=76 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6900 cut=0 mo=211 af=106 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6930 cut=0 mo=212 af=19 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6960 cut=0 mo=212 af=49 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F6990 cut=0 mo=211 af=29 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7020 cut=0 mo=211 af=59 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7050 cut=0 mo=211 af=89 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7080 cut=0 mo=211 af=119 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7110 cut=0 mo=211 af=149 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7140 cut=0 mo=211 af=179 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7170 cut=0 mo=211 af=209 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7200 cut=0 mo=211 af=239 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7230 cut=0 mo=211 af=269 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7260 cut=0 mo=212 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7290 cut=0 mo=212 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7320 cut=0 mo=211 af=23 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7350 cut=0 mo=211 af=53 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7380 cut=0 mo=211 af=83 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7410 cut=0 mo=212 af=1 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7440 cut=0 mo=212 af=31 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7470 cut=0 mo=211 af=11 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7500 cut=0 mo=211 af=41 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7530 cut=0 mo=211 af=71 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7560 cut=0 mo=211 af=101 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7590 cut=0 mo=211 af=131 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7620 cut=0 mo=211 af=161 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7650 cut=0 mo=211 af=191 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7680 cut=0 mo=211 af=221 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7710 cut=0 mo=211 af=251 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7740 cut=0 mo=212 af=5 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7770 cut=0 mo=212 af=35 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7800 cut=0 mo=211 af=15 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7830 cut=0 mo=211 af=45 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7860 cut=0 mo=211 af=75 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7890 cut=0 mo=212 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7920 cut=0 mo=212 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7950 cut=0 mo=211 af=23 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F7980 cut=0 mo=211 af=53 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8010 cut=0 mo=211 af=83 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8040 cut=0 mo=211 af=113 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8070 cut=0 mo=211 af=143 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8100 cut=0 mo=211 af=173 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8130 cut=0 mo=211 af=203 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8160 cut=0 mo=211 af=233 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8190 cut=0 mo=212 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8220 cut=0 mo=211 af=8 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8250 cut=0 mo=211 af=38 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8280 cut=0 mo=211 af=68 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8310 cut=0 mo=211 af=98 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8340 cut=0 mo=211 af=128 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8370 cut=0 mo=211 af=158 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8400 cut=0 mo=211 af=188 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8430 cut=0 mo=211 af=218 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8460 cut=0 mo=211 af=248 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8490 cut=0 mo=212 af=11 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8520 cut=0 mo=212 af=41 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8550 cut=0 mo=211 af=21 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8580 cut=0 mo=211 af=51 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8610 cut=0 mo=212 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8640 cut=0 mo=212 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8670 cut=0 mo=211 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8700 cut=0 mo=211 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8730 cut=0 mo=211 af=77 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8760 cut=0 mo=211 af=107 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8790 cut=0 mo=211 af=137 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8820 cut=0 mo=211 af=167 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8850 cut=0 mo=211 af=197 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8880 cut=0 mo=212 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8910 cut=0 mo=211 af=8 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8940 cut=0 mo=211 af=38 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F8970 cut=0 mo=211 af=68 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9000 cut=0 mo=211 af=98 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9030 cut=0 mo=211 af=128 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9060 cut=0 mo=211 af=158 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9090 cut=0 mo=211 af=188 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9120 cut=0 mo=212 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9150 cut=0 mo=211 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9180 cut=0 mo=211 af=34 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9210 cut=0 mo=211 af=64 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9240 cut=0 mo=211 af=94 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9270 cut=0 mo=211 af=124 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9300 cut=0 mo=211 af=154 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9330 cut=0 mo=212 af=0 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9360 cut=0 mo=212 af=30 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9390 cut=0 mo=211 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9420 cut=0 mo=211 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9450 cut=0 mo=211 af=70 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9480 cut=0 mo=211 af=100 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9510 cut=0 mo=211 af=130 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9540 cut=0 mo=211 af=160 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9570 cut=0 mo=212 af=26 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9600 cut=0 mo=211 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9630 cut=0 mo=211 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9660 cut=0 mo=211 af=66 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9690 cut=0 mo=211 af=96 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9720 cut=0 mo=212 af=3 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9750 cut=0 mo=212 af=33 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9780 cut=0 mo=211 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9810 cut=0 mo=211 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9840 cut=0 mo=211 af=73 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9870 cut=0 mo=211 af=103 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9900 cut=0 mo=211 af=133 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9930 cut=0 mo=211 af=163 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9960 cut=0 mo=211 af=193 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F9990 cut=0 mo=211 af=223 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10020 cut=0 mo=211 af=253 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10050 cut=0 mo=211 af=283 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10080 cut=0 mo=212 af=15 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10110 cut=0 mo=212 af=45 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10140 cut=0 mo=211 af=25 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10170 cut=0 mo=211 af=55 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10200 cut=0 mo=211 af=85 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10230 cut=0 mo=211 af=115 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10260 cut=0 mo=212 af=9 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10290 cut=0 mo=212 af=39 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10320 cut=0 mo=211 af=19 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10350 cut=0 mo=211 af=49 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10380 cut=0 mo=212 af=11 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10410 cut=0 mo=212 af=41 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10440 cut=0 mo=211 af=21 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10470 cut=0 mo=211 af=51 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10500 cut=0 mo=211 af=81 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10530 cut=0 mo=211 af=111 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10560 cut=0 mo=211 af=141 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10590 cut=0 mo=211 af=171 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10620 cut=0 mo=212 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10650 cut=0 mo=212 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10680 cut=0 mo=211 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10710 cut=0 mo=211 af=54 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10740 cut=0 mo=211 af=84 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10770 cut=0 mo=211 af=114 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10800 cut=0 mo=211 af=144 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10830 cut=0 mo=212 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10860 cut=0 mo=212 af=34 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10890 cut=0 mo=211 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10920 cut=0 mo=211 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10950 cut=0 mo=211 af=74 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F10980 cut=0 mo=211 af=104 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11010 cut=0 mo=211 af=134 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11040 cut=0 mo=212 af=29 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11070 cut=0 mo=211 af=9 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11100 cut=0 mo=211 af=39 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11130 cut=0 mo=212 af=3 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11160 cut=0 mo=212 af=33 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11190 cut=0 mo=211 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11220 cut=0 mo=211 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11250 cut=0 mo=211 af=73 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11280 cut=0 mo=211 af=103 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11310 cut=0 mo=211 af=133 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11340 cut=0 mo=211 af=163 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11370 cut=0 mo=212 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11400 cut=0 mo=212 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11430 cut=0 mo=211 af=20 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11460 cut=0 mo=211 af=50 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11490 cut=0 mo=211 af=80 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11520 cut=0 mo=211 af=110 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11550 cut=0 mo=211 af=140 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11580 cut=0 mo=212 af=8 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11610 cut=0 mo=212 af=38 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11640 cut=0 mo=211 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11670 cut=0 mo=211 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11700 cut=0 mo=211 af=78 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11730 cut=0 mo=211 af=108 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11760 cut=0 mo=212 af=19 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11790 cut=0 mo=212 af=49 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11820 cut=0 mo=211 af=29 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11850 cut=0 mo=211 af=59 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11880 cut=0 mo=211 af=89 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11910 cut=0 mo=211 af=119 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11940 cut=0 mo=211 af=149 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F11970 cut=0 mo=211 af=179 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12000 cut=0 mo=211 af=209 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12030 cut=0 mo=211 af=239 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12060 cut=0 mo=211 af=269 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12090 cut=0 mo=212 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12120 cut=0 mo=212 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12150 cut=0 mo=211 af=20 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12180 cut=0 mo=211 af=50 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12210 cut=0 mo=211 af=80 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12240 cut=0 mo=211 af=110 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12270 cut=0 mo=212 af=21 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12300 cut=0 mo=211 af=1 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12330 cut=0 mo=211 af=31 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12360 cut=0 mo=211 af=61 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12390 cut=0 mo=211 af=91 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12420 cut=0 mo=211 af=121 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12450 cut=0 mo=211 af=151 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12480 cut=0 mo=211 af=181 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12510 cut=0 mo=211 af=211 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12540 cut=0 mo=211 af=241 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12570 cut=0 mo=211 af=271 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12600 cut=0 mo=212 af=12 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12630 cut=0 mo=212 af=42 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12660 cut=0 mo=211 af=22 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12690 cut=0 mo=211 af=52 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12720 cut=0 mo=211 af=82 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12750 cut=0 mo=211 af=112 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12780 cut=0 mo=212 af=23 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12810 cut=0 mo=211 af=3 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12840 cut=0 mo=211 af=33 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12870 cut=0 mo=211 af=63 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12900 cut=0 mo=211 af=93 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12930 cut=0 mo=211 af=123 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12960 cut=0 mo=211 af=153 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F12990 cut=0 mo=211 af=183 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13020 cut=0 mo=211 af=213 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13050 cut=0 mo=211 af=243 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13080 cut=0 mo=211 af=273 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13110 cut=0 mo=212 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13140 cut=0 mo=212 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13170 cut=0 mo=211 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13200 cut=0 mo=211 af=54 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13230 cut=0 mo=211 af=84 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13260 cut=0 mo=211 af=114 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13290 cut=0 mo=212 af=25 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13320 cut=0 mo=211 af=5 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13350 cut=0 mo=211 af=35 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13380 cut=0 mo=211 af=65 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13410 cut=0 mo=211 af=95 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13440 cut=0 mo=211 af=125 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13470 cut=0 mo=211 af=155 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13500 cut=0 mo=211 af=185 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13530 cut=0 mo=211 af=215 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13560 cut=0 mo=211 af=245 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13590 cut=0 mo=211 af=275 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13620 cut=0 mo=212 af=16 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13650 cut=0 mo=212 af=46 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13680 cut=0 mo=211 af=26 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13710 cut=0 mo=211 af=56 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13740 cut=0 mo=211 af=86 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13770 cut=0 mo=211 af=116 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13800 cut=0 mo=212 af=27 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13830 cut=0 mo=211 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13860 cut=0 mo=211 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13890 cut=0 mo=211 af=67 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13920 cut=0 mo=211 af=97 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13950 cut=0 mo=211 af=127 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F13980 cut=0 mo=211 af=157 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14010 cut=0 mo=211 af=187 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14040 cut=0 mo=211 af=217 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14070 cut=0 mo=211 af=247 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14100 cut=0 mo=211 af=277 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14130 cut=0 mo=212 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14160 cut=0 mo=212 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14190 cut=0 mo=211 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14220 cut=0 mo=211 af=58 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14250 cut=0 mo=211 af=88 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14280 cut=0 mo=211 af=118 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14310 cut=0 mo=212 af=29 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14340 cut=0 mo=211 af=9 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14370 cut=0 mo=211 af=39 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14400 cut=0 mo=211 af=69 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14430 cut=0 mo=211 af=99 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14460 cut=0 mo=211 af=129 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14490 cut=0 mo=211 af=159 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14520 cut=0 mo=211 af=189 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14550 cut=0 mo=211 af=219 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14580 cut=0 mo=211 af=249 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14610 cut=0 mo=211 af=279 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14640 cut=0 mo=212 af=20 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14670 cut=0 mo=211 af=0 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14700 cut=0 mo=211 af=30 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14730 cut=0 mo=211 af=60 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14760 cut=0 mo=211 af=90 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14790 cut=0 mo=212 af=1 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14820 cut=0 mo=212 af=31 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14850 cut=0 mo=211 af=11 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14880 cut=0 mo=211 af=41 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14910 cut=0 mo=211 af=71 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14940 cut=0 mo=211 af=101 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F14970 cut=0 mo=211 af=131 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15000 cut=0 mo=211 af=161 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15030 cut=0 mo=211 af=191 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15060 cut=0 mo=211 af=221 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15090 cut=0 mo=211 af=251 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15120 cut=0 mo=211 af=281 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15150 cut=0 mo=212 af=22 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15180 cut=0 mo=211 af=2 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15210 cut=0 mo=211 af=32 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15240 cut=0 mo=211 af=62 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15270 cut=0 mo=211 af=92 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15300 cut=0 mo=212 af=3 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15330 cut=0 mo=212 af=33 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15360 cut=0 mo=211 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15390 cut=0 mo=211 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15420 cut=0 mo=211 af=73 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15450 cut=0 mo=211 af=103 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15480 cut=0 mo=211 af=133 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15510 cut=0 mo=211 af=163 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15540 cut=0 mo=211 af=193 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15570 cut=0 mo=211 af=223 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15600 cut=0 mo=211 af=253 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15630 cut=0 mo=211 af=283 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15660 cut=0 mo=212 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15690 cut=0 mo=211 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15720 cut=0 mo=211 af=34 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15750 cut=0 mo=211 af=64 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15780 cut=0 mo=211 af=94 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15810 cut=0 mo=212 af=5 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15840 cut=0 mo=212 af=35 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15870 cut=0 mo=211 af=15 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15900 cut=0 mo=211 af=45 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15930 cut=0 mo=211 af=75 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15960 cut=0 mo=211 af=105 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F15990 cut=0 mo=211 af=135 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16020 cut=0 mo=211 af=165 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16050 cut=0 mo=211 af=195 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16080 cut=0 mo=211 af=225 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16110 cut=0 mo=211 af=255 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16140 cut=0 mo=211 af=285 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16170 cut=0 mo=212 af=26 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16200 cut=0 mo=211 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16230 cut=0 mo=211 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16260 cut=0 mo=211 af=66 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16290 cut=0 mo=211 af=96 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16320 cut=0 mo=212 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16350 cut=0 mo=212 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16380 cut=0 mo=211 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16410 cut=0 mo=211 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16440 cut=0 mo=211 af=77 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16470 cut=0 mo=211 af=107 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16500 cut=0 mo=211 af=137 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16530 cut=0 mo=211 af=167 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16560 cut=0 mo=211 af=197 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16590 cut=0 mo=211 af=227 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16620 cut=0 mo=211 af=257 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16650 cut=0 mo=211 af=287 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16680 cut=0 mo=212 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16710 cut=0 mo=211 af=8 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16740 cut=0 mo=211 af=38 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16770 cut=0 mo=211 af=68 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16800 cut=0 mo=211 af=98 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16830 cut=0 mo=212 af=9 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16860 cut=0 mo=212 af=39 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16890 cut=0 mo=211 af=19 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16920 cut=0 mo=211 af=49 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16950 cut=0 mo=211 af=79 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F16980 cut=0 mo=211 af=109 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17010 cut=0 mo=211 af=139 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17040 cut=0 mo=211 af=169 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17070 cut=0 mo=211 af=199 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17100 cut=0 mo=211 af=229 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17130 cut=0 mo=211 af=259 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17160 cut=0 mo=212 af=0 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17190 cut=0 mo=212 af=30 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17220 cut=0 mo=211 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17250 cut=0 mo=211 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17280 cut=0 mo=211 af=70 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17310 cut=0 mo=211 af=100 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17340 cut=0 mo=212 af=11 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17370 cut=0 mo=212 af=41 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17400 cut=0 mo=211 af=21 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17430 cut=0 mo=211 af=51 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17460 cut=0 mo=211 af=81 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17490 cut=0 mo=211 af=111 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17520 cut=0 mo=211 af=141 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17550 cut=0 mo=211 af=171 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17580 cut=0 mo=211 af=201 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17610 cut=0 mo=211 af=231 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17640 cut=0 mo=211 af=261 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17670 cut=0 mo=212 af=2 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17700 cut=0 mo=212 af=32 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17730 cut=0 mo=211 af=12 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17760 cut=0 mo=211 af=42 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17790 cut=0 mo=211 af=72 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17820 cut=0 mo=211 af=102 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17850 cut=0 mo=212 af=13 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17880 cut=0 mo=212 af=43 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17910 cut=0 mo=211 af=23 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17940 cut=0 mo=211 af=53 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F17970 cut=0 mo=211 af=83 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18000 cut=0 mo=211 af=113 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18030 cut=0 mo=211 af=143 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18060 cut=0 mo=211 af=173 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18090 cut=0 mo=211 af=203 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18120 cut=0 mo=211 af=233 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18150 cut=0 mo=211 af=263 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18180 cut=0 mo=212 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18210 cut=0 mo=212 af=34 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18240 cut=0 mo=211 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18270 cut=0 mo=211 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18300 cut=0 mo=211 af=74 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18330 cut=0 mo=211 af=104 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18360 cut=0 mo=212 af=15 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18390 cut=0 mo=212 af=45 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18420 cut=0 mo=211 af=25 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18450 cut=0 mo=211 af=55 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18480 cut=0 mo=211 af=85 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18510 cut=0 mo=211 af=115 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18540 cut=0 mo=211 af=145 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18570 cut=0 mo=211 af=175 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18600 cut=0 mo=211 af=205 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18630 cut=0 mo=211 af=235 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18660 cut=0 mo=211 af=265 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18690 cut=0 mo=212 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18720 cut=0 mo=212 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18750 cut=0 mo=211 af=16 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18780 cut=0 mo=211 af=46 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18810 cut=0 mo=211 af=76 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18840 cut=0 mo=211 af=106 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18870 cut=0 mo=212 af=17 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18900 cut=0 mo=212 af=47 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18930 cut=0 mo=211 af=27 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18960 cut=0 mo=211 af=57 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F18990 cut=0 mo=211 af=87 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19020 cut=0 mo=211 af=117 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19050 cut=0 mo=211 af=147 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19080 cut=0 mo=211 af=177 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19110 cut=0 mo=211 af=207 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19140 cut=0 mo=211 af=237 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19170 cut=0 mo=211 af=267 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19200 cut=0 mo=212 af=8 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19230 cut=0 mo=212 af=38 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19260 cut=0 mo=211 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19290 cut=0 mo=211 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19320 cut=0 mo=211 af=78 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19350 cut=0 mo=211 af=108 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19380 cut=0 mo=212 af=19 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19410 cut=0 mo=212 af=49 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19440 cut=0 mo=211 af=29 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19470 cut=0 mo=211 af=59 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19500 cut=0 mo=211 af=89 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19530 cut=0 mo=211 af=119 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19560 cut=0 mo=211 af=149 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19590 cut=0 mo=211 af=179 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19620 cut=0 mo=211 af=209 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19650 cut=0 mo=211 af=239 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19680 cut=0 mo=211 af=269 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19710 cut=0 mo=212 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19740 cut=0 mo=212 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19770 cut=0 mo=211 af=20 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19800 cut=0 mo=211 af=50 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19830 cut=0 mo=211 af=80 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19860 cut=0 mo=211 af=110 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19890 cut=0 mo=212 af=21 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19920 cut=0 mo=211 af=1 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19950 cut=0 mo=211 af=31 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F19980 cut=0 mo=211 af=61 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20010 cut=0 mo=211 af=91 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20040 cut=0 mo=211 af=121 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20070 cut=0 mo=211 af=151 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20100 cut=0 mo=211 af=181 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20130 cut=0 mo=211 af=211 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20160 cut=0 mo=211 af=241 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20190 cut=0 mo=211 af=271 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20220 cut=0 mo=212 af=12 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20250 cut=0 mo=212 af=42 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20280 cut=0 mo=211 af=22 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20310 cut=0 mo=211 af=52 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20340 cut=0 mo=211 af=82 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20370 cut=0 mo=211 af=112 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20400 cut=0 mo=212 af=23 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20430 cut=0 mo=211 af=3 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20460 cut=0 mo=211 af=33 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20490 cut=0 mo=211 af=63 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20520 cut=0 mo=211 af=93 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20550 cut=0 mo=211 af=123 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20580 cut=0 mo=211 af=153 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20610 cut=0 mo=211 af=183 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20640 cut=0 mo=211 af=213 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20670 cut=0 mo=211 af=243 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20700 cut=0 mo=211 af=273 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20730 cut=0 mo=212 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20760 cut=0 mo=212 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20790 cut=0 mo=211 af=24 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20820 cut=0 mo=211 af=54 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20850 cut=0 mo=211 af=84 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20880 cut=0 mo=211 af=114 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20910 cut=0 mo=212 af=25 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20940 cut=0 mo=211 af=5 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F20970 cut=0 mo=211 af=35 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21000 cut=0 mo=211 af=65 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21030 cut=0 mo=211 af=95 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21060 cut=0 mo=211 af=125 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21090 cut=0 mo=211 af=155 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21120 cut=0 mo=211 af=185 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21150 cut=0 mo=211 af=215 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21180 cut=0 mo=211 af=245 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21210 cut=0 mo=211 af=275 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21240 cut=0 mo=212 af=16 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21270 cut=0 mo=212 af=46 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21300 cut=0 mo=211 af=26 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21330 cut=0 mo=211 af=56 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21360 cut=0 mo=211 af=86 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21390 cut=0 mo=211 af=116 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21420 cut=0 mo=212 af=27 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21450 cut=0 mo=211 af=7 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21480 cut=0 mo=211 af=37 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21510 cut=0 mo=211 af=67 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21540 cut=0 mo=211 af=97 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21570 cut=0 mo=211 af=127 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21600 cut=0 mo=211 af=157 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21630 cut=0 mo=211 af=187 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21660 cut=0 mo=211 af=217 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21690 cut=0 mo=211 af=247 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21720 cut=0 mo=211 af=277 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21750 cut=0 mo=212 af=18 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21780 cut=0 mo=212 af=48 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21810 cut=0 mo=211 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21840 cut=0 mo=211 af=58 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21870 cut=0 mo=211 af=88 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21900 cut=0 mo=211 af=118 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21930 cut=0 mo=212 af=29 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21960 cut=0 mo=211 af=9 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F21990 cut=0 mo=211 af=39 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22020 cut=0 mo=211 af=69 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22050 cut=0 mo=211 af=99 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22080 cut=0 mo=211 af=129 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22110 cut=0 mo=211 af=159 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22140 cut=0 mo=211 af=189 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22170 cut=0 mo=211 af=219 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22200 cut=0 mo=211 af=249 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22230 cut=0 mo=211 af=279 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22260 cut=0 mo=212 af=20 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22290 cut=0 mo=211 af=0 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22320 cut=0 mo=211 af=30 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22350 cut=0 mo=211 af=60 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22380 cut=0 mo=211 af=90 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22410 cut=0 mo=212 af=1 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22440 cut=0 mo=212 af=31 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22470 cut=0 mo=211 af=11 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22500 cut=0 mo=211 af=41 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22530 cut=0 mo=211 af=71 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22560 cut=0 mo=211 af=101 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22590 cut=0 mo=211 af=131 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22620 cut=0 mo=211 af=161 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22650 cut=0 mo=211 af=191 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22680 cut=0 mo=211 af=221 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22710 cut=0 mo=211 af=251 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22740 cut=0 mo=211 af=281 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22770 cut=0 mo=212 af=22 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22800 cut=0 mo=211 af=2 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22830 cut=0 mo=211 af=32 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22860 cut=0 mo=211 af=62 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22890 cut=0 mo=211 af=92 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22920 cut=0 mo=212 af=4 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22950 cut=0 mo=212 af=34 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F22980 cut=0 mo=211 af=14 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23010 cut=0 mo=211 af=44 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23040 cut=0 mo=211 af=74 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23070 cut=0 mo=211 af=104 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23100 cut=0 mo=211 af=134 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23130 cut=0 mo=211 af=164 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23160 cut=0 mo=211 af=194 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23190 cut=0 mo=211 af=224 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23220 cut=0 mo=211 af=254 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23250 cut=0 mo=211 af=284 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23280 cut=0 mo=212 af=26 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23310 cut=0 mo=211 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23340 cut=0 mo=211 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23370 cut=0 mo=211 af=66 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23400 cut=0 mo=211 af=96 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23430 cut=0 mo=212 af=10 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23460 cut=0 mo=212 af=40 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23490 cut=0 mo=211 af=20 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23520 cut=0 mo=211 af=50 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23550 cut=0 mo=211 af=80 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23580 cut=0 mo=211 af=110 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23610 cut=0 mo=211 af=140 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23640 cut=0 mo=211 af=170 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23670 cut=0 mo=211 af=200 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23700 cut=0 mo=211 af=230 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23730 cut=0 mo=211 af=260 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23760 cut=0 mo=212 af=6 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23790 cut=0 mo=212 af=36 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23820 cut=0 mo=211 af=16 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23850 cut=0 mo=211 af=46 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23880 cut=0 mo=211 af=76 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23910 cut=0 mo=211 af=106 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23940 cut=0 mo=212 af=28 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F23970 cut=0 mo=211 af=8 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F24000 cut=0 mo=211 af=38 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F24030 cut=0 mo=211 af=68 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F24060 cut=0 mo=211 af=98 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F24090 cut=0 mo=211 af=128 frz=0 | pl pos=(9100,0,4200) rot=0
+[walk] F24120 cut=0 mo=211 af=158 frz=0 | pl pos=(9100,0,4200) rot=0

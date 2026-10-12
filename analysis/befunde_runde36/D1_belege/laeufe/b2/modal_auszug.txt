@@ -1,0 +1,5 @@
+F292 state=2 f630=0 draw=0 type=0x00 face=0
+F293 state=2 f630=1 draw=1 type=0x38 face=0 quad TL(1112,720) TR(-792,720) BL(1112,-504) BR(-792,-504)
+F309 state=3 f630=0 draw=1 type=0x38 face=0 quad TL(104,72) TR(216,72) BL(104,144) BR(216,144)
+F310 state=4 f630=0 draw=1 type=0x38 face=0 quad TL(104,72) TR(216,72) BL(104,144) BR(216,144)
+F319 state=6 f630=9 draw=1 type=0x38 face=0 quad TL(104,72) TR(216,72) BL(104,144) BR(216,144)

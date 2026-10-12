@@ -1,0 +1,21 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/d1/runs/g10d1/wegplan_eingabe.txt: 8 Befehle
+F1 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 | RAUM 10D1 geladen, Spieler frei (obj 6 = Slot 6)
+F30 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 0 beendet: Raum bereit
+F31 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 | GEGNERWEG
+F31 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 1 Typ 0x10 (5878,25632) freigegeben
+F31 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 1 beendet: 1 Gegner weg
+F32 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,247)
+F32 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,247) = 0
+F32 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 2 beendet: gelesen
+F33 room=10D1 spieler=(7650,11400) rot=2048 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F34 room=10D1 spieler=(7650,11400) rot=2144 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F35 room=10D1 spieler=(7650,11400) rot=2240 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F36 room=10D1 spieler=(7650,11400) rot=2336 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F37 room=10D1 spieler=(7650,11400) rot=2432 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F38 room=10D1 spieler=(7650,11400) rot=2528 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F39 room=10D1 spieler=(7650,11400) rot=2624 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F40 room=10D1 spieler=(7650,11400) rot=2720 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F41 room=10D1 spieler=(7650,11400) rot=2816 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F42 room=10D1 spieler=(7650,11400) rot=2912 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (6877,15000) tol 150
+F104 room=10D1 spieler=(6884,14869) rot=3056 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 3 beendet: angekommen
+F105 room=10D1 spieler=(6884,14869) rot=3056 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (6877,23500) tol 150

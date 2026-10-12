@@ -1,0 +1,19 @@
+# Lauf B5 (ab Speicherstand B4b in 11E1 vor der Tuer "Prisons"): 1211 Zelle mit dem Prison Key, Befreiungsszene, Wegwerf-Abfrage Ja
+RAUM 11E1
+GEGNERWEG
+FLAG 3 139
+FLAG 4 236
+FLAG 4 252
+AKTION
+RAUM 1211
+FLAG 4 236
+FLAG 4 252
+GEHE -19350 -2200 150
+GEHE -20007 -18800 100
+WARTE 10
+FLAG 4 252
+FLAG 4 96
+FLAG 3 44
+FLAG 9 83
+WARTE 60
+ENDE

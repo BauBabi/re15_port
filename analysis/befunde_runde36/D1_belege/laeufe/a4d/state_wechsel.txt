@@ -1,0 +1,8 @@
+F0 pad=0000 PL(21200,25500,rot=1024,hp=100) pst=0 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=8 msg(a=0 fsm=0 id=0 q=0) pf=00000000 pm=0 gr=0
+F209 pad=8000 PL(5771,19761,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=5 msg(a=1 fsm=1 id=11 q=1) pf=FF800007 pm=0 gr=0
+F302 pad=8000 PL(5771,19761,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=5 msg(a=0 fsm=0 id=11 q=1) pf=00000007 pm=0 gr=0
+F303 pad=8000 PL(5771,19761,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=5 msg(a=0 fsm=0 id=11 q=0) pf=00000007 pm=0 gr=0
+F304 pad=0000 PL(5771,19761,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=5 msg(a=0 fsm=0 id=11 q=0) pf=01000007 pm=2 gr=0
+F524 pad=0000 PL(5771,19761,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=5 msg(a=0 fsm=0 id=11 q=0) pf=00000007 pm=1 gr=0
+F538 pad=0000 PL(5771,19761,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=5 msg(a=0 fsm=0 id=11 q=0) pf=00000007 pm=0 gr=0
+F1 pad=8000 PL(-20975,-25000,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=210 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=0 msg(a=0 fsm=0 id=0 q=0) pf=FF000007 pm=0 gr=0 [1 t=10 st=0 ss1=0 ss2=0 ss3=0 g=88 mo=22 af=0 stun=0 d=0 @(-16453,-23817,r1024)] hp=0 [2 t=10 st=0 ss1=0 ss2=

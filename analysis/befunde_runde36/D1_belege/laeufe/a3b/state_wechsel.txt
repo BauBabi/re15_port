@@ -1,0 +1,3 @@
+F0 pad=0000 PL(9100,4200,rot=0,hp=100) pst=0 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=0 msg(a=0 fsm=0 id=0 q=0) pf=00000000 pm=0 gr=0 [1 t=10 st=1 ss1=0 ss2=0 ss3=0 g=00 mo=1 af=0 stun=6 d=27092 @(-11000,-14000,r-1024)] hp=58 [2 t=10 st=1 ss1=0 ss2
+F274 pad=8000 PL(-25661,-16394,rot=2032,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=2 msg(a=0 fsm=0 id=0 q=0) pf=01000007 pm=2 gr=0
+F465 pad=0000 PL(-25661,-16394,rot=2032,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=-1 bx=30 sl=1111 cam=2 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0

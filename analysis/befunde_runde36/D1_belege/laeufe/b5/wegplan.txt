@@ -1,0 +1,59 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/d1/runs/b5/wegplan_eingabe.txt: 18 Befehle
+F1 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 | RAUM 11E1 geladen, Spieler frei (obj 6 = Slot 6)
+F30 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 0 beendet: Raum bereit
+F31 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 | GEGNERWEG
+F31 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 1 Typ 0x10 (-11000,-14000) freigegeben
+F31 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 2 Typ 0x10 (-10000,-15500) freigegeben
+F31 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 3 Typ 0x10 (-11000,-16000) freigegeben
+F31 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 4 Typ 0x10 (-10000,-17500) freigegeben
+F31 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 1 beendet: 4 Gegner weg
+F32 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (3,139)
+F32 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (3,139) = 1
+F32 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 2 beendet: gelesen
+F33 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,236)
+F33 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,236) = 1
+F33 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 3 beendet: gelesen
+F34 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,252)
+F34 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,252) = 0
+F34 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 4 beendet: gelesen
+F35 room=11E1 spieler=(9108,5482) rot=4080 mo=200 pm=0 obj6=(0,0,0) b0 | AKTION
+F2 room=1211 spieler=(-26400,-2200) rot=0 mo=210 pm=0 obj6=(0,0,0) b0 |   -> Befehl 5 beendet: gedrueckt
+F3 room=1211 spieler=(-26400,-2200) rot=0 mo=210 pm=0 obj6=(0,0,0) b0 | RAUM 1211 geladen, Spieler frei (obj 6 = Slot 6)
+F32 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 6 beendet: Raum bereit
+F33 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,236)
+F33 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,236) = 1
+F33 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 7 beendet: gelesen
+F34 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,252)
+F34 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,252) = 0
+F34 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 8 beendet: gelesen
+F35 room=1211 spieler=(-26400,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-19350,-2200) tol 150
+F140 room=1211 spieler=(-19500,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 9 beendet: angekommen
+F141 room=1211 spieler=(-19500,-2200) rot=0 mo=200 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F142 room=1211 spieler=(-19500,-2200) rot=96 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F143 room=1211 spieler=(-19500,-2200) rot=192 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F144 room=1211 spieler=(-19500,-2200) rot=288 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F145 room=1211 spieler=(-19500,-2200) rot=384 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F146 room=1211 spieler=(-19500,-2200) rot=480 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F147 room=1211 spieler=(-19500,-2200) rot=576 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F148 room=1211 spieler=(-19500,-2200) rot=672 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F149 room=1211 spieler=(-19500,-2200) rot=768 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F150 room=1211 spieler=(-19500,-2200) rot=864 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F151 room=1211 spieler=(-19500,-2200) rot=960 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F152 room=1211 spieler=(-19500,-2200) rot=1056 mo=105 pm=0 obj6=(0,0,0) b0 | GEHE (-20007,-18800) tol 100
+F2366 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 10 beendet: angekommen
+F2367 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 10
+F2376 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 11 beendet: gewartet
+F2377 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,252)
+F2377 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,252) = 1
+F2377 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 12 beendet: gelesen
+F2378 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (4,96)
+F2378 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (4,96) = 1
+F2378 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 13 beendet: gelesen
+F2379 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (3,44)
+F2379 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (3,44) = 1
+F2379 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 14 beendet: gelesen
+F2380 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 | FLAG (9,83)
+F2380 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   FLAG (9,83) = 1
+F2380 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 15 beendet: gelesen
+F2381 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 | WARTE 60
+F2440 room=1211 spieler=(-19999,-18897) rot=2905 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 16 beendet: gewartet

@@ -1,0 +1,65 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/d1/runs/b1/wegplan_eingabe.txt: 27 Befehle
+F1 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 | RAUM 1101 geladen, Spieler frei (obj 6 = Slot 6)
+F30 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 0 beendet: Raum bereit
+F31 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 | GEGNERWEG
+F31 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 1 Typ 0x10 (-16453,-23817) freigegeben
+F31 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 2 Typ 0x10 (-14269,-25091) freigegeben
+F31 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 3 Typ 0x10 (-13814,-13989) freigegeben
+F31 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 4 Typ 0x10 (-15452,-11168) freigegeben
+F31 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   Gegner Slot 5 Typ 0x10 (-20275,-10713) freigegeben
+F31 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 |   -> Befehl 1 beendet: 5 Gegner weg
+F32 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj6=(0,0,0) b0 | OBJ 0
+F32 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 2 beendet: gesetzt
+F33 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | FLAG (3,103)
+F33 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   FLAG (3,103) = 1
+F33 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 3 beendet: gelesen
+F34 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | FLAG (4,232)
+F34 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   FLAG (4,232) = 0
+F34 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 4 beendet: gelesen
+F35 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | WARTE 8
+F42 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 5 beendet: gewartet
+F43 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | AKTION
+F45 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 6 beendet: gedrueckt
+F46 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | WARTE 100
+F145 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 7 beendet: gewartet
+F146 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | AKTION
+F148 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 8 beendet: gedrueckt
+F149 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | WARTE 100
+F248 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 9 beendet: gewartet
+F249 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | AKTION
+F251 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 10 beendet: gedrueckt
+F252 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | WARTE 100
+F351 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 11 beendet: gewartet
+F352 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | AKTION
+F354 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 12 beendet: gedrueckt
+F355 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | WARTE 40
+F394 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 13 beendet: gewartet
+F395 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | FLAG (5,6)
+F395 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   FLAG (5,6) = 1
+F395 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 |   -> Befehl 14 beendet: gelesen
+F396 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-19554,0,22684) b0 | WARTE 70
+F465 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 |   -> Befehl 15 beendet: gewartet
+F466 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 | FLAG (5,0)
+F466 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 |   FLAG (5,0) = 1
+F466 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 |   -> Befehl 16 beendet: gelesen
+F467 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 | WARTE 60
+F526 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 |   -> Befehl 17 beendet: gewartet
+F527 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 | FLAG (5,4)
+F527 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 |   FLAG (5,4) = 0
+F527 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 |   -> Befehl 18 beendet: gelesen
+F528 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-22554,0,18884) b0 | WARTE 40
+F567 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,18884) b0 |   -> Befehl 19 beendet: gewartet
+F568 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,18884) b0 | FLAG (5,5)
+F568 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,18884) b0 |   FLAG (5,5) = 1
+F568 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,18884) b0 |   -> Befehl 20 beendet: gelesen
+F569 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,18884) b0 | WARTE 60
+F1143 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,16284) b0 |   -> Befehl 21 beendet: gewartet
+F1144 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,16284) b0 | FLAG (5,5)
+F1144 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,16284) b0 |   FLAG (5,5) = 0
+F1144 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,16284) b0 |   -> Befehl 22 beendet: gelesen
+F1145 room=1101 spieler=(-25391,-10470) rot=-1008 mo=200 pm=0 obj0=(-16554,0,16284) b0 | WARTE 40
+F1184 room=1101 spieler=(-25391,-10470) rot=-1008 mo=210 pm=0 obj0=(-16554,0,16284) b0 |   -> Befehl 23 beendet: gewartet
+F1185 room=1101 spieler=(-25391,-10470) rot=-1008 mo=210 pm=0 obj0=(-16554,0,16284) b0 | FLAG (4,232)
+F1185 room=1101 spieler=(-25391,-10470) rot=-1008 mo=210 pm=0 obj0=(-16554,0,16284) b0 |   FLAG (4,232) = 1
+F1185 room=1101 spieler=(-25391,-10470) rot=-1008 mo=210 pm=0 obj0=(-16554,0,16284) b0 |   -> Befehl 24 beendet: gelesen
+F1186 room=1101 spieler=(-25391,-10470) rot=-1008 mo=210 pm=0 obj0=(-16554,0,16284) b0 | WARTE 3000

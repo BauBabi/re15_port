@@ -1,0 +1,31 @@
+[STAIRREG] slot=3 type=13 chain=8 side=0 count=2 corner=19500 extent=4300 centre=(21450,21650) half=(1350,2150)
+[STAIRREG] slot=4 type=13 chain=6 side=0 count=2 corner=19500 extent=4300 centre=(21450,21650) half=(1350,2150)
+[STAIRREG] slot=5 type=13 chain=6 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[STAIRREG] slot=6 type=13 chain=4 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[STAIRREG] slot=7 type=13 chain=4 side=0 count=1 corner=19500 extent=2300 centre=(21450,20650) half=(1350,1150)
+[STAIRREG] slot=8 type=13 chain=3 side=0 count=1 corner=19500 extent=2300 centre=(21450,20650) half=(1350,1150)
+[STAIRREG] slot=9 type=13 chain=3 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[STAIRREG] slot=10 type=13 chain=1 side=1 count=2 corner=20100 extent=4500 centre=(25350,22350) half=(1350,2250)
+[stairzone] slot=3 pos=(21450,21650) band=8 event=0 hw=1350 hh=2150
+[stairzone] slot=4 pos=(21450,21650) band=6 event=0 hw=1350 hh=2150
+[stairzone] slot=5 pos=(25350,22350) band=6 event=1 hw=1350 hh=2250
+[stairzone] slot=6 pos=(25350,22350) band=4 event=1 hw=1350 hh=2250
+[stairzone] slot=7 pos=(21450,20650) band=4 event=0 hw=1350 hh=1150
+[stairzone] slot=8 pos=(21450,20650) band=3 event=0 hw=1350 hh=1150
+[stairzone] slot=9 pos=(25350,22350) band=3 event=1 hw=1350 hh=2250
+[stairzone] slot=10 pos=(25350,22350) band=1 event=1 hw=1350 hh=2250
+[stairzone] player band=1 pos=(25303,-1800,24919) rot=1024
+[stair] START dir=UP cur_band=1 target_band=3 (straight to gait, no turn)
+[stair] START dir=UP cur_band=3 target_band=4 (straight to gait, no turn)
+[stair] START dir=UP cur_band=4 target_band=6 (straight to gait, no turn)
+[stair] START dir=UP cur_band=6 target_band=8 (straight to gait, no turn)
+[STAIRREG] slot=3 type=13 chain=8 side=0 count=2 corner=19800 extent=4400 centre=(25150,22000) half=(1350,2200)
+[STAIRREG] slot=4 type=13 chain=6 side=0 count=2 corner=19800 extent=4400 centre=(25150,22000) half=(1350,2200)
+[STAIRREG] slot=5 type=13 chain=6 side=1 count=2 corner=20700 extent=4300 centre=(21400,22850) half=(1200,2150)
+[STAIRREG] slot=6 type=13 chain=4 side=1 count=2 corner=20700 extent=4300 centre=(21400,22850) half=(1200,2150)
+[STAIRREG] slot=7 type=13 chain=4 side=0 count=2 corner=19800 extent=4400 centre=(25150,22000) half=(1350,2200)
+[STAIRREG] slot=8 type=13 chain=2 side=0 count=2 corner=19800 extent=4400 centre=(25150,22000) half=(1350,2200)
+[STAIRREG] slot=9 type=13 chain=2 side=1 count=2 corner=20700 extent=4300 centre=(21400,22850) half=(1200,2150)
+[STAIRREG] slot=10 type=13 chain=0 side=1 count=2 corner=20700 extent=4300 centre=(21400,22850) half=(1200,2150)
+[stair] START dir=UP cur_band=0 target_band=2 (straight to gait, no turn)
+[stair] START dir=UP cur_band=2 target_band=4 (straight to gait, no turn)

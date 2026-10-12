@@ -1,0 +1,309 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] Controller: "Xbox 360 Controller" (Slot 0)
+[input-script] RE15_INPUT_SCRIPT="W1" -> 30 ticks @ 30 fps, start frame 90
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM11E1.RDT (209684 bytes)
+[rdt] nCut=16 nDoor=0 nItem=0 zones=40 main_scd=586B sub=28 props=3
+[esp] room 11E1: 3 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] effect TIM (id 0x11) -> slot 38: 256x40
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 21 meshes
+[md1] heli body (RDT prop2): 1 meshes
+[tim] heli TIM (RDT prop2) in slot 2: 128x256
+[pl-part] PL04W01.EDD aus PLD/PL04W01.PLW geschnitten (+8, 1336 B)
+[pl-part] PL04W01.EMR aus PLD/PL04W01.PLW geschnitten (+1344, 17368 B)
+[w01] PL04W01 weapon-track: 15 bones, 14 clips, 217 kf
+[w03] PL04W03 gun-track: 15 bones, 14 clips, 243 kf
+[wpn] loaded 21/21 PL04W** in-hand meshes (textured from body-skin slot 0)
+[pl-part] PL04.EDD aus PLD/PL04.PLD geschnitten (+8, 3156 B)
+[skel] PL04: 15 bones, 24 clips, 705 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM11E1.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 217 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 243 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL04W**.PLW
+[messer] Startinventar Charakter 4: | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 16 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM11E1 = (5112,0,-5348) yaw=3072
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 11e1 (hp=100)
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-9072,0,-11954) rot=(3072,-1024,-1024)
+[scd] thread start slot=1 first_op=0x06
+[prop-member F0] prop[0] obj=0x00 m=1 → val=-6550
+[scd] thread start slot=10 first_op=0x06
+[evt] F0 room=11e1 Evt_exec sub=27 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x81C masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[enemy] RE2 EM010 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[enemy] Hybrid EM10: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(9108,0,5482) rot=4080
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(9108,0,5482) rot=4080
+[aot] DOOR FIRE slot=3 rect=(10450,5500,hw=750,hh=1000) target_cut=0 spawn=(-26400,0,-2200)
+[tuer] Sequenz Archiv 2 DOOR19 Variante 1 Bit7 0 Tuer 25 Seite S103 T056 Spender FF (10 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[room] PC loaded room1211.rdt (254616 bytes)
+[esp] room 1211: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21750,0,-20760) rot=(0,1225,0)
+[scd] thread start slot=10 first_op=0x2E
+[evt] F35 room=1211 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd] Plc_motion(entity=0, motion=28, flags=0x00) → slot=1
+[scd F35] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[rbj] room 1211 cinematic overlay: 11 clips, 264 kf
+[enemy] EM49 loaded: 15 meshes, 15 bones, 24 clips -> slot 11
+[pri] cut=0 pri_offset=0x4D4 masks=0 fg_atlas=0
+[walk] F30 cut=0 mo=200 af=24 frz=0 | pl pos=(-26400,0,-2200) rot=0
+[walk] F60 cut=0 mo=105 af=23 frz=0 | pl pos=(-24600,0,-2200) rot=0
+[bone]  0: rel=(0,-1690,0) world=(-24600,-1690,-2200)
+[F60] cut=0 sd=208
+  cut.pos=(-20142,-3348,-1512)
+  cut.target=(-25110,-1188,-2520)
+  cut.fov=26684
+  VT=(-2521,10973,-17190)
+  VR0=(-814,0,4015) VR1=(1579,3781,320) VR2=(-3707,1611,-752)
+  Player=(-24600,0,-2200) rot_y=0
+  pose[0].trans=(0,-1690,0)
+  bone_world=(-24600,-1690,-2200)
+  combined_trans=(211,-243,4812)
+  combined_rot[0..2]=(-479,35,4067)
+  proj sx=169 sy=109
+[bone]  1: rel=(0,-1690,0) world=(-24600,-1690,-2200)
+[bone]  2: rel=(-37,-1493,-140) world=(-24637,-1493,-2340)
+[bone]  3: rel=(-65,-885,-137) world=(-24665,-885,-2337)
+[bone]  4: rel=(-481,-187,-86) world=(-25081,-187,-2286)
+[bone]  5: rel=(-5,-1489,137) world=(-24605,-1489,-2063)
+[bone]  6: rel=(170,-907,117) world=(-24430,-907,-2083)
+[bone]  7: rel=(255,-98,107) world=(-24345,-98,-2093)
+[bone]  8: rel=(17,-2314,0) world=(-24583,-2314,-2200)
+[bone]  9: rel=(18,-2262,-286) world=(-24582,-2262,-2486)
+[bone] 10: rel=(21,-1853,-298) world=(-24579,-1853,-2498)
+[bone] 11: rel=(109,-1502,-319) world=(-24491,-1502,-2519)
+[bone] 12: rel=(-29,-2263,282) world=(-24629,-2263,-1918)
+[bone] 13: rel=(-73,-1856,293) world=(-24673,-1856,-1907)
+[bone] 14: rel=(-78,-1494,301) world=(-24678,-1494,-1899)
+[walk] F90 cut=0 mo=105 af=53 frz=0 | pl pos=(-22350,0,-2200) rot=0
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x4D8 masks=16 fg_atlas=1
+[walk] F120 cut=1 mo=105 af=83 frz=0 | pl pos=(-20100,0,-2200) rot=0
+[walk] F150 cut=1 mo=105 af=9 frz=0 | pl pos=(-19500,0,-2200) rot=960
+[walk] F180 cut=1 mo=105 af=26 frz=0 | pl pos=(-19581,0,-4198) rot=1056
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x634 masks=61 fg_atlas=1
+[walk] F210 cut=3 mo=105 af=56 frz=0 | pl pos=(-19671,0,-6418) rot=1056
+[walk] F240 cut=3 mo=105 af=86 frz=0 | pl pos=(-19761,0,-8638) rot=1056
+[walk] F270 cut=3 mo=105 af=116 frz=0 | pl pos=(-19851,0,-10858) rot=1056
+[light] cut 4 tint=(128,128,128)
+[pri] cut=4 pri_offset=0x99C masks=77 fg_atlas=1
+[prop-render] pi=0 oid=0x00 pos=(-21750,0,-20760) rot=(0,0,0) meshes=1
+[walk] F300 cut=4 mo=105 af=146 frz=0 | pl pos=(-19941,0,-13078) rot=1056
+[walk] F330 cut=4 mo=105 af=176 frz=0 | pl pos=(-20031,0,-15298) rot=1056
+[walk] F360 cut=4 mo=105 af=206 frz=0 | pl pos=(-20121,0,-17518) rot=1056
+[scd] thread start slot=10 first_op=0x22
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-20650,-25450) flag=0) walk_active=1
+[scd] Plc_dest(slot=0 mode=0x04 dest=(-20650,-25450) flag=0) walk_active=1
+[walk] F390 cut=4 mo=105 af=15 frz=0 | pl pos=(-20197,0,-19531) rot=1075
+[light] cut 5 tint=(128,128,128)
+[pri] cut=5 pri_offset=0xE40 masks=70 fg_atlas=1
+[walk] F420 cut=5 mo=105 af=45 frz=0 | pl pos=(-20377,0,-21781) rot=1075
+[walk] F450 cut=5 mo=105 af=75 frz=0 | pl pos=(-20557,0,-24031) rot=1069
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-25275,-25450) flag=0) walk_active=1
+[scd F480] Cut_chg(7)
+[walk] F480 cut=5 mo=1 af=2 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[light] cut 7 tint=(128,128,128)
+[pri] cut=7 pri_offset=0x1464 masks=70 fg_atlas=1
+[scd F510] Cut_chg(8)
+[msg] room=1211 id=0 savepoint=0
+[msgtext] room=1211 id=0 "Elza: Hey! You must be John right? Get up now!"
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[walk] F510 cut=7 mo=0 af=0 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[light] cut 8 tint=(128,128,128)
+[pri] cut=8 pri_offset=0x1824 masks=59 fg_atlas=1
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[scd F535] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F540 cut=8 mo=0 af=5 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=4, flags=0x00) → slot=0
+[walk] F570 cut=8 mo=4 af=10 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=4, flags=0x00) → slot=0
+[scd F585] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F600 cut=8 mo=4 af=15 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=2, flags=0x00) → slot=0
+[walk] F630 cut=8 mo=2 af=20 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd F640] Cut_chg(7)
+[msg] room=1211 id=1 savepoint=0
+[msgtext] room=1211 id=1 "John: What do you want? I'm trying to sleep here!"
+[scd] Plc_motion(entity=0, motion=2, flags=0x00) → slot=1
+[light] cut 7 tint=(128,128,128)
+[pri] cut=7 pri_offset=0x1464 masks=70 fg_atlas=1
+[walk] F660 cut=7 mo=2 af=50 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[walk] F690 cut=7 mo=2 af=80 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[walk] F720 cut=7 mo=2 af=110 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[walk] F750 cut=7 mo=2 af=140 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=1
+[walk] F780 cut=7 mo=2 af=170 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[msg] room=1211 id=2 savepoint=0
+[msgtext] room=1211 id=2 "John: Ughh... my head is killing me."
+[scd] Plc_motion(entity=0, motion=8, flags=0x00) → slot=1
+[walk] F810 cut=7 mo=2 af=200 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[walk] F840 cut=7 mo=2 af=230 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[walk] F870 cut=7 mo=2 af=260 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=8, flags=0x00) → slot=1
+[scd F900] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[walk] F900 cut=7 mo=2 af=290 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_dest(slot=1 mode=0x04 dest=(-22825,-25450)) -> state4/sub4 (Sub-VM-WALK)
+[walk] F930 cut=7 mo=2 af=320 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[msg] room=1211 id=3 savepoint=0
+[msgtext] room=1211 id=3 "John: Who the hell are you anyway?"
+[scd] Plc_motion(entity=0, motion=10, flags=0x00) → slot=1
+[walk] F960 cut=7 mo=2 af=350 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=10, flags=0x00) → slot=1
+[scd F984] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[walk] F990 cut=7 mo=2 af=380 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=11, flags=0x00) → slot=1
+[walk] F1020 cut=7 mo=2 af=410 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=11, flags=0x00) → slot=1
+[scd F1034] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[walk] F1050 cut=7 mo=2 af=440 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=12, flags=0x00) → slot=1
+[scd F1079] Cut_chg(8)
+[msg] room=1211 id=4 savepoint=0
+[msgtext] room=1211 id=4 "Elza: My name's Elza. Roy sent me to get you out of here."
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=0
+[light] cut 8 tint=(128,128,128)
+[pri] cut=8 pri_offset=0x1824 masks=59 fg_atlas=1
+[walk] F1080 cut=8 mo=3 af=1 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=0
+[scd F1104] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F1110 cut=8 mo=3 af=6 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=1, flags=0x00) → slot=0
+[walk] F1140 cut=8 mo=1 af=11 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_motion(entity=0, motion=1, flags=0x00) → slot=0
+[scd F1154] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F1170 cut=8 mo=1 af=16 frz=0 | pl pos=(-20647,0,-25381) rot=2037
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-20650,-22075) flag=0) walk_active=1
+[walk] F1200 cut=8 mo=1 af=46 frz=0 | pl pos=(-20647,0,-25381) rot=2229
+[scd] Plc_dest(slot=0 mode=0x04 dest=(-20650,-22075) flag=0) walk_active=1
+[walk] F1230 cut=8 mo=105 af=20 frz=0 | pl pos=(-20650,0,-23881) rot=3072
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-22525,-22075) flag=0) walk_active=1
+[walk] F1260 cut=8 mo=1 af=8 frz=0 | pl pos=(-20650,0,-22156) rot=2400
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-22825,-21825)) -> state4/sub9 (Sub-VM-WALK)
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[walk] F1290 cut=8 mo=0 af=13 frz=0 | pl pos=(-20650,0,-22156) rot=2077
+[walk] F1320 cut=8 mo=0 af=43 frz=0 | pl pos=(-20650,0,-22156) rot=2077
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[scd F1337] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F1350 cut=8 mo=0 af=13 frz=0 | pl pos=(-20650,0,-22156) rot=2077
+[walk] F1380 cut=8 mo=0 af=43 frz=0 | pl pos=(-20650,0,-22156) rot=2077
+[scd] Plc_dest(slot=0 mode=0x08 dest=(-18400,-21825) flag=0) walk_active=1
+[walk] F1410 cut=8 mo=236 af=3 frz=0 | pl pos=(-20374,0,-22128) rot=1949
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-20650,-21825) flag=0) walk_active=1
+[scd F1439] Cut_chg(5)
+[scd] Plc_dest(slot=1 mode=0x04 dest=(-22825,-21825)) -> state4/sub4 (Sub-VM-WALK)
+[light] cut 5 tint=(128,128,128)
+[pri] cut=5 pri_offset=0xE40 masks=70 fg_atlas=1
+[walk] F1440 cut=5 mo=1 af=1 frz=0 | pl pos=(-18446,0,-21834) rot=2051
+[walk] F1470 cut=5 mo=2 af=15 frz=0 | pl pos=(-18446,0,-21834) rot=2051
+[scd] Plc_dest(slot=1 mode=0x04 dest=(-20650,-21825)) -> state4/sub4 (Sub-VM-WALK)
+[walk] F1500 cut=5 mo=2 af=45 frz=0 | pl pos=(-18446,0,-21834) rot=2051
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-19550,-20025)) -> state4/sub9 (Sub-VM-WALK)
+[walk] F1530 cut=5 mo=2 af=23 frz=0 | pl pos=(-18446,0,-21834) rot=2051
+[scd] Plc_dest(slot=1 mode=0x04 dest=(-19550,-20025)) -> state4/sub4 (Sub-VM-WALK)
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-19550,-20025) flag=0) walk_active=1
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-18400,-21825)) -> state4/sub9 (Sub-VM-WALK)
+[walk] F1560 cut=5 mo=2 af=8 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=12, flags=0x00) → slot=1
+[msg] room=1211 id=5 savepoint=0
+[msgtext] room=1211 id=5 "Elza: Listen. We're in serious trouble. The whole station is crawling with zombies!"
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[walk] F1590 cut=5 mo=0 af=15 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[scd F1600] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F1620 cut=5 mo=0 af=20 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=1, flags=0x00) → slot=0
+[scd] Plc_motion(entity=0, motion=1, flags=0x00) → slot=0
+[scd F1650] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F1650 cut=5 mo=1 af=0 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=2, flags=0x00) → slot=0
+[walk] F1680 cut=5 mo=2 af=5 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[F1700-leon-root] world=(-18446,0,-21834) view=(-1090,-89,6293) sd=208 screen=(124.0,117.1) cam_pos=(-18612,-3276,-15570) cam_tgt=(-20106,-648,-25002) cut=5 visible=1
+[msg] room=1211 id=6 savepoint=0
+[msgtext] room=1211 id=6 "John: Say what!?"
+[scd] Plc_motion(entity=0, motion=9, flags=0x00) → slot=1
+[walk] F1710 cut=5 mo=2 af=35 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F1740 cut=5 mo=2 af=65 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[F1750-leon-root] world=(-18446,0,-21834) view=(-1193,-114,6392) sd=208 screen=(121.2,116.3) cam_pos=(-18612,-3276,-15570) cam_tgt=(-20106,-648,-25002) cut=5 visible=1
+[scd] Plc_motion(entity=0, motion=9, flags=0x00) → slot=1
+[scd F1755] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[walk] F1770 cut=5 mo=2 af=95 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F1800 cut=5 mo=2 af=125 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[F1800-leon-root] world=(-18446,0,-21834) view=(-1193,-114,6392) sd=208 screen=(121.2,116.3) cam_pos=(-18612,-3276,-15570) cam_tgt=(-20106,-648,-25002) cut=5 visible=1
+[scd] Plc_motion(entity=0, motion=12, flags=0x00) → slot=1
+[msg] room=1211 id=7 savepoint=0
+[msgtext] room=1211 id=7 "Elza: Roy was injured by one of them. I left him in the Interrogation Room, but..."
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=0
+[walk] F1830 cut=5 mo=3 af=5 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F1860 cut=5 mo=3 af=35 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F1890 cut=5 mo=3 af=65 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=0
+[scd F1915] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F1920 cut=5 mo=3 af=5 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=9, flags=0x00) → slot=0
+[walk] F1950 cut=5 mo=9 af=10 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[msg] room=1211 id=8 savepoint=0
+[msgtext] room=1211 id=8 "John: The interrogation room? Alright. I'm going there."
+[scd] Plc_motion(entity=0, motion=11, flags=0x00) → slot=1
+[walk] F1980 cut=5 mo=9 af=40 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=11, flags=0x00) → slot=1
+[scd F1985] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[scd] Plc_motion(entity=0, motion=8, flags=0x00) → slot=1
+[walk] F2010 cut=5 mo=9 af=70 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=8, flags=0x00) → slot=1
+[scd F2035] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[walk] F2040 cut=5 mo=9 af=100 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-19550,-6486)) -> state4/sub9 (Sub-VM-WALK)
+[walk] F2070 cut=5 mo=9 af=130 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_dest(slot=1 mode=0x05 dest=(-19550,-6486)) -> state4/sub5 (Sub-VM-WALK)
+[msg] room=1211 id=9 savepoint=0
+[msgtext] room=1211 id=9 "Elza: John. Wait!"
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[walk] F2100 cut=5 mo=0 af=11 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F2130 cut=5 mo=0 af=41 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=0
+[scd F2139] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+[walk] F2160 cut=5 mo=0 af=21 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F2190 cut=5 mo=0 af=48 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F2220 cut=5 mo=0 af=48 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F2250 cut=5 mo=0 af=48 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F2280 cut=5 mo=0 af=48 frz=0 | pl pos=(-18446,0,-21834) rot=2713
+[walk] F2310 cut=5 mo=105 af=0 frz=0 | pl pos=(-18485,0,-21771) rot=2713
+[scd F2317] letterbox closed -> gameplay (player_mode=0)
+[walk] F2340 cut=5 mo=105 af=30 frz=0 | pl pos=(-19615,0,-19857) rot=2761
+[light] cut 4 tint=(128,128,128)
+[pri] cut=4 pri_offset=0x99C masks=77 fg_atlas=1
+[walk] F2370 cut=4 mo=200 af=8 frz=0 | pl pos=(-19999,0,-18897) rot=2905
+[walk] F2400 cut=4 mo=200 af=38 frz=0 | pl pos=(-19999,0,-18897) rot=2905
+[walk] F2430 cut=4 mo=200 af=68 frz=0 | pl pos=(-19999,0,-18897) rot=2905
+[walk] F2460 cut=4 mo=200 af=98 frz=0 | pl pos=(-19999,0,-18897) rot=2905
+[flow] EXIT_AT: Bild 2480 in Raum 1211 erreicht -> exit

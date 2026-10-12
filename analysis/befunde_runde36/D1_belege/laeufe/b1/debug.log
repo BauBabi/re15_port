@@ -1,0 +1,325 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] Controller: "Xbox 360 Controller" (Slot 0)
+[input-script] RE15_INPUT_SCRIPT="W1" -> 30 ticks @ 30 fps, start frame 90
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1101.RDT (181704 bytes)
+[rdt] nCut=13 nDoor=0 nItem=0 zones=25 main_scd=66B sub=9 props=1
+[esp] room 1101: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 21 meshes
+[pl-part] PL04W01.EDD aus PLD/PL04W01.PLW geschnitten (+8, 1336 B)
+[pl-part] PL04W01.EMR aus PLD/PL04W01.PLW geschnitten (+1344, 17368 B)
+[w01] PL04W01 weapon-track: 15 bones, 14 clips, 217 kf
+[w03] PL04W03 gun-track: 15 bones, 14 clips, 243 kf
+[wpn] loaded 21/21 PL04W** in-hand meshes (textured from body-skin slot 0)
+[pl-part] PL04.EDD aus PLD/PL04.PLD geschnitten (+8, 3156 B)
+[skel] PL04: 15 bones, 24 clips, 705 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1101.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 217 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 243 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL04W**.PLW
+[messer] Startinventar Charakter 4: | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 13 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1101 = (-20900,0,-10336) yaw=1024
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 1101 (hp=100)
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[light] cut 6 tint=(128,128,128)
+[pri] cut=6 pri_offset=0x620 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[enemy] RE2 EM010 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[enemy] Hybrid EM10: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[walk] F0 cut=6 mo=200 af=0 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[walk] F30 cut=6 mo=200 af=30 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x2B
+[msg] room=1101 id=1 savepoint=0
+[msgtext] room=1101 id=1 "It's a control panel.A type of voice device is required to open the lock."
+[walk] F60 cut=6 mo=200 af=43 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[bone]  0: rel=(0,-1723,0) world=(-25391,-1723,-10470)
+[F60] cut=6 sd=208
+  cut.pos=(-19062,-3528,-11304)
+  cut.target=(-25992,-1332,-10638)
+  cut.fov=26684
+  VT=(13103,8754,-16022)
+  VR0=(392,0,4087) VR1=(1230,3900,-119) VR2=(-3892,1233,373)
+  Player=(-25391,0,-10470) rot_y=-1008
+  pose[0].trans=(0,-1723,0)
+  bone_world=(-25391,-1723,-10470)
+  combined_trans=(226,-208,6632)
+  combined_rot[0..2]=(4093,111,-292)
+  proj sx=167 sy=113
+[bone]  1: rel=(0,-1723,0) world=(-25391,-1723,-10470)
+[bone]  2: rel=(-30,-1525,-140) world=(-25252,-1525,-10504)
+[bone]  3: rel=(-65,-918,-165) world=(-25228,-918,-10540)
+[bone]  4: rel=(-113,-106,-196) world=(-25198,-106,-10588)
+[bone]  5: rel=(-30,-1525,139) world=(-25531,-1525,-10497)
+[bone]  6: rel=(-62,-917,157) world=(-25550,-917,-10529)
+[bone]  7: rel=(-105,-104,180) world=(-25574,-104,-10571)
+[bone]  8: rel=(-39,-2346,0) world=(-25392,-2346,-10509)
+[bone]  9: rel=(-56,-2293,-285) world=(-25108,-2293,-10534)
+[bone] 10: rel=(-75,-1885,-298) world=(-25095,-1885,-10553)
+[bone] 11: rel=(-20,-1530,-345) world=(-25047,-1530,-10499)
+[bone] 12: rel=(-56,-2293,285) world=(-25678,-2293,-10519)
+[bone] 13: rel=(-101,-1887,299) world=(-25693,-1887,-10564)
+[bone] 14: rel=(-24,-1536,340) world=(-25732,-1536,-10486)
+[walk] F90 cut=6 mo=200 af=43 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F120 cut=6 mo=200 af=43 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F150 cut=6 mo=200 af=43 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F180 cut=6 mo=200 af=43 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F210 cut=6 mo=200 af=43 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F240 cut=6 mo=200 af=43 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[msg] room=1101 id=3 savepoint=0
+[msgtext] room=1101 id=3 "Will you use the Minidisc Player w/ Disc?"
+[walk] F270 cut=6 mo=200 af=44 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F300 cut=6 mo=200 af=44 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F330 cut=6 mo=200 af=44 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[msg] room=1101 id=3 savepoint=0
+[scd F355] Cut_chg(12)
+[light] cut 12 tint=(128,128,128)
+[pri] cut=12 pri_offset=0x638 masks=0 fg_atlas=0
+[prop-render] pi=0 oid=0x00 pos=(-19554,-900,22684) rot=(0,0,0) meshes=1
+[walk] F360 cut=12 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F390 cut=12 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x2E
+[evt] F401 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F402 room=1101 Evt_exec sub=6 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F403 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F404 room=1101 Evt_exec sub=6 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F405 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F406 room=1101 Evt_exec sub=6 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F407 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F408 room=1101 Evt_exec sub=6 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F409 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F410 room=1101 Evt_exec sub=6 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F411 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F412 room=1101 Evt_exec sub=6 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F413 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F414 room=1101 Evt_exec sub=6 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F415 room=1101 Evt_exec sub=6 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[walk] F420 cut=12 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x2E
+[evt] F431 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F432 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F433 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F434 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F435 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F436 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F437 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F438 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F439 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F440 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F441 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F442 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F443 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F444 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F445 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F446 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F447 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F448 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F449 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[walk] F450 cut=12 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x22
+[evt] F471 room=1101 Evt_exec sub=8 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd F471] Cut_chg(7)
+[light] cut 7 tint=(128,128,128)
+[pri] cut=7 pri_offset=0x624 masks=0 fg_atlas=0
+[walk] F480 cut=7 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd F501] Cut_chg(8)
+[light] cut 8 tint=(128,128,128)
+[pri] cut=8 pri_offset=0x628 masks=0 fg_atlas=0
+[walk] F510 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x2E
+[evt] F531 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F532 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F533 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F534 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F535 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F536 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F537 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F538 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F539 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F540 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[walk] F540 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x2E
+[evt] F541 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F542 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F543 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F544 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F545 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F546 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F547 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F548 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F549 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F550 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F551 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F552 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F553 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F554 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F555 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F556 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F557 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F558 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F559 room=1101 Evt_exec sub=5 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F560 room=1101 Evt_exec sub=5 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[walk] F570 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x2E
+[evt] F581 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F582 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F583 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F584 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F585 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F586 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F587 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F588 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F589 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F590 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F591 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=11 first_op=0x2E
+[evt] F592 room=1101 Evt_exec sub=4 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] thread start slot=10 first_op=0x2E
+[evt] F593 room=1101 Evt_exec sub=4 cond=0xff -> slot 10 (aktive Event-Slots 2) flag(3,0x80)=0
+[walk] F600 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd] thread start slot=10 first_op=0x22
+[evt] F621 room=1101 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[msg] room=1101 id=4 savepoint=0
+[msgtext] room=1101 id=4 "You've used the Minidisc Player w/ Disc."
+[walk] F630 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F660 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F690 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F720 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F750 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F780 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F810 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F840 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F870 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F900 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F930 cut=8 mo=200 af=47 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd F951] Cut_chg(12)
+[light] cut 12 tint=(128,128,128)
+[pri] cut=12 pri_offset=0x638 masks=0 fg_atlas=0
+[scd F956] Cut_chg(11)
+[light] cut 11 tint=(128,128,128)
+[pri] cut=11 pri_offset=0x634 masks=0 fg_atlas=0
+[walk] F960 cut=11 mo=200 af=57 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd F961] Cut_chg(12)
+[light] cut 12 tint=(128,128,128)
+[pri] cut=12 pri_offset=0x638 masks=0 fg_atlas=0
+[scd F966] Cut_chg(11)
+[light] cut 11 tint=(128,128,128)
+[pri] cut=11 pri_offset=0x634 masks=0 fg_atlas=0
+[scd F971] Cut_chg(12)
+[light] cut 12 tint=(128,128,128)
+[pri] cut=12 pri_offset=0x638 masks=0 fg_atlas=0
+[scd F976] Cut_chg(11)
+[light] cut 11 tint=(128,128,128)
+[pri] cut=11 pri_offset=0x634 masks=0 fg_atlas=0
+[msg] room=1101 id=2 savepoint=0
+[msgtext] room=1101 id=2 "You've opened the lock."
+[walk] F990 cut=11 mo=200 af=77 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1020 cut=11 mo=200 af=77 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1050 cut=11 mo=200 af=77 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1080 cut=11 mo=200 af=77 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1110 cut=11 mo=200 af=77 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[scd F1122] Cut_chg(6)
+[light] cut 6 tint=(128,128,128)
+[pri] cut=6 pri_offset=0x620 masks=0 fg_atlas=0
+[scd F1136] letterbox closed -> gameplay (player_mode=0)
+[walk] F1140 cut=6 mo=200 af=97 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1170 cut=6 mo=200 af=127 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1200 cut=6 mo=211 af=4 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1230 cut=6 mo=211 af=34 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1260 cut=6 mo=211 af=64 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[walk] F1290 cut=6 mo=211 af=94 frz=0 | pl pos=(-25391,0,-10470) rot=-1008
+[save] saved (room 1101) slot n=4 -> next=5; card=none (slot -1 qty -1)
+[save] SAVE_TEST_EXIT_AFTER: 1 saves -> exit

@@ -1,0 +1,324 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r36_integration/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] Controller: "Xbox 360 Controller" (Slot 0)
+[input-script] RE15_INPUT_SCRIPT="W1" -> 30 ticks @ 30 fps, start frame 90
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1051.RDT (243976 bytes)
+[rdt] nCut=10 nDoor=0 nItem=0 zones=22 main_scd=354B sub=4 props=2
+[esp] room 1051: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 21 meshes
+[pl-part] PL04W01.EDD aus PLD/PL04W01.PLW geschnitten (+8, 1336 B)
+[pl-part] PL04W01.EMR aus PLD/PL04W01.PLW geschnitten (+1344, 17368 B)
+[w01] PL04W01 weapon-track: 15 bones, 14 clips, 217 kf
+[w03] PL04W03 gun-track: 15 bones, 14 clips, 243 kf
+[wpn] loaded 21/21 PL04W** in-hand meshes (textured from body-skin slot 0)
+[pl-part] PL04.EDD aus PLD/PL04.PLD geschnitten (+8, 3156 B)
+[skel] PL04: 15 bones, 24 clips, 705 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1051.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 217 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 243 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL04W**.PLW
+[messer] Startinventar Charakter 4: | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 10 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1051 = (14700,0,-13500) yaw=0
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 1051 (hp=100)
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(14775,0,-10125) rot=(0,1199,0)
+[scd] thread start slot=1 first_op=0x06
+[dokumente] Boot-Weg: Prop obj_id=2 im Pool (slot 1, Raum 1051)
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x4FC masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(20600,0,12350) rot=2048
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(20600,0,12350) rot=2048
+[walk] F60 cut=0 mo=105 af=24 frz=0 | pl pos=(18750,0,12100) rot=1952
+[bone]  0: rel=(0,-1701,0) world=(18750,-1701,12100)
+[F60] cut=0 sd=208
+  cut.pos=(14349,-3547,11418)
+  cut.target=(24168,-87,13522)
+  cut.fov=26684
+  VT=(8166,8731,-14406)
+  VR0=(859,0,-4009) VR1=(-1310,3879,-281) VR2=(3796,1338,813)
+  Player=(18750,0,12100) rot_y=1952
+  pose[0].trans=(0,-1701,0)
+  bone_world=(18750,-1701,12100)
+  combined_trans=(255,293,4816)
+  combined_rot[0..2]=(77,0,4099)
+  proj sx=171 sy=133
+[bone]  1: rel=(0,-1701,0) world=(18750,-1701,12100)
+[bone]  2: rel=(-37,-1506,-143) world=(18765,-1506,12246)
+[bone]  3: rel=(-18,-898,-146) world=(18746,-898,12247)
+[bone]  4: rel=(-453,-212,-93) world=(19184,-212,12257)
+[bone]  5: rel=(-6,-1498,134) world=(18775,-1498,11968)
+[bone]  6: rel=(152,-911,111) world=(18615,-911,11968)
+[bone]  7: rel=(189,-98,99) world=(18577,-98,11974)
+[bone]  8: rel=(18,-2325,0) world=(18732,-2325,12097)
+[bone]  9: rel=(20,-2273,-286) world=(18688,-2273,12380)
+[bone] 10: rel=(16,-1864,-301) world=(18690,-1864,12395)
+[bone] 11: rel=(101,-1513,-321) world=(18603,-1513,12402)
+[bone] 12: rel=(-28,-2274,282) world=(18818,-2274,11825)
+[bone] 13: rel=(-64,-1867,296) world=(18856,-1867,11816)
+[bone] 14: rel=(-67,-1505,308) world=(18861,-1505,11805)
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x500 masks=0 fg_atlas=0
+[walk] F90 cut=1 mo=200 af=0 frz=0 | pl pos=(17208,0,11846) rot=1856
+[walk] F120 cut=1 mo=105 af=20 frz=0 | pl pos=(16053,0,10796) rot=1568
+[walk] F150 cut=1 mo=200 af=0 frz=0 | pl pos=(14962,0,9686) rot=1424
+[walk] F180 cut=1 mo=105 af=19 frz=0 | pl pos=(14942,0,8206) rot=1040
+[walk] F210 cut=1 mo=105 af=49 frz=0 | pl pos=(14912,0,5986) rot=1040
+[light] cut 2 tint=(128,128,128)
+[pri] cut=2 pri_offset=0x504 masks=0 fg_atlas=0
+[walk] F240 cut=2 mo=105 af=79 frz=0 | pl pos=(14882,0,3766) rot=1040
+[walk] F270 cut=2 mo=105 af=109 frz=0 | pl pos=(14852,0,1546) rot=1040
+[walk] F300 cut=2 mo=105 af=139 frz=0 | pl pos=(14822,0,-674) rot=1040
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x508 masks=0 fg_atlas=0
+[prop-render] pi=0 oid=0x01 pos=(14775,0,-10125) rot=(0,1199,0) meshes=1
+[prop-render] pi=1 oid=0x02 pos=(16474,-360,-6592) rot=(0,0,0) meshes=1
+[walk] F330 cut=3 mo=105 af=169 frz=0 | pl pos=(14792,0,-2894) rot=1040
+[walk] F360 cut=3 mo=105 af=199 frz=0 | pl pos=(14762,0,-5114) rot=1040
+[walk] F390 cut=3 mo=105 af=229 frz=0 | pl pos=(14732,0,-7334) rot=1040
+[walk] F420 cut=3 mo=105 af=259 frz=0 | pl pos=(14702,0,-9554) rot=1040
+[light] cut 4 tint=(128,128,128)
+[pri] cut=4 pri_offset=0x50C masks=0 fg_atlas=0
+[walk] F450 cut=4 mo=105 af=289 frz=0 | pl pos=(14672,0,-11774) rot=1040
+[walk] F480 cut=4 mo=105 af=1 frz=0 | pl pos=(14670,0,-13402) rot=944
+[walk] F510 cut=4 mo=105 af=11 frz=0 | pl pos=(15576,0,-13658) rot=80
+[aot] DOOR FIRE slot=4 rect=(17200,-13700,hw=500,hh=1000) target_cut=0 spawn=(26200,-14400,24800)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 0 Bit7 0 Tuer 7 Seite S021 T013 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[walk] F540 cut=4 mo=200 af=7 frz=0 | pl pos=(16094,0,-13701) rot=-16
+[room] PC loaded room10a1.rdt (101164 bytes)
+[esp] room 10A1: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[rbj] room 10A1 has no RBJ (RBJ/ROOM10A1.RBJ) — Leon auf PL00-Basis zurueckgesetzt (Arena-Reset @0x80039738)
+[pri] cut=0 pri_offset=0x564 masks=0 fg_atlas=0
+[walk] F30 cut=0 mo=200 af=24 frz=0 | pl pos=(26200,-14400,24800) rot=2048
+[walk] F60 cut=0 mo=105 af=0 frz=0 | pl pos=(26185,-14400,25318) rot=3152
+[bone]  0: rel=(0,-1721,0) world=(26185,-16121,25318)
+[F60] cut=0 sd=208
+  cut.pos=(20846,-19689,18715)
+  cut.target=(26478,-9771,32557)
+  cut.fov=26684
+  VT=(-12287,30470,-10142)
+  VR0=(3803,0,-1547) VR1=(-860,3420,-2113) VR2=(1291,2275,3175)
+  Player=(26185,-14400,25318) rot_y=3152
+  pose[0].trans=(0,-1721,0)
+  bone_world=(26185,-16121,25318)
+  combined_trans=(2462,-1550,8782)
+  combined_rot[0..2]=(-1071,-17,-3963)
+  proj sx=218 sy=83
+[bone]  1: rel=(0,-1721,0) world=(26185,-16121,25318)
+[bone]  2: rel=(-25,-1526,-145) world=(26325,-15926,25275)
+[bone]  3: rel=(8,-919,-169) world=(26353,-15319,25305)
+[bone]  4: rel=(-53,-108,-202) world=(26378,-14508,25240)
+[bone]  5: rel=(-30,-1520,134) world=(26048,-15920,25304)
+[bone]  6: rel=(-54,-912,144) world=(26035,-15312,25282)
+[bone]  7: rel=(-121,-101,156) world=(26015,-14501,25217)
+[bone]  8: rel=(-31,-2344,0) world=(26181,-16744,25287)
+[bone]  9: rel=(-49,-2292,-285) world=(26461,-16692,25234)
+[bone] 10: rel=(-75,-1884,-300) world=(26473,-16284,25206)
+[bone] 11: rel=(-22,-1528,-341) world=(26520,-15928,25254)
+[bone] 12: rel=(-49,-2292,285) world=(25896,-16692,25304)
+[bone] 13: rel=(-77,-1884,299) world=(25878,-16284,25278)
+[bone] 14: rel=(0,-1532,335) world=(25852,-15932,25358)
+[walk] F90 cut=0 mo=105 af=10 frz=0 | pl pos=(25380,-14400,25447) rot=2096
+[walk] F120 cut=0 mo=105 af=40 frz=0 | pl pos=(23154,-14400,25567) rot=2048
+[walk] F150 cut=0 mo=200 af=0 frz=0 | pl pos=(21604,-14400,25433) rot=1856
+[walk] F180 cut=0 mo=105 af=5 frz=0 | pl pos=(21454,-14400,24952) rot=1040
+[walk] F210 cut=0 mo=220 af=0 frz=0 | pl pos=(21446,-14400,24360) rot=1024
+[walk] F240 cut=0 mo=220 af=29 frz=0 | pl pos=(21417,-12588,22384) rot=1024
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x568 masks=0 fg_atlas=0
+[walk] F270 cut=1 mo=220 af=29 frz=0 | pl pos=(21388,-10807,20407) rot=1024
+[walk] F300 cut=1 mo=200 af=27 frz=0 | pl pos=(21387,-10800,19232) rot=1024
+[walk] F330 cut=1 mo=200 af=57 frz=0 | pl pos=(21387,-10800,19232) rot=1024
+[walk] F360 cut=1 mo=200 af=87 frz=0 | pl pos=(21387,-10800,19232) rot=1024
+[walk] F390 cut=1 mo=105 af=6 frz=0 | pl pos=(21947,-10800,19041) rot=64
+[walk] F420 cut=1 mo=105 af=36 frz=0 | pl pos=(24167,-10800,18891) rot=16
+[walk] F450 cut=1 mo=105 af=0 frz=0 | pl pos=(25272,-10800,18975) rot=-128
+[walk] F480 cut=1 mo=200 af=0 frz=0 | pl pos=(25363,-10800,19433) rot=-1088
+[walk] F510 cut=1 mo=220 af=18 frz=0 | pl pos=(25361,-9789,20895) rot=3072
+[light] cut 2 tint=(128,128,128)
+[pri] cut=2 pri_offset=0x56C masks=0 fg_atlas=0
+[walk] F540 cut=2 mo=220 af=18 frz=0 | pl pos=(25390,-8008,22872) rot=3072
+[walk] F570 cut=2 mo=200 af=16 frz=0 | pl pos=(25408,-7200,24818) rot=3072
+[walk] F600 cut=2 mo=200 af=46 frz=0 | pl pos=(25408,-7200,24818) rot=3072
+[walk] F630 cut=2 mo=200 af=76 frz=0 | pl pos=(25408,-7200,24818) rot=3072
+[walk] F660 cut=2 mo=105 af=4 frz=0 | pl pos=(25038,-7200,24853) rot=2112
+[walk] F690 cut=2 mo=105 af=9 frz=0 | pl pos=(23428,-7200,25014) rot=2112
+[walk] F720 cut=2 mo=105 af=1 frz=0 | pl pos=(21726,-7200,25175) rot=2112
+[walk] F750 cut=2 mo=105 af=9 frz=0 | pl pos=(21548,-7200,24449) rot=1056
+[light] cut 3 tint=(128,128,128)
+[pri] cut=3 pri_offset=0x570 masks=0 fg_atlas=0
+[walk] F780 cut=3 mo=200 af=6 frz=0 | pl pos=(21479,-7200,22747) rot=1056
+[walk] F810 cut=3 mo=220 af=8 frz=0 | pl pos=(21455,-6650,21645) rot=1024
+[light] cut 4 tint=(128,128,128)
+[pri] cut=4 pri_offset=0x574 masks=0 fg_atlas=0
+[walk] F840 cut=4 mo=200 af=6 frz=0 | pl pos=(21431,-5400,19232) rot=1024
+[walk] F870 cut=4 mo=200 af=36 frz=0 | pl pos=(21431,-5400,19232) rot=1024
+[walk] F900 cut=4 mo=200 af=66 frz=0 | pl pos=(21431,-5400,19232) rot=1024
+[walk] F930 cut=4 mo=200 af=2 frz=0 | pl pos=(21431,-5400,19082) rot=1024
+[walk] F960 cut=4 mo=105 af=15 frz=0 | pl pos=(22615,-5400,18970) rot=64
+[light] cut 5 tint=(128,128,128)
+[pri] cut=5 pri_offset=0x578 masks=0 fg_atlas=0
+[walk] F990 cut=5 mo=105 af=45 frz=0 | pl pos=(24835,-5400,18900) rot=-32
+[walk] F1020 cut=5 mo=105 af=2 frz=0 | pl pos=(25347,-5400,18987) rot=-416
+[walk] F1050 cut=5 mo=200 af=5 frz=0 | pl pos=(25351,-5400,19579) rot=-1088
+[light] cut 6 tint=(128,128,128)
+[pri] cut=6 pri_offset=0x57C masks=0 fg_atlas=0
+[walk] F1080 cut=6 mo=220 af=27 frz=0 | pl pos=(25380,-3584,21413) rot=3072
+[light] cut 7 tint=(128,128,128)
+[pri] cut=7 pri_offset=0x580 masks=0 fg_atlas=0
+[walk] F1110 cut=7 mo=220 af=27 frz=0 | pl pos=(25409,-1803,23390) rot=3072
+[walk] F1140 cut=7 mo=200 af=25 frz=0 | pl pos=(25410,-1800,24818) rot=3072
+[walk] F1170 cut=7 mo=200 af=55 frz=0 | pl pos=(25410,-1800,24818) rot=3072
+[walk] F1200 cut=7 mo=200 af=85 frz=0 | pl pos=(25410,-1800,24818) rot=3072
+[walk] F1230 cut=7 mo=105 af=14 frz=0 | pl pos=(24330,-1800,25088) rot=2208
+[light] cut 8 tint=(128,128,128)
+[pri] cut=8 pri_offset=0x584 masks=0 fg_atlas=0
+[walk] F1260 cut=8 mo=105 af=44 frz=0 | pl pos=(22148,-1800,25499) rot=2112
+[walk] F1290 cut=8 mo=200 af=1 frz=0 | pl pos=(21260,-1800,25501) rot=2064
+[aot] DOOR FIRE slot=2 rect=(21250,26350,hw=1000,hh=350) target_cut=2 spawn=(5112,0,-5348)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S036 T021 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[room] PC loaded room11e1.rdt (209684 bytes)
+[esp] room 11E1: 3 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] effect TIM (id 0x11) -> slot 38: 256x40
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-9072,0,-11954) rot=(3072,-1024,-1024)
+[prop-member F1306] prop[0] obj=0x00 m=1 → val=-6550
+[scd] thread start slot=10 first_op=0x06
+[evt] F1306 room=11e1 Evt_exec sub=27 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[rbj] room 11E1 has no RBJ (RBJ/ROOM11E1.RBJ) — Leon auf PL00-Basis zurueckgesetzt (Arena-Reset @0x80039738)
+[enemy] RE2 EM010 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[enemy] Hybrid EM10: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[pri] cut=2 pri_offset=0x88C masks=13 fg_atlas=1
+[walk] F30 cut=2 mo=200 af=24 frz=0 | pl pos=(5112,0,-5348) rot=3072
+[walk] F60 cut=2 mo=105 af=13 frz=0 | pl pos=(6120,0,-5096) rot=3936
+[bone]  0: rel=(0,-1722,0) world=(6120,-1722,-5096)
+[F60] cut=2 sd=208
+  cut.pos=(-144,-3384,-3618)
+  cut.target=(9252,-720,-5652)
+  cut.fov=26684
+  VT=(-3570,3440,303)
+  VR0=(-867,0,-4007) VR1=(-1076,3962,232) VR2=(3875,1099,-839)
+  Player=(6120,0,-5096) rot_y=3936
+  pose[0].trans=(0,-1722,0)
+  bone_world=(6120,-1722,-5096)
+  combined_trans=(119,-123,6674)
+  combined_rot[0..2]=(-1619,57,-3764)
+  proj sx=164 sy=116
+[bone]  1: rel=(0,-1722,0) world=(6120,-1722,-5096)
+[bone]  2: rel=(-9,-1514,-128) world=(6142,-1514,-5223)
+[bone]  3: rel=(33,-907,-110) world=(6178,-907,-5195)
+[bone]  4: rel=(-53,-98,-100) world=(6092,-98,-5206)
+[bone]  5: rel=(-38,-1533,148) world=(6047,-1533,-4962)
+[bone]  6: rel=(121,-947,173) world=(6195,-947,-4899)
+[bone]  7: rel=(-219,-209,146) world=(5872,-209,-5008)
+[bone]  8: rel=(0,-2346,-1) world=(6120,-2346,-5097)
+[bone]  9: rel=(-35,-2294,-284) world=(6154,-2294,-5380)
+[bone] 10: rel=(-80,-1888,-275) world=(6108,-1888,-5383)
+[bone] 11: rel=(-73,-1528,-311) world=(6124,-1528,-5416)
+[bone] 12: rel=(-6,-2294,285) world=(6045,-2294,-4822)
+[bone] 13: rel=(-19,-1886,315) world=(6025,-1886,-4796)
+[bone] 14: rel=(30,-1528,337) world=(6067,-1528,-4762)
+[walk] F90 cut=2 mo=105 af=43 frz=0 | pl pos=(8280,0,-4556) rot=3936
+[walk] F120 cut=2 mo=200 af=1 frz=0 | pl pos=(9360,0,-4286) rot=4032
+[walk] F150 cut=2 mo=105 af=10 frz=0 | pl pos=(9508,0,-3447) rot=3072
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x820 masks=8 fg_atlas=1
+[walk] F180 cut=1 mo=105 af=40 frz=0 | pl pos=(9508,0,-1197) rot=3072
+[walk] F210 cut=1 mo=105 af=70 frz=0 | pl pos=(9508,0,1053) rot=3072
+[walk] F240 cut=1 mo=105 af=100 frz=0 | pl pos=(9473,0,3296) rot=3024
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x81C masks=0 fg_atlas=0
+[walk] F270 cut=0 mo=200 af=4 frz=0 | pl pos=(9248,0,5141) rot=2928
+[walk] F300 cut=0 mo=105 af=8 frz=0 | pl pos=(9108,0,5482) rot=3600
+[walk] F330 cut=0 mo=200 af=24 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F360 cut=0 mo=200 af=54 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F390 cut=0 mo=200 af=84 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F420 cut=0 mo=210 af=8 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F450 cut=0 mo=211 af=22 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F480 cut=0 mo=211 af=52 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F510 cut=0 mo=212 af=12 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F540 cut=0 mo=212 af=42 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F570 cut=0 mo=211 af=22 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F600 cut=0 mo=211 af=52 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F630 cut=0 mo=211 af=82 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F660 cut=0 mo=211 af=112 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F690 cut=0 mo=211 af=142 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F720 cut=0 mo=211 af=172 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F750 cut=0 mo=212 af=11 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F780 cut=0 mo=212 af=41 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F810 cut=0 mo=211 af=21 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F840 cut=0 mo=211 af=51 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F870 cut=0 mo=211 af=81 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F900 cut=0 mo=211 af=111 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F930 cut=0 mo=211 af=141 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F960 cut=0 mo=211 af=171 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F990 cut=0 mo=212 af=23 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1020 cut=0 mo=211 af=3 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1050 cut=0 mo=211 af=33 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1080 cut=0 mo=211 af=63 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1110 cut=0 mo=211 af=93 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1140 cut=0 mo=211 af=123 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1170 cut=0 mo=212 af=1 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1200 cut=0 mo=212 af=31 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1230 cut=0 mo=211 af=11 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1260 cut=0 mo=211 af=41 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1290 cut=0 mo=211 af=71 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1320 cut=0 mo=212 af=1 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1350 cut=0 mo=212 af=31 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1380 cut=0 mo=211 af=11 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1410 cut=0 mo=211 af=41 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1440 cut=0 mo=211 af=71 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1470 cut=0 mo=211 af=101 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1500 cut=0 mo=211 af=131 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1530 cut=0 mo=211 af=161 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1560 cut=0 mo=211 af=191 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1590 cut=0 mo=211 af=221 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1620 cut=0 mo=212 af=0 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1650 cut=0 mo=212 af=30 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1680 cut=0 mo=211 af=10 frz=0 | pl pos=(9108,0,5482) rot=4080
+[F1700-leon-root] world=(9108,0,5482) view=(-260,-646,5836) sd=208 screen=(150.7,97.0) cam_pos=(9990,-4248,252) cam_tgt=(9000,1008,8604) cut=0 visible=1
+[walk] F1710 cut=0 mo=211 af=40 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1740 cut=0 mo=211 af=70 frz=0 | pl pos=(9108,0,5482) rot=4080
+[F1750-leon-root] world=(9108,0,5482) view=(-259,-646,5836) sd=208 screen=(150.8,97.0) cam_pos=(9990,-4248,252) cam_tgt=(9000,1008,8604) cut=0 visible=1
+[walk] F1770 cut=0 mo=211 af=100 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1800 cut=0 mo=211 af=130 frz=0 | pl pos=(9108,0,5482) rot=4080
+[F1800-leon-root] world=(9108,0,5482) view=(-260,-646,5836) sd=208 screen=(150.7,97.0) cam_pos=(9990,-4248,252) cam_tgt=(9000,1008,8604) cut=0 visible=1
+[walk] F1830 cut=0 mo=211 af=160 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1860 cut=0 mo=211 af=190 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1890 cut=0 mo=211 af=220 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1920 cut=0 mo=211 af=250 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1950 cut=0 mo=211 af=280 frz=0 | pl pos=(9108,0,5482) rot=4080
+[walk] F1980 cut=0 mo=212 af=12 frz=0 | pl pos=(9108,0,5482) rot=4080
+[save] saved (room 11e1) slot n=8 -> next=9; card=none (slot -1 qty -1)
+[save] SAVE_TEST_EXIT_AFTER: 1 saves -> exit
