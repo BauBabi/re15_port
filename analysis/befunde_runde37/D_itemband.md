@@ -108,7 +108,7 @@ Port: `op_item_aot_set` (scd_vm.c) speichert pc[4] bereits in `g_aot.slots[slot]
 Work_set kind 1 (LAB_80040d2c): `80040da4 lui v0,0x800b / 80040da8 addiu v0,v0,-13740 (= 0x800ACA54) / 80040db0 sw
 v0,340(a0)` -> Member_set 0x12 nach Work_set(1,0) schreibt **0x800ACAD6** = genau das Byte, das @0x80042cc0 liest
 (und Schubkette @0x8002bf38, Kletter-Sonde @0x800381c8). Im Port ist dieses Byte `s_coll_band`
-(re15_collision.c, `re15_collision_debug_band()`); `re15_collision_set_band()` setzt seit Runde 30 BEIDE Haelften
+(re15_collision.c, `re15_collision_debug_band()`); `re15_collision_set_band()` setzt seit 5a415332 (2026-09-01) BEIDE Haelften
 (s_coll_band UND g_actors[0].floor) — `re15_actor_set_member` case 18 schreibt aber nur `floor`.
 
 ### 2.5 ROOM3050 sub04 (Lift abwaerts) — selbst dekodiert (`tools/scd_dump_room.py ROOM3050.RDT`)
@@ -174,8 +174,10 @@ Am SPIELER (letztes Work_set der Region kind 1 -> 0x800ACA54), 17 Stellen:
 An FIGUREN (Work_set kind 2), 5 Stellen: ROOM10B1 sub00 @0x017DA / sub03 @0x018C2, ROOM11C0 sub02 @0x01AC2 / sub04 @0x01C10 /
 sub07 @0x01C66 — bleiben `g_actors[].floor` (kein Kollisionsband).
 **Nebenbefund (vom Haken mit behoben):** ohne Member 0x12 -> Kollisionsband blieb der Spieler nach JEDEM dieser Lifte auf
-dem alten Band — in ROOM50D0 waeren nach der Auffahrt die floor-3-Tueren (slot 0 -> 50C0, slot 2 -> 50E0) am Tuer-Band-Gate
-gescheitert, in ROOM2030 nach Lift B die floor-9-Tueren (Tuer-Band-Gate aot_common.c `door_params[i].band != pb`; nach dem Code, NICHT an der exe gefahren). Riegel Teil M zeigt das Band nach der Fahrt: 0 -> 3 -> 0 bzw. 3 -> 9 -> 3.
+dem alten Band. ROOM50D0 ABFAHRT an der exe gemessen (Abschnitt 5.7: ohne Haken Klemme an der Band-3-Wand auf y 0, keine
+untere Tuer; mit Haken Band 0 und Tuer slot 1 -> 50F0). Nach dem Code (Tuer-Band-Gate aot_common.c `door_params[i].band != pb`,
+NICHT an der exe gefahren) scheiterten ebenso nach der 50D0-AUFFAHRT die floor-3-Tueren (slot 0 -> 50C0, slot 2 -> 50E0) und
+in ROOM2030 nach Lift B die floor-9-Tueren. Riegel Teil M zeigt das Band nach jeder Fahrt: 0 -> 3 -> 0 bzw. 3 -> 9 -> 3.
 
 ## 4. Umsetzung
 
