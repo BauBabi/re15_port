@@ -224,7 +224,7 @@ Namen dann automatisch).
 - Vorbestehend: das 2-Feld-Symbol der Kisten-Liste (box_cell_icon_sized, Breite 49) tastet in inv_render_pc.c die
   SCHMALE ITEMALL-Kachel (40 Texel) ab; Spalten 40..48 wiederholen Spalte 39 (sichtbar als verlaengerter Lauf rechts,
   `M_belege/nachher_1150_zeilen_zoom.png` Zeile 2). RE2 zeichnet das breite Zeilensymbol aus ZWEI 20x30-Cache-Spalten
-  (u1 = 0x78 = 120 Texel, `li t1,0x78` @0x80071838 / Zuweisung @0x80071848; zweite Kachel fuer Id 14..18 in
+  (u1 = 0x78 = 120 Texel, `li t1,0x78` @0x8007183c im Delay-Slot von `j` @0x80071838, `sb t1,-0xe(s0)` @0x80071848; zweite Kachel fuer Id 14..18 in
   FUN_80069c40 @0x80069cd8-d64). Der Port hat die 80x30-Kunst (ITPS, Pfad w==80 im ITEMTILE-Zweig). Lage und Ebene
   (Nutzer-Punkte) sind davon unabhaengig — Kandidat fuer eine eigene Nachbesserung, wenn der Nutzer es wuenscht.
 - Integration: Spur I ("Empty Fire Extinguisher", 177 px) passt mit 1 px Luecke vor das schmale Symbol (179); der
