@@ -10,8 +10,8 @@ Die Abnahme aendert keinen Code; nur diese Datei wird committet.
 - [x] Gezielte ctest-Laeufe (unit 106/106, integration_r37_sperre1050 1/1)
 - [x] #10 an der exe gemessen (R1 Luke-Weg, R2/R2b Ada-Logik, R3-R6 Speichern/CONTINUE, Integrationslaeufe A-E)
 - [x] #5 an der exe gemessen (R7 Elza ueber die echte Tuer 5141 -> 50B1, Bilder beider Seiten, Sweep)
-- [x] RE-Gate (4 Code-Stellen + 7 Datei-Offsets selbst gelesen, Zensus nachgerechnet)
-- [ ] Vertrag / Pfade / Nebenwirkungen
+- [x] RE-Gate (4 Code-Stellen selbst disassembliert, 5 Datei-Offsets direkt + 3 ueber den Riegel `luke` gelesen, Zensus nachgerechnet)
+- [x] Vertrag / Pfade / Nebenwirkungen
 
 
 ## 1. Bau und gezielte Tests (selbst gefahren)
@@ -77,7 +77,9 @@ traegt die woertliche Nutzer-Bestaetigung (master AUFTRAG.md "Bestaetigung 2026-
 ROOM1050: vor Adas Rettung bleibt die Ada-Szene, danach der Chief-Text nur in der Endphase — nach der 10F0-Szene und
 bevor Irons geholt ist; Fruehspiel ungesperrt"). Der neue Wortlaut 50B1 ist als NUTZER-VORGABE (Nachtrag 8) gekennzeichnet.
 Testparameter (STAND_X/Z, Wege-Skripte) sind Messgroessen, keine Spielkonstanten. Suche im Diff nach "deferred",
-"tunable", "interim", "for now", "faithful", "plausibel", "TODO": **keine Treffer** (s. Abschnitt 4).
+"tunable", "interim", "for now", "faithful", "plausibel", "TODO": **keine Treffer** (`git diff master...HEAD -- re15_port |
+grep -i -E '^\+.*(deferred|tunable|interim|for now|faithful|plausib|TODO|FIXME|approx|vorerst|vorlaeufig|geschaetzt)'` ->
+leer; `getenv` im Code-Diff engine/include/platform: keiner).
 
 **Wege-Zensus nachgerechnet:** alle 40 `ROOM1??0.RDT` frisch mit `re15_port/tools/scd_dump_room.py` gedumpt, die
 Skripte `F_belege/tuer_graph.py` und `F_belege/wege_zensus.py` darauf gefahren: Ausgabe **identisch** zu
@@ -90,7 +92,9 @@ Ziel ausser den Tuerbildern (gen/re15_tuer_eigen.inc 10B0<->1260, gen/tuer_zuord
 ## 3. Punkt #10 — "Chief first" zusaetzlich an der ROOM1050-Tuer (eigene Messungen an der exe)
 
 Messkopie `re15_port/build/platform/pc/re15_pc_r37f_abn_mess.exe` (= re15_pc.exe des Baums), eigene Arbeitsordner im
-Scratchpad `.../scratchpad/abn/w_<lauf>/` (Laeufer `abn/lauf.sh`, PPM->PNG `abn/ppm2png.py`).
+Scratchpad `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn/w_<lauf>/`
+(Laeufer `abn/lauf.sh`, PPM->PNG `abn/ppm2png.py`; Bilder/Protokolle dort, nicht committet). Die Messkopie ist nach
+den Laeufen wieder geloescht.
 
 ### R1 — der Luke-Weg des Nutzers, Ende-zu-Ende in EINEM Lauf (Endspiel-Zustand)
 
@@ -223,3 +227,60 @@ ist die einzige Stelle, an der Elza Ada am Aussehen erkennen muesste — sie ist
   beim Fund der Leiche (Marvin 30C1), nicht eine Regel "nie begegnet" — kein Widerspruch zu Nachtrag 8.
 
 **#5: erfuellt.**
+
+## 5. Vertrag, Pfade, Nebenwirkungen
+
+* **Pfade** (`git diff master...HEAD --name-only`, Merge-Basis f1e019ca): nur `analysis/befunde_runde37/{F_sperre1050.md,
+  F_belege/*, AUFTRAG.md}` (AUFTRAG.md = Orchestrator-Nachtrag 8 91e58d5c, wortgleich zu master), `engine/src/sperre1050_r37.c`
+  + `include/re15_sperre1050_r37.h` (NEU), `engine/src/scd_room_setup.c` (+2: Include + Installer am Blockende, NACH
+  re15_adaruf_install, Kommentar "Runde 37 Spur F"), `platform/pc/main.c` (+2 im Boot-/CONTINUE-Block, Kommentar "Runde 37
+  Spur F"), `engine/src/gen/story_r36_texte.inc` + `tools/r36_p/texte_bauen.py` (Text-Weg der Spur P, VERTRAG §1.2
+  ausdruecklich), `tests/unit/probes/r37_sperre1050.cmake` + `tests/unit/test_r37_sperre1050.c` +
+  `tests/integration/test_r37_sperre1050.cmake` (NEU, `cmake_minimum_required(VERSION 3.16)`), `tests/unit/test_r36_story.c`
+  (Zaehlung 11 -> 12, Untersuchungsform). **Keine** release/, platform/android/, shared_assets/PSX/, keine CMakeLists.
+  (`git diff master --stat` zeigt zusaetzlich geloeschte orchestrator/*-Dateien und UEBERGABE.md — das ist nur der
+  Vorlauf von master seit f1e019ca, nicht die Spur.)
+* **Bank-9-Bits:** keine belegt (Code liest nur (3,0xBB), (9,71), (9,73), (3,94); kein `re15_game_flag_set` im Diff);
+  Zuteilung 96/97 ungenutzt. **Nachrichten-Ids:** ROOM1050 msg 26 (zugeteilt 26..28; belegt 0..8 RDT, 20/21 Rolltor,
+  22..25 Ada-Ruf; MSG_TABLE_N PSX 32 / PC 256), ROOM50B1 msg 0 ueber texte_bauen.py (zugeteilt). **Slots:** ROOM1050 Slot 4
+  nach dem Init-Lauf von main00 umgewidmet wie re15_tuer1060/re15_adaruf; kein SCD-Opcode von ROOM1050 beruehrt Slot 4
+  nach main00 (eigener Dump: Aot_reset nur Slot 7 @0x00CBE). **Ereignisse:** keine neuen.
+* **Gemeinsame Dateien:** nur kleine Haken (je 2 Zeilen). Die Anpassung in test_r36_story.c weicht die Pruefung der
+  uebrigen Overrides NICHT auf: die 11 Umschreibungen der Spur P beginnen mit `04 00` (unters=0, Pruefung unveraendert),
+  die zwei neuen Texte (1210/1091 msg 20, `04 02`) haben off_alt 0 und ueberspringen den Kopf/Schwanz-Teil wie bisher.
+* **Tests je Punkt, messend und diskriminierend:** #10 `unit_r37_sperre1050_{bedingung,raum,druck,luke}` +
+  integration A/E/B/C (Lauf A wuerde auf dem Vorher-Stand an `10A0=1` scheitern, vgl. `F_belege/r7_e2e_vorher.txt`);
+  #5 `unit_r37_sperre1050_elza50b1` + integration D (scheitert am alten Text). Alle selbst gruen gefahren.
+* **Nebenwirkungen:** der Installer laeuft in jedem Raum und kehrt ausser in 0x1050 sofort zurueck; in 0x1050 nur bei
+  (1,1,x,0) und nur, wenn Slot 4 noch die Original-Tuer ist. Leon 50B0 msg 18 unveraendert (Riegel), ROOM1051 (Elza) Tuer
+  bleibt (Riegel), Mittelspiel/nach Irons Tuer offen (Integration B/C), Ada-Logik vor der Rettung (R2/R2b), 106 Unit-Tests
+  der beruehrten Module/Raeume gruen. Kein Asset-Patch, keine Env-Schalter, keine Rate-Woerter im Diff.
+* **Herkunft "warum erst jetzt"** geprueft: `merge-base --is-ancestor` — 059664db (Sperre 1060) erst ab v0.8.22,
+  1c926683 (Tritt 10F0 kletterbar) erst ab v0.8.24 -> der Luke-Weg ist erst in v0.8.24 begehbar.
+
+## 6. Hinweise (keine Maengel der Spur F)
+
+1. **Fuer den Orchestrator** (vom Bau-Agenten genannt, bestaetigt): RE15_MIN_TESTS bei der Integration um 6 anheben
+   (5 unit + 1 integration); nach der Zusammenfuehrung mit Spur D (Band-Gate fuer alle AOT-Saetze) integration_r37_sperre1050
+   erneut fahren — der Text-Platz traegt Band 0 (aus door_params), Leon steht im 1050-Flur auf Band 0.
+2. Die Laeufe E/B/C/D des Integrationstests starten per Debug-Sprung (Sprungtabelle `cut=0`): die Kamera bleibt dort auf
+   Cut 0 (auch das Belegbild `F_belege/bild_50b1_elza_f200.png` zeigt weder Elza noch die Leiche). Fuer die Logik
+   unerheblich; die Abnahme hat beide Punkte zusaetzlich ueber echte Tueren mit der Spielkamera gemessen (R1, R6, R7).
+3. Beobachtung ausserhalb der Spur (nicht RE-geprueft, vom Diff unberuehrt): In R7 steht Elza waehrend des
+   Untersuchungstexts aufrecht (`[scd] Plc_motion(entity=1, motion=11, flags=0x00)`, danach `mo=200 af=29` konstant); das
+   Dossier beschreibt sub02 @0x00526 als "Elza kniet". Ob der Port die Pose des Originals zeigt, waere eigens zu pruefen.
+
+## 7. Maengel
+
+Keine.
+
+## 8. Gesamturteil
+
+| Punkt | Urteil |
+|---|---|
+| #10 "Chief first" zusaetzlich an der ROOM1050-Tuer der Ada-Szene (Luke-Luecke) | **erfuellt** |
+| #5 + Nachtrag 8 ROOM50B1 msg 0 (Elza) "a woman" statt "Ada" | **erfuellt** |
+| RE-Gate (4 Code-Stellen selbst disassembliert, 5+3 Datei-Offsets gelesen, keine Rate-Konstanten) | haelt |
+| Vertrag (Pfade, Bits, Ids, Slots, kleine Haken, Tests) | haelt |
+
+**bestanden = ja.**
