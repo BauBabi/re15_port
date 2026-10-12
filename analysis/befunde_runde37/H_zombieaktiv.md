@@ -189,7 +189,19 @@ Die 1070-Kopien (grid 0x00) gehen ab Bild 0 in den Gang (`1/1@0`) statt erst bei
 
 ## OFFEN
 
-(folgt)
+* **Zwei Abweichungen im RE2-Steh-Zweig gefunden (nicht Teil der Passivitaet, NICHT geaendert — jede verschiebt den
+  gemeinsamen RE2-Zufallsstrom und damit deterministische Riegel anderer Spuren; eigener Schritt mit Strom-Messung):**
+  1. DECISION[0] Block 3 (Ausfall-Biss 0xC01 bei dist < 0x7D0, ausserhalb Kegel 1024, Spieler bewegt): Original
+     `jal rand` @0x801013bc / `andi v0,v0,0x1` @0x801013c4 / `beq v0,zero,0x801013d4` @0x801013c8 = Commit bei
+     (rand & 1) == 1; Port re2z_decide_stand `(re2z_rand() & 1u) == 0u` (umgekehrt). Gleiche Wahrscheinlichkeit
+     (1/2), gleiche Wurfzahl, aber die Entscheidung je Wurf ist invertiert.
+  2. EXEC[0] P1 Wander-Wurf: Original setzt `sb v0,6(s0)` = 2 @0x80101540 und laeuft im SELBEN Takt weiter in den
+     Selbstwecker (@0x80101544-a0, inkl. +0x158-Dekrement), P2 (@0x801015a4) erst im NAECHSTEN Takt (Dispatch @0x80101410-
+     50); der Port ueberspringt nach dem Wurf den Wecker (`if (e->sub_state_2 == 1)`) und faellt im selben Takt in P2/P3
+     (ein Takt frueher, die P2-Wuerfe rand+150 / Zonen-Wurf 0x8004AA50 einen Takt frueher im Strom).
+* Die drei Produzenten des Arme-hoch-Gangs 0x201 in EXEC[1] (@0x80101D68-DBC, @0x80101EC4-F10, @0x80101F14-F60) bleiben
+  wie vor dieser Spur gedrosselt (enemy_ai_re2_zombie.c OFFEN-Block, Nahkampf-Zusammenbruch unaufgeklaert) — betrifft den
+  Angriffsgang, nicht das Stehen.
 
 ## Fuer den Nutzer
 
