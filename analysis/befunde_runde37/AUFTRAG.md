@@ -268,3 +268,11 @@ ueber ein Bit statt ueber das Inventar pruefen (Aufnahme-/Taken-Bits als Besitz-
 Item-Abfragen an Tueren/Raetseln); je Fall belegen, ob das Item in der Box liegen kann, und wie RE2 dieselbe Art Abfrage
 macht (Besitz-Pruefung im RE2-SCD/EXE belegen). Wo die Box den Fall oeffnet: wie RE2 das Item im Inventar verlangen
 (eine Port-Regel an EINER Stelle, je Fall per Tabelle), mit RE2-Text, wenn es fehlt. Basis = abgenommener Stand der Spur I.
+
+## Orchestrator-Auftrag R — 2026-10-12 (zu Nachtrag 9, vorbestehend, gefunden von Spur M)
+
+Grund: Spur M (M_kiste.md OFFEN) mass: das 2-Feld-Symbol in der Kisten-Liste (49 px breit, z.B. Waffen) liest nur die
+schmale 40-Texel-Kachel; die Spalten 40..48 wiederholen Spalte 39 -> der rechte Teil ist verschmiert. RE2 zeichnet die
+breite Zeile aus zwei Cache-Spalten (u1 0x78 @0x8007183c/@0x80071848, zweite Kachel FUN_80069c40 @0x80069cd8). -> Spur R
+kiste2feld: 2-Feld-Symbole in der Kisten-Liste wie RE2 vollstaendig zeichnen (auch, falls betroffen, im Inventar-Gitter
+und an anderen Stellen derselben Kachel-Logik pruefen). Basis = abgenommener Stand der Spur M.
