@@ -381,7 +381,12 @@ def rohr(netz, punkte, rh, uv):
 
 
 def netz_bauen(mass):
-    """Stehendes Netz. Rueckgabe: Netz + Kennzahlen."""
+    """Stehendes Netz. Rueckgabe: Netz + Kennzahlen.
+
+    GEMESSEN (abmessungen()): Mantellaenge, Fase, Kuppelhoehe, Hebelreichweite (1,55 R ~ Hebelpixel s -13,8..11,3 px
+    bei Durchmesser 17,05 px), Hebelseite. PORT-WAHL (Gestalt, es gibt keine Original-Geometrie): Kuppelprofil
+    0,93/0,76/0,50/0,30 R, Hals 0,30 R, Ventil-Kasten 0,72 R x 0,62 R, Griff-/Hebeldicke, Schlauchverlauf und Duese —
+    nach dem Item-Bild und dem gewoehnlichen Aufbau eines Aufladeloeschers."""
     L = mass["L"]
     netz = Netz()
 
