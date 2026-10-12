@@ -18,6 +18,7 @@
 #include "re15_engine.h"    /* g_engine.frame_count — the POSE-STREAM trace timestamp */
 #include "re15_enemy_ai.h"  /* re15_actor_clip_len — the frame clock's view, for the cross-check */
 #include "re15_player.h"    /* RE15_PLAYER_MOTION_BACK_PL00 — Plc_dest-Modi 7/8 (COMMON-Bank) */
+#include "re15_roy_r37.h"   /* Runde 37 Spur K */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -235,7 +236,7 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
      * per-tri (tpage/clut = -1) and shift X by his VRAM base, clut by his row
      * delta — never a single override (that drew the skin meshes from the body
      * half). The texture relocation survives the motion overrides below. */
-    if (!is_player && a->type == 0x47 && banks->elliot_ok) {
+    if (!is_player && re15_typ47_ist_elliot(a->type) && banks->elliot_ok) {   /* Runde 37 Spur K: nur Leons 0x47 */
         out->mesh   = banks->elliot_mesh;
         out->skel   = banks->elliot_skel;
         out->anim   = banks->elliot_anim;
@@ -253,7 +254,7 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
      * ballast). Its own anim bank is used directly (motion = clip index; a fresh spawn has
      * motion 0 = idle clip 0) and the W01 locomotion sentinels below never match, so the
      * idle pose stands. (The banks->em21_* fields are now unused; kept for ABI simplicity.) */
-    if (!is_player && a->type != 0x47) {
+    if (!is_player && !re15_typ47_ist_elliot(a->type)) {   /* Runde 37 Spur K: Elzas 0x47 = Roy (CDEMD1, @0x800223ac) */
         re15_enemy_bank_t *eb = re15_enemy_find(a->type);
         if (eb) {
             out->mesh   = &eb->md1;

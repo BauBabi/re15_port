@@ -9,6 +9,7 @@
 #include "re15_actor.h"      /* RBJ-Marker-Binder: Aktor-Slots (g_actors) */
 #include "re15_entladen.h"   /* Runde 35 Spur I: Generation je Bank */
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Record-Alias fuer den geliehenen Gestenblock */
+#include "re15_roy_r37.h"    /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) bindet ohne Elliot-Ausnahme */
 
 re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
 
@@ -107,7 +108,8 @@ static int rbj_resolve_slot(int slot)
         if (s_rbj_cache[i].slot == slot) return i;
     if (!s_room_rbj || slot <= 0 || slot >= RE15_ACTOR_MAX) return -1;
     const re15_actor_t *e = &g_actors[slot];
-    if (!e->active || e->type == 0x47) return -1;         /* Elliot-Ausnahme (O3) */
+    if (!e->active || re15_typ47_ist_elliot(e->type)) return -1;   /* Elliot-Ausnahme (O3) — Runde 37 Spur K: nur Leons 0x47;
+                                                   * Elzas Roy bindet wie jeder NPC (ROOM1011 rec1, @0x8001b498) */
     /* Marker-Bit (1 + Enemy-Index); Port-Aktor-Slot = 1 + Enemy-Index -> Bit == slot. */
     int rec = -1;
     int mslot = s_rbj_alias[slot] ? (int)s_rbj_alias[slot] : slot;   /* Runde 35 Spur L: Alias */

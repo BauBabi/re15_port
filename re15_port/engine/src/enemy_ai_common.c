@@ -36,6 +36,7 @@
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
 #include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
+#include "re15_roy_r37.h"   /* Runde 37 Spur K */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (marke / nachfuehren_alle in run_all) */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
@@ -9675,7 +9676,7 @@ static const re15_emd_animation_t *re15_npc_channel_anim(const re15_actor_t *e)
         int own_sub = (e->state == 4 &&
                        (e->sub_state_1 == 2 || e->sub_state_1 == 4 || e->sub_state_1 == 5 ||
                         e->sub_state_1 == 6 || e->sub_state_1 == 9));
-        if (e->type == 0x47 && s_npc_elliot_anim && !(own_sub && bank && bank->own_ok))
+        if (re15_typ47_ist_elliot(e->type) && s_npc_elliot_anim && !(own_sub && bank && bank->own_ok))   /* Runde 37 Spur K: nur Leons 0x47 */
             return s_npc_elliot_anim;
     }
     if (bank && bank->own_ok) return &bank->anim_own;     /* +0x170/+0x174 = BANK 1 (dir[4]/dir[3]):
