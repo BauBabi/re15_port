@@ -24,6 +24,7 @@ committen, nur eigene Pfade adden.
 | M | kiste / r37_kiste | Nachtrag 9: Item-Kiste — Symbole so weit rechts, dass kein Name sie ueberdeckt; der Rahmen liegt beim Scrollen ueber den Items (re15_inv_screen.c Block 7b, inv_render_pc.c) |
 | O | szene11c0 / r37_szene11c0 | Nachtrag 11: Ada/Marvin-Szene ROOM11C0 nach Irons' Tod — keine Fehlblicke/180-Grad-Drehungen, wer spricht, sieht den anderen an (irons_tod_1150.c Programm 4 k_p_11c0) |
 | N | elzaems / r37_elzaems | Orchestrator-Auftrag N (zu Nachtrag 7): Elzas Szenario laedt jeden Typ wie das Original aus CDEMD1.EMS (Elza-Bit @0x80022334, Datei 0x27 @0x800223ac); Basis = Stand der Spur K |
+| P | masken36 / r37_masken36 | Orchestrator-Auftrag P (Regression 53741fe5): R15M-Masken der Stages 3..6 ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen; Basis = Stand der Spur A |
 
 Nicht gebaut (Nutzer): Blutlache an Roys Platz (R2), Prison-Key-Hinweis fuer Elza, V6 (Montage-Folgen bei Elza) — ohne
 Zustimmung nichts davon anfassen. Die Werkstatt-Tuer 11B0 bleibt wie in v0.8.24.
@@ -59,6 +60,7 @@ Neue Logik in NEUEN Dateien engine/src/<thema>_r37.c + include/re15_<thema>_r37.
 Spur M aendert den Box-Listen-Block 7b in re15_inv_screen.c und, falls noetig, den Zeichner inv_render_pc.c (Kommentar "Runde 37 Spur M" + Beleg).
 Spur O aendert Programm 4 (k_p_11c0) in irons_tod_1150.c an Ort und Stelle (Kommentar "Runde 37 Spur O"); die uebrigen Programme (Spur H: Nachspawn 1130) und k_msg28 (Nachtrag 10, Integration) nicht anfassen.
 Spur N erweitert roy_r37.c / roy_pc.c / gen/ems_toc_r37.inc der Spur K (oder eine neue elzaems_r37.c) und die Lader-Haken in main.c / enemy_common.c; Griff-/Biss-Code (J), RE2-KI (L) und der Spawn-Haken (H) nur lesen.
+Spur P aendert den Masken-Lader (bg_pc.c re15_pri_load_cut_atlas_ex und was A dort angefasst hat) an Ort und Stelle; keine neuen Asset-Dateien, MASKS/* nicht umschreiben.
 Ausnahme Spur L: die Reparatur IST die RE2-Zombie-KI — L aendert enemy_ai_re2_zombie.c (DECISION[0], EXEC[0], EXEC[1], EXEC[2]) direkt an Ort und Stelle (Kommentar "Runde 37 Spur L" + @0x je Zeile). Die Griff-/Biss-Teile (Spur J) und re2z_init (Haken der Spur H) nur lesen. Jeder Riegel, der am gemeinsamen RE2-Zufallsstrom haengt und sich durch L verschiebt, steht mit altem/neuem Wert und Begruendung im Dossier (die Integration braucht die Liste).
 
 ### 1.5 Tests

@@ -232,3 +232,17 @@ ANDERES MODELL (ROOM3071/5081/5091/50F1), 0x42 ANDERES MODELL (ROOM11B1 @0x01058
 eigene Aktions- + Opfer-Bank (Griff-Animation am Spieler), Kraehe/0x27/0x29/0x2b Opfer-Bank. -> Spur N elzaems: Elzas
 Szenario laedt jeden Typ wie das Original aus CDEMD1 (K-Mechanismus re15_ems_toc / roy_pc.c verallgemeinern), je Typ am
 Original und an der exe gemessen; Leon bleibt bytegleich. Basis = abgenommener Stand der Spur K.
+
+## Orchestrator-Auftrag P — 2026-10-12 (Regression, gefunden von Abnahme A#1 M2)
+
+Grund: Abnahme A#1 (A_abnahme_1.md, M2) mass: alle 30 MSK-Dateien der Stages 3..6 (ROOM3040/41, 3050/51, 30A0/A1, 30E0/E1,
+4040/41, 4080/81, 40A0/A1, 5020/21, 5050/51, 5090/91, 50B0/B1, 5100/01, 6000/01, 6010/11, 6030/31) werden fuer NIEMANDEN
+gezeichnet (z.B. ROOM3040 Cut 0..7 fg_atlas=0, mit/ohne Masken 0 Punkte Unterschied). Herkunft laut git: b8db7b2b
+(2026-09-03) erzeugte die Geometrie fuer Cuts, deren Vordergrund-GRAFIK im BSS liegt, aber ohne Masken-Records im RDT
+(Prototyp unfertig: RE1.5 22 % der Cuts, RE2 Retail 67 %) — die Masken zeigen auf den ORIGINAL-Atlas im BSS
+(gen_masken.py: Atlas-Bloecke per Kreuzkorrelation wiedergefunden, Masken-Byte = src). 53741fe5 (2026-09-08) liess
+R15M-Masken nur noch mit EIGENEM Atlas zeichnen (re15_pri_load_cut_atlas_ex, Merker aus dem R15M-Zweig) — richtig fuer die
+Raeume mit den Freistellungen des Nutzers (eigene ROOMxxxx_PRI*.TIM), falsch fuer die BSS-Atlas-Raeume -> seitdem fehlt
+dort jede ergaenzte Verdeckung. -> Spur P masken36: R15M-Cut ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen (wie
+am 2026-09-03 gebaut), je Raum/Cut nachweisen (Blit-Pruefung wie pruef_gen.py + Figur-Messung an der exe), Basis = Stand
+der Spur A (gleicher Lader).
