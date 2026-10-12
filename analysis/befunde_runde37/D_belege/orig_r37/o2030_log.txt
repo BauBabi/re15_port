@@ -1,0 +1,54 @@
+DuckStation gestartet {'43400'}
+GDB verbunden
+Stopp: b'S02'
+Menue 0x800BBE5C.. vorher: 0101002400000000
+Menue nachher: 0101012403000000 (Zeile 1, Stage 1, Raumindex[stage] 0x03)
+Quadrat (laden) gedrueckt, warte 20 s
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+RDT-Basis 80119330 SCA 80119bb0 Zellen im RAM == STAGE2/ROOM2030.RDT @0x00898: True
+Spieler START: {'x': 6368, 'y': -5400, 'z': -360, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}
+  Entity 0 @800acc2c typ 0x25 -> Aktiv-Bit 0 geloescht
+  Entity 1 @800ace20 typ 0x25 -> Aktiv-Bit 0 geloescht
+  Entity 2 @800ad014 typ 0x25 -> Aktiv-Bit 0 geloescht
+  g_active_count @0x800aca4e: 3 -> 0
+Spieler nach Pad-Probe: {'x': 6368, 'y': -5400, 'z': -360, 'blick': 3360, 'band': 3, 'sub': 3, 'st': 1}
+  g_active_count @0x800aca4e: 0 -> 0
+L  (Lift A, sub02) VOR: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=1 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=2 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=3 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=4 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=5 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=6 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=7 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=8 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02) t=9 s: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+S3 (Band 3 bei der SPAS-12) VOR: Spieler {'x': -650, 'y': -5400, 'z': 14500, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S3 (Band 3 bei der SPAS-12) nach Druck 1: Spieler {'x': -650, 'y': -5400, 'z': 14500, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S3 (Band 3 bei der SPAS-12) nach Druck 2: Spieler {'x': -650, 'y': -5400, 'z': 14500, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S3 (Band 3 bei der SPAS-12) nach Druck 3: Spieler {'x': -650, 'y': -5400, 'z': 14500, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+S3 (Band 3 bei der SPAS-12) ERGEBNIS: Taken-Bit 109 = 0
+S6 (Band 6 bei der SPAS-12) VOR: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S6 (Band 6 bei der SPAS-12) nach Druck 1: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S6 (Band 6 bei der SPAS-12) nach Druck 2: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S6 (Band 6 bei der SPAS-12) nach Druck 3: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 1
+S6 (Band 6 bei der SPAS-12) ERGEBNIS: Taken-Bit 109 = 1
+T  (Treppe slot 8, West-Haelfte) VOR: Spieler {'x': -6350, 'y': -5400, 'z': -7700, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}
+  T  (Treppe slot 8, West-Haelfte) t=1 s: Spieler {'x': -3764, 'y': -3494, 'z': -7702, 'blick': 0, 'band': 7, 'sub': 12, 'st': 1}
+  T  (Treppe slot 8, West-Haelfte) t=2 s: Spieler {'x': -1982, 'y': -1800, 'z': -7694, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}
+  T  (Treppe slot 8, West-Haelfte) t=3 s: Spieler {'x': -1982, 'y': -1800, 'z': -7694, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}
+  T  (Treppe slot 8, West-Haelfte) t=4 s: Spieler {'x': -1982, 'y': -1800, 'z': -7694, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}
+  T  (Treppe slot 8, West-Haelfte) t=5 s: Spieler {'x': -1982, 'y': -1800, 'z': -7694, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}
+  T  (Treppe slot 8, West-Haelfte) t=6 s: Spieler {'x': -1982, 'y': -1800, 'z': -7694, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}
+G3 (Band 3 bei den Schrotpatronen) VOR: Spieler {'x': 4300, 'y': -5400, 'z': 7100, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 108 = 0
+  G3 (Band 3 bei den Schrotpatronen) nach Druck 1: Spieler {'x': 4300, 'y': -5400, 'z': 7100, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 108 = 0
+  G3 (Band 3 bei den Schrotpatronen) nach Druck 2: Spieler {'x': 4300, 'y': -5400, 'z': 7100, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 108 = 0
+  G3 (Band 3 bei den Schrotpatronen) nach Druck 3: Spieler {'x': 4300, 'y': -5400, 'z': 7100, 'blick': 0, 'band': 3, 'sub': 0, 'st': 1}, Taken-Bit 108 = 0
+G3 (Band 3 bei den Schrotpatronen) ERGEBNIS: Taken-Bit 108 = 0
+G1 (Band 1 bei den Schrotpatronen) VOR: Spieler {'x': 4300, 'y': -1800, 'z': 7100, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 108 = 0
+  G1 (Band 1 bei den Schrotpatronen) nach Druck 1: Spieler {'x': 4300, 'y': -1800, 'z': 7100, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 108 = 0
+  G1 (Band 1 bei den Schrotpatronen) nach Druck 2: Spieler {'x': 4300, 'y': -1800, 'z': 7100, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 108 = 0
+  G1 (Band 1 bei den Schrotpatronen) nach Druck 3: Spieler {'x': 4300, 'y': -1800, 'z': 7100, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 108 = 1
+G1 (Band 1 bei den Schrotpatronen) ERGEBNIS: Taken-Bit 108 = 1
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

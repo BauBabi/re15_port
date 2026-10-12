@@ -22,3 +22,16 @@ endif()
 add_test(NAME unit_r37_itemband COMMAND test_r37_itemband
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r37_itemband PROPERTIES TIMEOUT 600)
+
+# INTEGRATION (echte exe, RE15_WEGPLAN geschlossen geregelt + RE15_ITEMBAND_LOG): je erhoehtem Item das FALSCHE Band an der
+# Item-Stelle (GESPERRT, Taken-Bit 0) und der VORGESEHENE Weg (FREI auf dem Item-Band, Taken-Bit 1):
+#   3050 oben (Band 4) / Weg Fall -> Lift (Member 0x12 4 -> 0) -> Kerbe (3,93) -> Klettern -> Band 1; 3051 Elza (Band 4);
+#   3010 unter dem Steg (Band 0) / Klettern an r0[4] -> Band 1; 2090 echte Tuer aus 20A0 -> Plattform Band 1;
+#   2040 Band 5 / Halle Band 3 (Tor-Raetsel (3,146)+(3,53) gesetzt); 2030 SPAS-12 Band 3 / Lift A ((3,126) Strom gesetzt,
+#   Member 0x12 3 -> 6); 2030 Schrot Band 3 / Treppe slot 8 Abstieg 3 -> 1. Skript tests/integration/test_r37_itemband.cmake.
+add_test(NAME integration_r37_itemband
+    COMMAND ${CMAKE_COMMAND}
+        -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+        -DWORKDIR=${CMAKE_BINARY_DIR}/r37_itemband_wd
+        -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_itemband.cmake)
+set_tests_properties(integration_r37_itemband PROPERTIES TIMEOUT 2400)

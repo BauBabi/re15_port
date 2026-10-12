@@ -1,0 +1,3 @@
+F85 room=2030 ITEM slot 11 floor 6 item 0x0D tk 109 spieler-band 3 spieler=(-650,-5400,14500) -> GESPERRT (@0x80042ccc bne Band)
+F148 room=2030 ITEM slot 11 floor 6 item 0x0D tk 109 spieler-band 3 spieler=(-650,-5400,14500) -> GESPERRT (@0x80042ccc bne Band)
+F211 room=2030 ITEM slot 11 floor 6 item 0x0D tk 109 spieler-band 3 spieler=(-650,-5400,14500) -> GESPERRT (@0x80042ccc bne Band)

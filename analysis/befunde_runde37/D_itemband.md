@@ -113,6 +113,25 @@ DuckStation-GDB, Spielstand R_belege/room3050_orig.sav, Spieler per GDB auf (-24
   (dieselbe x/z/Blick-Stellung, nur das Band anders: das Gate @0x80042cac-ccc entscheidet).
 * C Lift sub04: `t=6 s: ... 'y': 0, ... 'band': 0 ..., (3,82) = 1` (vorher band 4) — der Abstieg setzt +0x82 = 0.
 
+### 2.7 Original gemessen (Runde 37, eigenes Werkzeug `D_belege/orig_r37_itemband.py`; Logs `D_belege/orig_r37/`)
+DuckStation-GDB, MZD-Disc, Auslieferungs-EXE (`EXE-Stub @0x80026e4c: 0800e003`), Raum ueber den Debug-Menue-Zustand geladen
+(Zeile 0x800BBE5D = 1, Stage 0x800BBE5E, Raumindex 0x800BBE5F+stage — Muster G2_belege/orig_11f0_spielstand.py), Pruefung
+`Zellen im RAM == ROOMxxxx.RDT: True`, Gegner per Aktiv-Bit aus; Spieler per GDB auf Lage/Blick/+0x82 gesetzt, Quadrat ueber
+vgamepad; Taken-Bit = FUN_8004efe4(*(0x80074688), n). settings.ini nach jedem Lauf zurueck (`EnableGDBServer = false: True`).
+* **ROOM3010** (`o3010_log.txt`): A (-10700,0,844) Blick 0 **Band 0 -> 3x Quadrat -> Taken-Bit 20 = 0**; C Klettern an r0[4]
+  (-10322,0,-11175) Blick 3072 Band 0 -> `t=1 s: ... 'y': -1800, 'z': -10027, ... 'band': 1, 'sub': 9` (Port `n3010_weg`:
+  nach dem Klettern (-10322,-10027) — dieselbe Lage); B (-10700,-1800,844) **Band 1 -> nach Druck 3 Taken-Bit 20 = 1**.
+* **ROOM2030** (`o2030_log.txt`): S3 (-650,-5400,14500) **Band 3 -> SPAS-12 Taken-Bit 109 = 0**, S6 (-650,-10800,14500)
+  **Band 6 -> 1**; T Treppe slot 8 aus (-6350,-5400,-7700) Blick 0 Band 3 -> `t=2 s: 'x': -1982, 'y': -1800, 'z': -7694,
+  'band': 1` (Abstieg 3 -> 1; Port `n2030_schrot_weg`: `[stair] START dir=DOWN cur_band=3 target_band=1`, Ende (-2082,-7741));
+  G3 (4300,-5400,7100) **Band 3 -> Schrot Taken-Bit 108 = 0**, G1 (4300,-1800,7100) **Band 1 -> 1**. (L ohne Strom: keine
+  Fahrt — die Meldung "not responding", sub01 @0x01E14.)
+* **ROOM2030 mit Strom** (`o2030L_log.txt`, (3,126) vor dem Laden gesetzt): L Lift A aus (6600,-5400,10900) Blick 3072 ->
+  y -7680 / -9360 / **`t=3 s: 'y': -10800, 'z': 11618, 'band': 6`** — sub02 @0x01E66 setzt +0x82 = 6; S6L danach Band 6 ->
+  Taken-Bit 109 = 1.
+-> Fuer ALLE gemessenen erhoehten Items (3050, 3010, 2030 x2) gilt im Original: Aufnahme NUR auf dem Item-Band; die
+vorgesehenen Wege (Lift = Member 0x12, Klettern, Treppe) bringen den Spieler auf genau dieses Band.
+
 ## 3. Zensus (alle ausgelieferten RDTs, main- und sub-SCD)
 
 Werkzeug `D_belege/zensus_itemband.py` (Walk = tools/scd_dump_room.py) und derselbe Walk in C im Riegel

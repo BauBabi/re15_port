@@ -18,7 +18,8 @@ Plaene:
         G3 Band 3 bei den Schrotpatronen (4300,-5400,7100) Blick 0 -> Taken 108 (slot 10 @0x01BC0 floor 1)
         G1 Band 1 dort (4300,-1800,7100) -> Taken 108
 settings.ini: gesichert, EnableGDBServer/ConfirmPowerOff/Pad-Bindungen nur fuer den Lauf, danach zurueckgeschrieben.
-Aufruf: python orig_r37_itemband.py <ausgabeordner> 3010|2030"""
+Aufruf: python orig_r37_itemband.py <ausgabeordner> 3010|2030|2030L
+  2030L L  wie 2030 L, aber (3,126) (Lift-Strom) vor dem Laden gesetzt -> Fahrt + Band; S6L SPAS-12 danach"""
 import os, shutil, struct, subprocess, sys, time
 
 HIER = os.path.dirname(os.path.abspath(__file__))
@@ -36,6 +37,7 @@ ZONE9_PTR = 0x80074688
 RAEUME = {   # Plan -> (Stage-Index 0-basiert, Raumindex, RDT)
     "3010": (2, 0x01, "STAGE3/ROOM3010.RDT"),
     "2030": (1, 0x03, "STAGE2/ROOM2030.RDT"),
+    "2030L": (1, 0x03, "STAGE2/ROOM2030.RDT"),   # wie 2030, aber (3,126) = Strom VOR dem Laden gesetzt (Lift A)
 }
 
 
@@ -107,6 +109,13 @@ def main():
         L("Stopp:", g.stop())
         m = g.mem(0x800BBE5C, 8)
         L("Menue 0x800BBE5C.. vorher:", m.hex())
+        if plan == "2030L":
+            # (3,126) = Lift-Strom (Set @ROOM2060 sub @0x012AE); sub01 @0x01E14 prueft es beim Raumaufbau. Zone 3 =
+            # *(0x80074664 + 3*4), Bit 126 = Wort +12, Maske 0x80000000 >> 30 (FUN_8004efe4).
+            z3 = struct.unpack("<I", g.mem(0x80074670, 4))[0]
+            w = struct.unpack("<I", g.mem(z3 + 12, 4))[0]
+            g.memw(z3 + 12, struct.pack("<I", w | 0x2))
+            L("(3,126) gesetzt: Zone 3 %08x Wort +12 %08x -> %08x" % (z3, w, struct.unpack("<I", g.mem(z3 + 12, 4))[0]))
         g.memw(0x800BBE5E, bytes([stage]))
         g.memw(0x800BBE5F + stage, bytes([raum]))
         m = g.mem(0x800BBE5C, 8)
@@ -203,6 +212,9 @@ def main():
             aufnahme("A  (Band 0 unter dem Steg)", -10700, 0, 844, 0, 0, 20)
             bandweg("C  (Klettern an r0[4])", -10322, 0, -11175, 3072, 0, 4)
             aufnahme("B  (Band 1 auf dem Steg)", -10700, -1800, 844, 0, 1, 20)
+        elif plan == "2030L":
+            bandweg("L  (Lift A, sub02, Strom an)", 6600, -5400, 10900, 3072, 3, 10)
+            aufnahme("S6L (nach dem Lift: SPAS-12 auf Band 6)", -650, -10800, 14500, 0, 6, 109)
         else:
             bandweg("L  (Lift A, sub02)", 6600, -5400, 10900, 3072, 3, 9)
             aufnahme("S3 (Band 3 bei der SPAS-12)", -650, -5400, 14500, 0, 3, 109)
