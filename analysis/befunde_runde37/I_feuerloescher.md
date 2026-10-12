@@ -111,7 +111,7 @@ Obj_model_set LAB_80040914: Flags `lhu v0,6(a2)` @0x80040990, `ori v0,v0,0x1` @0
 ### 2.6 Aktionspruefpunkt
 FUN_80042bac `ori v0,zero,0x26c` @0x80042bd0 = 620 Einheiten vor dem Spieler; je Druck gewinnt der KLEINSTE treffende
 Slot (aot_common.c, `j 0x80043028` @0x80042f94). Daraus: Aufhebe-Rechteck muss den 620-Punkt vor der Kollisionskante
-enthalten (Abschnitt 4), Untersuchen-Platz in ROOM1091 braucht einen Slot < 5 (Schuppen-Text).
+enthalten (Abschnitt 3.2), Untersuchen-Platz in ROOM1091 braucht einen Slot < 5 (Schuppen-Text, Abschnitt 3.4).
 
 ### 2.7 Nachtrag 3b (der Auftrag, der diesen Lauf ausgeloest hat)
 "Es muss schon in der richtigen Farbe leuchten das Panel..." gehoert laut AUFTRAG.md (Nachtrag 3b) / VERTRAG.md zur
@@ -271,7 +271,8 @@ Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine
   Ja = Leon legt den leeren Loescher vor der Wagentuer ab (er bleibt dort liegen, auch beim Wiederkommen und nach dem
   Laden); Nein = Leon behaelt ihn, dann liegt keiner da.
 * Elza: der leere Loescher liegt in ROOM1091 vor der Wagentuer; Aktionstaste davor -> "It's an empty fire extinguisher."
-* Der Spind in der Umkleide (ROOM1000) antwortet jetzt mit "Nothing unusual." wie die anderen Spinde.
+* Der Spind in der Umkleide (ROOM1000) antwortet jetzt mit "Nothing unusual." — dem Raumtext msg 0, den das Original an
+  seinen anderen Untersuchen-Plaetzen (Slots 6..9, Waschraum) zeigt.
 
 ### Zu entscheiden
 1. FUNDORT: Ostflur 1050, Wand rechts der Notausgangs-Tuer (Bild `I_belege/nachher_1050_wand_cut6.png`). Andere
@@ -281,4 +282,5 @@ Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine
    im Inventar und am Boden)? Oder soll der Loescher nach dem Benutzen ohne Frage abgelegt werden?
 3. TEXT: "It's an empty fire extinguisher." beim Untersuchen (Leon nach dem Ablegen, Elza) — Wortlaut ok?
 4. GROESSE / HOEHE: 0,47 m hoch, 13 cm Durchmesser (10-lb-Klasse), an der Wand 0,68-1,14 m ueber dem Boden.
-5. SPIND: "Nothing unusual." (der Text der anderen Spinde) oder ein eigener Satz wie "The locker is empty."?
+5. SPIND: "Nothing unusual." (Raumtext msg 0 der uebrigen Untersuchen-Plaetze in ROOM1000) oder ein eigener Satz wie
+   "The locker is empty."?
