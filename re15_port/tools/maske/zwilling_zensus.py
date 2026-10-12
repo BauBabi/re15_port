@@ -153,7 +153,7 @@ def main():
                       % (z["ungerade"], z["gerade"], "bytegleich" if z["rdt_gleich"] else "verschieden",
                          "gleich" if z["sca_gleich"] else "verschieden"))
     text = "\n".join(zeilen) + "\n"
-    alt = lies(INC)
+    alt = (lies(INC) or b"").replace(b"\r\n", b"\n")   # Arbeitskopie unter Windows ggf. CRLF (git autocrlf)
     print("\nRueckfall-Tabelle: %d Raeume: %s" % (len(tab), ", ".join("%04X->%04X" % (z["ungerade"], z["gerade"])
                                                                    for z in tab)))
     if a.nur_pruefen:

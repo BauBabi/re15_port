@@ -18,6 +18,16 @@
  *   test_r37_pri1100 marke   die Kopf-/Armpunkte der Marken (Rueckprojektion der gemessenen Dreiecke, Dossier 1.3/4.2)
  *                            sind verdeckt; dieselben Punkte waren mit den v0.8.24-Masken frei (Schluessel 10378).
  *
+ *   test_r37_pri1100 elza    Nachbesserung 1 (Abnahme A#0 M1): dieselben Riegel (leck + marke) fuer Elzas ROOM1101 -
+ *                            Kamera aus ROOM1101.RDT, Masken ueber re15_pri_masken_raum(0x1101) (= der Lader,
+ *                            entladen_pc.c/bg_pc.c). Vorher hatte 1101 gar keine Masken (MASKS/ROOM1101.* fehlt).
+ *   test_r37_pri1100 zwilling  Zensus aus den Dateien (alle Paare STAGE1..6): Rueckfall Elza -> Leon genau dann, wenn
+ *                            die Leon-Variante eine MSK hat, die Elza-Variante keine eigene, die Kamerasaetze gleich
+ *                            sind (RDT[1] Cuts, RDT+0x24 Satz+0x00..+0x1B je Cut; @0x80021e68 fov, @0x80021e90 ->
+ *                            FUN_80053ca4 kopiert Satz+0..+0x1C) und der Hintergrund je Cut gleich ist (so, wie
+ *                            bg_pc.c ihn laedt; Original @0x80021c88..cd8: Raum OHNE Varianten-Ziffer). Ergebnis ==
+ *                            re15_pri_masken_raum() fuer jede ungerade Id; gerade Ids bleiben unveraendert.
+ *
  * Die Flaechenlage X_FLAECHE (-15690 Cut 1 / -15710 Cut 2) und die Wandzelle (z -23200..-12100) sind die Quader der
  * Auswahl (analysis/esp_masken_2026-09-03/auswahl.json, ROOM1100 "Westwand"; Wandbasis von Runde 36 Spur O am
  * Hintergrund gemessen, SCA-Zelle 2 @ROOM1100.RDT x-17600 z-23200 w2000 d11100). STUFE = die Tiefenstufe, mit der
@@ -31,6 +41,7 @@
 #include "re15_camera.h"
 #include "re15_pri.h"
 #include "re15_tim.h"
+#include "re15_pri1100_r37.h"   /* re15_pri_masken_raum (Nachbesserung 1) */
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
@@ -64,6 +75,9 @@ typedef struct {
 static int cut_laden(cut_t *c, unsigned raum, int cut, const char *mskdir)
 {
     char pfad[700]; size_t sz = 0, msz = 0, tsz = 0; uint32_t off; int n, i, x, y;
+    /* Nachbesserung 1: die Masken-Dateien kommen wie im Lader (entladen_pc.c / bg_pc.c) von re15_pri_masken_raum -
+     * fuer ROOM1100 unveraendert ROOM1100, fuer Elzas ROOM1101 die Leon-Variante. Die KAMERA kommt aus der RDT von raum. */
+    const unsigned mraum = re15_pri_masken_raum(raum);
     memset(c, 0, sizeof *c);
     snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/STAGE%u/ROOM%04X.RDT", RE15_PORT_SRC_DIR, raum >> 12, raum);
     c->roh = slurp(pfad, &sz);
@@ -71,11 +85,11 @@ static int cut_laden(cut_t *c, unsigned raum, int cut, const char *mskdir)
         || re15_camera_build_view(&c->rdt.cuts[cut], &c->view) != 0) {
         printf("  FEHLER: ROOM%04X Cut %d: RDT/Kamera (%s)\n", raum, cut, pfad); return 0;
     }
-    snprintf(pfad, sizeof pfad, "%s/ROOM%04X.MSK", mskdir, raum);
+    snprintf(pfad, sizeof pfad, "%s/ROOM%04X.MSK", mskdir, mraum);
     c->msk = slurp(pfad, &msz);
     off = c->msk ? re15_pri_msk_section_offset(c->msk, msz, cut) : 0;
     n = off ? re15_pri_parse_section(c->msk, msz, off, &c->pri) : 0;
-    snprintf(pfad, sizeof pfad, "%s/ROOM%04X_PRI%02d.TIM", mskdir, raum, cut);
+    snprintf(pfad, sizeof pfad, "%s/ROOM%04X_PRI%02d.TIM", mskdir, mraum, cut);
     c->tb = slurp(pfad, &tsz);
     if (n <= 0 || !c->tb || re15_tim_parse(c->tb, (int) tsz, &c->tim) != 0 || c->tim.bpp != 8 || !c->tim.has_clut) {
         printf("  FEHLER: ROOM%04X Cut %d: Sektion (%d) oder Atlas fehlt (%s)\n", raum, cut, n, mskdir); return 0;
@@ -101,6 +115,9 @@ static int cut_laden(cut_t *c, unsigned raum, int cut, const char *mskdir)
 }
 
 static void cut_frei(cut_t *c) { free(c->roh); free(c->msk); free(c->tb); }
+
+/* Raum der Riegel leck/marke: ROOM1100 (Leon); "elza" setzt ROOM1101 (Nachbesserung 1). */
+static unsigned g_raum = 0x1100;
 
 /* Projektion mit Gleitkomma wie tools/maske/abnahme.proj und test_r36_pri.c. */
 static int proj(const re15_camera_view_t *v, double x, double y, double z, double *sx, double *sy, double *vz)
@@ -231,10 +248,10 @@ static void teil_leck_cut(int cut, double flaeche_x, int stufe, const char *mskd
     cut_t c; gitter_t g; char t[256];
     /* Schwelle = (Stufe + 1) Buckets: die Stufe selbst (Tiefenspanne eines Rechtecks) plus die Bucket-Rundung. */
     double schwelle = (stufe + 1) * 65536.0 / 1023.0;
-    if (!cut_laden(&c, 0x1100, cut, mskdir)) { g_fail = 1; return; }
+    if (!cut_laden(&c, g_raum, cut, mskdir)) { g_fail = 1; return; }
     gitter(&c, flaeche_x, schwelle, &g, 4);
-    printf("  Cut %d (%s): %d Rechtecke; Punkte hinter der Flaeche (> %.0f) %d, davon FREI %d (groesstes Leck %.0f); "
-           "vor der Flaeche %d, davon verdeckt %d\n", cut, mskdir, c.pri.draw_count, schwelle, g.hinter_n,
+    printf("  ROOM%04X (Masken ROOM%04X) Cut %d (%s): %d Rechtecke; Punkte hinter der Flaeche (> %.0f) %d, davon FREI %d (groesstes Leck %.0f); "
+           "vor der Flaeche %d, davon verdeckt %d\n", g_raum, re15_pri_masken_raum(g_raum), cut, mskdir, c.pri.draw_count, schwelle, g.hinter_n,
            g.hinter_frei, g.groesstes_leck, g.vor_n, g.vor_verdeckt);
     if (erwartung_gruen) {
         snprintf(t, sizeof t, "Cut %d: jeder Punkt > %.0f hinter der Westwand ist verdeckt (%d Punkte)", cut, schwelle, g.hinter_n);
@@ -254,7 +271,8 @@ static const char *ref_dir(void)
 
 static void teil_leck(void)
 {
-    printf("== r37_pri1100 leck: Weltpunkte hinter / vor der Westwand gegen ROOM1100.MSK ==\n");
+    printf("== r37_pri1100 leck: Weltpunkte hinter / vor der Westwand, ROOM%04X gegen ROOM%04X.MSK ==\n",
+           g_raum, re15_pri_masken_raum(g_raum));
     teil_leck_cut(1, -15690.0, 4, ref_dir(), 1);
     teil_leck_cut(2, -15710.0, 3, ref_dir(), 1);
 }
@@ -273,8 +291,9 @@ static void teil_marke(const char *mskdir, int erwartung_gruen)
         { 168, 144, 10357 }, { 168, 143, 10364 }, { 175, 143, 10367 },                        /* Arm,  Lage F892 */
     };
     cut_t c; int i, verd = 0, n = 0;
-    printf("== r37_pri1100 marke: Kopf und Arm von Zombie 1 (Marken F240/F892), Masken %s ==\n", mskdir);
-    if (!cut_laden(&c, 0x1100, 1, mskdir)) { g_fail = 1; return; }
+    printf("== r37_pri1100 marke: Kopf und Arm von Zombie 1 (Marken F240/F892), ROOM%04X, Masken %s/ROOM%04X ==\n",
+           g_raum, mskdir, re15_pri_masken_raum(g_raum));
+    if (!cut_laden(&c, g_raum, 1, mskdir)) { g_fail = 1; return; }
     for (i = 0; i < (int) (sizeof punkte / sizeof punkte[0]); i++) {
         int x = punkte[i][0], y = punkte[i][1], z = punkte[i][2];
         int d = c.deck[y][x] ? c.tief[y][x] : -1;
@@ -341,11 +360,128 @@ static void teil_schatten_messung(int cut, int px, int pz, int16_t rot, double f
     cut_frei(&c);
 }
 
+/* ---- Nachbesserung 1: Zensus Masken-Zwilling (VERTRAG.md 1.7) ------------------------------------------------- */
+static int datei_da(const char *pfad)
+{
+    FILE *f = fopen(pfad, "rb");
+    if (!f) return 0;
+    fclose(f);
+    return 1;
+}
+
+static uint32_t le32(const uint8_t *p) { return (uint32_t) p[0] | ((uint32_t) p[1] << 8) | ((uint32_t) p[2] << 16) | ((uint32_t) p[3] << 24); }
+
+/* Hintergrund-Block (Raum, Cut) wie bg_pc.c re15_bg_load_room_cut: BSS/ROOM%04X/BG%02d.BSS, sonst die Scheibe
+ * Cut*0x10000 der Stage-Datei STAGE%u/ROOM%03X.BSS (Original @0x80021cd8 sll a3,a3,5 = Cut*32 Sektoren; der Name
+ * traegt den Raum OHNE Varianten-Ziffer @0x80021c90 lh a1,0x0fe2). *sb wird erst bei Bedarf gelesen. */
+static uint8_t *bg_block(unsigned raum, int cut, uint8_t **sb, size_t *nsb, int *sb_gelesen, size_t *n)
+{
+    char p[700]; uint8_t *b;
+    snprintf(p, sizeof p, "%s/shared_assets/PSX/BSS/ROOM%04X/BG%02d.BSS", RE15_PORT_SRC_DIR, raum, cut);
+    b = slurp(p, n);
+    if (b) return b;
+    if (!*sb_gelesen) {
+        *sb_gelesen = 1;
+        snprintf(p, sizeof p, "%s/shared_assets/PSX/STAGE%u/ROOM%03X.BSS", RE15_PORT_SRC_DIR, raum >> 12, raum >> 4);
+        *sb = slurp(p, nsb);
+    }
+    if (*sb && (size_t) (cut + 1) * 0x10000u <= *nsb) {
+        b = (uint8_t *) malloc(0x10000u);
+        if (b) { memcpy(b, *sb + (size_t) cut * 0x10000u, 0x10000u); *n = 0x10000u; return b; }
+    }
+    *n = 0;
+    return NULL;
+}
+
+static void teil_zwilling(void)
+{
+    int stage, raum, n_paare = 0, n_rueck = 0, fehler = 0;
+    int kam_1030 = -1, kam_11c0 = -1;   /* Gegenprobe: diese Paare unterscheiden sich (Cuts 13/14, Satz 12 flag) */
+    printf("== r37_pri1100 zwilling: Zensus Elza -> Leon (Kamerasaetze + Hintergrund je Cut) gegen re15_pri_masken_raum ==\n");
+    for (stage = 1; stage <= 6; stage++)
+        for (raum = 0; raum < 0x40; raum++) {
+            unsigned ge = ((unsigned) stage << 12) | ((unsigned) raum << 4), un = ge | 1u, soll, ist;
+            char p[700]; uint8_t *rg, *ru, *sb = NULL; size_t ng = 0, nu = 0, nsb = 0;
+            int msk_g, msk_u, kam = 1, bg = 1, c, sb_gelesen = 0;
+            snprintf(p, sizeof p, "%s/shared_assets/PSX/STAGE%d/ROOM%04X.RDT", RE15_PORT_SRC_DIR, stage, ge);
+            rg = slurp(p, &ng);
+            snprintf(p, sizeof p, "%s/shared_assets/PSX/STAGE%d/ROOM%04X.RDT", RE15_PORT_SRC_DIR, stage, un);
+            ru = slurp(p, &nu);
+            if (!rg || !ru || ng < 0x60 || nu < 0x60) { free(rg); free(ru); continue; }   /* kein Paar / 4-Byte-Platzhalter */
+            n_paare++;
+            snprintf(p, sizeof p, "%s/shared_assets/PSX/MASKS/ROOM%04X.MSK", RE15_PORT_SRC_DIR, ge);
+            msk_g = datei_da(p);
+            snprintf(p, sizeof p, "%s/shared_assets/PSX/MASKS/ROOM%04X.MSK", RE15_PORT_SRC_DIR, un);
+            msk_u = datei_da(p);
+            if (rg[1] != ru[1]) kam = 0;              /* RDT[1] = Zahl der Kamerasaetze (Cuts) */
+            else {
+                uint32_t og = le32(rg + 0x24), ou = le32(ru + 0x24);
+                for (c = 0; c < rg[1] && kam; c++) {
+                    if (og + (uint32_t) c * 0x20u + 0x1Cu > ng || ou + (uint32_t) c * 0x20u + 0x1Cu > nu) kam = 0;
+                    else if (memcmp(rg + og + c * 0x20, ru + ou + c * 0x20, 0x1C)) kam = 0;
+                }
+            }
+            if (ge == 0x1030) kam_1030 = kam;
+            if (ge == 0x11C0) kam_11c0 = kam;
+            /* Hintergrund nur fuer Kandidaten (fuer alle anderen entscheidet er nichts). */
+            if (msk_g && !msk_u && kam)
+                for (c = 0; c < rg[1] && bg; c++) {
+                    size_t a = 0, b = 0;
+                    uint8_t *ba = bg_block(ge, c, &sb, &nsb, &sb_gelesen, &a);
+                    uint8_t *bb = bg_block(un, c, &sb, &nsb, &sb_gelesen, &b);
+                    if (a != b || (a && memcmp(ba, bb, a))) {
+                        bg = 0;
+                        printf("  ROOM%04X/%04X Cut %d: Hintergrund verschieden\n", ge, un, c);
+                    }
+                    free(ba); free(bb);
+                }
+            free(sb);
+            soll = (msk_g && !msk_u && kam && bg) ? ge : un;
+            ist = re15_pri_masken_raum(un);
+            if (soll == ge) {
+                n_rueck++;
+                printf("  ROOM%04X -> ROOM%04X (%d Cuts: Kamerasaetze + Hintergrund gleich, keine eigene MSK)\n", un, ge, rg[1]);
+            }
+            if (ist != soll) {
+                fehler++;
+                printf("  ABWEICHUNG ROOM%04X: Zensus -> ROOM%04X, Tabelle -> ROOM%04X (Leon-MSK %d, Elza-MSK %d, Kamera %d, "
+                       "Hintergrund %d)\n", un, soll, ist, msk_g, msk_u, kam, bg);
+            }
+            if (re15_pri_masken_raum(ge) != ge) {
+                fehler++;
+                printf("  ABWEICHUNG: die gerade Variante ROOM%04X wird auf ROOM%04X umgelenkt\n", ge, re15_pri_masken_raum(ge));
+            }
+            free(rg); free(ru);
+        }
+    printf("  %d Paare, %d Rueckfaelle, %d Abweichungen\n", n_paare, n_rueck, fehler);
+    /* Gegenproben: der Vergleich ist nicht leer. ROOM1030/1031 (13/14 Cuts) und ROOM11C0/11C1 (14/13, Satz 12 flag 0/1)
+     * haben verschiedene Kamerasaetze; zwei Cuts desselben Raums haben verschiedene Hintergruende. */
+    CHECK("Gegenprobe Kamera: ROOM1030/1031 und ROOM11C0/11C1 werden als verschieden erkannt", kam_1030 == 0 && kam_11c0 == 0);
+    {
+        uint8_t *sb = NULL; size_t nsb = 0, a = 0, b = 0; int gel = 0;
+        uint8_t *b0 = bg_block(0x1100, 0, &sb, &nsb, &gel, &a), *b1 = bg_block(0x1100, 1, &sb, &nsb, &gel, &b);
+        CHECK("Gegenprobe Hintergrund: ROOM1100 Cut 0 und Cut 1 werden als verschieden erkannt",
+              b0 && b1 && (a != b || memcmp(b0, b1, a) != 0));
+        free(b0); free(b1); free(sb);
+    }
+    CHECK("Zensus aus den Dateien == Tabelle re15_pri_masken_raum (alle Paare STAGE1..6)", n_paare >= 100 && fehler == 0);
+    CHECK("ROOM1101 (Elza, Pflichtweg 10D1 -> 1101) nutzt die Masken von ROOM1100", re15_pri_masken_raum(0x1101) == 0x1100);
+    CHECK("eigene Elza-Masken gewinnen (ROOM1221, ROOM2091 bleiben bei sich)",
+          re15_pri_masken_raum(0x1221) == 0x1221 && re15_pri_masken_raum(0x2091) == 0x2091);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     if (!strcmp(teil, "leck")) teil_leck();
     else if (!strcmp(teil, "marke")) teil_marke(ref_dir(), 1);
+    else if (!strcmp(teil, "zwilling")) teil_zwilling();
+    else if (!strcmp(teil, "elza")) {      /* Nachbesserung 1: Elzas ROOM1101 (Kamera ROOM1101.RDT, Masken per Zwilling) */
+        CHECK("ROOM1101 hat keine eigenen Masken, der Lader nimmt ROOM1100", re15_pri_masken_raum(0x1101) == 0x1100);
+        g_raum = 0x1101;
+        teil_leck();
+        teil_marke(ref_dir(), 1);
+    }
     else if (!strcmp(teil, "schatten") && argc > 2) {      /* Messung: schatten <maskenverzeichnis> */
         teil_schatten_messung(2, -15100, -18500, -1024, -15710.0, argv[2]);
         teil_schatten_messung(1, -15100, -16900, -1024, -15690.0, argv[2]);

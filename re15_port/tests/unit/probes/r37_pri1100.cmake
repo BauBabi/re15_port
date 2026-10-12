@@ -25,7 +25,15 @@ target_compile_definitions(test_r37_pri1100 PRIVATE RE15_PORT_SRC_DIR="${CMAKE_S
 if(NOT WIN32)
     target_link_libraries(test_r37_pri1100 PRIVATE m)
 endif()
-foreach(_teil leck marke)
+#
+# Nachbesserung 1 (Abnahme A#0 M1, VERTRAG.md 1.7): Elzas ROOM1101 (RDT bytegleich zu ROOM1100, Pflichtweg 10D1 -> 1101)
+# hatte KEINE Masken (der Port sucht MASKS/ROOM%04X.MSK mit der vollen Id). Jetzt re15_pri_masken_raum (Masken-Zwilling).
+#   unit_r37_pri1100_zwilling  Zensus aller Paare STAGE1..6 aus den Dateien (Leon-MSK da, Elza-MSK nicht, Kamerasaetze
+#                            RDT+0x24 Satz+0x00..+0x1B gleich, Hintergrund je Cut gleich) == Tabelle re15_pri_masken_raum.
+#   unit_r37_pri1100_elza    leck + marke fuer ROOM1101: Kamera aus ROOM1101.RDT, Masken ueber den Zwilling.
+#   integration_r37_pri1100_elza  echte exe als Elza auf dem Tuerweg 10D1 -> 1101 (Cut 1 von selbst): Leon-Masken
+#                            geladen, Wandfenster gleich "ohne Zombie", ohne Masken nicht.
+foreach(_teil leck marke zwilling elza)
     add_test(NAME unit_r37_pri1100_${_teil} COMMAND test_r37_pri1100 ${_teil}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r37_pri1100_${_teil} PROPERTIES TIMEOUT 120)
@@ -39,4 +47,11 @@ if(TARGET re15_pc AND TARGET probe_r36_ppm_diff)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r37_pri1100_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_pri1100_marke.cmake)
     set_tests_properties(integration_r37_pri1100_marke PROPERTIES TIMEOUT 600)
+    add_test(NAME integration_r37_pri1100_elza
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r36_ppm_diff>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r37_pri1100_elza_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_pri1100_elza.cmake)
+    set_tests_properties(integration_r37_pri1100_elza PROPERTIES TIMEOUT 600)
 endif()
