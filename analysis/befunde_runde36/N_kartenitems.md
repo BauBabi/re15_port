@@ -640,5 +640,44 @@ ok:     ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 
 ```
 unit_r36_kartenitems: 217 PASS, 0 FAIL (Zeile 3: ROOM1200 Bit 77, Zeile 4: ROOM11D0 Bit 78; Teil S Bits 87/78 -> Blatt 4 + 0).
 
-### 9.5 P4 Riegel
+### 9.5 P4 Riegel — `unit_r36_kartenbits` (tests/unit/test_r36_kartenbits.c, tests/unit/probes/r36_kartenbits.cmake)
+Drei Teile, alle an echten Daten / echtem Port-Code:
+* **Z Zensus des Originals** (a/b): alle ausgelieferten RDTs (STAGE1..6, Leon- und Elza-Varianten), main- und sub-SCD,
+  Laengen aus `scd_opcode_size_at` (scd_vm.c, schon fuer r21_discard exportiert und genau die Lese-Funktion fuer
+  `s_opcode_sizes`, die der Auftrag erlaubt — **scd_vm.c blieb unveraendert**), Sektionsende/Regionen/Vorwaertsziel-Regel
+  1:1 wie scd_dump_room.py. Gesammelt: Item_aot_set-Bit (u16 pc[18]/pc[26]), Ck(9,n), Set(9,n), FLAG_CHG-Saetze mit Bank 9
+  (Aot_set/Aot_reset sce 4); 0x58/0x59 mit Bank 9 sind verboten (Bit erst zur Laufzeit). Gegenproben: 206 RDTs, **1579
+  Regionen** (= Runde-30-Zensus "1579 SCD-Bloecke"), **40674 Opcodes** (= bank9_zensus.py, zweite unabhaengige
+  Implementierung), 0 Desync, 164 Item_aot_set, 85 Bits; die bekannten Bits 85, 86, 90, 91, 92 sowie 52/136/138
+  (Keycard-Tore) und 21 (Skript-Bit ROOM3091) werden gefunden.
+* **P Port** (c/d): explizite Liste aller 30 Bank-9-Eintraege des Ports mit Makro + Quelle (Werte aus den Koepfen
+  re15_sicherung.h, re15_irons_tisch.h, re15_granate.h, re15_dokumente.h, re15_leiche.h, re15_rolltor.h, re15_adaruf.h,
+  re15_cut10f0.h, re15_irons_tod.h, re15_fenster1120.h, re15_inhalt_r35.h, re15_schluessel_r36.h, re15_szenenleon_r36.h,
+  re15_tuer1060.h; je Eintrag Bank == 9 geprueft) + die 5 Lageplan-Bits LIVE aus `k_r36k_lage`: keines im Original-Satz,
+  kein Lageplan-Bit gleich einem anderen Port-Bit. GEGENPROBE im Test: die alte Spur-N-Belegung {87..91} durch DIESELBE
+  Pruefung -> genau {90, 91}.
+* **V Verhalten** (Abschnitt 9.2): Plan ueber das echte Port-Programm nehmen -> Stage-2-Items bleiben scharf;
+  Rueckrichtung.
+
+Ergebnis Endstand: `100% tests passed, 0 tests failed out of 1` (127 ok, 0 FAIL).
+
+**Gegenprobe (d) am gebauten Code** — `gen/kartenitems_r36.inc` voruebergehend auf die alte Belegung (B2 90, B1 91)
+zurueckgesetzt, gebaut, Riegel gefahren (exit 1), danach .inc wiederhergestellt (bytegleich zum Commit, cmp), neu
+gebaut, Riegel gruen (exit 0). Ausgabe mit der alten Belegung (alle 10 FAIL):
+```
+FAIL: Bit  90 Lageplan Blatt 1 ROOM1200 (k_r36k_lage, Spur N) — KOLLISION mit ROOM2090 main00 @0x00A12 Item_aot_set
+FAIL: Bit  91 Lageplan Blatt 0 ROOM11D0 (k_r36k_lage, Spur N) — KOLLISION mit ROOM2040 main00 @0x01364 Item_aot_set
+FAIL: 35 Port-Bits gegen 85 Original-Bits: 2 Kollision(en)
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2090 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 1 (Bit 9,90): ROOM2091 Slot 5 Item 0x3F (Pocket Watch, Taken-Bit 90) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2040 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL:   nach Plan Blatt 0 (Bit 9,91): ROOM2041 Slot 7 Item 0x32 (Head of Akuma, Taken-Bit 91) STILL - das Item ist weg
+FAIL: Original-Items 0x32/0x3F genommen (Bits 90/91): Besitz der Polizei-Blaetter 0..4 = 0x03
+FAIL:   ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+FAIL:   ROOM11D0: Plan Blatt 0 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
+```
+Grenze des Riegels: Teil P kennt nur die Port-Bits, die in seiner Liste stehen. Ein NEUES Port-Bit muss dort eingetragen
+werden (Kommentar an der Liste; bank9_zensus.py Teil port findet alle Zugriffsstellen per grep).
+
+### 9.6 P5 Alt-Spielstaende
 (folgt)

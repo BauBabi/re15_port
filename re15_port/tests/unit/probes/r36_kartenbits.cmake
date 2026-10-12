@@ -2,7 +2,14 @@
 # Bank-9-Bits ORIGINALER Item-Saetze (90 = ROOM2090/2091 Item 0x3F, 91 = ROOM2040/2041 Item 0x32).
 # Dossier: analysis/befunde_runde36/N_kartenitems.md Abschnitt 9.
 #
-#   unit_r36_kartenbits   V  Plan ueber das echte Port-Programm (Ereignis 28, Ja) nehmen -> Item_aot_set in
+#   unit_r36_kartenbits   Z  Zensus aller ausgelieferten RDTs (Laengen = scd_opcode_size_at): Bank-9-Bits des
+#                            Originals aus Item_aot_set (u16 pc[18] @0x80040680 / pc[26] @0x80040670), Ck(9,n)
+#                            @0x8003fd2c, Set(9,n) @0x8003fe04, FLAG_CHG(9,n) @0x80043140; 0x58/0x59 mit Bank 9
+#                            verboten. Gegenprobe: 206 RDTs, 0 Desync, 40674 Opcodes, 164 Item_aot_set, 85 Bits,
+#                            bekannte Bits 85/86/90/91/92/52/136/138/21 gefunden.
+#                         P  explizite Liste aller Port-Bank-9-Bits (Makros der Koepfe + live k_r36k_lage):
+#                            keines im Original-Satz; Gegenprobe alte Spur-N-Belegung 87..91 -> genau {90, 91}.
+#                         V  Plan ueber das echte Port-Programm (Ereignis 28, Ja) nehmen -> Item_aot_set in
 #                            ROOM2040/2041 @0x01364 und ROOM2090/2091 @0x00A12 bleibt scharf (Taken-Test
 #                            @0x800406dc); Gegenprobe Original-Bit -> still; Rueckrichtung kein Besitz.
 add_executable(test_r36_kartenbits ${CMAKE_CURRENT_LIST_DIR}/../test_r36_kartenbits.c)

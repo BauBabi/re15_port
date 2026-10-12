@@ -17,6 +17,20 @@
  *      -> der Item-Satz muss scharf bleiben. GEGENPROBE: das Original-Bit des Satzes gesetzt -> Satz still (die
  *      Messung kann den Fehler sehen). RUECKRICHTUNG: diese Original-Items genommen -> kein Polizei-Lageplan im
  *      Besitz, und die Karte haengt in ihrem Raum noch.
+ *   Z  ZENSUS DES ORIGINALS: alle ausgelieferten RDTs (shared_assets/PSX/STAGE1..6/ROOM*.RDT), main- und sub-SCD,
+ *      gelaufen mit dem Laengen-Vorschub des Motors selbst (scd_opcode_size_at = s_opcode_sizes in scd_vm.c, schon
+ *      exportiert fuer r21_discard — keine zweite Laengentabelle). Gesammelt wird jede Bank-9-Bitnummer, die das
+ *      Original anfasst: Item_aot_set-Taken-Bit (u16 pc[18] bzw. pc[26]), Ck(9,n) (@0x8003fd2c), Set(9,n)
+ *      (@0x8003fe04), FLAG_CHG-Saetze sce 4 mit Bank 9 (Aot_set/Aot_reset, LAB_80043120 @0x80043140); Flag-Ck2/
+ *      Flag-Set2 (0x58 @0x8003fda0 / 0x59 @0x8003fed0) mit Bank 9 tragen das Bit erst zur Laufzeit und duerfen
+ *      deshalb NICHT vorkommen (sonst ist der Satz unvollstaendig). Andere Leser/Schreiber der Bank 9 hat das
+ *      Original nicht (Zensus-Datei analysis/befunde_runde36/N_belege/bank9_zensus.txt: Ghidra-XREF, Overlays).
+ *      GEGENPROBE des Zensus: 206 RDTs mit Kopf, 0 Desync, 164 Item_aot_set, und die bekannten Original-Bits
+ *      85, 86, 90, 91, 92 (+ die Kartenleser-Tore 52/136/138) muessen gefunden werden.
+ *   P  PORT: explizite Liste ALLER Bank-9-Bits des Ports (je Bit Makro + Quelle, Runde 30..36; die Lageplan-Bits
+ *      live aus der Tabelle k_r36k_lage) — KEINES darf im Original-Satz liegen, und kein Lageplan-Bit darf ein
+ *      anderes Port-Bit sein. GEGENPROBE: die alte Spur-N-Belegung 87..91 (Stand 7a0fd453) liefert mit DERSELBEN
+ *      Pruefung genau die Treffer {90, 91} — der Riegel waere mit ihr rot.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -30,6 +44,21 @@
 #include "re15_enemy_ai.h"
 #include "re15_map_owned.h"
 #include "re15_kartenitems_r36.h"
+/* Teil P: die Bank-9-Bits des Ports stehen als Makros in diesen Koepfen (Runde 30..36). */
+#include "re15_sicherung.h"
+#include "re15_irons_tisch.h"
+#include "re15_granate.h"
+#include "re15_dokumente.h"
+#include "re15_leiche.h"
+#include "re15_rolltor.h"
+#include "re15_adaruf.h"
+#include "re15_cut10f0.h"
+#include "re15_irons_tod.h"
+#include "re15_fenster1120.h"
+#include "re15_inhalt_r35.h"
+#include "re15_schluessel_r36.h"
+#include "re15_szenenleon_r36.h"
+#include "re15_tuer1060.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -252,9 +281,282 @@ static void teil_v(void)
     }
 }
 
+/* ================================================================= Z */
+
+typedef struct {
+    long rdts, stummel, regionen, opcodes, desync;
+    long item_aot_set, ck9, set9, flagchg9, op58_9, op59_9, item_bit_hoch;
+    uint8_t  belegt[256];                  /* 1 = das Original fasst dieses Bank-9-Bit an */
+    char     erste[256][48];               /* erste Fundstelle je Bit (fuer die Ausgabe) */
+} zensus_t;
+
+static zensus_t s_z;
+
+static uint16_t le16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
+static int16_t  les16(const uint8_t *p) { return (int16_t)le16(p); }
+static uint32_t le32(const uint8_t *p)
+{
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+
+static void bit_merken(uint32_t bit, unsigned room, const char *tag, int idx, uint32_t pc, const char *was)
+{
+    if (bit >= 256) { s_z.item_bit_hoch++; return; }
+    if (!s_z.belegt[bit])
+        snprintf(s_z.erste[bit], sizeof s_z.erste[bit], "ROOM%04X %s%02d @0x%05X %s", room, tag, idx,
+                 (unsigned)pc, was);
+    s_z.belegt[bit] = 1;
+}
+
+/* Sektionsende und Regionen exakt wie tools/scd_dump_room.py (rdt_section_end / section_regions), damit der
+ * C-Zensus und bank9_zensus.py dieselben Opcodes sehen (Gegenprobe: dieselbe Opcode-Zahl). */
+static uint32_t ptr_ausdehnung(const uint8_t *d, size_t n, uint32_t s)
+{
+    if (s == 0 || s + 2 > n) return 0;
+    uint16_t first = le16(d + s);
+    if (first < 2 || (first & 1) || s + first > n) return 0;
+    uint32_t mx = 0;
+    for (uint32_t i = 0; i < first / 2u; i++) {
+        uint16_t o = le16(d + s + 2 * i);
+        if (o == 0 || s + o >= n) continue;
+        if (o > mx) mx = o;
+    }
+    return mx;
+}
+
+static uint32_t sektion_ende(const uint8_t *d, size_t n, uint32_t s)
+{
+    uint32_t boden = s + ptr_ausdehnung(d, n, s), best = 0;
+    for (uint32_t o = 0x40; o < 0x60 && o + 4 <= n; o += 4) {
+        uint32_t v = le32(d + o);
+        if (v > boden && v <= n && (best == 0 || v < best)) best = v;
+    }
+    return best ? best : (uint32_t)n;
+}
+
+static uint32_t sprungziel(const uint8_t *d, uint32_t pc)      /* scd_dump_room.py fwd_target; 0 = keins */
+{
+    uint8_t op = d[pc];
+    if (op == 0x06) return pc + 4 + le16(d + pc + 2);
+    if (op == 0x07) return (uint32_t)((int32_t)pc + les16(d + pc + 2));
+    if (op == 0x0D || op == 0x1B) return (uint32_t)((int32_t)pc + 6 + les16(d + pc + 2));
+    if (op == 0x0F || op == 0x11 || op == 0x13) return (uint32_t)((int32_t)pc + 4 + les16(d + pc + 2));
+    if (op == 0x14) return pc + 6 + le16(d + pc + 2);
+    if (op == 0x17) { int16_t o = les16(d + pc + 4); return o > 0 ? (uint32_t)((int32_t)pc + o) : 0; }
+    return 0;
+}
+
+static void region_laufen(const uint8_t *d, uint32_t start, uint32_t ende, unsigned room, const char *tag, int idx)
+{
+    uint32_t pc = start, maxf = start;
+    while (pc < ende) {
+        int sz = scd_opcode_size_at(d + pc);
+        if (sz <= 0 || pc + (uint32_t)sz > ende) { s_z.desync++; return; }
+        s_z.opcodes++;
+        const uint8_t op = d[pc];
+        if (op == 0x50) {                                  /* Item_aot_set @0x80040644 */
+            const int lang = (d[pc + 3] & 0x80) != 0;
+            const uint32_t bit = le16(d + pc + (lang ? 26 : 18));   /* @0x80040670 / @0x80040680 */
+            s_z.item_aot_set++;
+            bit_merken(bit, room, tag, idx, pc, "Item_aot_set");
+        } else if ((op == 0x21 || op == 0x22) && d[pc + 1] == 9) {   /* Ck @0x8003fd2c / Set @0x8003fe04 */
+            if (op == 0x21) s_z.ck9++; else s_z.set9++;
+            bit_merken(d[pc + 2], room, tag, idx, pc, op == 0x21 ? "Ck(9)" : "Set(9)");
+        } else if (op == 0x58 && d[pc + 1] == 9) {
+            s_z.op58_9++;                                  /* Bit aus work_vars: statisch unbestimmt */
+        } else if (op == 0x59 && d[pc + 1] == 9) {
+            s_z.op59_9++;
+        } else if (op == 0x2C && d[pc + 2] == 4) {         /* Aot_set sce 4 FLAG_CHG (LAB_80043120) */
+            const uint32_t b = pc + ((d[pc + 3] & 0x80) ? 22 : 14);
+            if (le16(d + b) == 9) { s_z.flagchg9++; bit_merken(le16(d + b + 2), room, tag, idx, pc, "Aot_set FLAG_CHG"); }
+        } else if (op == 0x46 && d[pc + 2] == 4) {         /* Aot_reset auf sce 4 */
+            if (le16(d + pc + 4) == 9) { s_z.flagchg9++; bit_merken(le16(d + pc + 6), room, tag, idx, pc, "Aot_reset FLAG_CHG"); }
+        }
+        uint32_t t = sprungziel(d, pc);
+        if (t > maxf) maxf = t;
+        if (op == 0x01 && pc + 2 > maxf) return;           /* Evt_end hinter dem weitesten Vorwaertsziel */
+        pc += (uint32_t)sz;
+    }
+}
+
+static void zensus_raum(const uint8_t *d, size_t n, unsigned room)
+{
+    static const char *tags[2] = { "main", "sub" };
+    for (int k = 0; k < 2; k++) {
+        uint32_t ss = le32(d + 0x40 + 4 * k);
+        if (ss == 0 || ss >= n || ss + 2 > n) continue;
+        uint32_t se = sektion_ende(d, n, ss);
+        uint16_t first = le16(d + ss);
+        if (first < 2 || (first & 1) || ss + first > n) continue;
+        uint32_t offs[512]; int idx_von[512]; int cnt = 0;
+        for (uint32_t i = 0; i < first / 2u && cnt < 512; i++) {
+            uint16_t o = le16(d + ss + 2 * i);
+            if (!o || ss + o >= n) continue;
+            int dup = 0;
+            for (int j = 0; j < cnt; j++) if (offs[j] == o) dup = 1;
+            if (!dup) { offs[cnt] = o; idx_von[cnt] = (int)i; cnt++; }
+        }
+        for (int i = 0; i < cnt; i++)
+            for (int j = i + 1; j < cnt; j++)
+                if (offs[j] < offs[i]) {
+                    uint32_t t = offs[i]; offs[i] = offs[j]; offs[j] = t;
+                    int ti = idx_von[i]; idx_von[i] = idx_von[j]; idx_von[j] = ti;
+                }
+        for (int i = 0; i < cnt; i++) {
+            uint32_t e = (i + 1 < cnt) ? offs[i + 1] : se - ss;
+            if (e > se - ss) e = se - ss;
+            if (e > offs[i]) { s_z.regionen++; region_laufen(d, ss + offs[i], ss + e, room, tags[k], idx_von[i]); }
+        }
+    }
+}
+
+static void teil_z(void)
+{
+    printf("=== Z: Zensus der Bank-9-Bits des Originals (alle ausgelieferten RDTs) ===\n");
+    memset(&s_z, 0, sizeof s_z);
+    for (unsigned st = 1; st <= 6; st++)
+        for (unsigned hi = 0; hi < 0x100; hi++)
+            for (unsigned lo = 0; lo < 2; lo++) {
+                unsigned room = (st << 12) | (hi << 4) | lo;
+                char p[600]; size_t n = 0;
+                snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, st, room);
+                uint8_t *d = slurp(p, &n);
+                if (!d) continue;
+                if (n < 0x48) { s_z.stummel++; free(d); continue; }
+                s_z.rdts++;
+                zensus_raum(d, n, room);
+                free(d);
+            }
+    int belegt = 0;
+    for (int b = 0; b < 256; b++) belegt += s_z.belegt[b];
+    printf("  Abdeckung: %ld RDTs mit Kopf (+%ld Stummel), %ld Regionen, %ld Opcodes, %ld Desync\n",
+           s_z.rdts, s_z.stummel, s_z.regionen, s_z.opcodes, s_z.desync);
+    printf("  %ld Item_aot_set, %ld Ck(9,n), %ld Set(9,n), %ld FLAG_CHG(9,n), 0x58/0x59 mit Bank 9: %ld/%ld -> %d von 256 Bits\n",
+           s_z.item_aot_set, s_z.ck9, s_z.set9, s_z.flagchg9, s_z.op58_9, s_z.op59_9, belegt);
+    printf("  belegt:");
+    for (int b = 0; b < 256; b++) if (s_z.belegt[b]) printf(" %d", b);
+    printf("\n");
+    PRUEFE(s_z.rdts == 206, "206 RDTs mit Kopf gelesen (%ld)", s_z.rdts);
+    PRUEFE(s_z.desync == 0, "0 Desync-Stopps (%ld) — der Walk ist synchron", s_z.desync);
+    PRUEFE(s_z.opcodes == 40674, "40674 Opcodes = dieselbe Zahl wie bank9_zensus.py (%ld)", s_z.opcodes);
+    PRUEFE(s_z.item_aot_set == 164, "164 Item_aot_set = r21_discard TEIL C (%ld)", s_z.item_aot_set);
+    PRUEFE(s_z.op58_9 == 0 && s_z.op59_9 == 0,
+           "kein Flag-Ck2/Flag-Set2 (0x58/0x59) mit Bank 9 — sonst traegt das Original Bits, die erst zur Laufzeit "
+           "feststehen (%ld/%ld)", s_z.op58_9, s_z.op59_9);
+    PRUEFE(s_z.item_bit_hoch == 0, "kein Item-Taken-Bit >= 256 (%ld)", s_z.item_bit_hoch);
+    PRUEFE(belegt == 85, "85 von 256 Bits belegt (= bank9_zensus.py und Runde-30-Zensus r30_idw_zensus.py): %d", belegt);
+    /* GEGENPROBE: der Zensus sieht die bekannten Original-Bits (sonst ist er selbst kaputt). */
+    static const struct { uint8_t bit; const char *was; } k_bekannt[] = {
+        { 85, "ROOM3040 sub00 @0x014B2 Item 0x36 Green Keycard" },
+        { 86, "ROOM4040 main00 @0x00F66 Item 0x41 Spark Plug" },
+        { 90, "ROOM2090 main00 @0x00A12 Item 0x3F Pocket Watch" },
+        { 91, "ROOM2040 main00 @0x01364 Item 0x32 Head of Akuma" },
+        { 92, "ROOM3050 main00 @0x01EC6 Item 0x07 Super Redhawk" },
+        { 52, "Blue Keycard 0x38 - Tor Ck(9,52) ROOM10D0 sub20 @0x019C0" },
+        { 136, "Red Keycard 0x37 - Tor Ck(9,136) ROOM1230 sub20 @0x01488" },
+        { 138, "Yellow Keycard 0x39 - Tor Ck(9,138) ROOM11E0 sub20 @0x01FA8" },
+        { 21, "einziges reines Skript-Bit: ROOM3091 sub06 @0x016C2 Set(9,21,1)" },
+    };
+    for (size_t i = 0; i < sizeof k_bekannt / sizeof k_bekannt[0]; i++)
+        PRUEFE(s_z.belegt[k_bekannt[i].bit], "Zensus findet Bit %u (%s): erste Stelle %s",
+               (unsigned)k_bekannt[i].bit, k_bekannt[i].was, s_z.erste[k_bekannt[i].bit]);
+}
+
+/* ================================================================= P */
+
+typedef struct { unsigned bank; unsigned bit; const char *makro; const char *quelle; } port_bit_t;
+
+/* ALLE Bank-9-Bits des Ports (Zensus 2026-10-12, bank9_zensus.py Teil port; Runde 30..36). Die Werte kommen aus
+ * den Koepfen — aendert jemand ein Makro auf ein Original-Bit, wird dieser Test rot. Neue Port-Bits: HIER
+ * eintragen (und VERTRAG.md 1.1). Die Lageplan-Bits der Spur N kommen live aus k_r36k_lage (teil_p). */
+static const port_bit_t k_port[] = {
+    { 9, RE15_SICHERUNG_TAKEN_BIT,       "RE15_SICHERUNG_TAKEN_BIT",       "Sicherung genommen, sicherung_1150.c (Runde 30/34)" },
+    { 9, RE15_IRONS_DIARY_TAKEN_BIT,     "RE15_IRONS_DIARY_TAKEN_BIT",     "Irons Diary genommen, irons_tisch_1150.c (Runde 30)" },
+    { 9, RE15_IRONS_KARTE_TAKEN_BIT,     "RE15_IRONS_KARTE_TAKEN_BIT",     "Memory Card Irons-Tisch, irons_tisch_1150.c (Runde 30)" },
+    { 9, RE15_GRANATE_TAKEN_BIT,         "RE15_GRANATE_TAKEN_BIT",         "Granate 1150 genommen, granate_1150.c (Runde 30)" },
+    { 9, RE15_DOK1_BIT,                  "RE15_DOK1_BIT",                  "Dokument 1 ROOM1050, dokumente_r34.c (Runde 34)" },
+    { 9, RE15_DOK2_BIT,                  "RE15_DOK2_BIT",                  "Dokument 2 ROOM1000, dokumente_r34.c (Runde 34)" },
+    { 9, RE15_DOK3_BIT,                  "RE15_DOK3_BIT",                  "Dokument 3 ROOM1020, dokumente_r34.c (Runde 34)" },
+    { 9, RE15_DOK4_BIT,                  "RE15_DOK4_BIT",                  "Dokument 4 ROOM1010, dokumente_r34.c (Runde 34)" },
+    { 9, RE15_LEICHE_1110_BIT,           "RE15_LEICHE_1110_BIT",           "Leichen-Munition ROOM1110, leiche_1110_1230.c (Runde 34)" },
+    { 9, RE15_LEICHE_1230_BIT,           "RE15_LEICHE_1230_BIT",           "Leichen-Munition ROOM1230, leiche_1110_1230.c (Runde 34)" },
+    { RE15_ROLLTOR_EINGESETZT_BANK, RE15_ROLLTOR_EINGESETZT_BIT, "RE15_ROLLTOR_EINGESETZT_BIT", "Sicherung eingesetzt, rolltor_1050.c Set @+2A (Runde 34)" },
+    { RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT, "RE15_ADARUF_GESEHEN_BIT", "Ada-Ruf gesehen, adaruf_1050.c Set @+00 (Runde 34)" },
+    { RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, "RE15_CUT10F0_GESEHEN_BIT", "10F0-Szene gesehen, gen/cut10f0_szene.inc Set @+0000 (Runde 35 K)" },
+    { RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT, "RE15_CUT10F0_ZIEL2_BESUCHT_BIT", "10F0 Ziel 2 besucht, cut_10f0.c (Runde 35 K)" },
+    { RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT, "RE15_CUT10F0_BGM_START_BIT", "liest Irons-Tod 73, cut_10f0.c (Runde 35)" },
+    { RE15_IT_K_BANK, RE15_IT_K_BIT,     "RE15_IT_K_BIT",                  "liest 10F0-Szene 71, irons_tod_1150.c (Runde 35 L)" },
+    { RE15_IT_BANK, RE15_IT_BIT_GESEHEN, "RE15_IT_BIT_GESEHEN",            "Irons-Todesszene gesehen, irons_tod_1150.c OP_SET (Runde 35 L)" },
+    { RE15_IT_BANK, RE15_IT_BIT_1130,    "RE15_IT_BIT_1130",               "Spawn 1130 verbraucht, irons_tod_1150.c (Runde 35 L)" },
+    { RE15_IT_BANK, RE15_IT_BIT_1040,    "RE15_IT_BIT_1040",               "Spawn 1040 verbraucht, irons_tod_1150.c (Runde 35 L)" },
+    { RE15_IT_BANK, RE15_IT_BIT_1030,    "RE15_IT_BIT_1030",               "Spawn 1030 verbraucht, irons_tod_1150.c (Runde 35 L)" },
+    { RE15_FENSTER_BANK, RE15_FENSTER_BIT, "RE15_FENSTER_BIT",             "Fenster 1120 kaputt, fenster_1120.c (Runde 35 M)" },
+    { RE15_FENSTER_BANK, RE15_FENSTER_TOR_BIT, "RE15_FENSTER_TOR_BIT",     "liest Irons-Tod 73, fenster_1120.c (Runde 35)" },
+    { 9, RE15_R35I_KARTE_BIT,            "RE15_R35I_KARTE_BIT",            "Memory Card ROOM1010, inhalt_r35.c (Runde 35 F)" },
+    { 9, RE15_R35I_SCHROT_BIT,           "RE15_R35I_SCHROT_BIT",           "Schrot ROOM1090, inhalt_r35.c (Runde 35 F)" },
+    { 9, RE15_R36Q_PARK_BIT,             "RE15_R36Q_PARK_BIT",             "Parking-Lot-Key genommen, schluessel_r36.c (Runde 36 Q)" },
+    { 9, RE15_R36Q_PRISON_BIT,           "RE15_R36Q_PRISON_BIT",           "Prison Key genommen, schluessel_r36.c (Runde 36 Q)" },
+    { 9, RE15_R36Q_TUER_BIT,             "RE15_R36Q_TUER_BIT",             "Parkplatz-Tuer aufgeschlossen, schluessel_r36.c (Runde 36 Q)" },
+    { RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU, "RE15_SZL_BIT_ZU",                "Werkstatt-Tuer verschlossen, gen/szl11b0_szene.inc Set 0x54 (Runde 36 J)" },
+    { RE15_TUER1060_K_BANK, RE15_TUER1060_K_BIT, "RE15_TUER1060_K_BIT",    "liest 10F0-Szene 71, tuer1060_1040.c (Runde 35)" },
+    { RE15_TUER1060_TOD_BANK, RE15_TUER1060_TOD_BIT, "RE15_TUER1060_TOD_BIT", "liest Irons-Tod 73, tuer1060_1040.c (Runde 35)" },
+};
+#define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
+
+/* Die Pruefung selbst: wie viele der Bits liegen im Original-Satz? (Treffer werden aufgezaehlt.) */
+static int kollisionen(const unsigned *bits, int n, unsigned *treffer, int max_treffer)
+{
+    int k = 0;
+    for (int i = 0; i < n; i++)
+        if (bits[i] < 256 && s_z.belegt[bits[i]]) { if (k < max_treffer) treffer[k] = bits[i]; k++; }
+    return k;
+}
+
+static void teil_p(void)
+{
+    printf("=== P: Bank-9-Bits des Ports gegen den Original-Satz ===\n");
+    unsigned alle[64]; int n = 0;
+    for (int i = 0; i < N_PORT; i++) {
+        PRUEFE(k_port[i].bank == 9, "%s steht in Bank 9 (%u)", k_port[i].makro, k_port[i].bank);
+        int im_original = k_port[i].bit < 256 && s_z.belegt[k_port[i].bit];
+        PRUEFE(!im_original, "Bit %3u %-30s %s — %s%s", k_port[i].bit, k_port[i].makro, k_port[i].quelle,
+               im_original ? "KOLLISION mit " : "im Original frei", im_original ? s_z.erste[k_port[i].bit] : "");
+        alle[n++] = k_port[i].bit;
+    }
+    const int n_plaene = re15_kartenitems_r36_anzahl();
+    for (int k = 0; k < n_plaene; k++) {
+        const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
+        int im_original = s_z.belegt[z->bit];
+        PRUEFE(RE15_R36K_BANK == 9 && !im_original, "Bit %3u Lageplan Blatt %u ROOM%04X (k_r36k_lage, Spur N) — %s%s",
+               (unsigned)z->bit, (unsigned)z->blatt, (unsigned)z->raum,
+               im_original ? "KOLLISION mit " : "im Original frei", im_original ? s_z.erste[z->bit] : "");
+        int doppelt = 0;
+        for (int i = 0; i < N_PORT; i++) if (k_port[i].bit == z->bit) doppelt = 1;
+        for (int j = 0; j < n_plaene; j++)
+            if (j != k && re15_kartenitems_r36_zeile(j)->bit == z->bit) doppelt = 1;
+        PRUEFE(!doppelt, "Lageplan-Bit %u ist kein anderes Port-Bit", (unsigned)z->bit);
+        alle[n++] = z->bit;
+    }
+    unsigned treffer[16];
+    int k = kollisionen(alle, n, treffer, 16);
+    PRUEFE(k == 0, "%d Port-Bits gegen 85 Original-Bits: %d Kollision(en)", n, k);
+
+    /* GEGENPROBE: die Spur-N-Belegung bis zum Nachtrag (gen/kartenitems_r36.inc Stand 7a0fd453: 87,88,89,90,91)
+     * mit DERSELBEN Pruefung — sie muss genau {90, 91} melden, sonst koennte der Riegel den Befund nicht sehen. */
+    static const unsigned k_alt_n[5] = { 87, 88, 89, 90, 91 };
+    unsigned alt[16]; int na = kollisionen(k_alt_n, 5, alt, 16);
+    PRUEFE(na == 2 && alt[0] == 90 && alt[1] == 91,
+           "Gegenprobe alte Belegung 87..91: %d Treffer {%u, %u} — erwartet genau {90, 91} (Riegel waere rot)",
+           na, na > 0 ? alt[0] : 0u, na > 1 ? alt[1] : 0u);
+    if (na >= 2)
+        printf("        90: %s\n        91: %s\n", s_z.erste[90], s_z.erste[91]);
+}
+
 int main(void)
 {
     printf("=== Runde 36 Nachtrag N: Lageplan-Bits gegen die Bank-9-Bits des Originals ===\n");
+    teil_z();
+    teil_p();
     teil_v();
     for (int i = 0; i < N_ORIG; i++) free(s_orig_raum[i].buf);
     if (g_fail) { printf("FAIL\n"); return 1; }
