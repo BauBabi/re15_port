@@ -28,16 +28,27 @@
  *
  * ABBILDUNG (PORT-MAPPING Beta -> Retail, Form RE2-Deskriptor 6): RE1.5 kennt fuer aufrechte Zombies drei Klassen:
  *   0x0d  ENGAGE ab INIT                                           -> RE2 6 (unveraendert, re2z_init sel 0x0d)
- *   0x00  Kampf-Untermodus 0, DECIDE FUN_80101b64 (@0x8011f840[0]): ENGAGE 0x201, sobald Leon im Weitkegel +-0x5f4
- *         sichtbar ist — OHNE Abstandsgrenze (`jal arc_test(0x5f4)` @0x80101b8c, `sll/bne` @0x80101bf4-f8, Sicht-Bit
- *         `lhu 472 / andi 0x10 / beq` @0x80101c0c-18, `ori 0x201 / sw` @0x80101c1c-20; der einzige Abstandstest des
- *         Zweigs `sltiu 0x2711` @0x80101c38 gilt dem 1/8-Wander-Wurf; der Sichtsensor FUN_8001bc08 ->
- *         FUN_8001b84c(0x5e8) prueft nur Kegel + Nibble-3-Strahl @0x8001b87c-8e8) = der AKTIVE Zombie der RE1.5-Daten
+ *   0x00  Kampf-Untermodus 0, DECIDE FUN_80101b64 (STAGE1.BIN @0x8011f840[0]): ENGAGE 0x201, sobald Leon im Weitkegel
+ *         +-0x5f4 sichtbar ist — OHNE Abstandsgrenze (`jal arc_test(0x5f4)` @0x80101b8c, `sll/bne` @0x80101bf4-f8,
+ *         Sicht-Bit `lhu 472 / andi 0x10 / beq` @0x80101c0c-18, `ori 0x201 / sw` @0x80101c1c-20; der einzige
+ *         Abstandstest des Engage-Zweigs: bei dist >= 0x2711 (`sltiu` @0x80101c38) ersetzt ein 1/8-Wurf (`jal rng` /
+ *         `andi 0x7` @0x80101c44-4c) das 0x201 durch 0x801 (@0x80101c54/64); davor Zaehler +0x9C -> 0x101
+ *         (@0x80101ba0-c4) und 0x701 bei dist < 0x7D0 ausserhalb 0x2c8 (@0x80101bd4-f0); der Sichtsensor FUN_8001bc08
+ *         -> FUN_8001b84c(0x5e8) prueft nur Kegel + Nibble-3-Strahl @0x8001b87c-8e8) = der AKTIVE Zombie der RE1.5-Daten
  *                                                                  -> RE2 6 (NEU, diese Datei)
- *         Dieselbe Klasse fuer das Zombie-Girl (Typ 0x13, Stage 4 ROOM4050): Modus-Tabelle @0x80120230[0] = 0x8010b6d4
- *         laedt DECIDE aus @0x80120264[+0x5] (`addiu at,at,612` @0x8010b728, `jalr` @0x8010b738), Eintrag [0] =
- *         0x80101b64 = derselbe FUN_80101b64.
- *   0x02  schlafender Steher, DECIDE FUN_80101c7c (@0x8011f960[0]): ENGAGE nur bei dist < 0xFA0
+ *         Dieselbe Klasse in Stage 4 (ROOM4050: Zombie-Girl Typ 0x13 und Zombies), Binaerdatei STAGE4.BIN (Runde 37
+ *         Nachbesserung 1 — hier standen vorher die Adressen der STAGE1.BIN-Kopie des Girl-Codes @0x80120230/0x80120264,
+ *         die ROOM4050 nicht laedt): Raumlader @0x800397a4-ec, Stage-Byte 3 / Raum 5 -> @0x8007438c[3] -> Datei 912 =
+ *         ROOM4050.RDT (221128 Byte); Overlay-Wechsel @0x80039a30 -> @0x800299a4(2, 3+1) -> Ladesatz @0x80073c0c =
+ *         Datei 3 (Dateitabelle @0x8006f454: 0x1A620 Byte = STAGE4.BIN) nach 0x80100000, Installation 0x80118380.
+ *         STAGE4.BIN: 0x80072bac[0x13] = 0x8010a87c (`addiu v1,v1,-22404` @0x80118390, `sw v1,0x2bf8(at)` @0x80118478);
+ *         Zustand 1 = 0x8010b228 (@0x80119734) -> Modus +0x9 & 0xf ueber @0x80119758 (`lbu v0,9(v0)` @0x8010b648,
+ *         `addiu at,at,-26792` @0x8010b65c, `jalr` @0x8010b66c); Modus 0 = 0x8010b688 -> DECIDE @0x8011978c[+0x5]
+ *         (`lbu v0,5(v0)` @0x8010b6cc, `addiu at,at,-26740` @0x8010b6dc, `jalr v0` @0x8010b6ec); Eintrag [0] =
+ *         0x80101b18 = STAGE1 FUN_80101b64 Wort fuer Wort (70/70 bis `jr ra` @0x80101c28). Die Stage-4-Zombies
+ *         (0x80072bac[0x10] = 0x801003d8) erreichen dieselbe 0x80101b18 ueber @0x80118d34[0] = 0x80101640 ->
+ *         DECIDE @0x80118d68 (`addiu at,at,-29336` @0x80101660).
+ *   0x02  schlafender Steher, DECIDE FUN_80101c7c (STAGE1.BIN @0x8011f960[0]): ENGAGE nur bei dist < 0xFA0
  *                                                                  -> RE2 0 (unveraendert)
  * Die RE2-KI hat fuer aufrechte Zombies genau diese zwei Klassen (0 / 6); die Abbildung legt die RE1.5-Daten-Klasse
  * "aktiv" auf die RE2-Klasse "aktiv". Wirkung: Stage 1 (Leon/Elza) 1010/1020/1070/1100/1180/11E0/11F0/1250 (+ Elza-
@@ -48,7 +59,11 @@
  * dann unsichtbar auf einem Parkplatz hinter der Kamera, ein gehender Zombie wuerde ihn angreifen (Riegel
  * integration_r35_cut1150 "Spieler-HP 100 -> min 100"). Beim spaeteren Betreten (Nachspawn) gilt die Abbildung.
  *
- * Nur RE2-KI (re2z_init laeuft nur fuer re15_ai_re2_for_type + re15_re2z_owns_type); RE1.5-KI und MIXED unberuehrt.
+ * Die ABBILDUNG wirkt nur unter der RE2-KI (re2z_init laeuft nur fuer re15_ai_re2_for_type + re15_re2z_owns_type);
+ * unter RE1.5-KI und MIXED (Zombies dort RE1.5-Gehirn) bleiben grid-0x00-Zombies in ihrer RE1.5-Klasse. Der Nachspawn
+ * 1130 in Durchbruch-Form (irons_tod_1150.c EM_1130_NACH, grid 0x0d) gilt dagegen fuer JEDE KI-Wahl: unter der
+ * RE1.5-KI ist 0x0d der RE1.5-Angriff ab INIT (@0x80100f40-44) — gemessen RE15_AI_FLAVOR=re15, Tuer 1150 -> 1130:
+ * alle fuenf ab Bild 6 in 0x201 und in 400 Bildern 2511..8610 naeher; v0.8.24 (grid 0x02) Stehen, Weg 0..18.
  */
 #ifndef RE15_ZOMBIEAKTIV_R37_H
 #define RE15_ZOMBIEAKTIV_R37_H
