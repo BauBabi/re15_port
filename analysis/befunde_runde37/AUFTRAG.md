@@ -122,3 +122,16 @@ Antwortet er NEIN, bleibt der Loescher im Inventar und es liegt nichts am Boden 
 Erscheinen haengt am Ja der Abfrage (dauerhaft: am Ergebnis, das der Wegwerf-Weg ohnehin speichert, sonst ein Bit laut
 VERTRAG.md 1.1 — Bank 9 Bit 96/97, im Riegel test_r36_kartenbits.c k_port[] eintragen). Elza ROOM1091: unveraendert,
 liegt immer. Riegel: Ja -> Prop da (auch nach Raumwechsel/Spielstand), Nein -> kein Prop, Loescher bleibt im Inventar.
+
+## Nachtrag 4c — 2026-10-12 (woertlich, weiterer Zusatz zu Nachtrag 4, vom Koordinator uebermittelt)
+
+> If he doesn't he has the text empty fire extinguisher in the player inventory.
+
+Lesart (Koordinator): Antwortet Leon an der Wegwerf-Abfrage nach dem Loeschen mit NEIN, behaelt er den Loescher — im
+Inventar heisst er dann "Empty Fire Extinguisher" (Name/Text des Gegenstands zeigt, dass er leer ist; Untersuchen-Text
+entsprechend, z.B. "An empty fire extinguisher." als PORT-WAHL zur Freigabe). Vor dem Loeschen bleibt es "Fire
+Extinguisher". Umsetzung belegen: wie der Port Item-Namen/Icons/Bilder liefert (engine/src/inventory_common.c
+re15_item_name, item_prompt_common.c Glyphen-Blob DAT_800c4a28, ITPS-Bild) — entweder eigener Port-Gegenstand "leerer
+Loescher" (freie Item-Id per Zensus) oder Zustand am Gegenstand 0x31; RE2/RE3-Vorbild fuer "leer gewordene" Gegenstaende
+pruefen. Spielstand muss den Zustand behalten. Riegel: Nein -> Inventar-Name "Empty Fire Extinguisher" (auch nach
+Speichern/Laden), Ja -> Gegenstand weg + Boden-Prop.
