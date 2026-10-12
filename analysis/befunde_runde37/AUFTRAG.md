@@ -87,3 +87,26 @@ Lesart: Die Lampen richten sich nach den am Panel gemalten Lampen. Panel in "Kor
 eingegeben), BLAU sobald richtig. Regel: rot = geschlossen. Die uebrigen Panels: blau solange falsch, gruen wenn richtig
 (soweit so gemalt). Dem laufenden Bau-Agenten der Spur E am 2026-10-12 per Nachricht uebermittelt (mit der Bitte, den
 Nachtrag in AUFTRAG.md seines Baums zu committen).
+
+## Nachtrag 3b — 2026-10-12 (woertlich, zu den Code-Panels)
+
+> Es muss schon in der richtigen Farbe leuchten das Panel... hintergrund rot - rot leuchten - hintergrund blau - blau leuchten...
+
+Lesart: Die Leuchtfarbe ist die Farbe der im Panel-Hintergrund gemalten Lampe (rot gemalt -> leuchtet rot, blau gemalt ->
+leuchtet blau), keine fremde Einheitsfarbe. Dem Bau-Agenten E per Nachricht uebermittelt.
+
+## Nachtrag 4 — 2026-10-12 (woertlich)
+
+> Bitte erstelle mir zusätzlich auch ein Modell des Feuerlöschers. Ich finde deine Idee, bei elza einen Leeren Feuerlöscher am Boden zu haben gut. Der müsste dann bei Leon nach der Nutzung erstmalig auftauchen.
+>
+> Außerdem finde ich den FEuerlöscher im Spind bei Leon noch unglücklich und würde ihn gerne woanders platzieren....
+
+Lesart -> Spur I feuerloescher:
+1. 3D-Modell des Feuerloeschers BAUEN (weder RE2 noch RE1.5 haben eines — extracted_re2_feuerloescher/README.md: nur das
+   Item-Bild ITPS 0x31; Basis-Kandidaten = Spraydosen-Netze RE1.5 ROOM1010/ROOM4050, RE2 ROOM1010/60D0).
+2. Elza ROOM1091 (ausgebrannter Schuppen): leerer Feuerloescher liegt von Anfang an am Boden (die frueher vorgeschlagene Spur).
+3. Leon ROOM1090: derselbe leere Loescher liegt erstmalig dort, NACHDEM Leon das Feuer geloescht hat ((3,0x84) := 1 in sub06
+   @0x02722 / "You've used the Fire Extinguisher."), danach dauerhaft.
+4. Leons Feuerloescher liegt heute im Spind von ROOM1000 (Bath-Lockers; sub00 @0x00C24 Item 0x31, Taken (9,0x86); sub01
+   @0x00D0C Set(3,0x85)) — an einen anderen, passenden Ort verlegen (sichtbar mit dem neuen Modell; Ort begruendet waehlen,
+   der Nutzer kann ihn danach verschieben).
