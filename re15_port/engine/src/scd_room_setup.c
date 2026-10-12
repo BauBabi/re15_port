@@ -40,6 +40,7 @@
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplaene zum Aufsammeln (kartenitems_r36.c) */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Zellen-Ausschiebung der Objekte (zellschub_r36.c) */
 #include "re15_sperre1050_r37.h" /* Runde 37 Spur F: "Chief first" auch an der Tuer ROOM1050 -> ROOM10A0 */
+#include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher 1050/1090/1091, Spind 1000 (feuerloescher_r37.c) */
 
 extern scd_vm_t g_scd;
 
@@ -462,6 +463,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — VOR den Dokumenten, damit das Dokument-Prop
      * wie bisher als LETZTES angehaengt wird (Riegel unit_r34n_e_dokumente "hinten angehaengt"). */
     re15_inhalt_r35_install((uint16_t)g_current_room_id);
+    re15_feuerloescher_r37_install((uint16_t)g_current_room_id); /* Runde 37 Spur I: Feuerloescher 1050/1090/1091, Spind 1000 — VOR den Dokumenten wie r35 (re15_feuerloescher_r37.h) */
     re15_dokumente_install((uint16_t)g_current_room_id);
     /* Die TUER ROOM1130 -> ROOM1120 bis zur ersten Irons-Szene sperren (Runde 33, Thema R,
      * Nutzerwunsch): solange Flag (3,94) fehlt, wird der Tuer-Slot 1, den main00 @0x008AE gerade

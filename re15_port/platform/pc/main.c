@@ -101,6 +101,7 @@ static inline int RNDI(float f) {
 #include "re15_fenster1120.h"  /* Runde 35 Spur M: re15_fenster1120_install (Boot-/CONTINUE-Weg)  */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Schluessel 10F0/10F1, Tuer 11B0, Icon/Bild/Modell */
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte (Boot-/CONTINUE-Weg + Prop-Lader) */
+#include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher (Boot-/CONTINUE-Weg + Prop-Lader) */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -1567,6 +1568,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_kartenitems_r36_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (r36_oid >= 0 && nprops <= r36_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[r36_oid]) == 0) ok[r36_oid] = 1;
         if (r36_oid >= 0 && nprops <= r36_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(r36_oid)); }
+    {   /* Runde 37 Spur I: Feuerloescher 1050/1090/1091 — eingebackenes MD1+TIM (gen/feuerloescher_r37.inc), Muster oben. */
+        const int fl_oid = re15_feuerloescher_r37_obj_id((uint16_t)g_current_room_id);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_feuerloescher_r37_md1_bytes((uint16_t)g_current_room_id, &msz);
+        const uint8_t *tb = re15_feuerloescher_r37_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
+        if (fl_oid >= 0 && nprops <= fl_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[fl_oid]) == 0) ok[fl_oid] = 1;
+        if (fl_oid >= 0 && nprops <= fl_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(fl_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -4929,6 +4936,7 @@ re_title:;
     /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — VOR den Dokumenten, damit das Dokument-Prop
      * wie bisher als LETZTES angehaengt wird (Riegel unit_r34n_e_dokumente "hinten angehaengt"). */
     re15_inhalt_r35_install((uint16_t)g_current_room_id);
+    re15_feuerloescher_r37_install((uint16_t)g_current_room_id); /* Runde 37 Spur I: Feuerloescher, derselbe Grund; VOR den Dokumenten wie r35 */
     re15_dokumente_install((uint16_t)g_current_room_id);
     if (re15_dokumente_obj_id((uint16_t)g_current_room_id) >= 0)
         for (int k = 0; k < (int)g_scd.prop_count; k++)

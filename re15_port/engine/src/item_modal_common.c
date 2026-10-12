@@ -23,6 +23,7 @@
 #include "re15_msg_select.h" /* re15_msg_select_blink_tick — Blink-Gatter der Ja/Nein-Auswahl @0x80028600 */
 #include "re15_audio.h"      /* re15_audio_core_se — Bank 4: Satz 6 Ja @0x8004a51c / Satz 5 Nein @0x8004a660 */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Prison Key setzt (4,0xEC) wie ROOM1011 sub06 @0x00E2C */
+#include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Loescher setzt (3,0x85) wie ROOM1000 sub01 @0x00D0C */
 
 /* ---- byte-true corner tables (FUN_8001e1c8 @0x80072d3c / @0x80072d44) ---- */
 static const int16_t s_corner_x[4] = { -56, +56, -56, +56 };
@@ -340,6 +341,7 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
             }
             if (s_taken) re15_game_flag_set(9, s_taken, 1);   /* FUN_8004ef90 (zone-9 taken flag) */
             re15_schluessel_r36_genommen(s_type, s_taken);     /* Runde 36 Spur Q */
+            re15_feuerloescher_r37_genommen(s_type, s_taken);  /* Runde 37 Spur I: (3,0x85) @0x00D0C */
             if (s_aot_slot >= 0 && s_aot_slot < RE15_AOT_MAX)
                 g_aot.slots[s_aot_slot].active = 0;            /* nur die ZONE verlaesst die Welt */
             /* ⛔ DAS WELT-MODELL (Nutzer-Report 2026-08-25: "wenn ich das item aufgenommen habe
