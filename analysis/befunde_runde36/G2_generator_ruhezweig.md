@@ -55,7 +55,8 @@ F0 room=11F0 p=1 obj=0 RUHE-AUSSCHIEBUNG lage=(-19554,29284) -> (-19554,29232) b
   ZELLE [33]: x -31700..-7750 z 30150..31150 r=900 -> lage (-19554,29232)
 F0 room=11F0 p=1 obj=0 RUHE-AUSSCHIEBUNG lage=(-19554,29432) -> (-19554,29232) band=0 y=0
   ZELLE [33]: x -31700..-7750 z 30150..31150 r=900 -> lage (-19554,29232)
-... (insgesamt 16 Zeilen: 1x 29284 -> 29232, 15x 29432 -> 29232)
+... (insgesamt 17 Zeilen: 1x 29284 -> 29232, 16x 29432 -> 29232 — 15 davon in den 49 Bildern von D(1), die
+     16. im ersten Bild danach: das gehaltene HOCH wirkt in der VM ein Bild nach)
 ```
 ZELLE [33] = Bereich 1 (Start 17) + 16 = r1[16] = Rahmen OBEN. Ausgabe der Sonde: `dz=6548` = 29232 - 22684,
 `Stillstandsbilder 15`, `Sperrbilder 0` (die Panel-Sperre war in keinem Bild an — der Cursor steht am Rahmen, nicht
@@ -87,7 +88,8 @@ allen 49 bzw. 51 Bildern weiter — in D bis z = 22684 + 48*200 = 32284, also UE
   Objekt-Pass nicht gelesen.
 * **Objekt-Pass FUN_8002bd44** (`dis 0x8002bd44 280`): Schleife `8002bdcc lw v0,0(s2) / andi v0,v0,0x1 / beq ->
   0x8002c150` (nur aktiv). Typ-Handler `8002bde0 lbu v0,8(s2)` -> Tabelle @0x80073c70 (`table`): [4] = 0x8002c40c
-  (`lbu v1,4(a0)` = Fall-Zustand, beim Cursor 0 -> nichts). Szenen-Bit `8002bec0 andi v0,v0,0x200` (Cursor: 0).
+  (`8002c414 lbu v1,4(a0)` Fall-Zustand, `8002c41c beq v1,zero,0x8002c434` -> Ruecksprung; nur obj+4 == 1 ruft den Fall
+  FUN_8002c444 @0x8002c42c — beim Cursor 0 -> nichts). Szenen-Bit `8002bec0 andi v0,v0,0x200` (Cursor: 0).
   Stand-Objekt `8002bef0 lw v0,0(s6)` / `8002bef8 bne s2,v0` (DAT_800ac788; Spielstand: 0). Schubkette
   `8002bf14 lbu v1,8(s2)` Typ 4 -> `8002bf24 lw v0,-32(s6)` (0x800ac768 & 1 = HOCH gehalten — im Raetsel JA) ->
   `8002bf38 lbu v1,846(s6) / lbu v0,130(s2) / bne` (Spieler-Band 0 = Cursor-Band 0) -> `8002bf50 jal 0x8002d1e8`
@@ -165,7 +167,9 @@ v0,v0,0x8 / 8003b674 bne`), obj+0 = pc[6..7] | 1 (`80040990-9a4`). Ergebnis: 672
   +-200 je Bild: ROOM1080/1081 (Fahrstuhl-Panel), 10D0/10D1, 1100/1101, 11E0/11E1 (zwei Cursor, obj 1 und 2),
   11F0/11F1 (Generator), 1230/1231, 2040/2041, 2050/2051 (obj 8), 2060/2061 (zwei: obj 3 und 4), 3050/3051 (obj 3),
   30E0, 4020/4021 (Fahrstuhl), 5050/5051. (1081/1101/11E1/11F1/1231 byte-gleich mit ...0, `cmp`; 10D1 nicht.)
-* ROOM3091 obj 1 (Typ 4, Band 1, `+0 = 0x0081`, Box h(0,0,0)): Add_speed @0x01E66, Pos_set @0x01786/@0x01E4C.
+* ROOM3091 obj 1 (Typ 4, Band 1, `+0 = 0x0081`, Box c(0,-1800,0) h(0,0,0)): nur zwei feste Lagen — Pos_set @0x01786
+  (-15072,-1010) und @0x01E4C (-25700,1300); Add_speed @0x01E66 dreht nur (Speed_set Achse 4 @0x01E5C `2f 04 19 00`).
+  An beiden Lagen keine Klasse-2-Zelle von Band 1 (Rechentest mit r = 0, `treffer()` des Zensus-Skripts) -> kein Schub.
 * Start-Treffer (Objekt beruehrt beim Installieren eine Klasse-2-Zelle seines Bands): nur ROOM2060/2061 obj 2 (der
   Tritt der Spur R, r0[9] @0x00738) und ROOM11A0/11A1 obj 0 im ELSE-Zweig @0x0107E (Ck(5,6)==0 @0x01040 sonst): Bank 5
   Wort 0 wird beim Raumaufbau geloescht (FUN_8003ecec `8003ed74 sw zero,4136(at)` = 0x800b1028), main00 sieht also nie
