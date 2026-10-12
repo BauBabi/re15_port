@@ -17,9 +17,11 @@
  *             Kabine (scd_event_fire 7/8/9 = Knopf 1F/2F/3F, Fahrt, Plc_dest zur Tuer, Aot_on) mit dem
  *             player_mode-Proxy des Spiels (main.c: flag(1,27)||flag(2,7) -> player_mode 2): ROOM1080/1081 ->
  *             P27C V0 S027/S028/S029, ROOM4020/4021 -> RE2-Datei DOOR27 V0 S221/S222/S223 (RE2 ROOM6010 sub02
- *             @0x00740/@0x0075A); Vorbedingung gemessen: beim Feuern ist player_mode 2. Gegenprobe: eine
- *             normale Tuer (ROOM10C0 -> 1080) in player_mode 2 bleibt ohne Sequenz (Sperre der Runde 31 gilt
- *             weiter, nur die Kabinen-Ausstiege gehen vorbei).
+ *             @0x00740/@0x0075A); Vorbedingung gemessen: beim Feuern ist player_mode 2. Ohne Fahrt (Etagen-
+ *             Merker (3,0x37) gesetzt, Knopf 2F sub08 bzw. Tuer-auf sub10 @0x008C4): dieselbe Sequenz, player_mode
+ *             0. Gegenprobe: eine normale Tuer (ROOM10C0 -> 1080) in player_mode 2 bleibt ohne Sequenz (Sperre
+ *             der Runde 31 gilt weiter, nur die Kabinen-Ausstiege gehen vorbei). Gegenprobe am Code (Dossier):
+ *             ohne den Haken in aot_common.c ist dieser Teil ROT (jeder Ausstieg "Laeufer 0 x").
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -454,6 +456,8 @@ static void teil_einstieg(void)
 /* ---------------------------------------------------------------------------------------------
  * Teil "ausstieg"
  * ------------------------------------------------------------------------------------------ */
+static int s_pmode_soll = 2;   /* player_mode beim Feuern: 2 nach einer Fahrt, 0 ohne Fahrt (Kabine steht schon da) */
+
 static void ausstieg(uint16_t kabine, int knopf, uint16_t ziel, int seite, const char *kennung)
 {
     re15_door_seq_setze_laeufer(fang);
@@ -478,8 +482,8 @@ static void ausstieg(uint16_t kabine, int knopf, uint16_t ziel, int seite, const
           && s_gefangen.tuer_nr == 0x27 && s_gefangen.variante == 0 && (int)s_gefangen.seite == seite
           && (kennung ? (e && !strcmp(e->kennung, kennung)) : s_gefangen.eigen == 0),
           "ROOM%04X sub%02d: Ausstiegs-Sequenz %s V0 S%03d fehlt/falsch", kabine, knopf, kennung ? kennung : "DOOR27", seite);
-    PRUEF(s_pmode_beim_fang == 2, "ROOM%04X: Vorbedingung player_mode 2 beim Feuern nicht gemessen (%d)", kabine,
-          s_pmode_beim_fang);
+    PRUEF(s_pmode_beim_fang == s_pmode_soll, "ROOM%04X: player_mode beim Feuern %d statt %d", kabine,
+          s_pmode_beim_fang, s_pmode_soll);
     g_room_change.pending = 0;
     s_kino = 0;
     re15_door_seq_setze_laeufer(NULL);
@@ -497,6 +501,14 @@ static void teil_ausstieg(void)
     ausstieg(0x4020, 8, 0x5000, 222, NULL);
     ausstieg(0x4020, 9, 0x50C0, 223, NULL);
     ausstieg(0x4021, 9, 0x50C1, 223, NULL);        /* Elza */
+
+    /* Ohne Fahrt (Kabine steht schon auf der Etage, Etagen-Merker (3,0x37) gesetzt wie ROOM10C0 @0x00FEE): Knopf 2F
+     * (sub08: Ck(3,0x37)==0 @0x00788 faellt durch -> Aot_on 1 @0x0080E) und Tuer-auf-Knopf (sub10 @0x008BC
+     * Ck(3,0x37)==1 -> Set(3,0x37)=0, Aot_on 1 @0x008C4): dieselbe Sequenz, hier mit player_mode 0. */
+    s_n_flags = 1; s_flags[0][0] = 3; s_flags[0][1] = 0x37; s_pmode_soll = 0;
+    ausstieg(0x1080, 8, 0x10C0, 28, "P27C");
+    ausstieg(0x1080, 10, 0x10C0, 28, "P27C");
+    s_n_flags = 0; s_pmode_soll = 2;
 
     /* Tabelle des Moduls = die sechs Saetze (Datei-Offsets der Door_aot_set) */
     PRUEF(re15_fahrstuhl_r37_anzahl() == 6, "fahrstuhl_r37: %d Saetze statt 6", re15_fahrstuhl_r37_anzahl());

@@ -206,14 +206,72 @@ ROOM4021 sub07 (Elza):  [tuer] Sequenz Archiv 2 DOOR27 Variante 0 ... Seite S221
 Ablauf (`C_belege/c2_ausstieg_1080_ablauf.jpg`): Kabine blendet ab, die helle Kabinentuer (P27C) schiebt auf, Kamera
 faehrt durch, Abblende, ROOM10C0 mit Leon vor dem Fahrstuhl (1450,0,7300).
 
+### N4 Durchlauf in EINEM Prozess (echter Einstieg, Kabine, Ausstieg)
+```
+RE15_SET_FLAG=4:243 RE15_DEBUG_JUMP=10C0@120 RE15_PLAYER_POS=1500,7000,1024,0 RE15_PAD_AT=150:A,160:A,170:A
+RE15_FORCE_EVENT=8@200 RE15_EXIT_AT=400#10C0 RE15_AUDIO_CAP_SYNC=cap.raw
+  [aot] DOOR FIRE slot=1 rect=(1500,6400,hw=1000,hh=500) target_cut=0 spawn=(-13650,0,-900)
+  [tuer] Sequenz Archiv 2 DOOR27 Port-Archiv P27F Variante 0 Bit7 0 Tuer 39 Seite S040 T017 ... Bild 70 Se_on
+  [room] PC loaded room1080.rdt
+  [force-event] scd_event_fire(8) at F200      (Kabine steht auf 2F: ROOM10C0 @0x00FEE Set(3,0x37)=1 -> keine Fahrt)
+  [aot] DOOR FIRE slot=1 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(1450,0,7300)
+  [tuer] Sequenz Archiv 2 DOOR27 Port-Archiv P27C Variante 0 Bit7 0 Tuer 39 Seite S028 T017 ... Bild 70 Se_on
+  [room] PC loaded room10c0.rdt
+dasselbe mit RE15_FORCE_EVENT=9@200 (Knopf 3F): [scd F202] Cut_chg(4) .. [scd F217] Cut_chg(0) .. Plc_dest ..
+  DOOR FIRE slot=2 -> P27C Seite S029 T018 -> room1120.rdt
+```
+
 ## Tests
 
-(folgt)
+Neu (`tests/unit/probes/r37_fahrstuhl.cmake`, `tests/unit/probe_r37_fahrstuhl.c`, `tests/integration/test_r37_fahrstuhl.cmake`):
+
+| Test | misst |
+|---|---|
+| `unit_r37_fahrstuhl_archiv` | P27F/P27C in der Tabelle (eigen 31/32, Basis 0x27, md1_eigen 2), Datei = Groesse/FNV, Tonteil + SCD bytegleich DOOR27; Fluegel 1860 breit an der Fuge +-3000, y -6600..0, x 100, Fugenkante z-Spanne 0 (Gegenprobe DOOR27: 618/619 = Zaehne); Maschine V0 Bild fuer Bild = DOOR27 (271 Bilder, Fluegel -2240/+2240); Bild 20 durch den Tuerzeichner: 128 Vorderseiten-Dreiecke alle Eckfarbe 73; gezeigt (Texel*73/128) gegen gemaltes Zeilenprofil: P27F max 1.6, P27C max 3.3 (Grenze 6), grau |
+| `unit_r37_fahrstuhl_einstieg` | echter Durchgang ROOM1040/10C0/1120 (Strom (4,0xF3)) -> ROOM1080: genau 1 Anfrage P27F V0 S013/S040/S057 |
+| `unit_r37_fahrstuhl_ausstieg` | echter Skriptweg mit player_mode-Proxy: ROOM1080 sub07/08/09 -> P27C S027/S028/S029 (-> 1040/10C0/1120), ROOM1081 sub08 (Elza) -> P27C S028, ROOM4020 sub07/08/09 -> DOOR27 V0 RE2-Datei S221/S222/S223, ROOM4021 sub09 -> S223; beim Feuern player_mode 2; ohne Fahrt ((3,0x37) gesetzt, sub08 und Tuer-auf sub10) dieselbe Sequenz mit player_mode 0; Gegenprobe normale Tuer ROOM10C0 in player_mode 2 -> keine Sequenz |
+| `integration_r37_fahrstuhl` | echte exe: A Seiten S013/S040/S057 = P27F + Bogen-Bilder; B echter Einstieg 2F (Aktionstaste) P27F S040 vor room1080; C Ausstieg 1080 sub08 P27C S028 vor room10c0 mit Ton (Bild 70 Se_on, 1 Se_on); D Ausstieg 4020 DOOR27 V0 S222 vor room5000; E Elza 1081 sub09 P27C S029 vor room1121 |
+
+**Gegenprobe am Code** (Riegel misst den Defekt, nicht sich selbst): Haken in `aot_common.c` auskommentiert, neu gebaut,
+`probe_r37_fahrstuhl ausstieg` -> `ausstieg: ROT (20 Fehler)`, jeder der 10 Ausstiege "Raumwechsel -> ROOMxxxx,
+Laeufer 0 x" (auch die beiden ohne Fahrt: ohne Haken haben Null-Rechtecke keine Zeile); Haken zurueck -> GRUEN.
+
+Angepasst (U4): `unit_r36_tueren_fahrstuhl`, `integration_r36_tueren`, `unit_r33_tueren_archive`.
+
+Gezielte Laeufe (KEINE volle Suite), Regex = eigene Tests + Testgruppen der beruehrten Module (Tueren/Tuersequenz,
+AOT-Feuerweg, Fahrstuhl, Elza-Selbsttueren, Kopflauf):
+```
+ctest --test-dir re15_port/build -R "r37_fahrstuhl|r36_tueren|r33_tuer|unit_r31_|r32_unterteilung|unit_door_seq|r35_inhalt_tueren|fahrstuhl|elevator|unit_elev_se|r30_tuer|door_|keydoor|unit_aot_|unit_scd_aot_opcodes|unit_tor_1170|r35_cut10f0_tuerton|r30_elza_selbsttuer|r35_zgirl_tuer|r35_zgirl_selbsttueren|integration_headless_run|r34_plattform_ton|r35_spiegel|tuer" --timeout 900 -j 2
+```
+Ergebnis (Zwischenstand vor den zwei Ausstiegen ohne Fahrt, 2026-10-12): `100% tests passed, 0 tests failed out of 63`
+(u. a. integration_r37_fahrstuhl 184.8 s, integration_r35_karte_fahrstuhl 185.2 s, integration_r36_tueren 36.0 s,
+unit_fahrstuhl_1080_etagen, unit_fahrstuhl_4020_etagen, unit_r33_tueren_*, unit_r31_*). Endstand: Abschnitt "Endstand".
 
 ## OFFEN
 
-(folgt)
+* Lastenaufzug ROOM3080 ("WAREHOUSE LIFT", STAGE3): auch dort verlaesst der Spieler die Kabine per Null-Rechteck-Tuer
+  (ROOM3080.RDT main00 @0x0072A Platz 0 -> ROOM4000 Cut 1, Aot_on 0 @0x00A22 am Ende der Fahrt sub02) ohne Sequenz.
+  Nicht Teil des Auftrags ("dem Fahrstuhl" = Revier-Fahrstuhl ROOM1080 aus Runde 36; Vertrag: ROOM1080/4020); der
+  Lastenaufzug ist eine Hubbuehne mit Gitter (Einstieg S195 = P14A Schiebe-Gittertor, Gegenrichtung S218 = P2DS
+  Hubbuehne DOOR2D) - eine Ausstiegssequenz braeuchte eine eigene RE2-Herleitung (DOOR2D-Variante abwaerts).
+* Gestalt der Fluegel = PORT-WAHL (RE1.5 hat keine Tuersequenz, RE2 keine Revier-Fahrstuhltuer): Masse und Farben sind
+  gemessen/belegt (U2), die Geometrie (glatte Platten, 200 dick, 4 x 8 Felder) ist gebaut, nicht aus einem Original.
+* Etagenanzeige ueber der Kabinentuer (gemalt ROOM10800: Knopfleiste "v 1 2 3 ^") ist kein Teil der Fluegel und fehlt
+  in der Sequenz - wie bei allen RE2-Tuersequenzen steht die Tuer vor Schwarz.
 
 ## Fuer den Nutzer
 
-(folgt)
+* **Neue Assets (Paket-Gate):** NEU `re15_port/shared_assets/RE15DOOR/P27F.DO2` (63412 B, FNV 0x5608136D) und
+  `re15_port/shared_assets/RE15DOOR/P27C.DO2` (63412 B, FNV 0xB8E6D960), sha1 in `C_belege/archiv_protokoll.json`.
+  Beide liegen im Ordner RE15DOOR, den make_package.sh (`cp -r RE15DOOR`) und build.gradle (ganzer Ordner) schon
+  mitnehmen; ein Gate-Eintrag je Datei ist Sache des Orchestrators (release/ ist tabu).
+* **Sprachdateien:** keine.
+* **Was man sieht/hoert:** Fahrstuhl im Revier (1F/2F/3F): beim Einsteigen schieben zwei glatte, dunkle graugruene
+  Stahlfluegel mit gerader Mittelfuge aus der Mitte auseinander (wie die gemalte Tuer in der Nische), Ton der
+  RE2-Fahrstuhltuer. Beim Aussteigen (nach der Fahrt, oder direkt mit dem Etagen-/Tuer-auf-Knopf) dieselbe Tuer von
+  innen, hell wie die Kabinentuer im Bild der Kabine. Labor-Fahrstuhl (A-2): beim Aussteigen jetzt ebenfalls die
+  Sequenz, dort die RE2-Labor-Fahrstuhltuer (so ist sie im RE1.5-Labor auch gemalt). Leon und Elza gleich.
+* **Bedienhinweise (Messhaken):** `RE15_TUER_ARCHIV="P27F:0,P27C:0,27:0"` + `RE15_TUER_BOGEN=<dir>` zeigt die drei
+  Fahrstuhltueren nebeneinander; `RE15_TUER_SEITE=S013,S040,S057` die Einstiege.
+* **Entscheidungsfrage (nur falls gewuenscht):** Lastenaufzug ROOM3080 -> ROOM4000 hat beim Aussteigen ebenfalls keine
+  Sequenz (OFFEN, nicht beauftragt).
