@@ -191,3 +191,88 @@ Lesart -> Spur M kiste (Item-Box-Bildschirm, RE2-Layout seit 2026-08-30, re15_in
 2. Beim Scrollen gleiten die Zeilen (box_pixoff) und liegen waehrenddessen UEBER dem Rahmen ("Kasten") des Listen-Panels. Der
    Rahmen muss ueber den Items liegen: Zeilen, die beim Gleiten aus dem Fenster ragen, werden vom Rahmen verdeckt bzw.
    abgeschnitten — wie RE2 (Listen-Zeichenschleife FUN_800710dc, Rahmen-Sprites @0x800a9c38).
+
+## Nachtrag 10 — 2026-10-12 (woertlich, Irons-Szene ROOM1150 bei Leon)
+
+> Der Text bei Leon zum Schluss bei Irons - "be a hero leon" ist mir irgendwie zu trashig.... hast du einen weniger trashigen Text als Abschluss für den Dialog?
+
+Vorschlaege (je mit "Irons: " in einer Zeile <= 271 px, gemessen mit tools/r35_l/texte_bauen.py): "Get them out of here... Leon..."
+(empfohlen), "It's up to you now... Leon...", "Now go... Leon... Go...". Antwort des Nutzers (woertlich):
+
+> ja, get them out of here leon gefällt mir besser
+
+Lesart: ROOM1150 msg 28 (Port-Text der Runde 35, irons_tod_1150.c k_msg28) wird "Irons: Get them out of here... Leon..."
+(NUTZER-VORGABE). Keine Sprachaufnahme vorhanden (synchro/STAGE1/room1150/main28.wav fehlt) -> nur Text; der Szenen-Takt
+haengt nicht an der Textlaenge (99-Bilder-Halt `01 63`, danach OP_SLEEP(100) + Armfall). Umsetzung im Integrationszweig.
+
+## Nachtrag 11 — 2026-10-12 (woertlich, Szene ROOM11C0 Ada/Marvin nach Irons' Tod)
+
+> Und die Dialogszene mit Ada/Marvin nach Irons Tod ist auch noch nicht so geil von den Animationen....
+>
+> Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut.
+
+Lesart -> Spur O szene11c0: Programm 4 der Irons-Szene (engine/src/irons_tod_1150.c k_p_11c0, Runde 35 Spur L + Runde 36
+Spur K2) neu choreografieren: (a) zu Beginn stehen beide schon sinnvoll (einander zugewandt bzw. so, dass keine grosse
+Drehung noetig ist) — kein "komplett falsche Richtung"; (b) keine 180-Grad-Drehung zum Gebaeude (die Tuer liegt HINTER der
+Kamera Cut 13): auf den Knall reagieren Kopf/Oberkoerper, nicht der ganze Koerper um 180 Grad; (c) keine zweite grosse
+Drehung Adas; (d) wer spricht, sieht den anderen an — Marvin sieht Ada an, wenn er spricht ("Yes!....", "Oh, no, Leon!",
+"I have to help him, sorry!"), bis er losrennt; Ada sieht ihm nach. Zuerst die heutige Szene Bild fuer Bild messen
+(Framedumps, Gierwinkel + Kopfdrehung je Bild beider Figuren) und gegen die Beschreibung des Nutzers stellen; pruefen,
+ob Plc_neck bei Marvin (Typ 0x40) ueberhaupt sichtbar wirkt. Vokabular wie bisher aus dem Original (Plc_neck Modus 1,
+Plc_dest Modus 9, Ankunfts-Warten, ROOM11C0 sub02/sub03) und RE2-Dialogszenen als Vorbild; Winkel aus den Positionen
+(Gierwinkel = Richtung zum Gegenueber), Takte PORT-WAHL. Beats der Runde 35/36 (Knall, Frage, Antwort, "Oh, no, Leon!",
+"I have to help him", Losrennen, "Marvin!...") bleiben.
+
+## Orchestrator-Auftrag N — 2026-10-12 (zu Nachtrag 7 "Bei Elzas Szenario stimmt weder das Modell von Roy ...")
+
+Grund: Spur K (K_roy.md OFFEN 1, §6.1) und Spur J (Folge-Kandidat) belegen dieselbe Fehlerklasse ueber Roy hinaus: das
+Original laedt in Elzas Szenario JEDEN Gegner-/NPC-Typ aus CDEMD1.EMS (FUN_80022300: Elza-Bit `bltz` @0x80022334 -> Datei
+0x27 @0x800223ac, TOC @0x80073178), der Port ausser Roy weiter Leons CDEMD0-Daten. Unterschiede je Typ laut K: 0x30 Birkin
+ANDERES MODELL (ROOM3071/5081/5091/50F1), 0x42 ANDERES MODELL (ROOM11B1 @0x01058, ROOM3091 @0x014F4), Zombies 0x10-0x18
+eigene Aktions- + Opfer-Bank (Griff-Animation am Spieler), Kraehe/0x27/0x29/0x2b Opfer-Bank. -> Spur N elzaems: Elzas
+Szenario laedt jeden Typ wie das Original aus CDEMD1 (K-Mechanismus re15_ems_toc / roy_pc.c verallgemeinern), je Typ am
+Original und an der exe gemessen; Leon bleibt bytegleich. Basis = abgenommener Stand der Spur K.
+
+## Orchestrator-Auftrag P — 2026-10-12 (Regression, gefunden von Abnahme A#1 M2)
+
+Grund: Abnahme A#1 (A_abnahme_1.md, M2) mass: alle 30 MSK-Dateien der Stages 3..6 (ROOM3040/41, 3050/51, 30A0/A1, 30E0/E1,
+4040/41, 4080/81, 40A0/A1, 5020/21, 5050/51, 5090/91, 50B0/B1, 5100/01, 6000/01, 6010/11, 6030/31) werden fuer NIEMANDEN
+gezeichnet (z.B. ROOM3040 Cut 0..7 fg_atlas=0, mit/ohne Masken 0 Punkte Unterschied). Herkunft laut git: b8db7b2b
+(2026-09-03) erzeugte die Geometrie fuer Cuts, deren Vordergrund-GRAFIK im BSS liegt, aber ohne Masken-Records im RDT
+(Prototyp unfertig: RE1.5 22 % der Cuts, RE2 Retail 67 %) — die Masken zeigen auf den ORIGINAL-Atlas im BSS
+(gen_masken.py: Atlas-Bloecke per Kreuzkorrelation wiedergefunden, Masken-Byte = src). 53741fe5 (2026-09-08) liess
+R15M-Masken nur noch mit EIGENEM Atlas zeichnen (re15_pri_load_cut_atlas_ex, Merker aus dem R15M-Zweig) — richtig fuer die
+Raeume mit den Freistellungen des Nutzers (eigene ROOMxxxx_PRI*.TIM), falsch fuer die BSS-Atlas-Raeume -> seitdem fehlt
+dort jede ergaenzte Verdeckung. -> Spur P masken36: R15M-Cut ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen (wie
+am 2026-09-03 gebaut), je Raum/Cut nachweisen (Blit-Pruefung wie pruef_gen.py + Figur-Messung an der exe), Basis = Stand
+der Spur A (gleicher Lader).
+
+## Nachtrag 12 — 2026-10-12 (woertlich, zu Nachtrag 11 / Spur O)
+
+> zum schluss dialog ada/marvin - wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin nach drehen.
+
+Lesart -> Spur O: Beim Schluss "Ada: Marvin!..." (ROOM11C0 msg 14) dreht sich Ada dem LAUFENDEN Marvin nach — Kopf und
+Koerper folgen seiner Position, waehrend er zur Tuer rennt (statt sich einmal fest zur Tuer zu drehen). Vokabular wie in
+Nachtrag 11 (Plc_neck Modus 1 / Plc_dest Modus 9 Drehen auf seine laufend aktualisierte Lage bzw. das Folge-Ziel; RE2-
+Vorbild fuer "einer Figur nachsehen" belegen); keine ruckartigen Spruenge, Drehrate wie die uebrigen Drehungen der Szene.
+
+## Orchestrator-Auftrag Q — 2026-10-12 (Folge der RE2-Item-Box, gefunden von Spur I Nachbesserung 1)
+
+Grund: Spur I (I_feuerloescher.md, Nachbesserung 1, offen) mass: legt Leon den Feuerloescher VOR dem Loeschen in die
+Item-Box, kann er das Feuer in ROOM1090 trotzdem loeschen ("Will you use the Fire Extinguisher?" -> Yes, Rettungsszene) —
+ROOM1090 sub00 @0x02306 `21 03 85 00` prueft nur das Aufnahme-Bit (3,0x85), nie das Inventar. Im Original (RE1.5 hat
+keine Item-Box) war "Bit gesetzt" gleichbedeutend mit "Item im Inventar" (ausser verbraucht/weggeworfen); mit der
+RE2-Item-Box des Ports (Nutzer-Auftrag 2026-08-30) nicht mehr. Beta -> Retail: in RE2 benutzt man ein Item nur, wenn man
+es TRAEGT. -> Spur Q kistenregel: Zensus ALLER Original-Abfragen (alle RDTs, Leon und Elza), die den BESITZ eines Items
+ueber ein Bit statt ueber das Inventar pruefen (Aufnahme-/Taken-Bits als Besitz-Ersatz vor einer Item-Benutzung,
+Item-Abfragen an Tueren/Raetseln); je Fall belegen, ob das Item in der Box liegen kann, und wie RE2 dieselbe Art Abfrage
+macht (Besitz-Pruefung im RE2-SCD/EXE belegen). Wo die Box den Fall oeffnet: wie RE2 das Item im Inventar verlangen
+(eine Port-Regel an EINER Stelle, je Fall per Tabelle), mit RE2-Text, wenn es fehlt. Basis = abgenommener Stand der Spur I.
+
+## Orchestrator-Auftrag R — 2026-10-12 (zu Nachtrag 9, vorbestehend, gefunden von Spur M)
+
+Grund: Spur M (M_kiste.md OFFEN) mass: das 2-Feld-Symbol in der Kisten-Liste (49 px breit, z.B. Waffen) liest nur die
+schmale 40-Texel-Kachel; die Spalten 40..48 wiederholen Spalte 39 -> der rechte Teil ist verschmiert. RE2 zeichnet die
+breite Zeile aus zwei Cache-Spalten (u1 0x78 @0x8007183c/@0x80071848, zweite Kachel FUN_80069c40 @0x80069cd8). -> Spur R
+kiste2feld: 2-Feld-Symbole in der Kisten-Liste wie RE2 vollstaendig zeichnen (auch, falls betroffen, im Inventar-Gitter
+und an anderen Stellen derselben Kachel-Logik pruefen). Basis = abgenommener Stand der Spur M.

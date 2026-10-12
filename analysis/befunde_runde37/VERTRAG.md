@@ -22,6 +22,11 @@ committen, nur eigene Pfade adden.
 | K | roy / r37_roy | Nachtrag 7: Roy in Elzas Szenario — Modell + alle Animationen wie im Original, keine Dauerschleife |
 | L | re2zombie / r37_re2zombie | Orchestrator-Auftrag L (zu Nachtrag 2 + Ergaenzung): die drei vorbestehenden Abweichungen der RE2-Zombie-KI schliessen (0x201-Produzenten @0x80101D68/EC4/F14, DECISION[0] @0x801013c8, EXEC[0] P1 @0x80101540-a0), Nahkampf-Zusammenbruch aufklaeren; Basis = Stand der Spur H 9c2a825d |
 | M | kiste / r37_kiste | Nachtrag 9: Item-Kiste — Symbole so weit rechts, dass kein Name sie ueberdeckt; der Rahmen liegt beim Scrollen ueber den Items (re15_inv_screen.c Block 7b, inv_render_pc.c) |
+| O | szene11c0 / r37_szene11c0 | Nachtrag 11: Ada/Marvin-Szene ROOM11C0 nach Irons' Tod — keine Fehlblicke/180-Grad-Drehungen, wer spricht, sieht den anderen an (irons_tod_1150.c Programm 4 k_p_11c0) |
+| N | elzaems / r37_elzaems | Orchestrator-Auftrag N (zu Nachtrag 7): Elzas Szenario laedt jeden Typ wie das Original aus CDEMD1.EMS (Elza-Bit @0x80022334, Datei 0x27 @0x800223ac); Basis = Stand der Spur K |
+| P | masken36 / r37_masken36 | Orchestrator-Auftrag P (Regression 53741fe5): R15M-Masken der Stages 3..6 ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen; Basis = Stand der Spur A |
+| Q | kistenregel / r37_kistenregel | Orchestrator-Auftrag Q: Item-Benutzung nur mit dem Item im Inventar (RE2-Regel), wo die RE2-Item-Box eine Original-Bit-Abfrage oeffnet; Zensus aller Faelle, erster Fall Loescher 1090; Basis = Stand der Spur I |
+| R | kiste2feld / r37_kiste2feld | Orchestrator-Auftrag R: 2-Feld-Symbole in der Kisten-Liste wie RE2 aus zwei Kacheln (u1 0x78 @0x8007183c/@0x80071848, FUN_80069c40 @0x80069cd8); Basis = Stand der Spur M |
 
 Nicht gebaut (Nutzer): Blutlache an Roys Platz (R2), Prison-Key-Hinweis fuer Elza, V6 (Montage-Folgen bei Elza) — ohne
 Zustimmung nichts davon anfassen. Die Werkstatt-Tuer 11B0 bleibt wie in v0.8.24.
@@ -55,6 +60,11 @@ gen/tuer_zuordnung.inc (C), audio_pc.c + panel_lampen_pc.c (E), render_pc.c + sh
 (player_common.c, schuss_r36.c, Treffer-Resolver) (G), enemy_ai_re2_zombie.c / enemy_ai_common.c / irons_tod_1150.c (H).
 Neue Logik in NEUEN Dateien engine/src/<thema>_r37.c + include/re15_<thema>_r37.h.
 Spur M aendert den Box-Listen-Block 7b in re15_inv_screen.c und, falls noetig, den Zeichner inv_render_pc.c (Kommentar "Runde 37 Spur M" + Beleg).
+Spur O aendert Programm 4 (k_p_11c0) in irons_tod_1150.c an Ort und Stelle (Kommentar "Runde 37 Spur O"); die uebrigen Programme (Spur H: Nachspawn 1130) und k_msg28 (Nachtrag 10, Integration) nicht anfassen.
+Spur N erweitert roy_r37.c / roy_pc.c / gen/ems_toc_r37.inc der Spur K (oder eine neue elzaems_r37.c) und die Lader-Haken in main.c / enemy_common.c; Griff-/Biss-Code (J), RE2-KI (L) und der Spawn-Haken (H) nur lesen.
+Spur P aendert den Masken-Lader (bg_pc.c re15_pri_load_cut_atlas_ex und was A dort angefasst hat) an Ort und Stelle; keine neuen Asset-Dateien, MASKS/* nicht umschreiben.
+Spur Q: neue Logik in kistenregel_r37.c (Tabelle je Fall), Haken an der Stelle, wo das Original das Bit prueft (scd_vm.c Ck-Pfad oder je Raum), feuerloescher_r37.c (Spur I) nur fuer den 1090-Fall; Texte nur mit RE2-Beleg (Ids nach VERTRAG 1.2 begruenden).
+Spur R aendert re15_inv_screen.c (Box-Symbol box_cell_icon_sized und die Kachel-Logik) und inv_render_pc.c an Ort und Stelle (Kommentar "Runde 37 Spur R").
 Ausnahme Spur L: die Reparatur IST die RE2-Zombie-KI — L aendert enemy_ai_re2_zombie.c (DECISION[0], EXEC[0], EXEC[1], EXEC[2]) direkt an Ort und Stelle (Kommentar "Runde 37 Spur L" + @0x je Zeile). Die Griff-/Biss-Teile (Spur J) und re2z_init (Haken der Spur H) nur lesen. Jeder Riegel, der am gemeinsamen RE2-Zufallsstrom haengt und sich durch L verschiebt, steht mit altem/neuem Wert und Begruendung im Dossier (die Integration braucht die Liste).
 
 ### 1.5 Tests
