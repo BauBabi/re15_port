@@ -101,7 +101,7 @@ zum Gebaeude) auf der Grundlage der r35-Fassung (Spur L: beide zum Gebaeude, Anf
   = das Original stellt zwei Gespraechspartner beim Schnitt sofort einander zugewandt auf (Dir_set = Peilung) und
   setzt beide Koepfe auf den Partner. Zensus Dir_set in allen 240 RE1.5-RDTs (`O_belege/re15_dir_set_zensus.txt`):
   114 Saetze, 32 davon auf Figuren (Work-Art 1/2), auf NPCs (Work-Art 2): ROOM10D0 @0x01AC4, ROOM3091 @0x01726/@0x0173E,
-  ROOM4000 @0x0157A/@0x01666/@0x01684/@0x0172C (derselbe Dialog, der die langsame Kopf-Rate 0x3c traegt, B3), ROOM4010
+  ROOM4000 @0x0157A/@0x01666/@0x01684/@0x0172C (Dialog mit Plc_neck m1, B3), ROOM4010
   @0x00E44; der Rest Requisiten (Work-Art 3).
 * Dir_set-Handler LAB_80041080 (selbst disassembliert): `lw a1,340(a0)` (Work +0x154) @0x80041084, `lhu v0,2(v1)` /
   `sh v0,104(a1)` @0x80041088/@0x80041090 (rot_x), `lhu v0,4(v1)` / `sh v0,106(a1)` @0x80041094/@0x8004109c (**rot_y
@@ -130,7 +130,9 @@ Koerperdrehung im Gespraech).
   `sb a1,158(v1)` (Gier) / `sb v0,159(v1)` (Neigung) @0x80041f5c..@0x80041f6c. RE1.5 hat KEINEN Entity-Folge-Modus
   (RE2 Modus 5): Modus >= 5 laesst nur 0x80 stehen.
 * Zensus aller 200 Plc_neck Modus 1 in den RE1.5-RDTs (`O_belege/re15_plc_neck_m1_zensus.txt`): Gier-Rate 0x64 172x,
-  0x60 12x, **0x3c 15x (ROOM4000 @0x015B6 `41 01 9d f2 00 00 15 f6 3c 00`, Dialog mit Message_on @0x015C4)**, 0x78 1x.
+  0x60 12x, 0x3c 15x (ROOM4000 @0x015B6 `41 01 9d f2 00 00 15 f6 3c 00`, Dialog mit Message_on @0x015C4), 0x78 1x.
+  Endfassung: alle Blicke der Szene mit 0x64 (die Rate des Raums, 11C0 sub02 @0x01886); eine Zwischenfassung (n3) liess
+  Ada mit 0x3c nur den Kopf zur Tuer drehen — durch Nachtrag 12 ersetzt.
 
 ### B4 RE2 als Vorbild (Beta -> Retail)
 * **Geraeusch-Reaktion = Kopf zuerst.** `tools/r37_o/re2_reaktion_zensus.py` (alle 495 RE2-Leon-RDTs, Walker r30):
