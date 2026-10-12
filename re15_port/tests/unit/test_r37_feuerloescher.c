@@ -18,6 +18,10 @@
  *              Runde 36 (0,250) Blick +X -> weiter msg 20 (Schuppen)
  *   spind      ROOM1000 Leon: Druck am Spind -> msg 0 "Nothing unusual.", kein Aufnahme-Modal
  *   spielstand (3,0x81)/(9,0x86)/(3,0x85) + Inventar reisen mit re15_savedata (Spielstand) -> gleicher Zustand
+ *   kiste      Nachbesserung 1 (Abnahme 0, M1): echter NEIN-Weg, dann Einlagern ueber den echten Tausch
+ *              re15_itembox_transfer (RE2 FUN_800703b8 @0x800706c8/@0x80070710) -> Wiederbetreten, Spielstand,
+ *              Herausnehmen: es liegt KEINER (die Kiste lagert nur um); Gegenprobe Kiste mit fremdem Gegenstand
+ *              bzw. leer + Loescher weg -> liegt
  */
 #include <math.h>
 #include <stdio.h>
@@ -48,6 +52,7 @@
 #include "re15_savedata.h"
 #include "re15_item_prompt.h"
 #include "re15_inv_screen.h"
+#include "re15_itembox.h"
 
 extern re15_aot_state_t g_aot;
 extern uint8_t          g_aot_action_pressed;
@@ -98,6 +103,7 @@ static void start(raum_t *r, int32_t px, int32_t py, int32_t pz, int16_t rot, co
     if (neu) {
         re15_game_state_init();
         re15_inv_init();
+        re15_itembox_init();              /* Nachbesserung 1: auch die ITEM BOX (neues Spiel, FUN_8003e4f4) */
         re15_files_reset();
         re15_discard_reset();
         for (int k = 0; flags && flags[k] >= 0; k += 2)
@@ -663,6 +669,77 @@ static void teil_spielstand(void)
     CHECK(slot_von(RE15_FL37_OBJ) < 0, "P geladen mit Loescher im Inventar: keiner liegt");
 }
 
+/* ======================================================================================== kiste */
+/* Nachbesserung 1 (I_abnahme_0.md M1): NEIN an der Wegwerf-Abfrage, Loescher in die ITEM BOX, ROOM1090
+ * betreten -> es lag einer am Boden (Tor fragte nur das Inventar, FUN_8004dfec). Die Kiste ist ein eigenes
+ * Feld (g_itembox = RE2 0x800d4a68): RE2 FUN_800703b8 tauscht inv[Cursor] <-> box[Platz] (@0x800706c8 /
+ * @0x80070710) — eingelagert ist der Loescher NICHT weggeworfen. */
+static int in_kiste(uint8_t id)
+{
+    for (int i = 0; i < RE15_BOX_SLOTS; i++) if (g_itembox.slots[i].id == id) return i;
+    return -1;
+}
+
+static int msg29_platz(void)
+{
+    return g_aot.slots[6].active && g_aot.slots[6].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[6].event_id == 29;
+}
+
+static void teil_kiste(void)
+{
+    raum_t r90;
+    printf("\n[kiste]\n");
+    if (raum_laden(&r90, 0x1090)) return;
+
+    /* (1) echter NEIN-Weg am Bild-Ablauf (Feuer, msg 7/8, Ja, Neueintritt, msg 9, Wegwerf-Abfrage NEIN) */
+    loeschen_fahren(&r90, 0x8000u, "Kiste/Nein");
+    int s = re15_inv_find_item(RE15_FL37_ITEM);
+    CHECK(s >= 0 && slot_von(RE15_FL37_OBJ) < 0 && re15_game_flag_get(3, 0x81),
+          "K Nein: Leon behaelt den Loescher (Inventar-Platz %d), (3,0x81) gesetzt, keiner liegt", s);
+
+    /* (2) Einlagern ueber den ECHTEN Tausch (Box-Platz 2 = (Scroll 0 + 2) & 0x3f, Auswahlformel RE2 FUN_800703b8) */
+    int r = re15_itembox_transfer(s, 2);
+    CHECK(r == RE15_BOX_XFER_OK && re15_inv_find_item(RE15_FL37_ITEM) < 0 && in_kiste(RE15_FL37_ITEM) == 2,
+          "K Einlagern: Loescher verlaesst das Inventar und liegt in Box-Platz 2 (ist %d)", in_kiste(RE15_FL37_ITEM));
+    CHECK(re15_feuerloescher_r37_liegt(0x1090) == 0,
+          "K Tor zu, solange der Loescher in der Kiste liegt (nicht weggeworfen)");
+
+    /* (3) Wiederbetreten ueber die Tuer ROOM1050 -> 1090 (Spawn @0x00B7A (-10100,-1800,4200)) — DER Befund */
+    start(&r90, -10100, -1800, 4200, 3072, NULL, NULL, 0, 0);
+    CHECK(slot_von(RE15_FL37_OBJ) < 0 && !msg29_platz() && in_kiste(RE15_FL37_ITEM) == 2,
+          "K Wiederbetreten mit dem Loescher in der Kiste: kein Prop obj 5, kein Platz msg 29 (kein Doppel)");
+    CHECK(re15_feuerloescher_r37_name(RE15_FL37_ITEM) != NULL,
+          "K in der Kiste heisst er weiter \"Empty Fire Extinguisher\" (Nachtrag 4c)");
+
+    /* (4) Spielstand: die Kiste reist mit (re15_savedata.c re15_itembox_export/_import) */
+    re15_savedata_t sd;
+    uint16_t rr = 0;
+    re15_savedata_capture(&sd, 0, 1);
+    re15_game_state_init(); re15_inv_init(); re15_itembox_init();
+    CHECK(re15_savedata_restore(&sd, &rr) == 0 && in_kiste(RE15_FL37_ITEM) == 2 && re15_game_flag_get(3, 0x81) &&
+          re15_inv_find_item(RE15_FL37_ITEM) < 0,
+          "K Spielstand traegt den Loescher in der Kiste und (3,0x81)");
+    start(&r90, -10100, -1800, 4200, 3072, NULL, NULL, 0, 0);
+    CHECK(slot_von(RE15_FL37_OBJ) < 0 && !msg29_platz(), "K geladen + Raumstart: keiner liegt");
+
+    /* (5) Herausnehmen (leerer Inventar-Platz 0 <-> Box-Platz 2): wieder im Inventar, weiter keiner am Boden */
+    r = re15_itembox_transfer(0, 2);
+    CHECK(r == RE15_BOX_XFER_OK && re15_inv_find_item(RE15_FL37_ITEM) >= 0 && in_kiste(RE15_FL37_ITEM) < 0,
+          "K Herausnehmen: Loescher wieder im Inventar, Kiste leer");
+    start(&r90, -10100, -1800, 4200, 3072, NULL, NULL, 0, 0);
+    CHECK(slot_von(RE15_FL37_OBJ) < 0, "K nach dem Herausnehmen: keiner liegt (Leon traegt ihn)");
+
+    /* (6) Gegenprobe: die Kiste sperrt NUR mit dem Loescher darin — fremder Gegenstand in der Kiste, Loescher
+     *     weg (Wegwerf-Ja nimmt ihn aus dem Inventar, re15_inv_remove_slot) -> liegt */
+    re15_inv_remove_slot(re15_inv_find_item(RE15_FL37_ITEM));
+    g_itembox.slots[5].id = 0x15; g_itembox.slots[5].qty = 30; g_itembox.slots[5].flags = 0;
+    start(&r90, -10100, -1800, 4200, 3072, NULL, NULL, 0, 0);
+    int p = slot_von(RE15_FL37_OBJ);
+    CHECK(p >= 0 && g_scd.props[p].active && g_scd.props[p].x == 2500 && g_scd.props[p].z == -1300 && msg29_platz() &&
+          re15_feuerloescher_r37_liegt(0x1090) == 1,
+          "K Gegenprobe: Loescher weg (weder Inventar noch Kiste), Kiste mit Patronen 0x15 -> liegt (2500,-1800,-1300)");
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -675,6 +752,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "spind"))      teil_spind();
     if (alle || !strcmp(teil, "spielstand")) teil_spielstand();
     if (alle || !strcmp(teil, "leer"))       teil_leer();
+    if (alle || !strcmp(teil, "kiste"))      teil_kiste();
     printf("\n%d Pruefungen, %d Fehler\n", checks, fails);
     return fails ? 1 : 0;
 }

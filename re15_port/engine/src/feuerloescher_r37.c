@@ -13,6 +13,7 @@
 #include "re15_aot.h"
 #include "re15_msg.h"
 #include "re15_inventory.h"   /* re15_inv_find_item (FUN_8004dfec) */
+#include "re15_itembox.h"     /* g_itembox (RE2-Box-Feld @0x800d4a68), RE15_BOX_SLOTS */
 #include "re15_room.h"        /* g_current_room_id */
 #include "re15_gameflow.h"    /* re15_char_variant (Leon 0 / Elza 1) */
 #ifdef RE15_PLATFORM_PC
@@ -72,16 +73,33 @@ const re15_fl37_lage_t *re15_feuerloescher_r37_des_raums(uint16_t room_id)
     return k >= 0 ? &k_lagen[k] : NULL;
 }
 
+/* Platz des Loeschers in der ITEM BOX oder -1. Die Box ist ein EIGENES Feld neben dem Inventar
+ * (g_itembox.slots[64] = RE2-Box-Feld 0x800d4a68 + Platz*4, re15_itembox.h): RE2 FUN_800703b8 lagert per
+ * TAUSCH ein — @0x80070400 `lbu v0,-30636(at)` Inventar-Id -> sp+16, @0x800706c8 `sb v0,-30636(at)` Box-Id ->
+ * Inventar, @0x80070710 `sb v0,-30592(at)` alte Inventar-Id -> Box (Basis s4 0x800cc1e8 @0x800703d8). Die
+ * Inventar-Suche FUN_8004dfec (@0x8004e014 Basis 0x800b10ac, Zaehler @0x8004dff0 0x800b0fbc) sieht die Box
+ * nicht. Dossier Abschnitt "Nachbesserung 1". */
+static int in_der_kiste(uint8_t id)
+{
+    for (int i = 0; i < RE15_BOX_SLOTS; i++)
+        if (g_itembox.slots[i].id == id) return i;
+    return -1;
+}
+
 static int tor_offen(const re15_fl37_lage_t *g)
 {
     switch (g->tor) {
     case RE15_FL37_IMMER:          return 1;
     case RE15_FL37_FEUER_AUS:
-        /* Feuer aus (3,0x81) UND Leon traegt den Loescher nicht mehr (Wegwerf-Abfrage "Ja" nach
-         * "You've used the Fire Extinguisher." ROOM1090 msg 9, gen/discard_sites.inc) — sonst laege
-         * derselbe Loescher zweimal da. PORT-WAHL, Dossier Abschnitt 3.3. */
+        /* Feuer aus (3,0x81) UND der Loescher ist WEG: weder im Inventar noch in der ITEM BOX. Aus BEIDEN
+         * Feldern nimmt ihn nur die Wegwerf-Abfrage "Ja" nach "You've used the Fire Extinguisher." (ROOM1090
+         * msg 9, gen/discard_sites.inc; RE2 @0x80051774 `sb zero,-30636(at)` = Inventar-Id := 0, das Box-Feld
+         * -30592 bleibt unberuehrt) — NUTZER-VORGABE Nachtrag 4b "it can only lay there - if leon ... select
+         * yes". Die Kiste lagert ihn nur um (in_der_kiste); im Inventar oder in der Kiste laege er sonst doppelt
+         * vor. Dossier Abschnitt 3.4 + Nachbesserung 1 (Zensus aller Wege, die 0x31 aus dem Inventar nehmen). */
         return re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT) &&
-               re15_inv_find_item(RE15_FL37_ITEM) < 0;
+               re15_inv_find_item(RE15_FL37_ITEM) < 0 &&
+               in_der_kiste(RE15_FL37_ITEM) < 0;
     case RE15_FL37_NICHT_GENOMMEN: return re15_game_flag_get(9, RE15_FL37_TAKEN_BIT) ? 0 : 1;
     default:                       return 0;
     }
@@ -138,10 +156,15 @@ void re15_feuerloescher_r37_install(uint16_t room_id)
     const re15_fl37_lage_t *g = &k_lagen[k];
     if (!tor_offen(g)) {
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[feuerloescher] ROOM%04X: kein Loescher (%s)\n", (unsigned)room_id,
-                g->tor != RE15_FL37_FEUER_AUS ? "schon genommen, (9,0x86)=1"
-                : !re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT) ? "Feuer brennt noch, (3,0x81)=0"
-                : "Leon traegt ihn noch (Item 0x31 im Inventar)");
+        if (g->tor == RE15_FL37_FEUER_AUS && re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT) &&
+            re15_inv_find_item(RE15_FL37_ITEM) < 0)
+            fprintf(stderr, "[feuerloescher] ROOM%04X: kein Loescher (Leon hat ihn in die Item-Box gelegt "
+                            "(Item 0x31 in der Kiste, Platz %d))\n", (unsigned)room_id, in_der_kiste(RE15_FL37_ITEM));
+        else
+            fprintf(stderr, "[feuerloescher] ROOM%04X: kein Loescher (%s)\n", (unsigned)room_id,
+                    g->tor != RE15_FL37_FEUER_AUS ? "schon genommen, (9,0x86)=1"
+                    : !re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT) ? "Feuer brennt noch, (3,0x81)=0"
+                    : "Leon traegt ihn noch (Item 0x31 im Inventar)");
 #endif
         return;
     }

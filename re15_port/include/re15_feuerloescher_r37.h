@@ -34,10 +34,12 @@
  *   ROOM1050 Cut 6 an der Wand rechts der Notausgangs-Tuer (zu ROOM1090), Lage des leeren Loeschers in
  *   ROOM1090/1091, Untersuchen-Text msg 29 "It's an empty fire extinguisher.", Spind ROOM1000 Slot 3
  *   -> der Raumtext msg 0 "Nothing unusual." (Satzform wie ROOM1000 sub00 @0x00CAA Slot 6).
- *   Leon ROOM1090: der leere Loescher liegt, sobald das Feuer aus ist (3,0x81) UND Leon ihn nicht mehr
- *   traegt. Die Port-Wegwerf-Abfrage nach msg 9 "You've used the Fire Extinguisher." (Runde 25,
+ *   Leon ROOM1090: der leere Loescher liegt, sobald das Feuer aus ist (3,0x81) UND er weder im Inventar
+ *   noch in der ITEM BOX liegt (Nachbesserung 1: die Kiste lagert nur um, RE2 FUN_800703b8 @0x80070710).
+ *   Die Port-Wegwerf-Abfrage nach msg 9 "You've used the Fire Extinguisher." (Runde 25,
  *   gen/discard_sites.inc Zeile ROOM1090/9/0x31) ist der Moment, in dem er ihn hinlegt; "Nein" =
- *   Leon behaelt ihn, dann liegt keiner da (sonst laege derselbe Loescher doppelt vor).
+ *   Leon behaelt ihn (Inventar, spaeter evtl. Kiste), dann liegt keiner da (sonst laege derselbe Loescher
+ *   doppelt vor).
  */
 #ifndef RE15_FEUERLOESCHER_R37_H
 #define RE15_FEUERLOESCHER_R37_H
