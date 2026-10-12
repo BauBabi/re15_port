@@ -16,7 +16,7 @@ cp -f "$EXE" "$KOPIE"
   export RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT="$SKRIPT" RE15_STATE_LOG=state.log
   export RE15_EXIT_AT="$EXITAT"
   for kv in "$@"; do export "$kv"; done
-  timeout 900 "$KOPIE" > stdout.txt 2>&1
+  timeout "${LAUF_TIMEOUT:-900}" "$KOPIE" > stdout.txt 2>&1
   echo "exit=$?" > exit.txt
 )
 rm -f "$KOPIE"

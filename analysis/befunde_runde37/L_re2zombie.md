@@ -27,8 +27,8 @@ wie @0x80101540-a0 / @0x8010159c. Dazu Zensus der uebrigen OFFEN-Marken (Bewegun
 - [x] Schritt 2: RE-Belege (EMZ0.BIN selbst disassembliert, R1-R4)
 - [x] Schritt 3: (1)(2)(3) + (b) + (c) scharf; dazu DECISION[12] (Zensus-Fund)
 - [x] Schritt 4: Zensus OFFEN-Marken
-- [ ] Schritt 5: Strom-Messung + verschobene Riegel
-- [ ] Schritt 6: Messung nachher (exe), Tests
+- [x] Schritt 5: Strom-Messung + verschobene Riegel
+- [x] Schritt 6: Messung nachher (Harness + exe Leon/Elza), Tests
 
 ## Schritt 0 — Lektuere (Befunde)
 
@@ -270,3 +270,59 @@ und nachher gruen, nicht vergleichbar.)
    statt >= 300 Bilder. Anpassung: das Paar Gegenprobe/Fix laeuft im Strom bis Runde 37 (Maske 0, Befund 450 Bilder, Fix
    0 Bilder), zusaetzlich neuer Check "Taschenfall mit Wurf-Klemme UND Spur L": keine KLEMME (30 < 300), Leon erreicht (92).
 Nach der Anpassung: 11/11 gruen.
+
+## Messung nachher
+
+### N1 — Port-Harness (echte Raumeintritte, echte Spielschleife; Sonde `test_r37_re2zombie gang`)
+| Lauf | Wechsel nach 0x201 | +0x1F0 im Wechsel-Takt | danach | Weg je Bild 0x101 / 0x201 | Gegenprobe Maske 0 |
+|---|---|---|---|---|---|
+| ROOM1130 nach der Montage, Leon steht an der Tuer (900 Bilder) | 1 (Produzent (2), Slot 5 Typ 0x11, F864) | 1993 | Griff F883 (+0x1F0 1193) | 31,0 / 53,8 | kein 0x201, erster Griff F891 |
+| ROOM1180 Normalspiel, Leon am Eintritt aus 1160 (900) | 2 (beide (2), Slot 3 Typ 0x10, F284/F803) | 1995 / 1991 | Griff F312 / F837 (+0x1F0 1193 / 1180) | 26,0 / 33,5 | kein 0x201 |
+| ROOM1180, Leon RENNT geradeaus (Gier 0/1024/2048/3072, 300 Bilder) | je 1-2 durch (3) | 2495 (< 0x9C4) | — | | — |
+RE2-Original (M2): Wechsel bei 1999/1987 (2) bzw. 3565 (1), Griff bei 1180/1152, Weg 32,2 / 44,1.
+
+### N2 — Nahkampf (Aufbau test_re2_zombie_abc, Messer, 64 Seeds x 900 Bilder)
+Stand bis Runde 37 (Maske 0): 368 Treffer; Spur L: 369 (Sonde) bzw. 373 (test_re2_zombie_abc im Prozess nach der Pistole).
+Pistole 1795 -> 1775 (90 statt 96 Tode). Der Nahkampf wird nicht schlechter.
+
+### N3 — ECHTE EXE (RE2-KI = Standard; Leon UND Elza; Spielstand per Kartenwerkzeug + CONTINUE + Eingabeskript, RE15_STATE_LOG)
+Treiber `L_belege/exe_lauf.sh` (eigene Messkopie `re15_pc_r37l_mess_<lauf>.exe`, nur eigene PID beendet), Auswerter
+`L_belege/ausw_state.py` (je Raumbesuch: Wechsel ss1 -> 2 mit +0x1F0, was danach kommt, Ausfall ss1=12 und Griff aus dem
+Ausfall, Spieler-Griffe). Montage-Karte = `9:71 3:94 9:73-76 4:4-5 4:15 7:0xd3-0xd7 7:0xc6-0xca` (wie Spur H N1/N4).
+
+| Lauf | Weg | Wechsel nach 0x201 (+0x1F0) | danach | Ausfall / Griff aus Ausfall (D12) | Spieler gegriffen |
+|---|---|---|---|---|---|
+| E1 Leon 1130 nach Irons' Tod, steht | Karte 1150 + Tuer | 1 (1991) | Griff | 0 / 0 | 1x (F888) |
+| E2 Leon 1130, geht den Gang hinunter | dto. `R0.33,U25` | 3 (1945, 985, 1987) | 1 Griff, 2x zurueck in den Gang | 1 / 1 | 2x (F453) |
+| E3 Leon 1130, RENNT den Gang hinunter | dto. `R0.33,UX25` | 4 (2332, 2374, 2482 bei rennendem Leon = Produzent (3), < 0x9C4; 596) | 1 Griff, 2 Ausfaelle | 2 / 1 | 3x (F325) |
+| E4 Leon 1030 nach der Montage | Karte 1040 + Tuer | 3 (1962, 1221, 709) | 2 Griffe | 0 / 0 | 3x (F76) |
+| E5 Leon 1040 nach der Montage | Karte 1040 | 2 (1987, 1999) | 2 Griffe | 0 / 0 | 2x (F224) |
+| E6 Leon 1010 (Normalspiel, Eintritt aus 1020) | Karte 1010 | 5 (1995, 849, 951, 1978, 1991) | 3 Griffe | 0 / 0 | 3x (F93) |
+| E7 Leon 1100 (aufrechte Form, Bit (4,0xE8)) | Karte 1100 | 2 (849, 1991) | 2 Griffe | 0 / 0 | 3x (F82) |
+| E8 **Elza** 1181 | Elza-Karte (probe_r36_elza_karte) | 1 (1995) | Griff | 0 / 0 | 1x (F311) |
+| E11 Leon 1130 mit MESSER an der Tuer (R1 + Schlaege) | Karte 1150 + Tuer | — | — | — | **3 Messertreffer** am Fetten (Typ 0x11, HP 250 -> 247 -> 244 -> 241, Reaktion 2/1) |
+Weg je Bild im Arme-hoch-Gang 25..58 (Typ/Bank), im Gang 20..31 (RE2-Original 44,1 / 32,2).
+Bild (Framedump, exe, Fensterskalierung 1): `L_belege/exe_1130_arme_hoch_F864_F872_F880.png` — Chief-Office-Tuer, Bild 864
+der fette Zombie im Gang (Arme unten), Bild 872/880 im Arme-hoch-Gang (Clip 6 = Loco 4 + walkclip 2) kurz vor dem Griff (F888).
+(ROOM1011 Elza: im Kartenstand laeuft Roys Szene, keine Zombies — kein Messlauf.)
+
+## Tests
+
+Neu (re15_port/tests/unit/probes/r37_re2zombie.cmake, Quelle tests/unit/test_r37_re2zombie.c, tests/integration/test_r37_re2zombie.cmake):
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r37_re2zombie_prod1 | (1) je Wurf (48 Strom-Lagen): 0x201 genau bei (r1&3)==0 und +0x1F0 0x1387; Reseed (r0>>3)+100; 2 Wuerfe; Gegenprobe 0x1388 | 4/4 |
+| unit_r37_re2zombie_prod2 | (2) +0x1F0 0x7CF geradeaus -> 0x201; Gegenproben hinten / 0x7D0 / beansprucht / Maske ohne (2) | 5/5 |
+| unit_r37_re2zombie_prod3 | (3) rennend seitlich (im +-1324-, nicht im +-512-Kegel), 0x9C3 -> 0x201; Gegenproben gehen / 0x9C4 / hinten | 5/5 |
+| unit_r37_re2zombie_b | Block 3 je Wurf (32 Lagen): Commit genau bei (rand&1)==1; ein Wurf; Gegenprobe Stand bis Runde 37 umgekehrt | 3/3 |
+| unit_r37_re2zombie_c | Wurf-Takt: +0x6 = 2 bleibt, +0x158 10 -> 9, ein Wurf; P2 im naechsten Takt; Wecker schlaegt den Wurf; Gegenproben | 6/6 |
+| unit_r37_re2zombie_d12 | DECISION[12]: Griff aus dem Stoss bei 0x513 / Bild 5; Gegenproben 0x514 / Bild 11 / hinten / Phase 1 / Stand bis Runde 37 | 6/6 |
+| unit_r37_re2zombie_nahkampf | Messer-Sweep: > 250 und >= 95 % vom Stand bis Runde 37 (369 gegen 368) | 2/2 |
+| unit_r37_re2zombie_raum1130 | Nutzer-Beispiel: Wechsel vor Leon (+0x1F0 1993), Griff aus 0x201; Gegenprobe Maske 0 keiner | 4/4 |
+| unit_r37_re2zombie_raum1180 | Normalspiel: dasselbe (2 Wechsel, 2 Griffe) | 4/4 |
+| integration_r37_re2zombie | echte exe, Karte 1150 + CONTINUE + Tuer -> 1130, Leon steht 1100 Bilder: Wechsel bei +0x1F0 1991 < 0x7D0, Griff aus 0x201 | gruen (52 s) |
+Angepasst (mit Beleg, s. Schritt 5): unit_r36_zombieki_eintritt (Gegenlauf "vorbestehend", Taschenfall-Paar im alten Strom),
+integration_r34_granaten (Fenster 220 -> 360), integration_r35_granate (EXIT_AT 260 -> 320, Leichen-Fenster X+80 -> X+180):
+Zeile 9 waehlt per Wurf Bersten oder Zerreissen (`beq s0,zero` @0x80108d10, 1 von 4 Zerreissen); im Strom nach Spur L zerreisst
+Gegner 3 (Leiche ab Bild 258 = X+139: P1 Clip 4, P5/P6 (rand&0x1f)+15 @0x80109214-1C, P3 Clip 1), vorher bersten beide (165).
+Gemessen mit 360: "Gegner 2 Leiche ab Bild 165, Gegner 3 Leiche ab Bild 258" — kein Haenger.

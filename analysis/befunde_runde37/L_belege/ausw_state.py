@@ -2,7 +2,8 @@
 Je Zombie (RE2-Familie, Typ 0x10..0x1F): Wechsel in den Arme-hoch-Gang ss1=2 (Abstand +0x1F0, Spieler-Motion 100 = RENNEN),
 was danach kommt (Griff ss1=3, zurueck ss1=1, ...), Weg je Bild in ss1=1 und ss1=2, Ausfall ss1=12 und Griff aus dem Ausfall
 (12 -> 3, DECISION[12] @0x8010460C), Spieler-Griffe (gr=1).
-Aufruf: python ausw_state.py <state.log> [ab_bild] [nur_raum_ab_letztem_F1]"""
+Aufruf: python ausw_state.py <state.log> [ab_bild] [besuch]   (besuch = n-ter Raumbesuch ab 1, Standard -1 = der letzte;
+        ein Besuch beginnt, wo die Bildnummer zurueckspringt)"""
 import re, sys
 from collections import defaultdict
 
@@ -14,9 +15,10 @@ RX_GR = re.compile(r" gr=(\d)")
 def main():
     pfad = sys.argv[1]
     ab = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+    besuch = int(sys.argv[3]) if len(sys.argv) > 3 else -1
     zeilen = open(pfad, errors="replace").read().splitlines()
-    # nur der letzte Raumbesuch: ab der letzten Zeile, deren Bildnummer kleiner ist als die vorige (Raumwechsel setzt F zurueck)
-    start = 0
+    # Raumbesuche: ein neuer beginnt, wo die Bildnummer zurueckspringt (Raumwechsel / CONTINUE setzt F zurueck)
+    anfaenge = [0]
     letzte = -1
     for i, z in enumerate(zeilen):
         m = RX_F.match(z)
@@ -24,8 +26,14 @@ def main():
             continue
         f = int(m.group(1))
         if f < letzte:
-            start = i
+            anfaenge.append(i)
         letzte = f
+    k = besuch - 1 if besuch > 0 else len(anfaenge) - 1
+    k = max(0, min(k, len(anfaenge) - 1))
+    start = anfaenge[k]
+    ende = anfaenge[k + 1] if k + 1 < len(anfaenge) else len(zeilen)
+    zeilen = zeilen[:ende]
+    print("Besuch %d von %d (Zeilen %d..%d)" % (k + 1, len(anfaenge), start, ende))
     vor = {}
     stat = defaultdict(lambda: dict(w201=0, d201=[], renn=0, nach=defaultdict(int), t1=0, w1=0, t2=0, w2=0, aus=0, aus_griff=0,
                                      griffe=0))
