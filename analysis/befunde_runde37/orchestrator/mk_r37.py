@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_n.js"
-BASIS = "99b4b13f"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_p.js"
+BASIS = "bddd6b31"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -243,6 +243,29 @@ SPUREN = [
    "11B1/3091, ein Zombie-Griff an Elza mit RE1.5-KI (Hand auf IHRER Schulter, J-Messung 20..65), Kraehen-/0x27-Opfer; Framedumps Original gegen Port. "
    "RIEGEL ueber probes/r37_elzaems.cmake: je Typ Quelle (CDEMD0/CDEMD1) nach Szenario, Bytegleichheit der geladenen Banken mit dem Original-Blob, "
    "Leon unveraendert (Gegenprobe), Roy-Riegel der Spur K gruen. Neue Assets: keine (CDEMD1.EMS liegt im Paket).")),
+
+ dict(id="P", thema="masken36", baum="r37_masken36", basis="bddd6b31",
+  punkte=["Orchestrator-Auftrag P (AUFTRAG.md, Regression): die ergaenzten Vordergrund-Masken der Stages 3..6 (30 MSK-Dateien ROOM3040..ROOM6031, erzeugt b8db7b2b 2026-09-03 fuer Cuts mit Vordergrund-Grafik im BSS, aber ohne Masken-Records im RDT) werden seit 53741fe5 (2026-09-08) fuer NIEMANDEN gezeichnet, weil der Lader fuer R15M-Masken einen eigenen Atlas verlangt, den nur die Raeume mit den Freistellungen des Nutzers haben. Ziel: diese Masken verdecken die Figuren wieder wie am 2026-09-03 gebaut (BSS-Atlas), ohne die Raeume mit eigenem Atlas (Stage 1/2, Spur A) zu veraendern; Figuren VOR einem Objekt werden nicht verdeckt.",
+          "Bezug zum Nutzer: Vordergrund-Verdeckung ist seit Runde 19 ein Dauerthema des Nutzers (F9-Marken, Freistellungen); in den Stages 3..6 fehlt sie seit v0.6.x unbemerkt."],
+  hinweise=("BASIS: dein Baum steht auf bddd6b31 = abgenommener Stand der Spur A (06ac2b56: Masken je Tiefenstufe ROOM1100, Zwillings-Rueckfall "
+   "Elza -> Leon re15_pri_masken_raum, Zensus tools/maske/zwilling_zensus.py) + AUFTRAG/VERTRAG vom master-Stand. Lies A_pri1100.md und "
+   "A_abnahme_1.md (M2: ROOM3040 Cut 0..7 fg_atlas=0, Cut 2 mit/ohne Masken 0 Punkte) in deinem Baum. GESCHICHTE: git show b8db7b2b (Generator "
+   "analysis/esp_masken_2026-09-03/gen_masken.py + pruef_gen.py: Atlas-Bloecke per NCC im Hintergrund wiedergefunden, Masken-Byte = src, "
+   "Transparenz Palettenindex 0, Tiefe konservativ x1.10; Container R15M, Original-Sektion hat IMMER Vorrang, Nachschlag nur bei NULL-Sektion "
+   "FF FF FF FF) und git show 53741fe5 (re15_pri_load_cut_atlas_ex: 'nachgezeichnete Rechtecke tragen srcX/srcY fuer IHREN Atlas', Merker aus "
+   "dem R15M-Zweig) — danach die Freistellungs-Commits 9474f9bb/692b4f10/7b24600f (eigene ROOMxxxx_PRI*.TIM). CODE: platform/pc/src/bg_pc.c "
+   "(re15_pri_load_cut_atlas_ex, beide Atlas-Pfade, A-Haken), entladen_pc.c re15_entladen_msk, render_pc.c Masken-Tiefentest, "
+   "engine re15_pri_msk_section_offset. SCHRITT 1 MESSEN: Zensus aller MASKS/*.MSK (alle Stages): je Raum/Cut eigene Atlas-Datei ja/nein, "
+   "R15M-Sektion ja/nein, Original-RDT-Sektion NULL ja/nein, fg_atlas an der exe; welche Cuts sind seit 53741fe5 tot (Erwartung laut A: alle "
+   "30 Stage-3..6-Dateien; pruefe auch Stage 1/2 auf Raeume/Cuts ohne eigenen Atlas). Pro totem Cut: auf welchen Atlas zeigen die Masken "
+   "(BSS-SLD-Atlas des Cuts? Bytes gegen gen_masken.py-Ausgabe pruefen). SCHRITT 2 BAUEN: R15M-Cut OHNE eigenen Atlas -> BSS-Atlas des "
+   "Cuts (Verhalten vor 53741fe5), R15M-Cut MIT eigenem Atlas -> unveraendert; Elza-Zwilling (A) unberuehrt. SCHRITT 3 PRUEFEN: Blit-Pruefung "
+   "je Cut (Masken durch den Atlas auf den Hintergrund: Bild bleibt praktisch gleich, gemessene Farbabweichung angeben); an der exe in "
+   "mehreren Raeumen jeder Stage 3..6 Leon (und Elza) HINTER einem Vordergrund-Objekt (verdeckt) und DAVOR (nicht verdeckt), Framedumps "
+   "RE15_WINDOW_SCALE=1 + Punktzaehlung wie A; Gegenprobe Stand vor P. Memory-Lehren: Maske = Tiefen-Profil je Zeile, 'deckt ab' != "
+   "'verdeckt', flache Maske verdeckt nichts, Masken nur wo man hinkommt, ⛔ Nutzer-PRI ohne Hash-Liste = Basis rot (pri_hashes.py im selben "
+   "Commit, falls Hash-Listen betroffen). RIEGEL ueber probes/r37_masken36.cmake: Zensus (je Datei/Cut Atlas-Quelle, kein toter Cut), "
+   "Blit-Pruefung, Verdeckungs-Pins je Stage mit Gegenprobe; Spur-A-Riegel (r37_pri1100*, pri_masken, r36_pri*) gruen.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
