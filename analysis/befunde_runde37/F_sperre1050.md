@@ -57,6 +57,20 @@ Bild-Zeitachse (Skript und Auszug: `F_belege/r7_e2e_vorher.txt`):
 Kein "I have to get the Chief first..." auf dem ganzen Weg; aus dem Treppenhaus 10A0 geht es weiter nach B1
 (1180 -> 11B0 -> 11C0). Das ist die Luecke des Nutzers, Ende-zu-Ende.
 
+**Herkunft (statt Bisect — keine Regression im engeren Sinn, aber "warum erst jetzt" ist erklaert):**
+
+| Stand | Sperre 1060 -> 1040 | Tritt ROOM10F0 kletterbar | Luke-Weg |
+|---|---|---|---|
+| v0.8.21 9362dd7e | nein (059664db fehlt) | nein (A_klettern.md Bisect: "sub bleibt 0") | — (nichts zu ueberspringen) |
+| v0.8.22 87cc8575 | ja (059664db, Runde 35 Spur L) | nein (climb_common.c = 92c17762) | zu — Gitter unerreichbar |
+| v0.8.23 3ec5b1f8 | ja | nein (A_klettern.md Bisect, gemessen) | zu |
+| v0.8.24 e8b3958f / f1e019ca | ja | **ja** (1c926683, Runde 36 Spur A: Flags-Gate @0x8002d358-35c) | **offen** (r7 oben) |
+
+(Abstammung per `git merge-base --is-ancestor`; climb_common.c-Stand je Release per `git log -1 <rel> -- ...`.) Der
+Runde-36-Fix machte den Tritt wieder original-treu kletterbar — damit wurde der Original-Weg Gitter -> Laufsteg ->
+Absprung begehbar, an dem die Runde-35-Sperre nur EINE Bruecke nach unten schliesst. Das erklaert, warum der Nutzer die
+Luecke in v0.8.24 fand.
+
 Gegenproben (je eigener Lauf): r2 — auf dem Laufsteg (Band 5) INNERHALB des Tuerrechtecks der 1050-Tuer
 (x -11500 .. -10375, z 2700) Aktionstaste: KEIN `DOOR FIRE` (Band-Gate @0x80042cac greift, Tuer-Band 1 != 5);
 r3/r4 — der Absprung allein (Sprung nach 1090 auf den Steg) zeigt dieselbe Kette; r6 — ROOM1050-Sued vom
@@ -277,3 +291,42 @@ Neu (nur `re15_port/tests/unit/probes/r37_sperre1050.cmake`, keine CMakeLists.tx
 | integration_r37_sperre1050 | echte exe, 5 Laeufe (A Luke Ende-zu-Ende, E Endspiel direkt, B Mittelspiel, C nach Irons, D Elza 50B1), `test_r37_sperre1050.cmake` | gruen (219 s) |
 
 Angepasst: `tests/unit/test_r36_story.c` teil_texte (Untersuchungsform, 12 Overrides) — unit_r36_story_texte gruen.
+
+Gezielte Laeufe (KEINE volle Suite; Regex = eigene Tests + die Testgruppen jedes beruehrten Moduls/Raums: ROOM1050
+(adaruf, rolltor, dokumente, Ada-Eintritt, inventar1050, sicherung), tuer1060/Irons (r35_cut1150), Text-Weg (r36_story,
+msg/text/savepoint), Luke-Weg (r36_klettern, r35_cut10f0), Boot-/CONTINUE-Weg in main.c (weste_load_pin, boot_bg_pin,
+r33_speichern, map_speichern_laden)):
+
+* Unit: `ctest --test-dir re15_port/build -R "^(unit_r37_sperre1050_|unit_r34n_d_adaruf_|unit_r34n_a_rolltor|unit_r34n_e_dokumente|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r27_ada_cutscene_1050|unit_room1050_sicherung|unit_r35_inventar1050_|unit_r35_cut1150_|unit_r36_story_|unit_msg_dialog|unit_action_msg_gate|unit_text_freeze|unit_savepoint|unit_r36_klettern_|unit_r35_cut10f0_|unit_r33_speichern|unit_map_speichern_laden|unit_stair_hwtruth_1060|unit_r34n_f_leiche_texte|unit_r34n_b_kreuztext)" -j 4 --timeout 600`
+  -> `100% tests passed, 0 tests failed out of 65`
+
+---
+
+## OFFEN
+
+* Keine offenen Punkte der Spur F.
+* Fuer den Orchestrator: +6 Tests (5 unit + 1 integration) — RE15_MIN_TESTS beim Zusammenfuehren anheben (bewusst
+  nicht im Spurbaum, gemeinsame Datei). Haken am Blockende von `engine/src/scd_room_setup.c` (Include + 1 Zeile) und
+  im Boot-/CONTINUE-Block von `platform/pc/main.c` (2 Zeilen) — beim Zusammenfuehren mit den anderen Spuren nur
+  Zeilen-Nachbarschaft, keine inhaltliche Ueberschneidung. `tests/unit/test_r36_story.c` zaehlt jetzt 12 Overrides —
+  schreibt eine andere Spur weitere Overrides in `texte_bauen.py`, muss die Zahl dort mitwachsen.
+* Fremde Spuren, die den Weg beruehren: D itemband (Band-Gate "fuer alle AOT-Saetze" + Member 0x12) — der Luke-Weg
+  nimmt die Tueren je auf ihrem Band (Gitter Band 1, Hof-Tuer Band 1, Slot 4 Band 0), der Absprung ist kein AOT;
+  integration_r37_sperre1050 Lauf A misst das nach der Zusammenfuehrung mit.
+
+## Fuer den Nutzer
+
+* **Bedienhinweis #10:** Nach der Szene im Funkraum (10F0) und bevor Leon den Chief geholt hat, sagt jetzt auch die Tuer
+  in ROOM1050 zum Treppenhaus nach unten (die Tuer, an der vor Adas Rettung die Ada-Szene kam) "I have to get the Chief
+  first..." — egal ob Leon ueber die Treppe 1060, ueber das Lueftungsgitter in 10F0 (Absprung im Hinterhof 1090) oder
+  mit dem Fahrstuhl nach unten gekommen ist. Vor Adas Rettung bleibt dort die Ada-Szene bzw. "I have to help the
+  Survivor first!", zwischen Rettung und Funkraum-Szene ist die Tuer offen, nach Irons' Tod ebenfalls.
+  Testweg: Funkraum-Szene sehen, Tritt unter das Gitter schieben, hoch, durchs Gitter, im Hinterhof am Nordrand des
+  Laufstegs (Blick zum Hof) Aktionstaste = Absprung auf die Kiste, von der Kiste nach Osten springen, Tuer nach
+  ROOM1050, dort zur Tuer am Treppenhaus.
+* **#5 / Nachtrag 8:** Elza an der Toten in ROOM50B1: "It's a woman. She's dead." / "It looks like one of those" /
+  "gorillas killed her." — sie findet nur die Leiche und kennt Ada nur dem Namen nach. Wortlaut aenderbar in
+  `re15_port/tools/r36_p/texte_bauen.py` (Liste UNTERSUCHEN), danach das Skript ausfuehren.
+* **Neue Assets / Sprachdateien:** keine (kein shared_assets, keine RE2-Datei; beide Texte sind Text-/Untersuchungs-
+  Plaetze ohne Stimme).
+* **Entscheidungsfragen:** keine.
