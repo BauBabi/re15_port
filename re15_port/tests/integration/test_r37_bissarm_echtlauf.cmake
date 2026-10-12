@@ -12,19 +12,22 @@ cmake_minimum_required(VERSION 3.16)
 #           Blick 2048 = Ruecken zum Greifer -> Griff von HINTEN, Browning ausgeruestet.
 #   Lauf B  ROOM1010 Cut 6 (Weg aus Abschnitt 1.2): Leon (3700,0,2300), 0,3 s rueckwaerts -> Griff
 #           durch Slot 1 (Typ 0x10) von vorn.
+#   Lauf C  wie A, aber ELZA (Charakter 4, PL04) — Opfer-Bezug: die exe liest PLD/PL00.PLD (Leons
+#           Knochen) ueber re15_asset_read_file und legt Elzas Schulter-Differenz an (Lauf A: 0).
 #
 # Je Lauf zwei Auswerter (test_r37_bissarm):
 #   pruef_armlog   RE15_BISSARM_LOG: der NPC-Zeichner (platform/pc/main.c) ruft im Griff
 #                  re15_bissarm_r37_handkontakt; in jedem Bild liegt die gezeichnete Hand hoechstens
 #                  |rest|+3 vom RE2-Zielpunkt und in >= 20 Biss-Bildern (Clip 12, P3 @0x80102838)
-#                  liegen beide Haende darauf.
+#                  liegen beide Haende darauf; Opfer-Bezug Leon = 0 in jeder Zeile, Elza |Y| >= 50.
 #   pruef_griffweg RE15_STATE_LOG: im Halten (Greifer-Clip 11/12) steht Leon <= 2000 vom Greifer,
 #                  im ganzen Griff kein Sprung > 1200 und nie (0,0) (RE2 FUN_8003567c: EIN Durchgang
 #                  `jal 0x8004c1bc` @0x800356d0 vom alten Standpunkt `sh` @0x800356f4-f8).
 #
 # Gemessen 2026-10-12 (Bau dieser Spur): A 103 Griffbilder, 50 Biss-Bilder mit beiden Haenden auf
-# dem Ziel, Halten max 1128; B 103 / 54 / max 917. Gegenprobe mit dem Bau VOR dem Fix (419380dc):
-# A ohne bissarm.log (Haken fehlt), B Leon 89 Bilder auf (0,0), 81 Halte-Bilder > 2000 (bis 5571).
+# dem Ziel, Halten max 1128; B 103 / 54 / max 917; C 103 / 58, Opfer-Bezug |Y| mittel 116.
+# Gegenprobe mit dem Bau VOR dem Fix (419380dc): A ohne bissarm.log (Haken fehlt), B Leon 89 Bilder
+# auf (0,0), 81 Halte-Bilder > 2000 (bis 5571).
 #
 # Eigener exe-Name (Muster test_r36_kleidung_bild.cmake), SDL_ASSERT=always_ignore (RDP-Haenger
 # an WIN_AddDisplay, Runde 36 B_abnahme_0.md Abschnitt 5).
@@ -56,7 +59,7 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 set(_fehler "")
 
 # Karte schreiben (Slot 0) -> CONTINUE -> Lauf bis Bild _ende; danach beide Auswerter.
-function(r37j_lauf _name _ende _raum)
+function(r37j_lauf _name _ende _raum _opfer)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     execute_process(COMMAND "${RE15_TOOL}" karte "re15_card.mcr" ${ARGN}
@@ -88,7 +91,7 @@ function(r37j_lauf _name _ende _raum)
     set(_f_lokal "${_fehler}")
     foreach(_teil pruef_armlog pruef_griffweg)
         if(_teil STREQUAL "pruef_armlog")
-            set(_args "${WORKDIR}/bissarm.log" 20)
+            set(_args "${WORKDIR}/bissarm.log" 20 ${_opfer})
         else()
             set(_args "${WORKDIR}/state.log" 2000 30)
         endif()
@@ -102,11 +105,12 @@ function(r37j_lauf _name _ende _raum)
     set(_fehler "${_f_lokal}" PARENT_SCOPE)
 endfunction()
 
-r37j_lauf(A 200 1140 1140 0 -1000 0 -19600 2048 100 1 3 "7:211,7:212,7:213,7:214")
-r37j_lauf(B 200 1010 1010 0 3700 0 2300 0 100 6 0 "-")
+r37j_lauf(A 200 1140 leon 1140 0 -1000 0 -19600 2048 100 1 3 "7:211,7:212,7:213,7:214")
+r37j_lauf(B 200 1010 leon 1010 0 3700 0 2300 0 100 6 0 "-")
+r37j_lauf(C 200 1140 elza 1140 4 -1000 0 -19600 2048 100 1 3 "7:211,7:212,7:213,7:214")
 
 file(REMOVE "${_exe}")
 if(_fehler)
     message(FATAL_ERROR "r37_bissarm_echtlauf: ROT —${_fehler}")
 endif()
-message(STATUS "r37_bissarm_echtlauf: OK — im Griff liegen die gezeichneten Zombie-Haende auf dem RE2-Kontaktpunkt, Leon bleibt am Greifer")
+message(STATUS "r37_bissarm_echtlauf: OK — im Griff liegen die gezeichneten Zombie-Haende auf dem RE2-Kontaktpunkt (Leon und Elza), das Opfer bleibt am Greifer")

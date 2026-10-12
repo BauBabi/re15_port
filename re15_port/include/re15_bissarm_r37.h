@@ -13,6 +13,15 @@
  *     keine Wurzelkorrektur), Ellbogen per Zwei-Gelenk-Kette mit den RE1.5-Armlaengen, Beugeseite = RE2-Ellbogen.
  *     PORT-KONSTRUKT wie root_y_fix (der Hybrid hat kein Original): die Invariante des Originals ist der
  *     Kontaktpunkt Hand–Opfer, er wird RE2-genau gehalten; Groesse und Aussehen der RE1.5-Modelle bleiben.
+ *     ELZA: der Kontaktpunkt gilt RELATIV ZUR SCHULTER DES OPFERS. Die Originale passen die Griff-Clips je
+ *     Figur an — RE1.5 liefert dafuer zwei Gegnerarchive: EMD/CDEMD0.EMS (Leon) und CDEMD1.EMS (Elza)
+ *     unterscheiden sich fuer EM10..EM1x genau in Aktionsbank dir[3]/dir[4] und Opferbank dir[5]/dir[6]
+ *     (Netz/Skelett/Textur dir[2]/[7]/[8] byte-gleich, gemessen); im RE1.5-Griff liegt die Zombie-Hand mit
+ *     der Elza-Variante ~165 tiefer (Sonde re15_kontakt). RE2 hat dasselbe (Claire-Archiv), aber nur Leons
+ *     RE2-Daten liegen im Repo. Deshalb: Ziel = RE2-Hand + (Schulter des gezeichneten Opfers - dieselbe
+ *     Schulter im selben Opfer-Keyframe mit Leons Knochen PL00.PLD), Schultern 9/12 je Hand nach Naehe (1/d^2)
+ *     gewichtet; fuer Leon ist die Differenz bitgenau 0. Nicht fuer den Kriecher (Bein-Griff, +0x10E Bit 0
+ *     @0x80102674): dort ist der Boden der Bezug.
  *
  * (B) WANDKLEMME DER OPFER-PLATZIERUNG. RE2 klemmt den Spieler im Griff genau EINMAL je Bild gegen die Waende,
  *     NACH der Platzierung und vom Standpunkt des Vorbilds aus: Hauptschleife `jal 0x8003bfac` (Spieler-Tick,
@@ -36,10 +45,17 @@
  * ueberschreibt (Quelle RE2/CDEMD0.EMS, EMR des Typs). */
 void re15_bissarm_r37_re2_bind_merken(int kind, const re15_emd_skeleton_t *re2skel);
 int  re15_bissarm_r37_re2_bind_da(uint8_t type);
+/* Messzugang: die gemerkte RE2-Bindtabelle des Typs (NULL, wenn keine). */
+const int16_t (*re15_bissarm_r37_re2_bind(uint8_t type))[3];
 
 /* enemy_ai_common.c re15_victim_place: 1 = fuer diesen Greifer gilt EIN Wandklemm-Durchgang je Bild ohne
  * Rueckfall (RE2 FUN_8003567c, RE1.5 @0x80031d70). */
 int  re15_bissarm_r37_ein_durchgang(uint8_t greifer_typ);
+
+/* platform/pc/main.c Spieler-Zeichner, nach re15_skel_compute_pose des Opfers: die Schultern (9/12) des
+ * gezeichneten Opfers gegen dieselbe Pose mit Leons Knochen merken (Welt). `vsk` = das gezeichnete Opfer-Skelett
+ * (Spieler-Knochen + Opfer-Keyframes), `kf` = dessen Keyframe. */
+void re15_bissarm_r37_opfer_merken(const re15_actor_t *pl, const re15_emd_skeleton_t *vsk, int kf);
 
 /* platform/pc/main.c NPC-Zeichner, direkt nach re15_skel_compute_pose: Arme des greifenden Hybrid-Zombies auf
  * den RE2-Handkontakt stellen. Liefert 1, wenn die Pose veraendert wurde. `kf` = der gezeichnete Keyframe. */

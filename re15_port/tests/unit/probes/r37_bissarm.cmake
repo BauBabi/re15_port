@@ -7,13 +7,15 @@
 #                                         J_belege/re2_*_frames.bin, SLUS-00748_4.sav, Biss-Loop P3 @0x8010F838 =
 #                                         EMOVL10_S0 +0x2838). Ohne Handkontakt Mittel >= 150 (gemessen 222/223),
 #                                         mit <= 12 (gemessen vorn 9/3, hinten 8/2), ab Biss-Bild 4 jedes Bild <= 6.
+#   unit_r37_bissarm_elza_vorn / _hinten  (A2) Opfer-Bezug: Elzas Kontakt-Hand liegt auf IHRER Schulter wie die
+#                                         RE2-Hand auf Leons (Schulter-Differenz Elza - Leon im selben Opfer-Keyframe).
 #   unit_r37_bissarm_klemme_*             (B) Wandklemme im Griff = EIN Durchgang je Bild vom Stand des Vorbilds
 #                                         (RE2 FUN_8003567c `jal 0x8004c1bc` @0x800356d0, alter Standpunkt
 #                                         `sh` @0x800356f4-f8): ROOM1010 an der Schreibtisch-Wand (vorher 16 bzw.
 #                                         80 Fehlbilder, Leon auf (0,0)/festgehalten), ROOM1140 freie Flaeche.
-#   integration_r37_bissarm_echtlauf      echte exe: ROOM1140 Griff von hinten (ein Greifer per Kill-Flags) und
-#                                         ROOM1010 Cut 6 — Haende auf dem RE2-Ziel (RE15_BISSARM_LOG), Leon am
-#                                         Greifer (RE15_STATE_LOG).
+#   integration_r37_bissarm_echtlauf      echte exe: ROOM1140 Griff (ein Greifer per Kill-Flags) mit Leon und mit
+#                                         Elza, ROOM1010 Cut 6 — Haende auf dem RE2-Ziel (RE15_BISSARM_LOG), Opfer-
+#                                         Bezug Leon 0 / Elza ~116, Leon am Greifer (RE15_STATE_LOG).
 # Die Fixtures liegen unter analysis/ (Muster r22_10f0 / r30_*); fehlen sie, meldet die Sonde SKIP (77).
 add_executable(test_r37_bissarm ${CMAKE_CURRENT_SOURCE_DIR}/test_r37_bissarm.c)
 target_link_libraries(test_r37_bissarm PRIVATE re15_engine re15_test_support)
@@ -26,6 +28,16 @@ foreach(_s vorn hinten)
              COMMAND test_r37_bissarm pruef_re2
                      ${CMAKE_SOURCE_DIR}/../analysis/befunde_runde37/J_belege/re2_${_s}_frames.bin ${_s})
     set_tests_properties(unit_r37_bissarm_re2_${_s} PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
+endforeach()
+
+# (A2) Opfer-Bezug fuer Elza: Elzas Kontakt-Hand liegt auf IHRER Schulter wie die RE2-Hand auf Leons (absolutes
+# RE2-Ziel gemessen 117/121 zu hoch, mit Bezug 0/2). Opfer = PL04 ueber R37J_ELZA=1.
+foreach(_s vorn hinten)
+    add_test(NAME unit_r37_bissarm_elza_${_s}
+             COMMAND test_r37_bissarm pruef_elza
+                     ${CMAKE_SOURCE_DIR}/../analysis/befunde_runde37/J_belege/re2_${_s}_frames.bin ${_s})
+    set_tests_properties(unit_r37_bissarm_elza_${_s} PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77
+                         ENVIRONMENT "R37J_ELZA=1")
 endforeach()
 
 # pruef_klemme <raum> <px> <pz> <rot> <vorn|hinten>: ROOM1010 = Stand des Nutzerwegs aus Abschnitt 1.2 (F57

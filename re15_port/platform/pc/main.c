@@ -8718,6 +8718,7 @@ re_title:;
             if (skel_ok) {                        /* NACHBESSERUNG M-HE-1: auch gecullt (s.o.) */
                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
                 pose_ok = (re15_skel_compute_pose(p_skel, kf_idx, poses) == 0);
+                if (pose_ok && re15_player_victim_state() != 0) re15_bissarm_r37_opfer_merken(player_ref, p_skel, kf_idx);   /* Runde 37 Spur J: Opfer-Schultern fuer den Handkontakt (Elza) */
                 /* RE15_POSE_DUMP: LEON render-level pose (grab-start / release investigations) */
                 {
                     static FILE *s_lp = NULL; static int s_lp_tried = 0;

@@ -7,9 +7,11 @@
 #include <math.h>
 #include "re15_bissarm_r37.h"
 #include "re15_ai_flavor.h"
-#include "re15_engine.h"   /* g_engine.frame_count (nur Messhaken) */
+#include "re15_engine.h"   /* g_engine.frame_count (Messhaken + Bildgleichheit Opfer/Greifer) */
+#include "re15_md1.h"      /* re15_pld_part (PL00.PLD -> EMR) */
 
 extern void *g_anim_pose_actor;
+extern uint8_t *re15_asset_read_file(const char *path, int *out_size);   /* PC-/PSX-Backend, Test-Stub */
 
 /* ---- RE2-Bindtabelle je Zombie-Typ ------------------------------------------------------------ */
 static int16_t s_re2_bind[256][RE15_EMD_MAX_BONES][3];
@@ -23,6 +25,7 @@ void re15_bissarm_r37_re2_bind_merken(int kind, const re15_emd_skeleton_t *re2sk
 }
 
 int re15_bissarm_r37_re2_bind_da(uint8_t type) { return s_re2_bind_ok[type] != 0; }
+const int16_t (*re15_bissarm_r37_re2_bind(uint8_t type))[3] { return s_re2_bind_ok[type] ? (const int16_t (*)[3])s_re2_bind[type] : NULL; }
 
 /* ---- (B) EIN Wandklemm-Durchgang je Bild (RE2 FUN_8003567c / RE1.5 @0x80031d70) ------------------ */
 int re15_bissarm_r37_ein_durchgang(uint8_t greifer_typ)
@@ -30,8 +33,63 @@ int re15_bissarm_r37_ein_durchgang(uint8_t greifer_typ)
     return re15_re2z_owns_type(greifer_typ);   /* Zombie-Familie 0x10/0x11/0x12/0x13/0x16/0x18 */
 }
 
+/* ---- (A2) Opfer-Bezug: Schulter des gezeichneten Opfers gegen Leons Schulter (Elza) ----------------- */
+static int     s_leon_ok = -1;                                  /* -1 = noch nicht gelesen */
+static int16_t s_leon_bind[RE15_EMD_MAX_BONES][3];
+static int     s_leon_n = 0;
+/* Anker am Opfer = die Schultern 9/12 (Leon PL00, RE2-Reihenfolge): dort liegt im RE2-Biss die KONTAKT-Hand
+ * (RE2-RAM: Hand 11 von vorn 68..171 von Leons Schulter 12). Ein dritter Anker Kopf 8 wurde gemessen und
+ * verworfen: er zog die Kontakt-Hand von der Schulter weg (Hoehe -157 statt -148, Sonde pruef_elza). */
+#define OPFER_ANKER 2
+static const int k_anker[OPFER_ANKER] = { 9, 12 };
+static int32_t s_opfer_delta[OPFER_ANKER][3], s_opfer_ref[OPFER_ANKER][3];   /* Welt */
+static uint32_t s_opfer_bild = 0xFFFFFFFFu;
+
+/* Leons Knochen: PLD/PL00.PLD (CD-Datei 0x3C, Tabelle @0x80073f70; Verzeichnis-Teil 1 = EMR, re15_pld_part). */
+static int leon_bind_laden(void)
+{
+    if (s_leon_ok >= 0) return s_leon_ok;
+    s_leon_ok = 0;
+    int sz = 0;
+    uint8_t *b = re15_asset_read_file("shared_assets/PSX/PLD/PL00.PLD", &sz);
+    if (!b) return 0;
+    unsigned long off = 0, len = 0;
+    static re15_emd_skeleton_t sk;
+    memset(&sk, 0, sizeof sk);
+    if (re15_pld_part(b, (long)sz, RE15_PLD_EMR, &off, &len) &&
+        re15_emd_parse_skeleton(b + off, (size_t)len, &sk) == 0 && sk.bone_count >= 13) {
+        memcpy(s_leon_bind, sk.bone_relative_pos, sizeof s_leon_bind);
+        s_leon_n = sk.bone_count;
+        s_leon_ok = 1;
+    }
+    free(b);
+    return s_leon_ok;
+}
+
+void re15_bissarm_r37_opfer_merken(const re15_actor_t *pl, const re15_emd_skeleton_t *vsk, int kf)
+{
+    s_opfer_bild = 0xFFFFFFFFu;
+    if (!pl || !vsk || kf < 0 || vsk->bone_count < 13) return;
+    if (!leon_bind_laden() || vsk->bone_count != s_leon_n) return;
+    static re15_emd_skeleton_t ref;
+    static re15_skel_pose_t a[RE15_EMD_MAX_BONES], r[RE15_EMD_MAX_BONES];
+    ref = *vsk;
+    memcpy(ref.bone_relative_pos, s_leon_bind, sizeof ref.bone_relative_pos);
+    void *sav = g_anim_pose_actor; g_anim_pose_actor = NULL;  /* beide OHNE Ueberblendung: fuer Leon exakt 0 */
+    int ok = (re15_skel_compute_pose(vsk, kf, a) == 0) && (re15_skel_compute_pose(&ref, kf, r) == 0);
+    g_anim_pose_actor = sav;
+    if (!ok) return;
+    for (int k = 0; k < OPFER_ANKER; k++) {
+        int32_t wa[3], wr[3];
+        re15_skel_bone_to_world(a[k_anker[k]].trans, pl->rot_y, pl->x, pl->y, pl->z, wa);
+        re15_skel_bone_to_world(r[k_anker[k]].trans, pl->rot_y, pl->x, pl->y, pl->z, wr);
+        for (int i = 0; i < 3; i++) { s_opfer_delta[k][i] = wa[i] - wr[i]; s_opfer_ref[k][i] = wr[i]; }
+    }
+    s_opfer_bild = g_engine.frame_count;
+}
+
 /* ---- (A) Handkontakt ------------------------------------------------------------------------- */
-static int32_t s_ziel[2][3], s_rest[2];
+static int32_t s_ziel[2][3], s_rest[2], s_bezug[2][3];   /* s_bezug: angelegter Opfer-Bezug (Rahmen des Greifers) */
 
 void re15_bissarm_r37_letzte_ziele(int32_t ziel[2][3], int32_t rest[2])
 {
@@ -78,6 +136,7 @@ int re15_bissarm_r37_handkontakt(const re15_actor_t *e, const re15_emd_skeleton_
                                  re15_skel_pose_t *poses, int n)
 {
     s_rest[0] = s_rest[1] = -1;
+    memset(s_bezug, 0, sizeof s_bezug);
     if (!e || !sk || !poses || n < 15 || sk->bone_count < 15 || kf < 0) return 0;
     if (!re15_re2z_owns_type(e->type) || !re15_ai_re2_for_type(e->type)) return 0;
     if (!s_re2_bind_ok[e->type]) return 0;                 /* kein Hybrid -> RE2-Rig, nichts zu tun */
@@ -109,8 +168,28 @@ int re15_bissarm_r37_handkontakt(const re15_actor_t *e, const re15_emd_skeleton_
             S[i] = poses[a].trans[i];
             T[i] = poses[a + 2].trans[i] + (double)(ru[a + 2].trans[i] - hu[a + 2].trans[i]);
             P[i] = poses[a + 1].trans[i] + (double)(ru[a + 1].trans[i] - hu[a + 1].trans[i]);
-            s_ziel[arm][i] = (int32_t)lround(T[i]);
         }
+        /* Opfer-Bezug (Elza, s. Kopf re15_bissarm_r37.h): stehender Griff (+0x10E Bit 0 = 0 @0x80102674),
+         * Opfer-Schultern 9/12 aus DIESEM Bild. Verschiebung = nach 1/d^2 (d = Abstand des Ziels zur Schulter)
+         * gewichtete Schulter-Differenz Opfer - Leon (Welt -> Rahmen des Greifers: R(yaw)^T, Umkehrung von
+         * re15_skel_bone_to_world). Liegt die Hand an EINER Schulter, folgt sie praktisch nur ihr. */
+        if (s_opfer_bild == g_engine.frame_count && !(e->re2z_f10e & 1u)) {
+            int32_t ti[3] = { (int32_t)lround(T[0]), (int32_t)lround(T[1]), (int32_t)lround(T[2]) }, tw[3];
+            re15_skel_bone_to_world(ti, e->rot_y, e->x, e->y, e->z, tw);
+            double w[OPFER_ANKER], ws = 0.0, dw[3] = { 0.0, 0.0, 0.0 };
+            for (int k = 0; k < OPFER_ANKER; k++) {
+                double dx = (double)tw[0] - s_opfer_ref[k][0], dy = (double)tw[1] - s_opfer_ref[k][1],
+                       dz = (double)tw[2] - s_opfer_ref[k][2];
+                w[k] = 1.0 / (dx * dx + dy * dy + dz * dz + 1.0);
+                ws += w[k];
+            }
+            for (int k = 0; k < OPFER_ANKER; k++)
+                for (int i = 0; i < 3; i++) dw[i] += (w[k] / ws) * (double)s_opfer_delta[k][i];
+            double c = (double)re15_cos_q12((int)e->rot_y) / 4096.0, sn = (double)re15_sin_q12((int)e->rot_y) / 4096.0;
+            double dm[3] = { c * dw[0] - sn * dw[2], dw[1], sn * dw[0] + c * dw[2] };
+            for (int i = 0; i < 3; i++) { T[i] += dm[i]; P[i] += dm[i]; s_bezug[arm][i] = (int32_t)lround(dm[i]); }
+        }
+        for (int i = 0; i < 3; i++) s_ziel[arm][i] = (int32_t)lround(T[i]);
         const double L1 = laenge(sk->bone_relative_pos[a + 1]);   /* RE1.5-Oberarm (Hybrid-Bind) */
         const double L2 = laenge(sk->bone_relative_pos[a + 2]);   /* RE1.5-Unterarm */
         double D[3] = { T[0] - S[0], T[1] - S[1], T[2] - S[2] };
@@ -173,10 +252,11 @@ int re15_bissarm_r37_handkontakt(const re15_actor_t *e, const re15_emd_skeleton_
             re15_skel_bone_to_world(s_ziel[0], e->rot_y, e->x, e->y, e->z, z0);
             re15_skel_bone_to_world(s_ziel[1], e->rot_y, e->x, e->y, e->z, z1);
             fprintf(s_log, "F%u typ=0x%02X ss2=%d clip=%d fr=%d hand11=(%d,%d,%d) ziel11=(%d,%d,%d) rest11=%d"
-                           " hand14=(%d,%d,%d) ziel14=(%d,%d,%d) rest14=%d\n",
+                           " hand14=(%d,%d,%d) ziel14=(%d,%d,%d) rest14=%d bezug11=(%d,%d,%d) bezug14=(%d,%d,%d)\n",
                     (unsigned)g_engine.frame_count, (unsigned)e->type, (int)e->sub_state_2, (int)e->motion,
                     (int)e->anim_frame, h0[0], h0[1], h0[2], z0[0], z0[1], z0[2], (int)s_rest[0],
-                    h1[0], h1[1], h1[2], z1[0], z1[1], z1[2], (int)s_rest[1]);
+                    h1[0], h1[1], h1[2], z1[0], z1[1], z1[2], (int)s_rest[1],
+                    s_bezug[0][0], s_bezug[0][1], s_bezug[0][2], s_bezug[1][0], s_bezug[1][1], s_bezug[1][2]);
             fflush(s_log);
         }
     }
