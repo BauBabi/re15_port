@@ -430,7 +430,7 @@ Auszuege: `D_belege/nb1/v_auf_eingang/`, `D_belege/nb1/v_ab_sued/`.
   der oberen Kabine (z 13050..13470) -> Sueden 13768 (Falle). Jeder Druck mit der Spielermitte IM Rechteck endet in der Kabine.
 
 **(b) RE2 Retail — dieselbe Schwaeche ist dort behoben (Vorbild).** RE2 ROOM6030 ist die Retail-Fassung von RE1.5 ROOM50D0:
-die Tuer slot 0 ist byte-gleich (RE1.5 50D0 main00 `0x011DA 3b 00 02 31 03 00 60 9b d5 f4 80 0c 08 07 ..` / RE2 6030 main00
+der Tuer-Satz slot 0 hat dasselbe Rechteck, sat und floor (nur sce-Nummer 02/01 und Ziel verschieden; RE1.5 50D0 main00 `0x011DA 3b 00 02 31 03 00 60 9b d5 f4 80 0c 08 07 ..` / RE2 6030 main00
 `0x029CA 3b 00 01 31 03 00 60 9b d5 f4 80 0c 08 07 ..`, Rechteck (-25760,-2859,3200,1800)), und der Liftausloeser der Beta
 (50D0 sub00 `0x012FA 2c 05 03 31 03 00 e8 b8 c0 c7 b0 04 b0 04 ff 00 18 04 00 00`, sat 0x31, (-18200,-14400,1200,1200)) wurde
 in Retail an derselben Ecke ZERLEGT (RE2-Walk `tools/re2_sicherung/re2_scd_walk.py`, Bloecke direkt aus dem RDT;
@@ -550,5 +550,7 @@ alle Riegel des ersten Stands (unit/integration_r37_itemband) bleiben gruen (NB1
   Abnahme o2030T/o2030D). Sie gilt nur an Lift A, weil nur dort Fallenstellen existieren (Zensus NB1.4). Der Beta-Lift 50D0, an
   dessen Retail-Fassung RE2 die Zone eingefuehrt hat, faehrt im Port weiter wie im RE1.5-Original (auch von knapp ausserhalb der
   Plattform, z.B. die Bau-Messung aus (-17600,-14900)), weil dort keine Falle entsteht — keine Entscheidungsfrage, nur Hinweis.
+* Paket: keine neue Engine-Datei in der Nachbesserung (itemband_r37.c stammt aus dem ersten Stand — beim Android-Paketbau den
+  GLOB-Cache app/.cxx neu erzeugen, Abnahme 0 §9); keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids.
 * Zone = das RE1.5-Ausloese-Rechteck (Kabine). RE2s Zone ist eigens kleiner (800 statt 1200 an 6030); fuer Lift A gibt es kein
   RE2-Gegenstueck, die Kabine aus den Zellen (NB1.2 a) ist die Plattform.

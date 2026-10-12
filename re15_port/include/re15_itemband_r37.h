@@ -33,7 +33,8 @@
  *     r0[49/55/56] Band 6). Ein Druck aus dem Kabineneingang (z 10730..10900, Blick Sued) bzw. knapp suedlich der
  *     oberen Kabine (z 13050..13470, Blick Nord) faehrt, und die Ausschiebung aus r0[49] bzw. r0[33] setzt den Spieler
  *     auf die FALSCHE Seite (gemessen 10182 / 13768, im Original identisch) — Softlock, im Port erst durch (2).
- *     RE2 Retail hat genau das an der Retail-Fassung des Beta-Lifts ROOM50D0 (= RE2 ROOM6030, Tuer slot 0 byte-gleich)
+ *     RE2 Retail hat genau das an der Retail-Fassung des Beta-Lifts ROOM50D0 (= RE2 ROOM6030: Tuer slot 0 mit gleichem
+ *     Rechteck/sat/floor, Liftausloeser an derselben Ecke (-18200,-14400))
  *     behoben: Plattformzone sub00 @0x02B9C `2c 03 06 41 03 00 e8 b8 c0 c7 20 03 b0 04 05 00 22 00 01 00` (FLAG_CHG,
  *     sat 0x41 = Spieler | MITTE -> (5,0x22)) und am Anfang des Fahrt-Unterprogramms sub10 @0x02F70-7A
  *     `06 00 08 00 21 05 22 00 01 00 08 00` = if (Ck(5,0x22)==0) Evt_end; (5,0x22) ist ein Ein-Bild-Zonenbit (Wisch
