@@ -216,8 +216,43 @@ S und |X - B| > 24. Lage = nach der Kollision gemessen (`RE15_STATE_LOG`).
 
 ## 6. OFFEN
 
-(folgt)
+1. **Sektionen ohne Stehplatz im Modell (32 von 224):** dort findet die Erreichbarkeit (Saaten = AOTs mit eigenem Band + Tuer-
+   Ankuenfte) keinen Stehplatz im Regionsviereck — meist Kameras auf Ebenen ohne Saat (z.B. ROOM3040 Cut 4..7/12 Laufsteg
+   Band 1, ROOM5020 obere Baender, ROOM5090 Band 1, ROOM6010 Band 1/4). Diese Sektionen zeichnen wie am 2026-09-03 gebaut,
+   ohne Pruefung auf Fehlverdeckung. Weg: Saaten fuer Treppen-Uebergaenge zwischen Baendern (Treppen-AOT/RAMP-Zonen mit
+   beiden Baendern) — nicht gebaut.
+2. **Rest in ROOM3040 Cut 1 (Szene f3040c1):** 9 von 222 Figurpunkten am Fussende werden noch von der verbliebenen
+   Kistenmaske uebermalt (vorher 87). Die Lage (-22500,-11400) liegt im Modell nicht im erreichbaren Gitter dieses Cuts
+   (Kiste auf dem Treppenabsatz); nicht weiter verfolgt.
+3. **Objekte ohne Kollisionszelle:** ihre Rechtecke fallen weg, sobald sie eine erreichbare Figur verdecken (keine Zelle
+   davor) — z.B. Ueberhaenge, Gelaender ohne Zelle. Folge = Zustand vor P (keine Verdeckung), nie eine Fehlverdeckung.
+   993 von 6609 Rechtecken sind ausgeschlossen (15 %).
+4. **Figurmass:** Leon (gemessen 3000 x 700). Groessere Figuren (z.B. Birkin, Tyrant-artige) sind nicht eigens geprueft.
+5. **PSX:** `platform/psx/src/pri_psx.c` kennt keinen eigenen Atlas — Freistellungs-Masken wuerden dort den BSS-Atlas abtasten
+   (vorbestehend, PSX-Ziel ungebaut). Der Ausschluss-Haken ist fuer den Gleichlauf in `platform/psx/main.c` eingetragen.
+6. **ROOM1221 (Elza):** ihre eigene Generator-Datei (ohne Atlas) zeichnet jetzt mit BSS-Atlas und Ausschluss (vorher gar
+   nichts, Abnahme A#1 M1). Die Integrations-Aufgabe des Orchestrators (1221 -> Zwilling 1220 mit den Freistellungen) hat
+   Vorrang; entfernt sie ROOM1221.MSK oder bevorzugt den Zwilling, werden die 0x1221-Zeilen der Tabelle wirkungslos (kein
+   Riegel faellt; `test_r37_masken36 erzeuge` danach neu laufen lassen haelt die Tabelle sauber).
+7. Die Generator-Masken selbst (Tiefenband 0.90, Bodenflaechen in der Auswahl) bleiben unveraendert (Vertrag: MASKS/*
+   nicht umschreiben). Ein Neubau der Stages 3..6 aus Freistellungen wie in STAGE1 waere der Weg zu vollstaendiger und
+   genauer Verdeckung — eigener Auftrag.
+
 
 ## 7. Fuer den Nutzer
 
-(folgt)
+- **Was sich aendert (Stages 3..6, Leon und Elza):** Vordergrund-Objekte verdecken die Figuren wieder, wenn sie dahinter
+  stehen — z.B. die Maschine in FACTORY LINE B (ROOM3050), der Pfeiler am Treppenaufgang (ROOM5020), die Wandbloecke im
+  EAST/WEST PASSAGE (ROOM4040/4080), der Treppenpfeiler am Bahnsteig (ROOM6010). Seit v0.6.x (2026-09-08) war das in diesen
+  Stages unbemerkt ganz ausgefallen. Steht die Figur VOR einem Objekt, wird nie etwas von ihr uebermalt.
+- Stellen, an denen die alten, automatisch erzeugten Masken Leon faelschlich geloescht haetten (Bodenflaechen, Wandstuecke,
+  das Band knapp vor Objekten — dieselbe Art Fehler wie Ihre Meldung vom 2026-09-03 "Leon verschwindet"), bleiben aus.
+  Wo Ihnen eine Verdeckung fehlt: F9-Marke wie gewohnt; der Weg dafuer ist eine Freistellung wie in STAGE1.
+- STAGE1/2 (Ihre Freistellungen) und Elzas Zwillings-Masken aus Runde 37 Spur A sind unveraendert.
+- Assets/Paket: keine neuen oder geaenderten Asset-Dateien (MASKS/* unveraendert, Paket-Gate unveraendert). Neu im Code:
+  `engine/src/masken36_r37.c` + `engine/src/gen/masken36_ausschluss_r37.inc` -> Android: .cxx-Cache neu konfigurieren
+  (neue Quelldatei, reai-v2-android-glob-cache); APK neu bauen.
+- Sprachdateien: keine. Bedienhinweise: keine neuen Schalter; im debug.log steht je Cut
+  `[pri] ROOMxxxx Cut n: Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)`.
+- Entscheidungsfragen: keine.
+
