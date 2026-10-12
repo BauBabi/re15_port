@@ -240,6 +240,9 @@ nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
    weil derselbe Weg Elliots Gesten in 1170 treibt (Auftrag: Elliot unveraendert) und alle NPC-Szenen (Marvin, Ada,
    Irons, John) mit ihren Riegeln betrifft — eigener Punkt fuer eine spaetere Runde (1 Takt = 33 ms, durch die
    7-Takt-Ueberblendung +0x8f kaum sichtbar).
+5. PSX-Ziel (nie gebaut, Memory reai-v2-psx-build-gap): platform/psx/src/asset_psx.c laedt Elliot fest aus PLD/ELLIOT.*
+   und registriert Gegner nur aus CDEMD0 (Zeile ~227). Die gemeinsame Engine-Weiche gilt dort ebenso (Elzas 0x47 nimmt
+   den allgemeinen Zweig); der PSX-Lader braucht fuer Roy dieselbe CDEMD1-Wahl, sobald Track T-PSX baut.
 
 ## 7. Fuer den Nutzer
 
@@ -253,3 +256,6 @@ nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
   ROOM1011 an der Wand, sackt bei "*groans*" zusammen und liegt danach; in ROOM1021 schlurft er auf John zu und faellt.
 * **An den Orchestrator** (keine Wahlfrage an den Nutzer): OFFEN 1 als eigene Spur der naechsten Runde (Elza-Archiv
   fuer alle Typen, u.a. Birkin 0x30 und Typ 0x42 in ROOM3091).
+* Weitergereichte Nutzer-Beobachtung aus dem Workflow-Aufruf ("bei deinen aktuellen testlauf in STAGE2 sieht man, das
+  leon den elevator nicht verlassen kann und irgendwo in der Luft rumlaufen kann....") betrifft den Fahrstuhl-Ausstieg
+  STAGE2 (Spur C fahrstuhl), nicht Spur K — hier nicht bearbeitet, nur weitergegeben.
