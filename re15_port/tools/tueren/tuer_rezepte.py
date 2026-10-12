@@ -776,24 +776,26 @@ def rezept_P14A(basis):
 
 
 # ---------------------------------------------------------------------------------------------
-# G10 (P2DS): Hubbuehne - Bedientafel + rote Lampe nicht zeichnen (Texel 0), Warnrand bleibt
+# G10 (P2DS): Hubbuehne - Bedientafel (Mesh 1) nicht zeichnen (Texel 0); Buehne, Warnrand und Schacht-Fachwerk bleiben
 # ---------------------------------------------------------------------------------------------
 @rezept("P2DS")
 def rezept_P2DS(basis):
     rgba = basis["rgba"].copy()
     md1 = basis["md1"]
-    # DOOR2D Mesh 1 = Bedientafel (UV u 0..95 v 193..255, gruen im UV-Bild), Lampe = Mesh 2-Teil
-    # u 96..127 v 193..255 (rot/blau). Texel 0 -> die GPU zeichnet 0x0000 nie (psx-spx).
-    m1 = tab.uv_maske(md1, [1])
-    lampe = np.zeros((256, 128), bool)
-    lampe[193:256, 96:128] = True
-    lampe &= tab.uv_maske(md1, [2])
-    weg = m1 | lampe
+    # DOOR2D Mesh 1 = Bedientafel mit Schaltern und roten Leuchten (UV u 1..93 v 194..253). Texel 0 -> die GPU
+    # zeichnet 0x0000 nie (psx-spx).
+    # Runde 37 Spur C N1 (analysis/befunde_runde37/C_fahrstuhl.md): bis dahin nahm das Rezept zusaetzlich eine
+    # "Lampe" = Mesh-2-Teil u 96..127 v 193..255 weg. Gemessen: GANZ Mesh 2 liegt dort (60/60 Dreiecke, UV u 96..126
+    # v 193..252, 1737/1737 Texel) - Mesh 2 ist das rot beleuchtete Schacht-Fachwerk (obj 2 + Kinder obj 3/4/5,
+    # DOOR2D Skript 1 @Datei 0x6050 / 2 @0x6130), das in Skript 4 @0x6300 / 5 @0x6344 je Bild um 125 an der Kamera
+    # vorbeizieht = die EINZIGE Bewegung der Hubbuehnen-Fahrt. Ohne sie zeigte P2DS 301/451 Bilder lang ein
+    # stehendes Bild. Gemalt ist der Schacht mit Fachwerk (ROOM4000 c01, Runde 31 stapel_5.pruefer.md S218) -> bleibt.
+    weg = tab.uv_maske(md1, [1])
     # Texel, die auch Mesh 0 (Buehne) liest, bleiben
     weg &= ~tab.uv_maske(md1, [0])
     rgba[weg, :3] = 0
     rgba[weg, 3] = 0
-    return rgba, dict(nicht_gezeichnet=int(weg.sum()), herkunft="S218 c01: leerer Schacht, keine Tafel/Lampe gemalt",
+    return rgba, dict(nicht_gezeichnet=int(weg.sum()), herkunft="S218 c01: Schacht mit Fachwerk, keine Bedientafel gemalt",
                       _frei=weg, _texel0=True)
 
 

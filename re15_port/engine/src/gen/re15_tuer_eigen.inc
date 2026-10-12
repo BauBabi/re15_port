@@ -46,8 +46,8 @@ static const re15_tuer_eigen_t re15_tuer_eigen[32] = {
     { "P25G", 0x25, 17624, 34300, 9, 52732, 0x1F709C51u, 0 },
     /* 17: P14A = DOOR14 + Textur 'groebere Rauten, hellgrauer Rahmen' (Ton eigen DOOR14 (Schiebe-Gittertor)) */
     { "P14A", 0x14, 24024, 39128, 12, 63704, 0x8701F033u, 0 },
-    /* 18: P2DS = DOOR2D + Textur 'Bedientafel + rote Lampe weg (Texel 0 = nicht gezeichnet), Warnrand bleibt' (Ton eigen DOOR2D (Hubbuehne)) */
-    { "P2DS", 0x2D, 22712, 53668, 12, 78244, 0xC9CE31CDu, 0 },
+    /* 18: P2DS = DOOR2D + Textur 'Bedientafel weg (Texel 0 = nicht gezeichnet), Warnrand + Schacht-Fachwerk bleiben' (Ton eigen DOOR2D (Hubbuehne)); Runde 37 Spur C N1: Fachwerk (Mesh 2) wieder gezeichnet */
+    { "P2DS", 0x2D, 22712, 53668, 12, 78244, 0x4A900C54u, 0 },
     /* 19: P07R = DOOR07 + Textur 'DOOR22-Blatt ohne Nietrand und ohne gemalten D-Riegel, rostbraun' (Ton F3 (= DOOR22-Ton, bytegleich)) */
     { "P07R", 0x07, 19608, 35428, 10, 55908, 0xEE008E6Du, 0 },
     /* 20: P1AP = DOOR1A + Textur 'DOOR23-Profil, Ausbuchtung am Griff gerade gezogen, braun' (Ton F4 (15 1A 23 = DOOR23-Ton)) */

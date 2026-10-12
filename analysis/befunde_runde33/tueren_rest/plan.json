@@ -162,7 +162,7 @@
    "basis": "DOOR2D",
    "blatt": "DOOR2D",
    "ton": "eigen DOOR2D (Hubbuehne)",
-   "rezept": "Bedientafel + rote Lampe weg (Texel 0 = nicht gezeichnet), Warnrand bleibt",
+   "rezept": "Bedientafel weg (Texel 0 = nicht gezeichnet), Warnrand + Schacht-Fachwerk bleiben",
    "griff": "-",
    "stufe": 2
   },
@@ -447,7 +447,7 @@
    "tueren": [
     "T112"
    ],
-   "grund": "Hubbuehne DOOR2D (V4 hinauf), Tafel/Lampe weg"
+   "grund": "Hubbuehne DOOR2D (V4 hinauf), Tafel weg, Fachwerk bleibt"
   },
   {
    "id": "G11a",
