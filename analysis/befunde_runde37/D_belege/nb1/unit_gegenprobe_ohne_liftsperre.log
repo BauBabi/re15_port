@@ -1,0 +1,12 @@
+=== L: Plattform-Sperre Lift A ROOM2030/2031 (PORT-WAHL nach RE2 6030 sub10 @0x02F70-7A), echter Scan ===
+  FAIL: ROOM2030 Eingang (6605,10770) Blick Sued Band 3: Satz getroffen, Mitte ausserhalb -> KEINE Fahrt (ev 2)
+  FAIL: ROOM2030 (6605,10850) Blick Sued: keine Fahrt (ev 2)
+  FAIL: ROOM2030 (6605,13245) Blick Nord Band 6: Mitte ausserhalb -> KEINE Fahrt (ev 2)
+  FAIL: ROOM2030 (6605,13400) Blick Nord Band 6: keine Fahrt (ev 2)
+  FAIL: ROOM2031 Eingang (6605,10770) Blick Sued Band 3: Satz getroffen, Mitte ausserhalb -> KEINE Fahrt (ev 2)
+  FAIL: ROOM2031 (6605,10850) Blick Sued: keine Fahrt (ev 2)
+  FAIL: ROOM2031 (6605,13245) Blick Nord Band 6: Mitte ausserhalb -> KEINE Fahrt (ev 2)
+  FAIL: ROOM2031 (6605,13400) Blick Nord Band 6: keine Fahrt (ev 2)
+FAIL
+0% tests passed, 1 tests failed out of 1
+The following tests FAILED:

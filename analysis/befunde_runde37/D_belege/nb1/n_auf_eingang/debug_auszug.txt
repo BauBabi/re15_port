@@ -1,0 +1,3 @@
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[room] PC loaded room2030.rdt (282076 bytes)
+exit=0 dauer=116s

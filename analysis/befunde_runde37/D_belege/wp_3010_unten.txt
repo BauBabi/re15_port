@@ -1,0 +1,16 @@
+# Runde 37 Spur D: ROOM3010 Gegenprobe: Band 0 UNTER dem Steg an derselben Stelle wie wp_3010_weg (Blick Ost).
+OBJ 0
+RAUM 3010
+GEGNERWEG
+WARTE 30
+FLAG 9 20
+BLICK 0
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 100
+FLAG 9 20
+ENDE

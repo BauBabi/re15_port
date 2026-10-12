@@ -1,0 +1,5 @@
+T2300 room=3050 pm=0 pad=0000 pos=(-2038,-7200,-8179) rot=4061 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=17 frac=0 push=-1 rc_b8=-10800 rc_bnd=-7200 t4=1 t4pos=(-24058,-15591) t4fl=0x0101
+T2350 room=3050 pm=2 pad=0000 pos=(-2038,-4900,-8179) rot=4061 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=67 frac=0 push=-1 rc_b8=-10800 rc_bnd=-7200 t4=1 t4pos=(-24058,-15591) t4fl=0x0101
+T2400 room=3050 pm=2 pad=0000 pos=(-2038,-2400,-8179) rot=4061 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=117 frac=0 push=-1 rc_b8=-10800 rc_bnd=-7200 t4=1 t4pos=(-24058,-15591) t4fl=0x0101
+T2450 room=3050 pm=1 pad=0000 pos=(-2038,0,-8179) rot=4061 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=1 frac=0 push=-1 rc_b8=-10800 rc_bnd=0 t4=1 t4pos=(-24058,-15591) t4fl=0x0101
+T2500 room=3050 pm=0 pad=0000 pos=(-2038,0,-8179) rot=4061 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=51 frac=0 push=-1 rc_b8=-10800 rc_bnd=0 t4=1 t4pos=(-24058,-15591) t4fl=0x0101

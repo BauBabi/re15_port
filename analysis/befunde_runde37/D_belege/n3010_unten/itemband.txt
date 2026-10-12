@@ -1,0 +1,3 @@
+F85 room=3010 ITEM slot 5 floor 1 item 0x16 tk 20 spieler-band 0 spieler=(-10700,0,844) -> GESPERRT (@0x80042ccc bne Band)
+F148 room=3010 ITEM slot 5 floor 1 item 0x16 tk 20 spieler-band 0 spieler=(-10700,0,844) -> GESPERRT (@0x80042ccc bne Band)
+F211 room=3010 ITEM slot 5 floor 1 item 0x16 tk 20 spieler-band 0 spieler=(-10700,0,844) -> GESPERRT (@0x80042ccc bne Band)

@@ -1,0 +1,1 @@
+[stair] START dir=DOWN cur_band=3 target_band=1 (straight to gait, no turn)

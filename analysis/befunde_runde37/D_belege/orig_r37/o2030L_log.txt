@@ -1,0 +1,34 @@
+DuckStation gestartet {'89700'}
+GDB verbunden
+Stopp: b'S02'
+Menue 0x800BBE5C.. vorher: 0101002400000000
+(3,126) gesetzt: Zone 3 800b0ff8 Wort +12 00000000 -> 00000002
+Menue nachher: 0101012403000000 (Zeile 1, Stage 1, Raumindex[stage] 0x03)
+Quadrat (laden) gedrueckt, warte 20 s
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+RDT-Basis 80119330 SCA 80119bb0 Zellen im RAM == STAGE2/ROOM2030.RDT @0x00898: True
+Spieler START: {'x': 6368, 'y': -5400, 'z': -357, 'blick': 0, 'band': 3, 'sub': 2, 'st': 2}
+  Entity 0 @800acc2c typ 0x25 -> Aktiv-Bit 0 geloescht
+  Entity 1 @800ace20 typ 0x25 -> Aktiv-Bit 0 geloescht
+  Entity 2 @800ad014 typ 0x25 -> Aktiv-Bit 0 geloescht
+  g_active_count @0x800aca4e: 3 -> 0
+Spieler nach Pad-Probe: {'x': 6368, 'y': -5400, 'z': -357, 'blick': 2112, 'band': 3, 'sub': 3, 'st': 1}
+  g_active_count @0x800aca4e: 0 -> 0
+L  (Lift A, sub02, Strom an) VOR: Spieler {'x': 6600, 'y': -5400, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=1 s: Spieler {'x': 6600, 'y': -7680, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=2 s: Spieler {'x': 6600, 'y': -9360, 'z': 10900, 'blick': 3072, 'band': 3, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=3 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=4 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=5 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=6 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=7 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=8 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=9 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+  L  (Lift A, sub02, Strom an) t=10 s: Spieler {'x': 6600, 'y': -10800, 'z': 11618, 'blick': 3072, 'band': 6, 'sub': 0, 'st': 1}
+S6L (nach dem Lift: SPAS-12 auf Band 6) VOR: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S6L (nach dem Lift: SPAS-12 auf Band 6) nach Druck 1: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S6L (nach dem Lift: SPAS-12 auf Band 6) nach Druck 2: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 0
+  S6L (nach dem Lift: SPAS-12 auf Band 6) nach Druck 3: Spieler {'x': -650, 'y': -10800, 'z': 14500, 'blick': 0, 'band': 6, 'sub': 0, 'st': 1}, Taken-Bit 109 = 1
+S6L (nach dem Lift: SPAS-12 auf Band 6) ERGEBNIS: Taken-Bit 109 = 1
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

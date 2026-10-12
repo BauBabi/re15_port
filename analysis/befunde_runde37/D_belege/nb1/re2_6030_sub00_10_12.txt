@@ -1,0 +1,261 @@
+=== ROOM6030 sub00 @0x02A68..0x02E26 ok
+  @0x02A68 op18                       18 1b
+  @0x02A6A Sce_em_set                 44 00 01 16 05 40 00 00 00 ff a4 d4 00 00 54 9a 00 08 00 00 00 00
+  @0x02A80 Work_set                   2e 03 01 kind=3 idx=1
+  @0x02A83 op00                       00
+  @0x02A84 Member_copy                3d 10 00
+  @0x02A87 op00                       00
+  @0x02A88 Calc                       26 00 05 10 02 00
+  @0x02A8E Member_set2                35 00 10
+  @0x02A91 op00                       00
+  @0x02A92 Obj_model_set              2d 00 00 00 00 00 00 00 00 00 0a 00 10 00 ec af 00 00 80 c1 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02AB8 Save                       24 09 01 00
+  @0x02ABC op06                       06 00 18 00
+  @0x02AC0 Cmp                        23 00 1b 00 02 06
+  @0x02AC6 Work_set                   2e 04 00 kind=4 idx=0
+  @0x02AC9 op00                       00
+  @0x02ACA Member_set                 34 0c e8 ea member=0x0c val=-5400
+  @0x02ACE Member_set                 34 11 03 00 member=0x11 val=3
+  @0x02AD2 Save                       24 09 02 00
+  @0x02AD6 op08                       08 00
+  @0x02AD8 Obj_model_set              2d 01 02 00 00 00 03 00 00 00 80 01 00 00 86 a7 e8 ea 76 cb 00 00 00 00 00 00 00 00 7c fc 00 00 84 03 84 03 84 03
+  @0x02AFE Obj_model_set              2d 02 00 00 00 00 00 00 00 00 0a 00 10 00 64 00 00 00 94 c6 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02B24 op06                       06 00 1e 00
+  @0x02B28 Ck                         21 04 6b 01
+  @0x02B2C Work_set                   2e 04 01 kind=4 idx=1
+  @0x02B2F op00                       00
+  @0x02B30 Member_set                 34 0b 82 c9 member=0x0b val=-13950
+  @0x02B34 Member_set                 34 0c 00 00 member=0x0c val=0
+  @0x02B38 Member_set                 34 0d 76 f3 member=0x0d val=-3210
+  @0x02B3C Member_set                 34 11 00 00 member=0x11 val=0
+  @0x02B40 Sca_id_set                 37 21 00 80
+  @0x02B44 op08                       08 00
+  @0x02B46 Obj_model_set              2d 03 00 00 00 00 03 00 00 00 0a 00 10 00 08 a3 48 e5 38 9b 00 00 00 fc 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02B6C op06                       06 00 2c 00
+  @0x02B70 Ck                         21 01 00 00
+  @0x02B74 Obj_model_set              2d 05 00 00 00 00 00 00 00 00 0a 00 00 00 00 00 10 aa 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02B9A op08                       08 00
+  @0x02B9C Aot_set                    2c 03 06 41 03 00 e8 b8 c0 c7 20 03 b0 04 05 00 22 00 01 00 slot=3 sce=6 sat=0x41 floor=3 rect=(-18200,-14400,800,1200)
+  @0x02BB0 Aot_set                    2c 17 05 31 03 00 40 bb ec c8 84 03 4c 04 ff 00 18 0a 00 00 slot=23 sce=5 sat=0x31 floor=3 rect=(-17600,-14100,900,1100)
+  @0x02BC4 Aot_set                    2c 04 06 41 00 00 e8 b8 c0 c7 20 03 b0 04 05 00 23 00 01 00 slot=4 sce=6 sat=0x41 floor=0 rect=(-18200,-14400,800,1200)
+  @0x02BD8 Aot_set                    2c 18 05 31 00 00 40 bb ec c8 84 03 4c 04 ff 00 18 0c 00 00 slot=24 sce=5 sat=0x31 floor=0 rect=(-17600,-14100,900,1100)
+  @0x02BEC Aot_set                    2c 05 05 44 03 00 24 af 04 c5 48 0d dc 05 ff 00 18 05 00 00 slot=5 sce=5 sat=0x44 floor=3 rect=(-20700,-15100,3400,1500)
+  @0x02C00 Aot_set                    2c 06 05 44 03 00 24 af e0 ca 48 0d 78 05 ff 00 18 06 00 00 slot=6 sce=5 sat=0x44 floor=3 rect=(-20700,-13600,3400,1400)
+  @0x02C14 Aot_set                    2c 07 05 44 00 00 24 af 04 c5 f0 0a c4 09 ff 00 18 07 00 00 slot=7 sce=5 sat=0x44 floor=0 rect=(-20700,-15100,2800,2500)
+  @0x02C28 Aot_set                    2c 08 05 44 00 00 0c b3 d0 bc 48 0d 34 08 ff 00 18 08 00 00 slot=8 sce=5 sat=0x44 floor=0 rect=(-19700,-17200,3400,2100)
+  @0x02C3C Aot_set                    2c 09 05 44 00 00 14 ba 54 c0 78 05 10 0e ff 00 18 08 00 00 slot=9 sce=5 sat=0x44 floor=0 rect=(-17900,-16300,1400,3600)
+  @0x02C50 Aot_set                    2c 0a 05 51 00 00 78 fb f0 bf 08 07 48 0d ff 00 18 0f 00 00 slot=10 sce=5 sat=0x51 floor=0 rect=(-1160,-16400,1800,3400)
+  @0x02C64 op06                       06 00 0c 00
+  @0x02C68 Cmp                        23 00 1a 00 07 00
+  @0x02C6E op04                       04 ff 18 10
+  @0x02C72 op08                       08 00
+  @0x02C74 Aot_set                    2c 0b 05 44 00 00 f8 c6 98 ef 08 07 08 07 ff 00 18 14 00 00 slot=11 sce=5 sat=0x44 floor=0 rect=(-14600,-4200,1800,1800)
+  @0x02C88 Aot_set                    2c 0c 0a 31 03 00 64 9c b4 97 8c 0a 8c 0a 03 00 04 00 00 00 slot=12 sce=10 sat=0x31 floor=3 rect=(-25500,-26700,2700,2700)
+  @0x02C9C Aot_set                    2c 10 09 31 00 00 58 e9 bc 9e d0 07 34 08 09 00 00 00 00 00 slot=16 sce=9 sat=0x31 floor=0 rect=(-5800,-24900,2000,2100)
+  @0x02CB0 Obj_model_set              2d 06 00 00 00 00 00 00 00 00 0a 00 10 00 48 a9 e8 ea a8 99 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02CD6 Obj_model_set              2d 07 00 00 00 00 00 00 00 00 0a 00 10 00 c4 eb f8 f8 78 a1 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02CFC Item_aot_set               4e 0f 02 31 03 00 b8 a7 88 96 e8 03 b0 04 26 00 01 00 39 00 06 01 slot=15 sce=2 sat=0x31 floor=3 rect=(-22600,-27000,1000,1200)
+  @0x02D12 Item_aot_set               4e 0d 02 31 00 00 58 e9 bc 9e d0 07 34 08 1e 00 03 00 3a 00 07 00 slot=13 sce=2 sat=0x31 floor=0 rect=(-5800,-24900,2000,2100)
+  @0x02D28 op06                       06 00 44 00
+  @0x02D2C Ck                         21 01 00 00
+  @0x02D30 Obj_model_set              2d 08 00 00 00 00 00 00 00 00 0a 00 10 00 a6 f0 00 00 4a 98 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02D56 Item_aot_set               4e 11 02 31 00 00 08 ee f8 94 b0 04 b0 04 15 00 07 00 3b 00 08 01 slot=17 sce=2 sat=0x31 floor=0 rect=(-4600,-27400,1200,1200)
+  @0x02D6C op07                       07 00 42 00
+  @0x02D70 Obj_model_set              2d 08 00 00 00 00 00 00 00 00 0a 00 10 00 a6 f0 00 00 4a 98 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02D96 Item_aot_set               4e 11 02 31 00 00 08 ee f8 94 b0 04 b0 04 19 00 0c 00 3b 00 08 01 slot=17 sce=2 sat=0x31 floor=0 rect=(-4600,-27400,1200,1200)
+  @0x02DAC op00                       00
+  @0x02DAD op00                       00
+  @0x02DAE Obj_model_set              2d 09 00 00 00 00 00 00 00 00 0a 00 10 00 4c d2 00 00 1e 97 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  @0x02DD4 Item_aot_set               4e 12 02 31 00 00 9c cd c0 95 e8 03 e8 03 7e 00 01 00 3f 00 09 01 slot=18 sce=2 sat=0x31 floor=0 rect=(-12900,-27200,1000,1000)
+  @0x02DEA Aot_set                    2c 13 05 41 03 00 b8 8e a4 bb d8 72 e4 3e ff 00 18 03 00 00 slot=19 sce=5 sat=0x41 floor=3 rect=(-29000,-17500,29400,16100)
+  @0x02DFE Aot_set                    2c 14 05 41 00 00 2e a5 b2 8f 8a 66 b8 6f ff 00 18 04 00 00 slot=20 sce=5 sat=0x41 floor=0 rect=(-23250,-28750,26250,28600)
+  @0x02E12 op04                       04 ff 18 1a
+  @0x02E16 Sce_bgm_control            51 01 00 01 64 40
+  @0x02E1C Save                       24 07 00 00
+  @0x02E20 Save                       24 08 01 00
+  @0x02E24 op01                       01 00
+=== ROOM6030 sub10 @0x02F70..0x03094 ok
+  @0x02F70 op06                       06 00 08 00
+  @0x02F74 Ck                         21 05 22 00
+  @0x02F78 op01                       01 00
+  @0x02F7A op08                       08 00
+  @0x02F7C Message_on                 2b 00 09 00 ff ff
+  @0x02F82 op02                       02
+  @0x02F83 op00                       00
+  @0x02F84 op06                       06 00 0a 01
+  @0x02F88 Ck                         21 0b 1f 00
+  @0x02F8C Set                        22 02 07 01
+  @0x02F90 Se_on                      36 02 11 00 00 00 00 00 00 00 00 00
+  @0x02F9C op09                       09
+  @0x02F9D op0A                       0a 0a 00
+  @0x02FA0 Save                       24 09 00 00
+  @0x02FA4 Cut_chg                    29 01
+  @0x02FA6 Nop                        8b 64 b4 00 00 00
+  @0x02FAC Nop                        8c 00 a0 50 14 00 b1 00
+  @0x02FB4 Nop                        8a 00 03 00 af 00
+  @0x02FBA Se_on                      36 02 0b 00 00 00 00 00 00 00 00 00
+  @0x02FC6 Work_set                   2e 01 00 kind=1 idx=0
+  @0x02FC9 op00                       00
+  @0x02FCA Member_copy                3d 10 00
+  @0x02FCD op00                       00
+  @0x02FCE Calc                       26 00 05 10 00 04
+  @0x02FD4 Member_set2                35 00 10
+  @0x02FD7 op00                       00
+  @0x02FD8 Save                       24 05 00 00
+  @0x02FDC op0D                       0d 00 60 00 b4 00
+  @0x02FE2 Work_set                   2e 04 00 kind=4 idx=0
+  @0x02FE5 op00                       00
+  @0x02FE6 Member_copy                3d 10 0c
+  @0x02FE9 op00                       00
+  @0x02FEA Calc                       26 00 00 10 1e 00
+  @0x02FF0 Member_set2                35 0c 10
+  @0x02FF3 op00                       00
+  @0x02FF4 Work_set                   2e 01 00 kind=1 idx=0
+  @0x02FF7 op00                       00
+  @0x02FF8 Member_copy                3d 10 0c
+  @0x02FFB op00                       00
+  @0x02FFC Calc                       26 00 00 10 1e 00
+  @0x03002 Member_set2                35 0c 10
+  @0x03005 op00                       00
+  @0x03006 op06                       06 00 18 00
+  @0x0300A Ck                         21 05 0a 01
+  @0x0300E Work_set                   2e 04 01 kind=4 idx=1
+  @0x03011 op00                       00
+  @0x03012 Member_copy                3d 10 0c
+  @0x03015 op00                       00
+  @0x03016 Calc                       26 00 00 10 1e 00
+  @0x0301C Member_set2                35 0c 10
+  @0x0301F op00                       00
+  @0x03020 op08                       08 00
+  @0x03022 op02                       02
+  @0x03023 op00                       00
+  @0x03024 Copy                       25 10 05
+  @0x03027 op00                       00
+  @0x03028 Calc                       26 00 00 10 01 00
+  @0x0302E Copy                       25 05 10
+  @0x03031 op00                       00
+  @0x03032 op06                       06 00 0a 00
+  @0x03036 Cmp                        23 00 05 00 4b 00
+  @0x0303C Cut_chg                    29 0a
+  @0x0303E op08                       08 00
+  @0x03040 op0E                       0e 00
+  @0x03042 Work_set                   2e 04 00 kind=4 idx=0
+  @0x03045 op00                       00
+  @0x03046 Member_set                 34 0c 00 00 member=0x0c val=0
+  @0x0304A Member_set                 34 11 00 00 member=0x11 val=0
+  @0x0304E Work_set                   2e 01 00 kind=1 idx=0
+  @0x03051 op00                       00
+  @0x03052 Member_set                 34 0c 00 00 member=0x0c val=0
+  @0x03056 Member_set                 34 11 00 00 member=0x11 val=0
+  @0x0305A op06                       06 00 12 00
+  @0x0305E Ck                         21 05 0a 01
+  @0x03062 Work_set                   2e 04 01 kind=4 idx=1
+  @0x03065 op00                       00
+  @0x03066 Member_set                 34 0c 00 00 member=0x0c val=0
+  @0x0306A Member_set                 34 11 00 00 member=0x11 val=0
+  @0x0306E op08                       08 00
+  @0x03070 Set                        22 05 0a 00
+  @0x03074 Work_set                   2e 01 00 kind=1 idx=0
+  @0x03077 op00                       00
+  @0x03078 Member_copy                3d 10 00
+  @0x0307B op00                       00
+  @0x0307C Calc                       26 00 06 10 ff fb
+  @0x03082 Member_set2                35 00 10
+  @0x03085 op00                       00
+  @0x03086 Save                       24 09 01 00
+  @0x0308A op18                       18 17
+  @0x0308C Set                        22 23 0e 01
+  @0x03090 op08                       08 00
+  @0x03092 op01                       01 00
+=== ROOM6030 sub12 @0x0309A..0x031BA ok
+  @0x0309A op06                       06 00 08 00
+  @0x0309E Ck                         21 05 23 00
+  @0x030A2 op01                       01 00
+  @0x030A4 op08                       08 00
+  @0x030A6 Message_on                 2b 00 09 00 ff ff
+  @0x030AC op02                       02
+  @0x030AD op00                       00
+  @0x030AE op06                       06 00 06 01
+  @0x030B2 Ck                         21 0b 1f 00
+  @0x030B6 Set                        22 02 07 01
+  @0x030BA Se_on                      36 02 11 00 00 00 00 00 00 00 00 00
+  @0x030C6 op09                       09
+  @0x030C7 op0A                       0a 0a 00
+  @0x030CA Save                       24 09 00 00
+  @0x030CE Cut_chg                    29 0a
+  @0x030D0 Nop                        8b 64 b4 00 00 00
+  @0x030D6 Nop                        8c 00 a0 50 14 00 b1 00
+  @0x030DE Nop                        8a 00 03 00 af 00
+  @0x030E4 Se_on                      36 02 0b 00 00 00 00 00 00 00 00 00
+  @0x030F0 Work_set                   2e 01 00 kind=1 idx=0
+  @0x030F3 op00                       00
+  @0x030F4 Member_copy                3d 10 00
+  @0x030F7 op00                       00
+  @0x030F8 Calc                       26 00 05 10 00 04
+  @0x030FE Member_set2                35 00 10
+  @0x03101 op00                       00
+  @0x03102 Save                       24 05 00 00
+  @0x03106 op0D                       0d 00 60 00 b4 00
+  @0x0310C Work_set                   2e 04 00 kind=4 idx=0
+  @0x0310F op00                       00
+  @0x03110 Member_copy                3d 10 0c
+  @0x03113 op00                       00
+  @0x03114 Calc                       26 00 01 10 1e 00
+  @0x0311A Member_set2                35 0c 10
+  @0x0311D op00                       00
+  @0x0311E Work_set                   2e 01 00 kind=1 idx=0
+  @0x03121 op00                       00
+  @0x03122 Member_copy                3d 10 0c
+  @0x03125 op00                       00
+  @0x03126 Calc                       26 00 01 10 1e 00
+  @0x0312C Member_set2                35 0c 10
+  @0x0312F op00                       00
+  @0x03130 op06                       06 00 18 00
+  @0x03134 Ck                         21 05 0b 01
+  @0x03138 Work_set                   2e 04 01 kind=4 idx=1
+  @0x0313B op00                       00
+  @0x0313C Member_copy                3d 10 0c
+  @0x0313F op00                       00
+  @0x03140 Calc                       26 00 01 10 1e 00
+  @0x03146 Member_set2                35 0c 10
+  @0x03149 op00                       00
+  @0x0314A op08                       08 00
+  @0x0314C op02                       02
+  @0x0314D op00                       00
+  @0x0314E Copy                       25 10 05
+  @0x03151 op00                       00
+  @0x03152 Calc                       26 00 00 10 01 00
+  @0x03158 Copy                       25 05 10
+  @0x0315B op00                       00
+  @0x0315C op06                       06 00 0a 00
+  @0x03160 Cmp                        23 00 05 00 4b 00
+  @0x03166 Cut_chg                    29 01
+  @0x03168 op08                       08 00
+  @0x0316A op0E                       0e 00
+  @0x0316C Work_set                   2e 04 00 kind=4 idx=0
+  @0x0316F op00                       00
+  @0x03170 Member_set                 34 0c e8 ea member=0x0c val=-5400
+  @0x03174 Member_set                 34 11 03 00 member=0x11 val=3
+  @0x03178 Work_set                   2e 01 00 kind=1 idx=0
+  @0x0317B op00                       00
+  @0x0317C Member_set                 34 0c e8 ea member=0x0c val=-5400
+  @0x03180 Member_set                 34 11 03 00 member=0x11 val=3
+  @0x03184 op06                       06 00 12 00
+  @0x03188 Ck                         21 05 0b 01
+  @0x0318C Work_set                   2e 04 01 kind=4 idx=1
+  @0x0318F op00                       00
+  @0x03190 Member_set                 34 0c e8 ea member=0x0c val=-5400
+  @0x03194 Member_set                 34 11 03 00 member=0x11 val=3
+  @0x03198 op08                       08 00
+  @0x0319A Set                        22 05 0b 00
+  @0x0319E Work_set                   2e 01 00 kind=1 idx=0
+  @0x031A1 op00                       00
+  @0x031A2 Member_copy                3d 10 00
+  @0x031A5 op00                       00
+  @0x031A6 Calc                       26 00 06 10 ff fb
+  @0x031AC Member_set2                35 00 10
+  @0x031AF op00                       00
+  @0x031B0 Save                       24 09 02 00
+  @0x031B4 op18                       18 17
+  @0x031B6 op08                       08 00
+  @0x031B8 op01                       01 00

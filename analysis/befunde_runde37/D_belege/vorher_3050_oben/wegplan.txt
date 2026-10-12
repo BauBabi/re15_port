@@ -1,0 +1,91 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r37d/vorher_3050_oben/wegplan_eingabe.txt: 22 Befehle
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj6=(0,0,0) b0 | OBJ 1
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj1=(0,0,0) b0 |   -> Befehl 0 beendet: gesetzt
+F1 room=3050 spieler=(-3596,1523) rot=1024 mo=210 pm=0 obj1=(-18000,-7200,-20800) b4 | RAUM 3050 geladen, Spieler frei (obj 1 = Slot 1)
+F30 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 1 beendet: Raum bereit
+F31 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | WARTE 30
+F60 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 2 beendet: gewartet
+F61 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | FLAG (9,92)
+F61 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   FLAG (9,92) = 0
+F61 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 3 beendet: gelesen
+F62 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | FLAG (3,93)
+F62 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   FLAG (3,93) = 0
+F62 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 4 beendet: gelesen
+F63 room=3050 spieler=(-3596,1523) rot=1024 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F64 room=3050 spieler=(-3596,1523) rot=1120 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F65 room=3050 spieler=(-3596,1523) rot=1216 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F66 room=3050 spieler=(-3596,1523) rot=1312 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F67 room=3050 spieler=(-3596,1523) rot=1408 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F68 room=3050 spieler=(-3596,1523) rot=1504 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F69 room=3050 spieler=(-3596,1523) rot=1600 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F70 room=3050 spieler=(-3596,1523) rot=1696 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F71 room=3050 spieler=(-3596,1523) rot=1792 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F72 room=3050 spieler=(-3596,1523) rot=1888 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F73 room=3050 spieler=(-3596,1523) rot=1984 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,1523) tol 150
+F124 room=3050 spieler=(-6330,1486) rot=2176 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 5 beendet: angekommen
+F125 room=3050 spieler=(-6330,1486) rot=2176 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F126 room=3050 spieler=(-6330,1486) rot=2080 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F127 room=3050 spieler=(-6330,1486) rot=1984 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F128 room=3050 spieler=(-6330,1486) rot=1888 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F129 room=3050 spieler=(-6330,1486) rot=1792 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F130 room=3050 spieler=(-6330,1486) rot=1696 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F131 room=3050 spieler=(-6330,1486) rot=1600 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F132 room=3050 spieler=(-6330,1486) rot=1504 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F133 room=3050 spieler=(-6330,1486) rot=1408 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F134 room=3050 spieler=(-6330,1486) rot=1312 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F135 room=3050 spieler=(-6330,1486) rot=1216 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F136 room=3050 spieler=(-6330,1486) rot=1120 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F137 room=3050 spieler=(-6330,1486) rot=1024 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-6450,-20750) tol 150
+F446 room=3050 spieler=(-6419,-20626) rot=1168 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 6 beendet: angekommen
+F447 room=3050 spieler=(-6419,-20626) rot=1168 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F448 room=3050 spieler=(-6419,-20626) rot=1264 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F449 room=3050 spieler=(-6419,-20626) rot=1360 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F450 room=3050 spieler=(-6419,-20626) rot=1456 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F451 room=3050 spieler=(-6419,-20626) rot=1552 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F452 room=3050 spieler=(-6419,-20626) rot=1648 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F453 room=3050 spieler=(-6419,-20626) rot=1744 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F454 room=3050 spieler=(-6419,-20626) rot=1840 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-11880,-22540) tol 150
+F544 room=3050 spieler=(-11775,-22464) rot=1696 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 7 beendet: angekommen
+F545 room=3050 spieler=(-11775,-22464) rot=1696 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-16650,-22540) tol 150
+F546 room=3050 spieler=(-11775,-22464) rot=1792 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-16650,-22540) tol 150
+F547 room=3050 spieler=(-11775,-22464) rot=1888 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-16650,-22540) tol 150
+F548 room=3050 spieler=(-11775,-22464) rot=1984 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-16650,-22540) tol 150
+F626 room=3050 spieler=(-16503,-22570) rot=2224 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 8 beendet: angekommen
+F627 room=3050 spieler=(-16503,-22570) rot=2224 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-22720,-22540) tol 150
+F628 room=3050 spieler=(-16503,-22570) rot=2128 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-22720,-22540) tol 150
+F629 room=3050 spieler=(-16503,-22570) rot=2032 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-22720,-22540) tol 150
+F734 room=3050 spieler=(-22713,-22544) rot=2176 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 9 beendet: angekommen
+F735 room=3050 spieler=(-22713,-22544) rot=2176 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-24070,-22782) tol 100
+F736 room=3050 spieler=(-22713,-22544) rot=2080 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-24070,-22782) tol 100
+F737 room=3050 spieler=(-22713,-22544) rot=1984 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | GEHE (-24070,-22782) tol 100
+F776 room=3050 spieler=(-24026,-22770) rot=1840 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 10 beendet: angekommen
+F777 room=3050 spieler=(-24026,-22770) rot=1840 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F778 room=3050 spieler=(-24026,-22770) rot=1744 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F779 room=3050 spieler=(-24026,-22770) rot=1648 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F780 room=3050 spieler=(-24026,-22770) rot=1552 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F781 room=3050 spieler=(-24026,-22770) rot=1456 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F782 room=3050 spieler=(-24026,-22770) rot=1360 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F783 room=3050 spieler=(-24026,-22770) rot=1264 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F784 room=3050 spieler=(-24026,-22770) rot=1168 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F785 room=3050 spieler=(-24026,-22770) rot=1072 mo=105 pm=0 obj1=(-18000,-7200,-20800) b4 | BLICK 1024
+F786 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 11 beendet: Blick steht
+F787 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | WARTE 20
+F806 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 12 beendet: gewartet
+F807 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | AKTION
+F809 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 13 beendet: gedrueckt
+F810 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | WARTE 60
+F869 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 14 beendet: gewartet
+F870 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | AKTION
+F872 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 15 beendet: gedrueckt
+F873 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | WARTE 60
+F932 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 16 beendet: gewartet
+F933 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | AKTION
+F935 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 17 beendet: gedrueckt
+F936 room=3050 spieler=(-24026,-22770) rot=1072 mo=200 pm=0 obj1=(-18000,-7200,-20800) b4 | WARTE 100
+F1035 room=3050 spieler=(-24026,-22770) rot=1072 mo=210 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 18 beendet: gewartet
+F1036 room=3050 spieler=(-24026,-22770) rot=1072 mo=211 pm=0 obj1=(-18000,-7200,-20800) b4 | FLAG (9,92)
+F1036 room=3050 spieler=(-24026,-22770) rot=1072 mo=211 pm=0 obj1=(-18000,-7200,-20800) b4 |   FLAG (9,92) = 1
+F1036 room=3050 spieler=(-24026,-22770) rot=1072 mo=211 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 19 beendet: gelesen
+F1037 room=3050 spieler=(-24026,-22770) rot=1072 mo=211 pm=0 obj1=(-18000,-7200,-20800) b4 | FLAG (3,93)
+F1037 room=3050 spieler=(-24026,-22770) rot=1072 mo=211 pm=0 obj1=(-18000,-7200,-20800) b4 |   FLAG (3,93) = 0
+F1037 room=3050 spieler=(-24026,-22770) rot=1072 mo=211 pm=0 obj1=(-18000,-7200,-20800) b4 |   -> Befehl 20 beendet: gelesen
