@@ -32,6 +32,7 @@
 #include "re15_skeleton.h"
 #include "re2_ems.h"
 #include "re15_zombieki_r36.h"
+#include "re15_zombieaktiv_r37.h"   /* Runde 37 Spur H: Spawn-Abbildung grid 0x00 -> Gang (s. main) */
 #include "re15_md1.h"
 #include "test_r36_zombieki_kopf.h"   /* NB2 Mangel 5: Leons Kopf aus PL00 */
 
@@ -432,6 +433,11 @@ static long durchwand(unsigned nur, int ausgabe, long *wand1040, int modus)   /*
 
 int main(int argc, char **argv)
 {
+    /* Runde 37 Spur H: dieser Zensus misst das SICHT-BIT STEHENDER Zombies (Kopf). Seit Runde 37 gehen grid-0x00-Zombies
+     * unter der RE2-KI ab dem Spawn (RE2-Deskriptor 6, re15_zombieaktiv_r37.h) und 'reagieren' damit in Bild 1 unabhaengig
+     * von der Sicht — der Zensus wuerde sie nicht mehr pruefen (gemessen: Gegenprobe ROOM1010 vor NB1 0 statt > 0 Plaetze).
+     * Damit er dieselben Zombies wie bisher als Steher prueft, laeuft er mit der Spawn-Abbildung von v0.8.24. */
+    re15_r37_zombieaktiv_enable(0);
     if (argc > 1 && strcmp(argv[1], "oberkante") == 0) { oberkante_liste(argc > 2 ? (unsigned)strtoul(argv[2], NULL, 16) : 0u); return 0; }
     if (argc > 1 && strcmp(argv[1], "kopf") == 0) {   /* NB2 Mangel 5: Leons Kopf (Knochen 8) je Clip, Bild 0 */
         if (!kopf_laden()) { printf("PL00 nicht ladbar\n"); return 1; }
