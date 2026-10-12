@@ -374,7 +374,7 @@ Nachbesserung 1: Code-Commit 589a37de (Plattform-Sperre: itemband_r37.c/.h, aot_
 Riegel 8c9be739 (unit Teil L/F) / 945e2be9 + 2ed7c0f5 (integration_r37_itemband_lift), Gegenprobe 5ccbb188; letzter Commit
 `fix(r37-itemband): Nachbesserung 1 ...`.
 
-## Nachbesserung 1 (nach Abnahme 0, 2026-10-12) — fortlaufend
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-12)
 
 Maengel aus `D_abnahme_0.md` §8: (1) Softlock ROOM2030/2031 Lift A AUFWAERTS aus dem Kabineneingang, (2) dasselbe ABWAERTS
 knapp suedlich der oberen Kabine, (3) Dossier §5.5/§7/§8 verharmlosen bzw. verschweigen die Falle, (4) kein Riegel fuer die
@@ -554,3 +554,26 @@ alle Riegel des ersten Stands (unit/integration_r37_itemband) bleiben gruen (NB1
   GLOB-Cache app/.cxx neu erzeugen, Abnahme 0 §9); keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids.
 * Zone = das RE1.5-Ausloese-Rechteck (Kabine). RE2s Zone ist eigens kleiner (800 statt 1200 an 6030); fuer Lift A gibt es kein
   RE2-Gegenstueck, die Kabine aus den Zellen (NB1.2 a) ist die Plattform.
+
+### NB1.9 Gezielte Regression (Spurbaum, KEINE volle Suite; exe 589a37de + Riegel, Log `D_belege/nb1/regression_ctest.log`)
+Diff der Nachbesserung: `engine/src/aot_common.c` (GENERIC-Feuer jedes Ereignis-Satzes laeuft durch den Haken) und
+`engine/src/itemband_r37.c`/`.h`; Riegel. Gruppen: AOT/Ereignisse/Items/Baender/Treppen/Klettern/Schub/Fahrstuehle/Lifte,
+die Raeume 2030/3050/2050/2060/10F0/1090/1170, dazu Ereignis-Saetze anderer Raeume (Sicherung, Hebetisch, Rolltor, Generator,
+Codepanel). Befehl:
+`ctest --test-dir re15_port/build -R "r37_itemband|aot|item|inventar|itembox|member|scd_|band|stair|klett|climb|dachkiste|objfall|push|fahrstuhl|elevator|1170|1090|10f0|3050|2050|2060|irons_tisch|dokumente|inhalt|schluessel|kartenitems|kartenbits|r36_karte|elza_vollstart|kleidung_spielweg|r16_objekte|2030|lift|sicherung|hebetisch|rolltor|generator|codepanel" --timeout 3000 -j 3 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 135`** (`Total Test time (real) = 1775.32 sec`), darin
+`integration_r37_itemband_lift` Passed 573.56 sec, `integration_r37_itemband` Passed 827.26 sec (die 12 Laeufe des ersten
+Stands), `integration_r36_dachkiste` Passed 1414.57 sec, `integration_r36_klettern` Passed 519.49 sec,
+`integration_r35_karte_fahrstuhl`, `integration_r36_inventar`, `integration_r36_schluessel(_befreiung)`, `integration_elza_vollstart`,
+`integration_r30_sicherung_laden/_bild`, `integration_r30_irons_tisch_*`, `unit_r37_itemband`, `unit_aot_*`, `unit_scd_*`,
+`unit_stair_*`, `unit_fahrstuhl_*`, `unit_r36_dachkiste_*`, `unit_r36_klettern*`, `unit_r36_objfall`. Kein Fenster-Haken musste
+nachgefahren werden. Nach dem letzten (reinen Kommentar-)Neubau: `1/1 Test #678: unit_r37_itemband ... Passed 2.15 sec`.
+
+### NB1.10 Fuer den Nutzer (Nachbesserung 1)
+* **Lift A in ROOM2030 (Abwasserkanal, SPAS-12; Leon und Elza):** faehrt nur noch, wenn man IN der Kabine steht. Vorher konnte
+  man ihn aus dem Eingang vor der Kabine bzw. kurz vor der oberen Kabine ausloesen und stand danach hinter der Kabinenwand fest
+  (Spiel nicht fortsetzbar) — so war es auch im Original-Prototyp; RE2 hat diese Lift-Art in der Retail-Fassung genauso
+  abgesichert. Ausserhalb der Kabine passiert beim Druecken nichts.
+* Alles andere aus dem ersten Stand bleibt: Gegenstaende auf erhoehten Flaechen nur vom eigenen Stockwerk (Super Redhawk nur von
+  der Kiste), Fahrstuehle setzen das Stockwerk der Kollision mit.
+* Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Entscheidungsfrage.
