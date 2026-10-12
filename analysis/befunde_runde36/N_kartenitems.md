@@ -680,4 +680,41 @@ Grenze des Riegels: Teil P kennt nur die Port-Bits, die in seiner Liste stehen. 
 werden (Kommentar an der Liste; bank9_zensus.py Teil port findet alle Zugriffsstellen per grep).
 
 ### 9.6 P5 Alt-Spielstaende
+**Die neuen Bits 77/78 koennen in keinem bisherigen Spielstand stehen:**
+* Original: kein Item_aot_set, kein Ck/Set, kein FLAG_CHG mit 77/78, kein 0x58/0x59 mit Bank 9 (Zensus 9.3, Riegel Z) —
+  die ausgelieferten Skripte, die der Port-VM ausfuehrt, setzen sie nie; die EXE setzt Bank 9 nur mit dem Bit eines
+  Item-Satzes (@0x8001e0d0 / @0x80021fd8).
+* Port: in KEINER Version je als Bank-9-Bit benutzt — `git log --all -G` (alle Zweige, auch r35/*, r34n/*) ueber
+  `#define RE15_*BIT* 77|78|0x4D|0x4E`, `re15_game_flag_(get|set)(9, 77|78)`, SCD-Bytes `0x21/0x22, 0x09/9, 0x4D/0x4E/77/78`:
+  0 Treffer (Gegenprobe der Suche: sie findet `RE15_R36Q_TUER_BIT 93` in c5a6d7d4); `git grep` in den Tags v0.8.21,
+  v0.8.22, v0.8.23: 0 Treffer. Einzige Ausnahme waeren die Test-Schalter `RE15_SET_FLAG`/`RE15_SET_FLAG_AT`
+  (platform/pc/main.c @4778/@7302, setzen beliebige Bits) — kein Spielweg.
+* Gemessen an echten Karten (Riegel Teil S, nur gelesen): die eingecheckte Nutzerkarte 2026-09-27 (Fixture
+  probes/r30_karte_nutzer_2026-09-27.mcr, 4 Plaetze) und eine Kopie der aktuellen Karte neben der exe des Hauptbaums
+  (re15_port/build/platform/pc/re15_card.mcr, Stand 2026-10-05, md5 4990b84f, 5 Plaetze; Aufruf
+  `RE15_R36KB_KARTE=<karte> test_r36_kartenbits.exe`): in keinem Platz 77 oder 78 gesetzt. Gesetzte Bank-9-Bits dort nur
+  Original-Item-Bits und Port-Bits der Liste (53..63, 65, 80), z.B. Platz 3 (ROOM1071): `2 10 53 54 55 56 57 60 62 63 80
+  99 104 105 134 136 138 ...`.
+* Spur N war nie in einem Release und nie in master (kartenitems_r36.c fehlt in v0.8.21/22/23 und master f3f7584b; nur
+  r36/integration seit cb1d5f59) — die alten Lageplan-Bits 90/91 koennen nur interne Integrations-Testlaeufe gesetzt
+  haben. Ein solcher interner Stand (B2/B1-Plan mit 90/91 genommen) zeigt nach dem Fix: Plan haengt wieder (77/78 = 0),
+  laesst sich erneut nehmen; die Taschenuhr / "Head of Akuma" bleiben dort verschwunden (90/91 gesetzt) — nur
+  Testsstaende, kein Nutzerstand betroffen.
+
+**Was ein v0.8.23-Spielstand mit genommenem Item 0x32/0x3F jetzt zeigt** (Spielstand-Format v9, re15_savedata.h/.c seit
+v0.8.23 unveraendert — `git diff v0.8.23 HEAD` leer): Riegel Teil S2 schreibt einen Stand mit Bits 90/91 ueber die ECHTE
+Speicherkarte (re15_memcard_save -> re15_memcard_load -> re15_savedata_restore) und misst:
+```
+ok:   Spielstand-Format v9 = v0.8.23 (RE15_SAVE_VERSION 9, re15_savedata.h/.c seit v0.8.23 unveraendert)
+ok:   Stand mit Items 0x3F/0x32 genommen ueber die Speicherkarte geschrieben und geladen (Bits 90/91 gesetzt)
+ok:   nach dem Laden: kein Polizei-Blatt im Besitz (Maske 0x00) — mit der alten Belegung waere es 0x03
+ok:   nach dem Laden: Plan Blatt 1 haengt in ROOM1200 (aufnehmbar, setzt dann Bit 77)
+ok:   nach dem Laden: Plan Blatt 0 haengt in ROOM11D0 (aufnehmbar, setzt dann Bit 78)
+ok:   nach dem Laden: ROOM2040 Item 0x32 bleibt genommen (Satz still, @0x800406f4)   (ebenso 2041, 2090, 2091)
+```
+Die alte Belegung haette denselben Stand als "B1 + B2 besessen" gezeigt (Maske 0x03, Abschnitt 9.2 Rueckrichtung) und die
+beiden Plaene gar nicht angelegt.
+Riegel-Endstand: 141 ok, 0 FAIL.
+
+### 9.7 P6 Regression
 (folgt)

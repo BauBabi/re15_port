@@ -31,6 +31,8 @@
  *      live aus der Tabelle k_r36k_lage) — KEINES darf im Original-Satz liegen, und kein Lageplan-Bit darf ein
  *      anderes Port-Bit sein. GEGENPROBE: die alte Spur-N-Belegung 87..91 (Stand 7a0fd453) liefert mit DERSELBEN
  *      Pruefung genau die Treffer {90, 91} — der Riegel waere mit ihr rot.
+ *   S  ALT-SPIELSTAENDE: die eingecheckte Nutzer-Speicherkarte (2026-09-27) traegt 77/78 in keinem Platz; ein
+ *      v0.8.23-Stand mit genommenen Items 0x3F/0x32 (Bits 90/91) zeigt nach dem Laden KEINEN Lageplan als besessen.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -44,6 +46,8 @@
 #include "re15_enemy_ai.h"
 #include "re15_map_owned.h"
 #include "re15_kartenitems_r36.h"
+#include "re15_savedata.h"
+#include "re15_memcard.h"
 /* Teil P: die Bank-9-Bits des Ports stehen als Makros in diesen Koepfen (Runde 30..36). */
 #include "re15_sicherung.h"
 #include "re15_irons_tisch.h"
@@ -552,12 +556,98 @@ static void teil_p(void)
         printf("        90: %s\n        91: %s\n", s_z.erste[90], s_z.erste[91]);
 }
 
+/* ================================================================= S */
+
+static int sd_bit(const re15_savedata_t *sd, unsigned bank, unsigned bit)
+{   /* dieselbe Anordnung wie g_game.flags: Wort = Bit>>5, Maske 0x80000000 >> (Bit&31) (FUN_8004efe4) */
+    return (sd->flags[bank][bit >> 5] & (0x80000000u >> (bit & 31u))) != 0;
+}
+
+/* P5 ALT-SPIELSTAENDE.
+ * S1 Die eingecheckte Speicherkarte des Nutzers (2026-09-27, Spielstand v8, Fixture von test_r30_karte_nutzerstand):
+ *    in keinem belegten Platz steht eines der neuen Lageplan-Bits 77/78 (kein Code hat sie je gesetzt — Dossier 9.6).
+ * S2 Ein v0.8.23-Spielstand (Format v9; re15_savedata.h/.c seit v0.8.23 unveraendert), in dem "Pocket Watch" 0x3F
+ *    (ROOM2090 @0x00A12, Bit 90) und "Head of Akuma" 0x32 (ROOM2040 @0x01364, Bit 91) genommen sind: ueber die echte
+ *    Speicherkarte geschrieben und gelesen -> kein Polizei-Lageplan im Besitz, beide Plaene haengen in ROOM1200/
+ *    11D0, und die zwei Original-Items bleiben genommen (Satz still) — der Spielfortschritt bleibt erhalten. */
+static void teil_s(void)
+{
+    printf("=== S: Alt-Spielstaende ===\n");
+    /* Karten: die eingecheckte Nutzerkarte; optional eine weitere per RE15_R36KB_KARTE (Diagnose, z.B. die
+     * aktuelle Karte neben der exe: re15_port/build/platform/pc/re15_card.mcr - wird nur GELESEN). */
+    const char *karten[2] = { NULL, getenv("RE15_R36KB_KARTE") };
+#ifdef RE15_R36KB_NUTZERKARTE
+    karten[0] = RE15_R36KB_NUTZERKARTE;
+#endif
+    for (int kk = 0; kk < 2; kk++) {
+        if (!karten[kk]) continue;
+        int used[RE15_SAVE_SLOTS]; char titles[RE15_SAVE_SLOTS][RE15_MC_TITLE_LEN];
+        int n = re15_memcard_list(karten[kk], used, titles);
+        PRUEFE(n > 0, "%s gelesen: %d belegte Plaetze", kk == 0 ? "Nutzerkarte 2026-09-27 (Fixture)" : karten[kk], n);
+        for (int slot = 0; slot < RE15_SAVE_SLOTS; slot++) {
+            if (!used[slot]) continue;
+            re15_savedata_t sd;
+            memset(&sd, 0, sizeof sd);
+            if (re15_memcard_load(karten[kk], slot, &sd) != 0) continue;
+            char liste[600]; int len = 0;
+            liste[0] = 0;
+            for (unsigned b = 0; b < 256; b++)
+                if (sd_bit(&sd, 9, b) && len < (int)sizeof liste - 8) len += snprintf(liste + len, sizeof liste - (size_t)len, " %u", b);
+            PRUEFE(!sd_bit(&sd, 9, 77) && !sd_bit(&sd, 9, 78),
+                   "Platz %d (ROOM%04X, v%u): Bank 9 gesetzt {%s } — 77/78 nicht gesetzt", slot, (unsigned)sd.room,
+                   (unsigned)sd.version, liste);
+        }
+    }
+    /* S2: v0.8.23-Stand mit genommenen Items 0x3F/0x32 ueber die Speicherkarte. */
+    re15_game_state_init();
+    for (int i = 0; i < N_ORIG; i++) re15_game_flag_set(BANK9, (uint8_t)k_orig[i].bit, 1);
+    g_current_room_id = 0x2040;
+    re15_savedata_t sd, zurueck;
+    re15_savedata_capture(&sd, 0, 1);
+    PRUEFE(sd.version == 9 && RE15_SAVE_VERSION == 9,
+           "Spielstand-Format v%u = v0.8.23 (RE15_SAVE_VERSION 9, re15_savedata.h/.c seit v0.8.23 unveraendert)",
+           (unsigned)sd.version);
+    const char *karte = "r36_kartenbits_v0823.mcr";
+    remove(karte);
+    int ok_w = re15_memcard_save(karte, 0, &sd, "R36 KARTENBITS") == 0;
+    re15_game_state_init();
+    memset(&zurueck, 0, sizeof zurueck);
+    uint16_t raum = 0;
+    int ok_r = ok_w && re15_memcard_load(karte, 0, &zurueck) == 0 && re15_savedata_restore(&zurueck, &raum) == 0;
+    PRUEFE(ok_r && re15_game_flag_get(BANK9, 90) && re15_game_flag_get(BANK9, 91),
+           "Stand mit Items 0x3F/0x32 genommen ueber die Speicherkarte geschrieben und geladen (Bits 90/91 gesetzt)");
+    PRUEFE((re15_map_owned_bits() & 0x1Fu) == 0,
+           "nach dem Laden: kein Polizei-Blatt im Besitz (Maske 0x%02X) — mit der alten Belegung waere es 0x03",
+           (unsigned)(re15_map_owned_bits() & 0x1Fu));
+    uint8_t stand[256];
+    bank9_lesen(stand);
+    for (int k = 0; k < re15_kartenitems_r36_anzahl(); k++) {
+        const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
+        if (z->blatt > 1) continue;                    /* B2 (1) und B1 (0) */
+        raum_t r;
+        if (raum_laden(&r, z->raum) != 0) continue;
+        bank9_schreiben(stand);
+        raum_start(&r, z->rect_x + RE15_R36K_RECT / 2, z->rect_z + RE15_R36K_RECT / 2);
+        PRUEFE(prop_slot(RE15_R36K_OBJ) >= 0 && g_aot.slots[z->aot_slot].event_id == RE15_R36K_EREIGNIS,
+               "nach dem Laden: Plan Blatt %u haengt in ROOM%04X (aufnehmbar, setzt dann Bit %u)",
+               (unsigned)z->blatt, (unsigned)z->raum, (unsigned)z->bit);
+        free(r.buf);
+    }
+    for (int i = 0; i < N_ORIG; i++) {
+        bank9_schreiben(stand);
+        PRUEFE(!orig_raum_scharf(i), "nach dem Laden: ROOM%04X Item 0x%02X bleibt genommen (Satz still, @0x800406f4)",
+               (unsigned)k_orig[i].raum, (unsigned)k_orig[i].item);
+    }
+    remove(karte);
+}
+
 int main(void)
 {
     printf("=== Runde 36 Nachtrag N: Lageplan-Bits gegen die Bank-9-Bits des Originals ===\n");
     teil_z();
     teil_p();
     teil_v();
+    teil_s();
     for (int i = 0; i < N_ORIG; i++) free(s_orig_raum[i].buf);
     if (g_fail) { printf("FAIL\n"); return 1; }
     printf("OK\n");

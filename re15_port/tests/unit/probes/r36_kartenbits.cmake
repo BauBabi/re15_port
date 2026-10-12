@@ -12,11 +12,14 @@
 #                         V  Plan ueber das echte Port-Programm (Ereignis 28, Ja) nehmen -> Item_aot_set in
 #                            ROOM2040/2041 @0x01364 und ROOM2090/2091 @0x00A12 bleibt scharf (Taken-Test
 #                            @0x800406dc); Gegenprobe Original-Bit -> still; Rueckrichtung kein Besitz.
+#                         S  Alt-Spielstaende: Nutzerkarte 2026-09-27 (Fixture r30) ohne 77/78; v0.8.23-Stand (v9)
+#                            mit genommenen Items 0x3F/0x32 ueber die Speicherkarte -> kein Plan besessen, Plaene da.
 add_executable(test_r36_kartenbits ${CMAKE_CURRENT_LIST_DIR}/../test_r36_kartenbits.c)
 target_link_libraries(test_r36_kartenbits PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_kartenbits PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r36_kartenbits PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_R36KB_NUTZERKARTE="${CMAKE_CURRENT_SOURCE_DIR}/probes/r30_karte_nutzer_2026-09-27.mcr")
 if(NOT WIN32)
     target_link_libraries(test_r36_kartenbits PRIVATE m)
 endif()
