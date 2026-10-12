@@ -1,0 +1,53 @@
+ROOM1130 sub15 Work(1, 0) Plc_dest m4 (-25289,-13849) @0x01B60 -> andere Figur:
+      @0x01B8E Work(3, 0) Plc_neck m5 (1,0,0) Rate 60/60
+      @0x01B9C Work(3, 0) Plc_dest m9 (-25318,-16548)
+ROOM1130 sub22 Work(1, 0) Plc_dest m4 (-25849,-21167) @0x01F22 -> andere Figur:
+      @0x01F3A Work(3, 0) Plc_neck m2 (0,0,128) Rate 20/20
+ROOM1150 sub21 Work(1, 0) Plc_dest m4 (-23037,-18397) @0x01BB2 -> andere Figur:
+      @0x01BCA Work(3, 0) Plc_neck m5 (1,0,0) Rate 60/60
+ROOM1150 sub21 Work(3, 0) Plc_dest m4 (-24574,-18632) @0x01BC2 -> andere Figur:
+      @0x01BDA Work(1, 0) Plc_neck m5 (3,0,0) Rate 60/60
+ROOM2020 sub02 Work(1, 0) Plc_dest m5 (-9350,-14000) @0x020C8 -> andere Figur:
+      @0x02108 Work(3, 0) Plc_neck m1 (-7530,-700,-17350) Rate 3c/1e
+ROOM2020 sub02 Work(1, 0) Plc_dest m5 (-7530,-17350) @0x020D6 -> andere Figur:
+      @0x02108 Work(3, 0) Plc_neck m1 (-7530,-700,-17350) Rate 3c/1e
+ROOM3010 sub02 Work(2, 0) Plc_dest m5 (-24450,-25650) @0x01FE8 -> andere Figur:
+      @0x02016 Work(1, 0) Plc_dest m21 (3400,128)
+      @0x02048 Work(1, 0) Plc_dest m20 (0,0)
+ROOM3010 sub02 Work(2, 0) Plc_dest m5 (-26300,-17800) @0x0264E -> andere Figur:
+      @0x026A4 Work(1, 0) Plc_dest m21 (3072,128)
+ROOM3010 sub04 Work(1, 0) Plc_dest m5 (-25300,-20500) @0x02852 -> andere Figur:
+      @0x028B0 Work(3, 0) Plc_neck m5 (1,0,0) Rate 3c/1e
+ROOM3010 sub04 Work(2, 0) Plc_dest m5 (-25300,-24500) @0x02C62 -> andere Figur:
+      @0x02C92 Work(1, 0) Plc_neck m5 (2,0,0) Rate 3c/1e
+ROOM3010 sub07 Work(1, 0) Plc_dest m5 (-25300,-20500) @0x02F32 -> andere Figur:
+      @0x02F98 Work(3, 0) Plc_neck m5 (1,0,0) Rate 3c/1e
+ROOM3040 sub08 Work(1, 0) Plc_dest m5 (-24044,-20442) @0x01400 -> andere Figur:
+      @0x01438 Work(2, 0) Plc_dest m9 (-17202,-19136)
+      @0x01440 Work(2, 0) Plc_rot 00 80 00
+      @0x01444 Work(2, 0) Plc_neck m5 (1,0,0) Rate 60/60
+ROOM30B0 sub06 Work(1, 0) Plc_dest m4 (-10900,-6015) @0x01132 -> andere Figur:
+      @0x0117C Work(2, 0) Plc_neck m4 (3,0,0) Rate 60/40
+      @0x01188 Work(2, 0) Plc_neck m5 (1,0,0) Rate 60/60
+ROOM30B0 sub12 Work(2, 0) Plc_dest m4 (-6500,-5415) @0x0167C -> andere Figur:
+      @0x016CC Work(1, 0) Plc_neck m1 (-7000,-6000,-4230) Rate 30/48
+ROOM30B0 sub12 Work(2, 0) Plc_dest m5 (-1900,-5415) @0x017EE -> andere Figur:
+      @0x01810 Work(1, 0) Plc_neck m1 (-7000,-6000,-4230) Rate 30/48
+ROOM5030 sub06 Work(1, 0) Plc_dest m4 (-22260,-24004) @0x00B8C -> andere Figur:
+      @0x00BA8 Work(2, 0) Plc_neck m2 (0,512,0) Rate 0a/0a
+      @0x00BDA Work(2, 0) Plc_neck m2 (0,0,1024) Rate 14/14
+ROOM5030 sub06 Work(2, 0) Plc_dest m4 (-23696,-24094) @0x00B9C -> andere Figur:
+      @0x00BB6 Work(1, 0) Plc_neck m2 (0,256,1024) Rate 14/14
+      @0x00BC8 Work(1, 0) Plc_neck m2 (0,0,-1024) Rate 14/14
+      @0x00BFA Work(1, 0) Plc_neck m5 (2,0,0) Rate 1e/1e
+ROOM5030 sub06 Work(2, 0) Plc_dest m4 (-22117,-20250) @0x00C6A -> andere Figur:
+      @0x00CCC Work(1, 0) Plc_neck m6 (0,0,0) Rate 28/28
+ROOM5030 sub06 Work(2, 0) Plc_dest m4 (-17948,-20256) @0x00C86 -> andere Figur:
+      @0x00CCC Work(1, 0) Plc_neck m6 (0,0,0) Rate 28/28
+ROOM6040 sub07 Work(1, 0) Plc_dest m5 (-12358,-24069) @0x02606 -> andere Figur:
+      @0x02640 Work(3, 0) Dir_set 1024
+ROOM6040 sub18 Work(1, 0) Plc_dest m5 (-13952,-16252) @0x0317E -> andere Figur:
+      @0x031D0 Work(3, 1) Dir_set 0
+ROOM7030 sub03 Work(1, 0) Plc_dest m5 (-15772,-23776) @0x02088 -> andere Figur:
+      @0x020CA Work(3, 0) Plc_neck m5 (1,0,0) Rate 60/60
+Zaehlung (Reaktion einer anderen Figur nach einem Gang/Lauf): {'Plc_neck m5': 10, 'Plc_dest m9': 2, 'Plc_neck m2': 5, 'Plc_neck m1': 4, 'Plc_dest m21': 2, 'Plc_dest m20': 1, 'Plc_rot': 1, 'Plc_neck m4': 1, 'Plc_neck m6': 2, 'Dir_set': 2}

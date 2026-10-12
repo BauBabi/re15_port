@@ -14,7 +14,8 @@
   [exe] Marvin dreht F374..F389 1631 -> 2749 (+1118)
   [exe] Marvin dreht F416..F447 2749 -> 2803 (+54)
   [exe] Marvin dreht F468..F498 2803 -> 2705 (-98)
-  FEHLER: [exe] Ada dreht sich in der ganzen Szene nicht (3 Abschnitte, groesste 1808 Einheiten) - kein 180, kein zweites 90
+  FEHLER: [exe] Ada dreht den Koerper im ganzen Gespraech nicht (bis Marvins letzte Zeile endet): 3 Drehungen davor - kein 180, kein zweites 90
+  FEHLER: [exe] Nachtrag 12: danach hoechstens EINE Drehung Adas (dem laufenden Marvin nach), 1808 Einheiten = 158.9 Grad < 90 Grad (3 Abschnitte)
   FEHLER: [exe] Marvin dreht den Koerper erst nach dem Ende seiner letzten Zeile (F394): 5 Drehungen davor
   FEHLER: [exe] groesste Einzeldrehung Marvins 1826 Einheiten = 160.5 Grad < 120 Grad (Losrennen zur Tuer hinter der Kamera)
   ok: [exe] msg 10 Sprecher Ada: Koerper zum Partner (Kegel 0x60) 99/99, Kopf auf dem Partner/geradeaus 99/99
@@ -34,6 +35,7 @@
   FEHLER: [exe] msg 13 Zuhoerer Ada: Koerper zum Partner (Kegel 0x60) 63/71, Kopf auf dem Partner/geradeaus 60/71
   FEHLER: [exe] msg 13 Zuhoerer Ada: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 62/71 Bildern (max 30.8 Grad)
   ok: [exe] Knall: beide Koepfe zur Tuer vor Adas Frage (Ada 1, Marvin 1), Koerper unveraendert (s.o.)
-  ok: [exe] msg 14 'Marvin!...': Adas Kopf zur Tuer = seine Laufrichtung in 99/99 Bildern
-  FEHLER: [exe] msg 14: Adas gezeichneter Blick liegt naeher bei Marvin als ihr Koerper in 0/99 Bildern
-auswerten: 13 Fehler
+  FEHLER: [exe] msg 14 'Marvin!...': Ada hat sich ihm nachgedreht - Koerper im ersten Bild 190 Einheiten neben ihm (Kegel 0x60)
+  FEHLER: [exe] msg 14: Adas Kopf-Ziel folgt dem laufenden Marvin in 0/99 Bildern
+  FEHLER: [exe] msg 14: Adas gezeichneter Blick auf Marvin <= 8,4 Grad in 87/99 Bildern (max 16.7 Grad)
+auswerten: 16 Fehler

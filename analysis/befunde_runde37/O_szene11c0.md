@@ -7,6 +7,10 @@ Auftrag: AUFTRAG.md Nachtrag 11 (woertlich):
 >
 > Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut.
 
+Nachtrag 12 (woertlich, AUFTRAG.md, vom Orchestrator in diesen Zweig committet 86507d09):
+
+> zum schluss dialog ada/marvin - wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin nach drehen.
+
 Zuteilung (VERTRAG.md §1.4): Spur O aendert Programm 4 (k_p_11c0) in irons_tod_1150.c an Ort und Stelle (Kommentar
 "Runde 37 Spur O"); die uebrigen Programme (Spur H: Nachspawn 1130) und k_msg28 (Nachtrag 10) NICHT anfassen.
 
@@ -17,7 +21,8 @@ Zuteilung (VERTRAG.md §1.4): Spur O aendert Programm 4 (k_p_11c0) in irons_tod_
 - [x] RE-Belege (B1 Gier/Aufstellung ROOM10D0, B2 Raum-Vokabular, B3 Kopf-Klemme/INIT/Raten, B4 RE2-Zensus)
 - [x] Umsetzung
 - [x] Messung nachher (Lauf n3, Auswerter 0 Fehler, Vorher/Nachher-Streifen)
-- [ ] Tests (probes/r37_szene11c0.cmake)
+- [x] Nachtrag 12: RE2-Beleg (B5), Umsetzung (Schritt 7), Messung nachher (Lauf n5)
+- [x] Tests (probes/r37_szene11c0.cmake; r35/r36-Riegel mit Beleg angepasst)
 
 ## Messung vorher
 
@@ -142,20 +147,41 @@ Koerperdrehung im Gespraech).
   Rate 0x3c/0x1e), der NPC `41 05 01 00 ..` @0x028B0 / @0x028D4 / @0x02940 (RE2-Modus 5 = auf Work(1,0) = Leon), kurze
   Blicke weg und zurueck nur mit dem Kopf @0x0290E/@0x0291C.
 
+### B5 Nachtrag 12: einer laufenden Figur nachsehen (RE2)
+* **RE2 Plc_neck Modus 5 = Kopf folgt einer Figur, je Bild.** Handler @0x80056e5c (selbst disassembliert,
+  `re2_disasm.py`): `addiu v0,zero,128` / `sb v0,448(a1)` @0x80056e6c/@0x80056e70 (+0x1c0 = 0x80), Sprungtabelle
+  @0x80011508 = {m0 0x80056eb0 `|0x12`, m1 0x80056f00 `|0x04`, m2 0x80056ec4 `|0x08`, m3 0x80056ed8 `|0x2a`,
+  m4 0x80056eec `|0x58`, **m5 0x80056f00 `|0x04`** (Weltpunkt-Bit wie m1), m6 0x80056f14 `sb zero`}; Ziel `sh` +0x170/
+  +0x172/+0x174 @0x80056f1c..@0x80056f28; NUR fuer m5 (`bne a2,5` @0x80056f24): +0x170 = Figur (Work 1 -> 0, 2 -> 1,
+  3,i -> i+2) und **+0x172 = 0x8000** (`addiu v0,zero,-32768` / `sh v0,370(a1)` @0x80056f70/@0x80056f74).
+  Kopf-FSM FUN_800177C0: Weltpunkt-Zweig `andi v1,v1,0x4` @0x80017870, `lh v0,370(s0)` @0x8001787c, **`ori v1,zero,0x8000`
+  / `bne v0,v1` @0x800178a0/@0x800178a4** -> Figur aus der Tabelle @0x800cfe14 (`lw a0,-492(at)` @0x800178b8), deren
+  Kopf-Teil (+0x1c1/+0x198) -> Ziel = `lw v0,92(t0)` .. `lw a1,104(t0)` @0x80017924..@0x80017930 = der Kopf-Ort der Figur
+  IN JEDEM BILD. RE1.5 kennt den Modus nicht (Handler @0x80041e98: `sltiu v0,a1,0x5` @0x80041eac -> Modus >= 5 nur 0x80).
+* **RE2-Zensus "nach einem Gang/Lauf reagiert eine andere Figur"** (`tools/r37_o/re2_nachsehen_zensus.py`,
+  `O_belege/re2_nachsehen_zensus.txt`): Plc_neck m5 10x, Plc_neck m2 5x, m1 4x, m6 2x, m4 1x, Plc_dest m9 2x, m21 2x,
+  m20 1x, Plc_rot 1x, Dir_set 2x. Vorbilder: ROOM1130 sub15 (Leon geht @0x01B60) -> NPC Plc_neck m5 auf Leon @0x01B8E +
+  Plc_dest m9 @0x01B9C (Kopf folgt, Koerper dreht); ROOM3040 sub08 (Leon rennt @0x01400) -> Partner Plc_dest m9 @0x01438 +
+  Plc_rot @0x01440 + Plc_neck m5 @0x01444; ROOM2020 sub02 (Leon rennt @0x020D6) -> NPC Plc_neck m1 auf Leons LAUFZIEL
+  @0x02108 (`41 01 .. 3c 1e`).
+
 ## Umsetzung
 
 ### Dateien
 * `re15_port/engine/src/irons_tod_1150.c` — Programm 4 `k_p_11c0` an Ort und Stelle neu (Kommentarblock "RUNDE 37 SPUR O"
   mit allen Belegen; der Ablauf der Runde 36 ist dort als ERSETZT markiert). Neue Makros `OP_DIR` (Dir_set, ROOM10D0
-  @0x01AC4), `OP_NECK1_LANGSAM` (ROOM4000 @0x015B6), `IT_GIER_ADA_MARVIN 3679` / `IT_GIER_MARVIN_ADA 1631`
-  (= re15_s11c0_gier, vom Riegel unit_r37_szene11c0_aufstellung nachgerechnet). Dazu 2 Zeilen Mess-Haken (Include +
-  Aufruf `re15_s11c0_mess_takt()` in `re15_irons_tod_tick`, nur in 11C0 waehrend Programm 4, env-gegatet). Andere
-  Programme (Spur H) und `k_msg28` (Nachtrag 10) unberuehrt.
+  @0x01AC4), `IT_GIER_ADA_MARVIN 3679` / `IT_GIER_MARVIN_ADA 1631` (= re15_s11c0_gier, vom Riegel
+  unit_r37_szene11c0_aufstellung nachgerechnet). Dazu 2 Zeilen Haken (Include + Aufruf `re15_s11c0_takt()` in
+  `re15_irons_tod_tick`, nur in 11C0 waehrend Programm 4). Andere Programme (Spur H) und `k_msg28` (Nachtrag 10) unberuehrt.
 * NEU `re15_port/engine/src/szene11c0_r37.c` + `re15_port/include/re15_szene11c0_r37.h`: `re15_s11c0_gier` (Peilung
-  in der Form des Ports), `re15_s11c0_winkel_diff`, Mess-Haken `RE15_S11C0_LOG`.
+  in der Form des Ports), `re15_s11c0_winkel_diff`, **Port-Takt `re15_s11c0_takt` "Ada folgt Marvin" (Nachtrag 12,
+  Signal (5,13))**, Mess-Haken `RE15_S11C0_LOG`.
 * Werkzeuge `re15_port/tools/r37_o/`: `szene_mess.py` (Auswertung Bild fuer Bild), `re2_reaktion_zensus.py`,
-  `re2_aufstellung_zensus.py`.
+  `re2_aufstellung_zensus.py`, `re2_nachsehen_zensus.py`.
 * Keine Assets, keine Sprachdateien, keine Bank-9-Bits, keine Nachrichten-Ids, keine Ereignisse (Ereignis 21 wie r35).
+  Neu belegt: Bank 5 Wort 0 Bit 13 in ROOM11C0 (Raum-Scratch, beim Raum-Init geloescht FUN_8003ecec @0x8003ed74) als
+  Signal "Ada folgt Marvin"; Zensus: die ROOM11C0-RDT benutzt in Bank 5 nur die Bits 0/1 (sub05 @0x01C3E/@0x01C46, sub06
+  @0x01C50/@0x01C58), kein Port-Modul setzt/liest (5,13).
 
 ### Ablauf Programm 4 (Takte = PORT-WAHL; jede Form mit Vorbild)
 | Schritt | Opcodes | Vorbild |
@@ -167,8 +193,13 @@ Koerperdrehung im Gespraech).
 | (3) "Yes!...." | Sleep 8; msg 11; Kopf frei, Sleep 5, Nicken, Sleep 20; Kopf auf Ada, Sleep 30 | sub03 @0x01BB2..@0x01BCA |
 | (4) "Oh, no, Leon!" | msg 12, Sleep 60 (Marvin sieht Ada an) | Nachtrag 11 |
 | (5) "I have to help him, sorry!" | msg 13; Clip 15 vor, 25 + 20 halten, zurueck 26; Sleep 30 (= 101 >= 99 Haltezeit `01 63`) | Arm wie r35; RE2 ROOM3010 sub04 je Zeile Kopf auf den Partner |
-| (6) Losrennen | Kopf frei; Plc_dest m5 zur Tuer-Mitte; Sleep 15 | 11B0 sub06 @0x015EA |
-| (7) Ada sieht nach | Plc_neck m1 zur Tuer Rate 0x3c; Sleep 4; msg 14 + Clip 15; Sleep 60; Tuer zurueck nach 1150 Cut 7 | ROOM4000 @0x015B6 |
+| (6) Losrennen | Kopf frei; Plc_dest m5 zur Tuer-Mitte; Sleep 12 (Phase 1 dreht ihn am Ort) | 11B0 sub06 @0x015EA |
+| (7) Nachtrag 12: Ada dreht sich dem laufenden Marvin nach | Set(5,13)=1; Plc_neck m1 + Plc_dest m9 (Ankunfts-Bit 1) mit Ausgangsziel = sein Laufziel; `18 06` (warten bis zugewandt); msg 14 + Clip 15; Sleep 60; Tuer zurueck nach 1150 Cut 7. Port-Takt je Bild: Kopf-Weltpunkt = Marvins Kopf-Ort, Drehpunkt = Marvins Ort (nur waehrend Sub 9) | RE2 Plc_neck m5 (B5); 11C0 sub02 @0x018C0/@0x018CA/@0x018D2; RE2 ROOM2020 sub02 @0x02108 (Laufziel) |
+
+Reihenfolge im Bild beim Folgen: der Irons-Takt laeuft am Kopf des VM-Laufs (scd_vm.c:722, vor den Faeden), die NPC-KI
+danach (Drehen liest +0x1bc/+0x1be), die Kopf-FSM beim Zeichnen. Im Bild des Befehls gilt das Ausgangsziel (Laufziel =
+dieselbe Richtung wie Marvin), ab dem naechsten Bild Marvins Ort; als Ausgangsziel taugt NICHT sein Startplatz (Ada sieht
+ihn schon an -> sofort "zugewandt", keine Drehung).
 
 ### Zwei Befunde beim Bauen (gemessen, behoben)
 * **Plc_neck vor dem NPC-INIT wird geloescht.** Erste Fassung (Lauf n1) setzte die Koepfe schon im Raumaufbau:
@@ -182,30 +213,37 @@ Koerperdrehung im Gespraech).
 
 ## Messung nachher
 
-Lauf n3 (Stand 95ff173f, Messkopie `re15_pc_r37o_n3.exe`, derselbe Weg wie "vorher", `RE15_EXIT_AT=509#11C0`):
+Lauf n5 (Endstand c44d3df2, Messkopie `re15_pc_r37o_n5.exe`, derselbe Weg wie "vorher", `RE15_EXIT_AT=513#11C0`):
 `O_belege/o_nach_mess.txt`, `o_nach_bilder.txt`, Kontaktbogen `o_nach_11c0.png`, Kopf-Ausschnitte `o_nach_kopf_zoom.png`,
-**Vorher/Nachher-Streifen `o_vor_nach_streifen.png`** (je Beat oben vorher, unten nachher), Auswerter
-`test_r37_szene11c0 auswerten` -> `o_nach_auswerten.txt` (0 Fehler) gegen `o_vor_auswerten.txt` (alter Stand: 9 Fehler).
+Schluss-Folge `o_nachtrag12_ende.png` (F384..F500), **Vorher/Nachher-Streifen `o_vor_nach_streifen.png`** (je Beat oben
+vorher, unten nachher), Auswerter `test_r37_szene11c0 auswerten` -> `o_nach_auswerten.txt` (0 Fehler) gegen
+`o_vor_auswerten.txt` (alter Stand: 9 Fehler). (Zwischenlaeufe n1..n4: n1 INIT-Befund, n3 = Stand vor Nachtrag 12 mit
+Ada nur Kopf, n4 = Laengenmessung.)
 ```
-Drehungen Ada:    keine
-Drehungen Marvin: F385..F400 Gier 1631 -> 2749 +98.3 Grad (Losrennen, nach dem Ende von msg 13 in F383); danach nur das
-                  Nachsteuern im Lauf (+4.7 / -8.6 Grad)
+Drehungen Ada:    F397..F404 Gier 3679 -> 3009  -58.9 Grad (dem laufenden Marvin nach; vorher keine)
+Drehungen Marvin: F385..F400 Gier 1631 -> 2749  +98.3 Grad (Losrennen, nach dem Ende von msg 13 in F383); danach nur das
+                  Nachsteuern im Lauf (+4.7 / -10.0 Grad)
 Untertitel: 10 F72..F169, 11 F170..F224, 12 F225..F284, 13 F285..F383, 14 F405..F503
 msg 10 Ada:    Sprecher Koerper 0.1 Grad, Kopf auf Marvin 98/98 (Blick 0.0 Grad) | Zuhoerer Marvin Koerper 0.1, Kopf auf Ada 98/98
 msg 11 Marvin: Koerper 0.1 Grad, Kopf auf Ada 30/55 + frei/Nicken 25/55, Blick max 6.2 Grad (Nicken) | Ada Kopf auf Marvin 55/55
 msg 12 Marvin: Koerper 0.1 Grad, Kopf auf Ada 60/60, Blick 0.0 Grad | Ada Kopf auf Marvin 60/60
 msg 13 Marvin: Koerper 0.1 Grad, Kopf auf Ada 99/99, Blick 0.0 Grad | Ada Kopf auf Marvin 99/99
-msg 14 Ada:    Koerper bleibt (Marvins alter Platz), Kopf zur Tuer an der Klemme 99/99, Blick zum laufenden Marvin 7..32 Grad
-               (der Koerper 61..87 Grad) — "sieht ihm nach", soweit die Kopf-Klemme 0x2c8 reicht
+msg 14 Ada:    Koerper im ersten Bild 40 Einheiten (3.5 Grad) neben dem laufenden Marvin; Kopf-Ziel folgt ihm 99/99,
+               gezeichneter Blick auf Marvin max 1.8..1.9 Grad in allen 99 Bildern (Kopf nie an der Klemme)
 Knall (vor msg 10): beide Koepfe zur Tuer (Marvin ab Bild 18, Ada ab Bild 24), Koerper unveraendert
 ```
+Folgen im Einzelnen (s11c0.log, Peilung Ada -> Marvin relativ zu ihrer Gier): F396 Marvin laeuft los (-260), Ada dreht ab
+F397 mit 0x60 je Bild (F399 -327, F402 -160), F405 zugewandt (-38) -> "Marvin!..." + Arm zu ihm; danach dreht nur noch
+der Kopf mit (F420 -160, F456 -319 = groesste Abweichung, weit innerhalb der Klemme 0x2c8).
+
 Gegen den Wortlaut des Nutzers:
 | Nutzer | nachher |
 |---|---|
 | "Erst schauen sie komplett in die falsche Richtung." | Im ersten Bild (F6) Ada Gier 3679 = Peilung auf Marvin, Marvin 1631 = Peilung auf Ada: einander zugewandt (Profil zur Kamera), Bild F8/F14. |
-| "Dann drehen sie sich einmal um 180 grad um." | Keine Koerperdrehung beim Knall; nur die Koepfe drehen zur Tuer (Kopf an der Klemme = Gesicht zur Kamera, Bild F32). Groesste Drehung Ada 0, Marvin 98,3 Grad nur beim Losrennen. |
-| "Dann dreht sich Ada noch mal um 90 grad um." | Ada dreht ihren Koerper in der ganzen Szene nicht (0 Abschnitte); beim Nachsehen nur der Kopf. |
+| "Dann drehen sie sich einmal um 180 grad um." | Keine Koerperdrehung beim Knall; nur die Koepfe drehen zur Tuer (Kopf an der Klemme = Gesicht zur Kamera, Bild F32). Groesste Drehung Marvin 98,3 Grad nur beim Losrennen, Ada 58,9 Grad nur beim Nachsehen (Nachtrag 12). |
+| "Dann dreht sich Ada noch mal um 90 grad um." | Im Gespraech (msg 10..13) dreht Ada ihren Koerper gar nicht; ihre einzige Drehung ist die gewuenschte nach Nachtrag 12 (58,9 Grad, dem laufenden Marvin nach). |
 | "Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada" | Bei allen drei Zeilen (msg 11/12/13) Koerper 0,1 Grad und gezeichneter Kopf-Blick <= 6,2 Grad auf Ada; er rennt erst los, wenn seine letzte Zeile abgelaufen ist. |
+| Nachtrag 12: "wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin nach drehen" | Ada dreht sich ihm nach, waehrend er loslaeuft (Drehpunkt folgt ihm), ruft "Marvin!..." ihm zugewandt (3,5 Grad) mit dem Arm zu ihm und sieht ihm mit dem Kopf nach (Blick <= 1,9 Grad in allen 99 Bildern der Zeile), Bild `o_nachtrag12_ende.png`. |
 
 ## Tests
 
@@ -213,10 +251,13 @@ Gegen den Wortlaut des Nutzers:
 
 ## OFFEN
 
-* **Kein Entity-Folge-Blick in RE1.5.** Ada sieht Marvin beim Weglaufen mit einem festen Weltpunkt (Tuer-Mitte) nach;
-  RE1.5 kennt keinen Plc_neck-Modus "auf eine Figur" (Handler @0x80041e98: Modus >= 5 setzt nur 0x80; RE2 hat dafuer
-  Modus 5). Mit der Klemme 0x2c8 bleibt ihr Blick 7..32 Grad neben dem laufenden Marvin (Koerper 61..87 Grad). Ein
-  mitlaufender Blick waere eine Folge von Plc_neck-Punkten entlang seines Weges — nicht gebaut (keine Vorlage im Original).
+* **Folgen = Port-Takt statt Opcode.** RE1.5 hat keinen Plc_neck-Modus "auf eine Figur" (Handler @0x80041e98); das
+  RE2-Verhalten (Modus 5, B5) bildet der Port-Takt `re15_s11c0_takt` nach, indem er Adas Weltpunkt je Bild auf Marvins
+  Kopf-Ort setzt — nur in dieser Szene (Signal (5,13)), keine Aenderung an Opcode-Handler oder Kopf-FSM (skeleton_common.c).
+  Ein allgemeiner RE2-Modus 5 im Port (Opcode + FSM-Zweig @0x800178a0) waere ein eigener Schritt fuer alle Szenen.
+* Der Koerper folgt Marvin nur, solange Ada sich dreht (bis sie ihm zugewandt ist, F405); danach folgt der Kopf allein.
+  Gemessen bleibt der Rest seines Weges im Bild <= 319 Einheiten (28 Grad) neben ihrer Gier, weit innerhalb der Kopf-
+  Klemme 0x2c8 — eine zweite Koerperdrehung ist nicht noetig (RE2-Vorbilder: eine Drehung + Kopf-Folge, B5).
 * **Marvin = Aktor 4 (Work_set(2,3)) ist vorbestehend (r35) fest verdrahtet:** der Platz ergibt sich, weil die zwei
   Gorilla-Records ROOM11C0 sub00 @0x01784/@0x01798 (gleiche Bedingung (4,64)=0, Tot-Bits (7,96)/(7,97)) vor ihm stehen.
   Unter (4,64)=0 (Bedingung der ganzen 11C0-Montage, re15_irons_tod_ohne_11c0) sind die Gorillas noch nicht
@@ -232,9 +273,10 @@ Gegen den Wortlaut des Nutzers:
   Kamera). Auf den Knall drehen nur die Koepfe zum Gebaeude (zur Kamera hin), der Koerper bleibt. Danach sehen sie
   sich wieder an; Ada fragt, Marvin nickt "Yes!....", sagt "Oh, no, Leon!" und "I have to help him, sorry!" (Arm) — bei
   allen drei Zeilen sieht er Ada an. Erst wenn seine letzte Zeile abgelaufen ist, dreht er sich um und rennt zur Tuer
-  (die einzige Koerperdrehung der Szene, ~98 Grad, weil die Tuer hinter der Kamera liegt). Ada dreht sich nicht mehr:
-  sie sieht ihm mit dem Kopf nach und ruft "Marvin!..." (Arm). Vorher/Nachher: `analysis/befunde_runde37/O_belege/
-  o_vor_nach_streifen.png`.
+  (~98 Grad, weil die Tuer hinter der Kamera liegt). Ada dreht sich ihm nach, sobald er losrennt (Nachtrag 12), ruft
+  ihm zugewandt "Marvin!..." mit dem Arm zu ihm und folgt ihm mit dem Kopf, bis er aus dem Bild ist. Im Gespraech selbst
+  dreht sich niemand mehr. Vorher/Nachher: `analysis/befunde_runde37/O_belege/o_vor_nach_streifen.png`, Schluss:
+  `o_nachtrag12_ende.png`.
 * Neue Assets fuer das Paket-Gate: KEINE. Sprachdateien: KEINE neuen (Zeilen 10..14 unveraendert).
 * Bedienung unveraendert: nach der 10F0-Szene ROOM1150 betreten (Irons-Szene), die Montage endet in 11C0.
 * Mess-Haken fuer eigene Nachmessungen: `RE15_S11C0_LOG=<datei>` (je Bild Gier/Kopf beider Figuren),

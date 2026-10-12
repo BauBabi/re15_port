@@ -1,13 +1,15 @@
   ok: neck_trace.log vorhanden
   ok: s11c0.log vorhanden
-  [exe] 504 Bilder (F6..F509)
+  [exe] 508 Bilder (F6..F513)
   ok: [exe] erstes Bild F6: Ada Gier 3679 (Peilung auf Marvin 3679), Marvin Gier 1631 (Peilung auf Ada 1631) - einander zugewandt
   [exe] Zeilen: 10 F72..F169 11 F170..F224 12 F225..F284 13 F285..F383 14 F405..F503
   ok: [exe] fuenf Zeilen 10..14 in der Reihenfolge (5)
+  [exe] Ada dreht F397..F404 3679 -> 3009 (-670)
   [exe] Marvin dreht F385..F400 1631 -> 2749 (+1118)
   [exe] Marvin dreht F427..F458 2749 -> 2803 (+54)
-  [exe] Marvin dreht F479..F509 2803 -> 2705 (-98)
-  ok: [exe] Ada dreht sich in der ganzen Szene nicht (0 Abschnitte, groesste 0 Einheiten) - kein 180, kein zweites 90
+  [exe] Marvin dreht F479..F513 2803 -> 2689 (-114)
+  ok: [exe] Ada dreht den Koerper im ganzen Gespraech nicht (bis Marvins letzte Zeile endet): 0 Drehungen davor - kein 180, kein zweites 90
+  ok: [exe] Nachtrag 12: danach hoechstens EINE Drehung Adas (dem laufenden Marvin nach), 670 Einheiten = 58.9 Grad < 90 Grad (1 Abschnitte)
   ok: [exe] Marvin dreht den Koerper erst nach dem Ende seiner letzten Zeile (F383): 0 Drehungen davor
   ok: [exe] groesste Einzeldrehung Marvins 1118 Einheiten = 98.3 Grad < 120 Grad (Losrennen zur Tuer hinter der Kamera)
   ok: [exe] msg 10 Sprecher Ada: Koerper zum Partner (Kegel 0x60) 98/98, Kopf auf dem Partner/geradeaus 98/98
@@ -27,6 +29,7 @@
   ok: [exe] msg 13 Zuhoerer Ada: Koerper zum Partner (Kegel 0x60) 99/99, Kopf auf dem Partner/geradeaus 99/99
   ok: [exe] msg 13 Zuhoerer Ada: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 99/99 Bildern (max 0.0 Grad)
   ok: [exe] Knall: beide Koepfe zur Tuer vor Adas Frage (Ada 1, Marvin 1), Koerper unveraendert (s.o.)
-  ok: [exe] msg 14 'Marvin!...': Adas Kopf zur Tuer = seine Laufrichtung in 99/99 Bildern
-  ok: [exe] msg 14: Adas gezeichneter Blick liegt naeher bei Marvin als ihr Koerper in 99/99 Bildern
+  ok: [exe] msg 14 'Marvin!...': Ada hat sich ihm nachgedreht - Koerper im ersten Bild 40 Einheiten neben ihm (Kegel 0x60)
+  ok: [exe] msg 14: Adas Kopf-Ziel folgt dem laufenden Marvin in 99/99 Bildern
+  ok: [exe] msg 14: Adas gezeichneter Blick auf Marvin <= 8,4 Grad in 99/99 Bildern (max 1.9 Grad)
 auswerten: 0 Fehler

@@ -96,31 +96,32 @@ F382 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 m
 F386 msg=- | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1727 mo=5 Koerper->P=-8 Kopf=frei Blick->P=+8
 F390 msg=- | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=2111 mo=5 Koerper->P=-42 Kopf=frei Blick->P=+37
 F394 msg=- | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=2495 mo=0 Koerper->P=-76 Kopf=frei Blick->P=+74
-F398 msg=- | A r=3679 mo=19 Koerper->P=-40 Kopf=Punkt(-8163,-13748) Blick->P=+38 | M r=2687 mo=0 Koerper->P=-133 Kopf=frei Blick->P=+148
-F402 msg=- | A r=3679 mo=19 Koerper->P=-56 Kopf=Tuer Blick->P=+42 K | M r=2749 mo=0 Koerper->P=-155 Kopf=frei Blick->P=+173
-F406 msg=14 | A r=3679 mo=15 Koerper->P=-64 Kopf=Tuer Blick->P=+28 K | M r=2749 mo=0 Koerper->P=-162 Kopf=frei Blick->P=+160
-F410 msg=14 | A r=3679 mo=15 Koerper->P=-68 Kopf=Tuer Blick->P=+5 K | M r=2749 mo=0 Koerper->P=-166 Kopf=frei Blick->P=+155
-F414 msg=14 | A r=3679 mo=15 Koerper->P=-70 Kopf=Tuer Blick->P=+8 K | M r=2749 mo=0 Koerper->P=-169 Kopf=frei Blick->P=+158
-F418 msg=14 | A r=3679 mo=15 Koerper->P=-72 Kopf=Tuer Blick->P=+9 K | M r=2749 mo=0 Koerper->P=-171 Kopf=frei Blick->P=+177
-F422 msg=14 | A r=3679 mo=15 Koerper->P=-73 Kopf=Tuer Blick->P=+11 K | M r=2749 mo=0 Koerper->P=-172 Kopf=frei Blick->P=-172
-F426 msg=14 | A r=3679 mo=15 Koerper->P=-75 Kopf=Tuer Blick->P=+12 K | M r=2749 mo=0 Koerper->P=-173 Kopf=frei Blick->P=-179
-F430 msg=14 | A r=3679 mo=15 Koerper->P=-78 Kopf=Tuer Blick->P=+15 K | M r=2753 mo=0 Koerper->P=-176 Kopf=frei Blick->P=+166
-F434 msg=14 | A r=3679 mo=15 Koerper->P=-80 Kopf=Tuer Blick->P=+17 K | M r=2759 mo=0 Koerper->P=-179 Kopf=frei Blick->P=+163
-F438 msg=14 | A r=3679 mo=15 Koerper->P=-82 Kopf=Tuer Blick->P=+19 K | M r=2765 mo=0 Koerper->P=+179 Kopf=frei Blick->P=-179
-F442 msg=14 | A r=3679 mo=15 Koerper->P=-83 Kopf=Tuer Blick->P=+20 K | M r=2771 mo=0 Koerper->P=+177 Kopf=frei Blick->P=-166
-F446 msg=14 | A r=3679 mo=15 Koerper->P=-84 Kopf=Tuer Blick->P=+22 K | M r=2779 mo=0 Koerper->P=+175 Kopf=frei Blick->P=-158
-F450 msg=14 | A r=3679 mo=15 Koerper->P=-86 Kopf=Tuer Blick->P=+23 K | M r=2787 mo=0 Koerper->P=+173 Kopf=frei Blick->P=-177
-F454 msg=14 | A r=3679 mo=15 Koerper->P=-86 Kopf=Tuer Blick->P=+24 K | M r=2795 mo=0 Koerper->P=+171 Kopf=frei Blick->P=+176
-F458 msg=14 | A r=3679 mo=15 Koerper->P=-87 Kopf=Tuer Blick->P=+25 K | M r=2803 mo=0 Koerper->P=+170 Kopf=frei Blick->P=+179
-F462 msg=14 | A r=3679 mo=15 Koerper->P=-86 Kopf=Tuer Blick->P=+24 K | M r=2803 mo=0 Koerper->P=+171 Kopf=frei Blick->P=-164
-F466 msg=14 | A r=3679 mo=15 Koerper->P=-86 Kopf=Tuer Blick->P=+23 K | M r=2803 mo=0 Koerper->P=+171 Kopf=frei Blick->P=-155
-F470 msg=14 | A r=3679 mo=15 Koerper->P=-85 Kopf=Tuer Blick->P=+23 K | M r=2803 mo=0 Koerper->P=+172 Kopf=frei Blick->P=-164
-F474 msg=14 | A r=3679 mo=15 Koerper->P=-85 Kopf=Tuer Blick->P=+22 K | M r=2803 mo=0 Koerper->P=+172 Kopf=frei Blick->P=+178
-F478 msg=14 | A r=3679 mo=15 Koerper->P=-84 Kopf=Tuer Blick->P=+22 K | M r=2803 mo=0 Koerper->P=+173 Kopf=frei Blick->P=+171
-F482 msg=14 | A r=3679 mo=15 Koerper->P=-83 Kopf=Tuer Blick->P=+21 K | M r=2795 mo=0 Koerper->P=+175 Kopf=frei Blick->P=-175
-F486 msg=14 | A r=3679 mo=15 Koerper->P=-82 Kopf=Tuer Blick->P=+19 K | M r=2781 mo=0 Koerper->P=+177 Kopf=frei Blick->P=-166
-F490 msg=14 | A r=3679 mo=15 Koerper->P=-81 Kopf=Tuer Blick->P=+18 K | M r=2771 mo=0 Koerper->P=+179 Kopf=frei Blick->P=-162
-F494 msg=14 | A r=3679 mo=15 Koerper->P=-80 Kopf=Tuer Blick->P=+17 K | M r=2759 mo=0 Koerper->P=-179 Kopf=frei Blick->P=+175
-F498 msg=14 | A r=3679 mo=15 Koerper->P=-79 Kopf=Tuer Blick->P=+16 K | M r=2745 mo=0 Koerper->P=-177 Kopf=frei Blick->P=+164
-F502 msg=14 | A r=3679 mo=15 Koerper->P=-78 Kopf=Tuer Blick->P=+15 K | M r=2731 mo=0 Koerper->P=-175 Kopf=frei Blick->P=+163
-F506 msg=- | A r=3679 mo=15 Koerper->P=-77 Kopf=Tuer Blick->P=+15 K | M r=2715 mo=0 Koerper->P=-172 Kopf=frei Blick->P=+179
+F398 msg=- | A r=3583 mo=5 Koerper->P=-31 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+21 K | M r=2687 mo=0 Koerper->P=-133 Kopf=frei Blick->P=+148
+F402 msg=- | A r=3199 mo=5 Koerper->P=-14 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-2 | M r=2749 mo=0 Koerper->P=-155 Kopf=frei Blick->P=+173
+F406 msg=14 | A r=3009 mo=15 Koerper->P=-5 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-2 | M r=2749 mo=0 Koerper->P=-162 Kopf=frei Blick->P=+160
+F410 msg=14 | A r=3009 mo=15 Koerper->P=-9 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-2 | M r=2749 mo=0 Koerper->P=-166 Kopf=frei Blick->P=+155
+F414 msg=14 | A r=3009 mo=15 Koerper->P=-12 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-1 | M r=2749 mo=0 Koerper->P=-169 Kopf=frei Blick->P=+158
+F418 msg=14 | A r=3009 mo=15 Koerper->P=-14 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2749 mo=0 Koerper->P=-171 Kopf=frei Blick->P=+177
+F422 msg=14 | A r=3009 mo=15 Koerper->P=-15 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2749 mo=0 Koerper->P=-172 Kopf=frei Blick->P=-172
+F426 msg=14 | A r=3009 mo=15 Koerper->P=-16 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2749 mo=0 Koerper->P=-173 Kopf=frei Blick->P=-179
+F430 msg=14 | A r=3009 mo=15 Koerper->P=-19 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-1 | M r=2753 mo=0 Koerper->P=-176 Kopf=frei Blick->P=+166
+F434 msg=14 | A r=3009 mo=15 Koerper->P=-21 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2759 mo=0 Koerper->P=-179 Kopf=frei Blick->P=+163
+F438 msg=14 | A r=3009 mo=15 Koerper->P=-23 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2765 mo=0 Koerper->P=+179 Kopf=frei Blick->P=-179
+F442 msg=14 | A r=3009 mo=15 Koerper->P=-24 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2771 mo=0 Koerper->P=+177 Kopf=frei Blick->P=-166
+F446 msg=14 | A r=3009 mo=15 Koerper->P=-25 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2779 mo=0 Koerper->P=+175 Kopf=frei Blick->P=-158
+F450 msg=14 | A r=3009 mo=15 Koerper->P=-27 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2787 mo=0 Koerper->P=+173 Kopf=frei Blick->P=-177
+F454 msg=14 | A r=3009 mo=15 Koerper->P=-28 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2795 mo=0 Koerper->P=+171 Kopf=frei Blick->P=+176
+F458 msg=14 | A r=3009 mo=15 Koerper->P=-28 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+170 Kopf=frei Blick->P=+179
+F462 msg=14 | A r=3009 mo=15 Koerper->P=-28 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+171 Kopf=frei Blick->P=-164
+F466 msg=14 | A r=3009 mo=15 Koerper->P=-27 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+171 Kopf=frei Blick->P=-155
+F470 msg=14 | A r=3009 mo=15 Koerper->P=-26 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+172 Kopf=frei Blick->P=-164
+F474 msg=14 | A r=3009 mo=15 Koerper->P=-26 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2803 mo=0 Koerper->P=+172 Kopf=frei Blick->P=+178
+F478 msg=14 | A r=3009 mo=15 Koerper->P=-25 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2803 mo=0 Koerper->P=+173 Kopf=frei Blick->P=+171
+F482 msg=14 | A r=3009 mo=15 Koerper->P=-24 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2795 mo=0 Koerper->P=+175 Kopf=frei Blick->P=-175
+F486 msg=14 | A r=3009 mo=15 Koerper->P=-23 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2781 mo=0 Koerper->P=+177 Kopf=frei Blick->P=-166
+F490 msg=14 | A r=3009 mo=15 Koerper->P=-22 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2771 mo=0 Koerper->P=+179 Kopf=frei Blick->P=-162
+F494 msg=14 | A r=3009 mo=15 Koerper->P=-21 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2759 mo=0 Koerper->P=-179 Kopf=frei Blick->P=+175
+F498 msg=14 | A r=3009 mo=15 Koerper->P=-20 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2745 mo=0 Koerper->P=-177 Kopf=frei Blick->P=+164
+F502 msg=14 | A r=3009 mo=15 Koerper->P=-19 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2731 mo=0 Koerper->P=-175 Kopf=frei Blick->P=+163
+F506 msg=- | A r=3009 mo=15 Koerper->P=-18 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2715 mo=0 Koerper->P=-172 Kopf=frei Blick->P=+179
+F510 msg=- | A r=3009 mo=15 Koerper->P=-17 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2701 mo=0 Koerper->P=-170 Kopf=frei Blick->P=-173
