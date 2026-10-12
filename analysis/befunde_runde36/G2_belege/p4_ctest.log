@@ -1,0 +1,179 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r36_generator/re15_port/build
+      Start   2: prop_rdt_filename
+      Start   3: prop_rdt_null_offset
+      Start   4: prop_scd_pc_advance
+      Start   5: prop_door_roundtrip
+ 1/87 Test   #2: prop_rdt_filename ...................   Passed    0.05 sec
+ 2/87 Test   #3: prop_rdt_null_offset ................   Passed    0.04 sec
+      Start   6: prop_fixpoint_precision
+      Start   7: prop_tank_controls
+ 3/87 Test   #4: prop_scd_pc_advance .................   Passed    0.07 sec
+      Start   8: prop_input_edge
+ 4/87 Test   #5: prop_door_roundtrip .................   Passed    0.07 sec
+ 5/87 Test   #6: prop_fixpoint_precision .............   Passed    0.05 sec
+      Start   9: prop_sca_collision
+      Start  10: prop_point_in_poly
+ 6/87 Test   #7: prop_tank_controls ..................   Passed    0.07 sec
+      Start  11: prop_zone_dispatch
+ 7/87 Test   #8: prop_input_edge .....................   Passed    0.06 sec
+ 8/87 Test   #9: prop_sca_collision ..................   Passed    0.05 sec
+      Start  12: prop_bss_chunk
+      Start  13: prop_spawn_entered
+ 9/87 Test  #10: prop_point_in_poly ..................   Passed    0.06 sec
+      Start  14: prop_ot_sort
+10/87 Test  #11: prop_zone_dispatch ..................   Passed    0.06 sec
+11/87 Test  #12: prop_bss_chunk ......................   Passed    0.04 sec
+      Start  15: prop_adpcm_decode
+      Start  16: prop_json_roundtrip
+12/87 Test  #13: prop_spawn_entered ..................   Passed    0.05 sec
+      Start  17: prop_savestate_cmp
+13/87 Test  #15: prop_adpcm_decode ...................   Passed    0.03 sec
+      Start  52: unit_enemy_body_push
+14/87 Test  #17: prop_savestate_cmp ..................   Passed    0.02 sec
+15/87 Test  #16: prop_json_roundtrip .................   Passed    0.04 sec
+      Start  54: unit_slope_collision
+      Start  65: unit_collision_layers
+16/87 Test  #14: prop_ot_sort ........................   Passed    0.08 sec
+17/87 Test  #54: unit_slope_collision ................   Passed    0.02 sec
+      Start 134: probe_elevator_1080
+      Start 135: unit_gen_11f0_switches
+18/87 Test  #52: unit_enemy_body_push ................   Passed    0.06 sec
+      Start 198: unit_gen_11f0_cursor_view
+19/87 Test  #65: unit_collision_layers ...............   Passed    0.04 sec
+      Start 199: unit_prop_texel_key_11f0
+20/87 Test #199: unit_prop_texel_key_11f0 ............   Passed    0.02 sec
+      Start 201: unit_1090_push_pin
+21/87 Test #135: unit_gen_11f0_switches ..............   Passed    0.06 sec
+      Start 210: unit_1090_push_anim
+22/87 Test #198: unit_gen_11f0_cursor_view ...........   Passed    0.06 sec
+      Start 212: unit_11f0_cut_after_puzzle
+23/87 Test #201: unit_1090_push_pin ..................   Passed    0.03 sec
+      Start 232: unit_re2z_pushoff_crawl
+24/87 Test #134: probe_elevator_1080 .................   Passed    0.10 sec
+25/87 Test #210: unit_1090_push_anim .................   Passed    0.03 sec
+      Start 248: unit_1090_npc_prop_push
+      Start 288: unit_fahrstuhl_1080_etagen
+26/87 Test #248: unit_1090_npc_prop_push .............   Passed    0.02 sec
+      Start 310: unit_r17_cursor_klick_pin
+27/87 Test #212: unit_11f0_cut_after_puzzle ..........   Passed    0.05 sec
+      Start 320: unit_r20_birkin_push_pin
+28/87 Test #288: unit_fahrstuhl_1080_etagen ..........   Passed    0.05 sec
+      Start 328: unit_r26_panel_11f0
+29/87 Test #232: unit_re2z_pushoff_crawl .............   Passed    0.08 sec
+      Start 329: unit_abtastphase_11f0
+30/87 Test #329: unit_abtastphase_11f0 ...............   Passed    0.01 sec
+      Start 333: unit_r27_panel_schalterwerte
+31/87 Test #328: unit_r26_panel_11f0 .................   Passed    0.09 sec
+      Start 375: unit_r30_tuer_r4000
+32/87 Test #375: unit_r30_tuer_r4000 .................   Passed    0.04 sec
+      Start 381: r31_trefferboxen
+33/87 Test #333: unit_r27_panel_schalterwerte ........   Passed    0.17 sec
+      Start 382: unit_r31_generator
+34/87 Test #381: r31_trefferboxen ....................   Passed    0.41 sec
+      Start 383: unit_r31_hebetisch
+35/87 Test #383: unit_r31_hebetisch ..................   Passed    0.03 sec
+      Start 384: unit_r31_viereck
+36/87 Test #384: unit_r31_viereck ....................   Passed    0.02 sec
+      Start 385: unit_r31_maschine
+37/87 Test #385: unit_r31_maschine ...................   Passed    0.04 sec
+      Start 386: unit_r31_zuordnung
+38/87 Test #382: unit_r31_generator ..................   Passed    0.45 sec
+      Start 387: unit_r31_tuer_ton
+39/87 Test #387: unit_r31_tuer_ton ...................   Passed    0.02 sec
+      Start 388: unit_r32_hebetisch_faecher
+40/87 Test #388: unit_r32_hebetisch_faecher ..........   Passed    0.02 sec
+      Start 421: unit_r34n_a_rolltor
+41/87 Test #386: unit_r31_zuordnung ..................   Passed    0.10 sec
+      Start 422: unit_r34n_b_halt
+42/87 Test #422: unit_r34n_b_halt ....................   Passed    0.02 sec
+      Start 423: unit_r34n_b_kuppel
+43/87 Test #421: unit_r34n_a_rolltor .................   Passed    0.06 sec
+      Start 424: unit_r34n_b_ablauf
+44/87 Test #423: unit_r34n_b_kuppel ..................   Passed    0.01 sec
+      Start 425: unit_r34n_b_cut_old
+45/87 Test #424: unit_r34n_b_ablauf ..................   Passed    0.03 sec
+      Start 426: unit_r34n_b_harness
+46/87 Test #425: unit_r34n_b_cut_old .................   Passed    0.03 sec
+      Start 427: unit_r34n_b_abbruch
+47/87 Test #426: unit_r34n_b_harness .................   Passed    0.02 sec
+      Start 428: unit_r34n_b_kreuztext
+48/87 Test #427: unit_r34n_b_abbruch .................   Passed    0.02 sec
+      Start 429: unit_r34n_b_cursor_bytes
+49/87 Test #428: unit_r34n_b_kreuztext ...............   Passed    0.02 sec
+      Start 430: integration_r34n_b_cursor
+50/87 Test #429: unit_r34n_b_cursor_bytes ............   Passed    0.01 sec
+      Start 431: unit_r34n_c_generator
+51/87 Test #320: unit_r20_birkin_push_pin ............   Passed    0.85 sec
+      Start 432: unit_r34n_d_adaruf_szene
+52/87 Test #432: unit_r34n_d_adaruf_szene ............   Passed    0.02 sec
+      Start 433: unit_r34n_d_adaruf_doppel
+53/87 Test #433: unit_r34n_d_adaruf_doppel ...........   Passed    0.03 sec
+      Start 434: unit_r34n_d_adaruf_sperre
+54/87 Test #434: unit_r34n_d_adaruf_sperre ...........   Passed    0.02 sec
+      Start 435: unit_r34n_d_adaruf_frei
+55/87 Test #435: unit_r34n_d_adaruf_frei .............   Passed    0.01 sec
+      Start 436: unit_r34n_d_adaruf_rettung
+56/87 Test #310: unit_r17_cursor_klick_pin ...........   Passed    0.97 sec
+      Start 437: unit_r34n_d_adaruf_speicher
+57/87 Test #436: unit_r34n_d_adaruf_rettung ..........   Passed    0.02 sec
+      Start 438: unit_r34n_d_adaruf_elza
+58/87 Test #437: unit_r34n_d_adaruf_speicher .........   Passed    0.02 sec
+      Start 439: unit_r34n_d_adaruf_raster
+59/87 Test #438: unit_r34n_d_adaruf_elza .............   Passed    0.02 sec
+      Start 440: unit_r34n_e_dokumente
+60/87 Test #440: unit_r34n_e_dokumente ...............   Passed    0.14 sec
+      Start 441: integration_r34n_e_dokumente_bild
+61/87 Test #431: unit_r34n_c_generator ...............   Passed    1.01 sec
+      Start 442: unit_r34n_f_leiche_texte
+62/87 Test #442: unit_r34n_f_leiche_texte ............   Passed    0.02 sec
+      Start 443: unit_r34n_f_leiche_nein_1110
+63/87 Test #443: unit_r34n_f_leiche_nein_1110 ........   Passed    0.02 sec
+      Start 444: unit_r34n_f_leiche_nein_1230
+64/87 Test #444: unit_r34n_f_leiche_nein_1230 ........   Passed    0.03 sec
+      Start 445: unit_r34n_f_leiche_ja_1110
+65/87 Test #445: unit_r34n_f_leiche_ja_1110 ..........   Passed    0.02 sec
+      Start 446: unit_r34n_f_leiche_ja_1230
+66/87 Test #446: unit_r34n_f_leiche_ja_1230 ..........   Passed    0.04 sec
+      Start 447: unit_r34n_f_leiche_voll
+67/87 Test #447: unit_r34n_f_leiche_voll .............   Passed    0.03 sec
+      Start 448: unit_r34n_f_leiche_varianten
+68/87 Test #448: unit_r34n_f_leiche_varianten ........   Passed    0.07 sec
+      Start 449: unit_r34n_f_leiche_laden
+69/87 Test #449: unit_r34n_f_leiche_laden ............   Passed    0.02 sec
+      Start 450: unit_r34n_f_leiche_andere
+70/87 Test #450: unit_r34n_f_leiche_andere ...........   Passed    0.03 sec
+      Start 451: unit_r34n_f_leiche_stimme
+71/87 Test #451: unit_r34n_f_leiche_stimme ...........   Passed    0.05 sec
+      Start 452: unit_r34n_f_leiche_nachhall
+72/87 Test #452: unit_r34n_f_leiche_nachhall .........   Passed    0.02 sec
+      Start 453: unit_r34n_f_leiche_latch
+73/87 Test #453: unit_r34n_f_leiche_latch ............   Passed    0.04 sec
+      Start 454: unit_r34n_g_maskgrp
+74/87 Test #454: unit_r34n_g_maskgrp .................   Passed    0.03 sec
+      Start 455: integration_r34n_g_schrift1150
+75/87 Test #439: unit_r34n_d_adaruf_raster ...........   Passed    5.23 sec
+      Start 571: unit_r36_dachkiste_zensus
+76/87 Test #571: unit_r36_dachkiste_zensus ...........   Passed    7.69 sec
+      Start 572: unit_r36_dachkiste_zellschub
+77/87 Test #572: unit_r36_dachkiste_zellschub ........   Passed    0.05 sec
+      Start 573: integration_r36_dachkiste
+78/87 Test #455: integration_r34n_g_schrift1150 ......   Passed   76.23 sec
+      Start 587: unit_r36_g2_cursor_rahmen
+79/87 Test #587: unit_r36_g2_cursor_rahmen ...........   Passed    0.63 sec
+      Start 618: unit_r36_klettern_10f0_endlage
+80/87 Test #618: unit_r36_klettern_10f0_endlage ......   Passed    0.02 sec
+      Start 619: unit_r36_klettern_10f0_startlage
+81/87 Test #619: unit_r36_klettern_10f0_startlage ....   Passed    0.01 sec
+      Start 620: unit_r36_klettern_zensus
+82/87 Test #620: unit_r36_klettern_zensus ............   Passed    0.29 sec
+      Start 621: integration_r36_klettern
+83/87 Test #430: integration_r34n_b_cursor ...........   Passed   96.02 sec
+      Start 622: unit_r36_objfall
+84/87 Test #622: unit_r36_objfall ....................   Passed    0.09 sec
+85/87 Test #441: integration_r34n_e_dokumente_bild ...   Passed  143.27 sec
+86/87 Test #621: integration_r36_klettern ............   Passed  530.29 sec
+87/87 Test #573: integration_r36_dachkiste ...........   Passed  1467.25 sec
+
+100% tests passed, 0 tests failed out of 87
+
+Total Test time (real) = 1481.63 sec

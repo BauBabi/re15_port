@@ -40,7 +40,7 @@ Richtungen (Bilder, Endlage, erste Ausschiebung). Hebetisch 1150 und Cursor-Rast
 - [x] P2 Original: statisch (FUN_8002bd44 / Installer / FUN_8003b558) + dynamisch (GDB, vier Richtungen)
 - [x] Zensus der Cursor-/Panel-Raeume (statisch alle RDTs, Port-Testlaeufe mit RE15_PUSH_LOG, Original + Port je Cursor)
 - [x] P3 Riegel angepasst (mit Original-Beleg) + neuer Riegel unit_r36_g2_cursor_rahmen, Rueckbau-Nachweis
-- [ ] P4 Regression gezielt, LOCAL-BUILD-OK
+- [x] P4 Regression gezielt (87/87), LOCAL-BUILD-OK
 
 ## P1 — Messung im Port
 
@@ -281,6 +281,26 @@ ALLES GRUEN (91 OK).
 Jeder Riegel faellt genau auf seine Aussage: der Rahmen (g1) nur in den neuen Rahmen-Pruefungen, die Zwischensperre (g2)
 und die Endsperre (g3) in den Sperr-Pruefungen; D(2) "Cursor steht trotz HOCH" bleibt wirksam (g3 faellt dort), weil
 der Cursor vor D(2) 20 Bilder vom Rahmen weggefahren wird.
+
+## P4 — Regression (gezielt)
+
+Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (Stand nach P3, Baum r36_generator).
+Lauf: `PATH="/c/msys64/mingw64/bin:$PATH" SDL_ASSERT=always_ignore ctest --test-dir re15_port/build -R "generator|11f0|panel|
+hebetisch|r34n_|r31_|r36_dachkiste|zellschub|klettern|objfall|cursor|1080|4000|push|prop_|collision" --timeout 900 -j 4`
+(Protokoll `G2_belege/p4_ctest.log`), Summenzeile:
+
+```
+100% tests passed, 0 tests failed out of 87
+Total Test time (real) = 1481.63 sec
+```
+
+Darunter: unit_r31_generator, unit_r34n_c_generator, unit_r36_g2_cursor_rahmen (neu), unit_r27_panel_schalterwerte,
+unit_gen_11f0_switches, unit_gen_11f0_cursor_view, probe_elevator_1080, unit_fahrstuhl_1080_etagen, unit_r31_hebetisch,
+unit_r32_hebetisch_faecher, unit_r34n_b_* + integration_r34n_b_cursor, unit_r36_dachkiste_zensus,
+unit_r36_dachkiste_zellschub, **integration_r36_dachkiste (1467 s)**, integration_r36_klettern (530 s), unit_r36_objfall.
+Die Spur-R-Riegel bleiben gruen (kein Engine-Code geaendert); die Zensus-Aussage der Spur R "nur 2060/2061 obj 2 im
+ersten Bild bewegt" bleibt gueltig (Z1: der einzige weitere statische Start-Treffer, ROOM11A0 obj 0, liegt im beim
+Raumeintritt unerreichbaren Else-Zweig).
 
 ## OFFEN (jeweils mit Grund)
 
