@@ -113,9 +113,61 @@ DuckStation-GDB, Spielstand R_belege/room3050_orig.sav, Spieler per GDB auf (-24
   (dieselbe x/z/Blick-Stellung, nur das Band anders: das Gate @0x80042cac-ccc entscheidet).
 * C Lift sub04: `t=6 s: ... 'y': 0, ... 'band': 0 ..., (3,82) = 1` (vorher band 4) — der Abstieg setzt +0x82 = 0.
 
-## 3. Zensus
+## 3. Zensus (alle ausgelieferten RDTs, main- und sub-SCD)
+
+Werkzeug `D_belege/zensus_itemband.py` (Walk = tools/scd_dump_room.py) und derselbe Walk in C im Riegel
+`unit_r37_itemband` Teil Z (Laengen = `scd_opcode_size_at` des Motors). Beide: **206 RDTs, 40674 Opcodes, 0 Desync,
+164 Item_aot_set** (= test_r36_kartenbits).
+
+### 3.1 Item_aot_set mit floor != 0 — genau 12 (floor-Verteilung aller 164: {0: 152, 1: 8, 3: 2, 6: 2}; Bit 0x80: 0)
+| Raum | Satz | Slot | floor | Item | tk (Bank 9) | Rechteck x/z/w/d | Weg auf das Band (Port gemessen, Abschnitt 5) |
+|---|---|---|---|---|---|---|---|
+| 2030/2031 | main00 @0x01BC0 | 10 | 1 | 0x16 SHOTGUN SHELLS x14 | 108 | 4350,6650,800,1000 | Treppe slot 8 @0x01B8E (sce 12, Seite 1, count 2): West-Haelfte = Abstieg Band 3 -> 1, dann Band-1-Gang |
+| 2030/2031 | main00 @0x01BD6 | 11 | 6 | 0x0D SPAS-12 x12 | 109 | -50,13500,1000,2000 | Lift A slot 5 -> sub02 (@0x01E66 Member 0x12 = 6) |
+| 2040/2041 | main00 @0x01364 | 7 | 3 | 0x32 Head of Akuma | 91 | 1700,-14750,1000,1000 | Halle Band 3 = Ankunft 2050 slot 2 @0x01C8A / 2060 slot 1 @0x00DBA |
+| 2090/2091 | main00 @0x00A12 | 5 | 1 | 0x3F Pocket Watch | 90 | 5350,-16700,1000,1000 | Plattform Band 1 = Ankunft 20A0 slot 0 @0x01746 (6300,-1800,-16250) |
+| 3010/3011 | main00 @0x02094 | 5 | 1 | 0x16 SHOTGUN SHELLS x7 | 20 | -10533,826,560,630 | Steg Band 1: Klettern an r0[4] (Band 0, u1 0x01, x -13124..-7688 z -10532..-9002) |
+| 3050/3051 | main00 @0x01EC6 | 6 | 1 | 0x07 SUPER REDHAWK x6 | 92 | -24800,-23700,1800,800 | Kistendach: Kiste faellt (Band 4 -> 0), Lift sub04 (@0x023D0 Member 0x12 = 0), Kiste in Kerbe slot 7 @0x01F06, Latch (3,93) sub01 @0x02184-2196, Klettern auf die Kiste (Band 0 -> 1) |
+
+Die 152 Saetze mit floor 0 liegen ausnahmslos in Raeumen, deren Tuer-Ankuenfte Band 0 enthalten (Join Ankunfts-Y aller 653
+Door_aot_set gegen die Item-Raeume, `zensus_itemband.py --tueren`); Ausnahme nur ROOM2040/2041 sub00 @0x014F8 slot 13
+mit Rechteck (0,0,0,0) (Geometrie trifft nie). 9 Saetze haben ein Null-Rechteck, 2 sind traege Erstinstallationen (sce 0,
+ROOM1190/1191 sub13 @0x02A30, spaeter Aot_reset).
+
+### 3.2 Schreiber des Members 0x12 — 22, alle Member_set 0x34 (kein 0x35/0x5A/0x5B mit Feld 0x12)
+Am SPIELER (letztes Work_set der Region kind 1 -> 0x800ACA54), 17 Stellen:
+| Raum | Stelle | Wert | Kontext |
+|---|---|---|---|
+| 1170 | sub14 @0x01756 | 4 | Pos_set (-11710,-7200,-26500) = Hof (Ankunft Tuer 0 ist schon Band 4) |
+| 2030/2031 | sub02 @0x01E66 / @0x01EA8 | 6 / 3 | Lift A auf / ab ((3,222)) |
+| 2030/2031 | sub04 @0x01F40 / @0x01F82 | 9 / 3 | Lift B auf / ab ((3,220)) |
+| 3050/3051 | sub02 @0x0232C / sub04 @0x023D0 | 4 / 0 | Lift auf / ab ((3,82)) |
+| 50D0/50D1 | sub02 @0x013D4 / sub04 @0x0144C | 3 / 0 | Lift mit Frage (Message_on 0, Ck (12,31)); Tueren slot 0/2 floor 3, slot 1/3 floor 0 |
+An FIGUREN (Work_set kind 2), 5 Stellen: ROOM10B1 sub00 @0x017DA / sub03 @0x018C2, ROOM11C0 sub02 @0x01AC2 / sub04 @0x01C10 /
+sub07 @0x01C66 — bleiben `g_actors[].floor` (kein Kollisionsband).
+**Nebenbefund (vom Haken mit behoben):** ohne Member 0x12 -> Kollisionsband blieb der Spieler nach JEDEM dieser Lifte auf
+dem alten Band — in ROOM50D0 waeren nach der Auffahrt die floor-3-Tueren (slot 0 -> 50C0, slot 2 -> 50E0) am Tuer-Band-Gate
+gescheitert, in ROOM2030 nach Lift B die floor-9-Tueren (Tuer-Band-Gate aot_common.c `door_params[i].band != pb`; nach dem Code, NICHT an der exe gefahren). Riegel Teil M zeigt das Band nach der Fahrt: 0 -> 3 -> 0 bzw. 3 -> 9 -> 3.
 
 ## 4. Umsetzung
+
+Neue Dateien: `re15_port/include/re15_itemband_r37.h` (Belege, Konstanten), `re15_port/engine/src/itemband_r37.c`.
+Haken in gemeinsamen Dateien (je 1 Aufruf + Include, Kommentar "Runde 37 Spur D"):
+* `engine/src/aot_common.c` re15_aot_scan, direkt nach dem GENERIC-Gate:
+  `if (a->type == RE15_AOT_TYPE_ITEM) re15_itemband_r37_gate(i, &gen_reach, &inside);`
+  -> gesperrt, wenn Spielerband (s_coll_band = 0x800ACAD6, @0x80042cc0) >= 0, rec-Band ohne Bit 0x80
+  (`RE15_R37D_BAND_EGAL` @0x80042cb4) und rec-Band != Spielerband (@0x80042ccc). Das rec-Band ist schon seit jeher
+  `g_aot.slots[slot].band = pc[4]` (op_item_aot_set). Gleiche Bedingung wie das vorhandene GENERIC-Gate (b89ada17).
+* `engine/src/actor_common.c` re15_actor_set_member case 18 (`RE15_R37D_MEMBER_BAND`, Tabelle 0x80010c8c[18]):
+  nach `a->floor = value` -> `re15_itemband_r37_member_band(slot, value)`: nur Spieler-Slot ->
+  `re15_collision_set_band((uint8_t)value)` (setzt s_coll_band UND g_actors[0].floor; `sb a2,130(a0)` @0x80041228
+  schreibt das untere Byte). Member_set2/0x5A/0x5B laufen ueber dieselbe Funktion.
+* Messschrieb `RE15_ITEMBAND_LOG=<datei>` (Diagnose, kein Verhalten): je Aktionsdruck mit ITEM in Reichweite
+  `ITEM slot s floor f ... spieler-band b -> GESPERRT|FREI`, je Member 0x12 am Spieler `MEMBER 0x12 Spieler:
+  Kollisionsband a -> b`.
+Keine Konstante ohne Beleg: 18 = Member-Id (@0x80010c8c[18] -> @0x80041228), 0x80 = Ignorierbit (@0x80042cb4).
+Port-synthetische ITEM-Saetze (dokumente_r34, inhalt_r35, irons_tisch_1150, schluessel_r36) setzen ihr Band selbst
+(0 bzw. ROOM1090-Schrot 5 = Dachband) und liegen auf ihrem Spielerband — vom Gate nicht betroffen (geprueft).
 
 ## 5. Messung nachher
 
