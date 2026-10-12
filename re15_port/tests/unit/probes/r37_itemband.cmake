@@ -11,6 +11,10 @@
 #                          Spielerband == floor; die 12 erhoehten bis zum Taken-Bit; Gegenprobe Sperr-Zaehler.
 #                       M  echte Subs: ROOM3050 sub04/sub02 (Band 0/4), ROOM2030 sub02/sub04 (6/3/9/3), ROOM50D0
 #                          sub02/sub04 (3/0); Gegenprobe Figur-Slot laesst das Band stehen.
+#                       L  (Nachbesserung 1) Plattform-Sperre Lift A ROOM2030/2031 ueber den echten Scan: Druck von
+#                          ausserhalb der Kabine faehrt nicht, aus der Kabine faehrt sub02 (RE2 6030 sub10 @0x02F70-7A).
+#                       F  (Nachbesserung 1) Fallen-Zensus aller Lifte mit Member 0x12 (echte Kollision + echte Fahrt):
+#                          mit Sperre 0 Fallen; ohne Sperre nur an Lift A (Gegenprobe), Lift B/3050/50D0 auch ohne 0.
 add_executable(test_r37_itemband ${CMAKE_CURRENT_LIST_DIR}/../test_r37_itemband.c)
 target_link_libraries(test_r37_itemband PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r37_itemband PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -35,3 +39,14 @@ add_test(NAME integration_r37_itemband
         -DWORKDIR=${CMAKE_BINARY_DIR}/r37_itemband_wd
         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_itemband.cmake)
 set_tests_properties(integration_r37_itemband PROPERTIES TIMEOUT 3000)
+
+# NACHBESSERUNG 1 (Abnahme 0, Maengel 1/2/4): Lift A ROOM2030/2031 von AUSSERHALB der Kabine (Eingang Blick Sued bzw. knapp
+# suedlich der oberen Kabine Blick Nord) faehrt NICHT mehr (PORT-WAHL nach RE2 ROOM6030 sub10 @0x02F70-7A, Plattformzone
+# sat 0x41); aus der Kabine faehrt er, SPAS-12 aufnehmbar bzw. Tuer slot 0 -> ROOM2070/2071 — Leon UND Elza (4 Laeufe).
+# Skript tests/integration/test_r37_itemband_lift.cmake; Gegenprobe gegen die exe vor der Nachbesserung im Dossier (NB1.6).
+add_test(NAME integration_r37_itemband_lift
+    COMMAND ${CMAKE_COMMAND}
+        -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+        -DWORKDIR=${CMAKE_BINARY_DIR}/r37_itemband_lift_wd
+        -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_itemband_lift.cmake)
+set_tests_properties(integration_r37_itemband_lift PROPERTIES TIMEOUT 3000)
