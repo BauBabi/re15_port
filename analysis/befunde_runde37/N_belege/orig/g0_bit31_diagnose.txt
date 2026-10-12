@@ -1,0 +1,7 @@
+? S02 aca3c 80000000 aca5c 04
+SPRUNG aus ROOM1171.RDT -> Nutzlast 539b000050d0690002070400
+HALT 8001d870  aca3c 80000000  aca5c 04  stage 0 room 17  a0 00000003 v0 00000000  ra 8001d858
+HALT 8001d988  aca3c 80000000  aca5c 04  stage 2 room 07  a0 00000100 v0 0001f80c  ra 8001d988
+HALT 800397e4  aca3c 80000000  aca5c 04  stage 2 room 07  a0 80000000 v0 8007430c  ra 80039798
+HALT 80022300  aca3c 00000000  aca5c 04  stage 2 room 07  a0 00000030 v0 00000000  ra 80042330
+settings.ini zurueck: True | resume.sav des Nutzers zurueck: True

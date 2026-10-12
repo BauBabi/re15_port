@@ -14,7 +14,7 @@ Stand: 2026-10-12, Baum `.claude/worktrees/r37_elzaems` (Zweig `r37/elzaems`, Ba
 
 - [x] Schritt 0: Pflichtlektuere (AUFTRAG, VERTRAG, K_roy, K_abnahme_0, J_bissarm via `git show r37/bissarm:`)
 - [x] Schritt 1: Zensus CDEMD0 gegen CDEMD1 je Typ/dir-Eintrag + Vorkommen in Elza-Raeumen + Port-Lesepfade (§1)
-- [ ] Schritt 2: Original messen (Lader FUN_80022300 ganz, Savestates mit Elza)
+- [x] Schritt 2: Original messen (Nutzer-Spielstaende + eigene GDB-Laeufe; Elza-Bit = Skript-Flag (1,0), §2)
 - [ ] Schritt 3: Bauen (Weiche fuer alle Typen)
 - [ ] Schritt 4: Messung nachher (exe, Framedumps)
 - [ ] Schritt 5: Riegel probes/r37_elzaems.cmake
@@ -104,13 +104,69 @@ Ausser ihm liest nur `pc_cdemd()` (CDEMD0.EMS resident) — und nur fuer diesen 
 * Banken fallen an jeder Raumgrenze (entladen_pc.c alles_entladen -> re15_enemy_reset) -> die Archivwahl beim
   Laden genuegt, kein Cache ueber Szenario-Grenzen.
 
+## 2. Original gemessen (Schritt 2) — UND der entscheidende Zusatzbefund: das Elza-Bit ist ein SKRIPT-FLAG
+
+### 2.1 Nutzer-Spielstaende (DuckStation, MZD-Disc, nur gelesen; N_belege/n2_orig_ram.py -> n2_orig_ram_nutzer.txt)
+Alle 21 Staende HASH-957757946319438E_{1..10,resume}.sav/.bak: saubere EXE (@0x80026e4c = 08 00 e0 03). Je Entity die
+sechs Bank-Zeiger (+0x16c/+0x84/+0x174/+0x170/+0x17c/+0x178, FUN_80022300 @0x80022498-e8) gegen die Abschnitte beider
+TOC-Blobs:
+* Elza (Bit 31 = 1): _6 ROOM11B1 Entity 1 **Typ 0x42: EMR2/EDD3/EMR4 == CDEMD1** (EDD1/EDD5/EMR6 in beiden gleich);
+  _7.bak ROOM1141 Entity 1/2 **Typ 0x27: EDD5/EMR6 (Opfer-Bank) == CDEMD1**; _1/_2/_3/_5 Typ 0x47 == CDEMD1 (Spur K).
+* Leon (Bit 31 = 0): resume ROOM1140 0x16/0x10/0x10/0x11/0x11, _9 ROOM10D0 0x10, _3.bak ROOM1200 4x 0x10, _10.bak ROOM1110
+  0x11: eigene + Opfer-Bank == CDEMD0; _9.bak ROOM10C0 3x 0x21: Opfer-Bank == CDEMD0.
+
+### 2.2 Eigene Laeufe am Original (DuckStation-GDB, N_belege/n2_gdb_elza.py; Protokolle N_belege/orig/g*.txt)
+Verfahren: Kopie eines Nutzer-Spielstands direkt geladen (-batch -statefile), GDB-Server nur fuer den Lauf (settings.ini
+vorher/nachher bytegleich, geprueft "settings.ini zurueck: True"; ConfirmPowerOff fuer den Lauf aus, damit das geordnete
+Schliessen einen Endstand schreibt; resume.sav des Nutzers vorher kopiert und bytegleich zurueckgelegt, md5 b177ab42 vor
+und nach jedem Lauf). Raumwechsel wie FUN_800430bc (@0x800430c4/@0x800430d4/@0x800430e4): 12-B-Nutzlast (x,y,z,dir,
+stage,room,cut,floor — gelesen von FUN_8001d600 @0x8001d87c-0x8001d970) an der Stelle der Nutzlast eines Door_aot_set
+des aktuellen Raums; Haltepunkte 0x80022300 (Typ, Elza-Bit) und 0x80022470 (nach dem CD-Lesen: Datei-Id 0x800be572,
+TOC-Laenge 0x800be574, Sektor-Feld 0x800be57c, Blob im RAM ab s4 gegen beide TOC-Blobs):
+
+| Lauf | Spieler / Raum | Typ | Elza-Bit beim Laden | Datei-Id | Sektor-Feld | Blob im RAM |
+|---|---|---|---|---|---|---|
+| g1 | Elza ROOM1101 | **0x10 (Zombie)** | 1 | 0x27 | 3627 (= LBA 3627 + 0) | **== CDEMD1** (214816 B), != CDEMD0 |
+| g1 | Elza ROOM3071 | 0x30 Birkin | **0** | 0x26 | 2577 (= 1316 + 1261) | **== CDEMD0** (226404 B) |
+| g3 | Elza ROOM50F1 | 0x30 Birkin | **0** | 0x26 | 2577 | **== CDEMD0** |
+| g3/g4 | Elza ROOM5081 | 0x30 Birkin | 1 | 0x27 | 5642 (= 3627 + 2015) | **== CDEMD1** (228460 B) |
+| g2 | **LEON** ROOM5080 | 0x30 Birkin | **1** | 0x27 | 5642 | **== CDEMD1** (228460 B) |
+
+### 2.3 Warum: Flag-Bank 1 Bit 0 IST das Elza-Bit, und vier Raumskripte schalten es um
+Diagnose g0 (N_belege/n2_gdb_bit31.py, Elza 1171 -> 3071): DAT_800aca3c = 0x80000000 noch beim Raumlader
+`srl a0,a0,31` @0x800397e4 (RDT-Variante 1 = ROOM3071), aber **0x00000000 beim Modell-Lader 0x80022300**. Ursache im Raumskript:
+* SCD-Set (Opcode 0x22, Handler LAB_8003fdd0) schreibt ueber die Bank-Tabelle @0x80074664: [1] = **0x800aca3c**
+  (re15_disasm.py table), Maske 0x80000000 >> (bit & 0x1f) (@0x8003fdd4 `lui t0,0x8000`, `srlv`) -> **Set(1,0,v) = Bit 31
+  von DAT_800aca3c = genau das Bit, das FUN_80022300 per `bltz` @0x80022334 liest.**
+* Zensus aller 240 RDTs (N_belege/n1_bit31_zensus.py -> n1_bit31_zensus.txt): genau 12 Set(1,0,v), alle als Klammer um
+  einen Birkin-Sce_em_set, jede Klammer stellt den Wert des Szenarios im selben Abschnitt wieder her; kein Ck(1,0):
+
+      Elza ROOM3071 sub00: Set(1,0,0) @0x03430, Sce_em_set 0x30 @0x03434, Set(1,0,1) @0x03448   (und @0x03476/7A/8E)
+      Elza ROOM50F1 sub00: Set(1,0,0) @0x009A8, Sce_em_set 0x30 @0x009AC, Set(1,0,1) @0x009C0   (und @0x009D0/D4/E8)
+      Leon ROOM5080 sub00: Set(1,0,1) @0x00742, Sce_em_set 0x30 @0x00746, Set(1,0,0) @0x0075A
+      Leon ROOM5090 sub00: Set(1,0,1) @0x01246, Sce_em_set 0x30 @0x0124A, Set(1,0,0) @0x0125E
+
+  (Der Port-Kommentar in game_state.c fuehrte "Zone 1 Bit 0 (0x80000000, 12x)" bereits als ungebunden.)
+=> Der Birkin hat zwei Formen: **CDEMD0-0x30 in 3070/3071 und 50E0/50F1, CDEMD1-0x30 (Sektor 2015, ans Archivende
+angehaengt) in 5080/5081 und 5090/5091** — fuer BEIDE Szenarien. Die Lesart des Auftrags "0x30 anderes Modell in
+3071/5081/5091/50F1" stimmt nur fuer 5081 (und 5091); in 3071/50F1 zeigt das Original Elza denselben Birkin wie Leon.
+**Und Leons ROOM5080 laedt im Original den CDEMD1-Birkin** (g2) — der Port laedt dort heute CDEMD0. In 5090/5091 tauscht
+der Port 0x30 seit Runde 7/8 gegen den RE2-EM36 (NUTZER-VORGABE "finaler Birkin", scd_vm.c op_sce_em_set) -> dort wirkt
+das Archiv nicht.
+
+### 2.4 Folgerung fuer "Leon bleibt bytegleich"
+Der Auftrag nahm an, Leon lade nur CDEMD0. Gemessen (g2): Leons ROOM5080 laedt den CDEMD1-Birkin. Der Original-Mechanismus
+(ein Bit, vom Skript umgeschaltet, beim Sce_em_set gelesen) wird hier EINMAL fuer beide Figuren nachgebaut; das aendert bei
+Leon genau einen Raum (5080: Birkin-Modell = CDEMD1 wie im Original). Jeder andere Leon-Raum laedt weiter bytegleich
+CDEMD0 (Zensus: kein weiteres Set(1,0,1) bei Leon ausser 5090, wo der RE2-EM36 laedt). Im Dossier "Fuer den Nutzer".
+
 ## Messung vorher
 
 (folgt)
 
 ## RE-Belege
 
-(folgt)
+(siehe §1.1, §2.2, §2.3)
 
 ## Umsetzung
 

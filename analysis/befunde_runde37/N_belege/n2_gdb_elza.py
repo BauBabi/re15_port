@@ -31,6 +31,7 @@ ap.add_argument("--out", required=True)
 ap.add_argument("--sprung", action="append", default=[])
 ap.add_argument("--start_bilder", type=int, default=30)
 ap.add_argument("--endstand", default=None)
+ap.add_argument("--endstand_halt", action="store_true")
 a = ap.parse_args()
 
 EXE = open(os.path.join(BAUM, 'info/Re1.5/PSX.EXE'), 'rb').read()
@@ -52,8 +53,8 @@ def blob(arch, t):
     return EMS[arch][s * 2048:s * 2048 + z] if z else b''
 
 
-def door_off(stage_idx, room):
-    fn = os.path.join(PSX, 'STAGE%d' % (stage_idx + 1), 'ROOM%d%02X1.RDT' % (stage_idx + 1, room))
+def door_off(stage_idx, room, variante=1):
+    fn = os.path.join(PSX, 'STAGE%d' % (stage_idx + 1), 'ROOM%d%02X%d.RDT' % (stage_idx + 1, room, variante))
     txt = subprocess.run([sys.executable, os.path.join(BAUM, 're15_port/tools/scd_dump_room.py'), fn],
                          capture_output=True, text=True).stdout
     m = re.search(r'0x([0-9A-F]+) \(\+[0-9A-F]+\) Door_aot_set', txt)
@@ -70,7 +71,10 @@ res_md5 = md5(RES)
 res_kopie = a.out + ".resume_vorher.sav"
 if res_md5:
     shutil.copyfile(RES, res_kopie)
-open(INI, "w", encoding="utf-8").write(ini_alt.replace("EnableGDBServer = false", "EnableGDBServer = true", 1))
+# Nur fuer den Lauf: GDB-Server an; ConfirmPowerOff aus (sonst haelt die Rueckfrage das geordnete Schliessen auf
+# und es gibt keinen Endstand). Beides wird nach dem Prozessende bytegleich zurueckgeschrieben (ini_alt).
+open(INI, "w", encoding="utf-8").write(ini_alt.replace("EnableGDBServer = false", "EnableGDBServer = true", 1)
+                                       .replace("ConfirmPowerOff = true", "ConfirmPowerOff = false", 1))
 
 
 def ini_zurueck():
@@ -145,16 +149,22 @@ def regs():
 
 
 try:
-    proc = subprocess.Popen([DUCK, "-batch", "-statefile", a.state, CUE])
-    for _ in range(80):
+    import ctypes
+    lang = ctypes.create_unicode_buffer(1024)
+    ctypes.windll.kernel32.GetLongPathNameW(os.path.abspath(a.state), lang, 1024)
+    zustand = lang.value or os.path.abspath(a.state)
+    log("Spielstand", zustand)
+    proc = subprocess.Popen([DUCK, "-batch", "-statefile", zustand, CUE])
+    for k in range(240):
         try:
             sock = socket.create_connection(("127.0.0.1", 2345), timeout=2)
             break
         except OSError:
             time.sleep(0.5)
+            if k % 20 == 0:
+                log("warte auf GDB", k, "proc.poll", proc.poll())
     if sock is None:
         raise SystemExit("keine Verbindung")
-    ini_zurueck()
     sock.settimeout(60)
     log("?", cmd("?"))
     log("EXE-Stub @0x80026e4c", rd(0x80026e4c, 4).hex(), "(sauber = 0800e003)")
@@ -188,7 +198,7 @@ try:
             ram = rd(s4, tl) if 0 < tl < 0x60000 else b""
             b0 = blob(0, typ) if 0x10 <= typ < 0x50 else b""
             b1 = blob(1, typ) if 0x10 <= typ < 0x50 else b""
-            raum = "%d%02X" % (u16(0x800b0fe0) + 1, u16(0x800b0fe2))
+            raum = "%d%02X(Variante %d)" % (u16(0x800b0fe0) + 1, u16(0x800b0fe2), u32(0x800aca3c) >> 31)
             log("LADER Raum %s VSync %d Entity %08x Typ 0x%02X +0x97=%d Elza-Bit %d | Datei-Id 0x%02X TOC-Laenge %d "
                 "Sektor-Feld %d | Blob im RAM @%08x == CDEMD0: %s == CDEMD1: %s" % (
                     raum, pend.get("vs", 0), pend.get("ent", 0), typ, pend.get("p97", -1), pend.get("elza", -1),
@@ -209,7 +219,7 @@ try:
             nl = bytes.fromhex(nl)
             sprung_i += 1
             cur = (u16(0x800b0fe0), u16(0x800b0fe2))
-            off, fn = door_off(*cur)
+            off, fn = door_off(cur[0], cur[1], u32(0x800aca3c) >> 31)
             rdtp = u32(0x800ac778)
             ziel = (nl[8], nl[9], False)
             wr(rdtp + off + 14, nl)
@@ -236,20 +246,29 @@ try:
     log("ENDE Spieler Lage (%d,%d) Raum %d%02X Cut %d" % (
         struct.unpack("<i", rd(0x800aca54 + 0x34, 4))[0], struct.unpack("<i", rd(0x800aca54 + 0x3c, 4))[0],
         u16(0x800b0fe0) + 1, u16(0x800b0fe2), u16(0x800b0fe4)))
-    send("c")
-    time.sleep(2.0)
-    sock.close()
+    # Endstand: im GDB-HALT (verbunden) geordnet schliessen — so wie der Lauf, dessen duckstation.log
+    # "Setting pending main window close flag" -> "Saving state" zeigt (Runde 36 R).
+    if a.endstand_halt:
+        pass
+    else:
+        send("c")
+        time.sleep(4.0)
 finally:
     if proc is not None:
         subprocess.run(["taskkill", "/PID", str(proc.pid)], capture_output=True)
-        for _ in range(60):
+        for _ in range(180):
             time.sleep(0.5)
             if proc.poll() is not None:
                 break
+        log("Prozessende:", "geordnet" if proc.poll() is not None else "ERZWUNGEN")
         if proc.poll() is None:
             subprocess.run(["taskkill", "/F", "/PID", str(proc.pid)], capture_output=True)
         time.sleep(1.0)
     ini_zurueck()
+    try:
+        sock.close()
+    except Exception:
+        pass
     if a.endstand and os.path.exists(RES) and md5(RES) != res_md5:
         shutil.copyfile(RES, a.endstand)
         log("Endstand kopiert ->", a.endstand)
