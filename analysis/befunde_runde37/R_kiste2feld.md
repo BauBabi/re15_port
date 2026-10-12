@@ -18,7 +18,7 @@ Inventar-Gitter und an anderen Stellen derselben Kachel-Logik pruefen.
 
 - [x] Code gelesen (Block 7b, Kachel-Cache, inv_render_pc.c)
 - [x] Messung vorher (Kiste, Inventar-Gitter, Statusschirm, Item-Modal)
-- [ ] RE2-Belege (zwei Cache-Spalten, zweite Kachel)
+- [x] RE2-Belege (zwei Cache-Spalten, zweite Kachel, Referenzbild, RE1.5-Gitter)
 - [ ] Umsetzung
 - [ ] Messung nachher
 - [ ] Riegel probes/r37_kiste2feld.cmake + gezielte Tests
@@ -102,9 +102,106 @@ Nachbarspalten, laengster Lauf 1 (kein Streifen), im rechten Drittel 720 von 255
 tastet das 112x72-Bild des ITPS-Blocks ueber die volle Breite (render_pc.c item_modal_build_tex, u < 112) — kein 40er-Kachel-
 Weg, keine Klemmung. **Kein Eingriff noetig.**
 
-## 2. RE-Belege
+## 2. RE-Belege (selbst disassembliert: re2_disasm.py auf info/re2leon/PSX.EXE, re15_disasm.py auf info/Re1.5/PSX.EXE)
 
-(folgt)
+### 2.1 RE2: das Zeilen-Symbol ist EIN POLY_FT4 ueber zwei Cache-Kacheln (FUN_800710dc)
+
+Schleife der 5 Zeilen ab @0x800717ac (s0 = Prim+0x22, also Feld f bei s0+(f-0x22)):
+
+```
+800717b4: addiu t0,zero,40         ; u0 = u2 = 40
+800717bc: addiu s7,zero,146 / 800717c0: addiu s6,zero,127   ; y2-y0 = 146-127 = 19
+800717c8: addiu s2,zero,270 / 800717d0: addiu s1,zero,240   ; v: je Zeile -30 (@0x800717f4 / @0x80071830)
+800717d4: addiu t1,t1,146          ; x0 = x2 = boxX+0x92
+80071824: lbu v0,-30590(at)        ; box[slot].size (0x800d4a6a + slot*4)
+8007182c: beq v0,zero,0x80071840   ; size 0 -> schmal
+80071834: addiu a3,zero,48         ; breit: Breite 48
+80071838: j 0x80071848
+8007183c: addiu t1,zero,120        ; (Delay-Slot) breit: u1 = u3 = 120
+80071840: addiu a3,zero,24         ; schmal: Breite 24
+80071844: addiu t1,zero,80         ; schmal: u1 = u3 = 80
+80071848: sb t1,-14(s0)            ; Prim+0x14 = u1
+8007184c: sb t0,-22(s0)            ; Prim+0x0c = u0
+80071850: sb s1,-21(s0) / 80071854: sb s1,-13(s0)   ; v0 = v1
+80071858: sb t0,-6(s0)             ; Prim+0x1c = u2
+8007185c: sb s2,-5(s0) / 80071864: sb s2,3(s0)       ; v2 = v3 = v0 + 30
+80071860: sb t1,2(s0)              ; Prim+0x24 = u3
+80071880: addu v1,t1,a3 / 80071884: addiu v1,v1,147  ; x1 = x3 = boxX+0x93+Breite
+```
+
+Breites Symbol: x0..x1 = boxX+146 .. boxX+195 = **49 px** (Kante exklusiv), u **40..120 = 80 Texel**, v 30 Texel auf
+**19 px** — die GANZE Breitkunst wird gestaucht. Schmal: 25 px, u 40..80 = 40 Texel. Entscheidung breit/schmal ueber das
+Size-Byte der Kiste (im Port `RE15_BOX_KIND_WIDE` = Size 3).
+
+### 2.2 RE2: woher die zwei Kacheln kommen (FUN_80069c40, Aufrufer im Kisten-Code)
+
+```
+80069c74: addiu v0,zero,20 / 80069c78: sh v0,20(sp)     ; RECT.w = 20 hw = 40 Texel (8bpp)
+80069c7c: addiu v0,zero,30 / 80069c84: sh v0,22(sp)     ; RECT.h = 30
+80069c88..cb4: x = ((cell%3)*40 - 128)/2 + 512          ; Spalte cell%3
+80069cb8..cc4: y = (cell/3)*30 + 256
+80069cc8: jal 0x80090664 (LoadImage) / 80069cd0: jal 0x800903a0 (DrawSync)   ; linke Kachel = src
+80069cd8: addiu v0,zero,19 / 80069cdc: beq s2,v0,0x80069d68                  ; Id 0x13 -> keine zweite
+80069ce0: addiu v0,s2,-14 / 80069ce4: sltiu v0,v0,0x6 / 80069ce8: beq v0,zero ; nur Id 14..18
+80069cec: addiu v1,s0,1                                                      ; Zelle+1 (Spalte daneben)
+80069d3c: jal 0x80090664                                                     ; LoadImage(Zelle+1, src)
+80069d4c: lui a1,0x1 / 80069d50: ori a1,a1,0x9320 / 80069d58: jal 0x80090664 / 80069d5c: addu a1,s1,a1
+                                                         ; LoadImage(Zelle+1, src + 0x19320) = rechte Haelfte
+```
+
+Aufrufer: Zeilen-Kacheln `addiu s2,zero,10` @0x8007009c, `addiu s2,s2,3` @0x800700c4 (Zellen 10, 13, 16, 19, 22 = u 40,
+v 90..210 — genau die u0/v0 des POLY_FT4), Quelle `a2 = 0x8019c000 + Id*0x4b0` (@0x80070098-b8, Id*5*15*16). Die rechte
+Haelfte liegt 0x19320 = 86*1200 Byte dahinter = **Kachel Id+0x56**; FUN_800703b8 nutzt dieselbe Rechnung fuer die
+Inventar-Seite (`(DAT_800d4a3c + 0x56) * 0x4b0`). Datenbeleg: info/re2leon/COMMON/DATA/ITEMALL.PIX = 127200 Byte = 106
+Kacheln (86 + 20 rechte Haelften). Im VRAM: Zeile k links bei Zelle 10+3k = (468, 256+30*(3+k)) 20x30 hw, rechts bei
+Zelle 11+3k = (488, ...) — direkt daneben, deshalb ueberstreicht u 40..120 beide.
+
+### 2.3 Gegenprobe am RE2-Bild (analysis/itembox_re2/referenz/re2_itembox_original.png)
+
+Werkzeug scratchpad re2_maske.py / re2_varianten.py / re2_schmal.py: RE2-ITEMALL.PIX Kachel[Id] + Kachel[Id+0x56] (80x30)
+gegen die Symbol-Pixel des laufenden RE2 (Waffen-/Grund-Maske je Pixel, Grund = Kachelblau, Unendlich-Zeichen unten links
+ausgenommen):
+
+| Zeile (RE2-Id) | NEU 80 -> 49, gerundet | NEU 80 -> 49, abgerundet | ALT (40er 1:1, Spalte 39 wdh.) | nur linke Kachel gestaucht |
+|---|---|---|---|---|
+| 0 Gatling Gun (0x12) | **770/771** | 759/771 | 624/771 | 616/771 |
+| 4 R. Launcher (0x11) | **752/771** | 746/771 | 439/771 | 395/771 |
+| 1/3 F. Aid Spray (0x23, schmal 40 -> 25) | **475/475** | 469/475 | - | - |
+
+RE2 zeigt also die ganze Waffe aus beiden Kacheln. Die Abtastung ist die des PSX-GPU-Rasterizers in DuckStation (Fixkomma
+12 Bit, Startwert +halb, Schritt (Texel<<12)/Pixel): `t = (2048 + p * ((n_tex << 12) / n_px)) >> 12` = auf die naechste
+Ganzzahl gerundet — fuer 80 -> 49 identisch mit (p*80+24)/49, fuer 30 -> 19 mit (p*30+9)/19, fuer 40 -> 25 mit
+(p*40+12)/25 (alle p nachgerechnet). Der Port nutzt dasselbe Modell schon fuer die Gouraud-Kaesten (inv_render_pc.c
+"ATTRIB_SHIFT=12 ... +half init").
+
+### 2.4 RE1.5: die Breitkunst und das Inventar-Gitter
+
+- RE1.5 hat keine Kiste und kein ITEMALL-Gegenstueck zu RE2s Kachel Id+0x56: ITEMALL.PIX hat 72 Kacheln (86400 Byte), die
+  2-Feld-Kunst liegt als EIN 80x30-Bild im ITPS-Block (Aufnahme: `a2 = *(0x800ac77c)+0x21A0` @0x8001e0b8-c8 an
+  FUN_8004dc4c). FUN_800492b8 Modus 1: `ori v0,zero,0x28` @0x80049314 (40 hw = 80 Texel), `ori v0,zero,0x1e` @0x8004931c,
+  x = ((Zelle%3)*40-128)/2+704 @0x8004933c-54, y = (Zelle/3)*30+256 @0x80049360-6c, LoadImage `jal 0x80068c88` @0x80049370.
+  Das ITPS-Breitbild ist damit das RE1.5-Gegenstueck zu RE2s zwei Kacheln (Spalten 0..39 = Kachel[Id], 40..79 = Id+0x56).
+- Einfuegen einer 2-Feld-Waffe (FUN_8004dc4c, Gate `addiu v0,v0,-14 / sltiu v0,v0,0x6` @0x8004dc74-78): erst 8x
+  FUN_80049390 (Zelle i -> i+2, @0x8004dc98 .. @0x8004de3c), dann `addu a0,zero,zero` / `ori a1,zero,0x1` @0x8004de44-48,
+  `j 0x8004df08` / `addu a2,s2,zero` @0x8004deb4-b8 -> FUN_800492b8(0, 1, Breitbild): das 80x30-Bild landet IMMER ueber
+  Zelle 0 und 1.
+- FUN_80049390 (Verschieben): RECT w `ori v0,zero,0x14` @0x800493ac (40 Texel), h `ori v0,zero,0x1e` @0x800493b4, Quelle
+  aus a0, Ziel aus a1, MoveImage `jal 0x80068d50` @0x8004945c — JE 40x30-ZELLE. Zusammenschieben ruft es je Platz
+  (`jal 0x80049390` @0x8004db30, a0 = s0, a1 = s0-1). Damit traegt im Original die Zelle k immer die linke, Zelle k+1 die
+  rechte Haelfte — auch wenn k in Speicher-Spalte 2 liegt (Zelle 2 -> u 80, Zelle 3 -> u 0 der naechsten Zeile).
+- Port-Fehler (inv_compose_cells): schreibt das Breitbild 80 Texel breit ab der Kopfzelle; fuer Kopfzellen 2/5/8 liegt die
+  rechte Haelfte dann bei u 120..159 statt in Zelle k+1 (gemessen §1.3).
+
+### 2.5 Folgerung fuer den Port
+
+1. Kisten-Liste: das 2-Feld-Symbol tastet die BREITKUNST (ITPS-Block Id*0x3000+0x21A0, 80x30) auf 49x19 ab, mit RE2s
+   Spanne u 40..120 (Op-Feld u = 80 = u1-u0, @0x8007183c/@0x800717b4) und der GPU-Abtastung aus §2.3. Lage/Groesse bleiben
+   wie Spur M (x 155..203, 49x19). Dieselbe Abtastregel gilt fuer das schmale Symbol (u 40..80, Op-Feld u = 40 = 0x50-0x28,
+   @0x80071844/@0x800717b4) — RE2 hat EINEN Prim fuer beide Breiten.
+2. Inventar-Gitter: die zwei Haelften des Breitbilds gehoeren je in die eigene Zelle (Kopf k: Spalten 0..39 bei uv(k),
+   Schwanz k+1: Spalten 40..79 bei uv(k+1)) — der Zustand, den das Original durch LoadImage ueber Zelle 0/1 und
+   zellenweises MoveImage herstellt. Fuer Kopfzellen in Speicher-Spalte 0/1 ist das bitgleich zum bisherigen
+   80-breiten Schreiben.
 
 ## 3. Umsetzung
 
