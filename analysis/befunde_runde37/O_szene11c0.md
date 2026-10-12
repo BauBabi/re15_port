@@ -15,8 +15,8 @@ Zuteilung (VERTRAG.md §1.4): Spur O aendert Programm 4 (k_p_11c0) in irons_tod_
 - [x] Pflichtlektuere (AUFTRAG/VERTRAG; Vorrunde L_cut1150.md, K_szene1150.md K2, K_abnahme_0.md §3.2)
 - [x] Messung vorher (echte exe, Kette wie integration_r35_cut1150 Lauf A, Bild fuer Bild Gier + Kopf)
 - [x] RE-Belege (B1 Gier/Aufstellung ROOM10D0, B2 Raum-Vokabular, B3 Kopf-Klemme/INIT/Raten, B4 RE2-Zensus)
-- [ ] Umsetzung
-- [ ] Messung nachher
+- [x] Umsetzung
+- [x] Messung nachher (Lauf n3, Auswerter 0 Fehler, Vorher/Nachher-Streifen)
 - [ ] Tests (probes/r37_szene11c0.cmake)
 
 ## Messung vorher
@@ -144,11 +144,68 @@ Koerperdrehung im Gespraech).
 
 ## Umsetzung
 
-(folgt)
+### Dateien
+* `re15_port/engine/src/irons_tod_1150.c` — Programm 4 `k_p_11c0` an Ort und Stelle neu (Kommentarblock "RUNDE 37 SPUR O"
+  mit allen Belegen; der Ablauf der Runde 36 ist dort als ERSETZT markiert). Neue Makros `OP_DIR` (Dir_set, ROOM10D0
+  @0x01AC4), `OP_NECK1_LANGSAM` (ROOM4000 @0x015B6), `IT_GIER_ADA_MARVIN 3679` / `IT_GIER_MARVIN_ADA 1631`
+  (= re15_s11c0_gier, vom Riegel unit_r37_szene11c0_aufstellung nachgerechnet). Dazu 2 Zeilen Mess-Haken (Include +
+  Aufruf `re15_s11c0_mess_takt()` in `re15_irons_tod_tick`, nur in 11C0 waehrend Programm 4, env-gegatet). Andere
+  Programme (Spur H) und `k_msg28` (Nachtrag 10) unberuehrt.
+* NEU `re15_port/engine/src/szene11c0_r37.c` + `re15_port/include/re15_szene11c0_r37.h`: `re15_s11c0_gier` (Peilung
+  in der Form des Ports), `re15_s11c0_winkel_diff`, Mess-Haken `RE15_S11C0_LOG`.
+* Werkzeuge `re15_port/tools/r37_o/`: `szene_mess.py` (Auswertung Bild fuer Bild), `re2_reaktion_zensus.py`,
+  `re2_aufstellung_zensus.py`.
+* Keine Assets, keine Sprachdateien, keine Bank-9-Bits, keine Nachrichten-Ids, keine Ereignisse (Ereignis 21 wie r35).
+
+### Ablauf Programm 4 (Takte = PORT-WAHL; jede Form mit Vorbild)
+| Schritt | Opcodes | Vorbild |
+|---|---|---|
+| (0) Aufstellung im Raumaufbau | Sce_em_set Marvin mit Gier 1631; Work_set(2,0) + Dir_set 3679 (Ada); Work_set(1,0) | Spawn-Gier Satz +16 -> +0x6a @0x800421bc/@0x800421c4; Dir_set ROOM10D0 @0x01AC4 (LAB_80041080); Work_set(1,0) ROOM10D0 @0x01AE2 |
+| Koepfe auf den Partner (erster Takt nach dem NPC-INIT, Bild 7) | Sleep 3; Plc_neck m1 Marvin->Ada, Ada->Marvin | ROOM10D0 @0x01ACC/@0x01AF6; INIT schreibt +0x1b8 @0x8011c768 |
+| (1) Knall | Plc_neck m1 zur Tuer: Marvin, Sleep 6, Ada; Sleep 36 | RE2 Kopf zuerst (ROOM2000 @0x029CA u.a.); 11C0 sub02 @0x01940..@0x01952 |
+| (2) zurueck zueinander, Ada fragt | Plc_neck m1 Ada->Marvin, Sleep 4, Marvin->Ada, Sleep 8; msg 10 + Clip 19 vor/zurueck (40/50) | 11C0 sub02 @0x018D8..@0x018E8 |
+| (3) "Yes!...." | Sleep 8; msg 11; Kopf frei, Sleep 5, Nicken, Sleep 20; Kopf auf Ada, Sleep 30 | sub03 @0x01BB2..@0x01BCA |
+| (4) "Oh, no, Leon!" | msg 12, Sleep 60 (Marvin sieht Ada an) | Nachtrag 11 |
+| (5) "I have to help him, sorry!" | msg 13; Clip 15 vor, 25 + 20 halten, zurueck 26; Sleep 30 (= 101 >= 99 Haltezeit `01 63`) | Arm wie r35; RE2 ROOM3010 sub04 je Zeile Kopf auf den Partner |
+| (6) Losrennen | Kopf frei; Plc_dest m5 zur Tuer-Mitte; Sleep 15 | 11B0 sub06 @0x015EA |
+| (7) Ada sieht nach | Plc_neck m1 zur Tuer Rate 0x3c; Sleep 4; msg 14 + Clip 15; Sleep 60; Tuer zurueck nach 1150 Cut 7 | ROOM4000 @0x015B6 |
+
+### Zwei Befunde beim Bauen (gemessen, behoben)
+* **Plc_neck vor dem NPC-INIT wird geloescht.** Erste Fassung (Lauf n1) setzte die Koepfe schon im Raumaufbau:
+  s11c0.log `F17 ... A(... nf=84 nt=(-8163,-13748))` -> `F18 ... A(... s=6 nf=12)` — der INIT (FUN_8011c6dc, enemy_ai_common.c
+  state 0: `e->neck_flags = (grid_id & 0x40) ? 0x12 : 0x00`, Original @0x8011c768 / SPL @0x8004260c-18) ueberschreibt +0x1b8.
+  Jetzt: Koepfe erst im 3. Takt nach den Riegeln (INIT beider in Bild 7, gemessen n2/n3: `mo 2 -> 1` in Bild 8).
+* **Work_set auf Ada haelt ihren INIT auf.** In n1 blieb Ada bis Bild 17 ohne INIT in einer haengenden Greif-Pose
+  (O_belege nicht abgelegt, Bild n1 F10/F16 im Scratch): `re15_scd_slot_event_controlled(slot)` (enemy_ai_common.c) laesst
+  einen NPC, den ein SCD-Faden per Work_set haelt, vor seinem INIT nicht ticken. Jetzt gibt `Work_set(1,0)` am Ende des
+  Raumaufbaus Ada frei (Form ROOM10D0 @0x01AE2); INIT beider in Bild 7 wie vor der Aenderung (Lauf vor: `F7 s=6`).
 
 ## Messung nachher
 
-(folgt)
+Lauf n3 (Stand 95ff173f, Messkopie `re15_pc_r37o_n3.exe`, derselbe Weg wie "vorher", `RE15_EXIT_AT=509#11C0`):
+`O_belege/o_nach_mess.txt`, `o_nach_bilder.txt`, Kontaktbogen `o_nach_11c0.png`, Kopf-Ausschnitte `o_nach_kopf_zoom.png`,
+**Vorher/Nachher-Streifen `o_vor_nach_streifen.png`** (je Beat oben vorher, unten nachher), Auswerter
+`test_r37_szene11c0 auswerten` -> `o_nach_auswerten.txt` (0 Fehler) gegen `o_vor_auswerten.txt` (alter Stand: 9 Fehler).
+```
+Drehungen Ada:    keine
+Drehungen Marvin: F385..F400 Gier 1631 -> 2749 +98.3 Grad (Losrennen, nach dem Ende von msg 13 in F383); danach nur das
+                  Nachsteuern im Lauf (+4.7 / -8.6 Grad)
+Untertitel: 10 F72..F169, 11 F170..F224, 12 F225..F284, 13 F285..F383, 14 F405..F503
+msg 10 Ada:    Sprecher Koerper 0.1 Grad, Kopf auf Marvin 98/98 (Blick 0.0 Grad) | Zuhoerer Marvin Koerper 0.1, Kopf auf Ada 98/98
+msg 11 Marvin: Koerper 0.1 Grad, Kopf auf Ada 30/55 + frei/Nicken 25/55, Blick max 6.2 Grad (Nicken) | Ada Kopf auf Marvin 55/55
+msg 12 Marvin: Koerper 0.1 Grad, Kopf auf Ada 60/60, Blick 0.0 Grad | Ada Kopf auf Marvin 60/60
+msg 13 Marvin: Koerper 0.1 Grad, Kopf auf Ada 99/99, Blick 0.0 Grad | Ada Kopf auf Marvin 99/99
+msg 14 Ada:    Koerper bleibt (Marvins alter Platz), Kopf zur Tuer an der Klemme 99/99, Blick zum laufenden Marvin 7..32 Grad
+               (der Koerper 61..87 Grad) — "sieht ihm nach", soweit die Kopf-Klemme 0x2c8 reicht
+Knall (vor msg 10): beide Koepfe zur Tuer (Marvin ab Bild 18, Ada ab Bild 24), Koerper unveraendert
+```
+Gegen den Wortlaut des Nutzers:
+| Nutzer | nachher |
+|---|---|
+| "Erst schauen sie komplett in die falsche Richtung." | Im ersten Bild (F6) Ada Gier 3679 = Peilung auf Marvin, Marvin 1631 = Peilung auf Ada: einander zugewandt (Profil zur Kamera), Bild F8/F14. |
+| "Dann drehen sie sich einmal um 180 grad um." | Keine Koerperdrehung beim Knall; nur die Koepfe drehen zur Tuer (Kopf an der Klemme = Gesicht zur Kamera, Bild F32). Groesste Drehung Ada 0, Marvin 98,3 Grad nur beim Losrennen. |
+| "Dann dreht sich Ada noch mal um 90 grad um." | Ada dreht ihren Koerper in der ganzen Szene nicht (0 Abschnitte); beim Nachsehen nur der Kopf. |
+| "Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada" | Bei allen drei Zeilen (msg 11/12/13) Koerper 0,1 Grad und gezeichneter Kopf-Blick <= 6,2 Grad auf Ada; er rennt erst los, wenn seine letzte Zeile abgelaufen ist. |
 
 ## Tests
 

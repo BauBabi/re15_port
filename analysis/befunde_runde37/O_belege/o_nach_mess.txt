@@ -1,0 +1,23 @@
+Bilder 6..509
+Drehungen A (Ada): keine
+Drehungen M (Marvin):
+  F385..F400  Gier 1631 -> 2749  Summe +1118 =  +98.3 Grad  (15 Bilder)
+  F427..F458  Gier 2749 -> 2803  Summe   +54 =   +4.7 Grad  (31 Bilder)
+  F479..F509  Gier 2803 -> 2705  Summe   -98 =   -8.6 Grad  (30 Bilder)
+  groesste Einzeldrehung: +98.3 Grad (F385..F400)
+Untertitel-Abschnitte (Id, Bilder): 10 F72..F169, 11 F170..F224, 12 F225..F284, 13 F285..F383, 14 F405..F503
+msg 10 "Ada: What was this noise? Did you hear that?" F72..F169:
+   Sprecher Ada   : Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 98/98) | Kopf-Ziel {'Partner': 98} | Kopf auf Partner (eingeschwungen, ungeklemmt): 98/98 | Kopf-Blick->Partner max   0.0 Grad | Kopf an der Klemme: 0
+   Zuhoerer Marvin: Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 98/98) | Kopf-Ziel {'Partner': 98} | Kopf auf Partner (eingeschwungen, ungeklemmt): 98/98 | Kopf-Blick->Partner max   0.0 Grad | Kopf an der Klemme: 0
+msg 11 "Marvin: Yes!...." F170..F224:
+   Sprecher Marvin: Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 55/55) | Kopf-Ziel {'frei': 21, 'Nicken': 4, 'Partner': 30} | Kopf auf Partner (eingeschwungen, ungeklemmt): 30/55 | Kopf-Blick->Partner max   6.2 Grad | Kopf an der Klemme: 0
+   Zuhoerer Ada   : Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 55/55) | Kopf-Ziel {'Partner': 55} | Kopf auf Partner (eingeschwungen, ungeklemmt): 55/55 | Kopf-Blick->Partner max   0.0 Grad | Kopf an der Klemme: 0
+msg 12 "Marvin: Oh, no, Leon!" F225..F284:
+   Sprecher Marvin: Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 60/60) | Kopf-Ziel {'Partner': 60} | Kopf auf Partner (eingeschwungen, ungeklemmt): 60/60 | Kopf-Blick->Partner max   0.0 Grad | Kopf an der Klemme: 0
+   Zuhoerer Ada   : Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 60/60) | Kopf-Ziel {'Partner': 60} | Kopf auf Partner (eingeschwungen, ungeklemmt): 60/60 | Kopf-Blick->Partner max   0.0 Grad | Kopf an der Klemme: 0
+msg 13 "Marvin: I have to help him, sorry!" F285..F383:
+   Sprecher Marvin: Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 99/99) | Kopf-Ziel {'Partner': 99} | Kopf auf Partner (eingeschwungen, ungeklemmt): 99/99 | Kopf-Blick->Partner max   0.0 Grad | Kopf an der Klemme: 0
+   Zuhoerer Ada   : Koerper->Partner max   0.1 Grad (im Kegel 8,4 Grad: 99/99) | Kopf-Ziel {'Partner': 99} | Kopf auf Partner (eingeschwungen, ungeklemmt): 99/99 | Kopf-Blick->Partner max   0.0 Grad | Kopf an der Klemme: 0
+msg 14 "Ada: Marvin!..." F405..F503:
+   Sprecher Ada   : Koerper->Partner max  87.1 Grad (im Kegel 8,4 Grad: 0/99) | Kopf-Ziel {'Tuer': 99} | Kopf auf Partner (eingeschwungen, ungeklemmt): 0/99 | Kopf-Blick->Partner max  32.3 Grad | Kopf an der Klemme: 99
+   Zuhoerer Marvin: Koerper->Partner max 179.9 Grad (im Kegel 8,4 Grad: 0/99) | Kopf-Ziel {'frei': 99} | Kopf auf Partner (eingeschwungen, ungeklemmt): 0/99 | Kopf-Blick->Partner max 179.9 Grad | Kopf an der Klemme: 0
