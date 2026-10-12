@@ -325,3 +325,85 @@ sub02 mit Ada-Szene, Gitterfluegel sub03..08):
 (b) `RE15_DEBUG_JUMP=2030@120 RE15_SET_FLAG=3:126 (Generator) RE15_FORCE_EVENT=2@260 (sub02 = Lift A) RE15_SE_DEBUG=1
 RE15_AUDIO_CAP_SYNC=v_2030.raw RE15_EXIT_AT=520`: `[force-event] scd_event_fire(2) at F260` -> `[scd F351] Cut_chg(10)`
 (Fahrt 90 Bilder + 1), im ganzen Lauf KEINE `[se]`-Zeile = kein einziger SE (Befund 5b reproduziert).
+
+### N1-2 RE-Belege (Bytes selbst gelesen)
+
+**(a) Lastenaufzug ROOM3080 -> ROOM4000**
+* RE1.5 ROOM3080.RDT main00 @0x0072A `3b 00 02 31 00 00 | 00 x8 | 50 e2 00 00 98 e5 80 07 | 03 00 01 00 00 00 ..` = Platz 0,
+  Rechteck (0,0,0,0), Ziel (-7600,0,-6760) Blick 0x780, Stage 3 Raum 00 Cut 1, RE1.5-Archiv-Byte +26 = 00 (DOOR00 =
+  Evt_end, keine Sequenz). sub00 @0x007A4 `06 00 48 00 / 21 04 60 00` Ck(4,96)==0 -> Evt_exec sub02 @0x007E8, sonst sub09
+  @0x007F0. sub02 (erste Fahrt, Ada-Szene): @0x007FE `22 02 07 01` Set(2,7)=1, @0x00802 `22 01 1b 01` Set(1,0x1B)=1, Fahrt-
+  Pulse @0x009FE..0x00A16 (SIG2), @0x00A1A Message_on 1 ("Ada: That's... got to be..."), @0x00A1E Sleep 100, @0x00A22
+  `47 00` Aot_on 0. sub09 (weitere Fahrt): @0x00BBA/@0x00BBE Set(2,7)/(1,0x1B), @0x00BFA `47 00`. ROOM3081 (Elza): derselbe
+  Satz @0x0072A, sub02 @0x0081E / sub03 @0x00862 `47 00`. Aot_on @0x800407bc -> `jalr v0` @0x8004082c = Tuer-Handler (B1).
+* RE2-Vorbild = die EINZIGE DOOR2D-Tuer in RE2 (Runde 31 tueren_02_re2.md §5): ROOM6170 ("A huge lift used to reach the
+  platform", msg 1 @0x04797) main00 @0x035A2 `3b 01 01 41 00 00 57 bc b4 ed 14 1e 80 0c f4 17 00 00 b5 6d 00 04 06 00 00 00
+  2d 05 ..` = aot 1, sat 0x41, Ziel Stage 6 Raum 00 (ROOM7000, Bahnsteig UNTEN), Byte 26/27 = `2d 05` = DOOR2D Variante 5;
+  sub02 @0x03604 Aot_reset aot 1 sce 0 (aus), sub15 @0x03F90 Aot_reset aot 1 sce 1 sat 0x41 (an, sobald der Lift da ist).
+* DOOR2D-Skripte (`tools/tor/tuerskript_dump.py dis DOOR2D.DO2`): Skript 0 @Datei 0x601c Switch(var 12): Case 0/2/4 ->
+  Gosub 1, Case 1/3/5 -> Gosub 2. Skript 1 @0x6050 (301 Bilder): Sleep 60, Se_on 0, Skript 3 (Ruetteln), Sleep 50, Skript 4,
+  Sleep 190, Se_on 1. Skript 2 @0x6130 (451 Bilder): Sleep 20, Se_on 0, Skript 3, Sleep 35, Skript 5, Sleep 120, Se_on 1,
+  Sleep 245, Blende, Sleep 30. Skript 4 @0x6300: obj 2 (Mesh 2) Member_set y -4400 / x 6600, For 60 { y += 125, x -= 200 }
+  x4 = das Schacht-Fachwerk zieht nach UNTEN = Buehne faehrt HINAUF; Skript 5 @0x6344: y 3100 / x -5400, For 60 { y -= 125,
+  x += 200 } = HINAB. Member 11/12/13 = obj x/y/z (RE2 @0x80055d30/38/40 `sw a2,56/60/64(a0)`, door_seq_common.c:435-437).
+  => ROOM3080 -> ROOM4000 faehrt hinab = **Variante 5** (wie RE2 ROOM6170 -> ROOM7000); die Gegenrichtung S218 (ROOM4000 ->
+  ROOM3070) spielt seit Runde 33 Variante 4. **Archiv P2DS** = das der Gegenrichtung (RE2: beide Seiten eines Paares tragen
+  dasselbe Archiv, 238/238, Runde 31 tueren_02_re2.md 2.1).
+* **Befund am Bestand (Runde 33 G10, P2DS):** P2DS zeigte die Fahrt 301/451 Bilder lang als STEHENDES Bild
+  (`C_belege/n1_p2ds_re2_alt_neu.jpg`: Reihe 1 RE2 DOOR2D V5 mit vorbeiziehendem Fachwerk, Reihe 2 P2DS alt ohne). Ursache
+  gemessen: das Rezept `tools/tueren/tuer_rezepte.py rezept_P2DS` nahm ausser der Bedientafel (Mesh 1, UV u 1..93 v 194..253)
+  eine "Lampe" = Mesh-2-Teil u 96..127 v 193..255 weg - dort liegt aber GANZ Mesh 2 (60/60 Dreiecke, UV u 96..126 v 193..252,
+  1737/1737 Texel auf Index 0), und Mesh 2 ist das rot beleuchtete Schacht-Fachwerk (obj 2 + Kinder 3/4/5) = die einzige
+  Bewegung der Fahrt. Gemalt ist der Schacht MIT Fachwerk (ROOM4000 c01, Runde 31 stapel_5.pruefer.md S218: "offener
+  Aufzugschacht mit Fachwerk, gelb-schwarzer Rand"). Korrektur: nur Mesh 1 weg (5580 Texel) -> P2DS neu (Reihe 3).
+
+**(b) STAGE2-Aufzuege ROOM2030/2031**
+* RE1.5 (N1-0): Lift A sub02 @0x01E30 `22 02 07 01` Set(2,7)=1, hinauf @0x01E54 `0d 00 06 00 2d 00 | 30 02 02 00 0e 00` For 45
+  x (Add_speed, 2x Evt_next) = 90 Bilder (Speed_set y -120 @0x01E50), hinab @0x01E98 (Else @0x01E7C); Lift B sub04 @0x01F0A,
+  @0x01F2E / @0x01F72 For 0x5A = 90 x 2 = 180 Bilder. Ausloeser: Platz 5/7 (Ebene 3) bzw. 4/6 (Ebene 6/9) Aot_set sce 3 auf der
+  Plattform (Aktionstaste); ohne Strom (3,126)=0 setzt sub01 @0x01E18/@0x01E22 die Plaetze 5/7 auf msg 1. KEIN Se_on.
+* RE2-Vorbild = die RE2-HUBPLATTFORM ROOM6030 (msg 9 @0x03CE0 "It's a switch for the lift. Will you push it?";
+  RE2_SOUND_LISTE.md "ROOM603.SAP - ... the room with the scenario B box/elevator"), selbe Art wie ROOM2030 (Plattform obj 0 +
+  Spieler fahren per Skript senkrecht 5400): sub10 @0x02F8C `22 02 07 01` Set(2,7)=1, @0x02F90 `36 02 11 00 ..` **Se_on(2,0x11)
+  KLICK**, @0x02F9C Sleep 10, Cut_chg 1, Ruetteln, @0x02FBA `36 02 0b 00 ..` **Se_on(2,0x0B) FAHRT**, @0x02FDC
+  `0d 00 60 00 b4 00` For 180 (obj 0 + Spieler y += 30 je Bild), danach Gosub sub23 @0x03680 (Plc_ret, Set(2,7)=0, Cut_auto 1).
+  sub12 @0x030B6/@0x030BA/@0x030E4/@0x03106 Gegenrichtung. ROOMF030 dieselben Folgen (@0x02E24/@0x02E28/@0x02E52/@0x02E74).
+  Andere RE2-Aufzuege (Nachrichten-Zensus "lift|elevator" ueber alle 495 RDTs): Kabinen 21B0/6010/6020/6060 (Kabinen-Ton
+  liegt schon als ELEVSE.VBS vor), Strom-Schalter 6050, Riesen-Hubbuehne 6170 - die Hubplattform 6030/F030 ist die einzige
+  offene Plattform mit eigenem Fahrt-Ton.
+* Raumbank ROOM6030 (RDT-Kopf +0x08/+0x0C/+0x10): EDT @0x0E128, VH @0x0E1E8, VB @0x0F008.
+  Satz 0x11 EDT @0x0E16C `00 01 a3 00` -> Prog 1 Ton 10 @0x0ED48 (vol 127, center 93, shift 0, note 69) -> VAG 15 @0x22F08
+  2496 B, Tonhoehe 0x400 (11025 Hz) = 0,39 s Klick. Satz 0x0B EDT @0x0E154 `00 01 13 02` -> Prog 1 Ton 1 @0x0EC28 (vol 127,
+  center 91, shift 42, note 60) -> VAG 22 @0x2F818 34320 B, note2pitch2 0x2C4 (7622,8 Hz) = 7,88 s. Huellkurve je Spielbild
+  (254,09 Abtastwerte): Anlauf-Spitze T6, gleichmaessige Fahrt, Stopp-Schlag T200 = **20 Bilder nach dem Fahrt-Ende T180**,
+  Ende T236. Die Fahrt-Welle steht nur in ROOM6030/ROOMF030 (bitgleich), im RE1.5-Baum 0 Treffer (512-B-Nadel).
+* Laengen: RE2 faehrt 180 Bilder; RE1.5 Lift B ebenso 180, Lift A nur 90 -> fuer Lift A gibt es in RE2 keine Welle.
+
+### N1-3 Umsetzung
+* **(a)** `engine/src/lastenaufzug_r37.c` + `include/re15_lastenaufzug_r37.h` (NEU): Null-Rechteck in ROOM3080/3081 mit Ziel
+  Stage 3 Raum 00 -> Anfrage Port-Archiv P2DS, RE2-Basis 0x2D, Variante 5, Tuer 112 (Runde 31 T112; Seite 0 = Runde 31 fuehrt
+  fuer die Skript-Ankunft keine Seite). Haken `aot_common.c tuer_sequenz_anfragen` (Include + 3 Zeilen) DIREKT HINTER dem
+  Kabinen-Haken, also vor der Zwischensequenz-Sperre der Runde 31 (beim Feuern ist player_mode 2, wie bei den Kabinen).
+  fahrstuhl_r37.c, P27F/P27C und der Kabinen-Haken unveraendert.
+* **(a, Bestand)** P2DS korrigiert: `tools/tueren/tuer_rezepte.py rezept_P2DS` nur noch Mesh 1 weg, `tuer_archiv_bauen.py --nur
+  P2DS` -> `shared_assets/RE15DOOR/P2DS.DO2` 78244 B, FNV 0xC9CE31CD -> **0x4A900C54** (Tonteil/SCD/MD1 bytegleich DOOR2D),
+  `gen/re15_tuer_eigen.inc` Eintrag 18, `analysis/befunde_runde33/tueren_rest/plan.json` + `archive.json` + `tuer_rest_plan.py`
+  (Rezept-Text) nachgezogen. Betrifft auch S218 (die Fahrt hinauf zeigt jetzt das Fachwerk).
+* **(b)** `engine/src/lift2030_r37.c` + `include/re15_lift2030_r37.h` (NEU): sechs Anker (Datei-Offset + 8-Byte-Signatur,
+  ROOM2030 = ROOM2031): @0x01E30/@0x01F0A -> Satz KLICK (RE2 @0x02F90 direkt hinter Set(2,7)=1), @0x01E54/@0x01E98 -> FAHRT_KURZ
+  (Lift A, 90 Bilder), @0x01F2E/@0x01F72 -> FAHRT (Lift B, 180 Bilder = RE2-Laenge; RE2 @0x02FBA direkt vor der Fahrt-
+  Schleife). Haken `scd_vm.c` (Include, Scan in `scd_register_current_rdt`, Takt-Pruefung hinter dem Elza-Anker, Wachposten
+  Ankerzahl = 0 ausserhalb ROOM2030/2031). For laeuft im Port einmal ueber den Anker (Next springt auf pc+6) -> ein Ton je Fahrt.
+* **(b)** `platform/pc/src/lift2030_se_pc.c` (NEU, Muster elza_se_pc.c): Mini-Bank laden, `re15_audio_se_play_bank`; Haken in
+  `platform/pc/main.c` (1 Zeile neben dem Elza-Haken). PSX/Tests: Haken NULL = stumm. audio_pc.c unberuehrt.
+* **(b)** Mini-Bank `shared_assets/RE2/LIFT6030.VBS` (NEU, 61192 B, FNV 0x0C73F970, sha1 944a61942ac1d5f3ac940242c5bf662fb197922e)
+  aus `tools/fahrstuhl_r37/re2_lift6030_cut.py --install` (Selbsttest gegen alle zitierten Bytes, ROOMF030-Gegenprobe) +
+  `engine/src/gen/re2_lift6030_bank.inc`. Saetze: 0 KLICK = RE2 0x11 (bytegleich), 1 FAHRT = RE2 0x0B (bytegleich),
+  2 FAHRT_KURZ. Nur Tone-Byte +0x14/+0x16 und EDT-Byte 1/2 (Lage in der Mini-Bank) geaendert.
+* **PORT-WAHL (FORM aus den Daten):** FAHRT_KURZ = RE2-Fahrt-Welle ohne die Bloecke [794,1611): Kuerzung = round((180-90)
+  Bilder x 254,09 / 28) = 817 Bloecke (RE2 For 180 @0x02FDC gegen RE1.5 For 45 x 2 @0x01E54); Schnittstelle = kleinste
+  Abweichung des ADPCM-Decoder-Zustands (209) im Fenster zwischen Anlauf-Ende T26 und Stopp-Schlag T200 (beides Huellkurve,
+  Regel im Werkzeug); Anlauf und Stopp-Schlag bytegleich. Naht: Fehler 115 im ersten, 12 im zweiten Block, dann 0; Sprung an
+  der Naht 1535 (Median-Sprung der Welle 1344, 95-%-Sprung 6541). Ergebnis: Stopp-Schlag T110 = Fahrt 90 + 20 wie RE2.
+  Ungekuerzt liefe der Motor 3,6 s ueber die Ankunft hinaus. Zwischen KLICK und FAHRT hat RE1.5 kein Sleep (RE2 Sleep 10
+  @0x02F9C) - die RE1.5-Zeitachse bleibt, beide Toene fallen ins selbe Bild.
