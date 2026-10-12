@@ -5,13 +5,15 @@ Nutzer-Punkt (AUFTRAG.md #8, woertlich): "Items auf erhöhten Flächen lassen si
 Super Redhawk in ROOM3050 ohne die Kiste. Das war schon in v0.8.23 so. << muss gefixed werden."
 Einstieg: R_abnahme_3.md M1/M2/M3/H4, NACHLAUF.md #73/#74 (Runde 36).
 
-## 0. Stand / Fortschritt
-- [ ] Messung vorher (exe, ROOM3050 Band 4 -> Super Redhawk)
-- [ ] RE-Belege selbst disassembliert (AOT-Scan @0x80042bac, Member_set 0x12 @0x8004116c)
-- [ ] Zensus Item_aot_set floor != 0 + Member_set 0x12 in allen RDTs
-- [ ] Umsetzung
-- [ ] Messung nachher (falsches Band: keine Aufnahme; vorgesehener Weg: Aufnahme)
-- [ ] Tests (probes/r37_itemband.cmake)
+## 0. Stand / Fortschritt (Abschluss 2026-10-12)
+- [x] Messung vorher (exe): 3050 Band 4 -> (9,92) = 1 ohne Kiste; Lift laesst Band 4 stehen, Klemme unten (Abschnitt 1)
+- [x] RE-Belege selbst disassembliert: AOT-Scan @0x80042cac-ccc, Aufrufer @0x80031fdc-fe8, Item_aot_set @0x800406cc,
+      Member_set @0x800410b8 -> FUN_8004116c [18] -> @0x80041228, Work_set kind 1 @0x80040da4 (Abschnitt 2)
+- [x] Original gemessen: 3050 (Spur R O2), 3010 und 2030 (eigenes Werkzeug, Abschnitt 2.7)
+- [x] Zensus: 12 Item_aot_set mit floor != 0, 22 Schreiber Member 0x12 (17 am Spieler) (Abschnitt 3)
+- [x] Umsetzung: 2 Haken + itemband_r37.c (Abschnitt 4)
+- [x] Messung nachher (exe): alle 6 Stellen falsches Band GESPERRT / vorgesehener Weg FREI + Taken-Bit (Abschnitt 5)
+- [x] Tests: unit_r37_itemband + integration_r37_itemband gruen, Gegenproben rot, Regression 120/120 (Abschnitt 6)
 
 ## 1. Messung vorher
 
@@ -27,6 +29,13 @@ RE15_PLAYER_POS=-3596,1523,1024,4 RE15_EXIT_AT=1500` (Wegplan der Spur-R-Abnahme
   Kollisionsband 4).
 -> **REPRODUZIERT:** die Super Redhawk (Item_aot_set slot 6 @0x01EC6, floor 1, Taken-Bit (9,92)) wird von der oberen Ebene
 (Band 4) ohne die Kiste aufgenommen. Dasselbe Ergebnis wie R_abnahme_3.md M3.
+
+### 1.1b Der vorgesehene Weg vorher (Wegplan der Spur-R-Abnahme `wp_3050_stufe2.txt`, Laufordner `vorher_3050_stufe2`)
+Fall der Kiste wie im Riegel (`F1233 SCHIEB: Objekt-y -7200 -> -7192 (Fall)`, Kiste `(-24058,0,-15591) b0`), Lift AKTION F2200,
+`F2601 FLAG (3,82) = 1` — climb.txt `T3201 ... pos=(-7657,0,-14178) ... band=4`: der Spieler steht nach dem Lift auf y 0
+mit Band 4; `F2825 GEHE: nach 8 Runden Rest 344` bei x -7657 (Band-4-Wand x -10350..-8125 + 450 + 18), `F3228 KLEMME`;
+der Kisten-Schub nach Norden laeuft ins Leere (`F4757 SCHIEB: 1500 Bilder ohne Bedingung`, `F4818 FLAG (3,93) = 0`); am Ende
+trotzdem **`F5418 FLAG (9,92) = 1`** von y 0 OHNE Kiste in der Kerbe. = R_abnahme_3.md M2, reproduziert.
 
 ### 1.2 Herkunft (kein Bisect noetig: beide Stellen sind seit Juni/Juli 2026 unveraendert)
 * `git show <c>:re15_port/engine/src/aot_common.c | grep "a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_AUTO_EVENT"`
