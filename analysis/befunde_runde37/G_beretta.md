@@ -215,5 +215,9 @@ je -16). Das ist die RE1.5-Kandidatenregel, keine Luecke: jede Kugel trifft.
   Spinne 0 Bilder (Tabelle @0x800A4424/@0x800A4B90), KRAEHE 15 Bilder (@0x800A45A0) — eine Kraehe nimmt je Feuerstoss nur die
   erste Kugel, die Kugeln 2/3 gehen an das naechste Ziel (wie in RE2 Retail). Mit RE1.5-KI trifft jede Kugel; ein
   getroffener Zombie, der zu Boden geht, ist mit geradem Zielen kein Ziel mehr, dann trifft die naechste Kugel den naechsten.
+* Schaden je Kugel = ein Pistolenschuss (Browning/SIG-Spalte), wie RE2 es fuer die Custom Handgun festlegt. Gegen Zombies
+  (RE2-Schadenszeile, beide KI-Modi) sind das 16 je Kugel. Gegen Gegner mit RE1.5-Schadenszeile (Gorilla, Kakerlake,
+  Alligator, Tyrant, Birkin; Hund/Kraehe/Spinne nur unter RE1.5-KI) ist der Stoss damit 3 x Browning — die RE1.5-Tabelle
+  fuehrte fuer M93R/Glock den Wert des GANZEN Stosses (z.B. Gorilla 28 = 2,3 x 12); 3 x 28 haette den Stoss verdreifacht.
 * Ist nur noch 1 oder 2 Schuss im Magazin, gibt es nur 1 bzw. 2 Treffer (drei Blitze zeigt das Original trotzdem).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung.
