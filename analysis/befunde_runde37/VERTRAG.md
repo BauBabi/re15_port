@@ -19,6 +19,7 @@ committen, nur eigene Pfade adden.
 | H | zombieaktiv / r37_zombieaktiv | Nachtrag 2: Zombies zu passiv — GENERELL fuer alle Zombies das RE2-Verhalten (teilweise aktiv im Gang, auf Leon zu); Beispiel Montage nach Irons' Tod |
 | I | feuerloescher / r37_feuerloescher | Nachtrag 4: Feuerloescher-Modell bauen; leer am Boden bei Elza (1091) und bei Leon nach dem Loeschen (1090); Leons Loescher aus dem Spind 1000 an einen besseren Ort |
 | J | bissarm / r37_bissarm | Nachtrag 6: beim Zombie-Biss fehlt teilweise der dranhaengende Arm (am Spieler haengender Zombie-Arm bzw. baumelnder angeschossener Arm) — wie RE2 |
+| K | roy / r37_roy | Nachtrag 7: Roy in Elzas Szenario — Modell + alle Animationen wie im Original, keine Dauerschleife |
 
 Nicht gebaut (Nutzer): Blutlache an Roys Platz (R2), Prison-Key-Hinweis fuer Elza, V6 (Montage-Folgen bei Elza) — ohne
 Zustimmung nichts davon anfassen. Die Werkstatt-Tuer 11B0 bleibt wie in v0.8.24.

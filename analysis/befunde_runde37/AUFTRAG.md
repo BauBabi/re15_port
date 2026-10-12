@@ -142,3 +142,11 @@ ELEVSE.VBS u.a.) und dort abspielen, wo RE2 ihn spielt.
 Lesart (beide pruefen, keine F9-Marke dazu): (1) der Arm des Zombies, der beim Biss/Griff an Leon haengt (Griff von vorn/hinten),
 fehlt in manchen Faellen; (2) der angeschossene, noch "dranhaengende" (baumelnde) Arm eines Zombies fehlt beim Biss. Messen,
 welcher Fall auftritt, dann wie RE2 bauen. -> Spur J bissarm.
+
+## Nachtrag 7 — 2026-10-12 (woertlich)
+
+> Bei Elzas Szenario stimmt weder das Modell von Roy noch all seine Animationen. Außerdem wiederholen sich seine Animationen wieder ständig, wie wir schon ungefähr 500x vorher bei Leon gefixed haben.....
+
+Lesart -> Spur K roy: Roy (Typ 0x47, im Original dasselbe Typ-Byte wie Elliot bei Leon; B_figuren.md §1.1) in Elzas Szenario
+(ROOM1011 verwundet / bewusstlos, ROOM1021 als Zombie, den John erschiesst): Modell und alle Animationen wie im Original;
+keine Dauerschleife der Animationen (dieselbe Fehlerklasse wie die frueheren NPC-Schleifen bei Leon).
