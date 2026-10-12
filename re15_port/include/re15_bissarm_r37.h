@@ -8,7 +8,7 @@
  *     gegen 569, Unterarm 419 gegen 459), die RE2-Griff-Clips legen die Hand des RE2-Zombies aber UEBER Leons
  *     Schulter (RE2-RAM SLUS-00748_4.sav, P3 @0x8010F838: Hand 11 45..180 von Leons Schultergelenk). Im Hybrid
  *     landet dieselbe Hand ~200 tiefer, unter der Schulter -> der Unterarm verschwindet hinter/in Leon.
- *     re15_bissarm_r37_handkontakt() stellt fuer die Dauer des Griffs (RE2-Exec[3] = +0x5 == 3, P0..P5) die
+ *     re15_bissarm_r37_handkontakt() stellt fuer die Dauer des Griffs (RE2-Exec[3] = +0x5 == 3 @0x8010C8CC[3], P0..P5) die
  *     Hand jedes Arms auf die Stelle, an der sie das RE2-Rig mit DEMSELBEN Keyframe zeichnet (RE2-Bindtabelle,
  *     keine Wurzelkorrektur), Ellbogen per Zwei-Gelenk-Kette mit den RE1.5-Armlaengen, Beugeseite = RE2-Ellbogen.
  *     PORT-KONSTRUKT wie root_y_fix (der Hybrid hat kein Original): die Invariante des Originals ist der
@@ -20,8 +20,11 @@
  *     der Elza-Variante ~165 tiefer (Sonde re15_kontakt). RE2 hat dasselbe (Claire-Archiv), aber nur Leons
  *     RE2-Daten liegen im Repo. Deshalb: Ziel = RE2-Hand + (Schulter des gezeichneten Opfers - dieselbe
  *     Schulter im selben Opfer-Keyframe mit Leons Knochen PL00.PLD), Schultern 9/12 je Hand nach Naehe (1/d^2)
- *     gewichtet; fuer Leon ist die Differenz bitgenau 0. Nicht fuer den Kriecher (Bein-Griff, +0x10E Bit 0
- *     @0x80102674): dort ist der Boden der Bezug.
+ *     gewichtet; fuer Leon ist die Differenz bitgenau 0.
+ *     KRIECHER: sein Griff laeuft als +0x5 == 1 (Kriecher-Hirn @0x80101210, EXEC @0x8010C918[1] = dieselbe
+ *     Funktion 0x801025EC) und bleibt ohne Handkontakt — gemessen (Sonde kriecher, ROOM1030): Hybrid- und
+ *     RE2-Rig-Hand liegen gleich weit von Leons Beinen (mittel 542 / 531), es gibt keinen Kontaktpunkt. Der
+ *     Opfer-Bezug ist zusaetzlich auf +0x10E Bit 0 = 0 (@0x80102674) beschraenkt.
  *
  * (B) WANDKLEMME DER OPFER-PLATZIERUNG. RE2 klemmt den Spieler im Griff genau EINMAL je Bild gegen die Waende,
  *     NACH der Platzierung und vom Standpunkt des Vorbilds aus: Hauptschleife `jal 0x8003bfac` (Spieler-Tick,
