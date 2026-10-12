@@ -74,8 +74,12 @@ P2_ALTE_KETTE = {
     # Boden", Dossier analysis/befunde_runde36/O_pri.md §2). Die Quaderbreiten in auswahl.json sind auf die
     # gemessene Basis gesetzt; die Cuts laufen ueber die alte Kette (Quader-Silhouette + Kollisionstiefe,
     # anwenden.bau_objektweise) und schreiben jetzt auch PBM/STAND (unit_pri_silhouette, unit_pri_kopfschnitt).
-    ("ROOM1100", 1): "Quader-Waende auf der gemessenen Wandbasis (Runde 36 Spur O)",
-    ("ROOM1100", 2): "Quader-Waende auf der gemessenen Wandbasis (Runde 36 Spur O)",
+    # ⛔ Runde 37 Spur A (2026-10-12, Nutzer-Marke befund_1100_F892_marke1.bmp "siehe Zombie"): ROOM1100 C1/C2
+    # laufen NICHT mehr ueber die alte Kette, sondern ueber bau_p2 (Rechtecke je Tiefenstufe). Die alte Kette gab
+    # jeder Gitterkachel das MAXIMUM der Quadertiefe; an der Wandecke faellt die Tiefe in einer 24er-Kachel von
+    # 10275 auf 7118 (Schluessel t=161 = 10378), und der Kopf des liegenden Zombies 1 — 1500..2500 Einheiten HINTER
+    # der Wand — wurde ueber die Wand gemalt (Leckband bis 3253). bau_p2 traegt je Rechteck nur EINE Tiefenstufe
+    # (Stufe 4 = hoechstens 256 Einheiten). Dossier analysis/befunde_runde37/A_pri1100.md.
 }
 P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}
 
