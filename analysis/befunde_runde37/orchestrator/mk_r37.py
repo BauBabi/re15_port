@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37.js"
-BASIS = "f1e019ca"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_h.js"
+BASIS = "44881ac2"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -92,6 +92,21 @@ SPUREN = [
    "Treffer aus (Schaden je Schuss wie der Einzelschuss der Waffe aus der Schadenstabelle, Reaktion/Blut je Treffer), Zeitpunkte je Schuss aus dem Clip der "
    "Waffe belegen. RE2/RE3-Vorbild fuer Feuerstoesse pruefen (Beta -> Retail). Riegel: Treffer je Feuerstoss = 3 (Leon und Elza), Munition -3, Gegenprobe; "
    "Dauerfeuer-Waffen (Ingram/MC51) und Einzelschuss-Waffen unveraendert (Runde-36-C-Riegel gruen halten).")),
+ dict(id="H", thema="zombieaktiv", baum="r37_zombieaktiv",
+  punkte=["das soll nicht nur da gelten, das darf generell für die Zombies gelten — schaue einfach nach wie Resident Evil 2 das macht (Nutzer-Ergaenzung: gilt fuer ALLE Zombies, Vorlage RE2)", "die Zombies sind immer noch zu passiv. Beispielsweise, am Ende von STAGE1 Leon, wenn wir die ganzen Zombies spawnen nach Irons tod - die Zombies bleiben einfach nur Stumpf alle im Gang stehen. So sind sie keine Bedrohung .... In Resident Evil 2 bewegen sie sich doch auch teilweise aktiv im Gang."],
+  hinweise=("UMFANG (Nutzer): GENERELL alle Zombies — RE1.5-Typen (0x10/0x11/0x16/... im Port mit RE2-KI als Standard, enemy_ai_re2_zombie.c) in JEDEM Raum und jeder Spawn-Art; Vorlage ist die RE2-Retail-Zombie-KI: wie sie im Gang wandern, wann sie loslaufen, auf Leon zukommen (Zustandsautomat, Weck-/Sichtbedingungen, Wander-Ziele, Tempo) — aus RE2 belegen (RE2_Quellcode_Overlays/, ghidra_re2_Leon.txt, info/re2leon/ RDTs: Sce_em_set-Bytes der RE2-Gang-Zombies) und am RE2-Original messen, wo moeglich (DuckStation mit RE2, Memory reai-v2-re2-trace-datei). Erst feststellen, was der Port von der RE2-KI schon hat und was fehlt (z.B. Wander-Zustand, Weckradius, Annaeherung ohne Sicht, Spawn-Variante), dann das Fehlende byte-true nachbauen. Beispiel des Nutzers: Montage nach Irons' Tod:  include/re15_irons_tod.h + engine/src/irons_tod_1150.c (Runde 35 Spur L, Runde 36 Spur K: analysis/befunde_runde36/"
+   "K_szene1150.md; Kette 1150 -> [1130 Cut 0, wenn in 1140 noch Zombies leben] -> 1040 Cut 1 -> 1030 (Cut 7, wenn in 1070 noch Zombies leben; Cut 6) -> 11C0 "
+   "Cut 13 -> 1150; Spawn-Bits (9,74)/(9,75)/(9,76) fuer 1130/1040/1030, Records 15..19 seit Runde 36 Spur E (20 Gegner)). Schritt 1 MESSEN am ECHTEN Weg: "
+   "Leon nach der Montage durch 1130/1040/1030/1070 (Spielstand + CONTINUE oder Kartenwerkzeug wie Spur E probe_r36_gegnerzahl_karte), je Zombie ueber "
+   "mehrere Sekunden: Zustand/Unterzustand, Sicht/Weck-Status, Geschwindigkeit, Abstand zu Leon (RE15_ENEMY_DBG, RE15_STATE_LOG, befund.log-Gegnerliste), "
+   "Framedumps. Wer steht warum? (Weck-Radius, Sicht, Spawn-Byte des Montage-Satzes (Sce_em_set beh / pc[6], Memory: pc[6] NICHT ohne Messung anfassen), "
+   "AI-Freeze-Gate (DAT_800aca40 & 0x20000000 / entity+0x9 & 0x20) nach der Szene nicht geloescht, Szenen-Flags, Tick-Budget bei vielen Gegnern?). "
+   "Schritt 2 ORIGINAL: was tun die Zombies dort im RE1.5-Original (Montage gibt es dort so nicht — PORT-Szene; Vergleich mit den Zombies derselben Raeume "
+   "im Original-Normalspiel und mit RE2: RE2-Zombie-KI enemy_ai_re2_zombie.c, RE2 EM10/EMZ0 in RE2_Quellcode_Overlays/ und ghidra_re2_Leon.txt: "
+   "Wander-/Annaeherungszustaende im Gang, Weckbedingungen). Ziel Beta -> Retail: wie RE2 (teilweise aktiv auf Leon zu), mit Beleg. Runde 36 Spur F "
+   "(analysis/befunde_runde36/F_zombieki.md, Riegel unit_r36_zombieki_*, Eintritts-Zensus test_r36_zombieki_eintritt) gruen halten; Spur-E-Riegel "
+   "(integration_r36_gegnerzahl) und die Montage-Riegel (integration_r35_cut1150, unit_r36_szene1150*) gruen halten. Riegel: nach der Montage bewegt sich "
+   "in 1130/1040 ein Anteil der Zombies binnen N Bildern auf Leon zu (N aus RE2 belegt), Gegenprobe Stand v0.8.24.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()

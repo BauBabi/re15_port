@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-12 12:10: Nachtrag 2 + Ergaenzung des Nutzers -> Spur H zombieaktiv (GENERELL alle Zombies, Vorlage RE2). Baum `.claude/worktrees/r37_zombieaktiv` (Zweig r37/zombieaktiv, Basis 44881ac2), EIGENER Workflow `wf_04596eeb-782` mit `orchestrator/r37_h.js` (args `{welle:[H], slots:1, max_nach:2}`). Hauptlauf `wf_59e74f0e-8ae` (A/C/D/E/F/G, Basis f1e019ca) laeuft unveraendert weiter. Zusammen 5 parallele Agenten. Der Nutzer hat die Lesart der Runde bestaetigt ("ja, perfekt.").
 * 2026-10-12 11:40: Workflow GESTARTET: Run `wf_59e74f0e-8ae` (args `{welle:[A,C,D,E,F,G], slots:4, max_nach:2}`), Journal `~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/subagents/workflows/wf_59e74f0e-8ae/journal.jsonl`.
 * 2026-10-12 11:30: Runde aufgesetzt. Basis master f1e019ca (= v0.8.24 + Auftrag/Vertrag). Sechs Spur-Baeume
   `.claude/worktrees/r37_{pri1100,fahrstuhl,itemband,codepanel,sperre1050,beretta}` (Zweige `r37/<thema>`, alle auf
@@ -22,6 +23,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | E codepanel | r37_codepanel | Code-Panels: blau solange falsch, gruen wenn richtig; Kamera bleibt bei Piep + Aufschliessen | gestartet |
 | F sperre1050 | r37_sperre1050 | "Chief first"-Sperre auch an ROOM1050 -> 10A0 (Endspiel), ROOM50B1 Elza-Text ohne Ada | gestartet |
 | G beretta | r37_beretta | Beretta M93R: jeder Schuss des Feuerstosses trifft (Glock 18 pruefen) | gestartet |
+| H zombieaktiv | r37_zombieaktiv | Zombies GENERELL aktiv wie in RE2 (Beispiel Montage nach Irons' Tod) | gestartet (eigener Workflow) |
 
 ## 2. Bei einem Abbruch (Sitzungs-/Wochenlimit)
 1. Verwaiste Prozesse beenden (`tasklist`; nur per PID, nie /IM), DuckStation `settings.ini` EnableGDBServer = false pruefen.
