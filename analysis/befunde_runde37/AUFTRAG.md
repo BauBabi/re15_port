@@ -150,3 +150,85 @@ welcher Fall auftritt, dann wie RE2 bauen. -> Spur J bissarm.
 Lesart -> Spur K roy: Roy (Typ 0x47, im Original dasselbe Typ-Byte wie Elliot bei Leon; B_figuren.md §1.1) in Elzas Szenario
 (ROOM1011 verwundet / bewusstlos, ROOM1021 als Zombie, den John erschiesst): Modell und alle Animationen wie im Original;
 keine Dauerschleife der Animationen (dieselbe Fehlerklasse wie die frueheren NPC-Schleifen bei Leon).
+
+## Nachtrag 8 — 2026-10-12 (woertlich, zu #5 / Spur F)
+
+> Elza kann theoretisch ada begegnen in ihren durchlauf. Ich kenne zumindest keine Aussage der Entwickler die sagt, das sie sich nicht begegnen können. Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza nur eine Leiche von Ada findet, kennt sie ada nicht. Dann ist es halt nur - a woman.
+
+Lesart (bestaetigt und praezisiert #5): ROOM50B1 msg 0 (Elza) nennt die Tote nicht "Ada", sondern "a woman" — Elza findet
+nur die Leiche und erkennt sie nicht. Story-Regel: NUR Leon und Elza begegnen sich nie; dass Elza und Ada sich begegnen, ist
+NICHT ausgeschlossen. Die Begruendung "Elza hat Ada nie gesehen" (Runde 36 P_story.md) ist damit keine Regel: kein Text darf
+behaupten, Elza und Ada koennten sich nicht begegnen; dass Elza den NAMEN Ada kennt (Marvin, ROOM30C1 msg 4/6), bleibt.
+Beim Sweep "sagt/liest Elza 'Ada'" nur dort aendern, wo Elza Ada am Aussehen erkennen muesste. Der Bau der Spur F traegt
+genau diesen Wortlaut ("It's a woman. She's dead." / "It looks like one of those" / "gorillas killed her.", F-Baum 6bf10b9b);
+die Abnahme prueft ihn gegen diesen Nachtrag, die Begruendung in Code/Dossier soll den Grund des Nutzers tragen.
+
+## Orchestrator-Auftrag L — 2026-10-12 (zu Nachtrag 2 + Ergaenzung, "schaue einfach nach wie Resident Evil 2 das macht")
+
+Grund: Die Abnahme H#0 (H_abnahme_0.md, Hinweis H1) und das Dossier der Spur H (H_zombieaktiv.md "OFFEN") belegen drei
+VORBESTEHENDE Abweichungen der RE2-Zombie-KI des Ports vom RE2-Original (EMZ0.BIN). Der Nutzer verlangt das RE2-Verhalten
+GENERELL fuer alle Zombies; diese Abweichungen gehoeren dazu und werden in dieser Runde geschlossen (Spur L re2zombie, Basis =
+abgenommener Stand der Spur H 9c2a825d):
+1. Die drei Produzenten des Arme-hoch-Gangs `+0x4 = 0x201` (EXEC[2]) im Gang-Executor sind seit 2026-08 abgeschaltet:
+   (1) Timer @0x80101D68-DBC, (2) Nahbereich @0x80101EC4-F10, (3) Spieler rennt @0x80101F14-F60. Mit (1)+(2) fiel die
+   Positiv-Kontrolle Nahkampf in test_re2_zombie_abc von 3523 auf 0 (Mechanismus nie aufgeklaert). -> aufklaeren und
+   byte-true scharf schalten; in RE2 heben die Zombies dabei die Arme und kommen auf Leon zu.
+2. DECISION[0] Block 3: Original committet bei (rand & 1) == 1 (`beq v0,zero,0x801013d4` @0x801013c8), der Port bei == 0.
+3. EXEC[0] P1: nach dem Wander-Wurf (`sb v0,6(s0)` @0x80101540) laeuft im Original im selben Takt der Selbstwecker
+   @0x80101544-a0 und P2 erst im naechsten Takt (`j 0x801016ac` @0x8010159c); der Port springt im selben Takt nach P2/P3.
+Dazu ein Zensus der uebrigen OFFEN-Marken der RE2-Zombie-KI, die Bewegung/Angriff betreffen (je Marke: Adresse, wirkt auf die
+Aktivitaet ja/nein); was die Aktivitaet betrifft, mitschliessen oder mit Adresse begruenden, warum nicht.
+
+## Nachtrag 9 — 2026-10-12 (woertlich, Item-Kiste)
+
+> In der Kiste müssen die Icons offenbar so weit wie möglich rechts liegen, damit sie nicht vom Text überdeckt werden. Außerdem ist mir aufgefallen, das beim scrollen/bewegen in der Kiste währendessen die Items oberhalb des Kastens liegen. Das darf nicht sein, der Kasten muss layertechnisch über den Items liegen.
+
+Lesart -> Spur M kiste (Item-Box-Bildschirm, RE2-Layout seit 2026-08-30, re15_inv_screen.c Block 7b "DIE BOX ALS LISTE"):
+1. In der Box-Liste ueberdecken lange Item-Namen (links ab NAME_X 16) die Item-Symbole (ICON_X 158). Die Symbole sollen so weit
+   wie moeglich nach rechts (bis vor die Mengen-Ziffern/den Scrollbalken), so dass kein Name ein Symbol ueberdeckt — Zensus
+   aller Item-Namen (Pixelbreite im Port-Zeichensatz) gegen die Symbol-Lage; RE2-Vorlage pruefen (RE2: Symbol x 155 in seinem
+   breiteren Panel; RE2 kuerzt/setzt Namen wie?).
+2. Beim Scrollen gleiten die Zeilen (box_pixoff) und liegen waehrenddessen UEBER dem Rahmen ("Kasten") des Listen-Panels. Der
+   Rahmen muss ueber den Items liegen: Zeilen, die beim Gleiten aus dem Fenster ragen, werden vom Rahmen verdeckt bzw.
+   abgeschnitten — wie RE2 (Listen-Zeichenschleife FUN_800710dc, Rahmen-Sprites @0x800a9c38).
+
+## Nachtrag 10 — 2026-10-12 (woertlich, Irons-Szene ROOM1150 bei Leon)
+
+> Der Text bei Leon zum Schluss bei Irons - "be a hero leon" ist mir irgendwie zu trashig.... hast du einen weniger trashigen Text als Abschluss für den Dialog?
+
+Vorschlaege (je mit "Irons: " in einer Zeile <= 271 px, gemessen mit tools/r35_l/texte_bauen.py): "Get them out of here... Leon..."
+(empfohlen), "It's up to you now... Leon...", "Now go... Leon... Go...". Antwort des Nutzers (woertlich):
+
+> ja, get them out of here leon gefällt mir besser
+
+Lesart: ROOM1150 msg 28 (Port-Text der Runde 35, irons_tod_1150.c k_msg28) wird "Irons: Get them out of here... Leon..."
+(NUTZER-VORGABE). Keine Sprachaufnahme vorhanden (synchro/STAGE1/room1150/main28.wav fehlt) -> nur Text; der Szenen-Takt
+haengt nicht an der Textlaenge (99-Bilder-Halt `01 63`, danach OP_SLEEP(100) + Armfall). Umsetzung im Integrationszweig.
+
+## Nachtrag 11 — 2026-10-12 (woertlich, Szene ROOM11C0 Ada/Marvin nach Irons' Tod)
+
+> Und die Dialogszene mit Ada/Marvin nach Irons Tod ist auch noch nicht so geil von den Animationen....
+>
+> Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut.
+
+Lesart -> Spur O szene11c0: Programm 4 der Irons-Szene (engine/src/irons_tod_1150.c k_p_11c0, Runde 35 Spur L + Runde 36
+Spur K2) neu choreografieren: (a) zu Beginn stehen beide schon sinnvoll (einander zugewandt bzw. so, dass keine grosse
+Drehung noetig ist) — kein "komplett falsche Richtung"; (b) keine 180-Grad-Drehung zum Gebaeude (die Tuer liegt HINTER der
+Kamera Cut 13): auf den Knall reagieren Kopf/Oberkoerper, nicht der ganze Koerper um 180 Grad; (c) keine zweite grosse
+Drehung Adas; (d) wer spricht, sieht den anderen an — Marvin sieht Ada an, wenn er spricht ("Yes!....", "Oh, no, Leon!",
+"I have to help him, sorry!"), bis er losrennt; Ada sieht ihm nach. Zuerst die heutige Szene Bild fuer Bild messen
+(Framedumps, Gierwinkel + Kopfdrehung je Bild beider Figuren) und gegen die Beschreibung des Nutzers stellen; pruefen,
+ob Plc_neck bei Marvin (Typ 0x40) ueberhaupt sichtbar wirkt. Vokabular wie bisher aus dem Original (Plc_neck Modus 1,
+Plc_dest Modus 9, Ankunfts-Warten, ROOM11C0 sub02/sub03) und RE2-Dialogszenen als Vorbild; Winkel aus den Positionen
+(Gierwinkel = Richtung zum Gegenueber), Takte PORT-WAHL. Beats der Runde 35/36 (Knall, Frage, Antwort, "Oh, no, Leon!",
+"I have to help him", Losrennen, "Marvin!...") bleiben.
+
+## Orchestrator-Auftrag N — 2026-10-12 (zu Nachtrag 7 "Bei Elzas Szenario stimmt weder das Modell von Roy ...")
+
+Grund: Spur K (K_roy.md OFFEN 1, §6.1) und Spur J (Folge-Kandidat) belegen dieselbe Fehlerklasse ueber Roy hinaus: das
+Original laedt in Elzas Szenario JEDEN Gegner-/NPC-Typ aus CDEMD1.EMS (FUN_80022300: Elza-Bit `bltz` @0x80022334 -> Datei
+0x27 @0x800223ac, TOC @0x80073178), der Port ausser Roy weiter Leons CDEMD0-Daten. Unterschiede je Typ laut K: 0x30 Birkin
+ANDERES MODELL (ROOM3071/5081/5091/50F1), 0x42 ANDERES MODELL (ROOM11B1 @0x01058, ROOM3091 @0x014F4), Zombies 0x10-0x18
+eigene Aktions- + Opfer-Bank (Griff-Animation am Spieler), Kraehe/0x27/0x29/0x2b Opfer-Bank. -> Spur N elzaems: Elzas
+Szenario laedt jeden Typ wie das Original aus CDEMD1 (K-Mechanismus re15_ems_toc / roy_pc.c verallgemeinern), je Typ am
+Original und an der exe gemessen; Leon bleibt bytegleich. Basis = abgenommener Stand der Spur K.
