@@ -37,4 +37,13 @@ static inline int re15_pri_atlas_quelle(int nachgezeichnet, int eigener_atlas_da
     return (nachgezeichnet && eigener_atlas_da) ? RE15_PRI_ATLAS_EIGEN : RE15_PRI_ATLAS_BSS;
 }
 
+/* Generator-Rechtecke, die eine Figur VOR jedem Objekt uebermalen wuerden, bleiben aus (engine/src/masken36_r37.c,
+ * Tabelle gen/masken36_ausschluss_r37.inc). masken_raum = Raum-Id der MSK-Datei (re15_pri_masken_raum); idx = Rechteck in
+ * der Reihenfolge von re15_pri_parse_section. */
+#include "re15_pri.h"
+int re15_masken36_ausgeschlossen(unsigned masken_raum, int cut, int idx);
+/* Entfernt die ausgeschlossenen Rechtecke aus pri (Reihenfolge bleibt, draw_count folgt); Rueckgabe = neue mask_count. */
+int re15_masken36_filter(unsigned masken_raum, int cut, re15_pri_cut_t *pri);
+int re15_masken36_zeilen_zahl(void);
+
 #endif
