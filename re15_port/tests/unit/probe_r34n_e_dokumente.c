@@ -45,6 +45,7 @@
 #include "re15_item_modal.h"
 #include "re15_light.h"
 #include "re15_pri.h"
+#include "re15_pri1100_r37.h"   /* Runde 37 Spur A: re15_pri_masken_raum (Masken-Zwilling wie der Lader) */
 #include "re15_md1.h"
 #include "re15_menu.h"
 
@@ -187,7 +188,8 @@ static int masken_des_cuts(int cut, re15_pri_cut_t *pri, int *nachgezeichnet)
     int n = re15_pri_parse_section(s_buf, s_size, s_rdt.cuts[cut].pri_offset, pri);
     if (n > 0) return n;
     char path[600];
-    snprintf(path, sizeof path, "%s/MASKS/ROOM%04X.MSK", RE15_ASSET_PSX_DIR, (unsigned)s_raum);
+    /* Runde 37 Spur A (VERTRAG 1.7): wie der Lader - Elza-Raum ohne eigene MSK nimmt die Leon-Variante. */
+    snprintf(path, sizeof path, "%s/MASKS/ROOM%04X.MSK", RE15_ASSET_PSX_DIR, re15_pri_masken_raum((unsigned)s_raum));
     size_t ms = 0;
     uint8_t *mb = read_file(path, &ms);
     if (!mb) return 0;

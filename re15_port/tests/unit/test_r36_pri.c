@@ -206,18 +206,30 @@ static int im_quad(const double *sx, const double *sy, double x, double y)
 
 static int schatten_messen(unsigned raum, int cut, int px, int pz, int16_t rot, int *in_quad, int *ueber)
 {
-    cut_t c; double sx[4], sy[4]; int32_t summe; int bucket, x, y, n = 0, u = 0;
+    cut_t c; double sx[4], sy[4]; int32_t summe; int bucket, x, y, n = 0, u = 0, r = 0;
     if (!cut_laden(&c, raum, cut)) { g_fail = 1; return -1; }
     if (!schatten_quad(&c, px, pz, rot, sx, sy, &summe)) { printf("  FEHLER: Schattenquad hinter der Kamera\n"); cut_frei(&c); g_fail = 1; return -1; }
     bucket = re15_schatten_bucket(summe);
     for (y = 0; y < 240; y++)
         for (x = 0; x < 320; x++) {
+            int rand = 0, dx, dy;
             if (!c.deck[y][x] || !im_quad(sx, sy, x + 0.5, y + 0.5)) continue;
             n++;
-            if (re15_schatten_maske_darueber((int) c.tief[y][x], bucket, 1)) u++;
+            if (!re15_schatten_maske_darueber((int) c.tief[y][x], bucket, 1)) continue;
+            /* Runde 37 Spur A: Randpunkte der Silhouette (ein Nachbar ohne Maske) zaehlen nicht. Seit die Wandmasken
+             * je Rechteck nur EINE Tiefenstufe tragen (analysis/befunde_runde37/A_pri1100.md), traegt der Wandfuss die
+             * Tiefe der Wandbasis statt des Kachel-Maximums; an Cut 2 (-15100,-18500) liegen dann 3 Randpunkte
+             * (53,237)/(52,238)/(51,239) mit Tiefe 63 < Bucket 65 im Quad — ihr Pixelmittelpunkt zeigt Boden 8..13
+             * Einheiten vor der Maskenflaeche x=-15710, also die halbe Rasterzelle, nicht die Tiefe. Die echte exe
+             * zeigt dort 0 geaenderte Punkte (integration_r36_pri_schatten). Der Befund der Runde 36 (Bodenstreifen
+             * des Zellenpolsters, v0.8.23-Masken) bleibt erkannt: 31 innere Punkte UEBER dem Schatten. */
+            for (dy = -1; dy <= 1; dy++)
+                for (dx = -1; dx <= 1; dx++)
+                    if (y + dy < 0 || y + dy >= 240 || x + dx < 0 || x + dx >= 320 || !c.deck[y + dy][x + dx]) rand = 1;
+            if (rand) r++; else u++;
         }
-    printf("  ROOM%04X Cut %d Spieler (%d,%d) rot %d: Schatten-Bucket %d (Summe %ld), Maskenpunkte im Quad %d, davon UEBER dem Schatten %d\n",
-           raum, cut, px, pz, rot, bucket, (long) summe, n, u);
+    printf("  ROOM%04X Cut %d Spieler (%d,%d) rot %d: Schatten-Bucket %d (Summe %ld), Maskenpunkte im Quad %d, davon UEBER dem Schatten %d (+%d am Silhouettenrand)\n",
+           raum, cut, px, pz, rot, bucket, (long) summe, n, u, r);
     *in_quad = n; *ueber = u;
     cut_frei(&c);
     return bucket;

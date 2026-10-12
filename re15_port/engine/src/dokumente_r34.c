@@ -14,6 +14,7 @@
 #include "re15_scd.h"
 #include "re15_aot.h"
 #include "re15_pri.h"
+#include "re15_pri1100_r37.h"   /* Runde 37 Spur A: re15_pri_masken_raum (Masken-Zwilling Elza -> Leon) */
 
 #include "gen/dokumente_props.inc"
 
@@ -111,7 +112,7 @@ typedef struct { uint16_t raum; uint8_t cut; uint16_t tiefe; } klemme_t;
 static const klemme_t k_klemmen[] = {
     { 0x1020, RE15_DOK3_KLEMME_CUT, RE15_DOK3_KLEMME_TIEFE },
     { 0x1021, RE15_DOK3_KLEMME_CUT, RE15_DOK3_KLEMME_TIEFE },
-    { 0x1010, 0, RE15_DOK4_KLEMME_CUT0 },       /* nur ROOM1010: ROOM1011 hat keine MSK-Datei */
+    { 0x1010, 0, RE15_DOK4_KLEMME_CUT0 },       /* ROOM1010 und (Runde 37, Masken-Zwilling) ROOM1011 */
     { 0x1010, 1, RE15_DOK4_KLEMME_CUT1 },
     { 0x1010, 6, RE15_DOK4_KLEMME_CUT6 },
     { 0x1010, 8, RE15_DOK4_KLEMME_CUT8 },
@@ -173,8 +174,11 @@ int re15_dokumente_sort_max_mit(int irons, uint16_t room_id, int cut, int obj_id
 {
     const dokument_t *d = dokument_des_raums(room_id);
     if (!d || obj_id != (int)d->obj) return irons;
+    /* Runde 37 Spur A (VERTRAG 1.7): die Klemme gehoert zu den MASKEN, die der Lader fuer den Raum nimmt —
+     * ROOM1011 zeichnet seither die Masken von ROOM1010 (re15_pri_masken_raum), also auch deren Klemme. */
+    const unsigned mraum = re15_pri_masken_raum(room_id);
     for (int k = 0; k < KLEMMEN_ANZAHL; k++)
-        if (k_klemmen[k].raum == room_id && (int)k_klemmen[k].cut == cut)
+        if (k_klemmen[k].raum == mraum && (int)k_klemmen[k].cut == cut)
             return (int)re15_pri_mask_camera_z((int)k_klemmen[k].tiefe) - 1;
     return irons;
 }

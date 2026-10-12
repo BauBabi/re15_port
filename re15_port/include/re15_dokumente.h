@@ -240,7 +240,9 @@
  * die kleinste Tiefe unter den Masken, die die fernste Ecke der Blatt-Huelle verdecken (Sonde
  * `huelle`, E_belege/endwerte.txt): Cut 0 Maske 14 Tiefe 40, Cut 1 Maske 46 Tiefe 53, Cut 6 Maske
  * 14 Tiefe 60, Cut 8 Maske 2 Tiefe 51. Damit stellt die Klemme fuer das Blatt genau das Original
- * her (nichts verdeckt). ROOM1011 hat keine MSK-Datei -> keine Klemme. */
+ * her (nichts verdeckt). ROOM1011 hat keine eigene MSK-Datei; seit Runde 37 (Spur A, VERTRAG 1.7, Masken-Zwilling
+ * re15_pri_masken_raum: gleiche Kamerasaetze + gleicher Hintergrund) zeichnet sie die Masken von ROOM1010 und bekommt
+ * deshalb dieselbe Klemme (gemessen ohne Klemme: Elza Cut 1 73 statt 163 Blatt-Punkte, Cut 0 198 statt 202). */
 #define RE15_DOK4_KLEMME_CUT0        40
 #define RE15_DOK4_KLEMME_CUT1        53
 #define RE15_DOK4_KLEMME_CUT6        60
