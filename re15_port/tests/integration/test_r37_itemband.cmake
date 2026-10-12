@@ -137,7 +137,7 @@ endmacro()
 set(_wp_oben3050 "OBJ 1" "RAUM 3050" "WARTE 30" "FLAG 9 92" "GEHE -6450 1523" "GEHE -6450 -20750" "GEHE -11880 -22540"
     "GEHE -16650 -22540" "GEHE -22720 -22540" "GEHE -24070 -22782 100" "BLICK 1024" "WARTE 20" "AKTION" "WARTE 60"
     "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 92" "ENDE")
-_lauf(oben3050 400 _wp_oben3050 RE15_DEBUG_JUMP=3050@250 "RE15_PLAYER_POS=-3596,1523,1024,4" "RE15_EXIT_AT=1500")
+_lauf(oben3050 500 _wp_oben3050 RE15_DEBUG_JUMP=3050@250 "RE15_PLAYER_POS=-3596,1523,1024,4" "RE15_EXIT_AT=1250")
 _muss("loaded room3050.rdt" _dbg "oben3050: ROOM3050 nicht geladen")
 _gesperrt(oben3050 3050 6 1 4 3)
 _flag_ende(oben3050 9 92 0)
@@ -151,7 +151,7 @@ set(_wp_weg3050 "OBJ 1" "RAUM 3050" "WARTE 30" "FLAG 3 82" "FLAG 3 93" "FLAG 9 9
     "GEHE -24058 -14250 100" "SCHIEB 1024 Z <= -22200 1500" "WARTE 60" "FLAG 3 93" "BLICK 1024" "WARTE 20" "AKTION"
     "WARTE 150" "GEHE -24058 -22900 100" "BLICK 1024" "WARTE 20" "AKTION" "WARTE 60" "AKTION" "WARTE 60" "AKTION"
     "WARTE 100" "FLAG 9 92" "FLAG 3 93" "ENDE")
-_lauf(weg3050 600 _wp_weg3050 RE15_DEBUG_JUMP=3050@250 "RE15_PLAYER_POS=-3596,1523,1024,4" "RE15_EXIT_AT=4300")
+_lauf(weg3050 900 _wp_weg3050 RE15_DEBUG_JUMP=3050@250 "RE15_PLAYER_POS=-3596,1523,1024,4" "RE15_EXIT_AT=4250")
 _muss("MEMBER 0x12 Spieler: Kollisionsband 4 -> 0 (@0x80041228) y=0" _item "weg3050: der Lift sub04 (@0x023D0) setzt das Band nicht auf 0")
 _muss("FLAG (3,82) = 1" _wp "weg3050: Lift sub04 nicht gefahren ((3,82))")
 _muss("FLAG (3,93) = 1" _wp "weg3050: Kiste nicht in der Kerbe slot 7 @0x01F06 (Latch (3,93) sub01 @0x02184-2196)")
@@ -160,8 +160,8 @@ _flag_ende(weg3050 9 92 1)
 message(STATUS "r37_itemband weg3050: Fall -> Lift (Band 4 -> 0) -> Kerbe (3,93) -> Klettern -> Band 1 FREI -> (9,92) = 1")
 
 string(REPLACE "RAUM 3050" "RAUM 3051" _wp_elza3051 "${_wp_oben3050}")
-_lauf(elza3051 400 _wp_elza3051 RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=3050@250 "RE15_PLAYER_POS=-3596,1523,1024,4"
-      "RE15_EXIT_AT=1500")
+_lauf(elza3051 500 _wp_elza3051 RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=3050@250 "RE15_PLAYER_POS=-3596,1523,1024,4"
+      "RE15_EXIT_AT=1250")
 _muss("loaded room3051.rdt" _dbg "elza3051: ROOM3051 (Elza) nicht geladen")
 _gesperrt(elza3051 3051 6 1 4 3)
 _flag_ende(elza3051 9 92 0)
@@ -170,7 +170,7 @@ message(STATUS "r37_itemband elza3051: Super Redhawk (ROOM3051, Elza) von Band 4
 # ---- ROOM3010: Steg (Band 1) ----------------------------------------------------------------------------------------
 set(_wp_unten3010 "OBJ 0" "RAUM 3010" "GEGNERWEG" "WARTE 30" "FLAG 9 20" "BLICK 0" "WARTE 20" "AKTION" "WARTE 60"
     "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 20" "ENDE")
-_lauf(unten3010 300 _wp_unten3010 RE15_DEBUG_JUMP=3010@250 "RE15_PLAYER_POS=-10700,844,0,0" "RE15_EXIT_AT=900")
+_lauf(unten3010 400 _wp_unten3010 RE15_DEBUG_JUMP=3010@250 "RE15_PLAYER_POS=-10700,844,0,0" "RE15_EXIT_AT=500")
 _muss("loaded room3010.rdt" _dbg "unten3010: ROOM3010 nicht geladen")
 _gesperrt(unten3010 3010 5 1 0 3)
 _flag_ende(unten3010 9 20 0)
@@ -179,7 +179,7 @@ message(STATUS "r37_itemband unten3010: Schrotpatronen auf dem Steg von Band 0 (
 set(_wp_weg3010 "OBJ 0" "RAUM 3010" "GEGNERWEG" "WARTE 30" "FLAG 9 20" "GEHE -10400 -11100 120" "BLICK 3072" "WARTE 20"
     "AKTION" "WARTE 150" "GEHE -10700 -8000" "GEHE -10700 844 100" "BLICK 0" "WARTE 20" "AKTION" "WARTE 60" "AKTION"
     "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 20" "ENDE")
-_lauf(weg3010 400 _wp_weg3010 RE15_DEBUG_JUMP=3010@250 "RE15_PLAYER_POS=-7400,-18400,3072,0" "RE15_EXIT_AT=1800")
+_lauf(weg3010 500 _wp_weg3010 RE15_DEBUG_JUMP=3010@250 "RE15_PLAYER_POS=-7400,-18400,3072,0" "RE15_EXIT_AT=1050")
 file(READ "${_sub}/climb.txt" _climb3010)
 string(REGEX MATCH "room=3010 [^\n]*band=0 sub=9" _kl3010 "${_climb3010}")
 if("${_kl3010}" STREQUAL "")
@@ -193,7 +193,7 @@ message(STATUS "r37_itemband weg3010: Klettern an r0[4] (Band 0 -> 1) -> FREI ->
 set(_wp_weg2090 "OBJ 0" "RAUM 20A0" "GEGNERWEG" "WARTE 30" "BLICK 3072" "WARTE 20" "AKTION" "RAUM 2090" "GEGNERWEG"
     "WARTE 30" "FLAG 9 90" "BLICK 2048" "WARTE 20" "AKTION" "WARTE 60" "AKTION" "WARTE 60" "AKTION" "WARTE 100"
     "FLAG 9 90" "ENDE")
-_lauf(weg2090 400 _wp_weg2090 RE15_DEBUG_JUMP=20A0@250 "RE15_PLAYER_POS=4950,4100,3072,2" "RE15_EXIT_AT=900#2090")
+_lauf(weg2090 500 _wp_weg2090 RE15_DEBUG_JUMP=20A0@250 "RE15_PLAYER_POS=4950,4100,3072,2" "RE15_EXIT_AT=500#2090")
 _muss("[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2 spawn=(6300,-1800,-16250)" _dbg "weg2090: Tuer 20A0 slot 0 @0x01746 nicht ausgeloest")
 _muss("loaded room2090.rdt" _dbg "weg2090: ROOM2090 nicht geladen")
 _frei(weg2090 2090 5 1)
@@ -203,7 +203,7 @@ message(STATUS "r37_itemband weg2090: Tuer 20A0 -> Plattform Band 1 -> Pocket Wa
 # ---- ROOM2040: Halle (Band 3) -----------------------------------------------------------------------------------------
 set(_wp_galerie2040 "OBJ 0" "RAUM 2040" "GEGNERWEG" "WARTE 30" "FLAG 9 91" "BLICK 1024" "WARTE 20" "AKTION" "WARTE 60"
     "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 91" "ENDE")
-_lauf(galerie2040 300 _wp_galerie2040 RE15_DEBUG_JUMP=2040@250 "RE15_PLAYER_POS=2200,-13800,1024,5" "RE15_EXIT_AT=700")
+_lauf(galerie2040 400 _wp_galerie2040 RE15_DEBUG_JUMP=2040@250 "RE15_PLAYER_POS=2200,-13800,1024,5" "RE15_EXIT_AT=500")
 _gesperrt(galerie2040 2040 7 3 5 3)
 _flag_ende(galerie2040 9 91 0)
 message(STATUS "r37_itemband galerie2040: Head of Akuma von Band 5 gesperrt, (9,91) = 0")
@@ -211,18 +211,18 @@ message(STATUS "r37_itemband galerie2040: Head of Akuma von Band 5 gesperrt, (9,
 set(_wp_weg2040 "OBJ 0" "RAUM 2040" "GEGNERWEG" "WARTE 30" "FLAG 9 91" "GEHE 5050 -5375" "GEHE 5050 -10000"
     "GEHE 2200 -10500" "GEHE 2200 -13800 100" "BLICK 1024" "WARTE 20" "AKTION" "WARTE 60" "AKTION" "WARTE 60" "AKTION"
     "WARTE 100" "FLAG 9 91" "ENDE")
-_lauf(weg2040 400 _wp_weg2040 RE15_SET_FLAG=3:146,3:53 RE15_DEBUG_JUMP=2040@250 "RE15_PLAYER_POS=21700,-5400,2048,3"
-      "RE15_EXIT_AT=2400")
+_lauf(weg2040 500 _wp_weg2040 RE15_SET_FLAG=3:146,3:53 RE15_DEBUG_JUMP=2040@250 "RE15_PLAYER_POS=21700,-5400,2048,3"
+      "RE15_EXIT_AT=1000")
 _frei(weg2040 2040 7 3)
 _flag_ende(weg2040 9 91 1)
 message(STATUS "r37_itemband weg2040: Halle Band 3 -> Nordgang -> Head of Akuma FREI -> (9,91) = 1")
 
 # ---- ROOM2030: Lift A (Band 6) und Treppe (Band 1) -------------------------------------------------------------------
-set(_wp_spas2030 "OBJ 1" "RAUM 2030" "GEGNERWEG" "WARTE 30" "FLAG 9 109" "FLAG 3 222" "GEHE 6600 10900 100" "BLICK 3072"
+set(_wp_spas2030 "OBJ 1" "RAUM 2030" "GEGNERWEG" "WARTE 30" "FLAG 9 109" "FLAG 3 222" "GEHE 6600 12000 100" "BLICK 3072"
     "WARTE 20" "AKTION" "WARTE 400" "FLAG 3 222" "GEHE 6600 13700 120" "GEHE 2000 14500" "GEHE -650 14500 100" "BLICK 0"
     "WARTE 20" "AKTION" "WARTE 60" "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 109" "ENDE")
-_lauf(spas2030 500 _wp_spas2030 RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,3072,3"
-      "RE15_EXIT_AT=2600")
+_lauf(spas2030 600 _wp_spas2030 RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,3072,3"
+      "RE15_EXIT_AT=1450")
 _muss("MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800" _item "spas2030: Lift A sub02 (@0x01E66) setzt das Band nicht auf 6")
 _frei(spas2030 2030 11 6)
 _flag_ende(spas2030 9 109 1)
@@ -230,7 +230,7 @@ message(STATUS "r37_itemband spas2030: Lift A (Band 3 -> 6) -> SPAS-12 FREI -> (
 
 set(_wp_spasb3 "OBJ 1" "RAUM 2030" "GEGNERWEG" "WARTE 30" "FLAG 9 109" "BLICK 0" "WARTE 20" "AKTION" "WARTE 60" "AKTION"
     "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 109" "ENDE")
-_lauf(spasb3 300 _wp_spasb3 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=-650,14500,0,3" "RE15_EXIT_AT=700")
+_lauf(spasb3 400 _wp_spasb3 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=-650,14500,0,3" "RE15_EXIT_AT=500")
 _gesperrt(spasb3 2030 11 6 3 3)
 _flag_ende(spasb3 9 109 0)
 message(STATUS "r37_itemband spasb3: SPAS-12 von Band 3 gesperrt, (9,109) = 0")
@@ -239,7 +239,7 @@ set(_wp_schrot2030 "OBJ 1" "RAUM 2030" "GEGNERWEG" "WARTE 30" "FLAG 9 108" "GEHE
     "GEHE -6350 -7700 80" "BLICK 0" "WARTE 20" "AKTION" "WARTE 300" "GEHE -1050 -7700" "GEHE -1050 7100"
     "GEHE 4300 7100 100" "BLICK 0" "WARTE 20" "AKTION" "WARTE 60" "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 108"
     "ENDE")
-_lauf(schrot2030 500 _wp_schrot2030 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,1024,3" "RE15_EXIT_AT=3000")
+_lauf(schrot2030 600 _wp_schrot2030 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=6550,-100,1024,3" "RE15_EXIT_AT=1650")
 set(_stair "")
 if(EXISTS "${_sub}/stair_dbg.log")
     file(READ "${_sub}/stair_dbg.log" _stair)
@@ -251,7 +251,7 @@ message(STATUS "r37_itemband schrot2030: Treppe (Band 3 -> 1) -> Gang -> Schrotp
 
 set(_wp_schrotb3 "OBJ 1" "RAUM 2030" "GEGNERWEG" "WARTE 30" "FLAG 9 108" "BLICK 0" "WARTE 20" "AKTION" "WARTE 60"
     "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 108" "ENDE")
-_lauf(schrotb3 300 _wp_schrotb3 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=4300,7100,0,3" "RE15_EXIT_AT=700")
+_lauf(schrotb3 400 _wp_schrotb3 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=4300,7100,0,3" "RE15_EXIT_AT=500")
 _gesperrt(schrotb3 2030 10 1 3 3)
 _flag_ende(schrotb3 9 108 0)
 message(STATUS "r37_itemband schrotb3: Schrotpatronen von Band 3 gesperrt, (9,108) = 0")

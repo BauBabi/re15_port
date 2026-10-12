@@ -34,4 +34,4 @@ add_test(NAME integration_r37_itemband
         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
         -DWORKDIR=${CMAKE_BINARY_DIR}/r37_itemband_wd
         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_itemband.cmake)
-set_tests_properties(integration_r37_itemband PROPERTIES TIMEOUT 2400)
+set_tests_properties(integration_r37_itemband PROPERTIES TIMEOUT 3000)

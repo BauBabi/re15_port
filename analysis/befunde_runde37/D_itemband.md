@@ -227,6 +227,41 @@ Laufordner Scratchpad `r37d/<lauf>/`; Auszuege (wegplan.txt, itemband.txt, climb
   erreicht das Rechteck geometrisch nicht (r0[5] umschliesst die Plattform) — in 2090 war der Defekt im Spiel nicht
   sichtbar; das Gate fuer diesen Satz belegt der Riegel (Teil G: Band 0/2/4 -> kein Modal).
 
+### 5.4 ROOM2040 — Halle (Head of Akuma, floor 3, tk 91)
+* **`n2040_galerie`** (Band 5 = Galerie-Band an der Item-Stelle (2200,-13800), Blick Nord): 3x `ITEM slot 7 floor 3 item 0x32
+  tk 91 spieler-band 5 spieler=(2200,-9000,-13800) -> GESPERRT`; `F314 FLAG (9,91) = 0`.
+* `n2040_weg` (Halle Band 3 = Ankunft der 2050-Tuer slot 2 (21700,-5400,-5400), ohne Vorbedingung): Klemme bei (4646,-5582)
+  — **Spielvorgabe, kein Port-Defekt**: ROOM2040 sub00 @0x0141A `Ck (3,146)=0` bzw. @0x01452 `Ck (3,53)=0` -> `Sca_id_set
+  37 0x 13 ff` = Zelle r*[19] (x 4150..5950 z -6500..-6050, im RDT u0 0x00) wird gesperrt, der Nordgang zur Head of Akuma
+  oeffnet erst das Tor-Raetsel ((3,53) in sub02 @0x01624).
+* **`n2040_weg2`** (dasselbe mit `RE15_SET_FLAG=3:146,3:53` = Raetsel geloest): `F554 ITEM slot 7 floor 3 ... spieler-band 3
+  spieler=(2215,-5400,-13727) -> FREI`, **`F783 FLAG (9,91) = 1`**.
+
+### 5.5 ROOM2030 — SPAS-12 (floor 6, tk 109) ueber Lift A
+* **`n2030_spas_b3`** (Band 3 an der SPAS-12 (-650,14500), Blick Ost): 3x `ITEM slot 11 floor 6 item 0x0D tk 109 spieler-band
+  3 spieler=(-650,-5400,14500) -> GESPERRT`; `F314 FLAG (9,109) = 0`. (Original S3: Taken-Bit 109 = 0.)
+* `n2030_spas_weg` (ohne Strom): AKTION am Lift -> Meldung "The elevator is not responding" (sub01 @0x01E14 `Ck (3,126)=0`
+  -> Aot_reset slot 5/7 sce 1) — Spielvorgabe (Sicherung in ROOM2060 sub @0x012AE `Set (3,126)=1`).
+* `n2030_spas_weg2` (Strom `RE15_SET_FLAG=3:126`, Start (6594,10846) am Kabinenrand): Lift faehrt, `MEMBER 0x12 Spieler:
+  Kollisionsband 3 -> 6 (@0x80041228) y=-10800`, aber die Ausschiebung aus der Band-6-Kabinenwand r0[49] (z 10650..11150)
+  setzt den Spieler NACH NORDEN (z 10182, kuerzerer Weg 646 < 754) — das Original stand im Messlauf bei z 10900 (Mitte,
+  Gleichstand 700/700) und landete suedlich (z 11618). Startstellung des Messlaufs, kein Mechanismus-Unterschied.
+* **`n2030_spas_weg3`** (Strom, Start IN der Kabine (6600,12000), Blick Sued, AKTION): `F361 MEMBER 0x12 Spieler:
+  Kollisionsband 3 -> 6 (@0x80041228) y=-10800`; `F807 (6605,13695) angekommen` (Kabine nach Sueden verlassen),
+  `F953 (-637,14499) angekommen`; **`F996 ITEM slot 11 floor 6 ... spieler-band 6 spieler=(-637,-10800,14499) -> FREI`**,
+  **`F1225 FLAG (9,109) = 1`**. Dauer des Laufs 161 s (2600 Bilder unter Last).
+
+### 5.6 ROOM2030 — SHOTGUN SHELLS x14 (floor 1, tk 108) ueber die Treppe
+* **`n2030_schrot_b3`** (Band 3 = Hallenhoehe y -5400 an der Item-Stelle (4300,7100)): 3x `ITEM slot 10 floor 1 item 0x16 tk 108
+  spieler-band 3 spieler=(4300,-5400,7100) -> GESPERRT`; `F314 FLAG (9,108) = 0` (Original G3: 0).
+* **`n2030_schrot_weg`** (Ankunft aus 2070 (6550,-5400,-100) Band 3 -> Ostgang -> Nordgang -> Absatz (-6364,-7750) -> Blick Ost
+  -> AKTION): stair_dbg.log `[stair] START dir=DOWN cur_band=3 target_band=1`, Ende (-2082,-7741) (Original T: (-1982,-1800,-7694)
+  Band 1); Band-1-Gang `F1049 (-1008,6978)`, `F1155 (4251,7118)`; **`F1179 ITEM slot 10 floor 1 ... spieler-band 1
+  spieler=(4251,-1800,7118) -> FREI`**, **`F1408 FLAG (9,108) = 1`**.
+  (Damit ist auch die Treppen-Aussage der Spur R ("2030 Treppe Band 3 -> 5") eingeordnet: sie stammt aus einer Messung mit
+  Band 3 am OST-Ende (-1800,-7700), dem Band-1-Ende der Treppe; Seite 1 + Ost-Haelfte = Aufstieg. Vom Absatz (West) fuehrt die
+  Treppe im Port wie im Original auf Band 1.)
+
 ## 6. Tests
 
 ## 7. OFFEN
