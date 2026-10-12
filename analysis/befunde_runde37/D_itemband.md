@@ -14,6 +14,9 @@ Einstieg: R_abnahme_3.md M1/M2/M3/H4, NACHLAUF.md #73/#74 (Runde 36).
 - [x] Umsetzung: 2 Haken + itemband_r37.c (Abschnitt 4)
 - [x] Messung nachher (exe): alle 6 Stellen falsches Band GESPERRT / vorgesehener Weg FREI + Taken-Bit (Abschnitt 5)
 - [x] Tests: unit_r37_itemband + integration_r37_itemband gruen, Gegenproben rot, Regression 120/120 (Abschnitt 6)
+- [x] Nachbesserung 1 (Abnahme 0, Maengel 1-4): Lift A ROOM2030/2031 faehrt nur noch mit der Spielermitte in der Kabine
+      (PORT-WAHL nach RE2 ROOM6030 sub10 @0x02F70-7A), Fallen-Zensus aller Lifte, Riegel + Gegenproben, §5.5/§7/§8
+      berichtigt (Abschnitt "Nachbesserung 1")
 
 ## 1. Messung vorher
 
@@ -253,10 +256,14 @@ Laufordner Scratchpad `r37d/<lauf>/`; Auszuege (wegplan.txt, itemband.txt, climb
   3 spieler=(-650,-5400,14500) -> GESPERRT`; `F314 FLAG (9,109) = 0`. (Original S3: Taken-Bit 109 = 0.)
 * `n2030_spas_weg` (ohne Strom): AKTION am Lift -> Meldung "The elevator is not responding" (sub01 @0x01E14 `Ck (3,126)=0`
   -> Aot_reset slot 5/7 sce 1) — Spielvorgabe (Sicherung in ROOM2060 sub @0x012AE `Set (3,126)=1`).
-* `n2030_spas_weg2` (Strom `RE15_SET_FLAG=3:126`, Start (6594,10846) am Kabinenrand): Lift faehrt, `MEMBER 0x12 Spieler:
-  Kollisionsband 3 -> 6 (@0x80041228) y=-10800`, aber die Ausschiebung aus der Band-6-Kabinenwand r0[49] (z 10650..11150)
-  setzt den Spieler NACH NORDEN (z 10182, kuerzerer Weg 646 < 754) — das Original stand im Messlauf bei z 10900 (Mitte,
-  Gleichstand 700/700) und landete suedlich (z 11618). Startstellung des Messlaufs, kein Mechanismus-Unterschied.
+* `n2030_spas_weg2` (Strom `RE15_SET_FLAG=3:126`, Start (6594,10846) im Kabineneingang): Lift faehrt, `MEMBER 0x12 Spieler:
+  Kollisionsband 3 -> 6 (@0x80041228) y=-10800`, die Ausschiebung aus der Band-6-Kabinenwand r0[49] (z 10650..11150) setzt den
+  Spieler NACH NORDEN (z 10182) hinter die geschlossene Nordwand der oberen Kabine: KLEMME, `(9,109) = 0`.
+  **BERICHTIGT (Nachbesserung 1):** Hier stand vorher "Startstellung des Messlaufs, kein Mechanismus-Unterschied" — das war
+  falsch. Der Ausloeser (sub00 @0x01CE6, sat 0x31 = nur Punkt 620 voraus) feuert schon aus dem Eingang (ab z 10730, Blick Sued),
+  und jeder Druck mit z < 10900 endet dort: ein SOFTLOCK (SPAS-12 unerreichbar, keine Rueckfahrt, keine Band-6-Tuer). Das
+  Original tut dasselbe (Abnahme o2030T: 10770 -> 10182; der o2030L-Start z 10900 aus 2.7 lag nur zufaellig auf der sicheren Seite);
+  in den Port kam die Falle erst mit dem Member-0x12-Haken. Behoben mit der Plattform-Sperre (Abschnitt Nachbesserung 1).
 * **`n2030_spas_weg3`** (Strom, Start IN der Kabine (6600,12000), Blick Sued, AKTION): `F361 MEMBER 0x12 Spieler:
   Kollisionsband 3 -> 6 (@0x80041228) y=-10800`; `F807 (6605,13695) angekommen` (Kabine nach Sueden verlassen),
   `F953 (-637,14499) angekommen`; **`F996 ITEM slot 11 floor 6 ... spieler-band 6 spieler=(-637,-10800,14499) -> FREI`**,
@@ -325,12 +332,14 @@ nachgefahren werden.
 
 * Treppen-Endlage ROOM2030 slot 8 (Abstieg vom Absatz): Port (-2082,-7741), Original (-1982,-1800,-7694) — 100 Einheiten in x,
   47 in z (stair_common.c, nicht Teil dieses Auftrags; fuer die Aufnahme ohne Folge, beide auf Band 1 im Gang).
-* Lift-Ausschiebung ROOM2030 Lift A bei Start genau auf der Kabinenwand r0[49]: Original (Start z 10900, Gleichstand) nach Sueden,
-  Port (Start z 10846) nach Norden — kuerzerer Weg; der Gleichstandsfall selbst ist nicht verglichen (Startstellung des
-  Messlaufs; im Spiel steht man IN der Kabine).
+* ~~Lift-Ausschiebung ROOM2030 Lift A ... (Startstellung des Messlaufs; im Spiel steht man IN der Kabine)~~ — **BERICHTIGT in
+  Nachbesserung 1:** kein offener Randfall, sondern zwei im normalen Spiel erreichbare Softlocks (Lift A aufwaerts aus dem
+  Eingang, abwaerts von knapp suedlich der oberen Kabine; Abnahme 0 Maengel 1/2). Behoben (Plattform-Sperre, Abschnitt
+  Nachbesserung 1); Gleichstand z 10900 ist durch die Sperre nicht mehr ausloesbar (Mitte ausserhalb 11350..12850).
 * Member 0x13 (+0x1ba) am Spieler: der Port schreibt `g_actors[0].dog_floor_y`, der Kletter-Code fuehrt +0x1ba als eigenen
   Spiegel `s_floor_y` (climb_common.c). Ohne Folge fuer diesen Auftrag: s_floor_y wird vor jedem Lesen gesetzt (@0x80038494).
-* ROOM50D0-Lift: an der exe die ABFAHRT gefahren (5.7); die Auffahrt (Tueren floor 3) nur im Riegel (Teil M: 0 -> 3).
+* ROOM50D0-Lift: an der exe die ABFAHRT gefahren (5.7); die AUFFAHRT hat die Abnahme 0 an der exe belegt (N1: `MEMBER 0x12
+  0 -> 3`, `DOOR FIRE slot=0`, `loaded room50c0.rdt`) — erledigt.
 
 ## 8. Fuer den Nutzer
 
@@ -340,11 +349,19 @@ nachgefahren werden.
   Norden in die Nische schieben, auf die Kiste klettern, dann die Super Redhawk nehmen.
 * Betroffen sind 12 Gegenstaende (6 Stellen, je Leon und Elza): ROOM2030 Schrotpatronen (Gang unten, ueber die Treppe vom
   Absatz) und SPAS-12 (oben, mit Lift A), ROOM2040 Head of Akuma (Halle), ROOM2090 Pocket Watch (Plattform), ROOM3010
-  Schrotpatronen (Steg, hochklettern), ROOM3050 Super Redhawk (Kiste). Alle bleiben auf ihrem vorgesehenen Weg erreichbar.
+  Schrotpatronen (Steg, hochklettern), ROOM3050 Super Redhawk (Kiste). Alle bleiben auf ihrem vorgesehenen Weg erreichbar —
+  die SPAS-12 erst seit Nachbesserung 1 sicher: im ersten Stand dieser Runde konnte man sich mit Lift A festfahren (naechster
+  Punkt). Hier stand vorher nur "Alle bleiben ... erreichbar" ohne die Falle — berichtigt.
 * **Mit behoben:** Fahrstuehle, die das Stockwerk per Skript setzen (ROOM3050, ROOM2030 Lift A/B, ROOM50D0; ROOM1170 sub14 setzt Band 4 = Hof, dort ohne Aenderung),
   setzen jetzt auch das Stockwerk der Kollision — vorher stand Leon nach der Fahrt "im falschen Stockwerk" (ROOM3050: Klemme
   an unsichtbaren Waenden unten).
-* Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bedienaenderung, keine Entscheidungsfrage.
+* **Bedienaenderung Lift A in ROOM2030 (Leon und Elza, Nachbesserung 1):** der Lift faehrt nur noch, wenn man IN der Kabine
+  steht. Vorher (im Original genauso, im Port erst seit dem ersten Stand dieser Runde) fuhr er auch, wenn man im Eingang vor
+  der unteren Kabine oder knapp vor der oberen Kabine die Aktionstaste drueckte — danach stand man hinter der Kabinenwand fest,
+  das Spiel war nicht fortsetzbar. RE2 sichert genau diese Lift-Bauart in der Retail-Fassung so ab (Fahrt nur mit der Figur auf
+  der Plattform). Drueckt man ausserhalb, passiert nichts — einen Schritt in die Kabine gehen. Die anderen Lifte (ROOM2030
+  Lift B, ROOM3050, ROOM50D0) bleiben wie im Original: dort gibt es keine solche Falle (gemessen, Zensus).
+* Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Entscheidungsfrage.
 
 ## 9. Abschluss
 
@@ -353,6 +370,9 @@ Zweig `r37/itemband` (Basis master f1e019ca), Code-Commit 6aeb2086 (die zwei Hak
 Gemeinsame Dateien: `re15_port/engine/src/aot_common.c` (+3 Zeilen: Include, Kommentar, Aufruf nach dem GENERIC-Gate),
 `re15_port/engine/src/actor_common.c` (+3/-1: Include, case 18 mit Aufruf). Keine Installer-Zeile in scd_room_setup.c noetig
 (kein Raum-Installer), keine neuen Assets, keine Sprachdateien, keine neuen Bank-9-Bits, keine Port-Text-Ids.
+Nachbesserung 1: Code-Commit 589a37de (Plattform-Sperre: itemband_r37.c/.h, aot_common.c +2 Zeilen im GENERIC-Feuer),
+Riegel 8c9be739 (unit Teil L/F) / 945e2be9 + 2ed7c0f5 (integration_r37_itemband_lift), Gegenprobe 5ccbb188; letzter Commit
+`fix(r37-itemband): Nachbesserung 1 ...`.
 
 ## Nachbesserung 1 (nach Abnahme 0, 2026-10-12) — fortlaufend
 
@@ -365,8 +385,8 @@ Lift-Ausloesung ausserhalb der Kabine.
 - [x] RE-Belege: RE1.5 Lift A (Ausloeser sat 0x31 = nur Punkt 620 voraus) / RE2 Retail-Vorbild (NB1.2)
 - [x] Umsetzung (NB1.3, Code-Commit 589a37de)
 - [x] Messung nachher (Leon + Elza, beide Richtungen; vorgesehener Weg bleibt) (NB1.5)
-- [ ] Riegel + Gegenprobe
-- [ ] Dossier §5.5/§7/§8 berichtigt
+- [x] Riegel + Gegenprobe (NB1.4, NB1.6)
+- [x] Dossier §5.5/§7/§8 berichtigt (Mangel 3)
 
 ### NB1.1 Messung vorher (exe = Stand 05117c03, Messkopie re15_pc_r37d_nb1.exe, `D_belege/nb1/lauf_nb1.sh`)
 Start an der Ankunft der 2070-Tuer, Strom an: `RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250 RE15_PLAYER_POS=6550,-100,3072,3`.
@@ -474,3 +494,61 @@ Gleiche Befehle und Wegplaene wie NB1.1.
 | `n_ab_sued_elza` | `F844 room=2031 LIFT slot 4 ... nein -> GESPERRT` | `F1308 ... ja -> FAEHRT`, `F1399 MEMBER 0x12 6 -> 3` | **`DOOR FIRE slot=0`**, **`loaded room2071.rdt`** |
 -> Beide Fallen sind fuer beide Figuren weg; der vorgesehene Weg (Fahrt aus der Kabine) faehrt unveraendert, die SPAS-12
 bleibt erreichbar und der Raum ueber die Tuer slot 0 verlassbar.
+
+### NB1.4 Fallen-Zensus aller Lifte (unit_r37_itemband Teil F, echte Port-Kollision; Ausgabe `D_belege/nb1/unit_r37_itemband_nb1.log`)
+Je Fahrt: Raum mit der Lift-Stellung starten (echtes sub00), Ausloesestellen = jeder Standplatz im 25er-Raster um das
+Ausloese-Rechteck (+/-700), frei und erreichbar auf dem Startband, dessen Punkt 620 voraus (sat 0x20, @0x80042ef8; 256
+Blickrichtungen) bzw. Mitte (sat 0x40) das Rechteck trifft; dann die ECHTE Fahrt (Unterprogramm mit allen Skriptwirkungen —
+ROOM3050 setzt per `Sca_id_set 37 0n 15/2d ..` die Schachtzelle r*[21]/r*[45] um); Endlage = Ausschiebung mit
+`re15_collision_constrain` (Spielerpfad, Radius PR 450, Kollisionsband); Falle = Endlage nicht in der Flut-Komponente (50er-Raster)
+der vorgesehenen Fahrt (an der exe gefahrene Druckstelle). Fuer Lift A muss die Referenz-Komponente die SPAS-12-Stelle
+(-637,14499) bzw. den Tuer-slot-0-Standplatz (6535,11) enthalten.
+| Fahrt | Ausloesestellen | Fallen OHNE Sperre | Fallen MIT Sperre |
+|---|---|---|---|
+| 2030 Lift A auf (@0x01CE6 -> sub02 @0x01E66) | 1152 (432 gesperrt) | **108** (x 6350..6775, z 10750..10875 -> Endlage z 10182) | **0** |
+| 2030 Lift A ab (@0x01D20 -> @0x01EA8) | 1351 (433 gesperrt) | **307** (x 5925..6775, z 13050..13450 -> z 13768) | **0** |
+| 2031 Lift A auf / ab (Elza) | 1152 / 1351 | 108 / 307 (gleich) | **0 / 0** |
+| 2030 Lift B auf / ab (@0x01D88 / @0x01DC2 -> sub04) | 1584 / 1584 | 0 / 0 | 0 / 0 |
+| 3050 ab / auf (@0x0206C -> sub04 @0x023D0 / @0x0211E -> sub02 @0x0232C) | 9718 / 11642 | 0 / 0 | 0 / 0 |
+| 50D0 ab / auf (@0x012FA -> sub04 @0x0144C / @0x0135C -> sub02 @0x013D4) | 2738 / 3701 | 0 / 0 | 0 / 0 |
+Deckt sich mit der Zellanalyse der Abnahme (114 / 323 Stellen an Lift A, sonst 0; deren 25er-Raster mit anderem Rand). Erster
+Zensus-Lauf ohne die Skriptwirkung der Fahrt zeigte an 3050 626/760 Schein-Fallen (Schachtzelle r*[21] vor der Fahrt noch
+solide) — deshalb flutet der Riegel das Zielband NACH der echten Fahrt.
+
+### NB1.6 Tests (registriert nur in `re15_port/tests/unit/probes/r37_itemband.cmake`)
+* `unit_r37_itemband` neu Teil **L** (Sperre ueber den echten `re15_aot_scan`, ROOM2030 und ROOM2031: Satz slot 5/4 =
+  sub00 @0x01CE6/@0x01D20 geprueft; Druck (6605,10770)/(6605,10850) Blick Sued Band 3 und (6605,13245)/(6605,13400) Blick Nord
+  Band 6 -> ev 0, Zaehler +1; (6605,11970) / (6597,12061) -> ev 2; Kabine Blick nach aussen (6605,11400) -> ev 0 wie im Original;
+  Lift B / 3050 / 50D0 ohne Sperre) und Teil **F** (Zensus NB1.4). Lauf: `1/1 Test #678: unit_r37_itemband ... Passed 1.49 sec`.
+  **GEGENPROBE** (Haken in aot_common.c auskommentiert, gebaut, Test, Haken zurueck, `git status` sauber, neu gebaut):
+  Teil L 8x `FAIL: ... -> KEINE Fahrt (ev 2)` (2030 + 2031, auf + ab), `0% tests passed, 1 tests failed out of 1`
+  (`D_belege/nb1/unit_gegenprobe_ohne_liftsperre.log`). Teil F traegt seine Gegenprobe selbst (108/307 Fallen ohne Sperre).
+* **`integration_r37_itemband_lift`** (`tests/integration/test_r37_itemband_lift.cmake`, echte exe, eigene Kopie
+  `re15_pc_r37d_lift_<id>`, `cmake_minimum_required(VERSION 3.16)`, keine POSIX-Aufrufe): je Figur `liftauf` (aus
+  (6605,10770) Blick Sued: (3,222)-Folge MUSS `0;0;1` sein, SPAS-12 FREI auf Band 6, (9,109) = 1; dazu die Messschrieb-Zeilen
+  GESPERRT/FAEHRT/MEMBER 3 -> 6) und `liftab` (aus (6605,13245) Blick Nord: Folge `0;1;1;0`, `DOOR FIRE slot=0`, `loaded
+  room2070/2071.rdt`, GESPERRT/MEMBER 6 -> 3). Lauf (Auszug `D_belege/nb1/integ_lift_86eb7a4a.txt`):
+  `ctest --test-dir re15_port/build -R "^integration_r37_itemband_lift$" --timeout 3000 --output-on-failure` ->
+  `1/1 Test #680: integration_r37_itemband_lift ....   Passed  579.41 sec` / **`100% tests passed, 0 tests failed out of 1`**.
+  **GEGENPROBE gegen die exe VOR der Nachbesserung** (05117c03, als `re15_pc_r37d_nb1_vorher.exe` neben der exe): ganzer Test ->
+  exit 1 nach 93 s, `r37_itemband_lift: liftauf2030: FLAG (3,222) gelesen '0;1;1', erwartet '0;0;1'`; nur die Abwaertsrichtung
+  (`-DLAEUFE=^liftab2030$`) -> exit 1 nach 115 s, `liftab2030: FLAG (3,222) gelesen '0;1;0', erwartet '0;1;1;0'` — beide rot am
+  VERHALTEN (Fahrt von ausserhalb), nicht erst am Messschrieb.
+
+### NB1.7 Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher
+| Mangel | Ursache | vorher (NB1.1) | Beleg (NB1.2) | Aenderung (NB1.3) | nachher (NB1.5/1.6) |
+|---|---|---|---|---|---|
+| 1 Lift A aufwaerts aus dem Eingang | Ausloeser sat 0x31 (nur voraus @0x80042ef8) feuert ab z 10730; mit Member 0x12 (@0x80041228) schiebt r0[49] den Spieler bei z < 10900 nach Norden (10182) | `v_auf_eingang`: F345 MEMBER 3 -> 6, (6605,10182), KLEMME, (9,109) = 0 | RE2 6030 sub10 @0x02F70-7A + Zone @0x02B9C sat 0x41; RE2 5060 sat 0x51 | Plattform-Sperre (Mitte im Rechteck) | `n_auf_eingang`(+Elza): GESPERRT, Kabine FAEHRT, (9,109) = 1; Riegel `liftauf2030/2031` |
+| 2 Lift A abwaerts suedlich der Kabine | dito, r0[33] schiebt bei z > 13050 nach Sueden (13768) | `v_ab_sued`: F935 MEMBER 6 -> 3, (6605,13768), Klemme bis EXIT | dito | dito | `n_ab_sued`(+Elza): GESPERRT, Kabine FAEHRT, Tuer slot 0 -> 2070/2071; Riegel `liftab2030/2031` |
+| 3 Dossier | §5.5/§7 hielten die eigene Klemme fuer eine Startstellung, §8 verschwieg sie | — | Abnahme L1/L2, o2030T/o2030D | §5.5, §7, §8 berichtigt (markiert "BERICHTIGT") | — |
+| 4 kein Riegel | spas2030 startet in der Kabine | — | — | Teil L/F + integration_r37_itemband_lift | gruen; Gegenproben rot (unit ohne Haken, integration gegen 05117c03, je Richtung) |
+Der byte-true Teil bleibt: Band-Gate fuer ITEM (@0x80042cac-ccc) und Member 0x12 = Kollisionsband (@0x80041228) unveraendert;
+alle Riegel des ersten Stands (unit/integration_r37_itemband) bleiben gruen (NB1.6, Regression NB1.9).
+
+### NB1.8 OFFEN / Hinweise
+* Die Sperre ist eine PORT-WAHL (Beta -> Retail): das RE1.5-Original faehrt Lift A auch von ausserhalb (und sitzt dann fest,
+  Abnahme o2030T/o2030D). Sie gilt nur an Lift A, weil nur dort Fallenstellen existieren (Zensus NB1.4). Der Beta-Lift 50D0, an
+  dessen Retail-Fassung RE2 die Zone eingefuehrt hat, faehrt im Port weiter wie im RE1.5-Original (auch von knapp ausserhalb der
+  Plattform, z.B. die Bau-Messung aus (-17600,-14900)), weil dort keine Falle entsteht — keine Entscheidungsfrage, nur Hinweis.
+* Zone = das RE1.5-Ausloese-Rechteck (Kabine). RE2s Zone ist eigens kleiner (800 statt 1200 an 6030); fuer Lift A gibt es kein
+  RE2-Gegenstueck, die Kabine aus den Zellen (NB1.2 a) ist die Plattform.
