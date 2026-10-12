@@ -357,6 +357,7 @@ void re15_re2z_hit_filter_apply(int slot);        /* Vier-Gate-Filter FUN_800470
 void re15_re2z_onesave_reset(void);                           /* Welle B (below): FUN_800401d4 latch */
 void re15_re2z_rng_reset(void) { s_re2_rng = 0xD2706CA4u;     /* room load — keeps runs deterministic */
                                  re15_re2z_onesave_reset();
+                                 re15_r37_marken_loeschen();   /* Runde 37 Spur H: Spawn-Marken leben mit dem Aktor-Feld */
                                  re15_re2dog_room_reset(); }  /* WELLE C: 0x800CFBF4-Analog (der
                                                                * einzige EXE-Clear FUN_80052f3c ist
                                                                * ein Room-Init) */

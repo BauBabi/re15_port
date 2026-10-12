@@ -70,6 +70,10 @@ void re15_r37_em_set(int actor_slot, const re15_actor_t *a, uint8_t behavior);
  * Spawn-Lage gleich — der INIT laeuft im ersten KI-Takt, vor jeder Bewegung); die Marke wird verbraucht. */
 int  re15_r37_re2_gang(int slot, const re15_actor_t *e);
 
+/* HAKEN enemy_ai_re2_zombie.c re15_re2z_rng_reset (Raum-Ladekette, VOR dem Init-Lauf der Sce_em_set; auch aus
+ * re15_actor_init): alle Marken verwerfen — ihre Lebensdauer ist die des Aktor-Feldes. */
+void re15_r37_marken_loeschen(void);
+
 /* Nur fuer Sonden/Riegel: Abbildung und den Nachspawn 1130 in aktiver Form abschalten (Gegenprobe = Stand v0.8.24). */
 void re15_r37_zombieaktiv_enable(int an);
 int  re15_r37_zombieaktiv_enabled(void);

@@ -21,3 +21,16 @@ foreach(_teil abbildung nachspawn1130 raum1180)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r37_zombieaktiv_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+# INTEGRATION (echte exe): Spielstand in ROOM1150 nach der Montage + CONTINUE + Tuer -> ROOM1130 (Nachspawn Programm 10),
+# Leon steht: Bild 7 alle fuenf im Gang, Bild 306 jeder >= 4500 naeher. Arbeitsordner r37_zombieaktiv_wd (nie gleich einem
+# Target-Namen: Linux-exe ohne Endung). Kartenwerkzeug = probe_r36_gegnerzahl_karte (Runde 36 Spur E, raum x z gierung bits).
+if(TARGET re15_pc)
+    add_test(NAME integration_r37_zombieaktiv
+        COMMAND ${CMAKE_COMMAND}
+            -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+            -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_gegnerzahl_karte>
+            -DWORKDIR=${CMAKE_BINARY_DIR}/r37_zombieaktiv_wd
+            -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_zombieaktiv.cmake)
+    set_tests_properties(integration_r37_zombieaktiv PROPERTIES TIMEOUT 900)
+endif()

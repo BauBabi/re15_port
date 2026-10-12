@@ -225,8 +225,9 @@ static int teil_abbildung(void)
             g_scd.work_vars[0x11] = 0; g_scd.work_vars[0x12] = 20;
             scd_thread_start(5, p2);
             scd_vm_tick();                                /* nur die VM: Spawn bei (-1000,-1000), KEIN KI-Takt */
-            re15_actor_init();
-        }
+        }                                                 /* Aktor 1 wird unten NEU belegt (ohne re15_actor_init, das
+                                                           * die Marken ohnehin loescht): die Pruefung im INIT muss
+                                                           * die liegengebliebene Marke verwerfen */
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = -20000; pl->z = 20000;
         re15_actor_t *e = &g_actors[1];

@@ -17,6 +17,7 @@ static r37_marke_t s_marke[RE15_ACTOR_MAX];
 static int s_an = 1;
 
 void re15_r37_zombieaktiv_enable(int an) { s_an = an ? 1 : 0; }
+void re15_r37_marken_loeschen(void)       { for (int i = 0; i < RE15_ACTOR_MAX; i++) s_marke[i].gang = 0; }
 int  re15_r37_zombieaktiv_enabled(void)  { return s_an; }
 
 void re15_r37_em_set(int actor_slot, const re15_actor_t *a, uint8_t behavior)
