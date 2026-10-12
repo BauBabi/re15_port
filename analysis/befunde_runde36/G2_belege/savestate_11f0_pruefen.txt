@@ -1,0 +1,30 @@
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+RDT-Basis DAT_800ac778 = 801219b0
+SCD 0x00CC4..0x01810 im RAM == ROOM11F0.RDT: True
+SCA @8012220c ceil (-9648,-13554)
+SCA-Zellen (85 x 12 B) im RAM == Datei @0x00874: True
+  Bereich 0: Zeiger 80122224 .. 801222f0 (17 Zellen)
+  Bereich 1: Zeiger 801222f0 .. 801223bc (17 Zellen)
+  Bereich 2: Zeiger 801223bc .. 80122488 (17 Zellen)
+  Bereich 3: Zeiger 80122488 .. 80122554 (17 Zellen)
+  Bereich 4: Zeiger 80122554 .. 06400d7a (-1 Zellen)
+  r1[13] @8012238c: x -31700..-7750 z 14150..15150 typ 1 u0 0xff u1 0x00 fl 0x03
+  r1[14] @80122398: x -31700..-30700 z 14150..31150 typ 1 u0 0xff u1 0x00 fl 0x03
+  r1[15] @801223a4: x -8750..-7750 z 14150..31150 typ 1 u0 0xff u1 0x00 fl 0x03
+  r1[16] @801223b0: x -31700..-7750 z 30150..31150 typ 1 u0 0xff u1 0x00 fl 0x03
+Objekt-Pool (nOmodel = RDT-Kopf[2] = 12):
+  k= 0 @800b3f98 +0=0101 typ 4 band 0 lage (-19554,0,22684) spiegel (-19554,0,22684) +0x8C=0 box@8012281a (0, -900, 0, 900, 900, 900) = RDT+0x00E6A
+  k= 1 @800b402c +0=000b typ 0 band 1 lage (11040,-16200,-15084) spiegel (11040,-16200,-15084) +0x8C=0 box@801226d6 (0, 0, 0, 0, 0, 0) = RDT+0x00D26
+  k= 2 @800b40c0 +0=000b typ 0 band 2 lage (-25975,10,26000) spiegel (-25975,10,26000) +0x8C=0 box@8012283c (0, 0, 0, 0, 0, 0) = RDT+0x00E8C
+  k= 3 @800b4154 +0=000b typ 0 band 2 lage (-25975,10,24000) spiegel (-25975,10,24000) +0x8C=0 box@8012285e (0, 0, 0, 0, 0, 0) = RDT+0x00EAE
+  k= 4 @800b41e8 +0=000b typ 0 band 2 lage (-25975,10,22000) spiegel (-25975,10,22000) +0x8C=0 box@80122880 (0, 0, 0, 0, 0, 0) = RDT+0x00ED0
+  k= 5 @800b427c +0=000b typ 0 band 2 lage (-25975,10,19800) spiegel (-25975,10,19800) +0x8C=0 box@801228a2 (0, 0, 0, 0, 0, 0) = RDT+0x00EF2
+  k= 6 @800b4310 +0=000b typ 0 band 2 lage (-25975,10,17800) spiegel (-25975,10,17800) +0x8C=0 box@801228c4 (0, 0, 0, 0, 0, 0) = RDT+0x00F14
+  k= 7 @800b43a4 +0=000b typ 0 band 2 lage (-18775,10,26000) spiegel (-18775,10,26000) +0x8C=0 box@801228e6 (0, 0, 0, 0, 0, 0) = RDT+0x00F36
+  k= 8 @800b4438 +0=000b typ 0 band 2 lage (-18775,10,24000) spiegel (-18775,10,24000) +0x8C=0 box@80122908 (0, 0, 0, 0, 0, 0) = RDT+0x00F58
+  k= 9 @800b44cc +0=000b typ 0 band 2 lage (-18775,10,22000) spiegel (-18775,10,22000) +0x8C=0 box@8012292a (0, 0, 0, 0, 0, 0) = RDT+0x00F7A
+  k=10 @800b4560 +0=000b typ 0 band 2 lage (-18775,10,19800) spiegel (-18775,10,19800) +0x8C=0 box@8012294c (0, 0, 0, 0, 0, 0) = RDT+0x00F9C
+  k=11 @800b45f4 +0=000b typ 0 band 2 lage (-18775,10,17800) spiegel (-18775,10,17800) +0x8C=0 box@8012296e (0, 0, 0, 0, 0, 0) = RDT+0x00FBE
+Bank 5 Wort 0 = 00000000 (Bits 0..12 = Raetsel scharf: nein); 4:238 = 0
+Spieler +0x34/+0x38/+0x3C = (250,0,250) Band 0 Blick 0
+DAT_800ac788 (Stand-Objekt) = 00000000
