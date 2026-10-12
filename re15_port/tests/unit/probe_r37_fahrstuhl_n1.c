@@ -17,6 +17,8 @@
  *                 = RE2), ECHTER Weg: Generator (3,126)=1, auf der Plattform Aktionstaste -> KLICK + FAHRT_KURZ (Lift A)
  *                 bzw. KLICK + FAHRT (Lift B) im selben Takt, Fahrt 90 bzw. 180 Bilder bis zum Etagen-Merker (3,222)/(3,220),
  *                 hinauf und hinab, Leon (2030) und Elza (2031). Gegenprobe: ohne Generator kein Ton (msg 1).
+ *   durchlauf     5a Story-Weg in einem Prozess: ROOM3070 mit (4,215)/(4,236)/(3,180) -> Szene sub03 (Platz 3 Mitte-Test),
+ *                 das Gitter feuert IN der Szene (Runde-31-Sperre: keine Sequenz) -> ROOM3080 erste Fahrt -> P2DS V5 -> ROOM4000.
  *   kapsel <mit.raw> <ohne.raw> <satz>  Auswertung fuer integration_r37_fahrstuhl_n1: Differenz zweier RE15_AUDIO_CAP_SYNC-
  *                 Aufnahmen (mit / ohne Aktionstaste) = der Lift-Ton; Beginn, Stopp-Schlag (Fahrt + 20 Bilder) und Ende
  *                 (Wellenlaenge) im Spieltakt (1470 Stereo-Bilder).
@@ -292,6 +294,63 @@ static void teil_lastenaufzug(void)
     printf("Gegenprobe S218 ROOM%04X: DOOR%02X V%d eigen %d (P2DS = %d)\n", r218, q.re2_nr, q.variante, q.eigen, i_p);
 }
 
+/* Teil "durchlauf": der ECHTE Story-Weg in einem Prozess. ROOM3070 sub00 macht das Gitter (Platz 0 @0x3302) in allen
+ * drei Zweigen zur Meldung msg 5 "The power seems to be off..." (Aot_reset @0x033F6/@0x03420/@0x03478); in den Lift
+ * kommt man nur ueber die Szene sub03 (Ck(3,180)==1 @0x03438: Platz 3 Aot_set sce 3 sat 0x41 @0x03464 = Mitte-Test ohne
+ * Taste; Leon/Marvin/Ada steigen ein, @0x037E8 Aot_reset Platz 0 sce 2 + @0x037F2 Aot_on 0). Das Gitter feuert dort
+ * IN der Szene (player_mode 2) -> Runde-31-Sperre, keine Sequenz (unveraendert). Dann ROOM3080 erste Fahrt (sub02, Ada)
+ * -> Aot_on @0x00A22 -> Sequenz P2DS V5 -> ROOM4000. Story-Merker (4,215)/(4,236)/(3,180) wie nach der Fabrik-Szene. */
+static void teil_durchlauf(void)
+{
+    re15_door_seq_setze_laeufer(fang);
+    s_kino = 1;
+    s_n_flags = 3;
+    s_flags[0][0] = 4; s_flags[0][1] = 215;
+    s_flags[1][0] = 4; s_flags[1][1] = 236;
+    s_flags[2][0] = 3; s_flags[2][1] = 180;
+    if (room_laden(0x3070, 1) != 0) { s_n_flags = 0; re15_door_seq_setze_laeufer(NULL); return; }
+    s_n_flags = 0;
+    int slot = -1;
+    for (int i = 0; i < RE15_AOT_MAX; i++) {
+        const re15_aot_t *a = &g_aot.slots[i];
+        if (a->active && !a->has_quad && a->x == -19550 && a->z == -4460 && a->half_w == 600 && a->half_h == 2250) slot = i;
+    }
+    PRUEF(slot >= 0, "ROOM3070: Szenen-Platz 3 (Aot_set @0x03464, Mitte (-19550,-4460)) fehlt");
+    if (slot < 0) { re15_door_seq_setze_laeufer(NULL); return; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -19550; pl->z = -4460; pl->rot_y = 0;
+    s_n_gefangen = 0; memset(&s_gefangen, 0, sizeof s_gefangen);
+    int bilder = 0;
+    while (bilder < 6000 && !g_room_change.pending) {
+        uint16_t e = ((g_scd.message_active || g_scd.message_query) && (bilder % 10) == 0) ? RE15_PAD_BIT_SQUARE : 0;
+        frame(e, e);
+        bilder++;
+    }
+    printf("Durchlauf ROOM3070 Platz %d (Szene sub03): %d Bilder -> ROOM%04X, Laeufer %d x (Gitter in der Szene: Sperre der "
+           "Runde 31)\n", slot, bilder, g_room_change.pending ? g_room_change.room_id : 0, s_n_gefangen);
+    PRUEF(g_room_change.pending && g_room_change.room_id == 0x3080 && s_n_gefangen == 0,
+          "ROOM3070 -> ROOM3080 ueber die Szene: Raumwechsel/Sperre weicht ab");
+    g_room_change.pending = 0;
+    re15_door_seq_setze_laeufer(fang);
+    if (room_laden(0x3080, 0) == 0) {
+        s_n_gefangen = 0; memset(&s_gefangen, 0, sizeof s_gefangen); s_pmode_beim_fang = -1;
+        bilder = 0;
+        while (bilder < 6000 && !g_room_change.pending) {
+            uint16_t e = ((g_scd.message_active || g_scd.message_query) && (bilder % 10) == 0) ? RE15_PAD_BIT_SQUARE : 0;
+            frame(e, e);
+            bilder++;
+        }
+        const re15_tuer_eigen_t *e2 = s_gefangen.eigen ? re15_door_seq_eigen(s_gefangen.eigen) : NULL;
+        printf("  Fahrt ROOM3080: %d Bilder -> ROOM%04X, Laeufer %d x: DOOR%02X V%d %s, player_mode beim Feuern %d\n", bilder,
+               g_room_change.pending ? g_room_change.room_id : 0, s_n_gefangen, s_gefangen.re2_nr, s_gefangen.variante,
+               e2 ? e2->kennung : "(RE2-Datei)", s_pmode_beim_fang);
+        PRUEF(g_room_change.pending && g_room_change.room_id == 0x4000 && s_n_gefangen == 1 && e2 && !strcmp(e2->kennung, "P2DS")
+              && s_gefangen.variante == 5 && s_pmode_beim_fang == 2, "Durchlauf: Ausstieg ROOM3080 -> ROOM4000 P2DS V5 fehlt/falsch");
+    }
+    g_room_change.pending = 0;
+    re15_door_seq_setze_laeufer(NULL);
+}
+
 /* =============================================================================================
  * Teil "lift2030" (Nachtrag 5b)
  * ========================================================================================== */
@@ -531,6 +590,7 @@ int main(int argc, char **argv)
     const char *teil = argc > 1 ? argv[1] : "lastenaufzug";
     if (!strcmp(teil, "lastenaufzug")) teil_lastenaufzug();
     else if (!strcmp(teil, "lift2030")) teil_lift2030();
+    else if (!strcmp(teil, "durchlauf")) teil_durchlauf();
     else if (!strcmp(teil, "kapsel") && argc > 4) teil_kapsel(argv[2], argv[3], atoi(argv[4]));
     else { printf("unbekannter Teil %s\n", teil); return 2; }
     printf("%s: %s (%d Fehler)\n", teil, g_fehler ? "ROT" : "GRUEN", g_fehler);

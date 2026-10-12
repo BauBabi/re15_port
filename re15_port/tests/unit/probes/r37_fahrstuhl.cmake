@@ -38,6 +38,8 @@ endif()
 #                 @0x035A2 DOOR2D V5 = hinab), echter Skriptweg aller vier Fahrten, Mechanik V5 hinab / V4 hinauf.
 #   lift2030      5b: RE2-Ton der STAGE2-Hubplattformen ROOM2030/2031 (RE2 ROOM6030 Satz 0x11/0x0B, LIFT6030.VBS), echter
 #                 Weg (Generator, Aktionstaste) hinauf/hinab, Lift A/B, Leon/Elza; Gegenprobe ohne Strom stumm.
+#   durchlauf     5a Story-Weg in einem Prozess: ROOM3070 Szene sub03 (Gitter feuert in der Szene, Sperre der Runde 31)
+#                 -> ROOM3080 erste Fahrt -> P2DS V5 -> ROOM4000.
 add_executable(probe_r37_fahrstuhl_n1 probe_r37_fahrstuhl_n1.c)
 target_link_libraries(probe_r37_fahrstuhl_n1 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r37_fahrstuhl_n1 PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR})
@@ -47,7 +49,9 @@ target_compile_definitions(probe_r37_fahrstuhl_n1 PRIVATE
     RE15_ASSET_SHARED_DIR="${CMAKE_SOURCE_DIR}/shared_assets")
 add_test(NAME unit_r37_fahrstuhl_lastenaufzug COMMAND probe_r37_fahrstuhl_n1 lastenaufzug)
 add_test(NAME unit_r37_fahrstuhl_lift2030     COMMAND probe_r37_fahrstuhl_n1 lift2030)
-set_tests_properties(unit_r37_fahrstuhl_lastenaufzug unit_r37_fahrstuhl_lift2030 PROPERTIES TIMEOUT 300)
+add_test(NAME unit_r37_fahrstuhl_durchlauf    COMMAND probe_r37_fahrstuhl_n1 durchlauf)
+set_tests_properties(unit_r37_fahrstuhl_lastenaufzug unit_r37_fahrstuhl_lift2030 unit_r37_fahrstuhl_durchlauf
+                     PROPERTIES TIMEOUT 300)
 if(NOT WIN32)
     target_link_libraries(probe_r37_fahrstuhl_n1 PRIVATE m)
 endif()
