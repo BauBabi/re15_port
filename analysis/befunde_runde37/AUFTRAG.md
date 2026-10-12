@@ -48,3 +48,11 @@ Lesart: Der 3-Schuss-Feuerstoss der Beretta M93R (Waffe 5; Glock 18 = Waffe 6 ha
 verbraucht 3 Schuss, trifft den Gegner aber nur einmal. Jeder Schuss des Feuerstosses soll treffen (Schaden + Treffer-
 reaktion/Blut je Schuss). Zuerst messen, dann am Original belegen, ob RE1.5 je Schuss trifft (dann Port = Original
 nachziehen) oder nur einmal (dann NUTZER-VORGABE). -> Spur G beretta.
+
+## Bestaetigung 2026-10-12 (woertlich)
+
+> ja, perfekt.
+
+Antwort auf die Zusammenfassung der Lesart (Spuren A-G wie oben; Sperre ROOM1050: vor Adas Rettung bleibt die Ada-Szene,
+danach der Chief-Text nur in der Endphase — nach der 10F0-Szene und bevor Irons geholt ist; Fruehspiel ungesperrt;
+Werkstatt bleibt, neue Texte uebernommen, keine Blutlache, kein Elza-Hinweis, V6 nur auf ausdruecklichen Wunsch).
