@@ -58,6 +58,24 @@ Die tote Menge ist genau die Menge "R15M-Sektion ohne eigenen Atlas": jede diese
   (`git log -L /re15_pri_load_cut_atlas_ex/ 53741fe5..HEAD`) — v0.8.21..v0.8.24 tragen die Regel unveraendert.
 
 
+### 1.3 Bisect (eigene Bauten, Scratchpad `p37/bisect/<commit>` per `git archive`, `RE15_TESTS=OFF local_build.sh`)
+Lauf je exe: `RE15_DEBUG_JUMP=3040@250` (Sprung-Spawn (-25600,0,-1350), Cut 0), Logzeile `[pri] cut=0`:
+
+| Stand | ROOM3040 Cut 0 |
+|---|---|
+| b721702f (= 53741fe5^, 2026-09-08) | `masks=19 fg_atlas=1` (gezeichnet) |
+| **53741fe5** (2026-09-08) | `masks=19 fg_atlas=0` (tot) — verursachender Commit |
+| bddd6b31 (Basis P = v0.8.24 + Spur A, exe `re15_pc_p37vorher.exe`) | `masks=19 fg_atlas=0` |
+| P (exe `re15_pc_p37final.exe`) | `masks=12 fg_atlas=1` (19 - 7 ausgeschlossene, §3.3) |
+
+v0.8.21..v0.8.24 tragen dieselbe Regel (Funktion seit 53741fe5 nur in 4a07f568 geaendert, §1.2). Der Fix erklaert den
+Befund: die Regel "R15M nur mit eigenem Atlas" ist genau die Bedingung, an der alle 224 Sektionen scheitern (§1.1).
+
+### 1.4 An der exe vorher (vorher-exe = Basis bddd6b31)
+Alle 18 Szenen aus §4 und die Spawns aller 15 Leon-Raeume: `fg_atlas=0` fuer jeden Cut mit R15M-Sektion; Framedump der
+vorher-exe **bitgleich** zum selben Lauf mit `RE15_NO_PRI=1` (0 Punkte > 24 im ganzen Bild, 18 von 18 Szenen) — vor P
+zeichnete der Port in diesen Cuts keine einzige Maske; Leon stand in allen HINTER-Szenen sichtbar VOR den Vordergrundobjekten.
+
 ## 2. RE-Belege (PSX.EXE Auslieferungsstand, sha256 e6b340fd12ec43be.., `@0x80026e4c = 08 00 e0 03`; `re15_disasm.py dis/bytes`,
 Namen der Bibliotheksaufrufe aus ghidra1_V2.txt (PsyQ-Signaturen))
 
