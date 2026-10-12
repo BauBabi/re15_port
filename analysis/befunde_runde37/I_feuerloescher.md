@@ -131,6 +131,10 @@ enthalten (Abschnitt 3.2), Untersuchen-Platz in ROOM1091 braucht einen Slot < 5 
   (`01 00`-Ende, 0x08 Zeilenumbruch; laengste Original-Zeile 191 px). Vorbild fuer einen LEEREN Gegenstand ist RE1.5
   selbst: Name 0x1C "Empty Grenade Shells" @0x4BA7 (`21 49 4c 50 55 00 ...`). RE2 hat keins: 0 "Empty"-Eintraege unter
   139 Namen und 0 in den Beschreibungen (analysis/befunde_2026-09-21/belege/re2_item_names.txt / _descriptions.txt).
+  RE3 liegt nicht im Repo (info/ enthaelt nur Re1.5 und re2leon) — dort nicht pruefbar. Eigener Port-Gegenstand
+  (freie Id) verworfen: Icon, Item-Bild, Name, Beschreibung und Wegwerf-Stelle muessten fuer eine neue Id gebaut
+  werden; derselbe Gegenstand 0x31 mit abgeleitetem Zustand braucht nur Name + CHECK-Text und bleibt mit allen
+  alten Spielstaenden vertraeglich.
 * Haken-Stellen wie Runde 36 Spur Q (Schluessel-Namen): re15_inv_screen.c (Name im Statusschirm emit_name/emit_name_at,
   CHECK-Text re15_inv_desc_entry) und item_prompt_common.c (Name in Abfragen).
 
