@@ -15,7 +15,12 @@
  *     7   = 0x15 x50
  *     8/9 = 0x0E x100 (Kopf Zelle 8 = Spalte 2, Schwanz Zelle 9 = Spalte 0 der naechsten Zeile)
  *
- * Aufruf: probe_r37_kiste2feld_karte <kartendatei> <raum-hex> <x> <z> <gier>
+ * Belegung "mc51" (6. Argument): wie nach der echten Aufnahme der MC51 (einzige platzierte 2-Feld-Waffe, ROOM1110/1111
+ *   main00 @0x00B5A): Inventar 0/1 = 0x13 x100 (Flag 1/2), 2 = 0x03 x15 (ausgeruestet), 3 = 0x15 x50; Kiste 0 = 0x0B x3,
+ *   1 = 0x15 x100, 2 = LEER (Auswahlzeile scroll+2), 3 = 0x1D x12, 4 = 0x44 — die exe legt die MC51 ueber die
+ *   Kisten-Bedienung (Box-Seite, Bestaetigen = Tausch, RE2 FUN_800703b8 Fall 2) in die Kiste.
+ *
+ * Aufruf: probe_r37_kiste2feld_karte <kartendatei> <raum-hex> <x> <z> <gier> [alle|mc51]
  *   Figur aus der Raum-Variante wie probe_r37_kiste_karte: xxx1 = Elza (Zeichen 4), sonst Leon (0).
  */
 #include "re15_actor.h"
@@ -55,8 +60,9 @@ static void inv_breit(int kopf, uint8_t id, uint8_t qty)
 
 int main(int argc, char **argv)
 {
-    int i;
-    if (argc < 6) { printf("Aufruf: karte raum-hex x z gier\n"); return 2; }
+    int i, mc51;
+    if (argc < 6) { printf("Aufruf: karte raum-hex x z gier [alle|mc51]\n"); return 2; }
+    mc51 = (argc >= 7 && strcmp(argv[6], "mc51") == 0);
     const char *path = argv[1];
     unsigned room = (unsigned)strtoul(argv[2], NULL, 16);
     scd_vm_init();
@@ -72,18 +78,28 @@ int main(int argc, char **argv)
     pl->x = atoi(argv[3]); pl->z = atoi(argv[4]); pl->rot_y = (int16_t)atoi(argv[5]); pl->y = 0;
 
     for (i = 0; i < RE15_INV_MAX_SLOTS; i++) inv_set(i, 0, 0, 0);
-    inv_breit(0, 0x0F, 6);
-    inv_breit(2, 0x12, 4);
-    inv_set(4, 0x03, 15, 0);
-    inv_breit(5, 0x13, 30);
-    inv_set(7, 0x15, 50, 0);
-    inv_breit(8, 0x0E, 100);
-    re15_inv_set_equipped_slot(4);
-    re15_player_set_equipped_weapon(0x03);   /* DAT_800aca5d = Browning, passend zu Platz 4 */
-
-    for (i = 0; i < 6; i++) box_set(i, (uint8_t)(0x0e + i), (uint8_t)(i + 1), RE15_BOX_KIND_WIDE);
-    box_set(6, 0x0B, 3, 0);
-    box_set(63, 0x15, 100, 0);
+    if (mc51) {
+        inv_breit(0, 0x13, 100);
+        inv_set(2, 0x03, 15, 0);
+        inv_set(3, 0x15, 50, 0);
+        re15_inv_set_equipped_slot(2);
+        box_set(0, 0x0B, 3, 0);
+        box_set(1, 0x15, 100, 0);
+        box_set(3, 0x1D, 12, 0);
+        box_set(4, 0x44, 1, 0);
+    } else {
+        inv_breit(0, 0x0F, 6);
+        inv_breit(2, 0x12, 4);
+        inv_set(4, 0x03, 15, 0);
+        inv_breit(5, 0x13, 30);
+        inv_set(7, 0x15, 50, 0);
+        inv_breit(8, 0x0E, 100);
+        re15_inv_set_equipped_slot(4);
+        for (i = 0; i < 6; i++) box_set(i, (uint8_t)(0x0e + i), (uint8_t)(i + 1), RE15_BOX_KIND_WIDE);
+        box_set(6, 0x0B, 3, 0);
+        box_set(63, 0x15, 100, 0);
+    }
+    re15_player_set_equipped_weapon(0x03);   /* DAT_800aca5d = Browning, passend zum ausgeruesteten Platz */
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
@@ -101,6 +117,9 @@ int main(int argc, char **argv)
     printf(", Inventar");
     for (i = 0; i < 10; i++) printf(" %d:%02x/%u", i, g_inv.slots[i].id, g_inv.slots[i].flags);
     printf(", ausgeruestet %d\n", re15_inv_equipped_slot());
+    if (mc51)
+        return (rr == (uint16_t)room && g_inv.slots[0].id == 0x13 && g_inv.slots[0].flags == 1 &&
+                g_inv.slots[1].flags == 2 && g_itembox.slots[2].id == 0) ? 0 : 1;
     {
         int ok = (rr == (uint16_t)room);
         for (i = 0; i < 6; i++)

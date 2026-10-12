@@ -92,11 +92,14 @@ enum {
                                * AddPrim'd at the draw gate @0x80049bf4.               */
     RE15_INV_PAGE_ITEMTILE = 6,/* ITEM BOX [DESIGN, non-canonical mechanism]: direct
                                * item-tile sampling for BOX cells — `v` = the tile id,
-                               * `u` = 0; w<=40 samples ITEMALL.PIX tile[v] (the SAME
+                               * `u` = Quell-Spanne in Texeln (Runde 37 Spur R, RE2
+                               * POLY_FT4 u1-u0, re15_kiste2feld_r37.h): 80 (oder
+                               * w==80) samples the wide-weapon 80x30 icon at ITPS
+                               * block v*0x3000+0x21A0 (FUN_800492b8 mode-1 source
+                               * @0x8001e0b8-c8), else ITEMALL.PIX tile[v] (the SAME
                                * byte-true 40x30 art the identity icon cache uses,
-                               * report-C byte-proof), w==80 samples the wide-weapon
-                               * 80x30 icon at ITPS block v*0x3000+0x21A0
-                               * (FUN_800492b8 mode-1 source @0x8001e0b8-c8). CLUT =
+                               * report-C byte-proof); both scaled onto w x h with
+                               * the PSX-GPU sampling (re15_kiste2feld_texel). CLUT =
                                * ST_00 row 0, like every icon cell. The box cells
                                * bypass the 10-cell VRAM cache because the original
                                * has no box VRAM region (itembox_verdict.md).        */
