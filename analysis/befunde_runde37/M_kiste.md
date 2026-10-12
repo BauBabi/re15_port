@@ -91,6 +91,9 @@ blittet das RE2-Panel 1:1 bei x 6 (Bild-Ursprung = RE2 (6,13)), also Port-x = RE
 - Folge: GPU zeichnet Eintrag 6 (Symbole, darueber die Namen: die Koepfe wurden VOR den Symbolen eingehaengt,
   AddPrim haengt vorn an), dann 3 (Ziffern), dann 2 (Rahmen). **Der Rahmen deckt alles zu, was beim Gleiten aus dem
   Fenster ragt.** Kein DrawArea/Clip im Box-Code (keine SetDrawArea/DR_AREA-Prim in FUN_800710dc/FUN_80072c6c).
+- Kein Clip: SetDrawArea/DR_AREA kommt im Menue-Code (0x80068000-0x80080000) nicht vor (PutDrawEnv nur
+  @0x8002b9b0/@0x8003274c in der Hauptschleife); die 12-Byte-Prims der Liste sind DR_MODE (`jal SetDrawMode`
+  @0x8006f9b4 fuer 0x800d6bd8, Texturfenster NULL `sw zero,0x10(sp)` @0x8006f9ac).
 - Das Fenster: Kopfband endet y 39 (boxY+6+20), Fussband beginnt y 141 (boxY+127); Listenstreifen x
   `addiu s6,t1,0xc5` @0x80071238 (rechte Kante boxX+0xc5 = 204, exklusiv), Auswahllinien x2
   `addiu v0,t1,0xc4` @0x80071adc (= 203, inklusiv). Gemessen in BOXPANEL.BIN: Listengrund (24,24,40) Bild-x 7..197,
@@ -125,9 +128,9 @@ blittet das RE2-Panel 1:1 bei x 6 (Bild-Ursprung = RE2 (6,13)), also Port-x = RE
 - Namen liegen in RE2 ueber dem Symbol (2.1); RE2s Proportionalschrift (Vorschub-Tabelle 0x8009de34, Flag 0x4000)
   bleibt vor x 153. Der Port nutzt RE1.5s breitere Schrift (bis 173 px) — deshalb ueberdeckt der Name dort das
   Symbol. Die Abhilfe ist die LAGE (kein Name erreicht das Symbol), nicht die Ebene.
-- Kein Clip: SetDrawArea/DR_AREA kommt im Menue-Code (0x80068000-0x80080000) nicht vor (PutDrawEnv nur
-  @0x8002b9b0/@0x8003274c in der Hauptschleife); die 12-Byte-Prims der Liste sind DR_MODE (`jal SetDrawMode`
-  @0x8006f9b4 fuer 0x800d6bd8, Texturfenster NULL `sw zero,0x10(sp)` @0x8006f9ac).
+- Gegenprobe am Bild des laufenden RE2 (analysis/itembox_re2/referenz/re2_itembox_original.png, Ausschnitt
+  `M_belege/re2_referenz_zeilen_zoom.png`): schmale (Spraydose) und breite Symbole (Waffen) beginnen gemeinsam bei
+  x 153, die Mengenanzeige (gruenes Unendlich der Waffen) steht unten links IM Symbol.
 
 ## 3. Umsetzung
 
