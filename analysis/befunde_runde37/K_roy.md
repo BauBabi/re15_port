@@ -13,12 +13,13 @@ Teilpunkte:
 Baum: .claude/worktrees/r37_roy (Zweig r37/roy, Basis master 3feb3a78).
 
 ## 0. Stand / Fortschritt
-- [ ] Messung vorher (Port)
-- [ ] RE-Belege Modell (Lader @0x80022300, Tabellen, EMS-Index)
-- [ ] RE-Belege Animationen (Clip-Bank je Plc_motion, Halten vs. Schleife)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
+- [x] Messung vorher (Port, echter Weg 1011 + Szene 1021; Bau aus master 3feb3a78 fuer Vorher-Bilder)
+- [x] RE-Belege Modell (Lader @0x80022300 bltz @0x80022334, TOC @0x80072f38/@0x80073178, Datei 0x26/0x27 -> LBA)
+- [x] RE-Belege Animationen (Executor-Kanaele @0x80050d40/@0x80050e64, Binder @0x8001b498, Plc_motion @0x80041bc8)
+- [x] Original-RAM (Elza-Spielstaende des Nutzers): Modell CDEMD1, rec1-Kanal, Clip 9 haelt Bild 99
+- [x] Umsetzung (roy_r37.c, roy_pc.c, 4 Haken)
+- [x] Messung nachher (Spuren + Vorher/Nachher-Bilder 1011/1021, Leon-1170-Spur bytegleich gegen master)
+- [x] Tests (5 Unit + 3 Integration, gezielte Regression §5)
 
 ## 1. Messung vorher (Port, Stand master 3feb3a78, eigener Bau im Spurbaum)
 
@@ -203,6 +204,8 @@ nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
   - K_belege/k5_vorher_nachher_1021.png: VORHER Elliot geht auf John zu und bleibt stehen; NACHHER Roy (Weste
     "POLICE") geht, sackt nach dem zweiten Schuss auf die Knie und faellt aufs Gesicht, bleibt liegen.
   - K_belege/k4_port_nachher_1011.png / k4_port_nachher_1021_sturz.png (Einzelbilder gross).
+  - K_belege/k5_nachher_1011_ruhe_schleife.png: Bilder 104..160 (je 4) der Ruhe-Schleife Clip 5 — Roy sitzt, Hand an
+    der Wunde, nur Kopf/Arm bewegen sich leicht (vorher: Knien + Arm ausstrecken im 20-Bilder-Takt).
 * Gegenprobe Leon 1170 (echter Weg Neuspiel -> Montage -> Tuer -> 1170, RE15_FPS=240): Bau aus master 3feb3a78 und
   Bau r37/roy liefern eine BYTEGLEICHE Elliot-Spur (317 Zeilen Typ 71, cmp gleich), dieselben debug.log-Zeilen
   ("[elliot] PL05 loaded ... (Raum 1170, Spawn 0x47)", "[enemy-diag] actor1 type=0x47 model=elliot").
