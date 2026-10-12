@@ -10,6 +10,11 @@
  * Sicht-Latch (+0x1d0 & 1), Wandklemme (+0x1d6), Zonensprung-Zaehler, naechste SCA-Zellen und ob Leon fuer
  * ihn sichtbar ist (Zellstrahl). Aufruf: test_r36_zombieki_affen_block [bilder] [seed]
  */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#  define _DEFAULT_SOURCE 1   /* popen/pclose (POSIX) unter -std=c11 ohne GNU-Erweiterungen (CMAKE_C_EXTENSIONS OFF);
+                               * sonst implizit deklariert -> int -> FILE* abgeschnitten -> SEGFAULT im Linux-Release-Bau
+                               * v0.8.24. Muster wie platform/pc/src/asset_root_pc.c. */
+#endif
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"

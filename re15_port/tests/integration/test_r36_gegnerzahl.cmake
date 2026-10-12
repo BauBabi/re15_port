@@ -30,6 +30,7 @@
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_gegnerzahl_karte> -DWORKDIR=<dir>
 #               -P test_r36_gegnerzahl.cmake
 # =============================================================================
+cmake_minimum_required(VERSION 3.16)   # Policies NEW (CMP0012: while(TRUE)/if(TRUE)) auch unter dem Container-CMake 3.28 im Skriptmodus; ohne sie lief die Schleife im Linux-Release-Bau v0.8.24 nie (exit=)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r36_gegnerzahl: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
 endif()
