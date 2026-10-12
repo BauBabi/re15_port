@@ -3769,6 +3769,41 @@ static void re2z_decide_bump(re15_actor_t *e, re15_actor_t *pl)
     /* Block K @0x80102208-38: der Port-Spieler wird nie HP == -32768 (fill_gates), inert. */
 }
 
+/* ============================================================================================
+ * Runde 37 Spur L — DECISION[12] @0x8010460C: der GRIFF AUS DEM AUSFALL (Lunge 0x0C01).
+ * Die DECISION-Tabelle 0x8010C88C hat fuer +0x5 = 3..15 nur `jr ra`-Stubs — AUSSER [12] = 0x8010460c
+ * (eigener Tabellen-Dump `table 0x8010c88c 16`, Stub-Pruefung je Eintrag). Der Port fuehrte [12]
+ * unter `default: break` ("stubs / not RE'd"): ein Ausfall endete so IMMER in 0x101, nie im Griff.
+ * Selbst disassembliert (EMZ0.BIN):
+ *   8010462c lbu v0,6(s0) / 80104634 bne v0,v1(=3) -> 0x801046a0   ; nur Phase 3 (der Stoss, Clip 0x1B)
+ *   80104630 lw a0,496(s0) / 8010463c sltiu v0,a0,0x514 / beq       ; +0x1F0 < 1300
+ *   80104648-58 lbu 0x800cfdcb / andi 0x80 / bne                     ; Spieler nicht beansprucht
+ *   80104660-6c lbu v0,333(s0) / sltiu v0,v0,0xb / beq               ; +0x14D (Bild) < 11
+ *   80104674-84 lbu v1,262(s0) / lbu 0x800cfcfe / bne                ; gleiche Etage (+0x106)
+ *   8010468c-9c lbu 0x800cfc00 / xori 0xf / sltu a1,zero,v0          ; Spieler+0x8 != 15 (G/J-Gabel:
+ *                                                                   ; der Port-Spieler traegt nie 15)
+ *   801046a8-d8 !(+0x21A & 0x20) && 0x80015758(self,PL,+0x76+256,256) == 0 -> addiu 769 / sw 4
+ *   801046dc-e8 PL+0x1D3 |= 0x80
+ *   801046ec-1c !(+0x21A & 0x40) && 0x80015758(self,PL,+0x76-256,256) == 0 -> addiu 769 / sw 4
+ *   80104720-2c PL+0x1D3 |= 0x80
+ * Kein frueher Ausstieg zwischen den beiden Sektor-Bloecken (last writer wins, beide schreiben 0x301).
+ * Der Spieler-Riegel PL+0x1D3 |= 0x80 ist im Port die Griff-Klammer, die EXEC[3] P0 im SELBEN Takt
+ * setzt (der Dispatcher liest +0x5 neu, @0x801011d0) — wie bei DECISION[1]/[2] Block G. */
+static void re2z_decide_lunge(re15_actor_t *e, re15_actor_t *pl)
+{
+    if (e->sub_state_2 != 3u) return;                              /* bne v0,3 @0x80104634 */
+    if (e->ai_dist >= 0x514u) return;                              /* sltiu 0x514 @0x8010463c */
+    if (re15_player_is_grabbed()) return;                          /* andi 0x80 @0x80104654 */
+    if (re2z_frame_slot(e) >= 11) return;                          /* sltiu 0xb @0x80104668 */
+    if (e->floor != pl->floor) return;                             /* bne @0x80104684 */
+    if (!(e->re2z_flags21a & 0x20u)
+        && re2z_sector(e, pl, ((int)e->rot_y + 256) & 0xfff, 256) == 0)   /* @0x801046a8-d0 */
+        re15_ai_set_state_word(e, 0x0301);                         /* 769 @0x801046d4-d8 */
+    if (!(e->re2z_flags21a & 0x40u)
+        && re2z_sector(e, pl, ((int)e->rot_y - 256) & 0xfff, 256) == 0)   /* @0x801046ec-14 */
+        re15_ai_set_state_word(e, 0x0301);                         /* 769 @0x80104718-1c */
+}
+
 /* ---- ACTIVE dispatcher: decision-then-executor on the SAME tick (@0x801011A8-EC) ----------- */
 static void re2z_exec_dispatch(int slot, re15_actor_t *e, re15_actor_t *pl);
 
@@ -3778,7 +3813,10 @@ static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
     case 0:  re2z_decide_stand(e, pl); break;                      /* 0x80101294 */
     case 1:  re2z_decide_walk_apply(e, pl); break;                 /* 0x80101714 (the ladder) */
     case 2:  re2z_decide_bump(e, pl); break;                       /* 0x80101F7C */
-    default: break;                                                /* stubs / not RE'd */
+    case 12: re2z_decide_lunge(e, pl); break;                      /* 0x8010460C (Runde 37 Spur L) */
+    default: break;                                                /* [3..11],[13..15] = `jr ra`-Stubs
+                                                                    * (0x801025e4/0x80103170/...,
+                                                                    * Runde 37 Spur L je Eintrag geprueft) */
     }
     re2z_exec_dispatch(slot, e, pl);
 }

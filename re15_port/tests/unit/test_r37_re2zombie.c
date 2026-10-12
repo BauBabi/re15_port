@@ -548,6 +548,35 @@ static void pin_c(void)
     }
 }
 
+/* DECISION[12] @0x8010460C: Griff aus dem Ausfall-Stoss (EXEC[12] Phase 3, Clip 0x1B): +0x1F0 < 0x514, Bild < 11, gleiche
+ * Etage, Spieler unbeansprucht, Spieler im Sektor +-512 um die Blickrichtung -> 0x301. */
+static re15_actor_t *pin_lunge(int32_t px, int32_t pz, int bild, int phase)
+{
+    re15_actor_t *e = pin_stellen(0x00030C01u, px, pz, 0);
+    e->sub_state_2 = (uint8_t)phase;
+    e->motion = 0x1B; e->anim_frame = (uint16_t)bild;
+    return e;
+}
+static void pin_d12(void)
+{
+    re15_actor_t *e = pin_lunge(dx_grenze(0x514) - 1, 0, 5, 3);
+    pin_takt();
+    PIN(e->state == 1 && e->sub_state_1 == 3, "D12: Stoss-Bild 5, +0x1F0 = 0x513, Spieler geradeaus -> Griff 0x301 (ist %u/%u/%u)",
+        e->state, e->sub_state_1, e->sub_state_2);
+    e = pin_lunge(dx_grenze(0x514), 0, 5, 3);
+    pin_takt();
+    PIN(!(e->state == 1 && e->sub_state_1 == 3), "D12 Gegenprobe +0x1F0 = 0x514 (sltiu 0x514 @0x8010463c): kein Griff (%u/%u)", e->state, e->sub_state_1);
+    e = pin_lunge(1000, 0, 11, 3);
+    pin_takt();
+    PIN(!(e->state == 1 && e->sub_state_1 == 3), "D12 Gegenprobe Bild 11 (sltiu 0xb @0x80104668): kein Griff (%u/%u)", e->state, e->sub_state_1);
+    e = pin_lunge(-1000, 0, 5, 3);
+    pin_takt();
+    PIN(!(e->state == 1 && e->sub_state_1 == 3), "D12 Gegenprobe Spieler hinten (Sektoren @0x801046c8/@0x8010470c): kein Griff (%u/%u)", e->state, e->sub_state_1);
+    e = pin_lunge(1000, 0, 5, 1);
+    pin_takt();
+    PIN(!(e->state == 1 && e->sub_state_1 == 3), "D12 Gegenprobe Phase 1 (bne v0,3 @0x80104634): kein Griff (%u/%u)", e->state, e->sub_state_1);
+}
+
 /* Nahkampf-Positivkontrolle: Messer-Sweep (test_re2_zombie_abc-Aufbau) mit allen Produzenten vs. Maske 0. */
 static void pin_nahkampf(void)
 {
@@ -586,6 +615,7 @@ int main(int argc, char **argv)
     else if (!strcmp(modus, "prod3"))    { if (pin_umgebung() < 0) return 1; pin_prod3(); }
     else if (!strcmp(modus, "b"))        { if (pin_umgebung() < 0) return 1; pin_b(); }
     else if (!strcmp(modus, "c"))        { if (pin_umgebung() < 0) return 1; pin_c(); }
+    else if (!strcmp(modus, "d12"))      { if (pin_umgebung() < 0) return 1; pin_d12(); }
     else if (!strcmp(modus, "nahkampf")) { pin_nahkampf(); }
     else if (!strcmp(modus, "raum1130")) { pin_raum(0x1130, -5900, 16350, 1); }
     else if (!strcmp(modus, "raum1180")) { pin_raum(0x1180, -4729, -16018, 0); }
