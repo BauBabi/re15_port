@@ -220,6 +220,13 @@ Namen dann automatisch).
   Gegenprobe mit den Vorher-Bildern: KISTE-BILD FEHLER 38.
 - Werkzeuge: probe_r37_kiste_karte (Spielstand vor der Kiste, Kiste mit den laengsten Namen), probe_r37_kiste_bild.
 
+**Gezielte Laeufe** (keine volle Suite; Regex = eigene Tests + alle Testgruppen des Inventar-/Kisten-/Karten-
+Schirms, dessen Zeichner re15_inv_screen.c + inv_render_pc.c der Diff beruehrt; -j 4, Maschine unter Last
+paralleler Spuren):
+
+- Lauf 1 (Bau nach 6382fb63): `ctest -R "r37_kiste|itembox|inv_|inventar|map_|karte|dokument|dachkiste|kartenitems"
+  --timeout 900 -j 4` -> `100% tests passed, 0 tests failed out of 71` (Total Test time (real) = 1563.04 sec).
+
 ## 6. OFFEN (nicht Teil von Nachtrag 9, nicht angefasst)
 
 - Vorbestehend: das 2-Feld-Symbol der Kisten-Liste (box_cell_icon_sized, Breite 49) tastet in inv_render_pc.c die
