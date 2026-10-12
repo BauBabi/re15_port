@@ -13,7 +13,7 @@ re15_beretta_r37.h 15:59, game_step_common.c 15:28, re15_damage.c 15:28; Baum sa
 | Punkt 1 (Beretta M93R: jeder Schuss des Feuerstosses trifft) | **teilweise** — Zombies (Leon/Elza, beide KI-Modi), Hund/Spinne und alle Typen unter RE1.5-KI: drei Treffer E/E+3/E+6. Unter der STANDARD-KI (RE2) treffen die Gegner mit RE1.5-Gehirn weiter nur EINMAL (an der exe gemessen 0x2b ROOM5040 und Kakerlake 0x29 ROOM3040; Gorilla 0x27, Birkin 0x30, Alligator 0x23 gleiche Code-Lage, Sonde 1f); dort schadet der Stoss jetzt sogar weniger als vorher (gemessen 0x2b 20 -> 10, 0x29 25 -> 14) |
 | RE-Gate (Konstanten mit @0x, 7 Stellen selbst disassembliert) | haelt |
 | Vertrag (Pfade, Ressourcen, Haken, Tests nur ueber probes/) | haelt (Testluecke s. M3) |
-| Gezielte Tests (eigener Lauf) | 47/47 Unit (Regex des Bau-Agenten ohne integration_*), 43/43 Gegner-Typ-Tests, Integration s. Abschnitt 5 |
+| Gezielte Tests (eigener Lauf) | 47/47 Unit (Regex des Bau-Agenten ohne integration_*), 43/43 Gegner-Typ-Tests, 5/5 exe-Integration (inkl. integration_r37_beretta) — alle gruen, keiner deckt M1/M2 ab |
 
 Maengel: M1 (Standard-KI, RE1.5-Gehirn-Gegner 1 Treffer), M2 (Schadens-Regression dieser Gegner), M3 (Testluecke),
 M4 (Dossier/Header falsch) — Abschnitt 4. Die M93R/Glock ist im Spiel ueber das Original-Item-Debug des Inventars
@@ -316,3 +316,33 @@ cat "$WD/exit.txt"
 Aufrufe: z.B. `bash abn_run.sh l_w5_re2 5 re2 200,-18200,1024 M2.0,MA0.1,M3.0,W2`; Elza `ELZA=1 JUMP=11E0 EXIT=220#11E1 bash abn_run.sh e_w5_default 5 default -10500,-11000,1024 M3.0,MA0.1,M3.0,W2`;
 0x2b `JUMP=5040 EXIT=200#5040 bash abn_run.sh t2b_w5_def_a 5 default -14493,-13185,1024 M2.0,MA0.1,M3.0,W2`; Kakerlake `JUMP=3040 EXIT=200#3040 ... roach_w5_def 5 default -13500,-10300,1024 ...`;
 Basis-exe: zusaetzlich `EXE_SRC=<hauptbaum>/re15_port/build/platform/pc/re15_pc.exe EXE_NAME=re15_abn0g_basis.exe`; Restmunition `MAG=2` / `MAG=1`.
+
+## 5. Gezielte Tests (eigener Lauf im Spurbaum, keine volle Suite)
+* Regex des Bau-Agenten ohne die exe-Laeufe: `ctest --test-dir re15_port/build -R "^(unit_r37_beretta|unit_r36_schuss|...|
+  unit_r35_affen_schrot)$" --timeout 600 --output-on-failure` -> **100% tests passed, 0 tests failed out of 47** (3,92 s).
+* Gegnertypen, deren Schadenszeile die Spur beruehrt: `-R "^(unit_maggot_ai|unit_cockroach_ai|unit_birkin_ai|
+  unit_alligator_ai|unit_tyrant_ai|unit_maggot_bone_square|unit_re2_dog_hp_reroll|unit_maggot_zone_leap|unit_gator_sweep|
+  unit_gator_fress|probe_p2_birkin_g5|probe_p3_birkin_rest|unit_r17_birkin_1zu1_pin|unit_r18_birkin_restluecken_pin|
+  unit_r20_birkin_push_pin|unit_r30_birkin_frost|unit_r30_n_room5080_birkin_wand|r30_hund_hitbox_stauchung|
+  r31_trefferboxen|unit_r34n_f_leiche_latch|unit_r35_affen_.*|unit_r36_zombieki_affen.*|unit_pri_inventar_riegel)$"`
+  -> **100% tests passed, 0 tests failed out of 43** (34,43 s) — gruen MIT dem Defekt aus M1/M2 (keiner prueft den
+  Feuerstoss gegen diese Typen).
+* exe-Laeufe: `-R "^(integration_r37_beretta|integration_r36_schuss|integration_r36_elza_schuss|integration_r35_werfer|
+  integration_r36_granate)$" --timeout 900` -> **100% tests passed, 0 tests failed out of 5** (551,10 s; r35_werfer
+  145,82 s, r36_elza_schuss 44,78 s, r36_granate 104,12 s, r36_schuss 131,01 s, r37_beretta 125,32 s). r37_beretta:
+  leon_re2_w5 / leon_re2_w6 / leon_re15_w5 je "F61 Munition -3, Treffer 0:5:-16;3:5:-16;6:5:-16", leon_re2_w3
+  "Browning F61 Munition -1, Treffer 0:5:-16", elza_re2_w5 "F91 Munition -3, Treffer 0:1:-16;3:1:-16;6:1:-16".
+* Echter Weg (Tuer statt Sprung): nicht anwendbar — Waffenmechanik, raumunabhaengig (Raumlader des Debug-Sprungs ist
+  derselbe); die M93R erhaelt der Spieler ueber das Item-Debug des Inventars.
+* Messkopien `re15_abn0g.exe` / `re15_abn0g_basis.exe` nach den Laeufen geloescht (kein taskkill, alle Laeufe endeten
+  ueber RE15_EXIT_AT mit exit=0).
+
+## 6. Fuer den Bau-Agenten (Nachbesserung)
+1. M1: Freigabe-Kriterium in `riegel_loesen()` auf "fuer diesen Aktor laeuft ein RE2-Pausenfilter" umstellen
+   (Zombie-Familie `re15_re2z_owns_type` bzw. 0x20/0x21/0x25/0x26-Baby mit RE2-Gehirn); alle anderen Aktoren — auch im
+   RE2-Flavor — wie im RE1.5-Modus behandeln. Danach an der exe 0x2b (ROOM5040) und 0x29 (ROOM3040) mit Standard-KI
+   messen: drei Treffer E/E+3/E+6.
+2. M2: mit 1. mitmessen — Stoss = 3 x Spalte 3 (0x2b 30, 0x29 42 statt Basis 20/25); im Dossier fuer den Nutzer
+   ausweisen.
+3. M3: Riegel mit Standard-/RE2-Flavor gegen mindestens 0x29 und 0x2b (Unit mit Filter-/KI-Tick oder exe-Lauf).
+4. M4: Dossier §7 und Header/Kommentar richtigstellen.
