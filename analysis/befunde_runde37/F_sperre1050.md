@@ -304,6 +304,12 @@ r33_speichern, map_speichern_laden)):
 
 * Unit: `ctest --test-dir re15_port/build -R "^(unit_r37_sperre1050_|unit_r34n_d_adaruf_|unit_r34n_a_rolltor|unit_r34n_e_dokumente|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r27_ada_cutscene_1050|unit_room1050_sicherung|unit_r35_inventar1050_|unit_r35_cut1150_|unit_r36_story_|unit_msg_dialog|unit_action_msg_gate|unit_text_freeze|unit_savepoint|unit_r36_klettern_|unit_r35_cut10f0_|unit_r33_speichern|unit_map_speichern_laden|unit_stair_hwtruth_1060|unit_r34n_f_leiche_texte|unit_r34n_b_kreuztext)" -j 4 --timeout 600`
   -> `100% tests passed, 0 tests failed out of 65`
+* Integration (nacheinander, echte exe): `ctest --test-dir re15_port/build -R "^(integration_r37_sperre1050|integration_r35_cut1150|integration_r36_story_leon|integration_r36_story_elza|integration_r34n_e_dokumente_bild|integration_r35_inventar1050|integration_r36_klettern|integration_r35_cut10f0|integration_weste_load_pin|integration_boot_bg_pin|integration_r33_speichern)$" --timeout 1800`
+  -> `100% tests passed, 0 tests failed out of 11` (2425 s; r37_sperre1050 231,76 s, r35_cut1150 527,53 s,
+  r36_klettern 526,56 s, r36_story_leon 404,77 s, r36_story_elza 217,32 s, r35_cut10f0 246,56 s)
+* Schluss (Stand nach dem letzten Code-Commit 0b9b1c7d neu gebaut, LOCAL-BUILD-OK):
+  `ctest --test-dir re15_port/build -R "^(unit_r37_sperre1050_|unit_r36_story_)" -j 4 --timeout 600`
+  -> `100% tests passed, 0 tests failed out of 11`
 
 ---
 
