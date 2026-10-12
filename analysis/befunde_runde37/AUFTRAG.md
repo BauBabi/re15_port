@@ -75,3 +75,106 @@ Ergaenzung des Nutzers zu Nachtrag 2 (woertlich, unmittelbar danach):
 Lesart (ersetzt die enge Lesart oben): Das RE2-Verhalten gilt GENERELL fuer alle Zombies (jeder Raum, jede Spawn-Art), die
 Montage nach Irons' Tod ist nur das Beispiel. Vorlage ist die RE2-Retail-Zombie-KI (wie sich Zombies dort im Gang bewegen,
 wann sie loslaufen, wandern, auf Leon zukommen) — aus RE2 belegt nachbauen.
+
+## Nachtrag 3 — 2026-10-12 (woertlich, Korrektur zu #9 Code-Panels)
+
+> Nein, beim Panel in korridor 2 ist falsch - dort soll natürlich rot leuchten - richtig eingegeben - dann blau....
+
+> rot = geschlossen
+
+Lesart: Die Lampen richten sich nach den am Panel gemalten Lampen. Panel in "Korridor 2" (laut Original-Raumnamen ROOM10D0
+"2F CORRIDOR" oder ROOM11E0 "B2 CORRIDOR" — Spur E bestimmt es an den gemalten Lampen): ROT solange zu (Code falsch/nicht
+eingegeben), BLAU sobald richtig. Regel: rot = geschlossen. Die uebrigen Panels: blau solange falsch, gruen wenn richtig
+(soweit so gemalt). Dem laufenden Bau-Agenten der Spur E am 2026-10-12 per Nachricht uebermittelt (mit der Bitte, den
+Nachtrag in AUFTRAG.md seines Baums zu committen).
+
+## Nachtrag 3b — 2026-10-12 (woertlich, zu den Code-Panels)
+
+> Es muss schon in der richtigen Farbe leuchten das Panel... hintergrund rot - rot leuchten - hintergrund blau - blau leuchten...
+
+Lesart: Die Leuchtfarbe ist die Farbe der im Panel-Hintergrund gemalten Lampe (rot gemalt -> leuchtet rot, blau gemalt ->
+leuchtet blau), keine fremde Einheitsfarbe. Dem Bau-Agenten E per Nachricht uebermittelt.
+
+## Nachtrag 4 — 2026-10-12 (woertlich)
+
+> Bitte erstelle mir zusätzlich auch ein Modell des Feuerlöschers. Ich finde deine Idee, bei elza einen Leeren Feuerlöscher am Boden zu haben gut. Der müsste dann bei Leon nach der Nutzung erstmalig auftauchen.
+>
+> Außerdem finde ich den FEuerlöscher im Spind bei Leon noch unglücklich und würde ihn gerne woanders platzieren....
+
+Lesart -> Spur I feuerloescher:
+1. 3D-Modell des Feuerloeschers BAUEN (weder RE2 noch RE1.5 haben eines — extracted_re2_feuerloescher/README.md: nur das
+   Item-Bild ITPS 0x31; Basis-Kandidaten = Spraydosen-Netze RE1.5 ROOM1010/ROOM4050, RE2 ROOM1010/60D0).
+2. Elza ROOM1091 (ausgebrannter Schuppen): leerer Feuerloescher liegt von Anfang an am Boden (die frueher vorgeschlagene Spur).
+3. Leon ROOM1090: derselbe leere Loescher liegt erstmalig dort, NACHDEM Leon das Feuer geloescht hat ((3,0x84) := 1 in sub06
+   @0x02722 / "You've used the Fire Extinguisher."), danach dauerhaft.
+4. Leons Feuerloescher liegt heute im Spind von ROOM1000 (Bath-Lockers; sub00 @0x00C24 Item 0x31, Taken (9,0x86); sub01
+   @0x00D0C Set(3,0x85)) — an einen anderen, passenden Ort verlegen (sichtbar mit dem neuen Modell; Ort begruendet waehlen,
+   der Nutzer kann ihn danach verschieben).
+
+## Nachtrag 4b — 2026-10-12 (woertlich, zu Spur I)
+
+> ah, it can only lay there - if leon when he is asked to discard it select "yes".
+
+Lesart: Bei Leon liegt der leere Loescher in ROOM1090 NUR, wenn er an der Wegwerf-Abfrage nach dem Loeschen (Port-Abfrage
+gen/discard_sites.inc `{ 0x1090, 9, 0x31, 0, 0 }`) "Yes" waehlt; bei "No" bleibt er im Inventar und am Boden liegt nichts.
+Elza 1091 unveraendert (liegt immer). Dem Bau-Agenten I per Nachricht uebermittelt.
+
+## Nachtrag 4c — 2026-10-12 (woertlich, zu Spur I)
+
+> If he doesn't he has the text empty fire extinguisher in the player inventory.
+
+Lesart: Bei "No" an der Wegwerf-Abfrage behaelt Leon den Loescher; im Inventar heisst er dann "Empty Fire Extinguisher"
+(Name/Untersuchen-Text zeigen, dass er leer ist; Zustand bleibt im Spielstand). Dem Bau-Agenten I per Nachricht uebermittelt.
+
+## Nachtrag 5 — 2026-10-12 (woertlich, zu Spur C)
+
+> ja, dann mache den noch. Mir ist auch aufgefallen in den Stage2 kleineres aufzügen fehlt noch das sound. Den sollte man auch aus Resident Evil 2 extrahieren.
+
+Lesart: (a) "den" = der Ausstieg aus dem Lastenaufzug ROOM3080 (WAREHOUSE LIFT) -> ROOM4000, der in Spur C noch ohne
+Tuersequenz ist (Null-Rechteck-Tuer @0x0072A, Aot_on @0x00A22) — Sequenz aus RE2 herleiten und bauen. (b) Die kleineren
+Aufzuege in STAGE2 haben keinen Ton — den passenden Aufzug-Ton aus RE2 extrahieren (RE2_SOUND_LISTE.md, shared_assets/RE2/
+ELEVSE.VBS u.a.) und dort abspielen, wo RE2 ihn spielt.
+
+## Nachtrag 6 — 2026-10-12 (woertlich)
+
+> Ja, wie ich gerade gesehen habe fehlt in unseren Port teilweise noch der dranhängende Arm wenn man vom Zombie gebissen wird.
+
+Lesart (beide pruefen, keine F9-Marke dazu): (1) der Arm des Zombies, der beim Biss/Griff an Leon haengt (Griff von vorn/hinten),
+fehlt in manchen Faellen; (2) der angeschossene, noch "dranhaengende" (baumelnde) Arm eines Zombies fehlt beim Biss. Messen,
+welcher Fall auftritt, dann wie RE2 bauen. -> Spur J bissarm.
+
+## Nachtrag 7 — 2026-10-12 (woertlich)
+
+> Bei Elzas Szenario stimmt weder das Modell von Roy noch all seine Animationen. Außerdem wiederholen sich seine Animationen wieder ständig, wie wir schon ungefähr 500x vorher bei Leon gefixed haben.....
+
+Lesart -> Spur K roy: Roy (Typ 0x47, im Original dasselbe Typ-Byte wie Elliot bei Leon; B_figuren.md §1.1) in Elzas Szenario
+(ROOM1011 verwundet / bewusstlos, ROOM1021 als Zombie, den John erschiesst): Modell und alle Animationen wie im Original;
+keine Dauerschleife der Animationen (dieselbe Fehlerklasse wie die frueheren NPC-Schleifen bei Leon).
+
+## Nachtrag 8 — 2026-10-12 (woertlich, zu #5 / Spur F)
+
+> Elza kann theoretisch ada begegnen in ihren durchlauf. Ich kenne zumindest keine Aussage der Entwickler die sagt, das sie sich nicht begegnen können. Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza nur eine Leiche von Ada findet, kennt sie ada nicht. Dann ist es halt nur - a woman.
+
+Lesart (bestaetigt und praezisiert #5): ROOM50B1 msg 0 (Elza) nennt die Tote nicht "Ada", sondern "a woman" — Elza findet
+nur die Leiche und erkennt sie nicht. Story-Regel: NUR Leon und Elza begegnen sich nie; dass Elza und Ada sich begegnen, ist
+NICHT ausgeschlossen. Die Begruendung "Elza hat Ada nie gesehen" (Runde 36 P_story.md) ist damit keine Regel: kein Text darf
+behaupten, Elza und Ada koennten sich nicht begegnen; dass Elza den NAMEN Ada kennt (Marvin, ROOM30C1 msg 4/6), bleibt.
+Beim Sweep "sagt/liest Elza 'Ada'" nur dort aendern, wo Elza Ada am Aussehen erkennen muesste. Der Bau der Spur F traegt
+genau diesen Wortlaut ("It's a woman. She's dead." / "It looks like one of those" / "gorillas killed her.", F-Baum 6bf10b9b);
+die Abnahme prueft ihn gegen diesen Nachtrag, die Begruendung in Code/Dossier soll den Grund des Nutzers tragen.
+
+## Orchestrator-Auftrag L — 2026-10-12 (zu Nachtrag 2 + Ergaenzung, "schaue einfach nach wie Resident Evil 2 das macht")
+
+Grund: Die Abnahme H#0 (H_abnahme_0.md, Hinweis H1) und das Dossier der Spur H (H_zombieaktiv.md "OFFEN") belegen drei
+VORBESTEHENDE Abweichungen der RE2-Zombie-KI des Ports vom RE2-Original (EMZ0.BIN). Der Nutzer verlangt das RE2-Verhalten
+GENERELL fuer alle Zombies; diese Abweichungen gehoeren dazu und werden in dieser Runde geschlossen (Spur L re2zombie, Basis =
+abgenommener Stand der Spur H 9c2a825d):
+1. Die drei Produzenten des Arme-hoch-Gangs `+0x4 = 0x201` (EXEC[2]) im Gang-Executor sind seit 2026-08 abgeschaltet:
+   (1) Timer @0x80101D68-DBC, (2) Nahbereich @0x80101EC4-F10, (3) Spieler rennt @0x80101F14-F60. Mit (1)+(2) fiel die
+   Positiv-Kontrolle Nahkampf in test_re2_zombie_abc von 3523 auf 0 (Mechanismus nie aufgeklaert). -> aufklaeren und
+   byte-true scharf schalten; in RE2 heben die Zombies dabei die Arme und kommen auf Leon zu.
+2. DECISION[0] Block 3: Original committet bei (rand & 1) == 1 (`beq v0,zero,0x801013d4` @0x801013c8), der Port bei == 0.
+3. EXEC[0] P1: nach dem Wander-Wurf (`sb v0,6(s0)` @0x80101540) laeuft im Original im selben Takt der Selbstwecker
+   @0x80101544-a0 und P2 erst im naechsten Takt (`j 0x801016ac` @0x8010159c); der Port springt im selben Takt nach P2/P3.
+Dazu ein Zensus der uebrigen OFFEN-Marken der RE2-Zombie-KI, die Bewegung/Angriff betreffen (je Marke: Adresse, wirkt auf die
+Aktivitaet ja/nein); was die Aktivitaet betrifft, mitschliessen oder mit Adresse begruenden, warum nicht.
