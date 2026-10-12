@@ -48,3 +48,17 @@ Lesart: Der 3-Schuss-Feuerstoss der Beretta M93R (Waffe 5; Glock 18 = Waffe 6 ha
 verbraucht 3 Schuss, trifft den Gegner aber nur einmal. Jeder Schuss des Feuerstosses soll treffen (Schaden + Treffer-
 reaktion/Blut je Schuss). Zuerst messen, dann am Original belegen, ob RE1.5 je Schuss trifft (dann Port = Original
 nachziehen) oder nur einmal (dann NUTZER-VORGABE). -> Spur G beretta.
+
+## Nachtrag 3 (Nutzer, 2026-10-12)
+
+Woertlich (Korrektur zu #9 Code-Panels, vom Orchestrator waehrend der Spur E uebermittelt; gilt vor der Punkteliste):
+
+> Nein, beim Panel in korridor 2 ist falsch - dort soll natürlich rot leuchten - richtig eingegeben - dann blau....
+
+> rot = geschlossen
+
+Lesart (Orchestrator): Die Lampenfarbe richtet sich nach den am Panel GEMALTEN Lampen. Beim Panel in "Korridor 2" leuchtet
+ROT, solange zu ist (Code falsch/noch nicht eingegeben), BLAU sobald der Code richtig ist. Allgemeine Regel: rot = geschlossen;
+jedes Panel zeigt seinen "geschlossen"-Zustand und seinen "offen"-Zustand mit den dort gemalten Lampen (fuer die uebrigen
+Panels bleibt blau = falsch, gruen = richtig, falls so gemalt). Welcher Raum "Korridor 2" ist, belegt Spur E im Dossier
+(`E_codepanel.md`). -> Spur E codepanel.
