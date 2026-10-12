@@ -27,6 +27,8 @@ Bau-Agenten E uebermittelt. Spur I fasst die Code-Panels NICHT an.
 
 ## Stand
 Alle vier Punkte gebaut und an der exe abgenommen (Abschnitte 3-5). Offene Entscheidungen fuer den Nutzer: Abschnitt 7.
+Nachbesserung 1 (Abnahme 0): M1 (Loescher lag nach NEIN + Item-Box doppelt in ROOM1090) und M2 (Abschnittsverweis)
+behoben — Abschnitt "Nachbesserung 1" am Ende.
 
 ## 1. Messung vorher (Stand master 64ba31e0, Baum gebaut 2026-10-12)
 
@@ -274,7 +276,8 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
   Leon war zuerst da und hat ihn genommen).
 
 ## 5. Tests
-* NEU `unit_r37_feuerloescher_{modell,raum,aufnahme,loeschen,elza,spind,spielstand,leer}` (tests/unit/
+* NEU `unit_r37_feuerloescher_{modell,raum,aufnahme,loeschen,elza,spind,spielstand,leer}` (+ `kiste` aus der
+  Nachbesserung 1, s.u.) (tests/unit/
   test_r37_feuerloescher.c, Mechanik am echten Port-Code; `leer` = Nachtrag 4c: Name aus @0x4BA7+@0x4CDC, Abfrage-Text
   ueber re15_item_prompt_walk, CHECK-Text ueber re15_inv_desc_entry, Elza ohne Ersatz, nach Speichern/Laden) und
   `integration_r37_feuerloescher` (echte exe, Laeufe A-L).
