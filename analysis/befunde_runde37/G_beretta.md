@@ -172,18 +172,41 @@ Ihre FORM kommt aus RE2 Retail (Beta -> Retail), wo der Feuerstoss der Custom Ha
 Elza-Start wie test_r35_werfer_elza (RE15_TITLE_CONFIRM_MS=1500, RE15_PSELECT_AUTO=1, RE15_PSELECT_AUTO_SWITCH=1); der
 Debug-Sprung 11E0 landet in ihrer Variante ROOM11E1 (debug.log `[pl] Spieler-Familie PL04`, `loaded room11e1.rdt`).
 ROOM1141 (Elzas Besprechungsraum) hat keine Gegner — Lauf dort ohne Ziel verworfen.
-RE1.5-KI in ROOM11E1: der getroffene Zombie faellt (ss1 0x11, Clip 11, g 0x80) und ist im Fallen kein Kandidat -> Kugel 2/3
-gehen ueber den Rueckgriff an den naechsten Zombie (je ein Treffer, je -16). Das ist die RE1.5-Kandidatenregel, keine Luecke:
-jede Kugel trifft.
+RE1.5-KI in ROOM11E1: der getroffene Zombie faellt (ss1 0x11, Clip 11, `g = 0x80` = liegend) und ist mit EBEN-Zielen kein
+Kandidat (RE1.5-Band: liegend -> nur TIEF und nur unter 5000, `eband = 0x20000000` @0x80101630-38 -> @0x800129cc-f0, eben
+-> LEVEL @0x801015f4-fc; re15_damage.c) -> Kugel 2/3 gehen ueber den Rueckgriff an den naechsten Zombie (je ein Treffer,
+je -16). Das ist die RE1.5-Kandidatenregel, keine Luecke: jede Kugel trifft.
 
-## 5. Tests
-
-(offen)
+## 5. Tests (registriert NUR in `re15_port/tests/unit/probes/r37_beretta.cmake`)
+* `unit_r37_beretta` (`tests/unit/test_r37_beretta.c`, echte ROOM1140.RDT, Resolver re15_player_weapon_fire): A Kugel 2/3
+  in Tick 3/6 (Ticks 1/2/4/5/7/8 nichts); B drei Treffer auf DENSELBEN Zombie unter RE1.5-KI mit Negativkontrolle (ohne
+  Riegel-Loesen trifft ein direkter zweiter Resolve NICHT: r=0), Zaehler 1/3/3/2, Reaktion state 2 / +0x5 = 5;
+  C Schaden je Kugel: RE2-Import-Zeile 16, RE1.5-Zeile 5 (3 Kugeln = 15 = Original-Stoss), Hund (RE1.5-Zeile) 10 statt 24,
+  Glock 18 wie M93R; D 1/2/3 Patronen -> 1/2/3 Kugeln; E Abbruch (tick_ex(0)) -> keine Kugel mehr; F Sterbender (HP<0) wird
+  nicht erneut getroffen, Kugel 2/3 gehen an den Zombie dahinter (Kontrolle: dieser ist allein treffbar);
+  G Browning 3 / Redhawk 7 / Ingram 12 / MC51 19 starten keinen Feuerstoss. Ergebnis `test_r37_beretta: OK`.
+* `integration_r37_beretta` (`tests/integration/test_r37_beretta.cmake`, echte exe als Messkopie `re15_pc_r37g_haken_*`):
+  leon_re2_w5 / leon_re2_w6 / leon_re15_w5: Munition -3 im Eintrittsbild E, HP-Abzuege GENAU in E, E+3, E+6;
+  leon_re2_w3 (Gegenprobe Browning): ein Abzug in E, Munition -1; elza_re2_w5 (PL04, ROOM11E1): drei Abzuege E/E+3/E+6.
+  Lauf 2026-10-12: `Passed 157.23 sec`; Werte (lauf_48823eac): Leon F61/F64/F67 je -16 (250 -> 202), Elza F91/F94/F97 je -16
+  (58 -> 10), Browning F61 -16, Munition 15 -> 12 / 14. Am Stand f1e019ca liefert derselbe Aufbau EINEN Abzug (1.1) — der
+  Riegel waere dort rot.
+* Angepasst: `unit_re2_hp_model` (Erwartungs-Index 5/6 -> Spalte 3, s. 3.2) — gruen.
 
 ## 6. OFFEN
-
-(offen)
+* Nichts aus dem Wortlaut. Bewusst NICHT gebaut (RE1.5 bleibt): Abbruch des Feuerstosses beim Loslassen des Abzugs (RE2
+  @0x80048928-30) und RE2s Einzelschuss-Bit 126 (@0x800488e4) — RE1.5 bucht immer drei Patronen ab und zeigt immer drei
+  Blitze.
+* Elza "vorher" nicht eigens an der alten exe gemessen (der Entlade-Handler 0x800338A8 verzweigt nicht nach Figur, kein
+  `aca5c`-Zweig @0x800338a8-9c; Leon vorher = 1 Treffer, 1.1).
 
 ## 7. Fuer den Nutzer
-
-(offen)
+* Beretta M93R und Glock 18: jeder der drei Schuesse des Feuerstosses trifft jetzt einzeln — Schaden, Treffer-Reaktion und
+  Blut je Kugel, im Takt der drei Muendungsblitze. Ein Feuerstoss auf einen Zombie macht jetzt 3 x 16 = 48 statt 16.
+* Das Original (RE1.5-Prototyp) trifft je Feuerstoss nur einmal — am Original gemessen. Die Umsetzung folgt RE2 (Custom
+  Handgun: je Kugel ein Treffer, Schaden je Kugel = Pistolenschuss).
+* Mit RE2-KI gilt RE2s Trefferpause je Gegner: Zombie/Hund/Spinne nehmen alle drei Kugeln, eine KRAEHE nur die erste (RE2
+  Zeile 4 der Kraehe: Pause 15 Bilder) — die Kugeln 2/3 gehen dann an das naechste Ziel. Mit RE1.5-KI trifft jede Kugel; ein
+  getroffener Zombie, der zu Boden geht, ist mit geradem Zielen kein Ziel mehr, dann trifft die naechste Kugel den naechsten.
+* Ist nur noch 1 oder 2 Schuss im Magazin, gibt es nur 1 bzw. 2 Treffer (drei Blitze zeigt das Original trotzdem).
+* Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung.
