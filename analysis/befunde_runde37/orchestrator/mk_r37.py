@@ -68,7 +68,8 @@ SPUREN = [
    "(falsch/teilweise/richtig).")),
  dict(id="F", thema="sperre1050", baum="r37_sperre1050",
   punkte=["bei Leon, bevor dem Ende wo er noch zu Irons muss habe ich eine Lücke gefunden - man kann über die Luke bis nach F1 und kann den \"Ich muss zuerst irons holen\" Blocker bei der Tür überspringen. Ich schlage vor - du machst den Text zusätzlich noch in ROOM 1050 bei der Tür, wo wir auch die Ada Cutscene triggern, wenn wir Ada noch nicht gerettet haben.",
-          "Ja, neuen Texte sind super. Bezug zu ada bei elza kann raus."],
+          "Ja, neuen Texte sind super. Bezug zu ada bei elza kann raus.",
+          "Nachtrag 8: Elza kann theoretisch ada begegnen in ihren durchlauf. Ich kenne zumindest keine Aussage der Entwickler die sagt, das sie sich nicht begegnen können. Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza nur eine Leiche von Ada findet, kennt sie ada nicht. Dann ist es halt nur - a woman."],
   hinweise=("Sperre heute: include/re15_tuer1060.h + engine/src/tuer1060*.c (ROOM1060 Slot 2 -> ROOM1040, Text 'I have to get the Chief first...', Bedingung "
    "(9,73)=0 UND ((9,71)=1 ODER (3,94)=0)). Ada-Tuer: include/re15_adaruf.h + engine/src/adaruf_1050.c (ROOM1050 Slot 4 -> ROOM10A0; vor der Ada-Rettung "
    "(3,0xBB)=0: Szene Ereignis 13 bzw. Sperrtext msg 25; danach Original-Tuer). Schritt 1: die Luecke des Nutzers REPRODUZIEREN (Leon im Endspiel-Zustand: "

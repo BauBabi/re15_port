@@ -150,3 +150,15 @@ welcher Fall auftritt, dann wie RE2 bauen. -> Spur J bissarm.
 Lesart -> Spur K roy: Roy (Typ 0x47, im Original dasselbe Typ-Byte wie Elliot bei Leon; B_figuren.md §1.1) in Elzas Szenario
 (ROOM1011 verwundet / bewusstlos, ROOM1021 als Zombie, den John erschiesst): Modell und alle Animationen wie im Original;
 keine Dauerschleife der Animationen (dieselbe Fehlerklasse wie die frueheren NPC-Schleifen bei Leon).
+
+## Nachtrag 8 — 2026-10-12 (woertlich, zu #5 / Spur F)
+
+> Elza kann theoretisch ada begegnen in ihren durchlauf. Ich kenne zumindest keine Aussage der Entwickler die sagt, das sie sich nicht begegnen können. Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza nur eine Leiche von Ada findet, kennt sie ada nicht. Dann ist es halt nur - a woman.
+
+Lesart (bestaetigt und praezisiert #5): ROOM50B1 msg 0 (Elza) nennt die Tote nicht "Ada", sondern "a woman" — Elza findet
+nur die Leiche und erkennt sie nicht. Story-Regel: NUR Leon und Elza begegnen sich nie; dass Elza und Ada sich begegnen, ist
+NICHT ausgeschlossen. Die Begruendung "Elza hat Ada nie gesehen" (Runde 36 P_story.md) ist damit keine Regel: kein Text darf
+behaupten, Elza und Ada koennten sich nicht begegnen; dass Elza den NAMEN Ada kennt (Marvin, ROOM30C1 msg 4/6), bleibt.
+Beim Sweep "sagt/liest Elza 'Ada'" nur dort aendern, wo Elza Ada am Aussehen erkennen muesste. Der Bau der Spur F traegt
+genau diesen Wortlaut ("It's a woman. She's dead." / "It looks like one of those" / "gorillas killed her.", F-Baum 6bf10b9b);
+die Abnahme prueft ihn gegen diesen Nachtrag, die Begruendung in Code/Dossier soll den Grund des Nutzers tragen.
