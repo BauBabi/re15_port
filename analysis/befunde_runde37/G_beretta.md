@@ -67,7 +67,7 @@ Der Handler laeuft EINMAL je Feuerstoss: Standard-Sub-2 0x80033460, Latch `lbu v
 Waffe 8: `ori v0,zero,0x8` / `bne v1,v0,0x8003355c` @0x80033510-14, acae9 == 3/5/7 @0x80033518-38, `jal 0x80011f50`
 @0x80033554. => RE1.5 (Auslieferungsstand) trifft je Feuerstoss EINMAL und zieht 3 Patronen ab.
 
-### 2.2 RE1.5: die DREI Schuesse stehen in den Daten (CORE00.ESP, eigener Dump `esp_dump.py`)
+### 2.2 RE1.5: die DREI Schuesse stehen in den Daten (CORE00.ESP, eigener Dump `G_beretta_mess/esp_dump.py`)
 Die Sub-2-Effekte sind je EIN Strom aus drei Zeilen Routine 15 (= "unsichtbar warten, dann Kind spawnen"):
 | Effekt | Zeile @Datei | A | Warte +0x0E | Kind (+0x17,+0x16) | +0x26 |
 |---|---|---|---|---|---|
