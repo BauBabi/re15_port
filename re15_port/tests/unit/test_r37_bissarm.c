@@ -833,6 +833,174 @@ static int teil_pruef_klemme(int argc, char **argv)
     return s_fail ? 1 : 0;
 }
 
+/* ======================================================================================================
+ * ECHTLAUF-AUSWERTER (tests/integration/test_r37_bissarm_echtlauf.cmake)
+ * ====================================================================================================== */
+
+/* pruef_armlog <bissarm.log> [min_biss=20]
+ * (A) im Echtlauf: die exe schreibt mit RE15_BISSARM_LOG je GEZEICHNETEM Griffbild die Hand-Gelenke 11/14 nach
+ * re15_bissarm_r37_handkontakt und den RE2-Zielpunkt (Welt, engine/src/bissarm_r37.c). Geprueft:
+ * (1) der Haken im NPC-Zeichner (platform/pc/main.c) laeuft im Griff ueberhaupt (>= 30 Zeilen; vor dem Fix: Datei
+ *     fehlt);
+ * (2) in JEDER Zeile liegt die gezeichnete Hand hoechstens |rest|+3 vom Ziel: rest 0 = erreicht, rest > 0 = Ziel
+ *     jenseits der RE1.5-Armlaenge (Arm gestreckt darauf gerichtet), rest < 0 = Ziel naeher an der Schulter als
+ *     |Oberarm-Unterarm|+1 (Arm ganz gebeugt; gemessen im Abwurf-Clip 13); 3 = Rundung der Weltumrechnung;
+ * (3) mindestens `min_biss` Biss-Bilder (Clip 12, P3 @0x80102838) mit BEIDEN Haenden auf dem Ziel (rest 0,
+ *     Abstand <= 2). */
+static int teil_pruef_armlog(int argc, char **argv)
+{
+    if (argc < 3) { printf("pruef_armlog <bissarm.log> [min_biss]\n"); return 2; }
+    int min_biss = (argc > 3) ? atoi(argv[3]) : 20;
+    FILE *f = fopen(argv[2], "r");
+    if (!f) { printf("FAIL: %s fehlt - der Handkontakt-Haken im Zeichner lief nie\n", argv[2]); return 1; }
+    char line[640];
+    int zeilen = 0, biss = 0, biss_auf = 0, daneben = 0, max_rest = 0, max_d = 0;
+    while (fgets(line, sizeof line, f)) {
+        unsigned fr = 0, typ = 0; int ss2 = 0, clip = 0, af = 0, r0 = 0, r1 = 0;
+        int a[6], b[6];
+        if (sscanf(line, "F%u typ=0x%X ss2=%d clip=%d fr=%d hand11=(%d,%d,%d) ziel11=(%d,%d,%d) rest11=%d"
+                         " hand14=(%d,%d,%d) ziel14=(%d,%d,%d) rest14=%d",
+                   &fr, &typ, &ss2, &clip, &af, &a[0], &a[1], &a[2], &b[0], &b[1], &b[2], &r0,
+                   &a[3], &a[4], &a[5], &b[3], &b[4], &b[5], &r1) != 19) continue;
+        zeilen++;
+        int32_t h0[3] = { a[0], a[1], a[2] }, z0[3] = { b[0], b[1], b[2] };
+        int32_t h1[3] = { a[3], a[4], a[5] }, z1[3] = { b[3], b[4], b[5] };
+        int d0 = abst3(h0, z0), d1 = abst3(h1, z1);
+        if (d0 > max_d) max_d = d0;
+        if (d1 > max_d) max_d = d1;
+        if (abs(r0) > max_rest) max_rest = abs(r0);
+        if (abs(r1) > max_rest) max_rest = abs(r1);
+        if (d0 > abs(r0) + 3 || d1 > abs(r1) + 3) {
+            daneben++;
+            if (daneben <= 5) printf("  F%u clip %d fr %d: Hand 11 %d vom Ziel (rest %d), Hand 14 %d (rest %d)\n",
+                                     fr, clip, af, d0, r0, d1, r1);
+        }
+        if (clip == 12) { biss++; if (r0 == 0 && r1 == 0 && d0 <= 2 && d1 <= 2) biss_auf++; }
+    }
+    fclose(f);
+    printf("pruef_armlog: %d Griffbilder gezeichnet, %d Biss-Bilder (Clip 12), davon %d mit beiden Haenden auf dem "
+           "RE2-Ziel; %d Zeilen weiter als |rest|+3; max |Rest| %d, max Abstand Hand-Ziel %d\n",
+           zeilen, biss, biss_auf, daneben, max_rest, max_d);
+    CHECK(zeilen >= 30, "nur %d Griffbilder mit Handkontakt im Zeichner (Haken nicht im Griff gelaufen)", zeilen);
+    CHECK(daneben == 0, "%d Griffbilder: gezeichnete Hand weiter als |rest|+3 vom RE2-Ziel", daneben);
+    CHECK(biss_auf >= min_biss, "nur %d Biss-Bilder mit beiden Haenden auf dem RE2-Ziel (Schranke %d)", biss_auf, min_biss);
+    return s_fail ? 1 : 0;
+}
+
+/* pruef_griffweg <state.log> [max_abstand=2000] [min_griff=30]
+ * (B) im Echtlauf: RE15_STATE_LOG (main.c, eine Zeile je Bild: PL(x,z,..), gr=, je Gegner [slot .. st ss1 .. mo ..
+ * @(x,z,r)]). In jedem Bild mit gr=1 wird der Greifer gesucht (RE2-Exec[3]: st=1 ss1=3, @0x801025EC). Geprueft:
+ * >= min_griff Griffbilder; im HALTEN (Greifer-Clip 11 Zupacken / 12 Biss) steht Leon nie weiter als max_abstand
+ * vom Greifer; im ganzen Griff kein Sprung > 1200 von Bild zu Bild und nie (0,0). Im Abwurf (Clip 13) laeuft der
+ * Greifer mit seiner Clip-Wurzel davon (gemessen bis 2841), deshalb dort kein Abstandsmass.
+ * Vorher (Bau 419380dc) ROOM1010: Leon den ganzen Griff auf (0,0), ~5000 vom Greifer; nachher max ~1100. */
+static int teil_pruef_griffweg(int argc, char **argv)
+{
+    if (argc < 3) { printf("pruef_griffweg <state.log> [max_abstand] [min_griff]\n"); return 2; }
+    int max_abst = (argc > 3) ? atoi(argv[3]) : 2000;
+    int min_griff = (argc > 4) ? atoi(argv[4]) : 30;
+    FILE *f = fopen(argv[2], "r");
+    if (!f) { printf("FAIL: %s fehlt\n", argv[2]); return 1; }
+    static char line[8192];
+    int griff = 0, halten = 0, weit = 0, spruenge = 0, null_lage = 0, max_d = 0, erster = -1, letzter = -1;
+    int alt_ok = 0, alt_x = 0, alt_z = 0;
+    while (fgets(line, sizeof line, f)) {
+        unsigned fr = 0;
+        if (sscanf(line, "F%u", &fr) != 1) continue;
+        const char *g = strstr(line, " gr=");
+        if (!g || atoi(g + 4) != 1) { alt_ok = 0; continue; }
+        int px = 0, pz = 0;
+        const char *pp = strstr(line, "PL(");
+        if (!pp || sscanf(pp, "PL(%d,%d,", &px, &pz) != 2) continue;
+        int gefunden = 0, gx = 0, gz = 0, gmo = -1;
+        for (const char *q = strstr(line, " ["); q; q = strstr(q + 2, " [")) {
+            int slot = 0, st = 0, ss1 = 0, ex = 0, ez = 0; unsigned t = 0;
+            if (sscanf(q, " [%d t=%x st=%d ss1=%d", &slot, &t, &st, &ss1) != 4) continue;
+            const char *at = strstr(q, "@(");
+            const char *mo = strstr(q, " mo=");
+            if (!at || !mo || sscanf(at, "@(%d,%d,", &ex, &ez) != 2) continue;
+            if (st == 1 && ss1 == 3 && re15_re2z_owns_type(t)) { gefunden = 1; gx = ex; gz = ez; gmo = atoi(mo + 4); break; }
+        }
+        if (!gefunden) continue;
+        griff++;
+        if (erster < 0) erster = (int)fr;
+        letzter = (int)fr;
+        if (px == 0 && pz == 0) null_lage++;
+        if (gmo == 11 || gmo == 12) {
+            halten++;
+            int d = (int)sqrt((double)(px - gx) * (px - gx) + (double)(pz - gz) * (pz - gz));
+            if (d > max_d) max_d = d;
+            if (d > max_abst) { weit++; if (weit <= 5) printf("  F%u Leon (%d,%d) Greifer (%d,%d): %d entfernt\n", fr, px, pz, gx, gz, d); }
+        }
+        if (alt_ok) {
+            int sp = (int)sqrt((double)(px - alt_x) * (px - alt_x) + (double)(pz - alt_z) * (pz - alt_z));
+            if (sp > 1200) { spruenge++; if (spruenge <= 5) printf("  F%u Sprung %d: (%d,%d) -> (%d,%d)\n", fr, sp, alt_x, alt_z, px, pz); }
+        }
+        alt_ok = 1; alt_x = px; alt_z = pz;
+    }
+    fclose(f);
+    printf("pruef_griffweg: %d Griffbilder (F%d..F%d), davon %d im Halten (Clip 11/12): max Abstand Leon-Greifer %d "
+           "(Schranke %d), %d weiter; %d Spruenge > 1200, %d auf (0,0)\n",
+           griff, erster, letzter, halten, max_d, max_abst, weit, spruenge, null_lage);
+    CHECK(griff >= min_griff, "nur %d Griffbilder (Schranke %d) - kein Griff im Lauf", griff, min_griff);
+    CHECK(halten >= min_griff / 2, "nur %d Halte-Bilder (Clip 11/12)", halten);
+    CHECK(weit == 0, "%d Halte-Bilder mit Leon weiter als %d vom Greifer", weit, max_abst);
+    CHECK(spruenge == 0, "%d Spruenge > 1200 im Griff", spruenge);
+    CHECK(null_lage == 0, "%d Griffbilder mit Leon auf (0,0)", null_lage);
+    return s_fail ? 1 : 0;
+}
+
+/* region <raum-hex> <state.log>
+ * Messwerkzeug: liegt im Griff (gr=1) der Ursprung des Greifers ausserhalb des Region-Vierecks des aktiven Cuts,
+ * waehrend Leon darin liegt? Dann zeichnet der Port den ganzen Greifer nicht (main.c `npc_region_culled`, Original
+ * FUN_8001e8c8 @0x8001e970-7c: Punkt-im-Viereck mit DAT_800ac790; aussen nur zusammensetzen @0x8001e9b4) und
+ * Leon ringt allein. Zaehlt je Lauf: Griffbilder, Leon innen, Greifer innen, Leon innen + Greifer aussen. */
+static int teil_region(int argc, char **argv)
+{
+    if (argc < 4) { printf("region <raum-hex> <state.log>\n"); return 2; }
+    unsigned room = (unsigned)strtoul(argv[2], NULL, 16);
+    const char *base = getenv("RE15_ASSET_DIR");
+    char path[600];
+    snprintf(path, sizeof path, "%s/STAGE%u/ROOM%04X.RDT",
+             (base && *base) ? base : RE15_ASSET_PSX_DIR, (room >> 12) & 0xFu, room);
+    size_t sz = 0; uint8_t *buf = slurp(path, &sz);
+    if (!buf || re15_rdt_parse(buf, sz, &s_rdt) != 0) { printf("FAIL: RDT %s\n", path); return 1; }
+    FILE *f = fopen(argv[3], "r");
+    if (!f) { printf("FAIL: %s fehlt\n", argv[3]); return 1; }
+    static char line[8192];
+    int griff = 0, l_in = 0, g_in = 0, allein = 0, ohne_quad = 0;
+    while (fgets(line, sizeof line, f)) {
+        unsigned fr = 0;
+        if (sscanf(line, "F%u", &fr) != 1) continue;
+        const char *g = strstr(line, " gr=");
+        if (!g || atoi(g + 4) != 1) continue;
+        int px = 0, pz = 0, cam = -1;
+        const char *pp = strstr(line, "PL(");
+        const char *cp = strstr(line, " cam=");
+        if (!pp || !cp || sscanf(pp, "PL(%d,%d,", &px, &pz) != 2) continue;
+        cam = atoi(cp + 5);
+        int gefunden = 0, gx = 0, gz = 0;
+        for (const char *q = strstr(line, " ["); q; q = strstr(q + 2, " [")) {
+            int slot = 0, st = 0, ss1 = 0, ex = 0, ez = 0; unsigned t = 0;
+            if (sscanf(q, " [%d t=%x st=%d ss1=%d", &slot, &t, &st, &ss1) != 4) continue;
+            const char *at = strstr(q, "@(");
+            if (!at || sscanf(at, "@(%d,%d,", &ex, &ez) != 2) continue;
+            if (st == 1 && ss1 == 3 && re15_re2z_owns_type(t)) { gefunden = 1; gx = ex; gz = ez; break; }
+        }
+        if (!gefunden) continue;
+        griff++;
+        int16_t xs[4], zs[4];
+        if (!re15_rdt_get_region_quad(&s_rdt, cam, xs, zs)) { ohne_quad++; l_in++; g_in++; continue; }
+        int li = re15_aot_point_in_quad(px, pz, xs, zs), gi = re15_aot_point_in_quad(gx, gz, xs, zs);
+        l_in += li; g_in += gi;
+        if (li && !gi) { allein++; if (allein <= 5) printf("  F%u cam %d: Leon (%d,%d) innen, Greifer (%d,%d) AUSSEN\n", fr, cam, px, pz, gx, gz); }
+    }
+    fclose(f);
+    printf("region ROOM%04X: %d Griffbilder, Leon innen %d, Greifer innen %d, Leon innen + Greifer aussen %d (ohne Viereck %d)\n",
+           room, griff, l_in, g_in, allein, ohne_quad);
+    return 0;
+}
+
 /* karte <datei> <raum-hex> <char 0|4> <x> <y> <z> <rot> <hp> <cut> <waffe|0> <flags|->
  * Schreibt Slot 0 einer PSX-Karte (wie test_r36_kleidung karte) — zusaetzlich die ausgeruestete Waffe
  * (Briefing-Inventar: 1 Messer, 3 Browning) und Spielflags "zone:bit,..." (z.B. die Kill-Flags der
@@ -892,6 +1060,9 @@ int main(int argc, char **argv)
     if (strcmp(teil, "vergleich") == 0) return teil_vergleich(argc, argv);
     if (strcmp(teil, "pruef_re2") == 0) return teil_pruef_re2(argc, argv);
     if (strcmp(teil, "pruef_klemme") == 0) return teil_pruef_klemme(argc, argv);
-    printf("Teile: griff | karte\n");
+    if (strcmp(teil, "pruef_armlog") == 0) return teil_pruef_armlog(argc, argv);
+    if (strcmp(teil, "pruef_griffweg") == 0) return teil_pruef_griffweg(argc, argv);
+    if (strcmp(teil, "region") == 0) return teil_region(argc, argv);
+    printf("Teile: griff | karte | re2gt | skel | vergleich | pruef_re2 | pruef_klemme | pruef_armlog | pruef_griffweg | region\n");
     return 2;
 }
