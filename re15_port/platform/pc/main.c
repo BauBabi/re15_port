@@ -115,6 +115,7 @@ static inline int RNDI(float f) {
 extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
+#include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
@@ -10021,6 +10022,7 @@ re_title:;
                 /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
+                (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
                 {
