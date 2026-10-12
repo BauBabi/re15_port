@@ -12,6 +12,9 @@ Punkte:
 - **M1** Symbole so weit rechts wie moeglich, kein Name ueberdeckt ein Symbol.
 - **M2** Beim Scrollen liegt der Rahmen ("Kasten") layertechnisch ueber den gleitenden Item-Zeilen.
 
+**Stand 2026-10-12 15:43: FERTIG** — beide Punkte gebaut und an der exe gemessen (Leon 1150, Elza 1151, Leon 2010,
+Taste gehalten), Riegel unit_r37_kiste + integration_r37_kiste, gezielte Laeufe 71/71 gruen (§5). Keine neuen Assets.
+
 ## 1. Messung vorher (exe dieses Baums, Stand 70030492)
 
 Weg: echter Spielstand + echte Aktionstaste, kein Sprung. Kartenwerkzeug `probe_r37_kiste_karte` (neu, s. Tests)
@@ -236,6 +239,13 @@ paralleler Spuren):
 
 - Lauf 1 (Bau nach 6382fb63): `ctest -R "r37_kiste|itembox|inv_|inventar|map_|karte|dokument|dachkiste|kartenitems"
   --timeout 900 -j 4` -> `100% tests passed, 0 tests failed out of 71` (Total Test time (real) = 1563.04 sec).
+- **Lauf 2 = Endstand** (Bau nach der Include-Verlegung 5cde2afa, integration_r37_kiste mit dem Lauf `kiste_halten`):
+  `ctest --test-dir re15_port/build -R "r37_kiste|itembox|inv_|inventar|map_|karte|dokument|dachkiste|kartenitems"
+  --timeout 900 -j 4 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 71`** (Total Test time (real) = 1492.20 sec); darin unit_r37_kiste,
+  integration_r37_kiste (4 Laeufe: leon/elza/stage2 je 31 Bilder, halten 102 Bilder), unit_itembox_screen,
+  unit_itembox_transfer, unit_room1150_itembox, unit_inv_fsm, unit_map_*, unit/integration_r3x_karte*,
+  integration_r34n_e_dokumente_bild, integration_r36_kartenitems_bild, integration_map_raum_live.
 
 ## 6. OFFEN (nicht Teil von Nachtrag 9, nicht angefasst)
 
