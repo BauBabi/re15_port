@@ -94,8 +94,10 @@ zum Gebaeude) auf der Grundlage der r35-Fassung (Spur L: beide zum Gebaeude, Anf
   0x01AF6 Plc_neck 41 01 fb 1d 00 00 91 50 64 00   Kopf auf Marvin
   ```
   = das Original stellt zwei Gespraechspartner beim Schnitt sofort einander zugewandt auf (Dir_set = Peilung) und
-  setzt beide Koepfe auf den Partner. Zensus Dir_set in allen RE1.5-RDTs: auf Figuren nur ROOM10D0 (NPC + Spieler) und
-  ROOM1150/1151 (Spieler); sonst Requisiten (Work-Art 3).
+  setzt beide Koepfe auf den Partner. Zensus Dir_set in allen 240 RE1.5-RDTs (`O_belege/re15_dir_set_zensus.txt`):
+  114 Saetze, 32 davon auf Figuren (Work-Art 1/2), auf NPCs (Work-Art 2): ROOM10D0 @0x01AC4, ROOM3091 @0x01726/@0x0173E,
+  ROOM4000 @0x0157A/@0x01666/@0x01684/@0x0172C (derselbe Dialog, der die langsame Kopf-Rate 0x3c traegt, B3), ROOM4010
+  @0x00E44; der Rest Requisiten (Work-Art 3).
 * Dir_set-Handler LAB_80041080 (selbst disassembliert): `lw a1,340(a0)` (Work +0x154) @0x80041084, `lhu v0,2(v1)` /
   `sh v0,104(a1)` @0x80041088/@0x80041090 (rot_x), `lhu v0,4(v1)` / `sh v0,106(a1)` @0x80041094/@0x8004109c (**rot_y
   +0x6a**), `lhu v0,6(v1)` / `sh v0,108(a1)` @0x800410a0/@0x800410a8, pc += 8.
