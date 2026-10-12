@@ -26,6 +26,7 @@
 #include "re15_actor.h"
 #include "re15_collision.h"   /* Etage = Band aus der Spieler-Y */          /* Spieler-Band (+0x82) fuer die Etagen-Umschaltung */
 #include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
+#include "re15_kiste_r37.h"       /* Runde 37 Spur M: Kisten-Liste — Symbol rechts, Rahmen ueber den Zeilen */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
 #include "gen/inv_desc_bank.inc" /* item-desc bank @0x800c50de (wave 4; entry idx = item id) */
@@ -39,7 +40,6 @@
 #include "re15_files.h"          /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
-#include "re15_kiste_r37.h"      /* Runde 37 Spur M: Kisten-Liste — Symbol rechts, Rahmen ueber den Zeilen */
 
 /* Die Archiv-Tabellen bleiben im Uebersetzungslauf REFERENZIERT, damit ihr Wegfall aus
  * dem Spiel keine "unbenutzt"-Warnung wird und der Zensus sie weiter abgleichen kann
