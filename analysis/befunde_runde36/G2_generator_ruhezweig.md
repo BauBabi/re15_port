@@ -140,3 +140,52 @@ false`, Datei-Inhalt verglichen).
 
 **Ergebnis P2:** Das Original schiebt den Generator-Cursor in jedem Bild aus den vier Rahmenzellen; er steht an der
 Rahmenkante. Die roten Riegel pinnten eine Port-Annahme.
+
+## Zensus — Cursor-/Panel-Raeume (wer kann ueberhaupt geschoben werden, wer wird es waehrend der Fahrt)
+
+### Z1 Statisch, alle 206 RDTs (`G2_belege/zensus_objekte_ausschiebung.py` -> `.txt`)
+
+Regel: FUN_8003b558 ueberspringt JEDE Zelle fuer Objekte mit obj+0 & 8 (`8003b668 lw v0,0(s1) / 8003b670 andi
+v0,v0,0x8 / 8003b674 bne`), obj+0 = pc[6..7] | 1 (`80040990-9a4`). Ergebnis: 672 Obj_model_set, **99 ohne Bit 3**, davon
+30 vom SCD bewegt (Work_set(3,k) + Add_speed/Pos_set im selben Skript):
+* **28 Panel-Cursor** — immer dasselbe Objekt: Typ 4, Band 0, `+0 = 0x0101`, Box c(0,-900,0) h(900,900,900), Fahrt
+  +-200 je Bild: ROOM1080/1081 (Fahrstuhl-Panel), 10D0/10D1, 1100/1101, 11E0/11E1 (zwei Cursor, obj 1 und 2),
+  11F0/11F1 (Generator), 1230/1231, 2040/2041, 2050/2051 (obj 8), 2060/2061 (zwei: obj 3 und 4), 3050/3051 (obj 3),
+  30E0, 4020/4021 (Fahrstuhl), 5050/5051. (1081/1101/11E1/11F1/1231 byte-gleich mit ...0, `cmp`; 10D1 nicht.)
+* ROOM3091 obj 1 (Typ 4, Band 1, `+0 = 0x0081`, Box h(0,0,0)): Add_speed @0x01E66, Pos_set @0x01786/@0x01E4C.
+* Start-Treffer (Objekt beruehrt beim Installieren eine Klasse-2-Zelle seines Bands): nur ROOM2060/2061 obj 2 (der
+  Tritt der Spur R, r0[9] @0x00738) und ROOM11A0/11A1 obj 0 im ELSE-Zweig @0x0107E (Ck(5,6)==0 @0x01040 sonst): Bank 5
+  Wort 0 wird beim Raumaufbau geloescht (FUN_8003ecec `8003ed74 sw zero,4136(at)` = 0x800b1028), main00 sieht also nie
+  5:6 = 1 — der Zweig ist beim Raumeintritt nicht erreichbar. Die Spur-R-Aussage "nur 2060/2061 obj 2 im ersten Bild
+  bewegt" bleibt gueltig.
+* Die genannten Nachbarn: **ROOM1150/1151 (Hebetisch)** — Tisch/Deckel obj 0..2 tragen `0a 00` -> `+0 = 0x000b`
+  (Bit 3), werden nie geschoben; obj 3 (`+0 = 0x0001`) wird vom SCD nicht bewegt und liegt in keiner Zelle.
+  **ROOM4000 (Cursor-Raster)** — alle sieben Objekte `0a 00` -> Bit 3, kein Eintrag. **ROOM1080 (Fahrstuhl-Panel)** —
+  Panel-Cursor mit Rahmen wie 11F0 (Z3).
+
+### Z2 Port: welche Riegel sehen eine Ruhe-Ausschiebung? (`G2_belege/port_ruhe_zensus.py`, Stand 7b2e56d9)
+
+99 Tests (Regex des Auftrags + 4020|10d0|1100|11e0|1230|2040|2050|2060|3050|30e0|5050|codepanel|espr_11e0|elevator|
+fahrstuhl), jeder EINZELN mit eigenem RE15_PUSH_LOG. Bewegungen durch den Ruhe-Zweig gab es nur in:
+
+| Test | Ruhe-Bewegungen | Objekt -> Endlage |
+|---|---|---|
+| unit_r31_generator (alte Fassung, rot) | 17 | ROOM11F0 obj 0 -> (-19554,29232) |
+| unit_r34n_c_generator (alte Fassung, rot) | 31 | ROOM11F0 obj 0 -> (-18554,16068) |
+| unit_r27_panel_schalterwerte (gruen) | 8 | ROOM11F0 obj 0 -> (-19554,29232) — Teil E faehrt 40 Bilder HOCH ab 22684 |
+| unit_r17_cursor_klick_pin, r31_trefferboxen, unit_r36_dachkiste_zellschub (gruen) | je 1 | ROOM2060 obj 2 -> (-3143,2075) (Tritt, Spur R) |
+
+Alle anderen Tests 0 Ruhe-Bewegungen, rc = 0 (96 von 99; `integration_r36_dachkiste` lief in die 900-s-Grenze des
+Zensus-Laeufers — ctest gibt ihm 2700 s, s. P4). Die Riegel der Fahrstuhl-Panels (unit_fahrstuhl_1080_etagen,
+probe_elevator_1080, unit_fahrstuhl_4020_etagen), des Hebetischs (unit_r31_hebetisch, unit_r32_hebetisch_faecher,
+unit_r34n_b_*) und von 11E0/10D0/1230 fahren ihre Cursor/Objekte NIE an eine Rahmenzelle — darum blieben sie gruen.
+Laufprotokolle: `G2_belege/port_ruhe_zensus_vorher.txt` (Zusammenfassung).
+
+### Z3 Panel-Cursor: Port gegen Original, alle Raeume (Fahrt nachgebildet)
+
+Port `probe_r36_g2_cursor_rahmen` (neu), Original `G2_belege/orig_cursor_zensus.py` (GDB). Beide bilden die Fahrt
+gleich nach: je Bild +-200 auf obj+0x34/+0x3C NACH der SCD und VOR dem Objekt-Pass (Original: am Haltepunkt
+@0x8002bd44; dieselben Felder wie Add_speed `80040f48 lw v1,52(a1) / 80040f54 sw v0,52(a1)`, `80040f70 lw v1,60(a1) /
+80040f7c sw v0,60(a1)`), kein Pad (die Schubkette @0x8002bf24 greift nie), je Richtung bis 15 Bilder Stillstand.
+Gegenprobe der Nachbildung: ROOM11F0 liefert damit am Original exakt dieselben Zahlen wie die ECHTE SCD-Fahrt
+(orig_cursor_lauf1): 33/66/52/101 Bilder, Endlagen 29232/16068/-29782/-9668, gleiche erste Ausschiebungen.

@@ -81,16 +81,18 @@ def raum(out, psx, stage, rid, objs, L, gp, B, flags=()):
         sca = struct.unpack("<I", g.mem(base + 0x20, 4))[0]
         q0 = struct.unpack("<I", g.mem(sca + 4, 4))[0]
         ram = g.mem(q0, 12 * n_all) if 0x80000000 <= q0 < 0x80200000 else b""
-        # u0 (Zellbyte +9) darf abweichen: Sca_id_set (Opcode 0x37, @0x8004179c) setzt es beim Raumaufbau um
+        # u0 (Zellbyte +9) und floor (+11) duerfen abweichen: Sca_id_set (Opcode 0x37) bzw. Sca_floor_set (0x39)
+        # setzen sie beim Raumaufbau um (Port: scd_vm.c op_sca_id_set / op_sca_floor_set, sca_entry_at)
         ok = len(ram) == len(zellen_datei) and all(
-            ram[i] == zellen_datei[i] for i in range(len(ram)) if i % 12 != 9)
-        L("  RDT-Basis %08x SCA %08x: %d Zellen im RAM == %s/ROOM%04X.RDT @0x%05X (ohne u0): %s" % (
+            ram[i] == zellen_datei[i] for i in range(len(ram)) if i % 12 not in (9, 11))
+        L("  RDT-Basis %08x SCA %08x: %d Zellen im RAM == %s/ROOM%04X.RDT @0x%05X (ohne u0/floor): %s" % (
             base, sca, n_all, stage, rid, sca_f + 24, ok))
         if ok:
             for i in range(n_all):
-                if ram[12 * i + 9] != zellen_datei[12 * i + 9]:
-                    L("    Zelle %d @%08x u0 Datei 0x%02x -> RAM 0x%02x (Sca_id_set)" % (
-                        i, q0 + 12 * i, zellen_datei[12 * i + 9], ram[12 * i + 9]))
+                for k, nm in ((9, "u0"), (11, "floor")):
+                    if ram[12 * i + k] != zellen_datei[12 * i + k]:
+                        L("    Zelle %d @%08x %s Datei 0x%02x -> RAM 0x%02x (Sca_id_set/Sca_floor_set)" % (
+                            i, q0 + 12 * i, nm, zellen_datei[12 * i + k], ram[12 * i + k]))
         if not ok:
             return erg
         for a in (BP_IN, BP_HIT, BP_OUT):

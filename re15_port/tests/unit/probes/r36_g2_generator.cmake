@@ -13,3 +13,9 @@ target_link_libraries(probe_r36_g2_cursor_rahmen PRIVATE re15_engine re15_test_s
 target_include_directories(probe_r36_g2_cursor_rahmen PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_r36_g2_cursor_rahmen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+#   unit_r36_g2_cursor_rahmen    Riegel (Argument pin): je Cursor und Richtung Bilder mit Bewegung, Endlage und erste
+#                                Ausschiebung = ORIGINAL (G2_belege/orig_zensus/log.txt, orig_cursor_zensus.py: dieselbe
+#                                Nachbildung am Haltepunkt @0x8002bd44). Rueckbau-Nachweis (Ruhe-Zweig aus) in
+#                                G2_generator_ruhezweig.md, P3.
+add_test(NAME unit_r36_g2_cursor_rahmen COMMAND probe_r36_g2_cursor_rahmen pin)
+set_tests_properties(unit_r36_g2_cursor_rahmen PROPERTIES TIMEOUT 300)

@@ -69,3 +69,120 @@ ROOM30E0: Menue 0101002400000000 -> 01010224000e0000 (Zeile 1, Stage 2, Rauminde
     UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @8011fe90 x -31700..-7750 z 14150..15150 r=900
     LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @8011fe9c x -31700..-30700 z 14150..31150 r=900
     RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @8011fdc4 x -8750..-7750 z 14150..31150 r=900
+ROOM4020: Menue 0101002400000000 -> 0101032400000200 (Zeile 1, Stage 3, Raumindex 0x02)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 8011a620 SCA 8011aa3c: 40 Zellen im RAM == STAGE4/ROOM4020.RDT @0x00434: True
+  obj 0 @800b3f98 +0=0101 typ 4 band 0 lage (-19554,0,22684)
+    OBEN   start (-19554,22684) bewegt  33 ende (-19554,29232)  erste Ausschiebung (-19554,29284) -> (-19554,29232) Zelle @8011ab08 x -31700..-7750 z 30150..31150 r=900
+    UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @8011aae4 x -31700..-7750 z 14150..15150 r=900
+    LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @8011aaf0 x -31700..-30700 z 14150..31150 r=900
+    RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @8011aa9c x -8750..-7750 z 14150..31150 r=900
+ROOM5050: Menue 0101002400000000 -> 0101042400000005 (Zeile 1, Stage 4, Raumindex 0x05)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 801208a0 SCA 80120be0: 75 Zellen im RAM == STAGE5/ROOM5050.RDT @0x00358: True
+  obj 0 @800b3f98 +0=0101 typ 4 band 0 lage (-19554,0,22684)
+    OBEN   start (-19554,22684) bewegt  33 ende (-19554,29232)  erste Ausschiebung (-19554,29284) -> (-19554,29232) Zelle @80120d54 x -31700..-7750 z 30150..31150 r=900
+    UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @80120d30 x -31700..-7750 z 14150..15150 r=900
+    LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @80120d3c x -31700..-30700 z 14150..31150 r=900
+    RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @80120c94 x -8750..-7750 z 14150..31150 r=900
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+  Flag 3:127 := 1 (@800b1004 00000000 -> 00000001)
+ROOM11E0: Menue 0101002400000000 -> 0101001e00000000 (Zeile 1, Stage 0, Raumindex 0x1E)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 801219b0 SCA 8012292c: 110 Zellen im RAM == STAGE1/ROOM11E0.RDT @0x00F94 (ohne u0): True
+    Zelle 0 @80122944 u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 22 @80122a4c u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 44 @80122b54 u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 66 @80122c5c u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 88 @80122d64 u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+  obj 1 @800b402c +0=0101 typ 4 band 0 lage (-19554,0,22684)
+    OBEN   start (-19554,22684) bewegt  33 ende (-19554,29232)  erste Ausschiebung (-19554,29284) -> (-19554,29232) Zelle @80122b18 x -31700..-7750 z 30150..31150 r=900
+    UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @80122af4 x -31700..-7750 z 14150..15150 r=900
+    LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @80122b00 x -31700..-30700 z 14150..31150 r=900
+    RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @80122a04 x -8750..-7750 z 14150..31150 r=900
+  obj 2 @800b40c0 +0=0000 typ 0 band 0 lage (0,0,0)
+  obj 2 ist nicht der Panel-Cursor - uebersprungen
+  Flag 3:103 := 1 (@800b1004 00000000 -> 01000000)
+ROOM1100: Menue 0101002400000000 -> 0101001000000000 (Zeile 1, Stage 0, Raumindex 0x10)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 801219b0 SCA 80122024: 60 Zellen im RAM == STAGE1/ROOM1100.RDT @0x0068C (ohne u0): True
+  obj 0 @800b3f98 +0=0101 typ 4 band 0 lage (-19554,0,22684)
+    OBEN   start (-19554,22684) bewegt  33 ende (-19554,29232)  erste Ausschiebung (-19554,29284) -> (-19554,29232) Zelle @80122150 x -31700..-7750 z 30150..31150 r=900
+    UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @8012212c x -31700..-7750 z 14150..15150 r=900
+    LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @80122138 x -31700..-30700 z 14150..31150 r=900
+    RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @801220b4 x -8750..-7750 z 14150..31150 r=900
+  Flag 3:146 := 1 (@800b1008 00100000 -> 00102000)
+ROOM2040: Menue 0101002400000000 -> 0101012404000000 (Zeile 1, Stage 1, Raumindex 0x04)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 80119330 SCA 80119be0: 200 Zellen im RAM == STAGE2/ROOM2040.RDT @0x008C8 (ohne u0): True
+    Zelle 19 @80119cdc u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 59 @80119ebc u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 99 @8011a09c u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 139 @8011a27c u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+    Zelle 179 @8011a45c u0 Datei 0x00 -> RAM 0xff (Sca_id_set)
+  obj 0 @800b3f98 +0=0101 typ 4 band 0 lage (-19554,0,22684)
+    OBEN   start (-19554,22684) bewegt  33 ende (-19554,29232)  erste Ausschiebung (-19554,29284) -> (-19554,29232) Zelle @80119fac x -31700..-7750 z 30150..31150 r=900
+    UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @80119f88 x -31700..-7750 z 14150..15150 r=900
+    LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @80119f94 x -31700..-30700 z 14150..31150 r=900
+    RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @80119dc0 x -8750..-7750 z 14150..31150 r=900
+  Flag 3:178 := 1 (@800b100c 00000000 -> 00002000)
+ROOM3050: Menue 0101002400000000 -> 0101022400050000 (Zeile 1, Stage 2, Raumindex 0x05)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 8011f80c SCA 801200a0: 455 Zellen im RAM == STAGE3/ROOM3050.RDT @0x008AC (ohne u0): False
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+  Flag 3:139 := 0 (@800b1008 00100000 -> 00000000)
+  Flag 3:127 := 1 (@800b1004 00000000 -> 00000001)
+ROOM11E0: Menue 0101002400000000 -> 0101001e00000000 (Zeile 1, Stage 0, Raumindex 0x1E)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 801219b0 SCA 8012292c: 110 Zellen im RAM == STAGE1/ROOM11E0.RDT @0x00F94 (ohne u0/floor): True
+    Zelle 0 @80122944 u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 22 @80122a4c u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 44 @80122b54 u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 66 @80122c5c u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 88 @80122d64 u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+  obj 1 @800b402c +0=0101 typ 4 band 0 lage (-19554,0,22684)
+    OBEN   start (-19554,22684) bewegt  33 ende (-19554,29232)  erste Ausschiebung (-19554,29284) -> (-19554,29232) Zelle @80122b18 x -31700..-7750 z 30150..31150 r=900
+    UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @80122af4 x -31700..-7750 z 14150..15150 r=900
+    LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @80122b00 x -31700..-30700 z 14150..31150 r=900
+    RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @80122a04 x -8750..-7750 z 14150..31150 r=900
+  obj 2 @800b40c0 +0=0101 typ 4 band 0 lage (19446,0,22684)
+    OBEN   start (19446,22684) bewegt  33 ende (19446,29232)  erste Ausschiebung (19446,29284) -> (19446,29232) Zelle @80122a40 x 7150..31100 z 30150..31150 r=900
+    UNTEN  start (19446,29232) bewegt  66 ende (19446,16068)  erste Ausschiebung (19446,16032) -> (19446,16068) Zelle @80122a1c x 7150..31100 z 14150..15150 r=900
+    LINKS  start (19446,16068) bewegt  52 ende (9068,16068)  erste Ausschiebung (9046,16068) -> (9068,16068) Zelle @80122a28 x 7150..8150 z 14150..31150 r=900
+    RECHTS start (9068,16068) bewegt 101 ende (29182,16068)  erste Ausschiebung (29268,16068) -> (29182,16068) Zelle @80122a34 x 30100..31100 z 14150..31150 r=900
+  Flag 3:178 := 1 (@800b100c 00000000 -> 00002000)
+ROOM3050: Menue 0101002400000000 -> 0101022400050000 (Zeile 1, Stage 2, Raumindex 0x05)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 8011f80c SCA 801200a0: 455 Zellen im RAM == STAGE3/ROOM3050.RDT @0x008AC (ohne u0/floor): True
+    Zelle 21 @801201b4 u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 21 @801201b4 floor Datei 0x00 -> RAM 0x03 (Sca_id_set/Sca_floor_set)
+    Zelle 76 @80120448 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 112 @801205f8 u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 112 @801205f8 floor Datei 0x00 -> RAM 0x03 (Sca_id_set/Sca_floor_set)
+    Zelle 167 @8012088c u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 203 @80120a3c u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 203 @80120a3c floor Datei 0x00 -> RAM 0x03 (Sca_id_set/Sca_floor_set)
+    Zelle 258 @80120cd0 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 294 @80120e80 u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 294 @80120e80 floor Datei 0x00 -> RAM 0x03 (Sca_id_set/Sca_floor_set)
+    Zelle 349 @80121114 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 385 @801212c4 u0 Datei 0x00 -> RAM 0xff (Sca_id_set/Sca_floor_set)
+    Zelle 385 @801212c4 floor Datei 0x00 -> RAM 0x03 (Sca_id_set/Sca_floor_set)
+    Zelle 440 @80121558 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+  obj 3 @800b4154 +0=0101 typ 4 band 0 lage (-19554,0,22684)
+    OBEN   start (-19554,22684) bewegt  33 ende (-19554,29232)  erste Ausschiebung (-19554,29284) -> (-19554,29232) Zelle @80120934 x -31700..-7750 z 30150..31150 r=900
+    UNTEN  start (-19554,29232) bewegt  66 ende (-19554,16068)  erste Ausschiebung (-19554,16032) -> (-19554,16068) Zelle @80120910 x -31700..-7750 z 14150..15150 r=900
+    LINKS  start (-19554,16068) bewegt  52 ende (-29782,16068)  erste Ausschiebung (-29954,16068) -> (-29782,16068) Zelle @8012091c x -31700..-30700 z 14150..31150 r=900
+    RECHTS start (-29782,16068) bewegt 101 ende (-9668,16068)  erste Ausschiebung (-9582,16068) -> (-9668,16068) Zelle @801204e4 x -8750..-7750 z 14150..31150 r=900
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+ROOM2050: Menue 0101002400000000 -> 0101012405000000 (Zeile 1, Stage 1, Raumindex 0x05)
+  EXE-Stub @0x80026e4c: 0800e003
+  RDT-Basis 80119330 SCA 80119c28: 395 Zellen im RAM == STAGE2/ROOM2050.RDT @0x00910 (ohne u0/floor): True
+    Zelle 50 @80119e98 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 129 @8011a24c u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 208 @8011a600 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 287 @8011a9b4 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+    Zelle 366 @8011ad68 u0 Datei 0xff -> RAM 0x00 (Sca_id_set/Sca_floor_set)
+  obj 8 @800b4438 +0=0000 typ 0 band 0 lage (0,0,0)
+  obj 8 ist nicht der Panel-Cursor - uebersprungen
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

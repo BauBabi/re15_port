@@ -170,6 +170,61 @@ static const char *RNAME[4] = { "OBEN", "UNTEN", "LINKS", "RECHTS" };
 static const int32_t RDX[4] = { 0, 0, -200, 200 };
 static const int32_t RDZ[4] = { 200, -200, 0, 0 };
 
+/* ================= SOLL = ORIGINAL ================================================================
+ * Gemessen am Original (DuckStation + GDB, Auslieferungs-EXE @0x80026e4c `08 00 e0 03`, Debug-Menue-JUMP je Raum,
+ * SCA im RAM == RDT bis auf u0/floor aus Sca_id_set/Sca_floor_set): analysis/befunde_runde36/G2_belege/orig_zensus/
+ * log.txt (orig_cursor_zensus.py; dieselbe Nachbildung +-200 nach der SCD am Haltepunkt @0x8002bd44), ROOM11F0
+ * zusaetzlich mit der echten SCD-Fahrt (orig_cursor_lauf1, identische Zahlen). Je Richtung: Bilder mit Bewegung,
+ * Endlage, erste Ausschiebung (Lage nach +-200 -> nach dem Pass). Vier Rahmenformen:
+ *   A  Rahmen x -31700..-7750 z 14150..31150, Start (-19554,22684): ROOM1080 (log Z.10), 1100 (3:103=1, Z.106),
+ *      11E0 obj 1 (3:127=1, Z.135), 11F0 (Z.1), 2040 (3:146=1, Z.115), 2060 obj 3 (Z.48), 3050 obj 3 (3:178=1, Z.154),
+ *      30E0 (Z.64), 4020 (Z.72), 5050 (Z.80)
+ *   B  Rahmen x -31700..-7750 z -31650..-14650, Start (-19554,-23216): ROOM10D0 (Z.18), 1230 (Z.34); ROOM10D1 ohne
+ *      eigene Messung (Elza-Variante, per Leon-JUMP nicht ladbar) — SCA-Kopf+Zellen und Cursor-Bytes @0x0114E
+ *      byte-gleich mit 10D0 (G2_generator_ruhezweig.md Z3)
+ *   C  ROOM11E0 obj 2, Rahmen x 7150..31100 z 14150..31150, Start (19446,22684) (3:139=0, Z.135)
+ *   D  ROOM2060 obj 4, Rahmen x 7500..31450 z -31050..-14050, Start (19571,-22542) (Z.48)
+ * ROOM2050 obj 8 fehlt: main00 @0x01D30-34 installiert ihn nur bei Ck(5,7)==1, Bank 5 ist beim Raumaufbau leer
+ * (FUN_8003ecec `sw zero,0x800b1028` @0x8003ed74) — im Original nach dem JUMP gemessen leer (log Z.178: Pool 8
+ * `+0=0000`), im Port ebenso. */
+typedef struct { int bewegt; int32_t ex, ez, vx, vz, nx, nz; } soll_t;
+static const soll_t SOLL_A[4] = {
+    {  33, -19554,  29232, -19554,  29284, -19554,  29232 },
+    {  66, -19554,  16068, -19554,  16032, -19554,  16068 },
+    {  52, -29782,  16068, -29954,  16068, -29782,  16068 },
+    { 101,  -9668,  16068,  -9582,  16068,  -9668,  16068 },
+};
+static const soll_t SOLL_B[4] = {
+    {  34, -19554, -16568, -19554, -16416, -19554, -16568 },
+    {  66, -19554, -29732, -19554, -29768, -19554, -29732 },
+    {  52, -29782, -29732, -29954, -29732, -29782, -29732 },
+    { 101,  -9668, -29732,  -9582, -29732,  -9668, -29732 },
+};
+static const soll_t SOLL_C[4] = {
+    {  33,  19446,  29232,  19446,  29284,  19446,  29232 },
+    {  66,  19446,  16068,  19446,  16032,  19446,  16068 },
+    {  52,   9068,  16068,   9046,  16068,   9068,  16068 },
+    { 101,  29182,  16068,  29268,  16068,  29182,  16068 },
+};
+static const soll_t SOLL_D[4] = {
+    {  33,  19571, -15968,  19571, -15942,  19571, -15968 },
+    {  66,  19571, -29132,  19571, -29168,  19571, -29132 },
+    {  51,   9418, -29132,   9371, -29132,   9418, -29132 },
+    { 101,  29532, -29132,  29618, -29132,  29532, -29132 },
+};
+
+static const soll_t *soll_fuer(unsigned rid, int obj)
+{
+    switch (rid) {
+    case 0x1080: case 0x1100: case 0x11F0: case 0x2040: case 0x30E0: case 0x4020: case 0x5050: return SOLL_A;
+    case 0x3050: return obj == 3 ? SOLL_A : NULL;
+    case 0x11E0: return obj == 1 ? SOLL_A : (obj == 2 ? SOLL_C : NULL);
+    case 0x2060: return obj == 3 ? SOLL_A : (obj == 4 ? SOLL_D : NULL);
+    case 0x10D0: case 0x10D1: case 0x1230: return SOLL_B;
+    default: return NULL;
+    }
+}
+
 int main(int argc, char **argv)
 {
     const int pin = (argc > 1 && strcmp(argv[1], "pin") == 0);
@@ -179,7 +234,25 @@ int main(int argc, char **argv)
         const cursor_t *k = &CURSOR[c];
         if (!room_boot(k->stage, k->rid, k->fl)) { printf("ROOM%04X: RDT fehlt\n", k->rid); g_fail++; continue; }
         const int ci = prop_von_obj(k->obj_id);
-        if (ci < 0) { printf("ROOM%04X obj %d: nicht installiert\n", k->rid, k->obj_id); continue; }
+        const soll_t *soll = soll_fuer(k->rid, k->obj_id);
+        if (ci < 0) {
+            printf("ROOM%04X obj %d: nicht installiert\n", k->rid, k->obj_id);
+            if (pin) {
+                char t[160];
+                snprintf(t, sizeof t, "ROOM%04X obj %d: %s", k->rid, k->obj_id,
+                         soll ? "Cursor fehlt, das Original installiert ihn" : "beim Raumaufbau nicht da (wie im Original)");
+                CHECK(t, soll == NULL);
+            }
+            continue;
+        }
+        if (pin) {
+            char t[200];
+            snprintf(t, sizeof t, "ROOM%04X obj %d: Panel-Cursor +0=0x0101 (pc[6..7] `00 01` | 1 @0x80040990-9a4), "
+                     "Typ 4, Band 0, h900", k->rid, k->obj_id);
+            CHECK(t, g_scd.props[ci].flags == 0x0101u && g_scd.props[ci].obj_type == 4 && g_scd.props[ci].band == 0 &&
+                     g_scd.props[ci].box_hx == 900 && g_scd.props[ci].box_hz == 900);
+            CHECK("  und es gibt eine Original-Messung dafuer", soll != NULL);
+        }
         printf("ROOM%04X obj %d (Platz %d) +0=%04x typ %d band %d box c(%d,%d,%d) h(%d,%d,%d) start (%d,%d)\n",
                k->rid, k->obj_id, ci, g_scd.props[ci].flags, g_scd.props[ci].obj_type, g_scd.props[ci].band,
                g_scd.props[ci].box_cx, g_scd.props[ci].box_cy, g_scd.props[ci].box_cz,
@@ -192,6 +265,15 @@ int main(int argc, char **argv)
             if (r.ausgeschoben) printf("  erste Ausschiebung (%d,%d) -> (%d,%d)", r.vor_x, r.vor_z, r.nach_x, r.nach_z);
             else printf("  KEINE Ausschiebung");
             printf("\n");
+            if (pin && soll) {
+                const soll_t *s = &soll[d];
+                char t[220];
+                snprintf(t, sizeof t, "ROOM%04X obj %d %s = Original: %d Bilder, Endlage (%d,%d), Ausschiebung (%d,%d)->(%d,%d)",
+                         k->rid, k->obj_id, RNAME[d], s->bewegt, (int)s->ex, (int)s->ez, (int)s->vx, (int)s->vz,
+                         (int)s->nx, (int)s->nz);
+                CHECK(t, r.bewegt == s->bewegt && r.ex == s->ex && r.ez == s->ez && r.ausgeschoben &&
+                         r.vor_x == s->vx && r.vor_z == s->vz && r.nach_x == s->nx && r.nach_z == s->nz);
+            }
         }
     }
     printf("\n%s (%d Fehler)\n", g_fail ? "FEHLER" : "ALLES GRUEN", g_fail);
