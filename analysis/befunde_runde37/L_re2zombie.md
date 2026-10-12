@@ -223,3 +223,50 @@ Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids, kein
 | EXEC[11] gerade Takte +0x144 >> 2 (~Z.3296) | @0x801044D0-E0 | nein (Ausrollen beim Zusammenbruch) | bleibt OFFEN mit Adresse |
 | EXEC[10] Haemmern / EXEC[15] Bank B | 0x8010417C / 0x80104E54 | nein | inert (+0x1D4-Bits bzw. kein Produzent) |
 | Gore/Teile-Physik (Wand/Boden/Skalierung), Rumble, Praesentation | @0x80028CAC u.a. | nein | Praesentation, bleibt |
+
+## Schritt 5 — Zufallsstrom und verschobene Riegel
+
+### Strom (Wuerfe je Bild, re15_re2_rand_draws, Sonde test_r37_re2zombie mess, 64 Seeds x 900 Bilder, ROOM1140)
+| Lauf | vorher (Basis-Build e399ee3f-Verhalten) | nachher (Spur L) |
+|---|---|---|
+| Messer-Sweep | 14003 Wuerfe = 218,8 je Seed = 0,243 je Bild | 15045 = 235,1 je Seed = 0,261 je Bild |
+| Pistolen-Sweep | 13538 = 211,5 je Seed = 0,235 je Bild | 13831 = 216,1 je Seed = 0,240 je Bild |
+Mehrwuerfe = EXEC[2] P0 (+0x158, Moan, Startbild, +0x15A: 3..4 Wuerfe je Eintritt @0x801022a8-334) und EXEC[2] P1 bei
+Wandkontakt (@0x801023ac-cc). (b) aendert die Wurfzahl nicht (nur die Richtung je Wurf), (c) nur den Takt der P2-Wuerfe.
+
+### Verschobene Riegel (gleiche -R-Auswahl, Basis-Build e399ee3f im Scratch-Ordner gegen Spur L, `ctest -V`, Vergleich
+`L_belege/riegel_vergleich.py`): 163 Tests, 140 mit bitgleicher Ausgabe. Geaenderte Ausgabe:
+
+| Riegel | alt | neu | Begruendung |
+|---|---|---|---|
+| unit_re2_zombie_abc | Pistole 1795 / 96 Tode / DOWN 96..324 (250); Messer 368 | Pistole 1775 / 90 / 94..323 (254); Messer 373 | Strom + Arme-hoch-Gang; Schranken > 500 / > 250 gruen; Nahkampf NICHT schlechter |
+| unit_r36_zombieki_eintritt | KLEMME 0; Taschenfall-Gegenprobe 450 Bilder | KLEMME 1 (1030<-1050 hin Slot 1); Gegenprobe 30 Bilder -> ROT | **angepasst**, s.u. |
+| unit_r36_zombieki_wecker | 10B0/1220 Weck-Zeilen "Bild 2 sub 1" | "Bild 2 sub 2" | Leon 800 vor dem Steher: DECISION[0] 0x101, EXEC[1] im selben Takt (Dispatcher liest +0x5 neu @0x801011d0), Produzent (2) (800 < 0x7D0, Kegel) -> 0x201 — byte-true; Riegel prueft "reagiert in Bild <= 2" (gruen) |
+| unit_r36_zombieki_sicht | 1010 Slot 1/2 Zaehler 74/2 bzw. 4/0 | 60/0 bzw. 4/0 | Strom; Riegel gruen |
+| unit_r36_zombieki_szenen | erneuter Angriff F340/299/148/307 | F349/276/145/319 | Strom; gruen |
+| unit_r35_inhalt_zombies | 1220 Slot 2 Griff Bild 12 | Bild 15 | Strom; gruen |
+| unit_r35_zgirl_ki_re2 | Griff ab Bild 155 | 154 | Strom; gruen |
+| unit_re2z_bump_walk | EXEC[2] ab Bild 120 (gesetzt), 9 Bilder, dist 1492 -> 1200 | ab Bild 100 (Produzent (2) bei 1962), 21 Bilder, 1962 -> 1214, Ausgang Griff | der Gang mit erhobenen Armen entsteht jetzt von selbst; gruen |
+| unit_re2_room1140_ab | B RE2 Slot 4/5 Wechsel 0/0 | 2/112 | 0x101 <-> 0x201 zaehlen als Wechsel; gruen |
+| unit_re2_lyer_1140 | Ende 1/1/1 Clip 0 | Ende 1/12/3 Clip 27 (Ausfall) | Strom; Riegel prueft das Aufstehen (Bild 82, gruen) |
+| r28_messer_dauerschlag | A: 50 Schlaege / 17 Treffer / Tod F1095; B Griff 3 | 48 / 17 / F1056; B Griff 4 | Strom; gruen |
+| unit_1030_crawl_live | RE2 z end -10392 | -9756 | Strom; gruen |
+| unit_re2_kfjump, unit_re2_zombie_teardeath, unit_r36_blut_pin_kriecher, unit_re2z_bandlock_pin, unit_re2z_grab_core_se (699 -> 702 Zuege), unit_re2z_rise_hittable (683/19 -> 708/16) | Messwerte | Messwerte verschoben | Strom; alle gruen |
+(Fuenf Tests liefen im Scratch-Basisbaum mangels Dateien ausserhalb re15_port rot — unit_r30_irons_diary_ablauf,
+unit_r34_re2fx_knochen, unit_r36_szene1150_knall_re2, unit_re15_re2z_gore_se, unit_re2_crow_se_bank —; im Spurbaum vorher
+und nachher gruen, nicht vergleichbar.)
+
+**unit_r36_zombieki_eintritt — Anpassung mit Beleg (Runde 36 Spur F, test_r36_zombieki_eintritt.c):**
+1. KLEMME 1030<-1050 "hin" Slot 1 (Typ 0x16, grid 0x0D, geht ab Spawn): GEMESSEN mit dem Basis-Build (gleicher Lauf
+   `spur 1030 1050 2 1 1 1200 30`): derselbe Zombie steht schon VORHER ab F330 an derselben Wand (-6230,-24838), Leon (-6170,
+   -22303) auf der anderen Seite der Tresen-/Wandzelle (Raster `raster 1030 1 125`: solide z -24734..-22484, x -8117..-3600),
+   870 Bilder lang — der Zensus zaehlte ihn nicht, weil die KLEMME eine "Reaktion" (Zustandswechsel) verlangt und ein ab Spawn
+   gehender Zombie vorher nie wechselte. Jetzt wechselt er in F230 per Produzent (1) in den Arme-hoch-Gang und in F270 per
+   DECISION[2] Block C in den Ausfall — der Zensus sieht den vorbestehenden Stillstand. Ursache des Stillstands: das
+   Steuerziel (-4984,-23860) des Navigators liegt IN der soliden Zelle (OFFEN, s.u.). Anpassung: jeder KLEMME-Fall wird mit
+   dem Stand bis Runde 37 (Sonden-Maske 0) gegengelaufen; steht der Zombie dort ebenfalls >= 300 Bilder aufrecht still
+   (Leon > 1500, ohne Reaktions-Bedingung), zaehlt er als "vorbestehend" (ausgegeben, nicht gezaehlt). Gemessen: 600 Bilder.
+2. Taschenfall-Gegenprobe (Wurf-Klemme aus): der Rueckstoss in die Tasche haengt an den Wuerfen des Griffs; mit Spur L 30
+   statt >= 300 Bilder. Anpassung: das Paar Gegenprobe/Fix laeuft im Strom bis Runde 37 (Maske 0, Befund 450 Bilder, Fix
+   0 Bilder), zusaetzlich neuer Check "Taschenfall mit Wurf-Klemme UND Spur L": keine KLEMME (30 < 300), Leon erreicht (92).
+Nach der Anpassung: 11/11 gruen.

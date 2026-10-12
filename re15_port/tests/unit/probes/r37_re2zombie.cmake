@@ -28,3 +28,16 @@ foreach(_teil prod1 prod2 prod3 b c d12 nahkampf raum1130 raum1180)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r37_re2zombie_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
+
+# INTEGRATION (echte exe): Spielstand ROOM1150 nach der Montage + CONTINUE + Tuer -> ROOM1130, Leon steht 1100 Bilder:
+# mindestens ein Zombie wechselt bei +0x1F0 < 0x7D0 in den Arme-hoch-Gang (ss1 1 -> 2) und greift aus ihm (2 -> 3).
+# Arbeitsordner r37_re2zombie_wd (nie gleich einem Target-Namen: Linux-exe ohne Endung).
+if(TARGET re15_pc)
+    add_test(NAME integration_r37_re2zombie
+        COMMAND ${CMAKE_COMMAND}
+            -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+            -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_gegnerzahl_karte>
+            -DWORKDIR=${CMAKE_BINARY_DIR}/r37_re2zombie_wd
+            -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_re2zombie.cmake)
+    set_tests_properties(integration_r37_re2zombie PROPERTIES TIMEOUT 1200)
+endif()
