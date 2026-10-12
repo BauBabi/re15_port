@@ -63,6 +63,7 @@
 #include "re15_ai_flavor.h"
 #include "re15_zombieki_r36.h"   /* Runde 36 Spur F: Sicht-Bit */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 */
+#include "re15_re2zombie_r37.h"   /* Runde 37 Spur L: 0x201-Produzenten (Sonden-Schalter) */
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
@@ -1590,6 +1591,22 @@ static int re2z_dot_tick(re15_actor_t *e, int mit_zucken)
     return 0;
 }
 
+/* Runde 37 Spur L — die drei Produzenten von `+0x4 = 0x201` (Schalter nur fuer Sonden/Gegenproben,
+ * include/re15_re2zombie_r37.h). Jeder Produzent schreibt nur das Wort; der Executor des neuen Unter-
+ * zustands laeuft im Original erst im NAECHSTEN Takt (EXEC[1] kehrt ueber den Epilog @0x80101f64 zurueck,
+ * der ACTIVE-Root @0x801011A8-EC ruft DECISION und EXECUTOR je Takt genau einmal). */
+static unsigned s_r37_prod = 0u;
+static unsigned s_r37_zaehler[3];
+void     re15_re2z_r37_produzenten(unsigned mask) { s_r37_prod = mask & RE15_R37L_PROD_ALLE; }
+unsigned re15_re2z_r37_produzenten_maske(void)    { return s_r37_prod; }
+void     re15_re2z_r37_zaehler_reset(void) { s_r37_zaehler[0] = s_r37_zaehler[1] = s_r37_zaehler[2] = 0u; }
+unsigned re15_re2z_r37_zaehler(int p)      { return (p >= 0 && p < 3) ? s_r37_zaehler[p] : 0u; }
+static void r2z_r37_auf_0x201(re15_actor_t *e, int produzent)
+{
+    if (e->state != 1u || e->sub_state_1 != 2u) s_r37_zaehler[produzent]++;
+    re15_ai_set_state_word(e, 0x201);                              /* addiu v0,zero,513 / sw v0,4 */
+}
+
 static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
@@ -1642,13 +1659,30 @@ static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
     if (e->re2z_t15a == 0) {
         e->re2z_t15a = (int16_t)((int)(re2z_rand() >> 3) + 100);   /* Reseed-Draw */
         if ((re2z_rand() & 3u) == 0u && e->ai_dist < 0x1388u) {    /* 2. Draw + dist-Gate */
-            /* +0x4 = 0x201 @0x80101DB8-BC — BEWUSST NICHT SCHARF (s. OFFEN-Block) */
+            /* Runde 37 Spur L: Produzent (1) `addiu v0,zero,513` / `sw v0,4(s1)` @0x80101DB8-BC */
+            if (s_r37_prod & RE15_R37L_PROD_TIMER) r2z_r37_auf_0x201(e, 0);
         }
     }
     (void)slot; (void)pl;
     /* RUNDE 34 B5: der Brand-/Saeure-DoT @0x80101DC0-EC0 (s. re2z_dot_tick). Stirbt der Zombie
      * daran, springt das Original in den Epilog @0x80101f64 (`j 0x80101f64` @0x80101e8c). */
     if (re2z_dot_tick(e, 1)) return;
+    /* Runde 37 Spur L: Produzent (2) NAHBEREICH @0x80101EC4-F10 —
+     *   80101ec4 lw v0,496(s1) / 80101ecc sltiu v0,v0,0x7d0 / 80101ed0 beq -> 0x80101f14
+     *   80101ee8 jal 0x80015614 (a3 = 512 @0x80101eec) / 80101ef0 bne v0,zero -> 0x80101f14
+     *   80101efc lbu 0x800cfdcb / 80101f04 andi 0x80 / 80101f08 bne -> 0x80101f14
+     *   80101f0c addiu v0,zero,513 / 80101f10 sw v0,4(s1)                         ; +0x4 = 0x201 */
+    if ((s_r37_prod & RE15_R37L_PROD_NAH) && e->ai_dist < 0x7d0u
+        && re15_ai_arc_test(e, pl->x, pl->z, 512) == 0 && !re15_player_is_grabbed())
+        r2z_r37_auf_0x201(e, 1);
+    /* Runde 37 Spur L: Produzent (3) SPIELER RENNT @0x80101F14-F60 —
+     *   80101f18 lhu 0x800cfbf6 / 80101f20 andi 0x4 / 80101f24 beq -> Epilog 0x80101f64
+     *   80101f2c lw v0,496(s1) / 80101f34 sltiu v0,v0,0x9c4 / 80101f38 beq -> Epilog
+     *   80101f50 jal 0x80015614 (a3 = 1324 @0x80101f54) / 80101f58 bne v0,zero -> Epilog
+     *   80101f5c addiu v0,zero,513 / 80101f60 sw v0,4(s1)                         ; +0x4 = 0x201 */
+    if ((s_r37_prod & RE15_R37L_PROD_RENNEN) && (re2z_cfbf6(pl) & 0x4u) && e->ai_dist < 0x9c4u
+        && re15_ai_arc_test(e, pl->x, pl->z, 1324) == 0)
+        r2z_r37_auf_0x201(e, 2);
 
     /* ========================================================================================
      * ⛔ OFFEN, VOLLSTAENDIG DISASSEMBLIERT, BEWUSST NOCH NICHT SCHARF:
