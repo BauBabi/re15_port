@@ -10,6 +10,8 @@
  *   cut:<n>            gespeicherter Kamera-Cut
  *   elza               Spielfigur Elza (g_gameflow.character = 4)
  *   leer               Inventar leeren (vor give:, damit ein Gegenstand auf Platz 0 liegt)
+ *   kiste:<id>:<n>     legt einen Gegenstand in die ITEM BOX (naechster freier Platz ab 2 = (Scroll 0 + 2) & 0x3f,
+ *                      RE2 FUN_800703b8; die Kiste reist mit re15_savedata v4) — Nachbesserung 1 (Abnahme 0, M1)
  * Inventar sonst = Einsatzausruestung (re15_inv_load_briefing).
  */
 #include "re15_actor.h"
@@ -20,6 +22,7 @@
 #include "re15_aot.h"
 #include "re15_inventory.h"
 #include "re15_gameflow.h"
+#include "re15_itembox.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,6 +63,17 @@ int main(int argc, char **argv)
             g_scd.cam_id = (uint8_t)atoi(argv[a] + 4);
         } else if (strcmp(argv[a], "elza") == 0) {
             g_gameflow.character = 4;
+        } else if (strncmp(argv[a], "kiste:", 6) == 0) {
+            char *e = NULL;
+            long id = strtol(argv[a] + 6, &e, 0);
+            long n = (e && *e == ':') ? strtol(e + 1, NULL, 0) : 1;
+            int frei = -1;
+            for (int k = 0; k < RE15_BOX_SLOTS && frei < 0; k++) {
+                int i = (k + 2) & (RE15_BOX_SLOTS - 1);
+                if (g_itembox.slots[i].id == 0) frei = i;
+            }
+            if (id <= 0 || id > 255 || n < 1 || n > 255 || frei < 0) { printf("FAIL: '%s'\n", argv[a]); return 2; }
+            g_itembox.slots[frei].id = (uint8_t)id; g_itembox.slots[frei].qty = (uint8_t)n; g_itembox.slots[frei].flags = 0;
         } else if (strcmp(argv[a], "leer") == 0) {
             re15_inv_init();
             re15_inv_set_equipped_slot(0x80);   /* keine Waffe (DAT_800b25c8 0x80), Muster probe_r36_schluessel_karte */

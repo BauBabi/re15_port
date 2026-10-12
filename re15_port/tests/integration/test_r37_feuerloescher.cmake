@@ -20,6 +20,10 @@ cmake_minimum_required(VERSION 3.16)
 #   I  Nachtrag 4b: NEIN an der Wegwerf-Abfrage -> Leon behaelt ihn, nichts liegt, die Rettungsszene laeuft weiter
 #   J/K Nachtrag 4c: nach Spielstand/CONTINUE heisst der behaltene Loescher "Empty Fire Extinguisher" (Name im
 #      Statusschirm, CHECK-Text "An empty fire extinguisher."); L Gegenprobe vor dem Loeschen: Original-Name
+#   M/N/O Nachbesserung 1 (Abnahme 0, M1): NEIN-Zustand, der Loescher kommt in die ITEM BOX -> in ROOM1090 liegt
+#      KEINER (die Kiste lagert nur um, RE2 FUN_800703b8 @0x80070710; weg ist er nur nach Wegwerf-Ja).
+#      M = Lauf L8 der Abnahme (Box-Schirm RE15_BOX_TEST, Tuer 1050 -> 1090), N = echte Box ROOM1150 (msg 3) +
+#      Sprung nach 1090, O = Spielstand/CONTINUE in 1090 mit dem Loescher in der Kiste (Gegenstueck zu F)
 #
 # Bilder je Lauf per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) im Arbeitsordner; geprueft wird das LOG.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r37_feuerloescher_karte> -DWORKDIR=<dir>
@@ -195,6 +199,35 @@ pruef(K _k "[feuerloescher] CHECK-Text Item 0x31: An empty fire extinguisher.")
 fl_lauf(l 1090 "1090;-10100;4200;3072;y:-1800;cut:3;flag:9:0x86;flag:3:0x85;leer;give:0x31:1"
     "W1" 600 "RE15_INV_SHOT=grid.bmp;RE15_INV_GRID_SHOT=1" _l)
 pruef_nicht(L _l "Empty Fire Extinguisher")
+
+# --- M/N/O: Nachbesserung 1 (Abnahme 0, M1) — NEIN, dann der Loescher in der ITEM BOX -> in ROOM1090 liegt KEINER ----
+# Tor RE15_FL37_FEUER_AUS (feuerloescher_r37.c): (3,0x81) UND 0x31 weder im Inventar (FUN_8004dfec) noch in der Kiste
+# (g_itembox = RE2-Box-Feld 0x800d4a68). Vorher lag er hier UND in der Kiste (Abnahme L8/L8r).
+# M: Spielstand ROOM1050 vor der Notausgangs-Tuer im NEIN-Zustand ((3,0x81), Loescher im Inventar); RE15_BOX_TEST oeffnet
+#    den Box-Schirm (re15_itembox.c, derselbe wie die Box-Zone ROOM1150 msg 3): A@30 Loescher waehlen, A@54 Tausch in
+#    Box-Platz 2 ((Scroll 0 + 2) & 0x3f), X/X schliessen, A@120 an der Tuer -> Tuersequenz -> ROOM1090.
+fl_lauf(m 1050 "1050;19850;-22300;1024;cut:6;flag:9:0x86;flag:3:0x85;flag:3:0x80;flag:3:0x81;leer;give:0x31:1"
+    "W1,A0.1,W0.7,A0.1,W1,X0.1,W0.7,X0.1,W2,A0.5,W6" "200#1090" "RE15_BOX_TEST=1" _m)
+pruef(M _m "[feuerloescher] Name Item 0x31: Empty Fire Extinguisher")
+pruef(M _m "[room] PC loaded room1090.rdt")
+pruef(M _m "[feuerloescher] ROOM1090: kein Loescher (Leon hat ihn in die Item-Box gelegt (Item 0x31 in der Kiste, Platz 2))")
+pruef_nicht(M _m "Loescher liegt leer am Boden")
+pruef_nicht(M _m "oid=0x05")
+# N: dieselbe Einlagerung an der ECHTEN Box ROOM1150 (Box-Zone msg 3; A@30 oeffnet, A@123 waehlt, A@147 tauscht),
+#    danach Sprung (Debug-Menue) nach ROOM1090 vor die Wagentuer (2500,-2400).
+fl_lauf(n 1150 "1150;-23000;-12100;2048;flag:9:0x86;flag:3:0x85;flag:3:0x80;flag:3:0x81;flag:7:0xf8;flag:7:0xf9;flag:7:0xfa;flag:7:0xfb;leer;give:0x31:1"
+    "W1,A0.1,W3,A0.1,W0.7,A0.1,W1,X0.1,W0.7,X0.1,W3" "120#1090" "RE15_DEBUG_JUMP=1090@330;RE15_PLAYER_POS=2500,-2400,3072,1" _n)
+pruef(N _n "room=1150 id=3 ITEMBOX")
+pruef(N _n "[feuerloescher] Name Item 0x31: Empty Fire Extinguisher")
+pruef(N _n "[debug-menu] AUTO-JUMP -> ROOM1090")
+pruef(N _n "[feuerloescher] ROOM1090: kein Loescher (Leon hat ihn in die Item-Box gelegt (Item 0x31 in der Kiste, Platz 2))")
+pruef_nicht(N _n "Loescher liegt leer am Boden")
+# O: Spielstand/CONTINUE in ROOM1090 (Feuer aus, Rettung durch) mit dem Loescher in der Kiste — Gegenstueck zu F
+#    (dort abgelegt -> liegt). Bild F60 Cut 6 (Wagentuer).
+fl_lauf(o 1090 "1090;2500;-2400;3072;y:-1800;cut:6;flag:9:0x86;flag:3:0x85;flag:3:0x80;flag:3:0x81;flag:3:0xbb;flag:3:0x6e;flag:7:0xf8;flag:7:0xf9;flag:7:0xfa;flag:7:0xfb;leer;kiste:0x31:1"
+    "W2" 100 "RE15_FRAMEDUMP=60-60/50:fd_" _o)
+pruef(O _o "[feuerloescher] ROOM1090: kein Loescher (Leon hat ihn in die Item-Box gelegt (Item 0x31 in der Kiste, Platz 2))")
+pruef_nicht(O _o "oid=0x05")
 
 file(REMOVE "${_exe_kopie}")
 if(_fehler)
