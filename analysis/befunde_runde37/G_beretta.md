@@ -11,7 +11,39 @@ Lesart (VERTRAG Spur G): jeder Schuss des 3-Schuss-Feuerstosses trifft (Glock 18
 
 ## 1. Messung vorher
 
-(laeuft)
+### 1.1 Port (exe, Stand f1e019ca, eigener Bau) — `G_beretta_mess/run_mess.sh` + `auswertung.py`
+Aufbau wie Runde 36 C "frei": ROOM1140 per `RE15_DEBUG_JUMP=1140@250`, Leon `RE15_PLAYER_POS=200,-18200,1024` (Blick -z),
+`RE15_GIVE=<w>:15`, `RE15_EQUIP=<w>`, EIN Abzug: `RE15_INPUT_SCRIPT=M2.0,MA0.1,M3.0,W2` (Square 3 Bilder), Ziel = Platz 5
+(Typ 0x11, (200,-19600), d = 1396). Messkopie `re15_r37g.exe`. Logs `mess_r37g/<tag>/` (unversioniert, Zahlen hier).
+| Lauf | Waffe | KI | Munition | Treffer (HP-Aenderungen) | Schaden | FX-Kinder (Muendung 2/0) |
+|---|---|---|---|---|---|---|
+| vorher_w5_re2 | 5 M93R | RE2 | 15 -> 12 (F61) | **1** (F61) | 250 -> 234 (**-16**) | F61, F64, F67 (+0/+3/+6) |
+| vorher_w6_re2 | 6 Glock 18 | RE2 | 15 -> 12 | **1** | -16 | F61, F64, F67 |
+| vorher_w3_re2 | 3 Browning | RE2 | 15 -> 14 | 1 | -16 | F61 |
+| vorher_w5_re15 | 5 M93R | RE1.5 | 15 -> 12 | **1** | -16 (RE2-Zeile per Import-Option) | F61, F64, F67 |
+| vorher_w6_re15 | 6 Glock 18 | RE1.5 | 15 -> 12 | **1** | -16 | F61, F64, F67 |
+| vorher_w3_re15 | 3 Browning | RE1.5 | 15 -> 14 | 1 | -16 | F61 |
+Knaelle (wf.log `SE arms_rec=0`) F62/F65/F68 = je Kind im 2. Takt (Routine 9). Befund bestaetigt: drei Schuesse sichtbar
+und hoerbar, drei Patronen weg, EIN Treffer — und dessen Schaden ist gleich EINEM Browning-Schuss (16 = RE2-Zeile 4 =
+Zeile 3), d.h. der Feuerstoss schadet je Patrone ein Drittel der Browning.
+
+### 1.2 Original RE1.5 (DuckStation-GDB) — `G_beretta_mess/orig_burst.py`, Logs `G_beretta_mess/orig_w{5,6,3}/log.txt`
+MZD-Disc, Spielstand `stage_saves/equip_test.sav` (ROOM1140, Browning angelegt, Leon zielt). Pruefung: `@0x80026e4c = 0800e003`
+(Auslieferungs-EXE, nicht die gepatchte), Code im RAM == PSX.EXE fuer 0x800338a8..+0xfc, 0x80033460..+0x100, 0x80017ac8..+0xb8,
+0x80011f50..+0x80. Eingabe OHNE virtuelles Pad: Haltepunkt @0x80020c90 (Ruecksprung aus FUN_80030444, `jal` @0x80020c88)
+ueberschreibt je Bild 0x800ac768/0x800ac76c (R1 = 0x100 immer, Feuer = 0x40 in Bild 40/41). Waffe per `0x800aca5d := 5/6/3`.
+Ziel: Zombie e3 (Typ 0x11, hp 105) per RAM auf (-5281,-17810) = 2000 vor Leon (Blick 1024); Leon selbst laesst sich per RAM
+nicht versetzen (die Lage springt nach dem Schreiben zurueck, Lauf 2 im Log), deshalb das Ziel.
+| Waffe | Entlade-Handler | Resolver 0x80011f50 | Gewinner / Sichtlinie / Ergebnis | HP e3 | Munition | Routine-15-Kinder (0x80017b38) |
+|---|---|---|---|---|---|---|
+| 5 M93R | 0x800338a8 B41 | **1x** (B41, a0 = 5) | 0x800ad208 (e3) / v0 0 / v0 1 | 105 -> **90 (-15)** | 15 -> 12 (3x 0x8004eae4 in B41) | 02/03/04 in **B41, B44, B47** |
+| 6 Glock 18 | 0x800338a8 B41 | **1x** (a0 = 6) | e3 / 0 / 1 | 105 -> **90 (-15)** | 15 -> 12 | B41, B44, B47 |
+| 3 Browning | 0x800337bc B41 | 1x (a0 = 3) | e3 / 0 / 1 | 105 -> 100 (-5) | 15 -> 14 | keine (Sub 0, direkt) |
+Nach dem Treffer traegt e3 `+0x93 = 01` und Zustand 2/5 (HURT, Reaktion = Waffen-Id) bis B50; in B51 zurueck 1/2/0 mit
+`+0x93 = 00` (RE1.5-Riegel lebt 10 Bilder). => **Das Original trifft je Feuerstoss EINMAL** (Schaden 15 = Spalte 5 der
+Zeile 0x11, = 3 x Browning 5), zeigt aber drei Schuesse. Die drei Blitze/Knaelle kommen aus der FX-Kette (2.2).
+Im ersten Lauf (Leon am Spielstand-Ort, Ziel hinter dem Konferenztisch) lehnte die Sichtlinie den Gewinner 0x800ace20 ab
+(`v0 = 1` @0x80012170) — gleicher Zaehlbefund: Resolver 1x, Kinder B21/B24/B27.
 
 ## 2. RE-Belege (selbst disassembliert; `re15_disasm.py` / `re2_disasm.py`, CORE00.ESP selbst gedumpt)
 
