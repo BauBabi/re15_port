@@ -131,6 +131,12 @@ TOC-Laenge 0x800be574, Sektor-Feld 0x800be57c, Blob im RAM ab s4 gegen beide TOC
 | g3 | Elza ROOM50F1 | 0x30 Birkin | **0** | 0x26 | 2577 | **== CDEMD0** |
 | g3/g4 | Elza ROOM5081 | 0x30 Birkin | 1 | 0x27 | 5642 (= 3627 + 2015) | **== CDEMD1** (228460 B) |
 | g2 | **LEON** ROOM5080 | 0x30 Birkin | **1** | 0x27 | 5642 | **== CDEMD1** (228460 B) |
+| g5 | Elza ROOM3091 | **0x42 (Sherry)** | 1 | 0x27 | 5132 (= 3627 + 1505) | **== CDEMD1** (144032 B), != CDEMD0 |
+| g5 | Elza ROOM3091 | 0x49 John | 1 | 0x27 | 5336 | == beiden (Blob bytegleich) |
+
+Bilder des Originals (VRAM-Anzeigepuffer des geordnet geschriebenen Endstands, N_belege/n2_vram_bild.py): fuer die
+Aufnahme wurde NUR die Lage des einen Aktors per GDB neben Elza gesetzt (g6: 0x42 +0x34/+0x40/+0x6a; g7: Birkin) —
+reiner Bildbeleg (Modell/Textur), kein Verhalten. Gegenueberstellung mit dem Port in §4.
 
 ### 2.3 Warum: Flag-Bank 1 Bit 0 IST das Elza-Bit, und vier Raumskripte schalten es um
 Diagnose g0 (N_belege/n2_gdb_bit31.py, Elza 1171 -> 3071): DAT_800aca3c = 0x80000000 noch beim Raumlader
@@ -160,21 +166,60 @@ Der Auftrag nahm an, Leon lade nur CDEMD0. Gemessen (g2): Leons ROOM5080 laedt d
 Leon genau einen Raum (5080: Birkin-Modell = CDEMD1 wie im Original). Jeder andere Leon-Raum laedt weiter bytegleich
 CDEMD0 (Zensus: kein weiteres Set(1,0,1) bei Leon ausser 5090, wo der RE2-EM36 laedt). Im Dossier "Fuer den Nutzer".
 
-## Messung vorher
+## 3. Messung vorher (Port, Bau aus 99b4b13f = Stand Spur K; exe gesichert als scratchpad re15_pc_vorher_99b4b13f.exe, md5 7f9af479)
 
-(folgt)
+Laeufe N_belege/n3_port_lauf.sh (Messkopie neben der exe, Arbeitsordner im scratchpad): Elza bzw. Leon Neuspiel
+(RE15_PSELECT_AUTO[_SWITCH]), RE15_GOTO_ROOM, RE15_ENEMY_DIAG, RE15_FRAMEDUMP (WINDOW_SCALE=1); 3091 zusaetzlich
+RE15_SUBSTART=7@40#3091 + Kreuz alle 30 Bilder (Dialog), 5081 zusaetzlich RE15_SUBSTART=3@60#5081 + RE15_FORCE_CUT=1
+(Birkin faellt vor den Generator). debug.log-Auszuege N_belege/port/vorher_*.txt:
+* JEDER Raum laedt aus CDEMD0 (keine Archiv-Zeile; "[enemy] EM30 loaded: 17 meshes, 16 bones, 21 clips" in Elza 3071,
+  Elza 5081, Elza 50F1 und Leon 5080 gleich; "[enemy] EM42 loaded: 15 meshes, 15 bones, 24 clips" in Elza 3091).
+* Bild: Elza 3091 zeigt als Typ 0x42 **Ada** (weisse Bluse, Rock) im Sherry-Dialog ("Sherry: It's Sherry..."); Elza 5081
+  und Leon 5080 zeigen die **erste Birkin-Form** (graue Haut, Jeans) — das Original zeigt dort die zweite (§2.2 g2/g4).
+* Abweichung je Raum gegen das Original (§2.2): 3091 0x42 falsch, 5081 0x30 falsch, Leon 5080 0x30 falsch, 1101/alle
+  Elza-Zombies eigene + Opfer-Bank falsch (unsichtbar im RE2-KI-Standard, siehe §6), 3071/50F1 richtig (zufaellig:
+  das Skript verlangt dort CDEMD0).
 
-## RE-Belege
+## 4. Umsetzung
 
-(siehe §1.1, §2.2, §2.3)
+Ein Weg fuer jeden Typ, wie FUN_80022300 (keine Typ- oder Raumliste):
 
-## Umsetzung
+| Datei | Inhalt |
+|---|---|
+| NEU include/re15_elzaems_r37.h, engine/src/elzaems_r37.c | `re15_elzabit()` = Zwilling von DAT_800aca3c Bit 31: zuletzt per Set(1,0,v) geschriebener Wert, solange dieselbe Figur gespielt wird, sonst die Figur (re15_char_variant; Spiegel TITLE.BIN @0x801024a8-ec). `re15_ems_sce_em_set_merken(typ)` merkt beim Sce_em_set (jal 0x80022300 @0x80042328) das Archiv je Typ (Index Typ-0x10 @0x80022338) mit dem Raum; `re15_ems_archiv_fuer_typ(typ)` liefert es (sonst das aktuelle Bit). |
+| engine/src/roy_r37.c (Spur K) | `re15_ems_archiv_aktiv()` liest jetzt `re15_elzabit()`; `re15_typ47_ist_elliot` / `re15_roy_aus_elza_archiv` lesen das gemerkte Archiv des Typs 0x47 (Elliot/Roy unveraendert: in 1011/1021/1170 schaltet kein Skript). |
+| platform/pc/src/roy_pc.c (Spur K) | `re15_roy_pc_emd(typ)` gilt fuer JEDEN Typ: gemerktes Archiv == Elza -> den einen Blob aus EMD/CDEMD1.EMS lesen (fseek TOC-Sektor*2048, TOC-Laenge; NICHT die Blobkette, §1.2), debug.log-Zeile mit Sektor, Laenge, CRC32; sonst NULL -> der bisherige CDEMD0-Weg (Port-Kette == TOC fuer alle 25 Typen). Bei Elza + Leon-Archiv (Skriptklammer 3071/50F1) eine Zeile "Elza-Bit 0 beim Sce_em_set". |
+| engine/src/game_state.c (1 Zeile + 2 Kommentar) | `re15_game_flag_set(1, 0, v)` -> `re15_elzabit_skript_set(v)` (Bank-Tabelle @0x80074664[1] = 0x800aca3c, Maske 0x80000000). |
+| engine/src/scd_vm.c op_sce_em_set (2 Zeilen) | nach `a->type = type`: `re15_ems_sce_em_set_merken(type)` (der Port laedt die Bank erst beim ersten Zeichnen, wenn die Skriptklammer schon zu ist — @0x03448 folgt @0x03434 im selben Lauf). |
+| platform/pc/main.c (nur Kommentar der Spur-K-Zeilen) | der Haken der Spur K ruft dieselbe Funktion, jetzt fuer jeden Typ. |
 
-(folgt)
+Keine neue Konstante ohne Adresse: Archiv/Sektor/Laenge kommen aus der EXE-TOC (gen/ems_toc_r37.inc, Spur K), 2048 =
+CD-Sektor (Einheit der TOC), Set(1,0,v) = Bank 1 Bit 0 (Tabelle @0x80074664). Gleichwertigkeit des Zwillings mit dem
+Original-Bit: jede der zwoelf Skriptklammern stellt im selben Abschnitt den Figurenwert wieder her (n1_bit31_zensus);
+ausserhalb einer Klammer ist das Bit also immer die Figur, innerhalb der geschriebene Wert. Leon: unveraendert ausser
+ROOM5080 (Birkin aus CDEMD1 wie im Original, §2.4) und ROOM5090 (0x30 wird dort zum RE2-EM36, Archiv wirkungslos).
+Speicher/Entladen: die Banken fallen weiter an jeder Raumgrenze (re15_enemy_reset); der Merkwert traegt den Raum und gilt
+nur in diesem Raum; der CDEMD1-Leser haelt nichts resident (je Typ ein Blob, eb->buf wie bisher).
 
-## Messung nachher
+## 5. Messung nachher (gleiche Laeufe, Bau r37/elzaems; N_belege/port/nachher_*.txt)
 
-(folgt)
+    Elza 3071: [elzaems] Typ 0x30 aus EMD/CDEMD0.EMS Sektor 1261 (226404 B) - Elza-Bit 0 beim Sce_em_set (Skript-Flag (1,0), @0x8002233c)
+    Elza 50F1: [elzaems] Typ 0x30 aus EMD/CDEMD0.EMS Sektor 1261 (226404 B) - Elza-Bit 0 beim Sce_em_set ...
+    Elza 5081: [elzaems] Typ 0x30 aus EMD/CDEMD1.EMS Sektor 2015 (228460 B) crc 1145F206 - Elza-Archiv (@0x800223ac)
+    Leon 5080: [elzaems] Typ 0x30 aus EMD/CDEMD1.EMS Sektor 2015 (228460 B) crc 1145F206 - Elza-Archiv (@0x800223ac)
+    Elza 3091: [elzaems] Typ 0x49 aus EMD/CDEMD1.EMS Sektor 1709 (137200 B) crc 285C67D3 ...
+               [elzaems] Typ 0x42 aus EMD/CDEMD1.EMS Sektor 1505 (144032 B) crc 91415329 ...
+               [enemy-diag] actor2 type=0x42 model=enemy-bank slot=12 ...
+(Die Laeufe vor der ASCII-Umstellung der Zeile trugen einen Gedankenstrich statt "-".) CRC32 = CRC32 des TOC-Blobs in
+der Datei (unit_r37_elzaems_toc) = Blob im Original-RAM (§2.2): Port und Original laden dieselben Bytes, je Raum.
+
+Bilder (Original-Endstand gegen Port, gleicher Raum):
+* N_belege/n5_sherry3091_original_vorher_nachher.png — ORIGINAL 3091: Typ 0x42 = blonde Figur in Rot/Weiss; PORT VORHER:
+  Ada (weisse Bluse, Rock); PORT NACHHER: dieselbe blonde Figur in Rot/Weiss wie das Original, im Dialog mit John.
+* N_belege/n5_birkin5081_original_vorher_nachher.png — ORIGINAL 5081: zweite Birkin-Form (dunkelroter, wuchernder
+  Oberkoerper, lange Klaue, nackte Unterschenkel); PORT VORHER: erste Form (graue Haut, Jeans); PORT NACHHER: zweite
+  Form wie das Original. (Leon 5080 laedt denselben Blob, crc 1145F206.)
+* Elza 3071/50F1: unveraendert erste Form (Original g1/g3: CDEMD0) — vorher wie nachher.
 
 ## Tests
 
