@@ -15,9 +15,9 @@ Baum `.claude/worktrees/r37_sperre1050`, Zweig `r37/sperre1050`, Basis master f1
 - [x] Schritt 0: Pflichtlektuere (AUFTRAG/VERTRAG Runde 37; Runde 35 L_cut1150 §2.1 (tuer1060), Runde 34 Nacht
       D_adaruf (re15_adaruf.h), Runde 36 P_story (Text-Weg), A_klettern (Tritt 10F0), A_rolltor (1090-Ebenen))
 - [x] Schritt 1: Luecke reproduziert (echte exe, ein durchgehender Lauf) + Wege-Zensus zum Ende von Stage 1
-- [ ] Schritt 2: Sperre an ROOM1050 Slot 4 (nach der Ada-Rettung, solange der Chief fehlt)
-- [ ] Schritt 3: ROOM50B1 msg 0 (Elza) ohne Ada-Bezug + Sweep
-- [ ] Tests + gezielte ctest-Laeufe
+- [x] Schritt 2: Sperre an ROOM1050 Slot 4 (nach der Ada-Rettung, solange der Chief fehlt) — gebaut, an der exe gemessen
+- [x] Schritt 3: ROOM50B1 msg 0 (Elza) ohne Ada-Bezug + Sweep — gebaut, an der exe gemessen
+- [x] Tests + gezielte ctest-Laeufe (Abschnitt "Tests")
 
 Werkzeuge (Kopien in `F_belege/`): `tuer_graph.py` (alle Door_aot_set der Leon-Raeume STAGE1 aus den SCD-Dumps
 `re15_port/tools/scd_dump_room.py`), `wege_zensus.py` (Erreichbarkeit), `sca_zellen.py` (SCA-Zellen + Typwort).
@@ -160,3 +160,94 @@ Irons-Todesszene (laeuft erst NACH (9,73)=1). Das Debug-Menue (SELECT, Original-
   10A0); sollte es doch, sperrt dort die Ada-Logik — keine Luecke.
 * Elza (ROOM1051) bleibt offen: eigene Raum-Id; Elzas Spiel kennt weder die 10F0-Szene noch die Irons-Szenen
   (re15_tuer1060.h).
+
+### Umsetzung (Schritt 2)
+
+* NEU `re15_port/include/re15_sperre1050_r37.h` (alle Konstanten mit Beleg) + `re15_port/engine/src/sperre1050_r37.c`:
+  `re15_sperre1050_r37_install(room)` — nur ROOM1050, nur bei (3,0xBB)=1 UND (9,71)=1 UND (9,73)=0, nur wenn Slot 4 nach
+  re15_adaruf_install noch die Original-Tuer (Typ DOOR) ist: msg 26 = Bytes von `re15_tuer1060_meldung()` (+ Dauer wie
+  jede Nachricht), Band aus door_params uebertragen (Aot_reset schreibt rec[2] nicht), `re15_aot_retype(4, sce 1,
+  flags 0x31, msg 26, Maske 0xffff, 0)`. Logzeile `[sperre1050] ROOM1050 Slot 4 -> Text-Platz msg 26 (...)`.
+* Haken (je 1-2 Zeilen, "Runde 37 Spur F"): `engine/src/scd_room_setup.c` (Include + Installer-Zeile am ENDE des
+  Blocks, also NACH re15_adaruf_install), `platform/pc/main.c` Boot-/CONTINUE-Block neben re15_tuer1060_install.
+* Konstanten: Slot 4 = @0x00B5A; (3,0xBB) = ROOM1090 sub03 @0x024D2; (9,71)/(9,73) = re15_tuer1060.h; sce 1 / 0x31 /
+  0xffff = Handler 0x80043084 (@0x80043098/@0x8004309c/@0x800430a0) + Vorbild ROOM1130 sub01 @0x00A1C; msg 26 =
+  VERTRAG Runde 37 §1.2 (ROOM1050: RDT 0..8 @0x00E44, Rolltor 20/21, Ada-Ruf 22..25). Keine Bank-9-Bits belegt
+  (Zuteilung 96/97 nicht gebraucht), kein Asset-Patch.
+
+### Messung nachher (Schritt 2)
+
+* **Derselbe Ende-zu-Ende-Lauf wie vorher** (r8, Stand 9e8f0762; `F_belege/r8_e2e_nachher.txt`): Gitter 10F0 ->
+  1090 -> Absprung -> Hof-Tuer -> ROOM1050, dann `[sperre1050] ROOM1050 Slot 4 -> Text-Platz msg 26 ((3,0xBB)=1
+  (9,73)=0 (9,71)=1 (3,94)=1)`, beim Druck F372 `msg(a=1 fsm=1 id=26)` und `[msgtext] room=1050 id=26 "I have to get
+  the Chief first..."`, Leon bleibt in ROOM1050 (16732,-13750), **kein ROOM10A0**.
+* Bild (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, Bild 450 in ROOM1050): `F_belege/bild_1050_endspiel_f450.png` — der
+  Text "I have to get the Chief first..." im Textkasten; Bild 360 (vor dem Druck) ohne Kasten.
+* integration_r37_sperre1050 (Stand df90b98a, `F_belege/integration_nachher.txt`): A Luke Ende-zu-Ende -> Text
+  msg 26, kein 10A0, Absprung-Zeile `T1488 room=1090 ... band=5 sub=9 kind=0x0E`; E Endspiel direkt -> Text; B
+  Mittelspiel und C nach Irons -> `DOOR FIRE slot=4` -> `PC loaded room10a0`, keine Sperr-Zeile.
+
+---
+
+## Punkt #5 — ROOM50B1 msg 0 (Elza) ohne Ada-Bezug
+
+### Messung vorher
+
+Echte exe vor dem Text-Bau (Stand 9e8f0762, `F_belege/r9b_elza_50b1_vorher.txt`): Elza (`[pl] Spieler-Familie PL04`),
+ROOM50B1, westlich der Leiche (-12500,-11600) Blick +X, Aktionstaste -> `[msgtext] room=50b1 id=0 "It's Ada. She's
+dead.It looks like one of those gorillas killed her."` (Seite 1 "It's Ada. She's dead.", Seite 2 zweizeilig).
+
+### RE-Belege (Form)
+
+* ROOM50B1.RDT Nachrichtenblock RDT+0x3C = @0x558, 1 Nachricht; msg 0 @0x0055A (74 B):
+  `04 02 25 50 3a 4f 00 1d 40 3d 57 00 2f 44 41 3a 4f 00 40 41 3d 40 57 02 00 25 50 00 48 4b 4b 47 4f 00 48 45 47 41
+  00 4b 4a 41 00 4b 42 00 50 44 4b 4f 41 08 43 4b 4e 45 48 48 3d 4f 00 47 45 48 48 41 40 00 44 41 4e 57 01 00`
+  = Untersuchungstext: Kopf `04 02`, Seite 1 "It's Ada. She's dead.", Seitenwechsel `02 00`, Seite 2 "It looks like
+  one of those" `08` "gorillas killed her.", Ende `01 00` (warten auf Taste).
+* Aufrufer: ROOM50B1 sub00 @0x004DE Aot_set Slot 2 sce 3 Rechteck (-12400,-12100,1000,1000) -> sub02 @0x00518:
+  Elza kniet (Plc_motion 1,11 @0x00526), `Message_on 0` Maske 0xffff @0x0052E, steht auf. Leiche = obj 0 @0x004F2
+  (-11800,0,-11600).
+* Elza kennt Ada nicht: ROOM30C1 msg 4 (Marvin nennt den Namen), msg 5 "Elza: Ada?", msg 6 "Marvin: Someone we
+  rescued from the RPD." — sie hat Ada nie gesehen, kann die Tote also nicht erkennen (Runde 36 P_story.md OFFEN).
+* RE2-Form fuer Tote, die der Spieler nicht kennt (RE2 Leon `info/re2leon/PL0/RDT`, englischer Block = RDT-Kopfzeiger
+  14 @0x40, Glyphen wie RE1.5, `.` = 0x01, `fc` = Zeile, `fd` = Seite): ROOM60A0 msg 1 @0x01982 "A researcher's
+  corpse. / It looks like he poured | oil all over the place..." (dieselbe Zwei-Seiten-Form mit "It looks like" auf
+  Seite 2), ROOM2020 msg 3 @0x02FA4 "It's a horrible corpse.", ROOM4090 msg 34 @0x04139 "The corpse of a sewer |
+  maintenance worker." — RE2 beschreibt, statt zu benennen.
+
+### Umsetzung (Schritt 3) — Wortlaut PORT-WAHL auf NUTZER-VORGABE
+
+| Raum | Id | Offset | alt | neu |
+|---|---:|---|---|---|
+| 50B1 (Elza) | 0 | @0x0055A | It's Ada. She's dead. / It looks like one of those / gorillas killed her. | It's a woman. She's dead. / It looks like one of those / gorillas killed her. |
+
+Nur der Name weicht der Beschreibung ("It's a ..." wie RE2 ROOM2020 msg 3); "She's dead." bleibt der RE1.5-Satz (auch
+Leons ROOM50B0 msg 18 @0x00FA4), Seite 2 bytegleich, Zeilenumbrueche wie das Original.
+* `re15_port/tools/r36_p/texte_bauen.py`: neue Liste `UNTERSUCHEN` — Kopf `04 02`, Seitentrenner `02 00`, Schwanz
+  `01 00` WOERTLICH aus der Original-Nachricht derselben Id; Abbruch, wenn die Vorlage nicht diese Form hat, eine
+  Zeile Steuercodes traegt oder Seiten-/Zeilenzahl abweicht. Zeilenbreiten 162/170/126 px (Grenze 271), 78 B (<= 128).
+* `re15_port/engine/src/gen/story_r36_texte.inc` neu erzeugt (+ Eintrag `k_s37_50b1_m0`, Override wie die 11 der Spur
+  P ueber re15_story_r36_texte am Ende von re15_msg_load_room_block). Dauer = Original (120 Bilder: 60 Seitenwechsel
+  + 60 Ende, msg_common.c re15_msg_compute_duration).
+* `re15_port/tests/unit/test_r36_story.c` teil_texte: kennt die Untersuchungsform (Kopf 2 B / Schwanz 2 B), 12
+  Overrides statt 11.
+
+### Messung nachher
+
+* integration_r37_sperre1050 Lauf D (Stand df90b98a): `[pl] Spieler-Familie PL04`, `[msgtext] room=50b1 id=0 "It's a
+  woman. She's dead.It looks like one of those gorillas killed her."`, keine 50B1-Zeile mit "Ada".
+* Bilder (RE15_FRAMEDUMP, Bild 200 / 290): `F_belege/bild_50b1_elza_f200.png` Seite 1 "It's a woman. She's dead.",
+  `F_belege/bild_50b1_elza_f290.png` Seite 2 im Aufbau "It looks like one of thos...".
+
+### Sweep: sagt/liest Elza noch irgendwo "Ada"?
+
+unit_r37_sperre1050_elza50b1 laedt ALLE 103 Elza-RDTs (ROOMxxx1, Raumlader Elza = Leon + 1, PSX.EXE
+@0x800397e4/@0x800397ec) mit dem Port-Lader inklusive aller Overrides und sucht das Wort "Ada":
+* ROOM30C1 msg 4 "Marvin: He's a rookie, and he's helping me and Ada escape the city." — Marvin spricht, Elza HOERT den
+  Namen zum ersten Mal; bleibt (Original-Satz, in Runde 36 freigegeben).
+* ROOM30C1 msg 5 "Elza: Ada?" — Elza fragt nach, wer das ist (Antwort msg 6 "Someone we rescued from the RPD.") =
+  kein Bezug, sondern das Gegenteil: sie kennt Ada nicht. Bleibt.
+* Sonst keine Fundstelle; "It's Ada" nirgends mehr. Port-Texte ausserhalb der RDT-Bloecke (grep `Ada` in engine/src,
+  gen/*.inc, Dokument-Werkzeuge): nur Leon-Szenen (cut_10f0.c, irons_tod_1150.c, adaruf_1050.c,
+  tools/r36_j/szene11b0_bauen.py, story 30C1 msg 4 / 50B0 msg 1) — kein Elza-Raum. Elzas Untersuchungstext 50B1 hat
+  keine Stimme.
