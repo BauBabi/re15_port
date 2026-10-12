@@ -16,7 +16,7 @@ committen, nur eigene Pfade adden.
 | E | codepanel / r37_codepanel | #9 Code-Panels: blaues Licht unten solange der Code falsch ist, gruenes bei richtigem Code; Kamera bleibt waehrend Piep + Aufschliessen auf dem Panel |
 | F | sperre1050 / r37_sperre1050 | #10 "Chief first"-Sperre zusaetzlich an der Tuer ROOM1050 -> 10A0 (Ada-Szenen-Tuer), #5 ROOM50B1 Elza-Text ohne Ada-Bezug |
 | G | beretta / r37_beretta | Nachtrag: Beretta M93R — jeder Schuss des 3-Schuss-Feuerstosses trifft (Glock 18 mit demselben Burst-Handler pruefen) |
-| H | zombieaktiv / r37_zombieaktiv | Nachtrag 2: Zombies nach Irons' Tod (Montage 1130/1040/1030/1070) stehen nur im Gang — RE2-Verhalten: teilweise aktiv auf Leon zu |
+| H | zombieaktiv / r37_zombieaktiv | Nachtrag 2: Zombies zu passiv — GENERELL fuer alle Zombies das RE2-Verhalten (teilweise aktiv im Gang, auf Leon zu); Beispiel Montage nach Irons' Tod |
 
 Nicht gebaut (Nutzer): Blutlache an Roys Platz (R2), Prison-Key-Hinweis fuer Elza, V6 (Montage-Folgen bei Elza) — ohne
 Zustimmung nichts davon anfassen. Die Werkstatt-Tuer 11B0 bleibt wie in v0.8.24.

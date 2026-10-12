@@ -65,3 +65,13 @@ Lesart: Die Zombies der Montage nach Irons' Tod (re15_irons_tod.h: 1130 / 1040 /
 1070) stehen danach nur im Gang. Ziel (Beta -> Retail): Verhalten wie RE2 — Zombies bewegen sich teilweise aktiv im Gang auf
 Leon zu. Runde 36 Spur F Punkt 1 (Sicht ueber niedrige Moebel) galt als erfuellt; hier gezielt die Montage-Zombies und das
 RE2-Gangverhalten messen. -> Spur H zombieaktiv.
+
+Ergaenzung des Nutzers zu Nachtrag 2 (woertlich, unmittelbar danach):
+
+> das soll nicht nur da gelten, das darf generell für die Zombies gelten
+
+> schaue einfach nach wie Resident Evil 2 das macht
+
+Lesart (ersetzt die enge Lesart oben): Das RE2-Verhalten gilt GENERELL fuer alle Zombies (jeder Raum, jede Spawn-Art), die
+Montage nach Irons' Tod ist nur das Beispiel. Vorlage ist die RE2-Retail-Zombie-KI (wie sich Zombies dort im Gang bewegen,
+wann sie loslaufen, wandern, auf Leon zukommen) — aus RE2 belegt nachbauen.
