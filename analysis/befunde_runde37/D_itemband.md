@@ -362,7 +362,7 @@ Lift-Ausloesung ausserhalb der Kabine.
 
 ### NB1.0 Stand
 - [x] Messung vorher an der exe (Falle auf/ab reproduziert, NB1.1)
-- [ ] RE-Belege: RE1.5 Lift A (Ausloeser sat 0x31 = nur Punkt 620 voraus) / RE2 Retail-Vorbild
+- [x] RE-Belege: RE1.5 Lift A (Ausloeser sat 0x31 = nur Punkt 620 voraus) / RE2 Retail-Vorbild (NB1.2)
 - [ ] Umsetzung
 - [ ] Messung nachher (Leon + Elza, beide Richtungen; vorgesehener Weg bleibt)
 - [ ] Riegel + Gegenprobe
@@ -381,3 +381,69 @@ Start an der Ankunft der 2070-Tuer, Strom an: `RE15_SET_FLAG=3:126 RE15_DEBUG_JU
   Treiber UP Richtung Kabine: climb.txt `T3549..T3551 pos=(6736..6738,-5400,13768) band=3` — z bleibt 13768 (Wand r0[33]),
   kein Raumwechsel bis EXIT_AT 3300. -> Falle ABWAERTS reproduziert (= Abnahme L2).
 Auszuege: `D_belege/nb1/v_auf_eingang/`, `D_belege/nb1/v_ab_sued/`.
+
+### NB1.2 RE-Belege (selbst disassembliert/dekodiert)
+
+**(a) RE1.5 — warum die Fahrt von ausserhalb der Kabine startet (Beta-Verhalten, = Original gemessen in Abnahme o2030T/o2030D).**
+* ROOM2030 sub00 (`tools/scd_dump_room.py`, ROOM2031 byte-gleich an denselben Offsets):
+  `0x01CCE Ck (3,222)=0` -> `0x01CD2 Aot_set 2c 04 00 31 06 00 da 16 56 2c dc 05 dc 05 ff 00 18 02 00 00` (slot 4, sce 0, floor 6) /
+  **`0x01CE6 Aot_set 2c 05 03 31 03 00 da 16 56 2c dc 05 dc 05 ff 00 18 02 00 00`** (slot 5, sce 3 = Ereignis, **sat 0x31**,
+  floor 3, Rechteck x 5850..7350 z 11350..12850, Unterprogramm 2); sonst `0x01D20` slot 4 sce 3 floor 6 / `0x01D34` slot 5 sce 0.
+* sub02 (Fahrt, `0x01E30..0x01EC8`): `Set (2,7)=1`, `Cut_auto 0`, `Ck (3,222)=0` -> `Aot_reset slot 5` / `Evt_exec sub3` /
+  `Work_set 2e 01 00` (Spieler) / `Speed_set 2f 01 88 ff` + `For 0d 00 06 00 2d 00` (45 x Add_speed) / `0x01E62 Member_set y -10800` /
+  **`0x01E66 34 12 06 00`** / `0x01E6E Aot_reset 46 04 03 31 ff 00 18 02 00 00`; Gegenrichtung **`0x01EA8 34 12 03 00`**. KEIN
+  Pos_set, KEINE Lageabfrage: die Fahrt nimmt den Spieler mit, wo immer er beim Druck stand.
+* AOT-Scan FUN_80042bac (`re15_disasm.py dis 0x80042e80`): `80042ea0 lbu v1,1(s0)` (sat) / **`80042ea8 andi v0,v1,0x40`** /
+  `80042eac beq v0,zero,0x80042ef4` -> der MITTE-Test (`80042eb8 addiu a0,s1,52` = Entity-Lage, `80042ecc jal 0x80042b64`
+  Rechteck) laeuft nur mit Bit 0x40; **`80042ef8 andi v0,v1,0x20`** -> Punkt 620 voraus (`80042f0c addiu a0,sp,24`,
+  `80042f20 jal 0x80042b64`). sat 0x31 = Spieler | Aktion | NUR voraus. Blick Sued trifft das Rechteck ab z 11350-620 = 10730,
+  Blick Nord bis z 12850+620 = 13470 — beides ausserhalb der Kabine.
+* Kabine in den Zellen (ROOM2030 SCA @0x880, Gruppe r0; r1..r4 gleich; `D_belege/nb1/sca_dump.py`): Band 3
+  `r0[34] @0x00A30 x 5400..5900 z 11500..13300`, `r0[35] @0x00A3C x 7250..7750 z 11500..13300` (Seiten),
+  **`r0[33] @0x00A24 x 5400..7750 z 12800..13300`** (Suedwand, geschlossen), Zugang von Norden zwischen `r0[25] @0x009C4`
+  (x bis 5900) und `r0[18] @0x00970` (x ab 7250); Band 6 `r0[55] @0x00B2C x 5400..5900`, `r0[56] @0x00B38 x 7250..8000`
+  (z 10650..13050), **`r0[49] @0x00AE4 x 5000..8000 z 10650..11150`** (Nordwand, geschlossen), nach Sueden offen. Das
+  Ausloese-Rechteck x 5850..7350 z 11350..12850 IST die Kabine (zwischen den Seitenwaenden x 5900..7250, bis zur Suedwand 12800);
+  das Liftmodell obj 1 steht bei (6725,y,12050) (sub00 `0x01CFA`/`0x01D48`).
+* Ausschiebung auf dem Zielband (Spielerradius 450 + 0x12, gemessen 10182 / 13768): r0[49] erweitert z 10200..11600 -> Mitte 10900;
+  r0[33] erweitert z 12350..13750 -> Mitte 13050. Druck aus dem Eingang (z 10730..10900) -> Norden 10182 (Falle), Druck suedlich
+  der oberen Kabine (z 13050..13470) -> Sueden 13768 (Falle). Jeder Druck mit der Spielermitte IM Rechteck endet in der Kabine.
+
+**(b) RE2 Retail — dieselbe Schwaeche ist dort behoben (Vorbild).** RE2 ROOM6030 ist die Retail-Fassung von RE1.5 ROOM50D0:
+die Tuer slot 0 ist byte-gleich (RE1.5 50D0 main00 `0x011DA 3b 00 02 31 03 00 60 9b d5 f4 80 0c 08 07 ..` / RE2 6030 main00
+`0x029CA 3b 00 01 31 03 00 60 9b d5 f4 80 0c 08 07 ..`, Rechteck (-25760,-2859,3200,1800)), und der Liftausloeser der Beta
+(50D0 sub00 `0x012FA 2c 05 03 31 03 00 e8 b8 c0 c7 b0 04 b0 04 ff 00 18 04 00 00`, sat 0x31, (-18200,-14400,1200,1200)) wurde
+in Retail an derselben Ecke ZERLEGT (RE2-Walk `tools/re2_sicherung/re2_scd_walk.py`, Bloecke direkt aus dem RDT;
+Auszug `D_belege/nb1/re2_6030_sub00_10_12.txt`):
+* `6030 sub00 0x02B9C 2c 03 06 41 03 00 e8 b8 c0 c7 20 03 b0 04 05 00 22 00 01 00` = slot 3, **sce 6 FLAG_CHG, sat 0x41 =
+  Spieler | MITTE**, floor 3, Plattformzone (-18200,-14400,800,1200) -> setzt (5,0x22)=1; `0x02BC4` slot 4 floor 0 -> (5,0x23)=1.
+* `0x02BB0 2c 17 05 31 03 00 40 bb ec c8 84 03 4c 04 ff 00 18 0a 00 00` = slot 23, sce 5 Ereignis, sat 0x31 (voraus) = das
+  Bedienfeld (-17600,-14100,900,1100) -> sub10; `0x02BD8` slot 24 floor 0 -> sub12.
+* **sub10 `0x02F70 06 00 08 00 | 0x02F74 21 05 22 00 | 0x02F78 01 00 | 0x02F7A 08 00`** = `if (Ck(5,0x22) == 0) Evt_end` — VOR
+  Message_on (`0x02F7C`) und VOR der Fahrt (`0x02FC6 Work_set 2e 01 00`, y += 30 je Bild, **`0x03056 34 11 00 00`** = Band;
+  RE2-Member 0x11 = `*(u8*)(p+0x106)`, FUN_80055cb0 case 0x11, dasselbe Byte, das der Scan @0x80051194 `lbu v0,0x106(s1)` liest).
+  sub12 `0x0309A`/`0x0309E 21 05 23 00` dito. ROOMF030 (Kopie) `0x02E0C 21 05 22 00`.
+* FLAG_CHG-Handler RE2-Tabelle 0x800a73c4[6] = `LAB_800519c0`: `lhu v1,0(a0)` Bank / `lhu a1,2(a0)` Bit / `lhu a0,4(a0)` Wert ->
+  Bit in PTR_DAT_800a78c8[Bank] setzen/loeschen. Bank 5 = 0x800d4874 (Tabelle `800a78dc`), Bits 0x20..0x3F = Wort 0x800d4878.
+* Bild-Ende-Wisch RE2 **FUN_80052e20 `80052e48 sw zero,0x4878(at)`** (lui 0x800d; dazu work_vars `sh -1` @80052e28..40), gerufen
+  vom VM-Lauf FUN_800536c4 @0x800537a0 — dasselbe wie RE1.5 FUN_8003ebf4 `@0x8003ec1c sw zero,0x800b102c`. (5,0x22)/(5,0x23) sind
+  also EIN-BILD-Zonenbits: gesetzt nur, solange die Spielermitte in der Zone steht.
+* AOT-Treiber RE2 FUN_8005264c: `80052694 jal FUN_80051088` (Spieler, Maske 1, **a2 0x10** = Aktion, wenn DAT_800cfbd8 & 0x200000),
+  `800526a4 jal FUN_80051088` (Spieler, **a2 0** = AUTO, jedes Bild). FUN_80051088: Band `80051180 lbu v1,2(s0)` /
+  `8005118c andi 0x80` / `80051194 lbu v0,0x106(s1)` / `8005119c bne`; MITTE `80051344 andi v0,v1,0x40` (a0 = s1+0x38),
+  voraus `80051390 andi v0,v1,0x20`. -> Im Druckbild laeuft die Zone (AUTO, Mitte) nach der Aktion; sub10 liest (5,0x22) im
+  naechsten VM-Lauf VOR dem Wisch. **Retail: der Lift faehrt nur, wenn die SPIELERMITTE in der Plattformzone steht; sonst endet
+  das Unterprogramm sofort (der Druck ist verbraucht, sichtbar passiert nichts).**
+* Zweiter Retail-Lift RE2 ROOM5060 (Band 8/11 `0x00F40 34 11 08 00` / `0x00F54 34 11 0b 00`): Ausloeser sub00
+  `0x00D7E 2c 04 05 51 80 00 ..` **sat 0x51 = Spieler | Aktion | MITTE** — ebenfalls nur von der Plattform.
+* Zensus ALLER RE2-Schreiber des Spielerbands (Work_set(1,0) + Member_set 0x11, `D_belege/nb1/re2_floor_scan.py`, Ausgabe
+  `re2_floor_scan.txt`): 1120 sub17 `0x03678` (Skript-Sturz mit Add_speed-Bahn, kein Lift), 3040 sub24 `0x01B54` +
+  `Pos_set (-7435,0,-24500)` `0x01B58`, 4100 sub03 `0x01452` nach `Pos_set (3732,0,-19807)` `0x01446`, 5040 sub11 `0x020EC` nach
+  `Pos_set (10090,0,-10932)` `0x020E4`, 5060 sub03 (Lift, Mitte-Ausloeser), 6030/F030 sub10/sub12 (Lift, Mitte-Zone). -> In Retail
+  aendert KEIN Skript das Spielerband, ohne den Spieler an eine feste Stelle zu setzen oder seine Mitte auf der Plattform zu verlangen.
+
+**(c) Folgerung (PORT-WAHL nach RE2-Vorbild, Beta -> Retail):** Lift A in ROOM2030/2031 faehrt nur, wenn die Spielermitte im
+Ausloese-Rechteck des Satzes (= Kabine, aus dem Satz selbst `0x01CE6`/`0x01D20`) steht — Mitte-Test wie @0x80042ea8 (Bit 0x40)
+bzw. RE2-Zone sat 0x41; sonst ist der Druck verbraucht und nichts passiert (RE2 sub10 `0x02F78 Evt_end`). Der Satz selbst (sat
+0x31, Punkt 620 voraus), das Band-Gate und Member 0x12 bleiben byte-true. Nur Lift A: das ist der einzige Lift mit Fallenstellen
+(Zensus NB1.4, echte Port-Kollision).
