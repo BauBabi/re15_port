@@ -19,3 +19,20 @@ foreach(_teil zensus ausschluss verdeckung)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r37_masken36_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+# Messwerkzeug der Integration (drei Framedumps: mit Masken / ohne Masken / ohne Figur).
+add_executable(probe_r37_masken36_ppm ${CMAKE_CURRENT_LIST_DIR}/../probe_r37_masken36_ppm.c)
+
+# Echte exe je Stage 3..6: HINTER verdeckt (>= Haelfte der Figurpunkte), DAVOR frei, Log fg_atlas=1 + Zeile der Spur P.
+if(TARGET re15_pc)
+    foreach(_stufe 3 4 5 6)
+        add_test(NAME integration_r37_masken36_stage${_stufe}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r37_masken36_s${_stufe}_wd
+                         -DSTUFE=${_stufe}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_masken36_verdeckung.cmake)
+        set_tests_properties(integration_r37_masken36_stage${_stufe} PROPERTIES TIMEOUT 900)
+    endforeach()
+endif()

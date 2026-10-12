@@ -726,12 +726,14 @@ static void teil_verdeckung(void)
             if (k == 4) fuss_cov = 1;
             if (re15_pri_mask_occludes(tief[(int) sy][(int) sx], (long) vz)) { occ++; if (k == 4) fuss_occ = 1; }
         }
-        ok = s->hinter ? (a->da && fuss_occ && occ * 2 >= on && on > 0)
-                       : (a->da && on > 0 && !fuss_cov && cov >= 10 && occ == 0);
+        if (s->hinter == 1)      ok = a->da && fuss_occ && occ * 2 >= on && on > 0;
+        else if (s->hinter == 0) ok = a->da && on > 0 && !fuss_cov && cov >= 10 && occ == 0;
+        else                     ok = a->da && on > 0 && occ == 0;          /* FREI: frueher fehlverdeckt */
         printf("  %s ROOM%04X Cut %d (%d,%d) %s: Atlas %s, im Bild %d/81, auf Maske %d, verdeckt %d, Fuss %s -> %s\n",
-               s->name, s->raum, s->cut, s->x, s->z, s->hinter ? "HINTER" : "DAVOR", a->da ? a->quelle : "FEHLT", on, cov,
+               s->name, s->raum, s->cut, s->x, s->z, s->hinter == 1 ? "HINTER" : (s->hinter == 0 ? "DAVOR" : "FREI"),
+               a->da ? a->quelle : "FEHLT", on, cov,
                occ, fuss_occ ? "verdeckt" : (fuss_cov ? "auf Maske" : "frei"), ok ? "ok" : "FALSCH");
-        if (ok) { n_ok++; if (s->hinter) stage_h[s->raum >> 12]++; else stage_v[s->raum >> 12]++; }
+        if (ok) { n_ok++; if (s->hinter == 1) stage_h[s->raum >> 12]++; else if (s->hinter == 0) stage_v[s->raum >> 12]++; }
         free(eig.roh); free(bss.roh); free(roh); free(msk);
     }
     CHECK("alle Szenen wie an der exe gemessen", n > 0 && n_ok == n);
