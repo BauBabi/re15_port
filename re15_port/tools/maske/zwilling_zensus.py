@@ -10,7 +10,9 @@ KRITERIUM (aus dem Original abgeleitet, nicht gesetzt):
   - Masken des Originals = f(RDT-Kamerasatz): FUN_800392d4 @0x80039310 lw v1,36(a0) (RDT+0x24 Kameratabelle),
     @0x80039314 sll v0,v0,5 (Cut*0x20), @0x8003931c lw t5,28(v0) (Satz+0x1C = sprite.pri), @0x8003932c NULL-Test.
   - Projektion = f(RDT-Kamerasatz): Cut-Wechsel @0x80021e5c..e70 lhu a0,2(Satz) >> 7 -> 0x80066c30 (ctc2 H),
-    @0x80021e84..e90 Satz -> FUN_80053ca4 (kopiert Satz+0x00..+0x1C, @0x80053cdc..d18).
+    @0x80021e84..e90 Satz -> FUN_80053ca4 (a0 = Satz, @0x80053cac addu s3,a0,zero; liest pos +4/+8/+12 und Ziel
+    +16/+20/+24: @0x80053d1c lw v0,16(s3), @0x80053d20 lw v1,4(s3), @0x80053d30 lw v0,20(s3), @0x80053d34 lw v1,8(s3),
+    @0x80053d44 lw v1,12(s3), @0x80053d48 lw v0,24(s3)). Verglichen wird Satz+0x00..+0x1B (flag +0 eingeschlossen = strenger).
   - Hintergrund = f(Stage, Raum OHNE Varianten-Ziffer, Cut): @0x80021c88 lh a3 Cut (0x800b0fe4), @0x80021c90 lh a1
     Raum (0x800b0fe2), @0x80021cc8 Stage-Tabelle 0x8007438c -> u16[Raum] (STAGE1 @0x8007429c, 40 Raeume),
     @0x80021cd8 sll a3,a3,5 (+Cut*32 Sektoren = Cut*0x10000). Die Spieler-Variante geht nicht ein.
@@ -146,7 +148,8 @@ def main():
     zeilen = ["/* ERZEUGT von re15_port/tools/maske/zwilling_zensus.py - NICHT von Hand aendern.",
               " * Runde 37 Spur A, Nachbesserung 1 (VERTRAG.md 1.7): Elza-Raum (ungerade Id) -> Leon-Variante, deren",
               " * Port-Masken (MASKS/ROOM%04X.MSK + _PRI%02d.TIM) gelten, weil Kamerasaetze (RDT+0x24, Satz+0x00..+0x1B je",
-              " * Cut, @0x80021e5c/@0x80053cdc) und Hintergrund je Cut (@0x80021c88..cd8, Raum ohne Varianten-Ziffer)",
+              " * Cut; fov @0x80021e68, pos/Ziel FUN_80053ca4 @0x80053d1c..d48) und Hintergrund je Cut (@0x80021c88..cd8, Raum",
+              " * ohne Varianten-Ziffer)",
               " * nachweislich gleich sind und die Elza-Variante keine eigene MSK hat. Riegel: unit_r37_pri1100_zwilling. */"]
     for z in tab:
         zeilen.append("{ 0x%04X, 0x%04X },   /* RDT %s, SCA %s */"

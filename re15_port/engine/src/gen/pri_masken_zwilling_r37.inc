@@ -1,7 +1,8 @@
 /* ERZEUGT von re15_port/tools/maske/zwilling_zensus.py - NICHT von Hand aendern.
  * Runde 37 Spur A, Nachbesserung 1 (VERTRAG.md 1.7): Elza-Raum (ungerade Id) -> Leon-Variante, deren
  * Port-Masken (MASKS/ROOM%04X.MSK + _PRI%02d.TIM) gelten, weil Kamerasaetze (RDT+0x24, Satz+0x00..+0x1B je
- * Cut, @0x80021e5c/@0x80053cdc) und Hintergrund je Cut (@0x80021c88..cd8, Raum ohne Varianten-Ziffer)
+ * Cut; fov @0x80021e68, pos/Ziel FUN_80053ca4 @0x80053d1c..d48) und Hintergrund je Cut (@0x80021c88..cd8, Raum
+ * ohne Varianten-Ziffer)
  * nachweislich gleich sind und die Elza-Variante keine eigene MSK hat. Riegel: unit_r37_pri1100_zwilling. */
 { 0x1001, 0x1000 },   /* RDT verschieden, SCA gleich */
 { 0x1011, 0x1010 },   /* RDT verschieden, SCA gleich */

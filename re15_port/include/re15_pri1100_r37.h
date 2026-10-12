@@ -21,7 +21,8 @@ void re15_r37a_gegner_pos_haken(void);
  * Befund: Elza sah in ROOM1101 (RDT bytegleich zu ROOM1100) Zombie 1 ueber der Westwand, weil der Port die Masken
  * mit der VOLLEN Raum-Id sucht und es in STAGE1 nur Leon-Masken gibt (ausser ROOM1221).
  * Original (warum die Bedingung reicht): Masken = f(RDT-Kamerasatz) @0x80039310/14/1c (RDT+0x24, Cut*0x20,
- * Satz+0x1C); Projektion = f(Kamerasatz) @0x80021e68 (fov>>7 -> H) und @0x80021e90 -> FUN_80053ca4 (Satz +0..+0x1C);
+ * Satz+0x1C); Projektion = f(Kamerasatz) @0x80021e68 (lhu +2 fov, >>7 -> H) und @0x80021e90 -> FUN_80053ca4 (a0 = Satz
+ * @0x80053cac addu s3,a0,zero; liest pos +4/+8/+12 und Ziel +16/+20/+24, z.B. @0x80053d1c lw v0,16(s3) / @0x80053d20 lw v1,4(s3));
  * Hintergrund = f(Stage, Raum OHNE Varianten-Ziffer, Cut) @0x80021c88..0x80021cd8 (Stage-Tabelle 0x8007438c).
  * Tabelle: gen/pri_masken_zwilling_r37.inc (erzeugt von tools/maske/zwilling_zensus.py, Riegel
  * unit_r37_pri1100_zwilling rechnet den Zensus aus den Dateien nach).

@@ -24,7 +24,8 @@
  *   test_r37_pri1100 zwilling  Zensus aus den Dateien (alle Paare STAGE1..6): Rueckfall Elza -> Leon genau dann, wenn
  *                            die Leon-Variante eine MSK hat, die Elza-Variante keine eigene, die Kamerasaetze gleich
  *                            sind (RDT[1] Cuts, RDT+0x24 Satz+0x00..+0x1B je Cut; @0x80021e68 fov, @0x80021e90 ->
- *                            FUN_80053ca4 kopiert Satz+0..+0x1C) und der Hintergrund je Cut gleich ist (so, wie
+ *                            FUN_80053ca4 liest pos +4..+12 / Ziel +16..+24 aus s3 = a0 = Satz, @0x80053cac,
+ *                            @0x80053d1c..d48) und der Hintergrund je Cut gleich ist (so, wie
  *                            bg_pc.c ihn laedt; Original @0x80021c88..cd8: Raum OHNE Varianten-Ziffer). Ergebnis ==
  *                            re15_pri_masken_raum() fuer jede ungerade Id; gerade Ids bleiben unveraendert.
  *
