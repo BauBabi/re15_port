@@ -1,0 +1,314 @@
+Done constructing a list of tests
+Added 0 tests to meet fixture requirements
+[prop-member F0] prop[0] obj=0x02 m=1 → val=-16200
+[scd F0] Cut_chg(7)
+[prop-member F0] prop[2] obj=0x00 m=1 → val=0
+[scd F0] Cut_chg(9)
+[prop-member F0] prop[2] obj=0x00 m=1 → val=-7200
+[scd F0] Cut_chg(10)
+[prop-member F0] prop[2] obj=0x01 m=1 → val=-10800
+[scd F0] Cut_chg(7)
+[prop-member F0] prop[2] obj=0x01 m=1 → val=-5400
+[scd F0] Cut_chg(9)
+[prop-member F0] prop[3] obj=0x02 m=1 → val=-16200
+[scd F0] Cut_chg(8)
+[prop-member F0] prop[3] obj=0x02 m=1 → val=-5400
+[scd F0] Cut_chg(1)
+[prop-member F0] prop[2] obj=0x02 m=1 → val=-5400
+[scd F0] Cut_chg(10)
+[prop-member F0] prop[2] obj=0x02 m=1 → val=0
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[story36] ROOM1020: Strom (4,0xF3)=0 -> Roy noch nicht da (obj 6 versteckt, Slot 5 sce 0)
+[story36] ROOM1020: Strom (4,0xF3)=0 -> Roy noch nicht da (obj 6 versteckt, Slot 5 sce 0)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45, Bit (9,82)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[scd F0] Cut_chg(2)
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45, Bit (9,82)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[scd F0] Cut_chg(2)
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45, Bit (9,82)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[scd F0] Cut_chg(2)
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45, Bit (9,82)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[scd F0] Cut_chg(2)
+[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (8050,-1460,2700), Zone Slot 15
+[kartenitems] ROOM1140: Karte Blatt 4 (Bit 9,87) Prop obj 15 bei (-2051,-2832,-8667), Zone Slot 40
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1190 Scheibe 0 -> Text-Platz 17 (Nachricht 6, viele Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1190 Scheibe 1 -> Text-Platz 18 (Nachricht 7, wenige Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1190 Scheibe 2 -> Text-Platz 19 (Nachricht 6, viele Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1190 Scheibe 3 -> Text-Platz 20 (Nachricht 7, wenige Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[ziel1190] ROOM1191 Scheibe 0 -> Text-Platz 17 (Nachricht 7, wenige Einschuesse) bei (-21340,-24516)
+[ziel1190] ROOM1191 Scheibe 1 -> Text-Platz 18 (Nachricht 6, viele Einschuesse) bei (-21340,-20916)
+[ziel1190] ROOM1191 Scheibe 2 -> Text-Platz 19 (Nachricht 7, wenige Einschuesse) bei (-21340,-17316)
+[ziel1190] ROOM1191 Scheibe 3 -> Text-Platz 20 (Nachricht 6, viele Einschuesse) bei (-21340,-13716)
+[scd F0] Cut_chg(13)
+[scd F0] Cut_chg(13)
+[scd F0] Cut_chg(13)
+[scd F0] Cut_chg(13)
+[kartenitems] ROOM11D0: Karte Blatt 0 (Bit 9,78) Prop obj 15 bei (1694,-2199,-19149), Zone Slot 40
+[kartenitems] ROOM11D0: Karte Blatt 0 (Bit 9,78) Prop obj 15 bei (1694,-2199,-19149), Zone Slot 40
+[kartenitems] ROOM11D1: Karte Blatt 0 (Bit 9,78) Prop obj 15 bei (1694,-2199,-19149), Zone Slot 40
+[kartenitems] ROOM11D1: Karte Blatt 0 (Bit 9,78) Prop obj 15 bei (1694,-2199,-19149), Zone Slot 40
+[kartenitems] ROOM1200: Karte Blatt 1 (Bit 9,77) Prop obj 15 bei (-26389,-2573,-15683), Zone Slot 40
+[kartenitems] ROOM1201: Karte Blatt 1 (Bit 9,77) Prop obj 15 bei (-26389,-2573,-15683), Zone Slot 40
+[story36] ROOM1210: Text-Platz Slot 9 (Rechteck ROOM1211 @0x01DEE) -> msg 20
+[story36] ROOM1210: Text-Platz Slot 9 (Rechteck ROOM1211 @0x01DEE) -> msg 20
+=== Runde 37 Spur D: Items nur vom eigenen Band (@0x80042cac-ccc) + Member 0x12 = Band (@0x80041228) ===
+=== Z: Zensus Item_aot_set (floor) + Member 0x12 ueber alle ausgelieferten RDTs ===
+  206 RDTs, 40674 Opcodes, 0 Desync, 164 Item_aot_set, 22 Schreiber Member 0x12
+  ok:   Walk vollstaendig: 206 RDTs / 0 Desync / 40674 Opcodes (= test_r36_kartenbits)
+  ok:   164 Item_aot_set (164)
+  ROOM2030 @0x01BC0 slot 10 floor 1 item 0x16 tk 108 rect (4350,6650,800,1000) 
+  ROOM2030 @0x01BD6 slot 11 floor 6 item 0x0D tk 109 rect (-50,13500,1000,2000) 
+  ROOM2031 @0x01BC0 slot 10 floor 1 item 0x16 tk 108 rect (4350,6650,800,1000) 
+  ROOM2031 @0x01BD6 slot 11 floor 6 item 0x0D tk 109 rect (-50,13500,1000,2000) 
+  ROOM2040 @0x01364 slot 7 floor 3 item 0x32 tk 91 rect (1700,-14750,1000,1000) 
+  ROOM2041 @0x01364 slot 7 floor 3 item 0x32 tk 91 rect (1700,-14750,1000,1000) 
+  ROOM2090 @0x00A12 slot 5 floor 1 item 0x3F tk 90 rect (5350,-16700,1000,1000) 
+  ROOM2091 @0x00A12 slot 5 floor 1 item 0x3F tk 90 rect (5350,-16700,1000,1000) 
+  ROOM3010 @0x02094 slot 5 floor 1 item 0x16 tk 20 rect (-10533,826,560,630) 
+  ROOM3011 @0x02094 slot 5 floor 1 item 0x16 tk 20 rect (-10533,826,560,630) 
+  ROOM3050 @0x01EC6 slot 6 floor 1 item 0x07 tk 92 rect (-24800,-23700,1800,800) 
+  ROOM3051 @0x01EC6 slot 6 floor 1 item 0x07 tk 92 rect (-24800,-23700,1800,800) 
+  ok:   genau die 12 erhoehten Saetze der Liste (12, davon bekannt 12)
+  ok:   kein Item_aot_set mit Bit 0x80 (Band egal, @0x80042cb4): 0
+  Spieler: ROOM1170 @0x01756 Member_set 0x12 = 4
+  Spieler: ROOM2030 @0x01E66 Member_set 0x12 = 6
+  Spieler: ROOM2030 @0x01EA8 Member_set 0x12 = 3
+  Spieler: ROOM2030 @0x01F40 Member_set 0x12 = 9
+  Spieler: ROOM2030 @0x01F82 Member_set 0x12 = 3
+  Spieler: ROOM2031 @0x01E66 Member_set 0x12 = 6
+  Spieler: ROOM2031 @0x01EA8 Member_set 0x12 = 3
+  Spieler: ROOM2031 @0x01F40 Member_set 0x12 = 9
+  Spieler: ROOM2031 @0x01F82 Member_set 0x12 = 3
+  Spieler: ROOM3050 @0x0232C Member_set 0x12 = 4
+  Spieler: ROOM3050 @0x023D0 Member_set 0x12 = 0
+  Spieler: ROOM3051 @0x0232C Member_set 0x12 = 4
+  Spieler: ROOM3051 @0x023D0 Member_set 0x12 = 0
+  Spieler: ROOM50D0 @0x013D4 Member_set 0x12 = 3
+  Spieler: ROOM50D0 @0x0144C Member_set 0x12 = 0
+  Spieler: ROOM50D1 @0x013D4 Member_set 0x12 = 3
+  Spieler: ROOM50D1 @0x0144C Member_set 0x12 = 0
+  ok:   22 Schreiber des Members 0x12, alle Member_set 0x34 (22 / 22)
+  ok:   genau die 17 Schreiber am Spieler (Work_set kind 1) mit ihren Werten (17, bekannt 17)
+  ok:   5 Schreiber an Figuren (Work_set kind 2: ROOM10B1 sub00/sub03, ROOM11C0 sub02/04/07): 5
+=== M: Member_set 0x12 am Spieler = Kollisionsband (@0x80041228 sb a2,130(a0)) ===
+  ROOM3050 sub04: rc 0, y 0, Band 0, floor 0, (3,82) = 1
+  ok:   ROOM3050 sub04 (Lift ab, @0x023D0 34 12 00 00): Band 4 -> 0, y 0, (3,82) = 1 — Original O2 C: band 0
+  ROOM3050 sub02: rc 0, y -7200, Band 4, (3,82) = 0
+  ok:   ROOM3050 sub02 (Lift auf, @0x0232C 34 12 04 00): Band 0 -> 4, y -7200
+  ROOM2030 sub02 auf: rc 0, y -10800, Band 6
+  ok:   ROOM2030 sub02 (Lift A auf, @0x01E66 34 12 06 00): Band 3 -> 6, y -10800
+  ROOM2030 sub02 ab: rc 0, y -5400, Band 3
+  ok:   ROOM2030 sub02 (Lift A ab, @0x01EA8 34 12 03 00): Band 6 -> 3, y -5400
+  ROOM2030 sub04 auf: rc 0, y -16200, Band 9
+  ok:   ROOM2030 sub04 (Lift B auf, @0x01F40 34 12 09 00): Band 3 -> 9, y -16200
+  ROOM2030 sub04 ab: rc 0, y -5400, Band 3
+  ok:   ROOM2030 sub04 (Lift B ab, @0x01F82 34 12 03 00): Band 9 -> 3, y -5400
+  ROOM50D0 sub02: rc 0, y -5400, Band 3
+  ok:   ROOM50D0 sub02 (@0x013D4 34 12 03 00): Band 0 -> 3, y -5400 (Tueren slot 0/2 floor 3)
+  ROOM50D0 sub04: rc 0, y 0, Band 0
+  ok:   ROOM50D0 sub04 (@0x0144C 34 12 00 00): Band 3 -> 0, y 0 (Tueren slot 1/3 floor 0)
+  ok:   Haken re15_itemband_r37_member_band lief je Fahrt (8)
+  ok:   GEGENPROBE Figur-Slot 1: Member 0x12 = 2 -> Figur.floor 2, Kollisionsband bleibt 5 (5)
+  ok:   Spieler-Slot: Member 0x12 = 1 -> Kollisionsband 1, +0x82 (Member_cmp liest denselben Wert) 1
+=== G: Band-Gate @0x80042cac-ccc je Item-Satz (echter Handler, re15_aot_scan) ===
+[prop-member F0] prop[0] obj=0x02 m=1 → val=-16200
+[prop-member F0] prop[0] obj=0x02 m=1 → val=-16200
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=2 anim_flags=0x0004
+[scd F0] Cut_chg(0)
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=2 anim_flags=0x0004
+[scd F0] Cut_chg(0)
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=2 anim_flags=0x0004
+[scd F0] Cut_chg(0)
+[scd F0] Cut_chg(10)
+[prop-member F0] prop[2] obj=0x01 m=1 → val=-10800
+ item 0x16: Band 1 -> Modal, fertig 1, (9,108) = 1; Baender 2 0 4 -> kein Modal
+  ROOM2030 @0x01BD6 slot 11 floor 6 item 0x0D: Band 6 -> Modal, fertig 1, (9,109) = 1; Baender 7 5 4 -> kein Modal
+  ROOM2031 @0x01BC0 slot 10 floor 1 item 0x16: Band 1 -> Modal, fertig 1, (9,108) = 1; Baender 2 0 4 -> kein Modal
+  ROOM2031 @0x01BD6 slot 11 floor 6 item 0x0D: Band 6 -> Modal, fertig 1, (9,109) = 1; Baender 7 5 4 -> kein Modal
+  ROOM2040 @0x01364 slot 7 floor 3 item 0x32: Band 3 -> Modal, fertig 1, (9,91) = 1; Baender 4 2 4 -> kein Modal
+  ROOM2041 @0x01364 slot 7 floor 3 item 0x32: Band 3 -> Modal, fertig 1, (9,91) = 1; Baender 4 2 4 -> kein Modal
+  ROOM2090 @0x00A12 slot 5 floor 1 item 0x3F: Band 1 -> Modal, fertig 1, (9,90) = 1; Baender 2 0 4 -> kein Modal
+  ROOM2091 @0x00A12 slot 5 floor 1 item 0x3F: Band 1 -> Modal, fertig 1, (9,90) = 1; Baender 2 0 4 -> kein Modal
+  ROOM3010 @0x02094 slot 5 floor 1 item 0x16: Band 1 -> Modal, fertig 1, (9,20) = 1; Baender 2 0 4 -> kein Modal
+  ROOM3011 @0x02094 slot 5 floor 1 item 0x16: Band 1 -> Modal, fertig 1, (9,20) = 1; Baender 2 0 4 -> kein Modal
+  ROOM3050 @0x01EC6 slot 6 floor 1 item 0x07: Band 1 -> Modal, fertig 1, (9,92) = 1; Baender 2 0 4 -> kein Modal
+  ROOM3051 @0x01EC6 slot 6 floor 1 item 0x07: Band 1 -> Modal, fertig 1, (9,92) = 1; Baender 2 0 4 -> kein Modal
+  153 Saetze geprueft, 9 mit Rechteck (0,0,0,0), 2 mit sce 0 uebersprungen; 318 gesperrte Druecke
+  ok:   153 Saetze mit Geometrie (+9 Null-Rechteck, +2 sce 0)
+  ok:   jeder Satz: Modal GENAU bei Spielerband == floor (falsch: 0)
+  ok:   die 12 erhoehten Saetze: auf ihrem Band aufgenommen, Taken-Bit gesetzt (12)
+  ok:   GEGENPROBE: der Haken hat JEDEN Druck auf falschem Band gesperrt (318 von 318)
+=== L: Plattform-Sperre Lift A ROOM2030/2031 (PORT-WAHL nach RE2 6030 sub10 @0x02F70-7A), echter Scan ===
+  ok:   ROOM2030 slot 5 = sub00 @0x01CE6 (GENERIC, Unterprogramm 2, floor 3, sat 0x31, Rechteck 5850..7350 x 11350..12850)
+  ok:   ROOM2030 slot 5 traegt die Plattform-Sperre
+  ok:   ROOM2030 Eingang (6605,10770) Blick Sued Band 3: Satz getroffen, Mitte ausserhalb -> KEINE Fahrt (ev 0)
+  ok:   ROOM2030 (6605,10850) Blick Sued: keine Fahrt (ev 0)
+  ok:   ROOM2030 Kabine (6605,11970) Blick Sued Band 3: Fahrt sub02 (ev 2)
+  ok:   ROOM2030 Kabine (6605,11400) Blick Nord: Satz (sat 0x31) nicht getroffen wie im Original (ev 0)
+  ok:   ROOM2030 slot 4 = sub00 @0x01D20 (GENERIC, Unterprogramm 2, floor 6)
+  ok:   ROOM2030 (6605,13245) Blick Nord Band 6: Mitte ausserhalb -> KEINE Fahrt (ev 0)
+  ok:   ROOM2030 (6605,13400) Blick Nord Band 6: keine Fahrt (ev 0)
+  ok:   ROOM2030 Kabine (6597,12061) Blick Nord Band 6: Fahrt sub02 (ev 2)
+  ok:   ROOM2031 slot 5 = sub00 @0x01CE6 (GENERIC, Unterprogramm 2, floor 3, sat 0x31, Rechteck 5850..7350 x 11350..12850)
+  ok:   ROOM2031 slot 5 traegt die Plattform-Sperre
+  ok:   ROOM2031 Eingang (6605,10770) Blick Sued Band 3: Satz getroffen, Mitte ausserhalb -> KEINE Fahrt (ev 0)
+  ok:   ROOM2031 (6605,10850) Blick Sued: keine Fahrt (ev 0)
+  ok:   ROOM2031 Kabine (6605,11970) Blick Sued Band 3: Fahrt sub02 (ev 2)
+  ok:   ROOM2031 Kabine (6605,11400) Blick Nord: Satz (sat 0x31) nicht getroffen wie im Original (ev 0)
+  ok:   ROOM2031 slot 4 = sub00 @0x01D20 (GENERIC, Unterprogramm 2, floor 6)
+  ok:   ROOM2031 (6605,13245) Blick Nord Band 6: Mitte ausserhalb -> KEINE Fahrt (ev 0)
+  ok:   ROOM2031 (6605,13400) Blick Nord Band 6: keine Fahrt (ev 0)
+  ok:   ROOM2031 Kabine (6597,12061) Blick Nord Band 6: Fahrt sub02 (ev 2)
+  ok:   ROOM2030 Lift B (sub00 @0x01D88 slot 7 -> sub04): keine Sperre
+  ok:   ROOM3050 Lift (sub00 @0x0206C slot 4 -> sub04): keine Sperre
+  ok:   ROOM50D0 Lift (sub00 @0x012FA slot 5 -> sub04): keine Sperre
+=== F: Fallen-Zensus der Lifte mit Member 0x12 (echte Port-Kollision, Ausloesestellen im 25er-Raster, 256 Blickrichtungen) ===
+  2030 Lift A auf  (sub00 @0x01CE6 -> sub02 @0x01E66): Referenz (6605,11970) frei 1 -> Fahrt rc 0 Band 6 -> Endlage (6605,11970); Komponenten 6786/22681 Netzpunkte, Ziel erreichbar 1
+[scd F0] Cut_chg(7)
+[prop-member F0] prop[2] obj=0x01 m=1 → val=-5400
+[scd F0] Cut_chg(10)
+[prop-member F0] prop[2] obj=0x01 m=1 → val=-10800
+[scd F0] Cut_chg(7)
+[prop-member F0] prop[2] obj=0x01 m=1 → val=-5400
+[scd F0] Cut_chg(9)
+[prop-member F0] prop[3] obj=0x02 m=1 → val=-16200
+[scd F0] Cut_chg(8)
+[prop-member F0] prop[3] obj=0x02 m=1 → val=-5400
+[prop-member F0] prop[0] obj=0x02 m=1 → val=-16200
+[scd F0] Cut_chg(7)
+[prop-member F0] prop[2] obj=0x00 m=1 → val=0
+08 (x 6350..6775 z 10750..10875 -> Endlage z 10182 / 10182), mit Sperre 0
+  ok:   2030 Lift A auf  (sub00 @0x01CE6 -> sub02 @0x01E66): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   2030 Lift A auf  (sub00 @0x01CE6 -> sub02 @0x01E66): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   2030 Lift A auf  (sub00 @0x01CE6 -> sub02 @0x01E66): GEGENPROBE ohne Sperre gaebe es Fallen (108) — der Zensus misst
+  2030 Lift A ab   (sub00 @0x01D20 -> sub02 @0x01EA8): Referenz (6597,12061) frei 1 -> Fahrt rc 0 Band 3 -> Endlage (6597,12061); Komponenten 22681/6786 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 1351, Sperre ja (433 gesperrt); Fallen ohne Sperre 307 (x 5925..6775 z 13050..13450 -> Endlage z 13768 / 13768), mit Sperre 0
+  ok:   2030 Lift A ab   (sub00 @0x01D20 -> sub02 @0x01EA8): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   2030 Lift A ab   (sub00 @0x01D20 -> sub02 @0x01EA8): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   2030 Lift A ab   (sub00 @0x01D20 -> sub02 @0x01EA8): GEGENPROBE ohne Sperre gaebe es Fallen (307) — der Zensus misst
+  2031 Lift A auf  (Elza, gleiche Offsets): Referenz (6605,11970) frei 1 -> Fahrt rc 0 Band 6 -> Endlage (6605,11970); Komponenten 6786/22681 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 1152, Sperre ja (432 gesperrt); Fallen ohne Sperre 108 (x 6350..6775 z 10750..10875 -> Endlage z 10182 / 10182), mit Sperre 0
+  ok:   2031 Lift A auf  (Elza, gleiche Offsets): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   2031 Lift A auf  (Elza, gleiche Offsets): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   2031 Lift A auf  (Elza, gleiche Offsets): GEGENPROBE ohne Sperre gaebe es Fallen (108) — der Zensus misst
+  2031 Lift A ab   (Elza, gleiche Offsets): Referenz (6597,12061) frei 1 -> Fahrt rc 0 Band 3 -> Endlage (6597,12061); Komponenten 22681/6786 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 1351, Sperre ja (433 gesperrt); Fallen ohne Sperre 307 (x 5925..6775 z 13050..13450 -> Endlage z 13768 / 13768), mit Sperre 0
+  ok:   2031 Lift A ab   (Elza, gleiche Offsets): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   2031 Lift A ab   (Elza, gleiche Offsets): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   2031 Lift A ab   (Elza, gleiche Offsets): GEGENPROBE ohne Sperre gaebe es Fallen (307) — der Zensus misst
+  2030 Lift B auf  (sub00 @0x01D88 -> sub04 @0x01F40): Referenz (-9800,3600) frei 1 -> Fahrt rc 0 Band 9 -> Endlage (-9800,3600); Komponenten 4065/1716 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 1584, Sperre nein (0 gesperrt); Fallen ohne Sperre 0, mit Sperre 0
+  ok:   2030 Lift B auf  (sub00 @0x01D88 -> sub04 @0x01F40): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   2030 Lift B auf  (sub00 @0x01D88 -> sub04 @0x01F40): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   2030 Lift B auf  (sub00 @0x01D88 -> sub04 @0x01F40): auch ohne Sperre keine Falle (0) -> keine Sperre noetig
+  2030 Lift B ab   (sub00 @0x01DC2 -> sub04 @0x01F82): Referenz (-9800,3600) frei 1 -> Fahrt rc 0 Band 3 -> Endlage (-9800,3600); Komponenten 1716/4065 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 1584, Sperre nein (0 gesperrt); Fallen ohne Sperre 0, mit Sperre 0
+  ok:   2030 Lift B ab   (sub00 @0x01DC2 -> sub04 @0x01F82): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   2030 Lift B ab   (sub00 @0x01DC2 -> sub04 @0x01F82): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   2030 Lift B ab   (sub00 @0x01DC2 -> sub04 @0x01F82): auch ohne Sperre keine Falle (0) -> keine Sperre noetig
+  3050 Lift ab     (sub00 @0x0206C -> sub04 @0x023D0): Referenz (-1900,-8150) frei 1 -> Fahrt rc 0 Band 0 -> Endlage (-1900,-8150); Komponenten 63423/45606 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 9718, Sperre nein (0 gesperrt); Fallen ohne Sperre 0, mit Sperre 0
+  ok:   3050 Lift ab     (sub00 @0x0206C -> sub04 @0x023D0): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   3050 Lift ab     (sub00 @0x0206C -> sub04 @0x023D0): KEINE Ausloesestelle fuehrt in eine Falle (0)
+[prop-member F0] prop[0] obj=0x02 m=1 → val=-16200
+[scd F0] Cut_chg(9)
+[prop-member F0] prop[2] obj=0x00 m=1 → val=-7200
+[scd F0] Cut_chg(10)
+[prop-member F0] prop[2] obj=0x02 m=1 → val=0
+[scd F0] Cut_chg(1)
+[prop-member F0] prop[2] obj=0x02 m=1 → val=-5400
+0 @0x0206C -> sub04 @0x023D0): auch ohne Sperre keine Falle (0) -> keine Sperre noetig
+  3050 Lift auf    (sub00 @0x0211E -> sub02 @0x0232C): Referenz (-1900,-8150) frei 1 -> Fahrt rc 0 Band 4 -> Endlage (-1900,-8150); Komponenten 45606/63423 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 11642, Sperre nein (0 gesperrt); Fallen ohne Sperre 0, mit Sperre 0
+  ok:   3050 Lift auf    (sub00 @0x0211E -> sub02 @0x0232C): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   3050 Lift auf    (sub00 @0x0211E -> sub02 @0x0232C): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   3050 Lift auf    (sub00 @0x0211E -> sub02 @0x0232C): auch ohne Sperre keine Falle (0) -> keine Sperre noetig
+  50D0 Lift ab     (sub00 @0x012FA -> sub04 @0x0144C): Referenz (-17600,-14900) frei 1 -> Fahrt rc 0 Band 0 -> Endlage (-17600,-14900); Komponenten 54823/53572 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 2738, Sperre nein (0 gesperrt); Fallen ohne Sperre 0, mit Sperre 0
+  ok:   50D0 Lift ab     (sub00 @0x012FA -> sub04 @0x0144C): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   50D0 Lift ab     (sub00 @0x012FA -> sub04 @0x0144C): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   50D0 Lift ab     (sub00 @0x012FA -> sub04 @0x0144C): auch ohne Sperre keine Falle (0) -> keine Sperre noetig
+  50D0 Lift auf    (sub00 @0x0135C -> sub02 @0x013D4): Referenz (-17600,-14900) frei 1 -> Fahrt rc 0 Band 3 -> Endlage (-17600,-14900); Komponenten 53572/54823 Netzpunkte, Ziel erreichbar 1
+    Ausloesestellen 3701, Sperre nein (0 gesperrt); Fallen ohne Sperre 0, mit Sperre 0
+  ok:   50D0 Lift auf    (sub00 @0x0135C -> sub02 @0x013D4): vorgesehene Fahrt endet in der Komponente des Ziels
+  ok:   50D0 Lift auf    (sub00 @0x0135C -> sub02 @0x013D4): KEINE Ausloesestelle fuehrt in eine Falle (0)
+  ok:   50D0 Lift auf    (sub00 @0x0135C -> sub02 @0x013D4): auch ohne Sperre keine Falle (0) -> keine Sperre noetig
+OK
+1/1 Test #678: unit_r37_itemband ................   Passed    1.64 sec
+The following tests passed:
+	unit_r37_itemband
+100% tests passed, 0 tests failed out of 1
+Total Test time (real) =   1.67 sec
