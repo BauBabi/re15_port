@@ -123,7 +123,7 @@ static const uint8_t k_p_szene[] = {
     OP_MOTION(0, 3), OP_FLG_LOOP, OP_SLEEP(10),
     OP_MSG(27),                                            /* "Irons: Please... one last favor..." */
     OP_MOTION(0, 5), OP_SLEEP(120),                        /* Arm ausgestreckt, Halt (@0x0125A/@0x0125E) */
-    OP_MSG(28),                                            /* "Irons: Be a hero... Leon..." */
+    OP_MSG(28),                                            /* "Irons: Get them out of here... Leon..." (Runde 37 Nachtrag 10) */
     OP_SLEEP(100),
     OP_SET(5, RE15_IT_SIG_ARM, 1),                         /* SIGNAL (5,12): Arm faellt (Port-Takt, Clip 2 ab Bild 72) */
     OP_SLEEP(30),
@@ -529,9 +529,12 @@ static const uint8_t k_msg27[] = {   /* "Irons: Please... one last favor... Look
     0x4f,0x51,0x4e,0x52,0x45,0x52,0x41,0x40,0x57,
     0x04,0x01,0x01,0x63,
 };
-static const uint8_t k_msg28[] = {   /* "Irons: Be a hero... Leon..." */
+/* Runde 37 Nachtrag 10 (NUTZER-VORGABE 2026-10-12): statt "Be a hero... Leon..."; Bytes = tools/r35_l/texte_bauen.py --c
+ * (Kopf/Sprecher/Schwanz unveraendert, 99-Bilder-Halt 01 63, eine Zeile 235 px <= 271). */
+static const uint8_t k_msg28[] = {   /* "Irons: Get them out of here... Leon..." */
     0x04,0x00,0x05,0x02,0x25,0x4e,0x4b,0x4a,0x4f,0x16,0x05,0x00,0x00,
-    0x1e,0x41,0x00,0x3d,0x00,0x44,0x41,0x4e,0x4b,0x57,0x57,0x57,0x00,0x28,0x41,0x4b,0x4a,0x57,0x57,0x57,
+    0x23,0x41,0x50,0x00,0x50,0x44,0x41,0x49,0x00,0x4b,0x51,0x50,0x00,0x4b,0x42,0x00,0x44,0x41,0x4e,0x41,
+    0x57,0x57,0x57,0x00,0x28,0x41,0x4b,0x4a,0x57,0x57,0x57,
     0x04,0x01,0x01,0x63,
 };
 static const uint8_t k_msg29[] = {   /* "Leon: SIR, Sir?!" */
