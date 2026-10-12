@@ -48,6 +48,14 @@ steckte er im Koerper. In ROOM1010 bleibt Leon im Griff an seinem Platz (vorher 
 falschen Stelle). Einen baumelnden angeschossenen Arm gibt es in RE2 nicht: ein abgeschossener Unterarm verschwindet
 nach knapp einer Sekunde, so wie bisher.
 
+**Zombies aktiver** (Spur H). Die Zombies, die RE1.5 selbst als angriffsbereit ablegt, gehen jetzt wie in RE2 schon
+beim Betreten des Raums auf Sie zu, statt stehen zu bleiben - in jedem Raum, fuer Leon und Elza (u.a. ROOM1010, 1020,
+1070, 1100, 1180, 11E0, 11F0, 1250, die Zombie-Girls in 4050). Nach Irons' Tod kommen die fuenf Zombies im Gang 1130
+auf Leon zu, wie die, die in 1040 durchs Rolltor brechen. Liegende, Fresser, Schlaefer und Kriecher bleiben wie bisher.
+Der Port ist damit aggressiver als RE2: dort laeuft etwa ein Drittel der Zombies sofort los, hier gut die Haelfte, weil
+RE1.5 mehr Zombies als angriffsbereit ablegt. Waehrend der Montage-Einstellung in 1130 selbst stehen die fuenf noch
+(Leon ist dort nicht im Bild).
+
 <!-- weitere Spuren: A pri1100, C fahrstuhl, D itemband, F sperre1050, G beretta, H zombieaktiv, I feuerloescher,
      J bissarm, K roy — Abschnitt erst nach bestandener Abnahme + Integration -->
 
