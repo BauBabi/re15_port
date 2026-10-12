@@ -8,10 +8,12 @@
  *   Bit 0  (1) TIMER       @0x80101D68-DBC  +0x15A abgelaufen, (rand & 3) == 0, dist < 0x1388
  *   Bit 1  (2) NAHBEREICH  @0x80101EC4-F10  dist < 0x7D0, Spieler im +-512-Kegel, nicht beansprucht
  *   Bit 2  (3) RENNEN      @0x80101F14-F60  0x800CFBF6 & 4, dist < 0x9C4, Spieler im +-1324-Kegel
- * Standard = alle drei an (das Original). Die Maske ist NUR fuer Sonden/Gegenproben da.
+ * Standard = alle drei an (das Original). Die Maske ist NUR fuer Sonden/Gegenproben da (Maske 0 = Stand bis Runde 37).
  */
 #ifndef RE15_RE2ZOMBIE_R37_H
 #define RE15_RE2ZOMBIE_R37_H
+
+#include <stdint.h>
 
 #define RE15_R37L_PROD_TIMER   0x1u
 #define RE15_R37L_PROD_NAH     0x2u
@@ -23,5 +25,8 @@ unsigned re15_re2z_r37_produzenten_maske(void);
 /* Zaehler (nur Sonden): Wechsel nach 0x201 je Produzent seit dem letzten Ruecksetzen. */
 void     re15_re2z_r37_zaehler_reset(void);
 unsigned re15_re2z_r37_zaehler(int produzent);       /* produzent 0..2 = (1)..(3) */
+int      re15_re2z_r37_letzter_produzent(int slot);  /* 0..2 = Produzent des letzten Wechsels dieses Platzes, -1 = keiner */
+/* Den (ahead+1)-ten naechsten Wurf des RE2-Zufallsstroms (@0x80015FE8) voraussehen, ohne ihn zu bewegen (nur Sonden). */
+uint32_t re15_re2z_rng_peek(int ahead);
 
 #endif

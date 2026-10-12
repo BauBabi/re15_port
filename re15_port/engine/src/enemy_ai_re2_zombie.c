@@ -55,6 +55,7 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>   /* ptrdiff_t (Runde 37 Spur L: Sonden-Zuordnung je Platz) */
 #include <stdlib.h>   /* getenv (headless flavor override) */
 #include <stdio.h>    /* RE15_RE2_TRACE */
 #include <string.h>   /* memset (Part-Record-Reset) */
@@ -351,6 +352,14 @@ static uint32_t re2z_rand(void)
 /* Die WURFZAHL ist Verhalten (jeder `jal 0x80015FE8` zaehlt); die Gore-Tests pinnen sie
  * differenziell (gleicher Pfad mit/ohne Zerleger-Zeile). */
 uint32_t re15_re2_rand_draws(void) { return s_re2_rng_draws; }
+/* Runde 37 Spur L (nur Sonden): den (ahead+1)-ten naechsten Wurf VORAUSSEHEN, ohne den Strom zu bewegen. */
+uint32_t re15_re2z_rng_peek(int ahead)
+{
+    uint32_t st = s_re2_rng, d = s_re2_rng_draws, v = 0;
+    for (int i = 0; i <= ahead; i++) v = re2z_rand();
+    s_re2_rng = st; s_re2_rng_draws = d;
+    return v;
+}
 /* WELLE C: the dog draws from the SAME generator (RE2 has ONE state word 0x800CE318 for every
  * overlay — 69 jal 0x80015FE8 in the dog module alone). Exported for enemy_ai_re2_dog.c. */
 uint32_t re15_re2_rand(void) { return re2z_rand(); }
@@ -1354,7 +1363,8 @@ static void re2z_hit_latch_release(re15_actor_t *e)
  *   a1024 = arc(PL,1024) @0x801012C4-C8; a800 = arc(PL,800) @0x801012E4;
  *   dist<0x1388 && a1024==0 && (+0x154&0x800)                  -> 0x101  @0x80101308-1C
  *   dist<0xBB8 && a800!=0 && (cfbf6&0x15) && (+0x154&0x800) && (rand&1)==0 -> 0xC01 @0x80101374-78
- *   dist<0x7D0 && a1024!=0 && (cfbf6&0x17) && (+0x154&0x800) && (rand&1)==0 -> 0xC01 @0x801013CC-D0
+ *   dist<0x7D0 && a1024!=0 && (cfbf6&0x17) && (+0x154&0x800) && (rand&1)==1 -> 0xC01 @0x801013CC-D0
+ *   (Runde 37 Spur L: Block 3 `beq v0,zero,0x801013d4` @0x801013c8 — Commit bei 1, nicht 0)
  * +0x154 & 0x800 = re2z_los154 (F2-Fix 2026-09-05; vorher konstant 1). WICHTIG: der LOS-Test
  * steht VOR dem rand&1-Draw der Bloecke 2/3 (@0x8010134C/@0x80101390 vor den jals) — LOS=0
  * aendert also auch die WURFZAHL, nicht nur das Gate (Kurzschluss-Reihenfolge = Byte-Kriterium,
@@ -1370,8 +1380,12 @@ static void re2z_decide_stand(re15_actor_t *e, re15_actor_t *pl)
     if (dist < 0xbb8u && a800 != 0 && (mv & 0x15u) && e->re2z_los154
         && (re2z_rand() & 1u) == 0u)
         re15_ai_set_state_word(e, 0xC01);                          /* @0x80101374-78 */
+    /* Runde 37 Spur L (b): Block 3 committet bei (rand & 1) == 1 — `jal 0x80015fe8` @0x801013bc /
+     * `andi v0,v0,0x1` @0x801013c4 / `beq v0,zero,0x801013d4` @0x801013c8 (== 0 -> Epilog, sonst
+     * `addiu v0,zero,3073` / `sw v0,4(s0)` @0x801013cc-d0). Block 2 dagegen `bne v0,zero,0x80101380`
+     * @0x8010136c = Commit bei == 0. Der Port hatte Block 3 wie Block 2 (== 0). */
     if (dist < 0x7d0u && a1024 != 0 && (mv & 0x17u) && e->re2z_los154
-        && (re2z_rand() & 1u) == 0u)
+        && (re2z_rand() & 1u) != 0u)
         re15_ai_set_state_word(e, 0xC01);                          /* @0x801013CC-D0 */
 }
 
@@ -1401,7 +1415,8 @@ static void re2z_decide_walk_apply(re15_actor_t *e, re15_actor_t *pl)
  *   P1 @0x80101494: Advance(256) [Port: globaler Advancer]; +0x15A: pre-dec==0 -> Moan-Block
  *      (+0x239-Gate, rand&1 -> SE 11, cd 150, Reseed rand+300 @0x801014BC-FC); sonst Dekrement,
  *      und POST-dec==0 (= der Tick VOR dem Moan-Tick) -> WANDER-WURF @0x8010151C-40:
- *      (rand&1)==0 -> +0x6=2 (der Moan-Tick des Zyklus ENTFAELLT, Phase verlassen).
+ *      (rand&1)==0 -> +0x6=2 (der Moan-Tick des Zyklus ENTFAELLT, Phase verlassen); der Wecker
+ *      laeuft im SELBEN Takt weiter, P2 erst im naechsten (Runde 37 Spur L, @0x80101540-a0/@0x8010159c).
  *      [+0x14E==0-gegateter jal 0x80016200 @0x80101500-18: P0 schreibt Rate 0xF nach +0x14E ->
  *       im Idle DORMANT; Konsument nicht identifiziert — benannt, nicht portiert.]
  *      SELBST-WECKER @0x80101544-7C: +0x158==0 (sonst Dekrement @0x80101590-A0) ->
@@ -1444,15 +1459,20 @@ static void re2z_exec_stand(re15_actor_t *e, re15_actor_t *pl)
                                                                     * entfaellt (Phase verlassen) */
             }
         }
-        if (e->sub_state_2 == 1) {                                 /* Wecker nur solange P1 */
-            if (e->re2z_t158 == 0) {                               /* @0x80101544-7C */
-                if (e->ai_dist < 0x1d4cu && e->re2z_los154) {
-                    re15_ai_set_state_word(e, 0x101);              /* sw 257,4 @0x80101578-7C */
-                    return;
-                }
-            } else e->re2z_t158--;                                 /* @0x80101590-A0 */
-            return;
+        /* Runde 37 Spur L (c): der SELBST-WECKER laeuft in JEDEM P1-Takt, auch im Takt des Wander-
+         * Wurfs — `sb v0,6(s0)` @0x80101540 faellt durch nach @0x80101544 (kein Sprung dazwischen).
+         * Er kann den Wurf ueberschreiben: `sw v0,4(s0)` = 0x101 @0x8010157c schreibt das GANZE
+         * Wort, also auch +0x6 = 0. P2 laeuft erst im NAECHSTEN Takt: jeder Weg aus P1 endet im
+         * Epilog (`beq v0,zero,0x801016ac` @0x80101588 bzw. `j 0x801016ac` @0x8010159c), der
+         * Phasen-Dispatch @0x80101410-50 liest +0x6 == 2 erst beim naechsten Aufruf. Der Port
+         * sperrte den Wecker nach dem Wurf und fiel im selben Takt nach P2/P3 durch. */
+        if (e->re2z_t158 == 0) {                                   /* lh 344 / bne @0x80101544-4C */
+            if (e->ai_dist < 0x1d4cu && e->re2z_los154)            /* sltiu 0x1d4c @0x8010155C; +0x154&0x800 @0x80101570 */
+                re15_ai_set_state_word(e, 0x101);                  /* sw 257,4 @0x80101578-7C */
+            return;                                                /* +0x158 == 0 -> Epilog @0x80101580-88 */
         }
+        e->re2z_t158--;                                            /* @0x80101590-A0 */
+        return;                                                    /* j 0x801016ac @0x8010159c */
     }
     if (e->sub_state_2 == 2) {                                     /* P2 @0x801015A4-DC */
         e->sub_state_2 = 3;
@@ -1595,15 +1615,28 @@ static int re2z_dot_tick(re15_actor_t *e, int mit_zucken)
  * include/re15_re2zombie_r37.h). Jeder Produzent schreibt nur das Wort; der Executor des neuen Unter-
  * zustands laeuft im Original erst im NAECHSTEN Takt (EXEC[1] kehrt ueber den Epilog @0x80101f64 zurueck,
  * der ACTIVE-Root @0x801011A8-EC ruft DECISION und EXECUTOR je Takt genau einmal). */
-static unsigned s_r37_prod = 0u;
+static unsigned s_r37_prod = RE15_R37L_PROD_ALLE;               /* das Original: alle drei scharf */
 static unsigned s_r37_zaehler[3];
+static int8_t   s_r37_letzter[RE15_ACTOR_MAX];                      /* Sonden: Produzent des letzten Wechsels */
 void     re15_re2z_r37_produzenten(unsigned mask) { s_r37_prod = mask & RE15_R37L_PROD_ALLE; }
 unsigned re15_re2z_r37_produzenten_maske(void)    { return s_r37_prod; }
-void     re15_re2z_r37_zaehler_reset(void) { s_r37_zaehler[0] = s_r37_zaehler[1] = s_r37_zaehler[2] = 0u; }
+void     re15_re2z_r37_zaehler_reset(void)
+{
+    s_r37_zaehler[0] = s_r37_zaehler[1] = s_r37_zaehler[2] = 0u;
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) s_r37_letzter[i] = -1;
+}
 unsigned re15_re2z_r37_zaehler(int p)      { return (p >= 0 && p < 3) ? s_r37_zaehler[p] : 0u; }
+int      re15_re2z_r37_letzter_produzent(int slot)
+{
+    return (slot >= 0 && slot < RE15_ACTOR_MAX) ? (int)s_r37_letzter[slot] : -1;
+}
 static void r2z_r37_auf_0x201(re15_actor_t *e, int produzent)
 {
-    if (e->state != 1u || e->sub_state_1 != 2u) s_r37_zaehler[produzent]++;
+    if (e->state != 1u || e->sub_state_1 != 2u) {
+        s_r37_zaehler[produzent]++;
+        {   ptrdiff_t slot = e - g_actors;
+            if (slot >= 0 && slot < RE15_ACTOR_MAX) s_r37_letzter[slot] = (int8_t)produzent; }
+    }
     re15_ai_set_state_word(e, 0x201);                              /* addiu v0,zero,513 / sw v0,4 */
 }
 
