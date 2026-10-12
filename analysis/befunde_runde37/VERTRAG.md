@@ -61,3 +61,13 @@ Integration an.
 ### 1.6 Assets
 Kein Patch an shared_assets/PSX/* ausser den Port-Masken (A, ROOM1100.*) und neuen Port-Tuerarchiven
 shared_assets/RE15DOOR/*.DO2 (C). Neue RE2-Dateien unter shared_assets/RE2/ (Paket-Gate-Eintrag im Dossier nennen).
+
+### 1.7 Orchestrator-Freigabe 2026-10-12 (Spur A, nach Abnahme A#0 M1)
+Spur A darf zusaetzlich zu MASKS/ROOM1100.* den Masken-LADER anfassen (platform/pc/src/entladen_pc.c re15_entladen_msk und
+was die PRI-Masken je Raum laedt): Fuer Elzas Raeume (ungerade Raum-Id) fehlen in STAGE1 ALLE Masken-Dateien (MASKS/ hat
+nur 1000, 1010, 1050, 1060, 10A0, 10C0, 10D0, 10E0, 10F0, 1100, 1110, 1120, 1130, 1140, 1160, 1180, 11B0, 11D0, 11F0, 1220,
+1221, 1230 — Elza-Gegenstuecke ausser 1221 fehlen), der Port laedt `MASKS/ROOM%04X.MSK` mit der vollen Id. Erlaubt und
+gewuenscht: Rueckfall auf die gerade Leon-Variante, wenn Kamera-Daten UND Hintergrund (RDT-Kamerasaetze, BSS/Bild je Cut)
+beider Raeume nachweislich gleich sind — Zensus aller STAGE1-Paare (und spaeterer Stages ohne eigene ungerade Datei) mit
+Ergebnis je Raum im Dossier, Riegel fuer 1101 und den Zensus. Wo sie sich unterscheiden: kein Rueckfall (im Dossier nennen).
+Keine neuen Asset-Dateien noetig (Paket-Gate unveraendert).
