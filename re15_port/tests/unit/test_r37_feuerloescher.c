@@ -697,7 +697,8 @@ static void teil_kiste(void)
     CHECK(s >= 0 && slot_von(RE15_FL37_OBJ) < 0 && re15_game_flag_get(3, 0x81),
           "K Nein: Leon behaelt den Loescher (Inventar-Platz %d), (3,0x81) gesetzt, keiner liegt", s);
 
-    /* (2) Einlagern ueber den ECHTEN Tausch (Box-Platz 2 = (Scroll 0 + 2) & 0x3f, Auswahlformel RE2 FUN_800703b8) */
+    /* (2) Einlagern ueber den ECHTEN Tausch. Box-Platz 2 = (Scroll 0 + 2) & 0x3f, Auswahlformel RE2 FUN_800703b8:
+     *     @0x800703cc `lbu v1` Scroll 0x800d5c14, @0x8007042c `addiu v1,v1,2`, @0x80070440 `andi s5,v1,0x3f`. */
     int r = re15_itembox_transfer(s, 2);
     CHECK(r == RE15_BOX_XFER_OK && re15_inv_find_item(RE15_FL37_ITEM) < 0 && in_kiste(RE15_FL37_ITEM) == 2,
           "K Einlagern: Loescher verlaesst das Inventar und liegt in Box-Platz 2 (ist %d)", in_kiste(RE15_FL37_ITEM));

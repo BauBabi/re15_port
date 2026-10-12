@@ -205,7 +205,8 @@ pruef_nicht(L _l "Empty Fire Extinguisher")
 # (g_itembox = RE2-Box-Feld 0x800d4a68). Vorher lag er hier UND in der Kiste (Abnahme L8/L8r).
 # M: Spielstand ROOM1050 vor der Notausgangs-Tuer im NEIN-Zustand ((3,0x81), Loescher im Inventar); RE15_BOX_TEST oeffnet
 #    den Box-Schirm (re15_itembox.c, derselbe wie die Box-Zone ROOM1150 msg 3): A@30 Loescher waehlen, A@54 Tausch in
-#    Box-Platz 2 ((Scroll 0 + 2) & 0x3f), X/X schliessen, A@120 an der Tuer -> Tuersequenz -> ROOM1090.
+#    Box-Platz 2 ((Scroll 0 + 2) & 0x3f: RE2 FUN_800703b8 @0x8007042c addiu +2, @0x80070440 andi 0x3f), X/X schliessen,
+#    A@120 an der Tuer -> Tuersequenz -> ROOM1090.
 fl_lauf(m 1050 "1050;19850;-22300;1024;cut:6;flag:9:0x86;flag:3:0x85;flag:3:0x80;flag:3:0x81;leer;give:0x31:1"
     "W1,A0.1,W0.7,A0.1,W1,X0.1,W0.7,X0.1,W2,A0.5,W6" "200#1090" "RE15_BOX_TEST=1" _m)
 pruef(M _m "[feuerloescher] Name Item 0x31: Empty Fire Extinguisher")

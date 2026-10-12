@@ -11,7 +11,8 @@
  *   elza               Spielfigur Elza (g_gameflow.character = 4)
  *   leer               Inventar leeren (vor give:, damit ein Gegenstand auf Platz 0 liegt)
  *   kiste:<id>:<n>     legt einen Gegenstand in die ITEM BOX (naechster freier Platz ab 2 = (Scroll 0 + 2) & 0x3f,
- *                      RE2 FUN_800703b8; die Kiste reist mit re15_savedata v4) — Nachbesserung 1 (Abnahme 0, M1)
+ *                      RE2 FUN_800703b8 @0x800703cc Scroll 0x800d5c14 / @0x8007042c +2 / @0x80070440 andi 0x3f; die
+ *                      Kiste reist mit re15_savedata v4) — Nachbesserung 1 (Abnahme 0, M1)
  * Inventar sonst = Einsatzausruestung (re15_inv_load_briefing).
  */
 #include "re15_actor.h"

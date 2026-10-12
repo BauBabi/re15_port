@@ -298,6 +298,8 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
   Namens-/CHECK-Haken).
 
 ## 6. OFFEN
+* Nachbesserung 1: M1 und M2 behoben (Abschnitt "Nachbesserung 1"); offen nur die dort gemessene Beobachtung "Loeschen mit
+  dem Loescher in der Kiste" (Original-Regel ROOM1090 sub00 @0x02306, nicht Spur-I-Auftrag).
 * Nichts Funktionales. Ehrliche Grenzen der Messung:
   - Das Modell ist ein Neubau (PORT-WAHL); seine Masse stammen aus dem Item-Bild (2D-Verhaeltnis; ist der Koerper im
     Bild geneigt, waere der echte Loescher etwas laenger) und aus der Leon-Groesse 1,78 m. Kein Original zum Vergleich.
@@ -317,6 +319,8 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
 ### Neue Assets / Paket-Gate
 Keine neue Datei: Netz, Textur und Text sind in die exe gebacken (`engine/src/gen/feuerloescher_r37.inc`, erzeugt von
 `tools/r37_feuerloescher/feuerloescher_modell.py` aus `shared_assets/PSX/ITEM/ITPS.ITP`). Kein Paket-Gate-Eintrag noetig.
+Nachbesserung 1 bringt ebenfalls kein Asset, keine Quelldatei (nur Aenderungen in vorhandenen Spur-I-Dateien + das
+Werkzeug `tools/r37_feuerloescher/kombi_zensus.py`), keine Sprachdatei, kein Bit, keine Nachricht.
 
 ### Sprachdateien
 Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine Stimme).
@@ -460,6 +464,26 @@ zu; Inventar UND Box reisen mit dem Spielstand: `re15_savedata.c:211` `re15_item
   Stand liefert fuer dieselbe Eingabe genau die verbotene Zeile (Lauf v8 oben). Ergebnis einzeln:
   `^integration_r37_feuerloescher$` -> `100% tests passed, 0 tests failed out of 1` (362 s; im Log `ok   M/N/O: ...`,
   `r37_feuerloescher: alle Laeufe gruen`).
+
+**Beruehrte Gruppen (gezielt, -j 3, --timeout 600, KEINE volle Suite; derselbe Ausdruck wie die Abnahme 0, jetzt mit
+`unit_r37_feuerloescher_kiste`), woertlich:**
+`^(unit_r37_feuerloescher|integration_r37_feuerloescher|unit_aot_edge|unit_scd_aot_opcodes|unit_savedata|unit_item_modal|unit_item_stack_press|unit_aot_sce_census|unit_sicherung_1150|unit_re2_room1090_ab|unit_1090_|probe_1090_|unit_plc_back_yaw_1090|unit_map_1090|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r21_discard_wegwerfen|unit_r27_ada_cutscene_1050|unit_r30_|unit_r34n_|unit_r35_|unit_room1050_sicherung|unit_r36_|unit_inv_fsm|unit_item_icon|unit_inv_grant|unit_room1150_itembox|unit_itembox_transfer|unit_itembox_screen|unit_debug_menu|unit_pri_inventar_riegel|unit_r26_inventar|unit_msg_dialog|unit_action_msg_gate|unit_text_freeze|integration_item_name_census|integration_flag_census|integration_r36_inventar|integration_r36_schluessel|integration_r35_inventar1050|integration_r36_story_leon|integration_r36_story_elza|integration_r34n_e_dokumente_bild|integration_r36_kartenitems_bild)`
+-> **`100% tests passed, 0 tests failed out of 290`** (1336.78 s; darin die Kisten-Riegel `unit_room1150_itembox`,
+`unit_itembox_transfer`, `unit_itembox_screen`, `unit_r35_inventar1050_kiste` und alle Riegel der als erfuellt
+bewerteten Punkte: Modell, Elza 1091, Wand 1050/Spind 1000, Nachtrag 4c). Danach nur Kommentare ergaenzt (Adressen der
+RE2-Auswahlformel im Test/Kartenwerkzeug), neu gebaut und die Spur-Riegel am Endstand nachgefahren:
+`^(unit_r37_feuerloescher|integration_r37_feuerloescher)` -> **`100% tests passed, 0 tests failed out of 10`** (382 s).
+
+**Beobachtung (gemessen, nicht Teil von M1/M2, keine Aenderung):** Legt Leon den Loescher schon VOR dem Loeschen in die
+Kiste, loescht er trotzdem: Lauf v10 (CONTINUE ROOM1090 (0,250) mit (9,0x86)/(3,0x85)/(3,0x80), Inventar leer,
+`kiste:0x31:1`) -> `id=7`, `id=8 "Will you use the Fire Extinguisher?"`, Ja -> Neueintritt `kein Loescher (Leon hat ihn in
+die Item-Box gelegt (... Platz 2))`, `id=9 "You've used the Fire Extinguisher."`, keine Wegwerf-Abfrage (discard.log nie
+`gefragt=1`; Vorentscheid braucht Besitz, `item_discard_common.c` @0x80051628/@0x80051634 RE2), Rettungsszene
+`id=3`/`id=4`. Ursache ist die ORIGINAL-Regel: ROOM1090 sub00 @0x02306 `06 00 24 00 21 03 85 00` fragt nur (3,0x85)
+(genommen), nie das Inventar — im Original gibt es keine Kiste ("Itembox is not available in this preview"), dort ist
+der Loescher nach der Aufnahme immer im Inventar. Mit dem Tor dieser Nachbesserung liegt auch in diesem Fall KEINER am
+Boden (kein Ja gegeben), der Loescher bleibt als "Empty Fire Extinguisher" in der Kiste — kein Doppel. Ob das Loeschen
+den Loescher im Inventar verlangen soll, ist keine Frage dieser Spur (Original-SCD unveraendert gelassen).
 
 ### N1.M2 — Abschnittsverweis im Kommentar feuerloescher_r37.c:82
 Ursache: Der Kommentar der Tor-Regel nannte "Dossier Abschnitt 3.3" (dort steht der Spind); die Regel steht in 3.4.
