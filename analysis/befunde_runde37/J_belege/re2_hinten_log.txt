@@ -1,0 +1,12 @@
+DuckStation gestartet {'141072'}
+GDB verbunden
+Stopp: b'S02'
+stage 0 room 20 PL -25970 -12509 yaw -17765
+Overlay-Basis 8010d000, Haltepunkt P3 8010f838
+Zombie 8011c778 Typ 10 (-26711,-19755) yaw 3143 w4 00010101
+Leon gestellt (-26613,-18860) yaw 3143 (hinten, Abstand 900)
+Z0: b'OK'
+erster P3-Halt: b'S05'
+Halts: 30
+Bild-Spielstand kopiert
+settings.ini + Resume-Spielstand zurueckgeschrieben
