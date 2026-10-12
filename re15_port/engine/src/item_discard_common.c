@@ -16,6 +16,7 @@
 
 #include "gen/discard_sites.inc"
 #include "re15_schluessel_r36.h"  /* Runde 36 Spur Q: Port-Benutzungsstellen 11B0 msg 29 (0x45) / 1211 msg 9 (0x42) */
+#include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: weggeworfener Loescher liegt in ROOM1090 */
 
 /* Port-Prompt-Schluessel 8 -> BSS-Skript [6] (item_prompt_common.c:60). */
 #define RE15_DISCARD_PROMPT_KEY 8
@@ -350,6 +351,7 @@ void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held)
          * anschliessender Kompaktierung (FUN_8004dadc). */
         if (s_slot >= 0 && s_slot < RE15_INV_MAX_SLOTS && g_inv.slots[s_slot].id == s_item) {
             re15_inv_remove_slot(s_slot);
+            re15_feuerloescher_r37_weggeworfen(s_item);   /* Runde 37 Spur I: Loescher faellt hin (ROOM1090) */
             s_weggeworfen++;
             s_zustand = D_AUS; s_item = 0; s_slot = -1;
             s_reveal = s_reveal_total = s_reveal_timer = 0; s_blink = 0;

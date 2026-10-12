@@ -12,6 +12,8 @@
 #include "re15_scd.h"
 #include "re15_aot.h"
 #include "re15_msg.h"
+#include "re15_inventory.h"   /* re15_inv_find_item (FUN_8004dfec) */
+#include "re15_room.h"        /* g_current_room_id */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -28,16 +30,20 @@
  *   Spieler steht vor der Kollisionskante z -23377, der Vorwaerts-Punkt 620 @0x80042bd0 liegt dann
  *   in z -23520..-23000); kein Ueberlapp mit Slot 5 (x >= 18100) und Slot 6 (x <= 16650).
  *   Slot 13: in ROOM1050 belegt 0..10 (Original), 15 (Dokument, re15_dokumente.h), 52.. Kamerazonen.
- * ROOM1090 (Leon, nach dem Loeschen) / ROOM1091 (Elza, immer): liegend auf dem Boden (Band 1 =
- *   y -1800, Feuer Sce_em_set @0x02214.. y 0xf8f8) vor dem Wagen an der Feuerstelle (7 Feuer
- *   x 1374..3104 z -3498..2040), sichtbar in Cut 5/13 und 4/12. Untersuchen-Platz 1000 x 1000 um das
+ * ROOM1090 (Leon, nach dem Loeschen UND weggeworfen) / ROOM1091 (Elza, immer): liegend auf dem Boden
+ *   (Band 1 = y -1800, Feuer Sce_em_set @0x02214.. y 0xf8f8) an der Feuerstelle vor dem Wagen (7 Feuer
+ *   x 1374..3104 z -3498..2040). (2100,600): in Cut 4/5/6 ohne Maske (probe_r34n_e_dokumente `sicht`;
+ *   der erste Versuch (700,-1300) lag in Cut 4 unter Maske 21, (2300,0) in Cut 5 unter Maske 15 =
+ *   Stossstange), Cut 6 = Eintritts-Cut der Selbst-Tuer @0x02352 (Rettungsszene). rot_y 3250 = diagonal
+ *   zu den Blickachsen von Cut 5 (Lot 3760) und Cut 6 (Lot 2733). Untersuchen-Platz 1000 x 1000 um das
  *   Prop; ROOM1091 Slot 3 (< Slot 5 = Schuppen-Text der Runde 36, Vorrang des kleinsten Slots
- *   FUN_80042bac), ROOM1090 Slot 5 (nach dem Loeschen legt sub00 keinen Slot 2/3-Text an). */
+ *   FUN_80042bac; der Messpunkt der Runde 36 (620,250) liegt NICHT darin), ROOM1090 Slot 5 (nach dem
+ *   Loeschen legt sub00 keinen Slot 2/3-Satz an). */
 static const re15_fl37_lage_t k_lagen[] = {
     /* raum    art                tor                        slot zone band   x      y       z    rot_y  rect_x rect_z  w     d   */
     { 0x1050, RE15_FL37_STEHEND, RE15_FL37_NICHT_GENOMMEN,   13,  1,   0, 17200, -1150, -23775,    0, 16700, -23900, 1000, 1000 },
-    { 0x1090, RE15_FL37_LIEGEND, RE15_FL37_FEUER_AUS,         5,  0,   1,   700, -1800,  -1300, 1700,   200,  -1800, 1000, 1000 },
-    { 0x1091, RE15_FL37_LIEGEND, RE15_FL37_IMMER,             3,  0,   1,   700, -1800,  -1300, 1700,   200,  -1800, 1000, 1000 },
+    { 0x1090, RE15_FL37_LIEGEND, RE15_FL37_FEUER_AUS,         5,  0,   1,  2100, -1800,    600, 3250,  1600,    100, 1000, 1000 },
+    { 0x1091, RE15_FL37_LIEGEND, RE15_FL37_IMMER,             3,  0,   1,  2100, -1800,    600, 3250,  1600,    100, 1000, 1000 },
 };
 #define N_LAGEN ((int)(sizeof k_lagen / sizeof k_lagen[0]))
 
@@ -65,7 +71,12 @@ static int tor_offen(const re15_fl37_lage_t *g)
 {
     switch (g->tor) {
     case RE15_FL37_IMMER:          return 1;
-    case RE15_FL37_FEUER_AUS:      return re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT) ? 1 : 0;
+    case RE15_FL37_FEUER_AUS:
+        /* Feuer aus (3,0x81) UND Leon traegt den Loescher nicht mehr (Wegwerf-Abfrage "Ja" nach
+         * "You've used the Fire Extinguisher." ROOM1090 msg 9, gen/discard_sites.inc) — sonst laege
+         * derselbe Loescher zweimal da. PORT-WAHL, Dossier Abschnitt 3.3. */
+        return re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT) &&
+               re15_inv_find_item(RE15_FL37_ITEM) < 0;
     case RE15_FL37_NICHT_GENOMMEN: return re15_game_flag_get(9, RE15_FL37_TAKEN_BIT) ? 0 : 1;
     default:                       return 0;
     }
@@ -120,7 +131,9 @@ void re15_feuerloescher_r37_install(uint16_t room_id)
     if (!tor_offen(g)) {
 #ifdef RE15_PLATFORM_PC
         fprintf(stderr, "[feuerloescher] ROOM%04X: kein Loescher (%s)\n", (unsigned)room_id,
-                g->tor == RE15_FL37_FEUER_AUS ? "Feuer brennt noch, (3,0x81)=0" : "schon genommen, (9,0x86)=1");
+                g->tor != RE15_FL37_FEUER_AUS ? "schon genommen, (9,0x86)=1"
+                : !re15_game_flag_get(RE15_FL37_STORY_BANK, RE15_FL37_FEUER_AUS_BIT) ? "Feuer brennt noch, (3,0x81)=0"
+                : "Leon traegt ihn noch (Item 0x31 im Inventar)");
 #endif
         return;
     }
@@ -178,6 +191,17 @@ void re15_feuerloescher_r37_genommen(uint8_t item_type, uint8_t taken_bit)
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[feuerloescher] Aufnahme Item 0x31 (9,0x86) -> Set(3,0x85)=1 wie ROOM1000 sub01 @0x00D0C\n");
 #endif
+}
+
+void re15_feuerloescher_r37_weggeworfen(uint8_t item_type)
+{
+    /* Wegwerf-Abfrage "Ja" (item_discard_common.c, re15_inv_remove_slot): der leere Loescher faellt
+     * in ROOM1090 an seinen Platz — derselbe Installer wie beim Raumstart (Tor jetzt offen). */
+    if (item_type != RE15_FL37_ITEM || g_current_room_id != 0x1090) return;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[feuerloescher] Loescher weggeworfen -> liegt in ROOM1090\n");
+#endif
+    re15_feuerloescher_r37_install((uint16_t)g_current_room_id);
 }
 
 int re15_feuerloescher_r37_obj_id(uint16_t room_id)

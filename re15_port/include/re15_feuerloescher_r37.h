@@ -34,6 +34,10 @@
  *   ROOM1050 Cut 6 an der Wand rechts der Notausgangs-Tuer (zu ROOM1090), Lage des leeren Loeschers in
  *   ROOM1090/1091, Untersuchen-Text msg 29 "It's an empty fire extinguisher.", Spind ROOM1000 Slot 3
  *   -> der Raumtext msg 0 "Nothing unusual." (Satzform wie ROOM1000 sub00 @0x00CAA Slot 6).
+ *   Leon ROOM1090: der leere Loescher liegt, sobald das Feuer aus ist (3,0x81) UND Leon ihn nicht mehr
+ *   traegt. Die Port-Wegwerf-Abfrage nach msg 9 "You've used the Fire Extinguisher." (Runde 25,
+ *   gen/discard_sites.inc Zeile ROOM1090/9/0x31) ist der Moment, in dem er ihn hinlegt; "Nein" =
+ *   Leon behaelt ihn, dann liegt keiner da (sonst laege derselbe Loescher doppelt vor).
  */
 #ifndef RE15_FEUERLOESCHER_R37_H
 #define RE15_FEUERLOESCHER_R37_H
@@ -88,6 +92,10 @@ void re15_feuerloescher_r37_install(uint16_t room_id);
 /* HAKEN item_modal_common.c (Aufnahme bestaetigt, Taken-Bit gesetzt): Item 0x31 mit Bit 0x86 setzt
  * (3,0x85) wie ROOM1000 sub01 @0x00D0C — der Fundort liegt nicht mehr in ROOM1000. */
 void re15_feuerloescher_r37_genommen(uint8_t item_type, uint8_t taken_bit);
+
+/* HAKEN item_discard_common.c (Wegwerf-Abfrage "Ja", Slot geleert): Item 0x31 in ROOM1090 -> der leere
+ * Loescher liegt ab jetzt am Boden (Installer mit offenem Tor). */
+void re15_feuerloescher_r37_weggeworfen(uint8_t item_type);
 
 /* Plattform-Lader: obj_id/MD1/TIM des Loescher-Props in diesem Raum, sonst -1/NULL. */
 int            re15_feuerloescher_r37_obj_id(uint16_t room_id);
