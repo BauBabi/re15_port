@@ -21,7 +21,8 @@ cmake_minimum_required(VERSION 3.16)
 #   liftauf2031 / liftab2031   dasselbe mit Elza (RE15_PSELECT_AUTO_SWITCH=1, ROOM2031/2071).
 # GEGENPROBE (Dossier NB1.6): derselbe Test gegen die exe VOR der Nachbesserung (05117c03) ist rot — schon am
 # Verhalten ((3,222)-Folge 0;1;1 statt 0;0;1 bzw. 0;1;0;.. statt 0;1;1;0), nicht erst am Messschrieb.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r37_itemband_lift.cmake
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DLAEUFE=<regex>] -P test_r37_itemband_lift.cmake
+# (LAEUFE waehlt Laeufe nach Namen, Vorgabe alle — nur fuer die Gegenprobe je Richtung).
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r37_itemband_lift: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
@@ -159,33 +160,40 @@ foreach(_fig leon elza)
         string(REPLACE "RAUM 2070" "RAUM 2071" _wp_ab_f "${_wp_ab_f}")
     endif()
 
-    _lauf(liftauf${_r} 600 _wp_auf_f ${_fig_env} RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250
-          "RE15_PLAYER_POS=6550,-100,3072,3" "RE15_EXIT_AT=1800#${_r}")
-    _muss("loaded room${_r}.rdt" _dbg "liftauf${_r}: ROOM${_r} nicht geladen")
-    # Verhalten zuerst: der Druck im Eingang faehrt NICHT ((3,222) bleibt 0), der Druck in der Kabine faehrt.
-    _flagfolge(liftauf${_r} 3 222 "0;0;1")
-    _frei(liftauf${_r} ${_r} 11 6)
-    _flag_ende(liftauf${_r} 9 109 1)
-    # Mechanismus: Sperre mit der Spielermitte ausserhalb (Eingang z 107xx/108xx), Fahrt mit der Mitte in der Kabine.
-    _muss_regex("room=${_r} LIFT slot 5 sub 2 spieler=[(]6[0-9][0-9][0-9],-5400,10[78][0-9][0-9][)] band 3 mitte im Ausloeser nein -> GESPERRT" _item
-                "liftauf${_r}: keine Sperre am Kabineneingang")
-    _muss_regex("room=${_r} LIFT slot 5 sub 2 spieler=[(]6[0-9][0-9][0-9],-5400,1[12][0-9][0-9][0-9][)] band 3 mitte im Ausloeser ja -> FAEHRT" _item
-                "liftauf${_r}: keine Fahrt aus der Kabine")
-    _muss("room=${_r} MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800" _item
-          "liftauf${_r}: Lift A sub02 (@0x01E66) setzt das Band nicht auf 6")
-    message(STATUS "r37_itemband_lift liftauf${_r} (${_fig}): Eingang GESPERRT, Kabine FAEHRT (Band 3 -> 6), SPAS-12 FREI, (9,109) = 1")
+    if(NOT DEFINED LAEUFE)
+        set(LAEUFE ".*")
+    endif()
+    if("liftauf${_r}" MATCHES "${LAEUFE}")
+        _lauf(liftauf${_r} 600 _wp_auf_f ${_fig_env} RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250
+              "RE15_PLAYER_POS=6550,-100,3072,3" "RE15_EXIT_AT=1800#${_r}")
+        _muss("loaded room${_r}.rdt" _dbg "liftauf${_r}: ROOM${_r} nicht geladen")
+        # Verhalten zuerst: der Druck im Eingang faehrt NICHT ((3,222) bleibt 0), der Druck in der Kabine faehrt.
+        _flagfolge(liftauf${_r} 3 222 "0;0;1")
+        _frei(liftauf${_r} ${_r} 11 6)
+        _flag_ende(liftauf${_r} 9 109 1)
+        # Mechanismus: Sperre mit der Spielermitte ausserhalb (Eingang z 107xx/108xx), Fahrt mit der Mitte in der Kabine.
+        _muss_regex("room=${_r} LIFT slot 5 sub 2 spieler=[(]6[0-9][0-9][0-9],-5400,10[78][0-9][0-9][)] band 3 mitte im Ausloeser nein -> GESPERRT" _item
+                    "liftauf${_r}: keine Sperre am Kabineneingang")
+        _muss_regex("room=${_r} LIFT slot 5 sub 2 spieler=[(]6[0-9][0-9][0-9],-5400,1[12][0-9][0-9][0-9][)] band 3 mitte im Ausloeser ja -> FAEHRT" _item
+                    "liftauf${_r}: keine Fahrt aus der Kabine")
+        _muss("room=${_r} MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800" _item
+              "liftauf${_r}: Lift A sub02 (@0x01E66) setzt das Band nicht auf 6")
+        message(STATUS "r37_itemband_lift liftauf${_r} (${_fig}): Eingang GESPERRT, Kabine FAEHRT (Band 3 -> 6), SPAS-12 FREI, (9,109) = 1")
+    endif()
 
-    _lauf(liftab${_r} 600 _wp_ab_f ${_fig_env} RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250
-          "RE15_PLAYER_POS=6550,-100,3072,3" "RE15_EXIT_AT=2600")
-    _muss("loaded room${_r}.rdt" _dbg "liftab${_r}: ROOM${_r} nicht geladen")
-    _flagfolge(liftab${_r} 3 222 "0;1;1;0")
-    _muss("[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750)" _dbg "liftab${_r}: Tuer slot 0 nicht erreicht")
-    _muss("loaded room${_r_aus}.rdt" _dbg "liftab${_r}: ROOM${_r_aus} nicht geladen")
-    _muss_regex("room=${_r} LIFT slot 4 sub 2 spieler=[(]6[0-9][0-9][0-9],-10800,13[0-9][0-9][0-9][)] band 6 mitte im Ausloeser nein -> GESPERRT" _item
-                "liftab${_r}: keine Sperre suedlich der oberen Kabine")
-    _muss("room=${_r} MEMBER 0x12 Spieler: Kollisionsband 6 -> 3 (@0x80041228) y=-5400" _item
-          "liftab${_r}: Lift A sub02 (@0x01EA8) setzt das Band nicht auf 3")
-    message(STATUS "r37_itemband_lift liftab${_r} (${_fig}): suedlich der Kabine GESPERRT, Kabine FAEHRT (Band 6 -> 3), Tuer slot 0 -> ROOM${_r_aus}")
+    if("liftab${_r}" MATCHES "${LAEUFE}")
+        _lauf(liftab${_r} 600 _wp_ab_f ${_fig_env} RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250
+              "RE15_PLAYER_POS=6550,-100,3072,3" "RE15_EXIT_AT=2600")
+        _muss("loaded room${_r}.rdt" _dbg "liftab${_r}: ROOM${_r} nicht geladen")
+        _flagfolge(liftab${_r} 3 222 "0;1;1;0")
+        _muss("[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750)" _dbg "liftab${_r}: Tuer slot 0 nicht erreicht")
+        _muss("loaded room${_r_aus}.rdt" _dbg "liftab${_r}: ROOM${_r_aus} nicht geladen")
+        _muss_regex("room=${_r} LIFT slot 4 sub 2 spieler=[(]6[0-9][0-9][0-9],-10800,13[0-9][0-9][0-9][)] band 6 mitte im Ausloeser nein -> GESPERRT" _item
+                    "liftab${_r}: keine Sperre suedlich der oberen Kabine")
+        _muss("room=${_r} MEMBER 0x12 Spieler: Kollisionsband 6 -> 3 (@0x80041228) y=-5400" _item
+              "liftab${_r}: Lift A sub02 (@0x01EA8) setzt das Band nicht auf 3")
+        message(STATUS "r37_itemband_lift liftab${_r} (${_fig}): suedlich der Kabine GESPERRT, Kabine FAEHRT (Band 6 -> 3), Tuer slot 0 -> ROOM${_r_aus}")
+    endif()
 endforeach()
 
 file(REMOVE "${_exe}")
