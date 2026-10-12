@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_j.js"
-BASIS = "419380dc"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_m.js"
+BASIS = "70030492"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -68,7 +68,8 @@ SPUREN = [
    "(falsch/teilweise/richtig).")),
  dict(id="F", thema="sperre1050", baum="r37_sperre1050",
   punkte=["bei Leon, bevor dem Ende wo er noch zu Irons muss habe ich eine Lücke gefunden - man kann über die Luke bis nach F1 und kann den \"Ich muss zuerst irons holen\" Blocker bei der Tür überspringen. Ich schlage vor - du machst den Text zusätzlich noch in ROOM 1050 bei der Tür, wo wir auch die Ada Cutscene triggern, wenn wir Ada noch nicht gerettet haben.",
-          "Ja, neuen Texte sind super. Bezug zu ada bei elza kann raus."],
+          "Ja, neuen Texte sind super. Bezug zu ada bei elza kann raus.",
+          "Nachtrag 8: Elza kann theoretisch ada begegnen in ihren durchlauf. Ich kenne zumindest keine Aussage der Entwickler die sagt, das sie sich nicht begegnen können. Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza nur eine Leiche von Ada findet, kennt sie ada nicht. Dann ist es halt nur - a woman."],
   hinweise=("Sperre heute: include/re15_tuer1060.h + engine/src/tuer1060*.c (ROOM1060 Slot 2 -> ROOM1040, Text 'I have to get the Chief first...', Bedingung "
    "(9,73)=0 UND ((9,71)=1 ODER (3,94)=0)). Ada-Tuer: include/re15_adaruf.h + engine/src/adaruf_1050.c (ROOM1050 Slot 4 -> ROOM10A0; vor der Ada-Rettung "
    "(3,0xBB)=0: Szene Ereignis 13 bzw. Sperrtext msg 25; danach Original-Tuer). Schritt 1: die Luecke des Nutzers REPRODUZIEREN (Leon im Endspiel-Zustand: "
@@ -138,6 +139,64 @@ SPUREN = [
    "ghidra_re2_Leon.txt, EM10-Griff/Biss, Teile-Flags +0x?? fuer abgerissene/baumelnde Arme) belegen, welche Teile RE2 waehrend des Bisses zeigt "
    "und wie der baumelnde Arm mitgeht; wo moeglich RE2 an DuckStation messen. Schritt 3: Fehlendes byte-true nachbauen. Riegel je Variante "
    "(Teile-Sichtbarkeit je Bild des Bisses), Runde-36-Riegel (Kleidung/Griff-Blut B, Schuss C) gruen halten.")),
+ dict(id="K", thema="roy", baum="r37_roy",
+  punkte=["Bei Elzas Szenario stimmt weder das Modell von Roy noch all seine Animationen. Außerdem wiederholen sich seine Animationen wieder ständig, wie wir schon ungefähr 500x vorher bei Leon gefixed haben....."],
+  hinweise=("Roy = NPC-Typ 0x47 (analysis/story_leon_elza/B_figuren.md §1.1: dasselbe Typ-Byte wie Elliot in Leons ROOM1170 sub15 @0x017D2): "
+   "ROOM1011 sub00 @0x009F6 Roy (-2000,0,7450) verwundet, Dialog sub02 msg 0-17 (Ihre Aufnahme main16.5 laeuft, wenn er bewusstlos wird), danach "
+   "sub00 @0x00A3E Roy bewusstlos (AOT Slot 5 -> sub06 Prison Key/Zettel); ROOM1021 main00 @0x01E0A Roy als Zombie (-4614,0,-16919), Plc_dest "
+   "@0x020B2 auf John zu, John schiesst (Runde 36 Spur L: zwei Schuesse + Todeslaut), Roy Clip 1/7 @0x020DE = Fallen. Runde 36 L-Abnahme: Roy "
+   "sackt in 1021 nicht sichtbar zusammen, in 1011 richtet er sich F1946..F1958 auf und bleibt aufrecht (NACHLAUF #21/#67) — derselbe Fehler. "
+   "MODELL: die Modelle liegen in shared_assets/PSX/EMD/CDEMD0.EMS und CDEMD1.EMS (vermutlich je Spieler-Familie — PRUEFEN, welches EMD/EMS das "
+   "Original fuer Typ 0x47 in Elzas Raeumen laedt (Lader in der EXE, Spieler-Familie PL04, Index), und was der Port laedt (emd/ems-Lader, "
+   "enemy_common.c / npc-Code)). ANIMATIONEN: Clip-Nummern der Skripte (Plc_motion/Plc_flg/Plc_dest in 1011/1021) gegen die Bank des richtigen "
+   "Modells; Dauerschleife = dieselbe Fehlerklasse wie frueher bei Leons NPCs — die Lehren nachlesen (Memory: reai-v2-platzhalter-als-verhalten "
+   "'Ada Clip 0 = Laufzyklus', reai-v2-npc-crossfade-decay, reai-v2-npc-global-yield, reai-v2-runde18-ada-eintritt; Dossiers analysis/befunde_runde18*, "
+   "Plc_motion-Ende/Halten des letzten Bilds). Am Original messen (DuckStation-Savestate mit Elza in 1011/1021 — stage_saves/ sauber, sonst per "
+   "Debug-Menue JUMP mit Elza; GDB wie Spur R), Framedumps Original gegen Port je Szenenabschnitt. Riegel: Modell-Kennung je Raum, Clip je "
+   "Szenenabschnitt, kein Clip laeuft ueber sein Ende hinaus in Schleife (wo das Original haelt), Elliot bei Leon (1170) unveraendert.")),
+
+ dict(id="L", thema="re2zombie", baum="r37_re2zombie", basis="e399ee3f",
+  punkte=["Ein weiteres Problem das ich immernoch habe - die Zombies sind immer noch zu passiv. Beispielsweise, am Ende von STAGE1 Leon, wenn wir die ganzen Zombies spawnen nach Irons tod - die Zombies bleiben einfach nur Stumpf alle im Gang stehen. So sind sie keine Bedrohung .... In Resident Evil 2 bewegen sie sich doch auch teilweise aktiv im Gang.",
+          "das soll nicht nur da gelten, das darf generell für die Zombies gelten",
+          "schaue einfach nach wie Resident Evil 2 das macht",
+          "Orchestrator-Auftrag L (AUFTRAG.md): die drei vorbestehenden Abweichungen der RE2-Zombie-KI vom RE2-Original schliessen — (a) die drei Produzenten des Arme-hoch-Gangs +0x4 = 0x201 (EXEC[2]) im Gang-Executor @0x80101D68-DBC (Timer), @0x80101EC4-F10 (Nahbereich), @0x80101F14-F60 (Spieler rennt) byte-true scharf schalten, NACHDEM der Nahkampf-Zusammenbruch (test_re2_zombie_abc Positiv-Kontrolle 3523 -> 0 mit (1)+(2)) aufgeklaert und an der Ursache behoben ist; (b) DECISION[0] Block 3 committet bei (rand & 1) == 1 wie @0x801013c8; (c) EXEC[0] P1: Selbstwecker im selben Takt, P2 erst im naechsten wie @0x80101540-a0 / @0x8010159c. Ergebnis an der exe: die Zombies heben wie in RE2 die Arme und kommen auf Leon zu, greifen und beissen wie in RE2; der Nahkampf wird nicht schlechter."],
+  hinweise=("BASIS: dein Baum steht auf e399ee3f = abgenommener Stand der Spur H (9c2a825d: RE1.5 grid 0x00 -> RE2-Deskriptor 6 'Gang ab Spawn', engine/src/zombieaktiv_r37.c) "
+   "+ AUFTRAG/VERTRAG vom master-Stand (Orchestrator-Auftrag L, VERTRAG Ausnahme fuer enemy_ai_re2_zombie.c). Lies in deinem Baum analysis/befunde_runde37/H_zombieaktiv.md (Abschnitt OFFEN, RE2-Messung) "
+   "und H_abnahme_0.md (H1, N1..N5). CODE: re15_port/engine/src/enemy_ai_re2_zombie.c — OFFEN-Block 'DIE DREI PRODUZENTEN VON +0x4 = 0x201' (~Z.1633-1695: Disassembly je Zeile "
+   "zitiert, Bisektion nur (1) -> 3756, nur (2) -> 3589, (1)+(2) -> 0; Verdacht dort: der Anmarschweg endet ausserhalb des +-0x400-Spielerkegels, weil EXEC[2] nur mit +-16 steuert "
+   "statt mit der Gang-Rate 8+16 — PRUEFEN, nicht uebernehmen), EXEC[2] @0x80102260 ('DER ZWEITE GANG (Arme oben)'; Nutzer-Report 2026-08-22: fetter Zombie 0x11 ROOM1140 laeuft "
+   "im Arme-hoch-Gang auf der Stelle), re2z_decide_stand (DECISION[0] Block 3), EXEC[0] P1 Wander-Wurf (sub_state_2, Wecker-Sperre). RE2-QUELLE: EMZ0.BIN (RE2-Zombie-Overlay; "
+   "info/re2leon/, RE2_Quellcode_Overlays/), ghidra_re2_Leon.txt — SELBST disassemblieren, jede Konstante mit @0x, richtige Binaerdatei. TEST: test_re2_zombie_abc (Positiv-Kontrolle "
+   "Nahkampf; Pistole ~1700) — zuerst klaeren, WAS er zaehlt. SCHRITT 1 MESSEN: den Zusammenbruch mit (1)+(2) reproduzieren und Bild fuer Bild die Ursache finden (Zustandswort +0x4, "
+   "Steuerwinkel, Abstand, Kegeltest, Griff-Einstieg; RE15_ENEMY_DBG); am RE2-Original gegenmessen wie Spur H (wie oft/wann wechselt ein RE2-Zombie in 0x201, wie steuert er, wann "
+   "greift er). SCHRITT 2: Ursache byte-true beheben, dann die drei Produzenten + (b) + (c) scharf. SCHRITT 3: Zensus der uebrigen OFFEN-Marken der RE2-Zombie-KI, die Bewegung/Angriff "
+   "betreffen (u.a. Kriecher-Test P1 ~Z.3120, Kriecher +0x5 > 2 ~Z.3603): je Marke Adresse + 'wirkt auf die Aktivitaet ja/nein'; was wirkt, mitschliessen oder mit Adresse begruenden. "
+   "STROM: re2z_rand ist EIN gemeinsamer Zufallsstrom — jede Aenderung verschiebt deterministische Riegel, auch fremder Spuren (r37_zombieaktiv der Spur H, unit_r36_zombieki_*, "
+   "integration_r36_gegnerzahl, test_re2_zombie_*, Biss-/Griff-Riegel); Strom vorher/nachher messen (Wuerfe je Takt), JEDEN verschobenen Riegel mit altem/neuem Wert + Begruendung im "
+   "Dossier auflisten und nur mit Beleg anpassen. Griff-/Biss-Code (Spur J bissarm arbeitet parallel daran) und re2z_init (Haken der Spur H) nur lesen. AN DER EXE (RE2-KI = Standard, "
+   "Leon UND Elza): Gang 1130 nach Irons' Tod, 1030/1040, 1010/1100 — Zombies kommen mit erhobenen Armen, greifen; an Zombies vorbeirennen (Produzent 3); Messer/Nahkampf geht. "
+   "RIEGEL ueber probes/r37_re2zombie.cmake: je Produzent ein Pin (Wechsel nach 0x201 unter seiner Bedingung, Gegenprobe ausserhalb), Nahkampf-Positiv-Kontrolle > 0 (gemessener Wert), "
+   "(b)/(c) gegen das Original-Muster (Takt-Folge).")),
+
+ dict(id="M", thema="kiste", baum="r37_kiste",
+  punkte=["In der Kiste müssen die Icons offenbar so weit wie möglich rechts liegen, damit sie nicht vom Text überdeckt werden.",
+          "Außerdem ist mir aufgefallen, das beim scrollen/bewegen in der Kiste währendessen die Items oberhalb des Kastens liegen. Das darf nicht sein, der Kasten muss layertechnisch über den Items liegen."],
+  hinweise=("KISTE = Item-Box-Bildschirm nach RE2 (Nutzer 2026-08-30/31: 'GENAUSO wie in Resident Evil 2'). CODE: re15_port/engine/src/re15_inv_screen.c Block "
+   "'7b. DIE BOX ALS LISTE' (~Z.1690-1800: LIST_X0 12, LIST_X1 204, NAME_X 16, ICON_X 158 'RE2: x 155', BAR_X 208, ROW0_Y 41+RE15_BOX_PANEL_DY, ROW_DY "
+   "RE15_BOX_ROW_PX, Gleiten ry += st->box_pixoff, Symbol box_cell_icon_sized RE15_BOX_ICON_W/H, Ziffern box_digits) und der Block danach 'DAS ORIGINALE "
+   "RE2-BOX-PANEL, 1:1'; Zeichner platform/pc/src/inv_render_pc.c. ⛔ REIHENFOLGE: die Op-Liste wird von HINTEN nach VORNE gerastert (ein frueher Eintrag liegt "
+   "OBEN; Memory reai-v2-zeichenreihenfolge-invers) — 'Rahmen ueber den Items' heisst: Rahmen-Ops vor die Zeilen-Ops ODER die Zeilen auf das Fenster "
+   "abschneiden — so, wie RE2 es macht (belegen). RE2-BELEGE: analysis/itembox_re2/re2-box-screen.md, re2-box-panel-geometrie.md, referenz/ (Bilder aus dem "
+   "laufenden RE2), Zeichenschleife FUN_800710dc (y-Start 0x7f, Schritt -0x14), Rahmen-Sprites @0x800a9c38 (x 7..218 / y 14..163), ghidra_re2_Leon.txt / "
+   "RE2_Quellcode_V2 — selbst disassemblieren, jede Konstante mit @0x. SCHRITT 1 MESSEN an der exe (Kiste ROOM1150 und weitere Kisten-Raeume, Leon UND Elza; "
+   "Framedumps RE15_WINDOW_SCALE=1): (a) Zensus ALLER Item-Namen (Pixelbreite im Port-Zeichensatz, emit_name_at) gegen ICON_X — welche Namen reichen in das "
+   "Symbol; (b) Scrollen Bild fuer Bild (box_pixoff, nach oben und unten, Halten der Taste) — wo liegen Zeilen ueber dem Rahmen bzw. ausserhalb des Panels. "
+   "SCHRITT 2 RE2: wie legt RE2 Symbol und Namen (Symbol-x, lange Namen, Mengen-Ziffern), und wie verdeckt bzw. schneidet RE2 die gleitenden Zeilen am Rahmen "
+   "(OT-Reihenfolge, DR_AREA/Clip, Maske)? Am RE2-Original messen (referenz/ oder DuckStation wie fruehere RE2-Messungen). SCHRITT 3 BAUEN: Symbol so weit "
+   "rechts wie moeglich (zwischen Namen und Scrollbalken, Mengen-Ziffern lesbar; Lage begruenden), gleitende Zeilen vom Rahmen verdeckt/abgeschnitten; "
+   "Auswahl-Band, Ziffern, Scrollbalken, Cursor, Inventar-Gitter rechts unveraendert. RIEGEL ueber probes/r37_kiste.cmake: Namen-Symbol-Ueberlappung = 0 "
+   "fuer ALLE Item-Ids, kein Zeilen-Pixel ueber dem Rahmen bzw. ausserhalb des Fensters in jedem Gleit-Bild, Rahmen-Pixel unveraendert; test_itembox_screen, "
+   "test_itembox_transfer, test_room1150_itembox gruen halten. Paket: keine neuen Assets erwartet.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
@@ -154,7 +213,8 @@ t = t.replace(" AUFTRAG.md traegt seit ${BASIS} einen Nachtrag 14:00 mit Story-E
 t = t.replace("description: 'Runde 37: 16 Bau-Spuren", "description: 'Runde 37: 5 Bau-Spuren")
 js = ["const SPUREN = ["]
 for s_ in SPUREN:
-    js.append("  { id: %s, thema: %s, baum: %s," % (json.dumps(s_["id"]), json.dumps(s_["thema"]), json.dumps(s_["baum"])))
+    js.append("  { id: %s, thema: %s, baum: %s,%s" % (json.dumps(s_["id"]), json.dumps(s_["thema"]), json.dumps(s_["baum"]),
+              (" basis: %s," % json.dumps(s_["basis"])) if s_.get("basis") else ""))
     js.append("    punkte: [")
     for p_ in s_["punkte"]:
         js.append("      %s," % json.dumps(p_, ensure_ascii=False))
@@ -162,6 +222,7 @@ for s_ in SPUREN:
     js.append("    hinweise: %s }," % json.dumps(s_["hinweise"], ensure_ascii=False))
 js.append("]")
 t = t.replace(PLATZ, chr(10).join(js))
+t = t.replace("Basis master ${BASIS}", "Basis ${BASIS}")
 io.open(DST, "w", encoding="utf-8", newline=chr(10)).write(t)
 print("geschrieben", len(t))
 vorlage = t[:t.index("const SPUREN = [")] + t[t.index("const REGELN"):]
