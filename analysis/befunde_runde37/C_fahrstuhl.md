@@ -410,3 +410,45 @@ RE15_AUDIO_CAP_SYNC=v_2030.raw RE15_EXIT_AT=520`: `[force-event] scd_event_fire(
   der Naht 1535 (Median-Sprung der Welle 1344, 95-%-Sprung 6541). Ergebnis: Stopp-Schlag T110 = Fahrt 90 + 20 wie RE2.
   Ungekuerzt liefe der Motor 3,6 s ueber die Ankunft hinaus. Zwischen KLICK und FAHRT hat RE1.5 kein Sleep (RE2 Sleep 10
   @0x02F9C) - die RE1.5-Zeitachse bleibt, beide Toene fallen ins selbe Bild.
+
+### N1-4 Messung nachher (eigener Bau, Messkopie `re15_pc_r37c_n1.exe`, Eingabe nur per RE15_INPUT_SCRIPT)
+⛔ Messfalle: an dieser Maschine haengt zeitweise ein (virtueller) "Xbox 360 Controller" (debug.log `[pad] Controller:
+"Xbox 360 Controller"`, an/abgezogen); ein Lauf mit RE15_PAD_AT lief dadurch bei Bild 120..210 von der Plattform
+(x -10032 -> -6818). RE15_INPUT_SCRIPT ersetzt die Tasten-Bits ganz (input_pc.c "SCRIPTED-INPUT OVERRIDE") -> alle
+Messlaeufe und integration_r37_fahrstuhl_n1 nur damit.
+
+**(a)** Story-Weg (`RE15_SET_FLAG=4:215,4:236,3:180 RE15_DEBUG_JUMP=3070@120 RE15_PLAYER_POS=-19550,-4460,0,0` = auf Platz 3,
+Szene sub03 startet ohne Taste):
+```
+[room] PC loaded room3070.rdt (243040 bytes)
+[aot] DOOR FIRE slot=0 rect=(-26800,-11960,hw=600,hh=1700) target_cut=0 spawn=(-25540,0,-22440)
+[aot] Tuer S195 in einer Zwischensequenz gefeuert -> RE1.5-Uebergang ohne Sequenz        (Runde-31-Sperre, unveraendert)
+[room] PC loaded room3080.rdt (240472 bytes)
+[aot] DOOR FIRE slot=0 rect=(0,0,hw=0,hh=0) target_cut=1 spawn=(-7600,0,-6760)
+[tuer] Sequenz Archiv 2 DOOR2D Port-Archiv P2DS Variante 5 Bit7 0 Tuer 45 Seite S000 T112 Spender FF (10 Skripte)
+[tuer] Bild 20 Se_on Tonkopf-Eintrag 0
+[tuer] Bild 175 Se_on Tonkopf-Eintrag 1
+[tuer] Sequenz fertig: 451 Bilder + 1 Warten, 2 Se_on, Schliesston 0, Ton geladen, Notizen 0x0
+[room] PC loaded room4000.rdt (288632 bytes)
+```
+Sprung direkt in die Kabine (`RE15_DEBUG_JUMP=3080@120`, erste Fahrt) und weitere Fahrt (`RE15_SET_FLAG=4:96`, sub09):
+dieselben `[tuer]`-Zeilen. Elza (`RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_GOTO_ROOM=3081`, `Elza-Bit=1`):
+`Port-Archiv P2DS Variante 5 ... Seite S000 T112`, 2 Se_on -> `room4001.rdt`.
+Bildfolge `C_belege/n1_3080_ausstieg_p2ds_v5.jpg`: ROOM3080 (Leon auf der Gitter-Plattform) -> Abdunkeln -> Plattform mit
+Gelaender, das rote Schacht-Fachwerk zieht von oben nach unten vorbei (Bild 90/180 ueber Kopf, 225/315/405 in
+Gelaenderhoehe) -> Abblende -> ROOM4000 Cut 1 "Level-1". P2DS vorher/nachher gegen RE2 (`C_belege/n1_p2ds_re2_alt_neu.jpg`):
+RE2 DOOR2D V5 und P2DS neu zeigen dasselbe Fachwerk an denselben Bildern, P2DS alt in allen 451 Bildern nur die Plattform;
+einziger Unterschied neu/RE2 = keine Bedientafel. Unit-Mechanik: P2DS V5 451 Bilder, Fachwerk-y faellt in 286 Bildern /
+steigt in 0; V4 301 Bilder, steigt in 148 / faellt in 0.
+
+**(b)** Echter Weg in der exe (Sprung ROOM2030, Generator (3,126), Spieler 620 vor der Plattform-Mitte mit Blick auf sie,
+Aktionstaste per Eingabeskript bei Bild 200; Ton = Differenz zweier RE15_AUDIO_CAP_SYNC-Aufnahmen mit/ohne Taste, sonst
+bitgleich):
+```
+Lift A: [lift2030] Anker @0x01E30 -> Satz 0 (Takt 197)   [lift2030] Anker @0x01E54 -> Satz 2 (Takt 197)   [scd F291] Cut_chg(10)
+Lift B: [lift2030] Anker @0x01F0A -> Satz 0 (Takt 197)   [lift2030] Anker @0x01F2E -> Satz 1 (Takt 197)
+[se] Stimme: se=0 ... pitch=0x400 (11025 Hz) / se=2 ... pitch=0x2c4 (7622 Hz)        (RE15_SE_DEBUG)
+```
+Differenz-Huellkurve (`C_belege/n1_lift2030_ton.png`, je Spieltakt ab dem Tastendruck): Klick + Anlauf-Schlag Takt 0..8
+(Spitze 2479 bei +6), gleichmaessige Fahrt ~700..1400, Stopp-Schlag Lift A ab +109/+110 (= Fahrt 90 + 20), Ende +146
+(Welle 37156 Abtastwerte / 254,09); Lift B ab +199/+200 (= 180 + 20), Ende +236. Vorher (N1-1): keine Differenz, kein `[se]`.
