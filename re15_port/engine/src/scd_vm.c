@@ -63,6 +63,7 @@
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Parkplatz-Tuer 11B0 + Roy 1011 (schluessel_r36.c) */
 #include "re15_codepanel_r37.h" /* Runde 37 Spur E: Code-Panel-Kamera/Lampen (codepanel_r37.c) */
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
+#include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
 
 scd_vm_t g_scd;
 
@@ -3918,6 +3919,7 @@ static int op_sce_em_set(scd_thread_t *t)
          * die Birkin-Wurzel; Belege und Umfang in enemy_ai_common.c re15_enemy_spawn_root. */
         { extern void re15_enemy_spawn_root(int slot);
           re15_enemy_spawn_root(actor_slot); }
+        re15_r37_em_set(actor_slot, a, behavior);   /* Runde 37 Spur H: aktive RE1.5-Form merken (re15_zombieaktiv_r37.h) */
     }
     t->pc += 20;                   /* byte-true: `addiu v1,v1,20` @0x8004262c
                                     * (Handler 0x800420A0). RE2 hat hier 22 —

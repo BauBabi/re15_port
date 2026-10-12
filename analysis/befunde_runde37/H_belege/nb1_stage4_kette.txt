@@ -1,0 +1,184 @@
+# Runde 37 Spur H Nachbesserung 1 (M1): welche Binaerdatei ROOM4050 laedt und wo dort DECIDE[0] liegt
+# Werkzeug .claude/skills/re15-psx-disasm/scripts/re15_disasm.py (Overlay roh @0x80100000), eigene Helfer im Sitzungsordner
+
+## 1. Dateigroessen
+137648 info/Re1.5/PSX/BIN/STAGE1.BIN
+108064 info/Re1.5/PSX/BIN/STAGE4.BIN
+221128 re15_port/shared_assets/PSX/STAGE4/ROOM4050.RDT
+
+## 2. EXE Dateitabelle @0x8006F43C (8 Byte je Eintrag, Groesse zuerst): Eintraege 0..7
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX.EXE  read 8 x u32 @0x8006f43c stride 8
+  0x8006f43c: [137648, 103216, 129036, 108064, 133280, 10324, 11832, 262144]
+
+## 3. Raumlader: RDT-Datei-Index = (aca3c>>31) + u16[*(0x8007438c + Stage*4) + Raum*2]
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX.EXE  @0x800397a4 (19 instr)
+  800397a4: lui v0,0x800b                      
+  800397a8: lh v0,4064(v0)                     0x800b0fe0
+  800397ac: lui v1,0x800b                      
+  800397b0: lh v1,4066(v1)                     0x800b0fe2
+  800397b4: lui a0,0x800b                      
+  800397b8: lw a0,-13764(a0)                   0x800aca3c
+  800397bc: lui a1,0x800b                      
+  800397c0: lw a1,-14472(a1)                   0x800ac778
+  800397c4: sll v0,v0,2                        
+  800397c8: lui at,0x8007                      
+  800397cc: addiu at,at,17292                  0x8007438c
+  800397d0: addu at,at,v0                      
+  800397d4: lw v0,0(at)                        0x80070000
+  800397d8: sll v1,v1,1                        
+  800397dc: addu v1,v1,v0                      
+  800397e0: lhu v0,0(v1)                       0x800b0000
+  800397e4: srl a0,a0,31                       
+  800397e8: jal 0x80013b60                     
+  800397ec: addu a0,a0,v0                      
+Stage-Byte 3 Raum 0x05 Figur-Bit 0: Zeiger 0x8007432c -> Datei-Index 912, Groesse 221128 (0x35fc8)
+Stage-Byte 3 Raum 0x05 Figur-Bit 1: Zeiger 0x8007432c -> Datei-Index 913, Groesse 221128 (0x35fc8)
+
+## 4. Overlay-Wechsel (Raumlader @0x8001d960-80: nur bei Stage-Wechsel) und Ladesatz-Tabelle @0x80073bdc (Datei, Installation, Zielzeiger)
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX.EXE  @0x80039a30 (16 instr)
+  80039a30: addiu sp,sp,-24                    
+  80039a34: lui a1,0x800b                      
+  80039a38: lh a1,4064(a1)                     0x800b0fe0
+  80039a3c: ori a0,zero,0x2                    
+  80039a40: sw ra,16(sp)                       
+  80039a44: jal 0x800299a4                     
+  80039a48: addiu a1,a1,1                      0x800b0001
+  80039a4c: lui v1,0x8010                      
+  80039a50: addu v1,v0,v1                      
+  80039a54: lui at,0x800b                      
+  80039a58: sw v1,-14464(at)                   0x800ac780
+  80039a5c: lui at,0x800c                      
+  80039a60: sw v0,-16724(at)                   0x800bbeac
+  80039a64: lw ra,16(sp)                       
+  80039a68: addiu sp,sp,24                     
+  80039a6c: jr ra                              
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX.EXE  @0x800299a4 (18 instr)
+  800299a4: addiu sp,sp,-32                    
+  800299a8: sw s1,20(sp)                       
+  800299ac: addu s1,a0,zero                    
+  800299b0: sw s0,16(sp)                       
+  800299b4: sll s0,a1,1                        
+  800299b8: addu s0,s0,a1                      
+  800299bc: sll s0,s0,2                        
+  800299c0: sw ra,24(sp)                       
+  800299c4: lui at,0x8007                      
+  800299c8: addiu at,at,15332                  0x80073be4
+  800299cc: addu at,at,s0                      
+  800299d0: lw v0,0(at)                        0x80070000
+  800299d4: lui at,0x8007                      
+  800299d8: addiu at,at,15324                  0x80073bdc
+  800299dc: addu at,at,s0                      
+  800299e0: lw a0,0(at)                        0x80070000
+  800299e4: lw a1,0(v0)                        
+  800299e8: jal 0x80013b60                     
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX.EXE  read 3 x u32 @0x80073bdc stride 4  rows 7 step 0xc
+  0x80073bdc: [ 0] [6, 2148540284, 2147554144]
+  0x80073be8: [ 1] [0, 2148657252, 2147554148]
+  0x80073bf4: [ 2] [1, 2148626156, 2147554152]
+  0x80073c00: [ 3] [2, 2148650688, 2147554152]
+  0x80073c0c: [ 4] [3, 2148631424, 2147554160]
+  0x80073c18: [ 5] [4, 2148654304, 2147554164]
+  0x80073c24: [ 6] [5, 2148539820, 2147554168]
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX.EXE  read 7 x u32 @0x80011360 stride 4
+  0x80011360: [2148532224, 2148532224, 2148532224, 2148532224, 2148532224, 2148532224, 2148532224]
+
+## 5. STAGE4.BIN Installation 0x80118380: Typ 0x10.. -> 0x801003d8, Typ 0x13 -> 0x8010a87c
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x80118380 (10 instr)
+  80118380: addiu sp,sp,-24                    
+  80118384: lui v0,0x8010                      
+  80118388: addiu v0,v0,984                    0x801003d8
+  8011838c: lui v1,0x8011                      
+  80118390: addiu v1,v1,-22404                 0x8010a87c
+  80118394: lui at,0x8007                      
+  80118398: sw v0,11244(at)                    0x80072bec
+  8011839c: lui at,0x8007                      
+  801183a0: sw v0,11248(at)                    0x80072bf0
+  801183a4: lui at,0x8007                      
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x80118474 (2 instr)
+  80118474: lui at,0x8007                      
+  80118478: sw v1,11256(at)                    0x80072bf8
+
+## 6. STAGE4.BIN Zombie-Girl: Zustandstabelle @0x80119730, Modus-Dispatch, Modus 0, DECIDE-Tabelle
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x8010a9c0 (9 instr)
+  8010a9c0: lbu v0,4(v0)                       
+  8010a9c8: sll v0,v0,2                        
+  8010a9cc: lui at,0x8012                      
+  8010a9d0: addiu at,at,-26832                 0x80119730
+  8010a9d4: addu at,at,v0                      
+  8010a9d8: lw v0,0(at)                        0x80120000
+  8010a9e0: jalr v0                            
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  pointer table @0x80119730
+  [ 0] 0x80119730 -> 0x8010aae0  overlay
+  [ 1] 0x80119734 -> 0x8010b228  overlay
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x8010b640 (12 instr)
+  8010b640: lw v0,-14460(v0)                   
+  8010b648: lbu v0,9(v0)                       
+  8010b650: andi v0,v0,0xf                     
+  8010b654: sll v0,v0,2                        
+  8010b658: lui at,0x8012                      
+  8010b65c: addiu at,at,-26792                 0x80119758
+  8010b660: addu at,at,v0                      
+  8010b664: lw v0,0(at)                        0x80120000
+  8010b66c: jalr v0                            
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  pointer table @0x80119758
+  [ 0] 0x80119758 -> 0x8010b688  overlay
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x8010b6c0 (12 instr)
+  8010b6c0: lui v0,0x800b                      
+  8010b6c4: lw v0,-14460(v0)                   g_entity(cur)
+  8010b6cc: lbu v0,5(v0)                       0x800b0005
+  8010b6d4: sll v0,v0,2                        
+  8010b6d8: lui at,0x8012                      
+  8010b6dc: addiu at,at,-26740                 0x8011978c
+  8010b6e0: addu at,at,v0                      
+  8010b6e4: lw v0,0(at)                        0x80120000
+  8010b6ec: jalr v0                            
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  pointer table @0x8011978c
+  [ 0] 0x8011978c -> 0x80101b18  overlay
+
+## 7. STAGE4.BIN Zombies: Modus-Dispatch @0x80101600-24, Modus 0 = 0x80101640 -> DECIDE @0x80118d68
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x80101600 (10 instr)
+  80101600: lbu v0,9(v0)                       
+  80101608: andi v0,v0,0xf                     
+  8010160c: sll v0,v0,2                        
+  80101610: lui at,0x8012                      
+  80101614: addiu at,at,-29388                 0x80118d34
+  80101618: addu at,at,v0                      
+  8010161c: lw v0,0(at)                        0x80120000
+  80101624: jalr v0                            
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  pointer table @0x80118d34
+  [ 0] 0x80118d34 -> 0x80101640  overlay
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x80101650 (9 instr)
+  80101650: lbu v0,5(v0)                       
+  80101658: sll v0,v0,2                        
+  8010165c: lui at,0x8012                      
+  80101660: addiu at,at,-29336                 0x80118d68
+  80101664: addu at,at,v0                      
+  80101668: lw v0,0(at)                        0x80120000
+  80101670: jalr v0                            
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  pointer table @0x80118d68
+  [ 0] 0x80118d68 -> 0x80101b18  overlay
+
+## 8. Vergleich STAGE1 FUN_80101b64 <-> STAGE4 0x80101b18 (bis jr ra + Delay-Slot)
+A STAGE1.BIN @0x80101b64  B STAGE4.BIN @0x80101b18  70 Worte: identisch 70, jal-Overlay-Versatz 0, Rest 0
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE1.BIN  @0x80101c74 (3 instr)
+  80101c74: jr ra                              
+  80101c78: nop                                
+  80101c7c: addiu sp,sp,-24                    
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE4.BIN  @0x80101c28 (3 instr)
+  80101c28: jr ra                              
+  80101c2c: nop                                
+  80101c30: addiu sp,sp,-24                    
+
+## 9. Herkunft des alten Zitats: STAGE1.BIN traegt eine Kopie des Girl-Codes (0x80072bac[0x13] = 0x8010a8c8 @0x8011e870-7c)
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE1.BIN  @0x8011e870 (4 instr)
+  8011e870: lui v1,0x8011                      
+  8011e874: addiu v1,v1,-22328                 0x8010a8c8
+  8011e878: lui at,0x8007                      
+  8011e87c: sw v1,11256(at)                    0x80072bf8
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE1.BIN  pointer table @0x80120230
+  [ 0] 0x80120230 -> 0x8010b6d4  overlay
+; C:\workspace\git\reAi_v2\.claude\worktrees\r37_zombieaktiv\info\Re1.5\PSX\BIN\STAGE1.BIN  pointer table @0x80120264
+  [ 0] 0x80120264 -> 0x80101b64  overlay
+A STAGE1.BIN @0x8010b6d4  B STAGE4.BIN @0x8010b688  44 Worte: identisch 42, jal-Overlay-Versatz 0, Rest 2
+  Wort  21 (A 0x8010b728 / B 0x8010b6dc): 0x24210264 vs 0x2421978c  ABWEICHUNG
+  Wort  34 (A 0x8010b75c / B 0x8010b710): 0x242102a8 vs 0x242197d0  ABWEICHUNG

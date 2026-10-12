@@ -9,6 +9,7 @@
  * (ROOM1240 sub02/03 Slot 0, ROOM1080 sub07..10).
  */
 #include "re15_irons_tod.h"
+#include "re15_zombieaktiv_r37.h"   /* Runde 37 Spur H: Gegenprobe-Schalter der Sonden */
 
 #include "re15_actor.h"
 #include "re15_aot.h"
@@ -185,7 +186,24 @@ static const uint8_t k_p_1130[] = {
     OP_AOT_ON,
     OP_END,
 };
-static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres Betreten */
+/* Runde 37 Spur H (NUTZER-VORGABE "die Zombies bleiben einfach nur Stumpf alle im Gang stehen ... In Resident Evil 2
+ * bewegen sie sich doch auch teilweise aktiv im Gang"): beim SPAETEREN Betreten stehen die aus dem Besprechungsraum
+ * ausgebrochenen Zombies nicht mehr als Schlaefer (grid 0x02, DECIDE FUN_80101c7c: ENGAGE nur bei dist < 0xFA0) im Gang,
+ * sondern in der RE1.5-Form der Zombies, die durch eine geoeffnete Tuer/ein Tor kommen: grid 0x0d = ENGAGE ab INIT
+ * (STAGE1.BIN `ori v0,zero,0x201` / `sw v0,4(v1)` @0x80100f40-44; Form der Raum-Records ROOM1040 main00 @0x011FC..
+ * und ROOM1030 main00 @0x01DE6.., die durchs Rolltor/Tor kommen) = unter der RE2-KI Deskriptor 6 = Gang ab Spawn
+ * (re2z_init sel 0x0d -> 0x0101, RE2 @0x80100ab8-abc; im RE2-Original gemessen, re15_zombieaktiv_r37.h). Typen, Tot-Bits,
+ * Lagen und Blick unveraendert. Der MONTAGE-Schritt selbst (k_p_1130, Spieler unsichtbar geparkt) behaelt die Stehform.
+ * Die Liste gilt fuer JEDE KI-Wahl: unter der RE1.5-KI ist grid 0x0d der RE1.5-Angriff ab INIT (gemessen in
+ * re15_zombieaktiv_r37.h, Nachbesserung 1). */
+#define EM_1130_NACH \
+    OP_EM(0, 0x16, 0x0d, 0x00, 40, -1400, -14200, 3072), \
+    OP_EM(1, 0x10, 0x0d, 0x01, 41,  -900, -12900, 3072), \
+    OP_EM(2, 0x10, 0x0d, 0x01, 42, -2000, -12000, 3072), \
+    OP_EM(3, 0x11, 0x0d, 0x01, 43, -1300, -10800, 3072), \
+    OP_EM(4, 0x11, 0x0d, 0x01, 46,  -700, -11600, 3072)
+static const uint8_t k_p_1130_nach[] = { EM_1130_NACH, OP_END };   /* spaeteres Betreten (Runde 37 Spur H) */
+static const uint8_t k_p_1130_nach_v0824[] = { EM_1130_LISTE, OP_END };   /* Gegenprobe Stand v0.8.24 (nur Sonden) */
 
 /* PROGRAMM 2 — ROOM1040 Cut 1: Knall wie ROOM1030, Rolltor hoch (nur wenn (4,5)=0), die Zombies
  * (Raum-Records, Limit 5 @0x011F0) kommen durchs Tor zur Kamera. Tor-Fahrt = sub08 @0x019B2..@0x01A26
@@ -963,7 +981,8 @@ static int programm_bauen(uint16_t room_id)
         return 1;
     case RE15_IT_AUS:
         if (room_id == RE15_IT_RAUM_1130 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)) {
-            prog_anhaengen(k_p_1130_nach, (int)sizeof k_p_1130_nach);
+            if (re15_r37_zombieaktiv_enabled()) prog_anhaengen(k_p_1130_nach, (int)sizeof k_p_1130_nach);   /* Runde 37 Spur H */
+            else prog_anhaengen(k_p_1130_nach_v0824, (int)sizeof k_p_1130_nach_v0824);
             return 1;
         }
         if (room_id == RE15_IT_RAUM_1040 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)) {
