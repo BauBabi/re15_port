@@ -9,6 +9,11 @@ Baum `.claude/worktrees/r37_sperre1050`, Zweig `r37/sperre1050`, Basis master f1
   Text zusätzlich noch in ROOM 1050 bei der Tür, wo wir auch die Ada Cutscene triggern, wenn wir Ada noch nicht gerettet
   haben."
 - **#5** "Ja, neuen Texte sind super. Bezug zu ada bei elza kann raus."
+- **Nachtrag 8 (zu #5)** "Elza kann theoretisch ada begegnen in ihren durchlauf. Ich kenne zumindest keine Aussage der
+  Entwickler die sagt, das sie sich nicht begegnen können. Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza
+  nur eine Leiche von Ada findet, kennt sie ada nicht. Dann ist es halt nur - a woman."
+- **Bestaetigung der Lesart** (master AUFTRAG.md): "ja, perfekt." — Sperre ROOM1050 nur in der Endphase (nach der
+  10F0-Szene, bevor Irons geholt ist), vor Adas Rettung bleibt die Ada-Szene, Fruehspiel ungesperrt.
 
 ## Stand (fortlaufend)
 
