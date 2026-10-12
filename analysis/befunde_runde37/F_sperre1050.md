@@ -257,6 +257,23 @@ Regel (Nachtrag 8): nur dort aendern, wo Elza Ada am AUSSEHEN erkennen muesste; 
 * ROOM30C1 msg 5 "Elza: Ada?" — Elza fragt nach, wer das ist (Antwort msg 6 "Someone we rescued from the RPD.") —
   kein Erkennen am Aussehen. Bleibt.
 * Sonst keine Fundstelle; "It's Ada" nirgends mehr. Port-Texte ausserhalb der RDT-Bloecke (grep `Ada` in engine/src,
-  gen/*.inc, Dokument-Werkzeuge): nur Leon-Szenen (cut_10f0.c, irons_tod_1150.c, adaruf_1050.c,
-  tools/r36_j/szene11b0_bauen.py, story 30C1 msg 4 / 50B0 msg 1) — kein Elza-Raum. Elzas Untersuchungstext 50B1 hat
-  keine Stimme.
+  gen/*.inc, Dokument-Werkzeuge): Leon-Szenen (cut_10f0.c, irons_tod_1150.c, adaruf_1050.c,
+  tools/r36_j/szene11b0_bauen.py, story_r36_texte.inc 50B0 msg 1) und 30C1 msg 4 (oben) — sonst kein Elza-Raum.
+  Elzas Untersuchungstext 50B1 hat keine Stimme.
+
+---
+
+## Tests
+
+Neu (nur `re15_port/tests/unit/probes/r37_sperre1050.cmake`, keine CMakeLists.txt angefasst):
+
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r37_sperre1050_bedingung | 16 Stellungen (3,0xBB)/(9,71)/(3,94)/(9,73): gesperrt genau bei 1/1/x/0 (2 von 16); dort ist auch die 1060-Sperre zu | gruen |
+| unit_r37_sperre1050_raum | ROOM1050 echter Aufbau (main00 + alle Installer): Fruehspiel -> Ada-Szene (Ereignis 13) bzw. Ada-Sperrtext (msg 25); Mittelspiel (auch ohne (3,94) = Stellung unit_r34n_d_adaruf_frei) -> Tuer -> 10A0; Endspiel -> Text-Platz msg 26 (Rechteck (17200,-13700) halb (500,1000), Band 0, Maske 0xffff, flags 0x31, Bytes = 1060-Sperre, keine Ja/Nein-Frage, Slots 0/1/2/3/5 bleiben Tueren, RDT-msg 2 unveraendert); nach Irons -> Tuer; ROOM1051 (Elza, Endspiel-Bits) -> Tuer | gruen |
+| unit_r37_sperre1050_druck | Aktionstaste vor Slot 4 (16580,-13700) Blick +X: Endspiel -> msg 26, Freeze 0xffff0000, kein Raumwechsel, keine Tuersequenz, weitere Quadrate schliessen, Steuerung frei, zweiter Druck ebenso; Mittelspiel -> Tuersequenz + ROOM10A0; nach Irons -> ROOM10A0 | gruen |
+| unit_r37_sperre1050_luke | Original-Daten der Luecke: Gitter ROOM10F0 @0x00F52, Absprung-Zelle ROOM1090 @0x01E3C (Typwort am Sondenpunkt (-9900,4158) Band 5 = 0x530E), Hof-Tuer @0x0211A | gruen |
+| unit_r37_sperre1050_elza50b1 | ROOM50B1 msg 0: Original @0x0055A, nach dem Laden neuer Text, Form (Kopf/1 Seitenwechsel/1 Umbruch auf Seite 2/Schwanz) und Dauer 120 = Original; Leon 50B0 msg 18 unveraendert; Sweep 103 Elza-RDTs: "Ada" nur 30C1 msg 4/5, "It's Ada" nirgends | gruen |
+| integration_r37_sperre1050 | echte exe, 5 Laeufe (A Luke Ende-zu-Ende, E Endspiel direkt, B Mittelspiel, C nach Irons, D Elza 50B1), `test_r37_sperre1050.cmake` | gruen (219 s) |
+
+Angepasst: `tests/unit/test_r36_story.c` teil_texte (Untersuchungsform, 12 Overrides) — unit_r36_story_texte gruen.
