@@ -13,6 +13,7 @@
 #include "re15_emd.h"
 #include "re15_md1.h"
 #include "re15_skeleton.h"   /* re15_skel_compute_pose + g_anim_pose_actor (Wurzelhoehen-Messung) */
+#include "re15_bissarm_r37.h"   /* Runde 37 Spur J */
 
 #include "gen/re2_ems_toc.inc"   /* s_re2_cdemd0_toc[600] + s_re2_enemse_toc[292] */
 
@@ -387,6 +388,7 @@ int re2_hybrid_apply(re15_enemy_bank_t *eb, int kind,
     re2_skel_own.root_y_fix = NULL;  re2_skel_own.root_y_fix_count = 0;
 
     int um = 0;
+    if (!eb->remap_ok) re15_bissarm_r37_re2_bind_merken(kind, &eb->skel);   /* Runde 37 Spur J: RE2-Bind vor dem Umbau (re15_bissarm_r37.h) */
     um += re2_hybrid_rig_skel(&eb->skel,        perm, n, skel15);
     if (eb->loco_ok)   um += re2_hybrid_rig_skel(&eb->skel_loco,   perm, n, skel15);
     if (eb->own_ok)    um += re2_hybrid_rig_skel(&eb->skel_own,    perm, n, skel15);
