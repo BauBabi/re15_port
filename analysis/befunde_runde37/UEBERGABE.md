@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-12 14:45: D itemband Bau FERTIG: Band-Gate fuer JEDEN AOT-Satz (FUN_80042bac @0x80042cac-ccc) + Member 0x12 setzt das Kollisionsband (@0x80041228) — itemband_r37.c + Haken aot_common.c/actor_common.c; am Original gemessen (3010, 2030 SPAS-12/Schrot/Treppe/Lift, 3050); 12 Items, 22 Member-0x12-Schreiber (17 am Spieler: Lifte 3050, 2030 A/B, 50D0, 1170 sub14). Exe: falsches Band gesperrt, vorgesehener Weg frei (3050: Fall -> Lift Band 4->0 -> Kerbe -> Klettern -> Super Redhawk). Nebenbefund ROOM50D0-Lift. Abnahme D laeuft.
 * 2026-10-12 14:35: C Abnahme 0: #6 Fahrstuhltuer und #7 Ausstieg ERFUELLT; Nachtrag 5a (Ausstieg ROOM3080 -> 4000) und 5b (RE2-Ton der kleineren Stage-2-Aufzuege) als Maengel -> die Nachbesserung C#1 im Hauptlauf baut beides (der geplante Rest-Lauf C entfaellt). Bestehendes (P27F/P27C, fahrstuhl_r37.c, Haken, Riegel) bleibt.
 * 2026-10-12 14:20: E codepanel Bau FERTIG: "Korridor 2" = ROOM10D0/10D1 "2F CORRIDOR" (rote + blaue runde Lampen); 1230/1231 und 11E0/11E1 = SECUGUARD rot/gelb/gruen. Rot leuchtet solange zu, bei richtigem Code blau (10D0) bzw. gruen (SECUGUARD) wie RE2 ROOM4070 (@0x008C6/@0x0088C, Wechsel @0x00DC2-0DD4) und ROOM2130; Kunst = RE2 ESP 0x16 = LAMPE2130.TIM (kein neues Asset). Kamera: Cut_old/Cut_auto erst nach Piep +0 / Aufschliessen +15 (RE2 ROOM2110 @0x01B9C). Hinweis: 11E0/11E1 im Spiel nie offen ((3,139) via ROOM1240 @0x0055A). Abnahme E laeuft.
 * 2026-10-12 14:15: Nachtrag 6 (beim Zombie-Biss fehlt teilweise der dranhaengende Arm) -> Spur J bissarm: Baum `.claude/worktrees/r37_bissarm` (Basis 419380dc), EIGENER Workflow `wf_88717cb9-5e3` mit `orchestrator/r37_j.js`. Jetzt vier Workflows (Haupt A-G, H, I, J); Monitor-Skript im Sitzungs-Scratchpad r37_monitor.sh (RUNS-Liste).
@@ -28,7 +29,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 |---|---|---|---|
 | A pri1100 (Bau fertig, Abnahme laeuft) | r37_pri1100 | ROOM1100 Zombie an der F9-Marke falsch verdeckt (Marken im HAUPTBAUM `re15_port/build/platform/pc/befund_1100_F892_marke1.bmp`, `befund_1100_F240_marke1.bmp`, befund.log MARKE-Block) | gestartet |
 | C fahrstuhl (Bau fertig, Abnahme laeuft) | r37_fahrstuhl | Fahrstuhl-Tuer der Tuersequenz korrekt (passende RE2-Tuer oder eigener Bau) + Sequenz beim Aussteigen | gestartet |
-| D itemband | r37_itemband | Items nur vom richtigen Band (AOT-Band-Gate @0x80042cac-ccc + Member 0x12 @0x80041228), alle Items erreichbar | gestartet |
+| D itemband (Bau fertig, Abnahme laeuft) | r37_itemband | Items nur vom richtigen Band (AOT-Band-Gate @0x80042cac-ccc + Member 0x12 @0x80041228), alle Items erreichbar | gestartet |
 | E codepanel (Bau fertig, Abnahme laeuft) | r37_codepanel | Code-Panels: blau solange falsch, gruen wenn richtig; Kamera bleibt bei Piep + Aufschliessen | gestartet |
 | F sperre1050 | r37_sperre1050 | "Chief first"-Sperre auch an ROOM1050 -> 10A0 (Endspiel), ROOM50B1 Elza-Text ohne Ada | gestartet |
 | G beretta | r37_beretta | Beretta M93R: jeder Schuss des Feuerstosses trifft (Glock 18 pruefen) | gestartet |
