@@ -15,6 +15,12 @@ Punkte:
 3. Leon ROOM1090: derselbe leere Loescher liegt erst NACH dem Loeschen, danach dauerhaft.
 4. Leons Loescher aus dem Spind ROOM1000 an einen anderen Ort verlegen (sichtbar, mit dem neuen Modell).
 
+Nachtraege waehrend der Arbeit (vom Koordinator in AUFTRAG.md dieses Baums committet, 11cadf09 / 99dbe19e):
+* 4b "ah, it can only lay there - if leon when he is asked to discard it select "yes"." -> der leere Loescher liegt
+  in ROOM1090 NUR nach JA an der Wegwerf-Abfrage (so schon gebaut, Abschnitt 3.4).
+* 4c "If he doesn't he has the text empty fire extinguisher in the player inventory." -> nach NEIN heisst der behaltene
+  Loescher "Empty Fire Extinguisher" (Abschnitt 3.5).
+
 Hinweis zur Zuteilung: Der Auftrag, der diesen Workflow angestossen hat, ist Nachtrag 3b ("Es muss schon in der
 richtigen Farbe leuchten das Panel ...") — der gehoert laut AUFTRAG.md/VERTRAG.md zur Spur E codepanel und wurde dem
 Bau-Agenten E uebermittelt. Spur I fasst die Code-Panels NICHT an.
@@ -113,7 +119,22 @@ FUN_80042bac `ori v0,zero,0x26c` @0x80042bd0 = 620 Einheiten vor dem Spieler; je
 Slot (aot_common.c, `j 0x80043028` @0x80042f94). Daraus: Aufhebe-Rechteck muss den 620-Punkt vor der Kollisionskante
 enthalten (Abschnitt 3.2), Untersuchen-Platz in ROOM1091 braucht einen Slot < 5 (Schuppen-Text, Abschnitt 3.4).
 
-### 2.7 Nachtrag 3b (der Auftrag, der diesen Lauf ausgeloest hat)
+### 2.7 Wegwerf-Abfrage, Namen und Beschreibungen (fuer 4b/4c)
+* Abfrage: Port-Konstruktion der Runde 25 in RE2-Form (include/re15_item_discard.h): Zeile `{ 0x1090, 9, 0x31, 0, 0 }`
+  in gen/discard_sites.inc = nach ROOM1090 msg 9 "You've used the Fire Extinguisher." (sub03 @0x02502); JA leert den
+  Platz (RE2 `sb zero,id` @0x80051774 / `jal FUN_80069714` @0x80051798 -> re15_inv_remove_slot), NEIN laesst ihn mit
+  Anzahl 1 (@0x800517C4). Kein RE1.5-Opcode entfernt Gegenstaende (Dispatch 0x00..0x5E, kein Sce_item_lost) — ohne
+  Abfrage bliebe der Loescher fuer immer im Inventar. Das Ergebnis (Gegenstand da/weg) speichert der Spielstand ohnehin
+  mit (Inventar in re15_savedata) — ein eigenes Bit ist nicht noetig (VERTRAG 1.1 teilt Spur I auch keins zu).
+* Namen: die Port-Namensbank gen/inv_name_bank.inc ist das DEBUG.BIN-Bild (102 Eintraege, 0x07-Ende; Name 0x31
+  "Fire Extinguisher" @0x4CDC = `22 45 4e 41 00 21 54 50 45 4a 43 51 45 4f 44 41 4e`); Beschreibungen gen/inv_desc_bank.inc
+  (`01 00`-Ende, 0x08 Zeilenumbruch; laengste Original-Zeile 191 px). Vorbild fuer einen LEEREN Gegenstand ist RE1.5
+  selbst: Name 0x1C "Empty Grenade Shells" @0x4BA7 (`21 49 4c 50 55 00 ...`). RE2 hat keins: 0 "Empty"-Eintraege unter
+  139 Namen und 0 in den Beschreibungen (analysis/befunde_2026-09-21/belege/re2_item_names.txt / _descriptions.txt).
+* Haken-Stellen wie Runde 36 Spur Q (Schluessel-Namen): re15_inv_screen.c (Name im Statusschirm emit_name/emit_name_at,
+  CHECK-Text re15_inv_desc_entry) und item_prompt_common.c (Name in Abfragen).
+
+### 2.8 Nachtrag 3b (der Auftrag, der diesen Lauf ausgeloest hat)
 "Es muss schon in der richtigen Farbe leuchten das Panel..." gehoert laut AUFTRAG.md (Nachtrag 3b) / VERTRAG.md zur
 Spur E codepanel und wurde dem Bau-Agenten E uebermittelt. Spur I hat keine Panel-Datei angefasst.
 
@@ -188,7 +209,16 @@ Elza (0x1001): unberuehrt (30 Patronen, Item 0x15).
   entfernt Gegenstaende), dann liegt keiner da. Der erste Lauf (Tor nur (3,0x81)) zeigte genau dieses Doppel: Loescher
   am Boden UND im Inventar, waehrend die Wegwerf-Frage offen stand.
 
-### 3.5 Dateien
+### 3.5 "Empty Fire Extinguisher" (Nachtrag 4c)
+NUTZER-VORGABE. Zustand "leer" = Leon (re15_char_variant() == 0) UND (3,0x81) — das Bit setzt nur sub06 @0x0271E, also
+genau dann, wenn Leon den Loescher benutzt hat; vor dem Loeschen bleibt "Fire Extinguisher". Name = "Empty " aus
+@0x4BA7 + Name 0x31 aus @0x4CDC + 0x07 (162 px; laengster Original-Name "Minidisc Player w/ Disc" 158 px, passt im
+Statusschirm, Bild unten). CHECK-Text (PORT-WAHL, Vorschlag des Koordinators): "An empty fire extinguisher." (186 px,
+eine Zeile; Original-Zeilen bis 191 px). Elza: kein Ersatz ((3,0x81) hat dort eine andere Bedeutung, ROOM10B1).
+Spielstand: Flags + Inventar reisen mit re15_savedata -> nach Laden derselbe Name. Bild/Icon bleiben das Original
+(ITPS 0x31, ITEMALL-Kachel 0x31) — derselbe Gegenstand, nur leer.
+
+### 3.6 Dateien
 Neu: `engine/src/feuerloescher_r37.c`, `include/re15_feuerloescher_r37.h`, `engine/src/gen/feuerloescher_r37.inc`,
 `tools/r37_feuerloescher/feuerloescher_modell.py`, `tools/r37_feuerloescher/kamera.py`,
 `tests/unit/test_r37_feuerloescher.c`, `tests/unit/probe_r37_feuerloescher_karte.c`,
@@ -198,7 +228,8 @@ re15_inhalt_r35_install, VOR re15_dokumente_install wie Runde 35 — am Blockend
 letzte, Riegel unit_r34n_e_dokumente "hinten angehaengt" rot), `platform/pc/main.c` (Include, Prop-Lader obj 5 nach
 dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room_setup.c),
 `engine/src/item_modal_common.c` (Include + re15_feuerloescher_r37_genommen), `engine/src/item_discard_common.c`
-(Include + re15_feuerloescher_r37_weggeworfen). Keine Bank-9-Bits neu belegt (nur die Original-Bits (9,0x86), (3,0x85),
+(Include + re15_feuerloescher_r37_weggeworfen), `engine/src/re15_inv_screen.c` (Include + CHECK-Text + 2x Name),
+`engine/src/item_prompt_common.c` (Include + Name in Abfragen). Keine Bank-9-Bits neu belegt (nur die Original-Bits (9,0x86), (3,0x85),
 (3,0x81)), Nachrichten-Id 29 (VERTRAG 1.2), Prop obj 5 (TIM-Slot 9), kein Patch an shared_assets.
 
 ## 4. Messung nachher
@@ -227,13 +258,22 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
   `ROOM1090: Loescher liegt leer am Boden ... Zone Slot 6`, `[prop-render] pi=4 oid=0x05 pos=(2500,-1800,-1300)`;
   Lauf G (dasselbe, Loescher im Inventar): `ROOM1090: kein Loescher (Leon traegt ihn noch (Item 0x31 im Inventar))`,
   kein prop-render obj 5.
+* exe NEIN (Lauf I, Nachtrag 4b): Spielstand ROOM1090 am Feuer mit Loescher -> msg 7/8 -> Ja -> Neueintritt
+  `kein Loescher (Leon traegt ihn noch ...)` -> msg 9 -> Wegwerf-Abfrage -> NEIN (X auf der fertig getippten Abfrage)
+  -> KEIN `weggeworfen`, KEIN `liegt leer am Boden`, die Rettungsszene laeuft weiter (`id=3 "Leon: There! Are you okay?"`).
+* exe Nachtrag 4c (Laeufe J/K, Spielstand + CONTINUE mit Loescher nach dem Loeschen): Statusschirm
+  `[feuerloescher] Name Item 0x31: Empty Fire Extinguisher`, CHECK `[feuerloescher] CHECK-Text Item 0x31: An empty fire
+  extinguisher.`; Lauf L (vor dem Loeschen): kein Ersatz-Name. Bild `I_belege/nachher_4c_empty_fire_extinguisher.png`
+  (links Statusschirm mit "Empty Fire Extinguisher", rechts CHECK mit Foto und Text).
 * exe Elza Tuer-Weg (Lauf H, CONTINUE ROOM1051 vor der Notausgangs-Tuer, Aktion): `PC loaded room1091.rdt` ->
   `ROOM1091: Loescher liegt leer am Boden`; in ROOM1051 haengt keiner (Elzas Variante bekommt keinen Wand-Loescher —
   Leon war zuerst da und hat ihn genommen).
 
 ## 5. Tests
-* NEU `unit_r37_feuerloescher_{modell,raum,aufnahme,loeschen,elza,spind,spielstand}` (tests/unit/test_r37_feuerloescher.c,
-  Mechanik am echten Port-Code) und `integration_r37_feuerloescher` (echte exe, Laeufe A-H).
+* NEU `unit_r37_feuerloescher_{modell,raum,aufnahme,loeschen,elza,spind,spielstand,leer}` (tests/unit/
+  test_r37_feuerloescher.c, Mechanik am echten Port-Code; `leer` = Nachtrag 4c: Name aus @0x4BA7+@0x4CDC, Abfrage-Text
+  ueber re15_item_prompt_walk, CHECK-Text ueber re15_inv_desc_entry, Elza ohne Ersatz, nach Speichern/Laden) und
+  `integration_r37_feuerloescher` (echte exe, Laeufe A-L).
 * exe-Gruppen (ctest -R, Ausdruck woertlich):
   `^(integration_r37_feuerloescher|integration_r36_story_leon|integration_r36_story_elza|integration_r35_inventar1050|integration_r34n_e_dokumente_bild|integration_r36_schluessel_befreiung)$`
   -> `100% tests passed, 0 tests failed out of 6` (1083 s); danach `integration_r37_feuerloescher` um die Laeufe F/G/H
@@ -260,7 +300,8 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
 * Fuer die Integration/Release: neue Quelldatei `engine/src/feuerloescher_r37.c` (GLOB) — der Android-Bau friert die
   GLOB-Liste im app/.cxx-Cache ein (Memory reai-v2-android-glob-cache), also dort neu konfigurieren. Merge-Stellen:
   `scd_room_setup.c` / `platform/pc/main.c` je eine Zeile direkt NACH re15_inhalt_r35_install (nicht am Blockende,
-  Grund 3.5), `item_modal_common.c` / `item_discard_common.c` je Include + eine Zeile neben den Runde-36-Haken.
+  Grund 3.6), `item_modal_common.c` / `item_discard_common.c` / `re15_inv_screen.c` / `item_prompt_common.c` je
+  Include + eine Zeile (re15_inv_screen.c: drei) direkt neben den Runde-36-Spur-Q-Haken.
 
 ## 7. Fuer den Nutzer
 
@@ -276,7 +317,8 @@ Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine
   Hinterhof. Davor stellen, Aktionstaste -> "Will you take the Fire Extinguisher?" -> Ja.
 * Am Feuer (ROOM1090) wie bisher benutzen. Danach fragt das Spiel "You don't need this item any more. Discard it?":
   Ja = Leon legt den leeren Loescher vor der Wagentuer ab (er bleibt dort liegen, auch beim Wiederkommen und nach dem
-  Laden); Nein = Leon behaelt ihn, dann liegt keiner da.
+  Laden); Nein = Leon behaelt ihn, im Inventar heisst er dann "Empty Fire Extinguisher" (CHECK: "An empty fire
+  extinguisher."), am Boden liegt keiner.
 * Elza: der leere Loescher liegt in ROOM1091 vor der Wagentuer; Aktionstaste davor -> "It's an empty fire extinguisher."
 * Der Spind in der Umkleide (ROOM1000) antwortet jetzt mit "Nothing unusual." — dem Raumtext msg 0, den das Original an
   seinen anderen Untersuchen-Plaetzen (Slots 6..9, Waschraum) zeigt.
@@ -285,9 +327,9 @@ Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine
 1. FUNDORT: Ostflur 1050, Wand rechts der Notausgangs-Tuer (Bild `I_belege/nachher_1050_wand_cut6.png`). Andere
    moegliche Plaetze: an der Wand der Umkleide 1000 (sichtbar statt im Spind), in der Lobby 1030, auf dem Boden neben
    der Tuer. Sag, wohin er soll.
-2. WEGWERFEN: Soll der leere Loescher auch liegen, wenn Leon bei "Discard it?" Nein waehlt (dann haette er ihn doppelt:
-   im Inventar und am Boden)? Oder soll der Loescher nach dem Benutzen ohne Frage abgelegt werden?
-3. TEXT: "It's an empty fire extinguisher." beim Untersuchen (Leon nach dem Ablegen, Elza) — Wortlaut ok?
+2. (entschieden durch 4b/4c: Ja -> liegt, Nein -> "Empty Fire Extinguisher" im Inventar.)
+3. TEXTE: "It's an empty fire extinguisher." beim Untersuchen am Boden (Leon nach dem Ablegen, Elza) und der CHECK-Text
+   des behaltenen Loeschers "An empty fire extinguisher." — Wortlaut ok?
 4. GROESSE / HOEHE: 0,47 m hoch, 13 cm Durchmesser (10-lb-Klasse), an der Wand 0,68-1,14 m ueber dem Boden.
 5. SPIND: "Nothing unusual." (Raumtext msg 0 der uebrigen Untersuchen-Plaetze in ROOM1000) oder ein eigener Satz wie
    "The locker is empty."?
