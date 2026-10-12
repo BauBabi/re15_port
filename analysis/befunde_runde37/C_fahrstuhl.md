@@ -254,7 +254,7 @@ unit_r37_fahrstuhl_archiv/_einstieg/_ausstieg). Ein Zwischenlauf vor den zwei Au
 
 ## OFFEN
 
-* Lastenaufzug ROOM3080 ("WAREHOUSE LIFT", STAGE3): auch dort verlaesst der Spieler die Kabine per Null-Rechteck-Tuer
+* [ERLEDIGT in Nachbesserung 1, s.u.] Lastenaufzug ROOM3080 ("WAREHOUSE LIFT", STAGE3): auch dort verlaesst der Spieler die Kabine per Null-Rechteck-Tuer
   (ROOM3080.RDT main00 @0x0072A Platz 0 -> ROOM4000 Cut 1, Aot_on 0 @0x00A22 am Ende der Fahrt sub02) ohne Sequenz.
   Nicht Teil des Auftrags ("dem Fahrstuhl" = Revier-Fahrstuhl ROOM1080 aus Runde 36; Vertrag: ROOM1080/4020); der
   Lastenaufzug ist eine Hubbuehne mit Gitter (Einstieg S195 = P14A Schiebe-Gittertor, Gegenrichtung S218 = P2DS
@@ -300,7 +300,7 @@ Auftrag: Maengel 1/2 der Abnahme 0 = AUFTRAG.md Nachtrag 5 (woertlich: "ja, dann
 aufgefallen in den Stage2 kleineres aufzügen fehlt noch das sound. Den sollte man auch aus Resident Evil 2
 extrahieren."). (a) Ausstieg Lastenaufzug ROOM3080 -> ROOM4000 mit Tuersequenz, (b) Ton der kleineren Aufzuege in
 STAGE2. #6/#7 (P27F/P27C, fahrstuhl_r37.c, aot_common-Haken, Riegel) bleiben unveraendert.
-Stand: IN ARBEIT (fortlaufend).
+Stand: FERTIG (beide Maengel gebaut, gemessen, gepinnt; Endstand am Ende des Abschnitts).
 
 ### N1-0 Raeume bestimmen (b)
 STAGE2 = Kanal (debug_jump_table.h Stage 1 = Spiel-STAGE2). Nachrichten aller zwoelf STAGE2-Raeume
@@ -452,3 +452,68 @@ Lift B: [lift2030] Anker @0x01F0A -> Satz 0 (Takt 197)   [lift2030] Anker @0x01F
 Differenz-Huellkurve (`C_belege/n1_lift2030_ton.png`, je Spieltakt ab dem Tastendruck): Klick + Anlauf-Schlag Takt 0..8
 (Spitze 2479 bei +6), gleichmaessige Fahrt ~700..1400, Stopp-Schlag Lift A ab +109/+110 (= Fahrt 90 + 20), Ende +146
 (Welle 37156 Abtastwerte / 254,09); Lift B ab +199/+200 (= 180 + 20), Ende +236. Vorher (N1-1): keine Differenz, kein `[se]`.
+
+### N1-5 Tests (neu: `tests/unit/probe_r37_fahrstuhl_n1.c`, registriert in `tests/unit/probes/r37_fahrstuhl.cmake`; `tests/integration/test_r37_fahrstuhl_n1.cmake`)
+
+| Test | misst |
+|---|---|
+| `unit_r37_fahrstuhl_lastenaufzug` | Bytes ROOM3080/3081 @0x0072A (Null-Rechteck, Stage 3 Raum 00 Cut 1, Archiv-Byte 0) + Aot_on `47 00` @0x00A22/@0x00BFA bzw. @0x0081E/@0x00862; P2DS.DO2 = Tabelle (Groesse/FNV); Mechanik P2DS V5 451 Bilder, Fachwerk-y nur fallend (hinab) / V4 301 Bilder nur steigend (hinauf); ECHTER Skriptweg ROOM3080 erste Fahrt (Ada, 907 Bilder) + weitere Fahrt (sub09, 280 Bilder), ROOM3081 Elza sub02/sub03 -> je GENAU eine Anfrage P2DS V5 (Basis 0x2D, Tuer 112), player_mode 2 beim Feuern, Ziel ROOM4000/4001; Gegenprobe S218 bleibt P2DS V4 |
+| `unit_r37_fahrstuhl_durchlauf` | Story-Weg in EINEM Prozess: ROOM3070 mit (4,215)/(4,236)/(3,180), Spieler auf Platz 3 -> Szene sub03 (1252 Bilder), Gitter feuert in der Szene ohne Sequenz (Runde-31-Sperre) -> ROOM3080 erste Fahrt (907 Bilder) -> genau eine Anfrage P2DS V5, player_mode 2 -> ROOM4000 |
+| `unit_r37_fahrstuhl_lift2030` | 6 Anker (Bytes in ROOM2030 UND 2031, Schleifenlaenge 45/90 x 2 Evt_next passt zum Satz); LIFT6030.VBS = Tabelle (Groesse/FNV), Tonhoehen 0x400/0x2C4 aus den Ton-Bytes, FAHRT_KURZ = FAHRT ohne [794,1611) bytegleich, Stopp-Schlag beider Wellen 20 Bilder nach ihrem Fahrt-Ende (180/90); ECHTER Weg (Strom, Plattform, Aktionstaste) Lift A/B hinauf/hinab in 2030 und 2031: Toene KLICK + FAHRT_KURZ (A) bzw. KLICK + FAHRT (B) im selben Takt, Fahrt 90/180 Bilder bis zum Etagen-Merker; Gegenprobe ohne Strom: 0 Toene |
+| `integration_r37_fahrstuhl_n1` | echte exe: A ROOM3080 -> Sequenz P2DS V5 (451 Bilder, 2 Se_on) VOR room4000; B/C Lift A/B: Anker-Zeilen + Ton als Differenz der Aufnahmen mit/ohne Aktionstaste (Stopp-Schlag Fahrt + 20 +-2, Dauer = Wellenlaenge +-2) |
+
+**Gegenprobe am Code** (Riegel messen den Befund): beide Haken entfernt (aot_common.c Lastenaufzug-Zeile, scd_vm.c
+`re15_lift2030_r37_pc`), neu gebaut -> `lastenaufzug: ROT (8 Fehler)` (jede Fahrt "Laeufer 0 x"), `lift2030: ROT (16 Fehler)`
+(keine Toene); Haken zurueck -> beide `GRUEN (0 Fehler)`. Paket-Gate lesend: `python release/apk_asset_gate.py --repo .
+--quellbaum` -> `Port-Tuerarchiv ... 32/32 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)`, `APK-ASSET-GATE-QUELLBAUM-OK`.
+
+Gezielte Laeufe (KEINE volle Suite), Regex = eigene Tests + Testgruppen der beruehrten Module (Tueren/Tuersequenz/P2DS,
+AOT-Feuerweg, SCD-VM-Anker (Elza, Hebetisch, Kartenhinweis, Fahrstuhl-Ton), Ton/SE, Kopflauf):
+```
+ctest --test-dir re15_port/build -R "r37_fahrstuhl|r36_tueren|r33_tuer|unit_r31_|r32_unterteilung|unit_door_seq|r35_inhalt_tueren|fahrstuhl|elevator|elev_se|r30_tuer|door_|keydoor|unit_aot_|unit_scd_|prop_scd|unit_tor_1170|r35_cut10f0_tuerton|elza|hebetisch|map_hint|integration_headless_run|r34_plattform_ton|unit_se_|unit_audio|r35_spiel|tuer" --timeout 900 -j 2
+```
+```
+100% tests passed, 0 tests failed out of 101
+```
+(Endstand 888e2de7 + Dossier, 590,7 s, Protokoll build/r37_n1_ct_final.log; u. a. integration_r37_fahrstuhl_n1 135,5 s,
+integration_r37_fahrstuhl 164,1 s, integration_r35_karte_fahrstuhl, integration_r36_tueren, integration_r36_story_elza,
+unit_r33_tueren_archive (P2DS neu), unit_elev_se, unit_r36_elza_*. Ein Lauf vor dem Teil durchlauf: `100% tests passed,
+0 tests failed out of 100`.)
+
+### N1-6 OFFEN
+* Die Gestalt der Lift-Fahrt bleibt RE2: nach der RE1.5-Fahrt in ROOM3080 (sub02 907 / sub09 280 Bilder) folgt die
+  RE2-Hubbuehnen-Sequenz mit 451 Bildern (RE2-Laenge von DOOR2D Skript 2 @0x6130). Kuerzer waere eine Port-Erfindung.
+* Einstieg in den Lastenaufzug: im Story-Weg feuert das Gitter S195 IN der ROOM3070-Szene (Aot_on @0x037F2) und bleibt
+  wegen der Zwischensequenz-Sperre der Runde 31 ohne Sequenz (nicht Teil des Nachtrags, unveraendert).
+* FAHRT_KURZ ist eine aus der RE2-Welle geschnittene Fassung (PORT-WAHL mit Herleitung, N1-3); RE2 hat keine 90-Bilder-
+  Plattform.
+* Nebenbefund P2DS (Runde 33) ist mit behoben; die Fahrt hinauf (S218) zeigt dadurch jetzt ebenfalls das Fachwerk.
+
+### N1-7 Fuer den Nutzer
+* **Neue/geaenderte Assets (Paket-Gate, release/ ist Sache des Orchestrators):**
+  NEU `re15_port/shared_assets/RE2/LIFT6030.VBS` (61192 B, FNV 0x0C73F970, sha1 944a61942ac1d5f3ac940242c5bf662fb197922e) -
+  in `release/make_package.sh check_tree` in die RE2-Pflichtliste aufnehmen (Muster ELZASE.VBS: `-s` + `cmp`), fehlt sie,
+  sind die STAGE2-Aufzuege still stumm (`[liftse] ... fehlt`).
+  GEAENDERT `re15_port/shared_assets/RE15DOOR/P2DS.DO2` (78244 B, FNV 0xC9CE31CD -> 0x4A900C54, sha1 8daaadc1b80917f1b002aa9dce2b63829c785d4a)
+  - der Ordner RE15DOOR wird ganz kopiert und gegen die Engine-Tabelle geprueft (Gate oben gruen).
+  Neue Quelldateien (engine/src/lastenaufzug_r37.c, engine/src/lift2030_r37.c, platform/pc/src/lift2030_se_pc.c) ->
+  Android-GLOB-Cache (app/.cxx) beim Paketbau neu konfigurieren.
+* **Sprachdateien:** keine.
+* **Was man sieht/hoert:** Lastenaufzug (Lager -> Labor-Eingang): nach der Fahrt im Aufzugsraum folgt jetzt die
+  Hubbuehnen-Sequenz wie in RE2 (Plattform mit Gelaender, das rote Schacht-Fachwerk zieht nach oben weg = die Buehne faehrt
+  hinab), dann ROOM4000 "Level-1"; Leon und Elza. Die Gegenrichtung (ROOM4000 -> Lager) zeigt jetzt ebenfalls das
+  Fachwerk statt eines stehenden Bildes. Kanal-Aufzuege (Behandlungsbecken, beide Plattformen): beim Druecken der
+  Aktionstaste der Schalter-Klick, dann Anlauf-Schlag, Motor waehrend der Fahrt und der Stopp-Schlag kurz nach der Ankunft
+  (RE2-Hubplattform aus dem Labor); bei der kurzen Plattform (Lift A) ist der Motor-Mittelteil gekuerzt.
+* **Bedienhinweise (Messhaken):** `RE15_TUER_ARCHIV="P2DS:5,P2DS:4,2D:5"` + `RE15_TUER_BOGEN=<dir>` zeigt die Hubbuehne;
+  `RE15_SE_DEBUG=1` meldet die Lift-Toene (`[se] Stimme: se=0/1/2`), debug.log `[lift2030] Anker @0x0.... -> Satz n`.
+* **Entscheidungsfragen:** keine.
+
+### Endstand Nachbesserung 1
+* Mangel 1 (Nachtrag 5a): erfuellt - ROOM3080/3081 -> ROOM4000/4001 spielt die RE2-Hubbuehne P2DS Variante 5 (RE2 ROOM6170
+  @0x035A2 DOOR2D V5 = hinab; Skript 5 @0x6344), im Story-Weg, im Sprung, bei der weiteren Fahrt und mit Elza; P2DS zeigt
+  das Schacht-Fachwerk wieder (Runde-33-Rezept nullte ganz Mesh 2).
+* Mangel 2 (Nachtrag 5b): erfuellt - die zwei Hubplattformen in ROOM2030/2031 spielen den Ton der RE2-Hubplattform
+  ROOM6030 (Satz 0x11 @0x02F90 Klick, Satz 0x0B @0x02FBA Fahrt; Lift A gekuerzt auf seine 90 Bilder), hinauf und hinab,
+  Leon und Elza, in der exe als Differenz der Aufnahmen nachgewiesen.
+* #6/#7 unveraendert (P27F/P27C, fahrstuhl_r37.c, Kabinen-Haken, ihre Riegel gruen).
