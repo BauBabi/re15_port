@@ -207,8 +207,12 @@ dead.It looks like one of those gorillas killed her."` (Seite 1 "It's Ada. She's
 * Aufrufer: ROOM50B1 sub00 @0x004DE Aot_set Slot 2 sce 3 Rechteck (-12400,-12100,1000,1000) -> sub02 @0x00518:
   Elza kniet (Plc_motion 1,11 @0x00526), `Message_on 0` Maske 0xffff @0x0052E, steht auf. Leiche = obj 0 @0x004F2
   (-11800,0,-11600).
-* Elza kennt Ada nicht: ROOM30C1 msg 4 (Marvin nennt den Namen), msg 5 "Elza: Ada?", msg 6 "Marvin: Someone we
-  rescued from the RPD." — sie hat Ada nie gesehen, kann die Tote also nicht erkennen (Runde 36 P_story.md OFFEN).
+* **Grund des Nutzers (AUFTRAG.md Nachtrag 8, woertlich):** "Elza kann theoretisch ada begegnen in ihren durchlauf.
+  [...] Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza nur eine Leiche von Ada findet, kennt sie ada
+  nicht. Dann ist es halt nur - a woman." In ROOM50B1 findet Elza nur die Leiche; Ada kennt sie bis dahin nur dem
+  NAMEN nach (ROOM30C1 msg 4 Marvin nennt ihn, msg 5 "Elza: Ada?", msg 6 "Marvin: Someone we rescued from the RPD.")
+  — am Aussehen erkennen kann sie die Tote nicht. Eine Begegnung Elza–Ada ist damit NICHT ausgeschlossen, und der
+  neue Text behauptet darueber nichts.
 * RE2-Form fuer Tote, die der Spieler nicht kennt (RE2 Leon `info/re2leon/PL0/RDT`, englischer Block = RDT-Kopfzeiger
   14 @0x40, Glyphen wie RE1.5, `.` = 0x01, `fc` = Zeile, `fd` = Seite): ROOM60A0 msg 1 @0x01982 "A researcher's
   corpse. / It looks like he poured | oil all over the place..." (dieselbe Zwei-Seiten-Form mit "It looks like" auf
@@ -243,10 +247,11 @@ Leons ROOM50B0 msg 18 @0x00FA4), Seite 2 bytegleich, Zeilenumbrueche wie das Ori
 
 unit_r37_sperre1050_elza50b1 laedt ALLE 103 Elza-RDTs (ROOMxxx1, Raumlader Elza = Leon + 1, PSX.EXE
 @0x800397e4/@0x800397ec) mit dem Port-Lader inklusive aller Overrides und sucht das Wort "Ada":
+Regel (Nachtrag 8): nur dort aendern, wo Elza Ada am AUSSEHEN erkennen muesste; dass Elza den Namen kennt, bleibt.
 * ROOM30C1 msg 4 "Marvin: He's a rookie, and he's helping me and Ada escape the city." — Marvin spricht, Elza HOERT den
-  Namen zum ersten Mal; bleibt (Original-Satz, in Runde 36 freigegeben).
-* ROOM30C1 msg 5 "Elza: Ada?" — Elza fragt nach, wer das ist (Antwort msg 6 "Someone we rescued from the RPD.") =
-  kein Bezug, sondern das Gegenteil: sie kennt Ada nicht. Bleibt.
+  Namen ("Ada" steht so im Original; der Satz ist der Runde-36-Wortlaut, vom Nutzer freigegeben). Bleibt.
+* ROOM30C1 msg 5 "Elza: Ada?" — Elza fragt nach, wer das ist (Antwort msg 6 "Someone we rescued from the RPD.") —
+  kein Erkennen am Aussehen. Bleibt.
 * Sonst keine Fundstelle; "It's Ada" nirgends mehr. Port-Texte ausserhalb der RDT-Bloecke (grep `Ada` in engine/src,
   gen/*.inc, Dokument-Werkzeuge): nur Leon-Szenen (cut_10f0.c, irons_tod_1150.c, adaruf_1050.c,
   tools/r36_j/szene11b0_bauen.py, story 30C1 msg 4 / 50B0 msg 1) — kein Elza-Raum. Elzas Untersuchungstext 50B1 hat

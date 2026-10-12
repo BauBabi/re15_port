@@ -190,7 +190,8 @@ NEU = [
 UNTERSUCHEN = [
     ("50B1", 0, "k_s37_50b1_m0",
      [["It's a woman. She's dead."], ["It looks like one of those", "gorillas killed her."]],
-     "Runde 37 #5: Elza kennt Ada nicht (nur den Namen aus Marvins 30C1 msg 4/6) - Ada-Bezug raus (NUTZER-VORGABE)"),
+     "Runde 37 #5 + Nachtrag 8 (NUTZER-VORGABE): Elza findet nur die Leiche - Ada kennt sie nur dem Namen nach "
+     "(Marvin, 30C1 msg 4/6), erkennen kann sie sie nicht: 'Dann ist es halt nur - a woman.'"),
 ]
 
 

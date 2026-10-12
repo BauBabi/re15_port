@@ -161,7 +161,7 @@ static const uint8_t k_s36_1091_m20[] = {
     0x4b,0x51,0x50,0x08,0x50,0x44,0x41,0x00,0x42,0x45,0x4e,0x41,0x57,0x01,0x00,
 };
 
-/* ROOM50B1 msg 0 (untersuchen) — Runde 37 #5: Elza kennt Ada nicht (nur den Namen aus Marvins 30C1 msg 4/6) - Ada-Bezug raus (NUTZER-VORGABE)
+/* ROOM50B1 msg 0 (untersuchen) — Runde 37 #5 + Nachtrag 8 (NUTZER-VORGABE): Elza findet nur die Leiche - Ada kennt sie nur dem Namen nach (Marvin, 30C1 msg 4/6), erkennen kann sie sie nicht: 'Dann ist es halt nur - a woman.'
  *   alt @0x0055A (74 B): "It's Ada. She's dead.It looks like one of those gorillas killed her."
  *   Kopf 2 B + Schwanz 2 B = Original-Bytes derselben Nachricht
  *   neu (78 B): "It's a woman. She's dead.It looks like one of those gorillas killed her."
