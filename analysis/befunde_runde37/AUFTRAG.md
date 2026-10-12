@@ -111,27 +111,160 @@ Lesart -> Spur I feuerloescher:
    @0x00D0C Set(3,0x85)) — an einen anderen, passenden Ort verlegen (sichtbar mit dem neuen Modell; Ort begruendet waehlen,
    der Nutzer kann ihn danach verschieben).
 
-## Nachtrag 4b — 2026-10-12 (woertlich, Praezisierung zu Nachtrag 4, vom Koordinator uebermittelt)
+## Nachtrag 4b — 2026-10-12 (woertlich, zu Spur I)
 
 > ah, it can only lay there - if leon when he is asked to discard it select "yes".
 
-Lesart (Koordinator) fuer Punkt 3 (Leon ROOM1090): Der leere Loescher liegt dort NUR, wenn Leon an der Wegwerf-Abfrage
-nach dem Loeschen mit JA antwortet (Port-Wegwerf-Abfrage, engine/src/gen/discard_sites.inc Zeile
-`{ 0x1090, 9, 0x31, 0, 0 }` = nach msg 9 "You've used the Fire Extinguisher.", engine/src/item_discard_common.c).
-Antwortet er NEIN, bleibt der Loescher im Inventar und es liegt nichts am Boden (auch nicht nach Wiederbetreten). Das
-Erscheinen haengt am Ja der Abfrage (dauerhaft: am Ergebnis, das der Wegwerf-Weg ohnehin speichert, sonst ein Bit laut
-VERTRAG.md 1.1 — Bank 9 Bit 96/97, im Riegel test_r36_kartenbits.c k_port[] eintragen). Elza ROOM1091: unveraendert,
-liegt immer. Riegel: Ja -> Prop da (auch nach Raumwechsel/Spielstand), Nein -> kein Prop, Loescher bleibt im Inventar.
+Lesart: Bei Leon liegt der leere Loescher in ROOM1090 NUR, wenn er an der Wegwerf-Abfrage nach dem Loeschen (Port-Abfrage
+gen/discard_sites.inc `{ 0x1090, 9, 0x31, 0, 0 }`) "Yes" waehlt; bei "No" bleibt er im Inventar und am Boden liegt nichts.
+Elza 1091 unveraendert (liegt immer). Dem Bau-Agenten I per Nachricht uebermittelt.
 
-## Nachtrag 4c — 2026-10-12 (woertlich, weiterer Zusatz zu Nachtrag 4, vom Koordinator uebermittelt)
+## Nachtrag 4c — 2026-10-12 (woertlich, zu Spur I)
 
 > If he doesn't he has the text empty fire extinguisher in the player inventory.
 
-Lesart (Koordinator): Antwortet Leon an der Wegwerf-Abfrage nach dem Loeschen mit NEIN, behaelt er den Loescher — im
-Inventar heisst er dann "Empty Fire Extinguisher" (Name/Text des Gegenstands zeigt, dass er leer ist; Untersuchen-Text
-entsprechend, z.B. "An empty fire extinguisher." als PORT-WAHL zur Freigabe). Vor dem Loeschen bleibt es "Fire
-Extinguisher". Umsetzung belegen: wie der Port Item-Namen/Icons/Bilder liefert (engine/src/inventory_common.c
-re15_item_name, item_prompt_common.c Glyphen-Blob DAT_800c4a28, ITPS-Bild) — entweder eigener Port-Gegenstand "leerer
-Loescher" (freie Item-Id per Zensus) oder Zustand am Gegenstand 0x31; RE2/RE3-Vorbild fuer "leer gewordene" Gegenstaende
-pruefen. Spielstand muss den Zustand behalten. Riegel: Nein -> Inventar-Name "Empty Fire Extinguisher" (auch nach
-Speichern/Laden), Ja -> Gegenstand weg + Boden-Prop.
+Lesart: Bei "No" an der Wegwerf-Abfrage behaelt Leon den Loescher; im Inventar heisst er dann "Empty Fire Extinguisher"
+(Name/Untersuchen-Text zeigen, dass er leer ist; Zustand bleibt im Spielstand). Dem Bau-Agenten I per Nachricht uebermittelt.
+
+## Nachtrag 5 — 2026-10-12 (woertlich, zu Spur C)
+
+> ja, dann mache den noch. Mir ist auch aufgefallen in den Stage2 kleineres aufzügen fehlt noch das sound. Den sollte man auch aus Resident Evil 2 extrahieren.
+
+Lesart: (a) "den" = der Ausstieg aus dem Lastenaufzug ROOM3080 (WAREHOUSE LIFT) -> ROOM4000, der in Spur C noch ohne
+Tuersequenz ist (Null-Rechteck-Tuer @0x0072A, Aot_on @0x00A22) — Sequenz aus RE2 herleiten und bauen. (b) Die kleineren
+Aufzuege in STAGE2 haben keinen Ton — den passenden Aufzug-Ton aus RE2 extrahieren (RE2_SOUND_LISTE.md, shared_assets/RE2/
+ELEVSE.VBS u.a.) und dort abspielen, wo RE2 ihn spielt.
+
+## Nachtrag 6 — 2026-10-12 (woertlich)
+
+> Ja, wie ich gerade gesehen habe fehlt in unseren Port teilweise noch der dranhängende Arm wenn man vom Zombie gebissen wird.
+
+Lesart (beide pruefen, keine F9-Marke dazu): (1) der Arm des Zombies, der beim Biss/Griff an Leon haengt (Griff von vorn/hinten),
+fehlt in manchen Faellen; (2) der angeschossene, noch "dranhaengende" (baumelnde) Arm eines Zombies fehlt beim Biss. Messen,
+welcher Fall auftritt, dann wie RE2 bauen. -> Spur J bissarm.
+
+## Nachtrag 7 — 2026-10-12 (woertlich)
+
+> Bei Elzas Szenario stimmt weder das Modell von Roy noch all seine Animationen. Außerdem wiederholen sich seine Animationen wieder ständig, wie wir schon ungefähr 500x vorher bei Leon gefixed haben.....
+
+Lesart -> Spur K roy: Roy (Typ 0x47, im Original dasselbe Typ-Byte wie Elliot bei Leon; B_figuren.md §1.1) in Elzas Szenario
+(ROOM1011 verwundet / bewusstlos, ROOM1021 als Zombie, den John erschiesst): Modell und alle Animationen wie im Original;
+keine Dauerschleife der Animationen (dieselbe Fehlerklasse wie die frueheren NPC-Schleifen bei Leon).
+
+## Nachtrag 8 — 2026-10-12 (woertlich, zu #5 / Spur F)
+
+> Elza kann theoretisch ada begegnen in ihren durchlauf. Ich kenne zumindest keine Aussage der Entwickler die sagt, das sie sich nicht begegnen können. Nur das Elza und Leon sich niemals begegnen. Aber wenn Elza nur eine Leiche von Ada findet, kennt sie ada nicht. Dann ist es halt nur - a woman.
+
+Lesart (bestaetigt und praezisiert #5): ROOM50B1 msg 0 (Elza) nennt die Tote nicht "Ada", sondern "a woman" — Elza findet
+nur die Leiche und erkennt sie nicht. Story-Regel: NUR Leon und Elza begegnen sich nie; dass Elza und Ada sich begegnen, ist
+NICHT ausgeschlossen. Die Begruendung "Elza hat Ada nie gesehen" (Runde 36 P_story.md) ist damit keine Regel: kein Text darf
+behaupten, Elza und Ada koennten sich nicht begegnen; dass Elza den NAMEN Ada kennt (Marvin, ROOM30C1 msg 4/6), bleibt.
+Beim Sweep "sagt/liest Elza 'Ada'" nur dort aendern, wo Elza Ada am Aussehen erkennen muesste. Der Bau der Spur F traegt
+genau diesen Wortlaut ("It's a woman. She's dead." / "It looks like one of those" / "gorillas killed her.", F-Baum 6bf10b9b);
+die Abnahme prueft ihn gegen diesen Nachtrag, die Begruendung in Code/Dossier soll den Grund des Nutzers tragen.
+
+## Orchestrator-Auftrag L — 2026-10-12 (zu Nachtrag 2 + Ergaenzung, "schaue einfach nach wie Resident Evil 2 das macht")
+
+Grund: Die Abnahme H#0 (H_abnahme_0.md, Hinweis H1) und das Dossier der Spur H (H_zombieaktiv.md "OFFEN") belegen drei
+VORBESTEHENDE Abweichungen der RE2-Zombie-KI des Ports vom RE2-Original (EMZ0.BIN). Der Nutzer verlangt das RE2-Verhalten
+GENERELL fuer alle Zombies; diese Abweichungen gehoeren dazu und werden in dieser Runde geschlossen (Spur L re2zombie, Basis =
+abgenommener Stand der Spur H 9c2a825d):
+1. Die drei Produzenten des Arme-hoch-Gangs `+0x4 = 0x201` (EXEC[2]) im Gang-Executor sind seit 2026-08 abgeschaltet:
+   (1) Timer @0x80101D68-DBC, (2) Nahbereich @0x80101EC4-F10, (3) Spieler rennt @0x80101F14-F60. Mit (1)+(2) fiel die
+   Positiv-Kontrolle Nahkampf in test_re2_zombie_abc von 3523 auf 0 (Mechanismus nie aufgeklaert). -> aufklaeren und
+   byte-true scharf schalten; in RE2 heben die Zombies dabei die Arme und kommen auf Leon zu.
+2. DECISION[0] Block 3: Original committet bei (rand & 1) == 1 (`beq v0,zero,0x801013d4` @0x801013c8), der Port bei == 0.
+3. EXEC[0] P1: nach dem Wander-Wurf (`sb v0,6(s0)` @0x80101540) laeuft im Original im selben Takt der Selbstwecker
+   @0x80101544-a0 und P2 erst im naechsten Takt (`j 0x801016ac` @0x8010159c); der Port springt im selben Takt nach P2/P3.
+Dazu ein Zensus der uebrigen OFFEN-Marken der RE2-Zombie-KI, die Bewegung/Angriff betreffen (je Marke: Adresse, wirkt auf die
+Aktivitaet ja/nein); was die Aktivitaet betrifft, mitschliessen oder mit Adresse begruenden, warum nicht.
+
+## Nachtrag 9 — 2026-10-12 (woertlich, Item-Kiste)
+
+> In der Kiste müssen die Icons offenbar so weit wie möglich rechts liegen, damit sie nicht vom Text überdeckt werden. Außerdem ist mir aufgefallen, das beim scrollen/bewegen in der Kiste währendessen die Items oberhalb des Kastens liegen. Das darf nicht sein, der Kasten muss layertechnisch über den Items liegen.
+
+Lesart -> Spur M kiste (Item-Box-Bildschirm, RE2-Layout seit 2026-08-30, re15_inv_screen.c Block 7b "DIE BOX ALS LISTE"):
+1. In der Box-Liste ueberdecken lange Item-Namen (links ab NAME_X 16) die Item-Symbole (ICON_X 158). Die Symbole sollen so weit
+   wie moeglich nach rechts (bis vor die Mengen-Ziffern/den Scrollbalken), so dass kein Name ein Symbol ueberdeckt — Zensus
+   aller Item-Namen (Pixelbreite im Port-Zeichensatz) gegen die Symbol-Lage; RE2-Vorlage pruefen (RE2: Symbol x 155 in seinem
+   breiteren Panel; RE2 kuerzt/setzt Namen wie?).
+2. Beim Scrollen gleiten die Zeilen (box_pixoff) und liegen waehrenddessen UEBER dem Rahmen ("Kasten") des Listen-Panels. Der
+   Rahmen muss ueber den Items liegen: Zeilen, die beim Gleiten aus dem Fenster ragen, werden vom Rahmen verdeckt bzw.
+   abgeschnitten — wie RE2 (Listen-Zeichenschleife FUN_800710dc, Rahmen-Sprites @0x800a9c38).
+
+## Nachtrag 10 — 2026-10-12 (woertlich, Irons-Szene ROOM1150 bei Leon)
+
+> Der Text bei Leon zum Schluss bei Irons - "be a hero leon" ist mir irgendwie zu trashig.... hast du einen weniger trashigen Text als Abschluss für den Dialog?
+
+Vorschlaege (je mit "Irons: " in einer Zeile <= 271 px, gemessen mit tools/r35_l/texte_bauen.py): "Get them out of here... Leon..."
+(empfohlen), "It's up to you now... Leon...", "Now go... Leon... Go...". Antwort des Nutzers (woertlich):
+
+> ja, get them out of here leon gefällt mir besser
+
+Lesart: ROOM1150 msg 28 (Port-Text der Runde 35, irons_tod_1150.c k_msg28) wird "Irons: Get them out of here... Leon..."
+(NUTZER-VORGABE). Keine Sprachaufnahme vorhanden (synchro/STAGE1/room1150/main28.wav fehlt) -> nur Text; der Szenen-Takt
+haengt nicht an der Textlaenge (99-Bilder-Halt `01 63`, danach OP_SLEEP(100) + Armfall). Umsetzung im Integrationszweig.
+
+## Nachtrag 11 — 2026-10-12 (woertlich, Szene ROOM11C0 Ada/Marvin nach Irons' Tod)
+
+> Und die Dialogszene mit Ada/Marvin nach Irons Tod ist auch noch nicht so geil von den Animationen....
+>
+> Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut.
+
+Lesart -> Spur O szene11c0: Programm 4 der Irons-Szene (engine/src/irons_tod_1150.c k_p_11c0, Runde 35 Spur L + Runde 36
+Spur K2) neu choreografieren: (a) zu Beginn stehen beide schon sinnvoll (einander zugewandt bzw. so, dass keine grosse
+Drehung noetig ist) — kein "komplett falsche Richtung"; (b) keine 180-Grad-Drehung zum Gebaeude (die Tuer liegt HINTER der
+Kamera Cut 13): auf den Knall reagieren Kopf/Oberkoerper, nicht der ganze Koerper um 180 Grad; (c) keine zweite grosse
+Drehung Adas; (d) wer spricht, sieht den anderen an — Marvin sieht Ada an, wenn er spricht ("Yes!....", "Oh, no, Leon!",
+"I have to help him, sorry!"), bis er losrennt; Ada sieht ihm nach. Zuerst die heutige Szene Bild fuer Bild messen
+(Framedumps, Gierwinkel + Kopfdrehung je Bild beider Figuren) und gegen die Beschreibung des Nutzers stellen; pruefen,
+ob Plc_neck bei Marvin (Typ 0x40) ueberhaupt sichtbar wirkt. Vokabular wie bisher aus dem Original (Plc_neck Modus 1,
+Plc_dest Modus 9, Ankunfts-Warten, ROOM11C0 sub02/sub03) und RE2-Dialogszenen als Vorbild; Winkel aus den Positionen
+(Gierwinkel = Richtung zum Gegenueber), Takte PORT-WAHL. Beats der Runde 35/36 (Knall, Frage, Antwort, "Oh, no, Leon!",
+"I have to help him", Losrennen, "Marvin!...") bleiben.
+
+## Orchestrator-Auftrag N — 2026-10-12 (zu Nachtrag 7 "Bei Elzas Szenario stimmt weder das Modell von Roy ...")
+
+Grund: Spur K (K_roy.md OFFEN 1, §6.1) und Spur J (Folge-Kandidat) belegen dieselbe Fehlerklasse ueber Roy hinaus: das
+Original laedt in Elzas Szenario JEDEN Gegner-/NPC-Typ aus CDEMD1.EMS (FUN_80022300: Elza-Bit `bltz` @0x80022334 -> Datei
+0x27 @0x800223ac, TOC @0x80073178), der Port ausser Roy weiter Leons CDEMD0-Daten. Unterschiede je Typ laut K: 0x30 Birkin
+ANDERES MODELL (ROOM3071/5081/5091/50F1), 0x42 ANDERES MODELL (ROOM11B1 @0x01058, ROOM3091 @0x014F4), Zombies 0x10-0x18
+eigene Aktions- + Opfer-Bank (Griff-Animation am Spieler), Kraehe/0x27/0x29/0x2b Opfer-Bank. -> Spur N elzaems: Elzas
+Szenario laedt jeden Typ wie das Original aus CDEMD1 (K-Mechanismus re15_ems_toc / roy_pc.c verallgemeinern), je Typ am
+Original und an der exe gemessen; Leon bleibt bytegleich. Basis = abgenommener Stand der Spur K.
+
+## Orchestrator-Auftrag P — 2026-10-12 (Regression, gefunden von Abnahme A#1 M2)
+
+Grund: Abnahme A#1 (A_abnahme_1.md, M2) mass: alle 30 MSK-Dateien der Stages 3..6 (ROOM3040/41, 3050/51, 30A0/A1, 30E0/E1,
+4040/41, 4080/81, 40A0/A1, 5020/21, 5050/51, 5090/91, 50B0/B1, 5100/01, 6000/01, 6010/11, 6030/31) werden fuer NIEMANDEN
+gezeichnet (z.B. ROOM3040 Cut 0..7 fg_atlas=0, mit/ohne Masken 0 Punkte Unterschied). Herkunft laut git: b8db7b2b
+(2026-09-03) erzeugte die Geometrie fuer Cuts, deren Vordergrund-GRAFIK im BSS liegt, aber ohne Masken-Records im RDT
+(Prototyp unfertig: RE1.5 22 % der Cuts, RE2 Retail 67 %) — die Masken zeigen auf den ORIGINAL-Atlas im BSS
+(gen_masken.py: Atlas-Bloecke per Kreuzkorrelation wiedergefunden, Masken-Byte = src). 53741fe5 (2026-09-08) liess
+R15M-Masken nur noch mit EIGENEM Atlas zeichnen (re15_pri_load_cut_atlas_ex, Merker aus dem R15M-Zweig) — richtig fuer die
+Raeume mit den Freistellungen des Nutzers (eigene ROOMxxxx_PRI*.TIM), falsch fuer die BSS-Atlas-Raeume -> seitdem fehlt
+dort jede ergaenzte Verdeckung. -> Spur P masken36: R15M-Cut ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen (wie
+am 2026-09-03 gebaut), je Raum/Cut nachweisen (Blit-Pruefung wie pruef_gen.py + Figur-Messung an der exe), Basis = Stand
+der Spur A (gleicher Lader).
+
+## Nachtrag 12 — 2026-10-12 (woertlich, zu Nachtrag 11 / Spur O)
+
+> zum schluss dialog ada/marvin - wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin nach drehen.
+
+Lesart -> Spur O: Beim Schluss "Ada: Marvin!..." (ROOM11C0 msg 14) dreht sich Ada dem LAUFENDEN Marvin nach — Kopf und
+Koerper folgen seiner Position, waehrend er zur Tuer rennt (statt sich einmal fest zur Tuer zu drehen). Vokabular wie in
+Nachtrag 11 (Plc_neck Modus 1 / Plc_dest Modus 9 Drehen auf seine laufend aktualisierte Lage bzw. das Folge-Ziel; RE2-
+Vorbild fuer "einer Figur nachsehen" belegen); keine ruckartigen Spruenge, Drehrate wie die uebrigen Drehungen der Szene.
+
+## Orchestrator-Auftrag Q — 2026-10-12 (Folge der RE2-Item-Box, gefunden von Spur I Nachbesserung 1)
+
+Grund: Spur I (I_feuerloescher.md, Nachbesserung 1, offen) mass: legt Leon den Feuerloescher VOR dem Loeschen in die
+Item-Box, kann er das Feuer in ROOM1090 trotzdem loeschen ("Will you use the Fire Extinguisher?" -> Yes, Rettungsszene) —
+ROOM1090 sub00 @0x02306 `21 03 85 00` prueft nur das Aufnahme-Bit (3,0x85), nie das Inventar. Im Original (RE1.5 hat
+keine Item-Box) war "Bit gesetzt" gleichbedeutend mit "Item im Inventar" (ausser verbraucht/weggeworfen); mit der
+RE2-Item-Box des Ports (Nutzer-Auftrag 2026-08-30) nicht mehr. Beta -> Retail: in RE2 benutzt man ein Item nur, wenn man
+es TRAEGT. -> Spur Q kistenregel: Zensus ALLER Original-Abfragen (alle RDTs, Leon und Elza), die den BESITZ eines Items
+ueber ein Bit statt ueber das Inventar pruefen (Aufnahme-/Taken-Bits als Besitz-Ersatz vor einer Item-Benutzung,
+Item-Abfragen an Tueren/Raetseln); je Fall belegen, ob das Item in der Box liegen kann, und wie RE2 dieselbe Art Abfrage
+macht (Besitz-Pruefung im RE2-SCD/EXE belegen). Wo die Box den Fall oeffnet: wie RE2 das Item im Inventar verlangen
+(eine Port-Regel an EINER Stelle, je Fall per Tabelle), mit RE2-Text, wenn es fehlt. Basis = abgenommener Stand der Spur I.

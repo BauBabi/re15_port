@@ -18,6 +18,14 @@ committen, nur eigene Pfade adden.
 | G | beretta / r37_beretta | Nachtrag: Beretta M93R — jeder Schuss des 3-Schuss-Feuerstosses trifft (Glock 18 mit demselben Burst-Handler pruefen) |
 | H | zombieaktiv / r37_zombieaktiv | Nachtrag 2: Zombies zu passiv — GENERELL fuer alle Zombies das RE2-Verhalten (teilweise aktiv im Gang, auf Leon zu); Beispiel Montage nach Irons' Tod |
 | I | feuerloescher / r37_feuerloescher | Nachtrag 4: Feuerloescher-Modell bauen; leer am Boden bei Elza (1091) und bei Leon nach dem Loeschen (1090); Leons Loescher aus dem Spind 1000 an einen besseren Ort |
+| J | bissarm / r37_bissarm | Nachtrag 6: beim Zombie-Biss fehlt teilweise der dranhaengende Arm (am Spieler haengender Zombie-Arm bzw. baumelnder angeschossener Arm) — wie RE2 |
+| K | roy / r37_roy | Nachtrag 7: Roy in Elzas Szenario — Modell + alle Animationen wie im Original, keine Dauerschleife |
+| L | re2zombie / r37_re2zombie | Orchestrator-Auftrag L (zu Nachtrag 2 + Ergaenzung): die drei vorbestehenden Abweichungen der RE2-Zombie-KI schliessen (0x201-Produzenten @0x80101D68/EC4/F14, DECISION[0] @0x801013c8, EXEC[0] P1 @0x80101540-a0), Nahkampf-Zusammenbruch aufklaeren; Basis = Stand der Spur H 9c2a825d |
+| M | kiste / r37_kiste | Nachtrag 9: Item-Kiste — Symbole so weit rechts, dass kein Name sie ueberdeckt; der Rahmen liegt beim Scrollen ueber den Items (re15_inv_screen.c Block 7b, inv_render_pc.c) |
+| O | szene11c0 / r37_szene11c0 | Nachtrag 11: Ada/Marvin-Szene ROOM11C0 nach Irons' Tod — keine Fehlblicke/180-Grad-Drehungen, wer spricht, sieht den anderen an (irons_tod_1150.c Programm 4 k_p_11c0) |
+| N | elzaems / r37_elzaems | Orchestrator-Auftrag N (zu Nachtrag 7): Elzas Szenario laedt jeden Typ wie das Original aus CDEMD1.EMS (Elza-Bit @0x80022334, Datei 0x27 @0x800223ac); Basis = Stand der Spur K |
+| P | masken36 / r37_masken36 | Orchestrator-Auftrag P (Regression 53741fe5): R15M-Masken der Stages 3..6 ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen; Basis = Stand der Spur A |
+| Q | kistenregel / r37_kistenregel | Orchestrator-Auftrag Q: Item-Benutzung nur mit dem Item im Inventar (RE2-Regel), wo die RE2-Item-Box eine Original-Bit-Abfrage oeffnet; Zensus aller Faelle, erster Fall Loescher 1090; Basis = Stand der Spur I |
 
 Nicht gebaut (Nutzer): Blutlache an Roys Platz (R2), Prison-Key-Hinweis fuer Elza, V6 (Montage-Folgen bei Elza) — ohne
 Zustimmung nichts davon anfassen. Die Werkstatt-Tuer 11B0 bleibt wie in v0.8.24.
@@ -50,6 +58,12 @@ aot_common.c + actor_common.c + re15_collision.c (D), door_scene_pc.c / door_seq
 gen/tuer_zuordnung.inc (C), audio_pc.c + panel_lampen_pc.c (E), render_pc.c + shared_assets/PSX/MASKS/ROOM1100.* (A), Schuss-/Waffen-Code
 (player_common.c, schuss_r36.c, Treffer-Resolver) (G), enemy_ai_re2_zombie.c / enemy_ai_common.c / irons_tod_1150.c (H).
 Neue Logik in NEUEN Dateien engine/src/<thema>_r37.c + include/re15_<thema>_r37.h.
+Spur M aendert den Box-Listen-Block 7b in re15_inv_screen.c und, falls noetig, den Zeichner inv_render_pc.c (Kommentar "Runde 37 Spur M" + Beleg).
+Spur O aendert Programm 4 (k_p_11c0) in irons_tod_1150.c an Ort und Stelle (Kommentar "Runde 37 Spur O"); die uebrigen Programme (Spur H: Nachspawn 1130) und k_msg28 (Nachtrag 10, Integration) nicht anfassen.
+Spur N erweitert roy_r37.c / roy_pc.c / gen/ems_toc_r37.inc der Spur K (oder eine neue elzaems_r37.c) und die Lader-Haken in main.c / enemy_common.c; Griff-/Biss-Code (J), RE2-KI (L) und der Spawn-Haken (H) nur lesen.
+Spur P aendert den Masken-Lader (bg_pc.c re15_pri_load_cut_atlas_ex und was A dort angefasst hat) an Ort und Stelle; keine neuen Asset-Dateien, MASKS/* nicht umschreiben.
+Spur Q: neue Logik in kistenregel_r37.c (Tabelle je Fall), Haken an der Stelle, wo das Original das Bit prueft (scd_vm.c Ck-Pfad oder je Raum), feuerloescher_r37.c (Spur I) nur fuer den 1090-Fall; Texte nur mit RE2-Beleg (Ids nach VERTRAG 1.2 begruenden).
+Ausnahme Spur L: die Reparatur IST die RE2-Zombie-KI — L aendert enemy_ai_re2_zombie.c (DECISION[0], EXEC[0], EXEC[1], EXEC[2]) direkt an Ort und Stelle (Kommentar "Runde 37 Spur L" + @0x je Zeile). Die Griff-/Biss-Teile (Spur J) und re2z_init (Haken der Spur H) nur lesen. Jeder Riegel, der am gemeinsamen RE2-Zufallsstrom haengt und sich durch L verschiebt, steht mit altem/neuem Wert und Begruendung im Dossier (die Integration braucht die Liste).
 
 ### 1.5 Tests
 Neue Tests nur ueber `re15_port/tests/unit/probes/r37_<thema>.cmake` (GLOB). Portabel fuer den Linux-Release-Bau:
@@ -60,3 +74,13 @@ Integration an.
 ### 1.6 Assets
 Kein Patch an shared_assets/PSX/* ausser den Port-Masken (A, ROOM1100.*) und neuen Port-Tuerarchiven
 shared_assets/RE15DOOR/*.DO2 (C). Neue RE2-Dateien unter shared_assets/RE2/ (Paket-Gate-Eintrag im Dossier nennen).
+
+### 1.7 Orchestrator-Freigabe 2026-10-12 (Spur A, nach Abnahme A#0 M1)
+Spur A darf zusaetzlich zu MASKS/ROOM1100.* den Masken-LADER anfassen (platform/pc/src/entladen_pc.c re15_entladen_msk und
+was die PRI-Masken je Raum laedt): Fuer Elzas Raeume (ungerade Raum-Id) fehlen in STAGE1 ALLE Masken-Dateien (MASKS/ hat
+nur 1000, 1010, 1050, 1060, 10A0, 10C0, 10D0, 10E0, 10F0, 1100, 1110, 1120, 1130, 1140, 1160, 1180, 11B0, 11D0, 11F0, 1220,
+1221, 1230 — Elza-Gegenstuecke ausser 1221 fehlen), der Port laedt `MASKS/ROOM%04X.MSK` mit der vollen Id. Erlaubt und
+gewuenscht: Rueckfall auf die gerade Leon-Variante, wenn Kamera-Daten UND Hintergrund (RDT-Kamerasaetze, BSS/Bild je Cut)
+beider Raeume nachweislich gleich sind — Zensus aller STAGE1-Paare (und spaeterer Stages ohne eigene ungerade Datei) mit
+Ergebnis je Raum im Dossier, Riegel fuer 1101 und den Zensus. Wo sie sich unterscheiden: kein Rueckfall (im Dossier nennen).
+Keine neuen Asset-Dateien noetig (Paket-Gate unveraendert).
