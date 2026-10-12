@@ -182,6 +182,12 @@ Gier 0; Message_on msg 2 in sub03 @0x008F0 = Kisten-Meldung laut re15_itembox.c)
 | Ruhebild F99: Symbol ab x 179 (schmal) / 155 (2-Feld), Spalte davor Listengrund | 5/5 Zeilen | 5/5 | 5/5 |
 | F107 einlaufende Zeile von unten / F127 von oben (Symbolpixel im Feld) | 325 / 325 | 325 / 325 | 325 / 325 |
 
+**Taste gehalten** (1150 Leon, `RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=40` `A0.034,W1.6,A0.034,W0.3,
+D1.2,W0.5,U1.2` = RUNTER 36 Bilder gehalten, dann HOCH 36 Bilder; RE2 bleibt bei gehaltener Taste im Gleit-Zustand,
+@0x80070024 / @0x800701b4): 5 Zeilen am Stueck runter und zurueck, Framedumps F99..F200: probe_r37_kiste_bild
+**102/102 Bilder Rahmen bitgleich**, glide_check 0 Pixel ausserhalb des Fensters in allen 101 Bildern gegen F99.
+Bild `M_belege/nachher_1150_halten_runter_hoch.png` (F99/112/125/140/158/171/186/195).
+
 Gegenprobe vorher (Bilder aus §1 mit demselben Bildwerkzeug): F99 Rahmen verletzt (49 px: 2-Feld-Symbol x 204..206
 auf Rahmenlinie/Schiene), Zeilen 0/2/3/4 "Spalte vor dem Symbol NICHT frei", 2-Feld-Symbol nicht ab x 155, F102..F107
 bis 3177 px, einlaufende Zeile oben/unten je 0 px -> KISTE-BILD FEHLER 38.
