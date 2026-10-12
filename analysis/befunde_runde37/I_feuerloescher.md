@@ -285,8 +285,10 @@ dem Lageplan-Block, Boot-/CONTINUE-Installer an derselben Stelle wie in scd_room
   hinten angehaengt") und unit_r36_story_schuppen ("Leon 1090 nach dem Loeschen: kein Text-Platz in Slot 2/5") rot ->
   Code angepasst (Installer vor den Dokumenten wie r35, Slot 6); beide Alt-Riegel unveraendert gruen.
 
-* ENDSTAND (letzter Code-Stand dieses Zweigs, Bau + ein Lauf): `^(unit_r37_feuerloescher|integration_r37_feuerloescher|unit_aot_edge|unit_scd_aot_opcodes|unit_savedata|unit_item_modal|unit_item_stack_press|unit_aot_sce_census|unit_sicherung_1150|unit_re2_room1090_ab|unit_1090_|probe_1090_|unit_plc_back_yaw_1090|unit_map_1090|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r21_discard_wegwerfen|unit_r27_ada_cutscene_1050|unit_r30_|unit_r34n_a_rolltor|unit_r34n_d_adaruf|unit_r34n_e_dokumente|unit_r35_granate|unit_r35_inhalt|unit_r35_inventar1050|unit_room1050_sicherung|unit_r36_granate|unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_schluessel|unit_r36_story)`
-  -> `100% tests passed, 0 tests failed out of 102`.
+* ENDSTAND (letzter Code-Stand dieses Zweigs inkl. 4b/4c, Bau + ein Lauf, -j 3): `^(unit_r37_feuerloescher|integration_r37_feuerloescher|unit_aot_edge|unit_scd_aot_opcodes|unit_savedata|unit_item_modal|unit_item_stack_press|unit_aot_sce_census|unit_sicherung_1150|unit_re2_room1090_ab|unit_1090_|probe_1090_|unit_plc_back_yaw_1090|unit_map_1090|unit_ada_eintritt_1050|unit_r19_marke3_1050_c1_tiefe|unit_r21_discard_wegwerfen|unit_r27_ada_cutscene_1050|unit_r30_|unit_r34n_a_rolltor|unit_r34n_d_adaruf|unit_r34n_e_dokumente|unit_r35_granate|unit_r35_inhalt|unit_r35_inventar1050|unit_room1050_sicherung|unit_r36_granate|unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_schluessel|unit_r36_story|unit_inv_fsm|unit_item_icon|unit_inv_grant|unit_room1150_itembox|unit_itembox_transfer|unit_itembox_screen|unit_debug_menu|unit_pri_inventar_riegel|unit_r26_inventar|unit_r30_android_n1_inventar_cmd|unit_r36_inventar|unit_msg_dialog|unit_action_msg_gate|unit_text_freeze|integration_item_name_census|integration_r36_inventar|integration_r36_schluessel|integration_r35_inventar1050)`
+  -> `100% tests passed, 0 tests failed out of 121` (278 s; darin integration_r37_feuerloescher Laeufe A-L,
+  integration_r36_inventar / _schluessel / _schluessel_befreiung / item_name_census / r35_inventar1050 wegen der
+  Namens-/CHECK-Haken).
 
 ## 6. OFFEN
 * Nichts Funktionales. Ehrliche Grenzen der Messung:
