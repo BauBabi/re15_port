@@ -163,3 +163,36 @@ Namen unveraendert ab x 16.
 
 Unveraendert (Riegel C, Bildvergleich §4): Auswahl-Band (x 12..203, y 92/112, Farben), Scrollgriff (Lage/Farbe),
 Textbox, Inventar-Gitter rechts, Cursor, Namens-x 16, Kopf-/Fussband-Pixel.
+
+## 4. Messung nachher (exe dieses Baums, gleicher Weg wie §1)
+
+Drei Raeume, je Spielstand + echte Aktionstaste am Kisten-AOT (kein Debug-Oeffnen): **Leon ROOM1150**, **Elza ROOM1151**
+(Kisten-AOT slot 5 main00 @0x00DCE bytegleich zu 1150: `2c0503310000f49dc8ce4006e803ff0018070000`), **Leon ROOM2010**
+(slot 5 main00 @0x007A8 `2c0503310000420e38e64006e803ff0018030000` = x 3650..5250 z -6600..-5600, Figur (3050,-6100)
+Gier 0; Message_on msg 2 in sub03 @0x008F0 = Kisten-Meldung laut re15_itembox.c). Gleiche Kisten-Belegung.
+
+| Messung | 1150 Leon | 1151 Elza | 2010 Leon |
+|---|---|---|---|
+| glide_check.py F100..F129 (Pixel ausserhalb des Fensters anders, gegen F99) | 0 in allen 30 Bildern | 0 | 0 |
+| probe_r37_kiste_bild: Rahmen bitgleich BOXPANEL.BIN (x 12..214) | 31/31 Bilder | 31/31 | 31/31 |
+| Ruhebild F99: Symbol ab x 179 (schmal) / 155 (2-Feld), Spalte davor Listengrund | 5/5 Zeilen | 5/5 | 5/5 |
+| F107 einlaufende Zeile von unten / F127 von oben (Symbolpixel im Feld) | 325 / 325 | 325 / 325 | 325 / 325 |
+
+Gegenprobe vorher (Bilder aus §1 mit demselben Bildwerkzeug): F99 Rahmen verletzt (49 px: 2-Feld-Symbol x 204..206
+auf Rahmenlinie/Schiene), Zeilen 0/2/3/4 "Spalte vor dem Symbol NICHT frei", 2-Feld-Symbol nicht ab x 155, F102..F107
+bis 3177 px, einlaufende Zeile oben/unten je 0 px -> KISTE-BILD FEHLER 38.
+
+Unveraendert (Ruhebild F99 vorher gegen nachher, gleicher Spielstand): **0 Pixel** ausserhalb des Listen-Panels
+(Textbox, Inventar-Gitter, Cursor, Chrome, Hintergrund) und 0 Pixel in den aeusseren Panel-Spalten x 6..11 / 215..219
+(dort liegen Menue-Chrome bzw. Inventar-Gitter ueber dem Panel — deshalb prueft das Bildwerkzeug x 12..214).
+
+Bilder: `M_belege/nachher_1150_zeilen_zoom.png` (F99, 4-fach: "Disc" endet x 173, Symbol ab 179; Grenade Launcher
+155..203 im Fenster; "6"/"12" unten links im Symbol), `nachher_1150_gleiten_F104.png` (Versatz -9: "Minidisc..." unter
+dem Kopfband, "Red Master Keycard" kommt unter dem Fussband hervor, Schriftzug "ITEM BOX" unversehrt),
+`nachher_1150_gleiten_sheet.png` (F100/102/104/106/107/108/124/127), `nachher_1151elza_2010leon_F99_F104_F125.png`.
+
+Zensus nachher (unit_r37_kiste, alle Ids 1..255, drei Spielzustaende): 101 Namen; laengster 0x44 "Minidisc Player w/
+Disc" bis x 173, schmales Symbol ab 179 -> kleinste Luecke **5 px**; 2-Feld-Namen bis x 137, Symbol ab 155 -> 17 px.
+Nach der Integration mit Spur I: "Empty Fire Extinguisher" (Leon, nach dem Loeschen) bis x 177 -> Luecke 1 px
+(rechnerisch aus k_name_leer r37/feuerloescher; der Zensus-Zustand "alle Flags Leon" setzt (3,0x81) und erfasst den
+Namen dann automatisch).
