@@ -5556,6 +5556,8 @@ re_title:;
               } }
             /* Spur C Runde 34 Nacht: die zwei gruenen Generator-Lampen (panel_lampen_pc.c). */
             { extern void re15_panel_lampen_pc_zeichnen(void); re15_panel_lampen_pc_zeichnen(); }
+            /* Runde 37 Spur E: Lampe der Ziffern-Code-Panels 10D0/11E0/1230 (codepanel_r37_pc.c). */
+            { extern void re15_codepanel_r37_pc_zeichnen(int); re15_codepanel_r37_pc_zeichnen(s_last_cut_idx); }
             re15_fenster1120_pc_zeichnen(s_last_cut_idx);   /* Runde 35 Spur M: beschaedigtes Fenster */
         } else {
             /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
