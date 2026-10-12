@@ -28,12 +28,18 @@ OBEN z 29232, UNTEN z 16068, LINKS x -29782, RECHTS x -9668; der Port (nach Spur
 "der Cursor faehrt unbegrenzt" — die galt nur, solange dem Port der Ruhe-Zweig fehlte (vor Spur R lief der Cursor
 ueber den Rahmen hinaus aus dem Schalterfeld). Folge: Riegel mit Original-Beleg anpassen, kein Code-Fix.
 
+**Zensus:** Der Panel-Cursor ist in allen Raeumen dasselbe Objekt (Typ 4, Band 0, `+0 = 0x0101`, h900, +-200 je Bild).
+Alle 15 beim Raumeintritt installierbaren Cursor (13 RDTs: Fahrstuhl 1080/4020, 10D0, 1100, 11E0 x2, 11F0, 1230, 2040,
+2060 x2, 3050, 30E0, 5050) sind am Original gemessen und haben einen Rahmen; Port = Original bitgleich in allen 60
+Richtungen (Bilder, Endlage, erste Ausschiebung). Hebetisch 1150 und Cursor-Raster 4000 haben keine schiebbaren Objekte
+(Bit 3). Kein Raum braucht eine Port-Aenderung.
+
 ## Stand (Arbeitsprotokoll)
 
 - [x] P1 Messung im Port (RE15_PUSH_LOG an beiden roten Riegeln)
 - [x] P2 Original: statisch (FUN_8002bd44 / Installer / FUN_8003b558) + dynamisch (GDB, vier Richtungen)
-- [ ] Zensus der Cursor-/Panel-Raeume (statisch alle RDTs + Port-Laeufe mit RE15_PUSH_LOG)
-- [ ] P3 Riegel anpassen (mit Original-Beleg), Rueckbau-Nachweis
+- [x] Zensus der Cursor-/Panel-Raeume (statisch alle RDTs, Port-Testlaeufe mit RE15_PUSH_LOG, Original + Port je Cursor)
+- [x] P3 Riegel angepasst (mit Original-Beleg) + neuer Riegel unit_r36_g2_cursor_rahmen, Rueckbau-Nachweis
 - [ ] P4 Regression gezielt, LOCAL-BUILD-OK
 
 ## P1 — Messung im Port
@@ -58,6 +64,13 @@ an einer Sperre).
 `unit_r34n_c_generator` Teil A (Cursor in die Zelle von Schalter 7 (-18554,24484), Quadrat, dann UNTEN gehalten):
 31 Zeilen `RUHE-AUSSCHIEBUNG`, 1x `lage=(-18554,15884) -> (-18554,16068)`, 30x `(-18554,15868) -> (-18554,16068)`
 (Rahmen UNTEN r1[13] z 14150..15150); Sonde: `51 Fahrt+Ruhe-Bilder: Cursor stand 21-mal, Sperre 0-mal`.
+
+Echte exe (`G2_belege/lauf_exe.sh`, Kopie der exe dieses Baums; DEBUG_JUMP 11F0, FIRE_AOT Slot 1 = Panel (sub16),
+Meldungen, "Ja" bei F500, dann 3 s HOCH; Belege `G2_belege/exe_oben/`): `push.txt` erste Zeile `F533 room=11F0 p=1 obj=0
+RUHE-AUSSCHIEBUNG lage=(-19554,29284) -> (-19554,29232)` mit `ZELLE [33]: x -31700..-7750 z 30150..31150 r=900`, danach
+F534..F590 je `29432 -> 29232` (58 Zeilen); `panel_F498-600.log`: cut=10, `panelsperre=0` in jedem Bild. 33 Bilder Fahrt
+ab F500 wie am Original (B001..B033). Framedump `fd_000560.png` (Cut 10): der gruene Cursor steht oben am Feld, direkt
+unter dem gelb-schwarzen Warnstreifen des Panel-Rahmens (Bildbefund, kein Mass).
 
 Ohne Ruhe-Zweig (Stand vor dem Merge der Spur R, Integration 645/645): beide Riegel gruen, d. h. der Cursor fuhr in
 allen 49 bzw. 51 Bildern weiter — in D bis z = 22684 + 48*200 = 32284, also UEBER die Rahmenzelle r1[16]
@@ -264,3 +277,33 @@ ALLES GRUEN (91 OK).
 Jeder Riegel faellt genau auf seine Aussage: der Rahmen (g1) nur in den neuen Rahmen-Pruefungen, die Zwischensperre (g2)
 und die Endsperre (g3) in den Sperr-Pruefungen; D(2) "Cursor steht trotz HOCH" bleibt wirksam (g3 faellt dort), weil
 der Cursor vor D(2) 20 Bilder vom Rahmen weggefahren wird.
+
+## OFFEN (jeweils mit Grund)
+
+* **ROOM10D1 (Elza) nicht am Original gefahren** — der Debug-JUMP laedt mit dem Leon-Spielstand die Leon-Variante;
+  SCA-Kopf + alle 170 Zellen und die Cursor-Bytes @0x0114E sind byte-gleich mit ROOM10D0 (selbst verglichen), der
+  Riegel nimmt fuer 10D1 die 10D0-Werte. Ein Elza-Spielstand wuerde die Luecke schliessen.
+* **ROOM2050 obj 8** wird beim Raumeintritt nie installiert (main00 @0x01D30-34 Ck(5,7)==1, Bank 5 Wort 0 geleert
+  @0x8003ed74) — Original (log Z.178) und Port gleich. Ob ein Ereignis main00 spaeter erneut ausfuehrt, ist nicht
+  untersucht (nicht Auftrag).
+* **Nachbildung statt SCD-Fahrt** fuer die 12 weiteren Cursor (Original und Port): die Fahrt ist dort als +-200 je
+  Bild auf die Add_speed-Felder nachgebildet; fuer ROOM11F0 ist die Nachbildung gegen die echte SCD-Fahrt
+  gegengeprueft (identische Zahlen). Die raumeigenen Tastenpfade (Sce_key_ck -> sub02..05) der anderen Raeume sind
+  nicht gefahren.
+* **Spiegel-Startwert** (obj+0x40/+0x44): Original Altspeicher des Pool-Platzes, Port = Lage beim Raumaufbau
+  (PORT-WAHL der Spur R, R_dachkiste.md OFFEN). Fuer die Cursor ohne Wirkung: der erste Treffer liegt jeweils 33+
+  Bilder nach dem Raumaufbau, der Spiegel ist dann das letzte Bildende (Original-Log: `spiegel` = voriges Bildende).
+* `RE15_MIN_TESTS` in local_build.sh nicht angehoben (+1 Test `unit_r36_g2_cursor_rahmen`) — die Wache steht auf 592,
+  die Integration der Runde fuehrt den Zaehler.
+
+## Fuer den Nutzer
+
+Der Auswahl-Cursor im Generator-Raetsel (ROOM11F0) bleibt am Rand des Schalterfelds stehen, statt aus dem Feld zu
+fahren — genau wie im Original. Das Original hat dafuer vier unsichtbare Rahmenzellen um das Feld und schiebt den Cursor
+in jedem Bild daraus zurueck; ich habe es im echten Spiel gemessen (DuckStation): oben, unten, links und rechts stoppt der
+Cursor an denselben Stellen wie jetzt im Port. Dasselbe gilt fuer alle anderen Bedienfelder mit diesem Cursor (Fahrstuhl
+1080 und 4020, 10D0, 1100, 11E0, 1230, 2040, 2060, 3050, 30E0, 5050) — alle einzeln am Original nachgemessen, alle gleich.
+Seit Spur R tut der Port das; vorher konnte der Cursor ueber den Feldrand hinaus fahren. Deine Vorgabe aus Runde 34
+("nach einem Schalter frei bewegen, nur ganz am Ende gesperrt") gilt unveraendert: am Rand steht der Cursor, weil dort das
+Feld zu Ende ist, nicht wegen einer Sperre. Am Spiel-Code aendert sich nichts, nur zwei Pruefprogramme hatten den freien
+Lauf ueber den Rand angenommen und sind jetzt an die Original-Werte angepasst.
