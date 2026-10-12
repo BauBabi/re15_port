@@ -64,6 +64,10 @@ Wand in ROOM1050 rechts der Notausgangstuer nach 1090. Bei Elza liegt in ROOM109
 liegt er in 1090 erst nach dem Loeschen und nur, wenn Sie an der Wegwerf-Frage "Yes" waehlen; bei "No" behaelt Leon
 ihn als "Empty Fire Extinguisher" (auch im Spielstand, auch wenn er ihn in die Kiste legt).
 
+**Item-Kiste** (Spur M). Beim Scrollen liegen die Eintraege nicht mehr ueber dem Rahmen: der Rahmen wird wie in RE2
+darueber gezeichnet, die Zeilen verschwinden darunter. Die Symbole stehen jetzt buendig am rechten Rand der Liste, kein
+Name reicht mehr hinein; die Mengen stehen wie in RE2 unten links im Symbol.
+
 <!-- weitere Spuren: A pri1100, C fahrstuhl, D itemband, F sperre1050, G beretta, H zombieaktiv, I feuerloescher,
      J bissarm, K roy — Abschnitt erst nach bestandener Abnahme + Integration -->
 
