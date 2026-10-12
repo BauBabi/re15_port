@@ -361,9 +361,23 @@ knapp suedlich der oberen Kabine, (3) Dossier §5.5/§7/§8 verharmlosen bzw. ve
 Lift-Ausloesung ausserhalb der Kabine.
 
 ### NB1.0 Stand
-- [ ] Messung vorher an der exe (Falle auf/ab reproduziert)
+- [x] Messung vorher an der exe (Falle auf/ab reproduziert, NB1.1)
 - [ ] RE-Belege: RE1.5 Lift A (Ausloeser sat 0x31 = nur Punkt 620 voraus) / RE2 Retail-Vorbild
 - [ ] Umsetzung
 - [ ] Messung nachher (Leon + Elza, beide Richtungen; vorgesehener Weg bleibt)
 - [ ] Riegel + Gegenprobe
 - [ ] Dossier §5.5/§7/§8 berichtigt
+
+### NB1.1 Messung vorher (exe = Stand 05117c03, Messkopie re15_pc_r37d_nb1.exe, `D_belege/nb1/lauf_nb1.sh`)
+Start an der Ankunft der 2070-Tuer, Strom an: `RE15_SET_FLAG=3:126 RE15_DEBUG_JUMP=2030@250 RE15_PLAYER_POS=6550,-100,3072,3`.
+* **`v_auf_eingang`** (`wp_auf_eingang.txt`: Anlauf von Norden bis (6600,10800), Blick Sued 3072, AKTION; danach in die Kabine,
+  AKTION, zur SPAS-12): wegplan `F230 (6605,10770) angekommen`, `F254 AKTION`; itemband **`F345 MEMBER 0x12 Spieler:
+  Kollisionsband 3 -> 6 (@0x80041228) y=-10800`**; `F346 spieler=(6605,10182)`; danach nur noch `KLEMME beim Gehen nach
+  (6600,12000): Rest 1818` / `(6600,13700): Rest 3518` / `(2000,14500): Rest 5864` / `(-650,14500): Rest 7902`, eine zweite
+  AKTION faehrt nicht ((3,222) bleibt 1), **`F1532 FLAG (9,109) = 0`**. -> Falle AUFWAERTS reproduziert (= Abnahme L1).
+* **`v_ab_sued`** (`wp_ab_sued.txt`: aus der Kabine (6605,11970) hoch, nach Sueden bis (6600,13300), Blick Nord, AKTION; danach
+  zur Kabine und zur Tuer slot 0): `F360 MEMBER 0x12 ... 3 -> 6`, `F800 (6605,13245) angekommen`, `F823 rot=1056`,
+  **`F935 MEMBER 0x12 Spieler: Kollisionsband 6 -> 3 (@0x80041228) y=-5400`**, `F936 spieler=(6605,13768)`, danach haelt der
+  Treiber UP Richtung Kabine: climb.txt `T3549..T3551 pos=(6736..6738,-5400,13768) band=3` — z bleibt 13768 (Wand r0[33]),
+  kein Raumwechsel bis EXIT_AT 3300. -> Falle ABWAERTS reproduziert (= Abnahme L2).
+Auszuege: `D_belege/nb1/v_auf_eingang/`, `D_belege/nb1/v_ab_sued/`.
