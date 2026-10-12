@@ -711,6 +711,128 @@ static int teil_vergleich(int argc, char **argv)
     return s_vgl_bilder > 0 ? 0 : 1;
 }
 
+/* ======================================================================================================
+ * RIEGEL
+ * ====================================================================================================== */
+
+/* pruef_re2 <fixture> <vorn|hinten>
+ * (A) Handkontakt: die GEZEICHNETE Hand (Pose + re15_bissarm_r37_handkontakt, wie main.c) liegt relativ zu Leons
+ * Schultergelenk dort, wo sie im RE2-ORIGINAL liegt (RAM-Fixture aus re2_biss_gdb.py, SLUS-00748_4.sav, P3
+ * @0x8010F838). Gemessen 2026-10-12: ohne Handkontakt mittel 222 daneben (Hybrid-Hand ~200 tiefer), mit
+ * Handkontakt 0..4 ab Biss-Bild 4; die Bilder 0..3 liegen jenseits der RE1.5-Armlaenge (936 gegen bis 1049
+ * benoetigt) — dort ist der Arm gestreckt und die Hand um den Rest kurz (Hand 11 max 83).
+ * Schranken: mit Handkontakt Mittel <= 12 je Hand und JEDES Bild ab 4 <= 6; ohne Handkontakt Mittel >= 150
+ * (der Riegel misst also den Mechanismus und nicht eine Konstante). */
+static int teil_pruef_re2(int argc, char **argv)
+{
+    if (argc < 4) { printf("pruef_re2 <fixture> <vorn|hinten>\n"); return 2; }
+    int hinten = (argv[3][0] == 'h');
+    int rc = vergleich_lauf(argv[2], hinten, 0, 0);
+    if (rc) return rc;
+    int ohne11 = s_vgl_mit11, ohne14 = s_vgl_mit14, ohne_bilder = s_vgl_bilder;
+    rc = vergleich_lauf(argv[2], hinten, 1, 1);
+    if (rc) return rc;
+    CHECK(ohne_bilder >= 20 && s_vgl_bilder >= 20, "zu wenige Biss-Bilder im Vergleich (ohne %d, mit %d)", ohne_bilder, s_vgl_bilder);
+    CHECK(ohne11 >= 150 && ohne14 >= 150, "OHNE Handkontakt muss der Hybrid daneben liegen (Mittel %d/%d) — sonst misst der Riegel nichts", ohne11, ohne14);
+    CHECK(s_vgl_mit11 <= 12 && s_vgl_mit14 <= 12, "MIT Handkontakt Mittel zu gross (%d/%d, Schranke 12)", s_vgl_mit11, s_vgl_mit14);
+    int schlecht = 0;
+    for (int k = 4; k < 64; k++) {
+        if (!s_portbild[k].ok || !s_re2bild[k].ok) continue;
+        const griffbild_t *a = &s_portbild[k], *b = &s_re2bild[k];
+        int32_t va[3], vb2[3], wa[3], wb[3];
+        for (int i = 0; i < 3; i++) { va[i] = a->h11[i] - a->l12[i]; vb2[i] = b->h11[i] - b->l12[i];
+                                      wa[i] = a->h14[i] - a->l9[i];  wb[i] = b->h14[i] - b->l9[i]; }
+        in_greiferrahmen(a->yaw, va); in_greiferrahmen(a->yaw, wa);
+        in_greiferrahmen(b->yaw, vb2); in_greiferrahmen(b->yaw, wb);
+        if (abst3(va, vb2) > 6 || abst3(wa, wb) > 6) { schlecht++; printf("  Biss-Bild %d ueber 6: %d / %d\n", k, abst3(va, vb2), abst3(wa, wb)); }
+    }
+    CHECK(schlecht == 0, "%d Biss-Bilder (ab 4) weichen > 6 vom RE2-Original ab", schlecht);
+    printf("%s pruef_re2 %s: ohne %d/%d -> mit %d/%d (Mittel Hand 11/14), max %d/%d\n", s_fail ? "FAIL" : "OK",
+           hinten ? "HINTEN" : "VORN", ohne11, ohne14, s_vgl_mit11, s_vgl_mit14, s_vgl_max11, s_vgl_max14);
+    return s_fail ? 1 : 0;
+}
+
+/* pruef_klemme <raum-hex> <px> <pz> <rot> <vorn|hinten> [max_abstand]
+ * (B) Wandklemme im Griff wie RE2 FUN_8003567c: je Griffbild GENAU EIN Durchgang re15_collision_constrain vom
+ * Standpunkt des Vorbilds zur Opfer-Platzierung (Anker + RotY(Yaw+0x158) * Wurzelversatz). Geprueft:
+ * (1) ab dem 2. Griffbild ist Ist == dieser eine Durchgang (Toleranz 4 = Rundungsrest der Schraeg-Schieber; im
+ *     Zupack-Bild hat der Koerperschub des Greifers Leon schon vor dem Latch verschoben, der Startwert ist dann
+ *     dieser Stand — die Sonde kennt ihn nicht genau), also kein Rueckfall auf einen alten Standpunkt;
+ * (2) kein Sprung: von Bild zu Bild hoechstens 1200, zum Greifer hoechstens 3000 (vorher ROOM1010: Leon den
+ *     ganzen Griff auf (0,0), 5250 entfernt);
+ * (3) Leon steht nach dem Durchgang in keiner Wandzelle (constrain(Ist->Ist) aendert hoechstens 4). */
+static int teil_pruef_klemme(int argc, char **argv)
+{
+    if (argc < 7) { printf("pruef_klemme <raum-hex> <px> <pz> <rot> <vorn|hinten> [max_abstand]\n"); return 2; }
+    unsigned room = (unsigned)strtoul(argv[2], NULL, 16);
+    int32_t px = atoi(argv[3]), pz = atoi(argv[4]);
+    int rot = atoi(argv[5]);
+    int hinten = (argv[6][0] == 'h');
+    int max_abst = (argc > 7) ? atoi(argv[7]) : 3000;
+    int rc = raum_laden(room);
+    if (rc) return rc;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    re15_collision_set_band(0); re15_player_set_aim_clip_len(12); re15_inv_load_briefing();
+    int zA = -1; long best = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active || !re15_re2z_owns_type(e->type)) continue;
+        long dx = e->x - px, dz = e->z - pz, d = dx * dx + dz * dz;
+        if (best < 0 || d < best) { best = d; zA = s; }
+    }
+    if (zA < 0) { printf("FAIL: kein Zombie in ROOM%04X\n", room); return 1; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (s != zA && g_actors[s].active && re15_re2z_owns_type(g_actors[s].type)) g_actors[s].active = 0;
+    re15_actor_t *z = &g_actors[zA];
+    const int abst = 700;
+    int32_t sn = re15_sin_q12(rot), cs = re15_cos_q12(rot);
+    int vz = hinten ? -1 : 1;
+    pl->x = px; pl->z = pz; pl->rot_y = (int16_t)rot;
+    z->x = px + vz * (int32_t)(((int64_t)cs * abst) >> 12); z->z = pz - vz * (int32_t)(((int64_t)sn * abst) >> 12);
+    z->y = 0; z->rot_y = (int16_t)((rot + (hinten ? 0 : 2048)) & 0x0fff);
+    int griff = 0, falsch = 0, weit = 0, in_wand = 0, max_d = 0;
+    int32_t alt_x = 0, alt_z = 0; int v_alt = 0;
+    for (int f = 0; f < 500; f++) {
+        int v = re15_player_victim_state();
+        if (v == 0 && !(pl->hit_react & 1)) { pl->x = px; pl->z = pz; pl->rot_y = (int16_t)rot; }
+        if (pl->hp < 60) pl->hp = 100;
+        int32_t vor_x = pl->x, vor_z = pl->z;
+        frame(0, 0);
+        v = re15_player_victim_state();
+        if (v == 1) {
+            if (v_alt != 1) { alt_x = vor_x; alt_z = vor_z; }        /* Zupack-Bild: Startwert = Stand */
+            int32_t sx, sz; soll_lage(pl, &sx, &sz);
+            int32_t nx = sx, nz = sz;
+            re15_collision_ensure_band(pl->y);
+            re15_collision_constrain(&g_room_rdt, alt_x, alt_z, &nx, &nz);
+            if (griff > 0 && abs((int)(pl->x - nx)) + abs((int)(pl->z - nz)) > 4) {
+                falsch++;
+                if (falsch <= 5) printf("  F%d Ist (%d,%d) != ein Durchgang (%d,%d) (alt (%d,%d), Soll (%d,%d))\n", f, (int)pl->x, (int)pl->z,
+                                        (int)nx, (int)nz, (int)alt_x, (int)alt_z, (int)sx, (int)sz);
+            }
+            int32_t cx = pl->x, cz = pl->z;
+            re15_collision_constrain(&g_room_rdt, pl->x, pl->z, &cx, &cz);
+            if (abs((int)(cx - pl->x)) + abs((int)(cz - pl->z)) > 4) in_wand++;
+            int d = (int)sqrt((double)(pl->x - z->x) * (pl->x - z->x) + (double)(pl->z - z->z) * (pl->z - z->z));
+            int sprung = (int)sqrt((double)(pl->x - alt_x) * (pl->x - alt_x) + (double)(pl->z - alt_z) * (pl->z - alt_z));
+            if (d > max_d) max_d = d;
+            if (d > max_abst || sprung > 1200) weit++;
+            alt_x = pl->x; alt_z = pl->z;
+            griff++;
+        }
+        v_alt = v;
+        if (griff > 0 && v == 0 && f > 60) break;
+    }
+    printf("pruef_klemme ROOM%04X %s: %d Griffbilder, %d ohne den einen Durchgang, %d mit Sprung > 1200 oder weiter als %d (max Abstand %d), %d in einer Wandzelle\n",
+           room, hinten ? "HINTEN" : "VORN", griff, falsch, weit, max_abst, max_d, in_wand);
+    CHECK(griff >= 30, "kein Griff zustande gekommen (%d Bilder)", griff);
+    CHECK(falsch == 0, "%d Bilder weichen vom einen Wandklemm-Durchgang ab (Rueckfall/Startwert)", falsch);
+    CHECK(weit == 0, "%d Bilder mit Sprung > 1200 oder Leon weiter als %d vom Greifer (alter Standpunkt)", weit, max_abst);
+    CHECK(in_wand == 0, "%d Bilder mit Leon in einer Wandzelle", in_wand);
+    return s_fail ? 1 : 0;
+}
+
 /* karte <datei> <raum-hex> <char 0|4> <x> <y> <z> <rot> <hp> <cut> <waffe|0> <flags|->
  * Schreibt Slot 0 einer PSX-Karte (wie test_r36_kleidung karte) — zusaetzlich die ausgeruestete Waffe
  * (Briefing-Inventar: 1 Messer, 3 Browning) und Spielflags "zone:bit,..." (z.B. die Kill-Flags der
@@ -768,6 +890,8 @@ int main(int argc, char **argv)
     if (strcmp(teil, "re2gt") == 0) return teil_re2gt(argc, argv);
     if (strcmp(teil, "skel") == 0) return teil_skel(argc, argv);
     if (strcmp(teil, "vergleich") == 0) return teil_vergleich(argc, argv);
+    if (strcmp(teil, "pruef_re2") == 0) return teil_pruef_re2(argc, argv);
+    if (strcmp(teil, "pruef_klemme") == 0) return teil_pruef_klemme(argc, argv);
     printf("Teile: griff | karte\n");
     return 2;
 }
