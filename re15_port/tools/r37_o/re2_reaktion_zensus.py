@@ -47,6 +47,7 @@ def beschreibe(op, r):
 def main():
     rooms = sys.argv[1:] or sorted(os.path.basename(p)[4:8] for p in glob.glob(R.rdt_path('*')))
     neck_modi = collections.Counter(); dest_modi = collections.Counter()
+    zaehl = collections.Counter()   # erste Figuren-Reaktion (nur Figuren: Work-Art 1 Spieler, 2 Partner, 3 NPC)
     for room in rooms:
         d = open(R.rdt_path(room), 'rb').read()
         for which, nm in ((16, 'main'), (17, 'sub')):
@@ -57,16 +58,29 @@ def main():
                     for _, op, r in recs:
                         if op == 0x41: neck_modi[r[1]] += 1
                         if op == 0x40: dest_modi[r[2]] += 1
+                work = None
+                works = []
+                for off, op, r in recs:
+                    if op == 0x2e: work = r[1]
+                    works.append(work)
                 for k, (off, op, r) in enumerate(recs):
                     if op != 0x36: continue
                     folge = []
-                    for off2, op2, r2 in recs[k + 1:k + 25]:
+                    erste = None
+                    for j in range(k + 1, min(k + 25, len(recs))):
+                        off2, op2, r2 = recs[j]
                         if op2 in STOP: break
                         if op2 in FIG: folge.append('@0x%05X %s' % (off2, beschreibe(op2, r2)))
+                        figur = works[j] in (1, 2, 3)
+                        if erste is None and figur and op2 == 0x41: erste = 'Kopf'
+                        if erste is None and figur and ((op2 == 0x40 and r2[2] == 9) or op2 in (0x58, 0x33)): erste = 'Koerper'
+                    if erste: zaehl[erste] += 1
                     if any(('Plc_neck' in f) or ('Plc_dest m9' in f) or ('Plc_rot' in f) or ('Dir_set' in f)
                            for f in folge):
                         print('ROOM%s %s%02d Se_on @0x%05X %s' % (room, nm, i, off, r.hex(' ')))
                         for f in folge: print('      ' + f)
+    print('Erste Figuren-Reaktion nach Se_on (Work-Art 1/2/3): Kopf (Plc_neck) %d, Koerper (Plc_dest m9/Plc_rot/Dir_set) %d'
+          % (zaehl['Kopf'], zaehl['Koerper']))
     print('Plc_neck-Modi in Szenen-Subs mit Message_on:', dict(sorted(neck_modi.items())))
     print('Plc_dest-Modi in Szenen-Subs mit Message_on:', dict(sorted(dest_modi.items())))
 

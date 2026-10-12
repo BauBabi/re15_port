@@ -1,0 +1,18 @@
+ROOM3010 sub04 Message_on @0x02CA4: Work(1, 0) Pos(-24300,-25000) Dir 2640 @0x02B78 -> Peilung 2895 (-255) | Work(2, 0) Pos(-26300,-17800) Dir 1024 @0x02BEC -> Peilung 847 (+177)
+ROOM3040 sub10 Message_on @0x0155E: Work(1, 0) Pos(-15878,-18971) Dir 63 @0x0153A -> Peilung 400 (-337) | Work(2, 0) Pos(-14785,-19742) Dir 2341 @0x0154E -> Peilung 2448 (-107)
+ROOM3040 sub12 Message_on @0x01672: Work(1, 0) Pos(-15453,-19996) Dir 63 @0x01610 -> Peilung 4094 (+65) | Work(2, 0) Pos(-13761,-19992) Dir 2341 @0x01624 -> Peilung 2046 (+295)
+ROOM3040 sub14 Message_on @0x017DA: Work(1, 0) Pos(-16502,-18871) Dir 31 @0x017B2 -> Peilung 1 (+30) | Work(2, 0) Pos(-13866,-18874) Dir 2053 @0x017C6 -> Peilung 2049 (+4)
+ROOM5030 sub11 Message_on @0x00E9C: Work(1, 0) Pos(-17952,-21337) Dir 3900 @0x00DFA -> Peilung 2933 (+967) | Work(2, 0) Pos(-18230,-20056) Dir 573 @0x00E0E -> Peilung 885 (-312)
+ROOM6020 sub06 Message_on @0x00C78: Work(1, 0) Pos(-10159,-15180) Dir 3240 @0x00C54 -> Peilung 3077 (+163) | Work(3, 0) Pos(-10098,-6995) Dir 1104 @0x00C68 -> Peilung 1029 (+75)
+ROOM6020 sub07 Message_on @0x00DDC: Work(1, 0) Pos(-10159,-15180) Dir 3240 @0x00DB8 -> Peilung 3026 (+214) | Work(3, 0) Pos(-10714,-7261) Dir 816 @0x00DCC -> Peilung 978 (-162)
+ROOM6020 sub08 Message_on @0x00E88: Work(1, 0) Pos(-10159,-15180) Dir 3240 @0x00E64 -> Peilung 3078 (+162) | Work(3, 0) Pos(-10075,-5574) Dir 976 @0x00E78 -> Peilung 1030 (-54)
+ROOM6020 sub09 Message_on @0x00ECA: Work(1, 0) Pos(-10159,-15180) Dir 3072 @0x00EA6 -> Peilung 3026 (+46) | Work(3, 0) Pos(-10714,-7261) Dir 816 @0x00EBA -> Peilung 978 (-162)
+ROOM6020 sub10 Message_on @0x00FC2: Work(1, 0) Pos(-10159,-15180) Dir 3240 @0x00F9E -> Peilung 3078 (+162) | Work(3, 0) Pos(-10075,-5574) Dir 976 @0x00FB2 -> Peilung 1030 (-54)
+ROOM6020 sub11 Message_on @0x01100: Work(1, 0) Pos(-10195,-16245) Dir 3080 @0x010DC -> Peilung 3079 (+1) | Work(3, 0) Pos(-10075,-5574) Dir 976 @0x010F0 -> Peilung 1031 (-55)
+ROOM6020 sub12 Message_on @0x01216: Work(1, 0) Pos(-10159,-15180) Dir 3240 @0x011F2 -> Peilung 3077 (+163) | Work(3, 0) Pos(-10098,-6995) Dir 1104 @0x01206 -> Peilung 1029 (+75)
+ROOM6020 sub14 Message_on @0x0148C: Work(1, 0) Pos(-10159,-15180) Dir 3240 @0x01464 -> Peilung 3026 (+214) | Work(3, 0) Pos(-10714,-7261) Dir 816 @0x01478 -> Peilung 978 (-162)
+ROOM6040 sub18 Message_on @0x0322A: Work(1, 0) Pos(-14500,-14900) Dir 0 @0x031B8 -> Peilung 1302 (-1302) | Work(3, 1) Pos(-15000,-16000) Dir 0 @0x031D0 -> Peilung 3350 (+746)
+ROOM7020 sub12 Message_on @0x0190E: Work(2, 0) Pos(-28000,-17900) Dir 3700 @0x018A2 -> Peilung 250 (-646) | Work(1, 0) Pos(-18600,-21700) Dir 2296 @0x018E0 -> Peilung 2298 (-2)
+ROOM7030 sub07 Message_on @0x02402: Work(1, 0) Pos(-16151,-24649) Dir 1344 @0x023EA -> Peilung 1273 (+71) | Work(3, 1) Pos(-16753,-26146) Dir 1024 @0x023BC -> Peilung 3321 (+1799)
+(A) Aufstellungen (zwei Figuren mit Pos_set + Dir_set vor einem Message_on): 16
+(B) Message_on gesamt 559, davon mit Plc_neck bis zur naechsten Zeile: 123
