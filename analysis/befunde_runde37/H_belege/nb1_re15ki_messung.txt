@@ -54,3 +54,8 @@ Besuch 1 (letzter): F1..F401, Leon (-5900, 16350) -> (-5900, 16350), HP 100 -> 1
   slot 3 t=10 g=0d Folge 0/0@1 1/1@6 | Abstand F1:28617 F6:28617 F7:28617 F100:27239 F200:25430 F300:23873 F400:22162 | Weg 6956
   slot 4 t=11 g=0d Folge 0/0@1 1/1@6 | Abstand F1:27537 F6:27537 F7:27537 F100:25179 F200:22716 F300:20359 F400:18040 | Weg 10460
   slot 5 t=11 g=0d Folge 0/0@1 1/1@6 | Abstand F1:28430 F6:28426 F7:28426 F100:25815 F200:22943 F300:19583 F400:16417 | Weg 14097
+
+## D. Endstand-exe (Bau 14:31 nach d3d92ecd, nur Kopf-Kommentare gegenueber 14:19), RE1.5-KI, gleicher Weg wie A
+### state.log Endstand gegen Spur-exe 12:22 (vgl.py)
+Besuch 0: Zeilen 91/91, abweichend 0, Zeile fuer Zeile gleich
+Besuch 1: Zeilen 401/401, abweichend 0, Zeile fuer Zeile gleich

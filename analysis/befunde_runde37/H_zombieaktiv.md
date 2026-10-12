@@ -24,6 +24,8 @@ Leon zu); die Montage nach Irons' Tod ist das Beispiel.
 - [x] Schritt 3: Umsetzung (zombieaktiv_r37.c, Haken scd_vm.c/enemy_ai_re2_zombie.c, Nachspawn 1130 grid 0x0d)
 - [x] Schritt 4: Messung nachher (exe N1/N2, Harness, Framedump)
 - [x] Schritt 5: Tests (3 Unit-Riegel + 1 Integration, gezielte Laeufe gruen)
+- [x] Nachbesserung 1 (Abnahme 0): M1 Zombie-Girl-Zitat auf STAGE4.BIN, M2 zwei Nutzer-Saetze nach Messung, H6 Stil;
+      kein Verhalten geaendert (gemessen), gezielte Tests gruen
 
 ## Messung vorher
 
@@ -383,4 +385,25 @@ der Spur-exe (91/91 + 401/401 Zeilen); RE2-KI (Standard) alle fuenf g=0d `1/1@6`
   RE2-Abweichungen im Steh-Zweig, OFFEN oben; H3 = die Montage-Einstellung 1130 zeigt die fuenf absichtlich stehend).
 
 ### Tests Nachbesserung 1 (gezielt, KEINE volle Suite)
-(folgt)
+Geaendert sind nur Kommentare (Kopf `re15_zombieaktiv_r37.h`, Kommentar in irons_tod_1150.c) und die Schreibweise von
+`EM_1130_NACH`; neu uebersetzt wurden zombieaktiv_r37.c, irons_tod_1150.c, scd_vm.c, enemy_ai_re2_zombie.c und zwei
+Test-Quellen. Gezielt die Gruppen aller Module der Spur (RE2-Zombie, Montage/Irons 1150, Gegnerzahl, Zombie-KI Runde 36,
+eigene Riegel):
+
+Bau 14:19 (nach 83eeff99):
+```
+ctest --test-dir re15_port/build -R "r37_zombieaktiv|r36_zombieki|r35_cut1150|r36_szene1150|r36_gegnerzahl|re2_zombie|re2z|irons|montage" -E "^integration_" --timeout 600 --output-on-failure -j 4
+100% tests passed, 0 tests failed out of 62
+ctest --test-dir re15_port/build -R "^integration_(r37_zombieaktiv|r35_cut1150|r36_szene1150|r36_gegnerzahl)$" --timeout 1500 --output-on-failure -j 2
+100% tests passed, 0 tests failed out of 4
+```
+(Integration 515,5 s; darin die Montage-Kette integration_r35_cut1150, integration_r36_szene1150, Spur-E-Riegel
+integration_r36_gegnerzahl und integration_r37_zombieaktiv; im Unit-Lauf die Runde-36-F-Riegel unit_r36_zombieki_*.)
+
+Endstand-Bau 14:31 (nach d3d92ecd, gegenueber 14:19 nur Kopf-Kommentare):
+```
+ctest --test-dir re15_port/build -R "r37_zombieaktiv" --timeout 600 --output-on-failure -j 2
+100% tests passed, 0 tests failed out of 4
+```
+dazu der RE1.5-KI-Messweg 1130 mit der Endstand-exe: state.log Zeile fuer Zeile gleich der Spur-exe 12:22 (91/91 +
+401/401, `nb1_re15ki_messung.txt` Abschnitt D).
