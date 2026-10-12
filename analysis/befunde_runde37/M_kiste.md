@@ -63,3 +63,65 @@ des Listenfensters W = x 13..203 / y 52..152, innerhalb des Listen-Panels x 6..2
 Ursache im Code: re15_inv_screen.c build_box_mode — die Op-Liste wird von HINTEN gerastert (frueher Eintrag liegt
 oben). Block 7b (Zeilen) kommt VOR dem Panel-Op (BOXPANEL.BIN mit Rahmen, Kopf-/Fussband UND Listengrund), also
 liegen die Zeilen ueber dem ganzen Panel. Ein Fenster/Abschneiden gibt es nicht.
+
+## 2. RE-Belege (RE2 Retail = Ziel; der Kisten-Schirm ist RE2, RE1.5 hat keinen)
+
+Quelle: ghidra_re2_Leon.txt (Disasm), RE2_Quellcode_V2/FUN_800710dc.c / FUN_80072c6c.c / FUN_8007300c.c /
+FUN_80031070.c. Panel-Ursprung boxX = DAT_800d5c40 = 7, boxY = DAT_800d5c42 = 14 (FUN_80070e58 Ende). Der Port
+blittet das RE2-Panel 1:1 bei x 6 (Bild-Ursprung = RE2 (6,13)), also Port-x = RE2-x; Port-y = RE2-y + 12
+(RE15_BOX_PANEL_DY).
+
+### 2.1 Zeichenreihenfolge: der Rahmen liegt in RE2 UEBER Symbolen, Namen und Ziffern (OT-Reihenfolge, kein Clip)
+
+- Menue-OT: 8 Eintraege je Puffer ab 0x800cc1e8 + buf*0x20. Hauptschleife: `08 00 05 24 li a1,0x8` @0x8002af34,
+  `sll v0,v0,0x5 / addu v0,s0,v0 / sw v0,0x40(s0)` @0x8002af44-54 (DAT_800cc228 = 0x800cc1e8 + buf*0x20),
+  `jal ClearOTagR` @0x8002af90 (umgekehrt verkettet: Eintrag i -> i-1). Gezeichnet ab dem LETZTEN Eintrag:
+  `lw a0,0x40(s2) / jal DrawOTag / addiu a0,a0,0x1c` @0x8002bd54-5c (ebenso @0x8002b42c-34). Reihenfolge der
+  GPU: Eintrag 7, 6, 5, 4, 3, 2, 1, 0 — ein spaeterer Eintrag liegt OBEN.
+- FUN_800710dc (Box-Liste): `lui t1,0x800d / addiu t1,t1,-0x3e18` @0x80071118-1c (0x800cc1e8),
+  `addiu v0,t1,0x8` @0x8007112c + `sll v1,a0,0x5` @0x80071148 -> Eintrag **2** (+8): die 4 Zeilenstreifen, beide
+  Pfeile, die 5 Scrollmarken, die **16 Rahmen-Sprites** (Positionen @0x800a9c38, darunter Kopfband (6,6)+(134,6)
+  je 20 hoch und Fussband (6,127)+(134,127)), Naht- und Auswahllinien — alle per AddPrim in Eintrag 2.
+  `addiu v0,t1,0x18` @0x80071154 -> Eintrag **6** (+0x18): die Zeilen-SYMBOLE (POLY_FT4), eingehaengt
+  `lw v0,0(t1)=>DAT_800cc200 ... sw` @0x80071784-a8 (einlaufende Zeile) und @0x80071900-3c (5 Zeilen).
+- Namen: FUN_800693d0 -> FUN_80031070(x, y, 6|0x4000, id): Kopf `0x800e2ab0 + buf*0xc0 + ((6&7)*2)*0xc` = Kopf 12;
+  FUN_80031bf0 (Hauptschleife @0x8002b298 nach ClearOTagR) haengt Kopf 2i/2i+1 in OT-Eintrag i
+  (`jal AddPrim` @0x80031c3c / @0x80031c48, `addiu s1,s1,0x18`, `addiu s0,s0,0x4`) -> Kopf 12 = Eintrag **6**.
+- Mengen-Ziffern: FUN_8007300c `AddPrim(&UNK_800cc1f4 + buf*0x20, ...)` -> Eintrag **3** (+0xc).
+- Folge: GPU zeichnet Eintrag 6 (Symbole, darueber die Namen: die Koepfe wurden VOR den Symbolen eingehaengt,
+  AddPrim haengt vorn an), dann 3 (Ziffern), dann 2 (Rahmen). **Der Rahmen deckt alles zu, was beim Gleiten aus dem
+  Fenster ragt.** Kein DrawArea/Clip im Box-Code (keine SetDrawArea/DR_AREA-Prim in FUN_800710dc/FUN_80072c6c).
+- Das Fenster: Kopfband endet y 39 (boxY+6+20), Fussband beginnt y 141 (boxY+127); Listenstreifen x
+  `addiu s6,t1,0xc5` @0x80071238 (rechte Kante boxX+0xc5 = 204, exklusiv), Auswahllinien x2
+  `addiu v0,t1,0xc4` @0x80071adc (= 203, inklusiv). Gemessen in BOXPANEL.BIN: Listengrund (24,24,40) Bild-x 7..197,
+  Bild-y 27..127 = RE2 x 13..203 / y 40..140 = Port x 13..203 / y 52..152.
+- Gleitweite: Versatz DAT_800d5c15 +-3 je Bild, 6 Bilder (@0x80070118-24 / @0x800702a4-b0) = 18 px, Commit-Sprung
+  2 px -> eine Zeile (20 px) verschwindet ganz unter dem 20 px hohen Kopf-/Fussband.
+
+### 2.2 RE2 zeichnet beim Gleiten die EINLAUFENDE Zeile (Name, Symbol, Ziffern)
+
+- Name: Zustand 2 (HOCH): Platz (scroll-1)&0x3f @0x80070128-48, `addiu a0,a0,0x7` @0x8007016c (x boxX+7),
+  `addiu a1,a1,0x9` @0x80070174 (y boxY+Versatz+9 = Zeilenoberkante-20 +2); leer -> Id 0x64 @0x8007017c.
+  Zustand 3 (RUNTER): Platz (scroll+5)&0x3f @0x800702b4-d4, `addiu a1,a1,0x81` @0x800702fc (y boxY+Versatz+0x81).
+- Symbol: FUN_800710dc `local_50 = -0x14` (Zustand 2) / `100` (Zustand 3), `local_48 = -1 / 5`
+  (Block vor LAB_800717ac @0x800716b8 `addiu a0,t1,0x1b`, @0x80071718 `addiu a2,t1,0x2e`), x wie die 5 Zeilen.
+- Ziffern: FUN_80072c6c `li s7,0x52` @0x80072e48 (Zustand 3, Platz scroll+5), `li s7,-0x26` @0x80072e74
+  (Zustand 2, Platz scroll-1), y = 70 + Versatz + s7.
+- Der Port zeichnet nur die 5 Zeilen (re15_inv_screen.c `for (k = 0; k < RE15_BOX_WINDOW && k < 5; k++)`) — die
+  einlaufende Zeile fehlt (Luecke im Vorher-Bild).
+
+### 2.3 Lage von Symbol, Name, Ziffern in der Zeile
+
+- Symbol: `addiu t1,t1,0x92` @0x800717d4 (x0 = boxX+0x92 = 153), Breite `li a3,0x30` @0x80071834 (Size != 0) /
+  `li a3,0x18` @0x80071840, `addiu v1,v1,0x93` @0x80071884 (x1 = boxX+0x93+w, POLY-Kante exklusiv) -> schmal
+  153..177 (25 px), breit 153..201 (49 px). Hoehe 0x1b..0x2e (19 px). RE2 setzt BEIDE Breiten an dieselbe linke
+  Kante; das breite Symbol endet 2 px vor dem Fensterrand 203.
+- Name: `addiu a0,t1,0x7` @0x800719b4 (x boxX+7 = 14), y = Zeilenoberkante + 2 (`addiu a1,s8,0x1d` @0x8007197c).
+- Ziffern: FUN_80072c6c Tabelle @0x800aae2c..3f `bd ff ee ff / bd ff 02 00 / bd ff 16 00 / bd ff 2a 00 / bd ff 3e 00`
+  = (-67, -18+20k), Ursprung (220,70) `li v0,0xdc / sh v0,0x34(s1)` @0x80074b88-8c, `li v0,0x46 / sh v0,0x36(s1)`
+  @0x80074b90-94 -> x = 153 = linke Symbolkante, y = Zeilenoberkante + 11; FUN_8007300c Schritt 7 je Ziffer.
+  **RE2 legt die Mengen-Ziffern ins Symbol (unten links), nicht daneben** — wie RE1.5s eigenes Inventar
+  (FUN_80048f28: x Zelle+3, y Zelle+20, also ebenfalls unten links IM Symbol).
+- Namen liegen in RE2 ueber dem Symbol (2.1); RE2s Proportionalschrift (Vorschub-Tabelle 0x8009de34, Flag 0x4000)
+  bleibt vor x 153. Der Port nutzt RE1.5s breitere Schrift (bis 173 px) — deshalb ueberdeckt der Name dort das
+  Symbol. Die Abhilfe ist die LAGE (kein Name erreicht das Symbol), nicht die Ebene.
