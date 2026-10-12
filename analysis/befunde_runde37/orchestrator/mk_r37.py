@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_h.js"
-BASIS = "44881ac2"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_i.js"
+BASIS = "64ba31e0"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -55,7 +55,7 @@ SPUREN = [
    "halten.")),
  dict(id="E", thema="codepanel", baum="r37_codepanel",
   punkte=["bei den Code panels möchte ich das, so lange der Code noch falsch eingegeben ist unten das blaue Licht leuchtet. Ist er dann richtig eingegeben das grüne Licht.",
-          "Die Kamera darf noch auf den Panels bleiben wenn der Piep und unlock sound kommt.", "Nachtrag 3 (Korrektur): Nein, beim Panel in korridor 2 ist falsch - dort soll natürlich rot leuchten - richtig eingegeben - dann blau.... / rot = geschlossen"],
+          "Die Kamera darf noch auf den Panels bleiben wenn der Piep und unlock sound kommt.", "Nachtrag 3 (Korrektur): Nein, beim Panel in korridor 2 ist falsch - dort soll natürlich rot leuchten - richtig eingegeben - dann blau.... / rot = geschlossen", "Nachtrag 3b: Es muss schon in der richtigen Farbe leuchten das Panel... hintergrund rot - rot leuchten - hintergrund blau - blau leuchten..."],
   hinweise=("Code-Panel-Raeume (Runde 36 Spur G, analysis/befunde_runde36/G_tueren.md Z.238ff): Ziffernfeld + Karte in 10D0/10D1 (Code 4312, Blue Keycard), "
    "11E0/11E1 ('Prisons', Yellow Keycard + 0513), 1230/1231 (Zettel 5632); dazu das Minidisc-Schloss 1100/1101 (Cursor-Raetsel) — vollstaendigen Zensus aller "
    "Ziffern-/Code-Panels aller Stages selbst machen (Ck(5,0x0D..0x10)-Muster, Cursor-Raster-Raeume). Die Folge Piep/Aufschliessen (0/15/30 Bilder) baute Spur G "
@@ -107,6 +107,25 @@ SPUREN = [
    "(analysis/befunde_runde36/F_zombieki.md, Riegel unit_r36_zombieki_*, Eintritts-Zensus test_r36_zombieki_eintritt) gruen halten; Spur-E-Riegel "
    "(integration_r36_gegnerzahl) und die Montage-Riegel (integration_r35_cut1150, unit_r36_szene1150*) gruen halten. Riegel: nach der Montage bewegt sich "
    "in 1130/1040 ein Anteil der Zombies binnen N Bildern auf Leon zu (N aus RE2 belegt), Gegenprobe Stand v0.8.24.")),
+ dict(id="I", thema="feuerloescher", baum="r37_feuerloescher",
+  punkte=["Bitte erstelle mir zusätzlich auch ein Modell des Feuerlöschers. Ich finde deine Idee, bei elza einen Leeren Feuerlöscher am Boden zu haben gut. Der müsste dann bei Leon nach der Nutzung erstmalig auftauchen.",
+          "Außerdem finde ich den FEuerlöscher im Spind bei Leon noch unglücklich und würde ihn gerne woanders platzieren...."],
+  hinweise=("Vorarbeit: extracted_re2_feuerloescher/README.md + analysis/befunde_2026-09-21/re2-feuerloescher-modell.md: es gibt KEIN Feuerloescher-Modell in RE2 "
+   "oder RE1.5; vorhanden sind das RE1.5-Item-Bild (info/Re1.5/PSX/ITEM/ITPS.ITP file@0x093000, 112x72 8bpp, Item 0x31: roter Loescher, Chromgriff, weisses Etikett; "
+   "Decoder engine/src/itps_common.c) und vier Basis-Netze (extracted_re2_feuerloescher/basis_kandidaten/: RE1.5 ROOM1010 m00 Spraydose @0xAF4/@0x22D28 und "
+   "ROOM4050 m03 rote Spraydose @0x3788/@0x2DDA8 = beste Basis, RE2 ROOM1010 m03 / 60D0 m02). MODELL BAUEN (PORT-WAHL, im Dossier begruenden): Netz eines "
+   "Feuerloeschers (Zylinderkoerper, Schulter, Ventil mit Griff/Hebel, Schlauch/Duese) in PSX-Massstab (Hoehe aus der realen Groesse und der Leon-Groesse "
+   "abgeleitet, Memory reai-v2-modellmass-aus-kamera), Textur aus dem ITPS-Bild (rot, Chrom, weisses Etikett) als 4/8-bpp-TIM, eingebettet wie die Lageplaene "
+   "der Spur N (engine/src/gen/kartenitems_r36.inc: MD1 + TIM als gen/*.inc, Prop wie Obj_model_set, Licht flach/NCCT wie das Original fuer solche Objekte "
+   "belegen). Sichtpruefung mit Framedumps aus mehreren Kameras + Vergleich mit dem Item-Bild. EINSATZ: (a) Elza ROOM1091 (Schuppen, Text der Spur P "
+   "'Someone must have put out the fire.' msg 20): leerer Loescher liegt von Anfang an am Boden (liegend, plausibler Ort im Schuppen, sichtbar in den Cuts; "
+   "optional Untersuchen-Text als PORT-WAHL zur Freigabe). (b) Leon ROOM1090: derselbe leere Loescher liegt erst NACH dem Loeschen ((3,0x84) = 1, ROOM1090 "
+   "sub06 @0x02722; vorher nicht), danach dauerhaft (Wiederbetreten, Spielstand). (c) Leons Feuerloescher (heute ROOM1000 Bath-Lockers Spind: sub00 @0x00C24 "
+   "Item 0x31 Taken (9,0x86), sub01 @0x00D0C Set(3,0x85)) an einen besseren Ort verlegen: sichtbar mit dem neuen Modell (z.B. Wandhalterung in einem Gang auf "
+   "Leons Weg zu 1090 nach dem Hilferuf in 1050), Taken-Bit (9,0x86) und Set(3,0x85) unveraendert (Spielstaende!), Original-Spind-AOT in 1000 auf Leons Seite "
+   "stilllegen bzw. umwidmen (Elzas 1001 bleibt mit 30 Patronen), Ort mit Bildern begruenden und in 'Zu entscheiden' fuer den Nutzer nennen. Elza-Raeume: "
+   "1091 hat keinen Loescher-Gegenstand. Riegel: Prop vorhanden/nicht vorhanden je Zustand (1091 immer, 1090 erst nach (3,0x84)), Aufnahme am neuen Ort setzt "
+   "(9,0x86)+(3,0x85) wie das Original, Feuer 1090 laesst sich damit loeschen (Weg Ende-zu-Ende an der exe), Paket-Gate-Eintraege fuer neue Assets nennen.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()

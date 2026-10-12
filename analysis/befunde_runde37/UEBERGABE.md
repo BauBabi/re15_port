@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-12 13:00: Nachtrag 3b (Panel leuchtet in der GEMALTEN Lampenfarbe) per SendMessage an Bau-Agent E; Nachtrag 4 -> Spur I feuerloescher (Modell bauen; leer am Boden Elza 1091 / Leon 1090 nach dem Loeschen (3,0x84); Loescher aus dem Spind 1000 an einen besseren Ort, Taken (9,0x86)/(3,0x85) bleiben). Baum `.claude/worktrees/r37_feuerloescher` (Basis 64ba31e0), EIGENER Workflow `wf_d8e6232c-55b` mit `orchestrator/r37_i.js`. Jetzt laufen drei Workflows: Haupt A-G (wf_59e74f0e-8ae), H (wf_04596eeb-782), I (wf_d8e6232c-55b).
 * 2026-10-12 12:40: Nachtrag 3 des Nutzers (Code-Panel "Korridor 2": ROT solange zu, BLAU wenn richtig; "rot = geschlossen") per SendMessage an den laufenden Bau-Agenten E (ab480ee892899bd36) uebermittelt, in AUFTRAG.md (master) und in den E-Punkten von mk_r37.py nachgetragen. ⛔ Die laufende Abnahme E im Workflow wf_59e74f0e-8ae kennt nur die alten Punkte (blau/gruen) aus dem Skript — AUFTRAG.md im E-Baum ist massgeblich (der Agent soll den Nachtrag dort committen); faellt die Abnahme deshalb falsch aus, Rest-Lauf fuer E mit modus abnahme und dem neuen r37.js (mk_r37.py erzeugen).
 * 2026-10-12 12:10: Nachtrag 2 + Ergaenzung des Nutzers -> Spur H zombieaktiv (GENERELL alle Zombies, Vorlage RE2). Baum `.claude/worktrees/r37_zombieaktiv` (Zweig r37/zombieaktiv, Basis 44881ac2), EIGENER Workflow `wf_04596eeb-782` mit `orchestrator/r37_h.js` (args `{welle:[H], slots:1, max_nach:2}`). Hauptlauf `wf_59e74f0e-8ae` (A/C/D/E/F/G, Basis f1e019ca) laeuft unveraendert weiter. Zusammen 5 parallele Agenten. Der Nutzer hat die Lesart der Runde bestaetigt ("ja, perfekt.").
 * 2026-10-12 11:40: Workflow GESTARTET: Run `wf_59e74f0e-8ae` (args `{welle:[A,C,D,E,F,G], slots:4, max_nach:2}`), Journal `~/.claude/projects/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/subagents/workflows/wf_59e74f0e-8ae/journal.jsonl`.
@@ -25,6 +26,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | F sperre1050 | r37_sperre1050 | "Chief first"-Sperre auch an ROOM1050 -> 10A0 (Endspiel), ROOM50B1 Elza-Text ohne Ada | gestartet |
 | G beretta | r37_beretta | Beretta M93R: jeder Schuss des Feuerstosses trifft (Glock 18 pruefen) | gestartet |
 | H zombieaktiv | r37_zombieaktiv | Zombies GENERELL aktiv wie in RE2 (Beispiel Montage nach Irons' Tod) | gestartet (eigener Workflow) |
+| I feuerloescher | r37_feuerloescher | Feuerloescher-Modell; leer am Boden 1091 (Elza) / 1090 nach dem Loeschen (Leon); Loescher aus dem Spind 1000 verlegen | gestartet (eigener Workflow) |
 
 ## 2. Bei einem Abbruch (Sitzungs-/Wochenlimit)
 1. Verwaiste Prozesse beenden (`tasklist`; nur per PID, nie /IM), DuckStation `settings.ini` EnableGDBServer = false pruefen.
