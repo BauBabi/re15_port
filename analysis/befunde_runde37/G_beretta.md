@@ -42,8 +42,10 @@ nicht versetzen (die Lage springt nach dem Schreiben zurueck, Lauf 2 im Log), de
 Nach dem Treffer traegt e3 `+0x93 = 01` und Zustand 2/5 (HURT, Reaktion = Waffen-Id) bis B50; in B51 zurueck 1/2/0 mit
 `+0x93 = 00` (RE1.5-Riegel lebt 10 Bilder). => **Das Original trifft je Feuerstoss EINMAL** (Schaden 15 = Spalte 5 der
 Zeile 0x11, = 3 x Browning 5), zeigt aber drei Schuesse. Die drei Blitze/Knaelle kommen aus der FX-Kette (2.2).
-Im ersten Lauf (Leon am Spielstand-Ort, Ziel hinter dem Konferenztisch) lehnte die Sichtlinie den Gewinner 0x800ace20 ab
-(`v0 = 1` @0x80012170) — gleicher Zaehlbefund: Resolver 1x, Kinder B21/B24/B27.
+Vorlaeufe (Leon am Spielstand-Ort, Ziel hinter dem Konferenztisch): die Sichtlinie lehnte den Gewinner 0x800ace20 ab
+(`v0 = 1` @0x80012170) — gleicher Zaehlbefund: Resolver 1x, Kinder B21/B24/B27 (Log ueberschrieben, Zahlen hier). Lauf
+`orig_w5_b/log.txt`: Leon per RAM auf (200,-18200) gehalten — sobald das Schreiben endet (B31), springt die Lage auf
+(-5281,-15810) zurueck; deshalb wurde im Endlauf das ZIEL versetzt, nicht Leon.
 
 ## 2. RE-Belege (selbst disassembliert; `re15_disasm.py` / `re2_disasm.py`, CORE00.ESP selbst gedumpt)
 
@@ -118,11 +120,61 @@ schadet in RE2 wie ein Handgun-Schuss, und die kurze Pause laesst die naechste K
 
 ## 3. Umsetzung
 
-(offen)
+### 3.1 Entscheidung (NUTZER-VORGABE, Form aus RE2)
+Das Original (RE1.5) trifft je Feuerstoss einmal (2.1, 1.2) — der Wunsch des Nutzers ist also eine NUTZER-VORGABE.
+Ihre FORM kommt aus RE2 Retail (Beta -> Retail), wo der Feuerstoss der Custom Handgun genau so gebaut ist (2.4):
+* **Zeitpunkte**: Kugel 1 im Eintrittsbild (wie bisher @0x8003396c), Kugel 2/3 im Bild +3/+6 — RE2 Bild 0/3/6
+  (@0x80048910-20) und die RE1.5-FX-Kette (Warte 0/2/2, Kinder B41/B44/B47 am Original, F61/F64/F67 im Port) liegen auf
+  denselben Bildern; Treffer, Blitz und Huelse fallen damit zusammen, der Knall folgt im naechsten Bild (Routine 9).
+* **Resolve je Kugel**: derselbe Resolver re15_player_weapon_fire(5|6) (Sichtlinie @0x80012168, Gegnerwahl, Schaden,
+  Reaktion, Blut, RE2-Trefferpause) — RE2 ruft je Kugel ebenso denselben Resolver FUN_800410CC nach dem Skript-Neustart.
+* **Patronen**: unveraendert drei im Eintrittsbild (`jal 0x8004eae4` x3 @0x80033974/7c/84, byte-true); Kugel k nur, wenn
+  ihre Patrone abgebucht wurde (RE2: `jal 0x80069f54` @0x80048938) — 1 Patrone im Magazin = 1 Treffer.
+* **RE1.5-Riegel** +0x93 Bit 0 (`ori v0,v0,0x1` @0x800124F0): haelt im RE1.5-Modell jeden weiteren Treffer bis zum Ende der
+  Trefferreaktion ab (am Original: B41..B50, Freigabe B51). Fuer Gegner ohne RE2-Trefferpause loest Kugel 2/3 den Riegel,
+  den DIESER Feuerstoss gesetzt hat (Bits 0|1), solange der Gegner lebt (HP >= 0); Gegner mit RE2-Pause (+0x1D3) behalten
+  die RE2-Regel (Zeile 4 = 1 Bild beim Zombie, 0 beim Hund/Spinne, 15 bei der Kraehe — RE2 Retail).
+* **Schaden je Kugel = Spalte 3** (Einzelschuss-Pistole): RE2 Zeile 4 == Zeile 3 im Schaden (20/22 Tabellen, 2.4). Die
+  RE1.5-Spalte 5/6 ist der Schaden des GANZEN Stosses (Zombie 15 = 3 x 5, 2.3) — mit drei Treffern a Spalte 5 waere der
+  Stoss dreifach so stark wie im Original. Mit Spalte 3 ist die RE1.5-Zombiezeile exakt der Original-Stoss (3 x 5 = 15);
+  die RE2-Zeilen des Ports (Zombie/Hund/Kraehe/Spinne) haben ohnehin Spalte 5 == Spalte 3 (16/11/18/15/17).
+* **Ende**: der Feuerstoss endet mit dem Rueckstoss (re15_player_aim_interrupt bei Treffer/Griff, re15_player_aim_reset beim
+  Raumwechsel) oder einem Waffenwechsel — RE2: Verlassen von Sub 2 beendet ihn ebenso.
+* NICHT uebernommen aus RE2: Loslassen des Abzugs bricht ab (@0x80048928-30) und Einzelschuss per Bit 126 (@0x800488e4) —
+  RE1.5 bucht alle drei Patronen sofort ab und zeigt immer drei Blitze; beides bleibt RE1.5.
 
-## 4. Messung nachher
+### 3.2 Dateien
+* NEU `re15_port/engine/src/beretta_r37.c`, `re15_port/include/re15_beretta_r37.h` (Belege im Kopf): `re15_beretta_r37_feuerstoss`
+  (Eintrittsbild), `re15_beretta_r37_tick` / `_tick_ex` (je Bild, Kugel 2/3 im Bild 3/6), Riegel-Loesen, Mess-Zaehler.
+  Konstanten: `BERETTA_KUGEL_ABSTAND 3` (@0x80048914/1c, CORE00.ESP +0x0E = 2 @0x11B0/0x11D8 + Routine 15 @0x80017aec-b38),
+  `BERETTA_KUGELN 3` (@0x80033974/7c/84, drei Routine-15-Zeilen @0x1188/0x11B0/0x11D8); Waffen 5/6 (@0x80074114/18).
+* Haken `re15_port/engine/src/game_step_common.c` (Kommentar "Runde 37 Spur G"): Include; je Bild
+  `if (c->rdt_ok) (void)re15_beretta_r37_tick();` vor dem R1-Feuerblock; im Entlade-Block Rueckgabe des Resolvers und Zahl der
+  abgebuchten Patronen merken, danach `re15_beretta_r37_feuerstoss(eq_item, r37_patronen, r37_treffer1)`.
+* Haken `re15_port/engine/src/re15_damage.c` hinter der Python-Zeile: `if (weapon_id == 5 || weapon_id == 6) dmg = dmg_row[3];`.
+* `re15_port/tests/unit/test_re2_hp_model.c`: Erwartungs-Index R35_W fuer 5/6 auf Spalte 3 (der Test pinnte den alten
+  "ein Resolve = ganzer Stoss"-Schaden; Begruendung im Kommentar).
+* Keine neuen Assets, keine Sprachdateien, kein Flag/Bank-9-Bit.
 
-(offen)
+## 4. Messung nachher (exe, eigener Bau mit 3f17b7db-Code; dieselben Laeufe wie 1.1, `mess_r37g/nachher_*`)
+| Lauf | Munition | Treffer (Bild, dHP) | HP | Blut id=0 (Alter 1) | FX-Kinder |
+|---|---|---|---|---|---|
+| nachher_w5_re2 (Leon, RE2) | 15 -> 12 (F61) | F61 -16, F64 -16, F67 -16 | 250 -> 202 | F61, F64, F67 | F61/F64/F67 |
+| nachher_w6_re2 (Glock) | 15 -> 12 | F61, F64, F67 je -16 | 250 -> 202 | 3 | F61/F64/F67 |
+| nachher_w5_re15 (RE1.5-KI) | 15 -> 12 | F61, F64, F67 je -16 (je Treffer st=2 HURT, ss1=5) | 250 -> 202 | F61, F64, F67 | F61/F64/F67 |
+| nachher_w6_re15 | 15 -> 12 | F61, F64, F67 je -16 | 250 -> 202 | 3 | |
+| nachher_w3_re2 (Gegenprobe Browning) | 15 -> 14 | F61 -16 (einer) | 250 -> 234 | F61 | F61 |
+| nachher_w3_re15 (Gegenprobe) | 15 -> 14 | F61 -16 (einer) | 250 -> 234 | F61 | F61 |
+| nachher_w5_re2_elza (Elza PL04, ROOM11E1, Platz 1 Typ 0x10) | 15 -> 12 (F91) | F91, F94, F97 je -16 | 58 -> 10 | | F91/F94/F97 |
+| nachher_w6_re2_elza | 15 -> 12 | F91, F94, F97 je -16 | 58 -> 10 | | |
+| nachher_w5_re15_elza (RE1.5-KI) | 15 -> 12 | F91 Platz 1, F94 Platz 2, F97 Platz 3 je -16 | | | |
+| nachher_w3_re2_elza (Gegenprobe) | 15 -> 14 | F91 -16 (einer) | 58 -> 42 | | |
+Elza-Start wie test_r35_werfer_elza (RE15_TITLE_CONFIRM_MS=1500, RE15_PSELECT_AUTO=1, RE15_PSELECT_AUTO_SWITCH=1); der
+Debug-Sprung 11E0 landet in ihrer Variante ROOM11E1 (debug.log `[pl] Spieler-Familie PL04`, `loaded room11e1.rdt`).
+ROOM1141 (Elzas Besprechungsraum) hat keine Gegner — Lauf dort ohne Ziel verworfen.
+RE1.5-KI in ROOM11E1: der getroffene Zombie faellt (ss1 0x11, Clip 11, g 0x80) und ist im Fallen kein Kandidat -> Kugel 2/3
+gehen ueber den Rueckgriff an den naechsten Zombie (je ein Treffer, je -16). Das ist die RE1.5-Kandidatenregel, keine Luecke:
+jede Kugel trifft.
 
 ## 5. Tests
 

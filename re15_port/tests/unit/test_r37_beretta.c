@@ -3,8 +3,9 @@
  * analysis/befunde_runde37/G_beretta.md.
  *
  * Misst die MECHANIK am echten Resolver re15_player_weapon_fire (FUN_80011f50) mit der echten ROOM1140.RDT
- * (Sichtlinie FUN_8001b9b4 aktiv). Leon (9000,-10300) Blick -z (rot 1024) neben dem Konferenztisch, Zombie
- * Typ 0x10 bei (9000,-19600) — dieselbe freie Bahn wie test_r36_schuss Teil A ("neben dem Tisch").
+ * (Sichtlinie FUN_8001b9b4 aktiv). Leon (200,-18200) Blick -z (rot 1024) hinter dem Konferenztisch (Kante -17450),
+ * Ziel bei (200,-19600), zweites Ziel (200,-21600) — dieselbe freie Bahn wie die exe-Messung (Plaetze 5/4) und
+ * integration_r36_schuss "frei".
  *
  *  A  Kugel-Takt: Kugel 2/3 in Tick 3/6 (`addiu v0,zero,3/6` @0x80048914/1c, ESP-Routine-15-Kette Warte
  *     0/2/2 @CORE00.ESP 0x1188/0x11B0/0x11D8); Ticks 1/2/4/5/7.. loesen nichts auf.
@@ -13,7 +14,7 @@
  *     re15_beretta_r37 loest ihn fuer DIESEN Feuerstoss -> 3 Treffer, Zaehler riegel_geloest = 2.
  *  C  Schaden je Kugel = Spalte 3 (Einzelschuss-Pistole): RE2-Import-Zeile 16 (= Zeile 4 == Zeile 3,
  *     @0x800A4168/@0x800A4154 w0 0x00E03C10); RE1.5-Zeile (Import AUS) 5 statt 15 (@0x8006e0d0 + 0x10*0x58
- *     + 3*4 / + 5*4) -> 3 Kugeln = 15 = der RE1.5-Feuerstoss; Gorilla 0x27 12 statt 28.
+ *     + 3*4 / + 5*4) -> 3 Kugeln = 15 = der RE1.5-Feuerstoss; Hund 0x20 (RE1.5-KI) 10 statt 24.
  *  D  Patronen: Kugel k nur mit eigener Patrone (RE2 `jal 0x80069f54` @0x80048938): 1 Patrone -> 1 Kugel,
  *     2 -> 2, 3 -> 3.
  *  E  Abbruch: Rueckstoss vorbei (tick_ex(0)) -> keine weitere Kugel; Zaehler abgebrochen.
@@ -61,7 +62,7 @@ static void spieler(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     memset(pl, 0, sizeof *pl);
-    pl->active = 1; pl->hp = 100; pl->state = 1; pl->x = 9000; pl->y = 0; pl->z = -10300; pl->rot_y = 1024;
+    pl->active = 1; pl->hp = 100; pl->state = 1; pl->x = 200; pl->y = 0; pl->z = -18200; pl->rot_y = 1024;
     pl->floor = 0;
     re15_player_apply_hitbox(pl);
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) memset(&g_actors[s], 0, sizeof g_actors[s]);
@@ -70,9 +71,10 @@ static re15_actor_t *mk(int slot, uint8_t type, int32_t z, int16_t hp)
 {
     re15_actor_t *e = &g_actors[slot];
     memset(e, 0, sizeof *e);
-    e->active = 1; e->type = type; e->x = 9000; e->y = 0; e->z = z; e->hp = hp;
+    e->active = 1; e->type = type; e->x = 200; e->y = 0; e->z = z; e->hp = hp;
     e->state = 1; e->rot_y = 0;
     re15_enemy_apply_hitbox(e, type);
+    e->grid_id = 0; e->aim_band = 2;            /* aufrecht / LEVEL (wie test_re2_hp_model arm()) */
     return e;
 }
 /* Eintrittsbild wie game_step: Resolve (Kugel 1, @0x8003396c), dann der Feuerstoss mit n Patronen. */
@@ -144,9 +146,10 @@ int main(void)
     CHECK(21, z->hp == 235, "drei Kugeln = 15 = der RE1.5-Feuerstoss (3 x 5): hp %d", z->hp);
     re15_beretta_r37_reset();
     spieler();
-    z = mk(Z, 0x27, -19600, 500);                       /* Gorilla: Spalte 3 = 12, Spalte 5 = 28 */
+    z = mk(Z, 0x20, -19600, 500);                       /* Hund (RE1.5-Zeile): Spalte 3 = 10, Spalte 5 = 24 */
     eintritt(5, 3);
-    CHECK(22, z->hp == 488, "Gorilla 0x27: Kugel 1 = 12 (Spalte 3 @0x8006e0d0+0x27*0x58+12), hp %d", z->hp);
+    CHECK(22, z->hp == 490, "Hund 0x20 (RE1.5-Zeile @0x8006e0d0+0x20*0x58): Kugel 1 = 10 (Spalte 3), nicht 24 "
+          "(Spalte 5): hp %d", z->hp);
     re15_re15_re2z_import_set(1);
     re15_beretta_r37_reset();
     spieler();
@@ -197,11 +200,17 @@ int main(void)
     {   /* mit einem zweiten Zombie dahinter: Kugel 2/3 gehen auf ihn (Rueckgriff @0x80012404-18) */
         re15_beretta_r37_reset();
         spieler();
-        z = mk(Z, 0x10, -19600, 10);
         re15_actor_t *z2 = mk(Z + 1, 0x10, -21600, 250);
+        int frei = re15_player_weapon_fire(3);       /* Kontrolle: der zweite Platz ist allein treffbar */
+        CHECK(52, frei == Z + 2 && z2->hp == 234, "Kontrolle: Platz 2 allein treffbar (r=%d hp=%d)", frei, z2->hp);
+        spieler();
+        z = mk(Z, 0x10, -19600, 10);
+        z2 = mk(Z + 1, 0x10, -21600, 250);
         eintritt(5, 3);
+        CHECK(53, z->hp < 0 && z2->hp == 250, "Kugel 1 toetet den vorderen (hp %d), der hintere unberuehrt (hp %d)",
+              z->hp, z2->hp);
         ticks(8, bei, 8);
-        CHECK(52, z2->hp == 218, "Kugel 2/3 treffen den naechsten Zombie (hp %d, erwartet 218)", z2->hp);
+        CHECK(54, z2->hp == 218, "Kugel 2/3 treffen den naechsten Zombie (hp %d, erwartet 218)", z2->hp);
     }
 
     /* ===================== G: andere Waffen ===================== */

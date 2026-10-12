@@ -49,3 +49,15 @@ if os.path.exists(wf):
             events.append((cur, 'wf ' + line.strip()))
 for f, t in sorted(events, key=lambda x: x[0]):
     print('F%-5d %s' % (f, t))
+# fx.log (RE15_FX_LOG): Blut-/Treffer-Effekte id=0 mit Alter 1 (frame=1) je Bild = im Bild gespawnt
+fx = os.path.join(wd, 'fx.log')
+if os.path.exists(fx):
+    per = {}
+    for line in open(fx, encoding='utf-8', errors='replace'):
+        m = re.match(r'^id=0 sub=(\d+) eidx=\d+ frame=(\d+) w\((-?\d+),(-?\d+),(-?\d+)\) phys=0 .*F=(\d+)$', line.strip())
+        if not m: continue
+        F = int(m.group(6))
+        per.setdefault(F, set()).add((int(m.group(2)), m.group(3), m.group(4), m.group(5)))
+    neu = [(F, sum(1 for v in per[F] if v[0] == 1)) for F in sorted(per)]
+    neu = [(F, n) for F, n in neu if n]
+    print('Blut-Effekte (id=0, Alter 1) je Bild:', neu, '-> gesamt', sum(n for _, n in neu))
