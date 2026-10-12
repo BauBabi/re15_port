@@ -8,8 +8,8 @@
 #   K3  Ereignisfolge (debug.log `[irons-tod] Folge #n <K|S|C> ROOMxxxx T<takt> ...`): je Montage-Raum der Knall VOR
 #       dem Spawn, der Spawn im Raumaufbau VOR dem ersten Kamerabild; state.log: das ERSTE Bild jedes Montage-Raums
 #       zeigt die Zombies schon (Eintraege `[slot t=..` in der ersten Zeile des Raumbesuchs)
-#   K2  ROOM11C0: Plc_neck Modus 1 Ada -> Marvin und Marvin -> Ada (RE15_NECK_LOG), Plc_dest Modus 9 beider auf den
-#       Partner (debug.log `[scd] Plc_dest(slot=..`)
+#   K2  ROOM11C0: Plc_neck Modus 1 Ada -> Marvin und Marvin -> Ada (RE15_NECK_LOG); seit Runde 37 Spur O KEIN Plc_dest
+#       Modus 9 mehr (einander zugewandt ab dem Raumaufbau), Marvins Lauf Modus 5 (debug.log `[scd] Plc_dest(slot=..`)
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r35_cut1150_karte> -DWORKDIR=<dir> -P test_r36_szene1150.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -174,10 +174,17 @@ foreach(_m "PLC_NECK slot=1 mode=1 tgt=(-8163,0,-13748)" "PLC_NECK slot=4 mode=1
         message(FATAL_ERROR "r36_szene1150[K2]: fehlt im neck.log: '${_m}'")
     endif()
 endforeach()
-foreach(_m "Plc_dest(slot=1 mode=0x09 dest=(-8163,-13748))" "Plc_dest(slot=4 mode=0x09 dest=(-8965,-14347))")
-    string(FIND "${_dbg}" "${_m}" _p)
-    if(_p LESS 0)
-        message(FATAL_ERROR "r36_szene1150[K2]: fehlt im debug.log: '${_m}'")
-    endif()
-endforeach()
+# Runde 37 Spur O (Nachtrag 11 "Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um"):
+# im Gespraech dreht sich niemand mehr per Plc_dest Modus 9 — beide stehen ab dem Raumaufbau einander zugewandt
+# (Dir_set / Spawn-Gier, Riegel integration_r37_szene11c0); bleibt Marvins Lauf zur Tuer (Modus 5).
+string(FIND "${_dbg}" "Montage 11C0 (Programm 4)" _p11)
+string(SUBSTRING "${_dbg}" ${_p11} -1 _dbg11)
+string(FIND "${_dbg11}" "mode=0x09" _p9)
+if(NOT _p9 LESS 0)
+    message(FATAL_ERROR "r36_szene1150[K2/r37 O]: in ROOM11C0 noch ein Plc_dest Modus 9 (Koerperdrehung im Gespraech)")
+endif()
+string(FIND "${_dbg11}" "Plc_dest(slot=4 mode=0x05 dest=(-25100,17250))" _p5)
+if(_p5 LESS 0)
+    message(FATAL_ERROR "r36_szene1150[K2]: Marvins Lauf zur Tuer (Plc_dest Modus 5) fehlt im debug.log")
+endif()
 message(STATUS "r36_szene1150: OK - K1 RE2-Knall, K3 Folge + erste Bilder (${_erste}), K2 Blicke/Drehungen")

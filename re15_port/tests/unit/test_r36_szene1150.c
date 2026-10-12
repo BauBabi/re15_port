@@ -14,8 +14,9 @@
  *               Kamera, die ihn zeigt; Varianten 1140/1070 leer und Tor schon aufgebrochen.
  *   dialog11c0  K2: Ada und Marvin wenden sich bei ihren Zeilen einander zu (Koerper: Ausrichtungs-Test der Engine
  *               re15_ai_arc_test mit dem Kegel des Drehens, Typ-Tabelle @0x80076c41; Kopf: Plc_neck Modus 1 auf den
- *               Partner); Beats der Nutzer-Vorgabe r35 (zum Gebaeude, "Oh, no, Leon!" zum Gebaeude, Ada sieht
- *               Marvin nach). */
+ *               Partner); Beats der Nutzer-Vorgabe r35 (zum Gebaeude, Ada sieht Marvin nach). Runde 37 Spur O
+ *               (Nachtrag 11): "Oh, no, Leon!" Marvin zu Ada, Ada sieht ihm nur mit dem Kopf nach (Riegel der Spur O:
+ *               test_r37_szene11c0.c). */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -408,9 +409,14 @@ static void teil_dialog11c0(void)
         /* gemessen wird in JEDEM Bild der Zeile; gezaehlt wird, wie viele Bilder die Bedingung haelt */
         if (id == 10) { bild_mit[10]++; ok_ada_zu_marvin_10 += zugewandt(ada, mx, mz); ok_mar_kopf_ada_10 += kopf_auf(mar, ADA_X, ADA_Z); }
         if (id == 11) { bild_mit[11]++; ok_mar_zu_ada_11 += zugewandt(mar, ADA_X, ADA_Z); ok_ada_kopf_mar_11 += kopf_auf(ada, -8163, -13748); }
-        if (id == 12) { bild_mit[12]++; ok_mar_tuer_12 += kopf_auf(mar, TUER_X, TUER_Z); ok_ada_kopf_mar_12 += kopf_auf(ada, -8163, -13748); }
+        /* Runde 37 Spur O (Nachtrag 11 "steht marvin da, spricht, schaut aber nicht zu ada"): bei "Oh, no, Leon!" sieht
+         * Marvin Ada an (Koerper + Kopf), nicht mehr zum Gebaeude */
+        if (id == 12) { bild_mit[12]++; ok_mar_tuer_12 += zugewandt(mar, ADA_X, ADA_Z) && kopf_auf(mar, ADA_X, ADA_Z);
+                        ok_ada_kopf_mar_12 += kopf_auf(ada, -8163, -13748); }
         if (id == 13) { bild_mit[13]++; ok_mar_zu_ada_13 += zugewandt(mar, ADA_X, ADA_Z); ok_mar_kopf_ada_13 += kopf_auf(mar, ADA_X, ADA_Z); }
-        if (id == 14) { bild_mit[14]++; ok_ada_tuer_14 += zugewandt(ada, TUER_X, TUER_Z); }
+        /* Runde 37 Spur O (Nachtrag 11 "Dann dreht sich Ada noch mal um 90 grad um"): Ada sieht ihm mit dem KOPF nach
+         * (Plc_neck m1 zur Tuer = seine Laufrichtung), der Koerper bleibt Marvins Platz zugewandt */
+        if (id == 14) { bild_mit[14]++; ok_ada_tuer_14 += kopf_auf(ada, TUER_X, TUER_Z) && zugewandt(ada, -8163, -13748); }
         if (g_room_change.pending) break;
     }
     printf("  Nachrichten-Beginn:"); for (int i = 0; i < n_msg; i++) printf(" %d", msg_bild[i]); printf(" (Schnitt nach %d Bildern)\n", f + 1);
@@ -424,13 +430,14 @@ static void teil_dialog11c0(void)
     PRUEF(bild_mit[11] > 0 && ok_ada_kopf_mar_11 == bild_mit[11], "msg 11: Ada sieht Marvin an in %d von %d Bildern",
           ok_ada_kopf_mar_11, bild_mit[11]);
     PRUEF(bild_mit[12] > 0 && ok_mar_tuer_12 == bild_mit[12] && ok_ada_kopf_mar_12 == bild_mit[12],
-          "msg 12 'Oh, no, Leon!': Marvin blickt zum Gebaeude (%d/%d), Ada sieht ihn an (%d/%d)", ok_mar_tuer_12, bild_mit[12],
+          "msg 12 'Oh, no, Leon!': Marvin sieht Ada an (Koerper + Kopf, r37 O) (%d/%d), Ada sieht ihn an (%d/%d)", ok_mar_tuer_12, bild_mit[12],
           ok_ada_kopf_mar_12, bild_mit[12]);
     PRUEF(bild_mit[13] > 0 && ok_mar_zu_ada_13 * 10 >= bild_mit[13] * 9 && ok_mar_kopf_ada_13 * 10 >= bild_mit[13] * 9,
           "msg 13 'I have to help him': Marvin hat sich zu Ada gedreht (Koerper %d/%d, Kopf %d/%d)", ok_mar_zu_ada_13, bild_mit[13],
           ok_mar_kopf_ada_13, bild_mit[13]);
     PRUEF(bild_mit[14] > 0 && ok_ada_tuer_14 * 10 >= bild_mit[14] * 9,
-          "msg 14 'Marvin!...': Ada sieht ihm nach (zur Tuer gewandt) in %d von %d Bildern", ok_ada_tuer_14, bild_mit[14]);
+          "msg 14 'Marvin!...': Ada sieht ihm mit dem Kopf nach (Kopf zur Tuer, Koerper bleibt, r37 O) in %d von %d Bildern",
+          ok_ada_tuer_14, bild_mit[14]);
     PRUEF(g_room_change.pending && g_room_change.room_id == 0x1150 && g_room_change.target_cut == 7,
           "Schnitt zurueck nach ROOM1150 Cut 7");
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);

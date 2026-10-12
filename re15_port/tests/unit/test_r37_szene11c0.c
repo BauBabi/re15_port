@@ -14,8 +14,9 @@
  *                "falsche Richtung"); die langsame Kopf-Rate ROOM4000 @0x015B6; im Programm keine Koerperdrehung im
  *                Gespraech (kein Plc_dest Modus 9), genau ein Lauf (Modus 5) erst nach Ablauf von Marvins letzter Zeile.
  *   ablauf       die Szene im Spieltakt (Raumaufbau wie das Spiel, scd_room_reenter): einander zugewandt ab dem ersten
- *                Bild, Ada dreht sich nie, Marvin nur beim Losrennen (nach seiner Zeile, < 120 Grad), je Zeile der
- *                Sprecher zum Partner (Koerper im Kegel 0x60 @0x80076c41, Kopf auf dem Partner bzw. Keyframe/Nicken),
+ *                Bild, Ada dreht sich nie, Marvin nur beim Losrennen (nach seiner Zeile, < 120 Grad), je Zeile
+ *                Sprecher UND Zuhoerer zum Partner (Koerper im Kegel 0x60 @0x80076c41, Kopf auf dem Partner bzw.
+ *                Keyframe/Nicken),
  *                der Knall nur mit den Koepfen, Ada sieht Marvin mit dem Kopf nach, Schnitt zurueck nach 1150 Cut 7.
  *   auswerten <lauf>  Auswerter fuer integration_r37_szene11c0 (echte exe): s11c0.log (RE15_S11C0_LOG) + neck_trace.log
  *                (RE15_NECK_TRACE, der GEZEICHNETE Kopf): dieselben Bedingungen mit dem wirklichen Kopf-Blick. */
@@ -362,12 +363,14 @@ static void bedingungen(int mit_kopf, const char *quelle)
           "[%s] Marvin dreht den Koerper erst nach dem Ende seiner letzten Zeile (F%d): %d Drehungen davor", quelle, z13_ende, m_vor_lauf);
     PRUEF(max_m < KEIN_180, "[%s] groesste Einzeldrehung Marvins %d Einheiten = %.1f Grad < 120 Grad (Losrennen zur Tuer hinter der Kamera)",
           quelle, max_m, max_m * 360.0 / 4096.0);
-    /* (4) je Zeile: der Sprecher sieht den Partner an */
+    /* (4) je Zeile: der Sprecher sieht den Partner an (Nachtrag 11) - und der Zuhoerer ihn (r36 K2 "Sie muessen sich
+     *     schon miteinander unterhalten"); rolle 0 = Sprecher, 1 = Zuhoerer */
     static int blick_a[MAXB], blick_m[MAXB];
     if (mit_kopf) { blicke_rechnen(0, blick_a); blicke_rechnen(1, blick_m); }
-    for (int zi = 0; zi < nz; zi++) {
+    for (int zr = 0; zr < 2 * nz; zr++) {
+        int zi = zr / 2, rolle = zr % 2;
         int id = Z[zi].id; if (id < 10 || id > 13) continue;
-        int sp_ada = (id == 10);
+        int sp_ada = (id == 10) ^ rolle;
         int n = 0, koerper = 0, kopf = 0, nk = 0, kblick = 0, kmax = 0;
         for (int i = 0; i < s_nb; i++) {
             const bild_t *b = &s_b[i];
@@ -384,11 +387,11 @@ static void bedingungen(int mit_kopf, const char *quelle)
             }
         }
         PRUEF(n > 0 && koerper == n && kopf == n,
-              "[%s] msg %d (%s spricht): Koerper zum Partner (Kegel 0x60) %d/%d, Kopf auf dem Partner/geradeaus %d/%d",
-              quelle, id, sp_ada ? "Ada" : "Marvin", koerper, n, kopf, n);
+              "[%s] msg %d %s %s: Koerper zum Partner (Kegel 0x60) %d/%d, Kopf auf dem Partner/geradeaus %d/%d",
+              quelle, id, rolle ? "Zuhoerer" : "Sprecher", sp_ada ? "Ada" : "Marvin", koerper, n, kopf, n);
         if (mit_kopf)
-            PRUEF(nk > 0 && kblick == nk, "[%s] msg %d: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in %d/%d Bildern (max %.1f Grad)",
-                  quelle, id, kblick, nk, kmax * 360.0 / 4096.0);
+            PRUEF(nk > 0 && kblick == nk, "[%s] msg %d %s %s: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in %d/%d Bildern (max %.1f Grad)",
+                  quelle, id, rolle ? "Zuhoerer" : "Sprecher", sp_ada ? "Ada" : "Marvin", kblick, nk, kmax * 360.0 / 4096.0);
     }
     /* (5) Knall: vor Adas Frage beide Koepfe zur Tuer, der Koerper bleibt */
     int knall_a = 0, knall_m = 0;

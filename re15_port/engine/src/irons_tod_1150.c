@@ -440,8 +440,10 @@ static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
  *     ROOM11C0 sub02 @0x00ABC -> m2 @0x00AE0/@0x00AEE/@0x00AFC); der eine, kurz danach der andere wie 11C0 sub02
  *     @0x01940/@0x0194A/@0x01952. Die Tuer liegt ~80/98 Grad neben dem Partner: der Kopf steht an der NPC-Klemme
  *     +-0x2c8 (`ori v0,zero,0x2c8` / `sh v0,1532(v1)` @0x8011c79c/@0x8011c7a0) = Blick zur Kamera-Seite.
- * (2) Ada wendet den KOPF zu Marvin und fragt (Geste Clip 19 @0x018D8..@0x018E8); Marvin horcht weiter zum Gebaeude.
- * (3) Marvin wendet den KOPF zu Ada (r35-Beat "Marvin dreht sich zu Ada"), "Yes!...." + Nicken (sub03 @0x01BB2..@0x01BCA).
+ * (2) beide wenden die KOEPFE wieder zueinander (erst Ada, dann Marvin = der r35-Beat "Marvin dreht sich zu Ada"),
+ *     Ada fragt (Geste Clip 19 @0x018D8..@0x018E8); waehrend des ganzen Gespraechs (msg 10..13) sehen sich beide an
+ *     (r36 K2 "Sie muessen sich schon miteinander unterhalten").
+ * (3) Marvin: "Yes!...." + Nicken (sub03 @0x01BB2..@0x01BCA).
  * (4) "Oh, no, Leon!" - Marvin sieht Ada an (Kopf + Koerper).
  * (5) "I have to help him, sorry!" + Arm zu Ada (Clip 15 vor, halten, zurueck); er rennt erst los, wenn die Zeile
  *     abgelaufen ist (`01 63` = 99 Bilder Haltezeit, msg_common.c) - der Sprecher sieht den Partner, solange sein
@@ -489,12 +491,14 @@ static const uint8_t k_p_11c0[] = {
     /* (1) der Knall: nur die Koepfe zum Gebaeude, erst Marvin, dann Ada (11C0 sub02 @0x01940..@0x01952) */
     OP_WORK(2, 3), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(6),
     OP_WORK(2, 0), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(36),
-    /* (2) Ada sieht Marvin an und fragt; Marvin horcht weiter zum Gebaeude */
-    OP_NECK1(IT_MARVIN_X, IT_MARVIN_Z), OP_SLEEP(8),
+    /* (2) beide sehen sich wieder an (erst Ada, dann Marvin wie @0x01940..@0x01952), Ada fragt */
+    OP_NECK1(IT_MARVIN_X, IT_MARVIN_Z), OP_SLEEP(4),
+    OP_WORK(2, 3), OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_SLEEP(8),
+    OP_WORK(2, 0),
     OP_MSG(10),                                             /* "Ada: What was this noise? Did you hear that?" */
     OP_MOTION(0, 19), OP_SLEEP(40), OP_MOTION(0, 19), OP_FLG_REV, OP_SLEEP(50),
-    /* (3) Marvin sieht Ada an, nickt */
-    OP_WORK(2, 3), OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_SLEEP(8),
+    /* (3) Marvin, nickt */
+    OP_WORK(2, 3), OP_SLEEP(8),
     OP_MSG(11),                                             /* "Marvin: Yes!...." */
     OP_NECK0, OP_SLEEP(5), OP_NICKEN, OP_SLEEP(20),
     OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_SLEEP(30),
