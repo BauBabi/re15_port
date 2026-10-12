@@ -18,11 +18,12 @@ Leon zu); die Montage nach Irons' Tod ist das Beispiel.
 ## Stand
 
 - [x] Schritt 0: Lektuere (Vorrunde F/K/E, Port-KI enemy_ai_re2_zombie.c)
-- [ ] Schritt 1: Messung vorher (Montage-Zombies 1130/1040/1030/1070 + allgemein)
-- [ ] Schritt 2: RE-Belege RE2 (Zustandsautomat, Weck-/Sichtbedingungen, Wander)
-- [ ] Schritt 3: Umsetzung
-- [ ] Schritt 4: Messung nachher
-- [ ] Schritt 5: Tests
+- [x] Schritt 1: Messung vorher (exe: 1130/1030/1040 nach der Montage, M1/M2)
+- [x] Schritt 2: RE-Belege RE2 (INIT-Deskriptoren, Steh-/Weck-/Wander-Zweig, Zensus 495 RDTs) + RE1.5 (grid-Klassen) +
+      RE2-Original gemessen (DuckStation-GDB ROOM20A0, Deskriptor 6 vs. 0)
+- [x] Schritt 3: Umsetzung (zombieaktiv_r37.c, Haken scd_vm.c/enemy_ai_re2_zombie.c, Nachspawn 1130 grid 0x0d)
+- [x] Schritt 4: Messung nachher (exe N1/N2, Harness, Framedump)
+- [x] Schritt 5: Tests (3 Unit-Riegel + 1 Integration, gezielte Laeufe gruen)
 
 ## Messung vorher
 
@@ -183,9 +184,30 @@ Die 1070-Kopien (grid 0x00) gehen ab Bild 0 in den Gang (`1/1@0`) statt erst bei
 
 (folgt)
 
+### N3 — Harness (echte Spielschleife, test_r37_zombieaktiv `mess`)
+* ROOM1130 nach der Montage, Leon an der Tuer aus 1150: alle fuenf ab Bild 1 im Gang; Abstand nach 300 Bildern
+  30879->25907, 29674->23051, 28616->23743, 27536->20166, 28426->19461 (4873..8965 naeher); Weg in 300 Bildern 5098..10156.
+  Gegenprobe v0.8.24: alle fuenf 600 Bilder stehend, Weg 0, Abstand unveraendert.
+* ROOM1180 (Normalspiel, 3x grid 0x00), Leon am Eintritt aus 1160: alle drei ab Bild 1 im Gang, Weg in 300 Bildern
+  5194/7823/5462; die zwei fernen folgen den Navigationspunkten des Hofs (Steuerziel (1900,13800), dann (1900,-5750)) und
+  sind nach 900 Bildern 3579 bzw. 18437 naeher; Gegenprobe: zwei stehen 900 Bilder (Wander), der nahe wacht erst in
+  Bild 192 (RE2-Selbstwecker, < 0x1D4C).
+* Framedump (exe, Kamera Cut 6 an der Chief-Office-Tuer): `H_belege/nachher_1130_bilder_150_450_750_900.png` — in Bild
+  900 hat der erste Zombie die 28000 Einheiten des Gangs zurueckgelegt und greift Leon an der Tuer.
+
 ## Tests
 
-(folgt)
+Neu (re15_port/tests/unit/probes/r37_zombieaktiv.cmake, Quelle tests/unit/test_r37_zombieaktiv.c,
+tests/integration/test_r37_zombieaktiv.cmake):
+
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r37_zombieaktiv_abbildung | Spawn ueber den echten Sce_em_set (VM), alle 14 RE1.5-Formen mit/ohne Abbildung: NUR grid 0x00 1/0 -> 1/1, Gang Bild 1 (<= 2 = RE2 Takt 2); ohne Sce_em_set Steher; liegengebliebene Marke an anderer Lage verworfen; Montage-Schritt Steher | 6/6 |
+| unit_r37_zombieaktiv_nachspawn1130 | Nutzer-Beispiel: 5 Montage-Zombies Gang <= Bild 2, >= 4500 naeher nach 300 Bildern; Gegenprobe v0.8.24 keiner im Gang in 600 Bildern | 4/4 |
+| unit_r37_zombieaktiv_raum1180 | allgemein, Normalspiel: 3x grid 0x00 Gang <= Bild 2, Weg >= 4500 in 300, naeher nach 900; Gegenprobe keiner <= Bild 2 | 5/5 |
+| integration_r37_zombieaktiv | echte exe, Spielstand + CONTINUE + Tuer 1150 -> 1130: Bild 7 5/5 im Gang, Bild 306 5/5 >= 4500 naeher (4892..8948) | gruen (25 s) |
+
+Angepasst: unit_r36_zombieki_sicht (Runde 36 Spur F) — Zensus mit `re15_r37_zombieaktiv_enable(0)`, s. Umsetzung.
 
 ## OFFEN
 
@@ -205,4 +227,17 @@ Die 1070-Kopien (grid 0x00) gehen ab Bild 0 in den Gang (`1/1@0`) statt erst bei
 
 ## Fuer den Nutzer
 
-(folgt)
+* **Was jetzt anders ist (RE2-KI, Standard):** RE2 laesst rund ein Drittel seiner Zombies schon beim Erscheinen auf Leon
+  zugehen (Spawn-Typ 6, im RE2-Original nachgemessen: sie laufen aus 19000 Einheiten los und sind nach ~20 s bei Leon),
+  die anderen stehen, bis Leon nahe kommt, oder schlurfen zufaellig herum. Genau diese Aufteilung gilt jetzt auch fuer
+  RE1.5: die Zombies, die RE1.5 selbst als "kampfbereit" ablegt (sie greifen im Original an, sobald sie Leon sehen, egal
+  wie weit), gehen ab dem Betreten auf Leon zu. Schlafende Steher, Liegende, Fresser und Kriecher bleiben wie bisher —
+  dadurch "teilweise aktiv". Betroffen (Leon und Elza): ROOM1010, 1020, 1070, 1100, 1180, 11E0, 11F0, 1250, dazu 4050
+  (Zombie-Girls); ROOM1030/1040/1200 waren schon aktiv.
+* **Nach Irons' Tod:** im Gang 1130 kommen die fuenf aus dem Besprechungsraum ausgebrochenen Zombies jetzt auf Leon zu
+  (wie die Zombies, die in 1040 durchs Rolltor kommen); in 1030 die Zombies aus 1070 ebenso. Die Montage selbst ist
+  unveraendert (Leon ist dort nicht im Bild).
+* RE1.5-KI im Menue: unveraendert (Original-Verhalten).
+* Neue Assets fuer das Paket-Gate: keine. Neue Sprachdateien: keine. Keine Bank-9-Bits, keine Text-Ids.
+* Fuer den Release-Bau: neue Quelldatei `re15_port/engine/src/zombieaktiv_r37.c` (Android: GLOB-Cache neu konfigurieren);
+  +4 Tests (3 unit, 1 integration).
