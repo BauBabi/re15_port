@@ -110,3 +110,11 @@ Lesart -> Spur I feuerloescher:
 4. Leons Feuerloescher liegt heute im Spind von ROOM1000 (Bath-Lockers; sub00 @0x00C24 Item 0x31, Taken (9,0x86); sub01
    @0x00D0C Set(3,0x85)) — an einen anderen, passenden Ort verlegen (sichtbar mit dem neuen Modell; Ort begruendet waehlen,
    der Nutzer kann ihn danach verschieben).
+
+## Nachtrag 4b — 2026-10-12 (woertlich, zu Spur I)
+
+> ah, it can only lay there - if leon when he is asked to discard it select "yes".
+
+Lesart: Bei Leon liegt der leere Loescher in ROOM1090 NUR, wenn er an der Wegwerf-Abfrage nach dem Loeschen (Port-Abfrage
+gen/discard_sites.inc `{ 0x1090, 9, 0x31, 0, 0 }`) "Yes" waehlt; bei "No" bleibt er im Inventar und am Boden liegt nichts.
+Elza 1091 unveraendert (liegt immer). Dem Bau-Agenten I per Nachricht uebermittelt.

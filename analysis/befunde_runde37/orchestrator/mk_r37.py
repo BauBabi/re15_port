@@ -109,7 +109,7 @@ SPUREN = [
    "in 1130/1040 ein Anteil der Zombies binnen N Bildern auf Leon zu (N aus RE2 belegt), Gegenprobe Stand v0.8.24.")),
  dict(id="I", thema="feuerloescher", baum="r37_feuerloescher",
   punkte=["Bitte erstelle mir zusätzlich auch ein Modell des Feuerlöschers. Ich finde deine Idee, bei elza einen Leeren Feuerlöscher am Boden zu haben gut. Der müsste dann bei Leon nach der Nutzung erstmalig auftauchen.",
-          "Außerdem finde ich den FEuerlöscher im Spind bei Leon noch unglücklich und würde ihn gerne woanders platzieren...."],
+          "Außerdem finde ich den FEuerlöscher im Spind bei Leon noch unglücklich und würde ihn gerne woanders platzieren....", "Nachtrag 4b: ah, it can only lay there - if leon when he is asked to discard it select \"yes\"."],
   hinweise=("Vorarbeit: extracted_re2_feuerloescher/README.md + analysis/befunde_2026-09-21/re2-feuerloescher-modell.md: es gibt KEIN Feuerloescher-Modell in RE2 "
    "oder RE1.5; vorhanden sind das RE1.5-Item-Bild (info/Re1.5/PSX/ITEM/ITPS.ITP file@0x093000, 112x72 8bpp, Item 0x31: roter Loescher, Chromgriff, weisses Etikett; "
    "Decoder engine/src/itps_common.c) und vier Basis-Netze (extracted_re2_feuerloescher/basis_kandidaten/: RE1.5 ROOM1010 m00 Spraydose @0xAF4/@0x22D28 und "
