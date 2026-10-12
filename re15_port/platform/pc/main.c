@@ -133,6 +133,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_inventar_r36.h" /* Runde 36 Spur I: Memory Card beim Speichern verbrauchen */
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
+#include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -850,6 +851,9 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
  * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
 static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
+    { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K: Elzas Typ 0x47 = Roy aus */
+      uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* CDEMD1.EMS (Elza-Bit bltz @0x80022334, */
+      if (rb) return rb; }                                   /* Datei 0x27 @0x800223ac), roy_pc.c       */
     uint8_t *buf = NULL; char rel[32]; int sz = 0;
     snprintf(rel, sizeof rel, "EMD/EM%02X.EMD", type);
     buf = pc_read_shared(rel, &sz);                    /* malloc'd if it exists */
@@ -7579,7 +7583,7 @@ re_title:;
                                          g_actors[_pi].type != 0x26u
                                              || g_actors[_pi].re2s_baby_spawned);
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)   /* Runde 35 Spur I (N1-M2): Elliot beim */
-                    if (g_actors[_pi].active && g_actors[_pi].type == 0x47u) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328 */
+                    if (g_actors[_pi].active && re15_typ47_ist_elliot(g_actors[_pi].type)) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328; Runde 37 Spur K: nur Leons 0x47 */
                 /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
                  * (FUN_80105D38, Aufrufstellen @0x8010322C/@0x801033D8/@0x801034DC/@0x80104478/
                  * @0x801045A4/@0x801046B8/@0x801047D8/@0x80104830). Die Roster-Schleife darueber
@@ -9577,7 +9581,7 @@ re_title:;
                      * weiter "RE2 EM026 loaded: ... 3 clips" im Log). */
                     pc_enemy_load_ex(npc->type,
                                      npc->type != 0x26u || npc->re2s_baby_spawned);
-                if (npc->type == 0x47u) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o. */
+                if (re15_typ47_ist_elliot(npc->type)) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o.; Runde 37 Spur K: Elzas 0x47 = Roy laeuft den allgemeinen Weg */
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
                  * the prop path (PSX FUN_8002c18c → FUN_80014368). Replaces the
