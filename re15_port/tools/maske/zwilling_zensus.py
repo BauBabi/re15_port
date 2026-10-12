@@ -3,7 +3,8 @@
 Runde 37 Spur A, Nachbesserung 1 (VERTRAG.md §1.7, Abnahme A#0 M1; Dossier analysis/befunde_runde37/A_pri1100.md §8).
 
 WARUM: Der Port laedt nachgezeichnete Masken (R15M, NUTZER-VORGABE) als MASKS/ROOM%04X.MSK mit der VOLLEN Raum-Id.
-In STAGE1 gibt es sie nur fuer die Leon-Variante (Ausnahme ROOM1221) — Elza sah z.B. in ROOM1101 (RDT bytegleich zu
+In STAGE1 gibt es sie nur fuer die Leon-Variante (die veralteten Elza-Kopien ROOM1221/ROOM2091 sind seit der
+Integration der Runde 37 entfernt) — Elza sah z.B. in ROOM1101 (RDT bytegleich zu
 ROOM1100) den Zombie 1 ueber der Westwand.
 
 KRITERIUM (aus dem Original abgeleitet, nicht gesetzt):

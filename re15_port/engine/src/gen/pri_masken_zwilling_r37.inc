@@ -23,4 +23,6 @@
 { 0x11B1, 0x11B0 },   /* RDT verschieden, SCA gleich */
 { 0x11D1, 0x11D0 },   /* RDT bytegleich, SCA gleich */
 { 0x11F1, 0x11F0 },   /* RDT bytegleich, SCA gleich */
+{ 0x1221, 0x1220 },   /* RDT bytegleich, SCA gleich */
 { 0x1231, 0x1230 },   /* RDT bytegleich, SCA gleich */
+{ 0x2091, 0x2090 },   /* RDT bytegleich, SCA gleich */

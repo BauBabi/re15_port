@@ -467,8 +467,13 @@ static void teil_zwilling(void)
     }
     CHECK("Zensus aus den Dateien == Tabelle re15_pri_masken_raum (alle Paare STAGE1..6)", n_paare >= 100 && fehler == 0);
     CHECK("ROOM1101 (Elza, Pflichtweg 10D1 -> 1101) nutzt die Masken von ROOM1100", re15_pri_masken_raum(0x1101) == 0x1100);
-    CHECK("eigene Elza-Masken gewinnen (ROOM1221, ROOM2091 bleiben bei sich)",
-          re15_pri_masken_raum(0x1221) == 0x1221 && re15_pri_masken_raum(0x2091) == 0x2091);
+    /* Runde 37 Integration: die Elza-Dateien ROOM1221.MSK (Maschinenstand 2026-09-03 ohne Atlas, nie gezeichnet) und
+     * ROOM2091.MSK + _PRI00..07.TIM (Stand 60cae0a6 ohne die zwei Cuts aus 7b24600f) waren VERALTETE Kopien der
+     * Leon-Raeume (Kamera + Hintergrund bytegleich) und sind entfernt -> Zwilling. Die Regel "eigene Datei gewinnt"
+     * gilt weiter: ROOM3041 hat eine eigene MSK und bleibt bei sich. */
+    CHECK("eigene Elza-Datei gewinnt (ROOM3041 bleibt bei sich)", re15_pri_masken_raum(0x3041) == 0x3041);
+    CHECK("veraltete Elza-Masken entfernt: ROOM1221 -> 1220, ROOM2091 -> 2090 (Zwilling)",
+          re15_pri_masken_raum(0x1221) == 0x1220 && re15_pri_masken_raum(0x2091) == 0x2090);
 }
 
 int main(int argc, char **argv)
