@@ -27,7 +27,7 @@ SPUREN = [
    "PATCHED-EXE_*).")),
  dict(id="C", thema="fahrstuhl", baum="r37_fahrstuhl",
   punkte=["Die Fahrstuhl Tür in der Tür Animation ist noch nicht korrekt. Da musst du noch mal schauen ... wenn es keine passende Fahrstuhl Tür gibt, müssen wir die wieder bauen....",
-          "Beim Aussteigen aus dem Fahrstuhl fehlt noch die Türsequenz. << stimmt."],
+          "Beim Aussteigen aus dem Fahrstuhl fehlt noch die Türsequenz. << stimmt.", "Nachtrag 5: ja, dann mache den noch (Ausstieg Lastenaufzug ROOM3080 -> 4000). Mir ist auch aufgefallen in den Stage2 kleineres aufzügen fehlt noch das sound. Den sollte man auch aus Resident Evil 2 extrahieren."],
   hinweise=("Stand v0.8.24 (Runde 36 Spur G, analysis/befunde_runde36/G_tueren.md + G_abnahme_0.md H1/H3/X1): der Einstieg in die Kabine ROOM1080 spielt RE2 DOOR27 "
    "(RE2-LABOR-Fahrstuhl, oliv-grau mit Bedienfeld, zwei Fluegel aus der Mitte) — der Nutzer sagt: nicht korrekt. Die Runde-33-Port-Archive (P25G = Hub, Farbe "
    "passend) hatten die falsche Mechanik. Schritt 1: den GEMALTEN RE1.5-Fahrstuhl in den Hintergruenden belegen (Kabine 1080, die Etagen-Raeume mit der "

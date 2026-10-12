@@ -125,3 +125,12 @@ Elza 1091 unveraendert (liegt immer). Dem Bau-Agenten I per Nachricht uebermitte
 
 Lesart: Bei "No" an der Wegwerf-Abfrage behaelt Leon den Loescher; im Inventar heisst er dann "Empty Fire Extinguisher"
 (Name/Untersuchen-Text zeigen, dass er leer ist; Zustand bleibt im Spielstand). Dem Bau-Agenten I per Nachricht uebermittelt.
+
+## Nachtrag 5 — 2026-10-12 (woertlich, zu Spur C)
+
+> ja, dann mache den noch. Mir ist auch aufgefallen in den Stage2 kleineres aufzügen fehlt noch das sound. Den sollte man auch aus Resident Evil 2 extrahieren.
+
+Lesart: (a) "den" = der Ausstieg aus dem Lastenaufzug ROOM3080 (WAREHOUSE LIFT) -> ROOM4000, der in Spur C noch ohne
+Tuersequenz ist (Null-Rechteck-Tuer @0x0072A, Aot_on @0x00A22) — Sequenz aus RE2 herleiten und bauen. (b) Die kleineren
+Aufzuege in STAGE2 haben keinen Ton — den passenden Aufzug-Ton aus RE2 extrahieren (RE2_SOUND_LISTE.md, shared_assets/RE2/
+ELEVSE.VBS u.a.) und dort abspielen, wo RE2 ihn spielt.
