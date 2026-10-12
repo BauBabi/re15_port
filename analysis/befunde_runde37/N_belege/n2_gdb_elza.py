@@ -32,6 +32,9 @@ ap.add_argument("--sprung", action="append", default=[])
 ap.add_argument("--start_bilder", type=int, default=30)
 ap.add_argument("--endstand", default=None)
 ap.add_argument("--endstand_halt", action="store_true")
+ap.add_argument("--setze", action="append", default=[],
+                help="NUR fuer Bildbelege: <hexadresse>:<hexbytes>, einmal nach dem letzten Sprung geschrieben")
+ap.add_argument("--nach_bilder", type=int, default=0, help="Bilder nach --setze bis zum Ende")
 a = ap.parse_args()
 
 EXE = open(os.path.join(BAUM, 'info/Re1.5/PSX.EXE'), 'rb').read()
@@ -214,6 +217,15 @@ try:
             log("Raum %d%02X erreicht bei Bild %d (VSync %d)" % (ziel[0] + 1, ziel[1], bilder, u32(0x800787dc)))
         if seit >= warte:
             if sprung_i >= len(a.sprung):
+                if a.setze and not getattr(a, "_gesetzt", False):
+                    for sz in a.setze:
+                        ad, hx = sz.split(":")
+                        wr(int(ad, 16), bytes.fromhex(hx))
+                        log("SETZE %s := %s (Bildbeleg, kein Spielverhalten)" % (ad, hx))
+                    a._gesetzt = True
+                    warte = a.nach_bilder
+                    seit = 0
+                    continue
                 break
             nl, n_bilder = a.sprung[sprung_i].split(":")
             nl = bytes.fromhex(nl)
