@@ -205,7 +205,7 @@ Elza (0x1001): unberuehrt (30 Patronen, Item 0x15).
   unit_r36_story_schuppen).
 * ELZA ROOM1091: immer (der Platz ist bei ihr schon geloescht, 2.4).
 * LEON ROOM1090: Tor = (3,0x81)==1 (DAUERHAFT, 2.3 — NICHT (3,0x84), das sub03 @0x024CE loescht) UND Item 0x31 nicht im
-  Inventar. Grund fuer die zweite Bedingung (PORT-WAHL, an der exe gemessen): nach dem Loeschen fragt die Port-Wegwerf-
+  Inventar UND nicht in der ITEM BOX (Nachbesserung 1: die Kiste lagert nur um, RE2 FUN_800703b8 @0x80070710). Grund fuer die zweite Bedingung (PORT-WAHL, an der exe gemessen): nach dem Loeschen fragt die Port-Wegwerf-
   Abfrage der Runde 25 bei msg 9 "You've used the Fire Extinguisher." (gen/discard_sites.inc Zeile ROOM1090/9/0x31)
   "You don't need this item any more. Discard it?". JA = Leon legt ihn hin -> Haken in item_discard_common.c (Ja-Zweig
   nach re15_inv_remove_slot) -> re15_feuerloescher_r37_weggeworfen -> der Loescher liegt SOFORT da (Installer mit
@@ -324,7 +324,8 @@ Keine. msg 29 ist ein Untersuchungstext (Untersuchungstexte haben in RE1.5 keine
 * Am Feuer (ROOM1090) wie bisher benutzen. Danach fragt das Spiel "You don't need this item any more. Discard it?":
   Ja = Leon legt den leeren Loescher vor der Wagentuer ab (er bleibt dort liegen, auch beim Wiederkommen und nach dem
   Laden); Nein = Leon behaelt ihn, im Inventar heisst er dann "Empty Fire Extinguisher" (CHECK: "An empty fire
-  extinguisher."), am Boden liegt keiner.
+  extinguisher."), am Boden liegt keiner — auch nicht, wenn Leon ihn spaeter in eine Item-Box legt (dort steht er als
+  "Empty Fire Extinguisher").
 * Elza: der leere Loescher liegt in ROOM1091 vor der Wagentuer; Aktionstaste davor -> "It's an empty fire extinguisher."
 * Der Spind in der Umkleide (ROOM1000) antwortet jetzt mit "Nothing unusual." — dem Raumtext msg 0, den das Original an
   seinen anderen Untersuchen-Plaetzen (Slots 6..9, Waschraum) zeigt.
@@ -403,5 +404,62 @@ kein Beleg fuer "an der Wegwerf-Abfrage Ja gesagt".
 **Wahl:** Abhilfe (a) der Abnahme — das Tor fragt zusaetzlich die Box. Kein neues Bit (VERTRAG 1.1 teilt Spur I keins
 zu; Inventar UND Box reisen mit dem Spielstand: `re15_savedata.c:211` `re15_itembox_export(out->box)`, `:294` import).
 
+**Aenderung:**
+* `engine/src/feuerloescher_r37.c`: neu `in_der_kiste(id)` (Suche in `g_itembox.slots[0..RE15_BOX_SLOTS)`, Kommentar mit
+  @0x80070400/@0x800706c8/@0x80070710 und @0x8004e014/@0x8004dff0); Tor `RE15_FL37_FEUER_AUS` = `(3,0x81) &&
+  re15_inv_find_item(0x31) < 0 && in_der_kiste(0x31) < 0` (Kommentar mit @0x80051774 und dem Wortlaut 4b). Neue
+  Messzeile bei geschlossenem Tor: `[feuerloescher] ROOM1090: kein Loescher (Leon hat ihn in die Item-Box gelegt (Item
+  0x31 in der Kiste, Platz N))`; die drei alten Zeilen bleiben woertlich (Riegel A/G/I/J pruefen sie).
+* `include/re15_feuerloescher_r37.h`: Kopf-Kommentar der Regel nachgezogen.
+* `tests/unit/probe_r37_feuerloescher_karte.c`: Option `kiste:<id>:<n>` (naechster freier Box-Platz ab 2 = (Scroll 0 + 2)
+  & 0x3f, die Auswahlformel von RE2 FUN_800703b8; die Kiste reist mit re15_savedata v4).
+* Werkzeug `tools/r37_feuerloescher/kombi_zensus.py` (Zensus Kombinieren, t_addr aus dem PS-X-EXE-Kopf @0x18).
+* Keine gemeinsame Datei beruehrt, kein Bit, keine Nachricht, kein Asset.
+
+**Messung nachher (exe 14:35:46, Messkopie neu gezogen):**
+* Lauf n8 = v8/L8 (gleiche Karte, gleiche Eingabe): 
+  ```
+  [feuerloescher] Name Item 0x31: Empty Fire Extinguisher
+  [room] PC loaded room1090.rdt (336440 bytes)
+  [feuerloescher] ROOM1090: kein Loescher (Leon hat ihn in die Item-Box gelegt (Item 0x31 in der Kiste, Platz 2))
+  [flow] EXIT_AT: Bild 200 in Raum 1090 erreicht -> exit
+  ```
+  keine Zeile `liegt leer am Boden`, kein `prop-render ... oid=0x05`.
+* Lauf n8r (ECHTE Box ROOM1150, Karte (-23000,-12100) rot 2048 wie L8r, Skript
+  `W1,A0.1,W3,A0.1,W0.7,A0.1,W1,X0.1,W0.7,X0.1,W3`, `RE15_DEBUG_JUMP=1090@330`, `RE15_PLAYER_POS=2500,-2400,3072,1`):
+  `[msg] room=1150 id=3 ITEMBOX (box screen, message suppressed)`, `[feuerloescher] Name Item 0x31: Empty Fire
+  Extinguisher`, `[debug-menu] AUTO-JUMP -> ROOM1090 (Frame 330)`, `[room] PC loaded room1090.rdt`,
+  `[feuerloescher] ROOM1090: kein Loescher (Leon hat ihn in die Item-Box gelegt (Item 0x31 in der Kiste, Platz 2))`.
+  Bild `I_belege/nb1_nachher_1150_echte_box_F210.png` (ITEM BOX mit "Empty Fire Extinguisher", Item-Liste leer).
+* Laeufe n9k / n9j (CONTINUE ROOM1090 (2500,-2400) rot 3072 Cut 6, Zustand nach der Rettung, einmal `kiste:0x31:1`,
+  einmal Loescher weg = Wegwerf-Ja-Zustand): n9k `kein Loescher (Leon hat ihn in die Item-Box gelegt ... Platz 2)`, kein
+  prop-render; n9j `Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300)` + `[prop-render] pi=4 oid=0x05
+  pos=(2500,-1800,-1300) rot=(0,3250,0)`. Bild `I_belege/nb1_nachher_1090_cut6_kiste_vs_ja.png` (links Kiste: Boden vor
+  der Wagentuer leer; rechts Ja: der Loescher liegt).
+
+**Riegel:**
+* NEU `unit_r37_feuerloescher_kiste` (16 Pruefungen, Mechanik am echten Port-Code): echter NEIN-Weg am Bild-Ablauf
+  (loeschen_fahren: Feuer, msg 7/8, Ja, Selbst-Tuer, msg 9, Wegwerf-Abfrage NEIN) -> Einlagern ueber den ECHTEN Tausch
+  `re15_itembox_transfer(Platz, 2)` -> Tor zu; Wiederbetreten (Spawn @0x00B7A) -> kein Prop obj 5, kein Platz msg 29;
+  Name bleibt "Empty Fire Extinguisher"; Spielstand (capture/restore) traegt Kiste + (3,0x81) -> nach dem Laden liegt
+  keiner; Herausnehmen (`re15_itembox_transfer(0, 2)`) -> weiter keiner; Gegenprobe: Loescher weg, Kiste mit Patronen
+  0x15 -> liegt (2500,-1800,-1300) + msg 29. Der Raumstart `start(neu)` leert jetzt auch die Kiste (`re15_itembox_init`,
+  Hygiene; die alten Teile fassten die Kiste nie an).
+  **Gegenprobe ohne die Kisten-Pruefung** (Tor-Zeile voruebergehend ohne `in_der_kiste`, nur das Test-Ziel neu
+  gebaut): `16 Pruefungen, 3 Fehler` —
+  `FAIL: K Tor zu, solange der Loescher in der Kiste liegt (nicht weggeworfen)`,
+  `FAIL: K Wiederbetreten mit dem Loescher in der Kiste: kein Prop obj 5, kein Platz msg 29 (kein Doppel)`,
+  `FAIL: K geladen + Raumstart: keiner liegt`. Mit der Pruefung: `16 Pruefungen, 0 Fehler`; alle Teile in einem
+  Prozess (`test_r37_feuerloescher` ohne Argument): `92 Pruefungen, 0 Fehler`.
+* `integration_r37_feuerloescher` um die exe-Laeufe M/N/O erweitert: M = L8 (Box-Schirm `RE15_BOX_TEST`, Tuer 1050 ->
+  1090), N = echte Box ROOM1150 + Sprung, O = CONTINUE in 1090 mit `kiste:0x31:1`; je `kein Loescher (Leon hat ihn in
+  die Item-Box gelegt (Item 0x31 in der Kiste, Platz 2))` und KEIN `Loescher liegt leer am Boden` / `oid=0x05`. Der alte
+  Stand liefert fuer dieselbe Eingabe genau die verbotene Zeile (Lauf v8 oben). Ergebnis einzeln:
+  `^integration_r37_feuerloescher$` -> `100% tests passed, 0 tests failed out of 1` (362 s; im Log `ok   M/N/O: ...`,
+  `r37_feuerloescher: alle Laeufe gruen`).
+
 ### N1.M2 — Abschnittsverweis im Kommentar feuerloescher_r37.c:82
-(in Arbeit)
+Ursache: Der Kommentar der Tor-Regel nannte "Dossier Abschnitt 3.3" (dort steht der Spind); die Regel steht in 3.4.
+Aenderung: Der Kommentar der Regel ist mit M1 neu geschrieben und verweist auf "Dossier Abschnitt 3.4 + Nachbesserung 1"
+(`feuerloescher_r37.c`, Fall `RE15_FL37_FEUER_AUS`). Messung nachher: `grep -n "Abschnitt 3.3" feuerloescher_r37.c` ->
+kein Treffer.
