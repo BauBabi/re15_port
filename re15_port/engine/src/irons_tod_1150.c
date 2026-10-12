@@ -16,6 +16,7 @@
 #include "re15_enemy.h"
 #include "re15_msg.h"
 #include "re15_scd.h"
+#include "re15_szene11c0_r37.h"   /* Runde 37 Spur O: Mess-Haken der 11C0-Szene */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -1174,6 +1175,7 @@ void re15_irons_tod_tick(void)
      * ohne den Alias stand Marvin bei "I have to help him, sorry!" mit haengenden Armen. Der Takt laeuft vor den
      * Faeden, der Binder loest Aktor 4 erst nach dessen Erscheinen auf (rbj_resolve_slot: !active -> kein Cache). */
     if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_rbj_set_alias(4, 1);
+    if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_s11c0_mess_takt();   /* Runde 37 Spur O (RE15_S11C0_LOG) */
     /* Knall-Signale: (5,28) = Tuerknall (Knall-Bank Satz 0), (5,29) = Knall wie ROOM1030 (Satz 1). Nur waehrend
      * der Kette (in ROOM1150/1130/1040/1030 ist Bank 5 Wort 0 oberhalb von Bit 20 unbenutzt, Zensus Dossier §8.8). */
     if (s_zustand != RE15_IT_AUS) {
