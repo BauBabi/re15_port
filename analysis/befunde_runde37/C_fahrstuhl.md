@@ -312,6 +312,9 @@ SCD ROOM2030 (`tools/scd_dump_room.py`): ZWEI Hubplattformen (obj 1 und obj 2) =
 * Lift B: obj 2 (-10675, y, 4050), y -5400 (Ebene 3) <-> -16200 (Ebene 9), Platz 6/7 (-10550,2850,1500,1500);
   Fahrt sub04 @0x01F0A + sub05 @0x01FA4, For 0x5A x 2 Bilder = 180 Bilder.
 Keines der Fahrskripte traegt ein Se_on (0x36).
+Zensus aller STAGE2-Skripte mit Speed_set y (`2f 01`): nur ROOM2030/2031 fahren den SPIELER (Work_set 1,0) mit einer
+Plattform; ROOM2020/2050/2080/20A0/20B0 bewegen nur Objekte (Wasser, Rolltor 20A0 mit eigenem RE1.5-Se_on 0x0A/0x0B).
+Die zwei Plattformen in ROOM2030/2031 sind also "die kleineren Aufzuege" der STAGE2.
 
 ### N1-1 Messung vorher (Stand 06bf9b12, Messkopie `re15_pc_r37c_n1.exe`, Ordner `build/r37_fahrstuhl/n1/`)
 (a) `RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=3080@120 RE15_EXIT_AT=60#4000` (erste Fahrt, (4,96)=0,
