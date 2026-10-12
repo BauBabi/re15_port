@@ -1133,24 +1133,25 @@
    "modell": 53668,
    "sektor": 12,
    "datei": 78244,
-   "fnv": 3385733581,
-   "sha1": "520e0052e14cc765017b8ce5b956936aa6eea682",
+   "fnv": 1250954324,
+   "sha1": "8daaadc1b80917f1b002aa9dce2b63829c785d4a",
    "basis_sha1": "53bef771bba73961ab10945ed8914fdfabd07646",
    "tim_off": 44932,
-   "rezept": "Bedientafel + rote Lampe weg (Texel 0 = nicht gezeichnet), Warnrand bleibt",
+   "rezept": "Bedientafel weg (Texel 0 = nicht gezeichnet), Warnrand + Schacht-Fachwerk bleiben",
    "ton_familie": "eigen DOOR2D (Hubbuehne)",
    "griff": "-",
    "protokoll": {
-    "nicht_gezeichnet": 7317,
-    "herkunft": "S218 c01: leerer Schacht, keine Tafel/Lampe gemalt"
+    "nicht_gezeichnet": 5580,
+    "herkunft": "S218 c01: Schacht mit Fachwerk, keine Bedientafel gemalt",
+    "runde37": "Runde 37 Spur C N1: Mesh 2 (Schacht-Fachwerk, 1737 Texel) wieder gezeichnet, analysis/befunde_runde37/C_fahrstuhl.md"
    },
    "palette": {
-    "farben_geschuetzt": 0,
-    "farben_blatt": 136,
+    "farben_geschuetzt": 112,
+    "farben_blatt": 118,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 7309,
-    "palette_belegt": 137
+    "palette_belegt": 231
    },
    "md1_eigen": 0,
    "md1_ergaenzung": null

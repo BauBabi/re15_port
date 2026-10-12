@@ -62,6 +62,7 @@
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Erweiterung ROOM11B0 sub06 (szenenleon_r36.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Parkplatz-Tuer 11B0 + Roy 1011 (schluessel_r36.c) */
 #include "re15_codepanel_r37.h" /* Runde 37 Spur E: Code-Panel-Kamera/Lampen (codepanel_r37.c) */
+#include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 
 scd_vm_t g_scd;
 
@@ -187,6 +188,8 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_elza_r36_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
     /* Runde 37 Spur E: sub19-Anker der Code-Panels 10D0/10D1/11E0/11E1/1230/1231 (re15_codepanel_r37.h). */
     re15_codepanel_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 37 Spur C N1: Lift-Anker ROOM2030/2031 (sub02/sub04, re15_lift2030_r37.h). */
+    re15_lift2030_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -763,6 +766,8 @@ void scd_vm_tick(void)
             if (g_re15_elza_anker_n) re15_elza_r36_pc(t->pc);
             /* Runde 37 Spur E: Code-Panel-Kamera bleibt bis nach dem Aufschliess-Ton (re15_codepanel_r37.h). */
             if (g_re15_codepanel_anker_n) { int cp = re15_codepanel_r37_pc(t); if (cp == 2) break; if (cp == 1) continue; }
+            /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (Wachposten = Ankerzahl, sonst 0). */
+            if (g_re15_lift2030_anker_n) re15_lift2030_r37_pc(t->pc);
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */

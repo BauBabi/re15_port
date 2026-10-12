@@ -241,7 +241,9 @@ typedef struct {
     uint32_t sektor, datei;
     uint32_t fnv;
     uint8_t  md1_eigen;   /* Stufe 2: 1 = MD1 = Basis-Meshes + ergaenzte Dreiecke (P1EL Lamellenplatte),
-                           * Tonteil + SCD bleiben bytegleich; 0 = MD1 bytegleich dem Basis-Archiv */
+                           * Tonteil + SCD bleiben bytegleich; 0 = MD1 bytegleich dem Basis-Archiv;
+                           * Runde 37 Spur C: 2 = MD1 NEU bei gleicher Meshzahl (P27F/P27C Revier-Fahrstuhl:
+                           * glatte Fluegel statt der verzahnten DOOR27-Fluegel), Tonteil + SCD bytegleich */
 } re15_tuer_eigen_t;
 
 /* Griff-Tausch je Paar Archiv <- Spender (tools/tueren/tuer_zuordnung_gen.py, [SIM]-Werte). */

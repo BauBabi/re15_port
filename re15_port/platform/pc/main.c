@@ -3964,6 +3964,7 @@ re_title:;
     }
     re15_pc_glas1120_init();   /* Runde 35 Spur M: RE2-Raum-ESP room1090 + Glas-Texturen + Knall-Haken */
     { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
+    { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
