@@ -20,7 +20,7 @@ Zuteilung (VERTRAG.md §1.4): Spur O aendert Programm 4 (k_p_11c0) in irons_tod_
 - [x] Messung vorher (echte exe, Kette wie integration_r35_cut1150 Lauf A, Bild fuer Bild Gier + Kopf)
 - [x] RE-Belege (B1 Gier/Aufstellung ROOM10D0, B2 Raum-Vokabular, B3 Kopf-Klemme/INIT/Raten, B4 RE2-Zensus)
 - [x] Umsetzung
-- [x] Messung nachher (Lauf n3, Auswerter 0 Fehler, Vorher/Nachher-Streifen)
+- [x] Messung nachher (Lauf n5 = Endstand, Auswerter 0 Fehler, Vorher/Nachher-Streifen)
 - [x] Nachtrag 12: RE2-Beleg (B5), Umsetzung (Schritt 7), Messung nachher (Lauf n5)
 - [x] Tests (probes/r37_szene11c0.cmake; r35/r36-Riegel mit Beleg angepasst)
 
@@ -115,8 +115,9 @@ zum Gebaeude) auf der Grundlage der r35-Fassung (Spur L: beide zum Gebaeude, Anf
 ROOM11C0 sub02: Plc_neck m1 `41 01 x 0 z 64 00` @0x01886 (Leon->Ada) / @0x018C0 (Ada->Leon); Plc_dest m9 @0x01890 /
 @0x018CA; beide Koepfe nacheinander auf denselben Punkt @0x01940 / Sleep 10 @0x0194A / @0x01952; Adas Sprech-Geste
 Clip 19 vor/zurueck @0x018D8..@0x018E8; sub03 Nicken @0x01BB2 (`41 00 .. 64 00` Kopf frei) / Sleep 5 / @0x01BC0
-(`41 03 01 00 00 00 00 00 00 3c`). Ankunfts-Warten sub05/sub06 @0x01C3E/@0x01C50 wird nicht mehr gebraucht (keine
-Koerperdrehung im Gespraech).
+(`41 03 01 00 00 00 00 00 00 3c`). Ankunfts-Warten: im Gespraech nicht mehr gebraucht (keine Koerperdrehung); fuer Adas
+Drehen am Schluss (Nachtrag 12) wartet das Programm wie Adas Original-Zeile @0x018D2 mit `18 06` (sub06 @0x01C50:
+Set(5,1)=0, While Ck(5,1)==0 {Evt_next}) auf ihr Ankunfts-Bit 1.
 
 ### B3 Kopf: Klemme, Raten, INIT
 * NPC-Kopf-INIT im STAGE1-Overlay (selbst disassembliert, `re15_disasm.py --bin STAGE1.BIN`): `ori v0,zero,0x40` /
@@ -219,7 +220,7 @@ Lauf n5 (Endstand c44d3df2, Messkopie `re15_pc_r37o_n5.exe`, derselbe Weg wie "v
 `O_belege/o_nach_mess.txt`, `o_nach_bilder.txt`, Kontaktbogen `o_nach_11c0.png`, Kopf-Ausschnitte `o_nach_kopf_zoom.png`,
 Schluss-Folge `o_nachtrag12_ende.png` (F384..F500), **Vorher/Nachher-Streifen `o_vor_nach_streifen.png`** (je Beat oben
 vorher, unten nachher), Auswerter `test_r37_szene11c0 auswerten` -> `o_nach_auswerten.txt` (0 Fehler) gegen
-`o_vor_auswerten.txt` (alter Stand: 9 Fehler). (Zwischenlaeufe n1..n4: n1 INIT-Befund, n3 = Stand vor Nachtrag 12 mit
+`o_vor_auswerten.txt` (alter Stand: 16 Fehler = genau die Nutzer-Punkte). (Zwischenlaeufe n1..n4: n1 INIT-Befund, n3 = Stand vor Nachtrag 12 mit
 Ada nur Kopf, n4 = Laengenmessung.)
 ```
 Drehungen Ada:    F397..F404 Gier 3679 -> 3009  -58.9 Grad (dem laufenden Marvin nach; vorher keine)
@@ -249,7 +250,33 @@ Gegen den Wortlaut des Nutzers:
 
 ## Tests
 
-(folgt)
+Registriert nur in `re15_port/tests/unit/probes/r37_szene11c0.cmake` (GLOB), Code `tests/unit/test_r37_szene11c0.c`,
+`tests/integration/test_r37_szene11c0.cmake` (cmake_minimum_required 3.16, Messkopie `re15_pc_r37o_haken_<id>`,
+Arbeitsordner `r37_szene11c0_lauf` != Target-Name; nur fopen/sscanf, kein popen).
+
+| Test | misst (Nutzer-Punkt) | Ergebnis |
+|---|---|---|
+| unit_r37_szene11c0_aufstellung | Peilungen 3679/1631 (re15_s11c0_gier); ROOM10D0 @0x01A96..@0x01AF6 Dir_set = Peilung auf den Partner (+-17); Ada-Record @0x01770 Gier 475 ("falsche Richtung"); Programm: Marvins Spawn-Gier und Adas Dir_set = Peilungen, kein Plc_neck vor dem INIT, kein Plc_dest m9 vor dem Lauf, ein Lauf erst 101 >= 99 Bilder nach msg 13, danach genau EINE Drehung Adas nach dem Signal (5,13), Knall nur Koepfe | gruen |
+| unit_r37_szene11c0_ablauf | Szene im Spieltakt (Raumaufbau wie das Spiel): erstes Bild einander zugewandt; im Gespraech keine Drehung (Ada 0, Marvin 0 bis F377); Marvin nur Losrennen 98.3 < 120 Grad; je Zeile Sprecher UND Zuhoerer Koerper im Kegel 0x60 + Kopf auf dem Partner/geradeaus; Knall nur Koepfe; Nachtrag 12: Ada eine Drehung < 90 Grad, bei msg 14 ihm zugewandt (40 Einheiten), Kopf-Ziel folgt ihm 99/99; Schnitt nach 1150 Cut 7 | gruen |
+| integration_r37_szene11c0 | echte exe (Spielstand + CONTINUE + Tuer, ganze Kette bis 11C0 Bild 505, SOFTWARE_RENDER), debug.log: genau ein Plc_dest m9 in 11C0 (Ada, nach Marvins Lauf); Auswerter `test_r37_szene11c0 auswerten` mit dem GEZEICHNETEN Kopf (RE15_NECK_TRACE): alle Bedingungen oben, Kopf-Blick von Sprecher und Zuhoerer <= 8,4 Grad (max 6.1 Grad beim Nicken), msg 14 Blick auf den laufenden Marvin <= 1.9 Grad (`O_belege/o_integration_auswerten.txt`) | gruen (114.9 s) |
+| Gegenprobe Auswerter auf den alten Stand (Lauf "vor") | dieselben Bedingungen auf die Protokolle von v0.8.24 | 16 Fehler, genau die Nutzer-Punkte: falsche Anfangsrichtung (Gier 475), Ada 3 / Marvin 5 Drehungen im Gespraech (160 Grad), Marvin bei msg 12 98 Grad weg, bei msg 10 Kopf 35.8 Grad an Ada vorbei, Ada folgt ihm bei msg 14 nicht (`O_belege/o_vor_auswerten.txt`) |
+
+Angepasste Riegel (mit Beleg, je Kommentar "Runde 37 Spur O" im Test):
+* `unit_r35_cut1150_programme`: Opcode-Walk kennt Dir_set (8 B: LAB_80041080 `addiu v1,v1,8` @0x800410a4 = s_opcode_sizes).
+* `unit_r36_szene1150_dialog11c0`: msg 12 "Oh, no, Leon!" Marvin sieht Ada an (Koerper + Kopf) statt "zum Gebaeude"
+  (Nachtrag 11); msg 14 Adas Kopf-Ziel folgt dem laufenden Marvin statt "Koerper zur Tuer" (Nachtrag 12).
+* `integration_r36_szene1150` K2: statt Plc_dest m9 beider auf den Partner jetzt genau ein Plc_dest m9 in 11C0 (Ada, nach
+  Marvins Lauf Modus 5) — die neck.log-Pruefungen (Ada->Marvin, Marvin->Ada, Nicken, Ada->Tuer als Ausgangsziel) bleiben.
+
+Gezielter Lauf (KEINE volle Suite; Endstand c44d3df2 + Dossier-Commits ohne Code-Aenderung), Regex = eigene Tests + die
+Gruppen der beruehrten Module/Raeume (irons_tod_1150.c / 11C0 / 1150 / 1030 / 1040 / 10F0-Kette, Kopf-FSM-Nachbarn):
+```
+ctest --test-dir re15_port/build -R '^unit_r37_szene11c0_|^integration_r37_szene11c0$|^unit_r35_cut1150_|^integration_r35_cut1150$|^unit_r36_szene1150_|^integration_r36_szene1150$|^unit_irons_|^unit_room1150_itembox$|^unit_sicherung_1150$|^unit_r30_irons|^integration_r30_irons|^unit_montage_fx$|^unit_marvin_|^unit_neck_headlook$|^unit_r35_affen_ada$|^unit_r35_affen_szene$|^unit_r36_karte_tuer11c0$|^unit_r36_szenenleon_irons$|^unit_r36_elza_irons$|^integration_r36_elza_irons$|^integration_r34n_g_schrift1150$|^unit_door_seq$|^integration_room_transition$|^unit_r35_cut10f0_|^integration_r35_cut10f0$|^unit_1030_|^unit_room1040_switch$|^unit_cam_1030_reentry$|^probe_r16_tuer1040' --timeout 900 --output-on-failure
+100% tests passed, 0 tests failed out of 64
+Total Test time (real) = 1255.30 sec
+```
+(darin integration_r35_cut1150 533 s, integration_r36_szene1150 114 s, integration_r37_szene11c0 115 s,
+integration_r35_cut10f0 248 s, integration_r30_irons_tisch_* , integration_r34n_g_schrift1150.)
 
 ## OFFEN
 
