@@ -143,6 +143,11 @@ K_belege/k2_orig_posen_ram.png (rec1 Clip 5, Clip 9, CDEMD1 Clip 7).
 (Ein eigener DuckStation-Lauf mit gepatchtem Elza-Bit scheiterte am Pad-Speicher-Hotkey: keine Datei geschrieben;
 er wurde verworfen, weil er den Slot 1 des Nutzers ueberschrieben haette — dafuer die Nutzer-Spielstaende.)
 
+### 2.2b Zensus: wo Typ 0x47 ueberhaupt steht
+re15_port/tools/scd_dump_room.py ueber alle 240 RDTs, Sce_em_set mit Typ-Byte 0x47 (drittes Byte): ROOM1011 @0x009F6 +
+@0x00A3E (Elza, Roy), ROOM1021 @0x01E0A (Elza, Roy), ROOM1170 @0x017D2 (Leon, Elliot) — sonst keiner. Damit deckt die
+Weiche "Typ 0x47 + Elza-Bit" genau Roy ab, und Elliot (Leon) bleibt der einzige Nutzer des Elliot-Sonderwegs.
+
 ### 2.3 K3 — Dauerschleife
 Kein Schleifen-Defekt des Abspielers: die Skript-Schleifen (Plc_flg 4) sind original. Defekt = falscher INHALT
 der Schleife: Roys Ruhe-Clip 5 lief aus Elzas Record 0 (Knien + Arm ausstrecken, 20 Bilder) statt aus Roys
@@ -224,6 +229,14 @@ nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
    nichts, und Slot-Speichern haette die Spielstaende des Nutzers (Slot 1-10) ueberschrieben. Belegt ist das
    Original ueber die RAM-Staende der Nutzer-Spielstaende (§2.2a: Modell, Kanal, Clip, Halten); Roy liegt dort in
    den gespeicherten Kameras ausserhalb des Bildes.
+4. **Allgemein (alle NPC-Gesten, nicht Roy-spezifisch, nicht Teil des Nutzer-Befunds)**: Executor-Sub 0 des Ports
+   (re15_npc_sub_motion) zeigt im ersten Takt nach Plc_motion Bild 1 statt 0 und erreicht fc-1 einen Takt frueher.
+   Original @0x80050cb8: Phase 0 setzt +0x95 = 0 (@0x80050d0c) und faellt in den Spielteil @0x80050d34, dessen
+   anim_set ZUERST +0x95 posiert und DANACH vorschiebt (@0x8001f36c / @0x8001f618, Kommentar "POSE-DANN-VORSCHUB" in
+   enemy_ai_common.c — dort nur fuer re15_npc_anim behoben). Spur: Gesten-Start "299: 7/1" statt "7/0". Nicht geaendert,
+   weil derselbe Weg Elliots Gesten in 1170 treibt (Auftrag: Elliot unveraendert) und alle NPC-Szenen (Marvin, Ada,
+   Irons, John) mit ihren Riegeln betrifft — eigener Punkt fuer eine spaetere Runde (1 Takt = 33 ms, durch die
+   7-Takt-Ueberblendung +0x8f kaum sichtbar).
 
 ## 7. Fuer den Nutzer
 
