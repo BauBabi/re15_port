@@ -213,7 +213,31 @@ nach der Szene, Flags (4,0xF1)/(4,0xFA)/(3,0x74)):
 
 ## 5. Tests
 
-(folgt)
+Registriert NUR in re15_port/tests/unit/probes/r37_roy.cmake (GLOB); Quelle tests/unit/test_r37_roy.c,
+tests/integration/test_r37_roy.cmake (cmake_minimum_required 3.16, Messkopie der exe unter eigenem Namen).
+
+| Test | misst (Mechanik) |
+|---|---|
+| unit_r37_roy_toc | TOC beider Archive (Typ 0x47: 1644/127640 bzw. 1639/142272), Datei 0x26/0x27; Roy-Blob: 15 Meshes/Knochen, Loco-Clip 7 = 113 / 8 = 2 / 23 = 30, eigene Bank Clip 5 = 61; ELLIOT.MD1/.EDD/.EMR/.TIM == CDEMD0-Blob (Elliot-Quelle unveraendert) |
+| unit_r37_roy_weiche | Elza-Bit -> Archiv; Leons 0x47 = Elliot-Weg, Elzas 0x47 = Elza-Archiv; kein anderer Typ umgelenkt |
+| unit_r37_roy_szene1011 | ROOM1011 am VM (Elza): Roy = Aktor 1, RBJ-Kanal = Record 1 (14 Clips, 5/6/7/9/10/13 = 28/78/30/100/60/2), Ruhe-Clip taktet 28 (nicht 20), Registry-Bank = CDEMD1; @0x00D54 Clip 9 = 100, laeuft bis 99 und haelt (0 Ruecksprunge) |
+| unit_r37_roy_szene1021 | ROOM1021 am VM (Elza, (4,0x60)/(3,0xC9)): Roy = Aktor 2 ohne Record, Clip 23 = 30, Gang @0x020B2 Clip 5 = 61 (eigene Bank), Sturz @0x020DE Clip 7 = 113, laeuft bis 112 und haelt |
+| unit_r37_roy_leon1170 | Gegenprobe Leon ROOM1170: Elliot gespawnt, Marker-Binder-Ausnahme bleibt (kein Record-Kanal), Registry-Bank = CDEMD0 (Loco-Clip 7 = 1) |
+| integration_r37_roy_szene1011 | echte exe, echter Weg (Spielstand 1021 + CONTINUE + Tuer): "[roy] ... CDEMD1.EMS Sektor 1639 (142272 B)", keine "[elliot]"-Zeile, Zeichenweg model=enemy-bank; RE15_ANIM_TRACE: Clip == Motion, Bild == Uhr, Bildzahlen = Record 1, kein Einmal-Clip springt zurueck, Clip 9 endet auf 99 und haelt |
+| integration_r37_roy_szene1021 | echte exe, Szene ueber Ereignis 2: Roy aus CDEMD1, Spur Clip 23/30, 5/61, 7/113, Sturz haelt Bild 112 |
+| integration_r37_roy_leon1170 | echte exe, Leon-Neuspiel -> Montage -> Tuer -> 1170: "[elliot] PL05 loaded ... (Raum 1170, Spawn 0x47)", kein "[roy]", model=elliot, Elliot-Clips 15 = 20 / 2 = 52 |
+
+Gegenmessung der Riegel (test_r37_roy spur auf den VORHER-Spuren v1011/v1021 aus §1): 1011 FAELLT mit 4 Fehlern
+(201 Klemmungen Clip 10 -> 0, 1288 Zeilen Uhr != Bild, alle 2401 Zeilen mit falscher Bildzahl, Clip 9 endet auf Bild 19),
+1021 FAELLT mit 2 Fehlern (853 Zeilen falsche Bildzahl, Clip 7 endet auf Bild 0) — der Riegel misst also den Befund.
+
+Gezielte Laeufe (KEINE volle Suite), ctest-Summenzeile woertlich:
+* `ctest --test-dir re15_port/build -R "r37_roy|r36_elza|elliot|unit_npc|marvin|anim_pose|anim_rate|anim_reverse|unit_ems|unit_re2_ems|r35_entladen|cut10f0|adaruf|r35_affen|irons_neck|r35_cut1150_szene|zombie_pose|ada_eintritt|ada_cutscene|r22_10f0" --timeout 1200`
+  -> `100% tests passed, 0 tests failed out of 93` (Total Test time 1082 s; Module des Diffs: NPC-Executor/Kanaele,
+  Marker-Binder (cut10f0-Alias, adaruf, affen, Irons), anim_select, EMS-Leser, Entladen/Elliot (r35_entladen a-l),
+  Elza-Szenen Runde 36 (unit + integration), eigene Tests).
+* Endstand (nach dem letzten Testkommentar neu gebaut): `ctest --test-dir re15_port/build -R "r37_roy" --timeout 1200`
+  -> `100% tests passed, 0 tests failed out of 8`.
 
 ## 6. OFFEN
 
