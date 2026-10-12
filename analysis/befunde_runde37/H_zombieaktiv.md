@@ -1,4 +1,4 @@
-# Runde 37 Spur H "zombieaktiv" — Dossier (laufend)
+# Runde 37 Spur H "zombieaktiv" — Dossier
 
 Baum `.claude/worktrees/r37_zombieaktiv`, Zweig `r37/zombieaktiv`, Basis master 44881ac2.
 
@@ -209,8 +209,28 @@ tests/integration/test_r37_zombieaktiv.cmake):
 
 Angepasst: unit_r36_zombieki_sicht (Runde 36 Spur F) — Zensus mit `re15_r37_zombieaktiv_enable(0)`, s. Umsetzung.
 
+### Gezielte Laeufe (KEINE volle Suite im Spurbaum), Endstand Bau nach 38681a0c (Code unveraendert bis zum Abschluss)
+
+Unit/Sonden aller beruehrten Module (RE2-Zombie, Montage 1150, Gegnerzahl, Zombie-KI Runde 36, Raeume mit grid-0x00-Zombies,
+neue Riegel), Liste `H_belege/ctest_gezielt_unit.txt`:
+```
+ctest --test-dir re15_port/build -R "re2|zombie|r35_cut1150|r36_szene1150|r36_gegnerzahl|r36_zombieki|r35_inhalt|lane_b1|kriecher|1010|1020|1070|1100|1180|11e0|11f0|1250|4050|room1140|1140|irons|montage|szenen|gegner|enemy|ai_|r37_zombieaktiv" -E "^integration_" --timeout 900 -j 6
+100% tests passed, 0 tests failed out of 155
+```
+Integration (echte exe) der Montage, der Raeume mit grid-0x00-Zombies (Story Leon/Elza 1010/1020/1100, Elza-Laeufe 1011/1021,
+Entladen 1020/11E0/11F0, Dokumente 1010/1020/1180, 10F0-Szene 1180, Zombie-Girls 4050, PRI 1100, Inventar 1071) und der
+neue Riegel, Liste `H_belege/ctest_gezielt_integration.txt`:
+```
+ctest --test-dir re15_port/build -R "^integration_(r35_entladen|r34n_e_dokumente|r35_cut10f0|r35_zgirl$|r36_elza|r36_inventar|r36_pri_schatten|r36_story|r35_cut1150|r36_szene1150|r36_gegnerzahl|r30_cut_blitz|r37_zombieaktiv)" --timeout 1500 -j 3
+100% tests passed, 0 tests failed out of 29
+```
+(Darin die Montage-Riegel integration_r35_cut1150 (Spieler-HP 100 -> min 100 ueber die ganze Kette) und
+integration_r36_szene1150, Spur-E-Riegel integration_r36_gegnerzahl; die Runde-36-Spur-F-Riegel unit_r36_zombieki_* im
+Unit-Lauf.)
+
 ## OFFEN
 
+* Nichts aus dem Auftrag dieser Spur offen. Nebenbefunde (beim Disassemblieren gefunden, keine Passivitaets-Ursache):
 * **Zwei Abweichungen im RE2-Steh-Zweig gefunden (nicht Teil der Passivitaet, NICHT geaendert — jede verschiebt den
   gemeinsamen RE2-Zufallsstrom und damit deterministische Riegel anderer Spuren; eigener Schritt mit Strom-Messung):**
   1. DECISION[0] Block 3 (Ausfall-Biss 0xC01 bei dist < 0x7D0, ausserhalb Kegel 1024, Spieler bewegt): Original
