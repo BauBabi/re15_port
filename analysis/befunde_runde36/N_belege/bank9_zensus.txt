@@ -1,4 +1,6 @@
-BANK-9-ZENSUS (Runde 36, Nachtrag zu Spur N, Zweig r36/kartenbits) - Stand P2 = VOR dem Fix (Port-Teil zeigt 87..91)
+BANK-9-ZENSUS (Runde 36, Nachtrag zu Spur N, Zweig r36/kartenbits) - Stand NACH dem Fix (P3): Port-Teil zeigt
+87/88/89/77/78. Der Stand VOR dem Fix (Spur-N-Tabelle 87..91) steht in Commit 4ac3636d (einziger Unterschied der
+Rohausgabe: die zwei Zeilen ROOM1200/ROOM11D0 der Spur-N-Tabelle).
 Werkzeug: re15_port/tools/r36_kartenbits/bank9_zensus.py (Laengentabelle = scd_walk_lib = scd_vm.c s_opcode_sizes)
 Aufruf:   PYTHONIOENCODING=utf-8 python re15_port/tools/r36_kartenbits/bank9_zensus.py   (Teile original | exe | port)
 Dossier:  analysis/befunde_runde36/N_kartenitems.md Abschnitt 9.3
@@ -43,13 +45,14 @@ WER IM PORT BANK 9 BENUTZT (Teil PORT unten = grep-Beleg; Bit -> Quelle):
   82 Parking-Lot-Key genommen      RE15_R36Q_PARK_BIT            (schluessel_r36.c)          Runde 36 Q
   83 Prison Key genommen           RE15_R36Q_PRISON_BIT          (schluessel_r36.c)          Runde 36 Q
   84 Werkstatt-Tuer verschlossen   RE15_SZL_BIT_ZU               (szl11b0_szene.inc Set 0x54) Runde 36 J
-  87..91 Lageplaene 3F/2F/1F/B2/B1 k_r36k_lage Feld 3            (gen/kartenitems_r36.inc)   Runde 36 N
+  87, 88, 89 Lageplaene 3F/2F/1F k_r36k_lage Feld 3             (gen/kartenitems_r36.inc)   Runde 36 N
+  77, 78 Lageplaene B2/B1         k_r36k_lage Feld 3 (vor dem Fix 90/91)                     Runde 36 N, Nachtrag
   93 Parkplatz-Tuer aufgeschlossen RE15_R36Q_TUER_BIT            (schluessel_r36.c)          Runde 36 Q
   (Item-Modal/menu_common/op_item_aot_set setzen bzw. testen das Bit DES SATZES = Original- oder Installer-Bit.
    RE15_R36Q_STROM_BIT 0xF3 / RE15_R36Q_ZELLE_BIT 0xEC sind Bank 4; RE15_IT_BIT_1140_0/1070_0/1040_0 Bank 7.)
   Spur R (seit ba384fac in r36/integration, nicht in der Basis 7a0fd453 dieses Zweigs): kein Bank-9-Bit (diff geprueft).
 
-SCHNITT ORIGINAL x PORT (vor dem Fix): {90, 91}
+SCHNITT ORIGINAL x PORT: vor dem Fix {90, 91}, nach dem Fix {} (leer; Riegel unit_r36_kartenbits Teil P)
   90 = ROOM2090/2091 main00 @0x00A12 Item_aot_set Slot 5 Item 0x3F "Pocket Watch"   <- Spur N B2 (ROOM1200)
   91 = ROOM2040/2041 main00 @0x01364 Item_aot_set Slot 7 Item 0x32 "Head of Akuma"  <- Spur N B1 (ROOM11D0)
 VERTRAG.md 1.1 fuehrte ausserdem als RESERVE (kein Code benutzt sie): 85 (J), 86 (L), 92 (P) - alle drei sind
@@ -517,6 +520,6 @@ Spur-N-Tabelle engine/src/gen/kartenitems_r36.inc (k_r36k_lage, Feld 3 = Bank-9-
   ROOM1140 Blatt 4 -> Bit 87
   ROOM10D0 Blatt 3 -> Bit 88
   ROOM1030 Blatt 2 -> Bit 89
-  ROOM1200 Blatt 1 -> Bit 90
-  ROOM11D0 Blatt 0 -> Bit 91
+  ROOM1200 Blatt 1 -> Bit 77
+  ROOM11D0 Blatt 0 -> Bit 78
 

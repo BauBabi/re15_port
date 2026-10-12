@@ -256,6 +256,7 @@ gefuellt), ohne Plan nur der eigene Raum — fuer alle fuenf Blaetter (3F/2F/1F/
 |---|---|---|
 | `unit_r36_kartenitems` | T Tabelle (Blatt = Zonen-Blatt, Bits 87..91, MD1/TIM parsen, MD1 nur Ecken verschieden, Texte = RE2-Wortlaut, Frage mit 0x03); R Raumstart aller 10 Raeume (Leon+Elza): Prop obj 15 an Lage/Drehung, EVENT-Satz Ereignis 28 sat 0x31, 1030/1031 Telefon -> Slot 39, Installer idempotent; G Bit gesetzt -> nichts, Slot 8 = Telefon; D echter Bild-Ablauf (re15_game_step) 1140 Ja, 1140 Nein, 10D1 (Elza) Ja, 1030 Ja: Frage 30 -> Bit/Zone weg/Modell (20000,..)/Meldung 31/Blatt besitzt+waehlbar bzw. nichts; 1030 danach an derselben Stelle Telefon-Text (Nachricht 3 aus Slot 39); K Kartenblatt je Etage ohne Plan 0 unbesuchte Kacheln, mit Plan Zeile 498 (+6/+10/+10/+9/+6 Kacheln), fremdes Blatt erst mit SEINEM Plan waehlbar; S Spielstand-Rundlauf | 201 Pruefungen gruen |
 | `integration_r36_kartenitems_bild` | echte exe, 12 Laeufe: je Raum Lade-Weg mit/ohne Bit, Karte NUR im Marken-Fenster (ausserhalb 0 Pixel), Boot-Haken-Zeile, danach Kartenschirm des Blatts: MIT Bit die ganze Etage; ROOM1140 echter Weg (Aktion, Ja) -> Ereignis 28, Kartenschirm 3F mit allen Raeumen (>= 268 Pixel mehr) | gruen (437,7 s; Schwellen kalibriert: Wand-Fenster je ~Haelfte, Kartenschirm 3F 268 / 2F 311 / 1F 452 / B2 381 / B1 433) |
+| `unit_r36_kartenbits` (Nachtrag, Abschnitt 9) | Z Zensus der Bank-9-Bits des Originals (alle RDTs, 85 Bits; Gegenproben 206 RDTs / 40674 Opcodes / 164 Item_aot_set / bekannte Bits); P alle Port-Bank-9-Bits (Makros + live k_r36k_lage) ausserhalb des Original-Satzes, Gegenprobe alte Belegung -> {90, 91}; V Plan nehmen (echtes Port-Programm) -> Stage-2-Items 0x32/0x3F bleiben; S Alt-Spielstaende (Nutzerkarte, v0.8.23-Stand) | 141 ok, 0 FAIL |
 
 Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
 * `ctest --test-dir re15_port/build -R "r36_kartenitems" --timeout 1200 --output-on-failure`
@@ -688,7 +689,7 @@ werden (Kommentar an der Liste; bank9_zensus.py Teil port findet alle Zugriffsst
   `#define RE15_*BIT* 77|78|0x4D|0x4E`, `re15_game_flag_(get|set)(9, 77|78)`, SCD-Bytes `0x21/0x22, 0x09/9, 0x4D/0x4E/77/78`:
   0 Treffer (Gegenprobe der Suche: sie findet `RE15_R36Q_TUER_BIT 93` in c5a6d7d4); `git grep` in den Tags v0.8.21,
   v0.8.22, v0.8.23: 0 Treffer. Einzige Ausnahme waeren die Test-Schalter `RE15_SET_FLAG`/`RE15_SET_FLAG_AT`
-  (platform/pc/main.c @4778/@7302, setzen beliebige Bits) — kein Spielweg.
+  (platform/pc/main.c Zeile 4778 / 7302, setzen beliebige Bits) — kein Spielweg.
 * Gemessen an echten Karten (Riegel Teil S, nur gelesen): die eingecheckte Nutzerkarte 2026-09-27 (Fixture
   probes/r30_karte_nutzer_2026-09-27.mcr, 4 Plaetze) und eine Kopie der aktuellen Karte neben der exe des Hauptbaums
   (re15_port/build/platform/pc/re15_card.mcr, Stand 2026-10-05, md5 4990b84f, 5 Plaetze; Aufruf
