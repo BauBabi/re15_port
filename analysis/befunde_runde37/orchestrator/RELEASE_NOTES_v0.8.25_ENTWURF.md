@@ -40,6 +40,8 @@ RE2, ihr Motorton ist deshalb gekuerzt.
 Wand verdeckt (beide Marken: kein Pixel mehr ueber der Wand). Die Masken arbeiten je Tiefenstufe statt mit dem
 tiefsten Wert je Kachel. Elza bekommt in 20 Raeumen von Stage 1 die Verdeckungsmasken des Leon-Raums mit derselben
 Kamera und demselben Hintergrund - bisher hatte sie dort keine (z.B. ROOM1101: der Zombie lag dort ueber der Wand).
+In ROOM1221 und ROOM2091 lagen fuer Elza veraltete Kopien (1221 wurde nie gezeichnet, 2091 ohne die zwei Kameras aus
+Ihren Freistellungen); sie nutzt dort jetzt ebenfalls Leons aktuelle Masken (22 Raeume).
 **Roy** (Spur K). In Elzas Szenario traegt Roy jetzt seine Uniform wie im Original (aus Elzas eigenem Modell-Archiv)
 statt Elliots Modell. Er sitzt verwundet da, sackt zusammen und bleibt liegen; in ROOM1021 schlurft er auf John zu und
 faellt. Keine Dauerschleife mehr. Elliot bei Leon ist unveraendert.
