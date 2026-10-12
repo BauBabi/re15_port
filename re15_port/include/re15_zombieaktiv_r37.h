@@ -34,6 +34,9 @@
  *         Zweigs `sltiu 0x2711` @0x80101c38 gilt dem 1/8-Wander-Wurf; der Sichtsensor FUN_8001bc08 ->
  *         FUN_8001b84c(0x5e8) prueft nur Kegel + Nibble-3-Strahl @0x8001b87c-8e8) = der AKTIVE Zombie der RE1.5-Daten
  *                                                                  -> RE2 6 (NEU, diese Datei)
+ *         Dieselbe Klasse fuer das Zombie-Girl (Typ 0x13, Stage 4 ROOM4050): Modus-Tabelle @0x80120230[0] = 0x8010b6d4
+ *         laedt DECIDE aus @0x80120264[+0x5] (`addiu at,at,612` @0x8010b728, `jalr` @0x8010b738), Eintrag [0] =
+ *         0x80101b64 = derselbe FUN_80101b64.
  *   0x02  schlafender Steher, DECIDE FUN_80101c7c (@0x8011f960[0]): ENGAGE nur bei dist < 0xFA0
  *                                                                  -> RE2 0 (unveraendert)
  * Die RE2-KI hat fuer aufrechte Zombies genau diese zwei Klassen (0 / 6); die Abbildung legt die RE1.5-Daten-Klasse

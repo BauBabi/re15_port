@@ -143,6 +143,9 @@ static void grundzustand(uint16_t raum, int cut, int32_t px, int32_t pz, int16_t
     load_bank_re2(0x10); load_bank_re2(0x11); load_bank_re2(0x12); load_bank_re2(0x16); load_bank_re2(0x18);
 }
 
+static void (*s_flags)(void) = NULL;   /* Spielstand-Flags des Laufs (vor dem Raumaufbau gesetzt) */
+static void flags_nach_montage(void);
+
 static int eintreten(uint16_t raum, int cut, int32_t px, int32_t pz, int16_t rot)
 {
     if (!raum_laden(raum)) return 0;
@@ -150,6 +153,7 @@ static int eintreten(uint16_t raum, int cut, int32_t px, int32_t pz, int16_t rot
     g_room_rdt_ok = 1;
     s_rdt = g_room_rdt;
     grundzustand(raum, cut, px, pz, rot);
+    if (s_flags) s_flags();                    /* NACH scd_vm_init: der loescht die Flags (re15_game_state_init, scd_vm.c) */
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
     scd_room_reenter(&s_rdt, px, pz, cut);
     g_scd.cut_auto_enabled = 1;
@@ -253,44 +257,60 @@ static int teil_abbildung(void)
 }
 
 /* ------------------------------------------------------------------------------------------------------------------
- * Gemeinsamer Lauf: Raum betreten, Leon steht, Zeitlinie je Zombie. */
+ * Gemeinsamer Lauf: Raum betreten, Leon steht (keine Eingabe), Zeitlinie je Zombie. Zombies werden ab dem Bild erfasst,
+ * in dem sie zum ersten Mal da sind (Raum-Records im Init-Lauf: Bild 1; Montage-Nachspawn ueber Ereignis 21: erstes
+ * VM-Bild), alle Bildangaben relativ dazu (Bild 1 = erstes Bild des Zombies). */
 typedef struct {
     int slot; unsigned typ; uint8_t grid;
-    int32_t d0, d2, d100, d300, d600;
-    int bild_gang;       /* erstes Bild im Gang (Zustand 1 / Unterzustand 1) */
-    int nie_gang;        /* 1 = in keinem Bild Unterzustand 1 */
+    int erstes;          /* absolutes Bild, in dem er zum ersten Mal aktiv war */
+    int32_t d1, d300, d600, d900;
+    int32_t weg300;      /* Weglaenge in den ersten 300 Bildern */
+    int32_t px, pz;
+    int bild_gang;       /* erstes Bild (relativ) im Gang (Zustand 1 / Unterzustand 1), 0 = nie */
 } zl_t;
 
 static int lauf(uint16_t raum, int cut, int32_t px, int32_t pz, int16_t rot, int bilder, zl_t *zs, int *nz)
 {
     if (!eintreten(raum, cut, px, pz, rot)) return 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    *nz = 0;
-    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
-        re15_actor_t *e = &g_actors[s];
-        if (!e->active || !zombie_typ(e->type)) continue;
-        zl_t *z = &zs[(*nz)++]; memset(z, 0, sizeof *z);
-        z->slot = s; z->typ = e->type; z->grid = e->grid_id; z->d0 = abst(pl, e); z->nie_gang = 1;
+    if (s_mess) {
+        int na = 0; for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active) na++;
+        printf("  [mess] ROOM%04X nach dem Raumaufbau: (9,73)=%d (9,74)=%d Montage-Zustand %d, aktive Gegner %d\n", raum,
+               re15_game_flag_get(9, 73), re15_game_flag_get(9, 74), re15_irons_tod_zustand(), na);
     }
+    int idx[RE15_ACTOR_MAX];
+    for (int s = 0; s < RE15_ACTOR_MAX; s++) idx[s] = -1;
+    *nz = 0;
     for (int fr = 1; fr <= bilder; fr++) {
-        pl->hp = 100;                                   /* Leon steht (keine Eingabe); stirbt nicht, damit der Lauf zaehlt */
+        pl->hp = 100;                                   /* Leon steht; stirbt nicht, damit der Lauf zaehlt */
         frame();
-        for (int k = 0; k < *nz; k++) {
-            zl_t *z = &zs[k]; re15_actor_t *e = &g_actors[z->slot];
-            if (!e->active) continue;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+            re15_actor_t *e = &g_actors[s];
+            if (!e->active || !zombie_typ(e->type)) continue;
+            if (idx[s] < 0) {
+                zl_t *z = &zs[*nz]; idx[s] = (*nz)++; memset(z, 0, sizeof *z);
+                z->slot = s; z->typ = e->type; z->grid = e->grid_id; z->erstes = fr; z->d1 = abst(pl, e);
+                z->px = e->x; z->pz = e->z;
+            }
+            zl_t *z = &zs[idx[s]];
+            int rel = fr - z->erstes + 1;
             int32_t d = abst(pl, e);
-            if (e->state == 1 && e->sub_state_1 == 1) { if (!z->bild_gang) z->bild_gang = fr; z->nie_gang = 0; }
-            if (fr == 2) z->d2 = d;
-            if (fr == 100) z->d100 = d;
-            if (fr == 300) z->d300 = d;
-            if (fr == 600) z->d600 = d;
+            if (e->state == 1 && e->sub_state_1 == 1 && !z->bild_gang) z->bild_gang = rel;
+            if (rel <= 300) {
+                long long dx = e->x - z->px, dz = e->z - z->pz;
+                z->weg300 += isqrt64(dx * dx + dz * dz);
+            }
+            z->px = e->x; z->pz = e->z;
+            if (rel == 300) z->d300 = d;
+            if (rel == 600) z->d600 = d;
+            if (rel == 900) z->d900 = d;
         }
     }
     if (s_mess)
         for (int k = 0; k < *nz; k++)
-            printf("  ROOM%04X slot %2d typ %02x grid %02x: Gang ab Bild %d%s | Abstand Bild 0 %6d, 2 %6d, 100 %6d, 300 %6d, 600 %6d\n",
-                   raum, zs[k].slot, zs[k].typ, zs[k].grid, zs[k].bild_gang, zs[k].nie_gang ? " (nie)" : "",
-                   (int)zs[k].d0, (int)zs[k].d2, (int)zs[k].d100, (int)zs[k].d300, (int)zs[k].d600);
+            printf("  ROOM%04X slot %2d typ %02x grid %02x (ab Bild %d): Gang ab Bild %d | Abstand 1 %6d, 300 %6d, 600 %6d, 900 %6d | Weg 300 Bilder %6d\n",
+                   raum, zs[k].slot, zs[k].typ, zs[k].grid, zs[k].erstes, zs[k].bild_gang, (int)zs[k].d1, (int)zs[k].d300,
+                   (int)zs[k].d600, (int)zs[k].d900, (int)zs[k].weg300);
     return 1;
 }
 
@@ -299,7 +319,6 @@ static int lauf(uint16_t raum, int cut, int32_t px, int32_t pz, int16_t rot, int
  * Zone-7-Tot-Bits der umgezogenen 1140-/1070-Records (umzug_vorbereiten). */
 static void flags_nach_montage(void)
 {
-    re15_game_state_init();
     re15_game_flag_set(9, 71, 1); re15_game_flag_set(3, 94, 1);
     for (int b = 73; b <= 76; b++) re15_game_flag_set(9, (uint8_t)b, 1);
     re15_game_flag_set(4, 4, 1); re15_game_flag_set(4, 5, 1); re15_game_flag_set(4, 15, 1);
@@ -312,30 +331,33 @@ static int teil_nachspawn1130(void)
     static zl_t zs[RE15_ACTOR_MAX]; int nz = 0;
     /* Leon = Spawn der Tuer ROOM1150 Slot 0 @0x00D5E -> ROOM1130 (-5900,0,16350) Gierung 0, Ziel-Cut 0 */
     for (int an = 1; an >= 0; an--) {
-        flags_nach_montage();
+        s_flags = flags_nach_montage;
+        re15_irons_tod_zustand_setzen(RE15_IT_AUS);
         re15_r37_zombieaktiv_enable(an);
         printf("%s\n", an ? "MIT Runde 37:" : "GEGENPROBE Stand v0.8.24 (Nachspawn grid 0x02, keine Abbildung):");
         if (!lauf(0x1130, 0, -5900, 16350, 0, 600, zs, &nz)) { CHECK(0, "ROOM1130 nicht ladbar"); return 0; }
         if (s_mess) continue;
-        int n_gang = 0, n_nah = 0, n_nie = 0; int32_t min_weg = 1 << 30; int bild_max = 0;
+        int n_gang = 0, n_nah = 0, n_nie = 0, bild_max = 0; int32_t min_weg = 1 << 30;
         for (int k = 0; k < nz; k++) {
             if (zs[k].bild_gang >= 1 && zs[k].bild_gang <= R37_BILD_GANG) n_gang++;
             if (zs[k].bild_gang > bild_max) bild_max = zs[k].bild_gang;
-            int32_t weg = zs[k].d0 - zs[k].d300;
-            if (weg < min_weg) min_weg = weg;
-            if (weg >= R37_BILDER_RATE * R37_RATE_MIN) n_nah++;
-            if (zs[k].nie_gang) n_nie++;
+            int32_t naeher = zs[k].d1 - zs[k].d300;
+            if (naeher < min_weg) min_weg = naeher;
+            if (naeher >= R37_BILDER_RATE * R37_RATE_MIN) n_nah++;
+            if (!zs[k].bild_gang) n_nie++;
         }
         if (an) {
             CHECK(nz == 5, "Nachspawn 1130 (Programm 10): 5 Montage-Zombies im Raum (%d)", nz);
-            CHECK(n_gang == nz, "alle %d spaetestens Bild %d im Gang (RE2-Original Takt 2): %d (spaetestes Bild %d)", nz, R37_BILD_GANG, n_gang, bild_max);
-            CHECK(n_nah == nz, "alle %d nach %d Bildern mindestens %d naeher an Leon (RE2-Original >= 15,4 je Takt): %d (kleinster Weg %d)",
-                  nz, R37_BILDER_RATE, R37_BILDER_RATE * R37_RATE_MIN, n_nah, (int)min_weg);
+            CHECK(n_gang == nz, "alle %d spaetestens Bild %d nach dem Erscheinen im Gang (RE2-Original Takt 2): %d (spaetestes Bild %d)",
+                  nz, R37_BILD_GANG, n_gang, bild_max);
+            CHECK(n_nah == nz, "alle %d nach %d Bildern mindestens %d naeher an Leon (gerader Gang; RE2-Original >= 15,4 je Takt): %d "
+                  "(kleinste Annaeherung %d)", nz, R37_BILDER_RATE, R37_BILDER_RATE * R37_RATE_MIN, n_nah, (int)min_weg);
         } else {
             CHECK(nz == 5 && n_nie == nz, "Gegenprobe v0.8.24: von %d Montage-Zombies erreicht in 600 Bildern KEINER den Gang (%d nie) = Befund "
-                  "\"bleiben stumpf im Gang stehen\"", nz, n_nie);
+                  "'bleiben stumpf im Gang stehen'", nz, n_nie);
         }
     }
+    s_flags = NULL;
     re15_r37_zombieaktiv_enable(1);
     return 1;
 }
@@ -344,28 +366,31 @@ static int teil_raum1180(void)
 {
     static zl_t zs[RE15_ACTOR_MAX]; int nz = 0;
     /* Leon = Spawn der Tuer ROOM1160 -> ROOM1180 (tools/engine_tueren.txt `1160 1180 -300 -16500 -4729 -16018 0`),
-     * Normalspiel-Flags (Spielbeginn). ROOM1180 main00 spawnt drei Zombies mit grid 0x00 (RE1.5-Zensus, H_belege). */
+     * Normalspiel-Flags (Spielbeginn). ROOM1180 main00 spawnt drei Zombies mit grid 0x00 (RE1.5-Zensus, H_belege).
+     * Der Hof verlangt fuer die fernen zwei einen Umweg ueber Navigationspunkte (gemessen: Steuerziel erst (1900,13800),
+     * dann (1900,-5750)) — gemessen wird deshalb die WEGLAENGE in 300 Bildern (>= 300 x 15, die RE2-Mindestrate als
+     * Untergrenze der Gangbewegung) und die Annaeherung nach 900 Bildern. */
     for (int an = 1; an >= 0; an--) {
-        re15_game_state_init();
+        s_flags = NULL;                        /* Spielbeginn: keine Flags */
         re15_irons_tod_zustand_setzen(RE15_IT_AUS);
         re15_r37_zombieaktiv_enable(an);
-        printf("%s ROOM1180, Leon am Eintritt aus 1160 (-4729,-16018)
-", an ? "MIT Runde 37:" : "GEGENPROBE v0.8.24:");
-        if (!lauf(0x1180, 0, -4729, -16018, 0, 600, zs, &nz)) { CHECK(0, "ROOM1180 nicht ladbar"); return 0; }
+        printf("%s ROOM1180, Leon am Eintritt aus 1160 (-4729,-16018)\n", an ? "MIT Runde 37:" : "GEGENPROBE v0.8.24:");
+        if (!lauf(0x1180, 0, -4729, -16018, 0, 900, zs, &nz)) { CHECK(0, "ROOM1180 nicht ladbar"); return 0; }
         if (s_mess) continue;
-        int n00 = 0, gang00 = 0, nah00 = 0, nie00 = 0;
+        int n00 = 0, gang00 = 0, weg00 = 0, nah00 = 0;
         for (int k = 0; k < nz; k++) {
             if (zs[k].grid != 0x00) continue;
             n00++;
             if (zs[k].bild_gang >= 1 && zs[k].bild_gang <= R37_BILD_GANG) gang00++;
-            if (zs[k].d0 - zs[k].d300 >= R37_BILDER_RATE * R37_RATE_MIN || zs[k].d300 < 1500) nah00++;
-            if (zs[k].nie_gang) nie00++;
+            if (zs[k].weg300 >= R37_BILDER_RATE * R37_RATE_MIN) weg00++;
+            if (zs[k].d900 < zs[k].d1) nah00++;
         }
         if (an) {
             CHECK(n00 == 3, "ROOM1180: %d Zombies mit grid 0x00 (main00, Normalspiel)", n00);
             CHECK(gang00 == n00, "ROOM1180: alle %d grid-0x00-Zombies spaetestens Bild %d im Gang: %d", n00, R37_BILD_GANG, gang00);
-            CHECK(nah00 == n00, "ROOM1180: alle %d nach %d Bildern >= %d naeher an Leon (oder schon < 1500): %d", n00, R37_BILDER_RATE,
-                  R37_BILDER_RATE * R37_RATE_MIN, nah00);
+            CHECK(weg00 == n00, "ROOM1180: alle %d gehen in 300 Bildern >= %d Einheiten (RE2-Mindestrate 15 je Takt): %d", n00,
+                  R37_BILDER_RATE * R37_RATE_MIN, weg00);
+            CHECK(nah00 == n00, "ROOM1180: alle %d sind nach 900 Bildern naeher an Leon als beim Erscheinen: %d", n00, nah00);
         } else {
             CHECK(n00 == 3 && gang00 == 0, "Gegenprobe v0.8.24 ROOM1180: keiner der %d grid-0x00-Zombies ist ab Bild <= %d im Gang (%d)", n00,
                   R37_BILD_GANG, gang00);
