@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_q.js"
-BASIS = "6f360fb3"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_r.js"
+BASIS = "badd228f"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -286,6 +286,21 @@ SPUREN = [
    "unberuehrt lassen: der Boden-Loescher bleibt an 'Yes' gebunden). Keine Wirkung, wo die Box das Item gar nicht aufnehmen kann. RIEGEL ueber "
    "probes/r37_kistenregel.cmake: Zensus (je Fall Entscheidung), 1090 mit Loescher in der Box -> keine Loesch-Frage, mit Loescher im Inventar -> wie "
    "bisher (Gegenprobe), integration_r37_feuerloescher gruen. Texte nur mit RE2-Beleg; Ids nach VERTRAG 1.2 begruenden (grep MSG_ID).")),
+
+ dict(id="R", thema="kiste2feld", baum="r37_kiste2feld", basis="badd228f",
+  punkte=["In der Kiste müssen die Icons offenbar so weit wie möglich rechts liegen, damit sie nicht vom Text überdeckt werden. (Nachtrag 9 — von Spur M erledigt; Spur R schliesst den dabei gefundenen vorbestehenden Fehler derselben Symbole)",
+          "Orchestrator-Auftrag R (AUFTRAG.md): 2-Feld-Symbole (49 px, z.B. Waffen) in der Kisten-Liste werden vollstaendig wie in RE2 gezeichnet — heute liest der Port nur die schmale 40-Texel-Kachel, die Spalten 40..48 wiederholen Spalte 39 (verschmiert). RE2 zeichnet die breite Zeile aus zwei Cache-Spalten (u1 0x78 @0x8007183c/@0x80071848, zweite Kachel FUN_80069c40 @0x80069cd8)."],
+  hinweise=("BASIS: dein Baum steht auf badd228f = abgenommener Stand der Spur M (aef88681: Rahmen ueber den Zeilen, Symbol buendig rechts x = 204 - Breite, "
+   "Ziffern im Symbol) + AUFTRAG/VERTRAG vom master-Stand. Lies M_kiste.md (OFFEN, §2 RE2-Belege, §5 Tests) und M_abnahme_0.md in deinem Baum. CODE: "
+   "engine/src/re15_inv_screen.c Block 7b (box_cell_icon_sized, RE15_BOX_ICON_W/H, 2-Feld-Breite 49), Kachel-Cache/ITEMALL-Logik (icon-cache ops, "
+   "re15_inv_screen.h, item_icon), platform/pc/src/inv_render_pc.c (Rasterung der Kachel). SCHRITT 1 MESSEN: an der exe (Kiste ROOM1150, Karte mit "
+   "2-Feld-Items wie Probe/Werkzeug der Spur M: probe_r37_kiste_karte) die Symbol-Pixel jeder 2-Feld-Item-Id gegen die Quell-Grafik (ITEMALL/Item-Bild, "
+   "breite Kachel) vergleichen — welche Spalten sind wiederholt; dasselbe im Inventar-Gitter (2-Feld-Item im Inventar) und im Item-Modal pruefen, ob "
+   "derselbe Fehler dort auftritt. SCHRITT 2 RE2: die zwei Cache-Spalten selbst disassemblieren (@0x8007183c/@0x80071848 u1 0x78, FUN_80069c40 "
+   "@0x80069cd8 zweite Kachel; wo liegt die rechte Haelfte im VRAM, wie wird sie geladen), am RE2-Referenzbild (analysis/itembox_re2/referenz) "
+   "gegenpruefen. SCHRITT 3 BAUEN: die rechte Haelfte wie RE2 aus der zweiten Kachel zeichnen; Lage/Groesse aus Spur M unveraendert (buendig rechts). "
+   "RIEGEL ueber probes/r37_kiste2feld.cmake: je 2-Feld-Item-Id Pixelvergleich Symbol gegen Quelle (keine wiederholte Spalte), Gegenprobe alter Stand, "
+   "Spur-M-Riegel (unit_r37_kiste, integration_r37_kiste) gruen.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
