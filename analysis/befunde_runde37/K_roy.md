@@ -124,6 +124,25 @@ Folge je Skriptstelle (Roy):
       @0x020BA Plc_flg(1,0x14) = Halbtakt (0x10, Gate @0x80050c00-c34) + Schleife.
     sub02 @0x020DE Plc_motion(1,7,0): Sub 1 -> CDEMD1 dir[1] Clip 7 = 113 Bilder, +0x1c4 = 0 -> einmal + Halten.
 
+### 2.2a AM ORIGINAL GEMESSEN — Savestates des Nutzers (DuckStation, MZD-Disc, unveraenderte EXE)
+Quelle: %LOCALAPPDATA%/DuckStation/savestates/HASH-957757946319438E_{1,2,3,5}.sav (Elza-Durchlauf des Nutzers
+7./8.10.; nur gelesen, Kopien im scratchpad; md5 4b254b79.. / a7b970d5.. / e5c87e78.. / c87ebb0e..). Saubere EXE
+(@0x80026e4c = 08 00 e0 03), DAT_800aca3c Bit 31 = 1 (Elza) in allen vier. Auswertung K_belege/orig_ram_beweis.py
+und orig_ram_entity.py (re15_ss.Ram; Gegner i = 0x800acc2c + i*0x1F4, RDT-Zeiger 0x800ac778):
+
+| Stand | Roy-Entity | Banken im RAM (Blob-Basis = +0x16c - 0xC) | RBJ-Kanal +0x180/+0x184 | Clip/Phase |
+|---|---|---|---|---|
+| _1 (1011, Szene laeuft, "Officer: *groans*") | Gegner 0, Typ 0x47 | 0x8012ff90: dir1 EDD 2008 B, dir2 EMR 34096 B, dir3 EDD 836 B, dir4 EMR 13048 B **== CDEMD1** (== CDEMD0: nein), Mesh +0x10-0xC = Blob+0xC358 = CDEMD1 dir[7] | 0x80124e68 / 0x8012c800 = ROOM1011 **rec1** EMR/EDD (RDT 0x801219b0 + 0x1384 + 0x2130+4 / +0x9acc), EDD-Bytes == Datei | Sub 0, Phase 1, Clip 5 (28 B.), +0x95 = 19, Posenzeiger +0x168 -> Bild 18, +0x1c4 = 0x24 (Schleife) |
+| _2/_3 (1011, nach der Ohnmacht) | dito | dito, == CDEMD1 | dito rec1 | Sub 0, **Phase 2 = HALTEN**, Clip 9 (100 B.), +0x168 -> **Bild 99 (letztes, liegend)**, +0x1c4 = 0x20 (kein Schleifenbit) |
+| _5 (1021, vor der Szene) | Gegner 1, Typ 0x47 | 0x80158e6c: alle vier == CDEMD1, Mesh = Blob+0xC358 | **0 / 0** (kein Record; John = Gegner 0 traegt rec1 0x80129708) | Sub 1 (Loco +0x84/+0x16c), Clip 23 (30 B.), +0x1c4 = 0x04 (Schleife) |
+
+Damit am Original belegt: Modell = CDEMD1 Typ 0x47; Gesten = Record 1 der Raum-Animation; Ohnmacht haelt das
+letzte Bild; Ruhe-Clip 5 laeuft im Original ebenfalls in Schleife (sitzend). Bildschirm: die gespeicherten Bilder
+zeigen Elza (Kamera 10/11), Roy liegt ausserhalb; das Posenbild aus den Original-Daten am RAM-Stand ist
+K_belege/k2_orig_posen_ram.png (rec1 Clip 5, Clip 9, CDEMD1 Clip 7).
+(Ein eigener DuckStation-Lauf mit gepatchtem Elza-Bit scheiterte am Pad-Speicher-Hotkey: keine Datei geschrieben;
+er wurde verworfen, weil er den Slot 1 des Nutzers ueberschrieben haette — dafuer die Nutzer-Spielstaende.)
+
 ### 2.3 K3 — Dauerschleife
 Kein Schleifen-Defekt des Abspielers: die Skript-Schleifen (Plc_flg 4) sind original. Defekt = falscher INHALT
 der Schleife: Roys Ruhe-Clip 5 lief aus Elzas Record 0 (Knien + Arm ausstrecken, 20 Bilder) statt aus Roys
