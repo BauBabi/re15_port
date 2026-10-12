@@ -75,3 +75,15 @@ Ergaenzung des Nutzers zu Nachtrag 2 (woertlich, unmittelbar danach):
 Lesart (ersetzt die enge Lesart oben): Das RE2-Verhalten gilt GENERELL fuer alle Zombies (jeder Raum, jede Spawn-Art), die
 Montage nach Irons' Tod ist nur das Beispiel. Vorlage ist die RE2-Retail-Zombie-KI (wie sich Zombies dort im Gang bewegen,
 wann sie loslaufen, wandern, auf Leon zukommen) — aus RE2 belegt nachbauen.
+
+## Nachtrag 3 — 2026-10-12 (woertlich, Korrektur zu #9 Code-Panels)
+
+> Nein, beim Panel in korridor 2 ist falsch - dort soll natürlich rot leuchten - richtig eingegeben - dann blau....
+
+> rot = geschlossen
+
+Lesart: Die Lampen richten sich nach den am Panel gemalten Lampen. Panel in "Korridor 2" (laut Original-Raumnamen ROOM10D0
+"2F CORRIDOR" oder ROOM11E0 "B2 CORRIDOR" — Spur E bestimmt es an den gemalten Lampen): ROT solange zu (Code falsch/nicht
+eingegeben), BLAU sobald richtig. Regel: rot = geschlossen. Die uebrigen Panels: blau solange falsch, gruen wenn richtig
+(soweit so gemalt). Dem laufenden Bau-Agenten der Spur E am 2026-10-12 per Nachricht uebermittelt (mit der Bitte, den
+Nachtrag in AUFTRAG.md seines Baums zu committen).

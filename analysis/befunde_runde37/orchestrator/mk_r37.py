@@ -55,7 +55,7 @@ SPUREN = [
    "halten.")),
  dict(id="E", thema="codepanel", baum="r37_codepanel",
   punkte=["bei den Code panels möchte ich das, so lange der Code noch falsch eingegeben ist unten das blaue Licht leuchtet. Ist er dann richtig eingegeben das grüne Licht.",
-          "Die Kamera darf noch auf den Panels bleiben wenn der Piep und unlock sound kommt."],
+          "Die Kamera darf noch auf den Panels bleiben wenn der Piep und unlock sound kommt.", "Nachtrag 3 (Korrektur): Nein, beim Panel in korridor 2 ist falsch - dort soll natürlich rot leuchten - richtig eingegeben - dann blau.... / rot = geschlossen"],
   hinweise=("Code-Panel-Raeume (Runde 36 Spur G, analysis/befunde_runde36/G_tueren.md Z.238ff): Ziffernfeld + Karte in 10D0/10D1 (Code 4312, Blue Keycard), "
    "11E0/11E1 ('Prisons', Yellow Keycard + 0513), 1230/1231 (Zettel 5632); dazu das Minidisc-Schloss 1100/1101 (Cursor-Raetsel) — vollstaendigen Zensus aller "
    "Ziffern-/Code-Panels aller Stages selbst machen (Ck(5,0x0D..0x10)-Muster, Cursor-Raster-Raeume). Die Folge Piep/Aufschliessen (0/15/30 Bilder) baute Spur G "
