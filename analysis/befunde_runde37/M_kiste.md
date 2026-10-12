@@ -224,6 +224,10 @@ Namen dann automatisch).
   (Spielstand, CONTINUE, Viereck am Kisten-AOT), Framedumps F95..F130 -> probe_r37_kiste_bild: 31/31 Bilder Rahmen
   bitgleich BOXPANEL.BIN, Ruhebild Symbol ab 179/155 mit freier Spalte davor, einlaufende Zeile F107/F127.
   Gegenprobe mit den Vorher-Bildern: KISTE-BILD FEHLER 38.
+  Vierter Lauf `kiste_halten` (1150 Leon, Taste gehalten RUNTER/HOCH je 36 Bilder, RE15_INPUT_SCRIPT auf der
+  Spielbild-Zeitachse): 102/102 Bilder Rahmen bitgleich, F140 ungleich F99 (es wurde geblaettert), F200 bitgleich F99
+  (gleich weit zurueck). Einzeln vorab geprueft (Skriptkopie mit eigenem exe-Praefix): "Taste gehalten, 102 Bilder
+  Rahmen unversehrt".
 - Werkzeuge: probe_r37_kiste_karte (Spielstand vor der Kiste, Kiste mit den laengsten Namen), probe_r37_kiste_bild.
 
 **Gezielte Laeufe** (keine volle Suite; Regex = eigene Tests + alle Testgruppen des Inventar-/Kisten-/Karten-
