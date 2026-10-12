@@ -20,7 +20,8 @@
  *
  * FORM (Beta -> Retail, RE2 Custom Handgun = RE2-Item 4, eigene FSM 0x8004879C @0x800A6F48):
  *   Sub 2 0x800487D8 feuert eine KUGEL in den Feuerclip-Bildern 0/3/6 (`beq v1,zero` @0x80048910,
- *   `addiu v0,zero,3` / `beq` @0x80048914-18, `addiu v0,zero,6` / `bne` @0x8004891c-20); Kugel 2/3
+ *   `addiu v0,zero,3` / `beq` @0x80048914-18, `addiu v0,zero,6` / `bne` @0x8004891c-20; Bildzaehler +0x14D
+ *   steigt je Bild um 1: `lbu v0,333(s2)` / `addiu v0,v0,1` / `sb v0,333(s2)` @0x80029b28-34); Kugel 2/3
  *   nur mit Patrone (`jal 0x80069f54` / `bne v0,zero` @0x80048938-40). Je Kugel: Treffer-Skript neu
  *   (`jal 0x80041098` @0x80048990), EINE Patrone (`jal 0x8006a0cc` @0x800489a0); der Resolver
  *   FUN_800410CC laeuft jedes Bild (@0x80048a04) und loest nach jedem Skript-Neustart genau EIN Bild

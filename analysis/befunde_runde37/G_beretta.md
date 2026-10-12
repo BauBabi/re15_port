@@ -106,6 +106,10 @@ Item 2/3 (Handgun) -> 0x80043230 (Standard), **Item 4 (Custom Handgun) -> 0x8004
                 jal 0x80043d30          ; Knall @0x800489b8
 800489c4..80048a04  jal 0x800410cc       ; Resolver JEDES Bild, vom Treffer-Skript gegatet
 ```
+Der Bildzaehler +0x14D steigt je Bild um genau 1: Sub 2 ruft am Ende `jal 0x8002959c` (@0x80048aa0) -> FUN_80029614
+`lbu v0,333(s2)` / `addiu v0,v0,1` / `sb v0,333(s2)` @0x80029b28-34 (Clip-Ende: `sb zero,333(s2)` @0x80029b48).
+Im Eintrittsbild steht er auf 0 (`sw v0,332(s0)` mit Clip + 0x70000 @0x80048860-70 -> +0x14D = 0), d.h. Kugel 1 im
+Eintrittsbild, Kugel 2/3 drei bzw. sechs Bilder spaeter.
 Treffer-Skript (Paar @0x800A68E8 + Item*24 + Gruppe*8; Item 4 = `18 66 0a 80 6c 66 0a 80` @0x800A6948): Boxen
 0x800A6618/34/50 (Handgun-Familie), Muster @0x800A666C = `00 01 00 ff` = {Record 0, 1 Bild}, {Ende}. Der Resolver
 FUN_800410CC loest also genau EIN Bild nach jedem `jal 0x80041098` auf (Zaehler +0x1EC: -1 = 0xFF -> kein Test,
@@ -142,6 +146,8 @@ Ihre FORM kommt aus RE2 Retail (Beta -> Retail), wo der Feuerstoss der Custom Ha
   Raumwechsel) oder einem Waffenwechsel — RE2: Verlassen von Sub 2 beendet ihn ebenso.
 * NICHT uebernommen aus RE2: Loslassen des Abzugs bricht ab (@0x80048928-30) und Einzelschuss per Bit 126 (@0x800488e4) —
   RE1.5 bucht alle drei Patronen sofort ab und zeigt immer drei Blitze; beides bleibt RE1.5.
+* RE3 als weiteres Vorbild: im Repo liegt kein RE3 (info/ traegt nur Re1.5, re2leon und die Referenzsammlung) — RE2 Retail
+  ist der naechste Nachfolger derselben Engine und hat genau diese Waffenklasse (Item 4).
 
 ### 3.2 Dateien
 * NEU `re15_port/engine/src/beretta_r37.c`, `re15_port/include/re15_beretta_r37.h` (Belege im Kopf): `re15_beretta_r37_feuerstoss`
@@ -205,8 +211,9 @@ je -16). Das ist die RE1.5-Kandidatenregel, keine Luecke: jede Kugel trifft.
   Blut je Kugel, im Takt der drei Muendungsblitze. Ein Feuerstoss auf einen Zombie macht jetzt 3 x 16 = 48 statt 16.
 * Das Original (RE1.5-Prototyp) trifft je Feuerstoss nur einmal — am Original gemessen. Die Umsetzung folgt RE2 (Custom
   Handgun: je Kugel ein Treffer, Schaden je Kugel = Pistolenschuss).
-* Mit RE2-KI gilt RE2s Trefferpause je Gegner: Zombie/Hund/Spinne nehmen alle drei Kugeln, eine KRAEHE nur die erste (RE2
-  Zeile 4 der Kraehe: Pause 15 Bilder) — die Kugeln 2/3 gehen dann an das naechste Ziel. Mit RE1.5-KI trifft jede Kugel; ein
+* Mit RE2-KI gilt RE2s Trefferpause je Gegner (RE2-Zeile 4): Zombie 1 Bild (gemessen: alle drei Kugeln treffen), Hund und
+  Spinne 0 Bilder (Tabelle @0x800A4424/@0x800A4B90), KRAEHE 15 Bilder (@0x800A45A0) — eine Kraehe nimmt je Feuerstoss nur die
+  erste Kugel, die Kugeln 2/3 gehen an das naechste Ziel (wie in RE2 Retail). Mit RE1.5-KI trifft jede Kugel; ein
   getroffener Zombie, der zu Boden geht, ist mit geradem Zielen kein Ziel mehr, dann trifft die naechste Kugel den naechsten.
 * Ist nur noch 1 oder 2 Schuss im Magazin, gibt es nur 1 bzw. 2 Treffer (drei Blitze zeigt das Original trotzdem).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung.
