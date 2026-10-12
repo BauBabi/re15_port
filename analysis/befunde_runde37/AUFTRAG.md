@@ -134,3 +134,11 @@ Lesart: (a) "den" = der Ausstieg aus dem Lastenaufzug ROOM3080 (WAREHOUSE LIFT) 
 Tuersequenz ist (Null-Rechteck-Tuer @0x0072A, Aot_on @0x00A22) — Sequenz aus RE2 herleiten und bauen. (b) Die kleineren
 Aufzuege in STAGE2 haben keinen Ton — den passenden Aufzug-Ton aus RE2 extrahieren (RE2_SOUND_LISTE.md, shared_assets/RE2/
 ELEVSE.VBS u.a.) und dort abspielen, wo RE2 ihn spielt.
+
+## Nachtrag 6 — 2026-10-12 (woertlich)
+
+> Ja, wie ich gerade gesehen habe fehlt in unseren Port teilweise noch der dranhängende Arm wenn man vom Zombie gebissen wird.
+
+Lesart (beide pruefen, keine F9-Marke dazu): (1) der Arm des Zombies, der beim Biss/Griff an Leon haengt (Griff von vorn/hinten),
+fehlt in manchen Faellen; (2) der angeschossene, noch "dranhaengende" (baumelnde) Arm eines Zombies fehlt beim Biss. Messen,
+welcher Fall auftritt, dann wie RE2 bauen. -> Spur J bissarm.
