@@ -11,8 +11,9 @@
  *   aufstellung  Form + Zahlen: die Anfangs-Gieren im Programm sind die Peilungen auf den Partner (re15_s11c0_gier =
  *                FUN_8001a6d4-Form des Ports); das Original-Vorbild ROOM10D0 @0x01ABC..@0x01AF6 stellt seine
  *                Gespraechspartner genauso auf (Dir_set = Peilung +-17); Adas Record @0x01770 traegt 475 (die
- *                "falsche Richtung"); die langsame Kopf-Rate ROOM4000 @0x015B6; im Programm keine Koerperdrehung im
- *                Gespraech (kein Plc_dest Modus 9), genau ein Lauf (Modus 5) erst nach Ablauf von Marvins letzter Zeile.
+ *                "falsche Richtung"); im Programm keine Koerperdrehung im Gespraech (kein Plc_dest Modus 9 vor dem
+ *                Lauf), genau ein Lauf (Modus 5) erst nach Ablauf von Marvins letzter Zeile, danach genau eine Drehung
+ *                Adas nach dem Signal "Ada folgt Marvin" (Nachtrag 12).
  *   ablauf       die Szene im Spieltakt (Raumaufbau wie das Spiel, scd_room_reenter): einander zugewandt ab dem ersten
  *                Bild, Ada dreht sich nie, Marvin nur beim Losrennen (nach seiner Zeile, < 120 Grad), je Zeile
  *                Sprecher UND Zuhoerer zum Partner (Koerper im Kegel 0x60 @0x80076c41, Kopf auf dem Partner bzw.
@@ -129,13 +130,6 @@ static void teil_aufstellung(void)
         PRUEF(wabs(475, g_am) > KEGEL * 8, "Gier 475 zeigt nicht auf Marvin (%d Einheiten daneben)", wabs(475, g_am));
     } else PRUEF(0, "ROOM11C0.RDT gelesen");
     free(r11);
-    size_t n40 = 0; uint8_t *r40 = rdt_roh(0x4000, &n40);
-    if (r40 && n40 > 0x015C0) {
-        static const uint8_t neck3c[10] = { 0x41,0x01,0x9d,0xf2,0x00,0x00,0x15,0xf6,0x3c,0x00 };
-        PRUEF(!memcmp(r40 + 0x015B6, neck3c, 10) && r40[0x015C4] == 0x2b,
-              "ROOM4000 @0x015B6 = Plc_neck m1 Rate 0x3c (Dialog, Message_on @0x015C4) - Vorbild des langsamen Nachsehens");
-    } else PRUEF(0, "ROOM4000.RDT gelesen");
-    free(r40);
 
     /* das Programm selbst */
     int n = 0; const uint8_t *p = re15_irons_tod_programm(8, &n);
@@ -143,6 +137,7 @@ static void teil_aufstellung(void)
     if (!p) return;
     int o = 0, ok = 1, work_k = -1, work_i = -1, em_rot = -1, ada_dir = -1, n_dreh = 0, n_lauf = 0, msg13 = -1, sleep_nach13 = 0;
     int lauf_nach13 = 0, neck_tuer_m = 0, neck_tuer_a = 0, msg10 = -1, dir_vor_riegel = 0, riegel = -1, neck_vor_riegel = 0;
+    int n_dreh_nach = 0, dreh_ada_f1 = 0, sig_folgen = 0, sig_vor_dreh = 0;
     while (o < n) {
         int l = op_len(p[o]);
         if (l <= 0) { ok = 0; printf("  unbekanntes Opcode 0x%02x @+%d\n", p[o], o); break; }
@@ -152,7 +147,11 @@ static void teil_aufstellung(void)
         if (q[0] == 0x22 && q[1] == 2 && q[2] == 7 && q[3] == 1 && riegel < 0) riegel = o;
         if (q[0] == 0x33 && work_k == 2 && work_i == 0) { ada_dir = le16(q + 4); if (riegel < 0) dir_vor_riegel = 1; }
         if (q[0] == 0x41 && riegel < 0) neck_vor_riegel = 1;
-        if (q[0] == 0x40 && q[2] == 9) n_dreh++;
+        if (q[0] == 0x22 && q[1] == 5 && q[2] == RE15_S11C0_SIG_FOLGEN && q[3] == 1) sig_folgen = 1;
+        if (q[0] == 0x40 && q[2] == 9) {
+            if (!n_lauf) n_dreh++;
+            else { n_dreh_nach++; dreh_ada_f1 = (work_k == 2 && work_i == 0 && q[3] == 0x01); sig_vor_dreh = sig_folgen; }
+        }
         if (q[0] == 0x40 && q[2] == 5) { n_lauf++; if (msg13 >= 0) lauf_nach13 = 1; }
         if (q[0] == 0x2b && q[1] == 13) msg13 = o;
         if (q[0] == 0x2b && q[1] == 10) msg10 = o;
@@ -168,7 +167,10 @@ static void teil_aufstellung(void)
     PRUEF(ada_dir == g_am && dir_vor_riegel, "Ada wird im Raumaufbau Marvin zugewandt: Dir_set %d == Peilung %d (LAB_80041080, Form ROOM10D0 @0x01AC4)",
           ada_dir, g_am);
     PRUEF(!neck_vor_riegel, "kein Plc_neck vor dem ersten Spieltakt (der NPC-INIT @0x8011c768 wuerde es loeschen)");
-    PRUEF(n_dreh == 0, "keine Koerperdrehung im Gespraech: kein Plc_dest Modus 9 (%d)", n_dreh);
+    PRUEF(n_dreh == 0, "keine Koerperdrehung im Gespraech: kein Plc_dest Modus 9 vor Marvins Lauf (%d)", n_dreh);
+    PRUEF(n_dreh_nach == 1 && dreh_ada_f1 && sig_vor_dreh,
+          "Nachtrag 12: genau eine Drehung nach dem Lauf - Ada (Work_set(2,0)), Ankunfts-Bit 1 wie @0x018CA, nach dem Signal "
+          "(5,%d) 'Ada folgt Marvin'", RE15_S11C0_SIG_FOLGEN);
     PRUEF(n_lauf == 1 && lauf_nach13 && sleep_nach13 >= 99,
           "genau ein Lauf (Modus 5), erst nach Marvins letzter Zeile: %d Bilder nach msg 13 >= 99 (Haltezeit 01 63)", sleep_nach13);
     PRUEF(neck_tuer_m && neck_tuer_a, "Knall: beide KOEPFE zur Tuer vor Adas Frage (Plc_neck m1, kein Drehen)");
@@ -351,14 +353,17 @@ static void bedingungen(int mit_kopf, const char *quelle)
     /* (2)+(3) Drehungen: Ada keine, Marvin nur der Lauf nach seiner letzten Zeile, keine Kehrtwende */
     dreh_t DA[32], DM[32];
     int na = drehungen(0, DA, 32), nm = drehungen(1, DM, 32);
-    int max_a = 0, max_m = 0, m_vor_lauf = 0;
+    int max_a = 0, max_m = 0, m_vor_lauf = 0, a_vor_lauf = 0;
     for (int i = 0; i < na; i++) { printf("  [%s] Ada dreht F%d..F%d %d -> %d (%+d)\n", quelle, DA[i].f0, DA[i].f1, DA[i].g0, DA[i].g1, DA[i].summe);
-        if (abs(DA[i].summe) > max_a) max_a = abs(DA[i].summe); }
+        if (abs(DA[i].summe) > max_a) max_a = abs(DA[i].summe);
+        if (z13_ende < 0 || DA[i].f0 < z13_ende) a_vor_lauf++; }
     for (int i = 0; i < nm; i++) { printf("  [%s] Marvin dreht F%d..F%d %d -> %d (%+d)\n", quelle, DM[i].f0, DM[i].f1, DM[i].g0, DM[i].g1, DM[i].summe);
         if (abs(DM[i].summe) > max_m) max_m = abs(DM[i].summe);
         if (z13_ende >= 0 && DM[i].f0 < z13_ende) m_vor_lauf++; }
-    PRUEF(na == 0, "[%s] Ada dreht sich in der ganzen Szene nicht (%d Abschnitte, groesste %d Einheiten) - kein 180, kein zweites 90",
-          quelle, na, max_a);
+    PRUEF(a_vor_lauf == 0, "[%s] Ada dreht den Koerper im ganzen Gespraech nicht (bis Marvins letzte Zeile endet): %d Drehungen "
+          "davor - kein 180, kein zweites 90", quelle, a_vor_lauf);
+    PRUEF(na <= 1 && max_a < 0x400, "[%s] Nachtrag 12: danach hoechstens EINE Drehung Adas (dem laufenden Marvin nach), %d Einheiten "
+          "= %.1f Grad < 90 Grad (%d Abschnitte)", quelle, max_a, max_a * 360.0 / 4096.0, na);
     PRUEF(m_vor_lauf == 0 && z13_ende >= 0,
           "[%s] Marvin dreht den Koerper erst nach dem Ende seiner letzten Zeile (F%d): %d Drehungen davor", quelle, z13_ende, m_vor_lauf);
     PRUEF(max_m < KEIN_180, "[%s] groesste Einzeldrehung Marvins %d Einheiten = %.1f Grad < 120 Grad (Losrennen zur Tuer hinter der Kamera)",
@@ -401,24 +406,31 @@ static void bedingungen(int mit_kopf, const char *quelle)
     }
     PRUEF(knall_a && knall_m, "[%s] Knall: beide Koepfe zur Tuer vor Adas Frage (Ada %d, Marvin %d), Koerper unveraendert (s.o.)",
           quelle, knall_a, knall_m);
-    /* (6) msg 14: Ada sieht Marvin nach - Kopf zur Tuer (seine Laufrichtung), Koerper bleibt; mit dem gezeichneten Kopf:
-     *     der Blick liegt naeher bei Marvin als die Koerperrichtung */
+    /* (6) msg 14 (Nachtrag 12): Ada hat sich dem laufenden Marvin nachgedreht - im ersten Bild der Zeile ist ihr Koerper ihm
+     *     zugewandt (Kegel 0x60), und ihr Kopf-Ziel folgt ihm in jedem Bild (Port-Takt, RE2 Plc_neck Modus 5): Abstand
+     *     Zielpunkt - Marvins Ort < 500 (ein Bild Verzug bei ~190 Einheiten Laufschritt je Bild + Kopf-Versatz); mit dem
+     *     gezeichneten Kopf: Blick zu Marvin <= 8,4 Grad */
     for (int zi = 0; zi < nz; zi++) {
         if (Z[zi].id != 14) continue;
-        int n = 0, kz = 0, naeher = 0, nk = 0;
+        int n = 0, folgt = 0, nk = 0, kblick = 0, kmax = 0, erst = -1, koerper0 = 0;
         for (int i = 0; i < s_nb; i++) {
             const bild_t *b = &s_b[i];
             if (b->f < Z[zi].f0 || b->f > Z[zi].f1 || !b->a.da || !b->m.da) continue;
-            n++; kz += tuer_ziel(&b->a);
+            n++;
+            if (erst < 0) { erst = i; koerper0 = wabs(b->a.r, re15_s11c0_gier(b->a.x, b->a.z, b->m.x, b->m.z)); }
+            long dx = labs((long)b->a.ntx - b->m.x), dz = labs((long)b->a.ntz - b->m.z);
+            folgt += ((b->a.nf & 0x04) && dx < 500 && dz < 500);
             if (mit_kopf && blick_a[i] >= 0) {
-                int gm = re15_s11c0_gier(b->a.hx, b->a.hz, b->m.x, b->m.z);
-                nk++; naeher += (wabs(blick_a[i], gm) < wabs(b->a.r, gm));
+                int gm = re15_s11c0_gier(b->a.hx, b->a.hz, b->m.x, b->m.z), d = wabs(blick_a[i], gm);
+                nk++; kblick += (d <= KEGEL); if (d > kmax) kmax = d;
             }
         }
-        PRUEF(n > 0 && kz == n, "[%s] msg 14 'Marvin!...': Adas Kopf zur Tuer = seine Laufrichtung in %d/%d Bildern", quelle, kz, n);
+        PRUEF(n > 0 && koerper0 <= KEGEL, "[%s] msg 14 'Marvin!...': Ada hat sich ihm nachgedreht - Koerper im ersten Bild %d Einheiten "
+              "neben ihm (Kegel 0x60)", quelle, koerper0);
+        PRUEF(n > 0 && folgt == n, "[%s] msg 14: Adas Kopf-Ziel folgt dem laufenden Marvin in %d/%d Bildern", quelle, folgt, n);
         if (mit_kopf)
-            PRUEF(nk > 0 && naeher == nk, "[%s] msg 14: Adas gezeichneter Blick liegt naeher bei Marvin als ihr Koerper in %d/%d Bildern",
-                  quelle, naeher, nk);
+            PRUEF(nk > 0 && kblick == nk, "[%s] msg 14: Adas gezeichneter Blick auf Marvin <= 8,4 Grad in %d/%d Bildern (max %.1f Grad)",
+                  quelle, kblick, nk, kmax * 360.0 / 4096.0);
     }
 }
 

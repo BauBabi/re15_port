@@ -16,7 +16,7 @@
 #include "re15_enemy.h"
 #include "re15_msg.h"
 #include "re15_scd.h"
-#include "re15_szene11c0_r37.h"   /* Runde 37 Spur O: Mess-Haken der 11C0-Szene */
+#include "re15_szene11c0_r37.h"   /* Runde 37 Spur O: Port-Takt + Mess-Haken der 11C0-Szene */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -452,9 +452,11 @@ static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
  * (6) rennt zur Tuer (Modus 5, 11B0 sub06 @0x015EA) - die einzige grosse Koerperdrehung der Szene (~98 Grad, Phase 1
  *     des Laufs dreht am Ort bis in den Kegel 0x15e @0x80051550, dann im Lauf mit Slew 48): die Tuer liegt hinter der
  *     Kamera, anders kommt er nicht hin.
- * (7) Ada sieht ihm nach: KOPF zur Tuer (Koerper bleibt), langsam wie ROOM4000 @0x015B6 `41 01 .. 3c 00` (die
- *     langsamste ausgelieferte Modus-1-Rate, Zensus O_belege/re15_plc_neck_m1_zensus.txt: 0x64 172x, 0x60 12x,
- *     0x3c 15x, 0x78 1x), damit der Kopf dem Laeufer folgt statt vorauszueilen; "Marvin!..." + Arm (Clip 15).
+ * (7) NACHTRAG 12 (NUTZER-VORGABE, woertlich: "wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin
+ *     nach drehen"): Ada dreht sich dem LAUFENDEN Marvin nach — Kopf und Drehpunkt folgen seiner Lage je Bild (Port-
+ *     Takt re15_s11c0_takt, RE2 Plc_neck Modus 5 = Kopf-Ort einer Figur je Bild, FUN_800177C0 @0x800178a0..@0x80017940;
+ *     Belege in re15_szene11c0_r37.h); gedreht wird mit der Rate der Engine (Kegel 0x60 @0x80076c41) bis sie ihm
+ *     zugewandt ist, dann "Marvin!..." + Arm (Clip 15) zu ihm; danach folgt ihm der Kopf.
  * Danach Schnitt zurueck nach 1150 wie bisher. */
 #define IT_ADA_X       (-8965)
 #define IT_ADA_Z       (-14347)
@@ -469,7 +471,6 @@ static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
 #define OP_GOSUB(n)    0x18, (n)                                                     /* 11C0 sub02 @0x01898 / @0x018D2 */
 /* Runde 37 Spur O */
 #define OP_DIR(ry)     0x33, 0x00, LE16(0), LE16(ry), LE16(0)       /* Dir_set ROOM10D0 @0x01AC4 (LAB_80041080 +0x68/6a/6c) */
-#define OP_NECK1_LANGSAM(x,z) 0x41, 0x01, LE16(x), LE16(0), LE16(z), 0x3c, 0x00   /* ROOM4000 @0x015B6 */
 #define IT_GIER_ADA_MARVIN 3679   /* = re15_s11c0_gier(Ada -> Marvin), Riegel unit_r37_szene11c0_aufstellung */
 #define IT_GIER_MARVIN_ADA 1631   /* = re15_s11c0_gier(Marvin -> Ada) */
 static const uint8_t k_p_11c0[] = {
@@ -508,10 +509,14 @@ static const uint8_t k_p_11c0[] = {
     OP_MSG(13),                                             /* "Marvin: I have to help him, sorry!" */
     OP_MOTION(0, 15), OP_SLEEP(25), OP_SLEEP(20), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
     OP_SLEEP(30),
-    /* (6) rennt zur Tuer Slot 0 @0x01712 (Mitte), Modus 5 (11B0 sub06 @0x015EA) */
-    OP_NECK0, OP_DEST(5, 0x22, IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(15),
-    /* (7) Ada sieht ihm nach (Kopf, langsam), "Marvin!..." + Arm */
-    OP_WORK(2, 0), OP_NECK1_LANGSAM(IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(4),
+    /* (6) rennt zur Tuer Slot 0 @0x01712 (Mitte), Modus 5 (11B0 sub06 @0x015EA); Phase 1 dreht ihn am Ort */
+    OP_NECK0, OP_DEST(5, 0x22, IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(12),
+    /* (7) NACHTRAG 12: Ada dreht sich dem laufenden Marvin nach. Signal (5,13) = Port-Takt re15_s11c0_takt: Kopf-Ziel und
+     *     Drehpunkt folgen Marvin je Bild (RE2 Plc_neck Modus 5, FUN_800177C0 @0x800178a0..@0x80017940). Ausgangsziel =
+     *     sein Laufziel (RE2 ROOM2020 sub02 @0x02108: Kopf auf das Ziel des Laeufers); Kopf + Drehen + Warten wie Adas
+     *     Original-Zeile 11C0 sub02 @0x018C0 / @0x018CA (Ankunfts-Bit 1) / @0x018D2 (`18 06`); dann "Marvin!..." + Arm */
+    OP_WORK(2, 0), OP_SET(5, RE15_S11C0_SIG_FOLGEN, 1),
+    OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x01, IT_TUER11C0_X, IT_TUER11C0_Z), OP_GOSUB(6),
     OP_MSG(14),                                             /* "Ada: Marvin!..." */
     OP_MOTION(0, 15), OP_SLEEP(25), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
     OP_SLEEP(60),
@@ -1227,7 +1232,7 @@ void re15_irons_tod_tick(void)
      * ohne den Alias stand Marvin bei "I have to help him, sorry!" mit haengenden Armen. Der Takt laeuft vor den
      * Faeden, der Binder loest Aktor 4 erst nach dessen Erscheinen auf (rbj_resolve_slot: !active -> kein Cache). */
     if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_rbj_set_alias(4, 1);
-    if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_s11c0_mess_takt();   /* Runde 37 Spur O (RE15_S11C0_LOG) */
+    if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_s11c0_takt();   /* Runde 37 Spur O: Ada folgt Marvin (Nachtrag 12) + RE15_S11C0_LOG */
     /* Knall-Signale: (5,28) = Tuerknall (Knall-Bank Satz 0), (5,29) = Knall wie ROOM1030 (Satz 1). Nur waehrend
      * der Kette (in ROOM1150/1130/1040/1030 ist Bank 5 Wort 0 oberhalb von Bit 20 unbenutzt, Zensus Dossier §8.8). */
     if (s_zustand != RE15_IT_AUS) {

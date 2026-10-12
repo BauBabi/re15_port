@@ -177,14 +177,18 @@ endforeach()
 # Runde 37 Spur O (Nachtrag 11 "Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um"):
 # im Gespraech dreht sich niemand mehr per Plc_dest Modus 9 — beide stehen ab dem Raumaufbau einander zugewandt
 # (Dir_set / Spawn-Gier, Riegel integration_r37_szene11c0); bleibt Marvins Lauf zur Tuer (Modus 5).
+# Gespraech ohne Koerperdrehung: in 11C0 genau EIN Plc_dest Modus 9 - Adas Drehen dem laufenden Marvin nach (Nachtrag 12,
+# Ausgangsziel sein Laufziel, der Port-Takt fuehrt den Drehpunkt mit ihm) - und erst NACH Marvins Lauf (Modus 5)
 string(FIND "${_dbg}" "Montage 11C0 (Programm 4)" _p11)
 string(SUBSTRING "${_dbg}" ${_p11} -1 _dbg11)
-string(FIND "${_dbg11}" "mode=0x09" _p9)
-if(NOT _p9 LESS 0)
-    message(FATAL_ERROR "r36_szene1150[K2/r37 O]: in ROOM11C0 noch ein Plc_dest Modus 9 (Koerperdrehung im Gespraech)")
-endif()
+string(REGEX MATCHALL "Plc_dest\\(slot=[0-9]+ mode=0x09[^\r\n]*" _m9 "${_dbg11}")
+list(LENGTH _m9 _n9)
 string(FIND "${_dbg11}" "Plc_dest(slot=4 mode=0x05 dest=(-25100,17250))" _p5)
+string(FIND "${_dbg11}" "Plc_dest(slot=1 mode=0x09 dest=(-25100,17250))" _p9)
 if(_p5 LESS 0)
-    message(FATAL_ERROR "r36_szene1150[K2]: Marvins Lauf zur Tuer (Plc_dest Modus 5) fehlt im debug.log")
+    message(FATAL_ERROR "r36_szene1150[K2/r37 O]: Marvins Lauf zur Tuer (Plc_dest Modus 5) fehlt im debug.log")
+endif()
+if(NOT _n9 EQUAL 1 OR _p9 LESS _p5)
+    message(FATAL_ERROR "r36_szene1150[K2/r37 O]: in ROOM11C0 muss genau ein Plc_dest Modus 9 stehen (Ada, nach Marvins Lauf): ${_m9}")
 endif()
 message(STATUS "r36_szene1150: OK - K1 RE2-Knall, K3 Folge + erste Bilder (${_erste}), K2 Blicke/Drehungen")

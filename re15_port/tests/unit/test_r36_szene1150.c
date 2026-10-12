@@ -15,8 +15,8 @@
  *   dialog11c0  K2: Ada und Marvin wenden sich bei ihren Zeilen einander zu (Koerper: Ausrichtungs-Test der Engine
  *               re15_ai_arc_test mit dem Kegel des Drehens, Typ-Tabelle @0x80076c41; Kopf: Plc_neck Modus 1 auf den
  *               Partner); Beats der Nutzer-Vorgabe r35 (zum Gebaeude, Ada sieht Marvin nach). Runde 37 Spur O
- *               (Nachtrag 11): "Oh, no, Leon!" Marvin zu Ada, Ada sieht ihm nur mit dem Kopf nach (Riegel der Spur O:
- *               test_r37_szene11c0.c). */
+ *               (Nachtrag 11/12): "Oh, no, Leon!" Marvin zu Ada, Ada dreht sich dem laufenden Marvin nach (Riegel der
+ *               Spur O: test_r37_szene11c0.c). */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -414,9 +414,10 @@ static void teil_dialog11c0(void)
         if (id == 12) { bild_mit[12]++; ok_mar_tuer_12 += zugewandt(mar, ADA_X, ADA_Z) && kopf_auf(mar, ADA_X, ADA_Z);
                         ok_ada_kopf_mar_12 += kopf_auf(ada, -8163, -13748); }
         if (id == 13) { bild_mit[13]++; ok_mar_zu_ada_13 += zugewandt(mar, ADA_X, ADA_Z); ok_mar_kopf_ada_13 += kopf_auf(mar, ADA_X, ADA_Z); }
-        /* Runde 37 Spur O (Nachtrag 11 "Dann dreht sich Ada noch mal um 90 grad um"): Ada sieht ihm mit dem KOPF nach
-         * (Plc_neck m1 zur Tuer = seine Laufrichtung), der Koerper bleibt Marvins Platz zugewandt */
-        if (id == 14) { bild_mit[14]++; ok_ada_tuer_14 += kopf_auf(ada, TUER_X, TUER_Z) && zugewandt(ada, -8163, -13748); }
+        /* Runde 37 Spur O (Nachtrag 12 "kann sie sich gerne den weglaufenden Marvin nach drehen"): Ada hat sich dem
+         * laufenden Marvin nachgedreht, ihr Kopf-Ziel folgt ihm je Bild (Port-Takt re15_s11c0_takt, RE2 Plc_neck Modus 5) */
+        if (id == 14) { bild_mit[14]++; ok_ada_tuer_14 += (ada->neck_flags & 0x04) && labs((long)ada->neck_tx - mx) < 500 &&
+                                                          labs((long)ada->neck_tz - mz) < 500; }
         if (g_room_change.pending) break;
     }
     printf("  Nachrichten-Beginn:"); for (int i = 0; i < n_msg; i++) printf(" %d", msg_bild[i]); printf(" (Schnitt nach %d Bildern)\n", f + 1);
@@ -436,7 +437,7 @@ static void teil_dialog11c0(void)
           "msg 13 'I have to help him': Marvin hat sich zu Ada gedreht (Koerper %d/%d, Kopf %d/%d)", ok_mar_zu_ada_13, bild_mit[13],
           ok_mar_kopf_ada_13, bild_mit[13]);
     PRUEF(bild_mit[14] > 0 && ok_ada_tuer_14 * 10 >= bild_mit[14] * 9,
-          "msg 14 'Marvin!...': Ada sieht ihm mit dem Kopf nach (Kopf zur Tuer, Koerper bleibt, r37 O) in %d von %d Bildern",
+          "msg 14 'Marvin!...': Ada sieht dem laufenden Marvin nach (Kopf-Ziel folgt ihm, r37 O Nachtrag 12) in %d von %d Bildern",
           ok_ada_tuer_14, bild_mit[14]);
     PRUEF(g_room_change.pending && g_room_change.room_id == 0x1150 && g_room_change.target_cut == 7,
           "Schnitt zurueck nach ROOM1150 Cut 7");

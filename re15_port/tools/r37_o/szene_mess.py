@@ -102,6 +102,8 @@ def kopf_ziel(fig, partner):
     if nf & 0x04:
         if partner and abs(nt[0] - partner['x']) < 2 and abs(nt[1] - partner['z']) < 2:
             return 'Partner'
+        if partner and abs(nt[0] - partner['x']) < 500 and abs(nt[1] - partner['z']) < 500:
+            return 'Partner (folgt, Nachtrag 12)'
         if nt == TUER:
             return 'Tuer'
         if nt == ADA:

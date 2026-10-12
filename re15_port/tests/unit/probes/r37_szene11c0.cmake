@@ -4,11 +4,13 @@
 #   test_r37_szene11c0   RIEGEL (Teil ueber das Argument):
 #     unit_r37_szene11c0_aufstellung  Anfangs-Gieren = Peilungen auf den Partner (re15_s11c0_gier, FUN_8001a6d4-Form);
 #                                     Vorbild ROOM10D0 @0x01ABC..@0x01AF6 (Dir_set = Peilung +-17), Adas Record 475
-#                                     @0x01770, ROOM4000 @0x015B6 Rate 0x3c; kein Plc_dest Modus 9, ein Lauf erst nach
-#                                     Marvins letzter Zeile, Knall nur Koepfe
-#     unit_r37_szene11c0_ablauf       die Szene im Spieltakt: einander zugewandt ab dem ersten Bild, Ada dreht sich nie,
-#                                     Marvin nur beim Losrennen (< 120 Grad), je Zeile der Sprecher zum Partner
-#                                     (Kegel 0x60 @0x80076c41), Ada sieht ihm mit dem Kopf nach, Schnitt nach 1150 Cut 7
+#                                     @0x01770; kein Plc_dest Modus 9 im Gespraech, ein Lauf erst nach Marvins letzter
+#                                     Zeile, danach EINE Drehung Adas nach dem Signal "Ada folgt Marvin" (Nachtrag 12),
+#                                     Knall nur Koepfe
+#     unit_r37_szene11c0_ablauf       die Szene im Spieltakt: einander zugewandt ab dem ersten Bild, im Gespraech dreht
+#                                     sich niemand, Marvin nur beim Losrennen (< 120 Grad), je Zeile Sprecher und
+#                                     Zuhoerer zum Partner (Kegel 0x60 @0x80076c41), Ada dreht sich dem laufenden Marvin
+#                                     nach (< 90 Grad) und ihr Kopf folgt ihm, Schnitt nach 1150 Cut 7
 add_executable(test_r37_szene11c0 ${CMAKE_CURRENT_SOURCE_DIR}/test_r37_szene11c0.c)
 target_link_libraries(test_r37_szene11c0 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r37_szene11c0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -21,8 +23,8 @@ endforeach()
 
 # INTEGRATION (echte exe): Spielstand + CONTINUE in ROOM1130, Tuer -> ROOM1150 -> Szene -> Montage bis ROOM11C0 Bild 505,
 # Mess-Haken RE15_S11C0_LOG + RE15_NECK_TRACE (der GEZEICHNETE Kopf); Auswertung = test_r37_szene11c0 auswerten <lauf>:
-# einander zugewandt im ersten Bild, Ada ohne Drehung, Marvin nur beim Losrennen, je Zeile Koerper und gezeichneter
-# Kopf-Blick des Sprechers zum Partner (<= 8,4 Grad), Ada blickt Marvin nach.
+# einander zugewandt im ersten Bild, im Gespraech keine Drehung, Marvin nur beim Losrennen, je Zeile Koerper und
+# gezeichneter Kopf-Blick von Sprecher und Zuhoerer zum Partner (<= 8,4 Grad), Ada dreht sich dem laufenden Marvin nach.
 add_test(NAME integration_r37_szene11c0
     COMMAND ${CMAKE_COMMAND}
         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

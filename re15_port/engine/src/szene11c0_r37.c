@@ -1,5 +1,6 @@
 /*
- * RE1.5 Rebuilt — Runde 37 Spur O "szene11c0": Rechenhilfe + Mess-Haken der Ada/Marvin-Szene ROOM11C0.
+ * RE1.5 Rebuilt — Runde 37 Spur O "szene11c0": Rechenhilfe, Port-Takt "Ada folgt Marvin" (Nachtrag 12) und
+ * Mess-Haken der Ada/Marvin-Szene ROOM11C0.
  * Dossier analysis/befunde_runde37/O_szene11c0.md; Choreografie = k_p_11c0 in irons_tod_1150.c.
  */
 #include "re15_szene11c0_r37.h"
@@ -24,6 +25,32 @@ int re15_s11c0_winkel_diff(int a, int b)
 {
     int d = (b - a) & 0x0fff;
     return (d > 0x800) ? d - 0x1000 : d;
+}
+
+/* NACHTRAG 12: Ada folgt dem laufenden Marvin (Belege im Kopf von re15_szene11c0_r37.h). */
+static void folgen_takt(void)
+{
+    if (!re15_game_flag_get(5, RE15_S11C0_SIG_FOLGEN)) return;
+    re15_actor_t *ada = &g_actors[RE15_S11C0_ADA_AKTOR];
+    const re15_actor_t *mar = &g_actors[RE15_S11C0_MARVIN_AKTOR];
+    if (!ada->active || !mar->active) return;
+    /* Kopf: Ziel = Kopf-Ort der Figur (RE2 FUN_800177C0 @0x80017924-30 `lw v0,92(t0)` ... = Teil-Weltlage); der Port
+     * fuehrt ihn in head_world (Vorbild-Bild), sonst die Wurzel. Nur im Weltpunkt-Modus (0x04, Plc_neck m1). */
+    if (ada->neck_flags & 0x04) {
+        ada->neck_tx = (int16_t)(mar->head_world_ok ? mar->head_world[0] : mar->x);
+        ada->neck_tz = (int16_t)(mar->head_world_ok ? mar->head_world[2] : mar->z);
+    }
+    /* Koerper: nur waehrend des Drehens (Sub 9, Phase 0/1 — re15_npc_sub_turn liest +0x1bc/+0x1be je Bild). */
+    if (ada->state == 4 && ada->sub_state_1 == 9 && ada->sub_state_2 <= 1) {
+        ada->steer_x = (int16_t)mar->x;
+        ada->steer_z = (int16_t)mar->z;
+    }
+}
+
+void re15_s11c0_takt(void)
+{
+    folgen_takt();
+    re15_s11c0_mess_takt();
 }
 
 void re15_s11c0_mess_takt(void)
