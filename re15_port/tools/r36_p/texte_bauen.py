@@ -19,6 +19,9 @@ FORM (belegt, nicht geraten):
     jede Zeile <= 271 px (99 % der 2286 ausgelieferten Zeilen, tuer1120_1130.c). Zeile 1 einer
     Dialognachricht zaehlt den Sprecher-Kopf mit.
   * Laenge <= 128 B (PSX MSG_RAW_LEN, msg_common.c).
+  * UNTERSUCHEN (Runde 37 Spur F, ROOM50B1 msg 0): einen Untersuchungstext DERSELBEN Id umschreiben.
+    Kopf `04 02`, Seitentrenner `02 00` und Schwanz `01 00` WOERTLICH aus der Original-Nachricht;
+    Seiten- und Zeilenzahl muessen der Vorlage gleichen ("Zeilenumbrueche wie das Original"), sonst Abbruch.
 
 WORTLAUT = PORT-WAHL (Story, Nachtrag AUFTRAG.md 14:00, P4: "Die duerfen sich niemals begegnet sein");
 alt -> neu steht im Dossier analysis/befunde_runde36/P_story.md zur Freigabe.
@@ -177,6 +180,21 @@ NEU = [
 ]
 
 
+# (Raum, Id, C-Name, Seiten (je Liste von Zeilen), Grund) — Runde 37 Spur F: Untersuchungstext UMSCHREIBEN
+# (Form `04 02 <Seite 1> 02 00 <Seite 2> 01 00` wie die Vorlage DERSELBEN Id; Kopf/Trenner/Schwanz = Original-Bytes).
+# Wortlaut = PORT-WAHL auf NUTZER-VORGABE (analysis/befunde_runde37/AUFTRAG.md #5 "Bezug zu ada bei elza kann raus"):
+# nur der Name weicht einer Beschreibung — RE2-Form fuer Tote, die der Spieler nicht kennt (RE2 Leon, englischer
+# Block RDT+0x40: ROOM60A0 msg 1 @0x01982 "A researcher's corpse. / It looks like he poured / oil all over the
+# place...", ROOM2020 msg 3 @0x02FA4 "It's a horrible corpse.", ROOM4090 msg 34 @0x04139 "The corpse of a sewer /
+# maintenance worker."); "She's dead." bleibt der RE1.5-Satz (auch ROOM50B0 msg 18 @0x00FA4).
+UNTERSUCHEN = [
+    ("50B1", 0, "k_s37_50b1_m0",
+     [["It's a woman. She's dead."], ["It looks like one of those", "gorillas killed her."]],
+     "Runde 37 #5 + Nachtrag 8 (NUTZER-VORGABE): Elza findet nur die Leiche - Ada kennt sie nur dem Namen nach "
+     "(Marvin, 30C1 msg 4/6), erkennen kann sie sie nicht: 'Dann ist es halt nur - a woman.'"),
+]
+
+
 def bauen():
     eintraege = []
     fehler = []
@@ -207,6 +225,28 @@ def bauen():
             fehler.append("%s msg %d: %d B > %d" % (room, mid, len(neu), MAX_LEN))
         eintraege.append(dict(room=room, mid=mid, name=name, bytes=neu, orig=b"", off=0,
                               alt="", neu=decode(neu), breiten=breiten, grund=grund, kopf=2, art="neu"))
+    for room, mid, name, seiten, grund in UNTERSUCHEN:
+        off, orig = msg_raw(room, mid)
+        if orig[:2] != bytes([0x04, 0x02]) or orig[-2:] != bytes([0x01, 0x00]):
+            raise SystemExit("%s msg %d: Vorlage hat nicht die Form 04 02 .. 01 00: %s" % (room, mid, orig.hex(" ")))
+        o_seiten = [sb.split(bytes([0x08])) for sb in orig[2:-2].split(bytes([0x02, 0x00]))]
+        for sb in o_seiten:
+            for z in sb:
+                if any(b in (0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09, 0x0A, 0x0B) for b in z):
+                    raise SystemExit("%s msg %d: Vorlage mit Steuercode in einer Zeile: %s" % (room, mid, z.hex(" ")))
+        if [len(sb) for sb in o_seiten] != [len(sn) for sn in seiten]:
+            raise SystemExit("%s msg %d: Seiten/Zeilen %s != Vorlage %s" % (room, mid, [len(sn) for sn in seiten],
+                             [len(sb) for sb in o_seiten]))
+        body = bytes([0x02, 0x00]).join(bytes([0x08]).join(enc(z) for z in sn) for sn in seiten)
+        neu = orig[:2] + body + orig[-2:]
+        breiten = [px(enc(z)) for sn in seiten for z in sn]
+        if max(breiten) > MAX_PX:
+            fehler.append("%s msg %d: Zeile %d px > %d" % (room, mid, max(breiten), MAX_PX))
+        if len(neu) > MAX_LEN:
+            fehler.append("%s msg %d: %d B > %d" % (room, mid, len(neu), MAX_LEN))
+        eintraege.append(dict(room=room, mid=mid, name=name, bytes=neu, orig=orig, off=off,
+                              alt=decode(orig), neu=decode(neu), breiten=breiten, grund=grund,
+                              kopf=2, art="untersuchen"))
     return eintraege, fehler
 
 
@@ -222,9 +262,9 @@ def schreiben(eintraege):
     L.append("")
     for e in eintraege:
         L.append("/* ROOM%s msg %d (%s) — %s" % (e["room"], e["mid"], e["art"], e["grund"]))
-        if e["art"] == "umschreiben":
+        if e["art"] in ("umschreiben", "untersuchen"):
             L.append(" *   alt @0x%05X (%d B): \"%s\"" % (e["off"], len(e["orig"]), e["alt"]))
-            L.append(" *   Kopf %d B + Schwanz 4 B = Original-Bytes derselben Nachricht" % e["kopf"])
+            L.append(" *   Kopf %d B + Schwanz %d B = Original-Bytes derselben Nachricht" % (e["kopf"], 4 if e["art"] == "umschreiben" else 2))
         L.append(" *   neu (%d B): \"%s\"" % (len(e["bytes"]), e["neu"]))
         L.append(" *   Zeilenbreiten px: %s (Grenze %d) */" % (", ".join(str(b) for b in e["breiten"]), MAX_PX))
         hexs = ["0x%02x" % b for b in e["bytes"]]

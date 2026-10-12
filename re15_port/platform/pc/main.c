@@ -4911,6 +4911,8 @@ re_title:;
     { extern void re15_tuer1060_install(uint16_t); extern void re15_irons_tod_install(uint16_t);
       re15_tuer1060_install((uint16_t)g_current_room_id);
       re15_irons_tod_install((uint16_t)g_current_room_id); }
+    { extern void re15_sperre1050_r37_install(uint16_t);   /* Runde 37 Spur F: derselbe Grund (Boot-/CONTINUE-Weg), Tuer 1050 -> 10A0 */
+      re15_sperre1050_r37_install((uint16_t)g_current_room_id); }
     { extern void re15_szl_install(uint16_t);   /* Runde 36 Spur J: Boot-/CONTINUE-Weg wie oben (ROOM11B0 Werkstatt-Tuer) */
       re15_szl_install((uint16_t)g_current_room_id); }
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — derselbe Grund wie Sicherung, Schreibtisch und

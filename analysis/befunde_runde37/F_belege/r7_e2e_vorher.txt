@@ -1,0 +1,35 @@
+# r7_e2e_vorher — echte exe (Stand master f1e019ca), ein durchgehender Lauf 10F0 -> 1090 -> 1050 -> 10A0
+# Env: RE15_DEBUG_JUMP=10f0@250 RE15_SET_FLAG=9:71,3:94,3:187,3:121,3:129 RE15_PLAYER_POS=-7125,4950,0 RE15_INPUT_SCRIPT_START=0
+# RE15_INPUT_SCRIPT=W18.4,U2.6,W1,L0.37,W0.3,U0.5,W0.3,R0.37,W0.3,U0.55,W0.3,R0.37,W0.5,U10.5,W1,A0.1,W2.5,U0.6,W0.3,A0.1,W3,U1.0,W0.3,R0.37,W0.3,U1.67,W0.3,L0.37,W0.3,U0.6,W0.5,A0.1,W3,R0.37,W0.3,U0.3,W0.3,A0.1,W2,R0.37,W0.3,A0.1,W3,L0.37,W0.3,U2.0,W0.3,R0.37,W0.3,U3.9,W0.3,R0.37,W0.3,U0.5,W0.3,A0.1,W5
+# --- debug.log (gefiltert)
+42:[setflag] flag(9,71/0x47) = 1
+43:[setflag] flag(3,94/0x5e) = 1
+44:[setflag] flag(3,187/0xbb) = 1
+45:[setflag] flag(3,121/0x79) = 1
+46:[setflag] flag(3,129/0x81) = 1
+67:[debug-menu] AUTO-JUMP -> ROOM10F0 (Frame 250)
+69:[debug-menu] JUMP -> 10f COMMUNIC. ROOM (ROOM10F0) spawn=(-7125,0,4950) cut=0
+70:[room] PC loaded room10f0.rdt (225092 bytes)
+127:[aot] DOOR FIRE slot=1 rect=(-4750,-1750,hw=600,hh=500) target_cut=0 spawn=(-13600,-9000,1300)
+130:[room] PC loaded room1090.rdt (336440 bytes)
+214:[aot] DOOR FIRE slot=0 rect=(-10080,3060,hw=2350,hh=800) target_cut=6 spawn=(19850,0,-22300)
+218:[room] PC loaded room1050.rdt (297324 bytes)
+277:[aot] DOOR FIRE slot=4 rect=(17200,-13700,hw=500,hh=1000) target_cut=0 spawn=(26200,-14400,24800)
+280:[room] PC loaded room10a0.rdt (101164 bytes)
+321:[flow] EXIT_AT: Bild 200 in Raum 10a0 erreicht -> exit
+# --- climb.txt (RE15_CLIMB_TRACE), Zustandswechsel
+T252 room=10F0 pad=0000 pos=(-7125,0,4950) rot=0 band=0 sub=0 kind=0x00 stand=-1
+T1119 room=10F0 pad=8000 pos=(-4901,0,-108) rot=1048 band=0 sub=9 kind=0x81 stand=-1
+T1150 room=10F0 pad=0000 pos=(-4901,-1800,-1256) rot=1024 band=1 sub=9 kind=0x81 stand=3
+T1171 room=10F0 pad=0000 pos=(-4901,-1800,-1256) rot=1024 band=1 sub=0 kind=0x00 stand=3
+T1225 room=1090 pad=8000 pos=(-13600,-9000,1300) rot=3072 band=5 sub=0 kind=0x00 stand=-1
+T1488 room=1090 pad=8000 pos=(-9900,-9000,3358) rot=3072 band=5 sub=9 kind=0x0E stand=-1
+T1489 room=1090 pad=8000 pos=(-9900,-9000,3358) rot=3072 band=5 sub=10 kind=0x0E stand=-1
+T1503 room=1090 pad=0000 pos=(-9900,-8410,4268) rot=3072 band=2 sub=10 kind=0x0E stand=0
+T1565 room=1090 pad=0000 pos=(-9900,-3600,4268) rot=3072 band=2 sub=0 kind=0x00 stand=0
+T1619 room=1090 pad=8000 pos=(-9234,-3600,4262) rot=4128 band=2 sub=9 kind=0x02 stand=0
+T1620 room=1090 pad=8000 pos=(-9234,-3600,4262) rot=0 band=2 sub=10 kind=0x02 stand=0
+T1634 room=1090 pad=0000 pos=(-8434,-3010,4262) rot=0 band=1 sub=10 kind=0x02 stand=-1
+T1658 room=1090 pad=0000 pos=(-8434,-1800,4262) rot=0 band=1 sub=0 kind=0x00 stand=-1
+T1703 room=1050 pad=8000 pos=(19850,0,-22300) rot=3072 band=0 sub=0 kind=0x00 stand=-1
+T2075 room=10A0 pad=8000 pos=(26200,-14400,24800) rot=2048 band=8 sub=0 kind=0x00 stand=-1
