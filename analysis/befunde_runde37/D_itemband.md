@@ -262,8 +262,45 @@ Laufordner Scratchpad `r37d/<lauf>/`; Auszuege (wegplan.txt, itemband.txt, climb
   Band 3 am OST-Ende (-1800,-7700), dem Band-1-Ende der Treppe; Seite 1 + Ost-Haelfte = Aufstieg. Vom Absatz (West) fuehrt die
   Treppe im Port wie im Original auf Band 1.)
 
-## 6. Tests
+## 6. Tests (registriert NUR in `re15_port/tests/unit/probes/r37_itemband.cmake`)
+
+* **`unit_r37_itemband`** (`tests/unit/test_r37_itemband.c`, 0,33 s):
+  Z Zensus (206 RDTs / 40674 Opcodes / 0 Desync / 164 Item_aot_set; genau die 12 erhoehten Saetze, kein Bit 0x80; 22 Schreiber
+  Member 0x12, alle 0x34, genau die 17 am Spieler + 5 an Figuren);
+  M echte Subs ROOM3050 sub04/sub02 (Band 4 -> 0 / 0 -> 4, y, (3,82)), ROOM2030 Lift A/B (3 -> 6 -> 3, 3 -> 9 -> 3), ROOM50D0
+  (0 -> 3 -> 0, Frage mit JA), Gegenprobe Figur-Slot (Band bleibt), Spieler-Slot direkt (Member_get liest denselben Wert);
+  G alle 153 Item-Saetze mit Geometrie ueber den echten Opcode-Handler + re15_aot_scan: Modal GENAU bei Band == floor (318/318
+  Druecke auf falschem Band gesperrt), die 12 erhoehten bis zum Taken-Bit.
+  **Gegenprobe ohne die beiden Haken** (Haken auskommentiert, nur das Testziel neu gebaut, danach wiederhergestellt;
+  `D_belege/unit/gegenprobe_ohne_haken.log`): `falsch: 153`, `0 von 318` gesperrt, die erhoehten `(0)`, Lifte ohne
+  Bandwechsel (ROOM3050 sub04 / 2030 sub02+sub04 / 50D0 sub02 FAIL) — der Riegel diskriminiert.
+* **`integration_r37_itemband`** (`tests/integration/test_r37_itemband.cmake`, echte exe mit eigener Kopie
+  `re15_pc_r37d_haken_<id>`, RE15_WEGPLAN + RE15_ITEMBAND_LOG): 12 Laeufe oben3050 / weg3050 / elza3051 / unten3010 / weg3010 /
+  weg2090 / galerie2040 / weg2040 / spas2030 / spasb3 / schrot2030 / schrotb3 (je falsches Band GESPERRT + Taken-Bit 0,
+  vorgesehener Weg FREI + Taken-Bit 1; Lift-Laeufe verlangen die MEMBER-Zeile, der Treppenlauf `[stair] START dir=DOWN
+  cur_band=3 target_band=1`, weg2090 die echte Tuer-Zeile `DOOR FIRE slot=0 ... spawn=(6300,-1800,-16250)`).
 
 ## 7. OFFEN
 
+* Treppen-Endlage ROOM2030 slot 8 (Abstieg vom Absatz): Port (-2082,-7741), Original (-1982,-1800,-7694) — 100 Einheiten in x,
+  47 in z (stair_common.c, nicht Teil dieses Auftrags; fuer die Aufnahme ohne Folge, beide auf Band 1 im Gang).
+* Lift-Ausschiebung ROOM2030 Lift A bei Start genau auf der Kabinenwand r0[49]: Original (Start z 10900, Gleichstand) nach Sueden,
+  Port (Start z 10846) nach Norden — kuerzerer Weg; der Gleichstandsfall selbst ist nicht verglichen (Startstellung des
+  Messlaufs; im Spiel steht man IN der Kabine).
+* Member 0x13 (+0x1ba) am Spieler: der Port schreibt `g_actors[0].dog_floor_y`, der Kletter-Code fuehrt +0x1ba als eigenen
+  Spiegel `s_floor_y` (climb_common.c). Ohne Folge fuer diesen Auftrag: s_floor_y wird vor jedem Lesen gesetzt (@0x80038494).
+* ROOM50D0-Lift: Bandwechsel nur im Riegel (Teil M) gemessen, nicht an der exe gefahren (Tueren floor 3 nach der Auffahrt).
+
 ## 8. Fuer den Nutzer
+
+* **Behoben:** Gegenstaende auf erhoehten Flaechen nimmt man nur noch auf dem Stockwerk auf, auf dem sie liegen — genau wie im
+  Original (am Original gemessen: ROOM3050, 3010, 2030). Die Super Redhawk in ROOM3050 gibt es nur noch von der Kiste aus:
+  Kiste oben nach Westen und dann nach Sueden ueber die Kante schieben, mit dem Lift hinunterfahren, die Kiste unten nach
+  Norden in die Nische schieben, auf die Kiste klettern, dann die Super Redhawk nehmen.
+* Betroffen sind 12 Gegenstaende (6 Stellen, je Leon und Elza): ROOM2030 Schrotpatronen (Gang unten, ueber die Treppe vom
+  Absatz) und SPAS-12 (oben, mit Lift A), ROOM2040 Head of Akuma (Halle), ROOM2090 Pocket Watch (Plattform), ROOM3010
+  Schrotpatronen (Steg, hochklettern), ROOM3050 Super Redhawk (Kiste). Alle bleiben auf ihrem vorgesehenen Weg erreichbar.
+* **Mit behoben:** Fahrstuehle, die das Stockwerk per Skript setzen (ROOM3050, ROOM2030 Lift A/B, ROOM50D0; ROOM1170 sub14 setzt Band 4 = Hof, dort ohne Aenderung),
+  setzen jetzt auch das Stockwerk der Kollision — vorher stand Leon nach der Fahrt "im falschen Stockwerk" (ROOM3050: Klemme
+  an unsichtbaren Waenden unten).
+* Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bedienaenderung, keine Entscheidungsfrage.
