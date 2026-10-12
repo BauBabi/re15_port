@@ -232,7 +232,7 @@ jenseits der RE1.5-Armlaenge (Rest bis 133), der Arm ist dort gestreckt zum Ziel
 |---|---|---|
 | A ROOM1140 Leon, Griff von hinten | 103 Griffbilder gezeichnet mit Handkontakt, 50 Biss-Bilder beide Haende auf dem RE2-Ziel, Opfer-Bezug 0, Halten max 1128 | kein bissarm.log (Haken fehlt) |
 | B ROOM1010 Cut 6 | 103 / 54, Halten max 917, 0 Bilder auf (0,0) | Leon 89 Bilder auf (0,0), 81 Halte-Bilder > 2000 (bis 5571), Sprung 4737 |
-| C ROOM1140 Elza | 103 / 58, Opfer-Bezug in 103 Zeilen, |Y| mittel 116 | — |
+| C ROOM1140 Elza | 103 / 58, Opfer-Bezug in 103 Zeilen, Betrag Y mittel 116 | — |
 
 Wandklemme in der Sonde (unit_r37_bissarm_klemme_*): ROOM1010 vorher 16 bzw. 80/81 Fehlbilder, nachher 0; ROOM1140 0/0.
 
