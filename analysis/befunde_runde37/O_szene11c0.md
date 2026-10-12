@@ -176,7 +176,7 @@ Koerperdrehung im Gespraech).
   state 0: `e->neck_flags = (grid_id & 0x40) ? 0x12 : 0x00`, Original @0x8011c768 / SPL @0x8004260c-18) ueberschreibt +0x1b8.
   Jetzt: Koepfe erst im 3. Takt nach den Riegeln (INIT beider in Bild 7, gemessen n2/n3: `mo 2 -> 1` in Bild 8).
 * **Work_set auf Ada haelt ihren INIT auf.** In n1 blieb Ada bis Bild 17 ohne INIT in einer haengenden Greif-Pose
-  (O_belege nicht abgelegt, Bild n1 F10/F16 im Scratch): `re15_scd_slot_event_controlled(slot)` (enemy_ai_common.c) laesst
+  (`O_belege/o_n1_init_pose.png`, Bilder F10/F16 der Zwischenfassung n1): `re15_scd_slot_event_controlled(slot)` (enemy_ai_common.c) laesst
   einen NPC, den ein SCD-Faden per Work_set haelt, vor seinem INIT nicht ticken. Jetzt gibt `Work_set(1,0)` am Ende des
   Raumaufbaus Ada frei (Form ROOM10D0 @0x01AE2); INIT beider in Bild 7 wie vor der Aenderung (Lauf vor: `F7 s=6`).
 
