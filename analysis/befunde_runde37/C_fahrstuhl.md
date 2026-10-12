@@ -1,7 +1,7 @@
 # Runde 37 — Spur C "fahrstuhl" (Dossier)
 
-Baum: `.claude/worktrees/r37_fahrstuhl`, Zweig `r37/fahrstuhl`, Basis master f1e019ca. Stand: IN ARBEIT (wird
-fortlaufend geschrieben und nach jedem Schritt committet).
+Baum: `.claude/worktrees/r37_fahrstuhl`, Zweig `r37/fahrstuhl`, Basis master f1e019ca. Stand: FERTIG - beide Punkte
+gebaut, gemessen, gepinnt (Endstand am Ende).
 
 ## Auftrag (Wortlaut des Nutzers, AUFTRAG.md #6 / #7)
 
@@ -243,9 +243,14 @@ AOT-Feuerweg, Fahrstuhl, Elza-Selbsttueren, Kopflauf):
 ```
 ctest --test-dir re15_port/build -R "r37_fahrstuhl|r36_tueren|r33_tuer|unit_r31_|r32_unterteilung|unit_door_seq|r35_inhalt_tueren|fahrstuhl|elevator|unit_elev_se|r30_tuer|door_|keydoor|unit_aot_|unit_scd_aot_opcodes|unit_tor_1170|r35_cut10f0_tuerton|r30_elza_selbsttuer|r35_zgirl_tuer|r35_zgirl_selbsttueren|integration_headless_run|r34_plattform_ton|r35_spiegel|tuer" --timeout 900 -j 2
 ```
-Ergebnis (Zwischenstand vor den zwei Ausstiegen ohne Fahrt, 2026-10-12): `100% tests passed, 0 tests failed out of 63`
-(u. a. integration_r37_fahrstuhl 184.8 s, integration_r35_karte_fahrstuhl 185.2 s, integration_r36_tueren 36.0 s,
-unit_fahrstuhl_1080_etagen, unit_fahrstuhl_4020_etagen, unit_r33_tueren_*, unit_r31_*). Endstand: Abschnitt "Endstand".
+Ergebnis Endstand (Baum bc10f30b, alle Riegel inkl. der Ausstiege ohne Fahrt, Protokoll build/ ct_final):
+```
+100% tests passed, 0 tests failed out of 63
+```
+(u. a. integration_r37_fahrstuhl 173.6 s, integration_r35_karte_fahrstuhl 181.9 s, integration_r36_tueren 45.5 s,
+unit_fahrstuhl_1080_etagen, unit_fahrstuhl_4020_etagen, unit_r33_tueren_archive/_zuordnung/_maschine, unit_r31_*,
+unit_r37_fahrstuhl_archiv/_einstieg/_ausstieg). Ein Zwischenlauf vor den zwei Ausstiegen ohne Fahrt: ebenfalls
+`100% tests passed, 0 tests failed out of 63`.
 
 ## OFFEN
 
@@ -275,3 +280,16 @@ unit_fahrstuhl_1080_etagen, unit_fahrstuhl_4020_etagen, unit_r33_tueren_*, unit_
   Fahrstuhltueren nebeneinander; `RE15_TUER_SEITE=S013,S040,S057` die Einstiege.
 * **Entscheidungsfrage (nur falls gewuenscht):** Lastenaufzug ROOM3080 -> ROOM4000 hat beim Aussteigen ebenfalls keine
   Sequenz (OFFEN, nicht beauftragt).
+
+## Endstand
+
+* #6 Fahrstuhltuer der Tuersequenz: keine der 55 RE2-Tueren ist die gemalte Revier-Fahrstuhltuer (Bogen V3) -> gebaut:
+  Port-Archive P27F (Flur) / P27C (Kabine) = RE2-Fahrstuhltuer DOOR27 (Mechanik, Ablauf, Ton bytegleich) mit zwei
+  glatten Fluegeln und gerader Mittelfuge statt der verzahnten Labortuer; Farbe/Licht gezeigt = gemalt (max 1.4 / 5.2
+  L-Stufen je Zeile gegen ROOM10C00+ROOM11200 bzw. ROOM10800; vorher DOOR27 40.5, oliv). Einstiege S013/S040/S057.
+  Labor-Fahrstuhl ROOM4020: bleibt DOOR27 (dort gemalt wie RE2).
+* #7 Tuersequenz beim Aussteigen: ROOM1080/1081 -> P27C, ROOM4020/4021 -> DOOR27 V0 (RE2 ROOM6010 sub02 @0x00740/
+  @0x0075A spielt die Fahrstuhltuer beim Verlassen der Kabine), nach der Fahrt UND ohne Fahrt, Leon und Elza; in der
+  exe gemessen inkl. Ton und im Durchlauf Einstieg -> Kabine -> Ausstieg.
+* Tests: 3 neue Unit-Riegel + 1 Integration (Gegenprobe ohne Haken ROT), 3 fremde Riegel auf die neue Voraussetzung
+  nachgezogen; gezielt `100% tests passed, 0 tests failed out of 63`.
