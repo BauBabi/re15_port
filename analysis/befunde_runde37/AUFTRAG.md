@@ -246,3 +246,12 @@ Raeume mit den Freistellungen des Nutzers (eigene ROOMxxxx_PRI*.TIM), falsch fue
 dort jede ergaenzte Verdeckung. -> Spur P masken36: R15M-Cut ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen (wie
 am 2026-09-03 gebaut), je Raum/Cut nachweisen (Blit-Pruefung wie pruef_gen.py + Figur-Messung an der exe), Basis = Stand
 der Spur A (gleicher Lader).
+
+## Nachtrag 12 — 2026-10-12 (woertlich, zu Nachtrag 11 / Spur O)
+
+> zum schluss dialog ada/marvin - wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin nach drehen.
+
+Lesart -> Spur O: Beim Schluss "Ada: Marvin!..." (ROOM11C0 msg 14) dreht sich Ada dem LAUFENDEN Marvin nach — Kopf und
+Koerper folgen seiner Position, waehrend er zur Tuer rennt (statt sich einmal fest zur Tuer zu drehen). Vokabular wie in
+Nachtrag 11 (Plc_neck Modus 1 / Plc_dest Modus 9 Drehen auf seine laufend aktualisierte Lage bzw. das Folge-Ziel; RE2-
+Vorbild fuer "einer Figur nachsehen" belegen); keine ruckartigen Spruenge, Drehrate wie die uebrigen Drehungen der Szene.

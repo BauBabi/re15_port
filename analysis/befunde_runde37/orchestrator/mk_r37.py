@@ -200,7 +200,8 @@ SPUREN = [
 
  dict(id="O", thema="szene11c0", baum="r37_szene11c0",
   punkte=["Und die Dialogszene mit Ada/Marvin nach Irons Tod ist auch noch nicht so geil von den Animationen....",
-          "Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut."],
+          "Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut.",
+          "Nachtrag 12: zum schluss dialog ada/marvin - wenn Ada sagt: \"Marvin!\" kann sie sich gerne den weglaufenden Marvin nach drehen."],
   hinweise=("SZENE = Programm 4 der Irons-Szene: re15_port/engine/src/irons_tod_1150.c k_p_11c0 (~Z.391-470; Herleitung im Kommentar: Runde 35 Spur L "
    "analysis/befunde_runde35/L_cut1150.md, Runde 36 Spur K2 analysis/befunde_runde36/K_*.md + K_belege/k2_*). Heutiger Ablauf: (1) beide drehen sich "
    "zum Gebaeude (Tuer Slot 0 @0x01712, Mitte (-25100,17250) — liegt HINTER der Kamera Cut 13 = RID ROOM11C0 @0x200), (2) Ada dreht sich zu Marvin, "
