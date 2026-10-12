@@ -12,4 +12,20 @@
  */
 void re15_r37a_gegner_pos_haken(void);
 
+/*
+ * Runde 37 Spur A, Nachbesserung 1 (VERTRAG.md 1.7, Abnahme A#0 M1): MASKEN-ZWILLING Elza -> Leon.
+ *
+ * Liefert die Raum-Id, deren nachgezeichnete Port-Masken (MASKS/ROOM%04X.MSK und MASKS/ROOM%04X_PRI%02d.TIM)
+ * fuer room_id gelten: die gerade Leon-Variante, wenn room_id eine Elza-Variante (ungerade Id) OHNE eigene MSK ist
+ * und Kamerasaetze UND Hintergrund je Cut beider Raeume nachweislich gleich sind; sonst room_id selbst.
+ * Befund: Elza sah in ROOM1101 (RDT bytegleich zu ROOM1100) Zombie 1 ueber der Westwand, weil der Port die Masken
+ * mit der VOLLEN Raum-Id sucht und es in STAGE1 nur Leon-Masken gibt (ausser ROOM1221).
+ * Original (warum die Bedingung reicht): Masken = f(RDT-Kamerasatz) @0x80039310/14/1c (RDT+0x24, Cut*0x20,
+ * Satz+0x1C); Projektion = f(Kamerasatz) @0x80021e68 (fov>>7 -> H) und @0x80021e90 -> FUN_80053ca4 (Satz +0..+0x1C);
+ * Hintergrund = f(Stage, Raum OHNE Varianten-Ziffer, Cut) @0x80021c88..0x80021cd8 (Stage-Tabelle 0x8007438c).
+ * Tabelle: gen/pri_masken_zwilling_r37.inc (erzeugt von tools/maske/zwilling_zensus.py, Riegel
+ * unit_r37_pri1100_zwilling rechnet den Zensus aus den Dateien nach).
+ */
+unsigned re15_pri_masken_raum(unsigned room_id);
+
 #endif

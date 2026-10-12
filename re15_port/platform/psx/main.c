@@ -34,6 +34,7 @@
 #include "re15_emd.h"
 #include "re15_camera.h"
 #include "re15_pri.h"   /* sprite.pri foreground-occlusion masks + emit */
+#include "re15_pri1100_r37.h"   /* Runde 37 Spur A: re15_pri_masken_raum (Masken-Zwilling Elza -> Leon) */
 extern int  re15_pri_psx_load_cut(int cut_idx);          /* pri_psx.c  */
 extern void re15_render_pri_sprites(const re15_pri_cut_t *pri); /* render.c */
 #include "re15_player.h"
@@ -508,7 +509,7 @@ int main(int argc, const char **argv)
                 if (s_msk_room != g_current_room_id) {
                     char mn[32];
                     s_msk_room = g_current_room_id;
-                    sprintf(mn, "\\MASKS\\ROOM%04X.MSK;1", g_current_room_id);
+                    sprintf(mn, "\\MASKS\\ROOM%04X.MSK;1", re15_pri_masken_raum(g_current_room_id));  /* Runde 37 Spur A */
                     s_msk_size = re15_cd_load_file(mn, s_msk, (int)sizeof s_msk);
                     if (s_msk_size < 0) s_msk_size = 0;
                 }

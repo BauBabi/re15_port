@@ -21,6 +21,7 @@
 #include "re15_msg.h"
 #include "re15_gameflow.h"
 #include "asset_root_pc.h"
+#include "re15_pri1100_r37.h"   /* Runde 37 Spur A: re15_pri_masken_raum (Masken-Zwilling) */
 
 /* render_pc.c */
 extern unsigned re15_render_pc_pri_gen(void);
@@ -83,7 +84,10 @@ const unsigned char *re15_entladen_msk(unsigned room_id, int *out_size)
         char rel[64];
         free(s_msk); s_msk = NULL; s_msk_size = 0;
         s_msk_room = room_id;
-        snprintf(rel, sizeof rel, "MASKS/ROOM%04X.MSK", room_id);
+        /* Runde 37 Spur A (VERTRAG 1.7): Elza-Raum ohne eigene MSK -> Masken der Leon-Variante (gleiche Kamera + Hintergrund). */
+        snprintf(rel, sizeof rel, "MASKS/ROOM%04X.MSK", re15_pri_masken_raum(room_id));
+        if (re15_pri_masken_raum(room_id) != room_id)
+            fprintf(stderr, "[pri] ROOM%04X: Masken der Leon-Variante %s (Runde 37 Spur A)\n", room_id, rel);
         s_msk = re15_pc_read_cd(rel, &s_msk_size);
         if (!s_msk) s_msk_size = 0;
         s_msk_gen = g_re15_entladen_gen;

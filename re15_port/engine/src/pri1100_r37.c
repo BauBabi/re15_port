@@ -44,3 +44,15 @@ void re15_r37a_gegner_pos_haken(void)
     }
 #endif
 }
+
+/* Runde 37 Spur A, Nachbesserung 1 (VERTRAG.md 1.7): Masken-Zwilling Elza -> Leon, s. re15_pri1100_r37.h. */
+static const unsigned short k_r37a_zwilling[][2] = {
+#include "gen/pri_masken_zwilling_r37.inc"
+};
+
+unsigned re15_pri_masken_raum(unsigned room_id)
+{
+    for (unsigned i = 0; i < sizeof k_r37a_zwilling / sizeof k_r37a_zwilling[0]; i++)
+        if (k_r37a_zwilling[i][0] == room_id) return k_r37a_zwilling[i][1];
+    return room_id;
+}
