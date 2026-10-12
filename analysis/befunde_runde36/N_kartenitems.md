@@ -677,6 +677,9 @@ FAIL: Original-Items 0x32/0x3F genommen (Bits 90/91): Besitz der Polizei-Blaette
 FAIL:   ROOM1200: Plan Blatt 1 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
 FAIL:   ROOM11D0: Plan Blatt 0 haengt noch (Prop obj 15 + Zone Slot 40 Ereignis 28)
 ```
+Nebenbefund (bestaetigt den Port): op_item_aot_set liest das Taken-Bit nur als uint8 pc[18]/pc[26], das Original als
+u16 (`lhu` @0x80040680/@0x80040670). Zulaessig, weil KEIN ausgelieferter Satz ein Bit >= 256 traegt (Riegel Z prueft
+"kein Item-Taken-Bit >= 256"; ein solches Bit liefe im Original ueber Bank 9 hinaus in Bank 10 = 0x800b1098).
 Grenze des Riegels: Teil P kennt nur die Port-Bits, die in seiner Liste stehen. Ein NEUES Port-Bit muss dort eingetragen
 werden (Kommentar an der Liste; bank9_zensus.py Teil port findet alle Zugriffsstellen per grep).
 
@@ -717,5 +720,44 @@ Die alte Belegung haette denselben Stand als "B1 + B2 besessen" gezeigt (Maske 0
 beiden Plaene gar nicht angelegt.
 Riegel-Endstand: 141 ok, 0 FAIL.
 
-### 9.7 P6 Regression
-(folgt)
+### 9.7 P6 Regression (gezielt, KEINE volle Suite)
+Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (Endstand, inkl. Re-Configure fuer die
+neue probes-Datei).
+```
+PATH="/c/msys64/mingw64/bin:$PATH" ctest --test-dir re15_port/build   -R "r36_kartenitems|kartenitem|r36_kartenbits|map_|karte|r33_karte|r35_karte|unit_r36_|item" --timeout 900 -j 4
+...
+121/123 Test #547: integration_r35_karte_fahrstuhl ....   Passed  185.82 sec
+122/123 Test #603: integration_r36_karte ..............   Passed  190.91 sec
+123/123 Test #606: integration_r36_kartenitems_bild ...   Passed  473.71 sec
+
+100% tests passed, 0 tests failed out of 123
+
+Total Test time (real) = 476.00 sec
+```
+Darin u.a. unit_r36_kartenbits, unit_r36_kartenitems, alle unit_r36_* (Spuren A..R), unit_r33_karte_*, unit_r35_karte_*,
+integration_r35_karte, integration_r36_karte, integration_map_uebergang, integration_map_raum_live,
+integration_item_name_census. Die exe des Laufs integration_r36_kartenitems_bild schreibt mit den neuen Bits
+(debug.log `lauf_*_b2_mit`: `[kartenitems] ROOM1200: Karte Blatt 1 (Bit 9,77) ...`, `lauf_*_b1_mit`: `ROOM11D0: Karte
+Blatt 0 (Bit 9,78) ...`; die Laeufe mit gesetztem Bit 77/78 legen keine Karte an). Parallel lief auf der Maschine eine
+fremde Sitzung (ctest + re15_pc_r36r_haken-exe); kein Test flatterte.
+
+### 9.8 OFFEN
+* `RE15_MIN_TESTS` (re15_port/tools/local_build.sh) steht weiter auf 592; dieser Zweig bringt +1 Test
+  (unit_r36_kartenbits, Suite hier 694). Anheben ist Sache der Integration (VERTRAG 1.5).
+* Der Riegel Teil P kennt nur die Port-Bits seiner Liste. Wer ein NEUES Bank-9-Bit vergibt, traegt es dort ein
+  (Kommentar an `k_port[]`) und in VERTRAG 1.1; `bank9_zensus.py port` listet alle Zugriffsstellen.
+* Nicht Teil dieses Auftrags: Port-eigene Zustandsbits in ANDEREN Banken (z.B. Bank 7 Tot-Bits der Montage
+  RE15_IT_* 40..43, 46..49, 75..79 laut re15_irons_tod.h, eigener Zensus aller Sce_em_set im irons_tod-Dossier §2.3; Bank 3/4 Lesezugriffe auf Original-Flags) — derselbe
+  Kollisions-Typ waere dort mit dem Muster von bank9_zensus.py je Bank pruefbar.
+* Interne r36-Integrationsstaende, in denen der B2/B1-Plan mit den alten Bits 90/91 genommen wurde, behalten ihr
+  verschwundenes Stage-2-Item (Bit bleibt gesetzt); der Plan haengt dort wieder. Kein Nutzerstand betroffen (9.6).
+
+### 9.9 Fuer den Nutzer
+* Was war: die Lageplaene **B2** (ROOM1200) und **B1** (ROOM11D0) merkten sich "genommen" auf denselben Speicherplaetzen
+  wie zwei Original-Gegenstaende in Stage 2 — die **Taschenuhr** in ROOM2090 und **"Head of Akuma"** in ROOM2040. Wer den
+  Plan nahm, fand den Gegenstand spaeter nicht mehr; wer den Gegenstand zuerst nahm, hatte die Etagenkarte schon, ohne
+  den Plan je gesehen zu haben.
+* Jetzt: die beiden Plaene haben eigene, freie Plaetze (77/78). 3F/2F/1F waren nie betroffen.
+* Spielstaende: unveraendert ladbar (gleiches Format). Kein veroeffentlichter Stand ist betroffen — die Lageplaene gab es
+  in keiner bisher ausgelieferten Version (erst ab v0.8.24).
+* Keine neuen Dateien, keine Sprachdateien, keine sichtbare Aenderung an den Karten selbst.
