@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_i.js"
-BASIS = "64ba31e0"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_j.js"
+BASIS = "419380dc"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -126,6 +126,18 @@ SPUREN = [
    "stilllegen bzw. umwidmen (Elzas 1001 bleibt mit 30 Patronen), Ort mit Bildern begruenden und in 'Zu entscheiden' fuer den Nutzer nennen. Elza-Raeume: "
    "1091 hat keinen Loescher-Gegenstand. Riegel: Prop vorhanden/nicht vorhanden je Zustand (1091 immer, 1090 erst nach (3,0x84)), Aufnahme am neuen Ort setzt "
    "(9,0x86)+(3,0x85) wie das Original, Feuer 1090 laesst sich damit loeschen (Weg Ende-zu-Ende an der exe), Paket-Gate-Eintraege fuer neue Assets nennen.")),
+ dict(id="J", thema="bissarm", baum="r37_bissarm",
+  punkte=["Ja, wie ich gerade gesehen habe fehlt in unseren Port teilweise noch der dranhängende Arm wenn man vom Zombie gebissen wird."],
+  hinweise=("Keine F9-Marke dazu — beide Lesarten messen: (1) der Zombie-Arm, der beim Biss/Griff an Leon haengt (Griff von vorn, von hinten, "
+   "Kriecher am Bein; Leon UND Elza), fehlt in manchen Bildern/Faellen; (2) ein angeschossener, noch dranhaengender (baumelnder) Arm des Zombies "
+   "fehlt waehrend des Bisses. Port: enemy_ai_re2_zombie.c (Griff-FSM: grab_kill_ctr/grab_choreo in include/re15_actor.h, Griff [0] kopiert den "
+   "Zombie-Anker auf den Spieler, Opfer-FSM des Spielers, Abriss-/Drift-Logik der Arme ~Z.6693ff 'Drift-Felder eines abgerissenen ARMS (Flagwort "
+   "0x4A)', Kinder abgerissener Teile ~Z.5584), Teile-Sichtbarkeit/Gore (md1_gore, Memory reai-v2-gore-vollausbau), emd_common.c. Schritt 1: alle "
+   "Biss-Varianten an der exe reproduzieren (RE15_ENEMY_DBG, RE15_ANIM_TRACE, Framedumps RE15_WINDOW_SCALE=1, je Bild welche Teile des Zombies "
+   "gezeichnet werden), auch mit vorher angeschossenem Arm (Schaden an Teil 3/6 o.ae.). Schritt 2: RE2-Original (RE2_Quellcode_Overlays/, "
+   "ghidra_re2_Leon.txt, EM10-Griff/Biss, Teile-Flags +0x?? fuer abgerissene/baumelnde Arme) belegen, welche Teile RE2 waehrend des Bisses zeigt "
+   "und wie der baumelnde Arm mitgeht; wo moeglich RE2 an DuckStation messen. Schritt 3: Fehlendes byte-true nachbauen. Riegel je Variante "
+   "(Teile-Sichtbarkeit je Bild des Bisses), Runde-36-Riegel (Kleidung/Griff-Blut B, Schuss C) gruen halten.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
