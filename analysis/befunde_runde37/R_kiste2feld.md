@@ -17,7 +17,7 @@ Inventar-Gitter und an anderen Stellen derselben Kachel-Logik pruefen.
 ## 0. Stand (fortlaufend)
 
 - [x] Code gelesen (Block 7b, Kachel-Cache, inv_render_pc.c)
-- [x] Messung vorher (Kiste, Inventar-Gitter, Statusschirm) — Item-Modal folgt
+- [x] Messung vorher (Kiste, Inventar-Gitter, Statusschirm, Item-Modal)
 - [ ] RE2-Belege (zwei Cache-Spalten, zweite Kachel)
 - [ ] Umsetzung
 - [ ] Messung nachher
@@ -91,6 +91,16 @@ liegt. Erreichbarkeit im Spiel: die einzige platzierte 2-Feld-Waffe ist die MC51
 scratchpad breit_zensus.py); sie landet beim Aufnehmen immer in Zelle 0/1 (Front-Shift). Der Gitter-Fehler tritt also erst
 mit ZWEI 2-Feld-Waffen auf (Debug-Gabe oder kuenftige Platzierung) — die Kisten-Liste dagegen trifft schon die MC51,
 sobald Leon/Elza sie in die Kiste legt.
+
+### 1.4 Item-Modal (Aufnahme) — nicht betroffen
+
+Echter Weg: Spielstand ROOM1110 Leon bei (-9950,-2970) Gier 1024 (Werkzeug probe_r37_kiste_karte der Spur M),
+CONTINUE, Viereck F40 am MC51-AOT (main00 @0x00B5A, Rechteck x -10450..-9450 / z -2350..-1550) -> "Will you take th..."
+mit dem Bild der MC51 (F79/F99; zwei andere Standorte trafen die Untersuchen-Zone "Weapons seized, ..."). Bild F99
+(`R_belege/vorher_1110_modal_mc51_F99.png`): Bildfeld x 105..213 / y 73..141 (109x69); nur 2 Paare gleicher
+Nachbarspalten, laengster Lauf 1 (kein Streifen), im rechten Drittel 720 von 2553 Pixeln Waffe (Schaft/Griff). Der Modal
+tastet das 112x72-Bild des ITPS-Blocks ueber die volle Breite (render_pc.c item_modal_build_tex, u < 112) — kein 40er-Kachel-
+Weg, keine Klemmung. **Kein Eingriff noetig.**
 
 ## 2. RE-Belege
 
