@@ -25,9 +25,28 @@
  *     fuer den SPIELER-Slot das Kollisionsband (re15_collision_set_band setzt beide Haelften); fuer andere Aktoren
  *     bleibt es bei +0x82 = floor.
  *
+ * (3) NACHBESSERUNG 1 — PLATTFORM-SPERRE LIFT A ROOM2030/2031 (PORT-WAHL nach RE2-Vorbild, Beta -> Retail).
+ *     Mit (2) nimmt der Lift den Spieler auf das Zielband mit, wo immer er beim Druck stand. Der Ausloeser von Lift A
+ *     ist sub00 @0x01CE6 (slot 5, floor 3) / @0x01D20 (slot 4, floor 6) `2c 0? 03 31 .. da 16 56 2c dc 05 dc 05 ff 00
+ *     18 02 00 00`: sat 0x31 = NUR der Punkt 620 voraus (FUN_80042bac @0x80042ea8 `andi 0x40` -> kein Mitte-Test,
+ *     @0x80042ef8 `andi 0x20` -> voraus), Rechteck x 5850..7350 z 11350..12850 = die Kabine (Zellen r0[33/34/35] Band 3,
+ *     r0[49/55/56] Band 6). Ein Druck aus dem Kabineneingang (z 10730..10900, Blick Sued) bzw. knapp suedlich der
+ *     oberen Kabine (z 13050..13470, Blick Nord) faehrt, und die Ausschiebung aus r0[49] bzw. r0[33] setzt den Spieler
+ *     auf die FALSCHE Seite (gemessen 10182 / 13768, im Original identisch) — Softlock, im Port erst durch (2).
+ *     RE2 Retail hat genau das an der Retail-Fassung des Beta-Lifts ROOM50D0 (= RE2 ROOM6030, Tuer slot 0 byte-gleich)
+ *     behoben: Plattformzone sub00 @0x02B9C `2c 03 06 41 03 00 e8 b8 c0 c7 20 03 b0 04 05 00 22 00 01 00` (FLAG_CHG,
+ *     sat 0x41 = Spieler | MITTE -> (5,0x22)) und am Anfang des Fahrt-Unterprogramms sub10 @0x02F70-7A
+ *     `06 00 08 00 21 05 22 00 01 00 08 00` = if (Ck(5,0x22)==0) Evt_end; (5,0x22) ist ein Ein-Bild-Zonenbit (Wisch
+ *     FUN_80052e20 @0x80052e48 `sw zero` Bank 5 Wort 1). Der zweite Retail-Lift ROOM5060 hat sat 0x51 (MITTE).
+ *     re15_itemband_r37_liftsperre(): Lift A faehrt nur, wenn die Spielermitte im Ausloese-Rechteck des Satzes steht
+ *     (Mitte-Test wie @0x80042ea8); sonst ist der Druck verbraucht und nichts passiert (RE2: sub10 endet @0x02F78).
+ *     Der Satz, das Band-Gate und Member 0x12 bleiben byte-true. Nur Lift A: einziger Lift mit Fallenstellen
+ *     (Zensus unit_r37_itemband Teil F, echte Port-Kollision; Lift B, ROOM3050, ROOM50D0: 0).
+ *
  * Messschrieb (Diagnose, kein Verhalten): RE15_ITEMBAND_LOG=<datei> — je Aktionsdruck, bei dem ein ITEM-Satz in
- * geometrischer Reichweite liegt, eine Zeile "ITEM slot s floor f spieler-band b -> GESPERRT|FREI", und je
- * Member_set 0x12 am Spieler "MEMBER 0x12 Spieler: Kollisionsband a -> b".
+ * geometrischer Reichweite liegt, eine Zeile "ITEM slot s floor f spieler-band b -> GESPERRT|FREI", je
+ * Member_set 0x12 am Spieler "MEMBER 0x12 Spieler: Kollisionsband a -> b" und je Ausloesung von Lift A
+ * "LIFT slot s sub n ... mitte im Ausloeser ja|nein -> FAEHRT|GESPERRT".
  */
 #ifndef RE15_ITEMBAND_R37_H
 #define RE15_ITEMBAND_R37_H
@@ -49,8 +68,20 @@ int  re15_itemband_r37_gate(int slot, int *reach, int *inside);
  * (0x800ACAD6). Fuer andere Slots ohne Wirkung. */
 void re15_itemband_r37_member_band(int slot, int32_t value);
 
-/* Nur fuer Tests: Zaehler seit Programmstart (gesperrte ITEM-Saetze / Band-Setzungen ueber Member 0x12). */
+/* Haken in aot_common.c re15_aot_scan, Feuer-Zweig der Ereignis-Saetze (GENERIC, default): ist `slot` ein Ausloeser
+ * von Lift A in ROOM2030/2031 (Tabelle in itemband_r37.c, Satz sub00 @0x01CE6/@0x01D20, Unterprogramm 2) und steht
+ * die Spielermitte NICHT im Ausloese-Rechteck (`mitte` = Mitte-Test des Scans fuer diesen Satz), ist der Druck
+ * verbraucht und die Fahrt startet nicht (RE2 ROOM6030 sub10 @0x02F78 Evt_end). Rueckgabe 1 = gesperrt. */
+int  re15_itemband_r37_liftsperre(int slot, int mitte);
+
+/* Fuer den Zensus im Riegel: 1, wenn `slot` im Raum `raum` ein Lift-A-Ausloeser mit Plattform-Sperre ist (ohne Log,
+ * ohne Zaehler). */
+int  re15_itemband_r37_ist_liftsperre(unsigned raum, int slot);
+
+/* Nur fuer Tests: Zaehler seit Programmstart (gesperrte ITEM-Saetze / Band-Setzungen ueber Member 0x12 / gesperrte
+ * Lift-A-Ausloesungen). */
 int  re15_itemband_r37_gesperrt_zahl(void);
 int  re15_itemband_r37_member_zahl(void);
+int  re15_itemband_r37_liftsperre_zahl(void);
 
 #endif /* RE15_ITEMBAND_R37_H */

@@ -1595,6 +1595,8 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 break;
             default:
                 /* GENERIC: fire bytecode event handler (Phase 4.4.6.1). */
+                /* Runde 37 Spur D NB1: Lift A 2030/2031 nur mit Spielermitte in der Kabine (RE2 6030 sub10 @0x02F70-7A). */
+                if (re15_itemband_r37_liftsperre(i, inside)) break;
                 g_aot.fired_event_id_this_frame = a->event_id;
                 break;
             }
