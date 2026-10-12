@@ -58,6 +58,12 @@ Der Port ist damit aggressiver als RE2: dort laeuft etwa ein Drittel der Zombies
 RE1.5 mehr Zombies als angriffsbereit ablegt. Waehrend der Montage-Einstellung in 1130 selbst stehen die fuenf noch
 (Leon ist dort nicht im Bild).
 
+**Feuerloescher** (Spur I). Es gibt jetzt ein Feuerloescher-Modell (nach dem Item-Bild gebaut - weder RE1.5 noch RE2
+haben eines). Leons Loescher haengt nicht mehr im Spind von ROOM1000 ("Nothing unusual."), sondern sichtbar an der
+Wand in ROOM1050 rechts der Notausgangstuer nach 1090. Bei Elza liegt in ROOM1091 ein leerer Loescher am Boden. Bei Leon
+liegt er in 1090 erst nach dem Loeschen und nur, wenn Sie an der Wegwerf-Frage "Yes" waehlen; bei "No" behaelt Leon
+ihn als "Empty Fire Extinguisher" (auch im Spielstand, auch wenn er ihn in die Kiste legt).
+
 <!-- weitere Spuren: A pri1100, C fahrstuhl, D itemband, F sperre1050, G beretta, H zombieaktiv, I feuerloescher,
      J bissarm, K roy — Abschnitt erst nach bestandener Abnahme + Integration -->
 
