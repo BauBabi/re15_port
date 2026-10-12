@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.16)
 #   "In der Kiste muessen die Icons offenbar so weit wie moeglich rechts liegen, damit sie nicht vom Text
 #    ueberdeckt werden. [...] beim scrollen/bewegen [...] Der Kasten muss layertechnisch ueber den Items liegen."
 #
-# Drei Laeufe auf dem echten Weg: Spielstand (probe_r37_kiste_karte) vor der Kiste, CONTINUE, Viereck in F40 oeffnet
+# Drei Laeufe (dazu ein vierter mit GEHALTENER Taste, kiste_halten) auf dem echten Weg: Spielstand (probe_r37_kiste_karte) vor der Kiste, CONTINUE, Viereck in F40 oeffnet
 # die Kiste ueber das Kisten-AOT (Vorwaertspunkt 620 im Rechteck, aot_common.c), Viereck F90 = Box-Seite, RUNTER F100,
 # HOCH F120. Anzeige 1 Bild versetzt: Gleiten F102..F107 / F122..F127, Commit F108 / F128. RE15_FRAMEDUMP jedes Bild
 # F95..F130 bei RE15_WINDOW_SCALE=1 (320x240). probe_r37_kiste_bild prueft:
@@ -104,9 +104,74 @@ function(kiste_lauf _name _raum _x _z _gier _arten)
                    "einlaufende Zeile oben/unten sichtbar")
 endfunction()
 
+# TASTE GEHALTEN (Nutzer: "beim scrollen/bewegen"): RUNTER 36 Bilder, Pause, HOCH 36 Bilder — RE2 bleibt bei gehaltener
+# Taste im Gleit-Zustand (roher Halte-Test `lhu v0,0x211c(s3)` @0x80070024 / @0x800701b4), die Zeilen laufen am Stueck.
+# Jedes Bild F99..F200: Rahmen bitgleich; F140 (mitten im Lauf) anders als F99, F200 (gleich viele Zeilen zurueck)
+# bitgleich F99 — beweist, dass wirklich geblaettert wurde.
+function(kiste_halten _name _raum _x _z _gier)
+    set(WORKDIR "${_basis}_${_name}")
+    file(MAKE_DIRECTORY "${WORKDIR}")
+    file(GLOB _alt "${WORKDIR}/f*.ppm")
+    if(_alt)
+        file(REMOVE ${_alt})
+    endif()
+    file(REMOVE "${WORKDIR}/re15_card.mcr" "${WORKDIR}/debug.log")
+    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" "${_raum}" "${_x}" "${_z}" "${_gier}"
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60
+                    RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+    if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
+        message(FATAL_ERROR "r37_kiste[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
+    endif()
+    re15_start_spiel(_rv 300
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
+        RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=40
+        "RE15_INPUT_SCRIPT=A0.034,W1.6,A0.034,W0.3,D1.2,W0.5,U1.2"
+        "RE15_FRAMEDUMP=99-200/1:f"
+        "RE15_EXIT_AT=201#${_raum}"
+        "${RE15_PC_EXE}")
+    if(NOT EXISTS "${WORKDIR}/debug.log")
+        message(FATAL_ERROR "r37_kiste[${_name}]: kein debug.log (exit=${_rv}, ${WORKDIR})")
+    endif()
+    file(READ "${WORKDIR}/debug.log" _dbg)
+    foreach(_z "CONTINUE: resumed in room ${_raum}" "EXIT_AT: Bild")
+        string(FIND "${_dbg}" "${_z}" _p)
+        if(_p LESS 0)
+            message(FATAL_ERROR "r37_kiste[${_name}]: '${_z}' fehlt im debug.log (exit=${_rv}, ${WORKDIR})")
+        endif()
+    endforeach()
+    set(_bilder "")
+    foreach(_f RANGE 99 200)
+        if(_f LESS 100)
+            list(APPEND _bilder "f0000${_f}.ppm")
+        else()
+            list(APPEND _bilder "f000${_f}.ppm")
+        endif()
+    endforeach()
+    execute_process(COMMAND "${RE15_BILD_TOOL}" "${RE15_BOXPANEL}" "SBSSS" ${_bilder}
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 120
+                    RESULT_VARIABLE _rvb OUTPUT_VARIABLE _outb)
+    file(WRITE "${WORKDIR}/kiste_bild.txt" "${_outb}")
+    string(REGEX MATCHALL "Rahmen ok" _ok "${_outb}")
+    list(LENGTH _ok _nok)
+    if(NOT _rvb EQUAL 0 OR NOT _nok EQUAL 102)
+        message(FATAL_ERROR "r37_kiste[${_name}]: Taste gehalten: ${_nok}/102 Bilder mit unversehrtem Rahmen "
+                            "(exit=${_rvb}, ${WORKDIR}/kiste_bild.txt)")
+    endif()
+    file(SHA256 "${WORKDIR}/f000099.ppm" _h99)
+    file(SHA256 "${WORKDIR}/f000140.ppm" _h140)
+    file(SHA256 "${WORKDIR}/f000200.ppm" _h200)
+    if(_h140 STREQUAL _h99 OR NOT _h200 STREQUAL _h99)
+        message(FATAL_ERROR "r37_kiste[${_name}]: Taste gehalten: es wurde nicht geblaettert (F140 gleich F99) oder "
+                            "nicht gleich weit zurueck (F200 ungleich F99) — ${WORKDIR}")
+    endif()
+    message(STATUS "r37_kiste[${_name}] ROOM${_raum}: Taste gehalten, 102 Bilder Rahmen unversehrt")
+endfunction()
+
 kiste_lauf(leon   1150 -25650 -12100 0 SBSSS)
 kiste_lauf(elza   1151 -25650 -12100 0 SBSSS)
 kiste_lauf(stage2 2010 3050   -6100  0 SBSSS)
+kiste_halten(halten 1150 -25650 -12100 0)
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "r37_kiste: OK")

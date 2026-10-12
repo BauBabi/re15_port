@@ -36,7 +36,8 @@ endif()
 
 #   integration_r37_kiste   echte exe, echter Weg: Spielstand vor der Kiste (CONTINUE), Viereck oeffnet die Kiste ueber
 #                           das Kisten-AOT, Box-Seite, RUNTER, HOCH; RE15_FRAMEDUMP jedes Bild F95..F130
-#                           (RE15_WINDOW_SCALE=1) -> probe_r37_kiste_bild. Leon ROOM1150, Elza ROOM1151, Leon ROOM2010.
+#                           (RE15_WINDOW_SCALE=1) -> probe_r37_kiste_bild. Leon ROOM1150, Elza ROOM1151, Leon ROOM2010;
+#                           dazu ROOM1150 mit GEHALTENER Taste (RUNTER/HOCH je 36 Bilder, 102 Bilder geprueft).
 if(TARGET re15_pc)
     add_test(NAME integration_r37_kiste
              COMMAND "${CMAKE_COMMAND}"
