@@ -146,6 +146,36 @@ ROOM2130 @0x08, 492 B gleich): Zellen @+0x70 `00 00 f0 f0` .. `80 00 f0 f0` (0..
 * E2 ist RE2- UND RE1.5-belegt: RE2 2110 haelt die Kamera auf dem Leser durch Piep und Aufschliess-Ton (Kamera erst
   @0x01B9C nach @0x01B90); RE1.5s eigenes Schloss-Panel 1100 haelt sie bis nach "You've opened the lock."
   (@0x00CBA..0x00CC6). Die Code-Panels 10D0/11E0/1230 schalten als einzige VOR der Nachricht zurueck.
-* E1: RE2 hat genau dieses System (Schloss-/Kartenleser-Lampe, Farbwechsel im Piep-Bild). Die FARBEN sind NUTZER-VORGABE:
-  RE2 selbst geht 2110 gruen (bereit) -> blau (angenommen) und 4070 rot -> blau; der Nutzer will blau (falsch/noch nicht)
-  -> gruen (richtig).
+* E1: RE2 hat genau dieses System (Schloss-/Kartenleser-Lampe, Farbwechsel im Piep-Bild).
+
+### 2.4 Nachtrag 3 / 3b des Nutzers (AUFTRAG.md, Commits 75b08666 / 985f0ad0) — gilt vor dem Wortlaut #9
+
+> Nein, beim Panel in korridor 2 ist falsch - dort soll natürlich rot leuchten - richtig eingegeben - dann blau....
+> rot = geschlossen
+>
+> Es muss schon in der richtigen Farbe leuchten das Panel... hintergrund rot - rot leuchten - hintergrund blau - blau leuchten...
+
+* **"Korridor 2" = ROOM10D0**: Original-Debug-Menue (`include/debug_jump_table.h`, aus DEBUG.BIN erzeugt) Stage 0 Index 13
+  (0x0D) = "2F CORRIDOR"; der Raum traegt das Panel mit der ROT und der BLAU gemalten runden Lampe (Cut 11). Zum
+  Vergleich: Index 30 (0x1E) "B2 CORRIDOR" = ROOM11E0 und Index 35 (0x23) "B1 CORR. LIGHT" = ROOM1230 tragen die
+  SECUGUARD-Kunst (rot / gelb / gruen).
+* **Lesart (umgesetzt):** solange zu (Code falsch oder noch nicht eingegeben) leuchtet die ROT gemalte Lampe ROT; sobald der
+  Code richtig ist, geht sie aus und die andere gemalte Lampe leuchtet in IHRER Farbe — 10D0/10D1 BLAU, SECUGUARD
+  (11E0/11E1/1230/1231) GRUEN; die gelbe SECUGUARD-Lampe bleibt wie gemalt.
+* **Das ist jetzt RE2-Mechanik in RE2-Farben** (vorher Farben NUTZER-VORGABE):
+  - RE2 ROOM4070 (zwei RUNDE Lampen, links ROT gemalt, rechts BLAU gemalt — dieselbe Anordnung wie 10D0): sub03 zu
+    @0x008C6 `64 02 16 04` (Unterindex 0x04 = Strom 4 rund, CLUT-Zeile 0 ROT) auf der roten, offen @0x0088C `64 03 16 0c`
+    (Strom 4, Zeile 1 BLAU) auf der blauen Lampe; sub08 @0x00DC2 blau an / @0x00DD2 `65 02` rot aus / @0x00DD4 Piep.
+  - RE2 ROOM2130 sub04 (Waffenkammer-Leser, Cut 8, selbst gelesen): @0x01772 `29 08` / @0x01774, @0x01784 `64 0b|0c 16 00`
+    ROT / @0x01794 Sleep 30 / @0x01798 Se_on(2,0x0F) Piep / @0x017A4, @0x017A6 `65 0b|0c` rot aus / @0x017A8, @0x017B8
+    `64 0d|0e 16 10` GRUEN / @0x017C8 Sleep 30 / @0x017CC `29 04` Kamera zurueck — rot (zu) -> gruen (offen) am Piep, die
+    Kamera bleibt dabei auf dem Leser.
+  - Gemaltes Glas (Mittel ueber die Farbmaske, Panel-Cut aus dem Port-MDEC-Dekoder) und HSV-Farbton:
+    10D0 rot (70,40,32) 13 Grad, 10D0 blau (62,77,95) 213 Grad, SECUGUARD rot (47,10,9) 2 Grad, SECUGUARD gruen (8,51,9)
+    121 Grad. RE2-ESP-0x16-Zeilen: 0 rot 356..0 Grad, 1 blau 213..231 Grad, 2 gruen 120 Grad -> jede Lampe bekommt die
+    Zeile ihrer gemalten Farbe.
+* Mein erster Stand (Commits ca9575f5/8aa2bfbf: blau = falsch auf der blau bzw. rot gemalten Lampe, gruen = richtig auf der
+  rot bzw. gruen gemalten) ist damit ueberholt; Mechanik, Kamera-Halt, Lage, Groesse und Zellfolge bleiben.
+* Hinweis zum Ablauf: waehrend dieser Spur hat ein zweiter Agent (Orchestrator-Nachbesserung) die drei Code-Dateien im Baum
+  bereits auf Nachtrag 3/3b umgestellt (uncommittet, 11:32..11:34; `logf_` mit `%s` kompilierte nicht). Ich habe die
+  Aenderung uebernommen, den Uebersetzungsfehler behoben und Tests/Messungen darauf umgestellt.

@@ -27,3 +27,15 @@ set_tests_properties(unit_r37_codepanel_anker unit_r37_codepanel_kamera unit_r37
 if(NOT WIN32)
     target_link_libraries(probe_r37_codepanel PRIVATE m)
 endif()
+
+# integration_r37_codepanel: echte exe (Lampe im Bild, Kamera-Halt, Toene) - tests/integration/test_r37_codepanel.cmake
+#   B ROOM10D0 echter Weg (Kartenleser, Ja, Code 4312 per Cursor), C ROOM1230 SECUGUARD, D ROOM10D0 falscher Code.
+if(TARGET re15_pc)
+    add_test(NAME integration_r37_codepanel
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PROBE=$<TARGET_FILE:probe_r37_codepanel>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r37_codepanel_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_codepanel.cmake)
+    set_tests_properties(integration_r37_codepanel PROPERTIES TIMEOUT 900)
+endif()

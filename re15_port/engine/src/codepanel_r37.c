@@ -27,14 +27,15 @@ extern int op_cut_auto(scd_thread_t *t);
  * Lampen   = Glasmitte, an den Panel-Cuts gemessen (Farbmaske max-Kanal minus Rest >= 20 bzw. 12, Dossier §0):
  *            10D0 Cut 11: rot x 116..127 / y 72..81 -> (121.5, 76.5), blau x 164..173 / y 72..81 -> (168.5, 76.5);
  *            11E0 Cut 15 == 1230 Cut 9: rot x 122..135 / y 166..183 -> (128.5, 174.5), gruen x 174..187 -> (180.5, 174.5).
- *            BLAU / GRUEN je Panel: siehe Kopf des Headers (Form folgt der gemalten Lampe). */
+ *            zu = die ROT gemalte Lampe leuchtet ROT, offen = die andere gemalte Lampe in IHRER Farbe (Nachtraege 3/3b,
+ *            RE2 ROOM4070 @0x008C6 rot / @0x0088C blau, ROOM2130 @0x01774 rot / @0x017A8 gruen). */
 static const re15_cp_panel_t k_panels[RE15_CP_RAEUME] = {
-    { 0x10D0u, 11,  50, 0x0199Au, RE15_CP_FORM_RUND,    337, 153, 243, 153 },
-    { 0x10D1u, 11,  50, 0x01984u, RE15_CP_FORM_RUND,    337, 153, 243, 153 },
-    { 0x11E0u, 15, 139, 0x01F82u, RE15_CP_FORM_QUADRAT, 257, 349, 361, 349 },
-    { 0x11E1u, 15, 139, 0x01F82u, RE15_CP_FORM_QUADRAT, 257, 349, 361, 349 },
-    { 0x1230u,  9, 137, 0x01462u, RE15_CP_FORM_QUADRAT, 257, 349, 361, 349 },
-    { 0x1231u,  9, 137, 0x01462u, RE15_CP_FORM_QUADRAT, 257, 349, 361, 349 },
+    { 0x10D0u, 11,  50, 0x0199Au, RE15_CP_FORM_RUND,    243, 153, RE15_CP_ZEILE_ROT, 337, 153, RE15_CP_ZEILE_BLAU  },
+    { 0x10D1u, 11,  50, 0x01984u, RE15_CP_FORM_RUND,    243, 153, RE15_CP_ZEILE_ROT, 337, 153, RE15_CP_ZEILE_BLAU  },
+    { 0x11E0u, 15, 139, 0x01F82u, RE15_CP_FORM_QUADRAT, 257, 349, RE15_CP_ZEILE_ROT, 361, 349, RE15_CP_ZEILE_GRUEN },
+    { 0x11E1u, 15, 139, 0x01F82u, RE15_CP_FORM_QUADRAT, 257, 349, RE15_CP_ZEILE_ROT, 361, 349, RE15_CP_ZEILE_GRUEN },
+    { 0x1230u,  9, 137, 0x01462u, RE15_CP_FORM_QUADRAT, 257, 349, RE15_CP_ZEILE_ROT, 361, 349, RE15_CP_ZEILE_GRUEN },
+    { 0x1231u,  9, 137, 0x01462u, RE15_CP_FORM_QUADRAT, 257, 349, RE15_CP_ZEILE_ROT, 361, 349, RE15_CP_ZEILE_GRUEN },
 };
 
 /* sub19 ab X (selbst gelesen in allen sechs RDTs): Cut_old, Nop, Cut_auto 1, Message_on 5 (Maske 0xffff), Evt_next,
@@ -55,10 +56,13 @@ static const uint8_t k_sig[RE15_CP_SIG_LAENGE] = {
 #define CP_RUND_PX_JE_TEXEL 2
 #define CP_QUADRAT_KANTE    26
 
-/* ---- Animation (ESP-0x16-Block, effect.esp ROOM2110 @0x0BFC == ROOM2130 @0x08, Anim-Saetze @+0x10) ---------
+/* ---- Animation (ESP-0x16-Block, ROOM2130 effect.esp Saetze @0x10.. == ROOM2110 effect.esp @0xC04..) ---------
  *   Quadrat (Strom 2): Satz 4 `03 01 01 20`, Satz 5 `04 01 01 20`, Satz 6 `04 01 ff 20` (Schleife -> Satz 4)
  *   rund    (Strom 4): Satz 7 `05 01 01 18`, Satz 8 `07 01 01 20`, Satz 9 `06 01 01 20`, Satz 10 `07 01 01 20`,
  *                      Satz 11 `07 01 ff 20` (Schleife -> Satz 7)
+ * Strom -> erster Satz: Strom-Tabelle @0x90 `04 00 12 00 20 00 2e 00 3c 00 4a 00` (x4 + 0x90), je 8 B Kopf, dann Zeile 0,
+ * deren Byte 2 der Satz ist: Strom 2 @0x110 -> Zeile @0x118 `01 00 04 00 ..` = Satz 4; Strom 4 @0x180 -> @0x188
+ * `01 00 07 00 ..` = Satz 7; beide mit Flags `03 ba` (Zeile+18 = 0xBA03, additiv wie die Generator-Lampe).
  * Dauer 1 = je Bild eine Zelle (FUN_8001d68c @0x8001d7b8..0x8001d880); Zelle des ersten Satzes im Einschaltbild
  * (Routine 1 @0x8001dc40/0x8001dc4c, Generator-Beleg C_generator.md §3.7). */
 static const uint8_t k_rund_zelle[4] = { 5, 7, 6, 7 };
@@ -74,7 +78,7 @@ static unsigned s_auf0 = 0;                       /* g_re15_auf_zaehler beim Hal
 static int      s_folge_n = 0, s_folge_letztes = 0;
 static int      s_warte = 0, s_warte_letzt = 0;
 static unsigned s_freigaben = 0;
-static int      s_lampe_zustand = 0;              /* 0 aus, sonst RE15_CP_ZEILE_* */
+static int      s_lampe_zustand = 0;              /* 0 aus, 1 zu, 2 offen */
 static unsigned s_lampe_ein = 0;                  /* Bild des Einschaltens (Takt 0) */
 
 static void logf_(const char *fmt, unsigned a, unsigned b, unsigned c)
@@ -169,19 +173,24 @@ int re15_codepanel_r37_pc(void *thread)
 int re15_codepanel_r37_lampe(unsigned bild, int cut_gezeigt, re15_cp_lampe_t *out)
 {
     const re15_cp_panel_t *p = s_panel;
-    int zustand = 0;
+    int zustand = 0;                                   /* 0 aus, 1 zu (rote Lampe), 2 offen */
     if (p && p->raum == (uint16_t)g_current_room_id && cut_gezeigt == (int)p->cut)
-        zustand = re15_game_flag_get(3, p->flag_bit) ? RE15_CP_ZEILE_GRUEN : RE15_CP_ZEILE_BLAU;
+        zustand = re15_game_flag_get(3, p->flag_bit) ? 2 : 1;
     if (zustand != s_lampe_zustand || bild < s_lampe_ein) {
-        if (zustand) logf_("lampe zeile=%u (1 blau, 2 gruen) Cut %u Flag (3,%u)", (unsigned)zustand,
-                           (unsigned)cut_gezeigt, (unsigned)p->flag_bit);
+        if (zustand == 2)
+            logf_("lampe OFFEN: Zeile %u (0 rot, 1 blau, 2 gruen) Cut %u Flag (3,%u)", (unsigned)p->auf_zeile,
+                  (unsigned)cut_gezeigt, (unsigned)p->flag_bit);
+        else if (zustand == 1)
+            logf_("lampe ZU: Zeile %u (0 rot, 1 blau, 2 gruen) Cut %u Flag (3,%u)", (unsigned)p->zu_zeile,
+                  (unsigned)cut_gezeigt, (unsigned)p->flag_bit);
         s_lampe_zustand = zustand;
         s_lampe_ein = bild;
     }
     if (!zustand) return 0;
     unsigned takt = bild - s_lampe_ein;
-    int mx2 = (zustand == RE15_CP_ZEILE_BLAU) ? p->blau_x2 : p->gruen_x2;
-    int my2 = (zustand == RE15_CP_ZEILE_BLAU) ? p->blau_y2 : p->gruen_y2;
+    int offen = (zustand == 2);
+    int mx2 = offen ? p->auf_x2 : p->zu_x2;
+    int my2 = offen ? p->auf_y2 : p->zu_y2;
     re15_cp_lampe_t l;
     if (p->form == RE15_CP_FORM_RUND) {
         l.zelle = k_rund_zelle[takt & 3];
@@ -193,10 +202,11 @@ int re15_codepanel_r37_lampe(unsigned bild, int cut_gezeigt, re15_cp_lampe_t *ou
         l.kante = CP_QUADRAT_KANTE;
     }
     /* Ecke = floor(Mitte - Kante/2 + 0.5) (wie RE15_PANEL_LAMPE_X0); die Zellen sind um ihre Mitte versetzt
-     * (effect.esp @+0x70: Zelle 5 `a0 00 f4 f4` = -12, sonst `.. f0 f0` = -16 = S/2). */
+     * (ROOM2130 effect.esp @0x70..: Zelle 5 `a0 00 f4 f4` = -12, sonst `.. f0 f0` = -16 = S/2). */
     l.x0 = (mx2 - l.kante + 1) >> 1;
     l.y0 = (my2 - l.kante + 1) >> 1;
-    l.zeile = zustand;
+    l.zeile = offen ? p->auf_zeile : p->zu_zeile;
+    l.offen = offen;
     if (out) *out = l;
     return 1;
 }

@@ -28,24 +28,33 @@
  * re15_aufschliessen_r36_folge) gespielt ist; bis dahin wartet sub19 an X+10. Flags, Platz-Umbau, Tuer und
  * Nachricht bleiben unveraendert (Reihenfolge wie RE1.5 1100: Nachricht, dann Kamera).
  *
- * ---- E1 LAMPEN (Mechanik RE2, Farben NUTZER-VORGABE) ---------------------------------------------------
+ * ---- E1 LAMPEN (Nutzer + Nachtraege 3/3b, AUFTRAG.md; Mechanik und Farbzeilen RE2) ------------------------
+ * Nutzer, Nachtrag 3: "beim Panel in korridor 2 ... dort soll natürlich rot leuchten - richtig eingegeben - dann blau",
+ *   "rot = geschlossen". Nachtrag 3b: "hintergrund rot - rot leuchten - hintergrund blau - blau leuchten".
+ *   -> Je Panel leuchtet die GEMALTE Lampe in IHRER gemalten Farbe: solange zu (Code falsch / noch nicht eingegeben) die
+ *      ROT gemalte, sobald der Code richtig ist die andere gemalte (10D0: BLAU, SECUGUARD: GRUEN; die gelbe bleibt dunkel).
+ *   "Korridor 2" = ROOM10D0 "2F CORRIDOR" (include/debug_jump_table.h Stage 0 Index 13 = 0x0D); dort sind rot + blau
+ *   gemalt. ROOM11E0 "B2 CORRIDOR" (Index 30 = 0x1E) traegt die SECUGUARD-Kunst rot/gelb/gruen.
  * RE1.5 hat fuer die Code-Panels keine Leuchtkunst (gemalte Lampen dunkel, kein Zusatz-Cut, kein ESP) -> RE2:
- *   ROOM2110 (Kartenleser): sub03 @0x0183A/@0x01866/@0x0188A Lampe nach Zustand (Zeile 0 rot / 2 gruen / 1 blau),
- *     sub08 @0x01B68..@0x01B7C Farbwechsel IM Piep-Bild (@0x01B5C).
- *   ROOM4070 (Schloss, zwei RUNDE Lampen links rot / rechts blau): sub08 @0x00DC2 blaue an, @0x00DD2 rote aus,
- *     @0x00DD4 Piep — genau eine Lampe brennt, Wechsel am Piep.
- * Kunst = RE2 ESP 0x16 = shared_assets/RE2/LAMPE2130.TIM (bytegleich room2110/esp16.tim): CLUT-Zeile 1 BLAU,
- *   2 GRUEN (Unterindex>>3, Spawner @0x8001c9e0..0x8001c9fc). Zellen/Anim-Saetze aus dem ESP-0x16-Block
- *   (effect.esp ROOM2110 @0x0BFC == ROOM2130 @0x08): Quadrat = Strom 2, Saetze 4..6 (Zelle 3, 4, Schleife);
- *   rund = Strom 4, Saetze 7..11 (Zelle 5 S 0x18, Zelle 7, Zelle 6, Zelle 7, Schleife).
- * Zustand: gruen, sobald das Schloss-Flag steht (sub01 Set(3,F,1) im selben Takt wie Evt_exec sub19 = Bild des
- *   Pieps, gemessen F231/F231), sonst blau. Nur im Panel-Cut (sub17 Cut_chg) des Raums.
- * Lage = Form folgt der gemalten Lampe (RE2 legt die ESP genau aufs gemalte Glas, 4070 selbst projiziert):
- *   10D0/10D1 (rund, rot links / blau rechts): BLAU auf der blau gemalten Lampe, GRUEN auf der rot gemalten.
- *   SECUGUARD 11E0/11E1/1230/1231 (eckig, rot / gelb / gruen unten): GRUEN auf der gruen gemalten, BLAU auf der rot
- *     gemalten Lampe. Die rot gemalte Lampe traegt die fehlende Farbe wie RE2 2110 seinen rot gemalten Leser-Streifen
- *     gruen und blau leuchten laesst. Je Zustand brennt genau EINE Lampe (RE2 4070).
- * ⛔ Farben = NUTZER-VORGABE: RE2 selbst geht gruen (bereit) -> blau (angenommen) bzw. rot -> blau.
+ *   ROOM4070 (Schloss "Clearance identification device", zwei RUNDE Lampen, links ROT gemalt, rechts BLAU gemalt):
+ *     sub03 zu @0x008C6 `64 02 16 04` (Unterindex 0x04 = Strom 4, Zeile 0 ROT auf der roten Lampe), offen @0x0088C
+ *     `64 03 16 0c` (0x0C = Strom 4, Zeile 1 BLAU auf der blauen Lampe); sub08 beim Oeffnen @0x00DC2 blau an,
+ *     @0x00DD2 `65 02` rot aus, @0x00DD4 Se_on(2,0x0C) Piep — im SELBEN Skript-Takt. = genau der Nutzer-Wunsch fuer 10D0.
+ *   ROOM2130 sub04 (Waffenkammer-Schloss, Cut 8): @0x01774/@0x01784 `64 0b/0c 16 00` ROT, @0x01798 Se_on(2,0x0F) Piep,
+ *     @0x017A4/@0x017A6 `65 0b/0c` rot aus, @0x017A8/@0x017B8 `64 0d/0e 16 10` GRUEN — rot (zu) -> gruen (offen) im
+ *     Piep-Takt, Kamera erst @0x017CC (Sleep 30 @0x017C8) zurueck.
+ * Kunst = RE2 ESP 0x16 = shared_assets/RE2/LAMPE2130.TIM (bytegleich room2110/esp16.tim): CLUT-Zeile 0 ROT, 1 BLAU,
+ *   2 GRUEN (Unterindex>>3, Spawner @0x8001c9e0..0x8001c9fc). Zellen/Anim-Saetze aus ROOM2130 effect.esp (Saetze
+ *   @0x10.., Zellen @0x70..; == ROOM2110 effect.esp @0xC04.. / @0xC64..): rund = Strom 4, Saetze 7..11 (Zelle 5 S 0x18,
+ *   7, 6, 7, Schleife); Quadrat = Strom 2, Saetze 4..6 (Zelle 3, 4, Schleife).
+ * Farbton gemessen (Dossier §3, HSV ueber das gemalte Glas): 10D0 rot gemalt 14 Grad -> leuchtend 1 Grad, 10D0 blau
+ *   212 -> 220, SECUGUARD rot 2 -> 1, gruen 121 -> 120; RE2-Zeilen 0/1/2 = 356..0 / 225..231 / 120 Grad.
+ * Form folgt der gemalten Lampe: 10D0 rund (RE2 4070), SECUGUARD eckig 14 x 18 -> Quadrat-Zelle (Strom 2, RE2 2130
+ *   Schalterlampe @0x01294 `64 01 16 02`, dort ROT; die gruene Quadrat-Lampe zeigt RE2 nicht -> Kombination wie die
+ *   Generator-Lampe, re15_panel_zeiger.h).
+ * Zustand: offen, sobald das Schloss-Flag steht (sub01 Set(3,F,1) im selben Takt wie Evt_exec sub19 = Piep-Takt),
+ *   sonst zu. Gezeichnet nur im Panel-Cut (sub17 Cut_chg) des Raums, in der Hintergrund-Ebene vor dem VM-Takt
+ *   (main.c, wie Zeiger und Generator-Lampen) -> sichtbar ab dem Bild nach dem Piep-Takt.
  * ==========================================================================*/
 
 #include <stdint.h>
@@ -55,7 +64,8 @@
 #define RE15_CP_FORM_RUND     1
 #define RE15_CP_FORM_QUADRAT  2
 
-/* Farbzeilen der ESP-TIM (Unterindex >> 3): 1 = blau, 2 = gruen. */
+/* Farbzeilen der ESP-TIM (Unterindex >> 3, @0x8001c9e0..0x8001c9fc): 0 = rot, 1 = blau, 2 = gruen. */
+#define RE15_CP_ZEILE_ROT     0
 #define RE15_CP_ZEILE_BLAU    1
 #define RE15_CP_ZEILE_GRUEN   2
 
@@ -70,8 +80,9 @@ typedef struct {
     uint8_t  flag_bit;     /* Schloss-Flag Bank 3 (sub01 Set(3,F,1)) */
     uint32_t sub19_x;      /* Datei-Offset X (Cut_old in sub19) */
     uint8_t  form;         /* RE15_CP_FORM_* */
-    int16_t  blau_x2, blau_y2;    /* Lampenmitte in HALBEN Pixeln (Glasmitte gemessen) */
-    int16_t  gruen_x2, gruen_y2;
+    /* Lampenmitte in HALBEN Pixeln (Glasmitte gemessen) und Farbzeile = gemalte Farbe. */
+    int16_t  zu_x2, zu_y2;   uint8_t zu_zeile;    /* geschlossen: die ROT gemalte Lampe */
+    int16_t  auf_x2, auf_y2; uint8_t auf_zeile;   /* offen: die andere gemalte Lampe (blau / gruen) */
 } re15_cp_panel_t;
 
 /* Was der Zeichner in diesem Bild malt. */
@@ -80,7 +91,8 @@ typedef struct {
     int kante;     /* Kantenlaenge (Pixel) */
     int zelle;     /* ESP-Zelle 3/4 (Quadrat) bzw. 5/6/7 (rund) */
     int s;         /* Zellgroesse in Texeln (24 fuer Zelle 5, sonst 32) */
-    int zeile;     /* CLUT-Zeile RE15_CP_ZEILE_* */
+    int zeile;     /* CLUT-Zeile RE15_CP_ZEILE_* (= gemalte Farbe der leuchtenden Lampe) */
+    int offen;     /* 0 = geschlossen (rote Lampe), 1 = offen */
 } re15_cp_lampe_t;
 
 /* Tabelle (Riegel, Sonden). */

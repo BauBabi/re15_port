@@ -30,20 +30,20 @@
 extern uint32_t *re15_pc_framebuffer(void);   /* render_pc.c: RGBA8888, R in Bit 24..31 */
 
 #define CP_ZS 32
-/* Zellen 3..7 -> Index 0..4; u-Anfang und Groesse aus effect.esp @+0x70 (s. Kopf). */
+/* Zellen 3..7 -> Index 0..4; u-Anfang und Groesse aus ROOM2130 effect.esp @0x70.. (s. Kopf). */
 static const int k_u0[5] = { 96, 128, 160, 184, 216 };
 static const int k_s[5]  = { 32,  32,  24,  32,  32 };
 
 static int      s_zustand = 0;       /* 0 ungeprueft, 1 geladen, -1 fehlt */
 static unsigned s_gen = 0;
-static uint16_t s_zelle[2][5][CP_ZS * CP_ZS];   /* [Zeile blau/gruen][Zelle 3..7][v*32+u] */
+static uint16_t s_zelle[3][5][CP_ZS * CP_ZS];   /* [CLUT-Zeile rot/blau/gruen][Zelle 3..7][v*32+u] */
 
 static uint32_t rd32(const uint8_t *p)
 { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
 static uint16_t rd16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
 
-/* Die TIM pruefen und die Zellen 3..7 mit CLUT-Zeile 1 und 2 aufloesen. 0 = ok. (Riegel: probe_r37_codepanel) */
-int re15_codepanel_r37_pc_dekodieren(const uint8_t *tim, int n, uint16_t out[2][5][CP_ZS * CP_ZS])
+/* Die TIM pruefen und die Zellen 3..7 mit CLUT-Zeile 0, 1 und 2 aufloesen. 0 = ok. (Riegel: probe_r37_codepanel) */
+int re15_codepanel_r37_pc_dekodieren(const uint8_t *tim, int n, uint16_t out[3][5][CP_ZS * CP_ZS])
 {
     if (!tim || n < 20 || !out) return -1;
     if (rd32(tim) != 0x10u || rd32(tim + 4) != 0x08u) return -1;
@@ -57,8 +57,8 @@ int re15_codepanel_r37_pc_dekodieren(const uint8_t *tim, int n, uint16_t out[2][
     if (pw != 64 || ph != 32) return -1;
     if ((size_t)8 + bl_c + bl_p > (size_t)n) return -1;
     const uint8_t *pix = pb + 12;
-    for (int z = 0; z < 2; z++) {
-        const uint8_t *clut = tim + 20 + (size_t)(z ? RE15_CP_ZEILE_GRUEN : RE15_CP_ZEILE_BLAU) * 16u * 2u;
+    for (int z = 0; z < 3; z++) {                        /* z = CLUT-Zeile = RE15_CP_ZEILE_ROT/BLAU/GRUEN */
+        const uint8_t *clut = tim + 20 + (size_t)z * 16u * 2u;
         for (int c = 0; c < 5; c++) {
             memset(out[z][c], 0, sizeof out[z][c]);
             for (int v = 0; v < k_s[c]; v++)
@@ -125,6 +125,7 @@ void re15_codepanel_r37_pc_zeichnen(int cut_gezeigt)
     if (!re15_codepanel_r37_lampe(g_engine.frame_count, cut_gezeigt, &l)) return;
     if (laden() != 1) return;
     if (l.zelle < 3 || l.zelle > 7) return;
-    const uint16_t *z = s_zelle[l.zeile == RE15_CP_ZEILE_GRUEN ? 1 : 0][l.zelle - 3];
+    if (l.zeile < RE15_CP_ZEILE_ROT || l.zeile > RE15_CP_ZEILE_GRUEN) return;
+    const uint16_t *z = s_zelle[l.zeile][l.zelle - 3];
     re15_codepanel_r37_pc_zelle(re15_pc_framebuffer(), z, l.s, l.x0, l.y0, l.kante);
 }

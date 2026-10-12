@@ -1,24 +1,28 @@
 /* probe_r37_codepanel.c — Runde 37 Spur E "codepanel" (analysis/befunde_runde37/E_codepanel.md).
  *
- * Nutzer (AUFTRAG.md #9): "so lange die Code noch falsch eingegeben ist unten das blaue Licht leuchtet. Ist er dann
- * richtig eingegeben das grüne Licht. Die Kamera darf noch auf den Panels bleiben wenn der Piep und unlock sound kommt."
+ * Nutzer (AUFTRAG.md #9): "... Die Kamera darf noch auf den Panels bleiben wenn der Piep und unlock sound kommt."
+ * Nachtrag 3: "beim Panel in korridor 2 ... dort soll natürlich rot leuchten - richtig eingegeben - dann blau",
+ *   "rot = geschlossen"; Nachtrag 3b: "hintergrund rot - rot leuchten - hintergrund blau - blau leuchten".
+ *   -> zu: die ROT gemalte Lampe leuchtet rot; offen: die andere gemalte Lampe in ihrer Farbe (10D0 blau, SECUGUARD gruen).
  *
  * Teile (je ein add_test):
  *   anker    Original-Bytes: sub19-Schwanz, sub17-Cut, sub01-Schloss-Flag in allen sechs RDTs; RE1.5 ROOM1100 sub02
- *            (Kamera NACH der Nachricht); RE2 ROOM2110 sub08 / ROOM4070 sub08 (Lampe am Piep, Kamera nach dem
- *            Aufschliessen); Kunst LAMPE2130.TIM == RE2 room2110/esp16.tim, Zeile 1 blau / 2 gruen. Die Port-Tabelle
- *            (re15_codepanel_r37_panel) muss mit diesen unabhaengig hier stehenden Zahlen uebereinstimmen.
+ *            (Kamera NACH der Nachricht); RE2 ROOM2110 sub08 / ROOM4070 sub03+sub08 / ROOM2130 sub04 Cut 8 (Lampe
+ *            rot -> blau bzw. rot -> gruen am Piep, Kamera erst danach zurueck); Kunst LAMPE2130.TIM == RE2
+ *            room2110/esp16.tim, Zeile 0 rot / 1 blau / 2 gruen. Die Port-Tabelle (re15_codepanel_r37_panel) muss mit
+ *            diesen unabhaengig hier stehenden Zahlen uebereinstimmen.
  *   kamera   E2 am ECHTEN Skriptweg: Tastenfeld auf (sub17), Code mit Cursor + Quadrat eingeben (10D0 4312, 11E0 0513,
  *            1230 5632; dazu 10D1/11E1/1231). Piep und Aufschliessen kommen, waehrend der angezeigte Cut der Panel-Cut
  *            ist; die Kamera geht erst nach dem Schliessen der Nachricht zurueck (Cut von vorher, Auto-Kamera an);
  *            Flags/Tuer wie im Original. Frueh geschlossene Nachricht (Quadrat gehalten): sub19 wartet bis zum
  *            Aufschliess-Ton. GEGENPROBE mit abgeschaltetem Haken: die Kamera geht im Piep-Bild (= Befund vorher).
- *   lampe    E1: blau an der blau (10D0) bzw. rot (SECUGUARD) gemalten Lampe, solange der Code nicht richtig ist (auch
- *            nach Teil-Eingabe und nach "Wrong code"), gruen an der rot (10D0) bzw. gruen (SECUGUARD) gemalten Lampe ab
- *            dem Bild nach dem Piep; nichts ausserhalb des Panel-Cuts; Zellfolge rund 5,7,6,7 / Quadrat 3,4.
+ *   lampe    E1: die ROT gemalte Lampe leuchtet ROT, solange der Code nicht richtig ist (auch nach Teil-Eingabe und
+ *            nach "Wrong code"); ab dem Bild nach dem Piep leuchtet die andere gemalte Lampe in IHRER Farbe (10D0 blau,
+ *            SECUGUARD gruen), die rote ist aus; nichts ausserhalb des Panel-Cuts; Zellfolge rund 5,7,6,7 / Quadrat 3,4.
  *   zeichner E1 im Bild: der echte PC-Zeichner (platform/pc/src/codepanel_r37_pc.c, einkompiliert) auf dem echten
  *            Panel-Hintergrund (MDEC aus ROOM10D.BSS / ROOM11E.BSS): Mittel ueber das gemalte Glas der leuchtenden Lampe
- *            blau- bzw. gruen-dominant, die andere Lampe unveraendert.
+ *            in der Farbe des gemalten Glases dominant und im Farbton des gemalten Glases (+-20 Grad), heller als
+ *            vorher; die andere Lampe unveraendert.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -169,7 +173,8 @@ static int room_boot(const soll_t *s)
 /* ---- Lampen-Buchfuehrung je Bild ---- */
 static re15_cp_lampe_t s_l;
 static int s_l_an = 0;
-static void lampe_lesen(void) { s_l_an = re15_codepanel_r37_lampe(s_bild, s_shown, &s_l); }
+static void beobachten(void);   /* Teil kamera/lampe: Buchfuehrung je gelesenem Bild */
+static void lampe_lesen(void) { s_l_an = re15_codepanel_r37_lampe(s_bild, s_shown, &s_l); beobachten(); }
 
 /* Ein Bild wie die PC-Hauptschleife: ERST Hintergrund + Lampe (main.c, vor scd_vm_tick, mit dem bisher angezeigten
  * Cut), DANN VM + Spielschritt. s_l/s_l_an gehoeren damit zum Bild s_l_bild, die Ereignisse des Spielschritts ebenso. */
@@ -264,6 +269,14 @@ static void teil_anker(void)
         const re15_cp_panel_t *p = re15_codepanel_r37_raum(s->raum);
         snprintf(t, sizeof t, "Port-Tabelle ROOM%04X: Cut %d, Flag (3,%d), X @0x%05X", s->raum, s->cut, s->flag, s->x);
         CHECK(t, p && p->cut == s->cut && p->flag_bit == s->flag && p->sub19_x == s->x);
+        /* Lampen (Glasmitte in halben Pixeln, Dossier §0): zu = rot gemalt, offen = 10D0 blau / SECUGUARD gruen gemalt */
+        int rund = (s->raum == 0x10D0 || s->raum == 0x10D1);
+        snprintf(t, sizeof t, "Port-Tabelle ROOM%04X: zu = rot gemalte Lampe %s, offen = %s gemalte Lampe %s", s->raum,
+                 rund ? "(121.5,76.5)" : "(128.5,174.5)", rund ? "blau" : "gruen", rund ? "(168.5,76.5)" : "(180.5,174.5)");
+        CHECK(t, p && p->zu_zeile == RE15_CP_ZEILE_ROT && p->zu_x2 == (rund ? 243 : 257) && p->zu_y2 == (rund ? 153 : 349) &&
+                 p->auf_zeile == (rund ? RE15_CP_ZEILE_BLAU : RE15_CP_ZEILE_GRUEN) &&
+                 p->auf_x2 == (rund ? 337 : 361) && p->auf_y2 == (rund ? 153 : 349) &&
+                 p->form == (rund ? RE15_CP_FORM_RUND : RE15_CP_FORM_QUADRAT));
         free(d);
     }
     {   /* RE1.5 ROOM1100 sub02: Message_on 2 / Evt_next / Set(2,7,0) / Cut_chg 6 / Cut_auto 1 */
@@ -295,10 +308,27 @@ static void teil_anker(void)
         d = slurp(rp, &n);
         if (!d) { printf("  [SKIP] RE2 ROOM4070.RDT fehlt\n"); }
         else {
-            static const uint8_t an[4] = { 0x64, 0x03, 0x16, 0x0c }, aus[2] = { 0x65, 0x02 }, piep[3] = { 0x36, 0x02, 0x0c };
-            CHECK("RE2 ROOM4070 @0x00DC2 runde Lampe blau an / @0x00DD2 rote aus / @0x00DD4 Piep",
+            static const uint8_t an[4] = { 0x64, 0x03, 0x16, 0x0c }, aus[2] = { 0x65, 0x02 }, piep[3] = { 0x36, 0x02, 0x0c },
+                                 zu[4] = { 0x64, 0x02, 0x16, 0x04 };
+            CHECK("RE2 ROOM4070 sub03 @0x008C6 zu: ROTE runde Lampe (Unterindex 0x04 = Strom 4, Zeile 0) / @0x0088C offen: "
+                  "BLAUE (0x0C = Strom 4, Zeile 1)", bytes_gleich(d, n, 0x008C6, zu, 4) && bytes_gleich(d, n, 0x0088C, an, 4));
+            CHECK("RE2 ROOM4070 sub08 @0x00DC2 blaue Lampe an / @0x00DD2 rote aus / @0x00DD4 Piep (ein Skript-Takt)",
                   bytes_gleich(d, n, 0x00DC2, an, 4) && bytes_gleich(d, n, 0x00DD2, aus, 2) &&
                   bytes_gleich(d, n, 0x00DD4, piep, 3));
+            free(d);
+        }
+        snprintf(rp, sizeof rp, "%s/ROOM2130.RDT", RE15_RE2_RDT_DIR);
+        d = slurp(rp, &n);
+        if (!d) { printf("  [SKIP] RE2 ROOM2130.RDT fehlt\n"); }
+        else {
+            static const uint8_t cut8[2] = { 0x29, 0x08 }, rot[4] = { 0x64, 0x0b, 0x16, 0x00 },
+                                 piep[3] = { 0x36, 0x02, 0x0f }, aus[4] = { 0x65, 0x0b, 0x65, 0x0c },
+                                 gruen[4] = { 0x64, 0x0d, 0x16, 0x10 }, zurueck[2] = { 0x29, 0x04 };
+            CHECK("RE2 ROOM2130 sub04 Cut 8 @0x01772: Leser-Lampe ROT @0x01774 -> Piep @0x01798 -> rot aus @0x017A4 -> "
+                  "GRUEN @0x017A8 -> Kamera erst @0x017CC zurueck",
+                  bytes_gleich(d, n, 0x01772, cut8, 2) && bytes_gleich(d, n, 0x01774, rot, 4) &&
+                  bytes_gleich(d, n, 0x01798, piep, 3) && bytes_gleich(d, n, 0x017A4, aus, 4) &&
+                  bytes_gleich(d, n, 0x017A8, gruen, 4) && bytes_gleich(d, n, 0x017CC, zurueck, 2));
             free(d);
         }
     }
@@ -311,9 +341,11 @@ static void teil_anker(void)
         uint8_t *e = slurp(rq, &m);
         if (e) CHECK("LAMPE2130.TIM bytegleich RE2 room2110/esp16.tim", t && n == m && memcmp(t, e, n) == 0);
         else   printf("  [SKIP] room2110/esp16.tim fehlt\n");
-        /* CLUT-Zeile 1 / 2, Eintrag 6 (Datei 8+12+(Zeile*16+6)*2): 0xd1c9 = (72,112,160) blau, 0xa729 = (72,200,72) gruen */
-        CHECK("CLUT-Zeile 1 Eintrag 6 = 0xd1c9 (blau), Zeile 2 Eintrag 6 = 0xa729 (gruen)",
-              t && n > 100 && (t[20 + (16 + 6) * 2] | (t[21 + (16 + 6) * 2] << 8)) == 0xd1c9 &&
+        /* CLUT-Zeile 0 / 1 / 2, Eintrag 6 (Datei 8+12+(Zeile*16+6)*2): 0x98fa = (208,56,48) rot, 0xd1c9 = (72,112,160)
+         * blau, 0xa729 = (72,200,72) gruen */
+        CHECK("CLUT-Zeile 0 Eintrag 6 = 0x98fa (rot), Zeile 1 = 0xd1c9 (blau), Zeile 2 = 0xa729 (gruen)",
+              t && n > 100 && (t[20 + 6 * 2] | (t[21 + 6 * 2] << 8)) == 0x98fa &&
+              (t[20 + (16 + 6) * 2] | (t[21 + (16 + 6) * 2] << 8)) == 0xd1c9 &&
               (t[20 + (32 + 6) * 2] | (t[21 + (32 + 6) * 2] << 8)) == 0xa729);
         free(t); free(e);
     }
@@ -324,46 +356,64 @@ typedef struct {
     int piep_bild, auf_bild, flag_bild, freigabe_bild;
     int cut_bei_piep, cut_bei_auf, cut_nach;
     int prev_cut;
-    int gruen_ab, blau_bis;          /* erstes Bild gruen, letztes Bild blau */
+    int offen_ab, zu_bis;            /* erstes Bild "offen", letztes Bild "zu" (rote Lampe) */
     int lampe_ausserhalb;            /* Lampe ausserhalb des Panel-Cuts gesehen */
-    int fehler_lage;
+    int fehler_lage;                 /* falsche Lage / Kante / Farbzeile */
+    int zu_bilder, offen_bilder;
     int ok;
 } lauf_t;
 
-/* Erwartete Lampenlage (unabhaengig vom Port-Kopf). */
+/* Erwartete Lampe (unabhaengig vom Port-Kopf): zu = ROT gemalte Lampe in CLUT-Zeile 0; offen = 10D0 BLAU gemalte
+ * Lampe in Zeile 1 bzw. SECUGUARD GRUEN gemalte in Zeile 2 (Nachtraege 3/3b). Glasmitten Dossier §0. */
 static int lage_ok(unsigned raum, const re15_cp_lampe_t *l)
 {
     int rund = (raum == 0x10D0 || raum == 0x10D1);
+    int soll_zeile = l->offen ? (rund ? RE15_CP_ZEILE_BLAU : RE15_CP_ZEILE_GRUEN) : RE15_CP_ZEILE_ROT;
+    if (l->zeile != soll_zeile) return 0;
     if (rund) {
-        /* blau: Mitte (168.5, 76.5); gruen: (121.5, 76.5); Kante 48 (Zelle 5, S 24) bzw. 64 (S 32) */
+        /* rot (121.5, 76.5) / blau (168.5, 76.5); Kante 48 (Zelle 5, S 24) bzw. 64 (S 32) */
         int k = (l->zelle == 5) ? 48 : 64;
-        int mx2 = (l->zeile == RE15_CP_ZEILE_BLAU) ? 337 : 243, my2 = 153;
+        int mx2 = l->offen ? 337 : 243, my2 = 153;
         return l->kante == k && l->x0 == (mx2 - k + 1) / 2 && l->y0 == (my2 - k + 1) / 2;
     }
-    /* SECUGUARD: blau auf ROT (128.5, 174.5), gruen auf GRUEN (180.5, 174.5), Kante 26 */
-    int mx2 = (l->zeile == RE15_CP_ZEILE_BLAU) ? 257 : 361, my2 = 349;
+    /* SECUGUARD: rot (128.5, 174.5) / gruen (180.5, 174.5), Kante 26 */
+    int mx2 = l->offen ? 361 : 257, my2 = 349;
     return l->kante == 26 && l->x0 == (mx2 - 26 + 1) / 2 && l->y0 == (my2 - 26 + 1) / 2;
+}
+
+/* Beobachter fuer JEDES gelesene Bild (auch waehrend der Ziffern-Eingabe), gefuellt in lampe_lesen(). */
+static lauf_t  *s_obs = NULL;
+static unsigned s_obs_raum = 0;
+static int      s_obs_cut = -1;
+static void beobachten(void)
+{
+    if (!s_obs || !s_l_an) return;
+    if (!lage_ok(s_obs_raum, &s_l)) s_obs->fehler_lage++;
+    if (s_shown != s_obs_cut) s_obs->lampe_ausserhalb++;
+    if (s_l.offen) { s_obs->offen_bilder++; if (s_obs->offen_ab < 0) s_obs->offen_ab = s_l_bild; }
+    else           { s_obs->zu_bilder++;    s_obs->zu_bis = s_l_bild; }
 }
 
 /* Code eingeben und alles messen. mit_haken = 0: Gegenprobe (Haken aus = Verhalten vorher).
  * frueh = 1: Quadrat ab dem Piep gehalten (Nachricht so frueh wie moeglich zu). */
 static lauf_t lauf(const soll_t *s, int mit_haken, int frueh)
 {
-    lauf_t r; memset(&r, 0, sizeof r);
-    r.piep_bild = r.auf_bild = r.flag_bild = r.freigabe_bild = r.gruen_ab = r.blau_bis = -1;
+    static lauf_t r;
+    memset(&r, 0, sizeof r);
+    r.piep_bild = r.auf_bild = r.flag_bild = r.freigabe_bild = r.offen_ab = r.zu_bis = -1;
+    s_obs = NULL;
     if (!room_boot(s)) { printf("  FAIL: %s fehlt\n", s->datei); return r; }
     if (!mit_haken) g_re15_codepanel_anker_n = 0;
-    if (!panel_auf(s)) { printf("  FAIL: Tastenfeld oeffnet nicht\n"); return r; }
+    s_obs = &r; s_obs_raum = s->raum; s_obs_cut = s->cut;
+    if (!panel_auf(s)) { printf("  FAIL: Tastenfeld oeffnet nicht\n"); s_obs = NULL; return r; }
     r.prev_cut = (int)g_scd.cam_id_prev;
     unsigned fr0 = re15_codepanel_r37_freigaben();
     for (int k = 0; k < 4; k++) {
-        if (s_l_an && s_l.zeile == RE15_CP_ZEILE_BLAU) r.blau_bis = s_l_bild;
-        if (!ziffer(s, s->code_slot[k])) { printf("  FAIL: Ziffer %d nicht erreicht\n", k + 1); return r; }
+        if (!ziffer(s, s->code_slot[k])) { printf("  FAIL: Ziffer %d nicht erreicht\n", k + 1); s_obs = NULL; return r; }
         if (k < 3) {
             for (int f = 0; f < 20 && !g_scd.message_active; f++) bild(0, 0);
-            if (s_l_an && s_l.zeile == RE15_CP_ZEILE_BLAU) r.blau_bis = s_l_bild;
-            if (nachricht_schliessen(400) < 0) { printf("  FAIL: Ziffern-Nachricht bleibt\n"); return r; }
-            if (warten_auf_flag(5, 1, 1, 30) < 0) { printf("  FAIL: Tastenfeld nicht wieder frei\n"); return r; }
+            if (nachricht_schliessen(400) < 0) { printf("  FAIL: Ziffern-Nachricht bleibt\n"); s_obs = NULL; return r; }
+            if (warten_auf_flag(5, 1, 1, 30) < 0) { printf("  FAIL: Tastenfeld nicht wieder frei\n"); s_obs = NULL; return r; }
         }
     }
     unsigned z0 = g_re15_auf_zaehler;
@@ -375,8 +425,7 @@ static lauf_t lauf(const soll_t *s, int mit_haken, int frueh)
             b = ((s_bild & 3) == 0) ? RE15_PAD_BIT_SQUARE : 0;                    /* normal schliessen */
         unsigned za = g_re15_auf_zaehler;
         int flag_vorher = re15_game_flag_get(3, (uint8_t)s->flag);
-        int gezeigt_vorher = s_shown;                 /* Cut, mit dem das Bild jetzt gezeichnet wird */
-        bild(b, b);
+        bild(b, b);                                    /* Lampe des Bilds -> beobachten() */
         int jetzt = s_l_bild;
         /* Ereignisse des Spielschritts von Bild `jetzt`; s_shown = Cut des NAECHSTEN Bilds */
         if (!flag_vorher && re15_game_flag_get(3, (uint8_t)s->flag)) r.flag_bild = jetzt;
@@ -385,23 +434,18 @@ static lauf_t lauf(const soll_t *s, int mit_haken, int frueh)
             if (g_re15_auf_letzter == 2 && r.auf_bild < 0)  { r.auf_bild  = jetzt; r.cut_bei_auf  = s_shown; }
         }
         if (re15_codepanel_r37_haelt()) halten = 1;
-        if (s_l_an) {                                  /* Lampe des Bilds `jetzt` */
-            if (s_l.zeile == RE15_CP_ZEILE_GRUEN && r.gruen_ab < 0) r.gruen_ab = jetzt;
-            if (s_l.zeile == RE15_CP_ZEILE_BLAU) r.blau_bis = jetzt;
-            if (!lage_ok(s->raum, &s_l)) r.fehler_lage++;
-            if (gezeigt_vorher != s->cut) r.lampe_ausserhalb++;
-        }
         if (r.freigabe_bild < 0 && r.piep_bild >= 0 && s_shown != s->cut) { r.freigabe_bild = jetzt; r.cut_nach = s_shown; }
         if (r.freigabe_bild >= 0 && !g_scd.message_active && jetzt > r.freigabe_bild + 5) break;
     }
     (void)z0; (void)halten; (void)fr0;
+    s_obs = NULL;
     r.ok = 1;
     return r;
 }
 
 static void teil_kamera_lampe(int nur_lampe)
 {
-    printf("\n=== %s ===\n", nur_lampe ? "lampe: blau solange falsch, gruen wenn richtig (E1)"
+    printf("\n=== %s ===\n", nur_lampe ? "lampe: rot solange zu, danach die andere gemalte Lampe in ihrer Farbe (E1)"
                                      : "kamera: Panel bleibt bei Piep und Aufschliessen (E2)");
     for (int i = 0; i < 6; i++) {
         const soll_t *s = &k_soll[i];
@@ -410,9 +454,9 @@ static void teil_kamera_lampe(int nur_lampe)
         lauf_t r = lauf(s, 1, 0);
         if (!r.ok) { g_fail++; continue; }
         printf("    Piep Bild %d (Cut %d), Flag Bild %d, Aufschliessen Bild %d (Cut %d), Kamera zurueck Bild %d -> Cut %d "
-               "(vorher %d); blau bis %d, gruen ab %d; Wartebilder %d\n",
+               "(vorher %d); zu (rot) bis %d [%d Bilder], offen ab %d [%d Bilder]; Wartebilder %d\n",
                r.piep_bild, r.cut_bei_piep, r.flag_bild, r.auf_bild, r.cut_bei_auf, r.freigabe_bild, r.cut_nach,
-               r.prev_cut, r.blau_bis, r.gruen_ab, re15_codepanel_r37_wartebilder());
+               r.prev_cut, r.zu_bis, r.zu_bilder, r.offen_ab, r.offen_bilder, re15_codepanel_r37_wartebilder());
         if (!nur_lampe) {
             snprintf(t, sizeof t, "ROOM%04X: Piep kommt, der angezeigte Cut ist der Panel-Cut %d", s->raum, s->cut);
             CHECK(t, r.piep_bild >= 0 && r.cut_bei_piep == s->cut);
@@ -443,35 +487,36 @@ static void teil_kamera_lampe(int nur_lampe)
                          re15_codepanel_r37_wartebilder() > 0);
             }
         } else {
-            snprintf(t, sizeof t, "ROOM%04X: blau bis zum Piep-Bild, gruen ab dem naechsten Bild", s->raum);
-            CHECK(t, r.blau_bis >= 0 && r.gruen_ab >= 0 && r.blau_bis == r.piep_bild && r.gruen_ab == r.piep_bild + 1);
-            snprintf(t, sizeof t, "ROOM%04X: Lampe an der erwarteten Lage/Kante (blau %s, gruen %s), %d Abweichungen",
-                     s->raum, (s->raum >> 4) == 0x10D ? "blau gemalt" : "rot gemalt",
-                     (s->raum >> 4) == 0x10D ? "rot gemalt" : "gruen gemalt", r.fehler_lage);
+            snprintf(t, sizeof t, "ROOM%04X: rote Lampe (zu) vom Panel-Auf bis zum Piep-Bild, offen ab dem naechsten Bild",
+                     s->raum);
+            CHECK(t, r.zu_bilder > 100 && r.offen_bilder > 0 && r.zu_bis == r.piep_bild && r.offen_ab == r.piep_bild + 1);
+            snprintf(t, sizeof t, "ROOM%04X: Lage/Kante/Farbe (zu: rot gemalte Lampe ROT, offen: %s gemalte Lampe %s), "
+                     "%d Abweichungen", s->raum, (s->raum >> 4) == 0x10D ? "blau" : "gruen",
+                     (s->raum >> 4) == 0x10D ? "BLAU" : "GRUEN", r.fehler_lage);
             CHECK(t, r.fehler_lage == 0);
             snprintf(t, sizeof t, "ROOM%04X: keine Lampe ausserhalb des Panel-Cuts", s->raum);
             CHECK(t, r.lampe_ausserhalb == 0);
         }
     }
     if (nur_lampe) {
-        /* falscher Code: bleibt blau, Kamera ueber sub16 wie bisher */
+        /* falscher Code: bleibt zu (rote Lampe rot), Kamera ueber sub16 wie bisher */
         const soll_t *s = &k_soll[0];
         printf(" -- ROOM10D0 falscher Code (9999) --\n");
         if (room_boot(s) && panel_auf(s)) {
-            int gruen = 0, blau = 0, msg4 = 0;
+            int offen = 0, rot = 0, msg4 = 0;
             for (int k = 0; k < 4; k++) {
                 if (!ziffer(s, s->falsch_slot)) { g_fail++; break; }
                 for (int f = 0; f < 20 && !g_scd.message_active; f++) bild(0, 0);
                 if (g_scd.message_active && g_scd.message_id == 4) msg4 = 1;
-                if (s_l_an) { if (s_l.zeile == RE15_CP_ZEILE_GRUEN) gruen++; else blau++; }
+                if (s_l_an) { if (s_l.offen) offen++; else if (s_l.zeile == RE15_CP_ZEILE_ROT) rot++; }
                 nachricht_schliessen(400);
                 if (k < 3) warten_auf_flag(5, 1, 1, 30);
             }
-            for (int f = 0; f < 40; f++) { bild(0, 0); if (s_l_an && s_l.zeile == RE15_CP_ZEILE_GRUEN) gruen++; }
-            printf("    msg4=%d blau-Bilder %d gruen-Bilder %d Panel-Cut jetzt %d Flag(3,50)=%d\n", msg4, blau, gruen,
+            for (int f = 0; f < 40; f++) { bild(0, 0); if (s_l_an && s_l.offen) offen++; }
+            printf("    msg4=%d rot-Bilder %d offen-Bilder %d Panel-Cut jetzt %d Flag(3,50)=%d\n", msg4, rot, offen,
                    s_shown, re15_game_flag_get(3, 50));
-            CHECK("ROOM10D0 falscher Code: \"Wrong code, try again.\" (msg 4) bei BLAUER Lampe, nie gruen",
-                  msg4 && blau > 0 && gruen == 0);
+            CHECK("ROOM10D0 falscher Code: \"Wrong code, try again.\" (msg 4) bei ROTER Lampe, nie offen",
+                  msg4 && rot > 0 && offen == 0);
             CHECK("ROOM10D0 falscher Code: Panel zu (sub16 Cut_old), Schloss bleibt zu", s_shown != 11 &&
                   re15_game_flag_get(3, 50) == 0);
         } else { printf("  FAIL: ROOM10D0 Panel\n"); g_fail++; }
@@ -540,55 +585,110 @@ static void mittel(int x0, int y0, int x1, int y1, int out[3])
     for (int c = 0; c < 3; c++) out[c] = (int)(s[c] / (n ? n : 1));
 }
 
+/* HSV-Farbton in Grad (0..360) eines Mittelwerts — Nachtrag 3b "in der richtigen Farbe": der Farbton der leuchtenden
+ * Lampe muss der des gemalten Glases sein. */
+static double farbton(const int c[3])
+{
+    double r = c[0] / 255.0, g = c[1] / 255.0, b = c[2] / 255.0;
+    double mx = r > g ? (r > b ? r : b) : (g > b ? g : b), mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    double d = mx - mn, h;
+    if (d <= 0.0) return 0.0;
+    if (mx == r)      { h = (g - b) / d; if (h < 0) h += 6.0; }
+    else if (mx == g) h = (b - r) / d + 2.0;
+    else              h = (r - g) / d + 4.0;
+    return h * 60.0;
+}
+
 static void teil_zeichner(void)
 {
     printf("\n=== zeichner: echter PC-Zeichner auf dem echten Panel-Hintergrund ===\n");
     static uint8_t rgb[RE15_BSS_FRAME_WIDTH * RE15_BSS_FRAME_HEIGHT * 3];
-    struct { const soll_t *s; const char *bss; int an[4], aus[4]; int gruen_an[4], gruen_aus[4]; } f[2] = {
-        /* 10D0 Cut 11: blau-Glas x 164..173 / y 72..81, rot-Glas x 116..127 / y 72..81 */
-        { &k_soll[0], "STAGE1/ROOM10D.BSS", { 164, 72, 173, 81 }, { 116, 72, 127, 81 }, { 116, 72, 127, 81 }, { 164, 72, 173, 81 } },
-        /* 11E0 Cut 15: rot x 122..135 / gruen x 174..187, y 166..183 */
-        { &k_soll[2], "STAGE1/ROOM11E.BSS", { 122, 166, 135, 183 }, { 174, 166, 187, 183 }, { 174, 166, 187, 183 }, { 122, 166, 135, 183 } },
+    /* Glasflaechen (Farbmasken am Panel-Cut, Dossier §0); Kanal = Farbe des gemalten Glases (0 r, 1 g, 2 b) */
+    struct { const soll_t *s; const char *bss; int zu[4]; int zu_kanal; int auf[4]; int auf_kanal; } f[2] = {
+        /* 10D0 Cut 11: rot gemalt x 116..127 / y 72..81, blau gemalt x 164..173 / y 72..81 */
+        { &k_soll[0], "STAGE1/ROOM10D.BSS", { 116, 72, 127, 81 }, 0, { 164, 72, 173, 81 }, 2 },
+        /* 11E0 Cut 15 (== 1230 Cut 9): rot gemalt x 122..135, gruen gemalt x 174..187, y 166..183 */
+        { &k_soll[2], "STAGE1/ROOM11E.BSS", { 122, 166, 135, 183 }, 0, { 174, 166, 187, 183 }, 1 },
     };
     for (int i = 0; i < 2; i++) {
         const soll_t *s = f[i].s;
         if (bss_cut(f[i].bss, s->cut, rgb) != 0) { printf("  FAIL: %s Cut %d\n", f[i].bss, s->cut); g_fail++; continue; }
         room_boot(s);
-        for (int zustand = 0; zustand < 2; zustand++) {
+        for (int zustand = 0; zustand < 2; zustand++) {        /* 0 = zu, 1 = offen (Schloss-Flag) */
             re15_game_flag_set(3, (uint8_t)s->flag, (uint8_t)zustand);
             int vorher_an[3], vorher_aus[3], nach_an[3], nach_aus[3];
-            const int *an = zustand ? f[i].gruen_an : f[i].an, *aus = zustand ? f[i].gruen_aus : f[i].aus;
-            int min_dom = 1000;
+            const int *an = zustand ? f[i].auf : f[i].zu, *aus = zustand ? f[i].zu : f[i].auf;
+            int kanal = zustand ? f[i].auf_kanal : f[i].zu_kanal;
+            int min_dom = 1000, max_dh = 0, min_hell = 1000, aus_gleich = 1;
             for (int k = 0; k < 4; k++) {                      /* vier Bilder = alle Zellen der Folge */
                 g_engine.frame_count++;                        /* der Zeichner taktet mit dem Bildzaehler */
                 fb_aus_rgb(rgb);
                 mittel(an[0], an[1], an[2], an[3], vorher_an); mittel(aus[0], aus[1], aus[2], aus[3], vorher_aus);
                 re15_codepanel_r37_pc_zeichnen(s->cut);
                 mittel(an[0], an[1], an[2], an[3], nach_an); mittel(aus[0], aus[1], aus[2], aus[3], nach_aus);
-                int d = zustand ? nach_an[1] - (nach_an[0] > nach_an[2] ? nach_an[0] : nach_an[2])
-                                : nach_an[2] - (nach_an[0] > nach_an[1] ? nach_an[0] : nach_an[1]);
+                int a = nach_an[(kanal + 1) % 3], b = nach_an[(kanal + 2) % 3];
+                int d = nach_an[kanal] - (a > b ? a : b);
                 if (d < min_dom) min_dom = d;
-                printf("    ROOM%04X %s Bild %d: Glas der Lampe vorher (%d,%d,%d) -> (%d,%d,%d); andere Lampe (%d,%d,%d) -> "
-                       "(%d,%d,%d)\n", s->raum, zustand ? "GRUEN" : "BLAU", k, vorher_an[0], vorher_an[1], vorher_an[2],
-                       nach_an[0], nach_an[1], nach_an[2], vorher_aus[0], vorher_aus[1], vorher_aus[2],
-                       nach_aus[0], nach_aus[1], nach_aus[2]);
+                int dh = (int)(farbton(nach_an) - farbton(vorher_an));
+                if (dh < 0) dh = -dh;
+                if (dh > 180) dh = 360 - dh;
+                if (dh > max_dh) max_dh = dh;
+                int hell = (nach_an[0] + nach_an[1] + nach_an[2]) - (vorher_an[0] + vorher_an[1] + vorher_an[2]);
+                if (hell < min_hell) min_hell = hell;
+                if (memcmp(nach_aus, vorher_aus, sizeof nach_aus) != 0) aus_gleich = 0;
+                printf("    ROOM%04X %s Bild %d: gemaltes Glas der Lampe (%d,%d,%d) Farbton %.0f -> (%d,%d,%d) Farbton %.0f; "
+                       "andere Lampe (%d,%d,%d) -> (%d,%d,%d)\n", s->raum, zustand ? "OFFEN" : "ZU", k,
+                       vorher_an[0], vorher_an[1], vorher_an[2], farbton(vorher_an), nach_an[0], nach_an[1], nach_an[2],
+                       farbton(nach_an), vorher_aus[0], vorher_aus[1], vorher_aus[2], nach_aus[0], nach_aus[1], nach_aus[2]);
             }
-            char t[200];
-            snprintf(t, sizeof t, "ROOM%04X %s: leuchtende Lampe %s-dominant (min. Abstand %d >= 30)", s->raum,
-                     zustand ? "richtig" : "falsch", zustand ? "gruen" : "blau", min_dom);
+            char t[240];
+            snprintf(t, sizeof t, "ROOM%04X %s: die %s gemalte Lampe leuchtet %s (Kanal %d dominant, min. Abstand %d >= 30)",
+                     s->raum, zustand ? "offen" : "zu", zustand ? (kanal == 2 ? "blau" : "gruen") : "rot",
+                     zustand ? (kanal == 2 ? "BLAU" : "GRUEN") : "ROT", kanal, min_dom);
             CHECK(t, min_dom >= 30);
+            snprintf(t, sizeof t, "ROOM%04X %s: Farbton wie das gemalte Glas (max. Abweichung %d <= 20 Grad), heller (min. +%d)",
+                     s->raum, zustand ? "offen" : "zu", max_dh, min_hell);
+            CHECK(t, max_dh <= 20 && min_hell >= 100);
+            snprintf(t, sizeof t, "ROOM%04X %s: die andere gemalte Lampe bleibt unveraendert", s->raum, zustand ? "offen" : "zu");
+            CHECK(t, aus_gleich);
             fb_aus_rgb(rgb); re15_codepanel_r37_pc_zeichnen(-1);
             mittel(an[0], an[1], an[2], an[3], nach_an);
             mittel(an[0], an[1], an[2], an[3], vorher_an);
             snprintf(t, sizeof t, "ROOM%04X %s: nicht im Panel-Cut gezeigt -> nichts gezeichnet", s->raum,
-                     zustand ? "richtig" : "falsch");
+                     zustand ? "offen" : "zu");
             CHECK(t, nach_an[0] == vorher_an[0] && nach_an[1] == vorher_an[1] && nach_an[2] == vorher_an[2]);
         }
     }
 }
 
+/* Werkzeug fuer integration_r37_codepanel: Mittel einer Rechteck-Flaeche eines P6-Framedumps (RE15_FRAMEDUMP).
+ * Aufruf: probe_r37_codepanel ppm <datei> x0 y0 x1 y1  ->  "MITTEL r g b" */
+static int ppm_mittel(int argc, char **argv)
+{
+    if (argc < 7) { printf("Aufruf: ppm <datei> x0 y0 x1 y1\n"); return 2; }
+    size_t n = 0;
+    uint8_t *d = slurp(argv[2], &n);
+    int w = 0, h = 0, mx = 0, k = 0;
+    if (!d || sscanf((const char *)d, "P6 %d %d %d%n", &w, &h, &mx, &k) != 3 || w <= 0 || h <= 0) {
+        printf("FEHLER: kein P6 (%s)\n", argv[2]); free(d); return 2;
+    }
+    const uint8_t *px = d + k + 1;
+    int x0 = atoi(argv[3]), y0 = atoi(argv[4]), x1 = atoi(argv[5]), y1 = atoi(argv[6]);
+    long sum[3] = { 0, 0, 0 }, cnt = 0;
+    for (int y = y0; y <= y1 && y < h; y++) for (int x = x0; x <= x1 && x < w; x++) {
+        size_t o = ((size_t)y * (size_t)w + (size_t)x) * 3u;
+        if ((size_t)(px - d) + o + 2 >= n) continue;
+        sum[0] += px[o]; sum[1] += px[o + 1]; sum[2] += px[o + 2]; cnt++;
+    }
+    if (!cnt) { printf("FEHLER: leere Flaeche\n"); free(d); return 2; }
+    printf("MITTEL %ld %ld %ld\n", sum[0] / cnt, sum[1] / cnt, sum[2] / cnt);
+    free(d);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc > 1 && !strcmp(argv[1], "ppm")) return ppm_mittel(argc, argv);
     const char *teil = argc > 1 ? argv[1] : "alle";
     int alle = !strcmp(teil, "alle");
     if (alle || !strcmp(teil, "anker"))    teil_anker();
