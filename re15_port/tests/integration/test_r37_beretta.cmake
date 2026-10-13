@@ -12,6 +12,11 @@
 #   leon_re15_w5   RE1.5-KI, M93R: dito — der RE1.5-Riegel +0x93 (`ori 0x1` @0x800124F0) haelt Kugel 2/3 nicht mehr ab
 #   leon_re2_w3    Gegenprobe Browning: EIN Abzug in E, keiner in E+3/E+6, 15 -> 14 (Handler 0x800337BC unveraendert)
 #   elza_re2_w5    Elza (RE15_PSELECT_AUTO, ROOM11E1, Platz 1 Typ 0x10 vor ihr), M93R: drei HP-Abzuege, 15 -> 12
+# Nachbesserung 1 (Abnahme 0 M1-M3) — Gegner mit RE1.5-Gehirn unter der STANDARD-KI (kein RE15_AI_FLAVOR = RE2-Flavor):
+#   t2b_std_w5     ROOM5040 Platz 1 Typ 0x2b, Leon (-14493,-13185) Blick -z: drei Abzuege E/E+3/E+6 je -10
+#                  (= Spalte 3 @0x8006EFA4; Stoss 30 statt vorher 1 x 10), Munition -3
+#   roach_std_w5   ROOM3040 Platz 2 Typ 0x29, Leon (-13500,-10300) Blick -z: drei Abzuege je -14 (Spalte 3 @0x8006EEF4)
+#   Vor der Nachbesserung lieferten beide Laeufe EINEN Abzug (F61 -10 / -14, Dossier G_beretta.md 8.1) — rot.
 # Die exe laeuft als Messkopie re15_pc_r37g_haken_<id> neben der Original-exe (Muster test_r34n_b_cursor.cmake).
 # Ein Lauf ohne Ergebnis (exit=1/-1 = von aussen beendet; debug.log < 10 Zeilen) wird EINMAL wiederholt.
 
@@ -52,9 +57,15 @@ function(r37_exe _lauf _dir _start _jump _exit _pos _waffe _flavor _input)
     else()
         set(_st RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2)
     endif()
+    # "std" = Standard-KI: KEIN RE15_AI_FLAVOR (Default RE2, enemy_ai_re2_zombie.c) — so spielt der Nutzer
+    if(NOT _flavor STREQUAL "std")
+        list(APPEND _st "RE15_AI_FLAVOR=${_flavor}")
+    else()
+        unset(ENV{RE15_AI_FLAVOR})   # auch eine geerbte Vorgabe der Testumgebung faellt weg
+    endif()
     set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 ${_st}
              RE15_WINDOW_SCALE=1 "RE15_DEBUG_JUMP=${_jump}@250" "RE15_PLAYER_POS=${_pos}"
-             "RE15_AI_FLAVOR=${_flavor}" "RE15_GIVE=${_waffe}:15" "RE15_EQUIP=${_waffe}"
+             "RE15_GIVE=${_waffe}:15" "RE15_EQUIP=${_waffe}"
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_input}"
              RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=${_exit}")
     re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
@@ -186,6 +197,27 @@ if(NOT _pl OR NOT _rm)
     r37_fehler("elza_re2_w5" "Elza nicht in ROOM11E1 (PL04: '${_pl}', Raum: '${_rm}')")
 endif()
 r37_feuerstoss_pruefen("elza_re2_w5" "${_d}")
+
+# Nachbesserung 1: Schaden je Kugel — jeder der drei Abzuege genau _dhp (Spalte 3 der RE1.5-Zeile)
+function(r37_schaden_pruefen _lauf _dir _dhp)
+    r37_auswerten("${_dir}/state.log" _E _ab _tr)
+    foreach(_t IN LISTS _tr)
+        if(NOT _t MATCHES ":${_dhp}$")
+            r37_fehler("${_lauf}" "Abzug '${_t}' in '${_tr}', erwartet je ${_dhp} (Spalte 3)")
+        endif()
+    endforeach()
+    message(STATUS "${_tag} [${_lauf}]: OK — Schaden je Kugel ${_dhp}")
+endfunction()
+
+set(_d "${_wurzel}/t2b_std_w5")
+r37_exe("t2b_std_w5" "${_d}" leon 5040 "200#5040" "-14493,-13185,1024" 5 std "M2.0,MA0.1,M3.0,W2")
+r37_feuerstoss_pruefen("t2b_std_w5" "${_d}")
+r37_schaden_pruefen("t2b_std_w5" "${_d}" -10)
+
+set(_d "${_wurzel}/roach_std_w5")
+r37_exe("roach_std_w5" "${_d}" leon 3040 "200#3040" "-13500,-10300,1024" 5 std "M2.0,MA0.1,M3.0,W2")
+r37_feuerstoss_pruefen("roach_std_w5" "${_d}")
+r37_schaden_pruefen("roach_std_w5" "${_d}" -14)
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "${_tag}: alle Laeufe OK")

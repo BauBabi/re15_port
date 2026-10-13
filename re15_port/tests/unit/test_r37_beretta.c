@@ -22,6 +22,10 @@
  *     treffen ihn NICHT erneut (HP bleibt), kein zweites Ziel -> 0.
  *  G  Andere Waffen (3 Browning, 7 Redhawk, 12 Ingram, 19 MC51) starten keinen Feuerstoss.
  *  H  Glock 18 (6) wie M93R (gleicher Handler 0x800338A8, @0x80074118).
+ *  I  Nachbesserung 1 (Abnahme 0 M1-M3): STANDARD-KI (RE2-Flavor) mit dem Bild-Nachlauf der RE2-Pausenfilter.
+ *     Einordnung "RE2-Pausenfilter laeuft" (Zombie-Familie/0x20/0x21/0x25/0x26 mit RE2-Gehirn); die RE1.5-Gehirne
+ *     0x23/0x27/0x29/0x2b/0x30 nehmen drei Kugeln in Tick 0/3/6, Stoss = 3 x Spalte 3 (@0x8006e0d0 + Typ*0x58 + 3*4);
+ *     Gegenproben Spinne 0x25 (RE2-Pause 0, Filter gibt frei) und Kraehe 0x21 (RE2-Pause 15, nur Kugel 1).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,6 +98,108 @@ static int ticks(int n, int *bei, int nmax)
         if (r && k < nmax) bei[k++] = t;
     }
     return k;
+}
+
+/* ===================== I: Nachbesserung 1 (Abnahme 0 M1-M3) — STANDARD-KI = RE2-Flavor =====================
+ * Je Bild wie game_step: Feuerstoss-Tick, danach der Bild-Nachlauf der RE2-Pausenfilter (game_step_common.c, Block
+ * "MIXED (2026-08-23)": re15_ai_re2_for_type -> Zombie-Familie re15_re2z_hit_filter_apply, sonst
+ * re15_re2_pause_filter_apply). KEINE Gegner-KI-Ticks — die gibt integration_r37_beretta (t2b_std_w5 / roach_std_w5).
+ * Vor der Nachbesserung: RE1.5-Gehirne 0x23/0x27/0x29/0x2b/0x30 nur EIN Treffer je Stoss (riegel_loesen sprang im
+ * RE2-Flavor ueber JEDEN Typ, kein Filter gab den Riegel frei — Abnahme 0 Sonde 1f). */
+extern void re15_re2z_hit_filter_apply(int slot);
+extern void re15_re2_pause_filter_apply(int slot);
+static void re2_nachlauf(void)
+{
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && re15_ai_re2_for_type(g_actors[s].type)) {
+            if (re15_re2z_owns_type(g_actors[s].type)) re15_re2z_hit_filter_apply(s);
+            else                                       re15_re2_pause_filter_apply(s);
+        }
+}
+static int ticks_re2(int n, int *bei, int nmax)
+{
+    int k = 0;
+    for (int t = 1; t <= n; t++) {
+        int r = re15_beretta_r37_tick_ex(1);
+        re2_nachlauf();
+        if (r && k < nmax) bei[k++] = t;
+    }
+    return k;
+}
+static void teil_i_standard_ki(int Z)
+{
+    re15_beretta_r37_mess_t m;
+    int bei[8] = {0};
+    printf("== I Standard-KI (RE2-Flavor): Gegner mit RE1.5-Gehirn\n");
+    /* I0 Einordnung: RE2-Pausenfilter laeuft nur fuer Zombie-Familie + 0x20/0x21/0x25/0x26 mit RE2-Gehirn. */
+    static const uint8_t MIT[10]  = { 0x10, 0x11, 0x12, 0x13, 0x16, 0x18, 0x20, 0x21, 0x25, 0x26 };
+    static const uint8_t OHNE[7]  = { 0x23, 0x27, 0x29, 0x2b, 0x30, 0x36, 0x1a };
+    int ok = 1;
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    for (int k = 0; k < 10; k++) ok &= re15_beretta_r37_re2_pause_regelt(MIT[k]) == 1;
+    for (int k = 0; k < 7; k++)  ok &= re15_beretta_r37_re2_pause_regelt(OHNE[k]) == 0;
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    for (int k = 0; k < 10; k++) ok &= re15_beretta_r37_re2_pause_regelt(MIT[k]) == 0;
+    re15_ai_flavor_set(RE15_AI_FLAVOR_MIXED);
+    for (int k = 0; k < 10; k++) ok &= re15_beretta_r37_re2_pause_regelt(MIT[k]) == (MIT[k] == 0x20);
+    CHECK(70, ok, "Einordnung RE2-Pausenfilter (RE2: Zombie-Familie/0x20/0x21/0x25/0x26 ja, 0x23/0x27/0x29/0x2b/0x30/"
+          "0x36/0x1a nein; RE1.5: keiner; MIXED: nur 0x20)");
+
+    /* I1 drei Treffer E/E+3/E+6, Stoss = 3 x Spalte 3 der RE1.5-Zeile (u16 @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4,
+     * aus info/Re1.5/PSX.EXE gelesen, Dossier 8.2). */
+    static const struct { uint8_t t; int sp3, sp5; } T[5] = {
+        { 0x23,  7, 21 },   /* @0x8006ECE4 / @0x8006ECEC Alligator */
+        { 0x27, 12, 28 },   /* @0x8006EE44 / @0x8006EE4C Gorilla */
+        { 0x29, 14, 25 },   /* @0x8006EEF4 / @0x8006EEFC Kakerlake */
+        { 0x2b, 10, 20 },   /* @0x8006EFA4 / @0x8006EFAC */
+        { 0x30, 15, 28 },   /* @0x8006F15C / @0x8006F164 Birkin */
+    };
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    for (int k = 0; k < 5; k++) {
+        const int w = (k == 2) ? 6 : 5;                 /* Kakerlake mit der Glock 18 (Handler 0x800338A8 @0x80074118) */
+        re15_beretta_r37_reset();
+        spieler();
+        re15_actor_t *e = mk(Z, T[k].t, -19600, 2000);
+        int r1 = eintritt(w, 3);
+        re2_nachlauf();
+        re2_nachlauf();                                 /* zwei weitere Nachlaeufe: KEIN Filter gibt Bit 0 frei */
+        CHECK(71 + 4 * k, r1 == Z + 1 && e->hp == 2000 - T[k].sp3 && (e->hit_react & 1u),
+              "Typ 0x%02x: Kugel 1 trifft (r=%d hp=%d, erwartet %d), Riegel +0x93 Bit 0 bleibt im RE2-Nachlauf stehen "
+              "(+0x93=%02x)", T[k].t, r1, e->hp, 2000 - T[k].sp3, e->hit_react);
+        int n = ticks_re2(8, bei, 8);
+        re15_beretta_r37_mess(&m);
+        CHECK(72 + 4 * k, n == 2 && bei[0] == 3 && bei[1] == 6 && m.treffer == 3 && m.riegel_geloest == 2,
+              "Typ 0x%02x: Kugel 2/3 treffen in Tick 3/6 (n=%d bei %d/%d, Treffer %u, Riegel %u)",
+              T[k].t, n, bei[0], bei[1], m.treffer, m.riegel_geloest);
+        CHECK(73 + 4 * k, e->hp == 2000 - 3 * T[k].sp3 && 3 * T[k].sp3 >= T[k].sp5,
+              "Typ 0x%02x: Stoss = 3 x Spalte 3 = %d (hp %d), nicht weniger als der alte EINE Treffer Spalte 5 = %d",
+              T[k].t, 3 * T[k].sp3, e->hp, T[k].sp5);
+        CHECK(74 + 4 * k, e->state == 2 && e->sub_state_1 == w, "Typ 0x%02x: Reaktion je Treffer (state %d, +0x5 %d)",
+              T[k].t, e->state, e->sub_state_1);
+    }
+
+    /* I2 Gegenproben — die RE2-Regel bleibt, wo ein RE2-Pausenfilter laeuft (Zeile 4, Pause = (w1 >> 9) & 0x7f):
+     *   Spinne 0x25 Pause 0 (@0x800A4BCC w1 0x0000000A): der FILTER gibt frei -> drei Treffer je 17, ohne Loesen
+     *   Kraehe 0x21 Pause 15 (@0x800A45DC w1 0x078F1E0A): ohne abgelaufene Pause nur Kugel 1 (im Spiel stirbt sie daran) */
+    re15_beretta_r37_reset();
+    spieler();
+    re15_actor_t *sp = mk(Z, 0x25, -19600, 2000);
+    eintritt(5, 3);
+    re2_nachlauf();
+    ticks_re2(8, bei, 8);
+    re15_beretta_r37_mess(&m);
+    CHECK(95, m.treffer == 3 && m.riegel_geloest == 0 && sp->hp == 2000 - 3 * 17,
+          "Spinne 0x25 (RE2-Pause 0): drei Treffer ueber den RE2-Filter (Treffer %u, Riegel %u, hp %d)",
+          m.treffer, m.riegel_geloest, sp->hp);
+    re15_beretta_r37_reset();
+    spieler();
+    re15_actor_t *kr = mk(Z, 0x21, -19600, 2000);
+    eintritt(5, 3);
+    re2_nachlauf();
+    ticks_re2(8, bei, 8);
+    re15_beretta_r37_mess(&m);
+    CHECK(96, m.treffer == 1 && m.riegel_geloest == 0 && kr->hp == 2000 - 15,
+          "Kraehe 0x21 (RE2-Pause 15): nur Kugel 1 (Treffer %u, Riegel %u, hp %d)", m.treffer, m.riegel_geloest, kr->hp);
 }
 
 int main(void)
@@ -227,6 +333,8 @@ int main(void)
     }
     CHECK(64, re15_beretta_r37_ist_feuerstoss(5) && re15_beretta_r37_ist_feuerstoss(6),
           "5 und 6 sind Feuerstoss-Waffen (@0x80074114/18 -> 0x800338A8)");
+
+    teil_i_standard_ki(Z);
 
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     re15_re15_re2z_import_set(1);
