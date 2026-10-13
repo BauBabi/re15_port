@@ -243,6 +243,24 @@ Haken-Zeile in scd_vm.c op_ck voruebergehend durch `(void)0;` ersetzt, `local_bu
 Mit dem Haken (Endstand): alle vier Teile 0 Fehler, Integrationsriegel gruen (Abschnitte 5/6). Die Riegel messen also
 die Regel selbst. Danach scd_vm.c per `git checkout` zurueck, neu gebaut (`LOCAL-BUILD-OK (build)`).
 
+### 4.4 Riegel anderer Spuren, die "Bit = Besitz" annahmen (gemessen, nachgezogen)
+Erster gezielter Lauf am Endstand (82 Tests, Regex Abschnitt 6) + Zensus aller Test-Quellen, die eines der elf
+Besitz-Bits setzen (grep `flag_set(3,0x85|0x7F|0x67|0x3B|0xB2|0x65|0x57)`, `(9,0x34|0x88|0x8A)`, `(4,0xEC)`, dezimal
+und `flag:b:n`-Kartenargumente; zweiter Lauf ueber die Tests dieser Quellen): vier Riegel rot, alle mit demselben Grund
+— sie setzen das Aufnahme-Bit OHNE den Gegenstand ins Inventar zu legen (der Zustand vor der Item-Box, in dem das Bit
+allein den Besitz bedeutete). Im Spiel kommt "Bit ohne Gegenstand" nicht vor: der Gegenstand verlaesst das Inventar nur
+ueber die Kiste (Q-Fall) oder ueber Wegwerf-Ja, das erst NACH der Benutzung angeboten wird (gen/discard_sites.inc; dann
+steht das fertig-Bit und die Regel laesst das Original-Bit gelten).
+| Riegel | alt (rot am Endstand) | Aenderung | neu |
+|---|---|---|---|
+| `unit_1090_flame_out_pin` (test_1090_flame_out_pin.c) | `FAIL: die brennenden Truemmer sind weg (7 Emitter)` u.a., 4 Fehler: ohne Loescher im Inventar legt sub00 den Loesch-Platz + Selbst-Tuer @0x02352 nicht an | Vorbedingung "aufgenommen" = `(3,0x85)` + `re15_inv_grant(0x31,1)` | gruen |
+| `unit_r36_schluessel_zelle` (test_r36_schluessel.c) | `FAIL: Z ROOM1211 mit (4,0xEC) (= Prison Key genommen): John ..., Slot 6 -> sub02` | "genommen" = Bit + Item 0x42 im Inventar (`s_hf_gabe` in hochfahren) | gruen |
+| `unit_r36_schluessel_befreiung` Pruefung O | alt erwartet "Schluessel nicht im Inventar (z.B. Item-Box): Szene bis zum Ende, keine Abfrage" — genau der Q-Fall | Erwartung auf die Q-Regel umgestellt: keine Befreiung (Set(4,0xFC) nie), Platz 8 = Raumtext msg 10, keine Abfrage | gruen (`ok: O Schluessel nicht im Inventar: keine Befreiung (Set(4,0xFC) Bild -1, msg 9 Bild -1), Platz 8 = Raumtext msg 10, keine Abfrage ...`) |
+| `unit_r36_elza_unlock` (test_r36_elza.c) | Szene erreicht die Aufschliess-Geste @0x020F8 nicht | "Prison key" = Bit + Item 0x42 im Inventar (`s_boot_gabe` in room_boot) | gruen |
+Die Pruefung O war eine Erwartung der Runde 36 (Nachbesserung 1, Wegwerf-Abfrage) fuer einen Zustand, den der
+Orchestrator-Auftrag Q jetzt ausdruecklich verbietet (Benutzung ohne Gegenstand im Inventar); ihr eigentlicher Kern
+(keine Wegwerf-Abfrage ohne Besitz, RE2 @0x80051634) bleibt geprueft.
+
 ## 5. Messung nachher
 (laufend)
 
