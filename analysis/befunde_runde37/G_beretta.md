@@ -404,7 +404,7 @@ naechsten Kandidaten der Liste. Der Rueckzug laeuft einmal.
 Regel fuer den Port (keine neue Konstante): riegel_loesen() laesst den Riegel stehen, wenn der Gegner ein RE2-Gehirn hat
 und sein +0x1D3-Byte != 0 ist (Gate @0x80041270-78). Das trifft den Arm (0x80 aus arm_hurt) und laesst die RE1.5-Gehirne
 0x23/0x27/0x29/0x2b/0x30 unberuehrt: ihr +0x1D3 bleibt 0 (Stempel re15_re2_stun_frames `return 0`, re15_damage.c:2695-2696,
-kein Gehirn schreibt es). G5 0x36 traegt nach einem Schuss ebenso 0 (Abschnitt 9.5).
+kein Gehirn schreibt es). G5 0x36 traegt nach einem Schuss ebenso 0 (Abschnitt 9.4).
 
 ### 9.3 Riegel zuerst (Teil J in unit_r37_beretta, VOR dem Fix gegen den NB1-Code gebaut)
 `test_r37_beretta.c` Teil J: Gitterarm 0x1A mit dem ECHTEN RE2-Arm-Gehirn (re15_re2arm_tick, RE2-Bank EM2D aus
