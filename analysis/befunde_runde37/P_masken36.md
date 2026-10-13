@@ -557,3 +557,11 @@ Tabelle zurueck und neu gebaut (`soll` bitgleich zur Liste vor der Gegenprobe).
 `git tag --contains 53741fe5 | sort -V | head -1` -> **v0.7.19** (2026-09-08 15:19); `git tag --contains b8db7b2b | sort -V |
 head -1` -> v0.3.96 (2026-09-03 12:30). §7 sagt jetzt "Seit v0.7.19 (2026-09-08, Commit 53741fe5) ... die Masken selbst
 gibt es seit v0.3.96".
+
+
+## Nachbesserung 2 (2026-10-14, nach Abnahme 1 `P_abnahme_1.md`)
+
+Stand (fortlaufend):
+- [ ] M1 ROOM3050/3051 Cut 15: Generator-Masken uebermalen den Konsolen-Cursor (NB2.1)
+- [ ] M2 Kopfoberkante (und Fussende) vom Figurmodell nie abgetastet, ROOM30A0 Cut 0 (NB2.2)
+- [ ] Bau + gezielte Tests (NB2.3)
