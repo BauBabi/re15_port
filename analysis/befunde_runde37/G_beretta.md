@@ -242,3 +242,32 @@ Abnahmebericht: `G_abnahme_0.md`. Zwei fruehere Versuche wurden von Limits ohne 
 laeuft (844 Saetze) und deckt sich mit Abnahme 1f: 0x27 in 1141/11C0 (8), 0x29 in 15 Raeumen (32), 0x2b in 9 Raeumen
 (4001/5040/5041/5070/5071/5110/5111/5130/5131, 28), 0x30 in 8 Raeumen (3070/3071/5080/5081/5090/5091/50E0/50F1; 5090/5091 werden
 zum G5-Modul 0x36 umgetypt), 0x36 in 3080, 0x1a in 1210/1211; 0x23 (Alligator) hat keinen Sce_em_set-Satz (Boss-Modul 2090).
+
+### 8.1 Messung vorher (Spur-Stand 6caac126 = Code 4a5571df, eigener Bau `LOCAL-BUILD-OK (build)`, Standard-KI ohne RE15_AI_FLAVOR)
+Skript `G_beretta_mess/run_nb1.sh` (= Abnahme-Aufbau Anhang B, Messkopie `re15_r37g_nb1.exe`), Auswertung `auswertung.py`.
+| Lauf | Raum / Ziel | Munition | Treffer | Blitze (wf SPAWN 2/0) |
+|---|---|---|---|---|
+| nb1v_t2b_def | ROOM5040 Platz 1 Typ 0x2b hp 121, Leon (-14493,-13185) Blick -z | F61 15 -> 12 | **F61 -10 (EINER)**, danach HURT 2/5 bis F70 | F61/F64/F67 |
+| nb1v_roach_def | ROOM3040 Platz 2 Typ 0x29 hp 99, Leon (-13500,-10300) Blick -z | F61 15 -> 12 | **F61 -14 (EINER)**, HURT 2/5 bis F73 | F61/F64/F67 |
+| nb1v_gor_def | ROOM11C0, Gorillas 0x27 (Platz 2/3, hp 180, ruhend) | 15 (kein Schuss) | — Leon zielt in 11C0 nach dem Sprung nicht (pst 0, pm 2 bis F200) | — |
+=> Abnahme M1/M2 reproduziert (0x2b -10, 0x29 -14 = je EINE Kugel Spalte 3, Basis-exe laut Abnahme -20 / -25).
+Gorilla an der exe nicht per Sprung messbar (11C0 haelt den Spieler fest); 0x27/0x30/0x23 deshalb in der Sonde (8.4).
+
+### 8.2 RE-Belege (selbst gelesen)
+* RE1.5-Riegel: der Resolver setzt +0x93 Bit 0 (`ori v0,v0,0x1` @0x800124F0, Abnahme 2 Nr. 3 bestaetigt); freigegeben wird
+  er erst am ENDE der Trefferreaktion des RE1.5-Gehirns — Kakerlake `sb zero,147(a0)` STAGE3.BIN @0x801149ac (selbst
+  disassembliert, nach Phase 0 `ori v0,v0,0x2` / `sb v0,147(a0)` @0x801148a0-a4). Diese Kette laeuft fuer 0x23/0x27/0x29/0x2b/
+  0x30 in JEDEM KI-Modus: der Port hat fuer sie kein RE2-Gehirn (RE2-Gehirne nur Zombie-Familie, 0x20, 0x21, 0x25/0x26,
+  0x1a; G5 0x36 in 5090/5091 = eigenes Modul).
+* RE2-Pause: nur dort, wo ein Filter +0x93 Bit 0 nach +0x1D3 freigibt — game_step_common.c (Bild-Nachlauf):
+  `re15_ai_re2_for_type(t)` und dann `re15_re2z_owns_type(t)` -> re15_re2z_hit_filter_apply, sonst
+  re15_re2_pause_filter_apply, das selbst nur 0x20/0x21/0x25/0x26 annimmt (re15_damage.c, Typ-Tor in der ersten Zeile).
+  Der Treffer stempelt +0x1D3 nur mit einer RE2-Zeile des Ports: re15_re2_stun_frames kennt 0x10-0x13/0x16/0x18/0x20/0x21/
+  0x25/0x26, sonst `return 0` — fuer 0x23/0x27/0x29/0x2b/0x30 gibt es weder Stempel noch Filter.
+* RE2 Retail (Beta -> Retail, `G_beretta_mess/re2_zeilen_nb1.py info/re2leon/PSX.EXE`): Zeile 4 (Custom Handgun) je Typ-Nummer
+  @0x800A6A88[t] + 3*0x14: 0x10 Pause 1, 0x20 0, 0x21 15, 0x23 2, 0x25 0, 0x27 5, 0x29 15, 0x2b 0, 0x30 5, 0x36 5. Die
+  RE2-Typ-Nummern 0x23..0x30 sind RE2-Kreaturen; der Port fuehrt fuer die RE1.5-Typen gleicher Nummer weder diese Zeilen noch
+  ihre Pause (re15_enemy_dmg_row = RE1.5-Zeile @0x8006e0d0, Abnahme 1c). Fuer diese Gegner gilt also die RE1.5-Lage — und
+  der Nutzer-Wortlaut ("die Gegner mehrfach getroffen") verlangt dort drei Treffer.
+=> Ursache M1: das Kriterium in riegel_loesen() war der FLAVOR (`re15_ai_re2_for_type`), nicht "fuer diesen Aktor gibt ein
+RE2-Pausenfilter den Riegel frei". Im RE2-Flavor fiel damit jeder RE1.5-Gehirn-Gegner durch beide Raster.
