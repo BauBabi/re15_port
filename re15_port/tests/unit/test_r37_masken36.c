@@ -518,7 +518,7 @@ static void teil_erzeuge(const char *pfad)
 
 /* ---- ausschluss (Riegel) ---------------------------------------------------------------------------------------- */
 typedef struct {
-    int sektionen, abweichungen, rest_falsch, aus_masken, masken, stehplatz_los;
+    int sektionen, abweichungen, rest_falsch, aus_masken, masken, stehplatz_los, soll_zeilen;
     long echt_stage[7], falsch_ohne[7];
 } ausschluss_ctx;
 
@@ -527,6 +527,7 @@ static void pruefe_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, cons
     ausschluss_ctx *x = (ausschluss_ctx *) vctx; int m, diff = 0;
     x->sektionen++;
     x->masken += pri->draw_count;
+    if (E->n_aus) x->soll_zeilen++;
     for (m = 0; m < pri->draw_count; m++) {
         int tab = re15_masken36_ausgeschlossen(re15_pri_masken_raum(raum), cut, m);
         if (tab != E->aus[m]) diff++;
@@ -550,13 +551,17 @@ static void ohne_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const 
 
 static void teil_ausschluss(void)
 {
-    ausschluss_ctx a, o; int s, stages_echt = 1;
+    ausschluss_ctx a, o; int s, stages_echt = 1, nach_sekt, nach_abw, nach_zeilen;
     printf("== r37_masken36 ausschluss: Tabelle aus den Dateien nachgerechnet, Fehlverdeckung danach, Verdeckung bleibt ==\n");
     saaten_sammeln();
     memset(&a, 0, sizeof a); memset(&o, 0, sizeof o);
     alle_sektionen(1, 0, pruefe_zeile, &a);            /* Nachrechnung (iteriert) gegen die Tabelle */
     printf("  Saaten %d | Sektionen %d, Masken %d, davon ausgeschlossen %d | Abweichungen %d | ohne Stehplatz %d\n",
            g_saat_n, a.sektionen, a.masken, a.aus_masken, a.abweichungen, a.stehplatz_los);
+    /* Ergebnis der Nachrechnung sichern (der Lauf mit Tabelle unten vergleicht die Tabelle nur mit sich selbst) */
+    nach_sekt = a.sektionen; nach_abw = a.abweichungen; nach_zeilen = a.soll_zeilen;
+    printf("  Tabellenzeilen %d (ohne Endzeile), nachgerechnete Sektionen mit Ausschluss %d\n",
+           re15_masken36_zeilen_zahl() - 1, nach_zeilen);
     memset(&a, 0, sizeof a);
     alle_sektionen(0, 1, pruefe_zeile, &a);            /* mit der Engine-Tabelle: keine Fehlverdeckung bleibt */
     alle_sektionen(0, 0, ohne_zeile, &o);              /* Gegenprobe ohne Ausschluss */
@@ -565,7 +570,9 @@ static void teil_ausschluss(void)
                s, a.echt_stage[s], o.falsch_ohne[s]);
         if (a.echt_stage[s] <= 0) stages_echt = 0;
     }
-    CHECK("Ausschluss-Tabelle == Nachrechnung aus MSK/BSS/RDT (Rechteck fuer Rechteck)", a.sektionen > 0 && a.abweichungen == 0);
+    CHECK("Ausschluss-Tabelle == Nachrechnung aus MSK/BSS/RDT (Rechteck fuer Rechteck)", nach_sekt > 0 && nach_abw == 0);
+    CHECK("keine verwaiste Tabellenzeile (Zeilen == nachgerechnete Sektionen mit Ausschluss)",
+          re15_masken36_zeilen_zahl() - 1 == nach_zeilen);
     CHECK("mit der Tabelle verdeckt keine Generator-Maske eine Figur ohne Zelle davor", a.rest_falsch == 0);
     CHECK("je Stage 3..6 verdecken die Masken weiterhin Figuren HINTER Zellen", stages_echt);
     CHECK("Gegenprobe: ohne Ausschluss gaebe es Fehlverdeckungen (Stage 3, 5)", o.falsch_ohne[3] > 0 && o.falsch_ohne[5] > 0);

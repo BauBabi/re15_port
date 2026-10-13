@@ -3,11 +3,6 @@
  * Figurpunkt ohne solide Zelle davor verdecken. Grundlagen und Messaufbau: Kopf von test_r37_masken36.c,
  * Dossier analysis/befunde_runde37/P_masken36.md. Spalten: Raum der MSK-Datei, Cut, Zahl, Bitfeld je Rechteck. */
 static const re15_masken36_zeile_t re15_masken36_zeilen[] = {
-    { 0x1221,  0,  16, { 0x000BABFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 16 von 21 Masken, Stehplaetze 2076 */
-    { 0x1221,  1,   3, { 0x00000B00u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 3 von 16 Masken, Stehplaetze 2076 */
-    { 0x1221,  2,  10, { 0x00001BDBu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 10 von 16 Masken, Stehplaetze 1933 */
-    { 0x1221,  4,  19, { 0x0047BFFFu, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 19 von 25 Masken, Stehplaetze 2264 */
-    { 0x1221,  5,   1, { 0x00000020u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 1 von 14 Masken, Stehplaetze 2264 */
     { 0x3040,  0,   7, { 0x0000350Du, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 7 von 19 Masken, Stehplaetze 2710 */
     { 0x3040,  1,   4, { 0x0000001Du, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 4 von 5 Masken, Stehplaetze 4716 */
     { 0x3040,  3,   4, { 0x00302400u, 0x00000000u, 0x00000000u, 0x00000000u } },   /* 4 von 36 Masken, Stehplaetze 1396 */
