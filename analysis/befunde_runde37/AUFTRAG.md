@@ -276,3 +276,14 @@ schmale 40-Texel-Kachel; die Spalten 40..48 wiederholen Spalte 39 -> der rechte 
 breite Zeile aus zwei Cache-Spalten (u1 0x78 @0x8007183c/@0x80071848, zweite Kachel FUN_80069c40 @0x80069cd8). -> Spur R
 kiste2feld: 2-Feld-Symbole in der Kisten-Liste wie RE2 vollstaendig zeichnen (auch, falls betroffen, im Inventar-Gitter
 und an anderen Stellen derselben Kachel-Logik pruefen). Basis = abgenommener Stand der Spur M.
+
+## Nachtrag 13 — 2026-10-13 (woertlich, Zwischenversion)
+
+> Wenn du die Aufzüge fertig hast und die funktionieren und die anderne Sachen auch fast fertig sind, baue mir schon mal eine Zwischen Version. Den Rest setzen wir am Samstag fort.
+
+Lesart: Aufzuege sind fertig und geprueft (C + D integriert, Integration 61/61, Lift 2030 an der Integrations-exe abgefahren).
+Die laufenden Rest-Laeufe (G, L, N, O, P, Q, R) beenden ihren aktuellen Schritt; was die Abnahme besteht, wird integriert,
+was durchfaellt oder laenger braucht, wird angehalten und am Samstag (2026-10-17) fortgesetzt. Dann Zwischenversion
+v0.8.25 aus r37/integration wie jedes Release: volle Suite seriell ohne Agenten, RE15_MIN_TESTS, Release Notes (mit
+"Folgt am Samstag"), master ff, Hauptbaum-exe, Windows + Linux/Deck + Android, Paket, Archiv, Tag, Push. Der Rest der
+Runde 37 wird danach v0.8.26.
