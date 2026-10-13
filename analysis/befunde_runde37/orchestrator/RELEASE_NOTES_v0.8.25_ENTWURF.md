@@ -68,8 +68,16 @@ ihn als "Empty Fire Extinguisher" (auch im Spielstand, auch wenn er ihn in die K
 darueber gezeichnet, die Zeilen verschwinden darunter. Die Symbole stehen jetzt buendig am rechten Rand der Liste, kein
 Name reicht mehr hinein; die Mengen stehen wie in RE2 unten links im Symbol.
 
-<!-- weitere Spuren: A pri1100, C fahrstuhl, D itemband, F sperre1050, G beretta, H zombieaktiv, I feuerloescher,
-     J bissarm, K roy — Abschnitt erst nach bestandener Abnahme + Integration -->
+**Items auf erhoehten Flaechen** (Spur D). Ein Gegenstand laesst sich nur noch von dem Stockwerk aus aufnehmen, auf
+dem er liegt - wie im Original, das jeden Ausloeser an das Band des Spielers bindet. Die Super Redhawk in ROOM3050
+bekommen Sie nur noch ueber den vorgesehenen Weg (Kiste, Lift, Kerbe, Klettern), weder von oben noch von unten ohne
+Kiste; das gilt fuer Leon und Elza und fuer alle zwoelf so liegenden Items. Dabei nimmt ein Lift den Spieler jetzt
+wie im Original auf sein Zielband mit. **Lift A in ROOM2030**: im Original laesst er sich auch von ausserhalb der
+Kabine ausloesen, und man sitzt danach hinter einer Wand fest (das hatten Sie im Testlauf gesehen). Im Port faehrt er
+jetzt nur, wenn Sie in der Kabine stehen, wie die Hubplattform der RE2-Fassung desselben Raums (ROOM6030). Lift B und
+die Lifte in 3050 und 50D0 hatten diese Falle nicht und bleiben wie im Original.
+
+<!-- Rest-Spuren G, L, N, O, P, Q, R: nach bestandener Abnahme + Integration hier ergaenzen, sonst unter 'Folgt am Samstag' -->
 
 ## Grenzen
 
@@ -78,3 +86,22 @@ Name reicht mehr hinein; die Mengen stehen wie in RE2 unten links im Symbol.
   Panel der Gefaengnistuer (11E0, Yellow Keycard) erscheint im normalen Spiel nie: der Startraum setzt ihr
   Schloss-Flag schon beim Neuspiel (ROOM1240 @0x0055A) - im Original genauso. Schliesst man die Nachrichten so
   schnell wie moeglich, klingt das Aufschliessen die letzten Bilder schon im Raum aus (wie RE2 ROOM2110).
+* **Fahrstuehle:** Plattform A in 2030 ist im Port eine Wahl nach RE2 (Kabinenpflicht); ihr Motorton ist aus dem
+  RE2-Ton gekuerzt. Klick und Motor starten im selben Bild, RE2 laesst 10 Bilder dazwischen.
+* **Zombie-Biss:** Beim Kriecher-Griff an der duennen Wand in ROOM1220 kann Leon in einem Bild durch die Wand
+  geschoben werden (schon vorher so; ob RE2 das ebenso tut, ist noch nicht belegt). Im Griff ist Leons Waffe
+  ausgeblendet, RE2 zeigt sie.
+* **Item-Kiste:** Zwei-Felder-Symbole (z.B. Waffen) sind in der Liste rechts noch verschmiert - wird am Samstag
+  fertig (Spur R).
+* **Feuerloescher:** Legt Leon den Loescher vor dem Loeschen in die Kiste, kann er das Feuer trotzdem loeschen
+  (das Original prueft nur, ob er ihn je aufgehoben hat) - wird am Samstag wie RE2 an den Besitz gebunden (Spur Q).
+
+## Zu entscheiden
+
+* **Feuerloescher:** Fundort (heute ROOM1050, Wand rechts der Notausgangstuer), Groesse (0,47 m), Wortlaut "It's an
+  empty fire extinguisher." (am Boden) und "An empty fire extinguisher." (Untersuchen), Spind-Text "Nothing
+  unusual." - alles Port-Wahl, aenderbar.
+
+## Folgt am Samstag
+
+<!-- beim Release fuellen: Spuren, die bis zum Bau der Zwischenversion nicht bestanden haben -->
