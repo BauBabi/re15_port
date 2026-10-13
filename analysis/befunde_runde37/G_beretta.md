@@ -348,3 +348,10 @@ nicht gezeichnet, z.B. Tyrant "blood FX 0x80019700 @0x80114998 — render-side, 
 * Ausnahme bleibt nur, wo der Port die RE2-Trefferpause fuehrt: die Kraehe (RE2-Pause 15 Bilder) nimmt nur die erste Kugel
   — sie stirbt daran (10 HP, 15 Schaden).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung.
+
+## 9. Nachbesserung 2 (Abnahme 1: N1 Gitterarm 0x1A, 2026-10-13)
+
+Abnahmebericht: `G_abnahme_1.md` (Abschnitt 1f / 5). Mangel N1: seit Nachbesserung 1 loest riegel_loesen() den +0x93-Riegel
+des Gitterarms 0x1A vor Kugel 2/3 (re2_pausenfilter_laeuft(0x1A) = 0); der getroffene, sich zurueckziehende Arm nimmt alle
+drei Kugeln, der Rueckzug startet je Kugel neu. RE2 schliesst ihn per +0x1D3 (EM2D-HURT `|= 0x80`) + Applier-Gate 2 aus.
+Fortlaufend geschrieben; Abschnitte 9.1 ff. folgen je Schritt.
