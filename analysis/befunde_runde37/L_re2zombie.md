@@ -388,6 +388,9 @@ Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`
 3. Integration (seriell), `-R "^integration_.*(<Ausdruck 1 ohne situp|10d0>)"`: **`100% tests passed, 0 tests failed out of 16`**
    (u.a. integration_r37_re2zombie 51,6 s, integration_r37_zombieaktiv, integration_r34_granaten, integration_r35_granate,
    integration_r36_gegnerzahl, integration_r35_zgirl/_5090, integration_r36_szene1150, integration_r35_cut1150).
+4. Integration (seriell), alle uebrigen Skripte, die Zombies/Gegner/state.log anfassen (grep der tests/integration/*.cmake):
+   `-R "^integration_.*(r34n_e_dokumente|r35_cut10f0|r35_inventar1050|r35_redhawk|r35_werfer|r36_dachkiste|r36_elza|r36_karte|r36_kleidung_spielweg|r36_pri_schatten|r36_schuss|r36_szenenleon)"`
+   -> **`100% tests passed, 0 tests failed out of 20`**.
 
 ## OFFEN
 
@@ -428,7 +431,7 @@ Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`
   `re15_port/include/re15_re2zombie_r37.h` (Header, keine neue .c — Android-GLOB unberuehrt); +9 Unit-Tests, +1 Integration
   (RE15_MIN_TESTS +10).
 * Entscheidungsfrage: keine.
-* Fuer die Integration: Riegel-Liste = Schritt 5 + 5b (zusammen 18 Riegel mit alt/neu). DECISION[12] (re2z_decide_lunge,
+* Fuer die Integration: Riegel-Liste = Schritt 5 (Tabelle + Granaten-Riegel unter Tests) + 5b, je mit alt/neu. DECISION[12] (re2z_decide_lunge,
   `case 12` in re2z_active) ist ein neuer Griff-EINSTIEG; der Griff-/Biss-Code selbst (Spur J) ist unberuehrt. Geaenderte
   fremde Testdateien: test_r36_zombieki_eintritt.c, test_r34_granaten.cmake, test_r35_granate.cmake, probe_r36_blut.c,
   probe_10d0_situp_re2.c (je mit Beleg im Dossier).
