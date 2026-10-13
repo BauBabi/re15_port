@@ -357,3 +357,11 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
   `[pri] ROOMxxxx Cut n: Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)`.
 - Entscheidungsfragen: keine.
 
+
+## Nachbesserung 1 (2026-10-13, nach Abnahme 0 `P_abnahme_0.md`)
+
+Stand (fortlaufend):
+- [ ] M1 Elza ROOM30A1: Ursache, Beleg, Aenderung, Messung nachher
+- [ ] M2 Riegel (leer wahr ohne Stehplatz, bytegleiche Paare, Elza 30A1 an der exe) + Dossier-Aussagen §4.2/§7
+- [ ] M3 Versionsangabe (v0.7.19 statt v0.6.x)
+- [ ] Bau + gezielte Tests
