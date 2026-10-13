@@ -20,7 +20,12 @@
  *   1 = 0x15 x100, 2 = LEER (Auswahlzeile scroll+2), 3 = 0x1D x12, 4 = 0x44 — die exe legt die MC51 ueber die
  *   Kisten-Bedienung (Box-Seite, Bestaetigen = Tausch, RE2 FUN_800703b8 Fall 2) in die Kiste.
  *
- * Aufruf: probe_r37_kiste2feld_karte <kartendatei> <raum-hex> <x> <z> <gier> [alle|mc51]
+ * Belegung "ausr" (6. Argument): wie "alle", aber AUSGERUESTET ist die MC51 (0x13) mit Kopfzelle 5 = Speicher-Spalte 2
+ *   (Schwanz Zelle 6 = Spalte 0 der naechsten Speicherzeile): der Ausruest-Kasten des Statusschirms zeichnet die Zellen
+ *   eq und eq+1 aus dem Symbol-Speicher (FUN_80049a5c L65-78, re15_inv_screen.c Abschnitt 7) — dieselbe Kachel-Logik
+ *   wie das Gitter (Dossier §4.3).
+ *
+ * Aufruf: probe_r37_kiste2feld_karte <kartendatei> <raum-hex> <x> <z> <gier> [alle|mc51|ausr]
  *   Figur aus der Raum-Variante wie probe_r37_kiste_karte: xxx1 = Elza (Zeichen 4), sonst Leon (0).
  */
 #include "re15_actor.h"
@@ -60,9 +65,10 @@ static void inv_breit(int kopf, uint8_t id, uint8_t qty)
 
 int main(int argc, char **argv)
 {
-    int i, mc51;
-    if (argc < 6) { printf("Aufruf: karte raum-hex x z gier [alle|mc51]\n"); return 2; }
+    int i, mc51, ausr;
+    if (argc < 6) { printf("Aufruf: karte raum-hex x z gier [alle|mc51|ausr]\n"); return 2; }
     mc51 = (argc >= 7 && strcmp(argv[6], "mc51") == 0);
+    ausr = (argc >= 7 && strcmp(argv[6], "ausr") == 0);
     const char *path = argv[1];
     unsigned room = (unsigned)strtoul(argv[2], NULL, 16);
     scd_vm_init();
@@ -94,12 +100,12 @@ int main(int argc, char **argv)
         inv_breit(5, 0x13, 30);
         inv_set(7, 0x15, 50, 0);
         inv_breit(8, 0x0E, 100);
-        re15_inv_set_equipped_slot(4);
+        re15_inv_set_equipped_slot(ausr ? 5 : 4);   /* ausr: MC51-Kopf in Speicher-Spalte 2 */
         for (i = 0; i < 6; i++) box_set(i, (uint8_t)(0x0e + i), (uint8_t)(i + 1), RE15_BOX_KIND_WIDE);
         box_set(6, 0x0B, 3, 0);
         box_set(63, 0x15, 100, 0);
     }
-    re15_player_set_equipped_weapon(0x03);   /* DAT_800aca5d = Browning, passend zum ausgeruesteten Platz */
+    re15_player_set_equipped_weapon(ausr ? 0x13 : 0x03);   /* DAT_800aca5d passend zum ausgeruesteten Platz */
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
@@ -126,6 +132,7 @@ int main(int argc, char **argv)
             ok = ok && g_itembox.slots[i].id == 0x0e + i && g_itembox.slots[i].flags == RE15_BOX_KIND_WIDE;
         ok = ok && g_inv.slots[2].id == 0x12 && g_inv.slots[2].flags == 1 && g_inv.slots[3].flags == 2;
         ok = ok && g_inv.slots[8].id == 0x0E && g_inv.slots[8].flags == 1 && g_inv.slots[9].flags == 2;
+        ok = ok && re15_inv_equipped_slot() == (ausr ? 5 : 4);
         return ok ? 0 : 1;
     }
 }

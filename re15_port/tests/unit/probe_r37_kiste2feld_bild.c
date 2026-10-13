@@ -39,6 +39,8 @@
  *
  * Aufruf: probe_r37_kiste2feld_bild <PSX-Asset-Ordner> kiste <ppm> <ids> <mengen>   (ids hex, "-" = leere Zeile)
  *         probe_r37_kiste2feld_bild <PSX-Asset-Ordner> gitter <ppm> <list_x> <list_y> <k:id:menge,...> [cursor=k]
+ *         probe_r37_kiste2feld_bild <PSX-Asset-Ordner> ausruest <ppm> <x> <y> <id> <menge>
+ *           (Ausruest-Kasten des Statusschirms, zwei 40x30-Haelften bei x und x+0x28 — s. ausruest())
  * Ausgabe je Zeile/Zelle eine Zeile, Ende "KISTE2FELD-BILD OK" oder "KISTE2FELD-BILD FEHLER n"; exit 0/1.
  */
 #include <stdio.h>
@@ -181,6 +183,23 @@ static const short k_zelle[10][2] = {   /* RE1.5 Zellentabelle @0x80076274 */
     { 4, 32 }, { 44, 32 }, { 4, 62 }, { 44, 62 }, { 4, 92 }, { 44, 92 }, { 4, 122 }, { 44, 122 }, { 4, 152 }, { 44, 152 }
 };
 
+/* Eine 40x30-Haelfte h (0 = ITPS-Spalten 0..39, 1 = 40..79) des Breitbilds w bei Bild (x0,y0): deckende Texel
+ * zaehlen (*n) und Abweichungen (*ab); in der linken Haelfte das Ziffernfeld (u 3 .. 3+6*(Stellen-1)+7, v 20..27,
+ * FUN_80048f28 x-Start 3 @0x80048f44, Schritt 6 @0x80049230, y +20) ausgenommen, wenn menge > 0. */
+static void haelfte_vergleich(const uint8_t *w, int h, int x0, int y0, int menge, int *n, int *ab)
+{
+    int u, v, nd = stellen(menge);
+    *n = 0; *ab = 0;
+    for (v = 0; v < 30; v++)
+        for (u = 0; u < 40; u++) {
+            unsigned char e[3];
+            if (!farbe(w[v * 80 + h * 40 + u], e)) continue;               /* durchsichtig */
+            if (h == 0 && menge > 0 && v >= 20 && v <= 27 && u >= 3 && u <= 3 + 6 * (nd - 1) + 7) continue;
+            (*n)++;
+            if (!gleich(x0 + u, y0 + v, e)) (*ab)++;
+        }
+}
+
 static int gitter(const char *ppm, int lx, int ly, const char *spec, int cursor)
 {
     int fehler = 0, geprueft = 0;
@@ -195,21 +214,13 @@ static int gitter(const char *ppm, int lx, int ly, const char *spec, int cursor)
         w = breit(id);
         if (!w || kopf < 0 || kopf > 8) { printf("FEHLER Angabe %d:%02x\n", kopf, id); fehler++; continue; }
         for (h = 0; h < 2; h++) {
-            int zelle = kopf + h, x0 = k_zelle[zelle][0] + lx, y0 = k_zelle[zelle][1] + ly, u, v, n = 0, ab = 0;
-            int nd = stellen(menge);
+            int zelle = kopf + h, x0 = k_zelle[zelle][0] + lx, y0 = k_zelle[zelle][1] + ly, n = 0, ab = 0;
             if (zelle == cursor || kopf == cursor) {
                 printf("%s: Zelle %d (Id %02x %s) unter dem Cursor - nicht verglichen\n", ppm, zelle, id,
                        h ? "rechte Haelfte" : "linke Haelfte");
                 continue;
             }
-            for (v = 0; v < 30; v++)
-                for (u = 0; u < 40; u++) {
-                    unsigned char e[3];
-                    if (!farbe(w[v * 80 + h * 40 + u], e)) continue;               /* durchsichtig */
-                    if (h == 0 && menge > 0 && v >= 20 && v <= 27 && u >= 3 && u <= 3 + 6 * (nd - 1) + 7) continue;
-                    n++;
-                    if (!gleich(x0 + u, y0 + v, e)) ab++;
-                }
+            haelfte_vergleich(w, h, x0, y0, (id < 0x22) ? menge : 0, &n, &ab);
             printf("%s: Zelle %d (Id %02x %s, Bild x %d y %d): %d/%d deckende Texel gleich -> %s\n", ppm, zelle, id,
                    h ? "rechte Haelfte" : "linke Haelfte", x0, y0, n - ab, n, ab == 0 ? "ok" : "FALSCH");
             if (ab) fehler++;
@@ -217,6 +228,26 @@ static int gitter(const char *ppm, int lx, int ly, const char *spec, int cursor)
         }
     }
     if (geprueft == 0) { printf("%s: FEHLER keine Zelle geprueft\n", ppm); fehler++; }
+    return fehler;
+}
+
+/* AUSRUEST-KASTEN des Statusschirms (FUN_80049a5c L65-78, re15_inv_screen.c Abschnitt 7): Kopf-Flag 1 -> zwei
+ * 40x30-SPRTs aus den Speicherzellen eq (bei x) und eq+1 (bei x+0x28), x/y = 25dc/25de (Kopf: x 0x82 @0x80049688,
+ * y 0x3a). Erwartung wie im Gitter: links ITPS-Spalten 0..39, rechts 40..79; Ziffernfeld (FUN_80048f28 equip-Modus
+ * @0x80049184-1e0: x+3.., y+20) ausgenommen. */
+static int ausruest(const char *ppm, int x0, int y0, int id, int menge)
+{
+    int fehler = 0, h;
+    const uint8_t *w = breit(id);
+    if (!ppm_laden(ppm)) { printf("%s: FEHLER Bild nicht lesbar\n", ppm); return 1; }
+    if (!w) { printf("FEHLER Angabe Id %02x\n", id); return 1; }
+    for (h = 0; h < 2; h++) {
+        int n = 0, ab = 0;
+        haelfte_vergleich(w, h, x0 + h * 0x28, y0, (id < 0x22) ? menge : 0, &n, &ab);
+        printf("%s: Ausruest-Kasten (Id %02x %s, Bild x %d y %d): %d/%d deckende Texel gleich -> %s\n", ppm, id,
+               h ? "rechte Haelfte" : "linke Haelfte", x0 + h * 0x28, y0, n - ab, n, ab == 0 ? "ok" : "FALSCH");
+        if (ab || n == 0) fehler++;
+    }
     return fehler;
 }
 
@@ -236,7 +267,9 @@ int main(int argc, char **argv)
         int cursor = -1;
         if (argc >= 8 && !strncmp(argv[7], "cursor=", 7)) cursor = atoi(argv[7] + 7);
         fehler = gitter(argv[3], atoi(argv[4]), atoi(argv[5]), argv[6], cursor);
-    } else { printf("Aufruf: siehe Kopf\n"); return 2; }
+    } else if (!strcmp(argv[2], "ausruest") && argc >= 8)
+        fehler = ausruest(argv[3], atoi(argv[4]), atoi(argv[5]), (int)strtol(argv[6], NULL, 16), atoi(argv[7]));
+    else { printf("Aufruf: siehe Kopf\n"); return 2; }
     if (fehler) { printf("KISTE2FELD-BILD FEHLER %d\n", fehler); return 1; }
     printf("KISTE2FELD-BILD OK\n");
     return 0;
