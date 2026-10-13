@@ -325,11 +325,19 @@ Nicht betroffen (§1.4, eigener 112x72-Weg) — nicht angefasst, nicht neu gemes
 - eigene: `ctest --test-dir re15_port/build -R "r37_kiste2feld" --timeout 900 --output-on-failure` ->
   `100% tests passed, 0 tests failed out of 2`
 - Module des Diffs (re15_inv_screen.c, inv_render_pc.c: Inventar-, Kisten-, Karten-, Dokumenten-Schirm, Symbol-Cache,
-  Item-Modal, ersetzte Kacheln 0x40/0x42/0x45) inkl. Spur-M-Riegel unit_r37_kiste / integration_r37_kiste: §5.1.
+  Item-Modal, ersetzte Kacheln 0x40/0x42/0x45) inkl. Spur-M-Riegel unit_r37_kiste / integration_r37_kiste: §5.1,
+  `100% tests passed, 0 tests failed out of 84`.
 
-### 5.1 Lauf Module
+### 5.1 Lauf Module (Bau nach dem Zuruecksetzen der unit-Gegenprobe, Endstand des Codes)
 
-(laeuft)
+`ctest --test-dir re15_port/build -R "r37_kiste|itembox|inv_|inventar|map_|karte|dokument|dachkiste|kartenitems|item_icon|item_modal|r30_sicherung_bild|r36_schluessel" --timeout 900 -j 4 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 84`** (Total Test time (real) = 1493.86 sec). Darin: unit_r37_kiste2feld,
+integration_r37_kiste2feld, Spur-M-Riegel **unit_r37_kiste** und **integration_r37_kiste** (4 Laeufe inkl. Taste gehalten,
+Rahmen bitgleich, Symbol buendig rechts mit freier Spalte davor — auch mit der 2-Feld-Zeile 49 px), unit_itembox_*,
+unit_room1150_itembox, unit_inv_fsm, unit_item_icon, unit_item_modal, unit/integration_r30_sicherung_bild (ersetzte
+Kachel 0x40 im neuen Abtastweg), unit/integration_r36_schluessel* (Kacheln 0x42/0x45), unit_map_*, Karten-Riegel
+r3x_karte*, integration_r34n_e_dokumente_bild, integration_r36_kartenitems_bild, integration_r36_dachkiste,
+integration_map_raum_live.
 
 ## 6. OFFEN
 
