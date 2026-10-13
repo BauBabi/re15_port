@@ -3,7 +3,9 @@
  * TITLE.BIN das Elza-Bit DAT_800ACA3C Bit 31 ableitet: @0x801024a8/@0x801024e4) in einem Raum an einer Stelle, damit
  * die echte exe ueber RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 am LADE-Weg startet (Muster
  * probe_r35_cut1150_karte.c). Die Flags kommen dann aus dem GELADENEN Spielstand.
- * Aufruf: probe_r36_elza_karte <kartendatei> <raum-hex> <x> <z> <gier> [bank:bit ...]
+ * Aufruf: probe_r36_elza_karte <kartendatei> <raum-hex> <x> <z> <gier> [bank:bit ...] [give:id]
+ * give:id (Runde 37 Spur Q): Gegenstand ins INVENTAR — seit der Kistenregel (kistenregel_r37.c) gilt ein Aufnahme-Bit
+ * wie (4,0xEC) nur mit dem Gegenstand im Inventar (RE2 Keep_Item_ck @0x800584F0 -> FUN_800696CC).
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -12,6 +14,7 @@
 #include "re15_memcard.h"
 #include "re15_aot.h"
 #include "re15_gameflow.h"
+#include "re15_inventory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +37,11 @@ int main(int argc, char **argv)
     pl->active = 1; pl->type = 0; pl->hp = 100;
     pl->x = atoi(argv[3]); pl->z = atoi(argv[4]); pl->rot_y = (int16_t)atoi(argv[5]); pl->y = 0;
     for (int a = 6; a < argc; a++) {
+        if (strncmp(argv[a], "give:", 5) == 0) {           /* Runde 37 Spur Q */
+            long id = strtol(argv[a] + 5, NULL, 0);
+            if (id <= 0 || id > 255 || re15_inv_grant((uint8_t)id, 1) != 0) { printf("FAIL: '%s'\n", argv[a]); return 2; }
+            continue;
+        }
         char *c = strchr(argv[a], ':'); if (!c) { printf("FAIL: '%s'\n", argv[a]); return 2; }
         re15_game_flag_set((uint8_t)strtol(argv[a], NULL, 0), (uint8_t)strtol(c + 1, NULL, 0), 1);
     }

@@ -64,6 +64,7 @@
 #include "re15_codepanel_r37.h" /* Runde 37 Spur E: Code-Panel-Kamera/Lampen (codepanel_r37.c) */
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
+#include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
 
 scd_vm_t g_scd;
 
@@ -2155,6 +2156,10 @@ static int op_ck(scd_thread_t *t)
     uint8_t  idx   = t->pc[2];
     uint8_t  value = t->pc[3];
     int      got   = re15_game_flag_get(zone, idx);
+    /* Runde 37 Spur Q: Besitz-Bit einer Benutzungs-Stelle gilt nur mit dem Gegenstand im INVENTAR (RE2 Keep_Item_ck
+     * @0x800584F0 -> FUN_800696CC, Box zaehlt nicht); Tabelle + Belege in kistenregel_r37.c / re15_kistenregel_r37.h. */
+    if (s_current_rdt && s_current_rdt->raw && t->pc >= s_current_rdt->raw && t->pc < s_current_rdt->raw + s_current_rdt->raw_size)
+        got = re15_kistenregel_r37_ck((uint16_t)g_current_room_id, (uint32_t)(t->pc - s_current_rdt->raw), zone, idx, got);
     if (flag_census_on())
         fprintf(stderr, "[flagcensus] room=%04X READ  Ck   zone=%d idx=%d exp=%d got=%d\n",
                 g_current_room_id, zone, idx, value, got);

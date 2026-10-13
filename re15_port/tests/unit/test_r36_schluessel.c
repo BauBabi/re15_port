@@ -97,6 +97,9 @@ static int raum_laden(raum_t *r, uint16_t id)
 }
 
 static int32_t s_px, s_pz; static int16_t s_prot;   /* Standort des Spielers (ruhe) */
+/* Runde 37 Spur Q: Gegenstand, den hochfahren() nach dem Leeren ins INVENTAR legt (0 = keiner). "Prison Key genommen"
+ * heisst seit der Kistenregel Bit (4,0xEC) UND Item 0x42 im Inventar (kistenregel_r37.c K11, ROOM1211 @0x01DEA). */
+static uint8_t s_hf_gabe = 0;
 /* Flags als Paare (bank, bit), Ende bank < 0. */
 static void hochfahren(raum_t *r, int32_t px, int32_t pz, int16_t rot, const int *flags, int elza)
 {
@@ -106,6 +109,7 @@ static void hochfahren(raum_t *r, int32_t px, int32_t pz, int16_t rot, const int
     re15_aot_init();
     scd_vm_init(); re15_actor_init();
     for (int k = 0; flags && flags[k] >= 0; k += 2) re15_game_flag_set((uint8_t)flags[k], (uint8_t)flags[k + 1], 1);
+    if (s_hf_gabe) re15_inv_grant(s_hf_gabe, 1);      /* Runde 37 Spur Q (s.o.) */
     g_gameflow.character = elza ? 4 : 0;
     g_current_room_id = r->id;
     g_room_rdt = r->rdt; g_room_rdt_ok = 1;
@@ -405,7 +409,9 @@ static void teil_zelle(void)
     CHECK(g_aot.slots[8].active && g_aot.slots[8].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[8].event_id == 10,
           "Z ROOM1211 ohne (4,0xEC): Slot 8 Text msg 10 (\"It's locked. It seems that there is someone inside\")");
     const int fz[3] = { 4, 0xEC, -1 };
+    s_hf_gabe = RE15_R36Q_PRISON_ITEM;                  /* Runde 37 Spur Q: genommen = Bit + Schluessel im Inventar */
     hochfahren(&z, -26000, -20000, 0, fz, 1);
+    s_hf_gabe = 0;
     ruhe(3);
     int john = 0;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) if (g_actors[i].active && g_actors[i].type == 0x49) john = 1;
@@ -612,12 +618,17 @@ static void teil_befreiung(void)
           L.f_ende > L.f_frage,
           "N Nein: Prison Key bleibt mit Anzahl 1 (RE2 @0x800517c4), Szene laeuft zu Ende");
 
-    /* 3. ohne Prison Key im Inventar (z.B. in der Item-Box; (4,0xEC) gesetzt) -> keine Abfrage (@0x80051634) */
+    /* 3. ohne Prison Key im Inventar (z.B. in der Item-Box; (4,0xEC) gesetzt). Runde 36 erwartete hier "Szene bis zum
+     *    Ende, keine Abfrage". Seit Runde 37 Spur Q (Orchestrator-Auftrag Q, RE2-Regel: benutzt wird nur, was man
+     *    TRAEGT — Keep_Item_ck @0x800584F0 -> FUN_800696CC sucht nur das Inventar 0x800d4a3c) gilt Ck(4,0xEC) @0x01DEA
+     *    nur mit dem Schluessel im Inventar (kistenregel_r37.c K11): die Befreiung beginnt gar nicht, Platz 8 bleibt
+     *    der Raumtext msg 10, also auch keine Wegwerf-Abfrage (@0x80051634). */
     bf_boot(&z, 0);
     L = bf_fahren(0);
-    CHECK(L.f_msg9_auf >= 0 && L.f_frage < 0 && !re15_discard_active() && L.f_ende > L.f_msg9_auf,
-          "O Schluessel nicht im Inventar: Szene bis zum Ende (msg 9 Bild %d, Ende %d), keine Abfrage "
-          "(RE2 @0x80051634 bltz -> keine Fortsetzung)", L.f_msg9_auf, L.f_ende);
+    CHECK(L.f_start < 0 && L.f_msg9_auf < 0 && L.f_frage < 0 && !re15_discard_active() &&
+          g_aot.slots[8].active && g_aot.slots[8].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[8].event_id == 10,
+          "O Schluessel nicht im Inventar: keine Befreiung (Set(4,0xFC) Bild %d, msg 9 Bild %d), Platz 8 = Raumtext "
+          "msg 10, keine Abfrage (Runde 37 Spur Q K11; RE2 @0x80051634 bltz)", L.f_start, L.f_msg9_auf);
     free(z.buf);
 }
 
