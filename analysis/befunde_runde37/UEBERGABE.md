@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-14 00:29: L re2zombie Abnahme 0: alle vier Punkte ERFUELLT; einziger Mangel M1 = Text: 'Messer unveraendert wirksam' widerspricht der exe (erster Zombie an der Tuer 1130 nimmt 6 statt 10 Messertreffer, weil Produzent (2) ihn nach jeder Treffer-Erholung sofort in den Arme-hoch-Gang schaltet — byte-true RE2). Nachbesserung L#1 (nur Text) laeuft. Fuer die Release Notes: Messer-Nahkampf gegen anrueckende Zombies wird schwerer.
 * 2026-10-13 23:25: Integration mit G gruen: 61/61 (r37_beretta, Schuss, Treffer, Blut, 1210-Arme, Writher, Werfer, Granaten, Birkin, r37_zombieaktiv/bissarm).
 * 2026-10-13 23:23: P masken36 Abnahme 0 NICHT bestanden: 1a (Stage 3..6 verdecken wieder) + 1b (Stage 1/2 unveraendert) erfuellt; M1: Elza ROOM30A1 (RDT/MSK bytegleich 30A0) ohne Ausschluss der Fehlverdecker — Erreichbarkeitsmodell ohne Saat fuer 30A1 -> Elza vor der Kabinenwand 265/464 Punkte uebermalt (Leon 0/602); M2: Riegel 'keine Fehlverdeckung' fuer 32 Sektionen ohne Stehplatz leer wahr, kein Elza-30A1-Riegel; M3: 'seit v0.6.x' falsch, 53741fe5 erst in v0.7.19. Nachbesserung P#1 laeuft (Vorschlag: bytegleiche Raumpaare bekommen die Zeilen des Leon-Raums).
 * 2026-10-13 23:21: G beretta Abnahme 2 BESTANDEN (Workflow fertig; alle Klassen 3 Treffer unter Standard-KI, Gitterarm einmal wie RE2) -> INTEGRIERT (625b0792, konfliktfrei). Bau ok, gezielte Kampf-Tests laufen. Offen: Abnahmen L und P.
@@ -92,7 +93,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | I feuerloescher (BESTANDEN, integriert) | r37_feuerloescher | Feuerloescher-Modell; leer am Boden 1091 (Elza) / 1090 nach dem Loeschen (Leon); Loescher aus dem Spind 1000 verlegen | gestartet (eigener Workflow) |
 | K roy (BESTANDEN, integriert) | r37_roy | Elzas Roy: Modell + Animationen wie im Original, keine Dauerschleife | gestartet (eigener Workflow wf_54d1fd6b-93b) |
 | J bissarm (BESTANDEN, integriert) | r37_bissarm | beim Zombie-Biss fehlt teilweise der dranhaengende Arm (wie RE2) | gestartet (eigener Workflow wf_88717cb9-5e3) |
-| L re2zombie (Bau fertig, Abnahme 0 laeuft) | r37_re2zombie | RE2-Zombie-KI: 0x201-Produzenten, DECISION[0], EXEC[0] P1 wie RE2 (Orchestrator-Auftrag L) | gestartet (eigener Workflow wf_b736a607-65f) |
+| L re2zombie (Abnahme 0: nur Text-Mangel; Nachbesserung L#1 laeuft) | r37_re2zombie | RE2-Zombie-KI: 0x201-Produzenten, DECISION[0], EXEC[0] P1 wie RE2 (Orchestrator-Auftrag L) | gestartet (eigener Workflow wf_b736a607-65f) |
 | M kiste (BESTANDEN, integriert) | r37_kiste | Item-Kiste: Symbole rechts, Rahmen ueber den gleitenden Zeilen (Nachtrag 9) | gestartet (eigener Workflow wf_e49eab60-a6e) |
 | O szene11c0 (BESTANDEN, integriert) | r37_szene11c0 | Ada/Marvin-Szene 11C0 ohne Fehlblicke und 180-Grad-Drehungen (Nachtrag 11) | gestartet (eigener Workflow wf_726ba53b-339) |
 | N elzaems (BESTANDEN, integriert) | r37_elzaems | Elzas Szenario laedt jeden Typ aus CDEMD1 wie das Original (Orchestrator-Auftrag N) | gestartet (eigener Workflow wf_b84c9fa3-fdb) |
