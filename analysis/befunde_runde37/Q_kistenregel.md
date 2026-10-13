@@ -18,10 +18,22 @@ prueft (scd_vm.c Ck-Pfad oder je Raum), feuerloescher_r37.c (Spur I) nur fuer de
 (Ids nach VERTRAG 1.2 begruenden).
 
 ## Stand
-(laufend)
+* 2026-10-12: Dossier, Zensus Schritt 1+2 (12e27805); Code-Stand beim Sitzungslimit vom Orchestrator UNGEPRUEFT gesichert
+  (51a24d29: kistenregel_r37.c/.h, scd_vm.c-Haken, Riegel). Danach Wochenlimit.
+* 2026-10-13 Fortsetzung: Baum sauber auf 51a24d29, `local_build.sh build` -> `ninja: no work to do` (der Vorgaenger
+  hatte 18:09 noch gebaut: `kistenregel_r37.c.obj` vorhanden, exe 18:09, Testverzeichnis 18:11 mit den Laeufen a/b/c
+  des Integrationsriegels, c durch das Limit abgerissen). Der gesicherte Code wurde Zeile fuer Zeile gegen 3.1 und 2.2
+  geprueft (Abschnitt 4.1), die Riegel gefahren (Abschnitt 6), der Integrationsriegel neu gefahren (Abschnitt 5).
 
 ## 1. Messung vorher
-(laufend)
+Nicht wiederholt — vorhandene Messung am Stand OHNE Regel (Spur I, I_feuerloescher.md Nachbesserung 1, "Beobachtung",
+Lauf v10): CONTINUE ROOM1090 (0,250) mit (9,0x86)/(3,0x85)/(3,0x80), Inventar leer, `kiste:0x31:1` -> `id=7`,
+`id=8 "Will you use the Fire Extinguisher?"`, Ja -> Neueintritt, `id=9 "You've used the Fire Extinguisher."`,
+Rettungsszene `id=3`/`id=4`. Das ist der Befund des Auftrags Q: Loeschen mit dem Loescher in der Item-Box.
+Ursache = Original-SCD ROOM1090 sub00 @0x02306 `06 00 24 00` Ifel_ck / @0x0230A `21 03 85 00` Ck(3,0x85)==0: das
+Skript fragt nur das abgeleitete Aufnahme-Bit (3,0x85), nie das Inventar (2.1).
+Fuer die uebrigen Faelle K2..K11 gilt derselbe Mechanismus (der Ck liest nur das Bit, 3.1); die Gegenprobe "Regel aus"
+(Abschnitt 6, Riegel ohne Haken gebaut) zeigt fuer jeden Fall den Benutzungs-Zweig trotz Kiste = das Verhalten vorher.
 
 ## 2. RE-Belege (selbst disassembliert / aus den RDT-Bytes)
 
@@ -82,6 +94,14 @@ prueft (scd_vm.c Ck-Pfad oder je Raum), feuerloescher_r37.c (Spur I) nur fuer de
     Box Key?" ... `07 00 10 00` ELSE -> **`2b 00 00 00 ff ff` msg 0 "I could open it if I had the key."**
   Ergebnis: in RE2 wird ein Gegenstand nur benutzt, wenn er im INVENTAR ist; die "schon benutzt"-Pruefung steht VOR
   der Besitz-Pruefung (ROOM6150); fehlt er, zeigt der Raum einen eigenen Text (keine Frage).
+
+### 2.3 Der Ck (0x21) ist der EINZIGE Bit-Abfrage-Weg der Raumskripte (Fortsetzung 2026-10-13, neu)
+Neben Ck LAB_8003fcf4 hat RE1.5 einen zweiten Bit-Test: 0x58 = LAB_8003fd54 (Bank pc[1], Bit aus einer Arbeitsvariablen,
+RE15_SCD_OPCODES_REFERENCE.md Zeile 0x58), dazu 0x59 = LAB_8003fe90 (indirektes Setzen). Zensus mit derselben
+Laengentabelle (tools/scd_walk_lib.py `regionen`/`walk_ops`) ueber alle ROOM*.RDT: **0x58: 0 Vorkommen**, **0x59: 2**
+(ROOM1030 sub09 @0x02822 `59 05 04 01`, ROOM1031 sub09 @0x0290E `59 05 04 01` — Bank 5, raumlokal, kein
+Besitz-Bit). Damit erfasst der Zensus der Ck-Stellen (3) alle Bit-Abfragen der Raumskripte; ein Haken im Ck-Opcode
+(scd_vm.c op_ck = LAB_8003fcf4) ist die EINE Stelle, an der das Original den Besitz prueft.
 
 ## 3. Zensus (Schritt 1) — alle RDTs, Leon und Elza
 
@@ -147,7 +167,48 @@ Original: nur die Nachlade-Pruefung (FUN_8004dfec, 2.1). Port: Rolltor ROOM1050 
 irons_tisch_1150, leiche_1110_1230, schluessel_r36, sicherung_1150, tuer1060_1040 Protokoll) — keine Benutzung.
 
 ## 4. Umsetzung
-(laufend)
+
+### 4.1 Entscheidung je Fall (Zensus 3 -> Regel)
+| Fall | Raeume | Entscheidung | Grund |
+|---|---|---|---|
+| K1..K11 (3.1) | 1090; 10D0/10D1; 1230/1231; 11E0/11E1 (2 Stellen); 1100/1101; 3010/3011; 3050/3051; 4000 (2 Stellen); 4030/4031; 1211 | **REGEL**: Besitz-Bit gilt nur mit dem Gegenstand im INVENTAR (oder wenn die Benutzung schon geschehen ist) | Inventar-Gegenstand, die Box nimmt ihn (einzige Abweisung 2-Zellen-Waffe @0x800707dc-ec, re15_itembox.h); RE2 prueft dieselbe Art Benutzung mit Keep_Item_ck @0x800584F0 -> FUN_800696CC nur im Inventar (2.2) |
+| Crank 2020/2021, Time Bomb 2040/2041, Fuse 2060/2061, Latch Key 3091 (3.2) | — | keine Regel | Gegenstand geht nie ins Inventar (nur Skript-Bit), die Box kann ihn nicht halten |
+| Ableitungs-Setzer, Aufnahme-Hygiene, Story-Folgen (3.3) | — | keine Regel | keine Benutzung; eine Sperre dort wuerde z.B. die Ableitung (3,0x85) selbst verhindern |
+| Port-Inventar-Abfragen (3.4) | Rolltor 1050, Parkplatz 11B0 | bleiben | pruefen schon das Inventar |
+
+"RE2-gleiche Reaktion": RE2 zeigt ohne Gegenstand einen RAUMTEXT statt der Frage (ROOM2080 sub13 msg 1, ROOM6150 sub02
+msg 0; alle 10 Keep_Item_ck des RE2-Zensus haben einen raumeigenen Else-Text, keinen allgemeinen System-Text). Das
+RE1.5-Gegenstueck ist der Zweig, den jedes der elf Raumskripte selbst fuer "nicht im Besitz" hat (Spalte "Text ohne
+Gegenstand" in 3.1) — die Regel schickt das Skript genau dorthin. Folge: KEIN neuer Text, KEINE neue Nachrichten-Id
+(VERTRAG 1.2 nicht beruehrt), kein neues Bit (VERTRAG 1.1), kein RDT-Patch. Die Reihenfolge "schon benutzt" vor
+"Besitz" ist die von RE2 ROOM6150 sub02 (@0x02D3C `21 04 9f 01` vor @0x02D64 `5e 3f`).
+
+### 4.2 Code (gesicherter Stand 51a24d29, am 2026-10-13 Zeile fuer Zeile geprueft, unveraendert uebernommen)
+* `re15_port/engine/src/kistenregel_r37.c` (neu): Tabelle `k_faelle[20]` = die 20 Ck-Stellen aus 3.1 {Raum,
+  Datei-Offset des Ck-Satzes, Bank, Bit, pc[3], Item, fertig-Bank/-Bit, K-Nummer}. Jede Zeile gegen 3.1 abgeglichen
+  (Raum, Offset, `21 bank bit wert`, Item-Id der 102er-Tabelle DEBUG.BIN @0x800C495C, fertig-Bit); Elza-Zeilen tragen
+  die Offsets ihrer eigenen RDT (10D1 @0x019AA, sonst gleich) — der Riegel `unit_r37_kistenregel_tabelle` liest die
+  Bytes an jedem Offset aus der ausgelieferten RDT. `re15_kistenregel_r37_ck(raum, off, bank, bit, got)`:
+  1. nicht in der Tabelle -> `got` (alle anderen Ck aller Raeume unveraendert);
+  2. `got == 0` -> 0 (nichts zu sperren); fertig-Bit gesetzt -> `got` (RE2-Reihenfolge ROOM6150 @0x02D3C);
+  3. `re15_inv_find_item(item) >= 0` (sucht NUR g_inv = RE1.5 FUN_8004dfec @0x8004e014 / RE2 FUN_800696CC @0x800696e4)
+     -> `got`; sonst 0 + Zaehler `g_re15_kr37_gesperrt_zaehler`.
+  Messzeile `[kistenregel] ROOMxxxx @0x..... Ck(b,0x..) Kn: Item 0x.. NICHT im Inventar (Item-Box Platz p) -> Besitz 0,
+  Zweig ohne Gegenstand` bzw. `... im Inventar -> wie Original` (nur PC, nur bei Wechsel der Entscheidung — K9 sub01
+  @0x01374 laeuft je Bild).
+* `re15_port/include/re15_kistenregel_r37.h` (neu): Typ, Prototypen, Herleitung mit allen Adressen.
+* `re15_port/engine/src/scd_vm.c` (gemeinsame Datei, Haken 2 Zeilen + Kommentar "Runde 37 Spur Q", VERTRAG 1.4 "Ck-Pfad"):
+  in `op_ck` (= LAB_8003fcf4) direkt nach `re15_game_flag_get`, VOR der Bedingung `cond = (got!=0) ^ (value==0)`
+  (@0x8003fd48 `sltu` / @0x8003fd50 `xor`) — so gilt die Regel fuer beide Formen `Ck(..)==0` (Zweig "nicht im Besitz"
+  wird wahr) und `Ck(..)==1` (Else-Zweig). Schluessel = `t->pc - s_current_rdt->raw` (Datei-Offset; nur fuer Skripte
+  im RDT-Puffer, Port-Programme ausserhalb des Puffers bleiben unberuehrt).
+* feuerloescher_r37.c (Spur I) NICHT geaendert: Der 1090-Fall braucht keinen Eingriff dort — das Tor des leeren
+  Loeschers bleibt an (3,0x81) = Ja gebunden (sub06 @0x0271E), die Regel greift VOR der Frage.
+* Keine Assets, keine Texte, keine Bits, keine Ereignisnummern, keine Installer-Zeile in scd_room_setup.c.
+* Grenze (gemessen am Raumbestand, nicht per Code abgefangen): Box-Raeume (re15_itembox.c s_boxpoints 1150/1151,
+  2010/2011, 30A0/30A1, 30B0/30B1, 4010/4011, 5010/5011, 6020/6021, 6030/6031) und die elf Benutzungs-Raeume sind
+  disjunkt -> im Benutzungs-Raum aendert sich der Besitz nur durch die Benutzung selbst; die Auswertung beim Raumstart
+  (main00/sub00) ist darum gleichwertig zur Auswertung beim Druck.
 
 ## 5. Messung nachher
 (laufend)
