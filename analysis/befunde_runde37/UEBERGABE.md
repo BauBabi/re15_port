@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-13 22:06: R kiste2feld Bau-Fortsetzung FERTIG: Kiste alle 6 2-Feld-Ids (0x0e..0x13) pixelgleich zur 80x30-Breitkunst (RE2 POLY_FT4 u0 40 @0x800717b4, u1 120 @0x8007183c / 80 @0x80071844, zweite Kachel FUN_80069c40 @0x80069cd8-d5c; RE1.5-Breitbild ITPS +0x21A0 @0x8001e0b8-c8); Inventar-Gitter Schwanzzellen 1200/1200 (vorher 257/0/0), Ausruest-Kasten MC51 rechte Haelfte 1200/1200 (vorher 530; FUN_80049a5c @0x80049d8c/@0x80049e08-e24); Riegel unit/integration_r37_kiste2feld, Gegenproben rot. Abnahme R laeuft.
 * 2026-10-13 22:04: O szene11c0 Abnahme 0 BESTANDEN (Workflow fertig; 97 gezielte Tests gruen; echter Weg A1: F6 beide 0,0 Grad zur Peilung, keine Drehung vor msg 10, Marvin nur +98,3 Grad beim Losrennen, Ada einmal -58,9 Grad bei msg 14, Kopf folgt 99/99) -> INTEGRIERT (762ced1c, automatisch zusammengefuehrt; irons_tod_1150.c traegt O + H + Irons-Zeile). Gezielte 40 Tests laufen.
 * 2026-10-13 21:57: G beretta Nachbesserung #1 FERTIG: Kriterium re2_pausenfilter_laeuft() (Spiegel der Filter-Weiche game_step_common.c) statt re15_ai_re2_for_type -> Riegel @0x800124F0 wird auch fuer RE1.5-Gehirne unter der Standard-KI geloest; exe: 0x2b 3x -10 (Stoss 30, Basis 20), 0x29 3x -14 (42/25), Birkin 0x30 ROOM5080 3x -15 (45/28), Glock 18 gleich; unit_r37_beretta Teil I (RE2-Flavor, 0x23/0x27/0x29/0x2b/0x30 + Gegenproben), integration t2b_std_w5/roach_std_w5; Dossier §7/§8 richtig. Abnahme G#1 laeuft.
 * 2026-10-13 21:53: O szene11c0 Bau-Fortsetzung FERTIG (Riegel-Befund behoben 2479bf01: 'Ada dreht sich EINMAL nach' jetzt na == 1 und nicht vor Marvins Losrennen; 64/64 gezielt). Lauf n5: einander zugewandt ab Bild 1, Ada im Gespraech ohne Drehung, Marvin nur beim Losrennen 98,3 Grad, Sprecher-Kopf <= 6,2 Grad daneben, Nachtrag 12: Ada einmal 58,9 Grad, Kopf folgt 99/99 Bilder. Integration: irons_tod_1150.c mit Spur H (anderes Programm) und k_msg28 zusammenfuehren. Abnahme O laeuft.
@@ -82,7 +83,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | N elzaems (Bau laeuft) | r37_elzaems | Elzas Szenario laedt jeden Typ aus CDEMD1 wie das Original (Orchestrator-Auftrag N) | gestartet (eigener Workflow wf_b84c9fa3-fdb) |
 | P masken36 (Bau laeuft) | r37_masken36 | Stage-3..6-Masken (BSS-Atlas) wieder zeichnen, Regression 53741fe5 (Orchestrator-Auftrag P) | gestartet (eigener Workflow wf_fef449e3-44a) |
 | Q kistenregel (Bau laeuft) | r37_kistenregel | Item-Benutzung nur mit Item im Inventar (RE2), wo die Item-Box Bit-Abfragen oeffnet (Orchestrator-Auftrag Q) | gestartet (eigener Workflow wf_bd4dc2bf-23a) |
-| R kiste2feld (Bau laeuft) | r37_kiste2feld | 2-Feld-Symbole in der Kisten-Liste wie RE2 aus zwei Kacheln (Orchestrator-Auftrag R) | gestartet (eigener Workflow wf_b8b00ab0-fbf) |
+| R kiste2feld (Bau fertig, Abnahme 0 laeuft) | r37_kiste2feld | 2-Feld-Symbole in der Kisten-Liste wie RE2 aus zwei Kacheln (Orchestrator-Auftrag R) | gestartet (eigener Workflow wf_b8b00ab0-fbf) |
 
 ## 2. Bei einem Abbruch (Sitzungs-/Wochenlimit)
 1. Verwaiste Prozesse beenden (`tasklist`; nur per PID, nie /IM), DuckStation `settings.ini` EnableGDBServer = false pruefen.
