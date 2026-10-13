@@ -66,7 +66,9 @@ ihn als "Empty Fire Extinguisher" (auch im Spielstand, auch wenn er ihn in die K
 
 **Item-Kiste** (Spur M). Beim Scrollen liegen die Eintraege nicht mehr ueber dem Rahmen: der Rahmen wird wie in RE2
 darueber gezeichnet, die Zeilen verschwinden darunter. Die Symbole stehen jetzt buendig am rechten Rand der Liste, kein
-Name reicht mehr hinein; die Mengen stehen wie in RE2 unten links im Symbol.
+Name reicht mehr hinein; die Mengen stehen wie in RE2 unten links im Symbol. Zwei-Felder-Symbole (z.B. die MC51) erscheinen jetzt in der
+Kiste, im Inventar-Gitter und im Ausruestungskasten vollstaendig wie in RE2 - vorher war ihre rechte Haelfte verschmiert
+bzw. fehlte (Spur R).
 
 **Items auf erhoehten Flaechen** (Spur D). Ein Gegenstand laesst sich nur noch von dem Stockwerk aus aufnehmen, auf
 dem er liegt - wie im Original, das jeden Ausloeser an das Band des Spielers bindet. Die Super Redhawk in ROOM3050
@@ -96,8 +98,6 @@ spricht, sieht den anderen an - auch Marvin bei allen drei Zeilen. Er dreht sich
 * **Zombie-Biss:** Beim Kriecher-Griff an der duennen Wand in ROOM1220 kann Leon in einem Bild durch die Wand
   geschoben werden (schon vorher so; ob RE2 das ebenso tut, ist noch nicht belegt). Im Griff ist Leons Waffe
   ausgeblendet, RE2 zeigt sie.
-* **Item-Kiste:** Zwei-Felder-Symbole (z.B. Waffen) sind in der Liste rechts noch verschmiert - wird am Samstag
-  fertig (Spur R).
 * **Feuerloescher:** Legt Leon den Loescher vor dem Loeschen in die Kiste, kann er das Feuer trotzdem loeschen
   (das Original prueft nur, ob er ihn je aufgehoben hat) - wird am Samstag wie RE2 an den Besitz gebunden (Spur Q).
 
