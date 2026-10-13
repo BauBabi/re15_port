@@ -276,7 +276,9 @@ Auftrag "je Raum/Cut nachweisen": ein Lauf je Sektion (`RE15_DEBUG_JUMP=<Leon-Ra
 - **Stand P: 214 von 216 Sektionen `fg_atlas=1`, Maskenzahl == Soll, Zeile der Spur P (BSS-Atlas des Cuts).** Die zwei
   uebrigen sind ROOM3050/3051 Cut 6: alle 7 Rechtecke ausgeschlossen (Bodenflaechen in der Auswahl, §3.2) -> masks=0 ==
   Soll, nichts zu zeichnen, kein Atlas noetig.
-- Stand vor P (vorher-exe bddd6b31): siehe §4.5.
+- **Stand vor P (vorher-exe bddd6b31), dieselben 216 Laeufe: 216 von 216 TOT** - `fg_atlas=0`, Maskenzahl == ungefilterte
+  Zahl der Datei, keine Zeile der Spur P. Damit ist die Regression je Raum/Cut belegt und behoben (Liste je Zeile mit
+  beiden Staenden in `P_masken36_alle_cuts.txt`).
 
 
 ## 5. Tests

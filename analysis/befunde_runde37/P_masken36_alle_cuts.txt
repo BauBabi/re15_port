@@ -1,220 +1,222 @@
 # Runde 37 Spur P (masken36), Fortsetzung 2026-10-13: JEDE Generator-Sektion der Stages 3..6 an der exe (Leon ROOMxxx0, Elza ROOMxxx1).
-# Lauf je Zeile: RE15_DEBUG_JUMP=<Leon-Raum>@250 (+ RE15_TITLE_SHOT_CHAR=1 fuer Elza) RE15_FORCE_CUT=<cut> RE15_EXIT_AT=40#<raum>, exe = Stand P.
-# soll = Masken nach dem Ausschluss (re15_pri_parse_section + re15_masken36_filter); ist = Logzeile nach 'loaded room<raum>.rdt'.
-# Ergebnis: 214 OK (BSS-Atlas, fg_atlas=1, Zeile der Spur P, Maskenzahl == soll); 2 x ROOM3050/3051 Cut 6: alle 7 Rechtecke ausgeschlossen (Bodenflaechen), masks=0 == soll.
-OK ROOM3040 Cut 0 soll masks=12 fg_atlas=1 (vor Ausschluss 19) | ist '[pri] cut=0 pri_offset=0x784 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 1 soll masks=1 fg_atlas=1 (vor Ausschluss 5) | ist '[pri] cut=1 pri_offset=0x788 masks=1 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 2 soll masks=62 fg_atlas=1 (vor Ausschluss 62) | ist '[pri] cut=2 pri_offset=0x78C masks=62 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 3 soll masks=32 fg_atlas=1 (vor Ausschluss 36) | ist '[pri] cut=3 pri_offset=0x790 masks=32 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 4 soll masks=59 fg_atlas=1 (vor Ausschluss 59) | ist '[pri] cut=4 pri_offset=0x794 masks=59 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 5 soll masks=60 fg_atlas=1 (vor Ausschluss 60) | ist '[pri] cut=5 pri_offset=0x798 masks=60 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 6 soll masks=48 fg_atlas=1 (vor Ausschluss 48) | ist '[pri] cut=6 pri_offset=0x79C masks=48 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 7 soll masks=41 fg_atlas=1 (vor Ausschluss 41) | ist '[pri] cut=7 pri_offset=0x7A0 masks=41 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 8 soll masks=39 fg_atlas=1 (vor Ausschluss 44) | ist '[pri] cut=8 pri_offset=0x7A4 masks=39 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 9 soll masks=25 fg_atlas=1 (vor Ausschluss 31) | ist '[pri] cut=9 pri_offset=0x7A8 masks=25 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 10 soll masks=6 fg_atlas=1 (vor Ausschluss 6) | ist '[pri] cut=10 pri_offset=0x7AC masks=6 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 11 soll masks=43 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=11 pri_offset=0x7B0 masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 12 soll masks=55 fg_atlas=1 (vor Ausschluss 55) | ist '[pri] cut=12 pri_offset=0x7B4 masks=55 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3040 Cut 13 soll masks=57 fg_atlas=1 (vor Ausschluss 57) | ist '[pri] cut=13 pri_offset=0x7B8 masks=57 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 0 soll masks=12 fg_atlas=1 (vor Ausschluss 19) | ist '[pri] cut=0 pri_offset=0x784 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 1 soll masks=1 fg_atlas=1 (vor Ausschluss 5) | ist '[pri] cut=1 pri_offset=0x788 masks=1 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 2 soll masks=62 fg_atlas=1 (vor Ausschluss 62) | ist '[pri] cut=2 pri_offset=0x78C masks=62 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 3 soll masks=32 fg_atlas=1 (vor Ausschluss 36) | ist '[pri] cut=3 pri_offset=0x790 masks=32 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 4 soll masks=59 fg_atlas=1 (vor Ausschluss 59) | ist '[pri] cut=4 pri_offset=0x794 masks=59 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 5 soll masks=60 fg_atlas=1 (vor Ausschluss 60) | ist '[pri] cut=5 pri_offset=0x798 masks=60 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 6 soll masks=48 fg_atlas=1 (vor Ausschluss 48) | ist '[pri] cut=6 pri_offset=0x79C masks=48 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 7 soll masks=41 fg_atlas=1 (vor Ausschluss 41) | ist '[pri] cut=7 pri_offset=0x7A0 masks=41 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 8 soll masks=39 fg_atlas=1 (vor Ausschluss 44) | ist '[pri] cut=8 pri_offset=0x7A4 masks=39 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 9 soll masks=25 fg_atlas=1 (vor Ausschluss 31) | ist '[pri] cut=9 pri_offset=0x7A8 masks=25 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 10 soll masks=6 fg_atlas=1 (vor Ausschluss 6) | ist '[pri] cut=10 pri_offset=0x7AC masks=6 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 11 soll masks=43 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=11 pri_offset=0x7B0 masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 12 soll masks=55 fg_atlas=1 (vor Ausschluss 55) | ist '[pri] cut=12 pri_offset=0x7B4 masks=55 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3041 Cut 13 soll masks=57 fg_atlas=1 (vor Ausschluss 57) | ist '[pri] cut=13 pri_offset=0x7B8 masks=57 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 0 soll masks=25 fg_atlas=1 (vor Ausschluss 25) | ist '[pri] cut=0 pri_offset=0x810 masks=25 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 1 soll masks=41 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=1 pri_offset=0x814 masks=41 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 2 soll masks=60 fg_atlas=1 (vor Ausschluss 62) | ist '[pri] cut=2 pri_offset=0x818 masks=60 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 3 soll masks=16 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=3 pri_offset=0x81C masks=16 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 4 soll masks=44 fg_atlas=1 (vor Ausschluss 45) | ist '[pri] cut=4 pri_offset=0x820 masks=44 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 5 soll masks=23 fg_atlas=1 (vor Ausschluss 39) | ist '[pri] cut=5 pri_offset=0x824 masks=23 fg_atlas=1' | Spur-P-Zeile 1
-FEHLT ROOM3050 Cut 6 soll masks=0 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=6 pri_offset=0x828 masks=0 fg_atlas=1' | Spur-P-Zeile 0
-OK ROOM3050 Cut 7 soll masks=22 fg_atlas=1 (vor Ausschluss 37) | ist '[pri] cut=7 pri_offset=0x82C masks=22 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 8 soll masks=10 fg_atlas=1 (vor Ausschluss 10) | ist '[pri] cut=8 pri_offset=0x830 masks=10 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 9 soll masks=48 fg_atlas=1 (vor Ausschluss 49) | ist '[pri] cut=9 pri_offset=0x834 masks=48 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 11 soll masks=27 fg_atlas=1 (vor Ausschluss 27) | ist '[pri] cut=11 pri_offset=0x83C masks=27 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 12 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=12 pri_offset=0x840 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 13 soll masks=38 fg_atlas=1 (vor Ausschluss 42) | ist '[pri] cut=13 pri_offset=0x844 masks=38 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3050 Cut 15 soll masks=36 fg_atlas=1 (vor Ausschluss 36) | ist '[pri] cut=15 pri_offset=0x84C masks=36 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 0 soll masks=25 fg_atlas=1 (vor Ausschluss 25) | ist '[pri] cut=0 pri_offset=0x810 masks=25 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 1 soll masks=41 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=1 pri_offset=0x814 masks=41 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 2 soll masks=60 fg_atlas=1 (vor Ausschluss 62) | ist '[pri] cut=2 pri_offset=0x818 masks=60 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 3 soll masks=16 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=3 pri_offset=0x81C masks=16 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 4 soll masks=44 fg_atlas=1 (vor Ausschluss 45) | ist '[pri] cut=4 pri_offset=0x820 masks=44 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 5 soll masks=23 fg_atlas=1 (vor Ausschluss 39) | ist '[pri] cut=5 pri_offset=0x824 masks=23 fg_atlas=1' | Spur-P-Zeile 1
-FEHLT ROOM3051 Cut 6 soll masks=0 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=6 pri_offset=0x828 masks=0 fg_atlas=1' | Spur-P-Zeile 0
-OK ROOM3051 Cut 7 soll masks=22 fg_atlas=1 (vor Ausschluss 37) | ist '[pri] cut=7 pri_offset=0x82C masks=22 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 8 soll masks=10 fg_atlas=1 (vor Ausschluss 10) | ist '[pri] cut=8 pri_offset=0x830 masks=10 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 9 soll masks=48 fg_atlas=1 (vor Ausschluss 49) | ist '[pri] cut=9 pri_offset=0x834 masks=48 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 11 soll masks=27 fg_atlas=1 (vor Ausschluss 27) | ist '[pri] cut=11 pri_offset=0x83C masks=27 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 12 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=12 pri_offset=0x840 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 13 soll masks=38 fg_atlas=1 (vor Ausschluss 42) | ist '[pri] cut=13 pri_offset=0x844 masks=38 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM3051 Cut 15 soll masks=36 fg_atlas=1 (vor Ausschluss 36) | ist '[pri] cut=15 pri_offset=0x84C masks=36 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A0 Cut 0 soll masks=21 fg_atlas=1 (vor Ausschluss 46) | ist '[pri] cut=0 pri_offset=0x3C0 masks=21 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A0 Cut 1 soll masks=12 fg_atlas=1 (vor Ausschluss 33) | ist '[pri] cut=1 pri_offset=0x3C4 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A0 Cut 2 soll masks=8 fg_atlas=1 (vor Ausschluss 8) | ist '[pri] cut=2 pri_offset=0x3C8 masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A0 Cut 3 soll masks=42 fg_atlas=1 (vor Ausschluss 56) | ist '[pri] cut=3 pri_offset=0x3CC masks=42 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A0 Cut 4 soll masks=14 fg_atlas=1 (vor Ausschluss 14) | ist '[pri] cut=4 pri_offset=0x3D0 masks=14 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A0 Cut 5 soll masks=21 fg_atlas=1 (vor Ausschluss 21) | ist '[pri] cut=5 pri_offset=0x3D4 masks=21 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A1 Cut 0 soll masks=46 fg_atlas=1 (vor Ausschluss 46) | ist '[pri] cut=0 pri_offset=0x3C0 masks=46 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A1 Cut 1 soll masks=33 fg_atlas=1 (vor Ausschluss 33) | ist '[pri] cut=1 pri_offset=0x3C4 masks=33 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A1 Cut 2 soll masks=8 fg_atlas=1 (vor Ausschluss 8) | ist '[pri] cut=2 pri_offset=0x3C8 masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A1 Cut 3 soll masks=56 fg_atlas=1 (vor Ausschluss 56) | ist '[pri] cut=3 pri_offset=0x3CC masks=56 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A1 Cut 4 soll masks=14 fg_atlas=1 (vor Ausschluss 14) | ist '[pri] cut=4 pri_offset=0x3D0 masks=14 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30A1 Cut 5 soll masks=21 fg_atlas=1 (vor Ausschluss 21) | ist '[pri] cut=5 pri_offset=0x3D4 masks=21 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E0 Cut 6 soll masks=1 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=6 pri_offset=0x4E0 masks=1 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E0 Cut 7 soll masks=2 fg_atlas=1 (vor Ausschluss 27) | ist '[pri] cut=7 pri_offset=0x4E4 masks=2 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E0 Cut 8 soll masks=3 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=8 pri_offset=0x4E8 masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E0 Cut 9 soll masks=3 fg_atlas=1 (vor Ausschluss 31) | ist '[pri] cut=9 pri_offset=0x4EC masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E1 Cut 6 soll masks=1 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=6 pri_offset=0x4E0 masks=1 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E1 Cut 7 soll masks=2 fg_atlas=1 (vor Ausschluss 27) | ist '[pri] cut=7 pri_offset=0x4E4 masks=2 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E1 Cut 8 soll masks=3 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=8 pri_offset=0x4E8 masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM30E1 Cut 9 soll masks=3 fg_atlas=1 (vor Ausschluss 31) | ist '[pri] cut=9 pri_offset=0x4EC masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 4 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=4 pri_offset=0x720 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 5 soll masks=23 fg_atlas=1 (vor Ausschluss 23) | ist '[pri] cut=5 pri_offset=0x724 masks=23 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 6 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=6 pri_offset=0x728 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 7 soll masks=5 fg_atlas=1 (vor Ausschluss 5) | ist '[pri] cut=7 pri_offset=0x72C masks=5 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 9 soll masks=18 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=9 pri_offset=0x734 masks=18 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 10 soll masks=13 fg_atlas=1 (vor Ausschluss 13) | ist '[pri] cut=10 pri_offset=0x738 masks=13 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 11 soll masks=24 fg_atlas=1 (vor Ausschluss 24) | ist '[pri] cut=11 pri_offset=0x73C masks=24 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4040 Cut 12 soll masks=35 fg_atlas=1 (vor Ausschluss 35) | ist '[pri] cut=12 pri_offset=0x740 masks=35 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 4 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=4 pri_offset=0x720 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 5 soll masks=23 fg_atlas=1 (vor Ausschluss 23) | ist '[pri] cut=5 pri_offset=0x724 masks=23 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 6 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=6 pri_offset=0x728 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 7 soll masks=5 fg_atlas=1 (vor Ausschluss 5) | ist '[pri] cut=7 pri_offset=0x72C masks=5 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 9 soll masks=18 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=9 pri_offset=0x734 masks=18 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 10 soll masks=13 fg_atlas=1 (vor Ausschluss 13) | ist '[pri] cut=10 pri_offset=0x738 masks=13 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 11 soll masks=24 fg_atlas=1 (vor Ausschluss 24) | ist '[pri] cut=11 pri_offset=0x73C masks=24 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4041 Cut 12 soll masks=35 fg_atlas=1 (vor Ausschluss 35) | ist '[pri] cut=12 pri_offset=0x740 masks=35 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4080 Cut 1 soll masks=6 fg_atlas=1 (vor Ausschluss 6) | ist '[pri] cut=1 pri_offset=0x4FC masks=6 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4080 Cut 2 soll masks=15 fg_atlas=1 (vor Ausschluss 15) | ist '[pri] cut=2 pri_offset=0x500 masks=15 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4080 Cut 3 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=3 pri_offset=0x504 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4080 Cut 5 soll masks=14 fg_atlas=1 (vor Ausschluss 14) | ist '[pri] cut=5 pri_offset=0x50C masks=14 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4080 Cut 6 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=6 pri_offset=0x510 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4080 Cut 7 soll masks=18 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=7 pri_offset=0x514 masks=18 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4080 Cut 8 soll masks=31 fg_atlas=1 (vor Ausschluss 31) | ist '[pri] cut=8 pri_offset=0x518 masks=31 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4081 Cut 1 soll masks=6 fg_atlas=1 (vor Ausschluss 6) | ist '[pri] cut=1 pri_offset=0x4FC masks=6 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4081 Cut 2 soll masks=15 fg_atlas=1 (vor Ausschluss 15) | ist '[pri] cut=2 pri_offset=0x500 masks=15 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4081 Cut 3 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=3 pri_offset=0x504 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4081 Cut 5 soll masks=14 fg_atlas=1 (vor Ausschluss 14) | ist '[pri] cut=5 pri_offset=0x50C masks=14 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4081 Cut 6 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=6 pri_offset=0x510 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4081 Cut 7 soll masks=18 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=7 pri_offset=0x514 masks=18 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM4081 Cut 8 soll masks=31 fg_atlas=1 (vor Ausschluss 31) | ist '[pri] cut=8 pri_offset=0x518 masks=31 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM40A0 Cut 7 soll masks=19 fg_atlas=1 (vor Ausschluss 19) | ist '[pri] cut=7 pri_offset=0xCA8 masks=19 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM40A1 Cut 7 soll masks=19 fg_atlas=1 (vor Ausschluss 19) | ist '[pri] cut=7 pri_offset=0xCA8 masks=19 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 0 soll masks=36 fg_atlas=1 (vor Ausschluss 50) | ist '[pri] cut=0 pri_offset=0x75C masks=36 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 2 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=2 pri_offset=0x764 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 3 soll masks=4 fg_atlas=1 (vor Ausschluss 4) | ist '[pri] cut=3 pri_offset=0x768 masks=4 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 4 soll masks=54 fg_atlas=1 (vor Ausschluss 54) | ist '[pri] cut=4 pri_offset=0x76C masks=54 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 5 soll masks=26 fg_atlas=1 (vor Ausschluss 26) | ist '[pri] cut=5 pri_offset=0x770 masks=26 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 6 soll masks=22 fg_atlas=1 (vor Ausschluss 55) | ist '[pri] cut=6 pri_offset=0x774 masks=22 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 7 soll masks=45 fg_atlas=1 (vor Ausschluss 54) | ist '[pri] cut=7 pri_offset=0x778 masks=45 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 8 soll masks=43 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=8 pri_offset=0x77C masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 9 soll masks=46 fg_atlas=1 (vor Ausschluss 46) | ist '[pri] cut=9 pri_offset=0x780 masks=46 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 10 soll masks=16 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=10 pri_offset=0x784 masks=16 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 11 soll masks=48 fg_atlas=1 (vor Ausschluss 56) | ist '[pri] cut=11 pri_offset=0x788 masks=48 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5020 Cut 12 soll masks=10 fg_atlas=1 (vor Ausschluss 11) | ist '[pri] cut=12 pri_offset=0x78C masks=10 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 0 soll masks=36 fg_atlas=1 (vor Ausschluss 50) | ist '[pri] cut=0 pri_offset=0x75C masks=36 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 2 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=2 pri_offset=0x764 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 3 soll masks=4 fg_atlas=1 (vor Ausschluss 4) | ist '[pri] cut=3 pri_offset=0x768 masks=4 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 4 soll masks=54 fg_atlas=1 (vor Ausschluss 54) | ist '[pri] cut=4 pri_offset=0x76C masks=54 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 5 soll masks=26 fg_atlas=1 (vor Ausschluss 26) | ist '[pri] cut=5 pri_offset=0x770 masks=26 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 6 soll masks=55 fg_atlas=1 (vor Ausschluss 55) | ist '[pri] cut=6 pri_offset=0x774 masks=55 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 7 soll masks=45 fg_atlas=1 (vor Ausschluss 54) | ist '[pri] cut=7 pri_offset=0x778 masks=45 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 8 soll masks=43 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=8 pri_offset=0x77C masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 9 soll masks=46 fg_atlas=1 (vor Ausschluss 46) | ist '[pri] cut=9 pri_offset=0x780 masks=46 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 10 soll masks=16 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=10 pri_offset=0x784 masks=16 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 11 soll masks=48 fg_atlas=1 (vor Ausschluss 56) | ist '[pri] cut=11 pri_offset=0x788 masks=48 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5021 Cut 12 soll masks=11 fg_atlas=1 (vor Ausschluss 11) | ist '[pri] cut=12 pri_offset=0x78C masks=11 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5050 Cut 0 soll masks=8 fg_atlas=1 (vor Ausschluss 8) | ist '[pri] cut=0 pri_offset=0x30C masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5050 Cut 1 soll masks=35 fg_atlas=1 (vor Ausschluss 41) | ist '[pri] cut=1 pri_offset=0x310 masks=35 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5050 Cut 2 soll masks=8 fg_atlas=1 (vor Ausschluss 48) | ist '[pri] cut=2 pri_offset=0x314 masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5050 Cut 3 soll masks=39 fg_atlas=1 (vor Ausschluss 39) | ist '[pri] cut=3 pri_offset=0x318 masks=39 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5051 Cut 0 soll masks=8 fg_atlas=1 (vor Ausschluss 8) | ist '[pri] cut=0 pri_offset=0x30C masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5051 Cut 1 soll masks=35 fg_atlas=1 (vor Ausschluss 41) | ist '[pri] cut=1 pri_offset=0x310 masks=35 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5051 Cut 2 soll masks=8 fg_atlas=1 (vor Ausschluss 48) | ist '[pri] cut=2 pri_offset=0x314 masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5051 Cut 3 soll masks=39 fg_atlas=1 (vor Ausschluss 39) | ist '[pri] cut=3 pri_offset=0x318 masks=39 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5090 Cut 11 soll masks=37 fg_atlas=1 (vor Ausschluss 41) | ist '[pri] cut=11 pri_offset=0x808 masks=37 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5090 Cut 12 soll masks=52 fg_atlas=1 (vor Ausschluss 57) | ist '[pri] cut=12 pri_offset=0x80C masks=52 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5090 Cut 13 soll masks=40 fg_atlas=1 (vor Ausschluss 50) | ist '[pri] cut=13 pri_offset=0x810 masks=40 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5090 Cut 14 soll masks=58 fg_atlas=1 (vor Ausschluss 61) | ist '[pri] cut=14 pri_offset=0x814 masks=58 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5091 Cut 11 soll masks=37 fg_atlas=1 (vor Ausschluss 41) | ist '[pri] cut=11 pri_offset=0x808 masks=37 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5091 Cut 12 soll masks=52 fg_atlas=1 (vor Ausschluss 57) | ist '[pri] cut=12 pri_offset=0x80C masks=52 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5091 Cut 13 soll masks=40 fg_atlas=1 (vor Ausschluss 50) | ist '[pri] cut=13 pri_offset=0x810 masks=40 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5091 Cut 14 soll masks=58 fg_atlas=1 (vor Ausschluss 61) | ist '[pri] cut=14 pri_offset=0x814 masks=58 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM50B0 Cut 1 soll masks=23 fg_atlas=1 (vor Ausschluss 23) | ist '[pri] cut=1 pri_offset=0x250 masks=23 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM50B0 Cut 2 soll masks=61 fg_atlas=1 (vor Ausschluss 61) | ist '[pri] cut=2 pri_offset=0x254 masks=61 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM50B0 Cut 3 soll masks=37 fg_atlas=1 (vor Ausschluss 48) | ist '[pri] cut=3 pri_offset=0x258 masks=37 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM50B1 Cut 1 soll masks=23 fg_atlas=1 (vor Ausschluss 23) | ist '[pri] cut=1 pri_offset=0x258 masks=23 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM50B1 Cut 2 soll masks=61 fg_atlas=1 (vor Ausschluss 61) | ist '[pri] cut=2 pri_offset=0x25C masks=61 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM50B1 Cut 3 soll masks=37 fg_atlas=1 (vor Ausschluss 48) | ist '[pri] cut=3 pri_offset=0x260 masks=37 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5100 Cut 2 soll masks=22 fg_atlas=1 (vor Ausschluss 24) | ist '[pri] cut=2 pri_offset=0x58C masks=22 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5100 Cut 3 soll masks=12 fg_atlas=1 (vor Ausschluss 22) | ist '[pri] cut=3 pri_offset=0x590 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5100 Cut 4 soll masks=29 fg_atlas=1 (vor Ausschluss 53) | ist '[pri] cut=4 pri_offset=0x594 masks=29 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5100 Cut 5 soll masks=3 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=5 pri_offset=0x598 masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5100 Cut 6 soll masks=31 fg_atlas=1 (vor Ausschluss 40) | ist '[pri] cut=6 pri_offset=0x59C masks=31 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5100 Cut 7 soll masks=7 fg_atlas=1 (vor Ausschluss 14) | ist '[pri] cut=7 pri_offset=0x5A0 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5101 Cut 2 soll masks=22 fg_atlas=1 (vor Ausschluss 24) | ist '[pri] cut=2 pri_offset=0x58C masks=22 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5101 Cut 3 soll masks=12 fg_atlas=1 (vor Ausschluss 22) | ist '[pri] cut=3 pri_offset=0x590 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5101 Cut 4 soll masks=29 fg_atlas=1 (vor Ausschluss 53) | ist '[pri] cut=4 pri_offset=0x594 masks=29 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5101 Cut 5 soll masks=3 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=5 pri_offset=0x598 masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5101 Cut 6 soll masks=31 fg_atlas=1 (vor Ausschluss 40) | ist '[pri] cut=6 pri_offset=0x59C masks=31 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM5101 Cut 7 soll masks=7 fg_atlas=1 (vor Ausschluss 14) | ist '[pri] cut=7 pri_offset=0x5A0 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 1 soll masks=8 fg_atlas=1 (vor Ausschluss 8) | ist '[pri] cut=1 pri_offset=0x6DC masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 2 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=2 pri_offset=0x6E0 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 3 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=3 pri_offset=0x6E4 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 4 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=4 pri_offset=0x6E8 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 5 soll masks=23 fg_atlas=1 (vor Ausschluss 44) | ist '[pri] cut=5 pri_offset=0x6EC masks=23 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 6 soll masks=39 fg_atlas=1 (vor Ausschluss 39) | ist '[pri] cut=6 pri_offset=0x6F0 masks=39 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 7 soll masks=43 fg_atlas=1 (vor Ausschluss 67) | ist '[pri] cut=7 pri_offset=0x6F4 masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 8 soll masks=29 fg_atlas=1 (vor Ausschluss 61) | ist '[pri] cut=8 pri_offset=0x6F8 masks=29 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6000 Cut 9 soll masks=3 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=9 pri_offset=0x6FC masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 1 soll masks=8 fg_atlas=1 (vor Ausschluss 8) | ist '[pri] cut=1 pri_offset=0x6DC masks=8 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 2 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=2 pri_offset=0x6E0 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 3 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=3 pri_offset=0x6E4 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 4 soll masks=9 fg_atlas=1 (vor Ausschluss 9) | ist '[pri] cut=4 pri_offset=0x6E8 masks=9 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 5 soll masks=23 fg_atlas=1 (vor Ausschluss 44) | ist '[pri] cut=5 pri_offset=0x6EC masks=23 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 6 soll masks=39 fg_atlas=1 (vor Ausschluss 39) | ist '[pri] cut=6 pri_offset=0x6F0 masks=39 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 7 soll masks=43 fg_atlas=1 (vor Ausschluss 67) | ist '[pri] cut=7 pri_offset=0x6F4 masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 8 soll masks=29 fg_atlas=1 (vor Ausschluss 61) | ist '[pri] cut=8 pri_offset=0x6F8 masks=29 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6001 Cut 9 soll masks=3 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=9 pri_offset=0x6FC masks=3 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 0 soll masks=16 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=0 pri_offset=0x774 masks=16 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 1 soll masks=11 fg_atlas=1 (vor Ausschluss 11) | ist '[pri] cut=1 pri_offset=0x778 masks=11 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 2 soll masks=6 fg_atlas=1 (vor Ausschluss 6) | ist '[pri] cut=2 pri_offset=0x77C masks=6 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 3 soll masks=66 fg_atlas=1 (vor Ausschluss 66) | ist '[pri] cut=3 pri_offset=0x780 masks=66 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 5 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=5 pri_offset=0x788 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 6 soll masks=4 fg_atlas=1 (vor Ausschluss 10) | ist '[pri] cut=6 pri_offset=0x78C masks=4 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 7 soll masks=64 fg_atlas=1 (vor Ausschluss 64) | ist '[pri] cut=7 pri_offset=0x790 masks=64 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 10 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=10 pri_offset=0x79C masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 11 soll masks=13 fg_atlas=1 (vor Ausschluss 13) | ist '[pri] cut=11 pri_offset=0x7A0 masks=13 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 12 soll masks=53 fg_atlas=1 (vor Ausschluss 53) | ist '[pri] cut=12 pri_offset=0x7A4 masks=53 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6010 Cut 13 soll masks=43 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=13 pri_offset=0x7A8 masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 0 soll masks=16 fg_atlas=1 (vor Ausschluss 16) | ist '[pri] cut=0 pri_offset=0x774 masks=16 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 1 soll masks=11 fg_atlas=1 (vor Ausschluss 11) | ist '[pri] cut=1 pri_offset=0x778 masks=11 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 2 soll masks=6 fg_atlas=1 (vor Ausschluss 6) | ist '[pri] cut=2 pri_offset=0x77C masks=6 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 3 soll masks=66 fg_atlas=1 (vor Ausschluss 66) | ist '[pri] cut=3 pri_offset=0x780 masks=66 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 5 soll masks=7 fg_atlas=1 (vor Ausschluss 7) | ist '[pri] cut=5 pri_offset=0x788 masks=7 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 6 soll masks=4 fg_atlas=1 (vor Ausschluss 10) | ist '[pri] cut=6 pri_offset=0x78C masks=4 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 7 soll masks=64 fg_atlas=1 (vor Ausschluss 64) | ist '[pri] cut=7 pri_offset=0x790 masks=64 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 10 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=10 pri_offset=0x79C masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 11 soll masks=13 fg_atlas=1 (vor Ausschluss 13) | ist '[pri] cut=11 pri_offset=0x7A0 masks=13 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 12 soll masks=53 fg_atlas=1 (vor Ausschluss 53) | ist '[pri] cut=12 pri_offset=0x7A4 masks=53 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6011 Cut 13 soll masks=43 fg_atlas=1 (vor Ausschluss 43) | ist '[pri] cut=13 pri_offset=0x7A8 masks=43 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6030 Cut 7 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=7 pri_offset=0x6B0 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6030 Cut 9 soll masks=26 fg_atlas=1 (vor Ausschluss 26) | ist '[pri] cut=9 pri_offset=0x6B8 masks=26 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6030 Cut 10 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=10 pri_offset=0x6BC masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6030 Cut 11 soll masks=18 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=11 pri_offset=0x6C0 masks=18 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6030 Cut 12 soll masks=1 fg_atlas=1 (vor Ausschluss 5) | ist '[pri] cut=12 pri_offset=0x6C4 masks=1 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6031 Cut 7 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=7 pri_offset=0x6B0 masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6031 Cut 9 soll masks=26 fg_atlas=1 (vor Ausschluss 26) | ist '[pri] cut=9 pri_offset=0x6B8 masks=26 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6031 Cut 10 soll masks=12 fg_atlas=1 (vor Ausschluss 12) | ist '[pri] cut=10 pri_offset=0x6BC masks=12 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6031 Cut 11 soll masks=18 fg_atlas=1 (vor Ausschluss 18) | ist '[pri] cut=11 pri_offset=0x6C0 masks=18 fg_atlas=1' | Spur-P-Zeile 1
-OK ROOM6031 Cut 12 soll masks=1 fg_atlas=1 (vor Ausschluss 5) | ist '[pri] cut=12 pri_offset=0x6C4 masks=1 fg_atlas=1' | Spur-P-Zeile 1
+# Lauf je Zeile: RE15_DEBUG_JUMP=<Leon-Raum>@250 (+ RE15_TITLE_SHOT_CHAR=1 fuer Elza) RE15_FORCE_CUT=<cut> RE15_EXIT_AT=40#<raum>.
+# P = exe Stand P; vorher = exe bddd6b31 (Basis vor P). Soll = Maskenzahl nach dem Ausschluss (re15_pri_parse_section + re15_masken36_filter).
+# Logzeile '[pri] cut=<c> ... masks=<n> fg_atlas=<f>' nach 'loaded room<raum>.rdt'; Spur-P-Zeile = 'Port-Masken ohne eigenen Atlas -> BSS-Atlas'.
+# Ergebnis: P 214 OK (fg_atlas=1, masks == Soll, Spur-P-Zeile) + 2 LEER (ROOM3050/3051 Cut 6: alle 7 Rechtecke ausgeschlossen, masks=0 == Soll);
+#           vorher 216 von 216 TOT (fg_atlas=0, masks == ungefilterte Zahl, keine Spur-P-Zeile).
+OK    ROOM3040 Cut  0 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=19 fg_atlas=0 TOT
+OK    ROOM3040 Cut  1 | P: masks=1 fg_atlas=1 Spur-P-Zeile 1 (Soll 1) | vorher: masks=5 fg_atlas=0 TOT
+OK    ROOM3040 Cut  2 | P: masks=62 fg_atlas=1 Spur-P-Zeile 1 (Soll 62) | vorher: masks=62 fg_atlas=0 TOT
+OK    ROOM3040 Cut  3 | P: masks=32 fg_atlas=1 Spur-P-Zeile 1 (Soll 32) | vorher: masks=36 fg_atlas=0 TOT
+OK    ROOM3040 Cut  4 | P: masks=59 fg_atlas=1 Spur-P-Zeile 1 (Soll 59) | vorher: masks=59 fg_atlas=0 TOT
+OK    ROOM3040 Cut  5 | P: masks=60 fg_atlas=1 Spur-P-Zeile 1 (Soll 60) | vorher: masks=60 fg_atlas=0 TOT
+OK    ROOM3040 Cut  6 | P: masks=48 fg_atlas=1 Spur-P-Zeile 1 (Soll 48) | vorher: masks=48 fg_atlas=0 TOT
+OK    ROOM3040 Cut  7 | P: masks=41 fg_atlas=1 Spur-P-Zeile 1 (Soll 41) | vorher: masks=41 fg_atlas=0 TOT
+OK    ROOM3040 Cut  8 | P: masks=39 fg_atlas=1 Spur-P-Zeile 1 (Soll 39) | vorher: masks=44 fg_atlas=0 TOT
+OK    ROOM3040 Cut  9 | P: masks=25 fg_atlas=1 Spur-P-Zeile 1 (Soll 25) | vorher: masks=31 fg_atlas=0 TOT
+OK    ROOM3040 Cut 10 | P: masks=6 fg_atlas=1 Spur-P-Zeile 1 (Soll 6) | vorher: masks=6 fg_atlas=0 TOT
+OK    ROOM3040 Cut 11 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM3040 Cut 12 | P: masks=55 fg_atlas=1 Spur-P-Zeile 1 (Soll 55) | vorher: masks=55 fg_atlas=0 TOT
+OK    ROOM3040 Cut 13 | P: masks=57 fg_atlas=1 Spur-P-Zeile 1 (Soll 57) | vorher: masks=57 fg_atlas=0 TOT
+OK    ROOM3041 Cut  0 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=19 fg_atlas=0 TOT
+OK    ROOM3041 Cut  1 | P: masks=1 fg_atlas=1 Spur-P-Zeile 1 (Soll 1) | vorher: masks=5 fg_atlas=0 TOT
+OK    ROOM3041 Cut  2 | P: masks=62 fg_atlas=1 Spur-P-Zeile 1 (Soll 62) | vorher: masks=62 fg_atlas=0 TOT
+OK    ROOM3041 Cut  3 | P: masks=32 fg_atlas=1 Spur-P-Zeile 1 (Soll 32) | vorher: masks=36 fg_atlas=0 TOT
+OK    ROOM3041 Cut  4 | P: masks=59 fg_atlas=1 Spur-P-Zeile 1 (Soll 59) | vorher: masks=59 fg_atlas=0 TOT
+OK    ROOM3041 Cut  5 | P: masks=60 fg_atlas=1 Spur-P-Zeile 1 (Soll 60) | vorher: masks=60 fg_atlas=0 TOT
+OK    ROOM3041 Cut  6 | P: masks=48 fg_atlas=1 Spur-P-Zeile 1 (Soll 48) | vorher: masks=48 fg_atlas=0 TOT
+OK    ROOM3041 Cut  7 | P: masks=41 fg_atlas=1 Spur-P-Zeile 1 (Soll 41) | vorher: masks=41 fg_atlas=0 TOT
+OK    ROOM3041 Cut  8 | P: masks=39 fg_atlas=1 Spur-P-Zeile 1 (Soll 39) | vorher: masks=44 fg_atlas=0 TOT
+OK    ROOM3041 Cut  9 | P: masks=25 fg_atlas=1 Spur-P-Zeile 1 (Soll 25) | vorher: masks=31 fg_atlas=0 TOT
+OK    ROOM3041 Cut 10 | P: masks=6 fg_atlas=1 Spur-P-Zeile 1 (Soll 6) | vorher: masks=6 fg_atlas=0 TOT
+OK    ROOM3041 Cut 11 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM3041 Cut 12 | P: masks=55 fg_atlas=1 Spur-P-Zeile 1 (Soll 55) | vorher: masks=55 fg_atlas=0 TOT
+OK    ROOM3041 Cut 13 | P: masks=57 fg_atlas=1 Spur-P-Zeile 1 (Soll 57) | vorher: masks=57 fg_atlas=0 TOT
+OK    ROOM3050 Cut  0 | P: masks=25 fg_atlas=1 Spur-P-Zeile 1 (Soll 25) | vorher: masks=25 fg_atlas=0 TOT
+OK    ROOM3050 Cut  1 | P: masks=41 fg_atlas=1 Spur-P-Zeile 1 (Soll 41) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM3050 Cut  2 | P: masks=60 fg_atlas=1 Spur-P-Zeile 1 (Soll 60) | vorher: masks=62 fg_atlas=0 TOT
+OK    ROOM3050 Cut  3 | P: masks=16 fg_atlas=1 Spur-P-Zeile 1 (Soll 16) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM3050 Cut  4 | P: masks=44 fg_atlas=1 Spur-P-Zeile 1 (Soll 44) | vorher: masks=45 fg_atlas=0 TOT
+OK    ROOM3050 Cut  5 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=39 fg_atlas=0 TOT
+LEER  ROOM3050 Cut  6 | P: masks=0 fg_atlas=1 Spur-P-Zeile 0 (Soll 0) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM3050 Cut  7 | P: masks=22 fg_atlas=1 Spur-P-Zeile 1 (Soll 22) | vorher: masks=37 fg_atlas=0 TOT
+OK    ROOM3050 Cut  8 | P: masks=10 fg_atlas=1 Spur-P-Zeile 1 (Soll 10) | vorher: masks=10 fg_atlas=0 TOT
+OK    ROOM3050 Cut  9 | P: masks=48 fg_atlas=1 Spur-P-Zeile 1 (Soll 48) | vorher: masks=49 fg_atlas=0 TOT
+OK    ROOM3050 Cut 11 | P: masks=27 fg_atlas=1 Spur-P-Zeile 1 (Soll 27) | vorher: masks=27 fg_atlas=0 TOT
+OK    ROOM3050 Cut 12 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM3050 Cut 13 | P: masks=38 fg_atlas=1 Spur-P-Zeile 1 (Soll 38) | vorher: masks=42 fg_atlas=0 TOT
+OK    ROOM3050 Cut 15 | P: masks=36 fg_atlas=1 Spur-P-Zeile 1 (Soll 36) | vorher: masks=36 fg_atlas=0 TOT
+OK    ROOM3051 Cut  0 | P: masks=25 fg_atlas=1 Spur-P-Zeile 1 (Soll 25) | vorher: masks=25 fg_atlas=0 TOT
+OK    ROOM3051 Cut  1 | P: masks=41 fg_atlas=1 Spur-P-Zeile 1 (Soll 41) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM3051 Cut  2 | P: masks=60 fg_atlas=1 Spur-P-Zeile 1 (Soll 60) | vorher: masks=62 fg_atlas=0 TOT
+OK    ROOM3051 Cut  3 | P: masks=16 fg_atlas=1 Spur-P-Zeile 1 (Soll 16) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM3051 Cut  4 | P: masks=44 fg_atlas=1 Spur-P-Zeile 1 (Soll 44) | vorher: masks=45 fg_atlas=0 TOT
+OK    ROOM3051 Cut  5 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=39 fg_atlas=0 TOT
+LEER  ROOM3051 Cut  6 | P: masks=0 fg_atlas=1 Spur-P-Zeile 0 (Soll 0) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM3051 Cut  7 | P: masks=22 fg_atlas=1 Spur-P-Zeile 1 (Soll 22) | vorher: masks=37 fg_atlas=0 TOT
+OK    ROOM3051 Cut  8 | P: masks=10 fg_atlas=1 Spur-P-Zeile 1 (Soll 10) | vorher: masks=10 fg_atlas=0 TOT
+OK    ROOM3051 Cut  9 | P: masks=48 fg_atlas=1 Spur-P-Zeile 1 (Soll 48) | vorher: masks=49 fg_atlas=0 TOT
+OK    ROOM3051 Cut 11 | P: masks=27 fg_atlas=1 Spur-P-Zeile 1 (Soll 27) | vorher: masks=27 fg_atlas=0 TOT
+OK    ROOM3051 Cut 12 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM3051 Cut 13 | P: masks=38 fg_atlas=1 Spur-P-Zeile 1 (Soll 38) | vorher: masks=42 fg_atlas=0 TOT
+OK    ROOM3051 Cut 15 | P: masks=36 fg_atlas=1 Spur-P-Zeile 1 (Soll 36) | vorher: masks=36 fg_atlas=0 TOT
+OK    ROOM30A0 Cut  0 | P: masks=21 fg_atlas=1 Spur-P-Zeile 1 (Soll 21) | vorher: masks=46 fg_atlas=0 TOT
+OK    ROOM30A0 Cut  1 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=33 fg_atlas=0 TOT
+OK    ROOM30A0 Cut  2 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=8 fg_atlas=0 TOT
+OK    ROOM30A0 Cut  3 | P: masks=42 fg_atlas=1 Spur-P-Zeile 1 (Soll 42) | vorher: masks=56 fg_atlas=0 TOT
+OK    ROOM30A0 Cut  4 | P: masks=14 fg_atlas=1 Spur-P-Zeile 1 (Soll 14) | vorher: masks=14 fg_atlas=0 TOT
+OK    ROOM30A0 Cut  5 | P: masks=21 fg_atlas=1 Spur-P-Zeile 1 (Soll 21) | vorher: masks=21 fg_atlas=0 TOT
+OK    ROOM30A1 Cut  0 | P: masks=46 fg_atlas=1 Spur-P-Zeile 1 (Soll 46) | vorher: masks=46 fg_atlas=0 TOT
+OK    ROOM30A1 Cut  1 | P: masks=33 fg_atlas=1 Spur-P-Zeile 1 (Soll 33) | vorher: masks=33 fg_atlas=0 TOT
+OK    ROOM30A1 Cut  2 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=8 fg_atlas=0 TOT
+OK    ROOM30A1 Cut  3 | P: masks=56 fg_atlas=1 Spur-P-Zeile 1 (Soll 56) | vorher: masks=56 fg_atlas=0 TOT
+OK    ROOM30A1 Cut  4 | P: masks=14 fg_atlas=1 Spur-P-Zeile 1 (Soll 14) | vorher: masks=14 fg_atlas=0 TOT
+OK    ROOM30A1 Cut  5 | P: masks=21 fg_atlas=1 Spur-P-Zeile 1 (Soll 21) | vorher: masks=21 fg_atlas=0 TOT
+OK    ROOM30E0 Cut  6 | P: masks=1 fg_atlas=1 Spur-P-Zeile 1 (Soll 1) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM30E0 Cut  7 | P: masks=2 fg_atlas=1 Spur-P-Zeile 1 (Soll 2) | vorher: masks=27 fg_atlas=0 TOT
+OK    ROOM30E0 Cut  8 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM30E0 Cut  9 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=31 fg_atlas=0 TOT
+OK    ROOM30E1 Cut  6 | P: masks=1 fg_atlas=1 Spur-P-Zeile 1 (Soll 1) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM30E1 Cut  7 | P: masks=2 fg_atlas=1 Spur-P-Zeile 1 (Soll 2) | vorher: masks=27 fg_atlas=0 TOT
+OK    ROOM30E1 Cut  8 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM30E1 Cut  9 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=31 fg_atlas=0 TOT
+OK    ROOM4040 Cut  4 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM4040 Cut  5 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=23 fg_atlas=0 TOT
+OK    ROOM4040 Cut  6 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM4040 Cut  7 | P: masks=5 fg_atlas=1 Spur-P-Zeile 1 (Soll 5) | vorher: masks=5 fg_atlas=0 TOT
+OK    ROOM4040 Cut  9 | P: masks=18 fg_atlas=1 Spur-P-Zeile 1 (Soll 18) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM4040 Cut 10 | P: masks=13 fg_atlas=1 Spur-P-Zeile 1 (Soll 13) | vorher: masks=13 fg_atlas=0 TOT
+OK    ROOM4040 Cut 11 | P: masks=24 fg_atlas=1 Spur-P-Zeile 1 (Soll 24) | vorher: masks=24 fg_atlas=0 TOT
+OK    ROOM4040 Cut 12 | P: masks=35 fg_atlas=1 Spur-P-Zeile 1 (Soll 35) | vorher: masks=35 fg_atlas=0 TOT
+OK    ROOM4041 Cut  4 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM4041 Cut  5 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=23 fg_atlas=0 TOT
+OK    ROOM4041 Cut  6 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM4041 Cut  7 | P: masks=5 fg_atlas=1 Spur-P-Zeile 1 (Soll 5) | vorher: masks=5 fg_atlas=0 TOT
+OK    ROOM4041 Cut  9 | P: masks=18 fg_atlas=1 Spur-P-Zeile 1 (Soll 18) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM4041 Cut 10 | P: masks=13 fg_atlas=1 Spur-P-Zeile 1 (Soll 13) | vorher: masks=13 fg_atlas=0 TOT
+OK    ROOM4041 Cut 11 | P: masks=24 fg_atlas=1 Spur-P-Zeile 1 (Soll 24) | vorher: masks=24 fg_atlas=0 TOT
+OK    ROOM4041 Cut 12 | P: masks=35 fg_atlas=1 Spur-P-Zeile 1 (Soll 35) | vorher: masks=35 fg_atlas=0 TOT
+OK    ROOM4080 Cut  1 | P: masks=6 fg_atlas=1 Spur-P-Zeile 1 (Soll 6) | vorher: masks=6 fg_atlas=0 TOT
+OK    ROOM4080 Cut  2 | P: masks=15 fg_atlas=1 Spur-P-Zeile 1 (Soll 15) | vorher: masks=15 fg_atlas=0 TOT
+OK    ROOM4080 Cut  3 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM4080 Cut  5 | P: masks=14 fg_atlas=1 Spur-P-Zeile 1 (Soll 14) | vorher: masks=14 fg_atlas=0 TOT
+OK    ROOM4080 Cut  6 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM4080 Cut  7 | P: masks=18 fg_atlas=1 Spur-P-Zeile 1 (Soll 18) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM4080 Cut  8 | P: masks=31 fg_atlas=1 Spur-P-Zeile 1 (Soll 31) | vorher: masks=31 fg_atlas=0 TOT
+OK    ROOM4081 Cut  1 | P: masks=6 fg_atlas=1 Spur-P-Zeile 1 (Soll 6) | vorher: masks=6 fg_atlas=0 TOT
+OK    ROOM4081 Cut  2 | P: masks=15 fg_atlas=1 Spur-P-Zeile 1 (Soll 15) | vorher: masks=15 fg_atlas=0 TOT
+OK    ROOM4081 Cut  3 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM4081 Cut  5 | P: masks=14 fg_atlas=1 Spur-P-Zeile 1 (Soll 14) | vorher: masks=14 fg_atlas=0 TOT
+OK    ROOM4081 Cut  6 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM4081 Cut  7 | P: masks=18 fg_atlas=1 Spur-P-Zeile 1 (Soll 18) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM4081 Cut  8 | P: masks=31 fg_atlas=1 Spur-P-Zeile 1 (Soll 31) | vorher: masks=31 fg_atlas=0 TOT
+OK    ROOM40A0 Cut  7 | P: masks=19 fg_atlas=1 Spur-P-Zeile 1 (Soll 19) | vorher: masks=19 fg_atlas=0 TOT
+OK    ROOM40A1 Cut  7 | P: masks=19 fg_atlas=1 Spur-P-Zeile 1 (Soll 19) | vorher: masks=19 fg_atlas=0 TOT
+OK    ROOM5020 Cut  0 | P: masks=36 fg_atlas=1 Spur-P-Zeile 1 (Soll 36) | vorher: masks=50 fg_atlas=0 TOT
+OK    ROOM5020 Cut  2 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM5020 Cut  3 | P: masks=4 fg_atlas=1 Spur-P-Zeile 1 (Soll 4) | vorher: masks=4 fg_atlas=0 TOT
+OK    ROOM5020 Cut  4 | P: masks=54 fg_atlas=1 Spur-P-Zeile 1 (Soll 54) | vorher: masks=54 fg_atlas=0 TOT
+OK    ROOM5020 Cut  5 | P: masks=26 fg_atlas=1 Spur-P-Zeile 1 (Soll 26) | vorher: masks=26 fg_atlas=0 TOT
+OK    ROOM5020 Cut  6 | P: masks=22 fg_atlas=1 Spur-P-Zeile 1 (Soll 22) | vorher: masks=55 fg_atlas=0 TOT
+OK    ROOM5020 Cut  7 | P: masks=45 fg_atlas=1 Spur-P-Zeile 1 (Soll 45) | vorher: masks=54 fg_atlas=0 TOT
+OK    ROOM5020 Cut  8 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM5020 Cut  9 | P: masks=46 fg_atlas=1 Spur-P-Zeile 1 (Soll 46) | vorher: masks=46 fg_atlas=0 TOT
+OK    ROOM5020 Cut 10 | P: masks=16 fg_atlas=1 Spur-P-Zeile 1 (Soll 16) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM5020 Cut 11 | P: masks=48 fg_atlas=1 Spur-P-Zeile 1 (Soll 48) | vorher: masks=56 fg_atlas=0 TOT
+OK    ROOM5020 Cut 12 | P: masks=10 fg_atlas=1 Spur-P-Zeile 1 (Soll 10) | vorher: masks=11 fg_atlas=0 TOT
+OK    ROOM5021 Cut  0 | P: masks=36 fg_atlas=1 Spur-P-Zeile 1 (Soll 36) | vorher: masks=50 fg_atlas=0 TOT
+OK    ROOM5021 Cut  2 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM5021 Cut  3 | P: masks=4 fg_atlas=1 Spur-P-Zeile 1 (Soll 4) | vorher: masks=4 fg_atlas=0 TOT
+OK    ROOM5021 Cut  4 | P: masks=54 fg_atlas=1 Spur-P-Zeile 1 (Soll 54) | vorher: masks=54 fg_atlas=0 TOT
+OK    ROOM5021 Cut  5 | P: masks=26 fg_atlas=1 Spur-P-Zeile 1 (Soll 26) | vorher: masks=26 fg_atlas=0 TOT
+OK    ROOM5021 Cut  6 | P: masks=55 fg_atlas=1 Spur-P-Zeile 1 (Soll 55) | vorher: masks=55 fg_atlas=0 TOT
+OK    ROOM5021 Cut  7 | P: masks=45 fg_atlas=1 Spur-P-Zeile 1 (Soll 45) | vorher: masks=54 fg_atlas=0 TOT
+OK    ROOM5021 Cut  8 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM5021 Cut  9 | P: masks=46 fg_atlas=1 Spur-P-Zeile 1 (Soll 46) | vorher: masks=46 fg_atlas=0 TOT
+OK    ROOM5021 Cut 10 | P: masks=16 fg_atlas=1 Spur-P-Zeile 1 (Soll 16) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM5021 Cut 11 | P: masks=48 fg_atlas=1 Spur-P-Zeile 1 (Soll 48) | vorher: masks=56 fg_atlas=0 TOT
+OK    ROOM5021 Cut 12 | P: masks=11 fg_atlas=1 Spur-P-Zeile 1 (Soll 11) | vorher: masks=11 fg_atlas=0 TOT
+OK    ROOM5050 Cut  0 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=8 fg_atlas=0 TOT
+OK    ROOM5050 Cut  1 | P: masks=35 fg_atlas=1 Spur-P-Zeile 1 (Soll 35) | vorher: masks=41 fg_atlas=0 TOT
+OK    ROOM5050 Cut  2 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=48 fg_atlas=0 TOT
+OK    ROOM5050 Cut  3 | P: masks=39 fg_atlas=1 Spur-P-Zeile 1 (Soll 39) | vorher: masks=39 fg_atlas=0 TOT
+OK    ROOM5051 Cut  0 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=8 fg_atlas=0 TOT
+OK    ROOM5051 Cut  1 | P: masks=35 fg_atlas=1 Spur-P-Zeile 1 (Soll 35) | vorher: masks=41 fg_atlas=0 TOT
+OK    ROOM5051 Cut  2 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=48 fg_atlas=0 TOT
+OK    ROOM5051 Cut  3 | P: masks=39 fg_atlas=1 Spur-P-Zeile 1 (Soll 39) | vorher: masks=39 fg_atlas=0 TOT
+OK    ROOM5090 Cut 11 | P: masks=37 fg_atlas=1 Spur-P-Zeile 1 (Soll 37) | vorher: masks=41 fg_atlas=0 TOT
+OK    ROOM5090 Cut 12 | P: masks=52 fg_atlas=1 Spur-P-Zeile 1 (Soll 52) | vorher: masks=57 fg_atlas=0 TOT
+OK    ROOM5090 Cut 13 | P: masks=40 fg_atlas=1 Spur-P-Zeile 1 (Soll 40) | vorher: masks=50 fg_atlas=0 TOT
+OK    ROOM5090 Cut 14 | P: masks=58 fg_atlas=1 Spur-P-Zeile 1 (Soll 58) | vorher: masks=61 fg_atlas=0 TOT
+OK    ROOM5091 Cut 11 | P: masks=37 fg_atlas=1 Spur-P-Zeile 1 (Soll 37) | vorher: masks=41 fg_atlas=0 TOT
+OK    ROOM5091 Cut 12 | P: masks=52 fg_atlas=1 Spur-P-Zeile 1 (Soll 52) | vorher: masks=57 fg_atlas=0 TOT
+OK    ROOM5091 Cut 13 | P: masks=40 fg_atlas=1 Spur-P-Zeile 1 (Soll 40) | vorher: masks=50 fg_atlas=0 TOT
+OK    ROOM5091 Cut 14 | P: masks=58 fg_atlas=1 Spur-P-Zeile 1 (Soll 58) | vorher: masks=61 fg_atlas=0 TOT
+OK    ROOM50B0 Cut  1 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=23 fg_atlas=0 TOT
+OK    ROOM50B0 Cut  2 | P: masks=61 fg_atlas=1 Spur-P-Zeile 1 (Soll 61) | vorher: masks=61 fg_atlas=0 TOT
+OK    ROOM50B0 Cut  3 | P: masks=37 fg_atlas=1 Spur-P-Zeile 1 (Soll 37) | vorher: masks=48 fg_atlas=0 TOT
+OK    ROOM50B1 Cut  1 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=23 fg_atlas=0 TOT
+OK    ROOM50B1 Cut  2 | P: masks=61 fg_atlas=1 Spur-P-Zeile 1 (Soll 61) | vorher: masks=61 fg_atlas=0 TOT
+OK    ROOM50B1 Cut  3 | P: masks=37 fg_atlas=1 Spur-P-Zeile 1 (Soll 37) | vorher: masks=48 fg_atlas=0 TOT
+OK    ROOM5100 Cut  2 | P: masks=22 fg_atlas=1 Spur-P-Zeile 1 (Soll 22) | vorher: masks=24 fg_atlas=0 TOT
+OK    ROOM5100 Cut  3 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=22 fg_atlas=0 TOT
+OK    ROOM5100 Cut  4 | P: masks=29 fg_atlas=1 Spur-P-Zeile 1 (Soll 29) | vorher: masks=53 fg_atlas=0 TOT
+OK    ROOM5100 Cut  5 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM5100 Cut  6 | P: masks=31 fg_atlas=1 Spur-P-Zeile 1 (Soll 31) | vorher: masks=40 fg_atlas=0 TOT
+OK    ROOM5100 Cut  7 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=14 fg_atlas=0 TOT
+OK    ROOM5101 Cut  2 | P: masks=22 fg_atlas=1 Spur-P-Zeile 1 (Soll 22) | vorher: masks=24 fg_atlas=0 TOT
+OK    ROOM5101 Cut  3 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=22 fg_atlas=0 TOT
+OK    ROOM5101 Cut  4 | P: masks=29 fg_atlas=1 Spur-P-Zeile 1 (Soll 29) | vorher: masks=53 fg_atlas=0 TOT
+OK    ROOM5101 Cut  5 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM5101 Cut  6 | P: masks=31 fg_atlas=1 Spur-P-Zeile 1 (Soll 31) | vorher: masks=40 fg_atlas=0 TOT
+OK    ROOM5101 Cut  7 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=14 fg_atlas=0 TOT
+OK    ROOM6000 Cut  1 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=8 fg_atlas=0 TOT
+OK    ROOM6000 Cut  2 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM6000 Cut  3 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM6000 Cut  4 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM6000 Cut  5 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=44 fg_atlas=0 TOT
+OK    ROOM6000 Cut  6 | P: masks=39 fg_atlas=1 Spur-P-Zeile 1 (Soll 39) | vorher: masks=39 fg_atlas=0 TOT
+OK    ROOM6000 Cut  7 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=67 fg_atlas=0 TOT
+OK    ROOM6000 Cut  8 | P: masks=29 fg_atlas=1 Spur-P-Zeile 1 (Soll 29) | vorher: masks=61 fg_atlas=0 TOT
+OK    ROOM6000 Cut  9 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM6001 Cut  1 | P: masks=8 fg_atlas=1 Spur-P-Zeile 1 (Soll 8) | vorher: masks=8 fg_atlas=0 TOT
+OK    ROOM6001 Cut  2 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM6001 Cut  3 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM6001 Cut  4 | P: masks=9 fg_atlas=1 Spur-P-Zeile 1 (Soll 9) | vorher: masks=9 fg_atlas=0 TOT
+OK    ROOM6001 Cut  5 | P: masks=23 fg_atlas=1 Spur-P-Zeile 1 (Soll 23) | vorher: masks=44 fg_atlas=0 TOT
+OK    ROOM6001 Cut  6 | P: masks=39 fg_atlas=1 Spur-P-Zeile 1 (Soll 39) | vorher: masks=39 fg_atlas=0 TOT
+OK    ROOM6001 Cut  7 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=67 fg_atlas=0 TOT
+OK    ROOM6001 Cut  8 | P: masks=29 fg_atlas=1 Spur-P-Zeile 1 (Soll 29) | vorher: masks=61 fg_atlas=0 TOT
+OK    ROOM6001 Cut  9 | P: masks=3 fg_atlas=1 Spur-P-Zeile 1 (Soll 3) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM6010 Cut  0 | P: masks=16 fg_atlas=1 Spur-P-Zeile 1 (Soll 16) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM6010 Cut  1 | P: masks=11 fg_atlas=1 Spur-P-Zeile 1 (Soll 11) | vorher: masks=11 fg_atlas=0 TOT
+OK    ROOM6010 Cut  2 | P: masks=6 fg_atlas=1 Spur-P-Zeile 1 (Soll 6) | vorher: masks=6 fg_atlas=0 TOT
+OK    ROOM6010 Cut  3 | P: masks=66 fg_atlas=1 Spur-P-Zeile 1 (Soll 66) | vorher: masks=66 fg_atlas=0 TOT
+OK    ROOM6010 Cut  5 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM6010 Cut  6 | P: masks=4 fg_atlas=1 Spur-P-Zeile 1 (Soll 4) | vorher: masks=10 fg_atlas=0 TOT
+OK    ROOM6010 Cut  7 | P: masks=64 fg_atlas=1 Spur-P-Zeile 1 (Soll 64) | vorher: masks=64 fg_atlas=0 TOT
+OK    ROOM6010 Cut 10 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM6010 Cut 11 | P: masks=13 fg_atlas=1 Spur-P-Zeile 1 (Soll 13) | vorher: masks=13 fg_atlas=0 TOT
+OK    ROOM6010 Cut 12 | P: masks=53 fg_atlas=1 Spur-P-Zeile 1 (Soll 53) | vorher: masks=53 fg_atlas=0 TOT
+OK    ROOM6010 Cut 13 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM6011 Cut  0 | P: masks=16 fg_atlas=1 Spur-P-Zeile 1 (Soll 16) | vorher: masks=16 fg_atlas=0 TOT
+OK    ROOM6011 Cut  1 | P: masks=11 fg_atlas=1 Spur-P-Zeile 1 (Soll 11) | vorher: masks=11 fg_atlas=0 TOT
+OK    ROOM6011 Cut  2 | P: masks=6 fg_atlas=1 Spur-P-Zeile 1 (Soll 6) | vorher: masks=6 fg_atlas=0 TOT
+OK    ROOM6011 Cut  3 | P: masks=66 fg_atlas=1 Spur-P-Zeile 1 (Soll 66) | vorher: masks=66 fg_atlas=0 TOT
+OK    ROOM6011 Cut  5 | P: masks=7 fg_atlas=1 Spur-P-Zeile 1 (Soll 7) | vorher: masks=7 fg_atlas=0 TOT
+OK    ROOM6011 Cut  6 | P: masks=4 fg_atlas=1 Spur-P-Zeile 1 (Soll 4) | vorher: masks=10 fg_atlas=0 TOT
+OK    ROOM6011 Cut  7 | P: masks=64 fg_atlas=1 Spur-P-Zeile 1 (Soll 64) | vorher: masks=64 fg_atlas=0 TOT
+OK    ROOM6011 Cut 10 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM6011 Cut 11 | P: masks=13 fg_atlas=1 Spur-P-Zeile 1 (Soll 13) | vorher: masks=13 fg_atlas=0 TOT
+OK    ROOM6011 Cut 12 | P: masks=53 fg_atlas=1 Spur-P-Zeile 1 (Soll 53) | vorher: masks=53 fg_atlas=0 TOT
+OK    ROOM6011 Cut 13 | P: masks=43 fg_atlas=1 Spur-P-Zeile 1 (Soll 43) | vorher: masks=43 fg_atlas=0 TOT
+OK    ROOM6030 Cut  7 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM6030 Cut  9 | P: masks=26 fg_atlas=1 Spur-P-Zeile 1 (Soll 26) | vorher: masks=26 fg_atlas=0 TOT
+OK    ROOM6030 Cut 10 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM6030 Cut 11 | P: masks=18 fg_atlas=1 Spur-P-Zeile 1 (Soll 18) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM6030 Cut 12 | P: masks=1 fg_atlas=1 Spur-P-Zeile 1 (Soll 1) | vorher: masks=5 fg_atlas=0 TOT
+OK    ROOM6031 Cut  7 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM6031 Cut  9 | P: masks=26 fg_atlas=1 Spur-P-Zeile 1 (Soll 26) | vorher: masks=26 fg_atlas=0 TOT
+OK    ROOM6031 Cut 10 | P: masks=12 fg_atlas=1 Spur-P-Zeile 1 (Soll 12) | vorher: masks=12 fg_atlas=0 TOT
+OK    ROOM6031 Cut 11 | P: masks=18 fg_atlas=1 Spur-P-Zeile 1 (Soll 18) | vorher: masks=18 fg_atlas=0 TOT
+OK    ROOM6031 Cut 12 | P: masks=1 fg_atlas=1 Spur-P-Zeile 1 (Soll 1) | vorher: masks=5 fg_atlas=0 TOT
