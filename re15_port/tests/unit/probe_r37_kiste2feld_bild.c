@@ -12,13 +12,22 @@
  *                  LoadImage @0x80069d4c-58, a1 = src+0x19320 = +86*1200). RE1.5 traegt die breite Kunst als
  *                  EIN 80x30-Bild im ITPS-Block id*0x3000+0x21A0 (FUN_8004dc4c-Aufruf @0x8001e0b8-c8,
  *                  FUN_800492b8 Modus 1 `ori v0,zero,0x28` @0x80049314 = 80 Texel breit).
- *                  Texel u = px*80/49, v = py*30/19 (wie die schmale Zeile px*40/25).
+ *                  Abtastung = PSX-GPU (DuckStation gpu_sw_rasterizer, Fixkomma 12 Bit, Startwert + 1/2, Schritt
+ *                  (n_tex << 12) / n_px): Texel = (2048 + p * ((n_tex << 12) / n_px)) >> 12 — gemessen am Bild
+ *                  des laufenden RE2 (analysis/itembox_re2/referenz/re2_itembox_original.png, Dossier §2.3:
+ *                  Gatling Gun 770/771, R. Launcher 752/771 Masken-Pixel; abgerundet nur 759 / 746). Eigene
+ *                  Umsetzung hier, NICHT aus dem Port-Kopf (unabhaengige Erwartung).
  *            ALT = der Stand vor Spur R: ITEMALL-Kachel[id] (40x30 = nur die LINKE Haelfte), Spalten 0..39 1:1,
- *                  Spalten 40..48 = Spalte 39 (Klemmung `if (sxp > 39) sxp = 39`), v = py*30/19.
+ *                  Spalten 40..48 = Spalte 39 (Klemmung `if (sxp > 39) sxp = 39`), v = py*30/19 abgerundet.
+ *          SCHMALE Zeilen (alle anderen Ids, 25x19 bei x 179..203): RE2 zeichnet sie mit DEMSELBEN POLY_FT4
+ *            (u0 40 @0x800717b4 .. u1 80 `addiu t1,zero,80` @0x80071844) — NEU = ITEMALL-Kachel[id] 40x30 mit der
+ *            GPU-Abtastung auf 25x19 (RE2-Bild F. Aid Spray 475/475, abgerundet 469/475), ALT = abgerundet
+ *            px*40/25, py*30/19. Nicht fuer die im Port ersetzten Kacheln 0x40/0x42/0x45 (Sicherung, Schluessel).
  *          Texel mit CLUT-Wert 0 sind durchsichtig -> Listengrund (24,24,40). Ausgenommen: die Linien des
  *          Auswahl-Bands (y 92/93/112/113, liegen ueber den Zeilen) und das Ziffernfeld unten links im Symbol
- *          (x 155 .. 155+6*(Stellen-1)+7, y Zeile+11 .. +18; RE2 FUN_80072c6c, Ziffern ueber dem Symbol).
- *          Zeile OK = NEU 0 Abweichungen UND nicht alle Spalten 40..48 gleich Spalte 39.
+ *          (x Symbol .. +6*(Stellen-1)+7, y Zeile+11 .. +18; RE2 FUN_80072c6c, Ziffern ueber dem Symbol; nur
+ *          Ids < 0x22 tragen Ziffern, Gate `sltiu id,0x22` @0x80049124).
+ *          Zeile OK = NEU 0 Abweichungen, bei 2-Feld-Zeilen zusaetzlich nicht alle Spalten 40..48 gleich Spalte 39.
  *   gitter <ppm> <list_x> <list_y> <kopfzellen> [cursor=k]   Inventar-GITTER (40x30-Zellen, RE1.5 Zellentabelle
  *          @0x80076274 + Listenbasis): je 2-Feld-Waffe mit Kopfzelle k ("k:id:menge", Komma-getrennt) muss Zelle
  *          k die LINKE Haelfte (ITPS-Spalten 0..39) und Zelle k+1 die RECHTE Haelfte (Spalten 40..79) zeigen —
@@ -28,7 +37,7 @@
  *          Ziffernfeld der Kopfzelle (x +3 .. +3+6*(Stellen-1)+7, y +20..+27, FUN_80048f28) und die Zellen unter
  *          dem Cursor (cursor=k).
  *
- * Aufruf: probe_r37_kiste2feld_bild <PSX-Asset-Ordner> kiste <ppm> <ids> <mengen>
+ * Aufruf: probe_r37_kiste2feld_bild <PSX-Asset-Ordner> kiste <ppm> <ids> <mengen>   (ids hex, "-" = leere Zeile)
  *         probe_r37_kiste2feld_bild <PSX-Asset-Ordner> gitter <ppm> <list_x> <list_y> <k:id:menge,...> [cursor=k]
  * Ausgabe je Zeile/Zelle eine Zeile, Ende "KISTE2FELD-BILD OK" oder "KISTE2FELD-BILD FEHLER n"; exit 0/1.
  */
@@ -94,55 +103,77 @@ static const uint8_t *breit(int id)   /* 80x30-Kunst der 2-Feld-Waffe (ITPS-Bloc
     return (s_itps && o + 80 * 30 <= s_itps_n) ? s_itps + o : NULL;
 }
 
+/* PSX-GPU-Abtastung eines gestauchten POLY_FT4 (s. Kopf): Texel fuer Pixel p, n_tex Texel auf n_px Pixel. */
+static int gpu_texel(int n_tex, int n_px, int p)
+{
+    return (2048 + p * ((n_tex << 12) / n_px)) >> 12;
+}
+
 static int kiste(const char *ppm, const char *ids, const char *mengen)
 {
     int k = 0, fehler = 0, geprueft = 0;
     char *pi = (char *)ids, *pm = (char *)mengen;
     if (!ppm_laden(ppm)) { printf("%s: FEHLER Bild nicht lesbar\n", ppm); return 1; }
     for (k = 0; k < 5 && *pi; k++) {
-        int id = (int)strtol(pi, &pi, 16), menge = (int)strtol(pm, &pm, 10);
-        int ry = 53 + 20 * k, sx = 155, px, py, n = 0, neu_ab = 0, alt_ab = 0, wdh = 0;
-        int nd = stellen(menge);
-        const uint8_t *w = breit(id);
+        int id, menge, breit_z, w, sw, sx, ry = 53 + 20 * k, px, py, n = 0, neu_ab = 0, alt_ab = 0, wdh = 0;
+        int nd, ziffern;
+        const uint8_t *quelle;
+        if (*pi == '-') { pi++; id = 0; } else id = (int)strtol(pi, &pi, 16);
+        menge = (int)strtol(pm, &pm, 10);
         if (*pi == ',') pi++;
         if (*pm == ',') pm++;
-        if ((unsigned)(id - 0x0e) >= 6) continue;           /* nur 2-Feld-Waffen */
-        if (!w || !s_itemall || (long)(id + 1) * 1200 > s_itemall_n) {
+        if (id == 0) continue;                                              /* leere Zeile */
+        breit_z = ((unsigned)(id - 0x0e) < 6);                              /* 2-Feld-Waffe */
+        w = breit_z ? 49 : 25;
+        sw = breit_z ? 80 : 40;
+        sx = 204 - w;                                                       /* Spur M: buendig rechts */
+        nd = stellen(menge);
+        ziffern = (id < 0x22 && menge > 0);
+        quelle = breit_z ? breit(id) : ((s_itemall && (long)(id + 1) * 1200 <= s_itemall_n)
+                                        ? s_itemall + (long)id * 1200 : NULL);
+        if (!quelle || !s_itemall || (long)(id + 1) * 1200 > s_itemall_n) {
             printf("FEHLER Quelle Id %02x\n", id);
             fehler++;
             continue;
         }
         for (py = 0; py < 19; py++) {
-            int y = ry + py, sv = (py * 30) / 19;
+            int y = ry + py, sv = gpu_texel(30, 19, py), sv_alt = (py * 30) / 19;
             if (band_zeile(y)) continue;                                        /* Auswahl-Band */
-            for (px = 0; px < 49; px++) {
+            for (px = 0; px < w; px++) {
                 unsigned char e_neu[3] = { 24, 24, 40 }, e_alt[3] = { 24, 24, 40 };
-                int su = (px * 80) / 49, sa = px > 39 ? 39 : px;
-                if (py >= 11 && px <= 6 * (nd - 1) + 7) continue;                 /* Ziffernfeld */
-                farbe(w[sv * 80 + su], e_neu);
-                farbe(s_itemall[(long)id * 1200 + sv * 40 + sa], e_alt);
+                int su = gpu_texel(sw, w, px);
+                int sa = breit_z ? (px > 39 ? 39 : px) : (px * 40) / 25;
+                if (ziffern && py >= 11 && px <= 6 * (nd - 1) + 7) continue;     /* Ziffernfeld */
+                farbe(quelle[sv * sw + su], e_neu);
+                farbe(s_itemall[(long)id * 1200 + sv_alt * 40 + sa], e_alt);
                 n++;
                 if (!gleich(sx + px, y, e_neu)) neu_ab++;
                 if (!gleich(sx + px, y, e_alt)) alt_ab++;
             }
         }
-        /* Wiederholte Spalten: Spalte 40..48 bildgleich Spalte 39 (in allen Zeilen ausser dem Band) */
-        for (px = 40; px < 49; px++) {
-            int same = 1;
-            for (py = 0; py < 19; py++) {
-                int y = ry + py;
-                if (band_zeile(y)) continue;
-                if (memcmp(s_bild[y][sx + px], s_bild[y][sx + 39], 3) != 0) { same = 0; break; }
+        if (breit_z) {
+            /* Wiederholte Spalten: Spalte 40..48 bildgleich Spalte 39 (in allen Zeilen ausser dem Band) */
+            for (px = 40; px < 49; px++) {
+                int same = 1;
+                for (py = 0; py < 19; py++) {
+                    int y = ry + py;
+                    if (band_zeile(y)) continue;
+                    if (memcmp(s_bild[y][sx + px], s_bild[y][sx + 39], 3) != 0) { same = 0; break; }
+                }
+                wdh += same;
             }
-            wdh += same;
+            printf("%s: Zeile %d Id %02x (2-Feld 49x19): NEU (80x30 -> 49x19, GPU) %d/%d Pixel gleich, ALT (40er-Kachel, "
+                   "Spalte 39 wiederholt) %d/%d gleich, Spalten 40..48 gleich Spalte 39: %d/9 -> %s\n", ppm, k, id,
+                   n - neu_ab, n, n - alt_ab, n, wdh, (neu_ab == 0 && wdh < 9) ? "ok" : "FALSCH");
+            if (neu_ab != 0 || wdh == 9) fehler++;
+        } else {
+            printf("%s: Zeile %d Id %02x (schmal 25x19): NEU (40x30 -> 25x19, GPU) %d/%d Pixel gleich, ALT (abgerundet) "
+                   "%d/%d gleich -> %s\n", ppm, k, id, n - neu_ab, n, n - alt_ab, n, neu_ab == 0 ? "ok" : "FALSCH");
+            if (neu_ab != 0) fehler++;
         }
-        printf("%s: Zeile %d Id %02x: NEU (80x30 -> 49x19) %d/%d Pixel gleich, ALT (40er-Kachel, Spalte 39 "
-               "wiederholt) %d/%d gleich, Spalten 40..48 gleich Spalte 39: %d/9 -> %s\n", ppm, k, id, n - neu_ab,
-               n, n - alt_ab, n, wdh, (neu_ab == 0 && wdh < 9) ? "ok" : "FALSCH");
-        if (neu_ab != 0 || wdh == 9) fehler++;
         geprueft++;
     }
-    if (geprueft == 0) { printf("%s: FEHLER keine 2-Feld-Zeile geprueft\n", ppm); fehler++; }
+    if (geprueft == 0) { printf("%s: FEHLER keine Zeile geprueft\n", ppm); fehler++; }
     return fehler;
 }
 
