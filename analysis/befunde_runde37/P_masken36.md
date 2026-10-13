@@ -376,7 +376,7 @@ Stand (fortlaufend):
 - [x] M1 Elza ROOM30A1: Ursache, Beleg, Aenderung, Messung nachher (NB1.1)
 - [x] M2 Riegel (leer wahr ohne Stehplatz, bytegleiche Paare, Elza 30A1 an der exe) + Dossier-Aussagen §4.2/§7 (NB1.2)
 - [x] M3 Versionsangabe (v0.7.19 statt v0.6.x) (NB1.3)
-- [ ] Bau + gezielte Tests (NB1.5)
+- [x] Bau + gezielte Tests (NB1.5): `100% tests passed, 0 tests failed out of 30`
 
 Werkzeuge (Scratchpad dieser Sitzung `nb1/lauf.sh`: exe-Kopie `re15_pc_nb1_<name>.exe` neben re15_pc.exe, Arbeitsordner
 `nb1/runs/<name>`, `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
@@ -530,7 +530,22 @@ bitgleich zu vorher: 1123/1234, 0/684, Elza 1158/1260, 0/1067, FREI 0/883, 0/997
 
 ### NB1.5 Tests
 `ctest --test-dir re15_port/build -R "r37_masken36|r37_pri1100|pri_masken|r36_pri|pri_hashes|unit_pri_|sld_atlas|maskgrp|boot_bg_pin|unit_r35_entladen" --timeout 900 --output-on-failure -j3`
-(Ausdruck der Abnahme; KEINE volle Suite) - Ergebnis im naechsten Abschnitt nach dem Schlussbau.
+(Ausdruck der Abnahme; KEINE volle Suite). Schlussbau `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`, danach
+**`100% tests passed, 0 tests failed out of 30`** (zweimal: vor und nach dem Werkzeug-Modus `soll`; Laufzeiten im
+Schlusslauf stage3 308.75 s, stage4 129.45 s, stage5 129.46 s, stage6 129.43 s, ausschluss 87.56 s). Darin die Spur-A-Riegel
+unit/integration_r37_pri1100_*, integration_pri_masken, unit/integration_r36_pri_*, unit_pri_hashes, boot_bg_pin -
+gruen, unveraendert. Zusammenfuehrung `git merge-tree --write-tree r37/integration HEAD`: Konflikte nur in
+AUFTRAG.md/VERTRAG.md (Orchestrator-Dateien), Code konfliktfrei.
+
+### NB1.6 OFFEN nach Nachbesserung 1
+1. Saumpunkte ROOM3040 Cut 1 (9 von 222) und ROOM5090 Cut 14 DAVOR (2 / 5) - Bits dieser Cuts unveraendert, wie §6.2.
+2. Ausschluss ist rechteckweise: ein Generator-Rechteck, das hinten richtig und vorne falsch verdeckt, faellt ganz weg.
+   Mit der Zellform betrifft das jetzt auch Stage 4 (ROOM4040 Cut 4: 5 von 7, Cut 5: 10 von 23 ...) und ROOM5050 Cut 1
+   (h5050c1 421 -> 52). Vollstaendige Verdeckung braucht Freistellungen wie in STAGE1 (eigener Auftrag, §6.7).
+3. Die Modellfigur (+-350 quer, 3000 hoch) ist an manchen Stellen breiter als Leon (ROOM4080 Cut 2: Modell 36 von 81,
+   exe 4 von 114) - Irrtum in die sichere Richtung (mehr Ausschluss). Groessere Figuren als Leon/Elza weiter ungeprueft.
+4. ROOM3050/3051 Cut 15 ohne Stehplatz - belegt ohne moegliche Figur (NB1.2), im Riegel als Liste.
+5. PSX unveraendert (§6.5).
 Werte aus dem Lauf: integration_r37_masken36_stage3 309 s (mit M1-Weg: Elza 464/0, Leon 602/0), stage4 130 s (ROOM4080
 Cut 5: Leon 883/879 und 8374/0, Elza 627/621 und 6165/0), stage5 130 s, stage6 130 s, unit_r37_masken36_ausschluss 85 s.
 Gegenprobe der neuen Riegel-Checks: mit der Tabelle von 7495dc73 (85 Zeilen) eingebaut faellt `ausschluss` durch -
