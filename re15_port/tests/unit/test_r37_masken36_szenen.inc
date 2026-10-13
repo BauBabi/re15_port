@@ -14,6 +14,9 @@ static const szene_t SZENEN[] = {
     { "h4080c5",  0x4080,  5,  17275, -12710, 0, 1 },   /* exe: 879 von 883 (alte und neue Tabelle) */
     { "v4080c5",  0x4080,  5,   9675,  -9310, 0, 0 },   /* exe: 0 von 8374 */
     { "f30A1c0",  0x30A1,  0, -24284,  13657, 0, 2 },   /* M1, Elza gelaufen ab der Tuer: alte Tabelle 265 von 464, jetzt 0 */
+    /* Nachbesserung 2 (Abnahme 1 M2): Leon VOR der Buero-Trennwand, der obere Rahmen-Balken (Maske 20) schnitt ihm das Haar
+     * ab (Abnahme 1 Zufallsweg Bild 380/400: 4/7 Punkte) - die alte Abtastung fragte die Kopfoberkante nie. */
+    { "f30A0c0k", 0x30A0,  0, -25400,  13550, 0, 2 },   /* NB2 M2: Kopfoberkante, Tabelle NB1 an der exe > 0, jetzt 0 */
     { "v40A0c7",  0x40A0,  7, -17592, -24095, 0, 0 },   /* exe: 0 von 3442 */
     { "h5020c0",  0x5020,  0,  -6933, -22525, 0, 1 },   /* exe: 741 von 794 */
     { "h5020c9",  0x5020,  9, -13133, -21625, 0, 1 },   /* exe: 199 von 322 */
