@@ -47,6 +47,7 @@
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 ohne Spieler-Schub (zellschub_r36.c) */
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
+#include "re15_beretta_r37.h"   /* Runde 37 Spur G: Feuerstoss 5/6 trifft je Kugel (beretta_r37.c) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -1715,6 +1716,8 @@ void re15_game_step(const re15_game_ctx_t *c)
                         re15_ammo_mag_nonzero(), re15_esp_fx_count());
             }
         }
+        /* Runde 37 Spur G: Kugel 2/3 des Feuerstosses 5/6 im Bild 3/6 (re15_beretta_r37.h) */
+        if (c->rdt_ok) (void)re15_beretta_r37_tick();
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
             /* THE HOLD FIRE GATE (@0x80033300-84, byte-true): Square HELD + FUN_8004ea6c
              * (mag>0) -> DISCHARGE. Mag EMPTY: only on the Square PRESS-EDGE (@0x80033338
@@ -1847,17 +1850,19 @@ void re15_game_step(const re15_game_ctx_t *c)
                     };
                     const re15_entlade_t *ent = (eq_item <= 20) ? &ENT[eq_item] : ENT + 3;
                     if (ent->aktiv) {
-                    int az;
+                    int az, r37_treffer1 = 0, r37_patronen = 0;   /* Runde 37 Spur G */
                     if (ent->resolve)
-                    re15_player_weapon_fire(eq_item);     /* FUN_80011f50 resolve (per-item dmg/reach) */
+                    r37_treffer1 = re15_player_weapon_fire(eq_item); /* FUN_80011f50 resolve (per-item dmg/reach) */
                     /* Runde 36 Spur D N1: Granate 9/10/11 -> Abzug @0x80033b40/60/80 erst im Spawnbild (re15_granate_r36.h 2c) */
                     if (!re15_granate_r36_verbrauch_im_spawnbild(eq_item))
                     for (az = 0; az < ent->ammo; az++)
-                    re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
+                    r37_patronen += re15_ammo_consume();  /* FUN_8004eae4 @0x80033888 (after damage,
                                                            * return unchecked for the handgun) */
                     /* (3-Schuss-Burst der M93R/Glock: jetzt datengetrieben ueber
                      * ent->ammo == 3; Beleg 0x800338A8: 1x FUN_80011f50 @0x8003396c
                      * + 3x FUN_8004eae4 @0x80033974/7c/84.) */
+                    /* Runde 37 Spur G (NUTZER-VORGABE, Form RE2 Custom Handgun @0x80048910-20): Kugel 2/3 */
+                    re15_beretta_r37_feuerstoss(eq_item, r37_patronen, r37_treffer1);
                     /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line).
                      * The MUZZLE runs the ROW VM (stage 3b): st0 R8 (show + chain the 0x02040bb8
                      * secondary flash) -> R9 (the positional BANG, ARMS record 0, on the slot's
