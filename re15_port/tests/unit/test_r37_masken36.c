@@ -744,13 +744,15 @@ static void teil_verdeckung(void)
 }
 
 /* ---- suche (Werkzeug, kein Riegel): Szenen je Cut nach dem Ausschluss ---------------------------------------------- */
+static int g_such_prozent = 60;   /* HINTER: Fuss verdeckt und >= g_such_prozent % der Figurpunkte (Aufruf: suche [prozent] [stage]) */
+static int g_such_stage;          /* 0 = Stages 3..6, sonst nur diese Stage */
 static void such_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri0, const ergebnis_t *E0, void *ctx)
 {
     static raum_t R2; static uint8_t deck[240][320]; static uint16_t tief[240][320];
     re15_pri_cut_t pri = *pri0; atlas_t bss; re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4];
     int has_q, m, x, y, k, b, gx, gz, bh = -1, bv = -1, hx = 0, hz = 0, hb = 0, vx = 0, vz2 = 0, vb = 0;
     (void) E0; (void) ctx;
-    if ((raum & 1u) || (raum >> 12) < 3) return;
+    if ((raum & 1u) || (raum >> 12) < 3 || (g_such_stage && (int) (raum >> 12) != g_such_stage)) return;
     re15_masken36_filter(raum, cut, &pri);
     if (!atlas_bss(raum, cut, &bss)) return;
     if (!raum_laden(&R2, raum) || re15_camera_build_view(&R2.rdt.cuts[cut], &v) != 0) { free(bss.roh); free(R2.roh); return; }
@@ -794,7 +796,7 @@ static void such_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri0, const
                     if (re15_pri_mask_occludes(tief[(int) sy][(int) sx], (long) vzz)) { occ++; if (k == 4) fo = 1; }
                 }
                 if (on < 72) continue;
-                if (fo && occ * 10 >= on * 6 && hp * 1000 + occ > bh) { bh = hp * 1000 + occ; hx = wx; hz = wz; hb = b; }
+                if (fo && occ * 100 >= on * g_such_prozent && hp * 1000 + occ > bh) { bh = hp * 1000 + occ; hx = wx; hz = wz; hb = b; }
                 if (!fc && occ == 0 && cov >= 20 && hp * 1000 + cov > bv) { bv = hp * 1000 + cov; vx = wx; vz2 = wz; vb = b; }
             }
     printf("  ROOM%04X Cut %2d: %2d Masken nach Ausschluss | HINTER %s", raum, cut, pri.draw_count, bh >= 0 ? "" : "-");
@@ -808,7 +810,11 @@ static void such_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri0, const
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
-    if (!strcmp(teil, "suche")) { saaten_sammeln(); alle_sektionen(0, 1, such_zeile, NULL); printf("OK\n"); return 0; }
+    if (!strcmp(teil, "suche")) {
+        if (argc > 2) g_such_prozent = atoi(argv[2]);
+        if (argc > 3) g_such_stage = atoi(argv[3]);
+        saaten_sammeln(); alle_sektionen(0, 1, such_zeile, NULL); printf("OK\n"); return 0;
+    }
     if (!strcmp(teil, "zensus")) teil_zensus();
     else if (!strcmp(teil, "ausschluss")) teil_ausschluss();
     else if (!strcmp(teil, "verdeckung")) teil_verdeckung();
