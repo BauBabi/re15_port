@@ -25,7 +25,8 @@ foreach(_teil tabelle raumstart ablauf spielstand)
     set_tests_properties(unit_r37_kistenregel_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
 
-#   integration_r37_kistenregel  ECHTE exe am Lade-Weg (Spielstand + CONTINUE, Kartenwerkzeug der Spur I
+#   integration_r37_kistenregel  ECHTE exe am Lade-Weg (Spielstand + CONTINUE, Kartenwerkzeug der Spur I; Lauf I: echte Box
+#                                ROOM1150 + Sprung nach 1090
 #                                probe_r37_feuerloescher_karte mit kiste:/give:): 1090 Loescher in der Kiste -> nur
 #                                msg 7, keine Loesch-Frage; im Inventar -> Frage + Loeschen (Gegenprobe); Kartenleser
 #                                10D0 / Elza 11E1, Zelle 1211 (Elza), 3010, 4030 je Kiste gegen Inventar

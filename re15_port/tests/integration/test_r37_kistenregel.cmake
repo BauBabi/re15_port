@@ -8,6 +8,8 @@ cmake_minimum_required(VERSION 3.16)
 #   A  1090 Loescher in der KISTE, Leon am Feuer (Spielstand wie Lauf I der Spur I): Aktion -> NUR msg 7 "I must
 #      hurry up ...", KEINE Frage msg 8, kein Loeschen (msg 9)                         (Auftrag Q, erster Fall)
 #   B  1090 Loescher im INVENTAR (Gegenprobe, dieselbe Eingabe): msg 7, Frage msg 8, Ja -> msg 9 wie bisher
+#   I  1090 ueber den ECHTEN Kisten-Weg: Box ROOM1150 (Tausch im Box-Schirm), Sprung nach ROOM1090, Aktion am Feuer
+#      -> nur msg 7, keine Frage, kein Loeschen
 #   C  10D0 Kartenleser, Blue Keycard in der KISTE (Aktion per RE15_FIRE_AOT=1): msg 7 -> Ja -> msg 8 "You have not
 #      the Blue Keycard to operate it." statt msg 9;  D  dasselbe mit der Karte im INVENTAR -> msg 9
 #   E  Elza 11E1 Kartenleser, Yellow Keycard in der KISTE -> msg 8
@@ -120,6 +122,23 @@ kr_lauf(b 1090 "${_k1};give:0x31:1" "${_feuer}" 800 "" _b)
 pruef(B _b "[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31 im Inventar -> wie Original")
 pruef(B _b "id=8 \"Will you use the Fire Extinguisher?\"")
 pruef(B _b "id=9 \"You've used the Fire Extinguisher.\"")
+
+# --- I: 1090 ueber den ECHTEN Kisten-Weg (Fortsetzung 2026-10-13) ------------------------------------------------
+# Spielstand ROOM1150 an der Item-Box (Karte wie Lauf N der Spur I, test_r37_feuerloescher.cmake), Loescher im INVENTAR,
+# Feuer brennt ((3,0x81) NICHT gesetzt). Box-Zone msg 3: A@30 oeffnet die Box, A@123 waehlt den Loescher, A@147 tauscht
+# ihn in Box-Platz 2 (RE2 FUN_800703b8 @0x800706c8/@0x80070710), X/X schliessen. Danach Sprung (Debug-Menue) nach
+# ROOM1090 vor das Feuer (0,-1800,250) = Lage der Laeufe A/B. Das Eingabeskript beginnt je Raum neu: A@30 in ROOM1090 =
+# Aktion am Feuer, A@123/A@147 = die Taktung "weiter"/"Ja" — es darf nur msg 7 kommen, keine Frage, kein Loeschen.
+kr_lauf(i 1150 "1150;-23000;-12100;2048;flag:9:0x86;flag:3:0x85;flag:3:0x80;flag:7:0xf8;flag:7:0xf9;flag:7:0xfa;flag:7:0xfb;leer;give:0x31:1"
+        "W1,A0.1,W3,A0.1,W0.7,A0.1,W1,X0.1,W0.7,X0.1,W3,W4,A0.1,W2,A0.1,W6.5,A0.1,W6,A0.1,W8" "500#1090"
+        "RE15_DEBUG_JUMP=1090@330;RE15_PLAYER_POS=0,250,0,1" _i)
+pruef(I _i "room=1150 id=3 ITEMBOX")
+pruef(I _i "[debug-menu] AUTO-JUMP -> ROOM1090")
+pruef(I _i "[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31 NICHT im Inventar (Item-Box Platz 2)")
+pruef(I _i "id=7 \"I must hurry up and get something to put out this fire to save that woman!\"")
+pruef_nicht(I _i "id=8 \"Will you use the Fire Extinguisher?\"")
+pruef_nicht(I _i "id=9 \"You've used the Fire Extinguisher.\"")
+pruef(I _i "EXIT_AT: Bild 500 in Raum 1090")
 
 # --- C/D: Kartenleser 10D0 (Leon) ------------------------------------------------------------------------------
 kr_lauf(c 10d0 "10D0;800;-5000;2048;flag:9:0x34;leer;kiste:0x38:1" "${_ja}" 700 "RE15_FIRE_AOT=1@70#10D0" _c)

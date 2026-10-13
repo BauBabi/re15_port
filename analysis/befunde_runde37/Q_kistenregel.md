@@ -177,7 +177,9 @@ irons_tisch_1150, leiche_1110_1230, schluessel_r36, sicherung_1150, tuer1060_104
 | Port-Inventar-Abfragen (3.4) | Rolltor 1050, Parkplatz 11B0 | bleiben | pruefen schon das Inventar |
 
 "RE2-gleiche Reaktion": RE2 zeigt ohne Gegenstand einen RAUMTEXT statt der Frage (ROOM2080 sub13 msg 1, ROOM6150 sub02
-msg 0; alle 10 Keep_Item_ck des RE2-Zensus haben einen raumeigenen Else-Text, keinen allgemeinen System-Text). Das
+msg 0 — die beiden Benutzungs-Stellen MIT Frage im RE2-Zensus; die uebrigen 8 Keep_Item_ck schalten raumlokale
+Zustaende: 4010 sub06 Small Key gegen Dietrich, 7020 sub01 Stecker, 6010 sub00 Platz-Aufbau, 10B0 sub05, A020 main00;
+keiner ruft einen allgemeinen "Gegenstand fehlt"-Text auf, Q_belege/re2_besitz_zensus.txt). Das
 RE1.5-Gegenstueck ist der Zweig, den jedes der elf Raumskripte selbst fuer "nicht im Besitz" hat (Spalte "Text ohne
 Gegenstand" in 3.1) — die Regel schickt das Skript genau dorthin. Folge: KEIN neuer Text, KEINE neue Nachrichten-Id
 (VERTRAG 1.2 nicht beruehrt), kein neues Bit (VERTRAG 1.1), kein RDT-Patch. Die Reihenfolge "schon benutzt" vor
