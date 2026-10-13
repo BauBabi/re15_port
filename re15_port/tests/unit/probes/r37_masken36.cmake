@@ -23,7 +23,7 @@ endforeach()
 # Messwerkzeug der Integration (drei Framedumps: mit Masken / ohne Masken / ohne Figur).
 add_executable(probe_r37_masken36_ppm ${CMAKE_CURRENT_LIST_DIR}/../probe_r37_masken36_ppm.c)
 
-# Echte exe je Stage 3..6: HINTER verdeckt (>= Haelfte der Figurpunkte), DAVOR frei, Log fg_atlas=1 + Zeile der Spur P.
+# Echte exe je Stage 3..6, Leon UND Elza: HINTER verdeckt (>= Haelfte der Figurpunkte), DAVOR frei, Log fg_atlas=1 + Zeile der Spur P.
 if(TARGET re15_pc)
     foreach(_stufe 3 4 5 6)
         add_test(NAME integration_r37_masken36_stage${_stufe}
