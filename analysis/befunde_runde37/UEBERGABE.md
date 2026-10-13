@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-13 23:23: P masken36 Abnahme 0 NICHT bestanden: 1a (Stage 3..6 verdecken wieder) + 1b (Stage 1/2 unveraendert) erfuellt; M1: Elza ROOM30A1 (RDT/MSK bytegleich 30A0) ohne Ausschluss der Fehlverdecker — Erreichbarkeitsmodell ohne Saat fuer 30A1 -> Elza vor der Kabinenwand 265/464 Punkte uebermalt (Leon 0/602); M2: Riegel 'keine Fehlverdeckung' fuer 32 Sektionen ohne Stehplatz leer wahr, kein Elza-30A1-Riegel; M3: 'seit v0.6.x' falsch, 53741fe5 erst in v0.7.19. Nachbesserung P#1 laeuft (Vorschlag: bytegleiche Raumpaare bekommen die Zeilen des Leon-Raums).
 * 2026-10-13 23:21: G beretta Abnahme 2 BESTANDEN (Workflow fertig; alle Klassen 3 Treffer unter Standard-KI, Gitterarm einmal wie RE2) -> INTEGRIERT (625b0792, konfliktfrei). Bau ok, gezielte Kampf-Tests laufen. Offen: Abnahmen L und P.
 * 2026-10-13 23:13: L re2zombie Bau-Fortsetzung FERTIG (ab2bf2b9): (a) 0x201-Produzenten scharf @0x80101D68-DBC/@0x80101EC4-F10/@0x80101F14-F60 (Nahkampf-'Zusammenbruch' war Messaufbau-Artefakt: Item-Modal fror den Testprozess ein, 182db277; Messer 368->373), (b) DECISION[0] Block 3 bei (rand&1)==1 @0x801013c8, (c) EXEC[0] P1 Wecker im selben Takt, P2 im naechsten @0x8010159c (+ Moan-Takt @0x801014b4/@0x8010151c); DECISION[12] @0x8010460C echte Griff-Entscheidung; vier Strom-Riegel (r36 blut_pin eben/tief/rip, probe_10d0_situp_handoff) mit Beleg angepasst. Integration: Konfliktgefahr mit J (Griff-Code). Abnahme L laeuft.
 * 2026-10-13 23:09: Integration mit Q gruen: 76/76 (r37_kistenregel, Feuerloescher, Schluessel, Elza, 1090, SCD, Flags, Itembox, Keypad/Keydoor, Story, Codepanel). G Nachbesserung #2 FERTIG (Gitterarm), Abnahme G#2 laeuft.
@@ -94,7 +95,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | M kiste (BESTANDEN, integriert) | r37_kiste | Item-Kiste: Symbole rechts, Rahmen ueber den gleitenden Zeilen (Nachtrag 9) | gestartet (eigener Workflow wf_e49eab60-a6e) |
 | O szene11c0 (BESTANDEN, integriert) | r37_szene11c0 | Ada/Marvin-Szene 11C0 ohne Fehlblicke und 180-Grad-Drehungen (Nachtrag 11) | gestartet (eigener Workflow wf_726ba53b-339) |
 | N elzaems (BESTANDEN, integriert) | r37_elzaems | Elzas Szenario laedt jeden Typ aus CDEMD1 wie das Original (Orchestrator-Auftrag N) | gestartet (eigener Workflow wf_b84c9fa3-fdb) |
-| P masken36 (Bau fertig, Abnahme 0 laeuft) | r37_masken36 | Stage-3..6-Masken (BSS-Atlas) wieder zeichnen, Regression 53741fe5 (Orchestrator-Auftrag P) | gestartet (eigener Workflow wf_fef449e3-44a) |
+| P masken36 (Abnahme 0: Elza 30A1 Fehlverdeckung; Nachbesserung P#1 laeuft) | r37_masken36 | Stage-3..6-Masken (BSS-Atlas) wieder zeichnen, Regression 53741fe5 (Orchestrator-Auftrag P) | gestartet (eigener Workflow wf_fef449e3-44a) |
 | Q kistenregel (BESTANDEN, integriert) | r37_kistenregel | Item-Benutzung nur mit Item im Inventar (RE2), wo die Item-Box Bit-Abfragen oeffnet (Orchestrator-Auftrag Q) | gestartet (eigener Workflow wf_bd4dc2bf-23a) |
 | R kiste2feld (BESTANDEN, integriert) | r37_kiste2feld | 2-Feld-Symbole in der Kisten-Liste wie RE2 aus zwei Kacheln (Orchestrator-Auftrag R) | gestartet (eigener Workflow wf_b8b00ab0-fbf) |
 
