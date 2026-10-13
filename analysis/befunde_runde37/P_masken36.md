@@ -247,7 +247,10 @@ S/H wie §4.1, jetzt jeweils gegen einen eigenen Lauf ohne Figur gezaehlt). Log 
 | DAVOR v50B0c2 | 50B0/50B1 C2 (-15100,-19928) | 5162 / **0** | 4915 / **0** |
 | HINTER h6000c7 | 6000/6001 C7 (20933,-18184) | 252 / **164 (65 %)** | 322 / **199 (62 %)** |
 
-- Leon und Elza verhalten sich gleich (die Elza-Dateien der Stages 3..6 sind bytegleich, die RDTs 3051/4041/6011 auch;
+- ⛔ RICHTIGGESTELLT (Nachbesserung 1, Abnahme 0 M2): die Aussage "Leon und Elza verhalten sich gleich" galt fuer die
+  gemessenen Szenen, NICHT allgemein - fuer ROOM30A1 (RDT und MSK bytegleich zu 30A0) hatte die Tabelle keine Zeile, Elza
+  wurde VOR der Buero-Trennwand uebermalt (265 von 464 Punkten). Seit Nachbesserung 1 haben alle 15 Raumpaare dieselben
+  Zeilen (Riegel). Urspruenglicher Text: (die Elza-Dateien der Stages 3..6 sind bytegleich, die RDTs 3051/4041/6011 auch;
   5021 weicht ab und hat eine eigene Menge Tabellenzeilen). Stage 5 hat HINTER-Szenen in 5020, 5100 (Beine hinter dem
   niedrigen Vordergrund-Objekt), 5090 (Beine hinter dem Maschinenteil) und 5050 (Knie/Messer hinter der dunklen Kante);
   >= 60 % liefert der Szenenfinder (`suche 25 5`) in Stage 5 nur in 5020 (Daten der Generator-Masken, §6).
@@ -310,11 +313,10 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
 
 ## 6. OFFEN
 
-1. **Sektionen ohne Stehplatz im Modell (32 von 216):** dort findet die Erreichbarkeit (Saaten = AOTs mit eigenem Band + Tuer-
-   Ankuenfte) keinen Stehplatz im Regionsviereck — meist Kameras auf Ebenen ohne Saat (z.B. ROOM3040 Cut 4..7/12 Laufsteg
-   Band 1, ROOM5020 obere Baender, ROOM5090 Band 1, ROOM6010 Band 1/4). Diese Sektionen zeichnen wie am 2026-09-03 gebaut,
-   ohne Pruefung auf Fehlverdeckung. Weg: Saaten fuer Treppen-Uebergaenge zwischen Baendern (Treppen-AOT/RAMP-Zonen mit
-   beiden Baendern) — nicht gebaut.
+1. ~~Sektionen ohne Stehplatz im Modell (32 von 216)~~ - **erledigt in Nachbesserung 1:** die Ursachen waren fehlende
+   Tuer-Saaten (ROOM30A1, M1), Saaten nur einer Raumvariante (ROOM5021) und schraege Zellen als Kasten (ROOM4040/4080 ganz zu,
+   ROOM3040 Laufsteg nicht verbunden). Uebrig sind ROOM3050/3051 Cut 15, belegt ohne moegliche Figur (Ereignis-Cut,
+   Akteur-Cull) - Liste im Riegel, jede weitere faellt durch.
 2. **Saumpunkte:** ROOM3040 Cut 1 (Szene f3040c1): 9 von 222 Figurpunkten am Fussende werden noch von der verbliebenen
    Kistenmaske uebermalt (vorher 87). Die Lage (-22500,-11400) liegt im Modell nicht im erreichbaren Gitter dieses Cuts
    (Kiste auf dem Treppenabsatz). ROOM5090 Cut 14 DAVOR (17017,-22665): 2 (Leon) / 5 (Elza) von 505 / 403 Punkten am
@@ -342,8 +344,11 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
 
 - **Was sich aendert (Stages 3..6, Leon und Elza):** Vordergrund-Objekte verdecken die Figuren wieder, wenn sie dahinter
   stehen — z.B. die Maschine in FACTORY LINE B (ROOM3050), der Pfeiler am Treppenaufgang (ROOM5020), die Wandbloecke im
-  EAST/WEST PASSAGE (ROOM4040/4080), der Treppenpfeiler am Bahnsteig (ROOM6010). Seit v0.6.x (2026-09-08) war das in diesen
-  Stages unbemerkt ganz ausgefallen. Steht die Figur VOR einem Objekt, wird nie etwas von ihr uebermalt.
+  WEST PASSAGE (ROOM4080), der Treppenpfeiler am Bahnsteig (ROOM6010). Seit v0.7.19 (2026-09-08, Commit 53741fe5) war
+  das in diesen Stages unbemerkt ganz ausgefallen; die Masken selbst gibt es seit v0.3.96 (2026-09-03). Rechtecke, die
+  eine Figur an einem erreichbaren Platz VOR einem Objekt uebermalen wuerden, bleiben aus (berechnet fuer jede der 216
+  Sektionen, Leon und Elza; an der exe in den Szenen der Riegel 0 Punkte). Bekannte Reste: Saumpunkte am Rand einzelner
+  Masken (ROOM3040 Cut 1: 9 Punkte am Fussende, ROOM5090 Cut 14: 2/5), s. OFFEN 2.
 - Stellen, an denen die alten, automatisch erzeugten Masken Leon faelschlich geloescht haetten (Bodenflaechen, Wandstuecke,
   das Band knapp vor Objekten — dieselbe Art Fehler wie Ihre Meldung vom 2026-09-03 "Leon verschwindet"), bleiben aus.
   Wo Ihnen eine Verdeckung fehlt: F9-Marke wie gewohnt; der Weg dafuer ist eine Freistellung wie in STAGE1.
@@ -361,7 +366,135 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
 ## Nachbesserung 1 (2026-10-13, nach Abnahme 0 `P_abnahme_0.md`)
 
 Stand (fortlaufend):
-- [ ] M1 Elza ROOM30A1: Ursache, Beleg, Aenderung, Messung nachher
-- [ ] M2 Riegel (leer wahr ohne Stehplatz, bytegleiche Paare, Elza 30A1 an der exe) + Dossier-Aussagen §4.2/§7
-- [ ] M3 Versionsangabe (v0.7.19 statt v0.6.x)
-- [ ] Bau + gezielte Tests
+- [x] M1 Elza ROOM30A1: Ursache, Beleg, Aenderung, Messung nachher (NB1.1)
+- [x] M2 Riegel (leer wahr ohne Stehplatz, bytegleiche Paare, Elza 30A1 an der exe) + Dossier-Aussagen §4.2/§7 (NB1.2)
+- [x] M3 Versionsangabe (v0.7.19 statt v0.6.x) (NB1.3)
+- [ ] Bau + gezielte Tests (NB1.5)
+
+Werkzeuge (Scratchpad dieser Sitzung `nb1/lauf.sh`: exe-Kopie `re15_pc_nb1_<name>.exe` neben re15_pc.exe, Arbeitsordner
+`nb1/runs/<name>`, `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+RE15_FRAMEDUMP=<bild>:f.ppm RE15_EXIT_AT=<bild>#<raum>`). exe "alt" = `re15_pc_p37final2.exe` (Stand P vor der
+Nachbesserung, Tabelle 85 Zeilen; Log ROOM30A1 Cut 0 `masks=46`), exe "neu" = re15_pc.exe des Stands NB1. Zaehlung S/H
+mit `probe_r37_masken36_ppm` wie §4 (A mit Masken, B `RE15_NO_PRI=1`, C Figur ausserhalb des Regionsvierecks), Fenster
+aus `test_r37_masken36 proj` (neu, gibt fuer h4040c4 und f3050c5 genau die Fenster der Riegel aus). Neue Werkzeug-Modi
+im Riegel-Programm (kein Riegel): `saaten <raum>` (Saaten mit Herkunft), `cut <raum> <cut>` (Regionsviereck, Zonen,
+freie/erreichte Punkte je Band, Zelltypen), `fehl <raum> <cut> [x z]` (Stellen, an denen die UNGEFILTERTEN Masken eine
+Figur ohne Zelle davor verdecken; mit x z je Figurpunkt), `proj <raum> <cut> <x> <z> [band]` (Figurfenster).
+
+### NB1.1 Mangel M1 - Elza in ROOM30A1 VOR der Buero-Trennwand uebermalt
+
+**Messung vorher (Weg der Abnahme nachgefahren, exe alt):** `RE15_TITLE_SHOT_CHAR=1 RE15_DEBUG_JUMP=30A0@250
+RE15_PLAYER_POS=-25500,11700,3425 RE15_INPUT_SCRIPT=U1.07 RE15_INPUT_SCRIPT_START=420`, Bild 240:
+`[walk] F240 cut=0 ... pl pos=(-24284,0,13657)` (Kamera schaltet selbst auf Cut 0), `[pri] cut=0 pri_offset=0x3C0 masks=46
+fg_atlas=1`, Fenster 173 75 201 154, C = Zwangs-Cut 0 bei (-19800,19763): **Elza S=464 H=265** - die Zahl der Abnahme.
+
+**Ursache (gemessen, Werkzeug `saaten`):** ROOM30A0 hat 12 Saaten (10 AOT + Tuer-Ankunft (-25500,11700) aus ROOM3090),
+ROOM30A1 nur die 10 AOT-Saaten; die liegen alle in soliden Zellen (Abnahme `frei 0`) -> 0 Stehplaetze in allen Cuts ->
+keine Tabellenzeile. Die Tuer gibt es aber auch fuer Elza (SCD-Ablauf `re15_port/tools/scd_dump_room.py`):
+- ROOM3091.RDT main00 +0x1398 `Door_aot_set 3b 02 02 31 ... 64 9c 00 00 b4 2d 00 00 02 0a 00` = Slot 2, sce 2, Ankunft
+  (-25500,0,11700), Nutzlast +8 Stage 2 / +9 Raum 0x0A - bytegleich zu ROOM3090 +0x1390.
+- ROOM3091 sub00 +0x148E `Ifel_ck` / +0x1492 `Ck(4,16)=0` / +0x149A `Ck(4,8)=0` -> +0x14B2 `Aot_reset 46 02 01 31 08 00 ff ff`
+  = Slot 2 wird beim ERSTEN Besuch zur Nachrichtenflaeche (sce 1); das Elza-Ereignis sub07 setzt (4,16) (+0x16D0
+  `Set 22 04 10 01`) und schaltet die Tuer zurueck (+0x1D7C `Aot_reset 46 02 02 31 64 9c 00 00 b4 2d` sce 2). Ab dann ist
+  Slot 2 die Tuer nach ROOM30A1.
+- Der Generator nahm Tuer-Saaten nur aus dem VM-Stand nach main00+sub00 mit frischen Flags (= erster Besuch) -> genau
+  diese Tuer fehlte.
+- Die Raumvariante kommt nicht aus dem Tuersatz: der Warp liest nur Stage/Raum (FUN_8001d600 Tuerzweig @0x8001d82c:
+  @0x8001d874 `lw a0,-13912(a0)` = 0x800ac9a8 Nutzlast-Zeiger, gesetzt vom Tuer-Handler @0x800430c4 `sw a0,-13912(at)`;
+  @0x8001d94c `lbu v0,9(a0)` -> @0x8001d95c `sh v0,4066(at)` = Raum 0x800b0fe2, @0x8001d960 `lbu v0,8(a0)` = Stage,
+  @0x8001d930 `lbu v1,10(a0)` -> Cut 0x800b0fe4). Derselbe Raum-Index 0x800b0fe2 (ohne Variante) waehlt den Hintergrund:
+  @0x80021c90 `lh a1,4066(a1)`, Stage @0x80021ca8 `lh v0,4064(v0)`, Cut @0x80021c88 `lh a3,4068(a3)` -> Sektor-Tabelle
+  @0x8007438c (@0x80021cbc..@0x80021cd4), Cut*32 Sektoren @0x80021cd8. Leon- und Elza-Variante eines Raums sind derselbe
+  Ort mit demselben Hintergrund und (Stages 3..6) derselben MSK-Datei (15 Paare bytegleich).
+
+**Aenderung (nur der Generator/Riegel `tests/unit/test_r37_masken36.c`; Lader und Laufzeit-Code unveraendert):**
+1. Saaten aus JEDEM Tuersatz 0x3B jeder RDT, statisch gelaufen wie scripts/door_graph.py / test_r36_kartenbits.c
+   (Regionen der main-/sub-Sektion, Laenge aus `scd_opcode_size_at` = Vorschub der VM; Satzlaenge 32/40 nach pc[3]&0x80
+   @0x80040618 `lbu v0,3(v1)` / @0x80040620 `andi v0,v0,0x80` / @0x80040630 `addiu v0,v1,40` / @0x80040634 `addiu v0,v1,32`;
+   Nutzlast pc+14 bzw. pc+22 @0x80042fb8 `addiu a0,s0,12` / @0x80042f90 `addiu a0,s0,20` mit s0 = pc+2). Ankunft (0,0,0)
+   zaehlt nicht (aot_common.c). Saaten 1979 -> 2626.
+2. Saaten des RAUMPAARS xxx0/xxx1: die Flutfuellung eines Raums startet auch an den Saaten seiner anderen Variante,
+   laeuft aber in der Kollision der EIGENEN RDT (frei/in_zonen) - nur wo diese Variante stehen kann.
+Wirkung auf die Tabelle (Zwischenstand vor NB1.2, `erzeuge` gegen die alte Tabelle): +3 Zeilen ROOM30A1 Cut 0/1/3
+(25/21/14 Rechtecke, bitgleich zu 30A0), +2 Zeilen ROOM5021 Cut 6/12 (33/1, bitgleich zu 5020 - der Hinweis Abnahme §4.6),
+ROOM6000/6001 Cut 9 +1 Rechteck (Tuer ROOM6010 +0xF88/+0xFAC nach ROOM6000, im VM-Stand nicht aktiv). Alle anderen Zeilen
+bitgleich; ohne Stehplatz 32 -> 22.
+
+**Messung nachher (exe neu, derselbe Weg):** Elza `masks=21 fg_atlas=1` + Zeile der Spur P, `[walk] F240 cut=0 ...
+pl pos=(-24284,0,13657)`, **S=464 H=0** (Bild bitgleich zu B im Fenster); Leon an derselben Stelle S=602 H=0.
+Bild Scratchpad `nb1/me1.png` (alt | neu | ohne Masken): alt bleibt von Elza nur der Stiefel unter der Trennwand, neu
+steht sie ganz davor. Riegel: `integration_r37_masken36_stage3` faehrt diesen Weg (Elza und Leon, Bild 240, verlangt
+Cut 0 von selbst, H == 0), `unit_r37_masken36_verdeckung` Szene f30A1c0 (FREI: ungefiltert 57 von 81 Figurpunkten
+verdeckt, gefiltert 0).
+
+### NB1.2 Mangel M2 - Riegel leer wahr, Paare ungeprueft, Dossier-Aussagen
+
+**Ursache 1 - leere Sektionen:** "keine Fehlverdeckung" ist fuer Sektionen ohne Stehplatz leer wahr. Nach NB1.1 blieben 22
+(11 Paare): ROOM3040/3041 Cut 6/12, 3050/3051 Cut 15, 4040/4041 Cut 9..12, 4080/4081 Cut 5..8. Gemessen (Werkzeug `cut`):
+- ROOM4040 Cut 9: im Regionsviereck 0 freie Punkte auf Band 0; die soliden Zellen dort sind type 1:45, **2:60, 4:5, 6:5, 7:10**
+  (Zaehlung mit Mehrfachnennung je Quadranten-Partition) - die schraegen Gaenge. ROOM4080 Cut 5 ebenso (2:40, 5:15 ...).
+  Das Modell nahm JEDE Zelle als ihren Kasten (`x - PR .. x + width + PR`), der Kasten einer schraegen Zelle sperrt den ganzen
+  Gang. Der Port-Resolver kennt die Formen (re15_collision.c: push_diag2/4/5/6/7, push_circle, push_caps8/9; Spieler-Aufruf
+  `collision_constrain_impl(..., PR, 1u, ...)`, PR 450 = DAT_80073e94[6]).
+- ROOM3040 Cut 6: Band 1 (Laufsteg) 2166 freie Punkte, 0 erreicht - der Laufsteg haengt nur ueber schraege Zellen
+  (Band 1: 2:5 4:5 5:5 6:5) an den Saaten.
+- ROOM3050 Cut 15: auf keinem Band erreicht. Keine RVD-Zone schaltet auf Cut 15 (nur Zone 38 `15 -> 0` = das
+  Regionsviereck (-32700,12500)..(-6500,32700)); einzig das Ereignis sub10 schaltet ihn (ROOM3050.RDT +0x2596 `Cut_chg 29 0f`,
+  nach `Message_on` 3/4 und `Ck(12,31)=0`), ausgeloest am Pruef-AOT Slot 10 (+0x1FB4 `Aot_set 2c 0a 03 31 ...`, Rechteck
+  (-25900,-16900) 1000 x 2000, Ereignis `18 0a` = sub10). Die Figur steht dabei bei z -16900..-14900, ausserhalb des
+  Regionsvierecks (z >= 12500) -> der Akteur-Cull (FUN_8002c18c, re15_rdt_get_region_quad) zeichnet sie in Cut 15 nicht.
+  ROOM3051.RDT ist bytegleich zu ROOM3050.
+
+**Aenderung 1 - Zellform aus dem Resolver:** `form_drin` fragt `re15_collision_constrain_contact_band` (= FUN_8003b0a4-Port)
+mit genau dieser Zelle in jeder Quadranten-Partition (FUN_8003aea0), Spieler-Maske 1, Band der Zelle: drin = der Resolver
+verschiebt einen dort STEHENDEN Spieler (alte = neue Lage; push_diag4..7 bestimmen die Seite aus der alten Lage, mit der
+eigenen gilt die Seite des Punkts). Rechtecke (type 1) bleiben ihr Kasten - Raeume nur mit Rechtecken rechnen bitgleich
+wie vorher. Frei-Test mit Radius 450; Sichtstrecke Kamera -> Figurpunkt gegen die Form im Raster 25 (Zellen mit Kamera
+oder Figurpunkt in der FORM zaehlen nicht). Zellen entdoppelt, frei-Merker je Gitterpunkt, Sicht-Merker je Stehplatz
+und Figurpunkt (Laufzeit `erzeuge` 52 s -> 30 s, `ausschluss` 85 s; Zeitgrenze der Unit-Riegel 300 -> 900 s).
+Gegenprobe der Formfrage: Variante "aus jeder der vier Achsrichtungen um 1 heranruecken" gegen "stehend" - gleiche
+Ausschluss-Bits in allen 216 Sektionen, nur ROOM4040/4041 Cut 11 5073 statt 5426 Stehplaetze. Raster 25 gegen Abtastung 25
+direkt am Resolver: 2 Rechtecke mehr (ROOM4080/4081 Cut 8, 5090/5091 Cut 11; Rundung am Rand, sichere Richtung).
+
+**Tabelle danach (`unit_r37_masken36_ausschluss`):** Saaten 2626, 216 Sektionen, 6478 Masken, **1224 ausgeschlossen
+(vorher 944), 124 Zeilen (vorher 85)**, ohne Stehplatz **2** (ROOM3050/3051 Cut 15, vorher 32). Stage 4 hat jetzt Zeilen
+(ROOM4040/4041 Cut 4..7, 9..11; ROOM4080/4081 Cut 1..3, 5..8); Fehlverdeckungen ohne Ausschluss je Stage 3/4/5/6 =
+419912 / 25510 / 319668 / 880614 (Stage 4 vorher 0 - die schraegen Gaenge waren unsichtbar), HINTER-Zellen-Verdeckung mit
+Ausschluss 682688 / 276494 / 180376 / 727312.
+
+**Ist das an der exe so? (alt gegen neu, Zwangs-Cut, Bild 120, Werkzeug `fehl` fuer die Stelle):**
+
+| Stelle | alt: masks / S / H | neu: masks / S / H |
+|---|---|---|
+| ROOM4040 Cut 4 (-22000,-3722) Leon neben dem Wandblock | 7 / 397 / **57** | 2 / 397 / **0** |
+| ROOM4080 Cut 2 (8275,-21910) Leon weit hinten im Gang | 15 / 114 / **4** | 5 / 114 / **0** |
+| ROOM4080 Cut 5 (17275,-12710) HINTER der Wand | 14 / 883 / 879 | 5 / 883 / **879** |
+| ROOM4080 Cut 5 (9675,-9310) DAVOR, nah an der Kamera | 14 / 8374 / 0 | 5 / 8374 / **0** |
+
+Bilder `nb1/m40.png` (4040 C4: alt schneidet die Wandblock-Kante durch Leon, neu = ohne Masken), `nb1/m80.png`,
+`nb1/m85.png`. ROOM4080 C2: das Modell sagt 36 von 81 Punkten, die exe zeigt 4 von 114 - die Modellfigur (+-350 quer) ist
+dort breiter als Leon von hinten; das Modell irrt in die sichere Richtung (mehr Ausschluss).
+**Folge fuer die Riegel-Szenen der Stage 4:** h4040c4 (-23200,-922), h4080c1 und v4040c7 lagen auf Rechtecken, die jetzt
+ausgeschlossen sind (sie uebermalten Leon VOR dem Wandblock, Zeile 1 der Tabelle oben) - ersetzt durch ROOM4080 Cut 5
+HINTER (17275,-12710) / DAVOR (9675,-9310) (Szenenfinder `suche 50 4`, Werte der Tabelle oben).
+
+**Aenderung 2 - Riegel:**
+- `unit_r37_masken36_ausschluss`: neu "Sektionen ohne Stehplatz == belegte Liste (ROOM3050/3051 Cut 15)" - jede weitere
+  Sektion ohne Stehplatz faellt durch (der Check "keine Fehlverdeckung" ist damit ausser in den zwei belegten Sektionen nie
+  leer wahr); "RDT- und MSK-bytegleiche Raumpaare haben dieselben Tabellenzeilen" (8 von 8) und "jedes Raumpaar mit MSK hat
+  dieselben Zeilen" (15 von 15). Gegenprobe: mit der Tabelle von 7495dc73 meldet der Paar-Check `Paar ROOM30A0/30A1:
+  Tabellenzeilen verschieden - RDT und MSK BYTEGLEICH` und `ROOM5020/5021`.
+- `unit_r37_masken36_verdeckung`: FREI-Szenen verlangen zusaetzlich die Gegenprobe "ungefiltert verdeckt" (f3050c5 54,
+  f30A1c0 57 von 81); neu f30A1c0, h4080c5, v4080c5.
+- `integration_r37_masken36_stage3`: der Weg aus M1 an der exe (Elza ROOM30A1 und Leon ROOM30A0, kein Zwangs-Cut, Bild
+  240, Cut 0 im Log verlangt, H == 0). `integration_r37_masken36_stage4`: ROOM4080 Cut 5 (Leon und Elza).
+- `P_masken36_alle_cuts.txt` vergleicht die Maskenzahl an der exe mit der Tabelle - das ist eine Lader-Pruefung
+  (Tabelle kommt an), KEINE Pruefung auf Fehlverdeckung; so steht es jetzt im Kopf der Datei (neu erzeugt, NB1.4).
+
+**Aenderung 3 - Dossier:** §4.2 ("Leon und Elza verhalten sich gleich") richtiggestellt, §6 OFFEN 1 erledigt, §7 neu
+formuliert (keine "nie"-Aussage, Reste genannt).
+
+### NB1.3 Mangel M3 - Versionsangabe
+`git tag --contains 53741fe5 | sort -V | head -1` -> **v0.7.19** (2026-09-08 15:19); `git tag --contains b8db7b2b | sort -V |
+head -1` -> v0.3.96 (2026-09-03 12:30). §7 sagt jetzt "Seit v0.7.19 (2026-09-08, Commit 53741fe5) ... die Masken selbst
+gibt es seit v0.3.96".
