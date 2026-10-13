@@ -18,8 +18,9 @@
  *                Bild, im Gespraech (msg 10..13) dreht sich niemand, Marvin nur beim Losrennen (nach seiner Zeile,
  *                < 120 Grad), je Zeile Sprecher UND Zuhoerer zum Partner (Koerper im Kegel 0x60 @0x80076c41, Kopf auf
  *                dem Partner bzw. Keyframe/Nicken), der Knall nur mit den Koepfen; Nachtrag 12: Ada dreht sich dem
- *                laufenden Marvin EINMAL nach (< 90 Grad, bei msg 14 im Kegel 0x60 neben ihm) und ihr Kopf-Ziel
- *                folgt ihm in jedem Bild; Schnitt zurueck nach 1150 Cut 7.
+ *                laufenden Marvin GENAU EINMAL nach (Beginn nicht vor seiner Drehung zum Losrennen, < 90 Grad, im
+ *                ersten Bild von msg 14 im Kegel 0x60 neben ihm) und ihr Kopf-Ziel folgt ihm in jedem Bild der Zeile
+ *                (Abstand zu seinem Ort < 500); Schnitt zurueck nach 1150 Cut 7.
  *   auswerten <lauf>  Auswerter fuer integration_r37_szene11c0 (echte exe): s11c0.log (RE15_S11C0_LOG) + neck_trace.log
  *                (RE15_NECK_TRACE, der GEZEICHNETE Kopf): dieselben Bedingungen mit dem wirklichen Kopf-Blick. */
 #include "re15_rdt.h"
@@ -363,8 +364,14 @@ static void bedingungen(int mit_kopf, const char *quelle)
         if (z13_ende >= 0 && DM[i].f0 < z13_ende) m_vor_lauf++; }
     PRUEF(a_vor_lauf == 0, "[%s] Ada dreht den Koerper im ganzen Gespraech nicht (bis Marvins letzte Zeile endet): %d Drehungen "
           "davor - kein 180, kein zweites 90", quelle, a_vor_lauf);
-    PRUEF(na <= 1 && max_a < 0x400, "[%s] Nachtrag 12: danach hoechstens EINE Drehung Adas (dem laufenden Marvin nach), %d Einheiten "
-          "= %.1f Grad < 90 Grad (%d Abschnitte)", quelle, max_a, max_a * 360.0 / 4096.0, na);
+    /* Nachtrag 12 "dreht sich dem weglaufenden Marvin nach": GENAU eine Drehung Adas, und sie beginnt erst, wenn Marvin
+     * sich zum Losrennen dreht (seine erste Drehung, Phase 1 des Laufs) - nicht schon davor (Fortsetzung Runde 37:
+     * vorher nur "hoechstens eine", das liess auch "Ada bleibt stehen" durch). */
+    int m_los = (nm > 0) ? DM[0].f0 : -1;
+    PRUEF(na == 1 && max_a < 0x400 && m_los >= 0 && DA[0].f0 >= m_los,
+          "[%s] Nachtrag 12: genau EINE Drehung Adas, dem laufenden Marvin nach (ab F%d, Marvin dreht zum Losrennen ab F%d), "
+          "%d Einheiten = %.1f Grad < 90 Grad (%d Abschnitte)", quelle, na ? DA[0].f0 : -1, m_los, max_a,
+          max_a * 360.0 / 4096.0, na);
     PRUEF(m_vor_lauf == 0 && z13_ende >= 0,
           "[%s] Marvin dreht den Koerper erst nach dem Ende seiner letzten Zeile (F%d): %d Drehungen davor", quelle, z13_ende, m_vor_lauf);
     PRUEF(max_m < KEIN_180, "[%s] groesste Einzeldrehung Marvins %d Einheiten = %.1f Grad < 120 Grad (Losrennen zur Tuer hinter der Kamera)",
