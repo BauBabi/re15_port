@@ -256,7 +256,7 @@ steht das fertig-Bit und die Regel laesst das Original-Bit gelten).
 | `unit_1090_flame_out_pin` (test_1090_flame_out_pin.c) | `FAIL: die brennenden Truemmer sind weg (7 Emitter)` u.a., 4 Fehler: ohne Loescher im Inventar legt sub00 den Loesch-Platz + Selbst-Tuer @0x02352 nicht an | Vorbedingung "aufgenommen" = `(3,0x85)` + `re15_inv_grant(0x31,1)` | gruen |
 | `unit_r36_schluessel_zelle` (test_r36_schluessel.c) | `FAIL: Z ROOM1211 mit (4,0xEC) (= Prison Key genommen): John ..., Slot 6 -> sub02` | "genommen" = Bit + Item 0x42 im Inventar (`s_hf_gabe` in hochfahren) | gruen |
 | `unit_r36_schluessel_befreiung` Pruefung O | alt erwartet "Schluessel nicht im Inventar (z.B. Item-Box): Szene bis zum Ende, keine Abfrage" — genau der Q-Fall | Erwartung auf die Q-Regel umgestellt: keine Befreiung (Set(4,0xFC) nie), Platz 8 = Raumtext msg 10, keine Abfrage | gruen (`ok: O Schluessel nicht im Inventar: keine Befreiung (Set(4,0xFC) Bild -1, msg 9 Bild -1), Platz 8 = Raumtext msg 10, keine Abfrage ...`) |
-| `unit_r36_elza_unlock` (test_r36_elza.c) | Szene erreicht die Aufschliess-Geste @0x020F8 nicht | "Prison key" = Bit + Item 0x42 im Inventar (`s_boot_gabe` in room_boot) | gruen |
+| `unit_r36_elza_unlock` (test_r36_elza.c) | `FEHLER: Szene erreicht die Aufschliess-Geste @0x020F8 in Bild -1` + 3 Folgefehler (Ton), `unlock: 4 Fehler` | "Prison key" = Bit + Item 0x42 im Inventar (`s_boot_gabe` in room_boot) | gruen |
 Die Pruefung O war eine Erwartung der Runde 36 (Nachbesserung 1, Wegwerf-Abfrage) fuer einen Zustand, den der
 Orchestrator-Auftrag Q jetzt ausdruecklich verbietet (Benutzung ohne Gegenstand im Inventar); ihr eigentlicher Kern
 (keine Wegwerf-Abfrage ohne Besitz, RE2 @0x80051634) bleibt geprueft.
