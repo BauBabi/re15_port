@@ -267,6 +267,17 @@ Regionsvierecks von Cut 5 ((-22600,-21300) (-22268,-13250) (1700,-3450) (1600,-2
 
 Der Ausschluss ist damit an der exe belegt (538 -> 0); B des alten Laufs und B des Riegel-Laufs sind bitgleich (cmp).
 
+### 4.4 Je Raum/Cut an der exe: JEDE der 216 Generator-Sektionen (Leon 108, Elza 108)
+Auftrag "je Raum/Cut nachweisen": ein Lauf je Sektion (`RE15_DEBUG_JUMP=<Leon-Raum>@250`, fuer Elza zusaetzlich
+`RE15_TITLE_SHOT_CHAR=1`, `RE15_FORCE_CUT=<cut>`, `RE15_EXIT_AT=40#<raum>`); Soll = Maskenzahl nach dem Ausschluss
+(Engine-Leser `re15_pri_parse_section` + `re15_masken36_filter`, Hilfsprogramm Scratchpad `p37/erwart.c`); Ist = Logzeile
+`[pri] cut=<c> ... masks=<n> fg_atlas=<f>` nach `loaded room<raum>.rdt` + Zeile der Spur P. Ergebnisliste:
+`analysis/befunde_runde37/P_masken36_alle_cuts.txt`.
+- **Stand P: 214 von 216 Sektionen `fg_atlas=1`, Maskenzahl == Soll, Zeile der Spur P (BSS-Atlas des Cuts).** Die zwei
+  uebrigen sind ROOM3050/3051 Cut 6: alle 7 Rechtecke ausgeschlossen (Bodenflaechen in der Auswahl, §3.2) -> masks=0 ==
+  Soll, nichts zu zeichnen, kein Atlas noetig.
+- Stand vor P (vorher-exe bddd6b31): siehe §4.5.
+
 
 ## 5. Tests
 
@@ -284,6 +295,16 @@ tests/integration/CMakeLists.txt):
 Abweichungen des ZWEITEN Laufs (nach `memset`), der die Tabelle mit sich selbst vergleicht - der Check war immer wahr.
 Jetzt wird das Ergebnis der Nachrechnung gesichert und geprueft; neu ist der Check "keine verwaiste Tabellenzeile"
 (er haette die fuenf 0x1221-Zeilen nach be2dbd26 gemeldet).
+
+### 5.1 Gezielte Laeufe (KEINE volle Suite; Bau `local_build.sh configure` + `build`)
+`ctest --test-dir re15_port/build -R "r37_masken36|r37_pri1100|pri_masken|r36_pri|pri_hashes|unit_pri_" --timeout 900 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 22`** (unit_pri_hashes, unit_pri_inventar_riegel, unit_pri_kopfschnitt,
+unit_pri_eingemessen, unit_pri_silhouette, unit_r36_pri_absperrung, unit_r36_pri_schatten, integration_r36_pri_schatten,
+unit_r37_masken36_zensus/ausschluss/verdeckung, integration_r37_masken36_stage3..6, unit_r37_pri1100_leck/marke/zwilling/
+elza, integration_r37_pri1100_marke/elza, integration_pri_masken). Laufzeiten integration_r37_masken36_stage3..6:
+206 / 159 / 129 / 128 s (Stage 3 mit FREI).
+Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikte nur in AUFTRAG.md/VERTRAG.md
+(Orchestrator-Dateien), Code konfliktfrei.
 
 ## 6. OFFEN
 
