@@ -29,6 +29,8 @@ wie @0x80101540-a0 / @0x8010159c. Dazu Zensus der uebrigen OFFEN-Marken (Bewegun
 - [x] Schritt 4: Zensus OFFEN-Marken
 - [x] Schritt 5: Strom-Messung + verschobene Riegel
 - [x] Schritt 6: Messung nachher (Harness + exe Leon/Elza), Tests
+- [x] Fortsetzung 2026-10-13: Stand gegen den Auftrag geprueft ((a)(b)(c) Code gegen Disassembly, (c) inkl. Moan-Takt),
+      breitere Testauswahl -> vier weitere verschobene Riegel gefunden und mit Mechanismus angepasst (5b), Abschluss
 
 ## Schritt 0 — Lektuere (Befunde)
 
@@ -371,6 +373,21 @@ integration_r34_granaten (Fenster 220 -> 360), integration_r35_granate (EXIT_AT 
 Zeile 9 waehlt per Wurf Bersten oder Zerreissen (`beq s0,zero` @0x80108d10, 1 von 4 Zerreissen); im Strom nach Spur L zerreisst
 Gegner 3 (Leiche ab Bild 258 = X+139: P1 Clip 4, P5/P6 (rand&0x1f)+15 @0x80109214-1C, P3 Clip 1), vorher bersten beide (165).
 Gemessen mit 360: "Gegner 2 Leiche ab Bild 165, Gegner 3 Leiche ab Bild 258" — kein Haenger.
+Fortsetzung (5b): probe_r36_blut (Sonden-Maske 0, alle neun Varianten bitgleich zur Basis), probe_10d0_situp_re2
+(Uebergabe-Tick +0x5 in {1,2}).
+
+### Gezielte Laeufe der Fortsetzung (2026-10-13, Baum r37_re2zombie, Stand nach 4c9e56e9; keine volle Suite)
+Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`.
+1. Unit-Auswahl (alle Module/Raeume des Diffs + RE2-Strom-Nutzer), `-E "^integration_" -j 4`:
+   `-R "re2|zomb|zgirl|granat|lyer|messer|crawl|kriech|gegnerzahl|1140|1130|1180|enemy|biss|griff|grab|bump|kfjump|teardeath|blut|bandlock|rise|r37_|irons|1150|dog|crow|spider|affen|situp|10d0"`
+   -> **`100% tests passed, 0 tests failed out of 200`** (vorher, vor 5b: `98% tests passed, 3 tests failed out of 198` =
+   blut_pin eben/tief/rip).
+2. Gegenprobe ALLER uebrigen Nicht-Integrations-Tests (`-E "^integration_|<Ausdruck 1 ohne situp|10d0>" -j 4`, 424 Tests):
+   `99% tests passed, 1 tests failed out of 424` — einziger roter = probe_10d0_situp_handoff (vor der Anpassung 5b;
+   danach in Lauf 1 enthalten und gruen).
+3. Integration (seriell), `-R "^integration_.*(<Ausdruck 1 ohne situp|10d0>)"`: **`100% tests passed, 0 tests failed out of 16`**
+   (u.a. integration_r37_re2zombie 51,6 s, integration_r37_zombieaktiv, integration_r34_granaten, integration_r35_granate,
+   integration_r36_gegnerzahl, integration_r35_zgirl/_5090, integration_r36_szene1150, integration_r35_cut1150).
 
 ## OFFEN
 
@@ -411,3 +428,7 @@ Gemessen mit 360: "Gegner 2 Leiche ab Bild 165, Gegner 3 Leiche ab Bild 258" —
   `re15_port/include/re15_re2zombie_r37.h` (Header, keine neue .c — Android-GLOB unberuehrt); +9 Unit-Tests, +1 Integration
   (RE15_MIN_TESTS +10).
 * Entscheidungsfrage: keine.
+* Fuer die Integration: Riegel-Liste = Schritt 5 + 5b (zusammen 18 Riegel mit alt/neu). DECISION[12] (re2z_decide_lunge,
+  `case 12` in re2z_active) ist ein neuer Griff-EINSTIEG; der Griff-/Biss-Code selbst (Spur J) ist unberuehrt. Geaenderte
+  fremde Testdateien: test_r36_zombieki_eintritt.c, test_r34_granaten.cmake, test_r35_granate.cmake, probe_r36_blut.c,
+  probe_10d0_situp_re2.c (je mit Beleg im Dossier).
