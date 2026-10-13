@@ -17,7 +17,8 @@ endif()
 foreach(_teil zensus ausschluss verdeckung)
     add_test(NAME unit_r37_masken36_${_teil} COMMAND test_r37_masken36 ${_teil}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(unit_r37_masken36_${_teil} PROPERTIES TIMEOUT 300)
+    # Nachbesserung 1: ausschluss rechnet mit der Zellform aus dem Resolver (allein ~85 s) - Luft fuer Last
+    set_tests_properties(unit_r37_masken36_${_teil} PROPERTIES TIMEOUT 900)
 endforeach()
 
 # Messwerkzeug der Integration (drei Framedumps: mit Masken / ohne Masken / ohne Figur).

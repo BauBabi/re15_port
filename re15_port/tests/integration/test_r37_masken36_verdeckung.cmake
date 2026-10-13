@@ -18,6 +18,12 @@ cmake_minimum_required(VERSION 3.16)
 # Stage 3 zusaetzlich FREI (Leon und Elza): ROOM3050 Cut 5 (-13300,-16368), Figur frei im Gang VOR der Maschine - ohne
 # den Ausschluss (engine/src/masken36_r37.c) loeschten die Generator-Rechtecke sie bis auf den Kopf (Dossier §3.2:
 # 538 Punkte), jetzt H == 0.
+# Stage 3 ausserdem der ECHTE WEG aus Abnahme 0 Mangel M1 (Nachbesserung 1): Elza (und Leon) an der Tuer-Ankunft aus
+# ROOM3091/3090 (-25500,11700), RE15_INPUT_SCRIPT=U1.07 ab Bild 420, kein Zwangs-Cut; Bild 240 im Raum: die Kamera hat
+# selbst auf Cut 0 geschaltet, die Figur steht VOR der Buero-Trennwand. Vor der Nachbesserung uebermalten die Masken von
+# ROOM30A1 Elza dort 265 von 464 Punkten (kein Ausschluss fuer 30A1), jetzt H == 0 fuer Elza und Leon.
+# Stage 4 (Nachbesserung 1): ROOM4080 Cut 5 statt ROOM4040 Cut 4/7 - mit der Zellform aus dem Kollisions-Resolver sind die
+# Rechtecke von ROOM4040 Cut 4/7 ausgeschlossen (sie uebermalten Leon VOR dem Wandblock: (-22000,-3722) 57 von 397).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PPM_TOOL=<probe_r37_masken36_ppm> -DWORKDIR=<dir> -DSTUFE=<3..6> -P <diese Datei>
 # =============================================================================
@@ -45,16 +51,18 @@ if(STUFE EQUAL 3)
     set(_wv 222 127 277 213)
     set(_f 5 -13300 -16368 -23996 1523)   # FREI: cut x z, ohne-Figur x z
     set(_wf 159 87 188 182)
+    set(_weg 1)                           # M1: echter Weg ROOM30A0/30A1 (s. Kopf)
+    set(_ww 173 75 201 154)
 elseif(STUFE EQUAL 4)
-    set(_raum 4040)
-    set(_cut 4)
-    set(_h -23200 -922)
-    set(_vcut 7)
-    set(_v -7200 -20022)
-    set(_c -26400 17150)
-    set(_vc -26400 17150)
-    set(_wh 172 65 194 123)
-    set(_wv 143 84 177 190)
+    set(_raum 4080)
+    set(_cut 5)
+    set(_h 17275 -12710)
+    set(_vcut 5)
+    set(_v 9675 -9310)
+    set(_c 22000 -5450)
+    set(_vc 22000 -5450)
+    set(_wh 45 74 74 146)
+    set(_wv 52 36 129 240)
 elseif(STUFE EQUAL 5)
     set(_raum 5020)
     set(_cut 9)
@@ -110,6 +118,36 @@ function(szene_lauf _name _cutnr _x _z)
     set(_ppm_${_name} "${WORKDIR}/f.ppm" PARENT_SCOPE)
     set(_log_${_name} "${WORKDIR}/debug.log" PARENT_SCOPE)
 endfunction()
+
+# Lauf ohne Zwangs-Cut und Lage aus dem Spieler-Weg (M1): Bild 240 im Zielraum _zr.
+function(weg_lauf _name _zr)
+    set(WORKDIR "${_basis_wd}/lauf_${_lauf_id}_${_name}")
+    file(MAKE_DIRECTORY "${WORKDIR}")
+    file(REMOVE "${WORKDIR}/f.ppm" "${WORKDIR}/debug.log")
+    re15_start_spiel(_rv 180
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_AUDIODRIVER=dummy
+        RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+        "RE15_FRAMEDUMP=240:f.ppm" "RE15_EXIT_AT=240#${_zr}"
+        ${ARGN}
+        "${_exe_kopie}")
+    if(NOT EXISTS "${WORKDIR}/f.ppm")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r37_masken36[${STUFE} ${_name}]: kein Framedump (exit=${_rv}, ${WORKDIR})")
+    endif()
+    set(_ppm_${_name} "${WORKDIR}/f.ppm" PARENT_SCOPE)
+    set(_log_${_name} "${WORKDIR}/debug.log" PARENT_SCOPE)
+endfunction()
+if(DEFINED _weg)
+    set(_weg_env "RE15_DEBUG_JUMP=30A0@250" "RE15_PLAYER_POS=-25500,11700,3425" "RE15_INPUT_SCRIPT=U1.07"
+                 "RE15_INPUT_SCRIPT_START=420")
+    set(_weg_c "RE15_DEBUG_JUMP=30A0@250" "RE15_PLAYER_POS=-19800,19763,0" "RE15_FORCE_CUT=0" "RE15_NO_PRI=1")
+    weg_lauf(ew_a 30A1 RE15_TITLE_SHOT_CHAR=1 ${_weg_env})
+    weg_lauf(ew_b 30A1 RE15_TITLE_SHOT_CHAR=1 ${_weg_env} RE15_NO_PRI=1)
+    weg_lauf(ew_c 30A1 RE15_TITLE_SHOT_CHAR=1 ${_weg_c})
+    weg_lauf(lw_a 30A0 ${_weg_env})
+    weg_lauf(lw_b 30A0 ${_weg_env} RE15_NO_PRI=1)
+    weg_lauf(lw_c 30A0 ${_weg_c})
+endif()
 
 list(GET _h 0 _hx)
 list(GET _h 1 _hz)
@@ -188,6 +226,16 @@ if(DEFINED _f)
     log_pruefen(f_a ${_fcut} ${_raum})
     log_pruefen(ef_a ${_fcut} ${_ziel_e})
 endif()
+if(DEFINED _weg)
+    log_pruefen(ew_a 0 30A1)
+    log_pruefen(lw_a 0 30A0)
+    foreach(_n ew_a lw_a)
+        file(READ "${_log_${_n}}" _wl)
+        if(NOT _wl MATCHES "\\[walk\\] F240 cut=0 ")
+            message(FATAL_ERROR "r37_masken36[${STUFE} ${_n}]: Bild 240 nicht in Cut 0 - der Weg aus M1 kommt nicht an")
+        endif()
+    endforeach()
+endif()
 
 function(sh_messen _out_s _out_h _a _b _c)
     execute_process(COMMAND "${RE15_PPM_TOOL}" "${_a}" "${_b}" "${_c}" ${ARGN} 24
@@ -237,6 +285,18 @@ if(DEFINED _f)
     endif()
     if(NOT _fh EQUAL 0 OR NOT _efh EQUAL 0)
         message(FATAL_ERROR "r37_masken36[${STUFE}]: FREI - Figur VOR jedem Objekt uebermalt (Leon ${_fh}, Elza ${_efh})")
+    endif()
+endif()
+if(DEFINED _weg)
+    sh_messen(_ews _ewh "${_ppm_ew_a}" "${_ppm_ew_b}" "${_ppm_ew_c}" ${_ww})
+    sh_messen(_lws _lwh "${_ppm_lw_a}" "${_ppm_lw_b}" "${_ppm_lw_c}" ${_ww})
+    message(STATUS "r37_masken36[Stage ${STUFE}] WEG M1 ROOM30A1/30A0 Cut 0 ab der Tuer: Elza Figurpunkte ${_ews}, "
+                   "uebermalt ${_ewh} (vor der Nachbesserung 265 von 464) | Leon Figurpunkte ${_lws}, uebermalt ${_lwh}")
+    if(NOT _ews GREATER 50 OR NOT _lws GREATER 50)
+        message(FATAL_ERROR "r37_masken36[${STUFE}]: WEG - Figur im Figurfenster nicht zu sehen - leeres Gruen")
+    endif()
+    if(NOT _ewh EQUAL 0 OR NOT _lwh EQUAL 0)
+        message(FATAL_ERROR "r37_masken36[${STUFE}]: WEG - Figur VOR der Trennwand uebermalt (Elza ${_ewh}, Leon ${_lwh})")
     endif()
 endif()
 message(STATUS "r37_masken36[${STUFE}]: OK")

@@ -739,7 +739,16 @@ static void teil_erzeuge(const char *pfad)
 typedef struct {
     int sektionen, abweichungen, rest_falsch, aus_masken, masken, stehplatz_los, soll_zeilen, zeige_leer;
     long echt_stage[7], falsch_ohne[7];
+    unsigned leer_raum[64]; int leer_cut[64];
 } ausschluss_ctx;
+
+/* Nachbesserung 1 (M2): Sektionen OHNE Stehplatz sind fuer "keine Fehlverdeckung" leer wahr. Sie stehen deshalb hier
+ * einzeln, mit Beleg, und jede weitere faellt durch (vorher 32 stillschweigend, darunter ROOM30A1 Cut 0..5 = Mangel M1).
+ *   ROOM3050/3051 Cut 15: keine RVD-Zone schaltet auf Cut 15 (nur Zone 38 15 -> 0 = das Regionsviereck); einzig das
+ *   Ereignis sub10 schaltet ihn (ROOM3050.RDT +0x2596 Cut_chg 15, ausgeloest am Pruef-AOT Slot 10, +0x1FB4 Aot_set
+ *   Rechteck (-25900,-16900) 1000 x 2000). Die Figur steht dabei ausserhalb des Regionsvierecks (z >= 12500) und wird vom
+ *   Akteur-Cull (FUN_8002c18c) nicht gezeichnet - es gibt keine Figur, die eine Maske dieses Cuts verdecken koennte. */
+static const struct { unsigned raum; int cut; } OHNE_STEHPLATZ_BELEGT[] = { { 0x3050, 15 }, { 0x3051, 15 } };
 
 static void pruefe_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const ergebnis_t *E, void *vctx)
 {
@@ -758,6 +767,7 @@ static void pruefe_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, cons
     }
     if (E->falsch) x->rest_falsch++;
     if (!E->stehplaetze) {
+        if (x->stehplatz_los < 64) { x->leer_raum[x->stehplatz_los] = raum; x->leer_cut[x->stehplatz_los] = cut; }
         x->stehplatz_los++;
         if (x->zeige_leer) printf("  ohne Stehplatz: ROOM%04X Cut %d (%d Masken)\n", raum, cut, pri->draw_count);
     }
@@ -771,9 +781,36 @@ static void ohne_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, const 
     x->falsch_ohne[(raum >> 12) & 7] += E->falsch;
 }
 
+/* Raumpaare Leon xxx0 / Elza xxx1 der Stages 3..6 mit beiden MSK-Dateien: gleiche Tabellenzeilen? (M2) */
+static void paare_pruefen(int *paare, int *paare_gleich, int *bytegleich, int *bytegleich_gleich)
+{
+    int stage, rr, c, i;
+    *paare = *paare_gleich = *bytegleich = *bytegleich_gleich = 0;
+    for (stage = 3; stage <= 6; stage++)
+        for (rr = 0; rr < 0x40; rr++) {
+            unsigned l = ((unsigned) stage << 12) | ((unsigned) rr << 4), e = l | 1u;
+            char p[700]; uint8_t *ml, *me, *rl, *re_; size_t nml = 0, nme = 0, nrl = 0, nre = 0; int gleich = 1, bg;
+            snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, l); ml = slurp(p, &nml);
+            snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, e); me = slurp(p, &nme);
+            snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, (unsigned) stage, l); rl = slurp(p, &nrl);
+            snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, (unsigned) stage, e); re_ = slurp(p, &nre);
+            if (ml && me && rl && re_) {
+                bg = nml == nme && !memcmp(ml, me, nml) && nrl == nre && !memcmp(rl, re_, nrl);
+                for (c = 0; c < 64; c++)
+                    for (i = 0; i < 128; i++)
+                        if (re15_masken36_ausgeschlossen(l, c, i) != re15_masken36_ausgeschlossen(e, c, i)) gleich = 0;
+                (*paare)++; *paare_gleich += gleich;
+                if (bg) { (*bytegleich)++; *bytegleich_gleich += gleich; }
+                if (!gleich) printf("  Paar ROOM%04X/%04X: Tabellenzeilen verschieden%s\n", l, e, bg ? " - RDT und MSK BYTEGLEICH" : "");
+            }
+            free(ml); free(me); free(rl); free(re_);
+        }
+}
+
 static void teil_ausschluss(void)
 {
-    ausschluss_ctx a, o; int s, stages_echt = 1, nach_sekt, nach_abw, nach_zeilen;
+    ausschluss_ctx a, o; int s, stages_echt = 1, nach_sekt, nach_abw, nach_zeilen, i, j, leer_ok = 1;
+    int paare, paare_gleich, bytegleich, bytegleich_gleich;
     printf("== r37_masken36 ausschluss: Tabelle aus den Dateien nachgerechnet, Fehlverdeckung danach, Verdeckung bleibt ==\n");
     saaten_sammeln();
     memset(&a, 0, sizeof a); memset(&o, 0, sizeof o);
@@ -783,6 +820,19 @@ static void teil_ausschluss(void)
            g_saat_n, a.sektionen, a.masken, a.aus_masken, a.abweichungen, a.stehplatz_los);
     /* Ergebnis der Nachrechnung sichern (der Lauf mit Tabelle unten vergleicht die Tabelle nur mit sich selbst) */
     nach_sekt = a.sektionen; nach_abw = a.abweichungen; nach_zeilen = a.soll_zeilen;
+    {   /* Sektionen ohne Stehplatz == belegte Liste (keine mehr, keine weniger) */
+        int nb = (int) (sizeof OHNE_STEHPLATZ_BELEGT / sizeof OHNE_STEHPLATZ_BELEGT[0]);
+        if (a.stehplatz_los != nb || a.stehplatz_los > 64) leer_ok = 0;
+        for (i = 0; i < a.stehplatz_los && i < 64; i++) {
+            int bekannt = 0;
+            for (j = 0; j < nb; j++)
+                if (OHNE_STEHPLATZ_BELEGT[j].raum == a.leer_raum[i] && OHNE_STEHPLATZ_BELEGT[j].cut == a.leer_cut[i]) bekannt = 1;
+            if (!bekannt) { leer_ok = 0; printf("  UNBELEGT ohne Stehplatz: ROOM%04X Cut %d\n", a.leer_raum[i], a.leer_cut[i]); }
+        }
+    }
+    paare_pruefen(&paare, &paare_gleich, &bytegleich, &bytegleich_gleich);
+    printf("  Raumpaare xxx0/xxx1 mit MSK: %d, davon gleiche Tabellenzeilen %d | RDT+MSK bytegleich %d, davon gleich %d\n",
+           paare, paare_gleich, bytegleich, bytegleich_gleich);
     printf("  Tabellenzeilen %d (ohne Endzeile), nachgerechnete Sektionen mit Ausschluss %d\n",
            re15_masken36_zeilen_zahl() - 1, nach_zeilen);
     memset(&a, 0, sizeof a);
@@ -797,6 +847,10 @@ static void teil_ausschluss(void)
     CHECK("keine verwaiste Tabellenzeile (Zeilen == nachgerechnete Sektionen mit Ausschluss)",
           re15_masken36_zeilen_zahl() - 1 == nach_zeilen);
     CHECK("mit der Tabelle verdeckt keine Generator-Maske eine Figur ohne Zelle davor", a.rest_falsch == 0);
+    CHECK("Sektionen ohne Stehplatz == belegte Liste (ROOM3050/3051 Cut 15), sonst ist der Check oben dort leer wahr", leer_ok);
+    CHECK("RDT- und MSK-bytegleiche Raumpaare xxx0/xxx1 haben dieselben Tabellenzeilen (M1: 30A0/30A1)",
+          bytegleich > 0 && bytegleich_gleich == bytegleich);
+    CHECK("jedes Raumpaar mit MSK hat dieselben Tabellenzeilen (Saaten je Raumpaar)", paare > 0 && paare_gleich == paare);
     CHECK("je Stage 3..6 verdecken die Masken weiterhin Figuren HINTER Zellen", stages_echt);
     CHECK("Gegenprobe: ohne Ausschluss gaebe es Fehlverdeckungen (Stage 3, 5)", o.falsch_ohne[3] > 0 && o.falsch_ohne[5] > 0);
 }
@@ -911,7 +965,7 @@ static void teil_verdeckung(void)
         const szene_t *s = &SZENEN[i];
         char p[700]; uint8_t *roh, *msk; size_t rn = 0, mn = 0; re15_rdt_t rdt; re15_camera_view_t v;
         re15_pri_cut_t pri; atlas_t eig, bss, *a; uint32_t off; int m, x, y, k, on = 0, cov = 0, occ = 0, fuss_occ = 0;
-        int fuss_cov = 0, ok;
+        int fuss_cov = 0, ok, durch, occ_roh = 0;
         double lx, lz, ll;
         unsigned mraum = re15_pri_masken_raum(s->raum);
         snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, s->raum >> 12, s->raum);
@@ -923,10 +977,16 @@ static void teil_verdeckung(void)
             || !(off = re15_pri_msk_section_offset(msk, mn, s->cut)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0) {
             printf("  FEHLER %s: Daten fehlen\n", s->name); g_fail = 1; free(roh); free(msk); continue;
         }
-        re15_masken36_filter(mraum, s->cut, &pri);                 /* wie der Lader (main.c) */
         atlas_eigen(mraum, s->cut, &eig);
         atlas_bss(s->raum, s->cut, &bss);
         a = (re15_pri_atlas_quelle(1, eig.da) == RE15_PRI_ATLAS_EIGEN) ? &eig : &bss;
+        lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+        if (ll > 0) { lx /= ll; lz /= ll; }
+        /* FREI (Nachbesserung 1): erst UNGEFILTERT zaehlen - die Szene muss ohne den Ausschluss fehlverdeckt sein, sonst
+         * prueft sie den Ausschluss nicht (Gegenprobe). Danach wie der Lader (main.c) gefiltert. */
+        for (durch = (s->hinter == 2) ? 0 : 1; durch <= 1; durch++) {
+        if (durch == 1) re15_masken36_filter(mraum, s->cut, &pri);  /* wie der Lader (main.c) */
+        on = cov = occ = fuss_occ = fuss_cov = 0;
         memset(deck, 0, sizeof deck); memset(tief, 0, sizeof tief);
         if (a->da) {
             const uint8_t *idx = (const uint8_t *) a->tim.pixels;
@@ -943,8 +1003,6 @@ static void teil_verdeckung(void)
                     }
             }
         }
-        lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
-        if (ll > 0) { lx /= ll; lz /= ll; }
         for (k = 0; k < 81; k++) {
             double h = -(double) s->band * BAND_Y - (FIGUR_HOCH / 9.0) * ((k / 9) + 0.5), o = ((k % 9) - 4) * (FIGUR_HALB / 4.0);
             double sx, sy, vz;
@@ -956,13 +1014,17 @@ static void teil_verdeckung(void)
             if (k == 4) fuss_cov = 1;
             if (re15_pri_mask_occludes(tief[(int) sy][(int) sx], (long) vz)) { occ++; if (k == 4) fuss_occ = 1; }
         }
+        if (durch == 0) occ_roh = occ;
+        }
         if (s->hinter == 1)      ok = a->da && fuss_occ && occ * 2 >= on && on > 0;
         else if (s->hinter == 0) ok = a->da && on > 0 && !fuss_cov && cov >= 10 && occ == 0;
-        else                     ok = a->da && on > 0 && occ == 0;          /* FREI: frueher fehlverdeckt */
-        printf("  %s ROOM%04X Cut %d (%d,%d) %s: Atlas %s, im Bild %d/81, auf Maske %d, verdeckt %d, Fuss %s -> %s\n",
+        else                     ok = a->da && on > 0 && occ == 0 && occ_roh > 0;   /* FREI: ungefiltert verdeckt, jetzt nicht */
+        printf("  %s ROOM%04X Cut %d (%d,%d) %s: Atlas %s, im Bild %d/81, auf Maske %d, verdeckt %d, Fuss %s",
                s->name, s->raum, s->cut, s->x, s->z, s->hinter == 1 ? "HINTER" : (s->hinter == 0 ? "DAVOR" : "FREI"),
                a->da ? a->quelle : "FEHLT", on, cov,
-               occ, fuss_occ ? "verdeckt" : (fuss_cov ? "auf Maske" : "frei"), ok ? "ok" : "FALSCH");
+               occ, fuss_occ ? "verdeckt" : (fuss_cov ? "auf Maske" : "frei"));
+        if (s->hinter == 2) printf(" | ungefiltert verdeckt %d", occ_roh);
+        printf(" -> %s\n", ok ? "ok" : "FALSCH");
         if (ok) { n_ok++; if (s->hinter == 1) stage_h[s->raum >> 12]++; else if (s->hinter == 0) stage_v[s->raum >> 12]++; }
         free(eig.roh); free(bss.roh); free(roh); free(msk);
     }
