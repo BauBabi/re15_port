@@ -19,9 +19,9 @@ Inventar-Gitter und an anderen Stellen derselben Kachel-Logik pruefen.
 - [x] Code gelesen (Block 7b, Kachel-Cache, inv_render_pc.c)
 - [x] Messung vorher (Kiste, Inventar-Gitter, Statusschirm, Item-Modal)
 - [x] RE2-Belege (zwei Cache-Spalten, zweite Kachel, Referenzbild, RE1.5-Gitter)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Riegel probes/r37_kiste2feld.cmake + gezielte Tests
+- [x] Umsetzung (ebc575f1; Fortsetzung 2026-10-13: Werkzeug 80082cf7 geprueft, Ausruest-Kasten nachgemessen)
+- [x] Messung nachher (Kiste Leon 1150 / Elza 1151, Inventar-Gitter Kisten- und Statusschirm, Ausruest-Kasten)
+- [x] Riegel probes/r37_kiste2feld.cmake (unit_r37_kiste2feld, integration_r37_kiste2feld) + gezielte Tests
 
 ## 1. Messung vorher (exe dieses Baums, Stand badd228f, Kopie re15_pc_r37k2f_vorher.exe)
 
@@ -203,22 +203,148 @@ Ganzzahl gerundet — fuer 80 -> 49 identisch mit (p*80+24)/49, fuer 30 -> 19 mi
    zellenweises MoveImage herstellt. Fuer Kopfzellen in Speicher-Spalte 0/1 ist das bitgleich zum bisherigen
    80-breiten Schreiben.
 
-## 3. Umsetzung
+### 2.6 RE1.5: Ausruest-Kasten = dieselben Speicherzellen (FUN_80049a5c, selbst disassembliert)
 
-(folgt)
+Der Ausruest-Kasten des Statusschirms zeichnet eine 2-Feld-Waffe als ZWEI 40x30-SPRTs aus den Speicherzellen eq und
+eq+1 — genau den Zellen, die inv_compose_cells belegt:
 
-## 4. Messung nachher
+```
+80049d7c: ori v0,zero,0x1 / 80049d80: bne v1,v0,0x80049e8c   ; Flag (0x800b10ae + eq*4) == 1 (Kopf)
+80049d8c: addiu at,at,25156 (0x80076244) ... 80049d9c: sb v0,12(s1)    ; u = uv-Tabelle[eq]
+80049db4: addiu at,at,25158 (0x80076246) ... 80049dc4: sb v0,13(s1)    ; v
+80049dcc: lhu v0,9692(v0) (0x800b25dc) / 80049dd4: sh v0,8(s1)         ; x = 25dc
+80049df4: jal 0x8006b538 (AddPrim)
+80049e08: addiu v0,v0,1 / 80049e14: addiu at,at,25156 / 80049e24: sb v0,12(s1)   ; u = uv-Tabelle[eq+1]
+80049e60: addiu v0,v0,40 / 80049e64: sh v0,8(s1)                        ; x = 25dc + 0x28
+```
 
-(folgt)
+(Decompilat RE_15_Quellcode_V2/FUN_80049a5c.c Z. 65-78 sagt dasselbe.) Der Port bildet das in re15_inv_screen.c
+Abschnitt 7 schon 1:1 ab; er war nur so falsch wie die Zellen-Belegung: mit der Kopfzelle in Speicher-Spalte 2 zeigte
+die rechte Haelfte alten Speicherinhalt (Messung §4.3).
 
-## 5. Tests
+## 3. Umsetzung (ebc575f1, unveraendert uebernommen)
 
-(folgt)
+Neue Dateien (VERTRAG §1.4: neue Logik in neuen Dateien):
+- `re15_port/include/re15_kiste2feld_r37.h` — Konstanten mit Beleg: `RE15_KISTE2FELD_SPANNE_SCHMAL 40` (RE2 u1
+  `addiu t1,zero,80` @0x80071844 minus u0 `addiu t0,zero,40` @0x800717b4), `RE15_KISTE2FELD_SPANNE_BREIT 80`
+  (`addiu t1,zero,120` @0x8007183c, gespeichert @0x80071848/@0x80071860), `RE15_KISTE2FELD_SPANNE_HOCH 30`
+  (@0x800717c8/@0x800717d0), `RE15_KISTE2FELD_ITPS_BLOCK 0x3000` + `RE15_KISTE2FELD_ITPS_BREITBILD 0x21A0`
+  (@0x8001e0b8-c8), `RE15_KISTE2FELD_BREIT_W 80`/`_H 30` (`ori v0,zero,0x28` @0x80049314, `ori v0,zero,0x1e`
+  @0x8004931c), `RE15_KISTE2FELD_HAELFTE_W 40` (FUN_80049390 `ori v0,zero,0x14` @0x800493ac);
+  `re15_kiste2feld_texel()` = GPU-Abtastung (§2.3, am RE2-Bild gemessen).
+- `re15_port/engine/src/kiste2feld_r37.c` — `re15_kiste2feld_zelle()`: Zelle -> (Id, erste Breitbild-Spalte) fuer
+  Kopf (Flag 1, `ori v0,zero,0x1` @0x8004de64) und Schwanz (Flag 2, `ori v0,zero,0x2` @0x8004de70).
+
+Haken an Ort und Stelle (VERTRAG §1.4 Spur R, Kommentar "Runde 37 Spur R"):
+- `re15_inv_screen.c` box_cell_icon_sized: Op-Feld u = Quell-Spanne (2-Feld 80, schmal 40) statt 0.
+- `re15_inv_screen.h`: Enum-Notiz RE15_INV_PAGE_ITEMTILE (u = Spanne).
+- `inv_render_pc.c` ITEMTILE-Zweig: Spanne 80 (oder w == 80) -> 80x30-Breitbild des ITPS-Blocks, sonst die 40x30-Kachel
+  ITEMALL[v]; beide mit `re15_kiste2feld_texel` auf w x h (vorher: w >= 40 1:1 + Klemmung auf Spalte 39, w < 40
+  abgerundet). Die SCHMALEN Symbole laufen damit ueber dieselbe RE2-Abtastung (RE2 hat EINEN POLY_FT4 fuer beide
+  Breiten, §2.1; RE2-Bild F. Aid Spray 475/475 gerundet gegen 469/475 abgerundet, §2.3) — an der exe gemessen §4.1
+  (0x0B, 0x15). Damit ist die Frage "brauchen auch die schmalen Symbole die RE2-Abtastung?" mit JA beantwortet und
+  schon in ebc575f1 gebaut.
+- `inv_render_pc.c` inv_compose_cells: jede 2-Feld-Zelle schreibt ihre EIGENE 40er-Haelfte an ihr eigenes uv (Kopf
+  Spalten 0..39, Schwanz 40..79), statt dass der Kopf 80 Texel ab seinem uv schreibt (§2.4). Der Ausruest-Kasten
+  (§2.6) liest dieselben Zellen und ist damit mit repariert.
+
+Lage/Groesse der Spur M unveraendert (x = 204 - Breite, 49x19 / 25x19, Ziffern im Symbol).
+
+Pruefung des Fortsetzungsstands 80082cf7 (Bildwerkzeug, vom Orchestrator ungeprueft gesichert): baut warnungsfrei;
+Erwartung NEU = eigene GPU-Abtastung (nicht aus dem Port-Kopf), ALT = alter Zeichner; schmale Zeilen mit derselben
+Abtastung (u 40..80 @0x80071844), Ziffernfeld nur fuer Ids < 0x22 (`sltiu id,0x22` @0x80049124). Gegen die Vorher-exe
+meldet es jede Zeile FALSCH (§5), gegen die Nachher-exe jede ok — es unterscheidet beide Staende. Ergaenzt um den Modus
+`ausruest` (§2.6) und das Kartenwerkzeug um die Belegung `ausr` (MC51 ausgeruestet, Kopf in Zelle 5 = Speicher-Spalte 2).
+
+## 4. Messung nachher (exe dieses Baums, Code-Stand ebc575f1, gleiche Wege wie §1.3)
+
+### 4.1 Kisten-Liste Leon ROOM1150 (CONTINUE, Viereck F40 am Kisten-AOT, F90 Box-Seite, RUNTER F100/F115, HOCH F130/F145/F160)
+
+`probe_r37_kiste2feld_bild kiste` — Pixel gleich der Erwartung NEU (GPU-Abtastung der breiten Kunst bzw. der 40er-Kachel);
+in Klammern ALT = alter Zeichner, wdh = Spalten 40..48 gleich Spalte 39:
+
+| Bild | Zeile 0 | Zeile 1 | Zeile 2 | Zeile 3 | Zeile 4 |
+|---|---|---|---|---|---|
+| F99 | 0x0e 867/867 (ALT 453, wdh 0/9) | 0x0f 867/867 (319, 0/9) | 0x10 818/818 (288, 0/9) | 0x11 818/818 (288, 0/9) | 0x12 867/867 (401, 4/9) |
+| F110 | 0x0f 867/867 | 0x10 867/867 | 0x11 818/818 | 0x12 818/818 (wdh 4/9) | **0x13** 867/867 (273, 0/9) |
+| F125 | 0x10 867/867 | 0x11 867/867 | 0x12 818/818 | 0x13 818/818 | 0x0B schmal 411/411 (ALT 333) |
+| F170 | 0x15 schmal 315/315 (ALT 198) | 0x0e 867/867 | 0x0f 818/818 | 0x10 818/818 | 0x11 867/867 |
+
+Alle sechs 2-Feld-Ids in jeder Zeilenlage (auch Auswahlzeile 2 und unter dem Band) = ganze Breitkunst; keine Zeile hat
+mehr 9/9 wiederholte Spalten (0x12: 4 der Spalten 40..48 gleichen Spalte 39 auch in der Quelle — gleichfarbiger Lauf
+des Rohrs, nicht geklemmt). Bild `R_belege/nachher_1150_kiste_F125_symbole_alt_neu.png` (links vorher, rechts nachher,
+4x): vorher Lauf + Streifen, nachher die ganze Waffe mit Schaft/Griff; dazu `nachher_1150_kiste_F99_symbole_alt_neu.png`
+und `nachher_1150_kiste_F99_liste_gitter.png` (ganzer Schirm).
+
+Elza ROOM1151 (gleicher Weg, integration_r37_kiste2feld Lauf `elza`): F99 + F110 je 5/5 Zeilen ok, Gitter 6/6.
+
+### 4.2 Inventar-Gitter (Kisten-Schirm F99, Statusschirm F80)
+
+| Kopfzelle (Speicher-Spalte) | Id | links (Zelle k) | rechts (Zelle k+1) vorher -> nachher |
+|---|---|---|---|
+| 0 (0) | 0x0F | 1135/1135 | 1183/1183 -> 1183/1183 |
+| 2 (2) | 0x12 | 1136/1136 | 257/1200 -> **1200/1200** |
+| 5 (2) | 0x13 | 1088/1088 | 0/1200 -> **1200/1200** |
+| 8 (2) | 0x0E | 1040/1040 | 0/1200 -> **1200/1200** |
+
+Kisten-Schirm F99 gleich (Zelle 0/1 unter dem Cursor ausgenommen).
+
+### 4.3 Ausruest-Kasten (Statusschirm, MC51 ausgeruestet, Kopf Zelle 5 = Speicher-Spalte 2; Kasten bei x 0x82 / y 0x3a)
+
+| | linke Haelfte (x 130) | rechte Haelfte (x 170) |
+|---|---|---|
+| vorher (re15_pc_r37k2f_vorher.exe) | 1088/1088 | **530/1200 FALSCH** |
+| nachher | 1088/1088 | **1200/1200** |
+
+Bild `R_belege/nachher_1150_status_ausr_F80_alt_neu.png` (links vorher, rechts nachher, 2x): vorher endet die MC51 im
+Kasten nach der vorderen Haelfte und die Schwanzzellen im Gitter zeigen Spraydose/leer; nachher vollstaendig.
+
+### 4.4 Item-Modal
+
+Nicht betroffen (§1.4, eigener 112x72-Weg) — nicht angefasst, nicht neu gemessen.
+
+## 5. Tests (probes/r37_kiste2feld.cmake, nur dort registriert)
+
+- **unit_r37_kiste2feld** (test_r37_kiste2feld.c, echte Kisten-FSM + Op-Liste, 0,01 s): (A) alle Ids 1..255 auf der
+  Auswahlzeile: 6 2-Feld-Ids = ITEMTILE 49x19 mit Spanne u 80 (= RE2 120 - 40), 249 schmale = 25x19 mit Spanne 40;
+  (B) Gitter-Belegung Kopf 0/2/5/8: 4 Kopf- (Spalten 0..39) + 4 Schwanzzellen (40..79), jede Zelle mit
+  re15_inv_screen_cache_tile == -2 hat eine Zuordnung, schmale/leere keine; Masse 0x28/0x1e/0x14 hw; (C) GPU-Abtastung
+  80->49 = (p*80+24)/49, 30->19 = (p*30+9)/19, 40->25 = (p*40+12)/25, streng steigend, n->n Identitaet.
+  **Gegenprobe** (alter Op-Vertrag u = 0 in box_cell_icon_sized, nur das Testziel neu gebaut, danach zurueck und neu
+  gebaut): exit 1, `=== 255 FEHLER ===` (jede Id: "Spanne u 0").
+- **integration_r37_kiste2feld** (echte exe, 45 s): vier Laeufe auf dem echten Weg (Spielstand, CONTINUE) —
+  `kiste` Leon 1150 (26 ok: 4 Bilder x 5 Zeilen + Gitter 6), `elza` 1151 (16 ok), `status` (8 ok), `ausruest` (10 ok);
+  Soll-Zahl der ok-Zeilen je Lauf fest, sonst FATAL. **Gegenprobe** mit der Vorher-exe
+  (`cmake -DRE15_PC_EXE=.../re15_pc_r37k2f_vorher.exe ... -P test_r37_kiste2feld.cmake`): exit 1 im ersten Lauf,
+  `KISTE2FELD-BILD FEHLER 5` (F99, alle fuenf 2-Feld-Zeilen); einzeln gegen die Vorher-exe: F110/F125/F170 je
+  FEHLER 5 (auch die schmalen 0x0B/0x15: ALT-Abtastung), Statusschirm-Gitter FEHLER 3, Ausruest-Kasten FEHLER 1.
+- Werkzeuge: probe_r37_kiste2feld_karte (Belegungen alle/mc51/ausr), probe_r37_kiste2feld_bild (kiste/gitter/ausruest).
+
+**Gezielte Laeufe** (keine volle Suite):
+
+- eigene: `ctest --test-dir re15_port/build -R "r37_kiste2feld" --timeout 900 --output-on-failure` ->
+  `100% tests passed, 0 tests failed out of 2`
+- Module des Diffs (re15_inv_screen.c, inv_render_pc.c: Inventar-, Kisten-, Karten-, Dokumenten-Schirm, Symbol-Cache,
+  Item-Modal, ersetzte Kacheln 0x40/0x42/0x45) inkl. Spur-M-Riegel unit_r37_kiste / integration_r37_kiste: §5.1.
+
+### 5.1 Lauf Module
+
+(laeuft)
 
 ## 6. OFFEN
 
-(folgt)
+- Keine offenen Punkte des Auftrags R. Restabweichung der Abtastung am RE2-Bild (§2.3): R. Launcher 752/771, Gatling
+  770/771 Masken-Pixel — die gerundete Abtastung ist das beste der gemessenen Modelle (abgerundet 746/759, ALT 439/624);
+  die Restpixel wurden nicht weiter aufgeschluesselt (Kandidat: Waffen-/Grund-Maske des Referenzbilds an Farbgrenzen).
+- Erreichbarkeit: die Gitter-/Ausruest-Haelfte betrifft nur Kopfzellen in Speicher-Spalte 2 — im Spiel erst mit zwei
+  2-Feld-Waffen (einzige platzierte ist die MC51, §1.3). Die Kisten-Liste trifft die MC51 sofort.
 
 ## 7. Fuer den Nutzer
 
-(folgt)
+- Neue Assets: **keine** (Paket-Gate unveraendert; die rechte Haelfte kommt aus dem vorhandenen ITEM/ITPS.ITP).
+  Sprachdateien: keine.
+- Sichtbar neu: In der Kiste zeigen Waffen (2-Feld-Symbole) jetzt die ganze Waffe — wie RE2 auf 49x19 gestaucht —
+  statt der vorderen Haelfte mit einem Streifen. Die schmalen Symbole sind wie in RE2 gerundet abgetastet (kleine
+  Pixel-Unterschiede, keine Lage-Aenderung). Im Inventar und im Ausruest-Kasten ist eine Waffe auch dann vollstaendig,
+  wenn sie an dritter Stelle des Symbol-Speichers liegt (z.B. eine zweite Waffe neben der MC51).
+- Bedienung unveraendert. Keine Entscheidungsfrage.
