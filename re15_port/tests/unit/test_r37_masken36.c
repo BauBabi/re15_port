@@ -228,15 +228,111 @@ static void kamera_ort(const re15_camera_view_t *v, double c[3])
 }
 
 /* ---- Erreichbarkeit -------------------------------------------------------------------------------------------- */
-typedef struct { unsigned raum; int x, z, band; } saat_t;
+typedef struct { unsigned raum; int x, z, band; char art; unsigned von; uint32_t off; } saat_t;   /* art: A = AOT, T = Tuer (VM), S = Tuer (Satz statisch) */
 static saat_t g_saat[SAAT_MAX];
 static int g_saat_n;
 
-static void saat_dazu(unsigned raum, int x, int z, int band)
+static void saat_dazu(unsigned raum, int x, int z, int band, char art, unsigned von, uint32_t off)
 {
     if (g_saat_n < SAAT_MAX && band >= 0 && band < 16) {
         g_saat[g_saat_n].raum = raum; g_saat[g_saat_n].x = x; g_saat[g_saat_n].z = z; g_saat[g_saat_n].band = band;
+        g_saat[g_saat_n].art = art; g_saat[g_saat_n].von = von; g_saat[g_saat_n].off = off;
         g_saat_n++;
+    }
+}
+
+/* ---- Tuer-Ankuenfte aus JEDEM Door_aot_set-Satz der RDT (Nachbesserung 1, Mangel M1) ------------------------------
+ * Der VM-Lauf oben sieht nur die AOTs, die nach main00+sub00 (erster Besuch, frische Flags) noch als Tuer stehen. In
+ * ROOM3091 (Datei-Offsets der RDT) setzt main00 die Tuer nach ROOM30A1 (+0x1398 Door_aot_set Slot 2, Nutzlast Stage 2 /
+ * Raum 0x0A, Ankunft (-25500,0,11700)); sub00 macht sie beim ersten Besuch (+0x1492 Ck(4,16)=0, +0x149A Ck(4,8)=0) zur
+ * Nachrichtenflaeche (+0x14B2 Aot_reset Slot 2 sce 1); das Elza-Ereignis sub07 setzt (4,16) (+0x16D0) und schaltet sie
+ * zurueck (+0x1D7C Aot_reset Slot 2 sce 2), ab dann bleibt sie Tuer. Die Ankunft in ROOM30A1 fehlte deshalb als Saat ->
+ * 0 Stehplaetze -> kein Ausschluss (Abnahme 0 M1). Jetzt zaehlt jeder Tuersatz des Spiels:
+ * Satz 0x3B, Laenge 32 bzw. 40 bei pc[3] & 0x80 (@0x80040618/@0x80040630), Nutzlast ab pc+14 bzw. pc+22 (@0x80042fb8 /
+ * @0x80042f90), darin +0/+2/+4 Ankunft, +8 Stage, +9 Raum (Warp FUN_8001d600); Variante = die des Quellraums
+ * (aot_common.c dest_id). Gelaufen wie scripts/door_graph.py / test_r36_kartenbits.c (Regionen der main-/sub-Sektion,
+ * Laengen aus scd_opcode_size_at = Vorschub der VM, Ende hinter dem weitesten Vorwaertsziel). Satz mit Ankunft (0,0,0)
+ * zaehlt nicht (aot_common.c: ungueltige Tuer). */
+static uint16_t m36_le16(const uint8_t *p) { return (uint16_t) (p[0] | (p[1] << 8)); }
+static int16_t  m36_les16(const uint8_t *p) { return (int16_t) m36_le16(p); }
+static uint32_t m36_le32(const uint8_t *p) { return (uint32_t) p[0] | ((uint32_t) p[1] << 8) | ((uint32_t) p[2] << 16) | ((uint32_t) p[3] << 24); }
+
+static uint32_t m36_sektion_ende(const uint8_t *d, size_t n, uint32_t s)
+{
+    uint32_t boden = s, best = 0, o, mx = 0, i;
+    uint16_t first = m36_le16(d + s);
+    if (first >= 2 && !(first & 1) && s + first <= n)
+        for (i = 0; i < first / 2u; i++) {
+            uint16_t q = m36_le16(d + s + 2 * i);
+            if (q && s + q < n && q > mx) mx = q;
+        }
+    boden += mx;
+    for (o = 0x40; o < 0x60 && o + 4 <= n; o += 4) {
+        uint32_t v = m36_le32(d + o);
+        if (v > boden && v <= n && (best == 0 || v < best)) best = v;
+    }
+    return best ? best : (uint32_t) n;
+}
+
+static uint32_t m36_sprungziel(const uint8_t *d, uint32_t pc)
+{
+    uint8_t op = d[pc];
+    if (op == 0x06) return pc + 4 + m36_le16(d + pc + 2);
+    if (op == 0x07) return (uint32_t) ((int32_t) pc + m36_les16(d + pc + 2));
+    if (op == 0x0D || op == 0x1B) return (uint32_t) ((int32_t) pc + 6 + m36_les16(d + pc + 2));
+    if (op == 0x0F || op == 0x11 || op == 0x13) return (uint32_t) ((int32_t) pc + 4 + m36_les16(d + pc + 2));
+    if (op == 0x14) return pc + 6 + m36_le16(d + pc + 2);
+    if (op == 0x17) { int16_t o = m36_les16(d + pc + 4); return o > 0 ? (uint32_t) ((int32_t) pc + o) : 0; }
+    return 0;
+}
+
+static void m36_tueren_region(const uint8_t *d, uint32_t start, uint32_t ende, unsigned raum)
+{
+    uint32_t pc = start, maxf = start;
+    while (pc < ende) {
+        int sz = scd_opcode_size_at(d + pc);
+        uint32_t t;
+        if (sz <= 0 || pc + (uint32_t) sz > ende) return;
+        if (d[pc] == 0x01 && pc + 2 > maxf) return;                 /* Evt_end hinter dem weitesten Vorwaertsziel */
+        if (d[pc] == 0x3B) {
+            const uint8_t *nl = (d[pc + 3] & 0x80) ? d + pc + 22 : d + pc + 14;
+            int nx = m36_les16(nl), ny = m36_les16(nl + 2), nz = m36_les16(nl + 4);
+            if (nl[8] <= 6 && (nx || ny || nz)) {
+                unsigned ziel = ((unsigned) (nl[8] + 1) << 12) | ((unsigned) nl[9] << 4) | (raum & 0xFu);
+                int zb = ny < 0 ? (-ny + BAND_Y / 2) / BAND_Y : 0;
+                saat_dazu(ziel, nx, nz, zb, 'S', raum, pc);
+            }
+        }
+        t = m36_sprungziel(d, pc);
+        if (t > maxf) maxf = t;
+        pc += (uint32_t) sz;
+    }
+}
+
+static void m36_tueren_statisch(const uint8_t *d, size_t n, unsigned raum)
+{
+    int k;
+    if (n < 0x48) return;
+    for (k = 0; k < 2; k++) {
+        uint32_t ss = m36_le32(d + 0x40 + 4 * k), se, offs[512]; uint16_t first; int cnt = 0, i, j;
+        if (ss == 0 || ss + 2 > n) continue;
+        se = m36_sektion_ende(d, n, ss);
+        first = m36_le16(d + ss);
+        if (first < 2 || (first & 1) || ss + first > n) continue;
+        for (i = 0; i < first / 2 && cnt < 512; i++) {
+            uint16_t o = m36_le16(d + ss + 2 * i); int dup = 0;
+            if (!o || ss + o >= n) continue;
+            for (j = 0; j < cnt; j++) if (offs[j] == o) dup = 1;
+            if (!dup) offs[cnt++] = o;
+        }
+        for (i = 0; i < cnt; i++)
+            for (j = i + 1; j < cnt; j++)
+                if (offs[j] < offs[i]) { uint32_t t = offs[i]; offs[i] = offs[j]; offs[j] = t; }
+        for (i = 0; i < cnt; i++) {
+            uint32_t e = (i + 1 < cnt) ? offs[i + 1] : se - ss;
+            if (e > se - ss) e = se - ss;
+            if (e > offs[i]) m36_tueren_region(d, ss + offs[i], ss + e, raum);
+        }
     }
 }
 
@@ -276,14 +372,15 @@ static void saaten_sammeln(void)
                         const re15_aot_door_params_t *dp = &g_aot.door_params[i];
                         unsigned ziel = ((unsigned) (dp->dest_stage + 1) << 12) | ((unsigned) dp->dest_room << 4) | (raum & 1u);
                         int zb = dp->spawn_y < 0 ? (-dp->spawn_y + BAND_Y / 2) / BAND_Y : 0;
-                        saat_dazu(ziel, dp->spawn_x, dp->spawn_z, zb);
+                        saat_dazu(ziel, dp->spawn_x, dp->spawn_z, zb, 'T', raum, 0);
                     }
                     if (q->band & 0x80) continue;
                     /* Zonen ohne Stehplatz-Beleg: GENERIC (Ereignisflaeche), CAM_SWITCH, AUTO_EVENT */
                     if (q->type == RE15_AOT_TYPE_GENERIC || q->type == RE15_AOT_TYPE_CAM_SWITCH
                         || q->type == RE15_AOT_TYPE_AUTO_EVENT) continue;
-                    saat_dazu(raum, x, z, q->band);
+                    saat_dazu(raum, x, z, q->band, 'A', raum, 0);
                 }
+                m36_tueren_statisch(buf, n, raum);          /* Nachbesserung 1 (M1): jeder Tuersatz, nicht nur der VM-Stand */
                 free(buf);
             }
 }
@@ -383,8 +480,12 @@ static int raum_laden(raum_t *R, unsigned raum)
     R->nx = (X1 - R->x0) / SCHRITT + 1; R->nz = (Z1 - R->z0) / SCHRITT + 1;
     if (R->nx > GMAX) R->nx = GMAX;
     if (R->nz > GMAX) R->nz = GMAX;
+    /* Nachbesserung 1 (M1): Saaten des RAUMPAARS (Leon xxx0 / Elza xxx1). Beide sind derselbe Raum: ein Hintergrund (BSS
+     * ohne Variantenziffer: Sektor-Tabelle @0x8007438c[Stage @0x80021ca8] + Raum @0x80021c90, Cut @0x80021c88/@0x80021cd8),
+     * Tuerziele ohne Variante (Warp FUN_8001d600 +8 Stage / +9 Raum), die Generator-MSK der Stages 3..6 je Paar bytegleich.
+     * Die Flutfuellung laeuft in der Kollision der EIGENEN RDT (frei/in_zonen), also nur, wo diese Variante stehen kann. */
     for (i = 0; i < g_saat_n; i++)
-        if (g_saat[i].raum == raum) flut(R, g_saat[i].band, g_saat[i].x, g_saat[i].z);
+        if (g_saat[i].raum == raum || g_saat[i].raum == (raum ^ 1u)) flut(R, g_saat[i].band, g_saat[i].x, g_saat[i].z);
     return 1;
 }
 
@@ -817,6 +918,18 @@ static void such_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri0, const
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
+    if (!strcmp(teil, "saaten") && argc > 2) {          /* Werkzeug: Saaten eines Raums mit Herkunft */
+        unsigned r = (unsigned) strtoul(argv[2], NULL, 16); int i, na = 0, nt = 0, ns = 0;
+        saaten_sammeln();
+        for (i = 0; i < g_saat_n; i++) {
+            if (g_saat[i].raum != r) continue;
+            na += g_saat[i].art == 'A'; nt += g_saat[i].art == 'T'; ns += g_saat[i].art == 'S';
+            printf("  %c (%d,%d) Band %d von ROOM%04X +0x%X\n", g_saat[i].art, g_saat[i].x, g_saat[i].z, g_saat[i].band,
+                   g_saat[i].von, (unsigned) g_saat[i].off);
+        }
+        printf("  ROOM%04X: AOT %d, Tuer (VM) %d, Tuer (Satz) %d | alle Saaten %d\nOK\n", r, na, nt, ns, g_saat_n);
+        return 0;
+    }
     if (!strcmp(teil, "suche")) {
         if (argc > 2) g_such_prozent = atoi(argv[2]);
         if (argc > 3) g_such_stage = atoi(argv[3]);
