@@ -314,3 +314,37 @@ nicht gezeichnet, z.B. Tyrant "blood FX 0x80019700 @0x80114998 — render-side, 
 | M2 Schadens-Regression | Folge von M1: Spalte 3 je Kugel bei nur EINER Kugel | 0x2b Stoss 10 (Basis 20), 0x29 14 (Basis 25) | Spalte 3 / 5 aus PSX.EXE @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4: 0x23 7/21, 0x27 12/28, 0x29 14/25, 0x2b 10/20, 0x30 15/28 | keine eigene (behoben mit M1) | Stoss 0x2b 30, 0x29 42, 0x30 45 (exe); 0x27 36, 0x23 21 (Sonde) — jeweils >= der alte Einzeltreffer |
 | M3 Testluecke | Riegel nur unter RE1.5-KI bzw. Zombies | — | — | unit_r37_beretta Teil I (RE2-Flavor + Bild-Nachlauf der RE2-Filter, 5 Typen, Gegenproben Spinne/Kraehe, Einordnung RE2/RE1.5/MIXED); integration_r37_beretta t2b_std_w5 / roach_std_w5 (Standard-KI, exe) | Teil I mit dem ALTEN Kriterium gebaut: 10 FAIL (je 1 Treffer) -> mit Fix gruen (8.6) |
 | M4 Doku falsch | Header/Kommentar setzten "RE2-Flavor" = "hat RE2-Pausenfilter", §7 behauptete 3 x Browning | — | — | Header-Absatz PORT-ABBILDUNG, Kommentar riegel_loesen(), §7 neu | — |
+
+### 8.6 Tests Nachbesserung 1 (gezielt, keine volle Suite)
+* `unit_r37_beretta` Teil I (neu, checks 70-96): Einordnung `re15_beretta_r37_re2_pause_regelt` (RE2: Zombie-Familie/0x20/0x21/
+  0x25/0x26 ja, 0x23/0x27/0x29/0x2b/0x30/0x36/0x1a nein; RE1.5: keiner; MIXED: nur 0x20); je Typ 0x23/0x27/0x29(Glock 18)/0x2b/
+  0x30 unter RE2-Flavor mit dem Bild-Nachlauf der echten RE2-Filter: Kugel 1 trifft, der Riegel bleibt im Nachlauf stehen,
+  Kugel 2/3 in Tick 3/6, Stoss = 3 x Spalte 3 (21/36/42/30/45) >= alter Einzeltreffer Spalte 5, Reaktion je Treffer;
+  Gegenproben Spinne 0x25 (Pause 0: drei Treffer ueber den Filter, Riegel-Loesen 0) und Kraehe 0x21 (Pause 15: nur Kugel 1).
+  GEGENPROBE gegen den Defekt: mit dem alten Kriterium (`re15_ai_re2_for_type`) gebaut -> `test_r37_beretta: 10 FAIL`
+  (checks 72/73/76/77/80/81/84/85/88/89, je "Treffer 1"); mit Fix gruen.
+* `integration_r37_beretta` + t2b_std_w5 (ROOM5040 0x2b) / roach_std_w5 (ROOM3040 0x29), Standard-KI ohne RE15_AI_FLAVOR
+  (`unset(ENV{RE15_AI_FLAVOR})`): drei Abzuege E/E+3/E+6, je -10 / -14, Munition -3. Lauf lauf_824a3ced: 0x2b F61/F64/F67
+  121 -> 91, 0x29 F61/F64/F67 99 -> 57; Leon RE2 F61/F64/F67 je -16, Elza F91/F94/F97 je -16. Am Stand vor NB1 lieferte
+  derselbe Aufbau EINEN Abzug (8.1) — der Riegel waere rot.
+* Regex U (eigene + alle Schuss-/Schadens-/Waffen-Gruppen + Gegnertypen der betroffenen Klasse, wie Abnahme 0 §5), am
+  Endstand: `ctest --test-dir re15_port/build -R "^(unit_r37_beretta|unit_r36_schuss|unit_r36_schuss_kraehe|unit_r36_elza_schuss|unit_re2_hp_model|unit_re2_weapon_rows|unit_re2_baby_spider_dmg|m93r_nachladen|unit_enemy_shootable|unit_room1140_combat|unit_damage|unit_weapon_select|unit_hit_reaction|unit_re2_hit_reaction|unit_re2_hit_repeat|unit_re2_hit_repeat_crow_spider|unit_r17_munition_pin|unit_r17_waffen_loop_pin|unit_autofire_pin|unit_zombie_hit_fixes|unit_re2_zombie_hitfilter|unit_r16_trefferhoehe_pin|unit_r16_aufstehen_schuss|unit_schrot_trennung|unit_r36_blut_pin_.*|unit_dog_hit|unit_re2_dog_hitwindow|unit_writher_hit_feedback|unit_aim_all_around|unit_aim_lower_exit|unit_r35_werfer|unit_r35_werfer_kombi|unit_r36_granate|unit_r35_granate|unit_r30_granate|unit_dog_aim_band|unit_re2z_rise_hittable|unit_sca_wall_hit|unit_r35_affen_schrot|unit_maggot_ai|unit_cockroach_ai|unit_birkin_ai|unit_alligator_ai|unit_tyrant_ai|unit_maggot_bone_square|unit_re2_dog_hp_reroll|unit_maggot_zone_leap|unit_gator_sweep|unit_gator_fress|probe_p2_birkin_g5|probe_p3_birkin_rest|unit_r17_birkin_1zu1_pin|unit_r18_birkin_restluecken_pin|unit_r20_birkin_push_pin|unit_r30_birkin_frost|unit_r30_n_room5080_birkin_wand|r30_hund_hitbox_stauchung|r31_trefferboxen|unit_r34n_f_leiche_latch|unit_r35_affen_.*|unit_r36_zombieki_affen.*|unit_pri_inventar_riegel)$" --timeout 600 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 89`** (26.96 sec).
+* Regex X (exe-Laeufe der beruehrten Schusspfade, Runde-36-C-Riegel inklusive): `ctest --test-dir re15_port/build -R "^(integration_r37_beretta|integration_r36_schuss|integration_r36_elza_schuss|integration_r35_werfer|integration_r36_granate)$" --timeout 900 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 5`** (555.91 sec; r35_werfer 145.22, r36_elza_schuss 49.54, r36_granate 95.21,
+  r36_schuss 126.07, r37_beretta 139.82). Danach nur Kommentar-Zeilen im Header geaendert (Code identisch), neu gebaut,
+  Regex U erneut gruen.
+
+### 8.7 OFFEN (Nachbesserung 1)
+* Nichts aus M1-M4. Gorilla 0x27 (11C0: Spieler nach dem Sprung festgehalten) und Alligator 0x23 (Boss-Modul 2090) nur in der
+  Sonde (Teil I) gemessen, nicht an der exe; Birkin 0x30 zusaetzlich an der exe (ROOM5080, drei Treffer je -15).
+* Weiter bewusst NICHT gebaut (wie §6): RE2-Abbruch beim Loslassen (@0x80048928-30), Einzelschuss-Bit 126 (@0x800488e4).
+
+### 8.8 Fuer den Nutzer (Nachbesserung 1)
+* Der Feuerstoss der Beretta M93R / Glock 18 trifft jetzt auch unter der STANDARD-KI jeden Gegner dreimal — auch Gorilla,
+  Kakerlaken, den Tyrant-Gegner der Stages 4/5 (0x2b) und Birkin, die auch im RE2-Modus mit ihrem RE1.5-Verhalten laufen.
+  Vorher traf dort nur die erste Kugel (3 Patronen fuer einen Browning-Schuss). Stoss jetzt: Kakerlake 42, Tyrant 30,
+  Gorilla 36, Birkin 45, Alligator 21.
+* Ausnahme bleibt nur, wo der Port die RE2-Trefferpause fuehrt: die Kraehe (RE2-Pause 15 Bilder) nimmt nur die erste Kugel
+  — sie stirbt daran (10 HP, 15 Schaden).
+* Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung.
