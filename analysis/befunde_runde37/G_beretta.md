@@ -401,3 +401,14 @@ Regel fuer den Port (keine neue Konstante): riegel_loesen() laesst den Riegel st
 und sein +0x1D3-Byte != 0 ist (Gate @0x80041270-78). Das trifft den Arm (0x80 aus arm_hurt) und laesst die RE1.5-Gehirne
 0x23/0x27/0x29/0x2b/0x30 unberuehrt: ihr +0x1D3 bleibt 0 (Stempel re15_re2_stun_frames `return 0`, re15_damage.c:2695-2696,
 kein Gehirn schreibt es). G5 0x36 traegt nach einem Schuss ebenso 0 (Abschnitt 9.5).
+
+### 9.3 Riegel zuerst (Teil J in unit_r37_beretta, VOR dem Fix gegen den NB1-Code gebaut)
+`test_r37_beretta.c` Teil J: Gitterarm 0x1A mit dem ECHTEN RE2-Arm-Gehirn (re15_re2arm_tick, RE2-Bank EM2D aus
+`shared_assets/RE2/CDEMD0.EMS`, Laden wie test_p2_1210_arme_re2.c), herausgekommen ueber A0 (0x101), hinter ihm ein Typ 0x2b
+als naechster Kandidat; Bildfolge Feuerstoss-Tick -> Arm-Tick -> RE2-Filter-Nachlauf. Checks 100-109: Kontrolle Browning
+(ein Treffer, Rueckzug einmal, Ende-Tick = Bezug), dann M93R in RE2/RE1.5/MIXED: +0x1D3 & 0x80 vor Kugel 2 (101/104/107),
+EIN Treffer am Arm + Riegel nicht geloest (102/105/108), Rueckzug einmal, Ende wie Browning, Kugel 2/3 am 0x2b (-20 =
+2 x Spalte 3 @0x8006EFA4) (103/106/109). Pruefung 70 fuehrt 0x1a nicht mehr in der Liste "wie RE1.5 behandelt".
+Gegen den NB1-Code: **`test_r37_beretta: 6 FAIL`** — 102/105/108 "hp 250 -> 245, Rest 235, weitere 2, Riegel geloest 2",
+103/106/109 "Rueckzug 3 x, Ende Tick 16 wie Browning 10, 0x2b -0". Die Sonde zeigt damit dieselben Zahlen wie die exe (9.1:
+Browning E+10, M93R E+16, 250 -> 235, Rueckzug dreimal). Kontrolle 100 und die 0x80-Pruefungen 101/104/107 gruen.

@@ -26,6 +26,12 @@
  *     Einordnung "RE2-Pausenfilter laeuft" (Zombie-Familie/0x20/0x21/0x25/0x26 mit RE2-Gehirn); die RE1.5-Gehirne
  *     0x23/0x27/0x29/0x2b/0x30 nehmen drei Kugeln in Tick 0/3/6, Stoss = 3 x Spalte 3 (@0x8006e0d0 + Typ*0x58 + 3*4);
  *     Gegenproben Spinne 0x25 (RE2-Pause 0, Filter gibt frei) und Kraehe 0x21 (RE2-Pause 15, nur Kugel 1).
+ *  J  Nachbesserung 2 (Abnahme 1 N1): GITTERARM 0x1A mit dem ECHTEN RE2-Arm-Gehirn (re15_re2arm_tick, Bank EM2D aus
+ *     CDEMD0.EMS wie test_p2_1210_arme_re2.c) in JEDEM KI-Modus. RE2-Kugel-Resolver FUN_800410CC (Custom Handgun
+ *     `jal 0x800410cc` @0x80048a04): Gate +0x1D3 != 0, ganzes Byte (`lbu v0,467(s2)` / `bne v0,zero,0x80041300`
+ *     @0x80041270-78); EM2D-HURT `ori v0,v0,0x80` @0x80100fa8 / `sb v0,467(s0)` @0x80100fb0 -> der getroffene Arm nimmt
+ *     Kugel 2/3 NICHT, sie gehen an den naechsten Kandidaten (Typ 0x2b dahinter); der Rueckzug 0x501 startet EINMAL und
+ *     endet im selben Tick wie nach EINEM Browning-Treffer. Vor der Nachbesserung: drei Treffer, Rueckzug dreimal neu.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +44,13 @@
 #include "re15_room.h"
 #include "re15_collision.h"
 #include "re15_beretta_r37.h"
+#include "re15_enemy.h"
+#include "re2_ems.h"
+#include "re15_enemy_ai_re2_zellenarm.h"
+
+#ifndef RE15_ASSET_RE2_DIR
+#define RE15_ASSET_RE2_DIR "shared_assets/RE2"
+#endif
 
 #define RE15_XSTR_(x) #x
 #define RE15_XSTR(x)  RE15_XSTR_(x)
@@ -133,17 +146,19 @@ static void teil_i_standard_ki(int Z)
     printf("== I Standard-KI (RE2-Flavor): Gegner mit RE1.5-Gehirn\n");
     /* I0 Einordnung: RE2-Pausenfilter laeuft nur fuer Zombie-Familie + 0x20/0x21/0x25/0x26 mit RE2-Gehirn. */
     static const uint8_t MIT[10]  = { 0x10, 0x11, 0x12, 0x13, 0x16, 0x18, 0x20, 0x21, 0x25, 0x26 };
-    static const uint8_t OHNE[7]  = { 0x23, 0x27, 0x29, 0x2b, 0x30, 0x36, 0x1a };
+    /* 0x1a (Gitterarm) steht NICHT hier: er hat zwar keinen Pausenfilter, seinen Riegel haelt aber das +0x1D3-Gate
+     * (Teil J, Nachbesserung 2). */
+    static const uint8_t OHNE[6]  = { 0x23, 0x27, 0x29, 0x2b, 0x30, 0x36 };
     int ok = 1;
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     for (int k = 0; k < 10; k++) ok &= re15_beretta_r37_re2_pause_regelt(MIT[k]) == 1;
-    for (int k = 0; k < 7; k++)  ok &= re15_beretta_r37_re2_pause_regelt(OHNE[k]) == 0;
+    for (int k = 0; k < 6; k++)  ok &= re15_beretta_r37_re2_pause_regelt(OHNE[k]) == 0;
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     for (int k = 0; k < 10; k++) ok &= re15_beretta_r37_re2_pause_regelt(MIT[k]) == 0;
     re15_ai_flavor_set(RE15_AI_FLAVOR_MIXED);
     for (int k = 0; k < 10; k++) ok &= re15_beretta_r37_re2_pause_regelt(MIT[k]) == (MIT[k] == 0x20);
     CHECK(70, ok, "Einordnung RE2-Pausenfilter (RE2: Zombie-Familie/0x20/0x21/0x25/0x26 ja, 0x23/0x27/0x29/0x2b/0x30/"
-          "0x36/0x1a nein; RE1.5: keiner; MIXED: nur 0x20)");
+          "0x36 nein; RE1.5: keiner; MIXED: nur 0x20)");
 
     /* I1 drei Treffer E/E+3/E+6, Stoss = 3 x Spalte 3 der RE1.5-Zeile (u16 @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4,
      * aus info/Re1.5/PSX.EXE gelesen, Dossier 8.2). */
@@ -200,6 +215,111 @@ static void teil_i_standard_ki(int Z)
     re15_beretta_r37_mess(&m);
     CHECK(96, m.treffer == 1 && m.riegel_geloest == 0 && kr->hp == 2000 - 15,
           "Kraehe 0x21 (RE2-Pause 15): nur Kugel 1 (Treffer %u, Riegel %u, hp %d)", m.treffer, m.riegel_geloest, kr->hp);
+}
+
+/* ===================== J: Nachbesserung 2 (Abnahme 1 N1) — GITTERARM 0x1A =====================
+ * Das echte RE2-Arm-Gehirn (enemy_ai_re2_zellenarm.c) auf der RE2-Bank EM2D (CDEMD0.EMS Typ 0x2D, Laden wie
+ * test_p2_1210_arme_re2.c load_re2_bank_1A). Bildfolge wie game_step: Feuerstoss-Tick (Kugel 2/3), danach der Arm-Tick
+ * (an der exe steht der Arm schon im Trefferbild auf 0x501, Dossier 9.1), danach der Nachlauf der RE2-Filter.
+ * Hinter dem Arm steht ein Typ 0x2b (RE1.5-Gehirn) als naechster Kandidat in der Bahn. */
+static uint8_t *s_ems = NULL; static size_t s_ems_n = 0;
+static int arm_bank_laden(void)
+{
+    if (!s_ems) {
+        FILE *f = fopen(RE15_ASSET_RE2_DIR "/CDEMD0.EMS", "rb");
+        if (!f) return 0;
+        fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET);
+        if (n <= 0) { fclose(f); return 0; }
+        s_ems = (uint8_t *)malloc((size_t)n);
+        if (!s_ems || fread(s_ems, 1, (size_t)n, f) != (size_t)n) { fclose(f); free(s_ems); s_ems = NULL; return 0; }
+        fclose(f); s_ems_n = (size_t)n;
+    }
+    re15_enemy_bank_t *eb = re15_enemy_find(0x1A);
+    if (!eb) eb = re15_enemy_alloc(0x1A);
+    if (!eb) return 0;
+    re15_tim_t tim = {0};
+    if (re2_ems_load_bank(s_ems, s_ems_n, 0x2D, eb, &tim) != 0) return 0;
+    eb->ok = 1; eb->buf = NULL;
+    return 1;
+}
+typedef struct {
+    int raus;            /* Arm ueber A0 herausgekommen (1/1, sichtbar) */
+    int hp0, hp_e;       /* HP vor / nach Kugel 1 */
+    int hp_rest;         /* letzte HP >= 0 vor dem Rueckzug-Ende */
+    int treffer_arm;     /* HP-Abzuege am Arm im Bildlauf (ohne Kugel 1) */
+    int rz_starts;       /* Eintritte in 1/5/0 (Rueckzug 0x501 Phase 0, arm_hurt @0x80100FA0-A4) */
+    int ende;            /* Tick, in dem hp < 0 wird (Rueckzug-Ende `sh -1,342` @0x80100E4C-50), -1 = nie */
+    int hinten;          /* HP-Abzug am Platz dahinter (Typ 0x2b) */
+    uint8_t d1d3;        /* +0x1D3 des Arms vor Kugel 2 (Tick 2) */
+    re15_beretta_r37_mess_t m;
+} arm_erg_t;
+static int arm_szenario(int Z, int waffe, re15_ai_flavor_t fl, arm_erg_t *o)
+{
+    memset(o, 0, sizeof *o);
+    o->ende = -1;
+    re15_ai_flavor_set(fl);
+    re15_beretta_r37_reset();
+    spieler();
+    re15_actor_t *pl  = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *arm = mk(Z, 0x1A, -19600, 0);
+    re15_actor_t *hz  = mk(Z + 1, 0x2b, -21600, 2000);
+    arm->state = 0; arm->grid_id = 1;                     /* wach: +0x9 & 0x1F == 1 (sub02 Member_set(12,1) @0x1EDA) */
+    arm->rot_y = (int16_t)((re15_atan2_q12(pl->z - arm->z, pl->x - arm->x) - 1024) & 0xfff);   /* Blick auf Leon */
+    if (!arm_bank_laden()) return 0;
+    (void)re15_re2arm_tick(Z);                            /* INIT @0x801000F8 */
+    for (int f = 0; f < 60 && !(arm->state == 1 && arm->sub_state_1 == 1 && !arm->no_draw); f++)
+        (void)re15_re2arm_tick(Z);                        /* B0 P0..P2, dann A0 Zweig 1 -> 0x101 @0x80100564-9C */
+    o->raus = (arm->state == 1 && arm->sub_state_1 == 1 && !arm->no_draw);
+    if (!o->raus) return 0;
+    o->hp0 = arm->hp;
+    const int hz0 = hz->hp;
+    (void)eintritt(waffe, re15_beretta_r37_ist_feuerstoss(waffe) ? 3 : 1);   /* Tick 0 = Eintrittsbild, Kugel 1 */
+    o->hp_e = arm->hp;
+    int vor_hp = arm->hp, war_rz = 0;
+    for (int t = 0; t <= 30; t++) {
+        if (t > 0) (void)re15_beretta_r37_tick_ex(1);    /* Kugel 2/3 in Tick 3/6 */
+        if (arm->hp < vor_hp && arm->hp >= 0) o->treffer_arm++;
+        if (t == 2) o->d1d3 = arm->re2z_self1d3;
+        (void)re15_re2arm_tick(Z);
+        re2_nachlauf();
+        const int rz = (arm->state == 1 && arm->sub_state_1 == 5 && arm->sub_state_2 == 0);
+        if (rz && !war_rz) o->rz_starts++;
+        war_rz = rz;
+        if (arm->hp < 0 && o->ende < 0) o->ende = t;
+        if (arm->hp >= 0) o->hp_rest = arm->hp;
+        vor_hp = arm->hp;
+    }
+    o->hinten = hz0 - hz->hp;
+    re15_beretta_r37_mess(&o->m);
+    return 1;
+}
+static void teil_j_gitterarm(int Z)
+{
+    printf("== J Gitterarm 0x1A (RE2-Arm-Gehirn): Kugel 2/3 gehen am getroffenen Arm vorbei\n");
+    arm_erg_t b, r;
+    /* Kontrolle: Browning, EIN Treffer -> Rueckzug-Ende = Bezug (exe: F80 = E+10, Dossier 9.1) */
+    const int ok_b = arm_szenario(Z, 3, RE15_AI_FLAVOR_RE2, &b);
+    const int schaden = b.hp0 - b.hp_e;                   /* Spalte 3 = Einzelschuss (Browning und Kugel je M93R) */
+    CHECK(100, ok_b && schaden > 0 && b.treffer_arm == 0 && b.hp_rest == b.hp_e && b.rz_starts == 1 && b.ende > 0
+               && b.hinten == 0,
+          "Kontrolle Browning (RE2): Arm heraus %d, EIN Treffer (hp %d -> %d, Rest %d), Rueckzug %d x, Ende Tick %d, "
+          "dahinter -%d", b.raus, b.hp0, b.hp_e, b.hp_rest, b.rz_starts, b.ende, b.hinten);
+    static const re15_ai_flavor_t FL[3] = { RE15_AI_FLAVOR_RE2, RE15_AI_FLAVOR_RE15, RE15_AI_FLAVOR_MIXED };
+    static const char *const FN[3] = { "RE2 (Standard)", "RE1.5", "MIXED" };
+    for (int k = 0; k < 3; k++) {
+        const int ok = arm_szenario(Z, 5, FL[k], &r);
+        CHECK(101 + 3 * k, ok && (r.d1d3 & 0x80u) && re15_beretta_r37_re2_pause_regelt(0x1Au) == 0,
+              "%s: Arm heraus %d, +0x1D3 vor Kugel 2 = %02x (Bit 0x80 aus arm_hurt @0x80100fa8-b0), kein Pausenfilter",
+              FN[k], r.raus, r.d1d3);
+        CHECK(102 + 3 * k, r.hp_e == r.hp0 - schaden && r.treffer_arm == 0 && r.hp_rest == r.hp_e
+                           && r.m.riegel_geloest == 0 && r.m.kugeln == 3,
+              "%s: EIN Treffer am Arm (hp %d -> %d, Rest %d, weitere %d), Riegel nicht geloest (%u), drei Kugeln (%u)",
+              FN[k], r.hp0, r.hp_e, r.hp_rest, r.treffer_arm, r.m.riegel_geloest, r.m.kugeln);
+        CHECK(103 + 3 * k, r.rz_starts == 1 && r.ende == b.ende && r.hinten == 20 && r.m.treffer == 3,
+              "%s: Rueckzug EINMAL (%d x), Ende Tick %d wie Browning %d; Kugel 2/3 treffen den naechsten Kandidaten "
+              "0x2b (-%d, erwartet 2 x Spalte 3 = 20 @0x8006EFA4), Treffer gesamt %u",
+              FN[k], r.rz_starts, r.ende, b.ende, r.hinten, r.m.treffer);
+    }
 }
 
 int main(void)
@@ -335,6 +455,7 @@ int main(void)
           "5 und 6 sind Feuerstoss-Waffen (@0x80074114/18 -> 0x800338A8)");
 
     teil_i_standard_ki(Z);
+    teil_j_gitterarm(Z);
 
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     re15_re15_re2z_import_set(1);

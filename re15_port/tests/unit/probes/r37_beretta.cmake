@@ -10,9 +10,14 @@
 #                             Sterbender bekommt keine zweite Kugel, andere Waffen unberuehrt; Teil I (Nachbesserung 1):
 #                             Standard-KI (RE2-Flavor) — RE1.5-Gehirne 0x23/0x27/0x29/0x2b/0x30 drei Treffer, Stoss =
 #                             3 x Spalte 3; Spinne/Kraehe behalten die RE2-Pause.
+#                             Teil J (Nachbesserung 2): Gitterarm 0x1A mit dem echten RE2-Arm-Gehirn in RE2/RE1.5/MIXED —
+#                             EIN Treffer am Arm (+0x1D3-Gate @0x80041270-78, arm_hurt 0x80 @0x80100fa8-b0), Rueckzug einmal,
+#                             Kugel 2/3 an den naechsten Kandidaten.
 add_executable(test_r37_beretta ${CMAKE_CURRENT_LIST_DIR}/../test_r37_beretta.c)
 target_link_libraries(test_r37_beretta PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r37_beretta PRIVATE ${CMAKE_SOURCE_DIR}/include)
+# Teil J (Nachbesserung 2): RE2-Bank EM2D des Gitterarms aus CDEMD0.EMS (wie test_p2_1210_arme_re2)
+target_compile_definitions(test_r37_beretta PRIVATE RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
 if(NOT WIN32)
     target_link_libraries(test_r37_beretta PRIVATE m)
 endif()
