@@ -77,6 +77,11 @@ Kabine ausloesen, und man sitzt danach hinter einer Wand fest (das hatten Sie im
 jetzt nur, wenn Sie in der Kabine stehen, wie die Hubplattform der RE2-Fassung desselben Raums (ROOM6030). Lift B und
 die Lifte in 3050 und 50D0 hatten diese Falle nicht und bleiben wie im Original.
 
+**Ada und Marvin nach Irons' Tod** (Spur O, Ihre Nachtraege 11 und 12). In ROOM11C0 stehen Ada und Marvin jetzt vom
+ersten Bild an einander zugewandt. Auf den Knall drehen sie nur die Koepfe; im Gespraech dreht sich niemand, und wer
+spricht, sieht den anderen an - auch Marvin bei allen drei Zeilen. Er dreht sich erst, wenn er zur Tuer losrennt. Bei
+"Marvin!..." dreht Ada sich ihm einmal nach, ihr Kopf folgt ihm, bis er aus dem Bild ist.
+
 <!-- Rest-Spuren G, L, N, O, P, Q, R: nach bestandener Abnahme + Integration hier ergaenzen, sonst unter 'Folgt am Samstag' -->
 
 ## Grenzen
