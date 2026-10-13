@@ -355,3 +355,49 @@ Abnahmebericht: `G_abnahme_1.md` (Abschnitt 1f / 5). Mangel N1: seit Nachbesseru
 des Gitterarms 0x1A vor Kugel 2/3 (re2_pausenfilter_laeuft(0x1A) = 0); der getroffene, sich zurueckziehende Arm nimmt alle
 drei Kugeln, der Rueckzug startet je Kugel neu. RE2 schliesst ihn per +0x1D3 (EM2D-HURT `|= 0x80`) + Applier-Gate 2 aus.
 Fortlaufend geschrieben; Abschnitte 9.1 ff. folgen je Schritt.
+
+### 9.1 Messung vorher (Spur-Stand 46e72af2, exe md5 1a2b95d657bccb2751aba752662c1231 = die Abnahme-1-exe)
+Skript `G_beretta_mess/run_nb2.sh` (Aufbau Abnahme 1f: `JUMP=1210`, Leon (-19500,-13000,1024), Eingabe
+`U0.8,R0.5,M1.0,MA0.1,M2.0,W2`, `RE15_RE2_TRACE=1`, Trace `re2_ki.log` neben der exe -> ins Messverzeichnis verschoben),
+Auswertung `auswertung.py`; Logs `mess_r37g/nb2v_*` (unversioniert). Arm = Platz 5 (Typ 0x1a), kommt F38 heraus (1/0 -> 1/1).
+| Lauf | KI | Waffe | Munition | HP Arm 5 | Rueckzug (Trace `[re2arm] slot 5`) | Ende (hp -1, 1/7, verborgen) |
+|---|---|---|---|---|---|---|
+| nb2v_arm_w3_std | Standard | 3 Browning | F70 15 -> 14 | F70 250 -> 245 | 1/5/0 -> 1/5/1 EINMAL | **F80 (E+10)** bei (-21750,-15897) |
+| nb2v_arm_w5_std | Standard | 5 M93R | F70 15 -> 12 | F70 -5, F73 -5, F76 -5 (250 -> 235) | 5/0 -> 5/1 -> 5/0 -> 5/1 -> 5/0 -> 5/1 (DREIMAL neu, Clip 4 je Kugel von vorn) | **F86 (E+16)** bei (-21854,-15957) |
+| nb2v_arm_w5_re15 | RE1.5 | 5 M93R | F70 15 -> 12 | F70/F73/F76 je -5 | wie w5_std (Trace zeilengleich) | F86 |
+Muendung (wf `SPAWN id=2 sub=0`) je Lauf F70/F73/F76 bzw. F70. => N1 reproduziert, in beiden KI-Modi gleich.
+Ursache (Code gelesen): `re15_ai_re2_for_type(0x1A)` = 1 in jedem Flavor (enemy_ai_re2_zombie.c:172), aber
+`re2_pausenfilter_laeuft(0x1A)` = 0 (kein Filter fuer 0x1A, game_step_common.c Nachlauf) -> riegel_loesen() loescht den
++0x93-Riegel des Arms vor Kugel 2/3 (NB1-Kriterium); das alte Kriterium (NB0) hatte ihn uebersprungen.
+
+### 9.2 RE-Belege (selbst disassembliert, RE2 Retail = Vorbild des Arm-Gehirns und der Feuerstoss-Form)
+Werkzeug `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py`; EM2D-Overlay selbst geschnitten
+(`python re15_port/tools/re2_ems_cut.py 0x2D` -> `build/extracted/re2_ems/CDEMD0_EM2D_ai1.BIN`, 5416 B, md5 82ab5760...,
+gleich der Hauptbaum-Kopie), `RE_OVERLAY_DIR=build/extracted/re2_ems`.
+* **Kugel-Resolver der Custom Handgun** (`jal 0x800410cc` @0x80048a04, info/re2leon/PSX.EXE), Kandidatenschleife:
+  ```
+  80041264  andi v0,v0,0x1 / 80041268 beq v0,zero,0x80041300      ; Gate 1 aktiv
+  80041270  lbu  v0,467(s2)                                        ; +0x1D3, GANZES Byte
+  80041278  bne  v0,zero,0x80041300                                ; != 0 -> naechster Kandidat
+  80041280  lh   v0,342(s2) / 80041288 bltz v0,0x80041300           ; Gate 3 HP < 0
+  80041290  lhu  v0,270(s2) / 80041298 andi v0,v0,0xc000 / 8004129c bne   ; Gate 4
+  80041300  j    0x800417d0 / 80041304 addiu fp,fp,4                ; naechster Listeneintrag
+  ```
+  Dieselben vier Gates hat der Applier FUN_800470C0 (`lbu v0,467(s0)` / `bne v0,zero,0x8004740c` @0x80047138-40).
+* **EM2D-HURT** (`CDEMD0_EM2D_ai1.BIN`, Routine 2 @0x80100F8C): `lbu v0,467(s0)` @0x80100f9c, `addiu v1,zero,1281` /
+  `sw v1,4(s0)` @0x80100fa0-a4 (0x501 = Rueckzug), **`ori v0,v0,0x80` @0x80100fa8**, **`sb v0,467(s0)` @0x80100fb0**
+  (Delay-Slot des `jal 0x80015fe8`). Port: arm_hurt (enemy_ai_re2_zellenarm.c:810-815, `e->re2z_self1d3 |= 0x80`).
+* **Rueckzug B5**: P0 `ori v0,v0,0x80` / `sb v0,467(s0)` @0x80100df0/f8 (Clip 0xF0004 @0x80100dd0-e0), Ende
+  `addiu v0,zero,1793` / `sw v0,4(s0)` @0x80100e40-44 (0x701), `sh v1(-1),342(s0)` @0x80100e4c-50, `ori 0x80` / `sb` @0x80100e54-58.
+* **Wer +0x1D3 wieder loescht**: nur INIT `sb zero,467(s0)` @0x80100130 und das Wieder-Auftauchen in A0
+  `sb zero,467(s1)` @0x801005b8 / @0x8010061c — also erst, wenn der Arm neu aus dem Gitter kommt.
+* **Trefferpause der Custom Handgun fuer den RE2-Arm** (Typ 0x2D, Zeile 4 = *(0x800A6B3C) + 3*0x14 = @0x800A51BC,
+  w1 0x02850A14 -> (w1 >> 9) & 0x7f = 5; selbst gelesen): auch ohne das HURT-Bit waere Kugel 2 (3 Bilder spaeter) noch in
+  der Pause. Der Port stempelt fuer 0x1A keine Pause (re15_re2_stun_frames `default: return 0`); massgeblich ist das
+  Bit 0x80 aus arm_hurt, das bis zum Wieder-Auftauchen steht.
+=> RE2: ein getroffener Arm ist fuer Kugel 2/3 KEIN Kandidat (+0x1D3 = 0x80 seit dem Trefferbild); die Kugeln gehen an den
+naechsten Kandidaten der Liste. Der Rueckzug laeuft einmal.
+Regel fuer den Port (keine neue Konstante): riegel_loesen() laesst den Riegel stehen, wenn der Gegner ein RE2-Gehirn hat
+und sein +0x1D3-Byte != 0 ist (Gate @0x80041270-78). Das trifft den Arm (0x80 aus arm_hurt) und laesst die RE1.5-Gehirne
+0x23/0x27/0x29/0x2b/0x30 unberuehrt: ihr +0x1D3 bleibt 0 (Stempel re15_re2_stun_frames `return 0`, re15_damage.c:2695-2696,
+kein Gehirn schreibt es). G5 0x36 traegt nach einem Schuss ebenso 0 (Abschnitt 9.5).
