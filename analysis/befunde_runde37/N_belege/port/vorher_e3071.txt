@@ -1,0 +1,4 @@
+[goto] queued room change -> ROOM3071 at F30
+[room] PC loaded room3071.rdt (243908 bytes)
+[enemy] EM30 loaded: 17 meshes, 16 bones, 21 clips -> slot 11
+[enemy-diag] actor1 type=0x30 model=enemy-bank slot=11 motion=0 anim_frame=0 clips=21

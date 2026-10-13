@@ -1,0 +1,54 @@
+== HASH-957757946319438E_1.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+   Entity  0 Typ 0x47 +0x97=0  EDD1=CDEMD1 EMR2=CDEMD1 EDD3=CDEMD1 EMR4=CDEMD1 EDD5=beide EMR6=beide  MD1=?
+== HASH-957757946319438E_10.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+== HASH-957757946319438E_2.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+   Entity  0 Typ 0x47 +0x97=0  EDD1=CDEMD1 EMR2=CDEMD1 EDD3=CDEMD1 EMR4=CDEMD1 EDD5=beide EMR6=beide  MD1=?
+== HASH-957757946319438E_3.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+   Entity  0 Typ 0x47 +0x97=0  EDD1=CDEMD1 EMR2=CDEMD1 EDD3=CDEMD1 EMR4=CDEMD1 EDD5=beide EMR6=beide  MD1=?
+== HASH-957757946319438E_4.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+   Entity  0 Typ 0x49 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+== HASH-957757946319438E_5.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+   Entity  0 Typ 0x49 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  1 Typ 0x47 +0x97=0  EDD1=CDEMD1 EMR2=CDEMD1 EDD3=CDEMD1 EMR4=CDEMD1 EDD5=beide EMR6=beide  MD1=?
+== HASH-957757946319438E_6.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+   Entity  0 Typ 0x4B +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  1 Typ 0x42 +0x97=0  EDD1=beide EMR2=CDEMD1 EDD3=CDEMD1 EMR4=CDEMD1 EDD5=beide EMR6=beide  MD1=?
+   Entity  2 Typ 0x40 +0x97=0  EDD1=keins EMR2=keins EDD3=keins EMR4=keins EDD5=keins EMR6=keins  MD1=?
+== HASH-957757946319438E_7.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+== HASH-957757946319438E_8.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+== HASH-957757946319438E_9.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+   Entity  0 Typ 0x10 +0x97=0  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+== HASH-957757946319438E_resume.sav  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+   Entity  0 Typ 0x16 +0x97=0  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  1 Typ 0x10 +0x97=1  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  2 Typ 0x10 +0x97=1  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  3 Typ 0x11 +0x97=1  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  4 Typ 0x11 +0x97=1  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+== HASH-957757946319438E_1.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+== HASH-957757946319438E_10.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+   Entity  0 Typ 0x11 +0x97=0  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+== HASH-957757946319438E_2.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+   Entity  0 Typ 0x26 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  1 Typ 0x26 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  2 Typ 0x26 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  3 Typ 0x26 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  4 Typ 0x26 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  5 Typ 0x26 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  6 Typ 0x26 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+== HASH-957757946319438E_3.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+   Entity  0 Typ 0x10 +0x97=0  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  1 Typ 0x10 +0x97=1  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  2 Typ 0x10 +0x97=1  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  3 Typ 0x10 +0x97=1  EDD1=beide EMR2=beide EDD3=CDEMD0 EMR4=CDEMD0 EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+== HASH-957757946319438E_4.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+== HASH-957757946319438E_5.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+== HASH-957757946319438E_6.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+== HASH-957757946319438E_7.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 1  Raum []
+   Entity  0 Typ 0x49 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=beide EMR6=beide  MD1=?
+   Entity  1 Typ 0x27 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=CDEMD1 EMR6=CDEMD1  MD1=?
+   Entity  2 Typ 0x27 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=CDEMD1 EMR6=CDEMD1  MD1=?
+== HASH-957757946319438E_8.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+== HASH-957757946319438E_9.bak  EXE-Stub 0800e003 (sauber)  Elza-Bit 0  Raum []
+   Entity  0 Typ 0x21 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  1 Typ 0x21 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=CDEMD0 EMR6=CDEMD0  MD1=?
+   Entity  2 Typ 0x21 +0x97=0  EDD1=beide EMR2=beide EDD3=beide EMR4=beide EDD5=CDEMD0 EMR6=CDEMD0  MD1=?

@@ -1,0 +1,237 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r37_elzaems/re15_port/build
+        Start 700: integration_r37_roy_szene1011
+        Start 701: integration_r37_roy_szene1021
+        Start 702: integration_r37_roy_leon1170
+  1/116 Test #701: integration_r37_roy_szene1021 ............   Passed   59.25 sec
+        Start 693: integration_r37_elzaems_leon10c0kraehe
+  2/116 Test #693: integration_r37_elzaems_leon10c0kraehe ...   Passed   38.90 sec
+        Start 692: integration_r37_elzaems_elza10c1kraehe
+  3/116 Test #700: integration_r37_roy_szene1011 ............   Passed  101.08 sec
+        Start 687: integration_r37_elzaems_elza1101
+  4/116 Test #702: integration_r37_roy_leon1170 .............   Passed  104.75 sec
+        Start 691: integration_r37_elzaems_elza1181griff
+  5/116 Test #691: integration_r37_elzaems_elza1181griff ....   Passed   15.41 sec
+        Start 688: integration_r37_elzaems_leon1100
+  6/116 Test #687: integration_r37_elzaems_elza1101 .........   Passed   25.95 sec
+        Start 689: integration_r37_elzaems_elza11b1
+  7/116 Test #692: integration_r37_elzaems_elza10c1kraehe ...   Passed   39.11 sec
+        Start 684: integration_r37_elzaems_elza3071
+  8/116 Test #689: integration_r37_elzaems_elza11b1 .........   Passed   26.83 sec
+        Start 690: integration_r37_elzaems_elza5091
+  9/116 Test #688: integration_r37_elzaems_leon1100 .........   Passed   33.77 sec
+        Start 694: integration_r37_elzaems_elza1141
+ 10/116 Test #684: integration_r37_elzaems_elza3071 .........   Passed   16.86 sec
+        Start 685: integration_r37_elzaems_leon5080
+ 11/116 Test #690: integration_r37_elzaems_elza5091 .........   Passed   13.56 sec
+        Start 686: integration_r37_elzaems_elza3091
+ 12/116 Test #694: integration_r37_elzaems_elza1141 .........   Passed   13.50 sec
+        Start 683: integration_r37_elzaems_elza5081
+ 13/116 Test #685: integration_r37_elzaems_leon5080 .........   Passed   13.45 sec
+        Start 698: unit_r37_roy_szene1021
+ 14/116 Test #698: unit_r37_roy_szene1021 ...................   Passed    0.08 sec
+        Start 697: unit_r37_roy_szene1011
+ 15/116 Test #697: unit_r37_roy_szene1011 ...................   Passed    0.06 sec
+        Start 681: unit_r37_elzaems_griff
+ 16/116 Test #681: unit_r37_elzaems_griff ...................   Passed    0.14 sec
+        Start 695: unit_r37_roy_toc
+ 17/116 Test #695: unit_r37_roy_toc .........................   Passed    0.01 sec
+        Start 699: unit_r37_roy_leon1170
+ 18/116 Test #699: unit_r37_roy_leon1170 ....................   Passed    0.01 sec
+        Start 682: unit_r37_elzaems_opfer27
+ 19/116 Test #682: unit_r37_elzaems_opfer27 .................   Passed    0.02 sec
+        Start 696: unit_r37_roy_weiche
+ 20/116 Test #696: unit_r37_roy_weiche ......................   Passed    0.01 sec
+        Start 680: unit_r37_elzaems_raeume
+ 21/116 Test #680: unit_r37_elzaems_raeume ..................   Passed    0.04 sec
+        Start 678: unit_r37_elzaems_toc
+ 22/116 Test #678: unit_r37_elzaems_toc .....................   Passed    0.04 sec
+        Start 679: unit_r37_elzaems_weiche
+ 23/116 Test #679: unit_r37_elzaems_weiche ..................   Passed    0.01 sec
+        Start  13: prop_spawn_entered
+ 24/116 Test  #13: prop_spawn_entered .......................   Passed    0.02 sec
+        Start  26: unit_room1140_spawn
+ 25/116 Test  #26: unit_room1140_spawn ......................   Passed    0.02 sec
+        Start  29: unit_crow_ai
+ 26/116 Test  #29: unit_crow_ai .............................   Passed    0.02 sec
+        Start  31: unit_maggot_ai
+ 27/116 Test  #31: unit_maggot_ai ...........................   Passed    0.02 sec
+        Start  37: unit_ems
+ 28/116 Test  #37: unit_ems .................................   Passed    0.01 sec
+        Start  44: unit_birkin_ai
+ 29/116 Test  #44: unit_birkin_ai ...........................   Passed    0.02 sec
+        Start  73: unit_scd_flag_fade
+ 30/116 Test  #73: unit_scd_flag_fade .......................   Passed    0.02 sec
+        Start  74: unit_flag_gate
+ 31/116 Test  #74: unit_flag_gate ...........................   Passed    0.02 sec
+        Start  86: unit_sherry_wall_pin
+ 32/116 Test  #86: unit_sherry_wall_pin .....................   Passed    0.09 sec
+        Start  89: unit_maggot_bone_square
+ 33/116 Test  #89: unit_maggot_bone_square ..................   Passed    0.02 sec
+        Start 112: unit_re2_crow_ai
+ 34/116 Test #112: unit_re2_crow_ai .........................   Passed    0.02 sec
+        Start 116: unit_crow_fixes
+ 35/116 Test #116: unit_crow_fixes ..........................   Passed    0.01 sec
+        Start 121: probe_crow_kill
+ 36/116 Test #121: probe_crow_kill ..........................   Passed    0.04 sec
+        Start 122: unit_crow_death_corpse
+ 37/116 Test #122: unit_crow_death_corpse ...................   Passed    0.03 sec
+        Start 124: unit_marvin_spawn_bank
+ 38/116 Test #124: unit_marvin_spawn_bank ...................   Passed    0.04 sec
+        Start 136: unit_1030_spawncap
+ 39/116 Test #136: unit_1030_spawncap .......................   Passed    0.03 sec
+        Start 143: unit_re2_ems
+ 40/116 Test #143: unit_re2_ems .............................   Passed    0.02 sec
+        Start 180: unit_re2_hit_repeat_crow_spider
+ 41/116 Test #180: unit_re2_hit_repeat_crow_spider ..........   Passed    0.05 sec
+        Start 181: unit_re2_hybrid_rig
+ 42/116 Test #181: unit_re2_hybrid_rig ......................   Passed    0.35 sec
+        Start 189: unit_re2_crow_se_bank
+ 43/116 Test #189: unit_re2_crow_se_bank ....................   Passed    0.05 sec
+        Start 200: unit_re2_victim_collapse
+ 44/116 Test #200: unit_re2_victim_collapse .................   Passed    0.02 sec
+        Start 223: unit_re2_crow_shadow_release
+ 45/116 Test #223: unit_re2_crow_shadow_release .............   Passed    0.02 sec
+        Start 229: unit_scd_zone2_pauseflags
+ 46/116 Test #229: unit_scd_zone2_pauseflags ................   Passed    0.02 sec
+        Start 244: unit_writher_kill_flag
+ 47/116 Test #244: unit_writher_kill_flag ...................   Passed    0.03 sec
+        Start 264: unit_re2_crow_kill_cmd3
+ 48/116 Test #264: unit_re2_crow_kill_cmd3 ..................   Passed    0.03 sec
+        Start 265: unit_re2z_spawn_seed
+ 49/116 Test #265: unit_re2z_spawn_seed .....................   Passed    0.01 sec
+        Start 266: unit_maggot_zone_leap
+ 50/116 Test #266: unit_maggot_zone_leap ....................   Passed    0.02 sec
+        Start 272: unit_g5_tentakel
+ 51/116 Test #272: unit_g5_tentakel .........................   Passed    0.04 sec
+        Start 273: unit_g5_morph
+ 52/116 Test #273: unit_g5_morph ............................   Passed    0.02 sec
+        Start 274: unit_g5_boss
+ 53/116 Test #274: unit_g5_boss .............................   Passed    0.33 sec
+        Start 292: probe_p2_birkin_g5
+ 54/116 Test #292: probe_p2_birkin_g5 .......................   Passed    0.57 sec
+        Start 294: unit_re2z_crawler_spawn_wait
+ 55/116 Test #294: unit_re2z_crawler_spawn_wait .............   Passed    0.03 sec
+        Start 303: probe_p3_birkin_rest
+ 56/116 Test #303: probe_p3_birkin_rest .....................   Passed    0.66 sec
+        Start 308: unit_r17_birkin_1zu1_pin
+ 57/116 Test #308: unit_r17_birkin_1zu1_pin .................   Passed    0.20 sec
+        Start 312: unit_r17_waffen_loop_pin
+ 58/116 Test #312: unit_r17_waffen_loop_pin .................   Passed    0.01 sec
+        Start 314: unit_r18_birkin_restluecken_pin
+ 59/116 Test #314: unit_r18_birkin_restluecken_pin ..........   Passed    0.24 sec
+        Start 320: unit_r20_birkin_push_pin
+ 60/116 Test #320: unit_r20_birkin_push_pin .................   Passed    1.20 sec
+        Start 339: unit_r30_birkin_frost
+ 61/116 Test #339: unit_r30_birkin_frost ....................   Passed    0.90 sec
+        Start 341: unit_r30_elza_selbsttuer
+ 62/116 Test #341: unit_r30_elza_selbsttuer .................   Passed    0.09 sec
+        Start 342: integration_elza_vollstart
+ 63/116 Test #683: integration_r37_elzaems_elza5081 .........   Passed   13.81 sec
+        Start 347: unit_r30_hund_tod_elza
+ 64/116 Test #686: integration_r37_elzaems_elza3091 .........   Passed   13.86 sec
+        Start 363: unit_r30_n_room5080_birkin_wand
+ 65/116 Test #363: unit_r30_n_room5080_birkin_wand ..........   Passed    0.10 sec
+        Start 402: unit_r33_tuer1120_elza
+ 66/116 Test #402: unit_r33_tuer1120_elza ...................   Passed    0.02 sec
+        Start 438: unit_r34n_d_adaruf_elza
+ 67/116 Test #438: unit_r34n_d_adaruf_elza ..................   Passed    0.02 sec
+        Start 456: unit_r35_affen_teile
+ 68/116 Test #456: unit_r35_affen_teile .....................   Passed    0.02 sec
+        Start 457: unit_r35_affen_band
+ 69/116 Test #457: unit_r35_affen_band ......................   Passed    0.03 sec
+        Start 458: unit_r35_affen_ada
+ 70/116 Test #458: unit_r35_affen_ada .......................   Passed    0.11 sec
+        Start 459: unit_r35_affen_sprung
+ 71/116 Test #459: unit_r35_affen_sprung ....................   Passed    0.04 sec
+        Start 460: unit_r35_affen_flug
+ 72/116 Test #460: unit_r35_affen_flug ......................   Passed    0.01 sec
+        Start 461: unit_r35_affen_wagen
+ 73/116 Test #461: unit_r35_affen_wagen .....................   Passed    0.04 sec
+        Start 462: unit_r35_affen_brust
+ 74/116 Test #462: unit_r35_affen_brust .....................   Passed    0.01 sec
+        Start 463: unit_r35_affen_kdsonde
+ 75/116 Test #463: unit_r35_affen_kdsonde ...................   Passed    0.02 sec
+        Start 464: unit_r35_affen_biss
+ 76/116 Test #464: unit_r35_affen_biss ......................   Passed    0.02 sec
+        Start 465: unit_r35_affen_frac
+ 77/116 Test #465: unit_r35_affen_frac ......................   Passed    0.01 sec
+        Start 466: unit_r35_affen_anker
+ 78/116 Test #466: unit_r35_affen_anker .....................   Passed    0.02 sec
+        Start 467: unit_r35_affen_takt
+ 79/116 Test #467: unit_r35_affen_takt ......................   Passed    0.07 sec
+        Start 468: unit_r35_affen_griff
+ 80/116 Test #468: unit_r35_affen_griff .....................   Passed    0.57 sec
+        Start 469: unit_r35_affen_npcband
+ 81/116 Test #347: unit_r30_hund_tod_elza ...................   Passed    1.21 sec
+        Start 470: unit_r35_affen_schrot
+ 82/116 Test #470: unit_r35_affen_schrot ....................   Passed    0.02 sec
+        Start 471: unit_r35_affen_wand
+ 83/116 Test #471: unit_r35_affen_wand ......................   Passed    0.01 sec
+        Start 472: unit_r35_affen_szene
+ 84/116 Test #472: unit_r35_affen_szene .....................   Passed    0.13 sec
+        Start 473: unit_r35_affen_finisher
+ 85/116 Test #473: unit_r35_affen_finisher ..................   Passed    0.02 sec
+        Start 474: unit_r35_affen_zonensprung
+ 86/116 Test #474: unit_r35_affen_zonensprung ...............   Passed    0.04 sec
+        Start 475: unit_r35_affen_kette
+ 87/116 Test #469: unit_r35_affen_npcband ...................   Passed    0.30 sec
+        Start 504: unit_r35_fenster_kraehe
+ 88/116 Test #475: unit_r35_affen_kette .....................   Passed    0.02 sec
+        Start 509: unit_elza_zweig
+ 89/116 Test #504: unit_r35_fenster_kraehe ..................   Passed    0.02 sec
+        Start 534: unit_r35_inventar1050_elza
+ 90/116 Test #509: unit_elza_zweig ..........................   Passed    0.02 sec
+        Start 558: integration_r35_werfer_elza
+ 91/116 Test #534: unit_r35_inventar1050_elza ...............   Passed    0.01 sec
+        Start 561: unit_r35_zgirl_killflag
+ 92/116 Test #561: unit_r35_zgirl_killflag ..................   Passed    0.03 sec
+        Start 570: integration_r35_zgirl_5090
+ 93/116 Test #558: integration_r35_werfer_elza ..............   Passed   31.86 sec
+        Start 574: unit_r36_elza_fenster
+ 94/116 Test #574: unit_r36_elza_fenster ....................   Passed    0.03 sec
+        Start 575: unit_r36_elza_irons
+ 95/116 Test #575: unit_r36_elza_irons ......................   Passed    0.02 sec
+        Start 576: unit_r36_elza_unlock
+ 96/116 Test #576: unit_r36_elza_unlock .....................   Passed    0.06 sec
+        Start 577: unit_r36_elza_schuss
+ 97/116 Test #577: unit_r36_elza_schuss .....................   Passed    0.05 sec
+        Start 578: unit_r36_elza_roy
+ 98/116 Test #578: unit_r36_elza_roy ........................   Passed    0.05 sec
+        Start 579: unit_r36_elza_stoehnen
+ 99/116 Test #579: unit_r36_elza_stoehnen ...................   Passed    0.06 sec
+        Start 580: unit_r36_elza_bank
+100/116 Test #580: unit_r36_elza_bank .......................   Passed    0.01 sec
+        Start 581: unit_r36_elza_signatur
+101/116 Test #581: unit_r36_elza_signatur ...................   Passed    0.01 sec
+        Start 582: integration_r36_elza_fenster
+102/116 Test #582: integration_r36_elza_fenster .............   Passed   49.01 sec
+        Start 583: integration_r36_elza_irons
+103/116 Test #342: integration_elza_vollstart ...............   Passed  100.09 sec
+        Start 584: integration_r36_elza_unlock
+104/116 Test #583: integration_r36_elza_irons ...............   Passed   13.73 sec
+        Start 585: integration_r36_elza_schuss
+105/116 Test #584: integration_r36_elza_unlock ..............   Passed   42.37 sec
+        Start 586: integration_r36_elza_stoehnen
+106/116 Test #585: integration_r36_elza_schuss ..............   Passed   46.51 sec
+        Start 611: unit_r36_kleidung_griff_re2
+107/116 Test #611: unit_r36_kleidung_griff_re2 ..............   Passed    0.05 sec
+        Start 612: unit_r36_kleidung_griff_re15
+108/116 Test #612: unit_r36_kleidung_griff_re15 .............   Passed    0.05 sec
+        Start 614: unit_r36_kleidung_kraehe
+109/116 Test #614: unit_r36_kleidung_kraehe .................   Passed    0.06 sec
+        Start 645: unit_r36_schuss_kraehe
+110/116 Test #645: unit_r36_schuss_kraehe ...................   Passed    0.02 sec
+        Start 653: integration_r36_story_elza
+111/116 Test #570: integration_r35_zgirl_5090 ...............   Passed  143.24 sec
+        Start 674: unit_r36_zombieki_affen
+112/116 Test #674: unit_r36_zombieki_affen ..................   Passed    0.05 sec
+        Start 676: unit_r36_zombieki_affen_block
+113/116 Test #676: unit_r36_zombieki_affen_block ............   Passed   17.23 sec
+        Start 714: integration_flag_census
+114/116 Test #714: integration_flag_census ..................   Passed    0.20 sec
+115/116 Test #586: integration_r36_elza_stoehnen ............   Passed   89.63 sec
+116/116 Test #653: integration_r36_story_elza ...............   Passed  213.72 sec
+
+100% tests passed, 0 tests failed out of 116
+
+Total Test time (real) = 538.08 sec

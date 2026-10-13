@@ -1,0 +1,37 @@
+# Runde 37 Spur N - Elza ROOM3091 sub07 (RE15_SUBSTART=7@40#3091, Kreuz alle 30 Bilder), RE15_ANIM_TRACE Typ 0x42 (66)
+# Zeile: erstes Bild eines neuen (Motion, Clip, Bildzahl, Loco-Flag)
+== vorher
+[enemy] EM42 loaded: 15 meshes, 15 bones, 24 clips -> slot 12
+F0 mo 2 clip 2 fc 52 loco 0
+F1 mo 1 clip 1 fc 16 loco 0
+F17 mo 2 clip 2 fc 52 loco 0
+F149 mo 0 clip 0 fc 22 loco 0
+F166 mo 5 clip 5 fc 30 loco 0
+F171 mo 0 clip 0 fc 22 loco 0
+F180 mo 5 clip 5 fc 30 loco 0
+F195 mo 1 clip 1 fc 16 loco 0
+F211 mo 2 clip 2 fc 52 loco 0
+F420 mo 4 clip 4 fc 20 loco 0
+F470 mo 3 clip 3 fc 20 loco 0
+F520 mo 9 clip 9 fc 1 loco 0
+F662 mo 1 clip 1 fc 32 loco 0
+F712 mo 0 clip 0 fc 34 loco 0
+F762 mo 9 clip 9 fc 1 loco 0
+== nachher
+[elzaems] Typ 0x42 aus EMD/CDEMD1.EMS Sektor 1505 (144032 B) crc 91415329 - Elza-Archiv (@0x800223ac)
+[enemy] EM42 loaded: 15 meshes, 15 bones, 24 clips -> slot 12
+F0 mo 2 clip 2 fc 52 loco 0
+F1 mo 1 clip 1 fc 16 loco 0
+F17 mo 2 clip 2 fc 52 loco 0
+F149 mo 0 clip 0 fc 22 loco 0
+F166 mo 5 clip 5 fc 30 loco 0
+F171 mo 0 clip 0 fc 22 loco 0
+F180 mo 5 clip 5 fc 30 loco 0
+F195 mo 1 clip 1 fc 16 loco 0
+F211 mo 2 clip 2 fc 52 loco 0
+F420 mo 4 clip 4 fc 20 loco 0
+F470 mo 3 clip 3 fc 20 loco 0
+F520 mo 9 clip 9 fc 1 loco 0
+F662 mo 1 clip 1 fc 32 loco 0
+F712 mo 0 clip 0 fc 34 loco 0
+F762 mo 9 clip 9 fc 1 loco 0

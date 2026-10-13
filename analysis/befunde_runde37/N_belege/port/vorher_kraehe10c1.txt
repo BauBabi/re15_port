@@ -1,0 +1,13 @@
+# Runde 37 Spur N - exe-Lauf vorher (vorher = Bau 99b4b13f, nachher = r37/elzaems), RE15_AI_FLAVOR=re15, RE15_ANIM_TRACE
+# debug.log (Lader):
+[enemy] EM21 loaded: 13 meshes, 13 bones, 14 clips -> slot 11
+# Spieler (Slot 0) Clip/Bildzahl je aufgeloester Pose (anim.log Spalten 4/6), Anzahl:
+     28   Clip 0 fc 14
+    174   Clip 1 fc 36
+     42   Clip 2 fc 20
+     16   Clip 210 fc 16
+    449   Clip 211 fc 52
+     99   Clip 212 fc 105
+# Greifer (Slot>0) Clip/Bildzahl:
+  Typ 33 Clip 0 fc 23;  Typ 33 Clip 1 fc 35;  Typ 33 Clip 2 fc 21;  Typ 33 Clip 3 fc 16;  Typ 33 Clip 4 fc 10;  Typ 33 Clip 5 fc 24;  Typ 33 Clip 6 fc 33;  Typ 33 Clip 7 fc 40;  Typ 33 Clip 8 fc 8;
+# state.log Griffbilder (gr=1): 244

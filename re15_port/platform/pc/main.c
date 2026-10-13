@@ -853,9 +853,9 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
  * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
 static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
-    { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K: Elzas Typ 0x47 = Roy aus */
-      uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* CDEMD1.EMS (Elza-Bit bltz @0x80022334, */
-      if (rb) return rb; }                                   /* Datei 0x27 @0x800223ac), roy_pc.c       */
+    { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K/N: JEDER Typ aus CDEMD1.EMS, */
+      uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* wenn das Elza-Bit beim Sce_em_set stand    */
+      if (rb) return rb; }                                   /* (bltz @0x80022334, Datei 0x27), roy_pc.c   */
     uint8_t *buf = NULL; char rel[32]; int sz = 0;
     snprintf(rel, sizeof rel, "EMD/EM%02X.EMD", type);
     buf = pc_read_shared(rel, &sz);                    /* malloc'd if it exists */

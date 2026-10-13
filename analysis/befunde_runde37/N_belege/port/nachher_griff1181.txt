@@ -1,0 +1,11 @@
+# Runde 37 Spur N - exe-Lauf nachher (vorher = Bau 99b4b13f, nachher = r37/elzaems), RE15_AI_FLAVOR=re15, RE15_ANIM_TRACE
+# debug.log (Lader):
+[elzaems] Typ 0x10 aus EMD/CDEMD1.EMS Sektor 0 (214816 B) crc AE292DA8 - Elza-Archiv (@0x800223ac)
+[enemy] EM10 loaded: 15 meshes, 15 bones, 43 clips -> slot 11
+# Spieler (Slot 0) Clip/Bildzahl je aufgeloester Pose (anim.log Spalten 4/6), Anzahl:
+     14   Clip 0 fc 14
+    103   Clip 1 fc 25
+     52   Clip 6 fc 70
+# Greifer (Slot>0) Clip/Bildzahl:
+  Typ 16 Clip 0 fc 14;  Typ 16 Clip 0 fc 75;  Typ 16 Clip 1 fc 25;  Typ 16 Clip 3 fc 57;  Typ 16 Clip 9 fc 70;
+# state.log Griffbilder (gr=1): 168
