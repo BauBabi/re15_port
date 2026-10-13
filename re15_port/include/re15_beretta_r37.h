@@ -40,10 +40,16 @@
  *   * Der Feuerstoss endet mit dem Rueckstoss (Treffer/Griff/Raumwechsel loeschen ihn,
  *     re15_player_aim_interrupt / re15_player_aim_reset) oder einem Waffenwechsel.
  *   * RE1.5-Riegel +0x93 Bit 0 (`ori v0,v0,0x1` @0x800124F0, Freigabe erst am Ende der Trefferreaktion
- *     z.B. @0x80105f9c-fac): fuer Gegner OHNE RE2-Trefferpause loest Kugel 2/3 den Riegel, den DIESER
- *     Feuerstoss gesetzt hat (Bits 0|1), solange der Gegner lebt (HP >= 0) — RE2-Gegenstueck: die
- *     1-Bild-Pause der Zeile 4. Gegner mit RE2-Trefferpause (+0x1D3, je Bild nachgerechnet in
- *     re15_re2z_hit_filter_apply / re15_re2_pause_filter_apply) behalten ihre RE2-Regel.
+ *     z.B. @0x80105f9c-fac, Kakerlake `sb zero,147(a0)` STAGE3.BIN @0x801149ac): fuer jeden Gegner, fuer den
+ *     KEIN RE2-Pausenfilter laeuft, loest Kugel 2/3 den Riegel, den DIESER Feuerstoss gesetzt hat (Bits 0|1),
+ *     solange der Gegner lebt (HP >= 0) — RE2-Gegenstueck: die 1-Bild-Pause der Zeile 4.
+ *     Massgeblich ist der FILTER, nicht der KI-Modus (Nachbesserung 1, Abnahme 0 M1): ein RE2-Pausenfilter
+ *     (+0x1D3, je Bild im Nachlauf von game_step) laeuft nur fuer die Zombie-Familie (re15_re2z_owns_type ->
+ *     re15_re2z_hit_filter_apply) und 0x20/0x21/0x25/0x26 (re15_re2_pause_filter_apply), jeweils nur mit
+ *     RE2-Gehirn (re15_ai_re2_for_type). Nur diese behalten ihre RE2-Regel (Zeile 4: Zombie 1 Bild, Hund/
+ *     Spinne 0, Kraehe 15). Die RE1.5-Gehirne 0x23/0x27/0x29/0x2b/0x30 (und 0x36, 0x1a) werden in JEDEM
+ *     KI-Modus wie unter RE1.5-KI behandelt — der Port stempelt ihnen keine Pause (re15_re2_stun_frames
+ *     `return 0`) und hat fuer sie keinen Filter.
  *   * Schaden je Kugel (re15_damage.c): Spalte 3 der RE1.5-Zeile (Einzelschuss-Pistole) — die
  *     RE1.5-Spalte 5/6 ist der Schaden des GANZEN Feuerstosses (Zombie 0x10..0x14: 5 / 15 = 3 x 5,
  *     @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4). In den RE2-Zeilen ist Spalte 5 == Spalte 3.
@@ -67,6 +73,11 @@ void re15_beretta_r37_feuerstoss(int waffe, int patronen, int treffer1);
  * wurde. re15_beretta_r37_tick_ex nimmt die Bedingung "Feuerstoss laeuft noch" als Argument (Sonden). */
 int re15_beretta_r37_tick(void);
 int re15_beretta_r37_tick_ex(int noch_im_feuer);
+
+/* 1, wenn fuer diesen Gegnertyp im aktuellen KI-Modus ein RE2-Pausenfilter den Riegel +0x93 freigibt
+ * (Zombie-Familie bzw. 0x20/0x21/0x25/0x26 mit RE2-Gehirn) — dann loest der Feuerstoss den Riegel NICHT.
+ * Fuer Sonden/Tests (Nachbesserung 1, Abnahme 0 M1/M3). */
+int re15_beretta_r37_re2_pause_regelt(unsigned type);
 
 /* Offene Kugeln des laufenden Feuerstosses (0 = keiner aktiv). */
 int re15_beretta_r37_offen(void);

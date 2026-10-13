@@ -78,15 +78,33 @@ void re15_beretta_r37_feuerstoss(int waffe, int patronen, int treffer1)
     merke_treffer(treffer1);
 }
 
-/* Den RE1.5-Riegel +0x93, den DIESER Feuerstoss gesetzt hat, vor Kugel 2/3 loesen — nur bei lebenden
- * Gegnern ohne RE2-Trefferpause (die RE2-Gegner fuehren +0x1D3 und den Filter je Bild selbst). */
+/* Gibt fuer diesen Typ ein RE2-PAUSENFILTER den Riegel +0x93 Bit 0 nach der RE2-Trefferpause +0x1D3 frei?
+ * Nachbesserung 1 (Abnahme 0 M1): das Kriterium ist der Filter, der wirklich laeuft, NICHT der KI-Modus.
+ * Spiegel der Weiche im Bild-Nachlauf game_step_common.c (Block "MIXED (2026-08-23)"): `re15_ai_re2_for_type`
+ * UND entweder die Zombie-Familie (`re15_re2z_owns_type` -> re15_re2z_hit_filter_apply, Gate +0x1D3
+ * @0x80047138-40) oder Hund/Kraehe/Spinne 0x20/0x21/0x25/0x26 (re15_re2_pause_filter_apply, dessen Typ-Tor in
+ * re15_damage.c genau diese vier annimmt). Alle anderen Gegner — im RE2-Flavor die RE1.5-Gehirne 0x23/0x27/
+ * 0x29/0x2b/0x30 — bekommen weder Stempel (re15_re2_stun_frames `return 0`) noch Filter; ihren Riegel gibt nur
+ * das Ende der RE1.5-Trefferreaktion frei (z.B. Kakerlake `sb zero,147(a0)` STAGE3.BIN @0x801149ac). */
+static int re2_pausenfilter_laeuft(unsigned t)
+{
+    if (!re15_ai_re2_for_type(t)) return 0;
+    if (re15_re2z_owns_type(t)) return 1;
+    return t == 0x20u || t == 0x21u || t == 0x25u || t == 0x26u;
+}
+
+int re15_beretta_r37_re2_pause_regelt(unsigned type) { return re2_pausenfilter_laeuft(type); }
+
+/* Den RE1.5-Riegel +0x93, den DIESER Feuerstoss gesetzt hat, vor Kugel 2/3 loesen — bei lebenden Gegnern,
+ * fuer die KEIN RE2-Pausenfilter laeuft (dort entscheidet die RE2-Zeile 4: Zombie 1 Bild, Hund/Spinne 0,
+ * Kraehe 15 — @0x800A4168 / @0x800A4460 / @0x800A4BCC / @0x800A45DC). */
 static void riegel_loesen(void)
 {
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!s_getroffen[s] || !e->active) continue;
         if (e->hp < 0) continue;                                   /* sterbend: Riegel bleibt (@0x80012520-2c) */
-        if (re15_ai_re2_for_type((unsigned)e->type)) continue;     /* RE2-Pause (+0x1D3) regelt selbst */
+        if (re2_pausenfilter_laeuft((unsigned)e->type)) continue;  /* RE2-Pause (+0x1D3) + Filter regeln selbst */
         if (e->hit_react & 0x3u) {
             e->hit_react = (uint8_t)(e->hit_react & ~0x3u);        /* Bits 0|1 (`ori 0x1` @0x800124F0, `|= 2` @0x8001240c) */
             s_mess.riegel_geloest++;
