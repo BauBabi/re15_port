@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-13 23:13: L re2zombie Bau-Fortsetzung FERTIG (ab2bf2b9): (a) 0x201-Produzenten scharf @0x80101D68-DBC/@0x80101EC4-F10/@0x80101F14-F60 (Nahkampf-'Zusammenbruch' war Messaufbau-Artefakt: Item-Modal fror den Testprozess ein, 182db277; Messer 368->373), (b) DECISION[0] Block 3 bei (rand&1)==1 @0x801013c8, (c) EXEC[0] P1 Wecker im selben Takt, P2 im naechsten @0x8010159c (+ Moan-Takt @0x801014b4/@0x8010151c); DECISION[12] @0x8010460C echte Griff-Entscheidung; vier Strom-Riegel (r36 blut_pin eben/tief/rip, probe_10d0_situp_handoff) mit Beleg angepasst. Integration: Konfliktgefahr mit J (Griff-Code). Abnahme L laeuft.
 * 2026-10-13 23:09: Integration mit Q gruen: 76/76 (r37_kistenregel, Feuerloescher, Schluessel, Elza, 1090, SCD, Flags, Itembox, Keypad/Keydoor, Story, Codepanel). G Nachbesserung #2 FERTIG (Gitterarm), Abnahme G#2 laeuft.
 * 2026-10-13 22:59: Q kistenregel Abnahme 0 BESTANDEN (Workflow fertig; 106 gezielt gruen; alle elf Faelle an der exe Kiste gegen Inventar gemessen, 20 Tabellen-Offsets in den RDTs nachgeprueft) -> INTEGRIERT (d8f96341; scd_vm.c Include beide Seiten, AUFTRAG/VERTRAG master). Bau ok, 76 gezielte Tests laufen.
 * 2026-10-13 22:57: Integration mit N gruen: 74/74 (r37_elzaems, r37_roy, r37_bissarm, r37_zombieaktiv, Elza, Birkin, Hybrid, Opfer).
@@ -88,7 +89,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | I feuerloescher (BESTANDEN, integriert) | r37_feuerloescher | Feuerloescher-Modell; leer am Boden 1091 (Elza) / 1090 nach dem Loeschen (Leon); Loescher aus dem Spind 1000 verlegen | gestartet (eigener Workflow) |
 | K roy (BESTANDEN, integriert) | r37_roy | Elzas Roy: Modell + Animationen wie im Original, keine Dauerschleife | gestartet (eigener Workflow wf_54d1fd6b-93b) |
 | J bissarm (BESTANDEN, integriert) | r37_bissarm | beim Zombie-Biss fehlt teilweise der dranhaengende Arm (wie RE2) | gestartet (eigener Workflow wf_88717cb9-5e3) |
-| L re2zombie (Bau laeuft) | r37_re2zombie | RE2-Zombie-KI: 0x201-Produzenten, DECISION[0], EXEC[0] P1 wie RE2 (Orchestrator-Auftrag L) | gestartet (eigener Workflow wf_b736a607-65f) |
+| L re2zombie (Bau fertig, Abnahme 0 laeuft) | r37_re2zombie | RE2-Zombie-KI: 0x201-Produzenten, DECISION[0], EXEC[0] P1 wie RE2 (Orchestrator-Auftrag L) | gestartet (eigener Workflow wf_b736a607-65f) |
 | M kiste (BESTANDEN, integriert) | r37_kiste | Item-Kiste: Symbole rechts, Rahmen ueber den gleitenden Zeilen (Nachtrag 9) | gestartet (eigener Workflow wf_e49eab60-a6e) |
 | O szene11c0 (BESTANDEN, integriert) | r37_szene11c0 | Ada/Marvin-Szene 11C0 ohne Fehlblicke und 180-Grad-Drehungen (Nachtrag 11) | gestartet (eigener Workflow wf_726ba53b-339) |
 | N elzaems (BESTANDEN, integriert) | r37_elzaems | Elzas Szenario laedt jeden Typ aus CDEMD1 wie das Original (Orchestrator-Auftrag N) | gestartet (eigener Workflow wf_b84c9fa3-fdb) |
