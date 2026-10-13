@@ -29,6 +29,7 @@ set_tests_properties(unit_r37_beretta PROPERTIES TIMEOUT 120)
 #                             +3 und +6, Munition 15 -> 12; Gegenprobe Browning: EIN Abzug, 15 -> 14; Elza (Spielerwahl,
 #                             ROOM11E1, RE2-KI) M93R: drei Treffer; Nachbesserung 1: Standard-KI (kein RE15_AI_FLAVOR)
 #                             ROOM5040 Typ 0x2b und ROOM3040 Kakerlake 0x29: drei Treffer E/E+3/E+6 je Spalte 3 (-10/-14).
+#                             Nachbesserung 2: ROOM1210 Gitterarm 0x1A (Standard- und RE1.5-KI): EIN Treffer, Rueckzug einmal.
 if(TARGET re15_pc)
     add_test(NAME integration_r37_beretta
              COMMAND "${CMAKE_COMMAND}"

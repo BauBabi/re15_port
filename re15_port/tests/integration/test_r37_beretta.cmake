@@ -17,6 +17,12 @@
 #                  (= Spalte 3 @0x8006EFA4; Stoss 30 statt vorher 1 x 10), Munition -3
 #   roach_std_w5   ROOM3040 Platz 2 Typ 0x29, Leon (-13500,-10300) Blick -z: drei Abzuege je -14 (Spalte 3 @0x8006EEF4)
 #   Vor der Nachbesserung lieferten beide Laeufe EINEN Abzug (F61 -10 / -14, Dossier G_beretta.md 8.1) — rot.
+# Nachbesserung 2 (Abnahme 1 N1) — GITTERARM 0x1A (ROOM1210, RE2-EM2D-Gehirn in jedem KI-Modus), Aufbau Abnahme 1f:
+#   Leon (-19500,-13000,1024), Eingabe "U0.8,R0.5,M1.0,MA0.1,M2.0,W2" (Laufen weckt die Arme, Arm Platz 5 kommt F38 heraus).
+#   arm_std_w5 / arm_re15_w5   M93R, Standard- bzw. RE1.5-KI: Munition -3, am Arm GENAU EIN Abzug in E (-5) und das
+#                  Rueckzug-Ende (hp -1, `sh -1,342` @0x80100E4C-50) in E+10 — wie nach EINEM Browning-Treffer. RE2s
+#                  Kugel-Gate +0x1D3 != 0 (@0x80041270-78) sperrt den getroffenen Arm (EM2D-HURT `ori 0x80` @0x80100fa8 /
+#                  `sb` @0x80100fb0) fuer Kugel 2/3. Vor der Nachbesserung 2: drei Abzuege E/E+3/E+6, Ende E+16 (Dossier 9.1) — rot.
 # Die exe laeuft als Messkopie re15_pc_r37g_haken_<id> neben der Original-exe (Muster test_r34n_b_cursor.cmake).
 # Ein Lauf ohne Ergebnis (exit=1/-1 = von aussen beendet; debug.log < 10 Zeilen) wird EINMAL wiederholt.
 
@@ -218,6 +224,41 @@ set(_d "${_wurzel}/roach_std_w5")
 r37_exe("roach_std_w5" "${_d}" leon 3040 "200#3040" "-13500,-10300,1024" 5 std "M2.0,MA0.1,M3.0,W2")
 r37_feuerstoss_pruefen("roach_std_w5" "${_d}")
 r37_schaden_pruefen("roach_std_w5" "${_d}" -14)
+
+# Nachbesserung 2: Gitterarm — EIN Treffer je Feuerstoss, Rueckzug einmal (Ende E+10)
+function(r37_arm_pruefen _lauf _dir)
+    r37_auswerten("${_dir}/state.log" _E _ab _tr)
+    if(_E LESS 0)
+        r37_fehler("${_lauf}" "kein Munitionsabzug im state.log — der Abzug kam nicht")
+    endif()
+    if(NOT _ab EQUAL 3)
+        r37_fehler("${_lauf}" "Munition im Eintrittsbild F${_E}: -${_ab}, erwartet -3 (@0x80033974/7c/84)")
+    endif()
+    list(LENGTH _tr _n)
+    set(_ok 0)
+    if(_n EQUAL 2)
+        list(GET _tr 0 _t0)
+        list(GET _tr 1 _t1)
+        if(_t0 MATCHES "^0:([0-9]+):-5$")
+            set(_s "${CMAKE_MATCH_1}")
+            if(_t1 STREQUAL "10:${_s}:-246")
+                set(_ok 1)
+            endif()
+        endif()
+    endif()
+    if(NOT _ok)
+        r37_fehler("${_lauf}" "Arm ab F${_E}: '${_tr}' (Bild-E:Platz:dHP), erwartet EIN Treffer in E (-5) und das Rueckzug-Ende in E+10 (245 -> -1)")
+    endif()
+    message(STATUS "${_tag} [${_lauf}]: OK — F${_E} Munition -3, Arm ${_tr} (ein Treffer, Rueckzug einmal)")
+endfunction()
+
+set(_d "${_wurzel}/arm_std_w5")
+r37_exe("arm_std_w5" "${_d}" leon 1210 "130#1210" "-19500,-13000,1024" 5 std "U0.8,R0.5,M1.0,MA0.1,M2.0,W2")
+r37_arm_pruefen("arm_std_w5" "${_d}")
+
+set(_d "${_wurzel}/arm_re15_w5")
+r37_exe("arm_re15_w5" "${_d}" leon 1210 "130#1210" "-19500,-13000,1024" 5 re15 "U0.8,R0.5,M1.0,MA0.1,M2.0,W2")
+r37_arm_pruefen("arm_re15_w5" "${_d}")
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "${_tag}: alle Laeufe OK")
