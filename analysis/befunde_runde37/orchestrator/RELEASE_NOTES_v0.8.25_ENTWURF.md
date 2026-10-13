@@ -27,6 +27,13 @@ Elza kennt Ada nicht vom Sehen. Den Namen Ada hoert sie nur von Marvin (ROOM30C1
 Leon..." statt "Be a hero... Leon..." - er nimmt Leons Plan mit dem Streifenwagen auf, der Arm faellt wie bisher.
 Eine Sprachaufnahme fuer diese Zeile gibt es nicht (optional: synchro/STAGE1/room1150/main28.wav).
 
+**Beretta M93R und Glock 18** (Spur G, Ihr Nachtrag). Der Feuerstoss trifft jetzt mit jeder Kugel: drei Patronen,
+drei Treffer, je Kugel der Schaden eines Browning-Schusses und eigenes Blut - wie die Custom Handgun in RE2, die ihre
+drei Kugeln einzeln auswertet. Das Original wertet den ganzen Stoss nur einmal aus; das war Ihre "Schussverschwendung".
+Es gilt fuer Zombies, Hunde, Spinnen, Gorillas, Kakerlaken, Birkin und den Alligator, fuer Leon und Elza und in
+allen KI-Einstellungen. Ausnahmen wie in RE2: eine Kraehe nimmt je Stoss nur die erste Kugel (sie stirbt daran), und
+der Gitterarm in ROOM1210 nimmt eine Kugel, die beiden anderen gehen an den naechsten Gegner.
+
 **Fahrstuehle** (Spur C). ROOM1080: die Tuer der Fahrstuhl-Sequenz ist jetzt eine eigene Fahrstuhltuer in der Optik
 des gemalten Revier-Fahrstuhls (zwei glatte Fluegel) - keine der 55 RE2-Tueren passte; Ton und Ablauf wie die RE2-
 Fahrstuhltuer. Beim Aussteigen laeuft jetzt ebenfalls die Tuersequenz (ROOM1080 und Labor-Fahrstuhl ROOM4020, wie RE2
