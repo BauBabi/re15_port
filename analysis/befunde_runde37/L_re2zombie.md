@@ -166,6 +166,13 @@ Ausstieg @0x80102550-cc — deckt sich Zeile fuer Zeile mit re2z_exec_bump (seit
 80101590 lhu v0,344(s0) / 80101598 addiu v0,v0,-1 / 8010159c j 0x801016ac / 801015a0 sh v0,344(s0)
 ```
 P2 (@0x801015a4) nur ueber den Phasen-Dispatch @0x80101410-50 (+0x6 == 2), also im naechsten Takt.
+Fortsetzung 2026-10-13, P1 ab 0x80101494 nachgelesen (re2_disasm EMZ0.BIN, 68 Instr.): auch der MOAN-Takt erreicht den
+Wecker — `bne v1,zero,0x80101500` @0x801014b4 (+0x15A vor dem Dekrement != 0), sonst Moan-Block @0x801014bc-fc
+(Reseed `addiu v0,v0,300` / `sh v0,346` @0x801014f8-fc), Durchfall nach @0x80101500 (`lbu v0,334` / `bne` / `jal 0x80016200`
+@0x80101500-18), dann @0x8010151c `lh v0,346` (nach dem Reseed != 0) -> `bne` -> 0x80101544 = Wecker. Der Port
+(re2z_exec_stand) laeuft nach beiden Zweigen in den Wecker — deckt sich. `jal 0x80016200(self,0,1)` @0x80101514 (bei
++0x14E == 0) ist der Lage-Nachzieher auf Part 1 (0x80016200 selbst gelesen: Part-Matrix, a1 = 0 -> +0x38/+0x40 -= Versatz
+@0x800162a8-d8) — Lage-Korrektur der Pose, keine Entscheidung (Zensus).
 
 ### R4 — DECISION[12] (0x8010460C) ist KEIN Stub (Zensus-Fund, s. Schritt 4)
 `table 0x8010c88c 16`: [0] 0x80101294, [1] 0x80101714, [2] 0x80101f7c, [3..11] und [13..15] je `jr ra`/`nop` (0x801025e4,
@@ -223,6 +230,8 @@ Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids, kein
 | EXEC[11] gerade Takte +0x144 >> 2 (~Z.3296) | @0x801044D0-E0 | nein (Ausrollen beim Zusammenbruch) | bleibt OFFEN mit Adresse |
 | EXEC[10] Haemmern / EXEC[15] Bank B | 0x8010417C / 0x80104E54 | nein | inert (+0x1D4-Bits bzw. kein Produzent) |
 | Gore/Teile-Physik (Wand/Boden/Skalierung), Rumble, Praesentation | @0x80028CAC u.a. | nein | Praesentation, bleibt |
+| EXEC[0] P1 `jal 0x80016200(self,0,1)` bei +0x14E == 0 ("benannt, nicht portiert") | @0x80101500-18 | nein (Lage-Nachzieher auf Part 1, @0x800162a8-d8; kein Zustand, kein Wurf) | bleibt, mit Adresse (Fortsetzung) |
+| Wurzel-Re-Anker beim Clipwechsel (Port: Delta 0) gegen e7c Bild 0 = root(kf0) | @0x80015F04-1C | ja (Weg im ersten Bild eines Clips mit root(kf0) != 0, z.B. RIP-Clip 4 (-277,-26)) | vorbestehend, nicht L (enemy_ai_common.c, Spur H); OFFEN mit Adresse (5b) |
 
 ## Schritt 5 — Zufallsstrom und verschobene Riegel
 
@@ -375,6 +384,17 @@ Gemessen mit 360: "Gegner 2 Leiche ab Bild 165, Gegner 3 Leiche ab Bild 258" —
   betrifft nicht die Annaeherung/den Griff (Zensus).
 * EXEC[11] gerade Takte `+0x144 >> 2` @0x801044D0-E0 (Ausrollen beim Zusammenbruch) — keine Aktivitaet (Zensus).
 * Der Nahkampf-Zusammenbruch ist aufgeklaert (M1), nichts offen.
+* **Blut-Anker im Aufsteh-Treffer (Spur C/G, vorbestehend, durch L nur haeufiger getroffen):** der Port rechnet den Anker
+  im Handler aus der Pose des LAUFENDEN Bilds (re15_schuss_r36.h, Port-Konvention); P0 @0x80107AEC setzt danach das
+  Blend-Byte `sb 15,334` @0x80107B3C, die gezeichnete Pose friert auf dem Vorbild ein. Das Blut liegt dann um den Kopfweg
+  eines Bilds neben dem gezeichneten Kopf (gemessen 46 / 67 im Aufsteh-Clip 9). Original: Anker = Record+72 des Vorbilds
+  (FUN_80027434 @0x8002751C-DC) = genau die eingefrorene Pose. Vorschlag fuer Spur C/G: Anker im Aufsteh-Treffer aus der
+  Pose des Vorbilds.
+* **Wurzel-Re-Anker beim Clipwechsel (enemy_ai_common.c re15_clip_root_motion_delta, fr_prev < 0 -> Delta 0):** das
+  Original kennt keinen Clipwechsel-Sonderfall, e7c setzt im Bild 0 die Momentaufnahme auf 0 (@0x80015F04-1C), das erste
+  Bild eines Clips faehrt also root(kf0) (RIP-Clip 4: (-277,-26)). Der Port faehrt das nur, wenn die Motion-Nummer gleich
+  bleibt (z.B. Tod aus dem Arme-hoch-Gang, Loco-Clip 4 -> Haupt-Clip 4); bei anderer Nummer Delta 0. Vorbestehend
+  (Runde 12), nicht Teil der Spur L; betrifft jeden Clip mit root(kf0) != 0.
 
 ## Fuer den Nutzer
 
