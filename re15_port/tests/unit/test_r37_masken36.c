@@ -36,6 +36,13 @@
  *     Flutfuellung je Band ab den AOTs des Raums (Engine-SCD main00+sub00 wie probe_1190_props) und den Tuer-Ankuenften
  *     aller Raeume, innerhalb der Kamerazonen des Bands (RVD, zone.floor == Band oder 0xFF), Akteur-Cull im Regionsviereck
  *     des Cuts (re15_rdt_get_region_quad, FUN_8002c18c).
+ *   - Nachbesserung 1 (Abnahme 0 M1/M2, Dossier "Nachbesserung 1"): Tuer-Ankuenfte aus JEDEM Door_aot_set-Satz der RDTs
+ *     (nicht nur dem VM-Stand des ersten Besuchs - ROOM3091 +0x14B2 machte die Tuer nach ROOM30A1 dort zur Nachricht);
+ *     Saaten je Raumpaar xxx0/xxx1 (ein Hintergrund @0x80021c90, Tuerziel ohne Variante @0x8001d94c/@0x8001d960);
+ *     nicht-rechteckige Zellen ueber den Kollisions-Resolver des Ports (form_drin) statt als Kasten (schraege Gaenge
+ *     ROOM4040/4080). Sektionen ohne Stehplatz nur noch belegt (OHNE_STEHPLATZ_BELEGT).
+ *   Werkzeug-Modi (kein Riegel): saaten <raum> | cut <raum> <cut> | fehl <raum> <cut> [x z] | proj <raum> <cut> <x> <z> [band]
+ *   | soll | suche [prozent] [stage] | erzeuge <datei.inc>.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -1112,6 +1119,29 @@ int main(int argc, char **argv)
                    g_saat[i].von, (unsigned) g_saat[i].off);
         }
         printf("  ROOM%04X: AOT %d, Tuer (VM) %d, Tuer (Satz) %d | alle Saaten %d\nOK\n", r, na, nt, ns, g_saat_n);
+        return 0;
+    }
+    if (!strcmp(teil, "soll")) {                        /* Werkzeug: Maskenzahl je Generator-Sektion nach dem Ausschluss (exe-Liste) */
+        int stage, rr, var, c;
+        for (stage = 3; stage <= 6; stage++)
+            for (rr = 0; rr < 0x40; rr++)
+                for (var = 0; var < 2; var++) {
+                    unsigned raum = ((unsigned) stage << 12) | ((unsigned) rr << 4) | (unsigned) var;
+                    char p[700]; uint8_t *msk; size_t mn = 0; int ncut;
+                    snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, raum);
+                    msk = slurp(p, &mn);
+                    if (!msk) continue;
+                    ncut = (mn >= 12) ? (int) (msk[8] | (msk[9] << 8)) : 0;
+                    for (c = 0; c < ncut; c++) {
+                        re15_pri_cut_t pri; atlas_t eig; uint32_t off = re15_pri_msk_section_offset(msk, mn, c); int roh;
+                        if (!off || re15_pri_parse_section(msk, mn, off, &pri) <= 0) continue;
+                        if (atlas_eigen(raum, c, &eig)) { free(eig.roh); continue; }
+                        roh = pri.draw_count;
+                        re15_masken36_filter(re15_pri_masken_raum(raum), c, &pri);
+                        printf("SOLL %04X %d %d %d\n", raum, c, roh, pri.draw_count);
+                    }
+                    free(msk);
+                }
         return 0;
     }
     if (!strcmp(teil, "proj") && argc > 5) {            /* Werkzeug: Figurfenster (Projektion Hoehe 3000 / +-350, +4) fuer die exe */
