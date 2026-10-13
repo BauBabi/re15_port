@@ -296,6 +296,15 @@ Kommentar mit beiden Mechanismen). GEMESSEN: alle neun Varianten (eben/tief/mg/r
 liefern danach eine zum Basis-Build e399ee3f BITGLEICHE Ausgabe (cmp je Variante), alle `probe_r36_blut: OK`.
 Beide Mechanismen stehen unter OFFEN (Spur C/G: Anker-Zeitpunkt; Port-Re-Anker beim Clipwechsel gegen e7c).
 
+Vierter Riegel aus dem breiten Unit-Lauf (alle Nicht-Integrations-Tests, s. Tests): `probe_10d0_situp_handoff`
+(probe_10d0_situp_re2 8, 10D0-Sitzer -> RE2-Gehirn). Alt: "Uebergabe-Tick t88: clip=0 af=16 frac=15 b8dy=-2527", OK.
+Neu: "FAIL: der Sitzer erreicht den RE2-WALK nie". Mechanismus: die Sonde suchte den ersten Tick mit +0x5 == 1; EXEC[1]
+P0 faellt aber im selben Tick nach P1 durch (`sw v0,332` @0x80101a8c, P0 endet @0x80101b20 ohne Sprung, P1 ab
+0x80101b24 — selbst disassembliert) und dort schreibt Produzent (2) @0x80101EC4-F10 sofort 0x201 (Leon steht 1694 vor dem
+Sitzer, < 0x7D0, im Kegel). Der Tick endet mit +0x5 = 2. Anpassung: Uebergabe = erster Tick mit +0x5 in {1, 2} (Ausgabe
+nennt s1). Gemessen danach: "Uebergabe-Tick t88: s1=2 clip=0 (RE2-Bank hat 31 Clips) af=16 frac=15 b8dy=-2527",
+`probe_10d0_situp_re2: OK` — Tick, Clip, Bild, Blend und Brusthoehe bitgleich zum Basis-Build, nur s1 = 2 statt 1.
+
 ## Messung nachher
 
 ### N1 — Port-Harness (echte Raumeintritte, echte Spielschleife; Sonde `test_r37_re2zombie gang`)

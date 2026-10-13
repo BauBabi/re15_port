@@ -334,10 +334,13 @@ int main(int argc, char **argv)
             pl->hp = 100; frame(0, 0);
             pose_bone(e, 8, b, &kf, &bk);             /* genau EIN Render-Aufruf pro Tick */
             long dy = (long)(b[1] - e->y);
-            if (handoff < 0 && e->state == 1 && e->sub_state_1 == 1) {
+            /* Runde 37 Spur L: EXEC[1] P0 faellt nach P1 durch (@0x80101b20 -> 0x80101b24), dort kann der Produzent (2)
+             * @0x80101EC4-F10 im Uebergabe-Tick schon 0x201 schreiben (Leon 1694 < 0x7D0 vor ihm) — das Clip-Wort des
+             * Ticks ist dann weiter das von EXEC[1] P0 (@0x80101a8c), EXEC[2] P0 laeuft erst im naechsten Tick. */
+            if (handoff < 0 && e->state == 1 && (e->sub_state_1 == 1 || e->sub_state_1 == 2)) {
                 handoff = t; handoff_clip = (int)e->motion;
-                printf("   Uebergabe-Tick t%d: clip=%d (RE2-Bank hat %d Clips) af=%u frac=%u "
-                       "b8dy=%ld\n", t, handoff_clip, ab->anim.clip_count, e->anim_frame,
+                printf("   Uebergabe-Tick t%d: s1=%u clip=%d (RE2-Bank hat %d Clips) af=%u frac=%u "
+                       "b8dy=%ld\n", t, e->sub_state_1, handoff_clip, ab->anim.clip_count, e->anim_frame,
                        e->anim_frac, dy);
             }
             if (handoff >= 0 && dy > worst_dy) { worst_dy = dy; worst_t = t; }
