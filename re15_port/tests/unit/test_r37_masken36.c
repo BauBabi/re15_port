@@ -51,6 +51,7 @@
 #include "re15_aot.h"
 #include "re15_masken36_r37.h"
 #include "re15_pri1100_r37.h"
+#include "re15_collision.h"
 
 #define MITTEL_MAX   40.0
 #define ANTEIL_MAX   0.20
@@ -387,13 +388,91 @@ static void saaten_sammeln(void)
 
 static int solide(const re15_sca_entry_t *e, int band) { return (e->u0 & 1) && (e->floor >> 4) == band; }
 
-static int frei(const re15_rdt_t *r, int band, int x, int z)
+/* Nachbesserung 1 (M2): FORM der Zelle. Rechtecke (type 1) sind ihr Kasten; alle anderen Formen (2/4/5/6/7 schraeg,
+ * 3 Kreis, 8/9 Kapsel) fragt das Modell beim Kollisions-Resolver des Ports selbst (re15_collision_constrain_contact_band
+ * = FUN_8003b0a4 mit Spieler-Maske 1 und Radius 450, Formen push_diag2..7 / push_circle / push_caps8/9 in
+ * re15_collision.c), mit genau DIESER Zelle in jeder Quadranten-Partition. Vorher galt jede Zelle als ihr Kasten: die
+ * schraegen Gaenge in ROOM4040 Cut 9..12 / ROOM4080 Cut 5..8 waren damit ganz zu (0 freie Punkte im Regionsviereck) und
+ * die Sektionen ohne Stehplatz - der Riegel war dort leer wahr. drin = der Resolver verschiebt einen dort stehenden Spieler. */
+static int form_drin(const re15_sca_entry_t *e, int x, int z, int r)
+{
+    static re15_rdt_t f; static re15_sca_entry_t k[5]; static int bereit;
+    int32_t px = x, pz = z; int i;
+    for (i = 0; i < 5; i++) k[i] = *e;
+    if (!bereit) {                                       /* der Resolver liest nur sca, sca_count, sca_rgn, ceiling_x/z */
+        memset(&f, 0, sizeof f);
+        f.sca = k; f.sca_count = 5;
+        for (i = 0; i < 5; i++) f.sca_rgn[i] = 1;        /* jede Quadranten-Partition (FUN_8003aea0) traegt die Zelle */
+        bereit = 1;
+    }
+    /* alte Lage = neue Lage: ein Spieler, der hier STEHT. push_diag4..7 bestimmen die Seite der Schraege aus der alten Lage
+     * (z.B. push_diag4 Kreuzprodukt mit prevx/prevz); mit der eigenen Lage gilt die Seite, auf der der Punkt liegt. Gemessen
+     * gegen die Variante 'aus jeder der vier Achsrichtungen um 1 heranruecken': gleiche Ausschluss-Bits in allen 216
+     * Sektionen, einzig ROOM4040/4041 Cut 11 zaehlt 5426 statt 5073 Stehplaetze. */
+    re15_collision_constrain_contact_band(&f, x, z, &px, &pz, r, e->floor >> 4, 1u, NULL, NULL);
+    return px != x || pz != z;
+}
+
+/* Punkt (x,z) in der Zelle, um r aufgeblasen? Kasten-Vortest, Form wie oben. */
+static int in_zelle(const re15_sca_entry_t *e, double x, double z, int r)
+{
+    if (x < e->x - r || x >= e->x + e->width + r || z < e->z - r || z >= e->z + e->density + r) return 0;
+    if (e->type == 1) return 1;
+    return form_drin(e, (int) floor(x + 0.5), (int) floor(z + 0.5), r);
+}
+
+/* Die SCA-Liste traegt jede Zelle je Quadranten-Partition (FUN_8003aea0) - das Modell prueft jede Zelle einmal. */
+#define ZEL_MAX 1024
+#define RASTER  25                   /* Abtastweite der Strecke und Raster der Form (Radius 0) */
+typedef struct { re15_sca_entry_t z[ZEL_MAX]; int n; uint8_t *ras[ZEL_MAX]; int rw[ZEL_MAX], rd[ZEL_MAX]; } zellen_t;
+
+static void zellen_frei(zellen_t *Z)
 {
     int i;
-    for (i = 0; i < r->sca_count; i++) {
-        const re15_sca_entry_t *e = &r->sca[i];
+    for (i = 0; i < ZEL_MAX; i++) { free(Z->ras[i]); Z->ras[i] = NULL; }
+}
+
+/* Punkt in der FORM von Zelle i (Radius 0)? Nicht-Rechtecke ueber ein Raster der Weite RASTER, einmal je Raum aus form_drin
+ * erzeugt (der Resolver je Abtastpunkt war zu langsam: ROOM4040/4080 je 10 s). */
+static int form0(zellen_t *Z, int i, double x, double z)
+{
+    const re15_sca_entry_t *e = &Z->z[i];
+    int ii, jj;
+    if (x < e->x || x >= e->x + e->width || z < e->z || z >= e->z + e->density) return 0;
+    if (e->type == 1) return 1;
+    if (!Z->ras[i]) {
+        int a, b;
+        Z->rw[i] = e->width / RASTER + 1; Z->rd[i] = e->density / RASTER + 1;
+        Z->ras[i] = (uint8_t *) malloc((size_t) Z->rw[i] * (size_t) Z->rd[i]);
+        if (!Z->ras[i]) return form_drin(e, (int) floor(x + 0.5), (int) floor(z + 0.5), 0);
+        for (b = 0; b < Z->rd[i]; b++)
+            for (a = 0; a < Z->rw[i]; a++)
+                Z->ras[i][b * Z->rw[i] + a] = (uint8_t) form_drin(e, e->x + a * RASTER, e->z + b * RASTER, 0);
+    }
+    ii = (int) ((x - e->x) / RASTER + 0.5); jj = (int) ((z - e->z) / RASTER + 0.5);
+    if (ii >= Z->rw[i]) ii = Z->rw[i] - 1;
+    if (jj >= Z->rd[i]) jj = Z->rd[i] - 1;
+    return Z->ras[i][jj * Z->rw[i] + ii];
+}
+
+static void zellen_entdoppeln(const re15_rdt_t *r, zellen_t *Z)
+{
+    int i, j;
+    zellen_frei(Z);
+    Z->n = 0;
+    for (i = 0; i < r->sca_count && Z->n < ZEL_MAX; i++) {
+        for (j = 0; j < Z->n; j++) if (!memcmp(&Z->z[j], &r->sca[i], sizeof r->sca[i])) break;
+        if (j == Z->n) Z->z[Z->n++] = r->sca[i];
+    }
+}
+
+static int frei(const zellen_t *Z, int band, int x, int z)
+{
+    int i;
+    for (i = 0; i < Z->n; i++) {
+        const re15_sca_entry_t *e = &Z->z[i];
         if (!solide(e, band)) continue;
-        if (x >= e->x - PR && x < e->x + e->width + PR && z >= e->z - PR && z < e->z + e->density + PR) return 0;
+        if (in_zelle(e, x, z, PR)) return 0;
     }
     return 1;
 }
@@ -408,21 +487,31 @@ static int in_zonen(const re15_rdt_t *r, int band, int x, int z)
     return 0;
 }
 
-/* kreuzt die Grundriss-Strecke Kamera -> Figurpunkt eine solide Zelle des Bands? (Zellen mit Kamera oder Ziel darin zaehlen nicht) */
-static int zelle_dazwischen(const re15_rdt_t *r, int band, double ax, double az, double bx, double bz)
+/* kreuzt die Grundriss-Strecke Kamera -> Figurpunkt eine solide Zelle des Bands? (Zellen mit Kamera oder Ziel darin zaehlen
+ * nicht). Rechteck: Strecke gegen den Kasten geschnitten; andere Formen: der geschnittene Teil wird in Schritten von hoechstens
+ * 25 abgetastet und jeder Punkt der Form gefragt (in_zelle, Radius 0). */
+static int zelle_dazwischen(zellen_t *Z, int band, double ax, double az, double bx, double bz)
 {
     int i;
-    for (i = 0; i < r->sca_count; i++) {
-        const re15_sca_entry_t *e = &r->sca[i];
+    for (i = 0; i < Z->n; i++) {
+        const re15_sca_entry_t *e = &Z->z[i];
         double x0 = e->x, x1 = e->x + e->width, z0 = e->z, z1 = e->z + e->density, t0 = 0.0, t1 = 1.0, dx = bx - ax, dz = bz - az;
         if (!solide(e, band)) continue;
-        if (ax >= x0 && ax < x1 && az >= z0 && az < z1) continue;
-        if (bx >= x0 && bx < x1 && bz >= z0 && bz < z1) continue;
         if (fabs(dx) < 1e-9) { if (ax < x0 || ax >= x1) continue; }
         else { double u0 = (x0 - ax) / dx, u1 = (x1 - ax) / dx; if (u0 > u1) { double t = u0; u0 = u1; u1 = t; } if (u0 > t0) t0 = u0; if (u1 < t1) t1 = u1; }
         if (fabs(dz) < 1e-9) { if (az < z0 || az >= z1) continue; }
         else { double u0 = (z0 - az) / dz, u1 = (z1 - az) / dz; if (u0 > u1) { double t = u0; u0 = u1; u1 = t; } if (u0 > t0) t0 = u0; if (u1 < t1) t1 = u1; }
-        if (t0 < t1) return 1;
+        if (!(t0 < t1)) continue;
+        if (form0(Z, i, ax, az)) continue;
+        if (form0(Z, i, bx, bz)) continue;
+        if (e->type == 1) return 1;
+        {
+            double len = (t1 - t0) * sqrt(dx * dx + dz * dz); int n = (int) (len / RASTER) + 1, k;
+            for (k = 0; k <= n; k++) {
+                double t = t0 + (t1 - t0) * k / n;
+                if (form0(Z, i, ax + t * dx, az + t * dz)) return 1;
+            }
+        }
     }
     return 0;
 }
@@ -431,7 +520,16 @@ typedef struct {
     re15_rdt_t rdt; uint8_t *roh; size_t n;
     int x0, z0, nx, nz;
     uint8_t err[16][GMAX][GMAX];
+    uint8_t fm[16][GMAX][GMAX];      /* frei-Merker je Gitterpunkt: 0 unbekannt, 1 frei, 2 belegt */
+    zellen_t zel;
 } raum_t;
+
+static int frei_g(raum_t *R, int band, int gx, int gz)
+{
+    if (!R->fm[band][gx][gz])
+        R->fm[band][gx][gz] = frei(&R->zel, band, R->x0 + gx * SCHRITT, R->z0 + gz * SCHRITT) ? 1 : 2;
+    return R->fm[band][gx][gz] == 1;
+}
 
 static void flut(raum_t *R, int band, int sx, int sz)
 {
@@ -444,7 +542,7 @@ static void flut(raum_t *R, int band, int sx, int sz)
             for (dz = -rr; dz <= rr && !gef; dz++) {
                 int nx = ix + dx, nz = iz + dz, wx = R->x0 + nx * SCHRITT, wz = R->z0 + nz * SCHRITT;
                 if (nx < 0 || nz < 0 || nx >= R->nx || nz >= R->nz) continue;
-                if (frei(&R->rdt, band, wx, wz) && in_zonen(&R->rdt, band, wx, wz)) { ix = nx; iz = nz; gef = 1; }
+                if (frei_g(R, band, nx, nz) && in_zonen(&R->rdt, band, wx, wz)) { ix = nx; iz = nz; gef = 1; }
             }
     if (!gef || R->err[band][ix][iz]) return;
     R->err[band][ix][iz] = 1; qx[qe] = ix; qz[qe] = iz; qe++;
@@ -454,7 +552,7 @@ static void flut(raum_t *R, int band, int sx, int sz)
             int nx = cx + (d == 0) - (d == 1), nz = cz + (d == 2) - (d == 3), wx, wz;
             if (nx < 0 || nz < 0 || nx >= R->nx || nz >= R->nz || R->err[band][nx][nz]) continue;
             wx = R->x0 + nx * SCHRITT; wz = R->z0 + nz * SCHRITT;
-            if (!frei(&R->rdt, band, wx, wz) || !in_zonen(&R->rdt, band, wx, wz)) continue;
+            if (!frei_g(R, band, nx, nz) || !in_zonen(&R->rdt, band, wx, wz)) continue;
             R->err[band][nx][nz] = 1; qx[qe] = nx; qz[qe] = nz; qe++;
         }
     }
@@ -464,6 +562,7 @@ static void flut(raum_t *R, int band, int sx, int sz)
 static int raum_laden(raum_t *R, unsigned raum)
 {
     char p[700]; int i, X1 = -(1 << 30), Z1 = -(1 << 30);
+    zellen_frei(&R->zel);
     memset(R, 0, sizeof *R);
     snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, raum >> 12, raum);
     R->roh = slurp(p, &R->n);
@@ -477,6 +576,7 @@ static int raum_laden(raum_t *R, unsigned raum)
         if (e->z + e->density > Z1) Z1 = e->z + e->density;
     }
     if (R->rdt.sca_count <= 0) return 1;
+    zellen_entdoppeln(&R->rdt, &R->zel);
     R->nx = (X1 - R->x0) / SCHRITT + 1; R->nz = (Z1 - R->z0) / SCHRITT + 1;
     if (R->nx > GMAX) R->nx = GMAX;
     if (R->nz > GMAX) R->nz = GMAX;
@@ -496,13 +596,14 @@ typedef struct { long stehplaetze, echt, falsch; int aus[RE15_PRI_MAX_MASKS_PER_
  * (Original-Urteil re15_pri_mask_occludes: @0x8002565c otz>>4, ZSF3 @0x80066c70, Masken-OT = depth @0x80039650), ohne
  * dass die Grundriss-Strecke Kamera -> Figurpunkt eine solide Zelle des Bands kreuzt. mit_ausschluss: Iteration bis keine
  * Fehlverdeckung bleibt (Rechteck = vorderste Maske an diesem Punkt raus). aus_vorgabe: feste Liste statt Iteration. */
-static void sektion_pruefen(const raum_t *R, int cut, const re15_pri_cut_t *pri, const atlas_t *a, int iterieren,
+static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const atlas_t *a, int iterieren,
                             const int *aus_vorgabe, ergebnis_t *E)
 {
     static int16_t welch[240][320];
     static uint16_t tief[240][320];
     re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4]; int has_q, runde, m, x, y, k, b;
     const uint8_t *idx = (const uint8_t *) a->tim.pixels;
+    long n_steh = 0; uint8_t *davor = NULL;
     memset(E, 0, sizeof *E);
     if (aus_vorgabe) for (m = 0; m < RE15_PRI_MAX_MASKS_PER_CUT; m++) E->aus[m] = aus_vorgabe[m];
     if (re15_camera_build_view(&R->rdt.cuts[cut], &v) != 0) return;
@@ -510,8 +611,18 @@ static void sektion_pruefen(const raum_t *R, int cut, const re15_pri_cut_t *pri,
     has_q = re15_rdt_get_region_quad(&R->rdt, cut, qx, qz);
     lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
     if (ll > 0) { lx /= ll; lz /= ll; }
+    {   /* Merker "Zelle davor" je Stehplatz und Figurpunkt (haengt nicht von den Masken ab, gilt fuer alle Runden) */
+        int gx, gz;
+        for (b = 0; b < 16; b++)
+            for (gx = 0; gx < R->nx; gx++)
+                for (gz = 0; gz < R->nz; gz++)
+                    if (R->err[b][gx][gz] && (!has_q || re15_aot_point_in_quad(R->x0 + gx * SCHRITT, R->z0 + gz * SCHRITT, qx, qz)))
+                        n_steh++;
+        davor = (uint8_t *) calloc((size_t) n_steh * 81 + 1, 1);
+    }
     for (runde = 0; runde < 64; runde++) {
         int falsch_m[RE15_PRI_MAX_MASKS_PER_CUT], neu = 0;
+        long si = 0;
         memset(falsch_m, 0, sizeof falsch_m);
         for (y = 0; y < 240; y++) for (x = 0; x < 320; x++) { welch[y][x] = -1; tief[y][x] = 0xFFFF; }
         for (m = 0; m < pri->draw_count; m++) {
@@ -535,6 +646,7 @@ static void sektion_pruefen(const raum_t *R, int cut, const re15_pri_cut_t *pri,
                     if (!R->err[b][gx][gz]) continue;
                     if (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;   /* Akteur-Cull (FUN_8002c18c) */
                     E->stehplaetze++;
+                    si++;
                     for (k = 0; k < 81; k++) {
                         double h = -(double) b * BAND_Y - (FIGUR_HOCH / 9.0) * ((k / 9) + 0.5), o = ((k % 9) - 4) * (FIGUR_HALB / 4.0);
                         double px = wx + o * lx, pz = wz + o * lz, sx, sy, vz; int mi;
@@ -542,8 +654,13 @@ static void sektion_pruefen(const raum_t *R, int cut, const re15_pri_cut_t *pri,
                         if (sx < 0 || sy < 0 || sx >= 320 || sy >= 240) continue;
                         mi = welch[(int) sy][(int) sx];
                         if (mi < 0 || !re15_pri_mask_occludes(tief[(int) sy][(int) sx], (long) vz)) continue;
-                        if (zelle_dazwischen(&R->rdt, b, cam[0], cam[2], px, pz)) E->echt++;
-                        else { E->falsch++; falsch_m[mi]++; }
+                        {
+                            uint8_t *d = (davor && si <= n_steh) ? &davor[(si - 1) * 81 + k] : NULL, dv;
+                            if (d && *d) dv = *d;
+                            else { dv = zelle_dazwischen(&R->zel, b, cam[0], cam[2], px, pz) ? 1 : 2; if (d) *d = dv; }
+                            if (dv == 1) E->echt++;
+                            else { E->falsch++; falsch_m[mi]++; }
+                        }
                     }
                 }
         }
@@ -551,6 +668,7 @@ static void sektion_pruefen(const raum_t *R, int cut, const re15_pri_cut_t *pri,
         for (m = 0; m < pri->draw_count; m++) if (!E->aus[m] && falsch_m[m]) { E->aus[m] = 1; neu++; }
         if (!neu) break;
     }
+    free(davor);
     E->n_aus = 0;
     for (m = 0; m < pri->draw_count; m++) E->n_aus += E->aus[m] ? 1 : 0;
 }
@@ -619,7 +737,7 @@ static void teil_erzeuge(const char *pfad)
 
 /* ---- ausschluss (Riegel) ---------------------------------------------------------------------------------------- */
 typedef struct {
-    int sektionen, abweichungen, rest_falsch, aus_masken, masken, stehplatz_los, soll_zeilen;
+    int sektionen, abweichungen, rest_falsch, aus_masken, masken, stehplatz_los, soll_zeilen, zeige_leer;
     long echt_stage[7], falsch_ohne[7];
 } ausschluss_ctx;
 
@@ -639,7 +757,10 @@ static void pruefe_zeile(unsigned raum, int cut, const re15_pri_cut_t *pri, cons
         printf("  ABWEICHUNG ROOM%04X Cut %d: Nachrechnung %d Rechtecke, Tabelle anders an %d Stellen\n", raum, cut, E->n_aus, diff);
     }
     if (E->falsch) x->rest_falsch++;
-    if (!E->stehplaetze) x->stehplatz_los++;
+    if (!E->stehplaetze) {
+        x->stehplatz_los++;
+        if (x->zeige_leer) printf("  ohne Stehplatz: ROOM%04X Cut %d (%d Masken)\n", raum, cut, pri->draw_count);
+    }
     x->echt_stage[(raum >> 12) & 7] += E->echt;
 }
 
@@ -656,6 +777,7 @@ static void teil_ausschluss(void)
     printf("== r37_masken36 ausschluss: Tabelle aus den Dateien nachgerechnet, Fehlverdeckung danach, Verdeckung bleibt ==\n");
     saaten_sammeln();
     memset(&a, 0, sizeof a); memset(&o, 0, sizeof o);
+    a.zeige_leer = 1;
     alle_sektionen(1, 0, pruefe_zeile, &a);            /* Nachrechnung (iteriert) gegen die Tabelle */
     printf("  Saaten %d | Sektionen %d, Masken %d, davon ausgeschlossen %d | Abweichungen %d | ohne Stehplatz %d\n",
            g_saat_n, a.sektionen, a.masken, a.aus_masken, a.abweichungen, a.stehplatz_los);
@@ -929,6 +1051,134 @@ int main(int argc, char **argv)
         }
         printf("  ROOM%04X: AOT %d, Tuer (VM) %d, Tuer (Satz) %d | alle Saaten %d\nOK\n", r, na, nt, ns, g_saat_n);
         return 0;
+    }
+    if (!strcmp(teil, "proj") && argc > 5) {            /* Werkzeug: Figurfenster (Projektion Hoehe 3000 / +-350, +4) fuer die exe */
+        static re15_rdt_t rdt; re15_camera_view_t v; char p[700]; uint8_t *roh; size_t rn = 0;
+        unsigned r = (unsigned) strtoul(argv[2], NULL, 16); int c = atoi(argv[3]), x = atoi(argv[4]), z = atoi(argv[5]);
+        int b = argc > 6 ? atoi(argv[6]) : 0, k; double lx, lz, ll, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        snprintf(p, sizeof p, "%s/STAGE%u/ROOM%04X.RDT", PSX, r >> 12, r);
+        roh = slurp(p, &rn);
+        if (!roh || re15_rdt_parse(roh, rn, &rdt) < 0 || c >= rdt.cut_count || re15_camera_build_view(&rdt.cuts[c], &v) != 0) {
+            printf("FEHLER\n"); return 1;
+        }
+        lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+        if (ll > 0) { lx /= ll; lz /= ll; }
+        for (k = 0; k < 4; k++) {
+            double h = -(double) b * BAND_Y - ((k & 1) ? FIGUR_HOCH : 0.0), o = (k & 2) ? FIGUR_HALB : -FIGUR_HALB, sx, sy, vz;
+            if (!proj(&v, x + o * lx, h, z + o * lz, &sx, &sy, &vz)) continue;
+            if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+        }
+        printf("FENSTER %d %d %d %d\n", (int) x0 - 4, (int) y0 - 4, (int) x1 + 5, (int) y1 + 5);
+        free(roh);
+        return 0;
+    }
+    if (!strcmp(teil, "fehl") && argc > 3) {            /* Werkzeug: Stehplaetze, an denen die UNGEFILTERTEN Masken eine Figur
+                                                          * ohne Zelle davor verdecken (meiste Punkte zuerst), fuer die exe */
+        static raum_t R; static int16_t welch[240][320]; static uint16_t tief[240][320];
+        unsigned r = (unsigned) strtoul(argv[2], NULL, 16); int c = atoi(argv[3]), m, x, y, k, b, gx, gz, has_q, n_out = 0;
+        re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4]; char p[700]; uint8_t *msk; size_t mn = 0;
+        re15_pri_cut_t pri; atlas_t bss; uint32_t off; const uint8_t *idx;
+        int best_f[8] = {0}, best_x[8], best_z[8], best_b[8], best_s[8];
+        saaten_sammeln();
+        snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, re15_pri_masken_raum(r));
+        msk = slurp(p, &mn);
+        if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
+            || !atlas_bss(r, c, &bss) || !raum_laden(&R, r) || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
+            printf("FEHLER\n"); return 1;
+        }
+        idx = (const uint8_t *) bss.tim.pixels;
+        kamera_ort(&v, cam);
+        has_q = re15_rdt_get_region_quad(&R.rdt, c, qx, qz);
+        lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+        if (ll > 0) { lx /= ll; lz /= ll; }
+        for (y = 0; y < 240; y++) for (x = 0; x < 320; x++) { welch[y][x] = -1; tief[y][x] = 0xFFFF; }
+        for (m = 0; m < pri.draw_count; m++) {
+            const re15_pri_mask_t *q = &pri.masks[m]; int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, xx, yy;
+            for (yy = 0; yy < q->height; yy++)
+                for (xx = 0; xx < q->width; xx++) {
+                    int ax = q->srcX + xx, ay = q->srcY + yy, tx = dx + xx, ty = dy + yy;
+                    if (ax >= bss.tim.width || ay >= bss.tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                    if (!idx[ay * bss.tim.width + ax]) continue;
+                    if (q->depth < tief[ty][tx]) { tief[ty][tx] = q->depth; welch[ty][tx] = (int16_t) m; }
+                }
+        }
+        for (b = 0; b < 16; b++)
+            for (gx = 0; gx < R.nx; gx += 3)
+                for (gz = 0; gz < R.nz; gz += 3) {
+                    int wx = R.x0 + gx * SCHRITT, wz = R.z0 + gz * SCHRITT, f = 0, s = 0, j;
+                    if (!R.err[b][gx][gz] || (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz))) continue;
+                    for (k = 0; k < 81; k++) {
+                        double h = -(double) b * BAND_Y - (FIGUR_HOCH / 9.0) * ((k / 9) + 0.5), o = ((k % 9) - 4) * (FIGUR_HALB / 4.0);
+                        double px = wx + o * lx, pz = wz + o * lz, sx, sy, vz; int mi;
+                        if (!proj(&v, px, h, pz, &sx, &sy, &vz) || sx < 0 || sy < 0 || sx >= 320 || sy >= 240) continue;
+                        s++;
+                        mi = welch[(int) sy][(int) sx];
+                        if (mi < 0 || !re15_pri_mask_occludes(tief[(int) sy][(int) sx], (long) vz)) continue;
+                        if (!zelle_dazwischen(&R.zel, b, cam[0], cam[2], px, pz)) f++;
+                    }
+                    if (argc > 5 && wx == atoi(argv[4]) && wz == atoi(argv[5])) {   /* Einzelstelle: je Figurpunkt */
+                        for (k = 0; k < 81; k++) {
+                            double h = -(double) b * BAND_Y - (FIGUR_HOCH / 9.0) * ((k / 9) + 0.5), o = ((k % 9) - 4) * (FIGUR_HALB / 4.0);
+                            double px = wx + o * lx, pz = wz + o * lz, sx, sy, vz; int mi;
+                            if (!proj(&v, px, h, pz, &sx, &sy, &vz) || sx < 0 || sy < 0 || sx >= 320 || sy >= 240) continue;
+                            mi = welch[(int) sy][(int) sx];
+                            if (mi < 0) continue;
+                            printf("    k %2d (%.1f,%.1f) vz %.0f Maske %d Tiefe %u Stufe %ld %s %s\n", k, sx, sy, vz, mi,
+                                   (unsigned) tief[(int) sy][(int) sx], (1023L * (long) vz) >> 16,
+                                   re15_pri_mask_occludes(tief[(int) sy][(int) sx], (long) vz) ? "VERDECKT" : "-",
+                                   zelle_dazwischen(&R.zel, b, cam[0], cam[2], px, pz) ? "Zelle" : "frei");
+                        }
+                    }
+                    if (s < 72) continue;
+                    for (j = 0; j < 8; j++)
+                        if (f > best_f[j]) {
+                            int t;
+                            for (t = 7; t > j; t--) { best_f[t] = best_f[t - 1]; best_x[t] = best_x[t - 1]; best_z[t] = best_z[t - 1]; best_b[t] = best_b[t - 1]; best_s[t] = best_s[t - 1]; }
+                            best_f[j] = f; best_x[j] = wx; best_z[j] = wz; best_b[j] = b; best_s[j] = s;
+                            break;
+                        }
+                }
+        for (k = 0; k < 8; k++)
+            if (best_f[k]) { printf("  ROOM%04X Cut %d (%d,%d) Band %d: %d von %d Figurpunkten ohne Zelle davor verdeckt\n", r, c,
+                                    best_x[k], best_z[k], best_b[k], best_f[k], best_s[k]); n_out++; }
+        printf("  %d Masken ungefiltert, %d Stellen\nOK\n", pri.draw_count, n_out);
+        free(bss.roh); free(msk);
+        return 0;
+    }
+    if (!strcmp(teil, "cut") && argc > 3) {             /* Werkzeug: warum hat ein Cut keinen Stehplatz? */
+        static raum_t R; unsigned r = (unsigned) strtoul(argv[2], NULL, 16); int c = atoi(argv[3]), i, b, gx, gz;
+        int16_t qx[4], qz[4]; int hq;
+        saaten_sammeln();
+        if (!raum_laden(&R, r) || c >= R.rdt.cut_count) { printf("FEHLER\n"); return 1; }
+        hq = re15_rdt_get_region_quad(&R.rdt, c, qx, qz);
+        printf("  ROOM%04X Cut %d: Regionsviereck %s (%d,%d) (%d,%d) (%d,%d) (%d,%d), Zonen %d\n", r, c, hq ? "ja" : "nein",
+               qx[0], qz[0], qx[1], qz[1], qx[2], qz[2], qx[3], qz[3], R.rdt.zone_count);
+        for (i = 0; i < R.rdt.zone_count; i++) {
+            const re15_rdt_zone_t *z = &R.rdt.zones[i];
+            if (z->cam_from != c && z->cam_to != c) continue;
+            printf("    Zone %2d %2d -> %2d Boden 0x%02X (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n", i, z->cam_from, z->cam_to, z->floor,
+                   z->xs[0], z->zs[0], z->xs[1], z->zs[1], z->xs[2], z->zs[2], z->xs[3], z->zs[3]);
+        }
+        for (b = 0; b < 16; b++) {
+            long frei_q = 0, err_q = 0, zellen = 0;
+            for (i = 0; i < R.rdt.sca_count; i++) zellen += (R.rdt.sca[i].floor >> 4) == b;
+            for (gx = 0; gx < R.nx; gx++)
+                for (gz = 0; gz < R.nz; gz++) {
+                    int wx = R.x0 + gx * SCHRITT, wz = R.z0 + gz * SCHRITT;
+                    if (hq && !re15_aot_point_in_quad(wx, wz, qx, qz)) continue;
+                    if (frei_g(&R, b, gx, gz) && in_zonen(&R.rdt, b, wx, wz)) frei_q++;
+                    if (R.err[b][gx][gz]) err_q++;
+                }
+            if (zellen || err_q) {
+                int typ[16] = {0}, t;
+                for (i = 0; i < R.rdt.sca_count; i++)
+                    if ((R.rdt.sca[i].floor >> 4) == b && (R.rdt.sca[i].u0 & 1)) typ[R.rdt.sca[i].type & 15]++;
+                printf("    Band %2d: SCA-Zellen %ld | im Viereck frei+Zone %ld, erreicht %ld | solide je Typ:", b, zellen, frei_q, err_q);
+                for (t = 0; t < 16; t++) if (typ[t]) printf(" %d:%d", t, typ[t]);
+                printf("\n");
+            }
+        }
+        printf("OK\n"); return 0;
     }
     if (!strcmp(teil, "suche")) {
         if (argc > 2) g_such_prozent = atoi(argv[2]);
