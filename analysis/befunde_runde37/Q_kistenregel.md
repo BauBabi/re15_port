@@ -23,7 +23,11 @@ prueft (scd_vm.c Ck-Pfad oder je Raum), feuerloescher_r37.c (Spur I) nur fuer de
 * 2026-10-13 Fortsetzung: Baum sauber auf 51a24d29, `local_build.sh build` -> `ninja: no work to do` (der Vorgaenger
   hatte 18:09 noch gebaut: `kistenregel_r37.c.obj` vorhanden, exe 18:09, Testverzeichnis 18:11 mit den Laeufen a/b/c
   des Integrationsriegels, c durch das Limit abgerissen). Der gesicherte Code wurde Zeile fuer Zeile gegen 3.1 und 2.2
-  geprueft (Abschnitt 4.1), die Riegel gefahren (Abschnitt 6), der Integrationsriegel neu gefahren (Abschnitt 5).
+  geprueft (Abschnitt 4.2), die Riegel gefahren (Abschnitt 6), der Integrationsriegel neu gefahren (Abschnitt 5).
+* 2026-10-13 Ende: FERTIG. Neu in der Fortsetzung: 0x58/0x59-Zensus (2.3), Entscheidung je Fall (4.1), Gegenprobe ohne
+  Haken an Unit-Riegeln und exe (4.3), exe-Lauf I ueber die ECHTE Box ROOM1150 (5), fuenf Riegel anderer Spuren mit
+  "Bit = Besitz" nachgezogen (4.4), gezielter Endlauf `100% tests passed, 0 tests failed out of 198` (6).
+  Code von 51a24d29 (kistenregel_r37.c/.h, scd_vm.c-Haken) unveraendert uebernommen.
 
 ## 1. Messung vorher
 Nicht wiederholt — vorhandene Messung am Stand OHNE Regel (Spur I, I_feuerloescher.md Nachbesserung 1, "Beobachtung",
@@ -246,29 +250,104 @@ die Regel selbst. Danach scd_vm.c per `git checkout` zurueck, neu gebaut (`LOCAL
 ### 4.4 Riegel anderer Spuren, die "Bit = Besitz" annahmen (gemessen, nachgezogen)
 Erster gezielter Lauf am Endstand (82 Tests, Regex Abschnitt 6) + Zensus aller Test-Quellen, die eines der elf
 Besitz-Bits setzen (grep `flag_set(3,0x85|0x7F|0x67|0x3B|0xB2|0x65|0x57)`, `(9,0x34|0x88|0x8A)`, `(4,0xEC)`, dezimal
-und `flag:b:n`-Kartenargumente; zweiter Lauf ueber die Tests dieser Quellen): vier Riegel rot, alle mit demselben Grund
+und `flag:b:n`-Kartenargumente; zweiter Lauf ueber die Tests dieser Quellen): fuenf Riegel rot, alle mit demselben Grund
 — sie setzen das Aufnahme-Bit OHNE den Gegenstand ins Inventar zu legen (der Zustand vor der Item-Box, in dem das Bit
 allein den Besitz bedeutete). Im Spiel kommt "Bit ohne Gegenstand" nicht vor: der Gegenstand verlaesst das Inventar nur
 ueber die Kiste (Q-Fall) oder ueber Wegwerf-Ja, das erst NACH der Benutzung angeboten wird (gen/discard_sites.inc; dann
-steht das fertig-Bit und die Regel laesst das Original-Bit gelten).
+steht das fertig-Bit und die Regel laesst das Original-Bit gelten). Beleg je Fall (gen/discard_sites.inc gegen die
+fertig-Bits aus 3.1): K1 1090 msg 9 nach Set(3,0x81) @0x0271E (Neueintritt); K2/K3 Tastenfeld msg 5 mit Gate
+flag(3,50)/(3,137) = fertig (@0x0152A/@0x00FF2); K5 msg 12 @0x01FEE nach Set(4,0x24) @0x01FC6; K6 msg 4 @0x00C90 nach
+Set(4,0xE8) @0x00C68; K7 msg 1 @0x02306 nach Set(3,0x3C) @0x02302; K11 msg 9 @0x0226A nach Set(4,0xFC) @0x01F76;
+K8 msg 5 @0x02608 und K9 msg 2 @0x0144A stehen VOR dem fertig-Bit, das aber der naechste Befehl desselben Threads setzt
+(@0x0260E / @0x01450) — die Abfrage friert den Thread nur ein; einzig K9 sub01 @0x01374 liest in dieser Luecke (je Bild)
+und bekaeme 0 = "nicht erneut starten" (die laufende sub02 bleibt unberuehrt); K4 (E5 gestrichen) und K10 haben keine
+Wegwerf-Stelle.
 | Riegel | alt (rot am Endstand) | Aenderung | neu |
 |---|---|---|---|
 | `unit_1090_flame_out_pin` (test_1090_flame_out_pin.c) | `FAIL: die brennenden Truemmer sind weg (7 Emitter)` u.a., 4 Fehler: ohne Loescher im Inventar legt sub00 den Loesch-Platz + Selbst-Tuer @0x02352 nicht an | Vorbedingung "aufgenommen" = `(3,0x85)` + `re15_inv_grant(0x31,1)` | gruen |
 | `unit_r36_schluessel_zelle` (test_r36_schluessel.c) | `FAIL: Z ROOM1211 mit (4,0xEC) (= Prison Key genommen): John ..., Slot 6 -> sub02` | "genommen" = Bit + Item 0x42 im Inventar (`s_hf_gabe` in hochfahren) | gruen |
 | `unit_r36_schluessel_befreiung` Pruefung O | alt erwartet "Schluessel nicht im Inventar (z.B. Item-Box): Szene bis zum Ende, keine Abfrage" — genau der Q-Fall | Erwartung auf die Q-Regel umgestellt: keine Befreiung (Set(4,0xFC) nie), Platz 8 = Raumtext msg 10, keine Abfrage | gruen (`ok: O Schluessel nicht im Inventar: keine Befreiung (Set(4,0xFC) Bild -1, msg 9 Bild -1), Platz 8 = Raumtext msg 10, keine Abfrage ...`) |
+| `integration_r36_elza_unlock` (test_r36_elza.cmake + Werkzeug probe_r36_elza_karte.c) | Karte nur `4:0xEC`; gemessen mit der alten Karte am Endstand: `r36_elza_unlock: Unlock-Aktion 0x (soll 1)`, `0% tests passed, 1 tests failed out of 1` | Werkzeug kann `give:id` (Gegenstand ins Inventar), Karte `4:0xEC give:0x42` | gruen (Endlauf) |
 | `unit_r36_elza_unlock` (test_r36_elza.c) | `FEHLER: Szene erreicht die Aufschliess-Geste @0x020F8 in Bild -1` + 3 Folgefehler (Ton), `unlock: 4 Fehler` | "Prison key" = Bit + Item 0x42 im Inventar (`s_boot_gabe` in room_boot) | gruen |
 Die Pruefung O war eine Erwartung der Runde 36 (Nachbesserung 1, Wegwerf-Abfrage) fuer einen Zustand, den der
 Orchestrator-Auftrag Q jetzt ausdruecklich verbietet (Benutzung ohne Gegenstand im Inventar); ihr eigentlicher Kern
 (keine Wegwerf-Abfrage ohne Besitz, RE2 @0x80051634) bleibt geprueft.
 
-## 5. Messung nachher
-(laufend)
+## 5. Messung nachher (echte exe, Endstand; Messkopie je Lauf `re15_pc_r37q_haken_<id>.exe`)
+`integration_r37_kistenregel` (Spielstand-Karte mit `kiste:`/`give:` -> CONTINUE -> Druck; Lauf I ueber die ECHTE Box),
+debug.log woertlich (Laeufe `lauf_3bc82393_*` am Stand 51a24d29 = Code-Endstand; Lauf I im Endlauf, Abschnitt 6):
+* **A — 1090, Loescher in der KISTE** (Auftrag Q, erster Fall): `[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31
+  NICHT im Inventar (Item-Box Platz 2) -> Besitz 0, Zweig ohne Gegenstand`, zweimal `[msgtext] room=1090 id=7 "I must hurry
+  up and get something to put out this fire to save that woman!"` (A@30 und A@474), KEIN `id=8 "Will you use the Fire
+  Extinguisher?"`, KEIN `id=9`, `EXIT_AT: Bild 800 in Raum 1090` (kein Neueintritt = keine Rettungsszene).
+* **B — 1090, Loescher im INVENTAR** (Gegenprobe "wie bisher"): `... K1: Item 0x31 im Inventar -> wie Original`, `id=7`,
+  `id=8 "Will you use the Fire Extinguisher?"`, `id=9 "You've used the Fire Extinguisher."`.
+* **I — ECHTE Box ROOM1150 -> 1090**: `[msg] room=1150 id=3 ITEMBOX (box screen, message suppressed)` (Tausch im
+  Box-Schirm), `[debug-menu] AUTO-JUMP -> ROOM1090 (Frame 330)`, `[kistenregel] ROOM1090 @0x0230A Ck(3,0x85) K1: Item 0x31
+  NICHT im Inventar (Item-Box Platz 2) ...`, `id=7` zweimal, kein `id=8`/`id=9`, `EXIT_AT: Bild 500 in Raum 1090`.
+  (Gegenprobe-Bau ohne Regel, Abschnitt 4.3: derselbe Weg liefert `id=8` + `id=9`.)
+* **C/D — 10D0 Kartenleser (Leon)**: Kiste -> `id=7 "A card reader.You have to use the Blue Keycard ... Will you operate the
+  card reader?"`, `... K2: Item 0x38 NICHT im Inventar (Item-Box Platz 2) ...`, `id=8 "You have not the Blue Keycard to
+  operate it."`; Inventar -> `id=7`, `... K2: Item 0x38 im Inventar -> wie Original`, `id=9 "You've used the Blue Keycard."`.
+* **E — 11E1 Kartenleser (Elza)**: `... K4: Item 0x39 NICHT im Inventar ...`, `id=8 "You have not the Yellow Keycard to
+  operate it."`.
+* **F — 1211 Zelle (Elza)**: `... K11: Item 0x42 NICHT im Inventar ...`, `id=10 "It's locked.It seems that there is someone
+  inside..."`, keine Befreiung.
+* **G — 3010 Tuer**: `... K7: Item 0x36 NICHT im Inventar ...`, `id=0 "It's locked.An ID card is required to open it."`.
+* **H — 4030 Hauptsicherung**: `... K10: Item 0x41 NICHT im Inventar ...`, `id=0 ""Main Fuse" It's a large circuit breaker
+  system.It looks like someone has removed all the fuses."`.
+Die uebrigen Faelle (K3 1230/1231, K5 11E0/11E1, K6 1100/1101, K8 3050/3051, K9 4000, K10 4031, alle Elza-Gegenstuecke)
+misst der Unit-Riegel am echten Port-Code (Raumstart + Druck + Bild-Ablauf, Abschnitt 6); jede Zeile hat dort Kiste,
+Inventar, "schon benutzt + Kiste" und "nie genommen".
 
 ## 6. Tests
-(laufend)
+Neu (probes/r37_kistenregel.cmake):
+* `unit_r37_kistenregel_tabelle` — 54 Pruefungen: 20 Zeilen = `21 bank bit wert` am Datei-Offset der ausgelieferten RDT,
+  fertig-Bit wird im Raum gesetzt (`22 b i 01`), K1..K11 vollstaendig, keine Zeile fuer Crank/Time Bomb/Fuse/Latch Key und
+  fremde Stellen desselben Bits, Regel ausserhalb der Tabelle wirkungslos.
+* `unit_r37_kistenregel_raumstart` — 58 Pruefungen: je Fall Platz beim Raumstart in vier Lagen (KISTE -> Raumtext +
+  Regel griff; INVENTAR -> Benutzungs-Platz; FERTIG + KISTE -> Zweig "fertig"; NIE GENOMMEN -> Raumtext), dazu Marker K9/K10
+  und Befreiungs-Platz K11.
+* `unit_r37_kistenregel_ablauf` — 23 Pruefungen: Druck + Bild-Ablauf, Nachrichtenfolge Kiste gegen Inventar (u.a.
+  `K1 1090 KISTE: ... [7]`, `K1 1090 INVENTAR: ... [7,8,9,3,4]`, `K2 10D0 KISTE: ... [7,8]`, `INVENTAR: [7,9,0]`), Feuer
+  brennt weiter mit Kiste ((3,0x81)=0), geloescht mit Inventar ((3,0x81)=1).
+* `unit_r37_kistenregel_spielstand` — 4 Pruefungen: Kiste + Bits reisen mit re15_savedata; nach dem Laden Raumtext;
+  Herausnehmen ueber den echten Tausch `re15_itembox_transfer(0,2)` -> Loesch-Platz sub06 wieder da.
+* `integration_r37_kistenregel` — echte exe, Laeufe A/B/I/C/D/E/F/G/H (Abschnitt 5).
+Gegenprobe ohne Haken: Abschnitt 4.3 (Unit 16+12+1 Fehler, exe A/C/E/F/G/H/I rot).
+Nachgezogene Riegel anderer Spuren: Abschnitt 4.4.
+
+Gezielter Endlauf am Endstand (KEINE volle Suite; `ctest --test-dir re15_port/build -R "<Ausdruck>" -j 3 --timeout 1800
+--output-on-failure`, 687 s): **`100% tests passed, 0 tests failed out of 198`**. Ausdruck woertlich = die Gruppen jedes
+beruehrten Moduls (scd_vm op_ck, Item-Box, Spur-I-Riegel) und JEDER Test, dessen Quelle einen der elf Benutzungs-Raeume
+laedt (grep `0x1090|0x10D0|...|ROOM1211.RDT` ueber tests/unit/*.c + tests/integration/*.c, auf Testnamen abgebildet per
+`ctest --show-only=json-v1`), dazu integration_r36_elza_unlock / integration_r36_karte (Kartenargumente mit Besitz-Bits):
+```
+^(unit_r37_kistenregel|integration_r37_kistenregel|unit_r37_feuerloescher|integration_r37_feuerloescher|unit_scd_|unit_flag_gate|unit_aot_|unit_savedata|unit_room1150_itembox|unit_itembox_|unit_r35_inventar1050_kiste|unit_re2_room1090_ab|unit_1090_|probe_1090_|unit_plc_back_yaw_1090|unit_map_1090|unit_zombie_10d0|unit_zombie_se_ab_10d0|probe_10d0_situp_handoff|r19_marke1_10d0_c1|unit_espr_11e0|unit_lane_b1_t45_room1100|unit_r30_tuer_r4000|unit_r34n_f_leiche_|unit_r35_karte_r1230|unit_r36_schluessel|integration_r36_schluessel|unit_r36_story_|integration_r36_story_|integration_flag_census|unit_writher_kill_flag)|^(integration_cross_stage|integration_item_name_census|integration_keydoor|integration_keypad|integration_r36_elza_unlock|integration_r36_karte|unit_1090_climb_pin|unit_1090_fire_pin|unit_1090_flame_out_pin|unit_1090_nodraw_pin|unit_1090_npc_prop_push|unit_1090_push_pin|unit_1090_room_pin|unit_1090_stay_on_crate|unit_1140_straight_shot|unit_action_msg_gate|unit_aot_edge|unit_debug_menu|unit_fade_step0_hold|unit_inv_fsm|unit_item_modal|unit_item_stack_press|unit_itembox_screen|unit_lane_b1_t1_aligntick|unit_lane_b1_t2_idleloop|unit_lane_b1_t3_sfxgate|unit_lane_b1_t3b_getupsfx|unit_lane_b1_t45_room1100|unit_map_1090|unit_map_eingemessen|unit_map_marke_zid|unit_map_marker_innen|unit_msg_dialog|unit_npc_wall_clamp|unit_pad_remap|unit_plc_back_yaw_1090|unit_pri_eingemessen|unit_pri_kopfschnitt|unit_r16_liegende_unschiessbar|unit_r19b_marke4_zeilenmodell|unit_r21_discard_wegwerfen|unit_r26_panel_11f0|unit_r30_hinweis_anker|unit_r30_hinweis_bank|unit_r30_hinweis_fsm|unit_r30_hinweis_spurlos|unit_r30_hinweis_zeichner|unit_r30_irons_tisch_licht|unit_r30_tuer_r4000|unit_r30_tuer_stimme|unit_r30_tuer_strom|unit_r30_tuer_tabelle|unit_r30_tuer_verschlossen|unit_r30_tuerse_bank|unit_r34n_a_rolltor|unit_r34n_d_adaruf_doppel|unit_r34n_d_adaruf_elza|unit_r34n_d_adaruf_frei|unit_r34n_d_adaruf_raster|unit_r34n_d_adaruf_rettung|unit_r34n_d_adaruf_speicher|unit_r34n_d_adaruf_sperre|unit_r34n_d_adaruf_szene|unit_r34n_f_leiche_andere|unit_r34n_f_leiche_ja_1110|unit_r34n_f_leiche_ja_1230|unit_r34n_f_leiche_laden|unit_r34n_f_leiche_latch|unit_r34n_f_leiche_nachhall|unit_r34n_f_leiche_nein_1110|unit_r34n_f_leiche_nein_1230|unit_r34n_f_leiche_stimme|unit_r34n_f_leiche_texte|unit_r34n_f_leiche_varianten|unit_r34n_f_leiche_voll|unit_r35_affen_ada|unit_r35_affen_anker|unit_r35_affen_band|unit_r35_affen_biss|unit_r35_affen_brust|unit_r35_affen_finisher|unit_r35_affen_flug|unit_r35_affen_frac|unit_r35_affen_griff|unit_r35_affen_kdsonde|unit_r35_affen_kette|unit_r35_affen_npcband|unit_r35_affen_schrot|unit_r35_affen_sprung|unit_r35_affen_szene|unit_r35_affen_takt|unit_r35_affen_teile|unit_r35_affen_wagen|unit_r35_affen_wand|unit_r35_affen_zonensprung|unit_r35_cut10f0_bgm|unit_r35_cut10f0_einmal|unit_r35_cut10f0_karte|unit_r35_cut10f0_programm|unit_r35_cut10f0_szene|unit_r35_cut10f0_texte|unit_r35_cut10f0_tuerton|unit_r35_granate|unit_r35_inhalt_items|unit_r35_inhalt_zombies|unit_r35_raeume_trage|unit_r35_werfer|unit_r36_elza_bank|unit_r36_elza_fenster|unit_r36_elza_irons|unit_r36_elza_roy|unit_r36_elza_schuss|unit_r36_elza_signatur|unit_r36_elza_stoehnen|unit_r36_elza_unlock|unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_pri_absperrung|unit_r36_pri_schatten|unit_r36_schluessel_befreiung|unit_r36_schluessel_namen|unit_r36_schluessel_raum|unit_r36_schluessel_tuer|unit_r36_schluessel_zelle|unit_r36_schuss|unit_r36_story_reihenfolge|unit_r36_story_roy|unit_r36_story_schuppen|unit_r36_story_sweep|unit_r36_story_texte|unit_r36_story_zelle|unit_r36_ziel1190|unit_r36_zombieki_sicht|unit_r36_zombieki_wecker|unit_r37_feuerloescher_aufnahme|unit_r37_feuerloescher_elza|unit_r37_feuerloescher_kiste|unit_r37_feuerloescher_leer|unit_r37_feuerloescher_loeschen|unit_r37_feuerloescher_modell|unit_r37_feuerloescher_raum|unit_r37_feuerloescher_spielstand|unit_r37_feuerloescher_spind|unit_r37_kistenregel_ablauf|unit_r37_kistenregel_raumstart|unit_r37_kistenregel_spielstand|unit_r37_kistenregel_tabelle|unit_re2_baby_spider_dmg|unit_re2_crow_se_bank|unit_re2_gore|unit_re2_hit_repeat_crow_spider|unit_re2_lyer_1140|unit_re2_room1090_ab|unit_re2_room1140_ab|unit_re2_spider_ai|unit_re2_spider_water_2090|unit_re2_zombie_abc|unit_re2_zombie_ai|unit_re2_zombie_hitfilter|unit_re2z_death_getup|unit_room1050_sicherung|unit_room1140_combat|unit_room1150_itembox|unit_rvd_scan_ungated_by_climb|unit_scd_key_ck|unit_synchro_stimme|unit_text_freeze|unit_tim_texel_key_rule|unit_zombie_getup_se|unit_zombie_se_ab_10d0)$
+```
+Erster gezielter Lauf (82 Tests, Ausdruck = erster Teil oben bis `unit_writher_kill_flag)`, vor 4.4):
+`96% tests passed, 3 tests failed out of 82` (unit_1090_flame_out_pin, unit_r36_schluessel_zelle,
+unit_r36_schluessel_befreiung), zweiter Lauf `^(integration_keypad|unit_r34n_d_adaruf_|unit_r36_elza_)`:
+`94% tests passed, 1 tests failed out of 17` (unit_r36_elza_unlock) -> 4.4.
 
 ## 7. OFFEN
-(laufend)
+* Nichts aus dem Auftrag Q offen: Zensus aller Bit-statt-Inventar-Abfragen (3, 2.3), Entscheidung je Fall mit Beleg (4.1),
+  RE2-Vorbild selbst disassembliert (2.2), Regel an EINER Stelle per Tabelle (4.2), 1090 Kiste/Inventar an der exe (5),
+  integration_r37_feuerloescher gruen (Endlauf), Tor der Spur I unberuehrt (leerer Loescher weiter nur nach Ja).
+* Grenze, gemessen und dokumentiert (kein Fehler): die Regel wertet die Ck-Stellen dort aus, wo das Original sie
+  auswertet — fuer K1/K5..K11 beim Raumstart (main00/sub00). Das ist gleichwertig, solange kein Box-Raum zugleich
+  Benutzungs-Raum ist (4.2, heute disjunkt). Wer eine Item-Box in einen der elf Raeume stellt, muss das hier pruefen.
+* PSX-Ziel: Haken + Tabelle sind Engine-Code ohne PC-Abhaengigkeit (Messzeile nur unter RE15_PLATFORM_PC); ein PSX-Bau
+  war hier nicht moeglich (kein PSn00bSDK im Baum) — nicht gebaut, nicht behauptet.
 
 ## 8. Fuer den Nutzer
-(laufend)
+* Neue Assets / Paket-Gate: keine. Sprachdateien: keine (kein neuer Text, keine neue Nachrichten-Id, kein neues Bit).
+* Verhalten (Bedienhinweis): Wie in RE2 benutzt Leon/Elza einen Schluessel-/Raetsel-Gegenstand nur, wenn er im INVENTAR
+  ist. Liegt er in der Item-Box, zeigt der Ort seinen eigenen Text fuer "Gegenstand fehlt" (z.B. ROOM1090 "I must hurry
+  up and get something to put out this fire to save that woman!", Kartenleser "You have not the Blue Keycard to operate
+  it.", ROOM3010 "It's locked.An ID card is required to open it.") — keine Frage, keine Benutzung. Gegenstand aus der Box
+  holen, dann geht es wie bisher. Schon Benutztes bleibt benutzt (Tuer offen, Feuer aus), auch wenn der Gegenstand danach
+  in der Box liegt. Betroffen: Feuerloescher 1090, Blue/Red/Yellow Keycard an den Kartenlesern 10D0/1230/11E1 (+ Elza),
+  Pliers 11E0/11E1, Minidisc Player 1100/1101, Green Keycard 3010/3011, Red Master Keycard 3050/3051, Blue Master Keycard
+  4000, Spark Plug 4030/4031, Prison Key 1211 (Elza).
+* Zu entscheiden: nichts.
