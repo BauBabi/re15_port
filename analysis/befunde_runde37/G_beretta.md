@@ -289,6 +289,9 @@ RE2-Pausenfilter den Riegel frei". Im RE2-Flavor fiel damit jeder RE1.5-Gehirn-G
   Beleg im Kommentar (@0x800A4168 Zombie 1, @0x800A4460 Hund 0, @0x800A4BCC Spinne 0, @0x800A45DC Kraehe 15).
 * Unveraendert: Zombies unter RE2-KI (RE2-Filter, Pause 1), Hund/Kraehe/Spinne unter RE2-KI (RE2-Pause), alles unter
   RE1.5-KI und MIXED (dort ist nur 0x20 RE2 — wie vorher), Kugel-Takt, Patronen, Abbruch, Schaden je Kugel (Spalte 3).
+  **Richtigstellung (Nachbesserung 2, Abnahme 1 N1):** "alles unter RE1.5-KI und MIXED" war fuer den Gitterarm 0x1A FALSCH —
+  er hat in JEDEM Modus das RE2-Gehirn (`re15_ai_re2_for_type(0x1A)` = 1, enemy_ai_re2_zombie.c:172), aber keinen Filter;
+  das NB1-Kriterium loeste deshalb seinen Riegel in jedem Modus (drei Treffer, Rueckzug dreimal neu). Behoben in Abschnitt 9.
 * M2 braucht keine eigene Aenderung: Spalte 3 je Kugel war richtig, falsch war, dass Kugel 2/3 nicht trafen. Mit drei
   Treffern ist der Stoss 3 x Spalte 3 >= der alte Einzeltreffer Spalte 5 fuer jede betroffene Zeile (Alligator gleich).
 * M4: `include/re15_beretta_r37.h` (PORT-ABBILDUNG, Riegel-Absatz) und der Kommentar an riegel_loesen() sagen jetzt
@@ -317,7 +320,8 @@ nicht gezeichnet, z.B. Tyrant "blood FX 0x80019700 @0x80114998 — render-side, 
 
 ### 8.6 Tests Nachbesserung 1 (gezielt, keine volle Suite)
 * `unit_r37_beretta` Teil I (neu, checks 70-96): Einordnung `re15_beretta_r37_re2_pause_regelt` (RE2: Zombie-Familie/0x20/0x21/
-  0x25/0x26 ja, 0x23/0x27/0x29/0x2b/0x30/0x36/0x1a nein; RE1.5: keiner; MIXED: nur 0x20); je Typ 0x23/0x27/0x29(Glock 18)/0x2b/
+  0x25/0x26 ja, 0x23/0x27/0x29/0x2b/0x30/0x36/0x1a nein [NB2: 0x1a aus dieser Liste genommen, s. 9.3]; RE1.5: keiner;
+  MIXED: nur 0x20); je Typ 0x23/0x27/0x29(Glock 18)/0x2b/
   0x30 unter RE2-Flavor mit dem Bild-Nachlauf der echten RE2-Filter: Kugel 1 trifft, der Riegel bleibt im Nachlauf stehen,
   Kugel 2/3 in Tick 3/6, Stoss = 3 x Spalte 3 (21/36/42/30/45) >= alter Einzeltreffer Spalte 5, Reaktion je Treffer;
   Gegenproben Spinne 0x25 (Pause 0: drei Treffer ueber den Filter, Riegel-Loesen 0) und Kraehe 0x21 (Pause 15: nur Kugel 1).
@@ -412,3 +416,74 @@ EIN Treffer am Arm + Riegel nicht geloest (102/105/108), Rueckzug einmal, Ende w
 Gegen den NB1-Code: **`test_r37_beretta: 6 FAIL`** — 102/105/108 "hp 250 -> 245, Rest 235, weitere 2, Riegel geloest 2",
 103/106/109 "Rueckzug 3 x, Ende Tick 16 wie Browning 10, 0x2b -0". Die Sonde zeigt damit dieselben Zahlen wie die exe (9.1:
 Browning E+10, M93R E+16, 250 -> 235, Rueckzug dreimal). Kontrolle 100 und die 0x80-Pruefungen 101/104/107 gruen.
+
+### 9.4 Umsetzung (Commit "NB2 N1")
+* `engine/src/beretta_r37.c`: neue Abfrage `re2_kugel_gate_sperrt(e)` = `re15_ai_re2_for_type(e->type)` UND
+  `e->re2z_self1d3 != 0` (GANZES Byte, wie `lbu v0,467(s2)` / `bne v0,zero,0x80041300` @0x80041270-78 im RE2-Kugel-Resolver
+  FUN_800410CC, den die Custom Handgun @0x80048a04 ruft). riegel_loesen() ueberspringt solche Gegner — ihr +0x93-Riegel aus
+  Kugel 1 bleibt stehen, der Resolver setzt Bit 1 dazu (`+0x93 |= 2` @0x8001240c) und greift auf den naechsten Kandidaten
+  zurueck (@0x80012404-18). Reihenfolge der Ausnahmen: sterbend (HP < 0) -> Pausenfilter-Typen -> Kugel-Gate.
+* Keine neue Konstante. Das Byte +0x1D3 fuehrt der Port bereits (`re2z_self1d3`); fuer den Arm schreibt es arm_hurt
+  (`|= 0x80` @0x80100FA8-B0), B5 P0 (@0x80100DE4/F0/F8) und das Rueckzug-Ende (@0x80100E48-58); geloescht nur INIT
+  (@0x80100130) und A0 (@0x801005B8 / @0x8010061C).
+* Wen es NICHT aendert (Code gelesen): RE1.5-Gehirne 0x23/0x27/0x29/0x2b/0x30 — nach einem Schuss +0x1D3 = 0
+  (re15_damage.c:2695-2696, Stempel `(alt & 0x80) | re15_re2_stun_frames` mit `default: return 0`, kein RE1.5-Gehirn
+  schreibt das Feld); G5 0x36 — der Schusspfad stempelt ebenfalls 0, das Modul setzt nie Bit 0x80 an sich selbst
+  (enemy_ai_boss_g5.c:1542/1621 nur Abzug/Abfrage); nur eine noch laufende GL-/Explosions-Sperre (re15_damage.c:4274)
+  wuerde den Riegel halten — dieselbe Regel, nach der das G5-Modul Bit 0 selbst erst bei Sperre 0 freigibt
+  (enemy_ai_boss_g5.c:1621-1624, "Sperre abgelaufen"). Zombie-Familie/0x20/0x21/0x25/0x26 laufen wie vorher ueber ihren Filter.
+* `include/re15_beretta_r37.h`: Absatz PORT-ABBILDUNG richtiggestellt — die falsche Begruendung "Gitterarm 0x1a (ein Treffer
+  toetet, HP < 0)" ist ersetzt durch das Kugel-Gate mit Adressen und "stirbt NICHT am Treffer (250 -> 245), sondern am Ende
+  seines Rueckzugs (`sh -1,342` @0x80100E4C-50)".
+* Tests: unit Teil J (9.3), Pruefung 70 ohne 0x1a, integration_r37_beretta + arm_std_w5 / arm_re15_w5 (9.7).
+
+### 9.5 Messung nachher (exe nach "NB2 N1", md5 2bb9b0f0fbea6b9420802bd249f87f42, Aufbau wie 9.1, Logs `mess_r37g/nb2n_*`)
+| Lauf | KI | Waffe | Munition | HP Arm 5 | Rueckzug (Trace) | Ende (hp -1) |
+|---|---|---|---|---|---|---|
+| nb2n_arm_w5_std | Standard | 5 M93R | F70 15 -> 12 | **F70 250 -> 245 (EINER)** | 5/0 -> 5/1 EINMAL | **F80 (E+10)** bei (-21750,-15897) |
+| nb2n_arm_w5_re15 | RE1.5 | 5 M93R | F70 15 -> 12 | F70 -5 (einer) | einmal | F80 |
+| nb2n_arm_w6_std | Standard | 6 Glock 18 | F70 15 -> 12 | F70 -5 (einer) | einmal | F80 |
+| nb2n_arm_w3_std (Kontrolle) | Standard | 3 Browning | F70 15 -> 14 | F70 -5 | einmal | F80 |
+Muendung je M93R-/Glock-Lauf F70/F73/F76 (drei Blitze, drei Patronen); Kugel 2/3 finden in diesem Aufbau keinen weiteren
+Kandidaten in der Bahn (die anderen Arme sind verborgen) — in der Sonde 9.3 gehen sie an den 0x2b dahinter (-20).
+Trace bis auf die Bildnummern zeilengleich mit dem Browning-Lauf (Ende bei (-21750,-15897) statt vorher (-21854,-15957)).
+Gegenprobe der bestandenen Punkte an der exe: nb2n_birk_def (ROOM5080 Birkin 0x30, Standard-KI) F61/F64/F67 je -15 (300 -> 255)
+— unveraendert drei Treffer; 0x2b/0x29/Zombie/Elza ueber integration_r37_beretta (9.7).
+
+### 9.6 Je Mangel (Ursache / vorher / Beleg / Aenderung / nachher)
+| Mangel | Ursache | Messung vorher | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|---|
+| N1 Gitterarm 0x1A nimmt alle drei Kugeln, Rueckzug je Kugel neu | NB1-Kriterium: `re2_pausenfilter_laeuft(0x1A)` = 0 -> riegel_loesen() loeste den +0x93-Riegel des Arms vor Kugel 2/3, in JEDEM KI-Modus (der Arm hat immer das RE2-Gehirn, aber keinen Filter); RE2s Kugel-Gate +0x1D3 fehlte als Kriterium | exe: F70/F73/F76 je -5 (250 -> 235), Rueckzug 3 x neu, Ende F86 (E+16) statt F80, Standard- und RE1.5-KI gleich (9.1); Sonde Teil J gegen NB1-Code 6 FAIL mit denselben Zahlen (9.3) | RE2-Kugel-Resolver FUN_800410CC `lbu v0,467(s2)` / `bne v0,zero,0x80041300` @0x80041270-78 (Ruf `jal 0x800410cc` @0x80048a04); EM2D-HURT `ori v0,v0,0x80` @0x80100fa8 / `sb v0,467(s0)` @0x80100fb0; Loeschen nur @0x80100130 / @0x801005b8 / @0x8010061c (9.2) | `re2_kugel_gate_sperrt` in riegel_loesen() (9.4); Header/Dossier 8.3/8.6 richtiggestellt; Pruefung 70 ohne 0x1a; Riegel Teil J + arm_std_w5/arm_re15_w5 | exe: EIN Treffer F70 -5, Rueckzug einmal, Ende F80 = E+10 wie Browning, M93R/Glock 18, Standard- und RE1.5-KI (9.5); Sonde: RE2/RE1.5/MIXED gruen, Kugel 2/3 am naechsten Kandidaten |
+
+### 9.7 Tests Nachbesserung 2 (gezielt, keine volle Suite)
+* `unit_r37_beretta` Teil J (checks 100-109, 9.3) + Pruefung 70 ohne 0x1a: gegen den NB1-Code 6 FAIL, mit Fix
+  `test_r37_beretta: OK` (60 x ok).
+* `integration_r37_beretta` + arm_std_w5 / arm_re15_w5: die Liste "Bild-E:Platz:dHP" im Fenster [E, E+10] muss genau
+  `0:S:-5;10:S:-246` sein (ein Treffer, Rueckzug-Ende E+10). Lauf: `[arm_std_w5]: OK — F70 Munition -3, Arm 0:5:-5;10:5:-246`,
+  `[arm_re15_w5]: OK — F70 Munition -3, Arm 0:5:-5;10:5:-246`. Am NB1-Stand lieferte derselbe Aufbau `0:5:-5;3:5:-5;6:5:-5`
+  (nb2v_arm_w5_std/_re15, Ende F86 ausserhalb des Fensters) — rot. Alle frueheren Faelle unveraendert gruen:
+  leon_re2_w5/w6/re15_w5 je `0:5:-16;3:5:-16;6:5:-16`, Browning `0:5:-16`, elza_re2_w5 `0:1:-16;3:1:-16;6:1:-16`,
+  t2b_std_w5 `0:1:-10;3:1:-10;6:1:-10`, roach_std_w5 `0:2:-14;3:2:-14;6:2:-14`.
+* Regex U2 (Regex U aus 8.6 + die Gruppen des Gitterarms/Writhers/1210 und G5, weil der Diff deren Riegel beruehrt):
+  `ctest --test-dir re15_port/build -R "^(unit_r37_beretta|unit_r36_schuss|unit_r36_schuss_kraehe|unit_r36_elza_schuss|unit_re2_hp_model|unit_re2_weapon_rows|unit_re2_baby_spider_dmg|m93r_nachladen|unit_enemy_shootable|unit_room1140_combat|unit_damage|unit_weapon_select|unit_hit_reaction|unit_re2_hit_reaction|unit_re2_hit_repeat|unit_re2_hit_repeat_crow_spider|unit_r17_munition_pin|unit_r17_waffen_loop_pin|unit_autofire_pin|unit_zombie_hit_fixes|unit_re2_zombie_hitfilter|unit_r16_trefferhoehe_pin|unit_r16_aufstehen_schuss|unit_schrot_trennung|unit_r36_blut_pin_.*|unit_dog_hit|unit_re2_dog_hitwindow|unit_writher_hit_feedback|unit_aim_all_around|unit_aim_lower_exit|unit_r35_werfer|unit_r35_werfer_kombi|unit_r36_granate|unit_r35_granate|unit_r30_granate|unit_dog_aim_band|unit_re2z_rise_hittable|unit_sca_wall_hit|unit_r35_affen_schrot|unit_maggot_ai|unit_cockroach_ai|unit_birkin_ai|unit_alligator_ai|unit_tyrant_ai|unit_maggot_bone_square|unit_re2_dog_hp_reroll|unit_maggot_zone_leap|unit_gator_sweep|unit_gator_fress|probe_p2_birkin_g5|probe_p3_birkin_rest|unit_r17_birkin_1zu1_pin|unit_r18_birkin_restluecken_pin|unit_r20_birkin_push_pin|unit_r30_birkin_frost|unit_r30_n_room5080_birkin_wand|r30_hund_hitbox_stauchung|r31_trefferboxen|unit_r34n_f_leiche_latch|unit_r35_affen_.*|unit_r36_zombieki_affen.*|unit_pri_inventar_riegel|unit_writher_ai|unit_writher_kill_flag|unit_writher_abtauchen|unit_1210_gitterhaende|unit_1210_arme|unit_1210_arme_re2|unit_r35_raeume_arme|unit_r35_karte_r1210|unit_g5_tentakel|unit_g5_morph|unit_g5_boss)$" --timeout 600 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 100`** (30.66 sec).
+* Regex X (exe-Laeufe der beruehrten Schusspfade): `ctest --test-dir re15_port/build -R "^(integration_r37_beretta|integration_r36_schuss|integration_r36_elza_schuss|integration_r35_werfer|integration_r36_granate)$" --timeout 900 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 5`** (565.64 sec; r35_werfer 132.94, r36_elza_schuss 46.44, r36_granate 91.66,
+  r36_schuss 127.78, r37_beretta 166.79). Keine Fenster-Flatterer.
+
+### 9.8 OFFEN (Nachbesserung 2)
+* Nichts aus N1. G5 0x36 nicht an der exe gemessen (Boss-Kampf ROOM5090); Lage im Code belegt (9.4: der Schuss stempelt 0,
+  das Gate greift nur waehrend einer laufenden GL-Sperre — dieselbe Regel wie das G5-Modul selbst), unit_g5_* gruen.
+* Weiter bewusst NICHT gebaut (wie §6/8.7): RE2-Abbruch beim Loslassen (@0x80048928-30), Einzelschuss-Bit 126 (@0x800488e4).
+* Messlogs `mess_r37g/` unversioniert (Zahlen in 9.1/9.5). Das EM2D-Overlay fuer die Disassembly liegt unter
+  `build/extracted/re2_ems/` (gitignored, mit `python re15_port/tools/re2_ems_cut.py 0x2D` reproduzierbar).
+
+### 9.9 Fuer den Nutzer (Nachbesserung 2)
+* Die Gitterhaende in ROOM1210/1211 (RE2-Arme): ein Feuerstoss trifft den Arm, den er erwischt, EINMAL — wie in RE2, wo der
+  getroffene Arm sich zurueckzieht und bis zum Wieder-Auftauchen kein Ziel ist. Die Kugeln 2/3 fliegen weiter und treffen
+  den naechsten Gegner in der Schusslinie. Vorher blieben alle drei Kugeln am ohnehin zurueckweichenden Arm haengen
+  (Schussverschwendung, drei Schmerzlaute, verlaengerter Rueckzug).
+* Alle anderen Gegner wie in Nachbesserung 1: drei Treffer je Feuerstoss (Zombie, Hund, Spinne, Gorilla, Kakerlake, 0x2b,
+  Birkin, Alligator); die Kraehe stirbt an der ersten Kugel.
+* Keine neuen Assets (die Sonde liest das vorhandene `shared_assets/RE2/CDEMD0.EMS`), keine Sprachdateien, keine
+  Bedienaenderung.
