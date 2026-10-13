@@ -15,9 +15,11 @@ Stand: 2026-10-12, Baum `.claude/worktrees/r37_elzaems` (Zweig `r37/elzaems`, Ba
 - [x] Schritt 0: Pflichtlektuere (AUFTRAG, VERTRAG, K_roy, K_abnahme_0, J_bissarm via `git show r37/bissarm:`)
 - [x] Schritt 1: Zensus CDEMD0 gegen CDEMD1 je Typ/dir-Eintrag + Vorkommen in Elza-Raeumen + Port-Lesepfade (§1)
 - [x] Schritt 2: Original messen (Nutzer-Spielstaende + eigene GDB-Laeufe; Elza-Bit = Skript-Flag (1,0), §2)
-- [ ] Schritt 3: Bauen (Weiche fuer alle Typen)
-- [ ] Schritt 4: Messung nachher (exe, Framedumps)
-- [ ] Schritt 5: Riegel probes/r37_elzaems.cmake
+- [x] Schritt 3: Bauen (Weiche fuer alle Typen, §4)
+- [x] Schritt 4: Messung nachher (exe, Framedumps, §5)
+- [x] Schritt 5: Riegel probes/r37_elzaems.cmake (§7)
+- [x] Schritt 6 (Fortsetzung 2026-10-13, nach zwei Limit-Abbruechen): Zombie-Griff an Elza mit RE1.5-KI, Kraehe,
+      0x27, 0x42 in 11B1, Birkin 5091, RE2-KI-Standard, Wechselwirkung J/H/L (§6), gezielte Tests (§7)
 
 ## 1. Zensus (Schritt 1)
 
@@ -221,14 +223,114 @@ Bilder (Original-Endstand gegen Port, gleicher Raum):
   Form wie das Original. (Leon 5080 laedt denselben Blob, crc 1145F206.)
 * Elza 3071/50F1: unveraendert erste Form (Original g1/g3: CDEMD0) — vorher wie nachher.
 
-## Tests
+## 6. Die uebrigen Punkte des Auftrags (Fortsetzung 2026-10-13)
 
-(folgt)
+Stand vorher fuer alle exe-Vergleiche dieses Abschnitts: die gesicherte exe des Baus 99b4b13f (md5 7f9af479, §3) als
+Messkopie neben der exe; nachher: Bau dieses Zweigs. Spielstand per probe_r36_elza_karte + CONTINUE (Lade-Weg des
+Spiels), RE15_AI_FLAVOR=re15 wo die RE1.5-KI verlangt ist, RE15_ANIM_TRACE (anim_select_common.c: je aufgeloester
+Pose Bild, Slot, Typ, Clip, Bildzahl des Clips = das, was gezeichnet wird).
 
-## OFFEN
+### 6.1 Zombie-Griff an Elza mit RE1.5-KI — die Hand liegt auf IHRER Schulter
+* **Vorher** (J_bissarm.md 2.3 / OFFEN 2): der RE1.5-Flavor gab Elzas Zombies Leons CDEMD0-Bank; die Zombie-Hand lag
+  229..284 ueber ihrer Schulter.
+* **Original:** FUN_80022300 laedt Elzas Zombie aus Datei 0x27 (`ori v0,zero,0x27` @0x800223ac, kein Typ-Test, §1.1);
+  gemessen g1: Elza ROOM1101 Typ 0x10, Blob im RAM == CDEMD1 (§2.2). CDEMD0/CDEMD1 unterscheiden sich bei 0x10-0x16
+  GENAU in der Aktions-Bank dir3/dir4 (Griff-Clips) und der Opfer-Bank dir5/dir6 (n1_zensus). Griff = RE1.5
+  FUN_80102548, Biss-Schleife +0x6 == 3 @0x801027dc (J 2.3).
+* **Nachher, Sonde** `unit_r37_elzaems_griff` (Aufbau der J-Sonde re15_kontakt: ROOM1140, Opfer (-1000,-19600), Greifer
+  900 davor/dahinter, Hand 10/13 gegen Schulter 12/9 des Opfer-Skeletts PL04.EMR bzw. PL00.EMR mit den Keyframes der
+  Opfer-Bank wie main.c s_victim_skel) — EIN Unterschied zu J: die Bank kommt aus der Port-Weiche
+  (re15_ems_archiv_fuer_typ nach dem Raum-Init, Blob per TOC wie roy_pc.c), nicht aus einer fest gewaehlten Datei:
 
-(folgt)
+| Lauf (101 Biss-Bilder je Zeile) | Bank | vorn Hand10-S12 / Hand13-S9 | hinten Y |
+|---|---|---|---|
+| Elza, Port-Weiche (NACHHER) | CDEMD1 | (-31,-65,-181) / (40,-20,22) | 0 / -30 |
+| Elza, Leons Bank erzwungen (Stand VORHER) | CDEMD0 | (-16,-229,-77) / (-22,-284,20) | -255 / -255 |
+| Leon, Port-Weiche | CDEMD0 | (-64,-127,-2) / (-63,-165,-56) | -138 / -133 |
+| Leon, CDEMD0 fest (Stand vorher) | CDEMD0 | bitgleich zur Zeile darueber | bitgleich |
 
-## Fuer den Nutzer
+  Die Zahlen sind Wert fuer Wert die der J-Tabelle (J 2.3, gemessen im Zweig r37/bissarm mit fest gewaehlter Datei):
+  die Port-Weiche liefert Elza jetzt genau die Bank, mit der J "Original Elza" gemessen hat. Y negativ = oben: die
+  Hand liegt 0..65 ueber IHRER Schulter (vorher 229..284), Leon unveraendert.
+* **Nachher, exe** (`integration_r37_elzaems_elza1181griff`; Elza ROOM1181 (-3758,-7436) Blick 2048, ein Zombie
+  (-3758,-8936) greift von vorn, RE1.5-KI; Belege N_belege/port/{vorher,nachher}_griff1181.txt):
 
-(folgt)
+| | vorher (99b4b13f) | nachher |
+|---|---|---|
+| Lader | `[enemy] EM10 loaded` (CDEMD0-Kette) | `[elzaems] Typ 0x10 aus EMD/CDEMD1.EMS Sektor 0 (214816 B) crc AE292DA8` |
+| Elza im Griff: Opfer-Clip 1 / 6 (Bildzahl) | 26 / 65 | **25 / 70** (= CDEMD1 dir5/dir6) |
+| Greifer: Aktions-Clip 1 / 9 | 26 / 65 | **25 / 70** (= CDEMD1 dir3/dir4) |
+
+  Bild `N_belege/n6_griff1181_elza_vorher_nachher.png` (RE15_FRAMEDUMP, WINDOW_SCALE=1, Cut 1 nur fuer die Aufnahme
+  erzwungen, Bilder 70/100/130 je vorher|nachher): vorher ragen Kopf und Arme des Zombies ueber Elzas Kopf, nachher
+  liegt sein Arm auf ihrer Schulter. Urteilstragend ist die Sonde (Zahlen), das Bild zeigt dieselbe Lage.
+
+### 6.2 Kraehe 0x21 — Opfer-Bank (Elza ROOM10C1)
+* Original: Lader ohne Typ-Test (§1.1); Leon-Gegenstueck am Original: Nutzer-Stand _9.bak ROOM10C0, 3x 0x21, Opfer-Bank
+  == CDEMD0 (§2.1). CDEMD1-Kraehe: Opfer-Clip 1 36 -> 31, Clip 2 20 -> 30 Bilder (n1_zensus, unit_r37_elzaems_toc).
+* exe (Elza (3000,0) zwischen den drei Kraehen, RE1.5-KI, 900 Bilder; N_belege/port/{vorher,nachher}_kraehe10c1.txt):
+  vorher Spieler-Opfer-Clip 1 = 36 / Clip 2 = 20 Bilder (Leon-Bank), nachher **31 / 30**, Lader
+  `[elzaems] Typ 0x21 aus EMD/CDEMD1.EMS Sektor 760 (70364 B) crc 921598F6`. Leon ROOM10C0: 36 / 20, keine Elza-Zeile
+  (`integration_r37_elzaems_leon10c0kraehe`). Die Opfer-FSM liest die Bildzahl aus der Bank des Greifers
+  (enemy_ai_common.c ~Z.1720/1749, `vb->anim_victim.clips[clip].frame_count`), keine feste Tabelle.
+
+### 6.3 0x27 — Opfer-Bank (Elza ROOM1141)
+* Original: Nutzer-Stand _7.bak ROOM1141 Entity 1/2 Typ 0x27, Opfer-Bank (EDD5/EMR6) == CDEMD1 (§2.1).
+* Spawn: ROOM1141 sub00 `Ifel_ck` + Ck(4,242) @0x00B4A -> Sce_em_set 0x27 @0x00B54/@0x00B68 (rdt-Dump).
+* exe (Karte mit Flag 4:242, `integration_r37_elzaems_elza1141`): `[elzaems] Typ 0x27 aus EMD/CDEMD1.EMS Sektor 893
+  (207236 B) crc 2A8D48B1`. Im 2600-Bilder-Lauf griffen die 0x27 mehrfach (Wurf = Opfer-Clip 1, 83 Bilder, in beiden
+  Archiven gleich); der Finisher (Sprung-Treffer B[8]: hp -= 600 @0x80119198-ac, re15_player_victim_devour
+  @0x801191c8-cc) kam nicht vor.
+* Deshalb Sonde `unit_r37_elzaems_opfer27` mit demselben Eintritt wie B[8]: der Finisher (Hook 0x8011c414,
+  engine/src/affen_11c0.c) spielt Clip 0 der Opfer-Bank (`pl->motion = 0` @0x8011c490) und meldet den Tod bei Bild
+  fc-1 (`k + 1 >= fc` @0x8011c548-50): Elza/Port-Weiche **63 Bilder, Tod bei Bild 62**; Leons Bank (Stand vorher)
+  70 / 69.
+
+### 6.4 0x42 in ROOM11B1 und ROOM3091
+* 11B1: Sce_em_set @0x01058 setzt 0x42 (wie 0x40 @0x0106C) mit Verhalten 0x40 auf (-30000,0,-30000); kein Skript des
+  Raums waehlt Gegner 1 an (Work_set nur kind 1 = Spieler und kind 2 idx 0 = 0x4B; rdt-Dump) — die Figur ist im
+  Original wie im Port nie im Bild. Geladen wird sie trotzdem: Original Nutzer-Stand _6 EMR2/EDD3/EMR4 == CDEMD1;
+  Port nachher `[elzaems] Typ 0x42 aus EMD/CDEMD1.EMS Sektor 1505 (144032 B) crc 91415329`
+  (`integration_r37_elzaems_elza11b1`; 0x40 und 0x4B ebenfalls aus CDEMD1, beide Blobs in beiden Archiven gleich).
+* 3091: Modell §5 (Sherry statt Ada). Animationen: 6.4b.
+
+@@3091@@
+
+### 6.5 Birkin 0x30 in ROOM5091
+* Port: in 5090/5091 wird 0x30 beim Sce_em_set zu 0x36 umgetypt (scd_vm.c op_sce_em_set, NUTZER-VORGABE 2026-09-12
+  "finaler Birkin aus RE2") und main.c laedt fuer 0x36/0x37 in diesen Raeumen das RE2-EM36/EM37 VOR jedem
+  RE1.5-Archiv (`[enemy] FINALER Birkin: RE2 EM036 geladen`). Messung Elza 5091 (`integration_r37_elzaems_elza5091`):
+  genau diese Zeile, keine `[elzaems] Typ 0x30/0x36`-Zeile.
+* Original: ROOM5091 hat kein Set(1,0,v) (n1_bit31_zensus) -> Bit 31 = Elza -> Datei 0x27, der CDEMD1-Birkin; Leon
+  5090 laedt per Klammer Set(1,0,1) @0x01246 denselben. Beide Szenarien zeigen im Original also dieselbe Form; der
+  Port zeigt in beiden den RE2-EM36 (Nutzer-Vorgabe, unveraendert).
+
+### 6.6 RE2-KI-Standard (Voreinstellung)
+Im RE2-Flavor zeichnet der Port 0x10-0x13/0x16/0x18/0x20/0x21/0x25 als WELLE-G-Hybrid (RE2-Clips/-Opfer-Bank,
+RE1.5-MD1/-TIM/-Bind-Lagen, fuer 0x10 zusaetzlich die Sitz-Clips 0x29/0x2A der RE1.5-Aktions-Bank). Gemessen
+(`unit_r37_elzaems_toc` 3b): Bind-Lagen + Hierarchie + MD1 aller neun Typen in beiden Archiven gleich, die Sitz-Clips
+59/28 Bilder mit bytegleichen Posen; MD1/TIM/Loco der Zombies laut n1_zensus bytegleich. => Im Standard aendert die
+Spur fuer diese neun Typen NICHTS am Bild (der Hybrid liest jetzt den CDEMD1-Blob, dessen gelesene Teile gleich sind).
+Sichtbar wird sie im Standard bei den Typen ohne RE2-Gegenstueck: Birkin 5081 (und Leon 5080), Sherry 3091, 0x27
+(Opfer-Clip 0), 0x29 (Opfer-Bank 4 -> 2 Clips), 0x2B (8 -> 11 Clips), Roy (Spur K). Im RE1.5-Flavor zusaetzlich alle
+Zombie-Griffe (6.1) und die Kraehe (6.2).
+
+### 6.7 Wechselwirkung mit J (bissarm), H (zombieaktiv), L (re2zombie)
+* **J** (r37/bissarm, nur gelesen): J OFFEN 2 ("RE1.5-Flavor Elza laedt die Leon-Bank") ist mit 6.1 geschlossen — die
+  Datei-Id-Auswahl, die J als "naechsten Weg" nannte, ist FUN_80022300 @0x80022334/@0x800223ac, nicht die PLD-Tabelle.
+  Der Opfer-Bezug in bissarm_r37.c (Schulter-Differenz Elza PL04 gegen Leon PL00, aufgetragen auf den RE2-Leon-
+  Kontaktpunkt) wirkt NUR im RE2-Griff (Handkontakt, solange 0x801025EC laeuft, Zustand 1 / +0x5 == 3); dort kommen
+  Griff- und Opfer-Clips aus RE2 (shared_assets/RE2/CDEMD0.EMS, Leon-Daten) und die Hybrid-Eingaenge sind in beiden
+  Archiven gleich (6.6) -> der Opfer-Bezug BLEIBT, unveraendert (RE2-Claire-Daten fehlen weiter, J OFFEN 3). Im
+  RE1.5-Griff laeuft J's Handkontakt nicht; dort liefert jetzt die CDEMD1-Bank die Hand auf Elzas Schulter — ohne
+  Schulter-Differenz. J's Wandklemme (Startwert/EIN Durchgang in re15_victim_place) ist bankunabhaengig; J's
+  Elza-Zahlen (J 2.3) und die Sonde 6.1 (ohne J-Code im Baum) sind wertgleich -> keine Wechselwirkung im Zahlenwert.
+* **H** (Spawn-Haken re2z_init, enemy_ai_re2_zombie.c / enemy_ai_common.c): N aendert keinen Spawn; der Merk-Haken
+  sitzt in op_sce_em_set NACH `a->type = type` und liest nur Typ und Bit.
+* **L** (RE2-Zombie-KI): RE2-Banken, kein RE1.5-Archiv -> keine Wechselwirkung (6.6).
+* Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` (2026-10-13): Code (scd_vm.c, main.c) ohne
+  Konflikt; Konflikte nur in AUFTRAG.md/VERTRAG.md (Dokument-Stand 99b4b13f gegen den neueren Orchestrator-Stand).
+* Gemeinsame Dateien dieser Spur: scd_vm.c (2 Zeilen, Merk-Haken), game_state.c (1 Zeile + 2 Kommentar, Set(1,0,v);
+  in VERTRAG 1.4 nicht namentlich gelistet, Haken-Groesse wie dort verlangt), main.c (nur Kommentar der Spur-K-Zeilen),
+  roy_r37.c/roy_pc.c (Spur-K-Dateien, laut VERTRAG 1.4 fuer N erweiterbar).
+
