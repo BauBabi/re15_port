@@ -49,9 +49,15 @@
  *     RE2-Gehirn (re15_ai_re2_for_type). Nur diese behalten ihre RE2-Regel (Zeile 4: Zombie 1 Bild, Hund/
  *     Spinne 0, Kraehe 15). Alle anderen werden in JEDEM KI-Modus wie unter RE1.5-KI behandelt: die
  *     RE1.5-Gehirne 0x23/0x27/0x29/0x2b/0x30 (der Port stempelt ihnen keine Pause, re15_re2_stun_frames
- *     `return 0`, und hat fuer sie keinen Filter), ebenso G5 0x36 (eigenes Modul, gibt Bit 0 bei Pause 0 in
- *     seinem Tick selbst frei, enemy_ai_boss_g5.c "Sperre abgelaufen") und der Gitterarm 0x1a (ein Treffer
- *     toetet, HP < 0).
+ *     `return 0`, und hat fuer sie keinen Filter) und G5 0x36 (eigenes Modul, gibt Bit 0 bei Pause 0 in
+ *     seinem Tick selbst frei, enemy_ai_boss_g5.c "Sperre abgelaufen").
+ *     Nachbesserung 2 (Abnahme 1 N1): der Riegel bleibt ausserdem stehen, solange RE2s Kugel-Gate den Gegner
+ *     sperrt — RE2-Gehirn und +0x1D3 als GANZES Byte != 0 (Resolver FUN_800410CC `lbu v0,467(s2)` /
+ *     `bne v0,zero,0x80041300` @0x80041270-78, Custom Handgun `jal 0x800410cc` @0x80048a04). Das betrifft den
+ *     Gitterarm 0x1a (RE2-EM2D-Gehirn in JEDEM KI-Modus): sein HURT setzt Bit 0x80 im Trefferbild (`ori v0,v0,0x80`
+ *     @0x80100fa8 / `sb v0,467(s0)` @0x80100fb0) und loescht es erst beim Wieder-Auftauchen (@0x801005b8/@0x8010061c).
+ *     Er stirbt NICHT am Treffer (HP 250 -> 245), sondern am Ende seines Rueckzugs (`sh -1,342` @0x80100E4C-50);
+ *     Kugel 2/3 gehen am getroffenen Arm vorbei an den naechsten Kandidaten, der Rueckzug laeuft einmal.
  *   * Schaden je Kugel (re15_damage.c): Spalte 3 der RE1.5-Zeile (Einzelschuss-Pistole) — die
  *     RE1.5-Spalte 5/6 ist der Schaden des GANZEN Feuerstosses (Zombie 0x10..0x14: 5 / 15 = 3 x 5,
  *     @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4). In den RE2-Zeilen ist Spalte 5 == Spalte 3.

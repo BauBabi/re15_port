@@ -95,9 +95,24 @@ static int re2_pausenfilter_laeuft(unsigned t)
 
 int re15_beretta_r37_re2_pause_regelt(unsigned type) { return re2_pausenfilter_laeuft(type); }
 
+/* Nachbesserung 2 (Abnahme 1 N1): sperrt RE2s Kugel-Gate diesen Gegner fuer Kugel 2/3?
+ * RE2s Kugel-Resolver FUN_800410CC (Custom Handgun `jal 0x800410cc` @0x80048a04) wirft jeden Kandidaten heraus, dessen
+ * +0x1D3 als GANZES Byte != 0 ist (`lbu v0,467(s2)` @0x80041270 / `bne v0,zero,0x80041300` @0x80041278; 0x80041300 =
+ * `j 0x800417d0` naechster Listeneintrag) — also auch mit Bit 0x80 allein. Gegner mit RE2-Gehirn fuehren das Byte im Port
+ * selbst (re2z_self1d3). Der Gitterarm 0x1A setzt es im Trefferbild: EM2D-HURT `ori v0,v0,0x80` @0x80100fa8 /
+ * `sb v0,467(s0)` @0x80100fb0 (CDEMD0_EM2D_ai1.BIN; Port arm_hurt), geloescht erst beim Wieder-Auftauchen (A0
+ * `sb zero,467(s1)` @0x801005b8 / @0x8010061c) — ein getroffener Arm nimmt Kugel 2/3 also NICHT, sie gehen an den
+ * naechsten Kandidaten. Die RE1.5-Gehirne 0x23/0x27/0x29/0x2b/0x30 tragen nach einem Schuss +0x1D3 = 0 (Stempel
+ * re15_re2_stun_frames `return 0`, kein Gehirn schreibt es) und bleiben bei drei Treffern. */
+static int re2_kugel_gate_sperrt(const re15_actor_t *e)
+{
+    return re15_ai_re2_for_type((unsigned)e->type) && e->re2z_self1d3 != 0u;
+}
+
 /* Den RE1.5-Riegel +0x93, den DIESER Feuerstoss gesetzt hat, vor Kugel 2/3 loesen — bei lebenden Gegnern,
  * fuer die KEIN RE2-Pausenfilter laeuft (dort entscheidet die RE2-Zeile 4: Zombie 1 Bild, Hund/Spinne 0,
- * Kraehe 15 — @0x800A4168 / @0x800A4460 / @0x800A4BCC / @0x800A45DC). */
+ * Kraehe 15 — @0x800A4168 / @0x800A4460 / @0x800A4BCC / @0x800A45DC) und die RE2s Kugel-Gate +0x1D3
+ * (@0x80041270-78) nicht sperrt. */
 static void riegel_loesen(void)
 {
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
@@ -105,6 +120,7 @@ static void riegel_loesen(void)
         if (!s_getroffen[s] || !e->active) continue;
         if (e->hp < 0) continue;                                   /* sterbend: Riegel bleibt (@0x80012520-2c) */
         if (re2_pausenfilter_laeuft((unsigned)e->type)) continue;  /* RE2-Pause (+0x1D3) + Filter regeln selbst */
+        if (re2_kugel_gate_sperrt(e)) continue;                    /* +0x1D3 != 0 @0x80041270-78 (Gitterarm 0x1A) */
         if (e->hit_react & 0x3u) {
             e->hit_react = (uint8_t)(e->hit_react & ~0x3u);        /* Bits 0|1 (`ori 0x1` @0x800124F0, `|= 2` @0x8001240c) */
             s_mess.riegel_geloest++;

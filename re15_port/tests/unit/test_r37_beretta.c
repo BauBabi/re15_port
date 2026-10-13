@@ -312,8 +312,9 @@ static void teil_j_gitterarm(int Z)
               "%s: Arm heraus %d, +0x1D3 vor Kugel 2 = %02x (Bit 0x80 aus arm_hurt @0x80100fa8-b0), kein Pausenfilter",
               FN[k], r.raus, r.d1d3);
         CHECK(102 + 3 * k, r.hp_e == r.hp0 - schaden && r.treffer_arm == 0 && r.hp_rest == r.hp_e
-                           && r.m.riegel_geloest == 0 && r.m.kugeln == 3,
-              "%s: EIN Treffer am Arm (hp %d -> %d, Rest %d, weitere %d), Riegel nicht geloest (%u), drei Kugeln (%u)",
+                           && r.m.riegel_geloest == 1 && r.m.kugeln == 3,
+              "%s: EIN Treffer am Arm (hp %d -> %d, Rest %d, weitere %d); geloest wird nur der Riegel des 0x2b vor "
+              "Kugel 3 (%u, erwartet 1), drei Kugeln (%u)",
               FN[k], r.hp0, r.hp_e, r.hp_rest, r.treffer_arm, r.m.riegel_geloest, r.m.kugeln);
         CHECK(103 + 3 * k, r.rz_starts == 1 && r.ende == b.ende && r.hinten == 20 && r.m.treffer == 3,
               "%s: Rueckzug EINMAL (%d x), Ende Tick %d wie Browning %d; Kugel 2/3 treffen den naechsten Kandidaten "
