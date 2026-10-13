@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-13 23:09: Integration mit Q gruen: 76/76 (r37_kistenregel, Feuerloescher, Schluessel, Elza, 1090, SCD, Flags, Itembox, Keypad/Keydoor, Story, Codepanel). G Nachbesserung #2 FERTIG (Gitterarm), Abnahme G#2 laeuft.
 * 2026-10-13 22:59: Q kistenregel Abnahme 0 BESTANDEN (Workflow fertig; 106 gezielt gruen; alle elf Faelle an der exe Kiste gegen Inventar gemessen, 20 Tabellen-Offsets in den RDTs nachgeprueft) -> INTEGRIERT (d8f96341; scd_vm.c Include beide Seiten, AUFTRAG/VERTRAG master). Bau ok, 76 gezielte Tests laufen.
 * 2026-10-13 22:57: Integration mit N gruen: 74/74 (r37_elzaems, r37_roy, r37_bissarm, r37_zombieaktiv, Elza, Birkin, Hybrid, Opfer).
 * 2026-10-13 22:52: N elzaems Abnahme 0 BESTANDEN (Workflow fertig; 116 gezielt gruen; CRC32 der geladenen Blobs = TOC; 3091 zeigt das Original-Modell 0x42 statt Ada, 5081 die zweite Birkin-Form; Leon nur 5080 geaendert wie das Original @0x742) -> INTEGRIERT (872a78cc; Konflikt nur AUFTRAG/VERTRAG -> master). Bau ok, 74 gezielte Tests laufen.
