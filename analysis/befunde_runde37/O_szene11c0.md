@@ -23,6 +23,7 @@ Zuteilung (VERTRAG.md §1.4): Spur O aendert Programm 4 (k_p_11c0) in irons_tod_
 - [x] Messung nachher (Lauf n5 = Endstand, Auswerter 0 Fehler, Vorher/Nachher-Streifen)
 - [x] Nachtrag 12: RE2-Beleg (B5), Umsetzung (Schritt 7), Messung nachher (Lauf n5)
 - [x] Tests (probes/r37_szene11c0.cmake; r35/r36-Riegel mit Beleg angepasst)
+- [x] Fortsetzung 2026-10-13: gesicherten Stand geprueft, Nachtrag-12-Riegel auf "genau eine Drehung" geschaerft, gezielter Lauf 64/64 gruen
 
 ## Messung vorher
 
@@ -257,7 +258,7 @@ Arbeitsordner `r37_szene11c0_lauf` != Target-Name; nur fopen/sscanf, kein popen)
 | Test | misst (Nutzer-Punkt) | Ergebnis |
 |---|---|---|
 | unit_r37_szene11c0_aufstellung | Peilungen 3679/1631 (re15_s11c0_gier); ROOM10D0 @0x01A96..@0x01AF6 Dir_set = Peilung auf den Partner (+-17); Ada-Record @0x01770 Gier 475 ("falsche Richtung"); Programm: Marvins Spawn-Gier und Adas Dir_set = Peilungen, kein Plc_neck vor dem INIT, kein Plc_dest m9 vor dem Lauf, ein Lauf erst 101 >= 99 Bilder nach msg 13, danach genau EINE Drehung Adas nach dem Signal (5,13), Knall nur Koepfe | gruen |
-| unit_r37_szene11c0_ablauf | Szene im Spieltakt (Raumaufbau wie das Spiel): erstes Bild einander zugewandt; im Gespraech keine Drehung (Ada 0, Marvin 0 bis F377); Marvin nur Losrennen 98.3 < 120 Grad; je Zeile Sprecher UND Zuhoerer Koerper im Kegel 0x60 + Kopf auf dem Partner/geradeaus; Knall nur Koepfe; Nachtrag 12: Ada eine Drehung < 90 Grad, bei msg 14 ihm zugewandt (40 Einheiten), Kopf-Ziel folgt ihm 99/99; Schnitt nach 1150 Cut 7 | gruen |
+| unit_r37_szene11c0_ablauf | Szene im Spieltakt (Raumaufbau wie das Spiel): erstes Bild einander zugewandt; im Gespraech keine Drehung (Ada 0, Marvin 0 bis F377); Marvin nur Losrennen 98.3 < 120 Grad; je Zeile Sprecher UND Zuhoerer Koerper im Kegel 0x60 + Kopf auf dem Partner/geradeaus; Knall nur Koepfe; Nachtrag 12: Ada genau eine Drehung < 90 Grad, nicht vor Marvins Losrennen, bei msg 14 ihm zugewandt (40 Einheiten), Kopf-Ziel folgt ihm 99/99; Schnitt nach 1150 Cut 7 | gruen |
 | integration_r37_szene11c0 | echte exe (Spielstand + CONTINUE + Tuer, ganze Kette bis 11C0 Bild 505, SOFTWARE_RENDER), debug.log: genau ein Plc_dest m9 in 11C0 (Ada, nach Marvins Lauf); Auswerter `test_r37_szene11c0 auswerten` mit dem GEZEICHNETEN Kopf (RE15_NECK_TRACE): alle Bedingungen oben, Kopf-Blick von Sprecher und Zuhoerer <= 8,4 Grad (max 6.1 Grad beim Nicken), msg 14 Blick auf den laufenden Marvin <= 1.9 Grad (`O_belege/o_integration_auswerten.txt`) | gruen (114.9 s) |
 | Gegenprobe Auswerter auf den alten Stand (Lauf "vor") | dieselben Bedingungen auf die Protokolle von v0.8.24 | 16 Fehler, genau die Nutzer-Punkte: falsche Anfangsrichtung (Gier 475), Ada 3 / Marvin 5 Drehungen im Gespraech (160 Grad), Marvin bei msg 12 98 Grad weg, bei msg 10 Kopf 35.8 Grad an Ada vorbei, Ada folgt ihm bei msg 14 nicht (`O_belege/o_vor_auswerten.txt`) |
 
@@ -277,6 +278,40 @@ Total Test time (real) = 1255.30 sec
 ```
 (darin integration_r35_cut1150 533 s, integration_r36_szene1150 114 s, integration_r37_szene11c0 115 s,
 integration_r35_cut10f0 248 s, integration_r30_irons_tisch_* , integration_r34n_g_schrift1150.)
+
+### Fortsetzung 2026-10-13 (Pruefung des gesicherten Stands nach den Limit-Abbruechen)
+Geprueft: 16 Commits seit 07bb463a, der vom Orchestrator UNGEPRUEFT gesicherte 68e4c88b (nur Kopfkommentar von
+test_r37_szene11c0.c + Abschlussmeldung von test_r37_szene11c0.cmake) und der Code-Diff gegen master (Spielcode nur
+k_p_11c0 + 2 Haken-Zeilen in irons_tod_1150.c und die neue szene11c0_r37.c; andere Programme und k_msg28 unberuehrt).
+Der Bau war aktuell: `local_build.sh build` baute nur den geaenderten Test neu, die exe blieb (Stand = c44d3df2-Code).
+Keine Messung wiederholt; die Zahlen oben gelten.
+
+Abdeckung des Wortlauts durch die Riegel (Nachtrag 11 Lesart a-d, Nachtrag 12):
+| Punkt | Riegel (Bedingung) |
+|---|---|
+| (a) "erst schauen sie komplett in die falsche Richtung" | aufstellung: Marvins Spawn-Gier und Adas Dir_set = Peilungen 1631/3679, Adas Record 475 als Gegenstueck; ablauf + auswerten: erstes Bild beide im Kegel 0x60 auf den Partner |
+| (b) "drehen sie sich einmal um 180 grad um" | aufstellung: kein Plc_dest Modus 9 vor Marvins Lauf, Knall = Plc_neck m1 zur Tuer; ablauf + auswerten: keine Koerperdrehung Marvins vor dem Ende seiner letzten Zeile, groesste Einzeldrehung < 120 Grad (gemessen 98,3 = Losrennen zur Tuer hinter der Kamera), Knall nur Koepfe |
+| (c) "dann dreht sich Ada noch mal um 90 grad um" | ablauf + auswerten: Ada keine Drehung bis Marvins letzte Zeile endet; danach genau eine (< 90 Grad, gemessen 58,9) |
+| (d) "Marvin spricht, schaut aber nicht zu Ada" | ablauf + auswerten: je Zeile msg 10..13 Sprecher UND Zuhoerer Koerper im Kegel 0x60 + Kopf auf dem Partner/geradeaus; auswerten zusaetzlich der GEZEICHNETE Kopf-Blick <= 8,4 Grad (max 6,1 Grad beim Nicken); unit_r36_szene1150_dialog11c0 msg 12 Marvin Koerper + Kopf zu Ada |
+| Nachtrag 12 "dem weglaufenden Marvin nach drehen" | aufstellung: genau ein Plc_dest m9 nach dem Lauf, Ada, nach dem Signal (5,13); ablauf + auswerten: genau EINE Drehung Adas, Beginn nicht vor Marvins Drehung zum Losrennen, im ersten Bild von msg 14 im Kegel 0x60 neben ihm, Kopf-Ziel folgt ihm 99/99, gezeichneter Blick max 1,9 Grad; integration_r36_szene1150 K2: genau ein m9 in 11C0 und erst nach Marvins m5 |
+
+**Befund der Pruefung (behoben, Commit 2479bf01):** Der neue Kopfkommentar behauptete "Ada dreht sich dem laufenden Marvin
+EINMAL nach", der Code pruefte nur `na <= 1` ("hoechstens eine") — "Ada bleibt stehen" waere nur ueber die Kegel-
+Bedingung bei msg 14 aufgefallen. Jetzt `na == 1` und `DA[0].f0 >= DM[0].f0` (Adas Drehung beginnt nicht vor Marvins
+Drehung zum Losrennen). Nachgerechnet auf alle drei Integrationslaeufe des Endstands (lauf_3403fc15, lauf_88939b9d,
+lauf_cb633921): `Nachtrag 12: genau EINE Drehung Adas, dem laufenden Marvin nach (ab F397, Marvin dreht zum Losrennen
+ab F385), 670 Einheiten = 58.9 Grad < 90 Grad (1 Abschnitte)`, 0 Fehler; Spieltakt (ablauf): ab F391 / Marvin ab F379,
+58,9 Grad, 0 Fehler. Gegenprobe alter Stand unveraendert 16 Fehler (die Bedingung schlug dort schon mit 3 Abschnitten
+fehl). Dazu Kommentar-Kopf von test_r36_szene1150.cmake K2 an den Nachtrag-12-Stand angeglichen (nur `#`-Zeilen).
+
+Gezielter Lauf auf dem Stand 2479bf01 (derselbe Ausdruck wie oben, KEINE volle Suite):
+```
+ctest --test-dir re15_port/build -R '^unit_r37_szene11c0_|^integration_r37_szene11c0$|^unit_r35_cut1150_|^integration_r35_cut1150$|^unit_r36_szene1150_|^integration_r36_szene1150$|^unit_irons_|^unit_room1150_itembox$|^unit_sicherung_1150$|^unit_r30_irons|^integration_r30_irons|^unit_montage_fx$|^unit_marvin_|^unit_neck_headlook$|^unit_r35_affen_ada$|^unit_r35_affen_szene$|^unit_r36_karte_tuer11c0$|^unit_r36_szenenleon_irons$|^unit_r36_elza_irons$|^integration_r36_elza_irons$|^integration_r34n_g_schrift1150$|^unit_door_seq$|^integration_room_transition$|^unit_r35_cut10f0_|^integration_r35_cut10f0$|^unit_1030_|^unit_room1040_switch$|^unit_cam_1030_reentry$|^probe_r16_tuer1040' --timeout 900 --output-on-failure
+100% tests passed, 0 tests failed out of 64
+Total Test time (real) = 1257.53 sec
+```
+(darin integration_r35_cut1150 531,5 s, integration_r36_szene1150 116,0 s, unit_r36_szene1150_dialog11c0 0,05 s,
+integration_r37_szene11c0 115,4 s, integration_r35_cut10f0 241,9 s.)
 
 ## OFFEN
 

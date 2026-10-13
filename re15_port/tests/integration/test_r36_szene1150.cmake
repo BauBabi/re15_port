@@ -8,8 +8,9 @@
 #   K3  Ereignisfolge (debug.log `[irons-tod] Folge #n <K|S|C> ROOMxxxx T<takt> ...`): je Montage-Raum der Knall VOR
 #       dem Spawn, der Spawn im Raumaufbau VOR dem ersten Kamerabild; state.log: das ERSTE Bild jedes Montage-Raums
 #       zeigt die Zombies schon (Eintraege `[slot t=..` in der ersten Zeile des Raumbesuchs)
-#   K2  ROOM11C0: Plc_neck Modus 1 Ada -> Marvin und Marvin -> Ada (RE15_NECK_LOG); seit Runde 37 Spur O KEIN Plc_dest
-#       Modus 9 mehr (einander zugewandt ab dem Raumaufbau), Marvins Lauf Modus 5 (debug.log `[scd] Plc_dest(slot=..`)
+#   K2  ROOM11C0: Plc_neck Modus 1 Ada -> Marvin und Marvin -> Ada (RE15_NECK_LOG); seit Runde 37 Spur O im Gespraech
+#       KEIN Plc_dest Modus 9 mehr (einander zugewandt ab dem Raumaufbau): Marvins Lauf Modus 5, danach genau EIN
+#       Modus 9 = Ada dreht sich dem laufenden Marvin nach (Nachtrag 12) (debug.log `[scd] Plc_dest(slot=..`)
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r35_cut1150_karte> -DWORKDIR=<dir> -P test_r36_szene1150.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
