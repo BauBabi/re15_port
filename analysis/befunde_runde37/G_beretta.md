@@ -222,14 +222,20 @@ Auswertung aller Messlaeufe (vorher/nachher, Leon/Elza): `G_beretta_mess/auswert
   Blut je Kugel, im Takt der drei Muendungsblitze. Ein Feuerstoss auf einen Zombie macht jetzt 3 x 16 = 48 statt 16.
 * Das Original (RE1.5-Prototyp) trifft je Feuerstoss nur einmal — am Original gemessen. Die Umsetzung folgt RE2 (Custom
   Handgun: je Kugel ein Treffer, Schaden je Kugel = Pistolenschuss).
-* Mit RE2-KI gilt RE2s Trefferpause je Gegner (RE2-Zeile 4): Zombie 1 Bild (gemessen: alle drei Kugeln treffen), Hund und
-  Spinne 0 Bilder (Tabelle @0x800A4424/@0x800A4B90), KRAEHE 15 Bilder (@0x800A45A0) — eine Kraehe nimmt je Feuerstoss nur die
-  erste Kugel, die Kugeln 2/3 gehen an das naechste Ziel (wie in RE2 Retail). Mit RE1.5-KI trifft jede Kugel; ein
-  getroffener Zombie, der zu Boden geht, ist mit geradem Zielen kein Ziel mehr, dann trifft die naechste Kugel den naechsten.
+* Mit RE2-KI (= Standard) gilt RE2s Trefferpause nur fuer die Gegner, die der Port mit RE2-Gehirn UND RE2-Pausenfilter fuehrt
+  (RE2-Zeile 4): Zombies 1 Bild (gemessen: alle drei Kugeln treffen), Hund und Spinne 0 Bilder (@0x800A4460/@0x800A4BCC),
+  KRAEHE 15 Bilder (@0x800A45DC) — eine Kraehe nimmt je Feuerstoss nur die erste Kugel und stirbt daran (10 HP, 15 Schaden).
+  Alle anderen Gegner (Gorilla, Kakerlake, Alligator, Tyrant 0x2b, Birkin) laufen auch unter RE2-KI auf ihrem RE1.5-Gehirn
+  und nehmen seit Nachbesserung 1 jede Kugel (gemessen 0x2b ROOM5040, Kakerlake ROOM3040, Birkin ROOM5080, Abschnitt 8.4).
+  Mit RE1.5-KI trifft jede Kugel; ein getroffener Zombie, der zu Boden geht, ist mit geradem Zielen kein Ziel mehr, dann
+  trifft die naechste Kugel den naechsten.
 * Schaden je Kugel = ein Pistolenschuss (Browning/SIG-Spalte), wie RE2 es fuer die Custom Handgun festlegt. Gegen Zombies
   (RE2-Schadenszeile, beide KI-Modi) sind das 16 je Kugel. Gegen Gegner mit RE1.5-Schadenszeile (Gorilla, Kakerlake,
-  Alligator, Tyrant, Birkin; Hund/Kraehe/Spinne nur unter RE1.5-KI) ist der Stoss damit 3 x Browning — die RE1.5-Tabelle
-  fuehrte fuer M93R/Glock den Wert des GANZEN Stosses (z.B. Gorilla 28 = 2,3 x 12); 3 x 28 haette den Stoss verdreifacht.
+  Alligator, Tyrant, Birkin; Hund/Kraehe/Spinne nur unter RE1.5-KI) ist der Stoss damit 3 x Browning — in BEIDEN KI-Modi
+  (bis Nachbesserung 1 war es unter der Standard-KI nur 1 x Browning, Abnahme 0 M1/M2). Die RE1.5-Tabelle fuehrte fuer
+  M93R/Glock den Wert des GANZEN Stosses; der neue Stoss ist nie schwaecher als dieser alte Einzeltreffer: Kakerlake
+  42 statt 25, Tyrant 0x2b 30 statt 20, Gorilla 36 statt 28, Birkin 45 statt 28, Alligator 21 = 21 (Spalte 3 / Spalte 5
+  @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4).
 * Ist nur noch 1 oder 2 Schuss im Magazin, gibt es nur 1 bzw. 2 Treffer (drei Blitze zeigt das Original trotzdem).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung.
 
@@ -271,3 +277,32 @@ Gorilla an der exe nicht per Sprung messbar (11C0 haelt den Spieler fest); 0x27/
   der Nutzer-Wortlaut ("die Gegner mehrfach getroffen") verlangt dort drei Treffer.
 => Ursache M1: das Kriterium in riegel_loesen() war der FLAVOR (`re15_ai_re2_for_type`), nicht "fuer diesen Aktor gibt ein
 RE2-Pausenfilter den Riegel frei". Im RE2-Flavor fiel damit jeder RE1.5-Gehirn-Gegner durch beide Raster.
+
+### 8.3 Umsetzung (Commit "NB1 M1")
+* `engine/src/beretta_r37.c`: neues Kriterium `re2_pausenfilter_laeuft(t)` = `re15_ai_re2_for_type(t)` UND
+  (`re15_re2z_owns_type(t)` ODER t in {0x20, 0x21, 0x25, 0x26}) — der Spiegel der Weiche im Bild-Nachlauf von game_step
+  (game_step_common.c, Block "MIXED (2026-08-23)") und des Typ-Tors von re15_re2_pause_filter_apply (re15_damage.c).
+  riegel_loesen() ueberspringt nur noch diese Aktoren; alle anderen behandelt der Feuerstoss in JEDEM KI-Modus wie unter
+  RE1.5-KI (Riegel +0x93 Bits 0|1 `ori 0x1` @0x800124F0 / `|= 2` @0x8001240c vor Kugel 2/3 loesen, solange HP >= 0).
+  Exportiert fuer Tests: `re15_beretta_r37_re2_pause_regelt(type)`.
+* Keine neue Konstante; die Typ-Liste ist die vorhandene Filter-Weiche des Ports, die Pausen der RE2-Zeile 4 stehen als
+  Beleg im Kommentar (@0x800A4168 Zombie 1, @0x800A4460 Hund 0, @0x800A4BCC Spinne 0, @0x800A45DC Kraehe 15).
+* Unveraendert: Zombies unter RE2-KI (RE2-Filter, Pause 1), Hund/Kraehe/Spinne unter RE2-KI (RE2-Pause), alles unter
+  RE1.5-KI und MIXED (dort ist nur 0x20 RE2 — wie vorher), Kugel-Takt, Patronen, Abbruch, Schaden je Kugel (Spalte 3).
+* M2 braucht keine eigene Aenderung: Spalte 3 je Kugel war richtig, falsch war, dass Kugel 2/3 nicht trafen. Mit drei
+  Treffern ist der Stoss 3 x Spalte 3 >= der alte Einzeltreffer Spalte 5 fuer jede betroffene Zeile (Alligator gleich).
+* M4: `include/re15_beretta_r37.h` (PORT-ABBILDUNG, Riegel-Absatz) und der Kommentar an riegel_loesen() sagen jetzt
+  "massgeblich ist der FILTER, nicht der KI-Modus"; Dossier §7 richtiggestellt (3 x Browning in BEIDEN KI-Modi erst seit
+  Nachbesserung 1, Vergleichswerte je Gegner).
+
+### 8.4 Messung nachher (exe nach "NB1 M1", Standard-KI ohne RE15_AI_FLAVOR, gleicher Aufbau wie 8.1)
+| Lauf | Ziel | Munition | Treffer (Bild, dHP) | Stoss | vorher (8.1 / Abnahme-Basis) |
+|---|---|---|---|---|---|
+| nb1n_t2b_def (M93R) | ROOM5040 Platz 1 Typ 0x2b | F61 15 -> 12 | F61 -10, F64 -10, F67 -10 (je st 2/5) | **30** | Spur 10, Basis 20 |
+| nb1n_t2b_w6_def (Glock 18) | dito | F61 15 -> 12 | F61/F64/F67 je -10 (st 2/6) | **30** | — |
+| nb1n_roach_def (M93R) | ROOM3040 Platz 2 Typ 0x29 | F61 15 -> 12 | F61 -14, F64 -14, F67 -14 | **42** | Spur 14, Basis 25 |
+| nb1n_roach_w3_def (Browning, Gegenprobe) | dito | F61 15 -> 14 | F61 -14 (einer) | 14 | unveraendert |
+| nb1n_birk_def (M93R) | ROOM5080 Platz 1 Typ 0x30 (hp 300), Leon (-18100,1700) Blick -z | F61 15 -> 12 | F61 -15, F64 -15, F67 -15 | **45** | Tabelle: Basis 28 (1 x Spalte 5) |
+Blitze je Lauf F61/F64/F67 (wf SPAWN 2/0), Reaktion je Treffer (Zustand 2, +0x5 = Waffe). Ein Blut-/FX-Protokoll schreibt die
+exe in 5040/3040/5080 weder vorher noch nachher (fx.log = gezeichnete Partikel; das RE1.5-Blut dieser Gehirne ist im Port
+nicht gezeichnet, z.B. Tyrant "blood FX 0x80019700 @0x80114998 — render-side, OPEN") — keine Aenderung dieser Spur.
