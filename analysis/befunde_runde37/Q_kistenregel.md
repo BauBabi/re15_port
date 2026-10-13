@@ -212,6 +212,37 @@ Gegenstand" in 3.1) — die Regel schickt das Skript genau dorthin. Folge: KEIN 
   disjunkt -> im Benutzungs-Raum aendert sich der Besitz nur durch die Benutzung selbst; die Auswertung beim Raumstart
   (main00/sub00) ist darum gleichwertig zur Auswertung beim Druck.
 
+### 4.3 Gegenprobe "Regel aus" = Verhalten VORHER fuer alle elf Faelle (2026-10-13)
+Haken-Zeile in scd_vm.c op_ck voruebergehend durch `(void)0;` ersetzt, `local_build.sh build`, dieselben Riegel:
+* `test_r37_kistenregel raumstart`: **58 Pruefungen, 16 Fehler** — fuer JEDEN Fall legt der Raumstart mit dem Gegenstand
+  in der Kiste den BENUTZUNGS-Platz an (Auszug woertlich):
+  `FAIL: K1 1090 KISTE: Platz 2 = EVENT ev 6 (soll Raumtext msg 7), Regel griff 0 x`,
+  `FAIL: K5 11E0 KISTE: Platz 6 = EVENT ev 26 (soll Raumtext msg 10)`, `FAIL: K6 1100 KISTE: Platz 2 = EVENT ev 7
+  (soll Raumtext msg 1)`, `FAIL: K7 3010 KISTE: Platz 6 = EVENT ev 2 (soll Raumtext msg 0)`, `FAIL: K8 3050 KISTE:
+  Platz 10 = EVENT ev 10 (soll Raumtext msg 3)`, `FAIL: K9 4000 KISTE: Marker Slot 2 weg (Aot_reset @0x01140), ist
+  MARKER(sce5)`, `FAIL: K10 4030 KISTE: kein Marker Slot 5, ist MARKER(sce5)`, `FAIL: K11 1211 KISTE: kein
+  Befreiungs-Platz Slot 6, ist AUTO` (dazu die Elza-Raeume 11E1/1101/3011/3051/4031 und die Raumtext-Zeilen 4000/4030/1211).
+* `test_r37_kistenregel ablauf`: **23 Pruefungen, 12 Fehler** — Druck auf den Platz mit dem Gegenstand in der Kiste:
+  `FAIL: K1 1090 KISTE: Druck auf Platz 2 -> Nachrichten [7,8,9,3,4]` (Frage, Loeschen, Rettungsszene),
+  `FAIL: K2 10D0 KISTE: ... [7,9,0]` ("You've used the Blue Keycard."), dito 10D1, 1230, 1231, 11E1 (K4),
+  `FAIL: K5 11E1 KISTE: ... [10,11]`, `FAIL: K6 1100 KISTE: ... [1,3]`, `FAIL: K7 3010 KISTE: ... [1]`,
+  `FAIL: K8 3050 KISTE: ... [3,4]`, `FAIL: K11 1211 KISTE: ... [-]` (Befreiung statt Raumtext),
+  `FAIL: K1 1090 KISTE: Feuer brennt weiter ((3,0x81)=1, (3,0x84)=0)`.
+* `test_r37_kistenregel spielstand`: **4 Pruefungen, 1 Fehler** (`nach dem Laden: Platz 2 = msg 7 ..., ist EVENT ev 6`).
+* `tabelle`: 54/0 (prueft nur Tabelle gegen RDT-Bytes, haengt nicht am Haken).
+* `integration_r37_kistenregel` an der exe desselben Gegenprobe-Baus (`ctest -R "^integration_r37_kistenregel$" -V`,
+  Laeufe `lauf_509d4551_*`): `0% tests passed, 1 tests failed out of 1`; woertlich u.a.
+  `FAIL A: unerwartet 'id=8 "Will you use the Fire Extinguisher?"'`, `FAIL A: unerwartet 'id=9 "You've used the Fire
+  Extinguisher."'`, `FAIL I: unerwartet 'id=8 ...'` / `'id=9 ...'` (ECHTE Box ROOM1150: debug.log
+  `[msg] room=1150 id=3 ITEMBOX (box screen, message suppressed)`, `[debug-menu] AUTO-JUMP -> ROOM1090 (Frame 330)`,
+  `[msgtext] room=1090 id=7 ...`, `id=8 "Will you use the Fire Extinguisher?"`, `id=9 "You've used the Fire
+  Extinguisher."`), `FAIL C: unerwartet 'id=9 "You've used the Blue Keycard."'`, `FAIL E: unerwartet 'id=9 "You've used
+  the Yellow Keycard."'`, `FAIL F: fehlt 'id=10 "It's locked.It seems that there is someone inside..."'` (Platz 8 leer,
+  statt dessen der Befreiungs-Platz), `FAIL G: unerwartet 'id=1 "You've used the Green Keycard."'`, `FAIL H: fehlt
+  'id=0 "Main Fuse"'`; die Gegenproben B/D (Gegenstand im Inventar) sind dort wie mit Regel gruen.
+Mit dem Haken (Endstand): alle vier Teile 0 Fehler, Integrationsriegel gruen (Abschnitte 5/6). Die Riegel messen also
+die Regel selbst. Danach scd_vm.c per `git checkout` zurueck, neu gebaut (`LOCAL-BUILD-OK (build)`).
+
 ## 5. Messung nachher
 (laufend)
 
