@@ -68,6 +68,10 @@ haben eines). Leons Loescher haengt nicht mehr im Spind von ROOM1000 ("Nothing u
 Wand in ROOM1050 rechts der Notausgangstuer nach 1090. Bei Elza liegt in ROOM1091 ein leerer Loescher am Boden. Bei Leon
 liegt er in 1090 erst nach dem Loeschen und nur, wenn Sie an der Wegwerf-Frage "Yes" waehlen; bei "No" behaelt Leon
 ihn als "Empty Fire Extinguisher" (auch im Spielstand, auch wenn er ihn in die Kiste legt).
+**Gegenstaende aus der Kiste** (Spur Q). Wie in RE2 benutzen Leon und Elza einen Gegenstand nur noch, wenn sie ihn
+tragen. Bisher genuegte es an elf Stellen, ihn irgendwann aufgehoben zu haben - mit der Kiste liess sich das
+ausnutzen: liegt der Loescher in der Kiste, sagt Leon in 1090 jetzt nur "I must hurry up..."; Kartenleser,
+Sicherungskasten und die uebrigen Stellen antworten ohne den Gegenstand mit ihrem Original-Text.
 
 **Item-Kiste** (Spur M). Beim Scrollen liegen die Eintraege nicht mehr ueber dem Rahmen: der Rahmen wird wie in RE2
 darueber gezeichnet, die Zeilen verschwinden darunter. Die Symbole stehen jetzt buendig am rechten Rand der Liste, kein
@@ -103,8 +107,6 @@ spricht, sieht den anderen an - auch Marvin bei allen drei Zeilen. Er dreht sich
 * **Zombie-Biss:** Beim Kriecher-Griff an der duennen Wand in ROOM1220 kann Leon in einem Bild durch die Wand
   geschoben werden (schon vorher so; ob RE2 das ebenso tut, ist noch nicht belegt). Im Griff ist Leons Waffe
   ausgeblendet, RE2 zeigt sie.
-* **Feuerloescher:** Legt Leon den Loescher vor dem Loeschen in die Kiste, kann er das Feuer trotzdem loeschen
-  (das Original prueft nur, ob er ihn je aufgehoben hat) - wird am Samstag wie RE2 an den Besitz gebunden (Spur Q).
 
 ## Zu entscheiden
 
