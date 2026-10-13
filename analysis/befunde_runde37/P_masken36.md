@@ -335,7 +335,8 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
 7. Die Generator-Masken selbst (Tiefenband 0.90, Bodenflaechen in der Auswahl) bleiben unveraendert (Vertrag: MASKS/*
    nicht umschreiben). Ein Neubau der Stages 3..6 aus Freistellungen wie in STAGE1 waere der Weg zu vollstaendiger und
    genauer Verdeckung — eigener Auftrag.
-8. **Stage 5: HINTER >= 60 % nur in ROOM5020.** Der Szenenfinder findet in den anderen Stage-5-Raeumen nur Teilverdeckungen
+8. (NB1: ROOM5050 Cut 1 verliert 7 weitere Rechtecke, h5050c1 an der exe 421 -> 52 von 5074, s. NB1.4.)
+   **Stage 5: HINTER >= 60 % nur in ROOM5020.** Der Szenenfinder findet in den anderen Stage-5-Raeumen nur Teilverdeckungen
    (5100 C7 38/42 %, 5090 C14 27/33 %, 5050 C1 8/9 %, an der exe gemessen) - die Generator-Masken decken dort nur die
    unteren Teile der Objekte. Riegel Stage 5 = ROOM5020; die anderen Raeume sind gemessen (§4.2), nicht verriegelt.
 
@@ -352,6 +353,12 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
 - Stellen, an denen die alten, automatisch erzeugten Masken Leon faelschlich geloescht haetten (Bodenflaechen, Wandstuecke,
   das Band knapp vor Objekten — dieselbe Art Fehler wie Ihre Meldung vom 2026-09-03 "Leon verschwindet"), bleiben aus.
   Wo Ihnen eine Verdeckung fehlt: F9-Marke wie gewohnt; der Weg dafuer ist eine Freistellung wie in STAGE1.
+- Nachbesserung 1 (nach der unabhaengigen Abnahme): Elza wurde im Sewer Control Room (ROOM30A1) VOR der Buero-Trennwand
+  bis auf einen Stiefel uebermalt - behoben (gemessen an der exe auf dem echten Weg von der Tuer: 265 -> 0 Punkte). Dabei
+  zeigte sich dieselbe Fehlerart in den schraegen Gaengen von EAST/WEST PASSAGE (ROOM4040/4080, z.B. die Wandblock-Kante
+  schnitt Leon an der Seite ab): auch dort bleiben diese Rechtecke jetzt aus. Folge: im EAST PASSAGE (ROOM4040 Cut 4/7)
+  verdecken die Wandbloecke weniger als vorher; Verdeckung HINTER der Wand im WEST PASSAGE (ROOM4080 Cut 5) bleibt (879 von
+  883 Punkten).
 - STAGE1/2 (Ihre Freistellungen) und Elzas Zwillings-Masken aus Runde 37 Spur A sind unveraendert.
 - Assets/Paket: Spur P bringt keine neuen oder geaenderten Asset-Dateien (Stage-3..6-MASKS unveraendert). Die Entfernung
   von ROOM1221.MSK / ROOM2091.MSK + _PRI00..07.TIM im Spurbaum ist be2dbd26 der Integration (inhaltsgleich uebernommen),
@@ -493,6 +500,43 @@ HINTER (17275,-12710) / DAVOR (9675,-9310) (Szenenfinder `suche 50 4`, Werte der
 
 **Aenderung 3 - Dossier:** §4.2 ("Leon und Elza verhalten sich gleich") richtiggestellt, §6 OFFEN 1 erledigt, §7 neu
 formuliert (keine "nie"-Aussage, Reste genannt).
+
+### NB1.4 Messung nachher an der exe (Stand NB1)
+
+**Je Raum/Cut, alle 216 Generator-Sektionen** (Leon 108, Elza 108; Lauf wie §4.4, Soll aus `test_r37_masken36 soll`,
+Skript Scratchpad `nb1/alle_cuts.sh` + `nb1/ac_auswerten.py`): **214 OK** (`fg_atlas=1`, `masks == Soll`, Zeile der Spur P)
+**+ 2 LEER** (ROOM3050/3051 Cut 6, alle 7 Rechtecke aus, `masks=0`) **+ 0 FALSCH**. Neu erzeugt:
+`analysis/befunde_runde37/P_masken36_alle_cuts.txt` (Kopf sagt jetzt ausdruecklich: Lader-Pruefung, keine Pruefung auf
+Fehlverdeckung). Beispiele der neuen Zeilen: ROOM30A1 Cut 0 `masks=21` (Soll 21 von 46, vorher P 46), ROOM5021 Cut 6
+`masks=22` (22 von 55), ROOM4040 Cut 4 `masks=2` (2 von 7), ROOM4081 Cut 5 `masks=5` (5 von 14).
+
+**Szenen, deren Cut eine neue/andere Zeile hat** (Zwangs-Cut, Bild 120, gleiche Lage wie §4.1/§4.2):
+
+| Szene | alt (P vor NB1): masks / H | NB1: masks / S / H |
+|---|---|---|
+| v30A0c4 DAVOR ROOM30A0 Cut 4 (-21843,17763) | 14 / 0 | 13 / 8210 / **0** |
+| v5050c0 DAVOR ROOM5050 Cut 0 (-22400,-20950) | 8 / 0 | 7 / 13552 / **0** |
+| h5050c1 HINTER ROOM5050 Cut 1 (-16400,-20850) | 35 / 421 (8 %) | 28 / 5074 / **52 (1 %)** |
+| h4080c5 / v4080c5 (Riegel Stage 4, neu) | 14 / 879 bzw. 0 | 5 / 883 / **879** bzw. 8374 / **0** |
+| Elza ROOM4081 Cut 5 HINTER / DAVOR (Riegel) | - | 627 / **621** bzw. 6165 / **0** |
+| M1-Weg Elza ROOM30A1 Cut 0 / Leon ROOM30A0 (Riegel) | 46 / 265 bzw. 21 / 0 | 21 / 464 / **0** bzw. 602 / **0** |
+
+h5050c1 verliert 7 Rechtecke von Cut 1: dieselben Rechtecke uebermalen an erreichbaren Stellen eine Figur ohne Zelle davor
+(Werkzeug `fehl 5050 1`: (-21500,-24550) 51 von 81 Figurpunkten) - nach der Regel "eine fehlende Maske laesst alles wie
+bisher, eine falsche uebermalt den Spieler" (6c29d834) bleiben sie aus; die Teilverdeckung dort war schon vorher nur 8 %
+(OFFEN 8). Die uebrigen Szenen aus §4.1/§4.2 liegen in Cuts mit unveraenderten Bits (Riegel-Werte Stage 3/5/6 unten
+bitgleich zu vorher: 1123/1234, 0/684, Elza 1158/1260, 0/1067, FREI 0/883, 0/997; 6010 820/1440, 0/9489, Elza 639/1105,
+0/7931; 5020 199/322, 0/5007, Elza 224/309, 0/5050).
+
+### NB1.5 Tests
+`ctest --test-dir re15_port/build -R "r37_masken36|r37_pri1100|pri_masken|r36_pri|pri_hashes|unit_pri_|sld_atlas|maskgrp|boot_bg_pin|unit_r35_entladen" --timeout 900 --output-on-failure -j3`
+(Ausdruck der Abnahme; KEINE volle Suite) - Ergebnis im naechsten Abschnitt nach dem Schlussbau.
+Werte aus dem Lauf: integration_r37_masken36_stage3 309 s (mit M1-Weg: Elza 464/0, Leon 602/0), stage4 130 s (ROOM4080
+Cut 5: Leon 883/879 und 8374/0, Elza 627/621 und 6165/0), stage5 130 s, stage6 130 s, unit_r37_masken36_ausschluss 85 s.
+Gegenprobe der neuen Riegel-Checks: mit der Tabelle von 7495dc73 (85 Zeilen) eingebaut faellt `ausschluss` durch -
+`Abweichungen 47`, `Paar ROOM30A0/30A1: Tabellenzeilen verschieden - RDT und MSK BYTEGLEICH`, `Paar ROOM5020/5021:
+Tabellenzeilen verschieden` (Paare 13 von 15 gleich, bytegleiche 7 von 8), "keine Fehlverdeckung" FAIL; danach die
+Tabelle zurueck und neu gebaut (`soll` bitgleich zur Liste vor der Gegenprobe).
 
 ### NB1.3 Mangel M3 - Versionsangabe
 `git tag --contains 53741fe5 | sort -V | head -1` -> **v0.7.19** (2026-09-08 15:19); `git tag --contains b8db7b2b | sort -V |
