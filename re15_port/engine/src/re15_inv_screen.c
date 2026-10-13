@@ -27,6 +27,7 @@
 #include "re15_collision.h"   /* Etage = Band aus der Spieler-Y */          /* Spieler-Band (+0x82) fuer die Etagen-Umschaltung */
 #include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
 #include "re15_kiste_r37.h"       /* Runde 37 Spur M: Kisten-Liste — Symbol rechts, Rahmen ueber den Zeilen */
+#include "re15_kiste2feld_r37.h"  /* Runde 37 Spur R: 2-Feld-Symbol aus der ganzen Breitkunst (RE2 u 40..120) */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
 #include "gen/inv_desc_bank.inc" /* item-desc bank @0x800c50de (wave 4; entry idx = item id) */
@@ -1582,8 +1583,13 @@ static void box_cell_icon_sized(emit_t *e, int x, int y, int w, int h,
                                 uint8_t id, uint8_t kind)
 {
     int ww = (kind == RE15_BOX_KIND_WIDE) ? (w * 2 - 1) : w;   /* RE2: 49x19 */
+    /* Runde 37 Spur R: u = QUELL-SPANNE in Texeln wie RE2s POLY_FT4 u1 - u0 (re15_kiste2feld_r37.h):
+     * schmal 40 (`addiu t1,zero,80` @0x80071844), 2-Feld 80 (`addiu t1,zero,120` @0x8007183c, u0 40
+     * @0x800717b4) = zwei Cache-Kacheln (FUN_80069c40 @0x80069cd8-d5c) = das ganze 80x30-Breitbild.
+     * Vorher u = 0: der Zeichner nahm die 40er-Kachel (linke Haelfte) und wiederholte Spalte 39. */
+    int spanne = (kind == RE15_BOX_KIND_WIDE) ? RE15_KISTE2FELD_SPANNE_BREIT : RE15_KISTE2FELD_SPANNE_SCHMAL;
     sprt(e, RE15_INV_PAGE_ITEMTILE, RE15_INV_CLUT_ST00_ROW0,
-         x, y, ww, h, 0, id, 128, 128, 128, 1);
+         x, y, ww, h, spanne, id, 128, 128, 128, 1);
 }
 
 static void box_cell_icon(emit_t *e, int x, int y, uint8_t id, uint8_t kind)
