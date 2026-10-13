@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-14 01:12: P masken36 Abnahme 1 NICHT bestanden (2 kleinere Maengel): M1 ROOM3050/3051 Cut 15 (Kranpult-Ereignis-Cut, sub10 +0x2596) -> 36 Generator-Masken uebermalen den Cursor (138 px, Basis 0) — Cut 15 wie Cut 6 ganz ausnehmen; M2 Figur-Modell tastet den Kopf nicht ab (oberste Zeile 2833 von 3000) -> ROOM30A0 Cut 0 Partition schneidet 4-7 px von Leons Haar. Nachbesserung P#2 (letzte) laeuft; besteht P danach nicht, Spur P -> Samstag.
 * 2026-10-14 00:38: L Nachbesserung #1 (Text) FERTIG -> Abnahme L#1 laeuft. P Nachbesserung #1 FERTIG (fb4be428): Saaten aus JEDEM 0x3B-Tuersatz (Satzlaenge @0x80040618/@0x80040630, Nutzlast @0x80042fb8/@0x80042f90) und je Raumpaar xxx0/xxx1 (@0x80021c90/@0x80021ca8); nicht-rechteckige SCA-Zellen ueber den Port-Kollisionsloeser (FUN_8003b0a4, Radius 450) -> Sektionen ohne Stehplatz 32 -> 2 (ROOM3050/3051 Cut 15, Ereignis-Cut, fest gelistet); exe: Elza 30A1 uebermalt 265/464 -> 0, ROOM4040 Cut 4 57/397 -> 0; Tabelle 124 Zeilen; bytegleiche Paare 8/8 gleiche Zeilen. Abnahme P#1 laeuft.
 * 2026-10-14 00:29: L re2zombie Abnahme 0: alle vier Punkte ERFUELLT; einziger Mangel M1 = Text: 'Messer unveraendert wirksam' widerspricht der exe (erster Zombie an der Tuer 1130 nimmt 6 statt 10 Messertreffer, weil Produzent (2) ihn nach jeder Treffer-Erholung sofort in den Arme-hoch-Gang schaltet — byte-true RE2). Nachbesserung L#1 (nur Text) laeuft. Fuer die Release Notes: Messer-Nahkampf gegen anrueckende Zombies wird schwerer.
 * 2026-10-13 23:25: Integration mit G gruen: 61/61 (r37_beretta, Schuss, Treffer, Blut, 1210-Arme, Writher, Werfer, Granaten, Birkin, r37_zombieaktiv/bissarm).
@@ -98,7 +99,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | M kiste (BESTANDEN, integriert) | r37_kiste | Item-Kiste: Symbole rechts, Rahmen ueber den gleitenden Zeilen (Nachtrag 9) | gestartet (eigener Workflow wf_e49eab60-a6e) |
 | O szene11c0 (BESTANDEN, integriert) | r37_szene11c0 | Ada/Marvin-Szene 11C0 ohne Fehlblicke und 180-Grad-Drehungen (Nachtrag 11) | gestartet (eigener Workflow wf_726ba53b-339) |
 | N elzaems (BESTANDEN, integriert) | r37_elzaems | Elzas Szenario laedt jeden Typ aus CDEMD1 wie das Original (Orchestrator-Auftrag N) | gestartet (eigener Workflow wf_b84c9fa3-fdb) |
-| P masken36 (Nachbesserung P#1 fertig, Abnahme P#1 laeuft) | r37_masken36 | Stage-3..6-Masken (BSS-Atlas) wieder zeichnen, Regression 53741fe5 (Orchestrator-Auftrag P) | gestartet (eigener Workflow wf_fef449e3-44a) |
+| P masken36 (Abnahme 1: Kranpult-Cursor + Kopfoberkante; Nachbesserung P#2 laeuft) | r37_masken36 | Stage-3..6-Masken (BSS-Atlas) wieder zeichnen, Regression 53741fe5 (Orchestrator-Auftrag P) | gestartet (eigener Workflow wf_fef449e3-44a) |
 | Q kistenregel (BESTANDEN, integriert) | r37_kistenregel | Item-Benutzung nur mit Item im Inventar (RE2), wo die Item-Box Bit-Abfragen oeffnet (Orchestrator-Auftrag Q) | gestartet (eigener Workflow wf_bd4dc2bf-23a) |
 | R kiste2feld (BESTANDEN, integriert) | r37_kiste2feld | 2-Feld-Symbole in der Kisten-Liste wie RE2 aus zwei Kacheln (Orchestrator-Auftrag R) | gestartet (eigener Workflow wf_b8b00ab0-fbf) |
 
