@@ -271,6 +271,31 @@ und nachher gruen, nicht vergleichbar.)
    0 Bilder), zusaetzlich neuer Check "Taschenfall mit Wurf-Klemme UND Spur L": keine KLEMME (30 < 300), Leon erreicht (92).
 Nach der Anpassung: 11/11 gruen.
 
+### 5b — Fortsetzung 2026-10-13: drei weitere verschobene Riegel (nicht in der -R-Auswahl der Liste oben)
+
+Die gezielte Pruefung der Fortsetzung (breitere -R-Auswahl, s. Tests) fand drei rote Riegel der Runde 36 Spur C, die
+in der 163er-Auswahl oben fehlten: `unit_r36_blut_pin_eben` / `_tief` / `_rip` (probe_r36_blut, Blut-Anker des
+RE2-Zombies). Basis-Build e399ee3f (Scratch) im selben Lauf: alle drei gruen. Mechanismus je Fall GEMESSEN
+(Sonde voruebergehend instrumentiert: Lage/Gier/Motion/Bild/Bank/Blend vor und nach dem Spielschritt, Anker vor dem
+Schritt, Abstand zur gezeichneten Matrix T-1 und T; Instrumentierung danach zurueckgenommen):
+
+| Riegel | alt (Basis) | neu (Spur L) | Mechanismus |
+|---|---|---|---|
+| blut_pin_eben | AUF F330/F342 d = 24 / 6, OK | AUF F318 d = 46 (> 40), 3 FAILURES | Strom: der Zombie liegt auf der ANDEREN Seite (+0x16A = 1, Clip 9 statt 8). Der Aufsteh-Treffer @0x80107AEC spawnt in P0, der Port-Anker rechnet (Port-Konvention "Pose des LAUFENDEN Bilds", re15_schuss_r36.h) die reine Keyframe-Pose Bild 63 (Anker vor dem Schritt Bild 62: y -1973, Spawn y -2020 = Kopfweg eines Bilds ~47); danach setzt P0 das Blend-Byte `sb 15,334` @0x80107B3C, die gezeichnete Pose friert auf dem Vorbild ein (wp = 15 x 0x200 -> 0x1000). d = Kopfweg eines Bilds im Aufsteh-Clip 9 |
+| blut_pin_tief | AUF F174 d = 32, OK | AUF F162 d = 67 (> 40), 3 FAILURES | dasselbe, Clip 9 Bild 10 -> 11 |
+| blut_pin_rip | F66 d = 0, OK (Tod aus 1/1/1) | F66 d = 278 (Kopf + RIP-P1), 3 FAILURES | Tod aus dem ARME-HOCH-GANG 1/2/1 (Produzent (2)): Loco-Clip 4 -> Haupt-Clip 4, Motion bleibt 4. RIP P0 spawnt (@0x80108E28, @0x80109054) und faellt nach P1 durch (@0x80109078): `jal 0x80015E7C` @0x80109084 + 0x800152C8 @0x801090B0. e7c im Bild 0: `lbu v0,333` / `bne` / `sw zero,524` / `sh zero,528` @0x80015F04-1C -> Momentaufnahme 0 -> +0x144 = root(kf0) = (-277,-26) (gemessen r144 -277, snap (-277,-26)) -> der Zombie rueckt NACH dem Spawn 278 weiter (Lage F66 (-1487,-19963) -> Schub -450 -> (-2193,-19785)). Aus 1/1/1 (Motion 0 -> 4) verankert der Port neu (Delta 0, re15_clip_root_motion_delta fr_prev < 0) |
+
+Bewertung: (a) ist die Port-Konvention des Blut-Ankers der Spur C (Original: Anker = Record+72 des Vorbilds,
+re15_schuss_r36.h) — Spur L wuerfelt nur einen Aufsteh-Clip mit groesserem Kopfweg je Bild; (b) ist der
+e7c-Bild-0-Wurzelschritt des Originals (@0x80015F14-1C, aus JEDEM Vorzustand), den der Port bisher nur dann nicht
+faehrt, wenn sich die Motion-Nummer aendert (Port-Re-Anker) — der Weg aus 0x201 ist hier der byte-treuere; die
+Sonde (G) misst den Spawn gegen die Pose NACH dieser Bewegung im Handler (wie beim MG-Schub @0x8010810C-6C, dort
+Schranke 100). Keiner der drei Faelle ist ein Fehler im Code der Spur L.
+Anpassung: probe_r36_blut laeuft im RE2-Zombie-Strom bis Runde 37 (`re15_re2z_r37_produzenten(0u)` im Kopf von main,
+Kommentar mit beiden Mechanismen). GEMESSEN: alle neun Varianten (eben/tief/mg/rip/arm/burst/glied/kriecher/kriecher5)
+liefern danach eine zum Basis-Build e399ee3f BITGLEICHE Ausgabe (cmp je Variante), alle `probe_r36_blut: OK`.
+Beide Mechanismen stehen unter OFFEN (Spur C/G: Anker-Zeitpunkt; Port-Re-Anker beim Clipwechsel gegen e7c).
+
 ## Messung nachher
 
 ### N1 — Port-Harness (echte Raumeintritte, echte Spielschleife; Sonde `test_r37_re2zombie gang`)
