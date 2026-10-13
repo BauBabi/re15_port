@@ -294,7 +294,19 @@ Pose Bild, Slot, Typ, Clip, Bildzahl des Clips = das, was gezeichnet wird).
   (`integration_r37_elzaems_elza11b1`; 0x40 und 0x4B ebenfalls aus CDEMD1, beide Blobs in beiden Archiven gleich).
 * 3091: Modell §5 (Sherry statt Ada). Animationen: 6.4b.
 
-@@3091@@
+#### 6.4b Sherry 3091 — Animationen (Fehlerklasse "falsche Clips / Dauerschleife")
+* Kanaele (K_roy.md 2.2, Plc_motion-Handler @0x80041b90: +0x94 = pc[2] Clip, +0x5 = pc[1] Sub): ROOM3091 sub07 waehlt
+  Sherry (Work_set kind 2 idx 1 @0x0171A/@0x01752/@0x01808/@0x01880) und spielt Plc_motion(0,N) = Sub 0 = Raum-RBJ-
+  Record (+0x180/+0x184, archivunabhaengig) sowie Plc_dest Sub 5/9 (@0x01756..@0x01778) = eigene Bank +0x170/+0x174 =
+  dir[4]/dir[3] (FUN_80022300 @0x800224b8/@0x800224c8). CDEMD1-dir3 hat 14 statt 6 Clips; die Clips 0..5 haben in
+  beiden Archiven dieselbe Bildzahl, die Posen (emr4 11448 -> 17528 B) und die Bind-Lagen (emr2) sind andere
+  (n1_zensus). 3091 verlangt keinen Clip >= 6.
+* exe vorher/nachher (sub07 per RE15_SUBSTART=7@40#3091, Kreuz alle 30 Bilder, 900 Bilder, RE15_ANIM_TRACE;
+  N_belege/port/s3091_sherry_clips.txt): dieselbe Clip-Folge mit denselben Bildzahlen (2/52, 1/16, 0/22, 5/30, 4/20,
+  3/20, 9/1, 1/32, 0/34), in JEDER Zeile Motion == aufgeloester Clip (kein Umbruch modulo Clip-Zahl, keine Schleife
+  ausser den vom Skript per Plc_flg 4 verlangten). Der Unterschied ist das Modell (§5) und die Posen der eigenen Bank:
+  beide stammen jetzt aus dem Blob, den das Original laedt (crc 91415329 = g5 Blob im RAM).
+
 
 ### 6.5 Birkin 0x30 in ROOM5091
 * Port: in 5090/5091 wird 0x30 beim Sce_em_set zu 0x36 umgetypt (scd_vm.c op_sce_em_set, NUTZER-VORGABE 2026-09-12
@@ -334,3 +346,67 @@ Zombie-Griffe (6.1) und die Kraehe (6.2).
   in VERTRAG 1.4 nicht namentlich gelistet, Haken-Groesse wie dort verlangt), main.c (nur Kommentar der Spur-K-Zeilen),
   roy_r37.c/roy_pc.c (Spur-K-Dateien, laut VERTRAG 1.4 fuer N erweiterbar).
 
+## 7. Tests
+
+Registriert NUR ueber re15_port/tests/unit/probes/r37_elzaems.cmake (GLOB); Unit = test_r37_elzaems.c (Teile als
+Argument, Komma-Liste moeglich), Integration = tests/integration/test_r37_elzaems.cmake (echte exe als Messkopie
+re15_pc_r37n_<id>.exe neben der exe, Spielstand per probe_r36_elza_karte + CONTINUE, cmake_minimum_required 3.16).
+
+| Test | misst (Mechanik) | Nutzer-Punkt |
+|---|---|---|
+| unit_r37_elzaems_toc | beide TOCs (@0x80072f38/@0x80073178) gegen die Archive, Port-Kette CDEMD0 == TOC (25/25), CDEMD1-0x30 Sektor 2015, zehn bytegleiche Typen, Unterschiede je Typ, CRC32 = debug.log-Werte, Hybrid-Eingang (RE2-KI) in beiden Archiven gleich | 2 |
+| unit_r37_elzaems_weiche | Elza-Bit-Zwilling: Figur, Set(1,0,v) (@0x80074664[1]), Figurwechsel | 2 |
+| unit_r37_elzaems_raeume | Raum-Init am VM: Archiv je gespawntem Typ (Elza 3071/50F1 CDEMD0, 5081/3091/1101/11B1/10C1/1141/5091 CDEMD1, Leon 5080 CDEMD1, Leon 3070/50E0/1100/10C0 CDEMD0, Roy/Elliot) | 1, 2 |
+| unit_r37_elzaems_griff | RE1.5-KI-Griff mit der Bank der Port-Weiche: Elza Hand 0..70 ueber IHRER Schulter, Gegenprobe Leons Bank <= -200, Leon bitgleich | 2 (Griff) |
+| unit_r37_elzaems_opfer27 | 0x27-Finisher an Elza: Opfer-Clip 0 = 63 Bilder, Tod bei 62 (Leons Bank 70/69) | 2 (0x27) |
+| integration_r37_elzaems_elza5081 / _elza3071 / _leon5080 / _elza3091 | Lader-Zeile (Archiv, Sektor, Laenge, CRC32) ueber CONTINUE | 2 (0x30, 0x42) |
+| integration_r37_elzaems_elza1101 / _leon1100 | ueber die TUER: Zombies 0x10/0x11 aus CDEMD1 bzw. Leon unveraendert | 1, 2 |
+| integration_r37_elzaems_elza11b1 / _elza5091 | 0x42 in 11B1 aus CDEMD1; 5091 = RE2-EM36 ohne RE1.5-Archiv | 2 (0x42, 0x30) |
+| integration_r37_elzaems_elza1181griff | Elza im RE1.5-Griff: Opfer-Clip 1/6 = 25/70, Greifer Clip 9 = 70 (nicht 26/65) | 2 (Griff) |
+| integration_r37_elzaems_elza10c1kraehe / _leon10c0kraehe | Kraehen-Opfer-Clips 31/30 bei Elza, 36/20 bei Leon | 2 (Kraehe), Leon bytegleich |
+| integration_r37_elzaems_elza1141 | 0x27 aus CDEMD1 (Ck(4,242)) | 2 (0x27) |
+
+Ergebnisse (2026-10-13, Bau dieses Zweigs, gezielt — KEINE volle Suite):
+* Spur allein, `ctest --test-dir re15_port/build -R "r37_elzaems" --timeout 600 --output-on-failure -j3`: 16/17 im
+  ersten Lauf — unit_r37_elzaems_raeume rot, Ursache im Test selbst (raum_init setzte die Flags VOR scd_vm_init, das
+  re15_game_state_init ruft und sie loescht; erst der neue 1141-Eintrag brauchte ein Flag); behoben, danach
+  `ctest -R "unit_r37_elzaems"`: `100% tests passed, 0 tests failed out of 5`.
+* Spur + jede Testgruppe der beruehrten Module/Raeume (roy_pc.c-Lader = jeder RE1.5-Gegnertyp; scd_vm.c Sce_em_set;
+  game_state.c Flags; Birkin/G5/Sherry/Kraehe/0x27/Opfer-FSM/Hybrid/EMS/Elza), Regex
+  `r37_elzaems|r37_roy|elza|birkin|5080|5081|5090|3071|3091|g5_|_ems|emd|hybrid|sherry|victim|affen|maggot|crow|kraeh|griff|flag|sce_em|spawn|game_state`,
+  `-j3`, 538 s:
+  **`100% tests passed, 0 tests failed out of 116`** (darin alle 17 r37_elzaems und alle 8 r37_roy;
+  Protokoll N_belege/ctest_regression_n.log).
+
+## OFFEN
+
+1. **Elza-Kraehe / 0x29 / 0x2B nicht einzeln am Original gemessen.** Am Original belegt sind der Lader ohne Typ-Test
+   (§1.1) und vier Typen (0x10, 0x30, 0x42 per GDB; 0x27/0x42/0x47 in Nutzer-Staenden). Fuer 0x21/0x29/0x2B folgt
+   das Archiv aus demselben `bltz` @0x80022334; ein eigener Elza-Stand mit diesen Typen liegt nicht vor.
+2. **0x27-Finisher an der exe nicht ausgeloest** (2600 Bilder, nur Wuerfe). Die Mechanik ist per Sonde mit dem Eintritt
+   der KI (B[8]) gemessen (6.3); ein Echtlauf braucht den Sprung-Treffer (Zustand 3 Sub 9, @0x80119198).
+3. **Kein Original-Bild des Elza-Griffs.** Urteil 6.1 ruht auf der Sonde (Original-Bank, Port-Griff = derselbe
+   RE1.5-Griff wie bei Leon) und J's Tabelle; ein DuckStation-Stand "Elza im Griff" waere der naechste Beleg.
+4. **5090/5091:** das Original zeigt dort den CDEMD1-Birkin 0x30 (zweite Form); der Port zeigt nach Nutzer-Vorgabe
+   (2026-09-12) den RE2-EM36. Unveraendert gelassen (Vorgabe), hier nur festgehalten.
+5. **J OFFEN 3 bleibt:** der RE2-Griff an Elza traegt weiter den RE2-LEON-Kontakt per Schulter-Differenz (keine
+   RE2-Claire-Daten im Repo). Spur N aendert daran nichts (6.7).
+
+## Fuer den Nutzer
+
+* **Was sich aendert:** In Elzas Szenario laedt jetzt JEDER Gegner und jede Figur ihr Modell und ihre Animationen aus
+  Elzas eigenem Archiv (EMD/CDEMD1.EMS) — wie das Original. Sichtbar: in ROOM3091 steht Sherry (statt Ada) im Dialog
+  mit John; in ROOM5081 ist Birkin in seiner zweiten Form; mit der RE1.5-KI liegt die Hand des Zombies beim Biss auf
+  Elzas Schulter (statt 25 cm darueber), Elzas Griff-/Kraehen-/0x27-Reaktionen haben ihre eigenen Laengen. Mit der
+  RE2-KI (Voreinstellung) sehen die Zombies, Hunde, Kraehen und Spinnen bei Elza aus wie bisher — dort zeichnet der
+  Port RE2-Bewegungen, und die Teile, die er aus RE1.5 nimmt, sind in beiden Archiven gleich.
+* **Leon:** unveraendert bis auf EINEN Raum: in ROOM5080 laedt das Original auch fuer Leon den zweiten Birkin (das
+  Raumskript schaltet das Archiv dort um); der Port tut das jetzt ebenso. In 5090/5091 bleibt der RE2-Birkin (Ihre
+  Vorgabe).
+* **Neue Assets / Paket-Gate:** keine. EMD/CDEMD1.EMS liegt seit dem ersten Commit in shared_assets/PSX/EMD und im
+  Paket. Keine Sprachdateien.
+* **Selbst pruefen:** debug.log neben der exe zeigt je geladenem Typ eine Zeile `[elzaems] Typ 0x.. aus
+  EMD/CDEMD1.EMS Sektor .. crc ..` (bei Roy `[roy] ...`); die Pruefsumme ist die des Blobs, den das Original in den
+  RAM laedt. Den Elza-Griff mit der RE1.5-KI sieht man mit der KI-Auswahl "RE1.5" im Optionsmenue (oder RE15_AI_FLAVOR=re15).
+* **Entscheidungsfragen:** keine neuen. (Die Birkin-Form in 5090/5091 folgt Ihrer frueheren Vorgabe; das Original
+  zeigt dort die zweite RE1.5-Form — falls gewuenscht, waere das eine eigene Entscheidung.)
