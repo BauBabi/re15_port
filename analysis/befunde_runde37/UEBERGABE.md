@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-13 22:52: N elzaems Abnahme 0 BESTANDEN (Workflow fertig; 116 gezielt gruen; CRC32 der geladenen Blobs = TOC; 3091 zeigt das Original-Modell 0x42 statt Ada, 5081 die zweite Birkin-Form; Leon nur 5080 geaendert wie das Original @0x742) -> INTEGRIERT (872a78cc; Konflikt nur AUFTRAG/VERTRAG -> master). Bau ok, 74 gezielte Tests laufen.
 * 2026-10-13 22:47: Integration mit R gruen: 45/45 (r37_kiste*, itembox, Inventar, Item-Modal, Feuerloescher, Schluessel, Dokumente).
 * 2026-10-13 22:41: R kiste2feld Abnahme 0 BESTANDEN (Workflow fertig; MC51-Tausch 722/722, Gitter/Ausruest 1200/1200; Abtastung 796/796 am RE2-Bild) -> INTEGRIERT (db1c682c; Konflikt nur AUFTRAG/VERTRAG -> master-Fassung). Bau ok, gezielte Tests laufen.
 * 2026-10-13 22:40: P masken36 Bau-Fortsetzung FERTIG: R15M ohne eigenen Atlas -> BSS-Atlas des Cuts (bg_pc.c re15_pri_atlas_quelle; Original @0x80021dec/@0x8004eea8-ee0 LoadImage nach VRAM 320,256, Abtastung @0x80039408/18 -> @0x800394dc/e0, CLUT 0x7800 @0x80039498, tpage 0x95 @0x80039630); Ausschluss masken36_r37.c (944/6478 Rechtecke, die eine Figur VOR jedem Objekt uebermalen); be2dbd26 uebernommen (1221 kein eigener Fall). exe: 214/216 Sektionen fg_atlas=1 (2 nur Boden, ausgeschlossen), Szenen Stage 3..6 Leon/Elza HINTER 57..92 % verdeckt, DAVOR 0; Blit-Pruefung Mittel 12,6/765. OFFEN: 32 Sektionen ohne Stehplatz im Modell ungeprueft, Stage 5 teils nur 8..42 % (Generator-Daten; volle Verdeckung braucht Freistellungen). Abnahme P laeuft.
@@ -87,7 +88,7 @@ Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren 
 | L re2zombie (Bau laeuft) | r37_re2zombie | RE2-Zombie-KI: 0x201-Produzenten, DECISION[0], EXEC[0] P1 wie RE2 (Orchestrator-Auftrag L) | gestartet (eigener Workflow wf_b736a607-65f) |
 | M kiste (BESTANDEN, integriert) | r37_kiste | Item-Kiste: Symbole rechts, Rahmen ueber den gleitenden Zeilen (Nachtrag 9) | gestartet (eigener Workflow wf_e49eab60-a6e) |
 | O szene11c0 (BESTANDEN, integriert) | r37_szene11c0 | Ada/Marvin-Szene 11C0 ohne Fehlblicke und 180-Grad-Drehungen (Nachtrag 11) | gestartet (eigener Workflow wf_726ba53b-339) |
-| N elzaems (Bau fertig, Abnahme 0 laeuft) | r37_elzaems | Elzas Szenario laedt jeden Typ aus CDEMD1 wie das Original (Orchestrator-Auftrag N) | gestartet (eigener Workflow wf_b84c9fa3-fdb) |
+| N elzaems (BESTANDEN, integriert) | r37_elzaems | Elzas Szenario laedt jeden Typ aus CDEMD1 wie das Original (Orchestrator-Auftrag N) | gestartet (eigener Workflow wf_b84c9fa3-fdb) |
 | P masken36 (Bau fertig, Abnahme 0 laeuft) | r37_masken36 | Stage-3..6-Masken (BSS-Atlas) wieder zeichnen, Regression 53741fe5 (Orchestrator-Auftrag P) | gestartet (eigener Workflow wf_fef449e3-44a) |
 | Q kistenregel (Bau fertig, Abnahme 0 laeuft) | r37_kistenregel | Item-Benutzung nur mit Item im Inventar (RE2), wo die Item-Box Bit-Abfragen oeffnet (Orchestrator-Auftrag Q) | gestartet (eigener Workflow wf_bd4dc2bf-23a) |
 | R kiste2feld (BESTANDEN, integriert) | r37_kiste2feld | 2-Feld-Symbole in der Kisten-Liste wie RE2 aus zwei Kacheln (Orchestrator-Auftrag R) | gestartet (eigener Workflow wf_b8b00ab0-fbf) |

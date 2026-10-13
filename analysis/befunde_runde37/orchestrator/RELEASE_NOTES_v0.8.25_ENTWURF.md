@@ -45,6 +45,11 @@ Ihren Freistellungen); sie nutzt dort jetzt ebenfalls Leons aktuelle Masken (22 
 **Roy** (Spur K). In Elzas Szenario traegt Roy jetzt seine Uniform wie im Original (aus Elzas eigenem Modell-Archiv)
 statt Elliots Modell. Er sitzt verwundet da, sackt zusammen und bleibt liegen; in ROOM1021 schlurft er auf John zu und
 faellt. Keine Dauerschleife mehr. Elliot bei Leon ist unveraendert.
+**Elzas Gegner** (Spur N). Wie im Original laedt Elzas Szenario jetzt JEDEN Gegner aus ihrem eigenen Modell-Archiv -
+bisher nur Roy. Sichtbar: in ROOM3091 steht die Figur des Originals statt Ada, in ROOM5081 die zweite Birkin-Form;
+mit der RE1.5-KI sitzt der Zombie-Griff auf Elzas Schulter und die Kraehen-Angriffe haben ihre eigenen Bewegungen.
+Mit der Standard-KI (RE2) aendert sich an Zombies, Hunden, Kraehen und Spinnen sichtbar nichts. Bei Leon aendert
+sich nur der Birkin in ROOM5080 - das Raumskript des Originals schaltet dort selbst auf dieses Archiv um.
 **Zombie-Biss** (Spur J). Beim Biss liegt der Arm des Zombies jetzt wie in RE2 auf Leons bzw. Elzas Schulter - vorher
 steckte er im Koerper. In ROOM1010 bleibt Leon im Griff an seinem Platz (vorher stand er waehrenddessen an einer
 falschen Stelle). Einen baumelnden angeschossenen Arm gibt es in RE2 nicht: ein abgeschossener Unterarm verschwindet
