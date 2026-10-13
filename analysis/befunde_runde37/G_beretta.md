@@ -232,3 +232,13 @@ Auswertung aller Messlaeufe (vorher/nachher, Leon/Elza): `G_beretta_mess/auswert
   fuehrte fuer M93R/Glock den Wert des GANZEN Stosses (z.B. Gorilla 28 = 2,3 x 12); 3 x 28 haette den Stoss verdreifacht.
 * Ist nur noch 1 oder 2 Schuss im Magazin, gibt es nur 1 bzw. 2 Treffer (drei Blitze zeigt das Original trotzdem).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung.
+
+## 8. Nachbesserung 1 (Abnahme 0: M1-M4, 2026-10-13)
+
+Abnahmebericht: `G_abnahme_0.md`. Zwei fruehere Versuche wurden von Limits ohne Commit beendet; ab hier fortlaufend.
+
+### 8.0 Zensus der betroffenen Klasse (Werkzeug geprueft)
+`G_beretta_mess/typ_zensus.py <baum>` (Walker `re15_port/tools/aot_sce_census.py`, Sammler Sce_em_set 0x44, Typ = pc[2])
+laeuft (844 Saetze) und deckt sich mit Abnahme 1f: 0x27 in 1141/11C0 (8), 0x29 in 15 Raeumen (32), 0x2b in 9 Raeumen
+(4001/5040/5041/5070/5071/5110/5111/5130/5131, 28), 0x30 in 8 Raeumen (3070/3071/5080/5081/5090/5091/50E0/50F1; 5090/5091 werden
+zum G5-Modul 0x36 umgetypt), 0x36 in 3080, 0x1a in 1210/1211; 0x23 (Alligator) hat keinen Sce_em_set-Satz (Boss-Modul 2090).
