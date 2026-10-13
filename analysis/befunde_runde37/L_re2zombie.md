@@ -31,6 +31,8 @@ wie @0x80101540-a0 / @0x8010159c. Dazu Zensus der uebrigen OFFEN-Marken (Bewegun
 - [x] Schritt 6: Messung nachher (Harness + exe Leon/Elza), Tests
 - [x] Fortsetzung 2026-10-13: Stand gegen den Auftrag geprueft ((a)(b)(c) Code gegen Disassembly, (c) inkl. Moan-Takt),
       breitere Testauswahl -> vier weitere verschobene Riegel gefunden und mit Mechanismus angepasst (5b), Abschluss
+- [x] Nachbesserung 1 (2026-10-14, nach Abnahme 0): M1 = Nutzer-Satz zum Messer an die exe-Messung angepasst (reine
+      Textkorrektur, kein Code), s. Abschnitt "Nachbesserung 1"
 
 ## Schritt 0 — Lektuere (Befunde)
 
@@ -328,7 +330,10 @@ RE2-Original (M2): Wechsel bei 1999/1987 (2) bzw. 3565 (1), Griff bei 1180/1152,
 
 ### N2 — Nahkampf (Aufbau test_re2_zombie_abc, Messer, 64 Seeds x 900 Bilder)
 Stand bis Runde 37 (Maske 0): 368 Treffer; Spur L: 369 (Sonde) bzw. 373 (test_re2_zombie_abc im Prozess nach der Pistole).
-Pistole 1795 -> 1775 (90 statt 96 Tode). Der Nahkampf wird nicht schlechter.
+Pistole 1795 -> 1775 (90 statt 96 Tode). Die Trefferpruefung wird nicht schlechter (Gesamt-Treffer im Sweep).
+⛔ Nachbesserung 1: diese Metrik zaehlt Treffer ueber den ganzen Lauf, NICHT Treffer je Anmarsch. An der exe nimmt der erste
+anrueckende Zombie mit Spur L weniger Messertreffer, bevor er greift (Abnahme 0 Abschnitt 3.6: 6 statt 10 in vier Paaren),
+weil er im schnelleren RE2-Arme-hoch-Gang schliesst — Mechanismus und Adressen im Abschnitt "Nachbesserung 1".
 
 ### N3 — ECHTE EXE (RE2-KI = Standard; Leon UND Elza; Spielstand per Kartenwerkzeug + CONTINUE + Eingabeskript, RE15_STATE_LOG)
 Treiber `L_belege/exe_lauf.sh` (eigene Messkopie `re15_pc_r37l_mess_<lauf>.exe`, nur eigene PID beendet), Auswerter
@@ -392,6 +397,65 @@ Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`
    `-R "^integration_.*(r34n_e_dokumente|r35_cut10f0|r35_inventar1050|r35_redhawk|r35_werfer|r36_dachkiste|r36_elza|r36_karte|r36_kleidung_spielweg|r36_pri_schatten|r36_schuss|r36_szenenleon)"`
    -> **`100% tests passed, 0 tests failed out of 20`**.
 
+## Nachbesserung 1 (2026-10-14, nach Abnahme 0 `L_abnahme_0.md`)
+
+Die Abnahme 0 hat alle vier Punkte als erfuellt bewertet und einen Mangel gemeldet (Abnahme-M1; nicht zu verwechseln mit
+der Messung M1 oben = historischer Nahkampf-Zusammenbruch).
+
+### Abnahme-M1 — Satz "Nahkampf/Messer: unveraendert wirksam (gemessen 368 -> 373 Treffer im Messer-Sweep)"
+
+**Ursache.** Der Satz im Abschnitt "Fuer den Nutzer" stuetzte sich nur auf den Harness-Sweep N2 (Aufbau test_re2_zombie_abc:
+64 Seeds x 900 Bilder, Spieler steht mit R1 2200..3400 vom Zombie-Schwerpunkt und schlaegt alle 7..17 Bilder). Diese Metrik
+zaehlt Treffer ueber den ganzen Lauf und belegt nur, dass die TREFFERPRUEFUNG nicht schlechter wird. Was der Nutzer an der exe
+erlebt, ist die Zahl der Schlaege je ANMARSCH, bevor ein Zombie greift. Die exe-Messung N3/E11 (3 Treffer) hatte kein
+Basis-Paar mit gleicher Eingabe; der Vergleich fehlte, der Satz verallgemeinerte die Harness-Metrik.
+
+**Messung vorher** (Abnahme 0, Abschnitt 3.6, selbst von der Abnahme gemessen; NICHT wiederholt): Leon steht mit Messer an
+der Tuer 1130 (`RE15_EQUIP=1`), R1 + Schlag alle 0,5 s, vier Paare Spur L / Basis mit identischer Eingabe, erster anrueckender
+Zombie Platz 5 (Typ 0x11, HP 250, 3 je Messertreffer):
+
+| Skript-Versatz | Spur L: HP / Treffer vor dem Griff | Basis: HP / Treffer |
+|---|---|---|
+| W20 (k_L_20 / k_B_20) | 247 / 1 | 244 / 2 |
+| W21.3 | 244 / 2 | 244 / 2 |
+| W22 (a5 / b5) | 247 / 1 | 244 / 2 |
+| W23.7 | 244 / 2 | 238 / 4 |
+| Summe | **6** | **10** |
+
+Bildfolge k_L_20 / k_B_20 (state.log der Abnahme): Spur L F1180 Arme hoch (+0x1F0 1995), F1186 Messertreffer (2/1), nach der
+Erholung F1208 sofort wieder 1/2 (+0x1F0 1487 < 0x7D0, im Kegel), Griff F1214 bei 1173, der naechste Schlag (F1222) kommt zu
+spaet. Basis: Erholung F1193 in den langsamen Gang 1/1, zweiter Treffer F1201 bei 1419, Griff erst F1224 bei 851.
+
+**Beleg (Mechanismus, RE2 EMZ0.BIN).** Weniger Schlaege je Anmarsch, weil der Zombie zwischen Treffer-Erholung und Griff
+weniger Bilder braucht:
+1. Treffer-Erholung, Haupt-Handler 0x80105438 P3 @0x80105A50 (2026-10-14 selbst nachgelesen, `re2_disasm.py --bin EMZ0.BIN
+   dis 0x80105A50 64`): Leiter 0xB01 (`addiu v0,zero,2817` @0x80105ACC / `sw v0,4(s1)` @0x80105AD4), 0xC01 (`addiu v0,zero,3073`
+   @0x80105B08 / `sw` @0x80105B10), 0x201 bei rand&1 (`jal 0x80015fe8` @0x80105B14 / `andi v0,v0,0x1` @0x80105B1C /
+   `beq v0,zero,0x80105b30` @0x80105B20 / `addiu v0,zero,513` @0x80105B24 / `sw v0,4(s1)` @0x80105B2C), sonst 0x101
+   (`addiu v0,zero,257` @0x80105B38 / `sw v0,4(s1)` @0x80105B40). Port re2z_hit_main case 3, von Spur L NICHT geaendert.
+2. Faellt die Leiter auf 0x101, laeuft im ersten Gang-Takt EXEC[1] P0 nach P1 durch (`@0x80101b20`, Abschnitt 5b) und
+   Produzent (2) (R1: `sltiu v0,v0,0x7d0` @0x80101ECC, Kegel a3 = 512 @0x80101EEC, `addiu v0,zero,513` / `sw v0,4(s1)`
+   @0x80101F0C-10) setzt 0x201 — in der Basis war (2) aus, der Zombie blieb im 0x101-Gang (k_B_20 F1193).
+3. Der Arme-hoch-Gang schliesst schneller: RE2-Original 44,1 gegen 32,2 Einheiten je Takt (M2, DuckStation-GDB jeder Takt,
+   ROOM20A0). Der Griff hat in beiden Gaengen dieselbe Schwelle +0x1F0 < 0x4B0 (DECISION[1] `sltiu 0x4b0` @0x801018F4,
+   DECISION[2] `sltiu 0x4b0` @0x80102114, Commit 0x301 @0x80102174-78 / @0x801021B8-BC) — also kommt der Griff bei gleicher
+   Schwelle frueher.
+Die Trefferpruefung des Messers ist unveraendert: Spur L aendert nur DECISION[0], EXEC[0], EXEC[1], EXEC[2] und DECISION[12]
+(VERTRAG Z.56); der Harness-Sweep bleibt 368 -> 369/373. Das Verhalten ist byte-true RE2 (Abnahme 0, Punkt 4).
+
+**Aenderung.** Nur Text, kein Code, keine Konstante:
+* "Fuer den Nutzer", 4. Punkt: neu formuliert (Messer trifft wie vorher; je Anmarsch weniger Schlaege, an der exe 6 statt
+  10 in vier Laeufen; RE2-Verhalten mit Beleg 44 / 32 je Takt).
+* N2: Schlusssatz "Der Nahkampf wird nicht schlechter" auf "Die Trefferpruefung wird nicht schlechter (Gesamt-Treffer im
+  Sweep)" eingeschraenkt, mit Verweis auf die exe-Messung je Anmarsch.
+* OFFEN: beim Nachlesen der Erholungsleiter gefunden — der Ausfall-Zweig P3 prueft im Original den Ein-Angreifer-Riegel
+  0x800CFDCB & 0x80 (@0x80105AA0-B0) vor dem Wurf, der Port nicht (vorbestehend, ausserhalb des Vertrags der Spur L, mit
+  Adresse und Vorschlag eingetragen).
+
+**Messung nachher.** Neuer Text gegen die Abnahme-Messung 3.6 geprueft (Summe 6 / 10, je Paar wie in der Tabelle oben).
+Code unveraendert gegenueber dem abgenommenen Stand ab2bf2b9 (`git diff ab2bf2b9 -- re15_port` leer); Bau
+`bash re15_port/tools/local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)`. Gezielte Tests: s. unten.
+
 ## OFFEN
 
 * **Navigator-Tasche ROOM1030 (vorbestehend, nicht durch L):** Zombie Slot 1 (Typ 0x16, grid 0x0D) steht im "hin"-Zensus
@@ -415,6 +479,16 @@ Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`
   Bild eines Clips faehrt also root(kf0) (RIP-Clip 4: (-277,-26)). Der Port faehrt das nur, wenn die Motion-Nummer gleich
   bleibt (z.B. Tod aus dem Arme-hoch-Gang, Loco-Clip 4 -> Haupt-Clip 4); bei anderer Nummer Delta 0. Vorbestehend
   (Runde 12), nicht Teil der Spur L; betrifft jeden Clip mit root(kf0) != 0.
+* **Treffer-Erholung, Ausfall-Zweig ohne Ein-Angreifer-Riegel (Nachbesserung 1, beim Nachlesen gefunden; vorbestehend,
+  ausserhalb des Vertrags der Spur L):** Haupt-Handler 0x80105438 P3 (re2z_hit_main case 3) — das Original prueft vor dem Wurf
+  fuer 0xB01 den Spieler-Riegel: `lui v0,0x800d` / `lbu v0,-565(v0)` (= 0x800CFDCB) @0x80105AA0-A4, `andi v0,v0,0x80` @0x80105AAC,
+  `bne v0,zero,0x80105ad8` @0x80105AB0, erst danach `jal 0x80015fe8` @0x80105AB8. Der Port (Zeile `arc 512 == 0 && dist < 0xfa0
+  && (rand & 0xf) == 0`) hat diese Pruefung nicht: ist Leon schon gepackt, wuerfelt der Port einen Wurf mehr und kann in den
+  Ausfall 0xB01 gehen (1 zu 16), das Original nicht. Wirkt auf die Aktivitaet: ja, gering (nur Erholung waehrend Leon gepackt
+  ist; der Griff aus dem Ausfall DECISION[12] prueft den Riegel selbst @0x80104648-58). Nicht geschlossen: der Treffer-Handler
+  gehoert laut VERTRAG.md Z.56 nicht zu den Teilen, die L aendert (DECISION[0], EXEC[0], EXEC[1], EXEC[2]), und die Aenderung
+  verschiebt den gemeinsamen Zufallsstrom in jedem Griff-mit-Treffer-Fall (Messer-Sweeps). Vorschlag: eigener Punkt
+  (Ein-Zeilen-Fix `&& !re15_player_is_grabbed()` vor dem Wurf, wie Produzent (2)) mit Riegel-Liste.
 
 ## Fuer den Nutzer
 
@@ -425,8 +499,13 @@ Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`
 * Ein Zombie, der aus dem Stand oder im Gang nach Leon schnappt (Ausfall), kann ihn jetzt dabei auch packen — wie in RE2.
 * Stehende Zombies: zwei kleine Korrekturen (welcher Zufallswurf den Ausfall ausloest, und dass ein Zombie, der gerade zu
   wandern beginnt, im selben Moment noch aufwachen kann) — kaum sichtbar.
-* Nahkampf/Messer: unveraendert wirksam (gemessen 368 -> 373 Treffer im Messer-Sweep). Der alte Grund, warum diese RE2-Regeln
-  seit August aus waren ("Messer trifft nicht mehr"), war ein Fehler im Messaufbau, nicht im Spiel.
+* Nahkampf/Messer: das Messer trifft wie vorher (die Trefferpruefung ist unveraendert; im Messer-Sweep des Tests 368 -> 373
+  Treffer insgesamt). ABER: weil die Zombies jetzt wie in RE2 mit erhobenen Armen schneller heranruecken und nach einem Treffer
+  sofort wieder in diesen schnelleren Gang gehen, bleiben je Anmarsch WENIGER Schlaege, bevor ein Zombie zupackt — an der exe
+  gemessen (Leon steht mit dem Messer an der Tuer im Gang 1130, Schlag alle 0,5 s, vier Laeufe): 6 statt vorher 10
+  Messertreffer am ersten Zombie. Das ist das RE2-Verhalten (im RE2-Original legt der Zombie im Arme-hoch-Gang 44 statt 32
+  Einheiten je Takt zurueck), kein Fehler. Der alte Grund, warum diese RE2-Regeln seit August aus waren ("Messer trifft nicht
+  mehr"), war ein Fehler im Messaufbau, nicht im Spiel.
 * Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids. Neue Datei nur
   `re15_port/include/re15_re2zombie_r37.h` (Header, keine neue .c — Android-GLOB unberuehrt); +9 Unit-Tests, +1 Integration
   (RE15_MIN_TESTS +10).
