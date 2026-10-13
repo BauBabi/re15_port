@@ -10,10 +10,13 @@ Baum: .claude/worktrees/r37_masken36 (Zweig r37/masken36, Basis bddd6b31 = Stand
 ## Stand
 
 - [x] Schritt 0: Pflichtlektuere (AUFTRAG, VERTRAG, A_pri1100, A_abnahme_1, b8db7b2b/e100d610/02c62294, 53741fe5)
-- [ ] Schritt 1: Messung vorher (Zensus aller MSK, Bisect)
-- [ ] Schritt 2: Umsetzung
-- [ ] Schritt 3: Messung nachher (Blit-Pruefung, Figur-Messung an der exe)
-- [ ] Tests (probes/r37_masken36.cmake)
+- [x] Schritt 1: Messung vorher (Zensus aller MSK, Bisect)
+- [x] Schritt 2: Umsetzung
+- [x] Schritt 3: Messung nachher (Blit-Pruefung, Figur-Messung an der exe, Leon und Elza)
+- [x] Tests (probes/r37_masken36.cmake), gezielte Laeufe gruen (§5)
+- Fortsetzung 2026-10-13 (nach Sitzungs-/Wochenlimit): be2dbd26 uebernommen (ROOM1221 kein eigener Fall, §1.1),
+  Ausschluss-Tabelle neu erzeugt, Riegel-Defekt behoben (§5), Elza + weitere Raeume Stage 5/6 an der exe (§4.2),
+  FREI-Szene als exe-Riegel (§4.3).
 
 ## 1. Messung vorher
 
@@ -42,6 +45,14 @@ Je Datei (Cuts mit Sektion / Masken gezeichnet):
 Die Elza-Dateien der Stages 3..6 sind bytegleich zu den Leon-Dateien (15 Paare, cmp), ROOM1221 != ROOM1220 (1816 / 4272 B).
 Die tote Menge ist genau die Menge "R15M-Sektion ohne eigenen Atlas": jede dieser 224 Sektionen hat einen BSS-Atlas
 (SLD im Block, `chunk[L-4] != 0`). Stage 1/2: ausser ROOM1221 hat jede Sektion einen eigenen Atlas (99/99).
+
+**Nachtrag 2026-10-13 - ROOM1221 ist kein eigener Fall:** die Integration hat in be2dbd26 ROOM1221.MSK und ROOM2091.MSK +
+_PRI00..07.TIM entfernt (veraltete Elza-Kopien; Elza nutzt dort ueber den Zwilling der Spur A die Leon-Masken mit eigenem
+Atlas). Der Spurbaum traegt diesen Stand jetzt auch (cherry-pick -x, eab5d03c; Inhalt identisch, die Zusammenfuehrung mit
+r37/integration ist konfliktfrei bis auf AUFTRAG/VERTRAG, `git merge-tree`). Zensus danach (`test_r37_masken36 zensus`):
+**52 Dateien, 307 Sektionen: eigener Atlas 91, BSS-Atlas 216, tot 0, Blit passt 307, Original nicht NULL 0; alte Regel
+53741fe5: 216 tot = genau die 216 Sektionen der Stages 3..6** (30 Dateien). Die tote Menge ist damit ausschliesslich
+Stage 3..6.
 
 ### 1.2 Herkunft (git)
 - b8db7b2b (2026-09-03 10:30) "234 Cuts Maskengeometrie nachgezeichnet": `analysis/esp_masken_2026-09-03/gen_masken.py` findet
@@ -164,8 +175,10 @@ Stehplatz einen Figurpunkt verdecken, ohne dass zwischen Kamera und Figurpunkt e
   nur im Regionsviereck (Akteur-Cull FUN_8002c18c, re15_rdt_get_region_quad). Band-Boden y = -Band*0x708.
 - Figur = Leon, an der exe gemessen (RE15_TRILOG + Rueckprojektion, §4): Hoehe 3000, halbe Breite 350; 9 x 9 Punkte.
 - Iteration: vorderstes Rechteck an einem fehlverdeckten Punkt raus, bis keine Fehlverdeckung bleibt.
-- Ergebnis (`test_r37_masken36 erzeuge`, Saaten 1979): 224 Sektionen, 6609 Masken, **993 ausgeschlossen**; 32 Sektionen
-  ohne Stehplatz im Modell (dort bleibt alles wie gebaut, OFFEN).
+- Ergebnis (`test_r37_masken36 erzeuge`, Saaten 1979) nach be2dbd26: **216 Sektionen, 6478 Masken, 944 ausgeschlossen,
+  85 Tabellenzeilen** (Stage 3: 39, Stage 4: 0, Stage 5: 34, Stage 6: 12); 32 Sektionen ohne Stehplatz im Modell (dort
+  bleibt alles wie gebaut, OFFEN). Gegen die Tabelle vom 2026-10-12 fallen genau die fuenf 0x1221-Zeilen weg, alle 85
+  anderen Zeilen sind bitgleich (diff). (Vorher mit ROOM1221: 224 Sektionen, 6609 Masken, 993 ausgeschlossen.)
 - Haken: `platform/pc/main.c` R15M-Zweig (2 Zeilen: `re15_masken36_filter(re15_pri_masken_raum(raum), cut, &pri)`),
   `platform/psx/main.c` (Gleichlauf, ungebaut). Die Freistellungs-Sektionen (eigener Atlas) stehen nicht in der Tabelle.
 
@@ -209,34 +222,97 @@ S und |X - B| > 24. Lage = nach der Kollision gemessen (`RE15_STATE_LOG`).
 - Bilder (A | N | B | V, 3-fach): `p37/img/final_montage1.png` (f3050c5, f3040c1, h3050c2, h5020c0), Einzelbilder
   `p37/img/z_<szene>.png`.
 
+### 4.2 Elza und weitere Raeume der Stages 5/6 (Fortsetzung 2026-10-13)
+Gleicher Aufbau (A final, B final `RE15_NO_PRI=1`, C ohne Figur, V vorher-exe bddd6b31; Elza = `RE15_TITLE_SHOT_CHAR=1`,
+der Sprung laedt ihre Raumvariante ROOMxxx1 mit ihrer eigenen MSK-Datei; Fenster = Projektion der Figur wie §4.1;
+S/H wie §4.1, jetzt jeweils gegen einen eigenen Lauf ohne Figur gezaehlt). Log je Lauf A `fg_atlas=1`, V `fg_atlas=0`;
+**V ist in allen 28 neuen Szenenlaeufen bitgleich zu B** (0 Punkte > 24 im ganzen Bild).
+
+| Szene | Raum/Cut, Lage | Leon: Figurpunkte / uebermalt | Elza: Figurpunkte / uebermalt |
+|---|---|---|---|
+| HINTER h3050c2 | 3050/3051 C2 (-22000,-20768) | 1234 / **1123 (91 %)** | 1260 / **1158 (92 %)** |
+| DAVOR v3050c2 | 3050/3051 C2 (-20400,-14368) | 684 / **0** | 1067 / **0** |
+| HINTER h4040c4 | 4040/4041 C4 (-23200,-922) | 208 / **146 (70 %)** | 231 / **185 (80 %)** |
+| DAVOR v4040c7 | 4040/4041 C7 (-7200,-20022) | 1170 / **0** | 1253 / **0** |
+| HINTER h5020c9 | 5020/5021 C9 (-13133,-21625) | 322 / **199 (62 %)** | 309 / **224 (72 %)** |
+| DAVOR v5020c9 | 5020/5021 C9 (-12133,-13325) | 5007 / **0** | 5050 / **0** |
+| HINTER h6010c12 | 6010/6011 C12 (-18612,-7920) | 1440 / **820 (57 %)** | 1105 / **639 (58 %)** |
+| DAVOR v6010c12 | 6010/6011 C12 (-14412,-5720) | 9489 / **0** | 7931 / **0** |
+| HINTER h5100c7 | 5100/5101 C7 (-16130,-2500) | 1228 / **471 (38 %)** | 950 / **397 (42 %)** |
+| DAVOR v5100c7 | 5100/5101 C7 (-12130,-5600) | 4243 / **0** | 3685 / **0** |
+| HINTER h5090c14 | 5090/5091 C14 (18317,-24665) | 565 / **152 (27 %)** | 556 / **182 (33 %)** |
+| DAVOR v5090c14 | 5090/5091 C14 (17017,-22665) | 505 / **2** | 403 / **5** |
+| HINTER h5050c1 | 5050/5051 C1 (-16400,-20850) | 5074 / **421 (8 %)** | 3463 / **304 (9 %)** |
+| DAVOR v5050c0 | 5050/5051 C0 (-22400,-20950) | 13552 / **0** | 10666 / **0** |
+| DAVOR v50B0c2 | 50B0/50B1 C2 (-15100,-19928) | 5162 / **0** | 4915 / **0** |
+| HINTER h6000c7 | 6000/6001 C7 (20933,-18184) | 252 / **164 (65 %)** | 322 / **199 (62 %)** |
+
+- Leon und Elza verhalten sich gleich (die Elza-Dateien der Stages 3..6 sind bytegleich, die RDTs 3051/4041/6011 auch;
+  5021 weicht ab und hat eine eigene Menge Tabellenzeilen). Stage 5 hat HINTER-Szenen in 5020, 5100 (Beine hinter dem
+  niedrigen Vordergrund-Objekt), 5090 (Beine hinter dem Maschinenteil) und 5050 (Knie/Messer hinter der dunklen Kante);
+  >= 60 % liefert der Szenenfinder (`suche 25 5`) in Stage 5 nur in 5020 (Daten der Generator-Masken, §6).
+- DAVOR v5090c14: 2 (Leon) / 5 (Elza) Saumpunkte am Rand der Pfeilermaske, s. OFFEN 2.
+- Die Zeilen 1..8 laufen als Riegel `integration_r37_masken36_stage3..6` (Leon und Elza, Werte reproduziert, §5).
+- Bilder: `p37/img/z4_<l|e><szene>.png`, `z5_*`, `z6_*` (A | B | V, 3-fach).
+
+### 4.3 FREI an der exe als Riegel (Stage 3, Leon und Elza)
+ROOM3050 Cut 5 (-13300,-16368) - Figur frei im Gang VOR der Maschine (§3.2), Lauf C = (-23996,1523) ausserhalb des
+Regionsvierecks von Cut 5 ((-22600,-21300) (-22268,-13250) (1700,-3450) (1600,-20890)), Fenster 159 87 188 182:
+
+| Stand | Leon: Figurpunkte / uebermalt | Elza |
+|---|---|---|
+| final (P) | 883 / **0** | 997 / **0** |
+| nur Lader-Regel, ohne Ausschluss (exe `re15_pc_p37nachher.exe`) | 883 / **538** | - |
+| vorher (bddd6b31) | 883 / 0 (keine Masken gezeichnet) | - |
+
+Der Ausschluss ist damit an der exe belegt (538 -> 0); B des alten Laufs und B des Riegel-Laufs sind bitgleich (cmp).
+
 
 ## 5. Tests
 
-(folgt)
+Alle in `re15_port/tests/unit/probes/r37_masken36.cmake` (keine Aenderung an tests/unit/CMakeLists.txt oder
+tests/integration/CMakeLists.txt):
+
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r37_masken36_zensus` | alle MSK-Dateien: je Sektion Original-NULL, Atlas-Quelle nach `re15_pri_atlas_quelle`, kein toter Cut, Blit-Pruefung (Mittel <= 40, Anteil > 48 <= 20 %); Stages 3..6 = 30 Dateien / 216 Sektionen / alle BSS; Gegenproben alte Regel (216 tot) und falscher Atlas (ROOM1220 Cut 0/2/4/6/8: 55.9..85.3 statt 4.7..5.8) | PASS (6/6) |
+| `unit_r37_masken36_ausschluss` | Ausschluss-Tabelle == Nachrechnung aus MSK/BSS/RDT (Rechteck fuer Rechteck), keine verwaiste Tabellenzeile (85 == 85), danach keine Fehlverdeckung, je Stage 3..6 Verdeckung HINTER Zellen bleibt (656684 / 440334 / 142077 / 730252 Figurpunkte), Gegenprobe ohne Ausschluss Fehlverdeckungen Stage 3 / 5 / 6 = 405755 / 291880 / 877426 | PASS (5/5) |
+| `unit_r37_masken36_verdeckung` | die an der exe gemessenen Leon-Szenen (§4.1) im Modell nach dem Ausschluss | PASS (3/3) |
+| `integration_r37_masken36_stage3..6` | echte exe je Stage, **Leon und Elza**: HINTER >= Haelfte verdeckt, DAVOR 0 uebermalt, Log `fg_atlas=1` + Zeile der Spur P; Stage 3 zusaetzlich FREI (Leon und Elza 0 uebermalt) | PASS (4/4) |
+
+**Riegel-Defekt behoben (Fortsetzung):** `unit_r37_masken36_ausschluss` pruefte "Tabelle == Nachrechnung" mit den
+Abweichungen des ZWEITEN Laufs (nach `memset`), der die Tabelle mit sich selbst vergleicht - der Check war immer wahr.
+Jetzt wird das Ergebnis der Nachrechnung gesichert und geprueft; neu ist der Check "keine verwaiste Tabellenzeile"
+(er haette die fuenf 0x1221-Zeilen nach be2dbd26 gemeldet).
 
 ## 6. OFFEN
 
-1. **Sektionen ohne Stehplatz im Modell (32 von 224):** dort findet die Erreichbarkeit (Saaten = AOTs mit eigenem Band + Tuer-
+1. **Sektionen ohne Stehplatz im Modell (32 von 216):** dort findet die Erreichbarkeit (Saaten = AOTs mit eigenem Band + Tuer-
    Ankuenfte) keinen Stehplatz im Regionsviereck — meist Kameras auf Ebenen ohne Saat (z.B. ROOM3040 Cut 4..7/12 Laufsteg
    Band 1, ROOM5020 obere Baender, ROOM5090 Band 1, ROOM6010 Band 1/4). Diese Sektionen zeichnen wie am 2026-09-03 gebaut,
    ohne Pruefung auf Fehlverdeckung. Weg: Saaten fuer Treppen-Uebergaenge zwischen Baendern (Treppen-AOT/RAMP-Zonen mit
    beiden Baendern) — nicht gebaut.
-2. **Rest in ROOM3040 Cut 1 (Szene f3040c1):** 9 von 222 Figurpunkten am Fussende werden noch von der verbliebenen
+2. **Saumpunkte:** ROOM3040 Cut 1 (Szene f3040c1): 9 von 222 Figurpunkten am Fussende werden noch von der verbliebenen
    Kistenmaske uebermalt (vorher 87). Die Lage (-22500,-11400) liegt im Modell nicht im erreichbaren Gitter dieses Cuts
-   (Kiste auf dem Treppenabsatz); nicht weiter verfolgt.
+   (Kiste auf dem Treppenabsatz). ROOM5090 Cut 14 DAVOR (17017,-22665): 2 (Leon) / 5 (Elza) von 505 / 403 Punkten am
+   Rand der Pfeilermaske (§4.2) - die Figur ist dort breiter als das Modellmass 700 (Arm/Haare), das Modell sieht 0.
+   Beide nicht weiter verfolgt; die Riegel-Szenen (§5) haben 0.
 3. **Objekte ohne Kollisionszelle:** ihre Rechtecke fallen weg, sobald sie eine erreichbare Figur verdecken (keine Zelle
    davor) — z.B. Ueberhaenge, Gelaender ohne Zelle. Folge = Zustand vor P (keine Verdeckung), nie eine Fehlverdeckung.
-   993 von 6609 Rechtecken sind ausgeschlossen (15 %).
-4. **Figurmass:** Leon (gemessen 3000 x 700). Groessere Figuren (z.B. Birkin, Tyrant-artige) sind nicht eigens geprueft.
+   944 von 6478 Rechtecken sind ausgeschlossen (15 %).
+4. **Figurmass:** Leon (gemessen 3000 x 700); Elza an der exe in 8 Szenen + 8 weiteren gemessen (§4.2), gleiches Bild.
+   Groessere Figuren (z.B. Birkin, Tyrant-artige) sind nicht eigens geprueft.
 5. **PSX:** `platform/psx/src/pri_psx.c` kennt keinen eigenen Atlas — Freistellungs-Masken wuerden dort den BSS-Atlas abtasten
    (vorbestehend, PSX-Ziel ungebaut). Der Ausschluss-Haken ist fuer den Gleichlauf in `platform/psx/main.c` eingetragen.
-6. **ROOM1221 (Elza):** ihre eigene Generator-Datei (ohne Atlas) zeichnet jetzt mit BSS-Atlas und Ausschluss (vorher gar
-   nichts, Abnahme A#1 M1). Die Integrations-Aufgabe des Orchestrators (1221 -> Zwilling 1220 mit den Freistellungen) hat
-   Vorrang; entfernt sie ROOM1221.MSK oder bevorzugt den Zwilling, werden die 0x1221-Zeilen der Tabelle wirkungslos (kein
-   Riegel faellt; `test_r37_masken36 erzeuge` danach neu laufen lassen haelt die Tabelle sauber).
+6. **ROOM1221 (Elza): erledigt.** be2dbd26 (Integration) im Spurbaum uebernommen, ROOM1221.MSK ist weg, Elza nutzt dort die
+   Leon-Freistellungen (Spur A). Tabelle neu erzeugt (0x1221-Zeilen weg), der neue Riegel-Check "keine verwaiste
+   Tabellenzeile" haelt das fest.
 7. Die Generator-Masken selbst (Tiefenband 0.90, Bodenflaechen in der Auswahl) bleiben unveraendert (Vertrag: MASKS/*
    nicht umschreiben). Ein Neubau der Stages 3..6 aus Freistellungen wie in STAGE1 waere der Weg zu vollstaendiger und
    genauer Verdeckung — eigener Auftrag.
+8. **Stage 5: HINTER >= 60 % nur in ROOM5020.** Der Szenenfinder findet in den anderen Stage-5-Raeumen nur Teilverdeckungen
+   (5100 C7 38/42 %, 5090 C14 27/33 %, 5050 C1 8/9 %, an der exe gemessen) - die Generator-Masken decken dort nur die
+   unteren Teile der Objekte. Riegel Stage 5 = ROOM5020; die anderen Raeume sind gemessen (§4.2), nicht verriegelt.
 
 
 ## 7. Fuer den Nutzer
@@ -249,7 +325,9 @@ S und |X - B| > 24. Lage = nach der Kollision gemessen (`RE15_STATE_LOG`).
   das Band knapp vor Objekten — dieselbe Art Fehler wie Ihre Meldung vom 2026-09-03 "Leon verschwindet"), bleiben aus.
   Wo Ihnen eine Verdeckung fehlt: F9-Marke wie gewohnt; der Weg dafuer ist eine Freistellung wie in STAGE1.
 - STAGE1/2 (Ihre Freistellungen) und Elzas Zwillings-Masken aus Runde 37 Spur A sind unveraendert.
-- Assets/Paket: keine neuen oder geaenderten Asset-Dateien (MASKS/* unveraendert, Paket-Gate unveraendert). Neu im Code:
+- Assets/Paket: Spur P bringt keine neuen oder geaenderten Asset-Dateien (Stage-3..6-MASKS unveraendert). Die Entfernung
+  von ROOM1221.MSK / ROOM2091.MSK + _PRI00..07.TIM im Spurbaum ist be2dbd26 der Integration (inhaltsgleich uebernommen),
+  nicht neu. Neu im Code:
   `engine/src/masken36_r37.c` + `engine/src/gen/masken36_ausschluss_r37.inc` -> Android: .cxx-Cache neu konfigurieren
   (neue Quelldatei, reai-v2-android-glob-cache); APK neu bauen.
 - Sprachdateien: keine. Bedienhinweise: keine neuen Schalter; im debug.log steht je Cut
