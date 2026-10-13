@@ -3,8 +3,8 @@ Bau -> unabhaengige Abnahme -> Nachbesserung, Modi ueber args), mit den Spuren d
 import io, json, re
 
 SRC = r"C:\workspace\git\reAi_v2\analysis\befunde_runde36\orchestrator\r36-rest3.js"
-DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_m.js"
-BASIS = "70030492"
+DST = r"C:\workspace\git\reAi_v2\analysis\befunde_runde37\orchestrator\r37_r.js"
+BASIS = "badd228f"
 HAUPT = "C:/workspace/git/reAi_v2"
 
 SPUREN = [
@@ -197,6 +197,110 @@ SPUREN = [
    "Auswahl-Band, Ziffern, Scrollbalken, Cursor, Inventar-Gitter rechts unveraendert. RIEGEL ueber probes/r37_kiste.cmake: Namen-Symbol-Ueberlappung = 0 "
    "fuer ALLE Item-Ids, kein Zeilen-Pixel ueber dem Rahmen bzw. ausserhalb des Fensters in jedem Gleit-Bild, Rahmen-Pixel unveraendert; test_itembox_screen, "
    "test_itembox_transfer, test_room1150_itembox gruen halten. Paket: keine neuen Assets erwartet.")),
+
+ dict(id="O", thema="szene11c0", baum="r37_szene11c0",
+  punkte=["Und die Dialogszene mit Ada/Marvin nach Irons Tod ist auch noch nicht so geil von den Animationen....",
+          "Erst schauen sie komplett in die falsche Richtung. Dann drehen sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht, schaut aber nicht zu ada.... da musst du noch mal ran, das ist noch nicht so gut.",
+          "Nachtrag 12: zum schluss dialog ada/marvin - wenn Ada sagt: \"Marvin!\" kann sie sich gerne den weglaufenden Marvin nach drehen."],
+  hinweise=("SZENE = Programm 4 der Irons-Szene: re15_port/engine/src/irons_tod_1150.c k_p_11c0 (~Z.391-470; Herleitung im Kommentar: Runde 35 Spur L "
+   "analysis/befunde_runde35/L_cut1150.md, Runde 36 Spur K2 analysis/befunde_runde36/K_*.md + K_belege/k2_*). Heutiger Ablauf: (1) beide drehen sich "
+   "zum Gebaeude (Tuer Slot 0 @0x01712, Mitte (-25100,17250) — liegt HINTER der Kamera Cut 13 = RID ROOM11C0 @0x200), (2) Ada dreht sich zu Marvin, "
+   "Marvin nur mit dem Kopf (OP_NECK1), (3) Marvin dreht sich zu Ada + Nicken, (4) 'Oh, no, Leon!' wieder zum Gebaeude gedreht, (5) zu Ada, Arm, "
+   "(6) rennt (Modus 5), (7) Ada sieht nach + 'Marvin!...'. Orte: Ada (-8965,-14347) (ROOM11C0 sub00 @0x01770), Marvin (-8163,-13748) Spawn-Gier 475 "
+   "(OP_EM). Vokabular aus dem Original-Dialog dieses Raums (ROOM11C0 sub02 Leon<->Ada: Plc_neck Modus 1 `41 01 x 0 z 64 00` @0x01886/@0x018C0, "
+   "Plc_dest Modus 9 Drehen @0x01890/@0x018CA, Ankunfts-Warten sub05/sub06 @0x01C3E/@0x01C50, Nicken sub03 @0x01BB2-BCA). SCHRITT 1 MESSEN an der "
+   "exe (echter Weg wie integration_r35_cut1150 Lauf A: probe_r35_cut1150_karte 1130 'nach10f0;ersteszene', CONTINUE, Tuer, Szene; RE15_FRAMEDUMP "
+   "Serie mit RE15_WINDOW_SCALE=1 im 11C0-Abschnitt; dazu je Bild Gierwinkel + Kopfdrehung (Plc_neck-Zustand) von Ada und Marvin loggen): jede Drehung "
+   "mit Bild, Start-/Endwinkel, Dauer — die Beschreibung des Nutzers Punkt fuer Punkt belegen (falsche Anfangsrichtung, 180-Grad-Drehung, 90-Grad-"
+   "Drehung Adas, Marvin spricht ohne Ada anzusehen). Pruefen, ob Plc_neck bei Marvin (Typ 0x40, NPC-Bibliothek) sichtbar wirkt (Kopfknochen dreht sich "
+   "im Bild?) und wie die Anfangs-Gier von Ada entsteht. SCHRITT 2 VORBILD: RE2-Dialogszenen zweier NPCs/Spieler (RE2_Quellcode_Overlays/, info/re2leon "
+   "RDT-SCD, z.B. Leon/Ada- oder Marvin-Szenen): wie halten sie sich zugewandt, wie reagieren sie auf ein Geraeusch (Kopf vs. Koerper), wie lange "
+   "drehen sie. SCHRITT 3 BAUEN: Anfangs-Gier beider so, dass sie sich zugewandt sind (Winkel aus den Positionen, atan2-Form des Ports zitieren); "
+   "Knall-Reaktion nur Kopf/kurze Koerperdrehung, keine 180 Grad; wer spricht, sieht den anderen an (Kopf + Koerper), auch Marvin bei allen drei "
+   "Zeilen bis zum Losrennen; Ada sieht ihm nach. Beats, Texte, Gesten, Laufziel und Schnitt zurueck nach 1150 bleiben; Takte PORT-WAHL. NICHT "
+   "anfassen: andere Programme in irons_tod_1150.c (Spur H: Nachspawn 1130), k_msg28 (Nachtrag 10). RIEGEL ueber probes/r37_szene11c0.cmake: je "
+   "Sprech-Abschnitt Gier/Kopf des Sprechers zeigt auf den anderen (Toleranz begruenden), groesste Einzeldrehung je Figur unter 90 Grad bzw. "
+   "begruendet, keine Drehung um ~180 Grad; integration_r35_cut1150 und integration_r36_szene1150 (Dialog-11C0-Riegel unit_r36_szene1150_dialog11c0) "
+   "gruen halten bzw. mit Beleg anpassen. Bildbeweis: Vorher/Nachher-Streifen im Dossier.")),
+
+ dict(id="N", thema="elzaems", baum="r37_elzaems", basis="99b4b13f",
+  punkte=["Bei Elzas Szenario stimmt weder das Modell von Roy noch all seine Animationen. Außerdem wiederholen sich seine Animationen wieder ständig, wie wir schon ungefähr 500x vorher bei Leon gefixed haben..... (Nachtrag 7 — fuer Roy durch Spur K erledigt; Spur N schliesst dieselbe Fehlerklasse fuer ALLE uebrigen Typen)",
+          "Orchestrator-Auftrag N (AUFTRAG.md): in Elzas Szenario laedt der Port jeden Gegner-/NPC-Typ wie das Original aus CDEMD1.EMS (FUN_80022300: Elza-Bit bltz @0x80022334 -> Datei 0x27 @0x800223ac, TOC @0x80073178), nicht aus Leons CDEMD0-Daten; sichtbar u.a. 0x30 Birkin (anderes Modell in ROOM3071/5081/5091/50F1) und 0x42 (anderes Modell in ROOM11B1 @0x01058, ROOM3091 @0x014F4); Aktions-/Opfer-Banken der Zombies 0x10-0x18, Kraehe, 0x27, 0x29, 0x2b. Leon bleibt bytegleich."],
+  hinweise=("BASIS: dein Baum steht auf 99b4b13f = abgenommener Stand der Spur K (238bb610) + AUFTRAG/VERTRAG vom master-Stand. Lies in deinem Baum "
+   "analysis/befunde_runde37/K_roy.md (v.a. §6.1 OFFEN 1, Zensus der Typ-Unterschiede, K_belege/emstab.py, emsdiff.py, k6_*) und K_abnahme_0.md, "
+   "dazu J_bissarm.md (OFFEN 2: RE1.5-Flavor mit Elza, Hand 229..284 statt 20..65 ueber der Schulter mit der Leon-Bank). CODE der Spur K: "
+   "engine/src/roy_r37.c + include/re15_roy_r37.h (Weiche nach dem Elza-Bit), engine/src/gen/ems_toc_r37.inc (BEIDE TOCs), "
+   "platform/pc/src/roy_pc.c (Lader aus CDEMD1), Haken platform/pc/main.c pc_enemy_read_re15_emd (~Z.851), enemy_common.c, anim_select_common.c, "
+   "enemy_ai_common.c. SCHRITT 1 ZENSUS: je Typ (alle Typen beider TOCs) Byte-Vergleich CDEMD0 gegen CDEMD1 je dir-Eintrag (Mesh, EDD/EMR-Banken, "
+   "TIM): was unterscheidet sich, wo kommt der Typ in Elzas Raeumen vor (alle Elza-RDTs, Sce_em_set/Typ-Zensus), welche Port-Pfade lesen welchen "
+   "dir-Eintrag (RE1.5-KI-Flavor, RE2-KI-Hybrid re2_hybrid_apply, NPC-Bibliothek, Opfer-Banken des Spielers). SCHRITT 2 ORIGINAL: am Original "
+   "messen, was es fuer Elza laedt (DuckStation-Spielstaende mit Elza wie K — Elza-Bit, Banken im RAM gegen CDEMD1; sauber = nicht "
+   "PATCHED-EXE_*), mindestens fuer 0x30 Birkin und 0x42 und einen Zombie-Typ; RE-Belege fuer den Lader (FUN_80022300 ganz lesen: gilt die Weiche "
+   "fuer JEDEN Typ? Sonderfaelle?). SCHRITT 3 BAUEN: die K-Weiche auf alle Typen verallgemeinern (ein Lade-Weg: Elza -> CDEMD1-Blob des Typs, "
+   "Leon -> wie bisher), Speicher/Entladen (Runde 35 Spur I entladen_pc.c) beachten; Roy (K) und Elliot (Leon 1170) bytegleich halten. "
+   "Beruehrt H (Zombie-Spawn), J (Griff-Arm: Opfer-Bezug Elza in bissarm_r37.c rechnet heute mit Leons Bank + Schulter-Differenz — mit der "
+   "CDEMD1-Opfer-Bank pruefen, ob das bleibt oder wegfaellt; im RE2-KI-Standard nur messen) und L (RE2-KI) — deren Code nur lesen, Wechselwirkung "
+   "im Dossier nennen. AN DER EXE (Elza, echte Wege bzw. Spielstand+CONTINUE): Birkin 0x30 in 3071/5081/5091/50F1 (Modell wie das Original), 0x42 in "
+   "11B1/3091, ein Zombie-Griff an Elza mit RE1.5-KI (Hand auf IHRER Schulter, J-Messung 20..65), Kraehen-/0x27-Opfer; Framedumps Original gegen Port. "
+   "RIEGEL ueber probes/r37_elzaems.cmake: je Typ Quelle (CDEMD0/CDEMD1) nach Szenario, Bytegleichheit der geladenen Banken mit dem Original-Blob, "
+   "Leon unveraendert (Gegenprobe), Roy-Riegel der Spur K gruen. Neue Assets: keine (CDEMD1.EMS liegt im Paket).")),
+
+ dict(id="P", thema="masken36", baum="r37_masken36", basis="bddd6b31",
+  punkte=["Orchestrator-Auftrag P (AUFTRAG.md, Regression): die ergaenzten Vordergrund-Masken der Stages 3..6 (30 MSK-Dateien ROOM3040..ROOM6031, erzeugt b8db7b2b 2026-09-03 fuer Cuts mit Vordergrund-Grafik im BSS, aber ohne Masken-Records im RDT) werden seit 53741fe5 (2026-09-08) fuer NIEMANDEN gezeichnet, weil der Lader fuer R15M-Masken einen eigenen Atlas verlangt, den nur die Raeume mit den Freistellungen des Nutzers haben. Ziel: diese Masken verdecken die Figuren wieder wie am 2026-09-03 gebaut (BSS-Atlas), ohne die Raeume mit eigenem Atlas (Stage 1/2, Spur A) zu veraendern; Figuren VOR einem Objekt werden nicht verdeckt.",
+          "Bezug zum Nutzer: Vordergrund-Verdeckung ist seit Runde 19 ein Dauerthema des Nutzers (F9-Marken, Freistellungen); in den Stages 3..6 fehlt sie seit v0.6.x unbemerkt."],
+  hinweise=("BASIS: dein Baum steht auf bddd6b31 = abgenommener Stand der Spur A (06ac2b56: Masken je Tiefenstufe ROOM1100, Zwillings-Rueckfall "
+   "Elza -> Leon re15_pri_masken_raum, Zensus tools/maske/zwilling_zensus.py) + AUFTRAG/VERTRAG vom master-Stand. Lies A_pri1100.md und "
+   "A_abnahme_1.md (M2: ROOM3040 Cut 0..7 fg_atlas=0, Cut 2 mit/ohne Masken 0 Punkte) in deinem Baum. GESCHICHTE: git show b8db7b2b (Generator "
+   "analysis/esp_masken_2026-09-03/gen_masken.py + pruef_gen.py: Atlas-Bloecke per NCC im Hintergrund wiedergefunden, Masken-Byte = src, "
+   "Transparenz Palettenindex 0, Tiefe konservativ x1.10; Container R15M, Original-Sektion hat IMMER Vorrang, Nachschlag nur bei NULL-Sektion "
+   "FF FF FF FF) und git show 53741fe5 (re15_pri_load_cut_atlas_ex: 'nachgezeichnete Rechtecke tragen srcX/srcY fuer IHREN Atlas', Merker aus "
+   "dem R15M-Zweig) — danach die Freistellungs-Commits 9474f9bb/692b4f10/7b24600f (eigene ROOMxxxx_PRI*.TIM). CODE: platform/pc/src/bg_pc.c "
+   "(re15_pri_load_cut_atlas_ex, beide Atlas-Pfade, A-Haken), entladen_pc.c re15_entladen_msk, render_pc.c Masken-Tiefentest, "
+   "engine re15_pri_msk_section_offset. SCHRITT 1 MESSEN: Zensus aller MASKS/*.MSK (alle Stages): je Raum/Cut eigene Atlas-Datei ja/nein, "
+   "R15M-Sektion ja/nein, Original-RDT-Sektion NULL ja/nein, fg_atlas an der exe; welche Cuts sind seit 53741fe5 tot (Erwartung laut A: alle "
+   "30 Stage-3..6-Dateien; pruefe auch Stage 1/2 auf Raeume/Cuts ohne eigenen Atlas). Pro totem Cut: auf welchen Atlas zeigen die Masken "
+   "(BSS-SLD-Atlas des Cuts? Bytes gegen gen_masken.py-Ausgabe pruefen). SCHRITT 2 BAUEN: R15M-Cut OHNE eigenen Atlas -> BSS-Atlas des "
+   "Cuts (Verhalten vor 53741fe5), R15M-Cut MIT eigenem Atlas -> unveraendert; Elza-Zwilling (A) unberuehrt. SCHRITT 3 PRUEFEN: Blit-Pruefung "
+   "je Cut (Masken durch den Atlas auf den Hintergrund: Bild bleibt praktisch gleich, gemessene Farbabweichung angeben); an der exe in "
+   "mehreren Raeumen jeder Stage 3..6 Leon (und Elza) HINTER einem Vordergrund-Objekt (verdeckt) und DAVOR (nicht verdeckt), Framedumps "
+   "RE15_WINDOW_SCALE=1 + Punktzaehlung wie A; Gegenprobe Stand vor P. Memory-Lehren: Maske = Tiefen-Profil je Zeile, 'deckt ab' != "
+   "'verdeckt', flache Maske verdeckt nichts, Masken nur wo man hinkommt, ⛔ Nutzer-PRI ohne Hash-Liste = Basis rot (pri_hashes.py im selben "
+   "Commit, falls Hash-Listen betroffen). RIEGEL ueber probes/r37_masken36.cmake: Zensus (je Datei/Cut Atlas-Quelle, kein toter Cut), "
+   "Blit-Pruefung, Verdeckungs-Pins je Stage mit Gegenprobe; Spur-A-Riegel (r37_pri1100*, pri_masken, r36_pri*) gruen.")),
+
+ dict(id="Q", thema="kistenregel", baum="r37_kistenregel", basis="6f360fb3",
+  punkte=["Orchestrator-Auftrag Q (AUFTRAG.md): mit der RE2-Item-Box des Ports darf kein Item mehr benutzt werden, das man nicht TRAEGT. Erster Fall (gemessen von Spur I): Feuerloescher in die Item-Box legen, dann loescht Leon das Feuer in ROOM1090 trotzdem (sub00 @0x02306 `21 03 85 00` prueft nur das Aufnahme-Bit (3,0x85)). Ziel wie RE2: das Item muss im Inventar sein, sonst RE2-gleiche Reaktion; Zensus ALLER solchen Bit-statt-Inventar-Abfragen (Leon und Elza, alle Stages) und je Fall die Entscheidung mit Beleg.",
+          "Zusammenhang zum Nutzer: Item-Box nach RE2 (Nutzer-Auftrag 2026-08-30); Feuerloescher (Nachtrag 4/4b/4c): leer am Boden nur nach 'Yes', bei 'No' 'Empty Fire Extinguisher' im Inventar."],
+  hinweise=("BASIS: dein Baum steht auf 6f360fb3 = abgenommener Stand der Spur I (1d338f4e) + AUFTRAG/VERTRAG vom master-Stand. Lies in deinem Baum "
+   "analysis/befunde_runde37/I_feuerloescher.md (v.a. Nachbesserung 1: Zensus der Wege, die 0x31 aus dem Inventar nehmen; RE2 FUN_800703b8 Box-Tausch "
+   "@0x800706c8/@0x80070710; Wegwerf-Ja @0x80051774) und I_abnahme_1.md. CODE: engine/src/re15_itembox.c (RE2-Box, g_itembox), feuerloescher_r37.c "
+   "(Tor 1090), scd_vm.c (Ck-Opcode = Flag-Abfrage), item_prompt_common.c / item_modal_common.c (Item-Benutzung/Abfragen). SCHRITT 1 ZENSUS (alle RDTs, "
+   "Leon + Elza, scd_dump_room.py / SCD-Walker): jede Stelle, an der ein Raumskript einen Item-Besitz ueber ein Bit prueft — Aufnahme-Bits (Set beim "
+   "Aufheben wie (3,0x85) in ROOM1000 sub01 @0x00D0C) bzw. Taken-Bits (Bank 9) als Bedingung einer Item-BENUTZUNG (Frage 'Will you use ...?', Raetsel, "
+   "Tuer mit Item); dazu, welche Abfragen das Original selbst ueber das INVENTAR macht (Item-Besitz-Opcode/EXE-Routine FUN_8004dfec @0x8004dff0/"
+   "@0x8004e014 u.a.). Je Fall: kann das Item in der Box liegen (laesst die Box es zu? Schluesselitems?), ist das Verhalten heute falsch (an der exe "
+   "nachweisen). SCHRITT 2 RE2: wie prueft RE2 dieselbe Art Benutzung (Besitz-Abfrage im RE2-SCD-Opcodesatz oder EXE, RE2_Quellcode_*, ghidra_re2_Leon.txt, "
+   "z.B. Feuerloescher-/Kurbel-/Schluessel-Raetsel in RE2) und was zeigt RE2, wenn man das Item nicht traegt (Text, keine Frage)? Selbst disassemblieren, "
+   "jede Konstante @0x. SCHRITT 3 BAUEN: kistenregel_r37.c — eine Tabelle {Raum, Abfrage-Stelle, Item} und ein Haken an der Stelle, wo das Original "
+   "das Bit prueft: Abfrage gilt nur, wenn das Item im INVENTAR ist (Box zaehlt nicht), sonst RE2-Verhalten; 1090 als erster Fall (dort Tor der Spur I "
+   "unberuehrt lassen: der Boden-Loescher bleibt an 'Yes' gebunden). Keine Wirkung, wo die Box das Item gar nicht aufnehmen kann. RIEGEL ueber "
+   "probes/r37_kistenregel.cmake: Zensus (je Fall Entscheidung), 1090 mit Loescher in der Box -> keine Loesch-Frage, mit Loescher im Inventar -> wie "
+   "bisher (Gegenprobe), integration_r37_feuerloescher gruen. Texte nur mit RE2-Beleg; Ids nach VERTRAG 1.2 begruenden (grep MSG_ID).")),
+
+ dict(id="R", thema="kiste2feld", baum="r37_kiste2feld", basis="badd228f",
+  punkte=["In der Kiste müssen die Icons offenbar so weit wie möglich rechts liegen, damit sie nicht vom Text überdeckt werden. (Nachtrag 9 — von Spur M erledigt; Spur R schliesst den dabei gefundenen vorbestehenden Fehler derselben Symbole)",
+          "Orchestrator-Auftrag R (AUFTRAG.md): 2-Feld-Symbole (49 px, z.B. Waffen) in der Kisten-Liste werden vollstaendig wie in RE2 gezeichnet — heute liest der Port nur die schmale 40-Texel-Kachel, die Spalten 40..48 wiederholen Spalte 39 (verschmiert). RE2 zeichnet die breite Zeile aus zwei Cache-Spalten (u1 0x78 @0x8007183c/@0x80071848, zweite Kachel FUN_80069c40 @0x80069cd8)."],
+  hinweise=("BASIS: dein Baum steht auf badd228f = abgenommener Stand der Spur M (aef88681: Rahmen ueber den Zeilen, Symbol buendig rechts x = 204 - Breite, "
+   "Ziffern im Symbol) + AUFTRAG/VERTRAG vom master-Stand. Lies M_kiste.md (OFFEN, §2 RE2-Belege, §5 Tests) und M_abnahme_0.md in deinem Baum. CODE: "
+   "engine/src/re15_inv_screen.c Block 7b (box_cell_icon_sized, RE15_BOX_ICON_W/H, 2-Feld-Breite 49), Kachel-Cache/ITEMALL-Logik (icon-cache ops, "
+   "re15_inv_screen.h, item_icon), platform/pc/src/inv_render_pc.c (Rasterung der Kachel). SCHRITT 1 MESSEN: an der exe (Kiste ROOM1150, Karte mit "
+   "2-Feld-Items wie Probe/Werkzeug der Spur M: probe_r37_kiste_karte) die Symbol-Pixel jeder 2-Feld-Item-Id gegen die Quell-Grafik (ITEMALL/Item-Bild, "
+   "breite Kachel) vergleichen — welche Spalten sind wiederholt; dasselbe im Inventar-Gitter (2-Feld-Item im Inventar) und im Item-Modal pruefen, ob "
+   "derselbe Fehler dort auftritt. SCHRITT 2 RE2: die zwei Cache-Spalten selbst disassemblieren (@0x8007183c/@0x80071848 u1 0x78, FUN_80069c40 "
+   "@0x80069cd8 zweite Kachel; wo liegt die rechte Haelfte im VRAM, wie wird sie geladen), am RE2-Referenzbild (analysis/itembox_re2/referenz) "
+   "gegenpruefen. SCHRITT 3 BAUEN: die rechte Haelfte wie RE2 aus der zweiten Kachel zeichnen; Lage/Groesse aus Spur M unveraendert (buendig rechts). "
+   "RIEGEL ueber probes/r37_kiste2feld.cmake: je 2-Feld-Item-Id Pixelvergleich Symbol gegen Quelle (keine wiederholte Spalte), Gegenprobe alter Stand, "
+   "Spur-M-Riegel (unit_r37_kiste, integration_r37_kiste) gruen.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
