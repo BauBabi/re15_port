@@ -15,10 +15,11 @@
  *                Lauf), genau ein Lauf (Modus 5) erst nach Ablauf von Marvins letzter Zeile, danach genau eine Drehung
  *                Adas nach dem Signal "Ada folgt Marvin" (Nachtrag 12).
  *   ablauf       die Szene im Spieltakt (Raumaufbau wie das Spiel, scd_room_reenter): einander zugewandt ab dem ersten
- *                Bild, Ada dreht sich nie, Marvin nur beim Losrennen (nach seiner Zeile, < 120 Grad), je Zeile
- *                Sprecher UND Zuhoerer zum Partner (Koerper im Kegel 0x60 @0x80076c41, Kopf auf dem Partner bzw.
- *                Keyframe/Nicken),
- *                der Knall nur mit den Koepfen, Ada sieht Marvin mit dem Kopf nach, Schnitt zurueck nach 1150 Cut 7.
+ *                Bild, im Gespraech (msg 10..13) dreht sich niemand, Marvin nur beim Losrennen (nach seiner Zeile,
+ *                < 120 Grad), je Zeile Sprecher UND Zuhoerer zum Partner (Koerper im Kegel 0x60 @0x80076c41, Kopf auf
+ *                dem Partner bzw. Keyframe/Nicken), der Knall nur mit den Koepfen; Nachtrag 12: Ada dreht sich dem
+ *                laufenden Marvin EINMAL nach (< 90 Grad, bei msg 14 im Kegel 0x60 neben ihm) und ihr Kopf-Ziel
+ *                folgt ihm in jedem Bild; Schnitt zurueck nach 1150 Cut 7.
  *   auswerten <lauf>  Auswerter fuer integration_r37_szene11c0 (echte exe): s11c0.log (RE15_S11C0_LOG) + neck_trace.log
  *                (RE15_NECK_TRACE, der GEZEICHNETE Kopf): dieselben Bedingungen mit dem wirklichen Kopf-Blick. */
 #include "re15_rdt.h"
