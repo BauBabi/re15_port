@@ -454,7 +454,14 @@ Die Trefferpruefung des Messers ist unveraendert: Spur L aendert nur DECISION[0]
 
 **Messung nachher.** Neuer Text gegen die Abnahme-Messung 3.6 geprueft (Summe 6 / 10, je Paar wie in der Tabelle oben).
 Code unveraendert gegenueber dem abgenommenen Stand ab2bf2b9 (`git diff ab2bf2b9 -- re15_port` leer); Bau
-`bash re15_port/tools/local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)`. Gezielte Tests: s. unten.
+`bash re15_port/tools/local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)`.
+Gezielte Tests (Baum r37_re2zombie, Stand fe329139 = Code ab2bf2b9; keine volle Suite):
+1. `ctest --test-dir re15_port/build -R "r37_re2zombie|re2_zombie_abc|blut_pin|10d0_situp|zombieki_eintritt|r37_zombieaktiv" -E "^integration_" -j 4 --timeout 600`
+   -> **`100% tests passed, 0 tests failed out of 24`** (alle Riegel der Spur L, Nahkampf-Positivkontrolle
+   unit_re2_zombie_abc / unit_r37_re2zombie_nahkampf, die in 5 / 5b angepassten Riegel blut_pin x9, probe_10d0_situp_handoff,
+   unit_r36_zombieki_eintritt, dazu die Riegel der Spur H r37_zombieaktiv).
+2. `ctest --test-dir re15_port/build -R "^integration_r37_(re2zombie|zombieaktiv)$" --timeout 600` (seriell)
+   -> **`100% tests passed, 0 tests failed out of 2`** (integration_r37_re2zombie 51,50 s, integration_r37_zombieaktiv 25,11 s).
 
 ## OFFEN
 
