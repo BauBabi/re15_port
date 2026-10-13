@@ -5,6 +5,7 @@ Pflichtlektuere: `CLAUDE.md`, `analysis/befunde_runde37/AUFTRAG.md` (Wortlaut), 
 Verfahren wie Runde 36 (`analysis/befunde_runde36/UEBERGABE.md` §2-§4, Lehren §6), Release-Ziel **v0.8.25**.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-13 22:57: Integration mit N gruen: 74/74 (r37_elzaems, r37_roy, r37_bissarm, r37_zombieaktiv, Elza, Birkin, Hybrid, Opfer).
 * 2026-10-13 22:52: N elzaems Abnahme 0 BESTANDEN (Workflow fertig; 116 gezielt gruen; CRC32 der geladenen Blobs = TOC; 3091 zeigt das Original-Modell 0x42 statt Ada, 5081 die zweite Birkin-Form; Leon nur 5080 geaendert wie das Original @0x742) -> INTEGRIERT (872a78cc; Konflikt nur AUFTRAG/VERTRAG -> master). Bau ok, 74 gezielte Tests laufen.
 * 2026-10-13 22:47: Integration mit R gruen: 45/45 (r37_kiste*, itembox, Inventar, Item-Modal, Feuerloescher, Schluessel, Dokumente).
 * 2026-10-13 22:41: R kiste2feld Abnahme 0 BESTANDEN (Workflow fertig; MC51-Tausch 722/722, Gitter/Ausruest 1200/1200; Abtastung 796/796 am RE2-Bild) -> INTEGRIERT (db1c682c; Konflikt nur AUFTRAG/VERTRAG -> master-Fassung). Bau ok, gezielte Tests laufen.
