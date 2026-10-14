@@ -36,6 +36,7 @@
 #include "re15_skeleton.h"
 #include "re15_door_seq.h"
 #include "re15_aufschliessen_r36.h"
+#include "re15_kistenregel_r37.h"
 #include "re15_tim.h"
 #include <math.h>
 
@@ -104,6 +105,15 @@ static int room_boot(uint16_t room)
     pl->x = 0; pl->z = 0; pl->rot_y = 0;
     re15_collision_set_band(0);
     re15_inv_load_briefing();
+    /* Runde 37 Spur Q: ein Besitz-Bit der Kistenregel zaehlt nur mit dem Gegenstand im INVENTAR (kistenregel_r37.c,
+     * RE2 Keep_Item_ck @0x8005850c). Im Original heisst "Bit gesetzt, noch nicht benutzt" = er liegt im Inventar (die
+     * Item-Box ist eine Port-Zutat) -> denselben Gegenstand aus der Q-Tabelle dazulegen (ROOM10D0 (9,0x34) Blue Keycard
+     * 0x38, ROOM3010 (3,0x3B) Green Keycard 0x36). */
+    for (int k = 0; k < s_n_flags; k++)
+        for (int j = 0; j < re15_kistenregel_r37_anzahl(); j++) {
+            const re15_kr37_fall_t *q = re15_kistenregel_r37_zeile(j);
+            if (q->raum == room && q->bank == s_flags[k][0] && q->bit == s_flags[k][1]) { re15_inv_grant(q->item, 1); break; }
+        }
     s_shown = 0;
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
