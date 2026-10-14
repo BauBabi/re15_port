@@ -103,10 +103,11 @@
 #                   2026-10-04 (Runde 35, Integration aller 14 Spuren, gemessen 592/592): +75 -> 592
 #                     (G karte, D redhawk, M fenster, F inhalt, C zgirl, I entladen, N android, J affen, H raeume).
 #                   2026-10-12 (Runde 36, Integration aller 17 Spuren A..Q + R + kartenbits + generator, gemessen 698/698): +106 -> 698
-#                   2026-10-14 (Runde 37, Zwischenversion: 15 Spuren A, C..K, M..O, Q, R, gemessen 785/788, die 3 roten = Q-Fixtures, korrigiert): +90 -> 788
 #                     (A klettern, B kleidung, C schuss, D granate, E gegnerzahl, F zombieki, G tueren, H ziel1190,
 #                      I inventar, J szenenleon, K szene1150, L elza, M karte, N kartenitems, O pri, P story,
 #                      Q schluessel, R dachkiste, kartenbits, g2_generator je eigene probes/r36_<spur>.cmake).
+#                   2026-10-14 (Runde 37, Zwischenversion: 15 Spuren A, C..K, M..O, Q, R, gemessen 785/788 - die 3 roten waren
+#                     Alt-Riegel ohne den Gegenstand der Q-Kistenregel, korrigiert und gruen): +90 -> 788
 #
 # FALLE, die dieses Skript bewusst schliesst
 # ---------------------------------------------------------------------------
