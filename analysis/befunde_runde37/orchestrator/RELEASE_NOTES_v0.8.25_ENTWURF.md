@@ -3,7 +3,9 @@
 Zwischenversion der Runde 37, wie gewuenscht: die Aufzuege sind fertig, dazu fast alles andere. 15 der 17 Spuren sind
 gebaut, von einem zweiten Agenten unabhaengig am gebauten Spiel gegen Ihren Wortlaut nachgemessen und zusammen
 getestet; wo eine Abnahme nicht bestand, wurde nachgebessert und erneut abgenommen. Zwei Spuren folgen am Samstag
-(unten). Suite 698 -> ???/??? (volle Suite einmal im Integrationsbaum, ohne parallele Agenten).
+(unten). Suite 698 -> 788 (volle Suite einmal im Integrationsbaum, ohne parallele Agenten: 785/788; die drei roten
+waren aeltere Pruefungen, die das Karten-Bit ohne die Karte im Inventar setzten - durch die neue Kistenregel
+zaehlt das Bit nur noch mit dem Gegenstand; nachgezogen, danach gruen).
 
 ## Was Sie merken
 
