@@ -33,6 +33,12 @@ wie @0x80101540-a0 / @0x8010159c. Dazu Zensus der uebrigen OFFEN-Marken (Bewegun
       breitere Testauswahl -> vier weitere verschobene Riegel gefunden und mit Mechanismus angepasst (5b), Abschluss
 - [x] Nachbesserung 1 (2026-10-14, nach Abnahme 0): M1 = Nutzer-Satz zum Messer an die exe-Messung angepasst (reine
       Textkorrektur, kein Code), s. Abschnitt "Nachbesserung 1"
+- [x] Nachbesserung 2 (2026-10-14, nach Abnahme 1 `L_abnahme_1.md`): M1 = RE2-Erholungsleiter P3 vollstaendig und richtig
+      beschrieben (Ende @0x80105B3C-98: 0x10101 im Normalfall), die vorbestehende Umkehr im Port (re2z_hit_main case 3)
+      mit dem Riegel-Fund @0x80105AA0-B0 als EIN OFFEN-Punkt (Adresse, Wirkung, Mess-Zeilen, Begruendung "nicht in L
+      geschlossen", Freigabe-Antrag); M2 = Messer-Aussage auf das phasenrobuste exe-Ergebnis (Abnahme 1, 18 Paare)
+      umgestellt, "weniger Schlaege" gestrichen, Weg-Zahlen als |dx|+|dz| gekennzeichnet (Wegstrecke 25,6 / 35,6). Reine
+      Textkorrektur, kein Code (s. Abschnitt "Nachbesserung 2")
 
 ## Schritt 0 — Lektuere (Befunde)
 
@@ -120,7 +126,8 @@ zurueckgeschrieben. Rohdaten `L_belege/re2_original_room20a0_jeder_takt.txt.gz`,
 | 80156d64 | 773 | 0x00010101 | 1987 | ja (963/961) | (2) | 4 Takte, dann 0x101 (Spieler beansprucht) |
 | 8016634c | 696 | 0x00010101 | 3565 | ja (1271/1273) | (1) Timer: +0x15A 1 -> 125 | 80 Takte 0x201, dann GRIFF bei 1152 |
 
-Weg je Takt: Gang 0x101 32,2 (4213 Takte), Arme-hoch-Gang 0x201 44,1 (94 Takte). Alle Zustandswechsel der 5400 Proben:
+Weg je Takt als Summe |dx|+|dz| (Zaehler in `re2_0x201_ausw.py`): Gang 0x101 32,2 (4213 Takte), Arme-hoch-Gang 0x201 44,1
+(94 Takte); als Wegstrecke (euklidisch, gleiche Takt-Auswahl, Nachbesserung 2) 25,6 / 35,6. Alle Zustandswechsel der 5400 Proben:
 1/1->1/2 3x, 1/2->1/3 2x, 1/2->1/1 1x, 1/3->1/5 2x, 1/5->1/1 3x, 1/1->1/9 5x (Rueckstoss-Domino eines abgeworfenen Greifers,
 `sw 0x901` @0x80102E90 — im Port vorhanden, enemy_ai_re2_zombie.c re2z_exec_grab), 1/9->1/5 5x.
 => **So macht es RE2:** ein gehender Zombie hebt die Arme (0x201), sobald Leon im ersten Takt unter 2000 vor ihm steht
@@ -321,12 +328,13 @@ nennt s1). Gemessen danach: "Uebergabe-Tick t88: s1=2 clip=0 (RE2-Bank hat 31 Cl
 ## Messung nachher
 
 ### N1 — Port-Harness (echte Raumeintritte, echte Spielschleife; Sonde `test_r37_re2zombie gang`)
-| Lauf | Wechsel nach 0x201 | +0x1F0 im Wechsel-Takt | danach | Weg je Bild 0x101 / 0x201 | Gegenprobe Maske 0 |
+| Lauf | Wechsel nach 0x201 | +0x1F0 im Wechsel-Takt | danach | Weg je Bild als |dx|+|dz| 0x101 / 0x201 | Gegenprobe Maske 0 |
 |---|---|---|---|---|---|
 | ROOM1130 nach der Montage, Leon steht an der Tuer (900 Bilder) | 1 (Produzent (2), Slot 5 Typ 0x11, F864) | 1993 | Griff F883 (+0x1F0 1193) | 31,0 / 53,8 | kein 0x201, erster Griff F891 |
 | ROOM1180 Normalspiel, Leon am Eintritt aus 1160 (900) | 2 (beide (2), Slot 3 Typ 0x10, F284/F803) | 1995 / 1991 | Griff F312 / F837 (+0x1F0 1193 / 1180) | 26,0 / 33,5 | kein 0x201 |
 | ROOM1180, Leon RENNT geradeaus (Gier 0/1024/2048/3072, 300 Bilder) | je 1-2 durch (3) | 2495 (< 0x9C4) | — | | — |
-RE2-Original (M2): Wechsel bei 1999/1987 (2) bzw. 3565 (1), Griff bei 1180/1152, Weg 32,2 / 44,1.
+RE2-Original (M2): Wechsel bei 1999/1987 (2) bzw. 3565 (1), Griff bei 1180/1152, Weg (|dx|+|dz|) 32,2 / 44,1 (Wegstrecke
+euklidisch 25,6 / 35,6).
 
 ### N2 — Nahkampf (Aufbau test_re2_zombie_abc, Messer, 64 Seeds x 900 Bilder)
 Stand bis Runde 37 (Maske 0): 368 Treffer; Spur L: 369 (Sonde) bzw. 373 (test_re2_zombie_abc im Prozess nach der Pistole).
