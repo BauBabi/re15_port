@@ -1,8 +1,9 @@
-# v0.8.25 - 2026-10-?? (ENTWURF — je bestandener und integrierter Spur ein Abschnitt; beim Release nach release/RELEASE_NOTES.md)
+# v0.8.25 - 2026-10-14 (Zwischenversion)
 
-Ihr Auftrag der Runde 37 ist gebaut. Jeder Punkt wurde von einem zweiten Agenten unabhaengig am gebauten
-Spiel gegen Ihren Wortlaut nachgemessen; wo er nicht bestand, wurde nachgebessert und erneut abgenommen.
-Suite 698 -> ???/??? (volle Suite einmal im Integrationsbaum, ohne parallele Agenten).
+Zwischenversion der Runde 37, wie gewuenscht: die Aufzuege sind fertig, dazu fast alles andere. 15 der 17 Spuren sind
+gebaut, von einem zweiten Agenten unabhaengig am gebauten Spiel gegen Ihren Wortlaut nachgemessen und zusammen
+getestet; wo eine Abnahme nicht bestand, wurde nachgebessert und erneut abgenommen. Zwei Spuren folgen am Samstag
+(unten). Suite 698 -> ???/??? (volle Suite einmal im Integrationsbaum, ohne parallele Agenten).
 
 ## Was Sie merken
 
@@ -100,7 +101,6 @@ ersten Bild an einander zugewandt. Auf den Knall drehen sie nur die Koepfe; im G
 spricht, sieht den anderen an - auch Marvin bei allen drei Zeilen. Er dreht sich erst, wenn er zur Tuer losrennt. Bei
 "Marvin!..." dreht Ada sich ihm einmal nach, ihr Kopf folgt ihm, bis er aus dem Bild ist.
 
-<!-- Rest-Spuren G, L, N, O, P, Q, R: nach bestandener Abnahme + Integration hier ergaenzen, sonst unter 'Folgt am Samstag' -->
 
 ## Grenzen
 
@@ -123,4 +123,10 @@ spricht, sieht den anderen an - auch Marvin bei allen drei Zeilen. Er dreht sich
 
 ## Folgt am Samstag
 
-<!-- beim Release fuellen: Spuren, die bis zum Bau der Zwischenversion nicht bestanden haben -->
+* **Zombies wie RE2, Angriffsgang** (Spur L): Zombies heben im Port bisher nie von sich aus die Arme fuer den schnelleren
+  Angriffsgang - in RE2 tun sie das in der Naehe, nach Treffern und wenn Sie an ihnen vorbeirennen. Gebaut und in allen
+  Punkten abgenommen; offen sind nur Belegtexte und eine dabei gefundene alte Abweichung in der Treffer-Erholung, die
+  am Samstag mitbehoben wird. Mit dem Messer wird es dann etwas schwerer, anrueckende Zombies aufzuhalten.
+* **Verdeckung in den Stages 3 bis 6** (Spur P): Seit v0.7.19 zeichnete der Port die ergaenzten Vordergrund-Masken
+  dieser Stages nie (ein Lader-Fehler) - Figuren liefen dort ueber Moebel und Wandteile, die sie verdecken muessten.
+  Gebaut und weitgehend abgenommen; offen sind zwei kleine Punkte (das Kranpult in ROOM3050, die Kopfoberkante).
