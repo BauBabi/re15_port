@@ -287,3 +287,49 @@ was durchfaellt oder laenger braucht, wird angehalten und am Samstag (2026-10-17
 v0.8.25 aus r37/integration wie jedes Release: volle Suite seriell ohne Agenten, RE15_MIN_TESTS, Release Notes (mit
 "Folgt am Samstag"), master ff, Hauptbaum-exe, Windows + Linux/Deck + Android, Paket, Archiv, Tag, Push. Der Rest der
 Runde 37 wird danach v0.8.26.
+
+## Nachtrag 14 — 2026-10-15 (woertlich, Elza: Luecke zwischen ROOM1021 und ROOM1141) -> Samstag / v0.8.26
+
+> In Elzas Szenario gibt es zunächst eine Cutscene im ROOM 1021 wo John Roy erschießt der sich zum Zombie gewandelt hat.
+>
+> Danach kommt nur noch eine - die nächste Cutscene - In Room 1141. main02 und folgende wo Elza sagt - Are you ok? What happened? und John dann erzählt das er die Monkeys auf dem Dach gesehen hat usw.... Aber da ist eine Lücke... Woher weiß Elza DAS etwas passsiert ist. Wo kann das are you ok? What happened her kommen.
+>
+> Da fehlt wieder mal was in der Story.... Hast du da einen guten Vorschlag.
+
+> Nein, das John, wait kommt, weil John mit der Pistole auf Elza zielt, weil er erschrocken ist, das sie die Tür rein kommt. Das passt schon.
+>
+> allgemein der Vorlauf passt trotzdem mit der Idee von dir.
+>
+> Der einzige Haken ist - Wir sind in ROOM 1020 und er sagt - he likes to be alone, und dann gehen wir aus der Tür raus, noch eine Tür in das Treppenhaus, die Etage hoch. Durch die Tür und dann plötzlich ist er in ROOM 1141 so schnell? Nachdem er gerade noch vor 5 Sekunden alleine sein wollte und getrauert hat? Das macht nicht so viel sinn...
+
+> Ich habe eine Idee.... Der Raum 1141 ist vorher abgeschlossen, Roy hat den Schlüssel. Nachdem er zum Zombie geworden ist, hat er den Schlüssel an der Stelle gedropped, wo er vorher am Boden lag in ROOM 1011. Und wenn Elza wieder aus dem Raum raus kommt, ist John weg.
+
+> Wir können das so machen, aber ohne das John, wait und das Sorry.... Einfach nur direkt - are you okay? what's happened? Und du musst einen für den Dining Room passenden Schlüssel finden. Und wir müssten irgendwie beim toten Roy irgendeine Art hinweis hinterlassen, das er den dining key hatte und der im 1011 gedropped gewesen sein könnte.
+>
+> Dafür müsste dann immer wieder ein panisches Klopfen/Hämmern und ein help ein regelmäßigen abständen, bis man den geheimen Schalter gefunden hat um die Tür zu öffnen, mit panischer Musik.
+>
+> Wenn Die Monkeys da sind, und Elza eine Tür anklickt, muss, so lange die Monkeys noch nicht tot sind kommen "I cannot leave him alone with those monsters".
+
+Abgestimmter Ablauf (Orchestrator, 2026-10-15; nur Elza-RDTs 1011/1021/1131/1141, Leon unberuehrt):
+1. ROOM1021 Szene wie bisher. Roys Leiche (sub06 msg 9 "He's dead. Poor Roy...") bekommt einen HINWEIS auf den
+   fehlenden Dining-Room-Schluessel und dass er ihn dort verloren haben koennte, wo er lag (1011). Text noch offen.
+2. ROOM1011 (einzige Tuer -> 1021): der Schluessel liegt an Roys Liegestelle (Roy-Spawn sub00 @0x009F6
+   (-2000,0,7450)), erst nach der 1021-Szene. Zurueck in 1021 ist John weg (schon Original: Spawn nur bei (4,0x60)==1,
+   die Szene loescht das Flag @0x01FD8).
+3. ROOM1131 -> 1141: Tuer verschlossen bis zum Schluessel. Vorschlag Schluessel = RE2 Precinct Key 0x5B "Heart Key"
+   (mesh066, gold mit rotem Herz, analysis/befunde_runde36/Q_belege/q_re2_schluessel_modelle.png "Precinct 5B";
+   im Port noch unbenutzt); RE2-Verschlossen-Text Index 15 (key_type 0x5B, Tabelle @0x8009F368) "It's locked. A heart
+   is etched under the key hole." Freie RE1.5-Item-Id per Zensus wie Runde 36 (0x42/0x45 sind vergeben).
+4. ROOM1141 nach dem Aufschliessen: John sitzt auf dem Dach fest (hochgekommen ueber die Flurtuer 1131 -> 1171,
+   @0x008EE, immer offen; Gorillas schneiden ihm den Rueckweg ab). In regelmaessigen Abstaenden panisches Haemmern +
+   "Help", panische Musik, bis Elza den GEHEIMEN SCHALTER findet: das Original hat ihn schon — Gemaelde "A beautiful
+   painting. There's a switch below." (sub06 @0x00FE8, hebt den Notrolladen Prop obj 0 vor dem Dachgang, (3,0x6A)),
+   danach der Riegel (sub05 @0x00FD2 "You've opened the lock."). OFFEN: "Help" als Stimme (RE2-Kendo-Proben
+   voice/Kendo, John traegt Kendos Modell) statt Textfenster — ein Message_on haelt das Spiel jedes Mal an.
+   OFFEN: welcher Musiktitel (Original startet in 1141 die Gorilla-Kampfmusik @0x00B4E, Stopp @0x00C06).
+5. Szene sub02 ohne msg 0 "John, wait!" und msg 1 "...sorry, I'm glad...": John stuerzt herein, Elza direkt
+   "Are you okay? What's happened?" (msg 2 ohne "Same here..." — das antwortete auf die gestrichene Zeile 1). Rest wie
+   Original (Dach-Warnung, Gorillas durch die Fenster, "I'll try to distract them...").
+6. Solange die Gorillas leben ((4,0xF2)==1; sub01 loescht es erst, wenn (7,0xCB) und (7,0xCC) gesetzt sind,
+   @0x00BF2-0x00C0C): jede Tuer in 1141 -> "I cannot leave him alone with those monsters." Danach muss John VOR Elza
+   aufs Dach (1171 beginnt mit John oben, sub07 @0x016C8) — kurzer Abgang durch die Dachtuer, sonst springt er wieder.
