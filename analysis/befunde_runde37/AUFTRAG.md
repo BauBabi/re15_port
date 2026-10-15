@@ -316,10 +316,11 @@ Abgestimmter Ablauf (Orchestrator, 2026-10-15; nur Elza-RDTs 1011/1021/1131/1141
 2. ROOM1011 (einzige Tuer -> 1021): der Schluessel liegt an Roys Liegestelle (Roy-Spawn sub00 @0x009F6
    (-2000,0,7450)), erst nach der 1021-Szene. Zurueck in 1021 ist John weg (schon Original: Spawn nur bei (4,0x60)==1,
    die Szene loescht das Flag @0x01FD8).
-3. ROOM1131 -> 1141: Tuer verschlossen bis zum Schluessel. Vorschlag Schluessel = RE2 Precinct Key 0x5B "Heart Key"
-   (mesh066, gold mit rotem Herz, analysis/befunde_runde36/Q_belege/q_re2_schluessel_modelle.png "Precinct 5B";
-   im Port noch unbenutzt); RE2-Verschlossen-Text Index 15 (key_type 0x5B, Tabelle @0x8009F368) "It's locked. A heart
-   is etched under the key hole." Freie RE1.5-Item-Id per Zensus wie Runde 36 (0x42/0x45 sind vergeben).
+3. ROOM1131 -> 1141: Tuer verschlossen bis zum Schluessel. Vorschlag: Name "Dining Room Key", Modell/Icon/Bild =
+   RE2 Precinct Key 0x5B (Heart Key, mesh066, gold mit rotem Herz, analysis/befunde_runde36/Q_belege/
+   q_re2_schluessel_modelle.png "Precinct 5B"; im Port noch unbenutzt). Tuertext nach RE2-Muster Text 0x13
+   @0x8009F2BB ("It's locked. The door is marked ..."): "It's locked. The door is marked "Dining Room"."
+   Freie RE1.5-Item-Id per Zensus wie Runde 36 (0x42/0x45 sind vergeben).
 4. ROOM1141 nach dem Aufschliessen: John sitzt auf dem Dach fest (hochgekommen ueber die Flurtuer 1131 -> 1171,
    @0x008EE, immer offen; Gorillas schneiden ihm den Rueckweg ab). In regelmaessigen Abstaenden panisches Haemmern +
    "Help", panische Musik, bis Elza den GEHEIMEN SCHALTER findet: das Original hat ihn schon — Gemaelde "A beautiful
