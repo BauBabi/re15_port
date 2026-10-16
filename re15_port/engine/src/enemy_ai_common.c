@@ -14685,6 +14685,10 @@ void re15_enemy_ai_run_all(int combat_active)
             {   /* Spinnen-Freeze 2026-09-10..11 ENTFERNT (Nutzer-Freigabe). */
                 int32_t asp_ox = e->x, asp_oz = e->z;
                 re15_adult_spider_ai_tick(s);
+                re15_enemy_selfpush_from_player(s, e);   /* Runde 38 Spur R: Spinnen-Root `jal 0x8002aec4`
+                                                          * @0x80110a6c (a0 = Spieler `addiu a0,s0,20`
+                                                          * @0x80110a70, a1 = Spinne); gemessen: Landung
+                                                          * (5975,3137) -> (5740,4332) neben dem Spieler */
                 re15_enemy_body_push_tail(s, e);
                 re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
             }
