@@ -48,6 +48,12 @@ int  re15_r38_sm_opfer_clips(uint8_t typ, uint8_t v, uint8_t *c_intro, uint8_t *
 /* 1 = Griff-2-Opfermaschine (aca59 2/3): KEINE Platzierung, KEIN Yaw-Schreiben (0x80115FF0-0x801161D8). */
 int  re15_r38_sm_griff2_opfer(uint8_t typ, uint8_t v);
 
+/* ---- Kein Griff durch eine Wand (alle Greifer) ---- */
+/* 1 = die Strecke (x0,z0)->(x1,z1) schneidet das Innere einer soliden Rechteckzelle (Typ 1, u0 & 1) des
+ * Spielerbandes. Gerufen von re15_victim_place (enemy_ai_common.c) und der Griff-2-Lage. NUTZER-VORGABE,
+ * Form und Belege im Funktionskopf (spiderman_r38.c). */
+int  re15_r38_griff_durch_wand(int32_t x0, int32_t z0, int32_t x1, int32_t z1);
+
 /* ---- Messzugang (Riegel) ---- */
 /* Zaehler der Griff-Latches dieses Moduls seit Programmstart (Sonde). */
 unsigned re15_r38_sm_latches(void);

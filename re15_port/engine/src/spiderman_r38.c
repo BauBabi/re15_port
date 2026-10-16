@@ -244,6 +244,7 @@ void re15_r38_sm_griff2(re15_actor_t *e, re15_actor_t *pl)
             if (g_room_rdt_ok) {
                 re15_collision_ensure_band(pl->y);
                 re15_collision_constrain(&g_room_rdt, ox, oz, &nx, &nz);
+                if (re15_r38_griff_durch_wand(ox, oz, nx, nz)) { nx = ox; nz = oz; }   /* NUTZER-VORGABE (3) unten */
             }
             pl->x = nx; pl->z = nz;
         }
@@ -320,4 +321,43 @@ int re15_r38_sm_opfer_clips(uint8_t typ, uint8_t v, uint8_t *c_intro, uint8_t *c
 int re15_r38_sm_griff2_opfer(uint8_t typ, uint8_t v)
 {
     return typ == RE15_R38_SM_TYP && v >= 2;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * (3) KEIN GRIFF DURCH EINE WAND — NUTZER-VORGABE "Sowas darf GARNICHT passieren, bei keinen Gegner."
+ * Die Spieler-Wandklemme beider Originale ist ein PUNKT-Test gegen die um den Radius aufgeblasene Zelle:
+ *   RE1.5 FUN_8003b0a4 (`(u32)(x - (zelle.x - r)) < (u32)(zelle.w + 2r)`, Port push_rect), RE2 FUN_8004c1bc
+ *   (`subu v1,s4,v1 / addu v0,v0,a0 / sltu` @0x8004c370-80 und @0x8004c38c-9c, Lage + Radius gegen x/z/w/d).
+ * Ein Sprung, der eine Wand GANZ ueberquert, landet hinter ihr ausserhalb jeder Zelle — die Klemme sieht nichts.
+ * Im Original kommt das nicht vor; im Port setzen Opfer-Platzierungen mit grossem Wurzelversatz (RE2-Kriecher
+ * ~2000 in ROOM1220, Runde 37 J_bissarm.md OFFEN 1: F13 von (-21086,-5496) nach (-22318,-5344) durch Zelle 7)
+ * den Spieler hinter eine duenne Wand. FORM (keine neue Zahl): die Strecke vom letzten begehbaren Standpunkt zur
+ * neuen Lage darf das INNERE keiner soliden Rechteckzelle (Typ 1) des Spielerbandes schneiden — Maske 1 = die
+ * Spieler-Maske von re15_collision_constrain (`collision_constrain_impl(.., PR, 1u, ..)`), Band = das
+ * Klemmband. Schneidet sie, bleibt der Standpunkt — derselbe Rueckfall, den re15_victim_place schon nimmt. */
+int re15_r38_griff_durch_wand(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.sca || g_room_rdt.sca_count <= 0) return 0;
+    if (x0 == x1 && z0 == z1) return 0;
+    const int band = re15_collision_debug_band();
+    if (band < 0) return 0;
+    const double p0[2] = { (double)x0, (double)z0 };
+    const double d[2]  = { (double)x1 - (double)x0, (double)z1 - (double)z0 };
+    for (int i = 0; i < g_room_rdt.sca_count; i++) {
+        const re15_sca_entry_t *c = &g_room_rdt.sca[i];
+        if (band != (c->floor >> 4) || (c->u0 & 1u) == 0 || c->type != 1) continue;
+        const double r0[2] = { (double)(int32_t)c->x, (double)(int32_t)c->z };
+        const double r1[2] = { r0[0] + (double)c->width, r0[1] + (double)c->density };
+        double lo = 0.0, hi = 1.0; int drin = 1;
+        for (int a = 0; a < 2 && drin; a++) {
+            if (d[a] == 0.0) { if (p0[a] <= r0[a] || p0[a] >= r1[a]) drin = 0; continue; }
+            double t0 = (r0[a] - p0[a]) / d[a], t1 = (r1[a] - p0[a]) / d[a];
+            if (t0 > t1) { double t = t0; t0 = t1; t1 = t; }
+            if (t0 > lo) lo = t0;
+            if (t1 < hi) hi = t1;
+            if (!(lo < hi)) drin = 0;                        /* offenes Inneres: Beruehren zaehlt nicht */
+        }
+        if (drin) return 1;
+    }
+    return 0;
 }

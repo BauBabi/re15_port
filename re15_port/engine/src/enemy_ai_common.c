@@ -1578,6 +1578,7 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
         re15_collision_constrain(&g_room_rdt, s_victim_ok_x, s_victim_ok_z, &nx, &nz);
         int32_t cx = nx, cz = nz;
         re15_collision_constrain(&g_room_rdt, nx, nz, &cx, &cz);
+        if (re15_r38_griff_durch_wand(s_victim_ok_x, s_victim_ok_z, nx, nz)) { nx = s_victim_ok_x; nz = s_victim_ok_z; cx = nx; cz = nz; }   /* Runde 38 Spur T: NUTZER-VORGABE kein Griff durch eine Wand (spiderman_r38.c (3)) */
         if ((cx == nx && cz == nz) || re15_bissarm_r37_ein_durchgang(vg_ty)) { s_victim_ok_x = nx; s_victim_ok_z = nz; }   /* Runde 37 Spur J: Zombie = EIN Durchgang je Bild (FUN_8003567c `jal 0x8004c1bc` @0x800356d0) */
         else                      { nx = s_victim_ok_x; nz = s_victim_ok_z; }
         pl->x = nx; pl->z = nz;
