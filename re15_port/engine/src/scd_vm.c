@@ -65,6 +65,7 @@
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
 #include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
+#include "re15_elzatoene_r38.h" /* Runde 38 Spur H: Schuss 1041 statt Text, Roys Stoehnen 1021 (elzatoene_r38.c) */
 
 scd_vm_t g_scd;
 
@@ -192,6 +193,8 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_codepanel_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
     /* Runde 37 Spur C N1: Lift-Anker ROOM2030/2031 (sub02/sub04, re15_lift2030_r37.h). */
     re15_lift2030_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 38 Spur H: Anker ROOM1041 @0x02200 (Text -> Schuss) und ROOM1021 @0x020B2 (Roys Stoehnen), re15_elzatoene_r38.h. */
+    re15_elzatoene_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -770,6 +773,8 @@ void scd_vm_tick(void)
             if (g_re15_codepanel_anker_n) { int cp = re15_codepanel_r37_pc(t); if (cp == 2) break; if (cp == 1) continue; }
             /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (Wachposten = Ankerzahl, sonst 0). */
             if (g_re15_lift2030_anker_n) re15_lift2030_r37_pc(t->pc);
+            /* Runde 38 Spur H: Roys Stoehnen am Gang-Anker ROOM1021 @0x020B2 (Wachposten = Ankerzahl, sonst 0). */
+            if (g_re15_elzatoene_anker_n) re15_elzatoene_r38_pc(t->pc);
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
@@ -1842,6 +1847,8 @@ static int op_message_on(scd_thread_t *t)
      * Munitions-Angebot). HINTER dem Stimmen-Riegel, damit auch dieser Text eine laufende Aufnahme
      * ausreden laesst. Herleitung: include/re15_leiche.h. */
     if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }
+    /* Runde 38 Spur H: ROOM1041 msg 3 "*gunshot*" @0x02200 ist ein Ton, kein Text (re15_elzatoene_r38.h). */
+    if (re15_elzatoene_r38_message_on(t->pc)) { t->pc += 4; return 1; }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text

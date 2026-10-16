@@ -65,7 +65,7 @@
 
 /* ---- Toene (Plattform-Haken re15_elza_se_hook; Satz der Mini-Bank shared_assets/RE2/ELZASE.VBS) ---------- */
 #define RE15_ELZA_TON_AUF     0     /* RE2 ROOM1140 Satz 0x25 (= RE2_ELZA_SE_AUF)    */
-#define RE15_ELZA_TON_SCHUSS  1     /* RE2 ROOM40A0 Satz 0x08 (= RE2_ELZA_SE_SCHUSS) */
+#define RE15_ELZA_TON_SCHUSS  1     /* RE2 ROOM4040 Satz 0x0A (= RE2_ELZA_SE_SCHUSS; Runde 38 Spur H, vorher ROOM40A0 0x08) */
 /* Roys Sterbe-Ton = RE1.5-Raum-SE 5 der snd1-Bank (FUN_80106c18 @0x80106da8-ac), ueber re15_audio_room_se. */
 #define RE15_ELZA_ROY_SE      5
 

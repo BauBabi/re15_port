@@ -15,12 +15,17 @@ RE2-VORBILD (alles selbst aus info/re2leon gelesen):
                 positional). Zensus (re2_raum_se_zensus.py 0x25): 7 Wellen-Familien; ROOM1140 = Raum der
                 "Locked/Unlocked door"-SAP (RE2_SOUND_LISTE.md ROOM114) und Quelle des Port-Tuer-zu-Tons ZU_A
                 (gleiche Raumbank, Satz 0x16) -> zu und auf aus EINER RE2-Tuerfamilie.
-  Satz 1 SCHUSS ROOM40A0 Raumbank-Satz 0x08 = der Pistolenschuss eines NPC im RE2-Skript: sub04 @Datei 0x0287E
-                `2e 02 00` Work_set(2,0), @0x02881 `3f 02 0e 04` Plc_motion(2,14,4) (Schiess-Clip), @0x02896
-                `36 02 08 01 02 00 00 00 00 00 00 00` Se_on(2,8) + @0x028A2 `3a 00 18 ..` Muendungsfeuer.
-                Huellkurve (vag_mass.py): Anschlag 0 ms, Spitze 10 ms, hoerbar 260 ms, Nulldurchgang 0.19 = Schuss.
+  Satz 1 SCHUSS ROOM4040 Raumbank-Satz 0x0A = der RE2-SKRIPT-PISTOLENSCHUSS (Runde 38 Spur H, korrigiert;
+                analysis/befunde_runde38/H_elzatoene.md §2.3): ROOM4040 feuert ihn in einer Skriptszene fuenfmal
+                (@0x014E4/@0x01528/@0x01558/@0x01578/@0x01668 `36 02 0a 00 03 01 ..`, je danach `3a 00 18 ..`
+                Muendungsfeuer; Work_set(1,0) @0x014BE, Plc_motion(0,0x11) @0x014D6); dieselbe Welle (sha1
+                994b137d4007, 5824 B) schiesst in ROOM4090 @0x02A4E und ROOM6020 @0x00B94 (Nutzer-SAP-Liste
+                "ROOM602.SAP - ... a gunshot") und liegt nur in Raumbaenken (4040/4090/6020/6110/D040/F110).
+                Runde 36 hatte ROOM40A0 Satz 0x08 genommen — das ist KEIN Schuss: einziger Gegner des Raums ist der
+                Alligator (Sce_em_set @0x025A0 `44 00 00 23 ..`), und Se_on(2,8) @0x02896 steht in einer While-Schleife
+                (@0x0288A `0f 04 82 00` + Ck(5,0x0b)) am Alligator (Ursprung Modus 2 Index 0).
                 Gegenprobe: RE2s Kendo-Schuss ROOM1010 Satz 0x0C ist bytegleich ARMS07 VAG 2 (Schrotflinte,
-                sha1 42bbd9b31614) — John haelt in RE1.5 aber eine PISTOLE (Bildmessung, Dossier §P4).
+                sha1 42bbd9b31614) — John haelt in RE1.5 aber eine PISTOLE (Bildmessung, Runde-36-Dossier §P4).
 
 EINZIGE Daten-Aenderungen beim Schnitt (wie re2_door_se_cut.py):
   (1) Tone-Byte +0x16 (VAG-Index, 1-basiert) -> Lage in der Mini-Bank.
@@ -43,8 +48,9 @@ RDT = os.path.join(REPO, "info", "re2leon", "PL0", "RDT")
 SAETZE = [
     ("AUF", "1140", 0x25, "00008416", 0x01484, 0x01DD0, 0x04480, 5264,
      "e12a441e528242816cc556dabbcc92a83d9580b9"),
-    ("SCHUSS", "40A0", 0x08, "0000a300", 0x09E00, 0x0A800, 0x17B80, 4736,
-     "e552c5d77eedb1bfe19cdfe204c68c94cc058d45"),
+    # Runde 38 Spur H: RE2-Skript-Pistolenschuss ROOM4040 Satz 0x0A (vorher ROOM40A0 0x08 = Alligator-Schleife).
+    ("SCHUSS", "4040", 0x0A, "00007300", 0x0BF60, 0x0C8F8, 0x18CC8, 5824,
+     "994b137d40070755fa17b026430cd98bfd36bd08"),
 ]
 
 VAB_HDR = 32

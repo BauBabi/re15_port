@@ -7,10 +7,12 @@
  * Mini-Bank shared_assets/RE2/ELZASE.VBS, Satzformat wie TUERSE.VBS / ELEVSE.VBS (FUN_8005a09c):
  *   [SE-Map @0 .. vh_off)[VH "pBAV" @vh_off][Trailer, u32 vh_off @edt_size-8][VBD]
  *   Satz 0 AUF    = RE2 ROOM1140 Raumbank-Satz 0x25 (Tuer-Handler @0x80051654-5c nach msg 5 "You unlocked ...")
- *   Satz 1 SCHUSS = RE2 ROOM40A0 Raumbank-Satz 0x08 (sub04 @0x02896 Se_on(2,8) zum NPC-Schiess-Clip @0x02881)
+ *   Satz 1 SCHUSS = RE2 ROOM4040 Raumbank-Satz 0x0A, der RE2-Skript-Pistolenschuss (@0x014E4 `36 02 0a 00 03 01 ..` +
+ *                   @0x014F0 `3a 00 18 ..` Muendungsfeuer; dieselbe Welle ROOM4090 @0x02A4E / ROOM6020 @0x00B94).
+ *                   Runde 38 Spur H: vorher ROOM40A0 Satz 0x08 = Alligator-Schleife, kein Schuss (H_elzatoene.md §2.3).
  * Geladen wie der Tuer-Slot 5c in audio_pc.c (dieselben Decoder re15_vab_parse / re15_vag_adpcm_decode), gespielt
  * ueber dieselbe Stimmen-/Prioritaets-Maschine (re15_audio_se_play_bank -> se_play_layers). Nicht positional wie
- * RE2 @0x8005165c `addu a1,zero,zero` (Aufschliessen) bzw. ROOM40A0 @0x02896 (Se_on ohne Lage).
+ * RE2 @0x8005165c `addu a1,zero,zero` (Aufschliessen) bzw. ROOM4040 @0x014E4 (Se_on Flags 0 = ohne Lage).
  */
 #include <stdint.h>
 #include <stdio.h>
