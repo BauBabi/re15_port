@@ -177,8 +177,9 @@ Bild 260, Skala 1. `A_belege/nachher_10d0_orig11f0_alt_neu.png`: alt mit innerer
 
 `A_belege/lauf_elza_11f1.sh` (RE15_PSELECT_AUTO=1 + _SWITCH=1, debug.log "[pl] Spieler-Familie PL04 (character=4,
 Elza-Bit=1)", "EXIT_AT: Bild 502 in Raum 11f1"), Cut 10, Bild 500: NEU 0 rueckseitige Cursor-Dreiecke, 0 reingruene
-Punkte im Rahmen, Klassenkarte 0 Abweichungen gegen das Original; ALT 14056 / 33 / 21. ROOM1151 (Hebetisch, Lade-Weg
-mit RAUM=1151): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
+Punkte im Rahmen, Klassenkarte 0 Abweichungen gegen das Original; ALT 14056 / 33 / 21. Raumvariante ROOM1151
+(Hebetisch, Lade-Weg mit RAUM=1151; das Kartenwerkzeug schreibt Spielerfamilie PL00, die Cursor-Zeichnung ist vom
+Spieler unabhaengig): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
 
 ### 4.4 Nebenwirkungen (der Verwurf gilt fuer ALLE Raum-Props, wie im Original)
 
@@ -231,8 +232,9 @@ Gezielter Lauf (keine volle Suite), Regex = eigene Tests + Testgruppen aller ber
 
 * Behoben: der "komische Schatten" war die UNTERSEITE des Cursor-Kastens (dasselbe Muster, 1828 Einheiten tiefer),
   die der PC-Port durch die durchsichtige Oberseite mitzeichnete. Das Original verwirft wie jede PlayStation-Engine
-  Rueckseiten (GTE NCLIP). Gilt fuer alle 23 Cursor-Raeume (Generator 11F0, Hebetisch 1150/1151, Ziffernfelder
-  10D0/11E0/1230, Aufzug 1080/4020, 1100, 2040, 2060, 3050, 30E0, 5050 und Elzas Varianten).
+  Rueckseiten (GTE NCLIP). Gilt fuer alle 23 Cursor-Raeume des Originals (Generator 11F0, Ziffernfelder
+  10D0/11E0/1230, Aufzug 1080/4020, 1100, 2040, 2060, 3050, 30E0, 5050 und Elzas Varianten) und fuer den
+  Hebetisch-Cursor in Irons' Buero 1150/1151 (Port-Bau mit dem 11F0-Modell).
 * Sichtbare Nebenwirkung, wie im Original: auch alle anderen Raum-Objekte zeichnen ihre Rueckseiten nicht mehr. In
   120 Leon-Raeumen aenderten sich nur Einzelpunkte (hoechstens 41); in Irons' Buero (Hebetisch-Sicht) verschwindet ein
   dunkles Band hinter den Papierstapel-Hochhaeusern.
