@@ -122,6 +122,7 @@ des Befunds = 36cb73d8 (Satzwahl ROOM40A0 0x08), nicht Runde 37 (K/N aendern wed
 | shared_assets/RE2/ELZASE.VBS, engine/src/gen/re2_elza_bank.inc | neu geschnitten (`re2_elza_se_cut.py --install`): 14232 B, md5 ba96a66267286e4754c6b5a7481928a4 (Satz 0 AUF unveraendert) |
 | platform/pc/src/elza_se_pc.c, include/re15_elza_r36.h | nur Kommentare (Satz 1 = ROOM4040 0x0A) |
 | tests/unit/test_r36_elza.c (Teil bank) | Quellvergleich Satz 1 auf ROOM4040 @0x18CC8 / 5824 B / EDT @0x0BF60 nachgezogen (vorher ROOM40A0 @0x17B80 — die widerlegte Quelle) |
+| tests/integration/test_r36_elza.cmake (Teil schuss) | Bezug der Mitschnitt-Pruefung: SPITZE der 28 Bilder vor Schuss 1 (John zielt, nur Raumklang) statt Median aller Raum-Bilder — gemessen: Roys Stoehnen hebt den Raum-Median 1640 -> 2086 (gleicher Weg), die Schuesse wurden lauter (6742/7193 -> 7101/7512), der alte Bezug 4x Median = 8344 schlug trotzdem an; Raum vor dem Schuss = 1177 (alt und neu); Untergrenze 3000/1500 fuer einen stillen Raum |
 
 Konstanten mit Beleg: @0x02200/msg 3 (ROOM1041.RDT), @0x020B2 (ROOM1021.RDT), SE 4 (snd1 EDT @0x145A8, FUN_801021f8
 @0x80102298/@0x8010229c), Satz ROOM4040 0x0A (Datei-Offsets oben). NUTZER-VORGABE: Stoehnen immer (kein 1/4-Wurf
