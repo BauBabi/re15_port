@@ -106,3 +106,27 @@ Zustandstabelle @0x8011eca4 = {INIT 0x80110c98, ACTIVE 0x8011101c, HURT 0x801147
   +0x3c -= m.tz - rec[92] @0x80115c04-20 -> verfolgter Knochen 14 + 3*a1.
 - **FUN_8001bff8** (PSX.EXE): Matrix(Record+0x40) * (I | a1) (`jal 0x80022da0` @0x8001c078), dann
   `(plX - ptX + r) & 0xffff > 2r -> kein Treffer` @0x8001c080-a0, Z ebenso @0x8001c0a8-c0 = achsenparalleles Quadrat.
+
+## Original gemessen (DuckStation-GDB, MZD-Disc, ohne Pad)
+Werkzeug (Scratch, nicht im Baum): `affen_spur.py` — DuckStation per `Start-Process -batch -statefile
+stage_saves/mzd_debugmenu.sav <MZD-cue>` (settings.ini `[Debug] EnableGDBServer = true` nur waehrend der Messung,
+Original gesichert und danach zurueckgespielt), GDB-Port 2345. Raumsprung OHNE Menue/Pad: am Halt der Hauptschleife
+0x8001c994 (erst wenn der Savestate aktiv ist: 0x800b0fe2 == 0x24) Stage-Index 0x800bbe5e := 2, Raumindex
+0x800bbe61 := 4, Tor 0x800ac9a8 := 0 (@0x8001d618), Sprungflag 0x800b5359 := 1 — genau der Schreibsatz des
+Menues @0x80014a44-58, den die Hauptschleife @0x8001c994 liest. Danach Haltepunkt `Z0` auf die Affen-Wurzel
+0x80110b00; je Bild (cur == Entity Slot 0 = 0x800acc2c) Spieler 0x800aca54, Entity 0/1 (je 0x1f4 B), aca58, VSync.
+- **Code-Identitaet:** RAM 0x80110b00..0x80116230 (22320 B) nach dem Sprung == info/Re1.5/PSX/BIN/STAGE3.BIN
+  Bytes 0x10b00.. — **0 Abweichungen**. Die MZD-Disc faehrt also genau den ausgelieferten Affen-Code.
+- **o1 (Leon am Sprung-Spawn (-25600,0,-1350), steht, 1500 Bilder):** beide Affen y = -1800, +0x82 = 1
+  (Plattform-Ebene, Band 1). A: Spawn (-8800,-6150) -> nach dem ersten Klemmen (-8800,-6082), Ruhe-Clip 0x16
+  ~290 Bilder, dann Sub 3 blind (Clip 4) und **steht fest bei (-8707 +-12, -6082)**, r 2227, +0x1d6 = 1
+  (Wandkontakt), Sicht 0. B: (-13618,-11800) -> Sub 3, kriecht +z mit ~9-11 Einheiten/Bild, **steht ab ~F815 bei
+  (-13610,-6910)**. Leon hp 100, kein Angriff.
+- **o2 (Leon auf dem Boden (-9100,0,-2600), Band 0, 2000 Bilder):** A sofort Sicht 1, Sub 3 sehend (Clip 5),
+  **steht bei (-8707..-8725, -6082)**, r 2997..3001, Abstand 3500 -> der Biss-Commit a804(0xbb8) wird NIE wahr;
+  B steht bei (-13618,-10663). **0 HP-Abzuege in 2000 Bildern.** Die Affen erreichen Leon von der Plattform aus
+  hier im Original NICHT.
+- **Port mit dem neuen Code, dieselben Aufbauten:** p1 (Spawn): Affe 1 steht ab F~100 bei (-8707 +-12, -6082)
+  r2227, Affe 2 kriecht von -11800 nach +z und steht bei (-13600 +-20, -6900) — **wie o1**. n2 (Boden
+  (-9100,-2600)): Affe 1 Sub 3 Clip 5 bei (-8707..-8725, -6082) r2997..2999 — **wie o2**. Der alte Port schob den
+  Affen dagegen per Clip-Wurzelweg durch die Wand bis z = -4878 und biss dort ins Leere (m2).
