@@ -700,3 +700,20 @@ bytegleich 8/8. ROOM30A0/30A1 Cut 0: 25 -> 28 Rechtecke aus (neu 5, 20, 21; 20 =
   (4 Bytes) gleich der gemessenen): der Riegel FAELLT DURCH - `r37_masken36_nb2[k_a]: Cut 15 zeichnet Masken: '[pri] cut=15
   pri_offset=0x84C masks=36 fg_atlas=1'`; aus denselben Laeufen: Cursor Leon S=210 **H=60**, Elza S=210 **H=60**, A/B 138 /
   138; Bild 380 S=328 **H=4**, Bild 400 S=355 **H=7** - genau die Befunde der Abnahme.
+
+### NB2.4 Messung nachher - Folgen der neuen Tabelle (148 Rechtecke mehr aus, ausserhalb von Cut 15)
+
+Neu ausgeschlossen sind nur Rechtecke (keines wieder an; Python-Vergleich der Tabellen fb4be428 / 9fd9428b), je Leon-Raum
+(Elza-Varianten gleich): 3040 C0 {1,4,5,6}, C1 {1}, C3 {9}, C8 {19,26,39,43}, C9 {25,29}; 3050 C2 {37}, C3 {12}, C13 {16};
+30A0 C0 {5,20,21}, C1 {14,19}, C3 {32,33,34,35,39,43,45}, C4 {8,10,12}; 30E0 C6 {6}, C7 {25,26}, C8 {7,8}, C9 {24};
+4040 C11 {15}; 4080 C7 {7}; 5020 C6 {1,8,9,13,14,46,47,51}, C12 {6}; 5050 C2 {39}; 5090 C11 {0,5,17,19,32}, C12 {19,47},
+C13 {0,26,29}; 50B0 C3 {24}; 5100 C2 {16}, C4 {7,43}, C6 {19,23}, C7 {5,6,7}; 6000 C5 {23,35}, C9 {10}; 6010 C6 {3,6,8,9}
+= 74 je Variante. Damit zeichnen sechs Sektionen je Variante gar keine Generator-Maske mehr: ROOM3040 Cut 1, ROOM3050 Cut 6
+und Cut 15, ROOM30E0 Cut 6 und 7, ROOM6010 Cut 6 (Soll-Liste `test_r37_masken36 soll`: 12 Sektionen mit Soll 0).
+
+**Riegel-Szenen an der exe (ctest, LastTest.log) - unveraendert gegenueber Abnahme 1:** Stage 3 ROOM3050 Cut 2 HINTER
+1123 von 1234 (Elza 1158 von 1260), DAVOR 0 von 684 (0 von 1067), FREI ROOM3050 Cut 5 0 von 883 (Elza 0 von 997), WEG M1
+Elza 0 von 464, Leon 0 von 602; Stage 4 ROOM4080 Cut 5 HINTER 879 von 883 (Elza 621 von 627), DAVOR 0 von 8374 (0 von
+6165); Stage 5 ROOM5020 Cut 9 HINTER 199 von 322 (Elza 224 von 309), DAVOR 0 von 5007 (0 von 5050); Stage 6 ROOM6010 Cut 12
+HINTER 820 von 1440 (Elza 639 von 1105), DAVOR 0 von 9489 (0 von 7931). Die zusaetzlichen Ausschluesse beruehren die
+Verdeckung in diesen Szenen nicht (ROOM3050 Cut 2 Rechteck 37 traegt bei h3050c2 nichts bei).
