@@ -334,3 +334,12 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
   (Schnitt aus main02.wav ab 1,24 s), `synchro/STAGE1/room1141/main42.wav` = "Help me out." (Schnitt aus
   room1171/main01.wav ab 1,95 s; Id 42 ist eine reine Sprach-Id ohne Text). Eine eigene Aufnahme unter demselben Namen
   ersetzt sie ohne weiteren Schritt.
+
+## 8. Nachpruefen (Befehle)
+- Riegel: `ctest --test-dir re15_port/build -R "r38_dining1141" --timeout 600 --output-on-failure` (Integration je Teil
+  `integration_r38_dining1141_w|z|d|l`, unter Last je 8-40 min).
+- Einzelteil direkt: `cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=D -P re15_port/tests/integration/test_r38_dining1141.cmake`;
+  Auswertung eines vorhandenen Laufs ohne neues Spiel: zusaetzlich `-DAUSWERTEN=<dir>/lauf_<id>`.
+- Ton-Mitschnitt gegen die Se_on-Takte: `python re15_port/tools/r38_dining/ton_mitschnitt.py <arbeitsordner des Laufs>`.
+- Druckzahlen je Abfrage: `re15_port/build/tests/unit/test_r38_dining1141.exe takt`.
+- Programme neu erzeugen/pruefen: `python re15_port/tools/r38_dining/programme_bauen.py [--pruefen]`.
