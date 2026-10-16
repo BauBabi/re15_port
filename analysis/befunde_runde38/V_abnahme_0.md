@@ -6,9 +6,11 @@ gelten erst nach eigener Messung.
 
 ## Stand (laufend, neueste oben)
 
+* 22:40 ABSCHLUSS: bestanden = NEIN (Mangel M1, V1 teilweise). Seriell 7/7 r38 gruen (A11).
+* 22:35 Serieller ctest-Lauf fertig (A11): r38 7/7 Passed (811 s), r35 pruefkette Passed, r35 bash_mutanten
+  Timeout unter Last (nicht der Spur zuzurechnen, A11).
 * 22:10 Docker-Desktop-Start fuer die Linux-Gegenprobe: `docker desktop start --timeout 300` -> nach 339 s
-  `Failed to start Docker Desktop ... still starting: context deadline exceeded` (A10); Nachpollen laeuft.
-  Serieller ctest-Lauf (r35 pruefkette/bash_mutanten + 7x r38) laeuft seit 21:46.
+  `Failed to start Docker Desktop ... still starting: context deadline exceeded` (A10); Docker danach gestoppt.
 * 21:50 Eigener Fehlerpfad-Versuch Push (A9) -> Mangel M1.
 * 21:45 fehler_umfeld einzeln gruen (A5), Doppelklick-Weg gemessen (A6).
 * 21:30 ctest -j3: 6/7, fehler_umfeld Timeout (A4).
@@ -101,7 +103,8 @@ denselben Test; hier ~6x langsamer (alle Teile 4-6x langsamer als im Dossier).
 `ctest --test-dir re15_port/build -R unit_r38_releaseskript_fehler_umfeld -V --timeout 1200` ->
 `== r38_releaseskript fehler_umfeld: 29/29 Pruefungen gruen ==`, `100% tests passed, 0 tests failed out of 1`,
 `Total Test time (real) = 747.60 sec` (Fremdlast waehrenddessen: bash 59, cmake 10, ctest 7 Prozesse). Funktional
-gruen; die Laufzeit liegt aber nur 1,6x unter der Grenze 1200 s (Dossier: 207 s) -> Mangel M2.
+gruen; die Laufzeit liegt unter dieser Last aber nur 1,6x unter der Grenze 1200 s (Dossier: 207 s; seriell in A11:
+198 s) -> Hinweis H6.
 
 ### A6 Doppelklick-Weg im Spurbaum (21:35, V1)
 
@@ -159,7 +162,42 @@ nur die Schritt-Attrappen der Spur; Tag v0.8.25, bare origin.
 Desktop is still starting: context deadline exceeded`, `docker info` danach `open //./pipe/dockerDesktopLinuxEngine:
 The system cannot find the file specified`; `wsl -l -v`: `docker-desktop Stopped`. Der Bau-Agent mass 19 s / 24 s.
 Fuer das Skript heisst das: ein echter Lauf bricht in diesem Zustand korrekt VOR dem Bauen ab ("Docker nicht
-bereit", release_alles.sh:288-289) - fail-closed, kein falsches Gruen. (Nachpollen: siehe Stand.)
+bereit", release_alles.sh:288-289) - fail-closed, kein falsches Gruen. Nachpollen (`docker info` alle 10 s, 300 s):
+`nicht bereit nach 300 s`. Backend-Protokoll (`%LOCALAPPDATA%\Docker\log\host\com.docker.backend.exe.log`,
+20:10:55Z): `running engine: waiting for the VM setup to be ready: bootstrapping in the main distro: listing WSL
+distros: running WSL command wsl.exe ...` - WSL-Bootstrap scheitert (Ursache offen: Last, WSL, oder die Sandbox
+dieser Sitzung). Danach `docker desktop stop` + Rest-Prozess PID 20556 per PID beendet: 0 Docker-Prozesse =
+Ausgangszustand. Die Linux-Gegenprobe der 7 Tests im Bau-Image (`<scratchpad>/linux_im_container.sh`, Registrierung
+ueber die echte Sonde, release/* als Rueckfall-Links wie rueckfall_links.sh) konnte deshalb NICHT laufen - die
+Linux-Angabe des Bau-Agenten (6/6 + SKIP) bleibt von mir ungemessen (nur gelesen: git steht in linux_deps.sh:54 PKGS,
+zip/unzip nicht; der Test ersetzt fehlende zip/unzip, test_r38_releaseskript.sh:94-107; cmd endet ausserhalb Windows
+mit 77, probes/r38_releaseskript.cmake:44 SKIP_RETURN_CODE 77).
+
+### A11 Serieller Lauf wie in der Integration (21:46-22:35, ohne -j, Fremdlast anderer Agenten)
+
+`ctest --test-dir re15_port/build -R "r38_releaseskript|r35_android_pruefkette|r35_android_bash_mutanten"
+--timeout 1500 --output-on-failure`, woertlich:
+```
+1/9 Test #479: unit_r35_android_pruefkette ............   Passed  613.68 sec
+2/9 Test #480: unit_r35_android_bash_mutanten .........***Timeout 1501.37 sec
+3/9 Test #768: unit_r38_releaseskript_version .........   Passed  132.83 sec
+4/9 Test #769: unit_r38_releaseskript_bausteine .......   Passed   41.17 sec
+5/9 Test #770: unit_r38_releaseskript_trocken .........   Passed  231.77 sec
+6/9 Test #771: unit_r38_releaseskript_ablauf ..........   Passed   34.89 sec
+7/9 Test #772: unit_r38_releaseskript_fehler_bau ......   Passed  101.97 sec
+8/9 Test #773: unit_r38_releaseskript_fehler_umfeld ...   Passed  197.55 sec
+9/9 Test #774: unit_r38_releaseskript_cmd .............   Passed   66.72 sec
+89% tests passed, 1 tests failed out of 9
+```
+Die 7 Tests der Spur: seriell 7/7 gruen, zusammen 811 s (Dossier 593 s). Pruefzahlen je Teil (aus dem -j3-Lauf A4
+und A5, gleiche Skripte): version 39/39, bausteine 18/18, trocken 32/32, ablauf 47/47, fehler_bau 25/25, fehler_umfeld
+29/29, cmd 19/19 - genau die Zahlen des Dossiers.
+`unit_r35_android_bash_mutanten` lief in die Grenze 1500 s; schon der UNVERAENDERTE Kontrolllauf meldet
+`Kontrolle (unveraendert): Rueckgabe 124 Zeitlimit` - Last. Der Test liest nur release/apk_pruefen.sh,
+release/python_finden.sh und seinen eigenen Ordner (test_r35_android_bash_mutanten.sh:14-21); keine dieser Dateien ist
+im Diff (`git diff master...HEAD --name-only -- release/apk_pruefen.sh release/python_finden.sh
+release/apk_asset_gate.py release/gate_urteil.py re15_port/tests/unit/r35_android` = 0 Dateien). Nicht der Spur
+zuzurechnen; der Bau-Agent mass ihn gruen (634.80 s).
 
 ## 3. FUND: das echte Archiv existiert nicht mehr
 
@@ -204,8 +242,9 @@ PORT-WAHL gekennzeichnet: MIN_FREI_GB=10 (release_alles.sh:72-73), Docker-Warteg
 Ohne Kennzeichnung: die CLI-Zeitgrenzen `timeout 60 docker info` / `timeout 30 docker desktop version`
 (docker_bereit.sh:41/:58) - Bau-Umgebung, ohne Wirkung auf Spiel oder Paket (Hinweis H2).
 Rate-Woerter im Diff (`deferred|tunable|interim|for now|faithful|plausibel|TODO|FIXME|vorlaeufig|geschaetzt`): 0 Treffer.
-Erklaert die Loesung den gemessenen Ausgangsbefund? Ja: M1/M2 (falsche Standard-Versionen) -> eine Quelle `--version
-$NEU` fuer build_android + make_package (Test ablauf prueft die Aufrufzeilen); M3 (Docker aus) -> docker_bereit.sh
+Erklaert die Loesung den gemessenen Ausgangsbefund (Dossier §1)? Ja: Dossier-M1/M2 (falsche Standard-Versionen) ->
+eine Quelle `--version $NEU` fuer build_android + make_package (Test ablauf prueft die Aufrufzeilen, A3 die
+Rechnung); Dossier-M3 (Docker aus) -> docker_bereit.sh
 (A1/A10: pruefen bzw. starten, sonst Abbruch vor dem Bauen); Pipe schluckt Fehler -> PIPESTATUS[0] (Test fehler_bau
 rc 7 durch tee); altes Artefakt -> Frische gegen Schrittbeginn (Test fehler_bau 2020-Zeitstempel); still fehlender
 Android-Satz -> Pflicht aller drei Saetze (Test fehler_bau).
@@ -230,3 +269,63 @@ bringen") ist die Spur richtig: nach dem Lauf liegt die alte Version im Archiv (
 NICHT dort. Die Frage, ob das Archiv kuenftig auf N Versionen gekuerzt wird, ist eine echte Nutzer-Entscheidung
 (Memory reai-v2-immer-paketieren 2026-08-24 "das letzte davor entfernen" ist mehrdeutig) - kein Mangel der Spur.
 
+## 5. Urteile je Teilpunkt (gegen den Wortlaut)
+
+| Punkt | Urteil | Beleg (Kurz) |
+|---|---|---|
+| V1 "einfache Moeglichkeit - ueber Skript oder sowas" | teilweise | Normalweg erfuellt: Doppelklick `release\release_alles.cmd` (A6: Git-Bash gefunden, Trockenlauf, Wahl [1]-[4], Rueckgabe durchgereicht), ein Aufruf `bash release/release_alles.sh` (A1), `--help` + README; Wege [1]/[2]/[3] im Test cmd 19/19. ABER: scheitert der Push (Wahl [2]/[3], `--tag`; ~0,5 GB neue Volumes je Release - der fehleranfaelligste Schritt), fuehrt weder die angebotene Wiederaufnahme-Zeile noch Wahl [3] weiter (A9, Mangel M1): rc 2 "Downgrade" bzw. Sprung auf v0.8.27 |
+| V2 "die Ports fuer alle Systeme zu bauen" | erfuellt (Massstab VERTRAG §2) | Kette windows -> android -> linux -> paket mit Rueckgabe + Marke + frischem Artefakt je Schritt, Pflicht aller drei Saetze (A7/A8, Tests ablauf 47/47, fehler_bau 25/25); echter Windows-Schritt am Artefakt nachgeprueft (A7); Android/Linux/Paket echt erst im Release-Lauf des Orchestrators |
+| V3 "neue Versionsnummer - minor" | erfuellt | hoechster Tag v0.8.25 -> v0.8.26, Uebertrag bei 99 (A3, eigene Rechnung gegen 264 echte Tags), eine Quelle `--version $NEU` fuer APK + Pakete (Test ablauf), Grenzen/Downgrade-Sperre (A3), Test version 39/39 |
+| V4 "die alte ins Archiv zu bringen" | erfuellt | Schritt alt mit echten v0.8.25-Volumes in ein leeres Archiv: 6/6 bytegleich, SUMS = Release-Commit 2077bb8e (A2); vorhandene Vorversion wird nur geprueft (Protokoll 17:19 des Bau-Agenten); im Archiv wird nichts geloescht (§3.1 grep), alte APK verlaesst release/ nur bytegleich archiviert (Test ablauf) |
+
+## 6. Maengel (nummeriert, nachpruefbar)
+
+**M1 - Gescheiterter Push im Schritt abschluss: die angebotene Wiederaufnahme fuehrt nicht weiter (muss).**
+* Ort: release_alles.sh:683-688 (Commit + annotierter Tag, DANN `lauf "git push" ...`); bei Push-Fehler meldet die()
+  (:153) `Nach der Behebung weiter mit: bash release/release_alles.sh --version vX.Y.Z --ab abschluss --tag`. Diese
+  Zeile scheitert danach zwangslaeufig: der lokale Tag vX.Y.Z existiert schon, also bricht :198-201 mit rc 2 ab
+  ("nicht groesser als der hoechste Tag ... Downgrade"); ohne `--version` (auch Doppelklick-Wahl [3]) rechnet :205
+  die Folgeversion vX.Y.(Z+1) und :259-260 bricht an den Notes ab. Einen "nur noch pushen"-Weg gibt es nicht, und die
+  Meldung nennt `git push origin master vX.Y.Z` nicht.
+* Messung: A9 (rc 1 beim Push, `Commit b3f45ba, Tag v0.8.26` lokal; die vorgeschlagene Zeile -> rc 2; origin danach
+  weiter ohne Commit/Tag).
+* Nachpruefbar ohne meinen Scratchpad: Wegwerf-Repo wie test_r38_releaseskript.sh `fx_bauen` (Tag v0.8.25, bare
+  origin), `release_alles.sh --archiv <A> --min-frei-gb 1` (rc 0), Notes `# v0.8.26 ...` oben,
+  `git remote set-url origin <nicht vorhanden>`, `release_alles.sh --archiv <A> --min-frei-gb 1 --version v0.8.26
+  --ab abschluss --tag` (rc 1 + Hinweiszeile), origin zuruecksetzen, Hinweiszeile ausfuehren -> heute rc 2.
+* Soll: nach einem Push-Fehler (Commit + Tag stehen lokal) fuehrt der gemeldete naechste Schritt zum Ziel - z.B. die
+  Meldung nennt den Push von Hand, oder `--ab abschluss --tag` (und Wahl [3]) erkennt "HEAD = Release-Commit mit Tag
+  vX.Y.Z, origin hat ihn nicht" und pusht nur. Ein Riegel (fehler_umfeld oder ablauf) faehrt genau diesen Fall bis zum
+  gepushten Tag. Betrifft V1 (Doppelklick-Wahl [2]/[3]); Bauen/Version/Archiv sind nicht betroffen.
+
+## 7. Hinweise (keine Maengel der Spur; fuer Orchestrator/Nutzer)
+
+* **H1 (wichtig, vor dem Release v0.8.26):** `C:\workspace\Re15Data` (mit `re15_packages_archiv`, 9 Versionen
+  7456 MB laut Dossier M5, und weiteren Daten) existiert seit spaetestens 21:13 nicht mehr (§3); die Spur kann es
+  nicht ausgeloest haben (§3.1). Ein Release-Lauf legt das Archiv neu an und bringt v0.8.25 aus release/ hinein (A2);
+  v0.8.7-v0.8.14 sind ohne den Nutzer nicht wiederherstellbar. Den Nutzer fragen, ob das Absicht war (verschoben?),
+  bevor das Skript den Standardpfad neu anlegt; sonst `--archiv`/`RE15_ARCHIV` auf den neuen Ort.
+* H2: `docker info` haengt auf dieser Maschine bei gestopptem Docker Desktop bis zur Grenze 60 s
+  (docker_bereit.sh:41; gemessen `docker info rc=124`); Trockenlauf/Doppelklick brauchen deshalb 125-161 s, ohne
+  Fortschrittszeile waehrend des Wartens. Die Grenze ist nicht als PORT-WAHL gekennzeichnet (Bau-Umgebung).
+* H3: "make_package.sh:929" (Dossier, release_alles.sh:581) meint :931.
+* H4: Docker Desktop startete aus dieser Abnahme-Sitzung nicht (A10, WSL-Bootstrap-Fehler) - die Linux-Angabe
+  "6/6 + cmd SKIP im Bau-Image" ist von mir NICHT gemessen. Der Release braucht Docker; das Skript prueft das und bricht
+  sonst vor dem Bauen ab. Vor dem Release v0.8.26 `docker info` pruefen.
+* H5: Zweistufiger Ablauf ([1], dann [3] bzw. `--ab abschluss --tag`): die Release-Commit-Nachricht nennt die Lauf-Id
+  des ABSCHLUSS-Laufs als "Gebaut und gepackt mit ... (Lauf ...)", die Bau-Ergebnisse fehlen (gemessen im A9-Repo:
+  `Gebaut und gepackt mit release/release_alles.sh (Lauf v0.8.26_20261016-215057)` = der abschluss-Lauf). Kosmetik.
+* H6: Laufzeit der Tests unter Last: seriell 811 s fuer alle 7 (A11, fehler_umfeld 198 s); einzeln unter starker
+  Fremdlast fehler_umfeld 748 s (A5); mit -j3 unter Fremdlast Timeout bei 1200 s (A4). Die Dossier-Aussage "1200 s
+  laesst genug Luft" gilt seriell, nicht parallel unter Last - fuer die serielle Integrationssuite ohne Agenten reicht
+  es. Gezielte Laeufe in belasteten Baeumen ohne -j fahren. Die Windows-Suite waechst um ~10-14 min.
+* H7: RE15_MIN_TESTS (local_build.sh, Standard 788) in der Integration auf die neue Zahl anheben (+7).
+* H8: Abweichung vom Orchestrator-Hinweis "alte Archivversion entfernen" ist wortlautgetreu (§4.3); die
+  Entscheidungsfrage des Dossiers (Archiv kuerzen?) an den Nutzer weitergeben.
+
+## 8. Ergebnis
+
+**bestanden: NEIN.** V2, V3, V4 erfuellt (Massstab VERTRAG §2: Trockenlauf + Versionslogik-Tests, dazu echte
+Daten im Schritt alt, echte Versionsrechnung gegen die Repo-Tags, seriell 7/7 Tests gruen); V1 teilweise wegen M1.
+Gates: RE-Gate (Datei:Zeile statt Adressen, Stichproben stimmen), Vertrag (nur release/ + Sonde + Tests) und
+Nebenwirkungen halten. Nachbesserung: nur M1 (klein); H1 vor dem Release klaeren.
