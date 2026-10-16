@@ -13,6 +13,12 @@ Lesart (AUFTRAG.md "Lesarten"): Elza-Raum = ROOM1171 (Elza-RDT = Leon-RDT + 1, P
 - 2026-10-16: Dossier angelegt, Pflichtlektuere (AUFTRAG/VERTRAG/UEBERGABE Runde 38) gelesen.
 - 2026-10-16: Haenger REPRODUZIERT (beide KI-Modi), Ursache am Original belegt (Abschnitt 1/2). Keine Regression:
   der Mechanismus ist seit 74121bb8 (2026-07-06, FLIGHT-2-Port) unveraendert in v0.8.23/24/25.
+- 2026-10-16 ~18:18: Sitzungslimit; Reste als 6a5970f5 (UNGEPRUEFT) gesichert: ORIENT-Effekt, Kraehen-Se(0) in
+  ASCEND/SPIN, Riegel-Erweiterungen (flagwort, szene_*, integration "danach steuerbar").
+- 2026-10-16 21:10 (Fortsetzung): 6a5970f5 gegen die Bytes nachgeprueft (Abschnitt 2.5 bestaetigt, Zitate im Commit
+  645f925a), gebaut (configure + build OK), Riegel `flagwort` war um ein Bild falsch (erwartete den ORIENT-Effekt im
+  Kontakt-Bild) -> berichtigt und verschaerft (645f925a). Messung nachher mit der echten exe wiederholt (Abschnitt 4.2),
+  gezielte Tests gruen (Abschnitt 5).
 
 ## 1. Messung vorher
 
@@ -173,14 +179,35 @@ Belege in `analysis/befunde_runde38/I_belege/` (Logauszuege, Zeitlinie, Bilder).
   F190/F205 Modus 6 (PLW-Clips), F450 "John: Elza, hurry up!", F540/F580 zwei Kraehenleichen auf dem Helipad, Elza
   laeuft zu John.
 
+### 4.2 Fortsetzung — Stand 645f925a (mit ORIENT-Effekt und Kraehen-Se(0)), echte exe
+
+Lade-Weg ROOM1171 (Karte `1171 2300 14365 1024 3:194`, Standard-KI RE2, Messkopie `re15_pc_i38mess.exe`, exit 0) mit
+RE15_AUDIO_CAP_SYNC + RE15_SE_DEBUG + RE15_FRAMEDUMP=94-112/2 (RE15_WINDOW_SCALE=1). Auszug:
+`I_belege/nachher_fortsetzung_fx_se.txt`.
+- Ablauf unveraendert gegenueber 4.: Griff F95 (gr=1), msg 0 / 1 / 3, sub03/sub04 F847, `Aot_on 01` -> ROOM10B1 (F1077
+  sub02 von 10B1).
+- ORIENT-Effekt (state.log Spalte fx = Effekt-Pool): F95 0 (Kontakt-Bild: 0x80115d74 setzt nur Sub 2 / Schritt 0),
+  **F96 1** (ORIENT Schritt 0 @0x80115334), dann je ein Spawn bei F103 (7 Bilder spaeter: der Eintritts-Takt rueckt
+  f314 schon einmal vor) und F111, F119, F127, F135, F143, F151 (Clip 8 = 8 Bilder, @0x80115394); F156 SPIN.
+  Effekt 0 kommt aus der globalen Bank CORE00.ESP ("[esp] room 1171: no effect bank", Rueckgriff von
+  re15_esp_fx_spawn_ex wie bei jedem Zombie-Treffer) = der Treffer-Effekt, Skala 0x1000.
+- Ton (Reihenfolge im debug.log): nach dem Szenenstart zwei `se=0` (ASCEND-Eintritt beider Ereignis-Kraehen
+  @0x80115004), drei `se=2` (Se_on 0x03020001 im Griff F95, am Clip-0-Ende F109, beim Halte-Umlauf F140; @0x80115c04 /
+  @0x80115c3c / @0x80115ca4), danach `se=0`-Paare (SPIN-Eintritt @0x801153f8, solange (5,0x1D) steht) zwischen Johns
+  sechs Schuessen (SCD Se_on bank=2 id=10 @0x01438..@0x0148C). Kein `GATE ... VERWORFEN`.
+- Bild: F94-F112 Kraehe an Elza, Elza in der Opfer-Pose der Kraehenbank (Arme am Kopf) — der Effekt selbst ist bei
+  Skala 0x1000 in 320x240 nicht sicher zu erkennen (kein urteilstragendes Bild, nicht abgelegt).
+
 ## 5. Tests
 
 Registriert NUR in `re15_port/tests/unit/probes/r38_heliport1171.cmake`:
 - `test_r38_heliport1171.c` (Unit, echte RDTs + echte Baenke, Bilder in main.c-Reihenfolge), Teile:
   `banken` (EM021-Opferbank beider Archive: CDEMD0 14/36/20, CDEMD1 14/31/30 = Header), `zensus` (opcode-genauer Walk
   aller 206 RDTs: Ereignis-Kraehen nur ROOM1171 @0x016DC/@0x016F0, kein Skript setzt (5,0x1C)=1, Warte-Bytes
-  @0x013F4), `flagwort` (HOVER-Kontakt setzt Bank-5-Wort-Maske 0x8, kein HP-Abzug, ORIENT-Effekt bei Eintritt und
-  Clip-8-Umlauf, (5,0x1D) -> SPIN + Opfer-Phase 4, (5,0x1F) -> Zustand 3 + Bit geloescht), `szene_re2` / `szene_re15`
+  @0x013F4), `flagwort` (HOVER-Kontakt setzt Bank-5-Wort-Maske 0x8, kein HP-Abzug; im Kontakt-Bild noch kein Effekt, im
+  Folgebild genau EIN Effekt 0 / Sub 0 / Skala 0x1000 an der Teil-2-Lage des Spawn-Augenblicks (Abstand 0, @0x80115334),
+  der Clip-8-Umlauf genau ein weiterer Spawn im 7. Folgebild (@0x80115394), (5,0x1D) -> SPIN + Opfer-Phase 4, (5,0x1F)
+  -> Zustand 3 + Bit geloescht), `szene_re2` / `szene_re15`
   (ganze Szene: Griff, Warten endet im Folgebild, Clip 0 = 14 Bilder, SE 2 im Griff-Bild und am Clip-Ende, Wurf =
   Griff+61, Modus 6 = Wurf+30, HP 100, beide Kraehen tot + Leiche, msg 0/1/3, Tuer -> ROOM10B1, (4,0xE9)=1),
   `danach` (Wiedereintritt Cut 3: 7 normale Kraehen, Abstieg Slot 2 -> ROOM10B1 installiert), `leon1170` (Leon: 7 Kraehen,
@@ -191,8 +218,32 @@ Registriert NUR in `re15_port/tests/unit/probes/r38_heliport1171.cmake`:
   Gegenprobe gegen e2cc7673 (build_bisect): ROT mit "Texte 0/1/3 nicht in Folge (-1/-1/-1) - die Szene haengt".
   Kuerzung (ehrlich): die Selbst-Tuer Slot 5 feuert der Haken RE15_FIRE_AOT (re15_aot_fire_slot = derselbe Tuerpfad wie
   die Aktionstaste); der Treppenweg Boden -> Ebene 2 -> Ebene 4 (Slots 6/8) wird nicht gelaufen.
+  Warum das reicht (gemessen 2026-10-16): re15_aot_fire_slot ruft fuer eine Tuer `aot_fire_door(slot)` = denselben
+  Tuer-Feuer-Pfad, den der Bereichs-Scan bei der Aktionstaste nimmt (aot_common.c, handler[2] @0x800430BC). Die vier
+  Treppen-AOTs und das Tor sind in ROOM1171 BYTEGLEICH zu ROOM1170 bis auf das Slot-Byte (1171 @0x01310/@0x01324/
+  @0x01338/@0x0134C = 1170 @0x0137A/@0x0138E/@0x013A2/@0x013B6, z.B. `2c 06|07 0d 31 00 00 d8 96 9e ad c4 09 7a 03 01 00
+  02 00 00 00`; Tor 1171 @0x012F0 Slot 5 = 1170 @0x0135A Slot 6, Rechteck `5c d1 de 90 d6 06`) — diese Treppen deckt
+  `unit_stair_1170_regression` (vier Zonen, beide Richtungen) ab.
 
-(Ergebnisse unten.)
+Ergebnisse (Stand 645f925a, eigener Baum, `local_build.sh configure` + `build` OK; KEINE volle Suite):
+- Eigene Riegel: `ctest --test-dir re15_port/build -R "r38_heliport1171" --timeout 900 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 10`** (7 Unit + weg_re2 88,5 s / weg_re15 102,6 s / laden 70,6 s).
+  Vorher (6a5970f5 ungeprueft) war `unit_r38_heliport1171_flagwort` ROT ("ORIENT-Eintritt ... (0 Effekte)"): der Riegel
+  erwartete den Effekt im Kontakt-Bild — Riegelfehler, nicht Code; berichtigt in 645f925a.
+- Nachbarn der beruehrten Module (Kraehenhirn enemy_ai_common.c, Spieler-Takt game_step_common.c, Bank-Weiche main.c,
+  Raum-Init scd_room_setup.c): `ctest ... -R "^(unit|probe)_.*(crow|kraehe|fenster|1170|10c0|victim|grab|elzaems|10d0|1090_push|plc_back|r37_roy)"
+  --timeout 600` -> **`100% tests passed, 0 tests failed out of 44`** (unit_crow_ai, unit_re2_crow_ai,
+  unit_re2_room10c0_ab, unit_crow_fixes, unit_elliot_1170_run, unit_stair_1170_regression, probe_crow_kill,
+  unit_crow_death_corpse, unit_door_1170_lock, unit_zombie_10d0_reentry_a/_b, unit_zombie_se_ab_10d0,
+  unit_re2_hit_repeat_crow_spider, unit_re2_crow_se_bank, unit_re2_victim_collapse, unit_1090_push_pin/_anim,
+  unit_dog_grab_anchor, unit_plc_back_yaw_1090, unit_re2_crow_shadow_release, unit_re2_dog_grab_anchor,
+  probe_10d0_situp_handoff, unit_re2z_grab_core_se, unit_re2_crow_kill_cmd3, unit_r35_fenster_* (5),
+  unit_r36_elza_fenster, unit_r36_kleidung_kraehe, unit_r36_schuss_kraehe, unit_r37_elzaems_* (5), unit_r37_roy_* (5),
+  unit_r38_heliport1171_leon1170, unit_tor_1170_anfrage).
+- Nachbarn mit der echten exe: `ctest ... -R "^integration_.*(fenster|kraehe|1170|1181griff)" --timeout 900` ->
+  **`100% tests passed, 0 tests failed out of 6`** (integration_r35_fenster, integration_r36_elza_fenster,
+  integration_r37_elzaems_elza1181griff, integration_r37_elzaems_elza10c1kraehe, integration_r37_elzaems_leon10c0kraehe,
+  integration_r37_roy_leon1170).
 
 ## 6. OFFEN
 
