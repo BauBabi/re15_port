@@ -6,6 +6,8 @@ Auftrag (AUFTRAG.md Z.37-44 + Nachtrag 14:00 Z.119/146): am Ende der Szene Marvi
 Innenseite der Werkstatt-Tuer -> Zuschliess-Animation + Zuschliess-Ton (RE2 Robert Kendo, Spielanfang) -> Tuer
 bleibt zu (Elzas Meldung) -> zurueck zu Leon und Ada -> "I just want to make sure we don't have any unwanted
 followers."; die Tuer danach beim Anklicken mit Elzas Text. Parkplatz-Tuer NICHT (Spur Q).
+Runde 38 Spur C (analysis/befunde_runde38/AUFTRAG.md Z.16): msg 20 lautet jetzt "But, hold on..." (NUTZER-VORGABE;
+Form der Auslassung = ROOM11B0 msg 4 @0x19CD `57 57 57`, Dossier analysis/befunde_runde38/C_werkstatt11b0.md §1).
 
 Jede Zeile ist ein ausgelieferter Opcode in ausgelieferter Form (Laengen = engine/src/scd_vm.c s_opcode_sizes);
 Wege/Positionen/Texte/Gesten = NUTZER-VORGABE bzw. PORT-WAHL, die FORM ist belegt (Datei-Offsets in
@@ -160,7 +162,7 @@ def tuer_bild_zu():
 marke = {}
 set_flag(BANK_ZU, BIT_ZU, 1, "Set(9,84)=1 als ERSTES (Einmal-Riegel)")
 work_marvin()
-message(MSG_HOLD, "Message_on 20  Marvin: \"Hold on.\"  (NUTZER-VORGABE)")
+message(MSG_HOLD, "Message_on 20  Marvin: \"But, hold on...\"  (NUTZER-VORGABE Runde 38)")
 motion(15, "Plc_motion(0,15) Geste 'Hey!' (sub06 @0x014F6)")
 sleep(40, "Sleep 40  (Zeilentakt @0x014FA)")
 motion(23, "Plc_motion(0,23) Abschluss (sub06 @0x01506)")
@@ -278,7 +280,9 @@ if rdt1[0x112A:0x113E] != bytes([0x2C, 0x08, 0x01, 0x31, 0x00, 0x00, 0x80, 0xA8,
     sys.exit("ROOM11B1 sub00 @0x0112A weicht ab")
 if rdt0[0x017EA:0x017EE] != bytes([0x47, 0x05, 0x01, 0x00]):
     sys.exit("ROOM11B0 sub06 @0x017EA weicht ab")
-MSG20 = marvin_zeile(["Hold on."])
+# Runde 38 Spur C (AUFTRAG.md Z.16, NUTZER-VORGABE): "But, hold on..." statt "Hold on.". FORM = ROOM11B0 msg 4
+# @0x19CD "Marvin: Oh, I see... Damn it!": Komma `18` + Leerzeichen `00`, Auslassung = drei Punkte `57 57 57`.
+MSG20 = marvin_zeile(["But, hold on..."])
 MSG21 = marvin_zeile(["I just want to make sure", "we don't have any unwanted followers."])
 
 
@@ -322,7 +326,8 @@ def main():
     lst, _ = listing(tuerprog)
     L += lst
     L += c_array("k_szl_tuerprog", tuer_bytes, "Ereignis 23: Tuer zu beim Raumaufbau, solange (9,84)=1")
-    L += c_array("k_szl_msg20", MSG20, "msg 20 Marvin: Hold on.  (NUTZER-VORGABE, Form ROOM11B0 msg 12 @0x1BD0)")
+    L += c_array("k_szl_msg20", MSG20, "msg 20 Marvin: But, hold on...  (NUTZER-VORGABE Runde 38, Form ROOM11B0 msg 12 "
+                 "@0x1BD0, Auslassung wie msg 4 @0x19CD `57 57 57`)")
     L += c_array("k_szl_msg21", MSG21, "msg 21 Marvin: I just want to make sure / we don't have any unwanted followers.")
     L += c_array("k_szl_msg22", MSG22, "msg 22 = ROOM11B1 msg 12 @0x179F \"The door is locked.\" (Bytes 1:1)")
     open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(L) + "\n")

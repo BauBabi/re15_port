@@ -27,6 +27,7 @@
  * Teil 4 — Irons (ROOM1150) nach dem Tod: Kopf-FSM-Flags 0x12 (siehe irons_kopf_tick).
  */
 #include "re15_szenenleon_r36.h"
+#include "re15_werkstatt11b0_r38.h"   /* Runde 38 Spur C: Bank im Uebergabebild (Kanal + Phase 7) */
 #include "re15_actor.h"
 #include "re15_audio.h"
 #include "re15_collision.h"
@@ -224,6 +225,7 @@ void re15_szl_schub_spieler_tick(void)
 /* ===================================================================================================== */
 int re15_szl_schub_npc_kanal(const re15_actor_t *e)
 {
+    { int k = re15_w11b0_schub_kanal(e); if (k >= 0) return k; }   /* Runde 38 Spur C: Bank = posierter Clip, Uebergabebild */
     if (!e || e->type < 0x40 || e->type > 0x4d) return 0;
     if (e->state != 4 || e->sub_state_1 != RE15_SZL_MODUS_SCHUB || e->walk_active) return 0;
     return (e->sub_state_2 >= 2) ? 1 : 2;      /* [2..7] Loco +0x84/+0x16c, [0/1] eigene Bank +0x170/+0x174 */
@@ -306,6 +308,7 @@ void re15_szl_schub_npc(re15_actor_t *e)
         e->sub_state_1 = 6;                                   /* +0x5 = 6 @0x80052be0 -> Event-Reach */
         e->sub_state_2 = 0;                                   /* +0x6 = 0 @0x80052bf0 */
         e->sub_state_3 = 0;
+        re15_w11b0_schub_uebergabe(e);                        /* Runde 38 Spur C: kein anim_set in [7] -> Pose halten */
         break;
     }
 }
