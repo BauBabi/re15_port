@@ -68,6 +68,10 @@ RE15_DEBUG_JUMP=1170@250 (laedt ROOM1171). sub07 spawnt John (0x49) + 2 Kraehen 
     @0x80030500 `beq` -> Pad auf die Menuebits 0xF000 (@0x80030514) = "Spieler kann sich nicht bewegen";
   - der Statusmenue-Sperre der Hauptschleife @0x8001cd0c `lui v1,0x100` / @0x8001cd14 `lw` / @0x8001cd20 `bne`.
   Kein Gegner-Code liest es.
+- RE2 Retail genauso: 28 EXE-Leser von Stop_flg 0x800CFBDC (ghidra_re2_Leon.txt); Bit 0x01000000 lesen nur die
+  Hauptschleifen-Tore @0x8002641c-30 (FUN_80021a48) und @0x8002b030-40 (Menue-Oeffnen, neben ClearOTagR) und die
+  Pad-Aufbereitung @0x800391f8 `lw v1,-0x424(v1)` / @0x800391fc `lui a0,0x100` / @0x80039200 `and` / @0x8003921c
+  `andi v0,v0,0x3c00` (nur Menuebits). Die RE2-Gegnermodule pruefen nur 0x20000000 (Hund EMD0G_MOD0.BIN @0x80100014-20).
 - Gegner-Wurzeln pruefen nur das GLOBALE Einfrieren Bit 0x20000000 (Set(2,2)): Hund @0x8010d80c `lw v0,0(s0)` /
   @0x8010d810 `lui v1,0x2000` / @0x8010d814 `and` / @0x8010d818 `bne` (+ grid&0x20 @0x8010d82c); RE2-Hund
   EMD0G_MOD0.BIN @0x80100014 `lw v0,-1060(v0)` (0x800CFBDC) / @0x80100018 `lui v1,0x2000` / @0x80100020 `bne`.
