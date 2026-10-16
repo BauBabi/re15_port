@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include "re15_actor.h"
 #include "re15_esp.h"
+#include "re15_enemy.h"   /* re15_enemy_bank_t (Teil 3: Animationspaar der RE2-Babybank) */
 
 /* ---- Teil 1: Schacht-Ausstieg (STAGE2.BIN Zustand 4 Unterzustand 1, grid 0x41) --------------
  * EM025-Cliplaengen (CDEMD0.EMS Blob 10 = Typ 0x25, Bank-0-EDD @Blob+0xc, 17 Clips). */
@@ -52,6 +53,13 @@ unsigned re15_spinnen_r38_gift_treffer(void);
  * Biss-Reichweite = Ziel+0x9A + 10 (EMS26 @0x80100E40) mit dem RE2-Spieler-Radius 450
  * (RE2 PSX.EXE `addiu v1,zero,450` @0x8003bdc0 / `sh v1,154(s2)` @0x8003bdc4). */
 #define RE15_SPINNEN_R38_RE2_SPIELER_9A 450
+
+/* Animationspaar der RE2-Bank: das Baby (kind 0x26) laeuft im Original IMMER auf Paar 1 (EMD dir[1] EDD ->
+ * +0x17C, dir[2] EMR -> +0x108; Binder RE2 PSX.EXE @0x8001abb0/@0x8001abc0), weil die EMS26-Wurzel genau diese
+ * zwei Zeiger an alle Zustaende reicht (`lw a1,264(s0)` / `lw a2,380(s0)` @0x8010005c/60 -> `jal 0x8002959c`).
+ * Die Port-Regel "Paar mit den meisten Clips" (re2_ems.c) nahm Paar 3 (victim, Wurzel-Y -1797..-1585) — die
+ * Babys schwebten 1166..1797 ueber ihrer Lage. Gerufen aus re2_ems_load_bank (Haken "Runde 38 Spur R"). */
+void re15_spinnen_r38_re2_bank(int kind, re15_enemy_bank_t *eb);
 
 /* ---- Teil 4: Objekt-Ausschiebung (Aktor-Durchgang des Objekt-Ticks FUN_8002bd44 @0x8002be0c-4c) ---
  * FUN_8002cabc(a0 = Spinne, a1 = Objekt, a2 = 0) je aktivem Obj_model_set-Objekt (obj_id von hinten,

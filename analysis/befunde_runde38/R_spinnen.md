@@ -199,9 +199,117 @@ Port vorher: re15_actor_prop_pushout schob nur die NPC-Familie 0x40..0x4d (mit S
 re15_collision.c behandelt Null-Kaesten als nicht kollidierend (Annahme fuer Heli/Rotor ROOM1170, nicht aus
 FUN_8002cabc) — die Spinne lief durch das Gitter.
 
+### 2.6 Minispinnen GEZEICHNET in der Luft: falsches Animationspaar der RE2-Babybank (Fortsetzung, neu)
+**Messung im Port (vor diesem Fix, Stand a7a84080, echte exe, `c_2030`):** die Babys stehen LOGISCH auf dem Boden
+(Messschiene: y = +0x1C2 = -5400 in 544 von 585 Bildern, sonst Sprung), im Framedump liegt aber eine Kette brauner
+Klumpen auf GELAENDERHOEHE neben Leon (`R_belege/babys_vorher_zoom.png`, Bild 200/280/400/520). Sonde
+`R_belege/sonde_babybank.c` (gleiche Zeichenkette wie der NPC-Renderer: Pose je Keyframe, Mesh-Vertex-Y), Ausgabe
+`R_belege/sonde_babybank_ausgabe.txt`: die Port-Bank fuer kind 0x26 ist **Paar 3** (EMD dir[5]/dir[6], 3 Clips 14/36/20
+Bilder, 80-Byte-Keyframes) mit Wurzel **(0,-1797,0)** in Keyframe 0 und -1797..-1585 ueber alle 70 Keyframes ->
+gezeichnete Unterkante **-1797..-1166** ueber der Lage = die Babys schweben in Brusthoehe. (Adult EM025 zum Vergleich:
+Wurzel -400, Unterkante +122 = steht.) Ursache im Port: re2_emd_parse_bank nimmt als Hauptbank "das Paar mit den
+meisten Clips" (PORT-Regel, re2_ems.c) — fuer EM026 Paar 3 (3 Clips) statt Paar 1 (1 Clip).
+**Original (RE2 Retail, selbst disassembliert):**
+| Adresse | Bytes/Instruktion | Bedeutung |
+|---|---|---|
+| PSX.EXE 0x8001abb0 | `sw v1,380(s1)` | Binder: EMD dir[1] (EDD Paar 1) -> Entity +0x17C |
+| PSX.EXE 0x8001abc0 | `sw v1,264(s1)` | Binder: EMD dir[2] (EMR Paar 1) -> Entity +0x108 |
+| PSX.EXE 0x8001abd0/abe0/abf0/ac00 | `sw v1,388/384/396/392(s1)` | dir[3..6] -> +0x184/+0x180/+0x18C/+0x188 |
+| EMS26 0x8010005c / 0x80100060 | `lw a1,264(s0)` / `lw a2,380(s0)` | Wurzel reicht +0x108/+0x17C an die Zustandstabelle @0x80101084 |
+| EMS26 0x801004ec-f4, 0x80100854-5c | `addu a1,s2 / addu a2,s3 / jal 0x8002959c` | Animations-Treiber mit genau diesen Zeigern (5 Aufrufe) |
+| EMS26 0x8010011c / 0x80100120 | `lui v0,0xf` / `sw v0,332(s0)` | einziger Clip-Schreiber: +0x14C = 0x000F0000 = Clip 0 |
+Vollscan EMS26.BIN (1086 Worte): ausser 0x8010005c/60 KEIN Zugriff auf +0x108/+0x17C und KEINER auf +0x180..+0x18C.
+=> Das RE2-Baby spielt immer **Paar 1 Clip 0**: 2 Bilder (Keyframes 0/1), Wurzel (0,0,0), Vertex-Y -275..0 = steht auf
+seiner Lage. Paar 3 ist die Opfer-Bank (Wurzel -1797 = Brusthoehe des Spielers) und wird vom Baby nie abgespielt.
+**Dynamischer Gegenbeweis im RE2-Original: nicht erreicht** (versucht, Dossier 6): DuckStation-GDB mit
+`SLUS-00748_5.sav` + Raumsprung per RAM nach ROOM2010 (`R_belege/re2_gdb_baby.py`) laedt den Raum, die Spinnen
+stehen dort aber im MAIN-Teil der SCD (Unterskript 11 @Datei 0x1088, Saetze @0x10EE/0x1104/0x111A) und erscheinen
+erst auf ein Ereignis — Entity-Tabelle 0x800CFE18 blieb leer; Haltepunkte im Entity-Takt (0x800268A4) beenden die
+GDB-Verbindung (DuckStation trennt). PCSX-Redux (`R_belege/re2_baby.lua`/`re2_baby_run.py`) startet in dieser Sitzung
+nicht (bekannt aus Runde 35 H: kein Monitor fuer GLFW). Der statische Beleg oben ist vollstaendig (alle Zugriffswege
+auf die Paar-Zeiger aufgezaehlt).
+
 ## 3. Umsetzung
 
+Neue Datei `re15_port/engine/src/spinnen_r38.c` + `re15_port/include/re15_spinnen_r38.h`; Haken (je 1-3 Zeilen,
+Kommentar "Runde 38 Spur R"):
+
+| Datei | Haken | Zweck |
+|---|---|---|
+| engine/src/enemy_ai_common.c | `re15_spinnen_r38_lauer_re2(e)` vor dem RE2-Spinnen-Tick | RE2-KI: Schachtspinne (grid 0x41) laeuft die RE1.5-Choreografie, danach RE2-INIT am Boden |
+| engine/src/enemy_ai_common.c | Zustand 4 Unterzustand 1 -> `re15_spinnen_r38_lauer(e)` | RE1.5-KI: neun Phasen @0x80114ec8 (2.1) |
+| engine/src/enemy_ai_common.c | INIT: `re15_aspider_anim(e)` | anim_set `jal 0x8001f314` @0x80110d60 (Halteposen-Bild 1) |
+| engine/src/enemy_ai_common.c | Unterzustand 7: `re15_spinnen_r38_spucken(e,0)` | Spucken 0x0d002000 `jal 0x80019700` @0x80112770 |
+| engine/src/enemy_ai_common.c | run_all: `re15_enemy_selfpush_from_player(s,e)` | Spinnen-Wurzel `jal 0x8002aec4` @0x80110a6c (RE1.5); RE2-Wurzel `jal 0x80035530` @0x8010016c -> FUN_80034d0c(other,self) schreibt self x/z @0x800350c8/cc |
+| engine/src/enemy_ai_common.c | re15_actor_prop_pushout: Typ 0x25 -> `re15_spinnen_r38_objekt_pass` | FUN_8002cabc @0x8002be40 (2.5) |
+| engine/src/enemy_ai_re2_spider.c | Unterzustand 8: `re15_spinnen_r38_spucken(e,1)` | RE2-Spucken FUN_801058A4 @0x8010101C (2.3) |
+| engine/src/enemy_ai_re2_spider.c | Baby-Spawner: `dog_floor_y`/`floor` = Elternteil | +0x1C2 = Boden unter der Entity (RE2 @0x8002686c/74) |
+| engine/src/enemy_ai_re2_spider.c | Biss: Reichweite 450 + 10 | Ziel+0x9A = 450 (RE2 @0x8003bdc0/c4), @0x80100E40 |
+| engine/src/re2_ems.c | `re15_spinnen_r38_re2_bank(kind, eb)` in re2_ems_load_bank | **neu in der Fortsetzung**: Baby 0x26 = Paar 1 (2.6) |
+| engine/src/re15_esp.c | `re15_spinnen_r38_routine_a(f)` | ESP-Routinen A 24 @0x80017f50 / 25 @0x80017fa4 (2.2) |
+| engine/src/game_step_common.c | `re15_spinnen_r38_gift_tick(pl)` im Kommando-1-Prolog | Gift-Wirkung @0x80031e44-ecc |
+| engine/src/scd_vm.c | Sce_em_set: pos_s_x/y/z := Spawnlage | Lage-Spiegel `sh` @0x800421a0-b8 (Vor-Hoehe von FUN_8002cabc) |
+| platform/pc/main.c | `re15_spinnen_r38_log_frame` | Messschiene RE15_SPINNEN_LOG (env-gegatet) |
+
+Konstanten (alle mit Adresse im Code): Phasentabelle @0x8010027c, Schub 200/300 (`ori 0xc8` @0x80114fa8 / `ori 0x12c`
+@0x8011502c), +1000 @0x8011501c, Abstieg 100 + (rng & 0xf) @0x801150dc-e8 / @0x80115198-bc, Schwellen -1800/-500
+@0x80115100/@0x80115188, Landung 1488 je Quadrant @0x80115278-310, Kaesten A/C @0x80118dd4/@0x80118dec, Spuck-Versatz
+DAT_80118ee8 = (500,0,0) bzw. RE2 (1000,0,-100) @0x80105910-24, Routine 25: +30/+30 @0x80017fbc-d8, Treffer-Radius 500
+@0x80017ffc, Kind `0x030c0000 | (+0x72 + 500)` @0x80018030-54, SE 0x03030001 @0x8001805c-60, Gift-Takt 0x78/8 und -2 HP
+@0x80031e7c-ac, nie toedlich @0x80031ebc-c0, RE2-Spieler-Radius 450 @0x8003bdc0, EM025-Cliplaengen aus CDEMD0.EMS Blob 10.
+**NUTZER-VORGABE / Beta->Retail (Gift):** RE1.5 wuerfelt das Gift-Bit tot (1.4: a0 = 0x0A in 13/13, Bit 0x2 @0x80012eac
+nie gesetzt); RE2 vergiftet bei JEDEM Gift-Treffer (Op 32 `sh 5400,0x800cfe10` @0x80020130). Port: derselbe Treffer
+(Giftklumpen im Spielerkasten, Routine 25) setzt das RE1.5-Gift-Bit 0x2; Wirkung und Heilung sind RE1.5 (2.2).
+
 ## 4. Messung nachher
+
+Alle Laeufe ueber die echte exe (Messkopie `re15_pc_r38sp_mess2.exe`, RE2-KI = Default, `RE15_DEBUG_JUMP=<raum>@250`,
+Messschiene RE15_SPINNEN_LOG, Bilder RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1). Laufordner `re15_port/build/r38_lauf/<name>`.
+
+### 4.0 Unit-Test vor der Fortsetzung
+`unit_r38_spinnen` auf Stand a7a84080: 0 FAIL (A RE1.5/RE2 Schacht Bild fuer Bild, A2 Landung neben dem Spieler, B Gift,
+C Babys). Ergaenzt in der Fortsetzung: C "gezeichnet auf der Lage" (2.6) und D (Abschnitt 5).
+
+### 4.1 Punkt 1 — Lage aller Stage-2-Spinnen und Schacht-Ausstieg (RE2-KI)
+Je Raum 1300 Bilder ab dem Sprungpunkt (Leon steht), Auswertung je Spinne (`ana.py`-Zusammenfassung):
+| Raum | Spinnen | y (alle Bilder) | Modus +0x222 | Neigung | Befund |
+|---|---|---|---|---|---|
+| ROOM2030 (Sprung, Cut 0) | 3 x grid 0x00 floor 3 | -5400 = Steg (Leon -5400) | 0 | 0 | am Boden; Spucken + Gift |
+| ROOM2030 (ECHTE Tuer 2060 -> 2030, Cut 13) | 1 x floor 9 | -16200 = oberer Steg (Leon -16200) | 0 | 0 | am Boden (Bild `R_belege/2030_oben_tuer.png`), Gift |
+| ROOM2050 | 2 x floor 3 | -5400 | 0 | 0 | am Boden |
+| ROOM2070 | 2 x floor 0 | 0 | 0 | 0 | am Boden, greifen an |
+| ROOM2090 | 2 x floor 0 | 0 | 0 | 0 | am Boden, greifen an |
+| ROOM2060 | 2 x grid 0x41 floor 2 | -3600 | 0 | 0 | warten im Schacht (Zustand 4/1), bis Cut 1/5 |
+| ROOM20A0 | grid 0x41 floor 3/2 | -5400/-3600 | 0 | 0 | warten im Schacht, bis Cut 4/5 |
+Alle Spinnen ausser den Schachtspinnen stehen in jedem Bild auf ihrer Sce_em_set-Hoehe = Boden des Stegs (y = +0x1ba).
+Elza-Raeume ROOM20x1: Sce_em_set/Member_set-Zeilen bytegleich mit ROOM20x0 (md5 der Zeilen: 2030/2031 d4ad8ac5,
+2050/2051 bbb2dd03, 2060/2061 bc29823b, 2070/2071 8a3c7569, 2090/2091 edfe6258, 20A0/20A1 d5eb059c).
+**Schacht ROOM2060, echter Weg** (`w_2060`: Spawn an der Tuerlage aus 2030 (7600,0,3950), zu Fuss in Cut 1): Bild 19
+grid 0x41 -> 0x42 (sub02), Kriechbahn z 6400 -> 4325 mit x 5975 (Gitter-Ausschiebung), Bild 49 y -2600 / Neigung 1024,
+Abstieg -1545, -462, Bild 89 Landung **(5975,0,3137) floor 0**, Bild 99 RE2-INIT Zustand 1 Modus 0 auf **y 0**.
+**Schacht ROOM20A0, echter Weg** (`w_20A0`: Lauf durch den Gang, an der Kante x 20082 SQUARE = Klettern nach unten auf
+y 0, damit Cut 3 -> 4): Bild ~159 grid 0x42, Kriechen z -29000 -> -26850 (x 22732 = Gitter obj 2 + 200), Abstieg,
+Bild 239 Landung **(22732,0,-25194)** (Original 1.4: (22732,0,-25662), dort mit erzwungenem Cut ohne Spieler-Weg), danach
+Angriff auf Leon (HP 100 -> 80 -> 60 ...). Bilder ROOM2060 (`w2_2060`, derselbe Weg, Bild 12..132 je 8):
+`R_belege/2060_schacht.png` — Cut 0 an der Tuer, Cut 1: die Spinne kriecht aus dem Deckenschacht am hinteren Gitter,
+haengt senkrecht an der Wand (Neigung 1024), steigt ab und steht ab Bild ~92 neben Leon auf dem Boden.
+
+### 4.2 Punkt 2 — Gift -> Vergiftung -> Gegengift (echte exe)
+* Spucken sichtbar (`s_2030`, Bild 8-34 je 2): violette Giftwolke fliegt von der Spinne zu Leon (`R_belege/spucken_2030.png`);
+  Messschiene: 3 Effektplaetze 0x0d (A 24 -> 25), Treffer in Bild 33: HP 100 -> 90, Zustand 2, **Status 0x0002 (Gift)**.
+* Wirkung: danach alle 121 Bilder -2 HP (v_2030: 1268 von 1300 Bildern vergiftet, HP 100 -> 32 durch Spucken + Gift).
+* Statusschirm (`g_2030`): EKG zeigt **"Poison"** (violett); Gegengift (RE15_GIVE=0x23:1, Platz 2) per Menue ITEM ->
+  Antidote Spray -> USE: Bild 440 **HP 86 -> 111 (+25, ohne Deckel = RE1.5 @0x8004afa8-b0), Status 0x0002 -> 0x0000**,
+  EKG wechselt auf **"Fine"** (gruen), das Spray verschwindet aus der Liste (`R_belege/gegengift_2030.png`).
+  Danach spuckt die Spinne erneut (Bild 640: HP 101, Status 0x0002).
+
+### 4.3 Punkt 3 — Minispinnen am Boden mit Angriff (echte exe)
+`c2_2030`: Spinne 1 mit der Schrotflinte getoetet (RE15_GIVE=8:30, RE15_EQUIP=8, Zielen+Feuer), Bild 176: 9 Babys
+(Typ 0x26, RE2-Spawner) auf dem Steg: y = -5400 = Boden in 544-570 von 585 Bildern, sonst Sprung (Modus 1, Scheitel
+-6680 = 1280 ueber dem Boden, RE2-Sprung vy -300/+40); nie unter dem Boden. **Gezeichnet**: vorher (`c_2030`, vor 2.6)
+Klumpenkette auf Gelaenderhoehe, nachher auf dem Steg zu Leons Fuessen (`R_belege/babys_vorher_zoom.png` /
+`babys_nachher_zoom.png`). **Angriff**: HP-Abzuege in 760 Bildern: 13 x 1 HP (Bisse), 5 x 2 HP (Gift), 1 x 10 (Spucken);
+der Lauf vor der Fortsetzung (`c_2030`, 1500 Bilder): 28 Bisse.
 
 ## 5. Tests
 

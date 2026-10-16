@@ -421,6 +421,34 @@ void re15_spinnen_r38_gift_tick(re15_actor_t *pl)
 }
 
 /* ============================================================================================
+ * Teil 3 — RE2-MINISPINNEN: das ANIMATIONSPAAR der Babybank (EM026)
+ * ============================================================================================
+ * GEMESSEN (Port, Dossier 4.3): die Babys stehen logisch auf dem Boden (y = +0x1C2), werden aber 1166..1797
+ * DARUEBER gezeichnet (Framedump ROOM2030: eine Kette brauner Klumpen auf Gelaenderhoehe neben Leon). Die
+ * Port-Bank nahm fuer kind 0x26 nach der Regel "Paar mit den meisten Clips" (re2_ems.c re2_emd_parse_bank)
+ * PAAR 3 (EMD dir[5]/dir[6], 3 Clips 14/36/20 Bilder, 80-Byte-Keyframes): Wurzel (0,-1797,0) in Keyframe 0,
+ * -1797..-1585 ueber alle 70 Keyframes, Vertex-Y -2072..-1166 (Sonde, Dossier 2.6).
+ * ORIGINAL (RE2 Retail, selbst disassembliert):
+ *   Binder PSX.EXE  8001abb0  sw v1,380(s1)   ; dir[1] (EDD Paar 1) -> +0x17C
+ *                   8001abc0  sw v1,264(s1)   ; dir[2] (EMR Paar 1) -> +0x108
+ *                   8001abd0/abe0/abf0/ac00   ; dir[3..6] -> +0x184/+0x180/+0x18C/+0x188
+ *   EMS26-Wurzel    8010005c  lw a1,264(s0)   ; +0x108
+ *                   80100060  lw a2,380(s0)   ; +0x17C  -> Zustandstabelle @0x80101084 (jalr @0x80100078)
+ *   alle fuenf `jal 0x8002959c` (Animations-Treiber) im Modul bekommen genau diese a1/a2 (@0x801004ec-f4,
+ *   @0x80100854-5c, ...); Vollscan EMS26.BIN (1086 Worte): KEIN anderer Zugriff auf +0x108/+0x17C und keiner
+ *   auf +0x180..+0x18C. Einziger Clip-Schreiber: `lui v0,0xf` @0x8010011c / `sw v0,332(s0)` @0x80100120
+ *   (+0x14C = 0x000F0000 = Clip 0).
+ * => das RE2-Baby spielt IMMER Paar 1 Clip 0 (EDD: 2 Bilder, Keyframes 0/1, Wurzel (0,0,0), Vertex-Y -275..0
+ *    = auf dem Boden). Paar 3 ist die Opfer-Bank (Wurzel-Y -1797 = Brusthoehe des Spielers) und wird vom
+ *    Baby nie abgespielt. */
+void re15_spinnen_r38_re2_bank(int kind, re15_enemy_bank_t *eb)
+{
+    if (!eb || kind != 0x26 || !eb->loco_ok) return;
+    eb->skel = eb->skel_loco;                                  /* +0x108 = dir[2] @0x8001abc0 */
+    eb->anim = eb->anim_loco;                                  /* +0x17C = dir[1] @0x8001abb0 */
+}
+
+/* ============================================================================================
  * Teil 4 — OBJEKT-AUSSCHIEBUNG (der Aktor-Durchgang des Objekt-Ticks FUN_8002bd44)
  * ============================================================================================
  * GEMESSEN (DuckStation-GDB, R_belege/orig_2060_klemme.txt + orig_2060_watch.txt): die Schachtspinne

@@ -45,6 +45,9 @@
 #include "re15_ems.h"
 #include "re15_esp.h"
 #include "re2_ems.h"
+#include "re15_skeleton.h"
+#include "re15_anim_select.h"
+#include "re15_md1.h"
 #include "re15_spinnen_r38.h"
 
 #ifndef RE15_ASSET_PSX_DIR
@@ -356,6 +359,39 @@ static void teil_b_wirkung(void)
 }
 
 /* ============================== C: MINISPINNEN ============================== */
+/* Tiefster GEZEICHNETER Punkt eines Aktors relativ zu seiner Lage-Y (PSX-Y nach unten: groesser = tiefer), exakt
+ * die Zeichenkette des NPC-Renderers (platform/pc/main.c: re15_compute_actor_kf -> re15_skel_compute_pose ->
+ * Mesh m an Pose m (m >= Bones -> Pose 0) -> rot*v>>12 + trans). 0 = steht auf seiner Lage; negativ = schwebt. */
+static int32_t gezeichnet_tiefster(const re15_actor_t *e, int *ok)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    *ok = 0;
+    if (!b || !b->ok || b->skel.bone_count <= 0) return 0;
+    int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;
+    int rv = re15_skel_compute_pose(&b->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    int32_t tief = -0x7fffffff;
+    for (int m = 0; m < b->md1.mesh_count; m++) {
+        const re15_skel_pose_t *p = &poses[m < b->skel.bone_count ? m : 0];
+        const re15_md1_mesh_t *me = &b->md1.meshes[m];
+        for (int pass = 0; pass < 2; pass++) {
+            const re15_md1_vertex_t *vs = pass ? me->quad_vertices : me->tri_vertices;
+            int nv = pass ? me->quad_vertex_count : me->tri_vertex_count;
+            for (int i = 0; i < nv; i++) {
+                int32_t y = (int32_t)(((int64_t)p->rot[3] * vs[i].x + (int64_t)p->rot[4] * vs[i].y
+                                      + (int64_t)p->rot[5] * vs[i].z) >> 12) + p->trans[1];
+                if (y > tief) tief = y;
+            }
+        }
+    }
+    *ok = (tief != -0x7fffffff);
+    return tief;
+}
+
 static void teil_c(void)
 {
     printf("\n== C Minispinnen (RE2-KI, ROOM2030, Boden -5400)\n");
@@ -396,6 +432,8 @@ static void teil_c(void)
     if (k) { pl->x = bx / k; pl->z = bz / k + 300; }
     pl->y = -5400; pl->hp = 100; pl->status_flags = 0; pl->state = 1;
     int bisse = 0, unter_boden = 0, max_hoch = 0;
+    int32_t zeichen_min = 0x7fffffff, zeichen_max = -0x7fffffff;   /* gezeichneter tiefster Punkt - Lage-Y */
+    int zeichen_n = 0;
     for (int f = 0; f < 600; f++) {
         int16_t vor = pl->hp;
         bild();
@@ -406,7 +444,23 @@ static void teil_c(void)
             if (!b->active || b->type != 0x26) continue;
             if (b->y > -5400) unter_boden++;
             if (-5400 - b->y > max_hoch) max_hoch = -5400 - b->y;
+            int ok = 0;
+            int32_t t = gezeichnet_tiefster(b, &ok);
+            if (ok) { zeichen_n++; if (t < zeichen_min) zeichen_min = t; if (t > zeichen_max) zeichen_max = t; }
         }
+    }
+    {   /* GEZEICHNET (Nutzerpunkt 3 "fliegen in der Luft"): RE2 spielt das Baby auf Paar 1 Clip 0 (Binder
+         * @0x8001abb0/c0, EMS26 `lw a1,264(s0)` / `lw a2,380(s0)` @0x8010005c/60, Clip-Wort 0x000F0000 @0x80100120):
+         * 2 Bilder, Wurzel (0,0,0), Vertex-Unterkante 0 = auf der Lage. Vorher (Paar 3): -1797..-1166. */
+        re15_enemy_bank_t *bb = re15_enemy_find(0x26);
+        CHECK(bb && bb->ok && bb->anim.clip_count == 1 && bb->anim.clips[0].frame_count == 2,
+              "Babybank = Paar 1: %d Clip(s), Clip 0 mit %d Bildern (RE2 dir[1]/dir[2], vorher Paar 3 mit 3 Clips)",
+              bb ? bb->anim.clip_count : -1, bb ? bb->anim.clips[0].frame_count : -1);
+        printf("   gezeichnete Unterkante der Babys relativ zur Lage: %d .. %d (%d Messungen)\n", zeichen_min,
+               zeichen_max, zeichen_n);
+        CHECK(zeichen_n > 0 && zeichen_min >= -10 && zeichen_max <= 10,
+              "Babys GEZEICHNET auf ihrer Lage: Unterkante %d..%d (vorher -1797..-1166 = schwebend)", zeichen_min,
+              zeichen_max);
     }
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++)
         if (g_actors[s].active && g_actors[s].type == 0x26) auf_boden++;
