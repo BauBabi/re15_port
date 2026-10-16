@@ -15,7 +15,8 @@
  *              Biss-Kontakt @0x80104E5C-68 (0), Zombie Block G @0x80102128, Spinne @0x80105A48-54 (Port:
  *              re15_player_is_grabbed()).
  *     Solange die Szene den Spieler haelt (Port: g_scd.player_mode == 2, einziger Schreiber platform/pc/main.c
- *     cine_active = flag(1,27) || flag(2,7) — das ist woertlich "Leon kann sich nicht bewegen"), sieht jeder Gegner
+ *     cine_active = flag(1,27) || flag(2,7); ODER Spieler+0x4 == 4 = Plc-Executor, gesetzt von Plc_motion @0x80041bb0 /
+ *     Plc_dest @0x80041c14, geloest von Plc_ret @0x80041f90 — beides woertlich "Leon kann sich nicht bewegen"), sieht jeder Gegner
  *     in seinem FREIEN Gehirn (Zustand +0x4 == 1, ACTIVE — Wurzeltabellen [1]: Hund 0x8010dbcc, Kraehe 0x80112420,
  *     Zombie 0x80101224, RE2-Hund 0x801004DC) den Spieler durch genau diese Tore als nicht angreifbar.
  *     AUSNAHME "Teil der Szene": Skript-Zustaende (+0x4 != 1) bleiben unberuehrt — der Kraehen-Griff der 1171-Szene
@@ -43,7 +44,7 @@ void re15_szenenschutz_gegner(int slot);         /* vor dem Tick JEDES aktiven A
 void re15_szenenschutz_durchlauf_ende(void);     /* nach der Schleife                              */
 int  re15_szenenschutz_sicht(void);              /* 1 = der gerade tickende Gegner sieht PL+0x1D3&0x80 */
 
-/* Die Szene haelt den Spieler (g_scd.player_mode == 2). */
+/* Die Szene haelt den Spieler (g_scd.player_mode == 2 oder Spieler+0x4 == 4 Plc-Executor). */
 int  re15_szenenschutz_haelt(void);
 /* Gilt der Schutz gegen diesen Akteur? (freies Gehirn, keine Szenen-Rolle) */
 int  re15_szenenschutz_gegen(const re15_actor_t *e);

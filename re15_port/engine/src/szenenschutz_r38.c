@@ -35,10 +35,15 @@ static uint32_t s_ticks, s_abgefangen, s_fenster_ticks;
 
 int re15_szenenschutz_haelt(void)
 {
-    /* player_mode 2 = "skript-gefuehrt, Pad wird ignoriert" (player_common.c:933-947); gesetzt AUSSCHLIESSLICH aus
-     * cine_active = flag(1,27) || flag(2,7) (platform/pc/main.c, Block "BL-round 2026-05-29"), inklusive der 15
-     * Letterbox-Bilder ohne Plc_ret. Das Original haelt den Spieler ueber Set(2,7) = Bit 0x01000000 (@0x800304f8). */
-    return g_scd.player_mode == 2;
+    /* (1) player_mode 2 = "skript-gefuehrt, Pad wird ignoriert" (player_common.c:933-947); gesetzt AUSSCHLIESSLICH aus
+     *     cine_active = flag(1,27) || flag(2,7) (platform/pc/main.c, Block "BL-round 2026-05-29"), inklusive der 15
+     *     Letterbox-Bilder ohne Plc_ret. Das Original haelt den Spieler ueber Set(2,7) = Bit 0x01000000 (@0x800304f8).
+     * (2) Spieler+0x4 == 4 = Kommando "Plc-Executor": Plc_motion @0x80041ba4/@0x80041bb0 `ori v1,zero,4` / `sb v1,4(v0)`,
+     *     Plc_dest @0x80041c10/@0x80041c14, geloest erst von Plc_ret @0x80041f8c/@0x80041f90 (+0x4 = 1). Der Spieler-
+     *     Dispatcher FUN_80031c44 laeuft dann ueber @0x80073f90[4] = 0x80030660 (@0x80031c8c-0x80031cb4) statt ueber
+     *     den Pad-Zweig [1] = 0x80031de8 — auch ohne (2,7) kann sich Leon nicht bewegen (Zensus: 15 Spieler-Plc-Subs
+     *     ohne (2,7)/(1,27), z.B. ROOM1230 sub21 Hocke @0x014B4 im Hunderaum). */
+    return g_scd.player_mode == 2 || g_actors[RE15_ACTOR_SLOT_PLAYER].state == 4;
 }
 
 int re15_szenenschutz_gegen(const re15_actor_t *e)

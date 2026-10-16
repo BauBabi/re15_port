@@ -15,8 +15,10 @@
  *   Teil 4  ROOM1190, RE2-Hund, Sperrzeit genullt: player_mode 2 -> 400 Bilder kein HP-Verlust, kein Griff;
  *           player_mode 0 -> Biss (20 HP, FUN_800401D4 @0x80104EB8-C0).
  *   Teil 5  dasselbe mit dem RE1.5-Gehirn (Tor Spieler+0x93 @0x8010e5c4-cc / FUN_8010f15c).
+ *   Teil 4b ROOM1190, RE2-Hund, Spieler im Plc-Executor (+0x4 == 4, ohne (2,7)): kein Angriff; nach Plc_ret Biss.
  *   Teil 6  Gegenprobe ROOM1171 (Elza-Raum): die Szenen-Kraehe (grid 0x40 -> FLIGHT-2) greift den GEHALTENEN
  *           Spieler weiterhin (HOVER-Griff @0x80115254-0x801152c4, ohne +0x93-Tor) — "Teil der Cutscene".
+ *   Teil 7  Zombie 0x10 (RE2- und RE1.5-Gehirn): frei greift er an, gehalten 600 Bilder nicht.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -125,6 +127,10 @@ int main(void)
         CHECK(re15_szenenschutz_haelt() == 0, "T1 player_mode 1 (Plc_ret) = frei");
         g_scd.player_mode = 0;
         CHECK(re15_szenenschutz_haelt() == 0, "T1 player_mode 0 = frei");
+        g_actors[RE15_ACTOR_SLOT_PLAYER].state = 4;
+        CHECK(re15_szenenschutz_haelt() == 1, "T1 Spieler+0x4 == 4 (Plc-Executor @0x80041bb0/@0x80041c14) haelt auch ohne (2,7)");
+        g_actors[RE15_ACTOR_SLOT_PLAYER].state = 1;
+        CHECK(re15_szenenschutz_haelt() == 0, "T1 Spieler+0x4 == 1 nach Plc_ret (@0x80041f90) = frei");
         re15_actor_t a; memset(&a, 0, sizeof a);
         a.active = 1; a.type = 0x20; a.state = 1;
         CHECK(re15_szenenschutz_gegen(&a) == 1, "T1 Hund im freien Gehirn (+0x4 = 1) -> geschuetzt");
@@ -248,6 +254,42 @@ int main(void)
         re15_player_clear_hit_guard(pl);
     }
 
+    /* ====== Teil 4b: RE2-Hund, Spieler im Plc-Executor (+0x4 == 4) OHNE (2,7) — z.B. ROOM1230 sub21 Hocke ====== */
+    {
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+        int t_land = -1, cd_land = -1;
+        int slot = hund_1190(&rdt, &t_land, &cd_land);
+        CHECK(slot > 0, "T4b: Hund freigegeben und gelandet");
+        if (slot > 0) {
+            re15_actor_t *d = &g_actors[slot];
+            d->dog_atk_cd = 0;
+            g_scd.player_mode = 0;                      /* KEIN (2,7)/(1,27) */
+            int angriff = 0;
+            for (int f = 0; f < 300; f++) {
+                spieler_vor_hund(pl, d, f);
+                pl->state = 4;                          /* Plc_motion @0x80041bb0: Executor, Pad tot */
+                frame();
+                if (d->state == 1 && d->sub_state_1 == 3) angriff++;
+            }
+            printf("  [T4b] Executor-Spieler: hp=%d Angriffs-Bilder=%d\n", pl->hp, angriff);
+            CHECK(pl->hp == 100 && angriff == 0,
+                  "T4b: Spieler im Plc-Executor -> kein Angriff (hp=%d, %d Bilder Sub 3)", pl->hp, angriff);
+            pl->state = 1;                              /* Plc_ret @0x80041f90 */
+            int t_biss = -1;
+            for (int f = 0; f < 900 && t_biss < 0; f++) {
+                spieler_vor_hund(pl, d, f);
+                pl->state = 1;
+                int16_t vor = pl->hp;
+                frame();
+                if (pl->hp < vor) t_biss = f;
+            }
+            printf("  [T4b] nach Plc_ret erster Biss nach %d Bildern\n", t_biss);
+            CHECK(t_biss >= 0, "T4b: nach Plc_ret beisst der Hund");
+            pl->hp = 100; pl->state = 0; pl->hit_react = 0; pl->motion = 0;
+            re15_player_clear_hit_guard(pl);
+        }
+    }
+
     /* ============== Teil 6: Gegenprobe ROOM1171 — Szenen-Kraehe greift den gehaltenen Spieler ===== */
     {
         long sz2 = 0;
@@ -287,6 +329,44 @@ int main(void)
             g_scd.player_mode = 0;
             free(b2);
         }
+    }
+
+    /* ========== Teil 7: Zombie (0x10) im RE2- und RE1.5-Gehirn — "fuer alle Gegner" ================ */
+    for (int flavor = 0; flavor < 2; flavor++) {
+        re15_ai_flavor_set(flavor == 0 ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15);
+        const char *nm = flavor == 0 ? "T7 RE2-Zombie" : "T7 RE1.5-Zombie";
+        int t_angriff[2] = { -1, -1 };
+        int16_t hp_ende[2] = { 0, 0 };
+        for (int halten = 1; halten >= 0; halten--) {
+            re15_actor_init();
+            re15_aot_init();
+            scd_vm_init();
+            re15_enemy_ai_set_paused(0);
+            re15_damage_seed_rng(0x0badf00du);
+            re15_szenenschutz_zaehler_reset();
+            pl->active = 1; pl->x = 0; pl->y = 0; pl->z = 0; pl->rot_y = 0;
+            pl->hp = 100; pl->hit_react = 0; pl->state = 1; pl->motion = 0; pl->floor = 0;
+            re15_actor_t *z = &g_actors[5];
+            memset(z, 0, sizeof(*z));
+            z->active = 1; z->type = 0x10; z->hp = 100; z->flags = 1; z->em_flag_id = 0xFF;
+            z->state = 0; z->x = 0; z->z = 900; z->rot_y = 2048;    /* 900 vor Leon, ihm zugewandt */
+            g_scd.player_mode = halten ? 2 : 0;
+            for (int f = 0; f < 600; f++) {
+                pl->x = 0; pl->z = 0;                   /* Leon steht (Szene / still) */
+                int16_t vor = pl->hp;
+                frame();
+                if (t_angriff[halten] < 0 && (pl->hp < vor || re15_player_is_grabbed())) t_angriff[halten] = f;
+            }
+            hp_ende[halten] = pl->hp;
+            uint32_t ticks = 0, ab = 0; re15_szenenschutz_zaehler(&ticks, &ab);
+            printf("  [%s] %s: erster Treffer/Griff bei Bild %d, hp=%d, geschuetzte Ticks=%u abgefangen=%u\n",
+                   nm, halten ? "gehalten" : "frei", t_angriff[halten], pl->hp, ticks, ab);
+            g_scd.player_mode = 0;
+        }
+        CHECK(t_angriff[0] >= 0, "%s frei: der Zombie greift Leon an (Bild %d) — Kontrolle, dass die Lage traegt",
+              nm, t_angriff[0]);
+        CHECK(t_angriff[1] < 0 && hp_ende[1] == 100, "%s gehalten: 600 Bilder kein Treffer/Griff (hp=%d)",
+              nm, hp_ende[1]);
     }
 
     free(buf);
