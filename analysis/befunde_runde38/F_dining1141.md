@@ -39,6 +39,14 @@ RE15_AUDIO_CAP_SYNC=cap.raw` (Leon, Strom (2,0) an — Port-Stromtor scd_vm.c s_
 - 1131 -> 1141: Door_aot_set ROOM1131 main00 @0x0088E `3b 00 02 31 ...` ohne jede Bedingung -> offen.
 - 1021 Roys Leiche: sub06 @0x02202 `2b 09 ff ff` = nur msg 9 "He's dead.[Seite]Poor Roy..." (kein Hinweis).
 
+### 1.3 Nachtrag 2 — der alte Ablauf liess John auftauchen (Stand 6ae7118b/32754a59, aus dem Programm-Listing)
+Das Programm RIEGEL (tools/r38_dining/programme_bauen.py vor 6f1890c5, `git show 32754a59:re15_port/tools/r38_dining/
+programme_bauen.py`) lief beim Riegel (Ereignis 5) und enthielt nacheinander `Cut_chg 6` (Kamera im Dachgang, Blick auf
+die Dachtuer — Bild cut1141_6 in `F_belege/sheet_1141_cuts.png`) und `Sce_em_set John ... Lage in der Dachtuer
+(-7350,-400)` — John wurde also IM BILD von Cut 6 an der Dachtuer erzeugt, ohne vorher irgendwo gewesen zu sein: genau
+das "plötzlich rein poppende" Auftauchen aus dem Nutzer-Nachtrag. Ebenso der Abgang: `Cut_chg 6`, John RUN an die
+Dachtuer, `Pos_set` geparkt — Verschwinden im Bild von Cut 6. Beides ist ersetzt (Abschnitt 3.0).
+
 ## 2. RE-Belege
 
 ### 2.1 Punkt 3 — Rolladen-Ton: Form aus ROOM1131 sub02, Wellen aus der 1131-snd0-Bank
@@ -138,7 +146,70 @@ genau ein solches Auftauchen und ist ersetzt (6f1890c5):
 | Johns Abgang | Pad-Sperre + Balken, Cut 7 (Blick nach Sueden), John RUN zum Gang-Ausgang und vor die Dachtuer (er laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand), DOOR1A auf/zu im Off, geparkt, (9,67)=1; Riegel-Zustand wie nach sub05 (@0x00FC8..@0x00FD5 ohne Nachricht, @0x00FDC), Slot 0 wieder Tuer | Cut 7 (-7465,-3024,-9613) -> (-4265,2209,-27792); DOOR1A = tuer_zuordnung.inc S064 ROOM1141 Slot 1 |
 | Riegel | Ereignis 5 hat KEIN Port-Programm mehr (Original sub05). John oeffnet ihn beim Abgang; danach ist die Dachtuer offen | Begruendung: John hat ihn auf der Gangseite vorgelegt; geht er hinaus, kann er ihn nicht wieder vorlegen — ein "You've opened the lock." danach waere ein neues Logikloch |
 
+### 3.1 Dateien
+- NEU `re15_port/engine/src/dining_r38.c`, `re15_port/include/re15_dining_r38.h` (Installer, Ereignis-/Evt_exec-Haken,
+  Tuer-Handler 1131, Gegenstand 0x43, Messhaken), `re15_port/platform/pc/src/dining_r38_pc.c` (Port-Baenke 0x3B/0x3C/0x3D).
+- GENERIERT `re15_port/engine/src/gen/dining_r38_programme.inc` (tools/r38_dining/programme_bauen.py: ROLL1140,
+  ROLL1141, LEICHE1021, HAEMMERN, BEFREIUNG mit Listing je Zeile + Texte + Anker),
+  `re15_port/engine/src/gen/dining_r38_schluessel.inc` (tools/r38_dining/re2_export.py: RE2 Herz-Schluessel 0x5B).
+- NEUE DATEN `re15_port/shared_assets/RE2/KLOPF1060.EDT/.VH/.VB` (RE2 ROOM1060 snd0 bytegleich),
+  `synchro/STAGE1/room1141/john_help.wav` ("Help me out.", Schnitt aus room1171/main01.wav), `synchro/STAGE1/room1141/
+  main40.wav` ("Are you okay? What's happened?", Schnitt aus main02.wav) — Werkzeug tools/r38_dining/sprache_schneiden.py.
+- HAKEN (je 1-5 Zeilen, Kommentar "Runde 38 Spur F"): scd_room_setup.c (Installer am Blockende), scd_vm.c
+  (scd_event_fire-Kette + op_evt_exec), platform/pc/main.c (Boot-/CONTINUE-Installer, Prop-Lader 1011, Icon/Bild an
+  zwei Ladestellen, Port-Bank-Init, Messhaken), audio_pc.c (Se_on der Port-Baenke vor der Bankweiche + Mitschnitt-Takt),
+  item_discard_common.c / item_icon_common.c / item_prompt_common.c / itps_common.c / re15_inv_screen.c /
+  inv_render_pc.c (Gegenstand 0x43 wie Runde 36 Spur Q), tests/unit/test_r36_kartenbits.c k_port[] (Bits 64/66/67).
+- Tests: `re15_port/tests/unit/test_r38_dining1141.c`, `re15_port/tests/unit/probes/r38_dining1141.cmake`,
+  `re15_port/tests/integration/test_r38_dining1141.cmake`.
+
+### 3.2 Konstanten (alle in include/re15_dining_r38.h mit Beleg)
+| Konstante | Wert | Beleg |
+|---|---|---|
+| Item | 0x43 | Zensus 2.2: nie platziert, Satz @0x80074DA8+0x43*12 wie alle Karten/Schluessel |
+| Bank-9-Bits | 64 / 66 / 67 | VERTRAG 1.1, k_port[] |
+| 1011 Schluessel | obj 6, Zone Slot 14, (-2000,0,7450) | Roy-Spawn sub00 @0x009F6; Slot/obj nach Port-Zensus (obj 3/4, Slot 9/10 belegt) |
+| 1021 Leiche | Ereignis 6 -> msg 40 | sub06 @0x02202 `2b 09 ff ff` -> `2b 28 ff ff` |
+| 1131 Tuer | Slot 0 -> Ereignis 29, msg 40/41 | Door_aot_set @0x0088E; RE2 LAB_80051514 (@0x80051628 Besitz, @0x80051654 Ton, @0x80051690 Bit) |
+| Phase H | (4,0xF0) && !(3,0x6A) | @0x01FE0 / @0x00FF6 / @0x00B84 |
+| John im Gang | (-7124,0,-6150) Blick 1024 | Prop obj 0 x @0x00B9C+10; pos_advance @0x800245d8; PORT-WAHL Tiefe |
+| Plaetze | Elza (-8000,-10250), John (-5800,-10250) | Gemaelde-Zone @0x00B88; Abstand 2196 = @0x00CD8/@0x00B06 |
+| Klopf-Takt | 30/30/90/90 Bilder | RE2 ROOM1060 sub05 +0x2E/+0x3E/+0x58/+0x5E |
+| Port-Baenke | 0x3B Rolladen (ROOM1131 snd0), 0x3C Klopfen (KLOPF1060), 0x3D Hilferuf | Abschnitt 2.1/2.5 |
+
 ## 4. Messung nachher
+
+### 4.1 Lauf m1 (echte exe, Elza, Sprung 1141 + Gemaelde per RE15_FIRE_AOT; scratchpad r38f_dining/l_m1)
+`RE15_PSELECT_AUTO(_SWITCH)=1 RE15_SET_FLAG=4:0xF0 RE15_DEBUG_JUMP=1141@gp RE15_PLAYER_POS=-8300,-10250,2048
+RE15_FIRE_AOT=3@700#1141 RE15_PRESS=square@760,square@820,square@880 RE15_AUDIO_CAP_SYNC RE15_STATE_LOG RE15_FRAMEDUMP`
+- debug.log: `[dining] F1005 ROOM1141 Phase H: John im Dachgang hinter dem Rolladen (-7124,0,-6150) Blick 1024, Gorillas
+  heraus` im Ladebild; Zustands-Log ab F0: `[1 t=49 ... @(-7124,-6150,r1024)]` — John ist ab dem ersten Bild da.
+- Ton: `[se] Se_on bank=0x3C id=10` F1, `0x3C id=11` F35, `0x3C id=11` F65, `0x3D id=0` F155, `0x3C id=10` F245 ...
+  (Takt 30/30/90/90), Gemaelde-Frage ab F705 (waehrend der Frage pausiert die Schleife wie jeder SCD-Faden), "ja"
+  F883: `0x3B id=12` F883, `0x3B id=10` F898, `0x3B id=11` F1093; danach kein 0x3C/0x3D mehr.
+- Nachrichten in 1141: 13, 40, 3, 4, 5, 6, 7, 8, 9, 10, 11 — kein 0, 1, 2. Kamera: F883 Cut 5, F1956 Cut 2 (Gorillas),
+  F2058 Cut 5, F2484 Steuerung frei; John am Ende (-7531,-21363) = Ecke @0x00F8E.
+- Bilder `F_belege/n2_rolladen_john.png` (F870..F1290): F900/F930 Cut 5, Rolladen zu, John NICHT im Bild; F960
+  Rolladen faehrt hoch, Johns Beine erscheinen UNTER dem Rolladen (er stand die ganze Zeit dort); F1020 John ganz zu
+  sehen, Dachgang mit Dachtuer dahinter; F1110/F1140 John laeuft heraus; F1170..F1260 "Elza: Are you okay? what's
+  happened?" mit beiden im Bild; F1290 "John: Somehow... Elza, listen to me!".
+
+### 4.2 Riegel unit_r38_dining1141_* (Engine-Wege, Messwerte aus den Ausgaben)
+- phase_h: Bild 0 John bei (-7124,-6150) Blick 1024, keine Gorillas; 600 Bilder ohne Nachricht, John 0 Bilder
+  abgewichen; Toene Bild 0/29/59/149/239/269/299/389/479/509/539 = 0x3C 0A/0B/0B, 0x3D 00 im Wechsel; "ja" Bild 725;
+  Nachrichten 40 3 4 5 6 7 8 9 10 11; groesster Schritt Johns 252 je Bild (Lauf), kein Sprung; Doppeltuer und Dachtuer
+  im Kampf -> msg 41; Gorillas tot -> John in Bild 3146 geparkt, Cut 7 aktiv, im Bild davor NICHT im Bild von Cut 7,
+  vorher lief er sichtbar durch Cut 7; DOOR1A auf/zu im Off; (9,67)=1, (4,0xC3)=1, Slot 1 -> 0x17, Slot 0 -> 0x13;
+  Dachtuer -> ROOM1171; Wiederbetreten: kein John.
+- tuer1131: ohne Schluessel msg 40, kein Raumwechsel; mit Schluessel msg 41, (9,66)=1, Wegwerf-Abfrage gestellt und
+  beantwortet, Schluessel weg; danach Raumwechsel nach ROOM1141 (eine Tuersequenz).
+- schluessel1011: vor der 1021-Szene kein Schluessel; nach der Szene (Flags wie im Spiel: (4,0xF1) (4,0xEC) (3,0x78)
+  (3,0x5F) (4,0xF0)) kein Roy, Prop obj 6 bei (-2000,7450), Zone Slot 14 Item; Druck von Osten -> Aufnahme-Modal
+  Item 0x43 -> Inventar + (9,64); Wiederbetreten: weg.
+- leiche1021: Anker bytegleich, Ereignis 6 -> msg 40 "He's dead.Poor Roy...There's an empty key tag on his belt. It
+  reads Dining Room"." (Log-Dekoder ohne Seitenleerzeichen und ohne die Font-Glyphe 0x61 = oeffnendes Anfuehrungszeichen;
+  Rohbytes `61 20 45 4a 45 4a 43 00 2e 4b 4b 49 19` geprueft).
+- leon1140: 0x3B 0x0C Bild 143, 0x0A Bild 158 (Abstand 15 = Sleep @0x00A54), 0x0B Bild 353; Rolladen-Prop faehrt hoch.
 
 ## 5. Tests
 
