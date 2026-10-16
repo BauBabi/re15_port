@@ -1,6 +1,6 @@
 # Runde 38 — Spur H "elzatoene" (Dossier, fortlaufend)
 
-Baum `.claude/worktrees/r38_elzatoene`, Zweig `r38/elzatoene`, Basis e2cc7673.
+Baum `.claude/worktrees/r38_elzatoene`, Zweig `r38/elzatoene`, Basis e2cc7673 (= master nach v0.8.25 2077bb8e + Doku).
 
 ## Punkte (Wortlaut, AUFTRAG.md massgeblich)
 1. "In Elzas Szenario im ROOM 1040 bei *Gunshot* fehlt der Sound für einen Gunshot."
@@ -9,5 +9,97 @@ Baum `.claude/worktrees/r38_elzatoene`, Zweig `r38/elzatoene`, Basis e2cc7673.
 
 Lesart (VERTRAG/AUFTRAG): Elza-Raeume = ROOM1041 / ROOM1021 (Elza-RDT = Leon-RDT + 1, PSX.EXE @0x800397e4/@0x800397ec).
 
-## Stand
-- (laufend) Dossier angelegt; Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
+## 0. Stand
+- [x] Pflichtlektuere (AUFTRAG/VERTRAG/UEBERGABE R38, L_elza + L_abnahme_0 R36, K_roy + N_elzaems R37)
+- [x] Bau Basis e2cc7673 im Spurbaum (local_build.sh configure + build, LOCAL-BUILD-OK)
+- [x] Messung vorher Punkt 3 (Testweg, echter Tuerweg, CONTINUE, CAP_SYNC und Echtzeit-SDL) — §1
+- [x] RE Punkt 3: Ursache = falscher RE2-Ton (Alligator-Schleife statt Pistolenschuss) — §2.3
+- [x] RE Punkt 1/2 — §2.1/§2.2
+- [ ] Umsetzung, Messung nachher, Tests
+
+## 1. Messung vorher (Bau e2cc7673, Messkopie re15_pc_r38h.exe, Arbeitsordner im Scratchpad)
+
+Laeufe (alle Elza, RE15_ELZA_LOG + RE15_SE_DEBUG; Mitschnitt RE15_AUDIO_CAP_SYNC = 1470 Stereo-Frames je Spielbild):
+
+| Lauf | Weg | Ergebnis |
+|---|---|---|
+| m1 | Testweg der Runde 36: Neuspiel, RE15_SET_FLAG=4:0x60,3:0xC9, GOTO 1021, FORCE_EVENT=2@40 | Anker F724/F754 (+Roy F754); `[se] Stimme: se=1 ... vag=1 note=69 fine=109 center=91 vol=100 pitch=0x4f3 (13641 Hz) -> SE-Stimme -16` zweimal; Mitschnitt Spitze 6356..6742 (Schuss 1) / 6783..7706 (Schuss 2), Hintergrund 500..1250 |
+| m3 | ECHTER Weg: Spielstand ROOM1041 (Tuer 3 -> 1021, Flags 4:0x60 3:0xC9 4:0xF1 3:0xAD), CONTINUE, FIRE_AOT 3, Elza laeuft per INPUT_SCRIPT `L0.25,U0.8,R0.25,U6` ins Auto-Feld AOT 5 (Szene startet ~F268) | Anker F939/F969; dieselben `[se]`-Zeilen; Mitschnitt Bild 900..937 Spitze 0 (Stille), **Bild 940 Spitze 6450, Bild 972 7198**, Roy 1004 7694 |
+| m5 | wie m3, aber ECHTZEIT-SDL-Mitschnitt RE15_AUDIO_CAP (kein CAP_SYNC) | Knall bei 44,37 s Spitze 6450 nach Stille — auch der Geraete-Pfad spielt den Ton |
+| m4 | Vergleich: Elza schiesst selbst (Browning, RE15_GIVE=3:15 RE15_EQUIP=3, `M1,MX0.1`) in 1021 | Elzas Schuss = RE1.5 ARMS03 Satz 0 (2 Lagen VAG 2, 31183 Hz, vol 90) |
+
+A-bewertete Lautheit (lauteste 100 ms, dB rel. Vollaussteuerung; scratchpad py/laut.py): Johns Schuss **-20,9 dB(A)**, Elzas
+eigene Pistole **-19,4 dB(A)**, Sprachzeilen der Szene -11,6..-13,8 dB(A), Schritte -39,9 dB(A). Der Schuss erklingt also
+mechanisch, im echten Weg, im Geraetepfad, und etwa so laut wie Elzas eigene Waffe.
+
+Weitere Pruefungen: elza_r36.c / elza_se_pc.c / re15_elza_r36.h / ELZASE.VBS seit v0.8.24 unveraendert
+(`git log e8b3958f..HEAD` leer); das v0.8.25-Paket enthaelt shared_assets/RE2/ELZASE.VBS (13144 B) und synchro/STAGE1/
+room1021/main00..08, room1041/main02; Anker armiert in jedem Weg ("[elza] ROOM1021: 3 Anker armiert"). => KEINE
+Regression (Haken, Bytes, Laden, Geraetepfad gemessen) — der Fehler liegt im gespielten TON selbst (§2.3).
+
+Kamera waehrend der Schuesse (m6, RE15_FRAMEDUMP, WINDOW_SCALE=1): Cut 10 vom Gang hinter Roy; John steht klein am
+Gangende, kein Muendungsfeuer — der Schuss ist im Bild nur am Ton erkennbar.
+
+## 2. RE-Belege
+
+### 2.1 Punkt 1 — ROOM1041 "*gunshot*"
+* ROOM1041 sub11 (@0x021EA..0x0223C), gestartet von AOT 8 `2c 08 03 41 .. ff 00 18 0b` (main00 @0x01178, sce 3, auto) nur
+  wenn Ck(4,0xF1)==0 (@0x0116C) und Ck(3,0xAD)==0 (@0x01174):
+  `22 03 ad 01` Set(3,0xAD) @0x021EA, Aot_reset 8, Set(2,7)/(1,0x1b) (Szene),
+  **@0x02200 `2b 03 00 00` Message_on 3** = msg 3 @0x022FB `04 00 5f 43 51 4a 4f 44 4b 50 5f 04 01 01 00` = "*gunshot*"
+  (Maske 0 = kein Einfrieren), dann `2e 01 00 00` Work_set(1,0), Sleep 25, Plc_dest (Elza dreht sich), Warten Ck(5,0x20),
+  Sleep 25, **@0x02224 Message_on 2** "Elza: What was that!?" (synchro room1041/main02.wav).
+* Der Text ist ein PLATZHALTER fuer einen Ton: Zensus aller Nachrichten (msg_suche.py: 1229 RE1.5 + 2315 RE2): "gunshot"
+  steht NUR in ROOM1041 msg 3; RE2 hat keine einzige Geraeusch-Beschriftung. RE1.5 selbst setzt Geraeusche, auf die eine
+  Figur reagiert, als Se_on: ROOM3091 sub07 @0x01A62/@0x01A72/@0x01A82/@0x01A92 `36 02 0d 01 ..` (vier Se_on), danach
+  Plc_neck/Plc_dest und @0x01AEE msg 22 "Sherry: What was that?". Nutzer-Regel derselben Runde (AUFTRAG, John/"Help"):
+  Geraeusche sind Ton, kein Text.
+* Ton: derselbe RE2-Skript-Pistolenschuss wie Punkt 3 (§2.3) — Elza hoert einen Schuss aus dem Nachbarbereich; RE2 spielt
+  Skript-Schuesse als Raumbank-Se_on ohne Text (ROOM4040/4090/6020, §2.3).
+
+### 2.2 Punkt 2 — Roys Zombie-Stoehnen beim Zugehen (ROOM1021 sub02)
+* Roy = Gegner 1 (Sce_em_set Slot 1 @0x01E0A `44 01 47 ..`), sub02 @0x020AE `2e 02 01 00` Work_set(2,1),
+  **@0x020B2 `40 00 04 22 4e ef 42 e6` Plc_dest** -> (-4274,-6590) = Johns Platz (Sce_em_set @0x01DF6), @0x020BA Plc_flg(1,0x14),
+  @0x020BE Sleep 40, @0x020C6 John zielt (Sleep 110), @0x020CE Schuss 1. Roy geht also 150 Bilder bis Schuss 1.
+* RE1.5-Original: kein Se_on in sub02 (Zensus Runde 36: alle 284 Se_on der RDTs auf Bank 2, keiner in 1021).
+  NUTZER-MANDAT 2026-08-23 (enemy_ai_re2_zombie.c:766): Zombie-Toene = RE1.5-Raumbank snd1.
+* Wann stoehnt ein GEHENDER Zombie im Original (STAGE1.BIN, re15_disasm.py): beim EINTRITT in den Gehzustand, nie waehrend
+  des Gehens. FUN_801021f8 (Engage-Gang, Tabelle @0x8011f890[2]):
+  `80102210 lbu v0,6(v1)` / `80102218 bne v0,zero,0x801023b0` (nur Phase +0x6 == 0 = Eintritt) ...
+  `80102270 jal 0x8001af20` / `80102278 andi v0,v0,0x3` / `8010227c bne v0,zero,0x801022a4` (1/4) /
+  `80102284 jal 0x8001af20` / `8010228c andi v0,v0,0x1` / `80102290 beq v0,zero,0x8010229c` / `80102294 ori a0,zero,0x5` /
+  `80102298 ori a0,zero,0x4` / **`8010229c jal 0x800453d0`** (Raum-SE 4 oder 5). Dieselbe Eintritts-Form in FUN_801057bc
+  (Annaeherung 0x13), FUN_80102dc8 (Drehen), FUN_80103014 (Sturmlauf); kein Stoehn-Takt im laufenden Gang (alle 40
+  `jal 0x800453d0` der Zombie-Funktionen 0x80101xxx..0x80109xxx durchgesehen). RE2-Gegenprobe (Gang-Moan
+  @0x80101C44-88, enemy_ai_re2_zombie.c re2z_walk_moan): nach einem Moan 150 Bilder Sperre (@0x80101C7C-88) — Roys Gang
+  bis Schuss 1 dauert genau 150 Bilder, also auch nach RE2 genau EIN Stoehnen vor dem Schuss.
+* Satz: ROOM1021 snd1 (EDT @0x145A8): **SE 4 = `00 00 5b 15`** -> VAG 5 (10304 B, sha1 a5234f0ba034, 11025 Hz, 1,41 s),
+  dieselbe Welle als SE 4 in 26 Zombie-Raeumen (1000/1010/1020/1060/1070/1080/10D0/10E0/10F0/1100/1110/11E0/1250 + Elza-
+  Varianten) = das Gang-Stoehnen, das man dort von jedem Zombie hoert. SE 5 (`00 00 69 15`, VAG 6, 2,2 s) klingt schon als
+  Roys Sterbe-Ton (Runde 36 P5, @0x80106da8) — PORT-WAHL des Muenzwurfs @0x80102290: SE 4 (der Eintritts-Wurf liefert 4
+  oder 5; 5 waere derselbe Ton wie 6 s spaeter beim Sterben). NUTZER-VORGABE "soll stoehnen": der 1/4-Wurf @0x8010227c
+  entfaellt (sonst bliebe Roy in 3 von 4 Szenen stumm).
+
+### 2.3 Punkt 3 — warum der Nutzer keinen Schuss hoert: der Runde-36-Ton ist KEIN Schuss
+Runde 36 (L_elza.md §3 P4) nahm "RE2 ROOM40A0 sub04 @0x0287E: Plc_motion(2,14,4) (Schiess-Clip), Se_on(2,8) + Muendungsfeuer"
+als "Skript-Pistolenschuss eines NPC". Selbst nachgelesen (info/re2leon/PL0/RDT/ROOM40A0.RDT):
+* Der EINZIGE Gegner des Raums ist der ALLIGATOR: Sce_em_set @0x025A0 `44 00 00 23 00 00 01 16 ..` (Slot 0, Typ 0x23 =
+  RE2-EM23, im Port der Alligator von ROOM2090); sonst kein Sce_em_set in der Datei. Work_set(2,0) @0x0287E waehlt also
+  den Alligator, `3f 02 0e 04` ist SEIN Clip 14.
+* Der Ton steht in einer SCHLEIFE: `0f 04 82 00` While + `21 05 0b 00` Ck(5,0x0b)==0, darin `09 0a 08 00` Sleep 8,
+  **`36 02 08 01 02 00 00 00 00 00 00 00`** Se_on(2,8) mit Ursprung Modus 2 Index 0 (= am Alligator) und zwei ESP — ein
+  wiederholtes Alligator-Geraeusch, kein Schuss. Raumbank laut Nutzer-SAP-Liste "ROOM40A.SAP - Alligator Room sounds".
+* Der ECHTE RE2-Skript-Pistolenschuss (Zensus aller 250 RE2-RDTs: Se_on mit nachfolgendem Muendungsfeuer `3a 00 18`):
+  Welle **994b137d4007** (5824 B), in den Skripten von ROOM4040 (5 Schuesse @0x014E4/@0x01528/@0x01558/@0x01578/@0x01668,
+  je `36 02 0a 00 03 01 ..` + `3a 00 18 ..`; Skriptszene mit der Spielfigur: Work_set(1,0) @0x014BE, Plc_motion(0,0x11)
+  @0x014D6; Raumtexte "He has lost consciousness due to shock from the bullet wound" / "I have to catch that woman!" =
+  Adas Episode), ROOM4090 (@0x02A4E, Nutzer-SAP-Liste "ROOM409.SAP - Ada meets Annette") und ROOM6020
+  (@0x00B94 `36 02 0a 01 ..`; Nutzer-SAP-Liste: "ROOM602.SAP - ... a gunshot"); dieselbe Welle liegt nur in Raumbaenken
+  (4040/4090/6020/6110/D040/F110), in keiner ARMS-/ENEMSE-Bank.
+  ROOM4040 Satz 0x0A: EDT @0x0BF60 `00 00 73 00` (Programm 0, Ton 7, Prio 3, Kanal 0), Ton @0x0C8F8
+  `00 04 6e 40 54 39 42 42` (vol 110, pan 0x40, center 84, shift 57, min/max 66), VAG @0x18CC8 5824 B.
+  (Folge-Satz 0x0B = Welle 2bf10f4ea91f folgt jedem Schuss 1-9 Bilder spaeter, in 4090/6020 am ZIELORT positioniert =
+  Abpraller eines FEHLschusses; Johns Schuesse treffen Roy -> nicht uebernommen.)
+* Klang (scratchpad py/ton.py): Alligator-Ton e552c5d77eed bei 13641 Hz 400 ms, Schwerpunkt 859 Hz; Skript-Schuss
+  994b137d4007 bei ~16,4 kHz 420 ms, Schwerpunkt 597 Hz. Beide "Knall"-Klasse — der Unterschied ist die HERKUNFT:
+  der gespielte Ton stammt aus einer Alligator-Schleife, nicht aus einem RE2-Schuss.
