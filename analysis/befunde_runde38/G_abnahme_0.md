@@ -11,13 +11,15 @@ ungeprueft uebernommen. Dieser Bericht wird FORTLAUFEND geschrieben.
       HEAD; cd21bb26 aendert nur das Dossier)
 - [x] Gezielte Tests (ctest -R, 85 + 59 Tests): **2 ROT durch die Spur** (unit_re2doc_bildebene, unit_r26_inventar)
 - [x] Sweep aller unit_/prop_-Tests (645 Tests, Lauf T3): 3 rot = die 2 bekannten + unit_r35_android_bash_mutanten
-      (Last, Einzel-Nachlauf s. T3)
+      (Last-Artefakt, Mechanismus + Einzel-Nachlauf s. T3/T3b)
 - [x] Fortsetzung nach dem Sitzungslimit (2. Sitzung, 2026-10-16 abends): Bau erneut geprueft ("no work to do"),
       beide roten Tests einzeln nachgefahren + master-Gegenprobe wiederholt, 3 RE-Stichproben wiederholt
 - [x] Punkt 1 an der exe gemessen (echter Weg: Tuer ROOM1021 -> ROOM1011, zu Roy gehen, Viereck)
 - [x] Punkt 2 an der exe gemessen (Hinweis-Schirm + normale Karte)
 - [x] RE-Gate (11 Stellen selbst disassembliert/gelesen, s. u.)
 - [x] Vertrag / Pfade / Nebenwirkungen (Abschnitt "Vertrag")
+- [x] Nebenwirkungs-Lauf T4 (21 Tests seriell: Inventar, Karte, Elza-Story, ROOM1011, Spur-Tests frisch): 21/21 gruen
+- [x] Gesamturteil: NICHT BESTANDEN (Punkte 1/2 erfuellt, 2 Alt-Riegel durch die Spur rot)
 
 Messwerkzeuge (Scratchpad, nicht im Baum): `lauf.sh` (Messkopie der exe als `re15_pc_abn0g_<name>.exe` neben der
 Bau-exe bzw. neben der v0.8.25-exe, eigener Arbeitsordner, Ende ueber RE15_EXIT_AT; Spielstand ueber
@@ -228,7 +230,7 @@ Genau dieser Mutant steht in AEQUIVALENT (bash_urteil_mutanten.py:59-60, "rc <= 
 (:358-361). Ein Last-Artefakt (Sweep mit parallelen Tests + parallele Agenten), unabhaengig vom Diff der Spur.
 
 ## Vertrag (VERTRAG.md §1/§2) — selbst geprueft
-* Pfade (`git diff master...HEAD --name-only`, 35 Dateien): KEINE unter release/, re15_port/platform/android/,
+* Pfade (`git diff master...HEAD --name-only`, 34 Dateien der Spur + dieser Bericht): KEINE unter release/, re15_port/platform/android/,
   re15_port/shared_assets/PSX/, KEINE CMakeLists-Aenderung (Test-Einbindung ueber
   tests/unit/probes/r38_tagebuch.cmake, tests/unit/CMakeLists.txt:4060 `file(GLOB ... probes/*.cmake)`).
   Neue Assets nur unter re15_port/shared_assets/RE2/FILES/ (FILE30_*, 8 Dateien) — nicht TABU.
@@ -273,7 +275,18 @@ mechanisch erklaert (Zeitlimit eines AEQUIVALENT-Mutanten), und eben dieser Muta
 "gleichwertig" durch. Der Orchestrator faehrt ihn in der seriellen Integrationssuite.
 
 ### Lauf T4 — Nebenwirkungen Inventar / Karte / Elza-Story / ROOM1011 + Spur-Tests frisch (2. Sitzung, seriell)
-(folgt nach T3b, damit die Fenster-Haken nicht unter der Last der 10 Mutanten-Prozesse laufen)
+Auswahl: alle Integrationen, die menu_common.c (Inventar/Statusschirm), map_hint_common.c (Karte), die Elza-Story
+oder ROOM1011 fahren und in T1 fehlten (ctest -N gegrept), dazu die Spur-Tests und der nachgezogene Alt-Riegel frisch:
+`ctest --test-dir re15_port/build -R "r38_tagebuch|^integration_elza_vollstart$|^integration_r35_inventar1050$|^integration_r36_inventar$|^integration_r36_story_|^integration_map_uebergang$|^integration_map_raum_live$|^integration_save_counter_pin$|^integration_r36_elza_stoehnen$|^unit_r36_schluessel" --timeout 1200 --output-on-failure`
+(Log `scratchpad/G0/abn0_t4.log`, bei weiterhin hoher Fremdlast):
+    integration_elza_vollstart 111.87 s | integration_r35_inventar1050 89.93 s | integration_r36_elza_stoehnen 85.59 s
+    integration_r36_inventar 145.88 s | unit_r36_schluessel_raum/_tuer/_zelle/_namen/_befreiung
+    integration_r36_story_leon 436.09 s | integration_r36_story_elza 280.15 s
+    unit_r38_tagebuch_dokument/_ablauf/_karte/_leon | integration_r38_tagebuch_lesen 61.56 s / _karte 35.35 s / _leon 33.44 s
+    integration_map_uebergang 2.64 s | integration_map_raum_live 30.13 s | integration_save_counter_pin 16.40 s
+    -> 100% tests passed, 0 tests failed out of 21   (Total Test time (real) = 1330.88 sec)
+Keine Nebenwirkung auf Inventar, Karte, Speicherzaehler, Elza-Vollstart, beide Story-Laeufe und Roys Szene
+(ROOM1021 -> ROOM1011, integration_r36_elza_stoehnen).
 
 ## Nachkontrolle Wortlaut (2. Sitzung, eigene Bilder der 1. Sitzung, Lauf b1)
 Montagen `scratchpad/G0/abn0s2_seiten_a.png` (F260/F375/F410/F440) und `abn0s2_seiten_b.png` (F475/F540/F600/F680)
@@ -335,4 +348,15 @@ der Punkt dahinter weiss.
 - H4: unit_r35_android_bash_mutanten ist lastempfindlich (AEQUIVALENT-Mutant + Zeitlimit 300 s) — kein Bezug zur
   Spur, Hinweis fuer den Orchestrator (volle Suite seriell fahren).
 
-(Gesamturteil folgt nach T3b/T4)
+## Gesamturteil Abnahme 0: NICHT BESTANDEN
+- Punkt 1 (Roys Tagebuch statt der Code-Nachricht, FILE16-Papier, woertlicher Text, 0513 gruen, kein Weltmodell,
+  "noch einmal anklicken" in ROOM1011): **erfuellt** — ueber den echten Weg gemessen, Gegenprobe v0.8.25.
+- Punkt 2 (danach auf der Karte Communications Room und Prison Room markieren, wie bei Leon): **erfuellt** —
+  Hinweis-Schirm 2F -> B2 und normale Karte gemessen.
+- RE-Gate und Vertrag halten; die Spur-Tests (7) und die Nebenwirkungs-Laeufe T1/T2/T4 sind gruen bis auf
+- **zwei vorhandene Riegel, die die Spur deterministisch rot macht** (unit_re2doc_bildebene, unit_r26_inventar B4;
+  master gruen). Damit ist das Test-Gate gebrochen -> Nachbesserung: Maengel 1-3. Die Spur-Logik selbst braucht keine
+  Aenderung; nach dem begruendeten Nachziehen der beiden Alt-Riegel genuegt fuer Abnahme 1 der Rueckblick auf diesen
+  Bericht plus `ctest -R "re2doc|r26_inventar|r38_tagebuch|r36_schluessel"`.
+
+Commits dieses Berichts: 184bcb4b (Teilbericht 1. Sitzung), 3108eff8, 5aaa25be, 5740d474 (Zwischenstaende), dieser.
