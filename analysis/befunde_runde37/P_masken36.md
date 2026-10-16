@@ -297,6 +297,7 @@ tests/integration/CMakeLists.txt):
 | `unit_r37_masken36_ausschluss` | Ausschluss-Tabelle == Nachrechnung aus MSK/BSS/RDT (Rechteck fuer Rechteck), keine verwaiste Tabellenzeile (85 == 85), danach keine Fehlverdeckung, je Stage 3..6 Verdeckung HINTER Zellen bleibt (656684 / 440334 / 142077 / 730252 Figurpunkte), Gegenprobe ohne Ausschluss Fehlverdeckungen Stage 3 / 5 / 6 = 405755 / 291880 / 877426 | PASS (5/5) |
 | `unit_r37_masken36_verdeckung` | die an der exe gemessenen Leon-Szenen (§4.1) im Modell nach dem Ausschluss | PASS (3/3) |
 | `integration_r37_masken36_stage3..6` | echte exe je Stage, **Leon und Elza**: HINTER >= Haelfte verdeckt, DAVOR 0 uebermalt, Log `fg_atlas=1` + Zeile der Spur P; Stage 3 zusaetzlich FREI (Leon und Elza 0 uebermalt) | PASS (4/4) |
+| `integration_r37_masken36_nb2` (Nachbesserung 2) | echte exe: ROOM3050/3051 Cut 15 Konsolen-Cursor (Leon und Elza, mit Red Master Keycard wegen Kistenregel K8; Cursor im Bild verlangt) nicht uebermalt, A/B im ganzen Bild gleich, Log `masks=0`; Zufallsweg ROOM30A0 Bild 380/400 Kopfoberkante nicht uebermalt (NB2.3) | PASS |
 
 **Riegel-Defekt behoben (Fortsetzung):** `unit_r37_masken36_ausschluss` pruefte "Tabelle == Nachrechnung" mit den
 Abweichungen des ZWEITEN Laufs (nach `memset`), der die Tabelle mit sich selbst vergleicht - der Check war immer wahr.
