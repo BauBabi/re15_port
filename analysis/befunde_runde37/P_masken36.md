@@ -723,3 +723,26 @@ Punkt 39 unter dem Boden (y -2999..39; ROOM3040 Cut 1: -2996..-7); der Kasten en
 Generators im Scratchpad `p38nb2/werkzeug_tief/`, Fuss jeder Spalte, Spaltenzahl, Grobsprung und Schranke bei Boden + 39):
 `erzeuge` -> Tabelle **bitgleich** (926298 Kaesten, Schranken je 0). Das Band 0..39 unter dem Boden aendert keinen
 Ausschluss; der Generator bleibt beim Kasten Boden..3000.
+
+**Sind die neuen Ausschluesse an der exe echt? (Stichprobe, Werkzeug `zeuge <raum> <cut> <rechteck>`):** fuer ein neu
+ausgeschlossenes Rechteck der Stehplatz (volles Gitter), an dem es - zusammen mit den Rechtecken, die die Tabelle anlaesst -
+als vorderste Maske die meisten Modell-Figurpunkte ohne Zelle davor verdeckt. Daran Leon (rot 0, Zwangs-Cut, Bild 120) mit
+der exe "gegen" (gemergter Code, Tabelle NB1: das Rechteck wird gezeichnet) und der exe neu; C = Figur ausserhalb des
+Regionsvierecks; S/H im Figurfenster (`proj`). Laeufe `p38nb2/runs/z*`, Skript `zeugen_exe.sh`/`zeugen_auswerten.sh`:
+
+| Rechteck (Zeuge) | Stehplatz (Modell-Punkte) | gegen (NB1): S / H | neu: S / H |
+|---|---|---|---|
+| 30A0 C3 #45 | (-22443,15863) (108) | 3602 / **26** (Schulter, Zeilen 47-50: der Zettel am Aktenschrank uebermalt Leon, der VOR dem Schrank steht; Bild `p38nb2/z30A0c3.png`) | 3602 / **0** |
+| 30A0 C0 #20 | (-25243,13663) (28) | 618 / **4** (Haar, Rahmen-Balken der Trennwand) | 618 / **0** |
+| 3040 C1 #1 | (-22500,-10800) (60) | 235 / **1** | 235 / **0** |
+| 5020 C6 #1 | (-1733,-13525) (124); Kollision schob Leon nach (-1655,-13325) | 2739 / 0 | 2739 / 0 |
+| 5090 C11 #17 | (4317,-22165) (21) | 4047 / 0 | 4047 / 0 |
+| 3040 C0 #1 | (-22800,-2000) (25) | 1083 / 0 | 1083 / 0 |
+| 6010 C6 #3 | (-14512,-23920) (42) | 1370 / 0 | 1370 / 0 |
+
+3 von 7 Stichproben zeigen an der exe eine echte Fehlverdeckung, die erst das pixelgenaue Raster findet (26/4/1 Punkte).
+4 von 7 zeigen in DIESER Haltung (stehend, rot 0) keine: der Modellkasten (+-350 quer, voll bis 3000 hoch) ist breiter als
+Leon - vor allem neben dem Kopf, wo das alte Raster mit 9 Spalten nur Zwischenraeume traf; dort schliesst das Modell
+Rechtecke aus, die Leon in diesem Bild nicht beruehren (sichere Richtung: weniger Verdeckung, keine Fehlverdeckung). Ob
+eine andere Haltung (Drehung, Zielen mit ausgestrecktem Arm) dort trifft, ist nicht gemessen. Folge fuer den Nutzer: §7
+nennt die Sektionen, die jetzt ganz ohne Generator-Maske sind.
