@@ -21,6 +21,19 @@ endif()
 add_test(NAME unit_r38_szenenschutz COMMAND test_r38_szenenschutz)
 set_tests_properties(unit_r38_szenenschutz PROPERTIES TIMEOUT 120)
 
+#   unit_r38_szenenschutz_alle    Zensus ALLER Gegnertypen (Dossier 2.5/2.6) in beiden Gehirnen (RE2-Standard, RE1.5):
+#                                 gehalten kein HP-Verlust/Griff ohne Sicherheitsnetz, frei greift derselbe Aufbau an.
+add_executable(test_r38_szenenschutz_alle ${CMAKE_CURRENT_LIST_DIR}/../test_r38_szenenschutz_alle.c)
+target_link_libraries(test_r38_szenenschutz_alle PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r38_szenenschutz_alle PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r38_szenenschutz_alle PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r38_szenenschutz_alle PRIVATE m)
+endif()
+add_test(NAME unit_r38_szenenschutz_alle COMMAND test_r38_szenenschutz_alle)
+set_tests_properties(unit_r38_szenenschutz_alle PROPERTIES TIMEOUT 300)
+
 #   integration_r38_szenenschutz  echte exe (Messkopie re15_pc_r38b_szene_*): ROOM1190 (Hebel-Szene sub10) und ROOM11D0
 #                                 (Aufnahme-Szene sub03/sub02) mit Leon, Standard-KI: kein HP-Verlust und kein Hund im
 #                                 Angriff (st1/3) solange pm=2, danach Biss; 1190 erster Biss >= 30 Bilder nach dem
