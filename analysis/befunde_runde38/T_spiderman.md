@@ -417,3 +417,13 @@ Modul-Phasen. Ergebnis: `test_r38_spiderman: 0 FAIL`.
 | Aenderung | sm_anim_halten am Austritts-Ende (spiderman_r38.c) | sm_anim_halten an allen Griff-Clip-Enden, P2 setzt den Wrap-Wert 0 |
 | Messung nachher | exe 5070 F376 / 4001 F253 / 5040 F320 gezeichnet (0x1D, 34); Framedump F374-F377 durchgehend sichtbar; Riegel: Wechselbild (0x1D, 34), Wurzel (0,-940,0), erste Ueberblendung 6 Einheiten von der Endpose | exe 4001 F712 / 5040 F787 gezeichnet (0x12, 33), naechstes Bild (0x13, 1); Riegel: alle Wechselbilder beider Griffe inkl. Losreissen fc-1, Halte-Start Bild 1 |
 Zusatz derselben Klasse im Austrittsablauf: B[2] Bruellen (s. Umsetzung), exe 4001 F303/F304 und 5040 F370/F371 (2, 49).
+
+### Tests Nachbesserung 1 (gezielt, keine volle Suite)
+`ctest --test-dir re15_port/build -R "r38_|tyrant|_2b|t2b|5040|5070|4001|4000|beretta|victim|grab|griff|bissarm|1210|dog|hund|re2z|crawl|kriech|affen|gorilla|maggot|devour|finisher|pushoff|1220|11c0|aim|ivy|enemy_ai|roster|stage4|stage5|spider|spinne|zombie|schatten|shadow|damage|schuss|treffer|hit|crow|kraehe|gator|g5|tentakel|zellenarm|gitter|birkin|opfer|anker|anchor" --timeout 600 -j 5 --output-on-failure`
+(dieselbe Auswahl wie Abnahme 0) -> **`100% tests passed, 0 tests failed out of 188`**, `Total Test time (real) = 196.34 sec`.
+Darin unit_r38_spiderman (neu: Wechselbilder Austritt/Bruellen/Griff 1/Losreissen/Griff 2), alle zehn unit_r38_griff_*
+(Punkt 2), unit_tyrant_ai, unit_r37_beretta, integration_r37_beretta (233 s in Abnahme 0), integration_r36_schuss,
+integration_r36_elza_schuss. Einzeln nachgefahren: `ctest -R "^unit_r38_spiderman$" -V` -> `test_r38_spiderman: 0 FAIL`.
+Punkt 2 an der exe nicht verschlechtert (`sprung.py` ueber state.log): 4001 erster Griff F679 bei (-26516,-7418), groesster
+Sprung 607 beim Uebergang in den Tod (F799), 5040 Griff F754, groesster Sprung 607 (F874) — gleiche Werte wie Abnahme 0,
+alle Bilder um eins spaeter (das Bruellen hat jetzt sein P2-Bild @0x80112390).
