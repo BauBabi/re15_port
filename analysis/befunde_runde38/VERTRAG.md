@@ -31,6 +31,7 @@ RE15_PSELECT_AUTO_SWITCH=1); Elza-Raeume sind die ROOMxxx1-Varianten.
 | T | spiderman / r38_spiderman | Stage 4 Spiderman kommen richtig aus den Schaechten; der Spieler verschwindet bei KEINEM Gegnerangriff von der Karte (Invariante fuer alle Gegner) |
 | U | wasserzombie / r38_wasserzombie | Stage 2 Zombies im Wasser ziehen sich am Rand hoch wie in RE1.5 |
 | V | releaseskript / r38_releaseskript | Ein Skript (plus Doppelklick-Datei) baut alle Plattformen, zaehlt die Version hoch, packt und bringt die alte Version ins Archiv |
+| W | rolltor20a0 / r38_rolltor20a0 | Nachtrag 1: ROOM20A0 — der Rolladen, den man fuer das Kistenschieben oeffnen muss, steht im Port direkt vor der Kamera (Original nicht); Elza 20A1 mitpruefen |
 
 Fortsetzungen aus Runde 37 (eigene Baeume, Runde-37-Orchestratoren, Dokumente unter `analysis/befunde_runde37/`):
 **L** re2zombie (`r37_re2zombie`, Nachbesserung 2: Texte + Korrektur der Inversion re2z_hit_main case 3) und

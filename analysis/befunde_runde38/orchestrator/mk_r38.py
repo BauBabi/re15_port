@@ -4,7 +4,7 @@ Aufruf: python mk_r38.py <BASIS-sha>   (je Spur ein eigener Workflow-Lauf mit ar
 import io, json, sys
 
 SRC = "C:/workspace/git/reAi_v2/analysis/befunde_runde37/orchestrator/r37_r.js"
-DST = "C:/workspace/git/reAi_v2/analysis/befunde_runde38/orchestrator/r38.js"
+DST = sys.argv[2] if len(sys.argv) > 2 else "C:/workspace/git/reAi_v2/analysis/befunde_runde38/orchestrator/r38.js"
 BASIS = sys.argv[1]
 HAUPT = "C:/workspace/git/reAi_v2"
 NUTZER = "analysis/befunde_runde38/nutzer"
@@ -276,6 +276,9 @@ SPUREN = [
    "Tag/Push NICHT automatisch ohne --tag (Release-Notes schreibt der Mensch/Orchestrator). Tests: Versionslogik (Unit, Grenzfaelle), Trockenlauf, "
    "Fehlerpfade (simulierter Schritt-Fehler bricht ab). KEIN echter Release-Lauf durch die Spur (dauert Stunden, der Orchestrator faehrt v0.8.26 mit "
    "dem Skript). Kurze Anleitung in release/README oder im Kopf des Skripts. Diese Spur darf als einzige release/ aendern.")),
+ dict(id="W", thema="rolltor20a0", baum="r38_rolltor20a0",
+  punkte=["And additionally: in ROOM 20A0 the shutter that you have to open to push the box down is somehow DIRECTLY in the camera. I cannot see anything... this is not like this in the original...."],
+  hinweise=("ROOM20A0 (Stage 2, Leon; Elza-Variante ROOM20A1 mitpruefen). SCD-Einstieg: analysis/story_leon_elza/scd_story.py 20A0 — main00 Obj_model_set obj 0 @0x01854 (12250,-7200,-12400) bzw. @0x0187A (23150,0,-24400) je nach Ck(3,0xCC) @0x0183C, Objekte 1-7 @0x01932-0x019FE, sub01 Bank-5-Schalterkette, sub03 @0x01CBC Se_on + Speed_set/Add_speed (Fahrt eines Objekts). SCHRITT 1 REPRODUZIEREN am echten Weg (Spielstand/Wegplan: Rolladen oeffnen, Kiste zur Kante schieben; RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1): welches Objekt steht vor der Kamera, in welchem Cut, wo liegt es (RE15_STATE_LOG/Prop-Log), bewegt es sich auf der falschen Achse, wird es mit falscher Lage/Drehung/Elternmatrix gezeichnet, fehlt eine Nahebene/Clip? Bisect ueber v0.8.21..v0.8.25 (Tags) und Runde-36/37-Merges (Runde 36 A klettern/Kisten-Kippen objfall_r36.c, Runde 37 Spur D itemband/Member 0x12, Runde 37 Spur C Fahrstuhl/Tuer-Objekte, Spur P Masken) — verursachenden Commit nennen. SCHRITT 2 ORIGINAL: DuckStation-Gegenprobe desselben Moments (Skill re15-room-capture; Prop-Lage im RAM) und die Objekt-Fahrt im SCD/EXE (Speed_set-Index = Achse, Add_speed Handler @0x80040f40). Fix, der den Befund ERKLAERT; Riegel: Framedump-Pixelpruefung des betroffenen Cuts (Bild nicht verdeckt), Objektlage = Original, Kisten-Ablauf weiter loesbar (Kiste faellt), Elza 20A1 gleich.")),
 ]
 
 src = io.open(SRC, encoding="utf-8").read()
