@@ -168,6 +168,25 @@ Damit ist das Originalbild im Erzaehler: schwarzes Standbild + Text. Der Port-La
   Lageplan ist trotzdem angelegt (`[kartenitems] ROOM1031: Karte Blatt 2 ...` im Log, vor dem Netz).
 - Bilder: `E_elzaintro_bilder/nachher_erzaehler_f200_leon_links_elza_rechts.png`,
   `nachher_elza_erzaehler_f200_verstaerkt_x40.png` (x40 verstaerkt: nur der Text, kein Feld, kein (1,1,1)-Grund).
+- Der Lageplan ist NICHT weg, nur im Erzaehler verdeckt: Elza-Lauf m5 (`e_lauf.sh elza 900-900/1 905#1031`) — nach der
+  Selbst-Tuer zweite `[kartenitems] ROOM1031`-Zeile, `Cut_chg(0)` F840, Bild F900 (Lobby, "Elza: Hey, is anyone here?!"):
+  Feld x 91..98 / y 107..112 = 48 helle Pixel = der Plan an der Wand
+  (`E_elzaintro_bilder/nachher_elza_lobby_cut0_f900_karte_sichtbar.png`). Leons Plan ROOM1030 Cut 0/3:
+  `integration_r36_kartenitems_bild` gruen.
+
+## Leon unveraendert (beide Punkte)
+- Bilder Leon vorher (m1, Basisbau) gegen nachher (m4, Bau mit Fix): 61 gemeinsame Bilder (Montage + Erzaehler, je 15.
+  Bild): 0 verschieden.
+- Ton Leon vorher = nachher: RMS-Fenster identisch (906;2817;3453;3435;3303;3612;3570), Uebergabe F1431 beide Male.
+- Erzaehler-Gate fuer Leon: dieselbe Bedingung (ROOM1170 Cut 7) jetzt als Tabellenzeile; `unit_r38_elzaintro_schwarz`
+  prueft sie, `integration_r37_roy_leon1170` / `unit_elliot_1170_run` gruen.
+
+## Gegenprobe der Riegel (rot am Stand vorher)
+- `test_r38_elzaintro.cmake TEIL=schwarz` gegen die Bisect-exe cb1d5f59: ROT "Erzaehler F60: 74507 Pixel Elza != Leon,
+  Lageplan-Feld 48 hell (soll 0/0)".
+- `TEIL=stimme` gegen dieselbe exe: ROT "msg 0: Elza-Ersatz 0x" (diese Bisect-exe findet synchro/ aus build_bisect nicht,
+  daher auch Leon 0x — der Elza-Teil allein reicht). Am Basisbau dieses Baums (m2) waeren auch die Tonfenster rot:
+  Elza 1348 gegen Leon 2817 im ersten Zeilenfenster (Verhaeltnis 0,48, Schranke 0,9).
 
 ## Tests
 Registrierung NUR aus `re15_port/tests/unit/probes/r38_elzaintro.cmake` (GLOB), Quellen `tests/unit/test_r38_elzaintro.c`,
@@ -191,7 +210,20 @@ Gezielte Laeufe (KEINE volle Suite):
 - Schlusslauf: siehe unten (alle 21 in einem Lauf).
 
 ## OFFEN
-(offen)
+- Nichts aus dem Auftrag dieser Spur. Hinweis: Elzas Erzaehler (ROOM1031 msg 20..23) ist wie Leons Erzaehler (ROOM1170
+  msg 8..11) NICHT vertont — beide haben keine Aufnahme; "das gleiche wie bei Leon" ist damit auch dort erfuellt. Wer
+  den Erzaehler vertonen will, legt `synchro/STAGE1/room1170/main08..11.wav` (Leon) bzw. `room1031/main20..23.wav`
+  (Elza) ab — keine Code-Aenderung noetig.
+- Bekannte Randnotiz (kein Befund): die schwarzen MDEC-Standbilder dekodiert der Port auf (1,1,1) statt (0,0,0)
+  (Montage-Cut 0, Erzaehler ohne Netz). Unsichtbar; im Erzaehler deckt das Netz jetzt bei beiden Figuren auf (0,0,0).
 
 ## Fuer den Nutzer
-(offen)
+- **Neue Assets:** keine. **Sprachdateien:** keine neuen; Elzas Montage spricht Leons `synchro/STAGE1/room1240/main00..05.wav`
+  (Text Zeile fuer Zeile identisch). Eigene Elza-Aufnahmen koennen jederzeit als `synchro/STAGE1/room1241/main00..05.wav`
+  abgelegt werden und haben dann Vorrang.
+- **Bedienung:** unveraendert. Neues Spiel -> Elza: der Vorspann ist jetzt in Bild und Ton bitgleich mit Leons
+  Vorspann; der Erzaehler-Text "We barricaded ourselves ..." steht auf reinem Schwarz, der Lageplan an der Lobby-Wand
+  erscheint erst mit der Szene.
+- **Fuer den Release (Orchestrator):** neue Engine-Datei `engine/src/elzaintro_r38.c` — der Android-Bau cacht die
+  GLOB-Liste (`app/.cxx`, Memory reai-v2-android-glob-cache) und muss neu konfigurieren.
+- **Entscheidungsfragen:** keine.
