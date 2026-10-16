@@ -16,7 +16,7 @@ Lesart (VERTRAG/AUFTRAG): Elza-Raeume = ROOM1041 / ROOM1021 (Elza-RDT = Leon-RDT
 - [x] RE Punkt 3: Ursache = falscher RE2-Ton (Alligator-Schleife statt Pistolenschuss) — §2.3
 - [x] RE Punkt 1/2 — §2.1/§2.2
 - [x] Umsetzung (§3), Messung nachher (§4), Riegel (§5: 6 Unit + 2 Integration, gruen)
-- [ ] gezielte Regression (§5)
+- [x] gezielte Regression (§5)
 
 ## 1. Messung vorher (Bau e2cc7673, Messkopie re15_pc_r38h.exe, Arbeitsordner im Scratchpad)
 
@@ -51,7 +51,7 @@ Gangende, kein Muendungsfeuer — der Schuss ist im Bild nur am Ton erkennbar.
   (Maske 0 = kein Einfrieren), dann `2e 01 00 00` Work_set(1,0), Sleep 25, Plc_dest (Elza dreht sich), Warten Ck(5,0x20),
   Sleep 25, **@0x02224 Message_on 2** "Elza: What was that!?" (synchro room1041/main02.wav).
 * Der Text ist ein PLATZHALTER fuer einen Ton: Zensus aller Nachrichten (msg_suche.py: 1229 RE1.5 + 2315 RE2): "gunshot"
-  steht NUR in ROOM1041 msg 3; RE2 hat keine einzige Geraeusch-Beschriftung. RE1.5 selbst setzt Geraeusche, auf die eine
+  steht NUR in ROOM1041 msg 3, in keiner RE2-Nachricht (Suchmuster gunshot|shot|what was). RE1.5 selbst setzt Geraeusche, auf die eine
   Figur reagiert, als Se_on: ROOM3091 sub07 @0x01A62/@0x01A72/@0x01A82/@0x01A92 `36 02 0d 01 ..` (vier Se_on), danach
   Plc_neck/Plc_dest und @0x01AEE msg 22 "Sherry: What was that?". Nutzer-Regel derselben Runde (AUFTRAG, John/"Help"):
   Geraeusche sind Ton, kein Text.
@@ -99,8 +99,9 @@ als "Skript-Pistolenschuss eines NPC". Selbst nachgelesen (info/re2leon/PL0/RDT/
   (4040/4090/6020/6110/D040/F110), in keiner ARMS-/ENEMSE-Bank.
   ROOM4040 Satz 0x0A: EDT @0x0BF60 `00 00 73 00` (Programm 0, Ton 7, Prio 3, Kanal 0), Ton @0x0C8F8
   `00 04 6e 40 54 39 42 42` (vol 110, pan 0x40, center 84, shift 57, min/max 66), VAG @0x18CC8 5824 B.
-  (Folge-Satz 0x0B = Welle 2bf10f4ea91f folgt jedem Schuss 1-9 Bilder spaeter, in 4090/6020 am ZIELORT positioniert =
-  Abpraller eines FEHLschusses; Johns Schuesse treffen Roy -> nicht uebernommen.)
+  (Folge-Welle 2bf10f4ea91f, hell — 4040/6020 Satz 0x0B, 4090 Satz 0x09: folgt in 4040 den Schuessen 1-2 Bilder spaeter, in 4090 @0x02A9C und
+  6020 @0x00BB4 an einem ANDEREN Ort als der Schuss positioniert = am Ziel (Einschlag/Abpraller, gedeutet). Johns
+  Treffer ist im Port schon Roys Sterbe-Ton (Runde 36 P5) -> nicht uebernommen, OFFEN 2.)
 * Klang (scratchpad py/ton.py): Alligator-Ton e552c5d77eed bei 13641 Hz 400 ms, Schwerpunkt 859 Hz; Skript-Schuss
   994b137d4007 bei ~16,4 kHz 420 ms, Schwerpunkt 597 Hz. Beide "Knall"-Klasse — der Unterschied ist die HERKUNFT:
   der gespielte Ton stammt aus einer Alligator-Schleife, nicht aus einem RE2-Schuss.
@@ -168,8 +169,8 @@ Auswertewerkzeug tests/unit/probe_r38_elzatoene_kreuz.c (kein add_test).
    ROOM6020 @0x00BA4, Kendo ROOM1010 @0x0269A). Der Port zeigt Johns Schuesse ohne Blitz; die Kamera steht dabei auf Cut 10 hinter Roy, John ist
    klein am Gangende (m6, Framedump). Der Ton ist jetzt der RE2-Skript-Schuss; das Bild bleibt wie bisher (Runde 36
    OFFEN 2). Eigener Punkt, falls gewuenscht.
-2. **RE2-Folge-Satz** 0x0B (Welle 2bf10f4ea91f, hell, Schwerpunkt 2090 Hz) folgt in RE2 jedem Skript-Schuss 1-9 Bilder
-   spaeter, in ROOM4090/6020 am ZIELORT positioniert (Abpraller/Einschlag). Johns Schuesse treffen Roy -> nicht
+2. **RE2-Folge-Welle** 2bf10f4ea91f (4040/6020 Satz 0x0B, 4090 Satz 0x09; hell, Schwerpunkt 2090 Hz) folgt in RE2 den Skript-Schuessen 1-2 Bilder
+   spaeter (4040), in ROOM4090/6020 an einem anderen Ort als der Schuss positioniert (Einschlag/Abpraller, gedeutet). Johns Schuesse treffen Roy -> nicht
    uebernommen; fuer einen Fehlschuss waere er die RE2-Form.
 3. **Positions-Ton**: RE2/RE1.5 setzen Skript-Geraeusche teils positional (Se_on Flags != 0, z.B. ROOM3091 @0x01A62);
    der Port spielt alle Se_on ohne Lage (scd_vm.c op_se_on "Positional-Pfad (OPEN)"). Der Schuss in 1041 klingt deshalb
