@@ -37,21 +37,33 @@ static uint32_t s_ticks, s_abgefangen, s_fenster_ticks;
 
 int re15_szenenschutz_haelt(void)
 {
-    /* (1) player_mode 2 = "skript-gefuehrt, Pad wird ignoriert" (player_common.c:933-947); gesetzt AUSSCHLIESSLICH aus
-     *     cine_active = flag(1,27) || flag(2,7) (platform/pc/main.c, Block "BL-round 2026-05-29"), inklusive der 15
-     *     Letterbox-Bilder ohne Plc_ret. Das Original haelt den Spieler ueber Set(2,7) = Bit 0x01000000 (@0x800304f8).
-     * (2) Spieler+0x4 == 4 = Kommando "Plc-Executor": Plc_motion @0x80041ba4/@0x80041bb0 `ori v1,zero,4` / `sb v1,4(v0)`,
-     *     Plc_dest @0x80041c10/@0x80041c14, geloest erst von Plc_ret @0x80041f8c/@0x80041f90 (+0x4 = 1). Der Spieler-
-     *     Dispatcher FUN_80031c44 laeuft dann ueber @0x80073f90[4] = 0x80030660 (@0x80031c8c-0x80031cb4) statt ueber
-     *     den Pad-Zweig [1] = 0x80031de8 — auch ohne (2,7) kann sich Leon nicht bewegen (Zensus: 15 Spieler-Plc-Subs
-     *     ohne (2,7)/(1,27), z.B. ROOM1230 sub21 Hocke @0x014B4 im Hunderaum). */
-    return g_scd.player_mode == 2 || g_actors[RE15_ACTOR_SLOT_PLAYER].state == 4;
+    /* "Halten" = eine Szene fuehrt den Spieler UND der Port ignoriert das Pad (Nutzer: "wo er sich noch nicht mal
+     * bewegen kann"). Massgeblich ist das Bewegungs-Gate des Ports (player_common.c re15_player_tick:
+     * `g_scd.player_mode != 2 && !msg_block`) — Nachbesserung 1, Mangel M2 der Abnahme 0.
+     * (1) player_mode 2 = "skript-gefuehrt, Pad wird ignoriert"; gesetzt AUSSCHLIESSLICH aus cine_active =
+     *     flag(1,27) || flag(2,7) (platform/pc/main.c, Block "BL-round 2026-05-29"), inklusive der 15 Letterbox-Bilder
+     *     ohne Plc_ret. Das Original haelt den Spieler ueber Set(2,7) = Bit 0x01000000 (Pad-Aufbereitung
+     *     @0x800304f4 `lw aca40` / @0x800304f8 `lui v1,0x100` / @0x80030500 `beq`).
+     * (2) Spieler+0x4 == 4 (Plc-Executor: Plc_motion @0x80041bb0 / Plc_dest @0x80041c14 `sb 4`, frei erst Plc_ret
+     *     @0x80041f90) haelt NUR, solange der Port das Pad wirklich sperrt = das Nachrichten-Tor des Bewegungs-Gates
+     *     (re15_player_msg_sperre). Im Original laeuft der Spieler-Dispatcher bei +0x4 == 4 ueber den Executor
+     *     @0x80073f90[4] = 0x80030660 statt ueber den Pad-Zweig [1] = 0x80031de8 (@0x80031c8c `lbu v1,aca58` /
+     *     @0x80031cac `lw v0,0(at)` / @0x80031cb4 `jalr`); der Port bindet sein Bewegungs-Gate NICHT an +0x4 (vorbestehend,
+     *     v0.8.25 gleich; gemessen ROOM1230 sub21: pst=4, pm=0, Leon laeuft 2100 Einheiten) — dort ist Leon im Port
+     *     beweglich und darum nicht gehalten. Dossier "Nachbesserung 1" N1.M2. */
+    extern int re15_player_msg_sperre(void);   /* player_common.c — Nachrichten-Tor des Bewegungs-Gates */
+    if (g_scd.player_mode == 2) return 1;
+    return g_actors[RE15_ACTOR_SLOT_PLAYER].state == 4 && re15_player_msg_sperre();
 }
 
 int re15_szenenschutz_gegen(const re15_actor_t *e)
 {
     if (!e || !e->active) return 0;
-    if (e->type >= 0x40) return 0;          /* NPC-Typen (0x40..0x4d) greifen den Spieler nie an */
+    if (e->type >= 0x40) return 0;          /* NPC-Typen (0x40..0x4d) greifen den Spieler nie an. Grenze 0x40 = die
+                                             * Gegner/NPC-Trennung des Originals, PSX.EXE 0x800509e4 ("naechster
+                                             * lebender Gegner"): @0x80050a70 `lbu v0,-146(s0)` (+0x8 Typ) /
+                                             * @0x80050a78 `sltiu v0,v0,0x40` / @0x80050a7c `beq v0,zero,0x80050ae4`
+                                             * (Typ >= 0x40 uebersprungen); Port enemy_ai_common.c re15_npc_nearest_enemy */
     if (e->state != 1) return 0;            /* nur das FREIE Gehirn (+0x4 == 1 ACTIVE); Skript-Zustaende (Hund 4/5/6,
                                              * Kraehe 4 FLIGHT-2, NPC-Executor 4) sind Szenen-Rollen */
     if (e->type == 0x21 && (e->grid_id & 0x40))

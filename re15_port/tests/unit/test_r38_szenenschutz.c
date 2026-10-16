@@ -7,7 +7,8 @@
  * den es ist Teil der Cutscene wie bei Elza Room 1170." Dossier analysis/befunde_runde38/B_szenenschutz.md.
  *
  *   Teil 1  Praedikat re15_szenenschutz_gegen/_haelt: freies Gehirn (+0x4 == 1) ja; Skript-Zustand (+0x4 != 1),
- *           NPC-Typ, Kraehe mit Skript-Marke grid&0x40 (INIT-Weiche @0x80112408) nein; Halten = player_mode 2.
+ *           NPC-Typ, Kraehe mit Skript-Marke grid&0x40 (INIT-Weiche @0x80112408) nein; Halten = player_mode 2 oder
+ *           Plc-Executor (+0x4 == 4) mit gesperrtem Pad (Nachrichten-Tor re15_player_msg_sperre, Nachbesserung 1 M2).
  *   Teil 2  Haken-Folge direkt: Sicht nur waehrend des geschuetzten Ticks (+0x93 Bit 0 / PL+0x1D3&0x80), danach der
  *           echte Wert; Sicherheitsnetz gibt einen HP-Abzug zurueck; ein Szenen-Gegner (+0x4 = 4) trifft echt.
  *   Teil 3  ROOM1190, RE2-Hund: der Sprung-Ausgang schreibt +0x1d6 = 0x78 (@0x801115e8-ec), der erste Angriffs-
@@ -15,7 +16,8 @@
  *   Teil 4  ROOM1190, RE2-Hund, Sperrzeit genullt: player_mode 2 -> 400 Bilder kein HP-Verlust, kein Griff;
  *           player_mode 0 -> Biss (20 HP, FUN_800401D4 @0x80104EB8-C0).
  *   Teil 5  dasselbe mit dem RE1.5-Gehirn (Tor Spieler+0x93 @0x8010e5c4-cc / FUN_8010f15c).
- *   Teil 4b ROOM1190, RE2-Hund, Spieler im Plc-Executor (+0x4 == 4, ohne (2,7)): kein Angriff; nach Plc_ret Biss.
+ *   Teil 4b ROOM1190, RE2-Hund, Spieler im Plc-Executor (+0x4 == 4, ohne (2,7)): mit Nachricht (Pad gesperrt) kein
+ *           Angriff; ohne Nachricht (Port-Pad offen, Nachbesserung 1 M2) nicht gehalten -> Biss; nach Plc_ret Biss.
  *   Teil 6  Gegenprobe ROOM1171 (Elza-Raum): die Szenen-Kraehe (grid 0x40 -> FLIGHT-2) greift den GEHALTENEN
  *           Spieler weiterhin (HOVER-Griff @0x80115254-0x801152c4, ohne +0x93-Tor) — "Teil der Cutscene".
  *   Teil 7  Zombie 0x10 (RE2- und RE1.5-Gehirn): frei greift er an, gehalten 600 Bilder nicht.
@@ -127,9 +129,21 @@ int main(void)
         CHECK(re15_szenenschutz_haelt() == 0, "T1 player_mode 1 (Plc_ret) = frei");
         g_scd.player_mode = 0;
         CHECK(re15_szenenschutz_haelt() == 0, "T1 player_mode 0 = frei");
+        /* Nachbesserung 1 (M2): Spieler+0x4 == 4 haelt nur, solange der Port das Pad sperrt (Nachrichten-Tor des
+         * Bewegungs-Gates re15_player_msg_sperre) — ohne Nachricht laeuft Leon im Port auch im Executor. */
         g_actors[RE15_ACTOR_SLOT_PLAYER].state = 4;
-        CHECK(re15_szenenschutz_haelt() == 1, "T1 Spieler+0x4 == 4 (Plc-Executor @0x80041bb0/@0x80041c14) haelt auch ohne (2,7)");
+        g_scd.message_display_frames = 0; g_scd.message_query = 0;
+        CHECK(re15_szenenschutz_haelt() == 0,
+              "T1 Spieler+0x4 == 4 ohne (2,7) und ohne Nachricht: Port-Pad offen (Bewegungs-Gate) -> NICHT gehalten");
+        g_scd.message_display_frames = 30;
+        CHECK(re15_szenenschutz_haelt() == 1,
+              "T1 Spieler+0x4 == 4 (Plc-Executor @0x80041bb0/@0x80041c14) + Nachricht (Pad gesperrt) -> gehalten");
+        g_scd.message_display_frames = 0; g_scd.message_query = 1;
+        CHECK(re15_szenenschutz_haelt() == 1, "T1 Spieler+0x4 == 4 + Ja/Nein-Abfrage (Pad gesperrt) -> gehalten");
         g_actors[RE15_ACTOR_SLOT_PLAYER].state = 1;
+        CHECK(re15_szenenschutz_haelt() == 0,
+              "T1 Spieler+0x4 == 1 + Abfrage (freie Untersuchung, keine Szene) -> NICHT gehalten");
+        g_scd.message_query = 0;
         CHECK(re15_szenenschutz_haelt() == 0, "T1 Spieler+0x4 == 1 nach Plc_ret (@0x80041f90) = frei");
         re15_actor_t a; memset(&a, 0, sizeof a);
         a.active = 1; a.type = 0x20; a.state = 1;
@@ -254,7 +268,10 @@ int main(void)
         re15_player_clear_hit_guard(pl);
     }
 
-    /* ====== Teil 4b: RE2-Hund, Spieler im Plc-Executor (+0x4 == 4) OHNE (2,7) — z.B. ROOM1230 sub21 Hocke ====== */
+    /* ====== Teil 4b: RE2-Hund, Spieler im Plc-Executor (+0x4 == 4) OHNE (2,7) — z.B. ROOM1230 sub21 Hocke ======
+     * Nachbesserung 1 (M2): gehalten nur, solange der Port das Pad sperrt. (i) Executor MIT Nachricht (Pad gesperrt,
+     * sub21 @0x014BC Message_on) -> kein Angriff; (ii) Executor OHNE Nachricht (Port-Pad offen, Leon kann laufen)
+     * -> nicht gehalten, der Hund greift an wie im Basisstand; (iii) nach Plc_ret Biss. */
     {
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
         int t_land = -1, cd_land = -1;
@@ -267,13 +284,28 @@ int main(void)
             int angriff = 0;
             for (int f = 0; f < 300; f++) {
                 spieler_vor_hund(pl, d, f);
-                pl->state = 4;                          /* Plc_motion @0x80041bb0: Executor, Pad tot */
+                pl->state = 4;                          /* Plc_motion @0x80041bb0: Executor */
+                g_scd.message_display_frames = 30;      /* Nachricht steht: Bewegungs-Gate sperrt das Pad */
                 frame();
                 if (d->state == 1 && d->sub_state_1 == 3) angriff++;
             }
-            printf("  [T4b] Executor-Spieler: hp=%d Angriffs-Bilder=%d\n", pl->hp, angriff);
+            g_scd.message_display_frames = 0;
+            printf("  [T4b] Executor-Spieler mit Nachricht: hp=%d Angriffs-Bilder=%d\n", pl->hp, angriff);
             CHECK(pl->hp == 100 && angriff == 0,
-                  "T4b: Spieler im Plc-Executor -> kein Angriff (hp=%d, %d Bilder Sub 3)", pl->hp, angriff);
+                  "T4b: Spieler im Plc-Executor + Nachricht -> kein Angriff (hp=%d, %d Bilder Sub 3)", pl->hp, angriff);
+            int t_offen = -1;
+            for (int f = 0; f < 900 && t_offen < 0; f++) {
+                spieler_vor_hund(pl, d, f);
+                pl->state = 4;                          /* Executor, aber Port-Pad offen (keine Nachricht) */
+                int16_t vor = pl->hp;
+                frame();
+                if (pl->hp < vor) t_offen = f;
+            }
+            printf("  [T4b] Executor-Spieler ohne Nachricht (Port-Pad offen): erster Biss nach %d Bildern\n", t_offen);
+            CHECK(t_offen >= 0,
+                  "T4b: Spieler im Plc-Executor OHNE Nachricht (Port laesst ihn laufen) -> nicht gehalten, Biss");
+            pl->hp = 100; pl->hit_react = 0;
+            re15_player_clear_hit_guard(pl);
             pl->state = 1;                              /* Plc_ret @0x80041f90 */
             int t_biss = -1;
             for (int f = 0; f < 900 && t_biss < 0; f++) {

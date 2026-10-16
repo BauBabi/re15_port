@@ -395,7 +395,14 @@ Abnahmebericht `analysis/befunde_runde38/B_abnahme_0.md` (Maengel M1-M3). Je Man
 Aenderung, Messung nachher. (Wird fortlaufend gefuellt.)
 
 ### N1.M3 — Typgrenze 0x40 ohne @-Zitat
-(offen)
+- Ursache: `if (e->type >= 0x40) return 0;` in `re15_szenenschutz_gegen` (engine/src/szenenschutz_r38.c) trug nur den
+  Kommentar "NPC-Typen (0x40..0x4d) greifen den Spieler nie an", keine Adresse.
+- Beleg (selbst disassembliert, `re15_disasm.py dis 0x800509e4` / `dis 0x80050a50`, info/Re1.5/PSX.EXE): 0x800509e4 =
+  "naechster lebender Gegner im Radius" (Port re15_npc_nearest_enemy). Gegner-Feld ab 0x800acc2c (s1 = 0x800aca4e+478,
+  Stride 500), s0 = 0x800aca4e+632: @0x80050a70 `lbu v0,-146(s0)` (= Gegner+0x8, Typ) / @0x80050a78 `sltiu v0,v0,0x40`
+  (Bytes `40 00 42 2c`) / @0x80050a7c `beq v0,zero,0x80050ae4` (Typ >= 0x40 wird uebersprungen) — das Original trennt
+  Gegner (< 0x40) von NPCs genau an 0x40.
+- Aenderung: Zitat am Code (szenenschutz_r38.c, re15_szenenschutz_gegen). Keine Verhaltensaenderung.
 
 ### N1.M2 — Halte-Bedingung "Spieler+0x4 == 4" deckt bewegliche Bilder
 (offen)
