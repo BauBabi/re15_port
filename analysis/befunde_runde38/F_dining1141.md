@@ -250,6 +250,11 @@ Auswertung `cmake -DTEIL=D -DAUSWERTEN=<lauf> -P tests/integration/test_r38_dini
   `F_belege/n2_schluessel_aufnahme.png`: RE2-Herz-Schluessel im Item-Bild, Icon im Modal), `FLAG (9,64) = 1`; Tuer Slot 0
   -> ROOM1021 (zweites Laden), dort kein `type=0x49` (John weg, Original main00 @0x01DF6). (Die Pruefung "zweimal
   geladen" schlug im Lauf selbst am Makro-Fehler fehl — Auswertung mit 36a17826 gruen.)
+- Sichtbarkeit des Schluessels (Lauf v1011c, Cut 3 erzwungen, Elza ausserhalb des Bildes): `F_belege/
+  n2_schluessel_liegestelle_cut3.png` — der Schluessel liegt auf Roys Blutlache (Liegestelle) als kleiner heller Punkt.
+  Das RE2-Modell 0x5B ist eine flache 152x76-Flaeche am Boden (MD1-Ecken (-76,0,+-38)/(76,0,+-38)); aus den Raumkameras
+  von ROOM1011 ist die Stelle weit weg: Cut 3 4419 Einheiten (Flaeche ~18 px^2), Cut 1 6028 (~8 px^2), Cut 2 knapp unter
+  dem Bildrand (y 245). Gross und deutlich ist der Schluessel im Aufnahme-Modal (Item-Bild, `n2_schluessel_aufnahme.png`).
 - Z (Elza 1131 ohne Schluessel): `ROOM1131 Slot 0 (Tuer -> ROOM1141) gesperrt: Ereignis 29`, `Tuer zum
   Besprechungsraum verschlossen`, msg 40 im Zustands-Log, kein Raumwechsel; Bild `F_belege/n2_tuer1131_zu.png` ("It's
   locked." / "The door is marked "Dining Room".").
