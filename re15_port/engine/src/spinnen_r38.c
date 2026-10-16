@@ -22,6 +22,8 @@
 #include "re15_collision.h"    /* re15_collision_room_coll (FUN_8001c6e8) */
 #include "re15_rdt.h"
 #include "re15_esp_brocken.h"   /* re15_esp_fx_zeile_weiter = FUN_800174e4 */
+#include "re15_scd.h"            /* g_scd.props = Obj_model_set-Pool 0x800b3f98 (Teil 4) */
+#include "re15_ai_flavor.h"      /* re15_ai_re2_for_type / re15_re2spider_owns (Teil 4) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -201,9 +203,19 @@ void re15_spinnen_r38_lauer(re15_actor_t *e)
  * gleichen RE2-Clips), danach uebernimmt das RE2-Gehirn mit seinem INIT auf dem Boden:
  *   +0x10E := 0 (= Boden-Deskriptor, INIT-Tabelle Eintrag 0 @0x80100460), +0x1C2 (Port dog_floor_y)
  *   = die RE1.5-Bodenhoehe nach der Landung (+0x1ba = 0 @0x80115044). */
+/* Je Aktor-Platz: hat in DIESEM Bild RE1.5-Spinnencode (INIT-Zweig grid 0x41 oder die Phasen) die
+ * Spinne im RE2-Modus bewegt? Dann gilt fuer sie in diesem Bild auch der RE1.5-Objekt-Durchgang
+ * (Teil 4, re15_spinnen_r38_objekt_pass liest und loescht die Marke). */
+static uint8_t s_lauer_lief[RE15_ACTOR_MAX];
+
 int re15_spinnen_r38_lauer_re2(re15_actor_t *e)
 {
     if (!e || e->type != 0x25) return 0;
+    {   int slot = (int)(e - g_actors);
+        if (slot >= 0 && slot < RE15_ACTOR_MAX
+            && ((e->state == 0 && e->grid_id == 0x41) || (e->state == 4 && e->sub_state_1 == 1)))
+            s_lauer_lief[slot] = 1;
+    }
     if (e->state == 0 && e->grid_id == 0x41) {
         /* RE1.5-INIT-Zweig fuer grid 0x41 (0x80110b6c): Clip 0x10 @0x80110b90, +0x95 = 0 @0x80110ba0,
          * +0x93 = 0 @0x80110bc0; grid & 0xf = 1 < 2 -> rot_x = rot_z = 0, y = -1800 * +0x82
@@ -406,6 +418,117 @@ void re15_spinnen_r38_gift_tick(re15_actor_t *pl)
     int16_t hp = (int16_t)(pl->hp - 2);                       /* @0x80031e9c-ac */
     pl->hp = hp;
     if (hp < 0 && !(a0 & 4u)) pl->hp = 1;                     /* @0x80031eb4-c8 */
+}
+
+/* ============================================================================================
+ * Teil 4 — OBJEKT-AUSSCHIEBUNG (der Aktor-Durchgang des Objekt-Ticks FUN_8002bd44)
+ * ============================================================================================
+ * GEMESSEN (DuckStation-GDB, R_belege/orig_2060_klemme.txt + orig_2060_watch.txt): die Schachtspinne
+ * von ROOM2060 wird beim Herauskriechen NACH ihrer Wurzel 0x801109e4 verschoben — Bild 66 -> 67
+ * z 5400 -> 5525, Bild 67 -> 68 x 5800 -> 5975 (alle sechs Aufrufe der Wurzel lassen x/z stehen). Der
+ * Schreib-Wachpunkt auf +0x3c trifft pc 0x8002cde0 mit ra 0x8002be48 = FUN_8002cabc, gerufen aus dem
+ * Objekt-Tick FUN_8002bd44 (Bild-Reihenfolge @0x8001ce04 Gegner -> @0x8001ce0c Spieler -> @0x8001ce14
+ * Objekte):
+ *   8002bd78  lbu  s3,2(v0)            ; Objektzahl = RDT-Kopf +2 (nOmodel)
+ *   8002bdb0-c8                        ; s2 = 0x800b3f98 + 148*(s3-1): Objekte von HINTEN nach vorn
+ *   8002bdcc-d8  lw v0,0(s2) / andi 1  ; nur aktive
+ *   8002be14  lbu  s1,0(0x800aca4e)    ; Aktorzahl, s0 = 0x800acc2c (Stride 0x1f4)
+ *   8002be24-30  lw v0,0(s0) / andi 1  ; nur aktive Aktoren, KEIN Typ-Filter
+ *   8002be40  jal  0x8002cabc          ; a0 = Aktor, a1 = Objekt, a2 = 0 (Delay `addu a2,zero,zero`)
+ * Das Objekt ist das SCHACHTGITTER obj 0 (5775,-4860,5325), Obj_model_set mit NULL-Kasten. FUN_8002cabc
+ * hat keine Null-Kasten-Ausnahme: t5 = Objekt-hx + Aktor-hx = 0 + 200 (Kasten C) macht das Gitter zum
+ * Punkt-Hindernis. Nachgerechnet: Bild 67 dz = 5325-5400 = -75, dx = -25 -> |dx*200| < |dz*200| ->
+ * z = 5325 + 200 = 5525; Bild 68 dz = 0 -> x = 5775 + 200 = 5975 (beides gemessen). ROOM20A0
+ * (orig_20a0_schacht.txt): Gitter obj 2 (22532,-6610,-27050) -> z -27250, x 22732, ebenso.
+ *
+ * FUN_8002cabc mit a2 = 0, selbst disassembliert (PSX.EXE @0x8002cabc-cdf0):
+ *   8002cad0-dc  Aktor-Wort0 & 0x40 -> 0          8002cae4-f0  Objekt-Wort0 & 2 -> 0
+ *   8002caf8-cb38 t8 = (objbox.cx + obj.x) - (akt+0x7c.x + akt.x), t7 analog z
+ *   8002cb3c-4c  t5 = objbox.hx + aktbox.hx, t4 = objbox.hz + aktbox.hx (Aktor +6 fuer BEIDE Achsen)
+ *   8002cb50-70  `sltu (2*t5),(t8+t5)` / `sltu (2*t4),(t7+t4)` -> keine Ueberlappung -> 0
+ *   8002cb84-c8  t6 = (objbox.cy + obj.y) - (aktbox.cy + akt.y), a1 = aktbox.hy + objbox.hy, Y-Test
+ *   8002cbcc-cc38 Aktor+0xa := Objekt-Index, Objekt+0xa := Aktor-Index (Buchhaltung; KEIN Leser im
+ *                Spinnen-Code: Vollscan lb/lbu/sb mit Versatz 10/11 ueber 0x801109e4-0x801158a0 = 0)
+ *   8002cc3c-70  Vor-Hoehe aus den Spiegeln +0x42 (lh) von Objekt und Aktor: lag der Aktor VORHER
+ *                nicht in der Hoehe des Objekts -> Ausschiebung in Y (@0x8002ccb4-e4), sonst x/z
+ *   8002cce8-d0c |t8*t4| gegen |t7*t5|: `slt` -> x (@0x8002cd50-7c), sonst z (@0x8002cdb8-dc)
+ * Die Lage-Spiegel +0x40/+0x42/+0x44: Sce_em_set setzt sie auf die Spawnlage (@0x800421a0-b8), danach
+ * schreibt sie die Zeichen-Schleife je Bild NACH dem Objekt-Tick (`sh` @0x8001d124/@0x8001d13c/
+ * @0x8001d154; gemessen: Wachpunkt auf +0x40 trifft pc 0x8001d128 mit der schon geklemmten Lage).
+ * PORT-ZUORDNUNG Objekt-Spiegel +0x42: geschrieben am Ende jedes Objekt-Durchgangs (`sh v1,0x42(s2)`
+ * @0x8002c0f8) = die Objekt-Hoehe; der Port fuehrt keinen Objekt-Spiegel und nimmt die Objekt-Hoehe
+ * selbst (gleich fuer jedes Objekt, das seine Hoehe nicht aendert — die Schachtgitter und Kisten). */
+static int32_t mflo_abs(int32_t a, int32_t b)
+{
+    int32_t p = (int32_t)(uint32_t)((int64_t)a * (int64_t)b);   /* `mult` / `mflo` (untere 32 Bit) */
+    return (p < 0) ? (int32_t)(0u - (uint32_t)p) : p;          /* `bgez` / `negu` @0x8002ccf0-08 */
+}
+
+static void objekt_schub(re15_actor_t *e, int i)
+{
+    if (g_scd.props[i].flags & 0x2u) return;                     /* @0x8002cae4-f0 */
+    const int32_t  ox  = g_scd.props[i].x, oy = g_scd.props[i].y, oz = g_scd.props[i].z;
+    const int32_t  ocx = g_scd.props[i].box_cx, ocy = g_scd.props[i].box_cy, ocz = g_scd.props[i].box_cz;
+    const uint32_t ohx = (uint16_t)g_scd.props[i].box_hx, ohy = (uint16_t)g_scd.props[i].box_hy;
+    const uint32_t ohz = (uint16_t)g_scd.props[i].box_hz;
+    /* Aktor-Kasten +0x78 der Spinne: A {0,-900,0,1000,900,1000} @0x80118dd4 bzw. C {0,-1440,0,200,1440,200}
+     * @0x80118dec — im Port re15_enemy_apply_hitbox / lauer_kasten (hit_offset_*, hit_radius_min = +6,
+     * hit_height = +8). Der gedrehte Versatz +0x7c (FUN_8002b498 dreht Kasten-x/z um +0x6a) ist fuer beide
+     * Kaesten 0, weil ihr x/z-Versatz 0 ist. */
+    const int32_t  ecx = e->hit_offset_x, ecy = e->hit_offset_y, ecz = e->hit_offset_z;
+    const uint32_t ehx = (uint16_t)e->hit_radius_min, ehy = (uint16_t)e->hit_height;
+    const int32_t  t8 = (ocx + ox) - e->x;                       /* @0x8002cb0c-1c */
+    const int32_t  t7 = (ocz + oz) - e->z;                       /* @0x8002cb20-38 */
+    const uint32_t t5 = ohx + ehx;                               /* @0x8002cb3c-48 */
+    const uint32_t t4 = ohz + ehx;                               /* @0x8002cb44-4c */
+    if ((t5 << 1) < (uint32_t)(t8 + (int32_t)t5)) return;        /* @0x8002cb50-5c */
+    if ((t4 << 1) < (uint32_t)(t7 + (int32_t)t4)) return;        /* @0x8002cb64-70 */
+    const int32_t  t6 = (ocy + oy) - (ecy + e->y);               /* @0x8002cb84-a4 */
+    const uint32_t a1 = ehy + ohy;                               /* @0x8002cb9c-a8 */
+    if ((a1 << 1) < (uint32_t)(t6 + (int32_t)a1)) return;        /* @0x8002cbac-c8 */
+    /* Vor-Hoehe @0x8002cc3c-70 (Objekt-Spiegel = Objekt-Hoehe, s. PORT-ZUORDNUNG oben) */
+    const int32_t vor = ((int32_t)(int16_t)(uint16_t)oy + ocy)
+                      - ((int32_t)(int16_t)e->pos_s_y + ecy) + (int32_t)a1;
+    if ((a1 << 1) < (uint32_t)vor) {                             /* vorher nicht ueberlappt -> Y */
+        const int32_t v = ocy + oy - ecy;                        /* @0x8002ccb4-c4 */
+        e->y = (t6 >= 0) ? v - 1 - (int32_t)a1                   /* @0x8002ccd8-e4 */
+                         : v + 1 + (int32_t)a1;                  /* @0x8002ccc8-d4 */
+        return;
+    }
+    const int32_t kx = mflo_abs(t8, (int32_t)t4);                /* `mult t8,t4` @0x8002cc74 */
+    const int32_t kz = mflo_abs(t7, (int32_t)t5);                /* `mult t7,t5` @0x8002ccec */
+    if (kz < kx) {                                               /* `slt v0,v0,v1` @0x8002cd0c -> x */
+        const int32_t v = ocx + ox - ecx;                        /* @0x8002cd50-64 */
+        e->x = (t8 >= 0) ? v - (int32_t)t5 : v + (int32_t)t5;    /* @0x8002cd60-7c */
+    } else {                                                     /* z @0x8002cd80 */
+        const int32_t v = ocz + oz - ecz;                        /* @0x8002cdb8-cc */
+        e->z = (t7 >= 0) ? v - (int32_t)t4 : v + (int32_t)t4;    /* @0x8002cdc8-dc */
+    }
+}
+
+void re15_spinnen_r38_objekt_pass(re15_actor_t *e)
+{
+    if (!e || !e->active || e->type != 0x25) return;
+    const int slot = (int)(e - g_actors);
+    const int lief = (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_lauer_lief[slot] : 0;
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) s_lauer_lief[slot] = 0;
+    /* RE1.5-Spinnencode bewegt die Spinne (RE1.5-KI, oder die RE1.5-Schacht-Choreografie im RE2-Modus)
+     * -> der RE1.5-Objekt-Durchgang gilt. Das RE2-Gehirn nach der Landung: OFFEN (kein RE2-Beleg fuer
+     * einen Objekt-Durchgang der RE2-Spinne gelesen; Dossier 6). */
+    const int re2_gehirn = re15_ai_re2_for_type(e->type) && re15_re2spider_owns(e);
+    if ((!re2_gehirn || lief) && g_room_rdt_ok && !(e->flags & 0x40u)) {   /* Aktor-Wort0 & 0x40 @0x8002cad0-dc */
+        const int n_obj = (int)g_room_rdt.nOmodel;                      /* @0x8002bd78 */
+        for (int oid = n_obj - 1; oid >= 0; oid--) {                     /* von hinten @0x8002bdb0-c8 */
+            for (int i = 0; i < (int)g_scd.prop_count && i < RE15_SCD_MAX_PROPS; i++) {
+                if (g_scd.props[i].obj_id != (uint8_t)oid || !g_scd.props[i].active) continue;   /* @0x8002bdcc-d8 */
+                objekt_schub(e, i);
+            }
+        }
+    }
+    /* Lage-Spiegel nach dem Objekt-Tick (Zeichen-Schleife `sh` @0x8001d124/@0x8001d13c/@0x8001d154) */
+    e->pos_s_x = (uint16_t)e->x;
+    e->pos_s_y = (uint16_t)e->y;
+    e->pos_s_z = (uint16_t)e->z;
 }
 
 /* ---- MESSSCHIENE RE15_SPINNEN_LOG ------------------------------------------------------------

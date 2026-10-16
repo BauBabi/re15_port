@@ -3887,6 +3887,8 @@ static int op_sce_em_set(scd_thread_t *t)
         a->x = (int32_t)x;
         a->y = (int32_t)y;
         a->z = (int32_t)z;
+        a->pos_s_x = (uint16_t)a->x; a->pos_s_y = (uint16_t)a->y; a->pos_s_z = (uint16_t)a->z;   /* Runde 38 Spur R:
+                                                   * Lage-Spiegel +0x40/+0x42/+0x44 `sh` @0x800421a0-b8 */
         a->rot_x  = 0;
         a->rot_y  = dir;
         a->rot_z  = 0;

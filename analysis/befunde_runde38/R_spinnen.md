@@ -13,6 +13,9 @@ Baum `.claude/worktrees/r38_spinnen` (Zweig `r38/spinnen`, Basis e2cc7673). Ange
 - 16:23 Dossier angelegt; Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
 - 16:55 Messschiene RE15_SPINNEN_LOG gebaut; ROOM2060 in beiden KI-Modi gemessen (1.1/1.2).
 - 17:20 Minispinnen gemessen (1.3); Original per DuckStation-GDB gemessen (1.4); RE-Belege 2.1-2.4.
+- 17:45 Umsetzung Schacht/Gift/Babys (spinnen_r38.c + Haken), Koerperschub aus dem Spieler.
+- 18:05 Unit-Test test_r38_spinnen.c (A/B/C) gruen; Rest-Abweichung Kriechbahn (x +175) im Original vermessen:
+  Objekt-Ausschiebung FUN_8002cabc am Schachtgitter (1.5/2.5), portiert (Teil 4), Bahn jetzt Bild fuer Bild gleich.
 
 ## 1. Messung vorher
 
@@ -64,6 +67,9 @@ prueft `dist < 10` statt `dist < Ziel+0x9A + 10` (Kommentar "OPEN, reine +10-Rei
 dazu die y-Probe `(u32)(pl.y - e.y) < 3000` mit dem Baby 5400 tiefer. => Nutzerpunkt 3 REPRODUZIERT.
 
 ### 1.4 ORIGINAL-Messung RE1.5 (DuckStation-GDB, MZD-Disc = identische PSX.EXE/STAGE2.BIN-Adressen)
+Identitaet der Mess-Disc nachgewiesen (ISO-Leser ueber das MODE2/2352-Abbild, md5 gegen den Auslieferungsbaum):
+PSX.EXE b55fdaa5b9ec0f84bdd8a6b1107ea0b0, PSX/BIN/STAGE2.BIN 73a0a8e2d19437cf7da9509cbea77a73,
+PSX/STAGE2/ROOM2060.RDT 3a8f7024acd63057231c9bd5dc4e0880 — alle drei byte-gleich mit info/Re1.5 bzw. shared_assets.
 Werkzeug `R_belege/gdb_spinne.py` (Muster Runde 36 F nb4): Savestate `stage_saves/mzd_debugmenu.sav`, Haltepunkt
 Debug-Menue-Tick 0x8001443c -> Schreibsatz von Quadrat in der JUMP-Zeile (@0x80014a44-58: 0x800b5359 := 1,
 0x800ac9a8 := 0, Menue zu 0x800bbe5c := 0) mit Stage-Var 0x800bbe5e := 1 und Raum-Index 0x800bbe5f[1] := 6/10
@@ -87,6 +93,21 @@ Debug-Menue-Tick 0x8001443c -> Schreibsatz von Quadrat in der JUMP-Zeile (@0x800
 - **ROOM20A0, Schacht** (`R_belege/orig_20a0_schacht.txt`, Spieler (21500,-24000), Cut 4 gesetzt): Spinne 0 (floor 3,
   y -5400) laeuft dieselbe Choreografie und landet auf **y 0, floor 0** (Lage (22732,0,-25662)), obwohl der Steg des
   Spielers auf -3600 liegt — das Original setzt +0x1ba fest auf 0 (@0x80115044) und y := +0x1ba (@0x80115264-6c).
+
+### 1.5 ORIGINAL-Messung: wer klemmt die Kriechbahn? (`R_belege/gdb_klemme.py`)
+Port vorher: Phase-1-Bahn z 6400 -> 4200 in 11 x 200 bei x 5800; Original (1.4) Bild 67 z 5525 statt 5400, Bild 68
+x 5800 -> 5975, Ende (5975,4325). ROOM2060-SCA hat KEIN Band-2-Feld (alle 28 Felder Band 0/1), FUN_800245d8 ist ein
+reiner Vorschub (@0x800245d8-70c, kein Klemmaufruf).
+- Klammer-Messung (`orig_2060_klemme.txt`): Haltepunkte hinter jedem Aufruf der Spinnen-Wurzel (0x80110a54 Zustand,
+  0x80110a64 b498, 0x80110a74 aec4, 0x80110a84 b544, 0x80110aa4 b0a4 SCA, 0x80110b58 b064): x/z bleiben in der
+  ganzen Wurzel stehen; die Aenderung liegt zwischen Wurzel-Ende (Bild 66 z 5400) und der naechsten Gegner-Schleife
+  (Bild 67 z 5525) — also AUSSERHALB der Spinne.
+- Schreib-Wachpunkt Z2 auf e0+0x3c (`orig_2060_watch.txt`): Treffer `pc=8002cde0 ra=8002be48` genau in Bild 66->67
+  und 67->68 = FUN_8002cabc, gerufen aus dem Objekt-Tick FUN_8002bd44 @0x8002be40.
+- Wachpunkt auf e0+0x40 (`orig_2060_watch42.txt`): Schreiber `pc=8001d128` (Zeichen-Schleife, `sh` @0x8001d124/
+  @0x8001d13c/@0x8001d154) mit der schon geklemmten Lage = Lage-Spiegel +0x40/+0x42/+0x44 NACH dem Objekt-Tick.
+- ROOM20A0 (`orig_20a0_schacht.txt` Bild 50/51): Gitter obj 2 (22532,-6610,-27050) -> z -27250 = -27050 - 200,
+  x 22732 = 22532 + 200: derselbe Mechanismus.
 
 ## 2. RE-Belege
 
@@ -147,6 +168,33 @@ ausgelieferten Sce_em_set vor (nur 0x00/0x41), wird deshalb nicht portiert.
   `sh v0,0x1c2(s0)` @0x80026874) = Bodenhoehe unter der Entity.
 - Biss FUN_80100DE8 (EMS26): `dist < (u16)Ziel[+0x9A] + 10` @0x80100E40; RE2-Spieler +0x9A = **450**
   (`addiu v1,zero,450` @0x8003bdc0 / `sh v1,154(s2)` @0x8003bdc4, RE2 PSX.EXE) -> Reichweite 460.
+
+### 2.5 Objekt-Ausschiebung der Aktoren (PSX.EXE, selbst disassembliert)
+Bild-Reihenfolge @0x8001ce04 Gegner-Schleife FUN_8001a50c -> @0x8001ce0c Spieler-FSM -> @0x8001ce14 Objekt-Tick
+FUN_8002bd44. Dort: `lbu s3,2(v0)` @0x8002bd78 = nOmodel (RDT +2), Objekte von hinten (s2 = 0x800b3f98 + 148*(s3-1),
+@0x8002bdb0-c8), nur aktive (`andi 1` @0x8002bdd4); je Objekt ALLE aktiven Aktoren (`lbu s1` 0x800aca4e @0x8002be14,
+s0 = 0x800acc2c, Stride 0x1f4): `jal 0x8002cabc` @0x8002be40 mit a0 = Aktor, a1 = Objekt, a2 = 0 (Delay
+`addu a2,zero,zero`). KEIN Typ-Filter. FUN_8002cabc (a2 = 0):
+| Adresse | Inhalt |
+|---|---|
+| 0x8002cad0-dc | Aktor-Wort0 & 0x40 -> Rueckgabe 0 |
+| 0x8002cae4-f0 | Objekt-Wort0 & 2 -> Rueckgabe 0 |
+| 0x8002caf8-cb38 | t8 = (objbox.cx + obj.x) - (akt+0x7c.x + akt.x), t7 analog z |
+| 0x8002cb3c-4c | t5 = objbox.hx + aktbox.hx, t4 = objbox.hz + aktbox.hx (Aktor +6 fuer beide Achsen) |
+| 0x8002cb50-70 | `sltu (2*t5),(t8+t5)` / `sltu (2*t4),(t7+t4)` -> keine Ueberlappung |
+| 0x8002cb84-c8 | Y-Test: t6 = (objbox.cy + obj.y) - (aktbox.cy + akt.y), a1 = aktbox.hy + objbox.hy |
+| 0x8002cbcc-cc38 | Aktor+0xa := Objekt-Index, Objekt+0xa := Aktor-Index (kein Leser im Spinnen-Code 0x801109e4-0x801158a0) |
+| 0x8002cc3c-70 | Vor-Hoehe aus den Spiegeln +0x42 (`lh`) — vorher nicht in der Hoehe -> Y-Ausschiebung @0x8002ccb4-e4 |
+| 0x8002cce8-d0c | `slt` \|t7*t5\| < \|t8*t4\| -> x @0x8002cd50-7c, sonst z @0x8002cdb8-dc (je +-t5/t4 an die Objektkante) |
+
+KEINE Null-Kasten-Ausnahme: das Schachtgitter obj 0 (5775,-4860,5325) traegt im Obj_model_set h(0,0,0) und ist mit
+t5 = 0 + 200 (Spinnen-Kasten C) ein Punkt-Hindernis. Nachgerechnet Bild 67: dx -25, dz -75 -> \|dx*200\| < \|dz*200\|
+-> z = 5325 + 200 = 5525; Bild 68: dz 0 -> x = 5775 + 200 = 5975 — beides gemessen. Lage-Spiegel: Sce_em_set
+`sh` @0x800421a0/@0x800421ac/@0x800421b8 (= Spawnlage pc[8..13]), danach je Bild @0x8001d124-154; Objekt-Spiegel
+`sh v1,0x42(s2)` @0x8002c0f8 am Ende jedes Objekt-Durchgangs.
+Port vorher: re15_actor_prop_pushout schob nur die NPC-Familie 0x40..0x4d (mit Spieler-PR 450) und
+re15_collision.c behandelt Null-Kaesten als nicht kollidierend (Annahme fuer Heli/Rotor ROOM1170, nicht aus
+FUN_8002cabc) — die Spinne lief durch das Gitter.
 
 ## 3. Umsetzung
 

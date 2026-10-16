@@ -53,6 +53,12 @@ unsigned re15_spinnen_r38_gift_treffer(void);
  * (RE2 PSX.EXE `addiu v1,zero,450` @0x8003bdc0 / `sh v1,154(s2)` @0x8003bdc4). */
 #define RE15_SPINNEN_R38_RE2_SPIELER_9A 450
 
+/* ---- Teil 4: Objekt-Ausschiebung (Aktor-Durchgang des Objekt-Ticks FUN_8002bd44 @0x8002be0c-4c) ---
+ * FUN_8002cabc(a0 = Spinne, a1 = Objekt, a2 = 0) je aktivem Obj_model_set-Objekt (obj_id von hinten,
+ * @0x8002bdb0-c8), danach der Lage-Spiegel +0x40/+0x42/+0x44 (@0x8001d124-154). Gerufen aus
+ * enemy_ai_common.c re15_actor_prop_pushout fuer Typ 0x25 (Haken "Runde 38 Spur R"). */
+void re15_spinnen_r38_objekt_pass(re15_actor_t *e);
+
 /* MESSSCHIENE (env RE15_SPINNEN_LOG=<datei>, kein Spielverhalten): eine Zeile je Bild und
  * Spinne (Typ 0x25/0x26) mit Lage X/Y/Z, Zustandsbytes, Modus und Boden. Gerufen einmal je
  * Spielbild aus platform/pc/main.c (Haken "Runde 38 Spur R"). */

@@ -14375,6 +14375,8 @@ void re15_actor_prop_pushout(void)
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *ac = &g_actors[i];
         if (!ac->active) continue;                        /* @0x8002be2c Wort-0 & 1 */
+        if (ac->type == 0x25) { re15_spinnen_r38_objekt_pass(ac); continue; }   /* Runde 38 Spur R: Spinne
+                                                          * mit eigenem Kasten +0x78, FUN_8002cabc @0x8002be40 */
         if (ac->type < 0x40 || ac->type > 0x4d) continue; /* s. Begrenzung oben */
         int32_t ax = ac->x, az = ac->z;
         re15_collision_objects_actor(&ax, &az, ac->y);    /* jal 0x8002cabc, a2 = 0; Runde 36 Spur R: Aktor +0x38 fuer den Y-Test @0x8002cb84-cbc8 */
