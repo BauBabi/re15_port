@@ -89,5 +89,7 @@ int  re15_wasserzombie_schatten_y(const re15_actor_t *e, int32_t *y);
 
 /* Testhaken: RE2-Marker ruecksetzen (Raumwechsel im Test). */
 void re15_wasserzombie_reset(void);
+/* Messschiene: Slot (-1 = noch keins) und Lage des letzten Hochzieh-Endes, VOR Koerperstoss/Klemme jenes Bildes. */
+int  re15_wasserzombie_letzte_landung(int32_t *x, int32_t *y, int32_t *z);
 
 #endif /* RE15_WASSERZOMBIE_R38_H */

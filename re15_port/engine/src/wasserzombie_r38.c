@@ -65,6 +65,16 @@ int re15_wasserzombie_kante_vorn(const re15_actor_t *e)
     return (c & 1u) ? 1 : 0;                                        /* andi 1: 1 -> 0xA01 (Hochziehen) @0x80101f30-44 */
 }
 
+/* Messschiene fuer Tests: Lage im Bild des Endes, VOR Koerperstoss/Klemme dieses Bildes (die laufen danach in run_all). */
+static struct { int slot; int32_t x, y, z; } s_landung = { -1, 0, 0, 0 };
+int re15_wasserzombie_letzte_landung(int32_t *x, int32_t *y, int32_t *z)
+{
+    if (x) *x = s_landung.x;
+    if (y) *y = s_landung.y;
+    if (z) *z = s_landung.z;
+    return s_landung.slot;
+}
+
 /* FUN_8001aa68 (PSX.EXE, selbst disassembliert): rel = (Ziel - Yaw + Rate) & 0xfff; rel < 2*Rate -> 0 (Totband),
  * rel <= 0x800 -> +Rate, sonst -Rate. Schreibt +0x6a NICHT. */
 static int wz_8001aa68(const re15_actor_t *e, int ziel, int rate)
@@ -132,6 +142,7 @@ void re15_wasserzombie_hochziehen(re15_actor_t *e)
             /* FUN_800245d8(a0 = 0) @0x80103474: RotMatrixY(+0x6a + 0), (+0x8c,0,0) -> X += IR1, Z += IR3. */
             e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * (int32_t)e->speed_h) >> 12);
             e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * (int32_t)e->speed_h) >> 12);
+            s_landung.slot = (int)(e - g_actors); s_landung.x = e->x; s_landung.y = e->y; s_landung.z = e->z;
             WZ_LOG(e, "oben");
         }
         return;
@@ -195,12 +206,13 @@ static int wz_bank_fuer(uint8_t type, const re15_emd_skeleton_t **sk, const re15
 /* ---- RE2-KI: Marke "dieser RE2-Zombie fuehrt gerade die RE1.5-Maschine" ------------------------------------- *
  * Eigene Marke statt eines Aktorfelds; gilt nur, solange Typ, Zustand 1 und Sub 0x0A passen (ein Treffer setzt
  * Zustand 2, ein neuer Spawn Zustand 0 -> die Marke faellt beim naechsten Blick). */
-typedef struct { uint8_t aktiv; uint8_t type; } wz_marke_t;
+typedef struct { uint8_t aktiv; uint8_t type; int16_t boden_vorher; } wz_marke_t;
 static wz_marke_t s_marke[RE15_ACTOR_MAX];
 
 void re15_wasserzombie_reset(void)
 {
     for (int i = 0; i < RE15_ACTOR_MAX; i++) s_marke[i].aktiv = 0;
+    s_landung.slot = -1;
 }
 
 static int wz_marke_gilt(int slot, const re15_actor_t *e)
@@ -254,7 +266,16 @@ int re15_wasserzombie_re2_dispatch(int slot, re15_actor_t *e)
 {
     if (slot < 1 || slot >= RE15_ACTOR_MAX || !e) return 0;
     if (s_marke[slot].aktiv && !wz_marke_gilt(slot, e)) {
-        /* anderweitig verlassen (Treffer -> HURT, Tod, neuer Spawn): zurueck aufs RE2-Rig, ohne Ueberblendung */
+        /* anderweitig verlassen (Treffer -> HURT, RE2-Partner-Domino 0x901, Tod): zurueck aufs RE2-Rig, ohne
+         * Ueberblendung. PORT-WAHL (nur RE2-KI): die Boden-Referenz +0x1ba folgt wieder der Lage — das RE2-Gehirn
+         * fuehrt seinen Boden als Lage, solange Zustand 0/1 (re15_re2z_tick: `re2z_ground_y = y`, +0x1C2-Pflege
+         * @0x8003EE04-18), und die geteilte Schwerkraft (re15_schwerkraft_8001bd60) liest +0x1ba. Die RE1.5-KI bleibt
+         * byte-true: dort setzt nur @0x801033fc +0x1ba (Wortsuche STAGE2.BIN), ein Abbruch nach Bild 0x46 laesst es
+         * stehen. */
+        /* Nur derselbe Aktor: ein neuer Spawn im Slot steht auf Zustand 0 (Sce_em_set `sw zero,4(s0)` @0x800421e0)
+         * und hat seine +0x1ba frisch (@0x80042210). */
+        if (s_marke[slot].type == e->type && e->active && e->state != 0)
+            e->dog_floor_y = s_marke[slot].boden_vorher;
         s_marke[slot].aktiv = 0;
         e->anim_prev_valid = 0;
         WZ_LOG(e, "abbruch");
@@ -269,6 +290,7 @@ int re15_wasserzombie_re2_dispatch(int slot, re15_actor_t *e)
         re15_ai_set_state_word(e, 0x0A01u);                         /* sw v0,4(a1) @0x80101f44 */
         s_marke[slot].aktiv = 1;
         s_marke[slot].type = e->type;
+        s_marke[slot].boden_vorher = e->dog_floor_y;
         e->anim_prev_valid = 0;                                     /* PORT-WAHL: Rig RE2 -> RE1.5 ohne Ueberblendung */
         WZ_LOG(e, "re2-eintritt");
     } else {
