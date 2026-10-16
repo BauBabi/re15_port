@@ -6,15 +6,16 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-17 01:10: Integration H/I gruen (168/168 gezielt), Baeume elzatoene/heliport1171 entfernt.
-* 2026-10-17 00:50: Integration P gruen (53/53), Baum r37_masken36 entfernt. H gemergt (scd_vm.c beide Seiten, 2a8b9abf), I gemergt (main.c Include beide Seiten, e10d9efb), Bau OK, gezielte Tests H/I laufen.
-* 2026-10-17 00:25: H elzatoene BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_10922d64-fbc). Merge nach dem P-Test (mit I).
-* 2026-10-17 00:10: I heliport1171 BESTANDEN (Abnahme 0, wf_88be68ba-db7, Bericht e0b6ed35). Merge nach dem P-Test (Konflikte erwartet: enemy_ai_common.c Include mit B, scd_room_setup.c mit F).
-* 2026-10-16 23:50: Welle 5 (r38_w5.js, BASIS d70c234e): N wasser wf_9fc9967b-c4b, O montage wf_83f7268d-331. Damit laufen ALLE 21 Spuren (bzw. sind fertig).
-* 2026-10-16 23:40: Integration Q/E/J gruen (105/105 gezielt), Baeume kleinkram/elzaintro/rekorder entfernt. P (r37/masken36) gemergt (87ff0737, konfliktfrei), Bau + Masken-Tests laufen. Welle 5: N, O.
-* 2026-10-16 23:10: Welle 4 (r38_w4.js, BASIS f587d34e): D zopf wf_08abf2fa-3ac, M npckante wf_d2a07ce1-679. Platte 67 GB. Offen zu starten: N, O.
-* 2026-10-16 23:05: P (r37 masken36) BESTANDEN (Abnahme 2, wf_6fbf718a-cd3, Bericht 0ce11f5f). Merge nach dem laufenden Q/E/J-Test.
-* 2026-10-16 22:45: Integration: L gruen (210 Unit + 7 Integration), r37_re2zombie-Baum entfernt. Q, E gemergt (konfliktfrei), J gemergt (Konflikte scd_vm.c/audio_pc.c = Haken nebeneinander, beide Seiten via konflikt_beide.py, 63ea4222). Bau + gezielte Tests Q/E/J laufen.
+* 2026-10-16 23:42: Zeitstempel 22:20-23:38 nach den Commit-Zeiten berichtigt (vorher geschaetzt, bis zu 1,5 h daneben).
+* 2026-10-16 23:38: Integration H/I gruen (168/168 gezielt), Baeume elzatoene/heliport1171 entfernt.
+* 2026-10-16 23:20: Integration P gruen (53/53), Baum r37_masken36 entfernt. H gemergt (scd_vm.c beide Seiten, 2a8b9abf), I gemergt (main.c Include beide Seiten, e10d9efb), Bau OK, gezielte Tests H/I laufen.
+* 2026-10-16 23:05: H elzatoene BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_10922d64-fbc). Merge nach dem P-Test (mit I).
+* 2026-10-16 22:58: I heliport1171 BESTANDEN (Abnahme 0, wf_88be68ba-db7, Bericht e0b6ed35). Merge nach dem P-Test (Konflikte erwartet: enemy_ai_common.c Include mit B, scd_room_setup.c mit F).
+* 2026-10-16 22:56: Welle 5 (r38_w5.js, BASIS d70c234e): N wasser wf_9fc9967b-c4b, O montage wf_83f7268d-331. Damit laufen ALLE 21 Spuren (bzw. sind fertig).
+* 2026-10-16 22:51: Integration Q/E/J gruen (105/105 gezielt), Baeume kleinkram/elzaintro/rekorder entfernt. P (r37/masken36) gemergt (87ff0737, konfliktfrei), Bau + Masken-Tests laufen. Welle 5: N, O.
+* 2026-10-16 22:41: Welle 4 (r38_w4.js, BASIS f587d34e): D zopf wf_08abf2fa-3ac, M npckante wf_d2a07ce1-679. Platte 67 GB. Offen zu starten: N, O.
+* 2026-10-16 22:37: P (r37 masken36) BESTANDEN (Abnahme 2, wf_6fbf718a-cd3, Bericht 0ce11f5f). Merge nach dem laufenden Q/E/J-Test.
+* 2026-10-16 22:32: Integration: L gruen (210 Unit + 7 Integration), r37_re2zombie-Baum entfernt. Q, E gemergt (konfliktfrei), J gemergt (Konflikte scd_vm.c/audio_pc.c = Haken nebeneinander, beide Seiten via konflikt_beide.py, 63ea4222). Bau + gezielte Tests Q/E/J laufen.
 * 2026-10-16 22:20: J rekorder BESTANDEN (Abnahme 0, wf_fe613bfa-201). S fortgesetzt wf_350d90f9-b55 (r38_w2b.js).
 * 2026-10-16 22:12: Bau-Fortsetzung R wf_ad7a778e-ca5 (r38.js), U wf_dc602f1a-a19 (r38_w2b.js). Warten: S (stand), D, M, N, O (neu).
 * 2026-10-16 22:10: E elzaintro BESTANDEN (Abnahme 0, wf_4385667f-bb0, Bericht f6b23e6d). Merge nach dem laufenden L-Test (mit Q).
