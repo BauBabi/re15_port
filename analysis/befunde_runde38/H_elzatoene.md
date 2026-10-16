@@ -91,8 +91,8 @@ als "Skript-Pistolenschuss eines NPC". Selbst nachgelesen (info/re2leon/PL0/RDT/
   **`36 02 08 01 02 00 00 00 00 00 00 00`** Se_on(2,8) mit Ursprung Modus 2 Index 0 (= am Alligator) und zwei ESP — ein
   wiederholtes Alligator-Geraeusch, kein Schuss. Raumbank laut Nutzer-SAP-Liste "ROOM40A.SAP - Alligator Room sounds".
 * Der ECHTE RE2-Skript-Pistolenschuss (Zensus aller 250 RE2-RDTs: Se_on mit nachfolgendem Muendungsfeuer `3a 00 18`):
-  Welle **994b137d4007** (5824 B), in den Skripten von ROOM4040 (5 Schuesse @0x014E4/@0x01528/@0x01558/@0x01578/@0x01668,
-  je `36 02 0a 00 03 01 ..` + `3a 00 18 ..`; Skriptszene mit der Spielfigur: Work_set(1,0) @0x014BE, Plc_motion(0,0x11)
+  Welle **994b137d4007** (5824 B), in den Skripten von ROOM4040 (5 Schuesse @0x014E4/@0x01528/@0x01558/@0x01578/@0x01668
+  `36 02 0a 00 03 01 ..`, die ersten zwei mit Muendungsfeuer `3a 00 18 ..` @0x014F0/@0x01534; Skriptszene mit der Spielfigur: Work_set(1,0) @0x014BE, Plc_motion(0,0x11)
   @0x014D6; Raumtexte "He has lost consciousness due to shock from the bullet wound" / "I have to catch that woman!" =
   Adas Episode), ROOM4090 (@0x02A4E, Nutzer-SAP-Liste "ROOM409.SAP - Ada meets Annette") und ROOM6020
   (@0x00B94 `36 02 0a 01 ..`; Nutzer-SAP-Liste: "ROOM602.SAP - ... a gunshot"); dieselbe Welle liegt nur in Raumbaenken
@@ -163,8 +163,8 @@ Auswertewerkzeug tests/unit/probe_r38_elzatoene_kreuz.c (kein add_test).
 
 ## 6. OFFEN (benannt, nicht beauftragt)
 
-1. **Muendungsfeuer**: RE2 setzt zu JEDEM Skript-Schuss ein ESP (`3a 00 18 ..` @0x014F0 in ROOM4040, @0x028A2-artig in
-   4090/6020/1010). Der Port zeigt Johns Schuesse ohne Blitz; die Kamera steht dabei auf Cut 10 hinter Roy, John ist
+1. **Muendungsfeuer**: RE2 setzt zu JEDEM Skript-Schuss ein ESP `3a 00 18 ..` (ROOM4040 @0x014F0, ROOM4090 @0x02A68,
+   ROOM6020 @0x00BA4, Kendo ROOM1010 @0x0269A). Der Port zeigt Johns Schuesse ohne Blitz; die Kamera steht dabei auf Cut 10 hinter Roy, John ist
    klein am Gangende (m6, Framedump). Der Ton ist jetzt der RE2-Skript-Schuss; das Bild bleibt wie bisher (Runde 36
    OFFEN 2). Eigener Punkt, falls gewuenscht.
 2. **RE2-Folge-Satz** 0x0B (Welle 2bf10f4ea91f, hell, Schwerpunkt 2090 Hz) folgt in RE2 jedem Skript-Schuss 1-9 Bilder

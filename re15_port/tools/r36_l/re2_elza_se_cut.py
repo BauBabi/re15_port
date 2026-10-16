@@ -17,8 +17,9 @@ RE2-VORBILD (alles selbst aus info/re2leon gelesen):
                 (gleiche Raumbank, Satz 0x16) -> zu und auf aus EINER RE2-Tuerfamilie.
   Satz 1 SCHUSS ROOM4040 Raumbank-Satz 0x0A = der RE2-SKRIPT-PISTOLENSCHUSS (Runde 38 Spur H, korrigiert;
                 analysis/befunde_runde38/H_elzatoene.md §2.3): ROOM4040 feuert ihn in einer Skriptszene fuenfmal
-                (@0x014E4/@0x01528/@0x01558/@0x01578/@0x01668 `36 02 0a 00 03 01 ..`, je danach `3a 00 18 ..`
-                Muendungsfeuer; Work_set(1,0) @0x014BE, Plc_motion(0,0x11) @0x014D6); dieselbe Welle (sha1
+                (@0x014E4/@0x01528/@0x01558/@0x01578/@0x01668 `36 02 0a 00 03 01 ..`, die ersten zwei mit
+                Muendungsfeuer `3a 00 18 ..` @0x014F0/@0x01534; Work_set(1,0) @0x014BE, Plc_motion(0,0x11) @0x014D6);
+                dieselbe Welle (sha1
                 994b137d4007, 5824 B) schiesst in ROOM4090 @0x02A4E und ROOM6020 @0x00B94 (Nutzer-SAP-Liste
                 "ROOM602.SAP - ... a gunshot") und liegt nur in Raumbaenken (4040/4090/6020/6110/D040/F110).
                 Runde 36 hatte ROOM40A0 Satz 0x08 genommen — das ist KEIN Schuss: einziger Gegner des Raums ist der
