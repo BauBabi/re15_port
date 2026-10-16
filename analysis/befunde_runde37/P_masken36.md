@@ -717,3 +717,9 @@ Elza 0 von 464, Leon 0 von 602; Stage 4 ROOM4080 Cut 5 HINTER 879 von 883 (Elza 
 6165); Stage 5 ROOM5020 Cut 9 HINTER 199 von 322 (Elza 224 von 309), DAVOR 0 von 5007 (0 von 5050); Stage 6 ROOM6010 Cut 12
 HINTER 820 von 1440 (Elza 639 von 1105), DAVOR 0 von 9489 (0 von 7931). Die zusaetzlichen Ausschluesse beruehren die
 Verdeckung in diesen Szenen nicht (ROOM3050 Cut 2 Rechteck 37 traegt bei h3050c2 nichts bei).
+
+**Fussunterkante (Gegenstueck zur Kopfoberkante):** die Figurmessung §3.3 (RE15_TRILOG, ROOM6010 Cut 12) fand Leons tiefsten
+Punkt 39 unter dem Boden (y -2999..39; ROOM3040 Cut 1: -2996..-7); der Kasten endet am Boden. Experiment (Kopie des
+Generators im Scratchpad `p38nb2/werkzeug_tief/`, Fuss jeder Spalte, Spaltenzahl, Grobsprung und Schranke bei Boden + 39):
+`erzeuge` -> Tabelle **bitgleich** (926298 Kaesten, Schranken je 0). Das Band 0..39 unter dem Boden aendert keinen
+Ausschluss; der Generator bleibt beim Kasten Boden..3000.
