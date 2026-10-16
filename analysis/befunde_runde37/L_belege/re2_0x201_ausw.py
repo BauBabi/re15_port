@@ -3,7 +3,8 @@
   (1) TIMER      @0x80101D68-DBC  +0x15A lief im Takt ab (vorher 1, danach (rand>>3)+100 = 100..131), dist < 0x1388
   (2) NAHBEREICH @0x80101EC4-F10  dist < 0x7D0, Spieler im +-512-Kegel des Zombies, 0x800CFDCB & 0x80 == 0
   (3) RENNEN     @0x80101F14-F60  0x800CFBF6 & 4, dist < 0x9C4, Spieler im +-1324-Kegel
-Dazu: was danach kommt (Griff 0x301 / zurueck 0x101 / ...), Dauer im Gang, Weg je Takt in 0x101 und 0x201.
+Dazu: was danach kommt (Griff 0x301 / zurueck 0x101 / ...), Dauer im Gang, Weg je Takt in 0x101 und 0x201 (als Summe
+|dx|+|dz| und als Wegstrecke sqrt(dx^2+dz^2); Nachbesserung 2: die Summe ist KEINE Wegstrecke).
 Kegeltest wie 0x80015614: ((Peilung - Gier + h) & 0xfff) < 2h. Peilung = -atan2(dz,dx) in 4096-Teilung — empirisch aus
 denselben Takten bestimmt (Gier gehender Zombies vs. Richtung zum Steuerziel +0x1C4/+0x1C6: 3508 von 4188 Takten innerhalb
 +-128; die Bewegung 0x800152C8 ist x += cos(Gier), z -= sin(Gier)). Nahe der Kegelkante unscharf, deshalb "kante" mit aus.
@@ -33,7 +34,7 @@ def main():
                  plx=int(g[0]), plz=int(g[1]), bf6=int(g[3], 16), dcb=int(g[4], 16))
         reihen[r["ent"]].append(r)
     gesamt = defaultdict(int)
-    weg = defaultdict(lambda: [0, 0])
+    weg = defaultdict(lambda: [0, 0, 0.0])
     for ent, rs in reihen.items():
         rs.sort(key=lambda r: r["n"])
         for i in range(1, len(rs)):
@@ -43,6 +44,7 @@ def main():
             if sta == 1 and stb == 1 and s1a == s1b and s1a in (1, 2) and ((a["w4"] >> 16) & 0xff) and ((b["w4"] >> 16) & 0xff):
                 weg[s1a][0] += 1
                 weg[s1a][1] += abs(b["x"] - a["x"]) + abs(b["z"] - a["z"])
+                weg[s1a][2] += math.hypot(b["x"] - a["x"], b["z"] - a["z"])
             if not (stb == 1 and s1b == 2 and not (sta == 1 and s1a == 2)):
                 continue
             # Der Haltepunkt steht VOR `sw v0,496(s0)`: +0x1F0 in Probe n ist der Abstand, den die KI im Takt n-1 (dem
@@ -74,8 +76,8 @@ def main():
                       a["t15a"], b["t15a"], "+".join(prod) or "?", dauer, nach,
                       rs[min(i + dauer, len(rs) - 1)]["d"]))
     print("SUMME", dict(gesamt))
-    for s1, (n, w) in sorted(weg.items()):
-        print("Weg je Takt s1=%d: %.1f (%d Takte)" % (s1, w / n if n else 0.0, n))
+    for s1, (n, w, e) in sorted(weg.items()):
+        print("Weg je Takt s1=%d: |dx|+|dz| %.1f, Wegstrecke %.1f (%d Takte)" % (s1, w / n if n else 0.0, e / n if n else 0.0, n))
 
 
 if __name__ == "__main__":

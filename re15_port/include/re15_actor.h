@@ -379,6 +379,9 @@ typedef struct {
     int16_t  re2z_root144;      /* +0x144 Wurzel-Delta X, den FUN_80015E7C ablegt (`sh v1,324(t0)`
                                  * @0x80015FD8, UNROTIERT). Der Kriecher liest ihn als Steuer-Gate
                                  * (`lh v0,324` / `slti 21` @0x801030C0-CC)                                  */
+    int16_t  re2z_root148;      /* +0x148 Wurzel-Delta Z (`sh a1,328(t0)` @0x80015FE4, UNROTIERT). Runde 37
+                                 * Spur L: der Treffer-Handler P3 wendet den Vektor ohne neuen e7c noch einmal
+                                 * an (`jal 0x800152c8` @0x80105B98, Gleichheitsfall @0x80105B84-90)          */
     uint8_t  re2z_prev_sub;     /* Port-Feld: ACTIVE-Sub-Schnappschuss fuer HURTs +0x5==1-Test
                                  * (@0x80105090-98) — das geteilte take_damage ueberschreibt +0x5          */
     uint32_t re2z_word228;      /* +0x228 Zustandswort-Schnappschuss vom TICK-ENDE der Zombie-Wurzel

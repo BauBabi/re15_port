@@ -27,7 +27,14 @@
 #define RE15_R37L_B            0x08u
 #define RE15_R37L_C            0x10u
 #define RE15_R37L_D12          0x20u
-#define RE15_R37L_ALLES        0x3Fu
+/* Nachbesserung 2 (Freigabe des Orchestrators 2026-10-16, AUFTRAG Runde 38): die Erholungsleiter des Treffer-Handlers
+ * 0x80105438 P3 (re2z_hit_main case 3) wie das Original:
+ *   Bit 6  P3    Ein-Angreifer-Riegel 0x800CFDCB & 0x80 vor dem 0xB01-Wurf (@0x80105AA0-B0) und das Leiter-Ende
+ *                `bne a0,v1,0x80105ba0` @0x80105B3C: GLEICHER Clip (+0x218 == +0x14C, der Normalfall) -> 0x10101 mit
+ *                +0x16B/+0x158 = 30/+0x16A/+0x15A = rand + 300 (@0x80105B44-80) und `jal 0x800152c8` @0x80105B98;
+ *                ANDERER Clip -> 0x101 (`sw` im Delay-Slot @0x80105B40). Ohne Bit: die bis Runde 37 umgekehrte Bedingung. */
+#define RE15_R37L_P3           0x40u
+#define RE15_R37L_ALLES        0x7Fu
 
 void     re15_re2z_r37_produzenten(unsigned mask);   /* Gegenprobe: Maske der aktiven Produzenten */
 unsigned re15_re2z_r37_produzenten_maske(void);
@@ -37,5 +44,8 @@ unsigned re15_re2z_r37_zaehler(int produzent);       /* produzent 0..2 = (1)..(3
 int      re15_re2z_r37_letzter_produzent(int slot);  /* 0..2 = Produzent des letzten Wechsels dieses Platzes, -1 = keiner */
 /* Den (ahead+1)-ten naechsten Wurf des RE2-Zufallsstroms (@0x80015FE8) voraussehen, ohne ihn zu bewegen (nur Sonden). */
 uint32_t re15_re2z_rng_peek(int ahead);
+/* Ausgaenge der Erholungsleiter P3 seit dem letzten re15_re2z_r37_zaehler_reset (nur Sonden):
+ * 0 = 0xB01 (@0x80105ACC), 1 = 0xC01 (@0x80105B08), 2 = 0x201 (@0x80105B24), 3 = 0x10101 (@0x80105B44-50), 4 = 0x101 (@0x80105B40). */
+unsigned re15_re2z_r37_p3_ausgang(int k);
 
 #endif

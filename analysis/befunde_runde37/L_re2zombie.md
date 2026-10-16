@@ -33,12 +33,11 @@ wie @0x80101540-a0 / @0x8010159c. Dazu Zensus der uebrigen OFFEN-Marken (Bewegun
       breitere Testauswahl -> vier weitere verschobene Riegel gefunden und mit Mechanismus angepasst (5b), Abschluss
 - [x] Nachbesserung 1 (2026-10-14, nach Abnahme 0): M1 = Nutzer-Satz zum Messer an die exe-Messung angepasst (reine
       Textkorrektur, kein Code), s. Abschnitt "Nachbesserung 1"
-- [x] Nachbesserung 2 (2026-10-14, nach Abnahme 1 `L_abnahme_1.md`): M1 = RE2-Erholungsleiter P3 vollstaendig und richtig
-      beschrieben (Ende @0x80105B3C-98: 0x10101 im Normalfall), die vorbestehende Umkehr im Port (re2z_hit_main case 3)
-      mit dem Riegel-Fund @0x80105AA0-B0 als EIN OFFEN-Punkt (Adresse, Wirkung, Mess-Zeilen, Begruendung "nicht in L
-      geschlossen", Freigabe-Antrag); M2 = Messer-Aussage auf das phasenrobuste exe-Ergebnis (Abnahme 1, 18 Paare)
-      umgestellt, "weniger Schlaege" gestrichen, Weg-Zahlen als |dx|+|dz| gekennzeichnet (Wegstrecke 25,6 / 35,6). Reine
-      Textkorrektur, kein Code (s. Abschnitt "Nachbesserung 2")
+- [ ] Nachbesserung 2 (begonnen 2026-10-14, am Monatslimit abgebrochen, Rest 7f581fde UNGEPRUEFT = nur die |dx|+|dz|-
+      Kennzeichnung in M2/N1 und diese Zeile; FORTGESETZT 2026-10-16 nach dem Merge von master 44721dca und der Freigabe
+      des Orchestrators): M1 = Erholungsleiter P3 im CODE korrigiert (Inversion @0x80105B3C + Ein-Angreifer-Riegel
+      @0x80105AA0-B0 + 0x800152C8 @0x80105B98), Texte richtiggestellt; M2 = Messer-Aussage phasenrobust, nach dem Fix an der
+      exe neu gemessen. Abschnitt "Nachbesserung 2"
 
 ## Schritt 0 — Lektuere (Befunde)
 
@@ -339,9 +338,11 @@ euklidisch 25,6 / 35,6).
 ### N2 — Nahkampf (Aufbau test_re2_zombie_abc, Messer, 64 Seeds x 900 Bilder)
 Stand bis Runde 37 (Maske 0): 368 Treffer; Spur L: 369 (Sonde) bzw. 373 (test_re2_zombie_abc im Prozess nach der Pistole).
 Pistole 1795 -> 1775 (90 statt 96 Tode). Die Trefferpruefung wird nicht schlechter (Gesamt-Treffer im Sweep).
-⛔ Nachbesserung 1: diese Metrik zaehlt Treffer ueber den ganzen Lauf, NICHT Treffer je Anmarsch. An der exe nimmt der erste
-anrueckende Zombie mit Spur L weniger Messertreffer, bevor er greift (Abnahme 0 Abschnitt 3.6: 6 statt 10 in vier Paaren),
-weil er im schnelleren RE2-Arme-hoch-Gang schliesst — Mechanismus und Adressen im Abschnitt "Nachbesserung 1".
+⛔ Diese Metrik zaehlt Treffer ueber den ganzen Lauf, NICHT je Anmarsch. Je Anmarsch an der exe (Abnahme 1 Abschnitt 2,
+18 Paare Spur L / Basis mit gleicher Eingabe ueber alle 15 Phasen des 0,5-s-Schlagtakts): Anmarsch 1 L 7 / Basis 4,
+Anmarsch 2 L 31 / Basis 33, alle Platz-5-Treffer bis Bild 1400 43 / 41, Griffe 35 / 35 — im Mittel gleich viele, je
+Schlagphase einer mehr oder weniger (die "6 statt 10" der Abnahme 0 waren EINE Schlagphase). Nach dem P3-Fix der
+Nachbesserung 2 neu gemessen: Abschnitt "Nachbesserung 2", M2.
 
 ### N3 — ECHTE EXE (RE2-KI = Standard; Leon UND Elza; Spielstand per Kartenwerkzeug + CONTINUE + Eingabeskript, RE15_STATE_LOG)
 Treiber `L_belege/exe_lauf.sh` (eigene Messkopie `re15_pc_r37l_mess_<lauf>.exe`, nur eigene PID beendet), Auswerter
@@ -434,22 +435,30 @@ Bildfolge k_L_20 / k_B_20 (state.log der Abnahme): Spur L F1180 Arme hoch (+0x1F
 Erholung F1208 sofort wieder 1/2 (+0x1F0 1487 < 0x7D0, im Kegel), Griff F1214 bei 1173, der naechste Schlag (F1222) kommt zu
 spaet. Basis: Erholung F1193 in den langsamen Gang 1/1, zweiter Treffer F1201 bei 1419, Griff erst F1224 bei 851.
 
-**Beleg (Mechanismus, RE2 EMZ0.BIN).** Weniger Schlaege je Anmarsch, weil der Zombie zwischen Treffer-Erholung und Griff
-weniger Bilder braucht:
-1. Treffer-Erholung, Haupt-Handler 0x80105438 P3 @0x80105A50 (2026-10-14 selbst nachgelesen, `re2_disasm.py --bin EMZ0.BIN
-   dis 0x80105A50 64`): Leiter 0xB01 (`addiu v0,zero,2817` @0x80105ACC / `sw v0,4(s1)` @0x80105AD4), 0xC01 (`addiu v0,zero,3073`
-   @0x80105B08 / `sw` @0x80105B10), 0x201 bei rand&1 (`jal 0x80015fe8` @0x80105B14 / `andi v0,v0,0x1` @0x80105B1C /
-   `beq v0,zero,0x80105b30` @0x80105B20 / `addiu v0,zero,513` @0x80105B24 / `sw v0,4(s1)` @0x80105B2C), sonst 0x101
-   (`addiu v0,zero,257` @0x80105B38 / `sw v0,4(s1)` @0x80105B40). Port re2z_hit_main case 3, von Spur L NICHT geaendert.
-2. Faellt die Leiter auf 0x101, laeuft im ersten Gang-Takt EXEC[1] P0 nach P1 durch (`@0x80101b20`, Abschnitt 5b) und
-   Produzent (2) (R1: `sltiu v0,v0,0x7d0` @0x80101ECC, Kegel a3 = 512 @0x80101EEC, `addiu v0,zero,513` / `sw v0,4(s1)`
-   @0x80101F0C-10) setzt 0x201 — in der Basis war (2) aus, der Zombie blieb im 0x101-Gang (k_B_20 F1193).
-3. Der Arme-hoch-Gang schliesst schneller: RE2-Original 44,1 gegen 32,2 Einheiten je Takt (M2, DuckStation-GDB jeder Takt,
-   ROOM20A0). Der Griff hat in beiden Gaengen dieselbe Schwelle +0x1F0 < 0x4B0 (DECISION[1] `sltiu 0x4b0` @0x801018F4,
-   DECISION[2] `sltiu 0x4b0` @0x80102114, Commit 0x301 @0x80102174-78 / @0x801021B8-BC) — also kommt der Griff bei gleicher
-   Schwelle frueher.
-Die Trefferpruefung des Messers ist unveraendert: Spur L aendert nur DECISION[0], EXEC[0], EXEC[1], EXEC[2] und DECISION[12]
-(VERTRAG Z.56); der Harness-Sweep bleibt 368 -> 369/373. Das Verhalten ist byte-true RE2 (Abnahme 0, Punkt 4).
+**Beleg (Mechanismus, RE2 EMZ0.BIN) — ⛔ in Nachbesserung 2 KORRIGIERT (Abnahme 1, M1).** Die erste Fassung beschrieb
+das Leiter-Ende falsch ("sonst 0x101 @0x80105B38/@0x80105B40"), nannte den Port-Weg "P0 nach P1" RE2 und folgerte "weniger
+Schlaege". Richtig (vollstaendige Disassembly mit Bytes: Abschnitt "Nachbesserung 2", R5):
+1. Treffer-Erholung, Haupt-Handler 0x80105438 P3 @0x80105A50: 0xB01 (`addiu v0,zero,2817` @0x80105ACC) nur bei Spieler vorn
+   (+-512 @0x80105A7C-84), +0x1F0 < 0xFA0 (@0x80105A94), Ein-Angreifer-Riegel 0x800CFDCB & 0x80 frei (@0x80105AA0-B0) und
+   (rand & 0xf) == 0 (@0x80105AB8-C4); 0xC01 (`addiu v0,zero,3073` @0x80105B08) bei Spieler ausserhalb +-1024 und rand & 1;
+   0x201 (`addiu v0,zero,513` @0x80105B24) bei rand & 1; sonst das ENDE `lbu a0,536(s1)` / `lbu v1,332(s1)` /
+   `addiu v0,zero,257` / `bne a0,v1,0x80105ba0` / `sw v0,4(s1)` (Delay-Slot) @0x80105B30-40: 0x101 bleibt NUR bei UNGLEICHEM
+   Clip stehen. Bei GLEICHEM Clip (+0x218 == +0x14C, der Normalfall: P0 zwingt den Gang-Clip @0x801054C8-D4) schreibt das
+   Original 0x10101 (`lui v0,0x1` / `ori v0,v0,0x101` / `sw` @0x80105B44-50) mit +0x16B = (r&0xf)<<1, +0x158 = 30,
+   +0x16A = (r&0x1f)+30, +0x15A = r + 300 (@0x80105B54-80) und wendet den +0x144-Vektor noch einmal an
+   (`jal 0x800152c8` @0x80105B98).
+2. "Faellt die Leiter auf 0x101, laeuft im ersten Gang-Takt EXEC[1] P0 nach P1 durch" war der PORT-Weg (umgekehrte
+   Bedingung in re2z_hit_main case 3, vorbestehend seit d39b815b), NICHT RE2. Im Original geht es mit 0x10101 direkt in
+   EXEC[1] P1: kein Clip-Neustart auf ein Zufallsbild, +0x15A = 300..555 statt (rand>>3)+100 = 100..131. Produzent (2)
+   (`sltiu v0,v0,0x7d0` @0x80101ECC, Kegel a3 = 512 @0x80101EEC, `sw 0x201` @0x80101F0C-10) laeuft in BEIDEN Wegen im
+   ersten Gang-Takt (P1-Rumpf); in der Basis war (2) aus, der Zombie blieb im 0x101-Gang (k_B_20 F1193).
+3. Der Arme-hoch-Gang schliesst schneller: RE2-Original Wegstrecke 35,6 gegen 25,6 je Takt (als Summe |dx|+|dz| 44,1 / 32,2;
+   M2, `re2_0x201_ausw.py`). Der Griff hat in beiden Gaengen dieselbe Schwelle +0x1F0 < 0x4B0 (DECISION[1] `sltiu 0x4b0`
+   @0x801018F4, DECISION[2] `sltiu 0x4b0` @0x80102114, Commit 0x301 @0x80102174-78 / @0x801021B8-BC). Daraus folgt NICHT
+   "weniger Schlaege": die Trefferreaktion haelt den Zombie je Schlag an — an der exe ueber alle 15 Schlagphasen im Mittel
+   gleich viele Treffer je Anmarsch (Abnahme 1, 18 Paare; M2).
+Die Trefferpruefung des Messers aendert Spur L nicht. "byte-true RE2" gilt fuer die Produzenten (1)(2)(3), (b), (c) und
+DECISION[12] (Abnahme 0/1) und seit Nachbesserung 2 fuer das Leiter-Ende P3 (Code-Fix, Freigabe 2026-10-16).
 
 **Aenderung.** Nur Text, kein Code, keine Konstante:
 * "Fuer den Nutzer", 4. Punkt: neu formuliert (Messer trifft wie vorher; je Anmarsch weniger Schlaege, an der exe 6 statt
@@ -470,6 +479,85 @@ Gezielte Tests (Baum r37_re2zombie, Stand fe329139 = Code ab2bf2b9; keine volle 
    unit_r36_zombieki_eintritt, dazu die Riegel der Spur H r37_zombieaktiv).
 2. `ctest --test-dir re15_port/build -R "^integration_r37_(re2zombie|zombieaktiv)$" --timeout 600` (seriell)
    -> **`100% tests passed, 0 tests failed out of 2`** (integration_r37_re2zombie 51,50 s, integration_r37_zombieaktiv 25,11 s).
+
+## Nachbesserung 2 (2026-10-14 begonnen, 2026-10-16 fortgesetzt; nach Abnahme 1 `L_abnahme_1.md`)
+
+### Grundlage der Fortsetzung
+* Rest 7f581fde (UNGEPRUEFT) geprueft: nur Text — die Stand-Zeile ("reine Textkorrektur, kein Code"; durch die Freigabe
+  ueberholt, ersetzt) und die Kennzeichnung der Weg-Zahlen als Summe |dx|+|dz| (M2-Tabelle, N1). Die dort genannte
+  Wegstrecke 25,6 / 35,6 selbst aus den Rohdaten nachgerechnet: `re2_0x201_ausw.py` gibt jetzt beide Masse aus —
+  "Weg je Takt s1=1: |dx|+|dz| 32.2, Wegstrecke 25.6 (4213 Takte)", "s1=2: |dx|+|dz| 44.1, Wegstrecke 35.6 (94 Takte)".
+* Merge 44721dca (master v0.8.25 + Runde-38-Auftrag): `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`,
+  `build` -> `=== LOCAL-BUILD-OK (build)` (851 Schritte). Gezielte Unit-Auswahl VOR dem Fix (Ausdruck wie Abnahme 1, s. Tests):
+  `100% tests passed, 0 tests failed out of 287`.
+* Freigabe (AUFTRAG Runde 38, "gehe die 2 Punkte an"; VERTRAG Runde 38 Fortsetzung L): die Inversion in re2z_hit_main
+  case 3 und der fehlende Ein-Angreifer-Riegel @0x80105AA0-B0 werden KORRIGIERT. Runde 38 Spur U (wasserzombie) haengt
+  parallel einen Haken in dieselbe Datei — geaendert sind nur case 3, ein neuer Helfer neben den Runde-37-Helfern und die
+  Sonden-Zaehler.
+
+### M1 — Erholungsleiter P3 (Text UND Code)
+
+**Ursache.** (a) Text: der Beleg der Nachbesserung 1 las nur bis zum `sw` im Delay-Slot @0x80105B40 und uebersah den
+`bne a0,v1` @0x80105B3C davor. (b) Code (vorbestehend seit d39b815b): re2z_hit_main case 3 hatte die Bedingung des Leiter-
+Endes umgekehrt (`motion != walkclip` -> 0x10101) und keinen Ein-Angreifer-Riegel vor dem 0xB01-Wurf; der Port fuhr deshalb
+im Normalfall 0x101 -> EXEC[1] P0 (Clip-Neustart auf Zufallsbild, 5 Wuerfe, +0x15A = (rand>>3)+100 = 100..131).
+
+**Messung vorher.** Abnahme 1 Abschnitt 4 (an beiden exe, nicht wiederholt): `L8_messer_W21.3` F1228 `st=2 ss1=1 ss2=3 mo=2`
+-> F1229 `st=1 ss1=1 ss2=0` (0x101); `B7_messer_W20` F1234 -> F1235 `ss2=0` -> F1236 `ss2=1 af 22 -> 18` (P0-Zufallsbild).
+Eigene Kalibrierung des Messer-Aufbaus am gemergten Stand VOR dem Fix (`L_belege/messer_laeufe.sh` / `messer_ausw.py`,
+Zaehlregel der Abnahme 1): w = 20.000 -> "anm1 0 anm2 2 alle 2 griffe 2 | Treffer F1183,F1213 | Griffe F888,F1236" =
+Abnahme 1 (L 0 / 2, F888, F1236) bitgleich.
+
+**R5 — Beleg (EMZ0.BIN, `re2_disasm.py --bin EMZ0.BIN dis 0x80105A50 90`, selbst disassembliert; EMOVL10_S0.BIN und
+EMZ0_d1.BIN im Bereich 0x80105A50-BA0 bytegleich, geprueft):**
+```
+80105a7c jal 0x80015614 / 80105a80 addiu a3,zero,512 / 80105a84 bne v0,zero,0x80105ad8     ; Spieler vorn +-512
+80105a8c lw v0,496(s1) / 80105a94 sltiu v0,v0,0xfa0 / 80105a98 beq v0,zero,0x80105ad8      ; +0x1F0 < 4000
+80105aa0 lui v0,0x800d / 80105aa4 lbu v0,-565(v0) / 80105aac andi v0,v0,0x80 / 80105ab0 bne v0,zero,0x80105ad8
+                                                                                          ; 0x800CFDCB & 0x80 frei
+80105ab8 jal 0x80015fe8 / 80105ac0 andi v0,v0,0xf / 80105ac4 bne v0,zero,0x80105ad8
+80105acc addiu v0,zero,2817 / 80105ad0 j 0x80105ba0 / 80105ad4 sw v0,4(s1)                 ; 0xB01
+80105ae8 jal 0x80015614 / 80105aec addiu a3,zero,1024 / 80105af0 beq v0,zero,0x80105b14     ; ausserhalb +-1024
+80105af8 jal 0x80015fe8 / 80105b00 andi v0,v0,0x1 / 80105b04 beq v0,zero,0x80105b14
+80105b08 addiu v0,zero,3073 / 80105b0c j 0x80105ba0 / 80105b10 sw v0,4(s1)                 ; 0xC01
+80105b14 jal 0x80015fe8 / 80105b1c andi v0,v0,0x1 / 80105b20 beq v0,zero,0x80105b30
+80105b24 addiu v0,zero,513 / 80105b28 j 0x80105ba0 / 80105b2c sw v0,4(s1)                  ; 0x201
+80105b30 lbu a0,536(s1) / 80105b34 lbu v1,332(s1) / 80105b38 addiu v0,zero,257
+80105b3c bne a0,v1,0x80105ba0 / 80105b40 sw v0,4(s1)                                       ; UNGLEICH: 0x101, Epilog
+80105b44 lui v0,0x1 / 80105b48 ori v0,v0,0x101 / 80105b4c jal 0x80015fe8 / 80105b50 sw v0,4(s1)   ; GLEICH: 0x10101
+80105b54 andi v0,v0,0xf / 80105b58 sll v0,v0,1 / 80105b5c sb v0,363(s1)                    ; +0x16B = (r1&0xf)<<1
+80105b60 addiu v0,zero,30 / 80105b64 jal 0x80015fe8 / 80105b68 sh v0,344(s1)                ; +0x158 = 30
+80105b6c andi v0,v0,0x1f / 80105b70 addiu v0,v0,30 / 80105b74 jal 0x80015fe8 / 80105b78 sb v0,362(s1) ; +0x16A
+80105b7c addiu v0,v0,300 / 80105b80 sh v0,346(s1)                                          ; +0x15A = r3 + 300
+80105b84 lbu v1,536(s1) / 80105b88 lbu v0,332(s1) / 80105b90 bne v1,v0,0x80105ba0
+80105b98 jal 0x800152c8 / 80105b9c addu a1,zero,zero                                       ; Vektor +0x144 noch einmal
+Rohbytes 80105aa0: 0d 80 02 3c cb fd 42 90 00 00 00 00 80 00 42 30 09 00 40 14 ...
+         80105b30: 18 02 24 92 4c 01 23 92 01 01 02 24 18 00 83 14 04 00 22 ae 01 00 02 3c 01 01 42 34 fa 57 00 0c
+         80105b50: 04 00 22 ae 0f 00 42 30 40 10 02 00 6b 01 22 a2 1e 00 02 24 fa 57 00 0c 58 01 22 a6 1f 00 42 30
+         80105b70: 1e 00 42 24 fa 57 00 0c 6a 01 22 a2 2c 01 42 24 5a 01 22 a6 18 02 23 92 4c 01 22 92 00 00 00 00
+         80105b90: 03 00 62 14 21 20 20 02 b2 54 00 0c 21 28 00 00
+```
+* RE2-rand @0x80015FE8 liefert 0..255 (`andi v0,v0,0xff` @0x80016014) -> +0x15A = 300..555.
+* Normalfall GLEICH: im ganzen Handler (0x80105438-BB8) schreibt nur P0 +0x14C (`sw v0,332(s1)` @0x801054D4, nach
+  `beq v1,v0` @0x801054C8 = Gang-Clip erzwingen); Scan aller `332(`/`536(`-Zugriffe des Handlers selbst gemacht.
+* 0x800152C8 (RE2 PSX.EXE, selbst disassembliert): `lhu v0,118(s1)` / `addu v0,v0,a1` (+0x76 + a1) @0x800152E4-F0,
+  RotMatrixY `jal 0x8008e1f4` @0x800152F8, ApplyMatrixSV auf &self+0x144 (`addiu a1,s1,324` / `jal 0x8008dba4`
+  @0x80015304-08), +0x38 += out.x @0x80015314-20, +0x40 += out.z @0x80015324-34. Der Vektor ist der zuletzt von e7c
+  abgelegte (+0x144 `sh v1,324(t0)` @0x80015FD8, +0x148 `sh a1,328(t0)` @0x80015FE4); P3 ruft KEIN e7c (Scan: e7c nur in
+  P0 @0x80105590/A8, P1 @0x8010575C, P2 @0x801058AC) -> es ist der Vektor des letzten P2-Takts.
+* Port-Zwilling des Riegels: re15_player_is_grabbed() — derselbe wie Produzent (2) @0x80101EFC-08, DECISION[12]
+  @0x80104648-58 und re15_re2z_fill_gates (`g->pl_1d3`, "The port's equivalent latch is s_player_grabbed").
+
+**Aenderung** (Kommentar "Runde 37 Spur L, Nachbesserung 2" + @0x je Zeile):
+* `engine/src/enemy_ai_re2_zombie.c` re2z_hit_main case 3: Riegel vor dem 0xB01-Wurf (@0x80105AA0-B0); Leiter-Ende
+  GLEICH -> 0x10101 + drei Wuerfe (+0x16B, +0x158 = 30, +0x16A, +0x15A = r + 300) + 0x800152C8 (@0x80105B44-98), UNGLEICH
+  -> 0x101 (@0x80105B38-40). Neuer Helfer `r2z_r37_152c8` (barer 0x800152C8(self,0), Drehung wie re15_clip_root_motion_delta).
+* `include/re15_actor.h`: neues Feld `re2z_root148` (+0x148, eine Zeile + Kommentar) neben re2z_root144;
+  `engine/src/enemy_ai_common.c` re15_clip_root_motion_delta: +0x148 wie +0x144 ablegen (2 Zeilen, @0x80015FE4).
+* `include/re15_re2zombie_r37.h`: Sonden-Bit `RE15_R37L_P3` (0x40, RE15_R37L_ALLES = 0x7F; Maske 0 bleibt der Stand bis
+  Runde 37 BITGLEICH, also auch die alte umgekehrte Bedingung — fuer probe_r36_blut / unit_r36_zombieki_eintritt) und
+  Zaehler der Leiter-Ausgaenge `re15_re2z_r37_p3_ausgang(k)` (nur Sonden).
+* Test `unit_r37_re2zombie_p3` (probes/r37_re2zombie.cmake, test_r37_re2zombie.c `pin_p3`).
 
 ## OFFEN
 
@@ -494,16 +582,8 @@ Gezielte Tests (Baum r37_re2zombie, Stand fe329139 = Code ab2bf2b9; keine volle 
   Bild eines Clips faehrt also root(kf0) (RIP-Clip 4: (-277,-26)). Der Port faehrt das nur, wenn die Motion-Nummer gleich
   bleibt (z.B. Tod aus dem Arme-hoch-Gang, Loco-Clip 4 -> Haupt-Clip 4); bei anderer Nummer Delta 0. Vorbestehend
   (Runde 12), nicht Teil der Spur L; betrifft jeden Clip mit root(kf0) != 0.
-* **Treffer-Erholung, Ausfall-Zweig ohne Ein-Angreifer-Riegel (Nachbesserung 1, beim Nachlesen gefunden; vorbestehend,
-  ausserhalb des Vertrags der Spur L):** Haupt-Handler 0x80105438 P3 (re2z_hit_main case 3) — das Original prueft vor dem Wurf
-  fuer 0xB01 den Spieler-Riegel: `lui v0,0x800d` / `lbu v0,-565(v0)` (= 0x800CFDCB) @0x80105AA0-A4, `andi v0,v0,0x80` @0x80105AAC,
-  `bne v0,zero,0x80105ad8` @0x80105AB0, erst danach `jal 0x80015fe8` @0x80105AB8. Der Port (Zeile `arc 512 == 0 && dist < 0xfa0
-  && (rand & 0xf) == 0`) hat diese Pruefung nicht: ist Leon schon gepackt, wuerfelt der Port einen Wurf mehr und kann in den
-  Ausfall 0xB01 gehen (1 zu 16), das Original nicht. Wirkt auf die Aktivitaet: ja, gering (nur Erholung waehrend Leon gepackt
-  ist; der Griff aus dem Ausfall DECISION[12] prueft den Riegel selbst @0x80104648-58). Nicht geschlossen: der Treffer-Handler
-  gehoert laut VERTRAG.md Z.56 nicht zu den Teilen, die L aendert (DECISION[0], EXEC[0], EXEC[1], EXEC[2]), und die Aenderung
-  verschiebt den gemeinsamen Zufallsstrom in jedem Griff-mit-Treffer-Fall (Messer-Sweeps). Vorschlag: eigener Punkt
-  (Ein-Zeilen-Fix `&& !re15_player_is_grabbed()` vor dem Wurf, wie Produzent (2)) mit Riegel-Liste.
+* ~~Treffer-Erholung P3: Ausfall-Zweig ohne Ein-Angreifer-Riegel (@0x80105AA0-B0) und umgekehrtes Leiter-Ende
+  (@0x80105B3C)~~ — GESCHLOSSEN in Nachbesserung 2 (Freigabe 2026-10-16), Abschnitt "Nachbesserung 2" M1.
 
 ## Fuer den Nutzer
 

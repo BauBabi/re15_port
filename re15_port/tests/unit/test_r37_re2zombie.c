@@ -604,6 +604,152 @@ static void pin_d12(void)
         e->state, e->sub_state_1);
 }
 
+/* Nachbesserung 2 — die Erholungsleiter des Treffer-Handlers 0x80105438 P3 (re2z_hit_main case 3), EMZ0.BIN selbst
+ * disassembliert (Dossier Abschnitt "Nachbesserung 2"):
+ *   80105a7c jal 0x80015614 (a3 = 512) / 80105a94 sltiu 0xfa0 / 80105aa4 lbu 0x800cfdcb / 80105aac andi 0x80 /
+ *   80105ab0 bne -> 0x80105ad8 / 80105ab8 jal rand / 80105ac0 andi 0xf / 80105acc addiu 2817         ; 0xB01
+ *   80105ae8 jal 0x80015614 (a3 = 1024) / 80105af0 beq -> 0x80105b14 / 80105b00 andi 1 / 80105b08 addiu 3073 ; 0xC01
+ *   80105b14 jal rand / 80105b1c andi 1 / 80105b20 beq -> 0x80105b30 / 80105b24 addiu 513               ; 0x201
+ *   80105b30 lbu a0,536 / 80105b34 lbu v1,332 / 80105b38 addiu 257 / 80105b3c bne a0,v1,Epilog / 80105b40 sw ; 0x101
+ *   80105b44-50 0x10101 / 80105b5c +0x16B = (r1&0xf)<<1 / 80105b68 +0x158 = 30 / 80105b78 +0x16A = (r2&0x1f)+30 /
+ *   80105b80 +0x15A = r3 + 300 / 80105b98 jal 0x800152c8(self, 0)
+ * Zombie (0,0) Gier 1024 (Blick -z), Treffer-Zeile 1 Spalte 1 (= Haupt-Handler), Zustandswort 0x00030102 (2/1/3).
+ * Der +0x144-Vektor des letzten e7c steht in re2z_root144/148 (37, -5); er wird im Gleichheitsfall EINMAL gedreht
+ * angewandt. */
+static re15_actor_t *pin_p3_stellen(int32_t px, int32_t pz, int gleich)
+{
+    re15_actor_t *e = pin_stellen(0x00030102u, px, pz, 0);
+    e->rot_y = 1024; e->ai_flags = 0; e->re2z_hits1d2 = 1; e->re2z_flag222 = 0;
+    e->motion = gleich ? (int16_t)e->re2z_walkclip : (int16_t)0x1B;
+    e->anim_frame = 7; e->re2z_root144 = 37; e->re2z_root148 = -5;
+    return e;
+}
+static void pin_p3(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    /* Vorbedingungen der Lage: Spieler 6000 vor dem Zombie (im +-512- und +-1024-Kegel, +0x1F0 >= 0xFA0 -> weder
+     * 0xB01- noch 0xC01-Wurf, erster Wurf = der 0x201-Wurf) bzw. 3000 vor ihm (< 0xFA0 -> der 0xB01-Wurf laeuft). */
+    {   re15_actor_t *e = pin_p3_stellen(0, -6000, 1);
+        PIN(re15_ai_arc_test(e, 0, -6000, 512) == 0 && re15_ai_arc_test(e, 0, -6000, 1024) == 0,
+            "P3 Vorbedingung: Spieler (0,-6000) liegt vor dem Zombie mit Gier 1024 (Kegel +-512 und +-1024)"); }
+    int32_t cs = re15_cos_q12(1024), sn = re15_sin_q12(1024);
+    int32_t wx = (int32_t)(((int64_t)cs * 37 + (int64_t)sn * -5) >> 12);   /* 0x800152C8: ApplyMatrixSV(RotY(+0x76)) */
+    int32_t wz = (int32_t)((-(int64_t)sn * 37 + (int64_t)cs * -5) >> 12);
+
+    /* A: GLEICHER Clip (Normalfall). Je Strom-Lage k: r0 & 1 -> 0x201 (1 Wurf); sonst 0x10101 mit +0x16B/+0x158/+0x16A/
+     *    +0x15A aus r1..r3 (4 Wuerfe) und genau einem Schritt um den gedrehten Vektor; naechster Takt = EXEC[1] P1 ohne P0. */
+    int a_regel = 1, a_n10101 = 0, a_n201 = 0, a_weg = 1, a_folge = 1;
+    for (int k = 0; k < 32; k++) {
+        re15_actor_t *e = pin_p3_stellen(0, -6000, 1);
+        rng_auf(k);
+        uint32_t r0 = re15_re2z_rng_peek(0), r1 = re15_re2z_rng_peek(1), r2 = re15_re2z_rng_peek(2), r3 = re15_re2z_rng_peek(3);
+        uint32_t d0 = re15_re2_rand_draws();
+        pin_takt();
+        uint32_t dw = re15_re2_rand_draws() - d0;
+        if (r0 & 1u) {
+            a_n201++;
+            if (!(e->state == 1 && e->sub_state_1 == 2 && e->sub_state_2 == 0 && dw == 1)) a_regel = 0;
+            if (e->x != 0 || e->z != 0) a_weg = 0;
+        } else {
+            a_n10101++;
+            if (!(e->state == 1 && e->sub_state_1 == 1 && e->sub_state_2 == 1 && dw == 4)) a_regel = 0;
+            if (e->re2z_gaitrow != (uint8_t)((r1 & 0xfu) << 1) || e->re2z_t158 != 30
+                || e->re2z_dir16a != (uint8_t)((r2 & 0x1fu) + 30u) || e->re2z_t15a != (int16_t)(r3 + 300u)) a_regel = 0;
+            if (e->x != wx || e->z != wz) a_weg = 0;
+            /* naechster Takt: EXEC[1] P1 direkt (kein P0: kein Zufalls-Startbild, +0x15A nur dekrementiert @0x80101D68-74) */
+            int16_t t15a = e->re2z_t15a; uint16_t af = e->anim_frame;
+            pin_takt();
+            if (!(e->state == 1 && e->sub_state_1 == 1 && e->re2z_t15a == (int16_t)(t15a - 1) && e->anim_frame == af)) a_folge = 0;
+        }
+    }
+    PIN(a_regel && a_n10101 > 0 && a_n201 > 0,
+        "P3 gleicher Clip: 0x201 bei r0&1 (1 Wurf), sonst 0x10101 mit +0x16B=(r1&0xf)<<1, +0x158=30, +0x16A=(r2&0x1f)+30,"
+        " +0x15A=r3+300, 4 Wuerfe (@0x80105B14-80): %d x 0x10101, %d x 0x201", a_n10101, a_n201);
+    PIN(a_weg, "P3 gleicher Clip: 0x800152C8(self,0) @0x80105B98 wendet den +0x144-Vektor (37,-5) gedreht EINMAL an -> (%d,%d);"
+        " beim 0x201-Ausgang keine Bewegung", (int)wx, (int)wz);
+    PIN(a_folge, "P3 -> 0x10101: der naechste Takt ist EXEC[1] P1 ohne P0 (Bild bleibt, +0x15A nur -1)");
+
+    /* B: ANDERER Clip (`bne a0,v1` @0x80105B3C genommen): 0x101 aus dem Delay-Slot @0x80105B40, kein weiterer Wurf, keine
+     *    Bewegung, +0x15A unberuehrt. */
+    int b_regel = 1, b_n = 0;
+    for (int k = 0; k < 32; k++) {
+        rng_auf(k);
+        if (re15_re2z_rng_peek(0) & 1u) continue;
+        re15_actor_t *e = pin_p3_stellen(0, -6000, 0);
+        rng_auf(k);
+        uint32_t d0 = re15_re2_rand_draws();
+        pin_takt();
+        b_n++;
+        if (!(e->state == 1 && e->sub_state_1 == 1 && e->sub_state_2 == 0 && re15_re2_rand_draws() - d0 == 1
+              && e->x == 0 && e->z == 0 && e->re2z_t15a == 200)) b_regel = 0;
+    }
+    PIN(b_regel && b_n > 0, "P3 anderer Clip (Gegenprobe): 0x101, 1 Wurf, keine Bewegung, +0x15A bleibt (%d Lagen)", b_n);
+
+    /* C: der EIN-ANGREIFER-RIEGEL @0x80105AA0-B0. Spieler 3000 vor dem Zombie: frei -> 0xB01-Wurf (B01 genau bei
+     *    r0 & 0xf == 0); beansprucht -> KEIN 0xB01-Wurf, der erste Wurf ist der 0x201-Wurf. */
+    int c_frei = 1, c_bean = 1, c_b01 = 0, c_n = 0;
+    for (int k = 0; k < 96; k++) {
+        rng_auf(k);
+        uint32_t r0 = re15_re2z_rng_peek(0), r1 = re15_re2z_rng_peek(1);
+        re15_actor_t *e = pin_p3_stellen(0, -3000, 1);
+        rng_auf(k);
+        uint32_t d0 = re15_re2_rand_draws();
+        pin_takt();
+        uint32_t dw = re15_re2_rand_draws() - d0;
+        if ((r0 & 0xfu) == 0u) {
+            c_b01++;
+            if (!(e->state == 1 && e->sub_state_1 == 11 && dw == 1)) c_frei = 0;
+        } else {
+            int soll201 = (r1 & 1u) != 0u;
+            if (soll201 ? !(e->sub_state_1 == 2 && dw == 2) : !(e->sub_state_1 == 1 && e->sub_state_2 == 1 && dw == 5)) c_frei = 0;
+        }
+        if ((r0 & 0xfu) != 0u && k > 40) continue;   /* beansprucht: alle B01-Lagen + die ersten Lagen */
+        e = pin_p3_stellen(0, -3000, 1);
+        re15_player_victim_force(0x10, 0, 0);        /* Spieler beansprucht (Port-Zwilling von 0x800CFDCB & 0x80) */
+        rng_auf(k);
+        d0 = re15_re2_rand_draws();
+        pin_takt();
+        dw = re15_re2_rand_draws() - d0;
+        re15_player_victim_force_end();
+        re15_player_victim_reset();
+        pl->hp = 100;
+        c_n++;
+        int soll201 = (r0 & 1u) != 0u;            /* der erste Wurf ist jetzt der 0x201-Wurf */
+        if (e->sub_state_1 == 11) c_bean = 0;
+        if (soll201 ? !(e->sub_state_1 == 2 && dw == 1) : !(e->sub_state_1 == 1 && e->sub_state_2 == 1 && dw == 4)) c_bean = 0;
+    }
+    PIN(c_frei && c_b01 > 0, "P3 Spieler frei, +0x1F0 3000 < 0xFA0, vorn: 0xB01 genau bei r0&0xf == 0 (%d Lagen), sonst 0x201-Wurf", c_b01);
+    PIN(c_bean && c_n > 0, "P3 Spieler BEANSPRUCHT (0x800CFDCB & 0x80 @0x80105AA0-B0): nie 0xB01, kein Ausfall-Wurf (%d Lagen)", c_n);
+
+    /* D: Gegenprobe Stand bis Runde 37 (Bit P3 aus): die umgekehrte Bedingung und kein Riegel. */
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES & ~RE15_R37L_P3);
+    int d_alt = 1, d_n = 0, d_b01 = 0;
+    for (int k = 0; k < 32; k++) {
+        rng_auf(k);
+        if (re15_re2z_rng_peek(0) & 1u) continue;
+        re15_actor_t *e = pin_p3_stellen(0, -6000, 1);
+        rng_auf(k);
+        pin_takt();
+        d_n++;
+        if (!(e->state == 1 && e->sub_state_1 == 1 && e->sub_state_2 == 0 && e->x == 0 && e->z == 0)) d_alt = 0;
+    }
+    for (int k = 0; k < 96; k++) {
+        rng_auf(k);
+        if (re15_re2z_rng_peek(0) & 0xfu) continue;
+        re15_actor_t *e = pin_p3_stellen(0, -3000, 1);
+        re15_player_victim_force(0x10, 0, 0);
+        rng_auf(k);
+        pin_takt();
+        re15_player_victim_force_end();
+        re15_player_victim_reset();
+        pl->hp = 100;
+        if (e->sub_state_1 == 11) d_b01++;
+    }
+    re15_re2z_r37_produzenten(RE15_R37L_ALLES);
+    PIN(d_alt && d_n > 0 && d_b01 > 0, "P3 Gegenprobe Stand bis Runde 37: gleicher Clip -> 0x101 (EXEC[1] P0 im naechsten Takt),"
+        " beansprucht -> 0xB01 moeglich (%d / %d Lagen)", d_n, d_b01);
+}
+
 /* Nahkampf-Positivkontrolle: Messer-Sweep (test_re2_zombie_abc-Aufbau) mit allen Produzenten vs. Maske 0. */
 static void pin_nahkampf(void)
 {
@@ -643,6 +789,7 @@ int main(int argc, char **argv)
     else if (!strcmp(modus, "b"))        { if (pin_umgebung() < 0) return 1; pin_b(); }
     else if (!strcmp(modus, "c"))        { if (pin_umgebung() < 0) return 1; pin_c(); }
     else if (!strcmp(modus, "d12"))      { if (pin_umgebung() < 0) return 1; pin_d12(); }
+    else if (!strcmp(modus, "p3"))       { if (pin_umgebung() < 0) return 1; pin_p3(); }
     else if (!strcmp(modus, "nahkampf")) { pin_nahkampf(); }
     else if (!strcmp(modus, "raum1130")) { pin_raum(0x1130, -5900, 16350, 1); }
     else if (!strcmp(modus, "raum1180")) { pin_raum(0x1180, -4729, -16018, 0); }
