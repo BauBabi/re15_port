@@ -75,3 +75,34 @@ Tag 1 (PCM), 1 Kanal, 32000 Hz, 16 bit; `data` @36, Laenge (u32 @40) 169414 B = 
 79,4 Spielbilder** (30 Hz). Spitze 30146 (92 % Vollaussteuerung -> der Lader hebt nichts an, audio_pc.c Ziel 14745).
 Sie liegt NICHT im Schema `main<NN>.wav` (synchro/README.md) -> eigene Bindung noetig; `unit_synchro_stimme` meldet sie
 bisher als "noch nicht zugeordnet".
+
+---
+
+## 2. Messung vorher (Stand 1bcbd0ff, echte exe, ECHTER Weg)
+
+Messkopie `re15_port/build/platform/pc/re15_pc_r38j_mess.exe`, Laeufer `re15_port/build/r38j/lauf.sh` (nicht versioniert),
+Laeufe `re15_port/build/r38j/runs/<name>/`. Weg: `RE15_DEBUG_JUMP=1100@120`, Minidisc genommen + im Inventar
+(`RE15_SET_FLAG=3:0x67`, `RE15_GIVE=0x44:1`; K6 der Runde-37-Kistenregel), Panel per `RE15_FIRE_AOT=2@150#1100`
+(Platz 2 sce 3 -> sub07), Viereck alle 10 Bilder 170..360 (msg 1, msg 3 "Ja"), Cursor per D-Pad (LEFT 15 / DOWN 19 Bilder,
+Viereck F406 = ON/OFF-Schalter; RIGHT 30 / DOWN 16, Viereck F498 = Mikrofon-Gitter), Viereck alle 10 Bilder 530..690.
+Hintergruende der Cuts 6..12 (Port-MDEC-Dekoder `probe_bg_dump`): `J_belege/vus_1100_cuts6_12.png` — Cut 7 SYSTEM READY,
+8 SAY HELLO, 9 INVALID, 10 TRY AGAIN, **11 ACCEPTED**, 12 leer (bestaetigt Runde 37 E §0).
+
+Ablauf (`RE15_SCD_TRACE`, Lauf `v3_weg`; Lauf `v4_vorher` mit denselben Eingaben bildgleich):
+```
+F151 sub07 msg 1 / F282 msg 3 (Frage) / F363 Ja: @0x0D64 Cut_chg 12, Cursor frei (bg 1100#12 ab F364)
+F407 sub08 (ON/OFF): @0x0D86 Cut_chg 7 SYSTEM READY, Sleep 30 / F437 @0x0D90 Cut_chg 8 SAY HELLO
+F499 sub02 (Mikrofon): @0x0C68.. Set(4,0xE8,1) .. @0x0C90 Message_on 4 "You've used the Minidisc Player w/ Disc."
+     (Pausemaske 0xffff: die VM steht, bis die Nachricht zu ist - kein Trace F500..F670)
+F671 @0x0C96 Cut_chg 12 (leer) / F676 @0x0C9C Cut_chg 11 ACCEPTED (angezeigt ab F677) / blinkt bis F700
+F701 @0x0CBA Message_on 2 "You've opened the lock."    auf.log: F701 PIEP (+0) / F716 AUF_E (+15)
+```
+Ton (`RE15_AUDIO_CAP_SYNC`, `tools/tueren/r36_cap_ticks.py`, Versatz Tick = F + 123): von Tick 622 (F499) bis Tick 823
+nur Musik (Anteil unter 250 Hz 0,3..0,95, kein 1450-Hz-Anteil), **beim Benutzen des Rekorders kein Ton**
+(`stimme.log`: "raum=1100 nachricht=4 laeuft=0", kein Clip geladen). Piep erst Tick 824..838 (= F701, Anteil 1450 Hz
+0,28..0,73), Aufschliessen ab Tick 839 (F716, unter 250 Hz 0,93).
+Bilder `J_belege/vorher_1100_ablauf.png`: F498 SAY HELLO (Cursor auf dem Gitter), F500 msg 4 "Yo..", F672 leer,
+**F677 ACCEPTED ohne Ton**, F702 msg 2 + Piep, F717 Aufschliessen.
+
+Befund: (a) die Datei des Nutzers spielt nirgends; (b) Piep und Aufschliessen kommen 25 Bilder NACH dem ersten ACCEPTED
+mit "You've opened the lock." (Runde-36-Haken an Message_on 2), das ACCEPTED selbst ist stumm.
