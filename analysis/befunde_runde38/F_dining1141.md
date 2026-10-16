@@ -274,7 +274,12 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
 (Druckzahlen je Abfrage fuer die Wegplaene).
 
 ## 6. OFFEN
-- (wird am Ende der Messlaeufe int_d3 / int_wzl ausgefuellt)
+- Keine offenen Mechanik-Punkte der Spur. Zur Integration (VERTRAG 1.5): ROOM1011 — Spur G (Tagebuch beim liegenden Roy,
+  Phase (4,0xFA)=1) und Spur F (Schluessel nach der 1021-Szene, (3,0x5F)=1, (4,0xFA)=0 seit ROOM1211 sub02 @0x01F7A)
+  liegen in verschiedenen Phasen; F belegt Prop obj 6 / Zone Slot 14, obj 5 bleibt fuer G. ROOM1171 (Spur I) betritt
+  Elza bei F ueber die Dachtuer mit (3,0xC2)=1 wie im Original.
+- Beobachtung aus Lauf int_wzl/Z (`F_belege/n2_tuer1131_zu.png`): ueber der Tuer in ROOM1131 haengt im Hintergrundbild
+  das Original-Schild "Briefing Room"; die Texte folgen dem Nutzer-Wortlaut "Dining Room" (Hinweis und Schluesselname).
 
 ## 7. Fuer den Nutzer
 - **Ablauf Elza (neu):** Roys Leiche in ROOM1021 zeigt nach "He's dead. / Poor Roy..." den Hinweis "There's an empty key
