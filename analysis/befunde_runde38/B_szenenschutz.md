@@ -173,6 +173,8 @@ es, CONTINUE zeigt es) bleibt unveraendert.
 | n1171a (RE2, Elza) | ab F1 | 0 | — | — | state.log ab Raumeintritt **bytegleich** (md5) |
 | n1171_re15 (Elza) | ab F1 | Kraehen-Griff F101 hp 92, gr=1 | — | — | **bytegleich** (erste 590 Bilder md5) |
 | n1170crow (Leon sub14) | F301..F731 | 0 | — | — | 3017 geschuetzte Kraehen-Ticks, keine im Angriff |
+| n1191elza (Elza, RE2; Hebel-Kombination B: 3:112,5:6,5:7) | F521..F738 | 0 | 0 | F805 | — (SCD sub10/sub13 opcode-gleich zu 1190) |
+| n11d1elza (Elza, RE2) | F331..F524 | 0 | 0 | F550 | — (SCD opcode-gleich zu 11D0) |
 
 1190 Sperrzeit im Detail (n1190a): Hund 1 landet F675 -> erster Commit F796 (= +121), Hund 3 landet F739 -> F860
 (+121); RE1.5-Referenz (m1190_re15) erster Biss F850.
