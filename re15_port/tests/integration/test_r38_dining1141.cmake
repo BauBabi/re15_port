@@ -40,11 +40,12 @@ set(_basis "${WORKDIR}/lauf_${_lauf_id}")
 # EIGENER EXE-NAME neben der exe (Asset-Wurzel = exe-Verzeichnis; Muster test_r34n_b_cursor.cmake).
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
 get_filename_component(_exe_ext "${RE15_PC_EXE}" EXT)
-file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r38f_haken_*")
+# Je TEIL ein eigener Praefix: parallele Laeufe verschiedener Teile raeumen sich nicht gegenseitig die Kopie weg.
+file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r38f_haken_${TEIL}_*")
 foreach(_k IN LISTS _alte_kopien)
     file(REMOVE "${_k}")
 endforeach()
-set(_exe_kopie "${_exe_dir}/re15_pc_r38f_haken_${_lauf_id}${_exe_ext}")
+set(_exe_kopie "${_exe_dir}/re15_pc_r38f_haken_${TEIL}_${_lauf_id}${_exe_ext}")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 set(RE15_PC_EXE "${_exe_kopie}")
 

@@ -239,7 +239,38 @@ Se_on(0x3D,0) im Takt der Schleife. Klopfen (0x3C) bleibt SE: RMS ~5000-5500 im 
 - leon1140: 0x3B 0x0C Bild 143, 0x0A Bild 158 (Abstand 15 = Sleep @0x00A54), 0x0B Bild 353; Rolladen-Prop faehrt hoch.
 
 ## 5. Tests
+Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
+| Test | misst | Nutzer-Punkt |
+|---|---|---|
+| unit_r38_dining1141_texte | fuenf Port-Texte dekodiert = Wortlaut, Rohbytes der Anfuehrungszeichen 61..19, nirgends "Help" | 1 |
+| unit_r38_dining1141_programme | HAEMMERN ohne Message_on, BEFREIUNG ohne msg 0/1/2, mit 40, Lagen = Kopf, Sperre Slot 0/2 | 1, 2, 4 |
+| unit_r38_dining1141_leiche1021 | Ereignis 6 -> msg 40 mit Hinweis (Anker bytegleich) | 1, 2 |
+| unit_r38_dining1141_schluessel1011 | Schluessel nur nach der 1021-Szene, Aufnahme-Modal -> Item 0x43 + (9,64), danach weg | 2 |
+| unit_r38_dining1141_tuer1131 | zu ohne Schluessel, msg 41 + (9,66) + Wegwerf-Abfrage, dann Raumwechsel 1141 | 2 |
+| unit_r38_dining1141_phase_h | John ab Bild 0 hinter dem Rolladen, in keinem Cut ausser 5/6 im Bild, Takt 30/30/90/90, keine Nachricht, "ja", Rolladen-Ton, Szene, keine Spruenge, Sperre msg 41, Abgang in Cut 7 ausserhalb des Bildes, Riegel/Tueren, 1171, Wiederbetreten | 2, 4 |
+| unit_r38_dining1141_leon1140 | Leon: 0x3B 0x0C/0x0A/0x0B in der 1131-Folge, Abstand Sleep 15, Rolladen faehrt | 3 |
+| integration_r38_dining1141 | echte exe: W 1021->1011->1021, Z 1131 zu, D 1131->1141->1171 (Zustands-Log: John ab Bild 0, kein Sprung, Parken hinter Cut 7), L Leon 1140 | 1-4 |
+Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel): `test_r38_dining1141 takt`
+(Druckzahlen je Abfrage fuer die Wegplaene).
 
 ## 6. OFFEN
+- (wird am Ende der Messlaeufe int_d3 / int_wzl ausgefuellt)
 
 ## 7. Fuer den Nutzer
+- **Ablauf Elza (neu):** Roys Leiche in ROOM1021 zeigt nach "He's dead. / Poor Roy..." den Hinweis "There's an empty key
+  tag on his belt. / It reads "Dining Room"." — in ROOM1011 liegt an Roys alter Liegestelle der **Dining Room Key**
+  (RE2-Herz-Schluessel) — die Tuer ROOM1131 -> Besprechungsraum ist bis dahin verschlossen ("It's locked. / The door is
+  marked "Dining Room".") — im Besprechungsraum hoert man hinter dem geschlossenen Notrolladen Klopfen und Johns "Help me
+  out." mit der Kampfmusik des Raums — das Gemaelde ("There's a switch below.") hebt den Rolladen, John steht dahinter
+  und kommt heraus, dann direkt "Are you okay? What's happened?" — solange die Gorillas leben, sagt jede Tuer "I cannot
+  leave him alone with those monsters." — danach laeuft John (Kamera Blick nach Sueden) aus dem Bild zur Dachtuer, man
+  hoert sie auf- und zugehen; die Dachtuer ist dann offen und fuehrt zu John aufs Dach (ROOM1171).
+- **Riegel der Dachtuer:** John hat ihn auf der Gangseite vorgelegt und oeffnet ihn beim Hinausgehen. "You've opened
+  the lock." kommt in diesem Ablauf deshalb nicht mehr (sonst oeffnete Elza einen Riegel, durch den John eben gegangen
+  ist).
+- **Neue Assets (Paket-Gate):** `re15_port/shared_assets/RE2/KLOPF1060.EDT`, `.VH`, `.VB` (RE2 ROOM1060 snd0,
+  bytegleich). Gegenstand/Modell/Icon/Bild des Schluessels sind eingebacken (gen/dining_r38_schluessel.inc).
+- **Sprachdateien (synchro, ersetzbar):** `synchro/STAGE1/room1141/main40.wav` = "Are you okay? What's happened?"
+  (Schnitt aus main02.wav ab 1,24 s), `synchro/STAGE1/room1141/main42.wav` = "Help me out." (Schnitt aus
+  room1171/main01.wav ab 1,95 s; Id 42 ist eine reine Sprach-Id ohne Text). Eine eigene Aufnahme unter demselben Namen
+  ersetzt sie ohne weiteren Schritt.
