@@ -5616,9 +5616,9 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
     case 3:
         re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
                                                                     * treffbar (RE1.5-Zwilling
-                                                                    * @0x80105f9c-fac); ALLE vier
-                                                                    * Ausgaenge dieser Phase
-                                                                    * (@0x80105ACC/B08/B24/B38)
+                                                                    * @0x80105f9c-fac); ALLE
+                                                                    * Ausgaenge dieser Phase (sw
+                                                                    * @0x80105AD4/B10/B2C/B40/B50)
                                                                     * verlassen die Reaktion */
         if (e->sub_state_1 == 14u) re2z_gore_spark(e);             /* Spark Shot @0x80105A50-64
                                                                     * (v0 = 14 aus dem Delay-Slot

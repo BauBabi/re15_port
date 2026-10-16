@@ -571,6 +571,34 @@ Rohbytes 80105aa0: 0d 80 02 3c cb fd 42 90 00 00 00 00 80 00 42 30 09 00 40 14 .
   Zaehler der Leiter-Ausgaenge `re15_re2z_r37_p3_ausgang(k)` (nur Sonden).
 * Test `unit_r37_re2zombie_p3` (probes/r37_re2zombie.cmake, test_r37_re2zombie.c `pin_p3`).
 
+**Messung nachher (Riegel, Strom-Lage je Wurf vorhergesehen mit re15_re2z_rng_peek):** `test_r37_re2zombie p3` (zweiter
+Bau-Ordner build_l2 mit dem Fix) -> `test_r37_re2zombie p3: 8/8`:
+* gleicher Clip, Spieler 6000 vorn (kein 0xB01-/0xC01-Wurf): 16 x 0x10101 mit +0x16B = (r1&0xf)<<1, +0x158 = 30,
+  +0x16A = (r2&0x1f)+30, +0x15A = r3+300 und genau 4 Wuerfen; 16 x 0x201 bei r0&1 mit 1 Wurf;
+* 0x800152C8 @0x80105B98: der Vektor (37,-5) wird bei Gier 1024 einmal gedreht angewandt -> Lage (-5,-37); beim
+  0x201-Ausgang keine Bewegung;
+* Folgetakt nach 0x10101: EXEC[1] P1 ohne P0 — Bild bleibt, Gang-Zeilen-Timer 30 -> 29 mit der P3-Zeile, +0x15A - 1;
+* Gegenprobe anderer Clip: 0x101, 1 Wurf, keine Bewegung, +0x15A unberuehrt (16 Lagen);
+* Riegel: Spieler frei 3000 vorn -> 0xB01 genau bei r0&0xf == 0 (8 Lagen); Spieler beansprucht -> nie 0xB01, kein
+  Ausfall-Wurf (45 Lagen);
+* Gegenprobe Stand bis Runde 37 (Bit P3 aus): gleicher Clip -> 0x101 und im naechsten Takt EXEC[1] P0 (+0x15A 99..130),
+  beansprucht -> 0xB01 moeglich (16 / 8 Lagen).
+
+**Messung nachher (Harness, Aufbau test_re2_zombie_abc: ROOM1140, 64 Seeds x 900 Bilder; `test_r37_re2zombie mess <maske> 64
+<waffe>`; Maske 0x3F = Spur L ohne den P3-Fix = Stand vor Nachbesserung 2, reproduziert die frueheren Summen 369 / 1775):**
+
+| Sweep | vorher (0x3F) | nachher (0x7F) |
+|---|---|---|
+| Messer: Treffer / Tode / Griff-Bilder | 369 / 2 / 27473 | 362 / 2 / 27609 |
+| Messer: P3-Ausgaenge 0xB01 / 0xC01 / 0x201 / 0x10101 / 0x101 | 5 / 1 / 47 / **0** / **61** | 2 / 1 / 57 / **54** / **0** |
+| Messer: Wuerfe | 15305 | 15325 |
+| Pistole: Treffer / Tode / Griff-Bilder | 1775 / 90 / 17472 | 1826 / 90 / 16520 |
+| Pistole: P3-Ausgaenge | 7 / 3 / 86 / **0** / **82** | 1 / 2 / 96 / **80** / **0** |
+| Pistole: Wuerfe | 14118 | 14280 |
+
+Vorher endete JEDE Leiter, die nicht in 0xB01/0xC01/0x201 ging, in 0x101 (die umgekehrte Bedingung trifft im Normalfall nie
+den 0x10101-Zweig), nachher in 0x10101 — wie das Original. Messer-Positivkontrolle 362 (Schranke > 250; >= 95 % von 368).
+
 ## OFFEN
 
 * **Navigator-Tasche ROOM1030 (vorbestehend, nicht durch L):** Zombie Slot 1 (Typ 0x16, grid 0x0D) steht im "hin"-Zensus
