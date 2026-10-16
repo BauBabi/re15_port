@@ -814,3 +814,13 @@ an Leons Hand an der Oberkante des roten Kanisters (Modell `punkt 3050 0 -22593 
 der Kanister steht als Zelle zwischen Kamera und Figur, die Verdeckung gilt als echt) und ROOM5051 Cut 0 8..9 Punkte an
 der Stiefelspitze (Modell an Elzas Lagen (-25900,-20100)/(-25993,-20000): ohne Zelle davor 0). Die 148 zusaetzlich
 ausgeschlossenen Rechtecke aendern auf diesen 570 Bildern nichts Sichtbares an der Figur ausser dem Wegfall des M2-Befunds.
+
+### NB2.6 Je Raum/Cut an der exe (Lader-Pruefung, alle 216 Generator-Sektionen, Leon 108 / Elza 108)
+
+Lauf wie §4.4/NB1.4 (`RE15_DEBUG_JUMP=<Leon-Raum>@250`, Elza `RE15_TITLE_SHOT_CHAR=1`, `RE15_FORCE_CUT=<cut>`,
+`RE15_EXIT_AT=40#<raum>`), Soll aus `test_r37_masken36 soll` (Stand NB2), Skripte `p38nb2/alle_cuts.sh` +
+`ac_auswerten.py`; Liste neu: `analysis/befunde_runde37/P_masken36_alle_cuts.txt` (Spalten NB2 | NB1 | vorher).
+**Ergebnis: 204 OK (`fg_atlas=1`, `masks == Soll`, Zeile der Spur P) + 12 LEER (alle Rechtecke aus: `masks=0`, keine
+Spur-P-Zeile = Weg einer Original-NULL-Sektion) + 0 FALSCH/FEHLT.** LEER sind ROOM3040/3041 Cut 1, ROOM3050/3051 Cut 6
+und Cut 15, ROOM30E0/30E1 Cut 6 und 7, ROOM6010/6011 Cut 6. Beispiele: ROOM30A0 Cut 0 `masks=18` (NB1 21, Soll 18 von 46),
+ROOM3040 Cut 0 `masks=8` (NB1 12). Wie zuvor: eine Lader-Pruefung, keine Pruefung auf Fehlverdeckung (Kopf der Liste).
