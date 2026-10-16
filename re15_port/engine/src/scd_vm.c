@@ -65,6 +65,7 @@
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
 #include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
+#include "re15_kleinkram_r38.h"   /* Runde 38 Spur Q: Irons 1151 sub03 + Flammenwerfer 30E0 sub04 (kleinkram_r38.c) */
 
 scd_vm_t g_scd;
 
@@ -192,6 +193,8 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_codepanel_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
     /* Runde 37 Spur C N1: Lift-Anker ROOM2030/2031 (sub02/sub04, re15_lift2030_r37.h). */
     re15_lift2030_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 38 Spur Q: Anker ROOM1151 sub03 / ROOM30E0 sub04 (re15_kleinkram_r38.h). */
+    re15_kleinkram_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -770,6 +773,8 @@ void scd_vm_tick(void)
             if (g_re15_codepanel_anker_n) { int cp = re15_codepanel_r37_pc(t); if (cp == 2) break; if (cp == 1) continue; }
             /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (Wachposten = Ankerzahl, sonst 0). */
             if (g_re15_lift2030_anker_n) re15_lift2030_r37_pc(t->pc);
+            /* Runde 38 Spur Q: 1151 Text 20 statt msg 2 / Irons-Gesten aus, 30E0 Aufnahme statt msg 15 (re15_kleinkram_r38.h). */
+            if (g_re15_r38q_anker_n) { int q = re15_kleinkram_r38_pc(t); if (q == 2) break; if (q == 1) continue; }
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
