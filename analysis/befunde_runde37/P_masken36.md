@@ -800,3 +800,17 @@ rechten Fuss - Fussunterkante bzw. Schatten auf dem Boden, NICHT Arm/Haar, wie N
 `p38nb2/v5090c14_fuss.png`, A | B | C 8-fach). Auch mit dem bis 39 unter den Boden verlaengerten Kasten (Experiment oben)
 sieht das Modell dort 0 Fehlverdeckungen (`punkt 5090 14 17017 -22665`: 833 Punkte, ungefiltert 0) - Rest an der
 Bodenkante, 2 bzw. 5 Bildpunkte.
+
+### NB2.5 Zufallswege der Abnahme 1 an der exe neu (30 Raeume, 570 Bildpaare)
+
+Dieselben 60 Laeufe wie Abnahme 1 §4.5 (Seed 37014, Liste `abnP1/rw_jobs.txt`, Leon xxx0 und Elza xxx1, Bilder 260..620/20,
+A mit Masken, B `RE15_NO_PRI=1`), exe neu, Skripte `p38nb2/rw_run.sh` + `rw_eval2.py` (unveraendert aus abnP1: Punkte mit
+|A-B| > 24, die nicht in mindestens der Haelfte der Bilder desselben Cuts stehen = was sich mit der Figur bewegt).
+60 von 60 Laeufen rc=0; die `[walk]`-Lagen sind in allen 30 Raeumen gleich denen der Abnahme (md5 der Lagen-Zeilen).
+**Auswertung neu gegen Abnahme (dieselbe Auswertung auf abnP1/rw, `diff`): einzige Aenderung ROOM30A0 - Abnahme
+`F380(c0):4@(172-175,78-78) F400(c0):7@(174-178,77-78)`, neu `-` (keine bewegten Punkte).** Alle anderen 29 Zeilen sind
+gleich, darunter die beiden Kleinstfunde, die die Abnahme "uneindeutig" nannte: ROOM3050 Cut 0 Bild 380-460 6..12 Punkte
+an Leons Hand an der Oberkante des roten Kanisters (Modell `punkt 3050 0 -22593 1555`: 650 Punkte, ohne Zelle davor 0 -
+der Kanister steht als Zelle zwischen Kamera und Figur, die Verdeckung gilt als echt) und ROOM5051 Cut 0 8..9 Punkte an
+der Stiefelspitze (Modell an Elzas Lagen (-25900,-20100)/(-25993,-20000): ohne Zelle davor 0). Die 148 zusaetzlich
+ausgeschlossenen Rechtecke aendern auf diesen 570 Bildern nichts Sichtbares an der Figur ausser dem Wegfall des M2-Befunds.
