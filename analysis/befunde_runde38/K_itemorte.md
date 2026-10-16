@@ -387,3 +387,16 @@ V3 108 / V4 0 / V5 29 Pixel, aussen ueberall 0 (bitgleich mit den Messungen 4.1/
 
 Offen gegen den Wortlaut bleibt nur die Grenze des Prison-Key-Modells (Abschnitt 6): die Ringlinie ist duenn und
 dunkel, weil sie es im RE2-Asset ist.
+
+## 9. Nachbesserung 1 (nach Abnahme 0, Beginn 2026-10-16 ~23:00)
+
+Abnahme `K_abnahme_0.md`: Punkt 1 erfuellt, Punkt 2 teilweise — **Mangel M1**: der Prison Key (Elza, ROOM10F1 Cut 5)
+haengt an der Marke, ist aber nicht "gut sichtbar" (Skala 1: 14 Pixel gegen 55 beim Parking Lot Key, Sum|dL| ~500 gegen
+~3430; Skala 3: 112 gegen 491; Skala 4: 215; Luminanz der geaenderten Pixel 68,3 gegen 65,6 auf dem Kork). Ursache laut
+Abnahme und Bau-Agent: das Modell (RE2 "Cabin Key", duenner dunkler Ring; Runde-36-Wahl, vom Nutzer nicht festgelegt).
+
+### 9.1 Stand / Vorgehen
+- Messung vorher = die Abnahme-Messung (nicht wiederholt): 14 / 112 / 215 Pixel, Sum|dL| ~500 (Skala 1).
+- Weg: ein kraeftigeres RE2-Schluesselmodell fuer den Prison Key, Wahl gemessen (alle RE2-Schluesselmodelle an der Marke
+  gerechnet), Weltmodell + Icon + Item-Bild aus DEMSELBEN RE2-Gegenstand (Runde-36-Regel "Modell und Bild passen
+  zusammen"), Licht wie im RE2-Satz dieses Modells (Obj_model_set-Attribut nachlesen), Riegel B3/B4 angehoben.
