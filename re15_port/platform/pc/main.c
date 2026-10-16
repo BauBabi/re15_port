@@ -6008,6 +6008,8 @@ re_title:;
                                                                     active_cut_idx);
                         if (moff)
                             pri_n = re15_pri_parse_section(s_msk, (size_t)s_msk_size, moff, &pri);
+                        { extern unsigned re15_pri_masken_raum(unsigned); extern int re15_masken36_filter(unsigned, int, re15_pri_cut_t *);
+                          if (pri_n > 0) pri_n = re15_masken36_filter(re15_pri_masken_raum(g_current_room_id), active_cut_idx, &pri); }  /* Runde 37 Spur P: Generator-Rechtecke VOR jedem Objekt aus (masken36_r37.c) */
                         /* Merker: die Rechtecke stammen aus dem R15M-Container. */
                         if (pri_n > 0) pri_nachgezeichnet = 1;
                     }

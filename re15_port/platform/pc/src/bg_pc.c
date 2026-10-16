@@ -31,6 +31,7 @@
 #include "re15_bss.h"
 #include "re15_room.h"   /* g_current_room_id — room-aware BG selection */
 #include "re15_pri1100_r37.h"   /* Runde 37 Spur A: re15_pri_masken_raum (Masken-Zwilling Elza -> Leon) */
+#include "re15_masken36_r37.h"  /* Runde 37 Spur P: re15_pri_atlas_quelle (eigener Atlas / BSS-Atlas) */
 #include "re15_bg.h"
 #include "re15_tim.h"    /* re15_tim_parse — per-cut foreground atlas decode */
 #include "re15_sld.h"    /* Laufzeit-Auszug des Vordergrundatlas aus dem BSS-Chunk */
@@ -195,11 +196,17 @@ int re15_pri_load_cut_atlas_ex(int cut_idx, int nachgezeichnet)
          * Atlas gepackt. Jeder andere waere ein anderes Bild an denselben Koordinaten. */
         snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", re15_pri_masken_raum(g_current_room_id), cut_idx);  /* Runde 37 Spur A */
         buf = re15_pc_read_cd(rel, &sz);
-        if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }
-        int ok2 = pri_publish_tim(buf, sz);
-        free(buf);
-        if (!ok2) re15_render_pc_set_pri_atlas(NULL, 0, 0);
-        return ok2;
+        /* Runde 37 Spur P (Regression 53741fe5): OHNE eigenen Atlas sind es die Generator-Masken vom 2026-09-03
+         * (b8db7b2b, Masken-Byte = src im BSS-Atlas) -> weiter mit dem BSS-Atlas des Cuts wie das Original
+         * (Atlas @0x80021dec/@0x8004eee0 bei VRAM 320,256; Maske tastet tpage 0x95 @0x80039630, u/v @0x800394dc/e0). */
+        if (re15_pri_atlas_quelle(1, buf != NULL) == RE15_PRI_ATLAS_EIGEN) {
+            int ok2 = pri_publish_tim(buf, sz);
+            free(buf);
+            if (!ok2) re15_render_pc_set_pri_atlas(NULL, 0, 0);
+            return ok2;
+        }
+        fprintf(stderr, "[pri] ROOM%04X Cut %d: Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)\n",
+                g_current_room_id, cut_idx);
     }
 
     /* 1. Laufzeit-Auszug aus dem BSS-Chunk (byte-true, deckt alle 359 Cuts). */
@@ -216,7 +223,7 @@ int re15_pri_load_cut_atlas_ex(int cut_idx, int nachgezeichnet)
         buf = re15_pc_read_cd(rel, &sz);
     }
     /* 3. Nachgezeichneter Atlas als letzter Rueckfall (Cut ohne jede Vordergrundgrafik). */
-    if (!buf) {
+    if (!buf && !nachgezeichnet) {   /* Runde 37 Spur P: fuer R15M oben schon gesucht */
         snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", re15_pri_masken_raum(g_current_room_id), cut_idx);  /* Runde 37 Spur A */
         buf = re15_pc_read_cd(rel, &sz);
     }
