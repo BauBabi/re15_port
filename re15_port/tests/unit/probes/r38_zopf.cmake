@@ -16,3 +16,13 @@ foreach(_teil libgte init ruhe drehung laufen freeze)
     add_test(NAME unit_r38_zopf_${_teil} COMMAND test_r38_zopf ${_teil})
     set_tests_properties(unit_r38_zopf_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
+
+# INTEGRATION (echte exe): Elza ROOM1121 mit dem Ruecken zur Kamera, Tank-Drehung — Winkelverlauf (RE15_ZOPF_LOG),
+# Pixel am Hinterkopf (Bild mit Zopf gegen die Mess-Sonde RE15_ZOPF_SONDE_AUS), Gegenprobe Leon ohne Zopf.
+add_test(NAME integration_r38_zopf
+    COMMAND ${CMAKE_COMMAND}
+        -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+        -DRE15_ZOPF_TOOL=$<TARGET_FILE:test_r38_zopf>
+        -DWORKDIR=${CMAKE_BINARY_DIR}/r38_zopf_wd
+        -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_zopf.cmake)
+set_tests_properties(integration_r38_zopf PROPERTIES TIMEOUT 900)

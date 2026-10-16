@@ -270,6 +270,14 @@ static void glied(re15_zopf_glied_t *g, const int16_t pm[9], const int32_t pt[3]
     re15_zopf_r38_rotmatrix_y((int32_t)(int16_t)p13, g->m);
 }
 
+/* Mess-Log RE15_ZOPF_LOG=<datei> (env-gegatet, kein Verhalten). */
+static FILE *zlog(void)
+{
+    static FILE *lf = NULL; static int lt = 0;
+    if (!lt) { lt = 1; const char *p = getenv("RE15_ZOPF_LOG"); if (p && *p) lf = fopen(p, "w"); }
+    return lf;
+}
+
 /* ---- FUN_80024c30: Treiber ----------------------------------------------------------------------- */
 void re15_zopf_r38_schritt(const re15_zopf_eingang_t *in)
 {
@@ -296,8 +304,8 @@ void re15_zopf_r38_schritt(const re15_zopf_eingang_t *in)
     s_geschritten = 1;
 
     {   /* Mess-Log RE15_ZOPF_LOG=<datei>: Koerperwinkel + je Glied rot/v94/v96/Lage. */
-        static FILE *lf = NULL; static int lt = 0; static unsigned n = 0;
-        if (!lt) { lt = 1; const char *p = getenv("RE15_ZOPF_LOG"); if (p && *p) lf = fopen(p, "w"); }
+        static unsigned n = 0;
+        FILE *lf = zlog();
         if (lf) {
             fprintf(lf, "Z%u s0=%d", n++, (int)s0);
             for (int k = 0; k < RE15_ZOPF_GLIEDER; k++)
@@ -345,6 +353,7 @@ void re15_zopf_r38_kommando0(int modell)
         s_gl[k].rot[1] = 0;           /* +0xbce/+0xc7a/+0xd26/+0xdd2 */
     }
     s_init_ok = 1;                    /* Flags |= 0x40 @0x80031bc4-bf0 */
+    { FILE *lf = zlog(); if (lf) { fprintf(lf, "R kommando0 modell=%d\n", modell); fflush(lf); } }
 }
 
 void re15_zopf_r38_takt(int lief)

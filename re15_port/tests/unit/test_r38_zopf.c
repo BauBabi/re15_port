@@ -395,34 +395,84 @@ static void teil_freeze(void)
 }
 
 /* ---------------------------------------------------------------------------------------- Integration */
-/* spur: RE15_ZOPF_LOG-Zeilen "Z<n> s0=<a> g0=(rx,ry,rz v94=.. v96=.. t=..)..."; erwartet: der Koerperwinkel s0
- * aendert sich (Drehung), Glied 17 schwingt mit (|v94| oder |v96| >= 8 waehrend/nach der Drehung) und kommt danach
- * zur Ruhe (die letzten 20 Zeilen |v| <= 4). */
+/* spur: RE15_ZOPF_LOG ab der letzten Raum-Marke "R kommando0" (Zopf-Init beim Raumeintritt). Je Schritt "Z<n> s0=<a>
+ * g0=(rx,ry,rz v94=.. v96=.. t=x,y,z) .. g3=(...)": Koerperwinkel s0, die Winkelgeschwindigkeiten aller Glieder und der
+ * SEITLICHE Winkel der Zopfspitze (Glied 20 gegen Glied 17) im Gierrahmen Ry(s0). Erwartet: s0 dreht sich (Summe der
+ * Aenderungen >= 0x200), der Zopf schlaegt seitlich aus (>= 5 Grad gegen die Ruhelage), schwingt durch die Ruhelage
+ * (>= 2 Seitenwechsel, Hysterese 1 Grad) und kommt danach zur Ruhe (>= 15 Schritte am Stueck mit |v| <= 6 und
+ * Winkelaenderung <= 0.6 Grad je Schritt). Ruhelage = Mittel dieses Ruhefensters. Der Verlauf geht nach <log>.verlauf. */
+#define SPUR_MAX 4096
 static int teil_spur(const char *pfad)
 {
     printf("[spur] %s\n", pfad);
     FILE *f = fopen(pfad, "r");
     if (!f) { printf("  FEHLER: %s fehlt\n", pfad); return 1; }
-    char z[2048];
-    int n = 0, s0min = 1 << 30, s0max = -(1 << 30), vmax = 0;
-    int vend[64]; int ne = 0;
-    while (fgets(z, sizeof z, f)) {
-        int idx, s0, rx, ry, rz, v94, v96;
-        if (sscanf(z, "Z%d s0=%d g0=(%d,%d,%d v94=%d v96=%d", &idx, &s0, &rx, &ry, &rz, &v94, &v96) != 7) continue;
-        n++;
-        if (s0 < s0min) s0min = s0;
-        if (s0 > s0max) s0max = s0;
-        int v = abs(v94) > abs(v96) ? abs(v94) : abs(v96);
-        if (n > 5 && v > vmax) vmax = v;      /* die ersten Schritte schwingen aus der PLD-Vorlage ein */
-        vend[ne++ % 64] = v;
+    static char zeilen[SPUR_MAX][1024];
+    static int    S0[SPUR_MAX], V[SPUR_MAX];
+    static double W[SPUR_MAX];
+    int nz = 0, start = 0;
+    while (nz < SPUR_MAX && fgets(zeilen[nz], sizeof zeilen[0], f)) {
+        if (!strncmp(zeilen[nz], "R kommando0", 11)) start = nz;
+        nz++;
     }
     fclose(f);
-    int rest = 0;
-    for (int i = 0; i < 20 && i < ne; i++) { int v = vend[(ne - 1 - i) % 64]; if (v > rest) rest = v; }
-    PRUEF(n >= 60, "%d Zopf-Schritte protokolliert", n);
-    PRUEF(s0max - s0min >= 0x200, "Koerperwinkel s0 dreht sich um %d (>= 0x200)", s0max - s0min);
-    PRUEF(vmax >= 8, "Glied 17 schwingt mit: max |v94|/|v96| = %d (>= 8)", vmax);
-    PRUEF(rest <= 4, "danach Ruhe: letzte 20 Schritte max |v| = %d (<= 4)", rest);
+    int n = 0;
+    for (int i = start; i < nz; i++) {
+        int idx, s0, rx, ry, rz, v94, v96, tx[4], ty[4], tz[4], v = 0, ok = 1;
+        if (sscanf(zeilen[i], "Z%d s0=%d", &idx, &s0) != 2) continue;
+        const char *p = zeilen[i];
+        for (int k = 0; k < 4 && ok; k++) {
+            char key[8]; snprintf(key, sizeof key, " g%d=(", k);
+            p = strstr(p, key);
+            if (!p || sscanf(p + 5, "%d,%d,%d v94=%d v96=%d t=%d,%d,%d", &rx, &ry, &rz, &v94, &v96,
+                             &tx[k], &ty[k], &tz[k]) != 8) { ok = 0; break; }
+            if (abs(v94) > v) v = abs(v94);
+            if (abs(v96) > v) v = abs(v96);
+            p += 5;
+        }
+        if (!ok) continue;
+        double a = s0 * 2 * M_PI / 4096, dx = tx[3] - tx[0], dy = ty[3] - ty[0], dz = tz[3] - tz[0];
+        double seit = dx * sin(a) + dz * cos(a), rueck = dx * cos(a) - dz * sin(a);
+        S0[n] = s0; V[n] = v; W[n] = atan2(seit, sqrt(rueck * rueck + dy * dy)) * 180.0 / M_PI;
+        n++;
+    }
+    char vp[600]; snprintf(vp, sizeof vp, "%s.verlauf", pfad);
+    FILE *vo = fopen(vp, "w");
+    for (int i = 0; vo && i < n; i++) fprintf(vo, "%d s0=%d seitwinkel=%.1f vmax=%d\n", i, S0[i], W[i], V[i]);
+    if (vo) fclose(vo);
+    /* Drehung (modular), groesster Ausschlag, Ruhefenster danach */
+    int drehung = 0, vmax = 0, imax = 5;
+    for (int i = 1; i < n; i++) {
+        int d = ((S0[i] - S0[i-1]) % 4096 + 4096 + 2048) % 4096 - 2048;
+        drehung += abs(d);
+        if (i > 5 && V[i] > vmax) vmax = V[i];
+    }
+    for (int i = 5; i < n; i++) if (fabs(W[i]) > fabs(W[imax])) imax = i;
+    int best = 0, best_s = -1, run = 0, run_s = -1;
+    for (int i = imax + 1; i < n; i++) {
+        if (V[i] <= 6 && fabs(W[i] - W[i-1]) <= 0.6) { if (!run) run_s = i; run++; if (run > best) { best = run; best_s = run_s; } }
+        else run = 0;
+    }
+    double ruhe = 0;
+    for (int i = 0; i < best; i++) ruhe += W[best_s + i];
+    if (best) ruhe /= best;
+    double maxaus = 0; int wechsel = 0, last = 0;
+    int ende = best_s > 0 ? best_s : n;
+    for (int i = 5; i < ende; i++) {
+        double d = W[i] - ruhe;
+        if (fabs(d) > maxaus) maxaus = fabs(d);
+        int sg = d > 1.0 ? 1 : (d < -1.0 ? -1 : 0);
+        if (sg && last && sg != last) wechsel++;
+        if (sg) last = sg;
+    }
+    printf("    %d Schritte im Zielraum, Drehung %d, groesster Ausschlag Schritt %d (%.1f Grad), Ruhe ab Schritt %d"
+           " (%d Schritte, %.1f Grad), %d Seitenwechsel\n", n, drehung, imax, W[imax], best_s, best, ruhe, wechsel);
+    PRUEF(n >= 60, "%d Zopf-Schritte im Zielraum protokolliert", n);
+    PRUEF(drehung >= 0x200, "Koerperwinkel s0 dreht sich um %d (>= 0x200)", drehung);
+    PRUEF(vmax >= 8, "Zopfglieder schwingen mit: max |v94|/|v96| = %d (>= 8)", vmax);
+    PRUEF(maxaus >= 5.0, "Zopfspitze schlaegt seitlich aus: %.1f Grad gegen die Ruhelage %.1f", maxaus, ruhe);
+    PRUEF(wechsel >= 2, "Pendel schwingt durch die Ruhelage: %d Seitenwechsel (>= 2)", wechsel);
+    PRUEF(best >= 15, "danach Ruhe: %d Schritte am Stueck ruhig (>= 15)", best);
     return g_fail ? 1 : 0;
 }
 
