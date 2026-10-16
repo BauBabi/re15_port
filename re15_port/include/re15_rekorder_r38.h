@@ -54,6 +54,7 @@
 #define RE15_REK_WARTE      0x00C96u   /* `29 0c` Cut_chg 12, erster Opcode nach dem Schliessen von msg 4 */
 #define RE15_REK_ACCEPTED   0x00C9Cu   /* `29 0b` Cut_chg 11, erstes ACCEPTED */
 #define RE15_REK_MSG2       0x00CBAu   /* `2b 02 ff ff` Message_on 2 "You've opened the lock." */
+#define RE15_REK_TUER       0x00CD2u   /* Opcode nach @0x00CC8 `46 01 02 31 ..` Aot_reset Platz 1 sce 2 (Tuer frei) */
 #define RE15_REK_SIG_LAENGE 56         /* Signatur @0x00C90..0x00CC7 (sub02 ab Message_on 4 bis Cut_auto 1) */
 #define RE15_REK_ACCEPTED_CUT 11       /* `29 0b` */
 
@@ -93,6 +94,7 @@ int      re15_rekorder_r38_wartebilder(void);     /* Takte, die sub02 an @0x00C9
 unsigned re15_rekorder_r38_anforderungen(void);   /* Zahl der Anforderungen der Aufnahme seit Start */
 unsigned re15_rekorder_r38_pieps(void);           /* Zahl der am ACCEPTED gestarteten Folgen seit Start */
 unsigned re15_rekorder_r38_unterdrueckt(void);    /* Zahl der an Message_on 2 ausgelassenen Runde-36-Folgen */
+unsigned re15_rekorder_r38_tuer_frei(void);       /* Zahl der Durchlaeufe hinter @0x00CC8 (Tuer-Platz neu gesetzt) */
 int      re15_rekorder_r38_bilder_seit_start(void);
 
 #endif /* RE15_REKORDER_R38_H */

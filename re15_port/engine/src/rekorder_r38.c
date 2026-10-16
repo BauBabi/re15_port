@@ -11,6 +11,7 @@
 #include "re15_aufschliessen_r36.h"   /* re15_aufschliessen_r36_notice, RE15_AUF_WEG_SKRIPT (Runde 36 Spur G) */
 #include "re15_scd.h"                 /* scd_thread_t, scd_audio_event_t, scd_audio_queue_push */
 #include "re15_engine.h"              /* g_engine.frame_count — nur fuer das Datei-Log */
+#include "re15_aot.h"                 /* g_aot (Messschiene: Tuer-Platz 1 nach @0x00CC8) */
 
 extern unsigned g_current_room_id;
 /* Die Plattform stempelt beide je Bild (audio_pc.c re15_audio_tick, Block vor der Warteschlange); die Engine haelt sie
@@ -42,7 +43,7 @@ static int      s_zustand = RE15_REK_AUS;
 static int      s_bilder = 0;                   /* Spielbilder seit der Anforderung (re15_rekorder_r38_tick) */
 static int      s_lief = 0;                     /* Plattform hat die Aufnahme als laufend gemeldet */
 static int      s_warte = 0, s_warte_letzt = 0;
-static unsigned s_anf = 0, s_pieps = 0, s_unterdrueckt = 0;
+static unsigned s_anf = 0, s_pieps = 0, s_unterdrueckt = 0, s_tuer = 0;
 
 static void logf_(const char *fmt, unsigned a, unsigned b, unsigned c)
 {
@@ -63,7 +64,7 @@ void re15_rekorder_r38_raum_scan(const unsigned char *raw, int raw_size, unsigne
 {
     g_re15_rekorder_anker_n = 0;
     s_basis = NULL; s_raum = room_id; s_zustand = RE15_REK_AUS;
-    s_bilder = 0; s_lief = 0; s_warte = 0;
+    s_bilder = 0; s_lief = 0; s_warte = 0; s_warte_letzt = 0;
     if (!ist_raum(room_id) || !raw || raw_size <= 0) return;
     if ((long)RE15_REK_MSG4 + RE15_REK_SIG_LAENGE > (long)raw_size) return;
     if (memcmp(raw + RE15_REK_MSG4, k_sig, sizeof k_sig) != 0) {
@@ -122,6 +123,13 @@ int re15_rekorder_r38_pc(void *thread)
               RE15_REK_ACCEPTED, (unsigned)RE15_REK_ACCEPTED_CUT, (unsigned)art);
         return 0;                                /* Cut_chg 11 normal, selber Takt */
     }
+    if (pc == s_basis + RE15_REK_TUER && s_zustand == RE15_REK_ENDE) {
+        /* Nur Messschiene: @0x00CC8 Aot_reset Platz 1 sce 2 ist ausgefuehrt (Tuer nach ROOM1110 frei). */
+        const re15_aot_t *a = &g_aot.slots[1];
+        s_tuer++;
+        logf_("Tuer frei: Platz 1 aktiv %u typ %u (1 = Tuer) nach @0x%05X", (unsigned)a->active, (unsigned)a->type,
+              0x00CC8u);
+    }
     return 0;
 }
 
@@ -171,4 +179,5 @@ int      re15_rekorder_r38_wartebilder(void)      { return s_warte_letzt; }
 unsigned re15_rekorder_r38_anforderungen(void)    { return s_anf; }
 unsigned re15_rekorder_r38_pieps(void)            { return s_pieps; }
 unsigned re15_rekorder_r38_unterdrueckt(void)     { return s_unterdrueckt; }
+unsigned re15_rekorder_r38_tuer_frei(void)        { return s_tuer; }
 int      re15_rekorder_r38_bilder_seit_start(void) { return s_bilder; }
