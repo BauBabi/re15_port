@@ -38,9 +38,17 @@ Zuteilung: `VERTRAG.md` Spur Q (Ressourcen §1.2: 1151/30E0/30E1 nur vorhandene 
   Evt_exec sub03 -> @0x0EC2.. (Pos/Dir/Plc_neck/Plc_motion(1,0x0B) = Hinbeugen, Cut 7, Message_on 2).
 * Warum der Runde-36-Riegel das nie sah: integration/unit_r36_elza_irons feuern Slot 2 per RE15_FIRE_AOT /
   re15_aot_fire_slot — das umgeht den Vorwaerts-Stempel des Scans (s. Abschnitt 2).
-* Regression? Nein: Mechanismus seit dem Runde-36-Bau 3eaf631d unveraendert (Stempel aot_common.c seit 289823a7
-  2026-07-11 bzw. fa0d53a1 2026-07-20, Frame-Ende-Wisch scd_vm.c seit 2026-08-08); der Fehler ist der
-  Runde-36-Entwurf selbst ("work_vars[0] wird nie 2" stimmt nicht). Verursachender Commit: 3eaf631d.
+* Regression? Nein — Fehler des Runde-36-Entwurfs selbst ("work_vars[0] wird nie 2" stimmt nicht). Statischer Bisect
+  der drei Bausteine an den Release-Staenden (git grep):
+
+  | Stand | Stempel `work_vars[gen_fwd_hit ? 0 : 1]` (aot_common.c) | Umbau Slot 2 (elza_r36.c) | Wisch `work_vars[0] = -1` (scd_vm.c) | Verhalten |
+  |---|---|---|---|---|
+  | v0.8.23 3ec5b1f8 | ja | nein (Irons lebt, Original-Gespraech) | ja | Original |
+  | v0.8.24 e8b3958f | ja | ja | ja | Text 20, danach Hinbeugen + msg 2 |
+  | v0.8.25 2077bb8e | ja | ja | ja | wie v0.8.24 (Nutzerbefund) |
+
+  Verursachender Commit: **3eaf631d** (2026-10-10, Runde 36 Spur L, Vorfahr von v0.8.24, nicht von v0.8.23); Stempel
+  seit 289823a7/fa0d53a1 (2026-07), Wisch seit 2026-08-08 unveraendert.
 
 ### P3 ROOM30E0 Flammenwerfer
 * Lauf: RE15_DEBUG_JUMP=30E0@250, Leon (-25000,-26400) rot 2048 vor dem Panel (Slot 3 @0x00A5A), Eingabe
@@ -142,3 +150,44 @@ Keine neuen Nachrichten-Ids (VERTRAG §1.2: 1151 Text 20 aus Runde 36), keine Ba
 * P3 Nein (RECHTS ~F527, Viereck ~F537): `F562 Flammenwerfer NICHT genommen (No/voll): Panel Slot 3 wieder scharf,
   Zellen 0`, `F593 sub04 @0x00FFA Set(3,0x9C) entfaellt`; erneutes Viereck am Panel -> sub09 startet wieder
   (`thread start ... first_op=0x29`, Cut 2) — der Flammenwerfer bleibt erreichbar.
+
+Belegbilder (Framedump RE15_WINDOW_SCALE=1, 320x240): `Q_belege/p2_1151_nachher_F180_gebeugt_text20.png`,
+`Q_belege/p3_30e0_vorher_F460_msg15.png`, `Q_belege/p3_30e0_nachher_F500_modal.png`,
+`Q_belege/p3_itps_0x0e_flammenwerfer.png` (ITPS.ITP @0x2A000 gerendert).
+
+## 5. Tests
+Neu (registriert NUR in `tests/unit/probes/r38_kleinkram.cmake`): 3 Unit- + 3 Integrationsteile = **6 Tests**
+(Orchestrator: RE15_MIN_TESTS um 6 anheben).
+
+| Test | misst |
+|---|---|
+| unit_r38_kleinkram_inventar | START-Annahme -> genau ein CORE-SE Satz 6 im Annahme-Bild, Blende/Halten/Task-Start ohne weiteren Ton; START / Kreuz / EXIT in der Reiterwahl -> Satz 5 + Schliess-Phase; ITEM bestaetigen bleibt Satz 6; Box-Anforderung ohne Oeffnen-Ton |
+| unit_r38_kleinkram_irons | ROOM1151 echter Viereck-Druck (Scan-Stempel @0x80042f3c-Weg): sub03 ab Druck+1, kein Text davor, Text 20 genau sub03-Start + 80 (Sleeps @0x00EDE/@0x00EF0/@0x00EF6), Elza motion 0x0B, msg 2 nie, Irons jedes Bild Clip 2 Bild 89, Anker 1/4/1, danach (3,0x9D)=1 + Slot 2 Text-Platz; zweites Anklicken nur Text 20; Leon ROOM1150: keine Anker, msg 2 wie im Original |
+| unit_r38_kleinkram_flammenwerfer | ROOM30E0 Panel -> LINKS 24 -> Viereck -> RECHTS 4 -> Viereck: Modal statt msg 15, Frage fuer 0x0E; Ja -> Zellen 0/1 Flags 1/2 Menge 100, (3,0x9C)=1, Panel weg, Wiederbetreten ohne Panel; Nein -> nichts, (3,0x9C)=0, Panel sce 3 sub 9 Flags 0x31, Viereck startet sub09 neu; voll -> "can't carry", wie Nein |
+| integration_r38_kleinkram_inventar | echte exe, START F400/F500 gegen ohne: genau 2 hoerbare Abschnitte (Mitschnitt 654 / 754, Abstand 100), debug.log Satz 6 / Satz 5, `[se] Stimme: se=6/5`, ohne-Lauf bytegleich |
+| integration_r38_kleinkram_irons | Elza-Spielstand 1151 + CONTINUE, Viereck F60: Text 20 ab F141 (Fenster 140..145) mit mo=11, msg 2 nie, Irons alle Bilder tot, zweiter Klick F450 -> Text 20, Anker-Zeilen |
+| integration_r38_kleinkram_flammenwerfer | Leon-Spielstand 30E0 + CONTINUE: ja -> Modal F170, genommen F263 (0 -> 2 Zellen), msg 15 nie; nein -> F322 nicht genommen, F353 Set(3,0x9C) entfaellt, danach startet sub09 erneut |
+
+Geaenderte Alt-Riegel (Nutzer-Befund widerlegt den Runde-36-Entwurf, Abschnitt 2.2):
+* `unit_r36_elza_irons` (tests/unit/test_r36_elza.c, Teil irons): vor der Szene erwartet er jetzt den Original-Platz
+  sce 5; den Text-Platz 20 (Maske 0xffff) + Anklicken -> Text 20 prueft er am Stand (3,0x9D) = 1.
+* `integration_r36_elza_irons` (tests/integration/test_r36_elza.cmake): Spielstand mit `3:0x9D` (Stand nach der Szene),
+  sonst unveraendert (RE15_FIRE_AOT=2 -> Text 20, Totenpose, Kopf fest).
+
+## 6. OFFEN
+* Keine offenen Punkte zu P1-P3.
+* Hinweis fuer die Integration: menu_common.c (3 Haken), scd_vm.c (3 Zeilen neben den Runde-37-Haken), elza_r36.c
+  (1 Bedingung im Irons-Block; Spur H arbeitet in derselben Datei an 1041/1021). test_r36_elza.c/.cmake nur Teil irons.
+
+## 7. Fuer den Nutzer
+* Inventar: Oeffnen mit START spielt jetzt den RE2-Oeffnen-Ton (Bestaetigungs-Klick), Schliessen (START, Kreuz oder
+  EXIT) den RE2-Zurueck-Ton — wie RE2 an denselben Stellen. Item-Box, Dokumente und Kartenhinweis oeffnen weiter ohne
+  Ton (RE2 ebenso). Bei Elza kommen die Toene aus ihrer CORE-Bank (CORE04, Saetze 5/6 wie im RE1.5-Inventar).
+* ROOM1151 (Elza): beim ersten Anklicken beugt sich Elza zu Irons (Original-Szene, Kamera 7), der Untertitel lautet
+  "He has already passed...", Irons bleibt tot liegen, kein "I'll be fine". Jedes weitere Anklicken zeigt nur noch
+  den Text (die Szene ist wie im Original einmalig).
+* ROOM30E0 (Leon): am Ende des Panel-Ablaufs (Cursor auf den Flammenwerfer im Spind) kommt die normale
+  Aufnahme-Frage "Will you take the Flamethrower?" (100 Schuss Treibstoff wie das Magazin der Waffe, 2 Felder im
+  Inventar). "No" oder volles Inventar: der Flammenwerfer bleibt im Spind, das Panel ist wieder benutzbar.
+  Elzas ROOM30E1 hat keinen Flammenwerfer (kein Panel, kein Text) — dort aendert sich nichts.
+* Keine neuen Assets, keine neuen Sprachdateien, keine neuen Nachrichten-Ids, keine Bank-9-Bits.
