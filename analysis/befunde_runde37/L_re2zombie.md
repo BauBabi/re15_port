@@ -599,6 +599,23 @@ Bau-Ordner build_l2 mit dem Fix) -> `test_r37_re2zombie p3: 8/8`:
 Vorher endete JEDE Leiter, die nicht in 0xB01/0xC01/0x201 ging, in 0x101 (die umgekehrte Bedingung trifft im Normalfall nie
 den 0x10101-Zweig), nachher in 0x10101 — wie das Original. Messer-Positivkontrolle 362 (Schranke > 250; >= 95 % von 368).
 
+**Zufallsstrom und verschobene Riegel.** Je Erholung, die nicht in 0xB01/0xC01/0x201 endet, zieht das Original 3 Wuerfe in P3
+(@0x80105B4C/64/74) und faehrt danach EXEC[1] P1; der Port zog bisher 0 in P3 und 5 im EXEC[1]-P0 des Folgetakts (Gang-Seeds
+@0x80101A88/98/C4, Startbild @0x80101AEC, +0x15A @0x80101B10) — also 2 Wuerfe weniger je Erholung, dazu kein Clip-Neustart,
++0x15A 300..555 statt 100..131 (der Timer-Produzent (1) kommt nach Treffern spaeter) und der eine 0x800152C8-Schritt. Wo der
+Spieler beansprucht ist, entfaellt zusaetzlich der 0xB01-Wurf. Gleiche -R-Auswahl wie Abnahme 1 (s. Tests), Baum vor dem Fix
+(build, Merge-Stand) gegen den Fix (build_l2), `ctest -V`, Vergleich `L_belege/riegel_vergleich.py`: 287 gemeinsame Tests,
+282 mit bitgleicher Ausgabe, alle gruen; geaendert:
+
+| Riegel | alt | neu | Begruendung |
+|---|---|---|---|
+| unit_re2_zombie_abc | Pistole 1775 Treffer / 90 Tode / DOWN 94..323 ueber 254 Fenster; Messer 373 | Pistole 1826 / 90 / 96..322 ueber 250; Messer 361 | Strom + Erholung 0x10101 (Harness-Tabelle oben); Schranken > 500 / > 250 gruen |
+| unit_r37_re2zombie_nahkampf | 373 gegen 368 | 361 gegen 368 (>= 95 %) | dasselbe; gruen |
+| unit_r36_zombieki_szenen | schuss3 erneuter Angriff F145, weg 912; schuss6 F319, weg 817 | F148, weg 804; F321, weg 807 | Zeitlinie `test_r36_zombieki_szenen schuss3` beider Baeume: die erste Erholung (Haupt-Handler P3) endet alt in F66 `st=1/1/0` (0x101, Folgetakt EXEC[1] P0), neu `st=1/1/1` (0x10101; Lage 1185 statt 1162 = 0x800152C8-Schritt + Clip laeuft weiter); danach anderer Strom: die zweite Erholung (Stagger-Handler P2 @0x80106010, NICHT case 3; Clip 4 = Stagger-Clip 0x00030004 @0x80105C18-38) wuerfelt alt 0x201, neu 0x101; Griff 3 Bilder spaeter. Riegel prueft "erneuter Angriff" (gruen) |
+| unit_re2_weapon_rows | Diagnose-Clips w=3 0->0, w=4 0->4, w=7 0->0, w=12 0->0, w=20 0->1 | 0->4, 0->0, 0->1, 0->4, 0->0 | die Waffen laufen nacheinander im SELBEN Strom; ab der ersten Erholung (w=0..2) verschoben. Clip-Indizes sind laut Testkopf Diagnose und bewusst nicht gepinnt; Zeilen/Handler unveraendert, gruen |
+| unit_re2z_bandlock_pin | Liege-Bit in 606 aufrechten Bildern (0,97 %, 5/64 Seeds) | 331 (0,54 %, 3/64) | Strom; gruen |
+| unit_r37_re2zombie_p3 | — | neu, 8/8 | Riegel dieses Fixes |
+
 ## OFFEN
 
 * **Navigator-Tasche ROOM1030 (vorbestehend, nicht durch L):** Zombie Slot 1 (Typ 0x16, grid 0x0D) steht im "hin"-Zensus
