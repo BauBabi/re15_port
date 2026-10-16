@@ -25,7 +25,7 @@ dieser Spur. Kein Bank-9-Bit neu (Loescher (9,0x86)/(3,0x85) wie Runde 37, Schlu
   (`local_build.sh build` OK 21:11; die gen/*.inc trugen mtime 18:18:52 = Neuerzeugung beim Abbruch, Inhalt
   bytegleich mit e8461907, `git status` leer). Wortlaut-Pruefung (Abschnitt 8): Luecken waren nur die Elza-Messung
   der anderen Pinnwand-Cuts (10F1 Cut 6/7) und eine Zahl fuer "gut sichtbar" in der Fenstergroesse, in der gespielt
-  wird -> gemessen (4.2 "Fortsetzung"), Riegel V4/V5/B4 (8544862d), gezielter Lauf am Endstand (5.3).
+  wird -> gemessen (4.2a), Riegel V4/V5/B4 (8544862d), gezielter Lauf am Endstand 112/112 gruen (5.4, Ende 21:50).
 
 ## 1. Messung vorher (Stand 1bcbd0ff, Baum gebaut 16:40, Messkopie `re15_pc_r38k_mess.exe`)
 
@@ -249,7 +249,8 @@ Bild `K_belege/k3_ohne_regel_cut10_mit_regel_cut10_ohne_regel_cut7.png`.
 * Parkplatz-Tuer 11B0 und Zelle 1211 unveraendert (Riegel unit_r36_schluessel_tuer/zelle/befreiung, integration
   zu/auf/check/befreiung).
 
-#### 4.2a Fortsetzung 2026-10-16 21:20 (exe am Endstand, Messkopie `re15_pc_r38k_mess.exe` frisch kopiert)
+#### 4.2a Fortsetzung 2026-10-16 21:16 (exe des Baus 21:11 = Code-Stand c01e409e, 8544862d aendert danach nur einen
+Kommentar und die Riegel; Messkopie `re15_pc_r38k_mess.exe` frisch kopiert)
 Lade-Weg CONTINUE mit Elza-Karte (`elza` -> debug.log `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`,
 `CONTINUE: resumed in room 10f1`), je zwei Laeufe mit/ohne (9,83), Bild 100, Werkzeug `probe_r34n_e_bild`:
 * **Elza Cut 6** (RE15_FORCE_CUT=6, debug.log `[pri] cut=6 ... masks=102`): **29 Pixel, Huelle x 83..97 y 67..78**
@@ -262,7 +263,9 @@ Lade-Weg CONTINUE mit Elza-Karte (`elza` -> debug.log `[pl] Spieler-Familie PL04
   |---|---|---|---|---|
   | Prison Key (10F1, Elza) | **112** | x 402..431 y 234..257 (30 x 24) | 0 | (70,67,67) / (68,67,53) |
   | Parking Lot Key (10F0, Leon) | **491** | x 397..432 y 233..255 (36 x 23) | 0 | (80,72,72) / (71,69,55) |
-  Bei Skala 1 trifft die Abtastung die 0,25..0,4 px breite Ringlinie des Prison Key nur stellenweise (B3: 14 Pixel);
+  Bei Skala 1 trifft die Abtastung die Ringlinie des Prison Key nur stellenweise (B3: 14 Pixel): 1..1,5 Texel x
+  13,9 Einheiten/Texel (Viereck-Kante 180 x 3,5896 = 646 Einheiten auf 46,6 Texel der UV-Kante (55,1)-(93,28)) =
+  14..21 Einheiten bei ~51 Einheiten/Bildpunkt (sichtbar 538 Einheiten auf 10,5 Spalten) = 0,27..0,41 px;
   in der Spielgroesse ist sie eine zusammenhaengende Linie (112 Pixel ~ Umfang 85 + Bart). Die Ringlinie ist im
   RE2-Asset dunkles Eisen (Farben der sichtbaren Texel, aus dem Texturbild des Werkzeugs gezaehlt: (24,16,16) ..
   (115,115,115), am haeufigsten (74,74,74) / (49,41,41) / (115,115,115)): sie hebt sich vom Kork ueber Farbton und
@@ -311,6 +314,14 @@ Lade-Weg CONTINUE mit Elza-Karte (`elza` -> debug.log `[pl] Spieler-Familie PL04
 Vorher einzeln: `^(unit_r38_itemorte|unit_r37_feuerloescher|unit_r36_schluessel)` -> `100% tests passed, 0 tests failed
 out of 18`; `^integration_r38_itemorte$` -> `100% tests passed, 0 tests failed out of 1` (258 s).
 
+### 5.4 Gezielter Lauf AM ENDSTAND (Fortsetzung, Baum 8544862d neu gebaut 21:25, -j 3, --timeout 600)
+Derselbe -R-Ausdruck wie 5.3 (woertlich oben; er deckt auch kistenregel_r37.c, dessen Kommentar 8544862d nachzieht):
+-> **`100% tests passed, 0 tests failed out of 112`** (Total Test time (real) = 1512.51 sec; Maschine voll mit
+Spurlaeufen anderer Baeume, daher langsamer als 5.3). Darin `integration_r38_itemorte` Passed 377.24 sec mit den
+neuen Pruefungen `ok   B4: Fenster 112 >= 90, aussen 0`, `ok   V4: 0 Pixel (nicht gezeichnet)`,
+`ok   V5: Fenster 29 >= 20, aussen 0`; nachgerechnet an den Framedumps des Laufs: B1 59 / B2 55 / B3 14 / B4 112 /
+V3 108 / V4 0 / V5 29 Pixel, aussen ueberall 0 (bitgleich mit den Messungen 4.1/4.2/4.2a).
+
 ## 6. OFFEN
 * Nichts Funktionales. Ehrliche Grenzen:
   - Prison Key = RE2 "Cabin Key" (Runde-36-Modellwahl): ein grosser DUENNER Ring (Linie 1..1,5 Texel) mit kleinem
@@ -337,7 +348,7 @@ out of 18`; `^integration_r38_itemorte$` -> `100% tests passed, 0 tests failed o
 * Kommentar-Drift in der gemeinsamen Datei `scd_room_setup.c` (Z. 43 und 466: "Feuerloescher 1050/1090/1091")
   absichtlich nicht angefasst (nur Kommentar; gemeinsame Datei, Merge-Risiko ohne Nutzen). Der K1-Kommentar in
   `kistenregel_r37.c` ("Port: Aufnahme in 1050") ist nachgezogen (8544862d, nur Kommentar).
-* Volle Suite NICHT gefahren (Spurbaum-Regel); gezielt 112/112 (5.3).
+* Volle Suite NICHT gefahren (Spurbaum-Regel); gezielt 112/112 (5.3) und am Endstand erneut 112/112 (5.4).
 
 ## 7. Fuer den Nutzer
 
