@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-16 23:05: P (r37 masken36) BESTANDEN (Abnahme 2, wf_6fbf718a-cd3, Bericht 0ce11f5f). Merge nach dem laufenden Q/E/J-Test.
 * 2026-10-16 22:45: Integration: L gruen (210 Unit + 7 Integration), r37_re2zombie-Baum entfernt. Q, E gemergt (konfliktfrei), J gemergt (Konflikte scd_vm.c/audio_pc.c = Haken nebeneinander, beide Seiten via konflikt_beide.py, 63ea4222). Bau + gezielte Tests Q/E/J laufen.
 * 2026-10-16 22:20: J rekorder BESTANDEN (Abnahme 0, wf_fe613bfa-201). S fortgesetzt wf_350d90f9-b55 (r38_w2b.js).
 * 2026-10-16 22:12: Bau-Fortsetzung R wf_ad7a778e-ca5 (r38.js), U wf_dc602f1a-a19 (r38_w2b.js). Warten: S (stand), D, M, N, O (neu).
@@ -49,7 +50,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | offen |
 | V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | offen |
 | L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | BESTANDEN (A2), integriert |
-| P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | offen |
+| P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | BESTANDEN (A2) |
 
 ## 2. Bei einem Abbruch (Sitzungs-/Wochen-/Monatslimit)
 1. Verwaiste Prozesse beenden (`tasklist`; nur per PID, nie /IM), DuckStation `settings.ini` EnableGDBServer = false pruefen.
