@@ -39,9 +39,31 @@ SCA-Geometrie (RDT u32 @0x20, 5 Quadranten-Partitionen, je identisch; Zelle 12 B
   [4] z=-27000..-25200, [5] z=-21600..-19800; Band 1 sieht ihn als u1 = 0x02 ([12], [13]).
 - Also: die Band-0-Zombies (2000: beide, 2020: Slots 2/3) stehen IM Kanal; die Kanalwand ist eine u1=1-Kante.
 
-## 1. Messung vorher
+## 1. Messung vorher (Basis cb782bda, echte exe, Messkopie `re15_pc_u_mess.exe`)
 
-(folgt — Port, beide KI-Varianten)
+Lauf: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1
+RE15_DEBUG_JUMP=2020@250 RE15_PLAYER_POS=-11300,2400,1024,1 RE15_GEGNER_Y_LOG=gy.log RE15_EXIT_AT=1400#2020`
+(Leon auf dem Suedsteg, Band 1, vor dem Wasserzombie Slot 3 (-11300,0,300) Blick +Z) — je einmal mit
+`RE15_AI_FLAVOR=re15` und `=re2`. ROOM2000: `RE15_DEBUG_JUMP=2000@250 RE15_PLAYER_POS=-20750,-10400,2048,1`
+(Oststeg). Ausgewertet wurde gy.log (re15_trage1200_mess: Zustand/Clip/Bild/Lage/Band/+0x1ba je Bild).
+
+**RE2-KI (Standard) — der Nutzerbefund, reproduziert:** ROOM2020 Aktor 4 (Wasserzombie) laeuft ab F7 auf Leon zu,
+steht ab F101 an der Kanalwand z = 1082 (Wand z = 1500 minus Radius) und pendelt bis zum Raumende (F1296) zwischen
+RE2-Gang 1/1 und 1/14 an derselben Stelle; y bleibt 0, Band 0. Aktor 3 genauso ab F549 (z = 1029..1093).
+ROOM2000: beide 0x84-Zombies wachen auf (1/8 -> 1/1, F63), laufen gegen die Ostwand x = -22068 und bleiben dort
+(F103..F1100, y = 0). **Kein Hochziehen, nie.**
+
+**RE1.5-KI — Hochziehen wird ausgeloest, aber kaputt:** ROOM2020 Aktor 4: F10 Engage, F64 Kontakt -> 1/10
+(Hochziehen), F71 Clip 22 (0x16), F229 Clip fertig: y = -1800, Band 1 — aber x/z unveraendert (-11486, 1082) =
+UEBER dem Kanal, +0x1ba unveraendert 0. F230 greift die Schwerkraft (Band-1-Zelle u1=2 unter ihm): +0x1ba += 1800
+-> **+1800** (falscher Ausgangswert), Band 0, der Zombie faellt bis **y = +1800 (1800 UNTER den Wasserboden)**,
+loest im Fall erneut 1/10 aus, F397 y = 0 bei Band 1, F563 y = -1800 bei **Band 2**, laeuft danach auf "Band 2" weiter.
+ROOM2000 identisch (Aktor 4: F102 1/10, F270 y=-1800 ueber dem Kanal, F271-290 Sturz bis y = +1800).
+
+Ursache (Vergleich Port `re15_enemy_ai_live_edge_fall` mit 0x8010325c, Abschnitt 2): es fehlen
+(a) `+0x1ba -= 1800` bei Bild 0x46 (@0x801033f8) und (b) der Vorschub FUN_800245d8(0) mit +0x8c = 0x474 am
+Clip-Ende (@0x80103474, `jal 0x800245d8`; a0 = 0 aus dem Delay-Slot @0x80103420). Ohne (b) endet der Zombie
+1140 Einheiten zu weit hinten, also ueber dem Kanal statt auf dem Steg.
 
 ## 2. RE-Belege (selbst disassembliert, STAGE2.BIN laedt roh @0x80100000)
 
