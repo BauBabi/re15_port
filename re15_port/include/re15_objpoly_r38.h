@@ -70,14 +70,19 @@ void re15_objpoly_r38_rtps(int32_t mac1, int32_t mac2, int32_t mac3, int h, int 
 /* 1 = das Dreieck (x0..y2) wird von der GPU gerastert (psx-spx Size Restriction), 0 = verworfen. */
 int re15_objpoly_r38_gpu_ok(int x0, int y0, int x1, int y1, int x2, int y2);
 
+/* nclip: 1 = Rueckseiten-Test wie das Original (RDT-Modelle). 0 = PORT-WAHL fuer eingebackene Port-Modelle (nicht aus
+ * der RDT): die haben keine verbindliche Windung (Zensus unit_r38_rolltor20a0_windung: Feuerloescher R37 112 von 148
+ * Polygonen verkehrt herum) und bleiben zweiseitig wie bisher; OTZ-Schranke, Saettigung und GPU-Grenze gelten auch
+ * fuer sie (Engine/Hardware, unabhaengig von der Windung). */
+
 /* Dreieck (FUN_80022f0c / FUN_800254a0). mac[v] = Sichtraum (x,y,z) der Scheitel 0..2.
  * Rueckgabe 1 = in die OT (NCLIP >= 0 und OTZ >= 64) UND von der GPU gerastert; out wird immer gefuellt. */
-int re15_objpoly_r38_tri(const int32_t mac[3][3], int h, int ofx, int ofy, re15_objpoly_t *out);
+int re15_objpoly_r38_tri(const int32_t mac[3][3], int h, int ofx, int ofy, int nclip, re15_objpoly_t *out);
 
 /* Viereck (FUN_80023098 / FUN_800256b0). mac[v] = Sichtraum der Scheitel 0..3 (MD1-Reihenfolge = Original).
  * Rueckgabe 1 = in die OT (NCLIP >= 0 und OTZ >= 64); welche der beiden GPU-Dreiecke (0,1,2)/(1,2,3) gerastert
  * werden, steht in out->tri_ok[]. 0 = verworfen. */
-int re15_objpoly_r38_quad(const int32_t mac[4][3], int h, int ofx, int ofy, re15_objpoly_t *out);
+int re15_objpoly_r38_quad(const int32_t mac[4][3], int h, int ofx, int ofy, int nclip, re15_objpoly_t *out);
 
 /* Zeichenweg-Helfer fuer die Prop-Schleife (platform/pc/main.c): Scheitel (MD1, Objektraum) mit der Kamera x Objekt-
  * Matrix bm (Q12) + bt in den Sichtraum (MAC1..3 = ((R*V) >> 12) + T, wie bisher in main.c), dann die Schranken.
@@ -85,9 +90,9 @@ int re15_objpoly_r38_quad(const int32_t mac[4][3], int h, int ofx, int ofy, re15
  * Sicht-z; fuer jedes bisher gezeichnete Dreieck identisch). Rueckgabe wie re15_objpoly_r38_tri/_quad;
  * beim Viereck tri_ok[0]/[1] = GPU-Dreieck (0,1,2)/(1,2,3). */
 int re15_objpoly_r38_tri_mesh(const re15_md1_vertex_t *const v[3], const int32_t bm[9], const int32_t bt[3],
-                              int h, int ofx, int ofy, int ax[3], int ay[3], int *wz);
+                              int h, int ofx, int ofy, int nclip, int ax[3], int ay[3], int *wz);
 int re15_objpoly_r38_quad_mesh(const re15_md1_vertex_t *const v[4], const int32_t bm[9], const int32_t bt[3],
-                               int h, int ofx, int ofy, int ax[4], int ay[4], int *wz, uint8_t tri_ok[2]);
+                               int h, int ofx, int ofy, int nclip, int ax[4], int ay[4], int *wz, uint8_t tri_ok[2]);
 
 /* NUR PC (platform/pc/src/objpoly_r38_pc.c): Viereck, von dem genau ein GPU-Dreieck (0,1,2)/(1,2,3) besteht ->
  * nur dieses zeichnen. rgb = je Scheitel 0..3 die Farbe (r,g,b). */

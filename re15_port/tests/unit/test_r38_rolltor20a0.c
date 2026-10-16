@@ -209,7 +209,7 @@ static int bedeckung_neu(const raum_t *r, int cut, int32_t py)
         const re15_md1_vertex_t *vp[4] = { &m->quad_vertices[qd->v0], &m->quad_vertices[qd->v1],
                                            &m->quad_vertices[qd->v2], &m->quad_vertices[qd->v3] };
         int ax[4], ay[4], wz = 0; uint8_t ok[2];
-        if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, h, 160, 120, ax, ay, &wz, ok)) continue;
+        if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, h, 160, 120, 1, ax, ay, &wz, ok)) continue;
         if (ok[0] && ok[1]) {
             dreieck_fuellen(ax[0], ay[0], ax[1], ay[1], ax[3], ay[3]);
             dreieck_fuellen(ax[0], ay[0], ax[3], ay[3], ax[2], ay[2]);
@@ -308,9 +308,9 @@ int main(int argc, char **argv)
             int32_t mac[4][3];
             for (int v = 0; v < 4; v++) sichtraum(vp[v], bm, bt, mac[v]);
             re15_objpoly_t p;
-            const int ein = re15_objpoly_r38_quad(mac, h, 160, 120, &p);
+            const int ein = re15_objpoly_r38_quad(mac, h, 160, 120, 1, &p);
             int ax[4], ay[4], wz; uint8_t ok[2];
-            const int ein2 = re15_objpoly_r38_quad_mesh(vp, bm, bt, h, 160, 120, ax, ay, &wz, ok);
+            const int ein2 = re15_objpoly_r38_quad_mesh(vp, bm, bt, h, 160, 120, 1, ax, ay, &wz, ok);
             CHECK(ein == ein2, "Q%02d: quad und quad_mesh uneinig", q);
             const orig_quad_t *o = &k_orig[q];
             CHECK((p.opz >= 0) == (o->opz >= 0), "Q%02d: NCLIP Port opz %d, Original %d", q, (int)p.opz, (int)o->opz);

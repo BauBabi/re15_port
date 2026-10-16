@@ -10846,6 +10846,8 @@ re_title:;
                         (uint16_t)g_current_room_id, active_cut_idx, oid),
                         (uint16_t)g_current_room_id, active_cut_idx, oid);
                     re15_objpoly_r38_objekt(oid, active_cut_idx, (unsigned)g_current_room_id);   /* Runde 38 Spur W: Messschiene */
+                    const int r38_nclip = prop_md1->raw >= rdt_buf && prop_md1->raw < rdt_buf + rdt_size;   /* Runde 38 Spur W:
+                                                     * NCLIP nur fuer RDT-Modelle (PORT-WAHL, re15_objpoly_r38.h) */
                     for (int hbi = 0; hbi < prop_md1->mesh_count; hbi++) {
                         const re15_md1_mesh_t *hm = &prop_md1->meshes[hbi];
                         int32_t world_trans[3] = { prop_x, prop_y, prop_z };
@@ -10871,7 +10873,7 @@ re_title:;
                             };
                             /* Runde 38 Spur W: RTPT + NCLIP (@0x80022fec/@0x80025580) + OTZ<64 (@0x80023044/@0x80025654)
                              * + GPU-Groessengrenze, gesaettigte SXY (objpoly_r38.c) statt Port-Ausschnitt `_vz < 64`. */
-                            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg)) continue;
+                            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, r38_nclip, ax, ay, &wz_avg)) continue;
                             int wz_for_sort = wz_avg;
                             if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
                                 wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
@@ -10928,7 +10930,7 @@ re_title:;
                             /* Runde 38 Spur W: RTPT/RTPS + NCLIP (@0x80023168/@0x80025798) + OTZ<64 (@0x80023224/@0x800258b0)
                              * + GPU-Groessengrenze je Dreieck (0,1,2)/(1,2,3) (objpoly_r38.c) statt `_vz < 64`. */
                             uint8_t gpu_ok[2];
-                            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg, gpu_ok)) continue;
+                            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, r38_nclip, ax, ay, &wz_avg, gpu_ok)) continue;
                             if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
                                 wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];

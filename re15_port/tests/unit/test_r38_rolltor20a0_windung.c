@@ -11,9 +11,13 @@
  * MESSGROESSE je Polygon (Objektraum): w = (v1-v0) x (v2-v0) (Windung der ersten drei Scheitel = was NCLIP auf dem
  * Schirm prueft) gegen n = Summe der gespeicherten Scheitelnormalen (Licht, zeigt nach aussen). Vorzeichen von w.n.
  *   O1  Zensus ueber ALLE Objekt-Modelle aller ausgelieferten RDTs (RDT+0x30, nOmodel): das vorherrschende Vorzeichen
- *       s (Original-Konvention, bei der NCLIP die Aussenseite zeigt).
- *   O2  Jedes port-eigene Modell hat mindestens 90 % seiner Polygone mit Vorzeichen s — sonst verschwaende es.
+ *       s (Original-Konvention, bei der NCLIP die Aussenseite zeigt) — eindeutig (>= 99 %).
+ *   O2  Zensus der port-eigenen Modelle (nur Ausgabe). ERGEBNIS 2026-10-16: alle folgen s, AUSSER dem Feuerloescher
+ *       R37 (36 von 148 Polygonen in s, 112 verkehrt; gen/feuerloescher_r37.inc, PORT-WAHL-Modell der Runde 37). Mit
+ *       NCLIP waere er zerrissen. Deshalb gilt NCLIP im PC-Weg NUR fuer Modelle aus der RDT (main.c: md1 im RDT-Puffer);
+ *       Port-Modelle bleiben zweiseitig wie bisher (PORT-WAHL, re15_objpoly_r38.h).
  *   O3  Der Rolladen (ROOM20A0 obj 1) folgt s (Gegenprobe: Original-Messung zeigt ihn in Cut 12 von vorn).
+ *   O4  Der Schalter nclip: ein Rueckseiten-Viereck wird mit nclip = 1 verworfen und mit nclip = 0 gezeichnet.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -32,6 +36,7 @@
 #include "re15_kartenitems_r36.h"
 #include "re15_schluessel_r36.h"
 #include "re15_sicherung.h"
+#include "re15_objpoly_r38.h"
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -101,16 +106,20 @@ static zaehl_t zaehle_md1(const uint8_t *data, int size)
     return z;
 }
 
+static int s_port_verkehrt = 0;   /* Port-Modelle mit < 90 % Original-Windung */
+static int s_loescher_verkehrt = 0;
+
 static int pruefe_port(const char *name, const uint8_t *data, int size, int s)
 {
     if (!data || size <= 0) return 0;
     const zaehl_t z = zaehle_md1(data, size);
     const long gut = (s > 0) ? z.plus : z.minus, schlecht = (s > 0) ? z.minus : z.plus;
-    printf("  Port-Modell %-34s Polygone %4ld: Original-Windung %4ld, verkehrt %4ld\n", name, gut + schlecht, gut,
-           schlecht);
+    const int verkehrt = gut * 10 < (gut + schlecht) * 9;
+    printf("  Port-Modell %-34s Polygone %4ld: Original-Windung %4ld, verkehrt %4ld%s\n", name, gut + schlecht, gut,
+           schlecht, verkehrt ? "  <- mit NCLIP zerrissen (darum: Port-Modelle ohne NCLIP)" : "");
     CHECK(gut + schlecht > 0, "O2: %s ohne auswertbare Polygone", name);
-    CHECK(gut * 10 >= (gut + schlecht) * 9, "O2: %s — nur %ld von %ld Polygonen in Original-Windung; mit NCLIP "
-          "verschwaende das Modell", name, gut, gut + schlecht);
+    s_port_verkehrt += verkehrt;
+    if (verkehrt && strstr(name, "Feuerloescher")) s_loescher_verkehrt++;
     return 1;
 }
 
@@ -142,7 +151,7 @@ int main(void)
     printf("O1 Zensus: %ld Raeume, %ld Objekt-Modelle, Polygone w.n > 0: %ld, < 0: %ld -> Original-Windung s = %+d\n",
            raeume, modelle, plus, minus, s);
     CHECK(raeume >= 200 && modelle >= 400, "O1: Zensus zu klein (%ld Raeume, %ld Modelle)", raeume, modelle);
-    CHECK((s > 0 ? plus : minus) * 10 >= (plus + minus) * 9, "O1: Original-Windung nicht eindeutig (%ld/%ld)", plus,
+    CHECK((s > 0 ? plus : minus) * 100 >= (plus + minus) * 99, "O1: Original-Windung nicht eindeutig (%ld/%ld)", plus,
           minus);
 
     /* O3: der Rolladen */
@@ -195,8 +204,27 @@ int main(void)
             }
         }
     }
-    printf("O2: %d port-eigene Modelle geprueft\n", n);
+    printf("O2: %d port-eigene Modelle geprueft, %d davon nicht in Original-Windung (Feuerloescher-Lagen: %d)\n", n,
+           s_port_verkehrt, s_loescher_verkehrt);
     CHECK(n >= 5, "O2: zu wenige port-eigene Modelle gefunden (%d)", n);
+
+    /* O4: der Schalter nclip (main.c: 1 fuer RDT-Modelle, 0 fuer Port-Modelle) */
+    {
+        /* Viereck 2000 vor der Kamera in Z-Ordnung; "hinten" = dieselben Ecken gespiegelt (OPZ < 0). */
+        const int32_t vorn[4][3]   = { { -500, -500, 2000 }, { 500, -500, 2000 }, { -500, 500, 2000 }, { 500, 500, 2000 } };
+        const int32_t hinten[4][3] = { { 500, -500, 2000 }, { -500, -500, 2000 }, { 500, 500, 2000 }, { -500, 500, 2000 } };
+        re15_objpoly_t p;
+        const int v1 = re15_objpoly_r38_quad(vorn, 208, 160, 120, 1, &p);
+        const int opz_vorn = (int)p.opz;
+        const int h1 = re15_objpoly_r38_quad(hinten, 208, 160, 120, 1, &p);
+        const int opz_hinten = (int)p.opz;
+        const int h0 = re15_objpoly_r38_quad(hinten, 208, 160, 120, 0, &p);
+        printf("O4 nclip: Vorderseite opz %d -> %d, Rueckseite opz %d -> nclip=1: %d, nclip=0: %d\n", opz_vorn, v1,
+               opz_hinten, h1, h0);
+        CHECK(opz_vorn >= 0 && opz_hinten < 0, "O4: Testvierecke falsch orientiert (%d/%d)", opz_vorn, opz_hinten);
+        CHECK(v1 == 1 && h1 == 0 && h0 == 1, "O4: nclip-Schalter wirkt nicht (vorn %d, hinten nclip=1 %d, nclip=0 %d)",
+              v1, h1, h0);
+    }
 
     if (g_fail) { printf("test_r38_rolltor20a0_windung: %d FEHLER\n", g_fail); return 1; }
     printf("test_r38_rolltor20a0_windung: OK\n");

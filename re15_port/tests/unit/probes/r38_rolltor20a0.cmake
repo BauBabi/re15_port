@@ -21,9 +21,8 @@ set_tests_properties(unit_r38_rolltor20a0 PROPERTIES TIMEOUT 120)
 
 #   unit_r38_rolltor20a0_windung  Nebenwirkung des NCLIP im PC-Prop-Weg: Zensus der Windung (Objektraum (v1-v0)x(v2-v0)
 #                                 gegen die gespeicherten Normalen) ueber alle Objekt-Modelle aller RDTs = Original-
-#                                 Konvention; jedes PORT-EIGENE Modell (Sicherung, Granate, Hebetisch-Cursor, Irons-
-#                                 Tisch, Dokumente, Inhalt R35, Schluessel R36, Kartenitems R36, Feuerloescher R37)
-#                                 folgt ihr zu >= 90 % — sonst waere es mit NCLIP unsichtbar geworden.
+#                                 Konvention (>= 99 %); Zensus der PORT-EIGENEN Modelle (Feuerloescher R37 112/148
+#                                 verkehrt -> NCLIP im PC nur fuer RDT-Modelle); Schalter nclip wirkt.
 add_executable(test_r38_rolltor20a0_windung ${CMAKE_CURRENT_LIST_DIR}/../test_r38_rolltor20a0_windung.c)
 target_link_libraries(test_r38_rolltor20a0_windung PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_rolltor20a0_windung PRIVATE ${CMAKE_SOURCE_DIR}/include)
