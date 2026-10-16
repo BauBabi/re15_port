@@ -163,7 +163,9 @@ NCLIP < 0, NEU 0. Reingruene Bildpunkte (R,B <= 12, G >= 15, G-R/G-B >= 12) im R
 `A_belege/nachher_1150_orig11f0_alt_neu.png` (Original-Cursor 11F0 | 1150 alt | 1150 neu): die innere Kopie ist weg.
 Reingruen im Rahmen: ALT 33, NEU 0. Klassen G/g gegen den Original-Cursor 11F0: NEU deckungsgleich (die 4 Rest-
 "Abweichungen" (144..145,104..105) sind brauner Hintergrund des Raums, in alt und neu gleich). Trilog Platz 28
-(RE15_HC_TIM_SLOT): ALT 1456 Dreiecke mit NCLIP < 0, NEU 0.
+(RE15_HC_TIM_SLOT): ALT 1456 Dreiecke mit NCLIP < 0, NEU 0. Nutzersicht Skala 3 (Fenster des Nutzers):
+`A_belege/nutzersicht_s3_1150_alt_neu.png` — alt je Eckwinkel ein dickes dunkles inneres L und eine versetzte dunkle
+Kreuz-Kopie, neu nur noch der feine Saum der Textur.
 
 ### 4.3 ROOM10D0 Ziffernfeld (weiterer Panel-Raum; Weg D aus Runde 37 Spur E: sub17 per RE15_SUBSTART)
 

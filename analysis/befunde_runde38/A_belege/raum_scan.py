@@ -1,7 +1,9 @@
 """raum_scan.py - Runde 38 Spur A: Nebenwirkungs-Scan des Rueckseiten-Verwurfs ueber alle Leon-Raeume.
 Je Raum zwei Laeufe (exe ALT = Stand 1bcbd0ff ohne Verwurf, exe NEU), Sprung per Debug-Menue (RE15_DEBUG_JUMP=<raum>@60),
 Framedump Bild 200 (Skala 1), dann Pixel-Differenz (max. Kanal-Abstand > 20). Ausgabe: je Raum Anzahl geaenderter Pixel
-und Huellrechteck. Aufruf: python raum_scan.py <ausgabeordner> [raum ...]"""
+und Huellrechteck. Aufruf: python raum_scan.py <ausgabeordner> [--elza] [raum ...]
+--elza: Spielerwahl auf Elza (RE15_TITLE_CONFIRM_MS=1500, RE15_PSELECT_AUTO=1, RE15_PSELECT_AUTO_SWITCH=1), Sprung @250 auf
+den Leon-Raum (der Raumlader nimmt fuer Elza ROOMxxx1, @0x800397e4/@0x800397ec), Framedump Bild 400."""
 import os, subprocess, sys, glob
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image, ImageChops
@@ -19,6 +21,9 @@ def raeume():
     return r
 
 
+ELZA = False
+
+
 def lauf(aus, raum, art):
     wd = os.path.join(aus, raum, art)
     os.makedirs(wd, exist_ok=True)
@@ -26,8 +31,13 @@ def lauf(aus, raum, art):
     if os.path.exists(ziel):
         return ziel
     env = dict(os.environ)
-    env.update({'RE15_NOAUDIO': '1', 'RE15_NO_INTRO': '1', 'RE15_TITLE_SHOT': 'title.bmp', 'RE15_WINDOW_SCALE': '1',
-                'RE15_DEBUG_JUMP': raum + '@60', 'RE15_FRAMEDUMP': '200:f.ppm', 'RE15_EXIT_AT': '203'})
+    if ELZA:
+        env.update({'RE15_NOAUDIO': '1', 'RE15_NO_INTRO': '1', 'RE15_TITLE_CONFIRM_MS': '1500', 'RE15_PSELECT_AUTO': '1',
+                    'RE15_PSELECT_AUTO_SWITCH': '1', 'RE15_WINDOW_SCALE': '1',
+                    'RE15_DEBUG_JUMP': raum + '@250', 'RE15_FRAMEDUMP': '400:f.ppm', 'RE15_EXIT_AT': '403'})
+    else:
+        env.update({'RE15_NOAUDIO': '1', 'RE15_NO_INTRO': '1', 'RE15_TITLE_SHOT': 'title.bmp', 'RE15_WINDOW_SCALE': '1',
+                    'RE15_DEBUG_JUMP': raum + '@60', 'RE15_FRAMEDUMP': '200:f.ppm', 'RE15_EXIT_AT': '203'})
     try:
         subprocess.run([EXE[art]], cwd=wd, env=env, timeout=90, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
@@ -50,8 +60,13 @@ def vergleich(aus, raum):
 
 
 def main():
+    global ELZA
     aus = os.path.abspath(sys.argv[1])
-    liste = sys.argv[2:] or raeume()
+    rest = sys.argv[2:]
+    if rest and rest[0] == '--elza':
+        ELZA = True
+        rest = rest[1:]
+    liste = rest or raeume()
     with ThreadPoolExecutor(max_workers=4) as ex:
         erg = list(ex.map(lambda r: vergleich(aus, r), liste))
     with open(os.path.join(aus, 'scan.txt'), 'w') as f:
