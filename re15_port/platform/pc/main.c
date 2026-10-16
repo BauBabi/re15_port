@@ -7828,6 +7828,8 @@ re_title:;
                     fputc('\n', s_state_log); fflush(s_state_log);
                 }
             }
+            { extern void re15_spinnen_r38_log_frame(unsigned);            /* Runde 38 Spur R: Messschiene */
+              re15_spinnen_r38_log_frame((unsigned)g_engine.frame_count); } /* RE15_SPINNEN_LOG (env-gegatet) */
             /* DEATH PRESENTATION (byte-true FUN_8003694c): fade the scene to black over the 0x78 death
              * timer (g_death_fade), then show the YOU DIED graphic (YOUDIED.TIM) for ~2s before the RE
              * continue = reload the current room. (Original: YOU DIED -> title; the port has no title
