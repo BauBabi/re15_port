@@ -478,11 +478,36 @@ def lage(netz, art):
     return vs, ns
 
 
+def wicklung(verts, norms, ecken):
+    """Runde 38 Spur A: sign(((v1-v0) x (v2-v0)) . (Summe der Normalen)) einer Flaeche (Ecken (vi,ni,uv)).
+    Alle Original-Props: w < 0 (analysis/befunde_runde38/A_belege/wicklung_props.py, 9364 von 9477 Flaechen)."""
+    p = [verts[e[0]] for e in ecken[:3]]
+    a = [p[1][k] - p[0][k] for k in range(3)]
+    c = [p[2][k] - p[0][k] for k in range(3)]
+    g = (a[1] * c[2] - a[2] * c[1], a[2] * c[0] - a[0] * c[2], a[0] * c[1] - a[1] * c[0])
+    n = [sum(norms[e[1]][k] for e in ecken) for k in range(3)]
+    s = g[0] * n[0] + g[1] * n[1] + g[2] * n[2]
+    return (s > 0) - (s < 0)
+
+
 def md1_bauen(netz, art):
     vs, ns = lage(netz, art)
     verts = [tuple(int(round(c)) for c in p) for p in vs]
     norms = [tuple(int(round(c * 4096)) for c in n) for n in ns]
-    tris, quads = netz.tris, netz.quads
+    # ⛔ WICKLUNG WIE DAS ORIGINAL (Runde 38 Spur A, analysis/befunde_runde38/A_cursor.md §4.5/§3b): der Port
+    # verwirft wie FUN_800254a0 (NCLIP @0x80025580, `bgez` @0x800255a8) / FUN_800256b0 (NCLIP @0x80025798, `bgez`
+    # @0x800257c0) jede Flaeche, deren Ecken v0,v1,v2 auf dem Bildschirm gegen den Original-Umlauf laufen. Eine
+    # Flaeche mit w > 0 (gegen die Original-Konvention w < 0) bekommt deshalb v1 <-> v2 getauscht — beim Dreieck die
+    # Gegenrichtung; beim Viereck in Z-Ordnung (v0,v1,v2,v3) bleiben damit BEIDE Teilungs-Diagonalen (PSX v1-v2,
+    # Port v0-v3) und alle vier Ecken samt Normale und UV dieselben, nur der Umlauf kehrt sich um.
+    tris = [(f[0], f[2], f[1]) if wicklung(verts, norms, f) > 0 else f for f in netz.tris]
+    quads = []
+    for f in netz.quads:
+        a, b, c, e = f
+        z = (a, b, e, c)                       # Z-Ordnung wie unten
+        if wicklung(verts, norms, z) > 0:
+            z = (z[0], z[2], z[1], z[3])       # v1 <-> v2
+        quads.append((z[0], z[1], z[3], z[2]))  # zurueck in den Umlauf a-b-c-d fuer die Ausgabe unten
     base, hdr = 12, 56
     off_v = hdr
     off_n = off_v + len(verts) * 8
@@ -736,6 +761,8 @@ def main():
                 " * Zylinder L = %d (Bildverhaeltnis %.3f), Gesamthoehe %.0f (%.2f m).\n"
                 " * Format wie gen/sicherung_prop.inc: MD1-Kopf 65/0/2, Normalen Q12 nach aussen, Vierecke in\n"
                 " * Z-Ordnung, TIM 8bpp+CLUT 128x128 @VRAM(0,0), CLUT @VRAM(0,480), clut 0x7800, page 0x80.\n"
+                " * Wicklung wie alle Original-Props (Runde 38 Spur A): v0,v1,v2 jeder Flaeche laufen so, dass der\n"
+                " * Rueckseiten-Verwurf (NCLIP, FUN_800254a0 @0x800255a8 / FUN_800256b0 @0x800257c0) die Aussenseite zeichnet.\n"
                 " * Textur-Helligkeit x%.3f = Weiss der Original-Spraydose ROOM4050 TIM @0x2DDA8 (%.0f).\n"
                 " * stehend: Ursprung Bodenmitte, Achse -Y, Hebel +X, Etikett +Z, Schlauch -X.\n"
                 " * liegend: Ursprung Mitte auf der Auflage (y=0), Achse X, Etikett oben (-Y), Hebel +Z.\n"

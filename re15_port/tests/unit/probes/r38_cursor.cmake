@@ -7,6 +7,9 @@
 #   unit_r38_cursor_kasten   ROOM11F0-Cursor unter Cut 10 an 25 Lagen: Oberseite gezeichnet, Unterseite verworfen;
 #                            Gegenprobe: ohne Verwurf 4 Unterseiten-Dreiecke im Oberseiten-Umriss
 #   unit_r38_cursor_raeume   Zensus aller 23 Cursor-Raeume (gleiche Kasten-Bauart, Unterseite gegensinnig gewunden)
+#   unit_r38_cursor_wicklung Nebenwirkung auf Port-Modelle: jedes eingebackene Modell wie das Original gewickelt
+#                            (Feuerloescher gen/feuerloescher_r37.inc war es nicht: 112 von 148 Flaechen), Mechanik an
+#                            60 Blicken + GEGENPROBE v1<->v2
 #   integration_r38_cursor   echte exe: ROOM11F0 Cut 10 (gegen das DuckStation-Bild), ROOM1150 Hebetisch-Cursor
 #                            (Lade-Weg), ROOM10D0 Ziffernfeld, Elza ROOM11F1; RE15_TRILOG + Framedump
 #                            (test_r38_cursor.cmake)
@@ -22,7 +25,9 @@ endif()
 add_test(NAME unit_r38_cursor_nclip  COMMAND probe_r38_cursor nclip)
 add_test(NAME unit_r38_cursor_kasten COMMAND probe_r38_cursor kasten)
 add_test(NAME unit_r38_cursor_raeume COMMAND probe_r38_cursor raeume)
-set_tests_properties(unit_r38_cursor_nclip unit_r38_cursor_kasten unit_r38_cursor_raeume PROPERTIES TIMEOUT 120)
+add_test(NAME unit_r38_cursor_wicklung COMMAND probe_r38_cursor wicklung)
+set_tests_properties(unit_r38_cursor_nclip unit_r38_cursor_kasten unit_r38_cursor_raeume unit_r38_cursor_wicklung
+                     PROPERTIES TIMEOUT 120)
 
 if(TARGET re15_pc AND TARGET probe_r30_granate_karte)
     add_test(NAME integration_r38_cursor

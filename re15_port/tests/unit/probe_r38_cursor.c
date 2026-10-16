@@ -26,15 +26,35 @@
  *             die Hintergrund-Rasterung des Originals (8,16,8) @(151,110) faellt nicht darunter),
  *           - psx11f0: Klassenkarte G/g/Y/y im Fenster x 140..179, y 100..137 gleich dem Original
  *             (analysis/grundwahrheit/psx_room11f0_cut10.png, DuckStation, Auslieferungs-EXE @0x80026e4c 0800e003).
+ *   wicklung  Nebenwirkung des Verwurfs auf PORT-GEBAUTE Modelle (Dossier §4.5/§3b): der Verwurf zeichnet nur die
+ *           Aussenseite, wenn das Modell wie das Original gewickelt ist. w = sign(((v1-v0) x (v2-v0)) . Summe der
+ *           Normalen) je Flaeche.
+ *           - Konvention des Originals: alle Props aller RDTs, w < 0 bei mindestens 99 % (gemessen 9364 : 41 je
+ *             Modell einmal, A_belege/wicklung_props.py);
+ *           - jedes eingebackene Port-Modell (Hebetisch-Cursor, Sicherung, Granate, Irons Diary/Keycard, Dokumente,
+ *             Memory Card/Schrot, Lageplan-Karten, Schluessel, Feuerloescher stehend/liegend): KEINE Flaeche w > 0
+ *             (vor der Behebung: Feuerloescher 112 von 148);
+ *           - Mechanik: 60 Blickrichtungen, Projektion wie main.c (re15_hebetisch_cursor_projiziere), Verwurf
+ *             re15_nclip_r38_verwerfen: keine nach aussen zur Kamera zeigende Flaeche verworfen, keine abgewandte
+ *             gezeichnet (|cos| > 0.5 zur gespeicherten Normale); GEGENPROBE mit v1 <-> v2: der Riegel schlaegt an.
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "re15_nclip_r38.h"
 #include "re15_md1.h"
 #include "re15_hebetisch_cursor.h"
+#include "re15_sicherung.h"
+#include "re15_granate.h"
+#include "re15_dokumente.h"
+#include "re15_irons_tisch.h"
+#include "re15_inhalt_r35.h"
+#include "re15_kartenitems_r36.h"
+#include "re15_schluessel_r36.h"
+#include "re15_feuerloescher_r37.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -492,6 +512,263 @@ static int teil_bild(int argc, char **argv)
     return 0;
 }
 
+/* --------------------------------------------------------------- wicklung */
+#define R38_PI 3.14159265358979323846
+typedef struct { long neg, pos, null; } wzahl_t;
+
+/* w = sign(((p1-p0) x (p2-p0)) . (n0+..+n{k-1})) */
+static int w_flaeche(const re15_md1_vertex_t *const p[3], const re15_md1_vertex_t *const *nn, int k)
+{
+    const double ax = p[1]->x - p[0]->x, ay = p[1]->y - p[0]->y, az = p[1]->z - p[0]->z;
+    const double cx = p[2]->x - p[0]->x, cy = p[2]->y - p[0]->y, cz = p[2]->z - p[0]->z;
+    const double gx = ay * cz - az * cy, gy = az * cx - ax * cz, gz = ax * cy - ay * cx;
+    double nx = 0, ny = 0, nz = 0;
+    for (int i = 0; i < k; i++) { nx += nn[i]->x; ny += nn[i]->y; nz += nn[i]->z; }
+    const double s = gx * nx + gy * ny + gz * nz;
+    return (s > 0) - (s < 0);
+}
+
+/* Ruft fn(ecken p[0..k-1], normalen n[0..k-1], k) fuer jede gueltige Flaeche; p[0..2] = v0,v1,v2 wie der Verwurf. */
+typedef void (*flaeche_fn)(const re15_md1_vertex_t *const *p, const re15_md1_vertex_t *const *n, int k, void *ctx);
+static void flaechen_je(const re15_md1_t *m, flaeche_fn fn, void *ctx)
+{
+    for (int mi = 0; mi < m->mesh_count; mi++) {
+        const re15_md1_mesh_t *me = &m->meshes[mi];
+        for (int i = 0; i < me->triangle_count; i++) {
+            const re15_md1_triangle_t *f = &me->triangles[i];
+            if (f->v0 >= me->tri_vertex_count || f->v1 >= me->tri_vertex_count || f->v2 >= me->tri_vertex_count ||
+                f->n0 >= me->tri_normal_count || f->n1 >= me->tri_normal_count || f->n2 >= me->tri_normal_count)
+                continue;
+            const re15_md1_vertex_t *p[3] = { &me->tri_vertices[f->v0], &me->tri_vertices[f->v1], &me->tri_vertices[f->v2] };
+            const re15_md1_vertex_t *n[3] = { &me->tri_normals[f->n0], &me->tri_normals[f->n1], &me->tri_normals[f->n2] };
+            fn(p, n, 3, ctx);
+        }
+        for (int i = 0; i < me->quad_count; i++) {
+            const re15_md1_quad_t *f = &me->quads[i];
+            if (f->v0 >= me->quad_vertex_count || f->v1 >= me->quad_vertex_count || f->v2 >= me->quad_vertex_count ||
+                f->v3 >= me->quad_vertex_count || f->n0 >= me->quad_normal_count || f->n1 >= me->quad_normal_count ||
+                f->n2 >= me->quad_normal_count || f->n3 >= me->quad_normal_count)
+                continue;
+            const re15_md1_vertex_t *p[4] = { &me->quad_vertices[f->v0], &me->quad_vertices[f->v1],
+                                              &me->quad_vertices[f->v2], &me->quad_vertices[f->v3] };
+            const re15_md1_vertex_t *n[4] = { &me->quad_normals[f->n0], &me->quad_normals[f->n1],
+                                              &me->quad_normals[f->n2], &me->quad_normals[f->n3] };
+            fn(p, n, 4, ctx);
+        }
+    }
+}
+
+static void w_zaehle_fn(const re15_md1_vertex_t *const *p, const re15_md1_vertex_t *const *n, int k, void *ctx)
+{
+    wzahl_t *z = (wzahl_t *)ctx;
+    const int w = w_flaeche(p, n, k);
+    if (w < 0) z->neg++; else if (w > 0) z->pos++; else z->null++;
+}
+
+/* Blick-Mechanik: Verwurf gegen "zeigt die Aussenseite (gespeicherte Normale) zur Kamera?" */
+typedef struct {
+    int32_t rot[9], trans[3]; int h;
+    int umgekehrt;                 /* GEGENPROBE: v1 <-> v2 */
+    long gezaehlt, falsch_gezeichnet, falsch_verworfen;
+} blick_t;
+
+static void blick_fn(const re15_md1_vertex_t *const *p, const re15_md1_vertex_t *const *n, int k, void *ctx)
+{
+    blick_t *b = (blick_t *)ctx;
+    double c[3] = { 0, 0, 0 }, ns[3] = { 0, 0, 0 };
+    for (int i = 0; i < k; i++) {
+        c[0] += p[i]->x; c[1] += p[i]->y; c[2] += p[i]->z;
+        ns[0] += n[i]->x; ns[1] += n[i]->y; ns[2] += n[i]->z;
+    }
+    for (int i = 0; i < 3; i++) c[i] /= k;
+    double cv[3], nv[3];
+    for (int r = 0; r < 3; r++) {
+        cv[r] = (b->rot[3 * r] * c[0] + b->rot[3 * r + 1] * c[1] + b->rot[3 * r + 2] * c[2]) / 4096.0 + b->trans[r];
+        nv[r] = (b->rot[3 * r] * ns[0] + b->rot[3 * r + 1] * ns[1] + b->rot[3 * r + 2] * ns[2]) / 4096.0;
+    }
+    const double ln = sqrt(nv[0] * nv[0] + nv[1] * nv[1] + nv[2] * nv[2]);
+    const double lc = sqrt(cv[0] * cv[0] + cv[1] * cv[1] + cv[2] * cv[2]);
+    if (ln < 1e-9 || lc < 1e-9) return;
+    const double cosw = -(nv[0] * cv[0] + nv[1] * cv[1] + nv[2] * cv[2]) / (ln * lc);   /* > 0: zur Kamera */
+    /* Die gespeicherten Normalen sind geglaettet (Licht): sie weichen von der Flaechen-Normale um delta ab (gemessen
+     * bis 34,4 Grad Feuerloescher-Hals, 40,5 Grad Sicherung). "Zur Kamera" ist nur dann eindeutig, wenn der Blick
+     * mehr als delta + 5 Grad von der Streiflage entfernt ist: |cos| > sin(delta + 5 Grad); sonst auslassen. */
+    const double ax = p[1]->x - p[0]->x, ay = p[1]->y - p[0]->y, az = p[1]->z - p[0]->z;
+    const double bx = p[2]->x - p[0]->x, by = p[2]->y - p[0]->y, bz = p[2]->z - p[0]->z;
+    const double g[3] = { ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx };
+    const double lg = sqrt(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+    const double lns = sqrt(ns[0] * ns[0] + ns[1] * ns[1] + ns[2] * ns[2]);
+    if (lg < 1e-9 || lns < 1e-9) return;
+    const double cosd = fabs(g[0] * ns[0] + g[1] * ns[1] + g[2] * ns[2]) / (lg * lns);
+    const double delta = acos(cosd > 1.0 ? 1.0 : cosd);
+    double schwelle = sin(delta + 5.0 * R38_PI / 180.0);
+    if (schwelle < 0.2) schwelle = 0.2;
+    if (fabs(cosw) < schwelle) return;                                                   /* streifend: auslassen */
+    int sx[3], sy[3];
+    const int idx[3] = { 0, b->umgekehrt ? 2 : 1, b->umgekehrt ? 1 : 2 };
+    for (int i = 0; i < 3; i++) {
+        int32_t vz = 0;
+        if (!re15_hebetisch_cursor_projiziere(b->rot, b->trans, b->h, p[idx[i]]->x, p[idx[i]]->y, p[idx[i]]->z,
+                                              &sx[i], &sy[i], &vz))
+            return;
+    }
+    /* Ganzzahlige Bildschirmpunkte (wie SX/SY der GTE): bei Splitter-Dreiecken (Sicherung: 1 Einheit breite Stufen-
+     * ringe bei x = +-107) kann die Rundung (je Ecke <= 0,5 Bildpunkte) das Vorzeichen von MAC0 kippen — das gilt fuer
+     * das Original genauso und ist keine Wicklungsfrage. Auslassen, wenn |MAC0| <= 2 * Umfang. */
+    const int32_t mac0 = re15_nclip_r38_mac0(sx[0], sy[0], sx[1], sy[1], sx[2], sy[2]);
+    double umfang = 0;
+    for (int i = 0; i < 3; i++) {
+        const double ex = sx[(i + 1) % 3] - sx[i], ey = sy[(i + 1) % 3] - sy[i];
+        umfang += sqrt(ex * ex + ey * ey);
+    }
+    if (fabs((double)mac0) <= 2.0 * umfang) return;
+    const int verw = re15_nclip_r38_verwerfen(sx[0], sy[0], sx[1], sy[1], sx[2], sy[2]);
+    b->gezaehlt++;
+    if (cosw > 0 && verw) b->falsch_verworfen++;
+    if (cosw < 0 && !verw) b->falsch_gezeichnet++;
+}
+
+/* 12 Gier- x 5 Nickwinkel (60 Blicke), Modellmitte im Abstand d vor der Kamera. */
+static void blicke(const re15_md1_t *m, int umgekehrt, blick_t *summe)
+{
+    int lo[3] = { 1 << 30, 1 << 30, 1 << 30 }, hi[3] = { -(1 << 30), -(1 << 30), -(1 << 30) };
+    for (int mi = 0; mi < m->mesh_count; mi++) {
+        const re15_md1_mesh_t *me = &m->meshes[mi];
+        for (int s = 0; s < 2; s++) {
+            const re15_md1_vertex_t *v = s ? me->quad_vertices : me->tri_vertices;
+            const int nv = s ? me->quad_vertex_count : me->tri_vertex_count;
+            for (int i = 0; i < nv; i++) {
+                const int q[3] = { v[i].x, v[i].y, v[i].z };
+                for (int a = 0; a < 3; a++) { if (q[a] < lo[a]) lo[a] = q[a]; if (q[a] > hi[a]) hi[a] = q[a]; }
+            }
+        }
+    }
+    double r = 0;
+    for (int a = 0; a < 3; a++) { const double e = (hi[a] - lo[a]) / 2.0; r += e * e; }
+    r = sqrt(r);
+    if (r < 1) r = 1;
+    const double mitte[3] = { (lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0, (lo[2] + hi[2]) / 2.0 };
+    /* Abstand d, Brennweite h: Modell vor der Nahebene (vz >= 64) und h < 2*vz (sonst saettigt die UNR-Division
+     * der GTE, re15_gte_divide), Abbildung hoechstens etwa +-300 Bildpunkte (Saettigung -0x400..+0x3FF). */
+    const double d = 4.0 * r + 100.0;
+    double hh = 300.0 * d / r;
+    if (hh > 1.9 * (d - r)) hh = 1.9 * (d - r);
+    memset(summe, 0, sizeof *summe);
+    for (int iy = 0; iy < 12; iy++) {
+        for (int ip = -2; ip <= 2; ip++) {
+            const double gier = iy * (2.0 * R38_PI / 12.0) + 0.1, nick = ip * (R38_PI / 6.0);
+            const double cy = cos(gier), sy = sin(gier), cp = cos(nick), sp = sin(nick);
+            /* R = Rx(nick) * Ry(gier), Q12, det +1 */
+            const double R[9] = { cy, 0, sy,  sp * sy, cp, -sp * cy,  -cp * sy, sp, cp * cy };
+            blick_t b;
+            memset(&b, 0, sizeof b);
+            for (int i = 0; i < 9; i++) b.rot[i] = (int32_t)lround(R[i] * 4096.0);
+            for (int i = 0; i < 3; i++)
+                b.trans[i] = (int32_t)lround(-(R[3 * i] * mitte[0] + R[3 * i + 1] * mitte[1] + R[3 * i + 2] * mitte[2])
+                                              + (i == 2 ? d : 0.0));
+            b.h = (int)lround(hh);
+            b.umgekehrt = umgekehrt;
+            flaechen_je(m, blick_fn, &b);
+            summe->gezaehlt += b.gezaehlt;
+            summe->falsch_gezeichnet += b.falsch_gezeichnet;
+            summe->falsch_verworfen += b.falsch_verworfen;
+        }
+    }
+}
+
+typedef struct { const char *name; const uint8_t *b; int n; } port_modell_t;
+
+static int port_dazu(port_modell_t *l, int *nl, int max, const char *name, const uint8_t *b, int n)
+{
+    if (!b || n <= 12) return 0;
+    for (int i = 0; i < *nl; i++) if (l[i].b == b) return 0;
+    if (*nl >= max) return 0;
+    l[*nl].name = name; l[*nl].b = b; l[*nl].n = n; (*nl)++;
+    return 1;
+}
+
+static int teil_wicklung(void)
+{
+    printf("[wicklung] Wicklung der Objekt-Modelle gegen den Verwurf (Dossier §4.5/§3b)\n");
+    /* 1. Konvention des Originals: alle Props aller RDTs */
+    wzahl_t orig = { 0, 0, 0 };
+    int modelle = 0, raeume = 0;
+    for (int st = 1; st <= 6; st++) {
+        for (int r = 0; r < 0x100; r++) {
+            for (int var = 0; var < 2; var++) {
+                char raum[8];
+                snprintf(raum, sizeof raum, "%d%02X%d", st, r, var);
+                uint8_t *d = NULL;
+                const long n = rdt_lesen(raum, &d);
+                if (n < 0x100) { free(d); continue; }
+                raeume++;
+                const int n_om = d[2];
+                const uint32_t tab = rd32(d + 0x30);
+                for (int oid = 0; oid < n_om && (long)tab + 8 * oid + 8 <= n; oid++) {
+                    const uint32_t md1 = rd32(d + tab + 8 * oid + 4);
+                    if (!md1 || (long)md1 >= n) continue;
+                    static re15_md1_t m;
+                    if (re15_md1_parse(d + md1, (int)(n - md1), &m) != 0) continue;
+                    flaechen_je(&m, w_zaehle_fn, &orig);
+                    modelle++;
+                }
+                free(d);
+            }
+        }
+    }
+    printf("       Original: %d RDTs, %d Props, Flaechen w<0 %ld, w>0 %ld, w=0 %ld\n", raeume, modelle, orig.neg,
+           orig.pos, orig.null);
+    CHECK("Original-Konvention: w < 0 bei >= 99 % der Flaechen mit w != 0 (alle Props aller RDTs)",
+          raeume > 200 && orig.neg > 0 && orig.neg >= 99 * orig.pos);
+
+    /* 2. alle eingebackenen Port-Modelle */
+    port_modell_t l[64];
+    int nl = 0, n = 0;
+    const uint8_t *b;
+    b = re15_hebetisch_cursor_md1_bytes(&n);                 port_dazu(l, &nl, 64, "Hebetisch-Cursor", b, n);
+    b = re15_sicherung_md1_bytes(&n);                        port_dazu(l, &nl, 64, "Sicherung", b, n);
+    b = re15_granate_md1_bytes(&n);                          port_dazu(l, &nl, 64, "Granate", b, n);
+    b = re15_irons_tisch_md1_bytes(RE15_IRONS_DIARY_OBJ_ID, &n); port_dazu(l, &nl, 64, "Irons Diary", b, n);
+    b = re15_irons_tisch_md1_bytes(RE15_IRONS_KARTE_OBJ_ID, &n); port_dazu(l, &nl, 64, "Irons Keycard", b, n);
+    b = re15_feuerloescher_r37_md1(RE15_FL37_STEHEND, &n);   port_dazu(l, &nl, 64, "Feuerloescher stehend", b, n);
+    b = re15_feuerloescher_r37_md1(RE15_FL37_LIEGEND, &n);   port_dazu(l, &nl, 64, "Feuerloescher liegend", b, n);
+    for (int raum = 0x1000; raum <= 0x6FFF; raum++) {
+        b = re15_dokumente_md1_bytes((uint16_t)raum, &n);       port_dazu(l, &nl, 64, "Dokument", b, n);
+        b = re15_inhalt_r35_md1_bytes((uint16_t)raum, &n);      port_dazu(l, &nl, 64, "Memory Card/Schrot", b, n);
+        b = re15_kartenitems_r36_md1_bytes((uint16_t)raum, &n); port_dazu(l, &nl, 64, "Lageplan-Karte", b, n);
+        b = re15_schluessel_r36_md1_bytes((uint16_t)raum, &n);  port_dazu(l, &nl, 64, "Schluessel", b, n);
+        b = re15_feuerloescher_r37_md1_bytes((uint16_t)raum, &n); port_dazu(l, &nl, 64, "Feuerloescher (Raum)", b, n);
+    }
+    printf("       %d eingebackene Port-Modelle\n", nl);
+    CHECK("mindestens 15 Port-Modelle gefunden (Cursor, Sicherung, Granate, 2 Irons, 2 Loescher, Dokumente, ...)",
+          nl >= 15);
+    int alle_ok = 1, mech_ok = 1, gegen_ok = 1, fl_gesehen = 0;
+    for (int i = 0; i < nl; i++) {
+        static re15_md1_t m;
+        if (re15_md1_parse(l[i].b, l[i].n, &m) != 0) {
+            printf("  FAIL %s: MD1 parst nicht\n", l[i].name); s_fail++; alle_ok = 0; continue;
+        }
+        wzahl_t z = { 0, 0, 0 };
+        flaechen_je(&m, w_zaehle_fn, &z);
+        blick_t s, g;
+        blicke(&m, 0, &s);
+        blicke(&m, 1, &g);
+        printf("       %-24s w<0 %3ld w>0 %3ld w=0 %ld | 60 Blicke: %ld Entscheide, falsch verworfen %ld, falsch "
+               "gezeichnet %ld | GEGENPROBE v1<->v2: falsch %ld/%ld\n", l[i].name, z.neg, z.pos, z.null, s.gezaehlt,
+               s.falsch_verworfen, s.falsch_gezeichnet, g.falsch_verworfen, g.falsch_gezeichnet);
+        if (z.pos != 0 || z.neg == 0) alle_ok = 0;
+        if (s.gezaehlt == 0 || s.falsch_verworfen != 0 || s.falsch_gezeichnet != 0) mech_ok = 0;
+        if (g.falsch_verworfen == 0 || g.falsch_gezeichnet == 0) gegen_ok = 0;
+        if (!strncmp(l[i].name, "Feuerloescher", 13)) fl_gesehen++;
+    }
+    CHECK("Feuerloescher (stehend + liegend) unter den Port-Modellen", fl_gesehen >= 2);
+    CHECK("jedes Port-Modell wie das Original gewickelt: keine Flaeche w > 0 (Feuerloescher vorher 112 von 148)",
+          alle_ok);
+    CHECK("Mechanik: an 60 Blicken verwirft NCLIP keine Aussenseite und zeichnet keine abgewandte Flaeche", mech_ok);
+    CHECK("GEGENPROBE: mit v1 <-> v2 (umgekehrte Wicklung) schlaegt der Riegel an jedem Modell an", gegen_ok);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -499,6 +776,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "nclip") || !strcmp(teil, "alle")) rc |= teil_nclip();
     if (!strcmp(teil, "kasten") || !strcmp(teil, "alle")) rc |= teil_kasten();
     if (!strcmp(teil, "raeume") || !strcmp(teil, "alle")) rc |= teil_raeume();
+    if (!strcmp(teil, "wicklung") || !strcmp(teil, "alle")) rc |= teil_wicklung();
     if (!strcmp(teil, "bild")) rc |= teil_bild(argc, argv);
     if (rc || s_fail) { printf("probe_r38_cursor %s: FEHLER (%d)\n", teil, s_fail); return 1; }
     printf("probe_r38_cursor %s: OK\n", teil);

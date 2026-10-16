@@ -133,6 +133,25 @@ anderes Objekt (obj 1, voll texturierter Kasten). ROOM1150 hat keinen eigenen Cu
 * `platform/pc/src/hebetisch_cursor_pc.c` (ROOM1150/1151, Modul des Cursors): dieselben zwei Pruefungen + Kopfzeile.
 * Keine Konstante ausser den belegten (Saettigung -0x400/+0x3FF psx-spx; Schwelle "< 0" aus den vier Verzweigungen).
 
+### 3b. Behebung der Nebenwirkung: Feuerloescher-Modell wie das Original gewickelt (Befund §4.5)
+
+* `tools/r37_feuerloescher/feuerloescher_modell.py` `md1_bauen()`: neue Funktion `wicklung()` (w wie §4.5); jede
+  Flaeche mit w > 0 bekommt **v1 <-> v2** getauscht (samt Normale und UV). Beim Dreieck kehrt das den Umlauf um; beim
+  Viereck in Z-Ordnung (v0,v1,v2,v3) bleiben beide Teilungs-Diagonalen (PSX v1-v2, Port v0-v3) und alle vier Ecken
+  dieselben — Form, Textur und Licht unveraendert, nur der Umlauf dreht. Kopf des .inc nennt die Regel.
+  Herleitung der Regel: die Original-Konvention w < 0 (9364 : 41, §4.5) + der Verwurf @0x800255a8/@0x800257c0.
+* `engine/src/gen/feuerloescher_r37.inc` mit dem Werkzeug NEU ERZEUGT (vorher geprueft: das unveraenderte Werkzeug
+  erzeugt die eingecheckte Datei inhaltsgleich, `git diff` leer; die Vorschaubilder unter
+  analysis/befunde_runde37/I_belege/ bleiben bytegleich). Unterschied alt -> neu, Feld fuer Feld nachgeprueft:
+  TIM, Text msg 29, alle 235 Punkte und Normalen gleich; 10 Dreiecke + 26 Vierecke gleich, **112 Vierecke mit
+  v1 <-> v2 (und UV1 <-> UV2)**, sonst nichts (stehend und liegend). Danach w < 0 bei 148 von 148 Flaechen.
+* Keine neue Konstante; Lage, Masse, Textur des Loeschers unberuehrt (Runde-37-Spur-I-Riegel unit_r37_feuerloescher_*
+  pruefen Kopf, Huelle, Normalen nach aussen und Z-Ordnung weiter).
+* **Ueberschneidung fuer die Integration:** Spur K (r38_itemorte) haengt den Loescher nach ROOM1030 (Lage in
+  feuerloescher_r37.c/.h). Aendert K das Modell nicht, gibt es keinen Konflikt; erzeugt K `gen/feuerloescher_r37.inc`
+  neu, dann mit DIESEM Werkzeugstand (sonst kommt die gegensinnige Wicklung zurueck — unit_r38_cursor_wicklung schlaegt
+  dann an).
+
 ## 4. Messung nachher
 
 ### 4.1 ROOM11F0 Cut 10 (gleicher Lauf wie §1.1, neue exe)
@@ -227,6 +246,18 @@ Skala 1: 13 Punkte geaendert (x 221..225, y 111..119); ROOM1090 Cut 5 (liegend):
 (Nutzerfenster) ROOM1050: ALT voller roter Zylinder mit weissem Etikett; VORWICKLUNG schmaler, Etikett dunkel und
 schmal, unten ein schwarzer Rand = die Innenseite der Rueckwand. -> echte Nebenwirkung des Verwurfs, Behebung §3b.
 
+**Messung nachher** (dieselben Laeufe, exe NEU = Verwurf + neu gewickeltes Modell):
+
+| Lauf | NEU gegen ALT (ohne Verwurf) | NEU gegen VORWICKLUNG |
+|---|---|---|
+| ROOM1050 Cut 6, Skala 1 | **0 Punkte** | 13 Punkte (x 221..225, y 111..119) |
+| ROOM1050 Cut 6, Skala 3 (Nutzerfenster) | **0 Punkte** | 120 Punkte (x 664..680, y 317..360) |
+| ROOM1090 Cut 5, Skala 1 | 2 Punkte bei (155..157, 75..76) = ein Original-Prop weiter oben (Verwurf wie §4.4), am Loescher 0 | 9 Punkte (x 160..165, y 131..133) |
+
+Bild `A_belege/nebenwirkung_loescher_alt_vorw_neu.png` (oben ROOM1050 Skala 3, unten ROOM1090 Skala 1 x6; je
+ALT | VORWICKLUNG | NEU): NEU ist am Loescher pixelgleich mit dem Stand vor dem Verwurf, VORWICKLUNG zeigt die
+Innenseite. Riegel: unit_r38_cursor_wicklung (§5).
+
 ## 5. Tests
 
 Neu (Registrierung NUR `tests/unit/probes/r38_cursor.cmake`; Sonde `tests/unit/probe_r38_cursor.c`, exe-Haken
@@ -238,10 +269,13 @@ Neu (Registrierung NUR `tests/unit/probes/r38_cursor.cmake`; Sonde `tests/unit/p
 | unit_r38_cursor_kasten | ROOM11F0-Cursor unter Cut 10 an 25 Lagen (+-4000 um den Start): 29 Muster-Vierecke oben gezeichnet, 4 Muster-Dreiecke unten verworfen | im Test: ohne Verwurf ueberdeckten an allen 25 Lagen 4 Muster-Dreiecke den Cursor, an der Startlage ganz im Oberseiten-Umriss |
 | unit_r38_cursor_raeume | 23 Cursor-Raeume: Record am Zensus-Offset, Modell aus der Prop-Tabelle, 29+4 Muster-Flaechen, Unterseite gegensinnig gewunden (gleichsinnig mit 11F0 oben) | - (Zensus) |
 | integration_r38_cursor | echte exe, 4 Laeufe: A 11F0 Cut 10, B 1150 Hebetisch (Lade-Weg), C 10D0 Ziffernfeld, D Elza 11F1. Je: RE15_TRILOG des Cursor-Platzes ohne NCLIP < 0, Rahmen-Inneres ohne reingruene Punkte; A/D zusaetzlich Klassenkarte = Original | exe 1bcbd0ff mit demselben Skript: A ROT (8456 Rueckseiten-Dreiecke, 33 Punkte, 21 Abweichungen); Einzelpruefung B 1456/33, C 2997/32, D 14056/33/21 |
+| unit_r38_cursor_wicklung (Fortsetzung) | (1) Original-Konvention ueber alle Props aller RDTs (206 RDTs, 570 Props, w<0 30037 : w>0 151 : w=0 72) >= 99 % w<0; (2) alle 19 eingebackenen Port-Modelle (Cursor, Sicherung, Granate, Irons Diary/Keycard, 2 Loescher, 5 Dokumente, Memory Card/Schrot, 5 Lageplan-Karten, 2 Schluessel) ohne Flaeche w>0; (3) Mechanik an 60 Blicken (12 Gier- x 5 Nickwinkel, Projektion re15_hebetisch_cursor_projiziere = main.c, Verwurf re15_nclip_r38_verwerfen): keine Aussenseite verworfen, keine abgewandte Flaeche gezeichnet (ausgelassen nur streifende Blicke, |cos| <= sin(Normalen-Glaettung + 5 Grad), und Splitter mit \|MAC0\| <= 2 x Umfang, deren Vorzeichen die Ganzzahl-Rundung kippen kann) | im Test: v1 <-> v2 an jedem Modell -> je Hunderte falsch verworfene/gezeichnete Flaechen (Loescher stehend 3006/3510); Altstand des Loeschers (git 79006fef): 112 von 148 Flaechen w>0 (wicklung_props.py) |
 
 Gezielter Lauf (keine volle Suite), Regex = eigene Tests + Testgruppen aller beruehrten Module (Raum-Prop-Schleife
--> alle Bild-Riegel mit Raum-Objekten; Hebetisch; Panels/Cursor; Port-eigene Props):
-`ctest --test-dir re15_port/build -R "r38_cursor|r34n_b|hebetisch|11f0|cursor|panel|codepanel|irons_tisch|sicherung|dokumente|schrift1150|kartenitems|feuerloescher|schluessel|kiste|tor_hell|cut1150|szene1150|pri_schatten|pri1100|granate|dachkiste|fahrstuhl|ziel1190|cut10f0|elza_irons|pri_masken|generator|zeiger" --timeout 900 --output-on-failure`
+-> alle Bild-Riegel mit Raum-Objekten und die Raeume, deren Bild sich im Scan aenderte; Hebetisch; Panels/Cursor;
+Port-eigene Props; Feuerloescher-Modell):
+`ctest --test-dir re15_port/build -R "r38_cursor|r34n_b|hebetisch|11f0|cursor|panel|codepanel|irons_tisch|sicherung|dokumente|schrift1150|kartenitems|feuerloescher|schluessel|kiste|tor_hell|cut1150|szene1150|pri_schatten|pri1100|granate|dachkiste|fahrstuhl|ziel1190|cut10f0|elza_irons|pri_masken|generator|zeiger|r36_elza|r36_kleidung|r36_klettern|r22_10f0|r36_szenenleon|r36_gegnerzahl|r30_tuer_r4000|r36_tueren|r35_cut11c0|r30_cut_blitz|r34_plattform|room1150|irons_neck_1150" --timeout 900 --output-on-failure`
+(193 Tests, davon 49 mit der exe)
 
 (Ergebnis: siehe unten, wird nach dem Lauf eingetragen)
 
