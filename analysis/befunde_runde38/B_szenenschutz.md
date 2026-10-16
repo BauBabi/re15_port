@@ -260,6 +260,7 @@ Treffer/Griff/Angriff, HP, Treffer-Bilder, Griff, Kraehen-Angriffs-Bilder, Netz,
 
     Zombie 0x10..0x18, 0x13   RE2  |  -1 100 0 0 0   0 899 |   2  -20  4-6 1   0
     Hund 0x20                 RE2  |  -1 100 0 0 0   0 899 |  11  -20    5 0   0
+    Hund 0x20 (Spieler HP 40) RE2  |  -1  40 0 0 0   0 899 |  11  -20    3 1   0
     Kraehe 0x21 (Flug)        RE2  |  -1 100 0 0 0   0 899 |   1   40    4 1 330
     Spinne 0x25               RE2  |  -1 100 0 0 0   0 899 |   4   80    0 0   0
     Affe 0x27                 RE2  |  -1 100 0 0 0   0 599 |  14   22   13 0   0
@@ -270,6 +271,7 @@ Treffer/Griff/Angriff, HP, Treffer-Bilder, Griff, Kraehen-Angriffs-Bilder, Netz,
     Feuer 0x26                RE2  |  -1 100 0 0 0 299 299 |   1    2    0 0   0
     Zombie 0x10..0x18, 0x13   RE15 |  -1 100 0 0 0   0 899 | 3-17  -5    1 1   0
     Hund 0x20                 RE15 |  -1 100 0 0 0   0 899 |  55   -1    7 1   0
+    Hund 0x20 (Spieler HP 40) RE15 |  -1  40 0 0 0   0 899 |  49   -1    3 1   0
     Kraehe 0x21 (Sitz)        RE15 |  -1 100 0 0 0   0 899 |  70   92    1 1 559
     Spinne 0x25 (grid 1)      RE15 |  -1 100 0 0 0   0 599 |  34  100    6 1   0
     Affe 0x27                 RE15 |  -1 100 0 0 0   0 599 |  15   40   10 0   0
@@ -310,6 +312,15 @@ Gitterarm 0x1A im echten ROOM1210 (`unit_r38_szenenschutz_arm`): frei Griff 0x40
 
 (ctest-Summenzeilen: Abschnitt 5.1 unten.)
 
+### 5.1 Gezielte Laeufe (keine volle Suite; woertlich)
+Rohausgaben der Sonde: `B_belege/zensus_vorher.txt` (ohne 3.(C): 5 FAIL = die 2 Kraehen-Luecken + 3 Kontrollen, deren
+Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRAB-A; danach ergaenzt) und
+`B_belege/zensus_nachher.txt` (0 Fehler, inkl. Teil 2).
+- Unit-Gruppe aller beruehrten Gegner-/Spieler-Module (219 Tests: die 217er-Liste des Vorgaengers = jede Testgruppe von
+  enemy_ai_common.c/enemy_ai_re2_dog.c, dazu alle Kraehen-Tests und die drei r38-Unit-Tests), `-R` = Inhalt von
+  `B_belege/unit_regex.txt` (`^(probe_crow_kill|...|unit_zombie_step_sfx)$`), `-j 4`, Stand 34f9847a + Sonde:
+  `100% tests passed, 0 tests failed out of 219`
+
 ## 6. OFFEN
 
 - ERLEDIGT (Fortsetzung): die Kraehen-Luecke (RE2 + RE1.5 ohne Spieler-Tor am Angriff) ist gemessen (2.6, vorher
@@ -323,8 +334,8 @@ Gitterarm 0x1A im echten ROOM1210 (`unit_r38_szenenschutz_arm`): frei Griff 0x40
   auf einen gerade getroffenen Spieler (Knurren Sub 6; bei Spieler-HP < 50 Ausholen Sub 5/7, @0x8010e5c4-0x8010e624).
   In 1190 verhindert die Sperrzeit den Entscheid ohnehin, in 11D0 kommen die RE1.5-Hunde nicht aus dem Kaefig
   (state.log bytegleich, 4.); in einem anderen Raum koennte ein Hund nach einer Szene bei HP < 50 bereits ausgeholt
-  haben. Kein gemessener Fall im Standard-Flavor. Zensus-Fall "Hund 0x20 (HP 40)" (Fortsetzung; MESSUNG AUSSTEHEND, s. 5.1):
-  erwartet kein Treffer und kein Griff waehrend der Szene — alle Biss-/Griff-Kontakte des RE1.5-Hundes lesen +0x93
+  haben. Kein gemessener Fall im Standard-Flavor. Gemessen (Fortsetzung, Zensus-Fall "Hund 0x20 (HP 40)", beide Gehirne):
+  gehalten hp bleibt 40, kein Treffer, kein Griff, Netz 0 (frei: Biss Bild 11 RE2 / 49 RE1.5) — also kein Treffer und kein Griff waehrend der Szene — alle Biss-/Griff-Kontakte des RE1.5-Hundes lesen +0x93
   (@0x8010f294, @0x8010f5c0); sichtbar bleibt hoechstens das Ausholen/Schnappen ins Leere (Sub 5/6/7).
 - Gegner-Animationen, deren KONTAKT (nicht der Commit) am Tor haengt (z.B. RE1.5-Spinne Lunge, RE1.5-Hund Schnappen),
   koennen waehrend einer Szene ins Leere gehen; Treffer, Griff, HP-Verlust, Treffer-Reaktion gibt es nicht (Zensus).
