@@ -1,0 +1,46 @@
+# integration_r37_itemband_lift, Lauf lauf_86eb7a4a (exe 589a37de): ctest-Zeile:
+1/1 Test #680: integration_r37_itemband_lift ....   Passed  579.41 sec
+100% tests passed, 0 tests failed out of 1
+Total Test time (real) = 579.44 sec
+== liftauf2030
+F254 room=2030 LIFT slot 5 sub 2 spieler=(6605,-5400,10770) band 3 mitte im Ausloeser nein -> GESPERRT (RE2 6030 sub10 @0x02F78)
+F717 room=2030 LIFT slot 5 sub 2 spieler=(6605,-5400,11970) band 3 mitte im Ausloeser ja -> FAEHRT
+F808 room=2030 MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800
+F1443 room=2030 ITEM slot 11 floor 6 item 0x0D tk 109 spieler-band 6 spieler=(-637,-10800,14499) -> FREI
+FLAG (9,109) = 0 FLAG (3,222) = 0 FLAG (3,222) = 0 FLAG (3,222) = 1 FLAG (9,109) = 1 
+[room] PC loaded room2030.rdt (282076 bytes)
+== liftab2030
+F269 room=2030 LIFT slot 5 sub 2 spieler=(6605,-5400,11970) band 3 mitte im Ausloeser ja -> FAEHRT
+F360 room=2030 MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800
+F844 room=2030 LIFT slot 4 sub 2 spieler=(6605,-10800,13245) band 6 mitte im Ausloeser nein -> GESPERRT (RE2 6030 sub10 @0x02F78)
+F1308 room=2030 LIFT slot 4 sub 2 spieler=(6597,-10800,12061) band 6 mitte im Ausloeser ja -> FAEHRT
+F1399 room=2030 MEMBER 0x12 Spieler: Kollisionsband 6 -> 3 (@0x80041228) y=-5400
+FLAG (3,222) = 0 FLAG (3,222) = 1 FLAG (3,222) = 1 FLAG (3,222) = 0 
+[room] PC loaded room2030.rdt (282076 bytes)
+[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=0 spawn=(4800,0,-6300)
+[room] PC loaded room2070.rdt (174036 bytes)
+== liftauf2031
+F254 room=2031 LIFT slot 5 sub 2 spieler=(6605,-5400,10770) band 3 mitte im Ausloeser nein -> GESPERRT (RE2 6030 sub10 @0x02F78)
+F717 room=2031 LIFT slot 5 sub 2 spieler=(6605,-5400,11970) band 3 mitte im Ausloeser ja -> FAEHRT
+F808 room=2031 MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800
+F1443 room=2031 ITEM slot 11 floor 6 item 0x0D tk 109 spieler-band 6 spieler=(-637,-10800,14499) -> FREI
+FLAG (9,109) = 0 FLAG (3,222) = 0 FLAG (3,222) = 0 FLAG (3,222) = 1 FLAG (9,109) = 1 
+[room] PC loaded room2031.rdt (282076 bytes)
+== liftab2031
+F269 room=2031 LIFT slot 5 sub 2 spieler=(6605,-5400,11970) band 3 mitte im Ausloeser ja -> FAEHRT
+F360 room=2031 MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800
+F844 room=2031 LIFT slot 4 sub 2 spieler=(6605,-10800,13245) band 6 mitte im Ausloeser nein -> GESPERRT (RE2 6030 sub10 @0x02F78)
+F1308 room=2031 LIFT slot 4 sub 2 spieler=(6597,-10800,12061) band 6 mitte im Ausloeser ja -> FAEHRT
+F1399 room=2031 MEMBER 0x12 Spieler: Kollisionsband 6 -> 3 (@0x80041228) y=-5400
+FLAG (3,222) = 0 FLAG (3,222) = 1 FLAG (3,222) = 1 FLAG (3,222) = 0 
+[room] PC loaded room2031.rdt (282076 bytes)
+[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=0 spawn=(4800,0,-6300)
+[room] PC loaded room2071.rdt (174036 bytes)
+
+# GEGENPROBE gegen die exe VOR der Nachbesserung (05117c03, re15_pc_r37d_nb1_vorher.exe):
+## cmake -DRE15_PC_EXE=...re15_pc_r37d_nb1_vorher.exe -P test_r37_itemband_lift.cmake  -> exit 1 nach 93 s:
+  r37_itemband_lift: liftauf2030: FLAG (3,222) gelesen '0;1;1', erwartet
+  '0;0;1' (wegplan.txt: RE15_WEGPLAN
+## dito -DLAEUFE=^liftab2030$ -> exit 1 nach 115 s:
+  r37_itemband_lift: liftab2030: FLAG (3,222) gelesen '0;1;0', erwartet
+  '0;1;1;0' (wegplan.txt: RE15_WEGPLAN

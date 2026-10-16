@@ -2705,6 +2705,12 @@ retry_after_latch:
      * 7 des Super Redhawk (@0x8006e0d0 + Typ*0x58 + 7*4) — unter dem RE2-Modell w7 -> RE2-Zeile 5
      * (Magnum, 900). */
     if (weapon_id == 20) dmg = dmg_row[7];
+    /* Runde 37 Spur G (NUTZER-VORGABE "jeder Schuss des Feuerstosses trifft", re15_beretta_r37.h): der Resolve
+     * der Waffen 5/6 ist jetzt EINE KUGEL. Die RE1.5-Spalte 5/6 traegt den Schaden des GANZEN Stosses (Zombie
+     * 5 -> 15 = 3 x 5, @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4); je Kugel gilt die Einzelschuss-Pistole (Spalte 3) —
+     * wie RE2, dessen Custom-Handgun-Zeile 4 im Schaden gleich der Handgun-Zeile 3 ist (@0x800A4168 / @0x800A4154
+     * w0 0x00E03C10). In den RE2-Zeilen des Ports ist Spalte 5 == Spalte 3 (No-op). */
+    if (weapon_id == 5 || weapon_id == 6) dmg = dmg_row[3];
     if (s_re2_probe[best].valid &&
         (dmg_row == s_re2_wpn_dmg_zombie || dmg_row == s_re2_wpn_dmg_zombie16)) {
         /* RE2-Applier: Schaden nach KLAMMER aus dem Zombie-Record-Wort 0 —

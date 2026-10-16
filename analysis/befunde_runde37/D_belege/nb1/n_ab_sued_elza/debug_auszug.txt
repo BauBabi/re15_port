@@ -1,0 +1,5 @@
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[room] PC loaded room2031.rdt (282076 bytes)
+[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=0 spawn=(4800,0,-6300)
+[room] PC loaded room2071.rdt (174036 bytes)
+exit=0 dauer=104s

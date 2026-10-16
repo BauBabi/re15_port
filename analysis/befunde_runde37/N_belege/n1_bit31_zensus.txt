@@ -1,0 +1,20 @@
+3071 sub00  @0x03430 Set(1,0,0)             
+3071 sub00  @0x03434 Sce_em_set Typ 0x30    mit Elza-Bit 0 -> CDEMD0
+3071 sub00  @0x03448 Set(1,0,1)             
+3071 sub00  @0x03476 Set(1,0,0)             
+3071 sub00  @0x0347A Sce_em_set Typ 0x30    mit Elza-Bit 0 -> CDEMD0
+3071 sub00  @0x0348E Set(1,0,1)             
+3071 sub00  @0x034AE Sce_em_set Typ 0x49    mit Elza-Bit 1 -> CDEMD1
+3071 sub00  @0x034C2 Sce_em_set Typ 0x4B    mit Elza-Bit 1 -> CDEMD1
+5080 sub00  @0x00742 Set(1,0,1)             
+5080 sub00  @0x00746 Sce_em_set Typ 0x30    mit Elza-Bit 1 -> CDEMD1
+5080 sub00  @0x0075A Set(1,0,0)             
+5090 sub00  @0x01246 Set(1,0,1)             
+5090 sub00  @0x0124A Sce_em_set Typ 0x30    mit Elza-Bit 1 -> CDEMD1
+5090 sub00  @0x0125E Set(1,0,0)             
+50F1 sub00  @0x009A8 Set(1,0,0)             
+50F1 sub00  @0x009AC Sce_em_set Typ 0x30    mit Elza-Bit 0 -> CDEMD0
+50F1 sub00  @0x009C0 Set(1,0,1)             
+50F1 sub00  @0x009D0 Set(1,0,0)             
+50F1 sub00  @0x009D4 Sce_em_set Typ 0x30    mit Elza-Bit 0 -> CDEMD0
+50F1 sub00  @0x009E8 Set(1,0,1)             

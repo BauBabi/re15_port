@@ -38,6 +38,11 @@ enum {
                              * Pfeilen und den leeren Listengrund. (x,y) = obere
                              * linke Ecke. Der Inhalt (Namen, Symbole, Mengen,
                              * Auswahlbalken, gelber Griff) wird DARUEBER gezeichnet. */
+    RE15_INV_OP_PANELTEIL = 7, /* Runde 37 Spur M: AUSSCHNITT eines RE2-Box-Panels — page = Bild
+                             * (0 Listen-Panel, 1 Textbox), (u,v) = Ursprung im Bild, (w,h) = Groesse,
+                             * (x,y) = Schirmlage. Traegt die vier Rahmen-Teile (re15_kiste_r37.h), die
+                             * UEBER den gleitenden Zeilen liegen (RE2: Rahmen OT-Eintrag 2 ueber Symbolen/
+                             * Namen 6 und Ziffern 3, Beleg im Header). */
     RE15_INV_OP_FILL = 4,   /* DECKENDES Rechteck (x,y)+(w,h) in exakter RGB-Farbe.
                              * Gebraucht fuer das aus RE2 gemessene Box-Panel: die
                              * LINE-Ops sind ABE-additiv ((dst+src)>>4) und kommen
@@ -87,11 +92,14 @@ enum {
                                * AddPrim'd at the draw gate @0x80049bf4.               */
     RE15_INV_PAGE_ITEMTILE = 6,/* ITEM BOX [DESIGN, non-canonical mechanism]: direct
                                * item-tile sampling for BOX cells — `v` = the tile id,
-                               * `u` = 0; w<=40 samples ITEMALL.PIX tile[v] (the SAME
+                               * `u` = Quell-Spanne in Texeln (Runde 37 Spur R, RE2
+                               * POLY_FT4 u1-u0, re15_kiste2feld_r37.h): 80 (oder
+                               * w==80) samples the wide-weapon 80x30 icon at ITPS
+                               * block v*0x3000+0x21A0 (FUN_800492b8 mode-1 source
+                               * @0x8001e0b8-c8), else ITEMALL.PIX tile[v] (the SAME
                                * byte-true 40x30 art the identity icon cache uses,
-                               * report-C byte-proof), w==80 samples the wide-weapon
-                               * 80x30 icon at ITPS block v*0x3000+0x21A0
-                               * (FUN_800492b8 mode-1 source @0x8001e0b8-c8). CLUT =
+                               * report-C byte-proof); both scaled onto w x h with
+                               * the PSX-GPU sampling (re15_kiste2feld_texel). CLUT =
                                * ST_00 row 0, like every icon cell. The box cells
                                * bypass the 10-cell VRAM cache because the original
                                * has no box VRAM region (itembox_verdict.md).        */

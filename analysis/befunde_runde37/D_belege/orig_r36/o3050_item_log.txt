@@ -1,0 +1,33 @@
+DuckStation gestartet {'41392'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Spieler START: {'x': -23996, 'y': 0, 'z': 1523, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}
+Zone-9-Basis *(0x80074688) = 800b1078, Wort +8 = 00000000, Taken-Bit 92 = 0
+Spieler nach Pad-Probe: {'x': -23996, 'y': 0, 'z': 1523, 'blick': 2496, 'band': 0, 'sub': 3, 'st': 1}
+A  (y 0, Band 0) VOR: Spieler {'x': -24026, 'y': 0, 'z': -22770, 'blick': 1072, 'band': 0, 'sub': 0, 'st': 1}
+  A  (y 0, Band 0) nach Druck 1: Spieler {'x': -24026, 'y': 0, 'z': -22732, 'blick': 1072, 'band': 0, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+  A  (y 0, Band 0) nach Druck 2: Spieler {'x': -24026, 'y': 0, 'z': -22732, 'blick': 1072, 'band': 0, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+  A  (y 0, Band 0) nach Druck 3: Spieler {'x': -24026, 'y': 0, 'z': -22732, 'blick': 1072, 'band': 0, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+A  (y 0, Band 0) ERGEBNIS: Taken-Bit 92 = 0 (Wort +8 = 00000000)
+A2 (y -7200, Band 4) VOR: Spieler {'x': -24026, 'y': -7200, 'z': -22770, 'blick': 1072, 'band': 4, 'sub': 0, 'st': 1}
+  A2 (y -7200, Band 4) nach Druck 1: Spieler {'x': -24026, 'y': -7200, 'z': -22770, 'blick': 1072, 'band': 4, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+  A2 (y -7200, Band 4) nach Druck 2: Spieler {'x': -24026, 'y': -7200, 'z': -22770, 'blick': 1072, 'band': 4, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+  A2 (y -7200, Band 4) nach Druck 3: Spieler {'x': -24026, 'y': -7200, 'z': -22770, 'blick': 1072, 'band': 4, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+A2 (y -7200, Band 4) ERGEBNIS: Taken-Bit 92 = 0 (Wort +8 = 00000000)
+B  (y 0, Band 1) VOR: Spieler {'x': -24026, 'y': 0, 'z': -22770, 'blick': 1072, 'band': 1, 'sub': 0, 'st': 1}
+  B  (y 0, Band 1) nach Druck 1: Spieler {'x': -24026, 'y': 0, 'z': -22732, 'blick': 1072, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+  B  (y 0, Band 1) nach Druck 2: Spieler {'x': -24026, 'y': 0, 'z': -22732, 'blick': 1072, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 92 = 0
+  B  (y 0, Band 1) nach Druck 3: Spieler {'x': -24026, 'y': 0, 'z': -22732, 'blick': 1072, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 92 = 1
+B  (y 0, Band 1) ERGEBNIS: Taken-Bit 92 = 1 (Wort +8 = 00000008)
+C  Lift: Zone-3-Basis 800b0ff8, (3,82) = 0
+C  VOR: Spieler {'x': -1900, 'y': -7200, 'z': -8150, 'blick': 0, 'band': 4, 'sub': 0, 'st': 1}, (3,82) = 0
+  C  t=1 s: Spieler {'x': -1900, 'y': -6300, 'z': -8150, 'blick': 0, 'band': 4, 'sub': 0, 'st': 1}, (3,82) = 0
+  C  t=2 s: Spieler {'x': -1900, 'y': -4800, 'z': -8150, 'blick': 0, 'band': 4, 'sub': 0, 'st': 1}, (3,82) = 0
+  C  t=3 s: Spieler {'x': -1900, 'y': -3300, 'z': -8150, 'blick': 0, 'band': 4, 'sub': 0, 'st': 1}, (3,82) = 0
+  C  t=4 s: Spieler {'x': -1900, 'y': -1800, 'z': -8150, 'blick': 0, 'band': 4, 'sub': 0, 'st': 1}, (3,82) = 0
+  C  t=5 s: Spieler {'x': -1900, 'y': -400, 'z': -8150, 'blick': 0, 'band': 4, 'sub': 0, 'st': 1}, (3,82) = 0
+  C  t=6 s: Spieler {'x': -1900, 'y': 0, 'z': -8150, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}, (3,82) = 1
+  C  t=7 s: Spieler {'x': -1900, 'y': 0, 'z': -8150, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}, (3,82) = 1
+  C  t=8 s: Spieler {'x': -1900, 'y': 0, 'z': -8150, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}, (3,82) = 1
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

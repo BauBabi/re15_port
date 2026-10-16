@@ -30,6 +30,7 @@
 #include "re15_engine.h"
 #include "re15_bss.h"
 #include "re15_room.h"   /* g_current_room_id — room-aware BG selection */
+#include "re15_pri1100_r37.h"   /* Runde 37 Spur A: re15_pri_masken_raum (Masken-Zwilling Elza -> Leon) */
 #include "re15_bg.h"
 #include "re15_tim.h"    /* re15_tim_parse — per-cut foreground atlas decode */
 #include "re15_sld.h"    /* Laufzeit-Auszug des Vordergrundatlas aus dem BSS-Chunk */
@@ -192,7 +193,7 @@ int re15_pri_load_cut_atlas_ex(int cut_idx, int nachgezeichnet)
     if (nachgezeichnet) {
         /* Die Rechtecke stammen aus dem R15M-Container - ihre srcX/srcY sind fuer DIESEN
          * Atlas gepackt. Jeder andere waere ein anderes Bild an denselben Koordinaten. */
-        snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", g_current_room_id, cut_idx);
+        snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", re15_pri_masken_raum(g_current_room_id), cut_idx);  /* Runde 37 Spur A */
         buf = re15_pc_read_cd(rel, &sz);
         if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }
         int ok2 = pri_publish_tim(buf, sz);
@@ -216,7 +217,7 @@ int re15_pri_load_cut_atlas_ex(int cut_idx, int nachgezeichnet)
     }
     /* 3. Nachgezeichneter Atlas als letzter Rueckfall (Cut ohne jede Vordergrundgrafik). */
     if (!buf) {
-        snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", g_current_room_id, cut_idx);
+        snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", re15_pri_masken_raum(g_current_room_id), cut_idx);  /* Runde 37 Spur A */
         buf = re15_pc_read_cd(rel, &sz);
     }
     if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }

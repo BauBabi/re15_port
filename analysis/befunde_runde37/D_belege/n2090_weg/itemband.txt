@@ -1,0 +1,1 @@
+F87 room=2090 ITEM slot 5 floor 1 item 0x3F tk 90 spieler-band 1 spieler=(6300,-1800,-16250) -> FREI

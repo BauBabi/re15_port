@@ -155,7 +155,8 @@ elseif(TEIL STREQUAL "irons")
     message(STATUS "${_tag}: OK — Irons ${_ntot}/${_nalle} Bilder tot (Clip 2 Bild 89), Kopf fest ${_nnk0}/${_nnk}, Anklicken -> Text 20")
 
 elseif(TEIL STREQUAL "unlock")
-    karte(unlock 1211 -19500 -19100 2048 4:0xEC)
+    # Runde 37 Spur Q: Prison key genommen = (4,0xEC) + Item 0x42 im Inventar (kistenregel_r37.c K11, ROOM1211 @0x01DEA)
+    karte(unlock 1211 -19500 -19100 2048 4:0xEC give:0x42)
     lauf_elza(unlock 600 ${_basis} ${_continue} RE15_AUDIO_CAP_SYNC=cap.raw RE15_ELZA_LOG=elza.log
               "RE15_EXIT_AT=1000#1211")
     aktion_bilder("${WORKDIR}/unlock/elza.log" 1 _b)

@@ -1,5 +1,6 @@
 # Runde 36 Spur G "tueren" (analysis/befunde_runde36/G_tueren.md). GEPINNT -> add_test je Teil von probe_r36_tueren:
-#   fahrstuhl      Punkt 1a: S013/S040/S057 -> RE2-Fahrstuhltuer DOOR27 V0 (RE2-Datei); Maschine: zwei Fluegel
+#   fahrstuhl      Punkt 1a: S013/S040/S057 -> RE2-Fahrstuhltuer DOOR27 V0 (RE2-Datei; seit Runde 37 Spur C Port-Archiv P27F
+#                  = DOOR27 mit glatten Fluegeln); Maschine: zwei Fluegel
 #                  schieben gegenlaeufig (Gegenprobe DOOR25 = ein Blatt hebt sich); echter Durchgang 10C0 -> 1080
 #   schott         Punkt 1b: S164/S165 -> DOOR26 V0 zwei Fluegel (Gegenprobe V3 einer); echter Durchgang 2090 -> 20A0
 #   aufschliessen  Punkt 3: KARTSE.VBS = RE2-Wellen bytegleich, RE2-Belegbytes (ROOM2110 sub08, EXE @0x800515f4/f8),

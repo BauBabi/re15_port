@@ -36,6 +36,7 @@
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
 #include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
+#include "re15_roy_r37.h"   /* Runde 37 Spur K */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (marke / nachfuehren_alle in run_all) */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
@@ -45,6 +46,8 @@
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
+#include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
+void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -1002,6 +1005,7 @@ static void re15_player_victim_latch_ex(const re15_actor_t *zombie, re15_actor_t
         s_victim_phase  = 0;
         player->anim_frame = 0;
         s_victim_fresh  = 1;
+        re15_victim_anchor_calibrate(player->x, player->z);   /* Runde 37 Spur J: alter Standpunkt = Stand beim Zupacken (RE1.5 @0x80031d70) */
         /* The grab cmd-5 write REPLACES the whole player command state — the per-frame dispatch
          * @0x80031c88 indexes DAT_800aca58, so a latched aim FSM (cmd 1 action 7) simply stops
          * being run. Exit the port's aim FSM here (keep the knife-in-hand latch aca50&0x4000 —
@@ -1572,7 +1576,7 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
         re15_collision_constrain(&g_room_rdt, s_victim_ok_x, s_victim_ok_z, &nx, &nz);
         int32_t cx = nx, cz = nz;
         re15_collision_constrain(&g_room_rdt, nx, nz, &cx, &cz);
-        if (cx == nx && cz == nz) { s_victim_ok_x = nx; s_victim_ok_z = nz; }
+        if ((cx == nx && cz == nz) || re15_bissarm_r37_ein_durchgang(vg_ty)) { s_victim_ok_x = nx; s_victim_ok_z = nz; }   /* Runde 37 Spur J: Zombie = EIN Durchgang je Bild (FUN_8003567c `jal 0x8004c1bc` @0x800356d0) */
         else                      { nx = s_victim_ok_x; nz = s_victim_ok_z; }
         pl->x = nx; pl->z = nz;
     }
@@ -2612,6 +2616,7 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
             s_victim_phase  = 0;
             player->anim_frame = 0;
             s_victim_fresh  = 1;
+            re15_victim_anchor_calibrate(player->x, player->z);   /* Runde 37 Spur J: alter Standpunkt = Stand beim Zupacken (RE2 +0x118/+0x11A, `sh` @0x800356f4-f8) */
             {   /* cmd-5 ersetzt den ganzen Spieler-Command-State (wie beim RE1.5-Latch oben) */
                 extern void re15_player_aim_interrupt(void);
                 re15_player_aim_interrupt();
@@ -9675,7 +9680,7 @@ static const re15_emd_animation_t *re15_npc_channel_anim(const re15_actor_t *e)
         int own_sub = (e->state == 4 &&
                        (e->sub_state_1 == 2 || e->sub_state_1 == 4 || e->sub_state_1 == 5 ||
                         e->sub_state_1 == 6 || e->sub_state_1 == 9));
-        if (e->type == 0x47 && s_npc_elliot_anim && !(own_sub && bank && bank->own_ok))
+        if (re15_typ47_ist_elliot(e->type) && s_npc_elliot_anim && !(own_sub && bank && bank->own_ok))   /* Runde 37 Spur K: nur Leons 0x47 */
             return s_npc_elliot_anim;
     }
     if (bank && bank->own_ok) return &bank->anim_own;     /* +0x170/+0x174 = BANK 1 (dir[4]/dir[3]):

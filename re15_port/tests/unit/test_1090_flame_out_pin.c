@@ -173,6 +173,9 @@ int main(void)
      * @0x230A installiert sub00 die sce-3-Flaeche @0x2336 (-> sub06) UND die Selbst-Tuer
      * `Door_aot_set 03` @0x2352, die sub06 per `Aot_on 03` @0x2726 ausloest. */
     re15_game_flag_set(3, 0x85, 1);
+    /* Runde 37 Spur Q: aufgenommen = im INVENTAR (kistenregel_r37.c K1: Ck(3,0x85) @0x0230A gilt nur mit Item 0x31
+     * im Inventar, RE2 Keep_Item_ck @0x800584F0 -> FUN_800696CC). Das Bit allein war der Zustand vor der Item-Box. */
+    re15_inv_grant(0x31, 1);
     scd_register_room_events(&s_rdt);
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
     for (int f = 0; f < 120; f++) frame_step();

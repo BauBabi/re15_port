@@ -4,7 +4,8 @@
 # Die Unit-Riegel unit_r36_tueren_* messen die Mechanik headless (Spion statt Ton). Dieser Riegel prueft, was nur
 # die exe zeigt: den PC-Spieler (platform/pc/src/tuer_r36_pc.c Anmeldung -> audio_pc.c Slot KARTSE.VBS -> Mischer)
 # und den Tuersequenz-Laeufer mit den neuen Zeilen.
-#   A  ROOM3010 Green Keycard (KARTE): RE15_SET_FLAG=3:59 (Karte da), Sprung, RE15_FIRE_AOT=6 -> sub02 Message_on 1.
+#   A  ROOM3010 Green Keycard (KARTE): RE15_SET_FLAG=3:59 (Karte da) + RE15_GIVE=0x36:1 (Runde 37 Spur Q: das Bit
+#      zaehlt nur mit der Karte im Inventar, kistenregel_r37.c K7 @0x020AE), Sprung, RE15_FIRE_AOT=6 -> sub02 Message_on 1.
 #      Erwartet: auf.log drei Toene Bild +0/+15/+30 (Satz 0/1/2), debug.log je ein "[se] Stimme: se=N" mit 16397 Hz
 #      (RE2 ROOM2110-Toene: center 83/81/82, shift 57 -> note2pitch2 = 0x5f3).
 #   B  ROOM10D0 Code richtig (KARTE_AUF): Bank-5-Bits 13..16 per RE15_SET_FLAG_AT -> sub19 Message_on 5.
@@ -70,7 +71,7 @@ function(g_muss _name _text _muster)
 endfunction()
 
 # --- A: ROOM3010 Green Keycard ------------------------------------------------------------------
-g_lauf(a _auf _dbg RE15_SET_FLAG=3:59 RE15_DEBUG_JUMP=3010@120 "RE15_FIRE_AOT=6@100#3010" "RE15_EXIT_AT=200#3010")
+g_lauf(a _auf _dbg RE15_SET_FLAG=3:59 RE15_GIVE=0x36:1 RE15_DEBUG_JUMP=3010@120 "RE15_FIRE_AOT=6@100#3010" "RE15_EXIT_AT=200#3010")
 g_muss(a "${_auf}" "F([0-9]+) raum=3010 nachricht=1 art=KARTE satz=0\\(KARTE_EIN\\) bild=\\+0")
 g_muss(a "${_auf}" "raum=3010 nachricht=1 art=KARTE satz=1\\(PIEP\\) bild=\\+15")
 g_muss(a "${_auf}" "raum=3010 nachricht=1 art=KARTE satz=2\\(AUF_E\\) bild=\\+30")
@@ -100,10 +101,11 @@ re15_start_spiel(_rv 300
     "RE15_TUER_BOGEN=${WORKDIR}/bogen"
     "${RE15_PC_EXE}")
 file(READ "${WORKDIR}/debug.log" _dbg)
-g_muss(c "${_dbg}" "\\[tuer-seite\\] S040 ROOM10C0 DOOR27 V0 Spender FF\n")
+# Runde 37 Spur C (analysis/befunde_runde37/C_fahrstuhl.md): S040 spielt jetzt das Port-Archiv P27F (Basis DOOR27)
+g_muss(c "${_dbg}" "\\[tuer-seite\\] S040 ROOM10C0 DOOR27 V0 Spender FF Port-Archiv P27F\n")
 g_muss(c "${_dbg}" "\\[tuer-seite\\] S164 ROOM2090 DOOR26 V0 Spender FF\n")
 g_muss(c "${_dbg}" "\\[tuer-seite\\] S041 ROOM10C0 DOOR0C V1 Spender FF Port-Archiv P0CD")
-g_muss(c "${_dbg}" "\\[tuer\\] Sequenz Archiv 2 DOOR27 Variante 0 Bit7 0 Tuer 39 Seite S040")
+g_muss(c "${_dbg}" "\\[tuer\\] Sequenz Archiv 2 DOOR27 Port-Archiv P27F Variante 0 Bit7 0 Tuer 39 Seite S040")
 g_muss(c "${_dbg}" "\\[tuer\\] Sequenz Archiv 2 DOOR26 Variante 0 Bit7 0 Tuer 38 Seite S164")
 foreach(_s S040 S164 S041)
     if(NOT EXISTS "${WORKDIR}/bogen/${_s}_mitte.ppm")

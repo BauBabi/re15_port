@@ -56,6 +56,7 @@
 #include "re15_fade.h"
 #include "re15_player.h"
 #include "re15_pri.h"
+#include "re15_pri1100_r37.h"   /* Runde 37 Spur A: re15_pri_masken_raum (Masken wie der Lader) */
 #include "re15_md1.h"
 #include "re15_tim.h"
 #include "re15_savedata.h"
@@ -401,6 +402,10 @@ static const klemme_soll_t k_klemmen[] = {
     { 0x1020, 3, 258, 3 }, { 0x1021, 3, 258, 3 },     /* Original-Maske 35 @0xD28 (Tischplatte) */
     { 0x1010, 0, 40, 4 }, { 0x1010, 1, 53, 4 },       /* nachgezeichnete Masken MASKS/ROOM1010.MSK */
     { 0x1010, 6, 60, 4 }, { 0x1010, 8, 51, 4 },
+    /* Runde 37 Spur A (VERTRAG 1.7): ROOM1011 zeichnet ueber den Masken-Zwilling die Masken von ROOM1010 ->
+     * dieselben Klemmen (vorher stand 1011 Cut 0/1 unter "frei", weil es keine MSK-Datei gab). */
+    { 0x1011, 0, 40, 4 }, { 0x1011, 1, 53, 4 },
+    { 0x1011, 6, 60, 4 }, { 0x1011, 8, 51, 4 },
 };
 #define N_KLEMMEN ((int)(sizeof k_klemmen / sizeof k_klemmen[0]))
 
@@ -419,7 +424,8 @@ static int masken_des_cuts(raum_t *r, int cut, re15_pri_cut_t *pri, int *herkunf
     int n = re15_pri_parse_section(r->buf, r->n, r->rdt.cuts[cut].pri_offset, pri);
     if (n > 0) { *herkunft = 1; return n; }
     char p[600]; size_t ms = 0;
-    snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", RE15_ASSET_PSX_DIR, (unsigned)r->id);
+    /* Runde 37 Spur A: wie der Lader (entladen_pc.c) - Elza-Raum ohne eigene MSK nimmt die Leon-Variante. */
+    snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", RE15_ASSET_PSX_DIR, re15_pri_masken_raum((unsigned)r->id));
     uint8_t *mb = datei(p, &ms);
     if (!mb) return 0;
     uint32_t off = re15_pri_msk_section_offset(mb, ms, cut);
@@ -513,7 +519,7 @@ static void teil_k(raum_t *alle[], int n_alle)
     /* Cuts OHNE Klemme, in denen das Dokument zu sehen ist: keine Maske verdeckt seine Huelle. */
     static const struct { uint16_t raum; int cut; int nr; } k_frei[] = {
         { 0x1050, 3, 1 }, { 0x1051, 3, 1 }, { 0x1000, 0, 2 }, { 0x1001, 0, 2 },
-        { 0x1020, 6, 3 }, { 0x1021, 6, 3 }, { 0x1011, 0, 4 }, { 0x1011, 1, 4 },
+        { 0x1020, 6, 3 }, { 0x1021, 6, 3 },   /* ROOM1011 Cut 0/1: seit Runde 37 mit Klemme (s. k_klemmen) */
     };
     for (int k = 0; k < (int)(sizeof k_frei / sizeof k_frei[0]); k++) {
         const soll_t *s = soll_nr(k_frei[k].nr);

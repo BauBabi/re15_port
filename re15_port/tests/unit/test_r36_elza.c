@@ -34,6 +34,7 @@
 #include "re15_vab.h"
 #include "re15_elza_r36.h"
 #include "re15_fenster1120.h"
+#include "re15_inventory.h"   /* Runde 37 Spur Q: re15_inv_grant (Prison Key im Inventar, s. room_boot) */
 #include "../../engine/src/gen/re2_elza_bank.inc"
 #include <stdio.h>
 #include <stdlib.h>
@@ -137,6 +138,10 @@ static void frame(void)
     s_bild++;
 }
 
+/* Runde 37 Spur Q: Gegenstand, den room_boot nach scd_vm_init (leert das Inventar) ins INVENTAR legt (0 = keiner).
+ * "Prison key genommen" heisst seit der Kistenregel Bit (4,0xEC) UND Item 0x42 im Inventar (kistenregel_r37.c K11,
+ * ROOM1211 sub00 @0x01DEA; RE2 Keep_Item_ck @0x800584F0 -> FUN_800696CC sucht nur das Inventar). */
+static uint8_t s_boot_gabe = 0;
 static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t cut)
 {
     if (rdt_laden(room) != 0) { printf("  FEHLER: ROOM%04X nicht ladbar\n", room); g_fail++; return -1; }
@@ -145,6 +150,7 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     re15_game_state_t flags_vorher = g_game;
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     g_game = flags_vorher;
+    if (s_boot_gabe) re15_inv_grant(s_boot_gabe, 1);   /* Runde 37 Spur Q (s.o.) */
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     bank_laden(0x47, 0); bank_laden(0x49, 1); bank_laden(0x45, 2); bank_laden(0x21, 3);
     re15_player_cmd_reset();
@@ -286,7 +292,10 @@ static void teil_unlock(void)
     printf("== unlock ==\n");
     re15_game_state_init();
     re15_game_flag_set(4, 0xEC, 1);                        /* Prison key (ROOM1011 sub06 @0x00E2C) */
-    if (room_boot(0x1211, -19500, -19100, 2048, 7) != 0) return;
+    s_boot_gabe = 0x42;                                    /* Runde 37 Spur Q: + Prison Key im Inventar */
+    int rb = room_boot(0x1211, -19500, -19100, 2048, 7);
+    s_boot_gabe = 0;
+    if (rb != 0) return;
     PRUEF(g_re15_elza_anker_n == 1 && re15_elza_r36_anker_off(0) == 0x020F8u, "ein Anker @0x%05X", re15_elza_r36_anker_off(0));
     int geste = bild_nach_stelle(0x020F8u, 2000);           /* Bild, in dem die Geste @0x020F8 startet */
     PRUEF(geste > 0, "Szene erreicht die Aufschliess-Geste @0x020F8 in Bild %d", geste);

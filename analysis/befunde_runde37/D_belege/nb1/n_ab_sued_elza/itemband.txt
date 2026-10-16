@@ -1,0 +1,5 @@
+F269 room=2031 LIFT slot 5 sub 2 spieler=(6605,-5400,11970) band 3 mitte im Ausloeser ja -> FAEHRT
+F360 room=2031 MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800
+F844 room=2031 LIFT slot 4 sub 2 spieler=(6605,-10800,13245) band 6 mitte im Ausloeser nein -> GESPERRT (RE2 6030 sub10 @0x02F78)
+F1308 room=2031 LIFT slot 4 sub 2 spieler=(6597,-10800,12061) band 6 mitte im Ausloeser ja -> FAEHRT
+F1399 room=2031 MEMBER 0x12 Spieler: Kollisionsband 6 -> 3 (@0x80041228) y=-5400

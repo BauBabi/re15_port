@@ -1,0 +1,61 @@
+# Runde 37 Spur H Nachbesserung 1 (M2b): RE1.5-KI (RE15_AI_FLAVOR=re15) vorher/nachher, echte exe
+# HEAD = Spurbaum-exe (Bau 12:22, Code = 6de90398), v0.8.24 = Hauptbaum-exe (Bau 09:02; Engine-Quelle 7f0fa8bb == 44881ac2, git diff leer)
+# Treiber lauf.sh (Karte probe_r36_gegnerzahl_karte 1150 -17150 -11960 0 9:71 3:94 9:73-76 4:4-5 4:15 7:0xd3-0xd7 7:0xc6-0xca
+#   + RE15_CONTINUE_TEST/CARD_AUTO, Skript W1,A0.2,W2 ab Spielbild 60 = Tuer 1150 -> 1130, RE15_STATE_LOG, EXIT_AT 401#1130)
+# Auswerter werte.py: Abstand aus den LAGEN Leon <-> Zombie (nicht aus dem d-Feld), Folge = st/ss1 mit erstem Bild
+
+## A. Nachspawn 1130 nach der Montage, Leon steht an der Tuer, RE1.5-KI
+### HEAD
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[irons-tod] ROOM1130 Zustand 0: Nachspawn 1130 (Programm 10)
+[flow] EXIT_AT: Bild 401 in Raum 1130 erreicht -> exit
+Besuch 1 (letzter): F1..F401, Leon (-5900, 16350) -> (-5900, 16350), HP 100 -> 100
+  slot 1 t=16 g=0d Folge 0/0@1 1/2@6 | Abstand F1:30880 F6:30880 F7:30880 F100:28980 F200:26765 F300:25192 F400:23389 | Weg 9564
+  slot 2 t=10 g=0d Folge 0/0@1 1/2@6 1/19@7 | Abstand F1:29674 F6:29674 F7:29674 F100:28991 F200:28198 F300:27998 F400:27163 | Weg 4313
+  slot 3 t=10 g=0d Folge 0/0@1 1/2@6 | Abstand F1:28617 F6:28617 F7:28617 F100:26307 F200:23895 F300:21844 F400:20007 | Weg 9973
+  slot 4 t=11 g=0d Folge 0/0@1 1/2@6 | Abstand F1:27537 F6:27537 F7:27537 F100:25971 F200:24426 F300:22816 F400:21469 | Weg 7268
+  slot 5 t=11 g=0d Folge 0/0@1 1/2@6 | Abstand F1:28430 F6:28426 F7:28426 F100:26951 F200:25989 F300:24251 F400:22590 | Weg 7709
+### v0.8.24
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[irons-tod] ROOM1130 Zustand 0: Nachspawn 1130 (Programm 10)
+[flow] EXIT_AT: Bild 401 in Raum 1130 erreicht -> exit
+Besuch 1 (letzter): F1..F401, Leon (-5900, 16350) -> (-5900, 16350), HP 100 -> 100
+  slot 1 t=16 g=02 Folge 0/0@1 1/0@6 | Abstand F1:30880 F6:30880 F7:30880 F100:30880 F200:30880 F300:30880 F400:30880 | Weg 0
+  slot 2 t=10 g=02 Folge 0/0@1 1/0@6 | Abstand F1:29674 F6:29674 F7:29674 F100:29674 F200:29674 F300:29674 F400:29674 | Weg 0
+  slot 3 t=10 g=02 Folge 0/0@1 1/0@6 | Abstand F1:28617 F6:28617 F7:28617 F100:28617 F200:28617 F300:28617 F400:28617 | Weg 0
+  slot 4 t=11 g=02 Folge 0/0@1 1/0@6 | Abstand F1:27537 F6:27537 F7:27537 F100:27537 F200:27537 F300:27537 F400:27537 | Weg 0
+  slot 5 t=11 g=02 Folge 0/0@1 1/0@6 | Abstand F1:28430 F6:28426 F7:28426 F100:28426 F200:28426 F300:28426 F400:28426 | Weg 18
+
+## B. ROOM1180 (3x grid 0x00), Debug-Sprung RE15_DEBUG_JUMP=1180@250, EXIT_AT 301#1180, RE1.5-KI
+### HEAD
+Besuch 1 (letzter): F1..F301, Leon (-4729, -16018) -> (-4817, -15916), HP 100 -> 85
+  slot 1 t=10 g=00 Folge 0/0@1 1/0@6 | Abstand F1:29588 F6:29487 F100:29487 F200:29487 F300:29497 | Weg 0
+  slot 2 t=10 g=00 Folge 0/0@1 1/0@6 | Abstand F1:34102 F6:34003 F100:34003 F200:34003 F300:34027 | Weg 0
+  slot 3 t=10 g=00 Folge 0/0@1 1/0@6 1/2@10 1/3@243 | Abstand F1:7148 F6:7047 F100:4634 F200:2076 F300:416 | Weg 8154
+### v0.8.24
+Besuch 1 (letzter): F1..F301, Leon (-4729, -16018) -> (-4817, -15916), HP 100 -> 85
+  slot 1 t=10 g=00 Folge 0/0@1 1/0@6 | Abstand F1:29588 F6:29487 F100:29487 F200:29487 F300:29497 | Weg 0
+  slot 2 t=10 g=00 Folge 0/0@1 1/0@6 | Abstand F1:34102 F6:34003 F100:34003 F200:34003 F300:34027 | Weg 0
+  slot 3 t=10 g=00 Folge 0/0@1 1/0@6 1/2@10 1/3@243 | Abstand F1:7148 F6:7047 F100:4634 F200:2076 F300:416 | Weg 8154
+### state.log HEAD gegen v0.8.24, Zeile fuer Zeile (vgl.py)
+Besuch 0: Zeilen 251/251, abweichend 0, Zeile fuer Zeile gleich
+Besuch 1: Zeilen 301/301, abweichend 0, Zeile fuer Zeile gleich
+
+## C. Messung nachher mit der NEU gebauten exe (Nachbesserung 1, Bau 14:19 nach 83eeff99), gleicher Weg wie A
+### RE1.5-KI: state.log NB1-exe gegen Spur-exe 12:22 (vgl.py)
+Besuch 0: Zeilen 91/91, abweichend 0, Zeile fuer Zeile gleich
+Besuch 1: Zeilen 401/401, abweichend 0, Zeile fuer Zeile gleich
+### RE2-KI (Standard), NB1-exe
+[irons-tod] ROOM1130 Zustand 0: Nachspawn 1130 (Programm 10)
+[flow] EXIT_AT: Bild 401 in Raum 1130 erreicht -> exit
+Besuch 1 (letzter): F1..F401, Leon (-5900, 16350) -> (-5900, 16350), HP 100 -> 100
+  slot 1 t=16 g=0d Folge 0/0@1 1/1@6 | Abstand F1:30880 F6:30880 F7:30880 F100:29266 F200:27630 F300:25957 F400:24420 | Weg 7034
+  slot 2 t=10 g=0d Folge 0/0@1 1/1@6 | Abstand F1:29674 F6:29674 F7:29674 F100:27457 F200:25330 F300:23180 F400:21031 | Weg 10296
+  slot 3 t=10 g=0d Folge 0/0@1 1/1@6 | Abstand F1:28617 F6:28617 F7:28617 F100:27239 F200:25430 F300:23873 F400:22162 | Weg 6956
+  slot 4 t=11 g=0d Folge 0/0@1 1/1@6 | Abstand F1:27537 F6:27537 F7:27537 F100:25179 F200:22716 F300:20359 F400:18040 | Weg 10460
+  slot 5 t=11 g=0d Folge 0/0@1 1/1@6 | Abstand F1:28430 F6:28426 F7:28426 F100:25815 F200:22943 F300:19583 F400:16417 | Weg 14097
+
+## D. Endstand-exe (Bau 14:31 nach d3d92ecd, nur Kopf-Kommentare gegenueber 14:19), RE1.5-KI, gleicher Weg wie A
+### state.log Endstand gegen Spur-exe 12:22 (vgl.py)
+Besuch 0: Zeilen 91/91, abweichend 0, Zeile fuer Zeile gleich
+Besuch 1: Zeilen 401/401, abweichend 0, Zeile fuer Zeile gleich

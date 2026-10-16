@@ -1,0 +1,717 @@
+ROOM1010 sub09 Se_on @0x01C20 36 02 0a 01 00 00 d8 c3 f8 f8 c6 c8
+      @0x01C2D Sleep 10
+      @0x01C30 Plc_motion 00 00 c0
+      @0x01C35 Sleep 5
+      @0x01C38 Plc_motion 00 00 40
+      @0x01C3F Sleep 5
+      @0x01C45 Sleep 25
+      @0x01C48 Plc_dest m9 f21 (-16121,-12737)
+      @0x01C50 Gosub sub21
+      @0x01C52 Plc_motion 00 04 00
+      @0x01C56 Plc_neck m2 (0,0,512) speed 5a5a
+ROOM1010 sub22 Se_on @0x022A6 36 02 0b 01 03 00 00 00 00 00 00 00
+      @0x022B3 Sleep 10
+      @0x022B6 Plc_motion 00 0a 04
+      @0x022BA Plc_neck m2 (0,0,128) speed 6060
+      @0x022C5 Sleep 10
+      @0x022C8 Plc_neck m5 (1,0,0) speed 6060
+      @0x022D3 Sleep 45
+ROOM1080 sub08 Se_on @0x021BC 36 02 05 01 01 00 70 17 38 ff 00 00
+      @0x021C9 Sleep 12
+      @0x021CE Plc_motion 00 11 00
+      @0x021D3 Sleep 18
+      @0x021E3 Sleep 15
+      @0x021E7 Sleep 12
+      @0x021EC Plc_motion 00 10 c0
+      @0x021F1 Sleep 50
+      @0x021F6 Plc_motion 00 0f c0
+      @0x021FB Sleep 30
+      @0x021FE Plc_neck m2 (0,600,-512) speed 140f
+      @0x02209 Sleep 180
+      @0x0220C Plc_neck m0 (0,0,0) speed 3228
+ROOM1080 sub08 Se_on @0x021D6 36 02 05 01 01 00 70 17 38 ff 00 00
+      @0x021E3 Sleep 15
+      @0x021E7 Sleep 12
+      @0x021EC Plc_motion 00 10 c0
+      @0x021F1 Sleep 50
+      @0x021F6 Plc_motion 00 0f c0
+      @0x021FB Sleep 30
+      @0x021FE Plc_neck m2 (0,600,-512) speed 140f
+      @0x02209 Sleep 180
+      @0x0220C Plc_neck m0 (0,0,0) speed 3228
+      @0x02217 Sleep 60
+ROOM1090 sub23 Se_on @0x02D58 36 02 0c 01 01 00 00 00 00 00 00 00
+      @0x02D69 Sleep 5
+      @0x02D71 Sleep 5
+      @0x02D78 Work_set(1,0)
+      @0x02D7C Plc_neck m1 (-5836,-5400,584) speed 8080
+      @0x02D87 Sleep 4
+      @0x02D8A Plc_dest m21 f20 (2291,128)
+      @0x02D92 Gosub sub36
+ROOM1090 sub24 Se_on @0x02DDA 36 02 0c 01 01 00 00 00 00 00 00 00
+      @0x02DEB Sleep 10
+      @0x02DF2 Work_set(1,0)
+      @0x02DF6 Plc_neck m1 (-5836,-5400,584) speed 8080
+      @0x02E01 Sleep 4
+      @0x02E04 Plc_dest m21 f20 (2931,128)
+      @0x02E0C Gosub sub36
+      @0x02E0E Plc_motion 0b 01 00
+      @0x02E13 Sleep 10
+ROOM10B0 sub13 Se_on @0x01E0C 36 02 21 00 00 00 a2 aa b0 eb de bc
+      @0x01E76 Gosub sub15
+      @0x01E78 Work_set(1,0)
+      @0x01E7C Plc_dest m9 f20 (-21752,-17097)
+      @0x01E84 Plc_rot 00 00 01
+      @0x01E89 Sleep 2
+      @0x01E8C Work_set(1,0)
+      @0x01E90 Plc_neck m5 (3,0,0) speed 6060
+ROOM10B0 sub13 Se_on @0x01E6A 36 03 08 00 03 00 00 00 00 00 00 00
+      @0x01E76 Gosub sub15
+      @0x01E78 Work_set(1,0)
+      @0x01E7C Plc_dest m9 f20 (-21752,-17097)
+      @0x01E84 Plc_rot 00 00 01
+      @0x01E89 Sleep 2
+      @0x01E8C Work_set(1,0)
+      @0x01E90 Plc_neck m5 (3,0,0) speed 6060
+      @0x01E9A Plc_dest m5 f20 (-21752,-17097)
+      @0x01EA3 Sleep 3
+ROOM10B0 sub13 Se_on @0x01F2E 36 02 0a 01 00 00 a2 aa 00 00 de bc
+      @0x01F3B Sleep 3
+      @0x01F4F Sleep 10
+      @0x01F62 Work_set(1,0)
+      @0x01F66 Plc_dest m8 f20 (-21633,-31775)
+      @0x01F73 Sleep 15
+      @0x01F76 Work_set(1,0)
+      @0x01F7A Plc_dest m9 f20 (-21752,-17097)
+      @0x01F82 Plc_rot 00 00 01
+      @0x01F87 Sleep 3
+      @0x01F8A Work_set(1,0)
+      @0x01F8D Plc_motion 00 11 00
+      @0x01F97 Sleep 25
+ROOM1120 sub17 Se_on @0x03668 36 02 1f 01 01 00 00 00 00 00 00 00
+      @0x0367C Plc_motion 00 0a 08
+      @0x03681 Sleep 3
+      @0x03689 Sleep 8
+      @0x03693 Sleep 6
+      @0x03696 Plc_neck m4 (4,0,0) speed 6060
+      @0x036A7 Sleep 10
+      @0x036AD Sleep 30
+ROOM1150 sub19 Se_on @0x01AB8 36 02 0a 00 00 00 56 99 00 00 8d b6
+      @0x01AC5 Sleep 20
+      @0x01AC8 Work_set(1,0)
+      @0x01ACC Plc_neck m5 (3,0,0) speed 6060
+      @0x01AD7 Sleep 5
+      @0x01ADA Work_set(1,0)
+      @0x01ADE Plc_dest m9 f20 (-23037,-18397)
+      @0x01AE7 Sleep 5
+ROOM11C0 sub02 Se_on @0x00A84 36 02 0b 01 01 00 00 00 00 00 00 00
+      @0x00A91 Sleep 18
+      @0x00A94 Plc_motion 01 06 80
+      @0x00A99 Sleep 24
+      @0x00A9C Plc_dest m7 f20 (13176,14458)
+      @0x00AA4 Gosub sub13
+      @0x00AA7 Sleep 10
+      @0x00AAA Work_set(4,3)
+      @0x00AD8 Work_set(1,0)
+      @0x00ADB Plc_motion 00 10 00
+      @0x00AE0 Plc_neck m2 (0,-512,-512) speed 4040
+      @0x00AEB Sleep 40
+ROOM11C0 sub02 Se_on @0x00ABC 36 02 0a 01 01 00 00 00 00 00 00 00
+      @0x00AD8 Work_set(1,0)
+      @0x00ADB Plc_motion 00 10 00
+      @0x00AE0 Plc_neck m2 (0,-512,-512) speed 4040
+      @0x00AEB Sleep 40
+      @0x00AEE Plc_neck m2 (0,512,-512) speed 3030
+      @0x00AF9 Sleep 40
+      @0x00AFC Plc_neck m2 (0,-512,-512) speed 2626
+      @0x00B07 Sleep 30
+      @0x00B11 Sleep 10
+      @0x00B14 Plc_dest m5 f20 (11931,17057)
+      @0x00B1C Gosub sub13
+      @0x00B1E Plc_dest m21 f20 (1651,96)
+      @0x00B26 Gosub sub13
+      @0x00B28 Gosub sub03
+ROOM11C0 sub07 Se_on @0x00DD8 36 02 0d 00 04 00 00 00 00 00 00 00
+      @0x00DEC Dir_set (0,3584,192)
+ROOM2000 sub05 Se_on @0x029BA 36 02 11 00 00 00 6f 9d 00 00 87 bb
+      @0x029C7 Sleep 10
+      @0x029CA Plc_neck m1 (-29493,-3200,-2721) speed 2020
+      @0x029D5 Sleep 10
+      @0x029D8 Plc_dest m9 f20 (-29493,-2721)
+      @0x029E1 Sleep 30
+ROOM20D0 sub10 Se_on @0x0180C 36 02 0d 00 00 00 00 00 00 00 00 00
+      @0x01818 Work_set(4,0)
+      @0x01824 Dir_set (1024,0,0)
+      @0x01837 Sleep 10
+      @0x0183A Work_set(1,0)
+      @0x0183E Dir_set (0,-1024,0)
+      @0x01847 Work_set(1,0)
+      @0x0184A Plc_dest m21 f21 (-3524,170)
+      @0x01852 Gosub sub12
+      @0x01855 Sleep 10
+      @0x01870 Gosub sub13
+ROOM2130 sub04 Se_on @0x01192 36 02 0a 01 00 00 9b a0 00 fc f4 d3
+      @0x011A6 Work_set(4,3)
+      @0x011AA Dir_set (-1024,-1024,1600)
+ROOM2130 sub04 Se_on @0x012B0 36 02 0a 01 00 00 9b a0 00 fc f4 d3
+      @0x012C4 Work_set(4,4)
+      @0x012C8 Dir_set (-1024,-1024,1600)
+ROOM2130 sub04 Se_on @0x013CE 36 02 0a 01 00 00 9b a0 00 fc f4 d3
+      @0x013E2 Work_set(4,5)
+      @0x013E6 Dir_set (-1024,-1024,1600)
+ROOM2130 sub04 Se_on @0x014EC 36 02 0a 01 00 00 9b a0 00 fc f4 d3
+      @0x01500 Work_set(4,6)
+      @0x01504 Dir_set (-1024,-1024,1600)
+ROOM2130 sub04 Se_on @0x0160A 36 02 0a 01 00 00 9b a0 00 fc f4 d3
+      @0x0161E Work_set(4,7)
+      @0x01622 Dir_set (-1024,-1024,1600)
+ROOM2140 sub03 Se_on @0x0054C 36 02 28 01 00 00 ac c7 00 fc 2c 1a
+      @0x00560 Work_set(4,5)
+      @0x0056C Dir_set (0,832,0)
+      @0x00578 Work_set(4,6)
+      @0x00584 Dir_set (0,-1536,0)
+      @0x0059A Work_set(4,6)
+      @0x005A6 Dir_set (0,-1536,0)
+      @0x005B2 Work_set(4,5)
+ROOM2160 sub08 Se_on @0x01CC2 36 02 0a 01 01 00 e0 fc 38 ff 20 03
+      @0x01CCF Sleep 2
+      @0x01CE3 Sleep 2
+      @0x01CF3 Sleep 2
+      @0x01CF6 Plc_motion 01 03 01
+      @0x01CFB Sleep 1
+      @0x01D00 Plc_neck m2 (0,-200,0) speed 5050
+      @0x01D0B Sleep 20
+      @0x01D0E Plc_neck m1 (3695,-1800,-3921) speed 2828
+      @0x01D1C Plc_dest m9 f01 (3695,-3921)
+      @0x01D24 Plc_rot 00 b8 00
+ROOM2160 sub08 Se_on @0x01CE6 36 02 0b 01 01 00 f8 f8 f8 f8 f8 f8
+      @0x01CF3 Sleep 2
+      @0x01CF6 Plc_motion 01 03 01
+      @0x01CFB Sleep 1
+      @0x01D00 Plc_neck m2 (0,-200,0) speed 5050
+      @0x01D0B Sleep 20
+      @0x01D0E Plc_neck m1 (3695,-1800,-3921) speed 2828
+      @0x01D1C Plc_dest m9 f01 (3695,-3921)
+      @0x01D24 Plc_rot 00 b8 00
+ROOM2190 sub12 Se_on @0x00FF4 36 02 0a 00 00 00 1a ad f8 f8 f8 9b
+      @0x01001 Sleep 6
+      @0x01004 Work_set(3,0)
+      @0x01010 Plc_neck m2 (0,-320,-1024) speed 8080
+      @0x0101B Sleep 2
+      @0x0101E Plc_motion 00 16 08
+      @0x01022 Plc_neck m2 (0,320,1024) speed 8080
+      @0x0103D Sleep 2
+      @0x01040 Plc_neck m2 (0,0,-1024) speed 8080
+      @0x0104A Plc_motion 00 14 08
+      @0x0104F Sleep 4
+      @0x01052 Plc_motion 00 0f 08
+      @0x01057 Sleep 8
+      @0x01066 Work_set(3,0)
+      @0x01069 Plc_motion 00 10 0c
+ROOM2190 sub12 Se_on @0x0102C 36 02 0d 00 00 00 17 a7 f8 f8 b9 a4
+      @0x0103D Sleep 2
+      @0x01040 Plc_neck m2 (0,0,-1024) speed 8080
+      @0x0104A Plc_motion 00 14 08
+      @0x0104F Sleep 4
+      @0x01052 Plc_motion 00 0f 08
+      @0x01057 Sleep 8
+      @0x01066 Work_set(3,0)
+      @0x01069 Plc_motion 00 10 0c
+      @0x0106F Sleep 10
+      @0x01074 Work_set(3,0)
+      @0x01080 Dir_set (0,560,0)
+      @0x01088 Work_set(3,1)
+ROOM2190 sub12 Se_on @0x0105A 36 02 0b 00 00 00 1a ad f8 f8 f8 9b
+      @0x01066 Work_set(3,0)
+      @0x01069 Plc_motion 00 10 0c
+      @0x0106F Sleep 10
+      @0x01074 Work_set(3,0)
+      @0x01080 Dir_set (0,560,0)
+      @0x01088 Work_set(3,1)
+      @0x01094 Dir_set (0,2372,0)
+ROOM2190 sub17 Se_on @0x0130C 36 02 0c 00 00 00 1a ad f8 f8 f8 9b
+      @0x01318 Work_set(3,0)
+      @0x01324 Plc_neck m2 (0,-320,-1024) speed 8080
+      @0x0132F Sleep 2
+      @0x01350 Plc_motion 00 16 08
+      @0x01354 Plc_neck m2 (0,320,1024) speed 8080
+      @0x0136F Sleep 2
+      @0x01382 Plc_neck m2 (0,0,-1024) speed 8080
+      @0x0138D Sleep 3
+      @0x01390 Work_set(3,0)
+      @0x01393 Plc_motion 00 14 00
+ROOM2190 sub17 Se_on @0x0135E 36 02 0d 00 00 00 17 a7 f8 f8 b9 a4
+      @0x0136F Sleep 2
+      @0x01382 Plc_neck m2 (0,0,-1024) speed 8080
+      @0x0138D Sleep 3
+      @0x01390 Work_set(3,0)
+      @0x01393 Plc_motion 00 14 00
+      @0x013AD Sleep 20
+ROOM3010 sub02 Se_on @0x01F90 36 02 0b 00 00 00 00 00 00 00 00 00
+      @0x01F9D Sleep 35
+      @0x01FA8 Work_set(2,0)
+      @0x01FB4 Dir_set (0,1024,0)
+      @0x01FC9 Sleep 30
+      @0x01FCD Sleep 10
+ROOM3010 sub04 Se_on @0x02B20 36 02 0e 00 00 00 00 00 00 00 00 00
+      @0x02B2D Sleep 30
+      @0x02B30 Work_set(3,1)
+      @0x02B44 Work_set(3,1)
+      @0x02B62 Work_set(1,0)
+      @0x02B66 Plc_neck m5 (3,1,0) speed 1e3c
+      @0x02B78 Dir_set (0,2640,0)
+ROOM3010 sub04 Se_on @0x02B56 36 02 12 00 00 00 00 00 00 00 00 00
+      @0x02B62 Work_set(1,0)
+      @0x02B66 Plc_neck m5 (3,1,0) speed 1e3c
+      @0x02B78 Dir_set (0,2640,0)
+ROOM3010 sub04 Se_on @0x02B94 36 02 09 00 00 00 00 00 00 00 00 00
+      @0x02BA0 Work_set(3,1)
+      @0x02BBF Sleep 10
+      @0x02BCF Sleep 20
+      @0x02BD3 Sleep 45
+      @0x02BD6 Work_set(2,0)
+      @0x02BDA Plc_neck m5 (1,0,0) speed 1e3c
+      @0x02BEC Dir_set (0,1024,0)
+      @0x02C01 Sleep 30
+      @0x02C04 Work_set(3,1)
+ROOM3010 sub04 Se_on @0x02BB2 36 02 09 00 00 00 00 00 00 00 00 00
+      @0x02BBF Sleep 10
+      @0x02BCF Sleep 20
+      @0x02BD3 Sleep 45
+      @0x02BD6 Work_set(2,0)
+      @0x02BDA Plc_neck m5 (1,0,0) speed 1e3c
+      @0x02BEC Dir_set (0,1024,0)
+      @0x02C01 Sleep 30
+      @0x02C04 Work_set(3,1)
+ROOM3010 sub04 Se_on @0x02BC2 36 02 09 00 00 00 00 00 00 00 00 00
+      @0x02BCF Sleep 20
+      @0x02BD3 Sleep 45
+      @0x02BD6 Work_set(2,0)
+      @0x02BDA Plc_neck m5 (1,0,0) speed 1e3c
+      @0x02BEC Dir_set (0,1024,0)
+      @0x02C01 Sleep 30
+      @0x02C04 Work_set(3,1)
+ROOM3010 sub07 Se_on @0x03148 36 02 12 00 00 00 00 00 00 00 00 00
+      @0x03154 Plc_neck m0 (0,0,0) speed 0000
+      @0x03161 Sleep 30
+      @0x03164 Work_set(2,0)
+      @0x03168 Plc_neck m5 (1,0,0) speed 1e3c
+      @0x0317A Dir_set (0,1024,0)
+      @0x0318F Sleep 30
+ROOM3040 sub25 Se_on @0x01C34 36 02 0b 00 00 00 f5 e2 f0 f1 4c a0
+      @0x01C43 Sleep 20
+      @0x01C47 Sleep 10
+      @0x01C4B Sleep 10
+      @0x01C4E Plc_neck m2 (0,0,1024) speed 2020
+      @0x01C59 Sleep 40
+      @0x01C5C Plc_motion 01 06 90
+      @0x01C61 Sleep 50
+      @0x01C64 Plc_motion 00 12 00
+      @0x01C69 Sleep 60
+      @0x01C6C Plc_motion 00 12 80
+      @0x01C73 Sleep 60
+      @0x01C76 Plc_neck m2 (0,0,0) speed 0c0c
+      @0x01C81 Sleep 40
+      @0x01C84 Plc_neck m2 (0,1024,0) speed 2020
+ROOM30B0 sub12 Se_on @0x01800 36 02 12 01 04 00 00 00 00 00 00 00
+      @0x0180C Work_set(1,0)
+      @0x01810 Plc_neck m1 (-7000,-6000,-4230) speed 4830
+      @0x0181A Plc_dest m5 f21 (-11300,-5015)
+      @0x01823 Sleep 25
+      @0x01837 Sleep 2
+ROOM30B0 sub13 Se_on @0x01880 36 02 11 01 04 00 00 00 00 00 00 00
+      @0x01894 Dir_set (0,0,1536)
+      @0x018B8 Dir_set (384,0,3776)
+ROOM30B0 sub14 Se_on @0x01934 36 02 11 01 04 00 00 00 00 00 00 00
+      @0x01948 Dir_set (0,0,1536)
+      @0x0196C Dir_set (384,0,3776)
+ROOM30B0 sub14 Se_on @0x01998 36 02 09 01 04 00 00 00 00 00 00 00
+      @0x019A4 Dir_set (224,0,3776)
+      @0x019AD Sleep 1
+      @0x019B8 Dir_set (524,0,3776)
+      @0x019C1 Sleep 1
+      @0x019CC Dir_set (1024,0,3776)
+ROOM4080 sub13 Se_on @0x031F2 36 02 0f 00 00 00 4c 04 d8 dc 5c 12
+      @0x03206 Dir_set (0,-2048,0)
+ROOM4090 sub07 Se_on @0x02EB0 36 02 1d 01 03 00 00 00 00 00 00 00
+      @0x02EBD Sleep 6
+      @0x02EC3 Sleep 9
+      @0x02ED3 Sleep 6
+      @0x02ED6 Plc_motion 00 19 00
+      @0x02EDD Sleep 5
+      @0x02EED Sleep 10
+      @0x02EF4 Plc_motion 0a 1a 54
+      @0x02F08 Plc_neck m2 (0,300,200) speed 0a0a
+ROOM4090 sub07 Se_on @0x02EC6 36 02 1d 01 03 00 00 00 00 00 00 00
+      @0x02ED3 Sleep 6
+      @0x02ED6 Plc_motion 00 19 00
+      @0x02EDD Sleep 5
+      @0x02EED Sleep 10
+      @0x02EF4 Plc_motion 0a 1a 54
+      @0x02F08 Plc_neck m2 (0,300,200) speed 0a0a
+      @0x02F12 Plc_motion 00 18 01
+      @0x02F17 Sleep 40
+      @0x02F1A Plc_motion 00 18 c1
+      @0x02F1F Sleep 42
+ROOM4090 sub07 Se_on @0x02EE0 36 02 0c 01 03 00 00 00 00 00 00 00
+      @0x02EED Sleep 10
+      @0x02EF4 Plc_motion 0a 1a 54
+      @0x02F08 Plc_neck m2 (0,300,200) speed 0a0a
+      @0x02F12 Plc_motion 00 18 01
+      @0x02F17 Sleep 40
+      @0x02F1A Plc_motion 00 18 c1
+      @0x02F1F Sleep 42
+      @0x02F22 Plc_motion 00 16 51
+      @0x02F27 Sleep 28
+      @0x02F2A Plc_neck m2 (0,200,-100) speed 0a0a
+      @0x02F35 Sleep 32
+ROOM40A0 sub04 Se_on @0x02896 36 02 08 01 02 00 00 00 00 00 00 00
+      @0x028C3 Sleep 2
+      @0x028D7 Sleep 1
+      @0x0290B Sleep 7
+      @0x02910 Plc_neck m2 (0,0,-200) speed 1414
+      @0x0291B Sleep 8
+      @0x0294B Sleep 3
+ROOM40A0 sub04 Se_on @0x0291E 36 02 08 01 02 00 00 00 00 00 00 00
+      @0x0294B Sleep 3
+      @0x0297F Sleep 7
+      @0x02983 Sleep 2
+      @0x02986 Plc_neck m5 (1,0,0) speed 2828
+      @0x02990 Plc_motion 02 09 90
+      @0x02995 Sleep 30
+      @0x02998 Plc_motion 02 02 04
+ROOM4100 sub10 Se_on @0x01A0A 36 02 1c 01 00 00 37 ff f8 f8 5e d7
+      @0x01A16 Plc_neck m2 (0,240,-20) speed 0250
+      @0x01A21 Sleep 2
+      @0x01A24 Plc_motion 00 0f 48
+      @0x01A29 Sleep 3
+      @0x01A2C Plc_neck m2 (0,-240,-20) speed 0250
+      @0x01A37 Sleep 10
+ROOM5000 sub02 Se_on @0x018BA 36 03 00 00 03 00 00 00 00 00 00 00
+      @0x018C7 Sleep 30
+      @0x018CA Work_set(1,0)
+      @0x018CE Plc_neck m1 (-16020,-4500,-23040) speed 3232
+      @0x018D8 Work_set(3,0)
+      @0x018EE Work_set(1,0)
+      @0x018F2 Plc_neck m2 (0,480,-320) speed a0f0
+      @0x018FD Sleep 20
+ROOM5000 sub02 Se_on @0x019BE 36 02 12 00 01 00 00 00 00 00 00 00
+      @0x019CA Gosub sub34
+      @0x019D1 Sleep 15
+      @0x019D4 Plc_neck m2 (0,0,-320) speed 0014
+      @0x019DF Sleep 24
+      @0x019E2 Plc_neck m2 (0,240,-320) speed 0028
+      @0x019ED Sleep 16
+      @0x019F0 Gosub sub27
+ROOM5000 sub04 Se_on @0x01B36 36 02 0e 00 02 00 00 00 00 00 00 00
+      @0x01B43 Sleep 10
+      @0x01B62 Dir_set (0,2600,0)
+      @0x01B6A Plc_motion 00 17 00
+      @0x01B6F Sleep 79
+      @0x01B72 Plc_motion 00 19 00
+      @0x01B85 Sleep 40
+ROOM5010 sub06 Se_on @0x01686 36 02 0d 00 01 00 00 00 00 00 00 00
+      @0x01693 Sleep 25
+      @0x0169B Sleep 1
+      @0x016A5 Sleep 4
+      @0x016A8 Plc_neck m2 (0,0,-512) speed 1e00
+      @0x016BA Work_set(2,0)
+      @0x016BE Plc_neck m2 (0,0,0) speed 1414
+      @0x016D7 Sleep 45
+ROOM5030 sub11 Se_on @0x00E32 36 02 0a 00 01 00 00 00 00 00 00 00
+      @0x00E3F Sleep 15
+      @0x00E4F Sleep 100
+      @0x00E6E Work_set(1,0)
+      @0x00E72 Plc_neck m1 (-17200,-2100,-20300) speed 2020
+      @0x00E7D Sleep 50
+      @0x00E80 Plc_neck m5 (2,0,0) speed 2020
+      @0x00E8A Plc_dest m9 f20 (-19106,-20336)
+      @0x00E93 Sleep 6
+ROOM5030 sub11 Se_on @0x00E42 36 02 0b 00 01 00 00 00 00 00 00 00
+      @0x00E4F Sleep 100
+      @0x00E6E Work_set(1,0)
+      @0x00E72 Plc_neck m1 (-17200,-2100,-20300) speed 2020
+      @0x00E7D Sleep 50
+      @0x00E80 Plc_neck m5 (2,0,0) speed 2020
+      @0x00E8A Plc_dest m9 f20 (-19106,-20336)
+      @0x00E93 Sleep 6
+ROOM5050 sub22 Se_on @0x0131E 36 02 0a 00 01 00 00 00 00 00 00 00
+      @0x0132B Sleep 10
+      @0x0132E Work_set(1,0)
+      @0x01332 Plc_neck m2 (0,1024,0) speed 3232
+      @0x0133C Work_set(2,0)
+      @0x01340 Plc_neck m2 (0,-1024,0) speed 2828
+      @0x0134B Sleep 10
+ROOM5050 sub22 Se_on @0x0135E 36 02 0d 00 01 00 00 00 00 00 00 00
+      @0x0137C Work_set(1,0)
+      @0x01380 Plc_neck m2 (0,0,-1024) speed 3232
+      @0x0138A Work_set(2,0)
+      @0x0138E Plc_neck m2 (0,-1024,0) speed 2828
+      @0x01399 Sleep 10
+      @0x0139C Work_set(1,0)
+      @0x013A0 Plc_neck m2 (0,-1024,0) speed 3232
+      @0x013AA Work_set(2,0)
+      @0x013AE Plc_neck m2 (0,1024,0) speed 3232
+      @0x013B9 Sleep 4
+ROOM5050 sub22 Se_on @0x0136E 36 02 0e 00 01 00 00 00 00 00 00 00
+      @0x0137C Work_set(1,0)
+      @0x01380 Plc_neck m2 (0,0,-1024) speed 3232
+      @0x0138A Work_set(2,0)
+      @0x0138E Plc_neck m2 (0,-1024,0) speed 2828
+      @0x01399 Sleep 10
+      @0x0139C Work_set(1,0)
+      @0x013A0 Plc_neck m2 (0,-1024,0) speed 3232
+      @0x013AA Work_set(2,0)
+      @0x013AE Plc_neck m2 (0,1024,0) speed 3232
+      @0x013B9 Sleep 4
+ROOM5050 sub24 Se_on @0x01456 36 02 0b 00 01 00 00 00 00 00 00 00
+      @0x0146B Sleep 5
+      @0x01484 Work_set(2,0)
+      @0x01487 Plc_motion 00 16 00
+      @0x014BB Sleep 9
+      @0x014C3 Sleep 20
+      @0x014C7 Work_set(2,0)
+      @0x014D2 Dir_set (0,648,0)
+      @0x014DA Plc_neck m2 (0,-1024,0) speed 8c8c
+ROOM5050 sub24 Se_on @0x0148C 36 02 0f 00 02 00 00 00 00 00 00 00
+      @0x014BB Sleep 9
+      @0x014C3 Sleep 20
+      @0x014C7 Work_set(2,0)
+      @0x014D2 Dir_set (0,648,0)
+      @0x014DA Plc_neck m2 (0,-1024,0) speed 8c8c
+      @0x014E4 Plc_motion 00 13 54
+      @0x014E8 Work_set(3,0)
+      @0x014F1 Sleep 30
+ROOM5050 sub24 Se_on @0x0149A 36 02 11 00 02 00 00 00 00 00 00 00
+      @0x014BB Sleep 9
+      @0x014C3 Sleep 20
+      @0x014C7 Work_set(2,0)
+      @0x014D2 Dir_set (0,648,0)
+      @0x014DA Plc_neck m2 (0,-1024,0) speed 8c8c
+      @0x014E4 Plc_motion 00 13 54
+      @0x014E8 Work_set(3,0)
+      @0x014F1 Sleep 30
+ROOM5050 sub32 Se_on @0x018D2 36 02 10 00 02 00 00 00 00 00 00 00
+      @0x018F5 Sleep 10
+      @0x018F8 Plc_neck m1 (-11600,-2240,-24360) speed 4646
+      @0x01903 Sleep 11
+ROOM5070 sub03 Se_on @0x024C6 36 02 0a 00 00 00 b0 b9 ca bd 92 a1
+      @0x02518 Gosub sub04
+      @0x02521 Work_set(1,0)
+      @0x0252C Dir_set (0,0,0)
+ROOM6010 sub23 Se_on @0x01178 36 02 0c 00 01 00 00 00 00 00 00 00
+      @0x01184 Work_set(1,0)
+      @0x01190 Dir_set (0,0,0)
+      @0x0119A Work_set(1,0)
+      @0x0119D Plc_motion 00 0f 40
+      @0x011A1 Work_set(2,0)
+      @0x011A4 Plc_motion 00 0f 40
+      @0x011A9 Work_set(1,0)
+ROOM6020 sub04 Se_on @0x00B94 36 02 0a 01 00 00 a5 d8 f8 f8 3a ea
+      @0x00BA1 Sleep 2
+      @0x00BCD Sleep 5
+      @0x00BD6 Work_set(1,0)
+      @0x00BDB Sleep 30
+      @0x00BDE Work_set(1,0)
+      @0x00BE2 Plc_dest m9 f20 (-10075,-5574)
+      @0x00BEA Plc_rot 00 c8 00
+      @0x00BEE Gosub sub28
+ROOM6020 sub04 Se_on @0x00BB4 36 02 0b 01 00 00 ce d6 00 00 ec d2
+      @0x00BCD Sleep 5
+      @0x00BD6 Work_set(1,0)
+      @0x00BDB Sleep 30
+      @0x00BDE Work_set(1,0)
+      @0x00BE2 Plc_dest m9 f20 (-10075,-5574)
+      @0x00BEA Plc_rot 00 c8 00
+      @0x00BEE Gosub sub28
+ROOM6020 sub12 Se_on @0x01288 36 02 11 01 00 00 8e d8 cc f7 ad e4
+      @0x01295 Sleep 5
+      @0x01298 Plc_neck m2 (0,-128,128) speed 2040
+      @0x012A5 Sleep 30
+ROOM6020 sub15 Se_on @0x015A2 36 02 0d 01 00 00 1a d8 00 00 f1 c4
+      @0x015CB Sleep 5
+      @0x015DE Work_set(1,0)
+      @0x015E2 Plc_dest m9 f20 (-10686,-22432)
+      @0x015EA Plc_rot 00 c8 00
+      @0x015EE Work_set(3,0)
+      @0x015F1 Plc_motion 01 01 00
+      @0x015F9 Sleep 5
+      @0x015FC Work_set(1,0)
+      @0x01600 Dir_set (0,1024,0)
+      @0x01608 Plc_motion 01 01 00
+ROOM6020 sub25 Se_on @0x01A14 36 02 0c 00 00 00 1a d8 00 00 f1 c4
+      @0x01A21 Sleep 10
+      @0x01A24 Plc_neck m2 (0,0,0) speed 6060
+      @0x01A2F Sleep 20
+      @0x01A32 Plc_neck m2 (0,1024,0) speed 2020
+      @0x01A3D Sleep 20
+      @0x01A40 Plc_neck m2 (0,-1024,0) speed 2020
+      @0x01A4B Sleep 20
+      @0x01A4E Plc_neck m2 (0,1024,0) speed 2020
+      @0x01A59 Sleep 40
+      @0x01A5C Plc_dest m9 f20 (-5000,-367)
+      @0x01A64 Plc_rot 00 c8 00
+      @0x01A68 Plc_neck m2 (0,0,0) speed 2020
+      @0x01A73 Sleep 40
+      @0x01A76 Plc_neck m2 (0,0,-1024) speed 2020
+      @0x01A81 Sleep 40
+ROOM6030 sub21 Se_on @0x03398 36 02 0a 00 00 00 00 00 00 00 00 00
+      @0x033A5 Sleep 60
+      @0x033A8 Work_set(1,0)
+      @0x033AC Plc_neck m0 (0,0,0) speed 0000
+      @0x033B6 Plc_motion 00 10 00
+      @0x033BB Sleep 20
+ROOM6040 sub06 Se_on @0x02506 36 02 0a 01 00 00 9a cd f8 ad 06 d0
+      @0x0252F Sleep 3
+      @0x02532 Work_set(1,0)
+      @0x02537 Sleep 10
+      @0x02543 Work_set(1,0)
+      @0x02546 Plc_dest m9 f20 (-12589,-5246)
+      @0x0254E Plc_rot 00 c8 00
+      @0x02552 Gosub sub20
+      @0x02554 Dir_set (0,3072,0)
+      @0x0255D Sleep 2
+      @0x02560 Work_set(1,0)
+      @0x02563 Plc_motion 01 01 08
+      @0x02568 Plc_neck m5 (3,0,0) speed 3c3c
+ROOM6040 sub08 Se_on @0x029A4 36 02 0e 01 00 00 9e cd b0 b9 fb c8
+      @0x029B1 Sleep 5
+      @0x029C1 Sleep 8
+      @0x029C4 Plc_motion 02 10 00
+      @0x029C9 Sleep 5
+      @0x029D9 Sleep 17
+      @0x029E8 Work_set(3,0)
+      @0x029F1 Sleep 10
+      @0x029F4 Work_set(3,1)
+      @0x029F7 Plc_motion 00 18 40
+      @0x029FE Dir_set (0,-1024,0)
+      @0x02A07 Sleep 2
+ROOM6040 sub08 Se_on @0x029B4 36 02 0e 01 00 00 9e cd b0 b9 fb c8
+      @0x029C1 Sleep 8
+      @0x029C4 Plc_motion 02 10 00
+      @0x029C9 Sleep 5
+      @0x029D9 Sleep 17
+      @0x029E8 Work_set(3,0)
+      @0x029F1 Sleep 10
+      @0x029F4 Work_set(3,1)
+      @0x029F7 Plc_motion 00 18 40
+      @0x029FE Dir_set (0,-1024,0)
+      @0x02A07 Sleep 2
+      @0x02A17 Sleep 10
+ROOM6040 sub08 Se_on @0x029CC 36 02 07 01 00 00 9e cd b0 b9 fb c8
+      @0x029D9 Sleep 17
+      @0x029E8 Work_set(3,0)
+      @0x029F1 Sleep 10
+      @0x029F4 Work_set(3,1)
+      @0x029F7 Plc_motion 00 18 40
+      @0x029FE Dir_set (0,-1024,0)
+      @0x02A07 Sleep 2
+      @0x02A17 Sleep 10
+      @0x02A27 Sleep 2
+ROOM6040 sub08 Se_on @0x029DC 36 02 09 01 00 00 9e cd b0 b9 fb c8
+      @0x029E8 Work_set(3,0)
+      @0x029F1 Sleep 10
+      @0x029F4 Work_set(3,1)
+      @0x029F7 Plc_motion 00 18 40
+      @0x029FE Dir_set (0,-1024,0)
+      @0x02A07 Sleep 2
+      @0x02A17 Sleep 10
+      @0x02A27 Sleep 2
+ROOM60C0 sub22 Se_on @0x01DBE 36 02 0d 01 01 00 00 00 00 00 00 00
+      @0x01DCE Gosub sub20
+      @0x01DD5 Sleep 20
+      @0x01DD9 Sleep 8
+      @0x01DDD Sleep 30
+      @0x01DE1 Sleep 30
+      @0x01DE4 Plc_neck m6 (0,0,0) speed 3232
+      @0x01DEF Sleep 6
+ROOM60C0 sub22 Se_on @0x01E0E 36 02 0e 01 01 00 00 00 00 00 00 00
+      @0x01E1B Sleep 55
+      @0x01E1E Work_set(1,0)
+      @0x01E22 Plc_dest m5 f20 (13866,-16619)
+      @0x01E2A Gosub sub33
+      @0x01E2C Plc_motion 01 06 00
+      @0x01E31 Sleep 50
+      @0x01E34 Plc_neck m2 (0,1024,256) speed 2020
+      @0x01E3F Sleep 10
+      @0x01E42 Plc_neck m2 (0,-1024,256) speed 2020
+      @0x01E4D Sleep 18
+      @0x01E50 Plc_neck m2 (0,1024,256) speed 4040
+      @0x01E5B Sleep 7
+      @0x01E5E Plc_neck m2 (0,-1024,256) speed 4040
+      @0x01E69 Sleep 5
+      @0x01E6C Plc_neck m6 (0,0,0) speed 2020
+      @0x01E77 Sleep 40
+ROOM6110 sub20 Se_on @0x03A1E 36 02 0c 01 03 01 00 00 00 00 00 00
+      @0x03A49 Sleep 2
+      @0x03A68 Plc_motion 00 16 00
+      @0x03A6C Plc_neck m6 (0,0,0) speed 0000
+      @0x03A77 Sleep 20
+      @0x03A7B Sleep 10
+ROOM6110 sub20 Se_on @0x03A4C 36 02 0f 01 02 00 00 00 00 00 00 00
+      @0x03A68 Plc_motion 00 16 00
+      @0x03A6C Plc_neck m6 (0,0,0) speed 0000
+      @0x03A77 Sleep 20
+      @0x03A7B Sleep 10
+ROOM6110 sub22 Se_on @0x03B74 36 02 11 01 01 00 00 00 00 00 00 00
+      @0x03B81 Sleep 38
+      @0x03B84 Work_set(1,0)
+      @0x03B87 Plc_motion 00 16 14
+      @0x03B8B Work_set(2,0)
+      @0x03B8E Plc_neck m2 (0,0,-1024) speed 2828
+      @0x03B98 Plc_motion 00 18 14
+ROOM6170 sub04 Se_on @0x03878 36 02 0c 00 01 00 00 00 00 00 00 00
+      @0x038AD Sleep 3
+      @0x038B4 Work_set(1,0)
+      @0x038B7 Plc_motion 00 01 00
+      @0x038BD Sleep 30
+      @0x038C4 Gosub sub25
+      @0x038CF Sleep 5
+      @0x038D2 Plc_motion 00 02 00
+      @0x038D6 Plc_neck m2 (0,512,-256) speed 2424
+ROOM7010 sub13 Se_on @0x0232C 36 02 0d 01 01 00 00 00 00 00 00 00
+      @0x0235D Sleep 3
+      @0x02364 Work_set(1,0)
+      @0x02367 Plc_motion 00 0f 00
+      @0x0236D Sleep 30
+      @0x02374 Gosub sub14
+      @0x0237F Sleep 5
+      @0x02382 Plc_motion 00 10 00
+      @0x02386 Plc_neck m2 (0,512,-256) speed 2424
+      @0x02391 Sleep 30
+ROOM7020 sub02 Se_on @0x013B4 36 02 11 00 00 00 00 00 00 00 00 00
+      @0x013C0 Work_set(1,0)
+      @0x013C5 Sleep 30
+      @0x013C8 Plc_neck m2 (0,-512,-512) speed 1e3c
+      @0x013D7 Sleep 30
+      @0x013DA Plc_neck m2 (0,512,-512) speed 1e3c
+      @0x013E6 Plc_neck m2 (0,0,-256) speed 1e3c
+      @0x013F1 Sleep 30
+      @0x013F4 Plc_neck m2 (0,0,-512) speed 1e3c
+      @0x01402 Gosub sub18
+ROOM7020 sub13 Se_on @0x019E2 36 02 0e 00 00 00 00 00 00 00 00 00
+      @0x019EE Work_set(4,0)
+      @0x019FA Dir_set (-1024,0,1024)
+ROOM7030 sub06 Se_on @0x0229C 36 02 0a 01 00 00 b7 a6 00 00 0b a4
+      @0x022A9 Sleep 30
+      @0x022B5 Sleep 10
+      @0x022B8 Plc_dest m5 f20 (-23342,-23770)
+      @0x022C1 Sleep 18
+      @0x022D0 Plc_dest m6 f20 (-23342,-23770)
+      @0x022D9 Sleep 10
+      @0x022DC Plc_neck m2 (0,0,1024) speed 2020
+      @0x022E7 Sleep 20
+ROOM7030 sub06 Se_on @0x022C4 36 02 16 01 00 00 ef a5 00 00 0b a4
+      @0x022D0 Plc_dest m6 f20 (-23342,-23770)
+      @0x022D9 Sleep 10
+      @0x022DC Plc_neck m2 (0,0,1024) speed 2020
+      @0x022E7 Sleep 20
+ROOM7030 sub07 Se_on @0x0239C 36 02 0c 01 00 00 8f be 00 00 de 99
+      @0x023A9 Sleep 10
+      @0x023AC Work_set(3,1)
+      @0x023AF Plc_motion 00 0f 44
+      @0x023BC Dir_set (0,1024,0)
+      @0x023C4 Plc_neck m2 (0,-1024,128) speed 4040
+Erste Figuren-Reaktion nach Se_on (Work-Art 1/2/3): Kopf (Plc_neck) 52, Koerper (Plc_dest m9/Plc_rot/Dir_set) 22
+Plc_neck-Modi in Szenen-Subs mit Message_on: {0: 20, 1: 35, 2: 312, 3: 2, 4: 15, 5: 135, 6: 14}
+Plc_dest-Modi in Szenen-Subs mit Message_on: {4: 26, 5: 27, 6: 3, 7: 1, 8: 5, 9: 27, 18: 2, 20: 35, 21: 28}

@@ -330,9 +330,13 @@ static int teil_texte(void)
             olen += (b == 0x02 || b == 0x04 || b == 0x05 || b == 0x06 || b == 0x09 || b == 0x0A || b == 0x0B) ? 2 : 1;
         }
         olen += 2;
-        CHECK(kopf > 4 && memcmp(t->bytes, orig, (size_t)kopf) == 0 &&
-              memcmp(t->bytes + t->len - 4, orig + olen - 4, 4) == 0,
-              "ROOM%04X msg %d: Kopf %d B (Sprecher/Farbe) und Schwanz `04 01 01 63` = Original", t->raum, t->id, kopf);
+        /* Runde 37 Spur F: Untersuchungstext (ROOM50B1 msg 0) = Kopf `04 02` + Schwanz `01 00` (texte_bauen.py UNTERSUCHEN) */
+        const int unters = (t->len >= 4 && t->bytes[0] == 0x04 && t->bytes[1] == 0x02);
+        const int schwanz = unters ? 2 : 4;
+        if (unters) kopf = 2;
+        CHECK((unters || kopf > 4) && memcmp(t->bytes, orig, (size_t)kopf) == 0 &&
+              memcmp(t->bytes + t->len - schwanz, orig + olen - schwanz, (size_t)schwanz) == 0,
+              "ROOM%04X msg %d: Kopf %d B und Schwanz %d B = Original", t->raum, t->id, kopf, schwanz);
         CHECK(re15_msg_compute_duration(t->bytes, t->len, 0) == re15_msg_compute_duration(orig, (size_t)olen, 0),
               "ROOM%04X msg %d: Dauer %d Bilder = Original", t->raum, t->id,
               re15_msg_compute_duration(t->bytes, t->len, 0));
@@ -357,8 +361,8 @@ static int teil_texte(void)
         CHECK(fremd == 0, "ROOM%04X: alle anderen %d Nachrichten bytegleich zur RDT", t->raum, nmsg - 1);
         free(r.buf);
     }
-    CHECK(umgeschrieben == 11, "P4: %d umgeschriebene Nachrichten (30C1 3/4/7, 6030 1/2/12, 6031 0/1, 50B0 1, 6000 0/3)",
-          umgeschrieben);
+    CHECK(umgeschrieben == 12, "P4: %d umgeschriebene Nachrichten (30C1 3/4/7, 6030 1/2/12, 6031 0/1, 50B0 1, 6000 0/3; "
+          "Runde 37 Spur F: 50B1 0)", umgeschrieben);
     return 0;
 }
 

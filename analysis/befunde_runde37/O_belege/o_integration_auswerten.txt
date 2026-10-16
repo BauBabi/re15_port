@@ -1,0 +1,29 @@
+ok: neck_trace.log vorhanden
+ok: s11c0.log vorhanden
+ok: [exe] erstes Bild F6: Ada Gier 3679 (Peilung auf Marvin 3679), Marvin Gier 1631 (Peilung auf Ada 1631) - einander zugewandt
+ok: [exe] fuenf Zeilen 10..14 in der Reihenfolge (5)
+ok: [exe] Ada dreht den Koerper im ganzen Gespraech nicht (bis Marvins letzte Zeile endet): 0 Drehungen davor - kein 180, kein zweites 90
+ok: [exe] Nachtrag 12: danach hoechstens EINE Drehung Adas (dem laufenden Marvin nach), 670 Einheiten = 58.9 Grad < 90 Grad (1 Abschnitte)
+ok: [exe] Marvin dreht den Koerper erst nach dem Ende seiner letzten Zeile (F383): 0 Drehungen davor
+ok: [exe] groesste Einzeldrehung Marvins 1118 Einheiten = 98.3 Grad < 120 Grad (Losrennen zur Tuer hinter der Kamera)
+ok: [exe] msg 10 Sprecher Ada: Koerper zum Partner (Kegel 0x60) 98/98, Kopf auf dem Partner/geradeaus 98/98
+ok: [exe] msg 10 Sprecher Ada: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 98/98 Bildern (max 0.0 Grad)
+ok: [exe] msg 10 Zuhoerer Marvin: Koerper zum Partner (Kegel 0x60) 98/98, Kopf auf dem Partner/geradeaus 98/98
+ok: [exe] msg 10 Zuhoerer Marvin: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 98/98 Bildern (max 0.0 Grad)
+ok: [exe] msg 11 Sprecher Marvin: Koerper zum Partner (Kegel 0x60) 55/55, Kopf auf dem Partner/geradeaus 55/55
+ok: [exe] msg 11 Sprecher Marvin: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 55/55 Bildern (max 6.1 Grad)
+ok: [exe] msg 11 Zuhoerer Ada: Koerper zum Partner (Kegel 0x60) 55/55, Kopf auf dem Partner/geradeaus 55/55
+ok: [exe] msg 11 Zuhoerer Ada: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 55/55 Bildern (max 0.0 Grad)
+ok: [exe] msg 12 Sprecher Marvin: Koerper zum Partner (Kegel 0x60) 60/60, Kopf auf dem Partner/geradeaus 60/60
+ok: [exe] msg 12 Sprecher Marvin: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 60/60 Bildern (max 0.0 Grad)
+ok: [exe] msg 12 Zuhoerer Ada: Koerper zum Partner (Kegel 0x60) 60/60, Kopf auf dem Partner/geradeaus 60/60
+ok: [exe] msg 12 Zuhoerer Ada: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 60/60 Bildern (max 0.0 Grad)
+ok: [exe] msg 13 Sprecher Marvin: Koerper zum Partner (Kegel 0x60) 99/99, Kopf auf dem Partner/geradeaus 99/99
+ok: [exe] msg 13 Sprecher Marvin: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 99/99 Bildern (max 0.0 Grad)
+ok: [exe] msg 13 Zuhoerer Ada: Koerper zum Partner (Kegel 0x60) 99/99, Kopf auf dem Partner/geradeaus 99/99
+ok: [exe] msg 13 Zuhoerer Ada: gezeichneter Kopf-Blick zum Partner <= 8,4 Grad in 99/99 Bildern (max 0.0 Grad)
+ok: [exe] Knall: beide Koepfe zur Tuer vor Adas Frage (Ada 1, Marvin 1), Koerper unveraendert (s.o.)
+ok: [exe] msg 14 'Marvin!...': Ada hat sich ihm nachgedreht - Koerper im ersten Bild 40 Einheiten neben ihm (Kegel 0x60)
+ok: [exe] msg 14: Adas Kopf-Ziel folgt dem laufenden Marvin in 99/99 Bildern
+ok: [exe] msg 14: Adas gezeichneter Blick auf Marvin <= 8,4 Grad in 99/99 Bildern (max 1.9 Grad)
+auswerten: 0 Fehler

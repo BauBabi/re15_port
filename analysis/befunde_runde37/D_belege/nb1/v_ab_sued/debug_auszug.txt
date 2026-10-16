@@ -1,0 +1,2 @@
+[room] PC loaded room2030.rdt (282076 bytes)
+exit=0 dauer=136s

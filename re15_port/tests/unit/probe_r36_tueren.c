@@ -8,6 +8,8 @@
  *                 aus der Mitte auseinander (obj 0 / obj 1 laufen in z gegenlaeufig, keine Drehung) - die
  *                 RE1.5-Kabinentuer (ROOM10800) ist zweifluegelig mittig. Gegenprobe: DOOR25 (vorher P25G)
  *                 hebt EIN Blatt (Lage y).
+ *                 Runde 37 Spur C (analysis/befunde_runde37/C_fahrstuhl.md): S013/S040/S057 spielen jetzt das Port-
+ *                 Archiv P27F (Basis DOOR27, Tonteil + SCD bytegleich, glatte Fluegel) - geprueft wird die Kennung.
  *   schott        Punkt 1b: grosse Tuer ROOM2090 <-> ROOM20A0 (S164/S165) = DOOR26 V0: zwei Fluegel
  *                 (DOOR26 Skript 3 @Datei 0x05914: obj 0 mesh 0 + obj 1 mesh 1); Gegenprobe V3 (vorher) = ein
  *                 Fluegel. Echter Durchgang ROOM2090 -> ROOM20A0 (Band 1) stellt die Anfrage DOOR26 V0.
@@ -34,6 +36,7 @@
 #include "re15_skeleton.h"
 #include "re15_door_seq.h"
 #include "re15_aufschliessen_r36.h"
+#include "re15_kistenregel_r37.h"
 #include "re15_tim.h"
 #include <math.h>
 
@@ -102,6 +105,15 @@ static int room_boot(uint16_t room)
     pl->x = 0; pl->z = 0; pl->rot_y = 0;
     re15_collision_set_band(0);
     re15_inv_load_briefing();
+    /* Runde 37 Spur Q: ein Besitz-Bit der Kistenregel zaehlt nur mit dem Gegenstand im INVENTAR (kistenregel_r37.c,
+     * RE2 Keep_Item_ck @0x8005850c). Im Original heisst "Bit gesetzt, noch nicht benutzt" = er liegt im Inventar (die
+     * Item-Box ist eine Port-Zutat) -> denselben Gegenstand aus der Q-Tabelle dazulegen (ROOM10D0 (9,0x34) Blue Keycard
+     * 0x38, ROOM3010 (3,0x3B) Green Keycard 0x36). */
+    for (int k = 0; k < s_n_flags; k++)
+        for (int j = 0; j < re15_kistenregel_r37_anzahl(); j++) {
+            const re15_kr37_fall_t *q = re15_kistenregel_r37_zeile(j);
+            if (q->raum == room && q->bank == s_flags[k][0] && q->bit == s_flags[k][1]) { re15_inv_grant(q->item, 1); break; }
+        }
     s_shown = 0;
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
@@ -168,8 +180,9 @@ static re15_door_seq_anfrage_t s_gefangen;
 static int s_n_gefangen = 0;
 static void fang(const re15_door_seq_anfrage_t *a) { s_gefangen = *a; s_n_gefangen++; }
 
-/* Raum booten, Tuer zum Ziel suchen, per QUADRAT durchgehen: genau eine Anfrage RE2-Datei DOORre2 V var. */
-static void durchgang_pruefen(uint16_t raum, uint16_t ziel, int re2, int var)
+/* Raum booten, Tuer zum Ziel suchen, per QUADRAT durchgehen: genau eine Anfrage RE2-Datei DOORre2 V var.
+ * Runde 37 Spur C: kennung != NULL = Port-Archiv mit dieser Kennung (Basis re2), sonst RE2-Datei (eigen 0). */
+static void durchgang_pruefen_k(uint16_t raum, uint16_t ziel, int re2, int var, const char *kennung)
 {
     re15_door_seq_setze_laeufer(fang);
     if (room_boot(raum) != 0) return;
@@ -188,32 +201,50 @@ static void durchgang_pruefen(uint16_t raum, uint16_t ziel, int re2, int var)
         if (!gefunden) continue;
         erledigt = 1;
         PRUEF(wechsel && g_room_change.room_id == ziel, "ROOM%04X: kein Durchgang nach ROOM%04X", raum, ziel);
+        const re15_tuer_eigen_t *ek = s_gefangen.eigen ? re15_door_seq_eigen(s_gefangen.eigen) : NULL;
         PRUEF(s_n_gefangen == 1 && s_gefangen.archiv == RE15_DOOR_ARCHIV_RE2 && s_gefangen.re2_nr == re2
-              && s_gefangen.tuer_nr == re2 && s_gefangen.variante == var && s_gefangen.eigen == 0,
-              "ROOM%04X -> ROOM%04X: Anfrage DOOR%02X V%d (RE2-Datei) fehlt/falsch", raum, ziel, re2, var);
+              && s_gefangen.tuer_nr == re2 && s_gefangen.variante == var
+              && (kennung ? (ek && !strcmp(ek->kennung, kennung)) : s_gefangen.eigen == 0),
+              "ROOM%04X -> ROOM%04X: Anfrage DOOR%02X V%d (%s) fehlt/falsch", raum, ziel, re2, var,
+              kennung ? kennung : "RE2-Datei");
         g_room_change.pending = 0;
     }
     PRUEF(erledigt, "ROOM%04X: keine begehbare Tuer nach ROOM%04X", raum, ziel);
     re15_door_seq_setze_laeufer(NULL);
 }
+static void durchgang_pruefen(uint16_t raum, uint16_t ziel, int re2, int var)
+{
+    durchgang_pruefen_k(raum, ziel, re2, var, NULL);
+}
 
-/* Zeilen einer Seite: alle (xxx0 und xxx1) tragen RE2-Datei DOORre2 Vvar. */
-static void zeilen_pruefen(int seite, int re2, int var)
+/* Zeilen einer Seite: alle (xxx0 und xxx1) tragen RE2-Datei DOORre2 Vvar.
+ * Runde 37 Spur C: kennung != NULL = Port-Archiv dieser Kennung mit Basis DOORre2 (sonst RE2-Datei, eigen 0). */
+static int eigen_ist(int eigen, const char *kennung)
+{
+    const re15_tuer_eigen_t *e = eigen ? re15_door_seq_eigen(eigen) : NULL;
+    return kennung ? (e && !strcmp(e->kennung, kennung)) : eigen == 0;
+}
+static void zeilen_pruefen_k(int seite, int re2, int var, const char *kennung)
 {
     int n = 0;
     for (int i = 0; i < re15_door_seq_zeilen(); i++) {
         const re15_tuer_zeile_t *z = re15_door_seq_zeile(i);
         if ((int)z->seite != seite) continue;
         n++;
-        PRUEF(z->re2_nr == re2 && z->variante == var && z->eigen == 0 && z->spender == RE15_DOOR_KEIN_SPENDER,
-              "S%03d ROOM%04X: DOOR%02X V%d eigen %d statt DOOR%02X V%d RE2-Datei", seite, z->raum, z->re2_nr,
-              z->variante, z->eigen, re2, var);
+        PRUEF(z->re2_nr == re2 && z->variante == var && eigen_ist(z->eigen, kennung) && z->spender == RE15_DOOR_KEIN_SPENDER,
+              "S%03d ROOM%04X: DOOR%02X V%d eigen %d statt DOOR%02X V%d %s", seite, z->raum, z->re2_nr,
+              z->variante, z->eigen, re2, var, kennung ? kennung : "RE2-Datei");
     }
     PRUEF(n == 2, "S%03d: %d Zeilen statt 2 (xxx0/xxx1)", seite, n);
     re15_door_seq_anfrage_t q;
     unsigned raum = 0;
-    PRUEF(re15_door_seq_anfrage_fuer_seite(seite, &q, &raum) && q.re2_nr == re2 && q.variante == var && q.eigen == 0,
+    PRUEF(re15_door_seq_anfrage_fuer_seite(seite, &q, &raum) && q.re2_nr == re2 && q.variante == var
+          && eigen_ist(q.eigen, kennung),
           "S%03d: Pruefhaken RE15_TUER_SEITE faende nicht DOOR%02X V%d", seite, re2, var);
+}
+static void zeilen_pruefen(int seite, int re2, int var)
+{
+    zeilen_pruefen_k(seite, re2, var, NULL);
 }
 
 /* Maschinenlauf eines RE2-Archivs aus shared_assets/RE2/DOOR: Lage/Drehung/an je Objekt und Bild. */
@@ -264,9 +295,11 @@ static int maschine(int nr, int var, spur_t *sp)
  * ------------------------------------------------------------------------------------------ */
 static void teil_fahrstuhl(void)
 {
-    zeilen_pruefen(13, 0x27, 0);   /* ROOM1040/1041 -> ROOM1080 */
-    zeilen_pruefen(40, 0x27, 0);   /* ROOM10C0/10C1 -> ROOM1080 */
-    zeilen_pruefen(57, 0x27, 0);   /* ROOM1120/1121 -> ROOM1080 */
+    /* Runde 37 Spur C (analysis/befunde_runde37/C_fahrstuhl.md): die Seiten spielen jetzt das Port-Archiv P27F =
+     * DOOR27 (Tonteil + SCD bytegleich, dieselbe Maschine V0) mit glatten Fluegeln statt der verzahnten Labortuer */
+    zeilen_pruefen_k(13, 0x27, 0, "P27F");   /* ROOM1040/1041 -> ROOM1080 */
+    zeilen_pruefen_k(40, 0x27, 0, "P27F");   /* ROOM10C0/10C1 -> ROOM1080 */
+    zeilen_pruefen_k(57, 0x27, 0, "P27F");   /* ROOM1120/1121 -> ROOM1080 */
 
     /* Maschine DOOR27 V0: zwei Fluegel schieben aus der Mitte auseinander (z gegenlaeufig), keiner dreht */
     static spur_t sp;
@@ -303,7 +336,7 @@ static void teil_fahrstuhl(void)
     /* echter Durchgang 10C0 -> Kabine 1080: die Kabinentuer ist erst mit Strom eine Tuer (ROOM10C0 main00
      * @0x00E66 Ck(4,0xF3)==0 -> Text "It's an elevator...", sonst @0x00E82 Door_aot_set Platz 1) */
     s_n_flags = 1; s_flags[0][0] = 4; s_flags[0][1] = 0xF3;
-    durchgang_pruefen(0x10C0, 0x1080, 0x27, 0);
+    durchgang_pruefen_k(0x10C0, 0x1080, 0x27, 0, "P27F");   /* Runde 37 Spur C: Port-Archiv P27F (Basis DOOR27) */
     s_n_flags = 0;
 }
 

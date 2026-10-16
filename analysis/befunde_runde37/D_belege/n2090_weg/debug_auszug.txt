@@ -1,0 +1,3 @@
+[room] PC loaded room20a0.rdt (300176 bytes)
+[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2 spawn=(6300,-1800,-16250)
+[room] PC loaded room2090.rdt (311024 bytes)

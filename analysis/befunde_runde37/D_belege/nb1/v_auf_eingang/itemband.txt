@@ -1,0 +1,1 @@
+F345 room=2030 MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800

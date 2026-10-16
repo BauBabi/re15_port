@@ -14,7 +14,8 @@
  *             probe_r31_tueren "maschine"), dieselben Se_on-Bilder und denselben Schliesston-Merker.
  *             Stufe 2: Archive mit md1_eigen (P1EL Lamellenplatte) - MD1 = Basis-Meshes als ANFANG
  *             jedes Meshes (Ecken, Normalen, Dreiecke, UV bytegleich) + ergaenzte Dreiecke; Tonteil + SCD
- *             bytegleich.
+ *             bytegleich. Runde 37 Spur C: md1_eigen 2 (P27F/P27C) = MD1 NEU bei gleicher Meshzahl (Geometrie:
+ *             unit_r37_fahrstuhl_archiv).
  *   maschine  Stufe 2: jede (Basis, Variante), die NUR die Runde 33 benutzt (u. a. DOOR04 V2, DOOR07
  *             V0/V1, DOOR0C, DOOR14, DOOR1D V0/V1, DOOR36 V0 = G12 objektlos), gegen den Katalog-Simulator
  *             (tests/unit/gen/r33_tuer_referenz.inc, tools/tueren/tuer_maschine_referenz.py --r33) - wie
@@ -169,8 +170,16 @@ static void teil_archive(void)
                      && x->quad_count == y->quad_count;
                 zusatz += x->triangle_count - y->triangle_count;
             }
+            if (t->md1_eigen == 2) {
+                /* Runde 37 Spur C (analysis/befunde_runde37/C_fahrstuhl.md): P27F/P27C = DOOR27 mit NEUEM MD1 (glatte
+                 * Fluegel statt der verzahnten) bei gleicher Meshzahl; die Geometrie prueft unit_r37_fahrstuhl_archiv */
+                PRUEF(re15_md1_parse(tm + md1_rel, (int)(tim_rel - md1_rel), &ma) == 0 && ma.mesh_count == mb.mesh_count,
+                      "%s: MD1 (md1_eigen 2) nicht lesbar oder andere Meshzahl", t->kennung);
+                printf("%s: MD1 neu (md1_eigen 2, %d Meshes wie DOOR%02X)\n", t->kennung, ma.mesh_count, t->basis);
+            } else {
             PRUEF(ok && zusatz > 0, "%s: MD1 ist nicht Basis + Ergaenzung (zusaetzliche Dreiecke %d)", t->kennung, zusatz);
             printf("%s: MD1 = Basis DOOR%02X + %d Dreiecke (md1_eigen)\n", t->kennung, t->basis, zusatz);
+            }
             diff = (size_t)(n - (t->sektor * 0x800 + tim_rel));
         }
         re15_tim_t tim;

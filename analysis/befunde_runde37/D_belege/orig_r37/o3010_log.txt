@@ -1,0 +1,29 @@
+DuckStation gestartet {'92900'}
+GDB verbunden
+Stopp: b'S02'
+Menue 0x800BBE5C.. vorher: 0101002400000000
+Menue nachher: 0101022400010000 (Zeile 1, Stage 2, Raumindex[stage] 0x01)
+Quadrat (laden) gedrueckt, warte 20 s
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+RDT-Basis 8011f80c SCA 801215cc Zellen im RAM == STAGE3/ROOM3010.RDT @0x01DD8: True
+Spieler START: {'x': -9100, 'y': 0, 'z': 11000, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}
+  g_active_count @0x800aca4e: 0 -> 0
+Spieler nach Pad-Probe: {'x': -9100, 'y': 0, 'z': 11000, 'blick': 3360, 'band': 0, 'sub': 3, 'st': 1}
+  g_active_count @0x800aca4e: 0 -> 0
+A  (Band 0 unter dem Steg) VOR: Spieler {'x': -10700, 'y': 0, 'z': 844, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}, Taken-Bit 20 = 0
+  A  (Band 0 unter dem Steg) nach Druck 1: Spieler {'x': -10700, 'y': 0, 'z': 844, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}, Taken-Bit 20 = 0
+  A  (Band 0 unter dem Steg) nach Druck 2: Spieler {'x': -10700, 'y': 0, 'z': 844, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}, Taken-Bit 20 = 0
+  A  (Band 0 unter dem Steg) nach Druck 3: Spieler {'x': -10700, 'y': 0, 'z': 844, 'blick': 0, 'band': 0, 'sub': 0, 'st': 1}, Taken-Bit 20 = 0
+A  (Band 0 unter dem Steg) ERGEBNIS: Taken-Bit 20 = 0
+C  (Klettern an r0[4]) VOR: Spieler {'x': -10322, 'y': 0, 'z': -11175, 'blick': 3072, 'band': 0, 'sub': 0, 'st': 1}
+  C  (Klettern an r0[4]) t=1 s: Spieler {'x': -10322, 'y': -1800, 'z': -10027, 'blick': 3072, 'band': 1, 'sub': 9, 'st': 1}
+  C  (Klettern an r0[4]) t=2 s: Spieler {'x': -10322, 'y': -1800, 'z': -10027, 'blick': 3072, 'band': 1, 'sub': 0, 'st': 1}
+  C  (Klettern an r0[4]) t=3 s: Spieler {'x': -10322, 'y': -1800, 'z': -10027, 'blick': 3072, 'band': 1, 'sub': 0, 'st': 1}
+  C  (Klettern an r0[4]) t=4 s: Spieler {'x': -10322, 'y': -1800, 'z': -10027, 'blick': 3072, 'band': 1, 'sub': 0, 'st': 1}
+B  (Band 1 auf dem Steg) VOR: Spieler {'x': -10700, 'y': -1800, 'z': 844, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 20 = 0
+  B  (Band 1 auf dem Steg) nach Druck 1: Spieler {'x': -10700, 'y': -1800, 'z': 826, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 20 = 0
+  B  (Band 1 auf dem Steg) nach Druck 2: Spieler {'x': -10700, 'y': -1800, 'z': 826, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 20 = 0
+  B  (Band 1 auf dem Steg) nach Druck 3: Spieler {'x': -10700, 'y': -1800, 'z': 826, 'blick': 0, 'band': 1, 'sub': 0, 'st': 1}, Taken-Bit 20 = 1
+B  (Band 1 auf dem Steg) ERGEBNIS: Taken-Bit 20 = 1
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

@@ -1,0 +1,20 @@
+# r8_e2e_nachher — derselbe Lauf wie r7_e2e_vorher, Stand 9e8f0762 (Sperre gebaut)
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r37_sperre1050/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r37_sperre1050/re15_port/shared_assets/PSX
+[setflag] flag(9,71/0x47) = 1
+[setflag] flag(3,94/0x5e) = 1
+[setflag] flag(3,187/0xbb) = 1
+[setflag] flag(3,121/0x79) = 1
+[setflag] flag(3,129/0x81) = 1
+[room] PC loaded room10f0.rdt (225092 bytes)
+[aot] DOOR FIRE slot=1 rect=(-4750,-1750,hw=600,hh=500) target_cut=0 spawn=(-13600,-9000,1300)
+[room] PC loaded room1090.rdt (336440 bytes)
+[aot] DOOR FIRE slot=0 rect=(-10080,3060,hw=2350,hh=800) target_cut=6 spawn=(19850,0,-22300)
+[room] PC loaded room1050.rdt (297324 bytes)
+[sperre1050] ROOM1050 Slot 4 -> Text-Platz msg 26 ((3,0xBB)=1 (9,73)=0 (9,71)=1 (3,94)=1)
+[msgtext] room=1050 id=26 "I have to get the Chief first..."
+[flow] EXIT_AT: Bild 700 in Raum 1050 erreicht -> exit
+# state.log: Druck in ROOM1050
+F361 pad=0010 PL(16732,-13747,rot=4128,hp=100)	msg(a=0 fsm=0 id=0 q=0)
+F362 pad=0010 PL(16732,-13750,rot=4128,hp=100)	msg(a=0 fsm=0 id=0 q=0)
+F372 pad=8000 PL(16732,-13750,rot=4128,hp=100)	msg(a=1 fsm=1 id=26 q=0)
