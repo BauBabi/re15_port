@@ -258,3 +258,12 @@ der Alt-Riegel schoss in den Schacht, angepasst s. o.; danach einzeln `ctest -R 
 - Keine neuen Spieldateien, keine Sprachdateien, nichts am Paket-Gate.
 - Selbst pruefen: als Elza ROOM4001 nach der Kendo-Szene betreten und auf den rechten Wandschacht zugehen; oder als Leon
   ROOM5040 (Debug-Menue "Stage 4" -> B-2 CORRIDOR) und in den Gang laufen; sich greifen lassen.
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-16, fortlaufend)
+Auftrag: Maengel M1 (Ein-Bild-Ruecksprung am Ende des Austritts, urteilsrelevant) und M2 (derselbe Ruecksprung an den
+Phasenwechseln der neuen Griffe) aus `T_abnahme_0.md` beheben. Punkt 2 (erfuellt) nicht verschlechtern, Riegel gruen halten.
+Der relayte Nutzer-Nachtrag ROOM20A0 (Rolladen vor der Kamera) gehoert zu Spur W (Baum r38_rolltor20a0), nicht zu T.
+
+### Stand
+- Lektuere: AUFTRAG/VERTRAG, Dossier, Abnahmebericht T_abnahme_0.md, spiderman_r38.c, re15_birkin_anim (enemy_ai_common.c),
+  Render-Pfad der Gegner-Pose (platform/pc/main.c, re15_skel_compute_pose).
