@@ -20,6 +20,7 @@
 #include "re15_scd.h"
 #include "re15_anim_select.h"   /* re15_actor_footstep (foot-plant query) */
 #include "re15_audio.h"         /* re15_audio_footstep */
+#include "re15_wasser_r38.h"    /* Runde 38 Spur N: FUN_80045630-Zwilling (Wasser-Effekt + Tonindex) */
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
 #include "re15_fenster1120.h"   /* Runde 35 Spur M */
@@ -1011,6 +1012,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     pl->pos_s_y = (uint16_t)(int32_t)pl->y;      /* @0x8001d0dc */
     pl->pos_s_z = (uint16_t)(int32_t)pl->z;      /* @0x8001d0e4 */
     schritt_station(RE15_SCHRITT_ANFANG, pl->x, pl->z);   /* Mess-Schiene, s. Kopf */
+    re15_wasser_r38_bildanfang(c);   /* Runde 38 Spur N: Schnappschuss + Stempel +0x88 latchen/loeschen @0x80031da4 */
 
     /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
@@ -2156,7 +2158,7 @@ void re15_game_step(const re15_game_ctx_t *c)
                 s_last_foot_cur = cur;
                 int clip = (pl->motion == 105) ? 5 : 0;   /* walk=W01 c5, run=c0 */
                 int foot = re15_actor_footstep(c->w01_anim, pl, clip, cur);
-                if (foot) re15_audio_footstep(foot, re15_rdt_floor_sound(c->rdt, pl->x, pl->z));
+                if (foot) re15_wasser_r38_schritt(c, re15_wasser_r38_a0(pl->motion, pl->walk_active), foot);   /* Runde 38 Spur N: FUN_80045630 (Effekt @0x800456ac-0x80045710, Ton @0x80045718) */
             }
         } else {
             s_last_foot_cur = 0xFFFFFFFFu;   /* reset when not locomoting */
