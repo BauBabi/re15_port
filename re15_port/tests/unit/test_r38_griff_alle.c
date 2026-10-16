@@ -145,6 +145,7 @@ static const fall_t k_faelle[] = {
     { "zombie2_hinten",  0x1140, RE15_AI_FLAVOR_RE2,  0, 0x10, 0x18, -1000, -19600, 0, 700, 1, -1, 100, 0, {{0}} },
     { "kriecher2_1220",  0x1220, RE15_AI_FLAVOR_RE2,  0, 0x10, 0x18, -21000, -5500, 0, 700, 0, -1, 100, 0, {{0}} },
     { "hund15",          0x1140, RE15_AI_FLAVOR_RE15, 0, 0x20, 0x20, -1000, -19600, 0, 700, 0,  9, 100, 0, {{0}} },
+    { "hund2",           0x1140, RE15_AI_FLAVOR_RE2,  0, 0x20, 0x20, -1000, -19600, 0, 1500, 0, -1, 5, 0, {{0}} },
     { "gorilla",         0x11C0, RE15_AI_FLAVOR_RE2,  0, 0x27, 0x27, -9013, -13961, 1024, 1500, 0, 15, 100, 1, {{4, 0x40}} },
     { "spiderman_vorn",  0x4001, RE15_AI_FLAVOR_RE2,  1, 0x2B, 0x2B, -12000, -9000, 1024, 1500, 0, 5, 40, 4,
                           {{4, 20}, {3, 0x21}, {3, 0x91}, {3, 0xAF}} },
@@ -242,7 +243,8 @@ static int fall_laufen(const fall_t *F)
             memset(d, 0, sizeof *d);
             d->active = 1; d->type = 0x20; d->state = 0; d->em_flag_id = 0xFF;
             re15_enemy_apply_hitbox(d, 0x20);
-            (void)bank15(0x20, F->archiv);
+            if (re15_ai_re2_for_type(0x20) && re15_re2_owns_type(0x20)) (void)bank2(0x20);
+            else (void)bank15(0x20, F->archiv);
         } else { printf("FAIL: kein Greifer 0x%02X..0x%02X im Raum\n", F->typ_lo, F->typ_hi); return 1; }
     }
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
@@ -268,6 +270,8 @@ static int fall_laufen(const fall_t *F)
     huelle();
     const int32_t gift_x = s_hx1 + 20000, gift_z = s_hz1 + 20000;   /* Anker eines frueheren Griffs, ausserhalb */
     pl->anchor_x = gift_x; pl->anchor_z = gift_z;
+    {   extern void re15_victim_anchor_calibrate(int32_t, int32_t);
+        re15_victim_anchor_calibrate(gift_x, gift_z); }   /* auch der "letzte begehbare Standpunkt" stammt aus einem frueheren Griff */
     printf("  Greifer slot %d Typ 0x%02X (%d,%d) r%d, Spieler (%d,%d) r%d, Huelle (%d,%d)..(%d,%d), Gift-Anker (%d,%d)\n",
            g, z->type, (int)z->x, (int)z->z, (int)z->rot_y, (int)pl->x, (int)pl->z, (int)pl->rot_y,
            (int)s_hx0, (int)s_hz0, (int)s_hx1, (int)s_hz1, (int)gift_x, (int)gift_z);
@@ -276,6 +280,7 @@ static int fall_laufen(const fall_t *F)
     int32_t vor_x = pl->x, vor_z = pl->z, maxd = 0, maxsprung = 0, lx = pl->x, lz = pl->z;
     int band = re15_collision_debug_band(); if (band < 0) band = 0;
     for (int f = 0; f < 1500; f++) {
+        if (latch < 0) { extern void re15_victim_anchor_calibrate(int32_t, int32_t); re15_victim_anchor_calibrate(gift_x, gift_z); }
         int v0 = re15_player_victim_state();
         if (latch < 0 && v0 == 0 && !(pl->hit_react & 1) && F->zwang_sub < 0) {
             pl->x = F->px; pl->z = F->pz; pl->rot_y = (int16_t)F->rot;  /* bis zum Griff festhalten (bissarm) */

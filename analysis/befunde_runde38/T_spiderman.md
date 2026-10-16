@@ -12,6 +12,8 @@ Baum `.claude/worktrees/r38_spiderman`, Zweig `r38/spiderman`, Basis e2cc7673. A
 - 17:0x Umsetzung spiderman_r38.c + Haken, Messung nachher (m3-m6), Riegel unit_r38_spiderman.
 - 17:2x Schritt 3: Zensus, Wandwaechter, Riegel unit_r38_griff_* (9 Faelle), Alt-Riegel r37_beretta angepasst.
 - 17:48 gezielte Tests gruen (141/141), Dossier fertig.
+- 18:03 Nachtrag (III): Bezugspunkt der Wandregel beim Kollaps ohne Griff (RE2-Hund) kalibriert, Riegelfall hund2 +
+  vergifteter Standpunkt, Mutationsprobe; gezielte Tests 142/142.
 
 ## Kurzfassung
 - Punkt 1: der Port liess den Spiderman (Typ 0x2B, grid 0x41) sofort beim Betreten aus dem Schacht laufen. Original
@@ -23,6 +25,9 @@ Baum `.claude/worktrees/r38_spiderman`, Zweig `r38/spiderman`, Basis e2cc7673. A
   (B[15]) war ein erfundenes Schleppen; Original setzt den Spieler EINMAL (@0x80114204/14). Beides behoben.
   GENERELL: Zensus aller Lageschreiber (Tabelle 2), alle anderen Greifer kopieren ihren Anker; neue Regel fuer ALLE
   Greifer: kein Griff setzt den Spieler hinter eine Wand (ROOM1220 RE2-Kriecher vorher 132 Bilder hinter Zelle 7).
+  Die Regel misst die Strecke ab dem letzten begehbaren Standpunkt; beim Kehlbiss des RE2-Hunds (Kollaps OHNE Griff)
+  stammte der noch aus einem frueheren Griff -> jetzt im Kollaps-Eintritt neu gesetzt wie RE2 +0x118/+0x11A
+  (`sh` @0x800356f4-f8). Ohne das: Spieler 302/302 Bilder ausserhalb des Raums (Mutationsprobe hund2).
 
 ## 0. Identifikation "Spiderman" (Zensus Stage-4-RDTs)
 - Typ **0x2B** (Port: `re15_tyrant_ai_tick`, enemy_ai_common.c "TYRANT"). Namensbeleg: RE15Editor
@@ -137,7 +142,7 @@ Original-Klemmen sind Punkt-Tests).
 | 9 | **B[15] 0x2B** | **Spiderman Griff 2** | **Spieler = Gegnerlage jedes Bild, Gegner +40/Bild ohne Wand, Opfer-Platzierung mit altem Anker** | **DEFEKT -> behoben (einmalig @0x80114204/14)** |
 | 10 | B[8]/B[10] 0x2B | Spiderman Kollaps | Anker aus Griff 1 | ok (B[10] fehlte -> ergaenzt) |
 | 11 | enemy_ai_re2_zombie.c:1866/1870, :2578 | RE2-Zombie Stehen/Kriecher | re15_re2z_grab_anchor (0x80015b94) | ok |
-| 12 | enemy_ai_re2_dog.c:606/1260/1270 | RE2-Hund | re2d_grab_anchor | ok |
+| 12 | enemy_ai_re2_dog.c:606/1260/1270 | RE2-Hund | re2d_grab_anchor; Latch geht DIREKT in den Kollaps (re15_re2dog_victim_latch -> devour) | Anker ok; Standpunkt der Wandklemme nicht neu gesetzt -> (III) |
 | 13 | enemy_ai_re2_zellenarm.c:735-736 | RE2-Gitterarm | Spieler = Hand (@0x80100C18-38) | eigene Lage, kein Anker |
 | 14 | enemy_ai_boss_gator.c:2097/2118 | Gator-Fress | Anker-Kopie + Lage am Maul | ok (eigene Maschine) |
 | 15 | g5/tentakel/zellenarm/gator Schub | Bosse | Koerperschub (FUN_80034f..), Zug -100 | danach Spieler-Wandklemme |
@@ -153,6 +158,18 @@ Original-Klemmen sind Punkt-Tests).
   @0x8004c370-80 und @0x8004c38c-9c = Lage+Radius gegen x/z/w/d), die einen Sprung UEBER eine Wand nicht sehen; im
   Original kommt er nicht vor, im Port setzen grosse Wurzelversaetze (RE2-Kriecher ~2000 in ROOM1220) ihn hinter
   duenne Waende. Haken: re15_victim_place (1 Zeile, enemy_ai_common.c) und die Griff-2-Lage.
+- (III) Bezugspunkt der Regel (II) = `s_victim_ok` (Runde 37 J), bisher nur im Griff-Latch gesetzt
+  (re15_player_victim_latch_ex / re15_re2z_victim_begin, Eintritt aus Zustand 0/3). Der RE2-Hund-Latch
+  (re15_re2dog_victim_latch, Spieler-Haken 0x80104ACC) und jeder andere Kollaps ohne vorherigen Griff gehen DIREKT
+  in re15_player_victim_devour -> der Bezugspunkt stammte aus einem frueheren Griff (oder (0,0) beim ersten Griff des
+  Spiels). Fuer den alten Punkttest war das gleichgueltig, fuer den Streckentest (II) nicht: die Strecke vom alten
+  Standpunkt kreuzt Waende -> Spieler bleibt auf dem alten Standpunkt = ausserhalb. Behoben: devour setzt den
+  Bezugspunkt auf die Lage JETZT, wenn kein Griff laeuft (`g_player_victim` != 1/2). Beleg: RE2 FUN_8003567c
+  (Spieler-Kollision, gerufen @0x80026634) schreibt nach dem Punkttest `jal 0x8004c1bc` @0x800356d0 in JEDEM Bild
+  die Vorbildlage `lw v0,0x84(s0) / lw v1,0x8c(s0) / sh v0,0x118(s0) / sh v1,0x11a(s0)` @0x800356ec-f8 — der
+  Bezug ist also nie aelter als ein Bild. Gefunden durch den neuen Riegelfall hund2 (vergifteter Standpunkt):
+  MUTATIONSPROBE (Zeile entfernt): `302 ausserhalb`, Spieler (36700,21850) = vergifteter Standpunkt, FAIL;
+  mit Zeile: 0 ausserhalb, 0 hinter einer Wand.
 
 ### Umsetzung (Spiderman)
 - `re15_r38_sm_griff1` (B[5]/B[9]): Anker = Lage - RotY(Blick VOR dem Schnapp) * Wurzel(Clip 0xE/0x12, Bild 0) aus
@@ -183,18 +200,19 @@ Original-Klemmen sind Punkt-Tests).
   Mutationsprobe Anker-Kopie entfernt: 10 FAIL.
 - `unit_r38_griff_<fall>` (test_r38_griff_alle.c), je Fall echter Griff mit vergiftetem Anker ausserhalb des Raums:
   zombie15_vorn/_hinten (RE1.5-KI), zombie2_vorn/_hinten (RE2-KI + Hybrid wie die exe), kriecher2_1220 (duenne Wand),
-  hund15, gorilla (11C0 Kampf-Layout), spiderman_vorn/_hinten. Invariante je Griffbild: Raumhuelle + kein Wanddurchgang
-  (eigener Slab-Test, nicht der Pruefling). Mutationsprobe Wandwaechter aus: kriecher2_1220 132 Bilder hinter der
-  Wand -> FAIL.
+  hund15, hund2 (RE2-Kehlbiss = Kollaps ohne Griff), gorilla (11C0 Kampf-Layout), spiderman_vorn/_hinten. Vergiftet
+  sind Spieler-Anker UND Standpunkt der Wandklemme (bis zum Latch jedes Bild). Invariante je Griffbild: Raumhuelle +
+  kein Wanddurchgang (eigener Slab-Test, nicht der Pruefling). Mutationsproben: Wandwaechter aus -> kriecher2_1220
+  132 Bilder hinter der Wand, FAIL; Kollaps-Kalibrierung (III) aus -> hund2 302/302 ausserhalb, FAIL.
 - Alt-Riegel angepasst: `integration_r37_beretta` Fall t2b_std_w5 schoss in den Schacht (Spiderman grid 0x41) — jetzt
   der schon draussen stehende Spiderman (Ck(4,0xD6)=1, Sce_em_set @0x017D4, Leon (-23943,-16785)); Absicht (drei
   Kugeln je -10) unveraendert, gruen.
 
 ### Gezielte Tests (kein volles Suite-Lauf im Spurbaum)
 `ctest --test-dir re15_port/build -R "r38_|tyrant|t2b|5040|beretta|victim|grab|griff|bissarm|1210|dog|hund|re2z|crawl|kriech|affen|gorilla|maggot|devour|finisher|pushoff|1220|11c0|aim|ivy|enemy_ai|roster|stage4|stage5|spider|spinne|zombie" --timeout 900 -j 6`
--> `100% tests passed, 0 tests failed out of 141` (Total Test time (real) = 217.08 sec).
-(Erster Lauf derselben Auswahl: 140/141, rot nur integration_r37_beretta t2b — der Alt-Riegel schoss in den Schacht,
-angepasst s. o.; danach einzeln `ctest -R "^integration_r37_beretta$"`: 1/1 gruen.)
+-> `100% tests passed, 0 tests failed out of 142` (Total Test time (real) = 221.35 sec), Stand nach (III).
+(Vorher 141/141 in 217.08 sec ohne hund2. Erster Lauf der Auswahl: 140/141, rot nur integration_r37_beretta t2b —
+der Alt-Riegel schoss in den Schacht, angepasst s. o.; danach einzeln `ctest -R "^integration_r37_beretta$"`: 1/1.)
 
 ## OFFEN
 1. **Deckenlauf des Spiderman nicht portiert.** A[3]-Ende @0x80112544-5C8: Wandkontakt (Zellattribut *(+0x1B4)+0xA
@@ -215,8 +233,15 @@ angepasst s. o.; danach einzeln `ctest -R "^integration_r37_beretta$"`: 1/1 grue
 7. Kommentar beim Efeu (enemy_ai_common.c, IVY): "0x801165F4 ist verwaiste Efeu-Griff-VM" ist falsch — es ist der
    Spieler-Kollaps hinten des Spiderman (Hook-B-Tabelle @0x8011A2B8[1], erreicht ueber B[10] aca59 = 1 @0x8011338C).
    Nur Kommentar, kein Verhalten -> NACHLAUF.
-8. Der Riegel unit_r38_griff_* misst 9 Greifer-Faelle. Gator/G5/Tentakel/RE2-Gitterarm platzieren mit eigener Mechanik
+8. Der Riegel unit_r38_griff_* misst 10 Greifer-Faelle. Gator/G5/Tentakel/RE2-Gitterarm platzieren mit eigener Mechanik
    (Tabelle 13-15) und sind nicht darin; die Gitterarme haben ihren eigenen Anker-Riegel (unit_1210_gitterhaende).
+9. RE2-Hund-Kehlbiss (gemessen im Fall hund2, ROOM1140, Hund 1500 vor dem Spieler, hp 5): der Spieler springt am
+   Kontakt-Latch 2554 Einheiten (auf den Flug-Anker hinter dem Hund) und beim Wechsel Sub 3 -> Sub 7 nochmals 3255
+   (neuer Anker Clip 23 @0x80101DA0) — immer in der Raumhuelle, nie hinter einer Wand. Die ERSTE Versetzung liegt im
+   Kontakt-Latch, fuer den Runde 30 (Kommentar enemy_ai_re2_dog.c am Kontakt-Latch) eine PORT-ABWEICHUNG belegt: der
+   Block @0x80104F20-74 schreibt im Original KEIN Spieler-Kommando und KEINEN Anker, Kommando 6 + Anker fallen erst in
+   Sub 7 P0 (@0x80101DC4 / @0x80101DA0); der Port startet die Opfer-Animation schon am Kontakt. Ob das Original damit
+   genau EINE Versetzung (die zweite) hat, ist NICHT gemessen. Nicht Spiderman, nicht "von der Karte" -> NACHLAUF.
 
 ## Fuer den Nutzer
 - **Spiderman kommt jetzt wie im Original aus dem Schacht:** er steckt unsichtbar im Wandschacht, bis man den Bereich

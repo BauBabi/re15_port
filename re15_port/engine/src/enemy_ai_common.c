@@ -1372,6 +1372,9 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
               /* KRIECH-Devour: FUN_80104548 schreibt ((+0x5)-1)<<8|6 (@0x801045c4-dc)
                * -> aca59 = 2/3; Kollaps-Clip = acaf3+6 = 6/7 (FUN_8010a6f8) */
         : (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* ZOMBIE (Steh): (+0x5)-5 */
+    /* Runde 38 Spur T: Kollaps OHNE vorherigen Griff (RE2-Hund-Latch -> devour): Standpunkt = Lage jetzt = RE2
+     * +0x118/+0x11A (Vorbildlage, `sh` @0x800356f4-f8) statt des Standpunkts eines alten Griffs. */
+    if (g_player_victim != 1 && g_player_victim != 2) re15_victim_anchor_calibrate(player->x, player->z);
     g_player_victim = 2;
     s_victim_groan_done = 0;                            /* O3: neuer Kollaps -> Todes-SE wieder scharf */
     if (!re15_victim_is_re2_dog())
