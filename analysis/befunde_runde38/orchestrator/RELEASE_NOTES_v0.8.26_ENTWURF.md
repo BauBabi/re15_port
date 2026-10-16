@@ -9,6 +9,17 @@ Integrationsbaum, ohne parallele Agenten).
 
 <!-- je integrierter Spur ein Absatz, Nutzer-Sprache, keine Adressen -->
 
+**Elza, Toene in ROOM1041 und ROOM1021.** In 1041 faellt statt des Platzhalter-Textes "gunshot" jetzt ein hoerbarer
+Schuss, danach dreht sich Elza um ("What was that!?"). In 1021 stoehnt Roy wie ein Zombie, wenn er auf John zugeht.
+Johns Schuesse waren schon da, aber mit einer duennen, hellen Aufnahme, die man kaum als Pistole erkannte; jetzt
+klingen sie wie eine schwere Pistole (dieselbe Aufnahme, die RE2 fuer solche Skript-Schuesse verwendet). Zum
+Gegenhoeren liegen vorher/nachher-Ausschnitte im Analyse-Ordner der Spur.
+
+**Elza auf dem Hubschrauberlandeplatz (ROOM1171).** Elza blieb in ihrer Dachszene stecken: Die Szene wartet darauf, dass
+eine Kraehe Elza von hinten packt - diese Kraehe kam im Port nie an (die RE2-KI hatte sie uebernommen, und ihr Signal
+erreichte das Szenenskript nicht). Jetzt laeuft die Szene wie im Original durch: die Kraehe packt Elza, John hilft, es
+geht hinunter in den Vorhof. Der Griff von hinten kostet wie im Original keine Lebensenergie.
+
 **Verdeckung in den Stages 3 bis 6 (Rest aus Runde 37).** Seit v0.7.19 zeichnete der Port die ergaenzten Vordergrund-
 Masken der Stages 3 bis 6 nicht mehr (ein Lader-Fehler) - Figuren liefen dort ueber Maschinen, Moebel und Wandteile, die
 sie verdecken muessten. Jetzt verdecken sie wieder. Wo eine ergaenzte Maske eine Figur VOR dem Objekt uebermalen wuerde,
@@ -51,6 +62,10 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
 ## Zu entscheiden
 
 ## Neu fuer das Paket / Ihre Dateien
+
+* ROOM1171: Ihre `main00.wav` und `main01.wav` laufen jetzt, weil die Szene durchlaeuft. `main02.wav` ("C'mon, give me a hand!")
+  spielt nie - das Original-Skript zeigt diese Nachricht nicht. Fuer "Alright, let's get down from here!" fehlt noch
+  `synchro/STAGE1/room1171/main03.wav`.
 
 * Der Erzaehltext vor der Lobby ("We barricaded ourselves...") hat bei Leon und Elza noch keine Aufnahme:
   `synchro/STAGE1/room1170/main08..11.wav` (Leon) bzw. `synchro/STAGE1/room1031/main20..23.wav` (Elza).

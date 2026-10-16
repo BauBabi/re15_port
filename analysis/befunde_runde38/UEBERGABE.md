@@ -6,6 +6,9 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 00:50: Integration P gruen (53/53), Baum r37_masken36 entfernt. H gemergt (scd_vm.c beide Seiten, 2a8b9abf), I gemergt (main.c Include beide Seiten, e10d9efb), Bau OK, gezielte Tests H/I laufen.
+* 2026-10-17 00:25: H elzatoene BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_10922d64-fbc). Merge nach dem P-Test (mit I).
+* 2026-10-17 00:10: I heliport1171 BESTANDEN (Abnahme 0, wf_88be68ba-db7, Bericht e0b6ed35). Merge nach dem P-Test (Konflikte erwartet: enemy_ai_common.c Include mit B, scd_room_setup.c mit F).
 * 2026-10-16 23:50: Welle 5 (r38_w5.js, BASIS d70c234e): N wasser wf_9fc9967b-c4b, O montage wf_83f7268d-331. Damit laufen ALLE 21 Spuren (bzw. sind fertig).
 * 2026-10-16 23:40: Integration Q/E/J gruen (105/105 gezielt), Baeume kleinkram/elzaintro/rekorder entfernt. P (r37/masken36) gemergt (87ff0737, konfliktfrei), Bau + Masken-Tests laufen. Welle 5: N, O.
 * 2026-10-16 23:10: Welle 4 (r38_w4.js, BASIS f587d34e): D zopf wf_08abf2fa-3ac, M npckante wf_d2a07ce1-679. Platte 67 GB. Offen zu starten: N, O.
@@ -39,8 +42,8 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | BESTANDEN (A0), integriert |
 | F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | offen |
 | G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | offen |
-| H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | offen |
-| I | r38_heliport1171 | Elza haengt in 1171 | offen |
+| H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | BESTANDEN (A1) |
+| I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0) |
 | J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0), integriert |
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | offen |
 | M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | offen |
@@ -53,7 +56,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | offen |
 | V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | offen |
 | L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | BESTANDEN (A2), integriert |
-| P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | BESTANDEN (A2) |
+| P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | BESTANDEN (A2), integriert |
 
 ## 2. Bei einem Abbruch (Sitzungs-/Wochen-/Monatslimit)
 1. Verwaiste Prozesse beenden (`tasklist`; nur per PID, nie /IM), DuckStation `settings.ini` EnableGDBServer = false pruefen.
