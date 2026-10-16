@@ -710,6 +710,7 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
                                         int clip, int fr_now, int fr_prev, int apply)
 {
     a->re2z_root144 = 0;                                           /* sh +0x144 @0x80015FD8 */
+    a->re2z_root148 = 0;                                           /* sh +0x148 @0x80015FE4 (Runde 37 Spur L) */
     if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
     const re15_emd_clip_t *c = &anim->clips[clip];
     if (c->frame_count <= 0) return;
@@ -766,6 +767,7 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
     }
     a->root_prev_x = sx; a->root_prev_y = sy; a->root_prev_z = sz; /* sw/sh @0x80015FC4/C8 */
     a->re2z_root144 = (int16_t)dx;                                 /* sh v1,324(t0) @0x80015FD8 */
+    a->re2z_root148 = (int16_t)dz;                                 /* sh a1,328(t0) @0x80015FE4 (Runde 37 Spur L) */
     if (!apply) return;                      /* barer e7c: kein FUN_800152C8 hinterher */
     if (dx == 0 && dz == 0) return;
     int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
