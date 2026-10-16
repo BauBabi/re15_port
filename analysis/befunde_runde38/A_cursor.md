@@ -200,7 +200,21 @@ mit RAUM=1151): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
 
 ## 5. Tests
 
-(in Arbeit)
+Neu (Registrierung NUR `tests/unit/probes/r38_cursor.cmake`; Sonde `tests/unit/probe_r38_cursor.c`, exe-Haken
+`tests/integration/test_r38_cursor.cmake`):
+
+| Test | misst | Gegenprobe alter Stand |
+|---|---|---|
+| unit_r38_cursor_nclip | Praedikat: MAC0 = psx-spx NCLIP woertlich; -100 verworfen, +100 und 0 (kollinear) gezeichnet; Saettigung kippt (0,0)(3000,10)(1500,6) von +3000 auf -4092; Zaehler | - (Mechanik-Einheit) |
+| unit_r38_cursor_kasten | ROOM11F0-Cursor unter Cut 10 an 25 Lagen (+-4000 um den Start): 29 Muster-Vierecke oben gezeichnet, 4 Muster-Dreiecke unten verworfen | im Test: ohne Verwurf ueberdeckten an allen 25 Lagen 4 Muster-Dreiecke den Cursor, an der Startlage ganz im Oberseiten-Umriss |
+| unit_r38_cursor_raeume | 23 Cursor-Raeume: Record am Zensus-Offset, Modell aus der Prop-Tabelle, 29+4 Muster-Flaechen, Unterseite gegensinnig gewunden (gleichsinnig mit 11F0 oben) | - (Zensus) |
+| integration_r38_cursor | echte exe, 4 Laeufe: A 11F0 Cut 10, B 1150 Hebetisch (Lade-Weg), C 10D0 Ziffernfeld, D Elza 11F1. Je: RE15_TRILOG des Cursor-Platzes ohne NCLIP < 0, Rahmen-Inneres ohne reingruene Punkte; A/D zusaetzlich Klassenkarte = Original | exe 1bcbd0ff mit demselben Skript: A ROT (8456 Rueckseiten-Dreiecke, 33 Punkte, 21 Abweichungen); Einzelpruefung B 1456/33, C 2997/32, D 14056/33/21 |
+
+Gezielter Lauf (keine volle Suite), Regex = eigene Tests + Testgruppen aller beruehrten Module (Raum-Prop-Schleife
+-> alle Bild-Riegel mit Raum-Objekten; Hebetisch; Panels/Cursor; Port-eigene Props):
+`ctest --test-dir re15_port/build -R "r38_cursor|r34n_b|hebetisch|11f0|cursor|panel|codepanel|irons_tisch|sicherung|dokumente|schrift1150|kartenitems|feuerloescher|schluessel|kiste|tor_hell|cut1150|szene1150|pri_schatten|pri1100|granate|dachkiste|fahrstuhl|ziel1190|cut10f0|elza_irons|pri_masken|generator|zeiger" --timeout 900 --output-on-failure`
+
+(Ergebnis: siehe unten, wird nach dem Lauf eingetragen)
 
 ## 6. OFFEN
 
