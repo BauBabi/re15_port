@@ -20,12 +20,19 @@ Mess-Skripte und Rohdaten (Scratch der Sitzung, nicht eingecheckt): Treiber `abn
 | 4 | Orchestrator-Auftrag L (a)(b)(c) + Zensus; exe: Arme hoch, auf Leon zu, greifen, beissen; Nahkampf nicht schlechter | **erfuellt** | (a)(b)(c), D12 und die Erholungsleiter P3 Zeile fuer Zeile gegen EMZ0.BIN; an der exe alle drei Produzenten und D12; Erholung 0x10101 statt 0x101 (F1211 Schritt (-4,+13), Bild 14 -> 15); Nahkampf an der exe 18 Paare: alle Messertreffer 41 = 41, je Anmarsch 7 / 31 gegen 4 / 33, Griffe 36 / 35 |
 | N2 | Nachbesserung 2 (Abnahme-1-M1 Code + Text, M2 Text) | **erfuellt** | Leiter-Ende/Riegel/0x800152C8/+0x148/Gang-Timer = Bytes; Harness-, Riegel- und exe-Zahlen des Dossiers reproduziert (Abschnitt 4); "weniger Schlaege" aus den Nutzer-Aussagen entfernt, Wegstrecke 35,6 / 25,6 mit der genannten Takt-Regel reproduzierbar |
 
-Gates: **RE-Gate haelt** (Stichproben weit ueber 3 Adressen, alle stimmen, Rohbytes geprueft; keine Guess-Tells, keine
-Env-Schalter im Engine-Diff). **Vertrag haelt** (Pfade, keine Ressourcen, Haken in gemeinsamen Dateien 2 + 3 Zeilen mit
-"Runde 37 Spur L"; Treffer-Handler nur case 3 = Freigabe Runde 38, s. Hinweis H1). **Tests**: Spur 10/10 verbose, Unit-
-Auswahl 306/306, Integration 16 seriell (Abschnitt 5).
+Gates: **RE-Gate haelt** (Teil 1: Stichproben weit ueber 3 Adressen, alle stimmen, Rohbytes geprueft; Teil 2: DECISION[12]
+inkl. der gemeinsamen Ausstiegsstelle 0x801046A0, EXEC[1]-Produzenten 0x80101D60-F78, Treffer-Handler P3 + 0x800152C8 erneut
+selbst disassembliert, Abschnitt 6.3; keine Guess-Tells, keine Env-Schalter im Engine-Diff). **Vertrag haelt** (Pfade:
+16 Dateien `analysis/befunde_runde37/L_*` + 12 unter re15_port, keine release/, platform/android/, shared_assets/,
+CMakeLists; keine Ressourcen; Haken in gemeinsamen Dateien 2 + 3 Zeilen mit "Runde 37 Spur L"; Treffer-Handler nur case 3 =
+Freigabe Runde 38, s. Hinweis H1). **Tests**: Spur 10/10 verbose (Teil 1 und Teil 2), Unit-Auswahl 306/306 (Teil 1, dieselben
+Binaerdateien), `unit_r36_zombieki_eintritt` 1/1 verbose (Teil 2), Integration **18/18 seriell** (Teil 2, Abschnitt 6.5).
+Reproduzierbarkeit: zwei Teil-1-Laeufe mit derselben exe neu gefahren, `state.log` bitgleich (Abschnitt 6.2).
 
-**Urteil: AUSSTEHEND** (Zwischenstand Teil 2 — die Integrationslaeufe laufen noch, Abschnitt 6.5).
+**Urteil: BESTANDEN** — alle vier Nutzer-Punkte und die Nachbesserung 2 sind erfuellt, RE-Gate und Vertrag halten, alle
+gezielten Tests gruen. Keine Maengel. Die Hinweise H1-H6 sind fuer die Integration bzw. den Orchestrator (H2: veraltete
+Messzahl im Code-Kommentar beim Merge nachziehen; H3/H6: offene RE2-Abweichung im Treffer-Handler und Navigator-Tasche
+ROOM1030 als eigene Punkte einplanen).
 
 ## Hinweise (kein Mangel dieser Spur)
 
@@ -61,8 +68,10 @@ Auswahl 306/306, Integration 16 seriell (Abschnitt 5).
   600 Bilder aufrecht still (Gegenlauf Maske 0)` -> Summe `PASSIV 0, KLEMME 0 (vorbestehend 1)`. Spur L hat diesen Riegel der
   Runde 36 so angepasst, dass ein Stillstand, den es im Stand bis Runde 37 ebenso gibt, nicht als KLEMME zaehlt (Begruendung
   im Diff: die 0x201-Wechsel machen den gehenden Zombie erst zu einem "reagierten" Fall). Die Anpassung ist nachvollziehbar
-  (L verkuerzt den Stillstand 600 -> 330), aber damit steht im Normalspiel weiterhin ein Zombie (Typ 0x16) ~11 s an der
-  Tresen-/Wandzelle, 2535 vor Leon, bis zum Laufende — genau die Fehlerklasse des Nutzers ("bleiben ... stehen"). Ursache
+  (330 = Zaehlung NACH der Reaktion im Spur-L-Lauf, 600 = Zaehlung OHNE Reaktions-Bedingung im Gegenlauf Maske 0 — zwei
+  verschiedene Zaehlungen des Riegels, kein Vorher/Nachher-Mass), aber damit steht im Normalspiel weiterhin ein Zombie
+  (Typ 0x16) mindestens 330 Bilder (~11 s) an der Tresen-/Wandzelle, 2535 vor Leon, bis zum Laufende — genau die
+  Fehlerklasse des Nutzers ("bleiben ... stehen"). Ursache
   laut Dossier OFFEN: Steuerziel des RE1.5-Navigators (re15_nav_update_steer = FUN_80039e7c-Zwilling) liegt in einer soliden
   Zelle; nicht im Code der Spur L (VERTRAG 1.4: L aendert DECISION[0]/EXEC[0..2]). Fuer den Orchestrator: eigene Spur
   "Navigator ROOM1030" einplanen (Dossier-Vorschlag: Zonen/Verbindungspunkte ROOM1030.RDT gegen FUN_80039e7c).
@@ -286,7 +295,7 @@ reproduziert bzw. aus den Rohdaten nachgezaehlt, drei Stellen erneut selbst disa
 Code nachgeprueft und die Integrationslaeufe vollstaendig gefahren. Rohdaten Teil 2: Scratch `abn2L/teil2/`.
 
 ### 6.1 Bau und Stand
-* HEAD `a17a649a` (seit `e4bca518` nur der Teilbericht), `git status` sauber. `bash re15_port/tools/local_build.sh configure`
+* HEAD beim Start von Teil 2 `a17a649a` (seit `e4bca518` nur der Teilbericht), `git status` sauber. `bash re15_port/tools/local_build.sh configure`
   -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` (EXIT=0).
 * exe `re15_port/build/platform/pc/re15_pc.exe` 2026-10-16 16:57:25, md5 `03503eba76de5a0aaefc6dba426cf039` = dieselbe exe
   wie in Teil 1 (juengste Quelle `enemy_ai_re2_zombie.c` 16:43:25). Der letzte re15_port-Commit `e2daa221` aendert nur
@@ -371,4 +380,39 @@ of 10`**; gelesen: prod1 4/4, prod2 5/5, prod3 5/5, b 3/3, c 6/6, d12 6/6, **p3 
 "2 Griffe aus 0x201"). Gegenproben "Maske 0: kein Arme-hoch-Gang vor Leon (0)" in beiden Raum-Tests.
 
 ### 6.5 Integration (Teil 2, seriell, Baum r37_re2zombie)
-(laeuft — Zwischenstand: 4 von 18 gruen: r30_granate_laden 135,8 s, r34_granaten 348,9 s, r35_granate 313,1 s, r35_werfer_elza 40,8 s)
+Auswahl = die 16 zombie-/kampfnahen Haken aus Teil 1 + `integration_r36_kleidung_hundeweg` (Hund, zieht aus DEMSELBEN
+RE2-Zufallsstrom `re15_re2_rand`) + `integration_r37_elzaems_elza1101` (Elza, Zombies in 1101):
+`ctest --test-dir re15_port/build -R "^integration_(r30_granate_laden|r34_granaten|r35_granate|r35_werfer_elza|r35_zgirl|r35_zgirl_5090|r36_elza_schuss|r36_gegnerzahl|r36_granate|r36_schuss|r37_beretta|r37_bissarm_echtlauf|r37_elzaems_leon1100|r37_elzaems_elza1181griff|r37_re2zombie|r37_zombieaktiv|r36_kleidung_hundeweg|r37_elzaems_elza1101)$" --timeout 1200 -V`
+(seriell, Start 21:10; parallel bauten/testeten die Baeume r37_masken36 und r38_* — Laufzeiten deshalb hoeher) ->
+**`100% tests passed, 0 tests failed out of 18`**, `Total Test time (real) = 2404.37 sec`, EXIT=0 (Log `abn2L/teil2/integ_v.log`).
+
+| Test | Zeit | Meldung (Auszug aus `-V`) |
+|---|---|---|
+| integration_r30_granate_laden | 135,8 s | Passed |
+| integration_r34_granaten | 348,9 s | `[g9_re2]: Gegner 2 ... Leiche ab Bild 165`, `Gegner 3 ... Leiche ab Bild 258` (= Dossier-Wert nach Spur L), `[abzug]: ok` |
+| integration_r35_granate | 313,1 s | Passed |
+| integration_r35_werfer_elza | 40,8 s | Passed |
+| integration_r35_zgirl / _5090 | 476,2 / 172,9 s | Passed |
+| integration_r36_elza_schuss | 47,2 s | Passed |
+| integration_r36_gegnerzahl | 97,3 s | `OK - 1040 Records 15..19 = Aktor 16..20 (a), 1030 dito (b), Kontrolle 1..5 (c), 1030 17 tot -> 18..20 (d), 20B0 21 Schatten (e)` |
+| integration_r36_granate | 101,2 s | Passed |
+| integration_r36_kleidung_hundeweg | 70,6 s | Passed |
+| integration_r36_schuss | 160,0 s | Passed |
+| integration_r37_beretta | 196,4 s | Passed |
+| integration_r37_bissarm_echtlauf | 66,5 s | `OK — im Griff liegen die gezeichneten Zombie-Haende auf dem RE2-Kontaktpunkt (Leon und Elza), das Opfer bleibt am Greifer` |
+| integration_r37_elzaems_elza1101 / leon1100 / elza1181griff | 43,1 / 26,0 / 15,0 s | `[elza1181griff]: Zombie 0x10 aus CDEMD1 ...`, `Elza im Griff: Opfer-Clip 1 / 6 ...`, je `OK` |
+| **integration_r37_re2zombie** | 57,2 s | `ROOM1130 Wechsel in den Arme-hoch-Gang 1 (davon aus dem Gang bei +0x1F0 < 0x7D0: 1; Abstaende 1991), Griffe aus dem Arme-hoch-Gang 1`, `OK` |
+| integration_r37_zombieaktiv | 36,1 s | `OK — 5/5 im Gang ab Bild 7, 5/5 >= 4500 naeher nach 300 Bildern` (Slot 1..5: 4952 / 6616 / 4892 / 7412 / 8948 naeher) |
+
+Ergebnis Tests: Spur-Riegel 10/10, Integration 18/18 (seriell, unter Last ohne einen einzigen roten Lauf), dazu die
+Unit-Auswahl 306/306 aus Teil 1 auf denselben Binaerdateien. Keine Regression in den Nachbarmodulen (Granaten-Zeile 9,
+Beretta, Schuss-Resolver, Biss-Arm, Elza-EMS, Hund im selben Zufallsstrom, Gegnerzahl/Schatten).
+
+### 6.6 Urteil Teil 2
+Teil 2 bestaetigt jedes Teil-1-Urteil: die Teil-1-Rohdaten sind mit der gebauten exe bitgleich reproduzierbar (6.2), der
+Code entspricht an den nachgeprueften Stellen den RE2-Bytes (6.3), die zwei Port-Eigenheiten des P3-Fixes (doppelte
+Zustandswort-Schreibung, eigenes Gang-Timer-Feld mit Tag) verhalten sich wie das Original (6.3), und alle gezielten Tests
+sind gruen (6.4, 6.5). **BESTANDEN.** Keine Maengel; Hinweise H1-H6 oben.
+
+Nicht Teil dieser Abnahme: der Nutzer-Befund vom 2026-10-16 "ROOM 20A0 ... the shutter ... DIRECTLY in the camera" ist
+Runde 38 Spur W zugeteilt (master `df08d83a`); Spur L beruehrt nur die Zombie-KI (keine Prop-/Kamera-/Masken-Datei im Diff).
