@@ -36,6 +36,7 @@ int re15_schuss_r36_sichtlinie_blockiert(const re15_actor_t *pl, const re15_acto
 #include "re15_anim_select.h"  /* re15_compute_actor_kf */
 #include "re15_esp.h"          /* re15_esp_fx_get / RE15_ESP_FX_MAX (Nachfuehrung, Nachbesserung 3) */
 #include "re15_engine.h"       /* g_engine.frame_count */
+#include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Bank des RE2-KI-Hochziehens */
 
 /* Nachbesserung 2: die BANK, aus der der Port-Renderer den Aktor zeichnet — Zwilling von platform/pc/main.c
  * 9798-9925 fuer einen Gegner mit eigener Bank (re15_actor_anim_select-Gegnerzweig: Hauptbank, clip_override = motion
@@ -67,6 +68,8 @@ static void zeichen_bank(const re15_actor_t *e, const re15_enemy_bank_t *b, cons
         const re15_emd_animation_t *ra = re15_re2z_re15_pose_anim();
         if (rs && ra && mo < ra->clip_count) { *sk = rs; *an = ra; *ov = mo; }
     }
+    { const re15_emd_skeleton_t *wz_sk; const re15_emd_animation_t *wz_an;   /* Runde 38 Spur U: wie main.c (RE2-KI-Hochziehen) */
+      if (re15_wasserzombie_bank(e, &wz_sk, &wz_an)) { *sk = wz_sk; *an = wz_an; *ov = mo; } }
 }
 
 int re15_schuss_r36_gezeichnet(const re15_actor_t *e, int bone, int32_t R[9], int32_t T[3])

@@ -47,6 +47,7 @@
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
+#include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen an der u1=1-Kante (ANIMATE[0x0A] 0x8010325c) */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
@@ -3368,6 +3369,7 @@ static void re15_enemy_ai_live_contact_stagger(re15_actor_t *e)
     e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
 }
 
+/* ⛔ Runde 38 Spur U: NICHT MEHR AUFGERUFEN — Ersatz re15_wasserzombie_hochziehen (wasserzombie_r38.c; Vorschub + +0x1ba fehlten hier). */
 /* EDGE-FALL (+0x5=0xa) — byte-true FUN_801033c8 (@0x8011f890[0xa]): the OTHER contact roll — the
  * zombie walks INTO the contact heading (clip 1 while slewing +0x10/tick to (+0x90&0xf0)<<4), then
  * TUMBLES OVER THE EDGE: clip 0x16, yaw snapped to the contact heading, +0x8c=0x474; at clip frame
@@ -4772,7 +4774,7 @@ int re15_enemy_ai_live_active(int slot)
                 else if (e->sub_state_1 == 0x0a)
                     /* EDGE-FALL (@0x8011f890[0xa]=FUN_801033c8): tumbles over the contact edge
                      * (the briefing-room pit) down one floor. */
-                    re15_enemy_ai_live_edge_fall(e);
+                    re15_wasserzombie_hochziehen(e);   /* Runde 38 Spur U: es ist das HOCHZIEHEN (+0x38 -= 1800, +0x82 += 1) — byte-true inkl. +0x1ba @0x801033f8 + Vorschub @0x80103474 (wasserzombie_r38.c) */
                 else if (e->sub_state_1 == 2)
                     /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2]) — THE AWARE WALK,
                      * factored into re15_enemy_ai_live_engage_animate (pure code motion; the zombie
@@ -5516,6 +5518,8 @@ int re15_actor_clip_len_legacy(const re15_actor_t *a)
 int re15_actor_clip_len(const re15_actor_t *a)
 {
     if (!a) return 0;
+    { const re15_emd_animation_t *wz_an = NULL;   /* Runde 38 Spur U: RE2-KI-Hochziehen taktet auf der RE1.5-Aktionsbank (wasserzombie_r38.c) */
+      if (re15_wasserzombie_bank(a, NULL, &wz_an)) return wz_an->clips[a->motion].frame_count; }
     /* SITZ-IMPORT (10D0, s. Delegation oben): der Sitzer taktet auf der registrierten
      * RE1.5-Aktions-Bank (Clip 0x2A = 28f, 0x29 = 59f), nicht auf der RE2-Bank —
      * dieselbe Bank wie der Render-Override (platform main.c), sonst laufen Uhr und

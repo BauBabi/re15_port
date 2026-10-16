@@ -90,6 +90,7 @@ const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_
 #include "re15_granate_r36.h" /* Runde 36 Spur D: Flammen-Gate des Spreng-Russ FUN_8010640C */
 #include "re15_gameflow.h"   /* g_gameflow.character — Port-Zwilling von DAT_800ACA5C (@0x80104008) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Phase-4-Wundstempel (@0x8010a4e8) am RE2-Abwurf */
+#include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: RE1.5-Hochziehen an der Wasserkante statt Zustands-Dispatch */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -8902,6 +8903,7 @@ int re15_re2z_tick(int slot)
         re15_re2z_enter_crawler(e, NULL, 0u);
     }
 
+    if (!re15_wasserzombie_re2_dispatch(slot, e))   /* Runde 38 Spur U: u1=1-Kante vorn -> RE1.5 0xA01/ANIMATE[0x0A] (@0x80101f00-44, 0x8010325c) */
     switch (e->state) {                                            /* table @0x8010C830 */
     case 0: re2z_init(slot, e); break;                             /* 0x8010065C */
     case 1: /* Zustand-1-Wurzel @0x8010114C: `andi 0x3f` @0x8010115C in die Tabelle @0x8010C854,
