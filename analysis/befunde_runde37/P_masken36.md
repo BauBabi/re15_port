@@ -565,3 +565,10 @@ Stand (fortlaufend):
 - [ ] M1 ROOM3050/3051 Cut 15: Generator-Masken uebermalen den Konsolen-Cursor (NB2.1)
 - [ ] M2 Kopfoberkante (und Fussende) vom Figurmodell nie abgetastet, ROOM30A0 Cut 0 (NB2.2)
 - [ ] Bau + gezielte Tests (NB2.3)
+
+Fortsetzung 2026-10-16 (der erste NB2-Agent brach am 2026-10-14 ~03:3x am Monatslimit ab): vorliegend ff2a5b87 (Generator
+pixelgenaues Figurraster, Sektion ohne Stehplatz ganz aus, Werkzeug `punkt`, Riegel-Checks) und 9fd9428b (Tabelle neu,
+UNGEPRUEFT: 126 Zeilen, + ROOM3050/3051 Cut 15 36 von 36). Danach master (v0.8.25) gemergt (2bb1bbe3). Diese Fortsetzung
+prueft beides kritisch (Disassembly des zitierten NULL-Belegs, Tabelle == Nachrechnung auf dem gemergten Stand, exe-Messung
+des Abnahme-Aufbaus) statt es zu uebernehmen. Vergleichs-exe "alt" = `re15_pc_nb2alt.exe` (Kopie der re15_pc.exe des
+Stands fb4be428 = Abnahme 1, Tabelle 124 Zeilen).
