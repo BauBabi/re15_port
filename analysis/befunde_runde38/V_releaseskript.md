@@ -14,6 +14,8 @@ Lesart des Orchestrators (AUFTRAG.md, "Lesarten"): "minor" = wie alle bisherigen
 
 (laufend, neueste Eintraege oben)
 
+* 2026-10-16 23:00: NACHBESSERUNG 1 begonnen (Abnahme 0: Mangel M1, gescheiterter Push im Schritt abschluss) -
+  Abschnitt 8.
 * 2026-10-16 18:17: FERTIG. Endlauf auf 98652210: `100% tests passed, 0 tests failed out of 7` (-R r38_releaseskript),
   Release-Modul `100% tests passed, 0 tests failed out of 2` (r35_android_pruefkette|bash_mutanten).
 * 2026-10-16 17:54: gezielte Tests gruen (Windows 7/7, Linux-Bau-Image 6/6 + cmd sichtbar SKIP), echte Messungen
@@ -207,3 +209,13 @@ Ergebnisse:
 * **Hinweis**: im Hauptbaum liegt noch `release/re15_port_v0.8.24_android.apk` (380 MB, gitignoriert); v0.8.24 ist
   nicht mehr im Archiv. Das Skript entfernt nur APKs, die bytegleich im Archiv liegen - diese bleibt liegen.
 * Neue Assets fuer das Paket-Gate: keine. Sprachdateien: keine.
+
+## 8. Nachbesserung 1 (nach Abnahme 0, `V_abnahme_0.md`)
+
+Abnahme 0: bestanden = NEIN, einziger Mangel **M1** (V1 "einfache Moeglichkeit" teilweise): scheitert im Schritt
+`abschluss` der Push, nachdem Release-Commit und annotierter Tag lokal schon stehen (release_alles.sh:683-688), fuehrt
+die gemeldete Wiederaufnahme nicht weiter. V2/V3/V4 erfuellt - ihre Riegel bleiben gruen.
+
+### 8.1 M1 - Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
+
+(laufend)
