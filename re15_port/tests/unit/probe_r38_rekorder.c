@@ -613,10 +613,12 @@ static int werkzeug_cap(int argc, char **argv)
     long ende = bk + wl;
     printf("WAV %ld Samples = %.2f Ticks | Korrelation %.3f Verstaerkung %.3f\n", wl, (double)wl / T_TICK, korr, g);
     printf("WAV ANFANG Tick %ld (+%ld) ENDE letzter Tick %ld\n", bk / T_TICK, bk % T_TICK, (ende - 1) / T_TICK);
-    /* Piep-Anteil je Tick: 1350..1550 Hz gegen alles ab Bin 1 (Hann-Fenster, Bins wie rfft(1470)) */
+    /* Piep-Anteil je Tick: 1350..1550 Hz gegen alles ab Bin 1 (Hann-Fenster, Bins wie rfft(1470)). Gesucht ab dem
+     * Anfang der Aufnahme (ein Piep WAEHREND der Aufnahme waere der Befund; Menue-Toene von Titel/Spielerwahl davor
+     * zaehlen nicht). */
     long erster = -1, letzter = -1, anzahl = 0;
     static float x[T_TICK];
-    for (long t = von; t < bis; t++) {
+    for (long t = bk / T_TICK; t < bis; t++) {
         double e = 0;
         for (int i = 0; i < T_TICK; i++) {
             double h = 0.5 - 0.5 * cos(2.0 * M_PI * i / (T_TICK - 1));
