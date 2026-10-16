@@ -7,6 +7,7 @@
 #                                 Gegenproben alte Regel (216 tot) und falscher Atlas (ROOM1220 faellt durch)
 #   unit_r37_masken36_ausschluss  Ausschluss-Tabelle == Nachrechnung; danach keine Fehlverdeckung, Verdeckung je Stage bleibt
 #   unit_r37_masken36_verdeckung  die an der exe gemessenen Szenen je Stage (HINTER verdeckt, DAVOR frei)
+#   integration_r37_masken36_stage3..6  echte exe je Stage (Leon und Elza), integration_r37_masken36_nb2  Nachbesserung 2 (Cut 15, Kopf)
 add_executable(test_r37_masken36 ${CMAKE_CURRENT_LIST_DIR}/../test_r37_masken36.c)
 target_link_libraries(test_r37_masken36 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r37_masken36 PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/..)
@@ -36,4 +37,13 @@ if(TARGET re15_pc)
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_masken36_verdeckung.cmake)
         set_tests_properties(integration_r37_masken36_stage${_stufe} PROPERTIES TIMEOUT 900)
     endforeach()
+    # Nachbesserung 2 (Abnahme 1): M1 ROOM3050/3051 Cut 15 Konsolen-Cursor nicht uebermalt (Leon + Elza),
+    # M2 Kopfoberkante auf dem Zufallsweg ROOM30A0 Bild 380/400 (Dossier NB2.1/NB2.2).
+    add_test(NAME integration_r37_masken36_nb2
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r37_masken36_ppm>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r37_masken36_nb2_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r37_masken36_nb2.cmake)
+    set_tests_properties(integration_r37_masken36_nb2 PROPERTIES TIMEOUT 900)
 endif()
