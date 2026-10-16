@@ -313,16 +313,25 @@ int re15_dining_r38_se_on(unsigned bank, int satz)
 }
 
 /* ============================ Messhaken (env-gegatet, kein Spielverhalten) ============================
- * RE15_R38F_GORILLAS_TOT=<bild>: in ROOM1141 ab diesem Bild (Bildzaehler des Raums) die beiden Gorillas (Typ 0x27)
- * herausnehmen und ihre Kill-Flags setzen — genau die Bits, die ihr Tod setzt: Sce_em_set sub00 @0x00B1A/@0x00B2E
- * tragen pc[7] = 0xCB/0xCC (scd_vm.c op_sce_em_set: em_flag_id = pc[7]), Bank = re15_em_status_zone() (Stage 1 -> 7,
- * @0x800420ec), gelesen von sub01 @0x00BFA/@0x00C02. Damit erreicht ein Messlauf Johns Abgang ohne Kampf-Eingaben. */
+ * RE15_R38F_GORILLAS_TOT=<n>: in ROOM1141 nach n freien Kampfbildern ((4,0xF2)=1 und Spieler frei, player_mode 0) die
+ * beiden Gorillas (Typ 0x27) herausnehmen und ihre Kill-Flags setzen — genau die Bits, die ihr Tod setzt: Sce_em_set
+ * sub00 @0x00B1A/@0x00B2E tragen pc[7] = 0xCB/0xCC (scd_vm.c op_sce_em_set: em_flag_id = pc[7]), Bank =
+ * re15_em_status_zone() (Stage 1 -> 7, @0x800420ec), gelesen von sub01 @0x00BFA/@0x00C02. Damit erreicht ein Messlauf
+ * Johns Abgang ohne Kampf-Eingaben (der Zaehler laeuft ab dem Ende der Szene, unabhaengig von der Dauer davor). */
 void re15_dining_r38_messhaken(void)
 {
 #ifdef RE15_PLATFORM_PC
-    static int s_init = 0, s_bild = -1, s_done = 0;
-    if (!s_init) { const char *e = getenv("RE15_R38F_GORILLAS_TOT"); s_init = 1; if (e && *e) s_bild = atoi(e); }
-    if (s_bild < 0 || s_done || g_current_room_id != RE15_R38F_RAUM_1141 || (int)g_engine.frame_count < s_bild) return;
+    static int s_init = 0, s_n = -1, s_done = 0, s_kampf = 0, s_starr = 0;
+    if (!s_init) { const char *e = getenv("RE15_R38F_GORILLAS_TOT"); s_init = 1; if (e && *e) s_n = atoi(e);
+                   e = getenv("RE15_R38F_GORILLAS_STARR"); s_starr = (e && *e); }
+    if (s_n < 0 || s_done || g_current_room_id != RE15_R38F_RAUM_1141) return;
+    if (!re15_game_flag_get(RE15_R38F_F2_BANK, RE15_R38F_F2_BIT) || g_scd.player_mode != 0) return;
+    /* RE15_R38F_GORILLAS_STARR=1: die Gorillas im Kampf einfrieren (grid_id | 0x20 = Member_set 0x0C=0x30 @0x800410b8,
+     * wie sub06 @0x0101A), damit der Messlauf zu Fuss an die Tueren kommt, ohne gegriffen zu werden. */
+    if (s_starr)
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) g_actors[s].grid_id |= 0x20;
+    if (++s_kampf < s_n) return;
     s_done = 1;
     extern uint8_t re15_em_status_zone(void);
     const uint8_t zone = re15_em_status_zone();
