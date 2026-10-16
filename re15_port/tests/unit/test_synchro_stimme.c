@@ -39,6 +39,7 @@
 #include <string.h>
 #include <dirent.h>
 #include "re15_elza_r36.h"  /* Runde 36 Spur L: re15_elza_stimme_datei (Sonderbindung main16.5.wav) */
+#include "re15_rekorder_r38.h"  /* Runde 38 Spur J: Sonderbindung Irons_Rekorder_Sound.wav (ROOM1100/1101 Id 40) */
 #include "re15_scd.h"
 #include "re15_room.h"
 
@@ -133,7 +134,11 @@ int main(void)
                      *    (einstellig, > 63, Zusatz im Namen), ist ein echter Ablage-Fehler:
                      *    sie SIEHT richtig aus und bleibt im Spiel trotzdem stumm. Genau das
                      *    soll diese Wache fangen. */
-                    if (strncmp(f->d_name, "main", 4) != 0) {
+                    /* Runde 38 Spur J: synchro/STAGE1/room1100/Irons_Rekorder_Sound.wav ist ueber re15_rekorder_r38_stimme
+                     * gebunden (Stimmen-Id 40 in ROOM1100/1101) - kein Roh-Export; Format prueft P4 wie bei jeder Datei. */
+                    int rekorder = re15_rekorder_r38_ist_datei(rid, f->d_name);
+                    if (rekorder) printf("  = %s/%s: Sonderbindung re15_rekorder_r38_stimme\n", rdir, f->d_name);
+                    if (!rekorder && strncmp(f->d_name, "main", 4) != 0) {
                         printf("  ~ %s/%s\n"
                                "      noch nicht zugeordnet - wird nicht abgespielt. In "
                                "main<NN>.wav umbenennen (NN = Message-Id)\n"
@@ -157,7 +162,7 @@ int main(void)
                     if (sonder) printf("  = %s/%s: Sonderbindung re15_elza_stimme_datei\n", rdir, f->d_name);
                     /* n == 10 = strlen("mainNN.wav"): der Loader formatiert %02d, eine
                      * einstellige "main5.wav" wuerde er also NIE finden. */
-                    if (!sonder && (sscanf(f->d_name, "main%d.wav", &id) != 1 ||
+                    if (!sonder && !rekorder && (sscanf(f->d_name, "main%d.wav", &id) != 1 ||
                         id < 0 || id >= 64 || n != 10)) {
                         printf("  ! %s/%s: heisst main..., verfehlt aber die Regel "
                                "(NN dezimal, zweistellig, < 64) -> bleibt stumm\n",

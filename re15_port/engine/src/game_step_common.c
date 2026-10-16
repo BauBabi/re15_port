@@ -48,6 +48,7 @@
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 ohne Spieler-Schub (zellschub_r36.c) */
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
 #include "re15_beretta_r37.h"   /* Runde 37 Spur G: Feuerstoss 5/6 trifft je Kugel (beretta_r37.c) */
+#include "re15_rekorder_r38.h"  /* Runde 38 Spur J: Rekorder-Aufnahme ROOM1100/1101 (rekorder_r38.c) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -1068,6 +1069,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * include/re15_leiche.h. */
     if (c->rdt_ok) re15_leiche_tick();
     re15_aufschliessen_r36_tick();   /* Runde 36 Spur G: faellige RE2-Aufschliess-Toene (auch bei offener Nachricht) */
+    re15_rekorder_r38_tick();        /* Runde 38 Spur J: Bilder seit der Rekorder-Aufnahme, Ende ins Protokoll */
 
     if (re15_item_modal_active()) return;
 
