@@ -4,7 +4,7 @@ Aufruf: python mk_r38.py <BASIS-sha>   (je Spur ein eigener Workflow-Lauf mit ar
 import io, json, sys
 
 SRC = "C:/workspace/git/reAi_v2/analysis/befunde_runde37/orchestrator/r37_r.js"
-DST = "C:/workspace/git/reAi_v2/analysis/befunde_runde38/orchestrator/r38.js"
+DST = sys.argv[2] if len(sys.argv) > 2 else "C:/workspace/git/reAi_v2/analysis/befunde_runde38/orchestrator/r38.js"
 BASIS = sys.argv[1]
 HAUPT = "C:/workspace/git/reAi_v2"
 NUTZER = "analysis/befunde_runde38/nutzer"

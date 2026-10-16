@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-16 16:40: Welle 2a laeuft (r38_w2.js, BASIS 1bcbd0ff, Baeume 16:28-16:39): Q wf_a6f0cd46-193, C wf_55628571-c21, K wf_f51a7d4d-ccc, E wf_4385667f-bb0, J wf_fe613bfa-201, A wf_539a5d00-022. Damit 16 Laeufe gleichzeitig. Platte 111 GB frei (vor den Builds) -> Welle 2b (D, M, N, O, S, U) erst, wenn erste Spuren integriert und ihre Baeume entfernt sind.
 * 2026-10-16 16:30: Welle 1 laeuft (je Spur ein Workflow, max_nach 2): L wf_64c0b503-94f (r37_l_forts.js), P wf_4979f9b2-77a (r37_p_forts.js; beide Zweige vorher mit master gemergt: L 44721dca, P 2bb1bbe3, Konflikte nur AUFTRAG/VERTRAG -> master), F wf_27c697b6-a0e, G wf_fef4a19f-77f, B wf_904f6df5-9b8, T wf_7931fdbe-adb, R wf_679cb64c-b33, H wf_10922d64-fbc, I wf_43b458d6-510, V wf_9f166cb7-bd0 (alle r38.js, BASIS e2cc7673). Baeume Welle 1 angelegt 16:17-16:27, Platte danach 143 GB frei. Welle 2 (A, C, D, E, J, K, M, N, O, Q, S, U) folgt nach Last/Platte.
 * 2026-10-16 16:10: Runde 38 angelegt (Auftrag woertlich, Vertrag mit 20 Spuren A-K, M-O, Q-V + Fortsetzung L/P der
   Runde 37). Orchestrator `orchestrator/r38.js` aus `mk_r38.py` (Vorlage `befunde_runde37/orchestrator/r37_r.js`), je
