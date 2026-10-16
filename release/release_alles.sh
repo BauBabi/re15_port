@@ -7,7 +7,8 @@
 # ins Archiv zu bringen."
 #
 # KURZANLEITUNG (ausfuehrlicher: release/README.md)
-#   Doppelklick auf release\release_alles.cmd  -> Trockenlauf, Rueckfrage, dann der ganze Lauf
+#   Doppelklick auf release\release_alles.cmd  -> Trockenlauf, dann Wahl [1] bauen [2] + Commit/Tag/Push
+#                                                 [3] nur Commit/Tag/Push [4] nichts
 #   bash release/release_alles.sh --dry-run    zeigt Version, Pruefungen und jeden Schritt; baut und schreibt nichts
 #   bash release/release_alles.sh              naechste Version, bauen, packen, Archiv (ohne Commit/Tag/Push)
 #   bash release/release_alles.sh --tag        dazu am Ende Release-Commit + Tag + Push

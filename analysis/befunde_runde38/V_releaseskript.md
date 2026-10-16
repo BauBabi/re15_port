@@ -14,6 +14,11 @@ Lesart des Orchestrators (AUFTRAG.md, "Lesarten"): "minor" = wie alle bisherigen
 
 (laufend, neueste Eintraege oben)
 
+* 2026-10-16 17:54: gezielte Tests gruen (Windows 7/7, Linux-Bau-Image 6/6 + cmd sichtbar SKIP), echte Messungen
+  N1 (Trockenlauf), N2 (Schritt alt gegen das echte Archiv), N5 (Docker-Start 19 s + echter Windows-Cross-Bau);
+  Docker Desktop danach wieder gestoppt. Abschnitte 3-7 geschrieben.
+* 2026-10-16 17:10-17:45: Umsetzung (release_alles.sh, _lib, docker_bereit.sh, .cmd, README), Tests mit Attrappen;
+  Funde beim Testen: geerbtes MSYS_NO_PATHCONV (cmd-Weg), zip/unzip fehlen im Linux-Bau-Image, Testzahl Windows/Linux.
 * 2026-10-16 16:55: Messung vorher + Ist-Ablauf belegt (Abschnitte 1/2), Entwurf (Abschnitt 3) folgt.
 * 2026-10-16 16:28: Dossier angelegt; Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE Runde 38, UEBERGABE Runde 37 §4,
   Memory-Notizen zur Release-Kette gelesen.
@@ -152,7 +157,23 @@ FAKE_ALTE_BLEIBEN/FAKE_DOCKER). Je Nutzer-Teilpunkt mindestens ein messender Rie
 | unit_r38_releaseskript_fehler_umfeld | Archiv v0.8.26 schon da -> Abbruch VOR dem Bauen, Ordner unangetastet; --ab archiv gleich = ok / anders = Abbruch; kaputtes Altarchiv -> Abbruch vor dem Bauen; anderes v0.8.25 im Archiv; schmutziger Baum/Werkzeug/unversionierte .c; Sperre lebend/verwaist; --tag ohne Notes/nicht master; Docker; Platz; Aufruffehler; --bis android; --tag nach Code-Commit verweigert; --kein-push | "die alte ins Archiv" (nichts geht verloren) |
 | unit_r38_releaseskript_cmd | (Windows; sonst sichtbar SKIP 77) CRLF; `cmd /c release_alles.cmd --dry-run` rc 0; Rueckgabe durchgereicht (2); Doppelklick-Weg ueber die Pipe: Wahl 4 -> nichts gebaut; Wahl 1 -> ganzer Lauf; Wahl 2 danach -> Abbruch vor dem Bauen mit Hinweis; Wahl 3 -> Commit + Tag + Push | "einfache Moeglichkeit - Skript oder sowas" |
 
-Ergebnisse: siehe Abschnitt 4 (N6, Linux-Container) und die ctest-Summenzeile unten.
+Ergebnisse:
+
+* Windows (Spurbaum, `local_build.sh configure` + `build` = LOCAL-BUILD-OK, dann gezielt), woertlich:
+  `ctest --test-dir re15_port/build -R "r38_releaseskript" --timeout 1200 --output-on-failure` ->
+  `100% tests passed, 0 tests failed out of 7` (`Total Test time (real) = 598.61 sec`; version 34 s, bausteine 4 s,
+  trocken 36 s, ablauf 57 s, fehler_bau 163 s, fehler_umfeld 231 s, cmd 73 s - Maschine dabei von anderen Spuren
+  ausgelastet). Pruefungen je Teil (direkter Lauf): version 39/39, bausteine 18/18, trocken 32/32, ablauf 47/47,
+  fehler_bau 25/25, fehler_umfeld 29/29, cmd 19/19.
+* Linux (Bau-Image `re15-linux-build:deb11`, git 2.30.2, cmake 3.28.6), Registrierung wie im Release-Container mit
+  einem Mini-Projekt aus `probes/r38_releaseskript.cmake`: `ctest -R r38_releaseskript` ->
+  `100% tests passed, 0 tests failed out of 7`, `7 - unit_r38_releaseskript_cmd (Skipped)` (sichtbar, gleiche
+  Testzahl); direkt je Teil: version 38/38, bausteine 18/18, trocken 32/32, ablauf 47/47, fehler_bau 25/25,
+  fehler_umfeld 29/29, cmd `SKIP: release_alles.cmd braucht cmd.exe (Windows) - hier Linux` (rc 77).
+* Release-Modul (die vorhandenen Tests, die release/ benutzen - der Diff fuegt dort nur Dateien und je eine Zeile in
+  .gitattributes/.gitignore hinzu), woertlich:
+  `ctest --test-dir re15_port/build -R "r35_android_pruefkette|r35_android_bash_mutanten" --timeout 1500 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 2` (pruefkette 167.52 s, bash_mutanten 634.80 s).
 
 ## 6. OFFEN
 
