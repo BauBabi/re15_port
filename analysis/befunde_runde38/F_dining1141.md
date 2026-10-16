@@ -241,6 +241,24 @@ Auswertung `cmake -DTEIL=D -DAUSWERTEN=<lauf> -P tests/integration/test_r38_dini
   dicht an der Kamera, ab F3360 aus dem Bild (unterer Rand) — kein Verschwinden im Bild.
 - Dachtuer -> `loaded room1171.rdt`.
 
+### 4.1d Laeufe int_wzl (W, Z) und int_l3 (L) — gruen
+- W (Elza, Sprung in 1021, danach nur Tueren): Leiche -> `[msg] room=1021 id=40`; Tuer Slot 1 -> ROOM1011 (Spawn
+  (3650,0,6900)); `[dining] ROOM1011: Dining Room Key (Item 0x43, Bit (9,64)) Prop obj 6 bei (-2000,0,7450), Zone Slot
+  14`; Elza geht zur Liegestelle (-1372,7415), Aufnahme-Modal "Will you take the Dining Room Key?" (Bild
+  `F_belege/n2_schluessel_aufnahme.png`: RE2-Herz-Schluessel im Item-Bild, Icon im Modal), `FLAG (9,64) = 1`; Tuer Slot 0
+  -> ROOM1021 (zweites Laden), dort kein `type=0x49` (John weg, Original main00 @0x01DF6). (Die Pruefung "zweimal
+  geladen" schlug im Lauf selbst am Makro-Fehler fehl — Auswertung mit 36a17826 gruen.)
+- Z (Elza 1131 ohne Schluessel): `ROOM1131 Slot 0 (Tuer -> ROOM1141) gesperrt: Ereignis 29`, `Tuer zum
+  Besprechungsraum verschlossen`, msg 40 im Zustands-Log, kein Raumwechsel; Bild `F_belege/n2_tuer1131_zu.png` ("It's
+  locked." / "The door is marked "Dining Room".").
+- L (Leon 1140): Leons Gemaelde-Zone (Slot 5) feuert im Port Ereignis 5 = sub05 "The switch is not responding..." —
+  sub00 @0x00B14 setzt Slot 5 -> sub03, aber sub01 @0x00C7A `46 05 03 31 ff 00 18 05` (laeuft jedes Bild) stellt ihn
+  auf sub05 (gemessen: `test_r38_dining1141 takt` "1140 Slot 5 ... Ereignis 5"; Lauf int_l2 msg 1 -> msg 5, Strom (2,0)
+  lag nachweislich an: Wegplan-FLAG (2,0) = 1 bis vor das Gemaelde, Lauf l4). Der Rolladen hebt sich bei Leon nur ueber
+  Ereignis 3 = sub03 — Lauf int_l3 per RE15_FORCE_EVENT=3 (wie der Vorher-Lauf v1140): `Se_on bank=0x3B id=12` F243,
+  `id=10` F258 (Sleep 15), `id=11` F453, `Port-Bank 0x3B geladen`; Mitschnitt: Pegel x2,10 nach 0x0A (Motor), x1,91 nach
+  0x0B (Anschlag). Elza 1141 (int_d3, echter Weg ueber das Gemaelde): 0x3B 12/10/11, Pegel x1,44/x1,56.
+
 ### 4.2 Riegel unit_r38_dining1141_* (Engine-Wege, Messwerte aus den Ausgaben)
 - phase_h: Bild 0 John bei (-7124,-6150) Blick 1024, keine Gorillas; 600 Bilder ohne Nachricht, John 0 Bilder
   abgewichen; Toene Bild 0/29/59/149/239/269/299/389/479/509/539 = 0x3C 0A/0B/0B, 0x3D 00 im Wechsel; "ja" Bild 725;
@@ -293,6 +311,11 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
 - **Riegel der Dachtuer:** John hat ihn auf der Gangseite vorgelegt und oeffnet ihn beim Hinausgehen. "You've opened
   the lock." kommt in diesem Ablauf deshalb nicht mehr (sonst oeffnete Elza einen Riegel, durch den John eben gegangen
   ist).
+- **Rolltor-Ton ROOM1140/1141:** jedes Hochfahren des Notrolladens spielt jetzt die drei Rolladen-Toene aus ROOM1131
+  (Klick, Motor, Anschlag) — Elza 1141 beim Gemaelde-Schalter (gemessen am echten Weg), Leon 1140 bei sub03. Hinweis:
+  Leons Gemaelde meldet im Port "The switch is not responding..." (Original sub01 @0x00C7A stellt den Schalter jedes Bild
+  darauf); hochfahren sieht man den Rolladen dort nur ueber sub03. Falls der Befund in ROOM1140 aus Elzas Raum (1141)
+  stammt: dort ist er jetzt mit Ton.
 - **Neue Assets (Paket-Gate):** `re15_port/shared_assets/RE2/KLOPF1060.EDT`, `.VH`, `.VB` (RE2 ROOM1060 snd0,
   bytegleich). Gegenstand/Modell/Icon/Bild des Schluessels sind eingebacken (gen/dining_r38_schluessel.inc).
 - **Sprachdateien (synchro, ersetzbar):** `synchro/STAGE1/room1141/main40.wav` = "Are you okay? What's happened?"

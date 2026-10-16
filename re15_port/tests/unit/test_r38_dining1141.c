@@ -710,6 +710,18 @@ static void teil_takt(void)
     for (int w = 0; w < 60; w++) frame(0, 0);
     n = drucke_bis(msg_offen, 10);
     printf("    1021 Leiche: danach %d Drucke bis zu\n", n);
+    /* 1140 Leon: welches Ereignis feuert der DRUCK aufs Gemaelde (Slot 5)? sub00 @0x00B14 setzt Slot 5 -> sub03,
+     * sub01 @0x00C7A setzt ihn -> sub05 ("not responding"). */
+    re15_game_state_init(); re15_inv_load_briefing();
+    re15_game_flag_set(2, 0, 1);
+    if (room_boot(RE15_R38F_RAUM_1140, -8150, -10250, 2048, 5) != 0) return;
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    printf("    1140 Slot 5: aktiv %d Typ %d Ereignis %d\n", g_aot.slots[5].active, g_aot.slots[5].type, g_aot.slots[5].event_id);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE); frame(RE15_PAD_BIT_SQUARE, 0); frame(RE15_PAD_BIT_SQUARE, 0);
+    for (int w = 0; w < 60; w++) frame(0, 0);
+    n = drucke_bis(msg_offen, 10);
+    printf("    1140 Gemaelde-Druck: %d Drucke, (3,0x6A) = %d, letzte msg %d\n", n,
+           re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT), (int)g_scd.message_id);
 }
 
 /* ---- Teil: leon1140 --------------------------------------------------------------------------------------- */

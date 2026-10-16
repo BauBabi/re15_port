@@ -375,23 +375,15 @@ endif()
 
 # --- L: Leon 1140 Rolladen-Ton ----------------------------------------------------------------------------------
 if(TEIL MATCHES "L")
-    # Strom (2,0) per RE15_SET_FLAG beim Start; mit RE15_DEBUG_JUMP@gp nach Leons Intro war er in Lauf int_wzl wieder
-    # aus (Gemaelde -> sub05 "not responding", msg 5, scd_vm.c s_power_gates) — darum RE15_GOTO_ROOM (Wechsel im
-    # ersten Raum, Muster des Vorher-Laufs v1140) und zu Fuss vom Eintrittspunkt ans Gemaelde.
-    f_lauf(l LEON "1100#1140" "RAUM 1140
-GEHE -7600 -12000 150
-GEHE -8150 -10250 80
-BLICK 2048
-AKTION
-WARTE 60
-AKTION
-WARTE 60
-AKTION
-WARTE 60
-AKTION
-WARTE 450
+    # Leons Gemaelde-Zone (Slot 5) feuert im Port Ereignis 5 ("The switch is not responding...", sub05): sub00 @0x00B14
+    # setzt Slot 5 -> sub03, sub01 @0x00C7A `46 05 03 31 ff 00 18 05` stellt ihn jedes Bild auf sub05 (gemessen
+    # test_r38_dining1141 takt: "1140 Slot 5 ... Ereignis 5", Lauf int_l2: msg 1 -> msg 5). Der Rolladen hebt sich bei Leon
+    # nur ueber Ereignis 3 = sub03 (Strom (2,0), scd_vm.c s_power_gates); gefeuert wie im Vorher-Lauf v1140 per
+    # RE15_FORCE_EVENT, Antwort "ja" per RE15_PRESS.
+    f_lauf(l LEON "700#1140" "RAUM 1140
+WARTE 600
 ENDE
-" "RE15_SET_FLAG=2:0;RE15_GOTO_ROOM=1140;RE15_FRAMEDUMP=0-1100/20:fd_" _l _wpl)
+" "RE15_SET_FLAG=2:0;RE15_GOTO_ROOM=1140;RE15_FORCE_EVENT=3@60;RE15_PRESS=square@120,square@180,square@240;RE15_FRAMEDUMP=0-700/20:fd_" _l _wpl)
     pruef(L _l "Se_on bank=0x3B id=12 -> Runde 38 Spur F (ROOM1131-snd0 Rolladen)")
     pruef(L _l "Se_on bank=0x3B id=10 -> Runde 38 Spur F (ROOM1131-snd0 Rolladen)")
     pruef(L _l "Se_on bank=0x3B id=11 -> Runde 38 Spur F (ROOM1131-snd0 Rolladen)")
