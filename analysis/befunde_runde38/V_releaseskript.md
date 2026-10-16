@@ -218,4 +218,28 @@ die gemeldete Wiederaufnahme nicht weiter. V2/V3/V4 erfuellt - ihre Riegel bleib
 
 ### 8.1 M1 - Ursache, Messung vorher, Beleg, Aenderung, Messung nachher
 
-(laufend)
+**Messung vorher** (22:49-22:59, Spurbaum 877f421a, Skript unveraendert = Stand 98652210; Riegel
+`ablauf_push_scheitert` im Test `ablauf`, Rezept der Abnahme A9: Wegwerf-Repo wie `fx_bauen`, Tags v0.8.24/v0.8.25,
+bare origin; ganzer Lauf; Notes `# v0.8.26` oben; origin per `set-url` auf einen nicht vorhandenen Pfad;
+`--version v0.8.26 --ab abschluss --tag`; origin zurueck; die gemeldete Zeile WOERTLICH im Repo ausgefuehrt):
+`bash test_r38_releaseskript.sh . <scratch> ablauf` -> rc 1, `58/70 Pruefungen gruen` (9 min 48 s; Fremdlast laut
+Vorbedingungszeile `cmake 12, ctest 7, re15_pc 1`). Woertlich aus den Ausgaben:
+
+| Lauf | Ergebnis (unveraendertes Skript) |
+|---|---|
+| p2 `--version v0.8.26 --ab abschluss --tag`, origin kaputt | rc 1; `Commit bc40d50, Tag v0.8.26`; `fatal: '.../gibtsnicht.git' does not appear to be a git repository`; `!!! ABBRUCH in Schritt 'abschluss': git push endete mit Rueckgabe 128`; `Nach der Behebung weiter mit: bash release/release_alles.sh --version v0.8.26 --ab abschluss --tag` - kein Wort davon, dass Commit + Tag schon stehen, kein Push von Hand |
+| p3 Trockenlauf danach (zeigt der Doppelklick zuerst) | `Version: v0.8.27  (hoechster Tag v0.8.26 + 1)`, `TROCKENLAUF-OK v0.8.27` - kein Hinweis, dass v0.8.26 nicht gepusht ist |
+| p4 die gemeldete Zeile woertlich, origin repariert | **rc 2** `--version v0.8.26 ist nicht groesser als der hoechste Tag v0.8.26 - die APK waere ein Downgrade (build_android.sh:195-199)`; origin ohne Commit und ohne Tag |
+| p5 `--ab abschluss --tag` (= Doppelklick-Wahl [3], release_alles.cmd:70) | rc 1, `Version: v0.8.27`, `[XX] --tag: release/RELEASE_NOTES.md beginnt nicht mit '# v0.8.27 ...' (oben steht: '# v0.8.26 - Testfassung')` |
+
+12 neue Pruefungen rot (Meldung, Trockenlauf-Hinweis, gemeldete Zeile -> gepusht, Wahl [3] -> gepusht, Wiederholung),
+die 58 alten gruen. M1 ist damit reproduziert.
+
+**Ursache (Beleg Datei:Zeile, Stand 98652210):** Die Version wird VOR dem Plan festgelegt und kennt nur zwei Wege:
+mit `--version` muss sie groesser als der hoechste Tag sein (release_alles.sh:198-201), ohne `--version` ist sie
+hoechster Tag + 1 (:205). Nach Commit + Tag (:683-684) ist der hoechste Tag die Release-Version selbst - beide Wege
+fuehren an ihr vorbei. `s_abschluss` legt Commit und Tag ausserdem immer neu an (:662-684; ein leerer Index endet in
+`die "nichts vorgemerkt"` :673), ist also nicht wiederholbar. Die Abbruchmeldung (`die`, :152-154) setzt nur
+`--version $NEU --ab $AKTUELL --tag` zusammen - ohne die Optionen des Aufrufs (`--archiv`!) und ohne den Push von Hand.
+
+(Umsetzung folgt)

@@ -407,6 +407,71 @@ teil_ablauf() {
     o="$fx/out3.txt"; ra "$o" --dry-run --min-frei-gb 1
     pruef "danach: naechste Version v0.8.27" hat "$o" "Version: v0.8.27  (hoechster Tag v0.8.26 + 1)"
     pruef "danach: Vorversion v0.8.26 liegt im Archiv (wird geprueft)" hat "$o" "Vorversion v0.8.26 liegt im Archiv"
+    pruef "danach: kein Hinweis 'der Push fehlt' (origin hat alles)" hat_nicht "$o" "der Push fehlt"
+
+    ablauf_push_scheitert
+}
+
+# Abnahme 0, Mangel M1 (V_abnahme_0.md A9): der Push scheitert im Schritt abschluss, NACHDEM Release-Commit und
+# annotierter Tag lokal stehen (release_alles.sh: commit, tag, dann push). Die gemeldete Wiederaufnahme-Zeile -
+# WOERTLICH im Repo ausgefuehrt - und die Doppelklick-Wahl [3] ('--ab abschluss --tag' ohne --version,
+# release_alles.cmd) muessen zum gepushten Commit + Tag fuehren: kein zweiter Commit, kein neuer Tag, kein v0.8.27.
+ablauf_push_scheitert() {
+    echo "== Push scheitert im Schritt abschluss, Wiederaufnahme (Abnahme 0, M1) =="
+    local fx="$ARBEIT/fx_push" o url head_rel tag_obj zeile
+    fx_bauen "$fx" v0.8.24 v0.8.25
+    o="$fx/p1.txt"; ra "$o" --min-frei-gb 1
+    pruef "M1 Vorlauf: ganzer Lauf rc 0 (ist $RC)" gleich "$RC" 0
+    printf '# v0.8.26 - Testfassung\n\nneu\n\n# v0.8.25 - Testfassung\n\nalt\n' > "$R/release/RELEASE_NOTES.md"
+    url="$(git -C "$R" remote get-url origin)"
+    git -C "$R" remote set-url origin "$fx/gibtsnicht.git"
+    o="$fx/p2.txt"; ra "$o" --min-frei-gb 1 --version v0.8.26 --ab abschluss --tag
+    pruef "M1 Push scheitert: rc 1 (ist $RC)" gleich "$RC" 1
+    pruef "M1 Push scheitert: Abbruch in abschluss an git push" hat "$o" "!!! ABBRUCH in Schritt 'abschluss': git push endete mit Rueckgabe"
+    head_rel="$(git -C "$R" rev-parse HEAD)"
+    tag_obj="$(git -C "$R" rev-parse -q --verify refs/tags/v0.8.26 || echo kein-tag)"
+    pruef "M1 Push scheitert: Release-Commit steht lokal" \
+        gleich "$(git -C "$R" log -1 --format=%s)" "release: v0.8.26 (Windows + Linux/Steam Deck + Android)"
+    pruef "M1 Push scheitert: annotierter Tag v0.8.26 lokal auf dem Release-Commit" \
+        bash -c "[[ \$(git -C '$R' cat-file -t v0.8.26) == tag && \$(git -C '$R' rev-parse 'v0.8.26^{commit}') == '$head_rel' ]]"
+    pruef "M1 Push scheitert: origin ohne Tag v0.8.26" bash -c "! git -C '$fx/origin.git' rev-parse -q --verify refs/tags/v0.8.26 >/dev/null"
+    pruef "M1 Meldung: nur der Push fehlt" hat "$o" "stehen lokal - nur der Push fehlt"
+    pruef "M1 Meldung: Push von Hand" hat "$o" "oder von Hand: git push origin master v0.8.26"
+    zeile="$(sed -n 's/^ *Nach der Behebung weiter mit: //p' "$o" | tail -1)"
+    pruef "M1 Meldung: Wiederaufnahme-Zeile vorhanden ('$zeile')" bash -c "[[ \"\$1\" == 'bash release/release_alles.sh '* ]]" _ "$zeile"
+    # Der Doppelklick zeigt zuerst den Trockenlauf: er muss sagen, dass nur der Push fehlt und wie er nachgeholt wird
+    o="$fx/p3.txt"; ra "$o" --dry-run --min-frei-gb 1
+    pruef "M1 Trockenlauf danach: [!!] der Push fehlt, Wahl [3]" \
+        bash -c "grep -qF 'der Push fehlt' '$o' && grep -qF 'Doppelklick: Wahl [3]' '$o'"
+    # origin repariert, dann die gemeldete Zeile WOERTLICH im Repo. RE15_ARCHIV zeigt auf einen leeren Ordner: die
+    # Zeile muss das Archiv des Laufs selbst nennen (sonst prueft sie das falsche und bricht ab).
+    git -C "$R" remote set-url origin "$url"
+    o="$fx/p4.txt"
+    ( cd "$R" && export RE15_ARCHIV="$fx/falsches_archiv" PATH="${WERKZEUG_PFAD}$PATH" && eval "$zeile" ) > "$o" 2>&1; RC=$?
+    pruef "M1 gemeldete Zeile: rc 0 (ist $RC)" gleich "$RC" 0
+    pruef "M1 gemeldete Zeile: RELEASE-ALLES-OK v0.8.26" hat "$o" "RELEASE-ALLES-OK v0.8.26"
+    pruef "M1 gemeldete Zeile: kein zweiter Commit" gleich "$(git -C "$R" rev-parse HEAD)" "$head_rel"
+    pruef "M1 gemeldete Zeile: Tag unveraendert (dasselbe Tag-Objekt)" gleich "$(git -C "$R" rev-parse -q --verify refs/tags/v0.8.26)" "$tag_obj"
+    pruef "M1 gemeldete Zeile: origin master = Release-Commit" gleich "$(git -C "$fx/origin.git" rev-parse master)" "$head_rel"
+    pruef "M1 gemeldete Zeile: origin traegt Tag v0.8.26 (dasselbe Tag-Objekt)" \
+        gleich "$(git -C "$fx/origin.git" rev-parse -q --verify refs/tags/v0.8.26)" "$tag_obj"
+    pruef "M1 gemeldete Zeile: kein v0.8.27, kein weiterer Tag" bash -c "! git -C '$R' rev-parse -q --verify refs/tags/v0.8.27 >/dev/null"
+    pruef "M1 gemeldete Zeile: Push von origin bestaetigt (ls-remote)" hat "$o" "origin bestaetigt"
+    [[ $FEHLER -eq 0 ]] || { zeige p2 "$fx/p2.txt" 25; zeige p4 "$o" 30; }
+    # Doppelklick-Wahl [3] = '--ab abschluss --tag' OHNE --version: origin auf den Stand vor dem Push zurueck
+    # (Commit + Tag nur lokal, wie nach einem gescheiterten Push), dann muss auch dieser Weg nur pushen
+    git -C "$fx/origin.git" update-ref refs/heads/master "$(git -C "$R" rev-parse HEAD~1)"
+    git -C "$fx/origin.git" tag -d v0.8.26 >/dev/null
+    o="$fx/p5.txt"; ra "$o" --min-frei-gb 1 --ab abschluss --tag
+    pruef "M1 Wahl [3] ohne --version: rc 0 (ist $RC)" gleich "$RC" 0
+    pruef "M1 Wahl [3]: Version v0.8.26 (nicht v0.8.27)" hat "$o" "Version: v0.8.26  (Tag v0.8.26 steht schon auf HEAD"
+    pruef "M1 Wahl [3]: origin master + Tag v0.8.26, kein neuer Commit" \
+        bash -c "[[ \$(git -C '$fx/origin.git' rev-parse master) == '$head_rel' && \$(git -C '$fx/origin.git' rev-parse refs/tags/v0.8.26) == '$tag_obj' && \$(git -C '$R' rev-parse HEAD) == '$head_rel' ]]"
+    # Noch einmal, wenn alles veroeffentlicht ist: rc 0, nichts veraendert
+    o="$fx/p6.txt"; ra "$o" --min-frei-gb 1 --ab abschluss --tag
+    pruef "M1 Wiederholung (alles schon gepusht): rc 0, HEAD + Tags unveraendert (ist $RC)" \
+        bash -c "[[ $RC == 0 && \$(git -C '$R' rev-parse HEAD) == '$head_rel' && \$(git -C '$R' tag --list 'v0.8.2*' | tr '\n' ' ') == 'v0.8.24 v0.8.25 v0.8.26 ' ]]"
+    [[ $FEHLER -eq 0 ]] || { zeige p5 "$fx/p5.txt" 30; zeige p6 "$o" 20; }
 }
 
 # =============================================================================
