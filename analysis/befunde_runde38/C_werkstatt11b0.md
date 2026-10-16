@@ -23,9 +23,10 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
 ## Stand / Fortschritt
 
 - [x] Messung vorher (alle drei Punkte) + RE-Belege — §1.1/§1.2, §2.1/§2.2, §3.1/§3.2
-- [ ] Punkt 1 Text "But, hold on..." — Umsetzung/nachher
-- [ ] Punkt 2 Schiebe-Ton — Umsetzung/nachher
-- [ ] Punkt 3 keine Fall-Animation — Umsetzung/nachher
+- [x] Punkt 1 Text "But, hold on..." — Umsetzung §1.3, nachher §1.4
+- [x] Punkt 2 Schiebe-Ton — Umsetzung §2.3, nachher §2.4
+- [x] Punkt 3 keine Fall-Animation — Umsetzung §3.3, nachher §3.4
+- [ ] Riegel gruen (gezielt) + integration_r38_werkstatt11b0 — Abschnitt Tests
 
 ## §1 Punkt 1 — Text "But, hold on..."
 
@@ -44,6 +45,19 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
   `... 2b 44 18 00 25 00 4f 41 41 57 57 57 00 ...` -> "Oh," = `2b 44 18` + Leerzeichen `00`, "..." = DREI Punkte
   `57 57 57` (kein eigenes Auslassungszeichen).
 - Damit "But, hold on..." = `1e 51 50 18 00 44 4b 48 40 00 4b 4a 57 57 57` (B u t , _ h o l d _ o n . . .).
+
+### 1.3 Umsetzung
+- `re15_port/tools/r36_j/szene11b0_bauen.py`: `MSG20 = marvin_zeile(["But, hold on..."])` (+ Kommentare/Listing mit
+  Formbeleg msg 4 @0x19CD), neu erzeugt -> `engine/src/gen/szl11b0_szene.inc`: NUR `k_szl_msg20` aendert sich
+  (26 -> 33 B: `04 00 05 07 29 3d 4e 52 45 4a 16 05 00 00 1e 51 50 18 00 44 4b 48 40 00 4b 4a 57 57 57 04 01 01 5f`),
+  das Programm (294 B, Message_on 20 @+0x0008) bleibt Byte fuer Byte. Ende `04 01 01 5f` (Wartezeit 95 Bilder) wie
+  bisher aus msg 12 (Generator prueft @0x1BFA).
+
+### 1.4 Messung nachher
+- exe (Grundlauf n1, Stand mit Fix): `[msgtext] room=11b0 id=20 "Marvin: But, hold on..."` (debug.log, zwischen
+  F2100 und F2130). Bildablauf der Szene unveraendert (`[walk] F1620..F1770` identisch zu v1/v3).
+- Riegel unit_r38_werkstatt11b0_text: Bytes, Form gegen ROOM11B0 @0x1BD0/@0x1BFA/@0x19CD, Programm 294 B,
+  `re15_msg_get_text(20)` = "Marvin: But, hold on..." (gruen).
 
 ## §2 Punkt 2 — Schiebe-Ton beim gemeinsamen Schieben
 
@@ -88,6 +102,32 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
   Schub-Szene, aus der ein Satz fuer 11B0 folgen wuerde. Leon klingt im Port beim Kistenschieben nach RE1.5 —
   derselbe Ton fuer das gemeinsame Schieben ist die einzige belegte Wahl.
 
+### 2.3 Umsetzung
+- `engine/src/werkstatt11b0_r38.c` / `include/re15_werkstatt11b0_r38.h`: `re15_w11b0_ergaenzung_noetig(raum, edt, n,
+  satz)` = 1 nur fuer ROOM11B0, Satz 7, Raumsatz leer (Byte 2/3 == 0 wie re15_edt_decode); Haken-Zeiger
+  `re15_w11b0_snd0_hook` (NULL auf PSX/in Unit-Tests = Original).
+- `platform/pc/src/werkstatt11b0_pc.c`: schneidet beim ersten Ton die snd0-Bank aus
+  `shared_assets/PSX/STAGE1/ROOM1171.RDT` (re15_rdt_parse, Kopfworte +0x08/+0x0C/+0x10), prueft Offsets 0x6EDC/0x6F5C/
+  0x87FC, Satz 7 `00 00 45 10` und VAG 4 = 6688 B, dekodiert die VAGs und spielt Satz 7 ueber re15_audio_se_play_bank
+  (= se_play_layers, Stimme 0 / Prio 5 / nicht positional wie FUN_80045024 @0x800451dc). KEINE neue Datei, kein Patch
+  an shared_assets/PSX. Mess-Haken `RE15_W11B0_SCHUB_STUMM` (nur Riegel: Ergaenzung aus = Stand vorher).
+- Haken (je 1 Zeile): `platform/pc/src/audio_pc.c` re15_audio_room_se_snd0 fragt zuerst `re15_w11b0_snd0_hook`
+  (+ 1 Include-Zeile); `platform/pc/main.c` Init-Block `re15_pc_w11b0_init()` neben den Runde-36/37-Ton-Haken.
+- Takt unveraendert (szenenleon_r36.c: Bild 1 jedes Clip-0x12-Umlaufs @0x80052ac0-d8, Phase 7 @0x80052bc8), je Schieber.
+
+### 2.4 Messung nachher
+- exe (Grundlauf n1): `[schub-r38] Ergaenzungsbank ROOM1171 snd0 geladen: 6 VAGs, Satz 7 @0x6EF8 00 00 45 10 -> Ton 4
+  -> VAG 4 (6688 B)`, dann 8 Toene `[schub-r38] F1646` x2, `F1671` x2, `F1696` x2, `F1729` (Leon Phase 7), `F1730`
+  (Marvin Phase 7), jeder mit `[se] Stimme: se=7 layer=0 vag=3 note=63 fine=0 center=87 vol=110 pitch=0x400 (11025 Hz)
+  -> SE-Stimme 0 (SPU 16)`. F1646 = Clip 0x12 Bild 1 (anim.txt: Clip 18 ab F1645), Abstand 25 = Clip-0x12-Laenge.
+- Ton-Mitschnitt (RE15_AUDIO_CAP_SYNC, v3 vorher gegen n1 nachher, gleiche Schalter, Mitschnittblock = Spielbild +
+  254): bis Block 1900 (= F1646) bitgleich; Unterschied genau in F1647..F1728 (drei Umlaeufe, Summe |Diff| 279 395 136)
+  und F1730..F1762 (Phase-7-Toene, 109 329 132) — mehr Energie als die ganze uebrige Mischung im selben Fenster
+  (171 615 336): der Schiebe-Ton ist deutlich zu hoeren, vorher fehlte er ganz.
+- Mischer-Probe (unit_r38_werkstatt11b0_ton, echtes audio_pc.c): 11B0 ohne Ergaenzung Energie 0, mit Ergaenzung
+  108 200 792, ROOM1090 (Leon allein, eigene Bank) 108 200 792 — **147 000 von 147 000 Samples gleich**: es ist exakt
+  Leons Kisten-Ton; Tonlaenge 32 Bilder; 11B1 und 11B0-Satz-0 unberuehrt.
+
 ## §3 Punkt 3 — Marvins "Fall-Animation"
 
 ### 3.1 Messung vorher (Grundlauf, RE15_ANIM_TRACE + state.log + Framedump JEDES Bildes F1626..F1800)
@@ -129,6 +169,33 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
 - Folgerung: das Original zeigt im Bild von Phase 7 die gehaltene Pose Clip 0x11 Bild 0 (aufrecht) und blendet von
   dort in Bank 1 Clip 1 — KEIN Rueckfall in die Schiebehaltung. Der Port-Fehler ist die Bank-Wahl fuer genau dieses
   Uebergabebild.
+- Regression? Nein — der Fehler steckt seit Runde 36 Spur J (3d394d71, Einfuehrung des NPC-Sub 0x13) in
+  re15_szl_schub_npc_kanal (Bank nach +0x6 statt nach dem posierten Clip, kein Halten in Phase 7); das Riegel
+  unit_r36_szenenleon_schub prueft nur die Phasen 3/5, nie das Uebergabebild.
+
+### 3.3 Umsetzung
+- `engine/src/werkstatt11b0_r38.c`: `re15_w11b0_schub_kanal(e)` — Sub 0x13: Bank folgt dem posierten Clip (Clip 5 ->
+  2 = +0x170 @0x8005294c, sonst 1 = +0x84 @0x80052a08/@0x80052af4/@0x80052b98); Uebergabebild (Sub 6, +0x6 = 0, Clip
+  0x11, Merker aus Phase 7) -> 1 (Loco); der Merker verfaellt, sobald Sub 6 posiert hat. `re15_w11b0_schub_uebergabe(e)`
+  in Phase 7: +0x95 = 0 (@0x8001f63c) + Merker + Log `[w11b0-r38] F<n> Aktor <i> ... Phase 7 ... gehalten`.
+- Haken in `engine/src/szenenleon_r36.c` (3 Zeilen): Include, erste Zeile von re15_szl_schub_npc_kanal, Aufruf im
+  default-Zweig (Phase 7). Alle Verbraucher (main.c Renderer, re15_actor_uses_own/loco_bank, Takt) lesen dieselbe
+  Kanal-Funktion — eine Regel.
+- Leon (Spieler) ist NICHT betroffen: sein Phase 7 startet Sub 6 im selben Bild (re15_player_event_reach_begin), die
+  Spieler-Bank haengt nicht an dieser Regel (anim.txt F1729 Clip 1).
+
+### 3.4 Messung nachher (Grundlauf n1, Framedump jedes Bildes F1626..F1800)
+- anim.txt Marvin: `1634 1 64 5 5 30 0 0 30 0 0` (Bank 1 Clip 5, vorher Loco 20 B.), `1729 1 64 17 17 10 9 0 10 1 1`
+  (Phase 6 letztes Bild, slot 0), **`1730 1 64 17 17 10 0 0 10 1 0`** (Uebergabebild: Loco Clip 0x11 slot 0 = dieselbe
+  Pose), `1731 1 64 1 1 16 0 0 16 0 0` (Sub 6 Clip 1). state.log-Zensus ueber 2760 Bilder: 0 Rueckfall-Bilder; anim.txt:
+  0 Zeilen Clip 0x11/0x12 ohne Loco-Bank.
+- Bild (`C_belege/p3_marvin_vorher_nachher_F1726_F1737.png`, Ausschnitt um Marvin, oben vorher/unten nachher): vorher
+  F1730-F1733 Rueckfall in die vorgebeugte Schiebehaltung, nachher bleibt er aufrecht. Mittlere Pixelabweichung zu F1729
+  im Ausschnitt: F1730 vorher 3.92 / nachher 0.00, F1731 4.02 / 0.02, F1732 3.50 / 0.08, F1733 2.75 / 0.39 (danach
+  gleiches Ausklingen in Clip 1, F1737 1.36 / 1.36).
+- Riegel unit_r38_werkstatt11b0_uebergabe: Phase 1->2 B1457 Bank 1 Clip 5; Phase 7 B1553 Loco Clip 0x11 Bild 0,
+  Keyframe 266 == Keyframe von Phase 6 (266); alte Regel haette Containerbank Keyframe 275 (tiefe Schiebehaltung)
+  gezeigt; Folgebild Bank 1 Clip 1 Bild 0; 0 Rueckfall-Bilder; Merker verbraucht.
 
 ## Tests
 
