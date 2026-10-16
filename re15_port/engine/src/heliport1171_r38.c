@@ -8,6 +8,8 @@
 #include "re15_enemy.h"
 #include "re15_scd.h"
 #include "re15_audio.h"
+#include "re15_esp.h"
+#include "re15_damage.h"   /* re15_enemy_bone_world_pos */
 #include <stdio.h>
 
 extern int  re15_player_victim_state(void);           /* enemy_ai_common.c */
@@ -53,6 +55,16 @@ void re15_r38i_rueckgriff(re15_actor_t *kraehe, re15_actor_t *pl)
     re15_player_aim_interrupt();
     re15_player_event_reach_end();
     if (pl) pl->walk_active = 0;
+}
+
+void re15_r38i_orient_blut(re15_actor_t *kraehe)
+{
+    if (!kraehe || !kraehe->active) return;
+    /* `jal 0x80019700` @0x80115334 / @0x80115394: a0 = 0x1000 @0x80115318, a1 = +0x6a, a2 = [+0x188]+408 (Teil 2). */
+    int32_t g[3];
+    re15_enemy_bone_world_pos(kraehe, RE15_R38I_ORIENT_TEIL, g);
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /* Effekt a0>>24 */, 0 /* Sub (a0>>16)&0xff */,
+                         (uint16_t)RE15_R38I_ORIENT_SKALA, g[0], g[1], g[2], (int16_t)kraehe->rot_y);
 }
 
 void re15_r38i_wurfstoss(void)

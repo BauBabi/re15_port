@@ -27,6 +27,7 @@ Ck(3,0xC2)==1 -> Ereigniszweig (John 0x49 + ZWEI Kraehen 0x21 beh 0x40 @0x016DC/
 | v2_re2 (STATE_LOG) | Standard (RE2) | beide Ereignis-Kraehen (g=40) im RE2-Hirn Zustand 1/Sub 0, Lage 900 Bilder unveraendert (-9970,-5680)/(-8644,-7294), Abstand 17132/17616 — sie kommen nie; Elza pm=2, pad=0000, steht |
 | v2_re15 | RE15_AI_FLAVOR=re15 | Kraehen im RE1.5-FLIGHT-2 (Zustand 4): ASCEND -> HOVER -> Kontakt -> ORIENT (Kraehe 2 ab F95), Elza hp 100->92, gr=1 — trotzdem KEIN Fortgang |
 | v3_re15_force | re15 + RE15_SET_FLAG_AT=5:28@150 (nur Diagnose) | Szene laeuft durch: msg 0/1/3, sub03/sub04 @F902, `Aot_on 01` -> DOOR FIRE Slot 1 -> ROOM10B1; aber Kraehen bleiben in ORIENT (kein SPIN, kein Tod), Elza ohne Opfer-Animation |
+| v4_weg_vorher (ECHTER WEG, build_bisect = e2cc7673 ohne Tests) | Standard (RE2) | Elza-Spielstand ROOM1131 vor der Flurtuer Slot 3 (@0x008EE), Aktionstaste -> ROOM1171 Cut 8 (Szenario 8, kein Ereignis) -> Selbst-Tuer Slot 5 (@0x012F0, Cut 0) -> sub02 F61 -> "RE2 EM021 loaded" -> bis F1500 keine Zeile mehr (kein Text, keine Tuer) |
 
 => Der Haenger ist allein die Warteschleife @0x013F4 auf (5,0x1C). Spieler-Eingabe ist waehrend der Szene zu
 (pm=2 durch (2,0x07)=1 @0x013A8 und (1,0x1B)=1 @0x013AC) — Elza steht fest, das ist der Nutzer-Befund.
@@ -113,6 +114,11 @@ Zustand 1/Sub 0, keine Bewegung). Die Szene ist in RE1.5 fertig (kein Beta-Loch)
   @0x80019714 -> `sh s1,114(t0)` @0x800197dc; Port-Zwilling re15_esp_fx_spawn_ex, vgl. Granate 0x040D1000 in
   re15_esp.h). Der Port-Kommentar "no distinct effect" war falsch: es ist Raum-ESP-Effekt 0 (Skala 0x1000, halb so
   gross wie der Zombie-Treffer 0x2000) am Kraehenteil 2, bei Eintritt und bei jedem Clip-Umlauf.
+- Ton der Ereignis-Kraehen (STAGE1.BIN `scan`): ASCEND 0x80114fb8 Schritt 0 `jal 0x800453d0` @0x80115004 mit
+  `addu a0,zero,zero` @0x80115008 = Raum-SE 0, dann Clip 4 @0x8011500c; SPIN 0x801153ac Schritt 0 `jal 0x800453d0`
+  @0x801153f8 / a0 = 0 @0x801153fc, Clip 4 @0x80115410, +0x8c = 0xb4, +0x1e4 = -30, +0x1d5 = 0x20. HOVER, ORIENT,
+  DIVE-ARM 0x8011553c und die Subs 0x80115830/0x80115910 rufen keinen SE. Der Port spielte in ASCEND und SPIN keinen
+  Ton (SPIN wird waehrend (5,0x1D) gesetzt ist immer wieder betreten -> der Kraehenruf wiederholt sich).
 
 ## 3. Umsetzung
 
@@ -130,7 +136,9 @@ Haken in gemeinsamen Dateien (je 1-3 Zeilen, Kommentar "Runde 38 Spur I"):
 - `engine/src/enemy_ai_common.c`: `#define s_crow_gflags (g_game.flags[5][0])` (statt privatem Wort) und kein
   Ruecksetzen im Flock-Reset (Raum-Init @0x8003ed74 loescht Bank 5); RE2-Weiche der Kraehe `&& !re15_r38i_ereigniskraehe(e)`;
   HOVER-Griff `re15_r38i_rueckgriff(e, player)` statt `re15_crow_hit_player(e, player, 8)` (die -8 HP waren erfunden);
-  `re15_r38i_wurfstoss()` an der Stelle @0x801120a0-e8 der Wurzel; Include.
+  `re15_r38i_wurfstoss()` an der Stelle @0x801120a0-e8 der Wurzel; ORIENT ruft `re15_r38i_orient_blut(e)` bei Eintritt
+  (@0x80115334) und Clip-Umlauf (@0x80115394); ASCEND/SPIN-Eintritt `re15_audio_room_se(0)` (@0x80115004/@0x801153f8);
+  veraltete Kommentare ("in STAGE1 nie gesetzt / unerreichbar") berichtigt; Include.
 - `engine/src/game_step_common.c`: `re15_r38i_rueckgriff_tick()` direkt nach `re15_player_victim_tick()` (Spieler-Takt
   nach dem Gegner-Durchlauf, wie Hook A im Spieler-Task nach FUN_8001a50c).
 - `engine/src/scd_room_setup.c`: Installer-Zeile am Ende des Blocks.
@@ -167,12 +175,47 @@ Belege in `analysis/befunde_runde38/I_belege/` (Logauszuege, Zeitlinie, Bilder).
 
 ## 5. Tests
 
-(folgt)
+Registriert NUR in `re15_port/tests/unit/probes/r38_heliport1171.cmake`:
+- `test_r38_heliport1171.c` (Unit, echte RDTs + echte Baenke, Bilder in main.c-Reihenfolge), Teile:
+  `banken` (EM021-Opferbank beider Archive: CDEMD0 14/36/20, CDEMD1 14/31/30 = Header), `zensus` (opcode-genauer Walk
+  aller 206 RDTs: Ereignis-Kraehen nur ROOM1171 @0x016DC/@0x016F0, kein Skript setzt (5,0x1C)=1, Warte-Bytes
+  @0x013F4), `flagwort` (HOVER-Kontakt setzt Bank-5-Wort-Maske 0x8, kein HP-Abzug, ORIENT-Effekt bei Eintritt und
+  Clip-8-Umlauf, (5,0x1D) -> SPIN + Opfer-Phase 4, (5,0x1F) -> Zustand 3 + Bit geloescht), `szene_re2` / `szene_re15`
+  (ganze Szene: Griff, Warten endet im Folgebild, Clip 0 = 14 Bilder, SE 2 im Griff-Bild und am Clip-Ende, Wurf =
+  Griff+61, Modus 6 = Wurf+30, HP 100, beide Kraehen tot + Leiche, msg 0/1/3, Tuer -> ROOM10B1, (4,0xE9)=1),
+  `danach` (Wiedereintritt Cut 3: 7 normale Kraehen, Abstieg Slot 2 -> ROOM10B1 installiert), `leon1170` (Leon: 7 Kraehen,
+  keine Ereignis-Kraehe, keine im FLIGHT-2, Bank-5-Bits unberuehrt).
+- `tests/integration/test_r38_heliport1171.cmake` (echte exe, Messkopie): `weg_re2`, `weg_re15` (ROOM1131 -> Flurtuer ->
+  ROOM1171 -> Selbst-Tuer Slot 5 -> Szene -> ROOM10B1), `laden` (Lade-Weg); prueft Texte 0/1/3 in Folge, Tuer Slot 1 ->
+  ROOM10B1, keine RE2-EM021-Bank, HP 100, Griff -> Wurf-Clip -> Modus 6, danach Elza steuerbar (pm=0 in ROOM10B1).
+  Gegenprobe gegen e2cc7673 (build_bisect): ROT mit "Texte 0/1/3 nicht in Folge (-1/-1/-1) - die Szene haengt".
+  Kuerzung (ehrlich): die Selbst-Tuer Slot 5 feuert der Haken RE15_FIRE_AOT (re15_aot_fire_slot = derselbe Tuerpfad wie
+  die Aktionstaste); der Treppenweg Boden -> Ebene 2 -> Ebene 4 (Slots 6/8) wird nicht gelaufen.
+
+(Ergebnisse unten.)
 
 ## 6. OFFEN
 
-(folgt)
+- `0x800acc0c := 1` in P0 der Rueck-FSM (@0x80115bc4) hat im Port kein Modell (wie in der Vorn-FSM, crow_victim_anim.md
+  §7.6) — unveraendert offen, ohne Wirkung auf den Ablauf.
+- Se_on 0x03020001 ist positional (a0&0xff = 1 -> 0x80045a64 mit Spieler+0x34, @0x80115c04); der Port spielt alle
+  Raum-SEs (re15_audio_room_se) ohne Positionsmischung — bestehende Port-Eigenschaft, nicht neu.
+- Modus-6-Takt: ein Bild frueher als das Original (Abschnitt 3, uebernommene Konvention der vorhandenen Maschine).
+- INTEGRATION (Hinweis an den Orchestrator): Spur B ("kein Angriff in Szenen") darf den Rueckgriff der Ereignis-Kraehe
+  NICHT sperren — er ist hier der Ausloeser der Szene (einziger Setzer von (5,0x1C)); eine Sperre liesse sub02 wieder
+  ewig @0x013F4 warten. Die Riegel `unit_r38_heliport1171_szene_re2/_re15` und `integration_r38_heliport1171_*`
+  fallen dann rot. Spur F (1141 -> 1171): unabhaengig — der Ereigniszweig haengt nur an (3,0xC2)==1 und an einem
+  Eintritt mit Szenario 0/3 (sub00 Switch @0x01374/@0x01384).
 
 ## 7. Fuer den Nutzer
 
-(folgt)
+- Neue Assets: keine. Sprachdateien: keine neuen. Die Nutzer-Aufnahmen synchro/STAGE1/room1171/main00.wav und
+  main01.wav gehoeren zu msg 0 "Elza, hurry up!" (@0x014BA) und msg 1 "We need to get this thing off of here! Help me
+  out!" (@0x0151E) und spielen jetzt, weil die Szene durchlaeuft (Regel synchro/README.md: Message-Id). HINWEIS:
+  main02.wav gehoert zu msg 2 "C'mon, give me a hand!" — diese Zeile zeigt das Original-Skript NIE (Zensus aller
+  Message_on in ROOM1171: nur 0, 1, 3); fuer msg 3 "Alright, let's get down from here!" (@0x01586) fehlt eine
+  Aufnahme (main03.wav).
+- Bedienung: keine Aenderung. Elza wird auf dem Helipad von hinten von einer Kraehe gepackt (wie im Original, kein
+  Schaden), nach dem Wurf erschiesst John beide Kraehen, die Szene endet mit "Alright, let's get down from here!"
+  und dem Abstieg nach ROOM10B1.
+- Entscheidungsfrage: keine.

@@ -38,6 +38,7 @@
 #include "re15_elzaems_r37.h"
 #include "re15_heliport1171_r38.h"
 #include "re15_damage.h"
+#include "re15_esp.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -282,12 +283,13 @@ static void teil_flagwort(void)
     k->state = 4; k->sub_state_1 = 1; k->sub_state_2 = 1;   /* HOVER 0x80115130 */
     PRUEF(re15_r38i_ereigniskraehe(k), "Ereignis-Kraehe erkannt (Typ 0x21, +0x9 & 0x40)");
     PRUEF(!re15_game_flag_get(5, 0x1C), "(5,0x1C) vor dem Griff 0");
-    int griff = -1;
+    re15_esp_fx_reset();
+    int griff = -1, fx_griff = 0;
     for (int f = 0; f < 60 && griff < 0; f++) {
         k->x = g_actors[RE15_ACTOR_SLOT_PLAYER].x + 100; k->z = g_actors[RE15_ACTOR_SLOT_PLAYER].z;
         k->y = g_actors[RE15_ACTOR_SLOT_PLAYER].y - 600;
         frame();
-        if (k->sub_state_1 == 2) griff = f;
+        if (k->sub_state_1 == 2) { griff = f; fx_griff = re15_esp_fx_count(); }
     }
     PRUEF(griff >= 0 && re15_game_flag_get(5, 0x1C) && (g_game.flags[5][0] & 0x8u),
           "HOVER-Kontakt -> ORIENT (Bild %d), Bank-5-Wort 0x%08X: Bit 0x1C (Maske 0x8) = @0x801152c4", griff,
@@ -295,6 +297,12 @@ static void teil_flagwort(void)
     PRUEF(re15_r38i_griffe() >= 1 && re15_r38i_phase() >= 1, "Rueckgriff latcht (aca58=5/aca59=1), Phase %d", re15_r38i_phase());
     PRUEF(g_actors[RE15_ACTOR_SLOT_PLAYER].hp == 100, "kein HP-Abzug beim Rueckgriff (hp %d; @0x80115248-c8 schreibt keine HP)",
           g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
+    PRUEF(fx_griff >= 1, "ORIENT-Eintritt spawnt den Effekt 0x80019700(0x1000, Teil 2) @0x80115334 (%d Effekte)", fx_griff);
+    {   /* jeder Umlauf von Kraehen-Clip 8 (8 Bilder, s_crow_clip_len[8]) spawnt erneut @0x80115394 */
+        int vor = re15_esp_fx_count(), mehr = 0;
+        for (int f = 0; f < 9; f++) { frame(); if (re15_esp_fx_count() > vor) mehr = 1; vor = re15_esp_fx_count(); }
+        PRUEF(mehr, "Clip-8-Umlauf in ORIENT spawnt den Effekt erneut (@0x80115394)");
+    }
     re15_game_flag_set(5, 0x1D, 1);
     frame();
     PRUEF(k->sub_state_1 == 3, "(5,0x1D) -> FLIGHT-2-Verteiler @0x80114f3c: SPIN (Sub %d)", k->sub_state_1);
@@ -364,7 +372,12 @@ static void teil_szene(re15_ai_flavor_t flavor, const char *name)
         if (!g_scd.message_active) msg_prev = -1;
         if (g_room_change.pending && tuer_bild < 0) tuer_bild = b;
     }
+    int se0_start = 0, se0_spin = 0;
     for (int i = 0; i < g_test_room_se_n; i++) {
+        if (g_test_room_se_log[i] == 0) {               /* Kraehen-Se(0): ASCEND @0x80115004, SPIN @0x801153f8 */
+            if (g_test_room_se_tickof[i] <= 2) se0_start++;
+            if (g_test_room_se_tickof[i] == wurf_bild) se0_spin++;
+        }
         if (g_test_room_se_log[i] != RE15_R38I_SE_SATZ) continue;
         if (g_test_room_se_tickof[i] == griff_bild) se_griff++;
         if (clip_halten_erst >= 0 && g_test_room_se_tickof[i] == clip_halten_erst) se_umlauf++;
@@ -376,6 +389,8 @@ static void teil_szene(re15_ai_flavor_t flavor, const char *name)
     PRUEF(clip_intro_bilder == RE15_R38I_LEN_INTRO && clip_halten_erst == griff_bild + RE15_R38I_LEN_INTRO,
           "Opfer-Clip 0 %d Bilder (@0x80115bec), Clip 1 ab Bild %d (@0x80115c54)", clip_intro_bilder, clip_halten_erst);
     PRUEF(se_griff >= 1 && se_umlauf >= 1, "Se_on 0x03020001 = Raum-SE 2 im Griff-Bild (@0x80115c04) und am Clip-0-Ende (@0x80115c3c)");
+    PRUEF(se0_start >= 2 && se0_spin >= 2, "Kraehen-Se(0): ASCEND-Eintritt beider Kraehen (%d, @0x80115004) und SPIN-Eintritt im Wurf-Bild (%d, @0x801153f8)",
+          se0_start, se0_spin);
     PRUEF(wurf_bild == griff_bild + 1 + 60, "Wurf (Phase 3/4, Clip 2) in Bild %d = Griff + 1 + Sleep 60 (@0x01400) -> Set(5,0x1D) @0x01404",
           wurf_bild);
     PRUEF(modus6_bild == wurf_bild + RE15_R38I_LEN_WURF,

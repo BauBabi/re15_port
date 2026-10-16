@@ -64,11 +64,21 @@
 #define RE15_R38I_LEN_HALTEN     31
 #define RE15_R38I_LEN_WURF       30
 
+/* ORIENT 0x801152e0 (die Kraehe haelt den Griff): `jal 0x80019700` @0x80115334 (Eintritt) und @0x80115394 (jeder
+ * Clip-Umlauf, f314 @0x8011536c) mit a0 = `ori a0,zero,0x1000` @0x80115318 = Effekt 0 / Sub 0 / Skala 0x1000,
+ * a1 = +0x6a, a2 = [+0x188]+408 = Modellteil 2 (Stride 172, Matrix +64 — wie Zombie @0x80105cd8), a3 = 0x8012110c
+ * (Nullblock). */
+#define RE15_R38I_ORIENT_SKALA   0x1000u
+#define RE15_R38I_ORIENT_TEIL    2
+
 /* 1 = Ereignis-Kraehe (Typ 0x21 mit +0x9 & 0x40). */
 int  re15_r38i_ereigniskraehe(const re15_actor_t *e);
 
 /* HOVER-Kontakt 0x80115248-b4: der Rueckgriff (aca58=5/aca59=1), nur wenn kein Griff laeuft. */
 void re15_r38i_rueckgriff(re15_actor_t *kraehe, re15_actor_t *pl);
+
+/* ORIENT-Effekt (Raum-ESP Effekt 0, Skala 0x1000, am Kraehenteil 2) — Eintritt und jeder Clip-Umlauf. */
+void re15_r38i_orient_blut(re15_actor_t *kraehe);
 
 /* Kraehen-Wurzel @0x801120a0-e8: (5,0x1D) && Griff && Phase < 3 -> Phase 3. */
 void re15_r38i_wurfstoss(void);
