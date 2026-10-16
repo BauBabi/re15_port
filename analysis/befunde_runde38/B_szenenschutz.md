@@ -17,6 +17,11 @@ Messkopie `re15_pc_r38b_mess.exe`, Laeufe unter `scratchpad/b/runs/<name>` (RE15
 `pm=2` ist im Port GENAU "die Szene haelt den Spieler, Pad wird ignoriert": einziger Schreiber `g_scd.player_mode = 2`
 ist platform/pc/main.c:5739 (cine_active = flag(1,27) || flag(2,7), plus 15 Bilder Letterbox-Countdown ohne Plc_ret).
 
+Weg: Raum per Debug-Menue-Sprung betreten (derselbe Ladeweg wie Quadrat in der JUMP-Zeile), die SZENE selbst ueber
+den Original-Ausloeser: 1190 die Ergebnis-Bits des Hebelraetsels (Bank 5 Bits 4/5 bzw. Elza 6/7 + (3,112), die sub01
+@0x0244C-0x02468 jedes Bild prueft und dann sub10 per Evt_exec startet), 11D0 die Aufnahme-AOT 9 (re15_aot_fire_slot =
+derselbe Pfad wie das Hineinlaufen) samt echtem Aufnahme-Modal (Quadrat). Die Raumskripte laufen unveraendert.
+
 ### 1.1 ROOM1190 (Lauf m1190a)
 Rezept: RE15_TITLE_SHOT (Neues Spiel), RE15_DEBUG_JUMP=1190@240, RE15_DEBUG_SUB=13@450 (Hunde-Spawn sub13),
 RE15_SET_FLAG_AT=4:243,5:4,5:5@520 (Hebel-Kombination -> sub01 startet sub10 = Szene), Spieler am Hebel 0
