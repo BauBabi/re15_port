@@ -48,7 +48,8 @@ Gangende, kein Muendungsfeuer — der Schuss ist im Bild nur am Ton erkennbar.
 * ROOM1041 sub11 (@0x021EA..0x0223C), gestartet von AOT 8 `2c 08 03 41 .. ff 00 18 0b` (main00 @0x01178, sce 3, auto) nur
   wenn Ck(4,0xF1)==0 (@0x0116C) und Ck(3,0xAD)==0 (@0x01174):
   `22 03 ad 01` Set(3,0xAD) @0x021EA, Aot_reset 8, Set(2,7)/(1,0x1b) (Szene),
-  **@0x02200 `2b 03 00 00` Message_on 3** = msg 3 @0x022FB `04 00 5f 43 51 4a 4f 44 4b 50 5f 04 01 01 00` = "*gunshot*"
+  **@0x02200 `2b 03 00 00` Message_on 3** = msg 3 @0x022FB `04 00 5f 43 51 4a 4f 44 4b 50 5f 04 01 01 31` = "*gunshot*" (Endecode `01`, Folgebyte
+  `31` so in der Datei; Nachbesserung 1 berichtigt, vorher falsch `00` zitiert — Abnahme 0 §4.2)
   (Maske 0 = kein Einfrieren), dann `2e 01 00 00` Work_set(1,0), Sleep 25, Plc_dest (Elza dreht sich), Warten Ck(5,0x20),
   Sleep 25, **@0x02224 Message_on 2** "Elza: What was that!?" (synchro room1041/main02.wav).
 * Der Text ist ein PLATZHALTER fuer einen Ton: Zensus aller Nachrichten (msg_suche.py: 1229 RE1.5 + 2315 RE2): "gunshot"
@@ -328,10 +329,11 @@ dieselbe Aufnahme wie der Redhawk, nur mit halber Abtastrate: Quelle -4,4 gegen 
 | 6040 sub10 @0x02ABA/@0x02B32/@0x02BAA | 0 (Weltlage) | 0x0F | 4482eb975558 | wie 5000 |
 | 1120 sub46/sub47 | 0 (Weltlage) | 0x05 + 0x06 | 57e7f7c6999c + fdd4323b9d43 | zwei Lagen, nicht weiter untersucht |
 
-   => Jeder Skript-Schuss aus dem GEGNERFELD (Art 3) ist in RE2 die Aufnahme der Spielerwaffe, die der Schuetze traegt
-   (Kendo: Schrotflinte bytegleich ARMS07; Annette: Pistole = Magnum-Aufnahme). John traegt eine Pistole (Runde 36,
-   Framedump Cut 9) und steht im Gegnerfeld -> RE2-Form = ROOM4040 Satz 0x0A. Dieselbe Welle ist auch RE2s Weltlage-
-   Schuss (4090, 6020). Der Runde-36-Satz 40A0/0x08 gehoert der Partnerin (Art 2), die es in RE1.5 nicht gibt.
+   => Jeder Skript-Schuss aus dem GEGNERFELD (Art 3) ist in RE2 eine SPIELERWAFFEN-Aufnahme (Kendos Schrotflinte =
+   ARMS07 VAG 2 bytegleich; Annettes Pistole = die Magnum-Aufnahme ARMS05 mit halber Rate). RE2 hat genau EINEN
+   Skript-Pistolenschuss aus dem Gegnerfeld: ROOM4040 Satz 0x0A. John traegt eine Pistole (Runde 36, Framedump Cut 9)
+   und steht im Gegnerfeld -> RE2-Form = ROOM4040 Satz 0x0A. Dieselbe Welle ist auch RE2s Weltlage-Schuss (4090, 6020).
+   Der Runde-36-Satz 40A0/0x08 gehoert der Partnerin (Art 2), einer Art, die es in RE1.5 nicht gibt.
 4. Lage: ROOM4040 @0x014E4 Se_on-Byte 3 = 0 -> in RE2 ohne Lage (Pumpe @0x8005c660 `beq a1,zero`) — genau so spielt der
    Port den Ton (elza_se_pc.c, nicht positional). Der 40A0-Schuss hat Byte 3 = 1 und waere in RE2 nach Lage geregelt
    worden (eine weitere Abweichung des alten Stands).
