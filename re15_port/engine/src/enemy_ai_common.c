@@ -13664,12 +13664,10 @@ static void re15_tyrant_ai_tick(int slot)
             re15_birkin_anim(e);
             break;
         }
-        case 2: {  /* B[2] ROAR 0x80112294: clip 2, SE1@frame 0x14 -> sub 3 (audit #10: +0x7==0 -> sub 3). */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 2); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 2 @0x801122f0 */
-            if (e->anim_frame == 0x14) re15_audio_room_se(1);                       /* SE 1 @0x80112334-44 */
-            if (re15_birkin_anim(e)) { e->sub_state_1 = 3; e->sub_state_2 = 0; }    /* roar done -> sub 3 @0x801123c4 */
+        case 2:    /* B[2] ROAR 0x80112294 — Runde 38 Spur T: spiderman_r38.c (Clip-Ende haelt Bild fc-1, P2 @0x80112390
+                    * schaltet im naechsten Bild auf sub 3; vorher Clip 2 Bild 0 im Wechselbild). */
+            re15_r38_sm_bruellen(e);
             break;
-        }
         case 3: {  /* B[3] WALK (fast) 0x801125dc: fast regime, A[3] decides the attacks above. */
             if (e->sub_state_2 == 0) { re15_birkin_clip(e, 3); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 3 @0x8011264c */
             int16_t sp   = (int16_t)((re15_engine_rand8() & 0x3f) + 130);           /* +0x8c=(rng&0x3f)+130 @0x80112610 */

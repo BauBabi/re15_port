@@ -26,6 +26,26 @@ static unsigned s_latches = 0;
 unsigned re15_r38_sm_latches(void) { return s_latches; }
 
 /* ------------------------------------------------------------------------------------------------
+ * Clip-Ende mit Phasenwechsel: im WECHSELBILD steht das LETZTE Bild des Clips auf dem Schirm.
+ * anim_set FUN_8001f314 waehlt den Bildsatz mit +0x95 (`lbu v0,149(t0)` @0x8001f35c -> `sw a2,360(t0)`
+ * @0x8001f36c); FUN_8001f3bc rechnet DIESE Pose (Keyframe `jal 0x8001f664` @0x8001f534, Matrizen
+ * `jal 0x80068098` @0x8001f574 / @0x8001f5f0) und zaehlt ERST DANACH +0x95 hoch (@0x8001f610-1c); bei
+ * >= fc `sb zero,149` @0x8001f63c und Rueckgabe 1 (@0x8001f638). Der Port zeichnet anim_frame NACH dem
+ * Vorschub (re15_birkin_anim) — ohne Halten zeigte das Wechselbild Bild 0 des fertigen Clips (Abnahme 0 M1:
+ * Austritt Clip 0x1D Bild 0 = Startpose 1278 unter dem Boden; M2: Griff-Clips). Bis eine Phase einen neuen
+ * Clip setzt, ruft das Original kein anim_set mehr, die Pose fc-1 bleibt stehen (P6 @0x80112DA0 /
+ * @0x8011327C / @0x80114414 ohne `jal`). Phasen, die den naechsten Clip OHNE +0x95-Schreiben starten
+ * (Griff-P2 @0x80112B9C / @0x80113094 / @0x801142C8), setzen das Bild deshalb selbst auf den Wrap-Wert 0.
+ * Schleifen-Clips (Halten, Gehen) laufen weiter ueber re15_r38_birkin_anim (fc-1 -> 0 ist dort auch im
+ * Original die Folge). */
+static int sm_anim_halten(re15_actor_t *e)
+{
+    int fertig = re15_r38_birkin_anim(e);
+    if (fertig) e->anim_frame = (uint8_t)(re15_r38_birkin_fc(e) - 1);
+    return fertig;
+}
+
+/* ------------------------------------------------------------------------------------------------
  * (1) AUSTRITT — Zustand 4, Untertabelle @0x8011A270: [0] 0x8011502C (grid 0x40), [1] 0x801152EC (grid 0x41).
  * Beide Maschinen sind gleich gebaut, sie unterscheiden sich nur im Freigabe-Bild (P2):
  *   [1] `ori v0,zero,0x21` @0x80115508   [0] `ori v0,zero,0x32` @0x80115248.
@@ -59,13 +79,42 @@ int re15_r38_sm_austritt(re15_actor_t *e)
             e->flags = (uint8_t)(e->flags & ~0x40u);         /* @0x80115530-3C */
             e->grid_id = 0;                                  /* `sb zero,9` @0x80115564 */
         }
-        if (re15_r38_birkin_anim(e)) {                       /* anim_set @0x8011557C, fertig -> */
+        if (sm_anim_halten(e)) {                             /* anim_set @0x8011557C, fertig -> */
             e->state = 1; e->sub_state_1 = 1;                /* +0x4-Wort = 0x101 @0x80115588-98 */
             e->sub_state_2 = 0; e->sub_state_3 = 0;
+            /* Wechselbild zeigt Clip 0x1D Bild 34 (gehalten, s. sm_anim_halten); das naechste Bild setzt
+             * B[1]/B[2] P0 +0x95 = 0 (@0x80112164 / @0x80112300) und +0x8F = 7 (@0x80112184 / @0x80112320)
+             * = Ueberblendung aus DIESER Pose (Abnahme 0 M1). */
         }
         return 1;
     }
     }
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * (1b) BRUELLEN — B[2] 0x80112294, das erste, was der Spiderman nach dem Austritt tut (A[1] 0x80112024 -> +0x5 = 2;
+ * A[2] 0x8011228C ist `jr ra`). Phasen nach +0x6: P0 @0x801122E0 (+0x6 = 1, Clip 2 @0x801122F0, +0x95 = 0
+ * @0x80112300, +0x96 = 0 @0x80112310, +0x8F = 7 @0x80112320, faellt in P1), P1 @0x80112324 (SE 1 bei +0x95 == 0x14
+ * @0x80112330-44, anim_set @0x80112360 mit a2 = +0x7, `+0x6 += fertig` @0x80112374-84), P2 @0x80112390 im
+ * NAECHSTEN Bild OHNE anim_set: +0x7 == 0 -> +0x5 = 3 @0x801123C4, +0x6 = 0 @0x801123D4; sonst +0x5 = +0x6 = +0x7 = 0
+ * (@0x801123A0-C0). Der alte Port-Fall schaltete schon im Fertig-Bild auf +0x5 = 3 und zeigte dort Clip 2 Bild 0
+ * (gemessen: Wurzel 729 Einheiten, Knochenwinkel bis 1175/4096 gegen Bild 49) — dieselbe Fehlerklasse wie M1. */
+void re15_r38_sm_bruellen(re15_actor_t *e)
+{
+    if (e->sub_state_2 == 0) {                               /* P0 @0x801122E0 */
+        e->sub_state_2 = 1;                                  /* @0x801122E0 */
+        e->motion = 2; e->anim_frame = 0; e->anim_frac = 7;  /* @0x801122F0 / @0x80112300 / @0x80112320 */
+    }
+    if (e->sub_state_2 == 1) {                               /* P1 @0x80112324 */
+        if (e->anim_frame == 0x14) re15_audio_room_se(1);    /* @0x80112330-44 */
+        if (sm_anim_halten(e)) e->sub_state_2 = 2;           /* anim_set @0x80112360, +0x6 += fertig @0x80112374-84 */
+        return;
+    }
+    if (e->sub_state_2 == 2) {                               /* P2 @0x80112390: kein anim_set, Bild fc-1 bleibt */
+        if (e->sub_state_3 == 0) { e->sub_state_1 = 3; e->sub_state_2 = 0; }                       /* @0x801123C4-D4 */
+        else { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }                       /* @0x801123A0-C0 */
+    }
+    /* +0x6 >= 3: `j 0x801123d8` = nichts */
 }
 
 int re15_r38_sm_versteckt(const re15_actor_t *e)
@@ -89,14 +138,6 @@ static void sm_platzieren(re15_actor_t *e)
     re15_enemy_bank_t *gb = re15_enemy_find(e->type);
     if (gb && gb->ok)
         re15_clip_root_motion_abs_pub(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
-}
-
-/* Einmal-Ende eines Clips: das letzte Bild halten (wie der Port-Todeszustand 0x2B, Runde 34 B8). */
-static int sm_anim_halten(re15_actor_t *e)
-{
-    int fertig = re15_r38_birkin_anim(e);
-    if (fertig) e->anim_frame = (uint8_t)(re15_r38_birkin_fc(e) - 1);
-    return fertig;
 }
 
 static void sm_gierschnapp(re15_actor_t *e, const re15_actor_t *pl)
@@ -138,16 +179,21 @@ void re15_r38_sm_griff1(re15_actor_t *e, re15_actor_t *pl, int hinten)
          * @0x80115DA4-B8), Se_on(0x04000001) @0x80115DC8. Deshalb steht der Latch hier, nicht davor. */
         re15_r38_opfer_latch(e, pl, hinten ? 1 : 0);         /* aca59 = 0 @0x80112B3C / = 1 @0x80113034 */
         s_latches++;
-        if (re15_r38_birkin_anim(e)) e->sub_state_2++;       /* anim_set, +0x6 += fertig */
+        if (sm_anim_halten(e)) e->sub_state_2++;             /* anim_set, +0x6 += fertig */
         return;
     }
     case 1:                                                  /* P1 @0x80112D44 / @0x80113220 */
         re15_r38_griff_pin();
-        sm_platzieren(e);
-        if (re15_r38_birkin_anim(e)) e->sub_state_2++;
+        sm_platzieren(e);                                    /* ad68 @0x80112D5C / @0x80113238 */
+        if (sm_anim_halten(e)) e->sub_state_2++;             /* anim_set @0x80112D78 / @0x80113254, +0x6 += fertig
+                                                              * @0x80112D8C-9C / @0x80113268-78; Wechselbild = Bild fc-1
+                                                              * (Abnahme 0 M2: vorher Bild 0) */
         return;
     case 2:                                                  /* P2 @0x80112B9C / @0x80113094 */
-        e->motion = c_halt;                                  /* +0x94 (Bild bleibt) */
+        e->motion = c_halt;                                  /* +0x94 = 0xF / 0x13 @0x80112BA8 / @0x801130A0 */
+        e->anim_frame = 0;                                   /* P2 schreibt +0x95 NICHT: es steht auf dem Wrap-Wert 0
+                                                              * des Zugriffs-Clips (`sb zero,149` @0x8001f63c); der
+                                                              * Port hielt fc-1 nur fuers Wechselbild */
         e->sub_state_2 = 3;
         e->ai_timer = 100;                                   /* +0x9C = 0x64 @0x80112BC8 / @0x801130C0 */
         e->grab_kill_ctr = 0x32;                             /* +0x9E = 0x32 @0x80112BD8 / @0x801130D0 */
@@ -186,7 +232,8 @@ void re15_r38_sm_griff1(re15_actor_t *e, re15_actor_t *pl, int hinten)
     case 5:                                                  /* P5 @0x80112D20 / @0x801131FC */
         if (e->anim_frame == 0x18) re15_audio_room_se(0);    /* @0x80112D30-3C / @0x8011320C-18 */
         sm_platzieren(e);                                    /* ad68 @0x80112D5C / @0x80113238 */
-        if (re15_r38_birkin_anim(e)) e->sub_state_2 = 6;
+        if (sm_anim_halten(e)) e->sub_state_2 = 6;           /* P6 ruft kein anim_set: Bild fc-1 des Loese-Clips bleibt
+                                                              * stehen bis B[3] P0 (+0x95 = 0 @0x8011265C) */
         return;
     default:                                                 /* P6 @0x80112DA0 / @0x8011327C */
         e->birkin_hurt_cd = 0x3C;                            /* +0x1DE = 0x3C @0x80112DAC / @0x80113288 */
@@ -259,15 +306,18 @@ void re15_r38_sm_griff2(re15_actor_t *e, re15_actor_t *pl)
         }
         pl->hit_react |= 1;                                  /* +0x93 |= 1 @0x801142AC-B4 */
         s_latches++;
-        if (re15_r38_birkin_anim(e)) e->sub_state_2++;       /* j 0x801143D8: anim_set, +0x6 += fertig */
+        if (sm_anim_halten(e)) e->sub_state_2++;             /* j 0x801143D8: anim_set, +0x6 += fertig */
         return;
     }
     case 1:                                                  /* P1 @0x801143D8 */
         re15_r38_griff_pin();
-        if (re15_r38_birkin_anim(e)) e->sub_state_2++;
+        if (sm_anim_halten(e)) e->sub_state_2++;             /* anim_set @0x801143EC, +0x6 += fertig @0x80114400-10;
+                                                              * Wechselbild = Bild fc-1 (Abnahme 0 M2) */
         return;
     case 2:                                                  /* P2 @0x801142C8 */
         e->motion = 0x19; e->sub_state_2 = 3;                /* @0x801142D4 / @0x801142E4 */
+        e->anim_frame = 0;                                   /* kein +0x95-Schreiben in P2 (@0x801142C8-F4): Wrap-Wert 0
+                                                              * des Clips 0x18 (`sb zero,149` @0x8001f63c) */
         e->ai_timer = 100;                                   /* +0x9C = 0x64 @0x801142F4 */
         /* fallthrough: P3 folgt direkt */
     case 3:                                                  /* P3 @0x801142F8 */
@@ -286,8 +336,9 @@ void re15_r38_sm_griff2(re15_actor_t *e, re15_actor_t *pl)
         e->motion = 0x1A; e->sub_state_2 = 5;                /* @0x801143A4 / @0x801143B4 */
         e->anim_frame = 0; e->anim_frac = 7;                 /* @0x801143C4 / @0x801143D4 */
         /* fallthrough: P5 = 0x801143D8 */
-    case 5:
-        if (re15_r38_birkin_anim(e)) e->sub_state_2 = 6;
+    case 5:                                                  /* P5 = P1 0x801143D8 */
+        if (sm_anim_halten(e)) e->sub_state_2 = 6;           /* P6 ohne anim_set (`jr ra` @0x80114484): Bild fc-1 des
+                                                              * Clips 0x1A bleibt bis B[13] P0 (+0x95 = 0 @0x80113D7C) */
         return;
     default:                                                 /* P6 @0x80114414 */
         e->birkin_hurt_cd = 0x1E;                            /* +0x1DE = 0x1E @0x80114420 */

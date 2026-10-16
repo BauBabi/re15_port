@@ -29,6 +29,9 @@
 /* Tick des Austritts fuer +0x5 = 0/1. Rueckgabe 1 = behandelt; 0 = andere Variante (grid 0x43, +0x5 = 2,
  * in keinem RDT gesetzt) -> der bisherige Port-Pfad bleibt zustaendig. */
 int  re15_r38_sm_austritt(re15_actor_t *e);
+/* B[2] 0x80112294 BRUELLEN (ACTIVE +0x5 = 2, direkt nach dem Austritt): Clip 2, SE 1 bei Bild 0x14, Clip-Ende
+ * haelt Bild fc-1 und schaltet ERST im naechsten Bild (P2 @0x80112390, ohne anim_set) auf +0x5 = 3. */
+void re15_r38_sm_bruellen(re15_actor_t *e);
 /* 1 = der Spiderman steckt noch im Schacht bzw. kommt gerade heraus (grid & 0x60): kein Ziel fuer den
  * Aim-Latch (FUN_8003703c `andi v0,a0,0x60` @0x8003710c) und ohne Hoehenband fuer den Treffer-Resolver
  * (INIT @0x80111C14-20 loescht es, gestempelt wird nur im ACTIVE-Schwanz @0x80111DCC-E24). */

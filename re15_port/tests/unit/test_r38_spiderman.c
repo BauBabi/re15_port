@@ -20,6 +20,15 @@
  *              in Blickrichtung + 0x800 (@0x801141E0-E8 / @0x80114204-14), Spiderman bleibt stehen, danach KEINE
  *              Spielerbewegung mehr (Hook A [2]/[3] ohne ad68), Opfer-Clips 8/9/0xA, kein Yaw-Schreiben.
  *
+ * NACHBESSERUNG 1 (Abnahme 0, M1/M2): GEZEICHNETES Bild. Jedes Bild rechnet der Test die Pose so nach, wie der
+ * Renderer sie zeichnet (gezeichnet(): Bankwahl, re15_compute_actor_kf, re15_skel_compute_pose mit Ueberblendung).
+ * Gefordert: im Bild, in dem ein Clip endet und die Phase wechselt, steht Bild fc-1 des Clips (FUN_8001f3bc rechnet
+ * die Pose VOR dem Hochzaehlen: @0x8001f534/@0x8001f574 vor @0x8001f610-1c, Wrap `sb zero,149` @0x8001f63c) —
+ * nie Bild 0 (vorher: Austritt Clip 0x1D Bild 0 = Startpose 1278 unter dem Boden, Griff-Clips ebenso). Das erste
+ * ACTIVE-Bild blendet aus GENAU dieser Pose (+0x8F = 7 @0x80112184 / @0x80112320). Die Griff-P2 starten den
+ * Halte-Clip beim Wrap-Wert 0 (kein +0x95-Schreiben @0x80112B9C / @0x80113094 / @0x801142C8). Losreissen (Tasten)
+ * misst die Loese-Clips P5 -> P6 (P6 ohne anim_set @0x80112DA0 / @0x8011327C / @0x80114414).
+ *
  * Rueckgabe 0 = alles gruen, 1 = Fehler, 77 = Assets fehlen (SKIP). */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -40,6 +49,8 @@
 #include "re15_skeleton.h"
 #include "re15_roy_r37.h"
 #include "re15_spiderman_r38.h"
+#include "re15_anim_select.h"
+#include "re15_player.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -92,13 +103,136 @@ static int bank_2b_laden(void)
     return 1;
 }
 
+/* ---- Gezeichnetes Bild (Nachbesserung 1, Abnahme 0 M1/M2) ---------------------------------------------------
+ * Wie der NPC-Zeichner in platform/pc/main.c NACH dem KI-Tick: Bank = eb->anim (re15_actor_anim_select:
+ * clip_override = motion bei anim_flags & 4, sonst -1) bzw. die Loco-Bank, wenn re15_actor_uses_loco_bank;
+ * Keyframe re15_compute_actor_kf(.., anim_frame); Pose re15_skel_compute_pose mit g_anim_pose_actor = Aktor
+ * (Ueberblendung aus der zuletzt gezeichneten Pose, prev_root). Je Bild fuer jeden Spiderman nachgerechnet. */
+typedef struct { int st, ss1, ss2, motion, frame, kf; int32_t root[3]; } gez_t;
+static gez_t s_gez[RE15_ACTOR_MAX], s_gez_alt[RE15_ACTOR_MAX];
+static int   s_gez_ok[RE15_ACTOR_MAX];
+static int   s_rueck_modul = 0, s_rueck_alt = 0;     /* Ruecksprung auf Bild 0 im Wechselbild */
+static int   s_br_ende = 0, s_br_p2 = 0, s_br_fehler = 0;   /* Bruellen B[2]: Clip-Ende, P2-Bild, Fehler */
+static uint16_t s_taste = 0;                         /* Kante fuer das naechste Bild (Losreissen) */
+
+static void gezeichnet(re15_actor_t *e, gez_t *g)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    memset(g, 0, sizeof *g);
+    g->st = e->state; g->ss1 = e->sub_state_1; g->ss2 = e->sub_state_2;
+    g->motion = e->motion; g->frame = (int)e->anim_frame; g->kf = -1;
+    if (!b || !b->ok) return;
+    const re15_emd_animation_t *an = &b->anim; const re15_emd_skeleton_t *sk = &b->skel;
+    int ov = (e->anim_flags & 0x04) ? (int)e->motion : -1;
+    if (re15_actor_uses_loco_bank(e) && b->loco_ok && (int)e->motion < b->anim_loco.clip_count) {
+        an = &b->anim_loco; sk = &b->skel_loco; ov = (int)e->motion;
+    }
+    g->kf = re15_compute_actor_kf(an, sk, e, ov, (uint32_t)e->anim_frame);
+    static re15_skel_pose_t po[RE15_EMD_MAX_BONES];
+    void *sav = g_anim_pose_actor; g_anim_pose_actor = e;
+    (void)re15_skel_compute_pose(sk, g->kf, po);
+    g_anim_pose_actor = sav;
+    g->root[0] = e->prev_root[0]; g->root[1] = e->prev_root[1]; g->root[2] = e->prev_root[2];
+}
+
+/* Phasen, die spiderman_r38.c fuehrt (Austritt [0]/[1], Bruellen B[2], Griff 1/Kollaps/Griff 2). */
+static int modul_phase(const gez_t *g)
+{
+    return (g->st == 4 && g->ss1 <= 1) ||
+           (g->st == 1 && (g->ss1 == 2 || g->ss1 == 5 || g->ss1 == 9 || g->ss1 == 8 || g->ss1 == 10 ||
+                           g->ss1 == 15));
+}
+
+static int clip_fc(int clip)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(RE15_R38_SM_TYP);
+    if (!b || !b->ok || clip < 0 || clip >= b->anim.clip_count) return -1;
+    return b->anim.clips[clip].frame_count;
+}
+
+static void clip_wurzel(int clip, int frame, int32_t out[3])
+{
+    re15_enemy_bank_t *b = re15_enemy_find(RE15_R38_SM_TYP);
+    out[0] = out[1] = out[2] = 0;
+    if (!b || !b->ok || clip < 0 || clip >= b->anim.clip_count) return;
+    int kf = (int)(b->anim.frames[b->anim.clips[clip].first_frame + frame] & 0xfff);
+    int16_t x = 0, y = 0, z = 0;
+    re15_emd_get_keyframe_position(&b->skel, kf, &x, &y, &z);
+    out[0] = x; out[1] = y; out[2] = z;
+}
+
+static double abst3(const int32_t a[3], const int32_t b[3])
+{
+    double dx = (double)a[0] - b[0], dy = (double)a[1] - b[1], dz = (double)a[2] - b[2];
+    return sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+/* Sichtbarkeit eines Ruecksprungs: groesste Winkeldifferenz (12 bit, kuerzester Weg) ueber alle Knochen zwischen
+ * zwei Keyframes der Hauptbank. */
+static int kf_winkel_max(int kf_a, int kf_b)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(RE15_R38_SM_TYP);
+    if (!b || !b->ok || kf_a < 0 || kf_b < 0) return -1;
+    int m = 0;
+    for (int k = 0; k < b->skel.bone_count; k++) {
+        int16_t a[3], c[3];
+        re15_emd_get_keyframe_angles(&b->skel, kf_a, k, &a[0], &a[1], &a[2]);
+        re15_emd_get_keyframe_angles(&b->skel, kf_b, k, &c[0], &c[1], &c[2]);
+        for (int i = 0; i < 3; i++) {
+            int d = ((int)c[i] - (int)a[i]) & 0xfff;
+            if (d > 0x800) d = 0x1000 - d;
+            if (d > m) m = d;
+        }
+    }
+    return m;
+}
+
 static void bild(void)
 {
     const unsigned char *raw; int len, id;
     re15_msg_tick(&raw, &len, &id);
-    s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
+    s_ctx.pad_current = 0; s_ctx.pad_pressed = s_taste;
     scd_vm_tick();
     re15_game_step(&s_ctx);
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->type != RE15_R38_SM_TYP) { s_gez_ok[s] = 0; continue; }
+        s_gez_alt[s] = s_gez[s];
+        gezeichnet(e, &s_gez[s]);
+        if (!s_gez_ok[s]) { s_gez_ok[s] = 1; continue; }
+        const gez_t *p = &s_gez_alt[s], *c = &s_gez[s];
+        int gewechselt = (p->st != c->st || p->ss1 != c->ss1 || p->ss2 != c->ss2);
+        /* Bruellen B[2]: Fertig-Bild (P1 -> P2, +0x6 += fertig @0x80112374-84) und P2-Bild (@0x80112390, kein
+         * anim_set) zeigen Clip 2 Bild fc-1; +0x5 = 3 erst im P2-Bild (@0x801123C4), nie schon im Fertig-Bild. */
+        if (p->st == 1 && c->st == 1 && p->ss1 == 2) {
+            const int soll = clip_fc(2) - 1;
+            if (p->ss2 == 1 && c->ss1 == 2 && c->ss2 == 2) {
+                s_br_ende++;
+                if (!(c->motion == 2 && c->frame == soll)) s_br_fehler++;
+            } else if (p->ss2 == 2 && c->ss1 == 3) {
+                s_br_p2++;
+                if (!(c->motion == 2 && c->frame == soll)) s_br_fehler++;
+            } else if (p->ss2 == 1 && c->ss1 == 3) {
+                s_br_fehler++;                               /* ohne P2-Bild direkt auf +0x5 = 3 (alter Port-Fall) */
+            }
+        }
+        if (gewechselt && c->motion == p->motion && p->frame > 0 && c->frame == 0) {
+            if (modul_phase(p)) {
+                s_rueck_modul++;
+                printf("  Ruecksprung (Modul): slot %d [%d/%d/%d] -> [%d/%d/%d] Clip 0x%X Bild %d -> 0 "
+                       "(Wurzel %.0f, Winkel max %d/4096)\n", s,
+                       p->st, p->ss1, p->ss2, c->st, c->ss1, c->ss2, c->motion, p->frame,
+                       abst3(p->root, c->root), kf_winkel_max(p->kf, c->kf));
+            } else {
+                s_rueck_alt++;
+                if (s_rueck_alt <= 6)
+                    printf("  info: Ruecksprung im Alt-Pfad: slot %d [%d/%d/%d] -> [%d/%d/%d] Clip 0x%X Bild %d -> 0 "
+                           "(Wurzel %.0f, Winkel max %d/4096)\n",
+                           s, p->st, p->ss1, p->ss2, c->st, c->ss1, c->ss2, c->motion, p->frame,
+                           abst3(p->root, c->root), kf_winkel_max(p->kf, c->kf));
+            }
+        }
+    }
 }
 
 /* ROOM4001 frisch betreten: Flags setzen (nach scd_vm_init, das sie nullt), Raumskript hochfahren. */
@@ -192,6 +326,7 @@ static int32_t griff_reichweite(void)
 static void teil_austritt(void)
 {
     printf("== austritt (ROOM4001, Ck(4,20)=1, Ck(3,0x21)=1) ==\n");
+    s_rueck_modul = 0; s_rueck_alt = 0; s_taste = 0; s_br_ende = 0; s_br_p2 = 0; s_br_fehler = 0;
     static const uint8_t fl[][2] = { {4, 20}, {3, 0x21} };
     if (!raum_4001(fl, 2, -8885, -6301, 1024)) { printf("  SKIP: Assets\n"); s_fails += 0; return; }
     for (int f = 0; f < 8; f++) bild();
@@ -236,12 +371,95 @@ static void teil_austritt(void)
     CHECK(t_frei - t42 == 0x21, "greifbar + grid 0 bei Bild 0x21 (@0x80115508-64): +%d", t_frei - t42);
     CHECK(t_aktiv - t42 == 34, "ACTIVE nach Clip 0x1D (35 Bilder, 0x101 @0x80115588-98): +%d", t_aktiv - t42);
     CHECK(b->state == 4 && b->grid_id == 0x41 && b->no_draw == 1, "Gegenprobe: zweiter Spiderman (Aot 5) bleibt versteckt");
+    if (t_aktiv < 0) return;
+
+    /* NACHBESSERUNG 1 / M1: das Wechselbild (Zustand 4 -> 1) zeigt Clip 0x1D Bild fc-1, nicht Bild 0. */
+    const int sa = (int)(a - g_actors);
+    const int fc1d = clip_fc(0x1D);
+    gez_t w = s_gez[sa];
+    int32_t r_end[3], r_null[3];
+    clip_wurzel(0x1D, fc1d - 1, r_end); clip_wurzel(0x1D, 0, r_null);
+    printf("  Wechselbild: [%d/%d/%d] Clip 0x%X Bild %d, gezeichnete Wurzel (%d,%d,%d); Clip 0x1D Bild %d (%d,%d,%d), "
+           "Bild 0 (%d,%d,%d)\n", w.st, w.ss1, w.ss2, w.motion, w.frame, (int)w.root[0], (int)w.root[1], (int)w.root[2],
+           fc1d - 1, (int)r_end[0], (int)r_end[1], (int)r_end[2], (int)r_null[0], (int)r_null[1], (int)r_null[2]);
+    CHECK(w.st == 1 && w.motion == 0x1D && w.frame == fc1d - 1,
+          "M1: Wechselbild zeigt Clip 0x1D Bild %d (FUN_8001f3bc: Pose vor dem Hochzaehlen @0x8001f534, Wrap @0x8001f63c), "
+          "gezeichnet Clip 0x%X Bild %d", fc1d - 1, w.motion, w.frame);
+    CHECK(w.root[0] == r_end[0] && w.root[1] == r_end[1] && w.root[2] == r_end[2],
+          "M1: gezeichnete Wurzel im Wechselbild = Clip 0x1D Bild %d (nicht die Startpose)", fc1d - 1);
+    bild();
+    gez_t na = s_gez[sa];
+    int32_t r_neu[3]; clip_wurzel(na.motion, na.frame, r_neu);
+    double d_ist = abst3(na.root, r_end), d_ziel = abst3(r_neu, r_end);
+    printf("  erstes ACTIVE-Bild: [%d/%d/%d] Clip 0x%X Bild %d frac %d, gezeichnete Wurzel (%d,%d,%d), Abstand zur "
+           "Austritts-Endpose %.0f (Clip-Ziel %.0f)\n", na.st, na.ss1, na.ss2, na.motion, na.frame, (int)a->anim_frac,
+           (int)na.root[0], (int)na.root[1], (int)na.root[2], d_ist, d_ziel);
+    CHECK(na.motion != 0x1D && a->anim_frac > 0,
+          "erstes ACTIVE-Bild: neuer Clip mit Ueberblendung (+0x95 = 0 @0x80112164/@0x80112300, +0x8F = 7 @0x80112184/@0x80112320)");
+    CHECK(d_ist <= d_ziel + 1.0,
+          "M1: Ueberblendung startet an der Austritts-Endpose (Abstand %.0f <= %.0f), nicht an der Startpose", d_ist, d_ziel);
+    /* Weiter bis das Bruellen (B[2], erste Handlung nach dem Austritt) vorbei ist und P2 auf +0x5 = 3 schaltet. */
+    for (int f = 0; f < 200 && s_br_p2 == 0 && s_br_fehler == 0; f++) bild();
+    printf("  Bruellen: Fertig-Bild %d, P2-Bild %d, Fehler %d (Clip 2 fc %d)\n", s_br_ende, s_br_p2, s_br_fehler,
+           clip_fc(2));
+    CHECK(s_br_ende == 1 && s_br_p2 == 1 && s_br_fehler == 0,
+          "Bruellen B[2]: Fertig-Bild und P2-Bild zeigen Clip 2 Bild fc-1, +0x5 = 3 erst im P2-Bild (@0x80112374-84, "
+          "@0x80112390-D4)");
+    CHECK(s_rueck_modul == 0, "kein Ruecksprung auf Bild 0 in einem Wechselbild des Austritts: %d", s_rueck_modul);
 }
 
 /* ============================================================================================================== */
-static void griff_lauf(const char *name, int32_t px, int32_t pz)
+/* NACHBESSERUNG 1 / M2: Wechselbilder der Griff-Phasen des Greifers (slot g) im Bild nach bild() pruefen.
+ * Griff 1 P1 -> P2 (+0x6 += fertig @0x80112D8C-9C / @0x80113268-78): Zugriffs-Clip Bild fc-1;
+ * erstes Halte-Bild (P2 ohne +0x95 @0x80112B9C / @0x80113094 -> P3): Halte-Clip Bild 1 (= Wrap 0 + ein anim_set);
+ * Loese-Clip P5 -> P6 und P6 (ohne anim_set @0x80112DA0 / @0x8011327C): Bild fc-1; Kollaps P1 -> P2: Bild fc-1. */
+typedef struct { int zugriff_ende, halte_start, loese_ende, p6_bild, kollaps_ende, fehler; } griffwechsel_t;
+static void griff_wechsel(int g, griffwechsel_t *w)
 {
-    printf("== %s (Spiderman draussen, Spieler-Anker vergiftet) ==\n", name);
+    const gez_t *p = &s_gez_alt[g], *c = &s_gez[g];
+    if (p->st != 1 || c->st != 1) return;
+    if ((p->ss1 == 5 || p->ss1 == 9) && p->ss2 == 1 && c->ss2 == 2) {
+        int soll = clip_fc(c->motion) - 1;
+        w->zugriff_ende++;
+        if (!((c->motion == 0x0E || c->motion == 0x12) && c->frame == soll)) {
+            w->fehler++; printf("  M2 FEHLER: Zugriff-Ende Clip 0x%X Bild %d (soll %d)\n", c->motion, c->frame, soll);
+        }
+    }
+    /* P2 faellt in P3; mit Tasten kann P3 im selben Bild schon +0x6 = 4 setzen (@0x80112CBC / @0x80113160). */
+    if ((c->ss1 == 5 || c->ss1 == 9) && (c->ss2 == 3 || c->ss2 == 4) && p->ss2 == 2) {
+        w->halte_start++;
+        if (!((c->motion == 0x0F || c->motion == 0x13) && c->frame == 1)) {
+            w->fehler++; printf("  M2 FEHLER: erstes Halte-Bild Clip 0x%X Bild %d (soll 1)\n", c->motion, c->frame);
+        }
+    }
+    if ((p->ss1 == 5 || p->ss1 == 9) && p->ss2 == 5 && c->ss2 == 6) {
+        int soll = clip_fc(c->motion) - 1;
+        w->loese_ende++;
+        if (!((c->motion == 0x10 || c->motion == 0x14) && c->frame == soll)) {
+            w->fehler++; printf("  M2 FEHLER: Loese-Ende Clip 0x%X Bild %d (soll %d)\n", c->motion, c->frame, soll);
+        }
+    }
+    if ((p->ss1 == 5 || p->ss1 == 9) && p->ss2 == 6 && c->ss1 == 3) {
+        int soll = clip_fc(c->motion) - 1;
+        w->p6_bild++;
+        if (!((c->motion == 0x10 || c->motion == 0x14) && c->frame == soll)) {
+            w->fehler++; printf("  M2 FEHLER: P6-Bild Clip 0x%X Bild %d (soll %d)\n", c->motion, c->frame, soll);
+        }
+    }
+    if ((p->ss1 == 8 || p->ss1 == 10) && p->ss2 == 1 && c->ss2 == 2) {
+        int soll = clip_fc(c->motion) - 1;
+        w->kollaps_ende++;
+        if (c->frame != soll) {
+            w->fehler++; printf("  M2 FEHLER: Kollaps-Ende Clip 0x%X Bild %d (soll %d)\n", c->motion, c->frame, soll);
+        }
+    }
+}
+
+static void griff_lauf(const char *name, int32_t px, int32_t pz, int losreissen)
+{
+    printf("== %s (Spiderman draussen, Spieler-Anker vergiftet%s) ==\n", name, losreissen ? ", Tasten" : "");
+    s_rueck_modul = 0; s_rueck_alt = 0; s_taste = 0; s_br_ende = 0; s_br_p2 = 0; s_br_fehler = 0;
+    griffwechsel_t gw; memset(&gw, 0, sizeof gw);
     static const uint8_t fl[][2] = { {4, 20}, {3, 0x21}, {3, 0x91}, {3, 0xAF} };
     if (!raum_4001(fl, 4, px, pz, 1024)) { printf("  SKIP: Assets\n"); return; }
     huelle();
@@ -255,7 +473,10 @@ static void griff_lauf(const char *name, int32_t px, int32_t pz)
     for (int f = 0; f < 3000; f++) {
         int war = re15_player_victim_state();
         int32_t ox = pl->x, oz = pl->z;
+        /* Losreissen: Richtungs-Kanten jedes zweite Bild (Maske 0xF0F0 = FUN_80037024-Zwilling re15_mash_pressed) */
+        s_taste = (losreissen && latch >= 0 && (f & 1)) ? (uint16_t)RE15_PAD_BIT_LEFT : 0;
         bild();
+        if (greifer >= 0) griff_wechsel(greifer, &gw);
         int ist = re15_player_victim_state();
         if (!war && ist && latch < 0) {
             latch = f; vor_x = ox; vor_z = oz;
@@ -287,8 +508,23 @@ static void griff_lauf(const char *name, int32_t px, int32_t pz)
     }
     CHECK(latch >= 0, "Griff 1 kommt zustande (Bild %d)", latch);
     if (latch < 0) return;
+    s_taste = 0;
     CHECK(anker_ok, "Latch: Spieler-Anker == Spiderman-Anker (FUN_8001ac38-Kopie @0x80112B08/@0x80113000)");
-    CHECK(griffbilder > 50, "%d Griff-/Kollapsbilder gemessen", griffbilder);
+    if (!losreissen) CHECK(griffbilder > 50, "%d Griff-/Kollapsbilder gemessen", griffbilder);
+    printf("  Wechselbilder: Zugriff-Ende %d, Halte-Start %d, Loese-Ende %d, P6 %d, Kollaps-Ende %d, Fehler %d; "
+           "Ruecksprung Modul %d, Alt-Pfad %d\n", gw.zugriff_ende, gw.halte_start, gw.loese_ende, gw.p6_bild,
+           gw.kollaps_ende, gw.fehler, s_rueck_modul, s_rueck_alt);
+    CHECK(gw.zugriff_ende >= 1 && gw.halte_start >= 1,
+          "M2: Zugriff-Ende (Clip 0xE/0x12 Bild fc-1) und erstes Halte-Bild (0xF/0x13 Bild 1, Wrap 0 @0x8001f63c) gemessen");
+    if (losreissen)
+        CHECK(gw.loese_ende >= 1 && gw.p6_bild >= 1,
+              "M2: Losreissen gemessen: Loese-Ende P5 -> P6 und P6-Bild (0x10/0x14 Bild fc-1, P6 ohne anim_set)");
+    else
+        CHECK(gw.kollaps_ende >= 1, "Kollaps-Ende gemessen (0x11/0x15 Bild fc-1)");
+    CHECK(gw.fehler == 0, "M2: jedes gemessene Wechselbild zeigt das letzte Bild des fertigen Clips: %d Fehler", gw.fehler);
+    CHECK(s_br_fehler == 0, "Bruellen B[2] in diesem Lauf: %d Fertig-, %d P2-Bilder, %d Fehler", s_br_ende, s_br_p2,
+          s_br_fehler);
+    CHECK(s_rueck_modul == 0, "M2: kein Ruecksprung auf Bild 0 in einem Wechselbild der Griffe: %d", s_rueck_modul);
     CHECK(aus_raum == 0, "Spieler in jedem Griffbild innerhalb der Raumhuelle (%d,%d)..(%d,%d): %d ausserhalb",
           (int)s_hx0, (int)s_hz0, (int)s_hx1, (int)s_hz1, aus_raum);
     CHECK(durch == 0, "kein Griffbild hinter einer Wand (Strecke ab Lage vor dem Griff): %d", durch);
@@ -330,14 +566,51 @@ static void teil_griff2(void)
     CHECK(re15_player_victim_state() == 1 && re15_player_victim_variant() >= 2, "Opfer-Maschine Griff 2 (aca59 2/3)");
     CHECK(pl->rot_y == blick0, "kein Yaw-Schreiben am Spieler (0x80115FF0 ohne a8f8)");
     int bewegt = 0, clip_ok = 1;
+    /* NACHBESSERUNG 1 / M2 (Griff 2): Zugriff 0x18 P1 -> P2 (+0x6 += fertig @0x80114400-10) Bild fc-1; erstes
+     * Halte-Bild 0x19 (P2 ohne +0x95 @0x801142C8-F4 -> P3) Bild 1; Loese-Clip 0x1A P5 -> P6 und P6 (kein `jal` bis
+     * @0x80114484) Bild fc-1. */
+    const int se = sl[0];
+    int z_ende = 0, h_start = 0, l_ende = 0, p6 = 0, fehler2 = 0;
+#define G2_WECHSEL() do { const gez_t *p_ = &s_gez_alt[se], *c_ = &s_gez[se];                                        \
+        if (p_->ss1 == 15 && p_->ss2 == 1 && c_->ss2 == 2) { z_ende++;                                                  \
+            if (!(c_->motion == 0x18 && c_->frame == clip_fc(0x18) - 1)) { fehler2++;                                  \
+                printf("  M2 FEHLER (Griff 2): Zugriff-Ende Clip 0x%X Bild %d\n", c_->motion, c_->frame); } }         \
+        if (c_->ss1 == 15 && p_->ss2 == 2 && c_->ss2 == 3) { h_start++;                                                 \
+            if (!(c_->motion == 0x19 && c_->frame == 1)) { fehler2++;                                                   \
+                printf("  M2 FEHLER (Griff 2): erstes Halte-Bild Clip 0x%X Bild %d\n", c_->motion, c_->frame); } }    \
+        if (p_->ss1 == 15 && p_->ss2 == 5 && c_->ss2 == 6) { l_ende++;                                                  \
+            if (!(c_->motion == 0x1A && c_->frame == clip_fc(0x1A) - 1)) { fehler2++;                                  \
+                printf("  M2 FEHLER (Griff 2): Loese-Ende Clip 0x%X Bild %d\n", c_->motion, c_->frame); } }           \
+        if (p_->ss1 == 15 && p_->ss2 == 6 && c_->ss1 == 0x0D) { p6++;                                                   \
+            if (!(c_->motion == 0x1A && c_->frame == clip_fc(0x1A) - 1)) { fehler2++;                                  \
+                printf("  M2 FEHLER (Griff 2): P6-Bild Clip 0x%X Bild %d\n", c_->motion, c_->frame); } } } while (0)
+    s_rueck_modul = 0; s_rueck_alt = 0; s_taste = 0; s_br_ende = 0; s_br_p2 = 0; s_br_fehler = 0;
     for (int f = 0; f < 60 && re15_player_victim_state(); f++) {
         bild();
+        G2_WECHSEL();
         if (pl->x != gx || pl->z != gz) bewegt++;
         if (re15_player_victim_state() == 1 && pl->motion != 8 && pl->motion != 9) clip_ok = 0;
     }
     CHECK(bewegt == 0, "danach keine Spielerbewegung mehr (Hook A [2]/[3] ohne ad68): %d Bilder bewegt", bewegt);
     CHECK(clip_ok, "Opfer-Clips 8 (Zugriff @0x80116044) / 9 (Halten @0x801160C8)");
     CHECK(e->sub_state_1 == 15 && e->x == ex0 && e->z == ez0, "Spiderman haelt (+0x5 0xF, keine Schleppbewegung)");
+    /* Losreissen (Tasten *8 @0x80114358) bis P6 -> +0x5 = 0xD, danach noch zwei Bilder. */
+    int nach = -1;
+    for (int f = 0; f < 400 && (nach < 0 || f < nach + 2); f++) {
+        s_taste = (f & 1) ? (uint16_t)RE15_PAD_BIT_LEFT : 0;
+        bild();
+        G2_WECHSEL();
+        if (nach < 0 && e->sub_state_1 == 0x0D) nach = f;
+    }
+    s_taste = 0;
+#undef G2_WECHSEL
+    printf("  Griff-2-Wechselbilder: Zugriff-Ende %d, Halte-Start %d, Loese-Ende %d, P6 %d, Fehler %d; Ruecksprung %d\n",
+           z_ende, h_start, l_ende, p6, fehler2, s_rueck_modul);
+    CHECK(z_ende == 1 && h_start == 1 && l_ende == 1 && p6 == 1,
+          "M2 Griff 2: alle vier Wechselbilder gemessen (Zugriff-Ende, Halte-Start, Loese-Ende, P6)");
+    CHECK(fehler2 == 0, "M2 Griff 2: Wechselbilder zeigen das letzte Bild des fertigen Clips bzw. Halte-Bild 1: %d Fehler",
+          fehler2);
+    CHECK(s_rueck_modul == 0, "M2 Griff 2: kein Ruecksprung auf Bild 0: %d", s_rueck_modul);
 }
 
 int main(void)
@@ -347,8 +620,9 @@ int main(void)
     if (!(f = fopen(p, "rb"))) { printf("SKIP: %s fehlt\n", p); return 77; }
     fclose(f);
     teil_austritt();
-    griff_lauf("griff1 vorn/hinten Lauf A", -12000, -9000);
-    griff_lauf("griff1 Lauf B (Ecke)", -14000, -6000);
+    griff_lauf("griff1 vorn/hinten Lauf A", -12000, -9000, 0);
+    griff_lauf("griff1 Lauf B (Ecke)", -14000, -6000, 0);
+    griff_lauf("griff1 Losreissen", -12000, -9000, 1);
     teil_griff2();
     printf("test_r38_spiderman: %d FAIL\n", s_fails);
     return s_fails ? 1 : 0;
