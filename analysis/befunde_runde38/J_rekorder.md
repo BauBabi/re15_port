@@ -249,3 +249,43 @@ Ergebnis (Stand c59ead3c, Protokoll `re15_port/build/r38j/ctest_gezielt_1.log`):
 ```
 100% tests passed, 0 tests failed out of 55
 ```
+
+---
+
+## 6. OFFEN / Grenzen
+
+* **Kein Panel-Licht am VUS:** die Spur-Beschreibung des Orchestrators nennt "dem gruenen Panel-Licht"; das Stimmschloss
+  hat keine gemalte Lampe (Hintergruende Cuts 7..12, `J_belege/vus_1100_cuts6_12.png`; Runde 37 E §0 "ROOM1100 (VUS) hat
+  keine Lampen, nur eine Anzeige"). Die Erfolgsmeldung des Panels ist die Anzeige "ACCEPTED" (Cut 11); der Wortlaut des
+  Nutzers nennt kein Licht. Es wird keines erfunden.
+* **Aufschliessen in der Blinkphase:** +15 (RE2 Sleep 15) faellt auf eine leere Phase des ACCEPTED-Blinkens (F692,
+  Original-Blinktakt 5 Bilder @0x00C98..); die Anzeige steht ab F697 wieder auf ACCEPTED, "You've opened the lock." F701.
+* **Abstand Ende der Aufnahme -> Piep haengt am Spieler:** zwischen beiden liegen die Nachricht 4 und die Runde-21/22-
+  Wegwerf-Abfrage ("Discard it?"); sub02 laeuft erst weiter, wenn beide zu sind. Gewartet wird nur, wenn der Spieler
+  schneller ist als die Aufnahme (gemessen 32 Takte). Die Aufnahme laeuft dabei weiter (Schliessen stoppt den Kanal nicht),
+  die Zeile 4 bleibt im Untertitel-Nachhall stehen, solange sie spricht (msg_common.c Zustand 7).
+* **Bildversatz +1:** Anzeige und Ton erscheinen ein Bild nach dem Skript-Takt (Port-Struktur wie Runde 37 E), beide im
+  selben Bild.
+* **PSX-Ziel:** spielt keine WAV (audio_psx.c sucht `\VOICE\VOICE40.VAG`, nicht vorhanden -> still); der Ablauf laeuft dort
+  ohne Warten (Stempel bleibt 0), Piep/Aufschliessen am ACCEPTED wie auf dem PC.
+* **Gegenprobe-Grenze:** ohne Audiogeraet (RE15_NOAUDIO) gibt es nichts abzuwarten; gemessen Lauf T (0 Wartetakte).
+
+## 7. Fuer den Nutzer / den Orchestrator
+
+* **Was man sieht/hoert (Leon ROOM1100, Elza ROOM1101):** Minidisc Player im Inventar, am Panel "Ja", ON/OFF -> SYSTEM
+  READY -> SAY HELLO, Cursor aufs Mikrofon-Gitter und Viereck: "You've used the Minidisc Player w/ Disc." und gleichzeitig
+  Irons' Aufnahme (2,6 s). Danach (ggf. nach der Wegwerf-Frage) wird die Anzeige kurz leer, dann **ACCEPTED mit dem Piep**,
+  eine halbe Sekunde spaeter das **Aufschliessen**, waehrend ACCEPTED blinkt; dann "You've opened the lock." (ohne
+  zweiten Piep). Ist man schneller als die Aufnahme, wartet die Anzeige, bis Irons fertig gesprochen hat.
+* **Neue Assets / Paket-Gate:** `synchro/STAGE1/room1100/Irons_Rekorder_Sound.wav` (Nutzer-Datei, seit e2cc7673 im Repo,
+  NICHT umbenannt). `release/make_package.sh` kopiert `synchro/STAGE*` ganz (`cp -r`, ~Z. 681-684) und vergleicht die
+  WAV-Zahl Repo/Paket (~Z. 324-326) -> die Datei ist damit im Paket und gezaehlt. Empfehlung fuer Spur V/Orchestrator: eine
+  ausdrueckliche Pruefung wie fuer `room1170/main00.wav` (~Z. 319-320): `[[ -s "$out/synchro/STAGE1/room1100/Irons_Rekorder_Sound.wav" ]]`.
+  Keine Dateien unter `shared_assets/`/`gen/`.
+* **Sprachdateien:** keine neue Message-Id belegt; Stimmen-Id 40 (VERTRAG §1.2 Spur J) bindet die Datei, `main40.wav`
+  wird nicht gesucht. Fuer Elza wird dieselbe Datei aus `room1100` gespielt.
+* **Bau/Paket:** neue Datei `engine/src/rekorder_r38.c` -> Android-GLOB-Cache neu konfigurieren
+  (reai-v2-android-glob-cache); RE15_MIN_TESTS +4 (3 unit + 1 integration).
+* **Messhaken:** `RE15_REKORDER_LOG=<datei>` (Anforderung, Laufen/Ende laut Plattform, Warten, ACCEPTED/Piep, msg-2-Weiche,
+  Tuer frei).
+* **Entscheidungsfragen:** keine.
