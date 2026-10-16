@@ -33,6 +33,10 @@ RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1`, Elza zusaetzlich `RE15_PSELECT_
 - Bild: Montage Bild fuer Bild (`m2_leon`/`m2_elza`, `RE15_AUDIO_CAP_SYNC`, `RE15_FRAMEDUMP=0-1431/1`, `RE15_EXIT_AT=1428#124x`):
   `frames_cmp.py` -> **1429 von 1429 Bildern (F0..F1428) pixelgleich** (inkl. Untertitel-Dauer).
 - Gegenprobe vorher: siehe Abschnitt 4.
+- Lesart "Voiceover" (Fortsetzung): Leons Erzaehler nach der Montage (ROOM1170 sub11 Message_on 8..11 @0x016AC..@0x016C4)
+  hat KEINE Aufnahme (`synchro/STAGE1/room1170/` = main00..07, 13, 14, 16); Elzas Erzaehler (ROOM1031 sub15 Message_on
+  0x14..0x17 @0x02A7A..@0x02A92) ebenfalls nicht (`room1031/` = main18, main19 = Elzas eigene Zeilen). Das Voiceover,
+  das bei Leon laeuft und bei Elza fehlte, ist also genau die Montage-Erzaehlung msg 0..5 — die ist jetzt da.
 ### Beleg / RE-Gate
 - Zuordnung ROOM1241 msg 0..5 -> `synchro/STAGE1/room1240` ist NUTZER-VORGABE ("Es ist das gleiche wie bei Leon"), im Code
   so gekennzeichnet (`elzaintro_r38.c` k_stimme, Header). Form selbst nachgelesen (Python ueber die ausgelieferten RDT,
@@ -58,7 +62,13 @@ RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1`, Elza zusaetzlich `RE15_PSELECT_
   Bild `SP/e_abn0/n_elza_f200.png` (nur "Where we thought it would be safe." auf Schwarz).
 - Lageplan in der Szene weiter da: `SP/e_abn0/n_elza_f900.png` (Lobby Cut 0, "Elza: Hey, is anyone here?!", Plan an der Wand),
   Kartenfeld F450..F470 = 48 helle Pixel.
-- Montage (das andere Schwarz mit Text des Vorspanns): s. Punkt 1, Leon = Elza 1429/1429 pixelgleich.
+- Montage (das andere Schwarz mit Text des Vorspanns; im Projekt heisst die ROOM1240-Montage "Pre-Intro", Memory
+  reai-v2-preintro-re2): s. Punkt 1, Leon = Elza 1429/1429 pixelgleich. ZUSAETZLICH absolut (Fortsetzung, Bilder
+  `SP/e_abn0/m2_elza`): die Text-auf-Schwarz-Abschnitte F0..F161 und F1194..F1263 haben ausserhalb des Untertitelbands
+  y 176..215 **kein einziges Pixel > 1**; F162..171, F1190..1193, F1264..1268 sind Ueberblendungen der benachbarten
+  Standbilder, F792..864 ist das S.T.A.R.S.-Standbild (Ansicht `SP/e_abn0/montage_dunkel_100_800_1200.png`: F100 schwarz,
+  F800 Logo x4, F1200 "But the umbrella corporation's experiments were far from finished." auf Schwarz). In Elzas
+  Vorspann scheint damit in KEINEM Schwarzbild mit Text etwas durch.
 - Gegenprobe vorher: siehe Abschnitt 4.
 ### Beleg / RE-Gate
 - Selbst gelesen (`rdt_bytes.py`, `scd_dump_room.py` -> `SP/e_abn0/scd_1031.txt`, `scd_1170.txt`): ROOM1031 sub15 @0x02A68
@@ -73,4 +83,46 @@ RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1`, Elza zusaetzlich `RE15_PSELECT_
   `@0x20A2 op=0x04` -> `Evt_exec sub=15`. Bytes @0x01E50 `06 00 c0 01`, @0x01E54 `21 03 7d 01`, @0x0207E `21 03 7d 00`,
   @0x02082 `3b 13 02 31`, @0x020A2 `04 ff 18 0f` wie zitiert.
 
-(Abschnitte 3-6 folgen)
+## 3. RE-Gate und Code (Fortsetzung 2026-10-16 ab 21:00, nach dem Sitzungslimit)
+Bau erneut bestaetigt: `local_build.sh configure` + `build` -> `LOCAL-BUILD-OK`, `ninja: no work to do`; exe 17:02:41
+(seit 3c0ca636 aenderte sich nur `tests/integration/test_r38_elzaintro.cmake`, kein Engine-/Plattform-Code).
+### 3.1 Code-Diff (gelesen, `git diff master...HEAD -- re15_port synchro`)
+- `elzaintro_r38.c`: zwei Tabellen. `k_stimme` = genau eine Zeile (0x1241, msg 0..5) -> 0x1240, als NUTZER-VORGABE
+  gekennzeichnet; `k_erzaehler` = (0x1170, 7, @0x016A6) + (0x1031, 13, @0x02A74). Keine Zahl ohne Offset/Kennzeichnung.
+- `main.c`: Include + die eine Zeile `re15_render_pc_set_scene_black(re15_elzaintro_r38_erzaehler_schwarz(...))`
+  statt `g_current_room_id == 0x1170 && active_cut_idx == 7` -> fuer Leon dieselbe Bedingung.
+- `audio_pc.c` `re15_voice_load_clip`: Include + 4 Zeilen, greift nur bei `!wav` NACH beiden eigenen Versuchen
+  (Gross-/Klein-Hex) -> eigene `room1241`-Dateien haetten Vorrang; trifft nur (0x1241, 0..5).
+- `render_pc.c`: nur Kommentar (Netz nicht loeschen). `synchro/README.md`: 4 Zeilen Doku.
+- Guess-Tell-Suche in den hinzugefuegten Zeilen (`deferred|tunable|interim|for now|faithful|plausib|TODO|FIXME|approx|
+  ungefaehr|geschaetzt|vermutlich|sieht richtig`): **0 Treffer**. Neue `getenv`-Schalter: **0**.
+### 3.2 Stichprobe EXE selbst disassembliert (`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`, info/Re1.5/PSX.EXE)
+Der Code-Diff zitiert nur RDT-Datei-Offsets; geprueft habe ich die EXE-Mechanismen, auf denen diese Belege ruhen:
+1. **SCD-Sprungtabelle @0x800744a8** (Kontrolle: Eintrag 0x38 -> 0x800417ac = Flr_set wie in scd_vm.c):
+   Eintrag 0x29 @0x8007454c -> **0x800402a0**, Eintrag 0x2B @0x80074554 -> **0x800404f4**, Eintrag 0x3B @0x80074594 ->
+   **0x800405bc**.
+2. **Cut_chg 0x800402a0**: `800402b8 lw v0,28(s0)` (Skript-pc), `800402c4 lbu a0,1(v0)` (= pc[1]), `800402fc sh a0,
+   4068(at)` -> 0x800b0fe4 (Schnitt), `80040310 addiu v1,v1,2` (Laenge 2). -> `29 0d` = Cut_chg(13), `29 07` = Cut_chg(7).
+3. **Message_on 0x800404f4**: `80040504 lbu a2,1(v0)` (Nachrichten-Nr. = pc[1]), `80040508 lhu a3,2(v0)`,
+   `8004050c addiu v0,v0,4` (Laenge 4), `80040518 jal 0x80027e68`. -> `2b 0N 00 00` = Nachricht N (Punkt 1).
+4. **Door_aot_set 0x800405bc**: `80040618 lbu v0,3(v1)`, `80040620 andi v0,v0,0x80`, `80040630 addiu v0,v1,40` /
+   `80040634 addiu v0,v1,32` -> 32/40 Byte (Grundlage meines Tuer-Scans 3.3).
+5. (Teil 1) Elza-Raum = Leon-Raum + Bit 31 @0x800397e4/@0x800397ec (Abschnitt 1).
+### 3.3 Nebenwirkung des Netzes: kann ROOM1031 Cut 13 ausserhalb des Erzaehlers entstehen?
+Das Netz schwaerzt (0x1031, 13) vollflaechig unter dem Text. Wuerde Cut 13 auch bei einem normalen Lobby-Eintritt
+aktiv, waere das eine Regression. Geprueft (eigenes Werkzeug `SP/e_abn0/tools/tueren_nach.py`, Laengen aus
+`scd_dump_room.py`):
+- **Tueren**: alle 653 `Door_aot_set` aller RDTs; die 8 mit Ziel Stage 0 / Raum-Byte 0x03 (1030/1031) haben Ziel-Schnitt
+  0, 2, 6, 7, 8 — **nie 13** (ROOM1031 main00 @0x02082 -> 6, 1040/1041 @0x010B8 -> 8, 1050/1051 @0x00ADA -> 2,
+  1070/1071 @0x0145E -> 7, 1241 @0x0051A -> 0). Rohe Bytesuche ohne Walk (`3b ?? 02 ..`, Ziel 00 03 0d bei +22/+30):
+  **0 Treffer**. Gegenprobe Leon: Tueren nach Raum-Byte 0x17 (1170/1171) -> Schnitte 0, 3, 8, 9, 11, nie 7.
+- **RVD**: der Port setzt bei Zonen `cam_id = event_id` = Ziel-Byte 3 (aot_common.c 1570/1651); in ROOM1031 fuehrt
+  keine Zone nach 13 (Riegel + Abschnitt 2).
+- **Port-Code**: alle Schreiber von `g_scd.cam_id` (aot_common.c 762/1570/1651, game_step_common.c 2232,
+  scd_room_setup.c 435, scd_vm.c 1481/1742, main.c 3034/4675/4973/8419) — keiner setzt 13 fuer ROOM1031 ausser dem
+  SCD-Cut_chg; kein Port-Modul nennt ROOM1031 zusammen mit einem Schnitt.
+- ROOM1031 @0x01E50..0x02014 (Ifel_ck-Block, `06 00 c0 01`): 20x Sce_em_set ab @0x01E5C, das einzige Obj_model_set des
+  Raums @0x01FEC — wie im Header zitiert.
+Ergebnis: Cut 13 gibt es in ROOM1031 nur im Erzaehler; das Netz trifft keinen normalen Spielmoment.
+
+(Abschnitte 4-6 folgen)
