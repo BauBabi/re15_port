@@ -502,6 +502,13 @@ static void teil_phase_h(void)
     }
     PRUEF(msg_gesehen == 0, "600 Bilder Phase H: keine Nachricht (Help/Klopfen nur Ton)");
     PRUEF(john_weg == 0, "John bleibt hinter dem Rolladen stehen (%d Bilder abgewichen)", john_weg);
+    {   /* Sichtbarkeit in Phase H: in KEINEM Cut ausser 5 (dort deckt ihn der geschlossene Rolladen, Bildbeleg m1 F900/F930)
+         * und 6 (Kamera IM Dachgang, nur aktiv wenn der Spieler im Gang steht — der Rolladen sperrt ihn aus). */
+        int sicht = 0;
+        for (int c = 0; c < (int)s_rdt.cut_count; c++)
+            if (c != 5 && c != 6 && sichtbar(c, john)) { sicht++; printf("    John im Bild von Cut %d\n", c); }
+        PRUEF(sicht == 0, "Phase H: John in keinem Cut ausser 5 (Rolladen davor) und 6 (Dachgang) im Bild");
+    }
     {
         static const uint8_t muster[4][2] = { { 0x3C, 0x0A }, { 0x3C, 0x0B }, { 0x3C, 0x0B }, { 0x3D, 0x00 } };
         static const int abstand[4] = { 90, 30, 30, 90 };   /* vor Zeile k: Sleep 90 (@+0x86), 30, 30, 90 */
@@ -653,6 +660,58 @@ static void teil_phase_h(void)
     PRUEF(!john_da && re15_dining_r38_phase_h() == 0, "Wiederbetreten: kein John, keine Phase H");
 }
 
+/* ---- Teil: takt (Messwerkzeug, kein Riegel): wie viele Aktionsdrucke im Abstand von 60 Bildern (RE15_WEGPLAN
+ * AKTION + WARTE 60) braucht jede Abfrage? Liefert die Zahlen fuer tests/integration/test_r38_dining1141.cmake. */
+static int drucke_bis(int (*offen)(void), int max)
+{
+    int n = 0;
+    for (int k = 0; k < max && offen(); k++) {
+        frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE); frame(RE15_PAD_BIT_SQUARE, 0); frame(RE15_PAD_BIT_SQUARE, 0);
+        n++;
+        for (int w = 0; w < 60; w++) frame(0, 0);
+    }
+    return n;
+}
+static int msg_offen(void) { return g_scd.message_active || g_scd.message_query; }
+static int wegwerf_offen(void) { return re15_discard_active(); }
+
+static void teil_takt(void)
+{
+    printf("== takt ==\n");
+    /* 1141 Gemaelde */
+    re15_game_state_init(); re15_inv_load_briefing();
+    re15_game_flag_set(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT, 1);
+    if (room_boot(RE15_R38F_RAUM_1141, -8150, -10250, 2048, 5) != 0) return;
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE); frame(RE15_PAD_BIT_SQUARE, 0); frame(RE15_PAD_BIT_SQUARE, 0);
+    for (int w = 0; w < 60; w++) frame(0, 0);
+    int n = drucke_bis(msg_offen, 10);
+    printf("    1141 Gemaelde: 1 Druck oeffnet, danach %d Drucke bis zu, (3,0x6A) = %d\n", n,
+           re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT));
+    /* 1131 Tuer mit Schluessel */
+    re15_game_state_init(); re15_inv_load_briefing();
+    inv_geben(RE15_R38F_ITEM);
+    if (room_boot(RE15_R38F_RAUM_1131, -1300, -13900, 0, 0) != 0) return;
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE); frame(RE15_PAD_BIT_SQUARE, 0); frame(RE15_PAD_BIT_SQUARE, 0);
+    for (int w = 0; w < 60; w++) frame(0, 0);
+    n = drucke_bis(msg_offen, 10);
+    int f0 = 0; while (f0 < 120 && !re15_discard_active()) { frame(0, 0); f0++; }
+    int m = drucke_bis(wegwerf_offen, 10);
+    printf("    1131 Tuer: 1 Druck oeffnet msg 41, %d Drucke bis zu, Abfrage nach %d Bildern, %d Drucke bis zu, Schluessel %s\n",
+           n, f0, m, re15_inv_find_item(RE15_R38F_ITEM) < 0 ? "weg" : "da");
+    /* 1021 Leiche */
+    re15_game_state_init();
+    re15_game_flag_set(RE15_R38F_ROY_BANK, RE15_R38F_ROY_BIT, 1);
+    if (room_boot(RE15_R38F_RAUM_1021, -3730, -9600, 2048, 0) != 0) return;
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE); frame(RE15_PAD_BIT_SQUARE, 0); frame(RE15_PAD_BIT_SQUARE, 0);
+    printf("    1021 Leiche: nach dem Druck msg %d aktiv %d\n", (int)g_scd.message_id, (int)g_scd.message_active);
+    for (int w = 0; w < 60; w++) frame(0, 0);
+    n = drucke_bis(msg_offen, 10);
+    printf("    1021 Leiche: danach %d Drucke bis zu\n", n);
+}
+
 /* ---- Teil: leon1140 --------------------------------------------------------------------------------------- */
 static void teil_leon1140(void)
 {
@@ -704,6 +763,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "tuer1131"))       teil_tuer1131();
     if (alle || !strcmp(teil, "phase_h"))        teil_phase_h();
     if (alle || !strcmp(teil, "leon1140"))       teil_leon1140();
+    if (!strcmp(teil, "takt"))                       teil_takt();   /* Messwerkzeug, kein Riegel */
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler (Tuersequenzen %d)\n", teil, g_fail, s_n_seq);
     return g_fail ? 1 : 0;

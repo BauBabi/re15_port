@@ -13,6 +13,10 @@ cmake_minimum_required(VERSION 3.16)
 #      Dachtuer -> ROOM1171. Zustands-Log: John nie gesprungen, beim Parken hinter der Kamera von Cut 7.
 #   L  LEON 1140: Gemaelde -> Rolladen-Ton 0x3B 0x0C/0x0A/0x0B (Punkt 3)
 #
+# Druckzahlen je Abfrage (AKTION + WARTE 60) gemessen mit `test_r38_dining1141 takt`: Gemaelde 1+3, Tuer 1131 mit
+# Schluessel 1+2 (msg 41 + Wegwerf-Abfrage; an der exe gemessen 1+3, darum 5 Drucke — ein zusaetzlicher Druck geht
+# durch die nun offene Tuer, die restlichen Zeilen laufen in 1141 am Eintrittspunkt ins Leere), Leiche 1021 1+4. Ein Druck zu viel loest den Satz neu aus (Leiche: sub06
+# @0x02216 stellt Slot 6 wieder scharf).
 # Bilder je Lauf per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) und Ton-Mitschnitt RE15_AUDIO_CAP_SYNC im Arbeitsordner;
 # geprueft werden debug.log, state.txt und wegplan_log.txt.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=W|Z|D|L] -P test_r38_dining1141.cmake
@@ -118,13 +122,15 @@ set(_nach1021 "RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78")
 if(TEIL MATCHES "W")
     f_lauf(w ELZA "900#1021" "RAUM 1021
 AKTION
-WARTE 45
+WARTE 60
 AKTION
-WARTE 45
+WARTE 60
 AKTION
-WARTE 45
+WARTE 60
 AKTION
-WARTE 30
+WARTE 60
+AKTION
+WARTE 60
 GEHE -3900 -18450 100
 BLICK 0
 AKTION
@@ -171,7 +177,9 @@ ENDE
 " "${_nach1021};RE15_DEBUG_JUMP=1131@gp;RE15_PLAYER_POS=-1300,-13900,0;RE15_FRAMEDUMP=0-400/20:fd_" _z _wpz)
     pruef(Z _z "ROOM1131 Slot 0 (Tuer -> ROOM1141) gesperrt: Ereignis 29")
     pruef(Z _z "ROOM1131: Tuer zum Besprechungsraum verschlossen (kein Dining Room Key im Inventar)")
-    pruef(Z _z "[msg] room=1131 id=40")
+    # (die Tuertexte zeigt der Tuer-Handler direkt, re15_scd_show_message — ohne "[msg]"-Zeile; Zustands-Log zeigt id 40)
+    file(READ "${_basis}_z/state.txt" _zst)
+    pruef(Z _zst "msg(a=1 fsm=1 id=40")
     pruef_nicht(Z _z "loaded room1141.rdt")
 endif()
 
@@ -204,6 +212,8 @@ WARTE 60
 AKTION
 WARTE 60
 AKTION
+WARTE 60
+AKTION
 WARTE 120
 GEHE -7900 -15000 150
 GEHE -7900 -17750 80
@@ -225,7 +235,8 @@ ENDE
 " "${_nach1021};RE15_GIVE=0x43:1;RE15_DEBUG_JUMP=1131@gp;RE15_PLAYER_POS=-1300,-13900,0;RE15_R38F_GORILLAS_TOT=600;RE15_R38F_GORILLAS_STARR=1;RE15_FRAMEDUMP=90-6000/15:fd_" _d _wpd)
     pruef(D _d "[give] item 67 x1")
     pruef(D _d "ROOM1131: Dining Room Key benutzt -> Tuer offen, Flag (9,66) = 1")
-    pruef(D _d "[msg] room=1131 id=41")
+    file(READ "${_basis}_d/state.txt" _dst)
+    pruef(D _dst "msg(a=1 fsm=1 id=41")
     pruef(D _d "loaded room1141.rdt")
     pruef(D _d "ROOM1141 Phase H: John im Dachgang hinter dem Rolladen (-7124,0,-6150) Blick 1024")
     pruef(D _d "Se_on bank=0x3C id=10 -> Runde 38 Spur F")
@@ -235,7 +246,6 @@ ENDE
     pruef(D _d "Se_on bank=0x3B id=11 -> Runde 38 Spur F")
     pruef(D _d "ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG")
     pruef(D _d "[msg] room=1141 id=40")
-    pruef(D _d "[msg] room=1141 id=41")
     pruef(D _d "[msg] room=1141 id=11")
     pruef_nicht(D _d "[msg] room=1141 id=0 ")
     pruef_nicht(D _d "[msg] room=1141 id=1 ")
@@ -260,7 +270,12 @@ ENDE
         set(_pz "")
         set(_sprung 0)
         set(_park "")
+        set(_sperre 0)
         foreach(_z IN LISTS _zeilen)
+            # Tuersperre im Kampf: msg 41 offen, waehrend John (t=49) im Raum ist = ROOM1141 (in 1131 gibt es keinen John)
+            if(_z MATCHES "msg\\(a=1 fsm=1 id=41 " AND _z MATCHES "\\[1 t=49 ")
+                set(_sperre 1)
+            endif()
             if(_z MATCHES "^F0 ")
                 set(_in1141 0)
             endif()
@@ -305,6 +320,7 @@ ENDE
         pruef_wahr(D "\"${_erst_bild}\" MATCHES \"^F[01] \"" "John steht ab dem ersten Bild in 1141 bei (-7124,-6150) (${_erst_bild})")
         pruef_wahr(D "_sprung EQUAL 0" "John springt nie und wird hinter der Kamera von Cut 7 geparkt (${_park})")
         pruef_wahr(D "NOT \"${_park}\" STREQUAL \"\"" "John wurde beim Abgang geparkt (${_park})")
+        pruef_wahr(D "_sperre EQUAL 1" "Doppeltuer im Kampf -> msg 41 \"I cannot leave him alone with those monsters.\"")
     else()
         list(APPEND _fehler "D: kein state.txt")
     endif()
@@ -313,6 +329,8 @@ endif()
 # --- L: Leon 1140 Rolladen-Ton ----------------------------------------------------------------------------------
 if(TEIL MATCHES "L")
     f_lauf(l LEON "800#1140" "RAUM 1140
+AKTION
+WARTE 60
 AKTION
 WARTE 60
 AKTION
