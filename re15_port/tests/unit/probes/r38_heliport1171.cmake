@@ -13,3 +13,16 @@ foreach(_teil banken zensus flagwort szene_re2 szene_re15 danach leon1170)
     add_test(NAME unit_r38_heliport1171_${_teil} COMMAND test_r38_heliport1171 ${_teil})
     set_tests_properties(unit_r38_heliport1171_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()
+
+# INTEGRATION (echte exe, Elza): echter Weg ROOM1131 -> Flurtuer -> ROOM1171 -> Selbst-Tuer Slot 5 -> Szene -> ROOM10B1
+# in beiden KI-Modi, dazu der Lade-Weg direkt in ROOM1171.
+foreach(_teil weg_re2 weg_re15 laden)
+    add_test(NAME integration_r38_heliport1171_${_teil}
+        COMMAND ${CMAKE_COMMAND}
+            -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+            -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_elza_karte>
+            -DWORKDIR=${CMAKE_BINARY_DIR}/r38_heliport1171_wd
+            -DTEIL=${_teil}
+            -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_heliport1171.cmake)
+    set_tests_properties(integration_r38_heliport1171_${_teil} PROPERTIES TIMEOUT 900)
+endforeach()
