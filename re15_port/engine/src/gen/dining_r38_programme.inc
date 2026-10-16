@@ -11,15 +11,15 @@
 #define RE15_R38F_ANKER_LEICHE1021_SUB06_OFF 0x021ECu  /* ROOM1021 */
 #define RE15_R38F_ANKER_LEICHE1021_SUB06_LEN 54u
 #define RE15_R38F_ANKER_LEICHE1021_SUB06_FNV 0xE3209EFDu
-#define RE15_R38F_ANKER_RIEGEL1141_SUB05_OFF 0x00FC8u  /* ROOM1141 */
-#define RE15_R38F_ANKER_RIEGEL1141_SUB05_LEN 32u
-#define RE15_R38F_ANKER_RIEGEL1141_SUB05_FNV 0x7117040Au
-#define RE15_R38F_ANKER_RIEGEL1141_SUB02_OFF 0x00C18u  /* ROOM1141 */
-#define RE15_R38F_ANKER_RIEGEL1141_SUB02_LEN 908u
-#define RE15_R38F_ANKER_RIEGEL1141_SUB02_FNV 0x372E1674u
-#define RE15_R38F_ANKER_RIEGEL1141_SUB00_OFF 0x00AFAu  /* ROOM1141 */
-#define RE15_R38F_ANKER_RIEGEL1141_SUB00_LEN 72u
-#define RE15_R38F_ANKER_RIEGEL1141_SUB00_FNV 0x8FBECF21u
+#define RE15_R38F_ANKER_SZENE1141_SUB02_05_OFF 0x00C18u  /* ROOM1141 */
+#define RE15_R38F_ANKER_SZENE1141_SUB02_05_LEN 976u
+#define RE15_R38F_ANKER_SZENE1141_SUB02_05_FNV 0xC944DCF3u
+#define RE15_R38F_ANKER_SZENE1141_SUB00_OFF 0x00AFAu  /* ROOM1141 */
+#define RE15_R38F_ANKER_SZENE1141_SUB00_LEN 72u
+#define RE15_R38F_ANKER_SZENE1141_SUB00_FNV 0x8FBECF21u
+#define RE15_R38F_ANKER_SZENE1141_MAIN00_OFF 0x00A52u  /* ROOM1141 */
+#define RE15_R38F_ANKER_SZENE1141_MAIN00_LEN 152u
+#define RE15_R38F_ANKER_SZENE1141_MAIN00_FNV 0xF31299BAu
 
 /* k_r38f_p_roll1140: 220 Byte
  *   +0000 2b 01 80 ff                          ROOM1140 @0x00CA6 Message_on
@@ -242,358 +242,398 @@ static const uint8_t k_r38f_p_leiche1021[54] = {
     0x18,0x06,0x00,0x00,0x01,0x00,
 };
 
-/* k_r38f_p_haemmern: 76 Byte
+/* k_r38f_p_haemmern: 122 Byte
  *   +0000 54 00 01 00 00 00                    Sce_bgm_control MAIN Play = ROOM1141 sub00 @0x00B4E (Raum-Titel MAIN16)
- *   +0006 36 3c 0a 00 00 00 00 00 00 00 00 00  Se_on(0x3C,0x0A) Klopfen  = RE2 ROOM1060 sub05 +0x22 (Datei 0x0F48) Satz 0x0A
- *   +0012 09 0a 1e 00                          Sleep 30  = RE2 ROOM1060 sub05 +0x2E
- *   +0016 36 3c 0b 00 00 00 00 00 00 00 00 00  Se_on(0x3C,0x0B) Klopfen  = RE2 ROOM1060 sub05 +0x32
- *   +0022 09 0a 1e 00                          Sleep 30  = RE2 ROOM1060 sub05 +0x3E
- *   +0026 36 3c 0b 00 00 00 00 00 00 00 00 00  Se_on(0x3C,0x0B) Klopfen  = RE2 ROOM1060 sub05 +0x4C
- *   +0032 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x58
- *   +0036 36 3d 00 00 00 00 00 00 00 00 00 00  Se_on(0x3D,0) "Help me out." (NUTZER-VORGABE: Help als Ton; john_help.wav)
- *   +0042 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x5E
- *   +0046 17 ff ff 00 c0 ff                    Goto zur Klopf-Zeile = RE2 ROOM1060 sub05 +0x62 `17 ff ff 00 e0 ff`
+ *   +0006 0f 04 6e 00                          While (Laenge 110 bis hinter das Ewhile) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`
+ *   +000A 21 03 6a 00                            Ck(3,0x6A)==0 (Schleife laeuft, solange der Rolladen zu ist)
+ *   +000E 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0012 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +0016 36 3c 0a 00 00 00 00 00 00 00 00 00    Se_on(0x3C,0x0A) Klopfen = RE2 ROOM1060 sub05 +0x22 (Datei 0x0F48)
+ *   +0022 08 00                                Endif = sub01 @0x00C10
+ *   +0024 09 0a 1e 00                          Sleep 30  = RE2 ROOM1060 sub05 +0x2E
+ *   +0028 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +002C 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +0030 36 3c 0b 00 00 00 00 00 00 00 00 00    Se_on(0x3C,0x0B) Klopfen = RE2 ROOM1060 sub05 +0x32
+ *   +003C 08 00                                Endif = sub01 @0x00C10
+ *   +003E 09 0a 1e 00                          Sleep 30  = RE2 ROOM1060 sub05 +0x3E
+ *   +0042 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0046 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +004A 36 3c 0b 00 00 00 00 00 00 00 00 00    Se_on(0x3C,0x0B) Klopfen = RE2 ROOM1060 sub05 +0x4C
+ *   +0056 08 00                                Endif = sub01 @0x00C10
+ *   +0058 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x58
+ *   +005C 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0060 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +0064 36 3d 00 00 00 00 00 00 00 00 00 00    Se_on(0x3D,0) "Help me out." (NUTZER-VORGABE: Help als Ton; john_help.wav)
+ *   +0070 08 00                                Endif = sub01 @0x00C10
+ *   +0072 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x5E
+ *   +0076 10 00                                Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test; RE2 ROOM1060 sub05 +0x62 Goto)
+ *   +0078 01 00                                Evt_end (Rolladen offen: Klopfen und Hilferuf sind zu Ende)
  */
-static const uint8_t k_r38f_p_haemmern[76] = {
-    0x54,0x00,0x01,0x00,0x00,0x00,0x36,0x3c,0x0a,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x09,0x0a,0x1e,0x00,0x36,0x3c,0x0b,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x09,0x0a,0x1e,0x00,0x36,0x3c,0x0b,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x09,0x0a,0x5a,0x00,0x36,0x3d,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x09,0x0a,0x5a,0x00,0x17,0xff,0xff,0x00,0xc0,0xff,
+static const uint8_t k_r38f_p_haemmern[122] = {
+    0x54,0x00,0x01,0x00,0x00,0x00,0x0f,0x04,0x6e,0x00,0x21,0x03,0x6a,0x00,0x06,0x00,
+    0x12,0x00,0x21,0x03,0x6a,0x00,0x36,0x3c,0x0a,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x08,0x00,0x09,0x0a,0x1e,0x00,0x06,0x00,0x12,0x00,0x21,0x03,0x6a,0x00,
+    0x36,0x3c,0x0b,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,
+    0x1e,0x00,0x06,0x00,0x12,0x00,0x21,0x03,0x6a,0x00,0x36,0x3c,0x0b,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,0x12,0x00,
+    0x21,0x03,0x6a,0x00,0x36,0x3d,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x08,0x00,0x09,0x0a,0x5a,0x00,0x10,0x00,0x01,0x00,
 };
 
-/* k_r38f_p_riegel: 1106 Byte
- *   +0000 54 00 02 00 00 00                    Sce_bgm_control MAIN Stop = ROOM1141 sub01 @0x00C06
- *   +0006 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05 ohne Evt_end: Riegel auf, msg 12, Dachtuer scharf)
- *   +0010 22 04 c3 01                          ROOM1141 @0x00FD2 Set
- *   +0014 2b 0c ff ff                          ROOM1141 @0x00FD6 Message_on
- *   +0018 02                                   ROOM1141 @0x00FDA Evt_next
- *   +0019 00                                   ROOM1141 @0x00FDB Nop
- *   +001A 46 01 02 31 4f aa 00 00 8f 9b        ROOM1141 @0x00FDC Aot_reset
- *   +0024 22 04 f0 00                          Set(4,0xF0)=0 = ROOM1141 sub02 @0x00C18
- *   +0028 22 04 f2 01                          Set(4,0xF2)=1 = ROOM1141 sub02 @0x00C1C (Gorillas leben)
- *   +002C 22 03 c2 01                          Set(3,0xC2)=1 = ROOM1141 sub02 @0x00C20 (John in ROOM1171, sub07 @0x016C4)
- *   +0030 22 02 07 01                          Set(2,7)=1 Pad-Sperre = ROOM1141 sub02 @0x00C26
- *   +0034 22 01 1b 01                          Set(1,0x1B)=1 Balken = ROOM1141 sub02 @0x00C2A
- *   +0038 44 01 27 30 00 00 00 cb a6 27 00 00  ROOM1141 @0x00B1A Sce_em_set (Gorillas geparkt wie sub00 beim Original-Szenenstart)
- *   +004C 44 02 27 30 00 00 00 cc a6 27 00 00  ROOM1141 @0x00B2E Sce_em_set
- *   +0060 29 06                                Cut_chg 6 = Dachgang (Kamera (-8292,-838,-6606) -> Dachtuer)
- *   +0062 2e 01 00 00                          Work_set(1,0)+Nop Spieler (Form ROOM1141 sub02 @0x00C2E)
- *   +0066 40 00 08 00 06 e6 d8 f5              Plc_dest RUECKWAERTS (Modus 8) Elza weicht von der Tuer zurueck = Form ROOM1211 sub02 @0x0212A `40 00 08 00 ..` (Elza in der Zellen-Szene)
- *   +006E 11 00 08 00                          Do  (Warteschleife Elza zurueckgewichen; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +0072 02 00                                Evt_next + Nop
- *   +0074 12 04                                Edwhile
- *   +0076 21 05 00 00                          Ck(5,0x00)==0
- *   +007A 44 00 49 40 00 00 00 ff 4a e3 00 00  Sce_em_set John = ROOM1141 sub00 @0x00B06, Lage in der Dachtuer + Blick -Z (PORT-WAHL)
- *   +008E 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) RE2-Tuerbank DOOR1A Satz 0 = oeffnen (gen/szl11b0_tuerton.inc; Form ROOM10D0 sub21 @0x01A02)
- *   +009A 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
- *   +009E 40 00 05 01 4a e3 50 e2              Plc_dest RUN Bit 1 zum Gang-Ausgang (Form ROOM1141 sub02 @0x00F8E `40 00 05 01`)
- *   +00A6 11 00 08 00                          Do  (Warteschleife John am Gang-Ausgang; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +00AA 02 00                                Evt_next + Nop
- *   +00AC 12 04                                Edwhile
- *   +00AE 21 05 01 00                          Ck(5,0x01)==0
- *   +00B2 29 07                                Cut_chg 7 = Nordende, Blick nach Sueden (Original-Szenenkamera sub02 @0x00C24)
- *   +00B4 40 00 05 01 e0 e3 74 c3              Plc_dest RUN John -> (-7200,-15500) = Elzas Original-Dialogplatz
- *   +00BC 2e 01 00 00                          Work_set(1,0)+Nop Spieler (Form ROOM1141 sub02 @0x00C2E)
- *   +00C0 40 00 05 00 a2 e5 da cb              Plc_dest RUN Elza -> (-6750,-13350) = Johns Original-Dialogplatz (Form ROOM1171 sub02 @0x013D4)
- *   +00C8 11 00 08 00                          Do  (Warteschleife Elza am Platz; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +00CC 02 00                                Evt_next + Nop
- *   +00CE 12 04                                Edwhile
- *   +00D0 21 05 00 00                          Ck(5,0x00)==0
- *   +00D4 11 00 08 00                          Do  (Warteschleife John am Platz; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +00D8 02 00                                Evt_next + Nop
- *   +00DA 12 04                                Edwhile
- *   +00DC 21 05 01 00                          Ck(5,0x01)==0
- *   +00E0 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
- *   +00E4 40 00 09 01 a2 e5 da cb              Plc_dest TURN John -> Elza (Form ROOM1141 sub02 @0x00C6E `40 00 09 01`)
- *   +00EC 2e 01 00 00                          Work_set(1,0)+Nop Spieler (Form ROOM1141 sub02 @0x00C2E)
- *   +00F0 40 00 09 00 e0 e3 74 c3              Plc_dest TURN Elza -> John (Form ROOM1141 sub02 @0x00CE2 `40 00 09 00`)
- *   +00F8 11 00 08 00                          Do  (Warteschleife Elza gedreht; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +00FC 02 00                                Evt_next + Nop
- *   +00FE 12 04                                Edwhile
- *   +0100 21 05 00 00                          Ck(5,0x00)==0
- *   +0104 11 00 08 00                          Do  (Warteschleife John gedreht; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +0108 02 00                                Evt_next + Nop
- *   +010A 12 04                                Edwhile
- *   +010C 21 05 01 00                          Ck(5,0x01)==0
- *   +0110 29 00                                Cut_chg 0 = ROOM1141 sub02 @0x00D08
- *   +0112 2b 28 00 00                          ROOM1141 @0x00D0A Message_on (sub02 ab msg 2)  -> Port-Nachricht 40 = msg 2 ohne "Same here..." (Nachtrag 14 Punkt 5)
- *   +0116 2e 01 00                             ROOM1141 @0x00D0E Work_set
- *   +0119 00                                   ROOM1141 @0x00D11 Nop
- *   +011A 3f 00 12 00                          ROOM1141 @0x00D12 Plc_motion
- *   +011E 09 0a 19 00                          ROOM1141 @0x00D16 Sleep
- *   +0122 3f 00 12 00                          ROOM1141 @0x00D1A Plc_motion
- *   +0126 43 00 80 00                          ROOM1141 @0x00D1E Plc_flg
- *   +012A 09 0a 19 00                          ROOM1141 @0x00D22 Sleep
- *   +012E 3f 00 13 00                          ROOM1141 @0x00D26 Plc_motion
- *   +0132 09 0a 19 00                          ROOM1141 @0x00D2A Sleep
- *   +0136 3f 00 13 00                          ROOM1141 @0x00D2E Plc_motion
- *   +013A 43 00 80 00                          ROOM1141 @0x00D32 Plc_flg
- *   +013E 09 0a 19 00                          ROOM1141 @0x00D36 Sleep
- *   +0142 3f 00 18 00                          ROOM1141 @0x00D3A Plc_motion
- *   +0146 09 0a 14 00                          ROOM1141 @0x00D3E Sleep
- *   +014A 2b 03 00 00                          ROOM1141 @0x00D42 Message_on
- *   +014E 2e 02 00                             ROOM1141 @0x00D46 Work_set
- *   +0151 00                                   ROOM1141 @0x00D49 Nop
- *   +0152 3f 00 13 00                          ROOM1141 @0x00D4A Plc_motion
- *   +0156 09 0a 19 00                          ROOM1141 @0x00D4E Sleep
- *   +015A 3f 00 13 00                          ROOM1141 @0x00D52 Plc_motion
- *   +015E 43 00 80 00                          ROOM1141 @0x00D56 Plc_flg
- *   +0162 09 0a 19 00                          ROOM1141 @0x00D5A Sleep
- *   +0166 3f 00 0f 00                          ROOM1141 @0x00D5E Plc_motion
- *   +016A 09 0a 19 00                          ROOM1141 @0x00D62 Sleep
- *   +016E 3f 00 0f 00                          ROOM1141 @0x00D66 Plc_motion
- *   +0172 43 00 80 00                          ROOM1141 @0x00D6A Plc_flg
- *   +0176 09 0a 19 00                          ROOM1141 @0x00D6E Sleep
- *   +017A 3f 00 17 00                          ROOM1141 @0x00D72 Plc_motion
- *   +017E 09 0a 14 00                          ROOM1141 @0x00D76 Sleep
- *   +0182 2b 04 00 00                          ROOM1141 @0x00D7A Message_on
- *   +0186 2e 01 00                             ROOM1141 @0x00D7E Work_set
- *   +0189 00                                   ROOM1141 @0x00D81 Nop
- *   +018A 3f 00 10 00                          ROOM1141 @0x00D82 Plc_motion
- *   +018E 09 0a 32 00                          ROOM1141 @0x00D86 Sleep
- *   +0192 3f 00 10 00                          ROOM1141 @0x00D8A Plc_motion
- *   +0196 43 00 80 00                          ROOM1141 @0x00D8E Plc_flg
- *   +019A 09 0a 32 00                          ROOM1141 @0x00D92 Sleep
- *   +019E 3f 00 18 00                          ROOM1141 @0x00D96 Plc_motion
- *   +01A2 09 0a 14 00                          ROOM1141 @0x00D9A Sleep
- *   +01A6 2b 05 00 00                          ROOM1141 @0x00D9E Message_on
- *   +01AA 2e 02 00                             ROOM1141 @0x00DA2 Work_set
- *   +01AD 00                                   ROOM1141 @0x00DA5 Nop
- *   +01AE 3f 00 0f 00                          ROOM1141 @0x00DA6 Plc_motion
- *   +01B2 09 0a 19 00                          ROOM1141 @0x00DAA Sleep
- *   +01B6 3f 00 0f 00                          ROOM1141 @0x00DAE Plc_motion
- *   +01BA 43 00 80 00                          ROOM1141 @0x00DB2 Plc_flg
- *   +01BE 09 0a 19 00                          ROOM1141 @0x00DB6 Sleep
- *   +01C2 3f 00 11 00                          ROOM1141 @0x00DBA Plc_motion
- *   +01C6 09 0a 32 00                          ROOM1141 @0x00DBE Sleep
- *   +01CA 3f 00 17 00                          ROOM1141 @0x00DC2 Plc_motion
- *   +01CE 09 0a 14 00                          ROOM1141 @0x00DC6 Sleep
- *   +01D2 2b 06 00 00                          ROOM1141 @0x00DCA Message_on
- *   +01D6 2e 01 00                             ROOM1141 @0x00DCE Work_set
- *   +01D9 00                                   ROOM1141 @0x00DD1 Nop
- *   +01DA 41 01 ae fc 00 00 da cb 64 00        ROOM1141 @0x00DD2 Plc_neck  -> Blickpunkt (-850,-13350) statt (-1300,-15500) (Plaetze getauscht)
- *   +01E4 09 0a 05 00                          ROOM1141 @0x00DDC Sleep
- *   +01E8 2e 02 00                             ROOM1141 @0x00DE0 Work_set
- *   +01EB 00                                   ROOM1141 @0x00DE3 Nop
- *   +01EC 41 01 ec fa 00 00 74 c3 64 00        ROOM1141 @0x00DE4 Plc_neck  -> Blickpunkt (-1300,-15500) statt (-850,-13350) (Plaetze getauscht)
- *   +01F6 09 0a 05 00                          ROOM1141 @0x00DEE Sleep
- *   +01FA 2e 01 00                             ROOM1141 @0x00DF2 Work_set
- *   +01FD 00                                   ROOM1141 @0x00DF5 Nop
- *   +01FE 40 00 09 00 ae fc da cb              ROOM1141 @0x00DF6 Plc_dest  -> Drehziel (-850,-13350) statt (-1300,-15500) (Plaetze getauscht)
- *   +0206 09 0a 05 00                          ROOM1141 @0x00DFE Sleep
- *   +020A 2e 02 00                             ROOM1141 @0x00E02 Work_set
- *   +020D 00                                   ROOM1141 @0x00E05 Nop
- *   +020E 40 00 09 01 ec fa 74 c3              ROOM1141 @0x00E06 Plc_dest  -> Drehziel (-1300,-15500) statt (-850,-13350) (Plaetze getauscht)
- *   +0216 18 04                                ROOM1141 @0x00E0E Gosub
- *   +0218 09 0a 56 00                          ROOM1141 @0x00E10 Sleep
- *   +021C 2b 07 00 00                          ROOM1141 @0x00E14 Message_on
- *   +0220 3f 00 11 00                          ROOM1141 @0x00E18 Plc_motion
- *   +0224 09 0a 32 00                          ROOM1141 @0x00E1C Sleep
- *   +0228 3f 00 14 00                          ROOM1141 @0x00E20 Plc_motion
- *   +022C 09 0a 19 00                          ROOM1141 @0x00E24 Sleep
- *   +0230 3f 00 14 00                          ROOM1141 @0x00E28 Plc_motion
- *   +0234 43 00 80 00                          ROOM1141 @0x00E2C Plc_flg
- *   +0238 09 0a 1a 00                          ROOM1141 @0x00E30 Sleep
- *   +023C 2e 02 01                             ROOM1141 @0x00E34 Work_set
- *   +023F 00                                   ROOM1141 @0x00E37 Nop
- *   +0240 32 00 1c 25 00 00 08 d5              ROOM1141 @0x00E38 Pos_set
- *   +0248 34 0c 10 00                          ROOM1141 @0x00E40 Member_set
- *   +024C 09 0a 01 00                          ROOM1141 @0x00E44 Sleep
- *   +0250 2e 02 02                             ROOM1141 @0x00E48 Work_set
- *   +0253 00                                   ROOM1141 @0x00E4B Nop
- *   +0254 32 00 a6 27 00 00 dc ba              ROOM1141 @0x00E4C Pos_set
- *   +025C 34 0c 10 00                          ROOM1141 @0x00E54 Member_set
- *   +0260 09 0a 0a 00                          ROOM1141 @0x00E58 Sleep
- *   +0264 54 00 01 00 00 00                    ROOM1141 @0x00E5C Sce_bgm_control
- *   +026A 29 02                                ROOM1141 @0x00E62 Cut_chg
- *   +026C 2b 08 00 00                          ROOM1141 @0x00E64 Message_on
- *   +0270 09 0a 65 00                          ROOM1141 @0x00E68 Sleep
- *   +0274 2e 02 01                             ROOM1141 @0x00E6C Work_set
- *   +0277 00                                   ROOM1141 @0x00E6F Nop
- *   +0278 34 0c 30 00                          ROOM1141 @0x00E70 Member_set
- *   +027C 2e 02 02                             ROOM1141 @0x00E74 Work_set
- *   +027F 00                                   ROOM1141 @0x00E77 Nop
- *   +0280 34 0c 30 00                          ROOM1141 @0x00E78 Member_set
- *   +0284 09 0a 01 00                          ROOM1141 @0x00E7C Sleep
- *   +0288 29 00                                ROOM1141 @0x00E80 Cut_chg
- *   +028A 2e 02 00                             ROOM1141 @0x00E82 Work_set
- *   +028D 00                                   ROOM1141 @0x00E85 Nop
- *   +028E 41 01 a2 e5 00 00 da cb 64 00        ROOM1141 @0x00E86 Plc_neck  -> Blickpunkt (-6750,-13350) statt (-7200,-15500) (Plaetze getauscht)
- *   +0298 09 0a 01 00                          ROOM1141 @0x00E90 Sleep
- *   +029C 40 00 09 01 a2 e5 da cb              ROOM1141 @0x00E94 Plc_dest  -> Drehziel (-6750,-13350) statt (-7200,-15500) (Plaetze getauscht)
- *   +02A4 09 0a 05 00                          ROOM1141 @0x00E9C Sleep
- *   +02A8 2e 01 00                             ROOM1141 @0x00EA0 Work_set
- *   +02AB 00                                   ROOM1141 @0x00EA3 Nop
- *   +02AC 41 01 e0 e3 00 00 74 c3 64 00        ROOM1141 @0x00EA4 Plc_neck  -> Blickpunkt (-7200,-15500) statt (-6750,-13350) (Plaetze getauscht)
- *   +02B6 09 0a 01 00                          ROOM1141 @0x00EAE Sleep
- *   +02BA 40 00 09 00 e0 e3 74 c3              ROOM1141 @0x00EB2 Plc_dest  -> Drehziel (-7200,-15500) statt (-6750,-13350) (Plaetze getauscht)
- *   +02C2 18 03                                ROOM1141 @0x00EBA Gosub
- *   +02C4 2b 09 00 00                          ROOM1141 @0x00EBC Message_on
- *   +02C8 2e 02 00                             ROOM1141 @0x00EC0 Work_set
- *   +02CB 00                                   ROOM1141 @0x00EC3 Nop
- *   +02CC 3f 00 0f 00                          ROOM1141 @0x00EC4 Plc_motion
- *   +02D0 09 0a 19 00                          ROOM1141 @0x00EC8 Sleep
- *   +02D4 3f 00 0f 00                          ROOM1141 @0x00ECC Plc_motion
- *   +02D8 43 00 80 00                          ROOM1141 @0x00ED0 Plc_flg
- *   +02DC 09 0a 19 00                          ROOM1141 @0x00ED4 Sleep
- *   +02E0 3f 00 10 00                          ROOM1141 @0x00ED8 Plc_motion
- *   +02E4 09 0a 19 00                          ROOM1141 @0x00EDC Sleep
- *   +02E8 3f 00 10 00                          ROOM1141 @0x00EE0 Plc_motion
- *   +02EC 43 00 80 00                          ROOM1141 @0x00EE4 Plc_flg
- *   +02F0 09 0a 1a 00                          ROOM1141 @0x00EE8 Sleep
- *   +02F4 2b 0a 00 00                          ROOM1141 @0x00EEC Message_on
- *   +02F8 2e 01 00                             ROOM1141 @0x00EF0 Work_set
- *   +02FB 00                                   ROOM1141 @0x00EF3 Nop
- *   +02FC 3f 00 11 00                          ROOM1141 @0x00EF4 Plc_motion
- *   +0300 09 0a 65 00                          ROOM1141 @0x00EF8 Sleep
- *   +0304 2b 0b 00 00                          ROOM1141 @0x00EFC Message_on
- *   +0308 2e 02 00                             ROOM1141 @0x00F00 Work_set
- *   +030B 00                                   ROOM1141 @0x00F03 Nop
- *   +030C 3f 00 0f 00                          ROOM1141 @0x00F04 Plc_motion
- *   +0310 09 0a 19 00                          ROOM1141 @0x00F08 Sleep
- *   +0314 3f 00 0f 00                          ROOM1141 @0x00F0C Plc_motion
- *   +0318 43 00 80 00                          ROOM1141 @0x00F10 Plc_flg
- *   +031C 09 0a 19 00                          ROOM1141 @0x00F14 Sleep
- *   +0320 3f 00 10 00                          ROOM1141 @0x00F18 Plc_motion
- *   +0324 09 0a 19 00                          ROOM1141 @0x00F1C Sleep
- *   +0328 3f 00 10 00                          ROOM1141 @0x00F20 Plc_motion
- *   +032C 43 00 80 00                          ROOM1141 @0x00F24 Plc_flg
- *   +0330 09 0a 1a 00                          ROOM1141 @0x00F28 Sleep
- *   +0334 2e 01 00                             ROOM1141 @0x00F2C Work_set
- *   +0337 00                                   ROOM1141 @0x00F2F Nop
- *   +0338 41 00 00 00 00 00 00 00 64 00        ROOM1141 @0x00F30 Plc_neck
- *   +0342 09 0a 01 00                          ROOM1141 @0x00F3A Sleep
- *   +0346 41 03 01 00 00 00 00 00 00 3c        ROOM1141 @0x00F3E Plc_neck
- *   +0350 09 0a 1e 00                          ROOM1141 @0x00F48 Sleep
- *   +0354 42                                   ROOM1141 @0x00F4C Plc_ret
- *   +0355 00                                   ROOM1141 @0x00F4D Nop
- *   +0356 22 02 07 00                          ROOM1141 @0x00F4E Set
- *   +035A 22 01 1b 00                          ROOM1141 @0x00F52 Set
- *   +035E 3c 01                                ROOM1141 @0x00F56 Cut_auto
- *   +0360 2e 02 01                             ROOM1141 @0x00F58 Work_set
- *   +0363 00                                   ROOM1141 @0x00F5B Nop
- *   +0364 32 00 84 03 00 00 2a ae              ROOM1141 @0x00F5C Pos_set
- *   +036C 34 0c 10 00                          ROOM1141 @0x00F64 Member_set
- *   +0370 2e 02 02                             ROOM1141 @0x00F68 Work_set
- *   +0373 00                                   ROOM1141 @0x00F6B Nop
- *   +0374 32 00 50 14 00 00 00 b5              ROOM1141 @0x00F6C Pos_set
- *   +037C 34 0c 10 00                          ROOM1141 @0x00F74 Member_set
- *   +0380 09 0a 01 00                          ROOM1141 @0x00F78 Sleep
- *   +0384 2e 02 00                             ROOM1141 @0x00F7C Work_set
- *   +0387 00                                   ROOM1141 @0x00F7F Nop
- *   +0388 41 00 00 00 00 00 00 00 64 00        ROOM1141 @0x00F80 Plc_neck
- *   +0392 09 0a 01 00                          ROOM1141 @0x00F8A Sleep
- *   +0396 40 00 05 01 82 e2 04 ac              ROOM1141 @0x00F8E Plc_dest
- *   +039E 18 04                                ROOM1141 @0x00F96 Gosub
- *   +03A0 40 00 09 01 82 e2 dc a1              ROOM1141 @0x00F98 Plc_dest
- *   +03A8 18 04                                ROOM1141 @0x00FA0 Gosub
- *   +03AA 46 00 01 31 29 00 ff ff 00 00        Aot_reset Slot 0 -> Text msg 41 (Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`)
- *   +03B4 46 01 01 31 29 00 ff ff 00 00        Aot_reset Slot 1 -> Text msg 41
- *   +03BE 11 00 08 00                          Do  (Warteschleife Gorillas leben (sub01 @0x00C0C loescht (4,0xF2)); Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +03C2 02 00                                Evt_next + Nop
- *   +03C4 12 04                                Edwhile
- *   +03C6 21 04 f2 01                          Ck(4,0xF2)==1
- *   +03CA 09 0a 1e 00                          Sleep 30 (Form ROOM1021 sub06 @0x021FE)
- *   +03CE 22 02 07 01                          Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)
- *   +03D2 22 01 1b 01                          Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)
- *   +03D6 29 05                                Cut_chg 5 = vom Sueden auf Rolladen/Dachgang (Kamera (-7266,-3806,-17278))
- *   +03D8 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
- *   +03DC 40 00 05 01 4a e3 50 e2              Plc_dest RUN John -> Gang-Ausgang
- *   +03E4 11 00 08 00                          Do  (Warteschleife John am Gang-Ausgang; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +03E8 02 00                                Evt_next + Nop
- *   +03EA 12 04                                Edwhile
- *   +03EC 21 05 01 00                          Ck(5,0x01)==0
- *   +03F0 29 06                                Cut_chg 6 = Dachgang
- *   +03F2 40 00 05 01 4a e3 44 fd              Plc_dest RUN John -> Dachtuer
- *   +03FA 11 00 08 00                          Do  (Warteschleife John an der Dachtuer; Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
- *   +03FE 02 00                                Evt_next + Nop
- *   +0400 12 04                                Edwhile
- *   +0402 21 05 01 00                          Ck(5,0x01)==0
- *   +0406 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) DOOR1A oeffnen
- *   +0412 09 0a 0f 00                          Sleep 15 (Form ROOM1131 sub02 @0x00A54)
- *   +0416 32 00 d0 8a 00 00 d0 8a              Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080)
- *   +041E 36 0e 01 00 00 00 00 00 00 00 00 00  Se_on(0x0E,1) DOOR1A zufallen (Door_exit)
- *   +042A 22 09 43 01                          Set(9,67)=1 John hat 1141 verlassen (VERTRAG 1.1)
- *   +042E 46 00 02 31 ec fa 00 00 82 c9        Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14)
- *   +0438 46 01 02 31 4f aa 00 00 8f 9b        Aot_reset Slot 1 -> Dachtuer = ROOM1141 sub05 @0x00FDC
- *   +0442 09 0a 0f 00                          Sleep 15
- *   +0446 3c 01                                Cut_auto 1   (Schwanz ROOM1050 sub03 @0x00DF4)
- *   +0448 22 02 07 00                          Set(2,7)=0
- *   +044C 22 01 1b 00                          Set(1,0x1B)=0
- *   +0450 01 00                                Evt_end
+/* k_r38f_p_befreiung: 1152 Byte
+ *   +0000 2b 0d 80 ff                          ROOM1141 @0x00FE8 Message_on (sub06: Gemaelde-Frage; Ja-Zweig)
+ *   +0004 02                                   ROOM1141 @0x00FEC Evt_next
+ *   +0005 00                                   ROOM1141 @0x00FED Nop
+ *   +0006 06 00 74 04                          ROOM1141 @0x00FEE Ifel_ck  -> Laenge 0xE8 -> 0x474 (Ja-Zweig mit Ton, Szene, Sperre, Abgang)
+ *   +000A 21 0c 1f 00                          ROOM1141 @0x00FF2 Ck
+ *   +000E 22 03 6a 01                          ROOM1141 @0x00FF6 Set
+ *   +0012 46 03 00 00 00 00 00 00 00 00        ROOM1141 @0x00FFA Aot_reset
+ *   +001C 22 02 07 01                          ROOM1141 @0x01004 Set
+ *   +0020 22 01 1b 01                          ROOM1141 @0x01008 Set
+ *   +0024 29 05                                ROOM1141 @0x0100C Cut_chg
+ *   +0026 36 3b 0c 00 01 00 00 00 00 00 00 00  Se_on(0x3B,0x0C) = ROOM1131 sub02 @0x00A48 bytegleich, Bank 2 -> Port-Bank 0x3B
+ *   +0032 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A54
+ *   +0036 36 3b 0a 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0A) = ROOM1131 sub02 @0x00A58 bytegleich, Port-Bank
+ *   +0042 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A64
+ *   +0046 2e 03 00                             ROOM1141 @0x01032 Work_set (Work_set Prop 0 = Rolladen; Bewegung bytegleich)
+ *   +0049 00                                   ROOM1141 @0x01035 Nop
+ *   +004A 2f 01 00 00                          ROOM1141 @0x01036 Speed_set
+ *   +004E 2f 07 fe ff                          ROOM1141 @0x0103A Speed_set
+ *   +0052 0d 00 06 00 14 00                    ROOM1141 @0x0103E For
+ *   +0058 31                                   ROOM1141 @0x01044 Add_aspeed
+ *   +0059 30                                   ROOM1141 @0x01045 Add_speed
+ *   +005A 02                                   ROOM1141 @0x01046 Evt_next
+ *   +005B 00                                   ROOM1141 @0x01047 Nop
+ *   +005C 0e 00                                ROOM1141 @0x01048 Next
+ *   +005E 0d 00 2c 00 0a 00                    ROOM1141 @0x0104A For
+ *   +0064 0d 00 04 00 0a 00                    ROOM1141 @0x01050 For
+ *   +006A 30                                   ROOM1141 @0x01056 Add_speed
+ *   +006B 02                                   ROOM1141 @0x01057 Evt_next
+ *   +006C 0e 00                                ROOM1141 @0x01058 Next
+ *   +006E 2f 07 03 00                          ROOM1141 @0x0105A Speed_set
+ *   +0072 0d 00 06 00 03 00                    ROOM1141 @0x0105E For
+ *   +0078 31                                   ROOM1141 @0x01064 Add_aspeed
+ *   +0079 30                                   ROOM1141 @0x01065 Add_speed
+ *   +007A 02                                   ROOM1141 @0x01066 Evt_next
+ *   +007B 00                                   ROOM1141 @0x01067 Nop
+ *   +007C 0e 00                                ROOM1141 @0x01068 Next
+ *   +007E 2f 07 fd ff                          ROOM1141 @0x0106A Speed_set
+ *   +0082 0d 00 06 00 03 00                    ROOM1141 @0x0106E For
+ *   +0088 31                                   ROOM1141 @0x01074 Add_aspeed
+ *   +0089 30                                   ROOM1141 @0x01075 Add_speed
+ *   +008A 02                                   ROOM1141 @0x01076 Evt_next
+ *   +008B 00                                   ROOM1141 @0x01077 Nop
+ *   +008C 0e 00                                ROOM1141 @0x01078 Next
+ *   +008E 0e 00                                ROOM1141 @0x0107A Next
+ *   +0090 36 3b 0b 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0B) = ROOM1131 sub02 @0x00AB2 bytegleich, Port-Bank
+ *   +009C 09 0a 0a 00                          Sleep 10 = ROOM1131 sub02 @0x00ABE
+ *   +00A0 37 00 0d 00                          ROOM1141 @0x0107C Sca_id_set (Sca-Saetze: Rolladen-Zellen frei)
+ *   +00A4 37 01 0d 00                          ROOM1141 @0x01080 Sca_id_set
+ *   +00A8 37 02 0d 00                          ROOM1141 @0x01084 Sca_id_set
+ *   +00AC 37 03 0d 00                          ROOM1141 @0x01088 Sca_id_set
+ *   +00B0 37 04 0d 00                          ROOM1141 @0x0108C Sca_id_set
+ *   +00B4 39 00 0d 00                          ROOM1141 @0x01090 Sca_floor_set
+ *   +00B8 39 01 0d 00                          ROOM1141 @0x01094 Sca_floor_set
+ *   +00BC 39 02 0d 00                          ROOM1141 @0x01098 Sca_floor_set
+ *   +00C0 39 03 0d 00                          ROOM1141 @0x0109C Sca_floor_set
+ *   +00C4 39 04 0d 00                          ROOM1141 @0x010A0 Sca_floor_set
+ *   +00C8 54 00 02 00 00 00                    Sce_bgm_control MAIN Stop = ROOM1141 sub01 @0x00C06 (John ist frei)
+ *   +00CE 22 04 f0 00                          ROOM1141 @0x00C18 Set (sub02: Set(4,0xF0)=0 / (4,0xF2)=1 / (3,0xC2)=1)
+ *   +00D2 22 04 f2 01                          ROOM1141 @0x00C1C Set
+ *   +00D6 22 03 c2 01                          ROOM1141 @0x00C20 Set
+ *   +00DA 44 01 27 30 00 00 00 cb a6 27 00 00  ROOM1141 @0x00B1A Sce_em_set (Gorillas geparkt wie sub00 beim Original-Szenenstart)
+ *   +00EE 44 02 27 30 00 00 00 cc a6 27 00 00  ROOM1141 @0x00B2E Sce_em_set
+ *   +0102 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
+ *   +0106 40 00 05 01 58 e9 f6 d7              Plc_dest RUN John aus dem Gang an seinen Platz (Form ROOM1141 sub02 @0x00F8E `40 00 05 01`)
+ *   +010E 18 04                                Gosub sub04 = ROOM1141 sub02 @0x00F96 (warten, bis John steht)
+ *   +0110 2e 01 00                             ROOM1141 @0x00CD4 Work_set (sub02: Elza an ihren Platz, Drehungen, Szene ab msg 2)
+ *   +0113 00                                   ROOM1141 @0x00CD7 Nop
+ *   +0114 40 00 04 00 c0 e0 f6 d7              ROOM1141 @0x00CD8 Plc_dest  -> Ziel (-8000,-10250) statt (-7200,-15500)
+ *   +011C 18 03                                ROOM1141 @0x00CE0 Gosub
+ *   +011E 40 00 09 00 58 e9 f6 d7              ROOM1141 @0x00CE2 Plc_dest  -> Ziel (-5800,-10250) statt (-6750,-13350)
+ *   +0126 18 03                                ROOM1141 @0x00CEA Gosub
+ *   +0128 2e 02 00                             ROOM1141 @0x00CEC Work_set
+ *   +012B 00                                   ROOM1141 @0x00CEF Nop
+ *   +012C 41 01 c0 e0 00 00 f6 d7 64 00        ROOM1141 @0x00CF0 Plc_neck  -> Blickpunkt (-8000,-10250) statt (-7200,-15500)
+ *   +0136 09 0a 01 00                          ROOM1141 @0x00CFA Sleep
+ *   +013A 40 00 09 01 c0 e0 f6 d7              ROOM1141 @0x00CFE Plc_dest  -> Ziel (-8000,-10250) statt (-7200,-15500)
+ *   +0142 18 04                                ROOM1141 @0x00D06 Gosub
+ *   +0144 29 05                                ROOM1141 @0x00D08 Cut_chg  -> Cut_chg 5: Cut 0 blickt nach Suedwesten (Ziel (-17202,-26058)), der Platz am Gemaelde liegt im Bild von Cut 5
+ *   +0146 2b 28 00 00                          ROOM1141 @0x00D0A Message_on  -> Port-Nachricht 40 = msg 2 ohne "Same here..." (Nachtrag 14 Punkt 5)
+ *   +014A 2e 01 00                             ROOM1141 @0x00D0E Work_set
+ *   +014D 00                                   ROOM1141 @0x00D11 Nop
+ *   +014E 3f 00 12 00                          ROOM1141 @0x00D12 Plc_motion
+ *   +0152 09 0a 19 00                          ROOM1141 @0x00D16 Sleep
+ *   +0156 3f 00 12 00                          ROOM1141 @0x00D1A Plc_motion
+ *   +015A 43 00 80 00                          ROOM1141 @0x00D1E Plc_flg
+ *   +015E 09 0a 19 00                          ROOM1141 @0x00D22 Sleep
+ *   +0162 3f 00 13 00                          ROOM1141 @0x00D26 Plc_motion
+ *   +0166 09 0a 19 00                          ROOM1141 @0x00D2A Sleep
+ *   +016A 3f 00 13 00                          ROOM1141 @0x00D2E Plc_motion
+ *   +016E 43 00 80 00                          ROOM1141 @0x00D32 Plc_flg
+ *   +0172 09 0a 19 00                          ROOM1141 @0x00D36 Sleep
+ *   +0176 3f 00 18 00                          ROOM1141 @0x00D3A Plc_motion
+ *   +017A 09 0a 14 00                          ROOM1141 @0x00D3E Sleep
+ *   +017E 2b 03 00 00                          ROOM1141 @0x00D42 Message_on
+ *   +0182 2e 02 00                             ROOM1141 @0x00D46 Work_set
+ *   +0185 00                                   ROOM1141 @0x00D49 Nop
+ *   +0186 3f 00 13 00                          ROOM1141 @0x00D4A Plc_motion
+ *   +018A 09 0a 19 00                          ROOM1141 @0x00D4E Sleep
+ *   +018E 3f 00 13 00                          ROOM1141 @0x00D52 Plc_motion
+ *   +0192 43 00 80 00                          ROOM1141 @0x00D56 Plc_flg
+ *   +0196 09 0a 19 00                          ROOM1141 @0x00D5A Sleep
+ *   +019A 3f 00 0f 00                          ROOM1141 @0x00D5E Plc_motion
+ *   +019E 09 0a 19 00                          ROOM1141 @0x00D62 Sleep
+ *   +01A2 3f 00 0f 00                          ROOM1141 @0x00D66 Plc_motion
+ *   +01A6 43 00 80 00                          ROOM1141 @0x00D6A Plc_flg
+ *   +01AA 09 0a 19 00                          ROOM1141 @0x00D6E Sleep
+ *   +01AE 3f 00 17 00                          ROOM1141 @0x00D72 Plc_motion
+ *   +01B2 09 0a 14 00                          ROOM1141 @0x00D76 Sleep
+ *   +01B6 2b 04 00 00                          ROOM1141 @0x00D7A Message_on
+ *   +01BA 2e 01 00                             ROOM1141 @0x00D7E Work_set
+ *   +01BD 00                                   ROOM1141 @0x00D81 Nop
+ *   +01BE 3f 00 10 00                          ROOM1141 @0x00D82 Plc_motion
+ *   +01C2 09 0a 32 00                          ROOM1141 @0x00D86 Sleep
+ *   +01C6 3f 00 10 00                          ROOM1141 @0x00D8A Plc_motion
+ *   +01CA 43 00 80 00                          ROOM1141 @0x00D8E Plc_flg
+ *   +01CE 09 0a 32 00                          ROOM1141 @0x00D92 Sleep
+ *   +01D2 3f 00 18 00                          ROOM1141 @0x00D96 Plc_motion
+ *   +01D6 09 0a 14 00                          ROOM1141 @0x00D9A Sleep
+ *   +01DA 2b 05 00 00                          ROOM1141 @0x00D9E Message_on
+ *   +01DE 2e 02 00                             ROOM1141 @0x00DA2 Work_set
+ *   +01E1 00                                   ROOM1141 @0x00DA5 Nop
+ *   +01E2 3f 00 0f 00                          ROOM1141 @0x00DA6 Plc_motion
+ *   +01E6 09 0a 19 00                          ROOM1141 @0x00DAA Sleep
+ *   +01EA 3f 00 0f 00                          ROOM1141 @0x00DAE Plc_motion
+ *   +01EE 43 00 80 00                          ROOM1141 @0x00DB2 Plc_flg
+ *   +01F2 09 0a 19 00                          ROOM1141 @0x00DB6 Sleep
+ *   +01F6 3f 00 11 00                          ROOM1141 @0x00DBA Plc_motion
+ *   +01FA 09 0a 32 00                          ROOM1141 @0x00DBE Sleep
+ *   +01FE 3f 00 17 00                          ROOM1141 @0x00DC2 Plc_motion
+ *   +0202 09 0a 14 00                          ROOM1141 @0x00DC6 Sleep
+ *   +0206 2b 06 00 00                          ROOM1141 @0x00DCA Message_on
+ *   +020A 2e 01 00                             ROOM1141 @0x00DCE Work_set
+ *   +020D 00                                   ROOM1141 @0x00DD1 Nop
+ *   +020E 41 01 cc f7 00 00 f6 d7 64 00        ROOM1141 @0x00DD2 Plc_neck  -> Blickpunkt (-2100,-10250) statt (-1300,-15500)
+ *   +0218 09 0a 05 00                          ROOM1141 @0x00DDC Sleep
+ *   +021C 2e 02 00                             ROOM1141 @0x00DE0 Work_set
+ *   +021F 00                                   ROOM1141 @0x00DE3 Nop
+ *   +0220 41 01 64 00 00 00 f6 d7 64 00        ROOM1141 @0x00DE4 Plc_neck  -> Blickpunkt (100,-10250) statt (-850,-13350)
+ *   +022A 09 0a 05 00                          ROOM1141 @0x00DEE Sleep
+ *   +022E 2e 01 00                             ROOM1141 @0x00DF2 Work_set
+ *   +0231 00                                   ROOM1141 @0x00DF5 Nop
+ *   +0232 40 00 09 00 cc f7 f6 d7              ROOM1141 @0x00DF6 Plc_dest  -> Ziel (-2100,-10250) statt (-1300,-15500)
+ *   +023A 09 0a 05 00                          ROOM1141 @0x00DFE Sleep
+ *   +023E 2e 02 00                             ROOM1141 @0x00E02 Work_set
+ *   +0241 00                                   ROOM1141 @0x00E05 Nop
+ *   +0242 40 00 09 01 64 00 f6 d7              ROOM1141 @0x00E06 Plc_dest  -> Ziel (100,-10250) statt (-850,-13350)
+ *   +024A 18 04                                ROOM1141 @0x00E0E Gosub
+ *   +024C 09 0a 56 00                          ROOM1141 @0x00E10 Sleep
+ *   +0250 2b 07 00 00                          ROOM1141 @0x00E14 Message_on
+ *   +0254 3f 00 11 00                          ROOM1141 @0x00E18 Plc_motion
+ *   +0258 09 0a 32 00                          ROOM1141 @0x00E1C Sleep
+ *   +025C 3f 00 14 00                          ROOM1141 @0x00E20 Plc_motion
+ *   +0260 09 0a 19 00                          ROOM1141 @0x00E24 Sleep
+ *   +0264 3f 00 14 00                          ROOM1141 @0x00E28 Plc_motion
+ *   +0268 43 00 80 00                          ROOM1141 @0x00E2C Plc_flg
+ *   +026C 09 0a 1a 00                          ROOM1141 @0x00E30 Sleep
+ *   +0270 2e 02 01                             ROOM1141 @0x00E34 Work_set
+ *   +0273 00                                   ROOM1141 @0x00E37 Nop
+ *   +0274 32 00 1c 25 00 00 08 d5              ROOM1141 @0x00E38 Pos_set
+ *   +027C 34 0c 10 00                          ROOM1141 @0x00E40 Member_set
+ *   +0280 09 0a 01 00                          ROOM1141 @0x00E44 Sleep
+ *   +0284 2e 02 02                             ROOM1141 @0x00E48 Work_set
+ *   +0287 00                                   ROOM1141 @0x00E4B Nop
+ *   +0288 32 00 a6 27 00 00 dc ba              ROOM1141 @0x00E4C Pos_set
+ *   +0290 34 0c 10 00                          ROOM1141 @0x00E54 Member_set
+ *   +0294 09 0a 0a 00                          ROOM1141 @0x00E58 Sleep
+ *   +0298 54 00 01 00 00 00                    ROOM1141 @0x00E5C Sce_bgm_control
+ *   +029E 29 02                                ROOM1141 @0x00E62 Cut_chg
+ *   +02A0 2b 08 00 00                          ROOM1141 @0x00E64 Message_on
+ *   +02A4 09 0a 65 00                          ROOM1141 @0x00E68 Sleep
+ *   +02A8 2e 02 01                             ROOM1141 @0x00E6C Work_set
+ *   +02AB 00                                   ROOM1141 @0x00E6F Nop
+ *   +02AC 34 0c 30 00                          ROOM1141 @0x00E70 Member_set
+ *   +02B0 2e 02 02                             ROOM1141 @0x00E74 Work_set
+ *   +02B3 00                                   ROOM1141 @0x00E77 Nop
+ *   +02B4 34 0c 30 00                          ROOM1141 @0x00E78 Member_set
+ *   +02B8 09 0a 01 00                          ROOM1141 @0x00E7C Sleep
+ *   +02BC 29 05                                ROOM1141 @0x00E80 Cut_chg  -> Cut_chg 5 (wie @0x00D08)
+ *   +02BE 2e 02 00                             ROOM1141 @0x00E82 Work_set
+ *   +02C1 00                                   ROOM1141 @0x00E85 Nop
+ *   +02C2 41 01 c0 e0 00 00 f6 d7 64 00        ROOM1141 @0x00E86 Plc_neck  -> Blickpunkt (-8000,-10250) statt (-7200,-15500)
+ *   +02CC 09 0a 01 00                          ROOM1141 @0x00E90 Sleep
+ *   +02D0 40 00 09 01 c0 e0 f6 d7              ROOM1141 @0x00E94 Plc_dest  -> Ziel (-8000,-10250) statt (-7200,-15500)
+ *   +02D8 09 0a 05 00                          ROOM1141 @0x00E9C Sleep
+ *   +02DC 2e 01 00                             ROOM1141 @0x00EA0 Work_set
+ *   +02DF 00                                   ROOM1141 @0x00EA3 Nop
+ *   +02E0 41 01 58 e9 00 00 f6 d7 64 00        ROOM1141 @0x00EA4 Plc_neck  -> Blickpunkt (-5800,-10250) statt (-6750,-13350)
+ *   +02EA 09 0a 01 00                          ROOM1141 @0x00EAE Sleep
+ *   +02EE 40 00 09 00 58 e9 f6 d7              ROOM1141 @0x00EB2 Plc_dest  -> Ziel (-5800,-10250) statt (-6750,-13350)
+ *   +02F6 18 03                                ROOM1141 @0x00EBA Gosub
+ *   +02F8 2b 09 00 00                          ROOM1141 @0x00EBC Message_on
+ *   +02FC 2e 02 00                             ROOM1141 @0x00EC0 Work_set
+ *   +02FF 00                                   ROOM1141 @0x00EC3 Nop
+ *   +0300 3f 00 0f 00                          ROOM1141 @0x00EC4 Plc_motion
+ *   +0304 09 0a 19 00                          ROOM1141 @0x00EC8 Sleep
+ *   +0308 3f 00 0f 00                          ROOM1141 @0x00ECC Plc_motion
+ *   +030C 43 00 80 00                          ROOM1141 @0x00ED0 Plc_flg
+ *   +0310 09 0a 19 00                          ROOM1141 @0x00ED4 Sleep
+ *   +0314 3f 00 10 00                          ROOM1141 @0x00ED8 Plc_motion
+ *   +0318 09 0a 19 00                          ROOM1141 @0x00EDC Sleep
+ *   +031C 3f 00 10 00                          ROOM1141 @0x00EE0 Plc_motion
+ *   +0320 43 00 80 00                          ROOM1141 @0x00EE4 Plc_flg
+ *   +0324 09 0a 1a 00                          ROOM1141 @0x00EE8 Sleep
+ *   +0328 2b 0a 00 00                          ROOM1141 @0x00EEC Message_on
+ *   +032C 2e 01 00                             ROOM1141 @0x00EF0 Work_set
+ *   +032F 00                                   ROOM1141 @0x00EF3 Nop
+ *   +0330 3f 00 11 00                          ROOM1141 @0x00EF4 Plc_motion
+ *   +0334 09 0a 65 00                          ROOM1141 @0x00EF8 Sleep
+ *   +0338 2b 0b 00 00                          ROOM1141 @0x00EFC Message_on
+ *   +033C 2e 02 00                             ROOM1141 @0x00F00 Work_set
+ *   +033F 00                                   ROOM1141 @0x00F03 Nop
+ *   +0340 3f 00 0f 00                          ROOM1141 @0x00F04 Plc_motion
+ *   +0344 09 0a 19 00                          ROOM1141 @0x00F08 Sleep
+ *   +0348 3f 00 0f 00                          ROOM1141 @0x00F0C Plc_motion
+ *   +034C 43 00 80 00                          ROOM1141 @0x00F10 Plc_flg
+ *   +0350 09 0a 19 00                          ROOM1141 @0x00F14 Sleep
+ *   +0354 3f 00 10 00                          ROOM1141 @0x00F18 Plc_motion
+ *   +0358 09 0a 19 00                          ROOM1141 @0x00F1C Sleep
+ *   +035C 3f 00 10 00                          ROOM1141 @0x00F20 Plc_motion
+ *   +0360 43 00 80 00                          ROOM1141 @0x00F24 Plc_flg
+ *   +0364 09 0a 1a 00                          ROOM1141 @0x00F28 Sleep
+ *   +0368 2e 01 00                             ROOM1141 @0x00F2C Work_set
+ *   +036B 00                                   ROOM1141 @0x00F2F Nop
+ *   +036C 41 00 00 00 00 00 00 00 64 00        ROOM1141 @0x00F30 Plc_neck
+ *   +0376 09 0a 01 00                          ROOM1141 @0x00F3A Sleep
+ *   +037A 41 03 01 00 00 00 00 00 00 3c        ROOM1141 @0x00F3E Plc_neck
+ *   +0384 09 0a 1e 00                          ROOM1141 @0x00F48 Sleep
+ *   +0388 42                                   ROOM1141 @0x00F4C Plc_ret
+ *   +0389 00                                   ROOM1141 @0x00F4D Nop
+ *   +038A 46 00 01 31 29 00 ff ff 00 00        Aot_reset Slot 0 (Tuer -> 1131) -> Text msg 41 (Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`)
+ *   +0394 46 02 01 31 29 00 ff ff 00 00        Aot_reset Slot 2 (Riegel im Rechteck der Dachtuer main00 @0x00A9A; Slot 1 ist bei zu Riegel sce 0 @0x00A7A) -> msg 41
+ *   +039E 22 02 07 00                          ROOM1141 @0x00F4E Set (sub02-Schluss: Steuerung zurueck, Gorillas, John in die Ecke)
+ *   +03A2 22 01 1b 00                          ROOM1141 @0x00F52 Set
+ *   +03A6 3c 01                                ROOM1141 @0x00F56 Cut_auto
+ *   +03A8 2e 02 01                             ROOM1141 @0x00F58 Work_set
+ *   +03AB 00                                   ROOM1141 @0x00F5B Nop
+ *   +03AC 32 00 84 03 00 00 2a ae              ROOM1141 @0x00F5C Pos_set
+ *   +03B4 34 0c 10 00                          ROOM1141 @0x00F64 Member_set
+ *   +03B8 2e 02 02                             ROOM1141 @0x00F68 Work_set
+ *   +03BB 00                                   ROOM1141 @0x00F6B Nop
+ *   +03BC 32 00 50 14 00 00 00 b5              ROOM1141 @0x00F6C Pos_set
+ *   +03C4 34 0c 10 00                          ROOM1141 @0x00F74 Member_set
+ *   +03C8 09 0a 01 00                          ROOM1141 @0x00F78 Sleep
+ *   +03CC 2e 02 00                             ROOM1141 @0x00F7C Work_set
+ *   +03CF 00                                   ROOM1141 @0x00F7F Nop
+ *   +03D0 41 00 00 00 00 00 00 00 64 00        ROOM1141 @0x00F80 Plc_neck
+ *   +03DA 09 0a 01 00                          ROOM1141 @0x00F8A Sleep
+ *   +03DE 40 00 05 01 82 e2 04 ac              ROOM1141 @0x00F8E Plc_dest
+ *   +03E6 18 04                                ROOM1141 @0x00F96 Gosub
+ *   +03E8 40 00 09 01 82 e2 dc a1              ROOM1141 @0x00F98 Plc_dest
+ *   +03F0 18 04                                ROOM1141 @0x00FA0 Gosub
+ *   +03F2 11 00 08 00                          Do  (Warteschleife Gorillas leben (sub01 @0x00C0C loescht (4,0xF2)); Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
+ *   +03F6 02 00                                Evt_next + Nop
+ *   +03F8 12 04                                Edwhile
+ *   +03FA 21 04 f2 01                          Ck(4,0xF2)==1
+ *   +03FE 09 0a 1e 00                          Sleep 30 (Form ROOM1021 sub06 @0x021FE)
+ *   +0402 22 02 07 01                          Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)
+ *   +0406 22 01 1b 01                          Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)
+ *   +040A 29 07                                Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand
+ *   +040C 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
+ *   +0410 40 00 05 01 4a e3 50 e2              Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)
+ *   +0418 18 04                                Gosub sub04 (Form sub02 @0x00F96)
+ *   +041A 40 00 05 01 4a e3 44 fd              Plc_dest RUN John -> vor die Dachtuer
+ *   +0422 18 04                                Gosub sub04
+ *   +0424 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) RE2-Tuerbank DOOR1A Satz 0 = oeffnen (Dachtuer 1141 = DOOR1A, tuer_zuordnung.inc S064; Form ROOM10D0 sub21 @0x01A02)
+ *   +0430 09 0a 0f 00                          Sleep 15 (Form ROOM1131 sub02 @0x00A54)
+ *   +0434 32 00 d0 8a 00 00 d0 8a              Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080) — ausserhalb jedes Bildes
+ *   +043C 36 0e 01 00 00 00 00 00 00 00 00 00  Se_on(0x0E,1) DOOR1A zufallen
+ *   +0448 22 09 43 01                          Set(9,67)=1 John hat 1141 verlassen (VERTRAG 1.1)
+ *   +044C 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 — John hat den Riegel beim Hinausgehen geoeffnet)
+ *   +0456 22 04 c3 01                          ROOM1141 @0x00FD2 Set
+ *   +045A 46 01 02 31 4f aa 00 00 8f 9b        ROOM1141 @0x00FDC Aot_reset (sub05: Dachtuer Slot 1 scharf)
+ *   +0464 46 00 02 31 ec fa 00 00 82 c9        Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14)
+ *   +046E 09 0a 0f 00                          Sleep 15
+ *   +0472 3c 01                                Cut_auto 1 (Form ROOM1141 sub06 @0x010D0)
+ *   +0474 22 02 07 00                          Set(2,7)=0 (Form sub06 @0x010C8)
+ *   +0478 22 01 1b 00                          Set(1,0x1B)=0 (Form sub06 @0x010CC)
+ *   +047C 08 00                                Endif = Ende des Ja-Zweigs (Form sub06 @0x010D8)
+ *   +047E 01 00                                Evt_end = sub06 @0x010DA
  */
-static const uint8_t k_r38f_p_riegel[1106] = {
-    0x54,0x00,0x02,0x00,0x00,0x00,0x46,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x22,0x04,0xc3,0x01,0x2b,0x0c,0xff,0xff,0x02,0x00,0x46,0x01,0x02,0x31,0x4f,0xaa,
-    0x00,0x00,0x8f,0x9b,0x22,0x04,0xf0,0x00,0x22,0x04,0xf2,0x01,0x22,0x03,0xc2,0x01,
-    0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x44,0x01,0x27,0x30,0x00,0x00,0x00,0xcb,
-    0xa6,0x27,0x00,0x00,0x6c,0x20,0x00,0x00,0x00,0x08,0x00,0x00,0x44,0x02,0x27,0x30,
-    0x00,0x00,0x00,0xcc,0xa6,0x27,0x00,0x00,0xa8,0x2f,0x00,0x00,0x00,0x08,0x00,0x00,
-    0x29,0x06,0x2e,0x01,0x00,0x00,0x40,0x00,0x08,0x00,0x06,0xe6,0xd8,0xf5,0x11,0x00,
-    0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x05,0x00,0x00,0x44,0x00,0x49,0x40,0x00,0x00,
-    0x00,0xff,0x4a,0xe3,0x00,0x00,0x70,0xfe,0x00,0x00,0x00,0x04,0x00,0x00,0x36,0x0e,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x2e,0x02,0x00,0x00,0x40,0x00,
-    0x05,0x01,0x4a,0xe3,0x50,0xe2,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x05,
-    0x01,0x00,0x29,0x07,0x40,0x00,0x05,0x01,0xe0,0xe3,0x74,0xc3,0x2e,0x01,0x00,0x00,
-    0x40,0x00,0x05,0x00,0xa2,0xe5,0xda,0xcb,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,
-    0x21,0x05,0x00,0x00,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x05,0x01,0x00,
-    0x2e,0x02,0x00,0x00,0x40,0x00,0x09,0x01,0xa2,0xe5,0xda,0xcb,0x2e,0x01,0x00,0x00,
-    0x40,0x00,0x09,0x00,0xe0,0xe3,0x74,0xc3,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,
-    0x21,0x05,0x00,0x00,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x05,0x01,0x00,
-    0x29,0x00,0x2b,0x28,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x00,0x12,0x00,0x09,0x0a,
-    0x19,0x00,0x3f,0x00,0x12,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,
-    0x13,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x13,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,
-    0x19,0x00,0x3f,0x00,0x18,0x00,0x09,0x0a,0x14,0x00,0x2b,0x03,0x00,0x00,0x2e,0x02,
-    0x00,0x00,0x3f,0x00,0x13,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x13,0x00,0x43,0x00,
-    0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,
-    0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x17,0x00,0x09,0x0a,
-    0x14,0x00,0x2b,0x04,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x00,0x10,0x00,0x09,0x0a,
-    0x32,0x00,0x3f,0x00,0x10,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,
-    0x18,0x00,0x09,0x0a,0x14,0x00,0x2b,0x05,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,
-    0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,
-    0x19,0x00,0x3f,0x00,0x11,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x17,0x00,0x09,0x0a,
-    0x14,0x00,0x2b,0x06,0x00,0x00,0x2e,0x01,0x00,0x00,0x41,0x01,0xae,0xfc,0x00,0x00,
-    0xda,0xcb,0x64,0x00,0x09,0x0a,0x05,0x00,0x2e,0x02,0x00,0x00,0x41,0x01,0xec,0xfa,
-    0x00,0x00,0x74,0xc3,0x64,0x00,0x09,0x0a,0x05,0x00,0x2e,0x01,0x00,0x00,0x40,0x00,
-    0x09,0x00,0xae,0xfc,0xda,0xcb,0x09,0x0a,0x05,0x00,0x2e,0x02,0x00,0x00,0x40,0x00,
-    0x09,0x01,0xec,0xfa,0x74,0xc3,0x18,0x04,0x09,0x0a,0x56,0x00,0x2b,0x07,0x00,0x00,
-    0x3f,0x00,0x11,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x14,0x00,0x09,0x0a,0x19,0x00,
-    0x3f,0x00,0x14,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x1a,0x00,0x2e,0x02,0x01,0x00,
-    0x32,0x00,0x1c,0x25,0x00,0x00,0x08,0xd5,0x34,0x0c,0x10,0x00,0x09,0x0a,0x01,0x00,
-    0x2e,0x02,0x02,0x00,0x32,0x00,0xa6,0x27,0x00,0x00,0xdc,0xba,0x34,0x0c,0x10,0x00,
-    0x09,0x0a,0x0a,0x00,0x54,0x00,0x01,0x00,0x00,0x00,0x29,0x02,0x2b,0x08,0x00,0x00,
-    0x09,0x0a,0x65,0x00,0x2e,0x02,0x01,0x00,0x34,0x0c,0x30,0x00,0x2e,0x02,0x02,0x00,
-    0x34,0x0c,0x30,0x00,0x09,0x0a,0x01,0x00,0x29,0x00,0x2e,0x02,0x00,0x00,0x41,0x01,
-    0xa2,0xe5,0x00,0x00,0xda,0xcb,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,0x09,0x01,
-    0xa2,0xe5,0xda,0xcb,0x09,0x0a,0x05,0x00,0x2e,0x01,0x00,0x00,0x41,0x01,0xe0,0xe3,
-    0x00,0x00,0x74,0xc3,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,0x09,0x00,0xe0,0xe3,
-    0x74,0xc3,0x18,0x03,0x2b,0x09,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x0f,0x00,
-    0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,
-    0x3f,0x00,0x10,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,0x43,0x00,0x80,0x00,
-    0x09,0x0a,0x1a,0x00,0x2b,0x0a,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x00,0x11,0x00,
-    0x09,0x0a,0x65,0x00,0x2b,0x0b,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x0f,0x00,
-    0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,
-    0x3f,0x00,0x10,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,0x43,0x00,0x80,0x00,
-    0x09,0x0a,0x1a,0x00,0x2e,0x01,0x00,0x00,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x64,0x00,0x09,0x0a,0x01,0x00,0x41,0x03,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x3c,
-    0x09,0x0a,0x1e,0x00,0x42,0x00,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x3c,0x01,
-    0x2e,0x02,0x01,0x00,0x32,0x00,0x84,0x03,0x00,0x00,0x2a,0xae,0x34,0x0c,0x10,0x00,
-    0x2e,0x02,0x02,0x00,0x32,0x00,0x50,0x14,0x00,0x00,0x00,0xb5,0x34,0x0c,0x10,0x00,
-    0x09,0x0a,0x01,0x00,0x2e,0x02,0x00,0x00,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,0x05,0x01,0x82,0xe2,0x04,0xac,0x18,0x04,
-    0x40,0x00,0x09,0x01,0x82,0xe2,0xdc,0xa1,0x18,0x04,0x46,0x00,0x01,0x31,0x29,0x00,
-    0xff,0xff,0x00,0x00,0x46,0x01,0x01,0x31,0x29,0x00,0xff,0xff,0x00,0x00,0x11,0x00,
-    0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x04,0xf2,0x01,0x09,0x0a,0x1e,0x00,0x22,0x02,
-    0x07,0x01,0x22,0x01,0x1b,0x01,0x29,0x05,0x2e,0x02,0x00,0x00,0x40,0x00,0x05,0x01,
-    0x4a,0xe3,0x50,0xe2,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x05,0x01,0x00,
-    0x29,0x06,0x40,0x00,0x05,0x01,0x4a,0xe3,0x44,0xfd,0x11,0x00,0x08,0x00,0x02,0x00,
-    0x12,0x04,0x21,0x05,0x01,0x00,0x36,0x0e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x09,0x0a,0x0f,0x00,0x32,0x00,0xd0,0x8a,0x00,0x00,0xd0,0x8a,0x36,0x0e,
-    0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x09,0x43,0x01,0x46,0x00,
-    0x02,0x31,0xec,0xfa,0x00,0x00,0x82,0xc9,0x46,0x01,0x02,0x31,0x4f,0xaa,0x00,0x00,
-    0x8f,0x9b,0x09,0x0a,0x0f,0x00,0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,
-    0x01,0x00,
+static const uint8_t k_r38f_p_befreiung[1152] = {
+    0x2b,0x0d,0x80,0xff,0x02,0x00,0x06,0x00,0x74,0x04,0x21,0x0c,0x1f,0x00,0x22,0x03,
+    0x6a,0x01,0x46,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x02,0x07,0x01,
+    0x22,0x01,0x1b,0x01,0x29,0x05,0x36,0x3b,0x0c,0x00,0x01,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x09,0x0a,0x0f,0x00,0x36,0x3b,0x0a,0x00,0x03,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x09,0x0a,0x0f,0x00,0x2e,0x03,0x00,0x00,0x2f,0x01,0x00,0x00,0x2f,0x07,
+    0xfe,0xff,0x0d,0x00,0x06,0x00,0x14,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x0d,0x00,
+    0x2c,0x00,0x0a,0x00,0x0d,0x00,0x04,0x00,0x0a,0x00,0x30,0x02,0x0e,0x00,0x2f,0x07,
+    0x03,0x00,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x2f,0x07,
+    0xfd,0xff,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x0e,0x00,
+    0x36,0x3b,0x0b,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0a,0x00,
+    0x37,0x00,0x0d,0x00,0x37,0x01,0x0d,0x00,0x37,0x02,0x0d,0x00,0x37,0x03,0x0d,0x00,
+    0x37,0x04,0x0d,0x00,0x39,0x00,0x0d,0x00,0x39,0x01,0x0d,0x00,0x39,0x02,0x0d,0x00,
+    0x39,0x03,0x0d,0x00,0x39,0x04,0x0d,0x00,0x54,0x00,0x02,0x00,0x00,0x00,0x22,0x04,
+    0xf0,0x00,0x22,0x04,0xf2,0x01,0x22,0x03,0xc2,0x01,0x44,0x01,0x27,0x30,0x00,0x00,
+    0x00,0xcb,0xa6,0x27,0x00,0x00,0x6c,0x20,0x00,0x00,0x00,0x08,0x00,0x00,0x44,0x02,
+    0x27,0x30,0x00,0x00,0x00,0xcc,0xa6,0x27,0x00,0x00,0xa8,0x2f,0x00,0x00,0x00,0x08,
+    0x00,0x00,0x2e,0x02,0x00,0x00,0x40,0x00,0x05,0x01,0x58,0xe9,0xf6,0xd7,0x18,0x04,
+    0x2e,0x01,0x00,0x00,0x40,0x00,0x04,0x00,0xc0,0xe0,0xf6,0xd7,0x18,0x03,0x40,0x00,
+    0x09,0x00,0x58,0xe9,0xf6,0xd7,0x18,0x03,0x2e,0x02,0x00,0x00,0x41,0x01,0xc0,0xe0,
+    0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,0x09,0x01,0xc0,0xe0,
+    0xf6,0xd7,0x18,0x04,0x29,0x05,0x2b,0x28,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x00,
+    0x12,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x12,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,
+    0x19,0x00,0x3f,0x00,0x13,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x13,0x00,0x43,0x00,
+    0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x18,0x00,0x09,0x0a,0x14,0x00,0x2b,0x03,
+    0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x13,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,
+    0x13,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x09,0x0a,
+    0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,
+    0x17,0x00,0x09,0x0a,0x14,0x00,0x2b,0x04,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x00,
+    0x10,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x10,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,
+    0x32,0x00,0x3f,0x00,0x18,0x00,0x09,0x0a,0x14,0x00,0x2b,0x05,0x00,0x00,0x2e,0x02,
+    0x00,0x00,0x3f,0x00,0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,
+    0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x11,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,
+    0x17,0x00,0x09,0x0a,0x14,0x00,0x2b,0x06,0x00,0x00,0x2e,0x01,0x00,0x00,0x41,0x01,
+    0xcc,0xf7,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x05,0x00,0x2e,0x02,0x00,0x00,
+    0x41,0x01,0x64,0x00,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x05,0x00,0x2e,0x01,
+    0x00,0x00,0x40,0x00,0x09,0x00,0xcc,0xf7,0xf6,0xd7,0x09,0x0a,0x05,0x00,0x2e,0x02,
+    0x00,0x00,0x40,0x00,0x09,0x01,0x64,0x00,0xf6,0xd7,0x18,0x04,0x09,0x0a,0x56,0x00,
+    0x2b,0x07,0x00,0x00,0x3f,0x00,0x11,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x14,0x00,
+    0x09,0x0a,0x19,0x00,0x3f,0x00,0x14,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x1a,0x00,
+    0x2e,0x02,0x01,0x00,0x32,0x00,0x1c,0x25,0x00,0x00,0x08,0xd5,0x34,0x0c,0x10,0x00,
+    0x09,0x0a,0x01,0x00,0x2e,0x02,0x02,0x00,0x32,0x00,0xa6,0x27,0x00,0x00,0xdc,0xba,
+    0x34,0x0c,0x10,0x00,0x09,0x0a,0x0a,0x00,0x54,0x00,0x01,0x00,0x00,0x00,0x29,0x02,
+    0x2b,0x08,0x00,0x00,0x09,0x0a,0x65,0x00,0x2e,0x02,0x01,0x00,0x34,0x0c,0x30,0x00,
+    0x2e,0x02,0x02,0x00,0x34,0x0c,0x30,0x00,0x09,0x0a,0x01,0x00,0x29,0x05,0x2e,0x02,
+    0x00,0x00,0x41,0x01,0xc0,0xe0,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x01,0x00,
+    0x40,0x00,0x09,0x01,0xc0,0xe0,0xf6,0xd7,0x09,0x0a,0x05,0x00,0x2e,0x01,0x00,0x00,
+    0x41,0x01,0x58,0xe9,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,
+    0x09,0x00,0x58,0xe9,0xf6,0xd7,0x18,0x03,0x2b,0x09,0x00,0x00,0x2e,0x02,0x00,0x00,
+    0x3f,0x00,0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,
+    0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,
+    0x43,0x00,0x80,0x00,0x09,0x0a,0x1a,0x00,0x2b,0x0a,0x00,0x00,0x2e,0x01,0x00,0x00,
+    0x3f,0x00,0x11,0x00,0x09,0x0a,0x65,0x00,0x2b,0x0b,0x00,0x00,0x2e,0x02,0x00,0x00,
+    0x3f,0x00,0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,
+    0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,
+    0x43,0x00,0x80,0x00,0x09,0x0a,0x1a,0x00,0x2e,0x01,0x00,0x00,0x41,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x64,0x00,0x09,0x0a,0x01,0x00,0x41,0x03,0x01,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x3c,0x09,0x0a,0x1e,0x00,0x42,0x00,0x46,0x00,0x01,0x31,0x29,0x00,
+    0xff,0xff,0x00,0x00,0x46,0x02,0x01,0x31,0x29,0x00,0xff,0xff,0x00,0x00,0x22,0x02,
+    0x07,0x00,0x22,0x01,0x1b,0x00,0x3c,0x01,0x2e,0x02,0x01,0x00,0x32,0x00,0x84,0x03,
+    0x00,0x00,0x2a,0xae,0x34,0x0c,0x10,0x00,0x2e,0x02,0x02,0x00,0x32,0x00,0x50,0x14,
+    0x00,0x00,0x00,0xb5,0x34,0x0c,0x10,0x00,0x09,0x0a,0x01,0x00,0x2e,0x02,0x00,0x00,
+    0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,
+    0x05,0x01,0x82,0xe2,0x04,0xac,0x18,0x04,0x40,0x00,0x09,0x01,0x82,0xe2,0xdc,0xa1,
+    0x18,0x04,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x04,0xf2,0x01,0x09,0x0a,
+    0x1e,0x00,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x29,0x07,0x2e,0x02,0x00,0x00,
+    0x40,0x00,0x05,0x01,0x4a,0xe3,0x50,0xe2,0x18,0x04,0x40,0x00,0x05,0x01,0x4a,0xe3,
+    0x44,0xfd,0x18,0x04,0x36,0x0e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x09,0x0a,0x0f,0x00,0x32,0x00,0xd0,0x8a,0x00,0x00,0xd0,0x8a,0x36,0x0e,0x01,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x09,0x43,0x01,0x46,0x02,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x04,0xc3,0x01,0x46,0x01,0x02,0x31,0x4f,0xaa,
+    0x00,0x00,0x8f,0x9b,0x46,0x00,0x02,0x31,0xec,0xfa,0x00,0x00,0x82,0xc9,0x09,0x0a,
+    0x0f,0x00,0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x08,0x00,0x01,0x00,
 };
 
 /* ROOM1021 msg 40: msg 9 @0x024FB ("He's dead.[Seite]Poor Roy...") + Seite `02 00` + NUTZER-VORGABE  [Zeilenbreiten 246, 153 px] */

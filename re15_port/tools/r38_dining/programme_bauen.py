@@ -19,15 +19,27 @@ PROGRAMME
              Bank = Port-Bank 0x3B (die snd0-Bank von ROOM1131, die einzige mit den Rolladen-Wellen).
   LEICHE1021 ROOM1021 Ereignis 6 (Roys Leiche): sub06 @0x021EC, Message_on 9 @0x02202 -> Port-Nachricht 40
              (= msg 9 + Seite + NUTZER-VORGABE "There's an empty key tag on his belt. / It reads "Dining Room".").
-  HAEMMERN   ROOM1141 Phase H (John sitzt auf dem Dach fest): ersetzt das Evt_exec sub02 @0x00B02 beim Betreten.
+  HAEMMERN   ROOM1141 Phase H (John sitzt im Dachgang hinter dem geschlossenen Notrolladen fest): ersetzt das
+             Evt_exec sub02 @0x00B02 beim Betreten. John steht schon im Dachgang HINTER dem Rolladen (Nachtrag 2: er ist
+             da, wenn Elza den Raum betritt — kein Auftauchen): der Installer setzt den Spawn sub00 @0x00B06 vor dem
+             ersten Bild auf JOHN_GANG.
              Musik = Sce_bgm_control in der Form sub00 @0x00B4E (MAIN-Slot Play); Klopfen = RE2 ROOM1060 sub05
-             (Satz 0x0A, Sleep 30, 0x0B, Sleep 30, 0x0B, Sleep 90 ... Sleep 90, Goto) mit der Port-Bank 0x3C
+             (Satz 0x0A, Sleep 30, 0x0B, Sleep 30, 0x0B, Sleep 90 ... Sleep 90) mit der Port-Bank 0x3C
              (KLOPF1060 = RE2-ROOM1060-snd0); "Help" = Port-Bank 0x3D Satz 0 (john_help.wav) in der zweiten
-             90er-Pause. Die Schleife beendet der C-Teil beim Riegel (dining_r38.c).
-  RIEGEL     ROOM1141 Ereignis 5 in Phase H: MAIN-Stopp (Form sub01 @0x00C06) + sub05 @0x00FC8..@0x00FE5 ("You've
-             opened the lock.", Dachtuer scharf) + Einbruch Johns (PORT-WAHL-Choreografie, Formen je Zeile) +
-             sub02 @0x00D0A..@0x00FA1 mit msg 2 -> Port-Nachricht 40 und vertauschten Plaetzen (John steht, wo Elza
-             stand, und umgekehrt) + Tuersperre/Abgang Johns (PORT-WAHL, Formen je Zeile).
+             90er-Pause. Schleife = While Ck(3,0x6A)==0 (Form sub03 @0x00FA8 `0f 04 ..`, Ck sub00 @0x00B84), jede
+             Ton-Zeile in Ifel_ck Ck(3,0x6A)==0 (Form sub01 @0x00BFE `06 00 ..`): das Original-Set(3,0x6A)=1 von
+             sub06 @0x00FF6 (Antwort "ja" am Gemaelde) beendet Klopfen und Hilferuf ohne C-Eingriff.
+  BEFREIUNG  ROOM1141 Ereignis 6 in Phase H (Gemaelde-Schalter): sub06 @0x00FE8.. mit dem Rolladen-Ton wie ROLL1141,
+             ohne die Gorilla-Einfrierbloecke @0x0100E/@0x010A4 (in Phase H sind keine Gorillas da); nach den
+             Sca-Saetzen @0x0107C..@0x010A3: Musik aus (Form sub01 @0x00C06), Flags sub02 @0x00C18/@0x00C1C/@0x00C20,
+             Gorillas geparkt (sub00 @0x00B1A..@0x00B41), John laeuft aus dem Gang (sichtbar seit dem Hochfahren)
+             zu seinem Platz (Form sub02 @0x00F8E/@0x00F96), dann sub02 @0x00CD4..@0x00FA1 = Elza an ihren Platz +
+             Drehungen + Szene ab msg 2 (-> Port-Nachricht 40), Plaetze/Blick-/Drehziele auf die neuen Plaetze
+             (Original-Regel: Blickpunkt = eigener Platz + (5900,0)), Cut_chg 0 @0x00D08/@0x00E80 -> Cut 5 (Cut 0
+             blickt nach Suedwesten auf die Doppeltuer, der neue Platz liegt am Gemaelde im Bild von Cut 5);
+             Tuersperre msg 41 (Slot 0 + Riegel-Slot 2) bis die Gorillas tot sind, dann Johns Abgang durch den Gang
+             und die Dachtuer AUSSERHALB des Bildes (Cut 7 blickt nach Sueden, John laeuft auf die Kamera zu und
+             verlaesst das Bild am unteren Rand; Tuer-Toene DOOR1A im Off), Riegel-Zustand wie nach sub05.
 """
 import io, os, struct, sys
 
@@ -49,14 +61,23 @@ MSG_1021_LEICHE = 40        # RE15_R38F_MSG_1021_LEICHE
 MSG_1141_FRAGE = 40         # RE15_R38F_MSG_1141_FRAGE
 MSG_1141_SPERRE = 41        # RE15_R38F_MSG_1141_SPERRE
 BIT_JOHN_WEG = 67           # RE15_R38F_BIT_JOHN_WEG (Bank 9, VERTRAG 1.1)
-ELZA_SEITE = (-6650, -2600)     # RE15_R38F_ELZA_SEITE_X/Z   Elza weicht zurueck (Dachgang, Ostseite, 700 neben Johns Bahn)
-JOHN_TUER = (-7350, -400)       # RE15_R38F_JOHN_TUER_X/Z   Johns Spawn in der Dachtuer
-JOHN_TUER_YAW = 1024            # RE15_R38F_JOHN_TUER_YAW   Blick -Z (in den Raum)
+# ---- Nachtrag 2 (Nutzer 2026-10-16 21:33: "keine plötzlich rein poppenden Charaktere") — PORT-WAHL-Lagen ----
+JOHN_GANG = (-7124, -6150)      # RE15_R38F_JOHN_GANG_X/Z   hinter dem Rolladen: x = Prop obj 0 x (sub00 @0x00B9C+10
+                                #   `2c e4` = -7124), z im Dachgang (SCA x -8600..-5750, z -6700..-250) 550 hinter der
+                                #   Rolladen-Zelle r[13] (z -7200..-6700)
+JOHN_GANG_YAW = 1024            # RE15_R38F_JOHN_GANG_YAW   Blick -Z = zum Rolladen (pos_advance @0x800245d8:
+                                #   x += cos(yaw)*v, z -= sin(yaw)*v; 1024 = -Z)
+ELZA_PLATZ = (-8000, -10250)    # RE15_R38F_ELZA_PLATZ_X/Z  vor dem Gemaelde: Ostkante + z-Mitte der Gemaelde-Zone
+                                #   Aot slot 3 sub00 @0x00B88 (x -9000..-8000, z -11000..-9500)
+JOHN_PLATZ = (-5800, -10250)    # RE15_R38F_JOHN_PLATZ_X/Z  2200 oestlich = Original-Abstand der Dialogplaetze
+                                #   ((-7200,-15500) @0x00CD8 / (-6750,-13350) @0x00B06: 2196)
+BLICK_DX = 5900                 # Original-Regel Blickpunkt = Platz + (5900,0): (-1300,-15500) @0x00DF6 zu
+                                #   (-7200,-15500), (-850,-13350) @0x00E06 zu (-6750,-13350)
 GANG_AUSGANG = (-7350, -7600)   # RE15_R38F_GANG_X/Z        Ausgang des Dachgangs (Rolladen-Zelle z -7200..-6700)
-JOHN_PLATZ = (-7200, -15500)    # = Elzas Dialogplatz im Original (sub02 @0x00CD8)
-ELZA_PLATZ = (-6750, -13350)    # = Johns Dialogplatz im Original (sub00 @0x00B06)
 TUER_INNEN = (-7350, -700)      # RE15_R38F_TUER_INNEN_X/Z  vor der Dachtuer (Rechteck z -750..250)
 PARK = (-30000, -30000)         # ROOM11B0 main00 @0x01080 `d0 8a` (geparkt)
+ORIG_ELZA = (-7200, -15500)     # Original-Dialogplatz Elza (sub02 @0x00CD8)
+ORIG_JOHN = (-6750, -13350)     # Original-Dialogplatz John (sub00 @0x00B06)
 
 prog = []
 
@@ -160,114 +181,146 @@ def baue_leiche():
     return list(prog)
 
 
+def ifel_6a(inner, c):
+    """Ifel_ck { Ck(3,0x6A)==0  <inner> } Endif — Form ROOM1141 sub01 @0x00BFE `06 00 10 00` (Laenge = Ck + Rumpf +
+    Endif, gemessen 0x10 = 4+6+4+2 bis hinter das Endif @0x00C10), Ck = sub00 @0x00B84 `21 03 6a 00`."""
+    rumpf = 4 + len(inner) + 2
+    op(b"\x06\x00" + struct.pack("<H", rumpf), "Ifel_ck Laenge %d (Form sub01 @0x00BFE)" % rumpf)
+    op(b"\x21\x03\x6a\x00", "  Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)")
+    op(inner, "  " + c)
+    op(b"\x08\x00", "Endif = sub01 @0x00C10")
+
+
 def baue_haemmern():
     del prog[:]
+    # John steht schon im Dachgang: der Installer (dining_r38.c raum_1141) setzt den Spawn sub00 @0x00B06 nach dem
+    # Init-Lauf und VOR dem ersten Bild auf JOHN_GANG/JOHN_GANG_YAW (die Lage traegt auch dieses Werkzeug, der Riegel
+    # vergleicht sie mit include/re15_dining_r38.h).
     op([0x54, 0x00, 0x01, 0x00, 0x00, 0x00], "Sce_bgm_control MAIN Play = ROOM1141 sub00 @0x00B4E (Raum-Titel MAIN16)")
-    start = sum(len(b) for b, _ in prog)
-    se_on(BANK_KLOPFEN, 0x0A, "Se_on(0x3C,0x0A) Klopfen  = RE2 ROOM1060 sub05 +0x22 (Datei 0x0F48) Satz 0x0A")
+    kopf = len(prog)
+    op(b"\x0f\x04\x00\x00", "While (Laenge s.u.) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`")
+    op(b"\x21\x03\x6a\x00", "  Ck(3,0x6A)==0 (Schleife laeuft, solange der Rolladen zu ist)")
+    ifel_6a(bytes([0x36, BANK_KLOPFEN, 0x0A] + [0] * 9), "Se_on(0x3C,0x0A) Klopfen = RE2 ROOM1060 sub05 +0x22 (Datei 0x0F48)")
     sleep(30, "Sleep 30  = RE2 ROOM1060 sub05 +0x2E")
-    se_on(BANK_KLOPFEN, 0x0B, "Se_on(0x3C,0x0B) Klopfen  = RE2 ROOM1060 sub05 +0x32")
+    ifel_6a(bytes([0x36, BANK_KLOPFEN, 0x0B] + [0] * 9), "Se_on(0x3C,0x0B) Klopfen = RE2 ROOM1060 sub05 +0x32")
     sleep(30, "Sleep 30  = RE2 ROOM1060 sub05 +0x3E")
-    se_on(BANK_KLOPFEN, 0x0B, "Se_on(0x3C,0x0B) Klopfen  = RE2 ROOM1060 sub05 +0x4C")
+    ifel_6a(bytes([0x36, BANK_KLOPFEN, 0x0B] + [0] * 9), "Se_on(0x3C,0x0B) Klopfen = RE2 ROOM1060 sub05 +0x4C")
     sleep(90, "Sleep 90  = RE2 ROOM1060 sub05 +0x58")
-    se_on(BANK_HILFE, 0x00, "Se_on(0x3D,0) \"Help me out.\" (NUTZER-VORGABE: Help als Ton; john_help.wav)")
+    ifel_6a(bytes([0x36, BANK_HILFE, 0x00] + [0] * 9), "Se_on(0x3D,0) \"Help me out.\" (NUTZER-VORGABE: Help als Ton; john_help.wav)")
     sleep(90, "Sleep 90  = RE2 ROOM1060 sub05 +0x5E")
-    hier = sum(len(b) for b, _ in prog)
-    op(b"\x17\xff\xff\x00" + s16(start - hier), "Goto zur Klopf-Zeile = RE2 ROOM1060 sub05 +0x62 `17 ff ff 00 e0 ff`")
+    op(b"\x10\x00", "Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test; RE2 ROOM1060 sub05 +0x62 Goto)")
+    laenge = sum(len(b) for b, _ in prog[kopf + 1:])
+    prog[kopf] = (b"\x0f\x04" + struct.pack("<H", laenge),
+                  prog[kopf][1].replace("Laenge s.u.", "Laenge %d bis hinter das Ewhile" % laenge))
+    op([0x01, 0x00], "Evt_end (Rolladen offen: Klopfen und Hilferuf sind zu Ende)")
     return list(prog)
 
 
-def baue_riegel():
+def zeile_bei(raum, off):
+    """Index der von kopie() an Datei-Offset `off` eingefuegten Zeile."""
+    k = "ROOM%s @0x%05X " % (raum, off)
+    t = [i for i, (_b, c) in enumerate(prog) if c.startswith(k)]
+    if len(t) != 1:
+        sys.exit("ABBRUCH: Zeile ROOM%s @0x%05X %d mal" % (raum, off, len(t)))
+    return t[0]
+
+
+def ersetze_bei(raum, off, alt, neu, c):
+    i = zeile_bei(raum, off)
+    if prog[i][0] != bytes(alt):
+        sys.exit("ABBRUCH: ROOM%s @0x%05X ist %s statt %s" % (raum, off, prog[i][0].hex(" "), bytes(alt).hex(" ")))
+    prog[i] = (bytes(neu), prog[i][1] + "  -> " + c)
+
+
+def baue_befreiung():
     del prog[:]
-    op([0x54, 0x00, 0x02, 0x00, 0x00, 0x00], "Sce_bgm_control MAIN Stop = ROOM1141 sub01 @0x00C06")
-    kopie("1141", 0x00FC8, 0x00FE6, [0x46, 0x02], "(sub05 ohne Evt_end: Riegel auf, msg 12, Dachtuer scharf)")
-    # ---- Einbruch Johns (PORT-WAHL; Formen je Zeile) ----
-    set_flag(4, 0xF0, 0, "Set(4,0xF0)=0 = ROOM1141 sub02 @0x00C18")
-    set_flag(4, 0xF2, 1, "Set(4,0xF2)=1 = ROOM1141 sub02 @0x00C1C (Gorillas leben)")
-    set_flag(3, 0xC2, 1, "Set(3,0xC2)=1 = ROOM1141 sub02 @0x00C20 (John in ROOM1171, sub07 @0x016C4)")
-    set_flag(2, 0x07, 1, "Set(2,7)=1 Pad-Sperre = ROOM1141 sub02 @0x00C26")
-    set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken = ROOM1141 sub02 @0x00C2A")
-    kopie("1141", 0x00B1A, 0x00B42, [0x44, 0x01, 0x27, 0x30], "(Gorillas geparkt wie sub00 beim Original-Szenenstart)")
-    cut_chg(6, "Cut_chg 6 = Dachgang (Kamera (-8292,-838,-6606) -> Dachtuer)")
-    work_player()
-    dest(8, 0, ELZA_SEITE, "Plc_dest RUECKWAERTS (Modus 8) Elza weicht von der Tuer zurueck = Form ROOM1211 sub02 @0x0212A "
-                           "`40 00 08 00 ..` (Elza in der Zellen-Szene)")
-    warte(5, 0, 0, "Elza zurueckgewichen")
     d = RDT["1141"]
-    john = bytearray(d[0x00B06:0x00B1A])
-    if john[:4] != bytes([0x44, 0x00, 0x49, 0x40]):
-        sys.exit("ABBRUCH: John-Spawn @0x00B06")
-    john[8:10] = s16(JOHN_TUER[0]); john[12:14] = s16(JOHN_TUER[1]); john[16:18] = s16(JOHN_TUER_YAW)
-    op(john, "Sce_em_set John = ROOM1141 sub00 @0x00B06, Lage in der Dachtuer + Blick -Z (PORT-WAHL)")
-    se_on(BANK_TUER, 0, "Se_on(0x0E,0) RE2-Tuerbank DOOR1A Satz 0 = oeffnen (gen/szl11b0_tuerton.inc; Form ROOM10D0 sub21 @0x01A02)")
+    # ---- sub06: Frage am Gemaelde, "ja" -> Rolladen hoch (mit Ton), OHNE die Gorilla-Bloecke ----
+    kopie("1141", 0x00FE8, 0x0100E, [0x2B, 0x0D, 0x80, 0xFF], "(sub06: Gemaelde-Frage; Ja-Zweig)")
+    i_ifel = zeile_bei("1141", 0x00FEE)
+    if prog[i_ifel][0] != bytes([0x06, 0x00, 0xE8, 0x00]):
+        sys.exit("ABBRUCH: Ifel sub06 @0x00FEE")
+    rolladen_ton_a()
+    kopie("1141", 0x01032, 0x0107C, [0x2E, 0x03, 0x00], "(Work_set Prop 0 = Rolladen; Bewegung bytegleich)")
+    rolladen_ton_b()
+    kopie("1141", 0x0107C, 0x010A4, [0x37, 0x00, 0x0D, 0x00], "(Sca-Saetze: Rolladen-Zellen frei)")
+    # ---- John ist frei: Musik aus, Szenen-Flags, Gorillas geparkt, John laeuft heraus ----
+    op([0x54, 0x00, 0x02, 0x00, 0x00, 0x00], "Sce_bgm_control MAIN Stop = ROOM1141 sub01 @0x00C06 (John ist frei)")
+    kopie("1141", 0x00C18, 0x00C24, [0x22, 0x04, 0xF0, 0x00], "(sub02: Set(4,0xF0)=0 / (4,0xF2)=1 / (3,0xC2)=1)")
+    kopie("1141", 0x00B1A, 0x00B42, [0x44, 0x01, 0x27, 0x30], "(Gorillas geparkt wie sub00 beim Original-Szenenstart)")
     work_npc(0)
-    dest(5, 1, GANG_AUSGANG, "Plc_dest RUN Bit 1 zum Gang-Ausgang (Form ROOM1141 sub02 @0x00F8E `40 00 05 01`)")
-    warte(5, 1, 0, "John am Gang-Ausgang")
-    cut_chg(7, "Cut_chg 7 = Nordende, Blick nach Sueden (Original-Szenenkamera sub02 @0x00C24)")
-    dest(5, 1, JOHN_PLATZ, "Plc_dest RUN John -> (-7200,-15500) = Elzas Original-Dialogplatz")
-    work_player()
-    dest(5, 0, ELZA_PLATZ, "Plc_dest RUN Elza -> (-6750,-13350) = Johns Original-Dialogplatz (Form ROOM1171 sub02 @0x013D4)")
-    warte(5, 0, 0, "Elza am Platz")
-    warte(5, 1, 0, "John am Platz")
-    work_npc(0)
-    dest(9, 1, ELZA_PLATZ, "Plc_dest TURN John -> Elza (Form ROOM1141 sub02 @0x00C6E `40 00 09 01`)")
-    work_player()
-    dest(9, 0, JOHN_PLATZ, "Plc_dest TURN Elza -> John (Form ROOM1141 sub02 @0x00CE2 `40 00 09 00`)")
-    warte(5, 0, 0, "Elza gedreht")
-    warte(5, 1, 0, "John gedreht")
-    cut_chg(0, "Cut_chg 0 = ROOM1141 sub02 @0x00D08")
-    # ---- Original-Szene ab msg 2, Plaetze vertauscht ----
+    dest(5, 1, JOHN_PLATZ, "Plc_dest RUN John aus dem Gang an seinen Platz (Form ROOM1141 sub02 @0x00F8E `40 00 05 01`)")
+    op([0x18, 0x04], "Gosub sub04 = ROOM1141 sub02 @0x00F96 (warten, bis John steht)")
+    # ---- Original sub02 ab @0x00CD4: Elza an ihren Platz, Drehungen, Szene ab msg 2 ----
     vor = len(prog)
-    kopie("1141", 0x00D0A, 0x00FA2, [0x2B, 0x02, 0x00, 0x00], "(sub02 ab msg 2)")
-    ersetze([0x2B, 0x02, 0x00, 0x00], [0x2B, MSG_1141_FRAGE, 0x00, 0x00],
-            "Port-Nachricht 40 = msg 2 ohne \"Same here...\" (Nachtrag 14 Punkt 5)")
-    xp = {(-1300, -15500): (-850, -13350), (-850, -13350): (-1300, -15500),
-          (-7200, -15500): (-6750, -13350), (-6750, -13350): (-7200, -15500)}
+    kopie("1141", 0x00CD4, 0x00F4E, [0x2E, 0x01, 0x00], "(sub02: Elza an ihren Platz, Drehungen, Szene ab msg 2)")
+    ersetze_bei("1141", 0x00D08, [0x29, 0x00], [0x29, 0x05],
+                "Cut_chg 5: Cut 0 blickt nach Suedwesten (Ziel (-17202,-26058)), der Platz am Gemaelde liegt im Bild von Cut 5")
+    ersetze_bei("1141", 0x00D0A, [0x2B, 0x02, 0x00, 0x00], [0x2B, MSG_1141_FRAGE, 0x00, 0x00],
+                "Port-Nachricht 40 = msg 2 ohne \"Same here...\" (Nachtrag 14 Punkt 5)")
+    ersetze_bei("1141", 0x00E80, [0x29, 0x00], [0x29, 0x05], "Cut_chg 5 (wie @0x00D08)")
+    # Tuersperre VOR der Rueckgabe der Steuerung (@0x00F4E Set(2,7)=0) — sonst koennte Elza in den Bildern bis
+    # zu Johns Ankunft in der Ecke noch durch die Tuer.
+    op([0x46, 0x00, 0x01, 0x31, MSG_1141_SPERRE, 0x00, 0xFF, 0xFF, 0x00, 0x00],
+       "Aot_reset Slot 0 (Tuer -> 1131) -> Text msg 41 (Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`)")
+    op([0x46, 0x02, 0x01, 0x31, MSG_1141_SPERRE, 0x00, 0xFF, 0xFF, 0x00, 0x00],
+       "Aot_reset Slot 2 (Riegel im Rechteck der Dachtuer main00 @0x00A9A; Slot 1 ist bei zu Riegel sce 0 @0x00A7A) -> msg 41")
+    kopie("1141", 0x00F4E, 0x00FA2, [0x22, 0x02, 0x07, 0x00], "(sub02-Schluss: Steuerung zurueck, Gorillas, John in die Ecke)")
+    xp = {ORIG_ELZA: ELZA_PLATZ, ORIG_JOHN: JOHN_PLATZ,
+          (-1300, -15500): (ELZA_PLATZ[0] + BLICK_DX, ELZA_PLATZ[1]),
+          (-850, -13350): (JOHN_PLATZ[0] + BLICK_DX, JOHN_PLATZ[1])}
     getauscht = 0
     for i in range(vor, len(prog)):
         b, k = prog[i]
-        if b[0] == 0x41 and len(b) == 10:
-            x, z = struct.unpack_from("<hh", b, 2)[0], struct.unpack_from("<h", b, 6)[0]
+        if b[0] == 0x41 and len(b) == 10 and b[1] == 0x01:
+            x, z = struct.unpack_from("<h", b, 2)[0], struct.unpack_from("<h", b, 6)[0]
             if (x, z) in xp:
                 nb = bytearray(b); nx, nz = xp[(x, z)]; nb[2:4] = s16(nx); nb[6:8] = s16(nz)
-                prog[i] = (bytes(nb), k + "  -> Blickpunkt (%d,%d) statt (%d,%d) (Plaetze getauscht)" % (nx, nz, x, z))
+                prog[i] = (bytes(nb), k + "  -> Blickpunkt (%d,%d) statt (%d,%d)" % (nx, nz, x, z))
                 getauscht += 1
-        elif b[0] == 0x40 and len(b) == 8 and b[2] == 0x09:
+        elif b[0] == 0x40 and len(b) == 8:
             x, z = struct.unpack_from("<hh", b, 4)
             if (x, z) in xp:
                 nb = bytearray(b); nx, nz = xp[(x, z)]; nb[4:6] = s16(nx); nb[6:8] = s16(nz)
-                prog[i] = (bytes(nb), k + "  -> Drehziel (%d,%d) statt (%d,%d) (Plaetze getauscht)" % (nx, nz, x, z))
+                prog[i] = (bytes(nb), k + "  -> Ziel (%d,%d) statt (%d,%d)" % (nx, nz, x, z))
                 getauscht += 1
-    if getauscht != 8:
-        sys.exit("ABBRUCH: %d statt 8 Koordinaten getauscht" % getauscht)
-    # ---- Tuersperre, Warten auf die Gorillas, Abgang Johns (PORT-WAHL; Formen je Zeile) ----
-    op([0x46, 0x00, 0x01, 0x31, MSG_1141_SPERRE, 0x00, 0xFF, 0xFF, 0x00, 0x00],
-       "Aot_reset Slot 0 -> Text msg 41 (Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`)")
-    op([0x46, 0x01, 0x01, 0x31, MSG_1141_SPERRE, 0x00, 0xFF, 0xFF, 0x00, 0x00], "Aot_reset Slot 1 -> Text msg 41")
+    if getauscht != 12:
+        sys.exit("ABBRUCH: %d statt 12 Koordinaten umgesetzt" % getauscht)
+    # ---- Gorillas tot -> Tueren frei, John geht durch den Gang aufs Dach (ausserhalb des Bildes) ----
     warte(4, 0xF2, 1, "Gorillas leben (sub01 @0x00C0C loescht (4,0xF2))")
     sleep(30, "Sleep 30 (Form ROOM1021 sub06 @0x021FE)")
     set_flag(2, 0x07, 1, "Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)")
     set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)")
-    cut_chg(5, "Cut_chg 5 = vom Sueden auf Rolladen/Dachgang (Kamera (-7266,-3806,-17278))")
+    cut_chg(7, "Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft auf die Kamera "
+               "zu und verlaesst das Bild am unteren Rand")
     work_npc(0)
-    dest(5, 1, GANG_AUSGANG, "Plc_dest RUN John -> Gang-Ausgang")
-    warte(5, 1, 0, "John am Gang-Ausgang")
-    cut_chg(6, "Cut_chg 6 = Dachgang")
-    dest(5, 1, TUER_INNEN, "Plc_dest RUN John -> Dachtuer")
-    warte(5, 1, 0, "John an der Dachtuer")
-    se_on(BANK_TUER, 0, "Se_on(0x0E,0) DOOR1A oeffnen")
+    dest(5, 1, GANG_AUSGANG, "Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)")
+    op([0x18, 0x04], "Gosub sub04 (Form sub02 @0x00F96)")
+    dest(5, 1, TUER_INNEN, "Plc_dest RUN John -> vor die Dachtuer")
+    op([0x18, 0x04], "Gosub sub04")
+    se_on(BANK_TUER, 0, "Se_on(0x0E,0) RE2-Tuerbank DOOR1A Satz 0 = oeffnen (Dachtuer 1141 = DOOR1A, tuer_zuordnung.inc "
+                        "S064; Form ROOM10D0 sub21 @0x01A02)")
     sleep(15, "Sleep 15 (Form ROOM1131 sub02 @0x00A54)")
-    pos_set(PARK, "Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080)")
-    se_on(BANK_TUER, 1, "Se_on(0x0E,1) DOOR1A zufallen (Door_exit)")
+    pos_set(PARK, "Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080) — ausserhalb jedes Bildes")
+    se_on(BANK_TUER, 1, "Se_on(0x0E,1) DOOR1A zufallen")
     set_flag(9, BIT_JOHN_WEG, 1, "Set(9,67)=1 John hat 1141 verlassen (VERTRAG 1.1)")
-    op([0x46, 0x00, 0x02, 0x31] + list(RDT["1141"][0x00A52 + 14:0x00A52 + 20]),
+    kopie("1141", 0x00FC8, 0x00FD6, [0x46, 0x02, 0x00, 0x00],
+          "(sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 — John hat den Riegel beim Hinausgehen geoeffnet)")
+    kopie("1141", 0x00FDC, 0x00FE6, [0x46, 0x01, 0x02, 0x31], "(sub05: Dachtuer Slot 1 scharf)")
+    op([0x46, 0x00, 0x02, 0x31] + list(d[0x00A52 + 14:0x00A52 + 20]),
        "Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14)")
-    op(list(RDT["1141"][0x00FDC:0x00FE6]), "Aot_reset Slot 1 -> Dachtuer = ROOM1141 sub05 @0x00FDC")
     sleep(15, "Sleep 15")
-    op([0x3C, 0x01], "Cut_auto 1   (Schwanz ROOM1050 sub03 @0x00DF4)")
-    set_flag(2, 0x07, 0, "Set(2,7)=0")
-    set_flag(1, 0x1B, 0, "Set(1,0x1B)=0")
-    op([0x01, 0x00], "Evt_end")
+    op([0x3C, 0x01], "Cut_auto 1 (Form ROOM1141 sub06 @0x010D0)")
+    set_flag(2, 0x07, 0, "Set(2,7)=0 (Form sub06 @0x010C8)")
+    set_flag(1, 0x1B, 0, "Set(1,0x1B)=0 (Form sub06 @0x010CC)")
+    op([0x08, 0x00], "Endif = Ende des Ja-Zweigs (Form sub06 @0x010D8)")
+    op([0x01, 0x00], "Evt_end = sub06 @0x010DA")
+    # Ifel-Laenge des Ja-Zweigs (sub06 @0x00FEE): von hinter dem Ifel-Kopf bis hinter das Endif.
+    laenge = sum(len(b) for b, _ in prog[i_ifel + 1:-1])
+    if laenge > 0xFFFF:
+        sys.exit("ABBRUCH: Ja-Zweig %d Byte" % laenge)
+    prog[i_ifel] = (b"\x06\x00" + struct.pack("<H", laenge),
+                    prog[i_ifel][1] + "  -> Laenge 0xE8 -> 0x%X (Ja-Zweig mit Ton, Szene, Sperre, Abgang)" % laenge)
     return list(prog)
 
 
@@ -367,9 +420,9 @@ QUELLEN = (   # (Name, Raum, von, bis) — der C-Teil prueft diese Bereiche im G
     ("ROLL1140_SUB03", "1140", 0x00CA6, 0x00D52),
     ("ROLL1141_SUB06", "1141", 0x00FE8, 0x010DC),
     ("LEICHE1021_SUB06", "1021", 0x021EC, 0x02222),
-    ("RIEGEL1141_SUB05", "1141", 0x00FC8, 0x00FE8),
-    ("RIEGEL1141_SUB02", "1141", 0x00C18, 0x00FA4),
-    ("RIEGEL1141_SUB00", "1141", 0x00AFA, 0x00B42),
+    ("SZENE1141_SUB02_05", "1141", 0x00C18, 0x00FE8),   # sub02 + sub03/sub04 (Gosub-Ziele) + sub05
+    ("SZENE1141_SUB00", "1141", 0x00AFA, 0x00B42),      # Evt_exec sub02 + Spawns John/Gorillas
+    ("SZENE1141_MAIN00", "1141", 0x00A52, 0x00AEA),     # Tueren Slot 0/1, Riegel Slot 2, Tisch
 )
 
 
@@ -380,7 +433,7 @@ def main():
         ("k_r38f_p_roll1141", baue_rolladen("1141", 0x00FE8, 0x00FEE, 0xE8, 0x118, 0x01032, 0x0107C, 0x010DC)),
         ("k_r38f_p_leiche1021", baue_leiche()),
         ("k_r38f_p_haemmern", baue_haemmern()),
-        ("k_r38f_p_riegel", baue_riegel()),
+        ("k_r38f_p_befreiung", baue_befreiung()),
     ]
     baue_texte()
     f = io.StringIO()

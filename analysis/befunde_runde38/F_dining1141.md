@@ -14,6 +14,10 @@ Punkte (Wortlaut AUFTRAG.md Runde 38 + Nachtrag 14 Runde 37):
 - 16:28 Basis-Bau `local_build.sh configure` + `build` gruen (LOCAL-BUILD-OK).
 - 16:48 Messung vorher Punkt 3 (1140), 17:10 Messung vorher 1141-Szene, Zensus Item-Id/Bank 9/Nachrichten,
   Ton-Quellen gemessen (Whisper-Transkription, VAB-Zensus). Naechster Schritt: Umsetzung Punkt 3.
+- 17:36 Modul dining_r38 (6ae7118b) — ~18:18 Sitzungslimit; 21:12 Fortsetzung, 21:35 vom Orchestrator gestoppt
+  (Nutzer-Nachtrag 2). Beide Reste (2fd2342d, 32754a59) ungeprueft committet.
+- **Fortsetzung 3 (ab ~22:00):** Bau des Ist-Stands gruen (`configure` + `build`: "ninja: no work to do", LOCAL-BUILD-OK —
+  die Vorgaenger hatten diesen Stand schon gebaut). Umbau 1141 auf Nachtrag 2, Plan Abschnitt 3.0.
 
 ## 1. Messung vorher (Stand e2cc7673, echte exe)
 

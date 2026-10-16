@@ -34,7 +34,6 @@ void (*re15_dining_r38_se_hook)(int bank, int satz) = NULL;
 
 unsigned g_re15_r38f_zu_zaehler       = 0;
 unsigned g_re15_r38f_benutzt_zaehler  = 0;
-unsigned g_re15_r38f_schleife_beendet = 0;
 unsigned g_re15_r38f_se_zaehler[3]    = { 0, 0, 0 };
 
 static uint8_t s_phase_h;
@@ -56,7 +55,7 @@ static void log_f(const char *s)
 /* ============================ Anker (Quellbereiche im GELADENEN RDT) ============================
  * Die Programme bestehen aus Original-Bytes. Bevor eines laeuft, wird der Quellbereich im geladenen RDT per
  * FNV-1a gegen den Wert beim Bauen geprueft — weicht er ab (fremde RDT), bleibt der Original-Sub. */
-enum { A_ROLL1140 = 1, A_ROLL1141 = 2, A_LEICHE = 4, A_SUB05 = 8, A_SUB02 = 16, A_SUB00 = 32 };
+enum { A_ROLL1140 = 1, A_ROLL1141 = 2, A_LEICHE = 4, A_SUB02_05 = 8, A_SUB00 = 16, A_MAIN00 = 32 };
 
 static uint32_t fnv(const uint8_t *p, uint32_t n)
 {
@@ -81,12 +80,12 @@ static int anker(uint16_t room_id)
     if (room_id == RE15_R38F_RAUM_1141) {
         if (bereich_ok(RE15_R38F_ANKER_ROLL1141_SUB06_OFF, RE15_R38F_ANKER_ROLL1141_SUB06_LEN, RE15_R38F_ANKER_ROLL1141_SUB06_FNV))
             m |= A_ROLL1141;
-        if (bereich_ok(RE15_R38F_ANKER_RIEGEL1141_SUB05_OFF, RE15_R38F_ANKER_RIEGEL1141_SUB05_LEN, RE15_R38F_ANKER_RIEGEL1141_SUB05_FNV))
-            m |= A_SUB05;
-        if (bereich_ok(RE15_R38F_ANKER_RIEGEL1141_SUB02_OFF, RE15_R38F_ANKER_RIEGEL1141_SUB02_LEN, RE15_R38F_ANKER_RIEGEL1141_SUB02_FNV))
-            m |= A_SUB02;
-        if (bereich_ok(RE15_R38F_ANKER_RIEGEL1141_SUB00_OFF, RE15_R38F_ANKER_RIEGEL1141_SUB00_LEN, RE15_R38F_ANKER_RIEGEL1141_SUB00_FNV))
+        if (bereich_ok(RE15_R38F_ANKER_SZENE1141_SUB02_05_OFF, RE15_R38F_ANKER_SZENE1141_SUB02_05_LEN, RE15_R38F_ANKER_SZENE1141_SUB02_05_FNV))
+            m |= A_SUB02_05;
+        if (bereich_ok(RE15_R38F_ANKER_SZENE1141_SUB00_OFF, RE15_R38F_ANKER_SZENE1141_SUB00_LEN, RE15_R38F_ANKER_SZENE1141_SUB00_FNV))
             m |= A_SUB00;
+        if (bereich_ok(RE15_R38F_ANKER_SZENE1141_MAIN00_OFF, RE15_R38F_ANKER_SZENE1141_MAIN00_LEN, RE15_R38F_ANKER_SZENE1141_MAIN00_FNV))
+            m |= A_MAIN00;
     }
     if (room_id == RE15_R38F_RAUM_1021 &&
         bereich_ok(RE15_R38F_ANKER_LEICHE1021_SUB06_OFF, RE15_R38F_ANKER_LEICHE1021_SUB06_LEN, RE15_R38F_ANKER_LEICHE1021_SUB06_FNV))
@@ -96,14 +95,15 @@ static int anker(uint16_t room_id)
 
 int re15_dining_r38_anker_ok(void) { return anker((uint16_t)g_current_room_id); }
 
-/* Phase H (re15_dining_r38.h): John sitzt auf dem Dach fest — (4,0xF0) gesetzt, Riegel (4,0xC3) zu. */
+/* Phase H (re15_dining_r38.h): John sitzt im Dachgang hinter dem Notrolladen fest — (4,0xF0) gesetzt, (3,0x6A) frei.
+ * Alle Quellbereiche der Programme HAEMMERN/BEFREIUNG muessen bytegleich sein, sonst bleibt der Original-Ablauf. */
 static int phase_h_bedingung(uint16_t room_id)
 {
     if (room_id != RE15_R38F_RAUM_1141) return 0;
     if (!re15_game_flag_get(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT)) return 0;
-    if (re15_game_flag_get(RE15_R38F_C3_BANK, RE15_R38F_C3_BIT)) return 0;
-    const int m = anker(room_id);
-    return (m & (A_SUB00 | A_SUB02 | A_SUB05)) == (A_SUB00 | A_SUB02 | A_SUB05);
+    if (re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT)) return 0;
+    const int alle = A_ROLL1141 | A_SUB02_05 | A_SUB00 | A_MAIN00;
+    return (anker(room_id) & alle) == alle;
 }
 
 int re15_dining_r38_phase_h(void) { return s_phase_h; }
@@ -138,7 +138,7 @@ const uint8_t *re15_dining_r38_programm(int nr, int *out_len)
         { k_r38f_p_roll1141,   (int)sizeof k_r38f_p_roll1141   },
         { k_r38f_p_leiche1021, (int)sizeof k_r38f_p_leiche1021 },
         { k_r38f_p_haemmern,   (int)sizeof k_r38f_p_haemmern   },
-        { k_r38f_p_riegel,     (int)sizeof k_r38f_p_riegel     },
+        { k_r38f_p_befreiung,  (int)sizeof k_r38f_p_befreiung  },
     };
     if (nr < 0 || nr >= 5) { if (out_len) *out_len = 0; return NULL; }
     if (out_len) *out_len = p[nr].n;
@@ -208,7 +208,9 @@ static void tuer_1131(void)
     log_f("ROOM1131 Slot 0 (Tuer -> ROOM1141) gesperrt: Ereignis 29, Flag (9,66) = 0");
 }
 
-/* ROOM1141: Texte; in Phase H John und die geparkten Gorillas herausnehmen (sub00 @0x00B06/@0x00B1A/@0x00B2E). */
+/* ROOM1141: Texte; in Phase H John in den Dachgang hinter den Rolladen setzen und die geparkten Gorillas herausnehmen
+ * (sub00 @0x00B06/@0x00B1A/@0x00B2E). Laeuft nach dem Init-Lauf und VOR dem ersten Bild (scd_room_setup.c Blockende,
+ * platform/pc/main.c Boot-/CONTINUE-Weg): John ist ab dem ersten Bild im Gang — er taucht nie auf (Nachtrag 2). */
 static void raum_1141(void)
 {
     meldung(RE15_R38F_MSG_1141_FRAGE, k_r38f_msg1141_frage, sizeof k_r38f_msg1141_frage);
@@ -218,11 +220,20 @@ static void raum_1141(void)
     for (int s = RE15_R38F_JOHN_SCRIPT_SLOT; s <= RE15_R38F_JOHN_SCRIPT_SLOT + 2; s++) {
         re15_actor_t *a = &g_actors[s + 1];                     /* SCRIPT_SLOT_TO_ACTOR = +1 (scd_vm.c) */
         if (!a->active) continue;
-        if ((s == RE15_R38F_JOHN_SCRIPT_SLOT && a->type == RE15_R38F_JOHN_TYP) ||
-            (s != RE15_R38F_JOHN_SCRIPT_SLOT && a->type == RE15_R38F_GORILLA_TYP))
+        if (s == RE15_R38F_JOHN_SCRIPT_SLOT && a->type == RE15_R38F_JOHN_TYP) {
+            a->x = RE15_R38F_JOHN_GANG_X;                       /* Spawn @0x00B06 (-6750,0,-13350) -> Dachgang */
+            a->y = 0;
+            a->z = RE15_R38F_JOHN_GANG_Z;
+            a->rot_y = RE15_R38F_JOHN_GANG_YAW;
+        } else if (s != RE15_R38F_JOHN_SCRIPT_SLOT && a->type == RE15_R38F_GORILLA_TYP) {
             re15_actor_free(s + 1);
+        }
     }
-    log_f("ROOM1141 Phase H: John sitzt auf dem Dach fest (Klopf-Schleife statt Szene sub02, John/Gorillas heraus)");
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[dining] F%u ROOM1141 Phase H: John im Dachgang hinter dem Rolladen (%d,0,%d) Blick %d, Gorillas "
+                    "heraus, Klopf-Schleife statt Szene sub02\n", (unsigned)g_engine.frame_count,
+            RE15_R38F_JOHN_GANG_X, RE15_R38F_JOHN_GANG_Z, RE15_R38F_JOHN_GANG_YAW);
+#endif
 }
 
 void re15_dining_r38_install(uint16_t room_id)
@@ -245,36 +256,23 @@ const uint8_t *re15_dining_r38_evt_exec(uint16_t room_id, uint8_t sub_id, const 
     return orig;
 }
 
-static void schleife_beenden(void)
-{
-    const uint8_t *lo = k_r38f_p_haemmern, *hi = k_r38f_p_haemmern + sizeof k_r38f_p_haemmern;
-    for (int s = 0; s < SCD_THREAD_COUNT; s++) {
-        scd_thread_t *t = &g_scd.threads[s];
-        if (t->active && t->pc >= lo && t->pc < hi) {
-            t->active = 0;
-            g_re15_r38f_schleife_beendet++;
-        }
-    }
-}
-
 const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id)
 {
     if (room_id == RE15_R38F_RAUM_1140 && event_id == RE15_R38F_1140_EREIGNIS && (anker(room_id) & A_ROLL1140))
         return k_r38f_p_roll1140;
+    if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_GEMAELDE && phase_h_bedingung(room_id)) {
+        /* Gemaelde in Phase H: BEFREIUNG (Rolladen hoch mit Ton, John kommt heraus, Szene, Sperre, Abgang). Die
+         * Tuerbank laedt schon hier den Tonteil der Dachtuer (DOOR1A, gen/tuer_zuordnung.inc S064 ROOM1141 Slot 1)
+         * fuer Johns Abgang am Ende. */
+        { int n = 0; const uint8_t *ton = re15_szl_tuerton(&n);
+          if (!re15_audio_re2_tuer_laden(ton, n)) log_f("Tuerbank DOOR1A nicht geladen (kein Audiogeraet?)"); }
+        log_f("ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG");
+        return k_r38f_p_befreiung;
+    }
     if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_GEMAELDE && (anker(room_id) & A_ROLL1141))
         return k_r38f_p_roll1141;
     if (room_id == RE15_R38F_RAUM_1021 && event_id == RE15_R38F_1021_EREIGNIS && (anker(room_id) & A_LEICHE))
         return k_r38f_p_leiche1021;
-    if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_RIEGEL && phase_h_bedingung(room_id)) {
-        /* John hoert den Riegel: Klopfen/Hilferuf hoeren auf (Schleife aus), die Tuerbank laedt den Tonteil der
-         * Dachtuer (DOOR1A, gen/tuer_zuordnung.inc ROOM1141 Slot 1) fuer das Aufstossen. */
-        schleife_beenden();
-        { int n = 0; const uint8_t *ton = re15_szl_tuerton(&n);
-          if (!re15_audio_re2_tuer_laden(ton, n)) log_f("Tuerbank DOOR1A nicht geladen (kein Audiogeraet?)"); }
-        s_phase_h = 0;
-        log_f("ROOM1141 Riegel (Ereignis 5) in Phase H -> Programm RIEGEL (Einbruch Johns, Szene ab msg 2)");
-        return k_r38f_p_riegel;
-    }
     if (room_id == RE15_R38F_RAUM_1131 && event_id == RE15_R38F_1131_EREIGNIS && s_gesperrt) {
         /* RE2 LAB_80051514: Besitz-Test im INVENTAR (`jal FUN_800696cc` @0x80051628, `bltz` @0x80051634). */
         if (re15_inv_find_item(RE15_R38F_ITEM) >= 0) {

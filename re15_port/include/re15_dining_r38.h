@@ -20,11 +20,15 @@
  *   1021  Roys Leiche (sub06, Ereignis 6): msg 9 -> Port-Nachricht 40 = msg 9 + Seite + Hinweis.
  *   1011  nach der 1021-Szene ((3,0x5F) = 1, ROOM1021 sub02 @0x01FE4) liegt der Dining Room Key an Roys Liegestelle.
  *   1131  Tuer Slot 0 -> 1141 verschlossen, bis der Schluessel benutzt ist (RE2-Tuer-Handler wie Runde 36 Spur Q).
- *   1141  Phase H ((4,0xF0) = 1 und Riegel zu (4,0xC3) = 0): beim Betreten statt der Szene sub02 die Klopf-Schleife
- *         (Klopfen + "Help me out." + Raum-Titel MAIN16); John und die Gorillas werden nicht gezeigt (er sitzt auf dem
- *         Dach). Gemaelde (sub06) hebt den Rolladen MIT Ton; der Riegel (sub05) beendet die Schleife, John bricht durch
- *         die Dachtuer herein, Szene sub02 ab msg 2 (msg 2 ohne "Same here..."), danach Tuersperre (msg 41) solange die
- *         Gorillas leben, dann geht John durch die Dachtuer voraus ((9,67)) und die Tueren sind wieder frei.
+ *   1141  Phase H ((4,0xF0) = 1 und Notrolladen zu (3,0x6A) = 0): John ist schon beim Betreten im Dachgang HINTER
+ *         dem geschlossenen Rolladen (Nachtrag 2, Nutzer 2026-10-16 21:33: "Ich möchte keine plötzlich rein poppenden
+ *         Charaktere haben...") — der Installer setzt seinen Spawn sub00 @0x00B06 vor dem ersten Bild dorthin, die
+ *         geparkten Gorillas nimmt er heraus. Statt der Szene sub02 laeuft die Klopf-Schleife (Klopfen + "Help me out."
+ *         + Raum-Titel MAIN16), bis Elza am Gemaelde (sub06) "ja" sagt: Set(3,0x6A)=1 @0x00FF6 beendet sie. Programm
+ *         BEFREIUNG: Rolladen hoch MIT Ton (John wird beim Hochfahren sichtbar), John laeuft aus dem Gang zu Elza, Szene
+ *         sub02 ab Elzas Gang an ihren Platz (msg 2 -> 40 ohne "Same here..."), Tuersperre (msg 41) solange die
+ *         Gorillas leben, dann laeuft John durch den Gang und die Dachtuer aufs Dach, AUSSERHALB des Bildes ((9,67)).
+ *         Der Riegel sub05 bleibt Original (kein Port-Programm am Ereignis 5); John oeffnet ihn beim Hinausgehen.
  */
 #ifndef RE15_DINING_R38_H
 #define RE15_DINING_R38_H
@@ -117,15 +121,14 @@
 #define RE15_R38F_ROLLADEN_RDT      "STAGE1/ROOM1131.RDT"
 
 /* ---- ROOM1141: Phase H, Szene, Sperre ------------------------------------------------------------------------------
- * Phase H = (4,0xF0) == 1 (ROOM1021 sub02 @0x01FE0 setzt, ROOM1141 sub02 @0x00C18 loescht) UND Riegel zu (4,0xC3) == 0
- * (ROOM1141 sub05 @0x00FD2 setzt). Beim Betreten startet sub00 @0x00B02 `04 ff 18 02` die Szene sub02 — in Phase H
- * startet stattdessen das Programm HAEMMERN; die Spawns sub00 @0x00B06 (John) / @0x00B1A / @0x00B2E (Gorillas,
- * geparkt) nimmt der Installer wieder heraus, das Programm RIEGEL setzt sie beim Einbruch neu. */
+ * Phase H = (4,0xF0) == 1 (ROOM1021 sub02 @0x01FE0 setzt, ROOM1141 sub02 @0x00C18 loescht) UND Notrolladen zu
+ * (3,0x6A) == 0 (ROOM1141 sub06 @0x00FF6 setzt; sub00 @0x00B80 `06 00 3e 00` / @0x00B84 `21 03 6a 00` liest).
+ * Beim Betreten startet sub00 @0x00B02 `04 ff 18 02` die Szene sub02 — in Phase H startet stattdessen HAEMMERN. */
 #define RE15_R38F_SUB_SZENE         2
 #define RE15_R38F_F0_BANK           4
 #define RE15_R38F_F0_BIT            0xF0
-#define RE15_R38F_C3_BANK           4
-#define RE15_R38F_C3_BIT            0xC3
+#define RE15_R38F_6A_BANK           3
+#define RE15_R38F_6A_BIT            0x6A   /* Notrolladen oben (sub06 @0x00FF6 `22 03 6a 01`) */
 #define RE15_R38F_F2_BANK           4
 #define RE15_R38F_F2_BIT            0xF2   /* Gorillas leben (sub02 @0x00C1C setzt, sub01 @0x00C0C loescht) */
 #define RE15_R38F_JOHN_SCRIPT_SLOT  0      /* sub00 @0x00B06 `44 00 49 ..` */
@@ -141,12 +144,20 @@
 #define RE15_R38F_SE_BANK_HILFE     0x3D
 #define RE15_R38F_KLOPF_DATEI       "KLOPF1060"
 #define RE15_R38F_HILFE_DATEI       "synchro/STAGE1/room1141/john_help.wav"
-/* Choreografie des Einbruchs/Abgangs (PORT-WAHL; Formen und Begruendung im Werkzeug/Dossier 3.6). */
-#define RE15_R38F_ELZA_SEITE_X      (-6650)
-#define RE15_R38F_ELZA_SEITE_Z      (-2600)
-#define RE15_R38F_JOHN_TUER_X       (-7350)
-#define RE15_R38F_JOHN_TUER_Z       (-400)
-#define RE15_R38F_JOHN_TUER_YAW     1024
+/* Lagen (PORT-WAHL; Formen und Begruendung tools/r38_dining/programme_bauen.py, Dossier 3.0). Der Riegel
+ * test_r38_dining1141 vergleicht sie mit dem Werkzeug.
+ *   JOHN_GANG: hinter dem Rolladen im Dachgang — x = Prop obj 0 x (sub00 @0x00B9C+10 `2c e4` = -7124), z 550 hinter der
+ *              Rolladen-Zelle r[13] (z -7200..-6700; Dachgang SCA x -8600..-5750, z -6700..-250);
+ *              Blick 1024 = -Z (pos_advance @0x800245d8: x += cos(yaw)*v, z -= sin(yaw)*v), also zum Rolladen.
+ *   ELZA_PLATZ: Ostkante + z-Mitte der Gemaelde-Zone (Aot slot 3 sub00 @0x00B88: x -9000..-8000, z -11000..-9500).
+ *   JOHN_PLATZ: 2200 oestlich = Original-Abstand der Dialogplaetze ((-7200,-15500) @0x00CD8 / (-6750,-13350) @0x00B06). */
+#define RE15_R38F_JOHN_GANG_X       (-7124)
+#define RE15_R38F_JOHN_GANG_Z       (-6150)
+#define RE15_R38F_JOHN_GANG_YAW     1024
+#define RE15_R38F_ELZA_PLATZ_X      (-8000)
+#define RE15_R38F_ELZA_PLATZ_Z      (-10250)
+#define RE15_R38F_JOHN_PLATZ_X      (-5800)
+#define RE15_R38F_JOHN_PLATZ_Z      (-10250)
 #define RE15_R38F_GANG_X            (-7350)
 #define RE15_R38F_GANG_Z            (-7600)
 #define RE15_R38F_TUER_INNEN_X      (-7350)
@@ -177,14 +188,13 @@ const uint8_t *re15_dining_r38_md1_bytes(uint16_t room_id, int *out_size);
 const uint8_t *re15_dining_r38_tim_bytes(uint16_t room_id, int *out_size);
 
 /* ---- Pruefhaken (Riegel) --------------------------------------------------------------------------------------- */
-const uint8_t *re15_dining_r38_programm(int nr, int *out_len);   /* 0 ROLL1140 1 ROLL1141 2 LEICHE 3 HAEMMERN 4 RIEGEL */
+const uint8_t *re15_dining_r38_programm(int nr, int *out_len);   /* 0 ROLL1140 1 ROLL1141 2 LEICHE 3 HAEMMERN 4 BEFREIUNG */
 const uint8_t *re15_dining_r38_text(int nr, int *out_len);       /* 0 1021/40 1 1131/40 2 1131/41 3 1141/40 4 1141/41 */
 int  re15_dining_r38_phase_h(void);         /* 1 = aktueller Raumaufbau 1141 in Phase H                          */
 int  re15_dining_r38_tuer_gesperrt(void);   /* 1 = 1131 Slot 0 ist umgewidmet                                     */
 int  re15_dining_r38_anker_ok(void);        /* Bitmaske der geprueften Quellbereiche (1 = bytegleich)             */
 extern unsigned g_re15_r38f_zu_zaehler;       /* Druecke auf die verschlossene Tuer ohne Schluessel              */
 extern unsigned g_re15_r38f_benutzt_zaehler;  /* Druecke mit Schluessel                                          */
-extern unsigned g_re15_r38f_schleife_beendet; /* wie oft der Riegel die Klopf-Schleife beendet hat               */
 extern unsigned g_re15_r38f_se_zaehler[3];    /* Se_on der drei Port-Baenke 0x3B/0x3C/0x3D (seit Prozessstart)   */
 
 #endif /* RE15_DINING_R38_H */
