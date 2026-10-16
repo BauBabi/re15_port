@@ -162,3 +162,90 @@ Nachrichten-Texte (Id 40 ist nur Stimmen-Id, VERTRAG §1.2 Spur J 1100/1101 40-4
 | "laeuft" | `g_re15_voice_laeuft && g_re15_voice_restbilder > 0` | dieselbe Bedingung wie der Stimmen-Riegel scd_vm.c op_message_on |
 | Stempel-Frist | 2 Bilder | audio_pc.c re15_audio_tick stempelt VOR der Warteschlange (Port-Struktur; gemessen: "stimme laeuft ... 2 Bilder nach der Anforderung") |
 | Notbremse | 300 Takte | = RE15_VOICE_NOTBREMSE in scd_vm.c (10 s > laengste Aufnahme); greift in keinem Messlauf |
+
+---
+
+## 4. Messung nachher (echte exe, dieselben Eingaben wie vorher)
+
+Messschiene `RE15_REKORDER_LOG=rk.log` (neu), dazu `auf.log`, `cut.log`, `debug.log`, Mitschnitt `RE15_AUDIO_CAP_SYNC`,
+Auswertung `probe_r38_rekorder cap` (Kreuzkorrelation der WAV, auf 44100 Hz gerechnet wie der Lader; Piep-Anteil
+1350..1550 Hz wie `tools/tueren/r36_cap_ticks.py`, beide Werkzeuge liefern dieselben Ticks) und `probe_r38_rekorder bild`
+(Anzeigefeld des Framedumps gegen die dekodierten Hintergruende der Cuts 8/11/12).
+
+### 4.1 Leon, Nachrichten langsam (Lauf `n1_spaet` / `n4_bilder`, Riegel L)
+```
+rk.log  F499 stimme an: sub02 @0x00C94 (Message_on 4 im selben Takt), Id 40 -> synchro/STAGE1/room1100/Irons_Rekorder_Sound.wav
+        F500 stimme laeuft: Plattform meldet 79 Restbilder (2 Bilder nach der Anforderung)
+        F579 stimme zu Ende: 81 Bilder nach der Anforderung
+        F671 frei: sub02 @0x00C96 Cut_chg 12 nach 0 Wartetakten          (msg 4 + Wegwerf-Abfrage erst F670 zu)
+        F676 ACCEPTED: sub02 @0x00C9C Cut_chg 11 -> Piep + Aufschliessen (Runde-36-Art 2 = KARTE_AUF)
+        F701 Message_on 2 @0x00CBA: Piep/Aufschliessen schon am ACCEPTED gespielt - Runde-36-Folge hier aus
+        F742 Tuer frei: Platz 1 aktiv 1 typ 1 (1 = Tuer) nach @0x00CC8
+auf.log F676 PIEP bild=+0 / F691 AUF_E bild=+15   (genau 2 Toene)
+debug   [voice] clip loaded: Irons_Rekorder_Sound.wav (32000 Hz x1 -> 116736 @44100 Hz); [scd F676] Cut_chg(11)
+cut.log F677 bg=1100#11
+cap     WAV Tick 623 (+0) .. 702, Korrelation 0.931, Verstaerkung 1.000 | Piep Tick 800..812 | Versatz Tick-Takt 124 fuer beide
+bild    fd F676 -> Cut 12 (Abstand 0.0), fd F677 -> Cut 11 ACCEPTED (Abstand 0.0)
+```
+Reihenfolge: Aufnahme F500..F579 (Ticks 623..702) -> ACCEPTED + Piep (Takt F676, Bild/Ton ab F677 = Tick 800) ->
+Aufschliessen F691 -> "You've opened the lock." F701 (stumm) -> Tuer frei. Vorher kam der Piep erst F701 (§2).
+Bilder `J_belege/nachher_1100_ablauf.png` (F498 SAY HELLO, F500 msg 4 + Aufnahme, F672 leer, F676 Takt des Pieps noch leer,
+F677 ACCEPTED + Piep, F692 Aufschliessen (Blinkphase leer), F702 msg 2), Mitschnitt-Verlauf vorher/nachher
+`J_belege/mitschnitt_vorher_nachher.png`.
+
+Bild und Ton im selben Bild: der Piep wird im Skript-Takt von Cut_chg 11 angefordert (auf.log F676 = `[scd F676]
+Cut_chg(11)`); die Anzeige wechselt im naechsten gezeigten Bild (Hintergrund wird vor dem VM-Takt gezeichnet, F677), der
+Piep wird ab dem naechsten Audio-Tick gemischt (Versatz Anforderung -> Mitschnitt 124 Ticks, gleich fuer Aufnahme und Piep).
+Das ist dieselbe Port-Struktur wie Runde 37 E (Lampe/Kamera +1 Bild gegen den Skript-Takt).
+
+### 4.2 Leon, Nachrichten so schnell wie moeglich (Lauf `n3_schnell`, Riegel S)
+```
+rk.log  F499 stimme an / F500 laeuft (79) / F579 stimme zu Ende / F580 frei: ... nach 32 Wartetakten / F585 ACCEPTED -> Piep
+auf.log F585 PIEP / F600 AUF_E ; msg 2 F610 ohne Folge
+cap     WAV Tick 623..702 (Korrelation 0.906) | Piep ab Tick 709 (7 Ticks nach dem letzten WAV-Tick)
+```
+Hier ist sub02 an @0x00C96 angekommen, waehrend die Aufnahme noch lief (F548) - es wartet 32 Takte, geht ein Bild nach dem
+Ende weiter (F580), ACCEPTED + Piep 5 Bilder spaeter (Cut 12 + Sleep 5, @0x00C96/@0x00C98). Ohne den Haken kaeme der
+Piep in diesem Fall MITTEN in die Aufnahme.
+
+### 4.3 Elza ROOM1101 (Lauf `e1_elza`, Riegel E; `RE15_PSELECT_AUTO_SWITCH=1`, "[pl] Spieler-Familie PL04")
+```
+rk.log  F629 raum=1101 stimme an ... -> synchro/STAGE1/room1100/Irons_Rekorder_Sound.wav / F709 zu Ende / F801 frei (0)
+        F806 ACCEPTED -> Piep / F831 Message_on 2 ... aus / F872 Tuer frei
+auf.log F806 raum=1101 PIEP / F821 AUF_E
+cap     WAV Tick 1554..1633 (Korrelation 0.902) | Piep ab Tick 1731 | Versatz 925 fuer beide
+```
+
+### 4.4 Tuer (Lauf `t2_tuer`, Riegel T; `RE15_NOAUDIO=1` = zugleich "ohne Ton")
+Panel per `RE15_FORCE_EVENT=7@150` (= Ereignis des Panel-Platzes, sub00 @0x00B14 `.. ff 00 18 07`), sonst gleiche Eingaben:
+F676 ACCEPTED/Piep, F742 "Tuer frei: Platz 1 aktiv 1 typ 1"; `RE15_FIRE_AOT=1@860` -> `[aot] DOOR FIRE slot=1` -> Tuer-
+Sequenz -> `[room] PC loaded room1110.rdt`. Ohne Ton (kein Geraet) laeuft der Ablauf ohne Warten durch (0 Wartetakte).
+
+---
+
+## 5. Tests
+
+Neu (`re15_port/tests/unit/probes/r38_rekorder.cmake`):
+
+| Test | misst |
+|---|---|
+| `unit_r38_rekorder_anker` | ROOM1100 == ROOM1101; sub02 @0x00C90..0x00CC7, @0x00C68, @0x00CC8/@0x00CD2; sub01 @0x00C2C; sub08 @0x00D82; Port-Konstanten == Bytes; Anker nur 1100/1101 und nur mit Signatur; RE2 ROOM2110 @0x01B5C/@0x01B68/@0x01B6C/@0x01B7C/@0x01B8C/@0x01B90; Runde-36-Stellen 1100/2 + 1101/2 = KARTE_AUF, Folge Satz 1 +0 / Satz 2 +15 |
+| `unit_r38_rekorder_datei` | WAV vorhanden, PCM16 mono 32000 Hz, data 169414 B = 84707 Samples = 79,4 Bilder; Bindung 1100/1101 Id 40 -> genau diese Datei; keine Bindung fuer msg 4 / andere Raeume / Id 41; Zensus-Erkennung |
+| `unit_r38_rekorder_ablauf` | ECHTER Skriptweg headless (Panel-AOT 2, msg 1, Ja, Cursor ON/OFF, SAY HELLO, Cursor Mikrofon, Wegwerf-Abfrage) mit nachgebildetem Stimmen-Kanal (Reihenfolge audio_pc.c, Laenge aus der WAV): A Leon langsam, B Leon schnell (Warten 48 Takte, Piep >= Ende + 5), C Elza ROOM1101, D Gegenprobe ohne Haken (= vorher: keine Aufnahme, Piep an msg 2), E ohne Ton (kein Haenger); je: Aufnahme im Takt von msg 4, Piep im Takt des ersten ACCEPTED (Cut 11, vorher 12), nach dem Ende der Aufnahme, Aufschliessen +15, genau 2 Toene, Tuer-Platz 1 = Tuer, Feuer -> Raumwechsel ROOM1110/1111 |
+| `integration_r38_rekorder` | echte exe L/S/E/T wie Abschnitt 4 (Logs, Mitschnitt mit Korrelation, Versatz, Ende vor Piep, Framedumps Takt/Takt+1 = Cut 12/11, Tuer -> room1110.rdt) |
+
+Geaendert: `unit_synchro_stimme` (Zensus: "= ...room1100/Irons_Rekorder_Sound.wav: Sonderbindung re15_rekorder_r38_stimme",
+"195 WAVs, 0 Namensfehler, 0 Formatfehler, 0 Stage-Fehler, 0 noch nicht zugeordnet").
+
+### 5.1 Gezielte Laeufe (KEINE volle Suite)
+
+Regex = eigene Tests + Testgruppen der beruehrten Module/Raeume (SCD-VM-Haken: SCD/AOT/Nachrichten/Kamera; Stimmen-Kanal/
+synchro; Runde-36-Aufschliess-Toene; Runde-37-Code-Panels (gleicher Mechanismus); ROOM1100: Kistenregel K6, PRI 1100,
+Elza-EMS 1100, Zombie-Spur t45; Wegwerf-Abfrage; Tueren/Schloesser; headless):
+```
+ctest --test-dir "<baum>/re15_port/build" -R "r38_rekorder|r36_tueren|r37_codepanel|unit_synchro_stimme|unit_voice_ausreden|unit_se_voice_machine|unit_audio_sperren|unit_msg_dialog|unit_action_msg_gate|unit_text_freeze|unit_r21_discard_wegwerfen|r37_kistenregel|r37_pri1100|r37_elzaems_leon1100|unit_lane_b1_t45_room1100|unit_scd_|unit_aot_|unit_cut_old_displayed|unit_r34n_b_cut_old|unit_r30_tuer_stimme|r36_elza_unlock|r34n_f_leiche_stimme|r34n_f_leiche_nachhall|integration_headless_run|integration_door_lock|integration_keydoor|integration_keypad" --timeout 600 --output-on-failure -j 2
+```
+Ergebnis (Stand c59ead3c, Protokoll `re15_port/build/r38j/ctest_gezielt_1.log`):
+```
+100% tests passed, 0 tests failed out of 55
+```
