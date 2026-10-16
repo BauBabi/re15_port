@@ -5188,6 +5188,7 @@ re_title:;
           if (s_kill_at == -2) { const char *k = getenv("RE15_KILL_AT"); s_kill_at = k ? atoi(k) : -1; }
           if (s_kill_at >= 0 && (int)g_engine.frame_count == s_kill_at) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1; }  /* dead = hp<0 */
         { extern void re15_r37a_gegner_pos_haken(void); re15_r37a_gegner_pos_haken(); }  /* Runde 37 Spur A: Messhaken RE15_GEGNER_POS (re15_pri1100_r37.h) */
+        re15_dining_r38_messhaken();   /* Runde 38 Spur F: Messhaken RE15_R38F_GORILLAS_TOT (re15_dining_r38.h) */
 
         /* DEBUG: RE15_INV_SHOT=<path> — wave-1 acceptance harness: force-open the status
          * screen at frame 30 (briefing loadout = the mzd_inv_open.sav items); the render

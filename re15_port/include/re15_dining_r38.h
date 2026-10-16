@@ -172,6 +172,8 @@ const uint8_t *re15_dining_r38_evt_exec(uint16_t room_id, uint8_t sub_id, const 
 const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id);
 /* audio_pc.c Se_on-Zweig vor der Bank-Weiche: 1 = Port-Bank dieser Spur (0x3B/0x3C/0x3D) erledigt. */
 int re15_dining_r38_se_on(unsigned bank, int satz);
+/* Messhaken RE15_R38F_GORILLAS_TOT=<bild> (env-gegatet, platform/pc/main.c je Bild; dining_r38.c). */
+void re15_dining_r38_messhaken(void);
 /* Plattform-Ton (platform/pc/src/dining_r38_pc.c setzt ihn): bank = 0x3B/0x3C/0x3D, satz = EDT-Satz. */
 extern void (*re15_dining_r38_se_hook)(int bank, int satz);
 

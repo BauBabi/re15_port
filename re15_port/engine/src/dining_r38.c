@@ -22,6 +22,7 @@
 #include "re15_szenenleon_r36.h"   /* re15_szl_tuerton: Tonteil DOOR1A (die Dachtuer 1141 spielt DOOR1A, tuer_zuordnung.inc) */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
+#include <stdlib.h>   /* getenv/atoi (Messhaken) */
 #endif
 
 #include "gen/re2_door_bank.inc"         /* RE2_DOOR_SE_AUF_KEY (TUERSE.VBS Satz 4 = RE2 ROOM1140 Satz 0x25) */
@@ -309,6 +310,30 @@ int re15_dining_r38_se_on(unsigned bank, int satz)
     g_re15_r38f_se_zaehler[k]++;
     if (re15_dining_r38_se_hook) re15_dining_r38_se_hook((int)bank, satz);
     return 1;
+}
+
+/* ============================ Messhaken (env-gegatet, kein Spielverhalten) ============================
+ * RE15_R38F_GORILLAS_TOT=<bild>: in ROOM1141 ab diesem Bild (Bildzaehler des Raums) die beiden Gorillas (Typ 0x27)
+ * herausnehmen und ihre Kill-Flags setzen — genau die Bits, die ihr Tod setzt: Sce_em_set sub00 @0x00B1A/@0x00B2E
+ * tragen pc[7] = 0xCB/0xCC (scd_vm.c op_sce_em_set: em_flag_id = pc[7]), Bank = re15_em_status_zone() (Stage 1 -> 7,
+ * @0x800420ec), gelesen von sub01 @0x00BFA/@0x00C02. Damit erreicht ein Messlauf Johns Abgang ohne Kampf-Eingaben. */
+void re15_dining_r38_messhaken(void)
+{
+#ifdef RE15_PLATFORM_PC
+    static int s_init = 0, s_bild = -1, s_done = 0;
+    if (!s_init) { const char *e = getenv("RE15_R38F_GORILLAS_TOT"); s_init = 1; if (e && *e) s_bild = atoi(e); }
+    if (s_bild < 0 || s_done || g_current_room_id != RE15_R38F_RAUM_1141 || (int)g_engine.frame_count < s_bild) return;
+    s_done = 1;
+    extern uint8_t re15_em_status_zone(void);
+    const uint8_t zone = re15_em_status_zone();
+    int n = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) { re15_actor_free(s); n++; }
+    re15_game_flag_set(zone, 0xCB, 1);
+    re15_game_flag_set(zone, 0xCC, 1);
+    fprintf(stderr, "[dining] F%u MESSHAKEN RE15_R38F_GORILLAS_TOT: %d Gorillas heraus, Flags (%u,0xCB)/(%u,0xCC) = 1\n",
+            (unsigned)g_engine.frame_count, n, (unsigned)zone, (unsigned)zone);
+#endif
 }
 
 /* ============================ Gegenstand 0x43 ============================ */

@@ -121,6 +121,23 @@ RDT-Nachrichten: 1011 = 24 (0..23), 1021 = 15, 1131 = 6, 1141 = 15. Port-Ids F: 
 
 ## 3. Umsetzung
 
+### 3.0 Nachtrag 2 (Nutzer 2026-10-16 21:33) — John taucht nirgends auf
+Wortlaut: "In Room 1141 mit dem reinkommenden John musst du anders lösen. Ich möchte keine plötzlich rein poppenden
+Charaktere haben..." Der alte Ablauf (6ae7118b: John wird beim Riegel in der Dachtuer gespawnt und "bricht herein") ist
+genau ein solches Auftauchen und ist ersetzt (6f1890c5):
+
+| Schritt | Mechanik | Beleg / Form |
+|---|---|---|
+| Phase H | (4,0xF0)==1 UND Notrolladen zu (3,0x6A)==0 (statt Riegel (4,0xC3)) | (3,0x6A): sub06 @0x00FF6 `22 03 6a 01` setzt, sub00 @0x00B84 `21 03 6a 00` liest |
+| John schon da | Installer (nach dem Init-Lauf, VOR dem ersten Bild) setzt den Spawn sub00 @0x00B06 `44 00 49 40 .. a2 e5 00 00 da cb` = (-6750,0,-13350) auf (-7124,0,-6150) Blick 1024 — im Dachgang HINTER dem Rolladen; Gorillas heraus | x = Prop obj 0 x sub00 @0x00B9C+10 `2c e4`; Dachgang SCA x -8600..-5750, z -6700..-250; Rolladen-Zelle r[13] z -7200..-6700; Blick: pos_advance @0x800245d8 (x += cos, z -= sin) -> 1024 = -Z (zum Rolladen). PORT-WAHL der Tiefe: 550 hinter der Zelle |
+| Klopfen/Hilferuf/Musik | HAEMMERN wie bisher (Klopfen RE2 ROOM1060 sub05, "Help me out.", MAIN Play @0x00B4E), jetzt als While Ck(3,0x6A)==0, jede Tonzeile in Ifel_ck Ck(3,0x6A)==0 | While-Form sub03 @0x00FA8 `0f 04 08 00` (Laenge ab hinter dem Kopf bis hinter Ewhile, scd_vm.c op_while); Ifel-Form sub01 @0x00BFE `06 00 10 00` (Laenge bis hinter Endif @0x00C10). Das Original-Set(3,0x6A)=1 beim "ja" am Gemaelde beendet die Schleife — kein C-Eingriff mehr |
+| Gemaelde (Ereignis 6) in Phase H | Programm BEFREIUNG: sub06 @0x00FE8..@0x0100D (Frage, Ja-Zweig, Cut 5) + Rolladen-Ton (ROOM1131 @0x00A48/@0x00A58, @0x00AB2) + Bewegung @0x01032..@0x0107B + Sca @0x0107C..@0x010A3; die Gorilla-Bloecke @0x0100E/@0x010A4 entfallen (in Phase H keine Gorillas) | John steht beim Hochfahren hinter dem Rolladen und wird im Bild von Cut 5 sichtbar, ohne sich zu bewegen |
+| John kommt heraus | Musik aus (Form sub01 @0x00C06), Flags sub02 @0x00C18/@0x00C1C/@0x00C20, Gorillas geparkt (sub00 @0x00B1A..@0x00B41), John RUN an seinen Platz + Gosub sub04 (Form sub02 @0x00F8E/@0x00F96) | |
+| Szene | sub02 @0x00CD4..@0x00FA1 (Elza an ihren Platz mode 4, Drehungen, msg 2 -> Port-Nachricht 40 ... msg 11, Gorillas durch die Fenster, John in die Ecke) — Cut_chg 0 @0x00D08/@0x00E80 -> 5; 12 Ziele umgesetzt: Elza (-7200,-15500) -> (-8000,-10250), John (-6750,-13350) -> (-5800,-10250), Blickpunkte (-1300,-15500)/(-850,-13350) -> Platz + (5900,0) | Cut 0 (893,-3929,-11697) -> (-17202,3679,-26058) blickt nach WSW auf die Doppeltuer; Cut 5 (-7266,-3806,-17278) -> (-3224,2605,2675) blickt nach NNO auf Rolladen + Gemaelde. Plaetze PORT-WAHL: Elza = Ostkante/z-Mitte der Gemaelde-Zone (Aot slot 3 @0x00B88: x -9000..-8000, z -11000..-9500), John 2200 oestlich = Original-Abstand (2196). Blickpunkt-Regel aus dem Original: (-1300,-15500) = (-7200,-15500)+(5900,0), (-850,-13350) = (-6750,-13350)+(5900,0) |
+| Tuersperre | VOR der Rueckgabe der Steuerung (@0x00F4E): Aot_reset Slot 0 und Slot 2 (Riegel im Rechteck der Dachtuer) -> msg 41; warten, bis sub01 (4,0xF2) loescht | Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`; Slot 1 ist bei zu Riegel sce 0 (main00 @0x00A7A) |
+| Johns Abgang | Pad-Sperre + Balken, Cut 7 (Blick nach Sueden), John RUN zum Gang-Ausgang und vor die Dachtuer (er laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand), DOOR1A auf/zu im Off, geparkt, (9,67)=1; Riegel-Zustand wie nach sub05 (@0x00FC8..@0x00FD5 ohne Nachricht, @0x00FDC), Slot 0 wieder Tuer | Cut 7 (-7465,-3024,-9613) -> (-4265,2209,-27792); DOOR1A = tuer_zuordnung.inc S064 ROOM1141 Slot 1 |
+| Riegel | Ereignis 5 hat KEIN Port-Programm mehr (Original sub05). John oeffnet ihn beim Abgang; danach ist die Dachtuer offen | Begruendung: John hat ihn auf der Gangseite vorgelegt; geht er hinaus, kann er ihn nicht wieder vorlegen — ein "You've opened the lock." danach waere ein neues Logikloch |
+
 ## 4. Messung nachher
 
 ## 5. Tests
