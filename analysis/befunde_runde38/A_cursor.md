@@ -219,7 +219,7 @@ Spieler unabhaengig): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
   sind Raum-Objekte (obj 4/5, Typ 3, ROOM20A0.RDT Obj_model_set @0x01998/@0x019BA), die sub01 je Kamera-Schnitt
   (Cmp 0x0A = Cut) zwischen ihrer Lage und y = -16200 umsetzt (@0x01B22/@0x01B2A, @0x01B7E/@0x01B86, @0x01BDA/@0x01BE2).
   Der Verwurf aendert ihr Bild: Debug-Sprung 20A0, Cut 2 erzwungen, Bild 200, alt gegen neu 170 Punkte, alle am
-  Rolladen oben links (x 7..135, y 0..54: die dunkle Rueckseiten-Flaeche an der Unterkante faellt weg); Cut 4/10/12
+  Rolladen oben links (x 7..135, y 0..54; was dort wegfaellt, sind dessen Rueckseiten-Flaechen); Cut 4/10/12
   0/1/5 Punkte. Spur W misst auf der Basis OHNE Verwurf — ihre Rolladen-Messung ist in der Integration mit diesem
   Stand zu wiederholen (Messbilder nicht versioniert: re15_port/build/r38_a/w20a0_*).
 * Port-eigene Props (dokumente_r34, feuerloescher_r37, granate_1150, inhalt_r35, irons_tisch_1150, kartenitems_r36,
