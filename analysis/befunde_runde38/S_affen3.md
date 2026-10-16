@@ -47,3 +47,62 @@ Kakerlake). Beleg jetzt aus dem ORIGINAL-Lader:
 - Die grossen Affen in ROOM11C0 sind Typ 0x27 (Tabelle Eintrag 23 -> Sektor 892 = Blob 12), Stage 1.
 - Stage 3 kennt sonst keinen Kandidaten: 0x20 (ROOM3060/3061) hat in STAGE3.BIN keinen Handler (Registrierungs-Scanner).
 **Zuordnung bestaetigt: "die kleinen Affen in Stage 3" = Typ 0x29, ROOM3040/3041 (je 2), Handler STAGE3.BIN 0x80110b00.**
+
+## Messung vorher (Port, master-Stand cb782bda, gebaute exe dieses Baums)
+Messkopie `re15_pc_r38s_mess.exe` neben der exe. Umgebung: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1
+RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=3040@250 RE15_STATE_LOG=state.log`.
+- **m1** (RE2-KI, Leon am Sprung-Spawn (-25600,-1350), steht still, 1800 Bilder): beide Affen (Platz 1 (-8800,-6150),
+  Platz 2 (-13500,-11800), HP 87/99) wechseln nach ~100 Bildern in Sub 3 (Annaeherung) mit Clip 4 und kriechen mit ~3
+  Einheiten/Bild; Affe 2 bleibt bei (-13600,-6900) haengen, Affe 1 bei (-13332,-2132). Keiner erreicht Leon.
+- **m2** (RE2-KI, `RE15_PLAYER_POS=-9100,-2600,1024` = 2300 vor Affe 1, 1200 Bilder): Affe 1 geht in Sub 3 (Clip 5), bei
+  Mittenabstand 2740 in **Sub 5 = BISS (Clip 0x12)**, spielt den Clip ganz (Bild 0..24), **Leon hp=100 bleibt**, zurueck in
+  Sub 3 Clip 4, kriecht von z=-4878 nach -5072 RUECKWAERTS und wieder auf -4878, erneut BISS — Schleife alle ~45 Bilder,
+  ueber 1200 Bilder **kein einziger HP-Abzug, keine Reaktion**. Genau der Nutzer-Befund ("es passiert nichts").
+  Auszug state.log: `F50 ... PL(-9100,-2600,rot=1024,hp=100) ... [1 t=29 st=1 ss1=5 ... mo=18 af=0 ... @(-9118,-5343,...)]`
+  ... `F95 [1 ... ss1=5 ... mo=18 af=0 @(-9118,-4878)]` ... `F237 hp=100`.
+- Ursache im Port (enemy_ai_common.c re15_cockroach_ai_tick): der BISS prueft `re15_dog_arc(e, pl, 1000, 0x400)` =
+  MITTEN-Abstand < 1000. Die Koerperschiebung haelt Affe und Leon auf >= 1100 + 450 = 1550 (Kasten des Affen
+  STAGE3.BIN @0x8011ec14 = {0,-1080,0, 1100, 1080, 1100}, Leon 450 @0x80073e94) -> die Bedingung kann NIE wahr werden.
+  Der SCHWERE Angriff (Sub 6) prueft `dist < 800` -> ebenso unmoeglich. Die Annaeherung (Sub 3) schiebt per
+  `re15_clip_root_motion_delta` statt per Fuss-Sperre -> Hin-und-her ohne Netto-Weg.
+
+## RE-Belege (Original, selbst disassembliert, STAGE3.BIN = Overlay @0x80100000 ohne Kopf)
+**Der kleine Affe 0x29 ist der Code der Gorilla-Familie 0x27 (STAGE1) mit anderen Konstanten.** Normalisierter
+Befehlsvergleich (Tabellenadressen ausgeblendet): B[5] 181/181 Befehle gleich bis auf Fenstertabelle, SE und Schaden;
+B[6] 236/237; B[3] und B[4] identisch; die A-Entscheider sind beim Affen schlanker (keine Zonen-Spruenge).
+Zustandstabelle @0x8011eca4 = {INIT 0x80110c98, ACTIVE 0x8011101c, HURT 0x80114790, DEATH 0x80114fb4, 0x80115734 x2,
+0x80116228, CORPSE 0x80115a6c}; A-Tabelle @0x8011ecc4, B-Tabelle @0x8011ed04 (je 16 Eintraege, wie der Gorilla).
+- ACTIVE 0x8011101c: A[+0x5] `jalr` @0x8011110c, +0x5 NEU gelesen @0x80111120, B[+0x5] `jalr` @0x80111140 — im SELBEN
+  Tick (wie Gorilla, re15_affen.h (10)); +0x1dc-- danach @0x801111c0-d4.
+- INIT-Schwanz: `+0x0 |= 0x800` @0x80110f44-48, **+0x166 = 0x14cc** @0x80110f54-58 (Massstab 1,3; Gorilla 0x1b33);
+  Kasten +0x78 = *(0x8011ec44 + 4*(+0x1e4)) @0x80110f68-88, +0x1e4 = (grid&8)?4:0 @0x80110e4c-70; Part 18 an Record 1,
+  rel (0x66,-810,0) @0x80110fc8-1008 (wie Gorilla @0x80117200-3c).
+- **B[5] BISS 0x80111d68**: Phase 0 @0x80111dcc-dfc: +0x6=1, Clip 0x12, +0x95=0, +0x8f=7. Jeder Tick: anim_set
+  `jal 0x8001f314` (a3=0x200) @0x80111e14, +0x6 += Rueckgabe; **Fuss-Sperre `jal 0x80115b68` (0,0)** @0x80111e34;
+  Versatz a1 = (0x64,0,0) (`ori v0,zero,0x64` / `sw v0,16(sp)` @0x80111e78-7c auf 0x80072d60 = (0,0,0)); SE 9 bei
+  +0x95 == 0xb @0x80111e8c-a0; Tor Spieler+0x93 == 0 @0x80111ea4-b4; **Treffer `jal 0x8001bff8`(Pool+1612 = Record 9
+  +0x40, a1, r = 0x3e8, &Spieler+0x34)** @0x80111eb8-c8 -> +0x1da; Fenster +0x95 in Tabelle @0x8011ed48 = {12,13,14,15}
+  @0x80111ef4-24; Treffer: **Spieler-HP -= 5** @0x80111f54-64, +0x1dc = 0x2d @0x80111f68-70, **SE 5** (a0=5
+  @0x80111f4c), aca58 = 2 @0x80111f7c, aca59 = FUN_8001a780(Spieler)+2 @0x80111f80-94, aca5a = 0 @0x80111f9c,
+  HP < 0 -> aca58 = 3 / aca59 = 0 @0x80111fa0-b4, Spieler+0x93 |= 1 @0x80111fb8-cc. Phase 2 @0x80111fd8-2018:
+  +0x1dc == 0 -> 0x14; +0x5 = 3, +0x6 = 0, **+0x7 = 0** (Port setzte 1).
+- **B[6] SCHWER 0x80112044**: Phase 0 @0x801120ac-dc Clip 0x13; anim_set @0x801120f4; Fuss-Sperre nach +0x95 (nach
+  dem Vorschub): < 6 -> `jal 0x80115c3c`(0,0) @0x80112138, < 0x15 -> `jal 0x80115b68`(0,1), sonst (0,0) @0x80112148-5c;
+  SE 9 bei 0x14 @0x80112170-84; Tor +0x93 @0x80112188-98; zwei Treffer `jal 0x8001bff8` Pool+1096 (Record 6) und
+  Pool+1784 (Record 10), a1 = (0,0,0) aus 0x80072d60, **r = 0x320** @0x801121a0-208; Fenster @0x8011ed4c =
+  {21,22,23,24,33,34}; Treffer: **HP -= 10** @0x801122a8-b8, +0x1dc = 0x2d, **SE 4** (a0=4 @0x80112290), aca58 = 2,
+  aca59 = a780 + **4** @0x801122d4-e8 (Niederschlag), HP<0 -> 3/0, +0x93 |= 1. Phase 2 @0x8011232c-3cc: +0x93 == 0 und
+  FUN_8001a804(0xfa0, 0x180) < 0 -> (+0x1dc == 0 ? 5 : 3), sonst (+0x1dc == 0 -> +0x1dc = 0x14) und 3; +0x6 = +0x7 = 0.
+- **A[3] 0x801117d8**: +0x93 == 0 und a804(0xbb8, 0x180) < 0 und +0x1dc == 0 -> +0x5 = 5 @0x801117e8-824; sonst bei
+  +0x93 == 0: Abstand(+0x1d4) < 0x1771 und Sicht(+0x1d0&1) und +0x7 != 0 -> +0x6 = +0x7 = 0 @0x80111848-890; Abstand >=
+  0x1771 und Sicht -> +0x5 = 4 @0x801118b4-8fc.
+- **B[3] 0x80111910**: Phase 0: Clip 4 @0x80111940, +0x7 == 0 -> Clip 5 + +0x9e = (rng&0x1f)+2 @0x80111958-78, +0x95 =
+  0, +0x8f = 7; jeder Tick +0x9e = (rng&0x1f)+6 @0x8011199c-b4, Lenken FUN_8001a8f8(&Spieler, +0x9e) @0x801119d0,
+  anim_set @0x801119ec, **Fuss-Sperre `jal 0x80115b68`(0, +0x95 < Fenster ? 1 : 0)**, Fenster 0x18 (+0x7 == 0)
+  @0x80111a18-30 / 0x29 @0x80111a64-7c, SE 8 bei +0x95 == 1 oder == Fenster @0x80111a44-ac.
+- **A[4] 0x80111ac0**: +0x93 == 0 und a804(0xfa0, 0xc0) < 0 und +0x1dc == 0 -> +0x5 = 6 @0x80111ad4-b18.
+- **FUN_80115b68** (= Gorilla FUN_8011bf50): Kette +0x20 * Record 0 * Record (12+3a1) * (13+3a1) * (14+3a1)
+  (`jal 0x80022da0` @0x80115b98/bbc/bcc/bdc, Block a1*0x204 + 0x968), +0x34 -= m.tx - rec[84] @0x80115be4-c00,
+  +0x3c -= m.tz - rec[92] @0x80115c04-20 -> verfolgter Knochen 14 + 3*a1.
+- **FUN_8001bff8** (PSX.EXE): Matrix(Record+0x40) * (I | a1) (`jal 0x80022da0` @0x8001c078), dann
+  `(plX - ptX + r) & 0xffff > 2r -> kein Treffer` @0x8001c080-a0, Z ebenso @0x8001c0a8-c0 = achsenparalleles Quadrat.
