@@ -58,17 +58,19 @@
 /* ---- ROOM1011: der Schluessel an Roys Liegestelle ------------------------------------------------------------------
  * Roys Spawn sub00 @0x009F6 / @0x00A3E `44 00 47 40 .. 30 f8 00 00 1a 1d` = (-2000, 0, 7450). Sichtbar ab dem Ende der
  * 1021-Szene: (3,0x5F) wird NUR von ROOM1021 sub02 @0x01FE4 gesetzt (Zensus flag_xref.txt) und nie geloescht.
- * Prop obj 4 (RDT-Kopf Byte 2 nOmodel = 3, obj 0..2 belegt @0x008EE/@0x00910/@0x00932; obj 3 bleibt frei fuer die
- * Parallel-Spur G (Roys Tagebuch, VERTRAG 1.5) — der Prop-Lader ist raum-, nicht phasengebunden); TIM-Slot
- * RE15_TIM_SLOT_PROP(4) = 8. Zone Slot 14 (main00 belegt 0..8; Abstand zu G aus demselben Grund). */
-#define RE15_R38F_1011_OBJ      4
+ * Prop obj 6: RDT-Kopf Byte 2 nOmodel = 3 (obj 0..2 @0x008EE/@0x00910/@0x00932), der Port belegt in 1011 schon obj 3
+ * (Dokument 4, RE15_DOK4_OBJ) und obj 4 (Memory Card, RE15_R35I_KARTE_OBJ); obj 5 bleibt frei fuer die Parallel-Spur G
+ * (Roys Tagebuch, VERTRAG 1.5 — der Prop-Lader in main.c ist raum-, nicht phasengebunden). TIM-Slot
+ * RE15_TIM_SLOT_PROP(6) = 26. Zone Slot 14: main00 belegt 0..8, der Port 9 (Dokument 4) und 10 (Memory Card).
+ * (Gemessen 2026-10-16: mit obj 4 fand slot_von_obj_id die Memory Card und legte KEIN eigenes Prop an.) */
+#define RE15_R38F_1011_OBJ      6
 #define RE15_R38F_1011_SLOT     14
 #define RE15_R38F_ROY_BANK      3
 #define RE15_R38F_ROY_BIT       0x5F
 #define RE15_R38F_KEY_X         (-2000)
 #define RE15_R38F_KEY_Y         0
 #define RE15_R38F_KEY_Z         7450
-#define RE15_R38F_KEY_ROT_Y     512
+#define RE15_R38F_KEY_ROT_Y     0
 /* Aufhebe-Rechteck 1000 x 1000 um die Liegestelle (haeufigste Item-Groesse, 69 von 162; RE15_R35I_KARTE_RECT_*). */
 #define RE15_R38F_KEY_RECT_X    (-2500)
 #define RE15_R38F_KEY_RECT_Z    6950
@@ -77,6 +79,12 @@
 /* Prop-/Zonen-Felder wie die Item-Props des Originals (Runde 36 Spur Q, re15_schluessel_r36.h). */
 #define RE15_R38F_PROP_FLAGS    0x000B   /* pc[6..7] 0x000A | 1 @0x80040998 */
 #define RE15_R38F_PROP_BAND     1        /* pc[4] -> pool+130 @0x80040974   */
+/* Attributwort Pool+0x0c (Obj_model_set pc[8..9], LAB_80040914 @0x800409a8/@0x800409b0): 0x0010 = FLACH ohne Raumlicht
+ * (Zeichner FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10` -> FUN_80022f0c, Textur unveraendert). RE2 legt GENAU dieses Modell
+ * so in die Welt: room2020 sub00 @0x01D90 Obj_model_set obj 2 (der Herz-Schluessel, Item_aot_set @0x01C5C Id 0x5B md1 2)
+ * `2d 02 00 00 00 00 00 00 00 00 0a 00 10 00 ..` — Attributwort +12 = 0x0010 wie die Lageplaene (Runde 36 Spur N),
+ * RE2-Zeichner FUN_800363f0 `puVar4[4] & 0x10` -> FUN_8002d0e8 unbeleuchtet. */
+#define RE15_R38F_PROP_ATTR     0x0010
 #define RE15_R38F_AOT_SAT       0x31     /* 160 von 164 Item_aot_set        */
 
 /* ---- ROOM1021: Roys Leiche ----------------------------------------------------------------------------------------
@@ -134,9 +142,8 @@
 #define RE15_R38F_KLOPF_DATEI       "KLOPF1060"
 #define RE15_R38F_HILFE_DATEI       "synchro/STAGE1/room1141/john_help.wav"
 /* Choreografie des Einbruchs/Abgangs (PORT-WAHL; Formen und Begruendung im Werkzeug/Dossier 3.6). */
-#define RE15_R38F_ELZA_SEITE_X      (-6450)
-#define RE15_R38F_ELZA_SEITE_Z      (-2900)
-#define RE15_R38F_ELZA_SEITE_YAW    3072
+#define RE15_R38F_ELZA_SEITE_X      (-6650)
+#define RE15_R38F_ELZA_SEITE_Z      (-2600)
 #define RE15_R38F_JOHN_TUER_X       (-7350)
 #define RE15_R38F_JOHN_TUER_Z       (-400)
 #define RE15_R38F_JOHN_TUER_YAW     1024

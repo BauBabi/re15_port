@@ -171,6 +171,7 @@ static void schluessel_1011(void)
         g_scd.props[i].z = RE15_R38F_KEY_Z;
         g_scd.props[i].rot_y = RE15_R38F_KEY_ROT_Y;
         g_scd.props[i].flags = RE15_R38F_PROP_FLAGS;
+        g_scd.props[i].attr  = RE15_R38F_PROP_ATTR;        /* 0x0010 unbeleuchtet wie RE2 room2020 @0x01D90 */
     }
     if (!g_aot.slots[RE15_R38F_1011_SLOT].active) {
         re15_aot_set_item_tk_prop(RE15_R38F_1011_SLOT,

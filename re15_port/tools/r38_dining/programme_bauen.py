@@ -49,8 +49,7 @@ MSG_1021_LEICHE = 40        # RE15_R38F_MSG_1021_LEICHE
 MSG_1141_FRAGE = 40         # RE15_R38F_MSG_1141_FRAGE
 MSG_1141_SPERRE = 41        # RE15_R38F_MSG_1141_SPERRE
 BIT_JOHN_WEG = 67           # RE15_R38F_BIT_JOHN_WEG (Bank 9, VERTRAG 1.1)
-ELZA_SEITE = (-6450, -2900)     # RE15_R38F_ELZA_SEITE_X/Z   Elza tritt beiseite (Dachgang, Ostseite)
-ELZA_SEITE_YAW = 3072           # RE15_R38F_ELZA_SEITE_YAW   Blick +Z (zur Dachtuer)
+ELZA_SEITE = (-6650, -2600)     # RE15_R38F_ELZA_SEITE_X/Z   Elza weicht zurueck (Dachgang, Ostseite, 700 neben Johns Bahn)
 JOHN_TUER = (-7350, -400)       # RE15_R38F_JOHN_TUER_X/Z   Johns Spawn in der Dachtuer
 JOHN_TUER_YAW = 1024            # RE15_R38F_JOHN_TUER_YAW   Blick -Z (in den Raum)
 GANG_AUSGANG = (-7350, -7600)   # RE15_R38F_GANG_X/Z        Ausgang des Dachgangs (Rolladen-Zelle z -7200..-6700)
@@ -191,8 +190,9 @@ def baue_riegel():
     kopie("1141", 0x00B1A, 0x00B42, [0x44, 0x01, 0x27, 0x30], "(Gorillas geparkt wie sub00 beim Original-Szenenstart)")
     cut_chg(6, "Cut_chg 6 = Dachgang (Kamera (-8292,-838,-6606) -> Dachtuer)")
     work_player()
-    pos_set(ELZA_SEITE, "Pos_set Elza beiseite (PORT-WAHL; Form ROOM1141 sub02 @0x00C32)")
-    op([0x34, 0x04] + list(s16(ELZA_SEITE_YAW)), "Member_set rot_y = 3072 (+Z, Dachtuer; Form sub02 @0x00C3A `34 04 00 00`)")
+    dest(8, 0, ELZA_SEITE, "Plc_dest RUECKWAERTS (Modus 8) Elza weicht von der Tuer zurueck = Form ROOM1211 sub02 @0x0212A "
+                           "`40 00 08 00 ..` (Elza in der Zellen-Szene)")
+    warte(5, 0, 0, "Elza zurueckgewichen")
     d = RDT["1141"]
     john = bytearray(d[0x00B06:0x00B1A])
     if john[:4] != bytes([0x44, 0x00, 0x49, 0x40]):
