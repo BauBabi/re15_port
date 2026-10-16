@@ -1,0 +1,39 @@
+# Runde 37 Spur L, Nachbesserung 2 — Messer-Paarlaeufe an der exe (messer_laeufe.sh), je Lauf: messer_ausw.py (Platz 5) + erholung_ausw.py (P3-Ausgaenge, ROOM1130-Besuch)
+## vor (exe Merge-Stand 44721dca + Spur L ohne P3-Fix)
+w=20.000 | anm1 0 anm2 2 alle 2 griffe 2 | Treffer F1183,F1213 | Griffe F888,F1236 | P3 SUMME {'0x201': 2}
+w=20.033 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1184 | Griffe F888,F1213 | P3 SUMME {'0x201': 1}
+w=20.067 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1185 | Griffe F888,F1214 | P3 SUMME {'0x201': 1}
+w=20.100 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1186 | Griffe F888,F1214 | P3 SUMME {'0x201': 1}
+w=20.133 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1187 | Griffe F888,F1214 | P3 SUMME {'0x201': 1}
+w=20.167 | anm1 0 anm2 4+ alle 4 griffe 1 | Treffer F1158,F1188,F1218,F1377 | Griffe F888 | P3 SUMME {'0x201': 1, '0x101': 1, '0xB01': 1}
+w=20.200 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1189,F1219,F1249 | Griffe F888,F1272 | P3 SUMME {'0x101': 1, '0x201': 2}
+w=20.233 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1190,F1220,F1250 | Griffe F888,F1273 | P3 SUMME {'0x101': 1, '0x201': 2}
+w=20.267 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1191,F1221,F1251 | Griffe F888,F1274 | P3 SUMME {'0x101': 1, '0x201': 2}
+w=20.300 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F873,F1177,F1207 | Griffe F904,F1230 | P3 SUMME {'0x201': 2, '0x101': 1}
+w=20.333 | anm1 1 anm2 1 alle 2 griffe 2 | Treffer F874,F1088 | Griffe F904,F1333 | P3 SUMME {'0x201': 1, '0xB01': 1}
+w=20.367 | anm1 1 anm2 1 alle 2 griffe 2 | Treffer F875,F1089 | Griffe F904,F1356 | P3 SUMME {'0x201': 1, '0xB01': 1}
+w=20.400 | anm1 1 anm2 1 alle 2 griffe 2 | Treffer F876,F1090 | Griffe F905,F1357 | P3 SUMME {'0x201': 1, '0xB01': 1}
+w=20.433 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F877,F1091,F1121 | Griffe F905,F1146 | P3 SUMME {'0x201': 3}
+w=20.467 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F878,F1197,F1227 | Griffe F901,F1252 | P3 SUMME {'0x201': 3}
+w=21.3 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F873,F1177,F1207 | Griffe F904,F1230 | P3 SUMME {'0x201': 2, '0x101': 1}
+w=22.2 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1189,F1219,F1249 | Griffe F888,F1272 | P3 SUMME {'0x101': 1, '0x201': 2}
+w=23.7 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1189,F1219,F1249 | Griffe F888,F1272 | P3 SUMME {'0x101': 1, '0x201': 2}
+## nach (exe mit P3-Fix)
+w=20.000 | anm1 0 anm2 2 alle 2 griffe 2 | Treffer F1183,F1213 | Griffe F888,F1236 | P3 SUMME {'0x201': 2}
+w=20.033 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1184 | Griffe F888,F1213 | P3 SUMME {'0x201': 1}
+w=20.067 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1185 | Griffe F888,F1214 | P3 SUMME {'0x201': 1}
+w=20.100 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1186 | Griffe F888,F1214 | P3 SUMME {'0x201': 1}
+w=20.133 | anm1 0 anm2 1 alle 1 griffe 2 | Treffer F1187 | Griffe F888,F1214 | P3 SUMME {'0x201': 1}
+w=20.167 | anm1 0 anm2 2 alle 2 griffe 2 | Treffer F1158,F1188 | Griffe F888,F1216 | P3 SUMME {'0x201': 1, '0x10101': 1}
+w=20.200 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1189,F1219,F1249 | Griffe F888,F1272 | P3 SUMME {'0x10101': 3}
+w=20.233 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1190,F1220,F1250 | Griffe F888,F1273 | P3 SUMME {'0x10101': 3}
+w=20.267 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1191,F1221,F1251 | Griffe F888,F1274 | P3 SUMME {'0x10101': 3}
+w=20.300 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F873,F1177,F1207 | Griffe F904,F1230 | P3 SUMME {'0x201': 2, '0x10101': 1}
+w=20.333 | anm1 1 anm2 1 alle 2 griffe 2 | Treffer F874,F1088 | Griffe F904,F1333 | P3 SUMME {'0x201': 1, '0xB01': 1}
+w=20.367 | anm1 1 anm2 1 alle 2 griffe 2 | Treffer F875,F1089 | Griffe F904,F1356 | P3 SUMME {'0x201': 1, '0xB01': 1}
+w=20.400 | anm1 1 anm2 1 alle 2 griffe 2 | Treffer F876,F1090 | Griffe F905,F1357 | P3 SUMME {'0x201': 1, '0xB01': 1}
+w=20.433 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F877,F1091,F1121 | Griffe F905,F1146 | P3 SUMME {'0x201': 3}
+w=20.467 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F878,F1197,F1227 | Griffe F901,F1252 | P3 SUMME {'0x201': 3}
+w=21.3 | anm1 1 anm2 2 alle 3 griffe 2 | Treffer F873,F1177,F1207 | Griffe F904,F1230 | P3 SUMME {'0x201': 2, '0x10101': 1}
+w=22.2 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1189,F1219,F1249 | Griffe F888,F1272 | P3 SUMME {'0x10101': 3}
+w=23.7 | anm1 0 anm2 3 alle 3 griffe 2 | Treffer F1189,F1219,F1249 | Griffe F888,F1272 | P3 SUMME {'0x10101': 3}

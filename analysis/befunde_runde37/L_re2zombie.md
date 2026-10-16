@@ -33,11 +33,12 @@ wie @0x80101540-a0 / @0x8010159c. Dazu Zensus der uebrigen OFFEN-Marken (Bewegun
       breitere Testauswahl -> vier weitere verschobene Riegel gefunden und mit Mechanismus angepasst (5b), Abschluss
 - [x] Nachbesserung 1 (2026-10-14, nach Abnahme 0): M1 = Nutzer-Satz zum Messer an die exe-Messung angepasst (reine
       Textkorrektur, kein Code), s. Abschnitt "Nachbesserung 1"
-- [ ] Nachbesserung 2 (begonnen 2026-10-14, am Monatslimit abgebrochen, Rest 7f581fde UNGEPRUEFT = nur die |dx|+|dz|-
-      Kennzeichnung in M2/N1 und diese Zeile; FORTGESETZT 2026-10-16 nach dem Merge von master 44721dca und der Freigabe
-      des Orchestrators): M1 = Erholungsleiter P3 im CODE korrigiert (Inversion @0x80105B3C + Ein-Angreifer-Riegel
-      @0x80105AA0-B0 + 0x800152C8 @0x80105B98), Texte richtiggestellt; M2 = Messer-Aussage phasenrobust, nach dem Fix an der
-      exe neu gemessen. Abschnitt "Nachbesserung 2"
+- [x] Nachbesserung 2 (begonnen 2026-10-14, am Monatslimit abgebrochen, Rest 7f581fde UNGEPRUEFT = nur die |dx|+|dz|-
+      Kennzeichnung in M2/N1 und diese Zeile; FORTGESETZT und abgeschlossen 2026-10-16 nach dem Merge von master 44721dca
+      und der Freigabe des Orchestrators): M1 = Erholungsleiter P3 im CODE korrigiert (Inversion @0x80105B3C + Ein-
+      Angreifer-Riegel @0x80105AA0-B0 + 0x800152C8 @0x80105B98 + Gang-Zeilen-Timer +0x158 @0x80101B24), Riegel
+      unit_r37_re2zombie_p3 8/8, Texte richtiggestellt; M2 = Messer-Aussage phasenrobust, nach dem Fix an der exe neu
+      gemessen (18 Laeufe: je Anmarsch 7 / 31 wie vorher). Abschnitt "Nachbesserung 2"
 
 ## Schritt 0 — Lektuere (Befunde)
 
@@ -497,8 +498,8 @@ Gezielte Tests (Baum r37_re2zombie, Stand fe329139 = Code ab2bf2b9; keine volle 
   `100% tests passed, 0 tests failed out of 287`.
 * Freigabe (AUFTRAG Runde 38, "gehe die 2 Punkte an"; VERTRAG Runde 38 Fortsetzung L): die Inversion in re2z_hit_main
   case 3 und der fehlende Ein-Angreifer-Riegel @0x80105AA0-B0 werden KORRIGIERT. Runde 38 Spur U (wasserzombie) haengt
-  parallel einen Haken in dieselbe Datei — geaendert sind nur case 3, ein neuer Helfer neben den Runde-37-Helfern und die
-  Sonden-Zaehler.
+  parallel einen Haken in dieselbe Datei — geaendert sind nur case 3, ein neuer Helfer neben den Runde-37-Helfern, die
+  Sonden-Zaehler und zwei Kommentar-Stellen (Handler-Kopf "P3 @0x80105A50", Weg-Zahl im Produzenten-Block).
 
 ### M1 — Erholungsleiter P3 (Text UND Code)
 
@@ -639,8 +640,9 @@ exe mit dem Fix; Basis = Spalte der Abnahme 1, nicht wiederholt):
 * Wirkung des Fixes an der exe: jede Erholung, die das Leiter-Ende erreicht, geht jetzt 0x10101 (vorher 0x101 -> EXEC[1]-P0
   mit Zufalls-Startbild); weil Leon unter 2000 im Kegel steht, schaltet Produzent (2) im ersten Gang-Takt ohnehin in den
   Arme-hoch-Gang — deshalb bleiben Treffer- und Griffbilder in 17 von 18 Laeufen gleich. Einzige Aenderung: w = 20.167 —
-  vor dem Fix fuehrte der andere Strom nach der 0x101-Erholung (F1211) zu einem Ausfall 0xB01 und KEINEM zweiten Griff bis
-  F1400 (4+ Treffer), nach dem Fix greift der Zombie nach dem zweiten Treffer (F1216, 2 Treffer).
+  vor dem Fix: Erholung F1210 0x101 (Folgetakt EXEC[1]-P0, Clip neu), dritter Treffer F1218, Erholung F1240 0xB01 (Sturz
+  nach vorn, EXEC[11]) und kein zweiter Griff bis F1400 (4+ Treffer); nach dem Fix: Erholung F1210 0x10101 (Gang laeuft
+  weiter), Griff F1216 vor dem dritten Schlag (2 Treffer).
 * Nahkampf nicht schlechter: je Anmarsch gleich (7 / 31 wie vor dem Fix), alle Treffer 41 = Basis.
 * M1 an der exe, Bild fuer Bild (w = 20.200, Platz 5 Typ 0x11, state.log; gleiche Eingabe, bis F1210 bitgleich):
 
@@ -687,7 +689,11 @@ Verlauf stehen; dieser Abschnitt ersetzt ihre Aussage "weniger Schlaege".
   wiederholt `ctest --test-dir re15_port/build_l2 -R "^integration_r34_granaten$" --timeout 1200 -V` ->
   `100% tests passed, 0 tests failed out of 1`. Vorher (build, Merge-Stand, derselbe Ausdruck): `100% tests passed, 0 tests
   failed out of 14`. Die Meldungszeilen (`-- ...`) aller 14 sind vorher/nachher gleich (ausser dem Laufordner-Pfad).
-* Integration am Ende, Hauptordner (seriell): INTEG_FINAL
+* Integration am Ende, Hauptordner (seriell):
+  `ctest --test-dir re15_port/build -R "^integration_(r37_re2zombie|r37_zombieaktiv|r34_granaten|r35_granate|r37_beretta|r36_schuss)$" --timeout 1200`
+  -> **`100% tests passed, 0 tests failed out of 6`** (r34_granaten 221,8 s, r35_granate 186,3 s, r36_schuss 176,3 s,
+  r37_beretta 216,8 s, r37_re2zombie 56,9 s, r37_zombieaktiv 25,3 s).
+* Rohdaten der exe-Messer-Laeufe: `L_belege/messer_vor_nach.txt` (je Lauf Zaehlung + P3-Ausgaenge).
 
 ## OFFEN
 
