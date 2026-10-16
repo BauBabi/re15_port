@@ -101,7 +101,7 @@ RDT-Nachrichten: 1011 = 24 (0..23), 1021 = 15, 1131 = 6, 1141 = 15. Port-Ids F: 
   Help me out." (32 kHz, 2,90 s). Huellkurve (10-ms-RMS, Schwelle 0,02): Sprache 0,28-0,80 / 0,90-1,87 /
   **2,04-2,59 s**, Pause 1,87-2,04 s. Schnitt ab 1,95 s -> "Help me out." (0,95 s; Whisper-Gegenprobe "Help me out.").
   => **Wahl "Help": Johns eigene Stimme** (gleicher Sprecher wie in der Szene direkt danach; Kendo hat kein Help,
-  Irons waere ein fremder Sprecher). Datei synchro/STAGE1/room1141/john_help.wav (Nutzer kann sie ersetzen).
+  Irons waere ein fremder Sprecher). Datei synchro/STAGE1/room1141/john_help.wav, seit 7fa09458 main42.wav (Nutzer kann sie ersetzen).
 - Klopfen/Haemmern: RE2 ROOM1060 ("An ominous wind can be heard...", "Zombies are inside...!!", "It's too dangerous
   to go back outside...!!" — die Huette, in der die Zombies gegen die Tuer schlagen; RE2_SOUND_LISTE "ROOM106.SAP -
   Cabin sounds - Zombies breaking in"). Dort laeuft das Schlagen als SCHLEIFE, sub05 @Datei 0x0F26 (106 B):
@@ -155,7 +155,7 @@ genau ein solches Auftauchen und ist ersetzt (6f1890c5):
   ROLL1141, LEICHE1021, HAEMMERN, BEFREIUNG mit Listing je Zeile + Texte + Anker),
   `re15_port/engine/src/gen/dining_r38_schluessel.inc` (tools/r38_dining/re2_export.py: RE2 Herz-Schluessel 0x5B).
 - NEUE DATEN `re15_port/shared_assets/RE2/KLOPF1060.EDT/.VH/.VB` (RE2 ROOM1060 snd0 bytegleich),
-  `synchro/STAGE1/room1141/john_help.wav` ("Help me out.", Schnitt aus room1171/main01.wav), `synchro/STAGE1/room1141/
+  `synchro/STAGE1/room1141/main42.wav` ("Help me out.", Schnitt aus room1171/main01.wav; bis 7fa09458 john_help.wav), `synchro/STAGE1/room1141/
   main40.wav` ("Are you okay? What's happened?", Schnitt aus main02.wav) — Werkzeug tools/r38_dining/sprache_schneiden.py.
 - HAKEN (je 1-5 Zeilen, Kommentar "Runde 38 Spur F"): scd_room_setup.c (Installer am Blockende), scd_vm.c
   (scd_event_fire-Kette + op_evt_exec), platform/pc/main.c (Boot-/CONTINUE-Installer, Prop-Lader 1011, Icon/Bild an
