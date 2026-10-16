@@ -566,9 +566,10 @@ gibt es seit v0.3.96".
 ## Nachbesserung 2 (2026-10-14, nach Abnahme 1 `P_abnahme_1.md`)
 
 Stand (fortlaufend):
-- [ ] M1 ROOM3050/3051 Cut 15: Generator-Masken uebermalen den Konsolen-Cursor (NB2.1)
-- [ ] M2 Kopfoberkante (und Fussende) vom Figurmodell nie abgetastet, ROOM30A0 Cut 0 (NB2.2)
-- [ ] Bau + gezielte Tests (NB2.3)
+- [x] M1 ROOM3050/3051 Cut 15: Generator-Masken uebermalen den Konsolen-Cursor (NB2.1) - an der exe 60 -> 0 (Leon, Elza)
+- [x] M2 Kopfoberkante (und Fussende) vom Figurmodell nie abgetastet, ROOM30A0 Cut 0 (NB2.2) - an der exe 4/7 -> 0/0
+- [x] Riegel + Gegenprobe (NB2.3), Folgen der neuen Tabelle (NB2.4)
+- [ ] Je-Cut-Liste, Zufallswege, Bau + gezielte Tests (NB2.5/NB2.6)
 
 Fortsetzung 2026-10-16 (der erste NB2-Agent brach am 2026-10-14 ~03:3x am Monatslimit ab): vorliegend ff2a5b87 (Generator
 pixelgenaues Figurraster, Sektion ohne Stehplatz ganz aus, Werkzeug `punkt`, Riegel-Checks) und 9fd9428b (Tabelle neu,
@@ -591,7 +592,8 @@ Gezeichnet wird in diesem Cut aber der Ziel-Cursor (Objekt 3, sub11..14 `Work_se
 Generator-Masken (Tiefe aus dem Bodenkontakt x0.90) liegen vor ihm. SCD-Bytes nachgeprueft (`re15_port/tools/scd_dump_room.py`
 ROOM3050.RDT): main00 @0x01FDC `Obj_model_set 2d 03 04 ... 9e b3 00 00 9c 58` = obj 3 type 4 pos (-19554,0,22684); sub10
 [0x2578..0x25B4] @0x02596 `Cut_chg 29 0f`; sub11..14 @0x025B4/@0x025C0/@0x025CC/@0x025D8 je `Work_set 2e 03 03` (kind 3 =
-Objekt, idx 3).
+Objekt, idx 3) + `Speed_set 2f 02 c8 00` / `2f 02 38 ff` / `2f 00 c8 00` / `2f 00 38 ff` + `Add_speed 30` (der Cursor
+wird in zwei Achsen um +-200 bewegt).
 
 **Messung vorher (Aufbau der Abnahme nachgefahren, exe alt = nb2alt):** `RE15_SET_FLAG=3:178 RE15_DEBUG_JUMP=3050@250
 RE15_PLAYER_POS=-24757,-15900,3072 RE15_FORCE_EVENT=10@300 RE15_PRESS=square@420,square@422,square@480,...,square@960,
@@ -630,7 +632,7 @@ der Riegel verlangt deshalb Cursor-Punkte in B (unten).
 
 | Lauf | Log Cut 15 | A/B Punkte > 24 | davon Cursor-Innenrand | Cursor-Innenrand-Punkte in B | A bitgleich B |
 |---|---|---|---|---|---|
-| Leon alt (nb2alt, ohne GIVE - vor dem Merge noetig nicht) | `masks=36 fg_atlas=1` + Spur-P-Zeile | 138 | **60** | 62 | nein |
+| Leon alt (nb2alt; ohne GIVE - vor dem Merge nicht noetig) | `masks=36 fg_atlas=1` + Spur-P-Zeile | 138 | **60** | 62 | nein |
 | Leon neu (`runs/k15g_neu_A/B`) | `masks=0 fg_atlas=1` | **0** | **0** | 62 | **ja** |
 | Elza alt (`RE15_TITLE_SHOT_CHAR=1`, ROOM3051) | `masks=36 fg_atlas=1` | 138 | **60** | 62 | nein |
 | Elza neu (`runs/k15ge_neu_A/B`) | `masks=0 fg_atlas=1` | **0** | **0** | 62 | **ja** |
