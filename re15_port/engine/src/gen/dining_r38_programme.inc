@@ -263,7 +263,7 @@ static const uint8_t k_r38f_p_leiche1021[54] = {
  *   +0058 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x58
  *   +005C 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
  *   +0060 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
- *   +0064 36 3d 00 00 00 00 00 00 00 00 00 00    Se_on(0x3D,0) "Help me out." (NUTZER-VORGABE: Help als Ton; john_help.wav)
+ *   +0064 36 3d 00 00 00 00 00 00 00 00 00 00    Se_on(0x3D,0) "Help me out." (NUTZER-VORGABE: Help als Ton; Sprachzeile main42.wav)
  *   +0070 08 00                                Endif = sub01 @0x00C10
  *   +0072 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x5E
  *   +0076 10 00                                Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test; RE2 ROOM1060 sub05 +0x62 Goto)

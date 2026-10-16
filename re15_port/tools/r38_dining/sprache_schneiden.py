@@ -9,7 +9,7 @@ Beide Schnitte liegen in einer GEMESSENEN Sprechpause (10-ms-RMS < 0,02 des Spit
      ("Same here. Are you okay? What's happened?" -> "Are you okay? What's happened?"; Pause 0,98-1,50 s).
      Fuer ROOM1141 msg 40 (Port-Id, VERTRAG 1.2) = msg 2 ohne "Same here..." (Runde 37 Nachtrag 14 Punkt 5).
      Id 2 behaelt ihre Aufnahme (VERTRAG 1.2: Ids mit Nutzer-WAV nie umwidmen).
-  2. synchro/STAGE1/room1141/john_help.wav = room1171/main01.wav ab 1,95 s
+  2. synchro/STAGE1/room1141/main42.wav (Hilferuf, Sprach-Id 42 ohne Text) = room1171/main01.wav ab 1,95 s
      ("We need to get this thing off of here. Help me out." -> "Help me out."; Pause 1,87-2,04 s) — Johns
      Hilferuf vom Dach (Johns eigene Stimme; voice/Kendo hat kein "Help", gemessen per Transkription).
      Kein Message-Name: der Stimmen-Lader (mainNN.wav) liest die Datei NICHT; sie spielt nur ueber den
@@ -27,7 +27,7 @@ SYN = os.path.join(REPO, "synchro", "STAGE1")
 SCHNITTE = (
     # (Quelle, sha1 der Quelle, Schnitt ab [s], Pause [von, bis], Ziel)
     ("room1141/main02.wav", None, 1.24, (0.98, 1.50), "room1141/main40.wav"),
-    ("room1171/main01.wav", None, 1.95, (1.87, 2.04), "room1141/john_help.wav"),
+    ("room1171/main01.wav", None, 1.95, (1.87, 2.04), "room1141/main42.wav"),
 )
 
 

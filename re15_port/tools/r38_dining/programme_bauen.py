@@ -25,7 +25,7 @@ PROGRAMME
              ersten Bild auf JOHN_GANG.
              Musik = Sce_bgm_control in der Form sub00 @0x00B4E (MAIN-Slot Play); Klopfen = RE2 ROOM1060 sub05
              (Satz 0x0A, Sleep 30, 0x0B, Sleep 30, 0x0B, Sleep 90 ... Sleep 90) mit der Port-Bank 0x3C
-             (KLOPF1060 = RE2-ROOM1060-snd0); "Help" = Port-Bank 0x3D Satz 0 (john_help.wav) in der zweiten
+             (KLOPF1060 = RE2-ROOM1060-snd0); "Help" = Port-Bank 0x3D Satz 0 (Sprachzeile main42.wav) in der zweiten
              90er-Pause. Schleife = While Ck(3,0x6A)==0 (Form sub03 @0x00FA8 `0f 04 ..`, Ck sub00 @0x00B84), jede
              Ton-Zeile in Ifel_ck Ck(3,0x6A)==0 (Form sub01 @0x00BFE `06 00 ..`): das Original-Set(3,0x6A)=1 von
              sub06 @0x00FF6 (Antwort "ja" am Gemaelde) beendet Klopfen und Hilferuf ohne C-Eingriff.
@@ -206,7 +206,7 @@ def baue_haemmern():
     sleep(30, "Sleep 30  = RE2 ROOM1060 sub05 +0x3E")
     ifel_6a(bytes([0x36, BANK_KLOPFEN, 0x0B] + [0] * 9), "Se_on(0x3C,0x0B) Klopfen = RE2 ROOM1060 sub05 +0x4C")
     sleep(90, "Sleep 90  = RE2 ROOM1060 sub05 +0x58")
-    ifel_6a(bytes([0x36, BANK_HILFE, 0x00] + [0] * 9), "Se_on(0x3D,0) \"Help me out.\" (NUTZER-VORGABE: Help als Ton; john_help.wav)")
+    ifel_6a(bytes([0x36, BANK_HILFE, 0x00] + [0] * 9), "Se_on(0x3D,0) \"Help me out.\" (NUTZER-VORGABE: Help als Ton; Sprachzeile main42.wav)")
     sleep(90, "Sleep 90  = RE2 ROOM1060 sub05 +0x5E")
     op(b"\x10\x00", "Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test; RE2 ROOM1060 sub05 +0x62 Goto)")
     laenge = sum(len(b) for b, _ in prog[kopf + 1:])

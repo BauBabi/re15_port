@@ -2388,6 +2388,8 @@ static void re15_voice_play(uint16_t room, int voice_id)
     re15_xa_set_filter((uint8_t)(room & 0xFF), (uint8_t)voice_id);
     re15_xa_read_s(s_voice_clip[voice_id].pcm, s_voice_clip[voice_id].len);
 }
+/* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */
+void re15_audio_stimme(uint16_t room, int voice_id) { re15_voice_play(room, voice_id); }
 
 /* ── re15_ss implementation: VAB soundfont + SEQp software synth ─────────── */
 

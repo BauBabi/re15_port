@@ -139,11 +139,15 @@
 /* Port-Baenke der Klopf-Schleife (Se_on pc[1]; RE1.5 kennt Bank 0..5, FUN_80045024 `sltiu 0x6` @0x80045094):
  *   0x3C = KLOPF1060 = RE2 ROOM1060 snd0 (shared_assets/RE2/KLOPF1060.*), Satz 0x0A/0x0B = das Schlagen
  *          (RE2 ROOM1060 sub05 @0x0F26 +0x22/+0x32/+0x4C);
- *   0x3D = Johns Hilferuf synchro/STAGE1/room1141/john_help.wav ("Help me out.", Schnitt aus room1171/main01.wav). */
+ *   0x3D = Johns Hilferuf als SPRACHZEILE ohne Text: synchro/STAGE1/room1141/main42.wav ("Help me out.", Schnitt aus
+ *          room1171/main01.wav, tools/r38_dining/sprache_schneiden.py), gespielt ueber den Sprach-Pfad (audio_pc.c
+ *          re15_voice_play, Pegel-Boden wie jede synchro-Zeile) — Begruendung und Pegelmessung dining_r38_pc.c Kopf.
+ *          Id 42 = Port-Id des Raums (VERTRAG Runde 38 1.2: 1141 40-49), ohne Message-Text (NUTZER-VORGABE: kein Text). */
 #define RE15_R38F_SE_BANK_KLOPFEN   0x3C
 #define RE15_R38F_SE_BANK_HILFE     0x3D
 #define RE15_R38F_KLOPF_DATEI       "KLOPF1060"
-#define RE15_R38F_HILFE_DATEI       "synchro/STAGE1/room1141/john_help.wav"
+#define RE15_R38F_HILFE_STIMME      42
+#define RE15_R38F_HILFE_DATEI       "synchro/STAGE1/room1141/main42.wav"
 /* Lagen (PORT-WAHL; Formen und Begruendung tools/r38_dining/programme_bauen.py, Dossier 3.0). Der Riegel
  * test_r38_dining1141 vergleicht sie mit dem Werkzeug.
  *   JOHN_GANG: hinter dem Rolladen im Dachgang — x = Prop obj 0 x (sub00 @0x00B9C+10 `2c e4` = -7124), z 550 hinter der
