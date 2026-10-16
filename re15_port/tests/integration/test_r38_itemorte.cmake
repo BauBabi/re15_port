@@ -8,11 +8,13 @@ cmake_minimum_required(VERSION 3.16)
 #   B1/B2/B3  BILD im Nutzer-Cut, je zwei Laeufe, einziger Unterschied das Taken-Bit: der Unterschied (|dR|+|dG|+|dB| > 30)
 #             liegt im Fenster um die Marke (+-2 px) und nirgends sonst — Loescher 1030 (Leon), Parking Lot Key 10F0
 #             (Leon), Prison Key 10F1 (Elza)
-#   A         AUFNAHME 1030 vor dem Pfeiler: Modal -> Ja -> (3,0x85); der dritte Druck an derselben Stelle zeigt den
+#   B4        Prison Key in der Spiel-Fenstergroesse (RE15_WINDOW_SCALE=3): die duenne Ringlinie ist zusammenhaengend
+#   A        AUFNAHME 1030 vor dem Pfeiler: Modal -> Ja -> (3,0x85); der dritte Druck an derselben Stelle zeigt den
 #             verschobenen Monitor-Satz msg 14 (die genommene Zone wird uebersprungen, @0x80042f50)
 #   K1/K2     AUFNAHME an der Pinnwand 10F0 (Leon) / 10F1 (Elza, + Zellen-Flag (4,0xEC)); danach msg 4
 #   V1/V2/V3  SICHT: 1030 Cut 10 nach dem Rolltor-Tausch ((4,0x0F), Cut_replace 3->10 @0x01FF7) und 10F0 Cut 7 zeigen
 #             KEINEN Unterschied (Regel re15_itemorte_r38_verdeckt), 10F0 Cut 6 zeigt den Schluessel
+#   V4/V5     dasselbe bei Elza: 10F1 Cut 7 ohne, Cut 6 mit Prison Key
 #   E         Elza: ROOM1031 ohne Loescher; ROOM1091 der leere Loescher am Boden wie Runde 37
 #   O         ROOM1050 (Leon): kein Loescher mehr
 #
@@ -154,6 +156,13 @@ k_lauf(b3_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd}" _b3)
 pruef(B3 _b3 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,3618,2048), Zone Slot 8")
 k_lauf(b3_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd}" _b3o)
 k_bild(B3 b3_mit b3_ohne 131 75 145 87 10)
+# B4: der Prison Key (RE2 "Cabin Key": duenner Ring, Linie 1..1,5 Texel) in der Fenstergroesse, in der gespielt wird —
+# RE15_WINDOW_SCALE=3 (960x720, 3D in Fensteraufloesung, render_pc.c Fenster = groesste ganze Skala <= 90 % des
+# Bildschirms). Fenster = B3-Fenster x 3. Gemessen 2026-10-16: 112 Pixel, Huelle x 402..431 y 234..257, aussen 0
+# (Parking Lot Key ebenso: 491). Bei Skala 1 trifft die Abtastung die Ringlinie nur stellenweise (B3: 14).
+k_lauf(b4_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4)
+k_lauf(b4_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4o)
+k_bild(B4 b4_mit b4_ohne 393 225 437 263 90)
 
 # --- A: Aufnahme ROOM1030 vor dem Pfeiler; dritter Druck = Monitor-Satz aus Slot 20 -------------------------------------
 # Skript (30 Hz ab Spielbild 60): A@90 Modal, A@198 Ja, A@321 an derselben Stelle.
@@ -182,6 +191,15 @@ k_bild(V2 v2_mit v2_ohne 0 0 319 239 0)
 k_lauf(v3_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v3)
 k_lauf(v3_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v3o)
 k_bild(V3 v3_mit v3_ohne 76 62 103 81 50)
+# V4/V5: dieselbe Sicht bei Elza (ROOM10F1, Prison Key) — Cut 7 (Buecherregal, keine Masken) nicht gezeichnet, Cut 6
+# (zweite Kamera auf die Pinnwand) gezeichnet. Gemessen 2026-10-16: Cut 7 0 Pixel, Cut 6 29 Pixel x 83..97 y 67..78.
+k_lauf(v4_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_FORCE_CUT=7" _v4)
+k_lauf(v4_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_FORCE_CUT=7" _v4o)
+pruef(V4 _v4 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4")
+k_bild(V4 v4_mit v4_ohne 0 0 319 239 0)
+k_lauf(v5_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5)
+k_lauf(v5_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5o)
+k_bild(V5 v5_mit v5_ohne 76 62 103 81 20)
 
 # --- E: Elza ROOM1031 (kein Loescher) und ROOM1091 (der leere am Boden, Runde 37) ----------------------------------------
 k_lauf(e1 1031 "1031;-11500;-19500;2048;cut:0;elza" "W2" 90 "" _e1)

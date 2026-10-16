@@ -25,8 +25,9 @@ endforeach()
 #   integration_r38_itemorte  ECHTE exe am Lade-Weg (Spielstand + CONTINUE, Kartenwerkzeug probe_r37_feuerloescher_karte):
 #                             Bilder mit/ohne Taken-Bit im Nutzer-Cut (Unterschied = der Gegenstand, in der Marke), Aufnahme
 #                             per Eingabeskript (Modal, Ja, danach der verschobene Satz), verdeckte Cuts (1030 Cut 10 nach
-#                             dem Rolltor-Tausch, 10F0 Cut 7) ohne Unterschied, Cut 6 mit; Elza 1031 kein Loescher, 1091 der
-#                             leere am Boden (Runde 37 unveraendert), 1050 kein Loescher mehr
+#                             dem Rolltor-Tausch, 10F0/10F1 Cut 7) ohne Unterschied, Cut 6 mit; Prison Key auch in der
+#                             Spiel-Fenstergroesse (Skala 3); Elza 1031 kein Loescher, 1091 der leere am Boden (Runde 37
+#                             unveraendert), 1050 kein Loescher mehr
 if(TARGET re15_pc)
     add_test(NAME integration_r38_itemorte
              COMMAND "${CMAKE_COMMAND}"
