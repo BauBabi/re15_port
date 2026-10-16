@@ -1,9 +1,13 @@
 # Runde 38 — Spur E "elzaintro": Abnahme 0 (unabhaengig, fortlaufend)
 
-Baum `.claude/worktrees/r38_elzaintro`, Zweig `r38/elzaintro`, Kopf b8d361ea, Merge-Basis 1bcbd0ff. Abnahme 2026-10-16 ab 18:00.
+Baum `.claude/worktrees/r38_elzaintro`, Zweig `r38/elzaintro`, geprueft Code-Stand b8d361ea, Merge-Basis 1bcbd0ff.
+Abnahme 2026-10-16 18:00-18:18 (Teilbericht e1f0b96c, Sitzungslimit), fortgesetzt 21:00-22:05.
+**Ergebnis: BESTANDEN — beide Punkte erfuellt, alle Gates halten, keine Maengel (Abschnitt 6).**
 Grundsatz: nur was hier selbst am gebauten Stand gemessen ist, zaehlt. Messordner (Scratchpad, nicht versioniert), kurz `SP` =
 `C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad`:
-`SP/abn/a1_{leon,elza}` (Ton + Log) und `SP/e_abn0/` (Werkzeuge `tools/`, Laeufe `m2_*`, `n_*`, `alt_*`).
+`SP/abn/a1_{leon,elza}` (Ton + Log) und `SP/e_abn0/` (Werkzeuge `tools/`, Laeufe `m2_*`, `n_*`, `g_*` = v0.8.25,
+`riegel_v0825/`). Bilder = `RE15_FRAMEDUMP` (render_pc.c: `SDL_RenderReadPixels` des beschleunigten Renderers unmittelbar
+vor `SDL_RenderPresent`, also NACH Netz s_scene_black, Text und Fade = das praesentierte Bild; kein SOFTWARE_RENDER/AUTOSHOT).
 Laeufe mit eigenem Laeufer `SP/e_abn0/abn_lauf.sh` (Messkopie `re15_pc_abn0e_<pid>.exe` neben der exe, Ende per
 `RE15_EXIT_AT`, nie /IM): Neues Spiel ueber Titel + Charakterwahl (`RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1
 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1`, Elza zusaetzlich `RE15_PSELECT_AUTO_SWITCH=1`), `RE15_EVT_TRACE=1 RE15_MSG_LOG=1`.
@@ -154,6 +158,18 @@ dazu, nichts fuer 1240/1241/1031/1170). Laeufe `SP/e_abn0/g_leon`, `g_elza` (`RE
 - **Leon unveraendert:** Erzaehler F0..F445 v0.8.25 Leon gegen Spurbau Leon (`n_leon`): **446/446 pixelgleich**; Ton
   v0.8.25 Leon gegen Spurbau Leon (`SP/abn/a1_leon`): **2614 von 2614 Takten bitgleich** (Titel, Charakterwahl, Montage,
   Erzaehler, Szenenbeginn).
+- **Zeitliche Zuordnung (git):** `re15_port/engine/src/kartenitems_r36.c` fehlt in v0.8.23, ist in v0.8.24/v0.8.25 da; erster
+  Commit 554877f9 (2026-10-11), Merge cb1d5f59 ist Vorfahre von v0.8.24, nicht von v0.8.23. Der genannte Verursacher erklaert
+  den Befund (Lageplan-Prop = das Feld, Gegenprobe 9:89).
+- **Riegel gegen v0.8.25 (beide ROT, wie verlangt):** `cmake -DRE15_PC_EXE=<v0.8.25-Kopie> -DRE15_AUSWERT_TOOL=<probe> -DWORKDIR=
+  SP/e_abn0/riegel_v0825 -DTEIL=<teil> -P tests/integration/test_r38_elzaintro.cmake`:
+  - `schwarz`: exit 1, "Erzaehler F60: 74507 Pixel Elza != Leon, Lageplan-Feld 48 hell (soll 0/0), Text 2341 Pixel".
+  - `stimme`: exit 1, "msg 0: Elza-Ersatz 0x (soll 1), Leon-Clip 1x (soll 1)". Weil das die eigene Logzeile ist, habe ich
+    die eigentliche Tonmessung auf denselben v0.8.25-Mitschnitten nachgerechnet (`probe_r38_elzaintro_auswertung rms ...
+    1300 0 60 90 181 150 383 150 563 150 765 150 967 150 1180 110`): Leon 906/2817/3453/3435/3303/3612/3570, Elza
+    906/**1348/2184/2141/1872/2424/2439** (0,48..0,71 von Leon -> ausserhalb +-10 %), msg 5 Aufrufe Leon 11 / Elza **1** ->
+    auch diese Pruefungen waeren rot. Am Spurbau (mein gruener ctest-Lauf, `build/r38_elzaintro_wd/lauf_stimme_181870a6`):
+    Elza = Leon = 906/2817/3453/3435/3303/3612/3570, msg 5 11/11.
 
 ## 5. Vertrag und Tests
 ### 5.1 Vertrag (VERTRAG.md)
@@ -177,6 +193,7 @@ dazu, nichts fuer 1240/1241/1031/1170). Laeufe `SP/e_abn0/g_leon`, `g_elza` (`RE
   keine RVD-Zone hinein, Kamera = ROOM1170 Cut 7, BG13 = BG07, Gate genau fuer die zwei Paare) und
   `integration_r38_elzaintro_schwarz` (echte exe: Erzaehlerbilder F60/F230/F400 Elza = Leon pixelgleich, Kartenfeld
   dunkel, Lageplan in ROOM1031 nachweislich angelegt, Text >= 100 Pixel).
+- Gegenprobe: beide Integrationsriegel am ausgelieferten Stand v0.8.25 ROT (Abschnitt 4), am Spurbau gruen (5.3).
 - Luecke (kein Mangel, selbst nachgeprueft in 3.3): kein Riegel prueft Tueren mit Ziel ROOM1031 Cut 13.
 ### 5.3 Gezielter Lauf (keine volle Suite)
 `ctest --test-dir re15_port/build -R "<38 Tests>" --timeout 600 --output-on-failure`, Ausdruck in
@@ -193,4 +210,33 @@ Ergebnis: **`100% tests passed, 0 tests failed out of 38`**, `Total Test time (r
 (integration_r38_elzaintro_stimme 125,34 s, _schwarz 164,73 s, integration_r36_kartenitems_bild 619,53 s,
 integration_r36_story_elza 482,17 s, integration_elza_vollstart 104,85 s).
 
-(Abschnitt 6 folgt)
+## 6. Urteil
+| Punkt (Wortlaut) | Urteil | Beleg (kurz) |
+|---|---|---|
+| 1 "Bei Elzas Intro fehlt das Voiceover. Es ist das gleiche wie bei Leon." | **erfuellt** | Spurbau: Elza laedt main00..05 aus `synchro/STAGE1/room1240` (6 Ersatzzeilen), Mitschnitt Titel..Erzaehler 2669 Takte bitgleich mit Leon, Tonfenster 906/2817/3453/3435/3303/3612/3570 = Leon, msg 5 parkt 11/11, Montage 1429/1429 Bilder = Leon. v0.8.25: 0 Clips, Tonfenster 0,48..0,71 von Leon. Form der Nutzervorgabe belegt (msg 0..5 byte-gleich @0x638/@0x63C.., Message_on @0x057E../+4, Handler 0x800404f4). |
+| 2 "Im blackscreen vom preintro Text, scheint die map durch vom Raum bei Elza" | **erfuellt** | Spurbau: Erzaehler ROOM1031 Cut 13 F0..F445 — Huelle aller Pixel != 0 = Untertitelfeld x34..227/y181..211, Kartenfeld 0/446 (v0.8.25: 442/446, ganzer Schirm != 0); Montage-Schwarzbilder mit Text ohne ein Pixel > 1 ausserhalb des Textbands; Ursache = Lageplan-Prop (Gegenprobe 9:89, ab v0.8.24); Lageplan in der Lobby-Szene weiter sichtbar (F900). Original: Cut 13 nur ueber `29 0d` @0x02A74 (Handler 0x800402a0), keine Tuer/RVD-Zone hinein, BG13 = schwarzes Standbild, Objekte nur im Zweig Ck(3,125)==1. |
+
+### Gates
+- RE-Gate: haelt. Jede Konstante im Code mit Datei-Offset bzw. als NUTZER-VORGABE gekennzeichnet; alle zitierten Offsets
+  selbst gelesen; vier EXE-Handler/-Stellen selbst disassembliert (3.2); keine Guess-Tells, keine neuen Env-Schalter;
+  der Fix erklaert jeweils den gemessenen Befund (Punkt 1: fehlender Ordner room1241 -> Ersatz room1240, Differenz alt/neu
+  = genau die Clips; Punkt 2: Lageplan-Prop im Erzaehlerbild -> Netz unter dem Text, Differenz = Feld + (1,1,1)-Grund).
+- Vertrag: haelt (5.1). Tests: je Punkt Unit- + Integrationsriegel, messend, am alten Stand rot (4), gezielt 38/38 gruen (5.3).
+- Nebenwirkungen: Leon Bild + Ton alt = neu (4); Netz trifft keinen normalen Lobby-Moment (3.3); Elza-Vollstart,
+  Story-Lauf Elza, Lageplan-Bild, Roy/Leon 1170, Boot-/Dark-Start-Pins gruen.
+
+### Maengel
+Keine.
+
+### Hinweise (nicht blockierend, keine Nachbesserung noetig)
+1. Ein Riegel fuer "keine Tuer fuehrt in ROOM1031 Cut 13 / ROOM1170 Cut 7" fehlt; der Zustand ist heute selbst nachgeprueft
+   (3.3: 653 Tueren, Ziel-Schnitte nach 1030/1031 nur 0/2/6/7/8). Wer das Netz spaeter erweitert, sollte ihn ergaenzen.
+2. `integration_r38_elzaintro_stimme` bricht am alten Stand schon an der eigenen Logzeile ab; die Tonfenster waeren ebenfalls
+   rot (Abschnitt 4 nachgerechnet) — die Messung traegt also.
+3. Release (Orchestrator): neue Engine-Datei `engine/src/elzaintro_r38.c` -> Android-GLOB-Cache (`app/.cxx`) neu
+   konfigurieren (Memory reai-v2-android-glob-cache).
+4. Der Erzaehler-Text ("We barricaded ourselves ...") ist bei Leon (ROOM1170 msg 8..11) wie bei Elza (ROOM1031 msg 20..23)
+   unvertont; "das gleiche wie bei Leon" ist damit auch dort gewahrt (Abschnitt 1, Lesart "Voiceover").
+
+Aufgeraeumt: Messkopien `re15_pc_abn0e_*.exe`, `re15_pc_r38e_*.exe` und `re15_pc_v0825_abn0e.exe` aus dem Build-Ordner
+entfernt (nur `re15_pc.exe` liegt dort); kein Code geaendert, nur diese Datei committet.
