@@ -11,7 +11,27 @@ Baum `.claude/worktrees/r38_elzaintro`, Zweig `r38/elzaintro`, Basis 1bcbd0ff. S
 
 ## Punkt 1 — Voiceover Elza-Intro
 ### Messung vorher
-(laeuft)
+Stand 1bcbd0ff (= master nach v0.8.25 + Doku), Bau dieses Baums. Werkzeug `E_elzaintro_werkzeug/e_lauf.sh`
+(Neues Spiel ueber Titel + Charakterwahl, `RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1` [+ `_SWITCH=1` fuer Elza],
+`RE15_AUDIO_CAP_SYNC`, `RE15_WINDOW_SCALE=1`, `RE15_SCD_TRACE=1`, Bild-Waechter `e_waechter.py`).
+Laeufe m2_leon / m2_elza (Ausgaben im Scratchpad, Zahlen hier):
+
+| | Leon (ROOM1240) | Elza (ROOM1241) |
+|---|---|---|
+| Message_on (SCD-Trace) | F181 id0 @0x057E, F383 id1, F563 id2, F765 id3, F967 id4, F1169 id5 @0x05FA | dieselben Bilder, @0x0582 .. @0x05FE |
+| `[voice] clip loaded` | main00..main04 (+ main05 nach dem Riegel) | **keine einzige Zeile** |
+| msg 5 geparkt (Stimm-Riegel op_message_on) | F1169..F1179 (main04 laeuft noch) | nein |
+| Uebergabe in den Folgeraum | F1431 -> ROOM1170 | F1421 -> ROOM1031 |
+| Mitschnitt RMS (Mono, Mittel je 30 Bilder) F0..F150 | 0 / 0 / 344 / 785 / 1271 / 1238 | **identisch** (nur Musik) |
+| Mitschnitt RMS F180 / F210 / F390 / F570 | 3763 / 2096 / 3522 / 3921 | **949 / 1159 / 1723 / 2374** (keine Stimme) |
+
+Bildvergleich Montage Leon gegen Elza, Bild fuer Bild (1421 Bilder, `e_vergleich.py`): 232 Bilder verschieden, ALLE nur
+im Untertitel (F738-739, F940-1420: Leons Text steht laenger, weil op_message_on waehrend der Aufnahme parkt). Die
+Montage-Bilder selbst sind gleich. Ursache: siehe RE-Belege.
+### Messung vorher — Ursache
+`re15_voice_load_clip` (audio_pc.c) sucht `synchro/STAGE1/room1241/main0N.wav`; den Ordner gibt es nicht
+(`git log --all -- synchro/STAGE1/room1241` leer = nie vorhanden) -> `re15_voice_play` kehrt still zurueck. Keine
+Regression (nie vertont), daher kein Bisect.
 ### RE-Belege
 **Daten (selbst gemessen, Python ueber die RDT-Bytes, `re15_port/tools/rdt_msgdump.py` + Bytevergleich):**
 - Nachrichtenblock ROOM1240 @Datei 0x62C (Zeiger RDT+0x3C), ROOM1241 @0x630; Offsettabelle beider
@@ -43,7 +63,30 @@ bei Leon"); ihre FORM (Zeile fuer Zeile dieselbe Id) belegen die byte-gleichen N
 
 ## Punkt 2 — Pre-Intro-Schwarz: Raum scheint durch (Elza)
 ### Messung vorher
-(offen)
+Welche Schwarzblende: Die Montage (ROOM1240/1241) ist bei Leon und Elza bildgleich (s. Punkt 1, nur Untertitel-Dauer).
+Der Unterschied liegt im ERZAEHLER danach ("We barricaded ourselves ..." auf Schwarz): Leon ROOM1170 sub11 Cut 7,
+Elza ROOM1031 sub15 Cut 13 (@0x02A74 `29 0d`).
+
+Bild fuer Bild (Laeufe m2, 441 Erzaehlerbilder F0..F440): **438 von 441 Bildern verschieden.**
+- Elza: ein 8x6-Pixel-Feld bei x 91..98, y 107..112 (320x240) mit Farben (128,120,104), (104,104,96), (72,80,72) ...,
+  ab F3 (11 Pixel, Tuer-Einblendung) / F4 (46) / ab F5 dauerhaft 48 Pixel bis F440; dazu Grund (1,1,1) statt (0,0,0).
+- Leon: reines (0,0,0) + Text (Sicherheitsnetz s_scene_black, main.c, Raum 0x1170 + Cut 7).
+- Bilder: `E_elzaintro_bilder/vorher_erzaehler_f200_leon_links_elza_rechts.png` (Leon links, Elza rechts, das graue
+  Feld = die Karte), `vorher_elza_erzaehler_f200_ausschnitt_karte.png`, `..._verstaerkt_x40.png`.
+- Log Elza beim Eintritt in ROOM1031 (nach `Cut_chg(13)`): `[kartenitems] ROOM1031: Karte Blatt 2 (Bit 9,89) Prop obj
+  15 bei (-1692,-2769,-23638), Zone Slot 8` und `[prop-render] pi=0 oid=0x0F pos=(-1692,-2769,-23638)` — **"die map vom
+  Raum" ist woertlich der Lageplan 1F** (Runde 36 Spur N, `engine/src/kartenitems_r36.c`), ein Port-Prop an der Wand
+  der Lobby.
+- GEGENPROBE (eine Variable): derselbe Elza-Lauf mit `RE15_SET_FLAG=9:89` (Lageplan 1F genommen -> kein Prop,
+  `re15_kartenitems_r36_install` legt nur an, solange das Bank-9-Bit fehlt): keine `[kartenitems]`-Zeile, die farbigen
+  Pixel je Erzaehlerbild = genau Leons Textpixel (1875 / 1271 / 1914 / 354 / 0). Das Feld IST die Karte.
+
+Warum nur Elza: Elzas Erzaehler laeuft IN der Lobby (ROOM1031), Leons im Helipad-Raum ROOM1170 (dort haengt keine
+Karte, und das Netz s_scene_black faerbt Cut 7 ohnehin vollflaechig schwarz). Die Erzaehler-Kamera ist in BEIDEN
+Raeumen dieselbe — und in ROOM1031 ist sie die Lobby-Kamera (Bytes s. RE-Belege) — sie sieht den Lageplan.
+
+Regression: `kartenitems_r36.c` kam mit 554877f9 (Runde 36 Spur N), gemergt cb1d5f59, erstmals ausgeliefert v0.8.24
+e8b3958f; in v0.8.23 3ec5b1f8 gibt es die Datei nicht (`git ls-tree`). Bisect-Laeufe: siehe Tabelle unten.
 ### RE-Belege
 (offen)
 ### Umsetzung
