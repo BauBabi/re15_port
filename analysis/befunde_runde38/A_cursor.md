@@ -198,6 +198,34 @@ Spieler unabhaengig): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
   Zeichner FUN_800254a0/FUN_800256b0 mit demselben Verwurf (§2.1).
 * Port-eigene Props (dokumente_r34, feuerloescher_r37, granate_1150, inhalt_r35, irons_tisch_1150, kartenitems_r36,
   schluessel_r36, sicherung_1150) und alle Panel-/Hebetisch-Riegel: §5 (Bild-Riegel ihrer Spuren laufen mit).
+  **Fortsetzung 2026-10-16 abends: das reichte NICHT** — der Feuerloescher-Riegel prueft nur das LOG
+  (test_r37_feuerloescher.cmake Kopf: "geprueft wird das LOG"), ein falsch gewickeltes Modell faellt dort nicht auf.
+  Deshalb §4.5.
+
+### 4.5 Nebenwirkung auf PORT-GEBAUTE Modelle: Wicklung (Fortsetzung, 2026-10-16 abends)
+
+Der Verwurf zeichnet eine Flaeche nur, wenn ihre Ecken v0,v1,v2 auf dem Bildschirm im Original-Umlaufsinn liegen.
+Das stimmt fuer "zeigt zur Kamera" nur, wenn das Modell so gewickelt ist wie die Original-Modelle. Mass je Flaeche
+(Modellraum, kameraunabhaengig): w = sign(((v1-v0) x (v2-v0)) . (n0+n1+n2[+n3])) mit den gespeicherten
+(Licht-)Normalen. Werkzeug `A_belege/wicklung_props.py`:
+
+| Modelle | w < 0 | w > 0 | w = 0 |
+|---|---|---|---|
+| ALLE Original-Props aller RDTs (je Modell einmal, 119 Modelle; 107 rein w<0, 10 gemischt, 2 leer) | 9364 | 41 | 72 |
+| Port: Dokumente 1-4, Irons Diary/Keycard, Granate, Schrot, Lageplan-Karten 0-4, Schluessel Park/Prison, Sicherung, Hebetisch-Cursor | alle | 0 | 0 |
+| **Port: Feuerloescher `k_fl_md1_stehend` / `k_fl_md1_liegend` (gen/feuerloescher_r37.inc, Runde 37 NEU GEBAUT)** | 36 | **112** | 0 |
+
+-> Konvention des Originals: w < 0 (99,6 % aller Flaechen). Der Feuerloescher ist das EINZIGE Port-Modell mit
+umgekehrter Wicklung: die 90 Band-Vierecke (Boden-Fase, Mantel, Schulter, Hals) und die 16+4 Schlauch-Vierecke sind
+gegensinnig, die 10 Boden-Dreiecke und die 24 Kasten-Vierecke (Ventil, Griff, Hebel) richtig; von den 4
+Schlauch-Kappen je eine richtig, eine falsch. Ohne Verwurf war das unsichtbar; MIT Verwurf zeichnet der Port vom
+Mantel nur die abgewandte INNENSEITE.
+
+Messung (Lade-Weg wie Lauf E/F von test_r37_feuerloescher.cmake, `A_belege/lauf_loescher.sh`; exe ALT = 1bcbd0ff
+ohne Verwurf, exe VORWICKLUNG = 87aeed73 mit Verwurf und altem Modell): ROOM1050 Cut 6 (Loescher an der Wand)
+Skala 1: 13 Punkte geaendert (x 221..225, y 111..119); ROOM1090 Cut 5 (liegend): 11 Punkte (x 155..165). Skala 3
+(Nutzerfenster) ROOM1050: ALT voller roter Zylinder mit weissem Etikett; VORWICKLUNG schmaler, Etikett dunkel und
+schmal, unten ein schwarzer Rand = die Innenseite der Rueckwand. -> echte Nebenwirkung des Verwurfs, Behebung §3b.
 
 ## 5. Tests
 
