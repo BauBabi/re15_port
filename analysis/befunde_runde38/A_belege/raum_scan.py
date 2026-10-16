@@ -67,7 +67,7 @@ def main():
         ELZA = True
         rest = rest[1:]
     liste = rest or raeume()
-    with ThreadPoolExecutor(max_workers=4) as ex:
+    with ThreadPoolExecutor(max_workers=int(os.environ.get('SCAN_WORKERS', '4'))) as ex:
         erg = list(ex.map(lambda r: vergleich(aus, r), liste))
     with open(os.path.join(aus, 'scan.txt'), 'w') as f:
         for raum, n, bb in erg:
