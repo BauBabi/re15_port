@@ -102,8 +102,42 @@ RE15_DEBUG_JUMP=4000@250 (-> ROOM4001, debug.log "JUMP -> 400 LAB ENTRANCE (ROOM
   +0x1DE=0x1E, +0x5=0xD. Kein Spieler-Schreiben pro Bild, kein Schieben des Spiderman.
 - EM2B-Baenke (gemessen, CDEMD1.EMS Sektor 1104): Hauptbank 30 Clips (0xE fc 15 Wurzel x 354..-363, 0x12 fc 34),
   Opferbank 11 Clips (0 fc 15 Wurzel x 2089..1070, 3 fc 91 Kollaps, 8/9/0xA fc 6/30/30).
-### Zensus: alle Stellen, die die Spielerposition schreiben
-(laufend, s. Abschnitt 2b)
+### Zensus: alle Stellen, die die Spielerposition schreiben (Schritt 3 GENERELL)
+Gesucht (engine/src, Stand e2cc7673): jede Schreibstelle `pl/player->x|z`, jede absolute Platzierung (re15_victim_place
+= FUN_8001ad68 / RE2 0x80015CB8) und jeder Opfer-Latch/-Kollaps (re15_player_victim_latch*/devour/re2z_victim_begin).
+Die Fehlerklasse "Leon verschwindet" hat ZWEI Formen: (I) Platzierung vom Anker eines frueheren Griffs (Greifer kopiert
+seinen Anker nicht = FUN_8001ac38-Kopie fehlt), (II) eine einzelne Versetzung ueberquert eine ganze Wand (beide
+Original-Klemmen sind Punkt-Tests).
+
+| # | Stelle | Greifer | Anker-/Lagequelle | Befund |
+|---|---|---|---|---|
+| 1 | enemy_ai_common.c re15_enemy_ai_live_grab [0] | RE1.5-Zombie Stehen | re15_clip_anchor_set(Lauf-Bank) + Kopie (@0x801025f0, @0x8001ad28-48) | ok |
+| 2 | re15_zcrawl_grab_animate [0] | RE1.5-Kriecher | anchor_set + Kopie (@0x80103c04) | ok |
+| 3 | re15_dog_grabhold LATCH | RE1.5-Hund | Hund- und Spieler-Anker = Spielerlage (@0x8010f8ec/f4); 0x0b nur aus grabhold | ok |
+| 4 | re15_dog_state456 Fall 4/5/10/11 | RE1.5-Hund Maschine A/B | Latch OHNE Anker | unerreichbar: Zustand 4 setzt nur INIT mit +0x5 0/1 (@0x8010db88-b8) |
+| 5 | re15_crow_move / enemy_ai_re2_crow.c:1123 | Kraehe | keine Platzierung (0x21 ausgenommen, 0x801159bc ohne ad68) | ok |
+| 6 | maggot sub 15 PIN | Gorilla 0x27 | re15_affen_pin_anker (FUN_8001ac38 @0x8011ac18) | ok |
+| 7 | 0x1A RE1.5-Zweig (~12880) | Gitterarme | Anker = Greiferlage + Kopie (9661e369) | ok |
+| 8 | **B[5]/B[9] 0x2B** | **Spiderman Griff 1** | **kein Anker** | **DEFEKT -> behoben (FUN_8001ac38 @0x80112B08/@0x80113000)** |
+| 9 | **B[15] 0x2B** | **Spiderman Griff 2** | **Spieler = Gegnerlage jedes Bild, Gegner +40/Bild ohne Wand, Opfer-Platzierung mit altem Anker** | **DEFEKT -> behoben (einmalig @0x80114204/14)** |
+| 10 | B[8]/B[10] 0x2B | Spiderman Kollaps | Anker aus Griff 1 | ok (B[10] fehlte -> ergaenzt) |
+| 11 | enemy_ai_re2_zombie.c:1866/1870, :2578 | RE2-Zombie Stehen/Kriecher | re15_re2z_grab_anchor (0x80015b94) | ok |
+| 12 | enemy_ai_re2_dog.c:606/1260/1270 | RE2-Hund | re2d_grab_anchor | ok |
+| 13 | enemy_ai_re2_zellenarm.c:735-736 | RE2-Gitterarm | Spieler = Hand (@0x80100C18-38) | eigene Lage, kein Anker |
+| 14 | enemy_ai_boss_gator.c:2097/2118 | Gator-Fress | Anker-Kopie + Lage am Maul | ok (eigene Maschine) |
+| 15 | g5/tentakel/zellenarm/gator Schub | Bosse | Koerperschub (FUN_80034f..), Zug -100 | danach Spieler-Wandklemme |
+| 16 | re15_victim_place (alle generischen Griffe) | alle | Klemme ab letztem Standpunkt (Runde 37 J) | **(II) Wanddurchgang moeglich: ROOM1220 RE2-Kriecher 132 Griffbilder hinter Zelle 7** |
+| 17 | Rueckstoss cmd 2 / Koerperschub | alle | <= 200/Bild bzw. Ueberdeckung, danach Klemme @0x80031d70 | ok |
+
+### Umsetzung (alle Greifer)
+- (I) Spiderman behoben (s. o.); alle uebrigen Latch-Stellen setzen den Anker (Tabelle).
+- (II) `re15_r38_griff_durch_wand` (spiderman_r38.c (3)): die Strecke letzter begehbarer Standpunkt -> neue Opferlage
+  darf das Innere keiner soliden Typ-1-Zelle (u0 & 1 = Spieler-Maske, Klemmband) schneiden, sonst bleibt der
+  Standpunkt. NUTZER-VORGABE "Sowas darf GARNICHT passieren, bei keinen Gegner." Form: kein neuer Wert; Original-Klemmen
+  sind Punkt-Tests (RE1.5 FUN_8003b0a4 / Port push_rect; RE2 FUN_8004c1bc `subu v1,s4,v1 / addu v0,v0,a0 / sltu`
+  @0x8004c370-80 und @0x8004c38c-9c = Lage+Radius gegen x/z/w/d), die einen Sprung UEBER eine Wand nicht sehen; im
+  Original kommt er nicht vor, im Port setzen grosse Wurzelversaetze (RE2-Kriecher ~2000 in ROOM1220) ihn hinter
+  duenne Waende. Haken: re15_victim_place (1 Zeile, enemy_ai_common.c) und die Griff-2-Lage.
 
 ### Umsetzung (Spiderman)
 - `re15_r38_sm_griff1` (B[5]/B[9]): Anker = Lage - RotY(Blick VOR dem Schnapp) * Wurzel(Clip 0xE/0x12, Bild 0) aus
