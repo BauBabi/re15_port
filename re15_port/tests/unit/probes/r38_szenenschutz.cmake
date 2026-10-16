@@ -22,7 +22,9 @@ add_test(NAME unit_r38_szenenschutz COMMAND test_r38_szenenschutz)
 set_tests_properties(unit_r38_szenenschutz PROPERTIES TIMEOUT 120)
 
 #   unit_r38_szenenschutz_alle    Zensus ALLER Gegnertypen (Dossier 2.5/2.6) in beiden Gehirnen (RE2-Standard, RE1.5):
-#                                 gehalten kein HP-Verlust/Griff ohne Sicherheitsnetz, frei greift derselbe Aufbau an.
+#                                 gehalten kein HP-Verlust/Treffer/Griff/Kraehen-Angriff ohne Sicherheitsnetz, frei
+#                                 greift derselbe Aufbau an; Teil 2: Szene beginnt mitten im Kraehen-Anflug (RE2-Abbruch
+#                                 ueber 0x80104400, RE1.5 Griff-/Strike-Kontakt @0x80113dd4/@0x80114464).
 add_executable(test_r38_szenenschutz_alle ${CMAKE_CURRENT_LIST_DIR}/../test_r38_szenenschutz_alle.c)
 target_link_libraries(test_r38_szenenschutz_alle PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_szenenschutz_alle PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -33,6 +35,20 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r38_szenenschutz_alle COMMAND test_r38_szenenschutz_alle)
 set_tests_properties(unit_r38_szenenschutz_alle PROPERTIES TIMEOUT 300)
+
+#   unit_r38_szenenschutz_arm     Gitterarm 0x1A (RE2-Zellenarm, ROOM1210/1211) im echten Raum bis zum Griff-Entscheid
+#                                 A3: frei 0x401 (Griff), gehalten 0x601 (Tor @0x80100A3C-48), nach der Szene Griff.
+add_executable(test_r38_szenenschutz_arm ${CMAKE_CURRENT_LIST_DIR}/../test_r38_szenenschutz_arm.c)
+target_link_libraries(test_r38_szenenschutz_arm PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r38_szenenschutz_arm PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r38_szenenschutz_arm PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+if(NOT WIN32)
+    target_link_libraries(test_r38_szenenschutz_arm PRIVATE m)
+endif()
+add_test(NAME unit_r38_szenenschutz_arm COMMAND test_r38_szenenschutz_arm)
+set_tests_properties(unit_r38_szenenschutz_arm PROPERTIES TIMEOUT 120)
 
 #   integration_r38_szenenschutz  echte exe (Messkopie re15_pc_r38b_szene_*): ROOM1190 (Hebel-Szene sub10) und ROOM11D0
 #                                 (Aufnahme-Szene sub03/sub02) mit Leon, Standard-KI: kein HP-Verlust und kein Hund im

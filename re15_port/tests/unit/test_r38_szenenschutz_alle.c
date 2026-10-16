@@ -192,6 +192,130 @@ typedef struct {
     int netz;                                                      /* Umgebungsschaden ohne Tor: Netz zaehlt */
 } fall_t;
 
+
+/* ===================== Teil 2: die Szene beginnt MITTEN im Kraehen-Anflug ===================================== */
+/* Frischer Aufbau wie lauf(), aber Bild fuer Bild von aussen gefuehrt. */
+static re15_actor_t *aufbau(uint8_t type, int32_t abstand, int32_t ey, int32_t py)
+{
+    re15_actor_init();
+    re15_aot_init();
+    scd_vm_init();
+    re15_enemy_ai_set_paused(0);
+    re15_player_victim_reset();
+    re15_damage_seed_rng(0x0badf00du);
+    re15_szenenschutz_zaehler_reset();
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->x = 0; pl->y = py; pl->z = 0; pl->rot_y = 0;
+    pl->hp = 100; pl->hit_react = 0; pl->state = 1; pl->motion = 0; pl->floor = 0;
+    re15_actor_t *e = &g_actors[5];
+    memset(e, 0, sizeof(*e));
+    e->active = 1; e->type = type; e->hp = 100; e->flags = 1; e->em_flag_id = 0xFF;
+    e->state = 0; e->x = 0; e->y = ey; e->z = abstand;
+    face(e, pl);
+    re15_enemy_apply_hitbox(e, type);
+    return e;
+}
+/* n Bilder gehalten: Treffer/Griff/Angriffs-Bilder zaehlen (Spieler steht, +0x93 je Bild geloescht). */
+static void gehalten(re15_actor_t *e, int32_t py, int n, int *hp_verlust, int *griff, int *angriff, int *treffer)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    *hp_verlust = 0; *griff = 0; *angriff = 0; *treffer = 0;
+    for (int f = 0; f < n; f++) {
+        pl->x = 0; pl->z = 0; pl->y = py;
+        int16_t vor = pl->hp;
+        frame();
+        if (pl->hp < vor) *hp_verlust += vor - pl->hp;
+        if (re15_player_victim_state() != 0 || re15_player_is_grabbed()) *griff = 1;
+        if (angriffs_zustand(e)) (*angriff)++;
+        if (pl->hit_react & 1u) (*treffer)++;
+        pl->hit_react = 0;
+    }
+}
+
+static void teil2(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int hv, gr, an, tr;
+
+    /* (a) RE2-Kraehe: frei bis zum Claim (Sub 11 Anlauf / Sub 13 Hover), dann haelt die Szene den Spieler. Erwartet:
+     *     der Original-Abbruch 0x80104400 im DEC desselben Bilds -> Sub 4, Cooldown +0x21C = 30 (@0x8010444c-54). */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_actor_t *e = aufbau(0x21, 2500, -3000, 0);
+    g_scd.player_mode = 0;
+    int sub_vor = -1;
+    for (int f = 0; f < 600 && sub_vor < 0; f++) {
+        pl->x = 0; pl->z = 0;
+        if (f == 1) kraehe_re2_flug(e, pl);
+        kraehe_re2_blick(e, pl);
+        frame();
+        if (e->state == 1 && (e->sub_state_1 == 11 || e->sub_state_1 == 13)) sub_vor = e->sub_state_1;
+    }
+    CHECK(sub_vor > 0, "T2a RE2-Kraehe frei im Angriffs-Anflug (Sub %d)", sub_vor);
+    g_scd.player_mode = 2;
+    pl->x = 0; pl->z = 0;
+    frame();
+    int sub_nach = e->sub_state_1, cd_nach = e->re2d_abort21c;
+    printf("  [T2a] Szene beginnt in Sub %d -> nach 1 Bild Sub %d, Cooldown +0x21C=%d, Flags +0x22A=0x%04X\n",
+           sub_vor, sub_nach, cd_nach, (unsigned)e->re2c_flags22a);
+    CHECK(sub_nach == 4 && cd_nach == 30 && !(e->re2c_flags22a & 0x10u),
+          "T2a Abbruch ueber den Original-Listener: Sub 4, Cooldown 30, Bit 0x10 verbraucht (@0x80104440-64)");
+    gehalten(e, 0, 400, &hv, &gr, &an, &tr);
+    printf("  [T2a] 400 Bilder gehalten: HP-Verlust %d, Griff %d, Angriffs-Bilder %d, Treffer %d\n", hv, gr, an, tr);
+    CHECK(hv == 0 && gr == 0 && an == 0 && tr == 0, "T2a gehalten: kein Griff/Strike/Treffer");
+    g_scd.player_mode = 0;
+    int wieder = -1;
+    for (int f = 0; f < 900 && wieder < 0; f++) {
+        pl->x = 0; pl->z = 0;
+        kraehe_re2_blick(e, pl);
+        frame();
+        if (angriffs_zustand(e)) wieder = f;
+        pl->hit_react = 0;
+    }
+    printf("  [T2a] Szene vorbei: Angriffs-Anflug wieder nach %d Bildern\n", wieder);
+    CHECK(wieder >= 0, "T2a nach der Szene greift die Kraehe wieder an");
+
+    /* (b) RE1.5-Kraehe: frei bis zum Grapple-Anflug (Sub 12, Commit @0x8011330c-70), dann gehalten: der Kontakt
+     *     @0x80113dd4 greift nicht; Sub 12 laeuft ueber seinen Zeitablauf @0x80113e68-78 aus. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    e = aufbau(0x21, 800, 700, 700);
+    g_scd.player_mode = 0;
+    sub_vor = -1;
+    for (int f = 0; f < 900 && sub_vor < 0; f++) {
+        pl->x = 0; pl->z = 0; pl->y = 700;
+        frame();
+        if (e->state == 1 && e->sub_state_1 == 12) sub_vor = 12;
+        pl->hit_react = 0;
+    }
+    CHECK(sub_vor == 12, "T2b RE1.5-Kraehe frei im Grapple-Anflug (Sub 12)");
+    g_scd.player_mode = 2;
+    gehalten(e, 700, 400, &hv, &gr, &an, &tr);
+    printf("  [T2b] 400 Bilder gehalten: HP-Verlust %d, Griff %d, Angriffs-Bilder %d (Sub 12-Rest), Treffer %d, Sub am Ende %d\n",
+           hv, gr, an, tr, e->sub_state_1);
+    CHECK(hv == 0 && gr == 0 && tr == 0, "T2b gehalten: der Grapple-Kontakt greift nicht (@0x80113dd4)");
+
+    /* (c) RE1.5-Kraehe im Homing-Descent (Sub 15, vom Schwarm-Dispatcher gesetzt) direkt am Spieler: frei -> Strike
+     *     (Sub 16 @0x80114464), gehalten -> kein Strike. */
+    for (int halten = 0; halten < 2; halten++) {
+        e = aufbau(0x21, 300, 700, 700);
+        frame();                                       /* INIT */
+        e->state = 1; e->sub_state_1 = 15; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        g_scd.player_mode = halten ? 2 : 0;
+        int strike = -1;
+        for (int f = 0; f < 200 && strike < 0; f++) {
+            pl->x = 0; pl->z = 0; pl->y = 700;
+            if (e->sub_state_1 != 15 && e->sub_state_1 != 16) { e->sub_state_1 = 15; e->sub_state_2 = 0; }
+            int16_t vor = pl->hp;
+            frame();
+            if (e->sub_state_1 == 16 || pl->hp < vor) strike = f;
+            pl->hit_react = 0;
+        }
+        printf("  [T2c] %s: Strike (Sub 16) bei Bild %d, hp %d\n", halten ? "gehalten" : "frei", strike, pl->hp);
+        if (halten) CHECK(strike < 0 && pl->hp == 100, "T2c gehalten: kein Strike aus dem Homing-Descent (@0x80114464)");
+        else        CHECK(strike >= 0, "T2c frei: Kontrolle — der Homing-Descent schlaegt zu");
+    }
+    g_scd.player_mode = 0;
+}
+
 int main(void)
 {
     static const fall_t faelle[] = {
@@ -253,6 +377,7 @@ int main(void)
                   "angriff %d netz %u)", c->name, gn, g.erster, g.hp, g.treffer, g.griff, g.angriff, g.ab);
         }
     }
+    teil2();
     printf("%s (%d Fehler)\n", fails ? "FAIL" : "OK", fails);
     return fails ? 1 : 0;
 }

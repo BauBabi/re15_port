@@ -24,6 +24,14 @@
  *     dazu die Kraehe mit noch gesetzter Skript-Marke grid&0x40 (dieselbe INIT-Weiche) in jedem Gehirn.
  *     SICHERHEITSNETZ: zieht ein geschuetzter Gegner dem Spieler trotzdem HP ab (ungatterter Pfad), bekommt der Spieler
  *     sie im selben Durchlauf zurueck — "kein Treffer, solange die Szene ihn haelt" (Protokoll "[szenenschutz]").
+ *     KRAEHEN (Zensus aller Typen, test_r38_szenenschutz_alle.c): ihr Angriff liest KEIN Spieler-Tor —
+ *       RE2 (EMOVL21_S0.BIN): Arbiter 0x801041F0 prueft nur die Spieler-HP (@0x801041f4 `lh v0,-690(v0)` /
+ *              @0x80104204 `bltz`), Strike-Commit @0x80101F2C (`jal 0x80104088` a1=12), Griff-Commit @0x80102444
+ *              (a1=14); RE1.5 (STAGE1.BIN): Commit @0x8011330c-0x80113370 (+0x1d2/+0x1db/+0x1dc<10000/+0x1d6<3),
+ *              Griff-Kontakt @0x80113dcc-dd4 (+0x1d0), Strike-Kontakt @0x80114454-64 (+0x1d0 -> Sub 16).
+ *     Dort traegt die Szenen-Sicht eigene Haken (enemy_ai_re2_crow.c Arbiter; enemy_ai_common.c Commit/Kontakte);
+ *     eine RE2-Kraehe, die schon im Anflug ist (Sub 11/13), bricht ueber den ORIGINAL-Listener 0x80104400 ab
+ *     (+0x22A |= 0x10 -> Sub 4, Cooldown +0x21C = 30; DEC-Aufrufe @0x80101D7C / @0x80102244).
  *
  * (B) FREIGABE-SPERRZEIT 1190 — byte-true Uebernahme in das RE2-Hundegehirn. Der RE1.5-Sprung-Ausgang FUN_80111398
  *     Phase 4 schreibt +0x1d6 = 0x78 (@0x801115e8 `ori v0,zero,0x78` / @0x801115ec `sh v0,470(v1)`); das ACTIVE-
