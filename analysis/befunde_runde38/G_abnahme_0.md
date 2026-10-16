@@ -10,11 +10,14 @@ ungeprueft uebernommen. Dieser Bericht wird FORTLAUFEND geschrieben.
 - [x] Bau: `local_build.sh configure` + `build` = LOCAL-BUILD-OK, "ninja: no work to do" (exe 17:21 = Quellstand
       HEAD; cd21bb26 aendert nur das Dossier)
 - [x] Gezielte Tests (ctest -R, 85 + 59 Tests): **2 ROT durch die Spur** (unit_re2doc_bildebene, unit_r26_inventar)
-- [ ] Sweep aller unit_/prop_-Tests (laeuft, nur um weitere Kollateralschaeden zu finden; keine Integration)
+- [x] Sweep aller unit_/prop_-Tests (645 Tests, Lauf T3): 3 rot = die 2 bekannten + unit_r35_android_bash_mutanten
+      (Last, Einzel-Nachlauf s. T3)
+- [x] Fortsetzung nach dem Sitzungslimit (2. Sitzung, 2026-10-16 abends): Bau erneut geprueft ("no work to do"),
+      beide roten Tests einzeln nachgefahren + master-Gegenprobe wiederholt, 3 RE-Stichproben wiederholt
 - [x] Punkt 1 an der exe gemessen (echter Weg: Tuer ROOM1021 -> ROOM1011, zu Roy gehen, Viereck)
 - [x] Punkt 2 an der exe gemessen (Hinweis-Schirm + normale Karte)
 - [x] RE-Gate (11 Stellen selbst disassembliert/gelesen, s. u.)
-- [ ] Vertrag / Pfade / Nebenwirkungen
+- [x] Vertrag / Pfade / Nebenwirkungen (Abschnitt "Vertrag")
 
 Messwerkzeuge (Scratchpad, nicht im Baum): `lauf.sh` (Messkopie der exe als `re15_pc_abn0g_<name>.exe` neben der
 Bau-exe bzw. neben der v0.8.25-exe, eigener Arbeitsordner, Ende ueber RE15_EXIT_AT; Spielstand ueber
@@ -195,5 +198,58 @@ Beide sind ALT-RIEGEL, deren Annahme die Spur mit ihren Ressourcen (Satz 30, Dok
 unit_r36_schluessel_zelle, das der Bau-Agent nachgezogen hat. Sie fehlen in seiner Regex (re15_files.c und die
 FILES-Assets sind beruehrt, ihre Verbraucher-Tests wurden nicht gefahren); seine Aussage "100% ... out of 60" ist
 deshalb fuer die beruehrten Module nicht vollstaendig.
+
+Nachlauf 2. Sitzung (Bau unveraendert, "ninja: no work to do"):
+    ctest -R "^(unit_re2doc_bildebene|unit_r26_inventar)$"  ->  0% tests passed, 2 tests failed out of 2
+      FAIL: ein nicht vorhandenes Dokument meldet 0 statt Muell ...      (0,29 s)
+      (B4 Vergleiche gefahren: 846, Dokument-Ids ausgenommen: 54) [FAIL] B4   (0,04 s)
+    master-Bau (C:/workspace/git/reAi_v2/re15_port/build, master hat seit der Basis e2cc7673 KEINE re15_port-Aenderung,
+    Assets ohne FILE30), eigener Arbeitsordner: "PASS: ein nicht vorhandenes Dokument meldet 0" /
+    "(B4 Vergleiche gefahren: 855, Dokument-Ids ausgenommen: 45) [OK  ] B4".
+    Code: test_re2doc_bildebene.c:150 `re15_re2doc_size(RE2_FILES_DOC_COUNT + 5, -1, ...)` mit
+    engine/src/gen/re2_files_toc.inc:5 `#define RE2_FILES_DOC_COUNT  25` -> Satz 30, Seite -1 = FILE30_title_page.TIM
+    (von der Spur angelegt). probe_r26_inventar.c:296-298 `gefahren == 9 * (name_count - n_dok - 2) && gefahren >= 850`,
+    n_dok = re15_files_doc_count() = 6 -> 846.
+
+### Lauf T3 — Sweep aller unit_- und prop_-Tests (645 = 629 unit_ + 16 prop_, keine Integration)
+Gestartet in der 1. Sitzung, lief nach deren Ende zu Ende (Log `scratchpad/g_ctest_unit.log`, 18:29):
+    99% tests passed, 3 tests failed out of 645   (Total Test time (real) = 741.60 sec)
+      1/645   Test #324: unit_r26_inventar ..............***Failed    0.03 sec    <- Spur (s. o.)
+      347/645 Test #252: unit_re2doc_bildebene ..........***Failed    0.07 sec    <- Spur (s. o.)
+      645/645 Test #480: unit_r35_android_bash_mutanten ..***Failed  662.03 sec   <- Last? (s. u.)
+`unit_r35_android_bash_mutanten` mutiert `release/apk_pruefen.sh` und laesst je Mutant
+`tests/unit/r35_android/urteil_kontrollen.sh` laufen (10 parallel, tests/unit/probes/r35_android.cmake:77-80); weder
+release/ noch tests/unit/r35_android/ noch platform/android/ sind von der Spur beruehrt. Einzel-Nachlauf: s. T3b.
+
+## Vertrag (VERTRAG.md §1/§2) — selbst geprueft
+* Pfade (`git diff master...HEAD --name-only`, 35 Dateien): KEINE unter release/, re15_port/platform/android/,
+  re15_port/shared_assets/PSX/, KEINE CMakeLists-Aenderung (Test-Einbindung ueber
+  tests/unit/probes/r38_tagebuch.cmake, tests/unit/CMakeLists.txt:4060 `file(GLOB ... probes/*.cmake)`).
+  Neue Assets nur unter re15_port/shared_assets/RE2/FILES/ (FILE30_*, 8 Dateien) — nicht TABU.
+* Gemeinsame Dateien, nur Haken mit Kommentar "Runde 38 Spur G": scd_vm.c +4 (Include + 1 Code-Zeile),
+  game_step_common.c +2, map_hint_common.c +9 (Include + 2 Tabellenzeilen + Kommentar), re15_files.c +9 (Name +
+  1 Tabellenzeile), menu_common.c +10/-1 (Include, Merker, 1 Zeile im Leser-Schliessen, 3 Zeilen in der Aufnahme,
+  1 Zeile in request_doc). menu_common.c / map_hint_common.c / re15_files.c stehen nicht in der Liste §1.4, die
+  Aenderungen sind aber Haken-gross; die Logik liegt in tagebuch_r38.c. menu_common.c aendert auch Spur Q
+  (r38_kleinkram: Inventar-Ton in re15_menu_start_poll / tab_select) — andere Stellen, Integrationsfrage, kein Mangel.
+* Ressourcen: Bank-9-Bit 68 (zugeteilt G) — als einziges neu belegt, in k_port[] eingetragen
+  (test_r36_kartenbits.c +2); keine Nachrichten-Id belegt (1011 40-44 nicht gebraucht); Dokument 5 / Item 0x4D /
+  Bildsatz 30 per Zensus (G_belege/zensus.txt). Kein anderer r38-Baum aendert re15_files.c, map_hint_common.c oder
+  legt FILE3x an (gegrept ueber alle `.claude/worktrees/r38_*`, Diff gegen e2cc7673).
+* Nebenwirkung "nur lesen" (menu_common.c): `file_reader_close` setzt bei s_doc_target && s_doc_nur_lesen
+  s_phase = 2 -> der gemeinsame Abbau (menu_common.c:1532 `s_doc_target = 0; s_doc_msg = 0; ...`) laeuft wie beim
+  normalen Schliessen, kein Zustand bleibt stehen (b4: danach Statusschirm normal, FILE-Liste 1 Eintrag).
+  `re15_tagebuch_r38_listenplatz` wird fuer JEDES Aufnahme-Dokument gefragt; fuer die Welt-Dokumente der Runden
+  30/34 liefert es -1 (ihre Zone ist nach dem Aufheben weg) -> unveraendert (unit_r34n_e_dokumente,
+  integration_r34n_e_dokumente_bild, unit_r30_irons_* gruen in T1).
+* Karte: Eintraege 3/4 haengen an (9,68) "gezeigt"; das Bit setzt nur das Ablegen von Roys Diary (Elza) -> in Leons
+  Spiel still (unit_r38_tagebuch_karte "Leon unveraendert", integration_r38_tagebuch_leon gruen). "erreicht" wirkt
+  nur auf das Blinken in der normalen Karte (map_hint_common.c:292-294), nicht auf den Hinweis-Schirm.
+* Tests je Punkt: Punkt 1 unit_r38_tagebuch_dokument/_ablauf + integration_r38_tagebuch_lesen; Punkt 2
+  unit_r38_tagebuch_karte + integration_r38_tagebuch_lesen/_karte; Gegenprobe Leon unit/integration_r38_tagebuch_leon.
+  Messend (echte VM + Statusschirm, echter Seitenlader, Framedump-Pixel), alle gruen (T1).
+* Alt-Riegel: unit_r36_schluessel_zelle R nachgezogen (Nutzer-Vorgabe ersetzt msg 18 — begruendet, Kern der Runde
+  36 bleibt geprueft). Die ZWEI weiteren Alt-Riegel, deren Annahme die Spur bricht (unit_re2doc_bildebene,
+  unit_r26_inventar B4), sind NICHT nachgezogen -> Mangel 1/2.
 
 (weitere Abschnitte folgen)
