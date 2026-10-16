@@ -12,6 +12,7 @@ Baum `.claude/worktrees/r38_spinnen` (Zweig `r38/spinnen`, Basis e2cc7673). Ange
 ## Arbeitsstand
 - 16:23 Dossier angelegt; Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
 - 16:55 Messschiene RE15_SPINNEN_LOG gebaut; ROOM2060 in beiden KI-Modi gemessen (1.1/1.2).
+- 17:20 Minispinnen gemessen (1.3); Original per DuckStation-GDB gemessen (1.4); RE-Belege 2.1-2.4.
 
 ## 1. Messung vorher
 
@@ -53,7 +54,99 @@ das Gitter faellt/klappt auf. => Im Original kommt die Schachtspinne heraus, sob
   y -3600 im Schacht stehen (der Port-Zweig `grid != 0x41 -> Zustand 1` hat keinen Abstieg, Kommentar "drop = OPEN").
   => Nutzerpunkt 1 ("kommen nicht aus den Schaechten raus") REPRODUZIERT.
 
+### 1.3 Port-Messung Minispinnen (RE2-KI, ROOM2030, Boden y -5400; Schrotflinte, Spinne 1 getoetet)
+`RE15_DEBUG_JUMP=2030@250 RE15_PLAYER_POS=6550,2000,3072,3 RE15_GIVE=8:30 RE15_EQUIP=8`, Feuerskript. Spinne 1 HP
+110 -> 55 -> 0 -> -55 (F~350-450); danach Slots 4..N Typ 0x26 grid 0x02. Die Babys **fallen von y -5400 auf y 0**
+(5400 UNTER den Raumboden) und laufen dort; einige springen (Unterzustand 3, +0x222 = 1, y -560..-1280). Spieler-HP
+bleibt 100 — **kein einziger Biss**. Ursachen im Code: (a) `re2s_spawn_babies` (enemy_ai_re2_spider.c) setzt das
+RE2-Feld +0x1C2 (Port dog_floor_y) des Kindes nicht -> 0 -> `re2sb_probe` landet erst bei y >= 0; (b) `re2sb_bite`
+prueft `dist < 10` statt `dist < Ziel+0x9A + 10` (Kommentar "OPEN, reine +10-Reichweite") -> nie in Reichweite,
+dazu die y-Probe `(u32)(pl.y - e.y) < 3000` mit dem Baby 5400 tiefer. => Nutzerpunkt 3 REPRODUZIERT.
+
+### 1.4 ORIGINAL-Messung RE1.5 (DuckStation-GDB, MZD-Disc = identische PSX.EXE/STAGE2.BIN-Adressen)
+Werkzeug `R_belege/gdb_spinne.py` (Muster Runde 36 F nb4): Savestate `stage_saves/mzd_debugmenu.sav`, Haltepunkt
+Debug-Menue-Tick 0x8001443c -> Schreibsatz von Quadrat in der JUMP-Zeile (@0x80014a44-58: 0x800b5359 := 1,
+0x800ac9a8 := 0, Menue zu 0x800bbe5c := 0) mit Stage-Var 0x800bbe5e := 1 und Raum-Index 0x800bbe5f[1] := 6/10
+(@0x8001d62c-660 liest genau diese), danach Haltepunkt Gegner-Schleife 0x8001a50c = einmal je Bild; Prolog-Kontrolle
+`801109e4 = e8ffbd27` (addiu sp,sp,-24 = Spinnen-Wurzel). settings.ini EnableGDBServer nur waehrend des Laufs.
+- **ROOM2060, Schacht** (`R_belege/orig_2060_schacht_gift.txt`, Spieler bei Bild 60 nach (6000,3000) = Cut-1-Zone
+  "0->1" der RVD): Bild 62 Cut 1 -> sub02 setzt grid 0x41 -> 0x42; Bild 63-73 Clip 16, z -200/Bild (6400 -> 4325,
+  Wandklemme schiebt x 5800 -> 5975), +0x93 = 03; Bild 74-92 Clip 16 ohne Bewegung bis Bild 31; Bild 94 y -3600 ->
+  -2600 (+1000), z +300 (rueckwaerts), +0x1ba := 0, rot_z := 1024; Bild 95-102 Clip 2, y +111/Bild bis -1720 (> -1800);
+  Bild 103-114 Clip 13, y +103..111 bis -428 (>= -500 stoppt); Bild 133 Clip 13 Bild 31; Bild 134 y := +0x1ba = 0,
+  rot_z 0, grid 5, floor 0, Lage (5740,0,4332); Bild 135 Zustand 1, +0x93 = 0; Bild 136 SPUCKEN (Unterzustand 7,
+  Clip 12). Drei Effektplaetze mit Routine A 24 -> 25 fliegen zum Spieler; Spieler Zustand 2 (getroffen).
+- **ROOM2060, Gift** (`R_belege/orig_2060_gift_hp.txt`, 1800 Bilder): Treffer alle ~62 Bilder, je **-10 HP**
+  (100->90->80...), Spieler Zustand 2 — aber **in 14 Treffern KEIN Gift** (Status 0x800acaec bleibt 0000).
+- **ROOM2060, Gift-Wuerfel** (`R_belege/orig_2060_rng_a0.txt`): Haltepunkt 0x80012e78 (erster `jal 0x8001af20` im
+  Spielerzweig von FUN_80012d60): **a0 = 0x0000000A in 13 von 13 Treffern** (= der SE-Id 10 aus dem Delay-Slot
+  `ori a0,zero,0xa` @0x80012e74, FUN_800453d0 laesst a0 stehen). FUN_8001af20 wertet NUR a0 aus (@0x8001af30-4c:
+  `srl v1,a0,7 / andi 0xff / addu / andi 0xff`) -> r1 = 10, a0' = 10, r2 = 10 -> beide gerade -> `mult` = 0 ->
+  **das Gift-Bit 0x2 @0x80012eac wird im Original NIE gesetzt** (toter Wuerfel; die "1/4"-Annahme in
+  re15_damage.c:76-90 ist damit widerlegt).
+- **ROOM20A0, Schacht** (`R_belege/orig_20a0_schacht.txt`, Spieler (21500,-24000), Cut 4 gesetzt): Spinne 0 (floor 3,
+  y -5400) laeuft dieselbe Choreografie und landet auf **y 0, floor 0** (Lage (22732,0,-25662)), obwohl der Steg des
+  Spielers auf -3600 liegt — das Original setzt +0x1ba fest auf 0 (@0x80115044) und y := +0x1ba (@0x80115264-6c).
+
 ## 2. RE-Belege
+
+### 2.1 Schacht-Ausstieg = Zustand 4 Unterzustand 1 (grid 0x41), STAGE2.BIN (selbst disassembliert)
+Zustand-4-Wurzel 0x80114e18: `lbu +0x5` -> Tabelle @0x80118f90 = {0x80114e60 (grid 0x40), 0x80114ec8 (grid 0x41)}.
+0x80114ec8: Phase +0x7, Gate `sltiu v0,v1,0x9` @0x80114ee0, Sprungtabelle @0x8010027c (9 Eintraege, selbst gelesen):
+
+| Phase | Adresse | Inhalt (Bytes) |
+|---|---|---|
+| 0 | 0x80114f08 | grid (+0x9) == 0x41 -> warten (`ori v0,zero,0x41 / beq` @0x80114f18-1c); sonst +0x7 = 1, Clip +0x94 = 0x10, +0x95 = 0, +0x8f = 7, +0x78 = *(0x80118e0c) = Kasten 0x80118dec, +0x93 \|= 3 (@0x80114f24-88); faellt durch |
+| 1 | 0x80114f8c | +0x95 < 11 (`sltiu v0,v0,0xb` @0x80114fa0) -> +0x8c = 200 (`ori 0xc8` @0x80114fa8), FUN_800245d8(0); anim_set(+0x84,+0x16c,0,0x200); +0x95 == 0x1f -> +0x7 = 2 (@0x80114fe4-f4) |
+| 2 | 0x80114ff8 | +0x7 = 3; y += 1000 (`addiu v0,v0,1000` @0x8011501c); +0x8c = 300 (`ori 0x12c` @0x8011502c); FUN_800245d8(0x800) (rueckwaerts); +0x1ba = 0 (`sh zero,442` @0x80115044); +0x6c += 1024 (@0x8011505c); anim_set |
+| 3 | 0x80115068 | Clip 2, +0x7 = 4, +0x95 = 0, +0x8f = 7; faellt in 4 |
+| 4 | 0x801150a8 | anim_set; y += 100 + (rng & 0xf) (@0x801150dc-e8); (+0x1ba - 1800) < y -> +0x7 = 5 (@0x801150f8-114) |
+| 5 | 0x80115118 | +0x7 = 6, Clip 0xd, +0x95 = 0, +0x8f = 7; faellt in 6 |
+| 6 | 0x80115158 | anim_set; y < +0x1ba - 500 -> y += 100 + (rng & 0xf) (@0x80115180-bc); +0x95 == 0x1f -> +0x7 = 7 |
+| 7 | 0x801151e4 | +0x7 = 8, +0x8f = 0, +0x6c -= 1024, +0x78 = *(0x80118e04) = Kasten 0x80118dd4, +0x82 = 0, grid = 5, y = +0x1ba; Quadrant (+0x6a & 0xc00) >> 10: 0 x += 1488, 1 z -= 1488, 2 x -= 1488, 3 z += 1488 (@0x80115278-310); anim_set |
+| 8 | 0x80115338 | +0x93 = 0, Clip 0, +0x95 = 0, +0x8f = 0, anim_set, Zustandswort `sh 1,4` / `sh 0,6` (@0x80115394-b0) |
+
+Die Original-Messung 1.4 trifft jede Phase (Bilder 62-136). Zensus: grid 0x40 (@0x80114e60 -> CLIMB) kommt in KEINEM
+ausgelieferten Sce_em_set vor (nur 0x00/0x41), wird deshalb nicht portiert.
+
+### 2.2 Gift = Effekt 0x0d der Raum-ESP (RE1.5)
+- Spucken (Unterzustand 7) @0x801126d4: `func_0x80019700(0x0d002000, +0x6a, *(+0x188)+0x40, &DAT_80118ee8)` @0x80112770
+  + SE 4 (`jal 0x800453d0` @0x80112778), Clip 0xc; Ende -> Unterzustand 0xb, +0x1d6 = 0xf.
+- ESP 0x0d (alle Stage-2-Spinnenraeume, Raum-ESP RDT+0x4C): sub 0 = 3 Stroeme je 3 Zeilen (`R_belege/esp_ids.py`):
+  Zeile 0 A=10 (Darstellung), Zeile 1 A=24, Zeile 2 A=25 acc (0,10,0); Groessen 4096/3800/3600, Startgeschwindigkeit
+  (150,-40,0)/(120,-32,0)/(90,-24,0).
+- Routine 24 @0x80017f50 (Tabelle 0x80071d40[24] = 0x80071da0): row[0x0e] != 0 -> row[0x0e]--, sonst Vorschub
+  FUN_800174e4; danach immer Routine 25 (`jal 0x80017fa4` @0x80017f8c).
+- Routine 25 @0x80017fa4: +0x04 += 30, +0x06 += 30 (@0x80017fbc-d8); P = Weltlage +0x28/+0x2a/+0x2c; Boden =
+  FUN_8001c6e8(&P,0,8,0x100) (@0x80017ff4); Treffer = FUN_80012d60(500,&P,0) (`ori a0,zero,0x1f4` @0x80017ffc,
+  `addu a2,zero,zero` @0x80018004 = Angriffsart 0 = 10 HP); Treffer ODER P.y >= Boden -> Kind
+  `0x030c0000 | (+0x72 + 500)` an P (FUN_800199d4 @0x80018054) + SE 0x03030001 an P (@0x80018064), dann A = B = 0,
+  +0x08..+0x14 = 0, Anim +0x6e = 0x0d (@0x80018078-98).
+- Spielerzweig FUN_80012d60 Art 0: HP -= 10, SE 10, Gift-Wuerfel (tot, s. 1.4), Zustand 2.
+- Gift-Wirkung (Spieler Zustand 1 = Handler 0x80031de8 = Tabelle 0x80073f90[1] @0x80073f94): (status & 7) != 0 ->
+  Zaehler +0x1d3 (0x800acc27) -1; war 0 -> Zaehler = 0x78 (8 bei Bit 0x4), HP -= 2, HP < 0 und nicht Bit 0x4 -> HP = 1
+  (@0x80031e44-ecc). Heilung: Gegengift 0x23 / Blau 0x26 / Mischungen `andi 0xfffd` @0x8004af8c (Port vorhanden,
+  item_use_common.c). Der Port hat die Wirkung NICHT (player_common.c:86 "not ported").
+
+### 2.3 Gift in RE2 Retail (Ziel, wo RE1.5 unfertig ist)
+- RE2-Spinne (EMS25.BIN) Modus 0 Unterzustand 8 @0x80100F88 ("Oberflaechenwechsel" im Port) ist das SPUCKEN:
+  Clip 11 + FUN_801058A4(self, +0x222+8, +0x76+0x21A) @0x8010101C; FUN_801058A4 @0x801058a4-9c8 spawnt
+  `0x1d001000 | (id << 16)` (`lui v0,0x1d00 / ori 0x1000` @0x801058f0-f4, `jal 0x8001bf10` @0x801059c4) an Knochen 0
+  + (1000,0,-100) = FX 0x1D sub 8..11.
+- FX 0x1D (RE2 Raum-ESP room2010/3020/4050, `R_belege/re2esp.py`): 4 Kugeln, Zeile 1 Op B 16 -> Op A = step[0x0B] =
+  0x20 = **Op 32** @0x800200b0 (Tabelle 0x8009d868[32] = 0x8009d8e8): Treffertest FUN_80047664(P, 800, 20); Ziel-Art
+  < 0x10 (Spieler) und `andi v0,v0,0x8` @0x80020118 (sub & 8) -> **0x800cfe10 := 5400** (`sh v0,-0x1f0(at)`
+  @0x80020130, Gift), 0x800cfe12 := 30, PL+0x1D3 \|= 0x80. RE2-Gift-Wirkung FUN_8003bfac: alle 30 Bilder HP -1 bis 1
+  (@0x8003c12c-160). => In RE2 vergiftet JEDER Gift-Treffer.
+
+### 2.4 Minispinnen (RE2 EMS26.BIN / EMS25.BIN)
+- RE1.5 STAGE2 registriert Typ 0x26 nicht und der RE1.5-Spinnen-Code spawnt keine Babys (Effekt-Spawns im Bereich
+  0x801109e4-0x801158a0: nur 0x0d002000 und 0x0008xxxx Blut) -> Minispinnen gibt es nur im RE2-Modus.
+- RE2-Spawner FUN_80105D38: Kind-Lage = Eltern-Lage (@0x80105e10-30), KEIN +0x1C2-Schreiber; +0x1C2 setzt die
+  RE2-Engine fuer JEDE Entity je Bild = FUN_8004fba0(Lage, 0, (+0x9)<<8, 0) (`jal 0x8004fba0` @0x8002686c,
+  `sh v0,0x1c2(s0)` @0x80026874) = Bodenhoehe unter der Entity.
+- Biss FUN_80100DE8 (EMS26): `dist < (u16)Ziel[+0x9A] + 10` @0x80100E40; RE2-Spieler +0x9A = **450**
+  (`addiu v1,zero,450` @0x8003bdc0 / `sh v1,154(s2)` @0x8003bdc4, RE2 PSX.EXE) -> Reichweite 460.
 
 ## 3. Umsetzung
 
