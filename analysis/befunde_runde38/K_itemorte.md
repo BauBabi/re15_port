@@ -400,3 +400,52 @@ Abnahme und Bau-Agent: das Modell (RE2 "Cabin Key", duenner dunkler Ring; Runde-
 - Weg: ein kraeftigeres RE2-Schluesselmodell fuer den Prison Key, Wahl gemessen (alle RE2-Schluesselmodelle an der Marke
   gerechnet), Weltmodell + Icon + Item-Bild aus DEMSELBEN RE2-Gegenstand (Runde-36-Regel "Modell und Bild passen
   zusammen"), Licht wie im RE2-Satz dieses Modells (Obj_model_set-Attribut nachlesen), Riegel B3/B4 angehoben.
+
+### 9.2 Messung vorher (eigenes Werkzeug gegen die Abnahme geeicht)
+Messkopie `re15_pc_r38k_nb1.exe` (exe 21:23 = Code-Stand HEAD), Lade-Weg CONTINUE wie die Riegel (Kartenwerkzeug
+`probe_r37_feuerloescher_karte 10F1 0 4000 1024 cut:5 elza [flag:9:83]`, Bild 100), Differenzwerkzeug im Scratchpad
+(`diff.py`: |dR|+|dG|+|dB| > 30 wie probe_r34n_e_bild, dazu Sum|dL| mit L = 0,299R + 0,587G + 0,114B ueber die
+geaenderten Pixel). Ergebnis = Abnahme-Zahlen (das Werkzeug misst dasselbe):
+| Lauf | Pixel | Huelle | Sum|dL| | L mit / ohne |
+|---|---|---|---|---|
+| Elza 10F1 Cut 5 Skala 1 (Cabin Key) | 14 | x 134..143 y 78..85 | 502 | 68,6 / 63,2 |
+| Elza 10F1 Cut 5 Skala 3 (Cabin Key) | 112 | x 402..431 y 234..257 | 3193 | 68,3 / 65,6 |
+
+### 9.3 Modellwahl gemessen: alle flachen RE2-Schluesselmodelle an der Marke
+Verfahren: jedes Schluessel-Netz aus `extracted_re2_items/platzierungen.csv` (MD1/TIM aus dem RE2-RDT gelesen, gegen
+die Katalog-Dateien bytegleich geprueft) nach DERSELBEN Regel wie `itemorte_export.py` an die Marke gelegt (Massstab =
+groesster Wert, bei dem alle sichtbaren Texel in der Marke liegen; Textur-u waagerecht) und in Software auf das
+Elza-Bild ohne Schluessel (Cut 5, Skala 1 und 3) gezeichnet (flach = Texel unveraendert). Werkzeug `screen.py`
+(Scratchpad). Gegenprobe der Schaetzung an der exe: Cabin Key Schaetzung 11 px / 324 (exe 14 / 502), P. Room Key
+50 / 2885 (exe 55 / ~3430) — die Schaetzung liegt in der Groessenordnung der exe, Rangfolge ist belastbar.
+| RE2-Modell | Item | sichtbar (Einheiten) | S1 Pixel | S1 Sum|dL| | S3 Pixel | S3 Sum|dL| | Modell = Icon = Item-Bild? | RE2-Attribut pc[12..13] |
+|---|---|---|---|---|---|---|---|---|
+| mesh071 P. Room Key (= Parking Lot Key) | 0x5F | 735 x 468 | 50 | 2885 | 466 | 28742 | ja | 0x0010 (ROOM6150 @0x02C98) |
+| mesh062 Cabin Key (heute Prison Key) | 0x58 | 538 x 620 | 11 | 324 | 123 | 3815 | ja | 0x0010 (ROOM1050 @0x01274) |
+| **mesh028 Small Key** | **0x1F** | 740 x 347 | **24** | **1049** | **240** | **13006** | **ja** (ITPS 3100, Icon 32: derselbe Bartschluessel mit Ringreide) | **0x0010** (ROOM10F0 @0x00706, ROOM20E0 @0x018F8/@0x01A96, ROOM2020 @0x01C1E) |
+| mesh070 C. Panel Key | 0x5E | 742 x 273 | 24 | 2224 | 243 | 25260 | NEIN (Item-Bild ITPS 9400/Icon 95: gelber Kunststoffkopf + gruener Anhaenger; Weltmodell: Messingschluessel ohne Anhaenger) | 0x0010 (ROOM5070 @0x02356) |
+| mesh049 W. Box Key | 0x3F | 751 x 365 | 34 | 2536 | 323 | 20839 | ja | **0x0000** (ROOM5010 @0x01408: RE2 BELEUCHTET ihn, im Raumlicht von 10F0 dunkel — Runde 36: NCCT machte den Parking Lot Key zum "dunkelgrauen Strich") |
+| mesh063..068 Precinct Keys | 0x59..0x5C | 743 x 214..235 | 15..18 | 1263..1767 | 128..144 | 7865..10192 | nein (Icons: dunkler Schluessel mit farbigem Spielkarten-Symbol, Modelle silber/gold ohne Farbe) | - |
+| mesh074 Platform Key | 0x63 | wie Cabin Key | 11 | 324 | 123 | 3815 | nein (Runde 36) | - |
+| mesh069 C. Panel Key, mesh072/073 Lab Card | | nicht flach (y != 0) | - | - | - | - | - | - |
+
+Regel der Wahl (vor der exe-Messung festgelegt): Modell, Icon und Item-Bild zeigen DENSELBEN Schluessel (Runde-36-Regel,
+Q_schluessel.md 2.4: "Modell und Bild passen nicht zusammen" verwarf den Platform Key), RE2 stellt ihn FLACH auf
+(dasselbe Licht wie der Parking Lot Key, 2.7), und unter diesen der kontrastreichste an der Marke. Das trifft genau EIN
+Modell: **RE2 0x1F "Small Key"** — ein heller Bartschluessel mit grosser Ringreide (der klassische Zellenschluessel).
+Gegenueber dem Cabin Key: S1 2,2x Pixel, 3,2x Sum|dL|; S3 2,0x Pixel, 3,4x Sum|dL|.
+RE-Belege (selbst gelesen, info/re2leon):
+* `ROOM10F0.RDT @0x006F0 4e 05 02 31 00 00 05 b0 c5 9c 36 06 12 07 1f 00 01 00 26 00 04 a0` = Item_aot_set Slot 5,
+  sat 0x31, Item **0x001F**, Menge 1, Merkbit 0x26, **md1 = 4**; direkt dahinter `@0x00706 2d 04 00 00 00 00 00 00 00 00
+  0a 00 10 00 ...` = Obj_model_set (Opcode 0x2D -> 0x80055260, Tabelle 0x800a74c8) Objekt 4, pc[12..13] = **0x0010**
+  (-> Pool+0x10 @0x80055320, Zeichner @0x800365e8 andi 0x10 = flach, 2.7). Ebenso `ROOM20E0.RDT @0x019C0 4e 04 02 31 ...
+  1f 00 01 00 3c 00 02 a0` (md1 = 2) mit `@0x018F8 2d 02 ... 0a 00 10 00`.
+* MD1 = ROOM10F0.RDT @0x001650, 236 B, md5 c5d49ef60b6b111ecac53a19652f3278 (= ROOM20E0 @0x002A98, bytegleich);
+  TIM = ROOM10F0.RDT @0x0215BC, 34848 B, md5 326b822bb81b07ecb6d3544ce6e094a6 (8 bpp, CLUT (0,480) 256x4, Bild 64x256
+  — dieselbe Form wie der P. Room Key ROOM6150 @0x030B74).
+* Icon: `ITEMALL.PIX` Tile 31 (@0x9168, 1200 B) == Bild von `ITEMALL/ITEMALL_032.TIM` (bytegleich), CLUT dieselbe wie
+  bei Tile 88/95 (md5 15a5a175 der CLUT von ITEMALL_032/089/096), **Index 0 kommt in Tile 31 nicht vor** -> wie in
+  Runde 36 ohne Aenderung einsetzbar (RE1.5- und RE2-Icon-CLUT unterscheiden sich nur in Eintrag 0).
+* Item-Bild: `ITPS.ITP` Block 31 (@0x5D000, 0x3000 B) = `ITPS/ITPS3100_0549.bmp` (derselbe Schluessel).
+* Texel-Helligkeit (sichtbare Texel, Rec.601): Small Key Mittel 102 / Median 104 (51 % > 100), Cabin Key 69 / 74
+  (22 %), P. Room Key 114 / 128; Kork der Pinnwand L ~ 63.
