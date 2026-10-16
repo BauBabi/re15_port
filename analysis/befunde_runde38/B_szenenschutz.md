@@ -196,6 +196,8 @@ Haken (gemeinsame Dateien, je 1-2 Zeilen, Kommentar "Runde 38 Spur B"):
 - `enemy_ai_re2_dog.c`: `#include`; Sperrzeit-Tor in `re2d_attack_decide` (nach dem hp<0-Test), am STALK-Commit
   (@0x801009C8) und am RUN-P3-Commit (@0x80101174-7C); Abzug `re15_r38_hund_sperrzeit_takt(e)` im ACTIVE-Schwanz
   (hinter dem Sub-Dispatch, wie @0x8010dd5c hinter @0x8010dcf0).
+- (Fortsetzung, s. (C)) `enemy_ai_re2_crow.c`: `#include`; eine Zeile im Arbiter. `enemy_ai_common.c` RE1.5-Kraehe: je
+  eine Bedingung am Angriffs-Commit, Griff-Kontakt und Homing-Kontakt.
 
 (A) SZENENSCHUTZ — NUTZER-VORGABE, Form aus dem Original (2.1-2.4):
 - Halten = `g_scd.player_mode == 2` (einziger Schreiber platform/pc/main.c cine_active = (1,27)||(2,7)) ODER
