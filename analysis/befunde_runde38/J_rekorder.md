@@ -9,6 +9,14 @@ Vertrag `VERTRAG.md` Spur J (Nachrichten-Ids ROOM1100/1101 40-44).
 > fertig abgespielt ist, machst du den Piep Sound für Erfolgreiche Eingabe und den Tür öffnen Sound. Das zusammen mit der
 > erfolgreich message auf den Panel.
 
+## 0. Stand
+
+**Fertig.** Aufnahme des Nutzers beim Druck aufs Mikrofon (Takt von Message_on 4 @0x00C90), sub02 wartet an @0x00C96 bis zu
+ihrem Ende, Piep im Takt des ersten ACCEPTED (Cut_chg 11 @0x00C9C), Aufschliessen +15, "You've opened the lock." ohne
+zweite Folge, Tuer frei - Leon ROOM1100 und Elza ROOM1101, echte exe + headless gemessen (§4), Riegel §5, gezielte Laeufe
+`100% tests passed, 0 tests failed out of 55`. Abschnitte: 1 RE-Belege / 2 Messung vorher / 3 Lesart + Umsetzung /
+4 Messung nachher / 5 Tests / 6 OFFEN / 7 Fuer den Nutzer.
+
 ---
 
 ## 1. RE-Belege (selbst gelesen)
