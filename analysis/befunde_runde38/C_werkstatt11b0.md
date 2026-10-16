@@ -31,7 +31,7 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
 ## §1 Punkt 1 — Text "But, hold on..."
 
 ### 1.1 Messung vorher
-- debug.log (Grundlauf, Erweiterung ab F2135): `[msgtext] room=11b0 id=20 "Marvin: Hold on."` — der heutige Wortlaut ist
+- debug.log (Grundlauf v1, Erweiterung zwischen F2100 und F2130): `[msgtext] room=11b0 id=20 "Marvin: Hold on."` — der heutige Wortlaut ist
   "Hold on." (Punkt), erzeugt von `tools/r36_j/szene11b0_bauen.py` Z.281 `MSG20 = marvin_zeile(["Hold on."])` ->
   `engine/src/gen/szl11b0_szene.inc` `k_szl_msg20`.
 - Sprachdatei: `synchro/STAGE1/room11B0/` traegt main00..main14.wav, KEINE main20.wav (auch nicht unter
@@ -82,7 +82,8 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
   snd0-EDT) / @0x80045140 `sll v0,s4,2` / @0x80045144 `addu a0,a0,v0` (Satz*4).
 - Leerer Satz `00 00 00 00` ist im Original ebenfalls stumm: byte3&0x1f = 0 < 0x10 -> Direktzweig @0x800451a8..
   @0x8004522c SsUtKeyOnV(Prog 0, Ton 0); a0&0xff = 0 -> nicht positional, voll = volr = Ton-vol (@0x800451dc
-  `lbu v0,2(s1)`) = ROOM11B0 Ton 0 vol **0**. Die Original-Szene ist an dieser Stelle STUMM.
+  `lbu v0,2(s1)`) = ROOM11B0 Ton 0 @0xED24 `00 00 00 40 52 43 ...` vol **0** (VAG 1, 48 B). Die Original-Szene ist an
+  dieser Stelle STUMM.
 - Zensus Bank-2-Satz-7-Aufrufer in PSX.EXE (jal 0x80045024 mit `lui a0,0x0207`): NUR @0x80035a18 (Kiste),
   @0x80052acc und @0x80052bc8 (Schub-Sub) — Satz 7 ist im Original ausschliesslich der Schiebe-Ton.
 - Zensus Plc_dest Modus 0x13 ueber alle 206 RDTs (`scd_dump_room.py`): NUR ROOM11B0 (@0x0170E/@0x0171A) und ROOM1171
