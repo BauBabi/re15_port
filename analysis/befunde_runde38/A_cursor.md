@@ -77,6 +77,29 @@ Zusatz (nicht geaendert, nur festgehalten): OTZ>>6 == 0 -> nicht in die OT (@0x8
   und OHNE jede Rueckseiten-Pruefung eingereiht (Stand 1bcbd0ff; die Figuren-Zeichner derselben Datei pruefen
   `IS_BACKFACE`, die Props nicht).
 * `platform/pc/src/hebetisch_cursor_pc.c` (ROOM1150/1151): dasselbe, "genau so wie die Raum-Prop-Schleife".
+* Gegenstueck: der PSX-Port des Ports zeichnet Objekte mit `backface_cull = 1` (platform/psx/main.c:719/756) und
+  verwirft `nclip_result < 0` (platform/psx/src/mesh_psx.c:489-493) — nur der PC-Zweig hatte die Pruefung nicht.
+
+### 2.3 Das Original im Bild: keine Kopie der Unterseite
+
+`analysis/grundwahrheit/psx_room11f0_cut10.png` ist ein DuckStation-Bild des Originals (Runde 27). Selbst nachgeprueft:
+der Spielstand `psx_room11f0_cut10.sav` laeuft auf der Auslieferungs-EXE (@0x80026e4c = `08 00 e0 03`), Objekt 0 =
+Cursor (+0 = 0x0101, Typ 4, Lage (-19554,0,22684)), und BEIDE 320x240-Puffer im VRAM des Spielstands sind
+stichprobengleich mit dem PNG (0 von 19200 Stichproben abweichend). Im Original liegt im Inneren des Eckwinkel-Rahmens
+KEIN Cursor-Gruen (einziger reingruener Punkt (151,110) = (8,16,8) = Hintergrund-Rasterung). Der Spielstand
+`analysis/befunde_runde36/G2_belege/room11f0_orig.sav` belegt zusaetzlich, dass das Original die Cursor-Textur
+unveraendert nutzt (CLUT bei VRAM (0,490) = Datei-CLUT, MD1 im RAM gepatcht auf CLUT 0x7A80 / Seite 0x85, 8 bpp,
+ABR 0): der Unterschied liegt NICHT in Textur oder Farbe, sondern darin, WELCHE Flaechen gezeichnet werden.
+
+### 2.4 Alle Cursor-Raeume haben dieselbe Bauart (Zensus)
+
+`A_belege/cursor_raeume_zensus.py` (Byte-Muster `2d <obj> 04` + Box (0,-900,0,900,900,900); Modell = Eintrag obj_id der
+Prop-Tabelle @RDT+0x30): 23 Raum-Varianten — 1080/1081, 4020/4021, 30E0, 10D0/10D1, 11E0/11E1, 1230/1231, 11F0/11F1,
+1100/1101, 2060/2061, 2040/2041, 5050/5051, 3050/3051 (ROOM30E1 hat keinen Cursor-Record). JEDER Cursor: 29
+Muster-Vierecke auf der Oberseite y=-900 + 4 Muster-Dreiecke auf der Unterseite y=+923, Unterseite gegensinnig
+gewunden. Die Raeume 11E0/11E1 und 2060/2061 tragen je zwei Records desselben Modells, 3050/3051 daneben ein
+anderes Objekt (obj 1, voll texturierter Kasten). ROOM1150 hat keinen eigenen Cursor (Port-Bau, Runde 34 Nacht:
+11F0-Modell 1:1). -> Der Fehler traf alle Cursor-Raeume; die Behebung in der Prop-Schleife trifft alle.
 
 ## 3. Umsetzung
 
@@ -109,6 +132,42 @@ eintraege 3/1/4/2 des Cursor-TIMs):
 
 Der Rest der Cursor-Darstellung (der in die Textur gebackene 1-Pixel-Schlagschatten rechts/unten, Original-Kunst
 +5u/+3v) ist bei Skala 1 klassengleich mit dem Original und bleibt unveraendert.
+
+RE15_TRILOG (Fenster 140,100..180,138, alle Bilder des Laufs, Platz 4): ALT 8456 eingereihte Cursor-Dreiecke mit
+NCLIP < 0, NEU 0. Reingruene Bildpunkte (R,B <= 12, G >= 15, G-R/G-B >= 12) im Rahmen-Inneren: ALT 33, NEU 0
+(Original 0).
+
+### 4.2 ROOM1150 Hebetisch-Cursor (Lade-Weg: Spielstand probe_r30_granate_karte, CONTINUE, Aktion am Tisch)
+
+`A_belege/lauf_1150.sh`, Bild 150 (Cursor seit F101 aktiv, cursor.log), Skala 1. Bild
+`A_belege/nachher_1150_orig11f0_alt_neu.png` (Original-Cursor 11F0 | 1150 alt | 1150 neu): die innere Kopie ist weg.
+Reingruen im Rahmen: ALT 33, NEU 0. Klassen G/g gegen den Original-Cursor 11F0: NEU deckungsgleich (die 4 Rest-
+"Abweichungen" (144..145,104..105) sind brauner Hintergrund des Raums, in alt und neu gleich). Trilog Platz 28
+(RE15_HC_TIM_SLOT): ALT 1456 Dreiecke mit NCLIP < 0, NEU 0.
+
+### 4.3 ROOM10D0 Ziffernfeld (weiterer Panel-Raum; Weg D aus Runde 37 Spur E: sub17 per RE15_SUBSTART)
+
+Bild 260, Skala 1. `A_belege/nachher_10d0_orig11f0_alt_neu.png`: alt mit innerer Kopie, neu ohne. Geaendert ALT->NEU:
+50 Bildpunkte, ALLE im Cursor-Fenster x 150..170, y 110..130. Reingruen im Rahmen: ALT 32, NEU 0. Trilog Platz 5
+(Prop 1): ALT 2997 Dreiecke mit NCLIP < 0, NEU 0.
+
+### 4.4 Nebenwirkungen (der Verwurf gilt fuer ALLE Raum-Props, wie im Original)
+
+* **Scan aller 120 Leon-Raeume** (`A_belege/raum_scan.py`, Debug-Sprung, Bild 200, Skala 1, exe alt gegen neu;
+  `A_belege/raum_scan_120.txt`): 112 Raeume pixelgleich, 8 mit 1..41 geaenderten Punkten (5010 41, 2040 19, 3080 8,
+  10F0 5, 20B0 5, 4010 5, 4000 3, 2090 1). Wiederholungslauf: alt/alt und neu/neu je 0 Punkte Unterschied -> die
+  Aenderungen sind deterministisch und stammen vom Verwurf. Bild `A_belege/nebenwirkung_scan_5010_2040_3080.png`
+  (alt | neu | Markierung): 5010 ein dunkelroter Streifen (Rueckseite) ueber einem Geraet faellt weg, darunter die
+  beleuchtete Kante und die gruene Lampe; 2040 ein 4x4-Block an Leons Hand; 3080 Einzelpunkte entlang einer Kante.
+* **ROOM11F0 Cut 10:** 85 Punkte an den Kippschaltern (Platz 28/29 hatten je 2 Rueckseiten-Dreiecke); mittlere
+  Abweichung der Schalterzeile 1 zum Original 12,90 -> 12,61 (naeher am Original).
+* **ROOM1150 Cut 4 (Hebetisch-Sicht):** 747 Punkte. `A_belege/nebenwirkung_1150_cut4_alt_neu.png`: alt lag ein
+  dunkelbraunes Band (Rueckseiten von Prop 0 = Plattform mit den Papierstapel-Hochhaeusern, im Band-Fenster 54
+  Dreiecke mit NCLIP < 0, RE15_TRILOG) quer ueber Hochhaeusern und Hintergrund; neu sind dort Hochhaeuser/Hintergrund
+  zu sehen. Prop 0 ist ein Original-Objekt (ROOM1150 Obj_model_set), das Original zeichnet es durch dieselben
+  Zeichner FUN_800254a0/FUN_800256b0 mit demselben Verwurf (§2.1).
+* Port-eigene Props (dokumente_r34, feuerloescher_r37, granate_1150, inhalt_r35, irons_tisch_1150, kartenitems_r36,
+  schluessel_r36, sicherung_1150) und alle Panel-/Hebetisch-Riegel: §5 (Bild-Riegel ihrer Spuren laufen mit).
 
 ## 5. Tests
 
