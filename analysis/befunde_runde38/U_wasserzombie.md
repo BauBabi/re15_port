@@ -143,8 +143,9 @@ es ist das HOCHZIEHEN an einer u1=1-Kante.
   f150 (1444,-3278,111), f158 (0,-1698,0); Bild 130 traegt Bit 23 (= SE 1, FUN_8001b38c `srl s0,v0,22` @0x8001b3b4).
   Fuer Typ 0x10/0x11/0x12/0x16/0x18 identisch (Clip-Tabelle + Wurzelbahn); Skelett 0x10 == 0x16, 0x11/0x12 weichen ab
   (b0 -1885 statt -1751). Das IST das Hochziehen: Huefte steigt ~1460 und wandert 1444 nach vorn ueber die Kante.
-- RE2 Retail (Gegenprobe "Beta -> Retail"): EMZ0.BIN (Zombie-Overlay) enthaelt keinen einzigen `addiu/ori` mit
-  +-1800 (0x0708/0xf8f8) — RE2s Zombie zieht sich nicht hoch. Ziel ist hier also RE1.5 (Nutzer: "wie im Original
+- RE2 Retail (Gegenprobe "Beta -> Retail"): die Zombie-Overlays EMZ0.BIN und EMOVL10_S0/S1.BIN (info/re2leon/COMMON/BIN)
+  enthalten keinen einzigen `addiu/ori` mit +-1800 (0x0708/0xf8f8; Gegenprobe: Hund EMD0G_MOD0 @0x80104e8c und Kraehe
+  EMOVL21_S0 @0x801014a4 haben je einen) — RE2s Zombie zieht sich nicht hoch. Ziel ist hier also RE1.5 (Nutzer: "wie im Original
   Resident Evil 1.5"), auch fuer die Standard-KI (RE2).
 
 **Zensus der Wirkung (alle 240 RDTs, u1==1-Zellen + Zombie-Spawns):** 1090/1091, 10B0/10B1, 2000/2001, 2020/2021,
@@ -171,7 +172,8 @@ Neue Dateien:
     +0x1ba zurueck auf den Wert vor dem Hochziehen (RE2 fuehrt den Boden als Lage, `re2z_ground_y = y` in Zustand 0/1).
     PORT-WAHL: Rig-Wechsel RE2 <-> RE1.5 ohne Ueberblendung (`anim_prev_valid = 0`, die Rigs ordnen die Knochen anders).
     SE: Frame-Wort-SE der RE1.5-Bank wie FUN_8001b38c (im RE2-Zweig laeuft die RE1.5-Wurzel nicht).
-  - RE1.5-Aktionsbank je Typ (`re15_wasserzombie_bank_merken`, PC-malloc, 8 Plaetze), Abfrage
+  - RE1.5-Aktionsbank je Typ (`re15_wasserzombie_bank_merken`, PC-malloc, 8 Plaetze; gilt nur, solange die
+    Gegnerbank des Typs denselben eb->buf traegt wie bei der Meldung — keyframe_data zeigt hinein), Abfrage
     `re15_wasserzombie_bank` fuer Renderer/Uhr/Schuss-Anker, Schatten `re15_wasserzombie_schatten_y` (+0x1ba waehrend
     des Hochziehens), Messschiene `RE15_WASSERZOMBIE_LOG` (env-gegatet), Testhaken `re15_wasserzombie_letzte_landung`.
 Haken in gemeinsamen Dateien (alle mit "Runde 38 Spur U"):
@@ -221,7 +223,12 @@ Gezielte Laeufe (KEINE volle Suite), Ergebnis woertlich:
 - Zombie-/Raum-Gruppen der beruehrten Module (enemy_ai_common.c, enemy_ai_re2_zombie.c, schuss_r36.c, Schwerkraft/
   Schatten), `-R '^(unit_enemy_ai|unit_room1140_spawn|unit_room1140_combat|unit_zombie_.*|unit_re2_zombie_.*|unit_re2_room.*|unit_re2z_.*|unit_knockdown_.*|unit_re15_zombie_death_anim|unit_re15_re2z_.*|unit_1090_.*|unit_1030_.*|unit_cam_1030_reentry|unit_re2_stagger_knockdown|unit_dog_grab_anchor|unit_re2_dog_grab_anchor|unit_rvd_scan_ungated_by_climb|unit_plc_back_yaw_1090|probe_10d0_situp_handoff|probe_1090_.*|probe_re2z_stomp|unit_map_1090|unit_r16_liegende_unschiessbar|unit_r16_aufstehen_schuss|r19_marke1_10d0_c1|unit_r35_cut1150_montage_1030|unit_r35_inhalt_zombies|unit_r35_raeume_.*|unit_r36_schuss.*|unit_r36_elza_schuss|unit_r36_blut_pin_.*|unit_r36_zombieki_.*|unit_r36_gegnerzahl_raum1030|unit_r37_beretta|unit_r37_zombieaktiv_.*|unit_r38_wasserzombie)$'`
   -> `100% tests passed, 0 tests failed out of 98`
-- Integrations-Gruppen (Zombie-Schuss/RE2-Dispatch/Renderer-Schatten): siehe unten (folgt).
+- Integrations-Gruppen (Zombie-Schuss, RE2-Dispatch, Renderer-Schatten, echte exe), seriell:
+  `-R '^(integration_r36_schuss|integration_r36_elza_schuss|integration_r37_beretta|integration_r37_zombieaktiv|integration_r36_pri_schatten|integration_r38_wasserzombie)$'`
+  -> `100% tests passed, 0 tests failed out of 6` (635 s).
+- Nach der letzten Aenderung (Bank-Gueltigkeit an eb->buf der Gegnerbank gebunden, wasserzombie_r38.c) erneut:
+  die 98er-Gruppe oben -> `100% tests passed, 0 tests failed out of 98`;
+  `-R "^integration_r38_wasserzombie$"` -> `100% tests passed, 0 tests failed out of 1`.
 
 ## 6. OFFEN
 

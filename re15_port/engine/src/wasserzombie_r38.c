@@ -9,6 +9,7 @@
 #include "re15_skeleton.h"    /* re15_cos_q12 / re15_sin_q12 */
 #include "re15_engine.h"      /* g_engine.frame_count (Messschiene) */
 #include "re15_room.h"        /* g_current_room_id (Messschiene) */
+#include "re15_enemy.h"       /* re15_enemy_find: Lebensdauer der gemeldeten Bank = die der Gegnerbank */
 #include <stddef.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -154,7 +155,10 @@ void re15_wasserzombie_hochziehen(re15_actor_t *e)
 /* ---- RE1.5-Aktionsbank je Typ (nur PC: der Hybrid-Lader in platform/pc/main.c meldet sie) ------------------- */
 #define WZ_BANK_MAX 8
 #ifdef RE15_PLATFORM_PC
-typedef struct { uint8_t type; re15_emd_skeleton_t sk; re15_emd_animation_t an; } wz_bank_t;
+/* puffer = eb->buf der Gegnerbank bei der Meldung: sk.keyframe_data zeigt in diesen Puffer (Hybrid-Lader
+ * platform/pc/main.c, `eb->buf = buf` vor der Meldung). Wird die Bank entladen/neu geladen, aendert sich eb->buf und
+ * die Kopie gilt nicht mehr, bis der Lader sie neu meldet. */
+typedef struct { uint8_t type; const void *puffer; re15_emd_skeleton_t sk; re15_emd_animation_t an; } wz_bank_t;
 static wz_bank_t *s_bank[WZ_BANK_MAX];
 #endif
 
@@ -173,8 +177,10 @@ void re15_wasserzombie_bank_merken(uint8_t type, const re15_emd_skeleton_t *sk, 
         s_bank[frei] = (wz_bank_t *)malloc(sizeof(wz_bank_t));
         if (!s_bank[frei]) return;
     }
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
     s_bank[frei]->type = type;
-    s_bank[frei]->sk = *sk;                                         /* keyframe_data zeigt in eb->buf (bleibt) */
+    s_bank[frei]->puffer = eb ? (const void *)eb->buf : NULL;
+    s_bank[frei]->sk = *sk;                                         /* keyframe_data zeigt in eb->buf */
     s_bank[frei]->an = *an;
 #else
     (void)type; (void)sk; (void)an;
@@ -193,6 +199,8 @@ static int wz_bank_fuer(uint8_t type, const re15_emd_skeleton_t **sk, const re15
 #ifdef RE15_PLATFORM_PC
     for (int i = 0; i < WZ_BANK_MAX; i++)
         if (s_bank[i] && s_bank[i]->type == type) {
+            re15_enemy_bank_t *eb = re15_enemy_find(type);
+            if (!eb || !eb->ok || (const void *)eb->buf != s_bank[i]->puffer) return 0;   /* entladen/neu geladen */
             if (sk) *sk = &s_bank[i]->sk;
             if (an) *an = &s_bank[i]->an;
             return 1;
