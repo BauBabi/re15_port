@@ -21,3 +21,22 @@ foreach(_teil inventar irons flammenwerfer)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r38_kleinkram_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+#   integration_r38_kleinkram_inventar       ECHTE exe: START in Bild 400/500 gegen Lauf ohne START -> genau zwei hoerbare
+#                                            Abschnitte im Abstand 100 (RE15_AUDIO_CAP_SYNC), debug.log Satz 6 / Satz 5
+#   integration_r38_kleinkram_irons          Elza-Spielstand ROOM1151 + CONTINUE, echtes Viereck: Text 20 erst nach dem
+#                                            Hinbeugen (Bild 140..145, mo=11), msg 2 nie, Irons tot, 2. Klick nur Text
+#   integration_r38_kleinkram_flammenwerfer  Leon-Spielstand ROOM30E0 + CONTINUE, Panel -> Zelle 4 -> Zelle 5: Modal 0x0E x100
+#                                            statt msg 15, Ja = 2 Zellen, Nein = liegt + Panel wieder scharf
+if(TARGET re15_pc)
+    foreach(_teil inventar irons flammenwerfer)
+        add_test(NAME integration_r38_kleinkram_${_teil}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_elza_karte>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_kleinkram_wd
+                         -DTEIL=${_teil}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_kleinkram.cmake)
+        set_tests_properties(integration_r38_kleinkram_${_teil} PROPERTIES TIMEOUT 1200)
+    endforeach()
+endif()
