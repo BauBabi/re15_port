@@ -194,6 +194,33 @@ RE15_FIRE_AOT=3@700#1141 RE15_PRESS=square@760,square@820,square@880 RE15_AUDIO_
   sehen, Dachgang mit Dachtuer dahinter; F1110/F1140 John laeuft heraus; F1170..F1260 "Elza: Are you okay? what's
   happened?" mit beiden im Bild; F1290 "John: Somehow... Elza, listen to me!".
 
+### 4.1a Hilferuf zu leise — gemessen und behoben (7fa09458)
+Ton-Mitschnitt m1 gegen die Se_on-Takte (`tools/r38_dining/ton_mitschnitt.py`, Kreuzkorrelation mit der Quelldatei,
+Least-Squares-Verstaerkung im Mix):
+| Quelle | Korrelation am Takt | Kontrolle 3 s vorher | Verstaerkung im Mix |
+|---|---|---|---|
+| Hilferuf (alte SE-Bank 0x3D) Takt 3294 / 3534 / 3774 | 0,295 / 0,258 / 0,236 | 0,042 / 0,033 / 0,054 | 0,234 / 0,247 |
+| Dialogzeile main40 (Sprach-Pfad), Takt 4300 | 0,844 | — | 1,043 |
+Der Hilferuf lag also im Mix, aber ~12 dB unter jeder Sprachzeile (se_play_layers: vol = (127*0x4000/127)>>1 = 0x2000 =
+0,25) und unter der Raummusik (RMS 1100-3300 gegen ~330) — praktisch unhoerbar. Weil "Help" eine Sprachzeile Johns aus
+der Nutzer-Produktion ist ("Teil der Audio files"), laeuft sie jetzt ueber den Sprach-Pfad wie jede synchro-Zeile
+(re15_voice_play, Pegel-Boden 45 % Vollaussteuerung): Datei `synchro/STAGE1/room1141/main42.wav` (umbenannt aus
+john_help.wav; Port-Id 42 ohne Text, VERTRAG 1.2), Haken audio_pc.c `re15_audio_stimme` (1 Zeile). Die SCD-Zeile bleibt
+Se_on(0x3D,0) im Takt der Schleife. Klopfen (0x3C) bleibt SE: RMS ~5000-5500 im Mix, deutlich ueber der Musik.
+
+### 4.1b Lauf int_d2 (echter Tuerweg 1131 -> 1141, integration_r38_dining1141 Teil D, vor dem Fix 95fc8af6)
+- Tuer 1131 mit Schluessel: `[dining] ROOM1131: Dining Room Key benutzt -> Tuer offen, Flag (9,66) = 1`, Tuer -> 1141.
+- 1141 ab Bild 1: John (t=49) bei (-7124,-6150); 12x Klopfen 0x3C, 3x Hilferuf 0x3D; Musik `Sce_bgm_control slot=0 op=1`
+  bei Phase-H-Beginn (Takt 3470), `op=2` nach dem Rolladen (Takt 4735, John frei), `op=1` beim Gorilla-Einbruch (Takt
+  5588 = Original @0x00E5C).
+- Nachrichten 1141: 13, 40, 3, 4, 5, 6, 7, 8, 9, 10, 11. Kameras: Cut 0 am Eingang, Cut 5 ab Bild 800 (Elza auf dem Weg
+  zum Gemaelde), Cut 2 Bild 2119 (Gorillas), Cut 5 Bild 2221.
+- Bildbogen `F_belege/n2_tuerweg_rolladen.png` (Bild 795..1395): Cut 5 mit geschlossenem Rolladen, Elza am Gemaelde,
+  John NICHT im Bild (Bild 825..1095, Frage "Will you push it? Yes"); Bild 1125 Johns Beine unter dem hochfahrenden
+  Rolladen, 1185 John im Gang, 1275/1305 John laeuft heraus, 1335.. "Elza: Are you okay? what's happened?".
+- Abbruch: die Doppeltuer-Nachricht msg 41 (Bild 2930) blieb offen — der zweite Druck nach WARTE 45 beschleunigte nur
+  die Schrift; Wegplan auf WARTE 90 korrigiert (95fc8af6), Lauf int_d3.
+
 ### 4.2 Riegel unit_r38_dining1141_* (Engine-Wege, Messwerte aus den Ausgaben)
 - phase_h: Bild 0 John bei (-7124,-6150) Blick 1024, keine Gorillas; 600 Bilder ohne Nachricht, John 0 Bilder
   abgewichen; Toene Bild 0/29/59/149/239/269/299/389/479/509/539 = 0x3C 0A/0B/0B, 0x3D 00 im Wechsel; "ja" Bild 725;
