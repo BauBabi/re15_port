@@ -14,6 +14,9 @@ Baum `.claude/worktrees/r38_spiderman`, Zweig `r38/spiderman`, Basis e2cc7673. A
 - 17:48 gezielte Tests gruen (141/141), Dossier fertig.
 - 18:03 Nachtrag (III): Bezugspunkt der Wandregel beim Kollaps ohne Griff (RE2-Hund) kalibriert, Riegelfall hund2 +
   vergifteter Standpunkt, Mutationsprobe; gezielte Tests 142/142.
+- 22:3x Nachbesserung 1 (Abnahme 0: M1/M2): Wechselbild haelt das letzte Clip-Bild (Austritt, Griffe, Bruellen B[2]),
+  Riegel rechnet das gezeichnete Bild nach (Mutationsproben 16 / 4 FAIL), exe-Messung 4001/5040/5070 — Abschnitt
+  "Nachbesserung 1" am Ende.
 
 ## Kurzfassung
 - Punkt 1: der Port liess den Spiderman (Typ 0x2B, grid 0x41) sofort beim Betreten aus dem Schacht laufen. Original
@@ -269,6 +272,10 @@ der Alt-Riegel schoss in den Schacht, angepasst s. o.; danach einzeln `ctest -R 
   greifbar), danach bruellt er und greift an. Vorher lief er schon beim Betreten des Raums los. Im Schacht kann man ihn
   nicht anvisieren (Original). Betrifft ROOM4001 (Elza, nach der Kendo-Szene) und die STAGE5-Gaenge 5040/5070 (beide
   Figuren; im Debug-Menue heisst STAGE5 "Stage 4").
+- **Kein Ruckeln mehr am Ende des Herauskletterns (Nachbesserung 1):** im letzten Bild des Austritts sprang das Modell
+  fuer ein Bild in seine Startpose zurueck (im Bodenschacht ROOM5070 war der Spiderman dann ein Bild lang weg, im
+  Wandschacht steckte er in der Wand). Jetzt bleibt die Endpose stehen und geht weich ins Bruellen ueber, wie im
+  Original. Dasselbe am Ende des Bruellens und an den Phasenwechseln der Griffe (Zugreifen -> Festhalten, Loslassen).
 - **Leon/Elza verschwinden beim Spiderman-Griff nicht mehr.** Der Griff stellte den Spieler vom Platz eines frueheren
   Griffs aus hin (bis 14 600 Einheiten weit, also ausserhalb des Raums). Jetzt uebernimmt der Spieler wie im Original
   den Ankerpunkt des Spiderman.
