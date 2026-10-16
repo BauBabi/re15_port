@@ -1628,6 +1628,8 @@ void re15_game_step(const re15_game_ctx_t *c)
                     if (re15_autolook_scan(pl, 0xfa0))               /* @0x80031e20-24 */
                         pl->neck_flags = (uint8_t)(pl->neck_flags & 0xed);  /* @0x80031e3c-40 */
                 }
+                { extern void re15_spinnen_r38_gift_tick(re15_actor_t *);   /* Runde 38 Spur R: Gift- */
+                  re15_spinnen_r38_gift_tick(pl); }                        /* Wirkung @0x80031e44-ecc */
             }
         }
         /* AIM-Zustand ZUM DECIDE-ZEITPUNKT festhalten (= DAT_800aca59 == 7, BEVOR die Aim-FSM
