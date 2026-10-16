@@ -61,6 +61,7 @@
 #include "re15_scd.h"         /* re15_game_flag_get — Szenen-Flag des Hinweises (Runde 33) */
 #include "re15_map_owned.h"   /* Runde 36 Spur N: re15_map_owned_page (Etagenwahl nach Aufnahme) */
 #include "re15_engine.h"     /* g_engine.frame_count — nur fuer die Messschiene */
+#include "re15_tagebuch_r38.h" /* Runde 38 Spur G: Kartenkette nach Roys Diary (Eintraege 3/4) */
 
 #include "gen/re2_hint_bank.inc"   /* RE2_HINT_EDT_SIZE / _VBD_OFF / _VBD_SIZE / RE2_HINT_SE */
 
@@ -106,6 +107,14 @@ static const re15_map_hint_eintrag_t s_hints[] = {
      * (RE15_CUT10F0_ZIEL2_BESUCHT_BANK/_BIT, gesetzt in re15_cut10f0_install). */
     { 0x10F0, { 0 }, 0, 0x11C0, 0, 9, 71,  2, 1, 4, 64 },
     { 0x10F0, { 0 }, 0, 0x1150, 0, 9, 71, -1, 1, 9, 72 },
+    /* Runde 38 Spur G (include/re15_tagebuch_r38.h): nach dem ERSTEN Lesen von Roys Diary (Elza, ROOM1011) die Kette
+     * der Runde 35 K — Communications Room ROOM10F1 (Zone 0, Blatt 3), danach (Folge = Eintrag 4) Prison Room ROOM1211
+     * (Zone 0, Blatt 1). Kein Anker, Anforderung aus re15_tagebuch_r38_tick am Evt_end des Ereignisses.
+     * "gezeigt" = (9,68) Tagebuch abgelegt; "erreicht" = Prison Key genommen / John befreit (4,0xFC) @0x01F76. */
+    { RE15_TAGEBUCH_R38_RAUM, { 0 }, 0, RE15_TAGEBUCH_R38_ZIEL1_RAUM, 0, RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT,
+      4, 1, RE15_TAGEBUCH_R38_ZIEL1_ERREICHT_BANK, RE15_TAGEBUCH_R38_ZIEL1_ERREICHT_BIT },
+    { RE15_TAGEBUCH_R38_RAUM, { 0 }, 0, RE15_TAGEBUCH_R38_ZIEL2_RAUM, 0, RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT,
+      -1, 1, RE15_TAGEBUCH_R38_ZIEL2_ERREICHT_BANK, RE15_TAGEBUCH_R38_ZIEL2_ERREICHT_BIT },
 };
 #define HINT_COUNT ((int)(sizeof s_hints / sizeof s_hints[0]))
 

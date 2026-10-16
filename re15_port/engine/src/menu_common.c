@@ -75,6 +75,7 @@
 #include "re15_item_prompt.h"   /* Runde 30: Glyphenzahl der Meldung "has been filed" */
 #include "re15_aot.h"           /* Runde 30: g_aot — die Aufhebe-Zone nach der Meldung aus */
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Hinweiskette + zweites Kartenziel (cut_10f0.c) */
+#include "re15_tagebuch_r38.h"  /* Runde 38 Spur G: Dokument schon in der Liste -> nur lesen (tagebuch_r38.c) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -116,6 +117,7 @@ static int     s_doc_prop   = -1;  /* Weltmodell obj_id (RE2 Byte +6 der Platzie
                                     * 255 = keines @0x80072b98-9c), < 0 = keines       */
 static uint8_t s_doc_open_se = 0;  /* 1 = Satz 8 steht noch aus (faellt ins erste Bild
                                     * des Hereinfahrens)                               */
+static uint8_t s_doc_nur_lesen = 0; /* Runde 38 Spur G: 1 = stand schon in der Liste -> nur lesen */
 /* Oeffnen aus der FILE-Liste: RE2s Zustand 11 zwischen Satz 6 und Satz 8 (Beleg-Block
  * bei file_open_wait_tick). s_file_open_wait = 1, solange der Leser noch nicht offen
  * ist; s_file_open_ctr = RE2s Zaehler 3(s2) = 0x800d5bf3; Satz/Seiten gemerkt. */
@@ -1923,6 +1925,7 @@ static void doc_msg_open(void)
 static void file_reader_close(int se)
 {
     se4(se);
+    if (s_doc_target && s_doc_nur_lesen) { s_phase = 2; return; }   /* Runde 38 Spur G: nur gelesen -> Schirm zu */
     if (s_doc_target) { doc_msg_open(); return; }
     g_inv_screen.item_state = 1;                /* 25c2=1 @0x800c717c-84 */
     g_inv_screen.file_bild  = 0;
@@ -2346,7 +2349,11 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
              * Listenplatz zu seinem Dokument kommt. */
             if (s_doc_target) {
                 const re15_file_doc_t *d = re15_files_doc(s_doc_nr);
-                int platz = re15_files_add(s_doc_nr);            /* @0x80071d00 */
+                /* Runde 38 Spur G: steht es schon in der Liste (Roys Diary, erneutes Untersuchen), nur lesen —
+                 * kein zweites Anhaengen, keine Meldung (include/re15_tagebuch_r38.h). */
+                int platz = re15_tagebuch_r38_listenplatz(s_doc_nr);
+                s_doc_nur_lesen = (uint8_t)(platz >= 0);
+                if (platz < 0) platz = re15_files_add(s_doc_nr);            /* @0x80071d00 */
                 s_doc_t_added = s_doc_tick;  s_doc_f[0] = ++s_doc_folge;
                 s_substate = 2;                                  /* FILE-Welle */
                 g_inv_screen.tab = 3;
@@ -2572,6 +2579,7 @@ void re15_menu_request_doc(int doc, int taken_bit, int aot_slot, int obj_id)
     if (s_alive || s_stage != 0) return;
     if (!re15_files_doc(doc)) return;       /* kein Eintrag -> nichts (Port-Schranke) */
     s_doc_target = 1;
+    s_doc_nur_lesen = 0;                    /* Runde 38 Spur G: entscheidet phase0 (Listenplatz) */
     s_doc_nr     = doc;
     s_doc_taken  = taken_bit;
     s_doc_aot    = aot_slot;

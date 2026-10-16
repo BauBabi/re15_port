@@ -74,7 +74,7 @@ def entpacken(z):
 
 
 def text_aus_auftrag():
-    zeilen = open(AUFTRAG, encoding="utf-8").read().split("\n")
+    zeilen = open(AUFTRAG, encoding="utf-8").read().replace("\r", "").split("\n")   # auch CRLF-Auscheckung
     kopf = entpacken(zeilen[ZEILE_KOPF - 1])
     if not kopf.startswith("- Header: "):
         raise SystemExit("Z. %d ist nicht der Kopf: %r" % (ZEILE_KOPF, kopf))

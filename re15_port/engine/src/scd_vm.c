@@ -65,6 +65,7 @@
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
 #include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
+#include "re15_tagebuch_r38.h" /* Runde 38 Spur G: ROOM1011 msg 18 -> Roys Diary (tagebuch_r38.c) */
 
 scd_vm_t g_scd;
 
@@ -1842,6 +1843,9 @@ static int op_message_on(scd_thread_t *t)
      * Munitions-Angebot). HINTER dem Stimmen-Riegel, damit auch dieser Text eine laufende Aufnahme
      * ausreden laesst. Herleitung: include/re15_leiche.h. */
     if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }
+    /* Runde 38 Spur G: ROOM1011 msg 18 (Roys Zettel "0513", sub07 @0x00E64) -> Roys Diary statt der Nachricht;
+     * 2 = parken, solange der Leser laeuft (include/re15_tagebuch_r38.h). */
+    { const int tb = re15_tagebuch_r38_message_on(t); if (tb == 2) return 2; if (tb == 1) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text

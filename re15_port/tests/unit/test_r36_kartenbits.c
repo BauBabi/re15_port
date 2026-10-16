@@ -63,6 +63,7 @@
 #include "re15_schluessel_r36.h"
 #include "re15_szenenleon_r36.h"
 #include "re15_tuer1060.h"
+#include "re15_tagebuch_r38.h"   /* Runde 38 Spur G: Bit 68 Roys Diary */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -504,6 +505,7 @@ static const port_bit_t k_port[] = {
     { RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU, "RE15_SZL_BIT_ZU",                "Werkstatt-Tuer verschlossen, gen/szl11b0_szene.inc Set 0x54 (Runde 36 J)" },
     { RE15_TUER1060_K_BANK, RE15_TUER1060_K_BIT, "RE15_TUER1060_K_BIT",    "liest 10F0-Szene 71, tuer1060_1040.c (Runde 35)" },
     { RE15_TUER1060_TOD_BANK, RE15_TUER1060_TOD_BIT, "RE15_TUER1060_TOD_BIT", "liest Irons-Tod 73, tuer1060_1040.c (Runde 35)" },
+    { RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT, "RE15_TAGEBUCH_R38_BIT", "Roys Diary abgelegt, tagebuch_r38.c (Runde 38 G)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 
