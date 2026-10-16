@@ -3,12 +3,12 @@
  * Satzformat wie TUERSE.VBS: [SE-Map @0 .. vh_off)[VH pBAV @vh_off][Trailer, u32 vh_off @size-8][VBD].
  * Herkunft je Satz (RE2 info/re2leon/PL0/RDT, Datei-Offsets):
  *   0 AUF     ROOM1140 Satz 0x25  EDT 00 00 84 16  Tone @0x01DD0  VAG @0x04480  5264 B  sha1 e12a441e528242816cc556dabbcc92a83d9580b9
- *   1 SCHUSS  ROOM40A0 Satz 0x08  EDT 00 00 a3 00  Tone @0x0A800  VAG @0x17B80  4736 B  sha1 e552c5d77eedb1bfe19cdfe204c68c94cc058d45
+ *   1 SCHUSS  ROOM4040 Satz 0x0A  EDT 00 00 73 00  Tone @0x0C8F8  VAG @0x18CC8  5824 B  sha1 994b137d40070755fa17b026430cd98bfd36bd08
  */
 #define RE2_ELZA_EDT_OFF   0u
 #define RE2_ELZA_EDT_SIZE  3144u
 #define RE2_ELZA_VBD_OFF   3144u
-#define RE2_ELZA_VBD_SIZE  10000u
+#define RE2_ELZA_VBD_SIZE  11088u
 #define RE2_ELZA_SE_COUNT  2
 #define RE2_ELZA_SE_AUF     0   /* RE2 ROOM1140 Satz 0x25, 5264 B */
-#define RE2_ELZA_SE_SCHUSS  1   /* RE2 ROOM40A0 Satz 0x08, 4736 B */
+#define RE2_ELZA_SE_SCHUSS  1   /* RE2 ROOM4040 Satz 0x0A, 5824 B */

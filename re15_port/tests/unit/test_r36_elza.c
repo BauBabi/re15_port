@@ -13,7 +13,7 @@
  *   schuss     P4 ROOM1021: zwei Schuss-Toene je 1 Takt nach @0x020CE / @0x020D6
  *   roy        P5 ROOM1021: Roys Sterbe-Ton = Raum-SE 5 im Takt von Schuss 2, hinter dem Schuss
  *   stoehnen   P6 ROOM1011: Nachricht 24 = ROOM1011 msg 10 woertlich + Stimme 24 -> main16.5 im Takt von @0x00D54
- *   bank       ELZASE.VBS: zwei Saetze, VAG-Groessen 5264/4736, EDT/Tone wie die RE2-Quelle
+ *   bank       ELZASE.VBS: zwei Saetze, VAG-Groessen 5264/5824 (Runde 38: Satz 1 = ROOM4040 0x0A), EDT/Tone wie die RE2-Quelle
  *   signatur   Anker armieren nur bei passender Signatur; Leon-Raeume ohne Anker */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -391,8 +391,10 @@ static void teil_bank(void)
     if (!b) return;
     uint32_t vh = (uint32_t)b[RE2_ELZA_EDT_SIZE - 8] | ((uint32_t)b[RE2_ELZA_EDT_SIZE - 7] << 8);
     re15_vab_t vab; int rc = re15_vab_parse(b + vh, RE2_ELZA_EDT_SIZE - vh, &vab);
-    PRUEF(rc == 0 && vab.vag_count == 2 && vab.samples[0].size == 5264 && vab.samples[1].size == 4736,
-          "VH @0x%X: %d VAGs, %u / %u B (ROOM1140 Satz 0x25 / ROOM40A0 Satz 0x08)", (unsigned)vh, vab.vag_count,
+    /* Runde 38 Spur H: Satz 1 = RE2-Skript-Pistolenschuss aus dem Gegnerfeld ROOM4040 Satz 0x0A (Annette, Art 3);
+     * vorher ROOM40A0 0x08 = Schuss der Partnerin Ada (Art 2) — analysis/befunde_runde38/H_elzatoene.md §8. */
+    PRUEF(rc == 0 && vab.vag_count == 2 && vab.samples[0].size == 5264 && vab.samples[1].size == 5824,
+          "VH @0x%X: %d VAGs, %u / %u B (ROOM1140 Satz 0x25 / ROOM4040 Satz 0x0A)", (unsigned)vh, vab.vag_count,
           (unsigned)vab.samples[0].size, (unsigned)vab.samples[1].size);
     re15_edt_rec_t e0, e1;
     PRUEF(re15_edt_decode(b, RE2_ELZA_SE_AUF, &e0) == 0 && re15_edt_decode(b, RE2_ELZA_SE_SCHUSS, &e1) == 0 &&
@@ -402,13 +404,13 @@ static void teil_bank(void)
     {
         char q[600]; size_t n1 = 0, n2 = 0;
         snprintf(q, sizeof q, "%s/../../../info/re2leon/PL0/RDT/ROOM1140.RDT", RE15_ASSET_PSX_DIR); uint8_t *a = slurp(q, &n1);
-        snprintf(q, sizeof q, "%s/../../../info/re2leon/PL0/RDT/ROOM40A0.RDT", RE15_ASSET_PSX_DIR); uint8_t *c = slurp(q, &n2);
+        snprintf(q, sizeof q, "%s/../../../info/re2leon/PL0/RDT/ROOM4040.RDT", RE15_ASSET_PSX_DIR); uint8_t *c = slurp(q, &n2);
         if (a && c) {
             PRUEF(!memcmp(b + RE2_ELZA_VBD_OFF + vab.samples[0].offset, a + 0x04480, 5264) &&
-                  !memcmp(b + RE2_ELZA_VBD_OFF + vab.samples[1].offset, c + 0x17B80, 4736),
-                  "VAG-Daten bytegleich ROOM1140 @0x04480 / ROOM40A0 @0x17B80");
-            PRUEF(a[0x01484 + 3] == b[3] && c[0x09E00 + 3] == b[7] && (a[0x01484 + 2] & 0x0F) == (b[2] & 0x0F) &&
-                  (c[0x09E00 + 2] & 0x0F) == (b[6] & 0x0F),
+                  !memcmp(b + RE2_ELZA_VBD_OFF + vab.samples[1].offset, c + 0x18CC8, 5824),
+                  "VAG-Daten bytegleich ROOM1140 @0x04480 / ROOM4040 @0x18CC8");
+            PRUEF(a[0x01484 + 3] == b[3] && c[0x0BF60 + 3] == b[7] && (a[0x01484 + 2] & 0x0F) == (b[2] & 0x0F) &&
+                  (c[0x0BF60 + 2] & 0x0F) == (b[6] & 0x0F),
                   "EDT-Stimmen-/Prioritaetsbyte unveraendert (0x%02X / 0x%02X)", b[3], b[7]);
         } else printf("  (info/re2leon fehlt — Quellvergleich uebersprungen)\n");
         free(a); free(c);
