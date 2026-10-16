@@ -1,0 +1,31 @@
+# Runde 38 Spur W: echter Weg auf die Plattform: Leiter = Tuer slot 1 @0x01766 (Band 2, Rechteck x 16000..17000
+# z -21550..-20550) -> ROOM20A0 Ankunft (16500,-7200,-20000) Band 4 Cut 12 -> Schalter slot 3 @0x017E8 (Spieler steht
+# an der Suedkante von Wand 38, z ~ -19530) -> Ja -> Rolladen obj 1 faehrt hoch (sub07 @0x01E40) -> nach Sueden in die
+# Cut-11-Zone (x 7000..15500 z -16500..-15000).
+OBJ 1
+RAUM 20A0
+GEGNERWEG
+WARTE 30
+BLICK 3072
+WARTE 5
+AKTION
+WARTE 150
+GEGNERWEG
+GEHE 16450 -19300 120
+GEHE 15300 -19450 120
+BLICK 1024
+WARTE 10
+AKTION
+WARTE 40
+AKTION
+WARTE 40
+AKTION
+WARTE 150
+GEHE 12500 -17300 250
+GEHE 12500 -15700 250
+WARTE 60
+GEHE 12500 -18500 250
+WARTE 40
+GEHE 12500 -15700 250
+WARTE 60
+ENDE
