@@ -24,3 +24,29 @@ foreach(_teil dokument ablauf karte leon)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r38_tagebuch_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()
+
+# MESS-WERKZEUG (kein add_test): Framedump-Auswertung (Gruen-Pixel im Code-Kasten, Blinkwechsel einer Kartenkachel).
+add_executable(probe_r38_tagebuch_bild ${CMAKE_CURRENT_LIST_DIR}/../probe_r38_tagebuch_bild.c)
+target_link_libraries(probe_r38_tagebuch_bild PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r38_tagebuch_bild PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r38_tagebuch_bild PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# INTEGRATION (echte exe, tests/integration/test_r38_tagebuch.cmake):
+#   integration_r38_tagebuch_lesen  Roy untersuchen -> Roys Diary statt msg 18, "0513" gruen im Bild, Bit 68, Kette
+#                                   Comms (Blatt 3/9) -> Prison (1/3) im Hinweis-Schirm (Bildfolge)
+#   integration_r38_tagebuch_karte  Spielstand mit (9,68): normale Karte, 2F- und B2-Kachel blinken
+#   integration_r38_tagebuch_leon   Gegenprobe Leon ROOM1010: nichts
+if(TARGET re15_pc AND TARGET probe_r36_elza_karte)
+    foreach(_teil lesen karte leon)
+        add_test(NAME integration_r38_tagebuch_${_teil}
+            COMMAND ${CMAKE_COMMAND}
+                -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_elza_karte>
+                -DRE15_BILD_TOOL=$<TARGET_FILE:probe_r38_tagebuch_bild>
+                -DWORKDIR=${CMAKE_BINARY_DIR}/r38_tagebuch_wd
+                -DTEIL=${_teil}
+                -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_tagebuch.cmake)
+        set_tests_properties(integration_r38_tagebuch_${_teil} PROPERTIES TIMEOUT 1200)
+    endforeach()
+endif()
