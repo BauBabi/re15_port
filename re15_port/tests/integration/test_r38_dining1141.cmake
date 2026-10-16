@@ -14,7 +14,8 @@ cmake_minimum_required(VERSION 3.16)
 #   L  LEON 1140: Gemaelde -> Rolladen-Ton 0x3B 0x0C/0x0A/0x0B (Punkt 3)
 #
 # Druckzahlen je Abfrage (AKTION + WARTE 60) gemessen mit `test_r38_dining1141 takt`: Gemaelde 1+3, Tuer 1131 mit
-# Schluessel 1+2 (msg 41 + Wegwerf-Abfrage; an der exe gemessen 1+3, darum 5 Drucke — ein zusaetzlicher Druck geht
+# Doppeltuer im Kampf 1+1 mit WARTE 90 (zwei Zeilen; nach WARTE 45 lief die Schrift noch, der Druck beschleunigte
+# nur — gemessen Lauf int_d2: msg 41 blieb ab Bild 2930 offen), Schluessel 1+2 (msg 41 + Wegwerf-Abfrage; an der exe gemessen 1+3, darum 5 Drucke — ein zusaetzlicher Druck geht
 # durch die nun offene Tuer, die restlichen Zeilen laufen in 1141 am Eintrittspunkt ins Leere), Leiche 1021 1+4. Ein Druck zu viel loest den Satz neu aus (Leiche: sub06
 # @0x02216 stellt Slot 6 wieder scharf).
 # Bilder je Lauf per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) und Ton-Mitschnitt RE15_AUDIO_CAP_SYNC im Arbeitsordner;
@@ -219,9 +220,9 @@ GEHE -7900 -15000 150
 GEHE -7900 -17750 80
 BLICK 2048
 AKTION
-WARTE 45
+WARTE 90
 AKTION
-WARTE 20
+WARTE 30
 GEHE -5500 -19000 150
 WARTE 700
 GEHE -6000 -12000 150
