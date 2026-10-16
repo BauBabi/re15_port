@@ -76,6 +76,20 @@ Ecke folgt per RTPS). Verworfen wird STRENG kleiner 0; = 0 wird gezeichnet.
 Zusatz (nicht geaendert, nur festgehalten): OTZ>>6 == 0 -> nicht in die OT (@0x80025654/58 `sra v0,v1,6` /
 `beq v0,zero`).
 
+Ausgeschlossene Hypothesen (je mit Beleg):
+* **Objekt-Schatten (Figuren-Schattenroutine):** die Objekt-Schleife FUN_8002c18c ruft NUR `jal 0x80068098`
+  (RotMatrix) @0x8002c218, 0x80022da0 @0x8002c22c/@0x8002c294, 0x80053fc0 @0x8002c254, 0x80068068 @0x8002c264,
+  0x80066ee0 @0x8002c278, 0x80067f28 @0x8002c280, 0x80066960 @0x8002c29c, 0x80068328 @0x8002c2a4, 0x8003e64c
+  @0x8002c2c8, 0x80014368 @0x8002c2dc, 0x80022f0c @0x8002c320, 0x80023098 @0x8002c350, 0x800254a0 @0x8002c380,
+  0x800256b0 @0x8002c3b0 — keinen Schattenzeichner (FUN_8001b064/FUN_8001af5c). Der Port zeichnet fuer Props
+  ebenfalls keinen Schatten-Quad (re15_render_shadow_quad nur Spieler/NPC). -> kein Schatten-Pass.
+* **Halbtransparenz:** Cursor-Attribut pc[8..9] = 0 (obj+0x0C, LAB_80040914 @0x800409a8/@0x800409b0), CLUT ohne
+  STP-Bit (Eintraege 0..5 = 0000/0160/00E8/03E1/035B/47FE), Port-Blend 0. -> nein.
+* **Unterlage/fremdes Objekt:** die zusaetzlichen Bildpunkte stammen aus dem Textur-Platz des Cursors selbst (Platz 4 =
+  Prop 0, RE15_TRILOG §1.2). -> nein.
+* **Doppelzeichnung des Musters:** JA — Oberseite UND Unterseite tragen das Muster; das Original zeichnet nur die
+  vorderseitige (NCLIP >= 0).
+
 ### 2.2 Der Port
 
 * `platform/pc/main.c` Raum-Prop-Schleife (Obj_model_set = FUN_8002c18c): Dreiecke und Vierecke werden projiziert
