@@ -26,7 +26,7 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
 - [x] Punkt 1 Text "But, hold on..." — Umsetzung §1.3, nachher §1.4
 - [x] Punkt 2 Schiebe-Ton — Umsetzung §2.3, nachher §2.4
 - [x] Punkt 3 keine Fall-Animation — Umsetzung §3.3, nachher §3.4
-- [ ] Riegel gruen (gezielt) + integration_r38_werkstatt11b0 — Abschnitt Tests
+- [x] Riegel gruen (gezielt, 89 + 5 Tests) + integration_r38_werkstatt11b0 — Abschnitt Tests
 
 ## §1 Punkt 1 — Text "But, hold on..."
 
@@ -217,6 +217,27 @@ Neue Riegel (`re15_port/tests/unit/probes/r38_werkstatt11b0.cmake`, registriert 
 | unit_r38_werkstatt11b0_uebergabe | 3 | Bankwahl wie main.c je Bild: Phase 1->2 Bank 1 Clip 5; Phase 7 Loco Clip 0x11 Bild 0, Keyframe 266 == Phase 6; alte Regel Containerbank kf 275; Folgebild Bank 1 Clip 1 Bild 0; 0 Rueckfall-Bilder; Merker verbraucht | gruen |
 | unit_r38_werkstatt11b0_ton | 2 | echtes audio_pc.c + werkstatt11b0_pc.c, CAP_SYNC: 11B0 ohne Ergaenzung 0, mit 108 200 792, ROOM1090 108 200 792, 147 000/147 000 Samples gleich, Tonlaenge 32 Bilder, 11B1/11B0-Satz-0 unberuehrt | gruen |
 | integration_r38_werkstatt11b0 | 1+2+3 | echte exe: A `[msgtext] ... id=20 "Marvin: But, hold on..."`; 8 gekeyte Toene F1646 x2/F1671 x2/F1696 x2/F1729/F1730 (Stimme 0, vag 3), F1646 Marvin Clip 0x12 Bild 1; Uebergabebild F1730 `17 17 10 0 0 10 1 0`, F1731 `1 1 16 0 0 16 0 0`, kein Rueckfall; B Mess-Haken STUMM: Mitschnitt A/B bis F1646 gleich (Versatz 254 Bloecke), danach verschieden | gruen (168.29 s) |
+
+Gezielter Lauf (KEINE volle Suite; Regex = eigene Riegel + die Testgruppen der beruehrten Module: Schub-Sub/11B0-Szene
+(szenenleon_r36.c, gen/szl11b0_szene.inc), ROOM10F0-Szene mit 11B0-RBJ-Leihe und Port-Tonbank (cut10f0), NPC-Bank-/
+Takt-Regel (enemy_ai_common.c-Verbraucher: npc/marvin/elliot/ada/irons/anim/neck/affen), Ton (audio_pc.c: audio/se/
+tuer_ton/plattform_ton/rotor_bgm/synchro/crow_se/zombie_se), Texte (msg), Elza-/Roy-/11C0-/Cut1150-Riegel derselben
+Personen), Bau-Stand fb51b2c6 (Code wie Endstand; danach nur die Portabilitaets-Zeilen der Riegel), woertlich:
+```
+ctest --test-dir re15_port/build -R "r38_werkstatt11b0|r36_szenenleon|r35_cut10f0|unit_npc_|unit_marvin_|unit_elliot_1170_run|unit_1090_npc_prop_push|unit_ada_eintritt_1050|unit_r27_ada_cutscene_1050|unit_r34n_d_adaruf_|unit_r35_affen_ada|unit_r35_affen_npcband|unit_irons_|unit_anim_|unit_neck_headlook|unit_audio_|unit_se_|unit_r31_tuer_ton|unit_r34_plattform_ton|unit_rotor_bgm_pin|unit_synchro_stimme|unit_re2_crow_se_bank|unit_zombie_se_ab_10d0|unit_msg_dialog|unit_action_msg_gate|unit_elza_zweig|unit_r36_elza_|unit_r37_roy_|unit_r37_szene11c0_|unit_r35_cut1150_" --timeout 900 --output-on-failure -j3
+100% tests passed, 0 tests failed out of 89
+Total Test time (real) = 278.08 sec
+```
+(darunter integration_r38_werkstatt11b0 181.65 s, integration_r36_szenenleon 185.96 s, integration_r35_cut10f0 272.25 s.)
+Nach dem letzten Bau (Linux-Portabilitaet der Riegel, Endstand), woertlich:
+```
+ctest --test-dir re15_port/build -R "r38_werkstatt11b0" --timeout 900 --output-on-failure
+100% tests passed, 0 tests failed out of 5
+Total Test time (real) = 152.06 sec
+```
+Linux-Portabilitaet (Memory reai-v2-linux-test-portabilitaet): probe_r38_werkstatt11b0_ton.c setzt `_DEFAULT_SOURCE`
+vor den Includes (putenv), test_r38_werkstatt11b0.cmake beginnt mit `cmake_minimum_required(VERSION 3.16)`; der
+Arbeitsordner der Mischer-Probe ist `r38_werkstatt11b0_ton_wd` (nicht der Target-Name).
 
 ## OFFEN
 1. **Leons Uebergabebild Phase 1 -> 2** (nicht gemeldet, nicht Teil des Auftrags): der Spieler-Sub 0x13 waehlt die Bank
