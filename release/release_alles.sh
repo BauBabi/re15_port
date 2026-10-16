@@ -21,8 +21,9 @@
 #   --tag              Release-Commit + Tag + Push am Ende (Schritt "abschluss")
 #   --kein-push        mit --tag: Commit + Tag, aber nicht pushen
 #   --ab SCHRITT       erst ab SCHRITT (alt windows android linux paket archiv abschluss)
+#   --bis SCHRITT      nur bis einschliesslich SCHRITT (z.B. --ab windows --bis windows: nur Windows neu bauen)
 #   --linux-jobs N     ctest im Linux-Container mit N Jobs (RE15_CTEST_JOBS; Standard seriell)
-#   --archiv ORDNER    Archiv-Wurzel (Standard C:/workspace/Re15Data/re15_packages_archiv)
+#   --archiv ORDNER    Archiv-Wurzel (Standard: $RE15_ARCHIV, sonst C:/workspace/Re15Data/re15_packages_archiv)
 #   --min-frei-gb N    verlangter freier Platz auf Repo- und Archiv-Laufwerk (Standard 10)
 #
 # VERSION: hoechster Tag vX.Y.Z -> vX.Y.(Z+1); bei Z = 99 -> vX.(Y+1).0 (wie v0.7.99 -> v0.8.0).
@@ -47,6 +48,11 @@
 # =============================================================================
 set -euo pipefail
 
+# Ein vom Aufrufer geerbtes MSYS_NO_PATHCONV=1 schaltet unter Git-Bash die Pfad-Umsetzung fuer git.exe & Co. ab:
+# "git -C /tmp/..." findet das Repo dann nicht (gemessen 2026-10-16, unit_r38_releaseskript_cmd: "kein git-Repo:
+# /tmp/claude/..."). Die Einzelskripte setzen es selbst dort, wo sie es brauchen (release/docker/kopie_lauf.sh:44).
+unset MSYS_NO_PATHCONV MSYS2_ARG_CONV_EXCL
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 # shellcheck source=release_alles_lib.sh
@@ -59,8 +65,9 @@ DRY=0
 TAG=0
 PUSH=1
 AB=""
+BIS=""
 LINUX_JOBS=""
-ARCHIV=""
+ARCHIV="${RE15_ARCHIV:-}"          # Umgebung RE15_ARCHIV = Standard fuer --archiv (andere Maschine, Tests)
 # PORT-WAHL (Bau-Umgebung): gemessen ~6,2 GB je Lauf auf dem Host (Dossier Abschnitt 1, M10) plus die Docker-VM.
 MIN_FREI_GB=10
 
@@ -75,6 +82,8 @@ while [[ $# -gt 0 ]]; do
         --kein-push)     PUSH=0; shift ;;
         --ab)            [[ -n "${2:-}" ]] || { echo "--ab braucht einen Schritt: ${SCHRITTE[*]}" >&2; exit 2; }
                          AB="$2"; shift 2 ;;
+        --bis)           [[ -n "${2:-}" ]] || { echo "--bis braucht einen Schritt: ${SCHRITTE[*]}" >&2; exit 2; }
+                         BIS="$2"; shift 2 ;;
         --linux-jobs)    [[ "${2:-}" =~ ^[1-9][0-9]*$ ]] || { echo "--linux-jobs braucht eine Zahl >= 1" >&2; exit 2; }
                          LINUX_JOBS="$2"; shift 2 ;;
         --archiv)        [[ -n "${2:-}" ]] || { echo "--archiv braucht einen Ordner" >&2; exit 2; }
@@ -96,19 +105,24 @@ fi
 
 # --- Plan: welche Schritte laufen ---------------------------------------------------
 PLAN=()
-if [[ -n "$AB" ]]; then
+for opt in "--ab:$AB" "--bis:$BIS"; do
+    name="${opt%%:*}"; wert="${opt#*:}"
+    [[ -n "$wert" ]] || continue
     gefunden=0
-    for s in "${SCHRITTE[@]}"; do [[ "$s" == "$AB" ]] && gefunden=1; done
-    [[ $gefunden -eq 1 ]] || { echo "--ab: unbekannter Schritt '$AB' (${SCHRITTE[*]})" >&2; exit 2; }
-fi
+    for s in "${SCHRITTE[@]}"; do if [[ "$s" == "$wert" ]]; then gefunden=1; fi; done
+    [[ $gefunden -eq 1 ]] || { echo "$name: unbekannter Schritt '$wert' (${SCHRITTE[*]})" >&2; exit 2; }
+done
 an=0; [[ -z "$AB" ]] && an=1
+bis_gesehen=0
 for s in "${SCHRITTE[@]}"; do
     [[ "$s" == "$AB" ]] && an=1
     [[ $an -eq 1 ]] || continue
-    [[ "$s" == abschluss && $TAG -eq 0 ]] && continue
-    PLAN+=("$s")
+    if [[ "$s" != abschluss || $TAG -eq 1 ]]; then PLAN+=("$s"); fi
+    if [[ "$s" == "$BIS" ]]; then bis_gesehen=1; break; fi
 done
-[[ "$AB" == abschluss && $TAG -eq 0 ]] && { echo "--ab abschluss braucht --tag" >&2; exit 2; }
+if [[ -n "$BIS" && $bis_gesehen -eq 0 ]]; then echo "--bis $BIS liegt vor --ab $AB" >&2; exit 2; fi
+if [[ "$AB" == abschluss && $TAG -eq 0 ]]; then echo "--ab abschluss braucht --tag" >&2; exit 2; fi
+(( ${#PLAN[@]} > 0 )) || { echo "leerer Plan (--ab $AB --bis $BIS)" >&2; exit 2; }
 im_plan() { local s; for s in "${PLAN[@]}"; do [[ "$s" == "$1" ]] && return 0; done; return 1; }
 
 # --- Ausgabe + Protokoll -------------------------------------------------------------
@@ -322,7 +336,15 @@ else
     esac
 fi
 if [[ -d "$ARCHIV/$NEU" ]] && im_plan archiv; then
-    pz warn "Archivordner $NEU existiert schon - Schritt 'archiv' vergleicht: gleich = ok, abweichend = Abbruch"
+    if im_plan paket; then
+        # Ein neuer Paketbau ergibt andere Bytes (Zeitstempel im Zip) - der Archiv-Schritt wuerde nach Stunden am
+        # Vergleich scheitern. Deshalb hier, vor dem Bauen; geloescht wird im Archiv nichts.
+        pz stop "Archivordner $NEU existiert schon ($(ra_zeit "$(ra_mtime "$ARCHIV/$NEU")")) - $NEU ist schon gebaut und archiviert.
+         Nur veroeffentlichen: bash release/release_alles.sh --ab abschluss --tag
+         Neu bauen: den Ordner $(zeige_pfad "$ARCHIV/$NEU") vorher umbenennen oder entfernen"
+    else
+        pz warn "Archivordner $NEU existiert schon - Schritt 'archiv' vergleicht: gleich = ok, abweichend = Abbruch"
+    fi
 fi
 
 # --- Eingaben uebersprungener Bauschritte (nach --ab)
@@ -416,12 +438,12 @@ $(printf '%s\n' "$s" | head -5)"
 
 NR=0
 SCHRITT_LOG=""
-# lauf <schritt> <befehl...>: Ausgabe auf den Schirm UND ins Schritt-Protokoll; die Rueckgabe des BEFEHLS zaehlt
-# (PIPESTATUS[0]), nicht die von tee (Memory reai-v2-releasebau-pipe-schluckt-fehler: '| tail' meldete exit 0).
+# lauf <name> <anzeige> <befehl...>: Ausgabe auf den Schirm UND ins Schritt-Protokoll; die Rueckgabe des BEFEHLS
+# zaehlt (PIPESTATUS[0]), nicht die von tee (Memory reai-v2-releasebau-pipe-schluckt-fehler: '| tail' meldete exit 0).
 lauf() {
-    local name="$1"; shift
+    local name="$1" anzeige="$2"; shift 2
     local st rc
-    meld "    \$ $*"
+    meld "    \$ $anzeige"
     set +e
     "$@" 2>&1 | tee -a "$SCHRITT_LOG"
     st=("${PIPESTATUS[@]}")
@@ -502,7 +524,7 @@ s_windows() {
     stand_pruefen
     local exe="$HERE/win_out/re15_pc.exe"
     rm -f "$exe"            # ein altes Binary darf nicht als neues durchgehen
-    lauf "build_win_cross.sh" bash "$HERE/build_win_cross.sh"
+    lauf "build_win_cross.sh" "bash release/build_win_cross.sh" bash "$HERE/build_win_cross.sh"
     marke "WIN-CROSS-BUILD-OK"
     frisch_oder_abbruch "$exe"
     stand_pruefen
@@ -513,7 +535,7 @@ s_android() {
     stand_pruefen
     local apk="$HERE/re15_port_${NEU}_android.apk"
     rm -f "$apk" "$apk.ungeprueft"
-    lauf "build_android.sh" bash "$HERE/build_android.sh" --version "$NEU"
+    lauf "build_android.sh" "bash release/build_android.sh --version $NEU" bash "$HERE/build_android.sh" --version "$NEU"
     marke "ANDROID-BUILD-OK"
     frisch_oder_abbruch "$apk"
     frisch_oder_abbruch "$HERE/SHA256SUMS_android.txt"
@@ -531,9 +553,10 @@ s_linux() {
     local bin="$HERE/linux_out/re15_pc"
     rm -f "$bin"
     if [[ -n "$LINUX_JOBS" ]]; then
-        lauf "build_linux_deck.sh" env RE15_CTEST_JOBS="$LINUX_JOBS" bash "$HERE/build_linux_deck.sh"
+        lauf "build_linux_deck.sh" "RE15_CTEST_JOBS=$LINUX_JOBS bash release/build_linux_deck.sh" \
+            env RE15_CTEST_JOBS="$LINUX_JOBS" bash "$HERE/build_linux_deck.sh"
     else
-        lauf "build_linux_deck.sh" bash "$HERE/build_linux_deck.sh"
+        lauf "build_linux_deck.sh" "bash release/build_linux_deck.sh" bash "$HERE/build_linux_deck.sh"
     fi
     marke "LINUX-BUILD-OK"
     LINUX_TESTS="$(grep -aoE 'Tests: [0-9]+ gelaufen = [0-9]+ registriert' "$SCHRITT_LOG" | tail -1 || true)"
@@ -548,9 +571,10 @@ s_paket() {
     schritt_beginn paket
     stand_pruefen
     if [[ -n "$ZIP_PFAD_ZUSATZ" ]]; then
-        lauf "make_package.sh" env PATH="$PATH:$ZIP_PFAD_ZUSATZ" bash "$HERE/make_package.sh" --version "$NEU"
+        lauf "make_package.sh" "PATH=\"\$PATH:$ZIP_PFAD_ZUSATZ\" bash release/make_package.sh --version $NEU" \
+            env PATH="$PATH:$ZIP_PFAD_ZUSATZ" bash "$HERE/make_package.sh" --version "$NEU"
     else
-        lauf "make_package.sh" bash "$HERE/make_package.sh" --version "$NEU"
+        lauf "make_package.sh" "bash release/make_package.sh --version $NEU" bash "$HERE/make_package.sh" --version "$NEU"
     fi
     marke "== Fertig =="
     # ALLE Systeme: make_package.sh liefert ohne APK still nur die PC-Saetze ("kein Android-Paket", :929)
@@ -560,8 +584,8 @@ s_paket() {
         [[ -f "$f" ]] || die "Satz $p fehlt: $(zeige_pfad "$f") - nicht alle Systeme gepackt"
     done
     while IFS= read -r f; do
-        frisch_oder_abbruch "$HERE/$f"
         [[ "$(ra_volumen_version "$f")" == "$NEU" ]] || die "in release/ liegt noch ein Volume einer anderen Version: $f"
+        frisch_oder_abbruch "$HERE/$f"
     done < <(ra_volumen_in "$HERE")
     frisch_oder_abbruch "$HERE/SHA256SUMS.txt"
     diff <(ra_volumen_in "$HERE") <(ra_sums_namen "$HERE/SHA256SUMS.txt" | LC_ALL=C sort) > /dev/null \
@@ -576,7 +600,7 @@ s_paket() {
         [[ "$(ra_volumen_version "$f")" == "$NEU" ]] || die "git-Index fuehrt noch $f"
     done < <(git_r ls-files -- 'release/re15_port_v*' | sed 's#^release/##')
     stand_pruefen
-    schritt_ende "$n_neu Volumes ($(printf '%s ' "${RA_PLATTFORMEN[@]}")), sha256sum -c $n_sums, im git-Index vorgemerkt"
+    schritt_ende "$n_neu Volumes (${RA_PLATTFORMEN[*]}), sha256sum -c $n_sums, im git-Index vorgemerkt"
 }
 
 # --- Archiv ------------------------------------------------------------------------
@@ -616,10 +640,24 @@ s_archiv() {
 # --- Abschluss (--tag) ------------------------------------------------------------------
 s_abschluss() {
     schritt_beginn abschluss
-    local f b erlaubt msg
+    local f b erlaubt msg m
     ra_archiv_pruefen "$ARCHIV/$NEU" >> "$SCHRITT_LOG" 2>&1 || die "Archiv $NEU fehlt oder ist fehlerhaft - erst Schritt 'archiv'"
     [[ "$(ra_versionen_in "$HERE")" == "$NEU" ]] || die "release/ traegt nicht genau die Volumes von $NEU"
     ra_sums_pruefen "$HERE" SHA256SUMS.txt >> "$SCHRITT_LOG" 2>&1 || die "release/SHA256SUMS.txt stimmt nicht"
+    # Der Tag muss den Stand tragen, aus dem gepackt wurde: kein Commit an Paket-Inhalt NACH dem Paketbau
+    # (Code + Assets + Aufnahmen + Paketdateien; Regel wie make_package.sh check_binary_fresh, :160-191).
+    local inhalt_t aeltestes=""
+    inhalt_t="$(git_r log -1 --format=%ct -- re15_port/engine re15_port/include re15_port/platform \
+                re15_port/shared_assets synchro release/pkg_files 2>/dev/null || true)"
+    while IFS= read -r f; do
+        m="$(ra_mtime "$HERE/$f")"
+        if [[ -z "$aeltestes" ]] || (( m < aeltestes )); then aeltestes="$m"; fi
+    done < <(ra_volumen_in "$HERE")
+    if [[ -n "$inhalt_t" && -n "$aeltestes" ]] && (( inhalt_t > aeltestes )); then
+        die "nach dem Paketbau ($(ra_zeit "$aeltestes")) wurde Paket-Inhalt committet ($(ra_zeit "$inhalt_t"),
+    $(git_r log -1 --format='%h %s' -- re15_port/engine re15_port/include re15_port/platform re15_port/shared_assets synchro release/pkg_files)) -
+    der Tag zeigte auf einen Stand, den die Pakete nicht enthalten. Neu bauen (ohne --ab)."
+    fi
     git_r add -- release/SHA256SUMS.txt release/SHA256SUMS_android.txt
     if [[ -n "$(git_r status --porcelain -- release/RELEASE_NOTES.md)" ]]; then git_r add -- release/RELEASE_NOTES.md; fi
     # Nur Paketdateien gehoeren in den Release-Commit (Form wie 2077bb8e: 6 Volumes umbenannt + 2 SUMS).
@@ -645,7 +683,7 @@ s_abschluss() {
     git_r tag -a "$NEU" -m "$NEU" || die "git tag $NEU fehlgeschlagen"
     meld "    Commit $(git_r rev-parse --short HEAD), Tag $NEU"
     if [[ $PUSH -eq 1 ]]; then
-        lauf "git push" git -C "$REPO" push origin master "$NEU"
+        lauf "git push" "git push origin master $NEU" git -C "$REPO" push origin master "$NEU"
         schritt_ende "Commit $(git_r rev-parse --short HEAD), Tag $NEU, gepusht (origin master + $NEU)"
     else
         schritt_ende "Commit $(git_r rev-parse --short HEAD), Tag $NEU (nicht gepusht: --kein-push)"
@@ -663,6 +701,18 @@ AKTUELL=fertig
 meld ""
 meld "== Zusammenfassung $NEU (gesamt $(dauer $(( $(date +%s) - T_LAUF )))) =="
 for z in "${ERGEBNIS[@]}"; do meld "  $z"; done
+letzter="${PLAN[${#PLAN[@]}-1]}"
+if [[ "$letzter" != archiv && "$letzter" != abschluss ]]; then
+    # --bis: nur ein Teil der Kette lief - kein "fertig"
+    naechster=""
+    for (( i = 0; i < ${#SCHRITTE[@]} - 1; i++ )); do
+        if [[ "${SCHRITTE[$i]}" == "$letzter" ]]; then naechster="${SCHRITTE[$((i + 1))]}"; fi
+    done
+    meld ""
+    meld "Teillauf bis '$letzter' fertig. Weiter mit: bash release/release_alles.sh --version $NEU --ab $naechster$( [[ $TAG -eq 1 ]] && echo ' --tag')"
+    meld "RELEASE-ALLES-TEILLAUF-OK $NEU (${PLAN[*]})"
+    exit 0
+fi
 if ! im_plan abschluss; then
     meld ""
     meld "Noch offen (macht der Mensch): Release-Notes '# $NEU ...' oben in release/RELEASE_NOTES.md, dann"

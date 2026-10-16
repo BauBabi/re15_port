@@ -7,11 +7,13 @@
 # Gemessen 2026-10-16: Docker Desktop lief nicht, `docker info` -> rc=1
 #   "open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified".
 # Bisher hat der Mensch Docker Desktop von Hand gestartet (Runde 37 UEBERGABE: "Docker Desktop musste
-# gestartet werden"). Dieses Skript macht das selbst.
+# gestartet werden"). Dieses Skript macht das selbst - zuerst ueber die Docker-Desktop-CLI
+# (`docker desktop start`, auf dieser Maschine CLI v0.1.4, wartet selbst bis bereit), sonst ueber das Programm
+# "C:/Program Files/Docker/Docker/Docker Desktop.exe".
 #
 # AUFRUF
-#   bash release/docker_bereit.sh            pruefen; laeuft nichts, unter Windows Docker Desktop starten
-#                                            und warten, bis `docker info` antwortet
+#   bash release/docker_bereit.sh            pruefen; laeuft nichts, Docker Desktop starten und warten,
+#                                            bis `docker info` antwortet
 #   bash release/docker_bereit.sh --pruefen  nur pruefen, nichts starten (Trockenlauf von release_alles.sh)
 #   --warten SEK                             Obergrenze fuers Warten (Standard 300)
 # Rueckgabe 0 = bereit, 1 = nicht bereit (mit --pruefen: aber Docker Desktop ist da und wuerde gestartet),
@@ -50,35 +52,46 @@ if wer="$(engine_antwortet)"; then
     exit 0
 fi
 
+# Wie liesse sich Docker Desktop starten?
+WEG=""
 DESKTOP=""
+if command -v docker >/dev/null 2>&1 && timeout 30 docker desktop version >/dev/null 2>&1; then
+    WEG=cli
+fi
 case "$(uname -s 2>/dev/null)" in
     MINGW*|MSYS*|CYGWIN*)
         for kand in "/c/Program Files/Docker/Docker/Docker Desktop.exe" \
                     "${ProgramW6432:+$(cygpath -u "$ProgramW6432" 2>/dev/null)/Docker/Docker/Docker Desktop.exe}"; do
-            [[ -n "$kand" && -f "$kand" ]] && { DESKTOP="$kand"; break; }
+            if [[ -n "$kand" && -f "$kand" ]]; then DESKTOP="$kand"; break; fi
         done ;;
 esac
+if [[ -z "$WEG" && -n "$DESKTOP" ]]; then WEG=programm; fi
 
 if [[ $NUR_PRUEFEN -eq 1 ]]; then
-    if [[ -n "$DESKTOP" ]]; then
-        echo "Container-Engine antwortet nicht - ein echter Lauf startet Docker Desktop ($DESKTOP) und wartet bis ${WARTEN} s" >&2
-        exit 1
-    fi
+    case "$WEG" in
+        cli)      echo "Container-Engine antwortet nicht - ein echter Lauf startet Docker Desktop ('docker desktop start') und wartet bis ${WARTEN} s" >&2; exit 1 ;;
+        programm) echo "Container-Engine antwortet nicht - ein echter Lauf startet Docker Desktop ($DESKTOP) und wartet bis ${WARTEN} s" >&2; exit 1 ;;
+    esac
     echo "Container-Engine antwortet nicht (weder docker noch podman) und Docker Desktop ist nicht zu finden" >&2
     exit 3
 fi
 
-[[ -n "$DESKTOP" ]] || {
-    echo "Container-Engine antwortet nicht (weder docker noch podman). Docker/Podman starten und neu aufrufen." >&2
-    exit 1
-}
-
-echo "Docker Desktop laeuft nicht - starte: $DESKTOP"
-# Start-Process loest das Programm vom aufrufenden Fenster (ein '&' aus Git-Bash haengt es an diese Shell).
-DESKTOP_WIN="$(cygpath -w "$DESKTOP")"
-powershell.exe -NoProfile -NonInteractive -Command "Start-Process -FilePath '$DESKTOP_WIN'" >/dev/null 2>&1 \
-    || { echo "Docker Desktop liess sich nicht starten: $DESKTOP_WIN" >&2; exit 1; }
 t0=$(date +%s)
+case "$WEG" in
+    cli)
+        echo "Docker Desktop laeuft nicht - starte: docker desktop start --timeout $WARTEN"
+        if ! timeout $((WARTEN + 30)) docker desktop start --timeout "$WARTEN"; then
+            echo "   ('docker desktop start' meldete einen Fehler - warte trotzdem auf docker info)"
+        fi ;;
+    programm)
+        echo "Docker Desktop laeuft nicht - starte: $DESKTOP"
+        # Start-Process loest das Programm vom aufrufenden Fenster (ein '&' aus Git-Bash haengt es an diese Shell).
+        powershell.exe -NoProfile -NonInteractive -Command "Start-Process -FilePath '$(cygpath -w "$DESKTOP")'" >/dev/null 2>&1 \
+            || { echo "Docker Desktop liess sich nicht starten: $DESKTOP" >&2; exit 1; } ;;
+    *)
+        echo "Container-Engine antwortet nicht (weder docker noch podman). Docker/Podman starten und neu aufrufen." >&2
+        exit 1 ;;
+esac
 while :; do
     if wer="$(engine_antwortet)"; then
         echo "Container-Engine bereit nach $(( $(date +%s) - t0 )) s: $wer"
