@@ -1300,7 +1300,9 @@ void re15_render_end_frame(void)
      * BG07 (decodes to pure 0,0,0). So cut 7 already renders black with no fill. This s_scene_black
      * fill is gated EXACTLY on room 0x1170 + cut 7 (main.c) = it only ever fires where the result is
      * already black, and never on the ROOM1240 montage stills or the ROOM1170 helipad cinematic. It is
-     * a redundant guarantee, not the mechanism; safe to delete once a windowed capture confirms cut 7. */
+     * a redundant guarantee, not the mechanism; safe to delete once a windowed capture confirms cut 7.
+     * ⛔ Runde 38 Spur E: NICHT loeschen — fuer Elzas Erzaehler ROOM1031 Cut 13 (dieselbe Kamera = Lobby-Kamera 0)
+     * ist es die Abdeckung der Port-Props der Lobby (Lageplan 1F); Tabelle + Belege elzaintro_r38.c. */
     if (s_scene_black) {
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_NONE);
         SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);

@@ -136,6 +136,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 #include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
+#include "re15_elzaintro_r38.h" /* Runde 38 Spur E: Erzaehler-Schwarz ROOM1031 Cut 13 (Elza) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -6804,7 +6805,9 @@ re_title:;
                  * narrator (headless-verified: sub11 messages 8-11 run at cut=7 cut_auto=0). */
                 {
                     extern void re15_render_pc_set_scene_black(int on);
-                    re15_render_pc_set_scene_black(g_current_room_id == 0x1170 && active_cut_idx == 7);
+                    /* Runde 38 Spur E: Tabelle der Erzaehler-Schnitte = ROOM1170 Cut 7 (wie bisher) + ROOM1031 Cut 13
+                     * (Elza, sub15 @0x02A74; Lobby-Kamera sieht dort den Port-Lageplan) — elzaintro_r38.c. */
+                    re15_render_pc_set_scene_black(re15_elzaintro_r38_erzaehler_schwarz(g_current_room_id, active_cut_idx));
                 }
             }
             /* Action-button press edge (Square = Enter on PC). */

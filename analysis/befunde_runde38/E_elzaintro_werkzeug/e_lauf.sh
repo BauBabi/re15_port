@@ -13,8 +13,8 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 OUT="${1:?Ausgabeordner fehlt}"; WER="${2:-elza}"; SERIE="${3:--}"; EXITAT="${4:?exit_at fehlt}"; shift 4
-EXE_SRC="$ROOT/re15_port/build/platform/pc/re15_pc.exe"
-EXE="$ROOT/re15_port/build/platform/pc/re15_pc_r38e_$$.exe"
+EXE_SRC="${E_EXE:-$ROOT/re15_port/build/platform/pc/re15_pc.exe}"
+EXE="$(dirname "$EXE_SRC")/re15_pc_r38e_$$.exe"
 cp -f "$EXE_SRC" "$EXE" || exit 2
 mkdir -p "$OUT"; cd "$OUT" || exit 2
 rm -f debug.log cap.raw f_*.ppm k*_f*.ppm k*_f*.png
