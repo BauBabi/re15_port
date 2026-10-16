@@ -610,9 +610,27 @@ dass die Original-Sektion dieser Cuts NULL ist (liest die RDT-Bytes: `ROOM3050 C
 FF (NULL - keine Masken)`). Lader und Laufzeit-Code unveraendert: mit 0 Masken nimmt main.c den Weg einer Original-NULL-
 Sektion (`pri_nachgezeichnet = 0`, kein Overdraw, `has_fg && pri_n > 0` falsch).
 
-**Messung nachher (exe neu, derselbe Aufbau):** Log `[scd F783] Cut_chg(15)` -> `[pri] cut=15 pri_offset=0x84C masks=0
-fg_atlas=1` (keine Spur-P-Zeile: der R15M-Zweig hat 0 Rechtecke, der BSS-Atlas wird wie bei jedem Original-Cut geladen);
-**A/B 0 Punkte > 24, Bild A BITGLEICH zu B** (Laeufe `runs/k15_neu_A/B`) - der Cursor ist vollstaendig.
+**⛔ Falle beim Nachmessen (master-Merge):** derselbe Aufbau an der exe NEU zeigt in Bild 900 KEINEN Cursor - auch nicht
+in B (`runs/k15_neu_A/B`, A bitgleich B, aber leer: Cursor-Innenrand-Punkte in B = 0). Ursache im Log: seit master v0.8.25
+(Runde 37 Spur Q, `engine/src/kistenregel_r37.c` Fall K8) liest `Ck(3,0xB2)` @0x01F90 den BESITZ der Red Master Keycard
+(Item 0x46) statt des Bits: `[kistenregel] ROOM3050 @0x01F90 Ck(3,0xB2) K8: Item 0x46 NICHT im Inventar ... Zweig ohne
+Gegenstand`, danach fehlt `Obj_model_set[2] id=0x03 type=4 pos=(-19554,0,22684)` (das Cursor-Objekt). `RE15_SET_FLAG=3:178`
+allein reicht nicht mehr; der Aufbau braucht zusaetzlich **`RE15_GIVE=0x46:1`** (`[kistenregel] ... Item 0x46 im Inventar
+-> wie Original`, Objekt 3 wird gesetzt, `[prop-render] pi=2 oid=0x03`). Ein "A == B" ohne Cursor im Bild beweist nichts -
+der Riegel verlangt deshalb Cursor-Punkte in B (unten).
+
+**Messung nachher (exe neu, Aufbau + `RE15_GIVE=0x46:1`, Bild 900; Werkzeug `k15zaehl.py`):**
+
+| Lauf | Log Cut 15 | A/B Punkte > 24 | davon Cursor-Innenrand | Cursor-Innenrand-Punkte in B | A bitgleich B |
+|---|---|---|---|---|---|
+| Leon alt (nb2alt, ohne GIVE - vor dem Merge noetig nicht) | `masks=36 fg_atlas=1` + Spur-P-Zeile | 138 | **60** | 62 | nein |
+| Leon neu (`runs/k15g_neu_A/B`) | `masks=0 fg_atlas=1` | **0** | **0** | 62 | **ja** |
+| Elza alt (`RE15_TITLE_SHOT_CHAR=1`, ROOM3051) | `masks=36 fg_atlas=1` | 138 | **60** | 62 | nein |
+| Elza neu (`runs/k15ge_neu_A/B`) | `masks=0 fg_atlas=1` | **0** | **0** | 62 | **ja** |
+
+`masks=0 fg_atlas=1` ohne Spur-P-Zeile: der R15M-Zweig hat nach dem Filter 0 Rechtecke, main.c nimmt den Weg einer
+Original-NULL-Sektion (BSS-Atlas wie jeder Original-Cut, kein Overdraw). Bild `p38nb2/k15g_alt_neu.png` (alt A | alt B |
+neu A | neu B, 4-fach): alt fehlt den gruenen Winkeln die dunkle Innenkante, neu ist der Cursor vollstaendig und gleich B.
 
 ### NB2.2 Mangel M2 - Kopfoberkante nie abgetastet (ROOM30A0 Cut 0)
 
