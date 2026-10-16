@@ -642,6 +642,14 @@ exe mit dem Fix; Basis = Spalte der Abnahme 1, nicht wiederholt):
   vor dem Fix fuehrte der andere Strom nach der 0x101-Erholung (F1211) zu einem Ausfall 0xB01 und KEINEM zweiten Griff bis
   F1400 (4+ Treffer), nach dem Fix greift der Zombie nach dem zweiten Treffer (F1216, 2 Treffer).
 * Nahkampf nicht schlechter: je Anmarsch gleich (7 / 31 wie vor dem Fix), alle Treffer 41 = Basis.
+* M1 an der exe, Bild fuer Bild (w = 20.200, Platz 5 Typ 0x11, state.log; gleiche Eingabe, bis F1210 bitgleich):
+
+  | Bild | vor dem Fix | nach dem Fix |
+  |---|---|---|
+  | F1210 | `st=2 ss1=1 ss2=3 mo=2 af=13` @(-4969,13767) (P3) | dasselbe |
+  | F1211 | `st=1 ss1=1 ss2=0 af=14` @(-4969,13767) — 0x101 | `st=1 ss1=1 ss2=1 af=14` @(-4973,13780) — **0x10101**, Schritt (-4,+13) = 0x800152C8 @0x80105B98 |
+  | F1212 | `ss2=1 af=24` — EXEC[1] P0: Clip neu auf Zufallsbild (14 -> 24) | `ss2=1 af=15` — Gang laeuft weiter (P1 direkt) |
+  | F1213 / F1214 | af 25 / 27 | af 16 / 18 (Fettzombie-Kadenz, re2z_fat_cadence_tick) |
 
 ### M2 — Messer-Aussage (Text)
 
@@ -658,6 +666,28 @@ je Anmarsch, je Schlagtakt einer mehr oder weniger; Arme-hoch-Gang schneller, di
 "weniger Schlaege" gestrichen; N2-Zusatz und Nachbesserung-1-Beleg Punkt 3 ebenso; Weg-Zahlen ueberall als Wegstrecke mit
 |dx|+|dz| in Klammern (M2-Tabelle, N1, R1-Kommentar in enemy_ai_re2_zombie.c). Die Commit-Nachricht d3f7417e bleibt als
 Verlauf stehen; dieser Abschnitt ersetzt ihre Aussage "weniger Schlaege".
+
+### Tests der Nachbesserung 2 (Baum r37_re2zombie; keine volle Suite)
+* Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (Hauptordner build; Messordner build_l2
+  ueber `RE15_BUILD_DIR`, configure + build ebenfalls OK). Keine neuen Warnungen in den geaenderten Dateien.
+* Unit-Auswahl VOR dem Fix (Merge-Stand, Ausdruck der Abnahme 1):
+  `ctest --test-dir re15_port/build -R "re2|zomb|zgirl|granat|lyer|messer|crawl|kriech|gegnerzahl|1140|1130|1180|enemy|biss|griff|grab|bump|kfjump|teardeath|blut|bandlock|rise|r37_|irons|1150|dog|crow|spider|affen|situp|10d0|hund|kraehe|gore|wecker|birkin|elza" -E "^integration_" -j 4 --timeout 600 -V`
+  -> `100% tests passed, 0 tests failed out of 287`; derselbe Ausdruck NACH dem Fix (build_l2, -j 3):
+  `100% tests passed, 0 tests failed out of 288` (Vergleich -> Riegel-Tabelle oben).
+* Unit-Auswahl am Ende, Hauptordner, erweitert um alle Nutzer von enemy_ai_common.c / re15_actor.h im Gegner-/Kampfbereich:
+  `ctest --test-dir re15_port/build -R "re2|zomb|zgirl|granat|lyer|messer|crawl|kriech|gegnerzahl|1140|1130|1180|enemy|biss|griff|grab|bump|kfjump|teardeath|blut|bandlock|rise|r37_|irons|1150|dog|crow|spider|affen|situp|10d0|hund|kraehe|gore|wecker|birkin|elza|gator|g5|boss|zellenarm|maggot|wurm|plant|spinne|gorilla|root|ragdoll|schuss|knife|hit|kampf|ai_" -E "^integration_" -j 4 --timeout 600`
+  -> **`100% tests passed, 0 tests failed out of 306`**.
+* Riegel der Spur L verbose: `ctest --test-dir re15_port/build -R "^unit_r37_re2zombie_" -V --timeout 600` ->
+  **`100% tests passed, 0 tests failed out of 10`** (prod1 4/4, prod2 5/5, prod3 5/5, b 3/3, c 6/6, d12 6/6, **p3 8/8**,
+  nahkampf 2/2 = "361 gegen 368 (>= 95 %)", raum1130 4/4, raum1180 4/4).
+* Integration (seriell, build_l2), 14 zombie-nahe Haken:
+  `ctest --test-dir re15_port/build_l2 -R "^integration_(r34_granaten|r35_granate|r36_granate|r36_schuss|r37_beretta|r37_bissarm_echtlauf|r37_re2zombie|r37_zombieaktiv|r36_gegnerzahl|r36_elza_schuss|r37_elzaems_elza1181griff|r37_elzaems_leon1100|r35_zgirl|r35_zgirl_5090)$" --timeout 1200 -V`
+  -> `93% tests passed, 1 tests failed out of 14` — der eine war integration_r34_granaten mit `exit=-1` nach 8 s: beendet vom
+  gleichzeitig gestarteten `local_build.sh build` im Hauptordner (Werkzeug-Befund unter OFFEN, Zeitstempel belegt); einzeln
+  wiederholt `ctest --test-dir re15_port/build_l2 -R "^integration_r34_granaten$" --timeout 1200 -V` ->
+  `100% tests passed, 0 tests failed out of 1`. Vorher (build, Merge-Stand, derselbe Ausdruck): `100% tests passed, 0 tests
+  failed out of 14`. Die Meldungszeilen (`-- ...`) aller 14 sind vorher/nachher gleich (ausser dem Laufordner-Pfad).
+* Integration am Ende, Hauptordner (seriell): INTEG_FINAL
 
 ## OFFEN
 
@@ -734,10 +764,17 @@ Verlauf stehen; dieser Abschnitt ersetzt ihre Aussage "weniger Schlaege".
   statt nach 3-4 Sekunden (steht Leon knapp vor ihm, sofort, wie vorher). Ist Leon schon von einem anderen Zombie gepackt,
   laesst sich ein getroffener Zombie nicht mehr nach vorn zu Boden fallen (wie in RE2).
 * Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids. Neue Datei nur
-  `re15_port/include/re15_re2zombie_r37.h` (Header, keine neue .c — Android-GLOB unberuehrt); +9 Unit-Tests, +1 Integration
-  (RE15_MIN_TESTS +10).
+  `re15_port/include/re15_re2zombie_r37.h` (Header, keine neue .c — Android-GLOB unberuehrt); +10 Unit-Tests (seit
+  Nachbesserung 2 dazu unit_r37_re2zombie_p3), +1 Integration (RE15_MIN_TESTS +11 gegenueber dem Stand vor Spur L).
 * Entscheidungsfrage: keine.
-* Fuer die Integration: Riegel-Liste = Schritt 5 (Tabelle + Granaten-Riegel unter Tests) + 5b, je mit alt/neu. DECISION[12] (re2z_decide_lunge,
-  `case 12` in re2z_active) ist ein neuer Griff-EINSTIEG; der Griff-/Biss-Code selbst (Spur J) ist unberuehrt. Geaenderte
-  fremde Testdateien: test_r36_zombieki_eintritt.c, test_r34_granaten.cmake, test_r35_granate.cmake, probe_r36_blut.c,
-  probe_10d0_situp_re2.c (je mit Beleg im Dossier).
+* Fuer die Integration: Riegel-Liste = Schritt 5 (Tabelle + Granaten-Riegel unter Tests) + 5b + Nachbesserung 2 (fuenf
+  verschobene Unit-Riegel, alle gruen; 14 zombie-nahe Integrationshaken mit bitgleicher Meldungsausgabe), je mit alt/neu.
+  DECISION[12] (re2z_decide_lunge, `case 12` in re2z_active) ist ein neuer Griff-EINSTIEG; der Griff-/Biss-Code selbst
+  (Spur J) ist unberuehrt. Nachbesserung 2 aendert im Treffer-Handler NUR re2z_hit_main case 3 (Freigabe 2026-10-16) und
+  fuegt zwei kleine Haken in gemeinsame Dateien ein: `include/re15_actor.h` (Feld re2z_root148, 1 Zeile + Kommentar) und
+  `engine/src/enemy_ai_common.c` re15_clip_root_motion_delta (2 Zeilen: +0x148 wie +0x144 ablegen) — Runde 38 Spur U
+  (wasserzombie) haengt parallel in enemy_ai_re2_zombie.c; beruehrt ist dort nur case 3, der Helfer r2z_r37_152c8 neben den
+  Runde-37-Helfern und die Sonden-Zaehler. Geaenderte fremde Testdateien: test_r36_zombieki_eintritt.c,
+  test_r34_granaten.cmake, test_r35_granate.cmake, probe_r36_blut.c, probe_10d0_situp_re2.c (je mit Beleg im Dossier).
+* Werkzeug-Befund fuer alle Spuren (s. OFFEN): `local_build.sh build` in `re15_port/build` beendet auch die exe in
+  `re15_port/build_<irgendwas>` (Pfad-Praefix ohne Trenner).
