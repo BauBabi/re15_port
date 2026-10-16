@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# =============================================================================
+# RE1.5 Port - ist die Container-Umgebung fuer die Release-Bauten bereit? (Runde 38, Spur V)
+# =============================================================================
+# build_win_cross.sh und build_linux_deck.sh brauchen docker (oder podman) mit laufender Engine
+# (build_win_cross.sh:35-38, build_linux_deck.sh:59-66 - sonst "Weder docker noch podman nutzbar").
+# Gemessen 2026-10-16: Docker Desktop lief nicht, `docker info` -> rc=1
+#   "open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified".
+# Bisher hat der Mensch Docker Desktop von Hand gestartet (Runde 37 UEBERGABE: "Docker Desktop musste
+# gestartet werden"). Dieses Skript macht das selbst.
+#
+# AUFRUF
+#   bash release/docker_bereit.sh            pruefen; laeuft nichts, unter Windows Docker Desktop starten
+#                                            und warten, bis `docker info` antwortet
+#   bash release/docker_bereit.sh --pruefen  nur pruefen, nichts starten (Trockenlauf von release_alles.sh)
+#   --warten SEK                             Obergrenze fuers Warten (Standard 300)
+# Rueckgabe 0 = bereit, 1 = nicht bereit (mit --pruefen: aber Docker Desktop ist da und wuerde gestartet),
+# 3 = nicht bereit und nichts zu starten (nur --pruefen), 2 = Aufruffehler. Meldung auf stderr.
+#
+# Wartegrenze: PORT-WAHL (Bau-Umgebung), keine Messgroesse. Gemessen dauerte ein Start 20 s
+# (analysis/befunde_runde32/release_v0818.md:24, "15:08:18 gestartet, 15:08:38 bereit"); 300 s ist nur die
+# Grenze, ab der aufgegeben wird - gepollt wird alle 5 s, ein schnellerer Start endet frueher.
+# =============================================================================
+set -euo pipefail
+
+NUR_PRUEFEN=0
+WARTEN=300
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --pruefen) NUR_PRUEFEN=1; shift ;;
+        --warten)  [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "--warten braucht Sekunden" >&2; exit 2; }
+                   WARTEN="$2"; shift 2 ;;
+        -h|--help) awk 'NR == 1 { next } /^set -euo pipefail/ { exit } { print }' "${BASH_SOURCE[0]}"; exit 0 ;;
+        *) echo "unbekannte Option: $1" >&2; exit 2 ;;
+    esac
+done
+
+engine_antwortet() {   # 0 und Name auf stdout, wenn docker oder podman eine laufende Engine hat
+    if command -v docker >/dev/null 2>&1 && timeout 60 docker info >/dev/null 2>&1; then
+        echo "docker $(docker version --format '{{.Server.Version}}' 2>/dev/null || true)"; return 0
+    fi
+    if command -v podman >/dev/null 2>&1 && timeout 60 podman info >/dev/null 2>&1; then
+        echo "podman"; return 0
+    fi
+    return 1
+}
+
+if wer="$(engine_antwortet)"; then
+    echo "Container-Engine bereit: $wer"
+    exit 0
+fi
+
+DESKTOP=""
+case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*)
+        for kand in "/c/Program Files/Docker/Docker/Docker Desktop.exe" \
+                    "${ProgramW6432:+$(cygpath -u "$ProgramW6432" 2>/dev/null)/Docker/Docker/Docker Desktop.exe}"; do
+            [[ -n "$kand" && -f "$kand" ]] && { DESKTOP="$kand"; break; }
+        done ;;
+esac
+
+if [[ $NUR_PRUEFEN -eq 1 ]]; then
+    if [[ -n "$DESKTOP" ]]; then
+        echo "Container-Engine antwortet nicht - ein echter Lauf startet Docker Desktop ($DESKTOP) und wartet bis ${WARTEN} s" >&2
+        exit 1
+    fi
+    echo "Container-Engine antwortet nicht (weder docker noch podman) und Docker Desktop ist nicht zu finden" >&2
+    exit 3
+fi
+
+[[ -n "$DESKTOP" ]] || {
+    echo "Container-Engine antwortet nicht (weder docker noch podman). Docker/Podman starten und neu aufrufen." >&2
+    exit 1
+}
+
+echo "Docker Desktop laeuft nicht - starte: $DESKTOP"
+# Start-Process loest das Programm vom aufrufenden Fenster (ein '&' aus Git-Bash haengt es an diese Shell).
+DESKTOP_WIN="$(cygpath -w "$DESKTOP")"
+powershell.exe -NoProfile -NonInteractive -Command "Start-Process -FilePath '$DESKTOP_WIN'" >/dev/null 2>&1 \
+    || { echo "Docker Desktop liess sich nicht starten: $DESKTOP_WIN" >&2; exit 1; }
+t0=$(date +%s)
+while :; do
+    if wer="$(engine_antwortet)"; then
+        echo "Container-Engine bereit nach $(( $(date +%s) - t0 )) s: $wer"
+        exit 0
+    fi
+    if (( $(date +%s) - t0 >= WARTEN )); then
+        echo "Docker Desktop antwortet nach ${WARTEN} s noch nicht (docker info). Von Hand pruefen." >&2
+        exit 1
+    fi
+    sleep 5
+done

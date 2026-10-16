@@ -8,3 +8,5 @@ docker_linux_build.sh.bak
 lbuild/
 docker_debug.sh
 win_out/
+# Protokolle + Sperre von release_alles.sh (Runde 38, Spur V)
+logs/

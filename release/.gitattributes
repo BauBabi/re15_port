@@ -4,3 +4,6 @@
 # Alias (v0.8.17: ungefragte Installation von Python 3.14). core.autocrlf=true zoege die Dateien beim
 # Auschecken auf CRLF, und Bash laese das '\r' als Teil von Shebang und Befehlen. Immer LF.
 *.py text eol=lf
+# Windows-Stapeldatei (Runde 38, Spur V: release_alles.cmd): cmd.exe liest Sprungmarken/Bloecke in Dateien mit
+# reinen LF-Zeilenenden unzuverlaessig - immer CRLF, auch in einem Checkout ohne core.autocrlf.
+*.cmd text eol=crlf
