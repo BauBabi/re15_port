@@ -122,7 +122,9 @@ if(TEIL STREQUAL "fenster")
     message(STATUS "${_tag}: OK — 4 Kraehen (Slot 3 bei (5327,0,10217)), Schaden ${_formel}/${_ops} Pixel nach Formel")
 
 elseif(TEIL STREQUAL "irons")
-    karte(irons 1151 -17150 -11960 1600)
+    # Runde 38 Spur Q: Stand NACH der Hinbeuge-Szene ((3,0x9D) = 1) — erst dann ist Slot 2 der Text-Platz 20, den
+    # RE15_FIRE_AOT direkt feuert. Den ersten Klick (Hinbeugen + Text 20, kein msg 2) misst integration_r38_kleinkram_irons.
+    karte(irons 1151 -17150 -11960 1600 3:0x9D)
     lauf_elza(irons 300 ${_basis} RE15_NOAUDIO=1 ${_continue} RE15_STATE_LOG=state.log RE15_ELZA_LOG=elza.log
               RE15_FORCE_CUT=7 RE15_NECK_TRACE=neck.log "RE15_FIRE_AOT=2@60#1151" "RE15_EXIT_AT=150#1151")
     file(READ "${WORKDIR}/irons/debug.log" _dbg)

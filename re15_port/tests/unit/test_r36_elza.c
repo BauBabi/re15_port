@@ -247,8 +247,17 @@ static void teil_irons(void)
           "Kopf fest: Flags 0x%02X Geschwindigkeit %d Akku (%d,%d), Kopf-Part %d", ir->neck_flags, ir->neck_speed,
           ir->neck_yaw, ir->neck_pitch, ir->neck_bone);
     const re15_aot_t *a = &g_aot.slots[RE15_ELZA_IRONS_SLOT];
+    /* Runde 38 Spur Q: vor der Hinbeuge-Szene ((3,0x9D) = 0) bleibt Slot 2 der Original-Platz (sce 5) — der Scan
+     * stempelt work_vars[0] auch fuer einen Text-Platz (@0x80042f3c), sub03 lief deshalb NACH Text 20 doch (Nutzerbefund
+     * Runde 38). Die Szene selbst (Hinbeugen + Text 20, kein msg 2) misst unit_r38_kleinkram_irons. */
+    PRUEF(a->active && a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR,
+          "(3,0x9D)=0: Slot 2 = Original-Platz sce 5 (Typ %d)", a->type);
+    /* nach der Szene ((3,0x9D) = 1, z.B. Spielstand): Text-Platz 20 wie Runde 36 */
+    re15_game_flag_set(3, 0x9D, 1);
+    if (room_boot(0x1151, -20538, -25147, 1500, 5) != 0) return;
+    for (int f = 0; f < 5; f++) frame();
     PRUEF(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == RE15_ELZA_IRONS_MSG_ID && a->pause_mask16 == 0xFFFF,
-          "Slot 2 = Text-Platz msg %d Maske 0x%04X (Typ %d)", a->event_id, a->pause_mask16, a->type);
+          "(3,0x9D)=1: Slot 2 = Text-Platz msg %d Maske 0x%04X (Typ %d)", a->event_id, a->pause_mask16, a->type);
     /* Anklicken = derselbe Pfad wie der AOT-Scan (re15_aot_fire_slot) */
     re15_aot_fire_slot(RE15_ELZA_IRONS_SLOT);
     int msg20 = 0, msg2 = 0;
@@ -257,10 +266,7 @@ static void teil_irons(void)
         if (g_scd.message_active && g_scd.message_id == RE15_ELZA_IRONS_MSG_ID) msg20 = 1;
         if (g_scd.message_active && g_scd.message_id == 2) msg2 = 1;
     }
-    PRUEF(msg20 && !msg2 && re15_game_flag_get(3, 0x9D) == 0, "Anklicken: Text 20, kein msg 2, (3,0x9D)=%d", re15_game_flag_get(3, 0x9D));
-    /* auch der Original-Ansprech-Weg (work_vars[0] = 2) startet sub03 nicht mehr? Nein — er WUERDE (sub01 ist
-     * unveraendert); der Slot stempelt ihn nur nicht mehr. Gegenprobe: Slot ist kein sce 5 mehr. */
-    PRUEF(a->type != RE15_AOT_TYPE_EXAMINE_WORKVAR, "kein sce-5-Platz mehr in Slot 2 -> work_vars[0] wird nie 2");
+    PRUEF(msg20 && !msg2, "Anklicken nach der Szene: Text 20, kein msg 2");
     int tl = 0; const uint8_t *tt = re15_elza_r36_meldung(0, &tl);
     char txt[96]; int n = re15_msg_decode_text(tt, (size_t)tl, txt, sizeof txt);
     PRUEF(n > 0 && strstr(txt, "He has already passed...") != NULL, "Text dekodiert: \"%s\"", txt);

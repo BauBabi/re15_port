@@ -268,9 +268,12 @@ void re15_elza_r36_install(uint16_t room_id)
     }
 
     /* (3) Anklicken: Slot 2 wie ein Aot_reset auf sce 1 (LAB_80040738; Rechteck/Band bleiben die des Platzes an der
-     *     Liege) -> Text 20 statt work_vars[0] = 2; sub01 @0x00E9E findet nie var00 == 2, sub03 (msg 2) startet nie. */
+     *     Liege) -> Text 20. (Die Annahme "work_vars[0] wird nie 2" galt nicht — Runde 38 Spur Q, s.u.) */
     text_einsetzen(RE15_ELZA_IRONS_MSG_ID, k_irons_text, sizeof k_irons_text);
-    if (g_aot.slots[RE15_ELZA_IRONS_SLOT].active &&
+    /* Runde 38 Spur Q: erst NACH der Hinbeuge-Szene (sub01 @0x00EA8 Set(3,0x9D)) umbauen — davor bleibt Slot 2 der
+     * Original-Platz und sub03 laeuft mit Text 20 (re15_kleinkram_r38.h; der Scan stempelt work_vars[0] auch fuer sce 1). */
+    if (re15_game_flag_get(3, 0x9D) &&
+        g_aot.slots[RE15_ELZA_IRONS_SLOT].active &&
         g_aot.slots[RE15_ELZA_IRONS_SLOT].type == RE15_AOT_TYPE_EXAMINE_WORKVAR)
         re15_aot_retype(RE15_ELZA_IRONS_SLOT, RE15_ELZA_IRONS_SCE_TEXT, RE15_ELZA_IRONS_FLAGS,
                         RE15_ELZA_IRONS_MSG_ID, RE15_ELZA_IRONS_MASKE, 0);

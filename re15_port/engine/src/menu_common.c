@@ -75,6 +75,7 @@
 #include "re15_item_prompt.h"   /* Runde 30: Glyphenzahl der Meldung "has been filed" */
 #include "re15_aot.h"           /* Runde 30: g_aot — die Aufhebe-Zone nach der Meldung aus */
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Hinweiskette + zweites Kartenziel (cut_10f0.c) */
+#include "re15_kleinkram_r38.h"  /* Runde 38 Spur Q: RE2-Inventar-Ton Oeffnen/Schliessen (kleinkram_r38.c) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -176,6 +177,7 @@ void re15_menu_start_poll(uint16_t pad_pressed, int hit_react_ok)
         s_stage = 1;                                /* (DAT_800b5359=1 is set by the     */
                                                     /* request path; pauseflags freeze   */
                                                     /* @0x8001cdd4 == frozen() here)     */
+        re15_kleinkram_r38_inv_ton(RE15_R38Q_INV_TON_AUF, "Oeffnen");   /* Runde 38 Spur Q: RE2 @0x8002652c-34 */
     }
     /* SELECT+START held 0x900 -> alternate task 0x8002dde4 (@0x8001cd28-60): identity
      * unresolved (likely the debug screen, spec Task-A open question) — not ported. */
@@ -243,7 +245,8 @@ static void tab_select(uint16_t pressed)
      * CROSS bind came from the identity-feed misread). NO sound effect on any confirm
      * path (spec fact: zero FUN_80045024 sites in this FSM). */
     if (re15_pad_virtual_word(pressed) & 0x4000) {
-        se4(6);                                 /* Auswahl-Ton (s. Block oben) */
+        if (g_inv_screen.tab == 2) re15_kleinkram_r38_inv_ton(RE15_R38Q_INV_TON_ZU, "EXIT");  /* Runde 38 Spur Q: RE2 @0x8006a8d4/@0x8006a918 */
+        else se4(6);                            /* Auswahl-Ton (s. Block oben) */
         if (g_inv_screen.tab != 4) {            /* guard @0x800498d4-dc (25bc shared with
                                                  * the standalone MAP screen's FSM) */
             /* 25ca dim flag: 1 iff tab==0, else 0 (@0x800498e4-f4 — the ONE set-to-1
@@ -273,9 +276,11 @@ static void tab_select(uint16_t pressed)
 
     /* CANCEL poll: raw START edge (lhu 0x800ac762 & 0x800 @0x800499d4-dc) OR VIRTUAL
      * cancel 0x8000 (lw 0x800ac76c @0x800499ec) <- RAW CROSS (@0x80073dbc[15]) ->
-     * 25bf++ (@0x800499d0-a18). No SE, no 25ca write. */
-    if ((pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000))
+     * 25bf++ (@0x800499d0-a18). RE1.5: no SE, no 25ca write (Runde 38: RE2-Schliessen-Ton). */
+    if ((pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000)) {
+        re15_kleinkram_r38_inv_ton(RE15_R38Q_INV_TON_ZU, "Abbruch");   /* Runde 38 Spur Q: RE2 @0x8006a930/@0x8006a968 */
         s_phase = 2;
+    }
 }
 
 /* ---------------------------------------------------------------------------------- */
