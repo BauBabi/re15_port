@@ -320,6 +320,22 @@ Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRA
   enemy_ai_common.c/enemy_ai_re2_dog.c, dazu alle Kraehen-Tests und die drei r38-Unit-Tests), `-R` = Inhalt von
   `B_belege/unit_regex.txt` (`^(probe_crow_kill|...|unit_zombie_step_sfx)$`), `-j 4`, Stand 34f9847a + Sonde:
   `100% tests passed, 0 tests failed out of 219`
+- Integration (exe) nach 3.(C), `-j 3`, `-R '^(integration_r38_szenenschutz|integration_r36_kleidung_hundeweg|`
+  `integration_r37_elzaems_elza10c1kraehe|integration_r37_elzaems_leon10c0kraehe|integration_r37_roy_leon1170)$'`:
+  `100% tests passed, 0 tests failed out of 5`
+  Statuszeilen integration_r38_szenenschutz (unveraendert gegenueber dem Vorgaenger-Stand):
+  `r38_szenenschutz[1190] Szene F521..F738 hp-Verlust=0 Angriffs-Bilder=0 erster Biss F805; [szenenschutz] F739 aus (94
+  geschuetzte Gegner-Ticks)` / `r38_szenenschutz[11D0] Szene F331..F524 hp-Verlust=0 Angriffs-Bilder=0 erster Biss F550` /
+  `r38_szenenschutz[1171] Szenen-Kraehe greift bei F101 (hp 92, pm=2)` / `r38_szenenschutz[1171s]: kein geschuetzter
+  Akteur in ROOM1171 (John NPC, Kraehen grid 0x40)`.
+  Gegenprobe 1171 BYTEGLEICH mit dem Endstand: state.log Segment 1 (300 Bilder) des Laufs r1171 (RE1.5-KI) == n1171_re15
+  (0 Abweichungen; n1171_re15 war schon == m1171_re15 vor jeder Spur-B-Aenderung), r1171s (Standard-KI) == m1171a (Basis
+  e2cc7673) und == n1171a (0 Abweichungen in 300 Bildern).
+- Teil-Lauf des Vorgaenger-Integrations-Satzes mit dem Endstand (abgebrochen zugunsten des Fokus-Laufs, alle gruen):
+  integration_r35_zgirl, integration_r36_ziel1190_scheiben, integration_r36_story_leon, integration_r36_story_elza,
+  integration_r37_beretta, integration_r36_szenenleon — je `Passed`. Der volle 29er-Satz lief beim Vorgaenger auf dem
+  Stand vor 3.(C) gruen (`100% tests passed, 0 tests failed out of 29`); 3.(C) wirkt nur auf Kraehen in Halte-Fenstern
+  (Fokus-Lauf oben).
 
 ## 6. OFFEN
 
@@ -352,8 +368,11 @@ Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRA
 - ROOM1170 (Leon) zum Abgleich: die sieben freien Kraehen entstehen in sub15 nur im Zweig Ck(3,125)==1
   (@0x01882-0x018FE); die Szene sub02 laeuft nur im anderen Zweig Ck(4,242)==1 (@0x017CE-0x01876) — Kraehen und
   sub02 schliessen sich aus; mit Kraehen haelt nur sub14 den Spieler, und sub14 setzt Leon per Pos_set @0x0174A weit
-  weg (n1170crow). Die Kraehen-Haken (3.(C)) aendern im ausgelieferten Leon-Ablauf darum nichts Sichtbares; sie machen
-  den Schutz fuer jede Szene vollstaendig (Zensus-Riegel).
+  weg (n1170crow). Elza ROOM1171 genauso: sub07 spawnt John + die zwei Szenen-Kraehen (grid 0x40) und startet sub02 NUR
+  im Zweig Ck(3,194)==1 (@0x016C4-0x01704); die sieben freien Kraehen stehen im Else-Zweig (@0x0170C-0x01784).
+  Die Kraehen-Haken (3.(C)) aendern im ausgelieferten Ablauf darum nichts Sichtbares (Gegenproben 1171 bytegleich,
+  integration_r37_elzaems_*kraehe und roy_leon1170 gruen); sie machen den Schutz fuer jede Szene vollstaendig
+  (Zensus-Riegel).
 
 ## 7. Fuer den Nutzer
 
