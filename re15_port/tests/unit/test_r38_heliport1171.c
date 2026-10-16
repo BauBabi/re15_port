@@ -297,11 +297,42 @@ static void teil_flagwort(void)
     PRUEF(re15_r38i_griffe() >= 1 && re15_r38i_phase() >= 1, "Rueckgriff latcht (aca58=5/aca59=1), Phase %d", re15_r38i_phase());
     PRUEF(g_actors[RE15_ACTOR_SLOT_PLAYER].hp == 100, "kein HP-Abzug beim Rueckgriff (hp %d; @0x80115248-c8 schreibt keine HP)",
           g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
-    PRUEF(fx_griff >= 1, "ORIENT-Eintritt spawnt den Effekt 0x80019700(0x1000, Teil 2) @0x80115334 (%d Effekte)", fx_griff);
-    {   /* jeder Umlauf von Kraehen-Clip 8 (8 Bilder, s_crow_clip_len[8]) spawnt erneut @0x80115394 */
-        int vor = re15_esp_fx_count(), mehr = 0;
-        for (int f = 0; f < 9; f++) { frame(); if (re15_esp_fx_count() > vor) mehr = 1; vor = re15_esp_fx_count(); }
-        PRUEF(mehr, "Clip-8-Umlauf in ORIENT spawnt den Effekt erneut (@0x80115394)");
+    /* Der HOVER-Kontakt ruft 0x80115d74(2) @0x801152b8 (`sb a0,5` / `sh zero,6` = Sub 2, Schritt 0); den
+     * ORIENT-Schritt 0 (Clip 8 + Effekt @0x80115334) fuehrt erst der NAECHSTE Kraehen-Takt aus. Der Riegel misst
+     * das Bild genau (frame() tickt den Effekt-Pool nicht, die Zahl steigt also nur durch Spawns). */
+    PRUEF(fx_griff == 0, "im Kontakt-Bild noch kein ORIENT-Effekt (%d; 0x80115d74 setzt nur Sub 2 / Schritt 0)", fx_griff);
+    {
+        frame();                                           /* ORIENT Schritt 0 */
+        int n = re15_esp_fx_count(), treffer = 0;
+        int32_t g[3], d = -1;
+        {   /* Pose im Spawn-Augenblick: Clip 8 Bild 0, +0x8f = 7 (re15_crow_clip), VOR dem f314-Vorschub */
+            re15_actor_t kk = *k;
+            kk.anim_frame = 0; kk.anim_frac = 7;
+            re15_enemy_bone_world_pos(&kk, RE15_R38I_ORIENT_TEIL, g);
+        }
+        for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+            const re15_esp_fx_t *fx = re15_esp_fx_get(i);
+            if (!fx || fx->effect_id != 0 || fx->sub_index != 0 || fx->scale16 != RE15_R38I_ORIENT_SKALA) continue;
+            int32_t dx = fx->x - g[0], dy = fx->y - g[1], dz = fx->z - g[2];
+            d = (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy) + (dz < 0 ? -dz : dz);
+            treffer++;
+        }
+        PRUEF(n == 1 && treffer == 1 && k->motion == 8 && d == 0,
+              "ORIENT-Eintritt (Folgebild): Clip %d, genau ein Effekt 0/Sub 0/Skala 0x1000 an Teil 2 (%d Effekte, %d Treffer, "
+              "Abstand zur Teil-2-Lage %d) = 0x80019700 @0x80115334 (a0 `ori 0x1000` @0x80115318, a2 = [+0x188]+408)",
+              k->motion, n, treffer, (int)d);
+    }
+    {   /* jeder Umlauf von Kraehen-Clip 8 (8 Bilder, s_crow_clip_len[8]; der Eintritts-Takt rueckt f314 schon einmal
+         * vor, Schritt 0 faellt in Schritt 1 @0x80115358) spawnt erneut @0x80115394 -> im 7. Folgebild */
+        int vor = re15_esp_fx_count(), umlauf = -1, spawns = 0;
+        for (int f = 1; f <= 9; f++) {
+            frame();
+            int n = re15_esp_fx_count();
+            if (n > vor) { spawns += n - vor; if (umlauf < 0) umlauf = f; }
+            vor = n;
+        }
+        PRUEF(umlauf == 7 && spawns == 1, "Clip-8-Umlauf in ORIENT spawnt den Effekt erneut im 7. Folgebild (Bild %d, %d Spawns; "
+              "f314 @0x8011536c -> 0x80019700 @0x80115394)", umlauf, spawns);
     }
     re15_game_flag_set(5, 0x1D, 1);
     frame();
