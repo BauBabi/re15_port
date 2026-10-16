@@ -185,6 +185,13 @@ Ergebnisse:
   laufen in den Tests als Attrappen, ihre Schnittstellen (Aufruf, Marke, Artefakt) sind mit Datei:Zeile belegt.
 * Abweichung vom Ablauf der Runde 37, mit Absicht (Abschnitt 2.1): im Archiv wird die vorige Version NICHT mehr
   geloescht; Reihenfolge windows -> android -> linux statt windows -> linux -> android (kurze Baue zuerst).
+* docker_bereit.sh: echt gelaufen ist der Weg `docker desktop start` (zweimal, 19 s / 24 s). Der Rueckfall fuer eine
+  Docker-Desktop-Version ohne diese CLI (`Start-Process "Docker Desktop.exe"`) ist auf dieser Maschine nicht
+  erreichbar und nur gelesen, nicht gelaufen.
+* Fuer den Orchestrator beim Release v0.8.26 (Hauptbaum, master): erst `bash release/release_alles.sh --dry-run`;
+  der Trockenlauf meldet dort die 33 unversionierten Eintraege unter synchro/ (darunter `synchro/STAGE2/room2001/`,
+  kommt ins Paket, nicht in den Commit) als [!!]. Die volle Suite des Integrationsbaums enthaelt die 7 neuen Tests
+  (Windows 7 gelaufen, Linux 6 + 1 SKIP) - RE15_MIN_TESTS entsprechend anheben.
 
 ## 7. Fuer den Nutzer
 
