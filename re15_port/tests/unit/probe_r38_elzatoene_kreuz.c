@@ -5,13 +5,15 @@
  * re15_vag_adpcm_decode, Tonhoehe re15_vab_note2pitch2(min, shift, center, shift) wie se_play_layers, Schritt =
  * pitch << 4 gegen 44100 Hz, Positionsfortschritt pos_frac/pos wie audio_callback) mit dem Mono-Mittel des Mitschnitts.
  *
- * Aufruf: probe_r38_elzatoene_kreuz <cap.raw> <exit-raumbild> <quelle> <bild> [<bild> ...]
+ * Aufruf: probe_r38_elzatoene_kreuz <cap.raw> <exit-raumbild> <quelle> <bild>[:<ab_ms>:<lang_ms>] ...
  *   quelle  vbs:<ELZASE.VBS>:<satz>      Satz der Mini-Bank (Aufbau gen/re2_elza_bank.inc)
  *           rdt:<ROOMxxxx.RDT>:<bank>:<se> Satz der Raumbank (RDT-Kopf +0x08 + bank*12 = EDT/VH/VB)
  *   Mitschnitt: Stereo s16, 1470 Frames je Spielbild; Raum-Bild f liegt bei Takt (Takte - 1 - exit) + f
  *   (dieselbe Zuordnung wie tests/unit/probe_r36_elza_auswertung.c).
  * Ausgabe je Bild: "bild B korrelation K versatz V" — das Maximum ueber Versatz -2..+6 Bilder ab B (V in Bildern,
  * auf 1/1470 genau), dazu dieselbe Suche 60 Bilder frueher als Gegenprobe ("gegenprobe G").
+ * Mit :<ab_ms>:<lang_ms> wird nur der Abschnitt [ab, ab+lang) des Tons verglichen, erwartet bei B + ab — fuer Toene,
+ * deren Anfang eine Sprachzeile ueberlagert; die Lage bleibt an das Bild B gebunden.
  */
 #include "re15_vab.h"
 #include "../../engine/src/gen/re2_elza_bank.inc"
@@ -84,13 +86,14 @@ static double korr(const double *x, long nx, const double *t, int nt, long lag)
     return (sxx > 0 && stt > 0) ? sxt / sqrt(sxx * stt) : 0.0;
 }
 
-static void suche(const double *x, long nx, long off, const double *t, int nt, int bild, double *best, double *versatz)
+static void suche(const double *x, long nx, long off, const double *t, int nt, int bild, long ab, double *best,
+                  double *versatz)
 {
     *best = -2; *versatz = 0;
-    long l0 = (off + bild - 2) * 1470L, l1 = (off + bild + 6) * 1470L;
+    long l0 = (off + bild - 2) * 1470L + ab, l1 = (off + bild + 6) * 1470L + ab;
     for (long lag = l0; lag <= l1; lag++) {
         double c = korr(x, nx, t, nt, lag);
-        if (c > *best) { *best = c; *versatz = (double)(lag - (off + bild) * 1470L) / 1470.0; }
+        if (c > *best) { *best = c; *versatz = (double)(lag - ab - (off + bild) * 1470L) / 1470.0; }
     }
 }
 
@@ -109,12 +112,20 @@ int main(int argc, char **argv)
     }
     double *t = NULL; int nt = vorlage(argv[3], &t);
     if (nt <= 0) { printf("FEHLER: Quelle %s\n", argv[3]); return 1; }
-    if (nt > 17640) nt = 17640;                         /* 0,4 s: Anschlag + Hauptteil */
     for (int a = 4; a < argc; a++) {
         int b = atoi(argv[a]); double k, v, kg, vg;
-        suche(x, nx, off, t, nt, b, &k, &v);
-        suche(x, nx, off, t, nt, b - 60, &kg, &vg);
-        printf("bild %d korrelation %.3f versatz %.2f gegenprobe %.3f\n", b, k, v, kg);
+        long ab = 0, lang = 17640;                      /* Standard: 0,4 s ab dem Anschlag */
+        const char *c1 = strchr(argv[a], ':');
+        if (c1) {
+            ab = atol(c1 + 1) * 441L / 10L;
+            const char *c2 = strchr(c1 + 1, ':');
+            if (c2) lang = atol(c2 + 1) * 441L / 10L;
+        }
+        if (ab < 0 || ab >= nt) { printf("FEHLER: Abschnitt\n"); return 1; }
+        int n2 = (int)((ab + lang > nt) ? nt - ab : lang);
+        suche(x, nx, off, t + ab, n2, b, ab, &k, &v);
+        suche(x, nx, off, t + ab, n2, b - 60, ab, &kg, &vg);
+        printf("bild %d ab %ld ms korrelation %.3f versatz %.2f gegenprobe %.3f\n", b, ab * 10L / 441L, k, v, kg);
     }
     free(x); free(t); free(c);
     return 0;
