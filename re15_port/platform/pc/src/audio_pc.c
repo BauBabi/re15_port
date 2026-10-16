@@ -38,6 +38,7 @@
 #include "re15_aufschliessen_r36.h"  /* Runde 36 Spur G: Satz-TOC der Mini-Bank KARTSE.VBS */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Port-Bank 0x3A = RE2-Schlossbank SCHLOSS1010 */
+#include "re15_werkstatt11b0_r38.h" /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (re15_w11b0_snd0_hook) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 
@@ -849,6 +850,7 @@ void re15_audio_room_se(int se_id)
  * layering as room_se (snd1), on the resident snd0 bank the footsteps also use. */
 void re15_audio_room_se_snd0(int se_id)
 {
+    if (re15_w11b0_snd0_hook && re15_w11b0_snd0_hook(se_id)) return;   /* Runde 38 Spur C: 11B0 Satz 7 leer -> ROOM1171 */
     if (!g_audio.initialized || !s_foot_loaded || se_id < 0) return;
     se_play_layers(s_foot_edt, &s_foot_vab, s_foot_decoded, s_foot_decoded_len, se_id);
 }
