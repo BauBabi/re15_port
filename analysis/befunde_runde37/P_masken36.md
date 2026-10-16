@@ -742,7 +742,7 @@ Regionsvierecks; S/H im Figurfenster (`proj`). Laeufe `p38nb2/runs/z*`, Skript `
 
 | Rechteck (Zeuge) | Stehplatz (Modell-Punkte) | gegen (NB1): S / H | neu: S / H |
 |---|---|---|---|
-| 30A0 C3 #45 | (-22443,15863) (108) | 3602 / **26** (Schulter, Zeilen 47-50: der Zettel am Aktenschrank uebermalt Leon, der VOR dem Schrank steht; Bild `p38nb2/z30A0c3.png`) | 3602 / **0** |
+| 30A0 C3 #45 | (-22443,15863) (108) | 3602 / **26** (Kopfoberkante rechts, Zeilen 47-50 bei x 227-236: der Zettel am Aktenschrank uebermalt Leons Haar, obwohl er VOR dem Schrank steht; Bild `p38nb2/z30A0c3.png`, gegen A / neu A / neu B / C) | 3602 / **0** |
 | 30A0 C0 #20 | (-25243,13663) (28) | 618 / **4** (Haar, Rahmen-Balken der Trennwand) | 618 / **0** |
 | 3040 C1 #1 | (-22500,-10800) (60) | 235 / **1** | 235 / **0** |
 | 5020 C6 #1 | (-1733,-13525) (124); Kollision schob Leon nach (-1655,-13325) | 2739 / 0 | 2739 / 0 |
@@ -750,7 +750,8 @@ Regionsvierecks; S/H im Figurfenster (`proj`). Laeufe `p38nb2/runs/z*`, Skript `
 | 3040 C0 #1 | (-22800,-2000) (25) | 1083 / 0 | 1083 / 0 |
 | 6010 C6 #3 | (-14512,-23920) (42) | 1370 / 0 | 1370 / 0 |
 
-3 von 7 Stichproben zeigen an der exe eine echte Fehlverdeckung, die erst das pixelgenaue Raster findet (26/4/1 Punkte).
+3 von 7 Stichproben zeigen an der exe eine echte Fehlverdeckung, die erst das pixelgenaue Raster findet (26/4/1 Punkte;
+die beiden groessten wie M2 an der Kopfoberkante).
 4 von 7 zeigen in DIESER Haltung (stehend, rot 0) keine: der Modellkasten (+-350 quer, voll bis 3000 hoch) ist breiter als
 Leon - vor allem neben dem Kopf, wo das alte Raster mit 9 Spalten nur Zwischenraeume traf; dort schliesst das Modell
 Rechtecke aus, die Leon in diesem Bild nicht beruehren (sichere Richtung: weniger Verdeckung, keine Fehlverdeckung). Ob
