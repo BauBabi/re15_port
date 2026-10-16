@@ -446,6 +446,12 @@ ablauf_push_scheitert() {
     o="$fx/p3.txt"; ra "$o" --dry-run --min-frei-gb 1
     pruef "M1 Trockenlauf danach: [!!] der Push fehlt, Wahl [3]" \
         bash -c "grep -qF 'der Push fehlt' '$o' && grep -qF 'Doppelklick: Wahl [3]' '$o'"
+    #   kommt danach noch ein Commit (z.B. Doku), pusht Wahl [3] nicht mehr allein - der Hinweis bleibt (Push von Hand)
+    printf 'x\n' > "$R/notiz.txt"; git -C "$R" add notiz.txt; git -C "$R" commit -q -m "doc: nach dem Release"
+    o="$fx/p3b.txt"; ra "$o" --dry-run --min-frei-gb 1
+    pruef "M1 Trockenlauf nach weiterem Commit: [!!] Commit des Tags fehlt in origin/master, Push von Hand" \
+        bash -c "grep -qF 'fehlt in origin/master' '$o' && grep -qF 'von Hand: git push origin master v0.8.26' '$o'"
+    git -C "$R" reset -q --hard HEAD~1
     # origin repariert, dann die gemeldete Zeile WOERTLICH im Repo. RE15_ARCHIV zeigt auf einen leeren Ordner: die
     # Zeile muss das Archiv des Laufs selbst nennen (sonst prueft sie das falsche und bricht ab).
     git -C "$R" remote set-url origin "$url"

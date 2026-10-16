@@ -275,15 +275,25 @@ elif git_r rev-parse -q --verify "refs/tags/$NEU" >/dev/null 2>&1; then
 else
     pz ok "Tag $NEU ist frei"
 fi
-# Haengt der vorige Release noch lokal (Commit + Tag, aber nicht gepusht)? Lokal gemessen: refs/remotes/origin/master
-# ist der Stand des letzten erfolgreichen Push/Fetch (git setzt ihn beim Push). Nur Hinweis - der Doppelklick zeigt
-# diesen Trockenlauf zuerst, Wahl [3] pusht dann nur.
-if [[ $NACHHOLEN -eq 0 && -n "$VORIG_TAG" ]] && tag_auf_head "$VORIG_TAG" && ist_release_commit "$VORIG_TAG"; then
+# Haengt der vorige Release noch lokal (Commit + Tag, aber nicht gepusht)? Lokal gemessen, ohne Netz:
+# refs/remotes/origin/master ist der Stand des letzten erfolgreichen Push/Fetch (git setzt ihn beim Push;
+# remote.origin.fetch +refs/heads/*:refs/remotes/origin/*). Ist der Commit des hoechsten Tags nicht darin, fehlt
+# dessen Push. Nur Hinweis - der Doppelklick zeigt diesen Trockenlauf zuerst; steht der Release-Commit noch auf HEAD,
+# pusht Wahl [3] nur, sonst (weitere Commits danach) der Push von Hand.
+if [[ $NACHHOLEN -eq 0 && -n "$VORIG_TAG" ]]; then
     om="$(git_r rev-parse -q --verify refs/remotes/origin/master 2>/dev/null || true)"
-    if [[ -n "$om" && "$om" != "$(git_r rev-parse HEAD)" ]]; then
-        pz warn "$VORIG_TAG: Release-Commit $HEAD_KURZ und Tag stehen lokal, origin/master steht auf $(git_r rev-parse --short "$om") - der Push fehlt.
+    tc="$(git_r rev-parse -q --verify "refs/tags/$VORIG_TAG^{commit}" 2>/dev/null || true)"
+    anc=0
+    if [[ -n "$om" && -n "$tc" ]]; then git_r merge-base --is-ancestor "$tc" "$om" 2>/dev/null || anc=$?; fi
+    if (( anc == 1 )); then     # 1 = nicht enthalten (0 = enthalten, sonst Fehler -> kein Hinweis)
+        if tag_auf_head "$VORIG_TAG" && ist_release_commit "$VORIG_TAG"; then
+            pz warn "$VORIG_TAG: Release-Commit $HEAD_KURZ und Tag stehen lokal, origin/master steht auf $(git_r rev-parse --short "$om") - der Push fehlt.
          Nur pushen: bash release/release_alles.sh --ab abschluss --tag$(opt_text ohne-kein-push) (Doppelklick: Wahl [3])
          oder von Hand: git push origin master $VORIG_TAG"
+        else
+            pz warn "$VORIG_TAG: der Commit des Tags ($(git_r rev-parse --short "$tc")) fehlt in origin/master ($(git_r rev-parse --short "$om")) - der Push fehlt.
+         von Hand: git push origin master $VORIG_TAG"
+        fi
     fi
 fi
 
