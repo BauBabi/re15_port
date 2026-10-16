@@ -28,7 +28,7 @@ Lauf `scratchpad/G/v1`: Karte `probe_r36_elza_karte re15_card.mcr 1011 -1900 683
 (Gier 3072: Vorwaertspunkt x + 620 cos, z - 620 sin, aot_common.c:1273 / @0x80042bd0), CONTINUE, Viereck (Aktion,
 game_step_common.c:1110) in Bild 60. debug.log:
     [schluessel] ROOM1011: Roy -> sub07 (Zettel 0513) statt sub06 (Prison key)      <- Runde 36 Q: Ereignis 6 -> 7
-    [scd] Plc_motion(entity=1, motion=11, flags=0x00)                                 <- sub07 @0x00E5C, Elza beugt sich
+    [scd] Plc_motion(entity=1, motion=11, flags=0x00)                                 <- sub07 @0x00E5C (Pose im Bild nicht gemessen, Abnahme 0 H1)
     [msg] room=1011 id=18 savepoint=0
     [msgtext] room=1011 id=18 "He has passed out from his injuries.He is holding a slip.The numbers 0513" are printed on the slip."
 Bild `G_belege/vorher_1011_msg18.png` (Bild 60 / Bild 120): die Code-Nachricht msg 18, Seite 1 mit Weiter-Pfeil.
@@ -47,7 +47,7 @@ Hinweis-Tabelle `map_hint_common.c` s_hints[]: 3 Eintraege, alle Leon (Quelle 0x
     sub07 @0x00E4E (Datei-Bytes 0xE4E..0xE83):
       46 05 00 00 00 00 00 00 00 00   Aot_reset(5,0)          Slot aus
       2e 01 00 00                      Work_set(1,0)+Nop       Elza
-      3f 01 0b 00                      Plc_motion(1,11)        @0x00E5C Elza beugt sich
+      3f 01 0b 00                      Plc_motion(1,11)        @0x00E5C Bewegung 11 (Pose nicht gemessen)
       09 0a 1e 00                      Sleep 30
       2b 12 ff ff                      Message_on 18, Maske 0xffff   @0x00E64  <- DIE Code-Nachricht
       02 00                            Evt_next
@@ -120,8 +120,9 @@ Neue Dateien:
 * `re15_port/include/re15_tagebuch_r38.h`, `re15_port/engine/src/tagebuch_r38.c` — Haken an Message_on 18 in ROOM1011:
   fordert den Dokument-Leser an (re15_menu_request_doc(5, 68, -1, -1): kein Aufhebe-Slot, kein Weltmodell — NUTZER-
   VORGABE "Muss nicht unbedingt ein Welt Model haben"), PARKT den Faden auf dem Opcode, bis der Statusschirm samt
-  Blenden durch ist, und laesst ihn dann HINTER das Message_on laufen (Elzas Beugen davor und Aufrichten danach bleiben
-  die des Originals). Erstes Lesen (Bit 68 vorher 0, nachher 1) -> am Evt_end des Fadens (@0x00E82, Versatz 0x1E vom
+  Blenden durch ist, und laesst ihn dann HINTER das Message_on laufen (die Opcodes des Originals davor und danach —
+  Plc_motion(1,11) @0x00E5C / @0x00E6A, Plc_flg 0x80, Plc_ret — laufen unveraendert weiter; Korrektur nach Abnahme 0 H1:
+  eine sichtbare Beuge-Pose ist damit NICHT gemessen, s. OFFEN). Erstes Lesen (Bit 68 vorher 0, nachher 1) -> am Evt_end des Fadens (@0x00E82, Versatz 0x1E vom
   Message_on) die Kartenkette (re15_map_hint_request). Spaeter: nur lesen.
 * `re15_port/tools/r38_g/tagebuch_satz.py` (Satz, Rueckleseprobe, --installieren), `re15_port/tools/r38_g/zensus.py`.
 * `re15_port/shared_assets/RE2/FILES/FILE30_{title_page,p00..p05_page,title_paper}.TIM` (8 Dateien, md5 im Bericht).
@@ -241,9 +242,85 @@ Die Spur-Logik bleibt unveraendert; nachgezogen werden nur die zwei Alt-Riegel (
     0% tests passed, 2 tests failed out of 2
 Beide Befunde der Abnahme reproduziert.
 
-### Mangel 1 — unit_re2doc_bildebene (IN ARBEIT)
+### Mangel 1 — unit_re2doc_bildebene (Gegenprobe traf Satz 30 = Roys Diary)
+* Ursache: `tests/unit/test_re2doc_bildebene.c:150` (alt) nahm als "nicht vorhandenes Dokument"
+  `re15_re2doc_size(RE2_FILES_DOC_COUNT + 5, -1, ...)` = Satz 30 (`gen/re2_files_toc.inc:5`
+  `#define RE2_FILES_DOC_COUNT 25`). Die feste +5 stammt aus dem ersten Commit der Wache (c90957f3, 2026-08-26), als es
+  nur RE2s 25 Saetze gab; seither kamen 25 (Runde 30), 26..29 (Runde 34 Nacht E, z. B. FILE29 2d7ede7b) und mit dieser
+  Spur 30 (d2850ba6, `FILE30_title_page.TIM`) dazu. Die Gegenprobe traf also ein VORHANDENES Dokument. Ihr Zweck
+  (Kopfkommentar der Wache): "die Gegenprobe, dass ein nicht vorhandenes Dokument sauber 0 meldet" — sonst ist jede
+  Zusage der Wache wertlos.
+* Messung vorher: s. o. (`FAIL: ein nicht vorhandenes Dokument meldet 0 statt Muell`).
+* Beleg (Asset-Baum, nicht Code): `FILE29_title_page.TIM` 22592 B, `FILE30_title_page.TIM` 22592 B vorhanden,
+  `FILE31_title_page.TIM` / `FILE32_title_page.TIM` fehlen. Der Lader (`re2doc_common.c:44-51`) baut genau diesen Namen
+  `FILE%02d_title_page.TIM`.
+* Aenderung (Kommentar "RUNDE 38 SPUR G (Nachbesserung 1, Mangel 1 der Abnahme 0)"): der Probe-Satz kommt aus dem
+  Asset-Baum — der ERSTE Satz nn, dessen `FILEnn_title_page.TIM` unter `RE15_ASSET_RE2_DIR/FILES` nicht existiert
+  (fopen-Probe, unabhaengig vom Lader = nachweislich nicht vorhanden). Zwei Vorbedingungen, damit die Probe nicht ins
+  Leere zielt: (a) nn liegt hinter RE2s 25 und hinter jedem `bildsatz` der Port-Tabelle (`re15_files_doc`) — davor fehlt
+  keiner; (b) der Nachbar nn-1 meldet sich im Lader unmittelbar vor der Probe mit 1 (ein Lader, der Satznummern
+  verwechselt oder den Cache-Schluessel nicht vergleicht, lieferte sonst dessen Bild). Keine feste Zahl mehr: legt eine
+  kuenftige Spur FILE31 an, wandert die Probe auf 32.
+* Messung nachher (`ctest -R "^(unit_re2doc_bildebene|unit_r26_inventar)$" -V`):
+      Gegenprobe: erster Satz ohne Titelseite im Asset-Baum = 31 (hoechster Satz RE2/Port-Tabelle = 30)
+      PASS: der Probe-Satz 31 liegt hinter allen RE2-Saetzen und allen Saetzen der Port-Tabelle (hoechster 30) - davor fehlt keiner
+      PASS: der Nachbar Satz 30 meldet sich im Lader (1) unmittelbar vor der Probe
+      PASS: ein nicht vorhandenes Dokument (Satz 31) meldet 0 statt Muell - sonst waere jede Zusage oben wertlos
+      1/2 Test #252: unit_re2doc_bildebene ............   Passed    0.79 sec
+* Mutationsprobe (die Wache ist nicht leer; Werkzeug `scratchpad/G1/mutation.sh`: mutierte Kopie EINER Engine-Datei in
+  den Scratchpad kompiliert und VOR `libre15_engine.a` an das vorhandene Test-Objekt gelinkt, Bauverzeichnis
+  unberuehrt): M1 = der Lader liefert fuer eine fehlende Titelseite die des Vorgaenger-Satzes ("Muell",
+  `if (!data && page < 0 && doc > 0) return tile_get(doc - 1, page, kind);`) -> GENAU EIN Fehlschlag
+  `FAIL: ein nicht vorhandenes Dokument (Satz 31) meldet 0 statt Muell`, alles andere PASS, exit 1. Kontrolle
+  (unveraenderte Kopie, gleicher Link-Weg): alles PASS, exit 0.
 
-### Mangel 2 — unit_r26_inventar B4 (IN ARBEIT)
+### Mangel 2 — unit_r26_inventar B4 (feste Untergrenze 850 liess nur 5 Dokumente zu)
+* Ursache: `tests/unit/probe_r26_inventar.c:296-298` (alt)
+  `ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok - 2) && gefahren >= 850`. Geschichte der Grenze:
+  Runde 26 (4f4184bd) `gefahren >= 900` (9 x 102 = 918, kein Dokument); Runde 34 Nacht E (54abec03)
+  `== 9 * (102 - n_dok) && >= 850` (873 mit 5 Dokumenten, Luft bis 7); Runde 36 Q (f8ef964f) zieht 0x42/0x45 ab
+  (`- 2`) -> 855 mit 5 Dokumenten, die Grenze 850 laesst seitdem hoechstens 5 Dokumente zu. Dokument 5 "Roys Diary"
+  (Item 0x4D) -> n_dok 6 -> 9 x 94 = 846: die Gleichung haelt, die Grenze nicht. Zweck der Grenze (Abnahme-Forderung):
+  verhindern, dass die Dokument-Tabelle Nicht-Dokument-Ids schluckt. Die Gleichung allein ist dafuer blind (sie rechnet
+  mit n_dok, s. Mutationsprobe M2: 846 = 9 x 94 auch MIT geschluckten Ids); die Grenze war ein Groessen-Ersatzmass.
+* Messung vorher: s. o. (`B4 Vergleiche gefahren: 846 ... [FAIL] B4`).
+* Beleg — wo die Dokument-Ids beginnen, selbst disassembliert (`re15_disasm.py` / DEBUG.BIN-Dekoder
+  `scratchpad/G1/dbg_dis.py`, Modul @0x800c0000 wie `tools/gen_item_prompt_data.py:58`):
+      PSX.EXE  8004a348 lbu v0,0(v1) / 8004a350 sltiu v0,v0,0x48 / 8004a354 bne v0,zero,0x8004a360 /
+               8004a358 ori v0,zero,0x47 / 8004a35c sb v0,0(v1)        <- Item-Id-Klemme: Items enden bei 0x47
+      DEBUG.BIN Datei 0x7370 = `48 52 5c 00`                         <- Basis-Id je FILE-Seite (3 x 10 Zeilen)
+      DEBUG.BIN 800c72d4 lbu v0,0x6c95(v0) (Seite) / 800c72dc addiu v1,v1,0x7370 / 800c72f4 addu v1,v1,v0 /
+               800c72f8 lbu s1,0(v1) / 800c7320 jal 0x80028840 + 800c7324 addu a0,s1,zero /
+               800c7344 ori v0,zero,0xa / 800c7350 addiu s1,s1,1    <- 10 Zeilen, Zeile k zeigt den Namen von Id basis+k
+      PSX.EXE  80028840 andi a0,a0,0xff / 8002884c addiu at,at,0x495c (u16 @0x800c495c) / 8002885c addiu v0,v0,0x4a28
+               (Blob @0x800c4a28)                                       <- = die Namensbank von gen/item_prompt_data.inc
+      Namensbank dekodiert (`scratchpad/G1/namen.py`): 0x46 "Red Master Keycard", 0x47 "Blue Master Keycard",
+      0x48 "Chris' Diary", 0x49 "Operation Report", 0x4A..0x4F "File 3".."File 8", 0x60 "Arachnophobia" ... (102 Namen).
+      Dazu Datei-Groessen: DATA/ITEMALL.PIX 86400 B = 72 x 1200, ITEM/ITPS.ITP 884736 B = 72 x 12288 -> 72 = 0x48 Items.
+  => Nicht-Dokument-Ids = 0x00..0x47; RE1.5-Dokument-Ids = 0x48.. (= RE15_FILES_FIRST_ITEM_ID, re15_files.h).
+* Aenderung (Kommentar "RUNDE 38 SPUR G (Nachbesserung 1, Mangel 2 der Abnahme 0)"): die feste 850 entfaellt; B4
+  prueft den Zweck GENAU: die Basis liest der Riegel selbst aus `shared_assets/PSX/BIN/DEBUG.BIN` Datei 0x7370 (NICHT
+  aus dem Engine-Makro, das sonst mit einer Mutation mitwanderte), verlangt `basis == 0x48`, dass jede Id unter der
+  Basis ausser den zwei Port-Namen 0x42/0x45 (B4c) je Schluessel verglichen ist (`gefahren_unter_basis == 9 x (0x48 - 2)
+  = 630`) und dass keine davon als Dokument ausgenommen wird (`dokumente_unter_basis == 0`). Gleichung ueber alle 102 Ids
+  und B4b bleiben unveraendert. Unabhaengig von der Tabellengroesse: weitere RE1.5-Dokument-Ids (0x48..) sind erlaubt,
+  keine Nicht-Dokument-Id.
+* Messung nachher:
+      (B4 Vergleiche gefahren: 846, Dokument-Ids ausgenommen: 54)
+      (B4 Dokument-Basis aus DEBUG.BIN @0x800c7370: 0x48; Nicht-Dokument-Ids darunter: 630 gefahren, 0 als Dokument geschluckt)
+      [OK  ] B4 kein Kollateral in den uebrigen Skripten
+      [OK  ] B4c 0x42/0x45: Port-Name statt ausgeliefertem Namen, sonst bit-gleich (Runde 36 Spur Q)
+      [OK  ] B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal
+      2/2 Test #324: unit_r26_inventar ................   Passed    0.19 sec
+      100% tests passed, 0 tests failed out of 2
+* Mutationsprobe M2 (gleicher Link-Weg): Engine-Basis `RE15_FILES_FIRST_ITEM_ID` auf 0x46 verschoben -> die Tabelle
+  schluckt 0x46/0x47 (Red/Blue Master Keycard):
+      (B4 Vergleiche gefahren: 846, Dokument-Ids ausgenommen: 54)          <- Gleichung haelt (blind)
+      (B4 Dokument-Basis aus DEBUG.BIN @0x800c7370: 0x48; Nicht-Dokument-Ids darunter: 612 gefahren, 18 als Dokument geschluckt)
+      [FAIL] B4 kein Kollateral in den uebrigen Skripten                    <- die neue Pruefung faengt es
+      [OK  ] B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal   <- blind
+      [FAIL] B5b der Lauf traegt "Irons Diary" und NICHT "Chris' Diary"     (Folgefehler der Verschiebung)
+  Kontrolle M0 (unveraenderte Kopie): `probe_r26_inventar: GRUEN (0 Fehler)`, exit 0.
 
 ### Mangel 3 — Testaussage ueber die beruehrten Module (IN ARBEIT)
 
@@ -258,13 +335,24 @@ Beide Befunde der Abnahme reproduziert.
 - Die Kette schaltet wie Leons Kette der Runde 35 K nach je 3 Blinkperioden (~3,9 s) oder mit START weiter; Leons
   ERSTER Comms-Hinweis (Runde 30/33) wartet dagegen auf START. Fuer zwei Ziele nacheinander gibt es im Port nur die
   Kettenform (RE2 kennt je Opcode 0x84 nur EIN Ziel, @0x80059210) — so gebaut, im Dossier begruendet.
+- Nachbesserung 1, Hinweise der Abnahme 0:
+  * H1 (Beobachtung, KEIN Punkt dieser Spur): die Abnahme sieht beim Untersuchen des liegenden Roy keine Beuge-Pose
+    Elzas (Bilder F190..F225/F650..F660), ebenso in v0.8.25 (Lauf v1) — die Opcodes Plc_motion(1,11) @0x00E5C/@0x00E6A
+    laufen (Log), die Pose ist nicht gemessen. Vorbestand, vom Nutzer hier nicht verlangt; die Dossier-Saetze, die eine
+    Pose behaupteten, sind korrigiert. Fuer den Orchestrator als moeglicher eigener Befund (Bewegung 11 des Spielers in
+    sub07 ROOM1011 gegen das Original messen).
+  * H2: menu_common.c teilt die Spur mit Spur Q (andere Stellen); FILE30_* (8 Dateien) muessen ins Paket (Asset-Gate).
+  * H3: der unversionierte Ordner `build/r38_g/` (Ausgabe `tagebuch_satz.py --out`) in der Baumwurzel ist entfernt.
+  * Die zwei nachgezogenen Alt-Riegel tragen keine Annahme mehr ueber die Zahl der Dokumente/Saetze: eine kuenftige
+    Spur, die FILE31 oder Dokument 6 (Item 0x4E) anlegt, macht sie nicht rot (Probe-Satz wandert mit; jede RE1.5-
+    Dokument-Id ab 0x48 ist erlaubt, keine Nicht-Dokument-Id).
 
 ## Fuer den Nutzer
 - NEUE ASSETS (Paket-Gate): `re15_port/shared_assets/RE2/FILES/FILE30_title_page.TIM`, `FILE30_p00_page.TIM` ..
   `FILE30_p05_page.TIM`, `FILE30_title_paper.TIM` (8 Dateien; Bau: `C:/Python310/python.exe
   re15_port/tools/r38_g/tagebuch_satz.py --installieren`). Keine Sprachdateien.
 - Bedienung: Roy nach dem Dialog untersuchen -> Tagebuch (RECHTS blaettert, VIERECK/KREUZ schliesst) -> "The Roys
-  Diary has been filed." -> Elza richtet sich auf -> Karte: 2F (Communications Room), dann B2 (Prison) je ca. 4 s
+  Diary has been filed." -> zurueck im Raum -> Karte: 2F (Communications Room), dann B2 (Prison) je ca. 4 s
   (START schaltet weiter). Danach blinken beide in der normalen Karte, bis der Prison Key genommen bzw. John befreit ist.
 - Schreibweise: Titel/Listenname "Roys Diary" woertlich wie im Auftrag (ohne Apostroph); im Text wurden die
   typografischen Apostrophe zum Apostroph der RE2-Schrift.
