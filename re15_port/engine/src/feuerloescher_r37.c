@@ -16,6 +16,7 @@
 #include "re15_itembox.h"     /* g_itembox (RE2-Box-Feld @0x800d4a68), RE15_BOX_SLOTS */
 #include "re15_room.h"        /* g_current_room_id */
 #include "re15_gameflow.h"    /* re15_char_variant (Leon 0 / Elza 1) */
+#include "re15_itemorte_r38.h" /* Runde 38 Spur K: Lage ROOM1030 + Slot-Freimachen */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -23,15 +24,13 @@
 #include "gen/feuerloescher_r37.inc"
 
 /* ---- Die Lagen (PORT-WAHL, Messungen im Dossier Abschnitt "Lage") -------------------------------
- * ROOM1050 (Leon): Wand rechts der Notausgangs-Tuer zu ROOM1090 (Door_aot_set Slot 5 @0x00B7A,
- *   Rechteck x 18100..21600 z -23900..-22900), Cut 6. Wandebene z ~ -23900 (Tuerunterkante im
- *   Hintergrund ROOM1050 Cut 6 deckt sich mit der Projektion bei z -23900; die Kollisionszelle
- *   x 12700..26100 z -24350..-23377 liegt VOR der gemalten Wand). Unterkante 1150 = 0,68 m,
- *   Oberkante 1942 = 1,14 m ueber dem Boden (NFPA 10: Oberkante <= 1,53 m bei < 40 lb).
- *   Aufhebe-Rechteck x 16700..17700 z -23900..-22900: dieselbe z-Spanne wie die Tuer daneben (der
- *   Spieler steht vor der Kollisionskante z -23377, der Vorwaerts-Punkt 620 @0x80042bd0 liegt dann
- *   in z -23520..-23000); kein Ueberlapp mit Slot 5 (x >= 18100) und Slot 6 (x <= 16650).
- *   Slot 13: in ROOM1050 belegt 0..10 (Original), 15 (Dokument, re15_dokumente.h), 52.. Kamerazonen.
+ * ROOM1030 (Leon) — Runde 38 Spur K, NUTZER-VORGABE "in room 1030 haengen an der stelle von
+ *   fire_extinguisher.bmp, anstatt in room 1050": -x-Flaeche des Pfeilers unter dem Notruf-Monitor
+ *   (Cut 0), Lage/Rechteck gemessen in gen/itemorte_r38_lage.inc (Herleitung include/re15_itemorte_r38.h,
+ *   analysis/befunde_runde38/K_itemorte.md). Slot 14 = Slot des Monitor-Satzes msg 14 (Vorrang
+ *   @0x80042f94), der Satz zieht nach Slot 20 (re15_itemorte_r38_platz_frei, Haken unten).
+ *   (Bis v0.8.25 hing er in ROOM1050 Cut 6 rechts der Notausgangs-Tuer, obj 5 bei (17200,-1150,-23775),
+ *   Slot 13 x 16700..17700 z -23900..-22900 — Runde 37 Dossier I 3.2.)
  * ROOM1090 (Leon, nach dem Loeschen UND weggeworfen) / ROOM1091 (Elza, immer): liegend auf dem Boden
  *   (Band 1 = y -1800, Feuer Sce_em_set @0x02214.. y 0xf8f8) vor der Seitentuer des Wagens, aus der die
  *   Frau in der Rettungsszene steigt (sub03 Ada-Start (2602,-2233) @0x02554), zwischen den Feuern
@@ -47,7 +46,9 @@
  *   prueft dort "kein Text-Platz" fuer Leon). */
 static const re15_fl37_lage_t k_lagen[] = {
     /* raum    art                tor                        slot zone band   x      y       z    rot_y  rect_x rect_z  w     d   */
-    { 0x1050, RE15_FL37_STEHEND, RE15_FL37_NICHT_GENOMMEN,   13,  1,   0, 17200, -1150, -23775,    0, 16700, -23900, 1000, 1000 },
+    { RE15_R38K_FL_RAUM, RE15_FL37_STEHEND, RE15_FL37_NICHT_GENOMMEN, RE15_R38K_FL_SLOT, 1, 0,   /* Runde 38 Spur K */
+      RE15_R38K_FL_X, RE15_R38K_FL_Y, RE15_R38K_FL_Z, RE15_R38K_FL_ROT_Y,
+      RE15_R38K_FL_RECT_X, RE15_R38K_FL_RECT_Z, RE15_R38K_FL_RECT_W, RE15_R38K_FL_RECT_D },
     { 0x1090, RE15_FL37_LIEGEND, RE15_FL37_FEUER_AUS,         6,  0,   1,  2500, -1800,  -1300, 3250,  2000,  -1800, 1000, 1000 },
     { 0x1091, RE15_FL37_LIEGEND, RE15_FL37_IMMER,             3,  0,   1,  2500, -1800,  -1300, 3250,  2000,  -1800, 1000, 1000 },
 };
@@ -129,7 +130,7 @@ static void text_ablegen(void)
 /* SPIND ROOM1000 (nur Leon): die Original-Aufnahme Slot 3 (@0x00C24) wird zum Raumtext msg 0
  * "Nothing unusual." — Satzform wie Slot 6 @0x00CAA `2c 06 01 31 00 00 .. 00 00 ff ff 00 00`
  * (sce 1, sat 0x31, Band 0, msg 0, Pause 0xFFFF), Rechteck der Original-Aufnahme (20500,-800) 800 x 800.
- * Gilt unabhaengig vom Taken-Bit: der Loescher liegt jetzt in ROOM1050. */
+ * Gilt unabhaengig vom Taken-Bit: der Loescher haengt jetzt in ROOM1030 (Runde 38; Runde 37: ROOM1050). */
 static void spind_umwidmen(void)
 {
     const int s = RE15_FL37_SPIND_SLOT;
@@ -187,6 +188,7 @@ void re15_feuerloescher_r37_install(uint16_t room_id)
     }
 
     /* ZONE — nur in einen freien Slot (fremde Saetze bleiben unberuehrt). */
+    re15_itemorte_r38_platz_frei(room_id, (int)g->slot);   /* Runde 38 Spur K: ROOM1030 Slot 14 (msg 14) -> 20 */
     if (g->slot >= RE15_AOT_MAX || g_aot.slots[g->slot].active) return;
     const int32_t cx = g->rect_x + g->rect_w / 2, cz = g->rect_z + g->rect_d / 2;
     if (g->zone_item) {

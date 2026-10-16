@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """Runde 38 Spur K "itemorte": Feuerloescher nach ROOM1030, Parking Lot Key / Prison Key an die Pinnwand ROOM10F0/10F1.
 
-Erzeugt re15_port/engine/src/gen/itemorte_r38.inc (KEIN Asset-Patch, shared_assets bleibt unangetastet).
+Erzeugt re15_port/engine/src/gen/itemorte_r38_lage.inc (Lage-Konstanten, #define) und gen/itemorte_r38_md1.inc
+(die zwei skalierten RE2-Schluessel-MD1) — KEIN Asset-Patch, shared_assets bleibt unangetastet.
 Dossier: analysis/befunde_runde38/K_itemorte.md.
 
 NUTZER-VORGABE (AUFTRAG.md Runde 38, woertlich):
@@ -56,7 +57,8 @@ REPO = os.path.abspath(os.path.join(HIER, "..", "..", ".."))
 RE2 = os.path.join(REPO, "info", "re2leon")
 NUTZER = os.path.join(REPO, "analysis", "befunde_runde38", "nutzer")
 FL37_INC = os.path.join(REPO, "re15_port", "engine", "src", "gen", "feuerloescher_r37.inc")
-ZIEL = os.path.join(REPO, "re15_port", "engine", "src", "gen", "itemorte_r38.inc")
+ZIEL = os.path.join(REPO, "re15_port", "engine", "src", "gen", "itemorte_r38_lage.inc")      # nur #define
+ZIEL_MD1 = os.path.join(REPO, "re15_port", "engine", "src", "gen", "itemorte_r38_md1.inc")  # die zwei MD1
 
 # ---- Kameras: `probe_r34n_e_dokumente kamera <raum>` VIEW-Zeilen (R Q12 zeilenweise, T, H) -----------------------
 CAMS = {
@@ -393,6 +395,9 @@ def main():
          "#define RE15_R38K_FL_RECT_W   %d" % fl["rect"][2],
          "#define RE15_R38K_FL_RECT_D   %d" % fl["rect"][3],
          ""]
+    M1 = ["/* AUTOMATISCH ERZEUGT von re15_port/tools/r38_itemorte/itemorte_export.py --schreiben - nicht von Hand.",
+          " * Runde 38 Spur K: die zwei RE2-Schluessel-MD1 fuer die Pinnwand ROOM10F0/10F1 (Lage: itemorte_r38_lage.inc). */",
+          ""]
     for k in ks:
         N = k["name"].upper()
         L += ["/* SCHLUESSEL %s (Item 0x%02X, RE2-MD1 md5 %s): s = %.4f -> sichtbar %.0f x %.0f Einheiten;"
@@ -405,7 +410,9 @@ def main():
               "#define RE15_R38K_%s_ROT_X    %d" % (N, k["rot"][0]),
               "#define RE15_R38K_%s_ROT_Y    %d" % (N, k["rot"][1]),
               "#define RE15_R38K_%s_ROT_Z    %d" % (N, k["rot"][2]),
-              blob("k_r38k_%s_md1" % k["name"], k["md1"]), ""]
+              "#define RE15_R38K_%s_S10000   %d   /* Massstab x 10000 (Sonden/Riegel) */" % (N, int(round(k["s"] * 10000))), ""]
+        M1 += ["/* SCHLUESSEL %s: RE2-MD1 (md5 %s), nur die Ecken @0x44 skaliert (s = %.4f) und verschoben. */"
+               % (N, k["md1_md5"], k["s"]), blob("k_r38k_%s_md1" % k["name"], k["md1"]), ""]
     L += ["/* Aufhebe-Rechteck der Schluessel (beide Varianten derselbe Ort): 1000 x 1000 um (x_Marke, Wand %d + %d),"
           % (WAND_Z, ZONE_VOR_WAND),
           " * rechts vor Slot 12 (x ab %d) beendet. */" % SLOT12_X0,
@@ -414,7 +421,8 @@ def main():
           "#define RE15_R38K_KS_RECT_W   1000",
           "#define RE15_R38K_KS_RECT_D   1000", ""]
     open(ZIEL, "w", newline="\n").write("\n".join(L) + "\n")
-    print("geschrieben:", ZIEL)
+    open(ZIEL_MD1, "w", newline="\n").write("\n".join(M1) + "\n")
+    print("geschrieben:", ZIEL, ZIEL_MD1)
 
 
 if __name__ == "__main__":

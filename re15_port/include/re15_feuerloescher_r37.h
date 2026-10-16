@@ -31,7 +31,8 @@
  *
  * PORT-WAHL (Dossier, Abschnitt "Zu entscheiden"):
  *   Modell (gen/feuerloescher_r37.inc, tools/r37_feuerloescher/feuerloescher_modell.py), Fundort
- *   ROOM1050 Cut 6 an der Wand rechts der Notausgangs-Tuer (zu ROOM1090), Lage des leeren Loeschers in
+ *   seit Runde 38 Spur K ROOM1030 am Pfeiler unter dem Notruf-Monitor (NUTZER-VORGABE fire_extinguisher.bmp,
+ *   include/re15_itemorte_r38.h; bis v0.8.25 ROOM1050 Cut 6 rechts der Notausgangs-Tuer), Lage des leeren Loeschers in
  *   ROOM1090/1091, Untersuchen-Text msg 29 "It's an empty fire extinguisher.", Spind ROOM1000 Slot 3
  *   -> der Raumtext msg 0 "Nothing unusual." (Satzform wie ROOM1000 sub00 @0x00CAA Slot 6).
  *   Leon ROOM1090: der leere Loescher liegt, sobald das Feuer aus ist (3,0x81) UND er weder im Inventar
@@ -54,7 +55,7 @@
 #define RE15_FL37_FEUER_AUS_BIT   0x81   /* ROOM1090 sub06 @0x0271E `22 03 81 01` (dauerhaft, s.o.)         */
 #define RE15_FL37_EINMAL_BIT      0x84   /* ROOM1090 sub06 @0x02722 Set =1, sub03 @0x024CE Set =0           */
 
-/* Prop-Pool-Id: in allen drei Raeumen frei (ROOM1050 nOmodel 2 + Dokument obj 2; ROOM1090/1091
+/* Prop-Pool-Id: in allen drei Raeumen frei (ROOM1030 nOmodel 1 + Lageplan obj 15, Runde 38; ROOM1090/1091
  * nOmodel 4 + Schrot obj 4 = RE15_R35I_SCHROT_OBJ); TIM-Slot RE15_TIM_SLOT_PROP(5) = 9. */
 #define RE15_FL37_OBJ             5
 #define RE15_FL37_PROP_BAND       1      /* wie die Item-Props des Originals (ROOM1010 @0x00930 pc[4])      */
