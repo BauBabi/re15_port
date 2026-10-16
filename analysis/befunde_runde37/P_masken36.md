@@ -670,3 +670,27 @@ Messaufbau = Bildbreite 320 + 1).
 Sektionen, 6478 Masken, **1444 ausgeschlossen (NB1: 1224; davon 72 = ROOM3050/3051 Cut 15, 148 durch das pixelgenaue
 Raster), Abweichungen 0, 126 Zeilen (NB1: 124)**, ohne Stehplatz 2 (belegt, jetzt ganz aus), Raumpaare 15/15 gleich,
 bytegleich 8/8. ROOM30A0/30A1 Cut 0: 25 -> 28 Rechtecke aus (neu 5, 20, 21; 20 = der obere Rahmen-Balken der Trennwand).
+
+### NB2.3 Riegel und Gegenprobe
+
+- `unit_r37_masken36_ausschluss` (Generator, erweitert): "Sektionen ohne Stehplatz sind GANZ ausgeschlossen" + Original-
+  Sektion dieser Cuts NULL (RDT-Bytes); "Figurraster pixelgenau - wo es nicht pixelgenau ist (Kasten breiter als das Bild,
+  Spalte halb hinter der Kamera), kann keine Maske verdecken" (Schranke, NB2.2).
+- `unit_r37_masken36_verdeckung` (ff2a5b87): neue FREI-Szene `f30A0c0k` (-25400,13550) ROOM30A0 Cut 0 = die Lage der
+  Abnahme; "das Figurraster tastet in jeder Szene Kopfoberkante und Fuss ab (mittlere Spalte)" und Gegenprobe "die alte
+  Abtastung (Zeilenmitten) verfehlt in f30A0c0k die Kopfoberkante" (Ausgabe: `Kopfoberkante Bildzeile 77 - Raster neu ja,
+  alte Abtastung nein`). Werkzeug `punkt 30A0 0 -25400 13550`: ungefiltert 549 Punkte ohne Zelle davor verdeckt (Zeilen 77/78
+  von Maske 20, darunter Maske 19 ...), mit Tabelle 0.
+- NEU `integration_r37_masken36_nb2` (tests/integration/test_r37_masken36_nb2.cmake, registriert in probes/r37_masken36.cmake),
+  echte exe:
+  - M1 Cut 15, Leon und Elza: K_A mit Masken + Karte, K_B ohne Masken + Karte, K_C ohne Masken OHNE Karte (= dasselbe Bild
+    ohne Cursor); Zaehlung im ganzen Bild S = Cursor-Punkte (|B-C| > 24), H = davon uebermalt; dazu A/B im ganzen Bild.
+    Verlangt Log `Cut_chg(15)`, `Item 0x46 im Inventar`, `[pri] cut=15 pri_offset=0x84C masks=0`, S > 30, H == 0, A/B 0.
+  - M2 Zufallsweg ROOM30A0 (Seed 37014 der Abnahme), Bild 380 und 400: S > 50, H == 0 (C = Zwangs-Cut 0 ohne Figur).
+  Ergebnis: **Leon Cursor-Punkte 210, uebermalt 0, A/B verschieden 0 | Elza 210 / 0 / 0; Bild 380: 328 / 0, Bild 400:
+  355 / 0 -> OK (292 s)**.
+- **Gegenprobe an der exe:** derselbe Code (master-Merge) mit der Tabelle von fb4be428 (NB1, 124 Zeilen) gebaut
+  (`re15_pc_nb2gegen.exe`, danach Tabelle zurueck und neu gebaut; neue re15_pc.exe bis auf PE-Zeitstempel/Pruefsumme
+  (4 Bytes) gleich der gemessenen): der Riegel FAELLT DURCH - `r37_masken36_nb2[k_a]: Cut 15 zeichnet Masken: '[pri] cut=15
+  pri_offset=0x84C masks=36 fg_atlas=1'`; aus denselben Laeufen: Cursor Leon S=210 **H=60**, Elza S=210 **H=60**, A/B 138 /
+  138; Bild 380 S=328 **H=4**, Bild 400 S=355 **H=7** - genau die Befunde der Abnahme.
