@@ -320,16 +320,23 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
    Tuer-Saaten (ROOM30A1, M1), Saaten nur einer Raumvariante (ROOM5021) und schraege Zellen als Kasten (ROOM4040/4080 ganz zu,
    ROOM3040 Laufsteg nicht verbunden). Uebrig sind ROOM3050/3051 Cut 15, belegt ohne moegliche Figur (Ereignis-Cut,
    Akteur-Cull) - Liste im Riegel, jede weitere faellt durch.
-2. **Saumpunkte:** ROOM3040 Cut 1 (Szene f3040c1): 9 von 222 Figurpunkten am Fussende werden noch von der verbliebenen
-   Kistenmaske uebermalt (vorher 87). Die Lage (-22500,-11400) liegt im Modell nicht im erreichbaren Gitter dieses Cuts
-   (Kiste auf dem Treppenabsatz). ROOM5090 Cut 14 DAVOR (17017,-22665): 2 (Leon) / 5 (Elza) von 505 / 403 Punkten am
-   Rand der Pfeilermaske (§4.2) - die Figur ist dort breiter als das Modellmass 700 (Arm/Haare), das Modell sieht 0.
-   Beide nicht weiter verfolgt; die Riegel-Szenen (§5) haben 0.
+2. **Saumpunkte (Stand Nachbesserung 2, NB2.4):** ROOM3040 Cut 1 (f3040c1) **erledigt** - 9 -> 0 von 222, Cut 1 zeichnet
+   keine Generator-Maske mehr. Kopfoberkante ROOM30A0 Cut 0 (Abnahme 1 M2) **erledigt** - 4/7 -> 0 (pixelgenaues Raster).
+   Bleibt: ROOM5090 Cut 14 DAVOR (17017,-22665) 2 (Leon) / 5 (Elza) Punkte an der Bodenkante unter dem rechten Fuss
+   (Zeilen 114-116, unter der Bodenzeile des Modellkastens; NB1 schrieb faelschlich Arm/Haar). Allgemein: wo die Figur
+   ueber den Modellkasten hinausragt (Schatten am Boden, ausgestreckter Arm/Waffe beim Zielen), sind einzelne Saumpunkte
+   an Maskenkanten moeglich.
 3. **Objekte ohne Kollisionszelle:** ihre Rechtecke fallen weg, sobald sie eine erreichbare Figur verdecken (keine Zelle
    davor) — z.B. Ueberhaenge, Gelaender ohne Zelle. Folge = Zustand vor P (keine Verdeckung), nie eine Fehlverdeckung.
-   944 von 6478 Rechtecken sind ausgeschlossen (15 %).
+   944 von 6478 Rechtecken sind ausgeschlossen (15 %); seit NB1 1224, seit NB2 1444 (22 %).
 4. **Figurmass:** Leon (gemessen 3000 x 700); Elza an der exe in 8 Szenen + 8 weiteren gemessen (§4.2), gleiches Bild.
    Groessere Figuren (z.B. Birkin, Tyrant-artige) sind nicht eigens geprueft.
+   Seit NB2 wird der Kasten pixelgenau abgetastet: er ist eine Huelle (Hoehe = hoechster gemessener Punkt 2999, quer
+   +-350 = gemessene Weite 706) und neben dem Kopf breiter als Leon. Stichprobe NB2.4: 3 von 7 neu ausgeschlossenen
+   Rechtecken uebermalen Leon an der exe wirklich (26/4/1 Punkte), 4 von 7 treffen ihn stehend (rot 0) nicht. Kosten im
+   Modell: Verdeckung HINTER Zellen Stage 3/4/6 -0.25/-1.1/-0.8 %, Stage 5 -11 %. Ein gemessener Umriss je Hoehe (Kopf
+   schmaler als die Schultern, Schrittweite unten) wuerde weniger ausschliessen - dafuer muessten Leon und Elza je Drehung
+   und Haltung (Gehen, Zielen) an der exe vermessen werden; eigener Schritt.
 5. **PSX:** `platform/psx/src/pri_psx.c` kennt keinen eigenen Atlas — Freistellungs-Masken wuerden dort den BSS-Atlas abtasten
    (vorbestehend, PSX-Ziel ungebaut). Der Ausschluss-Haken ist fuer den Gleichlauf in `platform/psx/main.c` eingetragen.
 6. **ROOM1221 (Elza): erledigt.** be2dbd26 (Integration) im Spurbaum uebernommen, ROOM1221.MSK ist weg, Elza nutzt dort die
