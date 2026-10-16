@@ -215,6 +215,13 @@ Spieler unabhaengig): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
   Dreiecke mit NCLIP < 0, RE15_TRILOG) quer ueber Hochhaeusern und Hintergrund; neu sind dort Hochhaeuser/Hintergrund
   zu sehen. Prop 0 ist ein Original-Objekt (ROOM1150 Obj_model_set), das Original zeichnet es durch dieselben
   Zeichner FUN_800254a0/FUN_800256b0 mit demselben Verwurf (§2.1).
+* **Hinweis fuer die Integration mit Spur W (ROOM20A0, Rolladen "direkt vor der Kamera", Nachtrag 1):** die Rolllaeden
+  sind Raum-Objekte (obj 4/5, Typ 3, ROOM20A0.RDT Obj_model_set @0x01998/@0x019BA), die sub01 je Kamera-Schnitt
+  (Cmp 0x0A = Cut) zwischen ihrer Lage und y = -16200 umsetzt (@0x01B22/@0x01B2A, @0x01B7E/@0x01B86, @0x01BDA/@0x01BE2).
+  Der Verwurf aendert ihr Bild: Debug-Sprung 20A0, Cut 2 erzwungen, Bild 200, alt gegen neu 170 Punkte, alle am
+  Rolladen oben links (x 7..135, y 0..54: die dunkle Rueckseiten-Flaeche an der Unterkante faellt weg); Cut 4/10/12
+  0/1/5 Punkte. Spur W misst auf der Basis OHNE Verwurf — ihre Rolladen-Messung ist in der Integration mit diesem
+  Stand zu wiederholen (Messbilder nicht versioniert: re15_port/build/r38_a/w20a0_*).
 * Port-eigene Props (dokumente_r34, feuerloescher_r37, granate_1150, inhalt_r35, irons_tisch_1150, kartenitems_r36,
   schluessel_r36, sicherung_1150) und alle Panel-/Hebetisch-Riegel: §5 (Bild-Riegel ihrer Spuren laufen mit).
   **Fortsetzung 2026-10-16 abends: das reichte NICHT** — der Feuerloescher-Riegel prueft nur das LOG
@@ -300,5 +307,9 @@ Port-eigene Props; Feuerloescher-Modell):
 * Sichtbare Nebenwirkung, wie im Original: auch alle anderen Raum-Objekte zeichnen ihre Rueckseiten nicht mehr. In
   120 Leon-Raeumen aenderten sich nur Einzelpunkte (hoechstens 41); in Irons' Buero (Hebetisch-Sicht) verschwindet ein
   dunkles Band hinter den Papierstapel-Hochhaeusern.
+* Der in Runde 37 neu gebaute Feuerloescher war als einziges Port-Modell "falsch herum" gewickelt und waere mit dem
+  Verwurf von innen gezeichnet worden; sein Modell ist neu erzeugt (nur die Eckenreihenfolge, Form/Textur gleich) und
+  sieht wieder genau so aus wie vorher (§4.5).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung, keine Entscheidungsfrage. Neue Engine-Datei
-  `engine/src/nclip_r38.c` (Android: release/build_android.sh verwirft den GLOB-Cache bereits).
+  `engine/src/nclip_r38.c` (Android: release/build_android.sh verwirft den GLOB-Cache bereits); geaendert
+  `engine/src/gen/feuerloescher_r37.inc` (mit tools/r37_feuerloescher/feuerloescher_modell.py erzeugt).
