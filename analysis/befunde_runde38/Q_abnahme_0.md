@@ -4,7 +4,7 @@ Pruefer: Abnahme-Agent 0 (2026-10-16). Baum `.claude/worktrees/r38_kleinkram`, Z
 Basis 1bcbd0ff (= merge-base mit master; `git diff master...HEAD`). Massgeblich: `AUFTRAG.md` (Wortlaut), `VERTRAG.md`.
 Nichts aus dem Bau-Dossier wird ohne eigene Messung uebernommen.
 
-STAND: in Arbeit (fortlaufend geschrieben).
+STAND: in Arbeit (fortlaufend geschrieben). Sitzung 2 (21:08): Fortsetzung — Abschnitte 9 ff.
 
 ## 0. Bau
 
@@ -215,3 +215,68 @@ P3 msg 15 @0x00FEE).
   Raum-Id 0x30E0 gebunden und trifft 30E1 nicht (sonst waere Elzas Dialog zerstoert).
 * Sprachdatei: synchro/STAGE1/room1151 existiert nicht -> Text 20 bleibt stumm wie vorher; die 1150-Stimme main02.wav
   ("I'll be fine") ist an Raum 1150 gebunden (audio_pc.c sucht `room%04X` exakt) und kann in 1151 nicht spielen.
+
+## 9. Fortsetzung Sitzung 2 (2026-10-16 ab 21:08)
+
+### 9.1 Stand des Baus erneut geprueft
+* Kopf 33ecd643 (nur dieser Bericht) ueber 7271cf80; `git status` sauber; `bash re15_port/tools/local_build.sh build` ->
+  `ninja: no work to do.` / `LOCAL-BUILD-OK (build)` — die exe (17:03) ist der Code-Stand 7271cf80.
+* Der breite Regressionslauf der Sitzung 1 (141 Tests, `ctest_breit_q0.log` im Pruefer-Scratchpad) ist bei 91/141 abgebrochen
+  (Sitzungsende; 91 Passed, 0 Failed, zuletzt gestartet integration_r35_werfer) -> in Sitzung 2 komplett neu gefahren (9.3).
+
+### 9.2 RE-Stichproben, in Sitzung 2 noch einmal SELBST disassembliert
+* RE2 (info/re2leon/PSX.EXE, re2_disasm.py): `800263fc lbu v0,-3256(v0)` / `80026404 bne v0,zero,0x80026540`;
+  `80026528 beq v1,v0,0x80026738` / `8002652c lui a0,0x406` / `80026530 jal 0x8005ba28` / `80026534 addu a1,zero,zero`.
+  Kommandoleiste: `8006a8a4 andi v0,v0,0x1000` (Bestaetigen), `8006a8c0 slti v0,v1,3` / `8006a8c4 bne v0,zero,0x8006a8e0`
+  mit `8006a8c8 lui a0,0x406` (Reiter 0..2 -> Satz 6), `8006a8cc addiu v0,zero,3` / `8006a8d0 beq v1,v0,0x8006a910` mit
+  `8006a8d4 lui a0,0x405` -> `8006a910 sb zero,1(s0)` / `8006a918 jal 0x8005ba28` (EXIT -> Satz 5 + Zustand 0);
+  `8006a928 andi v0,v0,0x2000` / `8006a930 lui a0,0x405` / `8006a934 jal` / `8006a93c sb zero,1(s0)` (Abbruch);
+  `8006a94c andi v0,v0,0x4000` / `8006a968 lui a0,0x405` / `8006a96c jal` / `8006a978 sb zero,0x800d5bf1` (Statustaste;
+  s0 = 0x800d5bf0 @0x8006a814-18, also derselbe Zustandsbyte 0x800d5bf1; 0x800d5c06 wird @0x8006a800 in jedem Bild dieses
+  Zustands auf 1 gesetzt). Sprungziel `8005ba28`: `8005ba30 srl t1,a0,24` (Bank), `8005ba7c srl v0,a0,16` /
+  `8005ba80 andi s7,v0,0xff` (Satz), `8005ba8c lw a1,0x800dbb78(bank*4)` — Se_on(Bank 4, Satz 6 bzw. 5). Bestaetigt.
+* RE1.5 (info/Re1.5/PSX.EXE, re15_disasm.py): `80042f34 addiu v0,s2,-1` / `80042f3c sh v0,0x800b0fd0` VOR `80042f48 lbu
+  v0,0(s0)`; `8003f040 lw v0,g_pauseflags` / `8003f044 lui v1,0x200` / `8003f04c bne v0,zero,0x8003f090`; Record
+  `bytes 0x80074e50` = `64 00 00 00 a8 4c 07 80 02 01 00 00`, Index `80049788 sll v0,a0,1` / `8004978c addu` / `80049790 sll
+  v0,v0,2` / `80049798 addiu at,at,0x4da8` -> 0x80074da8 + 0x0E*12 = 0x80074e50. Bestaetigt.
+* RDT-Anker (re15_port/shared_assets/PSX, Python): ROOM1151 @0x0D92 `2c 02 05 31 00 00 1c a8`, @0x0E9E `23 00 00 00 02 00 ..`,
+  @0x0EA4 `21 03 9d 00`, @0x0EA8 `22 03 9d 01`, @0x0EAC `04 ff 18 03`, @0x0EEC `3f 01 0b 00`, @0x0EF4 `29 07`, @0x0EFA
+  `2b 02 00 00 2e 02 00 00`, @0x0F02/@0x0F0A `3f 00 06 00 09 0a 32 00`, @0x0F12 `3f 00 03 00 43 00 04 00`, @0x0F16
+  `43 00 04 00 09 0a 14 00`, @0x0F72 `01 00 22 02 00 01 22 02`; ROOM30E0 @0x0A52 `06 00 64 00`, @0x0A56 `21 03 9c 00`,
+  @0x0A5A `2c 03 03 31 00 00 e0 98 ec 96 e8 03 e8 03 ff 00 18 09 00 00`, @0x0FE0 `46 03 ..`, @0x0FEE `2b 0f ff ff 02 00 29 02`,
+  @0x0FFA `22 03 9c 01 22 02 07 00` — jede Signatur in k_anker[] byte-gleich.
+
+### 9.3 Code-Pfade gegengelesen (Nebenwirkungen P1)
+* `tab_select` Reiter 2 = EXIT (`case 2: /* EXIT @0x800499b4-c4 */` -> s_phase = 2) -> der Haken `tab == 2` trifft genau EXIT.
+* Item-Box schliesst ueber Unterzustand 4 (`re15_itembox_screen_tick`), NICHT ueber tab_select -> kein neuer Schliess-Ton
+  an der Box; Kartenhinweis schliesst ueber seinen eigenen Zweig (`se4(5)` + s_phase 2, RE2 @0x8006F890-94) -> kein
+  Doppel-Ton; `close_phase` spielt selbst keinen Ton (kein se4 in close_phase) -> EXIT/Abbruch je genau EIN Satz 5.
+* Box/Dokument/Kartenhinweis (`re15_menu_request_box/_doc/_map_hint`) setzen s_stage selbst und laufen nicht durch
+  `re15_menu_start_poll` -> kein Oeffnen-Ton, wie RE2 @0x80026404.
+* Debug-Umschalter `re15_menu_toggle` behaelt sein se4(6) (nur Env-Messhaken) — unveraendert.
+
+### 9.4 P3 UEBER DEN ECHTEN WEG (Tuer ROOM3070 -> ROOM30E0) + Nebenwirkung "ausruesten und feuern"
+Sitzung 1 hatte P3 per Spielstand ROOM30E0 + CONTINUE gemessen; hier zusaetzlich durch die Tuer. Die Anker werden im
+gemeinsamen Raumstart armiert (scd_room_setup.c:368 `scd_register_room_events` -> `scd_register_current_rdt` ->
+`re15_kleinkram_r38_raum_scan`), also unabhaengig vom Eintrittsweg — gemessen trotzdem.
+* Tuer: ROOM3070 Slot 1 (Door_aot_set @0x03322 `3b 01 02 31 .. 44 cb 0c b3 98 08 b0 04 c4 9b 00 00 8e a9 80 01 02 0e 01`,
+  Rechteck (-13500,-19700,2200,1200), Ziel Stage 3 Raum 0x0E, Ankunft (-25660,-22130) Gier 384, Kamera 1).
+  Leon-Spielstand ROOM3070 (-12400,-18140) Gier 1024 (`probe_r36_elza_karte re15_card.mcr 3070 -12400 -18140 1024`),
+  CONTINUE, Messkopie `re15_pc_abn0q.exe` (md5 763443de.. == re15_pc.exe).
+* Eingabe (BASIS spiel, START 60; das Skript beginnt in jedem Raum neu bei Tick 0):
+  `A0.1,W1,R0.1667,U2.5,W0.5,R0.4,U0.6,W0.5,A0.1,W0.5,L0.8,W0.5,A0.1,W1,R0.13,W0.5,A0.1,W3,A0.1,W3,S0.1,W2`
+  -> debug.log `[aot] DOOR FIRE slot=1 ... spawn=(-25660,0,-22130)`, `[room] PC loaded room30e0.rdt`, `[r38q] F60 ROOM30E0:
+  2 Anker armiert`, Gang zum Panel (state.log F181 (-24310,-26390) -> F221 (-25086,-26444) Gier 2016), Panel cam 2 (F241),
+  Zelle 5 cam 3 (F291), **`F343 ROOM30E0 sub04 @0x00FEE Message_on 15 -> Aufnahme-Modal Item 0x0E x100`**, **`F436
+  Flammenwerfer genommen: Zellen 0 -> 2`**, cam 2 (F441) / cam 1 (F471), `F528 Inventar-Ton Satz 6 (Oeffnen)`.
+  state.log: **0 Bilder mit `id=15`**, ueberhaupt kein `msg(a=1 ...)`.
+  Bilder (Framedump 60..640/10, `q0b/p3_tuer3/sheet_p3_tuer.png` im Pruefer-Scratchpad): F300 offener Spind mit Fadenkreuz
+  auf dem Flammenwerfer, F350 ITPS-Bild faehrt ein, F380/F420 "Will you take the Flamethr..." ueber dem Spind, F440 Cut 2
+  (Spind zu), F470 Leon im Raum, F560/F630 Statusschirm: Item list = Flammenwerfer "100".
+* Nebenwirkung Ausruesten/Feuern (`q0b/p3_tuer4_equip`, gleiche Eingabe + `A0.1,W1,A0.1,W1,A0.1,W1.5,S0.1,W2.5,M0.5,MA1.5,
+  W1`, RE15_WAFFEN_LOG): ITEM -> Flammenwerfer -> EQUIP -> debug.log `[equip] W-bank -> W0E (Clips 16, Rueckstoss-Clip7
+  fc=21)`, wf.log `w=14` ab F722, Feuern 45 Bilder `pad=8800` mit 15 Strahl-Spawns `RE2SPAWN a0=031d1200` und 5 `re2arms`-
+  Tonzeilen; Treibstoff im state.log `mg=100 -> 98 -> 96 -> 94 -> 92 -> 90` (2 je 8 Bilder, wie integration_r35_werfer
+  w14); kein Absturz, EXIT_AT 940 erreicht, exit 0. Bild `q0b/p3_tuer4_equip/sheet_equip_fire.png`: Equip Arms =
+  Flammenwerfer, Name "Flamethrower", Leon zielt mit der Waffe.
+* -> P3 haelt auch ueber die Tuer; der aufgenommene Flammenwerfer ist eine voll benutzbare Waffe.
