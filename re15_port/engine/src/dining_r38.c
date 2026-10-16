@@ -18,6 +18,7 @@
 #include "re15_lock_se.h"
 #include "re15_audio.h"
 #include "re15_item_discard.h"
+#include "re15_engine.h"           /* g_engine.frame_count (Messschrieb log_f) */
 #include "re15_szenenleon_r36.h"   /* re15_szl_tuerton: Tonteil DOOR1A (die Dachtuer 1141 spielt DOOR1A, tuer_zuordnung.inc) */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -46,7 +47,7 @@ static const uint8_t k_evt_end[2] = { 0x01, 0x00 };
 static void log_f(const char *s)
 {
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[dining] %s\n", s);
+    fprintf(stderr, "[dining] F%u %s\n", (unsigned)g_engine.frame_count, s);   /* Spielbild fuer den Messschrieb */
 #else
     (void)s;
 #endif

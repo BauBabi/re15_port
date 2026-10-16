@@ -21,8 +21,10 @@
 #include "re15_audio.h"
 #include "re15_vab.h"
 #include "re15_dining_r38.h"
+#include "re15_engine.h"
 #include "asset_root_pc.h"
 
+extern long re15_audio_cap_tick(void);   /* audio_pc.c (Runde 38 Spur F): Mitschnitt-Takt */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);   /* audio_pc.c */
 
@@ -190,9 +192,10 @@ static void spielen(int bank, int satz)
     }
     if (b->state != 1 || satz < 0 || satz >= b->edt_count) return;
     s_gespielt[k]++;
-    if (getenv("RE15_SE_DEBUG"))
-        fprintf(stderr, "[se] Se_on bank=0x%02X id=%d -> Runde 38 Spur F (%s)\n", bank, satz,
-                k == 0 ? "ROOM1131-snd0 Rolladen" : k == 1 ? "RE2 ROOM1060 Klopfen" : "john_help.wav");
+    if (getenv("RE15_SE_DEBUG"))   /* Messschrieb: Spielbild + Mitschnitt-Takt (RE15_AUDIO_CAP_SYNC, Offset = Takt * 1470) */
+        fprintf(stderr, "[se] Se_on bank=0x%02X id=%d -> Runde 38 Spur F (%s) F%u tick=%ld\n", bank, satz,
+                k == 0 ? "ROOM1131-snd0 Rolladen" : k == 1 ? "RE2 ROOM1060 Klopfen" : "john_help.wav",
+                (unsigned)g_engine.frame_count, re15_audio_cap_tick());
     re15_audio_se_play_bank(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
 }
 

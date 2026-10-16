@@ -273,6 +273,7 @@ static FILE *s_audio_cap = NULL;   /* RE15_AUDIO_CAP=<raw>: dump mixed output (v
 static int   s_audio_cap_sync = 0; /* RE15_AUDIO_CAP_SYNC: frame-locked render, no SDL device */
 static long  s_cap_ticks      = 0; /* gerenderte Spielframes in diesem Modus (== PCM/1470)     */
 static long  s_cap_limit      = 0; /* RE15_AUDIO_CAP_FRAMES: danach Datei schliessen + exit(0)  */
+long re15_audio_cap_tick(void) { return s_cap_ticks; }   /* Runde 38 Spur F: Mitschnitt-Takt im Ton-Messschrieb (dining_r38_pc.c) */
 static int   s_audio_mono = 0;     /* OPTIONS SOUND: 1 = mono (collapse final mix), 0 = stereo */
 void re15_audio_set_mono(int mono) { s_audio_mono = mono ? 1 : 0; }
 
