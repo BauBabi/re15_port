@@ -71,8 +71,9 @@ pc[8..9] = 0) laeuft durch FUN_800254a0/FUN_800256b0. Selbst disassembliert (`re
 | FUN_80023098 GT4 flach | | @0x80023168 | @0x80023184 | @0x80023190 `bgez v0,0x800231b8` |
 
 NCLIP (psx-spx GTE "NCLIP": MAC0 = SX0*SY1+SX1*SY2+SX2*SY0-SX0*SY2-SX1*SY0-SX2*SY1) auf den ersten drei Ecken des
-Flaechensatzes (Dreieck v0,v1,v2; Viereck ebenfalls v0,v1,v2 — RTPT @0x80025764 laedt Satz+2/+6/+10, die vierte
-Ecke folgt per RTPS). Verworfen wird STRENG kleiner 0; = 0 wird gezeichnet.
+Flaechensatzes (Dreieck v0,v1,v2: `lh` Satz+2/+6/+10 @0x800254f4/@0x800254f8/@0x80025508 -> RTPT @0x8002554c; Viereck
+ebenfalls v0,v1,v2: `lh` Satz+2/+6/+10 @0x8002570c/@0x80025710/@0x80025720 -> lwc2 @0x80025744..58 -> RTPT @0x80025764,
+die vierte Ecke folgt per RTPS). Verworfen wird STRENG kleiner 0; = 0 wird gezeichnet.
 Zusatz (nicht geaendert, nur festgehalten): OTZ>>6 == 0 -> nicht in die OT (@0x80025654/58 `sra v0,v1,6` /
 `beq v0,zero`).
 
