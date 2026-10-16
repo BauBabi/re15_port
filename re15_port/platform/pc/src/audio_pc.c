@@ -3713,6 +3713,8 @@ void re15_audio_tick(void)
                  * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
                 if (re15_cut10f0_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
                 if (evt.bank == RE15_SZL_SE_BANK) { re2_schloss_se((int)evt.sample_id); break; }   /* Runde 36 Spur J */
+                { extern int re15_dining_r38_se_on(unsigned, int);   /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
+                  if (re15_dining_r38_se_on((unsigned)evt.bank, (int)evt.sample_id)) break; }
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);

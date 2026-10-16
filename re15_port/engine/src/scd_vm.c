@@ -65,6 +65,7 @@
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
 #include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
+#include "re15_dining_r38.h" /* Runde 38 Spur F: Programme 1140/1141/1021, Tuer 1131, Phase H 1141 (dining_r38.c) */
 
 scd_vm_t g_scd;
 
@@ -652,6 +653,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_szl_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 36 Spur J: 22/23 in ROOM11B0 */
     if (!pc) pc = re15_schluessel_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur Q: 11B0 Ereignis 25 */
     if (!pc) pc = re15_kartenitems_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur N: Karte, Ereignis 28 */
+    if (!pc) pc = re15_dining_r38_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 38 Spur F: 1140/3, 1141/5+6, 1021/6, 1131/29 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -1203,6 +1205,8 @@ static int op_evt_exec(scd_thread_t *t)
                 return 1;       /* PC steht bereits hinter dem Opcode */
     }
     const uint8_t *target_pc = s_current_rdt->sub_scd[sub_id];
+    /* Runde 38 Spur F: ROOM1141 sub00 @0x00B02 Evt_exec sub02 -> Klopf-Schleife in Phase H (re15_dining_r38.h). */
+    target_pc = re15_dining_r38_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
