@@ -108,22 +108,110 @@ RE15_DEBUG_JUMP=1170@250 (laedt ROOM1171). sub07 spawnt John (0x49) + 2 Kraehen 
   => Im Original unterscheidet genau das die Faelle: freie Gegner greifen nur ueber die "Spieler angreifbar"-Tore an
   (2.2), der Szenen-Griff in 1171 laeuft in einem Skript-Zustand (+0x4 = 4) ohne Tor.
 
+### 2.4 "Kann sich nicht bewegen" auch ohne (2,7): der Plc-Executor
+- Plc_motion @0x80041ba4 `ori v1,zero,0x4` / @0x80041bb0 `sb v1,4(v0)` und Plc_dest @0x80041c10 `ori v0,zero,0x4` /
+  @0x80041c14 `sb v0,4(a1)` setzen Spieler+0x4 (DAT_800aca58) = 4; erst Plc_ret @0x80041f8c `ori v1,zero,0x1` /
+  @0x80041f90 `sb v1,4(v0)` gibt ihn frei. Der Spieler-Dispatcher FUN_80031c44 (@0x80031c8c `lbu v1,-13736(v1)` /
+  @0x80031cac `lw v0,0(at)` / @0x80031cb4 `jalr v0`) springt dann ueber @0x80073f90[4] = 0x80030660 (Executor) statt
+  [1] = 0x80031de8 (Pad-Zweig).
+- Zensus (alle 240 RDTs, tools/scd_dump_room.py): 15 Subs fuehren den Spieler (Work_set(1,0) + Plc_motion/Plc_dest)
+  OHNE Set(2,7)/(1,27) in derselben Sub, z.B. **ROOM1230 sub21** (Hocke @0x014B4 `3f 01 0b 00`, Plc_ret @0x014CE) —
+  im Hunderaum 1230. Auch dort kann sich Leon nicht bewegen.
+
+### 2.5 Zensus "Szene haelt den Spieler" x Gegner (wer ist betroffen)
+Raeume mit Set(2,7)=1-Fenster UND Gegner-Spawns (Typ < 0x40), Auszug: Zombies 0x10/0x11/0x16/0x18 (1011, 1021, 1030,
+1040, 1090, 10D0, 1100, 1140, 11E0, 11F0, 1200, 2000, 2020, 3000, 30E0, 5060), Hunde 0x20 (1190, 11D0, 1230, 3060),
+Kraehen 0x21 (1170 frei, 1171 Skript), Gorilla 0x27 (1141, 11C0), Spinne 0x25 (2030, 2050), Kakerlake 0x29 (3040,
+4000, 5031), Birkin 0x30/0x36 (3070, 3080, 5080, 5090), Gitterarm 0x1A (1211), 0x2b (4001), 0x2d (4031), 0x24 (20B0).
+Darum gilt der Schutz fuer JEDEN Gegner im freien Gehirn, nicht nur fuer Hunde.
+
 ## 3. Umsetzung
 
-(offen)
+Neue Dateien: `re15_port/engine/src/szenenschutz_r38.c`, `re15_port/include/re15_szenenschutz_r38.h`.
+Haken (gemeinsame Dateien, je 1-2 Zeilen, Kommentar "Runde 38 Spur B"):
+- `enemy_ai_common.c`: `#include`; `re15_enemy_ai_run_all` Kopf `re15_szenenschutz_durchlauf_beginn()`, je aktivem
+  Akteur `re15_szenenschutz_gegner(s)` (direkt nach `if (!e->active) continue;`), nach der Schleife
+  `re15_szenenschutz_durchlauf_ende()`; `re15_player_is_grabbed()` `|| re15_szenenschutz_sicht()`.
+- `enemy_ai_re2_dog.c`: `#include`; Sperrzeit-Tor in `re2d_attack_decide` (nach dem hp<0-Test), am STALK-Commit
+  (@0x801009C8) und am RUN-P3-Commit (@0x80101174-7C); Abzug `re15_r38_hund_sperrzeit_takt(e)` im ACTIVE-Schwanz
+  (hinter dem Sub-Dispatch, wie @0x8010dd5c hinter @0x8010dcf0).
 
-## 4. Messung nachher
+(A) SZENENSCHUTZ — NUTZER-VORGABE, Form aus dem Original (2.1-2.4):
+- Halten = `g_scd.player_mode == 2` (einziger Schreiber platform/pc/main.c cine_active = (1,27)||(2,7)) ODER
+  Spieler+0x4 == 4 (Plc-Executor, 2.4).
+- Waehrend des Ticks eines Gegners im FREIEN Gehirn (+0x4 == 1, Typ < 0x40, nicht Kraehe mit Skript-Marke grid&0x40)
+  sieht er den Spieler durch die Original-Tore als nicht angreifbar: Spieler+0x93 Bit 0 (RE1.5, 2.2) und
+  PL+0x1D3&0x80 (RE2, Port `re15_player_is_grabbed`). Danach steht wieder der echte Wert; Szenen-Rollen (+0x4 != 1)
+  ticken mit dem echten Wert, ihr Treffer wird uebernommen.
+- Sicherheitsnetz: zieht ein geschuetzter Tick trotzdem HP ab (ungatterter Pfad), gibt das Modul sie zurueck und
+  protokolliert `[szenenschutz] F.. Treffer abgefangen ...`; eine Aenderung der Opfer-FSM wird als WARNUNG protokolliert.
+  Protokoll-Flanken `[szenenschutz] F.. an` / `aus (N geschuetzte Gegner-Ticks)` stehen im debug.log.
+- Konstanten: keine Zahl — nur die Original-Tore (Bit 0 von +0x93, Bit 0x80 von +0x1D3), Zustandswert 1 (ACTIVE,
+  Wurzeltabellen [1]), Executor 4 (@0x80041bb0/@0x80041c14), Skript-Marke 0x40 (@0x80112408).
 
-(offen)
+(B) FREIGABE-SPERRZEIT 1190 — byte-true Uebernahme: der Port fuehrte den RE1.5-Sprung-Ausgang auch unter dem RE2-Gehirn
+(`dog_atk_cd = 0x78`, enemy_ai_common.c:7591), las den Wert dort aber nie. Jetzt: kein Angriffs-Commit solange
+`dog_atk_cd != 0` (Tor @0x8010e578-0x8010e580), Abzug je ACTIVE-Bild (@0x8010dd5c-0x8010dd70). Konstante 0x78 bleibt
+die vorhandene Zeile @0x801115e8-ec. Nur der 1190/1191-Sprung-Ausgang schreibt den Wert unter dem RE2-Gehirn (RE2-INIT
+fasst ihn nicht an, Raumaufbau nullt alle Akteure, scd_room_setup.c memset).
+
+Folgeanpassung eines fremden Riegels: `tests/integration/test_r36_kleidung_hundeweg.cmake` (Runde 36 Spur B) mass die
+Bisse 13 Bilder nach dem Wecken; mit der Sperrzeit beissen die Hunde 120 Bilder nach der Landung (gemessen
+F664/F674/F685 statt F582-F587). Save-Haken 600 -> 700 (gleicher Stand: drei Bisse, hp 40); Biss 2 trifft jetzt Panel 5
+(vorn, Tabelle @0x80121014 dir 0 -> 0x05) statt Panel 4 -> Laeufe 2/3 drehen R4 statt L4, Kasten x150..200/y70..150,
+Schwelle 25 (gemessen 50 Pixel). Der Zweck des Riegels (zwei Stempel je 20-HP-Biss, Decal vor Danger, Spielstand traegt
+es, CONTINUE zeigt es) bleibt unveraendert.
+
+## 4. Messung nachher (gleiche Rezepte wie 1.)
+
+| Lauf | Szene (pm=2) | HP-Verlust in der Szene | Hund st1/3 in der Szene | erster Biss | vorher |
+|---|---|---|---|---|---|
+| n1190a (RE2) | F521..F738 | 0 | 0 (vorher Hund 1 F706-F738) | **F805** (66 nach Szenenende) | F752 (13 danach) |
+| n11d0c/d (RE2) | F331..F524 | 0 | 0 (vorher Hund 4 F514-F524) | **F550** (25 nach Freigabe) | F528 (3 danach) |
+| n1190_re15 | F521..F738 | 0 | — | F850 | F850 (state.log 1100 Zeilen bytegleich) |
+| n11d0_re15 | F331..F524 | 0 | — | kein Biss | kein Biss (bytegleich) |
+| n1171a (RE2, Elza) | ab F1 | 0 | — | — | state.log ab Raumeintritt **bytegleich** (md5) |
+| n1171_re15 (Elza) | ab F1 | Kraehen-Griff F101 hp 92, gr=1 | — | — | **bytegleich** (erste 590 Bilder md5) |
+| n1170crow (Leon sub14) | F301..F731 | 0 | — | — | 3017 geschuetzte Kraehen-Ticks, keine im Angriff |
+
+1190 Sperrzeit im Detail (n1190a): Hund 1 landet F675 -> erster Commit F796 (= +121), Hund 3 landet F739 -> F860
+(+121); RE1.5-Referenz (m1190_re15) erster Biss F850.
 
 ## 5. Tests
 
-(offen)
+- `unit_r38_szenenschutz` (neu, tests/unit/test_r38_szenenschutz.c, Registrierung tests/unit/probes/r38_szenenschutz.cmake):
+  T1 Praedikat (Halten = pm 2 oder Executor 4; frei/Skript/NPC/Skript-Kraehe), T2 Haken-Folge + Sicherheitsnetz,
+  T3 ROOM1190 RE2-Hund Sperrzeit (Landung schreibt 120, Commit 121 Bilder danach; NEGATIVKONTROLLE ohne Tor: 2 Bilder
+  danach = Messlauf F741), T4/T5 gehalten 400 Bilder kein Treffer und 0 Angriffs-Bilder (NEGATIVKONTROLLE ohne Schutz:
+  RE2 64 Angriffs-Bilder + 2 Bisse hp 60, RE1.5 49 Biss-Bilder), danach Biss; T4b Spieler im Plc-Executor ohne (2,7)
+  kein Angriff, nach Plc_ret Biss; T6 Gegenprobe ROOM1171 Szenen-Kraehe greift den gehaltenen Spieler (Bild 95, hp 92);
+  T7 Zombie 0x10 RE2 + RE1.5 frei greift an (Bild 23 / 5), gehalten 600 Bilder nicht.
+- `integration_r38_szenenschutz` (neu, tests/integration/test_r38_szenenschutz.cmake): echte exe, Laeufe 1190 / 11D0
+  (Leon, Standard-KI) / 1171 (Elza, RE1.5-KI) / 1171s (Elza, Standard-KI). Gemessen 2x reproduzierbar:
+  `[1190] Szene F521..F738 hp-Verlust=0 Angriffs-Bilder=0 erster Biss F805; [szenenschutz] F739 aus (94 geschuetzte
+  Gegner-Ticks)`, `[11D0] Szene F331..F524 hp-Verlust=0 Angriffs-Bilder=0 erster Biss F550`, `[1171] Szenen-Kraehe
+  greift bei F101 (hp 92, pm=2)`, `[1171s] kein geschuetzter Akteur in ROOM1171`. Gegen den alten Stand schluege der
+  Riegel an (1190 Angriffs-Bilder F706-F738 und Abstand 13 < 30; 11D0 Angriffs-Bilder F514-F524).
+- angepasst: `integration_r36_kleidung_hundeweg` (s. 3.).
+
+(ctest-Summenzeilen: Abschnitt 5.1 unten.)
 
 ## 6. OFFEN
 
-(offen)
+- Die RE2-Kraehe (Standard-KI) hat am Strike-/Griff-Commit KEIN Spieler-Tor (EMOVL21_S0.BIN liest +0x1D3 nur am
+  eigenen Akteur, @0x80100160/@0x80100fbc); eine freie Kraehe an einem gehaltenen Spieler wuerde nur vom
+  Sicherheitsnetz (HP zurueck) gebremst, ein Griff wuerde als WARNUNG protokolliert. Im ausgelieferten Spiel trifft das
+  nie zu: freie Kraehen gibt es nur in 1170 (sub14 teleportiert Leon 23000+ weg, n1170crow), 10C0/1120 haben keine
+  (2,7)-Fenster (Zensus 2.5). Kein gemessener Defekt -> kein Eingriff.
+- Die Szenen-Kraehe 1171 haengt (Szene wartet auf (5,28)) und ihr HOVER-Griff traegt im Port ein +0x93-Tor und -8 HP,
+  die das Original @0x80115248-0x801152c4 nicht hat — Spur I (heliport1171). Dieser Spur aendert daran nichts
+  (state.log bytegleich), der Szenenschutz nimmt die Rolle per Zustand 4 / grid 0x40 aus.
 
 ## 7. Fuer den Nutzer
 
-(offen)
+- Keine neuen Assets, keine Sprachdateien, keine Bank-/Message-Ids.
+- Verhalten: Solange eine Szene Leon festhaelt (Letterbox/Skript oder eine Skript-Bewegung wie Hocken), greifen
+  Gegner ihn nicht an — sie laufen, kreisen oder knurren. Ist der Angriff selbst Teil der Szene (Elza ROOM1170: die
+  Kraehe packt Elza, John schiesst), bleibt er. Nach der Szene greifen die Gegner normal an; die Zwingerhunde in
+  ROOM1190 beissen wie im Original erst 4 Sekunden (120 Bilder) nach ihrer Landung.
+- Im debug.log zeigen `[szenenschutz] ... an/aus` die geschuetzten Fenster.
