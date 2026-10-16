@@ -325,3 +325,55 @@ Bild des Clip-Endes und setzt erst das NAECHSTE Bild einen neuen Clip, steht im 
 das Original zeigt dort (Clip, fc-1) (FUN_8001f3bc rechnet die Pose vor dem Hochzaehlen). Betroffen in spiderman_r38.c:
 Austritt P2 -> ACTIVE (M1), Griff 1 P1 -> P2 und P5 -> P6, Griff 2 P1 -> P2 und P5 -> P6 (M2). Nicht betroffen: Schleifen-
 Clips (Halten P3, Gehen) — dort ist (fc-1, 0, 1, ...) auch im Original die Folge; der Kollaps (haelt schon).
+
+### Umsetzung Nachbesserung 1 (Commit 2029729b)
+- `spiderman_r38.c` `sm_anim_halten` (an den Dateianfang verlegt, Kopf mit den FUN_8001f3bc-Adressen): Clip-Ende mit
+  Phasenwechsel haelt anim_frame = fc-1 fuer das Wechselbild. Eingesetzt an:
+  - M1: Austritt P2 -> ACTIVE (anim_set @0x8011557C, 0x101 @0x80115588-98). Das naechste Bild setzt B[1]/B[2] P0
+    +0x95 = 0 / +0x8F = 7 (@0x80112164/@0x80112184 bzw. @0x80112300/@0x80112320) — Ueberblendung aus Bild 34.
+  - M2 Griff 1: P0/P1 (`+0x6 += fertig` @0x80112D8C-9C / @0x80113268-78) und P5 -> P6 (P6 ohne anim_set
+    @0x80112DA0 / @0x8011327C). P2 setzt `anim_frame = 0`: das Original schreibt in P2 kein +0x95
+    (@0x80112B9C-D8 / @0x80113094-D0), es steht auf dem Wrap-Wert 0 (`sb zero,149` @0x8001f63c); der Port haelt fc-1
+    nur fuer das Wechselbild. Ohne diese Zeile begaenne der Halte-Clip bei Bild 15 (Mutationsprobe 2).
+  - M2 Griff 2: P0/P1 (@0x80114400-10), P2 `anim_frame = 0` (kein +0x95 @0x801142C8-F4), P5 -> P6 (`jr ra` @0x80114484
+    ohne `jal`).
+  - Kollaps B[8]/B[10]: hielt schon (unveraendert).
+- Gleiche Fehlerklasse direkt nach dem Austritt — **B[2] Bruellen** (0x80112294, erste Handlung nach dem Austritt, A[1]
+  0x80112024 -> +0x5 = 2; A[2] 0x8011228C = `jr ra`): der alte Port-Fall (enemy_ai_common.c case 2) schaltete schon im
+  Fertig-Bild auf +0x5 = 3 und zeigte Clip 2 Bild 0 (Riegel: Wurzel 729 Einheiten, Knochenwinkel bis 1175/4096 = 103 Grad
+  gegen Bild 49). Original: P1 @0x80112324 SE 1 bei +0x95 == 0x14 (@0x80112330-44), anim_set @0x80112360 (a2 = +0x7),
+  `+0x6 += fertig` @0x80112374-84; P2 @0x80112390 im NAECHSTEN Bild ohne anim_set: +0x7 == 0 -> +0x5 = 3 @0x801123C4,
+  +0x6 = 0 @0x801123D4, sonst +0x5 = +0x6 = +0x7 = 0 (@0x801123A0-C0). Neu `re15_r38_sm_bruellen` (spiderman_r38.c),
+  Haken in enemy_ai_common.c case 2 (eine Zeile statt vier, "Runde 38 Spur T").
+- Keine neue Konstante: fc kommt aus der Bank (re15_birkin_fc), 0 ist der Wrap-Wert @0x8001f63c, alle Clip-/Phasen-
+  Werte waren schon belegt.
+
+### Messung nachher (exe, Stand 2029729b, gleiche Laeufe wie vorher)
+`wechsel.py` (Scratchpad) listet je Zustandswechsel des Spiderman-Slots den gezeichneten Clip/Bild aus RE15_ANIM_TRACE.
+- **ROOM5070 Leon** (Lauf wie "vorher"): anim.log `375 ... 29 35 34 34`, **`376 ... 29 35 34 34`** (vorher `0 0`),
+  `377 ... 2 50 1 1`. state.log F376 `[1 t=2b st=1 ss1=1 ss2=0 mo=29 af=34]`. Framedump F374-F377: der Spiderman bleibt
+  in allen vier Bildern ueber dem Gitter sichtbar (`T_bilder/nb1_nach_5070_F374-377.png`, vorher F376 leer).
+- **ROOM4001 Elza** (Abnahme-Lauf 3.1: Aot 5 betreten, stehen bleiben, `RE15_EXIT_AT=900#4001`), Slot 4:
+  F253 `[4/1/2]->[1/1/0]` gezeichnet (0x1D, 34) [vorher F253 Bild 0]; F303 Bruellen fertig (2, 49), F304 P2 -> +0x5 = 3
+  weiter (2, 49); F712 Griff hinten P1 -> P2 gezeichnet (0x12, 33) [vorher F711 `mo=18 af=0`]; F713 Halte-Clip
+  (0x13, 1); F848 Kollaps-Ende (0x15, 84). 43 Zustandswechsel, im Modul-Code kein Ruecksprung.
+- **ROOM5040 Leon**: F320 (0x1D, 34) [vorher `mo=29 af=0`], F370/F371 Bruellen (2, 49), F787 Griff hinten (0x12, 33),
+  F788 (0x13, 1).
+- Einziger verbliebener Fund des Werkzeugs: F314 (4001) / F389 (5040) `[1/7/1]->[1/3/0]` Clip 4 Bild 0 = Ende von
+  B[7] (Alt-Pfad, NICHT Teil von M1/M2) — s. OFFEN 10: B[7] spielt Clip 4 im Original RUECKWAERTS, dort ist Slot 0
+  das letzte gezeichnete Bild; die Abweichung des Ports ist die Laufrichtung, nicht das Endbild.
+
+### Riegel und Mutationsproben (unit_r38_spiderman, direkt gestartet)
+Der Test rechnet je Bild die gezeichnete Pose nach (`gezeichnet()`: Bank wie re15_actor_anim_select/
+re15_actor_uses_loco_bank, re15_compute_actor_kf, re15_skel_compute_pose mit g_anim_pose_actor = Aktor) und prueft:
+austritt (Wechselbild Clip 0x1D Bild 34 + Wurzel (0,-940,0) statt Startpose (-1683,1278,0); erstes ACTIVE-Bild mit
+Ueberblendung, Abstand der gezeichneten Wurzel zur Austritts-Endpose 6 <= 21; Bruellen Fertig-/P2-Bild Clip 2 Bild 49),
+griff1 Lauf A/B (Zugriff-Ende fc-1, Halte-Start Bild 1, Kollaps-Ende fc-1), NEU griff1 Losreissen (Tasten: Loese-Ende
+P5 -> P6 und P6-Bild fc-1), griff2 (alle vier Wechselbilder), dazu ein allgemeiner Ruecksprung-Zaehler ueber alle
+Modul-Phasen. Ergebnis: `test_r38_spiderman: 0 FAIL`.
+- MUTATIONSPROBE 1 (sm_anim_halten ohne Halten): **16 FAIL** — u. a. `Wechselbild ... gezeichnet Clip 0x1D Bild 0`,
+  `Ueberblendung startet an der Austritts-Endpose (Abstand 2084 <= 21)`, Ruecksprung-Zeilen mit Groesse: Austritt
+  Wurzel 2784 / Winkel 1616/4096, Zugriff 0xE Bild 14 -> 0 Winkel 1892/4096, Kollaps 0x11 Bild 90 -> 0 Winkel 2022/4096,
+  Loese-Clip 0x10 Bild 60 -> 0 Winkel 2022/4096, Bruellen Wurzel 729 / Winkel 1175/4096.
+- MUTATIONSPROBE 2 (P2 ohne `anim_frame = 0`): **4 FAIL** — `erstes Halte-Bild Clip 0xF Bild 15 (soll 1)`,
+  `Griff 2: erstes Halte-Bild Clip 0x19 Bild 5`.
