@@ -66,7 +66,24 @@ bei Leon"); ihre FORM (Zeile fuer Zeile dieselbe Id) belegen die byte-gleichen N
   Log `[voice] ROOM1241 msg N <- synchro/STAGE1/room1240/main0N.wav (Runde 38 Spur E)`.
 - KEINE neuen Assets, keine Kopie der WAVs (6 x ~1,7 MB gespart; Paket-Gate unveraendert).
 ### Messung nachher
-(offen)
+Bau dieses Baums mit dem Fix (wip 3c0ca636), dieselben Laeufe wie vorher (m4_leon / m4_elza, `e_lauf.sh ... 0-1500/1
+440#<raum> RE15_SCD_TRACE=1`):
+- Elza debug.log: `[voice] ROOM1241 msg N <- synchro/STAGE1/room1240/main0N.wav (Runde 38 Spur E)` fuer N = 0..5,
+  danach je `[voice] clip loaded: main0N.wav` — dieselben sechs Clips wie Leon (Leon ohne Ersatzzeile).
+- Ablauf: msg 5 parkt bei Elza jetzt wie bei Leon (11 Aufrufe `[msg] room=124x id=5` beide), Uebergabe in den
+  Folgeraum bei BEIDEN in F1431 (vorher Elza F1421).
+- Mitschnitt RMS je Zeilenfenster (`probe_r38_elzaintro_auswertung rms`, Fenster 60+90 / 181+150 / 383+150 / 563+150 /
+  765+150 / 967+150 / 1180+110):
+
+| | Musik F60 | msg0 | msg1 | msg2 | msg3 | msg4 | msg5 |
+|---|---|---|---|---|---|---|---|
+| Leon vorher = nachher | 906 | 2817 | 3453 | 3435 | 3303 | 3612 | 3570 |
+| Elza vorher | 906 | 1348 | 2184 | 2141 | 1872 | 2424 | 2439 |
+| **Elza nachher** | 906 | **2817** | **3453** | **3435** | **3303** | **3612** | **3570** |
+
+- Der ganze Mitschnitt von Montage + Erzaehler (1872 Spielbilder, 11.007.360 Byte ab dem jeweiligen Abschnittsbeginn,
+  Takt 807 Leon / 810 Elza) ist zwischen Leon und Elza **BITGLEICH**.
+- Bild fuer Bild Montage Leon gegen Elza: **1431 von 1431 Bildern gleich** (vorher 232 verschieden, Untertitel-Dauer).
 
 ## Punkt 2 — Pre-Intro-Schwarz: Raum scheint durch (Elza)
 ### Messung vorher
@@ -146,7 +163,11 @@ Damit ist das Originalbild im Erzaehler: schwarzes Standbild + Text. Der Port-La
   Letterbox -> s_scene_black -> Text -> Fade) = Originalbild. Der Lageplan bleibt angelegt und ist ab der Szene
   (Cut 4/6/0) wie bisher sichtbar; jede kuenftige Port-Requisite der Lobby ist im Erzaehler ebenfalls abgedeckt.
 ### Messung nachher
-(offen)
+- Laeufe m4 (wie oben): Erzaehler Bild fuer Bild Leon (ROOM1170 Cut 7) gegen Elza (ROOM1031 Cut 13): **441 von 441
+  Bildern pixelgleich** (vorher 438 verschieden). Feld x 91..98 / y 107..112 in allen Erzaehlerbildern dunkel; der
+  Lageplan ist trotzdem angelegt (`[kartenitems] ROOM1031: Karte Blatt 2 ...` im Log, vor dem Netz).
+- Bilder: `E_elzaintro_bilder/nachher_erzaehler_f200_leon_links_elza_rechts.png`,
+  `nachher_elza_erzaehler_f200_verstaerkt_x40.png` (x40 verstaerkt: nur der Text, kein Feld, kein (1,1,1)-Grund).
 
 ## Tests
 (offen)
