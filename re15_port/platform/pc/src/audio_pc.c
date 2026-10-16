@@ -35,6 +35,7 @@
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
 #include "re15_elza_r36.h"  /* Runde 36 Spur L: re15_elza_stimme_datei (main16.5.wav) */
+#include "re15_elzaintro_r38.h"  /* Runde 38 Spur E: Elzas Montage ROOM1241 -> Aufnahmen room1240 */
 #include "re15_aufschliessen_r36.h"  /* Runde 36 Spur G: Satz-TOC der Mini-Bank KARTSE.VBS */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Port-Bank 0x3A = RE2-Schlossbank SCHLOSS1010 */
@@ -2254,6 +2255,10 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
         wav = re15_pc_read_base(path, &wsz);
     }
+    /* Runde 38 Spur E: Elzas Montage ROOM1241 spricht Leons room1240 (re15_elzaintro_r38.h), nur ohne eigene Datei. */
+    if (!wav && re15_elzaintro_r38_stimme_pfad((unsigned)room, voice_id, stamm, path, sizeof path) &&
+        (wav = re15_pc_read_base(path, &wsz)) != NULL)
+        fprintf(stderr, "[voice] ROOM%04X msg %d <- %s (Runde 38 Spur E)\n", (unsigned)room, voice_id, path);
     int rate, ch, bits, dbytes, fmt_tag;
     const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes, &fmt_tag);
     if (!data || dbytes < 2 || ch < 1) { free(wav); return 0; }
