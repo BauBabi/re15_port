@@ -34,6 +34,7 @@
 #include "re15_item_prompt.h"
 #include "re15_inventory.h"
 #include "re15_inv_screen.h"
+#include "re15_menu.h"          /* Runde 38 Spur G: Roys Diary statt msg 18 (Pruefung R in teil_zelle) */
 #include "re15_itps.h"
 #include "re15_files.h"
 #include "re15_lock_se.h"
@@ -395,13 +396,33 @@ static void teil_zelle(void)
     CHECK(g_aot.slots[5].active && g_aot.slots[5].event_id == 6,
           "R ROOM1011 Slot 5 zeigt (Original) auf sub06 (Prison key, @0x00A52)");
     (void)scd_event_fire(g_aot.slots[5].event_id);
-    int msg = -1, sah19 = 0;
+    int msg = -1, sah19 = 0, tagebuch = 0;
     for (int f = 0; f < 120; f++) {
         scd_vm_tick();
         if (g_scd.message_active) { if (msg < 0) msg = g_scd.message_id; if (g_scd.message_id == 19 || g_scd.message_id == 20) sah19 = 1; }
+        if (re15_menu_doc_active()) tagebuch = 1;
     }
-    CHECK(msg == 18 && !sah19 && !re15_game_flag_get(4, 0xEC),
-          "R Roy untersuchen: msg %d (18 = Zettel 0513, sub07), keine msg 19/20, (4,0xEC) bleibt 0", msg);
+    /* Runde 38 Spur G (NUTZER-VORGABE "Das Tagebuch soll kommen statt der Code Message"): an sub07 @0x00E64 steht
+     * statt msg 18 (Zettel 0513) jetzt Roys Diary — der Faden parkt dort, keine Nachricht oeffnet. Der Beleg der
+     * Runde 36 bleibt derselbe: sub07 statt sub06, keine msg 19/20, (4,0xEC) bleibt 0 (include/re15_tagebuch_r38.h). */
+    long park = -1;
+    for (int i = 0; i < SCD_THREAD_COUNT; i++)
+        if (g_scd.threads[i].active && g_scd.threads[i].pc >= r.rdt.raw && g_scd.threads[i].pc < r.rdt.raw + r.n &&
+            (long)(g_scd.threads[i].pc - r.rdt.raw) == 0x00E64) park = 0x00E64;
+    CHECK(msg < 0 && tagebuch && park == 0x00E64 && !sah19 && !re15_game_flag_get(4, 0xEC),
+          "R Roy untersuchen: sub07 parkt an @0x00E64 mit Roys Diary statt msg 18 (Runde 38 G; msg %d), keine msg 19/20, "
+          "(4,0xEC) bleibt 0", msg);
+    {   /* Statusschirm abbauen (prozessweit): Leser zu (KREUZ), Meldung bestaetigen (VIERECK) */
+        for (int n = 0; n < 2000 && (re15_menu_is_open() || re15_menu_gameplay_frozen()); n++) {
+            uint16_t p = 0; uint8_t id = 0; int rev = 0;
+            if (re15_menu_phase() == 1 && g_inv_screen.item_state == 3) p = RE15_PAD_BIT_CROSS;
+            else if (re15_menu_doc_msg(&id, &rev) && rev >= re15_menu_doc_msg_total()) p = RE15_PAD_BIT_SQUARE;
+            re15_menu_fsm_tick(p, p);
+            if (re15_menu_is_open()) re15_inv_screen_ecg_tick();
+            re15_fade_tick();
+        }
+        CHECK(!re15_menu_gameplay_frozen(), "R Statusschirm des Tagebuchs wieder zu");
+    }
 
     /* Zelle ROOM1211 */
     hochfahren(&z, -26000, -20000, 0, NULL, 1);
