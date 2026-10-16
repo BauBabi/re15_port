@@ -41,8 +41,14 @@
  *     Saaten je Raumpaar xxx0/xxx1 (ein Hintergrund @0x80021c90, Tuerziel ohne Variante @0x8001d94c/@0x8001d960);
  *     nicht-rechteckige Zellen ueber den Kollisions-Resolver des Ports (form_drin) statt als Kasten (schraege Gaenge
  *     ROOM4040/4080). Sektionen ohne Stehplatz nur noch belegt (OHNE_STEHPLATZ_BELEGT).
+ *   - Nachbesserung 2 (Abnahme 1 M1/M2, Dossier "Nachbesserung 2"): Figurkasten PIXELGENAU abgetastet (jede Bildzeile von der
+ *     Kopfoberkante bis zum Fuss, eine Spalte je Bildspalte; vorher 9 x 9 Zeilenmitten 167..2833 - ROOM30A0 Cut 0 schnitt Leon
+ *     VOR der Trennwand das Haar ab), Schranke fuer die nicht pixelgenauen Faelle (Kasten breiter als das Bild, Spalte halb
+ *     hinter der Kamera); Sektion OHNE Stehplatz -> alle Rechtecke aus (= Original-NULL-Sektion; ROOM3050/3051 Cut 15:
+ *     die Masken uebermalten den Konsolen-Cursor).
  *   Werkzeug-Modi (kein Riegel): saaten <raum> | cut <raum> <cut> | fehl <raum> <cut> [x z] | proj <raum> <cut> <x> <z> [band]
- *   | soll | suche [prozent] [stage] | erzeuge <datei.inc>.
+ *   | punkt <raum> <cut> <x> <z> [band] | zeuge <raum> <cut> <rechteck> | soll | suche [prozent] [stage]
+ *   | erzeuge <datei.inc>; Optionen --alt (alte Abtastung) / --zeilen=N [--spalten=M] (festes Gitter).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -1558,6 +1564,66 @@ int main(int argc, char **argv)
             if (best_f[k]) { printf("  ROOM%04X Cut %d (%d,%d) Band %d: %d von %d Figurpunkten ohne Zelle davor verdeckt\n", r, c,
                                     best_x[k], best_z[k], best_b[k], best_f[k], best_s[k]); n_out++; }
         printf("  %d Masken ungefiltert, %d Stellen\nOK\n", pri.draw_count, n_out);
+        free(bss.roh); free(msk);
+        return 0;
+    }
+    if (!strcmp(teil, "zeuge") && argc > 4) {           /* Werkzeug (Nachbesserung 2): fuer Rechteck m einer Sektion der Stehplatz
+                                                          * (volles Gitter), an dem m - zusammen mit den Rechtecken, die die
+                                                          * Tabelle anlaesst - als VORDERSTE Maske die meisten Figurpunkte ohne
+                                                          * Zelle davor verdeckt; fuer die Nachmessung an der exe */
+        static raum_t R; static int16_t welch[240][320]; static uint16_t tief[240][320];
+        unsigned r = (unsigned) strtoul(argv[2], NULL, 16); int c = atoi(argv[3]), mz = atoi(argv[4]), m, x, y, k, b, gx, gz, has_q;
+        re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4]; char p[700]; uint8_t *msk; size_t mn = 0;
+        re15_pri_cut_t pri; atlas_t bss; uint32_t off; const uint8_t *idx;
+        int best_f = 0, best_x = 0, best_z = 0, best_b = 0, best_s = 0, best_g = 0;
+        saaten_sammeln();
+        snprintf(p, sizeof p, "%s/MASKS/ROOM%04X.MSK", PSX, re15_pri_masken_raum(r));
+        msk = slurp(p, &mn);
+        if (!msk || !(off = re15_pri_msk_section_offset(msk, mn, c)) || re15_pri_parse_section(msk, mn, off, &pri) <= 0
+            || mz < 0 || mz >= pri.draw_count || !atlas_bss(r, c, &bss) || !raum_laden(&R, r)
+            || re15_camera_build_view(&R.rdt.cuts[c], &v) != 0) {
+            printf("FEHLER\n"); return 1;
+        }
+        idx = (const uint8_t *) bss.tim.pixels;
+        kamera_ort(&v, cam);
+        has_q = re15_rdt_get_region_quad(&R.rdt, c, qx, qz);
+        lx = v.rot[0] / 4096.0; lz = v.rot[2] / 4096.0; ll = sqrt(lx * lx + lz * lz);
+        if (ll > 0) { lx /= ll; lz /= ll; }
+        for (y = 0; y < 240; y++) for (x = 0; x < 320; x++) { welch[y][x] = -1; tief[y][x] = 0xFFFF; }
+        for (m = 0; m < pri.draw_count; m++) {
+            const re15_pri_mask_t *q = &pri.masks[m]; int dx = (int16_t) q->dstX, dy = (int16_t) q->dstY, xx, yy;
+            if (m != mz && re15_masken36_ausgeschlossen(re15_pri_masken_raum(r), c, m)) continue;
+            for (yy = 0; yy < q->height; yy++)
+                for (xx = 0; xx < q->width; xx++) {
+                    int ax = q->srcX + xx, ay = q->srcY + yy, tx = dx + xx, ty = dy + yy;
+                    if (ax >= bss.tim.width || ay >= bss.tim.height || tx < 0 || ty < 0 || tx >= 320 || ty >= 240) continue;
+                    if (!idx[ay * bss.tim.width + ax]) continue;
+                    if (q->depth < tief[ty][tx]) { tief[ty][tx] = q->depth; welch[ty][tx] = (int16_t) m; }
+                }
+        }
+        for (b = 0; b < 16; b++)
+            for (gx = 0; gx < R.nx; gx++)
+                for (gz = 0; gz < R.nz; gz++) {
+                    int wx = R.x0 + gx * SCHRITT, wz = R.z0 + gz * SCHRITT, f = 0, s = 0, np, nsp, ges, sp_zd[SP_MAX];
+                    if (!R.err[b][gx][gz] || (has_q && !re15_aot_point_in_quad(wx, wz, qx, qz))) continue;
+                    np = figur_raster(&v, wx, wz, b, lx, lz, g_pt, &nsp, &ges);
+                    for (k = 0; k < nsp; k++) sp_zd[k] = -1;
+                    for (k = 0; k < np; k++) {
+                        int sx = g_pt[k].x, sy = g_pt[k].y, j2 = g_pt[k].spalte;
+                        if (sx < 0 || sy < 0 || sx >= 320 || sy >= 240) continue;
+                        s++;
+                        if (welch[sy][sx] != mz || !re15_pri_mask_occludes(tief[sy][sx], (long) g_pt[k].vz)) continue;
+                        if (sp_zd[j2] < 0)
+                            sp_zd[j2] = zelle_dazwischen(&R.zel, b, cam[0], cam[2], wx + spalte_o(j2, nsp) * lx, wz + spalte_o(j2, nsp) * lz);
+                        if (!sp_zd[j2]) f++;
+                    }
+                    if (f > best_f || (f == best_f && f > 0 && s > best_s)) {
+                        best_f = f; best_x = wx; best_z = wz; best_b = b; best_s = s; best_g = ges;
+                    }
+                }
+        printf("  ROOM%04X Cut %d Rechteck %d (Tabelle: %s): Stehplatz (%d,%d) Band %d, %d Figurpunkte ohne Zelle davor verdeckt "
+               "(im Bild %d von %d)\nOK\n", r, c, mz, re15_masken36_ausgeschlossen(re15_pri_masken_raum(r), c, mz) ? "aus" : "an",
+               best_x, best_z, best_b, best_f, best_s, best_g);
         free(bss.roh); free(msk);
         return 0;
     }

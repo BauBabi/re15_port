@@ -355,7 +355,8 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
 - Stellen, an denen die alten, automatisch erzeugten Masken Leon faelschlich geloescht haetten (Bodenflaechen, Wandstuecke,
   das Band knapp vor Objekten — dieselbe Art Fehler wie Ihre Meldung vom 2026-09-03 "Leon verschwindet"), bleiben aus.
   Wo Ihnen eine Verdeckung fehlt: F9-Marke wie gewohnt; der Weg dafuer ist eine Freistellung wie in STAGE1.
-- Nachbesserung 1 (nach der unabhaengigen Abnahme): Elza wurde im Sewer Control Room (ROOM30A1) VOR der Buero-Trennwand
+- Nachbesserung 1 (nach der unabhaengigen Abnahme): Elza wurde im NORTH OFFICE (ROOM30A1; Name aus der JUMP-Liste des
+  Original-Debug-Menues, include/debug_jump_table.h - NB1 schrieb faelschlich "Sewer Control Room") VOR der Buero-Trennwand
   bis auf einen Stiefel uebermalt - behoben (gemessen an der exe auf dem echten Weg von der Tuer: 265 -> 0 Punkte). Dabei
   zeigte sich dieselbe Fehlerart in den schraegen Gaengen von EAST/WEST PASSAGE (ROOM4040/4080, z.B. die Wandblock-Kante
   schnitt Leon an der Seite ab): auch dort bleiben diese Rechtecke jetzt aus. Folge: im EAST PASSAGE (ROOM4040 Cut 4/7)
