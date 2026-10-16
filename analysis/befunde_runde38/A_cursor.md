@@ -208,6 +208,16 @@ Spieler unabhaengig): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
   Aenderungen sind deterministisch und stammen vom Verwurf. Bild `A_belege/nebenwirkung_scan_5010_2040_3080.png`
   (alt | neu | Markierung): 5010 ein dunkelroter Streifen (Rueckseite) ueber einem Geraet faellt weg, darunter die
   beleuchtete Kante und die gruene Lampe; 2040 ein 4x4-Block an Leons Hand; 3080 Einzelpunkte entlang einer Kante.
+* **Elza-Raeume (Fortsetzung 2026-10-16 abends).** Statischer Vergleich zuerst (`A_belege/elza_props_vergleich.py`):
+  der Verwurf wirkt nur auf Raum-Objekte; in 73 Raeumen sind Modelle (Prop-Tabelle RDT+0x30) und Obj_model_set-Saetze
+  von ROOMxxx1 und ROOMxxx0 gleich (Wirkung = Leon-Scan), 30 unterscheiden sich, 17 haben keine Elza-Variante. Scan
+  mit Elza (`raum_scan.py --elza`: RE15_PSELECT_AUTO + _SWITCH, Debug-Sprung @250 -> der Raumlader nimmt ROOMxxx1,
+  Bild 400; exe ALT 1bcbd0ff gegen NEU = Verwurf + neu gewickelter Loescher) ueber 75 Raeume = 1000..3030 (60, davon
+  12 der "verschiedenen") + die uebrigen 15 "verschiedenen" (3060 3070 3080 3090 30E0 4000 4010 4030 5000 5010 5020
+  5030 50B0 6000 6030); `A_belege/raum_scan_elza_75.txt`: **68 pixelgleich**, 7 mit 4..41 Punkten (5010 41, 2040 38,
+  4010 32, 20B0 6, 2090 4, 3080 4, 4000 4) — dieselben Raeume wie im Leon-Scan. (Der Lauf "3080" endet laut debug.log
+  in ROOM4001 — Raumwechsel nach dem Sprung —, daher die gleichen 4 Punkte wie "4000".) Kein Elza-Raum mit einer
+  groesseren Aenderung.
 * **ROOM11F0 Cut 10:** 85 Punkte an den Kippschaltern (Platz 28/29 hatten je 2 Rueckseiten-Dreiecke); mittlere
   Abweichung der Schalterzeile 1 zum Original 12,90 -> 12,61 (naeher am Original).
 * **ROOM1150 Cut 4 (Hebetisch-Sicht):** 747 Punkte. `A_belege/nebenwirkung_1150_cut4_alt_neu.png`: alt lag ein
