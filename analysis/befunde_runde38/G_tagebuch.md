@@ -77,6 +77,9 @@ Hinweis-Tabelle `map_hint_common.c` s_hints[]: 3 Eintraege, alle Leon (Quelle 0x
     FUN_800692dc: 800692e0 addiu a2,zero,255 / 800692ec lbu v0,0(v1) / 800692f4 bne v0,a2,0x80069304 /
                   80069300 sb a0,0(v1) / 80069308 sltiu v0,a1,0x18 — erster freier Platz, KEINE Doppelpruefung.
     Item-Zone FUN_80051884: 800518f8 sb v1(=2),[0x800d5c00] / 80051904 sb v1(=1),[0x800df348] — keine Abfrage.
+    Abraeumen nach der Meldung (Zustand 6): 80072b1c bne (Meldung steht -> warten) / 80072b40 sb zero,0(v1) (Zone
+    [0x800ce5d8] aus, Verzoegerungsplatz) / 80072b8c jal 0x8007730c (Aufnahme-Flag) — ein genommenes Dokument wird
+    nie ein zweites Mal angeboten; deshalb fuehrt die Liste kein Dokument doppelt.
     => RE2 nimmt ein gefundenes Dokument IMMER in die Akten auf. Port: der vorhandene Weg re15_menu_request_doc
        (Runde 30), Item-Id 0x48 + 5 (RE1.5 erste Dokument-Id u8 @0x800c7370 an der Stelle von RE2s 0x68).
 
@@ -202,10 +205,36 @@ tests/integration/test_r38_tagebuch.cmake):
 * `integration_r38_tagebuch_lesen` / `_karte` / `_leon`: N1/N3-Messungen und Leon-Gegenprobe an der echten exe.
 * `unit_r36_kartenbits` (k_port[] + Bit 68).
 
-Ergebnis gezielt (ctest, Wortlaut): siehe unten "Gezielte Regression".
+### Gezielte Regression (keine volle Suite; Regex = eigene Tests + jedes beruehrte Modul/jeder beruehrte Raum)
+Beruehrt: scd_vm.c (Message_on), menu_common.c (Dokument-Aufnahme), map_hint_common.c (Hinweistabelle), re15_files.c
+(Dokumenttabelle), game_step_common.c (Hinweis-Annahme), ROOM1011/Roy, Bank-9-Riegel. Regex:
+`r38_tagebuch|r30_irons|r30_hinweis|r33_karte|r34n_e_dokumente|r35_inhalt_doku|r35_cut10f0|r36_kartenbits|r36_karte_|r36_schluessel|r36_elza_roy|r37_roy|unit_savedata|unit_msg_dialog|unit_action_msg_gate`
+* Lauf 1 (Bau vor dem Alt-Riegel-Abgleich): `98% tests passed, 1 tests failed out of 60` — rot NUR
+  `unit_r36_schluessel_zelle` Pruefung R: sie erwartete "Roy untersuchen -> msg 18 (Zettel 0513)". Das ist genau das
+  Verhalten, das der Nutzer jetzt ersetzt haben will ("Das Tagebuch soll kommen statt der Code Message") — ALT-RIEGEL
+  WIDERLEGT, nicht Regression. Abgleich (test_r36_schluessel.c teil_zelle, Kommentar "Runde 38 Spur G"): der Beleg der
+  Runde 36 bleibt unveraendert (sub07 statt sub06, keine msg 19/20, (4,0xEC) bleibt 0); statt "msg 18 offen" prueft
+  er jetzt "Faden parkt an @0x00E64, Roys Diary angefordert, keine Nachricht", danach baut er den Statusschirm ab.
+  Leons Hinweise (unit_r30_hinweis_*, unit_r33_karte_*, unit_r35_cut10f0_* + integration_r35_cut10f0), die Dokumente
+  (unit_r34n_e_dokumente, integration_r34n_e_dokumente_bild, unit_r30_irons_*, unit_r35_inhalt_doku), Roy
+  (unit/integration_r37_roy_*, unit_r36_elza_roy) und unit_r36_kartenbits: alle gruen.
+* Lauf 2 (Endstand, Bau mit allen Commits dieser Spur, 2026-10-16):
+  `ctest --test-dir re15_port/build -R "r38_tagebuch|r30_irons|r30_hinweis|r33_karte|r34n_e_dokumente|r35_inhalt_doku|r35_cut10f0|r36_kartenbits|r36_karte_|r36_schluessel|r36_elza_roy|r37_roy|unit_savedata|unit_msg_dialog|unit_action_msg_gate" --timeout 600`
+  -> **`100% tests passed, 0 tests failed out of 60`** (Total Test time (real) = 976.72 sec).
+* Satzwerkzeug reproduzierbar: zweiter Lauf `tagebuch_satz.py --out build/r38_g/satz2` = dieselben 8 md5 wie die
+  installierten FILE30-Dateien; Atlas md5 8cbe2c52 = Runde 34.
 
 ## OFFEN
-- (wird nach der Regression ergaenzt)
+- Nichts aus dem Auftrag offen. Hinweise fuer die Integration:
+  * map_hint_common.c: meine zwei Eintraege stehen an Platz 3/4, Folge-Index 4 ist positionsabhaengig. Haengt eine
+    andere Spur Eintraege davor ein, muss der Index mit — `unit_r38_tagebuch_karte` prueft folge(k1) == k2 und faengt das.
+  * Spur K (Prison Key an der Pinnwand-Stelle): "erreicht" von Ziel 1 liest RE15_R36Q_PRISON_BIT (9,83); behaelt K das
+    Aufnahme-Bit, passt es von selbst. Inhaltlich passt das Tagebuch ("locked it up in the Communications Room").
+  * Spur F (Schluessel an Roys Liegestelle NACH der 1021-Szene): anderes Ereignis/andere Phase; mein Haken greift nur an
+    msg 18 in sub07, und sub07 gibt es nur, solange (4,0xFA)==1 (Roy liegt in 1011).
+- Die Kette schaltet wie Leons Kette der Runde 35 K nach je 3 Blinkperioden (~3,9 s) oder mit START weiter; Leons
+  ERSTER Comms-Hinweis (Runde 30/33) wartet dagegen auf START. Fuer zwei Ziele nacheinander gibt es im Port nur die
+  Kettenform (RE2 kennt je Opcode 0x84 nur EIN Ziel, @0x80059210) — so gebaut, im Dossier begruendet.
 
 ## Fuer den Nutzer
 - NEUE ASSETS (Paket-Gate): `re15_port/shared_assets/RE2/FILES/FILE30_title_page.TIM`, `FILE30_p00_page.TIM` ..
