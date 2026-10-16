@@ -12,7 +12,7 @@
  *   frei      g_scd.player_mode = 0 -> KONTROLLE: derselbe Aufbau greift den Spieler an (HP-Verlust, Treffer-
  *             Riegel +0x93 oder Griff). Greift er nicht an, misst der Fall nichts und gilt als nicht bestanden.
  *   gehalten  g_scd.player_mode = 2 (die Szene haelt den Spieler) -> KEIN HP-Verlust, KEIN Treffer (Riegel +0x93 bleibt
- *             0), KEIN Griff (Opfer-FSM 0, PL+0x1D3-Sicht frei) — und das Sicherheitsnetz griff NICHT ein (abgefangen
+ *             0, keine Statusbits +0x98 Blutung/Gift), KEIN Griff (Opfer-FSM 0, PL+0x1D3-Sicht frei) — und das Sicherheitsnetz griff NICHT ein (abgefangen
  *             == 0): das Tor im Gehirn hielt den Angriff ab, nicht erst die HP-Rueckgabe.
  * Ausgenommen (kein Angriff im Gehirn, im Zensus belegt): Effekt-Schwarm 0x24 (harmlos), Efeu 0x2D (ruhendes
  * Skript-Requisit). Feuer 0x26 ist ein Umgebungsschaden ohne Tor (-2 je Kontaktbild): dort zaehlt der Fall nur,
@@ -83,6 +83,7 @@ static int angriffs_zustand(const re15_actor_t *e)
 }
 typedef void (*je_bild_fn)(re15_actor_t *e, re15_actor_t *pl);
 
+static int16_t s_php = 100;                            /* Spieler-HP beim Start (Fall-Feld php, 0 = 100) */
 static lauf_t lauf(uint8_t type, int32_t abstand, int32_t ey, int32_t py, int halten, int bilder,
                    nach_init_fn nach_init, je_bild_fn je_bild)
 {
@@ -96,7 +97,7 @@ static lauf_t lauf(uint8_t type, int32_t abstand, int32_t ey, int32_t py, int ha
     re15_szenenschutz_zaehler_reset();
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->x = 0; pl->y = py; pl->z = 0; pl->rot_y = 0;
-    pl->hp = 100; pl->hit_react = 0; pl->state = 1; pl->motion = 0; pl->floor = 0;
+    pl->hp = s_php; pl->hit_react = 0; pl->state = 1; pl->motion = 0; pl->floor = 0; pl->status_flags = 0;
     re15_actor_t *e = &g_actors[5];
     memset(e, 0, sizeof(*e));
     e->active = 1; e->type = type; e->hp = 100; e->flags = 1; e->em_flag_id = 0xFF;
@@ -113,9 +114,13 @@ static lauf_t lauf(uint8_t type, int32_t abstand, int32_t ey, int32_t py, int ha
         int vs = re15_player_victim_state();
         int gr = vs != 0 || re15_player_is_grabbed();
         if (gr) r.griff = 1;
-        if (pl->hit_react & 1u) r.treffer++;
+        /* Treffer = Riegel +0x93 Bit 0 ODER neue Statusbits +0x98 (Blutung/Gift Bit 0x2, @0x80012e68-eb8 — Gift-
+         * Angriffe anderer Spuren landen hier, auch ohne HP-Verlust im selben Bild) */
+        int tr = (pl->hit_react & 1u) || pl->status_flags != 0;
+        if (tr) r.treffer++;
         if (angriffs_zustand(e)) r.angriff++;
-        if (r.erster < 0 && (pl->hp < vor || gr || (pl->hit_react & 1u) || angriffs_zustand(e))) r.erster = f;
+        if (r.erster < 0 && (pl->hp < vor || gr || tr || angriffs_zustand(e))) r.erster = f;
+        pl->status_flags = 0;
         pl->hit_react = 0;                             /* der Spieler-Handler loescht +0x93 je Bild (@0x80031964) */
     }
     r.hp = pl->hp;
@@ -190,6 +195,7 @@ typedef struct {
     nach_init_fn nach_init; je_bild_fn je_bild; int flavor_maske; /* 1 = RE2, 2 = RE1.5 */
     int ohne_angriff;                                              /* Gehirn ohne Spielerangriff (belegt) */
     int netz;                                                      /* Umgebungsschaden ohne Tor: Netz zaehlt */
+    int16_t php;                                                   /* Spieler-HP beim Start (0 = 100) */
 } fall_t;
 
 
@@ -326,6 +332,7 @@ int main(void)
         { "Zombie 0x18",          0x18,  { 900 },     0,   0,  900, NULL, NULL, 3, 0, 0 },
         { "Zombie-Maedchen 0x13", 0x13,  { 900 },     0,   0,  900, NULL, NULL, 3, 0, 0 },
         { "Hund 0x20",            0x20, { 1500 },     0,   0,  900, NULL, NULL, 3, 0, 0 },
+        { "Hund 0x20 (HP 40)",    0x20, { 1500 },     0,   0,  900, NULL, NULL, 3, 0, 0, 40 },
         { "Kraehe 0x21 (Flug)",   0x21, { 2500 }, -3000,   0,  900, kraehe_re2_flug, kraehe_re2_blick, 1, 0, 0 },
         { "Kraehe 0x21 (Sitz)",   0x21,  { 800 },   700, 700,  900, NULL, NULL, 2, 0, 0 },
         { "Spinne 0x25",          0x25, { 1500 },     0,   0,  900, NULL, NULL, 1, 0, 0 },
@@ -348,6 +355,7 @@ int main(void)
         for (int i = 0; i < n; i++) {
             const fall_t *c = &faelle[i];
             if (!(c->flavor_maske & (fl == 0 ? 1 : 2))) continue;
+            s_php = c->php ? c->php : 100;            /* Hund HP 40: RE1.5-Eskalation < 50 @0x8010e5e8-f4 */
             /* Abstands-Sweep wie die Typ-Tests: der erste Abstand, an dem der FREIE Lauf angreift, gilt fuer beide */
             int32_t d = c->abstand[0];
             lauf_t f = lauf(c->type, d, c->ey, c->py, 0, c->bilder, c->nach_init, c->je_bild);
@@ -360,23 +368,24 @@ int main(void)
                    g.erster, g.hp, g.treffer, g.griff, g.angriff, g.ab, g.ticks,
                    f.erster, f.hp, f.treffer, f.griff, f.angriff);
             if (c->ohne_angriff) {
-                CHECK(f.erster < 0 && g.erster < 0 && f.hp == 100,
+                CHECK(f.erster < 0 && g.erster < 0 && f.hp == s_php,
                       "%s %s: Gehirn ohne Spielerangriff (frei und gehalten kein Treffer)", c->name, gn);
                 continue;
             }
             CHECK(f.erster >= 0, "%s %s frei: Kontrolle — der Aufbau greift an (Bild %d, hp %d)",
                   c->name, gn, f.erster, f.hp);
             if (c->netz) {
-                CHECK(g.hp == 100 && g.ab > 0,
+                CHECK(g.hp == s_php && g.ab > 0,
                       "%s %s gehalten: Umgebungsschaden ohne Tor, das Sicherheitsnetz gibt ihn zurueck (hp %d, %u)",
                       c->name, gn, g.hp, g.ab);
                 continue;
             }
-            CHECK(g.erster < 0 && g.hp == 100 && g.treffer == 0 && g.griff == 0 && g.angriff == 0 && g.ab == 0,
+            CHECK(g.erster < 0 && g.hp == s_php && g.treffer == 0 && g.griff == 0 && g.angriff == 0 && g.ab == 0,
                   "%s %s gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster %d hp %d treffer %d griff %d "
                   "angriff %d netz %u)", c->name, gn, g.erster, g.hp, g.treffer, g.griff, g.angriff, g.ab);
         }
     }
+    s_php = 100;
     teil2();
     printf("%s (%d Fehler)\n", fails ? "FAIL" : "OK", fails);
     return fails ? 1 : 0;

@@ -134,6 +134,58 @@ Kraehen 0x21 (1170 frei, 1171 Skript), Gorilla 0x27 (1141, 11C0), Spinne 0x25 (2
 4000, 5031), Birkin 0x30/0x36 (3070, 3080, 5080, 5090), Gitterarm 0x1A (1211), 0x2b (4001), 0x2d (4031), 0x24 (20B0).
 Darum gilt der Schutz fuer JEDEN Gegner im freien Gehirn, nicht nur fuer Hunde.
 
+Nachzensus (Fortsetzung, alle 240 SCD-Dumps, Set(2,7)=1 ODER Set(1,27)=1 ODER Plc_motion/Plc_dest UND Sce_em_set Typ
+< 0x40): **68 Raeume** (Leon + Elza-Varianten), Typen 0x10 0x11 0x16 0x18 0x1A 0x20 0x21 0x24 0x25 0x26 0x27 0x29 0x2B
+0x2D 0x30 0x36 — dieselben Typen wie oben plus **0x26 (Feuer, ROOM1090: 7 Spawns)**.
+
+### 2.6 Zensus aller Gegnertypen: wer liest ein Spieler-Tor, wer nicht (Fortsetzung)
+Messung zuerst (neue Sonde `unit_r38_szenenschutz_alle`, Abschnitt 5): jeder Typ x jedes Gehirn frisch vor dem stehenden
+Spieler, je ein Lauf frei (Kontrolle: greift an) und gehalten (player_mode 2). Stand mit dem Vorgaenger-Code (nur Sicht
++0x93/PL+0x1D3, Lauf `alle_vorher`):
+
+| Typ | Gehirn | gehalten | Netz | frei (Kontrolle) |
+|---|---|---|---|---|
+| Zombies 0x10/11/12/16/18, 0x13 | RE2 / RE1.5 | kein Treffer/Griff | 0 | Griff Bild 2 (RE2) / Biss -5 (RE1.5) |
+| Hund 0x20 | RE2 / RE1.5 | kein Treffer | 0 | Biss Bild 11 / 47 |
+| **Kraehe 0x21** | **RE2** | **Griff, 330 Angriffs-Bilder** | **12** (Pick-HP zurueck) | Griff Bild 1 |
+| **Kraehe 0x21** | **RE1.5** | **Griff Bild 75, 536 Angriffs-Bilder** | **1** | Angriff Bild 78 |
+| Spinne 0x25 | RE2 | kein Treffer | 0 | Biss -20 Bild 4 |
+| Kakerlake 0x29, Tyrant 0x2B, Birkin 0x30/0x36 | beide | kein Treffer | 0 | Treffer Bild 15 / 51 / 35 |
+| Effekt 0x24, Efeu 0x2D | beide | — | 0 | kein Angriff im Gehirn (s.u.) |
+| Feuer 0x26 | beide | kein HP-Verlust | 299 | -2 je Kontaktbild |
+
+Belege der Luecke (selbst disassembliert, re15_disasm.py / re2_disasm.py):
+- **RE2-Kraehe** (EMOVL21_S0.BIN): Arbiter 0x801041F0 `lh v0,-690(v0)` (0x800CFD4E = Spieler-HP) / @0x80104204
+  `bltz v0,0x801043ec` — das ist das EINZIGE Spieler-Tor; danach Grab-Join @0x8010420c-38, Claim, Direkt-Strike. Strike-
+  Commit aus Sub 11 @0x80101F18 `lh v0,324(s0)` / @0x80101F20 `slti v0,v0,231` / @0x80101F2C `jal 0x80104088` (a1=12);
+  Griff-Commit aus Sub 13 @0x80102438 `sltiu v0,v0,0xc7` / @0x80102444 `jal 0x80104088` (a1=14). Kein Lesen von
+  PL+0x1D3. Der Abbruch-Listener 0x80104400: @0x80104410 `lhu v0,554(s0)` / @0x80104418 `andi v0,v0,0x10` /
+  @0x8010441c `beq` / @0x80104424 `jal 0x8010472c` (a1=350) / @0x8010442c `jal 0x80015fe8` / @0x80104434 `andi v0,v0,0x9d`
+  / @0x80104444-50 `jal 0x80104088` (a1=4) / @0x8010444c `addiu v0,zero,30` / @0x80104454 `sb v0,540(s0)` /
+  @0x80104460 `andi v0,v0,0xffa7`. Ihn rufen die DECs von Sub 11 (@0x80101D7C `jal 0x80104400`) und Sub 13
+  (@0x80102244 `jal 0x80104400`) — im selben Bild VOR dem EXEC (DEC->EXEC-Doppel-Dispatch, Port enemy_ai_re2_crow.c).
+- **RE1.5-Kraehe** (STAGE1.BIN): Angriffs-Commit @0x8011330c `lbu v0,466(v1)` (+0x1d2) / @0x80113314 `beq` /
+  @0x8011331c `lbu v0,475(v1)` (+0x1db) / @0x8011332c `lhu v0,476(v1)` / @0x80113334 `sltiu v0,v0,0x2710` /
+  @0x80113340 `lbu v0,470(v1)` / @0x80113348 `sltiu v0,v0,0x3` / @0x80113354-68 grid<0x80 -> a0 = 0xc sonst 0xa /
+  @0x8011336c `jal 0x80115d74`. Griff-Kontakt @0x80113dcc `lbu v0,464(v1)` (+0x1d0) / @0x80113dd4 `beq v0,zero,
+  0x80113e5c` -> -8 HP + cmd 5 ohne +0x93 (Dossier crow_1170 D4). Homing-Kontakt @0x80114454 `lbu v0,464(v0)` /
+  @0x8011445c `beq` / @0x80114464 `jal 0x80115d74` (a0=0x10 = Sub 16 STRIKE, -4 HP @0x801144f0-fc ohne +0x93).
+- Alle anderen Typen lesen das Tor am Commit oder am Kontakt (Code-Stellen, die die Sonde bestaetigt): RE2-Zombie
+  Block G @0x80102128 (PL+0x1D3), RE2-Hund @0x80104D84-90, RE2-Spinne @0x80105A48-54 und Baby-Biss @0x80100E84,
+  RE2-Gitterarm A3 @0x80100A3C-48 (`unit_r38_szenenschutz_arm`), RE1.5-Hund @0x8010e5c4-cc/@0x8010f294/@0x8010f5c0,
+  Gorilla/Affe 0x27 Biss @0x80117a54-5c, Heavy @0x80117e88, Devour @0x8011aac0/@0x8011ab7c, Kakerlake (hit_react == 0
+  an Biss/Heavy), RE1.5-Spinne Griff-Kontakte @0x80112514-40/@0x8011299c-c0, G5-Tentakel (@0x80101640-94 u.a.).
+- Ohne Angriff im Gehirn: Efeu 0x2D (test_ivy_ai.c: "DORMANT SCRIPTED PROP", Wurzel 0x801168c4 ohne Spielerzugriff),
+  Effekt 0x24 (Schwarm ohne Schadensweg, Zensus-Skript: kein HP-Schreiber).
+- Feuer 0x26: Umgebungsschaden -2 je Ueberlappungsbild in JEDEM Zustand ohne Tor (enemy_ai_common.c re15_spider_ai_tick,
+  "-2 EVERY overlap tick, ANY state"). Kein Angriff; das Sicherheitsnetz gibt den Abzug zurueck, solange die Szene den
+  Spieler haelt (er kann nicht aus dem Feuer gehen).
+- G5-Endkampf (ROOM5090, re15_g5_boss_tick): fuehrt keinen +0x4-Zustand 1 (eigene Routine-Felder) und ist damit eine
+  Szenen-Rolle; das einzige Halte-Fenster mit lebendem Boss ist sub04 (Set(1,27)/(2,7) @0x012F2/@0x012F6, Pos_set
+  @0x012FE, Member_set(12,0x13) @0x0130A = Kampfstart-INTRO, Plc_dest @0x01320, Freigabe @0x01344/@0x01348) — der
+  Boss laeuft dort seine Intro-Choreografie, die Teil der Szene ist. sub02 haelt den Spieler erst nach dem Tod des Bosses
+  ((5,28) @0x012A6, Abspann). Kein Eingriff.
+
 ## 3. Umsetzung
 
 Neue Dateien: `re15_port/engine/src/szenenschutz_r38.c`, `re15_port/include/re15_szenenschutz_r38.h`.
@@ -164,6 +216,19 @@ Haken (gemeinsame Dateien, je 1-2 Zeilen, Kommentar "Runde 38 Spur B"):
 die vorhandene Zeile @0x801115e8-ec. Nur der 1190/1191-Sprung-Ausgang schreibt den Wert unter dem RE2-Gehirn (RE2-INIT
 fasst ihn nicht an, Raumaufbau nullt alle Akteure, scd_room_setup.c memset).
 
+(C) KRAEHEN (Fortsetzung, Luecke aus 2.6) — NUTZER-VORGABE, Form aus dem Original: die Kraehen-Angriffe tragen kein
+Spieler-Tor, also traegt die Szenen-Sicht dort eigene Haken (je 1 Zeile, Kommentar "Runde 38 Spur B"):
+- RE2 `enemy_ai_re2_crow.c` re2c_attack_arbiter: nach `bltz @0x80104204` `if (re15_szenenschutz_sicht()) return;` —
+  kein Claim, kein Grab-Join, kein Direkt-Strike, solange die Szene den Spieler haelt.
+- RE2, schon im Anflug (Sub 11 Anlauf / Sub 13 Hover, Claim vor Szenenbeginn): `szenenschutz_r38.c` kraehe_re2_abbruch
+  setzt im geschuetzten Tick +0x22A |= 0x10 = das Abbruch-Bit des Original-Broadcasts 16 (0x8010452C-Form); der
+  DEC-Listener 0x80104400 (@0x80101D7C / @0x80102244) bricht im selben Bild ab: Sub 4, Cooldown +0x21C = 30, Bits 0x58
+  weg. Sub 14 (Griff laeuft schon) bleibt unberuehrt (sein Listener @0x80102484 wuerde ohne Opfer-Freigabe abbrechen).
+- RE1.5 `enemy_ai_common.c` re15_crow_ai_tick: Angriffs-Commit @0x8011330c-70, Griff-Kontakt @0x80113dd4 und Homing-
+  Kontakt @0x80114464 je `&& !re15_szenenschutz_sicht()` (gehalten laeuft der Original-Ohne-Kontakt-Zweig: Sub-12-
+  Zeitablauf @0x80113e68-78 -> Sub 5, Sub 15 fliegt weiter).
+- Konstanten: keine neue Zahl; 0x10 = Abbruch-Bit (@0x80104418), 11/13/14 = Sub-Nummern (@0x80101F2C/@0x80102444).
+
 Folgeanpassung eines fremden Riegels: `tests/integration/test_r36_kleidung_hundeweg.cmake` (Runde 36 Spur B) mass die
 Bisse 13 Bilder nach dem Wecken; mit der Sperrzeit beissen die Hunde 120 Bilder nach der Landung (gemessen
 F664/F674/F685 statt F582-F587). Save-Haken 600 -> 700 (gleicher Stand: drei Bisse, hp 40); Biss 2 trifft jetzt Panel 5
@@ -188,6 +253,33 @@ es, CONTINUE zeigt es) bleibt unveraendert.
 1190 Sperrzeit im Detail (n1190a): Hund 1 landet F675 -> erster Commit F796 (= +121), Hund 3 landet F739 -> F860
 (+121); RE1.5-Referenz (m1190_re15) erster Biss F850.
 
+Zensus aller Typen NACH (C) (`unit_r38_szenenschutz_alle`, Ausgabe gekuerzt; Spalten gehalten: erstes Bild mit
+Treffer/Griff/Angriff, HP, Treffer-Bilder, Griff, Kraehen-Angriffs-Bilder, Netz, geschuetzte Ticks | frei: dasselbe):
+
+    Zombie 0x10..0x18, 0x13   RE2  |  -1 100 0 0 0   0 899 |   2  -20  4-6 1   0
+    Hund 0x20                 RE2  |  -1 100 0 0 0   0 899 |  11  -20    5 0   0
+    Kraehe 0x21 (Flug)        RE2  |  -1 100 0 0 0   0 899 |   1   40    4 1 330
+    Spinne 0x25               RE2  |  -1 100 0 0 0   0 899 |   4   80    0 0   0
+    Affe 0x27                 RE2  |  -1 100 0 0 0   0 599 |  14   22   13 0   0
+    Kakerlake 0x29            RE2  |  -1 100 0 0 0   0 899 |  15 -200   60 0   0
+    Tyrant 0x2B               RE2  |  -1 100 0 0 0   0 899 |  51   70    3 0   0
+    Birkin 0x30 / 0x36        RE2  |  -1 100 0 0 0   0 899 |  35    1   17 1   0
+    Effekt 0x24 / Efeu 0x2D   RE2  |  -1 100 0 0 0   0 599 |  -1  100    0 0   0
+    Feuer 0x26                RE2  |  -1 100 0 0 0 299 299 |   1    2    0 0   0
+    Zombie 0x10..0x18, 0x13   RE15 |  -1 100 0 0 0   0 899 | 3-17  -5    1 1   0
+    Hund 0x20                 RE15 |  -1 100 0 0 0   0 899 |  55   -1    7 1   0
+    Kraehe 0x21 (Sitz)        RE15 |  -1 100 0 0 0   0 899 |  70   92    1 1 559
+    Spinne 0x25 (grid 1)      RE15 |  -1 100 0 0 0   0 599 |  34  100    6 1   0
+    Affe 0x27                 RE15 |  -1 100 0 0 0   0 599 |  15   40   10 0   0
+    Kakerlake/Tyrant/Birkin   RE15 |  wie RE2 (dieselben RE1.5-Gehirne)
+
+Teil 2 (Szene beginnt MITTEN im Kraehen-Anflug): RE2-Kraehe in Sub 13 -> nach 1 Bild Sub 4, +0x21C = 30, +0x22A = 0x0002
+(Bit 0x10 verbraucht); 400 gehaltene Bilder ohne Griff/Strike/Treffer; nach der Szene Anflug wieder nach 30 Bildern (=
+Cooldown). RE1.5-Kraehe im Grapple-Anflug (Sub 12) gehalten: kein Griff, Sub 12 laeuft aus (Ende Sub 9). RE1.5-Homing
+(Sub 15) am Spieler: frei Strike Bild 1, gehalten kein Strike.
+Gitterarm 0x1A im echten ROOM1210 (`unit_r38_szenenschutz_arm`): frei Griff 0x401 Bild 4; gehalten 56 Bilder 0x601
+(Tor @0x80100A3C-48), kein Griff, Netz 0; nach der Szene Griff Bild 7.
+
 ## 5. Tests
 
 - `unit_r38_szenenschutz` (neu, tests/unit/test_r38_szenenschutz.c, Registrierung tests/unit/probes/r38_szenenschutz.cmake):
@@ -204,16 +296,23 @@ es, CONTINUE zeigt es) bleibt unveraendert.
   greift bei F101 (hp 92, pm=2)`, `[1171s] kein geschuetzter Akteur in ROOM1171`. Gegen den alten Stand schluege der
   Riegel an (1190 Angriffs-Bilder F706-F738 und Abstand 13 < 30; 11D0 Angriffs-Bilder F514-F524).
 - angepasst: `integration_r36_kleidung_hundeweg` (s. 3.).
+- `unit_r38_szenenschutz_alle` (neu, Fortsetzung, tests/unit/test_r38_szenenschutz_alle.c): Zensus ALLER Typen aus 2.5/
+  2.6 in beiden Gehirnen (19 Faelle RE2 + 18 RE1.5, Aufbauten aus den Typ-Tests: Kraehe fliegend/sitzend, Affe mit
+  EM027-Bank und Abstands-Sweep, RE1.5-Spinne GRAB-A), je frei (Kontrolle MUSS angreifen) und gehalten (KEIN HP-Verlust,
+  KEIN Treffer-Riegel, KEIN Griff, KEINE Kraehen-Angriffs-Unterzustaende, Netz 0); Feuer 0x26 = Netz gibt zurueck;
+  Teil 2: Szene beginnt mitten im Kraehen-Anflug (RE2-Abbruch ueber 0x80104400, RE1.5 Kontakte). NEGATIVKONTROLLE
+  (gemessen ohne (C), Lauf alle_vorher): 2 FAIL — RE2-Kraehe gehalten griff=1 / 330 Angriffs-Bilder / Netz 12, RE1.5-
+  Kraehe gehalten griff=1 / 536 Bilder / Netz 1.
+- `unit_r38_szenenschutz_arm` (neu): RE2-Gitterarm im echten ROOM1210 bis A3 (Aufbau test_p2_1210_arme_re2.c): frei
+  Griff, gehalten 0x601 statt 0x401, nach der Szene Griff.
 
 (ctest-Summenzeilen: Abschnitt 5.1 unten.)
 
 ## 6. OFFEN
 
-- Die RE2-Kraehe (Standard-KI) hat am Strike-/Griff-Commit KEIN Spieler-Tor (EMOVL21_S0.BIN liest +0x1D3 nur am
-  eigenen Akteur, @0x80100160/@0x80100fbc); eine freie Kraehe an einem gehaltenen Spieler wuerde nur vom
-  Sicherheitsnetz (HP zurueck) gebremst, ein Griff wuerde als WARNUNG protokolliert. Im ausgelieferten Spiel trifft das
-  nie zu: freie Kraehen gibt es nur in 1170 (sub14 teleportiert Leon 23000+ weg, n1170crow), 10C0/1120 haben keine
-  (2,7)-Fenster (Zensus 2.5). Kein gemessener Defekt -> kein Eingriff.
+- ERLEDIGT (Fortsetzung): die Kraehen-Luecke (RE2 + RE1.5 ohne Spieler-Tor am Angriff) ist gemessen (2.6, vorher
+  griff=1 gehalten) und geschlossen (3.(C)); die fruehere Begruendung "trifft im ausgelieferten Spiel nie zu" galt nur
+  fuer die eine gemessene Szene (1170 sub14 teleportiert Leon weg) — der Schutz soll fuer ALLE Szenen gelten.
 - Die Szenen-Kraehe 1171 haengt (Szene wartet auf (5,28)) und ihr HOVER-Griff traegt im Port ein +0x93-Tor und -8 HP,
   die das Original @0x80115248-0x801152c4 nicht hat — Spur I (heliport1171). Dieser Spur aendert daran nichts
   (state.log bytegleich), der Szenenschutz nimmt die Rolle per Zustand 4 / grid 0x40 aus.
@@ -222,13 +321,34 @@ es, CONTINUE zeigt es) bleibt unveraendert.
   auf einen gerade getroffenen Spieler (Knurren Sub 6; bei Spieler-HP < 50 Ausholen Sub 5/7, @0x8010e5c4-0x8010e624).
   In 1190 verhindert die Sperrzeit den Entscheid ohnehin, in 11D0 kommen die RE1.5-Hunde nicht aus dem Kaefig
   (state.log bytegleich, 4.); in einem anderen Raum koennte ein Hund nach einer Szene bei HP < 50 bereits ausgeholt
-  haben. Kein gemessener Fall im Standard-Flavor.
+  haben. Kein gemessener Fall im Standard-Flavor. Zensus-Fall "Hund 0x20 (HP 40)" (Fortsetzung; MESSUNG AUSSTEHEND, s. 5.1):
+  erwartet kein Treffer und kein Griff waehrend der Szene — alle Biss-/Griff-Kontakte des RE1.5-Hundes lesen +0x93
+  (@0x8010f294, @0x8010f5c0); sichtbar bleibt hoechstens das Ausholen/Schnappen ins Leere (Sub 5/6/7).
+- Gegner-Animationen, deren KONTAKT (nicht der Commit) am Tor haengt (z.B. RE1.5-Spinne Lunge, RE1.5-Hund Schnappen),
+  koennen waehrend einer Szene ins Leere gehen; Treffer, Griff, HP-Verlust, Treffer-Reaktion gibt es nicht (Zensus).
+  Das ist die Original-Reaktion dieser Gehirne auf einen "nicht angreifbaren" Spieler; kein Eingriff.
+
+- Fuer die INTEGRATION (andere Spuren dieser Runde): neue Angriffswege von R (Spinnen-Gift 0x25), S (Stage-3-Treffer)
+  und T (Stage-4-Gegner) muessen ein Spieler-Tor lesen (`pl->hit_react & 1` / `re15_player_is_grabbed()`) oder
+  `re15_szenenschutz_sicht()`; sonst gibt nur das Sicherheitsnetz die HP zurueck. `unit_r38_szenenschutz_alle` zaehlt
+  dafuer auch neue Statusbits +0x98 (Blutung/Gift) als Treffer und schlaegt fuer die abgedeckten Typen (0x10-0x18,
+  0x13, 0x1A, 0x20, 0x21, 0x24-0x27, 0x29, 0x2B, 0x2D, 0x30, 0x36) an, wenn ein gemergter Angriff das Tor umgeht.
+  Spur I (heliport1171): ihre Ereignis-Kraehe laeuft in FLIGHT-2 (+0x4 = 4, grid 0x40) und ist damit vom Szenenschutz
+  ausgenommen (Teil der Szene); die Haken beider Spuren liegen in verschiedenen Hunks von enemy_ai_common.c
+  (B: Commit @0x8011330c / Kontakte @0x80113dd4/@0x80114464 / run_all; I: FLIGHT-2 / Dispatch / Bank-5-Wort).
+- ROOM1170 (Leon) zum Abgleich: die sieben freien Kraehen entstehen in sub15 nur im Zweig Ck(3,125)==1
+  (@0x01882-0x018FE); die Szene sub02 laeuft nur im anderen Zweig Ck(4,242)==1 (@0x017CE-0x01876) — Kraehen und
+  sub02 schliessen sich aus; mit Kraehen haelt nur sub14 den Spieler, und sub14 setzt Leon per Pos_set @0x0174A weit
+  weg (n1170crow). Die Kraehen-Haken (3.(C)) aendern im ausgelieferten Leon-Ablauf darum nichts Sichtbares; sie machen
+  den Schutz fuer jede Szene vollstaendig (Zensus-Riegel).
 
 ## 7. Fuer den Nutzer
 
 - Keine neuen Assets, keine Sprachdateien, keine Bank-/Message-Ids.
 - Verhalten: Solange eine Szene Leon festhaelt (Letterbox/Skript oder eine Skript-Bewegung wie Hocken), greifen
-  Gegner ihn nicht an — sie laufen, kreisen oder knurren. Ist der Angriff selbst Teil der Szene (Elza ROOM1170: die
-  Kraehe packt Elza, John schiesst), bleibt er. Nach der Szene greifen die Gegner normal an; die Zwingerhunde in
-  ROOM1190 beissen wie im Original erst 4 Sekunden (120 Bilder) nach ihrer Landung.
+  Gegner ihn nicht an — sie laufen, kreisen oder knurren; das gilt fuer alle Gegnerarten (Zombies, Hunde, Kraehen,
+  Spinnen, Affen, Kakerlaken, Gitterarme, Tyrant, Birkin), Kraehen im Anflug drehen ab. Ist der Angriff selbst Teil der
+  Szene (Elza ROOM1170: die Kraehe packt Elza, John schiesst; Birkins Auftritt im Endkampf), bleibt er. Nach der Szene
+  greifen die Gegner normal an; die Zwingerhunde in ROOM1190 beissen wie im Original erst 4 Sekunden (120 Bilder) nach
+  ihrer Landung. Feuer verletzt Leon nicht, solange eine Szene ihn festhaelt (er kann nicht hinausgehen).
 - Im debug.log zeigen `[szenenschutz] ... an/aus` die geschuetzten Fenster.
