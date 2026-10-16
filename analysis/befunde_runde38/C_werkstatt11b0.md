@@ -178,7 +178,7 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
   |---|---|---|
   | v0.8.23 3ec5b1f8 | nein | kein Schub ueberhaupt (Modus 0x13 unbekannt, Marvin auf re15_npc_sub_idle, J §1.1) |
   | v0.8.24 e8b3958f | ja | Schub + Fall im Uebergabebild |
-  | v0.8.25 2077bb8e | ja | unveraendert (szenenleon_r36.c seit c3201da8 nicht mehr angefasst) |
+  | v0.8.25 2077bb8e | ja | unveraendert (letzter Eingriff in szenenleon_r36.c: 35c02fab, Integration Runde 36, schon in v0.8.24) |
 
   Der "Fall" kam also mit dem Schub selbst in v0.8.24, er ist kein Rueckfall eines vorher richtigen Stands.
 
@@ -220,7 +220,8 @@ Neue Riegel (`re15_port/tests/unit/probes/r38_werkstatt11b0.cmake`, registriert 
 ## OFFEN
 1. **Leons Uebergabebild Phase 1 -> 2** (nicht gemeldet, nicht Teil des Auftrags): der Spieler-Sub 0x13 waehlt die Bank
    ueber `re15_szl_schub_spieler_pl00/_wclip` nach +0x6 (szenenleon_r36.c), im Bild F1634 also PL00 Clip 5 statt des
-   W-Bank-Clips 5, den Phase 1 posiert (@0x8005294c). Ein Bild, im Framedump F1634 an Leon nicht als Sprung sichtbar.
+   W-Bank-Clips 5, den Phase 1 posiert (@0x8005294c). Ein Bild, im Framedump nicht als Sprung sichtbar: mittlere
+   Bilddifferenz im Leon-Ausschnitt F1633->F1634 1.47 (inkl. Kurs-Rastung), Nachbarn 0.80 / 1.14 / 2.32 / 3.26.
    Messweg bei Bedarf: RE15_ANIM_TRACE Aktor 0 F1633..F1635 + Framedump, Regel wie §3.3 (Bank des posierten Clips).
 2. **ROOM1171 (Elza)**: dieselbe Sub-0x13-Kanalregel gilt dort fuer den Partner (Sce_em_set sub07 @0x016C8 Typ 0x49);
    die Logik (Phasen, Takt, Yield-Tor `in_motion_pose`) ist unveraendert, nur die Bank im Uebergabebild. Gemessen ist
