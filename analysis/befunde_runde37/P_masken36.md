@@ -358,8 +358,9 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
   WEST PASSAGE (ROOM4080), der Treppenpfeiler am Bahnsteig (ROOM6010). Seit v0.7.19 (2026-09-08, Commit 53741fe5) war
   das in diesen Stages unbemerkt ganz ausgefallen; die Masken selbst gibt es seit v0.3.96 (2026-09-03). Rechtecke, die
   eine Figur an einem erreichbaren Platz VOR einem Objekt uebermalen wuerden, bleiben aus (berechnet fuer jede der 216
-  Sektionen, Leon und Elza; an der exe in den Szenen der Riegel 0 Punkte). Bekannte Reste: Saumpunkte am Rand einzelner
-  Masken (ROOM3040 Cut 1: 9 Punkte am Fussende, ROOM5090 Cut 14: 2/5), s. OFFEN 2.
+  Sektionen, Leon und Elza; an der exe in den Szenen der Riegel 0 Punkte). Bekannte Reste (Stand Nachbesserung 2):
+  einzelne Bildpunkte an Maskenkanten, wo die Figur ueber das Figurmodell hinausragt (Schatten/Fuss am Boden, z.B. TRAIN
+  CAR ABC ROOM5090 Cut 14: 2 Punkte Leon / 5 Punkte Elza), s. OFFEN 2.
 - Stellen, an denen die alten, automatisch erzeugten Masken Leon faelschlich geloescht haetten (Bodenflaechen, Wandstuecke,
   das Band knapp vor Objekten — dieselbe Art Fehler wie Ihre Meldung vom 2026-09-03 "Leon verschwindet"), bleiben aus.
   Wo Ihnen eine Verdeckung fehlt: F9-Marke wie gewohnt; der Weg dafuer ist eine Freistellung wie in STAGE1.
@@ -370,12 +371,23 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
   schnitt Leon an der Seite ab): auch dort bleiben diese Rechtecke jetzt aus. Folge: im EAST PASSAGE (ROOM4040 Cut 4/7)
   verdecken die Wandbloecke weniger als vorher; Verdeckung HINTER der Wand im WEST PASSAGE (ROOM4080 Cut 5) bleibt (879 von
   883 Punkten).
+- Nachbesserung 2 (nach der zweiten Abnahme): (1) In FACTORY LINE B (ROOM3050/3051) uebermalten die Masken in der
+  Monitor-Nahaufnahme der Kran-Konsole (Cut 15) den gruenen Ziel-Cursor - behoben, der Cut zeichnet wie im Original keine
+  Maske mehr (an der exe 60 -> 0 Punkte, Leon und Elza). (2) Im NORTH OFFICE (ROOM30A0/30A1) schnitt der obere Balken der
+  Buero-Trennwand Leon das Haar ab, obwohl er davor stand - behoben (4/7 -> 0 Punkte). Dafuer prueft der Generator die
+  Figur jetzt Bildpunkt fuer Bildpunkt bis zur Kopfoberkante; er laesst dadurch 148 weitere Rechtecke weg (Leon- und
+  Elza-Raeume). Gar keine automatisch erzeugte Maske zeichnen jetzt: FACTORY LINE A (ROOM3040) Cut 1 (Kiste am
+  Treppenabsatz), FORKLIFT-FAC.L (ROOM30E0) Cut 6 und 7, MAIN PLATFORM (ROOM6010) Cut 6, FACTORY LINE B Cut 6 und 15
+  (jeweils auch die Elza-Variante). Die Verdeckung HINTER Objekten in den gemessenen Szenen ist unveraendert; im Modell
+  sinkt sie in den Stages 3/4/6 um hoechstens 1 %, in Stage 5 um 11 %. Wo Ihnen dort eine Verdeckung fehlt: F9-Marke
+  wie gewohnt.
 - STAGE1/2 (Ihre Freistellungen) und Elzas Zwillings-Masken aus Runde 37 Spur A sind unveraendert.
 - Assets/Paket: Spur P bringt keine neuen oder geaenderten Asset-Dateien (Stage-3..6-MASKS unveraendert). Die Entfernung
   von ROOM1221.MSK / ROOM2091.MSK + _PRI00..07.TIM im Spurbaum ist be2dbd26 der Integration (inhaltsgleich uebernommen),
   nicht neu. Neu im Code:
   `engine/src/masken36_r37.c` + `engine/src/gen/masken36_ausschluss_r37.inc` -> Android: .cxx-Cache neu konfigurieren
-  (neue Quelldatei, reai-v2-android-glob-cache); APK neu bauen.
+  (neue Quelldatei, reai-v2-android-glob-cache); APK neu bauen. Nachbesserung 2 aendert die Tabelle erneut (126 Zeilen)
+  -> APK neu bauen.
 - Sprachdateien: keine. Bedienhinweise: keine neuen Schalter; im debug.log steht je Cut
   `[pri] ROOMxxxx Cut n: Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)`.
 - Entscheidungsfragen: keine.
