@@ -47,6 +47,7 @@
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
+#include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 (Rueckgriff, Wurf) */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
@@ -5856,15 +5857,18 @@ static uint16_t s_crow_flock;
 /* the second crow global: the flag-array word @0x800b1028 (bit-array, MSB-first: bit N ->
  * mask 0x80000000>>(N&0x1f)). FLIGHT-2 uses bits 0x1c(mask 0x8, set by HOVER-grab), 0x1d
  * (mask 0x4, tested by the dispatcher -> spin), 0x1e (mask 0x2, tested by dive-arm); 0x1f
- * (mask 0x1) = the death gate, set only in STAGE3/STAGE5. In STAGE1 only 0x1c is ever set. */
-static uint32_t s_crow_gflags;
+ * (mask 0x1) = the death gate. KORREKTUR Runde 38 Spur I: in STAGE1 setzt ROOM1171 sub02 0x1e/0x1d/0x1f
+ * (@0x013B2/@0x01404/@0x01464/@0x01498) - der Rueckgriff-Ablauf der Elza-Szene (re15_heliport1171_r38.h). */
+/* Runde 38 Spur I: das Wort IST Spiel-Flag-Bank 5 (Tabelle @0x80074664[5] = 0x800b1028; HOVER-Griff
+ * `addiu a0,s0,17824` @0x801152c0 -> SET @0x801152c4) - ein privates Wort sah das Skript nie. */
+#define s_crow_gflags (g_game.flags[5][0])
 /* DAT_800aca52 — player-reaction latch word (bit 0 = player knocked down). Setters = the EXE
  * knockdown handlers @0x800334e8-0x80033504 / @0x800345c8 `lhu aca52; ori v0,v0,1; sh` (the player
  * knockdown command FSM — NOT PORTED YET, so bit 0 currently has no producer: OPEN). Cleared by the
  * player normal handler (@0x80031c44 `DAT_800aca52 &= 0xfffe`, wired in game_step_common.c) and on
  * room init (FUN_8003ecec `DAT_800aca52 = 0`, wired below). (audit wf_827f186d crow #A) */
 uint16_t g_aca52_flags;
-void re15_crow_flock_reset(void) { s_crow_flock = 0; s_crow_gflags = 0;
+void re15_crow_flock_reset(void) { s_crow_flock = 0;   /* Runde 38 Spur I: Bank 5 loescht der Raum-Init (@0x8003ed74) */
                                    g_aca52_flags = 0; /* FUN_8003ecec: DAT_800aca52 = 0 on room init */ }
 /* the scripted "crows die" event trigger (STAGE3/STAGE5 set bit 0x1f of 0x800b1028 via
  * FUN_80118d00/80119514): the root then promotes every state-4 grid&0x40 crow to DEATH. */
@@ -6573,13 +6577,13 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
 /* FLIGHT-2 (state 4) sub-machine — byte-true 0x80114e54 family (workflow wf_2c7076b7, 0 refutations).
  * The grid&0x40 event crow's perch sequence via the substate table @0x80121220[0-4]: ASCEND -> HOVER
  * -> (grab on contact) ORIENT; SPIN/DIVE-ARM only fire on the event flags s_crow_gflags bit 0x1d/0x1e
- * (never set in STAGE1). FLIGHT-2 never writes +0x4 (no state exit) and never touches the death bit
- * 0x1f — so the event crow stays in state 4 and remains byte-true unkillable in STAGE1. */
+ * (in STAGE1 nur ROOM1171 sub02, Runde 38 Spur I). FLIGHT-2 never writes +0x4 (no state exit) and never touches
+ * the death bit 0x1f — den Tod schreibt die Wurzel (@0x80112088), wenn das Skript 0x1f setzt (ROOM1171 @0x01464/98). */
 static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
 {
     switch (e->sub_state_1) {
     case 0:   /* ASCEND 0x80114fb8: climb (vvel -120 + frame-8 re-thrust) -> HOVER when high enough */
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 0) { re15_audio_room_se(0); re15_crow_clip(e, 4); e->sub_state_2 = 1; }   /* Runde 38 Spur I: Se(0) @0x80115004 (a0=0 @0x80115008) */
         if (e->sub_state_2 == 1) { e->crow_vvel = -120; e->crow_speed = 160; e->sub_state_2 = 2; }
         if (e->anim_frame == 8) e->sub_state_2 = 1;                     /* @0x80115088 re-thrust */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);                     /* @0x801150a4 gravity */
@@ -6603,18 +6607,18 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
         re15_crow_advance(e);
         if (e->crow_contact) {                                          /* @0x80115248 grab gate (+0x1d0) */
             s_crow_gflags |= 0x8u;                                      /* @0x801152c0 setbit 0x1c */
-            re15_crow_hit_player(e, player, 8);                         /* grab: 0x800aca58=5 (@0x801152a4) */
+            re15_r38i_rueckgriff(e, player);                            /* Runde 38 Spur I: aca58=5/aca59=1 @0x801152a0/ac, KEIN HP-Write */
             re15_crow_sub(e, 2);                                        /* @0x801152b8 -> ORIENT */
         }
         break;
 
     case 2:   /* ORIENT 0x801152e0: hold the attack pose; promoted to SPIN by the dispatcher 0x1d-tick */
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); e->sub_state_2 = 1; }  /* @0x80115310 clip 8 */
-        re15_crow_anim(e);   /* pose 0x80019700(a3=0x8012110c null table) = no distinct effect; hold */
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); re15_r38i_orient_blut(e); e->sub_state_2 = 1; }  /* @0x80115310 clip 8, FX @0x80115334 */
+        if (re15_crow_anim(e)) re15_r38i_orient_blut(e);   /* Runde 38 Spur I: Umlauf -> 0x80019700(0x1000, Teil 2) @0x80115394 */
         break;
 
     case 3:   /* SPIN 0x801153ac: spin the yaw, timer -> back to HOVER */
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_vvel = -30; e->crow_timer = 32; e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 0) { re15_audio_room_se(0); re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_vvel = -30; e->crow_timer = 32; e->sub_state_2 = 1; }   /* Runde 38 Spur I: Se(0) @0x801153f8 (a0=0 @0x801153fc) */
         e->rot_y = (int16_t)(e->rot_y + 60);                           /* @0x80115460 yaw += 60 */
         if (e->sub_state_2 == 1) {
             if (e->crow_timer == 0) { e->sub_state_2 = 2; e->crow_vvel = 10; e->crow_timer = 40; }  /* @0x801154b4/c4 */
@@ -6651,8 +6655,8 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
 
 /* DEATH (state 3) — byte-true 0x801146d0 (crow-cluster-wave2, verified). Fall from the sky
  * (gravity +0x1e8=0x26), land (clip 0x0a), finish -> state 7 (corpse). Reached via the root
- * promotion (state 4 + grid&0x40 + mode bit-0x1f); byte-true UNREACHABLE in STAGE1 (bit-0x1f only
- * STAGE3/5), ported for full-stage portability. Lane on +0x5: [0-6] normal (nested on +0x7 =
+ * promotion (state 4 + grid&0x40 + mode bit-0x1f); in STAGE1 erreicht ueber ROOM1171 sub02 (5,0x1F)
+ * @0x01464/@0x01498 (Runde 38 Spur I), sonst STAGE3/5. Lane on +0x5: [0-6] normal (nested on +0x7 =
  * sub_state_3), [7] gib (the feather burst). */
 static void re15_crow_death(re15_actor_t *e)
 {
@@ -6812,7 +6816,8 @@ static void re15_crow_ai_tick(int slot)
     /* MIXED (2026-08-23): typ-bezogen — 0x21 != 0x20, die Kraehe bleibt dort auf RE1.5. */
     /* Runde 35 Spur M: die Fensterkraehe ROOM1120 (RE2-State 4) laeuft in jedem Flavor ueber das
      * RE2-Brain, solange sie im Skript steht (re15_fenster1120.h, re15_re2crow_zwang). */
-    if ((re15_ai_re2_for_type(e->type) || re15_re2crow_zwang_ist(slot)) && e->type == 0x21) {
+    if (((re15_ai_re2_for_type(e->type) && !re15_r38i_ereigniskraehe(e)) /* Runde 38 Spur I: RE1.5-Ereignis */
+         || re15_re2crow_zwang_ist(slot)) && e->type == 0x21) {
         if (!s_ai_paused) {
             e->ai_dist = (uint32_t)re15_enemy_player_dist(e, player);
             re15_re2crow_tick(slot);
@@ -6838,6 +6843,7 @@ static void re15_crow_ai_tick(int slot)
      * 0x800aca5a=3 (the FLIGHT-2 SPIN escalation of the GRABBED player command FSM). OPEN: the
      * player command bytes aca58/aca59/aca5a are the unported player reaction dispatcher
      * @0x80073f90 (see re15_crow_hit_player). */
+    re15_r38i_wurfstoss();   /* Runde 38 Spur I: der Rueckgriff (aca59=1) ist portiert (heliport1171_r38.c) */
     /* GLOBAL FREEZE GATE @0x801120ec-124 (audit wf_827f186d crow #7): skip the state dispatch +
      * post-pass iff (g_pauseflags & 0x20000000) && !(grid_id & 0x20) — NOTE the crow's grid&0x20
      * is a freeze-EXEMPTION (`lbu +0x9; andi 0x20; beq zero -> skip` @0x80112114-20), NOT the
