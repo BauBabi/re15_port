@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.16)
 # =============================================================================
 # SZENENSCHUTZ an der echten exe (Runde 38 Spur B, Dossier analysis/befunde_runde38/B_szenenschutz.md).
 #
