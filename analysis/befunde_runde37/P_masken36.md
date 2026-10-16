@@ -582,13 +582,13 @@ head -1` -> v0.3.96 (2026-09-03 12:30). §7 sagt jetzt "Seit v0.7.19 (2026-09-08
 gibt es seit v0.3.96".
 
 
-## Nachbesserung 2 (2026-10-14, nach Abnahme 1 `P_abnahme_1.md`)
+## Nachbesserung 2 (2026-10-14 begonnen, 2026-10-16 abgeschlossen, nach Abnahme 1 `P_abnahme_1.md`)
 
 Stand (fortlaufend):
 - [x] M1 ROOM3050/3051 Cut 15: Generator-Masken uebermalen den Konsolen-Cursor (NB2.1) - an der exe 60 -> 0 (Leon, Elza)
 - [x] M2 Kopfoberkante (und Fussende) vom Figurmodell nie abgetastet, ROOM30A0 Cut 0 (NB2.2) - an der exe 4/7 -> 0/0
 - [x] Riegel + Gegenprobe (NB2.3), Folgen der neuen Tabelle (NB2.4)
-- [ ] Je-Cut-Liste, Zufallswege, Bau + gezielte Tests (NB2.5/NB2.6)
+- [x] Zufallswege (NB2.5), Je-Cut-Liste (NB2.6), Bau + gezielte Tests (NB2.7): `100% tests passed, 0 tests failed out of 45`
 
 Fortsetzung 2026-10-16 (der erste NB2-Agent brach am 2026-10-14 ~03:3x am Monatslimit ab): vorliegend ff2a5b87 (Generator
 pixelgenaues Figurraster, Sektion ohne Stehplatz ganz aus, Werkzeug `punkt`, Riegel-Checks) und 9fd9428b (Tabelle neu,
@@ -824,6 +824,22 @@ Lauf wie §4.4/NB1.4 (`RE15_DEBUG_JUMP=<Leon-Raum>@250`, Elza `RE15_TITLE_SHOT_C
 Spur-P-Zeile = Weg einer Original-NULL-Sektion) + 0 FALSCH/FEHLT.** LEER sind ROOM3040/3041 Cut 1, ROOM3050/3051 Cut 6
 und Cut 15, ROOM30E0/30E1 Cut 6 und 7, ROOM6010/6011 Cut 6. Beispiele: ROOM30A0 Cut 0 `masks=18` (NB1 21, Soll 18 von 46),
 ROOM3040 Cut 0 `masks=8` (NB1 12). Wie zuvor: eine Lader-Pruefung, keine Pruefung auf Fehlverdeckung (Kopf der Liste).
+
+### NB2.7 Tests (gezielt, KEINE volle Suite)
+Schlussbau `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (nach `configure` fuer den master-Merge und den neuen
+Test). Gezielter Lauf, Ausdruck der Abnahme 1 (er trifft auch den neuen Test):
+`ctest --test-dir re15_port/build -R "r37_masken36|r37_pri1100|_pri_|pri_hashes|pri_masken|r35_entladen|sld_atlas|maskgrp|boot_bg_pin|bss_chunk|bss_room_source" --timeout 900 --output-on-failure -j3`
+-> **`100% tests passed, 0 tests failed out of 45`** (Total Test time 748.01 s; zweimal gruen: vor und nach dem Werkzeug
+`zeuge`, erster Lauf 689.34 s). Laufzeiten: integration_r37_masken36_nb2 352.7 s, stage3 380.3 s, stage4 138.3 s, stage5
+176.5 s, stage6 200.2 s, unit_r37_masken36_ausschluss 333.8 s (Zeitgrenze 900 s; Maschine durch parallele Runde-38-Agenten
+belastet), zensus 2.6 s, verdeckung 0.06 s. Darin unveraendert gruen: Spur-A-Riegel unit/integration_r37_pri1100_*,
+integration_pri_masken, unit/integration_r36_pri_*, unit_pri_*, unit_sld_atlas, unit_r34n_g_maskgrp,
+unit/integration_r35_entladen_* (a..l), integration_boot_bg_pin, prop_bss_chunk, unit_bss_room_source.
+Werte aus dem Lauf (LastTest.log): NB2 Cursor Leon 210 / 0 / A-B 0, Elza 210 / 0 / 0; Kopf Bild 380 328 / 0, Bild 400
+355 / 0; Stage 3 HINTER 1123/1234 (Elza 1158/1260), DAVOR 0/684 (0/1067), FREI 0/883 (0/997), WEG 0/464 (Leon 0/602);
+Stage 4 879/883 (621/627), 0/8374 (0/6165); Stage 5 199/322 (224/309), 0/5007 (0/5050); Stage 6 820/1440 (639/1105),
+0/9489 (0/7931) - alle wie Abnahme 1.
+Zusammenfuehrung: `git merge-tree --write-tree master HEAD` (master 98d35560) -> ohne Konflikt.
 
 ### NB2.8 OFFEN nach Nachbesserung 2
 1. **Modellkasten als Huelle** (NB2.4, §6.4): pixelgenau abgetastet schliesst er auch Rechtecke aus, die Leon in einer
