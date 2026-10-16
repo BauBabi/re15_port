@@ -103,7 +103,11 @@ int re15_affen3_trefferpunkt(const re15_actor_t *e, int record, int32_t out[3])
 int re15_affen3_quadrat(const re15_actor_t *e, const re15_actor_t *pl, int record, int32_t r)
 {
     int32_t g[3];
-    if (!re15_affen3_trefferpunkt(e, record, g)) return 0;
+    if (!re15_affen3_trefferpunkt(e, record, g)) {
+        /* Ohne EM029-Bank (nur Unit-Harness ohne Modell; im Spiel laedt main.c die Bank je Raum-Aufstellung,
+         * sonst gaebe es kein Bild): Ersatzpunkt = Aktor-Wurzel, wie re15_maggot_bone_square beim Gorilla. */
+        g[0] = e->x; g[1] = e->y; g[2] = e->z;
+    }
     /* @0x8001c080-a0: v0 = (plX - (ptX - r)) & 0xffff; a0 = (r << 16) >> 15 = 2r; `slt v0,a0,v0` -> kein Treffer.
      * Achse Z identisch @0x8001c0a8-c0. */
     uint16_t qx = (uint16_t)((uint16_t)(uint32_t)pl->x - (uint16_t)(uint32_t)g[0] + (uint16_t)r);
@@ -322,7 +326,7 @@ void re15_affen3_init(re15_actor_t *e)
     if (!e) return;
     e->render_scale_q12 = RE15_AFFEN3_MASSSTAB;   /* +0x0 |= 0x800 @0x80110f44-48, +0x166 = 0x14cc @0x80110f54-58 */
     e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* +0x94 = 0 @0x80110ce4, +0x95 @0x80110cf4, +0x8f @0x80110d04 */
-    re15_affen_pool_anim(e);                      /* anim_set @0x80110ed0: der INIT legt den Pool an (Clip 0, Bild 0) */
+    (void)anim_set(e);                            /* `jal 0x8001f314` (a3 = 0x200) @0x80110ed0: Pool des INIT-Clips 0 */
 }
 
 int re15_affen3_aktiv(int slot, int32_t dist, int sicht)
