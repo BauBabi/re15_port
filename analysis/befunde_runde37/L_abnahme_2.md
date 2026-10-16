@@ -1,11 +1,14 @@
 # Runde 37 Spur L "re2zombie" — Abnahme 2 (unabhaengig, nach Nachbesserung 2)
 
-Baum `.claude/worktrees/r37_re2zombie`, Zweig `r37/re2zombie`, gepruefter Stand `e4bca518` (Basis `e399ee3f`, Merge
-`44721dca` = master v0.8.25 + Runde-38-Auftrag). Abnahme 2026-10-16. Alles unten ist SELBST gemessen bzw. SELBST
+Baum `.claude/worktrees/r37_re2zombie`, Zweig `r37/re2zombie`, gepruefter Stand `e4bca518` (Code; HEAD `a17a649a` = nur der
+Teilbericht; Basis `e399ee3f`, Merge `44721dca` = master v0.8.25 + Runde-38-Auftrag). Abnahme 2026-10-16 in zwei Teilen:
+Teil 1 (Abschnitte 0-5, bis zum Sitzungslimit ~18:18, als Teilbericht `a17a649a` gesichert) und Teil 2 (Abschnitt 6, ab
+21:05: Neubau, Reproduktion, Nach-Disassemblierung, Integrationslaeufe, Urteil). Alles unten ist SELBST gemessen bzw. SELBST
 disassembliert; aus Abnahme 0/1 und dem Dossier ist nichts ungeprueft uebernommen (wo ich mich darauf beziehe, steht es dabei).
 Mess-Skripte und Rohdaten (Scratch der Sitzung, nicht eingecheckt): Treiber `abn2_lauf.sh`, Batches `batch1.sh` /
 `batch2_messer.sh`, Auswerter `abn2_state.py` (Zustandswechsel/HP/Griffe je Raumbesuch) und `abn2_messer.py`
-(Messertreffer je Anmarsch, P3-Ausgaenge), Laufordner `abn2L/runs/<lauf>` und `abn2L/runs_messer/<lauf>`.
+(Messertreffer je Anmarsch, P3-Ausgaenge), Laufordner `abn2L/runs/<lauf>`, `abn2L/runs_messer/<lauf>` und (Teil 2)
+`abn2L/teil2/`.
 
 ## Ergebnis
 
@@ -22,7 +25,7 @@ Env-Schalter im Engine-Diff). **Vertrag haelt** (Pfade, keine Ressourcen, Haken 
 "Runde 37 Spur L"; Treffer-Handler nur case 3 = Freigabe Runde 38, s. Hinweis H1). **Tests**: Spur 10/10 verbose, Unit-
 Auswahl 306/306, Integration 16 seriell (Abschnitt 5).
 
-BESTANDEN_ZEILE
+**Urteil: AUSSTEHEND** (Zwischenstand Teil 2 — die Integrationslaeufe laufen noch, Abschnitt 6.5).
 
 ## Hinweise (kein Mangel dieser Spur)
 
@@ -52,6 +55,17 @@ BESTANDEN_ZEILE
   Timer-Produzent (1) trotzdem (1/1 -> 1/2 bei 4857 / 4990 / 4096 < 0x1388), Basis nie. Wegen der unklaren Spielerlage
   nicht als Beleg gewertet; falls der Nutzer in Stage 2 "passive" Zombies meldet, zuerst Erreichbarkeit/Navigator
   (Dossier OFFEN "Navigator-Tasche") pruefen — Spur L aendert daran nichts (L und Basis gleich bis auf die 1/2-Wechsel).
+* **H6 — Navigator-Tasche ROOM1030 bleibt (vorbestehend, Teil 2 selbst gemessen; Vorschlag eigene Spur).**
+  `ctest -R "^unit_r36_zombieki_eintritt$" -V` (gruen) druckt: `1030<-1050 cut2 Leon(1172,-12558) hin slot1 typ16 grid0D ...
+  still 330 ab F780 @(-6175,-24838) d 2535 | Ende st1/1 (-6144,-24838) ... KLEMME` und `[vorbestehend] Stand bis Runde 37:
+  600 Bilder aufrecht still (Gegenlauf Maske 0)` -> Summe `PASSIV 0, KLEMME 0 (vorbestehend 1)`. Spur L hat diesen Riegel der
+  Runde 36 so angepasst, dass ein Stillstand, den es im Stand bis Runde 37 ebenso gibt, nicht als KLEMME zaehlt (Begruendung
+  im Diff: die 0x201-Wechsel machen den gehenden Zombie erst zu einem "reagierten" Fall). Die Anpassung ist nachvollziehbar
+  (L verkuerzt den Stillstand 600 -> 330), aber damit steht im Normalspiel weiterhin ein Zombie (Typ 0x16) ~11 s an der
+  Tresen-/Wandzelle, 2535 vor Leon, bis zum Laufende — genau die Fehlerklasse des Nutzers ("bleiben ... stehen"). Ursache
+  laut Dossier OFFEN: Steuerziel des RE1.5-Navigators (re15_nav_update_steer = FUN_80039e7c-Zwilling) liegt in einer soliden
+  Zelle; nicht im Code der Spur L (VERTRAG 1.4: L aendert DECISION[0]/EXEC[0..2]). Fuer den Orchestrator: eigene Spur
+  "Navigator ROOM1030" einplanen (Dossier-Vorschlag: Zonen/Verbindungspunkte ROOM1030.RDT gegen FUN_80039e7c).
 
 ## 0. Bau und Grundlage
 
@@ -260,4 +274,101 @@ Testlaeufe (Baum r37_re2zombie, keine volle Suite):
    bis Runde 37), nahkampf 2/2 ("361 gegen 368"), raum1130 4/4 (Wechsel bei 1991), raum1180 4/4 (Mittel 1993).
 2. `ctest --test-dir re15_port/build -R "re2|zomb|zgirl|granat|lyer|messer|crawl|kriech|gegnerzahl|1140|1130|1180|enemy|biss|griff|grab|bump|kfjump|teardeath|blut|bandlock|rise|r37_|irons|1150|dog|crow|spider|affen|situp|10d0|hund|kraehe|gore|wecker|birkin|elza|gator|g5|boss|zellenarm|maggot|wurm|plant|spinne|gorilla|root|ragdoll|schuss|knife|hit|kampf|ai_" -E "^integration_" -j 4 --timeout 600 --output-on-failure`
    -> **`100% tests passed, 0 tests failed out of 306`** (52 s).
-3. Integration seriell, 16 zombie-/kampfnahe Haken: ERGEBNIS_INTEGRATION
+3. Integration seriell: Teil 1 brach nach 7 gruenen von 16 Laeufen am Sitzungslimit ab (Scratch `abn2L/integ.log`, Start
+   18:01:15: r30_granate_laden, r34_granaten, r35_granate, r35_werfer_elza, r35_zgirl, r35_zgirl_5090, r36_elza_schuss je
+   `Passed`, dann Abbruch in r36_gegnerzahl). In Teil 2 vollstaendig neu gefahren (18 Haken): Abschnitt 6.5.
+
+## 6. Teil 2 — Fortsetzung nach dem Sitzungsabbruch (2026-10-16 ab 21:05)
+
+Teil 1 (Abschnitte 0-5) endete am Sitzungslimit vor dem Ende der Integrationslaeufe; die Platzhalter fuer das Urteil und das
+Integrationsergebnis standen noch im Text. Teil 2 hat den Stand neu gebaut, die Belege aus Teil 1 gegen den gebauten Stand
+reproduziert bzw. aus den Rohdaten nachgezaehlt, drei Stellen erneut selbst disassembliert, zwei Port-Eigenheiten des P3-Fixes im
+Code nachgeprueft und die Integrationslaeufe vollstaendig gefahren. Rohdaten Teil 2: Scratch `abn2L/teil2/`.
+
+### 6.1 Bau und Stand
+* HEAD `a17a649a` (seit `e4bca518` nur der Teilbericht), `git status` sauber. `bash re15_port/tools/local_build.sh configure`
+  -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` (EXIT=0).
+* exe `re15_port/build/platform/pc/re15_pc.exe` 2026-10-16 16:57:25, md5 `03503eba76de5a0aaefc6dba426cf039` = dieselbe exe
+  wie in Teil 1 (juengste Quelle `enemy_ai_re2_zombie.c` 16:43:25). Der letzte re15_port-Commit `e2daa221` aendert nur
+  einen Meldungstext in `test_r37_re2zombie.c` (`git show e2daa221 -- re15_port`); `test_r37_re2zombie.exe` 17:23:11 ist
+  juenger als die Quelle (17:07:05).
+* Basis-exe (Hauptbaum, ohne Spur L) md5 `bf27fdb9aab1cee84d267ae29627e604`, 2026-10-14 07:19:50; `git merge-base HEAD
+  master` = `e2cc7673`; master seither nur Doku (`git diff master --name-only` unter re15_port = genau die zwoelf
+  Spur-L-Dateien, gleich dem Drei-Punkt-Diff).
+
+### 6.2 Reproduktion und Nachzaehlung der Teil-1-Belege
+* **Determinismus:** L1 (Montage-Karte, echte Tuer 1150 -> 1130, Leon steht, `RE15_EXIT_AT=1100#1130`) mit derselben exe neu
+  gefahren (`abn2L/teil2/runs/T2_L1_1130_steht`, exit=0, 64 s): `state.log` md5 `7c36bc80c677f6fd17461a61d059d6a2` =
+  Teil-1-Lauf `runs/L1_1130_steht` BITGLEICH (1191 Zeilen). Ebenso der Messer-Lauf w = 20.200 (`RE15_EQUIP=1`, debug.log
+  `[equip] RE15_EQUIP -> item 1 (slot 128)`, `EXIT_AT: Bild 1400 in Raum 1130`; `teil2/runs/T2_Lm_w20.200`, 94 s): `state.log`
+  md5 `159ae87ead1fbb88960b196b4af57a27` = `runs_messer/Lm_w20.200` BITGLEICH, Zaehler: `anm1 0 anm2 3 alle 3 griffe 2 |
+  ... | P3 F1211 0x10101 (af 13->14, Lage -4,+13); F1241 0x10101 (af 21->22, Lage +10,+21); F1271 0x10101 (af 21->22,
+  Lage -1,+24)`. Damit gelten die Rohdaten aus Teil 1 fuer den gebauten Stand.
+* **Nachzaehlung (abn2_state.py auf den Teil-1-Rohdaten):** L1 Platz 5 `F869 1/1->1/2 d=1991`, `F888 1/2->1/3 d=1108`,
+  Spieler-HP `F909 100->70, F947 70->40`; B1 kein 1/2, `F896 1/1->1/3 d=1166`. L2 1/2 bei 4283 / 1717 / 4692 / 1978 / 1936 /
+  1273 / 738, Griffe aus 0x201 bei 1180 / 1193, HP -> -20 (F852). L3 (erster 1130-Besuch) 1/2 bei 2346 / 2442 / 2346 / 2346,
+  `F471 1/2->1/12` Ausfall, `F481 1/12->1/3 d=1280` Griff aus dem Ausfall, `F352 1/2->1/3 d=1180`. L4 1180 / L5 1181
+  (debug.log `[boot] room RDT: STAGE1/ROOM1181.RDT`, `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `CONTINUE:
+  resumed in room 1181`) je `F283 1/2 d=1995 -> F311 Griff d=1193`, `F802 1/2 d=1991 -> F836 Griff d=1180`; B4/B5 nur
+  Griffe aus dem Gang (1187 / 1173). L6 1010 1/2 bei 1995 / 849 / 1978 / 1995, Griffe aus 0x201 bei 849 / 1193; B6 kein
+  1/2. Alles wie Abschnitt 1.
+* **Messer (36 Laeufe `runs_messer`, abn2_messer.py, Platz 5 bis F1400):** L Anm.1 **7**, alle **41**, Griffe **36**, P3
+  **18x 0x10101 / 20x 0x201 / 3x 0xB01 / 0x 0x101**; B Anm.1 **4**, alle **41**, Griffe **35**. (Anm.2 ueber ALLE 18 Laeufe:
+  L 34 aus 18 vollstaendigen, B 35 aus 17 — Abschnitt 4.4 nennt die 16 Paare der Abnahme 1: 31 / 33.) w = 20.200: L P3
+  `F1211 0x10101 (af 13->14, Lage -4,+13)`, `F1241 (+10,+21)`, `F1271 (-1,+24)`; B `F1196 0x201`, `F1226 0x101 (+0,+0)`.
+
+### 6.3 RE-Gate — in Teil 2 erneut selbst disassembliert (`re2_disasm.py`; EMZ0.BIN = EMOVL10_S0.BIN = EMZ0_d1.BIN, md5 `7f7a39e651064e07c95830db1bebdb89` selbst geprueft)
+1. **DECISION[12] 0x8010460C-744** (`dis 0x8010460C 80 --bin EMZ0.BIN`): alle fruehen Ausstiege — `80104634 bne v0,v1,0x801046a0`
+   (Phase != 3), `8010463c sltiu v0,a0,0x514` / `beq`, `80104658 bne` (0x800CFDCB & 0x80), `8010466c beq` (+0x14D < 11),
+   `80104684 bne` (Etage +0x106 gegen 0x800CFCFE) — landen auf `801046a0 beq a1,zero,0x80104730` mit a1 = 0 aus dem
+   Delay-Slot `80104638 addu a1,zero,zero` -> Epilog. Nur der Durchlauf setzt `8010469c sltu a1,zero,v0` (Spieler+0x8 != 15).
+   Danach Sektor 1 `801046a8 lhu 538 / andi 0x20 / bne`, `801046c0 lh a2,118` / `801046c4 addiu a3,zero,256` /
+   `801046c8 jal 0x80015758` / Delay `addiu a2,a2,256`, `801046d0 bne` / `801046d4 addiu v0,zero,769` / `801046d8 sw v0,4(s0)`,
+   `801046dc-e8` PL+0x1D3 |= 0x80; Sektor 2 `801046ec-72c` mit `andi 0x40` und `addiu a2,a2,-256`. Port `re2z_decide_lunge`:
+   fruehe `return`s, dann beide Sektoren (last writer wins) — stimmt; die Zwischenstation 0x801046A0 ist KEIN zweiter Weg in
+   die Sektoren.
+2. **EXEC[1] 0x80101D60-F78** (`dis 0x80101D60 92`, `dis 0x80101EC4 46`): (1) `80101d68 lhu v0,346` / `addiu -1` / `sh` /
+   `80101d78 sll v0,v0,16` / `80101d7c bne v0,zero,0x80101dc0` / `80101d84 jal 0x80015fe8` / `sra 3` / `addiu 100` /
+   `80101d94 jal 0x80015fe8` (Delay `sh v0,346`) / `andi 3` / `bne` / `80101da8 lw v0,496` / `sltiu 0x1388` / `beq` /
+   Delay `addiu v0,zero,513` / `80101dbc sw v0,4(s1)`; (2) `80101ecc sltiu 0x7d0`, `80101ee8 jal 0x80015614` (a1/a2 =
+   0x800CFC30/0x800CFC38 = Spieler x/z, `addiu a3,zero,512`), `80101efc lbu 0x800cfdcb` / `andi 0x80` / `bne`,
+   `80101f0c addiu 513` / `80101f10 sw` und OHNE Sprung weiter nach (3): `80101f18 lhu 0x800cfbf6` / `andi 0x4` / `beq ->
+   0x80101f64`, `80101f34 sltiu 0x9c4`, `80101f54 addiu a3,zero,1324`, `80101f5c addiu 513` / `80101f60 sw`; Epilog
+   0x80101F64. Port: (1) im Timer-Block, (2) und (3) nacheinander nach dem DoT, beide ausgewertet — stimmt.
+3. **Treffer-Handler P3 0x80105A50-BA0** (Rohbytes 0x80105B30-9F wie Abschnitt 3) und **0x800152C8 (RE2 PSX.EXE)**:
+   `800152e0 sh zero,16(sp)` / `800152e4 lhu v0,118(s1)` / `800152ec sh zero,20(sp)` / `800152f0 addu v0,v0,a1` /
+   `800152f8 jal 0x8008e1f4` (Delay `sh v0,18(sp)`) = Winkel (0, +0x76 + a1, 0) -> Matrix; `80015304 addiu a1,s1,324` /
+   `80015308 jal 0x8008dba4` = Matrix auf den Vektor +0x144/+0x146/+0x148; `80015310-20` +0x38 += out.x,
+   `80015324-34` +0x40 += out.z. Der Port-Helfer `r2z_r37_152c8` benutzt die IDENTISCHE Drehung wie die seit Runde 12
+   bestehende Anwendung desselben Paars e7c+152c8 in `re15_clip_root_motion_delta` (enemy_ai_common.c Z.773-775:
+   `x += (c*dx + s*dz) >> 12`, `z += (-s*dx + c*dz) >> 12`) — stimmt.
+Weitere Pruefungen am Code (Teil 2):
+* `re15_ai_set_state_word` (enemy_ai_common.c Z.103-110) schreibt nur die vier Bytes, keine Nebenwirkung — das doppelte
+  Setzen 0x101 -> 0x10101 im Gleichheitsfall entspricht den zwei `sw` @0x80105B40 (Delay-Slot) / @0x80105B50.
+* Herkunft des Vektors: `re2z_root144/148` schreibt nur `re15_clip_root_motion_delta` (Aufrufer fuer RE2-Zombies:
+  `re15_re2z_move_root` / `re15_re2z_root_probe`; die zwei weiteren Aufrufer Z.10061 / Z.11391 sind NPC- bzw.
+  Schaben-Pfade). Im P3-Takt laeuft vor `case 3` kein weiterer e7c-Zwilling fuer diesen Platz -> der Vektor ist der des
+  letzten P2-Takts, wie im Original (e7c nur in P0/P1/P2 @0x80105590/A8/75C/8AC, Teil 1 Abschnitt 3).
+* Zwei Felder fuer das eine Original-Feld +0x158: der Gang liest im Port nur `re2z_gaittmr` (re2z_gait_tick Z.407-427,
+  Tag-Pruefung Z.415); `re2z_t158` liest im Gang niemand (grep: Leser nur in EXEC[0]/[2]/[3]/..., im Treffer-Lean
+  re2z_lean_angle Z.4389 nur in den Reaktions-Phasen P1/P2). Das Tag `0x80 | 1` aus P3 verhindert die zweite Gang-Init im
+  Folgetakt; jeder spaetere Gang-Eintritt ueber 0x101 laeuft weiter durch P0 (`re2z_exec_walk` Z.1670-1687 setzt Tag und
+  Seeds neu). Kein Befund.
+* Guess-Tells im hinzugefuegten Code (`deferred|tunable|interim|for now|faithful|plausib|TODO|vorerst|ungefaehr|geschaetzt|
+  approx|getenv|sieht richtig|nach Gefuehl`): im Engine-/Include-Diff keine; einziges `getenv` im ganzen Diff ist
+  `RE15_ASSET_DIR` im Test `test_r37_re2zombie.c` Z.177 (Asset-Pfad der Sonde, kein Verhalten).
+* Werkzeug-Befund H4 selbst gelesen: `local_build.sh` Z.326 `Get-Process re15_pc | Where-Object { $_.Path.StartsWith('$_bw',
+  ...) } | Stop-Process -Force` — trifft nur Prozesse mit dem Namen `re15_pc`, deren Pfad mit dem Bauordner BEGINNT, also
+  auch `re15_port/build_l2/.../re15_pc.exe`; Messkopien mit eigenem Namen (`re15_pc_abn2L_*`, `re15_pc_r37l_haken_*`) sind
+  nicht betroffen.
+
+### 6.4 Spur-Tests (Teil 2)
+`ctest --test-dir re15_port/build -R "^unit_r37_re2zombie_" -V --timeout 600` -> **`100% tests passed, 0 tests failed out
+of 10`**; gelesen: prod1 4/4, prod2 5/5, prod3 5/5, b 3/3, c 6/6, d12 6/6, **p3 8/8** ("16 x 0x10101, 16 x 0x201", "(37,-5)
+-> (-5,-37)", "Gang-Zeilen-Timer 30 -> 29", "anderer Clip ... 0x101 ... 16 Lagen", "0xB01 genau bei r0&0xf == 0 (8 Lagen)",
+"BEANSPRUCHT ... nie 0xB01 ... (45 Lagen)", "Stand bis Runde 37 ... 16 / 8 Lagen"), nahkampf 2/2 ("361 Treffer", "361 gegen
+368 (>= 95 %)"), raum1130 4/4 ("1 Wechsel, davon (2) 1", "1991", "1 Griffe aus 0x201"), raum1180 4/4 ("2 Wechsel", "1993",
+"2 Griffe aus 0x201"). Gegenproben "Maske 0: kein Arme-hoch-Gang vor Leon (0)" in beiden Raum-Tests.
+
+### 6.5 Integration (Teil 2, seriell, Baum r37_re2zombie)
+(laeuft — Zwischenstand: 4 von 18 gruen: r30_granate_laden 135,8 s, r34_granaten 348,9 s, r35_granate 313,1 s, r35_werfer_elza 40,8 s)
