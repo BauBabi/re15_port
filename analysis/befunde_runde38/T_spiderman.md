@@ -162,6 +162,18 @@ Original-Klemmen sind Punkt-Tests).
   ausserhalb des Raums. Der Riegel faengt also genau den gemeldeten Fehler.
 
 ## 3. Tests
+- `unit_r38_spiderman` (test_r38_spiderman.c, ROOM4001 + echter game_step): austritt (600 Bilder versteckt, kein Ziel/
+  Schatten/Angriff; Ausloeser Aot 4 -> grid 0x42 durch sub05; sichtbar +6, greifbar +0x21, ACTIVE +34; Gegenprobe
+  Aot 5), griff1 zwei Laeufe mit vergiftetem Anker, griff2 (einmalige Lage, keine Bewegung, Clips 8/9, kein Yaw).
+  Mutationsprobe Anker-Kopie entfernt: 10 FAIL.
+- `unit_r38_griff_<fall>` (test_r38_griff_alle.c), je Fall echter Griff mit vergiftetem Anker ausserhalb des Raums:
+  zombie15_vorn/_hinten (RE1.5-KI), zombie2_vorn/_hinten (RE2-KI + Hybrid wie die exe), kriecher2_1220 (duenne Wand),
+  hund15, gorilla (11C0 Kampf-Layout), spiderman_vorn/_hinten. Invariante je Griffbild: Raumhuelle + kein Wanddurchgang
+  (eigener Slab-Test, nicht der Pruefling). Mutationsprobe Wandwaechter aus: kriecher2_1220 132 Bilder hinter der
+  Wand -> FAIL.
+- Alt-Riegel angepasst: `integration_r37_beretta` Fall t2b_std_w5 schoss in den Schacht (Spiderman grid 0x41) — jetzt
+  der schon draussen stehende Spiderman (Ck(4,0xD6)=1, Sce_em_set @0x017D4, Leon (-23943,-16785)); Absicht (drei
+  Kugeln je -10) unveraendert, gruen.
 
 ## OFFEN
 
