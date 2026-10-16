@@ -557,6 +557,13 @@ Rohbytes 80105aa0: 0d 80 02 3c cb fd 42 90 00 00 00 00 80 00 42 30 09 00 40 14 .
 * `engine/src/enemy_ai_re2_zombie.c` re2z_hit_main case 3: Riegel vor dem 0xB01-Wurf (@0x80105AA0-B0); Leiter-Ende
   GLEICH -> 0x10101 + drei Wuerfe (+0x16B, +0x158 = 30, +0x16A, +0x15A = r + 300) + 0x800152C8 (@0x80105B44-98), UNGLEICH
   -> 0x101 (@0x80105B38-40). Neuer Helfer `r2z_r37_152c8` (barer 0x800152C8(self,0), Drehung wie re15_clip_root_motion_delta).
+* Ein Feld im Original, zwei im Port: +0x158 = 30 (@0x80105B68) ist im Gang der ZEILEN-TIMER — EXEC[1] mit +0x6 == 1
+  springt an P0 vorbei (`beq v1,v0,0x80101b24` @0x80101A64; P0 = Gang-Seeds @0x80101A74-B20) und P1 liest `lhu v1,344(s1)`
+  @0x80101B24 (Dekrement/Zeilenwechsel @0x80101B2C-90). Der Port fuehrt diesen Timer als re2z_gaittmr und erkennt "Gang
+  betreten" am Tag re2z_gaitinit (re2z_gait_tick: neues Tag -> Gang-Init mit 2 Wuerfen). P3 setzt deshalb im
+  Gleichheitsfall zusaetzlich re2z_gaittmr = 30 und das Tag 0x80 | 1 (die Gang-Seeds SIND gesetzt) — sonst lief im ersten
+  P1-Takt eine zweite Gang-Init, die das Original nicht hat. re2z_t158 = 30 bleibt (dasselbe Original-Feld; jeder andere
+  Executor saet +0x158 in seinem P0 neu).
 * `include/re15_actor.h`: neues Feld `re2z_root148` (+0x148, eine Zeile + Kommentar) neben re2z_root144;
   `engine/src/enemy_ai_common.c` re15_clip_root_motion_delta: +0x148 wie +0x144 ablegen (2 Zeilen, @0x80015FE4).
 * `include/re15_re2zombie_r37.h`: Sonden-Bit `RE15_R37L_P3` (0x40, RE15_R37L_ALLES = 0x7F; Maske 0 bleibt der Stand bis
