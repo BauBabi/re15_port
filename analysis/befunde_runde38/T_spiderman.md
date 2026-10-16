@@ -267,3 +267,61 @@ Der relayte Nutzer-Nachtrag ROOM20A0 (Rolladen vor der Kamera) gehoert zu Spur W
 ### Stand
 - Lektuere: AUFTRAG/VERTRAG, Dossier, Abnahmebericht T_abnahme_0.md, spiderman_r38.c, re15_birkin_anim (enemy_ai_common.c),
   Render-Pfad der Gegner-Pose (platform/pc/main.c, re15_skel_compute_pose).
+
+### M1 — Messung vorher (Stand 5db78deb = HEAD-Code, eigene Wiederholung der Abnahme-Messung 2.3 d)
+`lauf.sh vor5070 ... RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 "RE15_DEBUG_JUMP=5070@250"
+"RE15_PLAYER_POS=1700,-5700,2048" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60 "RE15_INPUT_SCRIPT=U9.5,W30"
+RE15_STATE_LOG=state.log RE15_ANIM_TRACE=anim.log "RE15_EXIT_AT=420#5070"` (Leon, ROOM5070). RE15_ANIM_TRACE ist die Zeile,
+die re15_compute_actor_kf beim ZEICHNEN schreibt (Spalten: Bild, Slot, Typ, motion, Clip, fc, anim_frame, gezeichnetes Bild):
+```
+375 1 43 29 29 35 34 34      state.log F375 [1 t=2b st=4 ss1=1 ss2=2 g=00 mo=29 af=34]
+376 1 43 29 29 35 0 0        state.log F376 [1 t=2b st=1 ss1=1 ss2=0 g=00 mo=29 af=0]   <- M1: Clip 0x1D Bild 0 gezeichnet
+377 1 43 2 2 50 1 1          state.log F377 [1 t=2b st=1 ss1=2 ss2=1 g=00 mo=2 af=1]    (B[2] Bruellen, Ueberblendung)
+```
+Framedump F374-F377 (RE15_WINDOW_SCALE=1): F374/F375 kauert der Spiderman ueber dem Bodengitter hinter Leon, F376 ist er
+weg (Startpose 1278 unter dem Boden), F377 steht er versetzt unten im Bild (Ueberblendung AUS der falschen Startpose:
+die Port-Ueberblendung re15_skel_compute_pose mischt mit 6*0x200 die zuletzt GEZEICHNETE Pose = Bild 0). Bild:
+`T_bilder/nb1_vor_5070_F374-377.png`.
+
+### RE-Belege Nachbesserung 1 (selbst disassembliert, re15_disasm.py)
+- **anim_set FUN_8001f314 (PSX.EXE)**: Bildsatz = Clip-Tabelle + `lbu v0,149(t0)` (+0x95) @0x8001f35c -> `sll 2` / `addu`
+  @0x8001f364-68 -> `sw a2,360(t0)` (+0x168) @0x8001f36c; `jal 0x8001f3bc` @0x8001f38c mit a3 = fc (`addu a3,t1,zero`
+  @0x8001f390); Rueckgabe v0 von FUN_8001f3bc unveraendert (`j 0x8001f3ac` @0x8001f394).
+- **FUN_8001f3bc**: zuerst die POSE des Bildes +0x168 (= +0x95 beim Eintritt): Keyframe laden `jal 0x8001f664` @0x8001f534,
+  Ueberblendung `lbu/addiu -1/sb 143` (+0x8F) @0x8001f5a8-b4 + `jal 0x80020510` @0x8001f5d0, Matrizen `jal 0x80068098`
+  (RotMatrix) @0x8001f574 / @0x8001f5f0 in die Teile-Saetze (+0x188). ERST DANACH `lbu v0,149(v1)` / `addiu v0,v0,1` /
+  `sb v0,149(v1)` @0x8001f610-1c, `sltu v0,v0,s4` @0x8001f624 (s4 = fc), bei >= fc `ori v0,zero,0x1` @0x8001f638 und
+  `sb zero,149(v1)` @0x8001f63c. => Im Bild, in dem anim_set "fertig" meldet, steht die Pose von Bild fc-1 auf dem
+  Schirm; +0x95 ist danach 0. Ohne weiteren anim_set-Aufruf bleibt diese Pose stehen (die Matrizen werden nur hier
+  geschrieben).
+- **Austritt P2 (STAGE4.BIN)**: anim_set `jal 0x8001f314` @0x8011557C (a3 = 0x200), `beq v0,zero` @0x80115584, sonst
+  `ori v0,zero,0x101` / `sw v0,4(v1)` @0x80115588-98. Im Wechselbild also Clip 0x1D Bild 34 (fc 35).
+- **Erstes ACTIVE-Bild**: B[1] 0x80112124 P0: +0x6 = 1 @0x80112144, +0x94 = 1 @0x80112154, +0x95 = 0 @0x80112164,
+  +0x96 = 0 @0x80112174, +0x8F = 7 @0x80112184, anim_set @0x801121F0. B[2] 0x80112294 P0: +0x94 = 2 @0x801122F0, +0x95 = 0
+  @0x80112300, +0x8F = 7 @0x80112320, anim_set @0x80112360. => neuer Clip ab Bild 0, Ueberblendung aus der Pose von
+  Bild 34 (kein Bild (0x1D, 0) dazwischen).
+- **Griff 1 (M2)**, Phasentabellen `table 0x8010026C` = {2aa8, 2d44, 2b9c, 2bdc, 2cd0, 2d20, 2da0} (vorn) und
+  `0x8010028C` = {2fa0, 3220, 3094, 30d4, 31ac, 31fc, 327c} (hinten):
+  - P1 = Schwanz von P5: ad68 `jal 0x8001ad68` @0x80112D5C / @0x80113238, anim_set @0x80112D78 / @0x80113254,
+    `lbu v1,6(a0)` / `addu v1,v1,v0` / `sb v1,6(a0)` @0x80112D8C-9C / @0x80113268-78 (+0x6 += fertig).
+  - P2 @0x80112B9C / @0x80113094: NUR +0x94 = 0xF / 0x13 (@0x80112BA8 / @0x801130A0), +0x6 = 3, +0x9C = 0x64, +0x9E = 0x32
+    (@0x80112BB8-D8 / @0x801130B0-D0) — KEIN +0x95-Schreiben. Der Halte-Clip beginnt also bei dem +0x95, das das
+    Clip-Ende hinterliess: 0 (`sb zero,149` @0x8001f63c). P3 platziert mit (Halte-Clip, 0) und rechnet Bild 0.
+  - P5 @0x80112D20 / @0x801131FC: SE 0 bei +0x95 == 0x18 (@0x80112D30-3C), dann derselbe Schwanz (P1) -> +0x6 = 6.
+  - P6 @0x80112DA0 / @0x8011327C: +0x1DE = 0x3C, +0x5 = 3, +0x6 = 0, word0 &= ~0x1000, Spieler +0x93 &= 0xFE, `jr ra`
+    @0x80112E10 / @0x801132F0 — KEIN anim_set: im P6-Bild bleibt die Pose von Bild fc-1 des Loese-Clips stehen.
+    Danach B[3] P0: +0x94 = 3 @0x8011264C, +0x95 = 0 @0x8011265C.
+- **Griff 2 (M2)**, Phasentabelle `0x80100324` = {4160, 43d8, 42c8, 42f8, 4398, 43d8, 4414}: P1 = P5 = 0x801143D8
+  (anim_set @0x801143EC, +0x6 += fertig @0x80114400-10); P2 @0x801142C8: +0x94 = 0x19 @0x801142D4, +0x6 = 3 @0x801142E4,
+  +0x9C = 0x64 @0x801142F4, kein +0x95; P6 @0x80114414: kein `jal` bis `jr ra` @0x80114484. Danach B[13] P0 0x80113D3C:
+  +0x95 = 0 @0x80113D7C.
+- **Kollaps** B[8]/B[10] P1 -> P >= 2 ruft kein anim_set (@0x80112F40 / @0x80113420) — dort haelt der Port schon das letzte
+  Bild (sm_anim_halten, unveraendert).
+
+### Ursache M1/M2 (Port)
+re15_birkin_anim (enemy_ai_common.c) zaehlt anim_frame VOR dem Zeichnen hoch und springt am Clip-Ende auf 0; der Renderer
+zeichnet anim_frame NACH dem KI-Tick (main.c: `ncur = npc->anim_frame` -> re15_compute_actor_kf). Wechselt die Phase im
+Bild des Clip-Endes und setzt erst das NAECHSTE Bild einen neuen Clip, steht im Wechselbild (Clip, 0) auf dem Schirm —
+das Original zeigt dort (Clip, fc-1) (FUN_8001f3bc rechnet die Pose vor dem Hochzaehlen). Betroffen in spiderman_r38.c:
+Austritt P2 -> ACTIVE (M1), Griff 1 P1 -> P2 und P5 -> P6, Griff 2 P1 -> P2 und P5 -> P6 (M2). Nicht betroffen: Schleifen-
+Clips (Halten P3, Gehen) — dort ist (fc-1, 0, 1, ...) auch im Original die Folge; der Kollaps (haelt schon).
