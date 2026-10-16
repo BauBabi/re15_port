@@ -772,3 +772,11 @@ Regionsvierecks; Skript `szenen_nb2.sh`):**
 |---|---|---|---|
 | f3040c1 FREI (OFFEN 2 aus NB1) | 3040 C1 (-22500,-11400), C (-15000,-11400) | 222 / **9** (Fussende, Kistenmaske) | 222 / **0** (`masks=0`, Cut 1 ganz aus) |
 | h30A0c3 HINTER | 30A0 C3 (-19800,19763), C (-25500,11700) | 1539 / 724 | 1539 / 724 (7 Rechtecke mehr aus, hier ohne Wirkung) |
+| v5090c14 DAVOR (OFFEN 2 aus NB1) | 5090 C14 (17017,-22665), C (10000,-22665) | Leon 505 / **2**, Elza 403 / **5** | Leon 505 / **2**, Elza 403 / **5** (Zeile unveraendert) |
+
+ROOM5090 Cut 14 bleibt: die Punkte liegen in den Zeilen 114-116 bei x 70-72 (Leon (72,114) (72,115); Elza dazu (70,114)
+(71,116) (72,116)) = UNTER der Bodenzeile des Modellkastens (Fenster `proj` 38..82 x 61..117, Kasten bis Zeile 113) am
+rechten Fuss - Fussunterkante bzw. Schatten auf dem Boden, NICHT Arm/Haar, wie NB1 vermutete (Bild
+`p38nb2/v5090c14_fuss.png`, A | B | C 8-fach). Auch mit dem bis 39 unter den Boden verlaengerten Kasten (Experiment oben)
+sieht das Modell dort 0 Fehlverdeckungen (`punkt 5090 14 17017 -22665`: 833 Punkte, ungefiltert 0) - Rest an der
+Bodenkante, 2 bzw. 5 Bildpunkte.
