@@ -125,4 +125,44 @@ aktiv, waere das eine Regression. Geprueft (eigenes Werkzeug `SP/e_abn0/tools/tu
   Raums @0x01FEC — wie im Header zitiert.
 Ergebnis: Cut 13 gibt es in ROOM1031 nur im Erzaehler; das Netz trifft keinen normalen Spielmoment.
 
-(Abschnitte 4-6 folgen)
+(Abschnitt 4 folgt)
+
+## 5. Vertrag und Tests
+### 5.1 Vertrag (VERTRAG.md)
+- Pfade (`git diff master...HEAD --name-only` ohne analysis/): `engine/src/elzaintro_r38.c`, `include/re15_elzaintro_r38.h`,
+  `platform/pc/main.c`, `platform/pc/src/audio_pc.c`, `platform/pc/src/render_pc.c`, `tests/integration/
+  test_r38_elzaintro.cmake`, `tests/unit/probe_r38_elzaintro_auswertung.c`, `tests/unit/probes/r38_elzaintro.cmake`,
+  `tests/unit/test_r38_elzaintro.c`, `synchro/README.md`. Kein `release/`, kein `platform/android/`, kein
+  `shared_assets/PSX/`, keine CMakeLists (Registrierung ueber die GLOB-Sonde `probes/r38_elzaintro.cmake`).
+- Gemeinsame Dateien nur Haken mit "Runde 38 Spur E": main.c +4/-1 (Include + 1 Zeile + 2 Kommentarzeilen), audio_pc.c +5
+  (Include + 4), render_pc.c +3/-1 (Kommentar).
+- Ressourcen: keine Bank-9-Bits, keine Nachrichten-Ids, keine Slots, keine neuen Assets/Sprachdateien (der einzige
+  Treffer auf "Bank-9" ist der Header-Kommentar zur Gegenprobe 9:89). Die Spur hatte laut VERTRAG §1 auch keine zugeteilt.
+- `snprintf` in der neuen Engine-Datei: schon in 5 anderen `engine/src`-Dateien benutzt -> kein neues Risiko fuer den
+  PSX-Bau. Hinweis Orchestrator (Dossier): neue Engine-Datei -> Android-GLOB-Cache neu konfigurieren.
+### 5.2 Riegel je Punkt (gelesen)
+- Punkt 1: `unit_r38_elzaintro_stimme` (Nachrichtenblock, Offsettabelle, msg 0..5 byte-gleich, Message_on-Offsets beider
+  sub02, Abbildung genau (1241,0..5)->1240, Ersatzpfad, sechs WAVs) und `integration_r38_elzaintro_stimme` (echte exe, Neues
+  Spiel Leon + Elza: sechs Ersatzzeilen nur bei Elza, msg 5 parkt gleich oft, **RMS je Zeilenfenster Elza = Leon +-10 %**
+  aus dem RE15_AUDIO_CAP_SYNC-Mitschnitt — misst den Ton, nicht nur die eigene Logzeile).
+- Punkt 2: `unit_r38_elzaintro_schwarz` (je Tabellenzeile `29 cut` am Offset = einziges Cut_chg im SCD per Opcode-Walk,
+  keine RVD-Zone hinein, Kamera = ROOM1170 Cut 7, BG13 = BG07, Gate genau fuer die zwei Paare) und
+  `integration_r38_elzaintro_schwarz` (echte exe: Erzaehlerbilder F60/F230/F400 Elza = Leon pixelgleich, Kartenfeld
+  dunkel, Lageplan in ROOM1031 nachweislich angelegt, Text >= 100 Pixel).
+- Luecke (kein Mangel, selbst nachgeprueft in 3.3): kein Riegel prueft Tueren mit Ziel ROOM1031 Cut 13.
+### 5.3 Gezielter Lauf (keine volle Suite)
+`ctest --test-dir re15_port/build -R "<38 Tests>" --timeout 600 --output-on-failure`, Ausdruck in
+`SP/e_abn0/ctest_regex2.txt`, Protokoll `SP/e_abn0/ctest_gezielt2.log`, 21:10:22..21:42:14, seriell:
+die vier Spur-Tests + Sprachausgabe (unit_synchro_stimme, unit_voice_ausreden, unit_se_voice_machine,
+unit_r17_untertitel_pin, unit_r30_tuer_stimme, unit_r34n_f_leiche_stimme, unit/integration_r36_elza_stoehnen) +
+Erzaehler-Netz/ROOM1170 (unit_elliot_1170_run, unit_stair_1170_regression, unit_door_1170_lock, unit_tor_1170_anfrage,
+unit/integration_r37_roy_leon1170, integration_boot_bg_pin, integration_dark_start_pin, integration_r30_cut_blitz,
+unit_montage_fx) + Lobby ROOM1030/1031 (unit_cam_1030_reentry, unit_1030_spawncap/_crawl_live/_trigger_chain/
+_stuck_who/_bandsweep, unit_r35_cut1150_montage_1030, unit_r36_gegnerzahl_raum1030/1031, unit_r30_elza_selbsttuer,
+unit_r35_zgirl_selbsttueren, integration_elza_vollstart, integration_r36_story_elza) + Lageplan (unit_r36_kartenitems,
+unit_r36_kartenbits, integration_r36_kartenitems_bild).
+Ergebnis: **`100% tests passed, 0 tests failed out of 38`**, `Total Test time (real) = 1911.85 sec`
+(integration_r38_elzaintro_stimme 125,34 s, _schwarz 164,73 s, integration_r36_kartenitems_bild 619,53 s,
+integration_r36_story_elza 482,17 s, integration_elza_vollstart 104,85 s).
+
+(Abschnitt 6 folgt)
