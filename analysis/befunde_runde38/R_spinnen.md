@@ -261,7 +261,8 @@ Kommentar "Runde 38 Spur R"):
 | engine/src/enemy_ai_re2_spider.c | Baby-Spawner: `dog_floor_y`/`floor` = Elternteil | +0x1C2 = Boden unter der Entity (RE2 @0x8002686c/74) |
 | engine/src/enemy_ai_re2_spider.c | Biss: Reichweite 450 + 10 | Ziel+0x9A = 450 (RE2 @0x8003bdc0/c4), @0x80100E40 |
 | engine/src/re2_ems.c | `re15_spinnen_r38_re2_bank(kind, eb)` in re2_ems_load_bank | **neu in der Fortsetzung**: Baby 0x26 = Paar 1 (2.6) |
-| engine/src/re15_esp.c | `re15_spinnen_r38_routine_a(f)` | ESP-Routinen A 24 @0x80017f50 / 25 @0x80017fa4 (2.2) |
+| engine/src/re15_esp.c | `re15_spinnen_r38_routine_a(f)` | ESP-Routinen A 24 @0x80017f50 / 25 @0x80017fa4 (2.2); Gift nur bei Absender Typ 0x25 (2.7, neu) |
+| engine/src/re15_damage.c | FUN_80012d60-Spielerzweig: Gift-Bit nie (Ziehungen bleiben) | **neu**: 2.7, a0 = 0x0A @0x80012e78 gemessen; test_damage angepasst |
 | engine/src/game_step_common.c | `re15_spinnen_r38_gift_tick(pl)` im Kommando-1-Prolog | Gift-Wirkung @0x80031e44-ecc |
 | engine/src/scd_vm.c | Sce_em_set: pos_s_x/y/z := Spawnlage | Lage-Spiegel `sh` @0x800421a0-b8 (Vor-Hoehe von FUN_8002cabc) |
 | platform/pc/main.c | `re15_spinnen_r38_log_frame` | Messschiene RE15_SPINNEN_LOG (env-gegatet) |
@@ -328,6 +329,56 @@ der Lauf vor der Fortsetzung (`c_2030`, 1500 Bilder): 28 Bisse.
 
 ## 5. Tests
 
+`unit_r38_spinnen` (tests/unit/test_r38_spinnen.c, registriert nur in tests/unit/probes/r38_spinnen.cmake) — echter
+Spielschritt (scd_vm_tick + re15_game_step + ESP-Tick) mit den echten STAGE2-RDTs und EM025/EM026-Baenken:
+| Teil | Nutzerpunkt | misst |
+|---|---|---|
+| A (RE1.5 + RE2) | 1 | ROOM2060 Schacht: Halten bis Cut 1, neun Phasen mit den Original-Bildabstaenden (+30/+31/+32/+40/+70/+71/+72), Kriechbahn 11/11 Bilder = Original-GDB-Messung, Landung (5975,0,3137) floor 0; RE2: Uebergabe an den RE2-INIT auf dem Boden |
+| A2 | 1 | Landung neben dem Spieler = Original Bild 134/135 (5740,4332)/(5740,4333) |
+| B (RE1.5 + RE2) | 2 | Spucken = 3 Plaetze Effekt 0x0d, Treffer -10 HP, Zustand 2, Gift-Bit |
+| B Wirkung | 2 | -2 HP alle 121 Bilder, nie toedlich, Gegengift 0x23 loescht das Bit (+25 HP) |
+| B2 (neu) | 2 | Klumpen ohne Spinne als Absender: trifft (-10), vergiftet NICHT |
+| C | 3 | Babys: Boden des Elternteils, nie unter dem Boden, Bisse > 0, Sprung <= 1280; **neu**: Babybank = RE2-Paar 1 (1 Clip, 2 Bilder), gezeichnete Unterkante 0..0 (vorher -1797..-1166) |
+| D (neu) | 1 | Zensus aller Stage-2-Spinnen, 7 Raumlagen x 2 KI x 300 Bilder: jede am Boden (y = +0x1ba) oder als Schachtspinne wartend; keine schwebt |
+**Gegenprobe** (Haken lauer_re2 + re2_bank ausgeschaltet, `R_belege/gegenprobe_test.txt`): **20 FAIL** (A-RE2, B-RE2,
+C Babybank/gezeichnet, D RE2 ROOM2060/20A0 "schwebend 600").
+`unit_damage` (test_damage.c test_bleed_gate): erwartet jetzt 0/2000 Gift ueber FUN_80012d60 (vorher die widerlegte 1/4-Rate).
+
 ## 6. OFFEN
 
+1. **RE2-Original dynamisch (Babys gezeichnet)**: nicht erreicht. DuckStation-GDB `R_belege/re2_gdb_baby.py` (Spielstand
+   SLUS-00748_5, Raumsprung per RAM nach ROOM2010) laedt den Raum, aber die Spinnen stehen dort im MAIN-SCD-Unterskript 11
+   und erscheinen erst auf ein Ereignis; Haltepunkte im Entity-Takt (0x800268A4) trennen die GDB-Verbindung. PCSX-Redux
+   startet in dieser Sitzung nicht (Runde 35 H: GLFW ohne Monitor). Naechster Weg: RE2-Spielstand direkt in einem
+   Spinnenraum (ROOM4050/4070 "Abwasser", Sce_em_set im MAIN-Teil, oder der Ereignis-Ausloeser von ROOM2010 Unterskript 11)
+   und dort per Abtasten (ohne Haltepunkt, `--modus int`) Part-0-Weltlage gegen Entity-Y lesen. Der statische Beleg (2.6)
+   zaehlt alle Zugriffswege auf die Paar-Zeiger vollstaendig auf.
+2. **RE2-KI nach der Landung ohne Objekt-Ausschiebung**: Teil 4 (FUN_8002cabc) gilt, solange RE1.5-Spinnencode die Spinne
+   bewegt (RE1.5-KI, oder die Schacht-Choreografie unter der RE2-KI). Fuer das RE2-Gehirn danach ist kein RE2-Objekt-
+   Durchgang belegt (die RE2-Wurzel ruft FUN_80035530 = Entity-Schub und FUN_8003567C = SCA-Kollision @0x8004c1bc).
+3. **Kunstfall "Ausloeser vor dem INIT"**: steht Leon beim Laden schon in Cut 1/5 (ROOM2060) bzw. 4/5 (ROOM20A0), setzt
+   sub02/03 grid 0x42 vor dem ersten Spinnen-Tick. Dann liest auch der RE1.5-INIT grid & 0xf = 2 ohne Zweig (@0x80110c28/
+   @0x80110c90) und die Spinne wird ACTIVE auf Schachthoehe; der RE2-INIT liest Eintrag 2 = Decke. Ueber Tueren nicht
+   erreichbar (Tueren nach 2060: Cut 0 (aus 2030) / Cut 3 (aus 2040); nach 20A0: Cut 13 (aus 2090) / Cut 12 (20A0 selbst)),
+   nur per Debug-Sprung mit RE15_PLAYER_POS. Keine Aenderung (Original-Verhalten im Kunstfall gleich).
+4. **Spieler-Restschub ein Bild spaeter** (Test A2): der Original-Spieler-Schub FUN_8002b544 @0x80031cbc laeuft in der
+   Spieler-FSM NACH der Gegner-Schleife (@0x8001ce04 -> @0x8001ce0c); der Port ruft re15_body_push_player VOR
+   re15_enemy_ai_run_all (game_step_common.c) — allgemeine Port-Reihenfolge, Endlage identisch, nicht Teil dieser Spur.
+5. **Baby-Wurzelbewegung X/Z** (FUN_80015350, vorbestehend OPEN in enemy_ai_re2_spider.c): unveraendert.
+
 ## 7. Fuer den Nutzer
+
+* **Neue Assets / Sprachdateien:** keine (keine Aenderung unter shared_assets/, kein gen/*.inc). Paket-Gate unberuehrt.
+* **Was sich im Spiel aendert (Stage 2, Leon und Elza; Elza-Raeume 20x1 haben dieselben Spinnen-Saetze):**
+  * Die Schachtspinnen in ROOM2060 und ROOM20A0 bleiben im Schacht, bis du den Ausloese-Bereich betrittst (2060: Bereich
+    vor dem Gitter = Kameraschnitt 1 bzw. 5; 20A0: unten im Schacht-Bereich hinter der Kante = Schnitt 4 bzw. 5), dann
+    kriechen sie heraus, klettern die Wand hinunter und landen auf dem Boden. Alle anderen Spinnen laufen auf ihrem Steg.
+  * Die Spinnen spucken Gift (violette Wolke). Ein Treffer kostet 10 HP und **vergiftet**: im Statusschirm steht im EKG
+    "Poison" (violett), alle ~4 Sekunden gehen 2 HP verloren, das Gift toetet aber nicht (Rest 1 HP). Heilung:
+    **Antidote Spray** (oder Blue Herb / Mischungen mit Blau) -> EKG wieder "Fine/Caution/Danger".
+  * Nur die Spinne vergiftet (deine Vorgabe; in RE2 ebenso), andere Treffer nie. Zur Einordnung: im ausgelieferten
+    RE1.5 setzt der Spuck-Treffer das Gift-Bit nie (gemessen: der "Wuerfel" ergibt in 13 von 13 Treffern "kein Gift");
+    der Port vergiftet bei jedem Spinnen-Treffer wie RE2 (Op 32 @0x80020130).
+  * Die Minispinnen nach dem Tod einer Spinne krabbeln auf dem Boden (vorher in Brusthoehe gezeichnet), springen dich an
+    und beissen (je 1 HP).
+* **Entscheidungsfragen:** keine.

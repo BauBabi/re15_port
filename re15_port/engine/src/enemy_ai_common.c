@@ -14690,7 +14690,10 @@ void re15_enemy_ai_run_all(int combat_active)
                 re15_enemy_selfpush_from_player(s, e);   /* Runde 38 Spur R: Spinnen-Root `jal 0x8002aec4`
                                                           * @0x80110a6c (a0 = Spieler `addiu a0,s0,20`
                                                           * @0x80110a70, a1 = Spinne); gemessen: Landung
-                                                          * (5975,3137) -> (5740,4332) neben dem Spieler */
+                                                          * (5975,3137) -> (5740,4332) neben dem Spieler.
+                                                          * RE2-Wurzel ebenso: `jal 0x80035530` @0x8010016c ->
+                                                          * FUN_80034d0c(Spieler, self) schreibt self x/z
+                                                          * (`sw v0,56(s1)` / `sw v1,64(s1)` @0x800350c8/cc) */
                 re15_enemy_body_push_tail(s, e);
                 re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
             }
