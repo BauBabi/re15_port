@@ -213,6 +213,46 @@ Auswertewerkzeug tests/unit/probe_r38_elzatoene_kreuz.c (kein add_test).
 Stand: Basis a95adbb6 (Spurstand 8328ae1f + Abnahme). Messordner (Scratchpad) `H38n1/`.
 Je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher. Fortlaufend ergaenzt.
 
-### 8.1 Mangel 1 — RE2 ROOM40A0 Satz 0x08 ist ein SCHUSS (der Partnerin), nicht die "Alligator-Schleife"
-* Ursache des Fehlers: die RE1.5-Lesart von Work_set Art 2 (= Gegner-Feld) wurde auf RE2 uebertragen. In RE2 ist Art 2
-  der PARTNER, Gegner sind Art 3 (Belege folgen in 8.1, selbst disassembliert).
+### 8.1 Mangel 1 — RE2 ROOM40A0 Satz 0x08 ist ein SCHUSS (der Partnerin Ada auf den Alligator)
+**Ursache des Fehlers:** die RE1.5-Bedeutung von Work_set-/Se_on-Art 2 (= Gegnerfeld) wurde auf RE2 uebertragen. RE2
+hat fuer den Partner eine eigene Art und schiebt das Gegnerfeld auf Art 3. Selbst disassembliert:
+* RE1.5 `info/Re1.5/PSX.EXE` (md5 b55fdaa5), Work_set LAB_80040d2c: @0x80040d4c `lbu v1,1(v0)` (Art), @0x80040d50
+  `lbu a1,2(v0)` (Index), @0x80040d5c `ori v0,zero,0x2` / @0x80040d60 `beq v1,v0,0x80040db4` -> @0x80040db4..c0 Index*0x1F4,
+  @0x80040dc4 `lui v1,0x800b` / @0x80040dc8 `addiu v1,v1,-13268` = Gegnerfeld 0x800ACC2C. Art 1 @0x80040da4/a8 = Spieler
+  0x800ACA54, Art 3 @0x80040dd4.. = Objekte 0x800B3F98. **Keine Partner-Art.**
+* RE2 `info/re2leon/PSX.EXE`, Opcode-Tabelle @0x800A74C8:
+  - Work_Set [0x2E] = 0x80055904: @0x80055920 `lbu v1,1(v0)` (Art), @0x80055924 `lb a1,2(v0)` (Index), Sprungtabelle
+    @0x800111f0 (Art-1): Art 1 -> 0x8005595c, @0x80055960 `8c42fe14` lw *0x800CFE14 (Spieler); **Art 2 -> 0x8005596c,
+    @0x80055970 `8c42fe18` lw *0x800CFE18 (PARTNER)**; **Art 3 -> 0x8005597c, @0x80055988 `8c22fe1c` lw *(0x800CFE1C +
+    4*Index) (GEGNERFELD)**; Art 4 -> 0x80055994 (Objekte 0x800D0324 + 0x1F8*Index); Art 5 -> 0x800559b0.
+  - Se_on [0x36] = 0x80056428: @0x80056444 `lh a1,4(s0)` (Byte 4 = Art, Byte 5 = Index), Sprungtabelle @0x80011458:
+    Art 0 -> 0x80056478 Weltlage 0 + Versatz; Art 1 -> @0x8005648c *0x800CFE14; **Art 2 -> @0x8005649c `8c63fe18`
+    *0x800CFE18**; **Art 3 -> @0x800564b8 `8c23fe1c` *(0x800CFE1C + 4*Index)**; Art 4 -> Objekte. Lage = Figur
+    +0x38/+0x3C/+0x40 + Versatz (Bytes 6..11), dann @0x80056530 `jal 0x8005ba28`.
+  - Sce_em_set [0x44] = 0x8005714c: @0x80057204 `80420002` lb (Id VORZEICHENBEHAFTET, 0xFF = -1), @0x8005720c `24450002`
+    addiu a1,v0,2, @0x80057210 `beq a1,a2` (Id 0xFF: Gegnerzaehler G+0x3A0B wird uebersprungen), @0x80057234 `ac433c2c`
+    sw -> G+0x3C2C+(Id+2)*4 (G = 0x800CC1E8; Init @0x80049ec4 `addiu v1,s0,0x3c30` = 0x800CFE18, @0x80049ed4
+    `addiu v0,s0,0x3c34` = 0x800CFE1C): **Id 0xFF -> 0x800CFE18 = Partner, Id n -> 0x800CFE1C+4n = Gegner n.**
+
+**Folge fuer ROOM40A0** (RE2-Walk `tools/re2_sicherung/re2_scd_walk.py`, Bytes selbst gelesen):
+* 5 Sce_em_set: main00 @0x02564 `44 00 ff 41` (nach Ck(1,0x00)==0: Ada), @0x02586 `44 00 ff 45`, @0x025A0 `44 00 00 23`
+  (Alligator, Id 0), sub00 @0x02612 / @0x0262C `44 00 ff 41`. Vier davon besetzen den PARTNER-Platz 0x800CFE18.
+  Der Alligator ist Art 3: sub11 @0x02CDC `2e 03 00`, @0x02CFE `22 05 02 01` Set(5,2), @0x02D02 `36 02 0a 01 03 00 ..`.
+* sub02 startet @0x02684/@0x02688 `04 ff 18 04` / `04 ff 18 03` sub04 und sub03 parallel; sub03 @0x026CA Work_set(1,0)
+  = Leon; **sub04 @0x0287E `2e 02 00` = die PARTNERIN**: @0x02881 Plc_motion(2,14,4), Schleife @0x0288A `0f 04 82 00`
+  solange Ck(5,0x0b)==0: Sleep 8, **@0x02896 `36 02 08 01 02 00 ..` Se_on Satz 0x08 an der Partnerin**, @0x028A2
+  `3a 00 18 ..` ESP 0x18 (esp18.tim = Blatt "GUN 5.00", bytegleich ROOM4040, md5 fd8fe615 — Abnahme 0), Sleep 2,
+  @0x028C6 `3a 00 1a 05 ..` ESP 0x1A ("MIZ", Wasserspritzer an fester Weltlage), Sleep 1+7 -> ein Schuss je 18 Bilder;
+  danach @0x0291E derselbe Se_on + @0x0292A ESP 0x18 (letzter Schuss), @0x02990 Plc_motion(2,9), @0x029A0 Warten auf
+  Ck(5,0x02) (= Set(5,2) des Alligator-Skripts @0x02CFE).
+* **=> Satz 0x08 ist der Pistolenschuss der Partnerin (Leon-Szenario: Ada, Typ 0x41) auf den Alligator.** Runde 36 lag
+  bei der ART des Tons richtig ("Skript-Pistolenschuss eines NPC"); die Behauptung "kein Schuss / Alligator-Schleife /
+  am Alligator" (Spurstand 8328ae1f) ist falsch und ueberall berichtigt (8.4).
+* Zusatz Lage (fuer 8.2): RE2-Pumpe FUN_8005c5e4 @0x8005c658 `86050006` lh a1,6(s0) (= Satz+0x12 = Se_on-Byte 3,
+  geschrieben @0x8005bc40 `sh t1,18(v1)`), @0x8005c660 `10a0001a` beq a1,zero,0x8005c6cc, @0x8005c668 `jal 0x8005c970`
+  (Lautstaerke nach Lage) -> nur Byte 3 != 0 klingt nach Lage. ROOM40A0 @0x02896 Byte 3 = 1 (in RE2 positional),
+  ROOM4040 @0x014E4 Byte 3 = 0 (nicht positional — so spielt der Port jeden ELZASE-Ton).
+* Tonhoehe (fuer 8.2): RE2 0x8005ba28 traegt @0x8005bbec `92020006` lbu tone[+6] (Note) und @0x8005bbf8 `92020005` lbu
+  tone[+5] (fein) in den Satz ein — dieselbe Note/Fein-Wahl wie RE1.5 SsUtKeyOnV @0x800451fc/@0x80045210, die der Port in
+  se_play_layers nutzt (re15_vab_note2pitch2(min, shift, center, shift)). Die Abspielrate der RE2-Wellen im Port ist also
+  RE2-treu; die Tonhoehe ist KEINE Ursache.
