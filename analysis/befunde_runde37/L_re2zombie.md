@@ -242,6 +242,11 @@ Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids, kein
 | Gore/Teile-Physik (Wand/Boden/Skalierung), Rumble, Praesentation | @0x80028CAC u.a. | nein | Praesentation, bleibt |
 | EXEC[0] P1 `jal 0x80016200(self,0,1)` bei +0x14E == 0 ("benannt, nicht portiert") | @0x80101500-18 | nein (Lage-Nachzieher auf Part 1, @0x800162a8-d8; kein Zustand, kein Wurf) | bleibt, mit Adresse (Fortsetzung) |
 | Wurzel-Re-Anker beim Clipwechsel (Port: Delta 0) gegen e7c Bild 0 = root(kf0) | @0x80015F04-1C | ja (Weg im ersten Bild eines Clips mit root(kf0) != 0, z.B. RIP-Clip 4 (-277,-26)) | vorbestehend, nicht L (enemy_ai_common.c, Spur H); OFFEN mit Adresse (5b) |
+| Treffer-Handler P3: Leiter-Ende umgekehrt + Ein-Angreifer-Riegel fehlt (Nachbesserung 2) | @0x80105B30-98, @0x80105AA0-B0 | JA (Erholung: 0x10101 statt 0x101 -> EXEC[1]-P0; +0x15A 300..555 statt 100..131 = Timer-Produzent (1) nach Treffern) | GESCHLOSSEN (Freigabe 2026-10-16, R5) |
+| Treffer-Handler P0 faellt im selben Takt nach P1 durch (Port: `break`) | @0x80105714-3C | gering (Reaktion +1 Takt) | OFFEN, nicht freigegeben (case 0) |
+| Treffer-Handler P1 halbiert den Wurzel-Vektor | @0x80105770-94 | gering (Weg in P1) | OFFEN, nicht freigegeben (case 1) |
+| Treffer-Handler P2-Schwanz: Griff 0x301 aus der Reaktion (+0x1F0 < 0x514, Sektor 288) | @0x80105980-A4C | JA (Griff waehrend der Trefferreaktion) | OFFEN, nicht freigegeben (case 2); offen: Port-Zwilling Spieler+0x220 Bit 0 (@0x801059C0-D8) |
+| Treffer-Handler: kein Bildvorschub in P0/P3 (Port-Advancer rueckt jeden Takt vor) | @0x80105790 / @0x801058C0 (nur P1/P2) | nein (Bild) | OFFEN, nicht freigegeben (player_common.c) |
 
 ## Schritt 5 — Zufallsstrom und verschobene Riegel
 
@@ -584,6 +589,28 @@ Rohbytes 80105aa0: 0d 80 02 3c cb fd 42 90 00 00 00 00 80 00 42 30 09 00 40 14 .
   (Runde 12), nicht Teil der Spur L; betrifft jeden Clip mit root(kf0) != 0.
 * ~~Treffer-Erholung P3: Ausfall-Zweig ohne Ein-Angreifer-Riegel (@0x80105AA0-B0) und umgekehrtes Leiter-Ende
   (@0x80105B3C)~~ — GESCHLOSSEN in Nachbesserung 2 (Freigabe 2026-10-16), Abschnitt "Nachbesserung 2" M1.
+* **Treffer-Handler 0x80105438, Phasen P0-P2 (beim Disassemblieren der Nachbesserung 2 gefunden; vorbestehend, NICHT
+  freigegeben — die Freigabe 2026-10-16 umfasst nur case 3):**
+  1. P0 faellt im Original im SELBEN Takt in P1 durch: P0 endet mit der Steuerung `jal 0x80015558` (a3 = 16) @0x8010571C-20
+     und dem Zeile-14-Funken @0x80105724-38, die naechste Instruktion @0x8010573C ist der P1-Einstieg (Dispatch
+     `beq v1,a0,0x8010573c` @0x80105480) — kein Sprung dazwischen. Port re2z_hit_main case 0 endet mit `break`: die
+     Reaktion dauert im Port einen Takt laenger (Original P0+P1, 3x P1, 17x P2, P3 = 22 Takte; Port 23). Wirkt auf die
+     Aktivitaet: gering (ein Takt je Treffer).
+  2. P1 halbiert den Wurzel-Vektor vor der Anwendung: `lhu v0,324(s1)` @0x80105770 / `lhu v1,328(s1)` @0x80105778 /
+     `sll 16` + `sra 17` @0x8010577C-88 / `sh v0,324(s1)` @0x8010578C / `sh v1,328(s1)` @0x80105794 (danach 0x800152C8
+     @0x80105B98). Port re2z_hit_move wendet in P1 den vollen Gang-Weg an. Wirkt: ja, gering (Weg in 4 Takten je Treffer).
+  3. Der P2-Schwanz (im Code als OPEN gefuehrt): in JEDEM P2-Takt Griff 0x301 (`sw` @0x80105A10 / @0x80105A4C) bei
+     +0x1F0 < 0x514 (@0x80105980), 0x800CFDCB & 0x80 frei (@0x8010598C-A0), gleicher Etage (+0x106 gegen 0x800CFCFE
+     @0x801059A8-B8), `*(*(u32*)0x800CFE18) & 1 == 0` (@0x801059C0-D8; 0x800CFE18 = Spieler+0x220, ein Zeiger — Bedeutung
+     nicht ermittelt) und Sektor 0x80015758(self+0x38, Spieler+0x38, +0x76 +-256, 288) (@0x80105A00 / @0x80105A38; a1 =
+     0x800CFDCB - 411 = 0x800CFC30), je gesperrt durch +0x21A & 0x20 / 0x40. Wirkt auf die Aktivitaet: JA — in RE2 kann ein
+     Zombie, der aus unter 1300 getroffen wird, WAEHREND der Trefferreaktion zupacken; im Port nicht (der Nahkampf ist im
+     Port dadurch leichter als in RE2). Offen fuer die Umsetzung: der Port-Zwilling von Spieler+0x220 / Bit 0.
+  4. Bildvorschub: der Handler rueckt den Clip nur in P1 (`jal 0x8002959c` @0x80105790) und P2 (@0x801058C0) vor, NICHT in
+     P0 und P3; der Port-Advancer re15_actors_anim_advance (player_common.c) rueckt jeden RE2-Zombie in jedem Takt vor
+     (+1 Bild in P0, +1 in P3). Wirkt: nein (Bild/Weg um ein Bild verschoben).
+  Vorschlag: eigener Punkt "RE2-Trefferreaktion Haupt-Handler P0-P2" mit Strom-Riegel-Liste (jeder der vier verschiebt den
+  gemeinsamen Zufallsstrom bzw. den Weg in jedem Messer-/Pistolen-Lauf).
 
 ## Fuer den Nutzer
 

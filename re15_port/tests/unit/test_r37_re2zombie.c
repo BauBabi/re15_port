@@ -94,6 +94,7 @@ static int is_zombie(const re15_actor_t *e) { return e->active && re15_re2z_owns
 typedef struct {
     long hits, deaths, grab_frames, s2_frames, s3_frames, walk_frames, modal_auf, modal_im_griff;
     unsigned prod[3];
+    unsigned p3[5];      /* Nachbesserung 2: Ausgaenge der Erholungsleiter P3 (0xB01/0xC01/0x201/0x10101/0x101) */
     uint32_t draws;
 } lauf_t;
 
@@ -166,6 +167,7 @@ static void lauf(lauf_t *o, int seed, int budget, int weapon, unsigned maske, in
         }
     }
     for (int p = 0; p < 3; p++) o->prod[p] = re15_re2z_r37_zaehler(p);
+    for (int k = 0; k < 5; k++) o->p3[k] = re15_re2z_r37_p3_ausgang(k);
     o->draws = re15_re2_rand_draws() - d0;
     o->modal_auf = s_modal_auf; o->modal_im_griff = s_modal_im_griff;
 }
@@ -802,11 +804,14 @@ int main(int argc, char **argv)
         int seeds = argc > 3 ? atoi(argv[3]) : 64;
         int waffe = argc > 4 ? atoi(argv[4]) : 1;
         long th = 0, tg = 0, t2 = 0, t3 = 0, tw = 0, td = 0, tm = 0, tmg = 0; unsigned tp[3] = {0, 0, 0};
+        unsigned tq[5] = {0, 0, 0, 0, 0}; unsigned long long tdr = 0;
         for (int seed = 0; seed < seeds; seed++) {
             lauf_t o; lauf(&o, seed, 900, waffe, maske, -1, -1);
             tm += o.modal_auf; tmg += o.modal_im_griff;
             th += o.hits; tg += o.grab_frames; t2 += o.s2_frames; t3 += o.s3_frames; tw += o.walk_frames; td += o.deaths;
             for (int p = 0; p < 3; p++) tp[p] += o.prod[p];
+            for (int q = 0; q < 5; q++) tq[q] += o.p3[q];
+            tdr += o.draws;
             printf("seed %2d: treffer %4ld tode %ld griff %4ld s1=1 %5ld s1=2 %5ld s1=3 %5ld 0x201 %u/%u/%u wuerfe %u\n",
                    seed, o.hits, o.deaths, o.grab_frames, o.walk_frames, o.s2_frames, o.s3_frames,
                    o.prod[0], o.prod[1], o.prod[2], (unsigned)o.draws);
@@ -814,6 +819,8 @@ int main(int argc, char **argv)
         printf("SUMME maske=%u waffe=%d: treffer %ld tode %ld griff %ld s1=1 %ld s1=2 %ld s1=3 %ld 0x201 %u/%u/%u"
                " item-modal %ld (davon im Griff %ld)\n",
                maske, waffe, th, td, tg, tw, t2, t3, tp[0], tp[1], tp[2], tm, tmg);
+        printf("SUMME P3-Ausgaenge 0xB01 %u / 0xC01 %u / 0x201 %u / 0x10101 %u / 0x101 %u, Wuerfe %llu\n",
+               tq[0], tq[1], tq[2], tq[3], tq[4], tdr);
         return 0;
     }
     if (!strcmp(modus, "zeit")) {
