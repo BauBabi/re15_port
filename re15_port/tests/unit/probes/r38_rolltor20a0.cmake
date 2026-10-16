@@ -32,8 +32,15 @@ endif()
 add_test(NAME unit_r38_rolltor20a0_windung COMMAND test_r38_rolltor20a0_windung)
 set_tests_properties(unit_r38_rolltor20a0_windung PROPERTIES TIMEOUT 300)
 
+#   probe_r38_rolltor20a0_karte   Werkzeug (kein Test): Speicherkarte mit Spielstand in ROOM20A0 (Leon) / ROOM20A1 (Elza)
+#                                 vor der Leiter, fuer den LADE-Weg (Titel -> CONTINUE) des exe-Riegels.
+add_executable(probe_r38_rolltor20a0_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r38_rolltor20a0_karte.c)
+target_link_libraries(probe_r38_rolltor20a0_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r38_rolltor20a0_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 #   integration_r38_rolltor20a0   echte exe (Messkopie re15_pc_r38w_haken_*), echter Weg (Leiter, Schalter, Ja):
-#                                 A Leon ROOM20A0 und B Elza ROOM20A1 — Rolladen auf y -10800, Cut 11, Framedump
+#                                 A Leon ROOM20A0 (Debug-Sprung vor die Leiter), B Elza ROOM20A1 und D Leon ROOM20A0
+#                                 (beide Spielstand + CONTINUE) — Rolladen auf y -10800, Cut 11, Framedump
 #                                 (RE15_WINDOW_SCALE=1): Anteil Raumhintergrund im Bild hoch (vorher zugedeckt),
 #                                 RE15_OBJPOLY_LOG Cut 11 obj 1 = Original (NCLIP 20, OTZ<64 16, GPU 6);
 #                                 C Leon: Kiste durch die Oeffnung schieben -> faellt (Ausloeser + Landung).
@@ -41,6 +48,7 @@ if(TARGET re15_pc)
     add_test(NAME integration_r38_rolltor20a0
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r38_rolltor20a0_karte>
                      -DRE15_BILD_TOOL=$<TARGET_FILE:test_r38_rolltor20a0>
                      -DRE15_BSS=${RE15_ASSETS_PATH}/STAGE2/ROOM20A.BSS
                      -DDATEN=${CMAKE_SOURCE_DIR}/tests/integration/r38_rolltor20a0
