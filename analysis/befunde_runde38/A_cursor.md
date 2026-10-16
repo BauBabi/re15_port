@@ -19,6 +19,11 @@ Messausgaben (nicht versioniert): `re15_port/build/r38_a/<marke>/`.
 
 ## 1. Messung vorher
 
+Keine Regression im Sinne eines Bisects: die Raum-Prop-Schleife hatte seit der Uebernahme der Engine nie einen
+Rueckseiten-Verwurf (`git log -S IS_BACKFACE` / `-G backface` auf platform/pc/main.c: nur aa346af1 (Figuren) und
+370dfd5e (Waffe in der Hand), nie die Props). Der Schatten war also seit jeher da; die zwei frueheren Meldungen
+(2026-09-26/27) wurden der Textur zugeschrieben (§0).
+
 ### 1.1 Port (echte exe dieses Baums, Stand 1bcbd0ff, beschleunigter Renderer, RE15_FRAMEDUMP)
 
 Lauf `A_belege/lauf_11f0.sh` (RE15_DEBUG_JUMP=11F0@30, RE15_FORCE_CUT=10 = Raetselkamera, Raetsel scharf wie
@@ -175,8 +180,23 @@ Bild 260, Skala 1. `A_belege/nachher_10d0_orig11f0_alt_neu.png`: alt mit innerer
 
 ## 6. OFFEN
 
-(in Arbeit)
+* Kein eigener DuckStation-Abzug fuer ROOM1150 Cut 4 (Hebetisch-Sicht, Nebenwirkung §4.4) und ROOM10D0. Begruendung:
+  derselbe Original-Zeichner (FUN_8002c18c -> FUN_800254a0/FUN_800256b0) mit derselben Verzweigung zeichnet alle
+  Objekte; dass er die Unterseite eines Cursors verwirft, zeigt das Original-Bild 11F0 (§2.3). ROOM1150 hat im
+  Original keinen Cursor (Port-Bau Runde 34).
+* Nicht Teil dieses Punkts, nur festgehalten: der PC-Port rastert 3D in Fensteraufloesung (render_pc.c
+  SDL_RenderSetLogicalSize + SDL_RenderGeometry), das Original in 320x240. Der in die Cursor-Textur GEBACKENE
+  Schlagschatten (+5u/+3v, Original-Kunst) erscheint deshalb bei Skala 3/4 als feiner dunkler Saum rechts/unten jedes
+  Elements statt als einzelner Bildpunkt. Bei Skala 1 ist der Cursor klassengleich mit dem Original (§4.1).
 
 ## 7. Fuer den Nutzer
 
-(in Arbeit)
+* Behoben: der "komische Schatten" war die UNTERSEITE des Cursor-Kastens (dasselbe Muster, 1828 Einheiten tiefer),
+  die der PC-Port durch die durchsichtige Oberseite mitzeichnete. Das Original verwirft wie jede PlayStation-Engine
+  Rueckseiten (GTE NCLIP). Gilt fuer alle 23 Cursor-Raeume (Generator 11F0, Hebetisch 1150/1151, Ziffernfelder
+  10D0/11E0/1230, Aufzug 1080/4020, 1100, 2040, 2060, 3050, 30E0, 5050 und Elzas Varianten).
+* Sichtbare Nebenwirkung, wie im Original: auch alle anderen Raum-Objekte zeichnen ihre Rueckseiten nicht mehr. In
+  120 Leon-Raeumen aenderten sich nur Einzelpunkte (hoechstens 41); in Irons' Buero (Hebetisch-Sicht) verschwindet ein
+  dunkles Band hinter den Papierstapel-Hochhaeusern.
+* Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung, keine Entscheidungsfrage. Neue Engine-Datei
+  `engine/src/nclip_r38.c` (Android: release/build_android.sh verwirft den GLOB-Cache bereits).
