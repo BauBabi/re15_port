@@ -259,7 +259,18 @@ Genau dieser Mutant steht in AEQUIVALENT (bash_urteil_mutanten.py:59-60, "rc <= 
   unit_r26_inventar B4), sind NICHT nachgezogen -> Mangel 1/2.
 
 ### Lauf T3b — Einzel-Nachlauf unit_r35_android_bash_mutanten (2. Sitzung)
-(laeuft)
+`ctest --test-dir re15_port/build -V -R "^unit_r35_android_bash_mutanten$" --timeout 1500` (Log
+`scratchpad/G0/abn0_android_mut_einzeln.log`), gefahren bei 100 % CPU-Last durch PARALLELE AGENTEN (gemessen:
+Win32_Processor LoadPercentage 100, 8 ctest-, 118 bash-Prozesse, 12 fremde re15_pc-Messkopien):
+    480:    Kontrolle (unveraendert): Rueckgabe 0 KONTROLLEN: 102 ok, 0 FALSCH
+    480:    [gleichwertig] Zeile 317: A (( rc == 0 )): == -> <=          <- DIESMAL korrekt eingestuft
+    1/1 Test #480: unit_r35_android_bash_mutanten ...***Timeout 1503.36 sec   (212 von 328 Mutanten durch)
+Unter dieser Last nicht zu Ende zu fahren. Wertung: KEIN Befund gegen die Spur — (a) der Test liest nur
+release/apk_pruefen.sh, release/python_finden.sh und tests/unit/r35_android/* mit eigenen Attrappen (gegrept: keine
+shared_assets-/FILES-Pfade), die Spur aendert keine dieser Dateien (`git diff master...HEAD --name-only | grep -E
+"release/|r35_android|apk|gate"` leer), die Eingaben sind also bit-gleich mit master; (b) das Sweep-Rot ist
+mechanisch erklaert (Zeitlimit eines AEQUIVALENT-Mutanten), und eben dieser Mutant laeuft im Nachlauf als
+"gleichwertig" durch. Der Orchestrator faehrt ihn in der seriellen Integrationssuite.
 
 ### Lauf T4 — Nebenwirkungen Inventar / Karte / Elza-Story / ROOM1011 + Spur-Tests frisch (2. Sitzung, seriell)
 (folgt nach T3b, damit die Fenster-Haken nicht unter der Last der 10 Mutanten-Prozesse laufen)
@@ -314,8 +325,9 @@ der Punkt dahinter weiss.
   (Ausschnitte F190..F225, F650..F660; ebenso v0.8.25 Lauf v1). Plc_motion(1,11) laeuft (Log), die Pose ist nicht
   gemessen. Vorbestand, nicht verlangt — den Satz im Dossier auf "die Opcodes des Originals laufen weiter"
   korrigieren oder die Pose messen.
-- H2: Integration: menu_common.c aendert auch Spur Q (Inventar-Ton in re15_menu_start_poll/tab_select) — zu pruefen,
-  ob der Aufnahme-Leser des Tagebuchs dabei den Inventar-Oeffnen-Ton bekommt; map_hint_common.c Folge-Index 4 ist
+- H2: Integration: menu_common.c aendert auch Spur Q (Inventar-Ton in re15_menu_start_poll/tab_select) — andere
+  Stellen; der Aufnahme-Leser des Tagebuchs geht NICHT durch re15_menu_start_poll (re15_menu_request_doc setzt
+  s_latch/s_stage selbst, menu_common.c:2580-2593), Qs Oeffnen-Ton trifft ihn also nicht; map_hint_common.c Folge-Index 4 ist
   positionsabhaengig (unit_r38_tagebuch_karte faengt es); neue Assets FILE30_* (8 Dateien) muessen ins Paket
   (Asset-Gate beim Release, Spur V/Orchestrator).
 - H3: Unversionierter Ordner `build/r38_g/` in der Baumwurzel (Ausgabe von `tagebuch_satz.py --out`) — nicht
