@@ -202,7 +202,7 @@ static int16_t affen_winkel(int prev, int kf, int wp)
 void re15_affen_pool_anim(re15_actor_t *e)
 {
     re15_affen_pool_t *P = affen_pool(e);
-    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);   /* Runde 38 Spur S: Bank des Aktor-Typs (0x27 Gorilla, 0x29 kleiner Affe, gleiche Familie) */
     if (!P) return;
     affen_stand_t *J = &P->jetzt;
     if (!b || !b->ok || (int)e->motion >= b->anim.clip_count) { J->ok = 0; return; }
@@ -247,7 +247,7 @@ void re15_affen_zeichen_merk(const re15_actor_t *e)
 int re15_affen_fusssperre(re15_actor_t *e, int bone)
 {
     re15_affen_pool_t *P = affen_pool(e);
-    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);   /* Runde 38 Spur S: dito */
     if (!P || !b || !b->ok) return 0;
     if (bone < 0 || bone >= b->skel.bone_count) return 1;
     if (!P->jetzt.ok || !P->zeichen.ok) return 1;
@@ -268,7 +268,7 @@ int re15_affen_fusssperre(re15_actor_t *e, int bone)
 int re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3])
 {
     re15_affen_pool_t *P = affen_pool(e);
-    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);   /* Runde 38 Spur S: dito */
     if (!P || !b || !b->ok || !P->zeichen.ok || bone < 0 || bone >= b->skel.bone_count) return 0;
     const int32_t a1[3] = { (bone == 9) ? 0x64 : 0, 0, 0 };   /* B[5] Knochen 9 @0x80118380-84, sonst (0,0,0) aus 0x80072d60 */
     affen_kette(&b->skel, &P->zeichen, bone, e->render_scale_q12, a1, out);

@@ -42,6 +42,7 @@
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
+#include "re15_affen3_r38.h"   /* Runde 38 Spur S: kleine Affen 0x29 — Subs 0..6 in affen3_r38.c */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
@@ -11338,6 +11339,7 @@ static void re15_cockroach_ai_tick(int slot)
         e->roach_beh2 = (uint8_t)((e->grid_id & 2) ? 1 : 0);                          /* +0x1e2 = beh&2 (HURT-exit sub 5) */
         e->state = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->sub_state_1 = (uint8_t)((e->grid_id & 1) ? 1 : 0);                         /* beh&1 -> state1 SUB 1 dormant @0x80110cbc; else sub 0 */
+        re15_affen3_init(e);   /* Runde 38 Spur S: Massstab 0x14cc @0x80110f54-58 + Pool (anim_set @0x80110ed0) */
         break;
 
     case 1: {  /* ACTIVE two-table A/B brain 0x8011101c (A decide @0x8011ecc4 + B act @0x8011ed04 on +0x5) */
@@ -11346,6 +11348,7 @@ static void re15_cockroach_ai_tick(int slot)
         int los = e->roach_los;                               /* every decision reads the LATCHED bit @0x80111250 */
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
         e->dog_dist = (int16_t)dist;
+        if (!re15_affen3_aktiv(slot, dist, los))   /* Runde 38 Spur S: Subs 0..6 (A+B im selben Tick) in affen3_r38.c; hier nur noch 7.. */
         switch (e->sub_state_1) {
         case 0:  /* A[0] idle 0x80111220 + B[0] 0x80111ee4: clip 0x16 */
             if (e->dog_atk_cd == 0) {                                                 /* +0x1dc!=0 freezes ALL idle decisions @0x8011122c */
@@ -14687,11 +14690,12 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * dispatches +0x4 via the 8-entry table @0x8011eca4. Scurries toward the player +
                                  * bites, and LEAPS/FLIES AWAY after a survived hit -> SCA wall-clamp after the tick. */
             int32_t rc_ox = e->x, rc_oz = e->z;
+            re15_affen_zeichen_merk(e);   /* Runde 38 Spur S: Zeichenstand des Vorbilds (Record+0x40, Zeichen-Schleife @0x8001d108) */
             re15_cockroach_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != rc_ox || e->z != rc_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, rc_ox, rc_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+                e->sca_wall_hit = (uint8_t)(re15_collision_constrain_contact(&g_room_rdt, rc_ox, rc_oz, &nx, &nz, e->hit_radius_min, e->y, 4u, NULL, NULL) != 0);   /* Runde 38 Spur S: +0x1d6 = Rueckgabe FUN_8003b0a4 `sh v0,470` @0x80110bb8-cc (Lage wie bisher) */
                 e->x = nx; e->z = nz;
             }
         }
