@@ -207,3 +207,12 @@ Auswertewerkzeug tests/unit/probe_r38_elzatoene_kreuz.c (kein add_test).
 * **Kontrolle selbst**: elza.log (RE15_ELZA_LOG=elza.log) zeigt `[elzatoene] ROOM1041 Anker @0x02200 -> Aktion 1` bzw.
   `[elzatoene] ROOM1021 Anker @0x020B2 -> Aktion 2`; Ton-Ausschnitte H_belege/*.wav.
 * **Entscheidungsfragen**: keine. (Falls zu den Schuessen ein Muendungsfeuer gewuenscht ist: OFFEN 1.)
+
+## 8. Nachbesserung 1 (nach Abnahme 0, `H_abnahme_0.md`) — IN ARBEIT
+
+Stand: Basis a95adbb6 (Spurstand 8328ae1f + Abnahme). Messordner (Scratchpad) `H38n1/`.
+Je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher. Fortlaufend ergaenzt.
+
+### 8.1 Mangel 1 — RE2 ROOM40A0 Satz 0x08 ist ein SCHUSS (der Partnerin), nicht die "Alligator-Schleife"
+* Ursache des Fehlers: die RE1.5-Lesart von Work_set Art 2 (= Gegner-Feld) wurde auf RE2 uebertragen. In RE2 ist Art 2
+  der PARTNER, Gegner sind Art 3 (Belege folgen in 8.1, selbst disassembliert).
