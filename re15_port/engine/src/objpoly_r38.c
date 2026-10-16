@@ -136,7 +136,7 @@ static void flush_obj(void)
 {
     if (s_log && s_obj >= 0 && (s_n_nclip + s_n_otz + s_n_gpu + s_n_ok) > 0) {
         fprintf(s_log, "F%u room=%04X cut=%d obj=%d gezeichnet=%d nclip=%d otz=%d gpu=%d\n",
-                (unsigned)g_engine.frame_count, s_room, s_cut, s_obj, s_n_ok, s_n_nclip, s_n_otz, s_n_gpu);
+                s_frame, s_room, s_cut, s_obj, s_n_ok, s_n_nclip, s_n_otz, s_n_gpu);
         fflush(s_log);
     }
     s_n_nclip = s_n_otz = s_n_gpu = s_n_ok = 0;

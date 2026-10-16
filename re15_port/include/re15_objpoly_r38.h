@@ -10,7 +10,9 @@
  * Kamera von Cut 11 (von (9648,-12691,-20700)). Der Port zeichnete jedes Dreieck mit allen Scheiteln vor der
  * Kamera ungesaettigt und ohne Rueckseiten-Test -> das ganze Bild voller Lamellen. Das Original (DuckStation-GDB,
  * Haltepunkte im Zeichner) verwirft 20 Vierecke an NCLIP, 16 an OTZ < 64, die eingehaengten Reste sind fuer die GPU
- * zu gross oder liegen ausserhalb des Bilds -> Cut 11 zeigt die Plattform ohne Rolladen.
+ * zu gross oder liegen ausserhalb des Bilds -> Cut 11 zeigt die Plattform ohne Rolladen. Zweiter Original-Fall mit dem
+ * LICHT-Zeichner (ROOM1050 Rolltor obj 0, Cut 5, Haltepunkt `bgez` @0x800257c0): alle 15 Vierecke OPZ < 0 — der Port
+ * rechnet dieselben 15 OPZ-Werte exakt (Riegel unit_r38_rolltor20a0 R7).
  *
  * DER ORIGINAL-WEG (FUN_8002c18c -> vier Zeichner, alle mit denselben zwei Schranken, PSX.EXE disassembliert):
  *   Flach-Dreieck FUN_80022f0c:  RTPT @0x80022fb0, NCLIP @0x80022fec, `bltz v0` @0x80023010 (OPZ < 0 -> weg),

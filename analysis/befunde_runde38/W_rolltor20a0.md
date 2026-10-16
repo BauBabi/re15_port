@@ -193,7 +193,9 @@ dem der Unterschied das ganze Bild kostet.
   Vierecks-Schleife ersetzen `re15_objpoly_r38_tri_mesh` / `_quad_mesh` die bisherige Projektion samt Port-Ausschnitt
   `if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */` (kein Original-Gegenstueck); beim Viereck zeichnet der
   bisherige Aufruf-Block (Teilung (0,1,3)+(0,3,2)) nur noch, wenn beide GPU-Dreiecke bestehen, sonst der Halbfall;
-  eine Zeile meldet der Messschiene den Objekt-Beginn. Diff main.c: +16 / -36 Zeilen.
+  eine Zeile meldet der Messschiene den Objekt-Beginn; eine Zeile setzt `r38_nclip` = MD1 liegt im RDT-Puffer
+  (`rdt_buf`/`rdt_size`), d. h. NCLIP nur fuer Original-Modelle (PORT-WAHL fuer eingebackene Port-Modelle, §8).
+  Diff main.c gegen df08d83a: `14 insertions(+), 34 deletions(-)`.
 * Keine Konstante ohne Adresse: 341/256 (ZSF), 64 (OTZ-Schranke), -400h/3FFh (SX/SY), 1023/511 (GPU) — Belege oben
   und im Kopf von re15_objpoly_r38.h.
 * Bekannte Rest-Abweichung (vorbestehend, NICHT Teil des Fixes): der PC teilt ein voll gezeichnetes Viereck weiter an
@@ -261,7 +263,8 @@ dessen Regions-Viereck die Lage enthaelt = 1757 Faelle; Summe Bildbedeckung alt 
 als 2 % des Bilds weniger nur in 18 Faellen (9 je Leon/Elza-Paar):
 * ROOM10D0/10D1 obj 0 (Rolladen vor Marvins Raum) Cut 12/13/6/7 in der geschlossenen Lage: der alte Port malte die
   RUECKSEITE (Cut 12 100 %, Cut 13 70 %); in der Szene (sub21 "It's a shutter switch", `Cut_chg 13` @0x01A22, sub22
-  hebt ihn auf y -6550) betrifft das die ersten Bilder von Cut 13 (y 0..-1500: alt 53884 -> neu 0..1080 px); oben
+  hebt ihn auf y -6550) betrifft das die ersten Bilder von Cut 13 (y 0: alt 53884 -> neu 0 px; y -1500: alt 25880 ->
+  neu 1080 px; y -3000: alt 2798 -> neu 1650 px; gerechnet mit zensus_objpoly.py, Lagen aus sub22 @0x01DBC); oben
   (y -6550) kein Unterschied. Cut 14 (Vorderseite) unveraendert.
 * ROOM1130/1131 obj 0 (Rolladen) Cut 8 (geschlossene Lage, ry 3072) und Cut 9 (Lage nach dem Oeffnen @0x00950,
   ry 1024): jeweils die Rueckseite, alt 25597 / 22378 px -> neu 0. Die im Spiel benutzten Paare (Cut 9 zu = die
