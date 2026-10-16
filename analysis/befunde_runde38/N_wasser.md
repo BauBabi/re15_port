@@ -153,7 +153,37 @@ und Routine 0 sind im Port vorhanden (re15_esp.c case 10). Kein Routine-B-Boden 
 
 ## Messung nachher
 
-(folgt)
+Messkopie `re15_pc_r38w_mess.exe` (Stand ace4282a + Umbenennung der Schiene auf `RE15_WASSER_LOG`), gleiche Laeufe wie vorher.
+`RE15_WASSER_LOG` = neue Schritt-Schiene (je Schritt eine Zeile); `RE15_FX_LOG` = VORHANDENE Zeichen-Spur des
+PC-Renderers (main.c:288, je gezeichnetem Partikel `id= sub= ... -> sx= sy= S=`).
+
+Leon ROOM1260 (Sprung, Band 1, (-8600,-7900) rot 0, `W0.5,U1.5,W1`):
+```
+F82  schritt fuss=7 lage=(-7879,-1800,-7246) boden=0x1d zweig=trocken plaetze=0 edt=0x1d
+F97  schritt fuss=4 lage=(-7068,-1800,-7246) boden=0x97 zweig=boden code=0x06050d00 part=4 anker=(-7502,-1858,-7381) quelle=zeichner plaetze=1 edt=0x17 fx=1
+F112 schritt fuss=7 lage=(-7068,-1800,-7246) boden=0x97 zweig=boden code=0x06050d00 part=7 anker=(-7543,-1878,-7100) quelle=zeichner plaetze=1 edt=0x17 fx=1
+```
+debug.log: `[foot] SE foot=4 type=23 vag=7` (Wasserschritt, wie vorher). state.log `fx=1` F97-F109 (13 Anim-Saetze
+x 1 Takt, Satz 13 = Ende), vorher 0. Zeichen-Spur: `id=6 sub=5 ... wpos=(-7502,-1858,-7381) ... fl=03 -> sx=141 sy=167
+S=8..32`. Differenzbild Bild 102 vorher/nachher: 28 Pixel in (136..147, 162..171) direkt am Fuss, gruenlich-weiss
+(ABR 3 = B+F/4, Zeile[0x16] = 0x60) — sonst bitgleich.
+
+Elza ROOM1261 (`RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, debug.log
+`[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, Sprung 1261 gleiche Lage):
+```
+F83  boden=0x1d zweig=trocken edt=0x1d
+F97  boden=0x97 zweig=boden code=0x06050d00 part=4 anker=(-7556,-1832,-7338) quelle=zeichner plaetze=1 edt=0x17
+F113 boden=0x97 zweig=boden code=0x06050d00 part=7 anker=(-7596,-1841,-7135) quelle=zeichner plaetze=1 edt=0x17
+```
+(eigene Anker = Elzas Skelett), Zeichen-Spur 26x `id=6 sub=5` (2 Spritzer x 13 Bilder).
+
+Leon ROOM2090 (Alligator-Becken, Sprung-Spawn (-8200,0,-25550), Band 0 in der sce-8-Zone, Spiegel -1620):
+```
+F87  boden=0x1d stempel=-1620 zweig=stempel code=0x06032000 part=6 anker=(-8632,-837,-26362) quelle=zeichner plaetze=1 edt=0x1a
+F102 boden=0x1d stempel=-1620 zweig=stempel code=0x06032000 part=3 anker=(-8626,-832,-26695) quelle=zeichner plaetze=1 edt=0x1a
+```
+debug.log `[foot] SE foot=7 type=26 vag=3` — vorher spielte der Port hier den Betonschritt 0x1d (VAG 1).
+Effekt-6-Zeilen von 2090/2000/2050/11A0 = byte-gleich zu 1260 (gleiche Sub 3/5).
 
 ## Tests
 

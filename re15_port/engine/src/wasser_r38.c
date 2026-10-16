@@ -45,7 +45,7 @@ static FILE *wasser_log(void)
     static FILE *f = NULL;
     if (!init) {
         init = 1;
-        const char *p = getenv("RE15_FX_LOG");
+        const char *p = getenv("RE15_WASSER_LOG");
         if (p && *p) f = fopen(p, "w");
     }
     return f;
