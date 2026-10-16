@@ -385,8 +385,8 @@ static void teil_bank(void)
     if (!b) return;
     uint32_t vh = (uint32_t)b[RE2_ELZA_EDT_SIZE - 8] | ((uint32_t)b[RE2_ELZA_EDT_SIZE - 7] << 8);
     re15_vab_t vab; int rc = re15_vab_parse(b + vh, RE2_ELZA_EDT_SIZE - vh, &vab);
-    /* Runde 38 Spur H: Satz 1 = RE2-Skript-Pistolenschuss ROOM4040 Satz 0x0A (vorher ROOM40A0 0x08 = Alligator-
-     * Schleife, kein Schuss — analysis/befunde_runde38/H_elzatoene.md §2.3). */
+    /* Runde 38 Spur H: Satz 1 = RE2-Skript-Pistolenschuss aus dem Gegnerfeld ROOM4040 Satz 0x0A (Annette, Art 3);
+     * vorher ROOM40A0 0x08 = Schuss der Partnerin Ada (Art 2) — analysis/befunde_runde38/H_elzatoene.md §8. */
     PRUEF(rc == 0 && vab.vag_count == 2 && vab.samples[0].size == 5264 && vab.samples[1].size == 5824,
           "VH @0x%X: %d VAGs, %u / %u B (ROOM1140 Satz 0x25 / ROOM4040 Satz 0x0A)", (unsigned)vh, vab.vag_count,
           (unsigned)vab.samples[0].size, (unsigned)vab.samples[1].size);

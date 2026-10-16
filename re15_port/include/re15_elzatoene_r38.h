@@ -7,8 +7,12 @@
  *   P2 ROOM1021  "Wenn Roy ... auf John zulaeuft soll er schon irgendwie ein Zombie stoehnen machen" -> Zombie-Stoehnen
  *                der Raumbank snd1, wenn Roys Gang beginnt.
  *   P3 ROOM1021  "Wenn John ... auf Roy schiesst, muss auch ein Schusssound kommen" -> der Schuss-Satz der Mini-Bank
- *                ELZASE.VBS (Runde 36 P4) war kein Schuss (RE2 ROOM40A0 = Alligator-Schleife) und ist jetzt der
- *                RE2-Skript-Pistolenschuss ROOM4040 Satz 0x0A (tools/r36_l/re2_elza_se_cut.py, gen/re2_elza_bank.inc).
+ *                ELZASE.VBS (Runde 36 P4: RE2 ROOM40A0 Satz 0x08 = Schuss der PARTNERIN Ada auf den Alligator, Se_on
+ *                Art 2 @0x02896; eine Aufnahme, die unter keiner RE1.5-Waffe vorkommt) ist jetzt der RE2-Skript-
+ *                Pistolenschuss aus dem GEGNERFELD, ROOM4040 Satz 0x0A (Annette, Se_on Art 3 Index 1 @0x014E4) — Johns
+ *                Art: RE1.5 Work_set 2 = Gegnerfeld (@0x80040d60) = RE2 Art 3 (@0x80055988/@0x800564b8). Die Welle ist
+ *                die Aufnahme des RE1.5-Super-Redhawk ARMS07 SE 0 (Korrelation 0,98). Werkzeug tools/r36_l/
+ *                re2_elza_se_cut.py, gen/re2_elza_bank.inc; Herleitung analysis/befunde_runde38/H_elzatoene.md §8.
  *                Die Anker/Zeitform der Runde 36 (@0x020CE/@0x020D6 +1) bleiben in engine/src/elza_r36.c.
  *
  * MECHANIK (Muster engine/src/elza_r36.c): ANKER = Datei-Offset + 8-Byte-Signatur im rohen RDT, einmal je Raum gesucht

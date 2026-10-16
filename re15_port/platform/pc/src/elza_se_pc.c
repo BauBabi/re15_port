@@ -9,7 +9,12 @@
  *   Satz 0 AUF    = RE2 ROOM1140 Raumbank-Satz 0x25 (Tuer-Handler @0x80051654-5c nach msg 5 "You unlocked ...")
  *   Satz 1 SCHUSS = RE2 ROOM4040 Raumbank-Satz 0x0A, der RE2-Skript-Pistolenschuss (@0x014E4 `36 02 0a 00 03 01 ..` +
  *                   @0x014F0 `3a 00 18 ..` Muendungsfeuer; dieselbe Welle ROOM4090 @0x02A4E / ROOM6020 @0x00B94).
- *                   Runde 38 Spur H: vorher ROOM40A0 Satz 0x08 = Alligator-Schleife, kein Schuss (H_elzatoene.md §2.3).
+ *                   Runde 38 Spur H: vorher ROOM40A0 Satz 0x08 = der Schuss der PARTNERIN (Ada) auf den Alligator
+ *                   (sub04 @0x02896 Se_on Art 2 = Partner laut RE2 @0x80011460/@0x8005649c, + ESP 0x18 @0x028A2).
+ *                   Gewechselt, weil John im RE1.5-Skript im Gegnerfeld steht (Work_set Art 2 @0x80040d60 -> 0x800ACC2C)
+ *                   = RE2 Art 3 (@0x80011464/@0x800564b8), und RE2s Gegnerfeld-Pistolenschuss im Skript ist ROOM4040
+ *                   0x0A (Annette, @0x014E4 Art 3 Index 1) = die Aufnahme des RE1.5-Super-Redhawk ARMS07 SE 0
+ *                   (Korrelation 0,98; H_elzatoene.md §8).
  * Geladen wie der Tuer-Slot 5c in audio_pc.c (dieselben Decoder re15_vab_parse / re15_vag_adpcm_decode), gespielt
  * ueber dieselbe Stimmen-/Prioritaets-Maschine (re15_audio_se_play_bank -> se_play_layers). Nicht positional wie
  * RE2 @0x8005165c `addu a1,zero,zero` (Aufschliessen) bzw. ROOM4040 @0x014E4 (Se_on Flags 0 = ohne Lage).

@@ -2,13 +2,13 @@
 # und Johns Schuesse (korrigierter RE2-Skript-Pistolenschuss) in ROOM1021. Dossier analysis/befunde_runde38/H_elzatoene.md.
 #
 # RIEGEL (Unit): misst die MECHANIK am echten VM (RDT laden, scd_room_reenter, Anker-Scan, Opcode-/Message_on-Haken).
-#   gunshot1041 stoehnen1021 schuss1021 bank re2beleg signatur
+#   gunshot1041 stoehnen1021 schuss1021 bank re2beleg aufnahme signatur
 add_executable(test_r38_elzatoene ${CMAKE_CURRENT_LIST_DIR}/../test_r38_elzatoene.c)
 target_link_libraries(test_r38_elzatoene PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_elzatoene PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r38_elzatoene PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-foreach(_teil gunshot1041 stoehnen1021 schuss1021 bank re2beleg signatur)
+foreach(_teil gunshot1041 stoehnen1021 schuss1021 bank re2beleg aufnahme signatur)
     add_test(NAME unit_r38_elzatoene_${_teil} COMMAND test_r38_elzatoene ${_teil})
     set_tests_properties(unit_r38_elzatoene_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

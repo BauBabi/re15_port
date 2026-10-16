@@ -15,16 +15,20 @@ RE2-VORBILD (alles selbst aus info/re2leon gelesen):
                 positional). Zensus (re2_raum_se_zensus.py 0x25): 7 Wellen-Familien; ROOM1140 = Raum der
                 "Locked/Unlocked door"-SAP (RE2_SOUND_LISTE.md ROOM114) und Quelle des Port-Tuer-zu-Tons ZU_A
                 (gleiche Raumbank, Satz 0x16) -> zu und auf aus EINER RE2-Tuerfamilie.
-  Satz 1 SCHUSS ROOM4040 Raumbank-Satz 0x0A = der RE2-SKRIPT-PISTOLENSCHUSS (Runde 38 Spur H, korrigiert;
-                analysis/befunde_runde38/H_elzatoene.md §2.3): ROOM4040 feuert ihn in einer Skriptszene fuenfmal
+  Satz 1 SCHUSS ROOM4040 Raumbank-Satz 0x0A = der RE2-SKRIPT-PISTOLENSCHUSS aus dem GEGNERFELD (Runde 38 Spur H,
+                Herleitung analysis/befunde_runde38/H_elzatoene.md §8): ROOM4040 feuert ihn in einer Skriptszene fuenfmal
                 (@0x014E4/@0x01528/@0x01558/@0x01578/@0x01668 `36 02 0a 00 03 01 ..`, die ersten zwei mit
                 Muendungsfeuer `3a 00 18 ..` @0x014F0/@0x01534; Work_set(1,0) @0x014BE, Plc_motion(0,0x11) @0x014D6);
                 dieselbe Welle (sha1
                 994b137d4007, 5824 B) schiesst in ROOM4090 @0x02A4E und ROOM6020 @0x00B94 (Nutzer-SAP-Liste
                 "ROOM602.SAP - ... a gunshot") und liegt nur in Raumbaenken (4040/4090/6020/6110/D040/F110).
-                Runde 36 hatte ROOM40A0 Satz 0x08 genommen — das ist KEIN Schuss: einziger Gegner des Raums ist der
-                Alligator (Sce_em_set @0x025A0 `44 00 00 23 ..`), und Se_on(2,8) @0x02896 steht in einer While-Schleife
-                (@0x0288A `0f 04 82 00` + Ck(5,0x0b)) am Alligator (Ursprung Modus 2 Index 0).
+                Schuetze ist Annette = Sce_em_set Id 1 @0x00E74 `44 00 01 47`, Se_on Art 3 Index 1. Art 3 = GEGNERFELD
+                (RE2 Work_Set @0x80055988 / Se_on @0x800564b8 lw *(0x800CFE1C + 4*Index)); John steht im RE1.5-Skript
+                ebenfalls im Gegnerfeld (Work_set Art 2 @0x80040d60 -> 0x800ACC2C, ROOM1021 @0x020C2 `2e 02 00`).
+                Die Welle ist die Aufnahme des RE1.5-Super-Redhawk ARMS07 SE 0 / RE2 ARMS05 (Korrelation 0,98).
+                Runde 36 hatte ROOM40A0 Satz 0x08 genommen = den Schuss der PARTNERIN Ada auf den Alligator (sub04
+                @0x0287E `2e 02 00`, Se_on Art 2 @0x02896, ESP 0x18 "GUN" @0x028A2; RE2 Art 2 = Partner @0x80055970/
+                @0x8005649c lw *0x800CFE18) — eine Aufnahme, die unter keiner RE1.5-Waffe vorkommt (<= 0,21).
                 Gegenprobe: RE2s Kendo-Schuss ROOM1010 Satz 0x0C ist bytegleich ARMS07 VAG 2 (Schrotflinte,
                 sha1 42bbd9b31614) — John haelt in RE1.5 aber eine PISTOLE (Bildmessung, Runde-36-Dossier §P4).
 
@@ -49,7 +53,8 @@ RDT = os.path.join(REPO, "info", "re2leon", "PL0", "RDT")
 SAETZE = [
     ("AUF", "1140", 0x25, "00008416", 0x01484, 0x01DD0, 0x04480, 5264,
      "e12a441e528242816cc556dabbcc92a83d9580b9"),
-    # Runde 38 Spur H: RE2-Skript-Pistolenschuss ROOM4040 Satz 0x0A (vorher ROOM40A0 0x08 = Alligator-Schleife).
+    # Runde 38 Spur H: RE2-Skript-Pistolenschuss aus dem Gegnerfeld ROOM4040 Satz 0x0A (vorher ROOM40A0 0x08 =
+    # Schuss der Partnerin).
     ("SCHUSS", "4040", 0x0A, "00007300", 0x0BF60, 0x0C8F8, 0x18CC8, 5824,
      "994b137d40070755fa17b026430cd98bfd36bd08"),
 ]
