@@ -224,6 +224,29 @@ Beruehrt: scd_vm.c (Message_on), menu_common.c (Dokument-Aufnahme), map_hint_com
 * Satzwerkzeug reproduzierbar: zweiter Lauf `tagebuch_satz.py --out build/r38_g/satz2` = dieselben 8 md5 wie die
   installierten FILE30-Dateien; Atlas md5 8cbe2c52 = Runde 34.
 
+## Nachbesserung 1 (nach Abnahme 0, `G_abnahme_0.md`; Sitzung 2026-10-16 abends)
+
+Abnahme 0: Punkt 1 und Punkt 2 ERFUELLT, RE-Gate und Vertrag halten; NICHT BESTANDEN wegen zweier Alt-Riegel, die
+diese Spur deterministisch rot macht (Maengel 1/2), und einer Testaussage, die deren Module nicht deckte (Mangel 3).
+Die Spur-Logik bleibt unveraendert; nachgezogen werden nur die zwei Alt-Riegel (begruendet, Kommentar "Runde 38 Spur G").
+
+### Messung vorher (Bau = HEAD 6470b5a2, `local_build.sh build` -> "ninja: no work to do")
+`ctest --test-dir re15_port/build -R "^(unit_re2doc_bildebene|unit_r26_inventar)$" --timeout 600 --output-on-failure`:
+    1/2 Test #252: unit_re2doc_bildebene ............***Failed    0.71 sec
+        FAIL: ein nicht vorhandenes Dokument meldet 0 statt Muell - sonst waere jede Zusage oben wertlos
+    2/2 Test #324: unit_r26_inventar ................***Failed    0.10 sec
+        (B4 Vergleiche gefahren: 846, Dokument-Ids ausgenommen: 54)
+        [FAIL] B4 kein Kollateral in den uebrigen Skripten
+        [OK  ] B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal
+    0% tests passed, 2 tests failed out of 2
+Beide Befunde der Abnahme reproduziert.
+
+### Mangel 1 — unit_re2doc_bildebene (IN ARBEIT)
+
+### Mangel 2 — unit_r26_inventar B4 (IN ARBEIT)
+
+### Mangel 3 — Testaussage ueber die beruehrten Module (IN ARBEIT)
+
 ## OFFEN
 - Nichts aus dem Auftrag offen. Hinweise fuer die Integration:
   * map_hint_common.c: meine zwei Eintraege stehen an Platz 3/4, Folge-Index 4 ist positionsabhaengig. Haengt eine
