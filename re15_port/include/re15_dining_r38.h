@@ -113,9 +113,10 @@
  * nur dort liegen die Rolladen-Wellen (Satz 0x0A -> VAG 4, 0x0B -> VAG 5, 0x0C -> VAG 8; die Baenke von 1140/1141
  * tragen auf denselben Saetzen andere Wellen, sha1-Vergleich Dossier 2.1). Programme ROLL1140/ROLL1141 = sub03/sub06
  * mit den drei Se_on + Sleeps von ROOM1131 sub02 @0x00A48/@0x00A54/@0x00A58/@0x00A64/@0x00AB2/@0x00ABE. */
-#define RE15_R38F_1140_EREIGNIS     3    /* Gemaelde Leon (Strom an; scd_vm.c s_power_gates leitet sonst auf 5) */
+#define RE15_R38F_1140_EREIGNIS     3    /* sub03 Leon (Rolladen hoch). Die Gemaelde-Zone (Slot 5) feuert im Port sub05:
+                                          * sub01 @0x00C7A `46 05 03 31 ff 00 18 05` jedes Bild (Dossier 4.1d) */
 #define RE15_R38F_1141_EREIGNIS_GEMAELDE 6
-#define RE15_R38F_1141_EREIGNIS_RIEGEL   5
+#define RE15_R38F_1141_EREIGNIS_RIEGEL   5   /* sub05 "You've opened the lock." — Original, KEIN Port-Programm mehr (Nachtrag 2) */
 #define RE15_R38F_SE_BANK_ROLLADEN  0x3B
 /* ROOM1131.RDT im CD-Baum (Lader der Plattform) und die drei Saetze. */
 #define RE15_R38F_ROLLADEN_RDT      "STAGE1/ROOM1131.RDT"
@@ -162,6 +163,8 @@
 #define RE15_R38F_ELZA_PLATZ_Z      (-10250)
 #define RE15_R38F_JOHN_PLATZ_X      (-5800)
 #define RE15_R38F_JOHN_PLATZ_Z      (-10250)
+/* Johns Abgang (BEFREIUNG-Schluss): Gang-Ausgang hinter der Rolladen-Zelle (z -7200..-6700) und vor der Dachtuer
+ * (Rechteck main00 @0x00A7A: z -750..250); waehrend Cut 7 (Blick nach Sueden) beide hinter der Kamera (z -9613). */
 #define RE15_R38F_GANG_X            (-7350)
 #define RE15_R38F_GANG_Z            (-7600)
 #define RE15_R38F_TUER_INNEN_X      (-7350)
