@@ -179,7 +179,8 @@ static void teil_raum(void)
      * (z -3400). Stand davor an der Klemmgrenze z -2900 (probe_r34n_e_dokumente stand 10F0), Blick -z (rot 1024):
      * 620 voraus (@0x80042bd0) = (1300,-3520) im Rechteck x 798..1798 z -3600..-2600. */
     const int32_t stand_x = 1300, stand_z = -2900; const int16_t stand_rot = 1024;   /* Blick -z */
-    static const int16_t k_rot[2][3] = { { 3072, 0, 2048 }, { 1024, 3618, 2048 } };   /* gen/itemorte_r38_lage.inc */
+    /* gen/itemorte_r38_lage.inc; Prison Key seit Runde 38 K Nachbesserung 1 = RE2 Small Key (vorher Cabin Key 1024/3618/2048) */
+    static const int16_t k_rot[2][3] = { { 3072, 0, 2048 }, { 1024, 0, 0 } };
     for (int i = 0; i < 2; i++) {
         raum_t r;
         if (raum_laden(&r, k[i].raum) != 0) { printf("FAIL: ROOM%04X nicht lesbar\n", k[i].raum); fails++; continue; }
@@ -247,8 +248,9 @@ static void teil_raum(void)
         static re15_md1_t md; re15_tim_t tim;
         memset(&md, 0, sizeof md); memset(&tim, 0, sizeof tim);
         CHECK(mb && tb && re15_md1_parse(mb, (size_t)mn, &md) == 0 && re15_tim_parse(tb, tn, &tim) == 0 &&
-              re15_schluessel_r36_obj_id(k[i].raum) == 4 && mn == (i == 0 ? 236 : 140),
-              "E Modell: MD1 %d B + TIM %d B parsen (RE2 %s)", mn, tn, i == 0 ? "P. Room Key" : "Cabin Key");
+              re15_schluessel_r36_obj_id(k[i].raum) == 4 && mn == 236 && tn == 34848,
+              "E Modell: MD1 %d B + TIM %d B parsen (RE2 %s)", mn, tn,
+              i == 0 ? "P. Room Key ROOM6150 @0x004FBC/@0x030B74" : "Small Key ROOM10F0 @0x001650/@0x0215BC");
         free(r.buf);
     }
     CHECK(re15_schluessel_r36_obj_id(0x1011) < 0 && re15_schluessel_r36_obj_id(0x11B0) < 0 &&
@@ -674,7 +676,8 @@ static void teil_namen(void)
     CHECK(re15_schluessel_r36_name(0x38) == NULL && re15_inv_desc_entry(0x38) != NULL &&
           re15_schluessel_r36_desc(0x38) == NULL, "C fremde Id 0x38 (Blue Keycard) unveraendert");
 
-    /* Icon: RE1.5 ITEMALL.PIX laden, einsetzen, gegen RE2 ITEMALL.PIX Tile 95/88 */
+    /* Icon: RE1.5 ITEMALL.PIX laden, einsetzen, gegen RE2 ITEMALL.PIX Tile 95 (P. Room Key) / 31 (Small Key, Prison Key seit
+     * Runde 38 Spur K Nachbesserung 1; vorher Tile 88 Cabin Key) */
     char p[600]; int n15 = 0, n2 = 0;
     snprintf(p, sizeof p, "%s/DATA/ITEMALL.PIX", RE15_ASSET_PSX_DIR);
     uint8_t *pix = slurp(p, &n15);
@@ -685,8 +688,13 @@ static void teil_namen(void)
         re15_schluessel_r36_icon_einsetzen(pix, n15);
         int anders = 0;
         for (int b = 0; b < n15; b++) if (pix[b] != orig[b] && (b / 1200 != 0x45 && b / 1200 != 0x42)) anders++;
-        CHECK(memcmp(pix + 0x45 * 1200, pix2 + 95 * 1200, 1200) == 0 && memcmp(pix + 0x42 * 1200, pix2 + 88 * 1200, 1200) == 0 &&
-              anders == 0, "I Icon-Tiles 0x45 = RE2-Tile 95, 0x42 = RE2-Tile 88; %d fremde Bytes veraendert", anders);
+        CHECK(memcmp(pix + 0x45 * 1200, pix2 + 95 * 1200, 1200) == 0 && memcmp(pix + 0x42 * 1200, pix2 + 31 * 1200, 1200) == 0 &&
+              anders == 0, "I Icon-Tiles 0x45 = RE2-Tile 95, 0x42 = RE2-Tile 31; %d fremde Bytes veraendert", anders);
+        {   /* Index 0 (RE1.5-CLUT 0x0000 durchsichtig / RE2 0x8000 schwarz) kommt im eingesetzten Prison-Key-Icon nicht vor */
+            int null = 0;
+            for (int b = 0; b < 1200; b++) null += pix[0x42 * 1200 + b] == 0;
+            CHECK(null == 0, "I Icon 0x42 (RE2-Tile 31) ohne CLUT-Index 0 (%d Vorkommen) -> ohne Aenderung einsetzbar", null);
+        }
         re15_itemall_set_pix(pix, n15);
         CHECK(re15_itemall_tile_raw(0x45) && memcmp(re15_itemall_tile_raw(0x45), pix2 + 95 * 1200, 1200) == 0,
               "I Leser re15_itemall_tile_raw(0x45) liefert das RE2-Icon");
@@ -701,7 +709,7 @@ static void teil_namen(void)
     uint8_t *itps2 = slurp(p, &t2);
     if (itps && itps2) {
         re15_schluessel_r36_bild_einsetzen(itps, t15);
-        static const struct { uint8_t id; int re2; } bl[2] = { { 0x45, 95 }, { 0x42, 88 } };
+        static const struct { uint8_t id; int re2; } bl[2] = { { 0x45, 95 }, { 0x42, 31 } };   /* 31 = RE2 Small Key */
         for (int i = 0; i < 2; i++) {
             const uint8_t *b = itps + bl[i].id * 0x3000, *q = itps2 + bl[i].re2 * 0x3000;
             int cx = b[12] | (b[13] << 8), cy = b[14] | (b[15] << 8);
@@ -715,6 +723,9 @@ static void teil_namen(void)
         int sicht = 0; uint8_t rr, gg, bb;
         for (int v = 0; v < RE15_ITPS_H; v++) for (int u = 0; u < RE15_ITPS_W; u++) sicht += re15_itps_pixel(0x45, u, v, &rr, &gg, &bb);
         CHECK(sicht > 4000, "B Modal-Leser re15_itps_pixel(0x45): %d von %d Bildpunkten gezeichnet", sicht, RE15_ITPS_W * RE15_ITPS_H);
+        sicht = 0;
+        for (int v = 0; v < RE15_ITPS_H; v++) for (int u = 0; u < RE15_ITPS_W; u++) sicht += re15_itps_pixel(0x42, u, v, &rr, &gg, &bb);
+        CHECK(sicht > 4000, "B Modal-Leser re15_itps_pixel(0x42): %d von %d Bildpunkten gezeichnet", sicht, RE15_ITPS_W * RE15_ITPS_H);
     } else { printf("FAIL: ITPS.ITP nicht lesbar\n"); fails++; }
 }
 

@@ -21,12 +21,14 @@ den Resident Evil 2 Items aus ..."), Begruendung im Dossier 2.4:
     Icon        COMMON/DATA/ITEMALL.PIX Tile 95 (= Id 0x5F, Tile == Id wie RE2-Tile 77 = 0x4D
                 "Fuse Case" == RE1.5-Tile 0x40, re15_sicherung.h) @0x1BD50, 1200 B
     Item-Bild   COMMON/DATA/ITPS.ITP Block 95 @0x11D000, 0x3000 B
-  PRISON KEY       = RE2 Item 0x58 "Cabin Key"
-    Weltmodell  ROOM1050.RDT Prop-Slot 0: MD1 @0x001558 140 B (md5 569def980f500800614301d40744b741),
-                TIM @0x00C650 8736 B (md5 be1f46e9490e070787f6e33fcae8faef) — Platzierung
-                room1050 sub00 @0x01208
-    Icon        ITEMALL.PIX Tile 88 @0x19C80, 1200 B
-    Item-Bild   ITPS.ITP Block 88 @0x108000, 0x3000 B
+  PRISON KEY       = RE2 Item 0x1F "Small Key" (seit Runde 38 Spur K, Nachbesserung 1 — vorher Item 0x58
+                     "Cabin Key", ein duenner dunkler Ring, an der Pinnwand nicht gut sichtbar; Wahl gemessen,
+                     analysis/befunde_runde38/K_itemorte.md 9.3)
+    Weltmodell  ROOM10F0.RDT Prop-Slot 4: MD1 @0x001650 236 B (md5 c5d49ef60b6b111ecac53a19652f3278),
+                TIM @0x0215BC 34848 B (md5 326b822bb81b07ecb6d3544ce6e094a6) — Platzierung
+                room10F0 sub00 @0x006F0 (Item_aot_set Item 0x1F, md1 4), Obj_model_set @0x00706 Attribut 0x0010
+    Icon        ITEMALL.PIX Tile 31 @0x9168, 1200 B (== ITEMALL/ITEMALL_032.TIM, Index 0 kommt nicht vor)
+    Item-Bild   ITPS.ITP Block 31 @0x5D000, 0x3000 B
 
 EINZIGE DATEN-AENDERUNG: die zwei Rechtecke im TIM-Kopf des Item-Bilds. RE2 laedt das Bild an
 crect (0,480) / prect (0,0) (gemessen: beide Bloecke), RE1.5s CHECK-Foto-Lader @0x800c0258 laedt an
@@ -37,7 +39,7 @@ das Foto leer (dieselbe Falle wie Block 0x40, re15_sicherung.h). Gesetzt werden 
   Block+0x0C u16 cx=0, +0x0E u16 cy=489  und  Block+0x214 u16 px=832, +0x216 u16 py=256.
 Das Icon braucht KEINE Aenderung: die RE1.5-Icon-CLUT (ST_00.TIM CLUT-Zeile 0) und die RE2-Icon-CLUT
 (ITEMALL_089.TIM) unterscheiden sich nur in Eintrag 0 (0x0000 / 0x8000), und Index 0 kommt in den
-Tiles 88/95 nicht vor (gemessen, Dossier 2.4).
+Tiles 31/95 nicht vor (gemessen, Dossier Runde 36 2.4 / Runde 38 K 9.3; ITEMALL_032/089/096 tragen dieselbe CLUT).
 
     python re15_port/tools/r36_schluessel/schluessel_export.py
 """
@@ -56,12 +58,12 @@ ZIEL = os.path.join(REPO, "re15_port", "engine", "src", "gen", "schluessel_r36.i
 QUELLEN = (
     ("re15_r36q_park_md1",   "PL0/RDT/ROOM6150.RDT", 0x004FBC, 236,   "3c9176ee9bbb7e91b7c9433d6fe5c371"),
     ("re15_r36q_park_tim",   "PL0/RDT/ROOM6150.RDT", 0x030B74, 34848, "0d43d30f076929dbc396075df3e051f6"),
-    ("re15_r36q_prison_md1", "PL0/RDT/ROOM1050.RDT", 0x001558, 140,   "569def980f500800614301d40744b741"),
-    ("re15_r36q_prison_tim", "PL0/RDT/ROOM1050.RDT", 0x00C650, 8736,  "be1f46e9490e070787f6e33fcae8faef"),
+    ("re15_r36q_prison_md1", "PL0/RDT/ROOM10F0.RDT", 0x001650, 236,   "c5d49ef60b6b111ecac53a19652f3278"),
+    ("re15_r36q_prison_tim", "PL0/RDT/ROOM10F0.RDT", 0x0215BC, 34848, "326b822bb81b07ecb6d3544ce6e094a6"),
     ("re15_r36q_park_icon",   "COMMON/DATA/ITEMALL.PIX", 95 * 1200, 1200, None),
-    ("re15_r36q_prison_icon", "COMMON/DATA/ITEMALL.PIX", 88 * 1200, 1200, None),
+    ("re15_r36q_prison_icon", "COMMON/DATA/ITEMALL.PIX", 31 * 1200, 1200, None),
     ("re15_r36q_park_itps",   "COMMON/DATA/ITPS.ITP", 95 * 0x3000, 0x3000, None),
-    ("re15_r36q_prison_itps", "COMMON/DATA/ITPS.ITP", 88 * 0x3000, 0x3000, None),
+    ("re15_r36q_prison_itps", "COMMON/DATA/ITPS.ITP", 31 * 0x3000, 0x3000, None),
 )
 
 # md5 der GANZEN Quelldateien (Icons/Bilder): Gegenprobe, dass der richtige RE2-Stand gelesen wird.

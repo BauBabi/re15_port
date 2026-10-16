@@ -33,7 +33,7 @@ PORT-WAHL (die FORM ist jeweils belegt, die Zahlen kommen aus der Messung):
     mit der Achsenebene (Runde 36 N: "Mitte = Sehstrahl der Markenmitte x Ebene"); Groesse NICHT an die Marke
     angepasst (es ist derselbe Loescher, den Leon spaeter in ROOM1090 ablegt).
   SCHLUESSEL: flach an der Pinnwand (Modellebene parallel zur Wand). Sichtseite = Wicklungs-Vorderseite = die Seite,
-    auf der die Textur NICHT gespiegelt erscheint (P. Room Key +y, Cabin Key -y: Rechnung im Dossier 2.6), Textur-u
+    auf der die Textur NICHT gespiegelt erscheint (P. Room Key +y; Rechnung im Dossier 2.6, der Small Key des Prison Key ebenso aus seinen UV), Textur-u
     waagerecht nach rechts (wie im TIM gezeichnet; P. Room Key Kopf rechts wie im RE2-Itembild ITPS 95).
     "gut sichtbar" = NUTZER-VORGABE; MASSSTAB s = groesster Wert, bei dem alle SICHTBAREN Texel (CLUT-Farbe != 0)
     im Nutzer-Cut innerhalb der Marken-Huelle liegen (+-0,5 / +1,5 px wie karten_export.py, Runde 36 N 3.3),
@@ -97,8 +97,9 @@ SLOT12_X0 = 1800                     # ROOM10F0 Slot 12 (30 Patronen, Item_aot_s
 SCHLUESSEL = {
     "park":   dict(item=0x45, rdt="PL0/RDT/ROOM6150.RDT", md1=(0x004FBC, 236, "3c9176ee9bbb7e91b7c9433d6fe5c371"),
                    tim=(0x030B74, 34848, "0d43d30f076929dbc396075df3e051f6")),
-    "prison": dict(item=0x42, rdt="PL0/RDT/ROOM1050.RDT", md1=(0x001558, 140, "569def980f500800614301d40744b741"),
-                   tim=(0x00C650, 8736, "be1f46e9490e070787f6e33fcae8faef")),
+    # Prison Key = RE2 0x1F "Small Key" (Nachbesserung 1, Dossier 9.3; vorher 0x58 Cabin Key ROOM1050 @0x001558)
+    "prison": dict(item=0x42, rdt="PL0/RDT/ROOM10F0.RDT", md1=(0x001650, 236, "c5d49ef60b6b111ecac53a19652f3278"),
+                   tim=(0x0215BC, 34848, "326b822bb81b07ecb6d3544ce6e094a6")),
 }
 VERT_OFF = 0x44                      # MD1: Ecken ab Datei 12 + t_vertex_offset 56 (beide Schluessel)
 

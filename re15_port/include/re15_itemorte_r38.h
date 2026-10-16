@@ -50,7 +50,9 @@
 #define RE15_R38K_SCHL_VERDRAENGT  15    /* der bisherige Schluessel-Slot der Runde 36 (0..14 Original belegt)    */
 /* LICHT der zwei RE2-Schluesselmodelle: RE2 Retail stellt BEIDE mit dem Attribut-Wort 0x0010 (FLACH, ohne Raumlicht)
  * auf — Obj_model_set des P. Room Key ROOM6150.RDT @0x02C98 `2d 08 00 00 00 00 00 00 00 00 00 00 10 00 ...` und des
- * Cabin Key ROOM1050.RDT @0x01274 `2d 00 00 00 00 00 00 00 00 00 0a 00 10 00 ...` (Wort nach dem Freigabe-Wort, wie
+ * Small Key (Prison Key seit Nachbesserung 1) ROOM10F0.RDT @0x00706 `2d 04 00 00 00 00 00 00 00 00 0a 00 10 00 ...`,
+ * ebenso ROOM20E0.RDT @0x018F8 / @0x01A96 und ROOM2020.RDT @0x01C1E (vorher Cabin Key ROOM1050.RDT @0x01274
+ * `2d 00 ... 0a 00 10 00`) (Wort nach dem Freigabe-Wort, wie
  * RE2 room20B0 @0x03158 der Lageplaene, Runde 36 N 8.3). Zeichner: RE2 FUN_800363f0 `puVar4[4] & 0x10` -> unbeleuchtet,
  * RE1.5 FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10` -> FUN_80022f0c @0x8002c320 mit 0x808080 (FUN_8002b898.c:16).
  * Runde 36 hatte die Schluessel mit Attribut 0 (NCCT) aufgestellt — an der Pinnwand gemessen fast schwarz. */

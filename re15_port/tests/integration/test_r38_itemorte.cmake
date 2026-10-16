@@ -8,7 +8,11 @@ cmake_minimum_required(VERSION 3.16)
 #   B1/B2/B3  BILD im Nutzer-Cut, je zwei Laeufe, einziger Unterschied das Taken-Bit: der Unterschied (|dR|+|dG|+|dB| > 30)
 #             liegt im Fenster um die Marke (+-2 px) und nirgends sonst — Loescher 1030 (Leon), Parking Lot Key 10F0
 #             (Leon), Prison Key 10F1 (Elza)
-#   B4        Prison Key in der Spiel-Fenstergroesse (RE15_WINDOW_SCALE=3): die duenne Ringlinie ist zusammenhaengend
+#   B4        Prison Key in der Spiel-Fenstergroesse (RE15_WINDOW_SCALE=3)
+#   B3/B4/B5  "GUT SICHTBAR" (Nachbesserung 1, Mangel M1 der Abnahme 0): Prison Key = RE2 Small Key (vorher Cabin Key, ein
+#             duenner dunkler Ring: 14 Pixel / Sum|dL| 502 bei Skala 1, 112 / 3193 bei Skala 3). Gemessen werden Pixelzahl
+#             UND Kontrastsumme Sum|dL| (probe_r38_itemorte_kontrast) und ihr Verhaeltnis zum Parking Lot Key am selben Ort
+#             (B2 Skala 1, B5 Skala 3).
 #   A        AUFNAHME 1030 vor dem Pfeiler: Modal -> Ja -> (3,0x85); der dritte Druck an derselben Stelle zeigt den
 #             verschobenen Monitor-Satz msg 14 (die genommene Zone wird uebersprungen, @0x80042f50)
 #   K1/K2     AUFNAHME an der Pinnwand 10F0 (Leon) / 10F1 (Elza, + Zellen-Flag (4,0xEC)); danach msg 4
@@ -21,7 +25,7 @@ cmake_minimum_required(VERSION 3.16)
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r37_feuerloescher_karte> -DRE15_BILD_TOOL=<probe_r34n_e_bild>
 #               -DWORKDIR=<dir> -P test_r38_itemorte.cmake
 # =============================================================================
-foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_BILD_TOOL)
+foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_BILD_TOOL RE15_KONTRAST_TOOL)
     if(NOT ${_v} OR NOT EXISTS "${${_v}}")
         message(FATAL_ERROR "r38_itemorte: ${_v} fehlt/existiert nicht: '${${_v}}'")
     endif()
@@ -135,6 +139,47 @@ function(k_bild _name _mit _ohne _x0 _y0 _x1 _y1 _min)
     endif()
 endfunction()
 
+# Kontrast zweier Laeufe (Bild 100): Pixel im Fenster >= _min_px, Sum|dL| >= _min_dl, ausserhalb 0; Sum|dL| -> _out.
+function(k_kontrast _name _mit _ohne _x0 _y0 _x1 _y1 _min_px _min_dl _out)
+    set(_a "${_basis}_${_mit}/fd_100.ppm")
+    set(_b "${_basis}_${_ohne}/fd_100.ppm")
+    execute_process(COMMAND "${RE15_KONTRAST_TOOL}" "${_a}" "${_b}" ${_x0} ${_y0} ${_x1} ${_y1}
+                    RESULT_VARIABLE _rv OUTPUT_VARIABLE _o)
+    string(STRIP "${_o}" _o)
+    message(STATUS "r38_itemorte[${_name}]: ${_o}")
+    if(NOT _o MATCHES "FENSTER [^:]*: ([0-9]+) Pixel, SUMDL ([0-9]+),.*AUSSEN: ([0-9]+)")
+        set(_fehler "${_fehler};${_name}: Kontrastwerkzeug-Ausgabe unlesbar '${_o}'" PARENT_SCOPE)
+        set(${_out} 0 PARENT_SCOPE)
+        return()
+    endif()
+    set(_px "${CMAKE_MATCH_1}")
+    set(_dl "${CMAKE_MATCH_2}")
+    set(_au "${CMAKE_MATCH_3}")
+    if(_px LESS _min_px OR _dl LESS _min_dl OR NOT _au EQUAL 0)
+        set(_fehler "${_fehler};${_name}: ${_px} Pixel (Soll >= ${_min_px}), Sum|dL| ${_dl} (Soll >= ${_min_dl}), aussen ${_au} (Soll 0)" PARENT_SCOPE)
+        message(STATUS "FAIL ${_name}: ${_px} Pixel (>= ${_min_px}), Sum|dL| ${_dl} (>= ${_min_dl}), aussen ${_au}")
+    else()
+        message(STATUS "ok   ${_name}: ${_px} Pixel >= ${_min_px}, Sum|dL| ${_dl} >= ${_min_dl}, aussen 0")
+    endif()
+    set(${_out} "${_dl}" PARENT_SCOPE)
+endfunction()
+# Verhaeltnis zweier Kontrastsummen in Prozent: 100 * _zaehler >= _min_proz * _nenner (Nenner 0 = Fehler).
+function(k_verhaeltnis _name _zaehler _nenner _min_proz)
+    if("${_zaehler}" STREQUAL "" OR "${_nenner}" STREQUAL "")
+        set(_fehler "${_fehler};${_name}: Kontrastsumme fehlt ('${_zaehler}' / '${_nenner}')" PARENT_SCOPE)
+        message(STATUS "FAIL ${_name}: Kontrastsumme fehlt")
+        return()
+    endif()
+    math(EXPR _l "100 * ${_zaehler}")
+    math(EXPR _r "${_min_proz} * ${_nenner}")
+    if(_nenner EQUAL 0 OR _l LESS _r)
+        set(_fehler "${_fehler};${_name}: Prison Key ${_zaehler} gegen Parking Lot Key ${_nenner} (Soll >= ${_min_proz} %)" PARENT_SCOPE)
+        message(STATUS "FAIL ${_name}: Sum|dL| Prison ${_zaehler} / Parking ${_nenner} < ${_min_proz} %")
+    else()
+        message(STATUS "ok   ${_name}: Sum|dL| Prison ${_zaehler} / Parking ${_nenner} >= ${_min_proz} %")
+    endif()
+endfunction()
+
 set(_fd "RE15_FRAMEDUMP=100:fd_100.ppm")
 
 # --- B1: Loescher ROOM1030 Cut 0 (Nutzer-Cut), Leon steht rechts im Bild (210 ; 154) -----------------------------------
@@ -152,17 +197,28 @@ pruef(B2 _b2 "[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45, Bit (9,82)) Pro
 pruef(B2 _b2 "oid=0x04 pos=(1358,-2495,-3400) rot=(3072,0,2048)")
 k_lauf(b2_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd}" _b2o)
 k_bild(B2 b2_mit b2_ohne 131 75 145 87 40)
+# Kontrast des Parking Lot Key (abgenommener Stand, Abnahme 0: 55 Pixel, Sum|dL| ~3430) = Bezug fuer B3.
+k_kontrast(B2K b2_mit b2_ohne 131 75 145 87 40 2700 _dl_park1)
 k_lauf(b3_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd}" _b3)
-pruef(B3 _b3 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,3618,2048), Zone Slot 8")
+pruef(B3 _b3 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,0,0), Zone Slot 8")
 k_lauf(b3_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd}" _b3o)
-k_bild(B3 b3_mit b3_ohne 131 75 145 87 10)
-# B4: der Prison Key (RE2 "Cabin Key": duenner Ring, Linie 1..1,5 Texel) in der Fenstergroesse, in der gespielt wird —
-# RE15_WINDOW_SCALE=3 (960x720, 3D in Fensteraufloesung, render_pc.c Fenster = groesste ganze Skala <= 90 % des
-# Bildschirms). Fenster = B3-Fenster x 3. Gemessen 2026-10-16: 112 Pixel, Huelle x 402..431 y 234..257, aussen 0
-# (Parking Lot Key ebenso: 491). Bei Skala 1 trifft die Abtastung die Ringlinie nur stellenweise (B3: 14).
+k_bild(B3 b3_mit b3_ohne 131 75 145 87 22)
+# B3K "gut sichtbar" bei Skala 1 (Nachbesserung 1): RE2 Small Key (ROOM10F0.RDT MD1 @0x001650, flach @0x00706) gemessen
+# 2026-10-16 27 Pixel, Sum|dL| 1627 (Cabin Key vorher 14 / 502), Parking Lot Key 55 / 3428 -> 47 %.
+k_kontrast(B3K b3_mit b3_ohne 131 75 145 87 22 1300 _dl_prison1)
+k_verhaeltnis(B3V "${_dl_prison1}" "${_dl_park1}" 38)
+# B4: der Prison Key in der Fenstergroesse, in der gespielt wird — RE15_WINDOW_SCALE=3 (960x720, 3D in Fensteraufloesung,
+# render_pc.c Fenster = groesste ganze Skala <= 90 % des Bildschirms). Fenster = B3-Fenster x 3. Gemessen 2026-10-16
+# (Small Key): 217 Pixel, Sum|dL| 11899, Huelle x 397..432 y 236..250, aussen 0 (Cabin Key vorher 112 / 3193).
 k_lauf(b4_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4)
 k_lauf(b4_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4o)
-k_bild(B4 b4_mit b4_ohne 393 225 437 263 90)
+k_bild(B4 b4_mit b4_ohne 393 225 437 263 180)
+k_kontrast(B4K b4_mit b4_ohne 393 225 437 263 180 9500 _dl_prison3)
+# B5: Parking Lot Key bei Skala 3 = Bezug fuer B4 (gemessen 491 Pixel, Sum|dL| 28852; Prison Key 11899 -> 41 %).
+k_lauf(b5_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b5)
+k_lauf(b5_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b5o)
+k_kontrast(B5K b5_mit b5_ohne 393 225 437 263 400 23000 _dl_park3)
+k_verhaeltnis(B4V "${_dl_prison3}" "${_dl_park3}" 33)
 
 # --- A: Aufnahme ROOM1030 vor dem Pfeiler; dritter Druck = Monitor-Satz aus Slot 20 -------------------------------------
 # Skript (30 Hz ab Spielbild 60): A@90 Modal, A@198 Ja, A@321 an derselben Stelle.
@@ -192,14 +248,15 @@ k_lauf(v3_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd
 k_lauf(v3_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v3o)
 k_bild(V3 v3_mit v3_ohne 76 62 103 81 50)
 # V4/V5: dieselbe Sicht bei Elza (ROOM10F1, Prison Key) — Cut 7 (Buecherregal, keine Masken) nicht gezeichnet, Cut 6
-# (zweite Kamera auf die Pinnwand) gezeichnet. Gemessen 2026-10-16: Cut 7 0 Pixel, Cut 6 29 Pixel x 83..97 y 67..78.
+# (zweite Kamera auf die Pinnwand) gezeichnet. Gemessen 2026-10-16: Cut 7 0 Pixel, Cut 6 mit dem Small Key (Nachbesserung 1)
+# 56 Pixel x 81..98 y 69..75, Sum|dL| 2690 (Cabin Key vorher 29 Pixel).
 k_lauf(v4_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_FORCE_CUT=7" _v4)
 k_lauf(v4_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_FORCE_CUT=7" _v4o)
 pruef(V4 _v4 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4")
 k_bild(V4 v4_mit v4_ohne 0 0 319 239 0)
 k_lauf(v5_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5)
 k_lauf(v5_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5o)
-k_bild(V5 v5_mit v5_ohne 76 62 103 81 20)
+k_bild(V5 v5_mit v5_ohne 76 62 103 81 45)
 
 # --- E: Elza ROOM1031 (kein Loescher) und ROOM1091 (der leere am Boden, Runde 37) ----------------------------------------
 k_lauf(e1 1031 "1031;-11500;-19500;2048;cut:0;elza" "W2" 90 "" _e1)

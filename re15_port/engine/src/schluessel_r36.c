@@ -40,8 +40,11 @@ extern void re15_scd_show_message(uint8_t index, uint32_t pause_mask);
  *   RE2-Beschreibung des jeweiligen MODELLS (RE2 PSX.EXE):
  *     P. Room Key @0x800A1DA4 "It looks unique.<FC>Now I can access<FC>the power room."
  *       -> "It looks unique. / Now I can access / the parking lot."
- *     Cabin Key   @0x800A1C6E "I can access the<FC>cabin in the rear<FC>with this."
- *       -> "I can access the / prison cells / with this."
+ *     Small Key   @0x800A11EF "I can open a<FC>simple lock<FC>with this."  (Modell des Prison Key seit Runde 38 Spur K,
+ *       Nachbesserung 1; Eintrag 0x1F der Beschreibungsbank, Nachbarn 0x1E Ink Ribbon @0x800A11C9 / 0x20 @0x800A1215)
+ *     Cabin Key   @0x800A1C6E "I can access the<FC>cabin in the rear<FC>with this."  (Modell bis Runde 38)
+ *       -> "I can access the / prison cells / with this."  — beide Saetze haben dieselbe Form (3 Zeilen, "... with
+ *          this."), der Port-Text bleibt deshalb beim Modellwechsel unveraendert.
  *   (RE2 0xFC = Zeilenumbruch = RE1.5 0x08.)
  * TUER-MELDUNGEN (Raummeldung, Kopf 04 02 wie ROOM11B0 msg 13/14/15 @0x1BFE/@0x1C37/@0x1C62):
  *   msg 28 = RE2 key_type-0x4C-Text des Modells P. Room Key (0x5F -> Index 0x13 @0x8009F2BB)

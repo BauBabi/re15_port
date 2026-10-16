@@ -443,7 +443,7 @@ RE-Belege (selbst gelesen, info/re2leon):
 * MD1 = ROOM10F0.RDT @0x001650, 236 B, md5 c5d49ef60b6b111ecac53a19652f3278 (= ROOM20E0 @0x002A98, bytegleich);
   TIM = ROOM10F0.RDT @0x0215BC, 34848 B, md5 326b822bb81b07ecb6d3544ce6e094a6 (8 bpp, CLUT (0,480) 256x4, Bild 64x256
   — dieselbe Form wie der P. Room Key ROOM6150 @0x030B74).
-* Icon: `ITEMALL.PIX` Tile 31 (@0x9168, 1200 B) == Bild von `ITEMALL/ITEMALL_032.TIM` (bytegleich), CLUT dieselbe wie
+* Icon: `ITEMALL.PIX` Tile 31 (@0x9150 = 31 x 1200, 1200 B) == Bild von `ITEMALL/ITEMALL_032.TIM` (bytegleich), CLUT dieselbe wie
   bei Tile 88/95 (md5 15a5a175 der CLUT von ITEMALL_032/089/096), **Index 0 kommt in Tile 31 nicht vor** -> wie in
   Runde 36 ohne Aenderung einsetzbar (RE1.5- und RE2-Icon-CLUT unterscheiden sich nur in Eintrag 0).
 * Item-Bild: `ITPS.ITP` Block 31 (@0x5D000, 0x3000 B) = `ITPS/ITPS3100_0549.bmp` (derselbe Schluessel).

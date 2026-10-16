@@ -26,14 +26,19 @@ endforeach()
 #                             Bilder mit/ohne Taken-Bit im Nutzer-Cut (Unterschied = der Gegenstand, in der Marke), Aufnahme
 #                             per Eingabeskript (Modal, Ja, danach der verschobene Satz), verdeckte Cuts (1030 Cut 10 nach
 #                             dem Rolltor-Tausch, 10F0/10F1 Cut 7) ohne Unterschied, Cut 6 mit; Prison Key auch in der
-#                             Spiel-Fenstergroesse (Skala 3); Elza 1031 kein Loescher, 1091 der leere am Boden (Runde 37
-#                             unveraendert), 1050 kein Loescher mehr
+#                             Spiel-Fenstergroesse (Skala 3); "gut sichtbar" des Prison Key als Pixelzahl UND Kontrastsumme,
+#                             auch im Verhaeltnis zum Parking Lot Key (Nachbesserung 1); Elza 1031 kein Loescher, 1091 der
+#                             leere am Boden (Runde 37 unveraendert), 1050 kein Loescher mehr
+# Nachbesserung 1 (Mangel M1 "Prison Key nicht gut sichtbar"): Auswerter mit Kontrastsumme Sum|dL| (Rec. 601) neben der
+# Pixelzahl — das Mass der Abnahme 0 (K_abnahme_0.md Abschnitt 5). Kein add_test, nur Werkzeug des Integrations-Riegels.
+add_executable(probe_r38_itemorte_kontrast ${CMAKE_CURRENT_LIST_DIR}/../probe_r38_itemorte_kontrast.c)
 if(TARGET re15_pc)
     add_test(NAME integration_r38_itemorte
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r37_feuerloescher_karte>
                      -DRE15_BILD_TOOL=$<TARGET_FILE:probe_r34n_e_bild>
+                     -DRE15_KONTRAST_TOOL=$<TARGET_FILE:probe_r38_itemorte_kontrast>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_itemorte_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_itemorte.cmake)
     set_tests_properties(integration_r38_itemorte PROPERTIES TIMEOUT 1800)
