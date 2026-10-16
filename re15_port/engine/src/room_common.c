@@ -145,6 +145,7 @@ void re15_room_transition_present(void)
     g_actors[RE15_ACTOR_SLOT_PLAYER].state       = 1;
     g_actors[RE15_ACTOR_SLOT_PLAYER].sub_state_1 = 0;   /* @0x80031974-Umfeld / cmd-0-INIT */
     g_actors[RE15_ACTOR_SLOT_PLAYER].sub_state_2 = 0;
+    { extern void re15_zopf_r38_kommando0(int); re15_zopf_r38_kommando0(-1); }   /* Runde 38 Spur D: Zopf-Init @0x80031a78-bf4 */
     g_re15_pauseflags = 7;                             /* @0x8001cbc4 ori 0x7 + @0x8001cbe4 sw */
     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);    /* FUN_800217b0(0x200,-6144,7,0) @0x8001cc00 */
     re15_fade_kick(0, 0);                              /* FUN_800216ec(0,0,..) @0x8001cc18 */
@@ -291,6 +292,7 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
         p->sub_state_2 = 0;
         p->sub_state_3 = 0;
         p->state       = 1;    /* @0x8003192C — Routine 0 laeuft durch, State steht danach auf 1 */
+        { extern void re15_zopf_r38_kommando0(int); re15_zopf_r38_kommando0(-1); }   /* Runde 38 Spur D: Zopf-Init @0x80031a78-bf4 */
         /* ...und das ROUTINEN-Register selbst. @0x8001CBDC nullt 0x800ACA58 (Spieler+0x04)
          * UNBEDINGT, also landet der Spieler nach JEDEM Raumwechsel wieder in Routine 0/1 =
          * Gameplay (Tabelle @0x80073F90). g_scd.player_mode ist das Port-Gegenstueck dieser

@@ -88,6 +88,9 @@ extern void (*g_anim_bone_angle_hook)(const void *actor, int bone, int16_t *ay, 
  * will (Tentakel-Kollision/Spitzensonde aus dem Engine-Tick), setzt hier den Aktor und
  * danach wieder NULL. Kein Crossfade-Zugriff, nur Identitaet fuer den Haken. */
 extern void *g_anim_query_actor;
+/* Runde 38 Spur D (Zopf, re15_zopf_r38.h): wenn gesetzt, schreibt re15_skel_compute_pose je Knochen die fertige
+ * LOKALE Rotation (nach Nacken/Haken, vor der Verkettung) hierher; [RE15_EMD_MAX_BONES][9]. NULL = aus. */
+extern int32_t (*g_skel_lokal_rot)[9];
 
 /* RotMatrix (byte-true, s. skeleton_common.c mat3_from_euler) fuer Aufrufer ausserhalb des
  * Pose-Builders: Entity-Matrix aus (rx, ry, rz) in PSX-Winkeleinheiten. */

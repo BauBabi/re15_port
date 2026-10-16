@@ -136,6 +136,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 #include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
+#include "re15_zopf_r38.h"     /* Runde 38 Spur D: Elzas Zopf (FUN_80024c30/FUN_80024e40) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -8735,7 +8736,11 @@ re_title:;
             int pose_ok = 0;
             if (skel_ok) {                        /* NACHBESSERUNG M-HE-1: auch gecullt (s.o.) */
                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
+                g_skel_lokal_rot = re15_zopf_r38_lokal();   /* Runde 38 Spur D: Teil 0 / Teil 8 lokal fuer den Zopf */
                 pose_ok = (re15_skel_compute_pose(p_skel, kf_idx, poses) == 0);
+                g_skel_lokal_rot = NULL;
+                if (pose_ok && re15_zopf_r38_aktiv(s_player_model_idx, md1.mesh_count))   /* Runde 38 Spur D: FUN_80024c30 (@0x80031d98) */
+                    (void)re15_zopf_r38_bild_aus_pose(player_ref, p_skel, poses);
                 if (pose_ok && re15_player_victim_state() != 0) re15_bissarm_r37_opfer_merken(player_ref, p_skel, kf_idx);   /* Runde 37 Spur J: Opfer-Schultern fuer den Handkontakt (Elza) */
                 /* RE15_POSE_DUMP: LEON render-level pose (grab-start / release investigations) */
                 {
@@ -9027,7 +9032,9 @@ re_title:;
              * nur im Viereck (innen-Zweig FUN_8001e9ec @0x8001e990), aussen nichts (FUN_8001ef54). */
             int n_bones = (pose_ok && player_visible) ? skel.bone_count : 0;
             if (n_bones > md1.mesh_count) n_bones = md1.mesh_count;
-            for (int bi = 0; bi < n_bones; bi++) {
+            /* Runde 38 Spur D: Elzas Zopf = Teile 17..20 mit eigener Weltmatrix (Flag 0x40 -> FUN_8001e9ec @0x8001ea10). */
+            int n_zopf = (n_bones > 0 && re15_zopf_r38_zeichnen(s_player_model_idx, md1.mesh_count)) ? RE15_ZOPF_GLIEDER : 0;
+            for (int bi = 0; bi < n_bones + n_zopf; bi++) {
                 /* Phase 4.5.10-L: revert to 1:1 mesh-bone mapping.
                  * Phase 4.5.10-H tried bone_mesh_index[] but that field's
                  * semantics weren't what we thought (it's the EMR child
@@ -9039,7 +9046,7 @@ re_title:;
 
                 /* Phase 4.5.8.2 + 4.4.5.1: pre-rotate pose by R_y(yaw),
                  * then compose view × (R_y × bone) per bone. */
-                const re15_skel_pose_t *p = &poses[bi];
+                const re15_skel_pose_t *p = &poses[bi < n_bones ? bi : 0];   /* Runde 38 Spur D: Zopf-Teile s.u. */
                 int32_t yawed_rot[9];
                 for (int r = 0; r < 3; r++) {
                     for (int c = 0; c < 3; c++) {
@@ -9064,6 +9071,10 @@ re_title:;
                     yawed_trans[1] + model_pos_y,
                     yawed_trans[2] + model_pos_z,
                 };
+                if (bi >= n_bones) {   /* Runde 38 Spur D: Zopfglied = Weltmatrix aus FUN_80024e40 (Teil+0x40) */
+                    mi = RE15_ZOPF_ERSTES_TEIL + (bi - n_bones);
+                    (void)re15_zopf_r38_welt(bi - n_bones, yawed_rot, bone_world_trans);
+                }
                 /* (Knochen-11-Fuetterung re15_player_set_hand_world/_rot: seit der NACHBESSERUNG
                  * M-HE-1 VOR diesem Loop, jedes Bild aus derselben Pose — s. "BLADE/HAND WORLD POINT"
                  * oben. Hier nur noch Zeichnen.) */
