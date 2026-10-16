@@ -575,7 +575,12 @@ teil_fehler_umfeld() {
 # =============================================================================
 teil_cmd() {
     echo "== release_alles.cmd (Windows) =="
-    if [[ $IST_WIN -ne 1 ]]; then fehl "Teil cmd nur unter Windows registrieren"; return; fi
+    if [[ $IST_WIN -ne 1 ]]; then
+        # Sichtbar uebersprungen (ctest SKIP_RETURN_CODE 77), nicht weggelassen: so bleibt die Testzahl unter Windows
+        # und im Linux-Container gleich - docker_linux_build.sh vergleicht sie mit RE15_MIN_TESTS (:125-130).
+        echo "SKIP: release_alles.cmd braucht cmd.exe (Windows) - hier $(uname -s)"
+        exit 77
+    fi
     local fx="$ARBEIT/fx_cmd" o cmdw
     fx_bauen "$fx" v0.8.24 v0.8.25
     cmdw="$(cygpath -w "$R/release/release_alles.cmd")"

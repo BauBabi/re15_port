@@ -128,16 +128,51 @@ Schritt-Skripte (Abschnitt 5).
 | N3 | Vorher M1/M2 (falsche Standard-Versionen) | eine Quelle: `--version $NEU` an build_android.sh UND make_package.sh (Aufrufzeilen im Protokoll, Test `ablauf`) |
 | N4 | Vorher M3 (Docker aus) | `docker_bereit.sh --pruefen` -> rc 1 "ein echter Lauf startet Docker Desktop ('docker desktop start') und wartet bis 300 s" |
 
-(N5 echter Docker-Start + Windows-Bau mit `--ab windows --bis windows`: folgt)
+| N5 | `bash release/release_alles.sh --ab windows --bis windows` (17:27:25-17:29:48, Docker Desktop war AUS) | rc 0 in 2 min 23 s: Vorbedingung `Container-Engine bereit nach 19 s: docker 27.5.1` (gestartet per `docker desktop start`; Runde 32 maß 20 s), danach das ECHTE build_win_cross.sh: Image 2 s, Quellbaum packen 25 s (5397 Dateien, 347 MB), auspacken 22 s, Configure 24 s, Compile+Link 25 s, `WIN-CROSS-BUILD-OK: 5295813 Bytes`, Wrapper 107 s; Schritt-Pruefung `windows OK in 0h01m48s: .../release/win_out/re15_pc.exe 5295813 B, 2026-10-16 17:29:46` (Marke + frisches Artefakt); `RELEASE-ALLES-TEILLAUF-OK v0.8.26 (windows)`. Gegenprobe Groesse: die v0.8.25-exe im Hauptbaum (release/win_out, 2026-10-14 07:24) hat ebenfalls 5295813 B - seit v0.8.25 kein Port-Code geaendert. Docker Desktop danach wieder gestoppt (`docker desktop stop`, `docker info` rc 1 = Ausgangszustand) |
+| N6 | die Tests der Spur im Linux-Bau-Image (`docker run re15-linux-build:deb11`, git 2.30.2, Baum read-only als /src) | erster Lauf ROT: `[XX] zip fehlt`, `[XX] unzip fehlt` - das Bau-Image hat beides nicht (linux_deps.sh PKGS), also brach jeder Attrappen-Lauf in den Vorbedingungen ab. Die Vorbedingung ist fuer einen echten Lauf richtig (make_package braucht zip); der Test ersetzt jetzt FEHLENDE zip/unzip durch Platzhalter ausserhalb des Repos (unter Windows bleibt der echte Weg /c/msys64/usr/bin/zip im Test). Zweiter Lauf: version 38/38 (die Zusatzpruefung gegen die echten Repo-Tags entfaellt dort sichtbar: der Arbeitsbaum-.git-Verweis zeigt auf C:/...), bausteine 18/18, trocken 32/32, ablauf 47/47, fehler_bau 25/25, fehler_umfeld 29/29, zusammen 21 s. Dieser Fund haette sonst den Linux-Release-Bau v0.8.26 rot gemacht (Memory reai-v2-linux-test-portabilitaet) |
+| N7 | Testzahl Windows = Linux | `unit_r38_releaseskript_cmd` ist ueberall registriert und meldet ausserhalb von Windows sichtbar SKIP (Rueckgabe 77, SKIP_RETURN_CODE): sonst haette Windows einen Test mehr, und docker_linux_build.sh:125-130 (gelaufen >= RE15_MIN_TESTS) wuerde rot, sobald die Untergrenze nach der Windows-Suite angehoben wird |
 
 ## 5. Tests
 
-(folgt)
+Registriert in `re15_port/tests/unit/probes/r38_releaseskript.cmake` (GLOB), Skript
+`re15_port/tests/unit/r38_releaseskript/test_r38_releaseskript.sh <repo> <arbeit> <teil>`. Die Tests fahren das ECHTE
+`release_alles.sh` + `release_alles_lib.sh` (+ das echte `.cmd`) in einem Wegwerf-Repo (git init, Tags v0.1/v0.2/
+v0.8.9/v0.8.24/v0.8.25/backup-..., bare origin, eigenes Archiv, Vorversion v0.8.25 mit CRLF-SUMS wie in einem frischen
+Checkout); nur die vier Schritt-Skripte + docker_bereit.sh + python_finden.sh sind Attrappen
+(`r38_releaseskript/attrappen/`, steuerbar ueber FAKE_FAIL/FAKE_KEIN/FAKE_ALT/FAKE_OHNE_MARKE/FAKE_OHNE_ANDROID/
+FAKE_ALTE_BLEIBEN/FAKE_DOCKER). Je Nutzer-Teilpunkt mindestens ein messender Riegel:
+
+| Test | misst (Auszug) | Nutzer-Teilpunkt |
+|---|---|---|
+| unit_r38_releaseskript_version | Folgeversion (v0.8.25->26, v0.8.9->10, v0.7.99->v0.8.0, v0.3.99->v0.4.0, v0.99.99 -> keine), Gueltigkeit (0.8.26 -> v0.8.26; v0.08.1/v0.8.100/v0.100.0/rc1 ungueltig), numerischer Vergleich, hoechster Tag mit Fremd-Tags und CRLF, versionCode streng steigend ueber 300 Folgeversionen + Gegenprobe v0.8.100 = v0.9.0 = 90000, echte Repo-Tags gegen `sort -V`, Volume-Namen | "neue Versionsnummer - minor" |
+| unit_r38_releaseskript_bausteine | sha256sum -c scheitert an CRLF (Gegenprobe), ra_sums_pruefen liest es; Archiv erst `.unvollstaendig`, dann fertig; vorhandener Ordner bleibt; veraenderte Quelle -> kein fertiger Ordner; veraendertes Volume wird gefunden; leere SUMS nicht gruen; altes/leeres/fehlendes Artefakt faellt durch | "die alte ins Archiv" (Pruefbarkeit) |
+| unit_r38_releaseskript_trocken | --dry-run: Version, alle 6 Schritte mit Befehlen, schreibt NICHTS (Pruefsumme ueber Baum+Index+Tags+Archiv vorher = nachher), ruft keinen Schritt (nur `docker --pruefen`); --tag ohne Notes [XX]; --version 0.9.0 / v0.8.25 / v0.8.100; --ab paket ohne Bau-Ergebnisse [XX]; --ab windows --bis windows; --bis vor --ab; Docker nicht startbar; schmutziges re15_port/; Tags bis v0.7.99 -> v0.8.0; v0.99.99 -> rc 2 | "einfache Moeglichkeit" (vorher ansehen) |
+| unit_r38_releaseskript_ablauf | ganzer Lauf: Reihenfolge windows, android --version v0.8.26, linux (3 Jobs), paket --version v0.8.26; Archiv v0.8.25 (die ALTE, 6 Volumes + APK + 2 SUMS, sha256sum -c, SUMS ohne CR) und v0.8.26 (3 Plattformen, bytegleich); release/ nur v0.8.26, alte APK weg; kein Commit/Tag ohne --tag; Index 12 Aenderungen; Protokolle 00-06; dann --ab abschluss --tag: Commit `release: v0.8.26 (...)` mit 15 Pfaden, annotierter Tag, Push (origin master + Tag); danach Trockenlauf v0.8.27 | alle vier Teilpunkte |
+| unit_r38_releaseskript_fehler_bau | Linux rot (rc 7 durch die tee-Pipe) -> Abbruch, paket/archiv laufen nicht, stderr im Protokoll, Wiederaufnahme --ab linux baut nur linux + paket; Windows rot; altes Artefakt (2020); rc 0 ohne APK; ohne Marke; Paket ohne Android-Satz; alte Volumes geblieben; Paket rot | "fuer alle Systeme bauen" (kein falsches Gruen) |
+| unit_r38_releaseskript_fehler_umfeld | Archiv v0.8.26 schon da -> Abbruch VOR dem Bauen, Ordner unangetastet; --ab archiv gleich = ok / anders = Abbruch; kaputtes Altarchiv -> Abbruch vor dem Bauen; anderes v0.8.25 im Archiv; schmutziger Baum/Werkzeug/unversionierte .c; Sperre lebend/verwaist; --tag ohne Notes/nicht master; Docker; Platz; Aufruffehler; --bis android; --tag nach Code-Commit verweigert; --kein-push | "die alte ins Archiv" (nichts geht verloren) |
+| unit_r38_releaseskript_cmd | (Windows; sonst sichtbar SKIP 77) CRLF; `cmd /c release_alles.cmd --dry-run` rc 0; Rueckgabe durchgereicht (2); Doppelklick-Weg ueber die Pipe: Wahl 4 -> nichts gebaut; Wahl 1 -> ganzer Lauf; Wahl 2 danach -> Abbruch vor dem Bauen mit Hinweis; Wahl 3 -> Commit + Tag + Push | "einfache Moeglichkeit - Skript oder sowas" |
+
+Ergebnisse: siehe Abschnitt 4 (N6, Linux-Container) und die ctest-Summenzeile unten.
 
 ## 6. OFFEN
 
-(folgt)
+* Kein echter Gesamtlauf durch die Spur (Auftrag: den faehrt der Orchestrator fuer v0.8.26). Echt gemessen sind
+  Trockenlauf (N1), Schritt alt gegen das echte Archiv (N2) und Docker-Start + Windows-Bau (N5); android/linux/paket
+  laufen in den Tests als Attrappen, ihre Schnittstellen (Aufruf, Marke, Artefakt) sind mit Datei:Zeile belegt.
+* Abweichung vom Ablauf der Runde 37, mit Absicht (Abschnitt 2.1): im Archiv wird die vorige Version NICHT mehr
+  geloescht; Reihenfolge windows -> android -> linux statt windows -> linux -> android (kurze Baue zuerst).
 
 ## 7. Fuer den Nutzer
 
-(folgt)
+* **Bedienung**: Doppelklick auf `release\release_alles.cmd`. Es zeigt erst, was passieren wuerde (Version, Pruefungen,
+  Schritte), dann die Wahl [1] bauen, packen, archivieren / [2] dazu Commit + Tag + Push / [3] nur Commit + Tag + Push
+  / [4] nichts. Aus Git-Bash: `bash release/release_alles.sh` (`--help`, Anleitung `release/README.md`).
+* **Versionsnummer**: automatisch die naechste (v0.8.25 -> v0.8.26, v0.8.99 -> v0.9.0); eine eigene mit `--version`.
+* **Archiv**: die alte Version kommt ins Archiv (bzw. wird dort geprueft), die neue ebenfalls; geloescht wird im Archiv
+  nichts. Das Archiv waechst damit um ~0,9 GB je Version (heute 9 Versionen v0.8.7-v0.8.14 + v0.8.25, zusammen 7456 MB; frei 97 GiB).
+* **Entscheidungsfrage**: Bisher wurde bei jedem Release die vorige Version im Archiv geloescht (v0.8.15-v0.8.24 sind
+  deshalb nicht mehr dort; v0.8.7-v0.8.14 und v0.8.25 schon). Soll das Archiv kuenftig doch aufgeraeumt werden (z.B. nur
+  die letzten N Versionen behalten)? Bis zu Ihrer Antwort bleibt alles liegen.
+* **Hinweis**: im Hauptbaum liegt noch `release/re15_port_v0.8.24_android.apk` (380 MB, gitignoriert); v0.8.24 ist
+  nicht mehr im Archiv. Das Skript entfernt nur APKs, die bytegleich im Archiv liegen - diese bleibt liegen.
+* Neue Assets fuer das Paket-Gate: keine. Sprachdateien: keine.

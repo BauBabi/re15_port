@@ -33,17 +33,15 @@ else()
 endif()
 if(R38_RELEASESKRIPT_BASH AND EXISTS "${_r38v_release}/release_alles.sh" AND EXISTS "${_r38v_release}/release_alles_lib.sh")
     get_filename_component(_r38v_repo "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
-    set(_r38v_teile version bausteine trocken ablauf fehler_bau fehler_umfeld)
-    if(WIN32)
-        list(APPEND _r38v_teile cmd)
-    endif()
-    foreach(_r38v_teil ${_r38v_teile})
+    # cmd wird ueberall registriert und meldet ausserhalb von Windows sichtbar SKIP (77): gleiche Testzahl unter
+    # Windows und im Linux-Container (docker_linux_build.sh vergleicht sie mit RE15_MIN_TESTS, :125-130).
+    foreach(_r38v_teil version bausteine trocken ablauf fehler_bau fehler_umfeld cmd)
         add_test(NAME unit_r38_releaseskript_${_r38v_teil}
                  COMMAND "${R38_RELEASESKRIPT_BASH}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/r38_releaseskript/test_r38_releaseskript.sh"
                          "${_r38v_repo}" "${CMAKE_CURRENT_BINARY_DIR}/r38_releaseskript_wd_${_r38v_teil}" ${_r38v_teil})
         # Laufzeiten gemessen: Dossier Abschnitt 5; die Grenze laesst Luft fuer eine ausgelastete Maschine
-        set_tests_properties(unit_r38_releaseskript_${_r38v_teil} PROPERTIES TIMEOUT 1200)
+        set_tests_properties(unit_r38_releaseskript_${_r38v_teil} PROPERTIES TIMEOUT 1200 SKIP_RETURN_CODE 77)
     endforeach()
 else()
     message(STATUS "r38_releaseskript: bash oder release/release_alles.sh fehlt - unit_r38_releaseskript_* nicht registriert")
