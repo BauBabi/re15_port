@@ -15,6 +15,11 @@
  * re15_collision.c Kopf; Spielerradius 450 = DAT_80073e94[6]). Erzeugt von tests/unit/test_r37_masken36.c ("erzeuge"),
  * der Riegel unit_r37_masken36_ausschluss rechnet sie aus den Dateien nach. Alle uebrigen Rechtecke zeichnet der Lader wie
  * am 2026-09-03 gebaut. MASKS/ * bleibt unveraendert.
+ *
+ * Nachbesserung 2 (Abnahme 1, Dossier "Nachbesserung 2"): die Figur wird pixelgenau abgetastet (Kopfoberkante bis Fuss;
+ * vorher 9 x 9 Zeilenmitten - ROOM30A0 Cut 0 schnitt Leon das Haar ab), und eine Sektion OHNE Stehplatz ist ganz aus
+ * (ROOM3050/3051 Cut 15: die Masken uebermalten den Konsolen-Cursor; das Original hat dort die NULL-Sektion FF FF FF FF,
+ * FUN_800392d4 @0x80039324 lw / @0x8003932c bne -1 / @0x80039338 sb zero = keine Maske).
  */
 #include <string.h>
 #include "re15_pri.h"

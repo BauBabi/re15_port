@@ -749,3 +749,26 @@ Leon - vor allem neben dem Kopf, wo das alte Raster mit 9 Spalten nur Zwischenra
 Rechtecke aus, die Leon in diesem Bild nicht beruehren (sichere Richtung: weniger Verdeckung, keine Fehlverdeckung). Ob
 eine andere Haltung (Drehung, Zielen mit ausgestrecktem Arm) dort trifft, ist nicht gemessen. Folge fuer den Nutzer: §7
 nennt die Sektionen, die jetzt ganz ohne Generator-Maske sind.
+
+**Wie viel Verdeckung kostet das? (Modell, gleiches pixelgenaues Raster, nur die Tabelle verschieden):** Generator-Kopie
+im Scratchpad gegen `masken36_r37.c` mit der Tabelle von fb4be428 gelinkt (`p38nb2/werkzeug_nb1tab/`), Modus `ausschluss`,
+Zeile "mit Ausschluss Figurpunkte HINTER Zellen verdeckt" (Modellpunkte an erreichbaren Plaetzen, die HINTER einer Zelle
+stehen und von einer Maske verdeckt werden = gewollte Verdeckung):
+
+| Stage | Tabelle NB1 (124 Zeilen) | Tabelle NB2 (126 Zeilen) | Aenderung |
+|---|---|---|---|
+| 3 | 6 415 840 | 6 399 790 | -0.25 % |
+| 4 | 2 092 418 | 2 068 874 | -1.1 % |
+| 5 | 2 671 580 | 2 373 216 | -11.2 % (ROOM5020 Cut 6, 5090 Cut 11..13, 5100 Cut 2/4/6/7) |
+| 6 | 6 536 616 | 6 484 922 | -0.8 % |
+
+Derselbe Lauf mit der NB1-Tabelle: `FAIL: mit der Tabelle verdeckt keine Generator-Maske eine Figur ohne Zelle davor` und 66
+Sektionen weichen ab - mit dem pixelgenauen Raster hat die NB1-Tabelle Fehlverdeckungen, die das alte Raster nicht sah.
+
+**Szenen der Reste-Liste an der exe (gegen = Tabelle NB1, neu; Leon rot 0, Zwangs-Cut, Bild 120; C ausserhalb des
+Regionsvierecks; Skript `szenen_nb2.sh`):**
+
+| Szene | Raum/Cut, Lage | gegen (NB1): S / H | neu: S / H |
+|---|---|---|---|
+| f3040c1 FREI (OFFEN 2 aus NB1) | 3040 C1 (-22500,-11400), C (-15000,-11400) | 222 / **9** (Fussende, Kistenmaske) | 222 / **0** (`masks=0`, Cut 1 ganz aus) |
+| h30A0c3 HINTER | 30A0 C3 (-19800,19763), C (-25500,11700) | 1539 / 724 | 1539 / 724 (7 Rechtecke mehr aus, hier ohne Wirkung) |
