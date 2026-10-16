@@ -221,6 +221,26 @@ Se_on(0x3D,0) im Takt der Schleife. Klopfen (0x3C) bleibt SE: RMS ~5000-5500 im 
 - Abbruch: die Doppeltuer-Nachricht msg 41 (Bild 2930) blieb offen — der zweite Druck nach WARTE 45 beschleunigte nur
   die Schrift; Wegplan auf WARTE 90 korrigiert (95fc8af6), Lauf int_d3.
 
+### 4.1c Lauf int_d3 (echter Tuerweg 1131 -> 1141 -> 1171, Teil D, Stand 7fa09458 + 95fc8af6) — alle Pruefungen gruen
+Auswertung `cmake -DTEIL=D -DAUSWERTEN=<lauf> -P tests/integration/test_r38_dining1141.cmake`: "alle Pruefungen gruen
+(TEIL D)". Messwerte:
+- `[give] item 67 x1`; `ROOM1131: Dining Room Key benutzt -> Tuer offen, Flag (9,66) = 1`; msg 41 im Zustands-Log;
+  `loaded room1141.rdt`; `ROOM1141 Phase H: John im Dachgang hinter dem Rolladen (-7124,0,-6150) Blick 1024`; Zustands-
+  Log Bild F1: `[1 t=49 ... @(-7124,-6150,r1024)]`.
+- Hilferuf jetzt Sprachzeile: `Se_on bank=0x3D id=0 -> Runde 38 Spur F (Stimme main42.wav) F155 tick=3696` (F395/F635
+  folgen), `[voice] clip loaded: main42.wav`; Pegel im Mitschnitt: Korrelation 0,863, Verstaerkung 1,288 (Quell-RMS 1393
+  -> im Mix 1794 bei Mix-RMS 2080) — vorher 0,23 (Abschnitt 4.1a).
+- Erste Nachricht in 1141 = msg 13 (Gemaelde) — in Phase H erscheint kein Text; danach 40, 3 .. 11, nie 0/1/2.
+- Rolladen-Ton 0x3B 12/10/11, `ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG`.
+- Doppeltuer im Kampf: msg 41 offen, waehrend John im Raum ist (Zustands-Log).
+- `MESSHAKEN RE15_R38F_GORILLAS_TOT` (nach 600 Kampfbildern) -> Abgang: Cut 7 ab Bild 3277; John (Zustands-Log, je 15
+  Bilder) F3270 (-7531,-21363) -> F3300 (-7399,-20375) -> F3330 (-7371,-14375) -> F3360 (-7353,-8375) -> F3390
+  (-7351,-2575) -> F3405 (-7351,-975) -> F3414 geparkt (-30000,-30000) bei Cut 7, letzte Lage z -975 = hinter der
+  Kamera von Cut 7 (z -9613, Blick nach Sueden); 0 Spruenge. `Se_on bank=14 id=0/1 -> RE2-Tuerbank` (DOOR1A auf/zu).
+  Bildbogen `F_belege/n2_abgang_cut7.png`: F3285 John hinten in der Ecke, F3300..F3330 laeuft auf die Kamera zu, F3345
+  dicht an der Kamera, ab F3360 aus dem Bild (unterer Rand) — kein Verschwinden im Bild.
+- Dachtuer -> `loaded room1171.rdt`.
+
 ### 4.2 Riegel unit_r38_dining1141_* (Engine-Wege, Messwerte aus den Ausgaben)
 - phase_h: Bild 0 John bei (-7124,-6150) Blick 1024, keine Gorillas; 600 Bilder ohne Nachricht, John 0 Bilder
   abgewichen; Toene Bild 0/29/59/149/239/269/299/389/479/509/539 = 0x3C 0A/0B/0B, 0x3D 00 im Wechsel; "ja" Bild 725;
