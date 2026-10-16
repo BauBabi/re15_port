@@ -10,11 +10,110 @@ Punkte (Wortlaut AUFTRAG.md Runde 38 + Nachtrag 14 Runde 37):
 3. ROOM1140 (Leon): Rolltor ohne Ton beim Hochfahren.
 
 ## 0. Stand / Fortschritt
-- (laufend)
+- 16:20 Baum sauber auf e2cc7673, Dossier angelegt (ca756a09).
+- 16:28 Basis-Bau `local_build.sh configure` + `build` gruen (LOCAL-BUILD-OK).
+- 16:48 Messung vorher Punkt 3 (1140), 17:10 Messung vorher 1141-Szene, Zensus Item-Id/Bank 9/Nachrichten,
+  Ton-Quellen gemessen (Whisper-Transkription, VAB-Zensus). Naechster Schritt: Umsetzung Punkt 3.
 
-## 1. Messung vorher
+## 1. Messung vorher (Stand e2cc7673, echte exe)
+
+### 1.1 Punkt 3 — Leon ROOM1140 Rolltor (Lauf `v1140`)
+`RE15_GOTO_ROOM=1140 RE15_SET_FLAG=2:0 RE15_FORCE_EVENT=3@60 RE15_PRESS=square@200..350 RE15_SE_DEBUG=1
+RE15_AUDIO_CAP_SYNC=cap.raw` (Leon, Strom (2,0) an — Port-Stromtor scd_vm.c s_power_gates). Auszug
+`F_belege/v1140_vorher_auszug.txt`:
+- F60 `scd_event_fire(3)` -> sub03, F60 msg 1 "A beautiful painting.There's a switch below. Will you push it?"
+- F293 `Cut_chg(5)`, das Prop obj 0 (Rolladen, (-7124,0,-6976)) faehrt hoch (prop-render y -6 ...),
+  F487 Letterbox zu.
+- **0 Zeilen `[se] SCD Se_on` im ganzen Lauf** — der Rolladen faehrt stumm. Befund bestaetigt.
+
+### 1.2 Punkt 1/2 — Elza ROOM1141 mit (4,0xF0)=1 (Lauf `v1141`, Bilder F100..F1800)
+`RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_GOTO_ROOM=1141 RE15_SET_FLAG=4:0xF0 RE15_MSG_LOG=1`:
+- F30 `Evt_exec sub=2` sofort beim Betreten (sub00 @0x00B02), Cut 7, msg 0 "Elza: John, wait!", msg 1
+  "John: Elza! sorry, I'm glad to see you're still alive...", msg 2 "Elza: Same here... are you okay? what's
+  happened?", ... msg 11, F1476 Letterbox zu; danach Gorilla-Kampf, John steht im Suedwesten (-7550,-21500).
+- Die Szene startet also beim ersten Betreten — der Nutzer-Befund (Logikloch) ist der Ist-Zustand.
+- 1131 -> 1141: Door_aot_set ROOM1131 main00 @0x0088E `3b 00 02 31 ...` ohne jede Bedingung -> offen.
+- 1021 Roys Leiche: sub06 @0x02202 `2b 09 ff ff` = nur msg 9 "He's dead.[Seite]Poor Roy..." (kein Hinweis).
 
 ## 2. RE-Belege
+
+### 2.1 Punkt 3 — Rolladen-Ton: Form aus ROOM1131 sub02, Wellen aus der 1131-snd0-Bank
+Werkzeug: `re15_port/tools/scd_dump_room.py` (eine Laengentabelle), `tools/r38_dining/zensus.py`.
+- ROOM1140 sub03 @0x00CA6..0x00D51 (172 B): Message_on 1, Ifel_ck `06 00 a0 00` @0x00CAC, Set(3,0x6A),
+  Aot_reset 5, Set(2,7), Set(1,0x1B), Cut_chg 5 @0x00CCA, Bewegungsblock @0x00CCC..0x00D15 (Work_set Prop 0,
+  Speed_set, 4 For-Schleifen), Sca_id_set ..., **kein Opcode 0x36**.
+- ROOM1141 sub06 @0x00FE8: derselbe Bewegungsblock @0x01032..0x0107B, ebenfalls **kein 0x36**.
+- ROOM1131 sub02 @0x00A22 (Elzas Flur-Rolladen, "It's a shutter switch"): Ifel_ck `06 00 d0 00` @0x00A28 und
+    @0x00A48 `36 02 0c 00 01 00 00 00 00 00 00 00`  Se_on(2,0x0C)
+    @0x00A54 `09 0a 0f 00`                          Sleep 15
+    @0x00A58 `36 02 0a 00 03 00 00 00 00 00 00 00`  Se_on(2,0x0A)
+    @0x00A64 `09 0a 0f 00`                          Sleep 15
+    @0x00A68..0x00AB1                               Bewegungsblock (74 B, bytegleich 1140/1141)
+    @0x00AB2 `36 02 0b 00 03 00 00 00 00 00 00 00`  Se_on(2,0x0B)
+    @0x00ABE `09 0a 0a 00`                          Sleep 10
+  Ifel-Laenge 0xd0 - 0xa0 = 0x30 = 48 B = genau die 3 Se_on (je 12 B) + 3 Sleep (je 4 B).
+- Bank 2 = RDT-snd0 (FUN_80045024 Bankweiche, re15_audio.h). snd0-EDT-Saetze (rolltor_sound.md 4.4, nachgemessen):
+    1130/1131 Satz 0x0A `00 00 76 16` -> VAG 4 (5920 B, sha1 f240d33c), 0x0B `00 00 87 16` -> VAG 5 (2240 B,
+    ce8ed301), 0x0C `00 00 95 11` -> VAG 8 (336 B, 7819c42b)
+    1140/1141 Satz 0x0A -> VAG 4 (912 B, 7f67e256), 0x0B -> VAG 5 (3168 B, 487c19e0), 0x0C -> VAG 7 (7440 B,
+    0f0c7871) — ANDERE Wellen; keine der 9 VAGs von 1140/1141 ist eine der drei Rolladen-Wellen (sha1-Vergleich).
+  => Die Rolladen-Wellen gibt es nur in der 1130/1131-Bank. Der Port spielt sie aus ROOM1131.RDT snd0
+     (EDT @0x1450, VH @0x14D0, VB @0x2F70 — RDT-Kopf +0x08/+0x0C/+0x10), nicht aus der Bank des Raums.
+
+### 2.2 Item-Id fuer den Dining Room Key (Zensus `zensus.py`, VERTRAG 1.3)
+- Platzierungen (Item_aot_set 0x50 + Aot_reset sce 9) in allen RDTs: nie platziert und Eigenschaftssatz
+  @0x80074DA8+Id*12 = `01 00 00 00 88 4c 07 80 00 00 00 00` (wie alle Schluesselkarten): 0x2A-0x2F, 0x33-0x35,
+  0x3A-0x3E, 0x40 (Port: Sicherung), 0x42 (Port: Prison Key), **0x43 "Communications Card"**, 0x45 (Port: Parking
+  Lot Key). Keep_Item_ck (0x5E) kommt in keinem RDT vor. Port-Code nennt 0x43 nirgends.
+- **Gewaehlt 0x43**: einzige freie Id der Karten-/Schluessel-Familie 0x36..0x47 (0x36-0x39 Keycards, 0x41/0x44/
+  0x46/0x47 platziert). Ihr ausgelieferter Name traegt kein "Key" -> der Wegwerf-Text (item_prompt_common.c
+  re15_prompt_name_ist_schluessel, prueft den AUSGELIEFERTEN Namen) braucht einen Haken, sonst sagte die Abfrage
+  "item" statt "key".
+
+### 2.3 Bank 9 (VERTRAG 1.1: F = 64, 66, 67)
+`zensus.py`: (9,60..70) in keinem Item_aot_set (pc[18]) und keinem Ck/Set der Bank 9; Port-Code: kein Bank-9-Bit 64/66/67
+(einziges "64" ist (4,64) in re15_cut10f0.h). Vergabe: 64 = Schluessel genommen, 66 = Tuer 1131->1141 aufgeschlossen,
+67 = John hat 1141 durch die Dachtuer verlassen.
+
+### 2.4 Nachrichten (VERTRAG 1.2)
+RDT-Nachrichten: 1011 = 24 (0..23), 1021 = 15, 1131 = 6, 1141 = 15. Port-Ids F: 1011 45-49, 1021 40-44,
+1131 40-44, 1141 40-49 — alle hinter den Originalen.
+
+### 2.5 Ton-Quellen "Help" und Klopfen (Wahl begruendet)
+- Transkription (Whisper base.en, Messwerkzeug, `F_belege/asr_voice_kendo.txt`, `asr_voice_alle.txt`): voice/Kendo
+  (22 RE2-Kendo-Schnipsel) enthaelt **kein "help"** — nur "Hold on", "Freeze", "Who are you?", Schreie.
+  Alle voice/*-Ordner: "Help me!" nur bei Irons (VOICE13.XAS[15]_04, 2,04 s) und Sherry.
+- Johns eigene Stimme (Nutzer-Produktion synchro/): ROOM1171 main01.wav = "We need to get this thing off of here.
+  Help me out." (32 kHz, 2,90 s). Huellkurve (10-ms-RMS, Schwelle 0,02): Sprache 0,28-0,80 / 0,90-1,87 /
+  **2,04-2,59 s**, Pause 1,87-2,04 s. Schnitt ab 1,95 s -> "Help me out." (0,95 s; Whisper-Gegenprobe "Help me out.").
+  => **Wahl "Help": Johns eigene Stimme** (gleicher Sprecher wie in der Szene direkt danach; Kendo hat kein Help,
+  Irons waere ein fremder Sprecher). Datei synchro/STAGE1/room1141/john_help.wav (Nutzer kann sie ersetzen).
+- Klopfen/Haemmern: RE2 ROOM1060 ("An ominous wind can be heard...", "Zombies are inside...!!", "It's too dangerous
+  to go back outside...!!" — die Huette, in der die Zombies gegen die Tuer schlagen; RE2_SOUND_LISTE "ROOM106.SAP -
+  Cabin sounds - Zombies breaking in"). Dort laeuft das Schlagen als SCHLEIFE, sub05 @Datei 0x0F26 (106 B):
+    +0x22 `36 02 0a 01 00 00 dc 88 f8 f8 3d 05` Se_on(2,0x0A)   +0x2E `09 0a 1e 00` Sleep 30
+    +0x32 `36 02 0b 01 00 00 dc 88 f8 f8 3d 05` Se_on(2,0x0B)   +0x3E `09 0a 1e 00` Sleep 30
+    +0x42 `06 00 18 00` Ifel  +0x46 `23 00 1d 02 00 7d` Cmp  +0x4C Se_on(2,0x0B)  +0x58 `09 0a 5a 00` Sleep 90  +0x5C Endif
+    +0x5E `09 0a 5a 00` Sleep 90   +0x62 `17 ff ff 00 e0 ff` Goto -0x20 (-> +0x42)
+  snd0 (RDT +0x08/+0x0C/+0x10 = EDT 0x3F58 / VH 0x4018 / VB 0x4C38): Satz 0x0A `00 00 85 20` -> VAG 5 (8768 B),
+  0x0B `00 00 ad 00` -> VAG 6 (12480 B).
+  => **Klopfen = RE2 ROOM1060 snd0 Satz 0x0A/0x0B, Takt = dieselbe Schleifenform** (Schlag, 30, Schlag, 30, ...,
+  90 Pause) — Beta->Retail, RE2 ist die Vorlage fuer "in regelmaessigen Abstaenden".
+- "Are you okay? What's happened?" (1141 msg 2 ohne "Same here..."): synchro/STAGE1/room1141/main02.wav = "Same here.
+  Are you okay? What's happened?" (Sprache 0,16-0,98 / 1,50-2,33 / 2,82-3,54 s). Schnitt ab 1,24 s ->
+  main40.wav (Whisper: "Are you okay? What's happened?"). Id 2 bleibt unangetastet (VERTRAG 1.2).
+
+### 2.6 ROOM1141 Geometrie (RDT, fuer die neue Szene)
+- Tueren: Slot 0 -> 1131 Rechteck x -9100..-8100, z -19750..-15750 (Westwand, Doppeltuer); Slot 1 -> 1171
+  x -8250..-6250, z -750..250 (Dachtuer am Nordende des Dachgangs), Riegel Slot 2 sce 3 -> sub05 im selben Rechteck.
+- SCA: Westwand x -10600..-8600; Dachgang x -8600..-5750, z -6700..-250; Rolladen-Zelle r[13] x -9000..-5300,
+  z -7200..-6700 (faellt per Sca_id_set 0x0d); Tisch x -4650..7450, z -17450..-11350.
+- Kameras: Cut 6 (-8292,-838,-6606) -> (-6375,-3295,8211) = Dachgang mit Dachtuer; Cut 7 (-7465,-3024,-9613) ->
+  Blick nach Sueden; Cut 0/2 (893,-3929,-11697) Richtung Doppeltuer / Fenster; Cut 5 (-7266,-3806,-17278) -> Norden
+  (Rolladen + Gemaelde). Bilder `F_belege` (sheet_1141).
+- Original-Szene sub02: Elza Pos_set (-7600,0,-17600) @0x00C32, John Spawn (-6750,0,-13350) sub00 @0x00B06,
+  Dialogplaetze Elza (-7200,-15500) / John (-6750,-13350), Fensterblick (-1300,-15500)/(-850,-13350),
+  Gorillas Pos_set (9500,-11000)/(10150,-17700) @0x00E38/@0x00E4C, John am Ende -> (-7550,-21500) @0x00F8E.
 
 ## 3. Umsetzung
 

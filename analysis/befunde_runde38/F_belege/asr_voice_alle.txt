@@ -1,0 +1,399 @@
+voice\Ada\VOICE02.XAS[10]_02.wav                          1.58s  8-1
+voice\Ada\VOICE02.XAS[2]_01.wav                           7.88s  I heard he was locked up in the cell block, only there's a wrecked car barring the entrance. I've been trying to find another way inside.
+voice\Ada\VOICE02.XAS[7]_01.wav                           6.29s  I'm looking for some guy named Ben. He's one of those reporter types, always looking for a scoop.
+voice\Ada\VOICE02.XAS[8]_01.wav                           5.46s  Sorry about that. When I saw the uniform, I thought you were another zombie.
+voice\Ada\VOICE02.XAS[9]_01.wav                           4.96s  If we work together, we can move this thing. Give me a hand here, will you?
+voice\Ada\VOICE03.XAS[10]_02.wav                          6.04s  To the chemical plant, I have a feeling that's where I'll find John. Leon.
+voice\Ada\VOICE03.XAS[11]_04.wav                          3.17s  I was there, Leon. I know.
+voice\Ada\VOICE03.XAS[12]_05.wav                          1.33s  Right here.
+voice\Ada\VOICE03.XAS[13]_01.wav                          2.92s  You think we can get upstairs through this shaft?
+voice\Ada\VOICE03.XAS[13]_04.wav                          2.62s  I heard a rumor that he's here in the city.
+voice\Ada\VOICE03.XAS[14]_02.wav                         10.92s  Alright, I'm going. Give me a boost, I'll go and check. Leon, can you hear me? Think fast, here's one more. Good God, what was that?
+voice\Ada\VOICE03.XAS[15]_02.wav                          2.08s  Just listen to me for a minute.
+voice\Ada\VOICE03.XAS[1]_01.wav                          10.00s  I'm trying to find my boyfriend. His name's John. He was working for a branch office of umbrella based in Chicago, but he suddenly disappeared six months ago.
+voice\Ada\VOICE03.XAS[3]_02.wav                           9.04s  Ben, you told the city officials that you knew something about what's been going on, didn't you? What did you tell them?
+voice\Ada\VOICE03.XAS[4]_02.wav                           6.25s  Hey, I can't reach the ventilation hole. I'm going to have to find another way around. I'll catch up with you later.
+voice\Ada\VOICE03.XAS[7]_03.wav                           5.25s  How cute! That little girl must have dropped this. I think I'll hold on to it for her.
+voice\Ada\VOICE04.XAS[10]_02.wav                          3.46s  Quiet, Leon. I'll patch you up.
+voice\Ada\VOICE04.XAS[11]_01.wav                          4.83s  John's dead. He became one of those zombies, my condolences.
+voice\Ada\VOICE04.XAS[12]_01.wav                          9.04s  Never mind. Let's just get out of here. The sooner the better. So those rats were the carriers of the virus. What?
+voice\Ada\VOICE04.XAS[14]_01.wav                          2.79s  That woman was... I have to talk to her.
+voice\Ada\VOICE04.XAS[14]_03.wav                          3.96s  I just found out. John's dead. Leon.
+voice\Ada\VOICE04.XAS[15]_02.wav                          2.08s  G-Virus
+voice\Ada\VOICE04.XAS[15]_04.wav                          0.92s  Too bad.
+voice\Ada\VOICE04.XAS[2]_02.wav                           1.00s  Leon
+voice\Ada\VOICE04.XAS[4]_02.wav                           2.58s  Ada, Ada Wong.
+voice\Ada\VOICE04.XAS[5]_01.wav                           2.08s  That's two IOU.
+voice\Ada\VOICE05.XAS[1]_01.wav                          10.46s  But, it'll be in danger if you stay with me. I know I've only known you for a short period of time, but I really enjoy being with you.
+voice\Ada\VOICE05.XAS[2]_02.wav                           2.88s  *sigh*
+voice\Ada\VOICE05.XAS[4]_01.wav                          11.96s  I know. I'm not capable of caring about anyone, but I don't want to lose you. We've finally arrived. There must be something hidden here.
+voice\Ada\VOICE05.XAS[5]_01.wav                           6.54s  But I'll only slow you down with these injuries. Go. Save yourself.
+voice\Ada\VOICE05.XAS[5]_03.wav                           1.79s  Oh, what?
+voice\Ada\VOICE05.XAS[7]_02.wav                           3.54s  AHHHHH! UGH! UGH!
+voice\Ada\VOICE06.XAS[10]_02.wav                          5.71s  You know what this is about, so just hand over the G virus.
+voice\Ada\VOICE06.XAS[11]_02.wav                          5.29s  If you don't want to believe it, I don't really care. You're about to die anyway.
+voice\Ada\VOICE06.XAS[12]_03.wav                          4.29s  That's why I told you to leave without me, but you wouldn't listen.
+voice\Ada\VOICE06.XAS[13]_01.wav                          7.17s  Now hand it over. Don't make me shoot you. Goodbye.
+voice\Ada\VOICE06.XAS[14]_01.wav                          7.33s  What happened?
+voice\Ada\VOICE06.XAS[14]_03.wav                          2.21s  I've been waiting for you, Leon.
+voice\Ada\VOICE06.XAS[15]_02.wav                          1.29s  Leon
+voice\Ada\VOICE06.XAS[15]_04.wav                          2.21s  Ugh, run!
+voice\Ada\VOICE06.XAS[1]_02.wav                           4.04s  Leon, please, escape!
+voice\Ada\VOICE06.XAS[2]_02.wav                           7.42s  Leon, it's over. Just let me go.
+voice\Ada\VOICE06.XAS[4]_02.wav                           7.96s  I know. I'm not capable of caring about anyone, but I don't want to lose you.
+voice\Ada\VOICE06.XAS[5]_02.wav                           9.38s  I really wanted to escape with you, Leon. Escape from everything.
+voice\Ada\VOICE06.XAS[6]_02.wav                           9.04s  I'm just a woman who fell in love with you. Nothing more.
+voice\Ada\VOICE06.XAS[8]_01.wav                          10.50s  But, it'll be in danger if you stay with me. I know I've only known you for a short period of time, but I really enjoy being with you.
+voice\Ada\VOICE06.XAS[9]_01.wav                          13.25s  But I'll only slow you down with these injuries. Go. Save yourself. It's too late, Leon. We both know it.
+voice\Ada\VOICE06.XAS[9]_03.wav                           2.00s  Oh, what?
+voice\Ada\VOICE07.XAS[6]_03.wav                           2.67s  Here, use this!
+voice\Ada\VOICE17.XAS[6]_3.wav                            2.71s  Here, use this!
+voice\Alert\VOICE06.XAS[13]_03.wav                        2.79s  Five minutes until detonation.
+voice\Alert\VOICE06.XAS[2]_01.wav                        14.00s  The self-destruct sequence has been activated. Repeat. The self-destruct sequence has been activated. This sequence may not be aborted. All employees proceed to the emergency car at the bottom platform.
+voice\Alert\VOICE07.XAS[2]_01.wav                        10.25s  Warning, biohazardous outbreak imminent. The emergency system has been activated. This train will detonate. Repeat, this train will detonate.
+voice\Alert\VOICE07.XAS[6]_02.wav                         2.67s  Five minutes until detonation.
+voice\Alert\VOICE16.XAS[11]_1.wav                         2.71s  Five minutes until detonation.
+voice\Alert\VOICE16.XAS[2].wav                           21.65s  The self-destruct sequence has been activated. Repeat. The self-destruct sequence has been activated. This sequence may not be aborted. All employees proceed to the emergency car at the bottom platform. This sequence may not be aborted. All employees proceed to the emergency car at the bottom platform.
+voice\Alert\VOICE17.XAS[2]_1.wav                         10.29s  Warning, biohazardous outbreak imminent. The emergency system has been activated. This train will detonate. Repeat, this train will detonate.
+voice\Alert\VOICE17.XAS[4]_2.wav                          2.96s  Five minutes until detonation.
+voice\Anette\VOICE04.XAS[0].wav                           9.60s  Now I remember. One of the men from Chicago who came to assist the T-virus research used his girlfriend's name as his password, Ada and John, I believe.
+voice\Anette\VOICE04.XAS[10]_03.wav                       1.33s  William.
+voice\Anette\VOICE04.XAS[11]_02.wav                       4.83s  Then that must mean the creature in the police department is...
+voice\Anette\VOICE04.XAS[13]_01.wav                       6.12s  and create offspring. No, she dropped it. I've been holding on to it for her.
+voice\Anette\VOICE04.XAS[14]_02.wav                       2.92s  Ada Wong. I've heard that name before.
+voice\Anette\VOICE04.XAS[15]_01.wav                       3.92s  How did you know? Who are you? No!
+voice\Anette\VOICE04.XAS[1].wav                           9.60s  And although I regret this, you will be joining him shortly. I won't let anyone take the G virus away from me.
+voice\Anette\VOICE04.XAS[2]_01.wav                        8.79s  Even worse, every G-virus bio-weapon, including William, has the ability to implant embryos into other creatures.
+voice\Anette\VOICE04.XAS[3].wav                           9.71s  As a result of his virus induced transmutation, William should have lost any prior memories he had as a human by now. G-Virus.
+voice\Anette\VOICE04.XAS[4]_01.wav                        7.00s  And it's all umbrellas' fault. None of this would have happened if they hadn't tried to steal his research away from him.
+voice\Anette\VOICE04.XAS[6].wav                           9.71s  A net Birkin. My husband is the man responsible for the creation of the T-virus. William Birkin. Liar! Give it back to me!
+voice\Anette\VOICE04.XAS[7].wav                           9.81s  It's capable of creating the ultimate bio-weapon. Its potential is even greater than that of the T-virus.
+voice\Anette\VOICE04.XAS[8]_01.wav                        5.00s  You're the one who was with that cop if I'm not mistaken. Identify yourself.
+voice\Anette\VOICE04.XAS[9].wav                           9.81s  Where did you get that, pendant? It looks exactly like the one I gave Sherry. Precisely, my husband, William, don't move.
+voice\Anette\VOICE06.XAS[13]_04.wav                       3.00s  G... G virus.
+voice\Anette\VOICE06.XAS[3]_01.wav                       13.29s  You murdered my husband. I know what you're looking for. You came for the G virus, didn't you? But you'll never take it from me. This is my husband's legacy.
+voice\Anette\VOICE06.XAS[4]_01.wav                       12.88s  You really don't know anything, do you? You're so gullible. She's one of the operatives sent here by the agency. The only reason why she came here is to obtain the G-Virus.
+voice\Anette\VOICE06.XAS[6]_03.wav                        1.46s  You!
+voice\Anette\VOICE06.XAS[7]_01.wav                       18.42s  No, it's the truth. I discovered this when I did a background check on her. She specifically got close to John and became his girlfriend to get information about Umbrella. Now, where's that spy you were working with earlier? You know who I'm talking about.
+voice\Anette\VOICE14.XAS[0].wav                          13.76s  And that's not even the entire story. Every G-Virus bio-weapon, including William, has the ability to implant embryos into other life forms. That's why he's after Sherry.
+voice\Anette\VOICE14.XAS[11]_03.wav                       3.79s  I tried to save him, but I'm afraid it's already too late.
+voice\Anette\VOICE14.XAS[14]_04.wav                       2.29s  Huh? How did you?
+voice\Anette\VOICE14.XAS[15]_04.wav                       0.92s  Who are you?
+voice\Anette\VOICE14.XAS[15]_07.wav                       0.71s  What?
+voice\Anette\VOICE14.XAS[2].wav                          13.97s  Oh, I see. Another spy sent by Umbrella, right? Let me guess. You're here to steal my husband's G-Virus, aren't you? You are tenacious, I'll give you that.
+voice\Anette\VOICE14.XAS[3]_01.wav                        8.21s  But since Sherry is his daughter, that possibility is non-existent, it's an inherent survival instinct.
+voice\Anette\VOICE14.XAS[4].wav                          13.55s  Get away from me. You just want my husband's G sample, don't you? But no one will take that away from me. No one. What? I told her to go to the police building. Why is she here?
+voice\Anette\VOICE14.XAS[5]_01.wav                        7.96s  As a result of his virus-induced transmutation, William should have lost any prior memories he had as a human by now.
+voice\Anette\VOICE14.XAS[6]_02.wav                        6.33s  That's right. The creature that's been causing all this destruction is none other than my own husband.
+voice\Anette\VOICE14.XAS[7].wav                          13.44s  That's impossible. I told her to go to the police station. What's she doing here? William will be after her. Now Sherry and the G-Zemple are both in danger.
+voice\Anette\VOICE14.XAS[9]_02.wav                        5.46s  The bodies of individuals with non-related genetic coding are likely to reject the embryo.
+voice\Anette\VOICE16.XAS[10]_2.wav                        3.50s  The samples inside the pendant Sherry's wearing.
+voice\Anette\VOICE16.XAS[10]_4.wav                        3.29s  You killed William! I'll never forgive you for that!
+voice\Anette\VOICE16.XAS[12]_2.wav                        1.50s  AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+voice\Anette\VOICE16.XAS[12]_4.wav                        4.50s  Which room? Tell me, William. Sucker. Where's Sherry?
+voice\Anette\VOICE16.XAS[12]_6.wav                        0.88s  Sherry!
+voice\Anette\VOICE16.XAS[12]_8.wav                        0.62s  What?
+voice\Anette\VOICE16.XAS[3]_1.wav                        19.46s  Sherry, you have to escape. I know I've been a terrible mother, but I still love you. Forgive me. I have detailed information. Everything you need to know to prepare the antidote is right here.
+voice\Anette\VOICE16.XAS[4].wav                          21.76s  I've just prepared a sample of the G virus. And this time, no one will take it from me. This is the most significant piece of research my husband has ever left in my hands. Save my daughter. And tell her I'm sorry I wasn't a better mother. Tell her I love her.
+voice\Anette\VOICE16.XAS[5]_2.wav                        10.21s  Ahh... William is still alive. He's getting stronger with each skin he casts off. Sh- Sherry!
+voice\Anette\VOICE16.XAS[8]_1.wav                         5.17s  Sherry!
+voice\Anette\VOICE16.XAS[9]_3.wav                         3.92s  William, you're alive!
+voice\Anette\VOICE16.XAS[9]_5.wav                         2.29s  (snoring)
+voice\Ben\VOICE02.XAS[10]_01.wav                          3.12s  No!
+voice\Ben\VOICE02.XAS[4]_02.wav                           2.58s  Get... get away!
+voice\Ben\VOICE02.XAS[7]_03.wav                           1.71s  NOOO!
+voice\Ben\VOICE03.XAS[11]_02.wav                          7.29s  Like I said, I'm not leaving this cell. But do you even know how to get out of the city?
+voice\Ben\VOICE03.XAS[12]_02.wav                          3.42s  Those zombies aren't the only things crawling around out there.
+voice\Ben\VOICE03.XAS[12]_04.wav                          2.83s  Get out of here before you lead it right to me.
+voice\Ben\VOICE03.XAS[14]_03.wav                          2.00s  And who the heck are you?
+voice\Ben\VOICE03.XAS[1]_02.wav                           7.67s  Get that scum! Make him pay!
+voice\Ben\VOICE03.XAS[2]_01.wav                           8.50s  Ah ha ha ha! Bitter irony! The chief of police! Coke and spirit are...
+voice\Ben\VOICE03.XAS[3]_01.wav                           8.54s  There's a kennel in the back of the building. Inside the kennel is a manhole. Go through and it'll lead you to the sewer entrance, but it won't be easy.
+voice\Ben\VOICE03.XAS[4]_03.wav                           3.12s  What do you want? I'm trying to sleep here.
+voice\Ben\VOICE03.XAS[5].wav                             18.03s  Damn, I don't believe this. I almost got the story. Oh, my chest. It's burning. I have it right here, officer. But I'm not about to leave this cell.
+voice\Ben\VOICE03.XAS[8]_02.wav                           2.67s  YAH! SON OF A-
+voice\Ben\VOICE03.XAS[9]_02.wav                           4.25s  I don't know anything, and even if I did, why would I want to tell you?
+voice\Clair\VOICE01.XAS[10]_01.wav                        3.08s  Leon! Wait, come back!
+voice\Clair\VOICE01.XAS[11]_03.wav                        2.92s  I can't believe what is happening to this city.
+voice\Clair\VOICE01.XAS[13]_02.wav                        1.88s  Do you know where your parents are?
+voice\Clair\VOICE01.XAS[13]_04.wav                        3.29s  Leon! Wait! Come back!
+voice\Clair\VOICE01.XAS[14]_03.wav                        1.21s  Sherry, wait!
+voice\Clair\VOICE01.XAS[14]_05.wav                        1.50s  Would you help me look for her?
+voice\Clair\VOICE01.XAS[14]_07.wav                        1.21s  What was that?
+voice\Clair\VOICE01.XAS[15]_02.wav                        0.96s  Right.
+voice\Clair\VOICE01.XAS[15]_04.wav                        0.79s  Wait.
+voice\Clair\VOICE01.XAS[2]_01.wav                         6.08s  But it's too dangerous for her to stay here alone. Leon, I'll go look for her. You go and find us a way out of here.
+voice\Clair\VOICE01.XAS[5]_01.wav                         4.17s  Yeah. Have you seen a little girl around here?
+voice\Clair\VOICE01.XAS[5]_03.wav                         1.08s  I don't know.
+voice\Clair\VOICE01.XAS[6]_01.wav                         3.00s  I'll go look for her. You go and find us a way out of here.
+voice\Clair\VOICE01.XAS[7]_02.wav                         3.17s  I can't believe what is happening to this city.
+voice\Clair\VOICE01.XAS[9]_04.wav                         1.08s  Right.
+voice\Clair\VOICE03.XAS[12]_03.wav                        3.62s  Leon, are you still there? We're leaving.
+voice\Clair\VOICE03.XAS[15]_03.wav                        3.21s  Got it. I'm on my way.
+voice\Clair\VOICE03.XAS[6]_01.wav                         6.00s  Leon come in I found the girl and I cleared the wreckage that was blocking the corridor
+voice\Clair\VOICE03.XAS[6]_03.wav                         5.83s  It'll be alright, trust me. We found a way to the sewer. Follow us later.
+voice\Clair\VOICE06.XAS[12]_01.wav                        4.54s  I still have a few loose ends to take care of. I'm counting on you.
+voice\Clair\VOICE06.XAS[14]_02.wav                        2.58s  Leon, you made it!
+voice\Clair\VOICE06.XAS[5]_01.wav                        11.42s  I can see you on the monitor. But never mind that right now. Leon, you have to go back and get Sherri for me. I left her in the security office. Please, you must save her.
+voice\Clair\VOICE07.XAS[7]_01.wav                         2.08s  I don't know, the door won't open!
+voice\Clair\VOICE11.XAS[10]_03.wav                        3.17s  Easy, easy there, I'm not a zombie!
+voice\Clair\VOICE11.XAS[11]_01.wav                        3.04s  I'll go look for her. You go and find us a way out of here.
+voice\Clair\VOICE11.XAS[11]_03.wav                        2.88s  I can't believe what is happening to this city.
+voice\Clair\VOICE11.XAS[13]_02.wav                        2.33s  My name's Claire. What's yours?
+voice\Clair\VOICE11.XAS[13]_04.wav                        2.08s  Don't shoot! I'm a human!
+voice\Clair\VOICE11.XAS[14]_03.wav                        4.50s  Leon! You're safe now. Sherry, wait!
+voice\Clair\VOICE11.XAS[15]_02.wav                        1.17s  What was that?
+voice\Clair\VOICE11.XAS[15]_04.wav                        0.88s  I don't know.
+voice\Clair\VOICE11.XAS[15]_06.wav                        0.96s  Right
+voice\Clair\VOICE11.XAS[15]_08.wav                        0.79s  Wait.
+voice\Clair\VOICE11.XAS[1]_02.wav                         2.12s  Do you know where your parents are?
+voice\Clair\VOICE11.XAS[3].wav                            9.60s  From the look of things, I'd say she was probably right, but it's dangerous here as well. You'd better come with me. What's going on in this town?
+voice\Clair\VOICE11.XAS[6]_01.wav                         6.17s  But it's too dangerous for her to stay here alone. Leon, I'll go look for her. You go and find us a way out of here.
+voice\Clair\VOICE11.XAS[7]_01.wav                         5.42s  Leon come in. I found the girl, and I've cleared the wreckage that was blocking the corridor.
+voice\Clair\VOICE11.XAS[8]_02.wav                         4.92s  The chemical plant, then what are you doing here?
+voice\Clair\VOICE11.XAS[9]_02.wav                         4.08s  Yeah. Have you seen a little girl around here?
+voice\Clair\VOICE12.XAS[10]_02.wav                        7.75s  Just hang in there. I'll be back soon. Leon, are you still there? We're leaving. There must be some way to stop it.
+voice\Clair\VOICE12.XAS[11]_01.wav                        2.12s  Sherry, you're okay.
+voice\Clair\VOICE12.XAS[11]_05.wav                        5.42s  Hang in there. What happened? Are you chief irons?
+voice\Clair\VOICE12.XAS[12]_01.wav                        0.71s  Chief?
+voice\Clair\VOICE12.XAS[1]_02.wav                         1.54s  Are you okay?
+voice\Clair\VOICE12.XAS[4]_02.wav                         6.54s  Don't worry, I'll protect you. I promise. But you have to make sure you don't leave my side.
+voice\Clair\VOICE12.XAS[5]_01.wav                         8.58s  It's nothing. But I think I found a way out of here. We should be able to find someplace safe if we can just make it out of town.
+voice\Clair\VOICE12.XAS[7]_02.wav                         8.67s  It'll be alright, trust me. We found a way to the sewer. Follow us later. I'm going down there. Stay here and wait for me, okay?
+voice\Clair\VOICE12.XAS[8]_01.wav                         4.21s  Claire, Claire Redfield, I'm looking for my brother Chris.
+voice\Clair\VOICE12.XAS[8]_04.wav                         2.83s  Are you the only officer left in the building?
+voice\Clair\VOICE12.XAS[9]_01.wav                         4.21s  I can't believe the man who developed the G virus is actually her father.
+voice\Clair\VOICE12.XAS[9]_05.wav                         0.92s  Okay.
+voice\Clair\VOICE13.XAS[11]_02.wav                        4.96s  Sherry, I've been looking everywhere for you. I was so worried.
+voice\Clair\VOICE13.XAS[12]_01.wav                        8.08s  Sherry, are you okay? Did you find your dad? Wait, Sherry, come back! Sherry! Sherry!
+voice\Clair\VOICE13.XAS[13]_01.wav                        7.54s  Calm down, Chief. What happened? What's the matter? Don't you trust me?
+voice\Clair\VOICE13.XAS[14]_04.wav                        2.12s  Sherry! Sherry!
+voice\Clair\VOICE13.XAS[14]_06.wav                        0.96s  RUN!
+voice\Clair\VOICE13.XAS[15]_01.wav                        3.79s  Come on, let's get out of here. Wait, Sherry, don't go alone!
+voice\Clair\VOICE13.XAS[15]_03.wav                        1.88s  William Birkin
+voice\Clair\VOICE13.XAS[15]_05.wav                        1.71s  Hold on!
+voice\Clair\VOICE13.XAS[15]_07.wav                        1.33s  I'm on my way.
+voice\Clair\VOICE13.XAS[3]_02.wav                         5.83s  Thanks, sweetie. Now, why don't you come over here? I want you to stay with me.
+voice\Clair\VOICE13.XAS[6]_02.wav                         6.42s  We've got to go now, honey, okay? If we stay here, that monster will find us. Let's go.
+voice\Clair\VOICE13.XAS[8]_01.wav                         8.00s  So it's true. You have been working with Umbrella. Then you must know about the G-Virus. What is it? Tell me!
+voice\Clair\VOICE13.XAS[9]_02.wav                         0.71s  Got it!
+voice\Clair\VOICE14.XAS[10]_01.wav                        4.58s  Sherry's wandering around alone in the sewers. You have to help me find her.
+voice\Clair\VOICE14.XAS[10]_03.wav                        4.62s  What did she mean by that? Does Sherry have the G sample?
+voice\Clair\VOICE14.XAS[11]_04.wav                        1.92s  We don't have time for that.
+voice\Clair\VOICE14.XAS[12]_01.wav                        7.33s  Sherry is lost somewhere in the sewer system. I have to find her. Husband? Then you must be a net.
+voice\Clair\VOICE14.XAS[13]_02.wav                       10.88s  Sherry, you're okay. So those rats were the carriers of the virus? But why would her mom say something like that? You go that way.
+voice\Clair\VOICE14.XAS[14]_01.wav                        7.38s  Sherry, where are you? What happened? You're bleeding! Come on, wake up, Sherry.
+voice\Clair\VOICE14.XAS[14]_03.wav                        2.08s  What are you trying to say?
+voice\Clair\VOICE14.XAS[15]_01.wav                        3.67s  Come on, let's go. Where is she?
+voice\Clair\VOICE14.XAS[15]_03.wav                        4.88s  It's Sherry! Sherry! But you've been shot!
+voice\Clair\VOICE14.XAS[15]_05.wav                        0.96s  William?
+voice\Clair\VOICE14.XAS[15]_06.wav                        0.92s  Sherry!
+voice\Clair\VOICE14.XAS[1]_02.wav                         2.12s  Are you alright? What happened?
+voice\Clair\VOICE14.XAS[3]_02.wav                         5.62s  Are you absolutely sure? If you give it to me, I'll hold on to it for safekeeping.
+voice\Clair\VOICE14.XAS[5]_02.wav                         6.00s  Husband, then you must be a net. Sherry's mother?
+voice\Clair\VOICE14.XAS[8]_02.wav                         7.50s  Sherry, did your mom give you something called G-Virus? Either a vial or a test tube? But...
+voice\Clair\VOICE14.XAS[9]_03.wav                         2.62s  Don't worry, you'll be fine.
+voice\Clair\VOICE15.XAS[1]_02.wav                         2.96s  Stay here. I'll be right back.
+voice\Clair\VOICE15.XAS[2]_2.wav                          4.54s  Wait here for me okay? I'm going back to look for your mom.
+voice\Clair\VOICE15.XAS[3]_2.wav                          5.62s  Her forehead's burning up! I've got to hurry before the embryo's pupate!
+voice\Clair\VOICE15.XAS[4]_2.wav                          1.25s  Stay here.
+voice\Clair\VOICE15.XAS[5].wav                           12.80s  Don't worry. Just wait here. I'll go and see what it was. That's okay. You keep it. I'm sure it'll keep you safe. Sherry, wait here. I'm going to check it out by myself.
+voice\Clair\VOICE15.XAS[6]_1.wav                          3.46s  Sherry, where is she?
+voice\Clair\VOICE15.XAS[6]_3.wav                          2.21s  Stay with me, Sherry!
+voice\Clair\VOICE15.XAS[7]_1.wav                          5.62s  Sherry? Okay, Sherry, let's go. Hang in there, Sherry!
+voice\Clair\VOICE16.XAS[10]_1.wav                         3.58s  Tell me what I need to know. How can I save Sherry?
+voice\Clair\VOICE16.XAS[10]_3.wav                         3.38s  But I asked her and she's never even heard of the G-Virus before.
+voice\Clair\VOICE16.XAS[10]_5.wav                         6.33s  The monsters after your pendant throw it to me! Sherry, where are you? Sherry!
+voice\Clair\VOICE16.XAS[11]_2.wav                        10.08s  Here! This is what you're looking for, right? Fine. Then go get it! Oh, you're finally awake. I can see you on the monitor.
+voice\Clair\VOICE16.XAS[11]_4.wav                         4.83s  Leon, you made it! Sherry! Oh no.
+voice\Clair\VOICE16.XAS[11]_6.wav                         0.92s  Annette!
+voice\Clair\VOICE16.XAS[12]_3.wav                         1.29s  Where is she?
+voice\Clair\VOICE16.XAS[12]_5.wav                         2.04s  What happened? A net!
+voice\Clair\VOICE16.XAS[12]_7.wav                         1.58s  Annette, wait!
+voice\Clair\VOICE16.XAS[3]_2.wav                          2.38s  Good girl, no run Sherry!
+voice\Clair\VOICE16.XAS[6]_2.wav                         10.50s  But never mind that right now. Leon, you have to go back and get Sherry from me. I left her in the security office. Please, you must save her. No!
+voice\Clair\VOICE16.XAS[7]_1.wav                         15.92s  Stop it! Sherry's in serious trouble! William implanted her with his embryos! There's no telling when they'll pupate! And if that happens, then Sherry won't... won't... Rest here for a bit. I'll be right back... as soon as I found the antidote for you.
+voice\Clair\VOICE16.XAS[8]_3.wav                          6.88s  As for you, come and get it. I've got what you want. Come on! Sherry.
+voice\Clair\VOICE16.XAS[9]_2.wav                          3.88s  That's okay, you keep it. I'm sure it'll keep you safe.
+voice\Clair\VOICE16.XAS[9]_4.wav                          4.00s  I still have a few loose ends to take care of. I'm counting on you.
+voice\Clair\VOICE16.XAS[9]_7.wav                          2.04s  Sherry, we have to go now.
+voice\Clair\VOICE17.XAS[1]_2.wav                          1.12s  What was that?
+voice\Clair\VOICE17.XAS[2]_2.wav                          1.62s  Who are you?
+voice\Clair\VOICE17.XAS[3]_1.wav                          3.58s  Now you wait here okay? I'll go and get this thing moving.
+voice\Clair\VOICE17.XAS[6]_2.wav                          2.67s  No! What's wrong with this thing?
+voice\Clair\VOICE17.XAS[7]_1.wav                          2.46s  You lose, big guy.
+voice\Hunk\VOICE03.XAS[14]_01.wav                         2.54s  Alpha Team here. Mission accomplished.
+voice\Hunk\VOICE13.XAS[14]_01.wav                         2.83s  Roger, we'll rendezvous at the meeting point.
+voice\Hunk\VOICE13.XAS[14]_03.wav                         2.46s  Alpha Team here. Mission accomplished.
+voice\Irons\VOICE12.XAS[10]_03.wav                        2.17s  Yes, that's me.
+voice\Irons\VOICE12.XAS[11]_02.wav                        1.46s  Just look at her.
+voice\Irons\VOICE12.XAS[11]_06.wav                        1.04s  But no longer.
+voice\Irons\VOICE12.XAS[2].wav                           15.79s  In a manner of speaking there is, either by putting a bullet through her brain, or by decapitating her completely. She was a true beauty. Her skin nothing short of perfection.
+voice\Irons\VOICE12.XAS[3]_02.wav                         7.21s  Oh, I'm terribly sorry. I thought you were another one of those zombies.
+voice\Irons\VOICE12.XAS[4]_01.wav                         8.71s  And just who are you? No, don't bother telling me. It makes no difference. You'll end up just like all the others.
+voice\Irons\VOICE12.XAS[6].wav                           15.68s  But it will soon putrefy and she will turn into a zombie within the hour like all the others. That's the mayor's daughter. I was told to look after her, but I failed miserably.
+voice\Irons\VOICE12.XAS[9]_02.wav                         3.38s  and to think that taxidermy used to be my hobby.
+voice\Irons\VOICE12.XAS[9]_03.wav                         4.00s  Claire! Claire! Wait, wait!
+voice\Irons\VOICE12.XAS[9]_04.wav                         3.25s  Please, I'd really like to be alone now.
+voice\Irons\VOICE13.XAS[0]_01.wav                        13.75s  In case you haven't already figured it out. The monster that's been tearing my precinct apart is yet another product of the G-Virus. An ultimate bio-weapon.
+voice\Irons\VOICE13.XAS[10]_02.wav                        7.58s  Ugh! My chest... can't take the pain!
+voice\Irons\VOICE13.XAS[11]_04.wav                        1.54s  AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+voice\Irons\VOICE13.XAS[13]_02.wav                        8.12s  Dr. William Birkin is the genius behind the project. Sherry! Isn't it? What?
+voice\Irons\VOICE13.XAS[14]_02.wav                        2.79s  (screaming)
+voice\Irons\VOICE13.XAS[15]_02.wav                        1.71s  *groans*
+voice\Irons\VOICE13.XAS[15]_04.wav                        2.04s  Help me!
+voice\Irons\VOICE13.XAS[1]_02.wav                         4.62s  How could they do that to me after everything I've done for them?
+voice\Irons\VOICE13.XAS[2]_01.wav                        10.62s  If you must know, it's the agent that can turn humans into the ultimate bio-weapons. Superior to the T-virus in every way!
+voice\Irons\VOICE13.XAS[3]_01.wav                         9.71s  Shut up! You couldn't possibly understand what's happened. Those monsters from Umbrella have destroyed my beautiful town!
+voice\Irons\VOICE13.XAS[4].wav                           15.36s  *screaming* But I'm not letting anyone leave my town! Everyone's gonna die!
+voice\Irons\VOICE13.XAS[5].wav                           15.47s  Umbrella must be trying to cover its tracks. But if I have to go, I'm going to take you with me! I'm sure you've already seen his little girl running around here somewhere.
+voice\Irons\VOICE13.XAS[7]_02.wav                         7.08s  *laughs* So you've made it this far. Not bad, girl.
+voice\Marvin\VOICE02.XAS[0].wav                          11.95s  "Oh, you must be the new guy." "Lion." "Sorry, but it looks like your party has been cancelled."
+voice\Marvin\VOICE02.XAS[1].wav                          11.84s  About two months ago, there was this incident involving zombies in a mansion located in the outskirts of this city.
+voice\Marvin\VOICE02.XAS[3]_03.wav                        1.21s  Just go!
+voice\Marvin\VOICE02.XAS[4]_01.wav                        7.83s  Chris and the other stars members discovered that Umbrella was behind everything.
+voice\Marvin\VOICE02.XAS[5]_01.wav                        9.71s  Here, take this key card. You should be able to unlock the doors in the hall with this. Now go.
+voice\Marvin\VOICE02.XAS[6]_01.wav                       10.83s  Not long after that, all this started to happen. Who are you?
+voice\Marvin\VOICE02.XAS[8]_02.wav                        5.92s  They risk their lives to reveal the truth, but no one believed them.
+voice\Marvin\VOICE02.XAS[9]_02.wav                        6.00s  Don't worry about me. Just rescue the survivors in the other rooms.
+voice\Marvin\VOICE12.XAS[0].wav                          15.79s  Chris and the other stars, members, discovered that Umbrella was behind everything, at the risk of their own lives, but no one believed them.
+voice\Marvin\VOICE12.XAS[10]_01.wav                       2.33s  Oh, are you?
+voice\Marvin\VOICE12.XAS[10]_05.wav                       1.08s  Just go!
+voice\Marvin\VOICE12.XAS[11]_04.wav                       1.75s  *cough*
+voice\Marvin\VOICE12.XAS[1]_01.wav                       14.00s  About two months ago, there was this incident involving these zombie-like creatures. In a mansion located in the outskirts of this city,
+voice\Marvin\VOICE12.XAS[3]_01.wav                        8.46s  Chris, Jill Berry. Every last star's team member has disappeared. We should have listened to them.
+voice\Marvin\VOICE12.XAS[5]_02.wav                        5.42s  Don't worry about me. Just rescue the survivors in the other rooms.
+voice\Marvin\VOICE12.XAS[7]_01.wav                        7.00s  Here, take this key card. You should be able to unlock the doors in the hall with this. Now go.
+voice\Marvin\VOICE12.XAS[8]_02.wav                        4.29s  We lost contact with him over ten days ago.
+voice\Sherry\VOICE01.XAS[11]_01.wav                       3.12s  That's what I was telling you about. It's here!
+voice\Sherry\VOICE01.XAS[14]_04.wav                       1.29s  Let me go!
+voice\Sherry\VOICE01.XAS[14]_06.wav                       0.83s  Sherry!
+voice\Sherry\VOICE06.XAS[13]_05.wav                       1.67s  Claire?
+voice\Sherry\VOICE11.XAS[0].wav                           9.71s  But there's something out there. I don't know what it is, but I saw it. Much larger than any of those zombies. And it's coming after me.
+voice\Sherry\VOICE11.XAS[10]_02.wav                       3.21s  That's what I was telling you about. It's here!
+voice\Sherry\VOICE11.XAS[14]_04.wav                       1.42s  Let me go!
+voice\Sherry\VOICE11.XAS[15]_01.wav                       2.46s  Help me!
+voice\Sherry\VOICE11.XAS[15]_03.wav                       0.88s  (screams)
+voice\Sherry\VOICE11.XAS[15]_05.wav                       0.92s  AHHH!
+voice\Sherry\VOICE11.XAS[4]_01.wav                        6.62s  My mom called and told me to go to the police station because it was too dangerous to stay at home.
+voice\Sherry\VOICE11.XAS[7]_02.wav                        4.04s  [sniffing]
+voice\Sherry\VOICE11.XAS[9]_01.wav                        4.29s  They both work at the Umbrella Chemical Plant near the city limits.
+voice\Sherry\VOICE11.XAS[9]_03.wav                        1.21s  Sherry!
+voice\Sherry\VOICE12.XAS[10]_04.wav                       2.21s  Claire, you came back!
+voice\Sherry\VOICE12.XAS[11]_03.wav                       2.33s  I'm glad to see your safe Claire.
+voice\Sherry\VOICE12.XAS[11]_07.wav                       1.62s  Claire! But...
+voice\Sherry\VOICE12.XAS[12]_02.wav                       0.88s  But...
+voice\Sherry\VOICE12.XAS[5]_03.wav                        1.54s  What's wrong, Claire?
+voice\Sherry\VOICE13.XAS[0]_02.wav                        1.92s  Here's another!
+voice\Sherry\VOICE13.XAS[11]_03.wav                       4.33s  Daddy must have been attacked by the monsters! I have to help him!
+voice\Sherry\VOICE13.XAS[12]_03.wav                       3.08s  Claire! Are you there?
+voice\Sherry\VOICE13.XAS[14]_05.wav                       4.50s  No, I won't. I can take care of myself.
+voice\Sherry\VOICE13.XAS[15]_06.wav                       1.46s  Claire?
+voice\Sherry\VOICE13.XAS[8]_02.wav                        7.25s  Claire! I can't reach the ventilation hole anymore. But don't worry, I'll find another way.
+voice\Sherry\VOICE13.XAS[9]_01.wav                       14.96s  Yes, I'm okay, but I couldn't find him. But I did find something else for you here. It's not that clear. It's because of my daddy. He's over there. I heard him call my name.
+voice\Sherry\VOICE14.XAS[11]_02.wav                       3.96s  G by Russ? I've never heard of anything like that before.
+voice\Sherry\VOICE14.XAS[12]_02.wav                       6.62s  But I really don't have anything. It's the truth!
+voice\Sherry\VOICE14.XAS[13]_01.wav                       3.08s  Claire! I'm here!
+voice\Sherry\VOICE14.XAS[14]_02.wav                       2.08s  AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+voice\Sherry\VOICE14.XAS[15]_02.wav                       1.79s  (baby crying)
+voice\Sherry\VOICE14.XAS[8]_01.wav                        6.33s  'Cause... Claire? Hauls? Hauls?
+voice\Sherry\VOICE14.XAS[9]_01.wav                        5.88s  My stomach... it hurts.
+voice\Sherry\VOICE15.XAS[2]_1.wav                         8.25s  Even though I'm an only child, neither of my parents ever spent much time with me because of their work.
+voice\Sherry\VOICE15.XAS[3]_1.wav                         6.62s  Claire, my stomach... my stomach hurts.
+voice\Sherry\VOICE15.XAS[4]_1.wav                        11.62s  But now that you're with me, I finally have someone to rely upon.
+voice\Sherry\VOICE15.XAS[6]_2.wav                         3.33s  Okay, I'll wait here, but hurry back!
+voice\Sherry\VOICE15.XAS[6]_4.wav                         2.62s  Claire? What was that?
+voice\Sherry\VOICE15.XAS[7]_2.wav                         3.00s  Thanks, Claire. Isn't this...
+voice\Sherry\VOICE16.XAS[10]_6.wav                        1.75s  Help me, Claire!
+voice\Sherry\VOICE16.XAS[11]_3.wav                        2.00s  Mom!
+voice\Sherry\VOICE16.XAS[11]_5.wav                        1.29s  Isn't this
+voice\Sherry\VOICE16.XAS[12]_1.wav                        1.21s  Thank you, Claire.
+voice\Sherry\VOICE16.XAS[5]_1.wav                        11.42s  Even though I'm an only child, neither of my parents ever spent much time with me because of their work. I grew up alone.
+voice\Sherry\VOICE16.XAS[7]_2.wav                         5.62s  But now that you're with me, I finally have someone to rely upon.
+voice\Sherry\VOICE16.XAS[8]_2.wav                         9.50s  Mom! Mom!
+voice\Sherry\VOICE16.XAS[9]_6.wav                         1.25s  Claire?
+voice\Speaker\VOICE00.XAS[0].wav                         13.97s  It was later revealed that the terrible disaster had been caused by the T-Virus, a mutagenic toxin created by the International Enterprise Umbrella Inc., for use in bio-weapon experiments.
+voice\Speaker\VOICE00.XAS[1].wav                         13.55s  The case was apparently closed, thanks to the efforts of stars members Chris Redfield and Jill Valentine. The Raccoon City Police Department's Special Stars Unit immediately began investigation in the affair.
+voice\Speaker\VOICE00.XAS[2].wav                         13.23s  A bizarre incident occurred in the outskirts of an American suburb called Raccoon City. But the umbrella corporation's experiments were far from finished. Leon S. Kennedy.
+voice\Speaker\VOICE00.XAS[3].wav                         13.87s  in the midst of the T-virus outbreak in Raccoon City. Was the lone survivor of the Raccoon City Police Department, a young girl named Sherry?
+voice\Speaker\VOICE00.XAS[4].wav                          9.17s  Claire Redfield succeeded in escaping from the city. However, behind their escape, along with one of the only other survivors,
+voice\Speaker\VOICE08.XAS[1]_01.wav                      13.88s  It was later revealed that the terrible disaster had been caused by the T-Virus, a mutagenic toxin created by the International Enterprise Umbrella Inc., for use in bio-weapon experiments.
+voice\Speaker\VOICE10.XAS[0].wav                         13.97s  It was later revealed that the terrible disaster had been caused by the T-Virus, a mutagenic toxin created by the International Enterprise Umbrella Inc., for use in bio-weapon experiments.
+voice\Speaker\VOICE10.XAS[1]_01.wav                      11.62s  She came to uncover the mysterious circumstances of her brother's disappearance. Chris Redfield, a member of the star's alpha team. Only now, her mission has become quite simple.
+voice\Speaker\VOICE10.XAS[2].wav                         13.97s  The case was apparently closed, thanks to the efforts of stars members Chris Redfield and Jill Valentine. Leon Kennedy succeeded in escaping from the city, following his encounter with one of the only other survivors.
+voice\Speaker\VOICE10.XAS[3].wav                         13.87s  The Raccoon City Police Department's Special Stars Unit immediately began investigation in the affair. A bizarre incident occurred in the outskirts of an American suburb called Raccoon City, a woman named Ada.
+voice\Speaker\VOICE10.XAS[4].wav                         10.88s  But the Umbrella Corporation's experiments were far from finished. Basic survival within the nightmare that was once Raccoon City.
+voice\Speaker\VOICE10.XAS[5]_01.wav                       8.92s  a spy seeking the deadly G-Virus. However, in the midst of the T-Virus outbreak in Raccoon City,
+voice\Speaker\VOICE10.XAS[6].wav                          7.57s  A girl named Claire Redfield was in town on business of her own. Leon was not the sole survivor of the incident.
+voice\Speaker\VOICE18.XAS[1]_1.wav                       13.83s  It was later revealed that the terrible disaster had been caused by the T-Virus, a mutagenic toxin created by the International Enterprise Umbrella Inc., for use in bio-weapon experiments.
+voice\William\VOICE02.XAS[3]_01.wav                       8.04s  (water splashing)
+voice\William\VOICE03.XAS[0]_01.wav                      10.79s  (growling) (growling)
+voice\William\VOICE03.XAS[2]_02.wav                       9.42s  [SOUND]
+voice\William\VOICE03.XAS[4]_01.wav                       8.54s  [Music]
+voice\William\VOICE03.XAS[7]_02.wav                       5.75s  [screaming]
+voice\William\VOICE05.XAS[0].wav                         12.91s  [MUSIC PLAYING]
+voice\William\VOICE05.XAS[2]_01.wav                       9.92s  [Music]
+voice\William\VOICE06.XAS[1]_01.wav                      17.79s  *Screams*
+voice\William\VOICE06.XAS[6]_01.wav                      11.25s  (water splashing)
+voice\William\VOICE07.XAS[0].wav                         12.69s  [water splashing]
+voice\William\VOICE07.XAS[1]_01.wav                      11.38s  (explosion)
+voice\William\VOICE07.XAS[4]_01.wav                       8.83s  [explosion]
+voice\William\VOICE07.XAS[5].wav                         11.63s  [explosion]
+voice\William\VOICE07.XAS[6]_01.wav                       7.00s  (loud rumbling)
+voice\William\VOICE13.XAS[10]_01.wav                      8.08s  (water splashing)
+voice\William\VOICE13.XAS[11]_01.wav                      4.83s  [screaming]
+voice\William\VOICE13.XAS[1]_01.wav                      10.92s  (growling) (growling)
+voice\William\VOICE13.XAS[6]_01.wav                       8.83s  (loud thud)
+voice\William\VOICE13.XAS[7]_01.wav                       8.38s  [Music]
+voice\William\VOICE15.XAS[0].wav                         12.91s  [MUSIC PLAYING]
+voice\William\VOICE15.XAS[1]_01.wav                       9.92s  [Music]
+voice\William\VOICE16.XAS[1]_1.wav                       17.71s  *Screams*
+voice\William\VOICE16.XAS[6]_1.wav                       11.33s  (water splashing)
+voice\William\VOICE17.XAS[0].wav                         12.69s  [water splashing]
+voice\William\VOICE17.XAS[1]_1.wav                       11.33s  (loud rumbling) (loud rumbling)
+voice\William\VOICE17.XAS[4]_1.wav                        8.88s  [explosion]
+voice\William\VOICE17.XAS[5].wav                         11.63s  [explosion]
+voice\William\VOICE17.XAS[6]_1.wav                        6.96s  (loud rumbling)
+voice\leon\VOICE01.XAS[11]_02.wav                         3.12s  One last thing. Here's a radio. Take it.
+voice\leon\VOICE01.XAS[12]_01.wav                         5.21s  Of course, but before I forget, here's a radio. That way we can keep in touch if anything happens.
+voice\leon\VOICE01.XAS[12]_03.wav                         2.00s  What's going on in this town?
+voice\leon\VOICE01.XAS[13].wav                            9.07s  That way we can keep in touch if something comes up. Do you know where your parents are? Hey! Wait! Leon! Wait! Come back!
+voice\leon\VOICE01.XAS[13]_01.wav                         2.08s  That way we can keep in touch if something comes up.
+voice\leon\VOICE01.XAS[13]_03.wav                         1.79s  Hey! Wait!
+voice\leon\VOICE01.XAS[14]_01.wav                         1.62s  Claire, you made it!
+voice\leon\VOICE01.XAS[1]_01.wav                          7.33s  There's no reason for us to stay any longer than necessary. Let's split up, look for any survivors, and get out of here.
+voice\leon\VOICE01.XAS[2]_02.wav                          2.33s  Hold your fire! I'm a human!
+voice\leon\VOICE01.XAS[4]_01.wav                          4.25s  It looks like we're not going to find your brother here after all.
+voice\leon\VOICE01.XAS[6]_02.wav                          5.21s  One last thing. Here's a radio. Take it. What's going on in this town?
+voice\leon\VOICE01.XAS[7]_01.wav                          2.54s  It's good to see you're still among the living.
+voice\leon\VOICE01.XAS[7]_03.wav                          2.79s  Yeah, you just missed her. Who is she?
+voice\leon\VOICE01.XAS[8]_01.wav                          5.17s  Of course, but before I forget, here's a radio. That way we can keep in touch if anything happens.
+voice\leon\VOICE01.XAS[9]_01.wav                          2.17s  That way we can keep in touch if something comes up.
+voice\leon\VOICE01.XAS[9]_03.wav                          3.46s  Hey! Wait! Claire, you made it!
+voice\leon\VOICE02.XAS[10]_03.wav                         3.71s  What happened? Hang in there. AID A WAIT!
+voice\leon\VOICE02.XAS[11].wav                            1.07s  8/8
+voice\leon\VOICE02.XAS[3]_02.wav                          2.67s  But I'm coming back for you. Just hold on!
+voice\leon\VOICE02.XAS[4]_03.wav                          1.42s  Oh, man!
+voice\leon\VOICE02.XAS[5]_02.wav                          2.12s  And what are you doing here?
+voice\leon\VOICE02.XAS[6]_02.wav                          1.08s  Fine.
+voice\leon\VOICE02.XAS[7]_02.wav                          3.71s  Hold your fire! Who are you?
+voice\leon\VOICE03.XAS[0]_02.wav                          6.79s  Claire! Claire! Wait! Wait! Man, why doesn't anyone ever listen to me?
+voice\leon\VOICE03.XAS[10]_01.wav                        11.88s  Those zombies are everywhere, not to mention that thing that got Ben. I'm getting out of here and heading to the sewer. Can you meet me there? Can you still hear me? Come on, answer!
+voice\leon\VOICE03.XAS[11]_01.wav                         3.71s  Are you crazy? The streets are still crawling with zombies.
+voice\leon\VOICE03.XAS[11]_03.wav                         3.62s  Look, if you want to live, then you're gonna have to leave with me.
+voice\leon\VOICE03.XAS[12]_01.wav                         3.08s  Ada, wait! Hey!
+voice\leon\VOICE03.XAS[13]_02.wav                         3.08s  What? Ada, wait!
+voice\leon\VOICE03.XAS[13]_03.wav                         2.75s  Ada, did you find anything?
+voice\leon\VOICE03.XAS[13]_05.wav                         0.92s  Got it.
+voice\leon\VOICE03.XAS[14]_04.wav                         2.33s  What's wrong?
+voice\leon\VOICE03.XAS[15]_01.wav                         3.50s  Is this the guy? Where are you going, Ada?
+voice\leon\VOICE03.XAS[15]_04.wav                         8.04s  It's a dead end. What was that? What? Ada? Ben! Ben!
+voice\leon\VOICE03.XAS[6]_02.wav                          5.33s  Let me guess. You must be Ben, right? Get up now!
+voice\leon\VOICE03.XAS[6]_04.wav                          0.75s  Ada!
+voice\leon\VOICE03.XAS[7]_01.wav                          5.17s  Okay, I say we leave him in there. Does anyone know where they put the key to this cell?
+voice\leon\VOICE03.XAS[7]_04.wav                          1.83s  Hang in there Ben!
+voice\leon\VOICE03.XAS[8]_01.wav                         15.33s  What was that all about? Running off like that was reckless and stupid. I don't think I've introduced myself yet. My name's Leon. I'm with the RPD. But we're not going to get through this alive if we don't work together, okay?
+voice\leon\VOICE03.XAS[9]_01.wav                          9.21s  Hey, I'm not going anywhere. I'm the only cop left alive in this building. Look, Ada. As an officer, it's my job to look out for you.
+voice\leon\VOICE03.XAS[9]_03.wav                          4.54s  Do you read me, Claire? We now have access to the back of the parking lot.
+voice\leon\VOICE04.XAS[10]_01.wav                         4.88s  Ahh... This bullet wound isn't making things any easier.
+voice\leon\VOICE04.XAS[12]_02.wav                         0.75s  Ada!

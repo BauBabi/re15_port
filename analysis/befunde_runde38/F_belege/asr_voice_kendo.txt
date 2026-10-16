@@ -1,0 +1,22 @@
+voice\Kendo\VOICE01.XAS[0].wav                            8.53s  I don't have a clue. By the time I noticed something was wrong, the entire city was infested with zombies.
+voice\Kendo\VOICE01.XAS[10]_02.wav                        0.96s  Hold on.
+voice\Kendo\VOICE01.XAS[12]_02.wav                        2.46s  Who are you? What are you doing here?
+voice\Kendo\VOICE01.XAS[14]_02.wav                        1.50s  I thought you were one of them.
+voice\Kendo\VOICE01.XAS[15]_01.wav                        0.79s  Yeah!
+voice\Kendo\VOICE01.XAS[15]_03.wav                        1.58s  Freeze! Hold on.
+voice\Kendo\VOICE01.XAS[1]_02.wav                         1.17s  *screams*
+voice\Kendo\VOICE01.XAS[3].wav                            8.43s  But you should be safe inside here. I'm keeping a close eye on things.
+voice\Kendo\VOICE01.XAS[4]_02.wav                         4.04s  AHHHHH! AHHHHH!
+voice\Kendo\VOICE01.XAS[5]_02.wav                         3.17s  Sorry about that.
+voice\Kendo\VOICE01.XAS[8]_02.wav                         3.25s  Who are you? What are you doing here? Freeze!
+voice\Kendo\VOICE01.XAS[9]_02.wav                         1.79s  I thought you were one of them.
+voice\Kendo\VOICE11.XAS[10]_01.wav                        3.29s  (screaming)
+voice\Kendo\VOICE11.XAS[13]_01.wav                        2.25s  Who are you? What are you doing here?
+voice\Kendo\VOICE11.XAS[13]_05.wav                        1.00s  *screams*
+voice\Kendo\VOICE11.XAS[14]_01.wav                        1.54s  I thought you were one of them.
+voice\Kendo\VOICE11.XAS[15]_07.wav                        0.96s  Hold on.
+voice\Kendo\VOICE11.XAS[15]_09.wav                        0.67s  Freeze!
+voice\Kendo\VOICE11.XAS[2]_01.wav                         7.21s  I ain't got no clue, Darlin'. By the time I noticed something was wrong, the entire city was infested with zombies.
+voice\Kendo\VOICE11.XAS[5].wav                            9.71s  But don't you worry, girly. You'll be safe in here. I'm keeping a close eye on things. Sorry about that, babe.
+voice\Kendo\VOICE11.XAS[6]_02.wav                         3.50s  *screams*
+voice\Kendo\VOICE13.XAS[15]_08.wav                        1.08s  *screams*
