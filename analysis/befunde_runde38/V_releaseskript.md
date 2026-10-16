@@ -14,6 +14,8 @@ Lesart des Orchestrators (AUFTRAG.md, "Lesarten"): "minor" = wie alle bisherigen
 
 (laufend, neueste Eintraege oben)
 
+* 2026-10-16 23:25: Umsetzung M1 committet (88dda648, 10fe5afa), Bau `LOCAL-BUILD-OK (build)`; gezielte Tests laufen
+  (Maschine stark ausgelastet: 105 bash, 13 cmake, 6 ctest, 15 Test-exes anderer Spuren).
 * 2026-10-16 23:00: NACHBESSERUNG 1 begonnen (Abnahme 0: Mangel M1, gescheiterter Push im Schritt abschluss) -
   Abschnitt 8.
 * 2026-10-16 18:17: FERTIG. Endlauf auf 98652210: `100% tests passed, 0 tests failed out of 7` (-R r38_releaseskript),
@@ -272,7 +274,19 @@ enthalten -> kein Hinweis (richtig).
 
 ### 8.2 Messung nachher
 
-(folgt)
+**Zwischenlauf** (23:06-23:14, Skript-Stand 88dda648 = ohne die zweite Hinweis-Stufe; Test als Kopie im Scratchpad,
+`bash test_r38_releaseskript.sh . <scratch> ablauf`): rc 0, `== r38_releaseskript ablauf: 70/70 Pruefungen gruen ==`
+(7 min 43 s unter Fremdlast). Dieselben Laeufe wie vorher, woertlich aus den Ausgaben:
+
+| Lauf | vorher (98652210) | nachher (88dda648) |
+|---|---|---|
+| p2 Push scheitert | rc 1, nur `--version v0.8.26 --ab abschluss --tag` | rc 1; `Commit ce5867a und Tag v0.8.26 stehen lokal - nur der Push fehlt.` / `Nach der Behebung weiter mit: bash release/release_alles.sh --version v0.8.26 --ab abschluss --tag --archiv <A> --min-frei-gb 1` / `(pusht nur, Commit und Tag bleiben; Doppelklick: Wahl [3])` / `oder von Hand: git push origin master v0.8.26` |
+| p3 Trockenlauf danach | `TROCKENLAUF-OK v0.8.27`, kein Hinweis | `[!!] v0.8.26: Release-Commit ce5867a und Tag stehen lokal, origin/master steht auf f348fef - der Push fehlt.` + `Nur pushen: ... --ab abschluss --tag ... (Doppelklick: Wahl [3])` |
+| p4 gemeldete Zeile WOERTLICH (im Repo, RE15_ARCHIV auf einen leeren Ordner) | **rc 2** "nicht groesser als der hoechste Tag v0.8.26 - ... Downgrade" | **rc 0**: `Version: v0.8.26  (Tag v0.8.26 steht schon auf HEAD = Release-Commit: ...)`, `Release-Commit steht schon: ce5867a ... - wird nicht neu angelegt`, `Tag v0.8.26 steht schon auf dem Release-Commit - wird nicht neu angelegt`, `origin bestaetigt (git ls-remote): master = ce5867a, Tag v0.8.26 = 0c72087e9481`, `RELEASE-ALLES-OK v0.8.26`; origin master = Release-Commit, origin-Tag = dasselbe Tag-Objekt, kein zweiter Commit, kein v0.8.27 |
+| p5 `--ab abschluss --tag` ohne --version (= Wahl [3]) nach zurueckgesetztem origin | rc 1, v0.8.27, `[XX]` Notes | rc 0, v0.8.26, gepusht, von origin bestaetigt |
+| p6 dasselbe, alles schon gepusht | rc 1 | rc 0, `Everything up-to-date`, `origin bestaetigt`, HEAD + Tags unveraendert |
+
+(Endlauf ueber ctest folgt)
 
 ### 8.3 OFFEN (Nachbesserung 1)
 
