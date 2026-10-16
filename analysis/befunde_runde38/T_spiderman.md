@@ -8,6 +8,21 @@ Baum `.claude/worktrees/r38_spiderman`, Zweig `r38/spiderman`, Basis e2cc7673. A
 
 ## Stand
 - 16:22 Dossier angelegt; Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
+- 16:3x Identifikation (0x2B), Messung vorher (m1/m2), RE (EMERGE, Griffe, Hooks).
+- 17:0x Umsetzung spiderman_r38.c + Haken, Messung nachher (m3-m6), Riegel unit_r38_spiderman.
+- 17:2x Schritt 3: Zensus, Wandwaechter, Riegel unit_r38_griff_* (9 Faelle), Alt-Riegel r37_beretta angepasst.
+- 17:48 gezielte Tests gruen (141/141), Dossier fertig.
+
+## Kurzfassung
+- Punkt 1: der Port liess den Spiderman (Typ 0x2B, grid 0x41) sofort beim Betreten aus dem Schacht laufen. Original
+  (STAGE4.BIN Untertabelle @0x8011A270 [1] 0x801152EC): versteckt (Teile aus, word0 |= 2|0x40, kein Schatten), WARTEN
+  bis das Raumskript grid 0x42 setzt (sub05 @0x015BA, derselbe Lauf, der den Deckel hochfahren laesst), dann Clip 0x1D:
+  sichtbar ab Bild 6, greifbar/grid 0 ab Bild 0x21, Ende -> ACTIVE +0x5 = 1. Jetzt so gebaut; im Schacht kein Ziel.
+- Punkt 2: Griff 1 (B[5]/B[9]) kopierte den gemeinsamen Anker nicht (FUN_8001ac38 @0x80112B08/@0x80113000) -> der
+  Spieler wurde vom Anker eines frueheren Griffs aus platziert (gemessen 14 600 Einheiten Sprung, ROOM4001). Griff 2
+  (B[15]) war ein erfundenes Schleppen; Original setzt den Spieler EINMAL (@0x80114204/14). Beides behoben.
+  GENERELL: Zensus aller Lageschreiber (Tabelle 2), alle anderen Greifer kopieren ihren Anker; neue Regel fuer ALLE
+  Greifer: kein Griff setzt den Spieler hinter eine Wand (ROOM1220 RE2-Kriecher vorher 132 Bilder hinter Zelle 7).
 
 ## 0. Identifikation "Spiderman" (Zensus Stage-4-RDTs)
 - Typ **0x2B** (Port: `re15_tyrant_ai_tick`, enemy_ai_common.c "TYRANT"). Namensbeleg: RE15Editor
@@ -175,6 +190,46 @@ Original-Klemmen sind Punkt-Tests).
   der schon draussen stehende Spiderman (Ck(4,0xD6)=1, Sce_em_set @0x017D4, Leon (-23943,-16785)); Absicht (drei
   Kugeln je -10) unveraendert, gruen.
 
+### Gezielte Tests (kein volles Suite-Lauf im Spurbaum)
+`ctest --test-dir re15_port/build -R "r38_|tyrant|t2b|5040|beretta|victim|grab|griff|bissarm|1210|dog|hund|re2z|crawl|kriech|affen|gorilla|maggot|devour|finisher|pushoff|1220|11c0|aim|ivy|enemy_ai|roster|stage4|stage5|spider|spinne|zombie" --timeout 900 -j 6`
+-> `100% tests passed, 0 tests failed out of 141` (Total Test time (real) = 217.08 sec).
+(Erster Lauf derselben Auswahl: 140/141, rot nur integration_r37_beretta t2b — der Alt-Riegel schoss in den Schacht,
+angepasst s. o.; danach einzeln `ctest -R "^integration_r37_beretta$"`: 1/1 gruen.)
+
 ## OFFEN
+1. **Deckenlauf des Spiderman nicht portiert.** A[3]-Ende @0x80112544-5C8: Wandkontakt (Zellattribut *(+0x1B4)+0xA
+   & 0xC, grid & 0x19 == 0, Kontaktrichtung (+0x90 & 0xF0)<<4 im Fenster +-0x200 zum Blick) -> +0x9F = Kontakt, +0x5 =
+   0xB (TURN, Clip 0x16) -> Regime 0xD (Clips 0x17-0x1A mit Wurzel-y -5400 = an der Decke). Im Port fehlt der
+   Uebergang; Griff 2 ist deshalb im Spiel unerreichbar (byte-true vorbereitet, im Riegel erzwungen geprueft).
+   Nicht Teil der zwei Nutzer-Punkte -> NACHLAUF.
+2. **Spiderman-Kollaps-Darstellung** (Hook B [0] 0x8011621C / [1] 0x801165F4): Arm ab bei Spieler-Bild 0x1D, Kopf ab
+   bei 0x3C (Teile-Records 12-14 bzw. 8, `xori 0x1062/0x200` @0x80116348-84/@0x80116450), Wundstempel @0x80116560-78,
+   cmd 7 am Clip-Ende — der Port faehrt die Zombie-Zeitachse (hp -1 bei Bild 0x23 + Blut 0x37).
+3. EMERGE [2] (grid 0x43, 0x801155AC) bleibt der bisherige Port-Pfad — kein RDT setzt grid 0x43 (Zensus).
+4. Die Aim-Latch-Regel grid & 0x60 (`andi v0,a0,0x60` @0x8003710c) gilt im Original fuer ALLE Typen; hier nur fuer
+   0x2B angewandt (Fensterhund grid 0x41, Gorillas grid 0x30 im 11C0-Szenenlayout usw. unveraendert — eigene Pruefung).
+5. Schattengroesse des Spiderman draussen: Original 0x3E8/0x44C (INIT `0x8001af5c(..,0x3e8,0x44c)` @0x80111C44-50,
+   Root-Schwanz @0x801119D4-F4), Port-Standard 500x600 — nicht gemeldet, nicht geaendert.
+6. Leons Archiv CDEMD0 traegt in der EM2B-Opferbank nur 8 Clips (0..7); Griff 2 braucht 8/9/0xA (nur Elzas CDEMD1).
+   Datenluecke des Prototyps; der Port faengt sie ueber die Clip-Grenzpruefung ab.
+7. Kommentar beim Efeu (enemy_ai_common.c, IVY): "0x801165F4 ist verwaiste Efeu-Griff-VM" ist falsch — es ist der
+   Spieler-Kollaps hinten des Spiderman (Hook-B-Tabelle @0x8011A2B8[1], erreicht ueber B[10] aca59 = 1 @0x8011338C).
+   Nur Kommentar, kein Verhalten -> NACHLAUF.
+8. Der Riegel unit_r38_griff_* misst 9 Greifer-Faelle. Gator/G5/Tentakel/RE2-Gitterarm platzieren mit eigener Mechanik
+   (Tabelle 13-15) und sind nicht darin; die Gitterarme haben ihren eigenen Anker-Riegel (unit_1210_gitterhaende).
 
 ## Fuer den Nutzer
+- **Spiderman kommt jetzt wie im Original aus dem Schacht:** er steckt unsichtbar im Wandschacht, bis man den Bereich
+  davor betritt; dann faehrt das Gitter hoch und er klettert heraus (sichtbar ab dem 7. Bild, nach gut einer Sekunde
+  greifbar), danach bruellt er und greift an. Vorher lief er schon beim Betreten des Raums los. Im Schacht kann man ihn
+  nicht anvisieren (Original). Betrifft ROOM4001 (Elza, nach der Kendo-Szene) und die STAGE5-Gaenge 5040/5070 (beide
+  Figuren; im Debug-Menue heisst STAGE5 "Stage 4").
+- **Leon/Elza verschwinden beim Spiderman-Griff nicht mehr.** Der Griff stellte den Spieler vom Platz eines frueheren
+  Griffs aus hin (bis 14 600 Einheiten weit, also ausserhalb des Raums). Jetzt uebernimmt der Spieler wie im Original
+  den Ankerpunkt des Spiderman.
+- **Fuer alle Gegner:** kein Griff setzt den Spieler mehr hinter eine Wand (gemessen beim Kriecher in ROOM1220, der Leon
+  durch eine duenne Wand zog). Ein automatischer Test prueft das fuer Zombies (RE1.5/RE2), Kriecher, Hund, Gorilla und
+  Spiderman mit absichtlich falschem Ankerpunkt.
+- Keine neuen Spieldateien, keine Sprachdateien, nichts am Paket-Gate.
+- Selbst pruefen: als Elza ROOM4001 nach der Kendo-Szene betreten und auf den rechten Wandschacht zugehen; oder als Leon
+  ROOM5040 (Debug-Menue "Stage 4" -> B-2 CORRIDOR) und in den Gang laufen; sich greifen lassen.
