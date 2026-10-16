@@ -139,7 +139,7 @@ Ablauf und Messwerte (alles aus der RAM gelesen):
   Ergebnis je Viereck in `orig1_log.txt` (Q00..Q47). Zusammenfassung:
   - 20 Vierecke OPZ < 0 -> @0x80023190 verworfen (Rueckseiten),
   - 16 Vierecke OTZ < 64 -> @0x80023228 verworfen (z. B. Q13 otz 47, Q34 otz 44, Q23/Q36/Q40.. otz 0),
-  - 12 eingehaengt; davon 7 mit beiden Dreiecken ueber der GPU-Grenze (z. B. Q35 sxy (804,-76),(481,231),(-114,-344),
+  - 12 eingehaengt; davon 6 mit beiden Dreiecken ueber der GPU-Grenze, Q07 mit einem (z. B. Q35 sxy (804,-76),(481,231),(-114,-344),
     (105,395): dy 739 >= 512), die uebrigen liegen ausserhalb des 320x240-Bilds (x > 319 bzw. y < 0); Q28 T0
     (481,231),(374,333),(105,395) beruehrt die Bbox des Bilds, die Flaeche selbst liegt bei y 231..239 erst ab x 463
     -> **nichts vom Rolladen auf dem Schirm**.
@@ -152,11 +152,67 @@ das Original zeigt den offenen Rolladen in Cut 11 nicht, weil sein Objekt-Zeichn
 (@0x80023190) bzw. OTZ < 64 (@0x80023228) verwirft und die GPU die eingehaengten Reste als zu gross (psx-spx Size
 Restriction) bzw. ausserhalb des Bilds nicht zeichnet. Der Port kennt keine dieser drei Schranken.
 
-## Umsetzung
+## 5. Umsetzung
 
-## Messung nachher
+Der Fix bildet den Original-Objektzeichner im PC-Prop-Weg nach — fuer ALLE Raum-Objekte (Obj_model_set), denn alle
+vier Original-Zeichner (Flach/Licht x Dreieck/Viereck) haben dieselben Schranken; der Rolladen ist nur der Fall, an
+dem der Unterschied das ganze Bild kostet.
 
-## Tests
+* NEU `re15_port/engine/src/objpoly_r38.c` + `re15_port/include/re15_objpoly_r38.h`:
+  - `re15_objpoly_r38_rtps`: IR1/IR2 gesaettigt -8000h..7FFFh, SZ3 0..FFFFh, n = `re15_gte_divide` (UNR, max 1FFFFh),
+    SX/SY = Bildmitte + (n*IR >> 16) gesaettigt -400h..3FFh (psx-spx RTPS; OFX/OFY 160/120 = SetGeomOffset(0xa0,0x78)
+    @0x8001643c/@0x80016440).
+  - `re15_objpoly_r38_tri` / `_quad`: NCLIP auf den gesaettigten SXY (psx-spx-Formel), OPZ < 0 -> weg
+    (`bltz` @0x80023010 / `bgez` @0x80023190 / @0x800255a8 / @0x800257c0); OTZ = ZSF3*(SZ1+SZ2+SZ3)>>12 bzw.
+    ZSF4*(SZ0..3)>>12, OTZ < 64 -> weg (`srl/sra 6` + `beq` @0x80023044/48, @0x80023224/28, @0x80025654/58,
+    @0x800258b0/b4; ZSF3 = 341 @0x80066c70/74, ZSF4 = 256 @0x80066c7c/80); GPU-Groessengrenze je Dreieck (0,1,2) und
+    (1,2,3): Spanne > 1023 waagerecht oder > 511 senkrecht -> nicht gerastert (psx-spx "Size Restriction").
+  - `re15_objpoly_r38_tri_mesh` / `_quad_mesh`: Sichtraum aus MD1-Scheitel + Kamera x Objekt (dieselbe Rechnung wie
+    bisher in main.c), dann die Schranken; liefern die gesaettigten Bildkoordinaten und den Sortierschluessel
+    (Mittel der SZ — fuer jedes bisher gezeichnete Polygon identisch mit dem alten Mittel der Sicht-z).
+  - Messschiene `RE15_OBJPOLY_LOG=<datei>` (Diagnose): je Bild und Objekt "gezeichnet/nclip/otz/gpu".
+* NEU `re15_port/platform/pc/src/objpoly_r38_pc.c`: `re15_objpoly_r38_halbviereck_pc` — besteht nur EIN GPU-Dreieck
+  eines Vierecks (Original Q07), wird nur dieses gezeichnet.
+* Haken `re15_port/platform/pc/main.c` (Prop-Schleife, "Runde 38 Spur W"): ein Include; in der Dreiecks- und der
+  Vierecks-Schleife ersetzen `re15_objpoly_r38_tri_mesh` / `_quad_mesh` die bisherige Projektion samt Port-Ausschnitt
+  `if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */` (kein Original-Gegenstueck); beim Viereck zeichnet der
+  bisherige Aufruf-Block (Teilung (0,1,3)+(0,3,2)) nur noch, wenn beide GPU-Dreiecke bestehen, sonst der Halbfall;
+  eine Zeile meldet der Messschiene den Objekt-Beginn. Diff main.c: +16 / -36 Zeilen.
+* Keine Konstante ohne Adresse: 341/256 (ZSF), 64 (OTZ-Schranke), -400h/3FFh (SX/SY), 1023/511 (GPU) — Belege oben
+  und im Kopf von re15_objpoly_r38.h.
+* Bekannte Rest-Abweichung (vorbestehend, NICHT Teil des Fixes): der PC teilt ein voll gezeichnetes Viereck weiter an
+  der Diagonale 0-3, die PSX-GPU an 1-2; Flaeche gleich, die affine Texturverzerrung eines perspektivisch stark
+  verzerrten Vierecks folgt der anderen Diagonale (siehe OFFEN).
+
+## 6. Messung nachher (Port, gleicher echter Weg)
+
+Bau `local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK (build)` (keine neue Warnung). Lauf `n2_leiter`
+(Wegplan `W_belege/wp_leiter_schalter_cut11.txt`, gleiche Startlage wie v2_leiter):
+* Ablauf identisch: Leiter F71 -> Cut 12; Rolladen `F555 obj1=(7942,-10800,-20510)`; Cut 11 ab F650, Cut 12 F763,
+  Cut 11 F889.
+* Bilder `W_belege/nachher_bogen_n2_leiter.png`, `nachher_cut11_F711_offen.png`, `nachher_cut11_F951_offen.png`:
+  **Cut 11 zeigt die Plattform mit Kiste, Faessern, Regal und Leon — wie das Original-Bild
+  `orig_cut11_offen_buf0.png`.** Cut 12 (`nachher_cut12_F301_zu.png`, `nachher_cut12_F551_offen.png`) zeigt den
+  Rolladen wie vorher (Vorderseite, faehrt hoch).
+* Pixelvergleich gegen das Original-Bild (Figur steht 156 Einheiten anders): vorher 59,9 % der Pixel <= 24 Stufen,
+  MAD 25,5; nachher **98,4 %, MAD 3,0**.
+* Raumhintergrund-Anteil (Werkzeug `test_r38_rolltor20a0 --bild <ppm> ROOM20A.BSS 11 0` = Pixel gleich dem
+  dekodierten BSS-Bild von Cut 11): vorher 0,1305 (F711/F951; frei nur die linke Wand), nachher **0,9424** (F711).
+* Messschiene `W_belege/nachher_n2_objpoly_obj1.txt`: **Cut 11 obj 1: 524 Bilder `gezeichnet=6 nclip=20 otz=16
+  gpu=6`** = Original (20 NCLIP, 16 OTZ<64, 6 eingehaengte mit beiden Dreiecken zu gross; die 6 gezeichneten liegen
+  ausserhalb des Bilds bzw. Q07 halb). Cut 12: 18-25 gezeichnet, 23-32 NCLIP (Rueckseiten), 0 OTZ/GPU.
+* Kisten-Ablauf (`W_belege/wp_kiste_fall.txt`, Lauf v3_kiste, vor dem Fix gemessen; der Fix aendert nur das
+  Zeichnen): Rolladen auf -> Sca_id_set @0x01E5E-6E setzt Zelle 32 (die Wand unter dem Rolladen, x 8000..14700
+  z -21000..-20500) in allen 5 Regionen auf u0 = 0 (`ZELLE r0[32] LAUFZEIT ... u0 0x00`) -> Kiste von Sueden durch die
+  Oeffnung geschoben: `F1261 AUSLOESER wort=0x4206 band=4 pos=(12250,-7200,-21473)`, `F1280 LANDUNG y=-3600 band=2`,
+  zweiter Fall auf Band 1 (y -1800). Waehrend des ganzen Schiebens ist Cut 11 aktiv (F643-F1087) — genau dort war
+  das Bild vorher zugedeckt (`vorher`: v3_kiste F661-F1061).
+  (Nebenbefund: der Runde-36-Satz "die Kiste faellt in 20A0 nie" beruecksichtigte die Rolladen-Zelle 32 nicht; mit
+  offenem Rolladen faellt sie im Port durch die Oeffnung.)
+
+## 7. Tests
+
+(laufend)
 
 ## OFFEN
 

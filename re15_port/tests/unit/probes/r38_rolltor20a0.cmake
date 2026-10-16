@@ -19,6 +19,20 @@ endif()
 add_test(NAME unit_r38_rolltor20a0 COMMAND test_r38_rolltor20a0)
 set_tests_properties(unit_r38_rolltor20a0 PROPERTIES TIMEOUT 120)
 
+#   unit_r38_rolltor20a0_windung  Nebenwirkung des NCLIP im PC-Prop-Weg: Zensus der Windung (Objektraum (v1-v0)x(v2-v0)
+#                                 gegen die gespeicherten Normalen) ueber alle Objekt-Modelle aller RDTs = Original-
+#                                 Konvention; jedes PORT-EIGENE Modell (Sicherung, Granate, Hebetisch-Cursor, Irons-
+#                                 Tisch, Dokumente, Inhalt R35, Schluessel R36, Kartenitems R36, Feuerloescher R37)
+#                                 folgt ihr zu >= 90 % — sonst waere es mit NCLIP unsichtbar geworden.
+add_executable(test_r38_rolltor20a0_windung ${CMAKE_CURRENT_LIST_DIR}/../test_r38_rolltor20a0_windung.c)
+target_link_libraries(test_r38_rolltor20a0_windung PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r38_rolltor20a0_windung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(test_r38_rolltor20a0_windung PRIVATE m)
+endif()
+add_test(NAME unit_r38_rolltor20a0_windung COMMAND test_r38_rolltor20a0_windung)
+set_tests_properties(unit_r38_rolltor20a0_windung PROPERTIES TIMEOUT 300)
+
 #   integration_r38_rolltor20a0   echte exe (Messkopie re15_pc_r38w_haken_*), echter Weg (Leiter, Schalter, Ja):
 #                                 A Leon ROOM20A0 und B Elza ROOM20A1 — Rolladen auf y -10800, Cut 11, Framedump
 #                                 (RE15_WINDOW_SCALE=1): Anteil Raumhintergrund im Bild hoch (vorher zugedeckt),

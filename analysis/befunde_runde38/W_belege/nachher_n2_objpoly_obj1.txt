@@ -1,0 +1,11 @@
+    524 cut=11 obj=1 gezeichnet=6 nclip=20 otz=16 gpu=6
+    345 cut=12 obj=1 gezeichnet=22 nclip=26 otz=0 gpu=0
+    290 cut=12 obj=1 gezeichnet=18 nclip=30 otz=0 gpu=0
+     70 cut=0 obj=1 gezeichnet=11 nclip=11 otz=21 gpu=5
+     25 cut=12 obj=1 gezeichnet=20 nclip=28 otz=0 gpu=0
+     22 cut=12 obj=1 gezeichnet=21 nclip=27 otz=0 gpu=0
+     19 cut=12 obj=1 gezeichnet=19 nclip=29 otz=0 gpu=0
+      2 cut=12 obj=1 gezeichnet=23 nclip=25 otz=0 gpu=0
+      2 cut=12 obj=1 gezeichnet=16 nclip=32 otz=0 gpu=0
+      1 cut=12 obj=1 gezeichnet=25 nclip=23 otz=0 gpu=0
+      1 cut=12 obj=1 gezeichnet=17 nclip=31 otz=0 gpu=0
