@@ -8,7 +8,8 @@
 #                            Gegenprobe: ohne Verwurf 4 Unterseiten-Dreiecke im Oberseiten-Umriss
 #   unit_r38_cursor_raeume   Zensus aller 23 Cursor-Raeume (gleiche Kasten-Bauart, Unterseite gegensinnig gewunden)
 #   integration_r38_cursor   echte exe: ROOM11F0 Cut 10 (gegen das DuckStation-Bild), ROOM1150 Hebetisch-Cursor
-#                            (Lade-Weg), ROOM10D0 Ziffernfeld; RE15_TRILOG + Framedump (test_r38_cursor.cmake)
+#                            (Lade-Weg), ROOM10D0 Ziffernfeld, Elza ROOM11F1; RE15_TRILOG + Framedump
+#                            (test_r38_cursor.cmake)
 # Eigene Datei (nicht tests/unit/CMakeLists.txt), s. probes/README.md.
 add_executable(probe_r38_cursor ${CMAKE_CURRENT_LIST_DIR}/../probe_r38_cursor.c)
 target_link_libraries(probe_r38_cursor PRIVATE re15_engine re15_test_support)

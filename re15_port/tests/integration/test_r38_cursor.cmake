@@ -16,6 +16,7 @@ cmake_minimum_required(VERSION 3.16)
 #      Platz 28 (RE15_HC_TIM_SLOT), Rahmen-Inneres ohne Schatten-Kopie.
 #   C  ROOM10D0 Ziffernfeld (Runde 37 Spur E, Weg D): sub17 per RE15_SUBSTART, Nachricht zu; Bild 260. MUSS: kein
 #      rueckseitiges Cursor-Dreieck (Platz 5 = Prop 1), Rahmen-Inneres ohne Schatten-Kopie.
+#   D  ELZA (RE15_PSELECT_AUTO + _SWITCH) in ROOM11F1, sonst wie A; Bild 500. MUSS wie A + "[pl] Spieler-Familie PL04".
 # Bildpruefung + RE15_TRILOG-Auswertung: probe_r38_cursor bild.
 #
 # GEGENPROBE (Dossier §4/§5): dieselben drei Laeufe mit der exe vor dem Fix (Stand 1bcbd0ff) liefern 4 bzw. 4 bzw. 4
@@ -112,4 +113,17 @@ a_lauf(c 260 RE15_TITLE_SHOT=title.bmp RE15_DEBUG_JUMP=10D0@120 "RE15_SUBSTART=1
        "RE15_EXIT_AT=262")
 a_bild(c 5)
 
-message(STATUS "r38_cursor: A ROOM11F0, B ROOM1150, C ROOM10D0 - kein rueckseitiges Cursor-Dreieck, kein Schatten im Rahmen, 11F0 gleich dem Original")
+# --- D: ELZA, ROOM11F1 (Spielerwahl schaltet auf Elza; Debug-Sprung 11F0 laedt fuer Elza ROOM11F1, Raumlader
+#        @0x800397e4/@0x800397ec; 11F1.RDT ist bytegleich 11F0.RDT) — dieselben MUSS-Zeilen wie A --------------------
+a_lauf(d 500 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
+       RE15_DEBUG_JUMP=11F0@250 RE15_FORCE_CUT=10
+       "RE15_SET_FLAG_AT=5:0,5:1,5:2,5:3,5:4,5:5,5:6,5:7,5:8,5:9,5:10,5:11,5:12@420" "RE15_EXIT_AT=502")
+file(READ "${_basis}_d/debug.log" _dbg_d)
+string(FIND "${_dbg_d}" "[pl] Spieler-Familie PL04" _p1)
+string(FIND "${_dbg_d}" "in Raum 11f1 erreicht" _p2)
+if(_p1 LESS 0 OR _p2 LESS 0)
+    message(FATAL_ERROR "r38_cursor[d]: nicht Elza (PL04) in ROOM11F1 (${_basis}_d)")
+endif()
+a_bild(d 4 psx11f0)
+
+message(STATUS "r38_cursor: A ROOM11F0, B ROOM1150, C ROOM10D0, D Elza ROOM11F1 - kein rueckseitiges Cursor-Dreieck, kein Schatten im Rahmen, 11F0/11F1 gleich dem Original")
