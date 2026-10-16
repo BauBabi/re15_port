@@ -229,6 +229,21 @@ GDB-Verbindung (DuckStation trennt). PCSX-Redux (`R_belege/re2_baby.lua`/`re2_ba
 nicht (bekannt aus Runde 35 H: kein Monitor fuer GLFW). Der statische Beleg oben ist vollstaendig (alle Zugriffswege
 auf die Paar-Zeiger aufgezaehlt).
 
+### 2.7 Gift nur ueber die Spinne: Absender-Gate in Routine 25 und der "1/4-Wuerfel" in re15_damage.c (Fortsetzung)
+* Effekt 0x0d mit Routine A 24/25 steht in **41** Raum-ESPs (Zensus `esp_a2425.py` ueber alle ROOM*.RDT + *.ESP: nur
+  Effekt 0x0d nutzt A 24/25; Raeume Stage 2 + ROOM1260/1261, 4001, 5030/5031, 5040/5041, ...); Birkin spawnt
+  0x0d002000 @0x801146d4-ec (im Port OFFEN). RE2 vergiftet nur fuer Spinnen-sub 8..11 (`andi v0,v0,0x8` @0x80020118).
+  => Port: Routine 25 setzt das Gift-Bit nur, wenn der Absender des Klumpens eine Spinne (Typ 0x25) ist.
+* re15_damage.c (FUN_80012d60-Spielerzweig) wuerfelte das Gift-Bit mit einer xorshift-Annahme "1/4". Selbst
+  disassembliert: FUN_8001af20 = zustandsloser Hash von a0 (`srl v1,a0,7 / andi 0xff / addu / andi 0xff`
+  @0x8001af30-3c; der geladene Zustand t1 @0x8001af28 wird nicht benutzt). a0 = Rueckgabestand von FUN_800453d0(10):
+  10 auf dem Frueh-Ende bzw. ohne Zusatzstimmen (`andi a0,s5,0xff` @0x80045508, `beq s3,zero` @0x80045554), sonst
+  ein SPU-Tabellenzeiger. Gemessen ROOM2060 (1.4): 0x0A in 13/13 -> nie Gift. Ein Zufall 1/4 existiert in keinem Fall.
+  PORT-WAHL nach NUTZER-VORGABE ("das Gift ist das einzige das die Charaktere vergiften kann") + RE2: dieser Pfad
+  vergiftet nie (die zwei Port-Ziehungen bleiben fuer den gemeinsamen Strom). Im Port laufen ueber ihn nur Routine 25
+  und die ruhende Ausfall-Attacke re15_enemy_attack — alle anderen Gegner ziehen HP direkt ab (game_step_common.c).
+  test_damage (test_bleed_gate) pinnte die widerlegte 1/4-Rate und erwartet jetzt 0/2000.
+
 ## 3. Umsetzung
 
 Neue Datei `re15_port/engine/src/spinnen_r38.c` + `re15_port/include/re15_spinnen_r38.h`; Haken (je 1-3 Zeilen,
