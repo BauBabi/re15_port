@@ -29,11 +29,14 @@ int g_re15_r38q_anker_n = 0;
 static int s_zaehler[RE15_R38Q_AKT_N];
 static int s_ton_zaehler[16];
 
-static void messzeile(const char *fmt, unsigned a, unsigned b, unsigned c)
+static void messzeile(const char *fmt, ...)
 {
-    /* stderr = debug.log neben dem Arbeitsordner (main.c freopen); in Unit-Tests die Konsole. */
+    /* stderr = debug.log im Arbeitsordner (main.c freopen); in Unit-Tests die Konsole. */
+    va_list ap;
     fprintf(stderr, "[r38q] F%u ", (unsigned)g_engine.frame_count);
-    fprintf(stderr, fmt, a, b, c);
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
     fputc('\n', stderr);
 }
 
