@@ -379,7 +379,7 @@ Zusammenfuehrung: `git merge-tree --write-tree r37/integration HEAD` -> Konflikt
   Elza-Raeume). Gar keine automatisch erzeugte Maske zeichnen jetzt: FACTORY LINE A (ROOM3040) Cut 1 (Kiste am
   Treppenabsatz), FORKLIFT-FAC.L (ROOM30E0) Cut 6 und 7, MAIN PLATFORM (ROOM6010) Cut 6, FACTORY LINE B Cut 6 und 15
   (jeweils auch die Elza-Variante). Die Verdeckung HINTER Objekten in den gemessenen Szenen ist unveraendert; im Modell
-  sinkt sie in den Stages 3/4/6 um hoechstens 1 %, in Stage 5 um 11 %. Wo Ihnen dort eine Verdeckung fehlt: F9-Marke
+  sinkt sie in den Stages 3/4/6 um 0,25/1,1/0,8 %, in Stage 5 um 11 %. Wo Ihnen dort eine Verdeckung fehlt: F9-Marke
   wie gewohnt.
 - STAGE1/2 (Ihre Freistellungen) und Elzas Zwillings-Masken aus Runde 37 Spur A sind unveraendert.
 - Assets/Paket: Spur P bringt keine neuen oder geaenderten Asset-Dateien (Stage-3..6-MASKS unveraendert). Die Entfernung
