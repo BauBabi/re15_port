@@ -9,6 +9,7 @@ Baum `.claude/worktrees/r38_elzaintro`, Zweig `r38/elzaintro`, Basis 1bcbd0ff. S
 ## Stand
 - 16:35 Dossier angelegt, Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
 - Messung vorher beider Punkte, Ursache je Punkt, Umsetzung (wip 3c0ca636), Bisect-Bauten vorN/mitN/v0823.
+- Messung nachher (Bild + Ton bitgleich mit Leon), Gegenprobe der Riegel, Schlusslauf 21/21 gruen. FERTIG.
 
 ## Punkt 1 — Voiceover Elza-Intro
 ### Messung vorher
@@ -207,7 +208,10 @@ Gezielte Laeufe (KEINE volle Suite):
   0 Treffer auf eine vorhandene Zeile) — behoben 4f251f7e (function statt macro), Logik vorher an den Logs des roten
   Laufs nachgeprueft.
 - Lauf 2: `ctest -R "^integration_r38_elzaintro_"` -> `100% tests passed, 0 tests failed out of 2`.
-- Schlusslauf: siehe unten (alle 21 in einem Lauf).
+- **Schlusslauf (alle 21 in EINEM Lauf, Stand eb3f8010):** derselbe `-R`-Ausdruck wie Lauf 1 ->
+  `100% tests passed, 0 tests failed out of 21` (`Total Test time (real) = 1084.52 sec`); darin
+  `integration_r38_elzaintro_stimme` 120,6 s, `integration_r38_elzaintro_schwarz` 168,9 s,
+  `integration_r36_kartenitems_bild` 478,6 s, `integration_elza_vollstart` 112,5 s.
 
 ## OFFEN
 - Nichts aus dem Auftrag dieser Spur. Hinweis: Elzas Erzaehler (ROOM1031 msg 20..23) ist wie Leons Erzaehler (ROOM1170
