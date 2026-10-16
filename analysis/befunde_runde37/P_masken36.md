@@ -572,3 +572,83 @@ UNGEPRUEFT: 126 Zeilen, + ROOM3050/3051 Cut 15 36 von 36). Danach master (v0.8.2
 prueft beides kritisch (Disassembly des zitierten NULL-Belegs, Tabelle == Nachrechnung auf dem gemergten Stand, exe-Messung
 des Abnahme-Aufbaus) statt es zu uebernehmen. Vergleichs-exe "alt" = `re15_pc_nb2alt.exe` (Kopie der re15_pc.exe des
 Stands fb4be428 = Abnahme 1, Tabelle 124 Zeilen).
+
+Werkzeuge dieser Fortsetzung (Scratchpad `p38nb2/`): `lauf.sh <exe> <name> <exit_raum> <framedump> <exit_bild> ENV...`
+(exe-Kopie `re15_pc_p38nb2_<quelle>.exe` neben re15_pc.exe, eigener Arbeitsordner `runs/<name>`, `RE15_NO_INTRO=1
+RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2`), Zaehlung `sh.py` (= abnP1/sh.py:
+S = |B-C| > 24, H = davon |A-B| > 24). Bau: `local_build.sh configure` (nach dem master-Merge) + `build` -> LOCAL-BUILD-OK.
+
+### NB2.1 Mangel M1 - ROOM3050/3051 Cut 15: Generator-Masken uebermalen den Cursor der Kran-Konsole
+
+**Ursache:** Cut 15 hat im Modell keinen Stehplatz (NB1.2: nur das Ereignis sub10 schaltet ihn, ROOM3050.RDT +0x2596
+`Cut_chg 29 0f`; die Figur steht dabei ausserhalb des Regionsvierecks und wird nicht gezeichnet). Die Regel bis NB1 liess
+eine Sektion ohne Stehplatz UNVERAENDERT (alle 36 Rechtecke an) - "keine Figur" wurde als "nichts zu uebermalen" gelesen.
+Gezeichnet wird in diesem Cut aber der Ziel-Cursor (Objekt 3, sub11..14 `Work_set 2e 03 03` + `Speed_set`), und die
+Generator-Masken (Tiefe aus dem Bodenkontakt x0.90) liegen vor ihm.
+
+**Messung vorher (Aufbau der Abnahme nachgefahren, exe alt = nb2alt):** `RE15_SET_FLAG=3:178 RE15_DEBUG_JUMP=3050@250
+RE15_PLAYER_POS=-24757,-15900,3072 RE15_FORCE_EVENT=10@300 RE15_PRESS=square@420,square@422,square@480,...,square@960,
+square@962` (20 Eintraege), Bild 900, A mit Masken, B `RE15_NO_PRI=1`. Log A: `[scd F783] Cut_chg(15)` -> `[pri] ROOM3050
+Cut 15: Port-Masken ohne eigenen Atlas -> BSS-Atlas des Cuts (Runde 37 Spur P)` -> `[pri] cut=15 pri_offset=0x84C
+masks=36 fg_atlas=1`; **A/B 138 Punkte > 24, davon 60 mit B = (0,21,0)/(2,60,0) = dunkelgruener Innenrand des Cursors** -
+genau die Zahlen der Abnahme (Laeufe `runs/k15_nb2alt_A/B`).
+
+**RE-Beleg (selbst disassembliert, `re15_disasm.py dis 0x800392d4 40`, info/Re1.5/PSX.EXE):** der Masken-Bauer
+FUN_800392d4 liest den Masken-Zeiger des Cuts und behandelt FF FF FF FF als "keine Masken":
+`800392d8 lw a0,-14472(a0)` (RDT-Zeiger 0x800ac778), `800392e0 lh v0,4068(v0)` (Cut 0x800b0fe4), `80039310 lw v1,36(a0)`
+(RDT+0x24 Kameratabelle), `80039314 sll v0,v0,5` (Cut*0x20), `8003931c lw t5,28(v0)` (+0x1C Masken-Sektion),
+`80039324 lw v1,0(t5)`, `80039328 addiu v0,zero,-1`, `8003932c bne v1,v0,0x8003933c`, `80039334 j 0x8003955c` mit
+Delay-Slot `80039338 sb zero,0(a0)` (Maskenzahl 0, Ende) - sonst `80039358 sb t2,0(a0)` (Zahl = obere Haelfte des ersten
+Worts). Bytes (Python, shared_assets/PSX/STAGE3): ROOM3050.RDT und ROOM3051.RDT RDT+0x24 = 0x60, Cut 15 Eintrag @0x240,
++0x1C @0x25C = 0x84C -> `ff ff ff ff` = NULL-Sektion. **Das Original zeichnet in Cut 15 keine einzige Maske.**
+
+**Aenderung (ff2a5b87, hier geprueft):** Generator `sektion_pruefen`: Sektion OHNE Stehplatz -> ALLE Rechtecke aus
+(= Original-Zustand des Cuts). Die Masken sind NUTZER-VORGABE fuer Figuren-Verdeckung; wo keine Figur stehen kann, koennen
+sie nur Anderes uebermalen. Tabelle (9fd9428b): `{ 0x3050, 15, 36, { 0xFFFFFFFFu, 0x0000000Fu, ... } }` und dasselbe fuer
+0x3051. Riegel `unit_r37_masken36_ausschluss`: neuer Check "Sektionen ohne Stehplatz sind GANZ ausgeschlossen" + Pruefung,
+dass die Original-Sektion dieser Cuts NULL ist (liest die RDT-Bytes: `ROOM3050 Cut 15: Original-Sektion +0x84C = FF FF FF
+FF (NULL - keine Masken)`). Lader und Laufzeit-Code unveraendert: mit 0 Masken nimmt main.c den Weg einer Original-NULL-
+Sektion (`pri_nachgezeichnet = 0`, kein Overdraw, `has_fg && pri_n > 0` falsch).
+
+**Messung nachher (exe neu, derselbe Aufbau):** Log `[scd F783] Cut_chg(15)` -> `[pri] cut=15 pri_offset=0x84C masks=0
+fg_atlas=1` (keine Spur-P-Zeile: der R15M-Zweig hat 0 Rechtecke, der BSS-Atlas wird wie bei jedem Original-Cut geladen);
+**A/B 0 Punkte > 24, Bild A BITGLEICH zu B** (Laeufe `runs/k15_neu_A/B`) - der Cursor ist vollstaendig.
+
+### NB2.2 Mangel M2 - Kopfoberkante nie abgetastet (ROOM30A0 Cut 0)
+
+**Ursache:** das Figurmodell tastete 9 x 9 Punkte mit Zeilen-MITTEN FIGUR_HOCH/9 * (z + 0.5) = 167 .. 2833 ab; die Baender
+0..167 (Fuss) und 2833..3000 (Haar) und alles zwischen zwei Zeilen/Spalten wurden nie gefragt.
+
+**Messung vorher (Zufallsweg der Abnahme nachgefahren):** `RE15_DEBUG_JUMP=30A0@250 RE15_INPUT_SCRIPT_START=520
+RE15_INPUT_SCRIPT=R0.69,U1.12,R0.23,U1.15,R0.19,U0.98,R0.44,U0.88,L0.14,U1.02,L0.16,U2.18,R0.67,U1.89`, Bilder 360..440/20,
+A mit Masken, B `RE15_NO_PRI=1`, C = Zwangs-Cut 0 bei (-19800,19763) ohne Figur. Lagen alt == neu (`[walk] F360
+(-26046,13582)`, `F390 (-25605,13657)`, `F420 (-24897,13261)`):
+
+| Bild | alt (nb2alt, `masks=21`): S / H | neu (`masks=18`): S / H |
+|---|---|---|
+| 360 | 495 / 0 | 495 / 0 |
+| 380 | 328 / **4** | 328 / **0** |
+| 400 | 355 / **7** | 355 / **0** |
+| 420 | 666 / 0 | 666 / 0 |
+| 440 | 995 / 0 | 995 / 0 |
+
+(alt = genau die Zahlen der Abnahme, Bild 380/400.)
+
+**Aenderung (ff2a5b87 + diese Fortsetzung, nur Generator/Riegel `tests/unit/test_r37_masken36.c`):** `figur_raster` tastet
+den Figurkasten PIXELGENAU ab: so viele Spalten, wie der Kasten Bildpunkte breit ist (Fuss- oder Kopfkante, die breitere;
+mindestens 9, ungerade, Raender eingeschlossen), und je Spalte ein Punkt in JEDER Bildzeile von der Kopfoberkante bis zum
+Fuss (perspektivisch richtig auf der senkrechten Kante, an die Enden geklemmt). Diese Fortsetzung: Spaltengrenze
+SP_MAX 129 -> 321 (eine Spalte je Bildspalte ueber die volle Bildbreite; `spalte` jetzt uint16_t) und eine SCHRANKE fuer
+die zwei Faelle, in denen das Raster nicht pixelgenau ist - Kasten breiter als das Bild (nur dicht vor der Kamera) und
+Spalten mit einem Ende hinter der Kamera (vz <= 64): keine Maske im Bildrechteck des Kastens (bzw. im ganzen Bild) hat
+depth < bucket(vz des fernsten Punkts). Gemessen (`erzeuge`): **924866 Kaesten pixelgenau, breitester 2505.1 Bildpunkte,
+breiter als 320: 28484 (davon Maske koennte verdecken: 0), Spalten halb hinter der Kamera: 65038 (davon: 0)** - die
+Ausnahmen koennen keine Fehlverdeckung verbergen; Riegel-Check "wo es nicht pixelgenau ist ... kann keine Maske
+verdecken". Die Tabelle ist mit Spaltengrenze 129 und 321 bitgleich (diff).
+Konstanten: keine Spielkonstanten neu (FIGUR_HOCH 3000 / FIGUR_HALB 350 an der exe gemessen, Dossier §3.3; SP_MAX ist
+Messaufbau = Bildbreite 320 + 1).
+
+**Tabelle danach (Nachrechnung auf dem gemergten Stand, `test_r37_masken36 ausschluss`, 197 s):** Saaten 2626, 216
+Sektionen, 6478 Masken, **1444 ausgeschlossen (NB1: 1224; davon 72 = ROOM3050/3051 Cut 15, 148 durch das pixelgenaue
+Raster), Abweichungen 0, 126 Zeilen (NB1: 124)**, ohne Stehplatz 2 (belegt, jetzt ganz aus), Raumpaare 15/15 gleich,
+bytegleich 8/8. ROOM30A0/30A1 Cut 0: 25 -> 28 Rechtecke aus (neu 5, 20, 21; 20 = der obere Rahmen-Balken der Trennwand).

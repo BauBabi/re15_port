@@ -244,11 +244,20 @@ static void kamera_ort(const re15_camera_view_t *v, double c[3])
  * nicht (ROOM30A0 Cut 0 (-25400,13550): der Rahmen-Balken der Buero-Trennwand schnitt Leon VOR der Trennwand das Haar ab,
  * Abnahme 1: 4/7 Punkte an der exe; Werkzeug punkt: alte Abtastung 0, neue 5 Punkte auf Maske 20).
  * Werkzeug-Optionen (kein Riegel): --alt = alte Abtastung, --zeilen=N [--spalten=M] = festes Gitter mit Raendern
- * (Konvergenzmessung Dossier NB2.2). */
-typedef struct { int16_t x, y; double vz; uint8_t spalte, fuss; } figpt_t;
-#define SP_MAX    129
+ * (Konvergenzmessung Dossier NB2.2).
+ * Spaltenzahl: hoechstens SP_MAX = 321 = eine Spalte je Bildspalte ueber die volle Bildbreite 320 (Messaufbau, keine
+ * Spielkonstante; vorher 129 - ein Kasten breiter als 128 Bildpunkte waere mit Abstand > 1 Punkt abgetastet worden).
+ * g_sp_gekappt zaehlt Kaesten, die breiter als das Bild sind (Ausgabe in ausschluss/erzeuge). */
+typedef struct { int16_t x, y; double vz; uint16_t spalte; uint8_t fuss; } figpt_t;
+#define SP_MAX    321
 #define FIGPT_MAX (SP_MAX * 240)
 static int g_fz, g_fs = 9, g_fz_alt;     /* g_fz == 0 und !g_fz_alt: pixelgenau (Riegel und Tabelle) */
+static long g_sp_kaesten, g_sp_gekappt;  /* pixelgenau abgetastete Kaesten / davon breiter als SP_MAX - 1 Bildpunkte */
+static double g_sp_breit_max;            /* breitester abgetasteter Kasten in Bildpunkten */
+static int g_raster_gekappt;             /* letzter figur_raster-Aufruf: Spalten gekappt (Abstand > 1 Bildpunkt) */
+static long g_sp_gekappt_offen;          /* gekappte Kaesten, an denen eine Maske verdecken KOENNTE (s. sektion_pruefen) */
+static double g_raster_halb_vz;          /* letzter Aufruf: groesstes vz einer Spalte, die halb hinter der Kamera liegt (0 = keine) */
+static long g_sp_halb, g_sp_halb_offen;  /* Kaesten mit solchen Spalten / davon Maske koennte verdecken */
 
 /* quer-Versatz der Spalte j von n */
 static double spalte_o(int j, int n) { return (j - (n - 1) / 2) * (2.0 * FIGUR_HALB / (double) (n - 1)); }
@@ -269,6 +278,8 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
     const double boden = -(double) band * BAND_Y, f = v->fov_screen_dist;
     int nc, j, n = 0;
     *gesamt = 0;
+    g_raster_gekappt = 0;
+    g_raster_halb_vz = 0;
     if (g_fz_alt || g_fz) {     /* festes Gitter (Werkzeug/Gegenprobe) */
         int nz = g_fz_alt ? 9 : g_fz, ns = g_fz_alt ? 9 : g_fs, k;
         *n_sp = ns;
@@ -279,7 +290,7 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
             (*gesamt)++;
             if (sy < 0 || sy >= 240 || sx < -1000 || sx > 1000) continue;
             pt[n].x = (int16_t) floor(sx); pt[n].y = (int16_t) sy; pt[n].vz = vz;
-            pt[n].spalte = (uint8_t) sp; pt[n].fuss = (k == (ns - 1) / 2); n++;
+            pt[n].spalte = (uint16_t) sp; pt[n].fuss = (k == (ns - 1) / 2); n++;
         }
         return n;
     }
@@ -294,14 +305,21 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
         nc = (int) ceil(b) + 1;
         if (nc < 9) nc = 9;
         if (!(nc & 1)) nc++;
-        if (nc > SP_MAX) nc = SP_MAX;
+        g_sp_kaesten++;
+        if (b > g_sp_breit_max) g_sp_breit_max = b;
+        g_raster_gekappt = nc > SP_MAX;
+        if (nc > SP_MAX) { nc = SP_MAX; g_sp_gekappt++; }
     }
     *n_sp = nc;
     for (j = 0; j < nc; j++) {
         double o = spalte_o(j, nc), p0[3], p1[3], d[3], y0, y1, ylo, yhi; int iy, ia, ib, ifuss;
         ansicht(v, wx + o * lx, boden, wz + o * lz, p0);                 /* Fuss */
         ansicht(v, wx + o * lx, boden - FIGUR_HOCH, wz + o * lz, p1);    /* Kopfoberkante */
-        if (p0[2] <= 64 || p1[2] <= 64) continue;
+        if (p0[2] <= 64 || p1[2] <= 64) {   /* (teilweise) hinter der Kamera: Schranke in sektion_pruefen */
+            double vzm = p0[2] > p1[2] ? p0[2] : p1[2];
+            if (vzm > g_raster_halb_vz) g_raster_halb_vz = vzm;
+            continue;
+        }
         d[0] = p1[0] - p0[0]; d[1] = p1[1] - p0[1]; d[2] = p1[2] - p0[2];
         y0 = 120 + p0[1] * f / p0[2];
         y1 = 120 + p1[1] * f / p1[2];
@@ -324,7 +342,7 @@ static int figur_raster(const re15_camera_view_t *v, double wx, double wz, int b
             sx = 160 + (p0[0] + t * d[0]) * f / vz;
             if (sx < -1000 || sx > 1000) continue;
             pt[n].x = (int16_t) floor(sx); pt[n].y = (int16_t) iy; pt[n].vz = vz;
-            pt[n].spalte = (uint8_t) j; pt[n].fuss = (j == (nc - 1) / 2 && iy == ifuss); n++;
+            pt[n].spalte = (uint16_t) j; pt[n].fuss = (j == (nc - 1) / 2 && iy == ifuss); n++;
         }
     }
     return n;
@@ -705,7 +723,7 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
     static uint16_t tief[240][320];
     static int sat[241][321];            /* Summentabelle "Maske da" fuer den Grobsprung */
     static figpt_t pt[FIGPT_MAX];
-    re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4]; int has_q, runde, m, x, y, b;
+    re15_camera_view_t v; double cam[3], lx, lz, ll; int16_t qx[4], qz[4]; int has_q, runde, m, x, y, b, tmin;
     const uint8_t *idx = (const uint8_t *) a->tim.pixels;
     long n_steh = 0; uint8_t *davor = NULL, *nochmal = NULL;
     memset(E, 0, sizeof *E);
@@ -748,6 +766,10 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
         for (y = 0; y < 240; y++)
             for (x = 0; x < 320; x++)
                 sat[y + 1][x + 1] = sat[y][x + 1] + sat[y + 1][x] - sat[y][x] + (welch[y][x] >= 0);
+        tmin = 0xFFFF;
+        for (y = 0; y < 240; y++)
+            for (x = 0; x < 320; x++)
+                if (welch[y][x] >= 0 && tief[y][x] < tmin) tmin = tief[y][x];
         E->stehplaetze = E->echt = E->falsch = 0;
         for (b = 0; b < 16; b++) {
             int gx, gz;
@@ -777,6 +799,38 @@ static void sektion_pruefen(raum_t *R, int cut, const re15_pri_cut_t *pri, const
                         }
                     }
                     np = figur_raster(&v, wx, wz, b, lx, lz, pt, &nsp, &ges);
+                    if (g_raster_gekappt && runde == 0) {
+                        /* Kasten breiter als das Bild (nur dicht vor der Kamera): Spaltenabstand > 1 Bildpunkt. Statt dichter
+                         * abzutasten eine Schranke: kein Punkt des Kastens kann verdeckt sein, wenn jede Maskentiefe im
+                         * Bildrechteck des Kastens >= bucket(vz der fernsten Kastenecke) ist (vz ist in der Kastenebene
+                         * linear, re15_pri_mask_occludes ist in vz monoton). Spaetere Runden haben nur weniger Masken. */
+                        double c3[3], vzmax = 0, sx, sy, vz, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+                        int e, alle = 1, X0 = 0, Y0 = 0, X1 = 319, Y1 = 239, dmin = 0xFFFF, xx, yy, thr;
+                        for (e = 0; e < 4; e++) {
+                            double o = (e & 1) ? FIGUR_HALB : -FIGUR_HALB, hy = -(double) b * BAND_Y - ((e & 2) ? FIGUR_HOCH : 0.0);
+                            ansicht(&v, wx + o * lx, hy, wz + o * lz, c3);
+                            if (c3[2] > vzmax) vzmax = c3[2];
+                            if (!proj(&v, wx + o * lx, hy, wz + o * lz, &sx, &sy, &vz)) { alle = 0; continue; }
+                            if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+                        }
+                        if (alle) {
+                            X0 = (int) floor(x0) - 1; Y0 = (int) floor(y0) - 1; X1 = (int) floor(x1) + 1; Y1 = (int) floor(y1) + 1;
+                            if (X0 < 0) X0 = 0; if (Y0 < 0) Y0 = 0; if (X1 > 319) X1 = 319; if (Y1 > 239) Y1 = 239;
+                        }
+                        thr = re15_pri_bucket_of_vz((long) vzmax);
+                        if (tmin < thr) {
+                            for (yy = Y0; yy <= Y1; yy++)
+                                for (xx = X0; xx <= X1; xx++)
+                                    if (welch[yy][xx] >= 0 && tief[yy][xx] < dmin) dmin = tief[yy][xx];
+                            if (dmin < thr) g_sp_gekappt_offen++;
+                        }
+                    }
+                    if (g_raster_halb_vz > 64 && runde == 0) {
+                        /* Spalten, deren eines Ende hinter der Kamera liegt (vz <= 64, wie proj), fehlen im Raster. Schranke:
+                         * keine Maske im ganzen Bild mit depth < bucket(groesstes vz dieser Spalten). */
+                        g_sp_halb++;
+                        if (tmin < re15_pri_bucket_of_vz((long) g_raster_halb_vz)) g_sp_halb_offen++;
+                    }
                     for (i = 0; i < np; i++) {
                         int px_ = pt[i].x, py_ = pt[i].y, mi;
                         if (px_ < 0 || px_ >= 320 || py_ < 0 || py_ >= 240) continue;
@@ -872,6 +926,9 @@ static void teil_erzeuge(const char *pfad)
     fprintf(f, "    { 0x0000, 0xFF, 0, { 0u, 0u, 0u, 0u } }   /* Ende */\n};\n");
     fclose(f);
     printf("  geschrieben: %s (Saaten %d)\n", pfad, g_saat_n);
+    printf("  Figurraster: %ld Kaesten pixelgenau, breitester %.1f Bildpunkte, breiter als %d: %ld (davon Maske koennte "
+           "verdecken: %ld), Spalten halb hinter der Kamera: %ld (davon Maske koennte verdecken: %ld)\n", g_sp_kaesten,
+           g_sp_breit_max, SP_MAX - 1, g_sp_gekappt, g_sp_gekappt_offen, g_sp_halb, g_sp_halb_offen);
 }
 
 /* ---- ausschluss (Riegel) ---------------------------------------------------------------------------------------- */
@@ -958,7 +1015,7 @@ static void paare_pruefen(int *paare, int *paare_gleich, int *bytegleich, int *b
 static void teil_ausschluss(void)
 {
     ausschluss_ctx a, o; int s, stages_echt = 1, nach_sekt, nach_abw, nach_zeilen, i, j, leer_ok = 1, leer_aus, leer_null;
-    int paare, paare_gleich, bytegleich, bytegleich_gleich;
+    int paare, paare_gleich, bytegleich, bytegleich_gleich; long gekappt_offen;
     printf("== r37_masken36 ausschluss: Tabelle aus den Dateien nachgerechnet, Fehlverdeckung danach, Verdeckung bleibt ==\n");
     saaten_sammeln();
     memset(&a, 0, sizeof a); memset(&o, 0, sizeof o);
@@ -966,6 +1023,10 @@ static void teil_ausschluss(void)
     alle_sektionen(1, 0, pruefe_zeile, &a);            /* Nachrechnung (iteriert) gegen die Tabelle */
     printf("  Saaten %d | Sektionen %d, Masken %d, davon ausgeschlossen %d | Abweichungen %d | ohne Stehplatz %d\n",
            g_saat_n, a.sektionen, a.masken, a.aus_masken, a.abweichungen, a.stehplatz_los);
+    printf("  Figurraster (Nachbesserung 2): %ld Kaesten pixelgenau, breitester %.1f Bildpunkte, breiter als %d: %ld (davon "
+           "Maske koennte verdecken: %ld), Spalten halb hinter der Kamera: %ld (davon Maske koennte verdecken: %ld)\n",
+           g_sp_kaesten, g_sp_breit_max, SP_MAX - 1, g_sp_gekappt, g_sp_gekappt_offen, g_sp_halb, g_sp_halb_offen);
+    gekappt_offen = g_sp_gekappt_offen + g_sp_halb_offen;
     /* Ergebnis der Nachrechnung sichern (der Lauf mit Tabelle unten vergleicht die Tabelle nur mit sich selbst) */
     nach_sekt = a.sektionen; nach_abw = a.abweichungen; nach_zeilen = a.soll_zeilen;
     leer_aus = a.stehplatz_los > 0 && a.leer_offen == 0;
@@ -1017,6 +1078,8 @@ static void teil_ausschluss(void)
     CHECK("Sektionen ohne Stehplatz == belegte Liste (ROOM3050/3051 Cut 15), sonst ist der Check oben dort leer wahr", leer_ok);
     CHECK("NB2 M1: Sektionen ohne Stehplatz sind GANZ ausgeschlossen (Cut 15: Konsolen-Cursor nicht uebermalt)",
           leer_aus && leer_null);
+    CHECK("NB2 M2: Figurraster pixelgenau - wo es nicht pixelgenau ist (Kasten breiter als das Bild, Spalte halb hinter der "
+          "Kamera), kann keine Maske verdecken", gekappt_offen == 0);
     CHECK("RDT- und MSK-bytegleiche Raumpaare xxx0/xxx1 haben dieselben Tabellenzeilen (M1: 30A0/30A1)",
           bytegleich > 0 && bytegleich_gleich == bytegleich);
     CHECK("jedes Raumpaar mit MSK hat dieselben Tabellenzeilen (Saaten je Raumpaar)", paare > 0 && paare_gleich == paare);
