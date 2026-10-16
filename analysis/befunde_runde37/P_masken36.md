@@ -824,3 +824,26 @@ Lauf wie §4.4/NB1.4 (`RE15_DEBUG_JUMP=<Leon-Raum>@250`, Elza `RE15_TITLE_SHOT_C
 Spur-P-Zeile = Weg einer Original-NULL-Sektion) + 0 FALSCH/FEHLT.** LEER sind ROOM3040/3041 Cut 1, ROOM3050/3051 Cut 6
 und Cut 15, ROOM30E0/30E1 Cut 6 und 7, ROOM6010/6011 Cut 6. Beispiele: ROOM30A0 Cut 0 `masks=18` (NB1 21, Soll 18 von 46),
 ROOM3040 Cut 0 `masks=8` (NB1 12). Wie zuvor: eine Lader-Pruefung, keine Pruefung auf Fehlverdeckung (Kopf der Liste).
+
+### NB2.8 OFFEN nach Nachbesserung 2
+1. **Modellkasten als Huelle** (NB2.4, §6.4): pixelgenau abgetastet schliesst er auch Rechtecke aus, die Leon in einer
+   bestimmten Haltung nicht beruehren (Stichprobe: 4 von 7 stehend rot 0 ohne Treffer); Kosten im Modell Stage 5 -11 %,
+   Stages 3/4/6 0,25/1,1/0,8 %; sechs Sektionen je Variante zeichnen keine Generator-Maske mehr. In den Riegel-Szenen und auf
+   den 570 Zufallsbildern sichtbar unveraendert. Ein gemessener Umriss je Hoehe und Haltung (Leon und Elza je Drehung, Gehen,
+   Zielen an der exe; Elzas Zopf aendert sich mit Runde 38 Spur D) wuerde weniger ausschliessen - eigener Schritt.
+2. **Rest an der Bodenkante** ROOM5090 Cut 14 (2 Leon / 5 Elza Punkte, unter der Bodenzeile des Kastens), §6.2; die beiden
+   "uneindeutigen" Kleinstfunde der Abnahme 1 (3050 C0 Kanister, 5051 C0 Stiefelspitze) unveraendert, im Modell hinter einer
+   Zelle bzw. ohne Fehlverdeckung (NB2.5).
+3. Rechteckweiser Ausschluss (NB1.6.2) und Objekte ohne Kollisionszelle (§6.3) unveraendert; groessere Figuren als
+   Leon/Elza ungeprueft; PSX unveraendert (§6.5).
+4. **Messfalle Cut 15 seit master v0.8.25:** der Cursor wird nur mit der Red Master Keycard (Item 0x46) im Inventar gesetzt
+   (Kistenregel K8 @0x01F90); `RE15_SET_FLAG=3:178` allein ergibt ein Bild OHNE Cursor, in dem "A == B" nichts beweist.
+   Der Riegel `integration_r37_masken36_nb2` verlangt deshalb Cursor-Punkte im Bild.
+
+### NB2.9 Fuer den Nutzer (Kurzfassung Nachbesserung 2; ausfuehrlich §7)
+- Kran-Konsole FACTORY LINE B (ROOM3050/3051, Monitor-Nahaufnahme): der gruene Ziel-Cursor wird nicht mehr von
+  Vordergrund-Masken angeschnitten (Original: keine Maske in diesem Bild).
+- NORTH OFFICE (ROOM30A0/30A1): Leon/Elza VOR der Buero-Trennwand behalten ihr Haar (Kopfoberkante wird geprueft).
+- Folge: 148 weitere automatisch erzeugte Rechtecke bleiben aus (Liste der Sektionen ohne Maske in §7).
+- Neue Assets: keine. Sprachdateien: keine. Bedienhinweise: keine neuen Schalter. Android: Tabelle geaendert -> APK neu
+  bauen. Entscheidungsfragen: keine.
