@@ -170,7 +170,25 @@ Damit ist das Originalbild im Erzaehler: schwarzes Standbild + Text. Der Port-La
   `nachher_elza_erzaehler_f200_verstaerkt_x40.png` (x40 verstaerkt: nur der Text, kein Feld, kein (1,1,1)-Grund).
 
 ## Tests
-(offen)
+Registrierung NUR aus `re15_port/tests/unit/probes/r38_elzaintro.cmake` (GLOB), Quellen `tests/unit/test_r38_elzaintro.c`,
+`tests/unit/probe_r38_elzaintro_auswertung.c` (Auswertewerkzeug, kein add_test), `tests/integration/test_r38_elzaintro.cmake`.
+
+| Test | misst | Ergebnis |
+|---|---|---|
+| `unit_r38_elzaintro_stimme` | 26 Pruefungen: Nachrichtenblock @0x62C/@0x630, Offsettabelle, msg 0..5 byte-gleich, Message_on `2b 0N 00 00` an beiden sub02-Offsets, sub02-Kopf (4 Byte Versatz), Abbildung genau (1241, 0..5) -> 1240, Ersatzpfad, sechs WAVs im Repo | gruen |
+| `unit_r38_elzaintro_schwarz` | 13 Pruefungen: je Tabellenzeile `29 cut` am Offset = einziges Cut_chg im ganzen SCD (Opcode-Walk `scd_opcode_size_at`), keine RVD-Zone fuehrt hinein, Kamera = ROOM1170 Cut 7, ROOM1031 Cut 13 = Lobby-Kamera Cut 0, BG13 = ROOM1170 BG07, Gate an/aus | gruen |
+| `integration_r38_elzaintro_stimme` | echte exe, Neues Spiel Leon + Elza bis Montage-Bild 1300: sechs Ersatzzeilen bei Elza, keine bei Leon, msg 5 parkt gleich oft (11/11), RMS je Zeilenfenster Elza = Leon +-10 % | gruen (RMS gleich: 906;2817;3453;3435;3303;3612;3570) |
+| `integration_r38_elzaintro_schwarz` | echte exe, Neues Spiel Leon + Elza bis Erzaehler-Bild 420: Erzaehler-Ereignis je 1x, Lageplan in ROOM1031 angelegt, Bilder F60/F230/F400 Elza = Leon pixelgleich, Lageplan-Feld dunkel | gruen (0 Pixel verschieden, Feld 0) |
+
+Gezielte Laeufe (KEINE volle Suite):
+- Lauf 1 (alle 21, darunter die Module, die der Diff beruehrt: Stimme audio_pc.c, Erzaehler-Netz main.c/render_pc.c,
+  Elza-Vorspann, Lageplan, Leon-1170):
+  `ctest -R "^(unit_r38_elzaintro_|integration_r38_elzaintro_|unit_synchro_stimme$|unit_voice_ausreden$|unit_se_voice_machine$|unit_r17_untertitel_pin$|unit_r34n_f_leiche_stimme$|unit_r30_tuer_stimme$|integration_r36_elza_stoehnen$|integration_elza_vollstart$|integration_r37_roy_leon1170$|unit_elliot_1170_run$|unit_montage_fx$|integration_boot_bg_pin$|integration_dark_start_pin$|integration_r30_cut_blitz$|unit_r36_kartenitems$|integration_r36_kartenitems_bild$|unit_r30_elza_selbsttuer$)"`
+  -> 19 gruen, die zwei neuen Integrationsriegel rot an einem TESTFEHLER (macro-Zaehler wertete `\[` doppelt aus,
+  0 Treffer auf eine vorhandene Zeile) — behoben 4f251f7e (function statt macro), Logik vorher an den Logs des roten
+  Laufs nachgeprueft.
+- Lauf 2: `ctest -R "^integration_r38_elzaintro_"` -> `100% tests passed, 0 tests failed out of 2`.
+- Schlusslauf: siehe unten (alle 21 in einem Lauf).
 
 ## OFFEN
 (offen)
