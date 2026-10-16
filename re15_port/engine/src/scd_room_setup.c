@@ -41,6 +41,7 @@
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Zellen-Ausschiebung der Objekte (zellschub_r36.c) */
 #include "re15_sperre1050_r37.h" /* Runde 37 Spur F: "Chief first" auch an der Tuer ROOM1050 -> ROOM10A0 */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher 1050/1090/1091, Spind 1000 (feuerloescher_r37.c) */
+#include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Heliport ROOM1171 (heliport1171_r38.c) */
 
 extern scd_vm_t g_scd;
 
@@ -493,6 +494,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_kartenitems_r36_install((uint16_t)g_current_room_id);  /* Runde 36 Spur N: Lageplan-Karte (re15_kartenitems_r36.h) */
     re15_zellschub_install((uint16_t)g_current_room_id);     /* Runde 36 Spur R: Spiegel obj+0x40/+0x44 = Lage (re15_zellschub_r36.h) */
     re15_sperre1050_r37_install((uint16_t)g_current_room_id); /* Runde 37 Spur F: NACH re15_adaruf_install (re15_sperre1050_r37.h) */
+    re15_r38i_install((uint16_t)g_current_room_id);          /* Runde 38 Spur I: Kraehen-Rueckgriff weg (re15_heliport1171_r38.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

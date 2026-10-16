@@ -136,6 +136,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 #include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
+#include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 nach HERKUNFT -> RE1.5-Bank */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -7595,8 +7596,9 @@ re_title:;
                          * nur die vom RE2-Adult-Spawner erzeugten (`addiu a0,zero,38`
                          * @0x80105DE8, Feld re2s_baby_spawned) sind echte RE2-Baby-Spinnen. */
                         pc_enemy_load_ex(g_actors[_pi].type,
-                                         g_actors[_pi].type != 0x26u
-                                             || g_actors[_pi].re2s_baby_spawned);
+                                         (g_actors[_pi].type != 0x26u
+                                             || g_actors[_pi].re2s_baby_spawned)
+                                         && !re15_r38i_ereigniskraehe(&g_actors[_pi]));   /* Runde 38 Spur I */
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)   /* Runde 35 Spur I (N1-M2): Elliot beim */
                     if (g_actors[_pi].active && re15_typ47_ist_elliot(g_actors[_pi].type)) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328; Runde 37 Spur K: nur Leons 0x47 */
                 /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
@@ -9596,7 +9598,8 @@ re_title:;
                      * Roster-Schleife geholt (gemessen: ohne den Zusatz stand trotz Brain-Fix
                      * weiter "RE2 EM026 loaded: ... 3 clips" im Log). */
                     pc_enemy_load_ex(npc->type,
-                                     npc->type != 0x26u || npc->re2s_baby_spawned);
+                                     (npc->type != 0x26u || npc->re2s_baby_spawned)
+                                     && !re15_r38i_ereigniskraehe(npc));   /* Runde 38 Spur I: RE1.5-Bank */
                 if (re15_typ47_ist_elliot(npc->type)) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o.; Runde 37 Spur K: Elzas 0x47 = Roy laeuft den allgemeinen Weg */
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as

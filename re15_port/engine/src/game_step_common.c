@@ -2407,6 +2407,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
      * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
     re15_player_victim_tick();
+    { extern void re15_r38i_rueckgriff_tick(void);   /* Runde 38 Spur I: Hook A [0x21][1] 0x80115b80 */
+      re15_r38i_rueckgriff_tick(); }
     schritt_station(RE15_SCHRITT_OPFER, pl->x, pl->z);
 
     /* cmd 3 = der GENERISCHE Spieler-Tod (Todes-Animation, PL00.EDD Clip 7) — derselbe
