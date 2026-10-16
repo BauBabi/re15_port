@@ -1,4 +1,4 @@
-# Runde 38 Spur V — releaseskript (Dossier, laufend)
+# Runde 38 Spur V — releaseskript (Dossier)
 
 Baum `.claude/worktrees/r38_releaseskript` (Zweig `r38/releaseskript`, Basis e2cc7673). Angelegt 2026-10-16 16:28 (Uhr).
 
@@ -14,6 +14,8 @@ Lesart des Orchestrators (AUFTRAG.md, "Lesarten"): "minor" = wie alle bisherigen
 
 (laufend, neueste Eintraege oben)
 
+* 2026-10-16 18:17: FERTIG. Endlauf auf 98652210: `100% tests passed, 0 tests failed out of 7` (-R r38_releaseskript),
+  Release-Modul `100% tests passed, 0 tests failed out of 2` (r35_android_pruefkette|bash_mutanten).
 * 2026-10-16 17:54: gezielte Tests gruen (Windows 7/7, Linux-Bau-Image 6/6 + cmd sichtbar SKIP), echte Messungen
   N1 (Trockenlauf), N2 (Schritt alt gegen das echte Archiv), N5 (Docker-Start 19 s + echter Windows-Cross-Bau);
   Docker Desktop danach wieder gestoppt. Abschnitte 3-7 geschrieben.
@@ -70,9 +72,11 @@ Wortlaut 2026-10-16: "... und die alte ins Archiv zu bringen"; VERTRAG.md Spur V
 Archiv". Der bisherige Ablauf (seit HANDOVER_2026-08-25 Zeile 175, Runde 32 release_v0818.md Abschnitt 6, Runde 37 §4)
 legt dagegen die NEUE Version ins Archiv und LOESCHT dort die vorige ("liegt weiter in Git"). Mit dem Loeschen waere die
 alte Version nach dem Lauf gerade NICHT im Archiv - das widerspricht dem neuen Wortlaut. Aeltere Nutzer-Vorgaben dazu:
-make_package.sh:980-981 (2026-08-22) "alte Packages vom Repo loeschen" und Memory reai-v2-immer-paketieren (2026-08-24)
-"auch im archiv, auch pushen und das letzte davor entfernen" - beide sprechen vom REPO (Pakete im Repo), nicht vom
-Archiv; das Loeschen im Archiv ist eine spaetere Auslegung der Agenten. Umsetzung daher:
+make_package.sh:980-981 (2026-08-22) "alte Packages vom Repo loeschen" spricht ausdruecklich vom REPO; Memory
+reai-v2-immer-paketieren (2026-08-24) "auch im archiv, auch pushen und das letzte davor entfernen" nennt das Entfernen
+im selben Zug wie das Pushen, meint also eher ebenfalls das Repo - eindeutig ist dieser Satz nicht, das Loeschen im
+Archiv ist die Auslegung, die die Agenten seit HANDOVER_2026-08-25 daraus gemacht haben. Der neue Wortlaut ist
+eindeutig und juenger. Umsetzung daher:
 1. die alte Version (die Volumes in release/ vor dem Lauf) kommt ins Archiv bzw. wird dort geprueft (sha256sum -c), bevor
    irgendetwas gebaut wird;
 2. die neue Version kommt zusaetzlich ins Archiv (stehende Anweisung "auch im archiv");
@@ -132,7 +136,6 @@ Schritt-Skripte (Abschnitt 5).
 | N2 | `bash release/release_alles.sh --bis alt` (17:19, echtes Archiv) | rc 0 in 24,5 s: `release/ v0.8.25: 6 Volumes, sha256sum -c 6/6 OK` (die SUMS-Datei ist in diesem Checkout CRLF - gelesen ohne \r), `Vorversion v0.8.25 war schon im Archiv, geprueft: SHA256SUMS.txt 6/6 OK; SHA256SUMS_android.txt 1/1 OK`, `RELEASE-ALLES-TEILLAUF-OK v0.8.26 (alt)`; Protokoll release/logs/v0.8.26_20261016-171913/ (gitignoriert, `git status` zeigt nur das Dossier), Sperre wieder weg; das Archiv nur gelesen |
 | N3 | Vorher M1/M2 (falsche Standard-Versionen) | eine Quelle: `--version $NEU` an build_android.sh UND make_package.sh (Aufrufzeilen im Protokoll, Test `ablauf`) |
 | N4 | Vorher M3 (Docker aus) | `docker_bereit.sh --pruefen` -> rc 1 "ein echter Lauf startet Docker Desktop ('docker desktop start') und wartet bis 300 s" |
-
 | N5 | `bash release/release_alles.sh --ab windows --bis windows` (17:27:25-17:29:48, Docker Desktop war AUS) | rc 0 in 2 min 23 s: Vorbedingung `Container-Engine bereit nach 19 s: docker 27.5.1` (gestartet per `docker desktop start`; Runde 32 maß 20 s), danach das ECHTE build_win_cross.sh: Image 2 s, Quellbaum packen 25 s (5397 Dateien, 347 MB), auspacken 22 s, Configure 24 s, Compile+Link 25 s, `WIN-CROSS-BUILD-OK: 5295813 Bytes`, Wrapper 107 s; Schritt-Pruefung `windows OK in 0h01m48s: .../release/win_out/re15_pc.exe 5295813 B, 2026-10-16 17:29:46` (Marke + frisches Artefakt); `RELEASE-ALLES-TEILLAUF-OK v0.8.26 (windows)`. Gegenprobe Groesse: die v0.8.25-exe im Hauptbaum (release/win_out, 2026-10-14 07:24) hat ebenfalls 5295813 B - seit v0.8.25 kein Port-Code geaendert. Docker Desktop danach wieder gestoppt (`docker desktop stop`, `docker info` rc 1 = Ausgangszustand) |
 | N6 | die Tests der Spur im Linux-Bau-Image (`docker run re15-linux-build:deb11`, git 2.30.2, Baum read-only als /src) | erster Lauf ROT: `[XX] zip fehlt`, `[XX] unzip fehlt` - das Bau-Image hat beides nicht (linux_deps.sh PKGS), also brach jeder Attrappen-Lauf in den Vorbedingungen ab. Die Vorbedingung ist fuer einen echten Lauf richtig (make_package braucht zip); der Test ersetzt jetzt FEHLENDE zip/unzip durch Platzhalter ausserhalb des Repos (unter Windows bleibt der echte Weg /c/msys64/usr/bin/zip im Test). Zweiter Lauf: version 38/38 (die Zusatzpruefung gegen die echten Repo-Tags entfaellt dort sichtbar: der Arbeitsbaum-.git-Verweis zeigt auf C:/...), bausteine 18/18, trocken 32/32, ablauf 47/47, fehler_bau 25/25, fehler_umfeld 29/29, zusammen 21 s. Dieser Fund haette sonst den Linux-Release-Bau v0.8.26 rot gemacht (Memory reai-v2-linux-test-portabilitaet) |
 | N7 | Testzahl Windows = Linux | `unit_r38_releaseskript_cmd` ist ueberall registriert und meldet ausserhalb von Windows sichtbar SKIP (Rueckgabe 77, SKIP_RETURN_CODE): sonst haette Windows einen Test mehr, und docker_linux_build.sh:125-130 (gelaufen >= RE15_MIN_TESTS) wuerde rot, sobald die Untergrenze nach der Windows-Suite angehoben wird |
@@ -159,12 +162,12 @@ FAKE_ALTE_BLEIBEN/FAKE_DOCKER). Je Nutzer-Teilpunkt mindestens ein messender Rie
 
 Ergebnisse:
 
-* Windows (Spurbaum, `local_build.sh configure` + `build` = LOCAL-BUILD-OK, dann gezielt), woertlich:
-  `ctest --test-dir re15_port/build -R "r38_releaseskript" --timeout 1200 --output-on-failure` ->
-  `100% tests passed, 0 tests failed out of 7` (`Total Test time (real) = 598.61 sec`; version 34 s, bausteine 4 s,
-  trocken 36 s, ablauf 57 s, fehler_bau 163 s, fehler_umfeld 231 s, cmd 73 s - Maschine dabei von anderen Spuren
-  ausgelastet). Pruefungen je Teil (direkter Lauf): version 39/39, bausteine 18/18, trocken 32/32, ablauf 47/47,
-  fehler_bau 25/25, fehler_umfeld 29/29, cmd 19/19.
+* Windows (Spurbaum, `local_build.sh configure` + `build` = LOCAL-BUILD-OK, dann gezielt), Endstand 98652210, woertlich:
+  `ctest --test-dir re15_port/build -V -R "r38_releaseskript" --timeout 1200 --output-on-failure` ->
+  `100% tests passed, 0 tests failed out of 7` (`Total Test time (real) = 593.63 sec`), je Teil aus der -V-Ausgabe:
+  version 39/39 (129 s), bausteine 18/18 (5 s), trocken 32/32 (46 s), ablauf 47/47 (31 s), fehler_bau 25/25 (112 s),
+  fehler_umfeld 29/29 (207 s), cmd 19/19 (64 s) - Maschine dabei von anderen Spuren ausgelastet (Hinweis der
+  Vorbedingung: cmake 9, ctest 8). Vorlauf auf 97b946db ebenso 7/7 (598.61 s).
 * Linux (Bau-Image `re15-linux-build:deb11`, git 2.30.2, cmake 3.28.6), Registrierung wie im Release-Container mit
   einem Mini-Projekt aus `probes/r38_releaseskript.cmake`: `ctest -R r38_releaseskript` ->
   `100% tests passed, 0 tests failed out of 7`, `7 - unit_r38_releaseskript_cmd (Skipped)` (sichtbar, gleiche
