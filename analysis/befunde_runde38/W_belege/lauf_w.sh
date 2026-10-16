@@ -14,12 +14,12 @@ if [ "$plan" != "-" ]; then plan="$(cd "$(dirname "$plan")" && pwd)/$(basename "
 dir="$SP/$name"
 mkdir -p "$dir"
 cd "$dir" || exit 2
-rm -f debug.log climb.txt objfall.txt push.txt run.log wegplan.txt state.txt fd_*.ppm
+rm -f debug.log climb.txt objfall.txt push.txt run.log wegplan.txt state.txt objpoly.txt fd_*.ppm
 WP=""
 if [ "$plan" != "-" ]; then cp "$plan" "$dir/wegplan_eingabe.txt"; WP="RE15_WEGPLAN=$dir/wegplan_eingabe.txt"; fi
 env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore \
     RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 \
     RE15_CLIMB_TRACE=climb.txt RE15_OBJFALL_LOG=objfall.txt RE15_PUSH_LOG=push.txt \
-    RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.txt $WP \
+    RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.txt RE15_OBJPOLY_LOG=objpoly.txt $WP \
     "$@" "$KOPIE" > run.log 2>&1
 echo "exit=$?" >> run.log

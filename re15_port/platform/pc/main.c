@@ -136,6 +136,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 #include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
+#include "re15_objpoly_r38.h"  /* Runde 38 Spur W: Polygon-Schranken des Objektzeichners (Rolladen ROOM20A0) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -10844,6 +10845,7 @@ re_title:;
                     const int irons_sort_max = re15_dokumente_sort_max_mit(re15_irons_tisch_sort_max(
                         (uint16_t)g_current_room_id, active_cut_idx, oid),
                         (uint16_t)g_current_room_id, active_cut_idx, oid);
+                    re15_objpoly_r38_objekt(oid, active_cut_idx, (unsigned)g_current_room_id);   /* Runde 38 Spur W: Messschiene */
                     for (int hbi = 0; hbi < prop_md1->mesh_count; hbi++) {
                         const re15_md1_mesh_t *hm = &prop_md1->meshes[hbi];
                         int32_t world_trans[3] = { prop_x, prop_y, prop_z };
@@ -10862,28 +10864,14 @@ re_title:;
                             if (tr->v1 >= (uint32_t)hm->tri_vertex_count) continue;
                             if (tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
                             int ax[3], ay[3], wz_avg = 0;
-                            int ok = 1;
                             const re15_md1_vertex_t *vp[3] = {
                                 &hm->tri_vertices[tr->v0],
                                 &hm->tri_vertices[tr->v1],
                                 &hm->tri_vertices[tr->v2],
                             };
-                            for (int v = 0; v < 3; v++) {
-                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
-                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
-                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
-                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
-                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
-                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
-                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
-                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
-                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
-                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
-                                wz_avg += (int)_vz;
-                            }
-                            if (!ok) continue;
-                            wz_avg /= 3;
+                            /* Runde 38 Spur W: RTPT + NCLIP (@0x80022fec/@0x80025580) + OTZ<64 (@0x80023044/@0x80025654)
+                             * + GPU-Groessengrenze, gesaettigte SXY (objpoly_r38.c) statt Port-Ausschnitt `_vz < 64`. */
+                            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg)) continue;
                             int wz_for_sort = wz_avg;
                             if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
                                 wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
@@ -10937,23 +10925,10 @@ re_title:;
                                 &hm->quad_vertices[qd->v2],
                                 &hm->quad_vertices[qd->v3],
                             };
-                            int ok = 1;
-                            for (int v = 0; v < 4; v++) {
-                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
-                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
-                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
-                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
-                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
-                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
-                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
-                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
-                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
-                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
-                                wz_avg += (int)_vz;
-                            }
-                            if (!ok) continue;
-                            wz_avg /= 4;
+                            /* Runde 38 Spur W: RTPT/RTPS + NCLIP (@0x80023168/@0x80025798) + OTZ<64 (@0x80023224/@0x800258b0)
+                             * + GPU-Groessengrenze je Dreieck (0,1,2)/(1,2,3) (objpoly_r38.c) statt `_vz < 64`. */
+                            uint8_t gpu_ok[2];
+                            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg, gpu_ok)) continue;
                             if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
                                 wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
@@ -10982,6 +10957,7 @@ re_title:;
                             if ((g_scd.props[pi].attr & 0x12) == 0x10)   /* wie beim Dreieck: FUN_80023098 @0x8002c350, flach 0x808080,
                                                                            * nur deckende Objekte. Runde 36 Spur N. */
                                 pqr0=pqr1=pqr2=pqr3=pqg0=pqg1=pqg2=pqg3=pqb0=pqb1=pqb2=pqb3=0x80;
+                            if (gpu_ok[0] && gpu_ok[1]) {   /* Runde 38 Spur W: beide GPU-Dreiecke -> wie bisher */
                             re15_render_textured_tri_lit(
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
@@ -10994,6 +10970,8 @@ re_title:;
                                 ax[2], ay[2], (int)uv->u2 + page_off, (int)uv->v2,
                                 0, (int)uv->clut, wz_avg,
                                 pqr0, pqg0, pqb0, pqr3, pqg3, pqb3, pqr2, pqg2, pqb2);
+                            } else re15_objpoly_r38_halbviereck_pc(ax, ay, uv, page_off, wz_avg, gpu_ok,   /* Runde 38 Spur W */
+                                       (const uint8_t[12]){ pqr0, pqg0, pqb0, pqr1, pqg1, pqb1, pqr2, pqg2, pqb2, pqr3, pqg3, pqb3 });
                         }
                     }
                     continue;
