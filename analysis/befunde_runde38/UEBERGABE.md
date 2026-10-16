@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 01:10: Integration H/I gruen (168/168 gezielt), Baeume elzatoene/heliport1171 entfernt.
 * 2026-10-17 00:50: Integration P gruen (53/53), Baum r37_masken36 entfernt. H gemergt (scd_vm.c beide Seiten, 2a8b9abf), I gemergt (main.c Include beide Seiten, e10d9efb), Bau OK, gezielte Tests H/I laufen.
 * 2026-10-17 00:25: H elzatoene BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_10922d64-fbc). Merge nach dem P-Test (mit I).
 * 2026-10-17 00:10: I heliport1171 BESTANDEN (Abnahme 0, wf_88be68ba-db7, Bericht e0b6ed35). Merge nach dem P-Test (Konflikte erwartet: enemy_ai_common.c Include mit B, scd_room_setup.c mit F).
@@ -42,8 +43,8 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | BESTANDEN (A0), integriert |
 | F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | offen |
 | G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | offen |
-| H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | BESTANDEN (A1) |
-| I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0) |
+| H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | BESTANDEN (A1), integriert |
+| I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0), integriert |
 | J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0), integriert |
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | offen |
 | M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | offen |
