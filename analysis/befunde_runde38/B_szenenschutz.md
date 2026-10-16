@@ -313,6 +313,9 @@ Gitterarm 0x1A im echten ROOM1210 (`unit_r38_szenenschutz_arm`): frei Griff 0x40
 (ctest-Summenzeilen: Abschnitt 5.1 unten.)
 
 ### 5.1 Gezielte Laeufe (keine volle Suite; woertlich)
+- Endstand, Spur-Regex der Abnahme `ctest --test-dir re15_port/build -R "r38_szenenschutz" --timeout 1200`
+  (unit_r38_szenenschutz, unit_r38_szenenschutz_alle, unit_r38_szenenschutz_arm, integration_r38_szenenschutz):
+  `100% tests passed, 0 tests failed out of 4`
 Rohausgaben der Sonde: `B_belege/zensus_vorher.txt` (ohne 3.(C): 5 FAIL = die 2 Kraehen-Luecken + 3 Kontrollen, deren
 Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRAB-A; danach ergaenzt) und
 `B_belege/zensus_nachher.txt` (0 Fehler, inkl. Teil 2).
@@ -350,8 +353,8 @@ Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRA
   auf einen gerade getroffenen Spieler (Knurren Sub 6; bei Spieler-HP < 50 Ausholen Sub 5/7, @0x8010e5c4-0x8010e624).
   In 1190 verhindert die Sperrzeit den Entscheid ohnehin, in 11D0 kommen die RE1.5-Hunde nicht aus dem Kaefig
   (state.log bytegleich, 4.); in einem anderen Raum koennte ein Hund nach einer Szene bei HP < 50 bereits ausgeholt
-  haben. Kein gemessener Fall im Standard-Flavor. Gemessen (Fortsetzung, Zensus-Fall "Hund 0x20 (HP 40)", beide Gehirne):
-  gehalten hp bleibt 40, kein Treffer, kein Griff, Netz 0 (frei: Biss Bild 11 RE2 / 49 RE1.5) — also kein Treffer und kein Griff waehrend der Szene — alle Biss-/Griff-Kontakte des RE1.5-Hundes lesen +0x93
+  haben. Gemessen (Fortsetzung, Zensus-Fall "Hund 0x20 (HP 40)", beide Gehirne): gehalten bleibt hp 40, kein Treffer,
+  kein Griff, Netz 0 (frei: Biss Bild 11 RE2 / 49 RE1.5). Alle Biss-/Griff-Kontakte des RE1.5-Hundes lesen +0x93
   (@0x8010f294, @0x8010f5c0); sichtbar bleibt hoechstens das Ausholen/Schnappen ins Leere (Sub 5/6/7).
 - Gegner-Animationen, deren KONTAKT (nicht der Commit) am Tor haengt (z.B. RE1.5-Spinne Lunge, RE1.5-Hund Schnappen),
   koennen waehrend einer Szene ins Leere gehen; Treffer, Griff, HP-Verlust, Treffer-Reaktion gibt es nicht (Zensus).
@@ -379,7 +382,8 @@ Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRA
 - Keine neuen Assets, keine Sprachdateien, keine Bank-/Message-Ids.
 - Verhalten: Solange eine Szene Leon festhaelt (Letterbox/Skript oder eine Skript-Bewegung wie Hocken), greifen
   Gegner ihn nicht an — sie laufen, kreisen oder knurren; das gilt fuer alle Gegnerarten (Zombies, Hunde, Kraehen,
-  Spinnen, Affen, Kakerlaken, Gitterarme, Tyrant, Birkin), Kraehen im Anflug drehen ab. Ist der Angriff selbst Teil der
+  Spinnen, Gorillas/Affen 0x27, die kleinen Stage-3/4-Gegner 0x29, Gitterarme, Tyrant, Birkin), Kraehen im
+  Anflug drehen ab. Ist der Angriff selbst Teil der
   Szene (Elza ROOM1170: die Kraehe packt Elza, John schiesst; Birkins Auftritt im Endkampf), bleibt er. Nach der Szene
   greifen die Gegner normal an; die Zwingerhunde in ROOM1190 beissen wie im Original erst 4 Sekunden (120 Bilder) nach
   ihrer Landung. Feuer verletzt Leon nicht, solange eine Szene ihn festhaelt (er kann nicht hinausgehen).
