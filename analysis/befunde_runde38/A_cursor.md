@@ -78,15 +78,37 @@ Zusatz (nicht geaendert, nur festgehalten): OTZ>>6 == 0 -> nicht in die OT (@0x8
   `IS_BACKFACE`, die Props nicht).
 * `platform/pc/src/hebetisch_cursor_pc.c` (ROOM1150/1151): dasselbe, "genau so wie die Raum-Prop-Schleife".
 
-(in Arbeit: Umsetzung)
-
 ## 3. Umsetzung
 
-(in Arbeit)
+* NEU `include/re15_nclip_r38.h` + `engine/src/nclip_r38.c`: `re15_nclip_r38_mac0()` = GTE NCLIP woertlich nach
+  psx-spx (`geometrytransformationenginegte.md:439`) auf den wie RTPS/RTPT gesaettigten Bildschirmwerten
+  (-0x400..+0x3FF, ebd. :418-419); `re15_nclip_r38_verwerfen()` = 1 bei MAC0 < 0 (FUN_800254a0 @0x800255a8 /
+  FUN_800256b0 @0x800257c0 `bgez`, FUN_80022f0c @0x80023010 `bltz`, FUN_80023098 @0x80023190 `bgez`), zaehlt mit
+  (`g_re15_nclip_r38_verworfen`, Messhaken).
+* Haken `platform/pc/main.c` (gemeinsame Datei, 1 Include + 2 Zeilen): Raum-Prop-Schleife (= FUN_8002c18c), Dreieck
+  nach der Projektion (v0,v1,v2), Viereck (v0,v1,v2) — jeweils `continue` bei Verwurf, Kommentar mit Adressen.
+* `platform/pc/src/hebetisch_cursor_pc.c` (ROOM1150/1151, Modul des Cursors): dieselben zwei Pruefungen + Kopfzeile.
+* Keine Konstante ausser den belegten (Saettigung -0x400/+0x3FF psx-spx; Schwelle "< 0" aus den vier Verzweigungen).
 
 ## 4. Messung nachher
 
-(in Arbeit)
+### 4.1 ROOM11F0 Cut 10 (gleicher Lauf wie §1.1, neue exe)
+
+`A_belege/nachher_11f0_psx_alt_neu_s1_s4.png` (oben: Original | Port alt Skala 1 | Port neu Skala 1; unten: Port alt
+Skala 4 | Port neu Skala 4) und `A_belege/nutzersicht_s3_psx_alt_neu.png` (Skala 3 = Nutzerfenster, Original 1x
+nativ auf dieselbe Groesse gezogen | alt | neu): die innere dunkle Kopie ist weg.
+
+Pixelmass im Cursor-Fenster x 140..179, y 100..137 (Skala 1, `A_belege/cursor_klassen.py` Klassen G/g/Y/y = Paletten-
+eintraege 3/1/4/2 des Cursor-TIMs):
+
+| Bild | Abweichungen der Klassenkarte gegen das Original | gruenstichige Pixel (G > R+12 und G > B+12) in x 144..175, y 104..133 |
+|---|---|---|
+| Original (DuckStation) | - | 106 |
+| Port ALT (1bcbd0ff) | 21 (alle "dunkelgruen statt Hintergrund": Spalte 151 Zeilen 110-114/123-128, Zeile 128 x 152-156/166-170) | 166 |
+| Port NEU | **0** | **106** |
+
+Der Rest der Cursor-Darstellung (der in die Textur gebackene 1-Pixel-Schlagschatten rechts/unten, Original-Kunst
++5u/+3v) ist bei Skala 1 klassengleich mit dem Original und bleibt unveraendert.
 
 ## 5. Tests
 

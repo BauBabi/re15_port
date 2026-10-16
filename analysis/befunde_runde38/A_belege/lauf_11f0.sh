@@ -2,12 +2,14 @@
 # Runde 38 Spur A — Messlauf ROOM11F0 Cursor (Generator-Raetsel), echte exe unter eigenem Namen.
 # Sprung per Debug-Menue (RE15_DEBUG_JUMP), Kamera auf Cut 10 (die Raetselkamera, sub16 `29 0a`),
 # Raetsel scharf wie sub16 @0x015C2..0x015F2 (13x Set(5,b,1)), Framedump.
-#   $1 Marke (Unterordner von re15_port/build/r38_a/), SKALA (1), BILD (300), EXTRA_ENV
+#   $1 Marke (Unterordner von re15_port/build/r38_a/), SKALA (1), BILD (300), EXTRA_ENV, ALT (0|1)
 set -uo pipefail
 WT=/c/workspace/git/reAi_v2/.claude/worktrees/r38_cursor
 SRC_EXE="$WT/re15_port/build/platform/pc/re15_pc.exe"
 EXE="$WT/re15_port/build/platform/pc/re15_pc_r38a.exe"
 [ "$SRC_EXE" -nt "$EXE" ] && cp -f "$SRC_EXE" "$EXE"
+# ALT=1: Gegenprobe mit der vor dem Fix gesicherten exe (re15_pc_r38a_alt.exe, Stand 1bcbd0ff)
+[ "${ALT:-0}" = "1" ] && EXE="$WT/re15_port/build/platform/pc/re15_pc_r38a_alt.exe"
 Z="$WT/re15_port/build/r38_a/$1"; mkdir -p "$Z"; cd "$Z" || exit 2
 rm -f debug.log befund.log f_*.ppm lauf_rc.txt
 export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' MSYS2_ENV_CONV_EXCL='*'
