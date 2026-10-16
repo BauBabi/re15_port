@@ -16,6 +16,9 @@ Baum `.claude/worktrees/r38_spinnen` (Zweig `r38/spinnen`, Basis e2cc7673). Ange
 - 17:45 Umsetzung Schacht/Gift/Babys (spinnen_r38.c + Haken), Koerperschub aus dem Spieler.
 - 18:05 Unit-Test test_r38_spinnen.c (A/B/C) gruen; Rest-Abweichung Kriechbahn (x +175) im Original vermessen:
   Objekt-Ausschiebung FUN_8002cabc am Schachtgitter (1.5/2.5), portiert (Teil 4), Bahn jetzt Bild fuer Bild gleich.
+- ~18:18 Sitzungslimit; Reste als a7a84080 "UNGEPRUEFT" gesichert.
+- 22:10 FORTSETZUNG (neue Sitzung): `local_build.sh build` -> "ninja: no work to do" (Stand a7a84080 war bereits
+  gebaut), `unit_r38_spinnen` gruen (0 FAIL, Ausgabe 4.0). Danach Messung NACHHER in der echten exe (Abschnitt 4).
 
 ## 1. Messung vorher
 
