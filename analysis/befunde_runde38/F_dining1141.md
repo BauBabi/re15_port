@@ -296,6 +296,11 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
   Phase (4,0xFA)=1) und Spur F (Schluessel nach der 1021-Szene, (3,0x5F)=1, (4,0xFA)=0 seit ROOM1211 sub02 @0x01F7A)
   liegen in verschiedenen Phasen; F belegt Prop obj 6 / Zone Slot 14, obj 5 bleibt fuer G. ROOM1171 (Spur I) betritt
   Elza bei F ueber die Dachtuer mit (3,0xC2)=1 wie im Original.
+- Befund fuer den Orchestrator (nicht Teil der Nutzer-Punkte dieser Spur): Leons ROOM1140-Gemaelde feuert seit e53fb043
+  (2026-08-06, sub01 je Bild neu geseedet, scd_room_setup.c) immer sub05 "The switch is not responding..." — sub01
+  @0x00C7A setzt Slot 5 auf sub05; die Strom-Rekonstruktion scd_vm.c s_power_gates (Ereignis 3 -> 5 bei Strom aus,
+  2026-06-28) bekommt Ereignis 3 vom Gemaelde nie zu sehen. Der Rolladen-Ton haengt an sub03 und spielt, sobald sub03
+  laeuft (Lauf int_l3).
 - Beobachtung aus Lauf int_wzl/Z (`F_belege/n2_tuer1131_zu.png`): ueber der Tuer in ROOM1131 haengt im Hintergrundbild
   das Original-Schild "Briefing Room"; die Texte folgen dem Nutzer-Wortlaut "Dining Room" (Hinweis und Schluesselname).
 
