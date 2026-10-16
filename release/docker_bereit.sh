@@ -37,6 +37,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Zeitgrenzen 60 s (docker/podman info) und 30 s (docker desktop version): PORT-WAHL (Bau-Umgebung), keine Messgroesse.
+# Gemessen (Abnahme 0, H2): bei gestopptem Docker Desktop kehrt `docker info` erst an der Grenze zurueck (rc 124) -
+# ohne Grenze stuende der Trockenlauf so lange wie docker info.
 engine_antwortet() {   # 0 und Name auf stdout, wenn docker oder podman eine laufende Engine hat
     if command -v docker >/dev/null 2>&1 && timeout 60 docker info >/dev/null 2>&1; then
         echo "docker $(docker version --format '{{.Server.Version}}' 2>/dev/null || true)"; return 0

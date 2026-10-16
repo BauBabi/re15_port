@@ -13,7 +13,9 @@
 #              NICHTS (Baum, Index, Archiv bytegleich), ruft keinen Bau-Schritt; Versionswahl ueber Tags
 #   ablauf     ganzer Lauf mit Attrappen der Schritt-Skripte: Reihenfolge, Version an Android und Paket, alte
 #              Version ins Archiv, neue ins Archiv (sha256sum -c), alte APK aus release/, kein Commit ohne --tag;
-#              dann --ab abschluss --tag: Commit + annotierter Tag + Push in ein lokales origin
+#              dann --ab abschluss --tag: Commit + annotierter Tag + Push in ein lokales origin.
+#              Abnahme 0 M1: der Push scheitert nach Commit + Tag -> die gemeldete Zeile (woertlich) und
+#              '--ab abschluss --tag' (Doppelklick-Wahl [3]) pushen nur noch, bis origin Commit und Tag traegt
 #   fehler_bau     jeder simulierte Schritt-Fehler bricht ab, spaetere Schritte laufen nicht (auch durch die
 #                  tee-Pipe): Rueckgabe != 0, altes Artefakt, kein Artefakt, fehlende Marke, fehlender Android-Satz,
 #                  alte Volumes geblieben, Paket rot; Wiederaufnahme mit --ab
@@ -21,7 +23,8 @@
 #                  Werkzeug, unversionierte Datei, Sperre, --tag-Voraussetzungen, Docker, Platz, Aufruffehler,
 #                  Teillauf --bis, --tag nach Code-Commit verweigert, --kein-push
 #   cmd        (Windows) release_alles.cmd: Git-Bash gefunden, Argumente + Rueckgabe durchgereicht,
-#              Doppelklick-Weg (ohne Argumente): Trockenlauf, Rueckfrage "N" -> nichts gebaut
+#              Doppelklick-Weg (ohne Argumente): Trockenlauf, Wahl 4 -> nichts gebaut, 1 / 2 / 3; Wahl 3 nach
+#              verlorenem Push pusht nur (Abnahme 0 M1)
 # Die Attrappen (attrappen/*.sh) ersetzen NUR die Schritt-Skripte; release_alles.sh und die Bausteine sind echt.
 # Rueckgabe 0 = alles gruen.
 # =============================================================================
@@ -635,6 +638,8 @@ teil_fehler_umfeld() {
     o="$fx/kein_push.txt"; ra "$o" --min-frei-gb 1 --version v0.8.26 --ab abschluss --tag --kein-push
     pruef "--kein-push: rc 0, Tag lokal" bash -c "[[ $RC == 0 ]] && [[ \$(git -C '$R' cat-file -t v0.8.26) == tag ]]"
     pruef "--kein-push: origin unveraendert, ohne Tag" bash -c "[[ \$(git -C '$fx/origin.git' rev-parse master) == '$origin_vorher' ]] && ! git -C '$fx/origin.git' rev-parse -q --verify refs/tags/v0.8.26 >/dev/null"
+    pruef "--kein-push: Meldung nennt den spaeteren Push (Zeile ohne --kein-push, Wahl [3], von Hand)" \
+        bash -c "grep -qF 'Pushen spaeter: bash release/release_alles.sh --version v0.8.26 --ab abschluss --tag --archiv' '$o' && ! grep -F 'Pushen spaeter:' '$o' | grep -qF -- '--kein-push' && grep -qF 'oder von Hand: git push origin master v0.8.26' '$o'"
 }
 
 # =============================================================================
@@ -690,6 +695,18 @@ teil_cmd() {
     pruef "Doppelklick 3: rc 0 (ist $RC), nichts gebaut" gleich "$RC:$(aufrufe)" "0:"
     pruef "Doppelklick 3: Release-Commit + Tag v0.8.26 + Push" bash -c "[[ \$(git -C '$R' log -1 --format=%s) == 'release: v0.8.26 (Windows + Linux/Steam Deck + Android)' && \$(git -C '$R' cat-file -t v0.8.26) == tag ]] && git -C '$fx/origin.git' rev-parse -q --verify refs/tags/v0.8.26 >/dev/null"
     [[ $FEHLER -eq 0 ]] || { zeige cmd4 "$fx/cmd4.txt" 30; zeige cmd5 "$fx/cmd5.txt" 30; zeige cmd6 "$o" 40; }
+    #   3 noch einmal, nachdem der Push verloren ging (Abnahme 0, M1): origin auf den Stand vor dem Push - Commit und Tag
+    #   stehen nur lokal, wie nach einem gescheiterten Push. Wahl 3 pusht nur (kein zweiter Commit, kein v0.8.27).
+    local head_rel tag_obj
+    head_rel="$(git -C "$R" rev-parse HEAD)"; tag_obj="$(git -C "$R" rev-parse refs/tags/v0.8.26)"
+    git -C "$fx/origin.git" update-ref refs/heads/master "$(git -C "$R" rev-parse HEAD~1)"
+    git -C "$fx/origin.git" tag -d v0.8.26 >/dev/null
+    o="$fx/cmd7.txt"
+    printf '3\n' | RE15_ARCHIV="$AW" MSYS_NO_PATHCONV=1 cmd.exe /c "$cmdw" > "$o" 2>&1; RC=$?
+    pruef "Doppelklick 3 nach verlorenem Push: rc 0 (ist $RC), nichts gebaut" gleich "$RC:$(aufrufe)" "0:"
+    pruef "Doppelklick 3 nach verlorenem Push: origin hat master + Tag v0.8.26, kein neuer Commit, kein v0.8.27" \
+        bash -c "[[ \$(git -C '$fx/origin.git' rev-parse master) == '$head_rel' && \$(git -C '$fx/origin.git' rev-parse refs/tags/v0.8.26) == '$tag_obj' && \$(git -C '$R' rev-parse HEAD) == '$head_rel' ]] && ! git -C '$R' rev-parse -q --verify refs/tags/v0.8.27 >/dev/null"
+    [[ $FEHLER -eq 0 ]] || zeige cmd7 "$o" 40
 }
 
 case "$TEIL" in

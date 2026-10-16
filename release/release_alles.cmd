@@ -7,7 +7,8 @@ rem fehlen docker.exe, cygpath und die Windows-Pfade, re15_port/tools/local_buil
 rem
 rem   Doppelklick (ohne Argumente): erst der Trockenlauf (Version, Pruefungen, Schritte), dann die Wahl
 rem     [1] bauen + packen + archivieren, [2] dazu am Ende Commit + Tag + Push, [3] nur Commit + Tag + Push
-rem     (schon gebaut und archiviert), [4] nichts. Das Fenster bleibt am Ende offen.
+rem     (schon gebaut und archiviert; stehen Commit und Tag schon, weil der Push scheiterte, wird nur noch
+rem     gepusht), [4] nichts. Das Fenster bleibt am Ende offen.
 rem   Aus einer Konsole MIT Argumenten: 1:1 an release_alles.sh, ohne Rueckfrage und ohne Pause, z.B.
 rem     release\release_alles.cmd --dry-run
 rem     release\release_alles.cmd --version v0.8.26 --tag
@@ -54,6 +55,7 @@ echo.
 echo   [1] Release bauen, packen, archivieren - ohne Commit/Tag/Push. Dauert Stunden.
 echo   [2] wie 1, am Ende Release-Commit + Tag + Push. Die Release-Notes muessen dann stehen.
 echo   [3] nur Release-Commit + Tag + Push - die Version ist schon gebaut und archiviert.
+echo       Stehen Commit und Tag schon (der Push scheiterte), wird nur noch gepusht.
 echo   [4] nichts tun
 choice /C 1234 /N /M "Auswahl [1-4]: "
 if errorlevel 4 goto ende_pause

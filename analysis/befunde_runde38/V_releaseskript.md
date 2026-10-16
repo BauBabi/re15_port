@@ -242,4 +242,23 @@ fuehren an ihr vorbei. `s_abschluss` legt Commit und Tag ausserdem immer neu an 
 `die "nichts vorgemerkt"` :673), ist also nicht wiederholbar. Die Abbruchmeldung (`die`, :152-154) setzt nur
 `--version $NEU --ab $AKTUELL --tag` zusammen - ohne die Optionen des Aufrufs (`--archiv`!) und ohne den Push von Hand.
 
-(Umsetzung folgt)
+**Aenderung** (nur `release/` + Test; Bau-Umgebung, keine Original-Adresse - Belege Datei:Zeile wie Abschnitt 3):
+
+| Stelle | vorher | jetzt |
+|---|---|---|
+| Version (release_alles.sh, Abschnitt `# --- Version`) | nur "--version > hoechster Tag" oder "hoechster Tag + 1" | zusaetzlich **Nachholen**: nur bei `--ab abschluss --tag` (= Doppelklick-Wahl [3], release_alles.cmd `--ab abschluss --tag`), wenn der hoechste Tag auf HEAD zeigt, HEAD dessen Release-Commit ist (Betreff `release: vX.Y.Z ...`, Form 2077bb8e/e8b3958f) und release/ genau dessen Volumes traegt -> diese Version; `--version` darf dann gleich dem Tag sein. Sonst unveraendert (Downgrade-Sperre build_android.sh:195-199 bleibt fuer jeden Bau) |
+| Vorbedingung Tag | Tag da -> `[XX]` | Nachholen: `[ok] Tag vX.Y.Z steht auf HEAD = Release-Commit ... nur der Push wird nachgeholt`; Notes werden im Release-Commit geprueft (`git show HEAD:release/RELEASE_NOTES.md`), die Datei darf schon die naechste Version beginnen |
+| Trockenlauf-Hinweis (neu) | - | `[!!] vX.Y.Z: Release-Commit ... und Tag stehen lokal, origin/master steht auf ... - der Push fehlt. Nur pushen: ... --ab abschluss --tag (Doppelklick: Wahl [3]) / oder von Hand: git push origin master vX.Y.Z` - lokal gemessen ueber `refs/remotes/origin/master` (git setzt es beim Push; `remote.origin.fetch = +refs/heads/*:refs/remotes/origin/*` im Repo) |
+| `s_abschluss` | legt Commit + Tag immer neu an; leerer Index -> `die "nichts vorgemerkt"` | **wiederholbar**: ist HEAD schon der Release-Commit, wird er nicht neu angelegt (vorher Pruefung: Volumes/SUMS in release/ = HEAD, sonst Abbruch); steht der Tag schon, muss er auf HEAD zeigen und bleibt; dann `git push origin master vX.Y.Z` |
+| Erfolgsmarke Push (neu) | Rueckgabe 0 von git push | zusaetzlich `git ls-remote origin refs/heads/master refs/tags/vX.Y.Z`: origin SELBST traegt master = HEAD und denselben Tag (Tag-Objekt); Zeile `origin bestaetigt (git ls-remote): ...` - gleiche Regel wie Marke + Artefakt der Bau-Schritte |
+| Abbruchmeldung (`die`) | `Nach der Behebung weiter mit: ... --version V --ab S [--tag]` | dieselbe Zeile **mit den Optionen des Aufrufs** (`--archiv`, `--min-frei-gb`, `--linux-jobs`, `--kein-push`; `printf %q`) - ohne `--archiv` pruefte die Zeile ein anderes Archiv; beim Push zusaetzlich `Commit X und Tag V stehen lokal - nur der Push fehlt.` / `(pusht nur, Commit und Tag bleiben; Doppelklick: Wahl [3])` / `oder von Hand: git push origin master V` |
+| `--kein-push` | `(nicht gepusht: --kein-push)` | dazu `Pushen spaeter: bash release/release_alles.sh --version V --ab abschluss --tag ... (Doppelklick: Wahl [3])` + Push von Hand |
+| Teillauf-/Noch-offen-Zeile | ohne Optionen | mit den Optionen des Aufrufs (`weiter_zeile`) |
+| release_alles.cmd | [3] "nur Release-Commit + Tag + Push" | dazu `Stehen Commit und Tag schon (der Push scheiterte), wird nur noch gepusht.` (CRLF, ASCII: 78/78 Zeilen CRLF) |
+| README, Kopf/`--help` | - | Push-Abbruch + Nachholen beschrieben |
+
+Nebenbei (Hinweise der Abnahme, keine Maengel): H3 Zitat `make_package.sh:929` -> `:931` (release_alles.sh, Kommentar in
+`s_paket`; selbst nachgelesen: :931 `(kein Android-Paket: ... fehlt`); H2 Zeitgrenzen 60 s / 30 s in docker_bereit.sh
+als PORT-WAHL gekennzeichnet (Kommentar, kein Verhalten geaendert).
+
+(Messung nachher folgt)

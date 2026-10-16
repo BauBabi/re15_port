@@ -15,6 +15,8 @@
 #   unit_r38_releaseskript_ablauf     ganzer Lauf: Reihenfolge, Version an Android + Paket, alte Version ins Archiv,
 #                                     neue ins Archiv (sha256sum -c), alte APK aus release/, kein Commit ohne --tag;
 #                                     --ab abschluss --tag: Commit + annotierter Tag + Push (lokales origin)
+#                                     Abnahme 0 M1: Push scheitert nach Commit + Tag -> gemeldete Zeile und
+#                                     Wahl [3] (--ab abschluss --tag) pushen nur, bis origin Commit + Tag traegt
 #   unit_r38_releaseskript_fehler_bau simulierte Schritt-Fehler brechen ab (auch durch die tee-Pipe), spaetere
 #                                     Schritte laufen nicht; altes/kein Artefakt, fehlende Marke, fehlender
 #                                     Android-Satz, alte Volumes geblieben, Paket rot; Wiederaufnahme --ab
@@ -22,7 +24,7 @@
 #                                     Sperre, --tag-Voraussetzungen, Docker, Platz, Aufruffehler, --bis,
 #                                     --tag nach Code-Commit verweigert, --kein-push
 #   unit_r38_releaseskript_cmd        (nur Windows) release_alles.cmd: Git-Bash, Argumente + Rueckgabe durchgereicht,
-#                                     Doppelklick-Weg mit Antwort N baut nichts
+#                                     Doppelklick-Weg: Wahl 4 baut nichts, 1/2/3; Wahl 3 nach verlorenem Push pusht nur
 # bash: unter Windows NUR Git-Bash (wie r35_android.cmake - nie System32\bash.exe/WSL); braucht git und sha256sum.
 set(_r38v_release "${CMAKE_SOURCE_DIR}/../release")
 if(WIN32)

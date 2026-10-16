@@ -13,7 +13,7 @@ Versionsnummer**, packt ihn und bringt die **alte Version ins Archiv** (Runde 38
 | Alles bauen, packen, archivieren | `bash release/release_alles.sh` |
 | ... und am Ende Commit + Tag + Push | `bash release/release_alles.sh --tag` (die Release-Notes `# vX.Y.Z ...` muessen oben in `release/RELEASE_NOTES.md` stehen) |
 | Nach einem Abbruch weitermachen | `bash release/release_alles.sh --version vX.Y.Z --ab <schritt>` (die Zeile steht in der Abbruchmeldung) |
-| Commit + Tag + Push spaeter | `bash release/release_alles.sh --ab abschluss --tag` |
+| Commit + Tag + Push spaeter | `bash release/release_alles.sh --ab abschluss --tag` (stehen Commit und Tag schon, z.B. weil der Push scheiterte, wird nur noch gepusht) |
 | Nur einen Teil, z.B. nur Windows | `bash release/release_alles.sh --ab windows --bis windows` |
 
 Dauer (gemessen): Windows 78-107 s, Android ~3 min, Linux/Deck ~3 h (volle Testsuite im Container, seriell:
@@ -44,16 +44,22 @@ Nach `v0.99.99` waehlt das Skript nichts selbst (das waere kein "minor" mehr) - 
    sie bytegleich im Archiv liegt. **Im Archiv wird nichts geloescht.**
 6. **abschluss** (nur mit `--tag`): Release-Commit `release: vX.Y.Z (...)` (nur Paketdateien + Notes), annotierter Tag,
    `git push origin master vX.Y.Z` (`--kein-push`: ohne Push). Verweigert, wenn nach dem Paketbau Paket-Inhalt
-   committet wurde.
+   committet wurde. Was ein frueherer Lauf schon angelegt hat (Commit, Tag), wird geprueft und nicht neu angelegt; der
+   Push gilt erst, wenn origin selbst `master` und den Tag traegt (`git ls-remote origin`).
 
 Archiv-Standard: `C:/workspace/Re15Data/re15_packages_archiv` (anders: `--archiv ORDNER` oder Umgebung `RE15_ARCHIV`).
 Hilfe zu allen Optionen: `bash release/release_alles.sh --help`.
 
 ## Bei einem Abbruch
 
-Die Meldung nennt Schritt, Grund, Protokoll und die Zeile zum Weitermachen. Ist der Linux-Schritt nur an
-Zeitgrenzen unter Last rot (Memory reai-v2-releasebau-pipe-schluckt-fehler): Maschine frei machen, dann
-`--ab linux --linux-jobs 3`. Diagnose des Linux-Baus: `release/linux_out/diag/`.
+Die Meldung nennt Schritt, Grund, Protokoll und die Zeile zum Weitermachen (mit denselben Optionen wie der Aufruf,
+z.B. `--archiv`). Ist der Linux-Schritt nur an Zeitgrenzen unter Last rot (Memory
+reai-v2-releasebau-pipe-schluckt-fehler): Maschine frei machen, dann `--ab linux --linux-jobs 3`. Diagnose des Linux-Baus: `release/linux_out/diag/`.
+
+Scheitert der **Push** (Netz, Anmeldung): Release-Commit und Tag stehen dann schon lokal. Die Meldung sagt das;
+nach der Behebung pusht ihre Zeile (oder Doppelklick-Wahl [3], `--ab abschluss --tag`) nur noch - kein zweiter
+Commit, keine neue Version. Von Hand geht es auch: `git push origin master vX.Y.Z`. Der Trockenlauf (auch der des
+Doppelklicks) meldet einen solchen nicht gepushten Release mit `[!!] ... der Push fehlt`.
 
 ## Einzelskripte (werden von release_alles.sh aufgerufen, gehen weiter einzeln)
 

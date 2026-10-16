@@ -15,6 +15,10 @@
 #                                              (die Release-Notes fuer die neue Version muessen dann oben in
 #                                              release/RELEASE_NOTES.md stehen - die schreibt der Mensch)
 #   bash release/release_alles.sh --ab linux   nach einem Abbruch ab diesem Schritt weitermachen
+#   bash release/release_alles.sh --ab abschluss --tag
+#                                              Commit + Tag + Push einer schon gebauten und archivierten Version;
+#                                              stehen Commit und Tag schon (Push scheiterte, --kein-push), wird nur
+#                                              noch gepusht (Doppelklick: Wahl [3])
 #
 # OPTIONEN
 #   --version vX.Y.Z   statt der automatischen Version (muss groesser sein als jeder Tag vX.Y.Z)
@@ -42,7 +46,8 @@
 #             die alten Volumes nimmt make_package.sh aus release/ und aus dem git-Index
 #   archiv    neue Version ins Archiv (sha256sum -c), die alte APK aus release/ (liegt geprueft im Archiv);
 #             im Archiv wird NICHTS geloescht - die alte Version bleibt dort
-#   abschluss (nur --tag) Release-Commit, Tag, Push
+#   abschluss (nur --tag) Release-Commit, Tag, Push; was davon schon steht, wird nicht neu angelegt; der Push gilt
+#             erst, wenn origin selbst master und Tag traegt (git ls-remote)
 # Reihenfolge Windows -> Android -> Linux: die kurzen Baue zuerst, der 3-Stunden-Linux-Lauf zuletzt.
 #
 # Bau-Umgebung, kein Spielverhalten: keine Original-Adresse. Belege: analysis/befunde_runde38/V_releaseskript.md
@@ -71,6 +76,9 @@ LINUX_JOBS=""
 ARCHIV="${RE15_ARCHIV:-}"          # Umgebung RE15_ARCHIV = Standard fuer --archiv (andere Maschine, Tests)
 # PORT-WAHL (Bau-Umgebung): gemessen ~6,2 GB je Lauf auf dem Host (Dossier Abschnitt 1, M10) plus die Docker-VM.
 MIN_FREI_GB=10
+# Optionen dieses Aufrufs, die jede gemeldete Wiederaufnahme-Zeile mitnimmt: ohne --archiv pruefte die Zeile ein
+# ANDERES Archiv und bliebe stehen (Abnahme 0, M1: die gemeldete Zeile muss woertlich zum Ziel fuehren).
+WEITER_OPT=()
 
 benutzung() { awk 'NR == 1 { next } /^set -euo pipefail/ { exit } { print }' "${BASH_SOURCE[0]}"; }
 
@@ -80,17 +88,17 @@ while [[ $# -gt 0 ]]; do
                          VERSION_ARG="$2"; shift 2 ;;
         --dry-run|--trockenlauf) DRY=1; shift ;;
         --tag)           TAG=1; shift ;;
-        --kein-push)     PUSH=0; shift ;;
+        --kein-push)     PUSH=0; WEITER_OPT+=("$1"); shift ;;
         --ab)            [[ -n "${2:-}" ]] || { echo "--ab braucht einen Schritt: ${SCHRITTE[*]}" >&2; exit 2; }
                          AB="$2"; shift 2 ;;
         --bis)           [[ -n "${2:-}" ]] || { echo "--bis braucht einen Schritt: ${SCHRITTE[*]}" >&2; exit 2; }
                          BIS="$2"; shift 2 ;;
         --linux-jobs)    [[ "${2:-}" =~ ^[1-9][0-9]*$ ]] || { echo "--linux-jobs braucht eine Zahl >= 1" >&2; exit 2; }
-                         LINUX_JOBS="$2"; shift 2 ;;
+                         LINUX_JOBS="$2"; WEITER_OPT+=("$1" "$2"); shift 2 ;;
         --archiv)        [[ -n "${2:-}" ]] || { echo "--archiv braucht einen Ordner" >&2; exit 2; }
-                         ARCHIV="$2"; shift 2 ;;
+                         ARCHIV="$2"; WEITER_OPT+=("$1" "$2"); shift 2 ;;
         --min-frei-gb)   [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "--min-frei-gb braucht eine Zahl" >&2; exit 2; }
-                         MIN_FREI_GB="$2"; shift 2 ;;
+                         MIN_FREI_GB="$2"; WEITER_OPT+=("$1" "$2"); shift 2 ;;
         -h|--help)       benutzung; exit 0 ;;
         *) echo "unbekannte Option: $1 (Hilfe: --help)" >&2; exit 2 ;;
     esac
@@ -145,18 +153,50 @@ pz() {   # Pruefzeile: $1 = ok|warn|stop|info, Rest = Text
     esac
 }
 AKTUELL="vorbedingungen"
+# opt_text [ohne-kein-push]: die Optionen aus WEITER_OPT als Befehlszeilen-Text (" --archiv X ..."), shell-sicher
+opt_text() {
+    local o t=""
+    for o in "${WEITER_OPT[@]}"; do
+        if [[ "${1:-}" == ohne-kein-push && "$o" == --kein-push ]]; then continue; fi
+        t+=" $(printf '%q' "$o")"
+    done
+    printf '%s' "$t"
+}
+# weiter_zeile <schritt> [--tag]: die Zeile, mit der ein Lauf ab <schritt> weitergeht (Version + Optionen des Aufrufs)
+weiter_zeile() {
+    local z="bash release/release_alles.sh --version $NEU --ab $1"
+    if [[ $TAG -eq 1 || "${2:-}" == --tag ]]; then z+=" --tag"; fi
+    printf '%s%s\n' "$z" "$(opt_text)"
+}
+WEITER_VOR=()    # Zusatzzeilen der Abbruchmeldung des laufenden Schritts: vor bzw. nach der Wiederaufnahme-Zeile
+WEITER_NACH=()
 die() {
+    local z
     meld ""
     meld "!!! ABBRUCH in Schritt '$AKTUELL': $*"
     [[ -n "${SCHRITT_LOG:-}" ]] && meld "    Protokoll: $SCHRITT_LOG"
     if [[ -n "${NEU:-}" && "$AKTUELL" != vorbedingungen ]]; then
-        meld "    Nach der Behebung weiter mit: bash release/release_alles.sh --version $NEU --ab $AKTUELL$( [[ $TAG -eq 1 ]] && echo ' --tag')"
+        for z in "${WEITER_VOR[@]}"; do meld "    $z"; done
+        meld "    Nach der Behebung weiter mit: $(weiter_zeile "$AKTUELL")"
+        for z in "${WEITER_NACH[@]}"; do meld "    $z"; done
     fi
     meld "RELEASE-ALLES-ABBRUCH ($AKTUELL)"
     exit 1
 }
 
 git_r() { git -C "$REPO" "$@"; }
+
+# ist_release_commit <vX.Y.Z>: HEAD ist der Release-Commit dieser Version - Betreff "release: vX.Y.Z ..." (Form aller
+# Release-Commits: 2077bb8e "release: v0.8.25 Zwischenversion (...)", e8b3958f "release: v0.8.24 (...)", s_abschluss)
+ist_release_commit() {
+    local s; s="$(git_r log -1 --format=%s HEAD 2>/dev/null || true)"
+    [[ "$s" == "release: $1" || "$s" == "release: $1 "* ]]
+}
+# tag_auf_head <tag>: der Tag existiert und zeigt (aufgeloest) auf HEAD
+tag_auf_head() {
+    local t; t="$(git_r rev-parse -q --verify "refs/tags/$1^{commit}" 2>/dev/null || true)"
+    [[ -n "$t" && "$t" == "$(git_r rev-parse HEAD 2>/dev/null || true)" ]]
+}
 
 # Unix-Pfad fuer Meldungen als Windows-Pfad (nur Anzeige)
 zeige_pfad() { if [[ $IST_WIN -eq 1 ]] && command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else echo "$1"; fi; }
@@ -192,7 +232,22 @@ meld "Repo:    $(zeige_pfad "$REPO")  (Zweig $ZWEIG, HEAD $HEAD_KURZ)"
 
 # --- Version
 VORIG_TAG="$(git_r tag --list 'v*' | ra_hoechste_version || true)"
-if [[ -n "$VERSION_ARG" ]]; then
+# Wiederaufnahme NACH Commit + Tag (Abnahme 0, M1: der Push scheiterte, oder --kein-push): HEAD ist der Release-Commit
+# des hoechsten Tags und release/ traegt genau dessen Volumes -> diese Version; Commit und Tag bleiben, s_abschluss
+# pusht nur noch. Nur fuer den Schritt abschluss allein (--ab abschluss --tag = Doppelklick-Wahl [3],
+# release_alles.cmd). Sonst gaelte der eigene Tag als "hoechster" und die Version liefe an ihm vorbei: mit --version
+# "nicht groesser als der hoechste Tag" (unten), ohne --version die Folgeversion.
+NACHHOLEN=0
+if [[ "$AB" == abschluss && $TAG -eq 1 && -n "$VORIG_TAG" ]] && tag_auf_head "$VORIG_TAG" \
+   && ist_release_commit "$VORIG_TAG" && [[ "$(ra_versionen_in "$HERE")" == "$VORIG_TAG" ]]; then
+    if [[ -z "$VERSION_ARG" || "$(ra_version_normal "$VERSION_ARG" 2>/dev/null || true)" == "$VORIG_TAG" ]]; then
+        NACHHOLEN=1
+    fi
+fi
+if [[ $NACHHOLEN -eq 1 ]]; then
+    NEU="$VORIG_TAG"
+    HERKUNFT="Tag $VORIG_TAG steht schon auf HEAD = Release-Commit: Commit und Tag bleiben, nur der Push wird nachgeholt"
+elif [[ -n "$VERSION_ARG" ]]; then
     NEU="$(ra_version_normal "$VERSION_ARG")" \
         || { echo "--version '$VERSION_ARG' ist keine gueltige Version vX.Y.Z (Y, Z hoechstens 99, keine fuehrenden Nullen)" >&2; exit 2; }
     if [[ -n "$VORIG_TAG" && "$(ra_version_vergleich "$NEU" "$VORIG_TAG")" != 1 ]]; then
@@ -212,11 +267,24 @@ meld "Plan:    ${PLAN[*]}"
 meld ""
 meld "Vorbedingungen:"
 
-if git_r rev-parse -q --verify "refs/tags/$NEU" >/dev/null 2>&1; then
+if [[ $NACHHOLEN -eq 1 ]]; then
+    pz ok "Tag $NEU steht auf HEAD = Release-Commit $HEAD_KURZ - Commit und Tag bleiben$( [[ $PUSH -eq 1 ]] && echo ', nur der Push wird nachgeholt')"
+elif git_r rev-parse -q --verify "refs/tags/$NEU" >/dev/null 2>&1; then
     if im_plan abschluss; then pz stop "Tag $NEU existiert schon - diese Version ist veroeffentlicht"
     else pz stop "Tag $NEU existiert schon - naechste freie Version mit --version waehlen"; fi
 else
     pz ok "Tag $NEU ist frei"
+fi
+# Haengt der vorige Release noch lokal (Commit + Tag, aber nicht gepusht)? Lokal gemessen: refs/remotes/origin/master
+# ist der Stand des letzten erfolgreichen Push/Fetch (git setzt ihn beim Push). Nur Hinweis - der Doppelklick zeigt
+# diesen Trockenlauf zuerst, Wahl [3] pusht dann nur.
+if [[ $NACHHOLEN -eq 0 && -n "$VORIG_TAG" ]] && tag_auf_head "$VORIG_TAG" && ist_release_commit "$VORIG_TAG"; then
+    om="$(git_r rev-parse -q --verify refs/remotes/origin/master 2>/dev/null || true)"
+    if [[ -n "$om" && "$om" != "$(git_r rev-parse HEAD)" ]]; then
+        pz warn "$VORIG_TAG: Release-Commit $HEAD_KURZ und Tag stehen lokal, origin/master steht auf $(git_r rev-parse --short "$om") - der Push fehlt.
+         Nur pushen: bash release/release_alles.sh --ab abschluss --tag$(opt_text ohne-kein-push) (Doppelklick: Wahl [3])
+         oder von Hand: git push origin master $VORIG_TAG"
+    fi
 fi
 
 # --- Saubere Baeume: der Code im Binary = der Code im Commit
@@ -253,9 +321,16 @@ PORT_BAUM="$(git_r rev-parse HEAD:re15_port 2>/dev/null || echo '')"
 
 # --- Release-Notes / Commit-Voraussetzungen
 NOTES="$HERE/RELEASE_NOTES.md"
-NOTES_KOPF="$( [[ -f "$NOTES" ]] && tr -d '\r' < "$NOTES" | grep -m1 '^# ' || true)"
+if [[ $NACHHOLEN -eq 1 ]]; then
+    # Commit + Tag stehen schon: es zaehlen die Notes IM Release-Commit (die Datei darf schon die naechste Version beginnen)
+    NOTES_KOPF="$(git_r show HEAD:release/RELEASE_NOTES.md 2>/dev/null | tr -d '\r' | grep -m1 '^# ' || true)"
+else
+    NOTES_KOPF="$( [[ -f "$NOTES" ]] && tr -d '\r' < "$NOTES" | grep -m1 '^# ' || true)"
+fi
 if [[ "$NOTES_KOPF" == "# $NEU" || "$NOTES_KOPF" == "# $NEU "* ]]; then
-    pz ok "release/RELEASE_NOTES.md beginnt mit dem Abschnitt $NEU"
+    pz ok "release/RELEASE_NOTES.md beginnt mit dem Abschnitt $NEU$( [[ $NACHHOLEN -eq 1 ]] && echo ' (im Release-Commit)')"
+elif [[ $NACHHOLEN -eq 1 ]]; then
+    pz warn "die Release-Notes im Release-Commit beginnen nicht mit '# $NEU ...' (oben: '${NOTES_KOPF:-nichts}') - gepusht wird der Commit, wie er ist"
 elif im_plan abschluss; then
     pz stop "--tag: release/RELEASE_NOTES.md beginnt nicht mit '# $NEU ...' (oben steht: '${NOTES_KOPF:-nichts}') - Notes zuerst schreiben"
 else
@@ -341,7 +416,7 @@ if [[ -d "$ARCHIV/$NEU" ]] && im_plan archiv; then
         # Ein neuer Paketbau ergibt andere Bytes (Zeitstempel im Zip) - der Archiv-Schritt wuerde nach Stunden am
         # Vergleich scheitern. Deshalb hier, vor dem Bauen; geloescht wird im Archiv nichts.
         pz stop "Archivordner $NEU existiert schon ($(ra_zeit "$(ra_mtime "$ARCHIV/$NEU")")) - $NEU ist schon gebaut und archiviert.
-         Nur veroeffentlichen: bash release/release_alles.sh --ab abschluss --tag
+         Nur veroeffentlichen: bash release/release_alles.sh --ab abschluss --tag$(opt_text)
          Neu bauen: den Ordner $(zeige_pfad "$ARCHIV/$NEU") vorher umbenennen oder entfernen"
     else
         pz warn "Archivordner $NEU existiert schon - Schritt 'archiv' vergleicht: gleich = ok, abweichend = Abbruch"
@@ -381,7 +456,11 @@ schritt_text() {
         linux)     echo "$( [[ -n "$LINUX_JOBS" ]] && echo "RE15_CTEST_JOBS=$LINUX_JOBS ")bash release/build_linux_deck.sh -> release/linux_out/re15_pc (volle Suite; zuletzt ctest 10827 s seriell, Runde 37)" ;;
         paket)     echo "bash release/make_package.sh --version $NEU -> Volumes win64 + linux_steamdeck_x64 + android, SHA256SUMS.txt" ;;
         archiv)    echo "$(zeige_pfad "$ARCHIV/$NEU") anlegen + sha256sum -c; alte APK aus release/ (liegt geprueft im Archiv); im Archiv wird nichts geloescht" ;;
-        abschluss) echo "git commit -F (release: $NEU), git tag -a $NEU$( [[ $PUSH -eq 1 ]] && echo ", git push origin master $NEU")" ;;
+        abschluss) if [[ $NACHHOLEN -eq 1 ]]; then
+                       echo "Commit + Tag $NEU stehen schon (HEAD)$( [[ $PUSH -eq 1 ]] && echo " - nur git push origin master $NEU, Kontrolle per git ls-remote origin" || echo " - nichts zu tun (--kein-push)")"
+                   else
+                       echo "git commit -F (release: $NEU), git tag -a $NEU$( [[ $PUSH -eq 1 ]] && echo ", git push origin master $NEU")"
+                   fi ;;
     esac
 }
 i=0
@@ -578,7 +657,7 @@ s_paket() {
         lauf "make_package.sh" "bash release/make_package.sh --version $NEU" bash "$HERE/make_package.sh" --version "$NEU"
     fi
     marke "== Fertig =="
-    # ALLE Systeme: make_package.sh liefert ohne APK still nur die PC-Saetze ("kein Android-Paket", :929)
+    # ALLE Systeme: make_package.sh liefert ohne APK still nur die PC-Saetze ("kein Android-Paket", :931)
     local p f n_neu n_sums
     for p in "${RA_PLATTFORMEN[@]}"; do
         f="$HERE/re15_port_${NEU}_$p.zip"
@@ -641,7 +720,7 @@ s_archiv() {
 # --- Abschluss (--tag) ------------------------------------------------------------------
 s_abschluss() {
     schritt_beginn abschluss
-    local f b erlaubt msg m
+    local f b erlaubt msg m s z kurz
     ra_archiv_pruefen "$ARCHIV/$NEU" >> "$SCHRITT_LOG" 2>&1 || die "Archiv $NEU fehlt oder ist fehlerhaft - erst Schritt 'archiv'"
     [[ "$(ra_versionen_in "$HERE")" == "$NEU" ]] || die "release/ traegt nicht genau die Volumes von $NEU"
     ra_sums_pruefen "$HERE" SHA256SUMS.txt >> "$SCHRITT_LOG" 2>&1 || die "release/SHA256SUMS.txt stimmt nicht"
@@ -659,36 +738,85 @@ s_abschluss() {
     $(git_r log -1 --format='%h %s' -- re15_port/engine re15_port/include re15_port/platform re15_port/shared_assets synchro release/pkg_files)) -
     der Tag zeigte auf einen Stand, den die Pakete nicht enthalten. Neu bauen (ohne --ab)."
     fi
-    git_r add -- release/SHA256SUMS.txt release/SHA256SUMS_android.txt
-    if [[ -n "$(git_r status --porcelain -- release/RELEASE_NOTES.md)" ]]; then git_r add -- release/RELEASE_NOTES.md; fi
-    # Nur Paketdateien gehoeren in den Release-Commit (Form wie 2077bb8e: 6 Volumes umbenannt + 2 SUMS).
-    while IFS= read -r f; do
-        [[ -n "$f" ]] || continue
-        b="${f#release/}"
-        erlaubt=0
-        [[ "$f" == release/* ]] && ra_volumen_version "$b" >/dev/null 2>&1 && erlaubt=1
-        case "$f" in release/SHA256SUMS.txt|release/SHA256SUMS_android.txt|release/RELEASE_NOTES.md) erlaubt=1 ;; esac
-        [[ $erlaubt -eq 1 ]] || die "fremde vorgemerkte Aenderung im Index: $f - gehoert nicht in den Release-Commit"
-    done < <(git_r diff --cached --no-renames --name-only)
-    [[ -n "$(git_r diff --cached --name-only)" ]] || die "nichts vorgemerkt - ist $NEU schon committet?"
-    msg="$LOGDIR/commit_msg.log"
-    {
-        echo "release: $NEU (Windows + Linux/Steam Deck + Android)"
-        echo
-        echo "Gebaut und gepackt mit release/release_alles.sh (Lauf $LAUF_ID)."
-        for z in "${ERGEBNIS[@]}"; do echo "  $z"; done
-        echo
-        echo "Archiv: $(zeige_pfad "$ARCHIV/$NEU") ($(ra_archiv_pruefen "$ARCHIV/$NEU" 2>&1))"
-    } > "$msg"
-    git_r commit -q -F "$msg" || die "git commit fehlgeschlagen"
-    git_r tag -a "$NEU" -m "$NEU" || die "git tag $NEU fehlgeschlagen"
-    meld "    Commit $(git_r rev-parse --short HEAD), Tag $NEU"
-    if [[ $PUSH -eq 1 ]]; then
-        lauf "git push" "git push origin master $NEU" git -C "$REPO" push origin master "$NEU"
-        schritt_ende "Commit $(git_r rev-parse --short HEAD), Tag $NEU, gepusht (origin master + $NEU)"
+    # Wiederholbar (Abnahme 0, M1): was ein frueherer Lauf schon angelegt hat (Commit, Tag), wird geprueft und nicht
+    # neu angelegt - ein Abbruch nach dem Commit (Tag oder Push scheiterte) endet sonst in "nichts vorgemerkt" bzw.
+    # einem zweiten Release-Commit.
+    if ist_release_commit "$NEU"; then
+        s="$(paket_abweichung || true)"
+        [[ -z "$s" ]] || die "HEAD ist schon der Release-Commit $NEU, aber die Paketdateien in release/ weichen davon ab - von Hand klaeren:
+$(printf '%s\n' "$s" | head -5)"
+        meld "    Release-Commit steht schon: $(git_r log -1 --format='%h %s') - wird nicht neu angelegt"
     else
-        schritt_ende "Commit $(git_r rev-parse --short HEAD), Tag $NEU (nicht gepusht: --kein-push)"
+        git_r add -- release/SHA256SUMS.txt release/SHA256SUMS_android.txt
+        if [[ -n "$(git_r status --porcelain -- release/RELEASE_NOTES.md)" ]]; then git_r add -- release/RELEASE_NOTES.md; fi
+        # Nur Paketdateien gehoeren in den Release-Commit (Form wie 2077bb8e: 6 Volumes umbenannt + 2 SUMS).
+        while IFS= read -r f; do
+            [[ -n "$f" ]] || continue
+            b="${f#release/}"
+            erlaubt=0
+            [[ "$f" == release/* ]] && ra_volumen_version "$b" >/dev/null 2>&1 && erlaubt=1
+            case "$f" in release/SHA256SUMS.txt|release/SHA256SUMS_android.txt|release/RELEASE_NOTES.md) erlaubt=1 ;; esac
+            [[ $erlaubt -eq 1 ]] || die "fremde vorgemerkte Aenderung im Index: $f - gehoert nicht in den Release-Commit"
+        done < <(git_r diff --cached --no-renames --name-only)
+        [[ -n "$(git_r diff --cached --name-only)" ]] || die "nichts vorgemerkt - ist $NEU schon committet?"
+        msg="$LOGDIR/commit_msg.log"
+        {
+            echo "release: $NEU (Windows + Linux/Steam Deck + Android)"
+            echo
+            echo "Gebaut und gepackt mit release/release_alles.sh (Lauf $LAUF_ID)."
+            for z in "${ERGEBNIS[@]}"; do echo "  $z"; done
+            echo
+            echo "Archiv: $(zeige_pfad "$ARCHIV/$NEU") ($(ra_archiv_pruefen "$ARCHIV/$NEU" 2>&1))"
+        } > "$msg"
+        git_r commit -q -F "$msg" || die "git commit fehlgeschlagen"
     fi
+    kurz="$(git_r rev-parse --short HEAD)"
+    if git_r rev-parse -q --verify "refs/tags/$NEU" >/dev/null 2>&1; then
+        tag_auf_head "$NEU" \
+            || die "Tag $NEU zeigt auf $(git_r rev-parse --short "$NEU^{commit}"), nicht auf den Release-Commit $kurz - von Hand klaeren"
+        meld "    Tag $NEU steht schon auf dem Release-Commit - wird nicht neu angelegt"
+    else
+        git_r tag -a "$NEU" -m "$NEU" || die "git tag $NEU fehlgeschlagen"
+    fi
+    meld "    Commit $kurz, Tag $NEU"
+    if [[ $PUSH -eq 1 ]]; then
+        # Scheitert der Push, stehen Commit und Tag schon: die Meldung sagt das, und ihre Zeile pusht nur noch
+        WEITER_VOR=("Commit $kurz und Tag $NEU stehen lokal - nur der Push fehlt.")
+        WEITER_NACH=("(pusht nur, Commit und Tag bleiben; Doppelklick: Wahl [3])" "oder von Hand: git push origin master $NEU")
+        lauf "git push" "git push origin master $NEU" git -C "$REPO" push origin master "$NEU"
+        push_pruefen
+        schritt_ende "Commit $kurz, Tag $NEU, gepusht (origin master + $NEU, von origin bestaetigt)"
+    else
+        schritt_ende "Commit $kurz, Tag $NEU (nicht gepusht: --kein-push)"
+        meld "    Pushen spaeter: bash release/release_alles.sh --version $NEU --ab abschluss --tag$(opt_text ohne-kein-push) (Doppelklick: Wahl [3])"
+        meld "    oder von Hand: git push origin master $NEU"
+    fi
+}
+# paket_abweichung: Paketdateien in release/ (Volumes, SHA256SUMS*.txt), die vom Commit HEAD abweichen
+# (geaendert, vorgemerkt oder unversioniert) - je Zeile wie git status --porcelain
+paket_abweichung() {
+    local z p
+    git_r status --porcelain --untracked-files=all -- release | while IFS= read -r z; do
+        p="${z:3}"; p="${p##* -> }"; p="${p#release/}"
+        if ra_volumen_version "$p" >/dev/null 2>&1 || [[ "$p" == SHA256SUMS.txt || "$p" == SHA256SUMS_android.txt ]]; then
+            printf '%s\n' "$z"
+        fi
+    done
+}
+# push_pruefen: Erfolgsmarke des Pushs - origin SELBST traegt master = HEAD und den Tag $NEU (dasselbe Tag-Objekt);
+# Rueckgabe 0 von git push allein ist es nicht (gleiche Regel wie Marke + Artefakt der Bau-Schritte)
+push_pruefen() {
+    local r h t
+    r="$(git_r ls-remote origin refs/heads/master "refs/tags/$NEU" 2>>"$SCHRITT_LOG")" \
+        || die "git ls-remote origin fehlgeschlagen - der Push ist nicht nachpruefbar"
+    printf '%s\n' "$r" >> "$SCHRITT_LOG"
+    h="$(printf '%s\n' "$r" | awk '$2 == "refs/heads/master" { print $1 }')"
+    t="$(printf '%s\n' "$r" | awk -v r="refs/tags/$NEU" '$2 == r { print $1 }')"
+    [[ "$h" == "$(git_r rev-parse HEAD)" ]] \
+        || die "origin master steht nach dem Push auf '${h:-nichts}', nicht auf dem Release-Commit $(git_r rev-parse --short HEAD)"
+    [[ "$t" == "$(git_r rev-parse "refs/tags/$NEU")" ]] \
+        || die "origin traegt nach dem Push nicht den Tag $NEU dieses Repos ('${t:-fehlt}')"
+    meld "    origin bestaetigt (git ls-remote): master = $(git_r rev-parse --short HEAD), Tag $NEU = ${t:0:12}"
 }
 
 # =============================================================================
@@ -710,13 +838,13 @@ if [[ "$letzter" != archiv && "$letzter" != abschluss ]]; then
         if [[ "${SCHRITTE[$i]}" == "$letzter" ]]; then naechster="${SCHRITTE[$((i + 1))]}"; fi
     done
     meld ""
-    meld "Teillauf bis '$letzter' fertig. Weiter mit: bash release/release_alles.sh --version $NEU --ab $naechster$( [[ $TAG -eq 1 ]] && echo ' --tag')"
+    meld "Teillauf bis '$letzter' fertig. Weiter mit: $(weiter_zeile "$naechster")"
     meld "RELEASE-ALLES-TEILLAUF-OK $NEU (${PLAN[*]})"
     exit 0
 fi
 if ! im_plan abschluss; then
     meld ""
     meld "Noch offen (macht der Mensch): Release-Notes '# $NEU ...' oben in release/RELEASE_NOTES.md, dann"
-    meld "  bash release/release_alles.sh --version $NEU --ab abschluss --tag     (Commit + Tag + Push)"
+    meld "  $(weiter_zeile abschluss --tag)     (Commit + Tag + Push; Doppelklick: Wahl [3])"
 fi
 meld "RELEASE-ALLES-OK $NEU"
