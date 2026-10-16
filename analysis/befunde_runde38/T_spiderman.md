@@ -242,6 +242,26 @@ der Alt-Riegel schoss in den Schacht, angepasst s. o.; danach einzeln `ctest -R 
    Block @0x80104F20-74 schreibt im Original KEIN Spieler-Kommando und KEINEN Anker, Kommando 6 + Anker fallen erst in
    Sub 7 P0 (@0x80101DC4 / @0x80101DA0); der Port startet die Opfer-Animation schon am Kontakt. Ob das Original damit
    genau EINE Versetzung (die zweite) hat, ist NICHT gemessen. Nicht Spiderman, nicht "von der Karte" -> NACHLAUF.
+10. (Nachbesserung 1) **B[7] 0x801145C8 ist im Port anders gebaut als im Original** (Alt-Pfad, nicht M1/M2; in den
+    Messlaeufen das erste nach dem Bruellen bei Spieler-hp >= 81): P0 setzt +0x9E = 1 (`sb a0,158` @0x80114634, a0 = 1
+    aus @0x801145F4) und P1 uebergibt es als Rueckwaerts-Argument an anim_set (`lb a2,158` @0x80114718, `jal 0x8001f314`
+    @0x8011471C) — Clip 4 laeuft RUECKWAERTS (Eskalation auf Clip 5 vorwaerts: +0x9E = 0 @0x80114688). Im ganzen Handler
+    0x801145C8-0x80114768 gibt es nur die Aufrufe arc_test @0x8011465C, FX 0x80019700 @0x801146EC, anim_set @0x8011471C
+    und 0x80115bec @0x8011473C — keinen Walker/Steer; der Port faehrt steer 0x30 + advance 60 vorwaerts und setzt bei
+    der Eskalation +0x6 = 2 (im Original ist +0x6 == 2 der Ausgang P2 @0x8011474C: +0x5 = 3, +0x6 = 0 im naechsten Bild).
+    Der gemessene "Ruecksprung" F314 (4001) / F389 (5040) auf Clip 4 Bild 0 ist dabei zufaellig das Endbild des
+    Originals (rueckwaerts endet bei Slot 0); falsch ist die Laufrichtung davor. Ob der Root-Schwanz 0x801118D0 den
+    Spiderman in Sub 7 bewegt, ist nicht geprueft -> NACHLAUF.
+11. (Nachbesserung 1) B[11] 0x80113438 (Drehen, vier anim_set-Aufrufe @0x801134CC/@0x801135D0/@0x80113778/@0x801139E4,
+    +0x5 = 0xD @0x80113A54), B[14] 0x80113E48 (zwei Clips, Treffer liest +0x95 NACH anim_set @0x80113FA4, Ausgang
+    +0x5 @0x801140E4 / +0x6 = 0 @0x801140F4) und HURT 0x80114770 sind im Port vereinfachte Fassungen; ob dort dieselbe
+    Wechselbild-Klasse auftritt, ist nicht gemessen (in den Laeufen dieser Nachbesserung nicht erreicht) -> NACHLAUF
+    zusammen mit 10.
+12. (Nachbesserung 1) Portweite Zeichen-Konvention (Abnahme 0 B6) bleibt: re15_birkin_anim zaehlt VOR dem Zeichnen, der
+    Port zeigt waehrend eines Clips jeweils das Bild, das das Original ein Bild spaeter zeigt (erstes sichtbares
+    Austrittsbild 7 statt 6, erste Ueberblendung mit 6*0x200 statt 7*0x200). Die Nachbesserung beseitigt nur den
+    sichtbaren Ruecksprung am Clip-Ende (dort zeigen Port und Original dasselbe Bild fc-1); die Konvention selbst
+    gehoert dem gemeinsamen Anim-Treiber (Birkin + Spiderman) und ist keine Spur-Aenderung.
 
 ## Fuer den Nutzer
 - **Spiderman kommt jetzt wie im Original aus dem Schacht:** er steckt unsichtbar im Wandschacht, bis man den Bereich
@@ -377,3 +397,13 @@ Modul-Phasen. Ergebnis: `test_r38_spiderman: 0 FAIL`.
   Loese-Clip 0x10 Bild 60 -> 0 Winkel 2022/4096, Bruellen Wurzel 729 / Winkel 1175/4096.
 - MUTATIONSPROBE 2 (P2 ohne `anim_frame = 0`): **4 FAIL** — `erstes Halte-Bild Clip 0xF Bild 15 (soll 1)`,
   `Griff 2: erstes Halte-Bild Clip 0x19 Bild 5`.
+
+### Nachbesserung 1 — je Mangel
+| | M1 (Austritt, urteilsrelevant) | M2 (Griff-Phasenwechsel) |
+|---|---|---|
+| Ursache | re15_birkin_anim zaehlt vor dem Zeichnen hoch und springt am Clip-Ende auf 0; Austritt P2 schaltete im selben Bild auf ACTIVE, der neue Clip kam erst im naechsten Bild -> das Wechselbild zeichnete (0x1D, 0) | dasselbe an Griff 1 P1 -> P2 / P5 -> P6 und Griff 2 P1 -> P2 / P5 -> P6 |
+| Messung vorher | exe ROOM5070 F376 `mo=29 af=0`, anim.log gezeichnet Bild 0, Framedump F376 ohne Spiderman (eigene Wiederholung); Abnahme: 4001 F253, 5040 F320 | Abnahme: 4001 F711 `ss1=9 ss2=2 mo=18 af=0`; Riegel-Mutationsprobe 1: Zugriff 0xE Bild 14 -> 0, Loese-Clip 0x10 Bild 60 -> 0 |
+| Beleg | FUN_8001f3bc Pose vor dem Hochzaehlen (@0x8001f534/@0x8001f574/@0x8001f5f0 vor @0x8001f610-1c, Wrap @0x8001f63c); P2 anim_set @0x8011557C, 0x101 @0x80115588-98; B[1]/B[2] P0 +0x95 = 0 / +0x8F = 7 @0x80112164/@0x80112184, @0x80112300/@0x80112320 | P1 `+0x6 += fertig` @0x80112D8C-9C / @0x80113268-78 / @0x80114400-10; P2 ohne +0x95 @0x80112B9C / @0x80113094 / @0x801142C8; P6 ohne anim_set @0x80112DA0 / @0x8011327C / @0x80114414 |
+| Aenderung | sm_anim_halten am Austritts-Ende (spiderman_r38.c) | sm_anim_halten an allen Griff-Clip-Enden, P2 setzt den Wrap-Wert 0 |
+| Messung nachher | exe 5070 F376 / 4001 F253 / 5040 F320 gezeichnet (0x1D, 34); Framedump F374-F377 durchgehend sichtbar; Riegel: Wechselbild (0x1D, 34), Wurzel (0,-940,0), erste Ueberblendung 6 Einheiten von der Endpose | exe 4001 F712 / 5040 F787 gezeichnet (0x12, 33), naechstes Bild (0x13, 1); Riegel: alle Wechselbilder beider Griffe inkl. Losreissen fc-1, Halte-Start Bild 1 |
+Zusatz derselben Klasse im Austrittsablauf: B[2] Bruellen (s. Umsetzung), exe 4001 F303/F304 und 5040 F370/F371 (2, 49).
