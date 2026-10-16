@@ -170,6 +170,13 @@ Bild 260, Skala 1. `A_belege/nachher_10d0_orig11f0_alt_neu.png`: alt mit innerer
 50 Bildpunkte, ALLE im Cursor-Fenster x 150..170, y 110..130. Reingruen im Rahmen: ALT 32, NEU 0. Trilog Platz 5
 (Prop 1): ALT 2997 Dreiecke mit NCLIP < 0, NEU 0.
 
+### 4.3b Elza: ROOM11F1 (Spielerwahl auf Elza, Debug-Sprung 11F0 -> fuer Elza ROOM11F1) und ROOM1151
+
+`A_belege/lauf_elza_11f1.sh` (RE15_PSELECT_AUTO=1 + _SWITCH=1, debug.log "[pl] Spieler-Familie PL04 (character=4,
+Elza-Bit=1)", "EXIT_AT: Bild 502 in Raum 11f1"), Cut 10, Bild 500: NEU 0 rueckseitige Cursor-Dreiecke, 0 reingruene
+Punkte im Rahmen, Klassenkarte 0 Abweichungen gegen das Original; ALT 14056 / 33 / 21. ROOM1151 (Hebetisch, Lade-Weg
+mit RAUM=1151): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
+
 ### 4.4 Nebenwirkungen (der Verwurf gilt fuer ALLE Raum-Props, wie im Original)
 
 * **Scan aller 120 Leon-Raeume** (`A_belege/raum_scan.py`, Debug-Sprung, Bild 200, Skala 1, exe alt gegen neu;
