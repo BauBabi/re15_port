@@ -93,7 +93,22 @@ Karte, und das Netz s_scene_black faerbt Cut 7 ohnehin vollflaechig schwarz). Di
 Raeumen dieselbe — und in ROOM1031 ist sie die Lobby-Kamera (Bytes s. RE-Belege) — sie sieht den Lageplan.
 
 Regression: `kartenitems_r36.c` kam mit 554877f9 (Runde 36 Spur N), gemergt cb1d5f59, erstmals ausgeliefert v0.8.24
-e8b3958f; in v0.8.23 3ec5b1f8 gibt es die Datei nicht (`git ls-tree`). Bisect-Laeufe: siehe Tabelle unten.
+e8b3958f; in v0.8.23 3ec5b1f8 gibt es die Datei nicht (`git ls-tree`).
+
+**Bisect** (Werkzeug `E_elzaintro_werkzeug/e_bisect.sh`: `git archive <stand> re15_port` ohne shared_assets nach
+`re15_port/build_bisect/src_<marke>`, Bau mit dem local_build.sh DIESES Stands, Tests aus, Assets aus dem Baum —
+seit v0.8.23 aenderten sich dort nur MASKS fuer 10F0/1100/1221/2091; Messung `e_lauf.sh elza 200-200/1 210#1031`,
+Erzaehlerbild F200, Feld x 91..98 / y 107..112, `e_feld.py`):
+
+| Stand | `[kartenitems] ROOM1031` | Erzaehler F200 hell gesamt | Feld hell | Urteil |
+|---|---|---|---|---|
+| v0.8.23 3ec5b1f8 | 0 | 1539 (= Leons Text) | 0 | sauber |
+| 5d279697 (= cb1d5f59^1) | 0 | 1539 | 0 | sauber |
+| **cb1d5f59** merge(r36): Spur N kartenitems | 1 | 1587 | **48** | **Karte sichtbar** |
+| 1bcbd0ff (Basis, = v0.8.25 + Doku) | 1 | 1587 | 48 | Karte sichtbar |
+
+Verursacher: **cb1d5f59** (Merge der Runde-36-Spur N, Lageplan-Props; der Lageplan-Commit selbst 554877f9), erstmals
+ausgeliefert in v0.8.24 e8b3958f.
 ### RE-Belege (Original: der Erzaehler-Schnitt zeigt NUR Standbild + Text)
 Alle Bytes selbst aus den ausgelieferten RDT/BSS gelesen (Python, Werte im Riegel `unit_r38_elzaintro_schwarz`):
 - **Einziger Weg in Cut 13:** ROOM1031 sub15 @0x02A74 `29 0d` = Cut_chg(13); Opcode-Walk (scd_dump_room.py) ueber
