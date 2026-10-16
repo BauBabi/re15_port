@@ -4,7 +4,7 @@ Pruefer: Abnahme-Agent 0 (2026-10-16). Baum `.claude/worktrees/r38_kleinkram`, Z
 Basis 1bcbd0ff (= merge-base mit master; `git diff master...HEAD`). Massgeblich: `AUFTRAG.md` (Wortlaut), `VERTRAG.md`.
 Nichts aus dem Bau-Dossier wird ohne eigene Messung uebernommen.
 
-STAND: in Arbeit (fortlaufend geschrieben). Sitzung 2 (21:08): Fortsetzung — Abschnitte 9 ff.
+STAND: ABGESCHLOSSEN (Sitzung 2, 2026-10-16 22:02) — Urteil Abschnitt 11: **bestanden** (P1/P2/P3 erfuellt, Gates halten).
 
 ## 0. Bau
 
@@ -280,3 +280,83 @@ gemeinsamen Raumstart armiert (scd_room_setup.c:368 `scd_register_room_events` -
   w14); kein Absturz, EXIT_AT 940 erreicht, exit 0. Bild `q0b/p3_tuer4_equip/sheet_equip_fire.png`: Equip Arms =
   Flammenwerfer, Name "Flamethrower", Leon zielt mit der Waffe.
 * -> P3 haelt auch ueber die Tuer; der aufgenommene Flammenwerfer ist eine voll benutzbare Waffe.
+
+### 9.5 P1 alle Schliess-Wege an der echten exe (ein Lauf, `q0b/p1_wege`)
+Env wie 3.2 (ROOM1000, RE15_SE_DEBUG=1), `RE15_PRESS=start@400,down@450,square@470,start@560,cross@620,start@700,up@750,
+square@770,start@830`, `RE15_EXIT_AT=900#1000`, exit 0. debug.log in Reihenfolge:
+* F400 START -> `[se] Stimme: se=6 ... vag=3 note=64` + `[r38q] F400 Inventar-Ton Satz 6 (Oeffnen)`
+* F450 RUNTER -> `se=4` (Cursor-Ton, wie vorher) ; F470 VIERECK auf EXIT -> `se=5 ... vag=2 note=63` + `[r38q] F470
+  Inventar-Ton Satz 5 (EXIT)` — genau EIN Ton, kein se=6 mehr an EXIT (RE2 @0x8006a8d0-d4: Cursor 3 -> Satz 5)
+* F560 START -> Satz 6 (Oeffnen) ; F620 KREUZ -> `se=5` + `[r38q] F620 Inventar-Ton Satz 5 (Abbruch)`
+* F700 START -> Satz 6 ; F750 HOCH -> se=4 ; F770 VIERECK auf ITEM -> `se=6` (Auswahl, unveraendert; RE2 @0x8006a8c8
+  Reiter -> Satz 6) ; F830 START im Raster -> `se=5` (vorbestehender Raster-Schliess-Ton), KEINE `[r38q]`-Zeile -> kein
+  Doppel-Ton.
+Jeder Oeffnen-/Schliess-Vorgang spielt genau einen Ton, jeweils den RE2-Satz.
+
+### 9.6 Gegenszenario P3: Elza ROOM30E1 (`q0b/p3_elza30e1`)
+Elza-Spielstand ROOM30E1 an derselben Stelle (-25000,-26400) Gier 2048 (`Figur 4`), CONTINUE, `RE15_PRESS=square@60,
+square@120`, `RE15_EXIT_AT=200#30E1`: `[save] CONTINUE: resumed in room 30e1`, KEINE `[r38q]`-Zeile (kein Anker armiert —
+Raum-Id-Filter 0x30E0), kein `msg(a=1 ...)` im state.log, exit 0. Elzas Raum bleibt unberuehrt.
+
+### 9.7 Bisect P2 nachgeprueft
+`git merge-base --is-ancestor 3eaf631d <tag>`: v0.8.23 ohne, v0.8.24 und v0.8.25 mit 3eaf631d ("wip(r36-elza): ... Irons
+tot 1151 ...", 2026-10-10) — passt zur Gegenprobe 4.2 (v0.8.25 zeigt exakt den Nutzerbefund).
+
+### 9.8 Breiter Regressionslauf (gezielt, KEINE volle Suite; seriell im Spurbaum, unter Last paralleler Spur-Agenten)
+Regex = Riegel der Spur + jede Testgruppe der beruehrten Module/Raeume: menu_common.c (inv/itembox/weapon_select/
+debug_menu/pri_inventar/discard/r26_inventar/android-Inventar/hinweis/pfeil/karte/adaruf/dokumente/inventar1050/r36_inventar/
+kiste), scd_vm.c (scd_*/prop_scd_pc_advance/aot_*/msg_dialog/action_msg_gate/npc_scd_pose), Aufnahme-Modal + Waffen
+(item_modal/inv_grant/re2_weapon_rows/r35_werfer*/r37_feuerloescher_*), elza_r36.c (r36_elza_* unit + ALLE integration_r36_elza_*,
+integration_r36_story_elza, elza_zweig, integration_elza_vollstart), 1150/1151 (irons_*/r30_irons_*/r30_sicherung_*/
+sicherung_1150/r31/r32 hebetisch/r35_cut1150_*/r36_szene1150_*/r36_szenenleon_irons), Ton (audio_sperren/re2z_grab_core_se),
+r36_kartenbits:
+```
+ctest --test-dir re15_port/build -R "$(cat q0b_regex.txt)" --timeout 600 --output-on-failure   (150 Tests, davon 23 integration_)
+100% tests passed, 0 tests failed out of 150
+Total Test time (real) = 3112.24 sec          EXIT=0
+```
+Log `q0b_ctest_breit.log`, Regex `q0b_regex.txt` (Pruefer-Scratchpad). Darunter integration_r35_cut1150 (737 s),
+integration_r35_inventar1050, integration_r35_werfer (+ton/elza/form), integration_r36_elza_{fenster,irons,unlock,schuss,
+stoehnen}, integration_r36_story_elza, integration_r36_inventar, integration_r36_szene1150, integration_r37_kiste/kiste2feld,
+integration_r34n_b_cursor, integration_r30_sicherung_laden, integration_r30_irons_tisch_laden, integration_elza_vollstart und
+die 6 Riegel der Spur — alle gruen, kein Wiederholungslauf noetig.
+
+## 10. Gates (Zusammenfassung)
+
+| Gate | Ergebnis | Beleg |
+|---|---|---|
+| Bau = Kopf | haelt | local_build.sh build: `ninja: no work to do`, md5 exe == Messkopie (9.1) |
+| Jeder Punkt am Spiel gemessen, gegen den Wortlaut | haelt | P1 3.2 + 9.5, P2 4.2 (Tuer 1131 -> 1151), P3 5.2 + 9.4 (Tuer 3070 -> 30E0) |
+| Gegenprobe v0.8.25 (Befund reproduziert, Ursache erklaert) | haelt | P1 bytegleich stumm, P2 msg 2 nach Text 20 (3eaf631d, 9.7), P3 291 Bilder msg 15 |
+| RE-Gate: jede Konstante mit @0x / Byte-Offset | haelt | Tabelle Abschnitt 6; Stichproben 6 + 9.2 selbst disassembliert/gelesen |
+| Keine Guess-Tells / Env-Schalter als Abschluss | haelt | grep im Code-Diff: nur das Nutzerzitat "for now" (6, erneut 9.x) |
+| Fix erklaert den Befund | haelt | P2 Stempel @0x80042f3c vor sce @0x80042f48 + VM-Stillstand @0x8003f04c; P1 einziger Ton im Debug-Umschalter; P3 @0x00FEE |
+| Vertrag: Pfade / Bank-9 / Nachrichten-Ids | haelt | 7; keine Bits, keine neuen Ids, keine Tabu-Pfade, Registrierung ueber probes/r38_kleinkram.cmake |
+| Gemeinsame Dateien nur kleine Haken | haelt (mit Hinweis H2) | scd_vm.c 3 Zeilen, menu_common.c include + 3 Rufstellen, elza_r36.c 1 Bedingung |
+| Riegel je Punkt, messend, gruen | haelt | 3 Unit + 3 Integration (echte exe), 9.8 |
+| Nebenwirkungen beide Szenarien | haelt | P1 Leon + Elza; P2 Leon 1150 unveraendert (Unit); P3 Elza 30E1 unberuehrt (9.6), Flammenwerfer ausruest- und feuerbar (9.4) |
+| Breite Regression der beruehrten Module | haelt | 150/150 (9.8) |
+
+## 11. Urteil
+
+| Punkt | Urteil | Kernbeleg |
+|---|---|---|
+| P1 Inventar oeffnen mit RE2-Ton | **erfuellt** | RE2 `8002652c lui a0,0x406` / `80026530 jal 0x8005ba28`; exe: `[se] Stimme: se=6` + `[r38q] F400 Inventar-Ton Satz 6 (Oeffnen)`, Mitschnitt mit/ohne START: genau 2 hoerbare Abschnitte (654/754); v0.8.25 bytegleich stumm; Schliessen EXIT/Kreuz/START je genau ein Satz 5 (9.5) |
+| P2 Elza 1151: nur Hinbeugen + "He has already passed..." | **erfuellt** | Tuerweg 1131 -> 1151: F366 Elza mo=11, F436 `id=20` bei mo=11, msg 2 in keinem Bild, Irons jedes Bild Totenpose; zweiter Klick nur Text 20; v0.8.25: Text 20 zuerst, dann Szene + msg 2 (= Nutzerbefund) |
+| P3 30E0 Flammenwerfer aufnehmen statt "not available" | **erfuellt** | Tuerweg 3070 -> 30E0: `F343 ... Message_on 15 -> Aufnahme-Modal Item 0x0E x100`, `F436 Flammenwerfer genommen: Zellen 0 -> 2`, 0 Bilder `id=15`; Statusschirm Flammenwerfer 100; ausruesten + feuern funktioniert; Nein -> Panel wieder scharf, zweiter Anlauf nimmt ihn |
+
+**bestanden: ja.** Maengel: **keine**.
+
+Hinweise (nicht blockierend):
+* **H1** `elza_r36.c:280` Messzeile `[elza] ROOM1151: Irons gefunden=%u, Slot %u -> Text %u %u` (nur RE15_ELZA_LOG) behauptet
+  den Umbau auf Text 20 auch dann, wenn er seit dieser Spur wegen (3,0x9D) = 0 NICHT stattfindet. Kein Riegel liest die Zeile
+  (grep re15_port/tests: 0 Treffer) — Messschienen-Hygiene, bei Gelegenheit den Umbau-Zustand mitschreiben.
+* **H2 (Integration)** VERTRAG §1.4 listet fuer Q re15_inv_screen.c/inventory_common.c; die Inventar-FSM liegt aber in
+  menu_common.c (include + 3 Rufstellen, je 1-2 Zeilen, Kommentar "Runde 38 Spur Q"). elza_r36.c ist Spur H zugeordnet ("H; F/G nur
+  Haken"); Q fuegt dort eine Bedingung im Irons-Block ein -> Konflikt-Kandidat mit Spur H (1041/1021 in derselben Datei) und mit
+  jeder Spur, die menu_common.c beruehrt (z.B. G Tagebuch/Dokument-Leser). RE15_MIN_TESTS um 6 anheben (794 registriert).
+* **H3 (Lesart P3)** Der Flammenwerfer wird ueber die normale Aufnahme-Frage "Will you take the Flamethrower? Yes/No" genommen
+  (dieselbe FSM FUN_8001db28 wie jedes Item, RE2 ebenso) — "einfach aufgenommen" ist als "normal aufnehmen statt
+  Preview-Meldung" gelesen. Menge 100 = Magazin des Waffen-Records @0x80074e50 (Regel aus allen 13 ausgelieferten Waffen-Items).
+* **H4** Nachtrag 1 des Nutzers (ROOM20A0 Rolladen vor der Kamera, AUFTRAG.md auf master df08d83a) gehoert zu Spur W und ist
+  nicht Gegenstand dieser Abnahme.
