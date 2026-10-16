@@ -13,6 +13,11 @@
  *   6. ROOM11B0 Satz 0 (Schritt, eigener Satz): Haken greift nicht (Zaehler bleibt)
  *   7. Mess-Haken RE15_W11B0_SCHUB_STUMM wird nur gelesen, wenn gesetzt (hier nicht): Zaehler = 2 Aufrufe
  * ============================================================================================ */
+/* putenv ist POSIX: unter -std=c11 ohne Erweiterungen (CMAKE_C_EXTENSIONS OFF) deklariert glibc es nur mit
+ * _DEFAULT_SOURCE (Memory reai-v2-linux-test-portabilitaet, Muster asset_root_pc.c). */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#endif
 #include "re15_audio.h"
 #include "re15_engine.h"
 #include "re15_rdt.h"

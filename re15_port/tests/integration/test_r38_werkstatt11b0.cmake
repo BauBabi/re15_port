@@ -17,6 +17,7 @@
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r38_werkstatt11b0.cmake
 # =============================================================================
+cmake_minimum_required(VERSION 3.16)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r38_werkstatt11b0: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
 endif()

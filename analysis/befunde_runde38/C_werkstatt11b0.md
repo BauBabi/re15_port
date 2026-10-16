@@ -171,7 +171,16 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
   Uebergabebild.
 - Regression? Nein — der Fehler steckt seit Runde 36 Spur J (3d394d71, Einfuehrung des NPC-Sub 0x13) in
   re15_szl_schub_npc_kanal (Bank nach +0x6 statt nach dem posierten Clip, kein Halten in Phase 7); das Riegel
-  unit_r36_szenenleon_schub prueft nur die Phasen 3/5, nie das Uebergabebild.
+  unit_r36_szenenleon_schub prueft nur die Phasen 3/5, nie das Uebergabebild. Einordnung je Release (git merge-base
+  --is-ancestor 3d394d71 <tag>):
+
+  | Stand | enthaelt 3d394d71 | Szene |
+  |---|---|---|
+  | v0.8.23 3ec5b1f8 | nein | kein Schub ueberhaupt (Modus 0x13 unbekannt, Marvin auf re15_npc_sub_idle, J §1.1) |
+  | v0.8.24 e8b3958f | ja | Schub + Fall im Uebergabebild |
+  | v0.8.25 2077bb8e | ja | unveraendert (szenenleon_r36.c seit c3201da8 nicht mehr angefasst) |
+
+  Der "Fall" kam also mit dem Schub selbst in v0.8.24, er ist kein Rueckfall eines vorher richtigen Stands.
 
 ### 3.3 Umsetzung
 - `engine/src/werkstatt11b0_r38.c`: `re15_w11b0_schub_kanal(e)` — Sub 0x13: Bank folgt dem posierten Clip (Clip 5 ->
@@ -198,7 +207,38 @@ RE15_STATE_LOG=.. RE15_AUDIO_CAP_SYNC=..` (Stand 1bcbd0ff).
   gezeigt; Folgebild Bank 1 Clip 1 Bild 0; 0 Rueckfall-Bilder; Merker verbraucht.
 
 ## Tests
+Neue Riegel (`re15_port/tests/unit/probes/r38_werkstatt11b0.cmake`, registriert NUR dort):
+
+| Test | Punkt | misst | Ergebnis |
+|---|---|---|---|
+| unit_r38_werkstatt11b0_text | 1 | msg 20 Bytes (33 B), Kopf/Ende == ROOM11B0 @0x1BD0/@0x1BFA, Formbeleg @0x19CD (`2b 44 18 00`, `57 57 57`), Programm 294 B unveraendert, `re15_msg_get_text(20)` == "Marvin: But, hold on..." | gruen |
+| unit_r38_werkstatt11b0_takt | 2 | 11B0 Satz 7 @0xE4A0 leer; ROOM1171 EDT/VH/VB @0x6EDC/0x6F5C/0x87FC, Satz 7 @0x6EF8 `00 00 45 10`; Ton 4 @0x77FC + VAG 4 (6688 B) == ROOM1090; Zustaendigkeit (11B0/7 ja; 11B0/0, 11B1/7, 1090/7 nein); Szene: 8 Satz-7-Anforderungen B1469 x2, B1494 x2, B1519 x2 (Marvin Clip 0x12 Bild 1), Phase 7 B1552/B1553 | gruen |
+| unit_r38_werkstatt11b0_uebergabe | 3 | Bankwahl wie main.c je Bild: Phase 1->2 Bank 1 Clip 5; Phase 7 Loco Clip 0x11 Bild 0, Keyframe 266 == Phase 6; alte Regel Containerbank kf 275; Folgebild Bank 1 Clip 1 Bild 0; 0 Rueckfall-Bilder; Merker verbraucht | gruen |
+| unit_r38_werkstatt11b0_ton | 2 | echtes audio_pc.c + werkstatt11b0_pc.c, CAP_SYNC: 11B0 ohne Ergaenzung 0, mit 108 200 792, ROOM1090 108 200 792, 147 000/147 000 Samples gleich, Tonlaenge 32 Bilder, 11B1/11B0-Satz-0 unberuehrt | gruen |
+| integration_r38_werkstatt11b0 | 1+2+3 | echte exe: A `[msgtext] ... id=20 "Marvin: But, hold on..."`; 8 gekeyte Toene F1646 x2/F1671 x2/F1696 x2/F1729/F1730 (Stimme 0, vag 3), F1646 Marvin Clip 0x12 Bild 1; Uebergabebild F1730 `17 17 10 0 0 10 1 0`, F1731 `1 1 16 0 0 16 0 0`, kein Rueckfall; B Mess-Haken STUMM: Mitschnitt A/B bis F1646 gleich (Versatz 254 Bloecke), danach verschieden | gruen (168.29 s) |
 
 ## OFFEN
+1. **Leons Uebergabebild Phase 1 -> 2** (nicht gemeldet, nicht Teil des Auftrags): der Spieler-Sub 0x13 waehlt die Bank
+   ueber `re15_szl_schub_spieler_pl00/_wclip` nach +0x6 (szenenleon_r36.c), im Bild F1634 also PL00 Clip 5 statt des
+   W-Bank-Clips 5, den Phase 1 posiert (@0x8005294c). Ein Bild, im Framedump F1634 an Leon nicht als Sprung sichtbar.
+   Messweg bei Bedarf: RE15_ANIM_TRACE Aktor 0 F1633..F1635 + Framedump, Regel wie §3.3 (Bank des posierten Clips).
+2. **ROOM1171 (Elza)**: dieselbe Sub-0x13-Kanalregel gilt dort fuer den Partner (Sce_em_set sub07 @0x016C8 Typ 0x49);
+   die Logik (Phasen, Takt, Yield-Tor `in_motion_pose`) ist unveraendert, nur die Bank im Uebergabebild. Gemessen ist
+   1171 hier nicht (Spur I "heliport1171" besitzt den Raum; ihr Befund "Elza haengt in der Szene" haengt nicht an der
+   Bankwahl). Der Schiebe-Ton klingt in 1171 schon immer (eigener Satz 7 @0x6EF8).
 
 ## Fuer den Nutzer
+- **Keine neuen Asset-Dateien** (Paket-Gate unveraendert): der Schiebe-Ton wird zur Laufzeit aus der schon
+  ausgelieferten `shared_assets/PSX/STAGE1/ROOM1171.RDT` gelesen (Satz 7 der Raum-Tonbank). Fehlt die Datei, bleibt
+  nur der Schiebe-Ton stumm (`[schub-r38] ... fehlt`).
+- **Sprachdatei**: zu msg 20 gibt es keine Aufnahme (`synchro/STAGE1/room11B0/` endet bei main14.wav) — nichts spricht
+  den alten Wortlaut. Wer die Zeile vertonen will: `synchro/STAGE1/room11B0/main20.wav` mit "But, hold on..."
+  (wird automatisch eingebunden, synchro/README.md).
+- **Ansehen**: Leon-Spielstand vor der Container-Szene (Strom an, ROOM11C0 erledigt) -> ROOM11B0. Beim gemeinsamen
+  Schieben kratzt der Container jetzt dreimal im Schritt-Takt (Bild 1 jedes Schub-Zyklus) und einmal beim Loslassen —
+  es ist exakt der Ton, den Leon beim Kistenschieben in ROOM1090 macht. Danach richtet sich Marvin auf und bleibt
+  aufrecht stehen (vorher kippte er fuer ~4 Bilder zurueck in die Schiebehaltung = der "Fall"). Spaeter sagt er
+  "But, hold on..." und laeuft zur Werkstatt-Tuer.
+- Beta -> Retail: RE1.5 hat das Schieben samt Ton fertig (ROOM1090/1170/1171); nur die Raumbank von 11B0 war
+  unfertig — deshalb RE1.5-Ton, kein RE2-Ton (RE2 hat je Raum andere Schiebe-Samples und keine Container-Szene).
+- Keine Entscheidungsfragen.
