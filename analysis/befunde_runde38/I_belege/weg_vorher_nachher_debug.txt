@@ -1,0 +1,31 @@
+# vorher (build_bisect = e2cc7673): echter Weg 1131 -> 1171 -> Selbst-Tuer Slot 5 -> Szene; Lauf bis F1500 in 1171
+[save] CONTINUE: resumed in room 1131 (hp=100)
+[aot] DOOR FIRE slot=3 rect=(2700,14650,hw=1000,hh=500) target_cut=8 spawn=(-21225,0,-18870)
+[room] PC loaded room1171.rdt (161300 bytes)
+[fire-aot] slot=5 at F60 (Raum 1171)
+[aot] DOOR FIRE slot=5 rect=(-11065,-27850,hw=875,hh=600) target_cut=0 spawn=(2300,-7200,14365)
+[evt] F61 room=1171 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[evt] F61 room=1171 Set(3,0x80) op=1 (vorher 0)
+[enemy] RE2 EM021 loaded: 13 meshes, 13 bones, 12 clips -> slot 12
+[elzaems] Typ 0x21 aus EMD/CDEMD1.EMS Sektor 760 (70364 B) crc 921598F6 - Elza-Archiv (@0x800223ac)
+[flow] EXIT_AT: Bild 1500 in Raum 1171 erreicht -> exit
+
+# nachher (8366bfb5): derselbe Weg
+[save] CONTINUE: resumed in room 1131 (hp=100)
+[aot] DOOR FIRE slot=3 rect=(2700,14650,hw=1000,hh=500) target_cut=8 spawn=(-21225,0,-18870)
+[room] PC loaded room1171.rdt (161300 bytes)
+[fire-aot] slot=5 at F60 (Raum 1171)
+[aot] DOOR FIRE slot=5 rect=(-11065,-27850,hw=875,hh=600) target_cut=0 spawn=(2300,-7200,14365)
+[evt] F61 room=1171 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[evt] F61 room=1171 Set(3,0x80) op=1 (vorher 0)
+[elzaems] Typ 0x21 aus EMD/CDEMD1.EMS Sektor 760 (70364 B) crc 921598F6 - Elza-Archiv (@0x800223ac)
+[msg] room=1171 id=0 savepoint=0
+[msg] room=1171 id=1 savepoint=0
+[evt] F913 room=1171 Evt_exec sub=3 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=1
+[evt] F913 room=1171 Evt_exec sub=4 cond=0xff -> slot 12 (aktive Event-Slots 3) flag(3,0x80)=1
+[msg] room=1171 id=3 savepoint=0
+[aot] DOOR FIRE slot=1 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(16490,-9000,-8110)
+[room] PC loaded room10b1.rdt (139080 bytes)
+[evt] F1143 room=10b1 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=1
+[evt] F1143 room=10b1 Set(3,0x80) op=0 (vorher 1)
+[flow] EXIT_AT: Bild 200 in Raum 10b1 erreicht -> exit

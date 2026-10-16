@@ -99,13 +99,71 @@ sw v1,0(a2)`), CLR 0x80077334, TEST 0x80077360. Das RE2-Kraehenmodul EMOVL21_S0.
 ruft KEINEN davon. Das RE2-Kraehenhirn kann das RE1.5-Ereignis also weder ausloesen noch lesen (gemessen v2_re2:
 Zustand 1/Sub 0, keine Bewegung). Die Szene ist in RE1.5 fertig (kein Beta-Loch) -> RE1.5 ist hier das Ziel.
 
+### 2.5 Elzas Kraehenbank (Opfer-Clips) und der Peck-Effekt der Kraehe
+
+- Modell-Lader FUN_80022300: Elza-Bit `bltz` @0x80022334 -> Datei 0x27 = EMD/CDEMD1.EMS (@0x800223ac). Die
+  EM021-Opferbank (dir[5]) hat dort 14 / 31 / 30 Bilder (Leons CDEMD0: 14 / 36 / 20) — gemessen vom Riegel
+  `unit_r38_heliport1171_banken` (beide Archive geparst). Die Rueck-FSM laeuft also mit 14/31/30.
+- ORIENT 0x801152e0: Schritt 0 `jal 0x80115d94(8)` @0x80115310 (Clip 8), dann `ori a0,zero,0x1000` @0x80115318,
+  a3 = 0x8012110c (16 Nullbytes, `bytes 0x8012110c`), `lw a2,392(v0)` (+0x188 Modellinstanz) / `lh a1,106(v0)`
+  (+0x6a), `jal 0x80019700` @0x80115334 mit `addiu a2,a2,408` = Teil 2 (Teil-Stride 172, Matrix +64: 408 =
+  172*2+64, dieselbe Rechnung wie Zombie @0x80105cd8), Schritt++ @0x80115354 und faellt in Schritt 1: f314
+  @0x8011536c, bei Umlauf dieselbe FX @0x80115394. FUN_80019700 = ESP-Spawner (Effekt = a0>>24 = 0
+  `srl t8,a0,24` @0x80019728, Sub = (a0>>16)&0xff = 0 @0x8001970c/30, Skala = a0&0xffff = 0x1000 `andi s1,a0,0xffff`
+  @0x80019714 -> `sh s1,114(t0)` @0x800197dc; Port-Zwilling re15_esp_fx_spawn_ex, vgl. Granate 0x040D1000 in
+  re15_esp.h). Der Port-Kommentar "no distinct effect" war falsch: es ist Raum-ESP-Effekt 0 (Skala 0x1000, halb so
+  gross wie der Zombie-Treffer 0x2000) am Kraehenteil 2, bei Eintritt und bei jedem Clip-Umlauf.
+
 ## 3. Umsetzung
 
-(folgt)
+Neue Dateien (Logik):
+- `re15_port/include/re15_heliport1171_r38.h` — Belege, Konstanten (Typ 0x21 / beh 0x40 @0x016DC, Bank 5 @0x80074664[5],
+  Bits 0x1C @0x801152c4 / 0x1D @0x801120a8, SE-Satz 2 @0x80045078-7c, Blend 7 @0x80115bd0, Clips 0/1/2
+  @0x80115bec/@0x80115c54/@0x80115cc4, Phase 3 @0x801120e8, Clip-Laengen CDEMD1 14/31/30).
+- `re15_port/engine/src/heliport1171_r38.c` — `re15_r38i_ereigniskraehe`, `re15_r38i_rueckgriff` (HOVER-Kontakt:
+  aca58=5/aca59=1 nur ohne laufenden Griff @0x80115264-70, Kommando ersetzt Ziel-Aktion/Plc-Gang/Modus 6),
+  `re15_r38i_wurfstoss` (Wurzel @0x801120a0-e8), `re15_r38i_rueckgriff_tick` (Rueck-FSM P0..P4 0x80115b80, Pose ueber
+  re15_player_victim_force = Kraehen-Opferbank, Ende -> re15_player_event_reach_begin = Modus 6 0x800517f0),
+  `re15_r38i_install` (Kommandowort weg beim Raumaufbau, FUN_800314b0 @0x80031518).
+
+Haken in gemeinsamen Dateien (je 1-3 Zeilen, Kommentar "Runde 38 Spur I"):
+- `engine/src/enemy_ai_common.c`: `#define s_crow_gflags (g_game.flags[5][0])` (statt privatem Wort) und kein
+  Ruecksetzen im Flock-Reset (Raum-Init @0x8003ed74 loescht Bank 5); RE2-Weiche der Kraehe `&& !re15_r38i_ereigniskraehe(e)`;
+  HOVER-Griff `re15_r38i_rueckgriff(e, player)` statt `re15_crow_hit_player(e, player, 8)` (die -8 HP waren erfunden);
+  `re15_r38i_wurfstoss()` an der Stelle @0x801120a0-e8 der Wurzel; Include.
+- `engine/src/game_step_common.c`: `re15_r38i_rueckgriff_tick()` direkt nach `re15_player_victim_tick()` (Spieler-Takt
+  nach dem Gegner-Durchlauf, wie Hook A im Spieler-Task nach FUN_8001a50c).
+- `engine/src/scd_room_setup.c`: Installer-Zeile am Ende des Blocks.
+- `platform/pc/main.c`: beide Bank-Ladestellen `&& !re15_r38i_ereigniskraehe(...)` -> RE1.5-Bank (CDEMD1) fuer die
+  Ereignis-Kraehen in jedem KI-Modus (Muster "0x26 nach HERKUNFT").
+
+PORT-WAHL (Form belegt): Ereignis-Kraehen laufen in jedem KI-Modus auf RE1.5-Hirn + RE1.5-Bank. Begruendung: das
+Ereignis existiert nur in RE1.5 (RE2-Modul ruft keinen Flag-Helfer, 2.4), der Mechanismus ist dort vollstaendig; die
+Weiche greift game-weit nur in ROOM1171 sub07 (Zensus 2.1, Riegel `zensus`). Schaden/HP-Tabellen der Kraehe bleiben
+typ-gebunden: in der Szene kann Elza nicht schiessen (pm=2 von @0x013A8/@0x013AC bis zum Raumwechsel).
+
+Uebernommene Konvention: Modus 6 ist die vorhandene Port-Maschine (re15_player_event_reach_*), deren erster Takt im
+selben Bild wie der Start vorrueckt (wie beim Plc_dest-Modus-6 der Szenen 10D0/1090) — Original: Modus 6 beginnt im
+Bild NACH dem Umlauf @0x80115cf0 und zeigt dort Bild 0; Port: Bild 1 im Umlaufbild. Ein Bild Versatz, nicht neu.
 
 ## 4. Messung nachher
 
-(folgt)
+Belege in `analysis/befunde_runde38/I_belege/` (Logauszuege, Zeitlinie, Bilder).
+
+- Lade-Weg ROOM1171 (8366bfb5, Messkopie, beide KI-Modi, `n1_re2`/`n1_re15`): Griff F95 (gr=1, Opfer-Clip 0),
+  Warten @0x013F4 vorbei F96, Clip 1 ab F109 (= 14 Bilder), Wurf F156 (Clip 2, = Griff + 1 + Sleep 60), Modus 6
+  F186 (PLW-Clip 1, = Wurf + 30), Clip 2 ab F201; Kraehen: ORIENT -> SPIN F156 -> Tod F363 / F410 (Zustand 3) ->
+  Leiche F388 / F437 (Zustand 7); msg 0 / 1 / 3; sub03/sub04 F847; `Aot_on 01` -> DOOR FIRE Slot 1 -> ROOM10B1
+  (F1077 sub02 von 10B1). HP durchgehend 100. Identische Bildzahlen in RE2- und RE15-Modus (dasselbe RE1.5-Hirn).
+  Zeitlinie: `I_belege/nachher_n1_re2_zeitlinie.txt`.
+- ECHTER WEG (Elza-Spielstand ROOM1131 vor der Flurtuer, (3,0xC2)=1): Aktionstaste -> DOOR FIRE Slot 3 -> ROOM1171
+  (Cut 8, kein Ereignis) -> Selbst-Tuer Slot 5 (RE15_FIRE_AOT, sonst derselbe Tuerpfad) -> Szenario 0 -> sub02 F61 ->
+  msg 0/1/3 -> ROOM10B1. VORHER (build_bisect = e2cc7673): nach sub02 F61 nur noch "RE2 EM021 loaded", bis F1500
+  keine Zeile mehr. `I_belege/weg_vorher_nachher_debug.txt`.
+- Bild (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, Lade-Weg, `I_belege/nachher_szene_framedump.png`): F95-F130 Kraehe
+  sitzt Elza im Nacken (Rueckgriff, Opfer-Pose der Kraehenbank), F160/F175 Wurf-Clip (Elza nach vorn gekruemmt),
+  F190/F205 Modus 6 (PLW-Clips), F450 "John: Elza, hurry up!", F540/F580 zwei Kraehenleichen auf dem Helipad, Elza
+  laeuft zu John.
 
 ## 5. Tests
 
