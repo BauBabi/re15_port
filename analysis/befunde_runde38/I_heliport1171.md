@@ -22,6 +22,10 @@ Lesart (AUFTRAG.md "Lesarten"): Elza-Raum = ROOM1171 (Elza-RDT = Leon-RDT + 1, P
 - 2026-10-16 21:40: Probe-Merge gegen r38/integration (Spur C, Sub 0x13 in szenenleon_r36.c) NUR in der Arbeitskopie
   (`git merge --no-commit`), Bau in re15_port/build_bisect, danach `git merge --abort`. Steht beim Lesen ein MERGE_HEAD
   im Baum, hat das Sitzungslimit die Probe unterbrochen: `git merge --abort`, nichts davon committen.
+  ERGEBNIS 21:55: Merge ohne Konflikt, Bau OK, `ctest --test-dir re15_port/build_bisect -R "r38_heliport1171|r38_werkstatt11b0"
+  --timeout 900` -> `100% tests passed, 0 tests failed out of 15`; im Lade-Lauf griff Cs Haken in ROOM1171
+  (`[w11b0-r38] F944 Aktor 1 Typ 0x49: Schub-Sub Phase 7 ... gehalten bis Sub 6 posiert`), die Szene lief trotzdem bis
+  msg 3 und ROOM10B1. Danach `git merge --abort`, Baum sauber (HEAD bd060fdd), build/ neu gebaut, Unit-Riegel 7/7.
 
 ## 1. Messung vorher
 
@@ -131,7 +135,8 @@ Zustand 1/Sub 0, keine Bewegung). Die Szene ist in RE1.5 fertig (kein Beta-Loch)
 
 ## 3. Umsetzung
 
-Neue Dateien (Logik):
+Neue Dateien (Logik) — `engine/src/heliport1171_r38.c` ist eine NEUE Engine-Quelle (GLOB): Desktop braucht ein
+`local_build.sh configure` (im Spurbaum erledigt), Android verwirft app/.cxx in release/build_android.sh ohnehin:
 - `re15_port/include/re15_heliport1171_r38.h` — Belege, Konstanten (Typ 0x21 / beh 0x40 @0x016DC, Bank 5 @0x80074664[5],
   Bits 0x1C @0x801152c4 / 0x1D @0x801120a8, SE-Satz 2 @0x80045078-7c, Blend 7 @0x80115bd0, Clips 0/1/2
   @0x80115bec/@0x80115c54/@0x80115cc4, Phase 3 @0x801120e8, Clip-Laengen CDEMD1 14/31/30).
@@ -255,11 +260,17 @@ Ergebnisse (Stand 645f925a, eigener Baum, `local_build.sh configure` + `build` O
 - Se_on 0x03020001 ist positional (a0&0xff = 1 -> 0x80045a64 mit Spieler+0x34, @0x80115c04); der Port spielt alle
   Raum-SEs (re15_audio_room_se) ohne Positionsmischung — bestehende Port-Eigenschaft, nicht neu.
 - Modus-6-Takt: ein Bild frueher als das Original (Abschnitt 3, uebernommene Konvention der vorhandenen Maschine).
-- INTEGRATION (Hinweis an den Orchestrator): Spur B ("kein Angriff in Szenen") darf den Rueckgriff der Ereignis-Kraehe
-  NICHT sperren — er ist hier der Ausloeser der Szene (einziger Setzer von (5,0x1C)); eine Sperre liesse sub02 wieder
-  ewig @0x013F4 warten. Die Riegel `unit_r38_heliport1171_szene_re2/_re15` und `integration_r38_heliport1171_*`
-  fallen dann rot. Spur F (1141 -> 1171): unabhaengig — der Ereigniszweig haengt nur an (3,0xC2)==1 und an einem
-  Eintritt mit Szenario 0/3 (sub00 Switch @0x01374/@0x01384).
+- INTEGRATION (Hinweise an den Orchestrator, Stand 2026-10-16 21:55, gemessen bzw. per `git merge-tree` geprueft):
+  - Spur C (r38/integration, Sub 0x13 in szenenleon_r36.c): Probe-Merge konfliktfrei, 15/15 (Abschnitt Stand).
+  - Spur B (r38/szenenschutz): FACHLICH vertraeglich — `re15_szenenschutz_gegen` nimmt Typ 0x21 mit grid&0x40 und jeden
+    Zustand != 1 aus (die Ereignis-Kraehe steht in Zustand 4 FLIGHT-2), Bs Kraehen-Tore sitzen nur im normalen Anflug
+    (re15_crow_steer/re15_crow_move), nicht im HOVER-Griff. Der Rueckgriff ist der einzige Setzer von (5,0x1C); eine
+    Sperre liesse sub02 wieder ewig @0x013F4 warten (Riegel `unit_r38_heliport1171_szene_*`, `integration_r38_heliport1171_*`
+    fielen rot). TEXTKONFLIKT (trivial): enemy_ai_common.c Include-Zeile nach `re15_bissarm_r37.h` — beide Zeilen behalten.
+  - Spur F (r38/dining1141): fachlich unabhaengig — der Ereigniszweig haengt nur an (3,0xC2)==1 und an einem Eintritt
+    mit Szenario 0/3 (sub00 Switch @0x01374/@0x01384). TEXTKONFLIKT (trivial): scd_room_setup.c Include-Zeile und
+    Installer-Zeile am Blockende (`re15_r38i_install` / `re15_dining_r38_install`) — beide Zeilen behalten, Reihenfolge
+    egal (re15_r38i_install loescht nur die eigenen Statics des Griffs).
 
 ## 7. Fuer den Nutzer
 
