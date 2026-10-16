@@ -15,6 +15,7 @@ Zuteilung: `VERTRAG.md` Spur Q (Ressourcen §1.2: 1151/30E0/30E1 nur vorhandene 
 - 2026-10-16: Dossier angelegt, Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
 - 2026-10-16: Bau des Basisstands 1bcbd0ff im Baum (local_build.sh configure + build, EXIT 0). Messkopie
   `re15_pc_r38q.exe` neben der exe, Arbeitsordner im Scratchpad (nie im Baum).
+- 2026-10-16: FERTIG — P1/P2/P3 gemessen, belegt, gebaut; 6 neue Riegel gruen; gezielter Lauf 101/101 (Abschnitt 5).
 
 ## 1. Messung vorher (Stand 1bcbd0ff, echte exe)
 
@@ -167,6 +168,18 @@ Neu (registriert NUR in `tests/unit/probes/r38_kleinkram.cmake`): 3 Unit- + 3 In
 | integration_r38_kleinkram_inventar | echte exe, START F400/F500 gegen ohne: genau 2 hoerbare Abschnitte (Mitschnitt 654 / 754, Abstand 100), debug.log Satz 6 / Satz 5, `[se] Stimme: se=6/5`, ohne-Lauf bytegleich |
 | integration_r38_kleinkram_irons | Elza-Spielstand 1151 + CONTINUE, Viereck F60: Text 20 ab F141 (Fenster 140..145) mit mo=11, msg 2 nie, Irons alle Bilder tot, zweiter Klick F450 -> Text 20, Anker-Zeilen |
 | integration_r38_kleinkram_flammenwerfer | Leon-Spielstand 30E0 + CONTINUE: ja -> Modal F170, genommen F263 (0 -> 2 Zellen), msg 15 nie; nein -> F322 nicht genommen, F353 Set(3,0x9C) entfaellt, danach startet sub09 erneut |
+
+Gezielter Lauf (KEINE volle Suite; Stand 5f659cec = Code-Stand c6389db5..6f6ab58f, serieller ctest im Spurbaum):
+Gruppen: eigene Riegel + Elza-1151 (r36_elza) + jedes Menue-/Inventar-Modul, das menu_common.c beruehrt (inv/itembox/
+weapon_select/hinweis/pfeil/karte/adaruf/dokumente/inventar1050/kiste/discard/android-Inventar) + VM/AOT (scd_/aot_/
+msg_dialog) + Irons-/Hebetisch-Raum 1150/1151 + exe-Laeufe mit START-Druck (inventar1050, r36_inventar, kiste,
+kiste2feld, elza_vollstart, r34n_b_cursor Lauf C, irons_tisch_laden).
+
+```
+ctest --test-dir re15_port/build -R "^(unit_r38_kleinkram_.*|integration_r38_kleinkram_.*|unit_r36_elza_.*|integration_r36_elza_irons|unit_inv_fsm|unit_inv_grant|unit_weapon_select|unit_room1150_itembox|unit_itembox_.*|unit_debug_menu|unit_msg_dialog|unit_scd_.*|prop_scd_pc_advance|unit_aot_.*|unit_npc_scd_pose|unit_pri_inventar_riegel|unit_r21_discard_wegwerfen|unit_r26_inventar|unit_r26_panel_11f0|unit_r27_panel_schalterwerte|unit_r17_cursor_klick_pin|unit_r30_android_r1_toggle|unit_r30_android_n1_inventar_cmd|unit_r30_irons_.*|unit_r30_hinweis_.*|unit_r30_pfeil|unit_r31_hebetisch|unit_r32_hebetisch_faecher|unit_r33_karte_.*|unit_r34n_b_.*|unit_r34n_d_adaruf_.*|unit_r34n_e_dokumente|unit_r35_inventar1050_.*|unit_r35_werfer_kombi|unit_r36_inventar|unit_r36_szenenleon_irons|unit_irons_.*|unit_r37_kiste.*|unit_r37_kistenregel_.*|unit_re2z_grab_core_se|integration_r35_inventar1050|integration_r36_inventar|integration_r30_irons_tisch_laden|integration_r34n_b_cursor|integration_r37_kiste|integration_r37_kiste2feld|integration_elza_vollstart)$" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 101
+Total Test time (real) = 852.32 sec
+```
 
 Geaenderte Alt-Riegel (Nutzer-Befund widerlegt den Runde-36-Entwurf, Abschnitt 2.2):
 * `unit_r36_elza_irons` (tests/unit/test_r36_elza.c, Teil irons): vor der Szene erwartet er jetzt den Original-Platz
