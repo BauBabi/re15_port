@@ -3,7 +3,7 @@
 Pruefer: Abnahme-Agent 0 (2026-10-16). Baum `.claude/worktrees/r38_szenenschutz`, Zweig `r38/szenenschutz`,
 HEAD 8d778c67, Basis e2cc7673 (= Code-Stand v0.8.25; `git log 2077bb8e..e2cc7673 -- re15_port/engine re15_port/platform
 re15_port/include` ist leer). Alles hier Gemessene ist SELBST gemessen; Aussagen des Bau-Agenten sind als solche
-gekennzeichnet. (Bericht wird fortlaufend geschrieben.)
+gekennzeichnet. Endstand des Berichts: 2026-10-16 ~23:30.
 
 ## 0. Stand / Bau
 
@@ -32,10 +32,13 @@ bei F101 (hp 92, pm=2)`, `[1171s]: kein geschuetzter Akteur in ROOM1171`.
 ## 2. Nutzer-Punkt, selbst an der exe gemessen — UEBER DEN ECHTEN WEG
 
 Die Riegel der Spur loesen die Szenen per Flag (1190: `RE15_SET_FLAG_AT=4:243,5:4,5:5`) bzw. per Teleport + AOT-Zuendung
-(11D0: `RE15_PLAYER_POS` + `RE15_FIRE_AOT`) aus. Ich habe beide Szenen ueber ECHTE Eingaben ausgeloest: Raum betreten
-(Debug-Sprung = Ankunft am Tuer-Spawn der Raumtabelle, main.c `re15_room_spawns[]`), hinlaufen (RE15_INPUT_SCRIPT,
-Tankstrecke kalibriert: 96 Rot-Einheiten/Bild, Gehen 74 Einheiten/Bild), Knopf/Gegenstand mit Quadrat bedienen,
-Abfrage "Yes" bestaetigen. Gleiches Skript mit der v0.8.25-exe als "vorher".
+(11D0: `RE15_PLAYER_POS` + `RE15_FIRE_AOT`) aus. Ich habe beide Szenen ueber ECHTE Eingaben ausgeloest: hinlaufen
+(RE15_INPUT_SCRIPT, Tankstrecke kalibriert: 96 Rot-Einheiten/Bild, Gehen 74 Einheiten/Bild), Knopf/Gegenstand mit
+Quadrat bedienen, Abfrage "Yes" bzw. Aufnahme-Modal bestaetigen. 11D0 zusaetzlich mit echtem TUER-Eintritt aus ROOM1180
+(2.3). ROOM1190 betrete ich per Original-Debug-Menue-Sprung (`[debug-menu] JUMP -> 119 FIRING-ARMORY (ROOM1190)
+spawn=(3050,0,-11650) cut=0`, ~480 Einheiten neben der Tuer-Ankunft (3174,-11182) aus ROOM1180 Tuer 2 @0x00A54); die
+Zugangstuer mit Strom liegt in ROOM1230 rund 25000 Einheiten hinter zwei freien Hunden. Die Szene selbst ist in 1190
+echt ausgeloest (zwei Knoepfe). Gleiches Skript mit der v0.8.25-exe als "vorher".
 
 ### 2.1 ROOM1190 (Leon, Standard-KI), echter Hebel-Weg
 Befehl (Lauf e8 = neu, v8 = v0.8.25): `RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=1190@240
@@ -74,6 +77,20 @@ F871 aus (365 geschuetzte Gegner-Ticks)`.
 |---|---|---|---|---|
 | v0.8.25 (v12) | F696..F870 | 0 | **Slot4 F865-F870 (6 Bilder, Ansprung in der Szene)** | F919 |
 | neu (e12) | F696..F870 | 0 | **0** | F890 (Commit Slot4 F881 = 11 Bilder nach Szenenende) |
+
+**Mit echtem Tuer-Eintritt** (Lauf t1 = neu, t1v = v0.8.25): `RE15_DEBUG_JUMP=1180@30 RE15_SET_FLAG=4:243` (Strom an:
+in ROOM1180 fuehrt Tuer 0 dann nach 11D0, main00 @0x00A12), im Gang `RE15_PRESS=right@40..50,square@53,square@54`
+(zur Tuer drehen, Tuer oeffnen) -> `[tuer] Sequenz Archiv 2 DOOR1A ...` -> `loaded room11d0.rdt`, Ankunft
+`F1 PL(-300,-17400,rot=1024)`; in 11D0 Skript `L0.36667,U1.6,R0.36667,U2.8,R0.36667,U3.7667,L0.36667,U2.6,W0.3,
+L0.36667,U0.4,W0.3,A0.1,W1.6` + 8x `A0.1,W0.23333` `,W12` (Ankunft `F700 PL(-10983,-12182)` im Kaefig):
+
+| | Szene pm=2 | HP-Verlust IN der Szene | Hund st1/ss1=3 IN der Szene | erster Biss |
+|---|---|---|---|---|
+| v0.8.25 (t1v) | F709..F883 | 0 | **Slot4 F878-F883 (6 Bilder)** | F932 |
+| neu (t1) | F709..F883 | 0 | **0** | F903 (Commit Slot4 F894) |
+
+Bild 11D0 (Debug-Sprung-Lauf, gleiche Bahn): `scratchpad/abn/blatt_v0825_11d0.png` zeigt bei F880 den Hund im Ansprung
+auf Leon (in der Szene begonnen); `blatt_neu_11d0.png` den laufenden Hund, Blut ab F900.
 
 Leon ist ab F871 frei (pst=1, mo=200, kein Plc-Zustand mehr). Hinweis (kein Mangel, s. 6): am echten Weg kommt der
 erste Biss NACH der Szene mit dem neuen Stand frueher (20 Bilder nach Szenenende) als mit v0.8.25 (49 Bilder) — der in
@@ -139,11 +156,14 @@ Lauf A: die 219er-Liste des Bau-Agenten (`B_belege/unit_regex.txt`) + 48 weitere
 Gegenprobe OHNE Spur B (dieselbe Test-exe aus Baeumen auf derselben Basis, nur gelesen/ausgefuehrt, Arbeitsordner im
 Scratchpad): `r38_cursor/re15_port/build/tests/unit/probe_sca_wall_hit.exe` -> `OK (0 Fehler)`, C1 FREI
 `Verbraucher=237`; `r38_integration/.../probe_sca_wall_hit.exe` -> `OK (0 Fehler)`.
-Ursache (Code gelesen): `live_run` (probe_sca_wall_hit.c:286-330) setzt `pl->state = 0` und ruft dann
-`scd_room_reenter` — das ROOM11C0-Skript fuehrt den Spieler per `Plc_dest(slot=0 mode=0x09 ...)` (Log-Zeile), Spieler+0x4
-wird 4, `re15_szenenschutz_haelt()` = 1, der Gorilla/Maggot 0x27 sieht den Spieler waehrend aller 240+240 Bilder als
+Ursache (Code gelesen): `live_run` setzt `pl->state = 0` (probe_sca_wall_hit.c:297) und ruft dann
+`scd_room_reenter` (:306) — das ROOM11C0-Skript startet seine Eingangsszene (sub01 @0x01824 Evt_exec sub2) und fuehrt
+den Spieler per `Plc_dest(slot=0 mode=0x09 ...)` (Log-Zeile); ohne main.c bleibt player_mode 0, aber Spieler+0x4 wird
+4, `re15_szenenschutz_haelt()` = 1, der Gorilla/Maggot 0x27 sieht den Spieler waehrend aller 240+240 Bilder als
 "gerade getroffen" -> keine CHASE-/REAR-UP-Kette mehr. Die Positiv-Kontrolle des fremden Riegels ist damit tot -> M1.
-Lauf B: die uebrigen 405 Nicht-Integrationstests: 403/403 bestanden (Ergebnis der zwei Android-Skript-Riegel s. unten).
+Lauf B: die uebrigen 405 Nicht-Integrationstests (`-j 4`, Begruendung: der Haken sitzt im globalen Gegner-Durchlauf,
+jeder Engine-Riegel mit Gegner-Tick ist betroffen): `99% tests passed, 1 tests failed out of 405` — einzig
+`unit_r35_android_bash_mutanten` (Android-Bash-Skripte, nicht der Spur zugerechnet, s. H6); alle Engine-Riegel gruen.
 
 ### 4.2 "Spieler+0x4 == 4" haelt auch Bilder, in denen Leon sich im Port BEWEGT
 Dossier 2.4 begruendet die zweite Halte-Bedingung mit "auch ohne (2,7) kann sich Leon nicht bewegen" (Beispiel ROOM1230
@@ -155,7 +175,86 @@ Szenenschutz an ist (pm=0; das Port-Bewegungstor player_common.c:946-947 prueft 
 Erst die Nachricht (msg_a=1 ab ~F336) sperrt die Bewegung (Kontrolllauf e15 ohne Steuerkreuz: z bleibt 25000).
 Folge: in diesen Fenstern ist Leon beweglich UND fuer freie Gegner unangreifbar — das widerspricht der Halte-Definition
 ("wo er sich noch nicht mal bewegen kann") und der Dossier-Aussage -> M2.
+Gegenprobe v0.8.25 (Lauf v14, gleiches Skript): dieselbe Bahn (F304 z=25150 ... F336 z=27100) — das Laufen in pst=4 ist
+eine VORBESTEHENDE Port-Abweichung (das Original dispatcht bei +0x4=4 den Executor @0x80073f90[4] statt des Pad-Zweigs,
+Dossier 2.4); Spur B legt den Schutz darueber, ohne das zu pruefen.
 
 ### 4.3 1171 unveraendert (s. 2.4), Elza-Varianten 1191/11D1 wie Leon (s. 2.2/2.5).
 
-(weitere Abschnitte folgen)
+### 4.4 Integration (exe) der beruehrten Szenen/Gegner — selbst gefahren
+`ctest -R '^(integration_r35_zgirl|integration_r35_zgirl_5090|integration_r36_kleidung_hundeweg|integration_r36_story_leon|
+integration_r36_story_elza|integration_r36_szene1150|integration_r36_szenenleon|integration_r37_bissarm_echtlauf|
+integration_r37_elzaems_leon5080|integration_r37_elzaems_leon1100|integration_r37_elzaems_elza10c1kraehe|
+integration_r37_elzaems_leon10c0kraehe|integration_r37_elzaems_elza1141|integration_r37_feuerloescher|
+integration_r37_roy_szene1011|integration_r37_roy_szene1021|integration_r37_roy_leon1170|integration_r37_szene11c0|
+integration_r37_zombieaktiv|integration_r35_fenster|integration_r36_elza_fenster|integration_r36_ziel1190_scheiben)$'
+-j 3 --timeout 1500` (Auswahl: Szenen mit Gegnern in beiden Szenarien, Kraehen 1120/1170/10C0, Hunde 1190, Gitterarm,
+Feuer 1090, Montage-Zombies, Endkampf 5090) — Ergebnis: `100% tests passed, 0 tests failed out of 22` (u.a.
+integration_r36_kleidung_hundeweg 83 s, integration_r37_roy_leon1170 93 s, integration_r37_elzaems_*kraehe 60/82 s,
+integration_r37_feuerloescher 393 s, integration_r35_zgirl_5090 250 s, integration_r37_zombieaktiv 43 s), unter
+Volllast der Maschine (mehrere Spur-Agenten parallel), ohne Wiederholung.
+
+## 5. Vertrag
+
+- Pfade: nur eigene Dateien + kleine Haken (enemy_ai_common.c +11/-4 in 5 Hunks, je 1-2 Zeilen mit "Runde 38 Spur B";
+  enemy_ai_re2_crow.c +3; enemy_ai_re2_dog.c +7/-2). Keine `release/`, `platform/android/`, `shared_assets/PSX/`,
+  keine Test-CMakeLists (Registrierung ueber `tests/unit/probes/r38_szenenschutz.cmake`). Keine Bank-9-Bits,
+  Nachrichten-Ids, Items, Sprachdateien.
+- Fremder Riegel `test_r36_kleidung_hundeweg.cmake` angepasst (Save-Bild 600->700, L4->R4, Kasten/Schwelle 13->25 bei
+  gemessenen 50 Pixeln), im Dossier 3 und im Kopf des Riegels begruendet; der Riegel laeuft gruen (4.4).
+- Ein weiterer fremder Riegel (`unit_sca_wall_hit`) wurde von der Aenderung getroffen und NICHT angepasst/gefahren
+  (M1); die 219er-Liste des Bau-Agenten ("jede Testgruppe von enemy_ai_common.c") enthielt ihn nicht, obwohl er Gegner
+  ueber `frame_step` -> `re15_enemy_ai_run_all` tickt.
+- Riegel je Punkt: vorhanden und messend (Negativkontrollen im Code und im Dossier dokumentiert).
+
+## 6. Hinweise (keine Maengel)
+
+- H1 11D0/11D1: Am echten Weg (auch mit Tuer-Eintritt, t1/t1v) setzt der erste Hund 11 Bilder nach der Freigabe an
+  (Biss 20 Bilder danach; v0.8.25: Ansprung schon in der Szene, Biss erst 49 Bilder danach). Der Wortlaut ("in Cutscenes ... wo er sich noch nicht mal
+  bewegen kann") ist erfuellt; eine Schonfrist NACH der Szene gibt es in 11D0 im Original nicht (Freigabe FUN_80111658
+  ohne Sperrzeit, Dossier 2.2). Wuenscht der Nutzer eine Schonfrist, waere das eine neue Vorgabe.
+- H2 RE1.5-KI (nicht Standard): Die Sicht "+0x93 gesetzt" fuehrt den RE1.5-Hund in seine Knurr-/Aushol-Reaktion
+  (Dossier 6) — dokumentiert, Treffer gibt es nicht.
+- H3 Feuer 0x26: Das Sicherheitsnetz gibt den Feuer-Abzug zurueck, solange die Szene haelt; das Feuer ist kein Angriff
+  — bewusste Erweiterung (Dossier 6), in den gefahrenen Szenen nicht beobachtbar.
+- H4 Integration mit Spur I: beide Spuren aendern enemy_ai_common.c in verschiedenen Hunks; die Ereignis-Kraehe der
+  Spur I bleibt durch `state != 1`/`grid&0x40` ausgenommen (gelesen in r38_heliport1171).
+- H5 ROOM11C0 (Gorilla-Raum, Gegenprobe zu M1 im Spiel): Debug-Sprung, 1100 Bilder, neu und v0.8.25 identische
+  Zeitleiste `F6 pst=4 pm=2` (Szene sub02) -> `F1071 pst=1 pm=1` -> `F1085 pm=0`, kein HP-Verlust; neu
+  `[szenenschutz] F1071 aus (2130 geschuetzte Gegner-Ticks)` = genau das Szenenfenster. Im Spiel ist M1 also die
+  gewollte Wirkung waehrend der Eingangsszene — rot ist der fremde Riegel, dessen Aufbau die Szene nicht beendet.
+- H6 `unit_r35_android_bash_mutanten` lief in Lauf B rot (`2 veraltete Eintraege`, 1471 s unter Volllast). Spur B
+  aendert nichts unter `release/`, `platform/android/`, `tools/` (`git diff e2cc7673 --stat` leer) — Testgegenstand sind
+  Android-Bash-Skripte; nicht der Spur zugerechnet.
+
+## 7. Urteil
+
+| Punkt | Urteil | Beleg |
+|---|---|---|
+| "Leon wird in Cutscenes, in denen er sich nicht bewegen kann, nicht angegriffen (1190 Hunde, 11D0 Hunde); Ausnahme: Teil der Cutscene wie Elza 1170" | erfuellt | Echter Weg 1190: v0.8.25 Biss F1401 bei pm=2 -> neu 0 HP-Verlust, 0 Angriffs-Bilder in F1214..F1431 (e8/v8, Bildblaetter). 11D0 mit Tuer-Eintritt aus 1180: v0.8.25 Ansprung F878-F883 in der Szene -> neu 0 (t1/t1v; ebenso e12/v12). Elza 1191/11D1 ebenso (el1/el2). 1171: state.log bytegleich zu v0.8.25 in beiden KI-Modi, Szenen-Kraehe greift Elza F101 (pm=2). Spur-Riegel 4/4 gruen. |
+
+Gates: Spur-Riegel gruen; RE-Gate haelt bis auf M3 (formal); Vertrag haelt; **Testsuite NICHT gruen (M1)**; Halte-
+Definition ueberdeckt bewegliche Bilder (M2).
+
+## 8. Maengel (nummeriert, nachpruefbar)
+
+- **M1 (hoch) — fremder Riegel `unit_sca_wall_hit` rot durch Spur B.** `ctest --test-dir re15_port/build -R
+  "^unit_sca_wall_hit$" --output-on-failure` -> `FAIL: C1/FREI: REAR-UP feuerte NIE` (C1 FREI `Verbraucher=0`), dazu
+  `[szenenschutz] F0 an` / `F0 aus (960 geschuetzte Gegner-Ticks)`. Ohne Spur B (probe_sca_wall_hit.exe aus
+  r38_cursor bzw. r38_integration): `OK (0 Fehler)`, C1 FREI `Verbraucher=237`. Ursache: der Aufbau
+  (`probe_sca_wall_hit.c` live_run: `pl->state = 0`, dann `scd_room_reenter`) startet die ROOM11C0-Eingangsszene
+  (sub01 @0x01824 Evt_exec sub2, Plc_dest -> Spieler+0x4 = 4) und tickt den Maggot 0x27 waehrend des Halte-Fensters.
+  Noetig: den fremden Riegel begruendet anpassen (wie bei test_r36_kleidung_hundeweg) und die Riegel-Auswahl auf ALLE
+  Tests erweitern, die Gegner ueber `frame_step`/`re15_enemy_ai_run_all` ticken (die 219er-Liste traf ihn nicht).
+- **M2 (mittel) — zweite Halte-Bedingung "Spieler+0x4 == 4" schuetzt auch, waehrend Leon sich im Port bewegt.**
+  Lauf e14 (ROOM1230 sub21, Quadrat an AOT 18 + Steuerkreuz): `[szenenschutz] F301 an`, pst=4, Leon laeuft F303-F336
+  von z=25000 nach z=27100 (pm=0; Bewegungstor player_common.c:946-947 prueft +0x4 nicht; in v0.8.25 gleiche Bahn =
+  vorbestehend). Dossier 2.4 ("auch dort kann sich Leon nicht bewegen") trifft fuer den Port nicht zu; der Schutz macht
+  Leon in diesen Fenstern beweglich UND unangreifbar. Noetig: Halte-Bedingung auf Bilder beschraenken, in denen der Port
+  das Pad wirklich ignoriert (oder das Bewegungstor byte-true an +0x4 binden: Dispatcher @0x80031c8c `lbu aca58` ->
+  Tabelle @0x80073f90, [1] = 0x80031de8 Pad-Zweig, [4] = 0x80030660 Executor — selbst disassembliert) — mit Messung.
+- **M3 (gering, formal) — Konstante ohne @-Beleg:** `if (e->type >= 0x40) return 0;` in `re15_szenenschutz_gegen`
+  (engine/src/szenenschutz_r38.c) zitiert keine Adresse; Beleg vorhanden: PSX.EXE @0x80050a78 `sltiu v0,v0,0x40`
+  (selbst disassembliert; im Port bei enemy_ai_common.c:10140 zitiert). Zitat ergaenzen.
+
+bestanden = false (M1, M2, M3).
