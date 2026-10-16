@@ -220,6 +220,12 @@ Gestartet in der 1. Sitzung, lief nach deren Ende zu Ende (Log `scratchpad/g_cte
 `unit_r35_android_bash_mutanten` mutiert `release/apk_pruefen.sh` und laesst je Mutant
 `tests/unit/r35_android/urteil_kontrollen.sh` laufen (10 parallel, tests/unit/probes/r35_android.cmake:77-80); weder
 release/ noch tests/unit/r35_android/ noch platform/android/ sind von der Spur beruehrt. Einzel-Nachlauf: s. T3b.
+Mechanismus des Rot (aus dem Sweep-Log + bash_urteil_mutanten.py:316-361): jeder Mutant laeuft mit
+`timeout=300`; ein Zeitlimit liefert rc 124 und zaehlt als "erkannt". Der EINZIGE Zeitlimit-Fall im Sweep:
+    [erkannt] Zeile 317: A (( rc == 0 )): == -> <=  <- Zeitlimit            (g_ctest_unit.log:1529)
+Genau dieser Mutant steht in AEQUIVALENT (bash_urteil_mutanten.py:59-60, "rc <= 0 und rc == 0 sind gleich"). Als
+"erkannt" gezaehlt wird er nicht "gesehen" -> sein AEQUIVALENT-Eintrag gilt als veraltet -> `return 1`
+(:358-361). Ein Last-Artefakt (Sweep mit parallelen Tests + parallele Agenten), unabhaengig vom Diff der Spur.
 
 ## Vertrag (VERTRAG.md §1/§2) — selbst geprueft
 * Pfade (`git diff master...HEAD --name-only`, 35 Dateien): KEINE unter release/, re15_port/platform/android/,
@@ -252,4 +258,69 @@ release/ noch tests/unit/r35_android/ noch platform/android/ sind von der Spur b
   36 bleibt geprueft). Die ZWEI weiteren Alt-Riegel, deren Annahme die Spur bricht (unit_re2doc_bildebene,
   unit_r26_inventar B4), sind NICHT nachgezogen -> Mangel 1/2.
 
-(weitere Abschnitte folgen)
+### Lauf T3b — Einzel-Nachlauf unit_r35_android_bash_mutanten (2. Sitzung)
+(laeuft)
+
+### Lauf T4 — Nebenwirkungen Inventar / Karte / Elza-Story / ROOM1011 + Spur-Tests frisch (2. Sitzung, seriell)
+(folgt nach T3b, damit die Fenster-Haken nicht unter der Last der 10 Mutanten-Prozesse laufen)
+
+## Nachkontrolle Wortlaut (2. Sitzung, eigene Bilder der 1. Sitzung, Lauf b1)
+Montagen `scratchpad/G0/abn0s2_seiten_a.png` (F260/F375/F410/F440) und `abn0s2_seiten_b.png` (F475/F540/F600/F680)
+noch einmal Zeile fuer Zeile gegen AUFTRAG.md gelesen: Titel "ROYS DIARY" 1/6; 2/6 "September 22nd / Umbrella...
+those bastards... / It was Umbrella who created these freaks now crawling all over the station. / The S.T.A.R.S.
+members told us what was going on in the Arklay Mountains, and what did we do? ...We laughed them off."; 3/6 "Worse,
+... survivor inside... / How could we have been so stupid..."; 4/6 "September 28th / Damn it, we're screwed. / Now
+someone has sabotaged the Communications Room and wrecked the radio equipment. / And of course, the others didn't
+have to look far for someone to blame. They went straight for my friend John. He's the only outsider here,"; 5/6
+"and he only got in because I signed him in on a visitor's pass... / They didn't even hesitate. They threw him into a
+holding cell downstairs. / There's no way in hell he did this... / Anyway, they took the cell"; 6/6 "key from me and
+locked it up in the Communications Room so I can't let him out. All I've got left is my keycard for the outer
+door... and its code: / 0513. / I just hope he's okay..." (+ EXIT); F600 "The Roys Diary / has been filed."; F680
+zurueck im Raum (Elza neben dem liegenden Roy). Die Stelle "outer door..." in 3-facher Vergroesserung
+(`abn0s2_p6_tuer.png`): drei Punkte, kein vierter (die Illustration dahinter taeuscht im kleinen Bild). "0513" gruen,
+der Punkt dahinter weiss.
+
+## Gates
+| Gate | Ergebnis | Beleg |
+|---|---|---|
+| Punkt 1 (Tagebuch statt Code-Nachricht) | ERFUELLT | Laeufe b1/b4/b6/e1/e2 + v1 (Abschnitt Punkt 1), Wortlaut-Nachkontrolle |
+| Punkt 2 (Karte Comms + Prison) | ERFUELLT | Laeufe b1/b3 (Abschnitt Punkt 2), `abn0s2_hinweis.png` |
+| RE-Gate | HAELT | 11 Stellen (1. Sitzung) + 3 Stichproben (2. Sitzung: ROOM1011 @0xE58-0xE83, RE2 @0x80071cf8-d0c, RE1.5 @0x80028968-94) selbst gelesen; 0 Rate-Woerter, 0 getenv im Diff |
+| Vertrag / Pfade / Ressourcen | HAELT | Abschnitt Vertrag |
+| Tests der Spur (r38_tagebuch, 7) | GRUEN | T1 (+ T4) |
+| Nebenwirkung auf vorhandene Riegel | BRICHT | unit_re2doc_bildebene + unit_r26_inventar deterministisch rot durch die Spur (T1/T2/T3, master gruen) |
+
+## Maengel (nummeriert, nachpruefbar)
+1. **unit_re2doc_bildebene rot durch FILE30.** `tests/unit/test_re2doc_bildebene.c:150` prueft als "nicht vorhandenes
+   Dokument" `re15_re2doc_size(RE2_FILES_DOC_COUNT + 5, -1, ...)` = Satz 30, Titelseite — die Spur legt genau
+   `shared_assets/RE2/FILES/FILE30_title_page.TIM` an. HEAD: `FAIL: ein nicht vorhandenes Dokument meldet 0 statt
+   Muell`; master: PASS. Nachpruefen: `ctest --test-dir re15_port/build -R "^unit_re2doc_bildebene$"`.
+   Forderung: Alt-Riegel begruendet nachziehen (Gegenprobe auf einen Satz, den es nachweislich nicht gibt, z. B. den
+   ersten Satz ohne FILEnn_title_page.TIM im Asset-Baum statt der festen +5), Kommentar "Runde 38 Spur G".
+2. **unit_r26_inventar B4 rot durch Dokument 5.** `tests/unit/probe_r26_inventar.c:296-298`
+   `gefahren == 9 * (re15_item_prompt_name_count() - n_dok - 2) && gefahren >= 850`: mit n_dok = 6 (Item 0x4D
+   ausgenommen) ist gefahren = 846 — die Gleichung haelt, die feste Untergrenze 850 nicht. HEAD:
+   `(B4 Vergleiche gefahren: 846, Dokument-Ids ausgenommen: 54) [FAIL] B4`; master: 855/45 OK. Nachpruefen:
+   `ctest --test-dir re15_port/build -R "^unit_r26_inventar$"`. Forderung: Untergrenze begruendet an die
+   Dokument-Tabelle anpassen (sie soll weiterhin verhindern, dass die Tabelle Nicht-Dokument-Ids schluckt), Kommentar
+   "Runde 38 Spur G".
+3. **Testaussage "100% ... out of 60" deckt die beruehrten Module nicht.** Die Regex des Bau-Agenten enthaelt keine
+   Verbraucher von `re15_files.c` / `shared_assets/RE2/FILES` (re2doc, r26_inventar). Forderung: nach 1./2. die
+   Regex um `re2doc|r26_inventar` (und die Inventar-/Kartengruppe aus T2/T4) erweitern und das Ergebnis woertlich
+   ins Dossier.
+
+## Hinweise (nicht blockierend)
+- H1: Behauptung/Dossier "Elza beugt sich vor und richtet sich wieder auf wie im Original" ist im Bild NICHT zu sehen
+  (Ausschnitte F190..F225, F650..F660; ebenso v0.8.25 Lauf v1). Plc_motion(1,11) laeuft (Log), die Pose ist nicht
+  gemessen. Vorbestand, nicht verlangt — den Satz im Dossier auf "die Opcodes des Originals laufen weiter"
+  korrigieren oder die Pose messen.
+- H2: Integration: menu_common.c aendert auch Spur Q (Inventar-Ton in re15_menu_start_poll/tab_select) — zu pruefen,
+  ob der Aufnahme-Leser des Tagebuchs dabei den Inventar-Oeffnen-Ton bekommt; map_hint_common.c Folge-Index 4 ist
+  positionsabhaengig (unit_r38_tagebuch_karte faengt es); neue Assets FILE30_* (8 Dateien) muessen ins Paket
+  (Asset-Gate beim Release, Spur V/Orchestrator).
+- H3: Unversionierter Ordner `build/r38_g/` in der Baumwurzel (Ausgabe von `tagebuch_satz.py --out`) — nicht
+  committet, beim Aufraeumen entfernen.
+- H4: unit_r35_android_bash_mutanten ist lastempfindlich (AEQUIVALENT-Mutant + Zeitlimit 300 s) — kein Bezug zur
+  Spur, Hinweis fuer den Orchestrator (volle Suite seriell fahren).
+
+(Gesamturteil folgt nach T3b/T4)
