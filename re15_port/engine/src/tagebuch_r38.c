@@ -45,9 +45,11 @@ int re15_tagebuch_r38_message_on(const scd_thread_t *t)
             s_kette = 1;
             s_faden = t;
         }
+#ifdef RE15_PLATFORM_PC
         fprintf(stderr, "[tagebuch] Leser zu: Bit (%d,%d)=%d, %s\n", RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT,
                 re15_game_flag_get(RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT),
                 s_kette ? "Kartenkette nach dem Evt_end" : "kein Hinweis (schon abgelegt)");
+#endif
         return 1;
     }
 
@@ -62,9 +64,11 @@ int re15_tagebuch_r38_message_on(const scd_thread_t *t)
     s_pc      = t->pc;
     s_raum    = g_current_room_id;
     s_kette   = 0;
+#ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[tagebuch] ROOM%04X msg %d -> Roys Diary (Dokument %d, Bildsatz %d, %s)\n",
             (unsigned)g_current_room_id, RE15_TAGEBUCH_R38_MSG, RE15_TAGEBUCH_R38_DOK, RE15_TAGEBUCH_R38_BILDSATZ,
             s_neu ? "erstes Mal: ablegen" : "schon abgelegt: nur lesen");
+#endif
     return 2;
 }
 
@@ -77,18 +81,22 @@ static int faden_im_ereignis(void)
 
 void re15_tagebuch_r38_tick(void)
 {
+    /* Raumwechsel: Zustand und Kette gehoeren zum Raum, in dem sie entstanden (der Statusschirm haelt das Spiel an,
+     * waehrend der Leser laeuft — ein Raumwechsel dazwischen ist ein neuer Raumaufbau). */
+    if (g_current_room_id != s_raum) { s_zustand = FREI; s_kette = 0; s_raum = g_current_room_id; return; }
     if (!s_kette) return;
-    if (g_current_room_id != s_raum) { s_kette = 0; return; }   /* Raum verlassen: gehoert nicht mehr hierher */
     if (faden_im_ereignis()) return;
     s_kette = 0;
     {
         const int k = re15_map_hint_eintrag_fuer(RE15_TAGEBUCH_R38_RAUM, RE15_TAGEBUCH_R38_ZIEL1_RAUM);
+#ifdef RE15_PLATFORM_PC
         int p1 = -1, r1 = -1, p2 = -1, r2 = -1;
         (void)re15_map_hint_ziel(k, &p1, &r1);
         (void)re15_map_hint_ziel(re15_map_hint_folge(k), &p2, &r2);
         fprintf(stderr, "[tagebuch] Evt_end erreicht: Kartenkette Eintrag %d (ROOM%04X Blatt %d Rechteck %d) -> "
                 "Folge %d (ROOM%04X Blatt %d Rechteck %d)\n", k, RE15_TAGEBUCH_R38_ZIEL1_RAUM, p1, r1,
                 re15_map_hint_folge(k), RE15_TAGEBUCH_R38_ZIEL2_RAUM, p2, r2);
+#endif
         if (k >= 0) re15_map_hint_request(k);
     }
 }
