@@ -51,11 +51,14 @@ macro(lauf _name _timeout)
     endif()
 endmacro()
 
-# Grep-Zaehler: Zeilen in _datei, die _regex treffen -> Variable _out
-macro(zeilen _datei _regex _out)
+# Grep-Zaehler: Zeilen in _datei, die _regex treffen -> Variable _out. FUNCTION, nicht macro: ein macro setzt den
+# Regex TEXTUELL ein, CMake wertet "\[" dabei ein zweites Mal aus und macht "[" daraus (gemessen: 0 Treffer auf
+# "[pl] Spieler-Familie PL04", obwohl die Zeile im Log steht).
+function(zeilen _datei _regex _out)
     file(STRINGS "${_datei}" _zz REGEX "${_regex}")
-    list(LENGTH _zz ${_out})
-endmacro()
+    list(LENGTH _zz _n)
+    set(${_out} ${_n} PARENT_SCOPE)
+endfunction()
 
 set(_neu RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_MSG_LOG=1
          RE15_EVT_TRACE=1)
@@ -124,11 +127,12 @@ elseif(TEIL STREQUAL "schwarz")
     lauf(elza 900 ${_neu} RE15_NOAUDIO=1 RE15_PSELECT_AUTO_SWITCH=1 "RE15_FRAMEDUMP=60-400/170:f_"
          "RE15_EXIT_AT=420#1031")
     zeilen("${WORKDIR}/elza/debug.log" "\\[pl\\] Spieler-Familie PL04" _pl)
+    zeilen("${WORKDIR}/elza/debug.log" "\\[evt\\] F[0-9]+ room=1031 Evt_exec sub=15 " _e15)
     zeilen("${WORKDIR}/elza/debug.log" "Cut_chg\\(13\\)" _c13)
     zeilen("${WORKDIR}/elza/debug.log" "\\[kartenitems\\] ROOM1031: Karte Blatt 2" _karte)
-    zeilen("${WORKDIR}/leon/debug.log" "Cut_chg\\(7\\)" _c7)
-    if(_pl LESS 1 OR _c13 LESS 1 OR NOT _karte EQUAL 1 OR _c7 LESS 1)
-        fail("Ablauf: PL04 ${_pl}, Elza Cut_chg(13) ${_c13}, Lageplan in ROOM1031 ${_karte} (soll 1), Leon Cut_chg(7) ${_c7}")
+    zeilen("${WORKDIR}/leon/debug.log" "\\[evt\\] F[0-9]+ room=1170 Evt_exec sub=11 " _e11)
+    if(_pl LESS 1 OR NOT _e15 EQUAL 1 OR NOT _c13 EQUAL 1 OR NOT _karte EQUAL 1 OR NOT _e11 EQUAL 1)
+        fail("Ablauf: PL04 ${_pl}, Elza sub15 ${_e15} / Cut_chg(13) ${_c13}, Lageplan in ROOM1031 ${_karte}, Leon sub11 ${_e11} (je soll 1)")
     endif()
     foreach(_f ${_bilder})
         string(LENGTH "${_f}" _len)
