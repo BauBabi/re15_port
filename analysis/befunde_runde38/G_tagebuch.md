@@ -17,6 +17,8 @@ Ressourcen (VERTRAG §1): Bank-9-Bit 68 (genutzt); Msg-Ids 1011 40-44 (NICHT geb
 - [x] Umsetzung (tagebuch_r38.c + FILE30 + 6 Haken)
 - [x] Messung nachher (N1-N3, echte exe)
 - [x] Tests (unit_r38_tagebuch_* 4, integration_r38_tagebuch_* 3, gezielte Regression)
+- [x] Nachbesserung 1 (Abnahme 0, Maengel 1-3): Alt-Riegel unit_re2doc_bildebene + unit_r26_inventar B4 begruendet
+      nachgezogen (Mutationsproben), erweiterte Regex 151 Tests (Abschnitt "Nachbesserung 1")
 
 ## Messung vorher
 
@@ -137,6 +139,10 @@ Haken in gemeinsamen Dateien (Kommentar "Runde 38 Spur G"):
   ROOM1211; "gezeigt" (9,68), zeitgesteuert 1, erreicht (9,83) bzw. (4,0xFC)).
 * `engine/src/re15_files.c`: Dokument 5 { 0x4D, 30, 5, 176, "Roys Diary" }.
 * `tests/unit/test_r36_kartenbits.c` k_port[]: Bit 68 (+ Include).
+* Nachbesserung 1 (Alt-Riegel, Kommentar "RUNDE 38 SPUR G (Nachbesserung 1, Mangel N der Abnahme 0)"):
+  `tests/unit/test_re2doc_bildebene.c` (Gegenprobe: erster Satz ohne Titelseite im Asset-Baum statt fest Satz 30) und
+  `tests/unit/probe_r26_inventar.c` B4 (statt Untergrenze 850: keine Nicht-Dokument-Id unter der Basis aus DEBUG.BIN
+  @0x800c7370 geschluckt). Keine Engine-Datei geaendert.
 
 Konstanten (alle mit Beleg in re15_tagebuch_r38.h):
 | Konstante | Wert | Beleg |
@@ -224,6 +230,9 @@ Beruehrt: scd_vm.c (Message_on), menu_common.c (Dokument-Aufnahme), map_hint_com
   -> **`100% tests passed, 0 tests failed out of 60`** (Total Test time (real) = 976.72 sec).
 * Satzwerkzeug reproduzierbar: zweiter Lauf `tagebuch_satz.py --out build/r38_g/satz2` = dieselben 8 md5 wie die
   installierten FILE30-Dateien; Atlas md5 8cbe2c52 = Runde 34.
+* ⛔ Lauf 2 deckte NICHT alle beruehrten Module (Abnahme 0, Mangel 3): unit_re2doc_bildebene und unit_r26_inventar
+  (Verbraucher von re15_files.c / shared_assets/RE2/FILES) fehlten und waren rot. Massgeblich ist Lauf N1 im Abschnitt
+  "Nachbesserung 1" (151 Tests, Regex woertlich dort).
 
 ## Nachbesserung 1 (nach Abnahme 0, `G_abnahme_0.md`; Sitzung 2026-10-16 abends)
 
@@ -322,7 +331,41 @@ Beide Befunde der Abnahme reproduziert.
       [FAIL] B5b der Lauf traegt "Irons Diary" und NICHT "Chris' Diary"     (Folgefehler der Verschiebung)
   Kontrolle M0 (unveraenderte Kopie): `probe_r26_inventar: GRUEN (0 Fehler)`, exit 0.
 
-### Mangel 3 — Testaussage ueber die beruehrten Module (IN ARBEIT)
+### Mangel 3 — Testaussage ueber die beruehrten Module
+* Ursache: die Regex des Bau-Agenten (Lauf 2 oben, 60 Tests) enthielt keinen Verbraucher von `re15_files.c` /
+  `shared_assets/RE2/FILES` (re2doc, r26_inventar) — genau dort lagen die zwei roten Alt-Riegel. Die Aussage
+  "100% ... out of 60" galt nur fuer die gefahrenen Tests.
+* Aenderung: Regex = Vereinigung der Abnahme-Laeufe T1 (85: Regex des Bau-Agenten + re2doc / r30_karte / r34n_f_leiche /
+  r35_karte / r36_karte / r36_story_roy / karte_besitz), T2 (59: Inventar-/Kartengruppe ueber die Datei-Zensur der Tests,
+  darin r26_inventar) und T4 (21: Integrationen Inventar / Karte / Elza-Story / ROOM1011 + Spur-Tests), dazu ausdruecklich
+  `re2doc|r26_inventar`. Selbst nachgezaehlt (`ctest -N` je Regex, `comm`): T1, T2, T4 und die 60 des Bau-Agenten sind
+  vollstaendig enthalten, nichts darueber hinaus -> 151 Tests (125 unit + 26 integration).
+* Lauf N1 (Bau HEAD 9bad5839 = die zwei nachgezogenen Riegel; exe unveraendert seit 17:21, md5 e81c5047..., derselbe Stand
+  wie in den Abnahme-Laeufen T1/T4; seriell, 22:23-23:21, Maschine durch parallele Agenten unter Volllast: 100 %
+  CPU-Last, 10 fremde re15_pc-Messkopien, 5 fremde ctest gemessen):
+  `ctest --test-dir re15_port/build -R "r38_tagebuch|re2doc|r26_inventar|r30_irons|r30_hinweis|r30_karte|r33_karte|r34n_e_dokumente|r34n_f_leiche|r35_inhalt_doku|r35_cut10f0|r35_karte|r36_kartenbits|r36_karte|r36_schluessel|r36_elza_roy|r36_story|r37_roy|unit_savedata|unit_msg_dialog|unit_action_msg_gate|karte_besitz|^unit_(inv_fsm|r30_pfeil|r34n_g_maskgrp|r34n_e|r35_inhalt_items|r37_feuerloescher|r37_kistenregel|map_|savepoint|inv_grant|r36_inventar|r35_inventar1050|debug_menu|pri_inventar_riegel|em_status_persist|aot_sce_census)|^integration_(elza_vollstart|r35_inventar1050|r36_inventar|map_uebergang|map_raum_live|save_counter_pin|r36_elza_stoehnen)$" --timeout 1200 --output-on-failure`
+  -> **`99% tests passed, 1 tests failed out of 151`** (Total Test time (real) = 3524.79 sec). Darin gruen u. a.:
+      21/151 Test #252: unit_re2doc_bildebene ....  Passed 0.10 sec      <- Mangel 1
+      30/151 Test #324: unit_r26_inventar ........  Passed 0.10 sec      <- Mangel 2
+     108/151 Test #629: unit_r36_schluessel_zelle   Passed               (Alt-Riegel der 1. Sitzung)
+     119/151 Test #652: integration_r36_story_leon  Passed 567.23 sec / 120/151 #653 integration_r36_story_elza 296.87 sec
+     142..148/151: unit_r38_tagebuch_dokument/_ablauf/_karte/_leon, integration_r38_tagebuch_lesen 45.85 s / _karte
+     21.02 s / _leon 23.77 s  — alle Passed (die Riegel der erfuellten Punkte 1/2 bleiben gruen)
+  Rot: `31/151 Test #342: integration_elza_vollstart ***Failed 105.77 sec` — "FEHLER (c) die Szene ist nicht bis zur
+  Spielfreigabe durchgelaufen", MESSWERTE `... Szenenende=0`. Mechanismus: der Riegel laesst die exe eine FESTE
+  Wanduhr-Zeit laufen (`test_elza_vollstart.cmake:45` `LAUFZEIT 100`, "gemessen: Start ~25 s + 363 + 445 + 570 Bilder
+  bei 30/s = ~71 s", `execute_process ... TIMEOUT ${LAUFZEIT}`); im Volllast-Lauf kam die exe in 100 s nur bis Bild F921
+  (letzte Zeile `elza_wd/debug.log`: `[bg-log] F921 blit room1031#00`). Kein Bezug zu dieser Nachbesserung: sie aendert
+  nur zwei Unit-Testdateien, die exe ist bit-gleich zu der, mit der die Abnahme den Riegel gruen fuhr (T4: 111.87 s).
+  Einzel-Nachlauf (je `ctest --test-dir re15_port/build -R "^integration_elza_vollstart$" --timeout 600
+  --output-on-failure`):
+      Nachlauf 1 (Last 69 %, 11 fremde re15_pc): Passed 100.08 sec, letzte Zeile F1770 -> 100% tests passed, 0 tests failed out of 1
+      Nachlauf 2 (-V): MESSWERTE elza=1 pl04=1 ... Tuer19=1 sub13=1 Szenenende=1; Passed 101.07 sec, F1608
+                       -> 100% tests passed, 0 tests failed out of 1
+  => Last-Artefakt (Wanduhr-Riegel), keine Regression; der Riegel gehoert in die serielle Integrationssuite.
+* Ergebnis Nachbesserung 1: alle 150 uebrigen Tests der erweiterten Regex gruen im ersten Durchgang, der 151. im
+  Einzel-Nachlauf 2x gruen. Die beiden Alt-Riegel sind gruen und pruefen ihren Zweck jetzt genauer als vorher
+  (Mutationsproben M1/M2 rot, Kontrollen gruen).
 
 ## OFFEN
 - Nichts aus dem Auftrag offen. Hinweise fuer die Integration:
