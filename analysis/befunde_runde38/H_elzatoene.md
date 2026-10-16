@@ -18,6 +18,7 @@ Lesart (VERTRAG/AUFTRAG): Elza-Raeume = ROOM1041 / ROOM1021 (Elza-RDT = Leon-RDT
 - [x] RE Punkt 1/2 — §2.1/§2.2
 - [x] Umsetzung (§3), Messung nachher (§4), Riegel (§5: 6 Unit + 2 Integration, gruen)
 - [x] gezielte Regression (§5)
+- [x] Nachbesserung 1 (Abnahme 0, Maengel 1-4) — §8; gezielte Regression 70/70 (§8.5)
 
 ## 1. Messung vorher (Bau e2cc7673, Messkopie re15_pc_r38h.exe, Arbeitsordner im Scratchpad)
 
@@ -265,7 +266,7 @@ hat fuer den Partner eine eigene Art und schiebt das Gegnerfeld auf Art 3. Selbs
   RE2-treu; die Tonhoehe ist KEINE Ursache.
 
 ### 8.2 Mangel 2 — Ursache des Befunds P3 und Wirksamkeit
-Messordner `H38n1/` (Scratchpad), Werkzeuge `H38n1/py/`: `schuss_zensus.py` (RE2-Skript-Schuesse), `wellen.py` +
+Messordner `H38n1/` (Scratchpad), Werkzeuge `H38n1/py/` (Kopie im Baum: `H_belege/nb1_py/`, Pfade relativ zum Baum): `schuss_zensus.py` (RE2-Skript-Schuesse), `wellen.py` +
 `klangbild.py` + `terz.py` + `baender2.py` (Wellen so getaktet wie der Mischer: Note tone[+6], fein tone[+5],
 Schritt pitch << 4, Halten wie audio_callback), `kap_kreuz.py` (Mitschnitte). Mitschnitte = die der Abnahme 0
 (`ab0h/runs/alt_s1021` = v0.8.25-Paket-exe, `ab0h/runs/neu_s1021` = Spur-exe; echter Weg 1041 -> Tuer 3 -> 1021,
@@ -315,8 +316,11 @@ dieselbe Aufnahme wie der Redhawk, nur mit halber Abtastrate: Quelle -4,4 gegen 
    @0x020C2 vor den Feuer-Clips; RE1.5 Art 2 = Gegnerfeld (@0x80040d60 -> 0x800ACC2C, §8.1). RE1.5 kennt keine
    Partner-Art.
 2. Die RE2-Entsprechung des Gegnerfelds ist Art 3 (@0x80055988 / @0x800564b8); Art 2 ist der Partner (§8.1).
-3. Zensus ALLER RE2-Skript-Schuesse (Se_on, dem binnen 4 Saetzen ein ESP 0x18 "GUN" folgt; opcode-exakter Walk ueber
-   alle PL0-RDTs, `schuss_zensus.py`):
+3. Zensus ALLER RE2-Skript-Schuesse (Se_on im selben Ablauf wie ein ESP 0x18 "GUN"; opcode-exakter Walk ueber alle
+   PL0-RDTs, `H_belege/nb1_py/schuss_zensus.py`: Fenster 4 Saetze nach dem Se_on, mit `FENSTER=12` zusaetzlich 4090 (Ck +
+   Plc_motion zwischen Se_on und GUN) und 6040 (dort steht der GUN-ESP zwei Saetze VOR jedem Se_on, @0x02A9A/@0x02B12/
+   @0x02B8A). Das weite Fenster faengt auch Nicht-Schuesse — 4040 Satz 0x0B (Folge-Welle an Annette) und 0x0F (Art 1, an
+   der Spielfigur), 4090 Satz 0x09, 6040 Satz 0x0B — die stehen NICHT in der Tabelle):
 
 | Raum Block @Se_on | Art (Schuetze) | Satz | Welle | Aufnahme |
 |---|---|---|---|---|
@@ -374,3 +378,28 @@ Berichtigt (Wortlaut jetzt: 40A0/0x08 = Schuss der PARTNERIN, Art 2 = Partner; T
   Zeile + Ton-Ausschnitte), §5 (Riegel-Tabelle), §6 OFFEN 4, §7 (RE15_MIN_TESTS, Bedienhinweis).
 * `grep -i "alligator-schleife|kein schuss|am alligator|alligator-ton|alligator-welle"` ueber alle geaenderten Code-,
   Werkzeug- und Riegeldateien: 0 Treffer; im Dossier nur noch in den als falsch markierten Zitaten.
+
+### 8.5 Messung nachher + Tests (Bau dieses Stands)
+* Bau: `local_build.sh configure` -> `LOCAL-BUILD-OK (configure)`, `local_build.sh build` -> `LOCAL-BUILD-OK (build)`.
+  Seit 8328ae1f keine Laufzeit-/Datenaenderung (`git diff 8328ae1f HEAD -- re15_port/engine re15_port/platform
+  re15_port/include re15_port/shared_assets`: nur Kommentarzeilen) -> ELZASE.VBS unveraendert (14232 B, md5 ba96a662..).
+* Riegel direkt: `test_r38_elzatoene re2beleg` -> 13x ok, `re2beleg: 0 Fehler` (u. a. "ROOM40A0: 5 Sce_em_set — 4 Partner
+  (Id 0xFF, @0x02564 Ada `44 00 ff 41`), 1 Gegner (@0x025A0 Alligator)"); `test_r38_elzatoene aufnahme` -> "Johns Schuss =
+  Aufnahme des RE1.5-Super-Redhawk (ARMS07 SE 0): Korrelation 0.982", Gegenprobe alter Satz vs ARMS02/03/07/08 SE 0:
+  0.209 / 0.182 / 0.107 / 0.092, `aufnahme: 0 Fehler`.
+* Echte exe, echter Weg (integration_r38_elzatoene, Spielstand + CONTINUE + Tuer + Gehen):
+  - integration_r38_elzatoene_szene1021 (Lauf lauf_szene1021_fe41be2e): elza.log F788 Anker @0x020B2 -> Aktion 2 (Stoehnen), F939 @0x020CE und F969 @0x020D6 -> Aktion 2 (Schuesse), F969 @0x020DE -> Aktion 3 (Roy); probe_r38_elzatoene_kreuz: Stoehnen snd1 SE 4 (Abschnitt ab 600 ms) Bild 788 Korrelation 1,000 (Gegenprobe 0,068), Schuss ELZASE Satz 1 Bild 939 1,000 / Bild 969 0,982 (Gegenprobe 0,000) — wie Abnahme 0
+  - integration_r38_elzatoene_gunshot1041 (Lauf lauf_gunshot1041_fb9b98bc): elza.log F83 Anker @0x02200 -> Aktion 1; Schuss Bild 83 Korrelation 0,900 (Gegenprobe 0,063); state.log: Nachricht 3 nie offen (fsm=1 nur id 2 = 99 Bilder 'What was that!?' und id 20 in ROOM1031 vor der Tuer — bildgleich mit dem Abnahme-Lauf neu_g1041)
+  - Mitschnitt dieses Laufs gegen die Spielerwaffen (`H38n1/py/kap_kreuz2.py`, wie 8.2): Bild 939: Super Redhawk ARMS07 SE 0 0,982 | Browning ARMS03 SE 0 0,165 | alter Satz 40A0/08 0,134 | neuer Satz 4040/0A 1,000; Bild 969: Redhawk 0,968 | Browning 0,161 | alt 0,143 | neu 0,985.
+* Gezielte Regression (KEINE volle Suite; Regex = eigene Tests + jede Testgruppe der von der Spur beruehrten Module, wie
+  Abnahme 0, jetzt mit unit_r38_elzatoene_aufnahme = 70 Tests):
+  `ctest --test-dir re15_port/build -R "scd|msg_dialog|text_freeze|synchro_stimme|voice_ausreden|se_voice_machine|leiche|r36_elza|r38_elzatoene|r37_roy|gegnerzahl_raum1041|story_elza|elza_vollstart|elza_zweig|codepanel|lift2030|savepoint|itembox" --timeout 1200 --output-on-failure -j2`
+  -> **`100% tests passed, 0 tests failed out of 70`**
+
+### 8.6 Fuer den Nutzer / Orchestrator (Nachbesserung 1)
+* Keine neuen oder geaenderten Assets gegenueber dem Spurstand 8328ae1f (ELZASE.VBS wie dort, 14232 B, md5 ba96a662..).
+* **RE15_MIN_TESTS +9** fuer die Spur insgesamt (7 Unit + 2 Integration; +1 gegenueber dem Spurstand =
+  unit_r38_elzatoene_aufnahme, registriert in tests/unit/probes/r38_elzatoene.cmake).
+* Bedienhinweis unveraendert (§7). Zum Gegenhoeren: `H_belege/h_1021_vorher_schuesse.wav` (v0.8.25: Schuss der
+  Partnerin aus RE2 40A0) und `H_belege/h_1021_nachher_schuesse.wav` (jetzt: Super-Redhawk-Aufnahme).
+* Entscheidungsfragen: keine.
