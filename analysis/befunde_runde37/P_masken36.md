@@ -255,7 +255,9 @@ S/H wie §4.1, jetzt jeweils gegen einen eigenen Lauf ohne Figur gezaehlt). Log 
   niedrigen Vordergrund-Objekt), 5090 (Beine hinter dem Maschinenteil) und 5050 (Knie/Messer hinter der dunklen Kante);
   >= 60 % liefert der Szenenfinder (`suche 25 5`) in Stage 5 nur in 5020 (Daten der Generator-Masken, §6).
 - DAVOR v5090c14: 2 (Leon) / 5 (Elza) Saumpunkte am Rand der Pfeilermaske, s. OFFEN 2.
-- Die Zeilen 1..8 laufen als Riegel `integration_r37_masken36_stage3..6` (Leon und Elza, Werte reproduziert, §5).
+- Die Zeilen 1..8 liefen als Riegel `integration_r37_masken36_stage3..6` (Leon und Elza, Werte reproduziert, §5).
+  (Richtigstellung NB2, Hinweis der Abnahme 1: seit Nachbesserung 1 ist der Stage-4-Riegel ROOM4080 Cut 5 h4080c5/v4080c5;
+  h4040c4/v4040c7 laufen nicht mehr als Riegel - ihre Rechtecke sind seit NB1 ausgeschlossen, NB1.2.)
 - Bilder: `p37/img/z4_<l|e><szene>.png`, `z5_*`, `z6_*` (A | B | V, 3-fach).
 
 ### 4.3 FREI an der exe als Riegel (Stage 3, Leon und Elza)
@@ -584,7 +586,10 @@ S = |B-C| > 24, H = davon |A-B| > 24). Bau: `local_build.sh configure` (nach dem
 `Cut_chg 29 0f`; die Figur steht dabei ausserhalb des Regionsvierecks und wird nicht gezeichnet). Die Regel bis NB1 liess
 eine Sektion ohne Stehplatz UNVERAENDERT (alle 36 Rechtecke an) - "keine Figur" wurde als "nichts zu uebermalen" gelesen.
 Gezeichnet wird in diesem Cut aber der Ziel-Cursor (Objekt 3, sub11..14 `Work_set 2e 03 03` + `Speed_set`), und die
-Generator-Masken (Tiefe aus dem Bodenkontakt x0.90) liegen vor ihm.
+Generator-Masken (Tiefe aus dem Bodenkontakt x0.90) liegen vor ihm. SCD-Bytes nachgeprueft (`re15_port/tools/scd_dump_room.py`
+ROOM3050.RDT): main00 @0x01FDC `Obj_model_set 2d 03 04 ... 9e b3 00 00 9c 58` = obj 3 type 4 pos (-19554,0,22684); sub10
+[0x2578..0x25B4] @0x02596 `Cut_chg 29 0f`; sub11..14 @0x025B4/@0x025C0/@0x025CC/@0x025D8 je `Work_set 2e 03 03` (kind 3 =
+Objekt, idx 3).
 
 **Messung vorher (Aufbau der Abnahme nachgefahren, exe alt = nb2alt):** `RE15_SET_FLAG=3:178 RE15_DEBUG_JUMP=3050@250
 RE15_PLAYER_POS=-24757,-15900,3072 RE15_FORCE_EVENT=10@300 RE15_PRESS=square@420,square@422,square@480,...,square@960,
