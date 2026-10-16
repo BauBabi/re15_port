@@ -12,7 +12,7 @@
 #   FAKE_KEIN=<schritt>      Rueckgabe 0 MIT Erfolgsmarke, aber OHNE Artefakt
 #   FAKE_ALT=<schritt>       Artefakt mit Zeitstempel 2020-01-01 (altes Artefakt, das als neues durchgehen will)
 #   FAKE_OHNE_MARKE=<schritt> Rueckgabe 0 und Artefakt, aber ohne Erfolgsmarke
-#   FAKE_OHNE_ANDROID=1      make_package packt keinen Android-Satz (wie das echte ohne APK, make_package.sh:929)
+#   FAKE_OHNE_ANDROID=1      make_package packt keinen Android-Satz (wie das echte ohne APK, make_package.sh:931)
 #   FAKE_ALTE_BLEIBEN=1      make_package laesst die Volumes der alten Version liegen
 #   FAKE_DOCKER=nein         docker_bereit.sh meldet "nicht bereit"
 # Schritt-Namen: windows android linux paket.

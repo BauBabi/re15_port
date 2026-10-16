@@ -14,6 +14,8 @@ Lesart des Orchestrators (AUFTRAG.md, "Lesarten"): "minor" = wie alle bisherigen
 
 (laufend, neueste Eintraege oben)
 
+* 2026-10-16 23:40: NACHBESSERUNG 1 FERTIG: gezielt `100% tests passed, 0 tests failed out of 7` (-R r38_releaseskript),
+  echter Trockenlauf rc 0 ohne falschen Hinweis. Abschnitt 8.
 * 2026-10-16 23:25: Umsetzung M1 committet (88dda648, 10fe5afa), Bau `LOCAL-BUILD-OK (build)`; gezielte Tests laufen
   (Maschine stark ausgelastet: 105 bash, 13 cmake, 6 ctest, 15 Test-exes anderer Spuren).
 * 2026-10-16 23:00: NACHBESSERUNG 1 begonnen (Abnahme 0: Mangel M1, gescheiterter Push im Schritt abschluss) -
@@ -112,7 +114,7 @@ Regeln/Konstanten mit Beleg (Bau-Umgebung, keine Original-Adresse):
 | Erfolgsmarken je Schritt | docker_win_build.sh:103, docker_linux_build.sh:131/142, build_android.sh:355, make_package.sh:1051 |
 | Frische: Artefakt nicht aelter als der Schrittbeginn, vorher geloescht | Memory reai-v2-releasebau-pipe-schluckt-fehler (v0.8.15: altes linux_out-Binary) |
 | Rueckgabe = PIPESTATUS[0] des Schritts, nicht die von tee | dieselbe Memory ('| tail' meldete exit 0) |
-| alle DREI Plattformen muessen nach `paket` als Satz da sein | make_package.sh:929 liefert ohne APK still nur PC-Saetze |
+| alle DREI Plattformen muessen nach `paket` als Satz da sein | make_package.sh:931 liefert ohne APK still nur PC-Saetze (Zitat in Nachbesserung 1 von :929 berichtigt, Abnahme H3) |
 | `stand_pruefen`: re15_port/ sauber und `HEAD:re15_port` unveraendert vor/nach jedem Bau-Schritt | sonst stammen die Binaries aus verschiedenen Staenden |
 | Release-Commit nur mit Paketdateien (Volumes, 2 SUMS, Notes) | Form von 2077bb8e / e8b3958f (8 Dateien); SUMS werden von make_package NICHT vorgemerkt (:1040-1045) |
 | `--tag` verweigert, wenn nach dem Paketbau Paket-Inhalt committet wurde | Regel wie make_package.sh check_binary_fresh (:160-191), erweitert um Assets/synchro/pkg_files |
@@ -261,7 +263,8 @@ fuehren an ihr vorbei. `s_abschluss` legt Commit und Tag ausserdem immer neu an 
 
 Nebenbei (Hinweise der Abnahme, keine Maengel): H3 Zitat `make_package.sh:929` -> `:931` (release_alles.sh, Kommentar in
 `s_paket`; selbst nachgelesen: :931 `(kein Android-Paket: ... fehlt`); H2 Zeitgrenzen 60 s / 30 s in docker_bereit.sh
-als PORT-WAHL gekennzeichnet (Kommentar, kein Verhalten geaendert).
+als PORT-WAHL gekennzeichnet (Kommentar, kein Verhalten geaendert). Das Zitat :929 stand ausserdem in Abschnitt 3 und im
+Kommentar der Attrappe attrappe_gemeinsam.sh - beide berichtigt (nur Kommentar/Text).
 
 Trockenlauf-Hinweis, zweite Stufe (nach den ersten Messungen ergaenzt): kommt nach dem nicht gepushten Release noch ein
 Commit (die Orchestratoren committen laufend Doku), steht der Release-Commit nicht mehr auf HEAD - dann pusht Wahl [3]
@@ -286,10 +289,42 @@ enthalten -> kein Hinweis (richtig).
 | p5 `--ab abschluss --tag` ohne --version (= Wahl [3]) nach zurueckgesetztem origin | rc 1, v0.8.27, `[XX]` Notes | rc 0, v0.8.26, gepusht, von origin bestaetigt |
 | p6 dasselbe, alles schon gepusht | rc 1 | rc 0, `Everything up-to-date`, `origin bestaetigt`, HEAD + Tags unveraendert |
 
-(Endlauf ueber ctest folgt)
+**Endlauf** (Stand 10fe5afa + Dossier, Bau `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`,
+`ninja: no work to do.` nach dem Neu-Configure der geaenderten Sonde), gezielt und seriell (Abnahme H6: unter Last kein
+-j), woertlich:
+`ctest --test-dir "<baum>/re15_port/build" -V -R "r38_releaseskript" --timeout 1200 --output-on-failure` ->
+`100% tests passed, 0 tests failed out of 7`, `Total Test time (real) = 576.93 sec`; je Teil aus der -V-Ausgabe:
+version 39/39 (38 s), bausteine 18/18 (4 s), trocken 32/32 (70 s), **ablauf 71/71** (110 s; vorher 47 - neu: 24
+Pruefungen M1), fehler_bau 25/25 (131 s), **fehler_umfeld 30/30** (173 s; +1 `--kein-push`-Meldung), **cmd 21/21**
+(49 s; +2 Doppelklick-Wahl 3 nach verlorenem Push). Testzahl unveraendert 7 (RE15_MIN_TESTS: weiter +7).
+
+Echter Trockenlauf im Spurbaum mit dem neuen Skript (23:28, read-only): `bash release/release_alles.sh --dry-run` ->
+rc 0 in 13 s, `Version: v0.8.26  (hoechster Tag v0.8.25 + 1)`, `[ok] Tag v0.8.26 ist frei`, KEIN Push-Hinweis
+(v0.8.25 liegt in origin/master - richtig), `TROCKENLAUF-OK v0.8.26`; `git status --porcelain --untracked-files=all
+--ignored -- release` vorher = nachher.
+
+Andere Release-Tests: `grep -rnE "release_alles|docker_bereit|release/README|release_alles\.cmd"` ueber
+re15_port/tests (ausser r38_releaseskript), re15_port/CMakeLists.txt, re15_port/tools -> 0 Treffer; die Tests
+r35_android_* lesen nur apk_pruefen.sh/python_finden.sh/apk_asset_gate.py/gate_urteil.py (Abnahme A11), die dieser
+Diff nicht beruehrt - deshalb nicht erneut gefahren.
+
+### 8.2a Tests (Nachbesserung 1, neue Pruefungen)
+
+| Test | neue Pruefungen |
+|---|---|
+| unit_r38_releaseskript_ablauf | `ablauf_push_scheitert` (Rezept Abnahme A9): Push scheitert -> rc 1, Commit + annotierter Tag lokal, origin ohne Tag, Meldung "nur der Push fehlt" + Push von Hand + Wiederaufnahme-Zeile; Trockenlauf danach `[!!] ... der Push fehlt ... Wahl [3]`; nach einem weiteren Commit `... fehlt in origin/master ... von Hand`; die gemeldete Zeile WOERTLICH im Repo (RE15_ARCHIV auf einen leeren Ordner) -> rc 0, `RELEASE-ALLES-OK v0.8.26`, kein zweiter Commit, Tag-Objekt unveraendert, origin master = Release-Commit, origin-Tag = dasselbe Tag-Objekt, kein v0.8.27, `origin bestaetigt`; Wahl-[3]-Aufruf ohne --version -> v0.8.26, gepusht; Wiederholung bei fertigem Push -> rc 0, nichts veraendert; im ersten Lauf zusaetzlich "kein Push-Hinweis, wenn origin alles hat" |
+| unit_r38_releaseskript_fehler_umfeld | `--kein-push`: Meldung nennt `Pushen spaeter: ... --ab abschluss --tag --archiv ...` (ohne --kein-push) und den Push von Hand |
+| unit_r38_releaseskript_cmd | echter Doppelklick (cmd.exe, Wahl 3) nach verlorenem Push: rc 0, nichts gebaut, origin traegt master + Tag v0.8.26, kein neuer Commit, kein v0.8.27 |
+
+Gegenprobe am unveraenderten Skript (8.1, "Messung vorher"): dieselben Riegel 12 rot (58/70).
 
 ### 8.3 OFFEN (Nachbesserung 1)
 
+* Die neuen Pruefungen liefen nur unter Windows (Git-Bash 5.2.26). Eine Linux-Gegenprobe im Bau-Image war nicht
+  moeglich: `timeout 20 docker info` -> rc 124 (Docker Desktop laeuft nicht; Abnahme A10: Start scheiterte am
+  WSL-Bootstrap) - die Spur startet Docker nicht neben der Last der anderen Spuren. Die neuen Wege brauchen nur
+  `git ls-remote`/`merge-base --is-ancestor`/`update-ref`/`tag -d` und `printf %q` (git 2.30.2 / bash 5.1 im Image
+  `re15-linux-build:deb11` laut Dossier N6); der Release-Linux-Lauf faehrt die 7 Tests (cmd: SKIP) ohnehin.
 * Der Push-Weg ist nur gegen ein lokales bare origin gemessen (Test), nicht gegen GitHub: ein echter Push gehoert zum
   Release-Lauf des Orchestrators. `git ls-remote origin` nutzt dieselbe Anmeldung wie `git push`.
 * Hinweis H1 der Abnahme selbst nachgemessen (2026-10-16 ~23:30, PowerShell `Test-Path`): `C:\workspace\Re15Data` und
