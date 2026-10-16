@@ -67,6 +67,11 @@ int  re15_npckante_kanal(const re15_actor_t *e);
  * Original +0x40/+0x42/+0x44 = neue Lage, die Klemme FUN_8003b0a4 sieht den Schub also nicht als Bewegung. */
 void re15_npckante_altlage(const re15_actor_t *e, int32_t *ox, int32_t *oz);
 
+/* Schatten-Hoehe: jede NPC-Wurzel zeichnet den Schatten auf +0x1ba (`lh a1,442` + `jal 0x8001b064`, 0x49: @0x8011dd78/7c).
+ * Rueckgabe 1 + *y = +0x1ba, solange ein Kanten-Sub laeuft oder die Schwerkraft faellt (+0x1c0 & 0x8000), dort weicht y
+ * vom Boden ab. Sonst 0 (der Renderer behaelt y; PORT-WAHL: Port-eigene Szenen setzen y ohne +0x1ba). */
+int  re15_npckante_schatten_y(const re15_actor_t *e, int32_t *y);
+
 /* Sonde selbst (lesend): 0 / 1 (hochklettern) / 2 (hinunterspringen) fuer die aktuelle Lage. */
 int  re15_npckante_sonde(const re15_actor_t *e);
 

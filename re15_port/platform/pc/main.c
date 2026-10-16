@@ -119,6 +119,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
+#include "re15_npckante_r38.h"     /* Runde 38 Spur M: NPC-Schatten auf +0x1ba waehrend Kante/Fall */
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
@@ -9808,6 +9809,7 @@ re_title:;
                     /* Runde 35 Spur H: Hund 0x20 -> Boden-Referenz (+0x1ba `lh a1,442` @0x8010d91c
                      * / RE2 +0x1C2 @0x800268c8), nicht der Koerper. re15_hundeschatten.h */
                     if (npc->type == RE15_HUNDESCHATTEN_TYP) nsh_y = re15_hundeschatten_y(npc);
+                    { int32_t ky; if (re15_npckante_schatten_y(npc, &ky)) nsh_y = ky; }   /* Runde 38 Spur M: +0x1ba @0x8011dd78 */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */

@@ -349,6 +349,14 @@ void re15_npckante_altlage(const re15_actor_t *e, int32_t *ox, int32_t *oz)
     if (!((e->sub_state_1 == 4 || e->sub_state_1 == 5) && e->sub_state_2 == 0)) s_nachlauf[s] = 0;
 }
 
+int re15_npckante_schatten_y(const re15_actor_t *e, int32_t *y)
+{
+    if (!ist_npc(e) || !y) return 0;
+    if (!re15_npckante_aktiv(e) && !(e->fall_1c0 & 0x8000u)) return 0;   /* Fall-Bit @0x8001be6c */
+    *y = (int32_t)e->dog_floor_y;                                       /* +0x1ba, `lh a1,442` @0x8011dd78 */
+    return 1;
+}
+
 /* ------------------------------------------------------------------------------------------------------------------ */
 /*  Messhaken                                                                                                          */
 /* ------------------------------------------------------------------------------------------------------------------ */

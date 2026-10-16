@@ -5360,6 +5360,7 @@ int re15_actor_uses_own_bank(const re15_actor_t *a)
 {
     if (!a || a->type < 0x40 || a->type > 0x4d) return 0;
     if (re15_szl_schub_npc_kanal(a)) return re15_szl_schub_npc_kanal(a) == 2;   /* Runde 36 Spur J: Sub 0x13 */
+    if (re15_npckante_kanal(a)) return re15_npckante_kanal(a) == 2;   /* Runde 38 Spur M: Kanten-/Sprung-Sub */
     if (a->walk_active) return 1;
     if (a->state == 1) return 1;                       /* ESKORTE, alle Subs */
     if (a->state == 4) {
@@ -5373,6 +5374,7 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
 {
     if (!a) return 0;
     if (re15_szl_schub_npc_kanal(a) == 1) return 1;   /* Runde 36 Spur J: Sub 0x13 [2..7] = +0x84/+0x16c */
+    if (re15_npckante_kanal(a) == 1) return 1;        /* Runde 38 Spur M: Kletter-/Sprung-Clips 2..5 = +0x84/+0x16c */
     /* WELLE B (RE2-Flavor): der RE2-WALK (ACTIVE sub 1) posiert/verfaehrt die PAIR-1-Bank —
      * sein 0x80015e7c laedt EXPLIZIT a1=EMR@+0x108 / a2=EDD@+0x17C (@0x80101CB0-BC), waehrend
      * der Dispatcher allen anderen Subs die Pair-2-Action-Bank reicht. Pair 1 == die Port-
@@ -9977,7 +9979,9 @@ static void re15_npc_sub_walk(re15_actor_t *e)
     if (backward) re15_dog_advance_ofs(e, 0x800);            /* `ori a0,zero,0x800` @0x800519cc /
                                                               * @0x80051bc4 — 180 Grad rueckwaerts */
     else          re15_dog_advance(e, e->crow_speed);        /* pos_advance(a0=0) @0x80051344/@0x800516b0 */
+    if (sub == 5 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde VOR anim_set @0x800516c4 */
     re15_npc_anim(e);
+    if (sub == 4 && re15_npckante_nach_schritt(e)) return;  /* Runde 38 Spur M: Sonde NACH anim_set @0x80051374 */
     {
         int32_t dx = e->steer_x - e->x, dz = e->steer_z - e->z;
         uint32_t d = re15_squareroot0((uint32_t)(dx * dx + dz * dz));
@@ -10028,6 +10032,8 @@ static void re15_npc_sub_dispatch(re15_actor_t *e)
     case 6: re15_npc_sub_event_reach(e); break;
     case 9: re15_npc_sub_turn(e); break;
     case 0x13: re15_szl_schub_npc(e); break;   /* Runde 36 Spur J: Schub-Sub 0x80076ca0[19] = 0x80052864 */
+    case 0x12: case 0x16: case 0x17: case 0x18:   /* Runde 38 Spur M: [18]=[22]=0x80052508, [23]=[24]=0x80052c14 */
+        (void)re15_npckante_dispatch(e); break;
     default: re15_npc_sub_idle(e); break;
     }
 }
@@ -10558,6 +10564,8 @@ static void re15_npc_ai_tick(int slot)
     }
 
     if (s_ai_paused || (e->grid_id & RE15_AI_GRID_SKIP)) return;
+    re15_schwerkraft_8001bd60(e, -10, 0x14, (int32_t)e->hit_radius_min);   /* Runde 38 Spur M: alle NPC-Wurzeln VOR dem
+                                                 * Dispatch, z.B. 0x49 `jal 0x8001bd60` @0x8011dcc4 (a0 -10 @0x8011dcb4, a1 0x14 @0x8011dcac) */
 
     /* SCD Plc_dest WALK yield (the ROOM1170 Elliot fix, 6b1bdd5f): while an SCD thread walks this
      * actor (Plc_dest -> walk_active) or otherwise Work_set-owns it (scd_slot_event_controlled), skip
@@ -10581,7 +10589,8 @@ static void re15_npc_ai_tick(int slot)
      * Walks byte-true in der Sub-VM laufen (state=4/+0x5=mode @0x80041c14-18, marvin_glide_end.md
      * Fix #1), gilt das auch fuer 4/5/7/8/9. */
     int in_motion_pose = (e->state == 4 && e->sub_state_1 <= 9) ||
-                         re15_szl_schub_npc_kanal(e);   /* Runde 36 Spur J: auch Schub-Sub 0x13 laeuft im Executor */
+                         re15_szl_schub_npc_kanal(e) ||   /* Runde 36 Spur J: auch Schub-Sub 0x13 laeuft im Executor */
+                         re15_npckante_aktiv(e);          /* Runde 38 Spur M: Kanten-Subs 0x12/0x16/0x17/0x18 ebenso */
     if (e->walk_active || (re15_scd_slot_event_controlled(slot) && !in_motion_pose)) {
         e->hp = -1;
         return;
@@ -10648,6 +10657,7 @@ static void re15_npc_ai_tick(int slot)
         break;
     }
 
+    re15_npckante_altlage(e, &npc_ox, &npc_oz);   /* Runde 38 Spur M: +0x40/+0x44 nach Kanten-Schub (@0x80052784/@0x80052de8) */
     re15_npc_wall_clamp(e, npc_ox, npc_oz);   /* Root-Tail @0x8011e318 (alle States, s.o.) */
     re15_npckante_spur(e);                    /* Runde 38 Spur M: Messhaken RE15_NPCKANTE_LOG */
 }
