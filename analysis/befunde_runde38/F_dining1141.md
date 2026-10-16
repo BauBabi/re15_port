@@ -17,7 +17,9 @@ Punkte (Wortlaut AUFTRAG.md Runde 38 + Nachtrag 14 Runde 37):
 - 17:36 Modul dining_r38 (6ae7118b) — ~18:18 Sitzungslimit; 21:12 Fortsetzung, 21:35 vom Orchestrator gestoppt
   (Nutzer-Nachtrag 2). Beide Reste (2fd2342d, 32754a59) ungeprueft committet.
 - **Fortsetzung 3 (ab ~22:00):** Bau des Ist-Stands gruen (`configure` + `build`: "ninja: no work to do", LOCAL-BUILD-OK —
-  die Vorgaenger hatten diesen Stand schon gebaut). Umbau 1141 auf Nachtrag 2, Plan Abschnitt 3.0.
+  die Vorgaenger hatten diesen Stand schon gebaut). Umbau 1141 auf Nachtrag 2, Plan Abschnitt 3.0 (6f1890c5); Lauf m1;
+  Riegel unit (c391d0cd) und integration (587a882c ff.); Hilferuf-Pegel gemessen und auf den Sprach-Pfad gelegt
+  (7fa09458); Laeufe int_d2/int_d3 (echter Tuerweg 1131 -> 1141 -> 1171), int_wzl (W/Z), int_l3 (Leon 1140), v1011.
 
 ## 1. Messung vorher (Stand e2cc7673, echte exe)
 
