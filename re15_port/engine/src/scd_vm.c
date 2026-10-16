@@ -65,6 +65,7 @@
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
 #include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
+#include "re15_rekorder_r38.h" /* Runde 38 Spur J: Stimmschloss ROOM1100/1101, Rekorder-Aufnahme (rekorder_r38.c) */
 
 scd_vm_t g_scd;
 
@@ -192,6 +193,8 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_codepanel_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
     /* Runde 37 Spur C N1: Lift-Anker ROOM2030/2031 (sub02/sub04, re15_lift2030_r37.h). */
     re15_lift2030_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 38 Spur J: sub02-Anker des Stimmschlosses ROOM1100/1101 (re15_rekorder_r38.h). */
+    re15_rekorder_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -770,6 +773,8 @@ void scd_vm_tick(void)
             if (g_re15_codepanel_anker_n) { int cp = re15_codepanel_r37_pc(t); if (cp == 2) break; if (cp == 1) continue; }
             /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (Wachposten = Ankerzahl, sonst 0). */
             if (g_re15_lift2030_anker_n) re15_lift2030_r37_pc(t->pc);
+            /* Runde 38 Spur J: ROOM1100/1101 sub02 wartet an @0x00C96 auf das Ende der Rekorder-Aufnahme (re15_rekorder_r38.h). */
+            if (g_re15_rekorder_anker_n && re15_rekorder_r38_pc(t) == 2) break;
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
@@ -1873,7 +1878,9 @@ static int op_message_on(scd_thread_t *t)
      * durch (t->pc += 4 am Ende). Skript-Wege mit EIGENEM RE1.5-Se_on (ROOM4000 sub02
      * @Datei 0x0142E Se_on(2,0x0f)) stehen nicht in der Tabelle und bleiben RE1.5. */
     re15_lock_se_notice(g_current_room_id, t->pc[1], RE15_LOCK_WEG_SKRIPT);
-    re15_aufschliessen_r36_notice(g_current_room_id, t->pc[1], RE15_AUF_WEG_SKRIPT);   /* Runde 36 Spur G: Piep + Aufschliessen (RE2 ROOM2110 sub08) */
+    /* Runde 38 Spur J: ROOM1100/1101 msg 2 - Piep + Aufschliessen liefen schon am ACCEPTED @0x00C9C (re15_rekorder_r38.h). */
+    if (!re15_rekorder_r38_message_on(g_current_room_id, t->pc))
+        re15_aufschliessen_r36_notice(g_current_room_id, t->pc[1], RE15_AUF_WEG_SKRIPT);   /* Runde 36 Spur G: Piep + Aufschliessen (RE2 ROOM2110 sub08) */
 
     if (re15_room_full_text(g_current_room_id)) {
         /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:
