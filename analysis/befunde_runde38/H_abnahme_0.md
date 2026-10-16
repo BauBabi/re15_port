@@ -152,18 +152,22 @@ Konstanten im Diff: alle mit @0x/Datei-Offset oder als NUTZER-VORGABE/PORT-WAHL 
      `3a 00 18 ..` ESP 0x18 — esp18.tim in room40A0 und room4040 bytegleich (md5 fd8fe615..), Blatt beschriftet
      "GUN 5.00" (Muendungsblitz/Leuchtspur) = dasselbe ESP, das in 4040/4090/6020 auf den Skript-Schuss folgt — und nach
      Sleep 2 @0x028C6 `3a 00 1a 05 ..` ESP 0x1A (esp1A.tim "MIZ 7.00" = Wasserspritzer).
-   => Satz 0x08 ist mit hoher Wahrscheinlichkeit der Schuss der PARTNERIN (Art 2 = die Sce_em_set mit Slot 0xFF; Name
-   "Splayer" nach RE2-Konvention, nicht in der EXE nachgeprueft) auf den Alligator im Wasser — also ein Schuss. Die
-   RE1.5-Zuordnung "Art 2 = Gegner" (Port: Work_set(2,1) = Roy) gilt in RE2 nicht. Runde 36 ("Pistolenschuss eines NPC +
-   Muendungsfeuer @0x028A2") lag bei der Art des Tons richtig.
+   - Art 2 Index 0 = die Partnerin (Sce_em_set mit Slot 0xFF), Zensus aller RE2-RDTs (je erste 0x8000 Bytes): in
+     ROOM3040 (einzige Sce_em_set: 3x `44 00 ff 41`) steht `2e 02 00` 16-mal, ROOM5000 (nur `44 00 ff 41`) 19-mal,
+     ROOM5030 (nur Ada) 12-mal, ROOM40E0 (nur Ada) 6-mal — Raeume ohne jeden Gegner-Slot 0. (Name "Splayer" nach RE2-
+     Konvention; der EXE-Handler ist nicht nachgeprueft, die Zuordnung folgt aus den Bytes.)
+   => Satz 0x08 ist der Ton an der PARTNERIN (Leon: Ada `44 00 ff 41` @0x02564) mit Muendungsblitz an ihr und
+   Wasserspritzern im Becken: ihr Schuss auf den Alligator — also ein Schuss. Die RE1.5-Zuordnung "Art 2 = Gegner"
+   (Port: Work_set(2,1) = Roy) gilt in RE2 nicht. Runde 36 ("Pistolenschuss eines NPC + Muendungsfeuer @0x028A2") lag bei
+   der Art des Tons richtig.
    Nachpruefen: `py/re_gate.py`, Bytes oben; `py/tim2png.py room4040/esp18.tim` -> `ab0h/esp18_4040.png`.
 2. **Befund P3 nicht erklaert, Wirksamkeit nicht belegt.** v0.8.25 spielte an F939/F969 bereits einen RE2-NPC-Schuss
    (Korrelation 1,000) in Sprachpegel (RMS 2568) in stillem Raum; der neue Ton hat denselben Pegel (RMS 2576) und dieselbe
    Klangklasse (Spur OFFEN 4). Warum der Nutzer den alten Ton nicht als Schuss gehoert hat, ist offen; dass der Tausch
    gegen einen anderen RE2-NPC-Schuss das behebt, ist nicht gezeigt. Gefordert: die tatsaechliche Ursache belegen (z.B.
-   Klangvergleich mit dem Schuss, den der Nutzer kennt — Elzas/Leons Waffe, RE2 ARMS02 SE0 = RE1.5 ARMS03 SE0 —, Lage/Pegel,
-   Einbettung in RE2: Se_on-Byte 3 = 1 bei 40A0 gegen 0 bei 4040) und zeigen, dass der neue Stand genau diese Ursache
-   beseitigt — oder die Wahl des Tons neu begruenden.
+   Klangvergleich mit dem Schuss, den der Nutzer kennt — Elzas/Leons Waffe, RE2 ARMS02 SE0 = RE1.5 ARMS03 SE0 —, Pegel
+   gegen die Sprachzeilen, Lage) und zeigen, dass der neue Stand genau diese Ursache beseitigt — oder die Wahl des Tons
+   mit zutreffender RE2-Herleitung neu begruenden.
 3. **Riegel unit_r38_elzatoene_re2beleg selbstbestaetigend.** test_r38_elzatoene.c teil_re2beleg zaehlt Sce_em_set nur mit
    `a0[i + 2] < 16` und meldet "einziger Gegner (Alligator)" bei n_em == 1 — der Filter schliesst genau die vier
    Slot-0xFF-Saetze (@0x02564/@0x02586/@0x02612/@0x0262C) aus; die Meldung "Se_on(2,8) @0x02896 (Ursprung 2/0)" wird als
