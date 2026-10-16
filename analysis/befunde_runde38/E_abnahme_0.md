@@ -125,7 +125,35 @@ aktiv, waere das eine Regression. Geprueft (eigenes Werkzeug `SP/e_abn0/tools/tu
   Raums @0x01FEC — wie im Header zitiert.
 Ergebnis: Cut 13 gibt es in ROOM1031 nur im Erzaehler; das Netz trifft keinen normalen Spielmoment.
 
-(Abschnitt 4 folgt)
+## 4. Gegenprobe am ausgelieferten Stand v0.8.25 (Ursache, Leon unveraendert)
+exe = `release/pkg-win/re15_port_v0.8.25/re15_pc.exe` (14.10. 10:31, Release-Commit 2077bb8e, sha256 9cd642a2a92f6ce614d3...),
+als `re15_pc_v0825_abn0e.exe` in den Build-Ordner des Spurbaums kopiert (Assets/synchro des Baums: zwischen 2077bb8e und
+der Basis 1bcbd0ff kamen ausserhalb analysis/ nur Sprachdateien der Raeume 1050/10B1/10F0/1100/1150/1171/11B0/11B1/11C0
+dazu, nichts fuer 1240/1241/1031/1170). Laeufe `SP/e_abn0/g_leon`, `g_elza` (`RE15_AUDIO_CAP_SYNC`, `RE15_FRAMEDUMP=
+0-445/1`, `RE15_EXIT_AT=446#1170` bzw. `446#1031`), `g_elza_flag` (`RE15_NOAUDIO=1 RE15_SET_FLAG=9:89`, F200,
+`210#1031`); alle rc=0. Auswertung `SP/e_abn0/tools/gegenprobe.py` -> `SP/e_abn0/gegenprobe.txt`.
+(Die alt_*-Laeufe der ersten Teilsitzung hatten keine benannte exe; sie sind hiermit ersetzt.)
+
+| Messung | v0.8.25 Leon | v0.8.25 Elza | Spurbau Leon | Spurbau Elza |
+|---|---|---|---|---|
+| `[voice] clip loaded` (Montage) | main00..05 | **0** | main00..05 | main00..05 (6 Ersatzzeilen room1240) |
+| Erzaehler F0..F445: Bilder mit hellem Kartenfeld x91..98/y107..112 | 0 | **442 (ab F3)** | 0 | **0** |
+| Erzaehler F0..F445: Huelle aller Pixel != 0 | x34..227 y181..211 (Text) | **x0..319 y0..239** | x34..227 y181..211 | **x34..227 y181..211** |
+| `[kartenitems] ROOM1031` | - | 2 | - | angelegt (Abschnitt 2) |
+
+- **Punkt 1 vorher bestaetigt:** Elza laedt am ausgelieferten Stand keinen einzigen Montage-Clip. Ton v0.8.25 Leon gegen
+  v0.8.25 Elza: bitgleich bis zum ersten Message_on, dann abwechselnd ANDERS 169/160/177/194/210 Takte (= die Clips) und
+  GLEICH in den Pausen. Ton v0.8.25 Elza gegen Spurbau Elza (`SP/abn/a1_elza`): GLEICH bis Takt 975, danach ANDERS genau in
+  denselben Clip-Strecken (169 = main00 248062 Samples / 1470, 160 = main01 235200 / 1470, 177 = main02, 210 = main04).
+  Der Fix fuegt also genau die Stimme hinzu und sonst nichts.
+- **Punkt 2 vorher bestaetigt und Ursache belegt:** am ausgelieferten Stand steht das Kartenfeld in 442 von 446
+  Erzaehlerbildern; mit `RE15_SET_FLAG=9:89` (Lageplan 1F gilt als genommen -> `re15_kartenitems_r36_install` legt kein
+  Prop an; Log: ROOM1031 geladen, `Evt_exec sub=15`, `Cut_chg(13)`, KEINE `[kartenitems]`-Zeile) ist das Feld in F200
+  dunkel. Das durchscheinende Feld IST der Lageplan-Prop (Runde 36 Spur N); das passt zum Bisect des Bau-Agenten
+  (erstmals ab cb1d5f59 / v0.8.24). Der (1,1,1)-Grund (Huelle ganzer Schirm) faellt mit dem Netz ebenfalls weg.
+- **Leon unveraendert:** Erzaehler F0..F445 v0.8.25 Leon gegen Spurbau Leon (`n_leon`): **446/446 pixelgleich**; Ton
+  v0.8.25 Leon gegen Spurbau Leon (`SP/abn/a1_leon`): **2614 von 2614 Takten bitgleich** (Titel, Charakterwahl, Montage,
+  Erzaehler, Szenenbeginn).
 
 ## 5. Vertrag und Tests
 ### 5.1 Vertrag (VERTRAG.md)
