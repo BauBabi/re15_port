@@ -579,8 +579,8 @@ Bau-Ordner build_l2 mit dem Fix) -> `test_r37_re2zombie p3: 8/8`:
   0x201-Ausgang keine Bewegung;
 * Folgetakt nach 0x10101: EXEC[1] P1 ohne P0 — Bild bleibt, Gang-Zeilen-Timer 30 -> 29 mit der P3-Zeile, +0x15A - 1;
 * Gegenprobe anderer Clip: 0x101, 1 Wurf, keine Bewegung, +0x15A unberuehrt (16 Lagen);
-* Riegel: Spieler frei 3000 vorn -> 0xB01 genau bei r0&0xf == 0 (8 Lagen); Spieler beansprucht -> nie 0xB01, kein
-  Ausfall-Wurf (45 Lagen);
+* Riegel: Spieler frei 3000 vorn -> 0xB01 (EXEC[11], Sturz nach vorn mit Clip 0x0A) genau bei r0&0xf == 0 (8 Lagen); Spieler
+  beansprucht -> nie 0xB01, kein 0xB01-Wurf (45 Lagen);
 * Gegenprobe Stand bis Runde 37 (Bit P3 aus): gleicher Clip -> 0x101 und im naechsten Takt EXEC[1] P0 (+0x15A 99..130),
   beansprucht -> 0xB01 moeglich (16 / 8 Lagen).
 
@@ -615,6 +615,49 @@ Spieler beansprucht ist, entfaellt zusaetzlich der 0xB01-Wurf. Gleiche -R-Auswah
 | unit_re2_weapon_rows | Diagnose-Clips w=3 0->0, w=4 0->4, w=7 0->0, w=12 0->0, w=20 0->1 | 0->4, 0->0, 0->1, 0->4, 0->0 | die Waffen laufen nacheinander im SELBEN Strom; ab der ersten Erholung (w=0..2) verschoben. Clip-Indizes sind laut Testkopf Diagnose und bewusst nicht gepinnt; Zeilen/Handler unveraendert, gruen |
 | unit_re2z_bandlock_pin | Liege-Bit in 606 aufrechten Bildern (0,97 %, 5/64 Seeds) | 331 (0,54 %, 3/64) | Strom; gruen |
 | unit_r37_re2zombie_p3 | — | neu, 8/8 | Riegel dieses Fixes |
+
+**Messung nachher an der EXE (M1 + M2): Messer-Paarlaeufe wie Abnahme 1 Abschnitt 2** (`L_belege/messer_laeufe.sh`,
+Zaehlregel `messer_ausw.py`, Erholungs-Ausgaenge `erholung_ausw.py`; Montage-Karte, echte Tuer 1150 -> 1130, RE15_EQUIP=1,
+Skript `W1,A0.2,W2,W<w>` + 50x `M0.4,MA0.1`, RE15_EXIT_AT=1400#1130; "vor" = exe des Merge-Stands VOR dem Fix, "nach" =
+exe mit dem Fix; Basis = Spalte der Abnahme 1, nicht wiederholt):
+
+| w | vor: Anm. 1 / Anm. 2 (Griffe) | nach: Anm. 1 / Anm. 2 (Griffe) | P3-Ausgaenge vor -> nach |
+|---|---|---|---|
+| 20.000 | 0 / 2 (F888, F1236) | 0 / 2 (F888, F1236) | 2x 0x201 -> gleich |
+| 20.033 / .067 / .100 / .133 | je 0 / 1 (F888, F1213..1214) | je 0 / 1 (gleich) | je 1x 0x201 -> gleich |
+| 20.167 | 0 / 4+ (F888, kein 2. Griff) | **0 / 2 (F888, F1216)** | 0x201, 0x101, 0xB01 -> 0x201, **0x10101** |
+| 20.200 / .233 / .267 | je 0 / 3 (F888, F1272..1274) | je 0 / 3 (gleich) | 0x101 + 2x 0x201 -> **3x 0x10101** |
+| 20.300 | 1 / 2 (F904, F1230) | 1 / 2 (gleich) | 0x101 + 2x 0x201 -> 0x10101 + 2x 0x201 |
+| 20.333 / .367 / .400 | je 1 / 1 | je 1 / 1 (gleich) | 0x201 + 0xB01 -> gleich |
+| 20.433 / .467 | je 1 / 2 | je 1 / 2 (gleich) | 3x 0x201 -> gleich |
+| 21.3 | 1 / 2 (F904, F1230) | 1 / 2 (gleich) | 0x101 + 2x 0x201 -> 0x10101 + 2x 0x201 |
+| 22.2 / 23.7 | je 0 / 3 (F888, F1272) | je 0 / 3 (gleich) | 0x101 + 2x 0x201 -> 3x 0x10101 |
+| **Summe** | Anm. 1 **7**; Anm. 2 (16 Paare wie Abnahme 1) **31**; alle Treffer bis F1400 **43**; Griffe **35** | Anm. 1 **7**; Anm. 2 **31**; alle **41**; Griffe **36** | 30x 0x201 / 8x 0x101 / 4x 0xB01 -> 20x 0x201 / **18x 0x10101** / 3x 0xB01 |
+
+* Kalibrierung: "vor" ist in ALLEN 18 Laeufen zeichengleich zur Spalte "Spur L" der Abnahme 1 (7 / 31 / 43 / 35) — Aufbau und
+  Zaehler stimmen, der Merge von master hat diesen Ablauf nicht veraendert. Basis (Abnahme 1): 4 / 33 / 41 / 35.
+* Wirkung des Fixes an der exe: jede Erholung, die das Leiter-Ende erreicht, geht jetzt 0x10101 (vorher 0x101 -> EXEC[1]-P0
+  mit Zufalls-Startbild); weil Leon unter 2000 im Kegel steht, schaltet Produzent (2) im ersten Gang-Takt ohnehin in den
+  Arme-hoch-Gang — deshalb bleiben Treffer- und Griffbilder in 17 von 18 Laeufen gleich. Einzige Aenderung: w = 20.167 —
+  vor dem Fix fuehrte der andere Strom nach der 0x101-Erholung (F1211) zu einem Ausfall 0xB01 und KEINEM zweiten Griff bis
+  F1400 (4+ Treffer), nach dem Fix greift der Zombie nach dem zweiten Treffer (F1216, 2 Treffer).
+* Nahkampf nicht schlechter: je Anmarsch gleich (7 / 31 wie vor dem Fix), alle Treffer 41 = Basis.
+
+### M2 — Messer-Aussage (Text)
+
+**Ursache.** Die Aussage "je Anmarsch WENIGER Schlaege, 6 statt 10" (Fuer den Nutzer Punkt 4, N2-Zusatz, Commit d3f7417e)
+verallgemeinerte die vier Laeufe der Abnahme 0 (EINE Schlagphase des 0,5-s-Takts); dazu war "44 statt 32 Einheiten je Takt"
+die Summe |dx|+|dz|, keine Wegstrecke.
+
+**Messung.** Abnahme 1 (18 Paare ueber alle 15 Schlagphasen, nicht wiederholt): Anm. 1 L 7 / Basis 4, Anm. 2 L 31 / Basis 33,
+alle 43 / 41, Griffe 35 / 35. Nach dem M1-Code-Fix neu gemessen (Tabelle oben): 7 / 31 / 41 / 36. Wegstrecke je Takt aus den
+RE2-Rohdaten nachgerechnet: 35,6 (0x201) / 25,6 (0x101), als |dx|+|dz| 44,1 / 32,2.
+
+**Aenderung (Text).** "Fuer den Nutzer" Punkt 4 auf das phasenrobuste Ergebnis umgestellt (im Mittel gleich viele Treffer
+je Anmarsch, je Schlagtakt einer mehr oder weniger; Arme-hoch-Gang schneller, die Trefferreaktion haelt je Schlag an),
+"weniger Schlaege" gestrichen; N2-Zusatz und Nachbesserung-1-Beleg Punkt 3 ebenso; Weg-Zahlen ueberall als Wegstrecke mit
+|dx|+|dz| in Klammern (M2-Tabelle, N1, R1-Kommentar in enemy_ai_re2_zombie.c). Die Commit-Nachricht d3f7417e bleibt als
+Verlauf stehen; dieser Abschnitt ersetzt ihre Aussage "weniger Schlaege".
 
 ## OFFEN
 
@@ -664,6 +707,13 @@ Spieler beansprucht ist, entfaellt zusaetzlich der 0xB01-Wurf. Gleiche -R-Auswah
   Vorschlag: eigener Punkt "RE2-Trefferreaktion Haupt-Handler P0-P2" mit Strom-Riegel-Liste (jeder der vier verschiebt den
   gemeinsamen Zufallsstrom bzw. den Weg in jedem Messer-/Pistolen-Lauf).
 
+* **Werkzeug-Befund (nicht Spur L, fuer den Orchestrator):** `local_build.sh build` beendet vor dem Link alle
+  `re15_pc`-Prozesse, deren Pfad mit dem Bauordner BEGINNT (`$_.Path.StartsWith('$_bw', ...)`, local_build.sh Z.326) —
+  ohne Pfadtrenner. Ein Bau in `re15_port/build` beendet damit auch die exe in `re15_port/build_l2` bzw. im empfohlenen
+  `re15_port/build_bisect`. Gemessen 2026-10-16: Bau-Log angelegt 16:56:46,44, die exe-Lauf-Ausgabe von
+  integration_r34_granaten (build_l2, `g9_re2/debug.log`) endet 16:56:46,83 bei F231 mit `exit=-1` (= Stop-Process -Force);
+  einzeln wiederholt gruen (s. Nachbesserung 2, Integration). Vorschlag: `StartsWith('$_bw\')` (mit Pfadtrenner).
+
 ## Fuer den Nutzer
 
 * **Was jetzt anders ist (RE2-KI, Standard; Leon und Elza; jeder Raum):** wie in RE2 heben gehende Zombies die Arme und kommen
@@ -673,13 +723,16 @@ Spieler beansprucht ist, entfaellt zusaetzlich der 0xB01-Wurf. Gleiche -R-Auswah
 * Ein Zombie, der aus dem Stand oder im Gang nach Leon schnappt (Ausfall), kann ihn jetzt dabei auch packen — wie in RE2.
 * Stehende Zombies: zwei kleine Korrekturen (welcher Zufallswurf den Ausfall ausloest, und dass ein Zombie, der gerade zu
   wandern beginnt, im selben Moment noch aufwachen kann) — kaum sichtbar.
-* Nahkampf/Messer: das Messer trifft wie vorher (die Trefferpruefung ist unveraendert; im Messer-Sweep des Tests 368 -> 373
-  Treffer insgesamt). ABER: weil die Zombies jetzt wie in RE2 mit erhobenen Armen schneller heranruecken und nach einem Treffer
-  sofort wieder in diesen schnelleren Gang gehen, bleiben je Anmarsch WENIGER Schlaege, bevor ein Zombie zupackt — an der exe
-  gemessen (Leon steht mit dem Messer an der Tuer im Gang 1130, Schlag alle 0,5 s, vier Laeufe): 6 statt vorher 10
-  Messertreffer am ersten Zombie. Das ist das RE2-Verhalten (im RE2-Original legt der Zombie im Arme-hoch-Gang 44 statt 32
-  Einheiten je Takt zurueck), kein Fehler. Der alte Grund, warum diese RE2-Regeln seit August aus waren ("Messer trifft nicht
-  mehr"), war ein Fehler im Messaufbau, nicht im Spiel.
+* Nahkampf/Messer: das Messer trifft wie vorher. An der exe gemessen (Leon steht mit dem Messer an der Tuer im Gang 1130,
+  ein Schlag alle 0,5 s, 18 Laeufe ueber alle Schlagphasen): je Anmarsch im Mittel GLEICH viele Treffer wie vor dieser
+  Aenderung (erster Anmarsch 7, zweiter 31; vor Spur L 4 / 33), je nach Schlagtakt einer mehr oder weniger. Wie in RE2 kommen
+  die Zombies mit erhobenen Armen schneller heran (RE2-Original: 35,6 statt 25,6 Einheiten Weg je Takt), dafuer haelt sie jeder
+  Treffer kurz an. Der alte Grund, warum diese RE2-Regeln seit August aus waren ("Messer trifft nicht mehr"), war ein Fehler im
+  Messaufbau, nicht im Spiel.
+* Nach einem Treffer (Nachbesserung 2): der Zombie setzt seinen Gang wie in RE2 fort, statt die Gehanimation neu zu starten,
+  und die Gelegenheit, schon auf einige Meter von selbst die Arme zu heben (1 zu 4), kommt nach einem Treffer erst nach 10-18
+  statt nach 3-4 Sekunden (steht Leon knapp vor ihm, sofort, wie vorher). Ist Leon schon von einem anderen Zombie gepackt,
+  laesst sich ein getroffener Zombie nicht mehr nach vorn zu Boden fallen (wie in RE2).
 * Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bank-9-Bits, keine Text-Ids. Neue Datei nur
   `re15_port/include/re15_re2zombie_r37.h` (Header, keine neue .c — Android-GLOB unberuehrt); +9 Unit-Tests, +1 Integration
   (RE15_MIN_TESTS +10).

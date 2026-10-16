@@ -732,7 +732,7 @@ static void pin_p3(void)
         if (soll201 ? !(e->sub_state_1 == 2 && dw == 1) : !(e->sub_state_1 == 1 && e->sub_state_2 == 1 && dw == 4)) c_bean = 0;
     }
     PIN(c_frei && c_b01 > 0, "P3 Spieler frei, +0x1F0 3000 < 0xFA0, vorn: 0xB01 genau bei r0&0xf == 0 (%d Lagen), sonst 0x201-Wurf", c_b01);
-    PIN(c_bean && c_n > 0, "P3 Spieler BEANSPRUCHT (0x800CFDCB & 0x80 @0x80105AA0-B0): nie 0xB01, kein Ausfall-Wurf (%d Lagen)", c_n);
+    PIN(c_bean && c_n > 0, "P3 Spieler BEANSPRUCHT (0x800CFDCB & 0x80 @0x80105AA0-B0): nie 0xB01, kein 0xB01-Wurf (%d Lagen)", c_n);
 
     /* D: Gegenprobe Stand bis Runde 37 (Bit P3 aus): die umgekehrte Bedingung und kein Riegel. */
     re15_re2z_r37_produzenten(RE15_R37L_ALLES & ~RE15_R37L_P3);
