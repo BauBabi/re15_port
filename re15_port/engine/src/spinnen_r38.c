@@ -358,7 +358,11 @@ static void routine25(re15_esp_fx_t *f)
     box.x = P[0]; box.y = P[1]; box.z = P[2]; box.radius = 500;   /* `ori a0,zero,0x1f4` @0x80017ffc */
     int idx = gift_platz_index(f);
     int besitzer = (idx >= 0) ? (int)s_gift_besitzer[idx] - 1 : -1;
-    if (re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], &box)) {
+    /* Gift NUR fuer den Klumpen einer SPINNE: RE2 Op 32 vergiftet nur bei Spinnen-sub 8..11 (`andi v0,v0,0x8`
+     * @0x80020118); Effekt 0x0d steht in 41 Raum-ESPs (auch ROOM1260/4001/50x0, Birkins Hieb-Effekt
+     * 0x0d002000 @0x801146d4-ec) — dort bleibt Routine 25 der reine Original-Treffer (10 HP, Wuerfel tot). */
+    if (besitzer > 0 && besitzer < RE15_ACTOR_MAX && g_actors[besitzer].type == 0x25 &&
+        re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], &box)) {
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;   /* Gift (s.o.) */
         s_gift_treffer++;
     }

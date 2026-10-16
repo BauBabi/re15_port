@@ -331,6 +331,28 @@ static void teil_b(re15_actor_t *e, int re2, const char *name)
           pl->status_flags, re15_spinnen_r38_gift_treffer());
 }
 
+/* B2: derselbe Effekt 0x0d OHNE Spinne als Absender (Effekt steht in 41 Raum-ESPs, u.a. Birkins Hieb 0x0d002000
+ * @0x801146d4-ec): Routine 25 trifft wie im Original (10 HP, Resolver Art 0), vergiftet aber NICHT — RE2 vergiftet nur
+ * fuer Spinnen-sub 8..11 (`andi v0,v0,0x8` @0x80020118). */
+static void teil_b2(void)
+{
+    printf("\n== B2 Effekt 0x0d ohne Spinne (kein Gift)\n");
+    /* ROOM2060 an der Landestelle der Schachtspinne (Teil A/B: Spinne (5975,0,3137), Spieler 2000 davor), aber ohne
+     * Spinne: Klumpen an der Spuck-Hoehe, Blick 1024 (-z) auf Leon. */
+    if (!raum("STAGE2/ROOM2060.RDT", 0x2060, RE15_AI_FLAVOR_RE15, 5975, 0, 1137, 3072, 1)) { s_fails++; return; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    pl->hp = 100; pl->status_flags = 0; pl->state = 1;
+    int n = re15_esp_fx_spawn_rows(re15_esp_room_bank(), 0x0d, 0x00, 0x2000, 5975, -700, 2637, INT32_MAX, 1024);
+    int getroffen = -1;
+    for (int f = 0; f < 60 && getroffen < 0; f++) { bild(); if (pl->hp < 100) getroffen = f; }
+    CHECK(n > 0 && getroffen >= 0 && pl->hp == 90, "Klumpen ohne Absender trifft: %d Plaetze, Bild %d, HP %d (Routine 25)",
+          n, getroffen, pl->hp);
+    CHECK(!(pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() == 0,
+          "kein Gift ohne Spinne als Absender (status 0x%04X, Gift-Treffer %u)", pl->status_flags,
+          re15_spinnen_r38_gift_treffer());
+}
+
 static void teil_b_wirkung(void)
 {
     printf("\n== B Gift-Wirkung (@0x80031e44-ecc) und Gegengift (@0x8004af8c)\n");
@@ -474,15 +496,72 @@ static void teil_c(void)
           max_hoch);
 }
 
+/* ============================== D: ZENSUS "keine Spinne schwebt" ============================== */
+/* Nutzerpunkt 1 ("die Spinnen fliegen FAST ALLE in der Luft"): jede Sce_em_set-Spinne (Typ 0x25) ALLER Stage-2-Raeume,
+ * beide KI-Geschmaecker, 300 Bilder am Sprungpunkt des Debug-Menues (DEBUG.BIN-Tabelle, gemessen in der exe) bzw. an der
+ * Tuerlage 2060 -> 2030 (Cut 13, oberer Steg). Erlaubt sind genau zwei Lagen: (a) auf dem eigenen Boden y == +0x1ba
+ * (Sce_em_set `sh v0,442(s0)` @0x80042210 = -(pc[4]*1800), RE1.5-INIT y = -1800*floor @0x80110c54-74) oder (b) wartend im
+ * Schacht (grid 0x41, Zustand 4/1, y = Spawnhoehe; Ausloeser erst Cut 1/5 bzw. 4/5, Teil A). Vorher (Stand e2cc7673)
+ * liefen die Schachtspinnen unter der RE2-KI im Bodenmodus frei auf der Schachthoehe herum (Dossier 1.2). */
+static void teil_d(void)
+{
+    static const struct { const char *datei; unsigned id; int32_t x, y, z; int16_t rot; uint8_t cut; } R[] = {
+        { "STAGE2/ROOM2030.RDT", 0x2030,  6550,  -5400,   -100, 2048,  0 },
+        { "STAGE2/ROOM2030.RDT", 0x2030, -6950, -16200,  -7200,    0, 13 },   /* Tuer 2060 -> 2030 (Datei 0x0D9A) */
+        { "STAGE2/ROOM2050.RDT", 0x2050,  9100,  -5400,   4100, 2048,  0 },
+        { "STAGE2/ROOM2060.RDT", 0x2060,  7600,      0,   3950, 2048,  0 },
+        { "STAGE2/ROOM2070.RDT", 0x2070,  4851,      0,  -6250, 2048,  0 },
+        { "STAGE2/ROOM2090.RDT", 0x2090, -8200,      0, -25550, 2048,  0 },
+        { "STAGE2/ROOM20A0.RDT", 0x20A0, -2800,  -3600, -22200, 2048,  0 },
+    };
+    printf("\n== D Zensus: Lage aller Stage-2-Spinnen (beide KI, 300 Bilder je Raum)\n");
+    for (int fl = 0; fl < 2; fl++) {
+        re15_ai_flavor_t flv = fl ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15;
+        for (size_t r = 0; r < sizeof R / sizeof R[0]; r++) {
+            if (!raum(R[r].datei, R[r].id, flv, R[r].x, R[r].y, R[r].z, R[r].rot, R[r].cut)) { s_fails++; continue; }
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            int n_sp = 0, boden = 0, schacht = 0, schwebt = 0;
+            int32_t schwebt_y = 0, schwebt_gy = 0;
+            for (int f = 0; f < 300; f++) {
+                pl->hp = 100;                                   /* Messlauf: Leon bleibt stehen, stirbt nicht */
+                bild();
+                for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+                    const re15_actor_t *e = &g_actors[s];
+                    if (!e->active || e->type != 0x25) continue;
+                    if (f == 0) n_sp++;
+                    /* grid 0x41 = Schachtspinne: solange das Skript grid nicht aendert, MUSS sie im Schacht warten
+                     * (Zustand 4/1 @0x80110d14, Phase 0 `beq` @0x80114f18-1c). Eine 0x41-Spinne in einem anderen
+                     * Zustand laeuft frei auf Schachthoehe herum (Stand e2cc7673 unter der RE2-KI: Zustand 1, Modus 0,
+                     * y -3600 ueber dem Boden 0) — y == +0x1ba ist dort KEIN Bodenbeweis, weil Sce_em_set +0x1ba aus
+                     * floor 2 setzt (-3600). */
+                    if (e->grid_id == 0x41) {
+                        if (e->state == 4 && e->sub_state_1 == 1) schacht++;
+                        else { schwebt++; schwebt_y = e->y; schwebt_gy = e->dog_floor_y; }
+                    }
+                    else if (e->y == (int32_t)e->dog_floor_y) boden++;
+                    else { schwebt++; schwebt_y = e->y; schwebt_gy = e->dog_floor_y; }
+                }
+            }
+            CHECK(n_sp > 0 && schwebt == 0,
+                  "%s ROOM%04X Cut %u: %d Spinnen, Spinnen-Bilder am Boden %d, im Schacht wartend %d, schwebend %d%s",
+                  fl ? "RE2" : "RE1.5", R[r].id, (unsigned)R[r].cut, n_sp, boden, schacht, schwebt,
+                  schwebt ? " (letzte: y/Boden siehe naechste Zeile)" : "");
+            if (schwebt) printf("   schwebend zuletzt y %d Boden %d\n", schwebt_y, schwebt_gy);
+        }
+    }
+}
+
 int main(void)
 {
     re15_actor_t *a15 = teil_a(RE15_AI_FLAVOR_RE15, "RE1.5");
     if (a15) teil_b(a15, 0, "RE1.5");
     teil_b_wirkung();
+    teil_b2();
     teil_a2(RE15_AI_FLAVOR_RE15, "RE1.5");
     re15_actor_t *a2 = teil_a(RE15_AI_FLAVOR_RE2, "RE2");
     if (a2) teil_b(a2, 1, "RE2");
     teil_c();
+    teil_d();
     printf("\ntest_r38_spinnen: %d FAIL\n", s_fails);
     return s_fails ? 1 : 0;
 }

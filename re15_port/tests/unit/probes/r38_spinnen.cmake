@@ -7,7 +7,10 @@
 #                      STAGE2-RDTs und EM025-Baenken: A Schacht ROOM2060 (RE1.5- und RE2-KI): Halten bis Cut 1,
 #                      neun Phasen @0x80114ec8 mit den Original-Bildabstaenden, Landung auf dem Boden; B Gift: Spucken
 #                      (Effekt 0x0d, 3 Stroeme), Treffer -10 HP + Gift-Bit, Wirkung -2 HP alle 121 Bilder, nie
-#                      toedlich, Gegengift; C Minispinnen (RE2-KI, ROOM2030): Boden des Elternteils, Bisse.
+#                      toedlich, Gegengift; B2 Effekt 0x0d ohne Spinne trifft, vergiftet aber nicht (RE2 @0x80020118);
+#                      C Minispinnen (RE2-KI, ROOM2030): Boden des Elternteils, Bisse, GEZEICHNET auf der Lage (Babybank =
+#                      RE2-Paar 1, Binder @0x8001abb0/c0); D Zensus aller Stage-2-Spinnen (7 Raum-Lagen x 2 KI): am Boden
+#                      oder wartend im Schacht, keine schwebt. Gegenprobe ohne die Haken: 20 FAIL (R_belege/gegenprobe_test.txt).
 add_executable(test_r38_spinnen ${CMAKE_CURRENT_LIST_DIR}/../test_r38_spinnen.c)
 target_link_libraries(test_r38_spinnen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_spinnen PRIVATE ${CMAKE_SOURCE_DIR}/include)
