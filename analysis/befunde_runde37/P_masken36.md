@@ -17,6 +17,9 @@ Baum: .claude/worktrees/r37_masken36 (Zweig r37/masken36, Basis bddd6b31 = Stand
 - Fortsetzung 2026-10-13 (nach Sitzungs-/Wochenlimit): be2dbd26 uebernommen (ROOM1221 kein eigener Fall, §1.1),
   Ausschluss-Tabelle neu erzeugt, Riegel-Defekt behoben (§5), Elza + weitere Raeume Stage 5/6 an der exe (§4.2),
   FREI-Szene als exe-Riegel (§4.3).
+- Nachbesserung 1 (2026-10-13/14, Abnahme 0): Elza ROOM30A1, Zellform, Riegel ohne leere Sektionen, v0.7.19 (Abschnitt NB1).
+- Nachbesserung 2 (2026-10-14/16, Abnahme 1): Cut 15 Konsolen-Cursor (Original-NULL-Sektion), Kopfoberkante (pixelgenaues
+  Figurraster), neuer exe-Riegel integration_r37_masken36_nb2; 45/45 gezielte Tests gruen (Abschnitt NB2).
 
 ## 1. Messung vorher
 
