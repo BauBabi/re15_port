@@ -11,7 +11,7 @@ Nutzer-Wortlaut (AUFTRAG.md Nachtrag 1, 2026-10-16 21:00):
 - [x] Messung vorher (Reproduktion am echten Weg, Cut, Objekt, Lage) — §1
 - [x] Bisect (v0.8.21..v0.8.25) — §2: keine Regression, Zeichenweg seit aa346af1 unveraendert
 - [x] RE-Belege Port-Seite + Original-Zeichenweg (statisch) — §3
-- [ ] Original-Gegenprobe DuckStation (GDB-Haltepunkte im Zeichner + Bild) — §4
+- [x] Original-Gegenprobe DuckStation (GDB-Haltepunkte im Zeichner + Bild) — §4: Hypothese bestaetigt, 48/48
 - [ ] Umsetzung
 - [ ] Messung nachher
 - [ ] Tests
@@ -117,9 +117,40 @@ NCLIP-Richtung stimmt (die dem Port-Bild entsprechende Vorderseite bleibt stehen
 **Hypothese (noch am Original zu messen):** das Original verwirft in Cut 11 praktisch den ganzen offenen Rolladen
 an NCLIP / OTZ<64 / GPU-Groessengrenze; der Port kennt keine dieser drei Schranken und deckt das Bild zu.
 
-## 4. Original-Gegenprobe (DuckStation)
+## 4. Original-Gegenprobe (DuckStation, Auslieferungs-EXE)
 
-(laufend)
+Werkzeug `W_belege/orig_20a0_rolladen.py` (Muster Runde 36 R `orig_1090_push.py`: vgamepad + GDB 127.0.0.1:2345,
+settings.ini gesichert und zurueckgeschrieben, `EnableGDBServer = false` geprueft), Log `W_belege/orig1_log.txt`,
+Bild aus dem SaveStateOnExit-Spielstand (`re15_ss.vram_png(..., true_base=True)`, beide Bildpuffer):
+`W_belege/orig_cut11_offen_buf0.png` / `..._buf1.png`.
+
+Ablauf und Messwerte (alles aus der RAM gelesen):
+* `EXE-Stub @0x80026e4c: 0800e003` = Auslieferung. Debug-Menue-Spielstand, JUMP-Auswahl per RAM (Zeile 0x800BBE5D = 1,
+  Stage 0x800BBE5E = 1, Raumindex 0x800BBE60 = 0x0A), Quadrat -> `Raumindex @0x800b0fe2: 10`.
+* Pool (0x800B3F98 + 0x94*k): `Pool 1: (153, 7942, -7200, -20510, 1024, 0, 16)` = Flags 0x99, Lage, ry 1024, Typ 0,
+  Attribut 0x10 — gleich dem Port-Record @0x01932.
+* Leiter (Spieler per RAM auf (16500,-3600,-21050) Band 2, Blick 3072, Quadrat): `nach der Leiter: Spieler (16500,
+  -7200, -20000, 3072, 4) Cut 12` — gleich dem Port (F71).
+* Schalter (15348,-7200,-19456) Blick 1024: dreimal Quadrat -> `Pool1 y=-9120` (faehrt), Ende `(7942, -10800,
+  -20510)` — gleich dem Port (`F555 obj1=(7942,-10800,-20510)`).
+* Spieler per RAM in die Zone 12->11 (12500,-7200,-15700) -> `Cut 11` (DAT_800B0FE4).
+* Haltepunkte im Zeichner (ein voller Aufruf, `FUN_80023098 Eintritt a0=8011c974 Anzahl 48 (Rolladen)`):
+  @0x80023190 v0 = OPZ + Prim-SXY0..2, @0x80023228 v1 = OTZ + SXY3 (Prim+44), @0x8002325c = in die OT eingehaengt.
+  Ergebnis je Viereck in `orig1_log.txt` (Q00..Q47). Zusammenfassung:
+  - 20 Vierecke OPZ < 0 -> @0x80023190 verworfen (Rueckseiten),
+  - 16 Vierecke OTZ < 64 -> @0x80023228 verworfen (z. B. Q13 otz 47, Q34 otz 44, Q23/Q36/Q40.. otz 0),
+  - 12 eingehaengt; davon 7 mit beiden Dreiecken ueber der GPU-Grenze (z. B. Q35 sxy (804,-76),(481,231),(-114,-344),
+    (105,395): dy 739 >= 512), die uebrigen liegen ausserhalb des 320x240-Bilds (x > 319 bzw. y < 0); Q28 T0
+    (481,231),(374,333),(105,395) beruehrt die Bbox des Bilds, die Flaeche selbst liegt bei y 231..239 erst ab x 463
+    -> **nichts vom Rolladen auf dem Schirm**.
+* **Bild (`orig_cut11_offen_buf0.png`): Cut 11 zeigt die Plattform mit Kiste, Faessern, Regal und Leon — KEIN
+  Rolladen.** Das ist die Original-Sollseite zum Port-Bild `vorher_cut11_F711_offen.png`.
+
+Abgleich mit der Nachrechnung `psxsim.py` (Abschnitt 3.3): **NCLIP-Entscheid 48/48 gleich, eingehaengt 48/48 gleich,
+max |dSXY| = 3 Pixel** (Rest = exakte Wurzel/Division statt SquareRoot0/UNR). Damit ist der Mechanismus belegt:
+das Original zeigt den offenen Rolladen in Cut 11 nicht, weil sein Objekt-Zeichner jedes Viereck an NCLIP
+(@0x80023190) bzw. OTZ < 64 (@0x80023228) verwirft und die GPU die eingehaengten Reste als zu gross (psx-spx Size
+Restriction) bzw. ausserhalb des Bilds nicht zeichnet. Der Port kennt keine dieser drei Schranken.
 
 ## Umsetzung
 
