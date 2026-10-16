@@ -7,7 +7,8 @@
 #           Wegwerf-Abfrage "You don't need this key any more. Discard it?" (RE2 @0x80051670/@0x80051834,
 #           getippt bis ~Bild 235) mit Ja beantworten (245), dann die Tuer halten (270..282) -> "DOOR FIRE
 #           slot=1" und ROOM11C0 erreicht (RE2-Tuer-Handler: erst aufschliessen, der naechste Druck geht hindurch)
-#   leon    Leon ROOM10F0 vor der Funkkonsole, Druck -> Aufnahme-Modal -> Ja: "PARKING LOT KEY genommen"
+#   leon    Leon ROOM10F0 vor der Pinnwand (Runde 38 Spur K, key_location.bmp), Druck -> Aufnahme-Modal -> Ja:
+#           "PARKING LOT KEY genommen"
 #   elza    Elza ROOM10F1, gleiche Stelle: "PRISON KEY genommen" und "(4,0xEC) = 1" (Zelle ROOM1211)
 #   check   Statusschirm CHECK beider Schluessel (Harness RE15_INV_CHECK_SHOT): "CHECK-Foto Item 0x45/0x42:
 #           crect (0,489) prect (832,256) 56x72 -> Foto und CLUT geladen" (eingesetzter RE2-Block)
@@ -150,15 +151,15 @@ muss(auf "${_lh}" "DOOR FIRE slot=1")
 muss(auf "${_lh}" "EXIT_AT: Bild 5 in Raum 11c0")
 message(STATUS "r36_schluessel[auf] OK: mit Schluessel Text msg 29 + Aufschliessen + Wegwerf-Abfrage, naechster Druck -> ROOM11C0")
 
-# --- leon / elza: Aufnahme an der Funkkonsole (Stand (8350,2050) Blick +z) ---
+# --- leon / elza: Aufnahme an der Pinnwand (Runde 38 Spur K: Stand (1300,-2900) Blick -z, 620 voraus im Rechteck) ---
 set(_pad "RE15_PAD_AT=45:A,120:A,160:A,200:A")
-lauf(leon "10F0;8350;2050;3072;flag:9:71;flag:3:94" "${_pad};RE15_EXIT_AT=240#10f0" _lh)
+lauf(leon "10F0;1300;-2900;1024;flag:9:71;flag:3:94" "${_pad};RE15_EXIT_AT=240#10f0" _lh)
 muss(leon "${_lh}" "[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45, Bit (9,82))")
 muss(leon "${_lh}" "[schluessel] PARKING LOT KEY genommen: Item 0x45, Bit (9,82)")
 darf_nicht(leon "${_lh}" "Flag (4,0xEC) = 1")
 message(STATUS "r36_schluessel[leon] OK: Parking Lot Key in ROOM10F0 aufgenommen")
 
-lauf(elza "10F1;8350;2050;3072;elza" "${_pad};RE15_EXIT_AT=240#10f1" _lh)
+lauf(elza "10F1;1300;-2900;1024;elza" "${_pad};RE15_EXIT_AT=240#10f1" _lh)
 muss(elza "${_lh}" "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83))")
 muss(elza "${_lh}" "[schluessel] PRISON KEY genommen: Item 0x42, Bit (9,83)")
 muss(elza "${_lh}" "Prison Key genommen -> Flag (4,0xEC) = 1")
