@@ -162,10 +162,18 @@ Auswertewerkzeug tests/unit/probe_r38_elzatoene_kreuz.c (kein add_test).
   Nachziehen von gunshot1041: Elza betritt das Feld statt darin zu starten — das Feld feuert beim Betreten).
 * `ctest --test-dir re15_port/build -R "integration_r38_elzatoene" --timeout 1200 -V` ->
   `100% tests passed, 0 tests failed out of 2` (Werte §4).
+* GEZIELTE REGRESSION (KEINE volle Suite) — eigene Tests + jede Testgruppe der beruehrten Module: scd_vm.c (SCD-Opcodes,
+  Message_on-Kette: Dialog/Text-Freeze/Stimmen/Leichen-Ersatz/Savepoint/Itembox, Nachbar-Haken Code-Panel/Lift),
+  elza_r36 + ELZASE.VBS (alle r36_elza), Szene 1021 (r37_roy), Raum 1041 (gegnerzahl_raum1041), Elza-Durchlaeufe:
+  `ctest --test-dir re15_port/build -R "scd|msg_dialog|text_freeze|synchro_stimme|voice_ausreden|se_voice_machine|leiche|r36_elza|r38_elzatoene|r37_roy|gegnerzahl_raum1041|story_elza|elza_vollstart|elza_zweig|codepanel|lift2030|savepoint|itembox" --timeout 1200 --output-on-failure -j2`
+  1. Lauf: 68/69 — integration_r36_elza_schuss rot (Bezug Raum-Median, s. §3 letzte Zeile); Bezug umgestellt, Test
+     2x einzeln gruen (`Raum vor dem Schuss 1177`, Spitzen 7101/7512, Roy 8407).
+  2. Lauf (Endstand, Bau unveraendert seit dem letzten C-Stand, "ninja: no work to do"):
+     **`100% tests passed, 0 tests failed out of 69`** (Total Test time 498.75 sec).
 
 ## 6. OFFEN (benannt, nicht beauftragt)
 
-1. **Muendungsfeuer**: RE2 setzt zu JEDEM Skript-Schuss ein ESP `3a 00 18 ..` (ROOM4040 @0x014F0, ROOM4090 @0x02A68,
+1. **Muendungsfeuer**: RE2 setzt zu Skript-Schuessen ein ESP `3a 00 18 ..` (ROOM4040 @0x014F0, ROOM4090 @0x02A68,
    ROOM6020 @0x00BA4, Kendo ROOM1010 @0x0269A). Der Port zeigt Johns Schuesse ohne Blitz; die Kamera steht dabei auf Cut 10 hinter Roy, John ist
    klein am Gangende (m6, Framedump). Der Ton ist jetzt der RE2-Skript-Schuss; das Bild bleibt wie bisher (Runde 36
    OFFEN 2). Eigener Punkt, falls gewuenscht.
