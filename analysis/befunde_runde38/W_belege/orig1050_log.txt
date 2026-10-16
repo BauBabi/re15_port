@@ -1,0 +1,60 @@
+DuckStation gestartet {'48620'}
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Debug-Menue gesetzt: Zeile 1 Stage 0 Raumidx [5, 0, 0, 0, 0, 0]
+Raumindex: 5 Cut: 0 Spieler: (20600, 0, 12350, 0, 0)
+  Pool 0: (11, 15432, 0, -10424, 2048, 0, 0)
+  Pool 1: (11, 14775, 0, -10125, 1199, 0, 0)
+  Pool 2: (0, 0, 0, 0, 0, 0, 0)
+  Pool 3: (0, 0, 0, 0, 0, 0, 0)
+  Pool 4: (0, 0, 0, 0, 0, 0, 0)
+  Pool 5: (0, 0, 0, 0, 0, 0, 0)
+  Pool 6: (0, 0, 0, 0, 0, 0, 0)
+  Pool 7: (0, 0, 0, 0, 0, 0, 0)
+Pool 1 ausgeblendet (w0 0000000b)
+Zonen-Kette von Cut 0 nach 5: [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
+  Zone 0->1 Mitte (17200,12200): Cut 1 Spieler (17200, 0, 12200, 0, 0)
+  Zone 1->2 Mitte (15400,4700): Cut 2 Spieler (15400, 0, 4700, 0, 0)
+  Zone 2->3 Mitte (15400,-1800): Cut 3 Spieler (15400, 0, -1800, 0, 0)
+  Zone 3->4 Mitte (15300,-12000): Cut 4 Spieler (15300, 0, -12000, 0, 0)
+  Zone 4->5 Mitte (16050,-16200): Cut 5 Spieler (16050, 0, -16200, 0, 0)
+Objekt 0: (11, 15432, 0, -10424, 2048, 0, 0)
+Z0 800256b0: b'OK'
+Z0 800257c0: b'OK'
+Z0 800258b4: b'OK'
+Z0 80025914: b'OK'
+FUN_800256b0 Eintritt a0=801cc3cc Anzahl 30 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc404 Anzahl 5 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc43c Anzahl 14 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc474 Anzahl 14 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc4ac Anzahl 8 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc4e4 Anzahl 12 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc51c Anzahl 14 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc554 Anzahl 8 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc58c Anzahl 64 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc5c4 Anzahl 14 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc5fc Anzahl 18 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc634 Anzahl 17 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc66c Anzahl 14 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc6a4 Anzahl 18 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc6dc Anzahl 17 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=801cc714 Anzahl 3 (anderes Modell, uebersprungen)
+FUN_800256b0 Eintritt a0=8012f9dc Anzahl 15 (gesuchtes Objekt)
+Vierecke: 15
+Q00 opz=-36 otz=- sxy=- eingehaengt=0
+Q01 opz=-339 otz=- sxy=- eingehaengt=0
+Q02 opz=-374 otz=- sxy=- eingehaengt=0
+Q03 opz=-17 otz=- sxy=- eingehaengt=0
+Q04 opz=-17 otz=- sxy=- eingehaengt=0
+Q05 opz=-283 otz=- sxy=- eingehaengt=0
+Q06 opz=-319 otz=- sxy=- eingehaengt=0
+Q07 opz=-432 otz=- sxy=- eingehaengt=0
+Q08 opz=-334 otz=- sxy=- eingehaengt=0
+Q09 opz=-357 otz=- sxy=- eingehaengt=0
+Q10 opz=-391 otz=- sxy=- eingehaengt=0
+Q11 opz=-336 otz=- sxy=- eingehaengt=0
+Q12 opz=-319 otz=- sxy=- eingehaengt=0
+Q13 opz=-373 otz=- sxy=- eingehaengt=0
+Q14 opz=-432 otz=- sxy=- eingehaengt=0
+Ende: Spieler (16050, 0, -16200, 0, 0) Cut 5 Objekt (11, 15432, 0, -10424, 2048, 0, 0)
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+resume.sav kopiert

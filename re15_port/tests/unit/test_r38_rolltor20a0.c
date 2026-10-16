@@ -24,6 +24,11 @@
  * R5  HALBVIERECK: Original Q07 — Dreieck (0,1,2) zu gross, (1,2,3) nicht (psx-spx Size Restriction je Dreieck).
  * R6  ELZA: ROOM20A1.RDT ist byte-gleich mit ROOM20A0.RDT (Record obj 1 @0x01932, Kamera Cut 11/12, Modell), also
  *     gilt alles oben auch fuer 20A1.
+ * R7  ZWEITER ORIGINAL-FALL (anderer Zeichner): ROOM1050 obj 0 (Rolltor, Obj_model_set @0x00C36, Attribut 0 ->
+ *     Licht-Viereck-Zeichner FUN_800256b0), Lage (15432,0,-10424) ry 2048, Cut 5. Original gemessen
+ *     (W_belege/orig1050_log.txt, Haltepunkt `bgez v0` @0x800257c0): alle 15 Vierecke OPZ < 0 -> verworfen; die
+ *     Tabelle k_orig1050 sind die 15 OPZ-Werte. Der Port liefert dieselben OPZ (Vorzeichen und Wert) und zeichnet
+ *     nichts; der alte Port-Weg bedeckte 4542 Pixel mit der Rueckseite.
  *
  * Werkzeug-Modus fuer integration_r38_rolltor20a0:
  *   test_r38_rolltor20a0 --bild <framedump.ppm> <ROOMrrr.BSS> <cut> [toleranz=24]
@@ -132,18 +137,23 @@ typedef struct {
     uint8_t   *buf;
 } raum_t;
 
-static int raum_laden(raum_t *r, const char *datei)
+static int raum_laden_obj(raum_t *r, int stage, const char *datei, int obj)
 {
     char path[512];
-    snprintf(path, sizeof path, "%s/STAGE2/%s", RE15_XSTR(RE15_ASSETS_PATH), datei);
+    snprintf(path, sizeof path, "%s/STAGE%d/%s", RE15_XSTR(RE15_ASSETS_PATH), stage, datei);
     size_t sz = 0;
     r->buf = read_file(path, &sz);
     if (!r->buf) { printf("  kann %s nicht lesen\n", path); return 0; }
     memset(&r->rdt, 0, sizeof r->rdt);
     if (re15_rdt_parse(r->buf, sz, &r->rdt) != 0) return 0;
-    if (r->rdt.prop_count < 2 || !r->rdt.prop_md1[1]) return 0;
-    return re15_md1_parse(r->rdt.prop_md1[1], r->rdt.prop_md1_size[1], &r->md1) == 0;
+    if (r->rdt.prop_count <= obj || !r->rdt.prop_md1[obj]) return 0;
+    return re15_md1_parse(r->rdt.prop_md1[obj], r->rdt.prop_md1_size[obj], &r->md1) == 0;
 }
+static int raum_laden(raum_t *r, const char *datei) { return raum_laden_obj(r, 2, datei, 1); }
+
+/* Original ROOM1050 obj 0 Cut 5 (W_belege/orig1050_log.txt): OPZ je Viereck am Haltepunkt @0x800257c0. */
+static const int32_t k_orig1050[15] = { -36, -339, -374, -17, -17, -283, -319, -432, -334, -357, -391, -336, -319,
+                                        -373, -432 };
 
 /* Kamera x Objekt fuer obj 1 (Lage (7942,py,-20510), ry 1024) in Cut cut — wie re15_camera_compose_view_bone in
  * der Prop-Schleife. */
@@ -392,6 +402,42 @@ int main(int argc, char **argv)
             printf("R6 ROOM20A1 = ROOM20A0 (%u Bytes), Cut 11 offen bedeckt %d Pixel\n", (unsigned)za, neu);
         }
         free(ba); free(be);
+    }
+
+    /* R7: zweiter Original-Fall ROOM1050 obj 0 Cut 5 (Licht-Viereck-Zeichner FUN_800256b0) */
+    {
+        raum_t t;
+        memset(&t, 0, sizeof t);
+        CHECK(raum_laden_obj(&t, 1, "ROOM1050.RDT", 0), "R7: ROOM1050.RDT obj 0 nicht geladen");
+        if (t.md1.mesh_count >= 1 && t.md1.meshes[0].quad_count == 15 && t.rdt.cut_count > 5) {
+            re15_camera_view_t view;
+            CHECK(re15_camera_build_view(&t.rdt.cuts[5], &view) == 0, "R7: Cut 5");
+            int32_t rot[9], tr[3] = { 15432, 0, -10424 }, bm[9], bt[3];   /* Obj_model_set @0x00C36, ry 2048 */
+            prop_rot(2048, rot);
+            re15_camera_compose_view_bone(&view, rot, tr, bm, bt);
+            const re15_md1_mesh_t *m = &t.md1.meshes[0];
+            int gleich = 0, gezeichnet = 0, max_d = 0;
+            for (int q = 0; q < 15; q++) {
+                const re15_md1_quad_t *qd = &m->quads[q];
+                const re15_md1_vertex_t *vp[4] = { &m->quad_vertices[qd->v0], &m->quad_vertices[qd->v1],
+                                                   &m->quad_vertices[qd->v2], &m->quad_vertices[qd->v3] };
+                int32_t mac[4][3];
+                for (int v = 0; v < 4; v++) sichtraum(vp[v], bm, bt, mac[v]);
+                re15_objpoly_t p;
+                gezeichnet += re15_objpoly_r38_quad(mac, view.fov_screen_dist, 160, 120, 1, &p);
+                gleich += ((p.opz < 0) == (k_orig1050[q] < 0));
+                const int d = abs((int)p.opz - (int)k_orig1050[q]);
+                if (d > max_d) max_d = d;
+            }
+            printf("R7 ROOM1050 obj 0 Cut 5: NCLIP-Vorzeichen %d/15 wie Original, max |dOPZ| %d, gezeichnet %d\n",
+                   gleich, max_d, gezeichnet);
+            CHECK(gleich == 15, "R7: nur %d/15 NCLIP-Entscheide wie das Original", gleich);
+            CHECK(gezeichnet == 0, "R7: %d Vierecke gezeichnet (Original: 0)", gezeichnet);
+            CHECK(max_d <= 64, "R7: OPZ weicht um %d vom Original ab", max_d);
+        } else {
+            CHECK(0, "R7: ROOM1050 obj 0 nicht 15 Vierecke / Cut 5 fehlt");
+        }
+        free(t.buf);
     }
 
     if (g_fail) { printf("test_r38_rolltor20a0: %d FEHLER\n", g_fail); return 1; }
