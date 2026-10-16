@@ -92,6 +92,12 @@ static int laden(void)
 static int ergaenzung(int se_id)
 {
     if (!g_audio.initialized || !g_room_rdt_ok) return 0;
+    /* MESS-HAKEN RE15_W11B0_SCHUB_STUMM (kein Spielverhalten, Muster RE15_IT_KNALL_STUMM irons_tod_1150.c): Ergaenzung
+     * aus = Stand vor Runde 38 (leerer Raumsatz, stumm). Die Differenz zweier RE15_AUDIO_CAP_SYNC-Mitschnitte (mit /
+     * ohne) ist dann genau der Schiebe-Ton (integration_r38_werkstatt11b0). */
+    static int s_stumm = -1;
+    if (s_stumm < 0) s_stumm = getenv("RE15_W11B0_SCHUB_STUMM") ? 1 : 0;
+    if (s_stumm) return 0;
     if (!re15_w11b0_ergaenzung_noetig(g_current_room_id, g_room_rdt.snd_edt[0], g_room_rdt.snd_edt_size[0], se_id))
         return 0;
     if (!laden()) return 0;
