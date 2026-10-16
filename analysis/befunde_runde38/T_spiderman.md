@@ -103,8 +103,29 @@ RE15_DEBUG_JUMP=4000@250 (-> ROOM4001, debug.log "JUMP -> 400 LAB ENTRANCE (ROOM
 - EM2B-Baenke (gemessen, CDEMD1.EMS Sektor 1104): Hauptbank 30 Clips (0xE fc 15 Wurzel x 354..-363, 0x12 fc 34),
   Opferbank 11 Clips (0 fc 15 Wurzel x 2089..1070, 3 fc 91 Kollaps, 8/9/0xA fc 6/30/30).
 ### Zensus: alle Stellen, die die Spielerposition schreiben
-### Umsetzung
+(laufend, s. Abschnitt 2b)
+
+### Umsetzung (Spiderman)
+- `re15_r38_sm_griff1` (B[5]/B[9]): Anker = Lage - RotY(Blick VOR dem Schnapp) * Wurzel(Clip 0xE/0x12, Bild 0) aus
+  der Hauptbank, Kopie auf den Spieler, dann Schnapp, Platzierung ad68 je Phase, Halten 0xF/0x13 mit +0x9C=100,
+  +0x9E=0x32, Tasten *100, Loesen 0x10/0x14 (SE 0 bei Bild 0x18), Ende +0x1DE=0x3C, +0x5=3. Ablauf: vorn -> B[8],
+  hinten -> B[10] (fehlte im Port: hinten lief auf B[8]).
+- `re15_r38_sm_kollaps` (B[8]/B[10]): Clip 0x11/0x15, aca58=6, aca59 0/1, SE 8, Platzierung vom Griff-Anker.
+- `re15_r38_sm_griff2` (B[15]): einmalige Spielerlage (+0x66C hinter dem Blick, Wandklemme wie @0x80031d70),
+  keine Schleppbewegung, Tasten *8, hp<0 -> 0.
+- Opfer-Maschine: Clips 4v+{0,1,2,3} bzw. 8/9/0xA; Griff 2 ohne Platzierung/ohne Yaw.
+- Haken in enemy_ai_common.c: Fall 5/9/8/10/15 rufen das Modul (vorher ~60 Zeilen ohne Anker), Clip-Belegung,
+  Platzierungs-/Yaw-Ausnahme Griff 2, 5 schmale Zugaenge (Pin, Latch mit Variante, Variante, Clip-Vorschub/-Laenge).
+
 ### Messung nachher
+- m5 (ROOM4001 Elza, Spiderman draussen, Spieler steht): F464 GRIFF vorn, Spieler bleibt bei (-15518,-2468)
+  und schwankt mit dem Opfer-Clip innerhalb (-15534..-15286, -2468..-2671); Kollaps F529, Tod F589 bei
+  (-14971,-3060). Groesster Bild-zu-Bild-Sprung des ganzen Laufs 476 (ATTACK1-Knockback), vorher 14 620.
+- m6 (Leon ROOM5040): Griff hinten + Kollaps hinten, Spieler im Griff (-25886,-25198)..(-25423,-24613).
+- Riegel unit_r38_spiderman (s. Tests) mit VERGIFTETEM Spieler-Anker (30000,30000): Latch kopiert den Anker,
+  402 Griffbilder je Lauf in der Raumhuelle, kein Bild hinter einer Wand, Abstand max 1731 <= 6665.
+  MUTATIONSPROBE (Anker-Kopie entfernt): 10 FAIL — Spieler 58 690 Einheiten in einem Bild, 402/402 Bilder
+  ausserhalb des Raums. Der Riegel faengt also genau den gemeldeten Fehler.
 
 ## 3. Tests
 
