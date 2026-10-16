@@ -213,6 +213,12 @@ es, CONTINUE zeigt es) bleibt unveraendert.
   die das Original @0x80115248-0x801152c4 nicht hat — Spur I (heliport1171). Dieser Spur aendert daran nichts
   (state.log bytegleich), der Szenenschutz nimmt die Rolle per Zustand 4 / grid 0x40 aus.
 
+- RE1.5-KI (nicht Standard): die Sicht "+0x93 gesetzt" fuehrt den RE1.5-Hund im ATTACK-RANGE in seine Original-Reaktion
+  auf einen gerade getroffenen Spieler (Knurren Sub 6; bei Spieler-HP < 50 Ausholen Sub 5/7, @0x8010e5c4-0x8010e624).
+  In 1190 verhindert die Sperrzeit den Entscheid ohnehin, in 11D0 kommen die RE1.5-Hunde nicht aus dem Kaefig
+  (state.log bytegleich, 4.); in einem anderen Raum koennte ein Hund nach einer Szene bei HP < 50 bereits ausgeholt
+  haben. Kein gemessener Fall im Standard-Flavor.
+
 ## 7. Fuer den Nutzer
 
 - Keine neuen Assets, keine Sprachdateien, keine Bank-/Message-Ids.
