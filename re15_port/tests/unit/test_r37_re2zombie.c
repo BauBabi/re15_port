@@ -658,10 +658,20 @@ static void pin_p3(void)
             if (e->re2z_gaitrow != (uint8_t)((r1 & 0xfu) << 1) || e->re2z_t158 != 30
                 || e->re2z_dir16a != (uint8_t)((r2 & 0x1fu) + 30u) || e->re2z_t15a != (int16_t)(r3 + 300u)) a_regel = 0;
             if (e->x != wx || e->z != wz) a_weg = 0;
-            /* naechster Takt: EXEC[1] P1 direkt (kein P0: kein Zufalls-Startbild, +0x15A nur dekrementiert @0x80101D68-74) */
-            int16_t t15a = e->re2z_t15a; uint16_t af = e->anim_frame;
+            /* naechster Takt: EXEC[1] P1 direkt (`beq v1,v0,0x80101b24` @0x80101A64): kein P0 (kein Zufalls-Startbild,
+             * keine Gang-Seeds), der Gang-Zeilen-Timer +0x158 = 30 aus P3 wird dekrementiert (@0x80101B24-34), +0x15A
+             * nur dekrementiert (@0x80101D68-74). */
+            int16_t t15a = e->re2z_t15a; uint16_t af = e->anim_frame; uint8_t zeile = e->re2z_gaitrow;
+            uint32_t d1 = re15_re2_rand_draws();
             pin_takt();
-            if (!(e->state == 1 && e->sub_state_1 == 1 && e->re2z_t15a == (int16_t)(t15a - 1) && e->anim_frame == af)) a_folge = 0;
+            if (!(e->state == 1 && e->sub_state_1 == 1 && e->re2z_t15a == (int16_t)(t15a - 1) && e->anim_frame == af
+                  && e->re2z_gaittmr == 29 && e->re2z_gaitrow == zeile)) {
+                a_folge = 0;
+                printf("  k=%d Folgetakt: st %u/%u/%u t15a %d (soll %d) af %u (soll %u) gaittmr %u (soll 29) zeile %u (soll %u) wuerfe %u\n",
+                       k, e->state, e->sub_state_1, e->sub_state_2, (int)e->re2z_t15a, (int)t15a - 1, e->anim_frame, af,
+                       (unsigned)e->re2z_gaittmr, (unsigned)e->re2z_gaitrow, (unsigned)zeile,
+                       (unsigned)(re15_re2_rand_draws() - d1));
+            }
         }
     }
     PIN(a_regel && a_n10101 > 0 && a_n201 > 0,
@@ -669,7 +679,8 @@ static void pin_p3(void)
         " +0x15A=r3+300, 4 Wuerfe (@0x80105B14-80): %d x 0x10101, %d x 0x201", a_n10101, a_n201);
     PIN(a_weg, "P3 gleicher Clip: 0x800152C8(self,0) @0x80105B98 wendet den +0x144-Vektor (37,-5) gedreht EINMAL an -> (%d,%d);"
         " beim 0x201-Ausgang keine Bewegung", (int)wx, (int)wz);
-    PIN(a_folge, "P3 -> 0x10101: der naechste Takt ist EXEC[1] P1 ohne P0 (Bild bleibt, +0x15A nur -1)");
+    PIN(a_folge, "P3 -> 0x10101: der naechste Takt ist EXEC[1] P1 ohne P0 (Bild bleibt, Gang-Zeilen-Timer 30 -> 29 mit der"
+        " P3-Zeile, +0x15A nur -1)");
 
     /* B: ANDERER Clip (`bne a0,v1` @0x80105B3C genommen): 0x101 aus dem Delay-Slot @0x80105B40, kein weiterer Wurf, keine
      *    Bewegung, +0x15A unberuehrt. */
@@ -734,6 +745,8 @@ static void pin_p3(void)
         pin_takt();
         d_n++;
         if (!(e->state == 1 && e->sub_state_1 == 1 && e->sub_state_2 == 0 && e->x == 0 && e->z == 0)) d_alt = 0;
+        pin_takt();                                  /* naechster Takt: EXEC[1] P0 -> +0x15A = (rand>>3)+100, im P1-Rumpf -1 */
+        if (!(e->sub_state_2 == 1 && e->re2z_t15a >= 99 && e->re2z_t15a <= 130)) d_alt = 0;
     }
     for (int k = 0; k < 96; k++) {
         rng_auf(k);

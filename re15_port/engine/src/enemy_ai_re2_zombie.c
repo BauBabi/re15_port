@@ -5672,6 +5672,17 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
                 e->re2z_t158    = 30;                              /* @0x80105B60-68 */
                 e->re2z_dir16a  = (uint8_t)((re2z_rand() & 0x1fu) + 30u); /* @0x80105B64-78 */
                 e->re2z_t15a    = (int16_t)(re2z_rand() + 300u);   /* @0x80105B74-80 */
+                if (s_r37_prod & RE15_R37L_P3) {
+                    /* +0x158 ist im Original EIN Feld; im Gang ist es der Zeilen-Timer: EXEC[1] mit +0x6 == 1
+                     * springt @0x80101A64 an P0 (Gang-Seeds @0x80101A74-B20) vorbei nach P1 @0x80101B24, und P1
+                     * liest `lhu v1,344(s1)` @0x80101B24 = dieses +0x158 = 30, Zeile +0x16B @0x80101B38. Der Port
+                     * fuehrt den Gang-Timer im eigenen Feld re2z_gaittmr und erkennt "Gang betreten" am Tag
+                     * re2z_gaitinit (re2z_gait_tick) — P3 HAT die Gang-Seeds gesetzt, also Tag = 0x80 | +0x5 (= 1),
+                     * sonst wuerfelte der Port im ersten P1-Takt eine zweite Gang-Init (2 Wuerfe), die das Original
+                     * nicht hat. */
+                    e->re2z_gaittmr  = 30;                         /* +0x158 = 30 @0x80105B68, gelesen @0x80101B24 */
+                    e->re2z_gaitinit = (uint8_t)(0x80u | (e->sub_state_1 & 0x7fu));
+                }
                 s_r37_p3[3]++;
                 /* @0x80105B84-98: derselbe Vergleich (nichts dazwischen schreibt +0x14C/+0x218) -> 0x800152c8(self,0):
                  * der +0x144-Vektor des LETZTEN e7c (P2 @0x801058AC, hier kein neuer) noch einmal, um +0x76 gedreht. */
