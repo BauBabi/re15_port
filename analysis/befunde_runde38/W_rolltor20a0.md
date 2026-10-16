@@ -12,10 +12,12 @@ Nutzer-Wortlaut (AUFTRAG.md Nachtrag 1, 2026-10-16 21:00):
 - [x] Bisect (v0.8.21..v0.8.25) — §2: keine Regression, Zeichenweg seit aa346af1 unveraendert
 - [x] RE-Belege Port-Seite + Original-Zeichenweg (statisch) — §3
 - [x] Original-Gegenprobe DuckStation (GDB-Haltepunkte im Zeichner + Bild) — §4: Hypothese bestaetigt, 48/48
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
-- [ ] Elza 20A1
+- [x] Zweiter Original-Fall (anderer Zeichner, ROOM1050 Rolltor Cut 5) — §4b: 15/15 OPZ exakt
+- [x] Umsetzung — §5 (engine/src/objpoly_r38.c, platform/pc/src/objpoly_r38_pc.c, Haken main.c)
+- [x] Messung nachher — §6 (Cut 11 frei, Bild = Original, OBJPOLY = Original)
+- [x] Tests — §7 (unit_r38_rolltor20a0, unit_r38_rolltor20a0_windung, integration_r38_rolltor20a0)
+- [x] Elza 20A1 — RDT byte-gleich, exe-Lauf B mit Elza (PL04) gruen
+- [x] Nebenwirkungen — §8 (Zensus aller Raeume; Port-Modelle ohne NCLIP)
 
 ## 1. Messung vorher (Port, Basis df08d83a = v0.8.25 + Doku)
 
@@ -152,6 +154,20 @@ das Original zeigt den offenen Rolladen in Cut 11 nicht, weil sein Objekt-Zeichn
 (@0x80023190) bzw. OTZ < 64 (@0x80023228) verwirft und die GPU die eingehaengten Reste als zu gross (psx-spx Size
 Restriction) bzw. ausserhalb des Bilds nicht zeichnet. Der Port kennt keine dieser drei Schranken.
 
+## 4b. Zweiter Original-Fall: ROOM1050 Rolltor (Licht-Viereck-Zeichner FUN_800256b0)
+
+Damit der Fix nicht nur am Rolladen (Flach-Zeichner FUN_80023098) belegt ist: Werkzeug `W_belege/orig_objmessung.py`
+(gleiche GDB-/vgamepad-Mechanik, Kamera-Fuehrung durch die RVD-Zonen-Kette per RAM-Lage; andere Pool-Objekte per
+Flags-Wort Bit 0 aus, damit nur das gesuchte Modell zeichnet), Log `W_belege/orig1050_log.txt`:
+* JUMP 105 (Stage 0, Raumindex 5), `Pool 0: (11, 15432, 0, -10424, 2048, 0, 0)` = Obj_model_set @0x00C36
+  (Typ 0, Attribut 0 -> FUN_800256b0), Zonen-Kette Cut 0 -> 1 -> 2 -> 3 -> 4 -> 5, `Cut 5`.
+* Haltepunkte FUN_800256b0 @0x800256b0 (Eintritt; der Zeichner laeuft auch fuer Leons Koerperteile: 16 Aufrufe
+  mit 3..64 Vierecken, uebersprungen), @0x800257c0 `bgez v0` (OPZ), @0x800258b4, @0x80025914:
+  `FUN_800256b0 Eintritt a0=8012f9dc Anzahl 15 (gesuchtes Objekt)` -> **alle 15 Vierecke OPZ < 0** (-36, -339, -374,
+  -17, -17, -283, -319, -432, -334, -357, -391, -336, -319, -373, -432) -> nichts eingehaengt.
+* Port (Riegel R7): dieselben 15 OPZ **exakt** (max |dOPZ| 0), nichts gezeichnet; der alte Port-Weg malte dort die
+  Rueckseite des Tors (4542 Pixel, Zensus §8).
+
 ## 5. Umsetzung
 
 Der Fix bildet den Original-Objektzeichner im PC-Prop-Weg nach — fuer ALLE Raum-Objekte (Obj_model_set), denn alle
@@ -212,8 +228,81 @@ Bau `local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK (build)` (keine 
 
 ## 7. Tests
 
-(laufend)
+Neu (nur aus `re15_port/tests/unit/probes/r38_rolltor20a0.cmake` registriert):
+* `unit_r38_rolltor20a0` (`tests/unit/test_r38_rolltor20a0.c`, echte RDTs, keine exe):
+  R1 48 Vierecke Cut 11 offen gegen die Original-Tabelle (NCLIP 48/48, eingehaengt 48/48, GPU-Dreiecke, **max |dSXY| 0**);
+  R2 Bedeckung neu 0 Pixel (offen und zu); R3 Negativkontrolle alter Weg 67728/76800 Pixel (88,2 %, Schwelle 85 %);
+  R4 Cut 12 von vorn: 12721 vs 12812 / 10934 vs 11012 Pixel (Abweichung < 1 %, Rolladen bleibt sichtbar);
+  R5 GPU-Grenze je Dreieck (Original Q07); R6 ROOM20A1.RDT == ROOM20A0.RDT (300176 Bytes) + 0 Pixel;
+  R7 ROOM1050 Rolltor Cut 5: 15/15 OPZ exakt wie das Original, 0 gezeichnet.
+  Werkzeug-Modus `--bild <ppm> <bss> <cut> [toleranz]` (Raumhintergrund-Anteil) fuer den exe-Riegel.
+* `unit_r38_rolltor20a0_windung` (`tests/unit/test_r38_rolltor20a0_windung.c`): Windungs-Zensus 568 Objekt-Modelle
+  aus 206 RDTs: w.n < 0 bei 30037 von 30188 Polygonen (99,5 %) = Original-Konvention; 20 Port-Modelle, davon nur der
+  Feuerloescher R37 verkehrt (36/148) -> NCLIP im PC nur fuer RDT-Modelle; Schalter nclip wirkt (O4).
+* `integration_r38_rolltor20a0` (`tests/integration/test_r38_rolltor20a0.cmake`, Wegplaene
+  `tests/integration/r38_rolltor20a0/wp_cut11.txt`, `wp_kiste.txt`; Messkopie `re15_pc_r38w_haken_*`):
+  A Leon ROOM20A0 echter Weg -> Cut 11 F700/F850/F1000: Raumhintergrund-Anteil 0,9424 / 0,9432 / 0,9430
+  (Schwelle 0,80; vorher 0,1305), OBJPOLY Cut 11 obj 1: 350 Bilder alle `gezeichnet=6 nclip=20 otz=16 gpu=6`;
+  B Elza ROOM20A1 (`[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`): 0,9488 / 0,9493 / 0,9493, 350 Bilder wie A;
+  C Leon Kiste: `F1259 AUSLOESER ... pos=(12250,-7200,-21473)`, `F1278 LANDUNG y=-3600 band=2`, `F1297 LANDUNG y=-1800
+  band=1` (Kiste faellt durch die Rolladen-Oeffnung). Bilder `W_belege/nachher_integ_leon20A0_cut11_F850.png`,
+  `nachher_integ_elza20A1_cut11_F850.png`.
+
+Lauf (gezielt, keine volle Suite):
+`ctest --test-dir re15_port/build -R "^(unit|integration)_r38_rolltor20a0(_windung)?$" --timeout 1200 --output-on-failure`
+-> `100% tests passed, 0 tests failed out of 3` (integration 214 s).
+Testgruppen der beruehrten Module: siehe §7b.
+
+## 8. Nebenwirkungen (Zensus) — wo der Port jetzt sonst noch anders (= wie das Original) zeichnet
+
+Der Fix gilt fuer alle RDT-Objekte (derselbe Original-Zeichner). Zensus `W_belege/zensus_objpoly.py` ->
+`W_belege/zensus_objpoly.txt`: 152 inhaltsverschiedene RDTs, jedes Obj_model_set (alle Skript-Lagen) x jeder Cut,
+dessen Regions-Viereck die Lage enthaelt = 1757 Faelle; Summe Bildbedeckung alt 4 193 818 px, neu 3 810 642 px. Mehr
+als 2 % des Bilds weniger nur in 18 Faellen (9 je Leon/Elza-Paar):
+* ROOM10D0/10D1 obj 0 (Rolladen vor Marvins Raum) Cut 12/13/6/7 in der geschlossenen Lage: der alte Port malte die
+  RUECKSEITE (Cut 12 100 %, Cut 13 70 %); in der Szene (sub21 "It's a shutter switch", `Cut_chg 13` @0x01A22, sub22
+  hebt ihn auf y -6550) betrifft das die ersten Bilder von Cut 13 (y 0..-1500: alt 53884 -> neu 0..1080 px); oben
+  (y -6550) kein Unterschied. Cut 14 (Vorderseite) unveraendert.
+* ROOM1130/1131 obj 0 (Rolladen) Cut 8 (geschlossene Lage, ry 3072) und Cut 9 (Lage nach dem Oeffnen @0x00950,
+  ry 1024): jeweils die Rueckseite, alt 25597 / 22378 px -> neu 0. Die im Spiel benutzten Paare (Cut 9 zu = die
+  Oeffnungs-Szene, Cut 8 nach dem Oeffnen = Cut_replace 9->8 @0x009E0) bleiben unveraendert (23512 / 27093 px).
+* ROOM1050/1051 obj 0 (Rolltor) Cut 5: Rueckseite 4542 px -> 0 — **am Original gemessen (§4b)**.
+* ROOM1170 obj 3 (Hubschrauber-Rotor) Cut 3: 40108 -> 30771 px (Rueckseiten der Blaetter).
+* ROOM1210/1211 obj 0 (Flach-Objekt 268 x 3600 x 1890 @0x01E4E) Cut 5: 9463 -> 384 px, Cut 8: 2832 -> 1381 px.
+Jede dieser Zahlen folgt aus denselben drei Schranken, die am Original zweimal Polygon fuer Polygon bestaetigt sind
+(20A0 Flach-Zeichner 48/48, 1050 Licht-Zeichner 15/15).
+**Port-Modelle** (eingebacken, nicht aus der RDT: Sicherung, Granate, Irons-Tisch, Dokumente, Inhalt R35, Schluessel
+R36, Kartenitems R36, Feuerloescher R37): bleiben zweiseitig (kein NCLIP, PORT-WAHL — der Feuerloescher hat 112 von
+148 Polygonen verkehrt herum gewickelt und waere sonst zerrissen); OTZ < 64, Saettigung und GPU-Grenze gelten auch fuer
+sie (wirken nur unmittelbar vor der Kamera).
 
 ## OFFEN
 
+* Vorbestehend, nicht Teil dieses Befunds: der PC teilt ein voll gezeichnetes Viereck an der Diagonale 0-3, die PSX-GPU
+  an 1-2 (gleiche Flaeche, andere affine Texturverzerrung bei stark perspektivischen Vierecken). Der Halbfall (nur ein
+  GPU-Dreieck besteht) nutzt schon die PSX-Teilung.
+* Figuren (Spieler/Gegner/NPC) laufen im PC NICHT durch diese Schranken; im Original zeichnet derselbe Licht-Viereck-
+  Zeichner FUN_800256b0 auch Leons Koerperteile (Messung §4b: 16 Aufrufe je Bild). Kein Nutzer-Befund dazu — nicht
+  angefasst.
+* Feuerloescher-Modell (gen/feuerloescher_r37.inc, Runde 37 Spur I / Runde 38 Spur K): Windung uneinheitlich; mit
+  einheitlicher Windung koennte auch er NCLIP bekommen. Hinweis an Spur K, keine Aenderung hier (Datei gehoert K).
+* Runde-36-Satz "die Kiste in ROOM20A0/20A1 faellt nie" (A_klettern.md) ist durch den Rolladen ueberholt: sub07
+  @0x01E5E-6E schaltet Zelle 32 (die "Wand 32" der Runde 36) in allen Regionen auf u0 = 0, danach faellt die Kiste
+  durch die Oeffnung (§6, Lauf C). Die Lage (3,0xCC)=1 @0x0187A verlangt dann noch die Kerbe 7 (Member_cmp m0F == 7
+  @0x01ADC) unten am Kanal — nicht Teil dieses Befunds, nicht gemessen.
+
 ## Fuer den Nutzer
+
+* ROOM20A0 (Leon) und ROOM20A1 (Elza): der geoeffnete Rolladen steht nicht mehr vor der Kamera. Im Kamerabild ueber
+  der Plattform (das beim Gang zur Kiste und beim Schieben aktiv ist) sieht man jetzt Kiste, Faesser, Regal und die
+  Figur — wie im Original (dort verwirft der Zeichner die Rueckseiten und die zu nahen/zu grossen Flaechen). Der
+  Kisten-Ablauf bleibt: Rolladen auf, Kiste nach Norden durch die Oeffnung schieben, sie faellt.
+* Dieselbe Original-Regel gilt jetzt fuer alle Raum-Objekte: Rueckseiten von Toren/Rolllaeden werden nicht mehr
+  gemalt, wo die Kamera von hinten draufschaut (z. B. ROOM10D0 Cut 13 am Anfang der Marvin-Szene, ROOM1050 Cut 5,
+  ROOM1130 Cut 8/9). Die eingebauten Port-Modelle (Sicherung, Dokumente, Schluessel, Feuerloescher ...) sehen aus wie
+  bisher.
+* Neue Assets: keine (Paket-Gate unveraendert). Sprachdateien: keine. Bank-9-Bits/Nachrichten-Ids: keine.
+* Bau: neue Quelldateien `re15_port/engine/src/objpoly_r38.c` und `re15_port/platform/pc/src/objpoly_r38_pc.c`
+  (GLOB) — der Android-Bau braucht einen frischen Configure (Memory reai-v2-android-glob-cache).
+* Messschiene fuer Rueckmeldungen: `RE15_OBJPOLY_LOG=objpoly.txt` schreibt je Bild und Objekt gezeichnet/NCLIP/OTZ/GPU.
+* Entscheidungsfragen: keine.
