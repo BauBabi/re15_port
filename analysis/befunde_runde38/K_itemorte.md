@@ -18,6 +18,7 @@ dieser Spur. Kein Bank-9-Bit neu (Loescher (9,0x86)/(3,0x85) wie Runde 37, Schlu
   Runde-36-Dossier Q (Schluessel), Runde-36-Dossier N (Lageplaene = dasselbe Verfahren "Marke im Nutzerbild -> Wand").
 - 17:15 Messung vorher, Cut-Zuordnung, Geometrie (Pfeiler/Pinnwand), RE-Belege fertig (Abschnitte 1/2); Werkzeug
   `re15_port/tools/r38_itemorte/itemorte_export.py` rechnet Lage, Drehung, Massstab.
+- 17:40 Umsetzung + Messung nachher (Abschnitte 3/4), RE2-Licht der Schluessel belegt (2.7), Riegel gebaut (5).
 
 ## 1. Messung vorher (Stand 1bcbd0ff, Baum gebaut 16:40, Messkopie `re15_pc_r38k_mess.exe`)
 
@@ -129,15 +130,115 @@ z -2900..-1300 begehbar, `stand 10F0`) gelten Cut 5/6/7-Vierecke; Uebergaenge 5-
 * Sichtbare Texel (CLUT-Farbe != 0x0000): P. Room Key 3642, Cabin Key 313.
 * Natuerliche Groesse an der Pinnwand (Cut 5, vz ~ 13000): 152 Einheiten = 2,4 Bildpunkte — NICHT "gut sichtbar".
 
-(folgt: Umsetzung, Messung nachher, Tests)
+### 2.7 Licht der RE2-Schluesselmodelle — RE2 zeichnet sie FLACH (selbst disassembliert, info/re2leon/PSX.EXE)
+RE2-SCD-Opcode-Tabelle 0x800a74c8 (geprueft: Eintrag 0x37 -> LAB_8005655c = Sca_id_set, Eintrag 0x2E = 0x80055904 =
+Work_set mit Pool 0x800d0324 + id*0x1F8 @0x80055994..ac). Eintrag 0x2D @0x800a757c = **0x80055260 = Obj_model_set**:
+```
+80055290  lbu  t1,1(s2)          ; pc[1] = Objekt-Id
+80055298..800552a8               ; s1 = 0x800cc1e8 + 16700 + id*504 = Pool 0x800d0324 + id*0x1F8
+800552d0  lhu  v0,10(s2)         ; pc[10..11] Freigabe-Wort
+800552d8  ori  v0,v0,0x1         ; |1 -> Pool+0 (@0x800552e4)
+8005530c  lh   a1,12(s2)         ; pc[12..13] ATTRIBUT-WORT
+80055320  sw   a1,16(s1)         ; -> Pool+0x10
+```
+Zeichner FUN_800363f0: @0x800365e0 `lw v0,16(s1)`, @0x800365e8 `andi v0,v0,0x10` -> mit Bit FUN_8002d0e8 (@0x80036610,
+unbeleuchtet), sonst FUN_80027bec (NCCT). Die Schluessel-Saetze in RE2 Retail:
+`ROOM6150.RDT @0x02C98 2d 08 00 00 00 00 00 00 00 00 00 00 10 00 ...` (P. Room Key, Objekt 8) und
+`ROOM1050.RDT @0x01274 2d 00 00 00 00 00 00 00 00 00 0a 00 10 00 ...` (Cabin Key, Objekt 0): pc[12..13] = 0x0010.
+=> RE2 stellt BEIDE Schluessel flach auf (Textur unveraendert, 0x808080). Runde 36 hatte sie mit Attribut 0 (NCCT)
+gesetzt; an der Pinnwand gemessen ist der Parking Lot Key damit ein dunkelgrauer Strich (Messung 4.2). RE1.5-Gegenstueck
+des Zweigs: FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10` -> FUN_80022f0c @0x8002c320 (Runde 36 N 8.3). (Damit ist auch die
+Luecke der Runde 36 N geschlossen, die den RE2-Handler "positionell" angenommen hatte: er steht jetzt mit Adresse fest.)
+
+### 2.8 Vorgaben, die NICHT aus dem Original kommen (NUTZER-VORGABE / PORT-WAHL, Form belegt)
+| Groesse | Wert | Herkunft |
+|---|---|---|
+| Ort Loescher | Mitte = Sehstrahl der Markenmitte (43,5 ; 117,0) x Achsenebene x = -2688 - 125 | NUTZER-VORGABE (Marke); Form Runde 36 N ("Mitte = Sehstrahl der Markenmitte x Ebene") |
+| Wandabstand | Achse R + 15 = 125 vor der Flaeche | Runde 37 Dossier I 3.2 (dieselbe Regel wie ROOM1050) |
+| rot_y Loescher | 3072 (Modell -z = Wandseite -> Welt +x, Etikett zum Raum) | Runde 37: "rot_y 0 = Etikett zum Raum" an einer z-Wand |
+| Groesse Loescher | unveraendert 0,47 m (Netz Runde 37) | derselbe Loescher wie in 1090/1091 (dort liegt er spaeter leer) |
+| Ort Schluessel | Mitte des SICHTBAREN Texel-Rechtecks auf dem Sehstrahl der Markenmitte (138,5 ; 81,5), Ebene z -3400 | NUTZER-VORGABE (Marke) |
+| Massstab Schluessel | groesster Wert, bei dem alle sichtbaren Texel in der Marke liegen (+-0,5/+1,5 px): P. Room Key 6,4636, Cabin Key 3,5896 | NUTZER-VORGABE "gut sichtbar"; Form Runde 36 N ("Massstab s = groesster Wert ... in der Marken-Huelle") |
+| Lage in der Ebene | Textur-u waagerecht nach rechts, Sichtseite = Wicklungs-Vorderseite = nicht gespiegelte Seite | PORT-WAHL (2.6); P. Room Key: Kopf rechts wie im RE2-Itembild ITPS 95 |
+| Zonen | 1000 x 1000 (r35-Muster, 69 von 162 Item_aot_set); 1030 Mitte x = Klemmgrenze -4100 + 620 (@0x80042bd0), z ab -18370 (Slot 13 endet -18372); 10F0 Mitte (x_Marke, Wand + 300) wie Runde 36 N, rechts vor Slot 12 (x 1800) beendet | Runde 35/36-Muster |
+| Ausweich-Slots | ROOM1030 20 (frei in 1030 und 1031), 10F0/10F1 15 (bisheriger Schluessel-Slot) | Muster Runde 36 N (Telefon 8 -> 39) |
 
 ## 3. Umsetzung
 
-(folgt)
+### 3.1 Dateien
+Neu: `engine/src/itemorte_r38.c`, `include/re15_itemorte_r38.h`, `engine/src/gen/itemorte_r38_lage.inc` (#define-Lagen),
+`engine/src/gen/itemorte_r38_md1.inc` (zwei skalierte RE2-MD1), Werkzeug `tools/r38_itemorte/itemorte_export.py`
+(erzeugt beide .inc aus Nutzer-BMP, Engine-Kameramatrix, gemessener Ebene; RE2-Bytes md5-geprueft wie Runde 36),
+`tests/unit/test_r38_itemorte.c`, `tests/unit/probes/r38_itemorte.cmake`, `tests/integration/test_r38_itemorte.cmake`.
+Haken (Kommentar "Runde 38 Spur K"):
+* `engine/src/feuerloescher_r37.c` (Spur-K-Datei laut VERTRAG 1.4): Lage-Zeile 0x1050 -> RE15_R38K_FL_* (0x1030, Slot 14),
+  1 Haken `re15_itemorte_r38_platz_frei(room_id, slot)` vor dem Zonen-Test, Include, Kommentare; Kopf
+  `include/re15_feuerloescher_r37.h` (Fundort-Satz, Pool-Id-Kommentar).
+* `engine/src/schluessel_r36.c` (Spur-K-Datei): schluessel_anlegen nimmt Lage/Drehung aus re15_itemorte_r38_schluessel_lage,
+  Attribut RE15_R38K_SCHL_ATTR, Zone Slot 8 + Haken platz_frei; re15_schluessel_r36_md1_bytes liefert das skalierte MD1.
+  `include/re15_schluessel_r36.h`: Konsolen-Lage der Runde 36 (X/Y/Z/ROT_Y/SLOT/RECT_*) entfernt, Verweis auf R38.
+* `platform/pc/main.c`: Include + 3 Zeilen nach `re15_prop_culled` im Prop-Zeichner (`re15_itemorte_r38_verdeckt`).
+Keine Bank-9-Bits, keine Nachrichten-Ids, kein Asset, kein Patch an shared_assets.
 
-## 4. Messung nachher
+### 3.2 Konstanten (gen/itemorte_r38_lage.inc, Herleitung 2.2/2.3/2.8)
+* Loescher: Ursprung (Bodenmitte) (-2813,-2122,-17904), rot_y 3072, Zone x -3980..-2980 z -18370..-17370 (Slot 14).
+* Parking Lot Key: (1358,-2495,-3400) rot (3072,0,2048), Massstab 6,4636 (sichtbar 735 x 468 Einheiten).
+* Prison Key: (1358,-2495,-3400) rot (1024,3618,2048), Massstab 3,5896 (sichtbar 538 x 620).
+* Schluessel-Zone x 798..1798 z -3600..-2600 (Slot 8); Licht 0x0010 (2.7).
 
-(folgt)
+### 3.3 Sichtbarkeitsregel (PORT-ZUSATZ, gemessen begruendet)
+`re15_itemorte_r38_verdeckt`: ROOM1030 Cut 3 und Cut 10 (Loescher obj 5), ROOM10F0/10F1 Cut 7 (Schluessel obj 4) werden
+nicht gezeichnet. Messung ohne Regel (Lauf mit ausgeschaltetem Haken, sonst identisch, Unterschied mit/ohne Taken-Bit):
+Cut 10 102 Pixel x 222..227 y 108..127 (Loescher VOR dem Pfeiler), Cut 3 36 Pixel x 224..227 y 109..124 (rechts neben
+der Maske 2, die bei x 226 endet, die Pfeilerkante liegt bei 228,5), 10F0 Cut 7 44 Pixel x 94..104 y 72..80 (Schluessel
+ueber dem Buecherregal). Mit Regel jeweils 0 Pixel. Geometrisch liegt der Loescher aus Kamera 3/10 hinter dem Pfeiler
+(sichtbarer Rand rechnerisch 13 Einheiten = 0,3 px), der Schluessel aus Kamera 7 hinter dem Regal (Bildpunkt im Regal).
+Bild `K_belege/k3_ohne_regel_cut10_mit_regel_cut10_ohne_regel_cut7.png`.
+
+## 4. Messung nachher (Baum gebaut, Messkopie `re15_pc_r38k_mess.exe`, Lade-Weg CONTINUE)
+
+### 4.1 Punkt 1 — Feuerloescher
+* `aots 1030`: `[itemorte] ROOM1030: Slot 14 (msg 14) -> Slot 20`, `[feuerloescher] ROOM1030: Loescher an der Wand obj 5 bei
+  (-2813,-2122,-17904) rot_y 3072, Zone Slot 14 Aufnahme Item 0x31 Bit (9,0x86)`; Slot 14 ITEM x[-3980..-2980]
+  z[-18370..-17370] prop 5; Slot 20 MESSAGE evt 14 x[-4190..-2860]. `aots 1031`: kein Loescher, Slot 14 msg 14.
+  `aots 1050`: kein Slot 13, kein obj 5.
+* Bild Nutzer-Cut (ROOM1030 Cut 0, Bild 100, mit/ohne (9,0x86)): **59 Pixel, Huelle x 40..45 y 110..123, 50 davon in der
+  Marke x 38..48 y 111..122**, ausserhalb des Fensters (Marke +-2 px) 0. Netz-Projektion (Unit-Riegel, Engine-Kamera):
+  x 40,9..46,3 y 109,6..124,4, Mitte (43,6 ; 117,0) = Markenmitte (43,5 ; 117,0). Bilder
+  `K_belege/k1_nutzerbild_vs_port_1030_cut0.png` (links Nutzerbild, rechts Port, Marke rot umrandet),
+  `k1_1030_cut0_mit_ohne_6x.png`.
+* Andere Cuts (RE15_FORCE_CUT, mit/ohne): Cut 1 90 Pixel x 296..303 y 106..122 (frontal auf der -x-Flaeche), Cut 2 175
+  Pixel x 271..280 y 87..110, Cut 9 (= Kamera 0 nach dem Rolltor-Tausch) 58 Pixel x 40..45 y 110..123, Cut 3 0, Cut 10 0.
+* Aufnahme (exe, Stand (-4300,-17904) Blick +x, Cut 0, Skript A@90/A@198/A@321): Modal mit ITPS-Bild, "Will you take the
+  Fire Extinguisher?", Ja -> `[feuerloescher] Aufnahme Item 0x31 (9,0x86) -> Set(3,0x85)=1 wie ROOM1000 sub01 @0x00D0C`;
+  Bild 200: der Pfeiler ist leer; dritter Druck an derselben Stelle -> `[msgtext] room=1030 id=14 "Seems like even the
+  emergency broadcast has gone offline..."` (Bild `K_belege/k1_aufnahme_1030_ablauf.png`).
+* Kamera beim Aufheben = Cut 0 (alle Zonen an der Standstelle fuehren nach Cut 0, 2.5): der Spieler sieht das Nutzerbild.
+* Elza: ROOM1031 kein Loescher (Runde 37: in ROOM1051 hing auch keiner — Leon war zuerst da und hat ihn benutzt),
+  ROOM1091 der leere Loescher am Boden unveraendert (`Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300)`).
+  Leon ROOM1090 Loesch-Ablauf unveraendert (Riegel unit_r37_feuerloescher_loeschen/kiste, integration A/F/G/I/M/N/O).
+
+### 4.2 Punkt 2 — Schluessel an der Pinnwand
+* `aots 10F0/10F1`: `[itemorte] ROOM10F0: Slot 8 (msg 4) -> Slot 15`, `[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45,
+  Bit (9,82)) Prop obj 4 bei (1358,-2495,-3400) rot (3072,0,2048), Zone Slot 8`; 10F1 PRISON KEY rot (1024,3618,2048).
+* Bild Nutzer-Cut (ROOM10F0/10F1 Cut 5, Bild 100, mit/ohne Taken-Bit): Parking Lot Key **55 Pixel, Huelle x 132..143
+  y 78..84**, Prison Key **14 Pixel, Huelle x 134..143 y 78..85**, ausserhalb des Fensters (Marke +-2) je 0.
+  Erste Fassung mit NCCT-Licht (Runde-36-Attribut 0): Parking Lot Key 50 Pixel, mittlere Farbe (91,82,82) gegen Kork
+  (71,70,55) = dunkler Strich; mit RE2-Attribut 0x0010 (2.7) silberne Klinge, schwarzer Kopf, rotes Emblem.
+  Netz-Abtastung (Unit-Riegel): ALLE sichtbaren Texel in der Marke (+-0,5/+1,5), Huelle x 132,59..144,41 (Park) bzw.
+  134,08..144,47 (Prison) = die Marke ist ausgefuellt.
+* Fensterskala 3 (RE15_WINDOW_SCALE=3, so spielt der Nutzer; 3D-Geometrie in Fensteraufloesung): der Parking Lot Key als
+  Schluessel mit Zacken und rotem Emblem, der Prison Key als Ring mit kleinem Schluessel (`K_belege/
+  k2_10f0_10f1_fensterskala3.png`). Bei Skala 1 ist die Ringlinie des Cabin Key (1..1,5 Texel = 0,3 px) nur
+  stellenweise getroffen.
+* Cut 6 (die zweite Kamera auf die Pinnwand): 108 Pixel x 81..98 y 67..76; Cut 7: 0 (Regel 3.3); Cut 0/1/11: das
+  Anker-Viereck enthaelt den Ursprung nicht (Original-Cull, nichts gezeichnet).
+* Aufnahme (exe, Stand (1300,-2900) Blick -z): Modal mit RE2-Bild P. Room Key / Cabin Key, Ja ->
+  `PARKING LOT KEY genommen: Item 0x45, Bit (9,82)` bzw. `PRISON KEY genommen: Item 0x42, Bit (9,83)` + `Prison Key
+  genommen -> Flag (4,0xEC) = 1 (Zelle ROOM1211)`; dritter Druck -> `[msgtext] room=10f0 id=4 "Several files from past
+  cases.Nothing useful here."` (Bild `K_belege/k2_aufnahme_10f0_10f1_ablauf.png`).
+* Parkplatz-Tuer 11B0 und Zelle 1211 unveraendert (Riegel unit_r36_schluessel_tuer/zelle/befreiung, integration
+  zu/auf/check/befreiung).
 
 ## 5. Tests
 
