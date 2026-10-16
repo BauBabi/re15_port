@@ -130,3 +130,21 @@ Menues @0x80014a44-58, den die Hauptschleife @0x8001c994 liest. Danach Haltepunk
   r2227, Affe 2 kriecht von -11800 nach +z und steht bei (-13600 +-20, -6900) — **wie o1**. n2 (Boden
   (-9100,-2600)): Affe 1 Sub 3 Clip 5 bei (-8707..-8725, -6082) r2997..2999 — **wie o2**. Der alte Port schob den
   Affen dagegen per Clip-Wurzelweg durch die Wand bis z = -4878 und biss dort ins Leere (m2).
+- **o3 (Leon sofort auf der Plattform (-8800,-1800,-4600), Band 1):** ORIGINAL-FEHLER beobachtet — Affe A wechselt
+  im ERSTEN aktiven Bild (Abstand 1481 < 0xbb8) in Sub 3; die Fuss-Sperre FUN_80115b68 zieht die noch nie
+  gezeichneten Records (Weltlage ~0) ab und versetzt ihn in EINEM Bild von (-8800,-6082) nach (245,747). Nur ein
+  Mess-Artefakt (Leon steht beim Aktivwerden schon im Bereich); der Port bildet das nicht nach (sein Zeichenstand
+  wird im INIT angelegt). Fuer die Treffer-Messung deshalb o4.
+- **o4 (Leon erst nach 120 aufgezeichneten Bildern auf die Plattform (-8800,-1800,-4600) -> Schub -> -4531):**
+  F137 Leon erscheint, A ruht (Clip 0x16 Bild 56, (-8800,-6082), r3072); F138 A Sub 3 blind (Clip 4) bei
+  (-8707,-6082); **F139 Sub 5 = BISS, Clip 0x12** (A und B im selben Tick); x waehrend des Bisses -8698, -8675,
+  -8666, -8683.., -8652, -8532 (Fuss-Sperre schiebt OSTWAERTS, z bleibt an der Wand -6082); **F150 = Bild 12:
+  TREFFER, Leon HP 100 -> 95**, aca58..5b = 02 02 01 00 (cmd 2, aca59 = 2 = a780 0 + 2), +0x1dc = 44 (0x2d, im
+  selben Tick um 1 abgebaut), Leon-Rueckstoss x -8800 -> -9000/-9150/-9250/-9300 (200/150/100/50), Flinch bis F171;
+  F163 Biss-Ende -> F164 Sub 3 mit +0x7 = 0 (sehend); **F195 zweiter Biss, F207 = Bild 13: 95 -> 90**; danach
+  GLEICHTAKT: Treffer alle **57 Bilder** (F264, 321, ... 1233) je **-5** bei Bild 13, Affe bei (-8297,-6082) r2813;
+  F1290 HP 0 -> -5 -> aca58 = 3 (Tod). 21 Bisse, kein schwerer Angriff (Leon steht nie >= 0x1771 entfernt).
+- **Port p4 (dieselbe Lage, Leon aber schon ab Bild 0 da):** Treffer -5 alle 59 Bilder bei Bild 15, Affe bei
+  (-9118,-4240) — er ist im allerersten Biss (ohne Ruhephase, Pool-Ueberblendung vom INIT-Clip 0) durch den Gang
+  nach Norden gerutscht. Mechanik (Sperre 0x2d, Fenster, -5, cmd 2) gleich, Lage verschieden, weil die Vorgeschichte
+  verschieden ist -> der Riegel startet den Port aus dem Original-Zustand F137 (s. Tests).
