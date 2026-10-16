@@ -261,4 +261,35 @@ Nebenbei (Hinweise der Abnahme, keine Maengel): H3 Zitat `make_package.sh:929` -
 `s_paket`; selbst nachgelesen: :931 `(kein Android-Paket: ... fehlt`); H2 Zeitgrenzen 60 s / 30 s in docker_bereit.sh
 als PORT-WAHL gekennzeichnet (Kommentar, kein Verhalten geaendert).
 
-(Messung nachher folgt)
+Trockenlauf-Hinweis, zweite Stufe (nach den ersten Messungen ergaenzt): kommt nach dem nicht gepushten Release noch ein
+Commit (die Orchestratoren committen laufend Doku), steht der Release-Commit nicht mehr auf HEAD - dann pusht Wahl [3]
+nicht allein, der Tag bliebe still ungepusht. Der Hinweis prueft deshalb allgemein, ob der Commit des hoechsten Tags in
+`refs/remotes/origin/master` enthalten ist (`git merge-base --is-ancestor`, Rueckgabe 1 = nicht enthalten; Fehler ->
+kein Hinweis): auf HEAD -> `Nur pushen: ... --ab abschluss --tag (Doppelklick: Wahl [3])`, sonst
+`... fehlt in origin/master ... von Hand: git push origin master vX.Y.Z`. Im Hauptbaum heute (gemessen):
+`remote.origin.fetch = +refs/heads/*:refs/remotes/origin/*`, origin/master = 6210d98f, v0.8.25 (2077bb8e) ist darin
+enthalten -> kein Hinweis (richtig).
+
+### 8.2 Messung nachher
+
+(folgt)
+
+### 8.3 OFFEN (Nachbesserung 1)
+
+* Der Push-Weg ist nur gegen ein lokales bare origin gemessen (Test), nicht gegen GitHub: ein echter Push gehoert zum
+  Release-Lauf des Orchestrators. `git ls-remote origin` nutzt dieselbe Anmeldung wie `git push`.
+* Hinweis H1 der Abnahme selbst nachgemessen (2026-10-16 ~23:30, PowerShell `Test-Path`): `C:\workspace\Re15Data` und
+  `C:\workspace\Re15Data\re15_packages_archiv` fehlen weiterhin (`C:\workspace` enthaelt nur `Gemeinde`, `git`,
+  `keepass`). Ein Release-Lauf legt das Archiv am Standardpfad neu an und bringt v0.8.25 aus release/ hinein (Abnahme
+  A2); v0.8.7-v0.8.14 kann das Skript nicht wiederherstellen. VOR dem Release v0.8.26 den Nutzer fragen bzw.
+  `--archiv`/`RE15_ARCHIV` auf den neuen Ort setzen.
+* H5 der Abnahme (Kosmetik) unveraendert: im zweistufigen Ablauf ([1], spaeter [3]) nennt die Commit-Nachricht die
+  Lauf-Id des Abschluss-Laufs.
+
+### 8.4 Fuer den Nutzer (Nachbesserung 1)
+
+* **Wenn beim Veroeffentlichen der Push scheitert** (Netz, Anmeldung): Release-Commit und Tag stehen dann schon auf dem
+  Rechner, die Meldung sagt das ("... stehen lokal - nur der Push fehlt."). Nach der Behebung einfach noch einmal
+  Doppelklick und Wahl [3] - oder die Zeile aus der Meldung. Es wird nur noch gepusht: kein zweiter Commit, keine neue
+  Versionsnummer. Von Hand geht auch `git push origin master vX.Y.Z`. Solange der Push fehlt, zeigt jeder Trockenlauf
+  (also auch der Doppelklick) `[!!] ... der Push fehlt`.
