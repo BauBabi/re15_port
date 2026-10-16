@@ -15,10 +15,12 @@
 #   unit_r38_releaseskript_ablauf     ganzer Lauf: Reihenfolge, Version an Android + Paket, alte Version ins Archiv,
 #                                     neue ins Archiv (sha256sum -c), alte APK aus release/, kein Commit ohne --tag;
 #                                     --ab abschluss --tag: Commit + annotierter Tag + Push (lokales origin)
-#   unit_r38_releaseskript_fehler     simulierte Schritt-Fehler brechen ab (auch durch die tee-Pipe), spaetere
-#                                     Schritte laufen nicht; altes Artefakt, fehlende Marke, fehlender Android-Satz,
-#                                     Archiv-Konflikt, kaputtes Altarchiv, schmutziger Baum, Sperre, Docker, Platz,
-#                                     Wiederaufnahme --ab
+#   unit_r38_releaseskript_fehler_bau simulierte Schritt-Fehler brechen ab (auch durch die tee-Pipe), spaetere
+#                                     Schritte laufen nicht; altes/kein Artefakt, fehlende Marke, fehlender
+#                                     Android-Satz, alte Volumes geblieben, Paket rot; Wiederaufnahme --ab
+#   unit_r38_releaseskript_fehler_umfeld  Archiv-Konflikt, kaputtes/anderes Altarchiv, schmutziger Baum, Werkzeug,
+#                                     Sperre, --tag-Voraussetzungen, Docker, Platz, Aufruffehler, --bis,
+#                                     --tag nach Code-Commit verweigert, --kein-push
 #   unit_r38_releaseskript_cmd        (nur Windows) release_alles.cmd: Git-Bash, Argumente + Rueckgabe durchgereicht,
 #                                     Doppelklick-Weg mit Antwort N baut nichts
 # bash: unter Windows NUR Git-Bash (wie r35_android.cmake - nie System32\bash.exe/WSL); braucht git und sha256sum.
@@ -31,7 +33,7 @@ else()
 endif()
 if(R38_RELEASESKRIPT_BASH AND EXISTS "${_r38v_release}/release_alles.sh" AND EXISTS "${_r38v_release}/release_alles_lib.sh")
     get_filename_component(_r38v_repo "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
-    set(_r38v_teile version bausteine trocken ablauf fehler)
+    set(_r38v_teile version bausteine trocken ablauf fehler_bau fehler_umfeld)
     if(WIN32)
         list(APPEND _r38v_teile cmd)
     endif()
@@ -40,7 +42,8 @@ if(R38_RELEASESKRIPT_BASH AND EXISTS "${_r38v_release}/release_alles.sh" AND EXI
                  COMMAND "${R38_RELEASESKRIPT_BASH}"
                          "${CMAKE_CURRENT_SOURCE_DIR}/r38_releaseskript/test_r38_releaseskript.sh"
                          "${_r38v_repo}" "${CMAKE_CURRENT_BINARY_DIR}/r38_releaseskript_wd_${_r38v_teil}" ${_r38v_teil})
-        set_tests_properties(unit_r38_releaseskript_${_r38v_teil} PROPERTIES TIMEOUT 900)
+        # Laufzeiten gemessen: Dossier Abschnitt 5; die Grenze laesst Luft fuer eine ausgelastete Maschine
+        set_tests_properties(unit_r38_releaseskript_${_r38v_teil} PROPERTIES TIMEOUT 1200)
     endforeach()
 else()
     message(STATUS "r38_releaseskript: bash oder release/release_alles.sh fehlt - unit_r38_releaseskript_* nicht registriert")

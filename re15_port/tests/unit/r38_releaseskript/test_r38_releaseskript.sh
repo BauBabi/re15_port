@@ -14,9 +14,12 @@
 #   ablauf     ganzer Lauf mit Attrappen der Schritt-Skripte: Reihenfolge, Version an Android und Paket, alte
 #              Version ins Archiv, neue ins Archiv (sha256sum -c), alte APK aus release/, kein Commit ohne --tag;
 #              dann --ab abschluss --tag: Commit + annotierter Tag + Push in ein lokales origin
-#   fehler     jeder simulierte Fehler bricht ab, spaetere Schritte laufen nicht (auch durch die tee-Pipe);
-#              altes Artefakt, fehlende Marke, fehlender Android-Satz, Archiv-Konflikt, kaputtes Altarchiv,
-#              schmutziger Baum, Sperre, --tag-Voraussetzungen, Docker, Platz; Wiederaufnahme mit --ab
+#   fehler_bau     jeder simulierte Schritt-Fehler bricht ab, spaetere Schritte laufen nicht (auch durch die
+#                  tee-Pipe): Rueckgabe != 0, altes Artefakt, kein Artefakt, fehlende Marke, fehlender Android-Satz,
+#                  alte Volumes geblieben, Paket rot; Wiederaufnahme mit --ab
+#   fehler_umfeld  Archiv-Konflikt (vor dem Bauen und im Schritt), kaputtes/anderes Altarchiv, schmutziger Baum,
+#                  Werkzeug, unversionierte Datei, Sperre, --tag-Voraussetzungen, Docker, Platz, Aufruffehler,
+#                  Teillauf --bis, --tag nach Code-Commit verweigert, --kein-push
 #   cmd        (Windows) release_alles.cmd: Git-Bash gefunden, Argumente + Rueckgabe durchgereicht,
 #              Doppelklick-Weg (ohne Argumente): Trockenlauf, Rueckfrage "N" -> nichts gebaut
 # Die Attrappen (attrappen/*.sh) ersetzen NUR die Schritt-Skripte; release_alles.sh und die Bausteine sind echt.
@@ -343,7 +346,7 @@ teil_ablauf() {
     done
     pruef "kein .unvollstaendig im Archiv" bash -c "! ls -a '$A' | grep -q unvollstaendig"
     # release/
-    pruef "release/: nur noch Volumes von v0.8.26 (6)" gleich "$(cd "$R/release" && ls re15_port_v*.z* | tr '\n' ' ')" \
+    pruef "release/: nur noch Volumes von v0.8.26 (6)" gleich "$(cd "$R/release" && LC_ALL=C ls re15_port_v*.z* | tr '\n' ' ')" \
         "re15_port_v0.8.26_android.z01 re15_port_v0.8.26_android.zip re15_port_v0.8.26_linux_steamdeck_x64.z01 re15_port_v0.8.26_linux_steamdeck_x64.zip re15_port_v0.8.26_win64.z01 re15_port_v0.8.26_win64.zip "
     pruef "release/: alte APK weg (liegt im Archiv)" test ! -e "$R/release/re15_port_v0.8.25_android.apk"
     pruef "release/: neue APK da" test -s "$R/release/re15_port_v0.8.26_android.apk"
@@ -392,8 +395,8 @@ teil_ablauf() {
 }
 
 # =============================================================================
-teil_fehler() {
-    echo "== Fehlerpfade =="
+teil_fehler_bau() {
+    echo "== Fehlerpfade: Bau- und Paket-Schritte =="
     local fx="$ARBEIT/fx_fehler" o
     # 1. Linux rot (Rueckgabe 7 durch die tee-Pipe) -> Abbruch, paket/archiv laufen nicht
     fx_bauen "$fx" v0.8.25
@@ -447,6 +450,11 @@ teil_fehler() {
     fx_bauen "$fx" v0.8.25
     o="$fx/paket_rot.txt"; FAKE_FAIL=paket ra "$o" --min-frei-gb 1
     pruef "paket rot: Abbruch in Schritt paket, kein Archiv v0.8.26" bash -c "[[ $RC == 1 ]] && grep -qF \"ABBRUCH in Schritt 'paket'\" '$o' && [[ ! -e '$A/v0.8.26' ]]"
+}
+
+teil_fehler_umfeld() {
+    echo "== Fehlerpfade: Archiv, Baum, Sperre, --tag, Docker, Platz, Aufruf, Teillauf =="
+    local fx="$ARBEIT/fx_fehler" o
     # 9. Archivordner der neuen Version existiert schon -> ein Neubau wird VOR dem Bauen abgelehnt (die neuen Zips
     #    haetten andere Bytes, der Vergleich scheiterte sonst erst nach Stunden); der Ordner bleibt unangetastet
     fx_bauen "$fx" v0.8.25
@@ -604,7 +612,8 @@ case "$TEIL" in
     bausteine) teil_bausteine ;;
     trocken)   teil_trocken ;;
     ablauf)    teil_ablauf ;;
-    fehler)    teil_fehler ;;
+    fehler_bau)    teil_fehler_bau ;;
+    fehler_umfeld) teil_fehler_umfeld ;;
     cmd)       teil_cmd ;;
     *) echo "unbekannter Teil: $TEIL" >&2; exit 2 ;;
 esac

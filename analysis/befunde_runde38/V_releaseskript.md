@@ -76,11 +76,59 @@ Archiv; das Loeschen im Archiv ist eine spaetere Auslegung der Agenten. Umsetzun
 
 ## 3. Umsetzung
 
-(folgt)
+Neue Dateien (alle unter `release/`, das nur Spur V aendern darf; kein Eingriff in die vier Einzelskripte):
+
+| Datei | Zweck |
+|---|---|
+| `release/release_alles.sh` | EIN Aufruf: Version, Vorbedingungen, Schritte alt -> windows -> android -> linux -> paket -> archiv (-> abschluss mit `--tag`), je Schritt Protokoll + klarer Abbruch + Wiederaufnahme-Zeile |
+| `release/release_alles_lib.sh` | Bausteine (von Skript und Tests geladen): Versionslogik, Volume-Namen, SHA256SUMS ohne `\r`, Frische, Archiv anlegen/pruefen |
+| `release/docker_bereit.sh` | Docker pruefen/starten: `docker desktop start --timeout` (CLI v0.1.4 auf dieser Maschine), sonst `Docker Desktop.exe` per `Start-Process`; `--pruefen` fuer den Trockenlauf (0 bereit / 1 startbar / 3 nichts zu starten) |
+| `release/release_alles.cmd` | Doppelklick: Git-Bash suchen (Program Files, Registry GitForWindows, `where git`; nie System32\bash.exe), Trockenlauf, Wahl [1] bauen [2] bauen + Commit/Tag/Push [3] nur Commit/Tag/Push [4] nichts; mit Argumenten 1:1 durchgereicht, Rueckgabe durchgereicht |
+| `release/README.md` | Kurzanleitung (auch im Kopf von release_alles.sh und `--help`) |
+| `release/.gitattributes` | `*.cmd text eol=crlf` (cmd.exe und Sprungmarken in LF-Dateien) |
+| `release/.gitignore` | `logs/` (Protokolle + Sperre) |
+
+Regeln/Konstanten mit Beleg (Bau-Umgebung, keine Original-Adresse):
+
+| Wert | Beleg / Art |
+|---|---|
+| Folgeversion Z+1, bei Z = 99 -> Y+1.0; Y = 99 und Z = 99 -> keine automatische (dann `--version`) | build.gradle:43-49 (versionCode X*1000000 + Y*10000 + Z*100), Tags v0.3.99 -> v0.4.0 / v0.7.99 -> v0.8.0; "minor" (Wortlaut) schliesst den Sprung in die erste Stelle aus |
+| X <= 999, Y/Z <= 99, keine fuehrenden Nullen | versionCode < 2^31; zwei Schreibweisen einer Version vermeiden (Tag, Paketname, versionName) |
+| explizite Version > hoechster Tag | build_android.sh:195-199 (Downgrade-Sperre auf dem Geraet) |
+| hoechster Tag = numerisches Maximum der Tags `vX.Y.Z` | M4 (Fremd-Tags v0.1, v0.2, backup-..., itembox-...; v0.8.10 > v0.8.9) |
+| Erfolgsmarken je Schritt | docker_win_build.sh:103, docker_linux_build.sh:131/142, build_android.sh:355, make_package.sh:1051 |
+| Frische: Artefakt nicht aelter als der Schrittbeginn, vorher geloescht | Memory reai-v2-releasebau-pipe-schluckt-fehler (v0.8.15: altes linux_out-Binary) |
+| Rueckgabe = PIPESTATUS[0] des Schritts, nicht die von tee | dieselbe Memory ('| tail' meldete exit 0) |
+| alle DREI Plattformen muessen nach `paket` als Satz da sein | make_package.sh:929 liefert ohne APK still nur PC-Saetze |
+| `stand_pruefen`: re15_port/ sauber und `HEAD:re15_port` unveraendert vor/nach jedem Bau-Schritt | sonst stammen die Binaries aus verschiedenen Staenden |
+| Release-Commit nur mit Paketdateien (Volumes, 2 SUMS, Notes) | Form von 2077bb8e / e8b3958f (8 Dateien); SUMS werden von make_package NICHT vorgemerkt (:1040-1045) |
+| `--tag` verweigert, wenn nach dem Paketbau Paket-Inhalt committet wurde | Regel wie make_package.sh check_binary_fresh (:160-191), erweitert um Assets/synchro/pkg_files |
+| Archivordner der neuen Version existiert + Neubau geplant -> Abbruch VOR dem Bauen | neue Zips haben andere Bytes (Zeitstempel); im Archiv wird nichts geloescht |
+| SHA256SUMS ohne `\r` lesen | gemessen: frischer Checkout w/crlf, `sha256sum -c` -> `'a.bin'$'\r': No such file` |
+| Mindestplatz 10 GiB | PORT-WAHL aus M10 (~6,2 GB je Lauf + Docker-VM) |
+| Docker-Wartegrenze 300 s, Takt 5 s | PORT-WAHL; gemessener Start 20 s (release_v0818.md:24) |
+| Reihenfolge windows -> android -> linux | PORT-WAHL: kurze Baue zuerst, der 3-h-Lauf zuletzt (keine Abhaengigkeit zwischen den Bauten) |
+| annotierter Tag | PORT-WAHL (v0.8.20/v0.7.99 annotiert, v0.8.24/25 leichtgewichtig; annotiert traegt Datum + Autor) |
+| `unset MSYS_NO_PATHCONV MSYS2_ARG_CONV_EXCL` am Anfang | gemessen im cmd-Test: geerbt -> "kein git-Repo: /tmp/claude/..." |
+
+Optionen: `--version`, `--dry-run`, `--tag`, `--kein-push`, `--ab`, `--bis`, `--linux-jobs` (RE15_CTEST_JOBS), `--archiv`
+(oder Umgebung RE15_ARCHIV), `--min-frei-gb`. Sperre `release/logs/.release_alles.sperre` (PID; verwaiste wird
+uebernommen, fremde lebende bricht ab und bleibt stehen).
 
 ## 4. Messung nachher
 
-(folgt)
+Ein echter Release-Lauf ist NICHT Teil der Spur (dauert Stunden; den faehrt der Orchestrator fuer v0.8.26 mit dem
+Skript). Gemessen wurde am echten Repo/Archiv, was ohne Release geht, und die ganze Kette mit Attrappen der vier
+Schritt-Skripte (Abschnitt 5).
+
+| # | Messung (echtes Repo, Spurbaum, 2026-10-16) | Ergebnis |
+|---|---|---|
+| N1 | `bash release/release_alles.sh --dry-run` (17:18, HEAD 37304753) | rc 0, `Version: v0.8.26  (hoechster Tag v0.8.25 + 1)`, alle Vorbedingungen [ok] (Tag frei, re15_port/ sauber, Werkzeug sauber, Platz 98 GiB, zip aus /c/msys64/usr/bin, Python /c/Python310/python 3.10.11, Vorversion v0.8.25 liegt im Archiv), Docker `[--] ... startet Docker Desktop ('docker desktop start')`, 6 Schritte mit Befehlen, `TROCKENLAUF-OK v0.8.26`; nichts geschrieben (kein release/logs) |
+| N2 | `bash release/release_alles.sh --bis alt` (17:19, echtes Archiv) | rc 0 in 24,5 s: `release/ v0.8.25: 6 Volumes, sha256sum -c 6/6 OK` (die SUMS-Datei ist in diesem Checkout CRLF - gelesen ohne \r), `Vorversion v0.8.25 war schon im Archiv, geprueft: SHA256SUMS.txt 6/6 OK; SHA256SUMS_android.txt 1/1 OK`, `RELEASE-ALLES-TEILLAUF-OK v0.8.26 (alt)`; Protokoll release/logs/v0.8.26_20261016-171913/ (gitignoriert, `git status` zeigt nur das Dossier), Sperre wieder weg; das Archiv nur gelesen |
+| N3 | Vorher M1/M2 (falsche Standard-Versionen) | eine Quelle: `--version $NEU` an build_android.sh UND make_package.sh (Aufrufzeilen im Protokoll, Test `ablauf`) |
+| N4 | Vorher M3 (Docker aus) | `docker_bereit.sh --pruefen` -> rc 1 "ein echter Lauf startet Docker Desktop ('docker desktop start') und wartet bis 300 s" |
+
+(N5 echter Docker-Start + Windows-Bau mit `--ab windows --bis windows`: folgt)
 
 ## 5. Tests
 
