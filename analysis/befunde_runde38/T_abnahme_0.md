@@ -26,8 +26,10 @@ RE15_STATE_LOG), `sca_map.py` (Kollisionsplan). Vergleichs-exe "vorher" = v0.8.2
 - [x] gezielte Tests (188, alle gruen)
 - [x] Messung Punkt 1 (ROOM4001 Elza Tuer + Ausloeser, ROOM5040 Leon, Gegenprobe v0.8.25)
 - [x] Messung Punkt 2 (ROOM4001 Elza Griff hinten + Kollaps vorher/nachher, ROOM5040 Leon)
-- [ ] RE-Gate (Stichproben) — Belege gesammelt, Abschnitt folgt
-- [ ] Vertrag
+- [x] RE-Gate (Stichproben, Abschnitt 4)
+- [x] Vertrag (Abschnitt 5)
+- [x] Gegenlauf des Riegels test_r38_griff_alle gegen den ALTEN Engine-Stand e2cc7673 (Abschnitt 3.4)
+- [x] Urteil (Abschnitt 6)
 
 ## 1. Gezielte Tests (diese Sitzung)
 `ctest --test-dir re15_port/build -R "<R>" --timeout 600 -j 5 --output-on-failure` mit
@@ -90,19 +92,31 @@ b) **Hineinlaufen in den Ausloeser Aot 5** (Sprung 4001 an den Tuer-Spawn, Gehen
     bei `>= fc` auf 0 und Rueckgabe 1) — das letzte gezeigte Austrittsbild ist Bild 34, ein Zurueckspringen gibt es nicht.
     Wurzelwerte selbst aus der EM2B-Bank gelesen (tools/emd_ansichtsblatt.py-Leser): Clip 0x1D Bild 0 (-1683,1278,0),
     Bild 34 (0,-940,0); Clip 2 Bild 0 (0,-940,0). Der Spiderman_r38-Kollaps haelt das letzte Bild bereits (sm_anim_halten),
-    der Austritt nicht.
+    der Austritt nicht. Was das Original im ersten ACTIVE-Bild tut (selbst disassembliert): Root 0x801118D0 ->
+    Zustand [1] 0x80111C98 -> Entscheid-Tabelle @0x8011A0D4 / Animations-Tabelle @0x8011A114, [1] = 0x80112124: P0
+    `+0x6=1`, `+0x94=1` (Clip 1), `+0x95=0`, `+0x96=0`, `+0x8F=7` (@0x80112144-84), danach `jal 0x8001f314` (@0x801121F0)
+    — also Clip 1 mit 7 Bildern Ueberblendung aus der Austritts-Endpose, kein Bild (0x1D, 0). Der alte Port-Pfad (case 4,
+    `if (re15_birkin_anim(e)) { e->state = 1; ...}`) hatte dasselbe Muster; der neue Austritt (re15_r38_sm_austritt,
+    spiderman_r38.c:62-65) uebernimmt es.
 c) **Leon ROOM5040** (`"RE15_DEBUG_JUMP=5040@250"`, Spawn (1500,-15000)): F1-F599 beide 0x2B `st=4 ss1=1 ss2=1 g=41`
    (versteckt, Spieler steht). Mit `"RE15_PLAYER_POS=1500,-15000,2048" "RE15_INPUT_SCRIPT=U9,W60"` laeuft Leon nach Westen,
-   ueber den versteckten Schacht (-14493,-14685) hinweg ohne Schub, in Aot 4 (Mitte (-16489,-14869)) — Slot 1 tritt aus,
-   greift an (s. Punkt 2).
+   ueber den versteckten Schacht (-14493,-14685) hinweg ohne Schub (F253-F313 z konstant -15000), in Aot 4 (Mitte
+   (-16489,-14869)): F285 `g=41 ss2=1`, F286 (Leon x -15525) `g=42 ss2=2 af=1`, F319 `g=00 af=34`, **F320 `st=1 ss1=1 mo=29
+   af=0`** (derselbe Ein-Bild-Ruecksprung), F321 Clip 2. Slot 1 greift danach an (s. Punkt 2).
+d) **Leon ROOM5070** (`"RE15_DEBUG_JUMP=5070@250" "RE15_PLAYER_POS=1700,-5700,2048" "RE15_INPUT_SCRIPT=U9.5,W30"
+   "RE15_FRAMEDUMP=330-400/1:bilder/f"`): bis F341 beide versteckt (`g=41 ss2=1`), F342 (Leon x -19525, Aot 3) `g=42 ss2=2`,
+   F375 `g=00 af=34`, F376 `st=1 ss1=1 mo=29 af=0`, F377 Clip 2. Framedump: F374/F375 kauert der Spiderman ueber dem
+   Bodengitter hinter Leon, **F376 ist er weg (Startpose 1278 unter dem Boden)**, F377 steht er wieder am Ursprung —
+   im Bodenschacht wirkt M1 als Ein-Bild-Verschwinden.
 
 ### 2.4 Urteil Punkt 1: **teilweise**
 Der Mechanismus ist byte-true und an der exe gemessen: kein Austritt ohne Ausloeser (vorher F61 ACTIVE ohne Ausloeser),
 Austritt erst mit grid 0x42 aus dem Raumskript, sichtbar ab Bild 6, Freigabe Bild 0x21, ACTIVE nach 35 Bildern, im
 Schacht kein Ziel, kein Schatten, kein Koerperschub (Leon laeuft in 5040 auf z -15000 geradeaus ueber den Schacht, F253-F313
-keine Querabweichung). Es bleibt der sichtbare Ein-Bild-Ruecksprung am Ende des Austritts (M1, F253 in 4001 bzw. F320 in
-5040 — gleicher Codepfad): genau der Vorgang "aus dem Schacht kommen", den der Nutzer bemaengelt, zeigt fuer ein Bild ein
-Modell, das 1278 Einheiten im Boden steckt. Das Original zeigt dort Bild 34.
+keine Querabweichung), in 4001/5040/5070 gleich. Es bleibt der sichtbare Ein-Bild-Ruecksprung am Ende des Austritts (M1:
+F253 in 4001, F320 in 5040, F376 in 5070 — gleicher Codepfad): genau der Vorgang "aus dem Schacht kommen", den der Nutzer
+bemaengelt, zeigt fuer ein Bild ein Modell, das 1278 Einheiten im Boden und 1683 seitlich versetzt steckt (Wandschacht:
+Rest in der Wand; Bodenschacht: verschwunden). Das Original zeigt dort Bild 34 und blendet dann in Clip 1 ueber.
 
 ## 3. Punkt 2 — "die Spiderman führen - mal wieder - dazu das Leon teilweise komplett von der Karte verschwindet, wenn sie einen Angreifen. Sowas darf GARNICHT passieren, bei keinen Gegner."
 
@@ -143,7 +157,18 @@ alle Lagen im Westgang von 5040 (x in (-26354,-21728), z > -25666 laut SCA). Kei
   Kontakt-Latch, 3255 beim Wechsel Sub 3 -> 7; Dossier OFFEN 9, vorbestehende Port-Abweichung aus Runde 30). Keiner dieser
   Faelle ist ein "Verschwinden von der Karte"; der 3255er-Sprung ist aber ein sichtbarer Versatz um ~3 m in einem Bild.
 
-(3.4 folgt.)
+### 3.4 Misst der Riegel? — Gegenlauf gegen den alten Engine-Stand
+Scratch-Bau ausserhalb des Repos: `git archive e2cc7673 re15_port/{CMakeLists.txt,cmake,engine,include,platform,tests,
+tools,targets}` + die NEUE Datei tests/unit/test_r38_griff_alle.c + eine Sonde nur fuer dieses Ziel; Bau mit dem PATH
+von local_build.sh (`cmake --build ... --target test_r38_griff_alle`, 154/154). Ergebnis je Fall (alter Stand):
+- spiderman_vorn: **FAIL** — `Latch Bild 0: ... Spieler-Anker (21492,19620), Greifer-Anker (0,0)`, `info: ... groesster
+  Bild-zu-Bild-Sprung 45460, Anker im Latch UNVERAENDERT (Gift)`, `302 ausserhalb`, `kein Griffbild hinter einer Wand: 302`.
+- spiderman_hinten: **FAIL** — Sprung 43357, 302 ausserhalb, 302 hinter einer Wand.
+- kriecher2_1220: **FAIL** — `kein Griffbild hinter einer Wand: 132`, groesster Sprung 1237.
+- zombie15_vorn/_hinten, zombie2_vorn/_hinten, hund15, hund2, gorilla: OK (diese Greifer kopierten ihren Anker schon).
+  hund2 ist auch im alten Stand gruen und zeigt dort denselben Sprung 3255 — der Fall prueft die Kalibrierung (III),
+  die erst durch die neue Wandregel noetig wurde.
+Neuer Stand (5db78deb): alle zehn OK. Der Riegel faengt also genau die gemeldete Fehlerklasse am alten Code.
 
 ## 4. RE-Gate (selbst disassembliert, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` / `re2_disasm.py`)
 Stichproben weit ueber die geforderten drei hinaus; jede zitierte Stelle enthaelt das Behauptete:
@@ -202,4 +227,53 @@ auf grid 0x42 (F30 Clip 0x1D ohne Ausloeser), jetzt P1 @0x8011545C.
 - Hinweis: RE15_MIN_TESTS in tools/local_build.sh (788) wurde nicht angehoben (Suite im Spurbaum 799) — Konvention des
   Skripts, kein Fehler der Spur.
 
-(Abschnitt 6 folgt.)
+## 6. Urteil
+
+| Punkt | Urteil | Beleg (kurz) |
+|---|---|---|
+| 1 Spiderman kommen richtig aus den Schaechten | **teilweise** | Warten auf grid 0x42 / sichtbar Bild 6 / frei 0x21 / ACTIVE an der exe in 4001 (Tuer + Ausloeser), 5040, 5070 gemessen, vorher (v0.8.25) F61 ACTIVE ohne Ausloeser; RE-Belege selbst disassembliert. Rest: M1. |
+| 2 Leon verschwindet nicht von der Karte, bei keinem Gegner | **erfuellt** | v0.8.25 F676: Sprung 27 058 auf (-724,761) ausserhalb; 5db78deb gleicher Ablauf F678: Spieler bleibt (-26516,-7418), groesster Sprung 607 (Tod); 5040 Leon ebenso. Riegel faengt den alten Code (spiderman 302/302 ausserhalb, kriecher2 132 hinter der Wand), neuer Code 10/10. |
+
+Gates: Bau gruen; gezielte Tests 188/188; RE-Gate gehalten (Abschnitt 4, keine Rate-Woerter, Wandregel als NUTZER-VORGABE
+gekennzeichnet); Vertrag gehalten (Abschnitt 5).
+
+**bestanden: NEIN** (Punkt 1 nur teilweise).
+
+### Maengel
+- **M1 (Punkt 1, Darstellung, urteilsrelevant): Ein-Bild-Ruecksprung am Ende des Austritts.** spiderman_r38.c:62-65
+  (`if (re15_r38_birkin_anim(e)) { e->state = 1; e->sub_state_1 = 1; ... }`) laesst `anim_frame` am Clip-Ende auf 0
+  springen; die exe zeichnet im Bild des Zustandswechsels Clip 0x1D Bild 0 (Wurzel (-1683,+1278,0)) statt Bild 34.
+  Nachpruefbar: ROOM4001 Lauf 2.3 b) `F253 [4 t=2b st=1 ss1=1 ss2=0 mo=29 af=0]` + Framedump F252/F253/F254;
+  ROOM5040 `F320 ... mo=29 af=0`; ROOM5070 `F376 ... mo=29 af=0`, Framedump F374-F377 (Spiderman fuer ein Bild weg).
+  Original: FUN_8001f3bc berechnet die Pose fuer das aktuelle +0x95 vor dem Hochzaehlen; im naechsten Bild setzt ACTIVE
+  (Entscheid @0x8011A0D4, Animation @0x8011A114) den neuen Clip mit +0x8F = 7 — [1] 0x80112124: Clip 1 @0x80112154,
+  +0x8F @0x80112184; [2] 0x80112294: Clip 2 @0x801122F0, +0x95 = 0 @0x80112300, +0x8F = 7 @0x80112320 — es gibt kein
+  Bild (0x1D, 0). Ein Riegel, der das gezeichnete Bild im
+  Wechselbild prueft (motion/anim_frame im Bild des Zustandswechsels == (0x1D, letztes Bild)), fehlt in unit_r38_spiderman.
+- **M2 (gering, nicht urteilsrelevant, neuer Code): derselbe Ruecksprung an den Phasenwechseln der neuen Griffe.**
+  spiderman_r38.c P1 -> P2 von Griff 1 (`if (re15_r38_birkin_anim(e)) e->sub_state_2++;` Z. 147) zeigt ein Bild
+  Zugriffs-Clip Bild 0: ROOM4001 Lauf 3.1 `F711 [4 t=2b ss1=9 ss2=2 mo=18 af=0]` zwischen `F710 mo=18 af=33` und
+  `F712 mo=19 af=1`. Original: P1 0x80112D44/0x80113220 rechnet das letzte Bild, P2 0x80112B9C/0x80113094 setzt den
+  Halte-Clip und faellt in P3 (ad68 + anim_set mit Bild 0 des Halte-Clips). Gleiches Muster bei Griff 2 P1->P2 und den
+  Loese-Clips (P5 -> P6) — dort nicht an der exe gemessen (Griff 2 unerreichbar, kein Losreissen im Lauf).
+
+### Beobachtungen (keine Maengel dieser Spur, fuer NACHLAUF/Integration)
+- **B1 Koerperschub ueber den ganzen Gang.** Nach dem ersten Treffer laeuft der Spiderman mit B[3] (Clip 3) weiter und
+  schiebt die stehende Figur vor sich her: 4001 F348-F382 von x -21257 nach -26507 (5250 Einheiten, 128-288 je Bild),
+  5040 F426-F581 von (-19498,-15015) um die Ecke bis (-25886,-24989) (~15 800 Einheiten Weg, unterbrochen von einem Treffer F475), erst an der Endwand folgt der
+  naechste Angriff. Identisch in v0.8.25 (4001 F350-F382, gleiche Endlage (-26516,-7418)) — vorbestehend, kein
+  "Verschwinden". Ungepruefte Hypothese: die Angriffs-Schwelle von B[3] liegt unter dem Schub-Abstand (Muster wie
+  re15_body_contact_reach); gegen das Original (B[3] Entscheid 0x801123E8 / Animation 0x801125DC) NICHT geprueft.
+- **B2 RE2-Hund-Kehlbiss:** zwei Spieler-Versetzungen 2554 / 3255 in je einem Bild (Riegelfall hund2, im alten und neuen
+  Stand gleich) — im Raum, nicht hinter einer Wand; Dossier OFFEN 9. Sichtbarer 3-m-Sprung, gegen das Original offen.
+- **B3** Riegel und Wandregel decken Gator/G5/Tentakel/RE2-Gitterarm (eigene Platzierung) und Nicht-Rechteck-Zellen nicht
+  ab (Dossier OFFEN 8; Regel prueft nur `type == 1`).
+- **B4** Schattengroesse draussen 500x600 statt 0x3E8/0x44C (@0x80115548-54, Root-Schwanz @0x801119D4-F4) — Dossier OFFEN 5.
+- **B5** Griff 2 schreibt den eigenen Anker +0xA0/+0xA2 = Lage (@0x801141B4-D4) nicht; ohne Wirkung, solange B[15] nicht
+  platziert und der Deckenlauf (OFFEN 1) fehlt.
+- **B6** Der Port zeigt Austritt/Griff-Clips allgemein ein Bild "voraus" (re15_birkin_anim zaehlt vor dem Zeichnen; erstes
+  sichtbares Bild ist Pose 7 statt 6) — portweite Konvention dieses Anim-Treibers, keine Spur-Aenderung.
+- **B7** re15_damage.c steht nicht in VERTRAG §1.4 (3 Haken-Zeilen) — bei der Integration mit R/S auf Konflikte achten;
+  enemy_ai_common.c-Haken mit Spur B zusammenfuehren (Dossier). RE15_MIN_TESTS (local_build.sh) nicht angehoben.
+- **B8** Zum relayten Nutzer-Nachtrag (ROOM20A0 Rolladen vor der Kamera): gehoert laut Orchestrator (df08d83a) zu Spur W,
+  nicht zu T; hier nicht geprueft.
