@@ -6,6 +6,8 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-16 22:45: Integration: L gruen (210 Unit + 7 Integration), r37_re2zombie-Baum entfernt. Q, E gemergt (konfliktfrei), J gemergt (Konflikte scd_vm.c/audio_pc.c = Haken nebeneinander, beide Seiten via konflikt_beide.py, 63ea4222). Bau + gezielte Tests Q/E/J laufen.
+* 2026-10-16 22:20: J rekorder BESTANDEN (Abnahme 0, wf_fe613bfa-201). S fortgesetzt wf_350d90f9-b55 (r38_w2b.js).
 * 2026-10-16 22:12: Bau-Fortsetzung R wf_ad7a778e-ca5 (r38.js), U wf_dc602f1a-a19 (r38_w2b.js). Warten: S (stand), D, M, N, O (neu).
 * 2026-10-16 22:10: E elzaintro BESTANDEN (Abnahme 0, wf_4385667f-bb0, Bericht f6b23e6d). Merge nach dem laufenden L-Test (mit Q).
 * 2026-10-16 22:05: Q kleinkram BESTANDEN (Abnahme 0, wf_a6f0cd46-193, 150/150 gezielt). Merge nach dem laufenden L-Test.
@@ -35,7 +37,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | offen |
 | H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | offen |
 | I | r38_heliport1171 | Elza haengt in 1171 | offen |
-| J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | offen |
+| J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0) |
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | offen |
 | M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | offen |
 | N | r38_wasser | Wasser-Effekt 1260+ | offen |
