@@ -45,6 +45,7 @@ zeige()     { echo "  ---- $1 (Ende) ----"; tail -n "${3:-25}" "$2" | sed 's/^/ 
 
 IST_WIN=0
 case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) IST_WIN=1 ;; esac
+WERKZEUG_PFAD=""
 
 # --- Wegwerf-Repo ----------------------------------------------------------------------
 # fx_bauen <ordner> <tags...>: repo/ (master, ein Commit, Tags), origin.git/ (bare, Push-Ziel), archiv/ (leer).
@@ -90,11 +91,25 @@ fx_bauen() {
     git -C "$R" push -q origin master --tags 2>/dev/null
     export FAKE_PROTOKOLL="$P"
     : > "$P"
+    # zip/unzip verlangt die Vorbedingung fuer den Schritt paket (das echte make_package.sh braucht sie). Die Attrappe
+    # braucht sie nicht, und im Linux-Bau-Image (release/docker/linux_deps.sh) fehlen sie - gemessen 2026-10-16:
+    # "[XX] zip fehlt", "[XX] unzip fehlt". Nur FEHLENDE werden durch Platzhalter ausserhalb des Repos ersetzt; unter
+    # Windows bleibt der echte Weg (zip aus /c/msys64/usr/bin, hinten an PATH) im Test.
+    WERKZEUG_PFAD=""
+    local w
+    for w in zip unzip; do
+        if command -v "$w" >/dev/null 2>&1; then continue; fi
+        if [[ "$w" == zip && -x /c/msys64/usr/bin/zip ]]; then continue; fi
+        mkdir -p "$fx/werkzeug"
+        printf '#!/bin/sh\necho "Platzhalter %s (Test r38_releaseskript)"\n' "$w" > "$fx/werkzeug/$w"
+        chmod +x "$fx/werkzeug/$w"
+        WERKZEUG_PFAD="$fx/werkzeug:"
+    done
 }
 # ra <ausgabe> <argumente...>: release_alles.sh im Wegwerf-Repo, Rueckgabe in RC
 ra() {
     local out="$1"; shift
-    bash "$R/release/release_alles.sh" --archiv "$A" "$@" > "$out" 2>&1
+    PATH="${WERKZEUG_PFAD}$PATH" bash "$R/release/release_alles.sh" --archiv "$A" "$@" > "$out" 2>&1
     RC=$?
 }
 schnappschuss() {   # Inhalt von Baum (ohne .git), Index und Archiv als eine Pruefsumme
