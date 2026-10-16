@@ -12,7 +12,7 @@
 #   unit_r38_dining1141_phase_h        Nachtrag 2 + Punkt 2: John ab Bild 0 hinter dem Rolladen, Ton-Takt, Gemaelde,
 #                                      Szene ohne msg 0/1, Sperre msg 41, Abgang ausserhalb des Bildes, 1171
 #   unit_r38_dining1141_leon1140       Punkt 3: Rolladen-Ton Leon ROOM1140
-#   integration_r38_dining1141         echte exe (test_r38_dining1141.cmake): Elza-Weg 1021 -> 1011 -> 1021, 1131 -> 1141
+#   integration_r38_dining1141_w|z|d|l echte exe (test_r38_dining1141.cmake): Elza-Weg 1021 -> 1011 -> 1021, 1131 -> 1141
 #                                      -> 1171 mit Bildern/Ton-Mitschnitt, Leon 1140
 add_executable(test_r38_dining1141 ${CMAKE_CURRENT_LIST_DIR}/../test_r38_dining1141.c)
 target_link_libraries(test_r38_dining1141 PRIVATE re15_engine re15_test_support)
@@ -28,11 +28,17 @@ foreach(_teil texte programme leiche1021 schluessel1011 tuer1131 phase_h leon114
     set_tests_properties(unit_r38_dining1141_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
 
+#   Je Teil ein eigener Test (gemessen unter Last 2026-10-16: W ~25 min, Z ~8, D ~40, L ~10 — zusammen ueber jedem
+#   vernuenftigen Einzel-Zeitlimit); eigener Arbeitsordner und eigene exe-Kopie je Teil.
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_dining1141.cmake)
-    add_test(NAME integration_r38_dining1141
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_dining1141_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_dining1141.cmake)
-    set_tests_properties(integration_r38_dining1141 PROPERTIES TIMEOUT 3600)
+    foreach(_teil W Z D L)
+        string(TOLOWER ${_teil} _klein)
+        add_test(NAME integration_r38_dining1141_${_klein}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_dining1141_${_klein}_wd
+                         -DTEIL=${_teil}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_dining1141.cmake)
+        set_tests_properties(integration_r38_dining1141_${_klein} PROPERTIES TIMEOUT 3600)
+    endforeach()
 endif()

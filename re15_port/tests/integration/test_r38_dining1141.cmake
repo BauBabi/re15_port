@@ -375,7 +375,13 @@ endif()
 
 # --- L: Leon 1140 Rolladen-Ton ----------------------------------------------------------------------------------
 if(TEIL MATCHES "L")
-    f_lauf(l LEON "800#1140" "RAUM 1140
+    # Strom (2,0) per RE15_SET_FLAG beim Start; mit RE15_DEBUG_JUMP@gp nach Leons Intro war er in Lauf int_wzl wieder
+    # aus (Gemaelde -> sub05 "not responding", msg 5, scd_vm.c s_power_gates) — darum RE15_GOTO_ROOM (Wechsel im
+    # ersten Raum, Muster des Vorher-Laufs v1140) und zu Fuss vom Eintrittspunkt ans Gemaelde.
+    f_lauf(l LEON "1100#1140" "RAUM 1140
+GEHE -7600 -12000 150
+GEHE -8150 -10250 80
+BLICK 2048
 AKTION
 WARTE 60
 AKTION
@@ -385,7 +391,7 @@ WARTE 60
 AKTION
 WARTE 450
 ENDE
-" "RE15_SET_FLAG=2:0;RE15_DEBUG_JUMP=1140@gp;RE15_PLAYER_POS=-8150,-10250,2048;RE15_FRAMEDUMP=0-800/20:fd_" _l _wpl)
+" "RE15_SET_FLAG=2:0;RE15_GOTO_ROOM=1140;RE15_FRAMEDUMP=0-1100/20:fd_" _l _wpl)
     pruef(L _l "Se_on bank=0x3B id=12 -> Runde 38 Spur F (ROOM1131-snd0 Rolladen)")
     pruef(L _l "Se_on bank=0x3B id=10 -> Runde 38 Spur F (ROOM1131-snd0 Rolladen)")
     pruef(L _l "Se_on bank=0x3B id=11 -> Runde 38 Spur F (ROOM1131-snd0 Rolladen)")
