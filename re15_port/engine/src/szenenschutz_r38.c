@@ -16,6 +16,8 @@
 #include "re15_actor.h"
 #include "re15_scd.h"        /* g_scd.player_mode */
 #include "re15_engine.h"     /* g_engine.frame_count (Protokoll) */
+#include "re15_ai_flavor.h"  /* re15_ai_re2_for_type (RE2-Kraehe) */
+#include "re15_fenster1120.h" /* re15_re2crow_zwang_ist (Fensterkraehe ROOM1120 laeuft immer ueber das RE2-Gehirn) */
 
 extern int re15_player_victim_state(void);   /* enemy_ai_common.c — Opfer-FSM des Spielers */
 
@@ -103,6 +105,23 @@ void re15_szenenschutz_durchlauf_beginn(void)
     }
 }
 
+/* RE2-Kraehe (EMOVL21_S0.BIN) bereits im Angriffs-Anflug — Sub 11 Anlauf (Strike-Commit bei Kontakt @0x80101F2C
+ * `jal 0x80104088` a1=12) oder Sub 13 Hover-Harass (Griff-Commit @0x80102444 `jal 0x80104088` a1=14): keiner der beiden
+ * Commits liest ein Spieler-Tor. Abbruch ueber den ORIGINAL-Listener 0x80104400: @0x80104410 `lhu v0,554(s0)` /
+ * @0x80104418 `andi v0,v0,0x10` / @0x8010441c `beq` -> Vol 350 (@0x80104424-28), +0x220 = rand&0x9d (@0x80104434-3c),
+ * Sub 4 (@0x80104444/@0x80104450), +0x21C = 30 (@0x8010444c-54), +0x22A &= 0xffa7 (@0x80104460-64). Die DECs von
+ * Sub 11 (@0x80101D7C `jal 0x80104400`) und Sub 13 (@0x80102244 `jal 0x80104400`) rufen ihn im selben Bild VOR dem
+ * EXEC (DEC->EXEC-Doppel-Dispatch @0x801005F8-69C) — der Commit kommt also nicht mehr zum Zug. Sub 14 (Griff laeuft
+ * schon) bleibt unberuehrt: sein Listener (@0x80102484) wuerde den Griff ohne Opfer-Freigabe abbrechen. */
+static void kraehe_re2_abbruch(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+    if (e->type != 0x21 || e->state != 1) return;
+    if (e->sub_state_1 != 11 && e->sub_state_1 != 13) return;
+    if (!re15_ai_re2_for_type(0x21u) && !re15_re2crow_zwang_ist(slot)) return;   /* nur das RE2-Gehirn */
+    e->re2c_flags22a |= 0x10u;                       /* Abbruch-Bit 0x10 = Broadcast 16 (0x8010452C-Form) */
+}
+
 void re15_szenenschutz_gegner(int slot)
 {
     abschliessen();
@@ -118,6 +137,7 @@ void re15_szenenschutz_gegner(int slot)
         s_sicht = 1;                                 /* PL+0x1D3&0x80 ueber re15_player_is_grabbed */
         s_ticks++;
         s_fenster_ticks++;
+        kraehe_re2_abbruch(slot);
     } else {
         pl->hit_react = s_hr_echt;
         s_sicht = 0;

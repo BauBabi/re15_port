@@ -6133,7 +6133,8 @@ static void re15_crow_steer(re15_actor_t *e, re15_actor_t *player)
                                                                * (audit wf_827f186d crow #4) */
         }
         if (e->crow_parity != 0 && e->crow_armed != 0 &&
-            e->crow_dist < 10000 && e->crow_atk_ctr < 3) {          /* attack-commit @0x8011330c-70 */
+            e->crow_dist < 10000 && e->crow_atk_ctr < 3             /* attack-commit @0x8011330c-70 */
+            && !re15_szenenschutz_sicht()) {                         /* Runde 38 Spur B: Commit ohne Spieler-Tor */
             re15_crow_sub(e, (e->grid_id & 0x80) ? 10 : 12);        /* downed->cruise, else grapple */
         }
         return;
@@ -6404,7 +6405,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         e->y += e->crow_vvel;
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
         re15_crow_advance(e);
-        if (e->crow_contact) {                               /* +0x1d0 contact -> GRAB (@0x80113dd4) */
+        if (e->crow_contact && !re15_szenenschutz_sicht()) { /* +0x1d0 contact -> GRAB (@0x80113dd4); Runde 38 Spur B */
             e->crow_hs = 1;                                  /* +0x1d8=1 self-exempt @0x80113ddc */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x8000);   /* @0x80113dfc */
             re15_crow_hit_player_ungated(e, player, 8, 0);   /* GRAB: -8 HP @0x80113e34 UNGATED (kein
@@ -6518,7 +6519,8 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (re15_crow_anim(e)) e->sub_state_2 = 0;
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
         e->y += e->crow_vvel;
-        if (e->crow_contact) re15_crow_sub(e, 16);   /* +0x1d0 contact -> STRIKE (@0x80114464), then
+        if (e->crow_contact && !re15_szenenschutz_sicht())   /* Runde 38 Spur B: Kontakt ohne Spieler-Tor */
+            re15_crow_sub(e, 16);                    /* +0x1d0 contact -> STRIKE (@0x80114464), then
                                                       * pos_advance @0x8011446c runs REGARDLESS — the
                                                       * contact tick still moves (audit wf_827f186d
                                                       * crow #16; old return skipped the advance) */
