@@ -19,6 +19,9 @@ Lesart (AUFTRAG.md "Lesarten"): Elza-Raum = ROOM1171 (Elza-RDT = Leon-RDT + 1, P
   645f925a), gebaut (configure + build OK), Riegel `flagwort` war um ein Bild falsch (erwartete den ORIENT-Effekt im
   Kontakt-Bild) -> berichtigt und verschaerft (645f925a). Messung nachher mit der echten exe wiederholt (Abschnitt 4.2),
   gezielte Tests gruen (Abschnitt 5).
+- 2026-10-16 21:40: Probe-Merge gegen r38/integration (Spur C, Sub 0x13 in szenenleon_r36.c) NUR in der Arbeitskopie
+  (`git merge --no-commit`), Bau in re15_port/build_bisect, danach `git merge --abort`. Steht beim Lesen ein MERGE_HEAD
+  im Baum, hat das Sitzungslimit die Probe unterbrochen: `git merge --abort`, nichts davon committen.
 
 ## 1. Messung vorher
 
