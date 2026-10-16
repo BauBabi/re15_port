@@ -160,3 +160,40 @@ Auswertewerkzeug tests/unit/probe_r38_elzatoene_kreuz.c (kein add_test).
   Nachziehen von gunshot1041: Elza betritt das Feld statt darin zu starten — das Feld feuert beim Betreten).
 * `ctest --test-dir re15_port/build -R "integration_r38_elzatoene" --timeout 1200 -V` ->
   `100% tests passed, 0 tests failed out of 2` (Werte §4).
+
+## 6. OFFEN (benannt, nicht beauftragt)
+
+1. **Muendungsfeuer**: RE2 setzt zu JEDEM Skript-Schuss ein ESP (`3a 00 18 ..` @0x014F0 in ROOM4040, @0x028A2-artig in
+   4090/6020/1010). Der Port zeigt Johns Schuesse ohne Blitz; die Kamera steht dabei auf Cut 10 hinter Roy, John ist
+   klein am Gangende (m6, Framedump). Der Ton ist jetzt der RE2-Skript-Schuss; das Bild bleibt wie bisher (Runde 36
+   OFFEN 2). Eigener Punkt, falls gewuenscht.
+2. **RE2-Folge-Satz** 0x0B (Welle 2bf10f4ea91f, hell, Schwerpunkt 2090 Hz) folgt in RE2 jedem Skript-Schuss 1-9 Bilder
+   spaeter, in ROOM4090/6020 am ZIELORT positioniert (Abpraller/Einschlag). Johns Schuesse treffen Roy -> nicht
+   uebernommen; fuer einen Fehlschuss waere er die RE2-Form.
+3. **Positions-Ton**: RE2/RE1.5 setzen Skript-Geraeusche teils positional (Se_on Flags != 0, z.B. ROOM3091 @0x01A62);
+   der Port spielt alle Se_on ohne Lage (scd_vm.c op_se_on "Positional-Pfad (OPEN)"). Der Schuss in 1041 klingt deshalb
+   so laut wie ein naher Schuss (-21,2 dB(A), lauteste 100 ms) — er ist ja auch das Ereignis, auf das Elza reagiert.
+4. **Wahrnehmung**: Pegel und Klangklasse des alten (Alligator) und neuen (Skript-Schuss) Tons liegen nah beieinander
+   (-20,9 / -21,3 dB(A), Schwerpunkt 859 / 597 Hz); geaendert ist die HERKUNFT (jetzt der Ton, mit dem RE2 im Skript
+   schiesst). Die Ton-Ausschnitte in H_belege/ sind zum Gegenhoeren da.
+
+## 7. Fuer den Nutzer / Orchestrator
+
+* **Neue/geaenderte Assets (Paket-Gate)**: `re15_port/shared_assets/RE2/ELZASE.VBS` GEAENDERT (14232 B, md5
+  ba96a66267286e4754c6b5a7481928a4; vorher 13144 B). Das bestehende Gate (release/make_package.sh: vorhanden + cmp gegen
+  den Quellbaum) deckt die Datei ab; die Android-APK muss neu gebaut werden (Asset-Gate prueft gegen den Baum).
+  Erzeugt von `re15_port/tools/r36_l/re2_elza_se_cut.py --install` (Selbsttest gegen info/re2leon).
+* **Neue Quelldateien** (Android-Configure frisch, Memory reai-v2-android-glob-cache): engine/src/elzatoene_r38.c;
+  Tests tests/unit/test_r38_elzatoene.c, tests/unit/probe_r38_elzatoene_kreuz.c (kein add_test),
+  tests/integration/test_r38_elzatoene.cmake. **RE15_MIN_TESTS +8** (6 Unit + 2 Integration).
+* **Sprachdateien**: keine neuen; ROOM1041 msg 2 nutzt die vorhandene synchro/STAGE1/room1041/main02.wav, msg 3 (der
+  Platzhalter) hat keine Datei und keinen Text mehr.
+* **Gemeinsame Dateien**: scd_vm.c (Include + 3 Haken-Zeilen, Kommentar "Runde 38 Spur H": Raum-Scan, Opcode-Haken,
+  op_message_on hinter re15_leiche_message_on — Spur F setzt ihr "Help"-Ton-statt-Text evtl. an dieselbe Stelle:
+  beide Zeilen behalten), tests/unit/test_r36_elza.c (Teil bank: Quelle Satz 1).
+* **Bedienhinweis**: ROOM1041 (Elza, erster Gang durch den Flur, Zugang z.B. ueber ROOM1031): statt des Textfensters
+  "*gunshot*" faellt ein Schuss, danach dreht sich Elza um ("What was that!?"). ROOM1021 (Szene nach Johns Befreiung):
+  Roy stoehnt, sobald er auf John zugeht; Johns zwei Schuesse sind jetzt der RE2-Pistolenschuss.
+* **Kontrolle selbst**: elza.log (RE15_ELZA_LOG=elza.log) zeigt `[elzatoene] ROOM1041 Anker @0x02200 -> Aktion 1` bzw.
+  `[elzatoene] ROOM1021 Anker @0x020B2 -> Aktion 2`; Ton-Ausschnitte H_belege/*.wav.
+* **Entscheidungsfragen**: keine. (Falls zu den Schuessen ein Muendungsfeuer gewuenscht ist: OFFEN 1.)
