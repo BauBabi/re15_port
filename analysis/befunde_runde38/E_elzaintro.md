@@ -8,6 +8,7 @@ Baum `.claude/worktrees/r38_elzaintro`, Zweig `r38/elzaintro`, Basis 1bcbd0ff. S
 
 ## Stand
 - 16:35 Dossier angelegt, Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE gelesen.
+- Messung vorher beider Punkte, Ursache je Punkt, Umsetzung (wip 3c0ca636), Bisect-Bauten vorN/mitN/v0823.
 
 ## Punkt 1 — Voiceover Elza-Intro
 ### Messung vorher
@@ -57,7 +58,13 @@ Kein Original-Mechanismus betroffen: RE1.5 hat keine englische Sprachausgabe (sy
 scd_vm.c Kopf von scd_queue_voice). Die Zuordnung 1241 -> 1240 ist NUTZER-VORGABE ("Es ist das gleiche wie
 bei Leon"); ihre FORM (Zeile fuer Zeile dieselbe Id) belegen die byte-gleichen Nachrichten + Message_on-Folgen.
 ### Umsetzung
-(offen)
+- NEU `re15_port/include/re15_elzaintro_r38.h`, `re15_port/engine/src/elzaintro_r38.c`: Tabelle {Raum 0x1241 ->
+  Quelle 0x1240, msg 0..5}; `re15_elzaintro_r38_stimme_raum`, `re15_elzaintro_r38_stimme_pfad` (Pfad
+  `synchro/STAGE1/room1240/main0N.wav`, Regel synchro/README.md).
+- HAKEN `platform/pc/src/audio_pc.c` re15_voice_load_clip (4 Zeilen + Include): NACH den beiden eigenen Versuchen
+  (Gross-/Klein-Hex) -> eigene Aufnahmen unter `synchro/STAGE1/room1241/` haetten Vorrang ("Datei da = sie spielt").
+  Log `[voice] ROOM1241 msg N <- synchro/STAGE1/room1240/main0N.wav (Runde 38 Spur E)`.
+- KEINE neuen Assets, keine Kopie der WAVs (6 x ~1,7 MB gespart; Paket-Gate unveraendert).
 ### Messung nachher
 (offen)
 
@@ -87,10 +94,42 @@ Raeumen dieselbe — und in ROOM1031 ist sie die Lobby-Kamera (Bytes s. RE-Beleg
 
 Regression: `kartenitems_r36.c` kam mit 554877f9 (Runde 36 Spur N), gemergt cb1d5f59, erstmals ausgeliefert v0.8.24
 e8b3958f; in v0.8.23 3ec5b1f8 gibt es die Datei nicht (`git ls-tree`). Bisect-Laeufe: siehe Tabelle unten.
-### RE-Belege
-(offen)
+### RE-Belege (Original: der Erzaehler-Schnitt zeigt NUR Standbild + Text)
+Alle Bytes selbst aus den ausgelieferten RDT/BSS gelesen (Python, Werte im Riegel `unit_r38_elzaintro_schwarz`):
+- **Einziger Weg in Cut 13:** ROOM1031 sub15 @0x02A74 `29 0d` = Cut_chg(13); Opcode-Walk (scd_dump_room.py) ueber
+  alle main-/sub-Regionen: kein zweites `29 0d`, Cut_replace nur 0->9, 3->10, 4->11, 6->12. RVD-Zonen (RDT+0x28 =
+  0x228, 37 Saetze a 20 Byte): Ziel-Schnitte nur 0..9, KEINE Zone fuehrt in Cut 13. -> Cut 13 == Erzaehler.
+- **Leons Gegenstueck:** ROOM1170 sub11 @0x016A6 `29 07` (einziges Cut_chg(7); RVD-Ziele 0,1,2,3,8,9,10,11).
+  sub11 (Leon) und sub15 (Elza) sind gleich gebaut: Set(3,125,1), Set(2,7,1), Cut_chg, Sleep 20, 4x Message_on mit
+  Sleep 100, Sleep 20, Aot_on (Selbst-Tuer).
+- **Kamera:** RDT+0x24 = 0x60, 0x20 Byte je Schnitt. ROOM1031 Cut 13 @0x200 pos (-12834,-3114,-9774) tgt
+  (-7794,-2196,-22446) = ROOM1031 Cut 0 @0x60 (LOBBY-Kamera) = ROOM1170 Cut 7 @0x140 = ROOM1240/1241 Cut 0 @0x60.
+  In ROOM1170 schaut diese Kamera ins Leere (Kommentar main.c "VOID camera"); in ROOM1031 IST sie die Lobby-Kamera.
+- **Zone:** die einzige Zone von Cut 13, ROOM1031 @0x4F8 `01 ff 0d 00 31 c6 44 80 1e c1 d8 dc d5 fe 11 dc 69 10 44 80`,
+  ist bis auf die Schnittnummer byte-gleich mit ROOM1170 @0x370 (Cut 7).
+- **Standbild:** BSS/ROOM1031/BG13.BSS = BSS/ROOM1170/BG07.BSS = BSS/ROOM1240/BG00.BSS (sha256 44cafcd7ff20b961...).
+- **Keine Raum-Objekte im Erzaehler:** ROOM1031 main00 legt Gegner und Objekte nur im Zweig Ck(3,125)==1 an
+  (@0x01E50 `06 00 c0 01`, @0x01E54 `21 03 7d 01`: Sce_em_set x20 ab @0x01E5C, Obj_model_set @0x01FEC); der
+  Erzaehler-Zweig verlangt (3,125)==0 (@0x0207E `21 03 7d 00` -> Door_aot_set 19 @0x02082, Evt_exec sub15 @0x020A2);
+  (3,125) setzt erst sub15 @0x02A68 `22 03 7d 01`.
+- **Spieler hinter der Kamera:** Tuer ROOM1241 main00 @0x051A `3b 00 02 31 ... 9a 99 00 00 eb f0 ...` -> Ziel
+  (-26214,0,-3861); relativ zur Kamera (-13380,+3114,+5913), Blick (5040,918,-12672): Skalarprodukt -139.506.084 < 0.
+Damit ist das Originalbild im Erzaehler: schwarzes Standbild + Text. Der Port-Lageplan (Runde 36) ist das einzige
+3D-Objekt vor dieser Kamera. ⛔ Ein (3,125)-Tor am Installer haelt NICHT: `[kartenitems]` laeuft im Log NACH
+`Cut_chg(13)`, d.h. sub15 hat (3,125) beim Installieren schon gesetzt (main00 prueft vorher, der Installer danach).
+
 ### Umsetzung
-(offen)
+- NEU `re15_port/include/re15_elzaintro_r38.h`, `re15_port/engine/src/elzaintro_r38.c`: Tabelle der Erzaehler-Schnitte
+  {ROOM1170 Cut 7 @0x016A6 (Leon, bisher woertlich in main.c), ROOM1031 Cut 13 @0x02A74 (Elza)};
+  `re15_elzaintro_r38_erzaehler_schwarz(raum, cut)`.
+- HAKEN `platform/pc/main.c` (Netz s_scene_black, 1 Zeile + Include): `re15_render_pc_set_scene_black(
+  re15_elzaintro_r38_erzaehler_schwarz(g_current_room_id, active_cut_idx))` statt `g_current_room_id == 0x1170 &&
+  active_cut_idx == 7`. Leon bleibt bitgleich (dieselbe Bedingung, jetzt aus der Tabelle).
+- KOMMENTAR `platform/pc/src/render_pc.c`: das Netz war als "redundant, safe to delete" markiert — fuer Elza ist es die
+  Abdeckung; Warnhinweis ergaenzt.
+- Wirkung: in ROOM1031 Cut 13 Vollbild-Schwarz UNTER dem Text (Layer-Reihenfolge render_pc.c: Framebuffer -> 3D ->
+  Letterbox -> s_scene_black -> Text -> Fade) = Originalbild. Der Lageplan bleibt angelegt und ist ab der Szene
+  (Cut 4/6/0) wie bisher sichtbar; jede kuenftige Port-Requisite der Lobby ist im Erzaehler ebenfalls abgedeckt.
 ### Messung nachher
 (offen)
 
