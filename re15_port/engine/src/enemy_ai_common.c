@@ -47,6 +47,7 @@
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
+#include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Angriff, solange die Szene den Spieler haelt */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
@@ -586,7 +587,8 @@ int re15_player_is_grabbed(void)
      * pin those first 35 frames; the cmd-6 handler never reads the pad either. */
     extern int re15_player_victim_state(void);
     int vs = re15_player_victim_state();
-    return s_player_grabbed || vs == 1 || vs == 2 || vs == 3 || vs == 4;
+    return s_player_grabbed || vs == 1 || vs == 2 || vs == 3 || vs == 4
+        || re15_szenenschutz_sicht();   /* Runde 38 Spur B: PL+0x1D3&0x80-Sicht (Tor @0x80104D84-90) */
 }
 
 /* ===================== LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) ===========
@@ -14490,9 +14492,11 @@ void re15_enemy_ai_run_all(int combat_active)
     /* just-escaped mercy timer (the thrower's +0x1d5, ticked by FUN_8010a8c8; clears DAT_800aca50&1
      * at 0 — port: the global timer stands in, see re15_grab_mercy_active). */
     if (s_grab_mercy_timer > 0) s_grab_mercy_timer--;
+    re15_szenenschutz_durchlauf_beginn();   /* Runde 38 Spur B */
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
+        re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
         /* EM-STATUS KILL PERSISTENCE (FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c setzen
          * flag[entity+0x1C6] am Todes-Commit): ist ein Gegner CORPSE (state 7), wird sein
          * em-Status-Kill-Flag gesetzt, damit ein Wieder-Betreten des Raums ihn NICHT respawnt
@@ -14864,6 +14868,7 @@ void re15_enemy_ai_run_all(int combat_active)
          * inert (its only real code is the shared cutscene model-draw aux, which the port's renderer already
          * covers). */
     }
+    re15_szenenschutz_durchlauf_ende();     /* Runde 38 Spur B */
     re15_schuss_r36_nachfuehren_alle();  /* Runde 36 Spur C N3: Blut-Spawns dieses Bilds um Schub+Klemme nachfuehren */
 }
 
