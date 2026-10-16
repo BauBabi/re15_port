@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-16 23:50: Welle 5 (r38_w5.js, BASIS d70c234e): N wasser wf_9fc9967b-c4b, O montage wf_83f7268d-331. Damit laufen ALLE 21 Spuren (bzw. sind fertig).
 * 2026-10-16 23:40: Integration Q/E/J gruen (105/105 gezielt), Baeume kleinkram/elzaintro/rekorder entfernt. P (r37/masken36) gemergt (87ff0737, konfliktfrei), Bau + Masken-Tests laufen. Welle 5: N, O.
 * 2026-10-16 23:10: Welle 4 (r38_w4.js, BASIS f587d34e): D zopf wf_08abf2fa-3ac, M npckante wf_d2a07ce1-679. Platte 67 GB. Offen zu starten: N, O.
 * 2026-10-16 23:05: P (r37 masken36) BESTANDEN (Abnahme 2, wf_6fbf718a-cd3, Bericht 0ce11f5f). Merge nach dem laufenden Q/E/J-Test.
