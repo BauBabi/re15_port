@@ -19,3 +19,25 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r38_wasserzombie COMMAND test_r38_wasserzombie)
 set_tests_properties(unit_r38_wasserzombie PROPERTIES TIMEOUT 300)
+
+#   probe_r38_wasserzombie_karte   Werkzeug (kein add_test): Spielstand in ROOM2020/2000 (Leon) bzw. 2021/2001 (Elza).
+add_executable(probe_r38_wasserzombie_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r38_wasserzombie_karte.c)
+target_link_libraries(probe_r38_wasserzombie_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r38_wasserzombie_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(probe_r38_wasserzombie_karte PRIVATE m)
+endif()
+
+#   integration_r38_wasserzombie   echte exe (Messkopie re15_pc_r38u_haken_*), LADE-Weg CONTINUE:
+#                                  a ROOM2020 Leon Standard-KI (RE2), b ROOM2020 Leon RE1.5-KI, c ROOM2021 Elza,
+#                                  d ROOM2000 Leon (0x84) — RE15_WASSERZOMBIE_LOG-Folge eintritt/klettern/boden-1800/
+#                                  oben (x,-1800,2222) Band 1 +0x1ba -1800; kein Gegner unter dem Wasserboden/auf Band 2.
+if(TARGET re15_pc)
+    add_test(NAME integration_r38_wasserzombie
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r38_wasserzombie_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_wasserzombie_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_wasserzombie.cmake)
+    set_tests_properties(integration_r38_wasserzombie PROPERTIES TIMEOUT 1500)
+endif()
