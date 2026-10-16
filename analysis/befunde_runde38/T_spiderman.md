@@ -374,6 +374,9 @@ Clips (Halten P3, Gehen) — dort ist (fc-1, 0, 1, ...) auch im Original die Fol
   Haken in enemy_ai_common.c case 2 (eine Zeile statt vier, "Runde 38 Spur T").
 - Keine neue Konstante: fc kommt aus der Bank (re15_birkin_fc), 0 ist der Wrap-Wert @0x8001f63c, alle Clip-/Phasen-
   Werte waren schon belegt.
+- STAGE5 (5040/5070) traegt dieselbe Maschine um +0x180: Austritt anim_set @0x801156FC, 0x101 @0x80115708/@0x80115718;
+  Bruellen anim_set @0x801124E0, `+0x6 += fertig` @0x801124F4-80112504, P2 @0x80112510 (+0x5 = 3 @0x80112544,
+  +0x6 = 0 @0x80112554) — ein Port-Pfad fuer beide Stages.
 
 ### Messung nachher (exe, Stand 2029729b, gleiche Laeufe wie vorher)
 `wechsel.py` (Scratchpad) listet je Zustandswechsel des Spiderman-Slots den gezeichneten Clip/Bild aus RE15_ANIM_TRACE.
