@@ -1,0 +1,181 @@
+===== vorher_w5_re2 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=4 d=1396 stun=4
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F62    slot 5 st 2/4 -> 1/8 d=1396 hp=234
+F63    slot 2 st 1/8 -> 1/1 d=2428 hp=50
+F63    slot 3 st 1/8 -> 1/1 d=3941 hp=80
+F63    slot 4 st 1/8 -> 1/1 d=3396 hp=250
+F63    slot 5 st 1/8 -> 1/1 d=1396 hp=234
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (210, 1)] -> gesamt 2
+===== vorher_w6_re2 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=4 d=1396 stun=4
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F62    slot 5 st 2/4 -> 1/8 d=1396 hp=234
+F63    slot 2 st 1/8 -> 1/1 d=2428 hp=50
+F63    slot 3 st 1/8 -> 1/1 d=3941 hp=80
+F63    slot 4 st 1/8 -> 1/1 d=3396 hp=250
+F63    slot 5 st 1/8 -> 1/1 d=1396 hp=234
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (210, 1)] -> gesamt 2
+===== vorher_w3_re2 (exit 0)
+F61    mg 15 -> 14
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=3 d=1396 stun=4
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F62    slot 5 st 2/3 -> 1/8 d=1396 hp=234
+F63    slot 2 st 1/8 -> 1/1 d=2428 hp=50
+F63    slot 3 st 1/8 -> 1/1 d=3941 hp=80
+F63    slot 4 st 1/8 -> 1/1 d=3396 hp=250
+F63    slot 5 st 1/8 -> 1/1 d=1396 hp=234
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (210, 1)] -> gesamt 2
+===== vorher_w5_re15 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=5 d=1396 stun=16
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F66    slot 2 st 1/13 -> 1/2 d=2428 hp=75
+F66    slot 5 st 2/5 -> 1/7 d=1470 hp=234
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F79    slot 5 st 1/7 -> 1/2 d=1481 hp=234
+F99    slot 5 st 1/2 -> 1/3 d=1180 hp=234
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (138, 1), (164, 1), (190, 1), (215, 1)] -> gesamt 5
+===== vorher_w6_re15 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=6 d=1396 stun=16
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F66    slot 2 st 1/13 -> 1/2 d=2428 hp=75
+F66    slot 5 st 2/6 -> 1/7 d=1470 hp=234
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F79    slot 5 st 1/7 -> 1/2 d=1481 hp=234
+F99    slot 5 st 1/2 -> 1/3 d=1180 hp=234
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (138, 1), (164, 1), (190, 1), (215, 1)] -> gesamt 5
+===== vorher_w3_re15 (exit 0)
+F61    mg 15 -> 14
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=3 d=1396 stun=5
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F66    slot 2 st 1/13 -> 1/2 d=2428 hp=75
+F66    slot 5 st 2/3 -> 1/7 d=1470 hp=234
+F79    slot 5 st 1/7 -> 1/2 d=1481 hp=234
+F95    slot 5 st 1/2 -> 1/3 d=1187 hp=234
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (134, 1), (160, 1), (186, 1), (211, 1)] -> gesamt 5
+===== nachher_w5_re2 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=4 d=1396 stun=4
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F62    slot 5 st 2/4 -> 1/8 d=1396 hp=234
+F63    slot 2 st 1/8 -> 1/1 d=2428 hp=50
+F63    slot 3 st 1/8 -> 1/1 d=3941 hp=80
+F63    slot 4 st 1/8 -> 1/1 d=3396 hp=250
+F63    slot 5 st 1/8 -> 1/1 d=1396 hp=234
+F64    slot 5 HP 234 -> 218 (dHP -16) st=2 ss1=4 d=1396 stun=4
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F67    slot 5 HP 218 -> 202 (dHP -16) st=2 ss1=4 d=1436 stun=4
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F89    slot 5 st 2/4 -> 1/12 d=1593 hp=202
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (64, 1), (67, 1), (197, 1)] -> gesamt 4
+===== nachher_w6_re2 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=4 d=1396 stun=4
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F62    slot 5 st 2/4 -> 1/8 d=1396 hp=234
+F63    slot 2 st 1/8 -> 1/1 d=2428 hp=50
+F63    slot 3 st 1/8 -> 1/1 d=3941 hp=80
+F63    slot 4 st 1/8 -> 1/1 d=3396 hp=250
+F63    slot 5 st 1/8 -> 1/1 d=1396 hp=234
+F64    slot 5 HP 234 -> 218 (dHP -16) st=2 ss1=4 d=1396 stun=4
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F67    slot 5 HP 218 -> 202 (dHP -16) st=2 ss1=4 d=1436 stun=4
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F89    slot 5 st 2/4 -> 1/12 d=1593 hp=202
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (64, 1), (67, 1), (197, 1)] -> gesamt 4
+===== nachher_w3_re2 (exit 0)
+F61    mg 15 -> 14
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=3 d=1396 stun=4
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F62    slot 5 st 2/3 -> 1/8 d=1396 hp=234
+F63    slot 2 st 1/8 -> 1/1 d=2428 hp=50
+F63    slot 3 st 1/8 -> 1/1 d=3941 hp=80
+F63    slot 4 st 1/8 -> 1/1 d=3396 hp=250
+F63    slot 5 st 1/8 -> 1/1 d=1396 hp=234
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (210, 1)] -> gesamt 2
+===== nachher_w5_re15 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=5 d=1396 stun=16
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F64    slot 5 HP 234 -> 218 (dHP -16) st=2 ss1=5 d=1442 stun=24
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F66    slot 2 st 1/13 -> 1/2 d=2428 hp=75
+F67    slot 5 HP 218 -> 202 (dHP -16) st=2 ss1=5 d=1481 stun=24
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F72    slot 5 st 2/5 -> 1/7 d=1562 hp=202
+F85    slot 5 st 1/7 -> 1/2 d=1578 hp=202
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (64, 1), (67, 1), (147, 1), (173, 1), (199, 1), (224, 1)] -> gesamt 7
+===== nachher_w6_re15 (exit 0)
+F61    mg 15 -> 12
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=6 d=1396 stun=16
+F61    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F64    slot 5 HP 234 -> 218 (dHP -16) st=2 ss1=6 d=1442 stun=24
+F64    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F66    slot 2 st 1/13 -> 1/2 d=2428 hp=75
+F67    slot 5 HP 218 -> 202 (dHP -16) st=2 ss1=6 d=1481 stun=24
+F67    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F72    slot 5 st 2/6 -> 1/7 d=1562 hp=202
+F85    slot 5 st 1/7 -> 1/2 d=1578 hp=202
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (64, 1), (67, 1), (147, 1), (173, 1), (199, 1), (224, 1)] -> gesamt 7
+===== nachher_w3_re15 (exit 0)
+F61    mg 15 -> 14
+F61    slot 5 HP 250 -> 234 (dHP -16) st=2 ss1=3 d=1396 stun=5
+F61    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F66    slot 2 st 1/13 -> 1/2 d=2428 hp=75
+F66    slot 5 st 2/3 -> 1/7 d=1470 hp=234
+F79    slot 5 st 1/7 -> 1/2 d=1481 hp=234
+F95    slot 5 st 1/2 -> 1/3 d=1187 hp=234
+Blut-Effekte (id=0, Alter 1) je Bild: [(61, 1), (134, 1), (160, 1), (186, 1), (211, 1)] -> gesamt 5
+===== nachher_w5_re2_elza (exit 0)
+F91    mg 15 -> 12
+F91    slot 1 HP 58 -> 42 (dHP -16) st=2 ss1=4 d=2918 stun=6
+F91    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F91    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F94    slot 1 HP 42 -> 26 (dHP -16) st=2 ss1=4 d=2907 stun=6
+F94    wf SPAWN id=0 sub=0 scale=0x13e8 streams=3
+F94    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F96    wf SPAWN id=0 sub=0 scale=0x13e8 streams=3
+F97    slot 1 HP 26 -> 10 (dHP -16) st=1 ss1=5 d=3357 stun=6
+F97    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+===== nachher_w5_re15_elza (exit 0)
+F91    mg 15 -> 12
+F91    slot 1 HP 65 -> 49 (dHP -16) st=1 ss1=17 d=2930 stun=-13
+F91    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F91    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F94    slot 2 HP 75 -> 59 (dHP -16) st=1 ss1=17 d=2974 stun=-17
+F94    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F97    slot 3 HP 65 -> 49 (dHP -16) st=1 ss1=17 d=3982 stun=-9
+F97    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+===== nachher_w6_re2_elza (exit 0)
+F91    mg 15 -> 12
+F91    slot 1 HP 58 -> 42 (dHP -16) st=2 ss1=4 d=2918 stun=6
+F91    wf SPAWN id=2 sub=2 scale=0x800 streams=1
+F91    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F94    slot 1 HP 42 -> 26 (dHP -16) st=2 ss1=4 d=2907 stun=6
+F94    wf SPAWN id=0 sub=0 scale=0x13e8 streams=3
+F94    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+F96    wf SPAWN id=0 sub=0 scale=0x13e8 streams=3
+F97    slot 1 HP 26 -> 10 (dHP -16) st=1 ss1=5 d=3357 stun=6
+F97    wf SPAWN id=2 sub=0 scale=0x800 streams=2
+===== nachher_w3_re2_elza (exit 0)
+F91    mg 15 -> 14
+F91    slot 1 HP 58 -> 42 (dHP -16) st=2 ss1=3 d=2918 stun=6
+F91    wf SPAWN id=2 sub=0 scale=0x800 streams=2

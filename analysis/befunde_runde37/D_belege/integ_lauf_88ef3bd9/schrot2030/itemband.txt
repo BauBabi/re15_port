@@ -1,0 +1,1 @@
+F1179 room=2030 ITEM slot 10 floor 1 item 0x16 tk 108 spieler-band 1 spieler=(4251,-1800,7118) -> FREI

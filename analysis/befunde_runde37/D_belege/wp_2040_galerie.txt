@@ -1,0 +1,16 @@
+# Runde 37 Spur D: ROOM2040 Gegenprobe: Band 5 (Galerie-Band) an derselben Stelle, Blick Nord.
+OBJ 0
+RAUM 2040
+GEGNERWEG
+WARTE 30
+FLAG 9 91
+BLICK 1024
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 100
+FLAG 9 91
+ENDE

@@ -246,3 +246,91 @@ Raeume mit den Freistellungen des Nutzers (eigene ROOMxxxx_PRI*.TIM), falsch fue
 dort jede ergaenzte Verdeckung. -> Spur P masken36: R15M-Cut ohne eigenen Atlas wieder mit dem BSS-Atlas zeichnen (wie
 am 2026-09-03 gebaut), je Raum/Cut nachweisen (Blit-Pruefung wie pruef_gen.py + Figur-Messung an der exe), Basis = Stand
 der Spur A (gleicher Lader).
+
+## Nachtrag 12 — 2026-10-12 (woertlich, zu Nachtrag 11 / Spur O)
+
+> zum schluss dialog ada/marvin - wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin nach drehen.
+
+Lesart -> Spur O: Beim Schluss "Ada: Marvin!..." (ROOM11C0 msg 14) dreht sich Ada dem LAUFENDEN Marvin nach — Kopf und
+Koerper folgen seiner Position, waehrend er zur Tuer rennt (statt sich einmal fest zur Tuer zu drehen). Vokabular wie in
+Nachtrag 11 (Plc_neck Modus 1 / Plc_dest Modus 9 Drehen auf seine laufend aktualisierte Lage bzw. das Folge-Ziel; RE2-
+Vorbild fuer "einer Figur nachsehen" belegen); keine ruckartigen Spruenge, Drehrate wie die uebrigen Drehungen der Szene.
+
+## Orchestrator-Auftrag Q — 2026-10-12 (Folge der RE2-Item-Box, gefunden von Spur I Nachbesserung 1)
+
+Grund: Spur I (I_feuerloescher.md, Nachbesserung 1, offen) mass: legt Leon den Feuerloescher VOR dem Loeschen in die
+Item-Box, kann er das Feuer in ROOM1090 trotzdem loeschen ("Will you use the Fire Extinguisher?" -> Yes, Rettungsszene) —
+ROOM1090 sub00 @0x02306 `21 03 85 00` prueft nur das Aufnahme-Bit (3,0x85), nie das Inventar. Im Original (RE1.5 hat
+keine Item-Box) war "Bit gesetzt" gleichbedeutend mit "Item im Inventar" (ausser verbraucht/weggeworfen); mit der
+RE2-Item-Box des Ports (Nutzer-Auftrag 2026-08-30) nicht mehr. Beta -> Retail: in RE2 benutzt man ein Item nur, wenn man
+es TRAEGT. -> Spur Q kistenregel: Zensus ALLER Original-Abfragen (alle RDTs, Leon und Elza), die den BESITZ eines Items
+ueber ein Bit statt ueber das Inventar pruefen (Aufnahme-/Taken-Bits als Besitz-Ersatz vor einer Item-Benutzung,
+Item-Abfragen an Tueren/Raetseln); je Fall belegen, ob das Item in der Box liegen kann, und wie RE2 dieselbe Art Abfrage
+macht (Besitz-Pruefung im RE2-SCD/EXE belegen). Wo die Box den Fall oeffnet: wie RE2 das Item im Inventar verlangen
+(eine Port-Regel an EINER Stelle, je Fall per Tabelle), mit RE2-Text, wenn es fehlt. Basis = abgenommener Stand der Spur I.
+
+## Orchestrator-Auftrag R — 2026-10-12 (zu Nachtrag 9, vorbestehend, gefunden von Spur M)
+
+Grund: Spur M (M_kiste.md OFFEN) mass: das 2-Feld-Symbol in der Kisten-Liste (49 px breit, z.B. Waffen) liest nur die
+schmale 40-Texel-Kachel; die Spalten 40..48 wiederholen Spalte 39 -> der rechte Teil ist verschmiert. RE2 zeichnet die
+breite Zeile aus zwei Cache-Spalten (u1 0x78 @0x8007183c/@0x80071848, zweite Kachel FUN_80069c40 @0x80069cd8). -> Spur R
+kiste2feld: 2-Feld-Symbole in der Kisten-Liste wie RE2 vollstaendig zeichnen (auch, falls betroffen, im Inventar-Gitter
+und an anderen Stellen derselben Kachel-Logik pruefen). Basis = abgenommener Stand der Spur M.
+
+## Nachtrag 13 — 2026-10-13 (woertlich, Zwischenversion)
+
+> Wenn du die Aufzüge fertig hast und die funktionieren und die anderne Sachen auch fast fertig sind, baue mir schon mal eine Zwischen Version. Den Rest setzen wir am Samstag fort.
+
+Lesart: Aufzuege sind fertig und geprueft (C + D integriert, Integration 61/61, Lift 2030 an der Integrations-exe abgefahren).
+Die laufenden Rest-Laeufe (G, L, N, O, P, Q, R) beenden ihren aktuellen Schritt; was die Abnahme besteht, wird integriert,
+was durchfaellt oder laenger braucht, wird angehalten und am Samstag (2026-10-17) fortgesetzt. Dann Zwischenversion
+v0.8.25 aus r37/integration wie jedes Release: volle Suite seriell ohne Agenten, RE15_MIN_TESTS, Release Notes (mit
+"Folgt am Samstag"), master ff, Hauptbaum-exe, Windows + Linux/Deck + Android, Paket, Archiv, Tag, Push. Der Rest der
+Runde 37 wird danach v0.8.26.
+
+## Nachtrag 14 — 2026-10-15 (woertlich, Elza: Luecke zwischen ROOM1021 und ROOM1141) -> Samstag / v0.8.26
+
+> In Elzas Szenario gibt es zunächst eine Cutscene im ROOM 1021 wo John Roy erschießt der sich zum Zombie gewandelt hat.
+>
+> Danach kommt nur noch eine - die nächste Cutscene - In Room 1141. main02 und folgende wo Elza sagt - Are you ok? What happened? und John dann erzählt das er die Monkeys auf dem Dach gesehen hat usw.... Aber da ist eine Lücke... Woher weiß Elza DAS etwas passsiert ist. Wo kann das are you ok? What happened her kommen.
+>
+> Da fehlt wieder mal was in der Story.... Hast du da einen guten Vorschlag.
+
+> Nein, das John, wait kommt, weil John mit der Pistole auf Elza zielt, weil er erschrocken ist, das sie die Tür rein kommt. Das passt schon.
+>
+> allgemein der Vorlauf passt trotzdem mit der Idee von dir.
+>
+> Der einzige Haken ist - Wir sind in ROOM 1020 und er sagt - he likes to be alone, und dann gehen wir aus der Tür raus, noch eine Tür in das Treppenhaus, die Etage hoch. Durch die Tür und dann plötzlich ist er in ROOM 1141 so schnell? Nachdem er gerade noch vor 5 Sekunden alleine sein wollte und getrauert hat? Das macht nicht so viel sinn...
+
+> Ich habe eine Idee.... Der Raum 1141 ist vorher abgeschlossen, Roy hat den Schlüssel. Nachdem er zum Zombie geworden ist, hat er den Schlüssel an der Stelle gedropped, wo er vorher am Boden lag in ROOM 1011. Und wenn Elza wieder aus dem Raum raus kommt, ist John weg.
+
+> Wir können das so machen, aber ohne das John, wait und das Sorry.... Einfach nur direkt - are you okay? what's happened? Und du musst einen für den Dining Room passenden Schlüssel finden. Und wir müssten irgendwie beim toten Roy irgendeine Art hinweis hinterlassen, das er den dining key hatte und der im 1011 gedropped gewesen sein könnte.
+>
+> Dafür müsste dann immer wieder ein panisches Klopfen/Hämmern und ein help ein regelmäßigen abständen, bis man den geheimen Schalter gefunden hat um die Tür zu öffnen, mit panischer Musik.
+>
+> Wenn Die Monkeys da sind, und Elza eine Tür anklickt, muss, so lange die Monkeys noch nicht tot sind kommen "I cannot leave him alone with those monsters".
+
+Abgestimmter Ablauf (Orchestrator, 2026-10-15; nur Elza-RDTs 1011/1021/1131/1141, Leon unberuehrt):
+1. ROOM1021 Szene wie bisher. Roys Leiche (sub06 msg 9 "He's dead. Poor Roy...") bekommt einen HINWEIS auf den
+   fehlenden Dining-Room-Schluessel und dass er ihn dort verloren haben koennte, wo er lag (1011). Text noch offen.
+2. ROOM1011 (einzige Tuer -> 1021): der Schluessel liegt an Roys Liegestelle (Roy-Spawn sub00 @0x009F6
+   (-2000,0,7450)), erst nach der 1021-Szene. Zurueck in 1021 ist John weg (schon Original: Spawn nur bei (4,0x60)==1,
+   die Szene loescht das Flag @0x01FD8).
+3. ROOM1131 -> 1141: Tuer verschlossen bis zum Schluessel. Vorschlag: Name "Dining Room Key", Modell/Icon/Bild =
+   RE2 Precinct Key 0x5B (Heart Key, mesh066, gold mit rotem Herz, analysis/befunde_runde36/Q_belege/
+   q_re2_schluessel_modelle.png "Precinct 5B"; im Port noch unbenutzt). Tuertext nach RE2-Muster Text 0x13
+   @0x8009F2BB ("It's locked. The door is marked ..."): "It's locked. The door is marked "Dining Room"."
+   Freie RE1.5-Item-Id per Zensus wie Runde 36 (0x42/0x45 sind vergeben).
+4. ROOM1141 nach dem Aufschliessen: John sitzt auf dem Dach fest (hochgekommen ueber die Flurtuer 1131 -> 1171,
+   @0x008EE, immer offen; Gorillas schneiden ihm den Rueckweg ab). In regelmaessigen Abstaenden panisches Haemmern +
+   "Help", panische Musik, bis Elza den GEHEIMEN SCHALTER findet: das Original hat ihn schon — Gemaelde "A beautiful
+   painting. There's a switch below." (sub06 @0x00FE8, hebt den Notrolladen Prop obj 0 vor dem Dachgang, (3,0x6A)),
+   danach der Riegel (sub05 @0x00FD2 "You've opened the lock."). OFFEN: "Help" als Stimme (RE2-Kendo-Proben
+   voice/Kendo, John traegt Kendos Modell) statt Textfenster — ein Message_on haelt das Spiel jedes Mal an.
+   OFFEN: welcher Musiktitel (Original startet in 1141 die Gorilla-Kampfmusik @0x00B4E, Stopp @0x00C06).
+5. Szene sub02 ohne msg 0 "John, wait!" und msg 1 "...sorry, I'm glad...": John stuerzt herein, Elza direkt
+   "Are you okay? What's happened?" (msg 2 ohne "Same here..." — das antwortete auf die gestrichene Zeile 1). Rest wie
+   Original (Dach-Warnung, Gorillas durch die Fenster, "I'll try to distract them...").
+6. Solange die Gorillas leben ((4,0xF2)==1; sub01 loescht es erst, wenn (7,0xCB) und (7,0xCC) gesetzt sind,
+   @0x00BF2-0x00C0C): jede Tuer in 1141 -> "I cannot leave him alone with those monsters." Danach muss John VOR Elza
+   aufs Dach (1171 beginnt mit John oben, sub07 @0x016C8) — kurzer Abgang durch die Dachtuer, sonst springt er wieder.

@@ -1,0 +1,17 @@
+Spielstand C:\Users\mjoedicke\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\n\gdb\start_1171_elza.sav
+? S02
+EXE-Stub @0x80026e4c 0800e003 (sauber = 0800e003)
+Z0 80022300 OK
+Z0 80022470 OK
+Z0 8001ce04 OK
+SPRUNG 1 bei Bild 30: aus ROOM1171.RDT (Door_aot_set @0x011DC, Nutzlast @80122b9a) -> Stage-Index 4 Raum 0x08 Cut 0, Nutzlast 22d90000e8b8000804080000
+LADER Raum 508(Variante 1) VSync 60525 Entity 800acc2c Typ 0x30 +0x97=0 Elza-Bit 1 | Datei-Id 0x27 TOC-Laenge 228460 Sektor-Feld 5642 | Blob im RAM @80123428 == CDEMD0: False == CDEMD1: True
+Raum 508 erreicht bei Bild 31 (VSync 60633)
+SETZE 800acc60 := e6e2ffff00000000e8b8ffff (Bildbeleg, kein Spielverhalten)
+SETZE 800acc6c := e6e20000e8b8 (Bildbeleg, kein Spielverhalten)
+SETZE 800acc96 := 000c (Bildbeleg, kein Spielverhalten)
+ENDE Entity  0 Typ 0x30 Lage (-7450,-18200) +0x16c 8012469c +0x10 801399b8 +0x94 0
+ENDE Spieler Lage (-9950,-18200) Raum 508 Cut 0
+Prozessende: geordnet
+Endstand kopiert -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/N/gdb/ende_lauf7_5081_bild.sav
+settings.ini zurueck: True | resume.sav des Nutzers zurueck: True

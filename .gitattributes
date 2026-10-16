@@ -39,3 +39,4 @@ re15_port/shared_assets/RE2/TEX.TIM -text
 analysis/befunde_runde36/orchestrator/*.js text eol=lf
 # RE2-Aufschliess-Toene (Runde 36 Spur G): Mini-Bank aus RE2-Raumbank-Wellen (re15_port/tools/re2_karten_se_cut.py).
 re15_port/shared_assets/RE2/KARTSE.VBS -text
+analysis/befunde_runde37/orchestrator/*.js text eol=lf

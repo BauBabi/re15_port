@@ -1,0 +1,7 @@
+# r9b_elza_50b1 — echte exe VOR dem Text-Bau (Stand 9e8f0762, .inc noch alt): Elza, RE15_DEBUG_JUMP=50b0@250, Standplatz (-12500,-11600) Blick +X
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[debug-menu] AUTO-JUMP -> ROOM50B0 (Frame 250)
+[debug-menu] JUMP -> 50b C-2 HANGAR     (ROOM50B1) spawn=(-12500,0,-11600) cut=0
+[room] PC loaded room50b1.rdt (225512 bytes)
+[msgtext] room=50b1 id=0 "It's Ada. She's dead.It looks like one of those gorillas killed her."
+[flow] EXIT_AT: Bild 500 in Raum 50b1 erreicht -> exit

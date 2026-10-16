@@ -1,0 +1,13 @@
+== ohne Sperren (Original): von ROOM10F0 erreichbar 38 Raeume
+   11B0: 10F0 -> 1090 -> 1050 -> 10A0 -> 1180 -> 11B0
+   11C0: 10F0 -> 1090 -> 1050 -> 10A0 -> 1180 -> 11B0 -> 11C0
+== nur Sperre 1060->1040 (Stand v0.8.24): von ROOM10F0 erreichbar 38 Raeume
+   11B0: 10F0 -> 1090 -> 1050 -> 10A0 -> 1180 -> 11B0
+   11C0: 10F0 -> 1090 -> 1050 -> 10A0 -> 1180 -> 11B0 -> 11C0
+== Sperren 1060->1040 + 1050->10A0 (neu): von ROOM10F0 erreichbar 22 Raeume
+   11B0: NICHT erreichbar
+   11C0: NICHT erreichbar
+== erreichbar mit beiden Sperren: 1000 1010 1020 1030 1040 1050 1060 1070 1080 1090 10C0 10D0 10E0 10F0 1100 1110 1120 1130 1140 1150 1170 1240
+== nicht erreichbar mit beiden Sperren: 10A0 10B0 1160 1180 1190 11A0 11B0 11C0 11D0 11E0 11F0 1200 1210 1220 1230 1260 2000
+== Kanten aus dem erreichbaren Teil in den Rest (Schnitt):
+   1050 -> 10A0  0x00B5A Slot 4 Band 0

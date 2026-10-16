@@ -1,0 +1,6 @@
+-- r37_zombieaktiv: Slot 1 Typ 16 grid 00: Bild 7 Zustand 1/1 d=30856, Bild 306 d=25904 (4952 naeher)
+-- r37_zombieaktiv: Slot 2 Typ 10 grid 00: Bild 7 Zustand 1/1 d=29604, Bild 306 d=22988 (6616 naeher)
+-- r37_zombieaktiv: Slot 3 Typ 10 grid 00: Bild 7 Zustand 1/1 d=28596, Bild 306 d=23704 (4892 naeher)
+-- r37_zombieaktiv: Slot 4 Typ 11 grid 00: Bild 7 Zustand 1/1 d=27476, Bild 306 d=20064 (7412 naeher)
+-- r37_zombieaktiv: Slot 5 Typ 11 grid 00: Bild 7 Zustand 1/1 d=28376, Bild 306 d=19428 (8948 naeher)
+-- r37_zombieaktiv: OK — 5/5 im Gang ab Bild 7, 5/5 >= 4500 naeher nach 300 Bildern (C:/workspace/git/reAi_v2/.claude/worktrees/r37_zombieaktiv/re15_port/build/r37_zombieaktiv_wd/lauf_ee63b9c3)

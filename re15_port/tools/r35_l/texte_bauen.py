@@ -76,7 +76,8 @@ MELDUNGEN = [
     ("1150", 25, "k_msg25", "Irons",  0x02, "Leon... I... I'm proud to have an officer as dependable as you!"),
     ("1150", 26, "k_msg26", "Irons",  0x02, "But... I... I'm not going to make it... I'm sorry..."),
     ("1150", 27, "k_msg27", "Irons",  0x02, "Please... one last favor... Look after yourself and the others who survived."),
-    ("1150", 28, "k_msg28", "Irons",  0x02, "Be a hero... Leon..."),
+    # Runde 37 Nachtrag 10 (NUTZER-VORGABE 2026-10-12): statt "Be a hero... Leon..." (zu trashig)
+    ("1150", 28, "k_msg28", "Irons",  0x02, "Get them out of here... Leon..."),
     ("1150", 29, "k_msg29", "Leon",   0x01, "SIR, Sir?!"),
     ("11C0", 10, "k_msg10", "Ada",    0x02, "What was this noise? Did you hear that?"),
     ("11C0", 11, "k_msg11", "Marvin", 0x07, "Yes!...."),

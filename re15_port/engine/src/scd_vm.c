@@ -61,6 +61,10 @@
 #include "re15_elza_r36.h"   /* Runde 36 Spur L: Anker-Toene/Stimme Elza-Szenen (elza_r36.c) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Erweiterung ROOM11B0 sub06 (szenenleon_r36.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Parkplatz-Tuer 11B0 + Roy 1011 (schluessel_r36.c) */
+#include "re15_codepanel_r37.h" /* Runde 37 Spur E: Code-Panel-Kamera/Lampen (codepanel_r37.c) */
+#include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
+#include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
+#include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
 
 scd_vm_t g_scd;
 
@@ -184,6 +188,10 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_hebetisch_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0);
     /* Runde 36 Spur L: Anker der Elza-Szenen 1211/1021/1011 (Datei-Offset + 8-Byte-Signatur, re15_elza_r36.h). */
     re15_elza_r36_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 37 Spur E: sub19-Anker der Code-Panels 10D0/10D1/11E0/11E1/1230/1231 (re15_codepanel_r37.h). */
+    re15_codepanel_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 37 Spur C N1: Lift-Anker ROOM2030/2031 (sub02/sub04, re15_lift2030_r37.h). */
+    re15_lift2030_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -758,6 +766,10 @@ void scd_vm_tick(void)
             if (g_re15_map_hint_anchor_n) re15_map_hint_pc(t->pc);
             /* Runde 36 Spur L: Anker der Elza-Szenen (Wachposten = Ankerzahl, ausserhalb 1211/1021/1011 0). */
             if (g_re15_elza_anker_n) re15_elza_r36_pc(t->pc);
+            /* Runde 37 Spur E: Code-Panel-Kamera bleibt bis nach dem Aufschliess-Ton (re15_codepanel_r37.h). */
+            if (g_re15_codepanel_anker_n) { int cp = re15_codepanel_r37_pc(t); if (cp == 2) break; if (cp == 1) continue; }
+            /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (Wachposten = Ankerzahl, sonst 0). */
+            if (g_re15_lift2030_anker_n) re15_lift2030_r37_pc(t->pc);
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
@@ -2144,6 +2156,10 @@ static int op_ck(scd_thread_t *t)
     uint8_t  idx   = t->pc[2];
     uint8_t  value = t->pc[3];
     int      got   = re15_game_flag_get(zone, idx);
+    /* Runde 37 Spur Q: Besitz-Bit einer Benutzungs-Stelle gilt nur mit dem Gegenstand im INVENTAR (RE2 Keep_Item_ck
+     * @0x800584F0 -> FUN_800696CC, Box zaehlt nicht); Tabelle + Belege in kistenregel_r37.c / re15_kistenregel_r37.h. */
+    if (s_current_rdt && s_current_rdt->raw && t->pc >= s_current_rdt->raw && t->pc < s_current_rdt->raw + s_current_rdt->raw_size)
+        got = re15_kistenregel_r37_ck((uint16_t)g_current_room_id, (uint32_t)(t->pc - s_current_rdt->raw), zone, idx, got);
     if (flag_census_on())
         fprintf(stderr, "[flagcensus] room=%04X READ  Ck   zone=%d idx=%d exp=%d got=%d\n",
                 g_current_room_id, zone, idx, value, got);
@@ -3821,6 +3837,8 @@ static int op_sce_em_set(scd_thread_t *t)
         a->em_flag_id = persist;            /* +0x1C6 latch (0x80042170) — the death-commit's flag index */
         a->active = 1;
         a->type   = type;
+        { extern void re15_ems_sce_em_set_merken(uint8_t);   /* Runde 37 Spur N: Archiv JETZT (FUN_80022300 */
+          re15_ems_sce_em_set_merken(type); }                /* @0x80042328, bltz @0x80022334) je Typ merken */
         re15_enemy_apply_hitbox(a, type);   /* byte-true +0x78 hitbox dims (savestate-verified) */
         /* BYTE-TRUE (LAB_800420a0, ghidra1_V2.txt:152547/152580; RE'd 2026-06-29): the
          * Sce_em_set behavior byte pc[3] is the entity's grid_id (+0x9) — the AI sub-dispatch
@@ -3908,6 +3926,7 @@ static int op_sce_em_set(scd_thread_t *t)
          * die Birkin-Wurzel; Belege und Umfang in enemy_ai_common.c re15_enemy_spawn_root. */
         { extern void re15_enemy_spawn_root(int slot);
           re15_enemy_spawn_root(actor_slot); }
+        re15_r37_em_set(actor_slot, a, behavior);   /* Runde 37 Spur H: aktive RE1.5-Form merken (re15_zombieaktiv_r37.h) */
     }
     t->pc += 20;                   /* byte-true: `addiu v1,v1,20` @0x8004262c
                                     * (Handler 0x800420A0). RE2 hat hier 22 —

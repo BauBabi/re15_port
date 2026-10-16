@@ -101,6 +101,7 @@ static inline int RNDI(float f) {
 #include "re15_fenster1120.h"  /* Runde 35 Spur M: re15_fenster1120_install (Boot-/CONTINUE-Weg)  */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Schluessel 10F0/10F1, Tuer 11B0, Icon/Bild/Modell */
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte (Boot-/CONTINUE-Weg + Prop-Lader) */
+#include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher (Boot-/CONTINUE-Weg + Prop-Lader) */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -115,6 +116,7 @@ static inline int RNDI(float f) {
 extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
+#include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
@@ -133,6 +135,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_inventar_r36.h" /* Runde 36 Spur I: Memory Card beim Speichern verbrauchen */
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
+#include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -850,6 +853,9 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
  * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
 static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
 {
+    { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K/N: JEDER Typ aus CDEMD1.EMS, */
+      uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* wenn das Elza-Bit beim Sce_em_set stand    */
+      if (rb) return rb; }                                   /* (bltz @0x80022334, Datei 0x27), roy_pc.c   */
     uint8_t *buf = NULL; char rel[32]; int sz = 0;
     snprintf(rel, sizeof rel, "EMD/EM%02X.EMD", type);
     buf = pc_read_shared(rel, &sz);                    /* malloc'd if it exists */
@@ -1562,6 +1568,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_kartenitems_r36_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (r36_oid >= 0 && nprops <= r36_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[r36_oid]) == 0) ok[r36_oid] = 1;
         if (r36_oid >= 0 && nprops <= r36_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(r36_oid)); }
+    {   /* Runde 37 Spur I: Feuerloescher 1050/1090/1091 — eingebackenes MD1+TIM (gen/feuerloescher_r37.inc), Muster oben. */
+        const int fl_oid = re15_feuerloescher_r37_obj_id((uint16_t)g_current_room_id);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_feuerloescher_r37_md1_bytes((uint16_t)g_current_room_id, &msz);
+        const uint8_t *tb = re15_feuerloescher_r37_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
+        if (fl_oid >= 0 && nprops <= fl_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[fl_oid]) == 0) ok[fl_oid] = 1;
+        if (fl_oid >= 0 && nprops <= fl_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(fl_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -3964,6 +3976,7 @@ re_title:;
     }
     re15_pc_glas1120_init();   /* Runde 35 Spur M: RE2-Raum-ESP room1090 + Glas-Texturen + Knall-Haken */
     { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
+    { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -4911,6 +4924,8 @@ re_title:;
     { extern void re15_tuer1060_install(uint16_t); extern void re15_irons_tod_install(uint16_t);
       re15_tuer1060_install((uint16_t)g_current_room_id);
       re15_irons_tod_install((uint16_t)g_current_room_id); }
+    { extern void re15_sperre1050_r37_install(uint16_t);   /* Runde 37 Spur F: derselbe Grund (Boot-/CONTINUE-Weg), Tuer 1050 -> 10A0 */
+      re15_sperre1050_r37_install((uint16_t)g_current_room_id); }
     { extern void re15_szl_install(uint16_t);   /* Runde 36 Spur J: Boot-/CONTINUE-Weg wie oben (ROOM11B0 Werkstatt-Tuer) */
       re15_szl_install((uint16_t)g_current_room_id); }
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — derselbe Grund wie Sicherung, Schreibtisch und
@@ -4921,6 +4936,7 @@ re_title:;
     /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — VOR den Dokumenten, damit das Dokument-Prop
      * wie bisher als LETZTES angehaengt wird (Riegel unit_r34n_e_dokumente "hinten angehaengt"). */
     re15_inhalt_r35_install((uint16_t)g_current_room_id);
+    re15_feuerloescher_r37_install((uint16_t)g_current_room_id); /* Runde 37 Spur I: Feuerloescher, derselbe Grund; VOR den Dokumenten wie r35 */
     re15_dokumente_install((uint16_t)g_current_room_id);
     if (re15_dokumente_obj_id((uint16_t)g_current_room_id) >= 0)
         for (int k = 0; k < (int)g_scd.prop_count; k++)
@@ -5557,6 +5573,8 @@ re_title:;
               } }
             /* Spur C Runde 34 Nacht: die zwei gruenen Generator-Lampen (panel_lampen_pc.c). */
             { extern void re15_panel_lampen_pc_zeichnen(void); re15_panel_lampen_pc_zeichnen(); }
+            /* Runde 37 Spur E: Lampe der Ziffern-Code-Panels 10D0/11E0/1230 (codepanel_r37_pc.c). */
+            { extern void re15_codepanel_r37_pc_zeichnen(int); re15_codepanel_r37_pc_zeichnen(s_last_cut_idx); }
             re15_fenster1120_pc_zeichnen(s_last_cut_idx);   /* Runde 35 Spur M: beschaedigtes Fenster */
         } else {
             /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
@@ -7582,7 +7600,7 @@ re_title:;
                                          g_actors[_pi].type != 0x26u
                                              || g_actors[_pi].re2s_baby_spawned);
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)   /* Runde 35 Spur I (N1-M2): Elliot beim */
-                    if (g_actors[_pi].active && g_actors[_pi].type == 0x47u) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328 */
+                    if (g_actors[_pi].active && re15_typ47_ist_elliot(g_actors[_pi].type)) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328; Runde 37 Spur K: nur Leons 0x47 */
                 /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
                  * (FUN_80105D38, Aufrufstellen @0x8010322C/@0x801033D8/@0x801034DC/@0x80104478/
                  * @0x801045A4/@0x801046B8/@0x801047D8/@0x80104830). Die Roster-Schleife darueber
@@ -8720,6 +8738,7 @@ re_title:;
             if (skel_ok) {                        /* NACHBESSERUNG M-HE-1: auch gecullt (s.o.) */
                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
                 pose_ok = (re15_skel_compute_pose(p_skel, kf_idx, poses) == 0);
+                if (pose_ok && re15_player_victim_state() != 0) re15_bissarm_r37_opfer_merken(player_ref, p_skel, kf_idx);   /* Runde 37 Spur J: Opfer-Schultern fuer den Handkontakt (Elza) */
                 /* RE15_POSE_DUMP: LEON render-level pose (grab-start / release investigations) */
                 {
                     static FILE *s_lp = NULL; static int s_lp_tried = 0;
@@ -9580,7 +9599,7 @@ re_title:;
                      * weiter "RE2 EM026 loaded: ... 3 clips" im Log). */
                     pc_enemy_load_ex(npc->type,
                                      npc->type != 0x26u || npc->re2s_baby_spawned);
-                if (npc->type == 0x47u) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o. */
+                if (re15_typ47_ist_elliot(npc->type)) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o.; Runde 37 Spur K: Elzas 0x47 = Roy laeuft den allgemeinen Weg */
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
                  * the prop path (PSX FUN_8002c18c → FUN_80014368). Replaces the
@@ -10024,6 +10043,7 @@ re_title:;
                 /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
+                (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
                 {

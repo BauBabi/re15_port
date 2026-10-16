@@ -333,6 +333,8 @@ static int op_len(uint8_t op)
     /* Nachbesserung 1 (Aufstellung ROOM1030 sub00 @0x020C6..): Laengen = s_opcode_sizes (scd_vm.c) */
     case 0x06: return 4; case 0x08: return 2; case 0x13: return 4; case 0x14: return 6; case 0x16: return 2;
     case 0x1a: return 2; case 0x26: return 6; case 0x32: return 8; case 0x3e: return 6; case 0x53: return 3;
+    /* Runde 37 Spur O: Dir_set im Programm 8 (11C0-Aufstellung), LAB_80041080 `addiu v1,v1,8` @0x800410a4 = s_opcode_sizes */
+    case 0x33: return 8;
     default: return 0;
     }
 }

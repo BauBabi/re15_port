@@ -1,0 +1,2 @@
+F360 room=2030 MEMBER 0x12 Spieler: Kollisionsband 3 -> 6 (@0x80041228) y=-10800
+F935 room=2030 MEMBER 0x12 Spieler: Kollisionsband 6 -> 3 (@0x80041228) y=-5400

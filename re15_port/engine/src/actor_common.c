@@ -16,6 +16,7 @@
 #include "re15_ai_flavor.h"   /* re15_re2z_rng_reset (OPTIONS -> AI -> RE2) */
 #include "re15_engine.h"
 #include "re15_damage.h"   /* re15_player_apply_hitbox — wire the player's +0x78 hitbox */
+#include "re15_itemband_r37.h" /* Runde 37 Spur D: Member 0x12 am Spieler = Kollisionsband */
 
 re15_actor_t g_actors[RE15_ACTOR_MAX];
 uint8_t      g_actor_count = 0;
@@ -156,7 +157,9 @@ void re15_actor_set_member(int slot, uint8_t member_id, int32_t value)
     case 15: a->member_0b    = (uint8_t)value; break;  /* +0x0b sb */
     case 16: a->anim_flags   = (uint16_t)value; break; /* +0x1c4 sh */
     case 17: a->status_flags = (uint16_t)value; break; /* +0x98 sh */
-    case 18: a->floor        = (uint8_t)value; break;  /* +0x82 sb */
+    case 18: a->floor        = (uint8_t)value;         /* +0x82 sb */
+             re15_itemband_r37_member_band(slot, value); /* Runde 37 Spur D: Spieler+0x82 = Kollisionsband @0x80041228 */
+             break;
     case 19: a->dog_floor_y  = (int16_t)value; break;  /* +0x1ba sh = Boden-Y @0x80042210, HP liegt bei +0x9a @0x80013000 (Runde 35 Spur J) */
     default: /* id>=20 → no-op */               break;
     }

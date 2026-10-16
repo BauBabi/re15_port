@@ -1,0 +1,127 @@
+F6 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=frei Blick->P=- | M r=1631 mo=2 Koerper->P=+0 Kopf=frei Blick->P=-
+F10 msg=- | A r=3679 mo=1 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=1 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F14 msg=- | A r=3679 mo=1 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=1 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F18 msg=- | A r=3679 mo=1 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=1 Koerper->P=+0 Kopf=Tuer Blick->P=+10 K
+F22 msg=- | A r=3679 mo=1 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=1 Koerper->P=+0 Kopf=Tuer Blick->P=+44 K
+F26 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-27 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F30 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F34 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F38 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F42 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F46 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F50 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F54 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F58 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=-58 K | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F62 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=-32 | M r=1631 mo=2 Koerper->P=+0 Kopf=Tuer Blick->P=+69 K
+F66 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+43
+F70 msg=- | A r=3679 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+8
+F74 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F78 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F82 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F86 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F90 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F94 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F98 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F102 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F106 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F110 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F114 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F118 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F122 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F126 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F130 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F134 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F138 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F142 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F146 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F150 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F154 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F158 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F162 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F166 msg=10 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F170 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=frei Blick->P=+6
+F174 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=frei Blick->P=+6
+F178 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Nicken Blick->P=+6
+F182 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=frei Blick->P=+6
+F186 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=frei Blick->P=+6
+F190 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=frei Blick->P=+6
+F194 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=frei Blick->P=+6
+F198 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F202 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F206 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F210 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F214 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F218 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F222 msg=11 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F226 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F230 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F234 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F238 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F242 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F246 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F250 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F254 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F258 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F262 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F266 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F270 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F274 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F278 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F282 msg=12 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=2 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F286 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F290 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F294 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F298 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F302 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F306 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F310 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F314 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F318 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F322 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F326 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F330 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F334 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F338 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F342 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F346 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F350 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F354 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F358 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F362 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F366 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F370 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F374 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F378 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F382 msg=13 | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1631 mo=15 Koerper->P=+0 Kopf=Partner Blick->P=+0
+F386 msg=- | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=1727 mo=5 Koerper->P=-8 Kopf=frei Blick->P=+8
+F390 msg=- | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=2111 mo=5 Koerper->P=-42 Kopf=frei Blick->P=+37
+F394 msg=- | A r=3679 mo=19 Koerper->P=+0 Kopf=Partner Blick->P=+0 | M r=2495 mo=0 Koerper->P=-76 Kopf=frei Blick->P=+74
+F398 msg=- | A r=3583 mo=5 Koerper->P=-31 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+21 K | M r=2687 mo=0 Koerper->P=-133 Kopf=frei Blick->P=+148
+F402 msg=- | A r=3199 mo=5 Koerper->P=-14 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-2 | M r=2749 mo=0 Koerper->P=-155 Kopf=frei Blick->P=+173
+F406 msg=14 | A r=3009 mo=15 Koerper->P=-5 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-2 | M r=2749 mo=0 Koerper->P=-162 Kopf=frei Blick->P=+160
+F410 msg=14 | A r=3009 mo=15 Koerper->P=-9 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-2 | M r=2749 mo=0 Koerper->P=-166 Kopf=frei Blick->P=+155
+F414 msg=14 | A r=3009 mo=15 Koerper->P=-12 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-1 | M r=2749 mo=0 Koerper->P=-169 Kopf=frei Blick->P=+158
+F418 msg=14 | A r=3009 mo=15 Koerper->P=-14 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2749 mo=0 Koerper->P=-171 Kopf=frei Blick->P=+177
+F422 msg=14 | A r=3009 mo=15 Koerper->P=-15 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2749 mo=0 Koerper->P=-172 Kopf=frei Blick->P=-172
+F426 msg=14 | A r=3009 mo=15 Koerper->P=-16 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2749 mo=0 Koerper->P=-173 Kopf=frei Blick->P=-179
+F430 msg=14 | A r=3009 mo=15 Koerper->P=-19 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-1 | M r=2753 mo=0 Koerper->P=-176 Kopf=frei Blick->P=+166
+F434 msg=14 | A r=3009 mo=15 Koerper->P=-21 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2759 mo=0 Koerper->P=-179 Kopf=frei Blick->P=+163
+F438 msg=14 | A r=3009 mo=15 Koerper->P=-23 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2765 mo=0 Koerper->P=+179 Kopf=frei Blick->P=-179
+F442 msg=14 | A r=3009 mo=15 Koerper->P=-24 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2771 mo=0 Koerper->P=+177 Kopf=frei Blick->P=-166
+F446 msg=14 | A r=3009 mo=15 Koerper->P=-25 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2779 mo=0 Koerper->P=+175 Kopf=frei Blick->P=-158
+F450 msg=14 | A r=3009 mo=15 Koerper->P=-27 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2787 mo=0 Koerper->P=+173 Kopf=frei Blick->P=-177
+F454 msg=14 | A r=3009 mo=15 Koerper->P=-28 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2795 mo=0 Koerper->P=+171 Kopf=frei Blick->P=+176
+F458 msg=14 | A r=3009 mo=15 Koerper->P=-28 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+170 Kopf=frei Blick->P=+179
+F462 msg=14 | A r=3009 mo=15 Koerper->P=-28 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+171 Kopf=frei Blick->P=-164
+F466 msg=14 | A r=3009 mo=15 Koerper->P=-27 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+171 Kopf=frei Blick->P=-155
+F470 msg=14 | A r=3009 mo=15 Koerper->P=-26 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2803 mo=0 Koerper->P=+172 Kopf=frei Blick->P=-164
+F474 msg=14 | A r=3009 mo=15 Koerper->P=-26 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2803 mo=0 Koerper->P=+172 Kopf=frei Blick->P=+178
+F478 msg=14 | A r=3009 mo=15 Koerper->P=-25 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2803 mo=0 Koerper->P=+173 Kopf=frei Blick->P=+171
+F482 msg=14 | A r=3009 mo=15 Koerper->P=-24 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2795 mo=0 Koerper->P=+175 Kopf=frei Blick->P=-175
+F486 msg=14 | A r=3009 mo=15 Koerper->P=-23 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2781 mo=0 Koerper->P=+177 Kopf=frei Blick->P=-166
+F490 msg=14 | A r=3009 mo=15 Koerper->P=-22 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2771 mo=0 Koerper->P=+179 Kopf=frei Blick->P=-162
+F494 msg=14 | A r=3009 mo=15 Koerper->P=-21 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2759 mo=0 Koerper->P=-179 Kopf=frei Blick->P=+175
+F498 msg=14 | A r=3009 mo=15 Koerper->P=-20 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2745 mo=0 Koerper->P=-177 Kopf=frei Blick->P=+164
+F502 msg=14 | A r=3009 mo=15 Koerper->P=-19 Kopf=Partner (folgt, Nachtrag 12) Blick->P=-0 | M r=2731 mo=0 Koerper->P=-175 Kopf=frei Blick->P=+163
+F506 msg=- | A r=3009 mo=15 Koerper->P=-18 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2715 mo=0 Koerper->P=-172 Kopf=frei Blick->P=+179
+F510 msg=- | A r=3009 mo=15 Koerper->P=-17 Kopf=Partner (folgt, Nachtrag 12) Blick->P=+0 | M r=2701 mo=0 Koerper->P=-170 Kopf=frei Blick->P=-173

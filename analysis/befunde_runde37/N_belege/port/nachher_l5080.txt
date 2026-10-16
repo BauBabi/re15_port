@@ -1,0 +1,5 @@
+[goto] queued room change -> ROOM5080 at F30
+[room] PC loaded room5080.rdt (101096 bytes)
+[elzaems] Typ 0x30 aus EMD/CDEMD1.EMS Sektor 2015 (228460 B) crc 1145F206 — Elza-Archiv (@0x800223ac)
+[enemy] EM30 loaded: 17 meshes, 16 bones, 21 clips -> slot 11
+[enemy-diag] actor1 type=0x30 model=enemy-bank slot=11 motion=0 anim_frame=16 clips=21

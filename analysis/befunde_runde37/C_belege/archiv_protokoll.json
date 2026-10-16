@@ -1,0 +1,140 @@
+{
+ "archive": [
+  {
+   "kennung": "P27F",
+   "basis": "DOOR27",
+   "basis_nr": 39,
+   "ton": 23176,
+   "modell": 38836,
+   "sektor": 12,
+   "datei": 63412,
+   "fnv": 1443369837,
+   "sha1": "9aca6318d000144c44b83f32eb1a11413c032b0b",
+   "basis_sha1": "b6f2d7bfe816fbe7db3d1c7b930ed6ec093535d9",
+   "md1_eigen": 2,
+   "textur": {
+    "feld": "feld_flur.png",
+    "gemalt_median": [
+     25.0,
+     28.0,
+     26.0
+    ],
+    "gemalt_mittel": [
+     23.8,
+     26.9,
+     24.6
+    ],
+    "texel_mittel": [
+     41.6,
+     47.0,
+     43.0
+    ],
+    "gezeigt_soll": [
+     23.7,
+     26.8,
+     24.5
+    ],
+    "c_blatt": 73,
+    "korn": 0.5,
+    "fuge": 0.75,
+    "kante": 0.6,
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 48,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 0,
+    "palette_belegt": 49
+   },
+   "textur_text": "Flurseite: gemalte Fluegel ROOM10C00 + ROOM11200 (je zwei, entzerrt, gemittelt)",
+   "md1": {
+    "fluegel_b": 1860,
+    "fluegel_h": 6600,
+    "dicke": 200,
+    "dreiecke": [
+     74,
+     74,
+     8
+    ],
+    "ecken": [
+     49,
+     49,
+     8
+    ],
+    "mesh2": "DOOR27 Mesh 2 bytegleich (unbenutzt)"
+   }
+  },
+  {
+   "kennung": "P27C",
+   "basis": "DOOR27",
+   "basis_nr": 39,
+   "ton": 23176,
+   "modell": 38836,
+   "sektor": 12,
+   "datei": 63412,
+   "fnv": 3102136672,
+   "sha1": "6cfea1c359ff19c152a709735590def672f6c53b",
+   "basis_sha1": "b6f2d7bfe816fbe7db3d1c7b930ed6ec093535d9",
+   "md1_eigen": 2,
+   "textur": {
+    "feld": "feld_kabine.png",
+    "gemalt_median": [
+     48.0,
+     49.0,
+     49.0
+    ],
+    "gemalt_mittel": [
+     51.5,
+     52.3,
+     52.2
+    ],
+    "texel_mittel": [
+     90.1,
+     91.5,
+     91.3
+    ],
+    "gezeigt_soll": [
+     51.4,
+     52.2,
+     52.1
+    ],
+    "c_blatt": 73,
+    "korn": 0.5,
+    "fuge": 0.75,
+    "kante": 0.6,
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 100,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 0,
+    "palette_belegt": 101
+   },
+   "textur_text": "Kabinenseite: gemalte Fluegel ROOM10800 Cut 0 (zwei, entzerrt, gemittelt)",
+   "md1": {
+    "fluegel_b": 1860,
+    "fluegel_h": 6600,
+    "dicke": 200,
+    "dreiecke": [
+     74,
+     74,
+     8
+    ],
+    "ecken": [
+     49,
+     49,
+     8
+    ],
+    "mesh2": "DOOR27 Mesh 2 bytegleich (unbenutzt)"
+   }
+  }
+ ],
+ "eigen_index": {
+  "P27F": 31,
+  "P27C": 32
+ }
+}

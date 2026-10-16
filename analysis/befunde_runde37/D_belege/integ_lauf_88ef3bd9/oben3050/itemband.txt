@@ -1,0 +1,3 @@
+F806 room=3050 ITEM slot 6 floor 1 item 0x07 tk 92 spieler-band 4 spieler=(-24026,-7200,-22770) -> GESPERRT (@0x80042ccc bne Band)
+F869 room=3050 ITEM slot 6 floor 1 item 0x07 tk 92 spieler-band 4 spieler=(-24026,-7200,-22770) -> GESPERRT (@0x80042ccc bne Band)
+F932 room=3050 ITEM slot 6 floor 1 item 0x07 tk 92 spieler-band 4 spieler=(-24026,-7200,-22770) -> GESPERRT (@0x80042ccc bne Band)

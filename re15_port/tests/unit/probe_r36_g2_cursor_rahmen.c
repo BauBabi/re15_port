@@ -41,6 +41,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"
 #include "re15_panel_zeiger.h"
+#include "re15_kistenregel_r37.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -114,6 +115,15 @@ static int room_boot(const char *stage, unsigned rid, const flag_t *fl)
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
     for (int i = 0; fl && i < 2 && fl[i].bank; i++)               /* nach scd_vm_init (leert die Baenke) */
         re15_game_flag_set((uint8_t)fl[i].bank, (uint8_t)fl[i].bit, (uint8_t)fl[i].val);
+    /* Runde 37 Spur Q: ein Besitz-Bit der Kistenregel zaehlt nur mit dem Gegenstand im INVENTAR (kistenregel_r37.c,
+     * RE2 Keep_Item_ck @0x8005850c). Im Original heisst "Bit gesetzt, noch nicht benutzt" = er liegt im Inventar (die
+     * Item-Box ist eine Port-Zutat) -> denselben Gegenstand aus der Q-Tabelle dazulegen, sonst laeuft der Zweig ohne.
+     * Betrifft ROOM1100 (3,0x67) Minidisc 0x44, ROOM11E0 (3,0x7F) Zange 0x30, ROOM3050 (3,0xB2) Master-Karte 0x46. */
+    for (int i = 0; fl && i < 2 && fl[i].bank; i++)
+        for (int k = 0; fl[i].val && k < re15_kistenregel_r37_anzahl(); k++) {
+            const re15_kr37_fall_t *q = re15_kistenregel_r37_zeile(k);
+            if ((unsigned)q->raum == rid && q->bank == fl[i].bank && q->bit == fl[i].bit) { re15_inv_grant(q->item, 1); break; }
+        }
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
     re15_panel_zeiger_reset();
     for (int f = 0; f < 30; f++) frame_fahrt(-1, 0, 0);

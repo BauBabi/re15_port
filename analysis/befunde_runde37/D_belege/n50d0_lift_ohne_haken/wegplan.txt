@@ -1,0 +1,89 @@
+RE15_WEGPLAN C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/r37d/n50d0_lift_ohne_haken/wegplan_eingabe.txt: 24 Befehle
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj6=(0,0,0) b0 | OBJ 2
+F0 room=1170 spieler=(0,0) rot=0 mo=0 pm=0 obj2=(0,0,0) b0 |   -> Befehl 0 beendet: gesetzt
+F1 room=50D0 spieler=(-23437,-4400) rot=1024 mo=210 pm=0 obj2=(-20500,-5400,-16000) b4 | RAUM 50D0 geladen, Spieler frei (obj 2 = Slot 2)
+F30 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 1 beendet: Raum bereit
+F31 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | GEGNERWEG
+F31 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 2 beendet: 0 Gegner weg
+F32 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | WARTE 30
+F61 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 3 beendet: gewartet
+F62 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | FLAG (3,83)
+F62 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   FLAG (3,83) = 0
+F62 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 4 beendet: gelesen
+F63 room=50D0 spieler=(-23437,-4400) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-23437,-11000) tol 150
+F162 room=50D0 spieler=(-23437,-10850) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 5 beendet: angekommen
+F163 room=50D0 spieler=(-23437,-10850) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F164 room=50D0 spieler=(-23437,-10850) rot=928 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F165 room=50D0 spieler=(-23437,-10850) rot=832 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F166 room=50D0 spieler=(-23437,-10850) rot=736 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F167 room=50D0 spieler=(-23437,-10850) rot=640 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F168 room=50D0 spieler=(-23437,-10850) rot=544 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F169 room=50D0 spieler=(-23437,-10850) rot=448 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F170 room=50D0 spieler=(-23437,-10850) rot=352 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F171 room=50D0 spieler=(-23437,-10850) rot=256 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F172 room=50D0 spieler=(-23437,-10850) rot=160 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F173 room=50D0 spieler=(-23437,-10850) rot=64 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-11000) tol 150
+F254 room=50D0 spieler=(-19003,-11010) rot=-128 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 6 beendet: angekommen
+F255 room=50D0 spieler=(-19003,-11010) rot=-128 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F256 room=50D0 spieler=(-19003,-11010) rot=-32 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F257 room=50D0 spieler=(-19003,-11010) rot=64 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F258 room=50D0 spieler=(-19003,-11010) rot=160 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F259 room=50D0 spieler=(-19003,-11010) rot=256 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F260 room=50D0 spieler=(-19003,-11010) rot=352 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F261 room=50D0 spieler=(-19003,-11010) rot=448 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F262 room=50D0 spieler=(-19003,-11010) rot=544 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F263 room=50D0 spieler=(-19003,-11010) rot=640 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F264 room=50D0 spieler=(-19003,-11010) rot=736 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F265 room=50D0 spieler=(-19003,-11010) rot=832 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F266 room=50D0 spieler=(-19003,-11010) rot=928 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F267 room=50D0 spieler=(-19003,-11010) rot=1024 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-19000,-14900) tol 150
+F330 room=50D0 spieler=(-19003,-14760) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 7 beendet: angekommen
+F331 room=50D0 spieler=(-19003,-14760) rot=1024 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F332 room=50D0 spieler=(-19003,-14760) rot=928 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F333 room=50D0 spieler=(-19003,-14760) rot=832 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F334 room=50D0 spieler=(-19003,-14760) rot=736 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F335 room=50D0 spieler=(-19003,-14760) rot=640 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F336 room=50D0 spieler=(-19003,-14760) rot=544 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F337 room=50D0 spieler=(-19003,-14760) rot=448 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F338 room=50D0 spieler=(-19003,-14760) rot=352 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F339 room=50D0 spieler=(-19003,-14760) rot=256 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F340 room=50D0 spieler=(-19003,-14760) rot=160 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F341 room=50D0 spieler=(-19003,-14760) rot=64 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | GEHE (-17600,-14900) tol 100
+F379 room=50D0 spieler=(-17671,-14886) rot=64 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 8 beendet: angekommen
+F380 room=50D0 spieler=(-17671,-14886) rot=64 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F381 room=50D0 spieler=(-17671,-14886) rot=-32 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F382 room=50D0 spieler=(-17671,-14886) rot=-128 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F383 room=50D0 spieler=(-17671,-14886) rot=-224 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F384 room=50D0 spieler=(-17671,-14886) rot=-320 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F385 room=50D0 spieler=(-17671,-14886) rot=-416 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F386 room=50D0 spieler=(-17671,-14886) rot=-512 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F387 room=50D0 spieler=(-17671,-14886) rot=-608 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F388 room=50D0 spieler=(-17671,-14886) rot=-704 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F389 room=50D0 spieler=(-17671,-14886) rot=-800 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F390 room=50D0 spieler=(-17671,-14886) rot=-896 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F391 room=50D0 spieler=(-17671,-14886) rot=-992 mo=105 pm=0 obj2=(-20500,-5400,-16000) b4 | BLICK 3072
+F392 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 9 beendet: Blick steht
+F393 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | WARTE 20
+F412 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 10 beendet: gewartet
+F413 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | AKTION
+F415 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 11 beendet: gedrueckt
+F416 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | WARTE 60
+F475 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 12 beendet: gewartet
+F476 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | AKTION
+F478 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 |   -> Befehl 13 beendet: gedrueckt
+F479 room=50D0 spieler=(-17671,-14886) rot=-992 mo=200 pm=0 obj2=(-20500,-5400,-16000) b4 | WARTE 400
+F986 room=50D0 spieler=(-17671,-14886) rot=-992 mo=212 pm=0 obj2=(-20500,0,-16000) b4 |   -> Befehl 14 beendet: gewartet
+F987 room=50D0 spieler=(-17671,-14886) rot=-992 mo=212 pm=0 obj2=(-20500,0,-16000) b4 | FLAG (3,83)
+F987 room=50D0 spieler=(-17671,-14886) rot=-992 mo=212 pm=0 obj2=(-20500,0,-16000) b4 |   FLAG (3,83) = 1
+F987 room=50D0 spieler=(-17671,-14886) rot=-992 mo=212 pm=0 obj2=(-20500,0,-16000) b4 |   -> Befehl 15 beendet: gelesen
+F988 room=50D0 spieler=(-17671,-14886) rot=-992 mo=212 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F989 room=50D0 spieler=(-17671,-14886) rot=-896 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F990 room=50D0 spieler=(-17671,-14886) rot=-800 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F991 room=50D0 spieler=(-17671,-14886) rot=-704 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F992 room=50D0 spieler=(-17671,-14886) rot=-608 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F993 room=50D0 spieler=(-17671,-14886) rot=-512 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F994 room=50D0 spieler=(-17671,-14886) rot=-416 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F995 room=50D0 spieler=(-17671,-14886) rot=-320 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F996 room=50D0 spieler=(-17671,-14886) rot=-224 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F997 room=50D0 spieler=(-17671,-14886) rot=-128 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150
+F998 room=50D0 spieler=(-17671,-14886) rot=-32 mo=105 pm=0 obj2=(-20500,0,-16000) b4 | GEHE (-9000,-14900) tol 150

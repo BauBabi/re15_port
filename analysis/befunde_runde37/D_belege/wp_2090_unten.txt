@@ -1,0 +1,16 @@
+# Runde 37 Spur D: ROOM2090 Gegenprobe: Band 0 (Wasser) an der Ankunftsstelle der Plattform, Blick West.
+OBJ 0
+RAUM 2090
+GEGNERWEG
+WARTE 30
+FLAG 9 90
+BLICK 2048
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 100
+FLAG 9 90
+ENDE

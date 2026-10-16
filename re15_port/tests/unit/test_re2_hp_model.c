@@ -85,7 +85,11 @@ static const uint8_t GUN_STRIP[22] = { 1,0,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,1,1
  * Runde 35 Spur B, Nachbesserung 2 (Abnahme 1 N2, Dossier B_werfer.md §9): die Python gehoert auch zur
  * Kritklasse des Redhawk (+0x93 |= 0x40 @0x800123b4-b8, HP -1 am Bit @0x800124fc-1c) — vorher hier als
  * "w7-eigen" gepinnt; das war die gemessene Luecke (Python hp -650 gegen Redhawk -1 am selben Zombie). */
-#define R35_W(w) ((w) == 20 ? 7 : (w))
+/* Runde 37 Spur G (Nutzer: jeder Schuss des Feuerstosses trifft): ein Resolve der Feuerstoss-Waffen 5/6 ist EINE
+ * Kugel und schadet wie die Einzelschuss-Pistole (Spalte 3, re15_player_weapon_fire `if (weapon_id == 5 ||
+ * weapon_id == 6) dmg = dmg_row[3]`, Belege include/re15_beretta_r37.h) — die RE1.5-Spalte 5/6 ist der Schaden
+ * des ganzen Stosses (3 Kugeln); in den RE2-Zeilen ist Spalte 5 == Spalte 3. */
+#define R35_W(w) ((w) == 20 ? 7 : ((w) == 5 || (w) == 6) ? 3 : (w))
 #define R35_KRIT(w) ((w) == 7 || (w) == 20)
 
 /* Die vier RE2-INIT-HP-Tabellen des ausgelieferten Zweigs (selbst gedumpt, s. Kopf). */

@@ -1,0 +1,940 @@
+RDTs mit Kopf: 206, Stummel: 34; Item-Namen: 102 (DEBUG.BIN)
+
+=== 1. Gegenstaende mit Platzierung (Item_aot_set 0x50) ===
+0x04 SIG P228                   ROOM1051/main00@0x00C22 slot12 tk(9,165) x15
+0x05 Beretta M93R               ROOM11D0/sub00@0x016C8 slot10 tk(9,155) x15; ROOM11D1/sub00@0x016C8 slot10 tk(9,155) x15
+0x07 Super Redhawk              ROOM3050/main00@0x01EC6 slot6 tk(9,92) x6; ROOM3051/main00@0x01EC6 slot6 tk(9,92) x6
+0x08 Remington M870             ROOM10F0/main00@0x0103E slot13 tk(9,164) x7; ROOM10F1/main00@0x0103E slot13 tk(9,164) x7
+0x0C Ingram M10                 ROOM1190/sub14@0x02BFC slot14 tk(9,153) x100; ROOM1191/sub14@0x02BFC slot14 tk(9,153) x100
+0x0D SPAS-12                    ROOM2030/main00@0x01BD6 slot11 tk(9,109) x12; ROOM2031/main00@0x01BD6 slot11 tk(9,109) x12
+0x13 H?K MC51                   ROOM1110/main00@0x00B5A slot10 tk(9,98) x100; ROOM1111/main00@0x00B5A slot10 tk(9,98) x100
+0x15 H. Gun Bullets             ROOM1001/sub00@0x00C24 slot3 tk(9,134) x30; ROOM1010/sub00@0x009AC slot3 tk(9,141) x15; ROOM1011/main00@0x0096A slot3 tk(9,141) x15; ROOM1020/main00@0x01D6A slot3 tk(9,2) x15; ROOM1020/main00@0x01D80 slot4 tk(9,227) x15; ROOM1021/main00@0x01D6A slot3 tk(9,2) x15; ROOM1021/main00@0x01D80 slot4 tk(9,227) x15; ROOM1050/main00@0x00B9A slot6 tk(9,228) x30; ROOM1051/main00@0x00B9A slot6 tk(9,228) x30; ROOM1070/main00@0x0156E slot13 tk(9,144) x15; ROOM1071/main00@0x0156E slot13 tk(9,144) x15; ROOM10E0/main00@0x00C7A slot3 tk(9,223) x15; ROOM10E0/main00@0x00D08 slot11 tk(9,169) x30; ROOM10E1/main00@0x00C7A slot3 tk(9,223) x15; ROOM10E1/main00@0x00D08 slot11 tk(9,169) x30; ROOM10F0/main00@0x01012 slot11 tk(9,162) x30; ROOM10F0/main00@0x01028 slot12 tk(9,163) x30; ROOM10F1/main00@0x01012 slot11 tk(9,162) x30; ROOM10F1/main00@0x01028 slot12 tk(9,163) x30; ROOM1110/main00@0x00B18 slot7 tk(9,231) x30; ROOM1111/main00@0x00B18 slot7 tk(9,231) x30; ROOM1140/sub00@0x00B94 slot7 tk(9,168) x30; ROOM1190/sub14@0x02B62 slot7 tk(9,146) x15; ROOM1190/sub14@0x02B78 slot8 tk(9,147) x15; ROOM1190/sub14@0x02B8E slot9 tk(9,148) x15; ROOM1190/sub14@0x02BA4 slot10 tk(9,149) x15; ROOM1191/sub14@0x02B62 slot7 tk(9,146) x15; ROOM1191/sub14@0x02B78 slot8 tk(9,147) x15; ROOM1191/sub14@0x02B8E slot9 tk(9,148) x15; ROOM1191/sub14@0x02BA4 slot10 tk(9,149) x15; ROOM11D0/main00@0x0160E slot7 tk(9,252) x30; ROOM11D1/main00@0x0160E slot7 tk(9,252) x30; ROOM11F0/main00@0x00CFA slot14 tk(9,99) x30; ROOM11F1/main00@0x00CFA slot14 tk(9,99) x30; ROOM1210/main00@0x01E70 slot7 tk(9,181) x15; ROOM1210/main00@0x01E86 slot8 tk(9,182) x15; ROOM1211/main00@0x01DA8 slot9 tk(9,181) x15; ROOM1211/main00@0x01DBE slot10 tk(9,182) x15
+0x16 Shotgun Shells             ROOM1010/sub00@0x009C2 slot4 tk(9,142) x7; ROOM1011/main00@0x00980 slot4 tk(9,142) x7; ROOM1110/main00@0x00B02 slot6 tk(9,230) x14; ROOM1111/main00@0x00B02 slot6 tk(9,230) x14; ROOM1190/sub14@0x02BBA slot11 tk(9,150) x7; ROOM1190/sub14@0x02BD0 slot12 tk(9,151) x7; ROOM1190/sub14@0x02BE6 slot13 tk(9,152) x7; ROOM1191/sub14@0x02BBA slot11 tk(9,150) x7; ROOM1191/sub14@0x02BD0 slot12 tk(9,151) x7; ROOM1191/sub14@0x02BE6 slot13 tk(9,152) x7; ROOM11B0/main00@0x01056 slot6 tk(9,226) x7; ROOM11B1/main00@0x0101A slot6 tk(9,226) x7; ROOM11D0/main00@0x01624 slot8 tk(9,253) x7; ROOM11D1/main00@0x01624 slot8 tk(9,253) x7; ROOM1200/sub00@0x00908 slot1 tk(9,105) x14; ROOM1201/sub00@0x00908 slot1 tk(9,105) x14; ROOM2010/main00@0x00766 slot1 tk(9,216) x7; ROOM2010/main00@0x0077C slot2 tk(9,217) x7; ROOM2011/main00@0x00766 slot1 tk(9,216) x7; ROOM2011/main00@0x0077C slot2 tk(9,217) x7; ROOM2030/main00@0x01BC0 slot10 tk(9,108) x14; ROOM2031/main00@0x01BC0 slot10 tk(9,108) x14; ROOM3010/main00@0x02094 slot5 tk(9,20) x7; ROOM3011/main00@0x02094 slot5 tk(9,20) x7; ROOM4010/main00@0x005BE slot11 tk(9,12) x7; ROOM4011/main00@0x00580 slot8 tk(9,12) x7; ROOM5010/main00@0x00434 slot7 tk(9,19) x7; ROOM5011/main00@0x00448 slot9 tk(9,19) x7
+0x17 Magnum Bullets             ROOM30E0/main00@0x00B10 slot9 tk(9,195) x6; ROOM30E1/main00@0x00A8C slot5 tk(9,195) x6; ROOM40B0/main00@0x00724 slot5 tk(9,188) x6; ROOM40B0/main00@0x0073A slot6 tk(9,189) x6; ROOM40B1/main00@0x00724 slot5 tk(9,188) x6; ROOM40B1/main00@0x0073A slot6 tk(9,189) x6; ROOM5020/sub00@0x012C0 slot3 tk(9,135) x12; ROOM5060/main00@0x02C70 slot16 tk(9,22) x6; ROOM5061/main00@0x02C70 slot16 tk(9,22) x6
+0x22 First Aid Spray            ROOM1010/sub00@0x00996 slot2 tk(9,140) x1; ROOM10E0/main00@0x00C4E slot1 tk(9,224) x1; ROOM10E1/main00@0x00C4E slot1 tk(9,224) x1; ROOM10F0/main00@0x01054 slot14 tk(9,229) x1; ROOM10F1/main00@0x01054 slot14 tk(9,229) x1; ROOM1110/main00@0x00B44 slot9 tk(9,143) x1; ROOM1111/main00@0x00B44 slot9 tk(9,143) x1; ROOM2010/main00@0x00792 slot3 tk(9,218) x1; ROOM2011/main00@0x00792 slot3 tk(9,218) x1; ROOM4010/main00@0x005A8 slot10 tk(9,11) x1; ROOM4011/main00@0x0056A slot7 tk(9,11) x1; ROOM4050/main00@0x01FF0 slot30 tk(9,198) x1; ROOM4051/main00@0x01FF0 slot30 tk(9,198) x1; ROOM40A0/main00@0x00E4E slot7 tk(9,14) x1; ROOM40A0/main00@0x00EA2 slot9 tk(9,16) x1; ROOM40A1/main00@0x00E4E slot7 tk(9,14) x1; ROOM40A1/main00@0x00EA2 slot9 tk(9,16) x1; ROOM5010/main00@0x0041E slot6 tk(9,18) x1; ROOM5011/main00@0x00432 slot8 tk(9,18) x1
+0x23 Antidote Spray             ROOM10E0/main00@0x00C64 slot2 tk(9,225) x1; ROOM10E1/main00@0x00C64 slot2 tk(9,225) x1; ROOM2040/sub00@0x014F8 slot13 tk(9,154) x1; ROOM2041/sub00@0x014F8 slot13 tk(9,154) x1; ROOM4050/main00@0x01F1C slot30 tk(9,187) x1; ROOM4050/main00@0x01FB0 slot30 tk(9,197) x1; ROOM4051/main00@0x01F1C slot30 tk(9,187) x1; ROOM4051/main00@0x01FB0 slot30 tk(9,197) x1
+0x24 Green Medicine             ROOM1000/sub00@0x00C3A slot4 tk(9,166) x1; ROOM1001/sub00@0x00C3A slot4 tk(9,166) x1; ROOM1220/main00@0x00ED8 slot5 tk(9,183) x1; ROOM1221/main00@0x00ED8 slot5 tk(9,183) x1; ROOM30E0/main00@0x00AFA slot8 tk(9,194) x1; ROOM30E1/main00@0x00A76 slot4 tk(9,194) x1; ROOM4050/main00@0x01E74 slot30 tk(9,185) x1; ROOM4051/main00@0x01E74 slot30 tk(9,185) x1; ROOM40B0/main00@0x00750 slot7 tk(9,190) x1; ROOM40B1/main00@0x00750 slot7 tk(9,190) x1
+0x25 Red Medicine               ROOM1000/sub00@0x00C50 slot5 tk(9,167) x1; ROOM1001/sub00@0x00C50 slot5 tk(9,167) x1; ROOM1220/main00@0x00EEE slot6 tk(9,184) x1; ROOM1221/main00@0x00EEE slot6 tk(9,184) x1; ROOM4050/main00@0x01F70 slot30 tk(9,196) x1; ROOM4051/main00@0x01F70 slot30 tk(9,196) x1; ROOM40B0/main00@0x00766 slot8 tk(9,191) x1; ROOM40B1/main00@0x00766 slot8 tk(9,191) x1
+0x26 Blue Medicine              ROOM1220/main00@0x00F04 slot7 tk(9,193) x1; ROOM1221/main00@0x00F04 slot7 tk(9,193) x1; ROOM4050/main00@0x01EC8 slot30 tk(9,186) x1; ROOM4051/main00@0x01EC8 slot30 tk(9,186) x1; ROOM40A0/main00@0x00E78 slot8 tk(9,15) x1; ROOM40A1/main00@0x00E78 slot8 tk(9,15) x1; ROOM40B0/main00@0x0077C slot9 tk(9,192) x1; ROOM40B1/main00@0x0077C slot9 tk(9,192) x1
+0x30 Pliers                     ROOM11B0/main00@0x00FF2 slot4 tk(9,10) x1; ROOM11B1/main00@0x00FE4 slot4 tk(9,10) x1
+0x31 Fire Extinguisher          ROOM1000/sub00@0x00C24 slot3 tk(9,134) x1
+0x32 Head of Akuma              ROOM2040/main00@0x01364 slot7 tk(9,91) x1; ROOM2041/main00@0x01364 slot7 tk(9,91) x1
+0x36 Green Keycard              ROOM3040/sub00@0x014B2 slot9 tk(9,85) x1; ROOM3041/sub00@0x014B2 slot9 tk(9,85) x1
+0x37 Red Keycard                ROOM1190/sub13@0x02A30 slot5 tk(9,136) x1; ROOM1190/sub13@0x02AA2 slot5 tk(9,136) x1; ROOM1191/sub13@0x02A30 slot5 tk(9,136) x1; ROOM1191/sub13@0x02AA2 slot5 tk(9,136) x1
+0x38 Blue Keycard               ROOM1110/main00@0x00B2E slot8 tk(9,52) x1; ROOM1111/main00@0x00B2E slot8 tk(9,52) x1
+0x39 Yellow Keycard             ROOM1011/main00@0x00954 slot2 tk(9,138) x1
+0x3F Pocket Watch               ROOM2090/main00@0x00A12 slot5 tk(9,90) x1; ROOM2091/main00@0x00A12 slot5 tk(9,90) x1
+0x41 Spark Plug                 ROOM4040/main00@0x00F66 slot6 tk(9,86) x1; ROOM4041/main00@0x00F66 slot6 tk(9,86) x1
+0x44 Minidisc Player w/ Disc    ROOM1200/sub00@0x00932 slot3 tk(9,104) x1; ROOM1201/sub00@0x00932 slot3 tk(9,104) x1
+0x46 Red Master Keycard         ROOM30A0/main00@0x00742 slot1 tk(9,180) x1; ROOM30A1/main00@0x00742 slot1 tk(9,180) x1
+0x47 Blue Master Keycard        ROOM4010/main00@0x00592 slot9 tk(9,6) x1
+
+=== 2. Abgeleitete Bits (A): Set(b,i)=1 unter Ck(9,tk)==1 ===
+(3,0x3B) <- ROOM3040/sub01 Set@0x014DA unter Ck(9,0x55)@0x014CE  Item 0x36 Green Keycard
+(3,0x3B) <- ROOM3041/sub01 Set@0x014DA unter Ck(9,0x55)@0x014CE  Item 0x36 Green Keycard
+(3,0x57) <- ROOM4040/sub01 Set@0x01020 unter Ck(9,0x56)@0x01014  Item 0x41 Spark Plug
+(3,0x57) <- ROOM4041/sub01 Set@0x01020 unter Ck(9,0x56)@0x01014  Item 0x41 Spark Plug
+(3,0x65) <- ROOM4010/sub01 Set@0x006EC unter Ck(9,0x06)@0x006E0  Item 0x47 Blue Master Keycard
+(3,0x67) <- ROOM1200/sub01 Set@0x0095A unter Ck(9,0x68)@0x0094E  Item 0x44 Minidisc Player w/ Disc
+(3,0x67) <- ROOM1201/sub01 Set@0x0095A unter Ck(9,0x68)@0x0094E  Item 0x44 Minidisc Player w/ Disc
+(3,0x7F) <- ROOM11B0/sub01 Set@0x011EA unter Ck(9,0x0A)@0x011DE  Item 0x30 Pliers
+(3,0x7F) <- ROOM11B1/sub01 Set@0x01186 unter Ck(9,0x0A)@0x0117A  Item 0x30 Pliers
+(3,0x85) <- ROOM1000/sub01 Set@0x00D0C unter Ck(9,0x86)@0x00D00  Item 0x15 H. Gun Bullets,0x31 Fire Extinguisher
+(3,0x98) <- ROOM11D0/sub03 Set@0x018BA unter Ck(9,0x9B)@0x018B2  Item 0x05 Beretta M93R
+(3,0x98) <- ROOM11D1/sub03 Set@0x018BA unter Ck(9,0x9B)@0x018B2  Item 0x05 Beretta M93R
+(3,0xB2) <- ROOM30A0/sub01 Set@0x0086C unter Ck(9,0xB4)@0x00860  Item 0x46 Red Master Keycard
+(3,0xB2) <- ROOM30A1/sub01 Set@0x0086C unter Ck(9,0xB4)@0x00860  Item 0x46 Red Master Keycard
+(4,0x11) <- ROOM1200/sub03 Set@0x00A36 unter Ck(9,0x68)@0x00A08  Item 0x44 Minidisc Player w/ Disc
+(4,0x11) <- ROOM1201/sub03 Set@0x00A36 unter Ck(9,0x68)@0x00A08  Item 0x44 Minidisc Player w/ Disc
+
+=== 3. Skript-Bits (S): Set(b,i)=1 im Block einer 'take(n) the'-Nachricht ===
+(1,0x1B) <- ROOM5060/sub06 Set@0x030E6  msg 13 "You've taken the T-Vaccine."
+(1,0x1B) <- ROOM5061/sub06 Set@0x030E6  msg 13 "You've taken the G-Vaccine."
+(2,0x02) <- ROOM5060/sub06 Set@0x030EE  msg 13 "You've taken the T-Vaccine."
+(2,0x02) <- ROOM5061/sub06 Set@0x030EE  msg 13 "You've taken the G-Vaccine."
+(2,0x07) <- ROOM5060/sub06 Set@0x030EA  msg 13 "You've taken the T-Vaccine."
+(2,0x07) <- ROOM5061/sub06 Set@0x030EA  msg 13 "You've taken the G-Vaccine."
+(3,0x4D) <- ROOM5060/sub06 Set@0x030DE  msg 13 "You've taken the T-Vaccine."
+(3,0x4D) <- ROOM5061/sub06 Set@0x030DE  msg 13 "You've taken the G-Vaccine."
+(3,0x6C) <- ROOM2030/sub06 Set@0x01FF2  msg 3 "You've taken the Fuse."
+(3,0x6C) <- ROOM2031/sub06 Set@0x01FF2  msg 3 "You've taken the Fuse."
+(3,0x72) <- ROOM2010/sub02 Set@0x008CA  msg 1 "You've taken the Crank."
+(3,0x72) <- ROOM2011/sub02 Set@0x008E8  msg 1 "You've taken the Crank."
+(3,0x73) <- ROOM5030/sub02 Set@0x010C8  msg 1 "You've taken the laboratory map."
+(3,0x73) <- ROOM5031/sub02 Set@0x01126  msg 1 "You've taken the laboratory map."
+(3,0x78) <- ROOM1011/sub06 Set@0x00E30  msg 20 "You've taken the Prison key."
+(3,0x92) <- ROOM1110/sub03 Set@0x00D32  msg 9 "You've taken the Time Bomb."
+(3,0x92) <- ROOM1111/sub03 Set@0x00D32  msg 9 "You've taken the Time Bomb."
+(4,0xEC) <- ROOM1011/sub06 Set@0x00E2C  msg 20 "You've taken the Prison key."
+(4,0xF8) <- ROOM5061/sub06 Set@0x030E2  msg 13 "You've taken the G-Vaccine."
+(4,0xFA) <- ROOM5060/sub06 Set@0x030E2  msg 13 "You've taken the T-Vaccine."
+(9,0x15) <- ROOM3091/sub06 Set@0x016C2  msg 31 "You've taken the Latch Key."
+
+=== 4. Ck-Stellen auf T/A/S-Bits: 107 ===
+
+ROOM1000/sub01 @0x00D00  Ck(9,0x86)==1  [T]
+   @0x00D04 Ifel_ck
+   @0x00D08 Ck(3,0x85)==0
+   @0x00D0C Set(3,0x85)=1
+   @0x00D10 Endif
+   @0x00D12 Endif
+
+ROOM1000/sub01 @0x00D08  Ck(3,0x85)==0  [A]
+   unter: Ck(9,0x86)==1@0x00D00
+   @0x00D0C Set(3,0x85)=1
+   @0x00D10 Endif
+
+ROOM1011/sub00 @0x00A30  Ck(4,0xFA)==1  [S]
+   @0x00A52 Aot_set slot 5 sce 3 (31 00 00 a0 f6 26 1b e8 03 e8 03 ff 00 18 06)
+   @0x00A66 Evt_exec sub05
+   @0x00A6E Endif
+
+ROOM1011/sub00 @0x00A74  Ck(3,0x78)==1  [S]
+   @0x00A78 Aot_reset slot 5 sce 3 (31 ff 00 18 07 00 00)
+   @0x00A82 Endif
+
+ROOM1051/sub01 @0x00CB6  Ck(9,0xA5)==1  [T]
+   @0x00CBA Aot_reset slot 11 sce 0 (00 00 00 00 00 00 00)
+   @0x00CC4 Endif
+
+ROOM1090/sub00 @0x0230A  Ck(3,0x85)==0  [A]
+   @0x0230E Aot_set slot 2 sce 1 (b1 01 00 64 00 14 05 3a 07 66 08 de 0d 30 f8)
+   @0x0232A Else_ck
+   ELSE:
+     @0x0232E Ifel_ck
+     @0x02332 Ck(3,0x81)==0
+     @0x02336 Aot_set slot 2 sce 3 (b1 01 00 64 00 14 05 3a 07 66 08 de 0d 30 f8)
+     @0x02352 Door_aot_set slot 3
+     @0x02372 Endif
+
+ROOM10D0/sub20 @0x019C0  Ck(9,0x34)==1  [T]
+   unter: Ck(12,0x1F)==0@0x019B8
+   @0x019C4 Message_on 9 "You've used the Blue Keycard."
+   @0x019CA Evt_exec sub17
+   @0x019CE Else_ck
+   ELSE:
+     @0x019D2 Message_on 8 'You have not the Blue Keycard / to operate it.'
+
+ROOM10D1/sub20 @0x019AA  Ck(9,0x34)==1  [T]
+   unter: Ck(12,0x1F)==0@0x019A2
+   @0x019AE Message_on 9 "You've used the Blue Keycard."
+   @0x019B4 Evt_exec sub17
+   @0x019B8 Else_ck
+   ELSE:
+     @0x019BC Message_on 8 'You have not the Blue Keycard / to operate it.'
+
+ROOM1100/sub00 @0x00AC8  Ck(3,0x67)==0  [A]
+   @0x00ACC Aot_reset slot 1 sce 0 (00 00 00 00 00 00 00)
+   @0x00AD6 Aot_set slot 2 sce 1 (31 00 00 6b 9a 1c d9 49 04 34 02 01 00 ff ff)
+   @0x00AEA Aot_set slot 3 sce 1 (31 00 00 3e 95 28 d2 84 03 40 06 00 00 ff ff)
+   @0x00AFE Else_ck
+   ELSE:
+     @0x00B02 Ifel_ck
+     @0x00B06 Ck(4,0xE8)==0
+     @0x00B0A Aot_reset slot 1 sce 0 (00 00 00 00 00 00 00)
+     @0x00B14 Aot_set slot 2 sce 3 (31 00 00 6b 9a 1c d9 49 04 34 02 ff 00 18 07)
+     @0x00B28 Aot_set slot 3 sce 1 (31 00 00 3e 95 28 d2 84 03 40 06 00 00 ff ff)
+     @0x00B3C Aot_set slot 4 sce 5 (44 00 00 34 a4 ba 45 02 08 02 08 00 00 00 00)
+     @0x00B50 Aot_set slot 5 sce 5 (44 00 00 72 bb 9e 39 02 08 02 08 00 00 00 00)
+     @0x00B86 Else_ck
+     @0x00B8A Aot_set slot 2 sce 1 (31 00 00 6b 9a 1c d9 49 04 34 02 05 00 ff ff)
+
+ROOM1101/sub00 @0x00AC8  Ck(3,0x67)==0  [A]
+   @0x00ACC Aot_reset slot 1 sce 0 (00 00 00 00 00 00 00)
+   @0x00AD6 Aot_set slot 2 sce 1 (31 00 00 6b 9a 1c d9 49 04 34 02 01 00 ff ff)
+   @0x00AEA Aot_set slot 3 sce 1 (31 00 00 3e 95 28 d2 84 03 40 06 00 00 ff ff)
+   @0x00AFE Else_ck
+   ELSE:
+     @0x00B02 Ifel_ck
+     @0x00B06 Ck(4,0xE8)==0
+     @0x00B0A Aot_reset slot 1 sce 0 (00 00 00 00 00 00 00)
+     @0x00B14 Aot_set slot 2 sce 3 (31 00 00 6b 9a 1c d9 49 04 34 02 ff 00 18 07)
+     @0x00B28 Aot_set slot 3 sce 1 (31 00 00 3e 95 28 d2 84 03 40 06 00 00 ff ff)
+     @0x00B3C Aot_set slot 4 sce 5 (44 00 00 34 a4 ba 45 02 08 02 08 00 00 00 00)
+     @0x00B50 Aot_set slot 5 sce 5 (44 00 00 72 bb 9e 39 02 08 02 08 00 00 00 00)
+     @0x00B86 Else_ck
+     @0x00B8A Aot_set slot 2 sce 1 (31 00 00 6b 9a 1c d9 49 04 34 02 05 00 ff ff)
+
+ROOM1110/sub00 @0x00CD0  Ck(3,0x92)==0  [S]
+   @0x00CD4 Aot_set slot 20 sce 3 (31 00 00 88 c8 1e fb 20 03 e8 03 ff 00 18 03)
+   @0x00CE8 Endif
+
+ROOM1111/sub00 @0x00CD0  Ck(3,0x92)==0  [S]
+   @0x00CD4 Aot_set slot 20 sce 3 (31 00 00 88 c8 1e fb 20 03 e8 03 ff 00 18 03)
+   @0x00CE8 Endif
+
+ROOM11B0/sub01 @0x011DE  Ck(9,0x0A)==1  [T]
+   @0x011E2 Ifel_ck
+   @0x011E6 Ck(3,0x7F)==0
+   @0x011EA Set(3,0x7F)=1
+   @0x011EE Endif
+   @0x011F0 Endif
+
+ROOM11B0/sub01 @0x011E6  Ck(3,0x7F)==0  [A]
+   unter: Ck(9,0x0A)==1@0x011DE
+   @0x011EA Set(3,0x7F)=1
+   @0x011EE Endif
+
+ROOM11B1/sub01 @0x0116A  Ck(9,0x0A)==1  [T]
+   unter: Ck(3,0x84)==0@0x01162
+   @0x0116E Evt_exec sub02
+   @0x01172 Endif
+
+ROOM11B1/sub01 @0x0117A  Ck(9,0x0A)==1  [T]
+   @0x0117E Ifel_ck
+   @0x01182 Ck(3,0x7F)==0
+   @0x01186 Set(3,0x7F)=1
+   @0x0118A Endif
+   @0x0118C Endif
+
+ROOM11B1/sub01 @0x01182  Ck(3,0x7F)==0  [A]
+   unter: Ck(9,0x0A)==1@0x0117A
+   @0x01186 Set(3,0x7F)=1
+   @0x0118A Endif
+
+ROOM11D0/main00 @0x012BA  Ck(3,0x98)==0  [A]
+   @0x013EE Else_ck
+
+ROOM11D0/sub03 @0x0189A  Ck(9,0x9B)==0  [T]
+   @0x018AA Aot_on 10
+   @0x018AE Ifel_ck
+   @0x018B2 Ck(9,0x9B)==1
+   @0x018B6 Evt_exec sub02
+   @0x018BA Set(3,0x98)=1
+   @0x018CC Endif
+   @0x018CE Ifel_ck
+   @0x018D2 Ck(9,0x9B)==0
+   @0x018E4 Endif
+   @0x018E6 Else_ck
+
+ROOM11D0/sub03 @0x018B2  Ck(9,0x9B)==1  [T]
+   unter: Ck(9,0x9B)==0@0x0189A
+   @0x018B6 Evt_exec sub02
+   @0x018BA Set(3,0x98)=1
+   @0x018CC Endif
+
+ROOM11D0/sub03 @0x018D2  Ck(9,0x9B)==0  [T]
+   unter: Ck(9,0x9B)==0@0x0189A
+   @0x018E4 Endif
+
+ROOM11D1/main00 @0x012BA  Ck(3,0x98)==0  [A]
+   @0x013EE Else_ck
+
+ROOM11D1/sub03 @0x0189A  Ck(9,0x9B)==0  [T]
+   @0x018AA Aot_on 10
+   @0x018AE Ifel_ck
+   @0x018B2 Ck(9,0x9B)==1
+   @0x018B6 Evt_exec sub02
+   @0x018BA Set(3,0x98)=1
+   @0x018CC Endif
+   @0x018CE Ifel_ck
+   @0x018D2 Ck(9,0x9B)==0
+   @0x018E4 Endif
+   @0x018E6 Else_ck
+
+ROOM11D1/sub03 @0x018B2  Ck(9,0x9B)==1  [T]
+   unter: Ck(9,0x9B)==0@0x0189A
+   @0x018B6 Evt_exec sub02
+   @0x018BA Set(3,0x98)=1
+   @0x018CC Endif
+
+ROOM11D1/sub03 @0x018D2  Ck(9,0x9B)==0  [T]
+   unter: Ck(9,0x9B)==0@0x0189A
+   @0x018E4 Endif
+
+ROOM11E0/sub00 @0x01798  Ck(3,0x7F)==0  [A]
+   @0x0179C Aot_set slot 6 sce 1 (31 00 00 70 cc 10 dc dc 05 d0 07 0a 00 ff ff)
+   @0x017C4 Else_ck
+   ELSE:
+     @0x017C8 Ifel_ck
+     @0x017CC Ck(4,0x24)==0
+     @0x017D0 Aot_set slot 6 sce 3 (31 00 00 70 cc 10 dc dc 05 d0 07 ff 00 18 1a)
+     @0x017E4 Aot_set slot 7 sce 5 (44 00 00 40 bb b0 4f 02 08 02 08 00 00 00 00)
+     @0x0182E Else_ck
+
+ROOM11E0/sub20 @0x01FA8  Ck(9,0x8A)==1  [T]
+   unter: Ck(12,0x1F)==0@0x01FA0
+   @0x01FAC Message_on 9 "You've used the Yellow Keycard."
+   @0x01FB2 Evt_exec sub17
+   @0x01FB6 Else_ck
+   ELSE:
+     @0x01FBA Message_on 8 'You have not the Yellow Keycard / to operate it.'
+
+ROOM11E1/sub00 @0x01798  Ck(3,0x7F)==0  [A]
+   @0x0179C Aot_set slot 6 sce 1 (31 00 00 70 cc 10 dc dc 05 d0 07 0a 00 ff ff)
+   @0x017C4 Else_ck
+   ELSE:
+     @0x017C8 Ifel_ck
+     @0x017CC Ck(4,0x24)==0
+     @0x017D0 Aot_set slot 6 sce 3 (31 00 00 70 cc 10 dc dc 05 d0 07 ff 00 18 1a)
+     @0x017E4 Aot_set slot 7 sce 5 (44 00 00 40 bb b0 4f 02 08 02 08 00 00 00 00)
+     @0x0182E Else_ck
+
+ROOM11E1/sub20 @0x01FA8  Ck(9,0x8A)==1  [T]
+   unter: Ck(12,0x1F)==0@0x01FA0
+   @0x01FAC Message_on 9 "You've used the Yellow Keycard."
+   @0x01FB2 Evt_exec sub17
+   @0x01FB6 Else_ck
+   ELSE:
+     @0x01FBA Message_on 8 'You have not the Yellow Keycard / to operate it.'
+
+ROOM11F0/sub19 @0x017C8  Ck(9,0x63)==0  [T]
+   @0x017D4 Endif
+
+ROOM11F0/sub19 @0x017DE  Ck(9,0x63)==0  [T]
+   @0x017E2 Aot_on 14
+   @0x017E6 Endif
+
+ROOM11F0/sub19 @0x017F0  Ck(9,0x63)==0  [T]
+   @0x017FC Endif
+
+ROOM11F1/sub19 @0x017C8  Ck(9,0x63)==0  [T]
+   @0x017D4 Endif
+
+ROOM11F1/sub19 @0x017DE  Ck(9,0x63)==0  [T]
+   @0x017E2 Aot_on 14
+   @0x017E6 Endif
+
+ROOM11F1/sub19 @0x017F0  Ck(9,0x63)==0  [T]
+   @0x017FC Endif
+
+ROOM1200/main00 @0x00800  Ck(4,0x11)==0  [A]
+   @0x00826 Else_ck
+
+ROOM1200/main00 @0x00852  Ck(4,0x11)==0  [A]
+   @0x008A6 Else_ck
+
+ROOM1200/sub01 @0x0094E  Ck(9,0x68)==1  [T]
+   @0x00952 Ifel_ck
+   @0x00956 Ck(3,0x67)==0
+   @0x0095A Set(3,0x67)=1
+   @0x0095E Endif
+   @0x00960 Endif
+
+ROOM1200/sub01 @0x00956  Ck(3,0x67)==0  [A]
+   unter: Ck(9,0x68)==1@0x0094E
+   @0x0095A Set(3,0x67)=1
+   @0x0095E Endif
+
+ROOM1200/sub03 @0x009FC  Ck(9,0x68)==0  [T]
+   @0x00A00 Aot_on 3
+   @0x00A04 Ifel_ck
+   @0x00A08 Ck(9,0x68)==1
+   @0x00A0C Evt_exec sub02
+   @0x00A36 Set(4,0x11)=1
+   @0x00A3A Endif
+   @0x00A3C Else_ck
+
+ROOM1200/sub03 @0x00A08  Ck(9,0x68)==1  [T]
+   unter: Ck(9,0x68)==0@0x009FC
+   @0x00A0C Evt_exec sub02
+   @0x00A36 Set(4,0x11)=1
+   @0x00A3A Endif
+
+ROOM1201/main00 @0x00800  Ck(4,0x11)==0  [A]
+   @0x00826 Else_ck
+
+ROOM1201/main00 @0x00852  Ck(4,0x11)==0  [A]
+   @0x008A6 Else_ck
+
+ROOM1201/sub01 @0x0094E  Ck(9,0x68)==1  [T]
+   @0x00952 Ifel_ck
+   @0x00956 Ck(3,0x67)==0
+   @0x0095A Set(3,0x67)=1
+   @0x0095E Endif
+   @0x00960 Endif
+
+ROOM1201/sub01 @0x00956  Ck(3,0x67)==0  [A]
+   unter: Ck(9,0x68)==1@0x0094E
+   @0x0095A Set(3,0x67)=1
+   @0x0095E Endif
+
+ROOM1201/sub03 @0x009FC  Ck(9,0x68)==0  [T]
+   @0x00A00 Aot_on 3
+   @0x00A04 Ifel_ck
+   @0x00A08 Ck(9,0x68)==1
+   @0x00A0C Evt_exec sub02
+   @0x00A36 Set(4,0x11)=1
+   @0x00A3A Endif
+   @0x00A3C Else_ck
+
+ROOM1201/sub03 @0x00A08  Ck(9,0x68)==1  [T]
+   unter: Ck(9,0x68)==0@0x009FC
+   @0x00A0C Evt_exec sub02
+   @0x00A36 Set(4,0x11)=1
+   @0x00A3A Endif
+
+ROOM1211/sub00 @0x01DEA  Ck(4,0xEC)==0  [S]
+   @0x01DEE Aot_set slot 8 sce 1 (31 00 00 5c aa 00 a8 0e 03 d4 06 0a 00 ff ff)
+   @0x01E12 Else_ck
+   ELSE:
+     @0x01E16 Ifel_ck
+     @0x01E1A Ck(4,0xFC)==0
+     @0x01E1E Set(5,0x02)=1
+     @0x01E22 Aot_set slot 6 sce 3 (41 00 00 c1 ab 39 b2 49 11 0e 06 ff 00 18 02)
+     @0x01E4A Evt_exec sub06
+     @0x01E5E Else_ck
+
+ROOM1230/sub20 @0x01488  Ck(9,0x88)==1  [T]
+   unter: Ck(12,0x1F)==0@0x01480
+   @0x0148C Message_on 9 "You've used the Red Keycard."
+   @0x01492 Evt_exec sub17
+   @0x01496 Else_ck
+   ELSE:
+     @0x0149A Message_on 8 'You have not the Red Keycard / to operate it.'
+
+ROOM1231/sub20 @0x01488  Ck(9,0x88)==1  [T]
+   unter: Ck(12,0x1F)==0@0x01480
+   @0x0148C Message_on 9 "You've used the Red Keycard."
+   @0x01492 Evt_exec sub17
+   @0x01496 Else_ck
+   ELSE:
+     @0x0149A Message_on 8 'You have not the Red Keycard / to operate it.'
+
+ROOM2010/sub00 @0x0087C  Ck(3,0x72)==0  [S]
+   @0x00880 Aot_set slot 4 sce 3 (31 00 00 8c 0a f2 f9 e8 03 e8 03 ff 00 18 02)
+   @0x008B6 Endif
+
+ROOM2011/sub00 @0x0087C  Ck(3,0x72)==0  [S]
+   @0x00880 Aot_set slot 4 sce 3 (31 00 00 8c 0a f2 f9 e8 03 e8 03 ff 00 18 02)
+   @0x008B6 Endif
+
+ROOM2020/sub00 @0x00954  Ck(3,0x72)==0  [S]
+   @0x00958 Aot_set slot 3 sce 1 (31 01 00 98 08 ca ef 20 03 20 03 00 00 ff ff)
+   @0x009A2 Else_ck
+   ELSE:
+     @0x009A6 Ifel_ck
+     @0x009AA Ck(3,0x71)==0
+     @0x009AE Aot_set slot 3 sce 3 (31 01 00 98 08 ca ef 20 03 20 03 ff 00 18 02)
+     @0x00A1A Else_ck
+
+ROOM2021/sub00 @0x00954  Ck(3,0x72)==0  [S]
+   @0x00958 Aot_set slot 3 sce 1 (31 01 00 98 08 ca ef 20 03 20 03 00 00 ff ff)
+   @0x009A2 Else_ck
+   ELSE:
+     @0x009A6 Ifel_ck
+     @0x009AA Ck(3,0x71)==0
+     @0x009AE Aot_set slot 3 sce 3 (31 01 00 98 08 ca ef 20 03 20 03 ff 00 18 02)
+     @0x00A1A Else_ck
+
+ROOM2030/main00 @0x01BA6  Ck(3,0x6C)==0  [S]
+   @0x01BAA Aot_set slot 9 sce 3 (31 01 00 f4 e8 fa 19 20 03 e8 03 ff 00 18 06)
+   @0x01BBE Endif
+
+ROOM2031/main00 @0x01BA6  Ck(3,0x6C)==0  [S]
+   @0x01BAA Aot_set slot 9 sce 3 (31 01 00 f4 e8 fa 19 20 03 e8 03 ff 00 18 06)
+   @0x01BBE Endif
+
+ROOM2040/sub00 @0x0141A  Ck(3,0x92)==0  [S]
+   @0x0141E Aot_set slot 8 sce 1 (31 03 00 d2 0f 38 e6 d0 07 e8 03 00 00 ff ff)
+   @0x0144A Else_ck
+   ELSE:
+     @0x0144E Ifel_ck
+     @0x01452 Ck(3,0x35)==0
+     @0x01456 Aot_set slot 8 sce 3 (31 03 00 d2 0f 38 e6 d0 07 e8 03 ff 00 18 07)
+     @0x0146A Aot_set slot 9 sce 5 (44 00 00 12 99 2e 54 02 08 02 08 00 00 00 00)
+     @0x014B8 Endif
+
+ROOM2040/sub01 @0x015F2  Ck(9,0x9A)==1  [T]
+   @0x015F6 Aot_reset slot 12 sce 0 (00 00 00 00 00 00 00)
+   @0x01600 Endif
+
+ROOM2041/sub00 @0x0141A  Ck(3,0x92)==0  [S]
+   @0x0141E Aot_set slot 8 sce 1 (31 03 00 d2 0f 38 e6 d0 07 e8 03 00 00 ff ff)
+   @0x0144A Else_ck
+   ELSE:
+     @0x0144E Ifel_ck
+     @0x01452 Ck(3,0x35)==0
+     @0x01456 Aot_set slot 8 sce 3 (31 03 00 d2 0f 38 e6 d0 07 e8 03 ff 00 18 07)
+     @0x0146A Aot_set slot 9 sce 5 (44 00 00 12 99 2e 54 02 08 02 08 00 00 00 00)
+     @0x014B8 Endif
+
+ROOM2041/sub01 @0x015F2  Ck(9,0x9A)==1  [T]
+   @0x015F6 Aot_reset slot 12 sce 0 (00 00 00 00 00 00 00)
+   @0x01600 Endif
+
+ROOM2060/sub00 @0x010A2  Ck(3,0x6C)==0  [S]
+   @0x010A6 Aot_set slot 9 sce 1 (31 00 00 a4 ed 6e 0f 78 05 e8 03 03 00 ff ff)
+   @0x010BA Else_ck
+   ELSE:
+     @0x010BE Ifel_ck
+     @0x010C2 Ck(3,0x90)==0
+     @0x010C6 Aot_set slot 9 sce 3 (31 00 00 a4 ed 6e 0f 78 05 e8 03 ff 00 18 12)
+     @0x010DA Else_ck
+     @0x010DE Aot_set slot 9 sce 1 (31 00 00 a4 ed 6e 0f 78 05 e8 03 06 00 ff ff)
+
+ROOM2061/sub00 @0x010A2  Ck(3,0x6C)==0  [S]
+   @0x010A6 Aot_set slot 9 sce 1 (31 00 00 a4 ed 6e 0f 78 05 e8 03 03 00 ff ff)
+   @0x010BA Else_ck
+   ELSE:
+     @0x010BE Ifel_ck
+     @0x010C2 Ck(3,0x90)==0
+     @0x010C6 Aot_set slot 9 sce 3 (31 00 00 a4 ed 6e 0f 78 05 e8 03 ff 00 18 12)
+     @0x010DA Else_ck
+     @0x010DE Aot_set slot 9 sce 1 (31 00 00 a4 ed 6e 0f 78 05 e8 03 06 00 ff ff)
+
+ROOM3010/main00 @0x020AE  Ck(3,0x3B)==0  [A]
+   @0x020B2 Aot_set slot 6 sce 1 (31 01 00 c0 95 70 ae 84 03 48 08 00 00 ff ff)
+   @0x020C6 Else_ck
+   ELSE:
+     @0x020CA Ifel_ck
+     @0x020CE Ck(3,0x3C)==0
+     @0x020D2 Aot_set slot 6 sce 3 (31 01 00 c0 95 70 ae 84 03 48 08 ff 00 18 02)
+     @0x020E6 Else_ck
+     @0x020EA Door_aot_set slot 6
+
+ROOM3011/main00 @0x020AE  Ck(3,0x3B)==0  [A]
+   @0x020B2 Aot_set slot 6 sce 1 (31 01 00 c0 95 70 ae 84 03 48 08 00 00 ff ff)
+   @0x020C6 Else_ck
+   ELSE:
+     @0x020CA Ifel_ck
+     @0x020CE Ck(3,0x3C)==0
+     @0x020D2 Aot_set slot 6 sce 3 (31 01 00 c0 95 70 ae 84 03 48 08 ff 00 18 02)
+     @0x020E6 Else_ck
+     @0x020EA Door_aot_set slot 6
+
+ROOM3040/sub01 @0x014CE  Ck(9,0x55)==1  [T]
+   @0x014D2 Ifel_ck
+   @0x014D6 Ck(3,0x3B)==0
+   @0x014DA Set(3,0x3B)=1
+   @0x014DE Endif
+   @0x014E0 Endif
+
+ROOM3040/sub01 @0x014D6  Ck(3,0x3B)==0  [A]
+   unter: Ck(9,0x55)==1@0x014CE
+   @0x014DA Set(3,0x3B)=1
+   @0x014DE Endif
+
+ROOM3041/sub01 @0x014CE  Ck(9,0x55)==1  [T]
+   @0x014D2 Ifel_ck
+   @0x014D6 Ck(3,0x3B)==0
+   @0x014DA Set(3,0x3B)=1
+   @0x014DE Endif
+   @0x014E0 Endif
+
+ROOM3041/sub01 @0x014D6  Ck(3,0x3B)==0  [A]
+   unter: Ck(9,0x55)==1@0x014CE
+   @0x014DA Set(3,0x3B)=1
+   @0x014DE Endif
+
+ROOM3050/main00 @0x01F90  Ck(3,0xB2)==0  [A]
+   @0x01F94 Aot_set slot 10 sce 1 (31 00 00 d4 9a fc bd e8 03 d0 07 03 00 ff ff)
+   @0x01FA8 Else_ck
+   ELSE:
+     @0x01FAC Ifel_ck
+     @0x01FB0 Ck(3,0xB3)==0
+     @0x01FB4 Aot_set slot 10 sce 3 (31 00 00 d4 9a fc bd e8 03 d0 07 ff 00 18 0a)
+     @0x01FC8 Aot_set slot 11 sce 5 (44 00 00 78 ba cc 42 02 08 02 08 00 00 00 00)
+     @0x01FFE Else_ck
+     @0x02002 Aot_set slot 10 sce 1 (31 00 00 d4 9a fc bd e8 03 d0 07 07 00 ff ff)
+
+ROOM3050/sub01 @0x0223C  Ck(9,0x5C)==0  [T]
+   @0x02240 Ifel_ck
+   @0x02244 Ck(5,0x06)==0
+   @0x02248 Ifel_ck
+   @0x0225A Set(5,0x06)=1
+   @0x0225E Endif
+   @0x02260 Endif
+   @0x02262 Ifel_ck
+   @0x02266 Ck(5,0x06)==0
+   @0x0226A Ifel_ck
+   @0x0227C Set(5,0x06)=1
+   @0x02280 Endif
+   @0x02282 Endif
+   @0x02284 Ifel_ck
+   @0x02288 Ck(5,0x06)==0
+   ...
+
+ROOM3051/main00 @0x01F90  Ck(3,0xB2)==0  [A]
+   @0x01F94 Aot_set slot 10 sce 1 (31 00 00 d4 9a fc bd e8 03 d0 07 03 00 ff ff)
+   @0x01FA8 Else_ck
+   ELSE:
+     @0x01FAC Ifel_ck
+     @0x01FB0 Ck(3,0xB3)==0
+     @0x01FB4 Aot_set slot 10 sce 3 (31 00 00 d4 9a fc bd e8 03 d0 07 ff 00 18 0a)
+     @0x01FC8 Aot_set slot 11 sce 5 (44 00 00 78 ba cc 42 02 08 02 08 00 00 00 00)
+     @0x01FFE Else_ck
+     @0x02002 Aot_set slot 10 sce 1 (31 00 00 d4 9a fc bd e8 03 d0 07 07 00 ff ff)
+
+ROOM3051/sub01 @0x0223C  Ck(9,0x5C)==0  [T]
+   @0x02240 Ifel_ck
+   @0x02244 Ck(5,0x06)==0
+   @0x02248 Ifel_ck
+   @0x0225A Set(5,0x06)=1
+   @0x0225E Endif
+   @0x02260 Endif
+   @0x02262 Ifel_ck
+   @0x02266 Ck(5,0x06)==0
+   @0x0226A Ifel_ck
+   @0x0227C Set(5,0x06)=1
+   @0x02280 Endif
+   @0x02282 Endif
+   @0x02284 Ifel_ck
+   @0x02288 Ck(5,0x06)==0
+   ...
+
+ROOM3070/sub00 @0x03408  Ck(4,0xEC)==0  [S]
+   unter: NOT Ck(4,0xD7)==0@0x033CA
+   @0x03420 Aot_reset slot 0 sce 1 (31 05 00 ff ff 00 00)
+   @0x03430 Else_ck
+   ELSE:
+     @0x03434 Ifel_ck
+     @0x03438 Ck(3,0xB4)==1
+     @0x03464 Aot_set slot 3 sce 3 (41 00 00 4a b1 ca e5 b0 04 94 11 ff 00 18 03)
+     @0x03478 Aot_reset slot 0 sce 1 (31 05 00 ff ff 00 00)
+     @0x03482 Endif
+
+ROOM3091/sub02 @0x01596  Ck(9,0x15)==0  [S]
+   unter: Ck(4,0x10)==0@0x0158E
+   @0x0159A Message_on 6 "The door is latched shut and won't open.I'd need a key to open this..."
+   @0x015A0 Else_ck
+   ELSE:
+     @0x015A4 Evt_exec sub07
+
+ROOM3091/sub06 @0x016B8  Ck(9,0x15)==0  [S]
+   @0x016BC Message_on 31 "You've taken the Latch Key."
+   @0x016C2 Set(9,0x15)=1
+   @0x016C6 Endif
+
+ROOM30A0/sub01 @0x00860  Ck(9,0xB4)==1  [T]
+   @0x00864 Ifel_ck
+   @0x00868 Ck(3,0xB2)==0
+   @0x0086C Set(3,0xB2)=1
+   @0x00870 Endif
+   @0x00872 Endif
+
+ROOM30A0/sub01 @0x00868  Ck(3,0xB2)==0  [A]
+   unter: Ck(9,0xB4)==1@0x00860
+   @0x0086C Set(3,0xB2)=1
+   @0x00870 Endif
+
+ROOM30A1/sub01 @0x00860  Ck(9,0xB4)==1  [T]
+   @0x00864 Ifel_ck
+   @0x00868 Ck(3,0xB2)==0
+   @0x0086C Set(3,0xB2)=1
+   @0x00870 Endif
+   @0x00872 Endif
+
+ROOM30A1/sub01 @0x00868  Ck(3,0xB2)==0  [A]
+   unter: Ck(9,0xB4)==1@0x00860
+   @0x0086C Set(3,0xB2)=1
+   @0x00870 Endif
+
+ROOM4000/main00 @0x01128  Ck(3,0x65)==0  [A]
+   @0x0112C Aot_set slot 6 sce 1 (31 00 00 47 c6 fe ac 14 05 8c 0a 00 00 ff ff)
+   @0x01140 Aot_reset slot 2 sce 0 (00 00 00 00 00 00 00)
+   @0x0114A Endif
+
+ROOM4000/sub01 @0x01374  Ck(3,0x65)==1  [A]
+   @0x01378 Ifel_ck
+   @0x01382 Ck(5,0x00)==0
+   @0x01386 Ck(5,0x01)==0
+   @0x0138A Evt_exec sub02
+   @0x0138E Endif
+   @0x01390 Endif
+
+ROOM4010/sub00 @0x006CE  Ck(4,0xFA)==1  [S]
+   unter: NOT Ck(4,0x22)==0@0x006BE
+   @0x006D2 Evt_exec sub04
+   @0x006D6 Endif
+
+ROOM4010/sub01 @0x006E0  Ck(9,0x06)==1  [T]
+   @0x006E4 Ifel_ck
+   @0x006E8 Ck(3,0x65)==0
+   @0x006EC Set(3,0x65)=1
+   @0x006F0 Endif
+   @0x006F2 Endif
+
+ROOM4010/sub01 @0x006E8  Ck(3,0x65)==0  [A]
+   unter: Ck(9,0x06)==1@0x006E0
+   @0x006EC Set(3,0x65)=1
+   @0x006F0 Endif
+
+ROOM4030/main00 @0x004FA  Ck(3,0x57)==0  [A]
+   @0x004FE Aot_set slot 6 sce 1 (31 00 00 14 a1 14 a1 78 0a 78 0a 00 00 ff ff)
+   @0x00512 Else_ck
+   ELSE:
+     @0x00516 Aot_set slot 5 sce 5 (31 00 00 14 a1 14 a1 78 0a 78 0a 00 00 00 00)
+
+ROOM4031/main00 @0x004FA  Ck(3,0x57)==0  [A]
+   @0x004FE Aot_set slot 6 sce 1 (31 00 00 14 a1 14 a1 78 0a 78 0a 00 00 ff ff)
+   @0x00512 Else_ck
+   ELSE:
+     @0x00516 Aot_set slot 5 sce 5 (31 00 00 14 a1 14 a1 78 0a 78 0a 00 00 00 00)
+
+ROOM4040/sub01 @0x01014  Ck(9,0x56)==1  [T]
+   @0x01018 Ifel_ck
+   @0x0101C Ck(3,0x57)==0
+   @0x01020 Set(3,0x57)=1
+   @0x01024 Endif
+   @0x01026 Endif
+
+ROOM4040/sub01 @0x0101C  Ck(3,0x57)==0  [A]
+   unter: Ck(9,0x56)==1@0x01014
+   @0x01020 Set(3,0x57)=1
+   @0x01024 Endif
+
+ROOM4041/sub01 @0x01014  Ck(9,0x56)==1  [T]
+   @0x01018 Ifel_ck
+   @0x0101C Ck(3,0x57)==0
+   @0x01020 Set(3,0x57)=1
+   @0x01024 Endif
+   @0x01026 Endif
+
+ROOM4041/sub01 @0x0101C  Ck(3,0x57)==0  [A]
+   unter: Ck(9,0x56)==1@0x01014
+   @0x01020 Set(3,0x57)=1
+   @0x01024 Endif
+
+ROOM40A0/main00 @0x00E68  Ck(9,0x0E)==1  [T]
+   @0x00E6C Aot_reset slot 7 sce 0 (31 00 00 00 00 00 00)
+   @0x00E76 Endif
+
+ROOM40A0/main00 @0x00E92  Ck(9,0x0F)==1  [T]
+   @0x00E96 Aot_reset slot 8 sce 0 (31 00 00 00 00 00 00)
+   @0x00EA0 Endif
+
+ROOM40A0/main00 @0x00EBC  Ck(9,0x10)==1  [T]
+   @0x00EC0 Aot_reset slot 9 sce 0 (31 00 00 00 00 00 00)
+   @0x00ECA Endif
+
+ROOM40A0/sub02 @0x00FE8  Ck(9,0x0E)==1  [T]
+   unter: Ck(12,0x1F)==0@0x00FC4 & Ck(4,0x13)==0@0x00FCC
+   @0x00FEC Aot_reset slot 7 sce 0 (31 00 00 00 00 00 00)
+   @0x00FF6 Endif
+
+ROOM40A0/sub02 @0x01006  Ck(9,0x0F)==1  [T]
+   unter: Ck(12,0x1F)==0@0x00FC4 & Ck(4,0x13)==0@0x00FCC
+   @0x0100A Aot_reset slot 8 sce 0 (31 00 00 00 00 00 00)
+   @0x01014 Endif
+
+ROOM40A0/sub02 @0x01024  Ck(9,0x10)==1  [T]
+   unter: Ck(12,0x1F)==0@0x00FC4 & Ck(4,0x13)==0@0x00FCC
+   @0x01028 Aot_reset slot 9 sce 0 (31 00 00 00 00 00 00)
+   @0x01032 Endif
+
+ROOM40A1/main00 @0x00E68  Ck(9,0x0E)==1  [T]
+   @0x00E6C Aot_reset slot 7 sce 0 (31 00 00 00 00 00 00)
+   @0x00E76 Endif
+
+ROOM40A1/main00 @0x00E92  Ck(9,0x0F)==1  [T]
+   @0x00E96 Aot_reset slot 8 sce 0 (31 00 00 00 00 00 00)
+   @0x00EA0 Endif
+
+ROOM40A1/main00 @0x00EBC  Ck(9,0x10)==1  [T]
+   @0x00EC0 Aot_reset slot 9 sce 0 (31 00 00 00 00 00 00)
+   @0x00ECA Endif
+
+ROOM40A1/sub02 @0x00FE8  Ck(9,0x0E)==1  [T]
+   unter: Ck(12,0x1F)==0@0x00FC4 & Ck(4,0x13)==0@0x00FCC
+   @0x00FEC Aot_reset slot 7 sce 0 (31 00 00 00 00 00 00)
+   @0x00FF6 Endif
+
+ROOM40A1/sub02 @0x01006  Ck(9,0x0F)==1  [T]
+   unter: Ck(12,0x1F)==0@0x00FC4 & Ck(4,0x13)==0@0x00FCC
+   @0x0100A Aot_reset slot 8 sce 0 (31 00 00 00 00 00 00)
+   @0x01014 Endif
+
+ROOM40A1/sub02 @0x01024  Ck(9,0x10)==1  [T]
+   unter: Ck(12,0x1F)==0@0x00FC4 & Ck(4,0x13)==0@0x00FCC
+   @0x01028 Aot_reset slot 9 sce 0 (31 00 00 00 00 00 00)
+   @0x01032 Endif
+
+ROOM5011/sub00 @0x0054A  Ck(4,0xF8)==1  [S]
+   unter: NOT Ck(4,0xED)==1@0x0053A
+   @0x0054E Evt_exec sub04
+   @0x00552 Endif
+
+ROOM5030/sub00 @0x01086  Ck(3,0x73)==0  [S]
+   @0x0108A Aot_set slot 5 sce 3 (b1 00 00 84 9f b0 d2 9c 9b a4 d4 78 a1 80 da)
+   @0x010A6 Endif
+
+ROOM5031/sub00 @0x0108C  Ck(3,0x73)==0  [S]
+   @0x01090 Aot_set slot 5 sce 3 (b1 00 00 84 9f b0 d2 9c 9b a4 d4 78 a1 80 da)
+   @0x010AC Endif
+
+ROOM5060/main00 @0x02C38  Ck(3,0x4D)==0  [S]
+   unter: NOT Ck(3,0x4F)==0@0x02C18
+   @0x02C3C Aot_set slot 15 sce 3 (31 00 00 5c f9 64 9c 54 0b b0 04 ff 00 18 06)
+   @0x02C50 Set(5,0x04)=1
+   @0x02C54 Else_ck
+   ELSE:
+     @0x02C58 Aot_set slot 15 sce 1 (31 00 00 5c f9 64 9c 54 0b b0 04 0e 00 ff ff)
+
+ROOM5061/main00 @0x02C38  Ck(3,0x4D)==0  [S]
+   unter: NOT Ck(3,0x4F)==0@0x02C18
+   @0x02C3C Aot_set slot 15 sce 3 (31 00 00 5c f9 64 9c 54 0b b0 04 ff 00 18 06)
+   @0x02C50 Set(5,0x04)=1
+   @0x02C54 Else_ck
+   ELSE:
+     @0x02C58 Aot_set slot 15 sce 1 (31 00 00 5c f9 64 9c 54 0b b0 04 0e 00 ff ff)
+
+=== 5. Benutzungs-Nachrichten (Text-Seite) mit ihren Bedingungen ===
+ROOM1090/sub03 @0x02502 msg 9 "You've used the Fire Extinguisher."
+   unter: -
+   T/A/S: KEIN
+ROOM1090/sub06 @0x02708 msg 8 'Will you use the Fire Extinguisher? '
+   unter: -
+   T/A/S: KEIN
+ROOM10D0/sub20 @0x019AE msg 7 'A card reader.You have to use the Blue Keycard / and insert four digit'
+   unter: -
+   T/A/S: KEIN
+ROOM10D0/sub20 @0x019C4 msg 9 "You've used the Blue Keycard."
+   unter: Ck(12,0x1F)==0@0x019B8 & Ck(9,0x34)==1@0x019C0
+   T/A/S: Ck(9,0x34)==1@0x019C0
+ROOM10D0/sub20 @0x019D2 msg 8 'You have not the Blue Keycard / to operate it.'
+   unter: Ck(12,0x1F)==0@0x019B8 & NOT Ck(9,0x34)==1@0x019C0
+   T/A/S: NOT Ck(9,0x34)==1@0x019C0
+ROOM10D1/sub20 @0x01998 msg 7 'A card reader.You have to use the Blue Keycard / and insert four digit'
+   unter: -
+   T/A/S: KEIN
+ROOM10D1/sub20 @0x019AE msg 9 "You've used the Blue Keycard."
+   unter: Ck(12,0x1F)==0@0x019A2 & Ck(9,0x34)==1@0x019AA
+   T/A/S: Ck(9,0x34)==1@0x019AA
+ROOM10D1/sub20 @0x019BC msg 8 'You have not the Blue Keycard / to operate it.'
+   unter: Ck(12,0x1F)==0@0x019A2 & NOT Ck(9,0x34)==1@0x019AA
+   T/A/S: NOT Ck(9,0x34)==1@0x019AA
+ROOM1100/sub02 @0x00C90 msg 4 "You've used the Minidisc Player w/ Disc."
+   unter: -
+   T/A/S: KEIN
+ROOM1100/sub07 @0x00D56 msg 3 'Will you use the Minidisc Player w/ Disc? '
+   unter: -
+   T/A/S: KEIN
+ROOM1101/sub02 @0x00C90 msg 4 "You've used the Minidisc Player w/ Disc."
+   unter: -
+   T/A/S: KEIN
+ROOM1101/sub07 @0x00D56 msg 3 'Will you use the Minidisc Player w/ Disc? '
+   unter: -
+   T/A/S: KEIN
+ROOM11E0/sub20 @0x01F96 msg 7 'A card reader.You have to use the Yellow Keycard / and insert four dig'
+   unter: -
+   T/A/S: KEIN
+ROOM11E0/sub20 @0x01FAC msg 9 "You've used the Yellow Keycard."
+   unter: Ck(12,0x1F)==0@0x01FA0 & Ck(9,0x8A)==1@0x01FA8
+   T/A/S: Ck(9,0x8A)==1@0x01FA8
+ROOM11E0/sub20 @0x01FBA msg 8 'You have not the Yellow Keycard / to operate it.'
+   unter: Ck(12,0x1F)==0@0x01FA0 & NOT Ck(9,0x8A)==1@0x01FA8
+   T/A/S: NOT Ck(9,0x8A)==1@0x01FA8
+ROOM11E0/sub21 @0x01FEE msg 12 "You've used the Pliers."
+   unter: -
+   T/A/S: KEIN
+ROOM11E0/sub26 @0x020B2 msg 11 'Will you use the Pliers? '
+   unter: -
+   T/A/S: KEIN
+ROOM11E1/sub20 @0x01F96 msg 7 'A card reader.You have to use the Yellow Keycard / and insert four dig'
+   unter: -
+   T/A/S: KEIN
+ROOM11E1/sub20 @0x01FAC msg 9 "You've used the Yellow Keycard."
+   unter: Ck(12,0x1F)==0@0x01FA0 & Ck(9,0x8A)==1@0x01FA8
+   T/A/S: Ck(9,0x8A)==1@0x01FA8
+ROOM11E1/sub20 @0x01FBA msg 8 'You have not the Yellow Keycard / to operate it.'
+   unter: Ck(12,0x1F)==0@0x01FA0 & NOT Ck(9,0x8A)==1@0x01FA8
+   T/A/S: NOT Ck(9,0x8A)==1@0x01FA8
+ROOM11E1/sub21 @0x01FEE msg 12 "You've used the Pliers."
+   unter: -
+   T/A/S: KEIN
+ROOM11E1/sub26 @0x020B2 msg 11 'Will you use the Pliers? '
+   unter: -
+   T/A/S: KEIN
+ROOM1230/sub20 @0x01476 msg 7 'A card reader.You have to use the Red Keycard / and insert four digits'
+   unter: -
+   T/A/S: KEIN
+ROOM1230/sub20 @0x0148C msg 9 "You've used the Red Keycard."
+   unter: Ck(12,0x1F)==0@0x01480 & Ck(9,0x88)==1@0x01488
+   T/A/S: Ck(9,0x88)==1@0x01488
+ROOM1230/sub20 @0x0149A msg 8 'You have not the Red Keycard / to operate it.'
+   unter: Ck(12,0x1F)==0@0x01480 & NOT Ck(9,0x88)==1@0x01488
+   T/A/S: NOT Ck(9,0x88)==1@0x01488
+ROOM1231/sub20 @0x01476 msg 7 'A card reader.You have to use the Red Keycard / and insert four digits'
+   unter: -
+   T/A/S: KEIN
+ROOM1231/sub20 @0x0148C msg 9 "You've used the Red Keycard."
+   unter: Ck(12,0x1F)==0@0x01480 & Ck(9,0x88)==1@0x01488
+   T/A/S: Ck(9,0x88)==1@0x01488
+ROOM1231/sub20 @0x0149A msg 8 'You have not the Red Keycard / to operate it.'
+   unter: Ck(12,0x1F)==0@0x01480 & NOT Ck(9,0x88)==1@0x01488
+   T/A/S: NOT Ck(9,0x88)==1@0x01488
+ROOM2020/sub02 @0x00A62 msg 1 'Will you use the Crank? '
+   unter: -
+   T/A/S: KEIN
+ROOM2021/sub02 @0x00A62 msg 1 'Will you use the Crank? '
+   unter: -
+   T/A/S: KEIN
+ROOM2040/sub07 @0x016EE msg 5 'Will you use the Time Bomb?    e         /            4   2  /        '
+   unter: -
+   T/A/S: KEIN
+ROOM2041/sub07 @0x016EE msg 5 'Will you use the Time Bomb?    e         /            4   2  /        '
+   unter: -
+   T/A/S: KEIN
+ROOM2060/sub12 @0x015D0 msg 1 'I need to insert the missing / fuse before I can operate this.'
+   unter: Ck(12,0x1F)==0@0x015C4 & Ck(3,0x90)==0@0x015CC
+   T/A/S: KEIN
+ROOM2060/sub18 @0x0167E msg 4 'Will you use the Fuse? '
+   unter: -
+   T/A/S: KEIN
+ROOM2060/sub19 @0x016C8 msg 5 "You've used the Fuse."
+   unter: -
+   T/A/S: KEIN
+ROOM2061/sub12 @0x015D0 msg 1 'I need to insert the missing / fuse before I can operate this.'
+   unter: Ck(12,0x1F)==0@0x015C4 & Ck(3,0x90)==0@0x015CC
+   T/A/S: KEIN
+ROOM2061/sub18 @0x0167E msg 4 'Will you use the Fuse? '
+   unter: -
+   T/A/S: KEIN
+ROOM2061/sub19 @0x016C8 msg 5 "You've used the Fuse."
+   unter: -
+   T/A/S: KEIN
+ROOM2080/sub02 @0x00C86 msg 0 'From here maybe I can control the / water level.Will you operate the c'
+   unter: -
+   T/A/S: KEIN
+ROOM2081/sub02 @0x00C86 msg 0 'From here maybe I can control the / water level.Will you operate the c'
+   unter: -
+   T/A/S: KEIN
+ROOM3010/sub02 @0x02306 msg 1 "You've used the Green Keycard."
+   unter: -
+   T/A/S: KEIN
+ROOM3011/sub02 @0x0233A msg 1 "You've used the Green Keycard."
+   unter: -
+   T/A/S: KEIN
+ROOM3050/sub10 @0x02578 msg 3 'The computer seems to be working. / There is a note:In case the machin'
+   unter: -
+   T/A/S: KEIN
+ROOM3050/sub10 @0x0257E msg 4 'Will you use the Red Master Keycard? '
+   unter: -
+   T/A/S: KEIN
+ROOM3050/sub15 @0x02608 msg 5 "You've used the Red Master Keycard."
+   unter: -
+   T/A/S: KEIN
+ROOM3051/sub10 @0x02578 msg 3 'The computer seems to be working. / There is a note:In case the machin'
+   unter: -
+   T/A/S: KEIN
+ROOM3051/sub10 @0x0257E msg 4 'Will you use the Red Master Keycard? '
+   unter: -
+   T/A/S: KEIN
+ROOM3051/sub15 @0x02608 msg 5 "You've used the Red Master Keycard."
+   unter: -
+   T/A/S: KEIN
+ROOM3071/sub11 @0x03AC9 msg 6 'Elza: No... It looks like it can be / operated only from the inside...'
+   unter: -
+   T/A/S: KEIN
+ROOM3091/sub07 @0x016CA msg 32 "You've used the Latch Key."
+   unter: -
+   T/A/S: KEIN
+ROOM4000/sub02 @0x01440 msg 1 'Will you use the Blue Master Keycard? '
+   unter: Ck(3,0x20)==0@0x0142A
+   T/A/S: KEIN
+ROOM4000/sub02 @0x0144A msg 2 "You've used the Blue Master Keycard."
+   unter: Ck(3,0x20)==0@0x0142A & Ck(12,0x1F)==0@0x01446
+   T/A/S: KEIN
+ROOM4030/sub02 @0x0063A msg 1 'Will you use the Spark Plug? '
+   unter: Ck(5,0x03)==1@0x00636
+   T/A/S: KEIN
+ROOM4031/sub02 @0x0067C msg 1 'Will you use the Spark Plug? '
+   unter: Ck(5,0x03)==1@0x00678
+   T/A/S: KEIN
+ROOM5050/sub02 @0x0086E msg 0 'Will you operate the / computer? '
+   unter: -
+   T/A/S: KEIN
+ROOM5051/sub02 @0x0086E msg 0 'Will you operate the / computer? '
+   unter: -
+   T/A/S: KEIN

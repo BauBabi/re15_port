@@ -1,0 +1,235 @@
+Typ 0x10  CDEMD0 Sektor    0 214496 B byte b9 | CDEMD1 Sektor    0 214816 B byte e8
+    Port-Kette CDEMD0 idx  0 @0x000000 214496 B == TOC-Blob[:214496]: True
+    Port-Kette CDEMD1 idx  0 @0x000000 214816 B == TOC-Blob[:214816]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1676 B)
+    emr2(struktur+loco)    gleich (14096 B)
+    edd3(eigene)           VERSCHIEDEN 6592 / 6596 B  Clips 43 / 43  Bilderzahl-Abweichung [(1, 26, 25), (2, 30, 18), (4, 21, 25), (5, 30, 18), (9, 65, 70), (10, 65, 70), (29, 29, 41)]
+    emr4(eigene)           VERSCHIEDEN 77288 / 76256 B  Kopf (100, 8, 15, 80) / (100, 176, 15, 80)
+    edd5(opfer)            VERSCHIEDEN 1704 / 1852 B  Clips 14 / 14  Bilderzahl-Abweichung [(1, 26, 25), (2, 20, 36), (4, 21, 25), (5, 20, 34), (6, 65, 70), (7, 65, 70), (10, 49, 46), (13, 49, 46)]
+    emr6(opfer)            VERSCHIEDEN 28408 / 29608 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (18092 B)
+    tim                    gleich (66592 B)
+Typ 0x11  CDEMD0 Sektor  105 214272 B byte f1 | CDEMD1 Sektor  105 214592 B byte 1f
+    Port-Kette CDEMD0 idx  1 @0x034800 214272 B == TOC-Blob[:214272]: True
+    Port-Kette CDEMD1 idx  1 @0x034800 214592 B == TOC-Blob[:214592]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1580 B)
+    emr2(struktur+loco)    gleich (14096 B)
+    edd3(eigene)           VERSCHIEDEN 6592 / 6596 B  Clips 43 / 43  Bilderzahl-Abweichung [(1, 26, 25), (2, 30, 18), (4, 21, 25), (5, 30, 18), (9, 65, 70), (10, 65, 70), (29, 29, 41)]
+    emr4(eigene)           VERSCHIEDEN 77288 / 76256 B  Kopf (100, 8, 15, 80) / (100, 176, 15, 80)
+    edd5(opfer)            VERSCHIEDEN 1704 / 1852 B  Clips 14 / 14  Bilderzahl-Abweichung [(1, 26, 25), (2, 20, 36), (4, 21, 25), (5, 20, 34), (6, 65, 70), (7, 65, 70), (10, 49, 46), (13, 49, 46)]
+    emr6(opfer)            VERSCHIEDEN 28408 / 29608 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (17964 B)
+    tim                    gleich (66592 B)
+Typ 0x12  CDEMD0 Sektor  210 215392 B byte 67 | CDEMD1 Sektor  210 215712 B byte 24
+    Port-Kette CDEMD0 idx  2 @0x069000 215392 B == TOC-Blob[:215392]: True
+    Port-Kette CDEMD1 idx  2 @0x069000 215712 B == TOC-Blob[:215712]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1740 B)
+    emr2(struktur+loco)    gleich (15056 B)
+    edd3(eigene)           VERSCHIEDEN 6592 / 6596 B  Clips 43 / 43  Bilderzahl-Abweichung [(1, 26, 25), (2, 30, 18), (4, 21, 25), (5, 30, 18), (9, 65, 70), (10, 65, 70), (29, 29, 41)]
+    emr4(eigene)           VERSCHIEDEN 77288 / 76256 B  Kopf (100, 8, 15, 80) / (100, 176, 15, 80)
+    edd5(opfer)            VERSCHIEDEN 1704 / 1852 B  Clips 14 / 14  Bilderzahl-Abweichung [(1, 26, 25), (2, 20, 36), (4, 21, 25), (5, 20, 34), (6, 65, 70), (7, 65, 70), (10, 49, 46), (13, 49, 46)]
+    emr6(opfer)            VERSCHIEDEN 28408 / 29608 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (17964 B)
+    tim                    gleich (66592 B)
+Typ 0x13  CDEMD0 Sektor  316 225864 B byte 8c | CDEMD1 Sektor  316 227196 B byte e1
+    Port-Kette CDEMD0 idx  3 @0x09e000 225864 B == TOC-Blob[:225864]: True
+    Port-Kette CDEMD1 idx  3 @0x09e000 227196 B == TOC-Blob[:227196]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1384 B)
+    emr2(struktur+loco)    gleich (13696 B)
+    edd3(eigene)           VERSCHIEDEN 6412 / 6564 B  Clips 42 / 42  Bilderzahl-Abweichung [(0, 14, 24), (1, 30, 34), (3, 14, 24), (4, 30, 36), (5, 26, 24), (9, 65, 70), (10, 65, 60), (29, 21, 31)]
+    emr4(eigene)           VERSCHIEDEN 83208 / 81456 B  Kopf (100, 8, 15, 80) / (100, 176, 15, 80)
+    edd5(opfer)            VERSCHIEDEN 1792 / 1924 B  Clips 14 / 14  Bilderzahl-Abweichung [(0, 14, 24), (1, 30, 35), (2, 31, 41), (3, 14, 24), (4, 30, 35), (5, 31, 27), (6, 65, 70), (7, 65, 60), (10, 42, 41), (13, 42, 40)]
+    emr6(opfer)            VERSCHIEDEN 31208 / 34008 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (21524 B)
+    tim                    gleich (66592 B)
+Typ 0x16  CDEMD0 Sektor  427 213584 B byte 67 | CDEMD1 Sektor  427 213904 B byte e5
+    Port-Kette CDEMD0 idx  4 @0x0d5800 213584 B == TOC-Blob[:213584]: True
+    Port-Kette CDEMD1 idx  4 @0x0d5800 213904 B == TOC-Blob[:213904]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1532 B)
+    emr2(struktur+loco)    gleich (13696 B)
+    edd3(eigene)           VERSCHIEDEN 6592 / 6596 B  Clips 43 / 43  Bilderzahl-Abweichung [(1, 26, 25), (2, 30, 18), (4, 21, 25), (5, 30, 18), (9, 65, 70), (10, 65, 70), (29, 29, 41)]
+    emr4(eigene)           VERSCHIEDEN 77288 / 76256 B  Kopf (100, 8, 15, 80) / (100, 176, 15, 80)
+    edd5(opfer)            VERSCHIEDEN 1704 / 1852 B  Clips 14 / 14  Bilderzahl-Abweichung [(1, 26, 25), (2, 20, 36), (4, 21, 25), (5, 20, 34), (6, 65, 70), (7, 65, 70), (10, 49, 46), (13, 49, 46)]
+    emr6(opfer)            VERSCHIEDEN 28408 / 29608 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (17724 B)
+    tim                    gleich (66592 B)
+Typ 0x18  CDEMD0 Sektor  532 218424 B byte df | CDEMD1 Sektor  532 219772 B byte 2a
+    Port-Kette CDEMD0 idx  5 @0x10a000 218424 B == TOC-Blob[:218424]: True
+    Port-Kette CDEMD1 idx  5 @0x10a000 219772 B == TOC-Blob[:219772]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1548 B)
+    emr2(struktur+loco)    gleich (21296 B)
+    edd3(eigene)           gleich (6592 B)
+    emr4(eigene)           gleich (77288 B)
+    edd5(opfer)            VERSCHIEDEN 1704 / 1852 B  Clips 14 / 14  Bilderzahl-Abweichung [(1, 26, 25), (2, 20, 36), (4, 21, 25), (5, 20, 34), (6, 65, 70), (7, 65, 70), (10, 49, 46), (13, 49, 46)]
+    emr6(opfer)            VERSCHIEDEN 28408 / 29608 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (14948 B)
+    tim                    gleich (66592 B)
+Typ 0x1A  CDEMD0 Sektor  639  77504 B byte c6 | CDEMD1 Sektor  640  77504 B byte c6
+    Port-Kette CDEMD0 idx  6 @0x13f800  77504 B == TOC-Blob[:77504]: True
+    Port-Kette CDEMD1 idx  6 @0x140000  77504 B == TOC-Blob[:77504]: True
+    BLOB IDENTISCH (md5 7c315d73)
+Typ 0x20  CDEMD0 Sektor  677 166912 B byte 21 | CDEMD1 Sektor  678 166912 B byte 96
+    Port-Kette CDEMD0 idx  7 @0x152800 166912 B == TOC-Blob[:166912]: True
+    Port-Kette CDEMD1 idx  7 @0x153000 166912 B == TOC-Blob[:166912]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (3260 B)
+    emr2(struktur+loco)    VERSCHIEDEN 55776 / 55776 B  Kopf (100, 176, 15, 80) / (100, 176, 15, 80)  Bind-Lagen gleich, Hierarchie gleich
+    edd3(eigene)           gleich (4 B)
+    emr4(eigene)           gleich (4 B)
+    edd5(opfer)            gleich (932 B)
+    emr6(opfer)            VERSCHIEDEN 17532 / 17532 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (22764 B)
+    tim                    gleich (66592 B)
+Typ 0x21  CDEMD0 Sektor  759  69944 B byte d8 | CDEMD1 Sektor  760  70364 B byte d1
+    Port-Kette CDEMD0 idx  8 @0x17b800  69944 B == TOC-Blob[:69944]: True
+    Port-Kette CDEMD1 idx  8 @0x17c000  70364 B == TOC-Blob[:70364]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1448 B)
+    emr2(struktur+loco)    gleich (17432 B)
+    edd3(eigene)           gleich (4 B)
+    emr4(eigene)           gleich (4 B)
+    edd5(opfer)            VERSCHIEDEN 296 / 316 B  Clips 3 / 3  Bilderzahl-Abweichung [(1, 36, 31), (2, 20, 30)]
+    emr6(opfer)            VERSCHIEDEN 5612 / 6012 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (11788 B)
+    tim                    gleich (33312 B)
+Typ 0x24  CDEMD0 Sektor  794  34876 B byte 15 | CDEMD1 Sektor  795  34876 B byte 15
+    Port-Kette CDEMD0 idx  9 @0x18d000  34876 B == TOC-Blob[:34876]: True
+    Port-Kette CDEMD1 idx  9 @0x18d800  34876 B == TOC-Blob[:34876]: True
+    BLOB IDENTISCH (md5 7d627a96)
+Typ 0x25  CDEMD0 Sektor  812 128160 B byte 1e | CDEMD1 Sektor  813 128160 B byte f4
+    Port-Kette CDEMD0 idx 10 @0x196000 128160 B == TOC-Blob[:128160]: True
+    Port-Kette CDEMD1 idx 10 @0x196800 128160 B == TOC-Blob[:128160]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (2252 B)
+    emr2(struktur+loco)    gleich (29972 B)
+    edd3(eigene)           gleich (4 B)
+    emr4(eigene)           gleich (4 B)
+    edd5(opfer)            gleich (88 B)
+    emr6(opfer)            VERSCHIEDEN 1612 / 1612 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (27588 B)
+    tim                    gleich (66592 B)
+Typ 0x26  CDEMD0 Sektor  875  33580 B byte 09 | CDEMD1 Sektor  876  33580 B byte 09
+    Port-Kette CDEMD0 idx 11 @0x1b5800  33580 B == TOC-Blob[:33580]: True
+    Port-Kette CDEMD1 idx 11 @0x1b6000  33580 B == TOC-Blob[:33580]: True
+    BLOB IDENTISCH (md5 330277ef)
+Typ 0x27  CDEMD0 Sektor  892 207824 B byte bc | CDEMD1 Sektor  893 207236 B byte d8
+    Port-Kette CDEMD0 idx 12 @0x1be000 207824 B == TOC-Blob[:207824]: True
+    Port-Kette CDEMD1 idx 12 @0x1be800 207236 B == TOC-Blob[:207236]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (5228 B)
+    emr2(struktur+loco)    gleich (89776 B)
+    edd3(eigene)           gleich (4 B)
+    emr4(eigene)           gleich (4 B)
+    edd5(opfer)            VERSCHIEDEN 624 / 596 B  Clips 2 / 2  Bilderzahl-Abweichung [(0, 70, 63)]
+    emr6(opfer)            VERSCHIEDEN 11288 / 10728 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (34260 B)
+    tim                    gleich (66592 B)
+Typ 0x29  CDEMD0 Sektor  994 222424 B byte 5e | CDEMD1 Sektor  995 221828 B byte a4
+    Port-Kette CDEMD0 idx 13 @0x1f1000 222424 B == TOC-Blob[:222424]: True
+    Port-Kette CDEMD1 idx 13 @0x1f1800 221828 B == TOC-Blob[:221828]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (5752 B)
+    emr2(struktur+loco)    gleich (103216 B)
+    edd3(eigene)           gleich (4 B)
+    emr4(eigene)           gleich (4 B)
+    edd5(opfer)            VERSCHIEDEN 740 / 704 B  Clips 4 / 2  Bilderzahl-Abweichung [(0, 70, 63), (1, 39, 110), (2, 20, None), (3, 51, None)]
+    emr6(opfer)            VERSCHIEDEN 14408 / 13848 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (31660 B)
+    tim                    gleich (66592 B)
+Typ 0x2B  CDEMD0 Sektor 1103 262768 B byte 97 | CDEMD1 Sektor 1104 268324 B byte 47
+    Port-Kette CDEMD0 idx 14 @0x227800 262768 B == TOC-Blob[:262768]: True
+    Port-Kette CDEMD1 idx 14 @0x228000 268324 B == TOC-Blob[:268324]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (4468 B)
+    emr2(struktur+loco)    gleich (127280 B)
+    edd3(eigene)           gleich (4 B)
+    emr4(eigene)           gleich (4 B)
+    edd5(opfer)            VERSCHIEDEN 1456 / 1732 B  Clips 8 / 11  Bilderzahl-Abweichung [(8, None, 6), (9, None, 30), (10, None, 30)]
+    emr6(opfer)            VERSCHIEDEN 28008 / 33288 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    gleich (34908 B)
+    tim                    gleich (66592 B)
+Typ 0x2D  CDEMD0 Sektor 1232  59288 B byte a0 | CDEMD1 Sektor 1236  59288 B byte a0
+    Port-Kette CDEMD0 idx 15 @0x268000  59288 B == TOC-Blob[:59288]: True
+    Port-Kette CDEMD1 idx 15 @0x26a000  59288 B == TOC-Blob[:59288]: True
+    BLOB IDENTISCH (md5 c35ebdfa)
+Typ 0x30  CDEMD0 Sektor 1261 226404 B byte c0 | CDEMD1 Sektor 2015 228460 B byte 55
+    Port-Kette CDEMD0 idx 16 @0x276800 226404 B == TOC-Blob[:226404]: True
+    Port-Kette CDEMD1 idx 16 @0x278800 226404 B == TOC-Blob[:226404]: False
+    dir-Zahl 9 / 9
+    d0                     gleich (4716 B)
+    edd1(loco)             VERSCHIEDEN 5520 / 5356 B  Clips 21 / 21  Bilderzahl-Abweichung [(1, 68, 27)]
+    emr2(struktur+loco)    VERSCHIEDEN 76792 / 73348 B  Kopf (104, 184, 16, 84) / (104, 184, 16, 84)  Bind-Lagen gleich, Hierarchie gleich
+    edd3(eigene)           gleich (4 B)
+    emr4(eigene)           gleich (4 B)
+    edd5(opfer)            gleich (400 B)
+    emr6(opfer)            VERSCHIEDEN 7688 / 7688 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    md1                    VERSCHIEDEN 31364 / 37028 B
+    tim                    VERSCHIEDEN 99872 / 99872 B
+Typ 0x36  CDEMD0 Sektor 1372 128600 B byte 66 | CDEMD1 Sektor 1376 128600 B byte 66
+    Port-Kette CDEMD0 idx 17 @0x2ae000 128600 B == TOC-Blob[:128600]: True
+    Port-Kette CDEMD1 idx 17 @0x2b0000 128600 B == TOC-Blob[:128600]: True
+    BLOB IDENTISCH (md5 1cb4b13b)
+Typ 0x40  CDEMD0 Sektor 1435 133400 B byte 83 | CDEMD1 Sektor 1439 133400 B byte 83
+    Port-Kette CDEMD0 idx 18 @0x2cd800 133400 B == TOC-Blob[:133400]: True
+    Port-Kette CDEMD1 idx 18 @0x2cf800 133400 B == TOC-Blob[:133400]: True
+    BLOB IDENTISCH (md5 29d0f6bc)
+Typ 0x42  CDEMD0 Sektor 1501 162524 B byte 8b | CDEMD1 Sektor 1505 144032 B byte 08
+    Port-Kette CDEMD0 idx 19 @0x2ee800 162524 B == TOC-Blob[:162524]: True
+    Port-Kette CDEMD1 idx 19 @0x2f0800 144032 B == TOC-Blob[:144032]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             gleich (1532 B)
+    emr2(struktur+loco)    VERSCHIEDEN 28816 / 28816 B  Kopf (100, 176, 15, 80) / (100, 176, 15, 80)  Bind-Lagen VERSCHIEDEN, Hierarchie gleich
+    edd3(eigene)           VERSCHIEDEN 932 / 1344 B  Clips 6 / 14  Bilderzahl-Abweichung [(6, None, 10), (7, None, 16), (8, None, 1), (9, None, 17), (10, None, 1), (11, None, 17), (12, None, 1), (13, None, 32)]
+    emr4(eigene)           VERSCHIEDEN 11448 / 17528 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    edd5(opfer)            gleich (4 B)
+    emr6(opfer)            gleich (4 B)
+    md1                    VERSCHIEDEN 19868 / 28164 B
+    tim                    VERSCHIEDEN 99872 / 66592 B
+Typ 0x45  CDEMD0 Sektor 1581 128432 B byte d0 | CDEMD1 Sektor 1576 128432 B byte d0
+    Port-Kette CDEMD0 idx 20 @0x316800 128432 B == TOC-Blob[:128432]: True
+    Port-Kette CDEMD1 idx 20 @0x314000 128432 B == TOC-Blob[:128432]: True
+    BLOB IDENTISCH (md5 9dab670e)
+Typ 0x47  CDEMD0 Sektor 1644 127640 B byte a3 | CDEMD1 Sektor 1639 142272 B byte 2e
+    Port-Kette CDEMD0 idx 21 @0x336000 127640 B == TOC-Blob[:127640]: True
+    Port-Kette CDEMD1 idx 21 @0x333800 142272 B == TOC-Blob[:142272]: True
+    dir-Zahl 9 / 9
+    d0                     gleich (4 B)
+    edd1(loco)             VERSCHIEDEN 1556 / 2008 B  Clips 24 / 24  Bilderzahl-Abweichung [(7, 1, 113), (8, 1, 2)]
+    emr2(struktur+loco)    VERSCHIEDEN 29296 / 34096 B  Kopf (100, 176, 15, 80) / (100, 176, 15, 80)  Bind-Lagen VERSCHIEDEN, Hierarchie gleich
+    edd3(eigene)           VERSCHIEDEN 712 / 836 B  Clips 6 / 6  Bilderzahl-Abweichung [(5, 30, 61)]
+    emr4(eigene)           VERSCHIEDEN 11848 / 13048 B  Kopf (0, 8, 15, 80) / (0, 8, 15, 80)
+    edd5(opfer)            gleich (4 B)
+    emr6(opfer)            gleich (4 B)
+    md1                    VERSCHIEDEN 17580 / 25636 B
+    tim                    VERSCHIEDEN 66592 / 66592 B
+Typ 0x49  CDEMD0 Sektor 1707 137200 B byte 27 | CDEMD1 Sektor 1709 137200 B byte 27
+    Port-Kette CDEMD0 idx 22 @0x355800 137200 B == TOC-Blob[:137200]: True
+    Port-Kette CDEMD1 idx 22 @0x356800 137200 B == TOC-Blob[:137200]: True
+    BLOB IDENTISCH (md5 ef5fc85e)
+Typ 0x4B  CDEMD0 Sektor 1774 139016 B byte f7 | CDEMD1 Sektor 1776 139016 B byte f7
+    Port-Kette CDEMD0 idx 23 @0x377000 139016 B == TOC-Blob[:139016]: True
+    Port-Kette CDEMD1 idx 23 @0x378000 139016 B == TOC-Blob[:139016]: True
+    BLOB IDENTISCH (md5 e4ad5b20)
+Typ 0x4D  CDEMD0 Sektor 1842 163316 B byte 78 | CDEMD1 Sektor 1844 163316 B byte 78
+    Port-Kette CDEMD0 idx 24 @0x399000 163316 B == TOC-Blob[:163316]: True
+    Port-Kette CDEMD1 idx 24 @0x39a000 163316 B == TOC-Blob[:163316]: True
+    BLOB IDENTISCH (md5 29500463)

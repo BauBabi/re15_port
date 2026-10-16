@@ -62,6 +62,7 @@
 #include "re15_math.h"       /* re15_vector_normal — MatrixNormal_0-Zwilling */
 #include "re15_ai_flavor.h"
 #include "re15_zombieki_r36.h"   /* Runde 36 Spur F: Sicht-Bit */
+#include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 */
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
@@ -356,6 +357,7 @@ void re15_re2z_hit_filter_apply(int slot);        /* Vier-Gate-Filter FUN_800470
 void re15_re2z_onesave_reset(void);                           /* Welle B (below): FUN_800401d4 latch */
 void re15_re2z_rng_reset(void) { s_re2_rng = 0xD2706CA4u;     /* room load — keeps runs deterministic */
                                  re15_re2z_onesave_reset();
+                                 re15_r37_marken_loeschen();   /* Runde 37 Spur H: Spawn-Marken leben mit dem Aktor-Feld */
                                  re15_re2dog_room_reset(); }  /* WELLE C: 0x800CFBF4-Analog (der
                                                                * einzige EXE-Clear FUN_80052f3c ist
                                                                * ein Room-Init) */
@@ -8648,6 +8650,8 @@ static void re2z_init(int slot, re15_actor_t *e)
         re15_ai_set_state_word(e, 0x701);                          /* @0x801009E8-0x80100A84 */
     } else if (sel == 0x0d) {                                      /* pre-engaged -> WALK */
         re15_ai_set_state_word(e, 0x101);
+    } else if (re15_r37_re2_gang(slot, e)) {                       /* Runde 37 Spur H: RE1.5 grid 0x00 = aktiv */
+        re15_ai_set_state_word(e, RE15_R37_RE2_WORT_GANG);         /* -> RE2-Deskriptor 6 @0x80100ab8-abc */
     } else {
         re15_ai_set_state_word(e, 0x1);                            /* sw 1,4(s2) @0x801006AC-B8 */
     }

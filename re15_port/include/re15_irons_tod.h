@@ -6,7 +6,7 @@
  * kommt eine weitere Cutscene: Leon: Sir! (Arm Streck Animation) / Leon rennt zu Irons zur Liege /
  * Leon: Sir, the communication system can't be fixed! ... / Irons: Leon... I... I'm proud ... /
  * Irons: But... I... I'm not going to make it... I'm sorry... / Irons: Please... one last favor...
- * Be a hero... Leon... (Arm ausgestreckt wie in der 1. Cutscene, dann abrupt fallen lassen, tot) /
+ * Get them out of here... Leon... [Runde 37 Nachtrag 10, vorher "Be a hero... Leon..."] (Arm ausgestreckt wie in der 1. Cutscene, dann abrupt fallen lassen, tot) /
  * Leon: SIR, Sir?! / Leon bleibt kniend - schuettelt mit leicht geneigten Kopf den Kopf langsam und
  * steht dann langsam wieder auf / Kurze Pause / Dann gibt es einen Knall - ... ROOM 1140 ... Anzahl an
  * Zombies die noch leben in ROOM 1130 spawnen bei Cut0 ... weiterer lauter Knall - so wie bei der

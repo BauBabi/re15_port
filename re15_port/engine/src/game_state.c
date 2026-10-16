@@ -182,6 +182,9 @@ void re15_game_flag_set(uint8_t zone, uint8_t idx, int value)
     if (value) g_game.flags[zone][word] |= mask;
     else       g_game.flags[zone][word] &= ~mask;
 
+    /* Runde 37 Spur N: Zone 1 Bit 0 = DAT_800aca3c Bit 31 = das Elza-Bit, das FUN_80022300 per `bltz`
+     * @0x80022334 liest (Bank-Tabelle @0x80074664[1]); vier Raumskripte klammern damit einen Birkin-Spawn. */
+    if (zone == 1 && idx == 0) { extern void re15_elzabit_skript_set(int); re15_elzabit_skript_set(value); }
     /* Der ECHTE Schreibvorgang des Originals (siehe Block oben): Zone 2, Wort 0. */
     if (zone == 2 && word == 0) {
         if (value) g_re15_pauseflags |= mask;    /* @0x8003fe6c `or`      */

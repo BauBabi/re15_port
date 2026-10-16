@@ -53,6 +53,7 @@ extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_re2doc.h"   /* die Bild-Ebene des FILE-Schirms */
 #include "re15_sicherung.h" /* Item-Bild + Icon der Sicherung im geladenen Puffer (Runde 30) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Icon + Bild der zwei Schluessel (0x42/0x45) */
+#include "re15_kiste2feld_r37.h" /* Runde 37 Spur R: 2-Feld-Symbol (Kiste) + Haelften je Zelle (Gitter) */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -360,17 +361,24 @@ static void inv_compose_cells(void)
         }
         if (tile == -2) {
             /* wide weapon (kind 1/2): the 80x30 icon from the item's ITPS block+0x21A0
-             * (FUN_800492b8 mode 1, single upload at the HEAD cell covering cells k and
-             * k+1 — LoadImage w=0x28hw @0x80049318-6c; the two ordinary 40x30 cell SPRTs
-             * then show the halves seamlessly). kind==2 (tail) is covered by the head's
-             * upload -> skip. */
-            uint8_t kind = g_inv.slots[k].flags;
-            uint8_t id = g_inv.slots[k].id;
-            if (kind == 1 && s_itps &&
-                ((int)id * 0x3000 + 0x21A0 + 80 * 30) <= s_itps_size) {
-                const uint8_t *src = s_itps + (int)id * 0x3000 + 0x21A0;
+             * (FUN_800492b8 mode 1 — LoadImage w=0x28hw @0x80049318-6c).
+             * Runde 37 Spur R (re15_kiste2feld_r37.h, Dossier R_kiste2feld.md §2.4): JEDE Zelle
+             * traegt ihre EIGENE Haelfte — Kopf (Flag 1) Spalten 0..39, Schwanz (Flag 2) 40..79.
+             * Das Original laedt das 80x30-Bild nur ueber Zelle 0/1 (FUN_8004dc4c -> FUN_800492b8
+             * @0x8004df08) und verschiebt danach je 40x30-Zelle (FUN_80049390 MoveImage @0x8004945c).
+             * Vorher schrieb der Kopf 80 Texel ab seiner Zelle: lag er in Speicher-Spalte 2 (Zelle
+             * 2/5/8, u 80), landete die rechte Haelfte bei u 120..159 und die Schwanzzelle zeigte
+             * alten Inhalt (gemessen: Spraydose / leer). Fuer Kopf in Spalte 0/1 bitgleich wie vorher. */
+            uint8_t id = 0;
+            int spalte0 = 0;
+            if (re15_kiste2feld_zelle(k, &id, &spalte0) && s_itps &&
+                ((long)id * RE15_KISTE2FELD_ITPS_BLOCK + RE15_KISTE2FELD_ITPS_BREITBILD +
+                 RE15_KISTE2FELD_BREIT_W * RE15_KISTE2FELD_BREIT_H) <= s_itps_size) {
+                const uint8_t *src = s_itps + (long)id * RE15_KISTE2FELD_ITPS_BLOCK +
+                                     RE15_KISTE2FELD_ITPS_BREITBILD + spalte0;
                 for (r = 0; r < 30; r++)
-                    memcpy(&s_icon8[v0 + r][u0], src + r * 80, 80);
+                    memcpy(&s_icon8[v0 + r][u0], src + r * RE15_KISTE2FELD_BREIT_W,
+                           RE15_KISTE2FELD_HAELFTE_W);
             }
             continue;
         }
@@ -1037,6 +1045,22 @@ static void raster_op(const re15_inv_op_t *o)
                     s_fb5[y][x] = img[py * pw + pxx];
                 }
         }
+    } else if (o->kind == RE15_INV_OP_PANELTEIL) {
+        /* Runde 37 Spur M: Ausschnitt (u,v)+(w,h) desselben Panel-Bilds 1:1 nach (x,y) — die Rahmen-Teile,
+         * die UEBER den gleitenden Zeilen liegen (RE2 OT-Eintrag 2 ueber 6/3, Beleg re15_kiste_r37.h). */
+        extern const uint16_t *re15_inv_boxpanel(int which, int *w, int *h);
+        int pw = 0, ph = 0;
+        const uint16_t *img = re15_inv_boxpanel(o->page, &pw, &ph);
+        if (img) {
+            for (int py = 0; py < o->h; py++)
+                for (int pxx = 0; pxx < o->w; pxx++) {
+                    int sx = o->u + pxx, sy = o->v + py;
+                    int x = o->x + pxx, y = o->y + py;
+                    if (sx >= pw || sy >= ph) continue;
+                    if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                    s_fb5[y][x] = img[sy * pw + sx];
+                }
+        }
     } else if (o->kind == RE15_INV_OP_FILL) {
         /* Deckendes Rechteck in exakter Farbe. RGB888 -> RGB555.
          * abe=1 = 50/50-Mix mit dem Untergrund (PSX ABR 0) - eingefuehrt fuer den
@@ -1131,37 +1155,43 @@ static void raster_op(const re15_inv_op_t *o)
          * 40x30 art of the identity icon map), w==80 samples the wide-weapon
          * 80x30 icon at ITPS block v*0x3000+0x21A0 (FUN_800492b8 mode-1 source).
          * Same ST_00-row-0 CLUT + opaque modulated pipeline as the icon cells. */
+        /* SKALIEREN statt beschneiden (Nutzer 2026-08-31: "die Item Bilder ragen heraus/sind
+         * abgeschnitten"): die Quelle wird auf w x h gestaucht.
+         * Runde 37 Spur R (re15_kiste2feld_r37.h, Dossier R_kiste2feld.md): o->u = QUELL-SPANNE wie RE2s
+         * POLY_FT4 u1 - u0 — 80 (2-Feld, `addiu t1,zero,120` @0x8007183c, u0 40 @0x800717b4) tastet das
+         * GANZE 80x30-Breitbild (ITPS-Block v*0x3000+0x21A0, RE1.5-Gegenstueck der RE2-Kacheln Id + Id+0x56,
+         * FUN_80069c40 @0x80069d4c-58) auf das 49x19-Symbol ab; sonst die 40x30-Kachel ITEMALL[v]. Abtastung
+         * = PSX-GPU (re15_kiste2feld_texel, gerundet; am RE2-Bild gemessen). Vorher tastete w >= 40 1:1 und
+         * klemmte Spalte 39: das 2-Feld-Symbol zeigte nur die linke Haelfte + 9 wiederholte Spalten. w == 80
+         * (alter 1:1-Pfad des Breitbilds) bleibt die Identitaet. */
         const uint16_t *clut = s_clut[o->clut];
         int tile = o->v, py, pxx;
-        for (py = 0; py < o->h; py++)
+        int breit = (o->u == RE15_KISTE2FELD_SPANNE_BREIT || o->w == RE15_KISTE2FELD_BREIT_W);
+        int sw = breit ? RE15_KISTE2FELD_BREIT_W : 40;
+        const uint8_t *src = NULL;
+        if (breit) {
+            long ofs = (long)tile * RE15_KISTE2FELD_ITPS_BLOCK + RE15_KISTE2FELD_ITPS_BREITBILD;
+            if (s_itps && ofs + RE15_KISTE2FELD_BREIT_W * RE15_KISTE2FELD_BREIT_H <= s_itps_size)
+                src = s_itps + ofs;
+        } else if (s_itemall && (tile + 1) * 1200 <= s_itemall_size) {
+            src = s_itemall + tile * 1200;
+        }
+        for (py = 0; src && py < o->h; py++) {
+            int syp = re15_kiste2feld_texel(RE15_KISTE2FELD_SPANNE_HOCH, o->h, py);
+            if (syp > 29) syp = 29;
             for (pxx = 0; pxx < o->w; pxx++) {
+                int sxp = re15_kiste2feld_texel(sw, o->w, pxx);
                 uint8_t t;
                 uint16_t c;
-                if (o->w == 80) {
-                    if (!s_itps || tile * 0x3000 + 0x21A0 + 80 * 30 > s_itps_size)
-                        continue;
-                    t = s_itps[tile * 0x3000 + 0x21A0 + py * 80 + pxx];
-                } else {
-                    if (!s_itemall || (tile + 1) * 1200 > s_itemall_size)
-                        continue;
-                    {   /* SKALIEREN statt beschneiden: die Quellkachel ist 40x30,
-                         * das Ziel kann kleiner sein (RE2s Zeilensymbol ist 25x19).
-                         * Vorher wurde nur die linke obere Ecke gezeigt — daher
-                         * "die Item Bilder ragen heraus/sind abgeschnitten"
-                         * (Nutzer 2026-08-31). */
-                        int sxp = (o->w >= 40) ? pxx : (pxx * 40) / o->w;
-                        int syp = (o->h >= 30) ? py  : (py  * 30) / o->h;
-                        if (sxp > 39) sxp = 39;
-                        if (syp > 29) syp = 29;
-                        t = s_itemall[tile * 1200 + syp * 40 + sxp];
-                    }
-                }
+                if (sxp > sw - 1) sxp = sw - 1;
+                t = src[syp * sw + sxp];
                 c = clut[t];
                 if (c == 0) continue;                 /* CLUT 0 = transparent */
                 px_opaque(o->x + pxx, o->y + py,
                           mod5(c & 31, o->r), mod5((c >> 5) & 31, o->g),
                           mod5((c >> 10) & 31, o->b));
             }
+        }
     } else if (o->kind == RE15_INV_OP_SPRT) {
         const uint16_t *clut = s_clut[o->clut];
         int py, pxx;

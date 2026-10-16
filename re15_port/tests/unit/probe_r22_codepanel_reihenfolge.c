@@ -185,6 +185,8 @@ static int teil_a(void)
     /* Die Karte liegt im Inventar: das "genommen"-Bit der Blue Keycard (bank 9 bit 52,
      * Ck @0x019C0) setzen — sonst nimmt sub20 den Zweig msg 8 ("You have not the ..."). */
     re15_game_flag_set(9, 52, 1);
+    /* Runde 37 Spur Q: das Bit zaehlt nur mit der Karte im INVENTAR (kistenregel_r37.c K2 @0x019C0, Blue Keycard 0x38). */
+    re15_inv_grant(0x38, 1);
 
     /* sub20 starten (im Spiel: QUADRAT auf dem Kartenleser-AOT main00 @0x0103E,
      * Aot_set slot1 sce=3, Daten ff 00 18 14 = Ereignistyp 0x18 / sub 20). */

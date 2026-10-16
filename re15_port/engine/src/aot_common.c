@@ -30,11 +30,14 @@
                               * differs, behind the re15_room_apply_pending ctx. */
 #include "re15_player.h"     /* RE15_PAD_BIT_UP + re15_player_push_substate (Schiebe-Handshake) */
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
+#include "re15_itemband_r37.h" /* Runde 37 Spur D: Band-Gate @0x80042cac-ccc auch fuer ITEM */
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (RE15_FILES_FIRST_ITEM_ID) */
 #include "re15_menu.h"       /* Runde 30: re15_menu_request_doc — Aufheben oeffnet den Leser */
 #include "re15_ziel1190.h"   /* Runde 36 Spur H: Scheiben-Text-Plaetze haengen an ihrer Scheibe */
 #include "re15_climb.h"      /* Runde 36 Spur R: re15_climb_standing_probe = DAT_800ac788 @0x8002bef0 */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 (FUN_8003b558 + FUN_8003da78), zellschub_r36.c */
+#include "re15_fahrstuhl_r37.h" /* Runde 37 Spur C: Tuersequenz beim Aussteigen aus den Fahrstuhlkabinen */
+#include "re15_lastenaufzug_r37.h" /* Runde 37 Spur C N1: Ausstieg Lastenaufzug ROOM3080 -> ROOM4000 */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
@@ -627,6 +630,12 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z)
 static void tuer_sequenz_anfragen(const re15_aot_t *a, const re15_aot_door_params_t *d)
 {
     re15_door_seq_anfrage_t q;
+    /* Runde 37 Spur C: Kabinen-Ausstieg ROOM1080/4020 (Null-Rechteck per Aot_on, RE2 ROOM6010 sub02 @0x0075A
+     * spielt dort DOOR27 V0 - auch bei player_mode 2), fahrstuhl_r37.c */
+    if (re15_fahrstuhl_r37_ausstieg(g_current_room_id, a, d, &q)) { g_door_seq_anfrage = q; return; }
+    /* Runde 37 Spur C N1: Ausstieg Lastenaufzug ROOM3080/3081 (Null-Rechteck @0x0072A per Aot_on @0x00A22/@0x00BFA,
+     * RE2 ROOM6170 @0x035A2 DOOR2D V5 = hinab), lastenaufzug_r37.c */
+    if (re15_lastenaufzug_r37_ausstieg(g_current_room_id, a, d, &q)) { g_door_seq_anfrage = q; return; }
     int archiv = re15_door_seq_zuordnen_flaeche(g_current_room_id, a->has_quad ? 1 : 0,
                                                 a->x, a->z, a->half_w, a->half_h,
                                                 a->xs, a->zs, d->band, &q);
@@ -1323,6 +1332,8 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 gen_reach = 0; inside = 0;   /* band mismatch -> gate the fire this frame */
             }
         }
+        /* Runde 37 Spur D: @0x80042cac-ccc laeuft fuer JEDEN Satz vor dem sce-Dispatch — auch ITEM (re15_itemband_r37.h). */
+        if (a->type == RE15_AOT_TYPE_ITEM) re15_itemband_r37_gate(i, &gen_reach, &inside);
         /* sce=4 FLAG_CHG (wf_f536e1ee step 3+4): the 3-POOL test per the record's pool-mask bits
          * (byte-true FUN_800436a8: player mask 1 / every active enemy mask 2 / every object mask
          * 4). 10 shipped zones are enemy-ONLY (0x42, e.g. the ROOM1030 zombie-window flags) — the
@@ -1592,6 +1603,8 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 break;
             default:
                 /* GENERIC: fire bytecode event handler (Phase 4.4.6.1). */
+                /* Runde 37 Spur D NB1: Lift A 2030/2031 nur mit Spielermitte in der Kabine (RE2 6030 sub10 @0x02F70-7A). */
+                if (re15_itemband_r37_liftsperre(i, inside)) break;
                 g_aot.fired_event_id_this_frame = a->event_id;
                 break;
             }

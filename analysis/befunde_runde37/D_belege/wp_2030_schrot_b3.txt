@@ -1,0 +1,16 @@
+# Runde 37 Spur D: ROOM2030 Gegenprobe Schrot: Band 3 (Hallenhoehe y -5400) an derselben Stelle (Blick Ost).
+OBJ 1
+RAUM 2030
+GEGNERWEG
+WARTE 30
+FLAG 9 108
+BLICK 0
+WARTE 20
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 100
+FLAG 9 108
+ENDE

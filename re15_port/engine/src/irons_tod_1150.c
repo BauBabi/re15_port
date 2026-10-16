@@ -9,6 +9,7 @@
  * (ROOM1240 sub02/03 Slot 0, ROOM1080 sub07..10).
  */
 #include "re15_irons_tod.h"
+#include "re15_zombieaktiv_r37.h"   /* Runde 37 Spur H: Gegenprobe-Schalter der Sonden */
 
 #include "re15_actor.h"
 #include "re15_aot.h"
@@ -16,6 +17,7 @@
 #include "re15_enemy.h"
 #include "re15_msg.h"
 #include "re15_scd.h"
+#include "re15_szene11c0_r37.h"   /* Runde 37 Spur O: Port-Takt + Mess-Haken der 11C0-Szene */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -123,7 +125,7 @@ static const uint8_t k_p_szene[] = {
     OP_MOTION(0, 3), OP_FLG_LOOP, OP_SLEEP(10),
     OP_MSG(27),                                            /* "Irons: Please... one last favor..." */
     OP_MOTION(0, 5), OP_SLEEP(120),                        /* Arm ausgestreckt, Halt (@0x0125A/@0x0125E) */
-    OP_MSG(28),                                            /* "Irons: Be a hero... Leon..." */
+    OP_MSG(28),                                            /* "Irons: Get them out of here... Leon..." (Runde 37 Nachtrag 10) */
     OP_SLEEP(100),
     OP_SET(5, RE15_IT_SIG_ARM, 1),                         /* SIGNAL (5,12): Arm faellt (Port-Takt, Clip 2 ab Bild 72) */
     OP_SLEEP(30),
@@ -185,7 +187,24 @@ static const uint8_t k_p_1130[] = {
     OP_AOT_ON,
     OP_END,
 };
-static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres Betreten */
+/* Runde 37 Spur H (NUTZER-VORGABE "die Zombies bleiben einfach nur Stumpf alle im Gang stehen ... In Resident Evil 2
+ * bewegen sie sich doch auch teilweise aktiv im Gang"): beim SPAETEREN Betreten stehen die aus dem Besprechungsraum
+ * ausgebrochenen Zombies nicht mehr als Schlaefer (grid 0x02, DECIDE FUN_80101c7c: ENGAGE nur bei dist < 0xFA0) im Gang,
+ * sondern in der RE1.5-Form der Zombies, die durch eine geoeffnete Tuer/ein Tor kommen: grid 0x0d = ENGAGE ab INIT
+ * (STAGE1.BIN `ori v0,zero,0x201` / `sw v0,4(v1)` @0x80100f40-44; Form der Raum-Records ROOM1040 main00 @0x011FC..
+ * und ROOM1030 main00 @0x01DE6.., die durchs Rolltor/Tor kommen) = unter der RE2-KI Deskriptor 6 = Gang ab Spawn
+ * (re2z_init sel 0x0d -> 0x0101, RE2 @0x80100ab8-abc; im RE2-Original gemessen, re15_zombieaktiv_r37.h). Typen, Tot-Bits,
+ * Lagen und Blick unveraendert. Der MONTAGE-Schritt selbst (k_p_1130, Spieler unsichtbar geparkt) behaelt die Stehform.
+ * Die Liste gilt fuer JEDE KI-Wahl: unter der RE1.5-KI ist grid 0x0d der RE1.5-Angriff ab INIT (gemessen in
+ * re15_zombieaktiv_r37.h, Nachbesserung 1). */
+#define EM_1130_NACH \
+    OP_EM(0, 0x16, 0x0d, 0x00, 40, -1400, -14200, 3072), \
+    OP_EM(1, 0x10, 0x0d, 0x01, 41,  -900, -12900, 3072), \
+    OP_EM(2, 0x10, 0x0d, 0x01, 42, -2000, -12000, 3072), \
+    OP_EM(3, 0x11, 0x0d, 0x01, 43, -1300, -10800, 3072), \
+    OP_EM(4, 0x11, 0x0d, 0x01, 46,  -700, -11600, 3072)
+static const uint8_t k_p_1130_nach[] = { EM_1130_NACH, OP_END };   /* spaeteres Betreten (Runde 37 Spur H) */
+static const uint8_t k_p_1130_nach_v0824[] = { EM_1130_LISTE, OP_END };   /* Gegenprobe Stand v0.8.24 (nur Sonden) */
 
 /* PROGRAMM 2 — ROOM1040 Cut 1: Knall wie ROOM1030, Rolltor hoch (nur wenn (4,5)=0), die Zombies
  * (Raum-Records, Limit 5 @0x011F0) kommen durchs Tor zur Kamera. Tor-Fahrt = sub08 @0x019B2..@0x01A26
@@ -418,6 +437,45 @@ static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
  * Ada": "I have to help him, sorry!" + Arm, (6) rennt los, (7) Ada sieht ihm nach (Kopf + Koerper zur Tuer), "Marvin!..."
  * + Arm. Orte: Ada sub00 @0x01770 (-8965,-14347), Marvin (-8163,-13748) (r35 M5), Tuer = Mitte des Rechtecks Slot 0
  * @0x01712 (-25100,17250). Sleeps = PORT-WAHL im Takt der r35-Fassung. */
+/* RUNDE 37 SPUR O (NUTZER-VORGABE Nachtrag 11, woertlich: "Erst schauen sie komplett in die falsche Richtung. Dann drehen
+ * sie sich einmal um 180 grad um. Dann dreht sich Ada noch mal um 90 grad um. Zwischendurch steht marvin da, spricht,
+ * schaut aber nicht zu ada"). Der Ablauf der Runde 36 oben ist ERSETZT. GEMESSEN vorher (echte exe, Dossier
+ * analysis/befunde_runde37/O_szene11c0.md, O_belege/o_vor_mess.txt): Anfangs-Gier beider 475 (Ada-Record @0x01770
+ * `.. db 01` = Ruecken zur Kamera, Marvin uebernommen), Ada -158.9 / Marvin -160.5 Grad zum Gebaeude, Ada +80.5 Grad zu
+ * Marvin, Marvin bei "Oh, no, Leon!" 98 Grad weg + Kopf zur Tuer, bei msg 10 Marvins Kopf an der NPC-Klemme 0x2c8.
+ * NEU (Form je Zeile belegt, Takte PORT-WAHL):
+ * (0) AUFSTELLUNG im Raumaufbau, vor dem ersten Bild: einander zugewandt (Koepfe auf dem Partner im ersten Takt nach dem
+ *     NPC-INIT, s. Programm) = Form des Original-
+ *     Dialogs Marvin/Leon ROOM10D0 @0x01ABC..@0x01AF6 (Work_set(2,0) Pos_set + Dir_set `33 00 00 00 ea 06 00 00`
+ *     @0x01AC4 + Plc_neck m1 auf Leon @0x01ACC; Work_set(1,0) Pos_set + Dir_set `.. f2 0e ..` @0x01AEE + Plc_neck m1
+ *     auf Marvin @0x01AF6 - 0x06ea/0x0ef2 = die Peilungen auf den Partner, +-17 Einheiten). Gier = Peilung auf den
+ *     Partner aus den Orten, Form des Ports re15_s11c0_gier = re15_enemy_steer_point (FUN_8001aac4 nimmt FUN_8001a6d4
+ *     = re15_atan2_q12(dz,dx) - 0x400). Marvin: Spawn-Gier = Sce_em_set +16 -> +0x6a (`lhu v0,14(s2)` @0x800421bc,
+ *     `sh v0,106(s0)` @0x800421c4); Ada: Dir_set (LAB_80041080: `lhu v0,4(v1)` @0x80041094, `sh v0,106(a1)` @0x8004109c).
+ * (1) der Knall: NUR DER KOPF zum Gebaeude (Plc_neck m1 auf die Tuer, Koerper bleibt) = RE2-Form der Geraeusch-
+ *     Reaktion (Zensus tools/r37_o/re2_reaktion_zensus.py: nach Se_on reagiert RE2 mit dem Kopf zuerst, z.B. ROOM2000
+ *     sub05 Se_on @0x029BA -> Plc_neck m1 @0x029CA, ROOM1080 sub08 @0x021BC -> Plc_neck m2 @0x021FE -> m0 @0x0220C,
+ *     ROOM11C0 sub02 @0x00ABC -> m2 @0x00AE0/@0x00AEE/@0x00AFC); der eine, kurz danach der andere wie 11C0 sub02
+ *     @0x01940/@0x0194A/@0x01952. Die Tuer liegt ~80/98 Grad neben dem Partner: der Kopf steht an der NPC-Klemme
+ *     +-0x2c8 (`ori v0,zero,0x2c8` / `sh v0,1532(v1)` @0x8011c79c/@0x8011c7a0) = Blick zur Kamera-Seite.
+ * (2) beide wenden die KOEPFE wieder zueinander (erst Ada, dann Marvin = der r35-Beat "Marvin dreht sich zu Ada"),
+ *     Ada fragt (Geste Clip 19 @0x018D8..@0x018E8); waehrend des ganzen Gespraechs (msg 10..13) sehen sich beide an
+ *     (r36 K2 "Sie muessen sich schon miteinander unterhalten").
+ * (3) Marvin: "Yes!...." + Nicken (sub03 @0x01BB2..@0x01BCA).
+ * (4) "Oh, no, Leon!" - Marvin sieht Ada an (Kopf + Koerper).
+ * (5) "I have to help him, sorry!" + Arm zu Ada (Clip 15 vor, halten, zurueck); er rennt erst los, wenn die Zeile
+ *     abgelaufen ist (`01 63` = 99 Bilder Haltezeit, msg_common.c) - der Sprecher sieht den Partner, solange sein
+ *     Untertitel steht. In RE2 setzt jede Zeile den Kopf des Sprechers auf den Partner (ROOM3010 sub04 @0x0288E /
+ *     @0x028B0 / @0x028D4 / @0x02940: Plc_neck m1 auf den Kopf des NPC bzw. m5 auf Leon je Message_on).
+ * (6) rennt zur Tuer (Modus 5, 11B0 sub06 @0x015EA) - die einzige grosse Koerperdrehung der Szene (~98 Grad, Phase 1
+ *     des Laufs dreht am Ort bis in den Kegel 0x15e @0x80051550, dann im Lauf mit Slew 48): die Tuer liegt hinter der
+ *     Kamera, anders kommt er nicht hin.
+ * (7) NACHTRAG 12 (NUTZER-VORGABE, woertlich: "wenn Ada sagt: "Marvin!" kann sie sich gerne den weglaufenden Marvin
+ *     nach drehen"): Ada dreht sich dem LAUFENDEN Marvin nach — Kopf und Drehpunkt folgen seiner Lage je Bild (Port-
+ *     Takt re15_s11c0_takt, RE2 Plc_neck Modus 5 = Kopf-Ort einer Figur je Bild, FUN_800177C0 @0x800178a0..@0x80017940;
+ *     Belege in re15_szene11c0_r37.h); gedreht wird mit der Rate der Engine (Kegel 0x60 @0x80076c41) bis sie ihm
+ *     zugewandt ist, dann "Marvin!..." + Arm (Clip 15) zu ihm; danach folgt ihm der Kopf.
+ * Danach Schnitt zurueck nach 1150 wie bisher. */
 #define IT_ADA_X       (-8965)
 #define IT_ADA_Z       (-14347)
 #define IT_MARVIN_X    (-8163)
@@ -429,36 +487,54 @@ static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
 #define OP_NICKEN      0x41, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3c   /* 11C0 sub03 @0x01BC0 */
 #define OP_TURN(f,x,z) OP_DEST(9, (f), (x), (z))                                     /* 11C0 sub02 @0x01890 / @0x018CA */
 #define OP_GOSUB(n)    0x18, (n)                                                     /* 11C0 sub02 @0x01898 / @0x018D2 */
+/* Runde 37 Spur O */
+#define OP_DIR(ry)     0x33, 0x00, LE16(0), LE16(ry), LE16(0)       /* Dir_set ROOM10D0 @0x01AC4 (LAB_80041080 +0x68/6a/6c) */
+#define IT_GIER_ADA_MARVIN 3679   /* = re15_s11c0_gier(Ada -> Marvin), Riegel unit_r37_szene11c0_aufstellung */
+#define IT_GIER_MARVIN_ADA 1631   /* = re15_s11c0_gier(Marvin -> Ada) */
 static const uint8_t k_p_11c0[] = {
-    OP_EM(3, 0x40, 0x40, 0x00, 0xff, IT_MARVIN_X, IT_MARVIN_Z, 475),   /* Marvin, Slot 3 = Aktor 4 — Raumaufbau (K3) */
+    /* (0) Aufstellung im Raumaufbau (Runde 37 Spur O): Marvin erscheint Ada zugewandt, Ada wird ihm zugewandt, Koepfe auf
+     *     dem Partner (ROOM10D0 @0x01ABC..@0x01AF6) */
+    OP_EM(3, 0x40, 0x40, 0x00, 0xff, IT_MARVIN_X, IT_MARVIN_Z, IT_GIER_MARVIN_ADA),   /* Marvin, Slot 3 = Aktor 4 (K3) */
+    OP_WORK(2, 0), OP_DIR(IT_GIER_ADA_MARVIN),
+    /* Work weg von Ada (Work_set(1,0) wie ROOM10D0 @0x01AE2): der Port laesst einen NPC, den ein SCD-Faden per Work_set
+     * haelt, vor seinem INIT nicht ticken (re15_scd_slot_event_controlled, enemy_ai_common.c) — gemessen (Lauf n1):
+     * Ada blieb bis Bild 17 ohne INIT in einer haengenden Greif-Pose. */
+    OP_WORK(1, 0),
     OP_ABSCHNITT_ENDE, OP_RIEGEL,
-    OP_SLEEP(29),                                           /* 1 + 29 = 30 */
-    /* (1) beide zum Gebaeude */
-    OP_WORK(2, 3), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x00, IT_TUER11C0_X, IT_TUER11C0_Z),
-    OP_SLEEP(10),
-    OP_WORK(2, 0), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x01, IT_TUER11C0_X, IT_TUER11C0_Z), OP_GOSUB(6),
-    OP_SLEEP(20),
-    /* (2) Marvin sieht Ada an; Ada wendet sich ihm zu und fragt */
+    /* Koepfe erst NACH dem NPC-INIT (FUN_8011c6dc, erster KI-Takt nach der Blende = Bild 7): der INIT schreibt +0x1b8
+     * (@0x8011c768, SPL-Fall 0x12 @0x8004260c-18) und loescht ein frueheres Plc_neck — gemessen (Lauf n1, nf=84 -> 12). */
+    OP_SLEEP(3),
     OP_WORK(2, 3), OP_NECK1(IT_ADA_X, IT_ADA_Z),
-    OP_WORK(2, 0), OP_NECK1(IT_MARVIN_X, IT_MARVIN_Z), OP_TURN(0x01, IT_MARVIN_X, IT_MARVIN_Z), OP_GOSUB(6),
+    OP_WORK(2, 0), OP_NECK1(IT_MARVIN_X, IT_MARVIN_Z),
+    OP_SLEEP(8),                                            /* 1 + 3 + 8: die ersten hellen Bilder einander zugewandt */
+    /* (1) der Knall: nur die Koepfe zum Gebaeude, erst Marvin, dann Ada (11C0 sub02 @0x01940..@0x01952) */
+    OP_WORK(2, 3), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(6),
+    OP_WORK(2, 0), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(36),
+    /* (2) beide sehen sich wieder an (erst Ada, dann Marvin wie @0x01940..@0x01952), Ada fragt */
+    OP_NECK1(IT_MARVIN_X, IT_MARVIN_Z), OP_SLEEP(4),
+    OP_WORK(2, 3), OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_SLEEP(8),
+    OP_WORK(2, 0),
     OP_MSG(10),                                             /* "Ada: What was this noise? Did you hear that?" */
     OP_MOTION(0, 19), OP_SLEEP(40), OP_MOTION(0, 19), OP_FLG_REV, OP_SLEEP(50),
-    /* (3) Marvin dreht sich zu Ada, nickt */
-    OP_WORK(2, 3), OP_TURN(0x00, IT_ADA_X, IT_ADA_Z), OP_GOSUB(5),
+    /* (3) Marvin, nickt */
+    OP_WORK(2, 3), OP_SLEEP(8),
     OP_MSG(11),                                             /* "Marvin: Yes!...." */
     OP_NECK0, OP_SLEEP(5), OP_NICKEN, OP_SLEEP(20),
     OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_SLEEP(30),
-    /* (4) zum Gebaeude gewandt */
-    OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x00, IT_TUER11C0_X, IT_TUER11C0_Z),
+    /* (4) Marvin sieht Ada weiter an */
     OP_MSG(12), OP_SLEEP(60),                               /* "Marvin: Oh, no, Leon!" */
-    /* (5) Marvin dreht sich zu Ada */
-    OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_TURN(0x00, IT_ADA_X, IT_ADA_Z), OP_GOSUB(5),
+    /* (5) Arm zu Ada; losrennen erst nach dem Ende der Zeile (99 Bilder Haltezeit `01 63`) */
     OP_MSG(13),                                             /* "Marvin: I have to help him, sorry!" */
-    OP_MOTION(0, 15), OP_SLEEP(25), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
-    /* (6) rennt zur Tuer Slot 0 @0x01712 (Mitte), Modus 5 (11B0 sub06 @0x015EA) */
-    OP_NECK0, OP_DEST(5, 0x22, IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(10),
-    /* (7) Ada sieht ihm nach */
-    OP_WORK(2, 0), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x01, IT_TUER11C0_X, IT_TUER11C0_Z), OP_GOSUB(6),
+    OP_MOTION(0, 15), OP_SLEEP(25), OP_SLEEP(20), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
+    OP_SLEEP(30),
+    /* (6) rennt zur Tuer Slot 0 @0x01712 (Mitte), Modus 5 (11B0 sub06 @0x015EA); Phase 1 dreht ihn am Ort */
+    OP_NECK0, OP_DEST(5, 0x22, IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(12),
+    /* (7) NACHTRAG 12: Ada dreht sich dem laufenden Marvin nach. Signal (5,13) = Port-Takt re15_s11c0_takt: Kopf-Ziel und
+     *     Drehpunkt folgen Marvin je Bild (RE2 Plc_neck Modus 5, FUN_800177C0 @0x800178a0..@0x80017940). Ausgangsziel =
+     *     sein Laufziel (RE2 ROOM2020 sub02 @0x02108: Kopf auf das Ziel des Laeufers); Kopf + Drehen + Warten wie Adas
+     *     Original-Zeile 11C0 sub02 @0x018C0 / @0x018CA (Ankunfts-Bit 1) / @0x018D2 (`18 06`); dann "Marvin!..." + Arm */
+    OP_WORK(2, 0), OP_SET(5, RE15_S11C0_SIG_FOLGEN, 1),
+    OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x01, IT_TUER11C0_X, IT_TUER11C0_Z), OP_GOSUB(6),
     OP_MSG(14),                                             /* "Ada: Marvin!..." */
     OP_MOTION(0, 15), OP_SLEEP(25), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
     OP_SLEEP(60),
@@ -529,9 +605,12 @@ static const uint8_t k_msg27[] = {   /* "Irons: Please... one last favor... Look
     0x4f,0x51,0x4e,0x52,0x45,0x52,0x41,0x40,0x57,
     0x04,0x01,0x01,0x63,
 };
-static const uint8_t k_msg28[] = {   /* "Irons: Be a hero... Leon..." */
+/* Runde 37 Nachtrag 10 (NUTZER-VORGABE 2026-10-12): statt "Be a hero... Leon..."; Bytes = tools/r35_l/texte_bauen.py --c
+ * (Kopf/Sprecher/Schwanz unveraendert, 99-Bilder-Halt 01 63, eine Zeile 235 px <= 271). */
+static const uint8_t k_msg28[] = {   /* "Irons: Get them out of here... Leon..." */
     0x04,0x00,0x05,0x02,0x25,0x4e,0x4b,0x4a,0x4f,0x16,0x05,0x00,0x00,
-    0x1e,0x41,0x00,0x3d,0x00,0x44,0x41,0x4e,0x4b,0x57,0x57,0x57,0x00,0x28,0x41,0x4b,0x4a,0x57,0x57,0x57,
+    0x23,0x41,0x50,0x00,0x50,0x44,0x41,0x49,0x00,0x4b,0x51,0x50,0x00,0x4b,0x42,0x00,0x44,0x41,0x4e,0x41,
+    0x57,0x57,0x57,0x00,0x28,0x41,0x4b,0x4a,0x57,0x57,0x57,
     0x04,0x01,0x01,0x63,
 };
 static const uint8_t k_msg29[] = {   /* "Leon: SIR, Sir?!" */
@@ -960,7 +1039,8 @@ static int programm_bauen(uint16_t room_id)
         return 1;
     case RE15_IT_AUS:
         if (room_id == RE15_IT_RAUM_1130 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)) {
-            prog_anhaengen(k_p_1130_nach, (int)sizeof k_p_1130_nach);
+            if (re15_r37_zombieaktiv_enabled()) prog_anhaengen(k_p_1130_nach, (int)sizeof k_p_1130_nach);   /* Runde 37 Spur H */
+            else prog_anhaengen(k_p_1130_nach_v0824, (int)sizeof k_p_1130_nach_v0824);
             return 1;
         }
         if (room_id == RE15_IT_RAUM_1040 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)) {
@@ -1174,6 +1254,7 @@ void re15_irons_tod_tick(void)
      * ohne den Alias stand Marvin bei "I have to help him, sorry!" mit haengenden Armen. Der Takt laeuft vor den
      * Faeden, der Binder loest Aktor 4 erst nach dessen Erscheinen auf (rbj_resolve_slot: !active -> kein Cache). */
     if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_rbj_set_alias(4, 1);
+    if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_s11c0_takt();   /* Runde 37 Spur O: Ada folgt Marvin (Nachtrag 12) + RE15_S11C0_LOG */
     /* Knall-Signale: (5,28) = Tuerknall (Knall-Bank Satz 0), (5,29) = Knall wie ROOM1030 (Satz 1). Nur waehrend
      * der Kette (in ROOM1150/1130/1040/1030 ist Bank 5 Wort 0 oberhalb von Bit 20 unbenutzt, Zensus Dossier §8.8). */
     if (s_zustand != RE15_IT_AUS) {

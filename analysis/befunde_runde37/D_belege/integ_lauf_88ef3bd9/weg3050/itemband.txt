@@ -1,0 +1,2 @@
+F2199 room=3050 MEMBER 0x12 Spieler: Kollisionsband 4 -> 0 (@0x80041228) y=0
+F3805 room=3050 ITEM slot 6 floor 1 item 0x07 tk 92 spieler-band 1 spieler=(-24072,-1800,-22732) -> FREI
