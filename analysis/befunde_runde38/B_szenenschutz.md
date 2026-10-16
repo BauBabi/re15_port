@@ -388,3 +388,17 @@ Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRA
   greifen die Gegner normal an; die Zwingerhunde in ROOM1190 beissen wie im Original erst 4 Sekunden (120 Bilder) nach
   ihrer Landung. Feuer verletzt Leon nicht, solange eine Szene ihn festhaelt (er kann nicht hinausgehen).
 - Im debug.log zeigen `[szenenschutz] ... an/aus` die geschuetzten Fenster.
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-16/17)
+
+Abnahmebericht `analysis/befunde_runde38/B_abnahme_0.md` (Maengel M1-M3). Je Mangel: Ursache, Messung vorher, Beleg,
+Aenderung, Messung nachher. (Wird fortlaufend gefuellt.)
+
+### N1.M3 — Typgrenze 0x40 ohne @-Zitat
+(offen)
+
+### N1.M2 — Halte-Bedingung "Spieler+0x4 == 4" deckt bewegliche Bilder
+(offen)
+
+### N1.M1 — fremder Riegel unit_sca_wall_hit rot
+(offen)
