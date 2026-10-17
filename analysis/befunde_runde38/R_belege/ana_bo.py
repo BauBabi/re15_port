@@ -5,7 +5,7 @@ import re, sys, collections
 TOL = int(sys.argv[2]) if len(sys.argv) > 2 else 100
 pl_re = re.compile(r"F(\d+) R(\w+) PL\((-?\d+),(-?\d+),(-?\d+) hp=(-?\d+) st=(\d+) ps=(\w+) fl=(\d+) gz=(\d+) bo=(-?\d+) bu=(-?\d+)\)")
 sp_re = re.compile(r"\[(\d+) t=(\w+) st=(\d+) s=(\d+)\.(\d+)\.(\d+) g=(\w+) fl=(\d+) m=(\d+) gy=(-?\d+) bo=(-?\d+) bu=(-?\d+) mo=(-?\d+) af=(\d+) @\((-?\d+),(-?\d+),(-?\d+)\)")
-stat = collections.defaultdict(lambda: [0,0,0,0,0])  # typ -> [bilder, schwebt, im_block, auf, sprung(m222=1)]
+stat = collections.defaultdict(lambda: [0,0,0,0,0,0])  # typ -> [bilder, schwebt, im_block, auf, sprung(m222=1), schacht(0x25 Zustand 4/1)]
 pl_n = pl_bad = 0
 first_float = {}
 slots = collections.defaultdict(lambda: [0,0])
@@ -14,7 +14,8 @@ for line in open(sys.argv[1], encoding="latin-1"):
     m = pl_re.search(line)
     if not m: continue
     f = int(m.group(1)); room = m.group(2); py = int(m.group(4)); pbu = int(m.group(12)); hp = int(m.group(6))
-    if room != (sys.argv[3] if len(sys.argv) > 3 else room): continue
+    if len(sys.argv) > 3 and room != sys.argv[3]: continue
+    raum = room
     if hp_first is None: hp_first = hp
     if prev_hp is not None and hp < prev_hp: hits += 1
     prev_hp = hp; hp_last = hp
@@ -24,6 +25,9 @@ for line in open(sys.argv[1], encoding="latin-1"):
         slot, t = int(s.group(1)), s.group(2)
         y, bu, m222 = int(s.group(16)), int(s.group(12)), int(s.group(9))
         stat[t][0] += 1; slots[(t,slot)][0] += 1
+        if t == "25" and int(s.group(3)) == 4 and int(s.group(4)) == 1:
+            stat[t][5] += 1          # Schacht-Choreografie @0x80114ec8 (im Schacht / an der Wand), eigene Klasse
+            continue
         if y < bu - TOL:
             if m222 == 1: stat[t][4] += 1
             else:
@@ -32,9 +36,9 @@ for line in open(sys.argv[1], encoding="latin-1"):
                     first_float[(t,slot)] = (f, int(s.group(15)), y, int(s.group(17)), bu, int(s.group(3)), s.group(4), m222)
         elif y > bu + TOL: stat[t][2] += 1
         else: stat[t][3] += 1
-print("Raum %s: Spieler %d Bilder, |y-bu|>%d in %d; HP %s -> %s, HP-Abzuege %d" % (room, pl_n, TOL, pl_bad, hp_first, hp_last, hits))
+print("Raum %s: Spieler %d Bilder, |y-bu|>%d in %d; HP %s -> %s, HP-Abzuege %d" % (raum, pl_n, TOL, pl_bad, hp_first, hp_last, hits))
 for t,v in sorted(stat.items()):
-    print("Typ %s: Bilder %d | SCHWEBT (y < bu-%d, ohne Sprung) %d | im Sprung %d | unter der Flaeche %d | auf dem Boden %d" % (t, v[0], TOL, v[1], v[4], v[2], v[3]))
+    print("Typ %s: Bilder %d | SCHWEBT (y < bu-%d, ohne Sprung/Schacht) %d | im Sprung %d | Schacht/Wand (Zustand 4/1) %d | unter der Flaeche %d | auf dem Boden %d" % (t, v[0], TOL, v[1], v[4], v[5], v[2], v[3]))
 n_sl = collections.Counter(); n_fl = collections.Counter()
 for (t,sl),v in slots.items():
     n_sl[t] += 1

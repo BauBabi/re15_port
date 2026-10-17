@@ -25,6 +25,12 @@ Baum `.claude/worktrees/r38_spinnen` (Zweig `r38/spinnen`, Basis e2cc7673). Ange
   bzw. `y == +0x1C2` — beide Felder setzt der Port selbst (Sce_em_set `-(pc[4]*1800)`, Baby = Elternteil), das ist eine
   SELBSTBESTAETIGENDE Pruefung. Neue unabhaengige Messgroesse `bu` (Abschnitt 1.6) -> die Minispinnen schwebten weiter
   (1.6), Ursache und Fix in 2.8/3/4.4.
+- 06:00 Baby-Wurzel-Schwanz portiert (Wandpass + Kugel-Schub, 2.8, 45da274d/02982a08), gemessen (4.4).
+- 06:30 Tests C/D auf die unabhaengige Messgroesse umgestellt, Gegenprobe 2 (5); Gift-Tor am erreichbaren Spieler
+  (2.9, Test B3, 96eca34b). Gezielte Tests 39/39 gruen (5). Endmessung in der exe (4.4).
+- ⛔ Gemeinsamer scratchpad: das Laufskript `lauf.sh` im scratchpad-Wurzelordner wurde von einem anderen Agenten
+  (Abnahme Spur B) ueberschrieben; ein Aufruf brach mit "exe fehlt" ab, bevor er etwas anlegte. Eigene Skripte liegen jetzt
+  in `scratchpad/R38_spinnen_fort2/` und im Baum unter `R_belege/` (lauf.sh, ana_bo.py).
 
 ## 1. Messung vorher
 
@@ -288,9 +294,37 @@ FUN_8003567C (RE2 PSX.EXE): `sw zero,272(s0)` @0x8003569c (+0x110 = 0); `andi v0
 PORT-ZUORDNUNG (dieselbe wie Hund/Kraehe/Adult, enemy_ai_common.c Hundezweig "EIN Klemmpfad fuer BEIDE Flavors"):
 FUN_8004c1bc liest RE2-SCA-Daten, die der Port nicht hat -> re15_collision_constrain_enemy auf den RE1.5-Raumdaten,
 Band aus Y (= +0x106), Solid-Maske 4 (= RE2 0x400 wie beim Hund `jal 0x8003567c` a1 = 0x400), Radius 10.
-Der Schub FUN_80035530 (Kugel-Schub FUN_80034d0c(andere, self) mit RE2-Spieler-Kugel r 450 / Versatz -1530 /
-Halbhoehe 1530 (`addiu v1,zero,450` @0x8003bdc0, `addiu v0,zero,-1530 / sh 152` @0x8003bde0-e4, `addiu v0,zero,1530 /
-sh 158` @0x8003bde8-ec) und Baby-Kugel r 10 / -10 / 10 (@0x80100168-78)) ist NICHT portiert: OFFEN 6.
+Der SCHUB FUN_80035530 (RE2 PSX.EXE, selbst disassembliert) ist ebenfalls portiert (Messung 4.4: ohne ihn standen
+Babys 1035 Bilder lang IN Leons Koerperkreis, 106 davon naeher als 100):
+| Adresse | Instruktion | Bedeutung |
+|---|---|---|
+| 0x80035544 | `jal 0x80035408` (a1 = self+56) | Kugeln aus der Lage |
+| 0x80035550 | `sb v0(255),13(s1)` | +0xD = 255 |
+| 0x80035560-a4 | `addiu s0,s0,-492` (0x800cfe14) ... `bne s0,v0` | Entity-Liste |
+| 0x80035574 / 0x8003557c-88 | `beq s1,a0` / `lw v0,0(a0); andi 1` | nicht self, nur aktive |
+| 0x80035590-94 | `jal 0x80034d0c` / `addu a1,s1,zero` | FUN_80034d0c(andere, self) |
+FUN_80034d0c(A, B): `or/andi 0x2` @0x80034d48-50 und `and/andi 0x1000` @0x80034d58-60 und `andi v0,v1,0x4` @0x80034d68
+(Paar gesperrt); R = A.+0x9A + B.+0x9A (`lhu s7,22(s5)` / `lhu v1,22(s2)` / `addu s0` @0x80034dac-e8); `sltu` gegen 2R
+@0x80034df4-fc/@0x80034e14-1c; dist = `jal 0x8008d2f4` @0x80034e38; pen = R - dist `blez` @0x80034e44-48; Hoehe
+-hs < dy < hs (Halbhoehen +0x1A der Kugel = +0x9E, `lhu 26` @0x80034e50/5c, `slt` @0x80034e6c-78); a3 = dx*pen/(dist+1),
+a2 = dz*pen/(dist+1) (@0x80034e7c-f00); Vor-Bild-Hoehe (`lh v1,20(s2)` +0x98, `lh v0,70(s1)` +0x46 @0x80034ec4-d4)
+ausserhalb -> Kreuzungsausstoss je Achse mit +0x44/+0x48 (@0x80034f18-35044, `sll v0,s7,1` = 2*A.r); A.w0 & 0x100000 ->
+Kappe +-100 (@0x80035048-a8); `sw v0,56(s1)` / `sw v1,64(s1)` @0x800350c8-cc. Kugeln: Spieler +0x9A 450 (`addiu
+v1,zero,450 / sh v1,154(s2)` @0x8003bdc0-c4), +0x98 -1530 (`addiu v0,zero,-1530 / sh v0,152(s2)` @0x8003bde0-e4), +0x9E
+1530 (@0x8003bde8-ec), +0x1E8 = 1 (`sw v0,488(s2)` @0x8003bddc); Baby -10/10/10 (@0x80100168-78), +0x1E8 = 1 (@0x80100164);
+Adult +0x9A = 1000 in allen drei Adult-Tabellen @0x801063A0/C0/E0. word0 & 2: Adult-Tod `ori v0,v0,0x42` @0x80103df4 /
+@0x801044a0 (Port: Zustand 3/7), Baby-Fall `ori v1,v1,0x2` @0x8010078c, Landung `addiu v1,zero,-3 / and` @0x801007dc-ec
+(Port: Zustand 1 Unterzustand 2). Code: spinnen_r38.c Teil 3b.
+
+### 2.9 Gift nur am ERREICHBAREN Spieler (Fortsetzung 2, RE2 selbst disassembliert)
+Port vorher (Stand 1014136f): Routine 25 setzte das Gift-Bit, sobald der Klumpen den Spielerkasten beruehrte — auch wenn der
+Spieler im Schutzfenster stand (+0x93 & 1, z. B. vom zweiten Klumpen desselben Spuckens) und der Treffer selbst abprallte.
+RE2 Op 32 (@0x800200b0): `jal 0x80047664` @0x800200e0 (a1 = 800, a2 = 20) / `beq v0,zero,0x800201e4` @0x800200e8 -> nur
+wenn der Applier ein Ziel ZURUECKGIBT, folgen Typ < 0x10 (`sltiu v0,v0,0x10` @0x800200f8), `andi v0,v0,0x8` @0x80020118
+und `sh v0(5400),-496(at)` @0x80020130. FUN_80047664 ueberspringt den Spieler bei `lbu v0,467(s0) / bne` @0x800476ec-f4
+(+0x1D3 != 0 = Schutz-/Griffzaehler) und `lh v0,342(s0) / bltz` @0x800476fc-704 (HP < 0). Port: Gift nur, wenn
++0x93 & 1 frei (das Tor des Spielerzweigs von FUN_80012d60 @0x80012e24-30), kein Griff (re15_player_is_grabbed = +0x1D3 &
+0x80, wie der Babybiss @0x80100E84) und HP >= 0 — gelesen VOR dem Resolver, der +0x93 selbst setzt. Test B3.
 
 ## 3. Umsetzung
 
@@ -308,28 +342,32 @@ Kommentar "Runde 38 Spur R"):
 | engine/src/enemy_ai_re2_spider.c | Unterzustand 8: `re15_spinnen_r38_spucken(e,1)` | RE2-Spucken FUN_801058A4 @0x8010101C (2.3) |
 | engine/src/enemy_ai_re2_spider.c | Baby-Spawner: `dog_floor_y`/`floor` = Elternteil | +0x1C2 = Boden unter der Entity (RE2 @0x8002686c/74) |
 | engine/src/enemy_ai_re2_spider.c | Biss: Reichweite 450 + 10 | Ziel+0x9A = 450 (RE2 @0x8003bdc0/c4), @0x80100E40 |
-| engine/src/enemy_ai_re2_spider.c | Baby-Wurzel: `re15_spinnen_r38_baby_schwanz(e, prev_x, prev_z)` | **Fortsetzung 2**: Wandpass FUN_8003567C @0x801000c0 (2.8) |
+| engine/src/enemy_ai_re2_spider.c | Baby-Wurzel: `re15_spinnen_r38_baby_schwanz(e, prev_x, prev_y, prev_z)` | **Fortsetzung 2**: Schub FUN_80035530 @0x801000b4 + Wandpass FUN_8003567C @0x801000c0 (2.8; spinnen_r38.c Teil 3b) |
 | engine/src/re2_ems.c | `re15_spinnen_r38_re2_bank(kind, eb)` in re2_ems_load_bank | **neu in der Fortsetzung**: Baby 0x26 = Paar 1 (2.6) |
-| engine/src/re15_esp.c | `re15_spinnen_r38_routine_a(f)` | ESP-Routinen A 24 @0x80017f50 / 25 @0x80017fa4 (2.2); Gift nur bei Absender Typ 0x25 (2.7, neu) |
+| engine/src/re15_esp.c | `re15_spinnen_r38_routine_a(f)` | ESP-Routinen A 24 @0x80017f50 / 25 @0x80017fa4 (2.2); Gift nur bei Absender Typ 0x25 (2.7) und nur am erreichbaren Spieler (2.9, Fortsetzung 2) |
 | engine/src/re15_damage.c | FUN_80012d60-Spielerzweig: Gift-Bit nie (Ziehungen bleiben) | **neu**: 2.7, a0 = 0x0A @0x80012e78 gemessen; test_damage angepasst |
 | engine/src/game_step_common.c | `re15_spinnen_r38_gift_tick(pl)` im Kommando-1-Prolog | Gift-Wirkung @0x80031e44-ecc |
 | engine/src/scd_vm.c | Sce_em_set: pos_s_x/y/z := Spawnlage | Lage-Spiegel `sh` @0x800421a0-b8 (Vor-Hoehe von FUN_8002cabc) |
-| platform/pc/main.c | `re15_spinnen_r38_log_frame` | Messschiene RE15_SPINNEN_LOG (env-gegatet) |
+| platform/pc/main.c | `re15_spinnen_r38_log_frame` | Messschiene RE15_SPINNEN_LOG (env-gegatet); Fortsetzung 2: je Figur `bo`/`bu` (SCA-Boden, 1.6), Messgroesse `re15_spinnen_r38_boden_unter` (kein Spielverhalten) |
 
 Konstanten (alle mit Adresse im Code): Phasentabelle @0x8010027c, Schub 200/300 (`ori 0xc8` @0x80114fa8 / `ori 0x12c`
 @0x8011502c), +1000 @0x8011501c, Abstieg 100 + (rng & 0xf) @0x801150dc-e8 / @0x80115198-bc, Schwellen -1800/-500
 @0x80115100/@0x80115188, Landung 1488 je Quadrant @0x80115278-310, Kaesten A/C @0x80118dd4/@0x80118dec, Spuck-Versatz
 DAT_80118ee8 = (500,0,0) bzw. RE2 (1000,0,-100) @0x80105910-24, Routine 25: +30/+30 @0x80017fbc-d8, Treffer-Radius 500
 @0x80017ffc, Kind `0x030c0000 | (+0x72 + 500)` @0x80018030-54, SE 0x03030001 @0x8001805c-60, Gift-Takt 0x78/8 und -2 HP
-@0x80031e7c-ac, nie toedlich @0x80031ebc-c0, RE2-Spieler-Radius 450 @0x8003bdc0, EM025-Cliplaengen aus CDEMD0.EMS Blob 10.
+@0x80031e7c-ac, nie toedlich @0x80031ebc-c0, RE2-Spieler-Radius 450 @0x8003bdc0, EM025-Cliplaengen aus CDEMD0.EMS Blob 10;
+Fortsetzung 2: Baby-Wandradius +0x90 = 10 @0x80100180, Maske 0x400 @0x801000c4 (Port 4), Kugeln Spieler 450/-1530/1530
+@0x8003bdc0-ec, Baby 10/-10/10 @0x80100168-78, Adult +0x9A 1000 @0x801063A0/C0/E0.
 **NUTZER-VORGABE / Beta->Retail (Gift):** RE1.5 wuerfelt das Gift-Bit tot (1.4: a0 = 0x0A in 13/13, Bit 0x2 @0x80012eac
 nie gesetzt); RE2 vergiftet bei JEDEM Gift-Treffer (Op 32 `sh 5400,0x800cfe10` @0x80020130). Port: derselbe Treffer
 (Giftklumpen im Spielerkasten, Routine 25) setzt das RE1.5-Gift-Bit 0x2; Wirkung und Heilung sind RE1.5 (2.2).
 
 ## 4. Messung nachher
 
-Alle Laeufe ueber die echte exe (Messkopie `re15_pc_r38sp_mess2.exe`, RE2-KI = Default, `RE15_DEBUG_JUMP=<raum>@250`,
-Messschiene RE15_SPINNEN_LOG, Bilder RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1). Laufordner `re15_port/build/r38_lauf/<name>`.
+Alle Laeufe ueber die echte exe (Messkopie `re15_pc_r38sp_mess2.exe`, Fortsetzung 2 `re15_pc_r38sp_mess3.exe`, RE2-KI =
+Default, `RE15_DEBUG_JUMP=<raum>@250`, Messschiene RE15_SPINNEN_LOG, Bilder RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1).
+Laufordner `re15_port/build/r38_lauf/<name>`. ⛔ Die Boden-Aussagen in 4.1/4.3 ("y = +0x1ba", "y = -5400 = Boden") waren
+selbstbestaetigend (das Feld setzt der Port selbst); die unabhaengige Messung steht in 4.4.
 
 ### 4.0 Unit-Test vor der Fortsetzung
 `unit_r38_spinnen` auf Stand a7a84080: 0 FAIL (A RE1.5/RE2 Schacht Bild fuer Bild, A2 Landung neben dem Spieler, B Gift,
@@ -380,6 +418,32 @@ Klumpenkette auf Gelaenderhoehe, nachher auf dem Steg zu Leons Fuessen (`R_beleg
 `babys_nachher_zoom.png`). **Angriff**: HP-Abzuege in 760 Bildern: 13 x 1 HP (Bisse), 5 x 2 HP (Gift), 1 x 10 (Spucken);
 der Lauf vor der Fortsetzung (`c_2030`, 1500 Bilder): 28 Bisse.
 
+### 4.4 Messung nachher mit der unabhaengigen Bodengroesse (Fortsetzung 2, Endstand)
+Auswertung `R_belege/ana_bo.py` (bu = SCA-Boden auf/unter der Figur, 1.6; Schachtspinnen in Zustand 4/1 = eigene Klasse
+"Schacht/Wand"; Sprung = Modus 1). Spieler-Gegenprobe der Groesse in jedem Lauf: |y - bu| <= 100 in allen Bildern
+(Ausnahme a_20A0: 14 Bilder beim Hinunterklettern an der Kante).
+| Lauf | Raum / Weg | Typ | Bilder | SCHWEBT | Sprung | Schacht/Wand | auf dem Boden |
+|---|---|---|---|---|---|---|---|
+| m2_2030 (vorher, 1014136f) | 2030, Spinne 1 erschossen | 0x26 Baby | 20025 | **14485** | 511 | - | 4835 |
+| m4_2030 (02982a08) = m5_2030 (Endstand 96eca34b, Zahl fuer Zahl gleich) | 2030, derselbe Lauf | 0x26 Baby | 20025 | **0** | 450 | - | 19575 |
+| m5_2030 | | 0x25 Adult | 7200 | 0 | 0 | 0 | 7200 |
+| a_2050 (45da274d; Adult-Code seither unveraendert) | Sprung, Leon steht, 1500 Bilder | 0x25 | 3000 | 0 | 0 | 0 | 3000 |
+| a_2070 | Sprung, Leon steht (stirbt) | 0x25 | 2650 | 0 | 0 | 0 | 2650 |
+| a_2090 | Sprung, Leon steht (stirbt) | 0x25 | 2118 | 0 | 0 | 0 | 2118 |
+| a_2060 | Tuerlage aus 2030, zu Fuss in Cut 1 (`U1.8`) | 0x25 | 1800 | 0 | 0 | 979 | 821 |
+| a_20A0 | Gang + Kante hinunter (`UX4.15,A0.2,W3,U1.5`) | 0x25 | 1674 | 5 (*) | 0 | 1066 | 603 |
+(*) a_20A0: Bilder 1-5 der Schachtspinne 1 VOR ihrem ersten Takt (Zustand 0, grid 0x41, y -5400 = Spawnlage im Schacht);
+ab dem ersten Takt Zustand 4/1. Spinne 1 in 2060/20A0 kriecht heraus und steht danach auf dem Boden (y 0 = bu 0), Spinne 2
+wartet ohne Ausloeser (Cut 5) im Schacht wie im Original.
+Babys m5_2030: am Boden innerhalb r 459 um Leon 45 Bilder, alle im Band 423..458 (m3 ohne Schub: 1035 Bilder, 106 naeher als 100)
+= der Kugel-Schub haelt sie am Rand von Leons Kugel (450 + 10). HP-Abzuege 1 HP (Bisse) 22, 2 HP (Gift) 15, 10 HP (Spucken)
+1. Bilder `R_belege/babys_wand_vorher.png` (m2: Klumpen vor dem Gelaender ueber dem Rohrgang) / `babys_wand_nachher.png`
+(m4: Klumpen auf dem Steg um Leons Fuesse), je Bild 400/800/1200/2000.
+Gift im Endstand (`g2_2030`, RE15_GIVE=35:1, Menue-Skript `S0.1,W2,A0.1,W1,D0.1,W0.6,A0.1,W1,A0.1,W2,S0.1,W3` ab Bild 250):
+Bild 33 Treffer HP 100 -> 90, Status 0x0002; Bild 56 Gift -2 (88); Bild 199 -2 (86); Bild 439 Gegengift HP 86 -> 111,
+Status 0x0000; Bild 634 neuer Treffer HP 101, Status 0x0002. Bild `R_belege/gegengift_fort2.png` (EKG "Poison" violett ->
+Antidote Spray -> USE -> "Fine" gruen, Spray weg; Bild 480 Leon mit der Spinne auf dem Steg).
+
 ## 5. Tests
 
 `unit_r38_spinnen` (tests/unit/test_r38_spinnen.c, registriert nur in tests/unit/probes/r38_spinnen.cmake) — echter
@@ -391,11 +455,19 @@ Spielschritt (scd_vm_tick + re15_game_step + ESP-Tick) mit den echten STAGE2-RDT
 | B (RE1.5 + RE2) | 2 | Spucken = 3 Plaetze Effekt 0x0d, Treffer -10 HP, Zustand 2, Gift-Bit |
 | B Wirkung | 2 | -2 HP alle 121 Bilder, nie toedlich, Gegengift 0x23 loescht das Bit (+25 HP) |
 | B2 (neu) | 2 | Klumpen ohne Spinne als Absender: trifft (-10), vergiftet NICHT |
-| C | 3 | Babys: Boden des Elternteils, nie unter dem Boden, Bisse > 0, Sprung <= 1280; **neu**: Babybank = RE2-Paar 1 (1 Clip, 2 Bilder), gezeichnete Unterkante 0..0 (vorher -1797..-1166) |
-| D (neu) | 1 | Zensus aller Stage-2-Spinnen, 7 Raumlagen x 2 KI x 300 Bilder: jede am Boden (y = +0x1ba) oder als Schachtspinne wartend; keine schwebt |
+| B3 (Fortsetzung 2) | 2 | Klumpen einer echten Spinne gegen den GESCHUETZTEN Spieler (+0x93 & 1): kein Schaden, kein Gift; Gegenprobe frei: HP 88 (10 + 2), Gift |
+| C | 3 | Babys: Boden des Elternteils, nie unter dem Boden, Bisse > 0, Sprung <= 1280; Babybank = RE2-Paar 1 (1 Clip, 2 Bilder), gezeichnete Unterkante 0..0 (vorher -1797..-1166); **Fortsetzung 2**: 0 von 4640 Boden-Bildern ueber dem SCA-Boden (bu), keines vom Steg; kein Baby am Boden naeher als 400 am Spieler (min 458) |
+| D | 1 | Zensus aller Stage-2-Spinnen, 7 Raumlagen x 2 KI x 300 Bilder: jede auf dem SCA-Boden (|y - bu| <= 100, **Fortsetzung 2** statt `y == +0x1ba`) oder als Schachtspinne wartend; keine schwebt, keine im Block |
 **Gegenprobe** (Haken lauer_re2 + re2_bank ausgeschaltet, `R_belege/gegenprobe_test.txt`): **20 FAIL** (A-RE2, B-RE2,
 C Babybank/gezeichnet, D RE2 ROOM2060/20A0 "schwebend 600").
 `unit_damage` (test_damage.c test_bleed_gate): erwartet jetzt 0/2000 Gift ueber FUN_80012d60 (vorher die widerlegte 1/4-Rate).
+**Gegenprobe 2** (Fortsetzung 2, Haken `re15_spinnen_r38_baby_schwanz` ausgeschaltet, `R_belege/gegenprobe_baby_schwanz.txt`):
+**2 FAIL** — "Babys bleiben auf dem Steg" (3281 von 4624 Boden-Bildern schwebend, zuletzt (10830,5054) ueber Boden 0) und
+"Kugel-Schub" (min Abstand 112).
+**Gezielte Tests (Endstand, keine volle Suite)**, `ctest --test-dir re15_port/build -R "<R>" --timeout 600 --output-on-failure` mit
+R = `^(unit_r38_spinnen|unit_damage|unit_bleed_rng|unit_enemy_ai|unit_spider_ai|unit_adult_spider_ai|unit_re2_spider_ai|unit_re2_spider_water_2090|unit_re2_baby_spider_dmg|unit_re2_hit_repeat_crow_spider|unit_re2_room1090_ab|unit_ai_flavor_mixed|probe_spinne_elevation|unit_esp_parse|unit_espr_11e0|integration_r34_plattform_esp_eintritt|unit_ems|unit_re2_ems|unit_re2_enemse|unit_re2_enemse_bank|unit_item_use|unit_enemy_body_push|unit_1090_npc_prop_push|unit_1090_fire_pin|unit_1090_flame_out_pin|probe_1090_flame_touch|unit_scd_opcodes|unit_aot_sce_census|unit_r30_granate|unit_r35_granate|unit_r36_granate|unit_r36_objfall|unit_r36_dachkiste_zellschub|unit_r36_szenenleon_schub|unit_r37_elzaems_toc|unit_r37_elzaems_weiche|unit_r37_elzaems_raeume|unit_r37_fahrstuhl_lift2030|unit_r34_re2fx)$`
+(Spinnen-KI beider Geschmaecker, Babys/1090-Feuer-Emitter, Schaden/Gift/Gegengift, ESP-Routinen, EMS-Baenke, SCD
+Sce_em_set, Objekt-/Koerperschub): **"100% tests passed, 0 tests failed out of 39"**.
 
 ## 6. OFFEN
 
@@ -418,6 +490,22 @@ C Babybank/gezeichnet, D RE2 ROOM2060/20A0 "schwebend 600").
    Spieler-FSM NACH der Gegner-Schleife (@0x8001ce04 -> @0x8001ce0c); der Port ruft re15_body_push_player VOR
    re15_enemy_ai_run_all (game_step_common.c) — allgemeine Port-Reihenfolge, Endlage identisch, nicht Teil dieser Spur.
 5. **Baby-Wurzelbewegung X/Z** (FUN_80015350, vorbestehend OPEN in enemy_ai_re2_spider.c): unveraendert.
+6. **+0x1C2 je Bild** (RE2-Engine `jal 0x8004fba0` @0x8002686c vor jedem Tick, liest RE2-SCA-Daten): nicht portiert;
+   PORT-ZUORDNUNG bleibt der Boden des Elternteils (2.4). Mit dem Wandpass bleibt jedes Baby auf der Ebene des
+   Elternteils (gemessen: 0 Boden-Bilder abseits des Stegs, Test C), dort ist der Elternboden der Boden unter dem Baby.
+   Unbelegt bleibt nur ein Elternteil, das an einer Ebenenkante stirbt (die Adultspinne selbst haelt ihre Klemme davon fern).
+7. **Kappe +-100 in FUN_80034d0c** (@0x80035048-a8, Bedingung A.w0 & 0x100000): kein Port-Bit, alle Port-Figuren gelten als 0.
+
+### Fuer die Integration (Hinweis Spur B "szenenschutz")
+Spur B macht re15_player_is_grabbed() waehrend des Takts eines geschuetzten Gegners wahr (re15_szenenschutz_sicht(),
+nur INNERHALB von re15_enemy_ai_run_all) und gibt dort abgezogene HP im selben Durchlauf zurueck. Neue Angriffswege dieser Spur:
+* **Babybiss** (enemy_ai_re2_spider.c re2sb_bite, im Baby-Takt): liest bereits re15_player_is_grabbed() (@0x80100E84) ->
+  von Spur B automatisch erfasst. Der Kugel-Schub (Teil 3b) ist kein Angriff.
+* **Giftklumpen** (spinnen_r38.c routine25, im ESP-Takt NACH der Gegner-Schleife): Gift-Tor `frei` liest +0x93 & 1,
+  re15_player_is_grabbed() und HP >= 0 (2.9); der Schaden laeuft ueber re15_resolve_attack -> re15_player_take_damage
+  (+0x93 & 1). Ausserhalb von run_all greift Spur Bs Sicht NICHT -> bei der Integration in routine25 vor Gift UND
+  re15_resolve_attack `re15_szenenschutz_haelt()` abfragen (Klumpen, der waehrend einer Szene ankommt). Das Spucken selbst
+  startet im Spinnen-Takt (RE1.5 Unterzustand 7 / RE2 Unterzustand 8) — dort ohne Spieler-Tor im Original.
 
 ## 7. Fuer den Nutzer
 
@@ -432,6 +520,9 @@ C Babybank/gezeichnet, D RE2 ROOM2060/20A0 "schwebend 600").
   * Nur die Spinne vergiftet (deine Vorgabe; in RE2 ebenso), andere Treffer nie. Zur Einordnung: im ausgelieferten
     RE1.5 setzt der Spuck-Treffer das Gift-Bit nie (gemessen: der "Wuerfel" ergibt in 13 von 13 Treffern "kein Gift");
     der Port vergiftet bei jedem Spinnen-Treffer wie RE2 (Op 32 @0x80020130).
-  * Die Minispinnen nach dem Tod einer Spinne krabbeln auf dem Boden (vorher in Brusthoehe gezeichnet), springen dich an
-    und beissen (je 1 HP).
+  * Die Minispinnen nach dem Tod einer Spinne krabbeln auf dem Boden (vorher in Brusthoehe gezeichnet), bleiben auf
+    ihrem Steg (vorher liefen sie durch Gelaender und Waende und schwebten ueber der unteren Ebene), springen dich an und
+    beissen (je 1 HP). Sie stecken nicht mehr in Leon, sondern werden wie in RE2 an den Rand seines Koerpers geschoben.
+  * Ein Giftklumpen, der Leon trifft, waehrend er gerade schon getroffen zurueckweicht (Schutzfenster), vergiftet nicht
+    zusaetzlich — wie in RE2 nur der Treffer, der ihn auch erreicht.
 * **Entscheidungsfragen:** keine.
