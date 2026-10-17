@@ -21,6 +21,10 @@ Rolltor-Schnitts im Port, deren Bausteine Original-Adressen tragen (unten).
 - [x] Schritt 1b: Zensus an der echten exe (Messzeilen RE15_IT_LOG=5, Stand d70c234e gebaut)
 - [x] Schritt 1c: Framedumps 1040/1030 (Bild)
 - [x] Schritt 2a: RE-Belege der Rolltor-Form (selbst disassembliert)
+- [x] Schritt 2a': FORTSETZUNG 2026-10-17 (zweiter Lauf nach dem Sitzungslimit des ersten): r37/re2zombie gemergt
+      (05e7af25, `git merge --no-ff r37/re2zombie`, OHNE Konflikte — die Spur-L-Dateien enemy_ai_re2_zombie.c /
+      enemy_ai_common.c / re15_actor.h / re15_re2zombie_r37.h und Tests beruehren keine Spur-O-Datei); alle RE-Belege
+      unten im zweiten Lauf selbst nachdisassembliert / nachgelesen (Abschnitt "Nachpruefung im zweiten Lauf")
 - [ ] Schritt 2b: Bauen
 - [ ] Schritt 3: Messen nachher + Riegel
 
@@ -96,3 +100,26 @@ Der Rolltor-Schnitt (irons_tod_1150.c, Runde 35 L Nachbesserung 1/2) besteht aus
    Navigator und Gehirn). Rolltor: bilanz_takt setzt es, sobald ein Zombie z < Kamera-z (-10692) erreicht.
 
 Kein Original-Vorbild fuer "Ziel = Kamera" (RE1.5 hat die Montage nicht) -> NUTZER-VORGABE, Form = 1+2+3.
+
+### Nachpruefung im zweiten Lauf (2026-10-17, selbst disassembliert, Ausgaben woertlich)
+
+* STAGE1.BIN Zombie-Wurzel `re15_disasm.py dis 0x80100424 12` / `dis 0x80100448 8`: Prolog `80100424 addiu sp,sp,-24`,
+  `8010042c lw v0,-13760(v0)` (g_pauseflags) / `80100438 and v0,v0,v1` (0x20000000) / `8010043c bne v0,zero,0x80100658`
+  (Pause), dann `80100450 lbu v0,9(a0)` / `80100458 andi v0,v0,0x20` / `8010045c bne v0,zero,0x80100658`. Sprungziel
+  `dis 0x80100650 14`: `80100658..80100670` nur `jal 0x8001b064` (a0 = entity+0xb0, a1 = lh 442(entity)) und `jr ra`
+  @0x80100680 = derselbe Ausgang wie die globale Pause -> Bit 0x20 friert den Zombie ein (keine KI, kein Schritt).
+* Durchbruch-Form `dis 0x80100f20 14`: `80100f20 lbu v0,9(a0)` / `80100f24 ori v1,zero,0xd` / `80100f28 andi v0,v0,0x1f`
+  / `80100f2c bne v0,v1,0x80100f60` / `80100f30 ori v0,zero,0x27` / `80100f34 sb v0,148(a0)` / `80100f3c lw v1,-14460(v1)`
+  (g_entity) / `80100f40 ori v0,zero,0x201` / `80100f44 sw v0,4(v1)` / `80100f54 sb zero,9(v0)` — bestaetigt.
+* Installer `dis 0x8011e868 16`: `8011e86c addiu v0,v0,1060` (0x80100424) / `8011e88c sw v0,11244(at)` (0x80072bec = Typ
+  0x10) / `8011e894 sw v0,11248(at)` (0x80072bf0 = 0x11) / `8011e8a4 sw v0,11268(at)` (0x80072c04 = 0x16) — bestaetigt.
+* RE2 EMZ0.BIN `re2_disasm.py dis 0x80100aa0 10 --bin EMZ0.BIN`: `80100aa8 lhu v0,270(s2)` / `80100aac addiu v1,zero,6` /
+  `80100ab0 andi v0,v0,0x3f` / `80100ab4 bne v0,v1,0x80100ac0` / `80100ab8 addiu v0,zero,257` / `80100abc sw v0,4(s2)`;
+  Stehen `801006ac addiu v0,zero,1` / `801006b8 sw v0,4(s2)` — bestaetigt.
+* Pos_set PSX.EXE `dis 0x80041048 16`: `8004104c lw a1,340(a0)` (Work-Entity) / `80041050 lh v0,2(v1)` / `80041058 sw
+  v0,52(a1)` / `80041064 sw v0,56(a1)` / `80041070 sw v0,60(a1)` / `8004106c addiu v1,v1,8` (8 Byte) — bestaetigt.
+  ROOM11B0.RDT `xxd -s 0x12a8`: @0x012B2 `2e 01 00 00 32 00 ae 9a 00 00 47 ba 34 04 e8 02` = Work_set(1,0), Nop,
+  Pos_set(-25938,0,-17849), Member_set(4,744) — bestaetigt (Member_set Id 4 = rot_y, scd_vm.c op_member_set ->
+  re15_actor_set_member).
+* RID-Bytes `xxd -s <off+4> -l 24` in ROOM1130/1040/1030.RDT: alle vier Zeilen der Kamera-Tabelle oben bytegleich;
+  camera_start @0x24 = `60 00 00 00` in allen drei RDTs.
