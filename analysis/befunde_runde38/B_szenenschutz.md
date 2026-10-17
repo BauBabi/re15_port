@@ -394,6 +394,12 @@ Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRA
 Abnahmebericht `analysis/befunde_runde38/B_abnahme_0.md` (Maengel M1-M3). Je Mangel: Ursache, Messung vorher, Beleg,
 Aenderung, Messung nachher. (Wird fortlaufend gefuellt.)
 
+Fortsetzung 2026-10-17 (der erste Nachbesserungs-Agent wurde 2026-10-16 ~23:45 vom Sitzungslimit beendet): seine
+Commits 6e2472e7 (Abschnitt angelegt) und 432487fa (M2-Code, M3-Zitat, Testanpassung T1/T4b) kritisch geprueft —
+Code gelesen, Bau `local_build.sh build` -> `ninja: no work to do.` (exe 23:35:47 juenger als die Quellen 23:34:36),
+M3-Zitat nachdisassembliert, M2 an der exe gemessen (Laeufe e14n/e15n), M1 mit systematischer Riegel-Auswahl.
+Messkopie `re15_pc_r38b_nb1.exe` (md5 81fa7d42... = re15_pc.exe), Laeufe unter `scratchpad/nb1/runs/<name>`.
+
 ### N1.M3 — Typgrenze 0x40 ohne @-Zitat
 - Ursache: `if (e->type >= 0x40) return 0;` in `re15_szenenschutz_gegen` (engine/src/szenenschutz_r38.c) trug nur den
   Kommentar "NPC-Typen (0x40..0x4d) greifen den Spieler nie an", keine Adresse.
@@ -403,9 +409,41 @@ Aenderung, Messung nachher. (Wird fortlaufend gefuellt.)
   (Bytes `40 00 42 2c`) / @0x80050a7c `beq v0,zero,0x80050ae4` (Typ >= 0x40 wird uebersprungen) — das Original trennt
   Gegner (< 0x40) von NPCs genau an 0x40.
 - Aenderung: Zitat am Code (szenenschutz_r38.c, re15_szenenschutz_gegen). Keine Verhaltensaenderung.
+- Pruefung (Fortsetzung): `re15_disasm.py dis 0x80050a68 6` -> `80050a70: lbu v0,-146(s0)` / `80050a78: sltiu
+  v0,v0,0x40` / `80050a7c: beq v0,zero,0x80050ae4`; `bytes 0x80050a70 12` -> `6e ff 02 92 00 00 00 00 40 00 42 2c` —
+  das Zitat im Code stimmt Wort fuer Wort.
 
 ### N1.M2 — Halte-Bedingung "Spieler+0x4 == 4" deckt bewegliche Bilder
-(offen)
+- Ursache: `re15_szenenschutz_haelt()` hielt bei Spieler+0x4 == 4 unabhaengig vom Bewegungs-Gate des Ports. Dieses
+  Gate (player_common.c re15_player_tick: Pad-Zweig nur bei `g_scd.player_mode != 2 && !msg_block`) prueft +0x4 nicht
+  (vorbestehend, v0.8.25 gleich: Abnahme v14). In Executor-Bildern ohne (2,7) und ohne Nachricht lief Leon also im Port,
+  war aber fuer freie Gegner unangreifbar.
+- Messung vorher: Abnahme Lauf e14 (ROOM1230 sub21): `[szenenschutz] F301 an`, pst=4 pm=0, Leon F303-F336
+  z=25000 -> 27100.
+- Beleg Original (Abnahme, selbst disassembliert, hier nicht wiederholt): Spieler-Dispatcher @0x80031c8c `lbu aca58` ->
+  Tabelle @0x80073f90, [1] = 0x80031de8 Pad-Zweig, [4] = 0x80030660 Executor — im Original kann sich Leon bei +0x4 == 4
+  nicht bewegen. ROOM1230 sub21 (scd_dump_room.py, ROOM1230.RDT): @0x014B4 Plc_motion `3f 01 0b 00` (Hocke) /
+  @0x014B8 Sleep `09 0a 1e 00` (30 Bilder Executor OHNE Nachricht) / @0x014BC Message_on `2b 0a ff ff` (Maske
+  0xFFFF -> 0xFFFF0000, Port scd_vm.c Message_on `pause_mask = (pc[2] | pc[3]<<8) << 16`) / @0x014CE Plc_ret `42`.
+- Entscheidung (Abnahme-Option 1, "Halten nur, wo der Port das Pad wirklich ignoriert"): Option 2 (das Bewegungs-Gate
+  byte-true an +0x4 binden) aendert die Spielerbewegung — ausserhalb der Spur-B-Zuteilung (VERTRAG §0: Szenenschutz);
+  ein im Port haengen gebliebener Zustand 4 (Plc_dest/Plc_motion ohne Plc_ret) wuerde Leon dann dauerhaft festsetzen,
+  das braucht einen eigenen Zensus aller Plc-Subs. Als OFFEN fuer den Orchestrator notiert (Abschnitt N1.OFFEN).
+- Aenderung (432487fa, geprueft): `haelt = player_mode == 2 || (Spieler+0x4 == 4 && re15_player_msg_sperre())`;
+  `re15_player_msg_sperre()` (player_common.c) ist der unveraenderte msg_block-Ausdruck des Bewegungs-Gates
+  (`message_display_frames > 0 || message_query != 0`), jetzt EINE Quelle fuer beide Leser (Gate und Szenenschutz).
+  Keine neue Konstante.
+- Messung nachher, Lauf **e14n** (Rezept der Abnahme e14: `RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+  RE15_DEBUG_JUMP=1230@240 RE15_SET_FLAG=4:243 RE15_PLAYER_POS=3900,25000,3072 RE15_INPUT_SCRIPT=A0.1,U4,W2
+  RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=300 RE15_EXIT_AT=560#1230`): debug.log in ROOM1230 OHNE
+  `[szenenschutz]`-Fenster (einzige Zeilen `F0 an` / `F6 aus (0 geschuetzte Gegner-Ticks)` = Vorspann im Startraum vor dem
+  Sprung). state.log: `F302 ... pst=4 ... pm=0`, `F304 PL(3900,25150) pst=4`, `F330 PL(3900,27100) pst=4` — Leon laeuft,
+  der Hund (Slot 1, st=1) tickt frei (d 12244 -> 14408); `F332 msg(a=1 fsm=1 id=22) pf=FFFF0007`: die Nachrichten-Maske
+  0xFFFF0000 traegt RE15_PAUSE_AI 0x20000000 (= Set(2,2), das Gegner-Wurzel-Tor @0x8010d80c-18, Dossier 2.1) — ab hier
+  tickt KEIN Gegner (Hund af=2 steht bis F559), unabhaengig vom Szenenschutz. Kontrolllauf **e15n** (`A0.1,W6`, ohne
+  Steuerkreuz): z bleibt 25000, ebenfalls kein Fenster in ROOM1230.
+  => In Bildern, in denen Leon sich im Port bewegen kann, schuetzt die Spur nicht mehr; die Bedingung (2) greift nur
+  noch, wenn eine Nachricht ohne Gegner-Freeze-Bit das Pad sperrt (Mechanik-Riegel unit_r38_szenenschutz T1/T4b).
 
 ### N1.M1 — fremder Riegel unit_sca_wall_hit rot
 (offen)
