@@ -185,3 +185,69 @@ einfach auf, wenn man Roy, der am Boden liegt noch einmal anklickt im Room 1011"
 Leser direkt, kein Weltmodell) | "statt der Code Message" (msg 18 0x im Log, bei jedem Untersuchen) | Header "Roys
 Diary" + Text woertlich (s. o.) | "Code ... gruen wie alle Codes in den Dokumenten" (87 Pixel, CLUT identisch mit
 FILE28/29).
+
+## Punkt 2 — Karte: Communications Room und Prison Room markieren, "so wie bei Leon" (2. Sitzung, selbst gemessen)
+
+### Hinweis-Schirm direkt nach dem ersten Lesen (Laeufe a1, a2)
+a1: `[hint] F729 begin` -> `F847 Folge-Hinweis 3 -> 4 (Zeit)` -> `F965 Zeit um (Hinweis 4, 3 Blinkperioden)` ->
+`F965 schliessen`; a2 (ganzer Nutzerweg): F2901 / F3019 / F3138 — dieselbe Kette, je 118 Bilder.
+Bilder a1 (`scratchpad/G1B/a1_m3_filed_hint.png`): F690/F710 noch im Raum, F740..F830 "POLICE STATION 2F", die
+Kachel Blatt 3 / Rechteck 9 wechselt gefuellt (F740) / Umriss (F760..F830); F860..F920 "POLICE STATION B2", die
+T-Kachel Blatt 1 / Rechteck 3 gefuellt (F860) / Umriss (F880, F920); F990 zurueck im Raum. Log je Periode
+"rot +Ton Se(2,0x2B)" / "umriss" (F730/F750/F769/F789 ...). a2 ebenso (F2960 2F, F3040/F3100 B2). Reihenfolge
+"einmal den Communications Room ... und einmal den Prison Room" = erst 2F, dann B2; "Und danach" = erst NACH dem
+Tagebuch (Kette am Evt_end von sub07, im Log nach "Leser zu").
+Zielraeume: ROOM10F1 = Kartenzone Blatt 3 Rechteck 9 (re15_map_zones.h Hauptzeile, "COMMUNIC. ROOM"); ROOM1211 =
+Blatt 1 Rechteck 3 ("DETENTI. AREA", Johns Zelle: ROOM1211 @0x1E36 `44 00 49 40 .. 8f 99 .. f4 9d` = Sce_em_set
+Typ 0x49 bei (-26225, -25100), selbst gelesen). Das Tagebuch selbst nennt "holding cell downstairs" — passt zu B2.
+
+### Gegenprobe "so wie auch schon bei Leon im Communications Room gemacht" (Lauf l1, Leon)
+Leons Szene IM Communications Room (Runde 35 K) mit derselben exe: Karte `probe_r35_cut10f0_karte` (ROOM10D0 vor der
+Tuer), `RE15_INPUT_SCRIPT=A0.2,W5`, `RE15_FRAMEDUMP=100-3200/10:f_`, `RE15_EXIT_AT=3200#10f0`:
+
+    [room] PC loaded room10f0.rdt
+    [cut10f0] ROOM10F0: Szene gestartet ... / [cut10f0] Szene zu Ende: Kartenhinweis ROOM11C0 -> ROOM1150 angefordert
+    [hint] F2742 begin / F2854 Folge-Hinweis 1 -> 2 (Zeit) / F2964 Zeit um (Hinweis 2, 3 Blinkperioden) / F2964 schliessen
+
+Bilder (`scratchpad/G1B/l1_leon_kette.png`): F2750..F2800 "POLICE STATION B1" Parkplatz-Kachel gefuellt/Umriss,
+F2860..F2900 "POLICE STATION 3F" ROOM1150-Kachel gefuellt/Umriss, F2990 zurueck im Raum. Elzas Kette hat GENAU diese
+Form (Schirm, Kachel-Blinken gefuellt/Umriss, Ton je Periode Se(2,0x2B), 3 Perioden ~118 Bilder je Ziel, Folge-Ziel,
+schliessen).
+
+### Normale Karte danach (Lauf a1)
+START F1262 -> Statusschirm, L1 F1496 -> MAP "POLICE STATION 1F" (besuchte Raeume 1021/1011, Standort), HOCH F1589 ->
+"2F", RUNTER F1652 -> 1F, RUNTER F1700 -> "B2" (B1 unbekannt, uebersprungen). Pixel in der Kachelmitte (`mitte.py`):
+2F-Kachel (178,95): F1600..F1610 (0,16,88) Kartenblau, F1615..F1630 (48,8,48) gefuellt, F1635..F1650 wieder blau;
+B2-Kachel (205,110): F1705/F1710 (48,8,64), F1715..F1730 (0,16,120), F1735..F1750 (48,8,64) -> beide BLINKEN in der
+normalen Karte weiter (Form der Runde 33/35 bei Leon). Ende des Blinkens ("erreicht"): Comms = Prison Key genommen
+(9,83), Prison = John befreit (4,0xFC); als PORT-WAHL im Header begruendet (Raum kann vor dem Lesen schon besucht sein,
+gleiche Lage wie ROOM1150 in Runde 35 K), geprueft von unit_r38_tagebuch_karte (Pruefungen "ROOM10F1 nur betreten:
+Comms blinkt weiter", "Prison Key genommen -> nur noch Prison", "John befreit -> kein Ziel mehr").
+
+### Urteil Punkt 2: ERFUELLT
+Beide Raeume werden markiert (Hinweis-Schirm nacheinander + Blinken in der normalen Karte), nach dem Tagebuch, in
+Leons Form (Gegenlauf l1 mit derselben exe).
+
+## RE-Gate (2. Sitzung, drei weitere Stichproben selbst gelesen; Werkzeug `scratchpad/G1B/dis.py` = `dis_one` aus
+`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`, Rohbytes aus `info/`)
+
+| # | Behauptung im Diff | Selbst gelesen | Ergebnis |
+|---|---|---|---|
+| S1 | RE15_TAGEBUCH_R38_MSG 18 = sub07 @0x00E64 `2b 12 ff ff`; EVT_END 0x1E = @0x00E82 - @0x00E64 | `xxd -s 0xE4E info/Re1.5/PSX/STAGE1/ROOM1011.RDT`: `0e4e 46 05 00..` / `0e58 2e 01 00 00` / `0e5c 3f 01 0b 00` / `0e60 09 0a 1e 00` / **`0e64 2b 12 ff ff`** / `0e68 02 00` / `0e6a 3f 01 0b 00` / `0e6e 43 00 80 00` / `0e72 09 0a 1e 00` / `0e76 42 00` / `0e78 46 05 03 31 ff 00 18 07 00 00` / **`0e82 01 00`**; `2b 12 ff ff` kommt in der Datei genau einmal vor (0xE64); md5 info == shared_assets (dfcbc099...) | BESTAETIGT |
+| S2 | RE2 FUN_80071ba0: Id >= 0x68 -> `jal 0x800692dc` mit `a0 = Id - 104` (an die FILE-Liste VOR dem Lesen), Modus 4; FUN_800692dc ohne Doppelpruefung | `80071bbc 2ce20068 sltiu v0,a3,0x68` / `80071bc0 1040004f beq v0,zero,0x80071d00` / `80071d00 0c01a4b7 jal 0x800692dc` / `80071d04 24e4ff98 addiu a0,a3,-104` / `80071dc0 24020004 addiu v0,zero,4` / `80071dc4 a2220001 sb v0,1(s1)`; Sprungziel `800692dc addu a1,zero,zero` / `800692e0 addiu a2,zero,255` / `800692e8 addiu v1,v1,19304` (0x800d4b68) / `800692ec lbu v0,0(v1)` / `800692f4 bne v0,a2,0x80069304` / `80069300 sb a0,0(v1)` / `80069308 sltiu v0,a1,0x18` / `80069314 jr ra` — kein Vergleich mit a0 | BESTAETIGT (Doppel-Sperre des Ports = PORT-WAHL, im Header so gekennzeichnet) |
+| S3 | Gruen = Textmaler Steuerbyte 0x05, Arg 1 -> CLUT-Zeile 482 @0x80028974-94; Seiten-CLUT 9..14 = diese Zeile | Sprungtabelle `8001099c..`: Index 4 (`800109ac`) = **0x80028968**; dort `addiu a2,a2,1` / `lbu v0,0(a2)` / `80028974 andi v1,v0,0x4` / `sltu v1,zero,v1` / `andi v0,v0,0x3` / `sll v0,v0,1` / `80028984 addiu v1,v1,480` / `addu v0,v0,v1` / `sll v0,v0,6` / `j 0x80028bd0` / `80028994 ori s5,v0,0x10` -> Arg 1: y = 480 + 2 = 482. `info/Re1.5/PSX/DATA/TEX.TIM` CLUT-Block x 256 y 480 w 32 h 24, Zeile y=482: `0000 16e0 1280 0e20 09e0 0980 0540 ...` = genau die CLUT-Eintraege 9..14 von FILE30_p05 / FILE28_p01 / FILE29_p01 und die 5 Farben im Bild (s. Punkt 1) | BESTAETIGT |
+| S4 | SEITE_H 176 = RE2 @0x800AA184 `06 00 50 00`; ZIEL2 erreicht (4,0xFC) = ROOM1211 @0x01F76 `22 04 fc 01` | RE2 PSX.EXE `800aa184: 06 00 50 00` (Nachbarn `800aa180: 08 00 50 00`, `800aa188: 09 00 50 00`); `xxd -s 0x1F70 ROOM1211.RDT`: `1f76 22 04 fc 01` (danach `22 04 fa 00`) | BESTAETIGT |
+
+Rate-Woerter im Diff (`git diff master...HEAD -- re15_port`, nur `+`-Zeilen,
+"deferred|tunable|interim|for now|faithful|plausib|TODO|FIXME|XXX|approx|geschaetzt|vermutlich|ungefaehr|nach gefuehl"):
+**0 Treffer**. `getenv` in den `+`-Zeilen von engine/include/platform: **0**, in tests/tools: **0** — kein
+Env-Schalter als Abschluss. Jede Konstante in `re15_tagebuch_r38.h` traegt Adresse/Byte-Offset oder die Kennzeichnung
+NUTZER-VORGABE / PORT-WAHL (RAUM 0x1011 @0x009F6/@0x00A3E — in meiner SCD-Ausgabe `0x009F6 Sce_em_set 44 00 47 40`,
+`0x00A3E` dto.; MSG/EVT_END S1; DOK 5/Item 0x4D = 0x48 + 5, 0x48 aus DEBUG.BIN @0x800c7370 (1. Sitzung bestaetigt);
+BILDSATZ 30 PORT-WAHL; MAX_PAGE 5 = Satzbestand p00..p05, im Bild 6 Seiten "1/6".."6/6"; SEITE_H S4; BIT 68 VERTRAG;
+ZIEL1 0x10F1/(9,83) schluessel_r36.h:60/67; ZIEL2 S4). Listenname "Roys Diary": Kodierung ASCII - 0x24 nachgerechnet
+(R 0x2e, o 0x4b, y 0x55, s 0x4f, Leerzeichen 0x00, D 0x20, i 0x45, a 0x3d, r 0x4e, y 0x55, Ende 0x07) und im Bild
+"Files: Roys Diary" gelesen.
+Erklaert der Fix den Befund? Vorher sub07 @0x00E64 oeffnet msg 18 (Abnahme 0 Lauf v1 mit v0.8.25); der Haken ersetzt
+genau dieses Message_on (Raum 0x1011 + Id 18) durch den Dokument-Leser und laesst den Faden danach hinter das Opcode
+laufen; nachher (a1/a2) 0 x msgtext id 18, Leser, Evt_end, Kette. Ja.
