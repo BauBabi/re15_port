@@ -250,6 +250,20 @@ static void fall_lauf(void)
     pl = spieler(-7068, -1800, -7246, 0, 100, b, 1);
     takt(pl);
     CHECK(m->boden == 1 && m->edt == 0x17, "Plc-Lauf (Plc_dest): Tonsatz 0x17 (a0 = 0 @0x80030e18), ist %#x", m->edt);
+    /* Original-GDB (ROOM1260, Lauf an der Wand): Bildwort[0] = 0x5000 -> Part 4, Anker (-6548,-1891,-7302);
+     * Bildwort[12] = 0x700c -> Part 4, Anker (-7872,-2875,-7442) (Fuss hinten oben); Tonsatz 0x18. */
+    static const struct { int bild; int32_t a[3]; } soll[2] = { { 0, { -6548, -1891, -7302 } },
+                                                               { 12, { -7872, -2875, -7442 } } };
+    for (int i = 0; i < 2; i++) {
+        re15_esp_fx_reset(); re15_wasser_r38_reset();
+        pl = spieler(-7068, -1800, -7246, 0, 100, soll[i].bild, 0);
+        takt(pl);
+        CHECK(m->boden == 1 && m->part == 4 && m->edt == 0x18 &&
+              nah(m->anker[0], soll[i].a[0], 3) && nah(m->anker[1], soll[i].a[1], 3) && nah(m->anker[2], soll[i].a[2], 3),
+              "Lauf Bild %d: Part 4, Tonsatz 0x18, Anker = Original (%d,%d,%d) +-3, ist part=%d edt=%#x (%d,%d,%d)",
+              soll[i].bild, soll[i].a[0], soll[i].a[1], soll[i].a[2], m->part, m->edt,
+              m->anker[0], m->anker[1], m->anker[2]);
+    }
     CHECK(re15_wasser_r38_a0(105, 0) == 0 && re15_wasser_r38_a0(100, 0) == 1 && re15_wasser_r38_a0(100, 1) == 0,
           "a0: Gehen 0, Lauf 1, Plc-Lauf 0");
 }
