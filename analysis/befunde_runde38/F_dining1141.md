@@ -327,6 +327,37 @@ F3435 Cut 0, F4125/F4200 Cut 5, F4275 Cut 6): Elza ist in jedem Bild zu sehen. N
 Kamera-Automatik an (1)" und `integration_r38_dining1141_d` "nach dem Abgang verlaesst die Kamera Cut 7 (Cut_old):
 F3429 ... cam=0".
 
+### 4.4 Fortsetzung 4 — Framedump-Pruefung "John erscheint in keinem Bild ohne vorherige Bewegung ins Bild"
+**Methode** (Riegel `integration_r38_dining1141_s`, Werkzeug `test_r38_dining1141 sicht`, Messhaken
+platform/pc/src/dining_r38_pc.c `re15_pc_dining_r38_sicht` + 1 Zeile main.c im NPC-Zeichendurchgang): zwei Laeufe des
+echten Weges D (1131 mit Schluessel -> Tuer -> 1141 -> Gemaelde -> Szene -> Kampf -> Abgang -> Elza zur Dachtuer), Ende
+Bild 4450 in 1141. Lauf A mit John, Lauf B mit `RE15_R38F_JOHN_AUS=1` (John weder Mesh noch Schatten; posiert und
+gesteuert wird er weiter). Beide lesen mit `RE15_R38F_SICHT=sicht_` JEDES Bild von 1141 fertig komponiert zurueck
+(`re15_render_pc_request_readback`, derselbe Weg wie RE15_FRAMEDUMP, unmittelbar vor SDL_RenderPresent, 320x240) und
+schreiben je Bild Kamera, Johns Lage, Rolladen-Hoehe und Elzas Lage ins Log. Johns sichtbare Pixel je Bild = Pixel, in
+denen A und B sich unterscheiden (dieselbe Tiefenordnung, Masken, Rolladen, Letterbox, Text — nur John fehlt in B).
+Schnitte erkennt das Werkzeug am Bild von B (mittlere Abweichung je Kanal zum Vorbild > 10).
+**Messung** (Lauf `lauf_e7035a6f`, Stand 9736579e; Tabelle je Bild `F_belege/n4_sicht_lauf_e7035a6f.txt`, Bildbogen mit
+Johns Pixeln magenta `F_belege/n4_sicht_john_framedump.png`):
+- R0: A und B haben 4451 gleiche Messzeilen (Spiel ohne Johns Bild bit-gleich), 4451 Bildpaare, 0 fehlen.
+- Schnitte (Bild B): F5 23,1 / F6 13,2 (Raumeintritt), F801 38,5 (Zone 0 -> 5), F2120 31,8 (Szene -> Cut 2 Gorillas),
+  F2222 32,3 (-> 5), F2789 38,5 (-> 0), F3278 29,5 (Abgang -> Cut 7), F3430 24,7 (Cut_old -> 0), F4109 38,3 (-> 5),
+  F4268 30,3 (-> 6). Innerhalb eines Bildes hoechstens 6,0 (F4, Einblenden), im Spiel hoechstens 5,3 (F2230).
+  Erste Fassung des Werkzeugs nahm die Kamera-Nummer aus dem Log und meldete an F2120/F2222 zwei Schein-Verstoesse:
+  ein Skript-Cut_chg steht ein Bild VOR dem Bildwechsel im Log (F2119 `anz=2`, das Bild F2119 zeigt noch Cut 5 mit
+  John, F2120 Cut 2), ein Zonenwechsel im selben Bild (F801) — gemessen an den Bildern, darum Schnitt-Erkennung am Bild.
+- R1: Bild 0..1075 (Rolladen steht, y = 0): John in KEINEM Bild sichtbar (0 Pixel).
+- Rolladen faehrt ab F1076 (y -2 ... -6550). Erste John-Pixel F1090: 16 px, Kasten x 112..132, y 126..127 = die Fuesse
+  unter der Rolladen-Kante; F1105 174 px (Beine), F1140 602 px — er wird sichtbar, waehrend der Rolladen hochfaehrt.
+- R2: innerhalb eines Bildes genau 1 Erscheinen (F1090, Rolladen faehrt) — kein Erscheinen ohne Bewegung.
+- R3: innerhalb eines Bildes 2 Verschwinden: F2683 (Cut 5, Johns Schritt 230, er verlaesst das Bild unten, F2682
+  872 px am unteren Rand) und F3353 (Cut 7 beim Abgang, Schritt 201, F3352 945 px am unteren Rand); kein Parken und
+  kein Sprung, waehrend er sichtbar ist. Sichtbar in 2055 Bildern, zuletzt F3352; danach (Cut_old, Elzas Weg ueber
+  Cut 0/5/6 zur Dachtuer) in keinem Bild mehr.
+- Ausgabe: "R0 Bilder: 4451 verglichen (Bild 0..4450), 0 fehlen", "R1 vor dem Hochfahren in keinem Bild sichtbar
+  (0 Verstoesse)", "R2 1 mal ins Bild gekommen, jedes Mal mit Bewegung (0 Verstoesse)", "R3 2 mal aus dem Bild gegangen,
+  jedes Mal mit Bewegung, kein Parken/Sprung im Bild (0 Verstoesse)".
+
 ## 5. Tests
 Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
 | Test | misst | Nutzer-Punkt |
@@ -398,6 +429,10 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
   `integration_r38_dining1141_w|z|d|l`, unter Last je 8-40 min).
 - Einzelteil direkt: `cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=D -P re15_port/tests/integration/test_r38_dining1141.cmake`;
   Auswertung eines vorhandenen Laufs ohne neues Spiel: zusaetzlich `-DAUSWERTEN=<dir>/lauf_<id>`.
+- Sichtbarkeit per Framedump (Teil S, zwei Laeufe, ~2 x 1,1 GB Bilder, nach gruener Pruefung geloescht):
+  `ctest --test-dir re15_port/build -R "^integration_r38_dining1141_s$" --timeout 3600 --output-on-failure`; nur das
+  Werkzeug auf zwei vorhandene Laeufe: `re15_port/build/tests/unit/test_r38_dining1141.exe sicht <laufA> <laufB> sicht_`
+  (schreibt `<laufA>/sicht.txt`).
 - Ton-Mitschnitt gegen die Se_on-Takte: `python re15_port/tools/r38_dining/ton_mitschnitt.py <arbeitsordner des Laufs>`.
 - Druckzahlen je Abfrage: `re15_port/build/tests/unit/test_r38_dining1141.exe takt`.
 - Programme neu erzeugen/pruefen: `python re15_port/tools/r38_dining/programme_bauen.py [--pruefen]`.

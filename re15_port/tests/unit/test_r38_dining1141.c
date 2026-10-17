@@ -782,8 +782,13 @@ static void teil_leon1140(void)
  *       je Bild) oder der Rolladen faehrt.
  *   R3  innerhalb derselben Kamera verschwindet John nur (>0 -> 0 Pixel), wenn er sich bewegt (Schritt 1..400); ein Parken
  *       (x <= -29000) oder Sprung (> 400) waehrend er sichtbar ist, ist ein Verstoss.
- * Kamerawechsel (angeforderter oder angezeigter Cut aendert sich) sind Schnitte: dort darf sich alles aendern.
- * Schreibt <laufA>/sicht.txt (je Bild F, Kamera, Pixel, Kasten, Lagen). */
+ * Kamerawechsel sind Schnitte: dort darf sich alles aendern. Erkannt am BILD des Laufs B (ohne John): mittlere
+ * Abweichung je Kanal zum Vorbild > SICHT_SCHNITT (gemessen Lauf e7035a6f, Grauwert: an den 9 Kamerawechseln 25,5..40,3,
+ * sonst <= 3,0 — Letterbox-Balken 3,0, Textfenster 1,2). Die Kamera-Nummern des Logs taugen dafuer NICHT: ein
+ * Skript-Cut_chg steht ein Bild VOR dem Bildwechsel im Log (F2119 anz=2, Bild erst F2120), ein Zonenwechsel im selben Bild
+ * (F801) — gemessen, erste Fassung des Werkzeugs meldete deshalb an F2120/F2222 zwei Schein-Verstoesse.
+ * Schreibt <laufA>/sicht.txt (je Bild F, Kamera, Pixel, Kasten, Lagen, Bildwechsel). */
+#define SICHT_SCHNITT 10.0
 typedef struct { int da, cam, anz, jda, jx, jz, rda, ry, ex, ez; } sicht_t;
 #define SICHT_MAX 20000
 static sicht_t s_sicht_a[SICHT_MAX], s_sicht_b[SICHT_MAX];
@@ -844,10 +849,12 @@ static int teil_sicht(int argc, char **argv)
     char p[1200];
     snprintf(p, sizeof p, "%s/sicht.txt", la);
     FILE *out = fopen(p, "w");
-    if (out) fprintf(out, "# Bild cam anz Pixel Kasten(x0,y0,x1,y1) John(da,x,z) Rolladen(da,y) Elza(x,z)\n");
+    if (out) fprintf(out, "# Bild cam anz Pixel Kasten(x0,y0,x1,y1) John(da,x,z) Rolladen(da,y) Elza(x,z) Bildwechsel(B)\n");
     int fehlend = 0, bilder = 0, sichtbar_n = 0, erst_sicht = -1, letzt_sicht = -1, verstoss = 0;
-    int r1 = 0, r2 = 0, r3 = 0, erscheinen = 0, verschwinden = 0;
+    int r1 = 0, r2 = 0, r3 = 0, erscheinen = 0, verschwinden = 0, schnitte = 0;
     int px_vor = -1, f_vor = -1, rolladen_faehrt_seit = -1;
+    uint8_t *bb_vor = NULL;   /* Bild B des Vorbilds (Schnitt-Erkennung) */
+    double mad_max_ohne = 0.0, mad_min_schnitt = 1e9;
     const int ry0 = s_sicht_a[erst].ry;
     for (int f = erst; f <= letzt; f++) {
         const sicht_t *s = &s_sicht_a[f];
@@ -857,8 +864,18 @@ static int teil_sicht(int argc, char **argv)
         snprintf(pa, sizeof pa, "%s/%s%06d.ppm", la, pf, f);
         snprintf(pb, sizeof pb, "%s/%s%06d.ppm", lb, pf, f);
         uint8_t *ba = ppm_lesen(pa, &wa, &ha), *bb = ppm_lesen(pb, &wb, &hb);
-        if (!ba || !bb || wa != wb || ha != hb) { fehlend++; free(ba); free(bb); px_vor = -1; continue; }
+        if (!ba || !bb || wa != wb || ha != hb) {
+            fehlend++; free(ba); free(bb); free(bb_vor); bb_vor = NULL; px_vor = -1; continue;
+        }
         bilder++;
+        /* Bildwechsel im Lauf B (ohne John): mittlere Abweichung je Kanal zum Vorbild */
+        double mad = -1.0;
+        if (bb_vor && f_vor == f - 1) {
+            unsigned long long sum = 0;
+            const size_t nb3 = (size_t)wb * (size_t)hb * 3u;
+            for (size_t i = 0; i < nb3; i++) sum += (unsigned long long)abs((int)bb[i] - (int)bb_vor[i]);
+            mad = (double)sum / (double)nb3;
+        }
         int px = 0, x0 = wa, y0 = ha, x1 = -1, y1 = -1;
         for (int y = 0; y < ha; y++)
             for (int x = 0; x < wa; x++) {
@@ -871,9 +888,9 @@ static int teil_sicht(int argc, char **argv)
                     if (y > y1) y1 = y;
                 }
             }
-        free(ba); free(bb);
-        if (out) fprintf(out, "F%d %d %d %d (%d,%d,%d,%d) (%d,%d,%d) (%d,%d) (%d,%d)\n", f, s->cam, s->anz, px,
-                         px ? x0 : -1, px ? y0 : -1, x1, y1, s->jda, s->jx, s->jz, s->rda, s->ry, s->ex, s->ez);
+        free(ba); free(bb_vor); bb_vor = bb;
+        if (out) fprintf(out, "F%d %d %d %d (%d,%d,%d,%d) (%d,%d,%d) (%d,%d) (%d,%d) %.1f\n", f, s->cam, s->anz, px,
+                         px ? x0 : -1, px ? y0 : -1, x1, y1, s->jda, s->jx, s->jz, s->rda, s->ry, s->ex, s->ez, mad);
         if (rolladen_faehrt_seit < 0 && s->rda && s->ry != ry0) rolladen_faehrt_seit = f;
         if (px > 0) { sichtbar_n++; if (erst_sicht < 0) erst_sicht = f; letzt_sicht = f; }
         /* R1: verdeckt, solange der Rolladen nicht faehrt */
@@ -884,7 +901,13 @@ static int teil_sicht(int argc, char **argv)
         }
         if (px_vor >= 0 && f_vor == f - 1) {
             const sicht_t *v = &s_sicht_a[f - 1];
-            const int schnitt = (s->cam != v->cam) || (s->anz != v->anz);
+            const int schnitt = mad > SICHT_SCHNITT;
+            if (schnitt) {
+                schnitte++;
+                if (mad < mad_min_schnitt) mad_min_schnitt = mad;
+                printf("  Schnitt Bild %d: Bildwechsel %.1f, Kamera laut Log %d -> %d (angefordert %d -> %d), John %d -> %d px\n",
+                       f, mad, v->anz, s->anz, v->cam, s->cam, px_vor, px);
+            } else if (mad > mad_max_ohne) mad_max_ohne = mad;
             const int park = s->jda && s->jx <= -29000, park_v = v->jda && v->jx <= -29000;
             int schritt = -1;
             if (s->jda && v->jda && !park && !park_v) schritt = abs(s->jx - v->jx) + abs(s->jz - v->jz);
@@ -910,7 +933,10 @@ static int teil_sicht(int argc, char **argv)
         px_vor = px; f_vor = f;
     }
     if (out) fclose(out);
+    free(bb_vor);
     PRUEF(fehlend == 0 && bilder > 0, "R0 Bilder: %d verglichen (Bild %d..%d), %d fehlen", bilder, erst, letzt, fehlend);
+    PRUEF(schnitte > 0, "Schnitte am Bild erkannt: %d (Bildwechsel dort >= %.1f, sonst <= %.1f, Schwelle %.1f)", schnitte,
+          mad_min_schnitt, mad_max_ohne, SICHT_SCHNITT);
     PRUEF(rolladen_faehrt_seit > 0, "Rolladen faehrt ab Bild %d", rolladen_faehrt_seit);
     PRUEF(r1 == 0, "R1 vor dem Hochfahren in keinem Bild sichtbar (%d Verstoesse)", r1);
     PRUEF(sichtbar_n > 0 && erst_sicht >= rolladen_faehrt_seit,
