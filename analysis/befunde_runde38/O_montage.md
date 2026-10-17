@@ -25,8 +25,9 @@ Rolltor-Schnitts im Port, deren Bausteine Original-Adressen tragen (unten).
       (05e7af25, `git merge --no-ff r37/re2zombie`, OHNE Konflikte — die Spur-L-Dateien enemy_ai_re2_zombie.c /
       enemy_ai_common.c / re15_actor.h / re15_re2zombie_r37.h und Tests beruehren keine Spur-O-Datei); alle RE-Belege
       unten im zweiten Lauf selbst nachdisassembliert / nachgelesen (Abschnitt "Nachpruefung im zweiten Lauf")
-- [ ] Schritt 2b: Bauen
-- [ ] Schritt 3: Messen nachher + Riegel
+- [x] Schritt 2b: Bauen + Zwischenmessung an der exe -> zwei Befunde am Stand des Vorgaengers (veraltetes
+      Navigator-Ziel in Cut 7, aufrechte Zombies am Tor in Cut 12) + Riegel-Defekt (ohne g_room_rdt), behoben
+- [x] Schritt 3: Messen nachher an der exe (echter Weg) + Riegel (unit + integration) gruen, Gegenprobe v0.8.25 rot
 
 ## Messung vorher
 
@@ -162,3 +163,52 @@ Riegel liefen die aufrechten Zombies durch das Tor (Cut 12: 9 von 9 naeher, auch
 Kopien auf Cut 7 direkt zum Spieler. Ausserdem mutiert Sca_id_set das RDT im Speicher, und der Riegel lud es pro Raum
 nur einmal (zweiter Lauf im selben Prozess sah das offene Tor). Gezielte Laeufe: `unit_r38_montage_s1030_re2` und
 `_re15` ROT (Gegenprobe), die anderen gruen — die Zahlen fuer 1030 sind aber nicht die der exe.
+
+## Umsetzung (Stand zweiter Lauf; Dateien, Konstanten mit Beleg)
+
+Bausteine 1-3 (Vorgaenger, nachgeprueft) + zwei Korrekturen + Baustein 4 (neu):
+
+| Datei | Aenderung | Beleg |
+|---|---|---|
+| engine/src/irons_tod_1150.c | EM_1130_DURCH / EM_1070_DURCH: Montage-Listen 1130 Cut 0 und 1030 Cut 7 in der Durchbruch-Form grid 0x0d (Typen, Tot-Bits, Lagen, Blick unveraendert) | STAGE1.BIN @0x80100f40-44 (0x201), RE2 EMZ0 @0x80100ab8-abc (0x101) |
+| engine/src/irons_tod_1150.c | OP_PARK_1030_12 nach Cut_chg 12: Spieler auf die Kameraachse Cut 12, 3985,5 hinter die Kamera (Rolltor-Abstand), Gierung 845 | Form ROOM11B0 @0x012B2, Pos_set @0x80041048-70; RID ROOM1030 @0x1E0, ROOM1040 @0x80 |
+| include/re15_irons_tod.h | **KORREKTUR** RE15_IT_PARK_1030 (-30708,-1699) -> **(-28558,-2183)**: Achse Cut 7, Mitte des Teils der BLK-Zone 7 hinter der Wand SCA 5 | BLK @0x01C10 (x1 -29340), SCA 5 @0x01A4C (x -27776), RID @0x140; FUN_80039e7c `bne a0,a1` @0x80039fbc / `sh s1,444(v0)` @0x80039fd0, Kopie @0x8003a040/@0x8003a058 |
+| engine/src/montage_r38.c | Baustein 3: Einzelstopp hinter der Bildebene (Skalarprodukt mit der Blickrichtung < 0) in 1130/0, 1030/7, 1030/12 | STAGE1.BIN @0x80100450-5c, Ausgang @0x80100658 |
+| engine/src/montage_r38.c | **Baustein 4 (neu)**: auf Cut 12 bekommt jeder Zombie im Warte-Rechteck (AOT-Stempel 5) einmal das Kriech-Bit member 0x10 \|= 0x1000, Set(5,i) | ROOM1030 sub06 @0x024C8.. (`21 05 i 00`, `3e 00 0f 00 05 00` @0x024E0, `22 05 i 01` @0x024E8), sub07 @0x02754 (`26 00 05 04 00 10` @0x02758), sub09 @0x02822 `59 05 04 01`; Torzelle SCA 18/28 nur fuer Kriecher frei: sub08 @0x0278E/@0x02792 `37 02 06 f7`/`37 03 06 f7` |
+| engine/src/montage_r38.c | Messung (kein Spielverhalten): je Schnitt/Zombie Abstand zur Kamera-Bodenprojektion, Tiefe, Kriech-Bit, Endlage; je Schnitt Spielerlage, HP, "Navigator-Ziel fremd" (laenger als ein Pfadsuch-Takt +0x91 = 7 Bilder, @0x80039eb8/@0x80039ed4), Kamera ausserhalb der Montage-Schnitte | debug.log `[montage-r38]` |
+| tests/unit/test_r38_montage.c | **KORREKTUR Riegel**: g_room_rdt/g_room_rdt_ok gesetzt (Navigator + Gegner-Wandklemme), RDT je Lauf frisch, RNG-Saat; Kriterien je Schnitt in EINER Bewertung fuer Prozess und exe (`auswerten <lauf>`) | — |
+| tests/integration/test_r38_montage.cmake, probes/r38_montage.cmake | integration_r38_montage: echte exe ueber den echten Weg | — |
+
+NUTZER-VORGABE / PORT-WAHL (keine Original-Szene): die Montage selbst; "Ziel = der geparkte Spieler hinter der Kamera"
+(Form des Rolltor-Schnitts); die sub06-Regel ohne die Spiel-Drossel sub02 @0x021CC ("weniger als 4 im Hauptraum") und
+ohne das Spiel-Bit (5,0x22) @0x024CC, weil der Nutzer ALLE Zombies auf der Kamera haben will.
+Gemeinsame Dateien: nur irons_tod_1150.c / re15_irons_tod.h (VERTRAG §1.4: O). Kein shared_assets-Patch, keine neuen
+Daten, keine Sprachdateien.
+
+Experiment (verworfen, nicht im Code): Cut 12 OHNE das Umparken (Spieler bleibt in Zone 7) + Baustein 4 -> alle
+Annaeherungen gleich oder kleiner (1: -2721 statt -2905, 6: -3083 statt -3650, 13: -2755 statt -3281, 14: -3709 statt
+-4061, 4/5: -4120/-4281 statt -4269/-4386; 2/3/12 gleich) -> das Umparken bleibt.
+
+## Messung nachher (ECHTE exe, gebaut 2026-10-17, Stand 0d9d544c + Messzeilen)
+
+Weg wie vorher (Karte 1130 nach10f0 ersteszene, CONTINUE, Tuer 1130 -> 1150, Szene, Montage), Laeufe x_kette2
+(RE15_IT_LOG=5) und integration_r38_montage (lauf_0ea873a3). Auswertung `O_belege/nachher_messung_x_kette2.txt`
+(ausw.py) und `O_belege/nachher_auswertung_exe.txt` (test_r38_montage auswerten), Messzeilen
+`O_belege/nachher_montage_zeilen_exe.txt`. Abstand zur Kamera-Bodenprojektion Anfang -> Ende des Schnitts:
+
+| Schnitt | vorher (v0.8.25-Stand, exe d70c234e) | nachher (exe) |
+|---|---|---|
+| 1130 Cut 0, 176 Bilder | alle fuenf +0 (einer -7) | 6821->3961, 5648->1969, 4565->1734, 3521->438 (Stopp hinter der Kamera Bild 142), 4478->1295 (Stopp Bild 161); Navigator-Ziel = Spieler in 0 Bildern fremd; HP 100 |
+| 1040 Cut 1 Rolltor, 405 Bilder | Endabstaende 7136/5663/8286/5395/7046, 5 durchs Tor, letzter Bild 270 | **bitgleich** (7136/5663/8286/5395/7046; Bilanz 5/5, letzter Bild 270, Kappe 0, HP 100) |
+| 1030 Cut 7, 207 Bilder | Kopien alle +0 | 8272->4995 (-3277), 6235->1293 (-4942), 4644->517 (-4127), 7222->2015 (-5207), 5599->860 (-4739); Ziel fremd 0 Bilder; Kamera bleibt Cut 7 (keine fremde Kamera) |
+| 1030 Cut 12, 335 Bilder | 1 -709, 2 +12, 3 -707, 4 -4031, 5 -4211, 6 -629, 12 -1565, 13 -350, 14 -13; 3 von 9 unter dem Tor durch | 1 -2905, **2 +120 (Klemme, s. OFFEN)**, 3 -1189, 4 -4269, 5 -4386, 6 -3650, 12 -779, 13 -3281, 14 -4061; die fuenf aufrechten (1,3,6,13,14) bekommen das Kriech-Bit (Bild 1/1/1/1/30); 6 von 9 unter dem Tor durch |
+
+Die Zahlen des Riegels im Prozess (unit_r38_montage_s1030_re2 / _s1130_re2) sind seit der Riegel-Korrektur
+**identisch** mit der exe (jede Zeile oben); die Gegenprobe im Riegel reproduziert die exe-Messung "vorher"
+(Cut 12: 1 -709/-709, 3 -710/-707, 12 -1565/-1565, 13 -351/-350).
+
+Bilder (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, echte exe): `O_belege/nach_1130.png` (F25..F175: die fuenf gehen aus der
+Gruppe vor der Briefing-Room-Tuer auf die Kamera zu, die vorderen verlassen das Bild unten), `O_belege/nach_1030.png`
+(Cut 7 F30..F210: die Kopien kommen den Gang herauf bis direkt vor die Kamera, Koepfe fuellen das Bild; Cut 12
+F240..F540: die Zombies hinter dem Gitter gehen zu Boden und kriechen unter dem Tor durch nach vorn). Vergleich vorher:
+`O_belege/vor_1130.png`, `O_belege/vor_1030.png` (stehende Gruppen).
