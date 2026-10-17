@@ -1,0 +1,100 @@
+Typ                    Gehirn | gehalten: erster hp treffer griff ab ticks | frei: erster hp treffer griff
+Zombie 0x10            RE2  |    -1  100    0 0   0   899 |     2  -20    6 1
+ok:   Zombie 0x10 RE2  frei: Kontrolle — der Aufbau greift an (Bild 2, hp -20)
+ok:   Zombie 0x10 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x11            RE2  |    -1  100    0 0   0   899 |     2  -20    4 1
+ok:   Zombie 0x11 RE2  frei: Kontrolle — der Aufbau greift an (Bild 2, hp -20)
+ok:   Zombie 0x11 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x12            RE2  |    -1  100    0 0   0   899 |     2  -20    6 1
+ok:   Zombie 0x12 RE2  frei: Kontrolle — der Aufbau greift an (Bild 2, hp -20)
+ok:   Zombie 0x12 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x16            RE2  |    -1  100    0 0   0   899 |     2  -20    6 1
+ok:   Zombie 0x16 RE2  frei: Kontrolle — der Aufbau greift an (Bild 2, hp -20)
+ok:   Zombie 0x16 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x18            RE2  |    -1  100    0 0   0   899 |     2  -20    6 1
+ok:   Zombie 0x18 RE2  frei: Kontrolle — der Aufbau greift an (Bild 2, hp -20)
+ok:   Zombie 0x18 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie-Maedchen 0x13   RE2  |    -1  100    0 0   0   899 |     2  -20    6 1
+ok:   Zombie-Maedchen 0x13 RE2  frei: Kontrolle — der Aufbau greift an (Bild 2, hp -20)
+ok:   Zombie-Maedchen 0x13 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Hund 0x20              RE2  |    -1  100    0 0   0   899 |    11  -20    5 0
+ok:   Hund 0x20 RE2  frei: Kontrolle — der Aufbau greift an (Bild 11, hp -20)
+ok:   Hund 0x20 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Kraehe 0x21 (Flug)     RE2  |     1  100    0 1  12   899 |     1   40    4 1
+ok:   Kraehe 0x21 (Flug) RE2  frei: Kontrolle — der Aufbau greift an (Bild 1, hp 40)
+FAIL: Kraehe 0x21 (Flug) RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster 1 hp 100 treffer 0 griff 1 angriff 330 netz 12)
+Spinne 0x25            RE2  |    -1  100    0 0   0   899 |     4   80    0 0
+ok:   Spinne 0x25 RE2  frei: Kontrolle — der Aufbau greift an (Bild 4, hp 80)
+ok:   Spinne 0x25 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Affe 0x27              RE2  |    -1  100    0 0   0   899 |    -1  100    0 0
+FAIL: Affe 0x27 RE2  frei: Kontrolle — der Aufbau greift an (Bild -1, hp 100)
+ok:   Affe 0x27 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Kakerlake 0x29         RE2  |    -1  100    0 0   0   899 |    15 -200   60 0
+ok:   Kakerlake 0x29 RE2  frei: Kontrolle — der Aufbau greift an (Bild 15, hp -200)
+ok:   Kakerlake 0x29 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Tyrant 0x2B            RE2  |    -1  100    0 0   0   899 |    51   70    3 0
+ok:   Tyrant 0x2B RE2  frei: Kontrolle — der Aufbau greift an (Bild 51, hp 70)
+ok:   Tyrant 0x2B RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Birkin 0x30            RE2  |    -1  100    0 0   0   899 |    35    1   17 1
+ok:   Birkin 0x30 RE2  frei: Kontrolle — der Aufbau greift an (Bild 35, hp 1)
+ok:   Birkin 0x30 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Birkin 0x36            RE2  |    -1  100    0 0   0   899 |    35    1   17 1
+ok:   Birkin 0x36 RE2  frei: Kontrolle — der Aufbau greift an (Bild 35, hp 1)
+ok:   Birkin 0x36 RE2  gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Effekt 0x24            RE2  |    -1  100    0 0   0   599 |    -1  100    0 0
+ok:   Effekt 0x24 RE2 : Gehirn ohne Spielerangriff (frei und gehalten kein Treffer)
+Efeu 0x2D              RE2  |    -1  100    0 0   0   599 |    -1  100    0 0
+ok:   Efeu 0x2D RE2 : Gehirn ohne Spielerangriff (frei und gehalten kein Treffer)
+Feuer 0x26             RE2  |    -1  100    0 0 299   299 |     1    2    1 0
+ok:   Feuer 0x26 RE2  frei: Kontrolle — der Aufbau greift an (Bild 1, hp 2)
+ok:   Feuer 0x26 RE2  gehalten: Umgebungsschaden ohne Tor, das Sicherheitsnetz gibt ihn zurueck (hp 100, 299)
+Zombie 0x10            RE15 |    -1  100    0 0   0   899 |     9   -5    1 1
+ok:   Zombie 0x10 RE15 frei: Kontrolle — der Aufbau greift an (Bild 9, hp -5)
+ok:   Zombie 0x10 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x11            RE15 |    -1  100    0 0   0   899 |     3   -5    1 1
+ok:   Zombie 0x11 RE15 frei: Kontrolle — der Aufbau greift an (Bild 3, hp -5)
+ok:   Zombie 0x11 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x12            RE15 |    -1  100    0 0   0   899 |    13   -5    1 1
+ok:   Zombie 0x12 RE15 frei: Kontrolle — der Aufbau greift an (Bild 13, hp -5)
+ok:   Zombie 0x12 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x16            RE15 |    -1  100    0 0   0   899 |     7   -5    1 1
+ok:   Zombie 0x16 RE15 frei: Kontrolle — der Aufbau greift an (Bild 7, hp -5)
+ok:   Zombie 0x16 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie 0x18            RE15 |    -1  100    0 0   0   899 |    17   -5    1 1
+ok:   Zombie 0x18 RE15 frei: Kontrolle — der Aufbau greift an (Bild 17, hp -5)
+ok:   Zombie 0x18 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Zombie-Maedchen 0x13   RE15 |    -1  100    0 0   0   899 |    11   -5    1 1
+ok:   Zombie-Maedchen 0x13 RE15 frei: Kontrolle — der Aufbau greift an (Bild 11, hp -5)
+ok:   Zombie-Maedchen 0x13 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Hund 0x20              RE15 |    -1  100    0 0   0   899 |    47   -1    7 1
+ok:   Hund 0x20 RE15 frei: Kontrolle — der Aufbau greift an (Bild 47, hp -1)
+ok:   Hund 0x20 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Kraehe 0x21 (Sitz)     RE15 |    75  100    0 1   1   899 |    78  100    0 0
+ok:   Kraehe 0x21 (Sitz) RE15 frei: Kontrolle — der Aufbau greift an (Bild 78, hp 100)
+FAIL: Kraehe 0x21 (Sitz) RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster 75 hp 100 treffer 0 griff 1 angriff 536 netz 1)
+Spinne 0x25 (grid 1)   RE15 |    -1  100    0 0   0   899 |    -1  100    0 0
+FAIL: Spinne 0x25 (grid 1) RE15 frei: Kontrolle — der Aufbau greift an (Bild -1, hp 100)
+ok:   Spinne 0x25 (grid 1) RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Affe 0x27              RE15 |    -1  100    0 0   0   899 |    -1  100    0 0
+FAIL: Affe 0x27 RE15 frei: Kontrolle — der Aufbau greift an (Bild -1, hp 100)
+ok:   Affe 0x27 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Kakerlake 0x29         RE15 |    -1  100    0 0   0   899 |    15 -200   60 0
+ok:   Kakerlake 0x29 RE15 frei: Kontrolle — der Aufbau greift an (Bild 15, hp -200)
+ok:   Kakerlake 0x29 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Tyrant 0x2B            RE15 |    -1  100    0 0   0   899 |    51   70    3 0
+ok:   Tyrant 0x2B RE15 frei: Kontrolle — der Aufbau greift an (Bild 51, hp 70)
+ok:   Tyrant 0x2B RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Birkin 0x30            RE15 |    -1  100    0 0   0   899 |    35    1   17 1
+ok:   Birkin 0x30 RE15 frei: Kontrolle — der Aufbau greift an (Bild 35, hp 1)
+ok:   Birkin 0x30 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Birkin 0x36            RE15 |    -1  100    0 0   0   899 |    35    1   17 1
+ok:   Birkin 0x36 RE15 frei: Kontrolle — der Aufbau greift an (Bild 35, hp 1)
+ok:   Birkin 0x36 RE15 gehalten: kein Treffer/Griff/Angriff, Tor statt Netz (erster -1 hp 100 treffer 0 griff 0 angriff 0 netz 0)
+Effekt 0x24            RE15 |    -1  100    0 0   0   599 |    -1  100    0 0
+ok:   Effekt 0x24 RE15: Gehirn ohne Spielerangriff (frei und gehalten kein Treffer)
+Efeu 0x2D              RE15 |    -1  100    0 0   0   599 |    -1  100    0 0
+ok:   Efeu 0x2D RE15: Gehirn ohne Spielerangriff (frei und gehalten kein Treffer)
+Feuer 0x26             RE15 |    -1  100    0 0 299   299 |     1    2    0 0
+ok:   Feuer 0x26 RE15 frei: Kontrolle — der Aufbau greift an (Bild 1, hp 2)
+ok:   Feuer 0x26 RE15 gehalten: Umgebungsschaden ohne Tor, das Sicherheitsnetz gibt ihn zurueck (hp 100, 299)
+FAIL (5 Fehler)

@@ -1,0 +1,119 @@
+# Raeume mit Halte-Fenster UND Gegner (Typ < 0x40): 68
+ROOM1011	set27=1	plc=1	typen=10
+ROOM1020	set27=0	plc=1	typen=10 11
+ROOM1021	set27=1	plc=1	typen=10 11
+ROOM1030	set27=1	plc=0	typen=16
+ROOM1031	set27=1	plc=1	typen=16
+ROOM1040	set27=1	plc=1	typen=16
+ROOM1041	set27=1	plc=1	typen=16
+ROOM1090	set27=1	plc=1	typen=10 11 26
+ROOM10B1	set27=1	plc=1	typen=10
+ROOM10D0	set27=1	plc=1	typen=10
+ROOM10D1	set27=1	plc=0	typen=10
+ROOM1100	set27=1	plc=0	typen=10
+ROOM1101	set27=1	plc=0	typen=10
+ROOM1110	set27=0	plc=1	typen=11
+ROOM1111	set27=0	plc=1	typen=11
+ROOM1140	set27=1	plc=0	typen=10 11 16
+ROOM1141	set27=1	plc=1	typen=27
+ROOM1170	set27=1	plc=1	typen=21
+ROOM1171	set27=1	plc=1	typen=21
+ROOM1190	set27=1	plc=0	typen=20
+ROOM1191	set27=1	plc=0	typen=20
+ROOM11C0	set27=1	plc=1	typen=27
+ROOM11D0	set27=1	plc=1	typen=20
+ROOM11D1	set27=1	plc=1	typen=20
+ROOM11E0	set27=1	plc=0	typen=10
+ROOM11E1	set27=1	plc=0	typen=10
+ROOM11F0	set27=1	plc=0	typen=10 11
+ROOM11F1	set27=1	plc=0	typen=10 11
+ROOM1200	set27=1	plc=0	typen=10
+ROOM1201	set27=1	plc=0	typen=10
+ROOM1211	set27=1	plc=1	typen=1A
+ROOM1230	set27=1	plc=1	typen=20
+ROOM1231	set27=1	plc=1	typen=20
+ROOM2000	set27=1	plc=1	typen=16
+ROOM2001	set27=1	plc=1	typen=16
+ROOM2020	set27=1	plc=1	typen=16
+ROOM2021	set27=1	plc=1	typen=16
+ROOM2030	set27=1	plc=0	typen=25
+ROOM2031	set27=1	plc=0	typen=25
+ROOM2050	set27=1	plc=0	typen=25
+ROOM2051	set27=1	plc=0	typen=25
+ROOM20B0	set27=1	plc=1	typen=24
+ROOM20B1	set27=1	plc=1	typen=24
+ROOM3000	set27=1	plc=1	typen=10 11
+ROOM3001	set27=1	plc=1	typen=10 11
+ROOM3040	set27=1	plc=0	typen=29
+ROOM3041	set27=1	plc=0	typen=29
+ROOM3060	set27=1	plc=1	typen=20
+ROOM3061	set27=1	plc=1	typen=20
+ROOM3070	set27=1	plc=1	typen=30
+ROOM3071	set27=1	plc=1	typen=30
+ROOM3080	set27=1	plc=1	typen=36
+ROOM30E0	set27=1	plc=1	typen=10 11
+ROOM30E1	set27=1	plc=1	typen=10 11
+ROOM4000	set27=1	plc=1	typen=29
+ROOM4001	set27=1	plc=1	typen=2B
+ROOM4030	set27=1	plc=0	typen=2D
+ROOM4031	set27=1	plc=1	typen=2D
+ROOM5031	set27=1	plc=1	typen=29
+ROOM5060	set27=1	plc=0	typen=18
+ROOM5061	set27=1	plc=0	typen=18
+ROOM5080	set27=1	plc=1	typen=30
+ROOM5081	set27=1	plc=1	typen=30
+ROOM5090	set27=1	plc=1	typen=30
+ROOM5091	set27=1	plc=1	typen=30
+ROOM50B0	set27=1	plc=1	typen=29
+ROOM50E0	set27=1	plc=1	typen=30
+ROOM50F1	set27=1	plc=1	typen=30
+# Integrations-Skripte, die einen dieser Raeume nennen: 49
+test_boot_bg_pin.cmake	1170
+test_elza_vollstart.cmake	1031 1170
+test_r30_cut_blitz.cmake	1170
+test_r34_granaten.cmake	1140
+test_r34n_e_dokumente_bild.cmake	1020
+test_r35_cut10f0.cmake	10D0 11C0 11D0
+test_r35_cut1150.cmake	1030 1040 11C0
+test_r35_entladen.cmake	1020 1030 1170 11E0 11F0
+test_r35_granate.cmake	1140 11C0 5090
+test_r35_inventar1050.cmake	1170
+test_r35_karte.cmake	11F0 1200 1230
+test_r35_karte_fahrstuhl.cmake	1040 11F0
+test_r35_redhawk.cmake	11D0
+test_r35_werfer.cmake	1140
+test_r35_werfer_form.cmake	1140
+test_r35_zgirl_5090.cmake	5090
+test_r36_dachkiste.cmake	1090 1100 2000 2001 2020 2030 2050 2051 30E0
+test_r36_elza.cmake	1011 1021 1211
+test_r36_gegnerzahl.cmake	1030 1040 20B0
+test_r36_granate.cmake	1140
+test_r36_inventar.cmake	1140
+test_r36_karte.cmake	1040 10D0 1100 1110 11D0 1230
+test_r36_kartenitems_bild.cmake	1030 1140
+test_r36_kleidung_hundeweg.cmake	1190
+test_r36_kleidung_spielweg.cmake	1140
+test_r36_klettern.cmake	1090 10D1
+test_r36_pri_schatten.cmake	1100
+test_r36_schluessel.cmake	11C0 1211
+test_r36_schuss.cmake	1140
+test_r36_story.cmake	1020 11E0 50B0
+test_r36_szene1150.cmake	1030 1040 11C0
+test_r36_tueren.cmake	10D0
+test_r36_ziel1190_scheiben.cmake	1190 1191
+test_r37_beretta.cmake	1140 11E1 3040
+test_r37_bissarm_echtlauf.cmake	1140
+test_r37_codepanel.cmake	10D0 1230
+test_r37_elzaems.cmake	1100 1101 1110 1111 1141 3071 5080 5081 5091
+test_r37_fahrstuhl.cmake	1040
+test_r37_fahrstuhl_n1.cmake	2030 3080 4000
+test_r37_feuerloescher.cmake	1090
+test_r37_itemband.cmake	2030
+test_r37_itemband_lift.cmake	2030 2031
+test_r37_kistenregel.cmake	1090 10D0 11E1 1211 4030
+test_r37_pri1100_elza.cmake	10D0 10D1 1100 1101
+test_r37_pri1100_marke.cmake	1100
+test_r37_roy.cmake	1011 1021 1170 1211
+test_r37_sperre1050.cmake	1090 50B0
+test_r37_szene11c0.cmake	11C0
+test_r38_szenenschutz.cmake	1170 1171 1190 11D0

@@ -812,6 +812,10 @@ static int re15_player_push_fsm(re15_actor_t *p, uint16_t pad_bits)
     return 1;
 }
 
+/* Runde 38 Spur B: das Nachrichten-Tor des Bewegungs-Gates (unten msg_block) als EINE Funktion — der Szenenschutz
+ * (szenenschutz_r38.c) haelt einen Spieler im Plc-Executor nur, solange genau dieses Tor das Pad sperrt. */
+int re15_player_msg_sperre(void) { return (g_scd.message_display_frames > 0) || (g_scd.message_query != 0); }
+
 void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
 {
     (void)view;
@@ -938,7 +942,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * blocks the player during dialog/prompts). message_display_frames>0 = a
      * subtitle/prompt is showing; message_query = a YES/NO prompt is waiting for
      * input. Only MOVEMENT is gated (anim still ticks), same as the cinematic. */
-    int msg_block = (g_scd.message_display_frames > 0) || (g_scd.message_query != 0);
+    int msg_block = re15_player_msg_sperre();   /* Runde 38 Spur B: dasselbe Tor, als Funktion (s. oben) */
     /* SCHIEBEN (Substate 8) besitzt Yaw, Pose und Translation vollstaendig: das Original
      * dispatcht in diesen Frames AUSSCHLIESSLICH die Substate-8-Handler (@0x80031eec
      * LAB_8003579c + @0x80031f14 LAB_80035810) — der Lauf-/Ziel-/Idle-Zweig unten laeuft

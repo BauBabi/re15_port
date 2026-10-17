@@ -78,6 +78,7 @@
 #include "re15_collision.h"  /* re15_collision_constrain_enemy (SCA-Wand-Klemme) */
 #include "re15_room.h"       /* g_room_rdt / g_room_rdt_ok */
 #include "re15_schuss_r36.h" /* re15_schuss_r36_kraehe_parts_seed / _gib (Runde 36 Spur C) */
+#include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Kraehen-Angriff, solange die Szene den Spieler haelt */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -299,6 +300,8 @@ static uint8_t re2_route_draw(void)
 static void re2c_attack_arbiter(re15_actor_t *e, re15_actor_t *pl)
 {
     if (pl->hp < 0) return;                                /* bltz @0x80104204 */
+    if (re15_szenenschutz_sicht()) return;                 /* Runde 38 Spur B: Szene haelt den Spieler -> kein Claim/
+                                                            * Join/Strike (Arbiter ohne Spieler-Tor @0x801041F0-0x80104204) */
     /* Grab-Join: +0x22A-Bits 8|2 zusammen (lw +0x228; and 0xA0000 @0x8010420C-18) →
      * Sub 13 + Cooldown-Clear + Bits 8|0x40 loeschen (andi 0xffb7 @0x80104228-34). */
     if ((e->re2c_flags22a & 0xAu) == 0xAu) {
