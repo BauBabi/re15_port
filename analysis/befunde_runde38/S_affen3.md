@@ -441,3 +441,13 @@ Affen blieben in ihrer Nische sitzen.
 Suedwand) und auf ihn zulaufen. Fuer die Decke: einen Affen anschiessen (z. B. Browning) und Leon umdrehen.
 
 Keine neuen Assets, keine neuen Sprachdateien.
+
+## Nachbesserung 1 (2026-10-17, nach Abnahme 0)
+Abnahmebericht `S_abnahme_0.md`: Nutzer-Punkt erfuellt, aber **Mangel 1**: Ereignis-Affen in Stage 4/5 (Typ 0x29, gesperrt
+mit grid 0x61, Freigabe per Pos_set y = -10000 + Member_set(12, 0x41)) fallen im Port nie von der Decke, sondern laufen
+auf y = -10000 umher und beissen Leon aus 10000 Einheiten Hoehe. Ursache laut Abnahme: der INIT-Zweig @0x80110e80-eb8
+(+0x9 == 0x40/0x41 -> Zustandswort 0x4/0x104) und Zustand 4 (0x80115734, Unter-Tabelle @0x8011ee34) fehlen im Port.
+
+### Stand beim Start
+- Baum geprueft: `git status --porcelain` leer, HEAD 8bb74063 (Abnahme 0), Basis cb782bda.
+- Abnahmebericht, Dossier, AUFTRAG.md, VERTRAG.md gelesen.
