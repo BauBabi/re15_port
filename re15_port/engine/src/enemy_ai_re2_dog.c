@@ -66,6 +66,7 @@
 #include "re15_emd.h"        /* re15_emd_get_keyframe_speed (Griff-Anker 0x80015b94) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Hundebiss-Wundstempel am RE2-Boden-Biss */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 blood stand-in) */
+#include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: 1190-Freigabe-Sperrzeit +0x1d6 @0x801115e8-ec */
 #include "re15_gameflow.h"   /* re15_char_variant — Port-Zwilling von PL+0x8 & 1 (@0x80102010-18) */
 #include <stdio.h>
 #include <string.h>   /* memset (Testhaken FX-Zaehler) */
@@ -511,6 +512,7 @@ static void re2d_drool_budget(re15_actor_t *e)
 static int re2d_attack_decide(re15_actor_t *e, re15_actor_t *pl)
 {
     if (pl->hp < 0) return -2;                             /* lh 342; bltz @0x80104D10-18 */
+    if (re15_r38_hund_sperrzeit(e)) return 0;              /* Runde 38 Spur B: +0x1d6 != 0 -> kein Biss-Entscheid @0x8010e578-80 */
     if (e->ai_dist >= 4000u) return 0;                     /* slti 4000 @0x80104D40-4C */
     if (pl->floor != e->floor) return 0;                   /* @0x80104D54-60 */
     if (re2d_sector(e, pl, (int)e->rot_y & 0xfff, 256) != 0)   /* 0x80015758(yaw,256) @0x80104D68-7C */
@@ -902,7 +904,8 @@ static void re2d_sub1_stalk(re15_actor_t *e, re15_actor_t *pl)
                                                             * (addiu v0,v1,21 @0x80100990-94) */
         e->re2z_dir16a = (uint8_t)a;
         if (re2d_sector(e, pl, (int)e->rot_y & 0xfff, 128) == 0    /* @0x80100998-A8 */
-            && e->ai_dist >= 0x259u) {                     /* NICHT <601 (sltiu 0x259; bne→skip
+            && e->ai_dist >= 0x259u                        /* (Runde 38 Spur B: Sperrzeit-Tor darunter) */
+            && !re15_r38_hund_sperrzeit(e)) {              /* NICHT <601 (sltiu 0x259; bne→skip
                                                             * @0x801009BC-C0; Commit @0x801009C8):
                                                             * die Lunge braucht >=601 Anlauf —
                                                             * Lane-D-Report ("Dist<601") hier nach
@@ -1039,7 +1042,8 @@ static void re2d_sub2_run(re15_actor_t *e, re15_actor_t *pl)
         e->rot_y = (int16_t)(((int)e->rot_y + s1p) & 0xfff);   /* @0x80101078-88 */
         re2d_move(e, 0);                                   /* @0x80101084 */
         re2d_lean(e, s1p);                                 /* @0x80101094 */
-        if (e->re2d_atkcd22f == 0) {                       /* @0x80101174-7C */
+        if (e->re2d_atkcd22f == 0                          /* @0x80101174-7C */
+            && !re15_r38_hund_sperrzeit(e)) {              /* Runde 38 Spur B: Sperrzeit wie @0x8010e580 */
             int d = re2d_attack_decide(e, pl);             /* @0x80101184 */
             if (d != 0 || s3 == 0) {                       /* bne/bne @0x8010118C-94 */
                 e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* @0x8010119C-A8 */
@@ -2607,6 +2611,7 @@ int re15_re2dog_tick(int slot)
         }
         /* ACTIVE-Tail @0x80100510-30: EDD-Frame-Event-Bit 0x40000 → SE 8 */
         if (re2d_frame_word(e) & 0x40000u) re2d_se(8);
+        re15_r38_hund_sperrzeit_takt(e);                   /* Runde 38 Spur B: +0x1d6-- je ACTIVE-Bild @0x8010dd5c-70 */
         break;
     case 2: re2d_hurt(e, pl); break;                       /* 0x801032A8 */
     case 3: re2d_death(e, pl); break;                      /* 0x801040DC */

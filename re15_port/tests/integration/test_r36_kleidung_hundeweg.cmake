@@ -12,6 +12,14 @@
 #           @500 (Weg der Abnahme), Leon steht ohne Eingabe: Bisse F582/F585/F587 (hp 80/60/40);
 #           Panel 4 erreicht beim 2. Biss 0x78 (@0x80037f14) -> Stufe 1 bei hp 60 = VOR Danger
 #           (hp < 20, FUN_8004ed6c). Save-Haken @600 -> das SPIEL schreibt den Spielstand.
+#           ⛔ Runde 38 Spur B: seit der RE2-Hund die Freigabe-Sperrzeit des Sprung-Ausgangs ehrt (+0x1d6 = 0x78
+#           @0x801115e8-ec, Abzug @0x8010dd5c-70; analysis/befunde_runde38/B_szenenschutz.md) beissen die
+#           Hunde erst 120 Bilder nach der Landung: gemessen F664/F674/F685 (hp 80/60/40), dann F764 (20) —
+#           der Save-Haken steht deshalb bei 700 (gleicher Stand wie vorher bei 600: drei Bisse, hp 40).
+#           Die Hunde kommen damit aus einer anderen Richtung: Biss 2 "dir=1+0" -> Panel 5 (Tabelle
+#           05 07 04 06 @0x80121014, dir 0 -> 0x05) = Westen-VORDERSEITE statt Panel 4 (Rueckseite). Laeufe
+#           2/3 drehen Leon deshalb mit R4 zur Kamera (Brust sichtbar) statt mit L4 weg; gemessen Bild 42:
+#           50 Pixel in (168,90)-(174,102), Figurenkasten jetzt x150..200 / y70..150, Schwelle 25 (halber Wert).
 #   Lauf 2  CONTINUE aus genau diesem Spielstand, Leon dreht sich (L ab Bild 30) -> Bild 42 (Ruecken
 #           zur Kamera; Panel 4 liegt auf der Westen-Rueckseite).
 #   Lauf 3  derselbe Spielstand mit genullter Wund-Tabelle (Werkzeug `nullen`) -> Bild 42.
@@ -59,8 +67,8 @@ re15_start_spiel(_rv 240
     RE15_KLEIDUNG_LOG=1
     RE15_DEBUG_JUMP=1190@240 RE15_DEBUG_SUB=13@450 RE15_DEBUG_DOGWAKE=500
     RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
-    RE15_SAVE_TEST_AGAIN=600 RE15_SAVE_TEST_EXIT_AFTER=1
-    RE15_EXIT_AT=900
+    RE15_SAVE_TEST_AGAIN=700 RE15_SAVE_TEST_EXIT_AFTER=1   # Runde 38 Spur B: 600 -> 700 (Sperrzeit 0x78)
+    RE15_EXIT_AT=1000
     "${_exe}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r36_kleidung_hundeweg[bisse]: kein debug.log (exit=${_rv})")
@@ -102,7 +110,7 @@ if(NOT _sync)
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _gespeichert REGEX "^\\[save\\] saved \\(room 1190\\)")
 if(NOT _gespeichert)
-    message(FATAL_ERROR "r36_kleidung_hundeweg[bisse]: der Save-Haken hat keinen Spielstand geschrieben (Leon tot vor Bild 600?)")
+    message(FATAL_ERROR "r36_kleidung_hundeweg[bisse]: der Save-Haken hat keinen Spielstand geschrieben (Leon tot vor Bild 700?)")
 endif()
 message(STATUS "r36_kleidung_hundeweg[bisse]: erstes Decal bei hp ${_decal_hp} (vor Danger)")
 set(_karte_wunden "${WORKDIR}/re15_card.mcr")
@@ -128,7 +136,7 @@ function(hund_bild _name _karte _out_bild)
         SDL_ASSERT=always_ignore
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=30 "RE15_INPUT_SCRIPT=L4,W5"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=30 "RE15_INPUT_SCRIPT=R4,W5"   # Runde 38 Spur B: L4 -> R4 (Panel 5 vorn)
         "RE15_FRAMEDUMP=42:bild.ppm"
         "RE15_EXIT_AT=50#1190"
         "${_exe}")
@@ -142,7 +150,7 @@ endfunction()
 hund_bild(nachher "${_karte_wunden}" _nachher)
 hund_bild(vorher  "${_karte_null}"   _vorher)
 
-execute_process(COMMAND "${RE15_KARTE_TOOL}" bild "${_vorher}" "${_nachher}" 13 170 80 240 170
+execute_process(COMMAND "${RE15_KARTE_TOOL}" bild "${_vorher}" "${_nachher}" 25 150 70 200 150
                 TIMEOUT 60 RESULT_VARIABLE _rvb OUTPUT_VARIABLE _ob)
 message(STATUS "r36_kleidung_hundeweg[bild] ${_ob}")
 if(NOT _rvb EQUAL 0)
