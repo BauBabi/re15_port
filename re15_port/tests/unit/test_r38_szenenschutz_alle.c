@@ -17,6 +17,13 @@
  * Ausgenommen (kein Angriff im Gehirn, im Zensus belegt): Effekt-Schwarm 0x24 (harmlos), Efeu 0x2D (ruhendes
  * Skript-Requisit). Feuer 0x26 ist ein Umgebungsschaden ohne Tor (-2 je Kontaktbild): dort zaehlt der Fall nur,
  * dass das Sicherheitsnetz den Abzug zurueckgibt.
+ *
+ * Typ 0x29 = der KLEINE AFFE (Runde 38 Spur S, analysis/befunde_runde38/S_affen3.md; Original-Lader FUN_80022300,
+ * Tabelle @0x80073000 = CDEMD0-Blob EM029, Riegel unit_r38_affen3_typ). Sein ACTIVE-Gehirn (affen3_r38.c, alle 16 Subs)
+ * ist animationsgetrieben: Fuss-Sperre FUN_80115b68/FUN_80115c3c und Treffer-Quadrat FUN_8001bff8 um einen GEZEICHNETEN
+ * Knochenpunkt brauchen die EM029-Bank (affe29_bank) und einen Pool-Stand. Die Aufbauten kommen aus den GDB-Spuren des
+ * Originals (S-Dossier "Original gemessen"): Biss aus o4 F137, schwerer Angriff aus o6 F1006 (affe29_o4/affe29_o6).
+ * Teil 2 (d): die Szene beginnt MITTEN im Angriff — dort muessen die Treffer-Tore B[5]/B[6] selbst greifen.
  */
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -29,6 +36,7 @@
 #include "re15_enemy.h"
 #include "re15_ems.h"
 #include "re15_emd.h"
+#include "re15_affen.h"          /* re15_affen_pool_anim (Pool-Stand der Affen-Familie 0x27/0x29, affen_11c0.c) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -190,6 +198,72 @@ static void spinne15_grab(re15_actor_t *e, re15_actor_t *pl)
     if (e->state == 1 && e->sub_state_2 != 6) { e->sub_state_1 = 1; e->sub_state_2 = 6; e->sub_state_3 = 0; }
 }
 
+/* EM029-Bank (kleiner Affe 0x29) wie test_r38_affen3.c bank_laden_29 / main.c pc_enemy_load: der Blob, den der
+ * Original-Lader FUN_80022300 fuer 0x29 nimmt (Tabelle @0x80073000 = Sektor 994 / 0x364d8 Byte, Index ueber
+ * re15_ems_index_for_type), als Container (Skelett + Clips: Pool, Fuss-Sperre, Trefferpunkt) plus Opfer-Bank.
+ * Diese Sonde ruft nie re15_enemy_reset (das alle Banken verwirft) -> einmal laden genuegt. */
+static uint8_t s_blob29[0x364d8];
+static int affe29_bank(void)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(0x29);
+    if (eb && eb->ok) return 1;
+    FILE *f = fopen(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", "rb");
+    if (!f) return 0;
+    fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *ems = (uint8_t *)malloc((size_t)n);
+    if (!ems || fread(ems, 1, (size_t)n, f) != (size_t)n) { fclose(f); free(ems); return 0; }
+    fclose(f);
+    int idx = re15_ems_index_for_type(0x29);
+    size_t off = 0, len = 0;
+    int ok = (idx >= 0 && re15_ems_get_entry(ems, (size_t)n, idx, &off, &len) == 0 && len <= sizeof s_blob29);
+    if (ok) { memcpy(s_blob29, ems + off, len); if (!eb) eb = re15_enemy_alloc(0x29); ok = (eb != NULL); }
+    if (ok) {
+        re15_tim_t tim = (re15_tim_t){0};
+        ok = (re15_emd_parse_container(s_blob29, len, &eb->md1, &eb->skel, &eb->anim, &tim) == 0);
+        if (ok) {
+            eb->ok = 1; eb->buf = NULL;
+            eb->victim_ok = (re15_emd_parse_victim_bank(s_blob29, len, &eb->skel_victim, &eb->anim_victim) == 0);
+        } else eb->type = 0;
+    }
+    free(ems);
+    return ok;
+}
+
+/* Kleiner Affe 0x29, BISS — Aufbau aus der GDB-Spur o4 des Originals (S-Dossier "o4", Riegel test_r38_affen3.c
+ * aufbau_o4): F137 steht Leon bei (-8800,-1800,-4531), Affe A ruht bei (-8800,-1800,-6082) = 1551 suedlich von ihm
+ * (Fall-Abstand -1551; face() ergibt dort Gier 3072 = +0x6a in F137); ACTIVE Sub 0 Phase 1 (+0x4..7 = 1/0/1/0),
+ * Ruhe-Clip 0x16 Bild 56 (Pool = zuletzt gezeichnetes Bild 55), +0x8f 0, +0x1dc 0, HP 105, +0x93 0, +0x1d0 0.
+ * Original: F138 Sub 3, F139 Biss-Commit A[3] (`sb v0,5` @0x801118dc), F150 = Clip-Bild 12 Treffer -5 (@0x80111f60).
+ * Die Sonde hat keinen Raum: die Wand, an der der Affe in o4 bei z -6082 steht (Klemme @0x80110ba0-cc), fehlt;
+ * gemessen trotzdem Commit Bild 2 und erster Treffer Bild 13 / Clip-Bild 12 wie F139/F150, in jeder der 16 Phasen
+ * des Sicht-Zaehlers (s_los_counter, enemy_ai_common.c, wird nie zurueckgesetzt). Die Sonde haelt Leon fest und loescht
+ * +0x93 je Bild (kein Rueckstoss wie in o4, x -8800 -> -9300): der Affe trifft darum in jedem Fensterbild {12..15}
+ * (@0x8011ed48) statt einmal je Biss — der Zensus wertet nur "greift an" / "greift gehalten nicht an". */
+static void affe29_o4(re15_actor_t *e, re15_actor_t *pl)
+{
+    (void)pl;
+    e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 1; e->sub_state_3 = 0;
+    e->rot_y = 3072; e->motion = 0x16; e->anim_frac = 0; e->dog_blocked_ctr = 0; e->hp = 105;
+    e->hit_react = 0; e->roach_los = 0;
+    e->anim_frame = 55; re15_affen_pool_anim(e); e->anim_frame = 56;
+}
+/* Kleiner Affe 0x29, SCHWERER ANGRIFF — Aufbau aus der GDB-Spur o6 (S-Dossier "Schwerer Angriff", test_r38_affen3.c
+ * teil_schwer): F1006 Affe B in Sub 4 (B[4] Anlauf, +0x6 1, +0x7 0), Clip 6 Bild 12 (Pool Bild 11), +0x8f 0, bei
+ * (-13618,-1800,-10549) r1005, +0x8c 196, +0x1d0 1; F1007 Leon (-13500,-1800,-14200) -> Affe relativ zu Leon
+ * (-118, +3651), Abstand 3653 < 0xfa0 -> A[4] im selben Bild Sub 6 (@0x80111ad4-b18, Original F1007), Treffer -10
+ * (@0x801122b4) im Fenster {21..24,33,34} (@0x8011ed4c). Ohne Raum fehlt die Wand hinter dem Affen (o6: +0x1d6 = 1):
+ * gemessen Commit Bild 1 wie F1007, erster Treffer aber bei Clip-Bild 21 statt 23 (die Fuss-Sperre schiebt den
+ * Affen in den Bildern 1..4 von z 3651 auf 4075 zurueck; o6 F1007..F1010 z -10549/-10549/-10549/-10508 an der Wand,
+ * test_r38_affen3.c s_o6_z) — fuer den Zensus (greift an / greift gehalten nicht an) ohne Belang. */
+static void affe29_o6(re15_actor_t *e, re15_actor_t *pl)
+{
+    (void)pl;
+    e->state = 1; e->sub_state_1 = 4; e->sub_state_2 = 1; e->sub_state_3 = 0;
+    e->x = -118; e->z = 3651; e->rot_y = 1005; e->motion = 6; e->anim_frac = 0; e->dog_blocked_ctr = 0;
+    e->hit_react = 0; e->crow_speed = 196; e->roach_los = 1;
+    e->anim_frame = 11; re15_affen_pool_anim(e); e->anim_frame = 12;
+}
+
 typedef struct {
     const char *name; uint8_t type; int32_t abstand[4]; int32_t ey; int32_t py; int bilder;
     nach_init_fn nach_init; je_bild_fn je_bild; int flavor_maske; /* 1 = RE2, 2 = RE1.5 */
@@ -319,6 +393,77 @@ static void teil2(void)
         if (halten) CHECK(strike < 0 && pl->hp == 100, "T2c gehalten: kein Strike aus dem Homing-Descent (@0x80114464)");
         else        CHECK(strike >= 0, "T2c frei: Kontrolle — der Homing-Descent schlaegt zu");
     }
+
+    /* (d) kleiner Affe 0x29 (Spur S): die Szene beginnt MITTEN im Angriff — frei bis zum Commit (Biss: A[3] -> Sub 5,
+     *     o4 F139 = Bild 2; schwer: A[4] -> Sub 6, o6 F1007 = Bild 1), dann gehalten durch das ganze Trefferfenster. Die
+     *     Commits lesen +0x93 (Zensus oben: `lbu v0,0(a2)` @0x801117e8 / @0x80111ad4); hier muss das Tor IM Angriff
+     *     greifen: B[5] `lbu v0,0(a3)` @0x80111eac / `bne v0,zero,0x8011201c` @0x80111eb4 vor dem Quadrat FUN_8001bff8
+     *     (Fenster {12..15} @0x8011ed48), B[6] `lbu v0,0(s2)` @0x80112190 / `bne v0,zero,0x801123d0` @0x80112198
+     *     (Fenster {21..24,33,34} @0x8011ed4c). Erwartet: das Fenster laeuft gehalten durch, kein HP-Verlust, kein
+     *     Treffer — und das Sicherheitsnetz griff NICHT ein (Tor statt Netz: ohne Tor gaebe das Netz die HP im selben
+     *     Durchlauf zurueck, der Abzug waere an hp/Treffer unsichtbar und nur am Netz-Zaehler zu sehen). */
+    {
+        static const struct {
+            const char *name; int32_t abstand; nach_init_fn aufbau_fn; uint8_t sub; uint8_t fenster[6]; int nf;
+        } angriff[2] = {
+            { "Biss",   -1551, affe29_o4, 5, { 12, 13, 14, 15 }, 4 },
+            { "schwer",  3651, affe29_o6, 6, { 21, 22, 23, 24, 33, 34 }, 6 },
+        };
+        for (int fl = 0; fl < 2; fl++) {
+            re15_ai_flavor_set(fl == 0 ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15);
+            const char *gn = fl == 0 ? "RE2 " : "RE15";
+            for (int a = 0; a < 2; a++) {
+                e = aufbau(0x29, angriff[a].abstand, 0, 0);
+                g_scd.player_mode = 0;
+                pl->x = 0; pl->z = 0;
+                frame();                                   /* INIT (Bild 0 wie lauf()) */
+                angriff[a].aufbau_fn(e, pl);               /* Original-Zustand vor Bild 1 wie lauf() */
+                int commit = -1;
+                for (int f = 1; f < 60 && commit < 0; f++) {
+                    pl->x = 0; pl->z = 0;
+                    frame();
+                    if (e->state == 1 && e->sub_state_1 == angriff[a].sub) commit = f;
+                    pl->hit_react = 0;
+                }
+                CHECK(commit > 0, "T2d kleiner Affe 0x29 %s %s: frei bis zum Commit Sub %d (Bild %d)", angriff[a].name, gn,
+                      angriff[a].sub, commit);
+                g_scd.player_mode = 2;
+                uint32_t t0, ab0, t1, ab1;
+                re15_szenenschutz_zaehler(&t0, &ab0);
+                int fenster = 0;
+                hv = 0; gr = 0; tr = 0;
+                for (int f = 0; f < 400; f++) {
+                    pl->x = 0; pl->z = 0;
+                    int16_t vor = pl->hp;
+                    frame();
+                    if (pl->hp < vor) hv += vor - pl->hp;
+                    if (re15_player_victim_state() != 0 || re15_player_is_grabbed()) gr = 1;
+                    if (pl->hit_react & 1u) tr++;
+                    if (e->state == 1 && e->sub_state_1 == angriff[a].sub)
+                        for (int k = 0; k < angriff[a].nf; k++) if (e->anim_frame == angriff[a].fenster[k]) fenster++;
+                    pl->hit_react = 0;
+                }
+                re15_szenenschutz_zaehler(&t1, &ab1);
+                printf("  [T2d] %s %s: Commit Bild %d; 400 Bilder gehalten: Fensterbilder %d, HP-Verlust %d, Griff %d, "
+                       "Treffer %d, netz %u, hp %d\n", angriff[a].name, gn, commit, fenster, hv, gr, tr,
+                       (unsigned)(ab1 - ab0), (int)pl->hp);
+                CHECK(fenster > 0 && hv == 0 && gr == 0 && tr == 0 && ab1 == ab0 && pl->hp == 100,
+                      "T2d kleiner Affe 0x29 %s %s gehalten: Fenster durchlaufen (%d Bilder), kein Treffer, Tor statt Netz "
+                      "(netz %u)", angriff[a].name, gn, fenster, (unsigned)(ab1 - ab0));
+                g_scd.player_mode = 0;
+                int wieder = -1;
+                for (int f = 0; f < 900 && wieder < 0; f++) {
+                    pl->x = 0; pl->z = 0;
+                    int16_t vor = pl->hp;
+                    frame();
+                    if (pl->hp < vor) wieder = f;
+                    pl->hit_react = 0;
+                }
+                printf("  [T2d] %s %s: Szene vorbei, Treffer wieder nach %d Bildern\n", angriff[a].name, gn, wieder);
+                CHECK(wieder >= 0, "T2d kleiner Affe 0x29 %s %s: nach der Szene trifft der Affe wieder", angriff[a].name, gn);
+            }
+        }
+    }
     g_scd.player_mode = 0;
 }
 
@@ -338,7 +483,8 @@ int main(void)
         { "Spinne 0x25",          0x25, { 1500 },     0,   0,  900, NULL, NULL, 1, 0, 0 },
         { "Spinne 0x25 (grid 1)", 0x25,  { 600 },     0,   0,  600, spinne15_naehe, spinne15_grab, 2, 0, 0 },
         { "Affe 0x27",            0x27, { 1200, 1600, 2000, 2400 }, 0, 0, 600, affe_jagd, affe_blick_pin, 3, 0, 0 },
-        { "Kakerlake 0x29",       0x29,  { 900 },     0,   0,  900, NULL, NULL, 3, 0, 0 },
+        { "kleiner Affe 0x29",    0x29, { -1551 },    0,   0,  900, affe29_o4, NULL, 3, 0, 0 },   /* Biss, o4 F137 */
+        { "kleiner Affe 0x29 (schwer)", 0x29, { 3651 }, 0, 0, 900, affe29_o6, NULL, 3, 0, 0 },   /* o6 F1006 */
         { "Tyrant 0x2B",          0x2B, { 1500 },     0,   0,  900, NULL, NULL, 3, 0, 0 },
         { "Birkin 0x30",          0x30, { 1500 },     0,   0,  900, NULL, NULL, 3, 0, 0 },
         { "Birkin 0x36",          0x36, { 1500 },     0,   0,  900, NULL, NULL, 3, 0, 0 },
@@ -348,6 +494,7 @@ int main(void)
     };
     const int n = (int)(sizeof faelle / sizeof faelle[0]);
     CHECK(affe_bank(), "EM027-Bank geladen (CDEMD0.EMS Eintrag 12)");
+    CHECK(affe29_bank(), "EM029-Bank geladen (kleiner Affe 0x29, Lader-Tabelle @0x80073000 -> CDEMD0.EMS)");
     printf("Typ                    Gehirn | gehalten: erster hp treffer griff angriff netz ticks | frei: erster hp treffer griff angriff\n");
     for (int fl = 0; fl < 2; fl++) {
         re15_ai_flavor_set(fl == 0 ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15);
