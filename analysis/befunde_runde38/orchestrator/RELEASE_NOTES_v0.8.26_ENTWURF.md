@@ -9,6 +9,11 @@ Integrationsbaum, ohne parallele Agenten).
 
 <!-- je integrierter Spur ein Absatz, Nutzer-Sprache, keine Adressen -->
 
+**Roys Tagebuch (Elza, ROOM1011).** Untersucht Elza den bewusstlosen Roy ein zweites Mal, erscheint statt der
+Code-Nachricht jetzt "Roys Diary" - Ihr Text auf RE2-Papier (der FILE16-Hintergrund), der Code 0513 gruen wie in allen
+Dokumenten; es wird in den Akten abgelegt und kann dort wieder gelesen werden. Danach markiert die Karte erst den
+Communications Room (2F), dann den Prison Room (B2, Johns Zelle) - so wie bei Leons Communications-Room-Hinweis.
+
 **Spiderman (Stage 4/5) und Griffe aller Gegner.** Der Spiderman wartet jetzt wie im Original versteckt im Schacht, bis
 Sie den Ausloeser erreichen, und klettert dann heraus (vorher lief er sofort los); beim Herausklettern und in seinen
 Griffen verschwindet er nicht mehr fuer ein Bild. Vor allem: Leon wird beim Griff nicht mehr aus der Karte geworfen
@@ -67,6 +72,9 @@ Original leer, die Szene war dort also stumm). Die "Fall"-Bewegung war ein Port-
 Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in seiner Haltung.
 
 ## Grenzen
+
+* Beobachtung (nicht beauftragt, schon in v0.8.25): Untersucht Elza den liegenden Roy, beugt sie sich nicht zu ihm
+  hinunter, obwohl das Original-Skript eine Geste setzt. Wenn Sie das aendern moechten, sagen Sie Bescheid.
 
 * Verdeckung Stages 3-6: rund ein Fuenftel der ergaenzten Masken bleibt aus, damit keine Figur VOR einem Objekt uebermalt
   wird; volle Verdeckung braeuchte Freistellungen wie in Stage 1. An einer Bodenkante in ROOM5090 bleiben einzelne Pixel.

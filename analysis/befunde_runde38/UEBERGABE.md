@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 05:52: G tagebuch BESTANDEN (Abnahme 1, wf_fef4a19f-77f), gemergt (5f5d0089, Includes/Haken beide Seiten), Bau OK, Tests laufen. S fortgesetzt wf_d92ecd29-8d1.
 * 2026-10-17 05:51: Integration T gruen (220/220 gezielt: Gegner/Griffe/Raeume), Baum r38_spiderman entfernt.
 * 2026-10-17 05:36: T spiderman BESTANDEN (Abnahme 1, wf_7931fdbe-adb), gemergt (96be43ad, Includes beide Seiten), Bau OK, Tests laufen. R fortgesetzt wf_40f9724b-eb5.
 * 2026-10-17 05:30: Integration V gruen (9/9: r38_releaseskript + Android-Pruefketten), Baum r38_releaseskript entfernt.
@@ -49,7 +50,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | D | r38_zopf | Elzas Zopf wie Claire (RE2) | offen |
 | E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | BESTANDEN (A0), integriert |
 | F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | offen |
-| G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | offen |
+| G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | BESTANDEN (A1), gemergt |
 | H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | BESTANDEN (A1), integriert |
 | I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0), integriert |
 | J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0), integriert |
