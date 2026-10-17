@@ -98,3 +98,13 @@ v0.8.25 "Folgt am Samstag". Sie laufen als Fortsetzung in ihren Runde-37-Baeumen
   Leon-RDT + 1 (PSX.EXE @0x800397e4/@0x800397ec).
 - "neue Versionsnummer - minor": wie alle bisherigen Releases die LETZTE Stelle hochzaehlen (0.8.25 -> 0.8.26, 0.8.99 ->
   0.9.0 wie v0.7.99 -> v0.8.0); das Skript nimmt optional eine explizite Version.
+
+## Nachtrag Integration (2026-10-17 07:36, Orchestrator) — Spieler-Tor fuer neue Angriffswege (Spur B integriert)
+
+Spur B (szenenschutz) ist im Integrationsbaum. Solange eine Szene den Spieler haelt, sieht jeder freie Gegner
+(+0x4 == 1) den Spieler ueber die ORIGINAL-Tore als "nicht angreifbar": RE1.5 Spieler+0x93 Bit 0 (Port
+`pl->hit_react & 1`, Tor @0x8010e5c4) und RE2 PL+0x1D3 & 0x80 (Port `re15_player_is_grabbed()`, Tor @0x80104D84-90).
+Jeder NEUE Angriffsweg dieser Spur (Biss, Griff, Schlag, Spucke/Gift) liest vor dem Commit dasselbe Tor wie das
+Original (Adresse des Tor-Lesens im Original zitieren). Liest der Original-Weg KEIN Tor, im Dossier vermerken. Ein Weg
+ohne Tor wird in der Integration nur vom Sicherheitsnetz (HP-Rueckgabe) abgefangen — ein Status wie Vergiftung wuerde
+trotzdem gesetzt. Die Abnahme prueft diesen Punkt mit.
