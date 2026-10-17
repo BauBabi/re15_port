@@ -8,6 +8,9 @@
 #   unit_r38_affen3_flavor   dasselbe unter RE2-KI (Standard) und RE1.5-KI
 #   unit_r38_affen3_quadrat  FUN_8001bff8 = Quadrat um den gezeichneten Knochenpunkt (Record 9 + 0x64)
 #   unit_r38_affen3_schwer   schwerer Angriff Sub 6: -10 im Fenster {21..24,33,34}, Records 6/10
+#   unit_r38_affen3_rueckstoss  Runde 38 Integration: Niederschlag des Spielers nach dem schweren Treffer Bild fuer Bild
+#                            wie GDB-Spur o17 ([4] von vorn, Leon Band 0 vor Affe B: 32 Schritte, 11 210, 41 Bilder,
+#                            Raumhuelle) und o6 ([5] von hinten an der Band-1-Wand, Wrap-Schritt, 92 Bilder); beide KI
 #   unit_r38_affen3_decke    angeschossener Affe: Sub 9 an die Decke, Kriechen/Jagd/Hieb wie GDB-Spur o7
 #   unit_r38_affen3_griff    Griff von der Decke (Sub 15 + Spieler-Haken cmd 5) und Bisse danach wie GDB-Spur o8
 #   unit_r38_affen3_sprung   Sprung Sub 7 / Todessprung Sub 8 (HP < 50 -> -500 -> cmd 6 -> Tod) wie GDB-Spur o9
@@ -32,7 +35,7 @@ target_compile_definitions(test_r38_affen3 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r38_affen3 PRIVATE m)
 endif()
-foreach(_teil typ biss flavor quadrat schwer decke griff sprung ereignis ereignis40)
+foreach(_teil typ biss flavor quadrat schwer rueckstoss decke griff sprung ereignis ereignis40)
     add_test(NAME unit_r38_affen3_${_teil} COMMAND test_r38_affen3 ${_teil})
     set_tests_properties(unit_r38_affen3_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

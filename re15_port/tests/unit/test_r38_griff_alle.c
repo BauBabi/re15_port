@@ -151,6 +151,12 @@ static const fall_t k_faelle[] = {
                           {{4, 20}, {3, 0x21}, {3, 0x91}, {3, 0xAF}} },
     { "spiderman_hinten",0x4001, RE15_AI_FLAVOR_RE2,  1, 0x2B, 0x2B, -12000, -9000, 1024, 1500, 1, 9, 40, 4,
                           {{4, 20}, {3, 0x21}, {3, 0x91}, {3, 0xAF}} },
+    /* Runde 38 Integration (Spur S Rueckstoss): der kleine Affe 0x29 (Spur S) greift von der Decke, nur von HINTEN
+     * (A[13]: a780(Spieler) != 0 @0x80113a24-a94) -> B[15] 0x801142c4 P0: Anker = Spieler-Lage (`sh` acaf4/acaf6
+     * @0x801143b0-b8), aca58 = 5 (@0x8011440c); der Spieler-Haken 0x80115d70 platziert absolut (FUN_8001ad68
+     * @0x80115e1c/@0x80115e74/@0x80115f34) — dieselbe Fehlerklasse wie oben, deshalb hier. ROOM3040 Band 0 im
+     * Westteil (Leon (-25600,-1350) Blick +z, Westwand Zelle 0 bei x -26800, Nordwand Zelle 3 bei z 200). */
+    { "affe3_hinten",    0x3040, RE15_AI_FLAVOR_RE2,  0, 0x29, 0x29, -25600, -1350, 3072, 1000, 1, 15, 100, 0, {{0}} },
 };
 
 static int32_t s_hx0, s_hx1, s_hz0, s_hz1;

@@ -24,6 +24,7 @@ set_tests_properties(unit_r38_spiderman PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 
 #                        solide Typ-1-Zellen). Faelle: RE1.5-Zombie vorn/hinten, RE2-Zombie vorn/hinten, RE2-Kriecher
 #                        ROOM1220 (duenne Wand, Runde 37 J_bissarm OFFEN 1), RE1.5-/RE2-Hund, Gorilla 0x27, Spiderman
 #                        vorn/hinten. Die Gitterarme 0x1A haben ihren eigenen Anker-Riegel (unit_1210_gitterhaende).
+#                        Runde 38 Integration: affe3_hinten = Deckengriff des kleinen Affen 0x29 (Spur S, B[15]).
 add_executable(test_r38_griff_alle ${CMAKE_CURRENT_LIST_DIR}/../test_r38_griff_alle.c)
 target_link_libraries(test_r38_griff_alle PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_griff_alle PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -32,7 +33,7 @@ if(NOT WIN32)
     target_link_libraries(test_r38_griff_alle PRIVATE m)
 endif()
 foreach(_f zombie15_vorn zombie15_hinten zombie2_vorn zombie2_hinten kriecher2_1220 hund15 hund2 gorilla
-           spiderman_vorn spiderman_hinten)
+           spiderman_vorn spiderman_hinten affe3_hinten)
     add_test(NAME unit_r38_griff_${_f} COMMAND test_r38_griff_alle ${_f})
     set_tests_properties(unit_r38_griff_${_f} PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
 endforeach()

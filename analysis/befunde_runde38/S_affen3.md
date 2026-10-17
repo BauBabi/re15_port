@@ -643,3 +643,118 @@ Mangel 1 behoben und gegen das Original gemessen: Ereignis-Affen (Typ 0x29, Stag
 Spawn-Aufruf (Zustandswort 0x104), warten gesperrt und fallen nach der Freigabe in 18 Bildern Bild fuer Bild wie o11 von der
 Decke; Angriffe nur vom Boden, Treffer-Werte (-10 schwer, -5 Biss) und Biss-Takt wie o11. Der Nutzer-Punkt (Stage 3) ist
 unveraendert erfuellt (integration_r38_affen3 bildgleich zur Abnahme). Neue Assets: keine. Sprachdateien: keine.
+
+## Integration: Rueckstoss schwerer Angriff (Runde 38 Integration, 2026-10-17)
+Befund des Orchestrators (nach dem Merge f1511069): `integration_r37_beretta` Lauf `roach_std_w5` rot. Leon (Band 0,
+(-13500,-10300), Blick -z, M93R) wird F27 vom schweren Angriff des Affen B getroffen (-10) und rutscht ab F29 mit ~1000
+Einheiten/Bild abklingend ~14 700 Einheiten nach +z bis (-12294,4747) — aus der Raumhuelle (z <= 1000) — und schiesst nie.
+
+### Messung Port (Messkopie re15_pc_integs_mess.exe, Aufbau wie roach_std_w5; state.log bildgleich zum Orchestrator-Lauf)
+F6 Affe B Sub 4 (A[0]: Leon zielt, Abstand 1504 < 0x1770 @0x80111280-a0), F7 Sub 6 Clip 0x13, F27 Treffer Bild 21 -10
+(@0x801122b4), aca59 = a780 + 4 = 4 -> `re15_player_knockdown_begin(0)` = Handler [4]. Leon-Schritte je Bild ab F28:
+0 (Phase 0 ohne Vorschub), 1000, 1000, 985, 955, ..., 460 (Clip 0xd), 445, 430, ..., 10 (Clip 0xe) = 15 025, Ende z 4747.
+Keine Wand: Leon steht auf Band 0 unter dem Gang; die Band-0-Zellen von ROOM3040 (SCA, 5 x 41 Zellen) haben fuer
+x -19575..-5125 noerdlich von z -11325 keine Wand (die Gang-Waende sind Band 1).
+
+### Original (selbst disassembliert, PSX.EXE)
+- Hauptschleife: `jal 0x8001a50c` (Entity-Schleife) @0x8001ce04 VOR `jal 0x80031c44` (Spieler-Dispatcher) @0x8001ce0c —
+  der Spieler reagiert im SELBEN Bild auf den Treffer.
+- cmd 2 0x80035af0: `jalr` ueber 0x800741a8[aca59] @0x80035b58; [4] = 0x800360e8 (`sltiu v0,v1,0xc` @0x800360f8, Tabelle
+  @0x80010b88), [5] = 0x8003644c (`sltiu v0,v1,0x7` @0x8003645c, Tabelle @0x80010bb8).
+- [4] Ph0 0x80036124: +0x94 0xd @0x80036144-4c, +0x8c `ori v0,zero,0x3e8` @0x8003615c / `sh` @0x8003616c, +0x93 |= 1,
+  Se 0x04010001 `jal 0x80045024` @0x80036184 — und FAELLT in Ph1 (@0x800361a0 -> @0x800361a4, kein Sprung).
+  Ph1: `lbu t0,+0x95` @0x800361c8, `sll v0,t0,4` / `subu` @0x800361d0-d8 (15 * Bild VOR anim_set), `jal 0x8001f314`
+  @0x800361dc mit `sh v1` im Delay-Slot @0x800361e0, aca5a += Rueckgabe @0x800361e4-f8, `jal 0x800245d8` (a0 0x800)
+  @0x800361fc, Sonde `jal 0x8001c2dc` @0x80036214 -> aca5a = 5 @0x8003622c-30.
+  Ph2 0x8003623c: Clip 0xe, Se @0x80036274, faellt in Ph3 0x8003627c: anim_set @0x80036290, `jal 0x800245d8` @0x800362b0
+  mit dem ALTEN +0x8c, DANACH `addiu v0,v0,-15` @0x800362c4 / Klemme 0 @0x800362d0-e0. Ph4 0x800362ec Exit `sw 1`
+  @0x800362f4. Ph5 0x80036308 Slam (Clip 0xf, Se @0x80036340) .. Ph11 0x80036404 wie bisher im Port.
+- [5] Ph0 0x80036488 (Clip 0xc, `ori v0,zero,0x1f4` @0x800364c0) faellt in Ph1 0x80036510: anim_set @0x80036524 ZUERST,
+  Tor auf +0x95 NACH anim_set (`sltiu a0,a0,0xf` @0x80036544), 5t @0x8003656c-8c, Sonde @0x80036594, `jal 0x800245d8`
+  (a0 0) @0x800365b4.
+- FUN_800245d8: (+0x8c,0,0) per RotMatrixY(+0x6a + a0) (`jal 0x800659d0` @0x80024660, MVMVA) auf +0x34/+0x3c — 1000
+  sind 1000 Einheiten je Bild.
+
+### Original gemessen (DuckStation-GDB)
+Werkzeug Scratch integ_s_rueck/gdb/affen_spur5.py (= affen_spur4.py + mehrere `--pad`-Bereiche, `--dump`, `--mirror`);
+settings.ini `EnableGDBServer` nur waehrend der Laeufe true, danach Sicherung byte-gleich zurueck (cmp leer).
+Code-Identitaet im RAM: PSX.EXE 0x80035af0+0xbd0, 0x800245d8+0x138, 0x8003b0a4+0x490, 0x8001c2dc+0x144, 0x80031c44+0x1a4,
+Tabellen @0x80010b88 / @0x800741a8 und STAGE3.BIN 0x80110b00+0x5730: 0 Abweichungen.
+- o12 (Leon ab Bild 0 dort, Zielen): Affe B entscheidet im 1. aktiven Bild (Leon zielt noch nicht) Sub 3 blind und
+  springt durch die Fuss-Sperre nach (-145,773) (o3-Klasse); Quadrat (Feuer) loest im Debug-Menue-Savestate den SPRUNG
+  erneut aus (Raum neu geladen) — fuer Messungen kein Quadrat.
+- o13/o14: ein ZIELENDER Leon laesst sich per RAM nicht versetzen (das Zielen setzt ihn im selben Bild zurueck).
+- o15/o16 (B per +0x1dc = 30 verzoegert): B sieht Leon (+0x1d0 = 1 ab F10) -> Sub 3 -> Sub 5 BISS: -5, Rueckstoss
+  200/150/100/50 — kein schwerer Angriff.
+- **o17 (B in Bild 30 per RAM auf Sub 4, +0x1dc 0):** F30 Sub 6 Clip 0x13 Bild 1; F49 -> F50: Treffer im Tick von B
+  (Bild 21), HP 100 -> 90, cmd 02 04 01 00, im SELBEN Bild Clip 0xd und z -10241 -> -9241. Schritte F50..F81:
+  1000 985 955 910 850 775 685 580 460 325 | 325 310 295 ... 25 10 (Clip 0xe ab F60), F82..F89 Stillstand, F90
+  cmd 01 00 00 00. **Rutschweg 11 210, Endlage (-13499,969)** — auch das Original rutscht dort ohne Wand, bleibt aber
+  im Raum.
+- o6 (Spur S, [5], Band 1): 500 / 495 / Wand -15507, F1061 Wrap-Schritt -25 (+0x95 nach anim_set = 0 < 15), Exit F1103.
+
+### Ursache im Port (game_step_common.c re15_player_knockdown_tick)
+1. Phase 0 brach ab (eigener Tick ohne Vorschub) — das Original faellt in Phase 1.
+2. [4] Phase 1 nahm fuer 15 * Bild das Bild des Vorticks (Saat-Tick doppelt): 1000, 1000, 985, ... statt 1000, 985, ...
+3. [4] Phase 3 zog -15 VOR dem Vorschub ab (Original: Vorschub mit altem +0x8c, dann -15).
+4. [5] Phase 1 pruefte das Bild VOR anim_set (Original: +0x95 NACH anim_set; Wrap-Schritt fehlte, zwei Schritte zuviel).
+-> [4] 15 025 statt 11 210 Einheiten, Leon aus der Raumhuelle; [5] verschoben. Kein Fehler im Affen (Spur S): Treffer,
+Bild 21, -10, aca59 = 4 sind bildgleich zu o17.
+
+### Aenderung
+`re15_player_knockdown_tick` faehrt jetzt die Original-Sprungtabellen 1:1 (s_kd_phase = aca5a, [4] 0..11 / [5] 0..6,
+alle Durchfaelle Ph0->1, Ph2->3, Ph5->6, Ph7->8, Ph9->10 bzw. Ph2->3, Ph4->5), dazu die beiden fehlenden Se
+0x04010001 in [4] Ph2 (@0x80036274) und Ph5 (@0x80036340). Neue Konstanten: keine (1000/500/15/5/0xf/Clips wie vorher,
+jetzt mit Adresse je Zeile). Port-Bildkonvention unveraendert (kd_clip/kd_adv: Saat-Tick posiert Bild 0).
+Bleibt: der Port faehrt den Spieler VOR der Gegner-Schleife (game_step_common.c), das Original danach (@0x8001ce04 vor
+@0x8001ce0c) — jede Spieler-Reaktion auf einen Gegnertreffer beginnt im Port ein Bild spaeter (auch der Biss-Rueckstoss,
+OFFEN 2 oben; jetzt mit Ursache). Nicht geaendert (Reihenfolge der ganzen Bildschleife).
+
+### Riegel
+- `unit_r38_affen3_rueckstoss` (test_r38_affen3.c teil_rueckstoss): [4] gegen o17 (RE2- und RE1.5-KI): Commit Tick 1,
+  Treffer Tick 21 Bild 21 -10, Clip 0xd, 32 Schritte Bild fuer Bild = o17, Summe 11 210, Stillstand, 41 Handler-Bilder,
+  Endlage (-13499,969) in der Raumhuelle; [5] gegen o6: -14700/-15195/-15507, Wand bis Bild 49, Wrap-Schritt -15482 in
+  Bild 50, Clips 0xc/0x10/0xb, 92 Handler-Bilder. Gegenprobe mit dem alten Handler (Datei aus HEAD gebaut): 14 Fehler
+  (32 Schritt-Abweichungen, Summe 14 399, Endlage z 4788 ausserhalb, [5] -14200/-14700/-15195, 42/93 Bilder).
+- `unit_r38_griff_affe3_hinten` (Spur T, test_r38_griff_alle.c): der Deckengriff 0x29 (B[15], Anker-Kopie
+  @0x801143b0-b8, Platzierung FUN_8001ad68 @0x80115e1c..) mit vergiftetem Anker: 193 Griffbilder, 0 ausserhalb, 0 hinter
+  einer Wand. Mutationsprobe (Anker-Kopie in b_griff entfernt): 193/193 ausserhalb, 193 hinter einer Wand, FAIL. Der
+  Niederschlag ist kein Griff — er gehoert nicht in unit_r38_griff_*, sein Raum-Riegel ist unit_r38_affen3_rueckstoss.
+
+### Folgen fuer zwei Spur-S-Riegel (gemessen, beide jetzt mit Original-Niederschlag)
+Der korrigierte Niederschlag veraenderte zwei Spur-S-Laeufe, deren Pruefung an Zufall/Reihenfolge hing:
+- `unit_r38_affen3_sprung` (o9): Ende-zu-Ende traf der Todessprung nicht mehr (der Port sprang T258 statt T266 —
+  A[4] wuerfelt rng & 1 @0x80111b88-ac, B[7] +0x8c @0x80112494-98 / @0x801124e4-fc, Ersatz-Zufallsquelle OFFEN 1 — und stand in
+  Bild 0x13 5184 > 0x1388 entfernt). Vorher kam der Todessprung nur, weil der falsche Niederschlag (15 025) Leon weiter
+  wegwarf. Jetzt: Ende-zu-Ende prueft Sprung, schweren Treffer und den Niederschlag danach Bild fuer Bild gegen o9 Zeilen
+  252..284 (32 Schritte, Summe (9316,6183), 0 Abweichungen); der Todessprung laeuft ab dem Original-Zustand o9 Zeile 425 (nach
+  beiden B[7]-Wuerfen, danach wuerfelt nichts mehr): Sub 8 n9 (y -3240), -500 n18 Clip 0x15 Bild 9, cmd 6 n18, Landung n22,
+  Sub 2 n30, Tod — bildgleich zu o9 (Zeilen 434/443/447/455).
+- `unit_r38_affen3_ereignis` (o11): (a) der Lauf hatte keine PL00-Bank (Ersatz-Cliplaenge 20 im Niederschlag statt 24/16/25)
+  -> geladen wie in der exe; der Niederschlag mit Wand-Slam ist jetzt Bild fuer Bild o11 Zeilen 112..179 (n1 -26000 Clip 0xd,
+  n2 -26451 = Wand, n3 Clip 0xf, n27 Clip 0x10, n43 Clip 0xb, Exit n68) und wird geprueft. (b) Der Biss-Takt 58/57/57/57 ist keine
+  feste Zahl: Abstand = 44 + Trefferbild des naechsten Bisses (Sperre 0x2d @0x80111f68-70, Abbau @0x801111c0-d4, Commit A[3]
+  @0x801117e8-820); o11 traf in den Bildern 15/14/13/13/13, der Port jetzt 15/13/13/13/13 (57/57/57/57). Das Trefferbild haengt an
+  der Lage nach dem Anschleichen B[3] (Lenkrate (rng & 0x1f) + 6 je Bild @0x8011199c-b4) — die Affenbahn weicht schon vor dem
+  schweren Treffer um ~330 in z von o11 ab (Port T72 (-24009,5448) gegen o11 Zeile 111 (-24010,5776)). Der Riegel prueft jetzt
+  die Mechanik (Fenster 12..15, Abstand = 44 + Bild); mit dem alten Niederschlag passte die 58 zufaellig (der verspaetete Ph0
+  hob die verkehrte Bildschleifen-Reihenfolge fuer den Affen auf, Leon selbst lief dabei falsch).
+Gegenprobe mit dem alten Handler (aus HEAD gebaut): rueckstoss 14 Fehler, sprung 2 Fehler (Niederschlag 33 Abweichungen, Summe
+(11966,7945)), ereignis 2 Fehler (n1 x -25000, n2 -26000, n68 noch aktiv).
+
+### integration_r37_beretta roach_std_w5 — gemessen umgestellt
+Am alten Platz ist der Lauf kein Feuerstoss-Test mehr: das Zielen loest den Anlauf aus (A[0] @0x80111280-a0, Abstand
+1504 < 0x1770), der schwere Treffer F27 wirft Leon um, der Abzug F61 kommt nie. Gemessen (Messlaeufe Scratch
+integ_s_rueck): v1_m05 (Abzug schon F16 = erstes Bild nach Zielclip 8 in F15) traf zwar dreimal, aber in den laufenden
+Angriff (Sub 6) hinein; **gewaehlt v2_fern: Leon (-13500,-18500) Blick +z (3072), Band 0 suedlich des Gangs, 6700 vor
+Affe B**: >= 0x1770 kein Anlauf, >= 0x1388 / 0xbb8 kein Sicht-/Blind-Zweig (@0x80111244-68 / @0x801112d8-304), der
+Ruhe-Zeitgeber endet fruehestens 59 Bilder nach F6 (`addiu v0,v0,59` @0x80111330-44) = F65 > E. Gemessen: Affe ruht
+F6..F60 (Sub 0, Clip 0x16), E = F61, Munition -3, Platz 2 -14 / -14 / -14 in E / E+3 / E+6, Leon 100 HP. Zweck (drei
+Abzuege je -14, Spalte 3 @0x8006EEF4) und Eingabe unveraendert.
+
+### OFFEN (Integration)
+1. Bildschleifen-Reihenfolge Spieler/Gegner (s. oben) — Ursache des "ein Bild spaeter" aller Treffer-Reaktionen.
+2. kd_move klemmt im Handler zusaetzlich (re15_collision_constrain + Objekt-Pass); das Original klemmt nur im Schwanz
+   @0x80031d70. Ohne gemessene Wirkung (die Sonde nimmt die ungeklemmte Lage wie @0x80036214), nicht geaendert.
+3. Ob ein Spieler im Original zu Fuss auf Band 0 unter den Gang kommt (Band-0-Ostteil ueber Tuer 0 / Kistenleiter AOT 4/5),
+   ist nicht abgelaufen; im o17-Aufbau rutscht auch das Original 11 210 weit bis an den Raumrand.

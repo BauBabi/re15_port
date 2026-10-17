@@ -409,6 +409,158 @@ static void teil_schwer(void)
     PRUEF(nach_sub == 3, "Ende mit +0x1dc != 0 -> Sub 3 (@0x80112388-3ac): Sub %d", nach_sub);
 }
 
+/* ==== RUECKSTOSS des schweren Angriffs (Runde 38 Integration, Spur S Rueckstoss) =========================
+ * Befund: integration_r37_beretta roach_std_w5 (Leon Band 0 unter dem Gang, (-13500,-10300), Blick -z auf Affe B)
+ * — der schwere Treffer warf Leon 15 025 Einheiten weit bis z 4747, aus der Raumhuelle (z <= 1000).
+ * Original-Gegenprobe o17 (DuckStation-GDB, affen_spur5.py, MZD-Disc, Code-Identitaet PSX.EXE 0x80035af0..+0xbd0 /
+ * 0x800245d8 / 0x8001c2dc / 0x8003b0a4 und STAGE3.BIN 0x80110b00..+0x5730 = 0 Abweichungen): Leon (-13500,0,-10300)
+ * Band 0 r1024 ab Bild 0, Affe B per RAM in Bild 30 auf Sub 4 (+0x5..7 = 04 00 00, +0x1dc = 0) -> A[4] -> Sub 6 im
+ * selben Tick (F30 Clip 0x13 Bild 1), Treffer F49 im Tick von B (Bild 20 -> 21): HP 100 -> 90, cmd 02 04 01 00
+ * (aca59 = a780 + 4 = 4 = Handler [4] 0x800360e8), und SCHON IM SELBEN Bild (Spieler-Dispatcher @0x8001ce0c laeuft
+ * nach der Entity-Schleife @0x8001ce04) Ph0+Ph1: Clip 0xd, +0x8c 1000, z -10241 -> -9241. Schritte je Bild: */
+static const int32_t s_o17_schritt[32] = { 1000, 985, 955, 910, 850, 775, 685, 580, 460, 325,     /* Ph1 F50..F59 */
+                                           325, 310, 295, 280, 265, 250, 235, 220, 205, 190, 175,   /* Ph3 F60.. */
+                                           160, 145, 130, 115, 100, 85, 70, 55, 40, 25, 10 };       /* ..F81 */
+/* danach 8 Bilder Stillstand (F82..F89, +0x8c 0, Clip 0xe Bild 23..29), F90 Ph4: cmd 01 00 00 00 = 41 Handler-Bilder;
+ * Endlage z 969 (-10241 + 11 210). Der Port faehrt den Handler einen Tick NACH dem Treffer-Tick (Spieler vor der
+ * Gegner-Schleife, game_step_common.c) — verglichen werden die Handler-Bilder ab dem ersten. */
+
+/* Raumhuelle = Begrenzungsrechteck aller SCA-Zellen (dieselbe Huelle wie die Riegel der Spur T). */
+static int  pl00_laden(void);     /* unten (DECKE/GRIFF): Leons COMMON-Bank PL00 */
+static void pl00_in_ctx(void);
+
+static void raumhuelle(int32_t *x0, int32_t *z0, int32_t *x1, int32_t *z1)
+{
+    *x0 = *z0 = 0x7fffffff; *x1 = *z1 = -0x7fffffff;
+    for (int i = 0; i < s_rdt.sca_count; i++) {
+        const re15_sca_entry_t *c = &s_rdt.sca[i];
+        if (c->x < *x0) *x0 = c->x;
+        if (c->z < *z0) *z0 = c->z;
+        if (c->x + (int32_t)c->width > *x1) *x1 = c->x + (int32_t)c->width;
+        if (c->z + (int32_t)c->density > *z1) *z1 = c->z + (int32_t)c->density;
+    }
+}
+
+static void affe_parken(re15_actor_t *e)
+{
+    if (e) { e->grid_id |= 0x20; e->x = 30000; e->z = 30000; }   /* Wurzel-Tor +0x9 & 0x20 @0x80110b34-40 */
+}
+
+static void teil_rueckstoss_vorn(re15_ai_flavor_t fl, const char *name)
+{
+    printf("  -- [4] von vorn (o17), %s --\n", name);
+    re15_ai_flavor_set(fl);
+    re15_damage_seed_rng(0x2545f491u);
+    if (room_boot(0x3040, -13500, 0, -10297, 1024, 0, 0, 2) != 0) return;
+    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }   /* nach room_boot (re15_enemy_reset) */
+    if (!pl00_laden()) { printf("  FEHLER: PL00.EDD/EMR\n"); g_fail++; return; }    /* Cliplaengen 0xd = 10 / 0xe = 30 */
+    pl00_in_ctx();
+    re15_actor_t *a = aktor_vom_typ(0x29, 0), *b = aktor_vom_typ(0x29, 1);
+    PRUEF(a != NULL && b != NULL, "zwei Affen 0x29 aus Sce_em_set (ROOM3040.RDT @0x01310/@0x01324)");
+    if (!a || !b) return;
+    affe_parken(a);                               /* o17: A ruht an seiner Nische, Abstand > 0x1770 */
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -13500; pl->y = 0; pl->z = -10297; pl->rot_y = 1024; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 1; pl->sub_state_1 = 0; pl->motion = 0;
+    re15_collision_set_band(0);
+    re15_player_cmd_zero();
+    /* B wie o17 F29 + der RAM-Satz in Bild 30: Ruhe-Clip 0x16 Bild 23, (-13618,-1800,-11846) r3072, Sicht 1 */
+    b->state = 1; b->sub_state_1 = 4; b->sub_state_2 = 0; b->sub_state_3 = 0;
+    b->x = -13618; b->y = -1800; b->z = -11846; b->rot_y = 3072; b->floor = 1;
+    b->motion = 0x16; b->anim_frac = 0; b->dog_blocked_ctr = 0; b->hit_react = 0; b->roach_los = 1;
+    b->anim_frame = 22; re15_affen_pool_anim(b); b->anim_frame = 23;
+    re15_affen3_log_reset();
+    int commit = -1, treffer = -1, bild = -1, clip_nach = -1, ende = -1;
+    int32_t z[96]; int16_t rot_h = 0;
+    for (int k = 1; k <= 90; k++) {
+        frame(0, 0);
+        z[k] = pl->z;
+        if (commit < 0 && b->sub_state_1 == 6) commit = k;
+        if (treffer < 0 && pl->hp != 100) { treffer = k; bild = b->anim_frame; rot_h = pl->rot_y; }
+        if (treffer > 0 && k == treffer + 1) clip_nach = pl->motion;
+        if (treffer > 0 && ende < 0 && k > treffer && !re15_player_knockdown_active()) ende = k - treffer;
+        if (getenv("R38_AFFEN3_SPUR"))
+            printf("    T%2d hp%d c%d f%d (%d,%d) kd%d | B %d/%d/%d c%d/%d (%d,%d)\n", k, (int)pl->hp, (int)pl->motion,
+                   (int)pl->anim_frame, (int)pl->x, (int)pl->z, re15_player_knockdown_active(), b->sub_state_1,
+                   b->sub_state_2, b->sub_state_3, (int)b->motion, (int)b->anim_frame, (int)b->x, (int)b->z);
+    }
+    re15_affen3_treffer_t log[4]; int nl = re15_affen3_log(log, 4);
+    PRUEF(commit == 1, "A[4] -> Sub 6 im ersten Tick (o17 F30: Clip 0x13 Bild 1, a804(0xfa0,0xc0) @0x80111ad4-b18): Tick %d", commit);
+    PRUEF(treffer == 21 && bild == 21 && nl > 0 && log[0].sub == 6 && log[0].schaden == RE15_AFFEN3_SCHWER_SCHADEN,
+          "schwerer Treffer -%d in Tick %d Bild %d (o17: Tick 21, Bild 21 = erstes Bild des Fensters @0x8011ed4c, HP-Satz @0x801122b4)",
+          nl > 0 ? log[0].schaden : 0, treffer, bild);
+    PRUEF(clip_nach == 0x0d, "Leon von vorn getroffen (Gier %d gegen Affe 3072): aca59 = a780 + 4 = 4 -> Handler [4], Clip 0xd "
+          "(@0x801122d4-e8, @0x80036144-4c): Clip %d", (int)rot_h, clip_nach);
+    if (treffer < 0 || treffer + 41 > 90) return;
+    int abw = 0, still = 0; int32_t summe = 0;
+    printf("    Handler-Schritte (Port | o17):");
+    for (int n = 1; n <= 32; n++) {
+        int32_t d = z[treffer + n] - z[treffer + n - 1];
+        summe += d;
+        if (d != s_o17_schritt[n - 1]) abw++;
+        printf(" %d|%d", (int)d, (int)s_o17_schritt[n - 1]);
+    }
+    printf("\n");
+    for (int n = 33; n <= 41; n++) if (z[treffer + n] != z[treffer + n - 1]) still++;
+    PRUEF(abw == 0, "32 Rutsch-Schritte Bild fuer Bild = o17 F50..F81 (Ph1 +0x8c -= 15*Bild @0x800361c8-e0 VOR dem Vorschub "
+          "@0x800361fc, Ph3 Vorschub @0x800362b0 VOR -15 @0x800362bc): %d Abweichungen", abw);
+    PRUEF(summe == 11210, "Rutschweg %d (o17: z -10241 -> 969 = 11 210; Port vorher 15 025)", (int)summe);
+    PRUEF(still == 0, "danach Stillstand bis zum Ende (o17 F82..F90, +0x8c 0 Clamp @0x800362d0-e0): %d Bewegungen", still);
+    PRUEF(ende == 41, "Steuerung zurueck nach %d Handler-Bildern (o17: Ph0 F50 .. Ph4 `sw 1` @0x800362f4 in F90 = 41)", ende);
+    int32_t hx0, hz0, hx1, hz1; raumhuelle(&hx0, &hz0, &hx1, &hz1);
+    PRUEF(pl->x >= hx0 && pl->x <= hx1 && pl->z >= hz0 && pl->z <= hz1,
+          "Leon bleibt in der Raumhuelle (%d..%d, %d..%d): Endlage (%d,%d) (o17 (-13499,969); Port vorher z 4784)",
+          (int)hx0, (int)hx1, (int)hz0, (int)hz1, (int)pl->x, (int)pl->z);
+}
+
+/* [5] (Treffer von hinten) gegen o6 (GDB, affen_spur.py, Leon Band 1 (-13500,-1800,-14200) r1024, Affe B von hinten):
+ * F1012 Ph0+Ph1 500 -> z -14700, F1013 495 -> -15195, F1014 an der Band-1-Zelle (z -17750..-15975 + 450 + 0x12)
+ * -> -15507, bis F1060 Stillstand (Tor +0x95 < 15 @0x80036544, Wand haelt), F1061 = Clip-0xc-Ende (50 Bilder): +0x95
+ * nach dem Wrap 0 -> noch ein Schritt 5*14 -> +0x8c -25 -> z -15482; Ph2 Clip 0x10 F1062..F1077 (16), Ph4 Clip 0xb
+ * rueckwaerts F1078..F1102 (25), Ph6 F1103: cmd 01 = 92 Handler-Bilder. */
+static void teil_rueckstoss_hinten(void)
+{
+    printf("  -- [5] von hinten (o6) --\n");
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    if (room_boot(0x3040, -13500, -1800, -14200, 1024, 1, 0, 2) != 0) return;
+    if (!pl00_laden()) { printf("  FEHLER: PL00.EDD/EMR\n"); g_fail++; return; }   /* 0xc = 50 / 0x10 = 16 / 0xb = 25 */
+    pl00_in_ctx();
+    affe_parken(aktor_vom_typ(0x29, 0)); affe_parken(aktor_vom_typ(0x29, 1));
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -13500; pl->y = -1800; pl->z = -14200; pl->rot_y = 1024; pl->hp = 90; pl->hit_react = 0;
+    pl->state = 1; pl->sub_state_1 = 0; pl->motion = 0;
+    re15_collision_set_band(1);
+    re15_player_cmd_zero();
+    re15_player_knockdown_begin(1);               /* aca59 = a780 + 4 = 5 (@0x801122d4-e8) */
+    int32_t z[100]; int clip[100], ende = -1;
+    z[0] = pl->z;
+    for (int n = 1; n <= 96; n++) {
+        frame(0, 0);
+        z[n] = pl->z; clip[n] = pl->motion;
+        if (ende < 0 && !re15_player_knockdown_active()) ende = n;
+        if (getenv("R38_AFFEN3_SPUR"))
+            printf("    n%2d c%d f%d z%d kd%d\n", n, clip[n], (int)pl->anim_frame, (int)pl->z, re15_player_knockdown_active());
+    }
+    int still = 0;
+    for (int n = 4; n <= 49; n++) if (z[n] != -15507) still++;
+    PRUEF(z[1] == -14700 && z[2] == -15195 && z[3] == -15507,
+          "erste Schritte im Ph0-Tick: z %d / %d / %d (o6 F1012..F1014: -14700 / -15195 / -15507; Ph0 faellt in Ph1 "
+          "@0x8003650c -> @0x80036510)", (int)z[1], (int)z[2], (int)z[3]);
+    PRUEF(still == 0, "Wand haelt Leon bis zum Clip-Ende (o6 F1015..F1060): %d Abweichungen von -15507", still);
+    PRUEF(z[50] == -15482 && z[51] == -15482, "Wrap-Schritt im 50. Bild: z %d (o6 F1061: +0x8c 45 - 5*14 = -25 -> -15482)", (int)z[50]);
+    PRUEF(clip[50] == 0x0c && clip[51] == 0x10 && clip[66] == 0x10 && clip[67] == 0x0b && clip[91] == 0x0b,
+          "Clipfolge 0xc (1..50) / 0x10 (51..66) / 0xb rueckwaerts (67..91): %d %d %d %d %d", clip[50], clip[51], clip[66],
+          clip[67], clip[91]);
+    PRUEF(ende == 92, "Steuerung zurueck nach %d Handler-Bildern (o6: Ph0 F1012 .. Ph6 `sw 1` @0x8003667c in F1103 = 92)", ende);
+}
+
+static void teil_rueckstoss(void)
+{
+    teil_rueckstoss_vorn(RE15_AI_FLAVOR_RE2, "RE2-KI (Standard)");
+    teil_rueckstoss_vorn(RE15_AI_FLAVOR_RE15, "RE1.5-KI");
+    teil_rueckstoss_hinten();
+}
+
 /* ==== DECKE / GRIFF (Subs 9..15) gegen die GDB-Spuren o7/o8 ===========================================
  * Original (DuckStation-GDB, affen_spur2.py): Leon (-8800,-1800,-2400) Band 1, in Bild 150 Affe A per RAM in den HURT
  * gesetzt (+0x4..7 = 02 03 00 00, HP 73) = die Lage nach einem ueberlebten Treffer (Spur 0, Ausgang +0x1e3 -> Sub 9).
@@ -509,6 +661,16 @@ static int lauf_decke(int16_t leon_gier, int ticks, decke_t *ev, int evmax, int 
  * T297 Landung, T305 Sub 2 (Spieler-HP < 0 @0x80112bbc-c30), T363 Spieler cmd 7 (tot). Die Ersatz-Zufallsquelle des Ports
  * (re15_damage.c, FUN_8001af20 haengt im Original am a0 des Aufrufers) laesst Bahn und Takt abweichen; geprueft wird die
  * Mechanik: Sprung -> Schwer/Treffer -> Todessprung bei HP < 50 -> -500 im Fenster -> cmd 6 -> Tod. */
+/* Runde 38 Integration (Spur S Rueckstoss): o9 Bild fuer Bild (GDB-Spur o9_sprung.txt, Zeilen 251..283): Leon (Gier 1665)
+ * nach dem ersten schweren Treffer (40 -> 30) im Niederschlag [4] — die 32 Schritte (dx, dz) je Bild. Summe (9316, 6183). */
+static const int16_t s_o9_rutsch[32][2] = {
+    {832,552}, {819,544}, {794,528}, {757,503}, {707,470}, {645,428}, {570,378}, {482,320}, {382,254}, {270,179},
+    {270,179}, {258,171}, {245,163}, {233,154}, {220,146}, {208,138}, {195,129}, {183,121}, {170,113}, {158,105},
+    {145,96}, {133,88}, {120,80}, {108,71}, {95,63}, {83,55}, {70,47}, {58,38}, {45,30}, {33,22}, {20,13}, {8,5} };
+
+/* Ende-zu-Ende ab dem Aufbau von o9: Sprung, schwerer Treffer und der Niederschlag danach. Der Todessprung selbst haengt
+ * an der Bahn der weiteren Spruenge, also an den Wuerfen von A[4] (rng & 1 @0x80111b88-ac) und B[7] (+0x8c @0x80112494-98 /
+ * @0x801124e4-fc) mit der Ersatz-Zufallsquelle (OFFEN 1) — er wird unten ab dem Original-Zustand geprueft. */
 static void teil_sprung_fl(re15_ai_flavor_t fl)
 {
     re15_ai_flavor_set(fl);
@@ -531,39 +693,109 @@ static void teil_sprung_fl(re15_ai_flavor_t fl)
     a->motion = 5; a->anim_frac = 0; a->anim_frame = 23; re15_affen_pool_anim(a); a->anim_frame = 24;
     b->state = 1; b->sub_state_1 = 0; b->sub_state_2 = 1; b->sub_state_3 = 0; b->ai_timer = 2000;
     re15_affen3_log_reset();
-    int t_sprung = -1, t_schwer = -1, t_tod_sub8 = -1, t_tod = -1, tod_bild = -1, t_cmd6 = -1, t_sub2 = -1;
-    int n_sprung = 0, n_schwer_treffer = 0, hp_alt = pl->hp, tod_ab = 0, s1_alt = a->sub_state_1, sprung_bild13_hp = -1;
+    int t_sprung = -1, t_schwer = -1, t_h1 = -1, n_sprung = 0, n_schwer_treffer = 0, hp_alt = pl->hp, s1_alt = a->sub_state_1;
+    int32_t rx[40] = {0}, rz[40] = {0};
     const char *v = getenv("R38_AFFEN3_SPUR");
-    for (int k = 1; k <= 700; k++) {
+    for (int k = 1; k <= 160; k++) {
         frame(0, 0);
         if (a->sub_state_1 == 7 && s1_alt != 7) { n_sprung++; if (t_sprung < 0) t_sprung = k; }
         if (a->sub_state_1 == 6 && s1_alt != 6 && t_schwer < 0) t_schwer = k;
-        if (a->sub_state_1 == 8 && s1_alt != 8 && t_tod_sub8 < 0) { t_tod_sub8 = k; sprung_bild13_hp = hp_alt; }
-        if (pl->hp != hp_alt) {
-            int d = hp_alt - pl->hp;
-            if (d == RE15_AFFEN3_SCHWER_SCHADEN) n_schwer_treffer++;
-            if (d == RE15_AFFEN3_TOD_SCHADEN && t_tod < 0) { t_tod = k; tod_bild = a->anim_frame; tod_ab = d; }
+        if (pl->hp != hp_alt && hp_alt - pl->hp == RE15_AFFEN3_SCHWER_SCHADEN) {
+            n_schwer_treffer++;
+            if (t_h1 < 0) { t_h1 = k; rx[0] = pl->x; rz[0] = pl->z; }
         }
-        if (t_tod > 0 && t_cmd6 < 0 && re15_player_victim_state() == 2) t_cmd6 = k;
-        if (t_tod > 0 && t_sub2 < 0 && a->sub_state_1 == 2) t_sub2 = k;
+        if (t_h1 > 0 && k > t_h1 && k - t_h1 < 40) { rx[k - t_h1] = pl->x; rz[k - t_h1] = pl->z; }
         if (v) printf("    T%3d A %d.%d.%d c%d f%d (%d,%d,%d) r%d hr%x air%d | PL (%d,%d) hp%d vs%d st%d mo%d f%d\n", k, a->state,
                       a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->y, (int)a->z,
                       (int)a->rot_y, a->hit_react, a->roach_air, (int)pl->x, (int)pl->z, (int)pl->hp, re15_player_victim_state(),
                       pl->state, (int)pl->motion, (int)pl->anim_frame);
         hp_alt = pl->hp; s1_alt = a->sub_state_1;
     }
-    printf("    Sprung T%d (%d Spruenge), Schwer T%d (%d Treffer -10), Todessprung T%d (HP davor %d), Treffer -%d T%d Bild %d, cmd 6 T%d, Sub 2 T%d\n",
-           t_sprung, n_sprung, t_schwer, n_schwer_treffer, t_tod_sub8, sprung_bild13_hp, tod_ab, t_tod, tod_bild, t_cmd6, t_sub2);
+    printf("    Sprung T%d (%d Spruenge), Schwer T%d, erster schwerer Treffer T%d (%d Treffer -10 bis T160)\n",
+           t_sprung, n_sprung, t_schwer, t_h1, n_schwer_treffer);
     PRUEF(t_sprung > 0, "Sprung Sub 7 aus A[4] (Original T41)");
     PRUEF(n_schwer_treffer >= 1, "schwerer Angriff trifft -10 (Original T102 40 -> 30)");
-    PRUEF(t_tod_sub8 > 0 && sprung_bild13_hp < RE15_AFFEN3_TOD_HP_GRENZE, "Todessprung Sub 8 erst bei Spieler-HP < 50 (@0x8011269c): HP davor %d", sprung_bild13_hp);
-    PRUEF(t_tod > 0 && tod_ab == RE15_AFFEN3_TOD_SCHADEN && tod_bild >= 8 && tod_bild <= 10,
-          "Todessprung trifft -500 im Fenster {8,9,10} (@0x80112b00 / @0x8011ed54): Bild %d", tod_bild);
-    PRUEF(t_cmd6 > 0, "Spieler cmd 6 = Haken 0x801160a4 (Gorilla-Finisher-Weg) nach dem Treffer");
-    PRUEF(t_sub2 > 0, "Affe danach Sub 2 (Spieler-HP < 0 @0x80112bbc-c30)");
+    /* Niederschlag [4] nach dem ersten schweren Treffer Bild fuer Bild = o9 (Handler-Bild n = Tick t_h1 + n, der Spieler laeuft
+     * vor der Gegner-Schleife): Ph0 faellt in Ph1 (@0x800361a0 -> @0x800361a4), 15 * Bild VOR anim_set (@0x800361c8-e0), Ph3
+     * Vorschub mit dem alten +0x8c (@0x800362b0) vor -15 (@0x800362bc). */
+    int abw = 0; int32_t sx = 0, sz = 0;
+    if (t_h1 > 0 && t_h1 + 33 <= 160) {
+        printf("    Rutsch-Schritte (Port | o9):");
+        for (int n = 1; n <= 32; n++) {
+            int32_t dx = rx[n] - rx[n - 1], dz = rz[n] - rz[n - 1];
+            sx += dx; sz += dz;
+            if (dx != s_o9_rutsch[n - 1][0] || dz != s_o9_rutsch[n - 1][1]) abw++;
+            if (n <= 4 || n >= 30) printf(" (%d,%d)|(%d,%d)", (int)dx, (int)dz, s_o9_rutsch[n - 1][0], s_o9_rutsch[n - 1][1]);
+        }
+        if (rx[33] != rx[32] || rz[33] != rz[32]) abw++;   /* o9 Zeile 284: Stillstand (+0x8c 0) */
+        printf("\n");
+    } else abw = 99;
+    PRUEF(abw == 0 && sx == 9316 && sz == 6183,
+          "Niederschlag [4] nach dem ersten schweren Treffer = o9 Zeilen 252..284 Bild fuer Bild: %d Abweichungen, Summe (%d,%d) "
+          "(o9 (9316,6183) = (-7984,-2996) -> (1332,3187))", abw, (int)sx, (int)sz);
+}
+
+/* Todessprung gegen o9 ab dem Original-Zustand Zeile 425 (nach dem Absprung, also nach beiden Wuerfen von B[7]): Affe A
+ * 1.7.2.0 Clip 0x14 Bild 10, (5686,0,6412) r3747, +0x8c 204, +0x1e0 1, +0x93 1, +0x9c 0, HP 105; Leon (10663,0,9375) r1665
+ * HP 20 nach dem zweiten schweren Treffer. o9: Zeile 434 Bild 0x13 -> Sub 8 (HP 20 < 50 slti @0x8011269c, a804(0x1388,0xc0)
+ * bei Abstand 4159), Zeile 443 Clip 0x15 Bild 9 -500 (@0x80112b00, Fenster @0x8011ed54) und cmd 6, Zeile 447 Landung,
+ * Zeile 455 Sub 2.
+ * B[7] Phase 2 und B[8] wuerfeln nicht mehr — der Lauf ist ab hier deterministisch. */
+static void teil_todessprung_fl(re15_ai_flavor_t fl)
+{
+    re15_ai_flavor_set(fl);
+    printf("  [%s] Todessprung ab o9 Zeile 425\n", fl == RE15_AI_FLAVOR_RE2 ? "RE2-KI (Standard)" : "RE1.5-KI");
+    re15_damage_seed_rng(0x2545f491u);
+    if (room_boot(0x3040, 10663, 0, 9375, 1665, 0, 0, 2) != 0) return;
+    if (!bank_laden_29() || !pl00_laden()) { printf("  FEHLER: Banken\n"); g_fail++; return; }
+    pl00_in_ctx();
+    re15_actor_t *a = aktor_vom_typ(0x29, 0);
+    if (!a) { g_fail++; return; }
+    affe_parken(aktor_vom_typ(0x29, 1));
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = 10663; pl->y = 0; pl->z = 9375; pl->rot_y = 1665; pl->hp = 20; pl->hit_react = 0;
+    pl->state = 1; pl->sub_state_1 = 0; pl->motion = 0;
+    re15_collision_set_band(0);
+    re15_player_cmd_zero();
+    a->state = 1; a->sub_state_1 = 7; a->sub_state_2 = 2; a->sub_state_3 = 0;
+    a->x = 5686; a->y = 0; a->z = 6412; a->rot_y = 3747; a->floor = 0; a->dog_floor_y = 0;
+    a->hp = 105; a->hit_react = 1; a->dog_blocked_ctr = 0; a->roach_air = 1; a->roach_esc = 1; a->roach_beh2 = 0;
+    a->roach_los = 1; a->ai_timer = 0; a->crow_speed = 204;
+    a->motion = 0x14; a->anim_frac = 0; a->anim_frame = 9; re15_affen_pool_anim(a); a->anim_frame = 10;
+    re15_affen3_log_reset();
+    int t_sub8 = -1, hp_sub8 = -1, t_tod = -1, tod_bild = -1, tod_clip = -1, t_cmd6 = -1, t_sub2 = -1, hp_alt = pl->hp;
+    int32_t y_sub8 = 0;
+    const char *v = getenv("R38_AFFEN3_SPUR");
+    for (int k = 1; k <= 200; k++) {
+        frame(0, 0);
+        if (t_sub8 < 0 && a->sub_state_1 == 8) { t_sub8 = k; hp_sub8 = hp_alt; y_sub8 = a->y; }
+        if (t_tod < 0 && hp_alt - pl->hp == RE15_AFFEN3_TOD_SCHADEN) { t_tod = k; tod_bild = a->anim_frame; tod_clip = a->motion; }
+        if (t_tod > 0 && t_cmd6 < 0 && re15_player_victim_state() == 2) t_cmd6 = k;
+        if (t_tod > 0 && t_sub2 < 0 && a->sub_state_1 == 2) t_sub2 = k;
+        if (v) printf("    n%3d A %d.%d.%d c%d f%d (%d,%d,%d) hr%x air%d | PL (%d,%d) hp%d vs%d st%d\n", k, a->state, a->sub_state_1,
+                      a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->y, (int)a->z, a->hit_react, a->roach_air,
+                      (int)pl->x, (int)pl->z, (int)pl->hp, re15_player_victim_state(), pl->state);
+        hp_alt = pl->hp;
+    }
+    printf("    Sub 8 n%d (HP davor %d, y %d), -500 n%d Clip 0x%x Bild %d, cmd 6 n%d, Sub 2 n%d, Spieler-Zustand %d "
+           "(o9: n9 y -3240, n18 Clip 0x15 Bild 9, n18, n30)\n", t_sub8, hp_sub8, (int)y_sub8, t_tod, tod_clip, tod_bild,
+           t_cmd6, t_sub2, pl->state);
+    PRUEF(t_sub8 == 9 && hp_sub8 < RE15_AFFEN3_TOD_HP_GRENZE && y_sub8 == -3240,
+          "Todessprung Sub 8 in Bild 0x13 bei Spieler-HP %d < 50 (@0x8011267c-6e4, o9 Zeile 434 = n9, y -3240): n%d y %d",
+          hp_sub8, t_sub8, (int)y_sub8);
+    PRUEF(t_tod == 18 && tod_clip == RE15_AFFEN3_TOD_CLIP && tod_bild == 9,
+          "Todessprung trifft -500 im Fenster {8,9,10} (@0x80112b00 / @0x8011ed54; o9 Zeile 443 = n18, Bild 9): n%d Bild %d",
+          t_tod, tod_bild);
+    PRUEF(t_cmd6 == 18, "Spieler cmd 6 = Haken 0x801160a4 (Gorilla-Finisher-Weg) im Treffer-Bild (o9 Zeile 443): n%d", t_cmd6);
+    PRUEF(t_sub2 == 30, "Affe danach Sub 2 (Spieler-HP < 0 @0x80112bbc-c30; o9 Zeile 455 = n30): n%d", t_sub2);
     PRUEF(pl->state == 7, "Spieler am Ende tot (aca58 = 7 @0x80116214): Zustand %d", pl->state);
 }
-static void teil_sprung(void) { teil_sprung_fl(RE15_AI_FLAVOR_RE2); teil_sprung_fl(RE15_AI_FLAVOR_RE15); }
+
+static void teil_sprung(void)
+{
+    teil_sprung_fl(RE15_AI_FLAVOR_RE2); teil_sprung_fl(RE15_AI_FLAVOR_RE15);
+    teil_todessprung_fl(RE15_AI_FLAVOR_RE2); teil_todessprung_fl(RE15_AI_FLAVOR_RE15);
+}
 
 /* Pruefung eines Bildes gegen das Original (exakt). */
 static int snap_gleich(int t, uint8_t st, uint8_t s1, uint8_t s2, int clip, int bild, int32_t x, int32_t y, int32_t z)
@@ -663,6 +895,10 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
     /* Bank NACH room_boot (dessen re15_enemy_reset wirft alle Banken weg) — wie die exe: main.c laedt die Raum-Banken
      * nach scd_vm_tick, also nach dem Spawn (RL-4-Vorladen); der Spawn-INIT laeuft dort ebenfalls ohne Bank. */
     if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }
+    /* Runde 38 Integration (Spur S Rueckstoss): Leons COMMON-Bank PL00 wie die exe (main.c) — sonst nimmt der Niederschlag
+     * nach dem schweren Treffer die Ersatz-Cliplaenge 20 statt 0xf = 24 / 0x10 = 16 / 0xb = 25 Bilder (o11 F114..F178). */
+    if (!pl00_laden()) { printf("  FEHLER: PL00.EDD/EMR\n"); g_fail++; return; }
+    pl00_in_ctx();
     re15_actor_t *a = aktor_vom_typ(0x29, 0);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     PRUEF(a != NULL, "[%s] Ereignis-Affe 0x29 aus Sce_em_set ROOM4040 @0x00EB0", name);
@@ -674,7 +910,8 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
           "[%s] INIT lief beim Spawn: Parkstelle (%d,%d), Massstab 0x%x (@0x80110f54-58)", name, (int)a->x, (int)a->z, (unsigned)a->render_scale_q12);
     int R = -1, lande = -1, sub4 = -1, gesperrt_aktiv = 0, hp_ab_luft = 0, erster_treffer = -1, erster_treffer_y = 1;
     int bahn_ok = 1, hp_alt = pl->hp; int32_t bahn[19]; int nb = 0;
-    int n_ab = 0, ab_t[16] = {0}, ab_d[16] = {0}, ab_sub[16] = {0};   /* HP-Abzuege: Bild R+t, Betrag, Affen-Sub */
+    int n_ab = 0, ab_t[16] = {0}, ab_d[16] = {0}, ab_sub[16] = {0}, ab_bild[16] = {0};   /* HP-Abzuege: Bild R+t, Betrag, Affen-Sub, Clip-Bild */
+    int kd_h = -1, kd_mo[72] = {0}, kd_akt[72] = {0}; int32_t kd_x[72] = {0};   /* Runde 38 Integration: Niederschlag nach dem schweren Treffer */
     uint8_t hr_R = 0, hr_R1 = 0, air_R = 0, air_19 = 1; uint16_t rad_R = 0, rad_19 = 0; uint8_t s2_19 = 0, bild_19 = 0, bild_R = 0;
     const char *spur = getenv("R38_AFFEN3_SPUR");   /* Messlauf: jedes Bild ausgeben */
     for (int k = 1; k <= 400; k++) {
@@ -701,12 +938,17 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
         if (pl->hp != hp_alt) {
             if (a->y != (int32_t)a->dog_floor_y) hp_ab_luft++;
             if (erster_treffer < 0) { erster_treffer = t; erster_treffer_y = a->y; }
-            if (n_ab < 16) { ab_t[n_ab] = t; ab_d[n_ab] = hp_alt - pl->hp; ab_sub[n_ab] = a->sub_state_1; n_ab++; }
+            if (n_ab < 16) { ab_t[n_ab] = t; ab_d[n_ab] = hp_alt - pl->hp; ab_sub[n_ab] = a->sub_state_1; ab_bild[n_ab] = a->anim_frame; n_ab++; }
+            if (kd_h < 0 && hp_alt - pl->hp == RE15_AFFEN3_SCHWER_SCHADEN) kd_h = k;
+        }
+        if (kd_h > 0 && k > kd_h && k - kd_h <= 70) {
+            int n = k - kd_h;
+            kd_x[n] = pl->x; kd_mo[n] = pl->motion; kd_akt[n] = re15_player_knockdown_active();
         }
         hp_alt = pl->hp;
     }
-    printf("  [%s] HP-Abzuege (R+t, -d, Sub):", name);
-    for (int i = 0; i < n_ab; i++) printf(" R+%d(-%d,Sub %d)", ab_t[i], ab_d[i], ab_sub[i]);
+    printf("  [%s] HP-Abzuege (R+t, -d, Sub, Clip-Bild):", name);
+    for (int i = 0; i < n_ab; i++) printf(" R+%d(-%d,Sub %d,Bild %d)", ab_t[i], ab_d[i], ab_sub[i], ab_bild[i]);
     printf("\n");
     printf("  [%s] Freigabe T%d, Bahn y:", name, R);
     for (int i = 0; i < nb; i++) printf(" %d", (int)bahn[i]);
@@ -726,18 +968,36 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
           "[%s] erster HP-Abzug erst nach der Landung (R+%d), Affe dabei auf +0x1ba (y=%d); Abzuege aus der Luft: %d", name,
           erster_treffer, (int)erster_treffer_y, hp_ab_luft);
     /* Werte wie Original o11: zuerst der schwere Angriff -10 (Sub 6, -10 @0x801122b4; o11 F128 = R+70, 100 -> 90), dann
-     * Bisse -5 (Sub 5, @0x80111f60) im Takt von o11 F225 -> 283 -> 340 -> 397 -> 454 = 58, 57, 57, 57. Die Lage des ersten
-     * Treffers (R+70 +-2) haengt am Anlauf B[4], dessen +0x8c/+0x9e wuerfeln (Zufallsquelle OFFEN 1); der Biss-Takt nicht. */
-    static const int o11_takt[4] = { 58, 57, 57, 57 };
+     * Bisse -5 (Sub 5, @0x80111f60). Die Lage des ersten Treffers (R+70 +-2) haengt am Anlauf B[4], dessen +0x8c/+0x9e
+     * wuerfeln (Zufallsquelle OFFEN 1).
+     * Runde 38 Integration (Spur S Rueckstoss): der Biss-Takt ist KEINE feste Zahl, sondern Sperre + Trefferbild: der Biss setzt
+     * +0x1dc = 0x2d (@0x80111f68-70), ACTIVE zieht je Bild ab (@0x801111c0-d4), A[3] committet bei +0x1dc == 0 (@0x801117e8-820)
+     * auf Clip 0x12 ab Bild 0, das Quadrat (@0x8001bff8) trifft im Fenster {12..15} (@0x8011ed48) -> Abstand = 44 + Trefferbild
+     * des naechsten Bisses. o11: Bilder 15/14/13/13/13 -> 58/57/57/57 (Zeilen 209/267/324/381/438). Welches Bild trifft, haengt an
+     * der Lage nach dem Anschleichen B[3] (Lenkrate (rng & 0x1f) + 6 je Bild @0x8011199c-b4, Ersatz-Zufallsquelle OFFEN 1) —
+     * der Port mit dem Original-Niederschlag trifft den zweiten Biss in Bild 13 statt 14 (57/57/57/57); mit dem alten (falschen)
+     * Niederschlag passte die Zahl 58 zufaellig. */
     int takt_ok = (n_ab >= 5);
-    for (int i = 1; i < 5 && i < n_ab; i++)
-        if (ab_d[i] != RE15_AFFEN3_BISS_SCHADEN || ab_sub[i] != 5 || (i >= 2 && ab_t[i] - ab_t[i - 1] != o11_takt[i - 2])) takt_ok = 0;
-    if (n_ab >= 6 && ab_t[5] - ab_t[4] != o11_takt[3]) takt_ok = 0;
+    for (int i = 1; i < 5 && i < n_ab; i++) {
+        if (ab_d[i] != RE15_AFFEN3_BISS_SCHADEN || ab_sub[i] != 5 || ab_bild[i] < 12 || ab_bild[i] > 15) takt_ok = 0;
+        if (i >= 2 && ab_t[i] - ab_t[i - 1] != 44 + ab_bild[i]) takt_ok = 0;
+    }
+    if (n_ab >= 6 && ab_t[5] - ab_t[4] != 44 + ab_bild[5]) takt_ok = 0;
     PRUEF(n_ab >= 1 && ab_d[0] == 10 && ab_sub[0] == 6 && ab_t[0] >= 68 && ab_t[0] <= 72,
           "[%s] erster Treffer schwer -%d aus Sub %d in R+%d (Original o11: -10 schwer in R+70)", name,
           n_ab ? ab_d[0] : 0, n_ab ? ab_sub[0] : -1, n_ab ? ab_t[0] : -1);
-    PRUEF(takt_ok, "[%s] danach Bisse -%d aus Sub 5 im Takt 58/57/57/57 wie Original o11 (F225/283/340/397/454)", name,
-          RE15_AFFEN3_BISS_SCHADEN);
+    PRUEF(takt_ok, "[%s] danach Bisse -%d aus Sub 5, Trefferbild im Fenster 12..15, Abstand = 44 + Trefferbild (Sperre 0x2d "
+          "@0x80111f68-70; o11 Bilder 15/14/13/13/13 = Takt 58/57/57/57)", name, RE15_AFFEN3_BISS_SCHADEN);
+    /* Runde 38 Integration (Spur S Rueckstoss): der Niederschlag [4] nach dem schweren Treffer gegen o11 Zeilen 112..179
+     * (Handler-Bild n = Zeile - 111): n1 Ph0+Ph1 x -25000 -> -26000 (Clip 0xd), n2 Wand: x -26451 und aca5a 5 (Sonde
+     * @0x80036214, @0x8003622c-30), n3 Ph5 Clip 0xf (@0x80036320-28) .. n26, n27 Ph7 Clip 0x10 (@0x80036374-7c) .. n42, n43 Ph9
+     * Clip 0xb rueckwaerts (@0x800363a8-c8) .. n67, n68 Ph11 Exit `sw 1` @0x8003640c (cmd 01 00 00 00). Braucht die PL00-Bank
+     * (Cliplaengen 0xf 24 / 0x10 16 / 0xb 25 wie in der exe). */
+    int kd_ok = (kd_h > 0 && kd_x[1] == -26000 && kd_mo[1] == 0x0d && kd_x[2] == -26451 && kd_mo[3] == 0x0f && kd_mo[26] == 0x0f
+                 && kd_mo[27] == 0x10 && kd_mo[42] == 0x10 && kd_mo[43] == 0x0b && kd_mo[67] == 0x0b && kd_akt[67] && !kd_akt[68]);
+    PRUEF(kd_ok, "[%s] Niederschlag [4] mit Wand-Slam Bild fuer Bild = o11 Zeilen 112..179: n1 x %d Clip %d, n2 x %d, n3 Clip %d, "
+          "n27 Clip %d, n43 Clip %d, n67 aktiv %d, n68 aktiv %d (o11: -26000 13, -26451, 15, 16, 11, 1, 0)", name, (int)kd_x[1],
+          kd_mo[1], (int)kd_x[2], kd_mo[3], kd_mo[27], kd_mo[43], kd_akt[67], kd_akt[68]);
 }
 
 /* Unterzustand 0 (0x8011577c, +0x9 == 0x40): im Auslieferungsstand von keinem Skript erreicht (Zensus aller RDTs: kein
@@ -786,6 +1046,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "flavor"))  teil_flavor();
     if (alle || !strcmp(teil, "quadrat")) teil_quadrat();
     if (alle || !strcmp(teil, "schwer"))  teil_schwer();
+    if (alle || !strcmp(teil, "rueckstoss")) teil_rueckstoss();   /* Runde 38 Integration (Spur S Rueckstoss) */
     if (alle || !strcmp(teil, "decke"))   teil_decke();
     if (alle || !strcmp(teil, "griff"))   teil_griff();
     if (alle || !strcmp(teil, "sprung"))  teil_sprung();
