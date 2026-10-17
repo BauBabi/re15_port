@@ -15,6 +15,12 @@ der Pinnwand im Communications Room. Der Prison Key ist dafuer jetzt RE2s "Small
 der bisherige duenne Eisenring war auf dem dunklen Kork kaum zu erkennen. Aufnahme, Inventar-Symbol und Item-Bild zeigen
 denselben Schluessel.
 
+**Kendo/John, Ada und Marvin springen Kanten hinunter.** Statt waagrecht in die Luft weiterzulaufen, springen die
+Figuren jetzt wie im Original von Stegen und klettern wieder hinauf: John in ROOM10B1 (vom oberen Steg ueber vier
+Stockwerke hinunter) und ROOM1261 (Elza), Ada und Marvin in ROOM1260 und in ROOM2000 (Leon). Unten am Westrand des
+Blocks in ROOM10B1 springt John noch einmal hinunter und klettert wieder hinauf, solange die Kamera auf dem oberen Steg
+bleibt - das macht das Original genauso (gemessen); von der Steg-Kamera aus sieht man es nicht.
+
 **Elza: von Roys Tod zu John in den Besprechungsraum (Ihr Ablauf).** Nach der Szene in ROOM1021 zeigt Roys Leiche
 nach "He's dead. / Poor Roy..." den Hinweis "There's an empty key tag on his belt. / It reads "Dining Room".". In
 ROOM1011 liegt an Roys alter Liegestelle der Dining Room Key (RE2s Herz-Schluessel). Bis dahin ist die Tuer zum
@@ -118,7 +124,9 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
   Skript-Bewegungen.
 
 * Der Schluessel heisst nach Ihrer Vorgabe "Dining Room Key"; das Schild ueber der Tuer im Hintergrundbild zeigt
-  "Briefing Room". Der Tuertext nennt deshalb kein Schild. Leons Gemaelde in ROOM1140 meldet wie im Original "The
+  "Briefing Room". Der Tuertext nennt deshalb kein Schild. Der Schluessel liegt flach auf Roys Blutlache; aus den
+  Raumkameras ist er nur ein heller Punkt (Cut 3: 2 Bildpunkte bei Skala 1). Aufgehoben wird er an Roys Liegestelle mit
+  der Aktionstaste. Leons Gemaelde in ROOM1140 meldet wie im Original "The
   switch is not responding...".
 
 ## Zu entscheiden

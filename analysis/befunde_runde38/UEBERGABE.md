@@ -6,6 +6,10 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 09:55: M npckante BESTANDEN (Abnahme 0, wf_bd5754a4-75e), gemergt (81f90f2e, enemy_ai_common.c Include beide Seiten), configure + Bau OK, gezielte Tests laufen (M-Nebenwirkungsauswahl + 1141/1171/11B0/Szenenschutz).
+* 2026-10-17 09:55: Integration F gruen (142/142: F-Auswahl + H/G/I), Herz-Schluessel ROOM1011 unter NCLIP gemessen: Integrations-exe und F-exe (ohne Verwurf) zeigen dieselben 2 Pixel (x 114-115, y 156-157, Cut 3, Skala 1) -> Verwurf unschaedlich; Schluessel ist aber nur ein Punkt (Release Notes Grenzen).
+* 2026-10-17 09:55: Fortsetzungen nach dem Limit (≤6 parallel): D Abnahme 0 (RESUME wf_3c7f69c5-a0f, Bau aus Cache), W Nachbesserung 1 (RESUME wf_75bbfb7e-d5f), R Abnahme 1 (RESUME wf_40f9724b-eb5), S Nachbesserung 1 (RESUME wf_d92ecd29-8d1), U Abnahme 1 (RESUME wf_ff1d4812-6d4), O Bau-Abschluss neu wf_ec75d894-03c (stand). Warten: N. Args fuer Resumes aus dem Sitzungsprotokoll (scratchpad/run_args.json, ueber "Run ID" im tool_result zugeordnet).
+* 2026-10-17 09:55: ⛔ DRITTES SITZUNGSLIMIT ~09:25 (Reset 09:50) brach D (Abnahme 0), N (Bau), R (Abnahme 1), S (Nachbesserung 1), U (Abnahme 1), W (Nachbesserung 1), O (Bau) ab; M war 09:33 bestanden. Reste gesichert: R/U Teilberichte (*_teil_limit.md), S/W/O Code-Reste wip UNGEPRUEFT. Lehre: 8 parallel erschoepfen das 5-h-Fenster in ~4,5 h -> jetzt hoechstens 6.
 * 2026-10-17 09:00: ⛔ ZWEI AGENT-HAENGER entdeckt (Agent-Protokoll ohne Schreibzugriff, letzter Werkzeug-Aufruf kehrte nie zurueck, keine exe mehr aktiv): D (Bau, seit 06:29, Bau+Messlauf in EINEM Aufruf) und U (Abnahme 1, seit 07:32, exe-Lauf 2050->2020). D: TaskStop w1yf8bxpj, Reste 447c0e35 UNGEPRUEFT, neu wf_3c7f69c5-a0f (r38_w4.js, stand + Werkzeug-Regel). U: TaskStop wqqtr5607, Teilbericht 76b6fa12, RESUME derselben Run-ID wf_ff1d4812-6d4 mit identischen args (Bau/Abnahme 0/Nachbesserung 1 aus dem Cache, Abnahme 1 neu). Waechter (scratchpad/waechter.sh, Monitor): Platte < 35 GB + Agent > 75 min still; aktive Laeufe in scratchpad/aktive_runs.txt.
 * 2026-10-17 08:49: Integration A gruen (202/202 gezielt, inkl. integration_r38_cursor E/F mit K-Schluessellage), Baum r38_cursor entfernt. F gemergt (f50f9eda): Include-/Haken-Zeilen beide Seiten; probe_r26_inventar.c B4 von Hand vereint (G: genaue Pruefung unter Basis 0x48; F: dritter Port-Name 0x43 -> 9 x (0x48 - 3)); configure + Bau OK; gezielte Tests laufen (F-Auswahl + H/G/I). Danach: Herz-Schluessel 1011 unter NCLIP an der exe pruefen.
 * 2026-10-17 08:44: F dining1141 BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_356a3960-7df). Merge nach dem laufenden A-Test. Integration F: neue Assets shared_assets/RE2/KLOPF1060.EDT/.VH/.VB (Paket + Android-Gate pruefen), ROOM1021 Ereignis 2 jetzt Programm SZENE1021 (Gosub sub02) -> gemeinsamer Lauf mit H (PC-Anker @0x020B2) fahren; Herz-Schluessel mit NCLIP-Verwurf (A) in ROOM1011 an der exe pruefen (A_belege/port_modelle_sicht.py). O fortgesetzt wf_8204134c-a42 (r38_w5.js, stand: r37/re2zombie zuerst mergen).
@@ -59,13 +63,13 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | C | r38_werkstatt11b0 | 11B0: "But, hold on...", Schiebe-Ton, keine Fall-Animation | BESTANDEN (A0), integriert |
 | D | r38_zopf | Elzas Zopf wie Claire (RE2) | offen |
 | E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | BESTANDEN (A0), integriert |
-| F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | BESTANDEN (A1), gemergt |
+| F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | BESTANDEN (A1), integriert |
 | G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | BESTANDEN (A1), integriert |
 | H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | BESTANDEN (A1), integriert |
 | I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0), integriert |
 | J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0), integriert |
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | BESTANDEN (A1), integriert |
-| M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | offen |
+| M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | BESTANDEN (A0), gemergt |
 | N | r38_wasser | Wasser-Effekt 1260+ | offen |
 | O | r38_montage | Montage-Zombies Richtung Kamera | offen |
 | Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0), integriert |
