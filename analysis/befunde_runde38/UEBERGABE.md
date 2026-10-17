@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 11:48: Integration S: 139/140 gezielt; ROT unit_r38_szenenschutz_alle - Fall "Kakerlake 0x29" (Spur B) setzt den Affen ohne EM029-Bank und ohne Raum auf Abstand 900; Ss neues Affen-Gehirn greift dort nie an -> Kontrolle "frei greift an" faellt, gehaltener Teil prueft nichts. Integrations-Workflow wf_9fe64976-04d (Fix-Agent + unabhaengige Pruefung): Fall auf das S-Gehirn umstellen, Gegenprobe (Schutz aus -> gehalten rot), Tor statt Netz pruefen.
 * 2026-10-17 11:25: S affen3 BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_d92ecd29-8d1), gemergt (f1511069; AUFTRAG.md = Integrationsseite, der wortgleiche Nachtrag stand schon drin), configure + Bau OK, gezielte Tests laufen (S-Auswahl 107 + 13 exe + Spiderman/Griffe/Spinnen/Szenenschutz).
 * 2026-10-17 11:22: Integration O gruen (122/122: O-Auswahl + Zombies L + Szenenschutz + Irons/1150/1030/1040), Baum r38_montage entfernt.
 * 2026-10-17 11:10: O montage BESTANDEN (Abnahme 0, wf_ec75d894-03c), gemergt (127100ef, konfliktfrei; enthaelt den L-Merge), configure + Bau OK, gezielte Tests laufen (O-Auswahl + Zombies L + Szenenschutz).
