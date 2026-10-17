@@ -213,6 +213,18 @@ Gruppe vor der Briefing-Room-Tuer auf die Kamera zu, die vorderen verlassen das 
 F240..F540: die Zombies hinter dem Gitter gehen zu Boden und kriechen unter dem Tor durch nach vorn). Vergleich vorher:
 `O_belege/vor_1130.png`, `O_belege/vor_1030.png` (stehende Gruppen).
 
+## Nebenwirkungen (geprueft)
+
+* Elza: die Szene startet nur in Leons ROOM1150 (re15_irons_tod_install `case RE15_IT_RAUM_1150` = 0x1150; Elzas Raum
+  ist 0x1151); montage_r38.c wirkt nur bei re15_irons_tod_zustand() != AUS in 1130/1040/1030 (Leon-Raeume). Riegel
+  unit_r36_elza_irons / integration_r36_elza_irons im gezielten Lauf (s. Tests).
+* Spaeteres Betreten von 1130/1030: die Nachspawn-Programme (k_p_1130_nach, k_p_1030_nach_tuer/_tor) sind unveraendert;
+  RE15_IT_PARK_1030 wird nur in den Montage-Tueren benutzt (irons_tod_1150.c k_p_1040_ende OP_DOOR, tuer_setzen ohne
+  Cut-7-Teil). Bank 5 (Kriech-Marken Set(5,i)) ist raumlokal.
+* Ohne Cut-7-Teil (1070 leer, (9,76)=0): Tuer zeigt gleich Cut 12, Kriech-Regel + Umparken gelten dort ebenso
+  (Riegel unit_r38_montage_s1030_ohne7_*, exe-Weg integration_r35_cut1150 Lauf B).
+* Rolltor 1040: bitgleich (Riegel unit_r38_montage_rolltor Bild fuer Bild; exe Endlagen gleich).
+
 ## OFFEN
 
 1. **Klemme an der Zellenecke SCA 30 (Cut 12, KI RE2) — vorbestehend, nicht durch Spur O.** Ein Kriecher (Raum-Record
@@ -220,7 +232,9 @@ F240..F540: die Zombies hinter dem Gitter gehen zu Boden und kriechen unter dem 
    +1 (Gegenprobe im Riegel), +120 (jetzt; die Nachbarn kriechen zum selben Uebergang und schieben ihn nach Westen).
    Mechanismus (gelesen + gemessen, Spur-Ausgabe `test_r38_montage s1030_re2 mess 2`): der Navigator setzt das Ziel auf
    den Uebergang Zone 0 -> 9 (-12195,-23860) (Mitte der Ueberlappung x -13070..-11320, BLK @0x01C28; FUN_8003a31c
-   nimmt die eigene x nur in [lo+2r, hi-2r]); dieser Punkt liegt nur 371 von der Ostkante der Zelle SCA 30 (@0x01B78,
+   selbst disassembliert: Mitte `addu v0,v1,a3` / `sra v0,v0,1` @0x8003a3f0-f4, die eigene x nur wenn lo + 2r < x <
+   hi - 2r, r = `lhu v0,6(v0)` aus dem +0x78-Satz @0x8003a408-410, `sll v0,v0,1` @0x8003a418, Ersatz `sh v0,0(a2)`
+   @0x8003a440); dieser Punkt liegt nur 371 von der Ostkante der Zelle SCA 30 (@0x01B78,
    x -15518..-12566, z -24134..-22694) — weniger als der Zombie-Radius 400 (+0x78-Satz +6). Wer von WESTEN kommt,
    drueckt in die Ecke, die Wandklemme setzt ihn auf z -24552 zurueck (Zyklus ~50 Bilder). Navigator (FUN_8003a524 /
    FUN_8003a31c) und Wandklemme sind byte-true Ports anderer Spuren (nav_zone_common.c, re15_collision.c,
