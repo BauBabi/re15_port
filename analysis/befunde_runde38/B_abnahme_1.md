@@ -22,7 +22,8 @@ gekennzeichnet. Der Bericht wird fortlaufend geschrieben (Sitzungslimit).
 - Messkopien neben der Bau-exe: `re15_pc_abn1b_neu.exe` (md5 81fa7d42..., = re15_pc.exe) und `re15_pc_abn1b_v0825.exe`
   (= `release/pkg-win/re15_port_v0.8.25/re15_pc.exe`, md5 7aa892fc...; Code-Gleichheit Basis/Release:
   `git log 2077bb8e..e2cc7673 -- re15_port/engine re15_port/platform re15_port/include` leer). Laeufe unter
-  `<scratchpad>/B_abn1/runs/<name>` (Werkzeuge `B_abn1/lauf.sh`, `B_abn1/auswerten.py`). Hinweis: beim Anlegen habe ich
+  `<scratchpad>/B_abn1/runs/<name>` (Werkzeuge `B_abn1/lauf.sh`, `B_abn1/auswerten.py`; beide Messkopien nach der
+  Abnahme wieder geloescht). Hinweis: beim Anlegen habe ich
   versehentlich die Datei `<scratchpad>/lauf.sh` (Werkzeug der abgeschlossenen Abnahme 0) ueberschrieben; Repo und
   Spurbaum sind davon nicht beruehrt.
 
@@ -100,6 +101,28 @@ v0.8.25 ging ins Leere. Leon ist ab F873 beweglich (pm=0, pst=1); eine Schonfris
 nicht (Freigabe FUN_80111658 ohne +0x1d6-Schreiber, Dossier 2.2). Wortlaut ("in Cutscenes ... wo er sich noch nicht
 mal bewegen kann") damit erfuellt; s. Hinweis H1.
 
+### 2.2b Elza-Varianten (beide Szenarien), echter TUER-Eintritt aus ROOM1181
+Elza-Wahl `RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, Sprung `1180@250` -> `ROOM1181`,
+Tuer-Druck F300/F301, Skript ab F400 (Bildzaehler je Raum).
+- ROOM1191 (Kombination B, sub01 @0x0247C-0x024A8: (4,243)=1, (3,112)=1, Bank-5-Bits 6+7; `RE15_SET_FLAG=4:243,3:112`,
+  Tuer 2 -> `[tuer] Sequenz ... DOOR13` -> `loaded room1191.rdt`; Skript `R0.36667,U2.1,L0.36667,U1.2,R0.36667,U1.0,
+  W0.3,A0.1,W2,A0.1,W5,R0.7,U0.9,R0.36667,U3.2167,R0.33333,U1.0,W0.3,A0.1,W2,A0.1,W12` = Schalter 3 (`sub=5` F572),
+  Schalter 1 (`sub=3` F993), Szene `sub=10` F1167):
+
+| Stand | Szene pm=2 | HP-Verlust IN der Szene | Hund st1/ss1=3 IN der Szene | erster HP-Verlust nach der Szene |
+|---|---|---|---|---|
+| v0.8.25 (e1191v0825) | F1167..F1384 | 0 | **35 Bilder (Slot 1 ab F1332)** | F1398 (+14, pm=1) |
+| neu (e1191neu) | F1167..F1384 | 0 | **0** | F1515 (+131) |
+
+  debug.log neu: `[szenenschutz] F1167 an` / `F1385 aus (94 geschuetzte Gegner-Ticks)`.
+- ROOM11D1 (Tuer 0, Strom an, Skript wie 2.2): `[tuer] Sequenz ... DOOR1A` -> `loaded room11d1.rdt`,
+  `[szenenschutz] F798 an` / `[evt] F899 room=11d1 Evt_exec sub=2` / `F973 aus (365 geschuetzte Gegner-Ticks)`:
+
+| Stand | Szene pm=2 | HP-Verlust IN der Szene | Hund st1/ss1=3 IN der Szene | erster HP-Verlust nach der Szene |
+|---|---|---|---|---|
+| v0.8.25 (e11d1v0825) | F798..F972 | 0 | **6 Bilder (Slot 4 ab F967)** | F1021 (+49) |
+| neu (e11d1neu) | F798..F972 | 0 | **0** | F992 (+20) |
+
 ### 2.3 Ausnahme "Teil der Cutscene" — Elza ROOM1171, echter TUER-Eintritt
 Die 1171-Szene startet nur bei Eintritts-Schnitt 0 oder 3: sub00 @0x01374 `Switch` / @0x01378 `Case 0` / @0x01388
 `Case 3` -> `Gosub 07`; sub07 @0x016C4 `Ck(3,194)==1` -> John 0x49 + 2 Kraehen 0x21 grid 0x40 (@0x016C8/@0x016DC/
@@ -148,4 +171,137 @@ bewegen kann"). Erklaert der Fix den Befund? Ja — gemessen in 2.1/2.2: vorher 
 ungebremst (Biss F1201 bei pm=2, Lunge F867 bei pm=2), jetzt sehen sie in pm=2 die Original-Tore geschlossen; der
 RE2-Hund ehrt die Sperrzeit (Landung F1169 -> Commit F1290).
 
-(Fortsetzung folgt.)
+## 4. Maengel der Abnahme 0 — selbst nachgeprueft
+
+### M1 (fremder Riegel unit_sca_wall_hit) — behoben
+`ctest -R "^(unit_sca_wall_hit|...)$"` -> Passed; `[C1] ... FREI: 240 Frames neu=0 alt=0 ref=0 ... Verbraucher=237`
+(= Wert ohne Spur B laut Abnahme 0), `OK (0 Fehler)`, keine `[szenenschutz]`-Zeile im Lauf. Ursache war die zu weite
+Halte-Bedingung (M2); der fremde Riegel ist unveraendert (`git diff master...HEAD --name-only` nennt ihn nicht).
+Riegel-Auswahl: 438 + 4 selbst ergaenzte = 442 Tests gruen (Abschnitt 1).
+
+### M2 (Halten bei Spieler+0x4 == 4, obwohl Leon im Port laeuft) — behoben
+Code (szenenschutz_r38.c): `if (g_scd.player_mode == 2) return 1; return g_actors[PLAYER].state == 4 &&
+re15_player_msg_sperre();` — `re15_player_msg_sperre()` ist woertlich der bisherige msg_block-Ausdruck des
+Bewegungs-Gates (player_common.c, `message_display_frames > 0 || message_query != 0`), das Gate liest jetzt dieselbe
+Funktion (reine Ausfaktorisierung, gleicher Ausdruck). Damit gilt: geschuetzt <=> das Pad-Gate des Ports
+(`player_mode != 2 && !msg_block`) ist zu (Fall pm=2) bzw. Executor + Nachricht.
+Selbst gemessen (Laeufe m1230neu/m1230v0825, Rezept der Abnahme 0 e14: `RE15_DEBUG_JUMP=1230@240 RE15_SET_FLAG=4:243
+RE15_PLAYER_POS=3900,25000,3072 RE15_INPUT_SCRIPT=A0.1,U4,W2 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=300
+RE15_EXIT_AT=560#1230`): 30 Bilder `pst=4 msg a=0 pm=0` (F301..F330), Leon z 25000 -> 27100; debug.log nach
+`loaded room1230` KEIN `[szenenschutz] F.. an` (Abnahme 0 mass hier `F301 an`); ab F331 `msg(a=1) pf=FFFF0007` (Maske
+0xFFFF0000 aus Message_on `2b 0a ff ff` @0x014BC traegt 0x20000000 -> Hund steht, af bleibt 2). state.log Segment
+ROOM1230 neu == v0.8.25 **bytegleich** (md5 ee97d96140cd, 560 Bilder) — die Spur aendert 1230 nicht mehr.
+Riegel: `integration_r38_szenenschutz` (selbst gefahren, 174 s, Passed) meldet `[1230] Executor-Bilder ohne
+(2,7)/Nachricht mit Hund: 30, Leon-Weg z 2100; Szenenschutz-Fenster in ROOM1230: ''`. Negativkontrolle der Auswertung
+selbst gefahren (Werkzeug `B_abn1/neg1230/`: der 1230-Block des Skripts gegen mein m1230neu-Log mit eingefuegter
+Altzeile `[szenenschutz] F301 an`): `CMake Error ... r38_szenenschutz[1230]: Szenenschutz haelt, obwohl Leon sich
+bewegen kann`, rc=1; ohne Einfuegung rc=0. Der Stolperdraht (Weg < 1000 -> Abbruch "Bewegungs-Gate bindet jetzt an
+Spieler+0x4") ist im Skript-Kopf und im Dossier N1.OFFEN begruendet.
+
+### M3 (Typgrenze 0x40 ohne Zitat) — behoben
+Zitat steht am Code (`re15_szenenschutz_gegen`), Bytes selbst gelesen (Abschnitt 3).
+
+## 5. Riegel der Spur — Messkraft selbst geprueft
+- `integration_r38_szenenschutz` gegen die **v0.8.25-exe** (Negativkontrolle, `cmake -DRE15_PC_EXE=<re15_pc_abn1b_v0825.exe>
+  -DWORKDIR=<scratchpad>/B_abn1/neg_v0825 -P tests/integration/test_r38_szenenschutz.cmake`): rc=1,
+  `r38_szenenschutz[1190] Szene F521..F738 hp-Verlust=0 Angriffs-Bilder=33 erster Biss F752` ->
+  `CMake Error ... 33 Bilder Hund im Angriff (st1/3) waehrend der Szene`. Mit dem neuen Stand gruen (Abschnitt 4 M2).
+  (Die dabei liegengebliebene Messkopie `re15_pc_r38b_szene_ee042d4a.exe` habe ich wieder geloescht.)
+- 1230-Teil: Negativkontrolle mit eingefuegter Altzeile (Abschnitt 4 M2) — schlaegt an.
+- Unit-Riegel T1/T4b (Diff 432487fa gelesen): Executor + Nachricht -> kein Angriff; Executor ohne Nachricht -> Biss;
+  nach Plc_ret -> Biss; T1 prueft die Halte-Bedingung mit/ohne Nachricht bzw. Ja/Nein-Abfrage und Spieler+0x4 == 1.
+
+## 6. Nebenwirkungen (selbst gemessen)
+
+### 6.1 Unit + Integration
+- Unit: 442/442 gruen (Abschnitt 1).
+- Integration (eigene Auswahl: Szenen mit Gegnern in beiden Szenarien, Hunde 1190, Kraehen 1170/10C0/10C1, Gorilla 11C0,
+  Feuer 1090, Birkin 3071/5080/5090, Codepanel 1230, Elza-Start 1031, Montage 1150, Kisten/Fahrstuhl):
+  `ctest -R '^(integration_r36_kleidung_hundeweg|integration_r36_ziel1190_scheiben|integration_r37_roy_leon1170|
+  integration_r37_roy_szene1011|integration_r37_roy_szene1021|integration_r37_szene11c0|integration_r35_zgirl_5090|
+  integration_r36_story_leon|integration_r36_story_elza|integration_r37_codepanel|integration_r37_elzaems_elza10c1kraehe|
+  integration_r37_elzaems_leon10c0kraehe|integration_r37_elzaems_elza3071|integration_r37_elzaems_leon5080|
+  integration_r37_fahrstuhl_n1|integration_r35_granate|integration_r37_kistenregel|integration_r36_szenenleon|
+  integration_r36_szene1150|integration_elza_vollstart|integration_r37_feuerloescher)$' -j 3 --timeout 1500`
+  -> `100% tests passed, 0 tests failed out of 21` (Total Test time (real) = 911.60 sec, unter Volllast, ohne
+  Wiederholung). Dazu `integration_r38_szenenschutz` (Abschnitt 4).
+- Sicherheitsnetz: 0 Zeilen `[szenenschutz] ... Treffer abgefangen|WARNUNG` in meinen 29 Laeufen mit Szenenschutz-Zeilen
+  und in allen Arbeitsordnern unter `re15_port/build/tests/integration` (auch die 79er-Laeufe des Bau-Agenten).
+
+### 6.2 Szenen ohne beabsichtigte Aenderung: neu == v0.8.25 bytegleich (state.log)
+| Lauf | Szene | Schutz aktiv? | Ergebnis |
+|---|---|---|---|
+| m1230neu/v0825 | ROOM1230 sub21 Hocke + Nachricht (Rezept Abnahme 0 e14) | nein | bytegleich (560 Bilder) |
+| e1031neu/v0825 | Elzas Start ROOM1031 (Rezept integration_elza_vollstart) | ja, F451..F999, 3288 geschuetzte Ticks | bytegleich (1400 Bilder) |
+| t10b1a/v, t10b1sn/sv | Elza ROOM1171 ueber die Tuer aus 10B1, RE1.5- und Standard-KI | ja, ab F6 | je bytegleich (400 Bilder) |
+| e3071neu/v0825 | Elza ROOM3071 Birkin-Szene sub02 (Debug-Sprung, AOT 2 per Quadrat) | ja, ab F301 | bytegleich (1200 Bilder) |
+| m1150neu/v0825 | Irons' Tod ROOM1150 + Montage 1130/1040/1030 -> 11C0 (Rezept integration_r36_szene1150: Karte `probe_r35_cut1150_karte re15_card.mcr 1130 nach10f0 ersteszene` + CONTINUE + Tuer) | ja, ab F6 bis Ende | bytegleich (alle Segmente, 3042 Zeilen) |
+| r1190neu/v0825 | ROOM1190 echter Weg, RE1.5-KI | ja, F1015..F1232 | bytegleich (1600 Bilder) |
+| g11c0neu/v0825 | ROOM11C0 Gorilla-Eingangsszene (Debug-Sprung, Rezept Abnahme 0 H5) | ja, bis F1071, 2130 geschuetzte Ticks | bytegleich (1300 Bilder) |
+
+### 6.3 Gibt es Szenen, deren Angriff "Teil der Cutscene" ist und jetzt unterdrueckt wuerde? (Zensus, selbst)
+- Gegner-Code, der Szenen-Flags setzt (alle `jal 0x8004ef90` in STAGE1-6.BIN, Argumente disassembliert): STAGE1 = 17
+  Stellen, davon 15 mit a1 = `lbu a1,454(v0)` = Gegner+0x1C6 (Status-/Todes-Flag des Gegners, verschiedene Banken);
+  die zwei anderen sind der 1171-Kraehengriff
+  @0x801152c4 ((5,0x1C), FLIGHT-2, ausgenommen) und der Feuer-Emitter @0x80116ac8 ((5,0x1D+n), ROOM1090-Skripte lesen
+  (5,29..31) nicht). STAGE3/STAGE5: Birkin-Sub 10 (Spawn-Auftritt 0x80119524) setzt (5,0x1F) @0x80119658 und (5,0x1E)
+  @0x801197b4, auf die ROOM3071 sub02 wartet (`While` @0x0364D/@0x03665). Der Auftritt greift den Spieler im Original
+  NICHT an (0x80119524-0x80119b50: nur anim_set, 0x8011b5c4, pos_advance, 0x800453d0, 0x8001aac4 Gier-Drehung,
+  0x8004ef90; kein Zugriff auf 0x800acae7/0x800acaee/0x800aca58). Gemessen bytegleich (6.2).
+- `Member_set` auf Gegner in Halte-Subs (Werkzeug `B_abn1/member_zensus.py`, alle 240 RDTs, `Work_set` Art 2 = Akteur):
+  70 Treffer, ausschliesslich Member 12 (grid +0x9): Freigaben (1190/1191 0x43, 11D0/11D1 0x42, 3060/3061 0x42),
+  Montage-Zombies (1100/1101, 11F0/11F1, 1200/1201 0x89/0x8A), Gorilla 1141/11C0 (0x10/0x30), Birkin 3070/3071/
+  5090/5091 (0x13/0x1/0x12), 3080 (0x4), Kakerlaken 5031/50B0 (0x41/0x61). Kein Zustands-/Sub-Schreiber (Member 8/9/10).
+  Die gemessenen Vertreter (1190/1191, 11D0/11D1 = beabsichtigte Aenderung; 3071, Montage 1150, 11C0 = bytegleich,
+  6.2) zeigen keinen unterdrueckten Szenen-Angriff.
+
+## 7. Vertrag
+- Pfade (`git diff master...HEAD --name-only`): nur Dossier/Abnahme/Belege, eigene Dateien
+  (`szenenschutz_r38.c`, `re15_szenenschutz_r38.h`, 3 Unit-Tests, Probe-Registrierung `tests/unit/probes/
+  r38_szenenschutz.cmake`, Integrations-Skript) und kleine Haken mit Kommentar "Runde 38 Spur B": enemy_ai_common.c
+  (Include, 1 Zeile is_grabbed, 3 Bedingungen Kraehe, 3 Aufrufe run_all), enemy_ai_re2_crow.c (+3), enemy_ai_re2_dog.c
+  (+9/-2), player_common.c (+4/-1: `re15_player_msg_sperre()` = woertlich der bisherige msg_block-Ausdruck, das Gate ruft
+  sie; verhaltensneutral). Keine `release/`, `platform/android/`, `shared_assets/PSX/`, keine Test-CMakeLists. Keine
+  Bank-9-Bits, Nachrichten-Ids, Items, Sprachdateien. Fremder Riegel test_r36_kleidung_hundeweg.cmake (schon in Abnahme 0
+  bewertet) laeuft gruen.
+- Kein anderer Runde-38-Zweig beruehrt player_common.c / enemy_ai_re2_dog.c / enemy_ai_re2_crow.c
+  (`git diff --numstat e2cc7673...r38/<x>` je Zweig leer). Probe-Merge in den Integrationsstand ohne Arbeitsbaum
+  (`git merge-tree --write-tree r38/integration r38/szenenschutz`): EIN Konflikt, nur der Include-Block in
+  enemy_ai_common.c (Spur I, Spur T und Spur B fuegen an derselben Stelle je eine `#include`-Zeile ein) — alle drei
+  Zeilen behalten.
+
+## 8. Hinweise (keine Maengel)
+- **H1 11D0/11D1:** In der Szene greift kein Hund mehr an; der erste Biss nach der Szene kommt aber FRUEHER als in v0.8.25
+  (echter Weg: Leon F892 = +20 statt F921 = +49; Elza F992 = +20 statt F1021 = +49) — in v0.8.25 ging der in der Szene
+  begonnene Ansprung ins Leere. Leon ist ab dem ersten freien Bild beweglich (pm=0, pst=1). Das Original hat in 11D0
+  keine Sperrzeit nach der Freigabe (FUN_80111658 schreibt +0x1d6 nicht, Abschnitt 3). Eine Schonfrist NACH der Szene
+  waere eine neue Nutzer-Vorgabe.
+- **H2 Feuer 0x26:** das Sicherheitsnetz gibt Feuer-Abzug zurueck, solange eine Szene haelt (bewusste Erweiterung, Dossier
+  6/N1.OFFEN); in keinem Lauf eingetreten (0 `Treffer abgefangen`).
+- **H3 Integration:** (a) Spur T (in `r38/integration`) bringt neue Griffe fuer 0x2B (`re15_r38_sm_griff1/2`, setzen +0x93
+  selbst); nach dem Merge `unit_r38_szenenschutz_alle` (Zensus inkl. 0x2B) und `integration_r38_szenenschutz` im
+  Integrationsbaum fahren — der Zensus-Riegel schlaegt an, wenn ein gemergter Angriff das Spieler-Tor umgeht. (b) Spur O
+  (Montage-Zombies Richtung Kamera, noch nicht gemergt): das RE2-Zombie-Gehirn liest `re15_player_is_grabbed()` auch in
+  der Ausstiegsleiter @0x80102564-74 (-> Zustandswort 0x101), und die Montage laeuft im Halte-Fenster (m1150: Schutz an
+  ab F6). Heute bytegleich zu v0.8.25 (6.2); nach dem Merge von O dessen Riegel gegen den Szenenschutz pruefen.
+  (c) Spur I: Ereignis-Kraehe ausgenommen (2.3).
+- **H4 Riegel-Auswahl:** die systematische Auswahl des Bau-Agenten liess 4 Tests aus, die die RE2-Kraehe direkt ticken
+  (`unit_r35_fenster_{glas,ereignis,knall,satzform}`); sie koennen vom Haken nicht betroffen sein (Sicht nur in run_all)
+  und laufen gruen (Abschnitt 1).
+- **H5 vorbestehend, nicht Spur B:** ROOM3071 sub02 haengt im Port in beiden Staenden (Birkin-Sub 10 ist kompakt
+  portiert und setzt (5,0x1F)/(5,0x1E) nicht, enemy_ai_common.c `case 10` "Faithful-compact"); state.log bytegleich.
+  Ebenso vorbestehend: das Bewegungs-Gate bindet nicht an Spieler+0x4 (Dossier N1.OFFEN, gemessen 1230).
+
+## 9. Urteil
+
+| Punkt (Wortlaut AUFTRAG.md) | Urteil | Beleg |
+|---|---|---|
+| "Das Leon schon in Cutscenes angegriffen werden kann, wo er sich noch nicht mal bewegen kann ist mist. So wie bei Leon zum Beispiel bei ROOM 1190 bei den Hunden oder 11D0 bei den Hunden. Es sei den es ist Teil der Cutscene wie bei Elza Room 1170." | erfuellt | Echte Wege (Tuer + Hebel/Aufnahme), neu gegen v0.8.25: 1190 v0.8.25 Biss F1201 bei pm=2 + 49 Angriffsbilder -> neu 0/0 (e1190n/v, b1190 mit Bildblatt); 11D0 v0.8.25 Lunge F867-F872 in der Szene -> neu 0 (e11d0n/v); Elza 1191 (35 -> 0) und 11D1 (6 -> 0); Ausnahme Elza 1171 ueber die Tuer aus 10B1: Kraehengriff F101 bei pm=2 bleibt, state.log bytegleich in beiden KI-Modi. Riegel gruen und messend (Negativkontrolle gegen v0.8.25 schlaegt an). |
+
+Gates: Bau ok; Spur-Riegel 4/4 + exe-Riegel gruen; RE-Gate haelt (7 Stellen selbst disassembliert, 0 Rate-Tells);
+Vertrag haelt; Unit 442/442, Integration 21/21 gruen; Maengel M1-M3 der Abnahme 0 behoben und selbst nachgemessen.
+
+## 10. Maengel
+Keine.
+
+bestanden = true.
