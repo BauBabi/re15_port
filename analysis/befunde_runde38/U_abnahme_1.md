@@ -224,3 +224,67 @@ dem RE2-Gang 1/1, weil das RE2-Gehirn kein Hochziehen hat — Nutzer-Wortlaut "w
 **RE-Gate haelt.** Der Fix erklaert den gemessenen Befund (Mangel 1): Bank/Uhr hingen am fremd geschriebenen Wort; jetzt an
 der Marke des eigenen Ticks -> F400 Kletterpose, af 49 -> 50 (M5), Ausfuehrung byte-gleich zum alten Stand.
 
+## 5. Tests (gezielt, keine volle Suite)
+
+- Spur: `ctest -R "^(unit_r38_wasserzombie|integration_r38_wasserzombie)$" --timeout 900` -> `100% tests passed, 0 tests
+  failed out of 2` (unit 0.16 s, integration 135.22 s). Unit-Ausgabe u.a. `[C RE1.5 2020] ... oben=F258
+  landung(slot 4)=(-11536,-1800,2222) ... danach max_y=-1800 band 1..1`, `[D RE2 2020] ... re15bank=1 len=159 ...`,
+  `[D-Gegenprobe ohne Bank] eintritt=F-1 y=0`, `[F] Zwischenbild: st=1/9 mo=22 af=76 bank_re15=1 len=159
+  schatten=1(-1800) advancer af=77`, `[F] Abbruch: st=1/9 mo=3 af=2 y=0 f1ba=0 band=0 bank_re15=0 len=40 (RE2 40)`,
+  `[E RE1.5 2000]`/`[E RE2 2000]` je oben (-20928,-1800,z) b1, `== OK ==`. Integration Laeufe a-e (Logs
+  `build/tests/integration/r38_wasserzombie_wd/lauf_53713856_*`): a 2020 Leon RE2 `F261 ... oben ... (-10756,-1800,2222)
+  b1`; b 2020 RE1.5 `F258`/`F304 oben`; c 2021 Elza `[save] CONTINUE: resumed in room 2021`, `F261 R2021 ... oben`;
+  d 2000 Raumlader `F275 ... oben (-20928,-1800,-9715) b1`; e Tuerweg `F400 ... zwischenbild ... af=49` / `F401 ... abbruch
+  ... af=50`.
+- **Messkraft von Riegel F gegen den alten Modulstand (eigene Gegenprobe):** derselbe Testquelltext, einmal mit
+  `371f4dc8:re15_port/engine/src/wasserzombie_r38.c` (Stand vor der Nachbesserung, Kopf-Deklarationen gleich), einmal mit
+  dem aktuellen Modul gegen dieselbe `libre15_engine.a` gelinkt (Scratchpad `alt_riegel/`, Baum unberuehrt):
+  alt -> `exit=1`, `[F] Zwischenbild: st=1/9 mo=22 af=76 bank_re15=0 len=10 schatten=0(12345) advancer af=9` und 5 Fehler
+  (`F: Zwischenbild posiert nicht die RE1.5-Aktionsbank (bank=0)`, `... Clip 22 ...`, `F: Zwischenbild-Uhr 10 statt 159`,
+  `F: Zwischenbild-Schatten 0/12345 ...`, `F: Advancer im Folgebild af 76 -> 9 (erwartet 77)`); neu -> `exit=0`, `== OK ==`.
+  Der Riegel misst also genau den Abnahme-0-Befund (af 49 -> 9 / RE2-Bank im Zwischenbild).
+- Unit-Gruppe der beruehrten Module (Regex des Bau-Agenten + `unit_.*hund.*schatten.*|unit_r35_.*schatten.*|unit_.*sitz.*|
+  unit_.*10d0.*`, -j 4): `100% tests passed, 0 tests failed out of 105` (16.5 s).
+
+## 6. Nebenwirkungen der Nachbesserung (Code-Pfade, selbst nachgelesen)
+
+`wz_marke_bank` (neu) gilt, solange die Marke steht, Typ gleich, `active`, `state != 0` und das RE2-Gehirn den Typ fuehrt;
+gesetzt/geloescht wird die Marke nur in `re15_wasserzombie_re2_dispatch`, das in `re15_re2z_tick` vor dem Zustands-
+`switch` fuer JEDEN aktiven Aktor laeuft (enemy_ai_re2_zombie.c:8906; davor nur `slot`-/`active`-Abbrueche).
+Aufrufer (Grep): Renderer main.c:10011, Schatten main.c:9813, Uhr `re15_actor_clip_len` enemy_ai_common.c:5479,
+Schuss-Anker schuss_r36.c:72. Gepruefte Faelle:
+- Fremder Schreiber NACH dem eigenen Tick (Partner-Domino aus hoeherem Slot): Zwischenbild = Pose des eigenen Ticks —
+  gemessen M5/M3. Der Port-Domino schreibt nur Wort + `re2z_gaitrow` (+ SE 4, enemy_ai_re2_zombie.c:2169), nicht
+  `motion` -> die RE1.5-Clipnummer bleibt im Zwischenbild gueltig.
+- Spieler-Treffer: Reihenfolge in `re15_game_step` = `re15_player_tick` (game_step_common.c:1644) ->
+  `re15_actors_anim_advance` (:2323) -> `re15_enemy_ai_run_all` (:2344); Treffer landen VOR dem eigenen Tick desselben
+  Bilds -> kein Zwischenbild, der eigene Tick bricht im selben Bild ab.
+- Neuspawn / Raumwechsel: `re15_wasserzombie_reset` wird in der exe nicht gerufen (nur Tests) — die Marke ueberlebt einen
+  Raumwechsel; ein neuer Aktor im Slot steht aber auf Zustand 0 (Sce_em_set @0x800421e0) -> keine RE1.5-Bank, und sein
+  erster eigener Tick loescht die Marke ueber den Abbruch-Zweig (ohne +0x1ba-Ruecksetzen, weil `state == 0`). Riegel
+  F-Neuspawn prueft genau das. Kein Fehlerpfad gefunden.
+- RE1.5-KI: `wz_marke_bank` = 0 (nicht RE2-Gehirn) -> unveraendert; der Schatten der RE1.5-KI haengt weiter an
+  Zustand 1/Sub 0x0A.
+- Ausfuehrung: gy.log des Tuerwegs bis F406 byte-gleich zum alten Stand (M5) — die Nachbesserung aendert nur Darstellung/
+  Uhr/Schatten/Schuss-Anker im Zwischenbild.
+
+## 7. Vertrag
+
+- Pfade (`git diff cb782bda HEAD --name-only`, 13 Dateien): Dossier + Abnahmeberichte, neues Modul
+  `engine/src/wasserzombie_r38.c` + Kopf `include/re15_wasserzombie_r38.h`, Haken in `enemy_ai_common.c`,
+  `enemy_ai_re2_zombie.c`, `schuss_r36.c`, `platform/pc/main.c`, Riegel `tests/unit/test_r38_wasserzombie.c`,
+  `tests/unit/probe_r38_wasserzombie_karte.c`, Sonde `tests/unit/probes/r38_wasserzombie.cmake`,
+  `tests/integration/test_r38_wasserzombie.cmake`. **Kein** `release/`, `platform/android/`, `shared_assets/PSX/`, keine
+  Test-CMakeLists (Grep auf die Namensliste: "keine").
+- Ressourcen: keine Bank-9-Bits, keine Nachrichten-Ids, keine Items/Dokumente, keine Sprachdateien (Grep der Plus-Zeilen
+  auf `game_flag_set|MSG_ID|msg_id|item_id|k_port|re15_inv_add`: 0 Treffer).
+- Gemeinsame Dateien: Haken klein und mit "Runde 38 Spur U" gekennzeichnet (enemy_ai_common.c: Include, Aufruf +
+  2-zeiliger Kommentar, 2 Zeilen in `re15_actor_clip_len`; enemy_ai_re2_zombie.c: Include + 1 Zeile; schuss_r36.c:
+  Include + 2 Zeilen; main.c: Include + 1 + 1 + 5 Zeilen). Die 43 entfernten Zeilen in enemy_ai_common.c sind die tote
+  Vorgaengerfunktion (Mangel 2 der Abnahme 0 verlangte das Entfernen).
+- Probe-Merge (nur Objekte): `git merge-tree --write-tree r38/integration HEAD` (Integration `f50f9eda`) -> Konflikte NUR
+  in den Include-Bloecken von `enemy_ai_common.c` (neben Spur I/T/B) und `platform/pc/main.c` (neben Spur E/I/T) —
+  beide Seiten behalten; alles andere automatisch. `git merge-tree --write-tree master HEAD` -> konfliktfrei.
+- Riegel je Punkt: `unit_r38_wasserzombie` (A-F + F-Neuspawn) und `integration_r38_wasserzombie` (a-e, echte exe) —
+  messend (Abschnitt 5: Riegel F gegen den alten Modulstand rot).
+- **Vertrag haelt.**
