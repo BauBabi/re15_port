@@ -43,8 +43,15 @@ int main(void)
     re15_enemy_ai_run_all(0);
     if (e->state != 1)   { fprintf(stderr, "FAIL(1): INIT->ACTIVE expected state 1, got %d\n", e->state); fail = 1; }
     if (e->hp < 81 || e->hp > 121) { fprintf(stderr, "FAIL(1): HP must seed to the row (81-121), got %d\n", e->hp); fail = 1; }
-    if (e->motion != 0x16) { fprintf(stderr, "FAIL(1): INIT idle clip must be 0x16, got %d\n", e->motion); fail = 1; }
-    printf("  (1) INIT: state->1, hp=%d (row 81-121), clip=0x%x\n", e->hp, e->motion);
+    /* Runde 38 Spur S (Alt-Riegel nachgezogen): der INIT schreibt +0x94 = 0 (`sb zero,148` @0x80110ce4) und legt den
+     * Pool mit anim_set an (@0x80110ed0); den Ruhe-Clip 0x16 setzt erst B[0] Phase 0 im ersten ACTIVE-Bild
+     * (@0x80111348-384). Die alte Pruefung "Clip 0x16 direkt nach dem INIT" hielt die Port-Abkuerzung fest. */
+    if (e->motion != 0) { fprintf(stderr, "FAIL(1): INIT clip must be 0 (@0x80110ce4), got %d\n", e->motion); fail = 1; }
+    pl->z = 20000;                      /* ausser Reichweite: A[0] 0x80111220 schaltet nicht um, B[0] laeuft (A+B im selben Bild) */
+    re15_enemy_ai_run_all(0);
+    pl->z = 2000;
+    if (e->motion != 0x16) { fprintf(stderr, "FAIL(1): first ACTIVE frame idle clip must be 0x16 (@0x80111348-384), got %d\n", e->motion); fail = 1; }
+    printf("  (1) INIT: state->1, hp=%d (row 81-121), clip=0x%x after B[0]\n", e->hp, e->motion);
 
     /* (2) CHASE: engage nearby, then verify the byte-true SCURRY (sub 4, +0x8c speed 180-211/frame,
      *     @0x80111c5c) closes on a player who flees past 6001 units. The approach walk (sub 3) uses

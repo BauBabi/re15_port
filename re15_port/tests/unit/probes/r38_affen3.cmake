@@ -1,0 +1,59 @@
+# Runde 38 Spur S "affen3" — die kleinen Affen (Typ 0x29, EM029) in Stage 3 treffen wie im Original.
+# Nutzer: "In Stage 3 die kleinen Affen koennen einen nicht treffen, es passiert nichts".
+# Dossier analysis/befunde_runde38/S_affen3.md, Code engine/src/affen3_r38.c + include/re15_affen3_r38.h
+# (Haken: enemy_ai_common.c INIT/ACTIVE/HURT/DEATH/Dispatch/Opfer-Wege, affen_11c0.c Bank + Griff-Paar, re15_damage.c Zielband).
+#
+#   unit_r38_affen3_typ      Typ 0x29 = der Blob, den der Original-Lader FUN_80022300 fuer 0x29 laedt (@0x80073000)
+#   unit_r38_affen3_biss     Port ab dem Original-Zustand F137 der GDB-Spur o4: Commit, Treffer -5 im Fenster, Takt 57
+#   unit_r38_affen3_flavor   dasselbe unter RE2-KI (Standard) und RE1.5-KI
+#   unit_r38_affen3_quadrat  FUN_8001bff8 = Quadrat um den gezeichneten Knochenpunkt (Record 9 + 0x64)
+#   unit_r38_affen3_schwer   schwerer Angriff Sub 6: -10 im Fenster {21..24,33,34}, Records 6/10
+#   unit_r38_affen3_decke    angeschossener Affe: Sub 9 an die Decke, Kriechen/Jagd/Hieb wie GDB-Spur o7
+#   unit_r38_affen3_griff    Griff von der Decke (Sub 15 + Spieler-Haken cmd 5) und Bisse danach wie GDB-Spur o8
+#   unit_r38_affen3_sprung   Sprung Sub 7 / Todessprung Sub 8 (HP < 50 -> -500 -> cmd 6 -> Tod) wie GDB-Spur o9
+#   integration_r38_affen3   echte exe, ROOM3040 per Debug-Sprung, Leon geht auf der Plattform in den Affen hinein:
+#                            Bisse -5 im Takt 56 wie Original o10 (GDB, derselbe Weg), Affe wird nach Westen geschoben;
+#                            RE2-KI (Standard) und RE1.5-KI
+#   integration_r38_affen3_decke  echte exe: angeschossener Affe -> Decke -> Griff von hinten (kein HP) -> Bisse -5,
+#                            RE2-KI (Standard) und RE1.5-KI
+#   unit_r38_affen3_ereignis    Nachbesserung 1, ROOM4040 ueber Skript/AOT: Spawn-Wurzelaufruf (@0x8004259c) -> gesperrt in
+#                            Zustand 4/1 (INIT @0x80110eb8), Freigabe -> Zustand 4/1 0x801158e8 -> Fall Bild fuer Bild wie
+#                            Original o11 (GDB), Landung R+18, Sub 4 R+34, HP-Abzug erst am Boden; beide KI
+#   unit_r38_affen3_ereignis40  Nachbesserung 1: Unterzustand 0 (0x8011577c, +0x9 == 0x40): Clip 0x1f, dann Sub 2 / Clip 3
+#   integration_r38_affen3_tor    echte exe, ROOM4040: Wurzel-Tor +0x9 & 0x20 @0x80110b34-40 — der Ereignis-Affe (g=61)
+#                            wartet in Zustand 4/1 (Spawn-INIT), bis Member_set(12, 0x41) @0x011D6 ihn freigibt; dann
+#                            Fall von y -10000 auf +0x1ba wie Original o11 und Angriffe nur vom Boden; beide KI
+add_executable(test_r38_affen3 ${CMAKE_CURRENT_SOURCE_DIR}/test_r38_affen3.c)
+target_link_libraries(test_r38_affen3 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r38_affen3 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r38_affen3 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_R38_PSX_EXE="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
+if(NOT WIN32)
+    target_link_libraries(test_r38_affen3 PRIVATE m)
+endif()
+foreach(_teil typ biss flavor quadrat schwer decke griff sprung ereignis ereignis40)
+    add_test(NAME unit_r38_affen3_${_teil} COMMAND test_r38_affen3 ${_teil})
+    set_tests_properties(unit_r38_affen3_${_teil} PROPERTIES TIMEOUT 240)
+endforeach()
+
+if(TARGET re15_pc)
+    add_test(NAME integration_r38_affen3
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_affen3_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_affen3.cmake)
+    set_tests_properties(integration_r38_affen3 PROPERTIES TIMEOUT 900)
+    add_test(NAME integration_r38_affen3_decke
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_affen3_decke_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_affen3_decke.cmake)
+    set_tests_properties(integration_r38_affen3_decke PROPERTIES TIMEOUT 900)
+    add_test(NAME integration_r38_affen3_tor
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_affen3_tor_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_affen3_tor.cmake)
+    set_tests_properties(integration_r38_affen3_tor PROPERTIES TIMEOUT 900)
+endif()

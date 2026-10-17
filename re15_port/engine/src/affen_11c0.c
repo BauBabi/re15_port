@@ -3,6 +3,7 @@
  * Belege und Messungen: include/re15_affen.h (Kopf) und analysis/befunde_runde35/J_affen.md.
  */
 #include "re15_affen.h"
+#include "re15_affen3_r38.h"   /* Runde 38 Spur S: re15_affen3_griff_paar */
 #include "re15_collision.h"     /* re15_collision_floor_typeword = FUN_8003b7f0 */
 #include "re15_enemy.h"         /* re15_enemy_find (Bank: re2_rig, Skelett/Clips des Gorillas) */
 #include "re15_enemy_ai.h"      /* re15_clip_anchor_set_pub */
@@ -202,7 +203,7 @@ static int16_t affen_winkel(int prev, int kf, int wp)
 void re15_affen_pool_anim(re15_actor_t *e)
 {
     re15_affen_pool_t *P = affen_pool(e);
-    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);   /* Runde 38 Spur S: Bank des Aktor-Typs (0x27 Gorilla, 0x29 kleiner Affe, gleiche Familie) */
     if (!P) return;
     affen_stand_t *J = &P->jetzt;
     if (!b || !b->ok || (int)e->motion >= b->anim.clip_count) { J->ok = 0; return; }
@@ -247,7 +248,7 @@ void re15_affen_zeichen_merk(const re15_actor_t *e)
 int re15_affen_fusssperre(re15_actor_t *e, int bone)
 {
     re15_affen_pool_t *P = affen_pool(e);
-    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);   /* Runde 38 Spur S: dito */
     if (!P || !b || !b->ok) return 0;
     if (bone < 0 || bone >= b->skel.bone_count) return 1;
     if (!P->jetzt.ok || !P->zeichen.ok) return 1;
@@ -268,7 +269,7 @@ int re15_affen_fusssperre(re15_actor_t *e, int bone)
 int re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3])
 {
     re15_affen_pool_t *P = affen_pool(e);
-    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);   /* Runde 38 Spur S: dito */
     if (!P || !b || !b->ok || !P->zeichen.ok || bone < 0 || bone >= b->skel.bone_count) return 0;
     const int32_t a1[3] = { (bone == 9) ? 0x64 : 0, 0, 0 };   /* B[5] Knochen 9 @0x80118380-84, sonst (0,0,0) aus 0x80072d60 */
     affen_kette(&b->skel, &P->zeichen, bone, e->render_scale_q12, a1, out);
@@ -372,7 +373,8 @@ uint8_t re15_affen_flinch_exit_sub(re15_actor_t *e)
  *      Gorilla-Spanne Phase 3/4 von sub 15. GDB (jnb1/g_griff.txt Wort 0): e1 0x60001811 ab T254, 0x60000811 ab T302. */
 int re15_affen_griff_paar(const re15_actor_t *e)
 {
-    return e && e->type == 0x27 && e->sub_state_1 == 15 && (e->sub_state_2 == 3 || e->sub_state_2 == 4);
+    return (e && e->type == 0x27 && e->sub_state_1 == 15 && (e->sub_state_2 == 3 || e->sub_state_2 == 4))
+        || re15_affen3_griff_paar(e);   /* Runde 38 Spur S: Affe 0x29, Bit 0x1000 @0x801143c4-c8/@0x80114670-7c, Spieler @0x801143e4-ec/@0x80115f68-78 */
 }
 
 /* (7) FUN_8001af20 = Hash des a0-Registers des AUFRUFERS (der State @0x800ac774 ist ein toter Store):
