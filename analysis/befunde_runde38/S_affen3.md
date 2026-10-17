@@ -219,3 +219,47 @@ dieselbe Lage wie nach einem ueberlebten Treffer (Spur 0 -> Ausgang Sub 9).
   aca59 = 3, Clip 9). Der Affe verlaesst seine Nische also im Original ueber die Decke.
 Folge fuer den Nutzer-Punkt: ein angeschossener Affe greift im Original von der Decke an und kommt aus der Nische,
 im Port bleibt er dort. Wird in diesem Baum nachgezogen (Subs 7..15 nach den obigen Adressen).
+
+## Umsetzung Subs 7..15 (2026-10-17) — affen3_r38.c traegt jetzt das ganze ACTIVE-Gehirn
+Alle 16 Subs laufen in `re15_affen3_aktiv` (A[+0x5], dann B[+0x5 neu] im selben Bild, auch wenn A den Affen gerade in
+den HURT gestuerzt hat); der alte Port-Code fuer 7..15 in `re15_cockroach_ai_tick` ist damit tot (bleibt stehen, nur
+Haken). Schwanz: Zielbaender @0x80111148-1b0 (Boden LEVEL + DOWN bei Abstand < 0xfa0, in der Luft/an der Decke NUR UP bei
+< 0x1388; Abstand nach dem B neu wie FUN_80012974/FUN_80012a0c @0x800129c0/@0x80012a58).
+| Teil | Original | Port |
+|---|---|---|
+| Sprung B[7] | 0x801123fc: Clip 0x14, +0x8c (rng&0x1f)+180, Bild 0xa Absprung (rng&0x1f)+200, +0x1e0 1, +0x93 \|= 1, c1a4(+0x8c,600,-60) | `b_sprung` |
+| Todessprung B[8] | 0x80112784: nur aus B[7] Bild 0x13 bei Spieler-HP < 50 (@0x8011269c), Quadrate Rec 6/10 r 0x320, Fenster {8,9,10} @0x8011ed54, HP -500, +0x1dc 0x12c, SE 0, aca58 6, Wunde (0,0x32) | `b_todessprung`; Spieler-Haken cmd 6 0x80116064 -> 0x801160a4 ist befehlsgleich zum Gorilla-Finisher 0x8011c3d4 -> 0x8011c414 -> derselbe Port-Weg (re15_player_victim_devour / _tick: 0x29 wie 0x27) |
+| Decke hoch B[9] | Phasen @0x801002d4; Bild 0x10: +0x1e0 1, Kasten @0x8011ec48[+0x1e4] (r 800, h 1530); c1a4(0,0x190,-20) bis y = +0x1ba - 2700 | `b_decke_hoch` |
+| Decke runter B[10] | Phasen @0x801002ec; Bild 0x18 halten, c1a4(+0x8c,0,-70), Landung SE 1, Bodenkasten, -> Sub 4 | `b_decke_runter` |
+| Drehen B[11] | Clip 0x1b, Bilder 1..7/17..20: +0x9e (rng&0x1f)+80, +0x1da = FUN_8001a9cc, Gier += +0x1da; +0x1da == 0 -> Sub 12, ohne Sicht oder Abstand >= 0x1389 -> Sub 10 | `b_decke_drehen` (+0x1da = Port-Feld ai_attack_timer) |
+| Kriechen B[12] | Phasen @0x80100304: Clip 0xf (-> Sub 13 bei Bild 0x32), Clip 0xf ab 0x32 / Clip 0x19 (-> Sub 11), Fuss-Sperre c3c | `b_decke_kriechen` |
+| A[13] | Flug-Treffer; Abstand < 0x7d0 + a780 != 0 + +0x1dc 0 -> Sub 15 (Griff); Bild {0,0x31} + a804(0x1388,0x180) -> Sub 14 (Hieb); Bild {0,0x31,0x18} + Abstand >= 0xfa1 + keine Sicht -> Sub 12 Phase 2/5 | `a_decke` |
+| Jagd B[13] | Clip 0x18, Bilder 5..12/33..37 Lenken +0x9e (rng&0x30)+48 (+24 unter 0x7d0), c3c(0, Bild < 0x19) | `b_decke_jagd` |
+| Hieb B[14] | Clip 0x1a, Fenster @0x8011ed5c {8..13} Rec 6 / @0x8011ed64 {43..48} Rec 10, r 0x320; HP -10, +0x1dc 0x2d, SE 5, aca59 a780+2 | `b_decke_hieb` |
+| Griff B[15] | Phasen @0x80100324: y = +0x1ba + 400, Anker = Spieler, aca58 5, Ringen +0x9c 100 - 1 - 100*Druecken (FUN_80037024), Loesen Clip 0x1e, Fall auf den Boden, Sub 2 | `b_griff` |
+| Spieler-Haken cmd 5 | 0x80115d30 -> 0x80115d70, aca5a-Phasen @0x80100364: Clip 1/2/3 aus der Opfer-Bank mit ad68-Platzierung, Blut 0x1500 an Part 8, Clip 0x10 und 0xb (a2 = 1) aus Leons Bank, aca58 1 | `re15_affen3_opfer_tick` (Haken in re15_player_victim_tick) |
+| Flug-Treffer A[9..14] | +0x93 & 2: & 0x40 -> HURT +0x5 9 +0x6 3 (Absturz), sonst Blut | `luft_treffer` |
+| HURT/DEATH-Kopf | +0x1e0 -> c1a4(0,0,-50), Landung Kasten + SE 1 (@0x801147a0-804 / @0x80114fc4-5028) | `re15_affen3_luft_landung` |
+Weitere Haken (je 1-3 Zeilen, "Runde 38 Spur S"): enemy_ai_common.c — Affen-Root ruft jetzt aec4(&Spieler, Affe)
+(`jal 0x8002aec4` @0x80110b88; im Port hatte nur der Hund diesen Selbst-Schub) und klemmt JEDES Bild mit Band +0x82 und dem
+aktuellen Kastenradius (@0x80110ba0-cc, vorher Bewegungs-Gate + Band aus y); +0x1dc als s16 (dog_blocked_ctr; 0x12c passt
+nicht in das u8 dog_atk_cd); Griff-Paar/Opfer-Wege fuer 0x29 (devour, victim_tick, own_bank, re15_player_victim_gorilla);
+re15_damage.c — 0x29 liest aim_band wie 0x27; affen_11c0.c — re15_affen_griff_paar fragt re15_affen3_griff_paar.
+INIT-Haken: +0x1ba = -(+0x82)*0x708 (Sce_em_set-Saat `sh v0,442(s0)` @0x80042210), Kasten nach grid&8 (@0x80110f68-88).
+
+## Messung nachher Subs 7..15 (Port-Riegel gegen die Original-Spuren, ROOM3040, beide KI-Varianten)
+- **o7 Decke** (`unit_r38_affen3_decke`): T13 Sub 9, T38 y -4500 Kasten 800, T110 Sub 12, T111 (-8706,-4500,-6076),
+  T160 (-8701,-4500,-6382), T161 (-8685,-4500,-6371), T177 (-8818,-4500,-3646), T210 Hieb (-8987,-4500,-3763) r3075,
+  T281 Hieb 2 (-8989,-4500,-3651) r3243 — **alle bildgleich zum Original**; danach weicht die Bahn ab (Ersatz-Zufall),
+  Endlage im Wechsel Hieb/Jagd bei (-9222,-2387) r3905 wie im Original; 0 HP-Abzug wie im Original.
+- **o8 Griff** (`unit_r38_affen3_griff`): Griff T174 (-8818,-1400,-3283), Haken-Phasen 1 (T174) / 2 (T212) / 3 (T213) /
+  5 (T313) / 6 (T364) / 7 Clip 0x10 (T365) / 8 (T380) / 9 Clip 0xb (T381) / 10 (T405) / frei (T406), Leon (-8777,-2711) T210,
+  (-9132,-1993) T330, Affe am Boden (-9118,-1800,-3547) T365, Sub 2 T385 — **alle bildgleich**; kein HP-Abzug im Griff;
+  danach Bisse T458/516/574/632/690/748/806/864 je -5 = **dieselben Bilder wie im Original**.
+- **o9 Sprung/Todessprung** (`unit_r38_affen3_sprung`, neue GDB-Spur o9: Affe auf offenen Boden versetzt, Leon HP 40):
+  Original T31 Sub 3, T32 Sub 4 (-16974,-8808), T41 Sprung, T50 Absprung, T72 Landung, T81 Schwer, T102 -10, T284
+  Todessprung (HP 20), T293 -500 (cmd 6), T305 Sub 2, Tod; Port T31/T32 (-16977,-8815)/T42/T51/T73/T82/T104 -10,
+  Todessprung T205 (HP 30), -500 Bild 8, cmd 6, Sub 2, Tod. 1-2 Bilder Versatz = Ersatz-Zufallsquelle (der Sprung-
+  Entscheid zieht rng&1 @0x80111b88-ac; FUN_8001af20 haengt im Original am a0 des Aufrufers, re15_damage.c).
+- Alt-Riegel `unit_cockroach_ai` (1) begruendet nachgezogen: INIT schreibt Clip 0 (`sb zero,148` @0x80110ce4), den
+  Ruhe-Clip 0x16 setzt erst B[0] (@0x80111348-384).
