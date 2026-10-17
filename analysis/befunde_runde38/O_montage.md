@@ -206,7 +206,11 @@ Original-Form (selbst gelesen, `scd_dump_room.py ROOM1141.RDT` + `xxd -s 0xE6C -
 `2e 02 01 00 34 0c 30 00 2e 02 02 00 34 0c 30 00 09 0a 01 00` @0x00E6C = Work_set(2,1) + Member_set(12, 0x30), Work_set(2,2)
 + Member_set(12, 0x30), Sleep 1, danach `29 00` Cut_chg 0 @0x00E80: die Szene haelt die beiden Zombies an (entity+0x9 Bit 0x20,
 Member 12 = +0x09 `sb`, actor_common.c re15_actor_set_member case 12), BEVOR sie den Schnitt von ihnen wegnimmt, und gibt sie
-mit `34 0c 10 00` @0x00F64 / @0x00F74 (Bit 0x20 wieder aus) frei, wenn das Spiel weiterlaeuft. Wirkung des Bits: STAGE1.BIN
+mit `34 0c 10 00` @0x00F64 / @0x00F74 (Bit 0x20 wieder aus) frei, wenn das Spiel weiterlaeuft. Member-Id 12 = entity+0x9 selbst
+disassembliert (`re15_disasm.py table 0x80010c8c 20` / `dis 0x800411cc 24`): FUN_8004116c `sltiu v0,a1,0x14` @0x8004116c,
+Sprungtabelle @0x80010c8c, [12] @0x80010cbc -> 0x800411f4 `j 0x80041230` / `sb a2,9(a0)` @0x800411f8; zur Gegenprobe der
+Baustein-4-Felder: [15] -> `sb a2,11(a0)` @0x80041210 (+0x0b = AOT-Stempel, Member 0x0F), [16] -> `sh a2,452(a0)` @0x80041218
+(+0x1c4 = Member 0x10, Kriech-Bit 0x1000). Wirkung des Bits: STAGE1.BIN
 `lbu v0,9(a0)` @0x80100450 / `andi v0,v0,0x20` @0x80100458 / `bne v0,zero,0x80100658` @0x8010045c (Takt uebersprungen; Port
 RE15_AI_GRID_SKIP, enemy_ai_common.c `if (e->grid_id & RE15_AI_GRID_SKIP) return 0;` fuer beide KI-Geschmaecker).
 
