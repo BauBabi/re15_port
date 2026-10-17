@@ -6,7 +6,10 @@ dieser Abnahme beim Sitzungslimit), Basis (merge-base) `e2cc7673`. Vorgaenger: `
 Punkt 1 und 3 erfuellt, Punkt 2 teilweise, Maengel 1-3, Hinweis 1). Dieser Bericht ersetzt den Teilbericht
 `R_abnahme_1_teil_limit.md` (Sitzungslimit ~09:25).
 
-**Ergebnis: (in Arbeit — Bericht wird fortlaufend geschrieben)**
+**Ergebnis: BESTANDEN.** Punkt 1, 2 und 3 erfuellt, an der exe gemessen (Leon und Elza). Die drei Maengel der
+Abnahme 0 und ihr Hinweis 1 sind behoben: Der Gift-Takt loest keine Treffer-Reaktion mehr aus (10/10 Takte ruhig,
+Periode 121), unit_r34_wurf ist gruen, Kommando 0 nullt den Gift-Zaehler, und der Giftklumpen wird in einer
+haltenden Szene abgefangen. RE-Gate und Vertrag halten. Keine Maengel.
 
 Messordner (ausserhalb des Baums, eigener Unterordner):
 `C:\Users\MJOEDI~1\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\r38R_abn1\`
@@ -66,6 +69,7 @@ Nachbesserung stimmen mit dem Zitat im Code/Dossier:
 | Treffer-Reaktion nur durch Kommando-2-Schreiber `sb v0,4(s1)` @0x80012ebc; Tor +0x93 @0x80012e24-30 (M3) | `80012e24 lbu v0,-13593(v0)` (+0x93) / `80012e2c andi v0,v0,0x1` / `80012e30 bne v0,zero,0x80012f00`; `80012eb8 ori v0,zero,0x2` / **`80012ebc sb v0,4(s1)`** (s1 = 0x800aca54); `80012eec sb v0,147(s1)` (+0x93 \|= 1). Sprungziel `80012f00 addiu s4,s4,1` = Trefferzaehler laeuft auch beim gesperrten Spieler (Klumpen zerplatzt) |
 | Spuck-Entscheid RE1.5 liest +0x93 @0x801111fc (STAGE2.BIN) | `801111fc lbu v0,-13593(v0)` / `80111204 andi v0,v0,0x1` / `80111208 beq` -> sonst `8011121c sb 1,5` / `8011122c sh 0xb,6` |
 | Spuck-Entscheid RE2 liest KEIN Spieler-Tor (EMS25 @0x80100784-8c0) | Leiter liest `+0x237`, `+0x1F4/+0x1F0`, `jal 0x80105190` (3x), `0x800cfbf6`, `jal 0x80015fe8` (rng), `+0x218`; Wort `0x501/0x901/0x701/0x801` nach `4(s0)`. Mitgelesene Sprungziele: `0x801006c4` (Leerlauf-Clip + Zeitgeber, kein Spielerfeld), `0x80105190` (Bogentest, liest nur Lage x/z +56/+64 des Ziels 0x800cfe18) — kein +0x1D3 |
+| RE2-Gift-Tor des Appliers FUN_80047664 @0x800476ec-f4 / HP @0x800476fc-704 (Klumpen-Tor `frei`) | `800476e0 andi v0,v0,0x1 / beq` (aktiv), **`800476ec lbu v0,467(s0)` / `800476f4 bne v0,zero,0x80047720`** (+0x1D3 != 0 -> uebersprungen), `800476fc lh v0,342(s0)` / `80047704 bltz` (HP < 0) |
 | Set(2,7) sperrt nur das Pad (Dossier N1.M3) | `800304f4 lw g_pauseflags / lui v1,0x100 / and / beq` -> `0x800ac768 &= 0xf000` (Pad-Maske) |
 
 Weitere Pruefungen des Diffs:
@@ -197,7 +201,21 @@ Weitere Pruefungen des Diffs:
 ### 6.2 Alle Adultspinnen am Boden (Messgroesse bu, am Spieler gegengeprueft)
 - 0 Bilder mehr als 100 ueber bu in jedem Lauf dieser Abnahme: ROOM2030 Steg (a1_gift_2030 3900, a1_babys_leon 7200,
   Elza a1_gift_2031 3900, a1_babys_elza 4500), ROOM2060 (321 nach der Landung, Leon/Elza/RE1.5-KI), ROOM20A0 (351),
-  ROOM2070 (3000). RE2-Modus +0x222 der Adulten: in allen Zeilen 0 (Boden).
+  ROOM2070 (3000). RE2-Modus +0x222 der Adulten: in allen 42860 Adult-Eintraegen aller Laeufe dieser Abnahme `m=0` (Boden).
+- Zusatzlaeufe (Stapel `A1\batch5.sh`), weil seit Abnahme 0 der Spur-B-Merge in jeden Gegner-Takt eingreift:
+  - `a1_2050` (`RE15_DEBUG_JUMP=2050@250`, 900 Bilder): 2 Adulte, 1800 Bilder, **0 ueber bu**. Bild
+    `A1\belege\raum_2050_F300-900.png`.
+  - `a1_2090` (`RE15_DEBUG_JUMP=2090@250`, 600 Bilder): 2 Adulte, 1200 Bilder, **0 ueber bu**; Angriffe 4 x 20 HP.
+  - **Oberer Steg ROOM2030 ueber die ECHTE Tuer 2060 -> 2030** `a1_tuer_2030_oben` (`RE15_DEBUG_JUMP=2060@250
+    RE15_PLAYER_POS=8300,3950,0,0 RE15_PAD_AT=260:A`; debug.log `[aot] DOOR FIRE slot=0 rect=(8450,3950,hw=500,hh=1000)
+    target_cut=13 spawn=(-6950,-16200,-7200)`): Spinne 4 (floor 9) in allen 600 Bildern auf y -16200 = bu -16200, spuckt
+    (F74 s=8) -> `F84 Spieler HP 100 -> 90 (ps 0002)`, Gift-Takte ohne Reaktion, Perioden 121. Bild
+    `A1\belege\oberer_steg_2030_tuerweg_F100-600.png` (Spinne auf dem Steg hinter dem Gelaender, Wolke an Leon F100).
+### 6.3 Zweite Schachtspinne ROOM2060 (Mechanikprobe)
+- Cut 5 ist zu Fuss in einem Messlauf nicht erreicht worden (wie Abnahme 0); Mechanik ueber das Original-Skript sub03:
+  `lauf_abn1.sh neu a1_2060_sub03 "500#2060" RE15_DEBUG_JUMP=2060@250 RE15_FORCE_EVENT=3@300` (debug.log
+  `[force-event] scd_event_fire(3) at F300`): Spinne 2 F301 g=42, F332 an der Wand, **F372 Landung (-3337,0,475)
+  bu=0**, F374 RE2-INIT auf dem Boden — Bild fuer Bild wie Abnahme 0 (Lauer-Code seit e7131aca unveraendert).
 
 ## 7. Vertrag, Nachtrag Integration, Nebenwirkungen
 - Pfade (`git diff master...HEAD --name-only`): nur `analysis/befunde_runde38/{R_*,B_*,AUFTRAG.md}` (B_* und AUFTRAG.md
@@ -227,3 +245,32 @@ Weitere Pruefungen des Diffs:
   Status & 7, das im Port nur Routine 25 einer Spinne setzt; weitere Schreiber von status_flags: Member_set 17,
   Spielstand, Raumwechsel-Uebernahme — grep `status_flags |=|=`). Fremde Abzuege im selben Bild bleiben Treffer
   (Spucktreffer reagieren mit 23 Bildern, 3.1). `re15_spinnen_r38_gift_cmd0` setzt nur den Spur-R-Zaehler.
+
+## 8. Urteile (gegen den Wortlaut)
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| 1 "die Spinnen die fliegen fast alle in der Luft und kommen teilweise nicht aus den Schaechten raus wie im Original" | **erfuellt** | 6.1-6.3: Schachtspinnen kriechen ueber den echten Tuerweg heraus und landen auf y 0 (2060 Leon/Elza, RE2- und RE1.5-KI: F308 Ausloeser, F379 Landung (5975,0,3137); 20A0: F249 Landung (22732,0,-25194); zweite 2060-Spinne per sub03: (-3337,0,475)); alle Adulten in 2030 (unten + oberer Steg ueber die echte Tuer), 2050, 2060, 2070, 2090, 20A0 mit 0 Bildern ueber dem SCA-Boden; Bilder schacht_2060_tuerweg, schacht_20a0, oberer_steg_2030. |
+| 2 "die Spinnen verschiessen kein Gift wie im Original ... das Gift ist das einzige das die Charaktere vergiften kann und damit der einzige Grund fuer das Gegengift Item" | **erfuellt** | 4 + 3.1/3.3/3.4: Spucken -> Treffer -10 HP + Gift-Bit (Leon/Elza, echter Weg 2060, oberer Steg), Gift-Takt -2 HP alle 121 Bilder **ohne** Treffer-Reaktion (10/10 Takte, Mangel 1 behoben), Antidote Spray -> EKG "Poison" -> "Fine", Bit geloescht (Bild gegengift_F260-560); Gift-Zaehler nach Kommando 0 wie im Original; Klumpen in einer haltenden Szene abgefangen (Nachtrag 07:36). |
+| 3 "die Minispinnen, die rauskommen, wenn man eine Spinne getoetet hat fliegen weitestgehend in der Luft und greifen einen nicht an wie im Original" | **erfuellt** | 5: 0 schwebende Baby-Bilder in 49341 (Leon 2030 20025, Elza 2031 11925, Bodenraum 2070 17391), gezeichnet auf dem Stegboden (Bild babys_leon_zoom_F300_F1000), Bisse 22 / 16 / 28 je Lauf; Echtlauf-Riegel L/E bestanden. |
+
+Gates: RE-Gate haelt (9 Stichproben selbst disassembliert, alle Zitate stimmen, keine Suchwort-Treffer, keine
+Konstante ohne Adresse, Fix erklaert den Befund); Vertrag haelt (Pfade, keine Bits/Ids/Assets, Haken klein und
+gekennzeichnet); gezielte Tests 156/156 gruen, Spur-Riegel heute erneut gruen (unit 6/6, Echtlauf 1/1); beide
+Szenarien gemessen (Leon und Elza in 2030/2031 und 2060/2061).
+
+## 9. Maengel
+Keine. Alle drei Maengel der Abnahme 0 sind an der exe nachgemessen behoben (3.1-3.4), Hinweis 1 ebenso (3.3).
+
+## 10. Hinweise (keine Maengel)
+1. Der Gift-Takt laeuft weiter, solange eine Szene den Spieler im Kommando 1 haelt (a1_szene_2030: Takte F647/F768/F889/
+   F1010/F1131/F1252 in player_mode 2, je ohne Reaktion). Original: Takt im Kommando-1-Prolog, Set(2,7) maskiert nur das Pad (`800304f4-51c`). Kein Angriff.
+2. Der RE2-Spuck-Entscheid liest kein Spieler-Tor (EMS25 @0x80100784-8c0, selbst gelesen); eine freie RE2-Spinne
+   spuckt daher auch waehrend einer Szene, der Klumpen zerplatzt sichtbar am Spieler ohne Schaden/Gift (Bild
+   `A1\belege\szene_klumpen_F570-596.png`). Original-konform, im Dossier N1 OFFEN vermerkt.
+3. Wer vergiftet den Statusschirm oeffnet und schliesst, verliert im ersten Spielbild danach 2 HP (Kommando 0 nullt den
+   Zaehler @0x8003196c, a1_h1_menu F177) — Original-Verhalten; kann dem Nutzer auffallen.
+4. Die zweite Schachtspinne in ROOM2060 (Ausloeser Cut 5) ist nur als Mechanikprobe (sub03 erzwungen) gemessen; der
+   Codeweg ist derselbe wie fuer Spinne 1. Dossier-OFFEN 1-7 unveraendert und ehrlich deklariert.
+5. Integration: der Zweig enthaelt den Spur-B-Merge (2af9d15f); enemy_ai_common.c traegt Haken von R, B und kuenftig T
+   — beim Integrations-Merge mit T auf Konflikte achten. Der Teilbericht `R_abnahme_1_teil_limit.md` (f584a35e) ist durch
+   diesen Bericht ersetzt.
