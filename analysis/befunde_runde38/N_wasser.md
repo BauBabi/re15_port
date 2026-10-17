@@ -15,7 +15,9 @@ Baum `.claude/worktrees/r38_wasser`, Zweig `r38/wasser`, Basis d70c234e (2026-10
 - [x] Messung nachher (Leon + Elza, alle Wasser-Raeume des Zensus; Bild am Original, Ton per Mitschnitt-Korrelation)
 - [x] Tests (unit_r38_wasser_* 7x, integration_r38_wasser; gezielte Gruppen)
 - [x] Lauf 3 (Abschluss 2026-10-17): Endstand gebaut, 20A0-/2090-Band-Messung an den Zonen-Bytes eingeordnet (B11),
-      Zensus op_aot_set auf Breite UND Tiefe erweitert, Elza ueber den echten Tuerweg 10B1 -> 1261, gezielte Tests am Endstand
+      Zensus op_aot_set auf Breite UND Tiefe erweitert, Elza ueber den echten Tuerweg 10B1 -> 1261, 20B0/20B1 neu gemessen;
+      BEFUND + KORREKTUR Skriptlauf (Plc_dest): Boden/Bild am gezeichneten Bild statt einen Schritt vorn (Anker jetzt +-1 =
+      Original-Lauf), gezielte Tests am Endstand
 
 ## Messung vorher
 
@@ -336,7 +338,7 @@ anker=(-7578,-1862,-7336), F114 bild=38 — zweig=boden code=0x06050d00 edt=0x17
 | 1260 / 1261 | P0 (s.o.) | zweig=boden 0x06050d00, edt 0x17 |
 | 2000 / 2001 | Fleck P2 (-7260,-6000) Blick 1024/3072 | zweig=boden, Anker y -73/-87 ueber Boden 0, edt 0x17 |
 | 2050 / 2051 | Fleck P0 (1100,550) | zweig=boden im Fleck, danach trocken 0x1d |
-| 20B0 | Raum-Skript (Flut-Szene, Leon rennt auf Band 1) | Fleck 0x97 -> boden; Fleck 0x17 OHNE Bit -> kein Effekt, Wasser-Ton 0x17 (Original-Daten) |
+| 20B0 / 20B1 | Raum-Skript (Flut-Szene, Plc-Lauf auf Band 1; Lauf 3 Leon UND Elza gemessen) | Fleck 0x97 -> boden; Fleck 0x17 OHNE Bit -> kein Effekt, Wasser-Ton 0x17 (Original-Daten); Boden-Abfrage seit Lauf 3 an der gezeichneten Lage (s. Lauf 3) |
 | 2090 / 2091 | Becken (-8438,-25550) | zweig=stempel -1620, 0x06032000 Part 6, edt 0x1a; Original-GDB: Anker relativ zu Leon (-233,-836,+174) = Port |
 | 20A0 / 20A1 | Zone 5 Band 1 (8000,-25000) | zweig=stempel -540, Part 6/3, edt 0x1a; Original-GDB (`N_belege/gdb_20a0_band1_zone.txt`): +0x88 = -540, SPAWN 0x06032000, Anker relativ (-233,-836,+174) = Port, TON 0x1a |
 | 11A0, 2020 | Zonen Band 0 unter dem Laufsteg | Spieler erreicht sie nicht (Sprung-Spawn Band 1, Gelaender); Stempel jetzt korrekt (B10) |
@@ -361,7 +363,8 @@ F77..F137 room=1261 (z -9775 .. -14275, hinter dem Fleck)  boden=0x1d zweig=troc
 `frame=0 ... F=98`, `frame=1 F=99`; Elza: F39/F39). Original ebenso: Spieler-Takt `jal 0x80031c44` @0x8001ce0c (Schritt +
 Spawn) vor dem ESP-Takt `jal 0x80019e20` @0x8001ce2c im selben Hauptschleifen-Durchlauf (B7); im GDB-Paketlauf folgt auf
 jedes SPAWN unmittelbar BAU c0 = 0 (`gdb_1260_paket.txt`).
-**Leon 20B0 / Elza 20B1 (neu gemessen, Lauf 3; die 20B0-Zeile der Raumliste hatte kein auffindbares Protokoll):** Sprung in
+**Leon 20B0 / Elza 20B1 (neu gemessen, Lauf 3, Stand 0dfc3dff VOR der Lauf-3-Korrektur; die 20B0-Zeile der Raumliste hatte
+kein auffindbares Protokoll):** Sprung in
 den Raum, kein Eingabe-Skript — das Raum-Skript (Flut-Szene, "L TUNNEL FLOOD") laesst die Figur per Plc_dest auf Band 1 entlang
 z -6355 nach -x rennen (200/Bild, a0 = 0):
 ```
@@ -430,12 +433,21 @@ Riegel (registriert in `tests/unit/probes/r38_wasser.cmake`):
 - `unit_r38_wasser_lauf` — a0 = 1 -> 0x18 (Anker Bild 0/12 = Original), Plc-Lauf 0x17.
 - `unit_r38_wasser_aotbreite` — 1260-Zone Breite 38950 stempelt -900 (vorher nie).
 - `unit_r38_wasser_zensus` — FLR 0x97 an den sechs Flecken von 1260.
-- `integration_r38_wasser` — echte exe: Leon 1260 (boden, Original-Anker, id=6 sub=5 >= 13 Bilder, VAG 7 / VAG 1),
+- `unit_r38_wasser_skriptlauf` (Lauf 3) — Skript-Bewegung vor dem Spielschritt: A gezeichnet im Fleck (-7700), Walker auf
+  Beton (-7900) -> boden + Lage-Quelle gezeichnet + Anker aus der gezeichneten Part-Matrix; B umgekehrte Kante -> trocken 0x1d;
+  C ohne Zeichner-Fuetterung -> Schnappschuss; D Raumwechsel -> Schnappschuss.
+- `integration_r38_wasser` — echte exe, sieben Laeufe: Leon 1260 (boden, Original-Anker, id=6 sub=5 >= 13 Bilder, VAG 7 / VAG 1),
   Elza 1261 (boden, id=6 sub=5, VAG 7), Leon 2090 (stempel, 0x06032000 Part 6, 0x1a, VAG 3), Leon Tuerweg 10B0 -> 1260
-  (Fleck P5) und (Lauf 3) Elza Tuerweg 10B1 -> 1261 (Fleck P5: boden + id=6 sub=5 + VAG 7, Beton in 1261 trocken 0x1d).
+  (Fleck P5), (Lauf 3) Elza Tuerweg 10B1 -> 1261 (Fleck P5: boden + id=6 sub=5 + VAG 7, Beton in 1261 trocken 0x1d),
+  (Lauf 3) Leon 20B0 / Elza 20B1 Skriptlauf (jede Zeile zustand=gezeichnet, lage = vor + 200 mind. 3x, >= 2 Wasserschritte;
+  Leon: Anker relativ ab Bild 22 = Original-Lauf-Anker gedreht +-3, Fleck 0x17 nur Ton).
+  Ergebnis am Endstand (Stand a8e08251 gebaut): `100% tests passed, 0 tests failed out of 1` (Laufzeit ~135 s).
 
 Gegen v0.8.25 (2077bb8e) rot: re15_wasser_r38_* existiert nicht (Unit-Riegel bauen nicht), kein RE15_WASSER_LOG,
-kein id=6 im FX_LOG, im Becken `[foot] ... type=29 vag=1`.
+kein id=6 im FX_LOG, im Becken `[foot] ... type=29 vag=1`. Gegen den Stand vor der Lauf-3-Korrektur (exe 0dfc3dff, Skript neu)
+rot: `integration_r38_wasser` bricht bei leon20b0_skript ab ("Schritt nicht am gezeichneten Bild: F16 room=20B0 ...");
+`unit_r38_wasser_skriptlauf` baut gegen den alten Stand nicht (Mess-Felder lage/lage_quelle fehlen), inhaltlich prueft der
+alte Stand in A den Schnappschuss -7900 = Beton -> trocken.
 
 ## OFFEN
 
@@ -452,11 +464,22 @@ kein id=6 im FX_LOG, im Becken `[foot] ... type=29 vag=1`.
   3 s vor dem Losgehen geschrieben) liegt, ist nicht untersucht. Die Schritte an der Wand (x -7068, Bild 22/37) sind Wert fuer Wert gleich.
 - vab_common.c (re15_footstep_vag) traegt noch den alten Kommentar "-3 / ->9 / -8 ... wired when those exist";
   -3 und 9 sind jetzt in wasser_r38.c verdrahtet (Kommentar nicht angefasst, fremde Datei).
+- Lauf 3, Elzas LAUF-Anker: ihre Lauf-Schritte (Bild 0 Part 7, Bild 11 Part 4, eingeschwungen) liegen am hochgezogenen Fuss
+  (rel y -983 / -997, wie Leons Original-Bild 12 mit y -1075). Das folgt aus ihren Bildworten/Posen mit demselben, fuer Leon am
+  Original gemessenen Mechanismus; ein Original-Lauf mit Elza ist nicht gemessen (kein Elza-Spielstand fuer die GDB-Kette).
+  Ihre GEH-Schritte liegen am Boden (1261: y -1862/-1865).
+- Lauf 3: der Port-Debug-Sprung nach 20B0/20B1 startet die Flut-Szene sofort, der Original-Debug-Sprung nicht
+  (`gdb_20b0_sprung.txt`). Unterschied des Sprung-Zustands (Flags), nicht dieses Punkts; die Skriptlauf-Riegel nutzen ihn
+  nur als reproduzierbaren Plc_dest-Lauf.
+- Lauf 3: im PSX-Lauf gibt es keine Zeichner-Fuetterung (platform/pc/main.c) — dort gilt der Bildanfang-Schnappschuss, im
+  Skriptlauf also weiter einen Schritt vorn. Fuer PC (Auslieferung) behoben.
 
 ## Fuer den Nutzer
 
 - Keine neuen Assets (Effekt 6 liegt in den Raum-ESP-Banken der Original-RDTs), keine Sprachdateien.
 - Sichtbar: in den gruenlichen Pfuetzen der Kanal-Gaenge (1260, 2000, 2050, 20B0 + Elza-Varianten) spritzt bei jedem
   Schritt am Fuss Wasser auf, dazu der Wasser-Schritt-Ton; im Alligator-Becken 2090 und im Wasser von 20A0 spritzt es
-  am Schienbein mit dem Wat-Ton. Laufen hat (wie im Original) einen eigenen Lauf-Ton.
+  am Schienbein mit dem Wat-Ton. Laufen hat (wie im Original) einen eigenen Lauf-Ton. Auch in Szenen, in denen Leon/Elza
+  vom Spiel gefuehrt laufen (Flut-Szene 20B0/20B1), spritzt es in den Pfuetzen — an derselben Stelle wie im Original.
 - Alle Schritt-Toene kommen jetzt einen Takt (1/30 s) spaeter, im Gleichtakt mit dem Original.
+- Bedienung: nichts Neues. Mess-Schiene fuer Nachpruefungen: `RE15_WASSER_LOG=<datei>` schreibt je Schritt eine Zeile.
