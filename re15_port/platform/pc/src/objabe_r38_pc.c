@@ -86,6 +86,7 @@ void re15_objabe_r38_pc_dreieck(uint16_t attr, uint16_t page,
     const int abr = re15_objabe_r38_abr(attr, page);
     /* 1. Durchgang: STP-0-Texel deckend. */
     re15_render_pc_set_tri_blend(RE15_OBJABE_BLEND_DECKEND);
+    re15_render_pc_set_tri_alpha(255);
     re15_render_textured_tri_lit(x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, tpage, clut, z,
                                  r0, g0, b0, r1, g1, b1, r2, g2, b2);
     /* 2. Durchgang: STP-1-Texel gemischt (psx-spx: 0 = B/2+F/2, 1 = B+F, 2 = B-F, 3 = B+F/4). */
