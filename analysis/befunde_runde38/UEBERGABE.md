@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 10:51: Integration D gruen (114/114: D-Auswahl + alle Elza-/Masken-/Skelett-/Cursor-/Tagebuch-Riegel), Baum r38_zopf entfernt.
 * 2026-10-17 10:30: D zopf BESTANDEN (Abnahme 0, wf_3c7f69c5-a0f), gemergt (72653ac1, main.c Include beide Seiten), configure + Bau OK, gezielte Tests laufen (D-Auswahl + alle Elza-/Masken-/Skelett-Riegel). N5 (Zopf ueber P-Kasten) -> Grenzen + NACHLAUF #16.
 * 2026-10-17 10:16: Integration R gruen (122/122: R-Auswahl + Spiderman/Griffe/1171-Szene), Baum r38_spinnen entfernt.
 * 2026-10-17 10:12: R spinnen BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_40f9724b-eb5), gemergt (078b62af; nur AUFTRAG.md-Nachtraege beide Seiten), configure + Bau OK, gezielte Tests laufen (R-Auswahl 109 + Spiderman/Griffe). N fortgesetzt wf_a76ae9bd-445 (r38_w5.js, stand; ⛔ N aendert op_aot_set Breite/Tiefe vorzeichenlos -> bei der Integration breite Tuer-/AOT-/Item-Auswahl).
@@ -65,7 +66,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | A | r38_cursor | Cursor-Schatten 1150/11F0 | BESTANDEN (A0), integriert |
 | B | r38_szenenschutz | kein Angriff in Szenen ohne Bewegung (1190/11D0), Ausnahme 1171 | BESTANDEN (A1), integriert |
 | C | r38_werkstatt11b0 | 11B0: "But, hold on...", Schiebe-Ton, keine Fall-Animation | BESTANDEN (A0), integriert |
-| D | r38_zopf | Elzas Zopf wie Claire (RE2) | BESTANDEN (A0), gemergt |
+| D | r38_zopf | Elzas Zopf wie Claire (RE2) | BESTANDEN (A0), integriert |
 | E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | BESTANDEN (A0), integriert |
 | F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | BESTANDEN (A1), integriert |
 | G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | BESTANDEN (A1), integriert |
