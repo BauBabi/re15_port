@@ -15,8 +15,8 @@ Leon-Szenario -> Marvin (0x40) und Ada (0x42) in ROOM1260 und wo sie sonst Hoehe
 - [x] RE-Belege (Sonde FUN_8002d7d8, Kanten-Sub 0x80052508, Sprung-Sub 0x80052c14, Schwerkraft FUN_8001bd60)
 - [x] Umsetzung (Vorgaenger a279c9b9, Fortsetzung 2026-10-17 gegen die Bytes nachgeprueft, s. "Pruefung der Fortsetzung")
 - [x] Messung nachher an der exe (1261 / 1260 / 10B1, gleiche Wege wie vorher)
-- [ ] ROOM2000 (Leon, Stage 2: Marvin sub02 @0x01A44, Ada sub03 @0x01A8A — "immer")
-- [ ] Original-Messung DuckStation (10B1: zweiter Sprung am Westrand von Block [6] + Hochklettern)
+- [x] ROOM2000 (Leon, Stage 2: Marvin sub02 @0x01A44, Ada sub03 @0x01A8A — "immer"): vorher/nachher an der exe
+- [x] Original-Messung DuckStation (10B1: Sprung/Klettern-Wechsel am Westrand von Block [6] = Original, gleiche Lagen)
 - [ ] Tests (Riegel schaerfen, ROOM2000, Gegenprobe)
 
 ## Messung vorher (Stand f587d34e + nur Messhaken RE15_NPCKANTE_LOG)
@@ -168,9 +168,11 @@ ausgenommen). Logs `M_belege/nachher_*_npckante.log`, debug.log-Auszuege `M_bele
 | Elza 1261 | `CONTINUE: resumed in room 10b1` -> `[fire-aot] slot=1 at F40` -> `PC loaded room1261.rdt` | John: F143 Sonde 2 bei (-20477,-1800,-17374) Band 1 -> Sub 0x12 (Rast, Clip 5 eigene Bank) -> F151 Sub 0x18 -> Clips 3/4/5, F165 Band 1 -> 0 (y -1800 -> -1210, fallend) -> landet auf 0; laeuft unten nach Osten; F430 Sonde 1 bei (20057,0,-18847) -> Sub 0x12 Clip 2, F461 Band 0 -> 1; Ende F1200 (20885,-1800,-5250) Band 1 Sub 6. **0 Bilder in der Luft** (vorher 249 von 400 Stichproben) |
 | Leon 1260 | `CONTINUE: resumed in room 11b0` -> `[fire-aot] slot=5 at F40` -> `PC loaded room1260.rdt` | Ada: F53 Sonde 2 (26750,-1800,14500) -> F54 Sub 0x18, F68 Band 1 -> 0; F317 Sonde 1 (-7489,0,16038) -> Clip 2, F348 Band 0 -> 1; Ende (-7502,-1800,-6005). Marvin: F118 Sonde 2 (25400,-1800,14500) -> F119 Sub 0x18, F133 Band 1 -> 0; F366 Sonde 1 (-8820,0,15980), F397 Band 0 -> 1; Ende (-8901,-1800,-4453). **0 Bilder in der Luft** (vorher Ada 241 / Marvin 224) |
 | Elza 10B1 | `CONTINUE: resumed in room 10b1` (Band 5, Cut 2, (3,0x80)(3,0x82)) | John: F115 Sonde 2 (-3661,-9000,-8275) Band 5 -> F120 Sub 0x17, F134 Band 5 -> 1 (Fall ueber 7200 auf Block [6]); F180 Sonde 2 (-6411,-1800,-7776) am Westrand von Block [6] (Zelle [18]) -> F200 Band 1 -> 0; F245 Sonde 1 (-7460,0,-7773) -> F280 Band 0 -> 1 (Hochklettern); danach im Wechsel Sprung (F342/F485/F628/F771) und Klettern (F423/F566/F709/F852) bis F900. **0 Bilder in der Luft** (vorher 7200 ueber Block [6]) |
+| Leon 2000 (Stage 2, "immer") | `CONTINUE: resumed in room 1260` (Karte (-8750,-1800,-8400) Band 1, Cut 0, (4,0xF4)) -> `[fire-aot] slot=1 at F40` (Tuer @0x0114A, Ziel Stage 2 Raum 00) -> `PC loaded room2000.rdt`; sub00 @0x01794 Ck(4,0xF4) -> sub02-Szene (12 Nachrichten, Viereck alle 25 Bilder) | Ada: F1517 Sonde 2 (-5558,-1800,-20854) -> F1526 Sub 0x18, F1540 Band 1 -> 0; F1605 Sonde 1 (-7242,0,-24461) -> Clip 2, F1644 Band 0 -> 1. Marvin: F1642 Sonde 2 (-4321,-1800,-20813) -> F1652 Sub 0x18, F1666 Band 1 -> 0; F1737 Sonde 1 (-6668,0,-24412), F1777 Band 0 -> 1. **0 Bilder in der Luft**. Gegenprobe VORHER (gleicher Weg, exe aus build_bisect = Haken-AUS-Stand): Ada 41 / Marvin 46 Bilder in der Luft ab F1536 / F1663, kein Kanten-Sub (`M_belege/vorher_2000_*`) |
 
 Bilder (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1): `M_belege/bild_nachher_1261.png`, `bild_nachher_1260.png`,
-`bild_nachher_10b1.png`. 10B1 Cut 2: John laeuft links am Steg vorbei, springt (F128-F140 Absprung-Hocke) und faellt aus
+`bild_nachher_10b1.png`, `bild_nachher_2000.png` (Ada springt F1540-F1545 in den dunklen Kanal, geht unten, zieht sich
+F1625-F1665 am Gegenufer hoch; Marvin springt F1665-F1670). 10B1 Cut 2: John laeuft links am Steg vorbei, springt (F128-F140 Absprung-Hocke) und faellt aus
 dem Bild nach unten (F146 klein unten links); der Wechsel Sprung/Klettern am Westrand von Block [6] liegt AUSSERHALB von
 Cut 2.
 
@@ -186,6 +188,36 @@ Evt_exec sub03 @0x018AC setzt John per Pos_set @0x018B6 auf (-9278,0,-6842) Band
 der Boden westlich des Blocks, wo ein Sprung von Zelle [18] endet. Dieselbe Folge liefert die unabhaengige Python-
 Nachbildung `M_belege/kanten_zensus.py` (SPRUNG an (-6383,-7711), KLETTERN an (-6984,-7711) im Wechsel).
 
+
+## Original-Messung (DuckStation, 2026-10-17) — ROOM10B1 John am Original
+
+Werkzeug `M_belege/orig_10b1_john.py` (Muster Runde 36 orig_11f0_spielstand.py / R_belege/orig_1090_push.py): MZD-Disc
+mit stage_saves/mzd_debugmenu.sav, GDB-Server 127.0.0.1:2345 nur fuer den Lauf (settings.ini gesichert und
+zurueckgeschrieben, `EnableGDBServer = false` danach geprueft).
+- Code-Gleichheit RAM == info/Re1.5/PSX.EXE: Sonde 0x8002d7d8-da4c, Subs 4/5 0x80051148-0x800517f0, Kanten-/Sprung-Sub
+  0x80052508-0x80052fd0, Schwerkraft 0x8001bd60-bf00 — alle `True`; EXE-Stub @0x80026e4c = `0800e003` (Auslieferung).
+- Debug-Menue JUMP 10B (0x800BBE5F := 0x0B) mit Elza-Bit 0x800ACA3C | 0x80000000 und Flags (3,0x80)(3,0x82) (Wort
+  0x800B1008). Danach im RAM: SCA-Zellen == ROOM10B1.RDT `True`, Sub-SCD 0x8012313c == ROOM10B1.RDT @0x0178C (852 B)
+  `True`; (3,0x80) geloescht und (3,0x81) gesetzt = sub02 @0x0182E lief.
+- Lauf 1 (`orig_10b1_john_lauf1` nicht eingecheckt): Spieler nur auf den Steg (0,-9000,-12000) gesetzt -> Var 0x0A
+  (0x800b0fe4, Cmp @0x8003ff94) bleibt 0, John wartet 100 s in Sub 6 bei (-2696,-9000,-8562) = sub02 `While(Cmp(0x0A !=
+  2))` @0x01888 haelt. (Ein Teleport schaltet die Kamera nicht: die RVD-Zonen gehoeren zur aktuellen Gruppe.)
+- Lauf 2 (`M_belege/orig_10b1_john.log`, 1206 Stichproben in 75 s, Zusammenfassung `orig_10b1_john_uebergaenge.txt`):
+  zusaetzlich Cut 2 ANGEFORDERT ueber DAT_800afbb5 = 2 (der Per-Bild-Vergleich @0x800214f8-14 schaltet ueber den eigenen
+  Apply). Ergebnis am ORIGINAL:
+
+| t (s) | Original (Entity 0x800ACC2C) | Port (exe, nachher_10b1) |
+|---|---|---|
+| 0.50 | Sonde 2 (+0x9f = 2) bei (-3676,-9000,-8352) Band 5 -> Sub 0x16, Rast Clip 5 | F115 Sonde 2 bei (-3661,-9000,-8275) -> 0x16 (anderer Startpunkt: am Original wartete John schon am Wegpunkt) |
+| 0.75-1.37 | Sub 0x17, Clip 3 bis Bild 13, dann Phase 3 Band 1, y -8270, +0x1ba -1800 | F120-F134 dasselbe |
+| 1.99 | Landung y -1800 (= +0x1ba) auf Block [6], Clip 5 | F149 Landung y -1800 |
+| 3.24 | Sonde 2 bei (-6407,-1800,-7789) -> 0x16 -> 0x17 | F180 Sonde 2 bei (-6411,-1800,-7776) |
+| 4.12-4.30 | Phase 3 Band 0 bei **x -7460** (Schub 800 + Klemme), y -1210 -> -640 -> 0 | F200 Band 0 bei **x -7460**, y -1210 ... 0 |
+| 5.98-7.47 | Sonde 1 (+0x9f = 1) bei (-7460,0,-7792) -> 0x16, Clip 2, Stufe auf **x -6314** y -1800 Band 1 | F245 Sonde 1 bei (-7460,0,-7773), F280 **x -6314** y -1800 Band 1 |
+| 9.09 ... 74.7 | danach im Wechsel Sprung (x -7460) / Klettern (x -6314), 12 Zyklen in 75 s, Cut bleibt 2 | dasselbe bis F900 |
+
+**Damit ist der Wechsel Sprung/Klettern am Westrand von Block [6] ORIGINAL-Verhalten** (gleiche Lagen bis auf die
+Einheit), nicht ein Port-Fehler; er liegt ausserhalb von Cut 2 und endet mit Cut 8 (sub03 Pos_set @0x018B6).
 
 ## Tests
 
