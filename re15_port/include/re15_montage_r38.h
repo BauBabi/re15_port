@@ -97,7 +97,23 @@ typedef struct {
     uint8_t  halt0;        /* 1 = beim ersten Sehen im Abschnitt schon angehalten (Stopp aus einem frueheren Schnitt) */
     uint8_t  kriech0;      /* 1 = beim ersten Sehen im Abschnitt schon mit Kriech-Bit (sub09 der Szene) */
     int      kriecht;      /* Abschnitts-Bild, in dem Baustein 4 das Kriech-Bit setzte, 0 = nie */
+    int32_t  x1, z1;       /* Lage im letzten Bild des Abschnitts */
 } re15_r38_spur_t;
+/* Je Abschnitt: Laenge, Spielerlage im letzten Bild, kleinste Spieler-HP, Zahl der Bilder mit einem Navigator-Ziel
+ * ungleich der Spielerlage bei einem Zombie in DERSELBEN BLK-Zone wie der Spieler (FUN_80039e7c gleiche Zone
+ * @0x80039fbc -> Ziel = Spielerlage; > 0 = veraltetes/fremdes Ziel), Kriech-Regel-Treffer. */
+typedef struct {
+    uint16_t raum;
+    uint8_t  cut;
+    int      bilder;
+    int32_t  px, pz;
+    int      hp_min;
+    int      ziel_fremd;
+    int      kriech;
+} re15_r38_abschnitt_t;
+int  re15_r38_abschnitte(const re15_r38_abschnitt_t **out);
+int  re15_r38_fremde_kamera(void);   /* Bilder eines Montage-Schritts auf einer Kamera ausserhalb der Schnitt-Tabelle */
+void re15_r38_abschnitt_beenden(void);   /* Riegel: laufenden Abschnitt schliessen (exe: schliesst der Raumwechsel) */
 int  re15_r38_spuren(const re15_r38_spur_t **out);
 int  re15_r38_abschnitt_bilder(uint16_t raum, uint8_t cut);   /* Laenge des (letzten) Abschnitts in Bildern */
 void re15_r38_montage_reset(void);
