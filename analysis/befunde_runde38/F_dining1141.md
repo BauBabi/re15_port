@@ -636,3 +636,25 @@ ausserhalb (x > -6450).
     `F_belege/nb1_m3_abgang_wartet.png`: F3255-F3900 Cut 0, John wartet in der Ecke, Elza an der Doppeltuer; F4140/F4170
     Cut 5, Elza geht in den Gang; F4185-F4245 Cut 7, John laeuft auf die Kamera zu (Elza ist nicht in diesem Bild), F4260
     aus dem Bild; F4335-F4395 Cut 5, Elza an derselben Stelle, geht weiter.
+
+### 9.7 Tests (Endstand Nachbesserung 1, gebaut mit local_build.sh configure + build, keine volle Suite)
+Eigene Riegel (10 Unit + 7 Integration, neu: unit szene1021/abgang/weg1131, integration r/a; texte/programme erweitert) +
+die Gruppen jedes beruehrten Moduls wie im Endstand Fortsetzung 4, dazu wegen der 1021-Szene (Gosub-Huelle) alle
+Runde-36-Elza-Riegel (unit_r36_elza_.*, integration_r36_elza_.* — u.a. schuss/stoehnen: Anker in sub02 @0x020B2/@0x020CE),
+unit_r37_elzaems_.*, unit_enemy_body_push (Koerper-Schub) und unit_member (Member-Tabellen),
+`ctest --test-dir re15_port/build -R "<Ausdruck>" -j3 --timeout 3600 --output-on-failure`:
+
+    -R "r38_dining1141|^(unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_schluessel_.*|unit_r36_inventar|unit_r36_elza_.*|unit_r36_szenenleon_tuer|unit_r26_inventar|unit_r21_discard_wegwerfen|unit_item_icon|unit_item_use|unit_item_modal|unit_item_stack_press|unit_inv_fsm|unit_inv_grant|unit_pri_inventar_riegel|unit_r35_inventar1050_.*|unit_r37_itemband|unit_r37_roy_szene1011|unit_r37_roy_szene1021|unit_r37_elzaems_.*|unit_room1140_.*|unit_r34n_a_rolltor|unit_r35_inhalt_.*|unit_scd_.*|unit_aot_.*|unit_npc_scd_pose|prop_scd_pc_advance|unit_se_bank_routing|unit_se_voice_machine|unit_synchro_stimme|unit_audio_.*|unit_voice_ausreden|unit_r30_tuerse_bank|unit_r30_hinweis_bank|unit_r30_tuer_.*|unit_r33_tuer1120_.*|unit_door_seq|unit_msg_dialog|unit_action_msg_gate|unit_enemy_body_push|unit_member|integration_r37_roy_szene1011|integration_r37_roy_szene1021|integration_r37_elzaems_elza1141|integration_r36_schluessel|integration_r36_schluessel_befreiung|integration_r36_inventar|integration_item_name_census|integration_r36_story_elza|integration_door_lock|integration_keydoor|integration_r36_tueren|integration_r36_elza_.*)$"
+    100% tests passed, 0 tests failed out of 116
+    Total Test time (real) = 927.30 sec
+
+Darin: integration_r38_dining1141_d 274,9 s, _a 285,0 s, _w 187,3 s, _s 541,6 s (Framedump "kein Hereinploppen":
+gruen), _z 113,2 s, _r 187,2 s, _l 56,6 s; integration_r36_elza_schuss 46,0 s, _stoehnen 81,0 s, r37_roy_szene1021 62,5 s.
+Gegenprobe der neuen Riegel gegen den alten Modulstand: Abschnitt 9.6.
+
+### 9.8 Offen nach Nachbesserung 1
+- Keine offenen Maengel M1-M4. Beobachtungen B1 (Schluessel am Boden klein), B3 (2./3. Klopfschlag leise), B4 (Hilferuf
+  ruhig, ersetzbar main42.wav) der Abnahme sind keine Maengel gegen den Wortlaut; unveraendert.
+- M2 ist umgesetzt (RE2 Text 0x0F statt eines Schild-Texts). "Dining Room" steht weiter nur dort, wo der Nutzer es
+  vorgegeben hat (Hinweis am Anhaenger, Schluesselname); das Hintergrundbild zeigt ueber der Tuer "Briefing Room".
+- Unveraendert aus Abschnitt 6: Befund Leons 1140-Gemaelde (Original sub01 @0x00C7A), Lesart Nachtrag 2 (Riegel).
