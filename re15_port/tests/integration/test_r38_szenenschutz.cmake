@@ -19,6 +19,13 @@ cmake_minimum_required(VERSION 3.16)
 #              greift Elza WAEHREND pm=2 (hp 100 -> 92, gr=1; HOVER-Griff @0x80115254-0x801152c4).
 #   Lauf 1171s Elza, Standard-KI: derselbe Weg; MUSS: der Szenenschutz fasst in 1171 keinen Akteur an
 #              ("[szenenschutz] ... aus (0 geschuetzte Gegner-Ticks)" bzw. kein geschuetzter Tick im Raum).
+#   Lauf 1230  Leon, Standard-KI (Nachbesserung 1, Mangel M2 der Abnahme 0): ROOM1230 sub21 ueber AOT 18 (Quadrat),
+#              Plc_motion @0x014B4 (Spieler+0x4 = 4, @0x80041bb0) + Sleep 30 @0x014B8 OHNE (2,7) und ohne Nachricht,
+#              danach Message_on @0x014BC (Maske 0xFFFF0000). Steuerkreuz hoch: der Port laesst Leon im Executor laufen
+#              (Bewegungs-Gate player_common.c prueft +0x4 nicht, vorbestehend). MUSS: in ROOM1230 KEIN Szenenschutz-
+#              Fenster ("[szenenschutz] F.. an" nach dem Laden), solange Leon sich bewegen kann. Faellt die
+#              Vorbedingung (Leon laeuft in pst=4/pm=0 nicht mehr), bindet das Bewegungs-Gate jetzt an +0x4 — dann ist
+#              die Halte-Bedingung (2) in szenenschutz_r38.c neu zu bewerten (der Riegel meldet das ausdruecklich).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P <diese Datei>
 # =============================================================================
@@ -215,6 +222,71 @@ if(_abgefangen OR _geschuetzt)
     message(FATAL_ERROR "r38_szenenschutz[1171s]: der Szenenschutz griff in ROOM1171 ein: ${_abgefangen} ${_geschuetzt}")
 endif()
 message(STATUS "r38_szenenschutz[1171s]: kein geschuetzter Akteur in ROOM1171 (John NPC, Kraehen grid 0x40)")
+
+# ---- Lauf 1230 (Nachbesserung 1, M2): Executor ohne (2,7)/Nachricht, Leon beweglich -> kein Schutz -----------------
+r38_lauf(r1230 240 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=1230@240 "RE15_SET_FLAG=4:243"
+         "RE15_PLAYER_POS=3900,25000,3072" "RE15_INPUT_SCRIPT=A0.1,U4,W2" RE15_INPUT_SCRIPT_BASIS=spiel
+         RE15_INPUT_SCRIPT_START=300 "RE15_EXIT_AT=400#1230")
+file(STRINGS "${_dir}/debug.log" _dl)
+set(_nach_laden 0)
+set(_fenster "")
+foreach(_z IN LISTS _dl)
+    if(_z MATCHES "loaded room1230\\.rdt")
+        set(_nach_laden 1)
+    elseif(_nach_laden AND _z MATCHES "^\\[szenenschutz\\] F[0-9]+ an")
+        list(APPEND _fenster "${_z}")
+    endif()
+endforeach()
+if(NOT _nach_laden)
+    message(FATAL_ERROR "r38_szenenschutz[1230]: ROOM1230 nicht geladen (Sprung)")
+endif()
+# Vorbedingung aus state.log Segment 1: Bilder mit pst=4, pm=0, ohne Nachricht, Hund (t=20) im Raum; Leon laeuft.
+file(STRINGS "${_dir}/state.log" _zeilen REGEX "^F[0-9]+ ")
+set(_seg 0)
+set(_vorF -1)
+set(_n4 0)
+set(_zmin 999999)
+set(_zmax -999999)
+foreach(_z IN LISTS _zeilen)
+    if(NOT _z MATCHES "^F([0-9]+) .*PL\\((-?[0-9]+),(-?[0-9]+),.* pst=([0-9]+) .* msg\\(a=([0-9]+) .* pm=([0-9]+) ")
+        continue()
+    endif()
+    set(_f "${CMAKE_MATCH_1}")
+    set(_pz "${CMAKE_MATCH_3}")
+    set(_pst "${CMAKE_MATCH_4}")
+    set(_msga "${CMAKE_MATCH_5}")
+    set(_pm "${CMAKE_MATCH_6}")
+    if(_f LESS _vorF)
+        math(EXPR _seg "${_seg} + 1")
+    endif()
+    set(_vorF "${_f}")
+    if(NOT _z MATCHES "\\[[0-9]+ t=20 ")
+        continue()
+    endif()
+    if(_seg EQUAL 1 AND _pst EQUAL 4 AND _msga EQUAL 0 AND _pm EQUAL 0)
+        math(EXPR _n4 "${_n4} + 1")
+        if(_pz LESS _zmin)
+            set(_zmin "${_pz}")
+        endif()
+        if(_pz GREATER _zmax)
+            set(_zmax "${_pz}")
+        endif()
+    endif()
+endforeach()
+math(EXPR _weg "${_zmax} - ${_zmin}")
+message(STATUS "r38_szenenschutz[1230] Executor-Bilder ohne (2,7)/Nachricht mit Hund: ${_n4}, Leon-Weg z ${_weg}; "
+               "Szenenschutz-Fenster in ROOM1230: '${_fenster}'")
+if(_n4 LESS 20)
+    message(FATAL_ERROR "r38_szenenschutz[1230]: sub21-Executor-Fenster nicht erreicht (${_n4} Bilder pst=4/pm=0 mit Hund)")
+endif()
+if(_weg LESS 1000)
+    message(FATAL_ERROR "r38_szenenschutz[1230]: Leon bewegt sich im Executor (pst=4, pm=0) nicht mehr (Weg ${_weg}) — "
+                        "das Bewegungs-Gate bindet jetzt an Spieler+0x4 (@0x80031c8c / @0x80073f90[4]); Halte-Bedingung "
+                        "(2) in szenenschutz_r38.c neu bewerten (Nachbesserung 1, M2)")
+endif()
+if(_fenster)
+    message(FATAL_ERROR "r38_szenenschutz[1230]: Szenenschutz haelt, obwohl Leon sich bewegen kann: ${_fenster}")
+endif()
 
 file(REMOVE "${_exe}")
 message(STATUS "r38_szenenschutz: OK — 1190/11D0 kein Treffer in der Szene, danach Angriff; 1171 Szenen-Angriff bleibt")

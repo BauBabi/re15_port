@@ -445,5 +445,42 @@ Messkopie `re15_pc_r38b_nb1.exe` (md5 81fa7d42... = re15_pc.exe), Laeufe unter `
   => In Bildern, in denen Leon sich im Port bewegen kann, schuetzt die Spur nicht mehr; die Bedingung (2) greift nur
   noch, wenn eine Nachricht ohne Gegner-Freeze-Bit das Pad sperrt (Mechanik-Riegel unit_r38_szenenschutz T1/T4b).
 
+- Riegel an der exe (neu): `integration_r38_szenenschutz` Lauf **1230** (Rezept e14n, `RE15_EXIT_AT=400#1230`): MUSS
+  nach dem Laden von ROOM1230 KEIN `[szenenschutz] F.. an` zeigen, waehrend state.log Segment 1 >= 20 Bilder pst=4/pm=0/
+  ohne Nachricht mit Hund (t=20) und >= 1000 Einheiten Leon-Weg hat (gemessen an e14n: 30 Bilder, Weg 2100, kein
+  Fenster -> gruen). Negativkontrolle der Auswertung: e14n-debug.log mit der von der Abnahme gemessenen Altzeile
+  `[szenenschutz] F301 an` hinter dem Laden -> `FATAL_ERROR ... Szenenschutz haelt, obwohl Leon sich bewegen kann`.
+  Stolperdraht: laeuft Leon in pst=4/pm=0 nicht mehr (Kontrolle e15n ohne Steuerkreuz: Weg 0 -> der Riegel meldet
+  "Bewegungs-Gate bindet jetzt an Spieler+0x4 ... Halte-Bedingung (2) neu bewerten"), muss wer das Gate aendert die
+  Halte-Bedingung neu bewerten.
+
 ### N1.M1 — fremder Riegel unit_sca_wall_hit rot
-(offen)
+- Ursache (Abnahme 4.1, Code gelesen): `probe_sca_wall_hit.c` live_run setzt `pl->state = 0` (:297) und ruft
+  `scd_room_reenter` (:306); ROOM11C0 startet seine Eingangsszene (sub01 @0x01824 Evt_exec sub2, `Plc_dest(slot=0
+  mode=0x09 ...)`, Lauf-Zeile `[scd] Plc_dest(slot=0 mode=0x09 dest=(-15893,12430) flag=0) walk_active=1`) -> Spieler+0x4
+  = 4. Die alte Halte-Bedingung (`|| state == 4`) hielt damit jeden Tick der Sonde; der Maggot 0x27 sah den Spieler als
+  "gerade getroffen" -> C1 FREI `Verbraucher=0` -> `FAIL: C1/FREI: REAR-UP feuerte NIE`.
+- Messung vorher: Abnahme 4.1 (FAIL, `[szenenschutz] F0 an` / `F0 aus (960 geschuetzte Gegner-Ticks)`; ohne Spur B
+  `OK (0 Fehler)`, C1 FREI `Verbraucher=237`).
+- Aenderung: KEINE am fremden Riegel. Die Ursache war die zu weite Halte-Bedingung (M2): in der Sonde laeuft kein
+  platform/pc/main.c, `player_mode` bleibt 0 (einziger Schreiber von 2 ist main.c cine_active), und die 11C0-
+  Eingangsszene zeigt in den 480 Bildern keine Nachricht — das Bewegungs-Gate des Ports ist offen, der Spieler gilt nach
+  der korrigierten Definition (N1.M2) nicht als gehalten. Im Spiel haelt die 11C0-Eingangsszene ueber pm=2 (Abnahme H5:
+  `F6 pst=4 pm=2` -> `F1071 pst=1 pm=1`), dort bleibt der Schutz unveraendert.
+- Messung nachher (`ctest --test-dir re15_port/build -R "^(unit_sca_wall_hit|unit_r38_szenenschutz|
+  unit_r38_szenenschutz_alle|unit_r38_szenenschutz_arm)$" --timeout 600 --output-on-failure -V`): unit_sca_wall_hit
+  `OK (0 Fehler)`, `[C1] ... FREI: 240 Frames neu=0 alt=0 ref=0 ... Verbraucher=237 (max 0)` (= Wert ohne Spur B), WAND
+  `Verbraucher=0 (max 0)` neu=240; im Lauf des Riegels KEINE `[szenenschutz]`-Zeile (Modul inert); Summe
+  `100% tests passed, 0 tests failed out of 4`.
+- Riegel-Auswahl erweitert (Forderung der Abnahme): SYSTEMATISCH statt Modul-Liste. Werkzeug
+  `B_belege/auswahl_nb1.py` liest build.ninja (Ziel -> Quellen, lokale `#include "x.c"` verfolgt) und `ctest -N -V`
+  (Test -> exe) und waehlt jeden Test, dessen Quellen `re15_game_step(` (die frame_step-Helfer der Sonden),
+  `re15_enemy_ai_run_all(` oder `re15_player_tick(` (player_common.c, vom Diff beruehrt) aufrufen: 389 von 792 Tests
+  (game_step 296, run_all 105, player_tick 9; 296 ohne Tick, 107 cmake-Skripte). Vereinigt mit der 219er-Liste
+  (`B_belege/unit_regex.txt`, Gegner-Module, +49 Tests ohne direkten Aufruf) = **438 Tests**, `-R` = Inhalt von
+  `B_belege/unit_regex_nb1.txt`, `-j 4`, Stand 432487fa: `100% tests passed, 0 tests failed out of 438`
+  (Total Test time (real) = 37.06 sec; unit_sca_wall_hit 0.15 s Passed).
+- Integration (exe) systematisch: Raum-Zensus `B_belege/zensus_raeume_nb1.py` (scd_dump_room.py ueber alle 240 RDTs:
+  Halte-Fenster Set(2,7)=1/Set(1,27)=1/Plc_motion/Plc_dest UND Sce_em_set Typ < 0x40) = **68 Raeume** (gleiche Zahl
+  wie der Nachzensus 2.5), Ergebnis `B_belege/zensus_raeume_nb1.txt`; jedes Integrations-Skript, das einen dieser Raeume
+  nennt (49 Skripte) -> **79 Tests** (`B_belege/integ_auswahl_nb1.txt`), `-j 3`. Ergebnis: Abschnitt N1.Tests.
