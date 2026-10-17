@@ -236,3 +236,97 @@ disassembliert: `lw v0,360(v0)` +0x168 @0x8001b3a4, `srl s0,v0,22` @0x8001b3b4, 
 note=61 ... -> SE-Stimme 4 (SPU 20)` genau einmal zwischen `[walk] F240` und `[walk] F270` (= F252, Clip-Bild 102) und
 einmal zwischen `[framedump] ... f000279.ppm` und `f000280.ppm` (= F280, Clip-Bild 130). Die Klettertoene des
 RE1.5-Clips laufen also auch im RE2-Zweig (`wz_frame_se`), je SE-Bild einmal.
+
+## 3. Mangel 2 der Abnahme 0 (Code-Hygiene) geprueft
+
+- Suche nach `re15_enemy_ai_live_edge_fall`, `EDGE-FALL`, `edge_fall` in re15_port/engine/src, include, tests, platform:
+  einziger Treffer `include/re15_wasserzombie_r38.h:30` (Abschnitt "WAS DER PORT VORHER TAT" — Beschreibung, kein Code).
+  Die tote Funktion ist entfernt (Diff `enemy_ai_common.c` -43 Zeilen @@ -3368).
+- Kommentar am Aufruf (`enemy_ai_common.c` in `re15_enemy_ai_live_active`): "Runde 38 Spur U: HOCHZIEHEN an der u1=1-Kante
+  (@0x8011f890[0xa]=FUN_801033c8 / STAGE2 0x8010325c): +0x38 -= 1800 und +0x82 += 1 = ein Band HOCH, +0x1ba
+  @0x801033f8, Vorschub @0x80103474" — stimmt mit meiner Disassembly (Abschnitt 4 Nr. 2).
+- `gcc -std=c11 -Wall -Wextra -fsyntax-only -DRE15_PLATFORM_PC=1 -Iinclude` (msys64-gcc) auf wasserzombie_r38.c,
+  enemy_ai_re2_zombie.c, schuss_r36.c, enemy_ai_common.c, tests/unit/test_r38_wasserzombie.c,
+  tests/unit/probe_r38_wasserzombie_karte.c: **keine Meldung aus `re15_wasserzombie_r38.h` und keine aus einer
+  Spur-U-Zeile**. Uebrig: `-Wcomment` aus `include/re15_emd.h:37` / `include/re15_collision.h:85/90` (fremde Koepfe) und in
+  enemy_ai_common.c Z. 1518 (`-Wunused-variable` px0/pz0), 6113 (`-Wmisleading-indentation`), 11346 (`-Wsign-compare`) —
+  `git blame`: 4b64f5c56 (2026-08-25), 773b20af7 (2026-07-06), 95d99f781 (2026-07-26); derselbe Lauf auf
+  `cb782bda:enemy_ai_common.c` meldet dieselben drei (Z. 1517/6152/11385) -> vorbestehend.
+- **Mangel 2 ist behoben.**
+
+## 4. RE-Gate — selbst disassembliert
+
+Werkzeug: `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` / `re2_disasm.py` (Hauptbaum, nur lesend).
+Binaerdateien: `info/Re1.5/PSX.EXE`, `info/Re1.5/PSX/BIN/STAGE2.BIN` (roh @0x80100000), `info/re2leon/PSX.EXE`,
+`info/re2leon/COMMON/BIN/EMOVL10_S0.BIN`.
+
+Kern-Mechanik (Ausgangsstand der Spur):
+1. **Ausloeser** `dis 0x80101eec 24 --bin STAGE2.BIN`: `80101f00 lbu a0,144(a1)` (+0x90) / `80101f08 andi v0,a0,0x3` /
+   `80101f0c beq v0,zero,0x80101f48` / `80101f10 andi v0,a0,0xf0` / `80101f14 lh v1,106(a1)` / `80101f18 sll v0,v0,4` /
+   `80101f1c subu` / `80101f20 addiu v0,v0,512` / `80101f24 andi 0xfff` / `80101f28 slti v0,v0,1024` /
+   `80101f30 andi v0,a0,0x1` / `80101f34 addiu v0,v0,9` / `80101f38 sll v0,v0,8` / `80101f3c ori v0,v0,0x1` /
+   `80101f44 sw v0,4(a1)`. Erreichbar: `table 0x80117944` [2] und `table 0x80117a64` [2] = 0x80101eec. =
+   `re15_wasserzombie_kante_vorn` (u1&3, Kegel +0x200/<0x400, Bit 0 -> 0xA01).
+2. **Hochziehen** `table 0x80117994 12 --bin STAGE2.BIN`: [10] = **0x8010325c**. `dis 0x8010325c 136`: Phase 0
+   `801032b0 sb v1,6(a0)` / `801032c0 sb v1,148(v0)` (v1 = 1 aus dem Delay-Slot `80103288 ori v1,zero,0x1`) /
+   `801032d0 sb zero,149` / `801032dc ori v0,zero,0x7` / `801032e0 sb v0,143`; Phase 1 `801032ec addu a2,zero,zero` /
+   `801032f8 jal 0x8001f314` / `801032fc ori a3,zero,0x200`, `80103310 ori a1,zero,0x10` / `80103318 jal 0x8001aa68` /
+   `8010331c sll a0,a0,4`, `80103334 addu v1,v0,v1` / `80103340 sh v1,106(a0)` (Delay-Slot, immer), d == 0 ->
+   `80103354 sb v0(=2),6`; Phase 2 `80103368 ori v0,zero,0x16` / `8010336c sb v0,148`, `80103388-8c` +0x8f = 7,
+   `80103398 ori v0,zero,0x474` / `8010339c sh v0,140`, `801033b4-bc` +0x6a = (+0x90&0xf0)<<4; Phase 3
+   `801033cc lbu v1,149` / `801033d0 ori v0,zero,0x46` / `801033d4 bne`, `801033e0 sh 0x474,176`,
+   `801033f0 lhu v0,442` / `801033f8 addiu v0,v0,-1800` / `801033fc sh v0,442`, `80103414 jal 0x8001f314` /
+   `80103418 ori a3,zero,0x200`, `8010341c beq v0,zero` / Delay `80103420 addu a0,zero,zero`, `80103430-3c` +0x82 += 1,
+   `8010344c-58` +0x38 -= 1800, `80103464 ori v0,zero,0x1` / `80103468 sw v0,4`, `80103474 jal 0x800245d8` / Delay
+   `80103478 sh zero,176`. Zeile fuer Zeile = `re15_wasserzombie_hochziehen` und alle `RE15_WZ_*`-Konstanten im Kopf
+   (SUB 0x0A, CLIP_DREH 1, CLIP_KLETTER 0x16, FRAC 7, RATE 0x200, DREHSCHRITT 0x10, TEMPO 0x474, BODENBILD 0x46, BAND 1800).
+3. **Frame-Wort-SE** `dis 0x8001b38c 30` (PSX.EXE): `8001b3a4 lw v0,360(v0)` (+0x168), `8001b3b4 srl s0,v0,22`, je Bit
+   `8001b3cc jal 0x800453d0` mit `8001b3d0 andi a0,s1,0xff`; Aufruf aus der Zombie-Wurzel `801004c8 jal 0x8001b38c`
+   (STAGE2). = `wz_frame_se` (gemessen M6).
+4. **Schatten** `dis 0x801004e0 12 --bin STAGE2.BIN`: `801004fc lh a1,442(v0)` / `80100500 jal 0x8001b064` /
+   `80100504 addiu a0,a0,176`. = `re15_wasserzombie_schatten_y` (+0x1ba).
+
+Neue Belege der Nachbesserung 1 (die Stellen, auf die der Bau-Agent den Fix stuetzt):
+5. **anim_set FUN_8001f314** `dis 0x8001f314 42`: `8001f324 lbu v0,148(t0)` (+0x94), `8001f330 addu a2,a1,v0` /
+   `8001f334 lw v0,0(a2)` (Clipzeile aus der UEBERGEBENEN Bank a1), `8001f35c lbu v0,149(t0)` (+0x95),
+   `8001f36c sw a2,360(t0)` (+0x168), `8001f38c jal 0x8001f3bc` (sonst `8001f3a4 jal 0x8001f8b4`). **Stimmt.**
+6. **FUN_8001f3bc** `dis 0x8001f3bc 30` + `dis 0x8001f560 12` + `dis 0x8001f5e0 20`: `8001f40c lw s1,392(v1)`
+   (v1 = g_entity(cur) -> +0x188 Teileblock), `8001f42c sw v0,44(s1)` / `8001f430 sh v0,56(s1)`, je Teil
+   `8001f570 addiu a0,s1,120` / `8001f574 jal 0x80068098` und `8001f5f0 jal 0x80068098` (a1 = s1+24 im Delay-Slot
+   `8001f5f4`), danach `8001f610 lbu v0,149(v1)` / `8001f618 addiu v0,v0,1` / `8001f61c sb v0,149(v1)`. 0x80068098 beginnt
+   mit `lh t7,0(a0)` / `bgez` / `andi t9,t7,0xfff` (RotMatrix-Form). **Stimmt**: die Pose wird im eigenen anim_set-Aufruf
+   in den Teileblock gerechnet.
+7. **Eigener Lade-Scan** (Skript `U38abn1c/re/scan9495.py`, alle lb/lbu/lh/lhu/lw mit Offset 148/149, Basis != sp, Text
+   von PSX.EXE): **31 Treffer** (= Zahl des Bau-Agenten). Byte-Leser (Clip/Bild des Aktors) nur in FUN_8001ae38
+   (0x8001ae48/5c), anim_set/FUN_8001f3bc/FUN_8001f8b4 (0x8001f324-0x8001fb4c) und 0x800526d4-0x80052cbc. Die Halbwort-/
+   Wort-Leser haben andere Basen (selbst nachgesehen: `8001b5fc lhu a0,148(s0)` neben `lhu a1,98(s0)`; `80024ed8 lhu
+   v1,148(fp)` / `80025190 lh v1,148(fp)` in der Nackenfeder FUN_80024e40 (Katalog: Teil +0x94 = Nickwinkel);
+   `800378c8 lhu v1,148(s0)` direkt nach `jal 0x80068098`; `80060a7c lw v0,148(s0)` / `lw v1,152(s0)` = Wortpaar).
+   Kein Zeichner wertet +0x94/+0x95 des Aktors neu aus. **Stimmt.**
+8. **RE2-Partner-Domino** `dis 0x80102E70 20 --bin EMOVL10_S0.BIN`: `80102e90 addiu v0,zero,2305` (0x901),
+   `80102e94 jal 0x80015910`, `80102e98 sw v0,4(s0)` (Delay-Slot), `80102ea4 jal 0x8005bd6c` (a0 = 4 aus
+   `80102e9c`), `80102ea8 sb v0,363(s0)` (+0x16B). RE2 PSX.EXE `dis 0x80015910 10`: `lh v0,118(a1)` / `lh v1,118(a0)` /
+   `subu` / `addiu 1024` / `andi 0xfff` / `jr ra` / `slti v0,v0,2048` — reine Seitenpruefung ohne Store. Der Domino
+   schreibt weder Clip noch Bild noch Teileblock des Partners. **Stimmt.**
+9. **EXEC[9] P0** `dis 0x80103EF0 36 --bin EMOVL10_S0.BIN`: `80103f30 sw v0,332(s1)` (Clipwort +0x14C, Delay-Slot),
+   Index `80103f14-20` = 2*(+0x16B) + (+0x16A) in die Stapeltabelle s0 = sp+16 (`80103ebc addiu s0,sp,16`), gefuellt per
+   lwl/lwr/swl/swr ab `0x80100000+216` (`80103e70 addiu a1,a1,216`); `bytes 0x801000D8 8` = `03 03 04 0d ...` =
+   {3,3,4,0x0D}; `80103f60 addiu v0,zero,400` / `80103f64 sh v0,324(s1)` (Schub +0x144). **Stimmt** (Riegel F prueft
+   den Clip in {3,4,0x0D}).
+10. **Sce_em_set** `dis 0x800421c0 22` (PSX.EXE): `800421e0 sw zero,4(s0)` (Zustandswort 0), `800421f8-8004220c`
+    v0 = -(pc[2]*1800) -> `80042210 sh v0,442(s0)`. **Stimmt** (Grund fuer `e->state != 0` in `wz_marke_bank`).
+
+Diff-Suche (`git diff cb782bda HEAD -- re15_port`, Plus-Zeilen) nach den Rate-Woertern deferred, tunable, interim,
+for now, faithful, plausib, TODO, FIXME, approx, geschaetzt, vermut, ungefaehr, heuristi: **0 Treffer**. Einziger neuer
+`getenv`: `RE15_WASSERZOMBIE_LOG` (Messschiene, oeffnet nur eine Logdatei, kein Verhalten, kein Abschluss-Schalter).
+Die Nachbesserung bringt **keine neue Konstante** (`wz_marke_bank`: `state != 0` = Sce_em_set @0x800421e0, Nr. 10;
+`zwischen` = nur Messschiene). Gekennzeichnet: PORT-WAHL (Rig-Wechsel ohne Ueberblendung; +0x1ba-Ruecksetzen beim
+RE2-Abbruch), PORT-EMULATION (LOOP-Bit 0x04 in Phase 0/1, Rueckwaerts-Bit 0x80 aus, a2 = 0 @0x801032ec), PORT-ABBILDUNG
+(Eintritt aus dem RE2-Gang 1/1, weil das RE2-Gehirn kein Hochziehen hat — Nutzer-Wortlaut "wie im Original Resident
+Evil 1.5").
+
+**Erklaert der Fix den Befund?** Ja: Mangel 1 war, dass Bank/Uhr/Schatten am fremd geschriebenen Zustandswort hingen
+(`wz_marke_gilt` = Zustand 1 UND Sub 0x0A); jetzt haengen sie an der Marke, die nur der eigene Tick setzt/loescht
+(`wz_marke_bank`). Gemessen: F400 Kletterpose statt "bis auf ein Bein leer", Abbruch af 49 -> 50 statt 49 -> 9 (M5),
+Ausfuehrung sonst byte-gleich (M5/M7). Die RE-Begruendung (die Pose wird im eigenen Tick gerechnet, der fremde Schreiber
+aendert sie nicht) ist durch Nr. 5-9 belegt. **RE-Gate haelt.**
