@@ -19,7 +19,7 @@ target_link_libraries(test_r38_npckante PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_npckante PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r38_npckante PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-foreach(_teil clips sonde john1261 ada1260 john10b1 gegen)
+foreach(_teil clips sonde john1261 ada1260 john10b1 gegen j2000 schwerkraft)
     add_test(NAME unit_r38_npckante_${_teil} COMMAND test_r38_npckante ${_teil})
     set_tests_properties(unit_r38_npckante_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()

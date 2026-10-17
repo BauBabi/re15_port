@@ -41,11 +41,13 @@
 #include "re15_gameflow.h"
 #include "re15_engine.h"
 #include "re15_npckante_r38.h"
+#include "re15_fade.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -224,6 +226,16 @@ typedef struct {
     int band_end; int32_t x_end, y_end, z_end; int sub_end;
     int band_wechsel;     /* Zahl der Bandwechsel */
     int sprung51, sprung10, hoch01;   /* Bandwechsel 5->1, 1->0 (Sprung), 0->1 (Klettern) */
+    /* MECHANIK (Fortsetzung 2026-10-17): Fallkurve, Landung und Kletterstufe Bild fuer Bild gegen die Original-Konstanten */
+    int32_t y_vor, x_vor, z_vor; int s1_vor, s2_vor, band_vor, hat_vor;
+    int fall_k;                     /* Fall-Bild-Index im laufenden Sprung (1 = erstes Bild nach dem Schub)           */
+    int fall_bilder, fall_fehler;   /* Schub-Bild: dy = 500 + 90 (@0x80052d68 + @0x80052e34); danach dy = 90 + 50 k
+                                     * (@0x80052e34-5c, k = +0x9c)                                                    */
+    int lande_ok, lande_fehler;     /* Landebild [4]: y = +0x1ba (@0x80052efc)                                        */
+    int stufe_ok, stufe_fehler;     /* Kletterstufe [3] Bild 0x1d: dy = -1800 (@0x80052730), Weg 0x47c (@0x80052710),
+                                     * Band + 1 (@0x80052768); sonst KEINE y-Aenderung im Kanten-Sub                  */
+    int32_t x_sprung_unten[8]; int n_sprung_unten;   /* Lage nach jedem Sprung auf Band 0 (Landebild)                  */
+    int32_t x_stufe[8]; int n_stufe;                  /* Lage nach jeder Kletterstufe                                   */
 } spur_t;
 
 /* "In der Luft" = was die Engine-Schwerkraft FUN_8001bd60 sofort fallen liesse: y auf der Bandhoehe -(Band*1800)
@@ -269,15 +281,69 @@ static void spur_tick(spur_t *sp, const re15_actor_t *e, int *letztes_band, int 
         }
         *letztes_band = (int)e->floor;
     }
+    if (sp->hat_vor && e->state == 4) {
+        int sprung_jetzt = (s1 == 0x17 || s1 == 0x18), sprung_vor = (sp->s1_vor == 0x17 || sp->s1_vor == 0x18);
+        int kante_jetzt = (s1 == 0x12 || s1 == 0x16),  kante_vor = (sp->s1_vor == 0x12 || sp->s1_vor == 0x16);
+        int32_t dy = e->y - sp->y_vor;
+        if (sprung_jetzt && sprung_vor) {
+            if (sp->s2_vor == 2 && (e->sub_state_2 == 3 || e->sub_state_2 == 4)) {          /* Schub-Bild [2] -> [3] */
+                sp->fall_k = 1; sp->fall_bilder++;
+                if (dy != 500 + 90) { sp->fall_fehler++; if (log) printf("    F%d Schub-Bild dy %d (soll 590)\n", f, (int)dy); }
+            } else if (sp->s2_vor == 3 && (e->sub_state_2 == 3 || e->sub_state_2 == 4)) {   /* Fall-Bild [3] */
+                sp->fall_bilder++;
+                if (dy != 90 + 50 * sp->fall_k) {
+                    sp->fall_fehler++;
+                    if (log) printf("    F%d Fall-Bild %d dy %d (soll %d)\n", f, sp->fall_k, (int)dy, 90 + 50 * sp->fall_k);
+                }
+                sp->fall_k++;
+            } else if (sp->s2_vor == 4 && e->sub_state_2 == 5) {                           /* Landebild [4] */
+                if (e->y == (int32_t)e->dog_floor_y) sp->lande_ok++; else sp->lande_fehler++;
+                if (e->floor == 0 && sp->n_sprung_unten < 8) sp->x_sprung_unten[sp->n_sprung_unten++] = e->x;
+            }
+        }
+        if (kante_jetzt && kante_vor && dy != 0) {
+            double weg = sqrt((double)(e->x - sp->x_vor) * (e->x - sp->x_vor) + (double)(e->z - sp->z_vor) * (e->z - sp->z_vor));
+            if (dy == -1800 && weg > 1146.0 && weg < 1150.0 && (int)e->floor == sp->band_vor + 1) {
+                sp->stufe_ok++;
+                if (sp->n_stufe < 8) sp->x_stufe[sp->n_stufe++] = e->x;
+            } else {
+                sp->stufe_fehler++;
+                if (log) printf("    F%d Kanten-Sub dy %d Weg %.1f Band %d -> %d\n", f, (int)dy, weg, sp->band_vor, (int)e->floor);
+            }
+        }
+    }
+    sp->y_vor = e->y; sp->x_vor = e->x; sp->z_vor = e->z; sp->s1_vor = s1; sp->s2_vor = e->sub_state_2;
+    sp->band_vor = e->floor; sp->hat_vor = 1;
     sp->band_end = e->floor; sp->x_end = e->x; sp->y_end = e->y; sp->z_end = e->z; sp->sub_end = s1;
 }
+
+/* > 0: Viereck alle n Bilder (= Nachricht bestaetigen: msg_common.c CONFIRM virt. 0x4000 <- RAW SQUARE) */
+static int s_druck_takt = 0;
+/* 1: Szenen-Schritt wie test_r36_szenenleon.c frame() (Letterbox/Cine-Sperre, Kamera-Apply) — fuer Szenen, in denen
+ * auch der SPIELER per Plc_dest gefuehrt wird (ROOM2000 sub02) */
+static int s_szene = 0, s_cine_was = 0;
 
 static void frame_step(void)
 {
     const unsigned char *raw; int len, id;
     re15_msg_tick(&raw, &len, &id);
-    s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
+    uint16_t druck = (s_druck_takt > 0 && g_engine.frame_count > 0 && (g_engine.frame_count % (uint32_t)s_druck_takt) == 0)
+                   ? (uint16_t)RE15_PAD_BIT_SQUARE : (uint16_t)0;
+    s_ctx.pad_current = druck; s_ctx.pad_pressed = druck;
     scd_vm_tick();
+    re15_actor_step_all_walkers();   /* Spieler-Plc_dest-Walker wie main.c nach scd_vm_tick (ROOM2000 sub02 dreht Leon) */
+    if (s_szene) {
+        re15_letterbox_tick(re15_game_flag_get(1, 27));
+        int cine = re15_cine_active();
+        if (cine) { g_scd.player_mode = 2; g_scd.letterbox_countdown = -1; }
+        else if (s_cine_was) g_scd.letterbox_countdown = 15;
+        s_cine_was = cine;
+        if (g_scd.letterbox_countdown > 0 && --g_scd.letterbox_countdown == 0) {
+            g_scd.player_mode = 0;
+            re15_aot_settle_at(g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+        }
+        if (re15_cam_present_tick()) s_ctx.active_cut = (int)g_scd.cam_id;
+    }
     re15_game_step(&s_ctx);
     g_engine.frame_count++;
 }
@@ -325,6 +391,20 @@ static void spur_bericht(const char *wer, const spur_t *s)
            (int)s->x_end, (int)s->y_end, (int)s->z_end, s->band_end, s->sub_end);
 }
 
+/* Mechanik eines Laufs: Fallkurve (Schub 500 + 90, dann 90 + 50 k), Landung auf +0x1ba, Kletterstufe 1800 / 0x47c / Band+1 */
+static void mechanik(const char *wer, const spur_t *s, int mit_klettern)
+{
+    PRUEF(s->fall_bilder > 0 && s->fall_fehler == 0,
+          "%s: Fallkurve Bild fuer Bild = Original (Schub-Bild +590 @0x80052d68/@0x80052e34, dann +90+50k @0x80052e34-5c): "
+          "%d Bilder, %d Abweichungen", wer, s->fall_bilder, s->fall_fehler);
+    PRUEF(s->lande_ok > 0 && s->lande_fehler == 0, "%s: Landung y = +0x1ba (@0x80052efc): %d ok, %d falsch",
+          wer, s->lande_ok, s->lande_fehler);
+    if (mit_klettern)
+        PRUEF(s->stufe_ok > 0 && s->stufe_fehler == 0,
+              "%s: Kletterstufe dy -1800 (@0x80052730), Weg 0x47c (@0x80052710), Band +1 (@0x80052768): %d ok, %d falsch",
+              wer, s->stufe_ok, s->stufe_fehler);
+}
+
 /* 1261: John nach dem Kanaldeckel (Elza). Eintritt ueber ROOM10B1 Tuer Slot 1 @0x016F2 -> Cut 15 bei
  * (-20250,-1800,-6700); sub03 @0x01276 setzt John (-21100,-1800,-8050) Band 1 und startet sub04 @0x012F0. */
 static void teil_john1261(void)
@@ -349,6 +429,9 @@ static void teil_john1261(void)
     PRUEF(a.band_end == 1 && a.y_end == -1800 && a.x_end > 19000 && a.z_end > -6500 && a.z_end < -3500,
           "John endet oben am Oststeg (Band 1, y -1800) nahe dem Ziel (20900,-5000) -> (%d,%d,%d)",
           (int)a.x_end, (int)a.y_end, (int)a.z_end);
+    PRUEF(a.sprung10 == 1 && a.hoch01 == 1, "genau ein Sprung (Band 1 -> 0: %d) und ein Hochklettern (0 -> 1: %d)",
+          a.sprung10, a.hoch01);
+    mechanik("John", &a, 1);
 }
 
 /* 1260: Ada (Slot 0, Typ 0x42) und Marvin (Slot 1, Typ 0x40), Leon, Eintritt ueber ROOM11B0 Tuer Slot 5 @0x01034 ->
@@ -380,6 +463,8 @@ static void teil_ada1260(void)
     PRUEF(a.band_end == 1 && a.y_end == -1800 && m.band_end == 1 && m.y_end == -1800,
           "beide enden oben auf dem Mittelblock (Band 1): Ada (%d,%d,%d), Marvin (%d,%d,%d)",
           (int)a.x_end, (int)a.y_end, (int)a.z_end, (int)m.x_end, (int)m.y_end, (int)m.z_end);
+    mechanik("Ada", &a, 1);
+    mechanik("Marvin", &m, 1);
 }
 
 /* 10B1: John (Elza) laeuft in sub02 vom Band-5-Steg nach Westen; nach `While(Cmp(0x0A != 2))` @0x01888 zum Ziel
@@ -404,6 +489,21 @@ static void teil_john10b1(void)
     PRUEF(a.sprung51 == 1, "John springt vom Band-5-Steg auf den Block [6] (Band 5 -> 1, 1+3 Baender: %d mal)",
           a.sprung51);
     PRUEF(a.sprung10 >= 1, "John springt vom Block [6] an Zelle [18] auf den Boden (Band 1 -> 0: %d mal)", a.sprung10);
+    /* ORIGINAL (DuckStation, M_belege/orig_10b1_john.log, Code RAM == PSX.EXE): danach im Wechsel Sprung auf x -7460 und
+     * Klettern auf x -6314 (Ziel @0x01896 liegt 298 vom Westrand; Sonde @0x800516c4 vor dem Ankunftstest @0x80051764),
+     * bis Cut 8 sub03 startet. Der Port muss dieselben Lagen treffen. */
+    {
+        int unten_ok = a.n_sprung_unten > 0, stufe_ok = a.n_stufe > 0;
+        for (int i = 0; i < a.n_sprung_unten; i++) if (a.x_sprung_unten[i] < -7465 || a.x_sprung_unten[i] > -7455) unten_ok = 0;
+        for (int i = 0; i < a.n_stufe; i++) if (a.x_stufe[i] < -6319 || a.x_stufe[i] > -6309) stufe_ok = 0;
+        PRUEF(unten_ok, "jeder Sprung von Block [6] landet bei x -7460 wie am Original (%d Spruenge, erster x %d)",
+              a.n_sprung_unten, a.n_sprung_unten ? (int)a.x_sprung_unten[0] : 0);
+        PRUEF(stufe_ok, "jedes Hochklettern endet bei x -6314 wie am Original (%d Stufen, erste x %d)",
+              a.n_stufe, a.n_stufe ? (int)a.x_stufe[0] : 0);
+        PRUEF(a.hoch01 >= 1 && (a.sprung10 == a.hoch01 || a.sprung10 == a.hoch01 + 1),
+              "Wechsel Sprung/Klettern wie am Original (Spruenge %d, Kletterstufen %d)", a.sprung10, a.hoch01);
+    }
+    mechanik("John", &a, 1);
     PRUEF(a.clip_sprung[3] > 0 && a.clip_sprung[4] > 0 && a.clip_sprung[5] > 0, "Sprung mit den Clips 3/4/5");
     PRUEF(a.luft == 0, "John laeuft nie in der Luft (Sub 4/5/6/9 auf Bandhoehe, ausserhalb jeder Absprungzelle: %d)",
           a.luft);
@@ -438,6 +538,89 @@ static void teil_gegen(void)
     PRUEF(a.luft == 0 && a.band_wechsel == 0, "y bleibt auf dem Boden, kein Bandwechsel");
 }
 
+/* 2000 (Leon, Stage 2, "immer"): Eintritt ueber ROOM1260 Tuer Slot 1 @0x0114A -> (4350,-1800,-20500) Cut 0 Band 1.
+ * sub00 @0x01794 Ck(4,0xF4) -> Sce_em_set Ada (Slot 0, Typ 0x42) / Marvin (Slot 1, Typ 0x40) + Evt_exec sub02 (Szene mit
+ * 12 Message_on, Viereck alle 25 Bilder wie im exe-Lauf); Marvin sub02 @0x01A44 und Ada sub03 @0x01A8A Plc_dest 4 nach
+ * (-8350,-26100) queren die Absprungkante (Band 1) und klettern am Gegenufer (Band 0 -> 1). */
+static void teil_j2000(void)
+{
+    printf("== j2000: Leon ROOM2000 (Stage 2), Flag (4,0xF4), Szene sub02/sub03 ==\n");
+    if (!raum_laden("STAGE2/ROOM2000.RDT")) return;
+    raum_start(0x2000, 0, 0, 4350, -1800, -20500, 1024);
+    re15_game_flag_set(4, 0xF4, 1);
+    scd_room_reenter(&s_rdt, 4350, -20500, 0);
+    bank_laden(RE15_EMS_ARCHIV_LEON, 0x42);
+    bank_laden(RE15_EMS_ARCHIV_LEON, 0x40);
+    int sa = -1, sm = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        if (g_actors[s].active && g_actors[s].type == 0x42) sa = s;
+        if (g_actors[s].active && g_actors[s].type == 0x40) sm = s;
+    }
+    PRUEF(sa > 0 && sm > 0, "Ada (0x42, Slot %d) und Marvin (0x40, Slot %d) gespawnt (sub00 @0x017A0/@0x017B4)", sa, sm);
+    if (sa <= 0 || sm <= 0) return;
+    spur_t a, m; spur_init(&a); spur_init(&m);
+    s_druck_takt = 25; s_szene = 1; s_cine_was = 0;
+    raum_lauf(2400, sa, &a, sm, &m);
+    s_druck_takt = 0; s_szene = 0;
+    spur_bericht("Ada", &a);
+    spur_bericht("Marvin", &m);
+    PRUEF(a.sprung10 == 1 && a.clip_sprung[3] > 0 && a.clip_sprung[4] > 0 && a.clip_sprung[5] > 0,
+          "Ada springt in den Kanal (Band 1 -> 0: %d, Clips 3/4/5)", a.sprung10);
+    PRUEF(m.sprung10 == 1 && m.clip_sprung[3] > 0 && m.clip_sprung[4] > 0 && m.clip_sprung[5] > 0,
+          "Marvin springt in den Kanal (Band 1 -> 0: %d, Clips 3/4/5)", m.sprung10);
+    PRUEF(a.hoch01 == 1 && a.clip_hoch > 0 && m.hoch01 == 1 && m.clip_hoch > 0,
+          "beide klettern am Gegenufer hinauf (Ada %d, Marvin %d, Clip 2)", a.hoch01, m.hoch01);
+    PRUEF(a.luft == 0 && m.luft == 0, "keiner geht in der Luft (Ada %d, Marvin %d)", a.luft, m.luft);
+    mechanik("Ada", &a, 1);
+    mechanik("Marvin", &m, 1);
+}
+
+/* Schwerkraft FUN_8001bd60 in der NPC-Wurzel (0x49: `jal 0x8001bd60` @0x8011dcc4, a0 = -10 @0x8011dcb4, a1 = 0x14
+ * @0x8011dcac; alle 17 NPC-Wurzeln gleich): eine NPC, die im Stand mindestens ihren Radius (Box +6 = 450) tief in einer
+ * Absprungzelle ihres Bandes steht (FUN_8003b7f0(&+0x34, -r, +0x82) & 2 @0x8001bd94-b4, y == -(Band*1800) @0x8001bdc8-ec),
+ * faellt: +0x1ba += 1800 je Band (1 + ((u1>>2)&3)), y += -10 + 20 t (@0x8001be78-a4), Landung y = +0x1ba (@0x8001becc).
+ * ROOM1260: Ada nach ihrer Szene (Sub 6, Band 1) mitten in Zelle [28] (Band 1, u1 0x02) gesetzt. Der Schatten liegt
+ * waehrend des Falls auf +0x1ba (`lh a1,442` @0x8011dd78). */
+static void teil_schwerkraft(void)
+{
+    printf("== schwerkraft: NPC-Wurzel ruft FUN_8001bd60 (Ada ROOM1260 in Zelle [28]) ==\n");
+    if (!raum_laden("STAGE1/ROOM1260.RDT")) return;
+    raum_start(0x1260, 0, 7, 26750, -1800, 9400, 1024);
+    re15_game_flag_set(4, 0xF4, 1);
+    scd_room_reenter(&s_rdt, 26750, 9400, 7);
+    bank_laden(RE15_EMS_ARCHIV_LEON, 0x42);
+    bank_laden(RE15_EMS_ARCHIV_LEON, 0x40);
+    int sa = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == 0x42) sa = s;
+    PRUEF(sa > 0, "Ada gespawnt, Slot %d", sa);
+    if (sa <= 0) return;
+    for (int f = 0; f < 1200; f++) frame_step();            /* Szene zu Ende: Ada steht oben auf dem Mittelblock */
+    re15_actor_t *e = &g_actors[sa];
+    PRUEF(e->state == 4 && e->sub_state_1 == 6 && e->floor == 1 && e->y == -1800 && e->dog_floor_y == -1800,
+          "Ausgang: Ada steht (Sub 6) auf Band 1, y -1800, +0x1ba -1800 (St %d Sub %d Band %d y %d +0x1ba %d)",
+          e->state, e->sub_state_1, (int)e->floor, (int)e->y, (int)e->dog_floor_y);
+    e->x = 10000; e->z = 16800;                                /* Zelle [28] x -10550..28400 z 15250..18350, Band 1 */
+    int32_t soll_y = -1800, n = 0, kurve_ok = 1, schatten_ok = 1, fallbit = 0;
+    for (int t = 0; t < 40; t++) {
+        frame_step();
+        if (!(e->fall_1c0 & 0x8000u) && e->y == 0) break;
+        n++;
+        soll_y += -10 + 20 * t;
+        if (soll_y > 0) soll_y = 0;
+        if (e->y != soll_y) { kurve_ok = 0; printf("    Fall-Bild %d: y %d (soll %d)\n", t, (int)e->y, (int)soll_y); }
+        if (e->fall_1c0 & 0x8000u) fallbit++;
+        int32_t sy = 1;
+        if (!(e->fall_1c0 & 0x8000u) || !re15_npckante_schatten_y(e, &sy) || sy != 0) schatten_ok = 0;
+        if (e->y == 0) break;
+    }
+    printf("  Fall: %d Bilder, Ende y %d Band %d +0x1ba %d +0x1c0 %04x\n", n, (int)e->y, (int)e->floor,
+           (int)e->dog_floor_y, (unsigned)e->fall_1c0);
+    PRUEF(n > 0 && kurve_ok, "Fallkurve y += -10 + 20 t (a0 -10 @0x8011dcb4, a1 0x14 @0x8011dcac) ueber %d Bilder", n);
+    PRUEF(e->y == 0 && e->floor == 0 && e->dog_floor_y == 0 && !(e->fall_1c0 & 0x8000u),
+          "Landung auf dem Kanalboden: y 0, Band 0, +0x1ba 0, Fallbit geloescht (@0x8001bee4)");
+    PRUEF(fallbit > 0 && schatten_ok, "Schatten waehrend des Falls auf +0x1ba = 0 (@0x8011dd78), %d Fall-Bilder", fallbit);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -448,6 +631,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "ada1260"))  teil_ada1260();
     if (alle || !strcmp(teil, "john10b1")) teil_john10b1();
     if (alle || !strcmp(teil, "gegen"))    teil_gegen();
+    if (alle || !strcmp(teil, "j2000"))    teil_j2000();
+    if (alle || !strcmp(teil, "schwerkraft")) teil_schwerkraft();
     if (g_fail) { printf("FAIL: %d Pruefung(en)\n", g_fail); return 1; }
     printf("OK\n");
     return 0;
