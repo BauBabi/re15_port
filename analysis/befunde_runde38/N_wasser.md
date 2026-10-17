@@ -443,6 +443,18 @@ Riegel (registriert in `tests/unit/probes/r38_wasser.cmake`):
   Leon: Anker relativ ab Bild 22 = Original-Lauf-Anker gedreht +-3, Fleck 0x17 nur Ton).
   Ergebnis am Endstand (Stand a8e08251 gebaut): `100% tests passed, 0 tests failed out of 1` (Laufzeit ~135 s).
 
+**Gezielte Tests am Endstand** (Stand a8e08251 gebaut = Code-Endstand; danach nur Dossier), seriell, KEINE volle Suite.
+Auswahl = eigene Riegel + Gruppen jedes beruehrten Moduls: op_aot_set (scd_vm.c) -> aot/door/tuer/item/karte/map_/stair/treppe/scd;
+Schritt-Ton-Zeitpunkt (game_step_common.c) -> audio_decode/room1140_combat/re2_gore_fly/zombie_step_sfx und alle exe-Tests mit
+Ton-Mitschnitt oder SE-Protokoll (werfer_ton, r36_elza, r36_szenenleon, r37_codepanel, r37_fahrstuhl, cut10f0); Wasser-Stempel
+-> spider_water, r34_wasser:
+```
+ctest --test-dir re15_port/build -R "r38_wasser|r34_wasser|aot|door|tuer|item|karte|map_|stair|treppe|scd|audio_decode|spider_water|room1140_combat|re2_gore_fly|zombie_step_sfx|werfer_ton|r36_elza|r36_szenenleon|r37_codepanel|r37_fahrstuhl|cut10f0" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 160
+```
+(Vorlauf am Stand 0dfc3dff mit 159 Tests: 158 gruen, einzig integration_r38_wasser rot, weil das Skript schon die
+Skriptlauf-Pruefung trug und die exe noch nicht korrigiert war — siehe "gegen alt rot".)
+
 Gegen v0.8.25 (2077bb8e) rot: re15_wasser_r38_* existiert nicht (Unit-Riegel bauen nicht), kein RE15_WASSER_LOG,
 kein id=6 im FX_LOG, im Becken `[foot] ... type=29 vag=1`. Gegen den Stand vor der Lauf-3-Korrektur (exe 0dfc3dff, Skript neu)
 rot: `integration_r38_wasser` bricht bei leon20b0_skript ab ("Schritt nicht am gezeichneten Bild: F16 room=20B0 ...");
