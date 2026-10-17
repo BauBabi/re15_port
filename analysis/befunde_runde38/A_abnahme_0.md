@@ -203,3 +203,18 @@ RE15_FRAMEDUMP/FBDUMP/TRILOG sind darin, `grep -l` selbst geprueft).
 * Teil 1 (`-E "^integration_" -j4 --timeout 600`): **`100% tests passed, 0 tests failed out of 148`** (7.98 sec).
 * Teil 2 (48 Laeufe mit der exe, `-j2 --timeout 900`, ohne integration_r38_cursor = §1): laeuft
   (`scratchpad/abn/ctest_teil2.log`), Ergebnis folgt.
+
+## 12. Integration mit K (bereits in r38/integration) und F — selbst nachgerechnet
+
+* Spur K, Daten aus `r38/integration` (`gen/itemorte_r38_md1.inc`, `gen/itemorte_r38_lage.inc`): beide Pinnwand-Modelle
+  (k_r38k_park_md1 / k_r38k_prison_md1, je 4 Dreiecke) haben Umlauf-Normale (v1-v0)x(v2-v0) = (0,-1,0); mit der
+  Port-Matrix `pc_prop_rot_q12` (main.c:687, Ry*Rx*Rz) und K's Lagen PARK rot (3072,0,2048) / PRISON rot (1024,0,0)
+  -> Welt (0,0,-1) = in die Wand z = -3400. Kameras ROOM10F0/10F1 (RDT offs[7] = 0x60, 12 Saetze a 32 B, selbst
+  gelesen): z von -1637 bis 12824, alle > -3400 -> die Umlauf-Normale zeigt in JEDEM Cut von der Kamera weg ->
+  MAC0 > 0 -> sichtbar mit dem Verwurf. Gegenprobe der Regel am Cursor selbst: Oberseite (gezeichnet) hat g_y > 0,
+  Unterseite (verworfen) g_y < 0 bei Blick von oben (§10).
+* Spur F (`r38/dining1141`, `gen/dining_r38_schluessel.inc`): re15_r38f_key_md1 4 Dreiecke, g = (0,+5776,0) = +Y,
+  Lage rot_y 0 flach am Boden ROOM1011 (-2000,0,7450) -> g zeigt von der Kamera (oben) weg -> sichtbar.
+* Daraus fuer die Integration: Konflikt schluessel_r36.c/.h -> K's Seite (wie Dossier §8); danach
+  `integration_r38_cursor` (E/F an K's Pinnwand-Cuts 5/6) und `unit_r38_cursor_wicklung` an der Integrations-exe fahren;
+  Spur W (r38/rolltor20a0) hat r38/cursor bis 10e39eda bereits gemergt (fb5111e8) und misst mit dem Verwurf.
