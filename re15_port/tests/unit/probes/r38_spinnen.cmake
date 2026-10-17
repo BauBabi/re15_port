@@ -22,3 +22,15 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r38_spinnen COMMAND test_r38_spinnen)
 set_tests_properties(unit_r38_spinnen PROPERTIES TIMEOUT 300)
+
+# integration_r38_spinnen_echtlauf   echte exe (Leon ROOM2030, Elza ROOM2031): Babys am Boden (SCA-Boden bu), Bisse,
+#                                    keine Adultspinne in der Luft, Gift-Bit; Auswerter `test_r38_spinnen pruef_log`.
+if(TARGET re15_pc)
+    add_test(NAME integration_r38_spinnen_echtlauf
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_TOOL=$<TARGET_FILE:test_r38_spinnen>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_spinnen_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_spinnen_echtlauf.cmake)
+    set_tests_properties(integration_r38_spinnen_echtlauf PROPERTIES TIMEOUT 900)
+endif()

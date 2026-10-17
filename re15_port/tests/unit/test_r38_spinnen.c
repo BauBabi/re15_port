@@ -628,8 +628,70 @@ static void teil_d(void)
     }
 }
 
-int main(void)
+/* ============================== pruef_log: Auswerter fuer den Echtlauf ==============================
+ * Aufruf `test_r38_spinnen pruef_log <spinnen.log> <raum-hex>` (integration_r38_spinnen_echtlauf). Liest die Messschiene
+ * RE15_SPINNEN_LOG der echten exe (spinnen_r38.c re15_spinnen_r38_log_frame) und prueft je Nutzerpunkt:
+ *   Punkt 3  Babys (Typ 0x26) entstehen; in keinem Bild am Boden (Zustand 1 Unterzustand 1) liegt ein Baby mehr als 100
+ *            UEBER dem SCA-Boden bu (Wandpass @0x801000c0); Bisse (HP -1) > 0
+ *   Punkt 1  keine Adultspinne (Typ 0x25) ausserhalb der Schacht-Choreografie (Zustand 4/1) mehr als 100 ueber bu
+ *   Punkt 2  der Spieler traegt mindestens einmal das Gift-Bit 0x2 (Status-Wort ps)
+ *   Spieler  |y - bu| <= 100 in jedem Bild (Gegenprobe der Messgroesse). */
+static int pruef_log(const char *pfad, unsigned raum)
 {
+    FILE *f = fopen(pfad, "r");
+    if (!f) { printf("FAIL: pruef_log: %s fehlt\n", pfad); return 1; }
+    static char z[65536];
+    long bilder = 0, baby_boden = 0, baby_schwebt = 0, adult = 0, adult_schwebt = 0, pl_falsch = 0;
+    int bisse = 0, gift = 0, babys_max = 0, vor_hp = -100000;
+    while (fgets(z, sizeof z, f)) {
+        unsigned fr = 0, r = 0, ps = 0, fl = 0, gz = 0;
+        int px = 0, py = 0, pz = 0, hp = 0, st = 0, bo = 0, bu = 0;
+        if (sscanf(z, "F%u R%X PL(%d,%d,%d hp=%d st=%d ps=%x fl=%u gz=%u bo=%d bu=%d)", &fr, &r, &px, &py, &pz, &hp,
+                   &st, &ps, &fl, &gz, &bo, &bu) != 12) continue;
+        if (r != raum) continue;
+        bilder++;
+        if (py - bu > 100 || bu - py > 100) pl_falsch++;
+        if (ps & 0x2u) gift = 1;
+        if (vor_hp != -100000 && vor_hp - hp == 1) bisse++;
+        vor_hp = hp;
+        int babys = 0;
+        for (const char *q = strchr(z, '['); q; q = strchr(q + 1, '[')) {
+            int slot, t, est, s1, s2, s3, g, efl, m, gy, ebo, ebu, mo, af, x, y, zz;
+            if (sscanf(q, "[%d t=%x st=%d s=%d.%d.%d g=%x fl=%d m=%d gy=%d bo=%d bu=%d mo=%d af=%d @(%d,%d,%d)", &slot, &t,
+                       &est, &s1, &s2, &s3, &g, &efl, &m, &gy, &ebo, &ebu, &mo, &af, &x, &y, &zz) != 17) continue;
+            if (t == 0x26) {
+                babys++;
+                if (est == 1 && s1 == 1) { baby_boden++; if (y < ebu - 100) baby_schwebt++; }
+            } else if (t == 0x25) {
+                if (est == 4 && s1 == 1) continue;                     /* Schacht-Choreografie @0x80114ec8 */
+                if (est == 0 && g == 0x41) continue;                   /* Schachtspinne vor dem ersten Takt */
+                adult++;
+                if (y < ebu - 100) adult_schwebt++;
+            }
+        }
+        if (babys > babys_max) babys_max = babys;
+    }
+    fclose(f);
+    printf("   pruef_log ROOM%04X: %ld Bilder, Babys bis %d, Baby-Boden-Bilder %ld (schwebend %ld), Adult-Bilder %ld "
+           "(schwebend %ld), Bisse %d, Gift %d, Spieler |y-bu|>100 in %ld\n", raum, bilder, babys_max, baby_boden,
+           baby_schwebt, adult, adult_schwebt, bisse, gift, pl_falsch);
+    CHECK(bilder > 300, "Lauf in ROOM%04X: %ld Bilder", raum, bilder);
+    CHECK(pl_falsch == 0, "Messgroesse bu am Spieler gegengeprueft (|y - bu| <= 100 in jedem Bild, falsch %ld)", pl_falsch);
+    CHECK(babys_max > 0 && baby_boden > 0, "Punkt 3: Babys entstehen (bis %d gleichzeitig, %ld Boden-Bilder)", babys_max,
+          baby_boden);
+    CHECK(baby_schwebt == 0, "Punkt 3: kein Baby am Boden ueber dem SCA-Boden (%ld von %ld; Wandpass @0x801000c0)",
+          baby_schwebt, baby_boden);
+    CHECK(bisse > 0, "Punkt 3: Babys beissen (%d x 1 HP, `addiu a0,zero,1` @0x80100EA8)", bisse);
+    CHECK(adult > 0 && adult_schwebt == 0, "Punkt 1: keine Adultspinne ueber dem SCA-Boden (%ld von %ld)", adult_schwebt,
+          adult);
+    CHECK(gift, "Punkt 2: der Spieler wird vergiftet (Status-Bit 0x2, Routine 25 / RE2 Op 32 @0x80020130)");
+    return s_fails ? 1 : 0;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc >= 4 && strcmp(argv[1], "pruef_log") == 0)
+        return pruef_log(argv[2], (unsigned)strtoul(argv[3], NULL, 16));
     re15_actor_t *a15 = teil_a(RE15_AI_FLAVOR_RE15, "RE1.5");
     if (a15) teil_b(a15, 0, "RE1.5");
     teil_b_wirkung();

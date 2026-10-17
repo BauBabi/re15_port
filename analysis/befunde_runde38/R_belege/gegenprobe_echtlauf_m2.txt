@@ -1,0 +1,8 @@
+   pruef_log ROOM2030: 2400 Bilder, Babys bis 9, Baby-Boden-Bilder 19273 (schwebend 14462), Adult-Bilder 7200 (schwebend 0), Bisse 37, Gift 1, Spieler |y-bu|>100 in 0
+ok    Lauf in ROOM2030: 2400 Bilder
+ok    Messgroesse bu am Spieler gegengeprueft (|y - bu| <= 100 in jedem Bild, falsch 0)
+ok    Punkt 3: Babys entstehen (bis 9 gleichzeitig, 19273 Boden-Bilder)
+FAIL: Punkt 3: kein Baby am Boden ueber dem SCA-Boden (14462 von 19273; Wandpass @0x801000c0)
+ok    Punkt 3: Babys beissen (37 x 1 HP, `addiu a0,zero,1` @0x80100EA8)
+ok    Punkt 1: keine Adultspinne ueber dem SCA-Boden (0 von 7200)
+ok    Punkt 2: der Spieler wird vergiftet (Status-Bit 0x2, Routine 25 / RE2 Op 32 @0x80020130)

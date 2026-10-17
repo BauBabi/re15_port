@@ -427,6 +427,8 @@ Auswertung `R_belege/ana_bo.py` (bu = SCA-Boden auf/unter der Figur, 1.6; Schach
 | m2_2030 (vorher, 1014136f) | 2030, Spinne 1 erschossen | 0x26 Baby | 20025 | **14485** | 511 | - | 4835 |
 | m4_2030 (02982a08) = m5_2030 (Endstand 96eca34b, Zahl fuer Zahl gleich) | 2030, derselbe Lauf | 0x26 Baby | 20025 | **0** | 450 | - | 19575 |
 | m5_2030 | | 0x25 Adult | 7200 | 0 | 0 | 0 | 7200 |
+| e_2031 (Endstand, ELZA PL04, `RE15_TITLE_SHOT_CHAR=1`) | 2031 = Elzas Variante, derselbe Lauf | 0x26 Baby | 20025 | **0** | 450 | - | 19575 |
+| e_2031 | | 0x25 Adult | 7200 | 0 | 0 | 0 | 7200 |
 | a_2050 (45da274d; Adult-Code seither unveraendert) | Sprung, Leon steht, 1500 Bilder | 0x25 | 3000 | 0 | 0 | 0 | 3000 |
 | a_2070 | Sprung, Leon steht (stirbt) | 0x25 | 2650 | 0 | 0 | 0 | 2650 |
 | a_2090 | Sprung, Leon steht (stirbt) | 0x25 | 2118 | 0 | 0 | 0 | 2118 |
@@ -461,6 +463,13 @@ Spielschritt (scd_vm_tick + re15_game_step + ESP-Tick) mit den echten STAGE2-RDT
 **Gegenprobe** (Haken lauer_re2 + re2_bank ausgeschaltet, `R_belege/gegenprobe_test.txt`): **20 FAIL** (A-RE2, B-RE2,
 C Babybank/gezeichnet, D RE2 ROOM2060/20A0 "schwebend 600").
 `unit_damage` (test_damage.c test_bleed_gate): erwartet jetzt 0/2000 Gift ueber FUN_80012d60 (vorher die widerlegte 1/4-Rate).
+`integration_r38_spinnen_echtlauf` (**neu**, tests/integration/test_r38_spinnen_echtlauf.cmake, registriert nur in
+probes/r38_spinnen.cmake): echte exe, Lauf L Leon ROOM2030 und Lauf E Elza ROOM2031 (Spinne 1 mit der Schrotflinte, Ende
+Bild 900), Auswerter `test_r38_spinnen pruef_log` auf RE15_SPINNEN_LOG: Babys entstehen, kein Baby am Boden ueber bu, Bisse
+> 0, keine Adultspinne ueber bu, Gift-Bit am Spieler, Messgroesse am Spieler gegengeprueft. Ergebnis (L und E gleich): 900
+Bilder, bis 9 Babys, 6349 Baby-Boden-Bilder davon 0 schwebend, 2700 Adult-Bilder davon 0 schwebend, 7 Bisse, Gift gesetzt,
+Spieler |y - bu| > 100 in 0 Bildern; Laufzeit 114 s. Gegenprobe des Auswerters auf dem Vorher-Log m2_2030 (Stand 1014136f):
+**FAIL** "kein Baby am Boden ueber dem SCA-Boden (14462 von 19273)" (`R_belege/gegenprobe_echtlauf_m2.txt`).
 **Gegenprobe 2** (Fortsetzung 2, Haken `re15_spinnen_r38_baby_schwanz` ausgeschaltet, `R_belege/gegenprobe_baby_schwanz.txt`):
 **2 FAIL** — "Babys bleiben auf dem Steg" (3281 von 4624 Boden-Bildern schwebend, zuletzt (10830,5054) ueber Boden 0) und
 "Kugel-Schub" (min Abstand 112).
