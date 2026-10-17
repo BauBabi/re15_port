@@ -560,7 +560,7 @@ int main(void)
     printf("\n################ PASS E - IST DER TOTE ZUSTAND UEBERHAUPT BESCHIESSBAR? ###\n");
     /* Der Hund in state 4 sub 0 sub2 0 (grid 0x40, wartet auf die SCD-Marke 0x43) tickt seinen
      * Root NICHT (PASS C) und traegt dort NOCH KEIN +0x93 |= 3 (das setzt erst der Sprung,
-     * @0x801113f8). Frage: kann der Spieler ihn in diesem Zustand treffen? Nur dann ist der
+     * @0x801113fc-400, STAGE1.BIN). Frage: kann der Spieler ihn in diesem Zustand treffen? Nur dann ist der
      * fehlende Abbau ein erreichbares Loch. */
     if (load_room("STAGE1/ROOM1190.RDT", 0x1190, 13)) {
         int slot = setup_target(RE15_AI_FLAVOR_RE2, 0x20, 3, 0);

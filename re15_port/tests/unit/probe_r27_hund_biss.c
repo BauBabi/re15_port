@@ -250,7 +250,7 @@ static void lauf(int32_t sx, int32_t sz, int16_t yaw, int nframes, int ausfuehrl
     /* DIE HUNDE LOSLASSEN — der echte Weg des Raums: ROOM11D0 spawnt sie als Zwinger-/
      * Fensterhunde (grid 0x41 -> Zustand 4 Sub 1, enemy_ai_re2_dog.c:2212), und das SKRIPT
      * gibt sie mit der Marke 0x42 frei (`beq +0x9,0x42` @0x8011170c-14, Verbrauch
-     * @0x80111718, Ausgang Wort 0xc01 @0x8011172c). Dieselbe Marke zuendet die Sonde. */
+     * `sb zero,9(a0)` @0x8011171c, Ausgang Wort 0xc01 @0x8011172c; STAGE1.BIN). Dieselbe Marke zuendet die Sonde. */
     for (int i = 0; i < nh; i++)
         if (g_actors[hs[i]].grid_id == 0x41) g_actors[hs[i]].grid_id = 0x42;
 

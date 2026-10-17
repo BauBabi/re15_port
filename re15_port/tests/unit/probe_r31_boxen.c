@@ -31,7 +31,9 @@
  *   (6) RUNDE 38 INTEGRATION (Argument `versteckt`, ctest r31_trefferboxen_versteckt): IM Schacht
  *       ist die Spinne wie im Original kein Ziel (Zielhilfe grid & 0x60 @0x8003710c-10, leeres
  *       Band @0x800120e4-ec, Latch @0x80012100) — RE2- und RE1.5-KI, Tuerweg Leon/Elza, plus
- *       der Zensus aller ausgelieferten Typen mit grid & 0x60.
+ *       der Zensus aller ausgelieferten Typen mit grid & 0x60 und die Stegspinne ROOM2050 je Zielhoehe
+ *       HOCH/EBEN/TIEF gegen das Original-Tor = Schnitt Band & Spieler-Bit (@0x800120e0-ec; Pruefmaengel N1,
+ *       Block "B: das Band der STEGSPINNE").
  * ============================================================================================ */
 #include "re15_emd.h"
 #include "re15_rdt.h"
@@ -1041,14 +1043,18 @@ typedef struct {
     const char *tag, *sub; int id, fire_sub, em; uint8_t type, grid0; int freigabe, hirn, fbank, fbit; const char *quelle;
 } zensus60_t;
 static const zensus60_t Z60[] = {
+  /* Overlay-Adressen je in der Binaerdatei der Stage des Raums (Pruefmaengel N1 2/3, selbst disassembliert): */
   { "Hund Fenster", "STAGE1/ROOM11D0.RDT", 0x11D0, -1, 0, 0x20, 0x41, 0x42, 1, -1, 0,
-    "Sce_em_set main00 @Datei 0x12BE | sub02 Member_set 0x42 @0x172C | grid := 0 `sb zero,9` @0x80111718" },
+    "Sce_em_set main00 @Datei 0x12BE | sub02 Member_set 0x42 @0x172C | grid := 0 `sb zero,9(a0)` STAGE1.BIN @0x8011171c "
+    "(`bne v1,v0` @0x80111714, Delay `ori v0,zero,0xc01` @0x80111718)" },
   { "Hund Zwinger", "STAGE1/ROOM1190.RDT", 0x1190, 13, 0, 0x20, 0x40, 0x43, 1, -1, 0,
-    "Sce_em_set sub13 @Datei 0x2900 | sub10 Member_set 0x43 @0x27E6 | grid := 0 `sb zero,9` @0x8011161c" },
+    "Sce_em_set sub13 @Datei 0x2900 | sub10 Member_set 0x43 @0x27E6 | grid := 0 `sb zero,9(v0)` STAGE1.BIN @0x8011161c" },
   { "Affe Ereignis", "STAGE4/ROOM4040.RDT", 0x4040, -1, 0, 0x29, 0x61, 0x41, 1, -1, 0,
-    "Sce_em_set main00 @Datei 0x0EB0 | sub04 Member_set 0x41 @0x11D6 | grid &= 0xbf @0x80115978-7c" },
+    "Sce_em_set main00 @Datei 0x0EB0 | sub04 Member_set 0x41 @0x11D6 | grid &= 0xbf `andi v0,v0,0xbf` / `sb v0,9(v1)` "
+    "STAGE4.BIN @0x80111018-1c (Zustand 4 Unterzustand 1 0x80110f88)" },
   { "Spiderman", "STAGE4/ROOM4001.RDT", 0x4001, -1, 2, 0x2B, 0x41, 0x42, 1, 4, 20,
-    "Ck(4,20)=1 @0x120C, Sce_em_set sub00 @Datei 0x122C | sub05 Member_set 0x42 @0x15BA | grid := 0 `sb zero,9` @0x80115564" },
+    "Ck(4,20)=1 @0x120C, Sce_em_set sub00 @Datei 0x122C | sub05 Member_set 0x42 @0x15BA | grid := 0 `sb zero,9(v0)` "
+    "STAGE4.BIN @0x80115564" },
   { "Zombie 1200", "STAGE1/ROOM1200.RDT", 0x1200, -1, 2, 0x10, 0xA1, 0x81, 0, -1, 0,
     "Sce_em_set main00 @Datei 0x087E | sub02 Member_set 0x81 @0x09A4" },
   { "Gorilla 11C0", "STAGE1/ROOM11C0.RDT", 0x11C0, -1, 1, 0x27, 0x30, 0x10, 0, -1, 0,
@@ -1125,14 +1131,39 @@ static void pass_zensus60(int fi, int k)
 }
 
 /* ===== B: das Band der STEGSPINNE (ROOM2050, grid 0x00 floor 3, y -5400) — die Wirkung des Band-Tors ausserhalb
- * des Schachts. RE1.5-KI: das Band ist der ACTIVE-Stempel FUN_80012aa4(0xfa0) (@0x80110fd0) mit
+ * des Schachts. RE1.5-KI: das Band ist der ACTIVE-Stempel FUN_80012aa4(0xfa0) (`jal 0x80012aa4` / `ori a0,zero,0xfa0`
+ * STAGE2.BIN @0x80110fd0-d4) mit
  *   s0 = (SpielerY - SpinneY) / 1800 (Abschneiden, @0x80012abc-b1c), LEVEL bei (unsigned)s0 < 2 (@0x80012b20-44),
- *   UP (s0 > 0) bzw. DOWN im Ring 1000*|s0| < Abstand < 0xfa0 + 1000*|s0| (@0x80012b64-bb8);
- * leer -> kein Kandidat (@0x800120e4-ec). RE2-KI: kein Hoehenband (Port-Abbildung wie vorher) -> immer Kandidat.
+ *   UP (s0 > 0) bzw. DOWN im Ring 1000*|s0| < Abstand < 0xfa0 + 1000*|s0| (@0x80012b64-bb8).
+ * DAS ORIGINAL-TOR IST DER SCHNITT MIT DEM SPIELER-BAND, nicht "Band nicht leer" (Pruefmaengel N1 1, PSX.EXE selbst
+ * disassembliert): der Resolver FUN_80011f50 baut das Spieler-Wort aus 0x800acaec (`lhu v0,-13588(v0)` @0x80011fc8,
+ * `and v1,v1,a0` = word0 & 0x1fffffff @0x80011fcc, `sll v0,v0,16` @0x80011fd0, `or` @0x80011fe0, `sw` @0x80011fe8)
+ * und nimmt einen Kandidaten nur bei Gegner-word0 & Spieler-word0 & 0xe0000000 != 0 (`lw v0,0(s0)` @0x800120d0,
+ * `lw v1,-13740(v1)` @0x800120d8, `and` @0x800120e0, `lui v1,0xe000` @0x800120e4, `and` @0x800120e8,
+ * `beq v0,zero,0x80012128` @0x800120ec). Die Ziel-Schreiber von 0x800acaec (Waffe heben, hoch, mitte, tief) loeschen
+ * die drei Zielbits und setzen GENAU EINES (`andi …,0x1fff` + `ori`): HOCH 0x8000 @0x8003322c / @0x80035170, EBEN
+ * 0x4000 @0x80032f9c / @0x800332c0 / @0x80035204, TIEF 0x2000 @0x80033274 / @0x800351b8. Ein UP-Band (0x80000000) ist
+ * also NUR mit Zielhoehe HOCH ein Kandidat: EBEN 0x40000000 & 0x80000000 = 0 -> kein Kandidat.
+ * Gemessen wird deshalb je Lage mit allen drei Zielhoehen (re15_player_set_aim_elevation_for_test +1/0/-1 =
+ * re15_player_aim_elevation, daraus pband im Resolver re15_damage.c). Urteil (urteil_versteckt): Band == Soll;
+ * Original-Kandidat (Schnitt nicht leer) -> Port muss treffen; leeres Soll-Band -> Port darf bei KEINER Zielhoehe
+ * treffen; trifft der Port bei nicht leerem Band EBEN, obwohl der Schnitt leer ist, ist das die BEKANNTE
+ * PORT-ABWEICHUNG der Bitauswahl (Resolver-Zweig 0x25: LEVEL immer + RE2-Fenster, re15_damage.c; R_spinnen.md
+ * "Integration ... Offen" 2) — sie wird als OFFEN ausgegeben und NICHT als Soll geprueft; jede andere Abweichung
+ * zaehlt. RE2-KI: Port-Abbildung wie vorher (EBEN immer Kandidat), HOCH/TIEF nur ausgegeben.
  * Drei Spielerlagen: auf dem Steg 2000 entfernt, unten (y 0) 2000 bzw. 5000 waagerecht entfernt. */
-typedef struct { int ok, band, soll, treffer; int32_t dist, px, py, pz; } stegband_t;
+typedef struct { int ok, band, soll, treffer[3]; int32_t dist, px, py, pz; } stegband_t;
 static stegband_t s_steg[2][3];
 static const struct { int unten; int32_t dx, dz; } STEG_LAGE[3] = { { 0, -2000, 0 }, { 1, -2000, 0 }, { 1, 0, 5000 } };
+/* Zielhoehe des Spielers -> das EINE Bit im Spieler-word0 (0x800acaec << 16, @0x80011fd0). */
+static const struct { int elev; uint32_t bit; const char *name; } ZH[3] = {
+    { +1, 0x80000000u, "HOCH" }, { 0, 0x40000000u, "EBEN" }, { -1, 0x20000000u, "TIEF" } };
+extern void re15_player_set_aim_elevation_for_test(int elev);
+/* aim_band-Kodierung (re15_actor.h: 4 = UP, 2 = LEVEL, 1 = DOWN) -> word0-Bits 31/30/29 */
+static uint32_t band_bits(int b)
+{
+    return ((b & 4) ? 0x80000000u : 0u) | ((b & 2) ? 0x40000000u : 0u) | ((b & 1) ? 0x20000000u : 0u);
+}
 static int aa4_soll(const re15_actor_t *pl, const re15_actor_t *e, int32_t *dist_out)
 {
     int32_t s0 = (pl->y - e->y) / 1800;                                   /* @0x80012ad8 / @0x80012b0c-1c */
@@ -1164,7 +1195,13 @@ static void pass_stegband(int fi)
         m->soll = aa4_soll(pl, e, &m->dist);
         m->px = pl->x; m->py = pl->y; m->pz = pl->z;
         pl->rot_y = (int16_t)(((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0x0fff);
-        m->treffer = direkter_treffer(slot);
+        /* je Zielhoehe ein direkter Resolver-Aufruf aus demselben Zustand (direkter_treffer setzt Ziel und Spieler
+         * zurueck, re15_player_weapon_fire loescht s_re2_probe am Anfang) */
+        for (int z = 0; z < 3; z++) {
+            re15_player_set_aim_elevation_for_test(ZH[z].elev);
+            m->treffer[z] = direkter_treffer(slot);
+        }
+        re15_player_set_aim_elevation_for_test(0);
         m->ok = 1;
     }
 }
@@ -1207,9 +1244,15 @@ static void drucke_versteckt(void)
         }
         for (int k = 0; k < 3; k++) {
             const stegband_t *m = &s_steg[fi][k];
-            printf("  Stegspinne 2050 (y -5400), Spieler %s (%d,%d,%d), Abstand %d: Band %d (FUN_80012aa4(0xfa0)-Soll %d) | "
-                   "Resolver direkt %d\n", STEG_LAGE[k].unten ? "unten" : "auf dem Steg", m->px, m->py, m->pz, m->dist,
-                   m->band, m->soll, m->treffer);
+            printf("  Stegspinne 2050 (y -5400) Lage %d, Spieler %s (%d,%d,%d), Abstand %d: Band %d (FUN_80012aa4(0xfa0)-Soll %d) "
+                   "| Resolver direkt HOCH %d EBEN %d TIEF %d", k, STEG_LAGE[k].unten ? "unten" : "auf dem Steg", m->px,
+                   m->py, m->pz, m->dist, m->band, m->soll, m->treffer[0], m->treffer[1], m->treffer[2]);
+            if (VFL[fi] == RE15_AI_FLAVOR_RE15)
+                printf(" | Original-Tor Soll & Spieler-Bit (@0x800120d0-ec): HOCH %d EBEN %d TIEF %d\n",
+                       (band_bits(m->soll) & ZH[0].bit) != 0, (band_bits(m->soll) & ZH[1].bit) != 0,
+                       (band_bits(m->soll) & ZH[2].bit) != 0);
+            else
+                printf(" | RE2-KI: kein RE1.5-Stempel, Port-Abbildung\n");
         }
     }
 }
@@ -1307,12 +1350,31 @@ static int urteil_versteckt(void)
             const stegband_t *m = &s_steg[fi][k];
             if (!m->ok) { printf("  FEHLER %s Stegspinne 2050 Lage %d nicht gemessen\n", K, k); abw++; continue; }
             if (VFL[fi] == RE15_AI_FLAVOR_RE15) {
-                /* RE1.5-Gehirn: Band = ACTIVE-Stempel, Kandidat genau bei nicht leerem Band (@0x800120e4-ec) */
-                if (m->band != m->soll || m->treffer != (m->band != 0)) { abw++;
-                    printf("  ABWEICHUNG %s Stegspinne Lage %d: Band %d, Soll %d (FUN_80012aa4(0xfa0) @0x80110fd0), Resolver %d "
-                           "(Soll %d)\n", K, k, m->band, m->soll, m->treffer, m->soll != 0); }
-            } else if (!m->treffer) { abw++;   /* RE2-Gehirn: kein Hoehenband, Kandidat wie vorher */
-                printf("  UNERWUENSCHT %s Stegspinne Lage %d: der Resolver nimmt die RE2-Spinne nicht mehr\n", K, k); }
+                /* RE1.5-Gehirn: Band = ACTIVE-Stempel FUN_80012aa4(0xfa0) (STAGE2.BIN @0x80110fd0); Kandidat genau bei
+                 * nicht leerem SCHNITT mit dem einen Spieler-Bit (`and` / `lui v1,0xe000` / `and` / `beq v0,zero` @0x800120e0-ec) */
+                if (m->band != m->soll) { abw++;
+                    printf("  ABWEICHUNG %s Stegspinne Lage %d: Band %d, Soll %d (FUN_80012aa4(0xfa0) @0x80110fd0)\n", K, k,
+                           m->band, m->soll); }
+                const uint32_t sb = band_bits(m->soll);
+                for (int z = 0; z < 3; z++) {
+                    const int orig = (sb & ZH[z].bit) != 0;
+                    if (orig && !m->treffer[z]) { abw++;
+                        printf("  ABWEICHUNG %s Stegspinne Lage %d Zielhoehe %s: Original Kandidat (0x%08X & 0x%08X != 0 "
+                               "@0x800120e0-ec), der Port trifft nicht\n", K, k, ZH[z].name, (unsigned)sb, (unsigned)ZH[z].bit); }
+                    else if (!orig && m->treffer[z]) {
+                        if (sb == 0u || z != 1) { abw++;
+                            printf("  ABWEICHUNG %s Stegspinne Lage %d Zielhoehe %s: Original KEIN Kandidat (0x%08X & 0x%08X = 0 "
+                                   "-> `beq v0,zero,0x80012128` @0x800120ec), der Port trifft\n", K, k, ZH[z].name,
+                                   (unsigned)sb, (unsigned)ZH[z].bit); }
+                        else
+                            printf("  OFFEN %s Stegspinne Lage %d Zielhoehe EBEN (bekannte Port-Abweichung, nicht gezaehlt): "
+                                   "Original kein Kandidat (0x%08X & 0x40000000 = 0 @0x800120ec), der Port trifft - "
+                                   "Bitauswahl des Resolver-Zweigs 0x25 = LEVEL immer + RE2-Fenster statt Stempel "
+                                   "(re15_damage.c, R_spinnen.md Integration Offen 2)\n", K, k, (unsigned)sb); }
+                }
+            } else if (!m->treffer[1]) { abw++;   /* RE2-Gehirn: Port-Abbildung wie vorher, EBEN immer Kandidat */
+                printf("  UNERWUENSCHT %s Stegspinne Lage %d: der Resolver nimmt die RE2-Spinne mit Zielhoehe EBEN nicht "
+                       "mehr\n", K, k); }
         }
     }
     return abw;

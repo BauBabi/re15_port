@@ -7549,7 +7549,7 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
         switch (e->sub_state_2) {
         case 0:
             if (e->grid_id != 0x43) break;              /* gate: `bne +0x9,0x43 -> jr ra` WAIT @0x801113e4-ec */
-            e->hit_react |= 3;                          /* +0x93 |= 3 @0x801113f8 */
+            e->hit_react |= 3;                          /* +0x93 |= 3: `ori v0,v0,0x3` / `sb v0,147(a0)` @0x801113fc-400 (STAGE1.BIN) */
             e->sub_state_2 = 1;
             re15_dog_clip(e, 0x14); e->crow_speed = 0xf0;   /* clip 0x14, +0x8c=0xf0 @0x80111410-24 */
             re15_audio_room_se(5);                      /* Se(5): `ori a0,5` @0x8011142c + jal 453d0 @0x80111450 (audit #14) */
@@ -7607,7 +7607,7 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
              * dog sits raised in the kennel window) — the +0xb0 shadow block is not modeled (OPEN). */
         } else if (e->sub_state_2 != 1) break;
         if (e->grid_id == 0x42) {                        /* SCD release mark 'B' @0x8011170c-14 */
-            e->grid_id = 0;                              /* consumed @0x80111718 */
+            e->grid_id = 0;                              /* consumed: `sb zero,9(a0)` @0x8011171c (STAGE1.BIN; @0x80111718 = Delay `ori v0,zero,0xc01`) */
             e->state = 1; e->sub_state_1 = 0x0c; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* word 0xc01 @0x8011172c */
             e->dog_cage_rel0c = 1;                       /* PORT-MARKE (kein Original-Feld): nur
                                                           * DIESE Herkunft darf unter dem RE2-

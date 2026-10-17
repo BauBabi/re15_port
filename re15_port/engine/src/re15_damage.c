@@ -1491,12 +1491,23 @@ static int64_t re15_wedge_cross(int32_t ax, int32_t az, int32_t bx, int32_t bz)
  *   liegend 0x16 grid 0x88 dist 7228 -> wie downed 5538                                    = 0
  * 5/5 exakt reproduziert.
  *
- * GELTUNGSBEREICH (Zensus aller `jal` auf die drei Band-Helfer in STAGE1..5.BIN, selbst
- * gescannt): 0x80012aa4 wird IMMER mit a0 = 0xbb8 gerufen — STAGE1 @0x80101600 (Zombie-ACTIVE),
- * @0x8010b650 (Zombie-Girl), @0x8011d49c/@0x8011da30 (der generische 0x47-Root). Andere
- * Gegner-Familien stempeln ANDERS und bleiben hier unangetastet: Hund @0x8010dd38-4c
- * (`word0 |= 0x40000000` + `jal 0x80012974 / a0 = 0xfa0`), Kraehe @0x801125ac (974 mit 0x1770)
- * / @0x80112594 (0x80012a0c) — die faehrt weiter ueber e->aim_band. */
+ * GELTUNGSBEREICH (⛔ BERICHTIGT Runde 38 Integration, Pruefmaengel N1 4: hier stand "0x80012aa4
+ * wird IMMER mit a0 = 0xbb8 gerufen (Zensus STAGE1..5)" - widerlegt durch STAGE2.BIN @0x80110fd0).
+ * Zensus aller `jal 0x80012aa4` (Wort 0x0C004AA9) in PSX.EXE und STAGE1..6/DEBUG/TITLE.BIN, selbst
+ * gescannt; kein Datenzeiger 0x80012aa4, kein lui/addiu-Paar darauf: 13 Aufrufe, a0 im Delay-Slot.
+ *   a0 = 0xbb8 (12x): STAGE1 @0x80101600 (Zombie-ACTIVE), @0x8010b650 (Zombie-Girl), @0x8011d49c
+ *     (Typ 0x45, Wurzel 0x8011d140) und @0x8011da30 (Typ 0x47, Wurzel 0x8011d6d4; Registrierung
+ *     `sw v0,11456/11464(at)` @0x8011e93c/@0x8011e94c); dieselben zwei Zombie-Schwaenze in STAGE2
+ *     @0x80101494/@0x8010b4e4, STAGE3 @0x801016ec/@0x8010b73c, STAGE4 @0x801015b4/@0x8010b604,
+ *     STAGE5 @0x80101734/@0x8010b784 (je +-24 Befehle bis auf Sprungziele gleich mit STAGE1).
+ *   a0 = 0xfa0 (1x): STAGE2.BIN @0x80110fd0 `jal 0x80012aa4` / `ori a0,zero,0xfa0` (a9 4a 00 0c
+ *     a0 0f 04 34) = Spinnen-ACTIVE (nur grid < 2 oder 5, @0x80110fbc-c8); im Port
+ *     re15_band_stamp_aa4_aim (unten), gerufen aus spinnen_r38.c.
+ * Der feste Radius 0xbb8 im Resolver unten gilt deshalb nur fuer die Zombie-Familie
+ * (re15_band_is_zombie_family). Andere Gegner-Familien stempeln mit anderen Helfern und bleiben
+ * hier unangetastet: Hund STAGE1 @0x8010dd38-4c (`word0 |= 0x40000000` + `jal 0x80012974` /
+ * `ori a0,zero,0xfa0`), Kraehe STAGE1 @0x801125ac (974 mit 0x1770) / @0x80112594 (0x80012a0c mit
+ * 0x1770) — die fahren weiter ueber e->aim_band. */
 static uint32_t re15_band_stamp_aa4(const re15_actor_t *pl, const re15_actor_t *e,
                                     uint32_t dist, int32_t R)
 {
@@ -2581,7 +2592,8 @@ retry_after_latch:
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
                      * uebrigen Familien stempeln mit anderen Helfern/Radien — die generischen
-                     * 0x47-Roots @0x8011d49c/@0x8011da30 (aa4(0xbb8), gleiche Form wie oben).
+                     * Roots Typ 0x45 @0x8011d49c / Typ 0x47 @0x8011da30 (STAGE1.BIN, aa4(0xbb8),
+                     * gleiche Form wie oben; Zensus im Kopf von re15_band_stamp_aa4).
                      * Bis jede davon einzeln disassembliert ist, bleibt fuer sie das
                      * bisherige Verhalten unveraendert stehen. (Hund 2026-08-29, Maggot
                      * 2026-08-30 oben geloest.) */
@@ -3947,7 +3959,7 @@ int re15_enemy_should_attack(const re15_actor_t *e, const re15_actor_t *player)
  * ⛔ WARUM NICHT IN DER SCHLEIFE (gemessen, nicht vermutet): `(+0x93 & 3) == 3` ist dort der
  * einzige Fixpunkt des `goto retry_after_latch` (@0x800123FC-0x80012418). Ersetzt man ihn fuer
  * RE2-Typen durch das 1D3-Gate, laeuft der Resolver endlos (vier Tests in Timeouts; Taeter u.a.
- * der Skript-Hund, der mit `+0x93 |= 3` @0x801113f8 startet). Stellt man es DANEBEN, terminiert
+ * der Skript-Hund, der mit `+0x93 |= 3` @0x801113fc-400 (STAGE1.BIN) startet). Stellt man es DANEBEN, terminiert
  * es zwar, verschluckt aber Schuesse still - vier gruene Tests fielen darueber.
  * Ueber Bit 0 wirkt die Pause dagegen genau wie im Original: der Resolver sieht "schon
  * getroffen", setzt Bit 1 dazu (`+0x93 |= 2` @0x8001240c) und nimmt beim Rueckgriff den

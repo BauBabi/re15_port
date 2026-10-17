@@ -770,7 +770,8 @@ RE2- und RE1.5-KI, je Schachtspinne (2060/0, 2060/1, 20A0/0, 20A0/1): W wartend 
 eben/hoch, wartet danach unveraendert), K Herauskriechen (Latch == 3 in jedem Ausstiegsbild, Zielhilfe 0 solange grid 0x42,
 Resolver 0, Schuesse treffen nicht, landet), L Grenze (nach Phase 8 Resolver 0, nach dem ersten ACTIVE/RE2-INIT Resolver 1 +
 Zielhilfe 1, RE1.5-KI Band 0 -> 3 wie 0x00000801 -> 0x60000801, danach Treffer, kein Bild ueber dem Boden), T Tuerweg Leon/Elza,
-Zensus grid & 0x60 (unten), Stegspinne ROOM2050 (Band = FUN_80012aa4(0xfa0)-Soll an drei Spielerlagen). Ergebnis: `OK`.
+Zensus grid & 0x60 (unten), Stegspinne ROOM2050 (Band = FUN_80012aa4(0xfa0)-Soll an drei Spielerlagen; seit N1 je Lage mit
+allen drei Zielhoehen gegen das Original-Tor = Schnitt mit dem Spieler-Bit, s. "Pruefmaengel N1"). Ergebnis: `OK`.
 **Gegenprobe** (Engine-Stand 7fff66c5, Riegel unveraendert): `FEHLGESCHLAGEN: 95 Abweichung(en) vom Original` (W/K/L je Schachtspinne in beiden KI, Tuerweg Leon/Elza, Zensus, Stegspinne;
 `R_belege/integ_riegel_versteckt_gegenprobe.txt`; mit Fix `R_belege/integ_riegel_versteckt_nachher.txt`).
 
@@ -778,20 +779,28 @@ Zensus grid & 0x60 (unten), Stegspinne ROOM2050 (Band = FUN_80012aa4(0xfa0)-Soll
 | Typ | Saetze (Sce_em_set +0x09) | Freigabe im Original | Port | Wirkung (gemessen im Riegel, beide KI) |
 |---|---|---|---|---|
 | NPC 0x40-0x4D | ~60 Saetze grid 0x40 (1011, 1021, 1050, 10D0, 11B0, 1260, 2000, 3000, 4000, 5011, 6020, ...) | - | HP -1 (@0x8011c744) -> war schon kein Ziel | keine |
-| Hund 0x20 | 1190/1191 sub13 0x40 (-> sub10 0x43 @0x27E6); 11D0/11D1 0x41, 3060 0x41, 3061 0x41 (-> 0x42) | grid := 0 `sb zero,9` @0x8011161c / @0x80111718 | re15_dog_state456, beide KI, gleiche Stellen | versteckt kein Ziel; Fenster-Hund nach 1 Bild, Zwinger-Hund nach 35 Bildern wieder Ziel |
+| Hund 0x20 | 1190/1191 sub13 0x40 (-> sub10 0x43 @0x27E6); 11D0/11D1 0x41, 3060 0x41, 3061 0x41 (-> 0x42) | grid := 0 `sb zero,9`: STAGE1.BIN @0x8011161c (Zwinger, Untertabelle @0x801210c8 [0] 0x80111398) / @0x8011171c (Fenster, [1] 0x80111658; @0x80111718 ist der Delay-Slot `ori v0,zero,0xc01`); STAGE3.BIN (3060/3061) @0x801101fc (Fenster, @0x8011ebe0 [1] 0x80110138) | re15_dog_state456, beide KI, gleiche Stellen | versteckt kein Ziel; Fenster-Hund nach 1 Bild, Zwinger-Hund nach 35 Bildern wieder Ziel |
 | Kraehe 0x21 | 1171 sub07 em1/em2 0x40 (Ck(3,194)) | keine (STAGE1 0x80111a00-0x80116000 ohne grid-Store, kein Member_set) | ebenso | Szenenkraehen nie Ziel der Zielhilfe (Original ebenso); Spur B (re15_szenenschutz_gegen liest grid & 0x40) unberuehrt |
 | Spinne 0x25 | 2060/2061, 20A0/20A1 0x41 (-> 0x42) | Phase 7 grid 5 @0x80115250-54 | spinnen_r38.c | Ziel des Fixes (oben) |
-| Affe 0x29 | 4000, 4040/4041, 4080/4081, 5031, 50A0/50A1, 50B0, 5100/5101 0x61 (-> 0x41/0x61/0x00) | grid &= 0xbf @0x80115860-64 / @0x80115978-7c | affen3_r38.c | versteckt kein Ziel; nach 0x41 in 1 Bild 0x01 -> Ziel |
-| Spiderman 0x2B | 4001, 5040/5041, 5070/5071 0x41 (-> 0x42) | grid := 0 @0x80115564 (Bild 0x21) | spiderman_r38.c | wie vorher (Spur-T-Tor jetzt allgemein); nach 34 Bildern Ziel |
+| Affe 0x29 | 4000, 4040/4041, 4080/4081, 5031, 50A0/50A1, 50B0, 5100/5101 0x61 (-> 0x41/0x61/0x00) | grid &= 0xbf `andi v0,v0,0xbf` / `sb v0,9`, Zustand 4 Unterzustand 1 / 0: STAGE4.BIN @0x80111018-1c / @0x80110f00-04 (4000/4040/4080; Untertabelle @0x8011a064), STAGE5.BIN @0x80111198-9c / @0x80111080-84 (5031/50A0/50B0/5100; @0x8011fbcc). Derselbe Code in STAGE3.BIN @0x80115978-7c / @0x80115860-64 gehoert zu ROOM3040/3041 (grid 0x00) | affen3_r38.c (Adressen dort STAGE3.BIN) | versteckt kein Ziel; nach 0x41 in 1 Bild 0x01 -> Ziel |
+| Spiderman 0x2B | 4001, 5040/5041, 5070/5071 0x41 (-> 0x42) | grid := 0 `sb zero,9(v0)` STAGE4.BIN @0x80115564 (4001; Unterzustand 1 0x801152ec, @0x8011a270) / STAGE5.BIN @0x801156e4 (5040/5070; 0x8011546c, @0x8011fdd8) (Bild 0x21) | spiderman_r38.c | wie vorher (Spur-T-Tor jetzt allgemein); nach 34 Bildern Ziel |
 | Zombie 0x10 | 1200/1201 em2 0xA1 (-> sub02 0x81) | Freigabewert ohne 0x60 | Member_set | eingefroren kein Ziel, nach Freigabe sofort |
 | Zombie 0x18 | 5020 em0 0xAE | keine | - | nie Ziel (Original ebenso) |
 | Gorilla 0x27 | 1141 sub00 0x30 (Ck(4,240)), 11C0 sub00 0x30 (-> 0x10) | Freigabewert ohne 0x60 | Member_set; Messhaken dining_r38 (RE15_R38F_GORILLAS_STARR) | eingefroren kein Ziel |
 | Birkin 0x30/0x36 | 3070, 5080/5081, 5090/5091, 50E0, 50F1 0x33; 3071 0x21; 3080 0x24 (-> 0x13/0x01/0x12/0x04) | Freigabewert ohne 0x60 | Member_set | eingefroren kein Ziel, nach Freigabe Ziel |
 | Port-Halt 0x20 | irons_tod_1150.c (1040 hinter der Kamera), montage_r38.c (1030 hinter dem Tor) | - | Port-Szenen | angehaltene Zombies kein Ziel (Bedeutung wie Original-Bit 0x20) |
-Stegspinne ROOM2050 (y -5400; Wirkung des Band-Tors ausserhalb des Schachts, gemessen im Riegel): RE1.5-KI Kandidat genau bei
-nicht leerem ACTIVE-Stempel - auf dem Steg 1999 entfernt Band 3 (LEVEL|DOWN), Treffer; unten (y 0) 2048 waagerecht Band 0
-(s0 3, ausserhalb des Rings 3000 < d < 7000), KEIN Treffer (vorher LEVEL pauschal = Treffer); unten 4990 Band 4 (UP), Treffer.
-RE2-KI in allen drei Lagen Treffer wie vorher (RE2 hat kein Hoehenband).
+Stegspinne ROOM2050 (y -5400; Wirkung des Band-Tors ausserhalb des Schachts, gemessen im Riegel). ⛔ BERICHTIGT (N1): hier stand
+"RE1.5-KI Kandidat genau bei nicht leerem ACTIVE-Stempel ... unten 4990 Band 4 (UP), Treffer". Das Original-Tor ist der SCHNITT
+mit dem einen Spieler-Bit (`and` / `lui v1,0xe000` / `and` / `beq v0,zero,0x80012128` @0x800120e0-ec), nicht "Band nicht leer";
+der damalige Riegel schoss nur mit Zielhoehe EBEN (0x40000000), und 0x80000000 & 0x40000000 = 0 ist im Original KEIN Kandidat.
+Gemessen (RE1.5-KI, Riegel N1, je Lage HOCH/EBEN/TIEF; `R_belege/integ_riegel_versteckt_n1.txt`):
+| Lage | Band (= Soll FUN_80012aa4(0xfa0)) | Original-Kandidat HOCH/EBEN/TIEF | Port-Treffer HOCH/EBEN/TIEF |
+|---|---|---|---|
+| 0: auf dem Steg, 1999 | 3 = LEVEL\|DOWN | 0/1/1 | 0/1/1 |
+| 1: unten (y 0), 2048 (s0 3, ausserhalb des Rings 3000 < d < 7000) | 0 | 0/0/0 | 0/0/0 (vorher LEVEL pauschal = Treffer) |
+| 2: unten (y 0), 4990 | 4 = UP | 1/0/0 | 1/**1**/0 |
+EBEN in Lage 2 (UP-Band) trifft der Port, das Original nicht: bekannte Port-Abweichung der Bitauswahl (Offen 2), der Riegel gibt
+sie als `OFFEN` aus und prueft sie nicht als Soll. RE2-KI: EBEN in allen drei Lagen Treffer wie vorher (Port-Abbildung).
 
 ### Tests
 `ctest --test-dir re15_port/build -R "trefferboxen|r38_spinnen|spider|r31_|aim|ziel|r38_affen3|r38_szenenschutz|crow|kraehe|r36_schuss|beretta|r38_griff" -j 3 --timeout 1500`:
@@ -811,11 +820,48 @@ wie der ACTIVE-Schwanz (`re15_spinnen_r38_band_stempel`, grid 0x01, gleiche Hoeh
    zusaetzlich den Trefferkasten (hit_radius_min), das Original nicht. Vorbestehend.
 2. RE1.5-Spinne: der DEATH-Zustand schreibt das Band (loeschen + DOWN ab +0x95 >= 0xe @0x80114bec-c30, loeschen + DOWN
    @0x80114cec-d1c) - nicht abgebildet; die Bitauswahl bei nicht leerem Band ist weiter das Port-Modell (LEVEL + RE2-Fenster).
+   Gemessene Folge (N1): die Stegspinne ROOM2050 mit UP-Band (Spieler unten, 4990 entfernt) trifft der Port auch mit Zielhoehe
+   EBEN; im Original ist das kein Kandidat (0x80000000 & 0x40000000 = 0, `beq v0,zero,0x80012128` @0x800120ec). Der Riegel
+   r31_trefferboxen_versteckt gibt diesen Fall als `OFFEN` aus.
 3. Eingefrorene Wesen (grid & 0x20, z.B. ROOM5020 0xAE) sind jetzt kein Ziel der Zielhilfe, der Resolver des Ports kann sie
    aber weiter treffen (Band je Typ im Resolver gerechnet); im Original stempelt kein ACTIVE-Takt. Je Typ nachzumessen.
-4. RE2-KI-Skripthunde (Zustand 4/5/6 = RE1.5-Maschine, Latch `+0x93 |= 3` @0x801113f8): der RE2-Pausenfilter gibt Bit 0
+4. RE2-KI-Skripthunde (Zustand 4/5/6 = RE1.5-Maschine, Latch `+0x93 |= 3` = `ori v0,v0,0x3` / `sb v0,147(a0)` STAGE1.BIN
+   @0x801113fc-400 bzw. STAGE3.BIN @0x8010fedc-e0; N1: hier stand @0x801113f8 = `nop`): der RE2-Pausenfilter gibt Bit 0
    frei wie vorher bei der Spinne (Kommentar dort nennt den ROOM1190-Zwingerhund) - gleiche Fehlerklasse, nicht Teil dieses Fixes.
 5. Kunstfall Ausloeser vor dem INIT (nur Debug-Sprung direkt in Cut 1/5): RE2-KI-Spinne laeuft mit grid 0x42 auf Schachthoehe
    (R_spinnen OFFEN 3); unter der RE1.5-KI jetzt wie im Original ohne Band.
 6. DuckStation-GDB beantwortet `P` (Register schreiben) leer - ein direkter Aufruf der Zielhilfe ging nicht; gemessen wurde ueber
    das virtuelle R1 (0x800ac768).
+
+### Pruefmaengel N1 (2026-10-17, unabhaengige Pruefung von c939ce5d / 3c62b5ae)
+Der Spielfix bleibt unveraendert; berichtigt sind Riegel, Zitate und Kommentare (Spielcode: nur Kommentare). Jede Adresse
+selbst disassembliert (`re15_disasm.py`; PSX.EXE bzw. die STAGE-Datei des Raums, roh @0x80100000).
+1. **Stegspinne Lage 2 am Original-Tor.** Der Riegel schoss je Lage nur mit Zielhoehe EBEN und verlangte "Treffer genau bei
+   nicht leerem Band" - das ist die Port-Bitauswahl, nicht das Original. Original: Spieler-Wort = 0x800acaec << 16
+   (`lhu` @0x80011fc8, `sll v0,v0,16` @0x80011fd0, `sw` @0x80011fe8); die Ziel-Schreiber setzen genau EIN Bit (HOCH
+   `ori v0,v0,0x8000` @0x8003322c / @0x80035170, EBEN `ori v0,v0,0x4000` @0x80032f9c / @0x800332c0 / @0x80035204, TIEF
+   `ori v0,v0,0x2000` @0x80033274 / @0x800351b8); Kandidat nur bei Schnitt != 0 (`beq v0,zero,0x80012128` @0x800120ec).
+   Jetzt je Lage HOCH/EBEN/TIEF gegen den Schnitt (Tabelle "Stegspinne ROOM2050" oben); EBEN bei UP-Band = `OFFEN` (Offen 2).
+   Beleg `R_belege/integ_riegel_versteckt_n1.txt` (OK). Gegenprobe `R_belege/integ_riegel_versteckt_n1_gegenprobe.txt`
+   (Wegwerf: HOCH/TIEF beim Messen vertauscht): `FEHLGESCHLAGEN: 4 Abweichung(en) vom Original`.
+2. **Affe 0x29 liegt in STAGE4/5.** Das Zitat @0x80115978-7c ist STAGE3.BIN (ROOM3040/3041, grid 0x00). Kette Registrierung
+   -> Wurzel -> Zustand [4] -> Untertabelle -> Store: STAGE4 `sw v0,11344(at)` @0x801183e8 -> 0x8010c1a0 -> @0x80119ed4 [4]
+   0x80110dd4 -> @0x8011a064 [1] 0x80110f88 -> `andi v0,v0,0xbf` / `sb v0,9(v1)` @0x80111018-1c (bf 00 42 30 09 00 62 a0);
+   STAGE5 @0x8011dd48 -> 0x8010c320 -> @0x8011fa3c [4] 0x80110f54 -> @0x8011fbcc [1] 0x80111108 -> @0x80111198-9c. Vollscan
+   aller STAGE-Dateien nach `andi ..,0xbf` + `sb ..,9(..)`: genau sechs Stellen, je zwei in STAGE3/4/5.
+3. **Off-by-one (STAGE1.BIN).** Fenster-Hund: `sb zero,9(a0)` @0x8011171c (@0x80111718 = Delay-Slot `ori v0,zero,0xc01`).
+   Latch: `ori v0,v0,0x3` @0x801113fc / `sb v0,147(a0)` @0x80111400 (@0x801113f8 = `nop`). STAGE3 (3060/3061): @0x801101fc
+   bzw. @0x8010fedc-e0. Berichtigt in probe_r31_boxen.c (Z60), hier (Zensus, Offen 4), enemy_ai_common.c (Kommentar
+   :7552/:7610), re15_damage.c (Kommentar), test_dog_ai.c (FAIL-Text), probe_r27_hund_biss.c, probe_1d3_zensus.c,
+   test_re2_hit_repeat.c (Kommentare). Nicht geaendert: die historischen Dossiers befunde_2026-09-26/raum11d0-bluteffekte.md
+   und nutzer_batch_2026-08-29/hund-erster-treffer.md (gleiche Zitate, Stand ihrer Runde).
+4. **re15_damage.c, Kopf re15_band_stamp_aa4** (Kommentar): "IMMER a0 = 0xbb8" ist widerlegt. Zensus `jal 0x80012aa4` in
+   PSX.EXE und allen BIN: 13 Aufrufe, 12 mit 0xbb8 (Zombie-ACTIVE / Zombie-Girl je Stage, STAGE1 dazu Typ 0x45 @0x8011d49c und
+   Typ 0x47 @0x8011da30 - vorher beide "0x47"), 1 mit 0xfa0 (STAGE2 @0x80110fd0, Spinne).
+Werkzeug-Befund: `local_build.sh build` beendet jede re15_pc.exe, deren Pfad mit `...\re15_port\build` BEGINNT - also auch die
+aus `re15_port\build_suite` (gemessen mit demselben Filter ohne Stop-Process: PID 50984 eines parallelen Suite-Laufs).
+Gebaut wurde deshalb mit `cmake --build re15_port/build -j 4` aus PowerShell (msys64 vorn im PATH): 756/756, 0 Warnungen.
+Tests (Endstand): `ctest --test-dir re15_port/build -R "trefferboxen|r38_spinnen|spider|r31_" -j 2 --timeout 1500`:
+`100% tests passed, 0 tests failed out of 19` / `Total Test time (real) = 113.91 sec` (darin r31_trefferboxen_versteckt,
+r31_trefferboxen, unit_r38_spinnen, integration_r38_spinnen_echtlauf); dazu die Hunde-Tests mit berichtigten Texten
+`-R "^unit_dog_ai$|^unit_re2_hit_repeat$"`: `100% tests passed, 0 tests failed out of 2`.

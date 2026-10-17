@@ -205,7 +205,7 @@ static void run(const char *tag, re15_ai_flavor_t flavor, int weapon, int budget
      * Kandidat (Band-Gate @0x800120d0-ec) — auf ihn zu schiessen war ein original-
      * unmoegliches Szenario. Freigabe wie im echten Lauf: das Skript setzt +0x9 = 0x43
      * (Member-12-Write `sb a2,9(a0)` @0x800411f8), der Hund springt (waehrenddessen
-     * byte-true +0x93|=3 @0x801113f8 = unverwundbar), landet und wechselt mit `sw 0x201`
+     * byte-true +0x93|=3 @0x801113fc-400 = unverwundbar), landet und wechselt mit `sw 0x201`
      * @0x8011162c nach state 1 — ab da stempelt der Tail und die Trefferkette laeuft. */
     if (s_want_type == 0x20 && g_actors[slot].state == 4 && g_actors[slot].grid_id == 0x40)
         g_actors[slot].grid_id = 0x43;

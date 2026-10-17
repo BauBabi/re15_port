@@ -250,7 +250,7 @@ int main(void)
     wd->grid_id = 0x42;                              /* SCD release mark */
     re15_enemy_ai_run_all(0);
     if (wd->state != 1 || wd->sub_state_1 != 0x0c) { fprintf(stderr, "FAIL(10): grid 0x42 must release to state 1 sub 0xc (word 0xc01 @0x8011172c), state=%d sub=%d\n", wd->state, wd->sub_state_1); fail = 1; }
-    if (wd->grid_id != 0) { fprintf(stderr, "FAIL(10): the 0x42 mark must be consumed (@0x80111718), grid=%02x\n", wd->grid_id); fail = 1; }
+    if (wd->grid_id != 0) { fprintf(stderr, "FAIL(10): the 0x42 mark must be consumed (`sb zero,9(a0)` @0x8011171c), grid=%02x\n", wd->grid_id); fail = 1; }
     printf("  (10) WINDOW HOLD: clip-8 hold, 0x42 release -> sub 0xc stand-up\n");
 
     /* (11) grounded HURT (FUN_801109e0, audit #4): flinch clip 6, then recover STRAIGHT into
