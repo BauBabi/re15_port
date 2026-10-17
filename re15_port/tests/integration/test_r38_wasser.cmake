@@ -13,6 +13,7 @@
 #   leon2090  Leon, ROOM2090 (Becken, sce-8-Stempel -1620), (-8438,-25550) Band 0 Blick 0, "U1.6,W1" ab Bild 30
 #             (der Alligator greift ab ~F52 an, der erste Schritt liegt davor):
 #               zweig=stempel code=0x06032000 part=6 stempel=-1620 edt=0x1a, [foot] type=26 vag=3 (Watschritt).
+#   leon10b0_tuer  echter Weg: Sprung nach 10B0, durch die Tuer nach 1260 (Ankunft vor Fleck P5), Wasserschritt + Spritzer.
 # v0.8.25 (2077bb8e) faellt hier durch: kein RE15_WASSER_LOG, kein id=6 im FX_LOG, im Becken Betonschritt vag=1.
 # Die exe laeuft als Messkopie re15_pc_r38n_haken_<id> neben der Original-exe (Muster test_r34n_b_cursor.cmake).
 
@@ -49,6 +50,11 @@ function(r38n_exe _lauf _start _raum _pos _input _beginn _exit)
     set(_dir "${_wurzel}/${_lauf}")
     file(MAKE_DIRECTORY "${_dir}")
     set(WORKDIR "${_dir}")
+    if(_exit MATCHES "#")
+        set(_ex "${_exit}")              # Ende in einem anderen Raum (Weg durch die Tuer)
+    else()
+        set(_ex "${_exit}#${_raum}")
+    endif()
     if(_start STREQUAL "elza")
         set(_st RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1)
     else()
@@ -57,7 +63,7 @@ function(r38n_exe _lauf _start _raum _pos _input _beginn _exit)
     set(_env RE15_NO_INTRO=1 ${_st} RE15_WINDOW_SCALE=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_FOOT_DEBUG=1
              "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_pos}"
              RE15_INPUT_SCRIPT_BASIS=spiel "RE15_INPUT_SCRIPT_START=${_beginn}" "RE15_INPUT_SCRIPT=${_input}"
-             RE15_STATE_LOG=state.log RE15_WASSER_LOG=wasser.log RE15_FX_LOG=fx.log "RE15_EXIT_AT=${_exit}#${_raum}")
+             RE15_STATE_LOG=state.log RE15_WASSER_LOG=wasser.log RE15_FX_LOG=fx.log "RE15_EXIT_AT=${_ex}")
     re15_start_spiel(_rv 300 ${_env} "${RE15_PC_EXE}")
     set(_z "")
     if(EXISTS "${_dir}/debug.log")
@@ -138,5 +144,17 @@ r38n_zeile(leon2090 "${_d}/wasser.log" "room=2090;stempel=-1620;zweig=stempel;co
            "Watschritt im Becken (Effekt 6 Sub 3 an Part a1-1, Watsatz 0x1a)")
 r38n_zeile(leon2090 "${_d}/debug.log" "type=26 vag=3" "Wat-Schritt-Ton (EDT 0x1a -> VAG 3)")
 
+# ---- Leon durch die Tuer ROOM10B0 -> ROOM1260 (echter Weg, kein Sprung in 1260) -----------------------------------
+# 10B0 FRONT EXTERIOR: vor die Tuer (Satz main00 @0x16f2, Ziel Stage 0 Raum 0x26, Ankunft (-20250,-1800,-6700) Blick 1024,
+# Cut 15), Aktionstaste, Raumwechsel; das Skript laeuft auf der Spielbild-Achse im neuen Raum erneut an -> Leon geht nach
+# -z durch den Fleck P5 (x -20800..-19500, z -9550..-7350).
+r38n_exe(leon10b0_tuer leon 10B0 "-21370,3000,3072,0" "U0.6,A0.2,U3" 30 "150#1260")
+set(_d "${_wurzel}/leon10b0_tuer")
+r38n_zeile(leon10b0_tuer "${_d}/debug.log" "JUMP -> 10b" "Sprung nur nach 10B0")
+r38n_zeile(leon10b0_tuer "${_d}/wasser.log" "room=10B0;zweig=trocken" "Schritt vor der Tuer (10B0)")
+r38n_zeile(leon10b0_tuer "${_d}/wasser.log" "room=1260;zweig=boden;code=0x06050d00;edt=0x17"
+           "nach der Tuer: Wasserschritt im Fleck P5 von ROOM1260")
+r38n_fx_bilder(leon10b0_tuer "${_d}/fx.log" 13)
+
 file(REMOVE "${_exe_kopie}")
-message(STATUS "${_tag}: OK — Leon/Elza Wasserschritt mit Effekt 6 Sub 5 + VAG 7, Becken Effekt 6 Sub 3 + VAG 3")
+message(STATUS "${_tag}: OK — Leon/Elza Wasserschritt mit Effekt 6 Sub 5 + VAG 7, Becken Effekt 6 Sub 3 + VAG 3, Tuerweg 10B0 -> 1260")
