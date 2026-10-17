@@ -78,6 +78,7 @@ static inline int RNDI(float f) {
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
 #include "re15_pri_schatten_r36.h"   /* Runde 36 Spur O: Schatten-Tag fuer die OT-Ordnung */
+#include "re15_nclip_r38.h"          /* Runde 38 Spur A: Rueckseiten-Verwurf der Objekt-Zeichner */
 #include "re15_collision.h"
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
@@ -10898,6 +10899,7 @@ re_title:;
                                 wz_avg += (int)_vz;
                             }
                             if (!ok) continue;
+                            if (re15_nclip_r38_verwerfen(ax[0], ay[0], ax[1], ay[1], ax[2], ay[2])) continue;   /* Runde 38 Spur A: Rueckseite, FUN_800254a0 NCLIP @0x80025580 bgez @0x800255a8 */
                             wz_avg /= 3;
                             int wz_for_sort = wz_avg;
                             if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
@@ -10968,6 +10970,7 @@ re_title:;
                                 wz_avg += (int)_vz;
                             }
                             if (!ok) continue;
+                            if (re15_nclip_r38_verwerfen(ax[0], ay[0], ax[1], ay[1], ax[2], ay[2])) continue;   /* Runde 38 Spur A: Rueckseite (v0,v1,v2), FUN_800256b0 NCLIP @0x80025798 bgez @0x800257c0 */
                             wz_avg /= 4;
                             if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
                                 wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
