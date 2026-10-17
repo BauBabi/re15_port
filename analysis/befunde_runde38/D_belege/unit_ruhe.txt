@@ -1,0 +1,12 @@
+[ruhe]
+  ok: Ruhe: max |v94|,|v96| = 5, Spitze bewegt sich in 30 Bildern um 0 Einheiten
+    Glied 0: rot=(17,0,7) v=(-1,3) Lage=(1004,-2695,2000)
+    Glied 1: rot=(9,0,305) v=(-3,1) Lage=(959,-2727,1999)
+    Glied 2: rot=(3,0,17) v=(-4,5) Lage=(824,-2686,1999)
+    Glied 3: rot=(19,0,11) v=(-3,5) Lage=(820,-2580,1999)
+  ok: Glieder 18..20 haengen an ihrem Vorgaenger (Lage = Eltern-Weltmatrix * Versatz)
+    Koerperrahmen: Ansatz x=4 z=0, Glied 20 x=-180 z=-1
+    35 Zopf-Vertices: tiefster y=-2366 (Ansatz y=-2695), hinterster x=-241 (Ansatz x=4)
+  ok: Zopf haengt: Netz reicht 329 Einheiten unter den Ansatz (> 250)
+  ok: Zopf liegt hinter dem Kopf: Netz reicht 245 Einheiten hinter den Ansatz (> 150)
+ruhe: 0 Fehler
