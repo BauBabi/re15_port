@@ -31,7 +31,8 @@ Rolltor-Schnitts im Port, deren Bausteine Original-Adressen tragen (unten).
 - [x] Schritt 4 (dritter Lauf, Abschluss): Reste aus acdbfe7c gebaut + gefahren -> 2 neue Teile rot (Riegel-Defekte);
       Pruefung gegen den Wortlaut -> die Klemme (OFFEN 1 alt) erfuellt "alle" nicht; Mechanismus gemessen; Baustein 5
       (Zombies hinter dem Tor warten auf Cut 12, Form ROOM1141 sub02) behebt sie; Riegel misst "ueber die Schnittdauer"
-- [ ] Schritt 5: exe ueber den echten Weg nachher (Baustein 5), Framedump Cut 12, gezielte ctest-Laeufe, Abschluss-Commit
+- [x] Schritt 5: exe ueber den echten Weg nachher (Baustein 5), Framedump Cut 12, gezielte ctest-Laeufe (109/109 + 9/9),
+      Abschluss-Commit
 
 ## Messung vorher
 
@@ -270,7 +271,7 @@ Experiment (verworfen, nicht im Code): Cut 12 OHNE das Umparken (Spieler bleibt 
 Annaeherungen gleich oder kleiner (1: -2721 statt -2905, 6: -3083 statt -3650, 13: -2755 statt -3281, 14: -3709 statt
 -4061, 4/5: -4120/-4281 statt -4269/-4386; 2/3/12 gleich) -> das Umparken bleibt.
 
-## Messung nachher (ECHTE exe, gebaut 2026-10-17, Stand 0d9d544c + Messzeilen)
+## Messung nachher (ECHTE exe; zweiter Lauf Stand 0d9d544c, ENDSTAND = "Dritter Lauf" unten)
 
 Weg wie vorher (Karte 1130 nach10f0 ersteszene, CONTINUE, Tuer 1130 -> 1150, Szene, Montage), Laeufe x_kette2
 (RE15_IT_LOG=5) und integration_r38_montage (lauf_0ea873a3). Auswertung `O_belege/nachher_messung_x_kette2.txt`
@@ -282,7 +283,7 @@ Weg wie vorher (Karte 1130 nach10f0 ersteszene, CONTINUE, Tuer 1130 -> 1150, Sze
 | 1130 Cut 0, 176 Bilder | alle fuenf +0 (einer -7) | 6821->3961, 5648->1969, 4565->1734, 3521->438 (Stopp hinter der Kamera Bild 142), 4478->1295 (Stopp Bild 161); Navigator-Ziel = Spieler in 0 Bildern fremd; HP 100 |
 | 1040 Cut 1 Rolltor, 405 Bilder | Endabstaende 7136/5663/8286/5395/7046, 5 durchs Tor, letzter Bild 270 | **bitgleich** (7136/5663/8286/5395/7046; Bilanz 5/5, letzter Bild 270, Kappe 0, HP 100) |
 | 1030 Cut 7, 207 Bilder | Kopien alle +0 | 8272->4995 (-3277), 6235->1293 (-4942), 4644->517 (-4127), 7222->2015 (-5207), 5599->860 (-4739); Ziel fremd 0 Bilder; Kamera bleibt Cut 7 (keine fremde Kamera) |
-| 1030 Cut 12, 335 Bilder | 1 -709, 2 +12, 3 -707, 4 -4031, 5 -4211, 6 -629, 12 -1565, 13 -350, 14 -13; 3 von 9 unter dem Tor durch | 1 -2905, **2 +120 (Klemme, s. OFFEN)**, 3 -1189, 4 -4269, 5 -4386, 6 -3650, 12 -779, 13 -3281, 14 -4061; die fuenf aufrechten (1,3,6,13,14) bekommen das Kriech-Bit (Bild 1/1/1/1/30); 6 von 9 unter dem Tor durch |
+| 1030 Cut 12, 335 Bilder | 1 -709, 2 +12, 3 -707, 4 -4031, 5 -4211, 6 -629, 12 -1565, 13 -350, 14 -13; 3 von 9 unter dem Tor durch | 1 -2905, **2 +120 (Klemme; im dritten Lauf behoben, s. unten)**, 3 -1189, 4 -4269, 5 -4386, 6 -3650, 12 -779, 13 -3281, 14 -4061; die fuenf aufrechten (1,3,6,13,14) bekommen das Kriech-Bit (Bild 1/1/1/1/30); 6 von 9 unter dem Tor durch |
 
 Die Zahlen des Riegels im Prozess (unit_r38_montage_s1030_re2 / _s1130_re2) sind seit der Riegel-Korrektur
 **identisch** mit der exe (jede Zeile oben); die Gegenprobe im Riegel reproduziert die exe-Messung "vorher"
@@ -317,6 +318,37 @@ Bild (RE15_FRAMEDUMP "30-540/30", RE15_WINDOW_SCALE=1, beschleunigter Renderer, 
 Gang herauf bis vor die Kamera; Cut 12 (F240..F540): bei F240 stehen die Zombies hinter dem Gitter noch an ihren Plaetzen
 (Baustein 5), F300/F360 gehen sie aufs Tor zu und gehen zu Boden, F450/F540 kriechen alle unter dem Tor durch nach vorn auf
 die Kamera zu; bei F540 steht keiner mehr hinter dem Gitter.
+
+## Tests (dritter Lauf, gezielt — KEINE volle Suite)
+
+Eigene Riegel (registriert NUR in tests/unit/probes/r38_montage.cmake; Quelle tests/unit/test_r38_montage.c,
+tests/integration/test_r38_montage.cmake):
+
+| Test | misst (Mechanik) | Ergebnis |
+|---|---|---|
+| unit_r38_montage_kameras | Kamera-Tabelle = RID-Bytes (camera_start + Cut*32), Parkplaetze Cut 7/12 aus RID/BLK/SCA nachgerechnet, Zonen | Passed |
+| unit_r38_montage_s1130_re2 / _re15 | 1130 Cut 0: alle 5 >= 1000 naeher UND in beiden Haelften >= 400 (RE2 Pflicht), Stopp nur hinter der Kamera, Ziel = Spieler, HP; Gegenprobe v0.8.25 rot | Passed |
+| unit_r38_montage_s1030_re2 / _re15 | 1030 Cut 7 (Kopien) + Cut 12 (Tor): alle naeher in beiden Haelften (RE2 Pflicht), Baustein 5 (9 hinter dem Tor angehalten, kein Raum-Record am Tor waehrend Cut 7), Kriech-Regel, nur Cut 7/12, Achse Cut 12, HP; Gegenprobe v0.8.25 rot (Cut 7 + Cut 12) | Passed |
+| unit_r38_montage_s1030_ohne7_re2 / _re15 | 1070 leer: Tuer zeigt gleich Cut 12; dieselben Cut-12-Kriterien; Gegenprobe rot ueber die Haelften | Passed |
+| unit_r38_montage_rolltor | 1040 Cut 1 mit/ohne Aenderung Bild fuer Bild dieselben Lagen, 5 durchs Tor, HP | Passed |
+| integration_r38_montage | ECHTE exe ueber den echten Weg (Karte + CONTINUE 1130 -> Tuer -> 1150 -> Irons' Tod -> Montage bis 11C0), dieselben Kriterien aus dem debug.log | Passed (99,46 s) |
+
+Vorher (Stand acdbfe7c, `ctest -R "^unit_r38_montage" -j4`): `75% tests passed, 2 tests failed out of 8`
+(s1030_ohne7_re2, s1030_ohne7_re15 — Riegel-Defekte, s. "Dritter Lauf").
+
+Gezielter Lauf am Endstand (Engine-Stand b490ed78 gebaut; alle Module/Raeume, die der Diff gegen master beruehrt —
+irons_tod_1150.c/re15_irons_tod.h: Montage-Ketten 1150/1130/1040/1030/11C0, Elza-Gegenstueck, Fenster; L-Merge:
+enemy_ai_re2_zombie.c/enemy_ai_common.c/re15_actor.h mit ihren Riegeln und den geaenderten Granaten-/Blut-/10D0-Sonden),
+woertlich:
+
+`ctest --test-dir re15_port/build -R "r38_montage|r35_cut1150|r36_szene1150|r36_elza_irons|r37_szene11c0|r37_zombieaktiv|r37_re2zombie|r36_zombieki|re2z_|r36_gegnerzahl_raum10[34]0|r34n_a_rolltor|unit_1030_|cam_1030|room1040_switch|r35_fenster|r36_elza_fenster|irons|r34_granaten|r35_granate|10d0_situp|r36_blut" -j4 --timeout 600 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 109`** (Total Test time (real) = 575.65 sec; darin integration_r35_cut1150
+514 s inkl. Lauf B ohne Cut-7-Teil, integration_r36_szene1150, integration_r37_szene11c0, integration_r37_zombieaktiv,
+integration_r37_re2zombie, integration_r36_elza_irons, integration_r38_montage).
+
+Nach den letzten Kommentar-Aenderungen (Testkopf, probes-Beschreibung; neu gebaut):
+`ctest --test-dir re15_port/build -R "r38_montage" -j2 --timeout 600 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 9`** (Total Test time (real) = 99.48 sec).
 
 ## Nebenwirkungen (geprueft)
 
