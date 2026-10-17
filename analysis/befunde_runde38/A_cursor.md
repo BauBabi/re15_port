@@ -152,6 +152,25 @@ anderes Objekt (obj 1, voll texturierter Kasten). ROOM1150 hat keinen eigenen Cu
   neu, dann mit DIESEM Werkzeugstand (sonst kommt die gegensinnige Wicklung zurueck — unit_r38_cursor_wicklung schlaegt
   dann an).
 
+### 3c. Behebung der Nebenwirkung auf flache Port-Modelle: Parking Lot Key gewendet (Befund §4.6)
+
+* `include/re15_schluessel_r36.h`: `RE15_R36Q_PARK_ROT_X 2048`, `RE15_R36Q_PRISON_ROT_X 0` mit Herleitung im Kopf:
+  Verwurf MAC0 < 0 (RE1.5 FUN_800254a0 @0x800255a8 / FUN_800256b0 @0x800257c0, RE2 FUN_8002d0e8 @0x8002d1ac) -> ein
+  flaches Modell zeigt nur die Seite, von der seine Umlauf-Normale WEG zeigt; P. Room Key (RE2 ROOM6150 @0x004FBC,
+  Umlauf-Normale -Y) legt RE2 selbst GEWENDET (ROOM6150 MAIN sub00 @0x02C98 Obj_model_set obj 8, Dir z 0x600), den
+  Cabin Key (+Y) UNGEWENDET (ROOM1050 MAIN @0x01274, Dir 0,0,0). 2048 = 180 Grad.
+* `engine/src/schluessel_r36.c` `schluessel_anlegen()`: eine Zeile `rot_x` je Modell (Parking Lot Key 2048, Prison
+  Key 0).
+* Achse x statt z (RE2 wendet um z): Rx(180) = Ry(180) * Rz(180) — beide zeigen dieselbe (Vorder-)Seite, sie
+  unterscheiden sich nur um eine halbe Drehung in der Ebene. Um z lag der Schluesselkopf am anderen Ende (gemessen,
+  nicht committeter Zwischenstand mit rot_z 2048, Bild k10f0b_neu_s1/s3: Kopf rechts statt links); um x bleibt er an dem Ende, an das Runde 36 ihn gelegt
+  hat (PORT-WAHL der Lage, rot_y 256 = 22,5 Grad zur Konsolenkante, unveraendert).
+* **Merge mit Spur K (r38/itemorte):** K ersetzt in `schluessel_anlegen()` und `re15_schluessel_r36.h` genau diese
+  Lage (Pinnwand, `re15_itemorte_r38_schluessel_lage`, Konstanten RE15_R36Q_X/Y/Z/ROT_Y entfernt). Beim Konflikt
+  **K's Seite nehmen** und meine zwei Konstanten + die `rot_x`-Zeile verwerfen: K's Lage zeigt die Vorderseite (§4.6
+  gerechnet), und integration_r38_cursor E/F prueft das danach an der exe (Cut 5 bzw. 6 sind K's Pinnwand-Cuts).
+  NICHT beide Seiten behalten — sonst setzt die spaetere Zeile die Lage der anderen Spur zurueck.
+
 ## 4. Messung nachher
 
 ### 4.1 ROOM11F0 Cut 10 (gleicher Lauf wie §1.1, neue exe)
@@ -208,6 +227,8 @@ Spieler unabhaengig): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
   Aenderungen sind deterministisch und stammen vom Verwurf. Bild `A_belege/nebenwirkung_scan_5010_2040_3080.png`
   (alt | neu | Markierung): 5010 ein dunkelroter Streifen (Rueckseite) ueber einem Geraet faellt weg, darunter die
   beleuchtete Kante und die gruene Lampe; 2040 ein 4x4-Block an Leons Hand; 3080 Einzelpunkte entlang einer Kante.
+  **Nachtrag 2026-10-17:** die 5 Punkte in 10F0 (96..99, 169..170) waren KEINE Kleinigkeit, sondern der ganze
+  Parking Lot Key (Port-Prop, flach, Rueckseite oben) — er verschwand. Befund und Behebung §4.6/§3c.
 * **Elza-Raeume (Fortsetzung 2026-10-16 abends).** Statischer Vergleich zuerst (`A_belege/elza_props_vergleich.py`):
   der Verwurf wirkt nur auf Raum-Objekte; in 73 Raeumen sind Modelle (Prop-Tabelle RDT+0x30) und Obj_model_set-Saetze
   von ROOMxxx1 und ROOMxxx0 gleich (Wirkung = Leon-Scan), 30 unterscheiden sich, 17 haben keine Elza-Variante. Scan
@@ -321,14 +342,27 @@ Verwurf unbemerkt, mit Verwurf unsichtbar. Behebung §3c.
 **Laufende Spuren (fuer die Integration, gerechnet mit der Port-Matrix pc_prop_rot_q12 = Ry*Rx*Rz, main.c):**
 * Spur K (r38/itemorte) haengt beide Schluessel an die Pinnwand ROOM10F0/10F1 (gen/itemorte_r38_lage.inc, "Sichtseite
   Modell +1y"): Modelle k_r38k_park_md1 / k_r38k_prison_md1 g = -Y; PARK rot (3072, 0, 2048), PRISON rot (1024, 0, 0) ->
-  Spalte 1 der Matrix = (0, 0, 1) -> g_Welt = (0, 0, -1); die Pinnwand liegt an der Wand z = -3400, die Kamera davor
-  (z > -3400) -> g zeigt von der Kamera weg -> VORDERSEITE, mit dem Verwurf sichtbar. K's gen/feuerloescher_r37.inc ist die
+  Spalte 1 der Matrix = (0, 0, 1) -> g_Welt = (0, 0, -1); die Pinnwand liegt an der Wand z = -3400, ALLE 12 Kameras
+  von ROOM10F0/10F1 davor (RDT cameraStart 0x60, Satz 32 B: pos_z -1637 .. 12824 > -3400) -> g zeigt in jedem Cut von
+  der Kamera weg -> VORDERSEITE, mit dem Verwurf sichtbar. K's gen/feuerloescher_r37.inc ist die
   ALTE Fassung (K aendert nur .c/.h) -> beim Merge gilt die neu gewickelte Datei dieses Zweigs (§3b), kein Konflikt.
   K ersetzt in schluessel_r36.c genau die Lage-Zeilen, die §3c aendert -> beim Merge **K's Seite nehmen** (s. §3c).
 * Spur F (r38/dining1141): Herz-Schluessel re15_r38f_key_md1 (RE2 ROOM2020 @0x003474) g = +Y, Lage ROOM1011 obj 6
   (-2000, 0, 7450) rot 0 = flach auf dem Boden wie RE2 @0x01D90 -> g_Welt = +Y, Kamera oben -> VORDERSEITE, sichtbar.
   Achtung: die Normalen-Pruefung (unit_r38_cursor_wicklung Teil 2) wuerde dieses Modell faelschlich anmahnen (w > 0) —
   deshalb gilt sie seit §3c nur noch fuer RAEUMLICHE Modelle; flache prueft die Lage (§5).
+
+**Messung nachher (§3c, exe NEU = Verwurf + gewendeter Schluessel):**
+* `port_modelle_sicht.py --exe neu 10F0 10F0:elza` (RE15_TRILOG je Cut): ROOM10F0 Platz 8 in ALLEN 12 Cuts gezeichnet,
+  0 Dreiecke mit NCLIP < 0 (Cut 1/11 je 2 mit Flaeche 0); ROOM10F1 (Elza, Prison Key) in allen Cuts gezeichnet
+  (Cut 11: 1 von 2 Dreiecken des einen Vierecks < 0 — das Viereck wird wie im Original nur ueber v0,v1,v2 entschieden).
+* Bild ROOM10F0 Cut 0 (Debug-Sprung, Bild 200) ALT gegen NEU: Skala 1 4 geaenderte Punkte in x 97..102, y 169..171,
+  6 dunkle Schluesselpunkte in beiden; Skala 3 (Nutzerfenster) 55 Punkte in x 289..308, y 507..515.
+  `A_belege/schluessel10f0_alt_neu_s1_s3.png` (oben Skala 1 x12, unten Skala 3 x4; je links ALT, rechts NEU): derselbe
+  flache Schluessel an derselben Stelle, Kopf links, Klinge rechts; NEU zeigt die Vorderseite (Textur wie RE2), ALT
+  zeigte die Rueckseite (gespiegelt).
+* GEGENPROBE des Riegels (probe sicht, 10F0 Cut 0 + 5): exe ALT 1bcbd0ff -> je 4 Dreiecke, alle MAC0 < 0 -> ROT;
+  exe VORWICKLUNG 87aeed73 (Verwurf, ungewendet) -> Platz 8 leer -> ROT; exe NEU -> gruen (§5).
 
 ## 5. Tests
 
@@ -341,15 +375,19 @@ Neu (Registrierung NUR `tests/unit/probes/r38_cursor.cmake`; Sonde `tests/unit/p
 | unit_r38_cursor_kasten | ROOM11F0-Cursor unter Cut 10 an 25 Lagen (+-4000 um den Start): 29 Muster-Vierecke oben gezeichnet, 4 Muster-Dreiecke unten verworfen | im Test: ohne Verwurf ueberdeckten an allen 25 Lagen 4 Muster-Dreiecke den Cursor, an der Startlage ganz im Oberseiten-Umriss |
 | unit_r38_cursor_raeume | 23 Cursor-Raeume: Record am Zensus-Offset, Modell aus der Prop-Tabelle, 29+4 Muster-Flaechen, Unterseite gegensinnig gewunden (gleichsinnig mit 11F0 oben) | - (Zensus) |
 | integration_r38_cursor | echte exe, 4 Laeufe: A 11F0 Cut 10, B 1150 Hebetisch (Lade-Weg), C 10D0 Ziffernfeld, D Elza 11F1. Je: RE15_TRILOG des Cursor-Platzes ohne NCLIP < 0, Rahmen-Inneres ohne reingruene Punkte; A/D zusaetzlich Klassenkarte = Original | exe 1bcbd0ff mit demselben Skript: A ROT (8456 Rueckseiten-Dreiecke, 33 Punkte, 21 Abweichungen); Einzelpruefung B 1456/33, C 2997/32, D 14056/33/21 |
-| unit_r38_cursor_wicklung (Fortsetzung) | (1) Original-Konvention ueber alle Props aller RDTs (206 RDTs, 570 Props, w<0 30037 : w>0 151 : w=0 72) >= 99 % w<0; (2) alle 19 eingebackenen Port-Modelle (Cursor, Sicherung, Granate, Irons Diary/Keycard, 2 Loescher, 5 Dokumente, Memory Card/Schrot, 5 Lageplan-Karten, 2 Schluessel) ohne Flaeche w>0; (3) Mechanik an 60 Blicken (12 Gier- x 5 Nickwinkel, Projektion re15_hebetisch_cursor_projiziere = main.c, Verwurf re15_nclip_r38_verwerfen): keine Aussenseite verworfen, keine abgewandte Flaeche gezeichnet (ausgelassen nur streifende Blicke, |cos| <= sin(Normalen-Glaettung + 5 Grad), und Splitter mit \|MAC0\| <= 2 x Umfang, deren Vorzeichen die Ganzzahl-Rundung kippen kann) | im Test: v1 <-> v2 an jedem Modell -> je Hunderte falsch verworfene/gezeichnete Flaechen (Loescher stehend 3006/3510); Altstand des Loeschers (git 79006fef): 112 von 148 Flaechen w>0 (wicklung_props.py) |
+| unit_r38_cursor_wicklung (Stand 2026-10-17) | wie unten, aber Teil (2)/(3) nur fuer die 11 RAEUMLICHEN Port-Modelle; die 8 FLACHEN (Parking/Prison Key, Keycard = Memory Card 1150, 5 Lageplan-Karten; Kriterium: alle Umlauf-Normalen parallel, \|cos\| > 0,999) werden erkannt und an die Lage-Pruefung verwiesen (ihre gespeicherte Normale entscheidet die Sichtseite nicht, §4.6) | - |
+| probe_r38_cursor sicht + integration_r38_cursor E/F (2026-10-17) | E: ROOM10F0 Cut 0 + 5, F: Elza ROOM10F1 Cut 0 + 6, RE15_TRILOG ganzer Schirm: Platz 8 (Schluessel) zeigt in mindestens einem Cut seine Vorderseite (MAC0 > 0). Zwei Cuts, damit der Riegel auch die Pinnwand-Lage der Spur K deckt | exe ALT 1bcbd0ff: Cut 0/5 je 4 Dreiecke MAC0 < 0 -> ROT; exe 87aeed73 (Verwurf, ungewendet): Platz 8 leer -> ROT |
+| unit_r38_cursor_wicklung (Fortsetzung 2026-10-16) | (1) Original-Konvention ueber alle Props aller RDTs (206 RDTs, 570 Props, w<0 30037 : w>0 151 : w=0 72) >= 99 % w<0; (2) alle 19 eingebackenen Port-Modelle (Cursor, Sicherung, Granate, Irons Diary/Keycard, 2 Loescher, 5 Dokumente, Memory Card/Schrot, 5 Lageplan-Karten, 2 Schluessel) ohne Flaeche w>0; (3) Mechanik an 60 Blicken (12 Gier- x 5 Nickwinkel, Projektion re15_hebetisch_cursor_projiziere = main.c, Verwurf re15_nclip_r38_verwerfen): keine Aussenseite verworfen, keine abgewandte Flaeche gezeichnet (ausgelassen nur streifende Blicke, |cos| <= sin(Normalen-Glaettung + 5 Grad), und Splitter mit \|MAC0\| <= 2 x Umfang, deren Vorzeichen die Ganzzahl-Rundung kippen kann) | im Test: v1 <-> v2 an jedem Modell -> je Hunderte falsch verworfene/gezeichnete Flaechen (Loescher stehend 3006/3510); Altstand des Loeschers (git 79006fef): 112 von 148 Flaechen w>0 (wicklung_props.py) |
 
 Gezielter Lauf (keine volle Suite), Regex = eigene Tests + Testgruppen aller beruehrten Module (Raum-Prop-Schleife
 -> alle Bild-Riegel mit Raum-Objekten und die Raeume, deren Bild sich im Scan aenderte; Hebetisch; Panels/Cursor;
 Port-eigene Props; Feuerloescher-Modell):
-`ctest --test-dir re15_port/build -R "r38_cursor|r34n_b|hebetisch|11f0|cursor|panel|codepanel|irons_tisch|sicherung|dokumente|schrift1150|kartenitems|feuerloescher|schluessel|kiste|tor_hell|cut1150|szene1150|pri_schatten|pri1100|granate|dachkiste|fahrstuhl|ziel1190|cut10f0|elza_irons|pri_masken|generator|zeiger|r36_elza|r36_kleidung|r36_klettern|r22_10f0|r36_szenenleon|r36_gegnerzahl|r30_tuer_r4000|r36_tueren|r35_cut11c0|r30_cut_blitz|r34_plattform|room1150|irons_neck_1150" --timeout 900 --output-on-failure`
-(193 Tests, davon 49 mit der exe)
+`ctest --test-dir re15_port/build -R "r38_cursor|r34n_b|hebetisch|11f0|cursor|panel|codepanel|irons_tisch|sicherung|dokumente|schrift1150|kartenitems|feuerloescher|schluessel|kiste|tor_hell|cut1150|szene1150|pri_schatten|pri1100|granate|dachkiste|fahrstuhl|ziel1190|cut10f0|elza_irons|pri_masken|generator|zeiger|r36_elza|r36_kleidung|r36_klettern|r22_10f0|r36_szenenleon|r36_gegnerzahl|r30_tuer_r4000|r36_tueren|r35_cut11c0|r30_cut_blitz|r34_plattform|room1150|irons_neck_1150|r35_inhalt" --timeout 900 --output-on-failure`
+(Stand 2026-10-17: 197 Tests = 148 ohne + 49 mit der exe; `r35_inhalt` neu, weil Memory Card/Schrot Port-Props sind.
+Gefahren in zwei Teilen am Endstand cd41f6b2 + Dossier, exe/Sonden gebaut nach 3f11372f/cd41f6b2:)
 
-(Ergebnis: siehe unten, wird nach dem Lauf eingetragen)
+* Teil 1, `-R "<obiger Ausdruck>" -E "^integration_" -j4 --timeout 600`:
+  **`100% tests passed, 0 tests failed out of 148`** (Total Test time (real) = 14.90 sec)
 
 ## 6. OFFEN
 
@@ -375,6 +413,35 @@ Port-eigene Props; Feuerloescher-Modell):
 * Der in Runde 37 neu gebaute Feuerloescher war als einziges Port-Modell "falsch herum" gewickelt und waere mit dem
   Verwurf von innen gezeichnet worden; sein Modell ist neu erzeugt (nur die Eckenreihenfolge, Form/Textur gleich) und
   sieht wieder genau so aus wie vorher (§4.5).
+* Der Parkplatz-Schluessel (Parking Lot Key) im Funkraum ROOM10F0 lag seit Runde 36 mit der RUECKSEITE nach oben —
+  ein flaches RE2-Modell hat nur eine Vorderseite, und RE2 selbst legt genau dieses Modell gewendet hin. Mit dem
+  Verwurf waere er unsichtbar gewesen; er liegt jetzt gewendet an derselben Stelle (Kopf links wie bisher) und zeigt
+  seine Vorderseite (§3c/§4.6). Elzas Prison Key in ROOM10F1 lag schon richtig herum.
+* Ebenfalls wie im Original: eine Lageplan-Karte oder ein Dokument an der Wand ist aus einer Kamera HINTER der Wand
+  nicht mehr zu sehen (ROOM11D0 Cut 7: die B1-Karte schien vorher durch die Wand; ROOM1020 Cut 5 Dokument 3 hochkant,
+  14 Punkte; ROOM1010 Cut 2 ohne sichtbare Aenderung). In allen anderen Cuts sind sie unveraendert sichtbar (§4.6).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung, keine Entscheidungsfrage. Neue Engine-Datei
   `engine/src/nclip_r38.c` (Android: release/build_android.sh verwirft den GLOB-Cache bereits); geaendert
-  `engine/src/gen/feuerloescher_r37.inc` (mit tools/r37_feuerloescher/feuerloescher_modell.py erzeugt).
+  `engine/src/gen/feuerloescher_r37.inc` (mit tools/r37_feuerloescher/feuerloescher_modell.py erzeugt),
+  `engine/src/schluessel_r36.c` + `include/re15_schluessel_r36.h` (Wendung des Parking Lot Key).
+
+## 8. Fuer die Integration
+
+* **Regel fuer JEDES Port-Modell, das durch die Raum-Prop-Schleife (main.c pc_load_room_prop_set) oder den
+  Hebetisch-Cursor geht:** sichtbar ist nur, was mit NCLIP MAC0 >= 0 auf v0,v1,v2 auf dem Schirm liegt (§2.1).
+  RAEUMLICHE Modelle muessen wie das Original gewickelt sein (Umlauf-Normale gegen die Licht-Normale, w < 0;
+  unit_r38_cursor_wicklung); FLACHE Modelle muessen so LIEGEN, dass ihre Vorderseite (die Seite, von der die
+  Umlauf-Normale (v1-v0)x(v2-v0) weg zeigt) zur Kamera zeigt — wie RE2 (ROOM6150 @0x02C98 gewendet, ROOM2020
+  @0x01D90 / ROOM1050 @0x01274 ungewendet). Pruefen an der exe: `analysis/befunde_runde38/A_belege/
+  port_modelle_sicht.py <aus> --exe neu <RAUM[:elza]>` (je Cut, Platz mit "KEIN MAC0>0" = unsichtbar).
+* **Spur K (r38/itemorte):** `schluessel_r36.c` / `re15_schluessel_r36.h` — Konflikt an der Lage des Schluessels:
+  **K's Seite nehmen** (K's Pinnwand-Lage ersetzt die Konsolen-Lage samt RE15_R36Q_X/Y/Z/ROT_Y; meine Konstanten
+  RE15_R36Q_PARK_ROT_X/PRISON_ROT_X und die `rot_x`-Zeile entfallen). K's Lage zeigt die Vorderseite (gerechnet §4.6:
+  g_Welt = (0,0,-1) vor der Wand z = -3400); integration_r38_cursor E/F (10F0 Cut 0+5, 10F1 Cut 0+6) prueft das danach
+  an der exe. `gen/feuerloescher_r37.inc`: K aendert es nicht -> die neu gewickelte Fassung dieses Zweigs gilt; erzeugt
+  K es spaeter neu, dann mit dem Werkzeugstand dieses Zweigs (§3b).
+* **Spur F (r38/dining1141):** Herz-Schluessel (re15_r38f_key_md1, flach, Umlauf-Normale +Y) liegt ungewendet auf dem
+  Boden von ROOM1011 wie in RE2 ROOM2020 @0x01D90 -> Vorderseite oben, mit dem Verwurf sichtbar (§4.6). Nicht in die
+  Normalen-Pruefung von unit_r38_cursor_wicklung aufnehmen (flach); falls gewuenscht, dort `port_dazu(...,
+  re15_dining_r38_md1_bytes(0x1011, &n))` — der Teil erkennt es als flach.
+* Die uebrigen laufenden Spuren fuegen keine Weltmodelle hinzu (git diff je Zweig auf main.c/gen/*.inc, 2026-10-17).
