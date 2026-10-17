@@ -11,10 +11,13 @@
 #   unit_r38_affen3_decke    angeschossener Affe: Sub 9 an die Decke, Kriechen/Jagd/Hieb wie GDB-Spur o7
 #   unit_r38_affen3_griff    Griff von der Decke (Sub 15 + Spieler-Haken cmd 5) und Bisse danach wie GDB-Spur o8
 #   unit_r38_affen3_sprung   Sprung Sub 7 / Todessprung Sub 8 (HP < 50 -> -500 -> cmd 6 -> Tod) wie GDB-Spur o9
-#   integration_r38_affen3   echte exe, ROOM3040 per Debug-Sprung, Leon auf der Plattform: Bisse treffen (-5),
+#   integration_r38_affen3   echte exe, ROOM3040 per Debug-Sprung, Leon geht auf der Plattform in den Affen hinein:
+#                            Bisse -5 im Takt 56 wie Original o10 (GDB, derselbe Weg), Affe wird nach Westen geschoben;
 #                            RE2-KI (Standard) und RE1.5-KI
 #   integration_r38_affen3_decke  echte exe: angeschossener Affe -> Decke -> Griff von hinten (kein HP) -> Bisse -5,
 #                            RE2-KI (Standard) und RE1.5-KI
+#   integration_r38_affen3_tor    echte exe, ROOM4040: Wurzel-Tor +0x9 & 0x20 @0x80110b34-40 — der Ereignis-Affe (g=61)
+#                            bleibt in Zustand 0, bis Member_set(12, 0x41) @0x011D6 ihn freigibt; beide KI
 add_executable(test_r38_affen3 ${CMAKE_CURRENT_SOURCE_DIR}/test_r38_affen3.c)
 target_link_libraries(test_r38_affen3 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_affen3 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -42,4 +45,10 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_affen3_decke_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_affen3_decke.cmake)
     set_tests_properties(integration_r38_affen3_decke PROPERTIES TIMEOUT 900)
+    add_test(NAME integration_r38_affen3_tor
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_affen3_tor_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_affen3_tor.cmake)
+    set_tests_properties(integration_r38_affen3_tor PROPERTIES TIMEOUT 900)
 endif()

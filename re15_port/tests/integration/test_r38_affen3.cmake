@@ -17,10 +17,15 @@
 #   - im Folgebild flincht Leon mit dem Clip aus aca59 = a780(Spieler)+2 (@0x80111f80-94): a780 =
 #     ((Spieler.Gier - Affe.Gier + 0x400) & 0xfff) < 0x800 (@0x8001a788-a4) -> 0: Clip 8 (vorn), 1: Clip 9
 #     (Handler [2]/[3], re15_affen_biss_clip)
-#   - GLEICHTAKT wie das Original o4 (DuckStation-GDB, analysis/befunde_runde38/S_affen3.md): mindestens 10
-#     aufeinanderfolgende Treffer-Abstaende von genau 57 Bildern, Treffer dort in Bild 13, Affe dort bei
-#     x = -8297 +-40 / z = -6082 (Original o4: (-8297,-6082) r2813, Treffer F264..F1233 alle 57 Bilder, Bild 13);
-#     jeder Abstand 50..61
+#   - TAKT + LAGE wie das Original o10 (DuckStation-GDB auf DEMSELBEN Weg: Leon (-8800,-2400) Band 1, Gier 1024, ab
+#     Bild 143 Pad 0x1000 = hoch, eingespeist per Haltepunkt im Pad-Lauf @0x8003047c hinter `sw v0,DAT_800ac758`
+#     @0x80030478; Dossier analysis/befunde_runde38/S_affen3.md): 15 Bisse F182, 238, ... 966, ALLE Abstaende 56 Bilder,
+#     Treffer in Bild 14 (erster) bzw. 12; Affe A beim Treffer immer z = -6082 (Wand), x zuerst am Ost-Anschlag -8068
+#     (Treffer 3..5), danach schiebt der gehende Leon ihn Biss fuer Biss nach Westen (-8312 -> -8685): Selbst-Schub
+#     FUN_8002aec4(&Spieler, Affe) @0x80110b88 + Klemmen @0x80110ba0-cc. Geprueft: >= 10 Abstaende genau 56, jeder 50..61,
+#     z = -6082 bei jedem Treffer, mindestens ein Treffer bei x = -8068 +-40 und der letzte >= 400 westlich davon.
+#     (Die fruehere Erwartung "Gleichtakt 57 bei (-8297,-6082)" stammte aus o4 — dort STEHT Leon. Der Port ohne
+#     Selbst-Schub erreichte sie im Gehen nur, weil der Affe nicht geschoben wurde; o10 zeigt das Original im Gehen.)
 # Vorher (master cb782bda, derselbe Aufbau, dieselbe exe-Umgebung): 0 Abzuege — Dossier "Messung vorher" v1.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r38_affen3.cmake
@@ -153,12 +158,10 @@ function(r38s_lauf _lauf _flavor)
         set(_hp_alt ${_hp})
     endforeach()
     list(LENGTH _treffer _nt)
-    # Abstaende + laengster Gleichtakt-Lauf (57) mit Bild 13 und Lage wie Original o4
+    # Abstaende (Takt 56 wie Original o10) + Lage des Affen beim Treffer (Wand z = -6082, Ost-Anschlag -8068, Drift West)
     set(_abst "")
     set(_alt "")
-    set(_lauf57 0)
-    set(_best57 0)
-    set(_i 0)
+    set(_n56 0)
     foreach(_t IN LISTS _treffer)
         if(NOT _alt STREQUAL "")
             math(EXPR _a "${_t} - ${_alt}")
@@ -166,34 +169,41 @@ function(r38s_lauf _lauf _flavor)
             if(_a LESS 50 OR _a GREATER 61)
                 string(APPEND _fehler " Abstand ${_a}(Soll 50..61)")
             endif()
-            list(GET _bilder ${_i} _bi)
-            list(GET _affe_x ${_i} _lage)
-            string(REPLACE "/" ";" _lage_l "${_lage}")
-            list(GET _lage_l 0 _lx)
-            list(GET _lage_l 1 _lz)
-            math(EXPR _dx "${_lx} + 8297")
-            if(_dx LESS 0)
-                math(EXPR _dx "0 - ${_dx}")
-            endif()
-            if(_a EQUAL 57 AND _bi EQUAL 13 AND _dx LESS 41 AND _lz EQUAL -6082)
-                math(EXPR _lauf57 "${_lauf57} + 1")
-                if(_lauf57 GREATER _best57)
-                    set(_best57 ${_lauf57})
-                endif()
-            else()
-                set(_lauf57 0)
+            if(_a EQUAL 56)
+                math(EXPR _n56 "${_n56} + 1")
             endif()
         endif()
         set(_alt ${_t})
-        math(EXPR _i "${_i} + 1")
+    endforeach()
+    set(_anschlag "")
+    set(_letzt_x "")
+    foreach(_lage IN LISTS _affe_x)
+        string(REPLACE "/" ";" _lage_l "${_lage}")
+        list(GET _lage_l 0 _lx)
+        list(GET _lage_l 1 _lz)
+        if(NOT _lz EQUAL -6082)
+            string(APPEND _fehler " Affe-z=${_lz}(Soll -6082)")
+        endif()
+        math(EXPR _dx "${_lx} + 8068")
+        if(_anschlag STREQUAL "" AND _dx GREATER -41 AND _dx LESS 41)
+            set(_anschlag ${_lx})
+        endif()
+        set(_letzt_x ${_lx})
     endforeach()
     message(STATUS "${_tag} [${_lauf}]: ${_nt} Treffer in Bild ${_treffer}; Abstaende ${_abst}; Clip-Bilder ${_bilder}; "
-                   "Affe ${_affe_x}; Gleichtakt-57-Lauf ${_best57}")
+                   "Affe ${_affe_x}; Abstaende 56: ${_n56}; Ost-Anschlag ${_anschlag}, letzter Treffer x ${_letzt_x}")
     if(_nt LESS 12)
-        message(FATAL_ERROR "${_tag} [${_lauf}]: nur ${_nt} Treffer (Soll >= 12 in 1000 Bildern; Original o4: alle 57 Bilder)")
+        message(FATAL_ERROR "${_tag} [${_lauf}]: nur ${_nt} Treffer (Soll >= 12 in 1000 Bildern; Original o10: 15, alle 56 Bilder)")
     endif()
-    if(_best57 LESS 10)
-        message(FATAL_ERROR "${_tag} [${_lauf}]: Gleichtakt wie Original o4 fehlt (laengster Lauf 57/Bild 13/(-8297,-6082): ${_best57}, Soll >= 10)")
+    if(_n56 LESS 10)
+        message(FATAL_ERROR "${_tag} [${_lauf}]: Takt wie Original o10 fehlt (${_n56} Abstaende von genau 56 Bildern, Soll >= 10; o10: 14 von 14)")
+    endif()
+    if(_anschlag STREQUAL "")
+        message(FATAL_ERROR "${_tag} [${_lauf}]: kein Treffer am Ost-Anschlag x = -8068 +-40 (Original o10: Treffer 3..5 bei -8068)")
+    endif()
+    math(EXPR _drift "${_anschlag} - ${_letzt_x}")
+    if(_drift LESS 400)
+        message(FATAL_ERROR "${_tag} [${_lauf}]: Affe nicht nach Westen geschoben (Anschlag ${_anschlag} -> letzter Treffer ${_letzt_x} = ${_drift}, Soll >= 400; o10: -8068 -> -8685; Selbst-Schub FUN_8002aec4 @0x80110b88)")
     endif()
     if(NOT _fehler STREQUAL "")
         message(FATAL_ERROR "${_tag} [${_lauf}]: Abweichungen:${_fehler}")
@@ -203,4 +213,4 @@ endfunction()
 r38s_lauf(std std)
 r38s_lauf(re15 re15)
 file(REMOVE "${_exe_kopie}")
-message(STATUS "${_tag}: OK (Standard-KI und RE1.5-KI: Bisse treffen mit -5 im Gleichtakt des Originals, Leon flincht)")
+message(STATUS "${_tag}: OK (Standard-KI und RE1.5-KI: Bisse treffen mit -5 im Takt des Originals o10, Leon flincht, Affe wird geschoben)")

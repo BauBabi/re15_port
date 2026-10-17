@@ -42,7 +42,7 @@
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
-#include "re15_affen3_r38.h"   /* Runde 38 Spur S: kleine Affen 0x29 — Subs 0..6 in affen3_r38.c */
+#include "re15_affen3_r38.h"   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
@@ -11359,7 +11359,7 @@ static void re15_cockroach_ai_tick(int slot)
         int los = e->roach_los;                               /* every decision reads the LATCHED bit @0x80111250 */
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
         e->dog_dist = (int16_t)dist;
-        if (!re15_affen3_aktiv(slot, dist, los))   /* Runde 38 Spur S: Subs 0..6 (A+B im selben Tick) in affen3_r38.c; hier nur noch 7.. */
+        if (!re15_affen3_aktiv(slot, dist, los))   /* Runde 38 Spur S: alle 16 Subs (A+B im selben Tick) in affen3_r38.c; der Alt-Code unten laeuft nicht mehr */
         switch (e->sub_state_1) {
         case 0:  /* A[0] idle 0x80111220 + B[0] 0x80111ee4: clip 0x16 */
             if (e->dog_atk_cd == 0) {                                                 /* +0x1dc!=0 freezes ALL idle decisions @0x8011122c */
@@ -14705,10 +14705,12 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * bites, and LEAPS/FLIES AWAY after a survived hit -> SCA wall-clamp after the tick. */
             int32_t rc_ox = e->x, rc_oz = e->z;
             re15_affen_zeichen_merk(e);   /* Runde 38 Spur S: Zeichenstand des Vorbilds (Record+0x40, Zeichen-Schleife @0x8001d108) */
+            if (!(e->grid_id & RE15_AI_GRID_SKIP)) {   /* Runde 38 Spur S: Tor +0x9 & 0x20 `lbu v0,9(v1)`/`andi v0,v0,0x20`/`bne v0,zero,0x80110bd0` @0x80110b34-40 (Freigabe per Member_set(12,0x41), z.B. ROOM4040 @0x011D6) */
             re15_cockroach_ai_tick(s);
             re15_enemy_selfpush_from_player(s, e);   /* Runde 38 Spur S: aec4(&Spieler, Affe) `jal 0x8002aec4` @0x80110b88 */
             re15_enemy_body_push_tail(s, e);
             (void)re15_enemy_sca_clamp_band(e, rc_ox, rc_oz, 4u);   /* Runde 38 Spur S: FUN_8003b0a4 JEDES Bild @0x80110ba0-cc, Radius = Kasten+6 (`lhu a1,6(v0)` @0x80110bb4), Band +0x82, +0x1d6 = v0 */
+            }
         }
         else if (t == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {
             /* ENDKAMPF-G5 (Runde 6, birkin-g5-ki.md): eigenes byte-true Modul

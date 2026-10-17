@@ -21,6 +21,12 @@
  *      der Pool und der Zeichenstand kommen aus affen_11c0.c (re15_affen_pool_anim / _zeichen_merk /
  *      _fusssperre / _trefferpunkt), die seit Runde 38 die Bank des Aktor-Typs nehmen (vorher fest 0x27).
  *
+ * WURZEL 0x80110b00 (Haken in re15_enemy_ai_run_all, enemy_ai_common.c): Tor g_pauseflags & 0x20000000
+ *      @0x80110b14-20 (steht im Port am run_all-Aufruf) und +0x9 & 0x20 @0x80110b34-40 -> sonst Zustand
+ *      (Tabelle @0x8011eca4, `jalr` @0x80110b68), Schub FUN_8002b498 @0x80110b78, Selbst-Schub aec4(&Spieler, Affe)
+ *      @0x80110b88 (+0x1d2), FUN_8002b544 @0x80110b98, Wandklemme FUN_8003b0a4(+0x34, Kasten[6], 4) @0x80110bb8
+ *      (+0x1d6). Gesperrte Affen (+0x9 = 0x61) stehen in Stage 4/5 und werden per Member_set(12, 0x41) frei.
+ *
  * SUBS 7..15 (Fortsetzung 2026-10-17; Messung + Belege im Dossier, Abschnitt "Weitere Treffer-Wege"):
  *      7 Sprung B[7] 0x801123fc   8 Todessprung B[8] 0x80112784 (HP -500 @0x80112b00, Spieler cmd 6 = derselbe
  *      Haken wie beim Gorilla: 0x80116064 -> 0x801160a4 ist befehlsgleich zu 0x8011c3d4 -> 0x8011c414)
@@ -99,7 +105,7 @@ int  re15_affen3_opfer_phase(void);
 void re15_affen3_init(re15_actor_t *e);
 
 /* ACTIVE-Haken (Zustand 1, 0x8011101c). dist = +0x1d4 (SquareRoot0 @0x801110c8), sicht = +0x1d0 & 1 (Latch
- * @0x8011105c-88). Rueckgabe 1 = A und B dieses Ticks liefen hier; 0 = Sub >= 7, der bisherige Code faehrt. */
+ * @0x8011105c-88). Rueckgabe 1 = A und B dieses Ticks liefen hier (alle 16 Subs); 0 nur bei ungueltigem Platz. */
 int  re15_affen3_aktiv(int slot, int32_t dist, int sicht);
 
 /* FUN_8001bff8(Pool + record*0xac + 0x40, a1, r, &Spieler+0x34): 1 = Treffer (Quadrat |dX|,|dZ| <= r um den

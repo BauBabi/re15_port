@@ -251,7 +251,7 @@ static void a_jagd(re15_actor_t *e, const re15_actor_t *pl, uint16_t d, int sich
     if (d >= 0x1771 && sicht) wechsel(e, 4, 0);                                    /* @0x801118b4-8fc */
 }
 
-/* A[4] 0x80111ac0 — Auswahl: schwerer Angriff oder Sprung (Sprung = Sub 7, dessen B[7] faehrt der bisherige Code). */
+/* A[4] 0x80111ac0 — Auswahl: schwerer Angriff (Sub 6) oder Sprung (Sub 7, B[7] = b_sprung unten). */
 static void a_auswahl(re15_actor_t *e, const re15_actor_t *pl, uint16_t d, int sicht)
 {
     if (pl->hit_react == 0 && a804(e, pl, 0xfa0, 0xc0) && e->dog_blocked_ctr == 0) {    /* @0x80111ad4-b0c */

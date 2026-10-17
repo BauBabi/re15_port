@@ -180,6 +180,10 @@ Flinch-Clip im Folgebild **8** (a780 = ((1024-3053+0x400)&0xfff) = 3091 >= 0x800
 Clip 4) kriecht im Port von -11800 nach (-13618,-10663..-10680) — Original o4 B: (-13618,-10662..-10691).
 Langer Lauf w2_tod (U45, bis Bild 1700): 21 Treffer, HP 0 -> -5 in F1308 (Leon Clip 7), Spieler-Zustand 7 ab ~F1430,
 danach der Tod-Ablauf des Ports (zurueck zum Titel) — der Affe toetet Leon wie im Original o4 (F1290 HP 0 -> -5, cmd 3).
+**Nachtrag (o10, s. unten): der Vergleich w1 <-> o4 war ein Szenen-Mismatch.** In o4 STEHT Leon, in w1 GEHT er weiter in
+den Affen hinein. w1 lief noch ohne den Selbst-Schub des Affen (aec4 @0x80110b88, s. Umsetzung) — der Affe wurde deshalb
+nicht geschoben und landete beim Steh-Takt 57 von o4. Das Original auf demselben Weg (o10) hat Takt 56 und schiebt den
+Affen nach Westen; der jetzige Stand trifft genau das.
 
 ## Weitere Treffer-Wege des Originals (Subs 7..15) — Befund 2026-10-17
 Der Vorgaenger hat nur die Subs 0..6 umgestellt; 7..15 liefen weiter im alten Port-Code ("LEAP-ESCAPE / FLIGHT-ESCAPE
@@ -274,3 +278,166 @@ PLATZ (-8720,-6082), F343 zurueck in Sub 0/3 — der Affe blieb in seiner Nische
 Bildkontrolle (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, Schnitt per RE15_FORCE_CUT 5/6/12, weil der Sprung-Teleport keinen
 Zonenwechsel ausloest): F340 Affe haengt kopfueber an der Decke (Schnitt 5/12), F360-F610 Griff von hinten, Ringen, Wurf,
 Aufstehen, Affe daneben — Modelle und Opfer-Posen geschlossen, keine zerrissenen Meshes.
+
+## Original o10 — derselbe Weg wie der exe-Riegel (Leon geht in den Affen hinein), 2026-10-17
+Anlass: nach dem Selbst-Schub (aec4 @0x80110b88) und dem Klemmen in jedem Bild (@0x80110ba0-cc) lief der alte
+exe-Riegel rot (Takt 56 statt 57, Affe wandert). Statt die Erwartung zu raten: das Original auf genau diesem Weg gemessen.
+Werkzeug `affen_spur3.py` (Scratch) = affen_spur2.py + `--pad Start:Ende:Wert`: zweiter Haltepunkt auf 0x8003047c in
+FUN_80030444 (`jal PadRead` @0x80030464, `sw v0,DAT_800ac758` @0x80030478, `lw t0,-0x4(s0)` @0x8003047c liest das
+Pad-Wort zurueck). In den aufgezeichneten Bildern 143..892 schreibt das Werkzeug an diesem Halt 0x800ac758 := 0x1000
+(PadRead Bit 12 = Steuerkreuz hoch), bevor der Befehl es liest. Den PC liefert das `g`-Paket (Register 37); DuckStation
+beantwortet `p25` nicht — der erste Versuch las deshalb keinen PC, speiste nichts ein, Leon stand (verworfen). Aufbau
+sonst wie w1: Leon (-8800,-2400) Band 1, Gier 1024. settings.ini danach wieder `EnableGDBServer = false` (Sicherung
+zurueckgespielt, ohne BOM, `diff` leer).
+
+Ablauf o10: F143 Pad an, F161 Leon geht (aca58/59 = 01 01, Clip 5), F169 Biss-Entscheid (Abstand 2985 < 0xbb8), 15 Bisse.
+Port = dieser Baum, derselbe Aufbau an der exe (`integration_r38_affen3`, Lauf std; der Lauf re15 ist bildgleich).
+Leon-Lage im Treffer-Bild: im Original schon nach dem ersten Rueckstoss-Schritt (s. unten), im Port davor.
+
+| Biss | Original: Bild (Clip-Bild) | Affe x | Leon (x,z) | Port: Bild (Clip-Bild) | Affe x | Leon (x,z) |
+|---|---|---|---|---|---|---|
+| 1 | F182 (14) | -8127 | (-8800,-3903) | F169 (14) | -8127 | (-8800,-4125) |
+| 2 | F238 (12) | -8205 | (-9241,-4617) | F225 (12) | -8213 | (-9235,-4802) |
+| 3 | F294 (12) | -8068 | (-9357,-5126) | F281 (12) | -8068 | (-9357,-5364) |
+| 4 | F350 (12) | -8068 | (-9357,-5459) | F337 (12) | -8068 | (-9357,-5773) |
+| 5 | F406 (12) | -8068 | (-9623,-6164) | F393 (12) | -8068 | (-9623,-6179) |
+| 6 | F462 (12) | -8312 | (-9644,-6732) | F450 (13) | -8356 | (-9686,-6732) |
+| 7 | F518 (12) | -8352 | (-9683,-6732) | F506 (12) | -8371 | (-9703,-6732) |
+| 8 | F574 (12) | -8389 | (-9718,-6732) | F562 (12) | -8412 | (-9742,-6732) |
+| 9 | F630 (12) | -8428 | (-9757,-6732) | F618 (12) | -8448 | (-9782,-6732) |
+| 10 | F686 (12) | -8464 | (-9797,-6732) | F674 (12) | -8488 | (-9817,-6732) |
+| 11 | F742 (12) | -8506 | (-9837,-6732) | F730 (12) | -8529 | (-9862,-6732) |
+| 12 | F798 (12) | -8545 | (-9876,-6732) | F786 (12) | -8570 | (-9901,-6732) |
+| 13 | F854 (12) | -8582 | (-9911,-6732) | F842 (12) | -8608 | (-9940,-6732) |
+| 14 | F910 (12) | -8619 | (-9951,-6732) | F898 (12) | -8674 | (-10018,-6732) |
+| 15 | F966 (12) | -8685 | (-10029,-6732) | F954 (12) | -8707 | (-10086,-6732) |
+
+- Takt: Original 14 x 56 Bilder; Port 13 x 56 + 1 x 57 (Biss 6 in Clip-Bild 13 statt 12). Jeder Biss -5, Affe z beim
+  Treffer immer -6082 (Wand). Der Affe laeuft zuerst bis an den Ost-Anschlag -8068 (Bisse 3..5) und wird danach vom
+  gehenden Leon Biss fuer Biss nach Westen geschoben (-8312 -> -8685) — im Port ebenso (-8356 -> -8707).
+- Flinch: Bisse 1..5 aca59 = 2 -> Leon-Clip 8, ab Biss 6 aca59 = 3 -> Clip 9 (Original) — im Port dieselbe Folge.
+- Biss 1 Bild fuer Bild (Original F174..F187 / Port F161..F174): Affe x -8707 (Clip-Bild 6..9), -8648, -8530, -8383,
+  -8237, **-8127 Treffer**, -8066, -8068, -8068, -8081, -8197 — **identisch**.
+- Die Unterschiede liegen bei LEON, nicht beim Affen: (a) Gehtempo im Original 76..80 Einheiten/Bild (F174..F181:
+  -3557 -> -4103), im Port konstant 75; (b) der Rueckstoss beginnt im Original IM Treffer-Bild (F181 -4103 -> F182 -3903
+  -> -3753 -> -3653 -> -3603 = 200/150/100/50), im Port ein Bild spaeter (F169 -4125 -> F170 -3925 -> -3775 -> -3675 ->
+  -3625). Beides Spieler-Code ausserhalb dieser Spur (OFFEN). Daraus kommen die kleinen Lageunterschiede ab Biss 2 und der
+  eine 57er-Abstand.
+- Der exe-Riegel `integration_r38_affen3` prueft jetzt gegen o10 (>= 10 Abstaende genau 56, jeder 50..61, z = -6082,
+  ein Treffer am Ost-Anschlag -8068 +-40, letzter Treffer >= 400 westlich davon) statt gegen den Steh-Fall o4.
+
+## Wurzel-Tor +0x9 & 0x20 — gesperrte Ereignis-Affen (Stage 4/5), 2026-10-17
+Zensus ALLER RDTs nach `Sce_em_set` Typ 0x29 (scd_dump_room.py): ausser ROOM3040/3041 (je 2, grid 0x00) auch ROOM4000
+(@0x01262 grid 0x00, @0x01318 grid **0x61**, @0x0133A 0x00), ROOM4040/4041 und 4080/4081 (Platz 0: **0x61** oder 0x00),
+ROOM5000/5001 (0x00), ROOM5031 (@0x010CA **0x61**), ROOM50A0/50A1 (Platz 0/1: **0x61** oder 0x00). Die Wurzel 0x80110b00
+(selbst disassembliert, STAGE3.BIN):
+`lw v0,0(s0)` (g_pauseflags) / `lui v1,0x2000` / `and` / `bne v0,zero,0x80110bd0` @0x80110b14-20 und
+`lbu v0,9(v1)` / `andi v0,v0,0x20` / `bne v0,zero,0x80110bd0` @0x80110b34-40 — gesperrt laeuft WEDER der Zustand (auch
+kein INIT) NOCH b498 / aec4 / b544 / Wandklemme; danach nur der Schatten-Block @0x80110bd0 (+0x9 & 0x40). Die Pausen-Haelfte
+steht im Port am run_all-Aufruf (game_step_common.c, `RE15_PAUSE_AI`); die +0x9-Haelfte fehlte fuer 0x29. Die 0x61-Affen
+gibt erst ihr Skript frei, z.B. ROOM4040 sub04 (Ausloeser Aot_set Platz 5 sce 3 @0x00E9C): Work_set(2,0), Pos_set
+(-25090,-10000,9230) @0x011CE, **Member_set(12, 0x41)** @0x011D6 (Member 12 = +0x9, actor_common.c).
+Haken: in run_all laufen Zustand, Selbst-Schub, Schub und Klemme des Affen nur noch bei `!(grid_id & 0x20)`.
+Gemessen an der exe (ROOM4040 per Debug-Sprung, beide Male dieselbe Umgebung):
+| Lauf | Stand | Leon | Affe (Platz 1, grid 0x61) |
+|---|---|---|---|
+| g1 | ohne Tor | Sprung-Spawn (-26400,17150) | F6 INIT (st 1, Sub 1) an der Spawn-Stelle (-14040,19130), F214 wach, F235.. laeuft los -> (-16877,17861) bei F600 — VOR seinem Auftritt |
+| g2 | mit Tor | dito | bis F600 st 0, grid 0x61, unbewegt bei (-14040,19130) |
+| g4 | ohne Tor | im Ausloeser (-25000,4000) | F16 Freigabe (grid 0x41, Lage (-25090,9230)), F214 wach, Bisse F314 / F370 je -5 |
+| g3 | mit Tor | dito | F16 Freigabe + INIT, F224 wach, Bisse F324 / F380 je -5 |
+Nach der Freigabe sind beide Staende gleich (nur 10 Bilder spaeter, weil INIT erst mit der Freigabe laeuft); das Tor
+aendert also nur die Zeit VOR dem Auftritt. Stage 3 (grid 0x00, kein Member_set(12) in ROOM3040/3041) ist unberuehrt.
+
+## Spieler-Tor der neuen Angriffswege (AUFTRAG-Nachtrag Integration 2026-10-17 07:36, Spur B)
+Jeder Angriffsweg des kleinen Affen liest im Original das RE1.5-Tor Spieler+0x93 (`lbu` von 0x800acae7 = 0x800aca54 +
+0x93, ganzes Byte, `bne v0,zero` = kein Angriff) — selbst disassembliert, STAGE3.BIN. Der Port liest dasselbe Byte
+(`pl->hit_react`) an derselben Stelle; Spur B setzt dort in Szenen Bit 0, also sieht jeder Weg den Szenenschutz.
+| Angriffsweg | Tor-Lesen im Original | Port (affen3_r38.c) |
+|---|---|---|
+| Biss-Entscheid A[3] -> Sub 5 | `lbu v0,0(a2)` @0x801117e8 (a2 = 0x800acae7 @0x801117e0), weitere @0x8011182c / @0x80111898 | a_jagd |
+| Biss-Treffer B[5] | `lbu v0,0(a3)` @0x80111eac | Biss-Zweig: `if (pl->hit_react != 0) return` |
+| Schwer-Entscheid A[4] -> Sub 6 | `lbu v0,0(a2)` @0x80111ad4, `bne` @0x80111adc | a_auswahl |
+| Schwer-Treffer B[6] | `lbu v0,0(s2)` @0x80112190, `bne` @0x80112198 | Schwer-Zweig |
+| Todessprung-Entscheid B[7] Bild 0x13 | `lbu` @0x801126ac, `bne` @0x801126b4 | b_sprung |
+| Todessprung-Treffer B[8] (-500) | `lbu v0,0(s1)` @0x801129dc | b_todessprung |
+| Griff-Entscheid A[13] -> Sub 15 | `lbu v0,0(a0)` @0x80113a24, `bne` @0x80113a2c | a_decke |
+| Hieb-Entscheid A[13] -> Sub 14 | `lbu v0,0(a2)` @0x80113af8, `bne` @0x80113b00 | a_decke |
+| Hieb-Treffer B[14] (-10) | `lbu` @0x8011406c, `bne` @0x80114074 | b_decke_hieb |
+| Griff B[15] selbst | **KEIN Tor-Lesen**: P0 liest +0x93 nur zum Setzen (`lbu` @0x801143e0, `ori v1,v1,0x1` @0x801143f4, `sb` @0x8011441c); das Tor steht im Entscheid A[13] desselben Bildes (A vor B) | b_griff, wie das Original ohne eigenes Tor |
+Kein Weg setzt einen Status (kein Gift o.ae.). Das RE2-Tor PL+0x1D3 & 0x80 liest der Affe nicht — er faehrt in beiden
+KI-Varianten den RE1.5-Code, dessen Tor +0x93 ist.
+
+## Tests (gezielt in diesem Baum, keine volle Suite)
+Neue Riegel (`re15_port/tests/unit/probes/r38_affen3.cmake`, Quelle `tests/unit/test_r38_affen3.c` bzw.
+`tests/integration/test_r38_affen3*.cmake`):
+| Test | prueft |
+|---|---|
+| unit_r38_affen3_typ | Typ 0x29 = der Blob, den FUN_80022300 laedt (Tabelle @0x80073000 -> CDEMD0 Blob 13) |
+| unit_r38_affen3_biss | Port ab dem Original-Zustand F137 von o4 (Leon steht): Entscheid, Treffer -5 im Fenster {12..15}, Takt 57 |
+| unit_r38_affen3_flavor | dasselbe unter RE2-KI (Standard) und RE1.5-KI |
+| unit_r38_affen3_quadrat | FUN_8001bff8 = achsenparalleles Quadrat um Record 9 + (0x64,0,0) |
+| unit_r38_affen3_schwer | Sub 6: -10 im Fenster {21..24,33,34}, Records 6/10, r 0x320 |
+| unit_r38_affen3_decke | o7: Sub 9 an die Decke, Kriechen/Jagd/Hieb bildgleich bis T281, beide KI |
+| unit_r38_affen3_griff | o8: Griff Sub 15 + Spieler-Haken cmd 5 bildgleich, Bisse T458.. wie im Original, beide KI |
+| unit_r38_affen3_sprung | o9: Sprung -> Schwer -10 -> Todessprung bei HP < 50 -> -500 -> cmd 6 -> Tod, beide KI |
+| integration_r38_affen3 | exe, Weg wie o10: Bisse -5 im Takt 56, Affe an der Wand nach Westen geschoben, Flinch-Clip, beide KI |
+| integration_r38_affen3_decke | exe: Schuss -> Sub 9/12/13/15 -> Griff ohne HP (Leon-Clips 1/2/3/16/11) -> >= 3 Bisse -5, beide KI |
+| integration_r38_affen3_tor | exe, ROOM4040: gesperrter Ereignis-Affe (g=61) bleibt in Zustand 0 bis Member_set(12, 0x41), beide KI |
+Alt-Riegel begruendet nachgezogen: `unit_cockroach_ai` (1) (INIT-Clip 0 @0x80110ce4, Ruhe-Clip 0x16 erst B[0]
+@0x80111348-384). Mitgelaufen als Regression: Gorilla-Familie (`unit_r35_affen_*`, `unit_maggot_*`), geteilte
+Opfer-/Griff-/Schub-Wege (`unit_re2_victim_collapse`, `unit_dog_grab_anchor`, `unit_re2_dog_grab_anchor`, `unit_re2z_*`,
+`unit_enemy_body_push`, `unit_dog_aim_band`, `unit_r36_*`), exe-Laeufe mit Griff/Schuss/Opfer (`integration_r36_*`,
+`integration_r37_*`).
+Laeufe (Stand mit Wurzel-Tor, gebaut mit `local_build.sh build`; `ctest --test-dir re15_port/build -R "<Ausdruck>"
+--timeout 600 --output-on-failure`):
+- 53 Tests, `-R "^(unit_(cockroach_ai|maggot_|enemy_body_push|re2_victim_collapse|dog_grab_anchor|re2_dog_grab_anchor|re2z_grab_core_se|re2z_finisher_bite|r35_affen_|r36_kleidung_griff_|r36_zombieki_affen|r36_szenenleon_schub|r36_dachkiste_zellschub|dog_aim_band|r38_affen3_).*|integration_(r38_affen3|r38_affen3_decke|r37_szene11c0|r36_kleidung_hundeweg|r37_elzaems_elza1181griff|r36_schuss|r36_elza_schuss|r36_ziel1190_scheiben))$"`
+  -> `100% tests passed, 0 tests failed out of 53` (Total Test time (real) = 776.91 sec)
+- danach der neue Tor-Riegel, `-R "^integration_r38_affen3_tor$"` -> `100% tests passed, 0 tests failed out of 1`
+  (Total Test time (real) = 87.89 sec). Gegenprobe mit der exe OHNE Tor (Stand vor dem Haken): ROT, "gesperrter Affe lief
+  (395 aktive Bilder bei g=61)".
+- integration_r38_affen3 vor der Umstellung auf o10 (alter o4-Riegel, Stand mit Selbst-Schub): ROT "Gleichtakt wie
+  Original o4 fehlt" — die Erwartung war falsch, nicht der Code (s. o10).
+
+## OFFEN
+1. **Zufallsquelle:** FUN_8001af20 haengt im Original am a0 des Aufrufers; der Port nimmt re15_engine_rand8 (Ersatz,
+   re15_damage.c). Wo der Affe wuerfelt (Sprung-Entscheid rng&1 @0x80111b88-ac, Lenkraten +0x9e in B[3]/B[13], Sprungweite
+   +0x8c in B[7]), laufen die Bahnen nach 1-2 Bildern (o9) bzw. nach einigen hundert Bildern (o7 ab T281) auseinander. Die
+   Mechanik ist gleich; bildgleich wird es erst mit einer Engine-weiten Zufallsquelle nach dem Original (nicht diese Spur).
+2. **Spieler-Code, in o10 gemessen (nicht der Affe):** Rueckstoss nach einem Biss ein Bild spaeter als im Original;
+   Leons Gehtempo 75 statt 76..80 Einheiten/Bild. Betrifft jeden Gegner-Treffer bzw. jedes Gehen, nicht nur die Affen.
+3. **Anzeige-Bits aca3c:** der Opfer-Haken cmd 5 setzt `aca3c |= 0xc0` (@0x80115df8-e00) und loescht sie beim Freiwerden
+   (@0x80116020-44); der Port hat dafuer kein Gegenstueck (wie beim Gorilla-Finisher). Sichtbare Folge nicht gemessen.
+4. **o3 (Original-Fehler):** steht Leon schon beim allerersten aktiven Bild des Affen im Biss-Bereich, versetzt das Original
+   den Affen in einem Bild nach (245,747) (Fuss-Sperre auf nie gezeichnete Records). Der Port bildet das nicht nach (sein
+   Zeichenstand entsteht im INIT). Gesehen nur bei kuenstlich gesetzter Lage.
+5. **Ereignis-Affen Stage 4/5 (grid 0x61) nicht gegen das Original gemessen:** das Tor ist portiert (s. oben). Mit Tor
+   steht der gesperrte Affe bis zur Freigabe ungestartet an seiner Spawn-Stelle (ROOM4040: (-14040,19130)); der Port
+   zeichnet jeden aktiven Aktor. Framedump aller 9 Schnitte von ROOM4040 mit Leon daneben (-15500,19130), RE15_FORCE_CUT
+   1..8 + Schnitt 0: weder Affe noch Leon im Bild — die Stelle liegt ausserhalb der Kameras (Parkstelle). Offen bleibt,
+   wie der freigegebene Affe aus y = -10000 (Pos_set @0x011CE) herunterkommt — im state.log steht kein y; dieser Teil
+   laeuft mit und ohne Tor gleich (g3/g4), war also schon vor dem Tor so.
+
+## Fuer den Nutzer
+**Was war falsch:** Die kleinen Affen in Stage 3 (ROOM3040 und ROOM3041, je zwei) bissen im Port ins Leere — ihr Biss
+pruefte einen Abstand, den die Koerper-Kollision nie zuliess, und der Affe rutschte dabei durch die Wand. Angeschossene
+Affen blieben in ihrer Nische sitzen.
+
+**Jetzt wie im Original** (gegen das laufende Original in DuckStation gemessen, Bild fuer Bild):
+- Biss: -5 HP, Leon zuckt zurueck. Geht man auf den Affen zu, beisst er alle 56 Bilder (knapp 2 s) und wird dabei von
+  Leon an der Wand entlang geschoben.
+- Stuermt der Affe aus groesserer Entfernung heran, greift er schwer an (-10 HP, Leon geht zu Boden) oder springt.
+- Ein angeschossener Affe springt an die Decke, kriecht ueber den Gang, schlaegt von oben zu (-10 HP) und springt Leon von
+  hinten an: der Griff selbst kostet keine HP, mit schnellem Tastendruecken kommt man frei; danach beisst er vom Boden.
+- Hat Leon weniger als 50 HP, kann ein Sprung zum Todessprung werden (Leon stirbt) — wie im Original.
+- An der Decke trifft man den Affen nur mit Ziel nach oben. Normale Treffer lassen ihn dort nur bluten; die Magnum oder
+  die Schrotflinte aus der Naehe holen ihn herunter.
+- Beide KI-Einstellungen spielen hier denselben Original-Code (RE2 hat an dieser Stelle die Kakerlake, kein Vorbild
+  fuer den Affen).
+- Dieselben Affen kommen auch in Stage 4 und 5 vor. Die, die dort erst bei einem Ereignis auftauchen (z.B. ROOM4040:
+  das Skript setzt den Affen erst um und gibt ihn frei, wenn Leon einen bestimmten Bereich des Gangs betritt), warten
+  jetzt wie im Original gesperrt auf ihren Auftritt — vorher liefen sie sofort los.
+
+**Zum Ausprobieren:** Stage 3, ROOM3040, auf die Plattform mit den zwei Affen gehen (der erste sitzt in der Nische an der
+Suedwand) und auf ihn zulaufen. Fuer die Decke: einen Affen anschiessen (z. B. Browning) und Leon umdrehen.
+
+Keine neuen Assets, keine neuen Sprachdateien.
