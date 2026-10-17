@@ -1,15 +1,23 @@
 # Runde 38 Spur V — releaseskript: UNABHAENGIGE ABNAHME 1
 
-Baum `.claude/worktrees/r38_releaseskript` (Zweig `r38/releaseskript`, HEAD 99925242, Basis e2cc7673).
-Pruefer: Abnahme-Agent 1, 2026-10-16 (ab ~23:30). Gegenstand: Nachbesserung 1 (Mangel M1 der Abnahme 0,
-`V_abnahme_0.md`) und Regressionen. Alles hier ist SELBST gemessen; Behauptungen des Bau-Agenten gelten erst nach
-eigener Messung.
+Baum `.claude/worktrees/r38_releaseskript` (Zweig `r38/releaseskript`, Code-Stand 99925242 = letzter Commit des
+Bau-Agenten; danach nur Commits dieses Berichts; Basis e2cc7673).
+Pruefer: Abnahme-Agent 1, 2026-10-16 (ab ~23:30) und - nach dem Sitzungslimit - 2026-10-17 (ab 04:55). Gegenstand:
+Nachbesserung 1 (Mangel M1 der Abnahme 0, `V_abnahme_0.md`) und Regressionen. Alles hier ist SELBST gemessen;
+Behauptungen des Bau-Agenten gelten erst nach eigener Messung.
+
+**Ergebnis: bestanden = JA** (V1-V4 erfuellt, M1 behoben, Gates halten; Hinweise H1 vor dem Release klaeren - §7).
 
 ## Stand (laufend, neueste oben)
 
+* 2026-10-17 05:10 ABSCHLUSS: bestanden = JA. B3 Windows 7/7 (236/236 Pruefungen), B6 Linux-Bau-Image 7/7 (6 + 1
+  SKIP), eigene Gegenproben 52/52 + 10/10, Gegenprobe am alten Skript 13 rot. Kein Mangel; Hinweise H1, H-a, H-b,
+  H5, H7, H8.
+* 2026-10-17 05:04 B6 Linux-Gegenprobe gruen (Docker gestartet und wieder gestoppt); G-S4b/G-S7 gemessen.
+* 2026-10-17 05:01 B3 serieller ctest 7/7 gruen (284 s).
 * 2026-10-17 04:56 FORTSETZUNG nach dem Sitzungslimit (gleicher Pruefer-Auftrag, neue Sitzung): Bau erneut
-  `LOCAL-BUILD-OK (configure)` + `LOCAL-BUILD-OK (build)` (`ninja: no work to do.`), Maschine jetzt OHNE Fremdlast
-  (keine ctest/cmake/ninja/re15_pc-Prozesse); serieller ctest-Lauf B3 gestartet. Der ctest-Lauf der ersten Sitzung
+  `LOCAL-BUILD-OK (configure)` + `LOCAL-BUILD-OK (build)` (`ninja: no work to do.`), bei Beginn keine
+  ctest/cmake/ninja/re15_pc-Prozesse; serieller ctest-Lauf B3 gestartet. Der ctest-Lauf der ersten Sitzung
   (23:33-23:45) ist NICHT verwertbar: `fehler_umfeld` endete nach 7 gruenen Pruefungen ohne eine `FEHL`-Zeile mit
   `***Failed 119.89 sec` (23:44:05), `cmd` startete und ctest endete mit `CTEST_RC=1` - beides in der Minute des
   Sitzungsabbruchs, ohne Zeitlimit und ohne Pruef-Ausgabe (Ursache dort nicht mehr feststellbar); deshalb hier
@@ -34,7 +42,11 @@ geloeschte Orchestrator-Dateien - das sind nur Commits, die master nach der Basi
 `re15_port/tests/unit/probes/r38_releaseskript.cmake`, `re15_port/tests/unit/r38_releaseskript/**`, Dossier und
 Abnahme 0. Nachbesserung 1 (`git diff 190a26a0 HEAD --stat`): release_alles.sh (+222/-), README, .cmd (+2 Zeilen),
 docker_bereit.sh (+3 Kommentarzeilen), Test (+92), Sonde (Kommentar), Attrappe (Kommentar), Dossier.
-Code-Diff der Nachbesserung vollstaendig gelesen, dazu release_alles.sh ganz (861 Zeilen) und die Attrappen.
+Code-Diff der Nachbesserung vollstaendig gelesen, dazu release_alles.sh ganz (860 Zeilen, `wc -l`) und die Attrappen
+(zweite Sitzung erneut: Diff 190a26a0..99925242 fuer release_alles.sh/.cmd/README/docker_bereit.sh/Test/Sonde/Attrappe
+und release_alles.sh vollstaendig).
+Nachpruefung 2026-10-17 04:59: `git diff master...HEAD --name-only` = dieselben 18 Dateien + dieser Bericht; TABU = 0,
+CMakeLists = 0; `git diff --check 190a26a0 99925242 -- release/` sauber.
 * TABU unberuehrt: `git diff master...HEAD --name-only -- release/RELEASE_NOTES.md re15_port/platform/android
   re15_port/shared_assets` = 0. `release/` gehoert laut VERTRAG §1.4 ausschliesslich Spur V.
 * Keine CMakeLists geaendert (Sonde ueber GLOB tests/unit/CMakeLists.txt:4060). Keine Bank-9-Bits, Nachrichten-Ids,
@@ -52,6 +64,8 @@ Code-Diff der Nachbesserung vollstaendig gelesen, dazu release_alles.sh ganz (86
 `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work
 to do.`, `=== LOCAL-BUILD-OK (build)`. `ctest -N`: `Total Tests: 795`, darunter #768-#774
 `unit_r38_releaseskript_{version,bausteine,trocken,ablauf,fehler_bau,fehler_umfeld,cmd}` (Testzahl wie Abnahme 0).
+Zweite Sitzung (2026-10-17 04:56): `local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`, `local_build.sh build`
+-> `ninja: no work to do.`, `=== LOCAL-BUILD-OK (build)`; `ctest -N` weiter `Total Tests: 795`, `-R r38_releaseskript` 7.
 
 ### B2 Echter Trockenlauf im Spurbaum (23:37, HEAD 99925242)
 `bash release/release_alles.sh --dry-run` -> `RC=0` in 37 s: `Version: v0.8.26  (hoechster Tag v0.8.25 + 1)`,
@@ -63,6 +77,15 @@ besteht weiter: `/c/workspace/Re15Data` fehlt, vorher und nachher `No such file 
 `TROCKENLAUF-OK v0.8.26 (1 Hinweis(e) [!!])` (der Hinweis = Fremdlast `cmake 5, ctest 6, re15_pc 1`).
 Schreibt nichts: `git status --porcelain --untracked-files=all --ignored -- release` vorher = nachher (sha256
 bdbb0f8a..., 9 Zeilen), das Archiv wurde nicht angelegt.
+
+### B2b Echter Doppelklick im Spurbaum, Wahl 4 (23:41, HEAD 99925242)
+
+`printf '4\n' | cmd.exe /c <baum>\release\release_alles.cmd` (ohne Argumente = Doppelklick; Ausgabe
+`<scratchpad>/abn1_doppelklick4.txt`) -> `RC=0 DAUER=32s`: `Git-Bash: C:\Program Files\Git\bin\bash.exe`, der komplette
+Trockenlauf (`TROCKENLAUF-OK v0.8.26`), dann die Wahl mit dem neuen Text
+`[3] nur Release-Commit + Tag + Push - die Version ist schon gebaut und archiviert.` /
+`Stehen Commit und Tag schon (der Push scheiterte), wird nur noch gepusht.` / `[4] nichts tun`, `Auswahl [1-4]: 4`.
+release/ vorher = nachher (sha256 bdbb0f8a..., Protokollordner unveraendert drei: kein neuer Lauf).
 
 ### B3 Tests der Spur, seriell (2026-10-17 04:56:37-05:01:21; beim Start keine Fremdprozesse, ab 04:56:55 lief ein ctest der Spur tagebuch mit)
 
@@ -241,5 +264,123 @@ danach: [!!] der Push fehlt, Wahl [3]`, `M1 Trockenlauf nach weiterem Commit: ..
 2)`** (= A9: "Downgrade"), `... RELEASE-ALLES-OK v0.8.26`, `... origin master = Release-Commit`, `... origin traegt Tag
 v0.8.26`, `... Push von origin bestaetigt`, `M1 Wahl [3] ohne --version: rc 0 (ist 1)`, `M1 Wahl [3]: Version v0.8.26`,
 `M1 Wahl [3]: origin master + Tag ...`, `M1 Wiederholung ...: rc 0 (ist 1)` (13 rot; das Dossier nennt 12 von 70 - die
-13. ist der spaeter in 10fe5afa ergaenzte p3b-Riegel). Am neuen Skript dieselben 71/71 gruen (ctest unten). Die Riegel
-messen also den Mangel und nicht nur sich selbst.
+13. ist der spaeter in 10fe5afa ergaenzte p3b-Riegel). Am neuen Skript dieselben 71/71 gruen (B3 Windows, B6 Linux).
+Die Riegel messen also den Mangel und nicht nur sich selbst. Zweite Sitzung nachgeprueft: `alt_gegenprobe.txt` traegt
+genau diese 13 `FEHL`-Zeilen + `58/71`; `alt_repo/release/release_alles.sh` ist bytegleich mit `git show
+190a26a0:release/release_alles.sh` (sha256 3360188c... beide) und enthaelt 0x `NACHHOLEN`.
+
+## 3. Gates
+
+### 3.1 RE-Gate / Belege
+
+* Der Diff enthaelt KEIN Spielverhalten (nur Bau-Umgebung `release/` + Tests): in den hinzugefuegten Zeilen unter
+  release/ und re15_port/ steht 0x `@0x` - es gibt keine Original-Adresse zu zitieren oder zu disassemblieren. An
+  Stelle der drei Disassembly-Stichproben habe ich die Datei:Zeile-/Commit-Belege der Nachbesserung SELBST nachgelesen:
+  * `make_package.sh:931` (H3; Kommentar in `s_paket` + Attrappe): Zeile 931 = `echo "   (kein Android-Paket:
+    $(basename "$APK") fehlt ...)"` - stimmt (vorher falsch :929).
+  * `build_android.sh:195-199` (Downgrade-Sperre, release_alles.sh:254): Zeilen 195-199 = Kommentar "versionCode ...
+    lehnt die APK dann als DOWNGRADE ab" + Pruefung auf x.y.z - stimmt.
+  * "Form aller Release-Commits" (`ist_release_commit`, release_alles.sh:189-194): `2077bb8e release: v0.8.25
+    Zwischenversion (Windows + Linux/Steam Deck + Android)`, `e8b3958f release: v0.8.24 (...)`; `git log
+    --grep='^release: v' -8 master`: alle 8 juengsten Release-Commits (v0.8.18-v0.8.25) beginnen mit `release: vX.Y.Z `
+    - die Regel trifft sie, aber keinen Doku-Commit.
+  * Doppelklick-Wahl [3] = `--ab abschluss --tag`: release_alles.cmd:72 - stimmt.
+  * Trockenlauf-Hinweis liest `refs/remotes/origin/master`: im Hauptbaum `remote.origin.fetch =
+    +refs/heads/*:refs/remotes/origin/*` (git setzt den Verweis beim Push) - stimmt (B4).
+  * H2: docker_bereit.sh:40-42 kennzeichnet die Zeitgrenzen 60 s / 30 s jetzt als PORT-WAHL (Bau-Umgebung). Die
+    Nachbesserung fuehrt keine neue Zahl-Konstante ein (nur Rueckgabewerte und Anzeige-Kuerzungen).
+* Rate-Woerter (`deferred|tunable|interim|for now|faithful|plausibel|TODO|FIXME|vorlaeufig|geschaetzt|approx`) in den
+  hinzugefuegten Zeilen unter release/ + re15_port/: 0 Treffer. Kein Env-Schalter als Abschluss.
+* Erklaert der Fix den Befund? Ja, Ursache und Aenderung decken sich (Dossier 8.1, selbst im Code nachgelesen):
+  (a) die Version kannte nur "--version groesser als hoechster Tag" (:250-256) oder "hoechster Tag + 1" (:258-262) ->
+  neu der Weg NACHHOLEN (:240-249; nur `--ab abschluss --tag`, hoechster Tag auf HEAD, HEAD = dessen Release-Commit,
+  release/ traegt genau dessen Volumes); (b) `s_abschluss` war nicht wiederholbar -> Commit (:754-758) und Tag
+  (:784-790) werden nur angelegt, wenn sie fehlen, sonst geprueft; (c) Push-Erfolg nur per Rueckgabe -> zusaetzlich
+  `push_pruefen` (:818-830, `git ls-remote origin`: master = HEAD, Tag = dasselbe Objekt); (d) Abbruchzeile ohne
+  Optionen und ohne Push von Hand -> `opt_text`/`weiter_zeile` (:157-170) + `WEITER_VOR`/`WEITER_NACH` (:794-795).
+  Gemessen: am alten Skript dieselben Riegel 13x `FEHL` (G-R), am neuen 71/71 (B3, B6), dazu G-S1..S8.
+
+### 3.2 Vertrag
+
+* Pfade: nur `release/` (gehoert laut VERTRAG §1.4 ausschliesslich Spur V), Sonde `probes/r38_releaseskript.cmake`
+  (GLOB, in der Nachbesserung nur Kommentar), Testordner, Dossier/Abnahmen. Keine CMakeLists, kein
+  `platform/android/`, kein `shared_assets/PSX/`, kein `release/RELEASE_NOTES.md`.
+* Keine Bank-9-Bits, Nachrichten-Ids, Slots, Ereignisse, Item-/Dokument-Ids (kein Spiel-Code).
+* Tests je Teilpunkt vorhanden und messend: V1 -> cmd (echter `cmd.exe`-Doppelklick, auch Wahl 3 nach verlorenem
+  Push), ablauf (`ablauf_push_scheitert`), trocken; V2 -> ablauf, fehler_bau; V3 -> version, trocken; V4 -> bausteine,
+  ablauf, fehler_umfeld. Testzahl unveraendert 7 (`ctest -N` 795); Windows 7 gelaufen, Linux 6 + 1 sichtbar SKIP (B6).
+* Nebenwirkungen: die Eingaben der anderen Release-Tests (`r35_android_*`) und die vier Einzelskripte sind vom Diff
+  unberuehrt (0 Dateien, §1); die Nachbesserung aendert in release/ nur release_alles.sh, .cmd, README.md und einen
+  Kommentar in docker_bereit.sh (nicht .gitattributes/.gitignore) - r35 deshalb nicht erneut gefahren (Abnahme 0, A11:
+  pruefkette Passed). Echte Laeufe im Spurbaum schreiben nur das gitignorierte Protokoll `release/logs/...` (B4/B5),
+  der Trockenlauf nichts. `release_alles.cmd` weiter CRLF + reines ASCII (78/78 Zeilen CRLF, 0 Nicht-ASCII-Bytes;
+  `git ls-files --eol`: `i/lf w/crlf attr/text eol=crlf`).
+
+## 4. Durchsicht des Nachbesserungs-Codes (eigene Lektuere, Funde mit Messung)
+
+* Das Nachholen greift nur in einem eng gefassten Zustand (:241-242) - mit Absicht (Dossier 8.1) und gemessen ohne
+  Schaden: "schon alles gepusht" -> `Everything up-to-date` + `origin bestaetigt`, rc 0, nichts veraendert (Riegel
+  `M1 Wiederholung`); "Tag fehlt, Commit steht" -> Tag wird angelegt (G-S5); "Teil-Push" -> nur der Tag wird
+  nachgeschoben (G-S3).
+* Der gemeldete Weg setzt voraus, dass HEAD der Release-Commit BLEIBT. Kommt vor der Wiederholung ein Commit dazu
+  (G-S4/G-S4b), fuehren die erste Zeile der Meldung (rc 2, "... Downgrade") und Wahl [3] (rc 1, `[XX]` Notes der
+  Folgeversion) nicht zum Ziel; beides bricht ohne Schaden ab, und die Zeile "oder von Hand: git push origin master
+  vX.Y.Z" der Meldung sowie der Trockenlauf-Hinweis fuehren zum Ziel -> H-b.
+* Der Trockenlauf-Hinweis prueft (lokal, ohne Netz) nur, ob der COMMIT des hoechsten Tags in `origin/master` liegt,
+  nicht ob der TAG auf origin liegt: Teil-Push (G-S3) bleibt ohne Hinweis, und wird nach einem gescheiterten Push der
+  naechste Release ganz durchgezogen (G-S7), fehlt der Tag der Vorversion auf origin dauerhaft ohne Meldung -> H-a.
+* Ein Archiv aus der Umgebung (`RE15_ARCHIV`) traegt die Wiederaufnahme-Zeile nicht mit (nur Optionen landen in
+  `WEITER_OPT`, :91-101) - gemessen unschaedlich, solange dieselbe Umgebung gilt (G-S1); mit `--archiv` traegt die
+  Zeile den Ordner (G-S1b, B5).
+
+## 5. Urteile je Teilpunkt (gegen den Wortlaut)
+
+| Punkt | Urteil | Beleg (Kurz) |
+|---|---|---|
+| V1 "einfache Moeglichkeit - ueber Skript oder sowas" | erfuellt | Normalweg wie Abnahme 0 (Doppelklick, ein Aufruf, `--help`, README); echter Doppelklick Wahl 4 im Spurbaum mit dem neuen [3]-Text: rc 0, nichts geschrieben (23:41). M1 behoben: gescheiterter Push -> Meldung "nur der Push fehlt" + Zeile + Push von Hand; die gemeldete Zeile WOERTLICH rc 0 (G-S1; mit `--archiv` G-S1b), echter Doppelklick Wahl 3 rc 0 (G-S2, Test cmd), `--kein-push`-Zeile rc 0 (G-S6), Tag fehlt (G-S5), Teil-Push (G-S3); Riegel ablauf 71/71 + cmd 21/21 (Windows), ablauf 71/71 (Linux), am alten Skript 13 rot. Rest-Faelle mit Weg "von Hand": H-a, H-b |
+| V2 "die Ports fuer alle Systeme zu bauen" | erfuellt (Massstab VERTRAG §2) | unveraendert seit Abnahme 0 (A7/A8); Regression: fehler_bau 25/25, ablauf 71/71 (Reihenfolge windows android linux paket, alle drei Saetze Pflicht), G-S8; Windows und Linux gruen (B3, B6) |
+| V3 "neue Versionsnummer - minor" | erfuellt | echter Trockenlauf `Version: v0.8.26  (hoechster Tag v0.8.25 + 1)` (B2, B4); version 39/39 (Linux 38/38), trocken 32/32; das Nachholen vergibt keine neue Nummer und baut nichts (nur `--ab abschluss --tag`; G-S1/S2: kein v0.8.27) |
+| V4 "die alte ins Archiv zu bringen" | erfuellt | Schritt alt mit echten v0.8.25-Volumes in ein leeres Archiv: 6/6 `OK`, SUMS = Release-Commit (0 CR), 6x `cmp` gleich (B5, Stand 99925242); ablauf (Archiv v0.8.25 + v0.8.26), fehler_umfeld 30/30 |
+
+## 6. Maengel
+
+Keine. (M1 der Abnahme 0 ist behoben - §2 G-S1/S1b/S2/S3/S5/S6, G-R, B3, B6.)
+
+## 7. Hinweise (keine Maengel der Spur; fuer Orchestrator/Nutzer)
+
+* **H1 (wichtig, VOR dem Release v0.8.26 klaeren):** `C:\workspace\Re15Data` (samt `re15_packages_archiv`) fehlt
+  weiter - gemessen 2026-10-17 05:00 (`ls /c/workspace` -> nur `Gemeinde`, `git`, `keepass`; `/c/workspace/Re15Data`:
+  `No such file or directory`). Ein Release-Lauf legt das Archiv am Standardpfad NEU an und bringt v0.8.25 aus release/
+  hinein (B5 zeigt genau das in einem Wegwerf-Archiv); v0.8.7-v0.8.14 kann das Skript nicht wiederherstellen. Den
+  Nutzer fragen, ob das Verzeichnis verschoben wurde; sonst `--archiv`/`RE15_ARCHIV` auf den neuen Ort.
+* **H-a (Verbesserung):** Der Trockenlauf meldet einen fehlenden TAG auf origin nicht, solange der Release-Commit in
+  `origin/master` liegt - Teil-Push (G-S3) und "Hinweis uebergangen, naechster Release gebaut" (G-S7: origin ohne Tag
+  v0.8.26, danach kein Hinweis mehr). Der Release-Commit ist gesichert, nur der Tag fehlt (von Hand: `git push origin
+  vX.Y.Z`). Vorschlag: im Schritt abschluss (dort ist das Netz ohnehin da) die lokalen vX.Y.Z-Tags gegen `git ls-remote
+  --tags origin` pruefen und fehlende mitpushen bzw. melden.
+* **H-b (Verbesserung):** Nach einem gescheiterten Push UND einem weiteren Commit (die Orchestratoren committen laufend
+  Doku auf master) fuehren die erste Zeile der Abbruchmeldung (rc 2 "... Downgrade", G-S4b) und Wahl [3] (rc 1, `[XX]`
+  Notes v0.8.27, G-S4) nicht zum Ziel; der Text der Wahl [3] ("Stehen Commit und Tag schon ..., wird nur noch
+  gepusht") verspricht in diesem Fall zu viel. Zum Ziel fuehren die zweite Zeile der Meldung und der
+  Trockenlauf-Hinweis (`git push origin master vX.Y.Z`); nichts Falsches passiert. Vorschlag: die rc-2-Meldung bei
+  "Tag existiert schon, fehlt in origin/master" um die Push-Zeile ergaenzen, oder das Nachholen auch zulassen, wenn der
+  Tag-Commit Vorfahr von HEAD ist und danach kein Paket-Inhalt committet wurde.
+* H4 der Abnahme 0 (Linux ungemessen): erledigt - B6 im Release-Bau-Image 7/7 (6 + 1 SKIP). Docker Desktop startete
+  diesmal in 12 s und ist wieder gestoppt.
+* H2/H3 der Abnahme 0: erledigt (§3.1).
+* H5 (Kosmetik, unveraendert): Im zweistufigen Ablauf ([1], spaeter [3]) nennt die Release-Commit-Nachricht die
+  Lauf-Id des Abschluss-Laufs.
+* H7: RE15_MIN_TESTS (local_build.sh, Standard 788) in der Integration um 7 anheben (Testzahl der Spur 7, B1).
+* H8: Entscheidungsfrage an den Nutzer (aus dem Bau, unveraendert): Archiv kuenftig auf N Versionen kuerzen? Heute
+  wird dort nichts geloescht (wortlautgetreu, Abnahme 0 §4.3).
+* Der ctest-Lauf der ersten Sitzung (fehler_umfeld `Failed` nach 7 Pruefungen ohne `FEHL`-Zeile) faellt in die Minute
+  des Sitzungsabbruchs; derselbe Test ist seriell 30/30 gruen (B3) und unter Linux 30/30 (B6).
+
+## 8. Ergebnis
+
+**bestanden: JA.** V1, V2, V3, V4 erfuellt (Massstab VERTRAG §2: Trockenlauf + Versionslogik-Tests, dazu echte Daten
+im Schritt alt, echter Trockenlauf, echter Doppelklick, ganze Kette mit dem echten Skript in Wegwerf-Repos). M1 der
+Abnahme 0 ist behoben und durch Riegel gesichert, die am alten Skript rot und am neuen gruen sind (Windows UND Linux).
+Gates halten: RE-Gate (kein Spielverhalten, keine Adresse; Datei:Zeile-Belege stimmen, keine Rate-Woerter), Vertrag
+(nur release/ + Sonde + Tests + Doku), Nebenwirkungen (keine Eingabe anderer Tests beruehrt). Vor dem Release v0.8.26:
+H1 klaeren; H-a/H-b als Verbesserungen fuer eine spaetere Runde.
