@@ -545,8 +545,9 @@ eigener Text fuer genau die Tuer, die dieser Schluessel oeffnet — er nennt kei
 - Koerper-Schub FUN_8002aec4 (PSX.EXE): @0x8002aef8 `lw a0,0(s3)` / @0x8002aefc `lw v1,0(s2)` (Wort 0 beider
   Figuren), @0x8002af04 `or v0,a0,v1`, @0x8002af08 `andi v0,v0,0x2`, @0x8002af0c `bne v0,zero,0x8002af30` ->
   @0x8002af30 `j 0x8002b464` / `addu v0,zero,zero` = kein Schub, wenn EINE der beiden Bit 0x2 traegt (Port:
-  enemy_ai_common.c re15_body_push). Original-Setzer von Bit 0x2: Spinne beim Auftauchen @0x801163dc, Kriecher
-  @0x80104134, Kraehe @0x80114acc (alle Overlay-Code).
+  enemy_ai_common.c re15_body_push). Original-Setzer von Bit 0x2 (selbst gelesen): STAGE1.BIN Typ-0x26-Handler
+  @0x801163dc `lw v0,0(a0)` / @0x801163e4 `ori v0,v0,0x2` / @0x801163e8 `sw v0,0(a0)` (solange er auftaucht, ist er
+  "durchlaessig") — Bit 0x2 ist also die Original-Bedeutung "kein Koerper-Schub", gesetzt im Overlay-Code.
 - Wort 0 per Skript: Member_set LAB_800410b8 (@0x800410d0 `lbu a1,1(v0)` Member-Id, @0x800410d4 `lh a2,2(v0)` Wert,
   @0x800410e8 pc+4) -> FUN_8004116c Tabelle @0x80010c8c, Id 6 -> @0x800411c4 `j 0x80041230` / @0x800411c8
   `sw a2,0(a0)` = Wort 0 der Arbeitsfigur. RE1.5-Form `34 06 lo hi`: ROOM11B0 sub06 @0x01706 `34 06 01 02`,
