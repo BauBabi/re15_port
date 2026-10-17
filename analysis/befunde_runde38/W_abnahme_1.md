@@ -165,3 +165,47 @@ Alle 24 Laeufe exit 0, state.txt cam = erzwungener Schnitt.
 Befund: in keinem Bild Muell, fehlende Objekte oder Loecher; jede Aenderung ist die Anwendung derselben, an 5 Schnitten
 gegen das Original gemessenen Regel (ABE/ABR/STP, Flach-Farbe). Die Dreieckszahl waechst durch den zweiten Durchgang
 (4090 Cut 0: **2130 statt 1232** Dreiecke in der Queue, Kapazitaet `TEXTRI_QUEUE_MAX` 8192) — Hinweis H2.
+
+### 5.2 M1: ROOM5060 (Leon) und ROOM5061 (Elza) Cut 4 — ZU FUSS durch die Zonen-Kette erreicht
+Wegplaene `wp_5060_c4.txt` / `wp_5061_c4.txt` (Gegner weg wie im Original-Abzug, dann `GEHE` durch die Zonen-Mitten
+des Original-Logs (-23025,-12425) -> (-25475,-18725) -> (-23375,-23075) -> (-20926,-25850), Halt), Laeufe
+`d1_5060c4_leon` (`RE15_PSELECT_AUTO=1 RE15_DEBUG_JUMP=5060@250 RE15_FRAMEDUMP=250-2400/10:fd_ RE15_EXIT_AT=2400#5060`)
+und `d2_5061c4_elza` (dasselbe + `RE15_PSELECT_AUTO_SWITCH=1`, 5061; debug.log `Spieler-Familie PL04`). state.txt:
+Schnittfolge 0 -> 1 -> 2 -> 3 -> 4 (der Port schaltet ueber dieselbe Zonen-Kette), cam=4 ab F375, Halt bei (-21018,-25793).
+
+| Messung (Halbviereck (1,2,3) von obj 4, 1749 px; Werkzeug `tools/serie.py` / `tools/orig_vgl.py`) | Ergebnis |
+|---|---|
+| Leon, alle **203** Bilder mit Bild UND Vorbild cam=4 (F380..F2400) | Mittel **(32.2,15.4,26.5)** in jedem Bild, Original (31.6,15.3,26.1): Abstand **0.6**, MAD (2.1,2.2,2.3), 8 von 1749 px > 24 |
+| Elza, alle **203** Bilder cam=4 | dasselbe: (32.2,15.4,26.5), Abstand 0.6, MAD (2.1,2.2,2.3) |
+| Vergleich Abnahme 0 | v0.8.25 (47.2,30.5,36.6) = Scheibe fehlte; Stand vor N1 (6.3,0.5,6.6) = deckend dunkles Dreieck (M1) |
+| ganzes Bild F2400 gegen das Original | Leon MAD (2.1,1.2,1.6), Elza (3.1,1.4,1.7); Abweichungen nur an der Figur (Pose/Figur verschieden) |
+
+Bilder `abnW1_rolltor/vgl_5060c4_ganz.png` (Original | Leon | Elza), `vgl_5060c4_zufuss.png`. **M1 ist behoben**: das linke
+Fenster zeigt wie im Original das Gitter halb abgedunkelt durch die Scheibe, mit Leon und mit Elza, im Spiel erreichbar.
+
+### 5.3 ABR 1 (ROOM5060 Cut 3) und ABR 2 (ROOM20A0 Cut 2 / Cut 3) — zu Fuss
+* `d3_5060c3` (Wegplan `wp_5060_c3.txt`, Halt (-23476,-22966), cam=3 in 209 Bildern): Licht-Bodenplatte obj 5
+  (Attribut 0x0006, ABR 1), Rechteck x 95..134 y 180..229: Mittel **(124.8,47.7,46.9)** in allen 209 Bildern, Original
+  (125.4,46.2,44.0), Abstand **2.9**, MAD 3.8 (v0.8.25 laut Riegel (45.9,45.1,43.9), Abstand 79.5).
+* `d4_20a0c2c3` (Wegplan `wp_20a0_c2c3.txt`, Gegner weg, `RE15_FX_LOG=fx.txt`): Cut 2 (Halt (8646,-22942), 10 Bilder):
+  Kanal x 160..299 y 180..235 **(0.4,0.4,0.3) = Original**, Abstand 0.0, MAD 0.1. Cut 3 (Halt (18562,-22932), 193 Bilder):
+  Kanal x 140..249 y 180..235 **(6.8,5.5,6.0)** gegen (7.1,5.8,6.4), Abstand 0.3, MAD 1.2, 0 von 6160 px > 24.
+* Aber: der OBERE Teil des Kanals in Cut 3 (x 140..259, y 145..179 — ausserhalb der Messflaeche des Riegels) weicht ab:
+  Mittel (17.3,17.0,15.3) gegen Original (19.0,17.2,17.6), MAD 5.3, **305 px > 24** (Bereich x 130..269, y 140..189) — die
+  gruenen Flecken der vom Port gestarteten Effekt-Schleife (§8.2, Hinweis H1). Bild `vgl_20a0c3_zufuss.png`.
+
+### 5.4 Nicht-ABE-Darstellung unveraendert (Laeufe der Abnahme 0 mit der exe NACH N1 wiederholt, Bild fuer Bild)
+Batch `batch_e.sh`, dieselben Parameter wie die Abnahme-0-Laeufe (exe VOR N1), `tools/diff_dumps.py` mit Toleranz **0**:
+
+| Lauf | Inhalt | Bilder verschieden (tol 0) |
+|---|---|---|
+| `e_t3_intro1170` gegen `t3_intro1170_neu` | New-Game-Intro ROOM1170 (Hubschrauber, Rotor, Figuren; MEHR-Fall des Zensus) | **0 von 281** |
+| `e_t11_10d0_c12` gegen `t11_10d0_cut12_neu` | ROOM10D0 Cut 12 (Marvin, Rolladen) | **0 von 5** |
+| `e_t12_1050_c5` gegen `t12_1050_cut5_neu` | ROOM1050 Cut 5 (Rolltor, Licht-Zeichner) | **0 von 5** |
+| `e_t9_2050_c11` gegen `t9_2050_cut11_neu` | ROOM2050 Cut 11 (Typ-3-WENIGER-Fall) | **0 von 5** |
+| `e_t7_5060_c4` gegen `t7_5060_cut4_neu` | ROOM5060 Cut 4 (ABE, M1) | 5 von 5 — Dreieck jetzt (32.2,15.4,26.5) statt (6.3,0.5,6.6); v0.8.25 `t8` (47.2,30.5,36.6) (`vgl_5060c4_drei.png`) |
+| `e_t10_20a0_c3` gegen `t10_20a0_cut3_neu` | ROOM20A0 Cut 3 (ABE-Wasser) | 5 von 5 (Wasser B - F, Flecken) |
+
+Damit ist belegt: das Eckpunkt-Alpha im beleuchteten Weg und der Zwei-Durchgang-Flush aendern an Figuren und deckenden
+Objekten **kein einziges Pixel**; N1 wirkt nur auf Objekte mit Attribut-Bit 0x2. Leistung (Hinweis H2): 4090 mit
+`RE15_FPS=240`, 2500 Bilder: neu 33.8 / 33.9 s, v0.8.25 34.3 / 34.2 s — am PC kein Unterschied.
