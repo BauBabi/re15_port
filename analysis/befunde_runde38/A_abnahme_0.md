@@ -185,5 +185,6 @@ Eigener MD1-Leser auf ROOM11F0.RDT @0x001928 (65 Bytes Kopf-Laenge-Feld, 1 Netz,
 y = +923 = Dreiecke **T03 (u 4..125, v 41..82), T04 (u 65..125, v 0..82), T05 (u 4..125, v 0..41), T11 (u 4..65, v 0..82)**
 — das ganze Muster-Feld; Oberseite y = -900: 49 Vierecke im Musterfeld (v <= 82). Umlauf in (x,z) von oben: Unterseite
 "+", Oberseite "-" — gegensinnig, also ist bei Blick von oben genau eine der beiden Flaechen rueckseitig. Das deckt die
-Ursache "Unterseite mit demselben Muster scheint durch die zu 92,8 % durchsichtige Oberseite" (TIM: Index 0 = 7682 von
-10126 Texeln im Musterfeld u 4..125, v 0..82).
+Ursache "Unterseite mit demselben Muster scheint durch die weitgehend durchsichtige Oberseite" (selbst gezaehlt: im
+Musterfeld u 4..125, v 0..82 sind 7682 von 10126 Texeln = 75,9 % Index 0 = durchsichtig; die 92,8 % des Dossiers beziehen
+sich auf die ganze Oberseite, nicht nachgezaehlt).
