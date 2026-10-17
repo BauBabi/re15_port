@@ -245,4 +245,43 @@ Gegenprobe v0.8.25 zeichnet in derselben Lage keinen einzigen Effekt, der Spurst
 - Hinweis Release: `engine/src/wasser_r38.c` ist eine NEUE Engine-Datei — der Android-Bau friert die GLOB-Liste ein
   (app/.cxx-Cache, Memory reai-v2-android-glob-cache); beim Paketbau neu konfigurieren, sonst fehlen die Symbole beim Linken.
 
+## 5. Urteil je Nutzer-Punkt
+
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| "In Room 1260 und folgende fehlt noch der Wasser Effekt, wenn sich Leon oder Elza im flachen Wasser bewegen." | **erfuellt** | Leon 1260 Gehen/Laufen/Rueckwaerts/Drehen (M1/M3/M11/M12) und ueber den Tuerweg 10B0 -> 1260 (integration leon10b0_tuer); Elza ueber den echten Tuerweg 10B1 -> 1261 (M2) und Laufen (M10); Folge-Raeume 20B0 (M5), 2050-Becken (M6), 2090 (M7), 20A0 (M8), 2091 (M9), 2070/2071 ueber die echten Tuerwege 2040/2041 (M13/M14), 11A0 Band 0 (M15). Bild: Spritzer pixelgleich zum Original-POLY_FT4 (13 Quads, M1-TRILOG), Anker = Original-GDB (1260 Gehen/Laufen, 2090, 20A0). Ton: Wasser-/Lauf-/Wat-Satz per Mitschnitt-Korrelation (M1) bzw. [foot]-Satz in jedem Lauf. Gegenprobe v0.8.25: kein Effekt (1260), Beton-Ton in 11A0. |
+
+## 6. Gates
+
+- Bau: OK (configure/build, exe = Code-Endstand).
+- Eigene Riegel: 9/9 gruen (unit_r38_wasser_* 8, integration_r38_wasser).
+- Gezielte Gruppen (Module des Diffs): siehe Abschnitt 7.
+- RE-Gate: haelt (Abschnitt 3, 15 Stellen selbst disassembliert, keine Rate-Woerter, keine Env-Schalter als Abschluss).
+- Vertrag: haelt (Abschnitt 4).
+
+## 8. Maengel (blockierend)
+
+Keine.
+
+## 9. Hinweise (nicht blockierend, fuer Dossier/NACHLAUF)
+
+1. Dossier-Raumliste ungenau: (a) "2000 / 2001 | Fleck P2 ... zweig=boden, Anker y -73/-87 ueber Boden 0" ist ein Log-Befund auf
+   Band 0 an einer Stelle, die in ROOM2000 KEINE Kamera-Region hat (RVD-Anker aller 16 Cuts: z <= -17201 oder x <= -6502) — dort
+   sieht man weder Leon noch den Effekt; spielbar ist der Gang in ROOM20B0 (M5). (b) "11A0 ... Spieler erreicht sie nicht" ist
+   falsch: die Tuer 2070 slot 4 -> 11A0 (6500,0,-3200) und 11A0 slot 0 -> 2070 liegen auf Band 0 in Zone 7 (M15, wirkt dank B10).
+   (c) "2070 ... im Sprung-Zustand keine Zone aktiv" ist richtig, aber unvollstaendig: ueber die Tueren aus 2040/2041 (Cut 9) und
+   11A0/11A1 (Cut 12) ist die Zone aktiv und der Watschritt laeuft (M13/M14). "Fuer den Nutzer" sollte 2070 (Flut-Tunnel) und
+   11A0 nennen.
+2. Port-Interna ohne PORT-WAHL-Etikett: `gez_gueltig` "selber Raum und <= 2 Bilder alt" (wasser_r38.c:119-123) und
+   `WASSER_FOLGE_MAX 8` (wasser_r38.c:47). Kein Original-Verhalten (Synchronisation Zeichner -> Spielschritt; die 2 deckt den
+   60-fps-Halbtakt), sollte im Kommentar als PORT-WAHL stehen.
+3. Elzas Lauf-Spritzer liegen bei allen drei gemessenen Schritten am hochgezogenen Fuss (M10, y ~1000 ueber Boden); Mechanismus
+   = Original, fuer Elza aber ohne Original-Messung (OFFEN des Bau-Agenten, kein Elza-Spielstand fuer die GDB-Kette).
+4. Sub-3-Spritzer (Watschritt) ist am Original nur ueber Anker/Ton belegt (GDB 2090/20A0), nicht ueber einen POLY_FT4-Mitschnitt
+   wie Sub 5; im Port sichtbar (M13 2070, M15 11A0), Zeichenweg derselbe wie beim pixelgleichen Sub 5.
+5. Vorbestehend, nicht Teil des Punkts (fuer NACHLAUF): erster Geh-Schritt nach dem Losgehen im Port ~95 Einheiten hinter dem
+   Original (1260: -7804 gegen -7710; 20A0: 8600 gegen 8696 bei gleicher Bildnummer); 2090-Becken: Original-Leon bewegt sich bei
+   Blick 0 langsam nach +z, Port mit Gehtempo nach +x; Port-Debug-Sprung nach 20B0/20B1 startet die Flut-Szene, Original nicht.
+6. Release: neue Engine-Datei `wasser_r38.c` -> Android-GLOB-Cache beim Paketbau erneuern.
+
 (in Arbeit)
