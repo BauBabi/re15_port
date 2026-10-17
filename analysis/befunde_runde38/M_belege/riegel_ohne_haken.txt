@@ -1,0 +1,39 @@
+=== john1261 (Haken AUS)
+  OK   John (Typ 0x49) gespawnt (sub03 @0x01276), Slot 1
+    F153 Slot 1 Sub 4: in der Luft, y -1800 bei (-20399,-18558) Band 1
+    F154 Slot 1 Sub 4: in der Luft, y -1800 bei (-20394,-18632) Band 1
+    F155 Slot 1 Sub 4: in der Luft, y -1800 bei (-20389,-18706) Band 1
+    F156 Slot 1 Sub 4: in der Luft, y -1800 bei (-20385,-18780) Band 1
+    F157 Slot 1 Sub 4: in der Luft, y -1800 bei (-20380,-18854) Band 1
+  FAIL John springt (Sub 0x18 aus Sub 4, Clips 3/4/5 der Loco-Bank)
+  FAIL John klettert am Oststeg hinauf (Sub 0x12 Phase 3, Clip 2)
+  FAIL John geht/laeuft nie in der Luft (Sub 4/5/6/9 auf Bandhoehe, ausserhalb jeder Absprungzelle: 245)
+  OK   John endet oben am Oststeg (Band 1, y -1800) nahe dem Ziel (20900,-5000) -> (20883,-1800,-5273)
+FAIL: 3 Pruefung(en)
+=== ada1260 (Haken AUS)
+  OK   Ada (0x42, Slot 1) und Marvin (0x40, Slot 2) gespawnt (sub02 @0x01254/@0x01268)
+    F63 Slot 1 Sub 4: in der Luft, y -1800 bei (26750,15700) Band 1
+    F64 Slot 1 Sub 4: in der Luft, y -1800 bei (26750,15775) Band 1
+    F65 Slot 1 Sub 4: in der Luft, y -1800 bei (26750,15850) Band 1
+    F66 Slot 1 Sub 4: in der Luft, y -1800 bei (26750,15925) Band 1
+    F67 Slot 1 Sub 4: in der Luft, y -1800 bei (26750,16000) Band 1
+    F128 Slot 2 Sub 4: in der Luft, y -1800 bei (25400,15700) Band 1
+    F129 Slot 2 Sub 4: in der Luft, y -1800 bei (25400,15775) Band 1
+    F130 Slot 2 Sub 4: in der Luft, y -1800 bei (25400,15850) Band 1
+    F131 Slot 2 Sub 4: in der Luft, y -1800 bei (25400,15925) Band 1
+    F132 Slot 2 Sub 4: in der Luft, y -1800 bei (25400,16000) Band 1
+  FAIL Ada springt nordlich vom Steg (Sub 0x18)
+  FAIL Marvin springt nordlich vom Steg (Sub 0x18)
+  FAIL Ada und Marvin klettern auf den Mittelblock (Sub 0x12, Clip 2)
+=== john10b1 (Haken AUS)
+  OK   John (Typ 0x49) gespawnt, Slot 1
+    F121 Slot 1 Sub 5: in der Luft, y -9000 bei (-4843,-8053) Band 5
+    F122 Slot 1 Sub 5: in der Luft, y -9000 bei (-5040,-8016) Band 5
+    F123 Slot 1 Sub 5: in der Luft, y -9000 bei (-5237,-7979) Band 5
+    F124 Slot 1 Sub 5: in der Luft, y -9000 bei (-5434,-7942) Band 5
+    F125 Slot 1 Sub 5: in der Luft, y -9000 bei (-5631,-7905) Band 5
+  FAIL John springt vom Band-5-Steg auf den Block [6] (Band 5 -> 1, 1+3 Baender: 0 mal)
+  FAIL John springt vom Block [6] an Zelle [18] auf den Boden (Band 1 -> 0: 0 mal)
+  FAIL Sprung mit den Clips 3/4/5
+  FAIL John laeuft nie in der Luft (Sub 4/5/6/9 auf Bandhoehe, ausserhalb jeder Absprungzelle: 6)
+FAIL: 4 Pruefung(en)
