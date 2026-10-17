@@ -12,6 +12,7 @@
 #                                (Cut 12: bis auf die vorbestehende Klemme an SCA 30), nur Cut 7/12, Spieler auf der
 #                                Kameraachse Cut 12; Gegenprobe v0.8.25 ROT
 #   unit_r38_montage_s1030_re15  dasselbe unter der RE1.5-KI
+#   unit_r38_montage_s1030_ohne7_re2/_re15  1070 leer ((9,76)=0): die Tuer zeigt gleich Cut 12 — dieselben Cut-12-Kriterien
 #   unit_r38_montage_rolltor     ROOM1040 Cut 1: mit/ohne Aenderung Bild fuer Bild dieselben Lagen, 5 durchs Tor
 #   integration_r38_montage      ECHTE exe ueber den echten Weg (Karte + CONTINUE in 1130 + Tuer -> 1150 -> Szene ->
 #                                Montage bis 11C0): dieselben Kriterien aus den [montage-r38]-Zeilen des debug.log
@@ -23,7 +24,7 @@ target_compile_definitions(test_r38_montage PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r38_montage PRIVATE m)
 endif()
-foreach(_teil kameras s1130_re2 s1130_re15 s1030_re2 s1030_re15 rolltor)
+foreach(_teil kameras s1130_re2 s1130_re15 s1030_re2 s1030_re15 s1030_ohne7_re2 s1030_ohne7_re15 rolltor)
     add_test(NAME unit_r38_montage_${_teil} COMMAND test_r38_montage ${_teil}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r38_montage_${_teil} PROPERTIES TIMEOUT 300)

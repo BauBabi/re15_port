@@ -13,15 +13,23 @@
  * Zustand der Kette aufgebaut, den der vorige Raum hinterlaesst, und bis zur Tuer-Anforderung gefahren; gemessen wird
  * ueber den Mess-Haken re15_r38_spuren (Abstand zur Bodenprojektion der Kamera je Schnitt und Zombie).
  *
+ * ⛔ Navigator (BLK-Graph) und Gegner-Wandklemme lesen g_room_rdt — rdt_laden setzt ihn (ohne ihn liefen die Zombies im
+ * ersten Riegel dieser Spur durch Waende und Tor, Dossier "Zwischenmessung" Befund 3). Seitdem sind die Zahlen des
+ * Riegels mit denen der exe identisch (Dossier "Messung nachher").
+ *
  * Teile (argv[1]):
  *   kameras      Kamera-Tabelle = RID-Bytes der ausgelieferten RDTs (Datei-Offset camera_start + Cut*32); Parkplatz
- *                Cut 12 aus den RID-Bytes nachgerechnet (Abstand der Rolltor-Form, Kameraachse Cut 12, Gierung).
+ *                Cut 12 aus den RID-Bytes nachgerechnet (Abstand der Rolltor-Form, Kameraachse Cut 12, Gierung); Parkplatz
+ *                1030 (Cut 7) = Mitte BLK-Zone 7 hinter der Wand SCA 5 auf der Achse Cut 7, in Zone 7, ohne SCA-Zelle.
  *   s1130_re2 / s1130_re15     ROOM1130 Cut 0: alle Zombies kommen der Kamera naeher (KI RE2 = Standard / RE1.5);
- *                Einzelstopp nur hinter der Kamera; Spieler-HP unveraendert. Gegenprobe Stand v0.8.25: keiner bewegt sich.
- *   s1030_re2 / s1030_re15     ROOM1030 Cut 7 (Kopien aus 1070) und Cut 12 (Tor): ebenso; nach dem Schnitt auf Cut 12
- *                steht der geparkte Spieler auf der Kameraachse (Parkplatz Cut 12). Gegenprobe Stand v0.8.25.
+ *                Einzelstopp nur hinter der Kamera; Navigator-Ziel = Spieler; HP unveraendert. Gegenprobe v0.8.25 ROT.
+ *   s1030_re2 / s1030_re15     ROOM1030 Cut 7 (Kopien aus 1070) und Cut 12 (Tor, Kriech-Regel): ebenso; nur Cut 7/12;
+ *                Spieler auf der Kameraachse Cut 12. Gegenprobe Stand v0.8.25 ROT.
+ *   s1030_ohne7_re2 / _re15    1070 leer ((9,76) = 0): die Tuer zeigt gleich Cut 12 — dieselben Cut-12-Kriterien.
  *   rolltor      ROOM1040 Cut 1: mit und ohne die Aenderung Bild fuer Bild dieselben Lagen aller Zombies, 5 durchs Tor,
- *                Spieler-HP unveraendert (= Rolltor-Schnitt unveraendert). */
+ *                Spieler-HP unveraendert (= Rolltor-Schnitt unveraendert).
+ *   auswerten <lauf>           integration_r38_montage: dieselben Kriterien aus den [montage-r38]-Zeilen eines
+ *                exe-Laufs (debug.log). */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -508,6 +516,53 @@ static void teil_s1030(re15_ai_flavor_t fl)
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 }
 
+/* ---- Teil: s1030_ohne7 — 1070 leer ((9,76) = 0): die Tuer aus 1040 zeigt gleich das aufgebrochene Tor (Cut 12,
+ * irons_tod_1150.c tuer_setzen(.., 12)); Bruch + Kriecher im Raumaufbau. Dieselben Cut-12-Kriterien. ---------------- */
+static void schritt_1030_ohne7(int an, lauf_t *L)
+{
+    re15_r38_montage_enable(an);
+    szene_flags();                                         /* (9,76) bleibt 0 */
+    re15_irons_tod_zustand_setzen(RE15_IT_S1040);
+    re15_r38_montage_reset();
+    if (room_boot(0x1030, an ? RE15_IT_PARK_1030_X : -27300, an ? RE15_IT_PARK_1030_Z : -3650, 0, 12) != 0) return;
+    PRUEF(re15_irons_tod_zustand() == RE15_IT_S1030, "1030 ohne Cut-7-Teil: Montage-Schritt laeuft (Zustand %d)", re15_irons_tod_zustand());
+    lauf(L, 900);
+    re15_r38_abschnitt_beenden();
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    re15_r38_montage_enable(1);
+}
+static void teil_s1030_ohne7(re15_ai_flavor_t fl)
+{
+    printf("== s1030_ohne7 (KI %s) ==\n", fl == RE15_AI_FLAVOR_RE2 ? "RE2" : "RE1.5");
+    re15_ai_flavor_set(fl);
+    lauf_t L;
+    const re15_r38_spur_t *sp = NULL; const re15_r38_abschnitt_t *ab = NULL;
+    schritt_1030_ohne7(1, &L);
+    PRUEF(L.raumwechsel && L.ziel == 0x11C0, "Schnitt nach ROOM11C0 nach %d Bildern", L.bilder);
+    int n = re15_r38_spuren(&sp), nab = re15_r38_abschnitte(&ab);
+    const re15_r38_abschnitt_t *a12 = abschnitt(ab, nab, 0x1030, 12);
+    bew_t s12 = bewerte(sp, n, 0x1030, 12, NULL, 0, R38_NAEHER_TOR, "jetzt", a12 ? a12->bilder : -1);
+    PRUEF(a12 && !abschnitt(ab, nab, 0x1030, 7) && re15_r38_fremde_kamera() == 0, "ROOM1030 ohne Cut-7-Teil: nur Cut 12 (%d Bilder), "
+          "keine andere Kamera (%d Bilder)", a12 ? a12->bilder : -1, re15_r38_fremde_kamera());
+    PRUEF(s12.n >= 9 && s12.kriech_noetig >= 1 && s12.kriech_bekommen == s12.kriech_noetig, "Cut 12: jeder aufrechte Zombie vor der "
+          "Kamera bekommt das Kriech-Bit (%d von %d)", s12.kriech_bekommen, s12.kriech_noetig);
+    PRUEF(s12.n >= 9 && s12.naeher + s12.klemme == s12.n && s12.klemme <= 1, "Cut 12: alle %d kommen mindestens %d naeher (%d), ausser "
+          "hoechstens einer Klemme an SCA 30 (%d); kleinste %d", s12.n, R38_NAEHER_TOR, s12.naeher, s12.klemme, s12.min_naeher);
+    PRUEF(s12.stopp_vorn == 0 && a12 && a12->hp_min == 100 && L.hp_min == 100, "Cut 12: Einzelstopp nur hinter der Kamera (%d), Spieler-HP "
+          "unveraendert (min %d)", s12.stopp_vorn, L.hp_min);
+    PRUEF(a12 && labs((long)a12->px - RE15_R38_PARK_1030_12_X) <= 1 && labs((long)a12->pz - RE15_R38_PARK_1030_12_Z) <= 1,
+          "Cut 12: Spieler auf der Kameraachse (%d,%d)", a12 ? (int)a12->px : 0, a12 ? (int)a12->pz : 0);
+    printf("  Cut 12: %d von %d unter dem Tor durch\n", s12.durchs_tor, s12.n);
+    if (g_mess) return;
+    schritt_1030_ohne7(0, &L);
+    n = re15_r38_spuren(&sp); nab = re15_r38_abschnitte(&ab);
+    a12 = abschnitt(ab, nab, 0x1030, 12);
+    bew_t g12 = bewerte(sp, n, 0x1030, 12, NULL, 0, R38_NAEHER_TOR, "Gegenprobe v0.8.25", a12 ? a12->bilder : -1);
+    PRUEF(g12.kriech_bekommen == 0 && g12.naeher + g12.klemme < g12.n, "Gegenprobe v0.8.25 ist ROT: kein aufrechter Zombie kriecht "
+          "(%d von %d), naeher %d + Klemme %d von %d", g12.kriech_bekommen, g12.kriech_noetig, g12.naeher, g12.klemme, g12.n);
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+}
+
 /* ---- Teil: rolltor ------------------------------------------------------------------------------------------------ */
 #define R38_ROLLTOR_BILDER 2000
 static int32_t s_bahn[2][R38_ROLLTOR_BILDER][RE15_ACTOR_MAX][2];
@@ -638,6 +693,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "s1130_re15")) teil_s1130(RE15_AI_FLAVOR_RE15);
     if (alle || !strcmp(teil, "s1030_re2"))  teil_s1030(RE15_AI_FLAVOR_RE2);
     if (alle || !strcmp(teil, "s1030_re15")) teil_s1030(RE15_AI_FLAVOR_RE15);
+    if (alle || !strcmp(teil, "s1030_ohne7_re2"))  teil_s1030_ohne7(RE15_AI_FLAVOR_RE2);
+    if (alle || !strcmp(teil, "s1030_ohne7_re15")) teil_s1030_ohne7(RE15_AI_FLAVOR_RE15);
     if (alle || !strcmp(teil, "rolltor"))    teil_rolltor();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

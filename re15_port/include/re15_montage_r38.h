@@ -17,7 +17,11 @@
  *      Zombies tragen sie (ROOM1040 main00 @0x011FC.. Typ 0x16 grid 0x0d); die Montage-Listen 1130/1030-Cut-7 trugen
  *      bis v0.8.25 die STEHENDE Form (grid 0x02 / 0x00) -> sie standen still (gemessen, Dossier "Messung vorher").
  *   2. ZIEL = der geparkte Spieler HINTER der Kamera (Navigator-Ziel = Spielerlage, enemy_ai_common.c
- *      re15_nav_update_steer; Form EXE FUN_80039e7c). Rolltor: Parkplatz (-24950,-14900) liegt 3985 hinter der Kamera
+ *      re15_nav_update_steer; Form EXE FUN_80039e7c). ⛔ Nur wenn der Parkplatz in einer BLK-Zone liegt: gleiche Zone ->
+ *      Ziel = Spielerlage jeden Takt (`bne a0,a1` @0x80039fbc, `sh s1,444(v0)` @0x80039fd0); sonst Pfadsuche FUN_8003a524
+ *      und UNBEDINGTE Kopie der geteilten Globals @0x8003a040/@0x8003a058 — ausserhalb jeder Zone (0xff @0x8003a198)
+ *      bleibt dort das Ergebnis eines frueheren Raums stehen (GEMESSEN, Dossier "Zwischenmessung" Befund 1).
+ *      Rolltor: Parkplatz (-24950,-14900) liegt 3985 hinter der Kamera
  *      Cut 1 (RID-Rechnung unten). Fuer ROOM1030 Cut 12 wird der Spieler nach dem Schnittwechsel auf die Kameraachse
  *      gesetzt (Form Work_set(1,0) + Pos_set + Member_set(4) = ROOM11B0 @0x012B2 `2e 01 00 00 32 00 ae 9a 00 00 47 ba
  *      34 04`; Pos_set LAB_80041048: `lw a1,340(a0)` @0x8004104c, `sw v0,52(a1)` / `56` / `60` @0x80041058-70).
