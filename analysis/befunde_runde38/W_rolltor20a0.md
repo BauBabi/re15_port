@@ -493,3 +493,13 @@ beruehren Kisten-Code; am selben Kisten-Code 2026-10-16 gruen, §7b).
   NEUE flache Port-Modell muss mit der Vorderseite zur Kamera liegen (As §8), sonst ist es mit dem Verwurf unsichtbar.
 * ROOM20A0 Cut 2 (obj 4/5): kein DuckStation-Abzug; Mechanismus ueber FUN_8003e64c belegt (§9.4), kein Nutzer-Befund.
 * Vorbestehend (unveraendert): Viereck-Teilung 0-3 statt 1-2; Figuren laufen nicht durch diese Schranken (OFFEN oben).
+
+## 10. Nachbesserung 1 (2026-10-17, nach Abnahme 0)
+
+Abnahmebericht `analysis/befunde_runde38/W_abnahme_0.md` (HEAD d6a55686): Nutzer-Punkt **erfuellt** (echter Tuerweg Leon
+2090 -> 20A0 und Elza 2091 -> 20A1, §3/§4 dort); nicht bestanden wegen zweier Maengel:
+* **M1** ROOM5060/5061 Cut 4: der neue Weg zeichnet ein Halbviereck des Glas-Objekts obj 4 (Attribut 0x0012) DECKEND
+  dunkel; das Original mischt es halbtransparent (ABE). Der PC-Prop-Weg kennt kein ABE (vorbestehend).
+* **M2** Nebenwirkungs-Zensus nur in eine Richtung (WENIGER), ohne Typ 3 und ohne Eltern-Objekte.
+
+Stand: in Arbeit (Abschnitte folgen je Schritt).
