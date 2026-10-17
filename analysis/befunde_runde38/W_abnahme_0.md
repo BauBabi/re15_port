@@ -84,4 +84,46 @@ Uebersicht aller Cuts des Laufs (Bilder alle 100, `t1_bogen_alle1.png`, `t1_boge
 Cut 12 (Schalter, Rolladen von vorn zu -> offen), Cut 11, Cut 12 nach dem Kistenfall — in KEINEM Bild steht der
 Rolladen vor der Kamera. Der Nutzer-Befund ist am echten Tuerweg reproduziert (v0.8.25) und behoben (neu).
 
-(weitere Abschnitte folgen: Elza, Nebenwirkungen, Vertrag, Urteil)
+## 4. Elza — ECHTER Tuerweg 2091 -> 20A1
+
+ROOM2091.RDT == ROOM2090.RDT (cmp), Tuersatz @0x009B6 wie oben; die Elza-Variante waehlt die Engine (Debug-Sprung
+`room_id >> 4`, debug_menu_common.c:332). Wegplan `wp_tuer_20a1_elza.txt` (= Leon-Plan mit RAUM 2091 / RAUM 20A1),
+Lauf `t5_tuer_elza`: `RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_KEIN_GATOR=1 RE15_DEBUG_JUMP=2091@250
+RE15_PLAYER_POS=6300,-16250,2048,1 RE15_FRAMEDUMP=300-3600/10:fd_ RE15_EXIT_AT=3600#20A1`.
+* debug.log `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`; wegplan `F1 room=2091 ... RAUM 2091 geladen`,
+  `F46 room=20A1 spieler=(4950,4100) ... RAUM 20A1 geladen` (durch die Tuer), `F1263 ... obj1=(7942,-10800,-20510)`.
+* Cut 11 F1358..F1609 und F1662..F2111: **70/70 Bilder Raumhintergrund-Anteil 0.9026..0.9684**; OBJPOLY Cut 11 obj 1
+  **702/702 `gezeichnet=6 nclip=20 otz=16 gpu=6`**; Bild `t5_bogen_cut11.png` (Plattform, Kiste, Faesser, Regal, Elza;
+  Cut 12 mit offenem Rolladen von vorn).
+* Kiste: `F2288 room=20A1 p=0 AUSLOESER wort=0x4206 band=4`, `F2307 LANDUNG y=-3600 band=2`, `F2309 AUSLOESER ... band=2`.
+
+## 5. Nebenwirkungen (selbst geprueft)
+
+### 5.1 Was der Zensus des Bau-Agenten NICHT prueft
+`W_belege/zensus_objpoly.py` meldet nur Faelle, in denen der neue Weg WENIGER zeichnet (`pa - pb > 1536 ...`). Der neue
+Weg zeichnet aber auch Polygone, die der alte Weg ganz verwarf (ein Scheitel `vz < 64` -> altes Polygon weg; neu mit
+gesaettigten SXY, wenn NCLIP >= 0, OTZ >= 64 und ein GPU-Dreieck besteht). Meine Kopie `abnW0_rolltor/zensus_mehr.py`
+(gleicher Zensus + Ausgabe `NEU > ALT + 300 px`) findet **3 Faelle**:
+* `MEHR ROOM1170 obj 3 Cut 0 @(-1161,-12296,1991): ALT 0 px -> NEU 11338 px (7 Poly)` — Rotor des Hubschraubers im
+  New-Game-Intro; Kamera Cut 0 (-1170,-11682,4050) haengt 614 unter der Rotorebene. Detail (`mehr_detail.py`): 7 Dreiecke
+  mit zwei Scheiteln hinter der Kamera (vz -1578..-1843 -> SZ 0 -> SX 1023), OTZ 337..904, NCLIP > 0, GPU-Grenze ok.
+* `MEHR ROOM5060/5061 obj 4 Cut 4 @(-19548,-3780,-23346): ALT 0 -> NEU 1849 px (1 Poly)` — ein Viereck mit Scheitel 0 bei
+  vz 21 (SXY (-1024,1023)); Dreieck (0,1,2) zu gross, (1,2,3) besteht -> Halbviereck.
+Beide folgen derselben, am Original belegten Regel (RTPS-Saettigung, NCLIP, OTZ, GPU-Grenze je Dreieck) — kein neuer
+Mechanismus; im Dossier aber nicht erwaehnt (siehe Maengel).
+
+### 5.2 Am Spiel gemessen: New-Game-Intro ROOM1170 (Leon), neu gegen v0.8.25
+Laeufe `t3_intro1170_neu` / `t4_intro1170_alt`: `RE15_PSELECT_AUTO=1 RE15_FRAMEDUMP=0-1400/5:fd_ RE15_EXIT_AT=1400#1170`.
+Beide exe identischer Ablauf (state.txt: 1170 `F1 cam=7` Erzaehler, `F445 cam=0`, `F479 cam=2`, `F982 cam=1`,
+`F1043 cam=2`, `F1230 cam=0`, `F1324 cam=1`, `F1360 cam=2`, `F1392 cam=3`). Pixelvergleich (`diff_dumps.py`, max|d| > 24):
+146 von 281 Bildern verschieden, **hoechstens 96 Pixel je Bild (0,12 %)**; Cut 0 F450..F470 nur 6..9 Pixel, Cut 0
+F1230..F1320 0 Pixel. Bild `intro_vergleich.png`: nur Kantenpixel (Rotorblatt-Kanten oben, Naehte) — die 11338-px-
+Zahl des statischen Zensus (Rotor in Ruhelage ry 0) tritt im Spiel nicht auf (der Rotor dreht, Pool 3 ry 2048/2560/
+12800/5632 in den Original-Spielstaenden lamp_1170_run2/3, orig_1170_gp/gp2).
+
+### 5.3 ROOM20A0 selbst (alle Cuts des Tuerwegs)
+OBJPOLY im Tuerweg (Auszug): Cut 13/14 obj 1 `otz=48` (Rolladen hinter der Kamera — vorher ebenso weg durch `_vz < 64`),
+Cut 15 obj 4 `gezeichnet=9 otz=6 gpu=11`, Cut 2 obj 4 `gezeichnet=18 otz=6 gpu=2`; die Bilder dieser Cuts
+(`t1_bogen_alle1.png`) zeigen Gaenge und Rolllaeden ohne Loecher oder Riesendreiecke.
+
+(weitere Abschnitte folgen: Testgruppen, Vertrag, Urteil)
