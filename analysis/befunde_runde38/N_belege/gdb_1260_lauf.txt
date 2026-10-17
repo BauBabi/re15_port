@@ -1,0 +1,35 @@
+[   3.1] vgamepad bereit, XInput vorher [] nachher [0] mein [0]
+[   4.5] DuckStation gestartet {'5620'}
+[  21.8] Rechts 1
+[  22.3] Rechts 2
+[  22.9] Quadrat = laden
+[  33.6] GDB verbunden
+[  34.2] Stopp: b'S02'
+[  34.5] RDT 801219b0 FLR 80122a80 n=7 e0 x=-7800 z=-8700 w=1200 d=1600 typ=0x97
+[  34.9] Leon vorher (-8750,-1800,-6900) Blick 0 Band 1
+[  35.5] Stempel +0x88 = 0
+[  35.7] Leon gestellt (-8404,-1800,-7246) Blick 0
+[  35.9] Z0 80045630: b'OK'
+[  36.0] Z0 80045710: b'OK'
+[  36.1] Z0 80045798: b'OK'
+[  37.1] Mitschnitt AN
+[  38.9] UP halten 2.0s + X (Lauf)
+[  38.9] EIN  a0=1 a1=4 Leon=(-8206,-1800,-7246) Blick=0 +0x88=0 clip(+0x94)=0 bild(+0x95)=1 +0x168=801d7740 wort=00005000
+[  38.9] TON  index(v0)=0x1e s0=0x1d Leon=(-8206,-1800,-7246)
+[  39.3] EIN  a0=1 a1=4 Leon=(-7068,-1800,-7246) Blick=0 +0x88=0 clip(+0x94)=0 bild(+0x95)=13 +0x168=801d7770 wort=0000700c
+[  39.3] SPAWN a0=06050d00 a1=0x0 a2=801d3788 versatz=(0, 100, 0) s0(boden)=0x97 anker=(-7872,-2875,-7442) R=(-1219, -3890, 180, 3884, -1196, 383, -318, 293, 4064) T=(-7777, -2845, -7449) Leon=(-7068,-1800,-7246)
+[  39.4] TON  index(v0)=0x18 s0=0x97 Leon=(-7068,-1800,-7246)
+[  39.7] EIN  a0=1 a1=4 Leon=(-7068,-1800,-7246) Blick=0 +0x88=0 clip(+0x94)=0 bild(+0x95)=1 +0x168=801d7740 wort=00005000
+[  39.7] SPAWN a0=06050d00 a1=0x0 a2=801d3788 versatz=(0, 100, 0) s0(boden)=0x97 anker=(-6548,-1891,-7302) R=(3791, 1470, -327, -1476, 3804, 57, 323, 62, 4076) T=(-6583, -1983, -7303) Leon=(-7068,-1800,-7246)
+[  39.7] TON  index(v0)=0x18 s0=0x97 Leon=(-7068,-1800,-7246)
+[  40.1] EIN  a0=1 a1=4 Leon=(-7068,-1800,-7246) Blick=0 +0x88=0 clip(+0x94)=0 bild(+0x95)=13 +0x168=801d7770 wort=0000700c
+[  40.1] SPAWN a0=06050d00 a1=0x0 a2=801d3788 versatz=(0, 100, 0) s0(boden)=0x97 anker=(-7872,-2875,-7442) R=(-1219, -3890, 180, 3884, -1196, 383, -318, 293, 4064) T=(-7777, -2845, -7449) Leon=(-7068,-1800,-7246)
+[  40.1] TON  index(v0)=0x18 s0=0x97 Leon=(-7068,-1800,-7246)
+[  40.5] EIN  a0=1 a1=4 Leon=(-7068,-1800,-7246) Blick=0 +0x88=0 clip(+0x94)=0 bild(+0x95)=1 +0x168=801d7740 wort=00005000
+[  40.5] SPAWN a0=06050d00 a1=0x0 a2=801d3788 versatz=(0, 100, 0) s0(boden)=0x97 anker=(-6548,-1891,-7302) R=(3791, 1470, -327, -1476, 3804, 57, 323, 62, 4076) T=(-6583, -1983, -7303) Leon=(-7068,-1800,-7246)
+[  40.5] TON  index(v0)=0x18 s0=0x97 Leon=(-7068,-1800,-7246)
+[  40.9] losgelassen, Stopps: 14
+[  42.7] Stopp2: b'S05'
+[  43.7] Mitschnitt AUS
+[  68.5] settings.ini zurueckgeschrieben
+[  68.5] Video: Biohazard 1.5 (MZD Mod) Update 25-01-2025 2026-10-17-09-10-01.mp4

@@ -8909,6 +8909,9 @@ re_title:;
                                            hand_tr[2] + model_pos_z);
                 re15_player_set_hand_rot(hand_rot);   /* R_gunbone (WORLD rot) for the discharge-FX anchor */
             }
+            {   extern void re15_wasser_r38_zeichner(const re15_skel_pose_t *, int, const int32_t *, int32_t, int32_t, int32_t);
+                re15_wasser_r38_zeichner(pose_ok ? poses : NULL, p_skel ? (int)p_skel->bone_count : 0, yaw_rot_q12,
+                                         model_pos_x, model_pos_y, model_pos_z); }   /* Runde 38 Spur N: Part+0x40 (FUN_8001e9ec) je Bild fuer den Schritt-Effekt */
 
             /* RE1.5 CHARACTER SHADOW (FUN_8001b064 + FUN_8001af5c, 2026-05-29).
              * A subtractive textured floor quad under the actor: 4 corners at
