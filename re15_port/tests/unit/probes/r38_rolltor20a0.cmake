@@ -64,7 +64,8 @@ endif()
 #                                 Laufzeitmessung (DuckStation-GDB: 5060 obj 2-5, 20A0 obj 4-6, 4090 obj 0-2, Code
 #                                 0x3e + Texpage-ABR je Polygon), STP-Teilung echter Texturen (11B0 obj 0 gemischt,
 #                                 5060 obj 4), SDL-Mischung gegen die GPU-Formel (<= 1 Stufe). Werkzeug --fall fuer:
-#   integration_r38_rolltor20a0_abe  echte exe: ROOM5060 Cut 4 (ABR 0, der Abnahme-Fall), ROOM20A0 Cut 2 (ABR 2,
+#   integration_r38_rolltor20a0_abe  echte exe: ROOM5060 Cut 4 (ABR 0, der Abnahme-Fall) mit Leon und ROOM5061 Cut 4
+#                                 mit Elza, ROOM5060 Cut 3 (ABR 1, Licht-Bodenplatte obj 5), ROOM20A0 Cut 2 (ABR 2,
 #                                 Wasser Typ 3), ROOM4090 Cut 0 (ABR 3, Nebel) — Mittelwert der Messflaeche = Original-
 #                                 Bildpuffer (W_belege/orig_abe_*_buf0.png).
 add_executable(test_r38_rolltor20a0_abe ${CMAKE_CURRENT_LIST_DIR}/../test_r38_rolltor20a0_abe.c)

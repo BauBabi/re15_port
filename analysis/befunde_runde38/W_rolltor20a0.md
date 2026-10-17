@@ -664,6 +664,15 @@ Flags an Platz+0x6C, FUN_80053240 @0x800532f4) in Cut 2 dreimal gelesen = **0 ak
 
 ### 10.7 M2 — Nebenwirkungs-Zensus in BEIDE Richtungen, mit Typ 3 und Eltern-Objekten
 
+* **Ursache:** `W_belege/zensus_objpoly.py` (§8) meldete nur Faelle mit WENIGER Bedeckung (`pa - pb > 1536 or ...`)
+  und rechnete Typ 3 und Eltern-Objekte nicht — ein selbstbestaetigendes Mass: es sah nur, was der Fix wegnimmt, nicht
+  was er neu zeichnet (Polygone, die der alte Port-Ausschnitt `_vz < 64` ganz verwarf und die jetzt gesaettigt
+  bestehen, wie das Halbviereck in 5060 Cut 4).
+* **Messung vorher:** §8 = 18 WENIGER-Faelle, MEHR nicht gezaehlt, 0 Typ-3-/Eltern-Saetze.
+* **Aenderung:** Zensus-Werkzeug `W_belege/zensus_beidseitig.py` (beide Richtungen, Typ 3, Eltern), MEHR-Faelle am
+  Spiel gegen v0.8.25 gemessen; der einzige sichtbare MEHR-Fall (5060/5061 Cut 4) ist M1 und mit §10.5 = Original.
+* **Messung nachher:** unten (MEHR 3, WENIGER 22, Eltern 0, halbtransparent sichtbar 364).
+
 `W_belege/zensus_beidseitig.py` -> `zensus_beidseitig.txt` (baut auf zensus_objpoly.py auf): jedes Obj_model_set
 (alle Skript-Lagen) aller 152 inhaltsverschiedenen RDTs, **Typ 3 in jedem Cut** (der Port zeichnet sie ohne Objekt-
 Ausschnitt, re15_prop_culled), **Eltern-Objekte** (pc[5] = 0xC0: Weltmatrix = Eltern x lokal, LAB_80040914 @0x80040a84,
@@ -687,3 +696,27 @@ nicht umgesetzt) gemeldet: 2499 Kombinationen Objekt x Cut (54 Typ-3-Saetze, 4 E
   11B0/11B1, 1260/1261, 2000/2001, 2020/2021, 2040/2041, 2050/2051, 2070/2071, 2080/2081, 2090/2091, 20A0/20A1,
   20B0/20B1, 4090/4091, 5030/5031, 5060/5061 — dort zeigt der Port seit N1 die Original-Mischung statt einer deckenden
   Flaeche (gemessen an 5060/5061, 20A0 Cut 2 und 3, 4090: §10.6).
+
+### 10.8 Fortsetzung 2026-10-17 (nach dem Sitzungslimit ~09:25): Riegel um ABR 1 und Elza erweitert
+
+Stand bei der Uebernahme: f47ddf56 (Werkzeug-Fall `5060c3` im Unit-Test, ungebaut); der Gruppenlauf des Vorgaengers
+(81 Tests, Ausdruck unten) war bei 63/81 abgebrochen (63 bestanden, 0 rot, Abbruch durch das Sitzungslimit in
+integration_r37_feuerloescher) — er wird unten vollstaendig neu gefahren.
+* Bau `local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`.
+* Wert des Falls `5060c3` am Original-Bildpuffer nachgerechnet (`orig_abe_5060_cut3_buf0.png`, Rechteck x 95..134,
+  y 180..229, 2000 px): **(125.4,46.2,44.0)** = Wert im Werkzeug. Ebenso nachgerechnet: 4090c0 (140.5,139.4,147.9),
+  20a0c2 (0.4,0.4,0.3).
+* Laeufe mit der exe dieses Stands (Laeufer `scratchpad/W38nb2/lauf_n2.sh`, Auswertung `werte.sh` = dieselbe Bildwahl
+  wie der Riegel: Bild UND Vorbild im Ziel-Schnitt):
+  - Leon ROOM5060 Cut 3 (`RE15_PSELECT_AUTO=1 RE15_DEBUG_JUMP=5060@250 RE15_PLAYER_POS=-23375,-23075,0,0
+    RE15_FORCE_CUT=3 RE15_FRAMEDUMP=270-330/2:fd_ RE15_EXIT_AT=332#5060`): **31 von 31 Bildern im Rahmen**, F270 Mittel
+    (124.8,47.7,46.9), Abstand 2.9 (Toleranz 6). Gegenprobe v0.8.25 (Lauf m5060c3_alt F270): (45.9,45.1,43.9), Abstand
+    **79.5 -> ABWEICHUNG** (die graue deckende Platte).
+  - Elza ROOM5061 Cut 4 (`RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=5061@250
+    RE15_PLAYER_POS=-20926,-25850,0,0 RE15_FORCE_CUT=4 ... RE15_EXIT_AT=332#5061`, debug.log `Spieler-Familie PL04`,
+    `AUTO-JUMP -> ROOM5061`): **31 von 31 Bildern im Rahmen**, (32.2,15.4,26.5), Abstand 0.6.
+* Riegel `integration_r38_rolltor20a0_abe` jetzt mit FUENF Laeufen: 5060c4 (Leon), **5061c4_elza** (Elza, Fall 5060c4),
+  **5060c3** (ABR 1), 20a0c2, 4090c0 — damit ist jede der vier Mischarten der GPU an der exe gegen ein Original-Bild
+  geprueft, der Abnahme-Fall mit Leon und Elza.
+  `ctest --test-dir re15_port/build -R "^(unit_r38_rolltor20a0_abe|integration_r38_rolltor20a0_abe)$" --timeout 1200
+  --output-on-failure` -> **`100% tests passed, 0 tests failed out of 2`** (`Total Test time (real) = 188.95 sec`).
