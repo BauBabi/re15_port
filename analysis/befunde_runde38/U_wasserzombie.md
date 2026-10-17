@@ -254,3 +254,12 @@ Gezielte Laeufe (KEINE volle Suite), Ergebnis woertlich:
 - Hinweis (im Port gemessen, im Original nicht dynamisch geprueft): steht der Spieler genau auf dem Landeplatz, schiebt
   der Koerperstoss (FUN_8002aec4) den Zombie zurueck; liegt er dann ueber der Absturzkante (u1=2), faellt er per
   Schwerkraft (FUN_8001bd60) ins Wasser und setzt erneut an.
+
+## 8. Nachbesserung 1 (nach Abnahme 0, `U_abnahme_0.md`)
+
+Stand: 2026-10-17, Baum `r38_wasserzombie` auf `371f4dc8`. Zwei Maengel der Abnahme:
+1. Ein-Bild-Sprung beim Abbruch des RE2-Hochziehens durch einen fremden Zustandsschreiber (Bank/Clip/Uhr hingen an
+   Zustand 1 + Sub 0x0A statt an der Marke des letzten eigenen Ticks).
+2. Code-Hygiene: tote `re15_enemy_ai_live_edge_fall`, falscher Kommentar ueber dem Aufruf, `-Wcomment` im Kopf.
+
+(Abschnitte 8.1 ff. werden fortlaufend gefuellt.)
