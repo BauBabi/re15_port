@@ -10,8 +10,8 @@ Bericht wird fortlaufend geschrieben (Sitzungslimit). Scratch: `C:\Users\MJOEDI~
 Gegenstand dieser Abnahme zusaetzlich: Mangel 1 aus Abnahme 0 (Ereignis-Affen Stage 4/5 beissen aus y = -10000).
 
 ## 0. Stand und Bau
-- `git log --oneline master..HEAD`: 34 Commits; seit Abnahme 0 (8bb74063): 11 Commits (eb5ffa7e .. 0b1bf561), Code nur in
-  6bd30a91 (affen3_r38.c +65, enemy_ai_common.c +28/-11 netto, re15_affen3_r38.h +12), Riegel in 3bfe08ef/71695061/aad46e72/5c54afd7.
+- `git log --oneline master..HEAD` (vor dieser Abnahme): 34 Commits; seit Abnahme 0 (8bb74063): 11 Commits (eb5ffa7e .. 0b1bf561), Code nur in
+  6bd30a91 (`--numstat`: affen3_r38.c +65/-0, enemy_ai_common.c +20/-8, re15_affen3_r38.h +11/-1), Riegel in 3bfe08ef/71695061/aad46e72/5c54afd7.
 - Arbeitsbaum sauber (`git status --porcelain` leer).
 - Bau: `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work to do.`
   `=== LOCAL-BUILD-OK (build)`. re15_pc.exe 09:28:51 ist juenger als jede Engine-Quelle (affen3_r38.c 09:27:42,
@@ -26,7 +26,7 @@ Gegenstand dieser Abnahme zusaetzlich: Mangel 1 aus Abnahme 0 (Ereignis-Affen St
   um 0x29 erweitert, zwischen Sperrbit-Loeschen und -Zuruecksetzen).
 - Header: Deklaration + Kopf-Kommentar. Keine weiteren Engine-/Plattform-Dateien beruehrt.
 - Gesamt-Diff der Spur (`git diff master...HEAD --stat`): 14 Dateien; Code affen3_r38.c (neu), re15_affen3_r38.h (neu),
-  enemy_ai_common.c +61/-?, affen_11c0.c, re15_damage.c (1 Zeile); Tests/Dossier/Abnahme 0/AUFTRAG-Nachtrag (Orchestrator).
+  enemy_ai_common.c +45/-16, affen_11c0.c +6/-4, re15_damage.c +1/-1; Tests/Dossier/Abnahme 0/AUFTRAG-Nachtrag (Orchestrator).
 
 ## 2. RE-Gate — Stichproben selbst disassembliert (re15_disasm.py; STAGE3.BIN/STAGE4.BIN ohne Kopf, PSX.EXE)
 Alle Stichproben betreffen die NEUEN Konstanten/Wege der Nachbesserung 1:
@@ -106,7 +106,7 @@ Lauf m2_elza_weg (115 s, rv 0): debug.log `[pl] Spieler-Familie PL04 (character=
 **3 HP-Abzuege je -5**: `F1695 hp 95 (Elza mo8)`, `F1853 hp 90 (mo9)`, `F1912 hp 85 (mo9)`, Affe P1 jeweils Sub 5 / Clip 18 / Bild 15,
 y -1800. Abnahme 0 hatte F1695/F1852/F1911 (+1 Bild bei 2 und 3 = Spawn-Reihenfolge). Danach wandert Affe A in Sub 3 sehend
 im schmalen Westgang (x -11630 F1950 -> -12377 F2699), Elza steht bei (-8299,-6732) HP 85 — dasselbe Bild wie Abnahme 0 M2
-und wie die Basis-exe dort (Hinweis 1 unten, vorbestehend).
+und wie die Basis-exe dort (Hinweis 2 unten, vorbestehend).
 
 ### M3 — Gegenprobe VORHER: Basis-exe cb782bda, derselbe echte Weg wie M1
 Basis-Bau aus Abnahme 0 (`scratchpad\vorher_src\build_vorher\platform\pc\re15_pc.exe`); Quellen selbst gegen cb782bda
@@ -147,7 +147,7 @@ F1..F292 Platz 1 st 4/1/0/0 g61 @(-14040,0,19130)   (Leon geht nach der Tuer nac
 F293 (R) st 1/10/2/0 g01 mo13 af20 @(-25090,-10000,9230)
 y R..R+20 = dieselbe Bahn wie o11; Landung R+18, Sub 4 R+34
 HP F360 (R+67) 100->90 Leon(-23400,4250) | Affe st1/6/1 mo19 af23 @(-23991,0,6813) y 0
-HP F464 (R+171) 90->85 ... 20 Bisse je -5 bis F1488 (0 -> -5), jeder mit Affe auf y = 0; y nach R+18: min 0 max 0
+HP F464 (R+171) 90->85 ... 19 Bisse je -5 bis F1488 (0 -> -5), jeder mit Affe auf y = 0; y nach R+18: min 0 max 0
 ```
 
 ### M6 — Stage 5: ROOM50A0 (zweiter Raum mit Deckenfall-Freigabe)
@@ -164,6 +164,22 @@ Ausschnitt `...\S38abn1\fall_zoom.png`, Angriff `...\S38abn1\angriff_blatt.png`:
 Evt_exec 5/6) fallen, F303 der Affe erscheint an der Decke, F306/F309 faellt er gestreckt (Clip 13 Bild 23 gehalten), F312 steht
 er am Boden, F315-F330 kauert er bei den Gittern; F333-F357 umrundet er Leon, F360 schwerer Angriff, F363-F372 Leon am Boden
 (Niederschlag, aca59 = a780+4). Modelle geschlossen, kein Schweben ueber dem Boden, keine zerrissenen Meshes.
+
+### M8 — Elza: ROOM4041 (zweites Szenario), Mangel-Aufbau
+`RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=4040@250 RE15_PLAYER_POS=-25000,4000,1024,0
+RE15_EXIT_AT=600#4041` (+ gemeinsame Umgebung; Lauf e1_4041_elza, 45 s, rv 0): debug.log `[pl] Spieler-Familie PL04 (character=4,
+Elza-Bit=1)`, `[room] PC loaded room4041.rdt`. Platz 1 F1..F15 `4/1/0/0 g61` an der Parkstelle, F16 Freigabe `1/10/2/0 g01 mo13 af20
+@(-25090,-10000,9230)`, Bahn wie o11, Landung R+18, Sub 4 R+34, Elza HP F87 (R+71) -10 aus Sub 6, danach -5 aus Sub 5 — bildgleich zu
+M4 (Leon), jeder Treffer mit Affe auf y = 0.
+
+### M9 — Ton beim Treffer (Stage 3, Riegel-Aufbau der Spur, Ton frame-genau mitgeschnitten)
+`RE15_NO_INTRO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_AUDIO_CAP_SYNC=cap.raw
+RE15_SE_DEBUG=1 RE15_DEBUG_JUMP=3040@250 RE15_PLAYER_POS=-8800,-2400,1024,1 RE15_INPUT_SCRIPT_START=250 RE15_INPUT_SCRIPT=W5,U25
+RE15_STATE_LOG=state.log RE15_EXIT_AT=400#3040` (Lauf t1_3040_ton, rv 0, `[audio] RE15_AUDIO_CAP_SYNC -> cap.raw`):
+5 Treffer je -5 (F169, 225, 281, 337, 393, Abstaende 56), debug.log `[se] Stimme: se=5` **genau 5-mal** (Treffer-SE 5: selbst gelesen
+`80111f4c ori a0,zero,0x5` im Delay-Slot vor dem HP-Block `80111f60 addiu v0,v0,-5`, Raumbank FUN_800453d0), `se=9` 5-mal (Ausholen,
+selbst gelesen `80111e90 ori v0,zero,0xb` / `80111e9c jal 0x800453d0` / `80111ea0 ori a0,zero,0x9`), `se=8` 18-mal (Kriechen). Zum Treffer
+gehoeren also HP-Abzug, Flinch-Clip und Treffer-Ton.
 
 ## 5. Zensus/Randfaelle selbst nachgeprueft
 - **Alle 32 `Sce_em_set` Typ 0x29** (shared_assets/PSX, scd_dump_room.py): grid nur `00` (3040/3041, 4000, 4040/4041 Else-Zweig,
@@ -209,4 +225,71 @@ er am Boden, F315-F330 kauert er bei den Gittern; F333-F357 umrundet er Leon, F3
   liegt dort).
 - Merge: s. Abschnitt 8.
 
-(Abschnitte folgen fortlaufend.)
+### Riegel (selbst gefahren, gezielt, KEINE volle Suite)
+- Unit/Sonden (116 Tests, `-j3`): `ctest --test-dir re15_port/build -j3 --timeout 600 --output-on-failure -R "^(unit_(cockroach_ai|maggot_|
+  enemy_body_push|re2_victim_collapse|dog_grab_anchor|re2_dog_grab_anchor|re2z_|dog_aim_band|dog_devour|sca_wall_hit|knockdown_|
+  re2_stagger_knockdown|r35_affen_|r35_cut1150_montage_11c0|r36_kleidung_|r36_zombieki_|r36_szenenleon_|r36_dachkiste_|r36_schuss|
+  r36_elza_schuss|r36_ziel1190|r36_karte_tuer11c0|r37_szene11c0_|r37_bissarm_|r38_affen3_|npc_wall_clamp|r20_birkin_push_pin|
+  1090_push_pin|r34n_f_leiche_latch|sherry_wall_pin|birkin_ai|g5_|room1140_spawn|marvin_spawn_bank|1030_spawncap|
+  r37_zombieaktiv_nachspawn1130|r30_tuer_r4000|aot_sce_census|r36_story_sweep|r17_birkin_1zu1_pin|r18_birkin_restluecken_pin|
+  r30_birkin_frost|r30_n_room5080_birkin_wand)|probe_p2_birkin_g5|probe_p3_birkin_rest|prop_spawn_entered|integration_room_probe_sweep)"`
+  -> **100% tests passed, 0 tests failed out of 116** (46,24 s). Gegenueber dem Satz des Bau-Agenten (107) zusaetzlich: ROOM4000-Tuer
+  (Raum mit 0x29-Spawns), AOT-Zensus, Story-Sweep, Raum-Sonden-Sweep (laedt alle Raeume) und alle Birkin-Spawn-Wurzel-Riegel
+  (re15_enemy_spawn_root ist dieselbe Funktion).
+- `unit_r38_affen3_ereignis` einzeln mit Ausgabe: je KI `Freigabe T2, Bahn y: -10000 -10000 -9930 ... -480 0`, `Landung R+18, Sub 4 R+34,
+  erster HP-Abzug R+71 (Affe y=0)`, `HP-Abzuege R+71(-10,Sub 6) R+166(-5,Sub 5) R+224 R+281 R+338 R+395` -> `PASS: 0 Fehler`.
+- exe seriell (4 Tests): `ctest --test-dir re15_port/build -V --timeout 900 -R "^integration_(r38_affen3|r38_affen3_decke|r38_affen3_tor|
+  r37_szene11c0)$"` -> **100% tests passed, 0 tests failed out of 4** (377,65 s). Wortlaut:
+  `r38_affen3 [std]: 15 Treffer in Bild 169;225;281;337;393;450;506;562;618;674;730;786;842;898;954; Abstaende 56 x13 + 57 x1 ...
+  Ost-Anschlag -8068, letzter Treffer x -8708` ([re15] identisch; = Abnahme 0);
+  `r38_affen3_decke [std]: getroffen=1, ... Griff F350, Sub 2 F561; Leon-Clips im Griff 1;2;3;16;11; HP-Abzuege im Griff 0; Bisse danach 8`
+  ([re15] identisch; = Abnahme 0); `r38_affen3_tor [std_ruhe]/[re15_ruhe]: gesperrt (g=61) 400 Bilder, davon nicht 4/1 ...: 0`;
+  `[std_frei]/[re15_frei]: ... Freigabe F16; Fallbahn -10000;...;0; Sub 4 R+34; HP-Abzuege F87(R+71,100->90,y=0);F182(R+166,...,y=0);...`;
+  Gorilla-Szene `integration_r37_szene11c0` gruen (Gorilla 0x27 teilt affen_11c0.c und die Spawn-Wurzel).
+- Riegel messen den Mangel: Abnahme-0-Lauf s4_4040 (Stand 4ff3b973) zeigt fuer den gesperrten Affen `st=0/0/0/0 g=61` (F1..F15) und
+  nach der Freigabe `st=1/1/0/0 @(-25090,-10000,9230)` — `integration_r38_affen3_tor` bricht dort schon an "gesperrter Affe nicht in
+  Zustand 4/1" ab (15 Bilder), die Fallbahn-Pruefung waere ebenso rot. Stage 3: Basis-exe 0 Treffer (M3) gegen >= 12 im Riegel.
+
+## 7. Urteil je Punkt (gegen den Wortlaut)
+| Punkt | Urteil | Beleg |
+|---|---|---|
+| Nutzer: "In Stage 3 die kleinen Affen können einen nicht treffen, es passiert nichts" | **erfuellt** | M1/M1b echter Weg (Tuer 3050 -> 3040, Treppe, Schalter, Plattform): 9 x -5, Flinch-Clip 8, beide KI; M2 Elza ROOM3041 3 x -5; M9 Treffer-Ton se=5 je Treffer; M3 Basis-exe gleicher Weg 0 Abzuege bei 125 Biss-Bildern; Riegel integration_r38_affen3 (15 x -5, Takt 56 wie Original o10) + 10 Unit-Teile gruen |
+| Mangel 1 aus Abnahme 0: Ereignis-Affen Stage 4/5 beissen aus y = -10000 | **erfuellt (behoben)** | M4 Mangel-Aufbau beide KI, M5 echter Tuerweg 4050 -> 4040, M6 ROOM50A0, M8 Elza ROOM4041: gesperrt in 4/1, Fall Bild fuer Bild = Original o11 (selbst dekodiert), Landung R+18, Sub 4 R+34, alle HP-Abzuege mit Affe auf y = 0; M7 Bildkontrolle (Fall aus der Deckenklappe sichtbar); Code gegen 8 Disasm-Stichproben; integration_r38_affen3_tor + unit_r38_affen3_ereignis/ereignis40 gruen |
+
+## 8. Merge-Probe (ohne Schreiben)
+`git merge-tree --write-tree --name-only r38/integration HEAD` (r38/integration = 127100ef "merge(r38): Spur O montage"):
+`CONFLICT (content): Merge conflict in analysis/befunde_runde38/AUFTRAG.md` (Doku-Nachtrag); `Auto-merging
+re15_port/engine/src/enemy_ai_common.c`, `Auto-merging re15_port/engine/src/re15_damage.c` — Code konfliktfrei. In r38/integration
+haben Spur B (re15_szenenschutz_*) und Spur T (re15_r38_sm_*) Haken in denselben Opfer-Funktionen von enemy_ai_common.c
+(re15_player_victim_*); textuell getrennt, die gemeinsame Wirkung prueft erst die Suite im Integrationsbaum (Hinweis 4).
+
+## 9. Maengel
+Keine.
+
+## 10. Hinweise (nicht blockierend)
+1. **Stage-3-Echtweg verlaeuft anders als in Abnahme 0** (M1: 9 statt 19 Bisse, Leon wird nach dem 9. Biss aus der Reichweite
+   geschoben). Ursache selbst belegt: der INIT laeuft jetzt wie im Original im Spawn-Aufruf (F1 `st=1 @(-8800,-6082)` statt `st=0
+   @(-8800,-6150)`), der Affe ist ein KI-Bild frueher dran, Lagen weichen bis zum 4. Biss um 1..20 Einheiten ab und entscheiden dann,
+   ob Leon an der Ecke vorbei nach Sueden rutscht. Kein Fehler; die Aussage "Stage 3 unveraendert" des Bau-Agenten gilt fuer den
+   Riegel-Aufbau (dort bildgleich), nicht fuer jeden Weg.
+2. **Elza ROOM3041 (M2):** Affe A wandert nach drei Bissen in Sub 3 sehend im schmalen Westgang nach Westen (x -11630 -> -12377 in
+   750 Bildern); dasselbe zeigte Abnahme 0 auch mit der Basis-exe — vorbestehend, nicht gegen das Original gemessen.
+3. **OFFEN 4 / Pool beim Spawn:** der Spawn-INIT findet die EM029-Bank noch nicht (main.c laedt sie nach scd_vm_tick); dadurch faellt
+   die erste Ueberblendung von B[0] weg. Wirkt nur, wenn die Fuss-Sperre schon im ersten aktiven Bild laeuft (o3-Randfall), s. Abschnitt 5.
+4. **Integration:** gemeinsame Funktionen mit Spur B/T in enemy_ai_common.c (Opfer-Weg cmd 5/6 fuer 0x29, Spieler-Tor) — die
+   Integrationssuite sollte integration_r38_affen3_decke (Griff von der Decke) mitlaufen lassen.
+5. **Erster schwerer Treffer 1 Bild spaeter als o11** (R+71 statt R+70; 50A0/Tuerweg R+67): Anlauf B[4] wuerfelt +0x8c/+0x9e mit
+   re15_engine_rand8 statt FUN_8001af20 (OFFEN 1, engine-weit). Mechanik, Werte (-10 / -5) und Biss-Takt sind gleich.
+6. VERTRAG §1.4 nennt enemy_ai_common.c fuer B/T; die Haken der Spur S dort sind klein und gekennzeichnet (wie Abnahme 0).
+
+## 11. Messdaten (Scratch, nicht im Baum)
+`C:\Users\MJOEDI~1\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\S38abn1\`:
+laeufe\m1_weg_std, m1b_weg_re15 (M1), m2_elza_weg (M2), m3_weg_vorher (M3), s1_4040_std, s2_4040_re15 (M4), s3_tuer_4050 (M5),
+s4_50a0_std (M6), b1_tuer_bild (M7, 51 Bilder), e1_4041_elza (M8), t1_3040_ton (M9); Bilder fall_blatt.png, fall_zoom.png,
+angriff_blatt.png; Logs ctest_unit2.log (116), ctest_exe.log (4), ut_ereignis.txt, o11_eigen.txt; Werkzeuge tools\hits.py,
+diffseg.py, ereignis.py, o11_eigen.py, blatt.py; lauf.sh.
+
+## Ergebnis
+**bestanden = true** — der Nutzer-Punkt (Stage 3) ist am Spielweg erfuellt (Treffer -5, Flinch, Treffer-Ton; vorher 0 Treffer),
+Mangel 1 aus Abnahme 0 ist behoben und gegen die selbst dekodierte Original-Spur o11 nachgemessen (Leon/Elza, beide KI, Sprung und
+echter Tuerweg, Stage 4 und 5), alle Gates halten (RE-Stichproben 8/8 + Nebenweg, Vertrag, 116 + 4 Riegel gruen).
