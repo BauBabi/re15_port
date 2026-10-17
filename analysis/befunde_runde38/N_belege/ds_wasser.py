@@ -218,8 +218,8 @@ def main():
         for i in range(96):
             e = pool[i * 132:(i + 1) * 132]
             if e[108] & 1:
-                L("POOL %2d fl=%02x id=%d sub=%d skala=%#x wpos=(%d,%d,%d)" % (i, e[108], e[112], e[113],
-                  struct.unpack_from("<H", e, 114)[0]) + struct.unpack_from("<3h", e, 40))
+                L("POOL %2d fl=%02x id=%d sub=%d skala=%#x wpos=(%d,%d,%d)" % ((i, e[108], e[112], e[113],
+                  struct.unpack_from("<H", e, 114)[0]) + struct.unpack_from("<3h", e, 40)))
         for bp in (BP_EIN, BP_SPAWN, BP_TON):
             g.cmd("z0,%x,4" % bp)
         g.sk.sendall(b"$c#63"); time.sleep(1.0)

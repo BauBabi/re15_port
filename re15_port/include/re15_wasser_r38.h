@@ -23,8 +23,14 @@
  * (@0x800325ec), die Part-Weltmatrizen fuellt der Zeichner (FUN_8001e9ec) — der Schritt sieht also Lage,
  * Pose und Stempel des zuletzt gezeichneten Bilds. Auch das gepruefte Bildwort ist das des gezeichneten
  * Bilds: *(+0x168) setzt der anim_set des Vorbilds (`sw a2,360(t0)` @0x8001f36c) auf +0x95 VOR dessen
- * Vorschub (@0x8001f618/1c). Der Port haelt dafuer am Anfang von re15_game_step einen Schnappschuss des
- * Spielers (re15_wasser_r38_bildanfang) und rechnet Schritt-Erkennung, Boden, Anker und Stempel daraus.
+ * Vorschub (@0x8001f618/1c). Der Port rechnet Schritt-Erkennung, Boden und Anker aus dem Zustand des
+ * zuletzt GEZEICHNETEN Bilds (re15_wasser_r38_zeichner: Lage = model_pos, Bewegung, Bild, Part-Matrizen);
+ * ohne Zeichner-Fuetterung (PSX, Sonden) aus dem Bildanfang-Schnappschuss (re15_wasser_r38_bildanfang).
+ * Lauf 3: im Skriptlauf (Plc_dest) bewegt re15_actor_step_all_walkers den Spieler VOR re15_game_step
+ * (platform/pc/main.c), der Schnappschuss lag dort einen Laufschritt vor dem gezeichneten Bild; das
+ * Original prueft in allen vier Executoren vor pos_advance (Gehen @0x8003255c/@0x800325ec, Lauf
+ * @0x80032868/@0x8003295c, Plc-Gehen @0x80030c3c/@0x80030c5c, Plc-Lauf @0x80030e90/@0x80030eb0).
+ * Der Stempel +0x88 kommt weiter aus dem Bildanfang (Scan des Vorbilds, @0x8001ce1c / @0x80031da4).
  */
 #ifndef RE15_WASSER_R38_H
 #define RE15_WASSER_R38_H
@@ -68,8 +74,10 @@ int  re15_wasser_r38_a0(int motion, int skriptlauf);
 /* ZEICHNER-FUETTERUNG (PC-Zeichner, Spieler-Block neben Knochen 11): die Weltmatrizen ALLER Parts des
  * gerade gezeichneten Bilds — R = R_y(Gier) x Pose.rot, T = R_y(Gier) x Pose.trans + Lage, dieselbe
  * Rechnung wie re15_player_set_hand_world/_rot. Das ist Part+0x40 (FUN_8001e9ec: CompMatrix(Eltern,
- * lokal) -> +0x40), den das Original beim naechsten Schritt liest. Ohne Fuetterung (PSX, Sonden)
- * rechnet re15_wasser_r38_schritt die Pose aus dem Bildanfang-Schnappschuss. */
+ * lokal) -> +0x40), den das Original beim naechsten Schritt liest; dazu der Spieler-Zustand dieses Bilds
+ * (Lage = px/py/pz, Bewegung, Bild, Gier) fuer Boden-Abfrage und Schritt-Erkennung. Gilt nur im selben
+ * Raum und hoechstens 2 Bilder lang. Ohne Fuetterung (PSX, Sonden) rechnet re15_wasser_r38_schritt aus
+ * dem Bildanfang-Schnappschuss. */
 void re15_wasser_r38_zeichner(const re15_skel_pose_t *poses, int n, const int32_t yaw_rot[9],
                               int32_t px, int32_t py, int32_t pz);
 
@@ -83,6 +91,8 @@ typedef struct {
     int      plaetze;        /* Plaetze des letzten Spawns (Stroeme)        */
     int      edt;            /* zuletzt gespielter EDT-Index                */
     int      folge;          /* zuletzt nachgefuehrte Folge-Plaetze         */
+    int32_t  lage[3];        /* Lage der Boden-Abfrage des letzten Schritts */
+    int      lage_quelle;    /* 1 = gezeichnetes Bild (Zeichner), 2 = Bildanfang-Schnappschuss */
 } re15_wasser_r38_mess_t;
 const re15_wasser_r38_mess_t *re15_wasser_r38_mess(void);
 void re15_wasser_r38_reset(void);

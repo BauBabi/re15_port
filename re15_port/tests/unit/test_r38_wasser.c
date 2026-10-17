@@ -19,6 +19,10 @@
  *   aotbreite  sce-8-Zone ROOM1260 main00 @0x11ca (Breite 38950 > 32767): Stempel -900 fuer eine Figur in der Zone
  *              (`lhu`/`sltu` @0x80042b70-94 = vorzeichenlos); vorher las op_aot_set die Breite als s16 -> nie gestempelt.
  *   zensus     FLR-Typ an den sechs Fleckmitten von ROOM1260 = 0x97, daneben 0x1d.
+ *   skriptlauf (Lauf 3) Skript-Bewegung VOR dem Spielschritt (re15_actor_step_all_walkers, main.c): Boden,
+ *              Bild und Anker kommen aus dem GEZEICHNETEN Bild (Zeichner-Fuetterung), nicht aus dem um einen
+ *              Schritt weiter bewegten Schnappschuss — Original prueft in allen Executoren vor pos_advance
+ *              (Plc-Gehen @0x80030c3c vor @0x80030c5c, Plc-Lauf @0x80030e90 vor @0x80030eb0).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +36,7 @@
 #include "re15_esp.h"
 #include "re15_game_step.h"
 #include "re15_rdt.h"
+#include "re15_room.h"
 #include "re15_scd.h"
 #include "re15_wasser_r38.h"
 
@@ -299,6 +304,68 @@ static void fall_aotbreite(void)
     CHECK(pl->water_y == 0, "Figur vor der Zone: kein Stempel (%d)", pl->water_y);
 }
 
+/* Zeichner-Fuetterung wie platform/pc/main.c, mit Einheits-Posen und Blick 0: Part-Weltmatrix = (I, Lage),
+ * der Anker ist dann genau Lage + (0,100,0) — so ist sichtbar, aus welcher Lage er stammt. */
+static void zeichne(const re15_actor_t *pl)
+{
+    static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    static const int32_t ident[9] = { 4096, 0, 0, 0, 4096, 0, 0, 0, 4096 };
+    for (int p = 0; p < RE15_EMD_MAX_BONES; p++) {
+        memcpy(poses[p].rot, ident, sizeof ident);
+        poses[p].trans[0] = poses[p].trans[1] = poses[p].trans[2] = 0;
+    }
+    re15_wasser_r38_zeichner(poses, 16, ident, pl->x, pl->y, pl->z);
+}
+
+static void fall_skriptlauf(void)
+{
+    printf("== skriptlauf (Plc_dest: Walker vor dem Spielschritt; Boden/Bild/Anker des GEZEICHNETEN Bilds) ==\n");
+    if (raum_laden("STAGE1/ROOM1260.RDT") != 0 || baenke_laden() != 0) { CHECK(0, "Raum/Baenke laden"); return; }
+    const re15_wasser_r38_mess_t *m = re15_wasser_r38_mess();
+    /* A: gezeichnet im Fleck P0 (x -7800..-6600) bei x -7700, Bild 22 (Bildwort 0x507c); dann bewegt die
+     * Skript-Bewegung (re15_actor_step_all_walkers, main.c VOR re15_game_step) 200 nach -x auf -7900 = Beton.
+     * Original: Schritt vor pos_advance (Plc-Gehen @0x80030c3c vor @0x80030c5c) -> Boden an der GEZEICHNETEN Lage. */
+    re15_wasser_r38_reset(); re15_esp_fx_reset();
+    re15_actor_t *pl = spieler(-7700, -1800, -7246, 0, 105, 22, 1);
+    zeichne(pl);
+    pl->x -= 200;
+    takt(pl);
+    CHECK(m->boden == 1 && m->trocken == 0, "A: Boden an der gezeichneten Lage x -7700 = 0x97 (boden=%u trocken=%u; "
+          "Schnappschuss x -7900 waere Beton)", m->boden, m->trocken);
+    CHECK(m->lage_quelle == 1 && m->lage[0] == -7700, "A: Lage-Quelle gezeichnet, x %d (Quelle %d)", m->lage[0], m->lage_quelle);
+    CHECK(m->edt == 0x17, "A: Tonsatz 0x17 (Plc-Gehen a0 = 0 `addu a0,zero,zero` @0x80030c28), ist %#x", m->edt);
+    CHECK(m->anker[0] == -7700 && m->anker[1] == -1700 && m->anker[2] == -7246,
+          "A: Anker = Part-Matrix des gezeichneten Bilds * (0,100,0) = (-7700,-1700,-7246), ist (%d,%d,%d)",
+          m->anker[0], m->anker[1], m->anker[2]);
+    /* B: umgekehrte Kante — gezeichnet bei x -6500 (Beton, oestlich von P0), Skript-Bewegung auf -6700 (im Fleck). */
+    re15_wasser_r38_reset(); re15_esp_fx_reset();
+    pl = spieler(-6500, -1800, -7246, 0, 105, 22, 1);
+    zeichne(pl);
+    pl->x -= 200;
+    takt(pl);
+    CHECK(m->trocken == 1 && m->boden == 0 && re15_esp_fx_count() == 0,
+          "B: gezeichnet x -6500 = Beton -> kein Effekt (trocken=%u boden=%u fx=%d; Schnappschuss -6700 waere 0x97)",
+          m->trocken, m->boden, re15_esp_fx_count());
+    CHECK(m->edt == 0x1d, "B: Tonsatz 0x1d, ist %#x", m->edt);
+    /* C: ohne Zeichner-Fuetterung (PSX-Lauf, Sonden) gilt der Bildanfang-Schnappschuss. */
+    re15_wasser_r38_reset(); re15_esp_fx_reset();
+    pl = spieler(-7700, -1800, -7246, 0, 105, 22, 1);
+    takt(pl);
+    CHECK(m->lage_quelle == 2 && m->lage[0] == -7700 && m->boden == 1, "C: ohne Fuetterung Schnappschuss (Quelle %d, x %d)",
+          m->lage_quelle, m->lage[0]);
+    /* D: Raumwechsel zwischen Zeichnen und Schritt macht die Fuetterung ungueltig. */
+    re15_wasser_r38_reset(); re15_esp_fx_reset();
+    unsigned raum = g_current_room_id;
+    pl = spieler(-6500, -1800, -7246, 0, 105, 22, 1);
+    zeichne(pl);
+    g_current_room_id = raum + 1;
+    pl->x -= 200;
+    takt(pl);
+    CHECK(m->lage_quelle == 2 && m->lage[0] == -6700, "D: anderer Raum -> Schnappschuss (Quelle %d, x %d)",
+          m->lage_quelle, m->lage[0]);
+    g_current_room_id = raum;
+}
+
 static void fall_zensus(void)
 {
     printf("== zensus (ROOM1260 FLR) ==\n");
@@ -320,6 +387,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(fall, "lauf"))      fall_lauf();
     if (alle || !strcmp(fall, "aotbreite")) fall_aotbreite();
     if (alle || !strcmp(fall, "zensus"))    fall_zensus();
+    if (alle || !strcmp(fall, "skriptlauf")) fall_skriptlauf();
     printf("%s: %d Fehler\n", fall, s_fails);
     return s_fails ? 1 : 0;
 }

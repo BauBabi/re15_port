@@ -280,6 +280,14 @@ Spawn ueber den vorhandenen FUN_80019700-Zwilling `re15_esp_fx_spawn_rows` (Flag
 gezeichneten Bilds * (0,100,0) + T (Zeichner-Fuetterung, Rueckfall: Pose des Schnappschusses mit derselben Bankwahl);
 FOLGE-Plaetze (Sub 3, Zeilen-Flags 0x07 Bit 2) werden je Bildanfang auf den Part-Anker gesetzt (@0x80019f54-a4).
 
+**Lauf-3-Korrektur (Skriptlauf):** Boden-Abfrage, Schritt-Erkennung (Bild/Bewegung) und Anker-Rueckfall kommen aus dem
+Spieler-Zustand des zuletzt GEZEICHNETEN Bilds, den der vorhandene Zeichner-Haken je Bild ablegt (`re15_wasser_r38_zeichner`:
+Kopie von g_actors[0] mit Lage = model_pos; gueltig im selben Raum und hoechstens 2 Bilder alt, sonst Bildanfang-Schnappschuss
+wie bisher — PSX-Lauf, Sonden). Kein neuer Haken in gemeinsamen Dateien. Beleg: alle vier Executoren pruefen vor pos_advance
+(Tabelle im Befund oben), Plc-Gehen a0 = 0 `addu a0,zero,zero` @0x80030c28 / Bit `andi v0,v1,0x4000` @0x80030c1c / Aufruf
+@0x80030c3c. Echtzeit-Bewegung unveraendert (dort ist der Schnappschuss = gezeichnetes Bild, gemessen Elza F84/F114).
+Der Stempel +0x88 bleibt beim Bildanfang (Scan des Vorbilds).
+
 **Lauf-2-Korrektur am Vorgaenger-Stand:** Schritt-Erkennung + Pose am GEZEICHNETEN Bild (B9). Vorher pruefte der
 Port das Bildwort nach dem Vorschub dieses Takts = einen Takt zu frueh mit der Pose davor (Anker 53 Einheiten daneben,
 Spritzer halb unter Leons Schatten). Betrifft alle Schritt-Toene: sie kommen jetzt einen Takt spaeter, wie im Original.

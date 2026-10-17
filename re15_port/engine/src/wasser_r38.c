@@ -31,6 +31,18 @@ static struct { int32_t r[9]; int32_t t[3]; } s_zp[RE15_EMD_MAX_BONES];
 static int      s_zp_n     = 0;       /* gefuetterte Parts (0 = keine Fuetterung -> Rueckfall)        */
 static uint32_t s_zp_bild  = 0;       /* g_engine.frame_count der Fuetterung                          */
 
+/* ---- Spieler-Zustand des zuletzt gezeichneten Bilds (Lauf 3, dieselbe Fuetterung) ----------------
+ * Der Schritt des Originals liegt in ALLEN vier Executoren VOR pos_advance (Echtzeit-Gehen @0x8003255c /
+ * @0x800325ec, Echtzeit-Lauf @0x80032868 / @0x8003295c, Plc-Gehen @0x80030c3c / @0x80030c5c, Plc-Lauf
+ * @0x80030e90 / @0x80030eb0) und liest Lage x +0x34 / z +0x3c (@0x80045664/68) und das Bildwort *(+0x168)
+ * (anim_set des Vorbilds @0x8001f36c) — beides gehoert zum zuletzt gezeichneten Bild. Im Port laeuft die
+ * Echtzeit-Bewegung (re15_player_tick) nach dem Bildanfang-Schnappschuss, die Skript-Bewegung
+ * (re15_actor_step_all_walkers, Plc_dest) aber VOR re15_game_step (platform/pc/main.c) — dort lag der
+ * Schnappschuss einen Laufschritt vor dem gezeichneten Bild (Dossier "Befund Skriptlauf"). */
+static re15_actor_t s_gez;
+static int          s_gez_ok   = 0;
+static int          s_gez_raum = -1;  /* g_current_room_id der Fuetterung (Raumwechsel = ungueltig)   */
+
 /* ---- FOLGE-Plaetze (Sub 3, Flags 0x07: Bit 2 = Matrix je Takt neu, @0x80019f54-a4) ------------ */
 #define WASSER_FOLGE_MAX 8
 static struct { int slot; int part; } s_folge[WASSER_FOLGE_MAX];
@@ -61,6 +73,7 @@ void re15_wasser_r38_reset(void)
     memset(&s_vor, 0, sizeof s_vor);
     s_vor_ok = 0; s_stempel = 0; s_objekt = 0;
     s_zp_n = 0; s_zp_bild = 0; s_letztes = 0xFFFFFFFFu;
+    memset(&s_gez, 0, sizeof s_gez); s_gez_ok = 0; s_gez_raum = -1;
     for (int i = 0; i < WASSER_FOLGE_MAX; i++) { s_folge[i].slot = -1; s_folge[i].part = -1; }
 }
 
@@ -79,6 +92,11 @@ void re15_wasser_r38_zeichner(const re15_skel_pose_t *poses, int n, const int32_
                               int32_t px, int32_t py, int32_t pz)
 {
     wasser_init();
+    /* Zustand des gezeichneten Bilds: Bewegung/Bild/Gier des Spielers, Lage = model_pos des Zeichners. */
+    s_gez = g_actors[RE15_ACTOR_SLOT_PLAYER];
+    s_gez.x = px; s_gez.y = py; s_gez.z = pz;
+    s_gez_ok = 1; s_gez_raum = (int)g_current_room_id;
+    s_zp_bild = g_engine.frame_count;
     if (!poses || !yaw_rot || n <= 0) { s_zp_n = 0; return; }
     if (n > RE15_EMD_MAX_BONES) n = RE15_EMD_MAX_BONES;
     for (int p = 0; p < n; p++) {
@@ -95,6 +113,22 @@ void re15_wasser_r38_zeichner(const re15_skel_pose_t *poses, int n, const int32_
     }
     s_zp_n = n;
     s_zp_bild = g_engine.frame_count;
+}
+
+/* Fuetterung gilt fuer den Schritt dieses Takts: aus diesem Raum und hoechstens 2 Bilder alt. */
+static int gez_gueltig(void)
+{
+    return s_gez_ok && s_gez_raum == (int)g_current_room_id &&
+           (uint32_t)(g_engine.frame_count - s_zp_bild) <= 2u;
+}
+
+/* Zustand, den der Schritt sieht: das zuletzt gezeichnete Bild (Zeichner-Fuetterung), ohne Fuetterung
+ * (PSX-Lauf, Sonden) der Bildanfang-Schnappschuss. quelle 1 = gezeichnet, 2 = Schnappschuss. */
+static const re15_actor_t *schritt_zustand(int *quelle)
+{
+    if (gez_gueltig()) { *quelle = 1; return &s_gez; }
+    *quelle = 2;
+    return s_vor_ok ? &s_vor : &g_actors[RE15_ACTOR_SLOT_PLAYER];
 }
 
 /* ApplyMatrix(R, {0,100,0}) + T (FUN_80019e20 @0x8001a248-2a4 mit dem Versatz aus @0x800456c4-cc). */
@@ -134,13 +168,13 @@ int re15_wasser_r38_anker(const void *skel_v, const void *anim_v, const void *ak
 static int part_anker(const re15_game_ctx_t *c, int part, int32_t out[3], int *quelle)
 {
     *quelle = 0;
-    if (s_zp_n > 0 && part >= 0 && part < s_zp_n &&
-        (uint32_t)(g_engine.frame_count - s_zp_bild) <= 2u) {
+    if (s_zp_n > 0 && part >= 0 && part < s_zp_n && gez_gueltig()) {
         anker_aus_matrix(s_zp[part].r, s_zp[part].t, out);
         *quelle = 1;
         return 0;
     }
-    const re15_actor_t *a = s_vor_ok ? &s_vor : &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int zq = 0;
+    const re15_actor_t *a = schritt_zustand(&zq);
     re15_anim_banks_t b;
     memset(&b, 0, sizeof b);
     b.def_skel  = c ? c->pl00_skel : NULL;  b.def_anim  = c ? c->pl00_anim : NULL;
@@ -223,9 +257,10 @@ void re15_wasser_r38_bildanfang(const re15_game_ctx_t *c)
 int re15_wasser_r38_schritt(const re15_game_ctx_t *c, int a0, int fuss)
 {
     wasser_init();
-    const re15_actor_t *v = s_vor_ok ? &s_vor : &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    /* Bodentyp an der Lage VOR der Bewegung dieses Bilds (`lw a0,52(v0)` / `lw a1,60(v0)` /
-     * `jal 0x800437d4` @0x80045664-6c; Schritt @0x8003255c vor pos_advance @0x800325ec). */
+    int lq = 0;
+    const re15_actor_t *v = schritt_zustand(&lq);
+    /* Bodentyp an der Lage VOR der Bewegung dieses Bilds = Lage des gezeichneten Bilds (`lw a0,52(v0)` /
+     * `lw a1,60(v0)` / `jal 0x800437d4` @0x80045664-6c; Schritt vor pos_advance in allen vier Executoren). */
     const int boden = (c && c->rdt) ? re15_rdt_floor_sound(c->rdt, v->x, v->z) : 0;
     int s0 = boden;
     int zweig = 0, plaetze = 0, part = -1, quelle = 0;
@@ -259,14 +294,19 @@ int re15_wasser_r38_schritt(const re15_game_ctx_t *c, int a0, int fuss)
         s_mess.part = part; s_mess.plaetze = plaetze;
     }
     s_mess.edt = idx;
+    s_mess.lage[0] = v->x; s_mess.lage[1] = v->y; s_mess.lage[2] = v->z;
+    s_mess.lage_quelle = lq;
 
     FILE *lf = wasser_log();
     if (lf) {
-        fprintf(lf, "F%u room=%04X schritt fuss=%d a0=%d bild=%d akt=%d lage=(%d,%d,%d) gier=%d boden=%#x stempel=%d objekt=%d "
+        const re15_actor_t *sv = s_vor_ok ? &s_vor : &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        fprintf(lf, "F%u room=%04X schritt fuss=%d a0=%d bild=%d akt=%d lage=(%d,%d,%d) zustand=%s vor=(%d,%d) gier=%d "
+                    "boden=%#x stempel=%d objekt=%d "
                     "zweig=%s code=%#010x part=%d anker=(%d,%d,%d) quelle=%s plaetze=%d edt=%#x fx=%d\n",
                 (unsigned)g_engine.frame_count, g_current_room_id, fuss, a0,
                 (int)v->anim_frame, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame,
-                (int)v->x, (int)v->y, (int)v->z, (int)v->rot_y, boden, (int)s_stempel, s_objekt,
+                (int)v->x, (int)v->y, (int)v->z, lq == 1 ? "gezeichnet" : "schnappschuss", (int)sv->x, (int)sv->z,
+                (int)v->rot_y, boden, (int)s_stempel, s_objekt,
                 zweig == 1 ? "boden" : (zweig == 2 ? "stempel" : "trocken"),
                 zweig == 1 ? RE15_WASSER_R38_CODE_BODEN : (zweig == 2 ? RE15_WASSER_R38_CODE_STEMPEL : 0u),
                 part, (int)anker[0], (int)anker[1], (int)anker[2],
@@ -285,13 +325,15 @@ int re15_wasser_r38_schritt(const re15_game_ctx_t *c, int a0, int fuss)
  * DuckStation-GDB ROOM1260: Schritt Part 7 bei +0x95 = 8 mit Bildwort[7] = 0x0000606d, Part 4 bei
  * +0x95 = 23 mit Bildwort[22] = 0x0000507c. Der Port las vorher das Bild NACH dem Vorschub dieses
  * Takts (re15_player_tick @player_common.c anim_frame++) = einen Takt zu frueh, mit der Pose des
- * Vorbilds (Anker ~50 Einheiten neben dem Original). Hier: Bild + Pose aus dem Bildanfang-Schnappschuss
- * (= gezeichnetes Bild), Executor-Bedingung (Gehen 105 / Laufen 100) aus dem laufenden Takt. */
+ * Vorbilds (Anker ~50 Einheiten neben dem Original). Hier: Bild + Pose des gezeichneten Bilds (Zeichner-
+ * Fuetterung; ohne sie der Bildanfang-Schnappschuss, Lauf 3), Executor-Bedingung (Gehen 105 / Laufen 100)
+ * aus dem laufenden Takt. */
 void re15_wasser_r38_fusstakt(const re15_game_ctx_t *c)
 {
     wasser_init();
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    const re15_actor_t *v  = s_vor_ok ? &s_vor : pl;
+    int lq = 0;
+    const re15_actor_t *v  = schritt_zustand(&lq);
     if (c && c->rdt_ok && c->w01_anim && (pl->motion == 105 || pl->motion == 100) &&
         (v->motion == 105 || v->motion == 100)) {
         uint32_t bild = (uint32_t)v->anim_frame;

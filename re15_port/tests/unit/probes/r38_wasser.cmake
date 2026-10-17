@@ -7,7 +7,9 @@
 #                            pfuetze (Effekt 6 Sub 5, Anker = Original-GDB-Wert, Tonsatz 0x17), zeitfolge (Bildwort des
 #                            gezeichneten Bilds), trocken (kein Effekt, 0x1d), stempel (ROOM2090: Effekt 6 Sub 3, Part a1-1,
 #                            Gier 0x800, Watsatz 0x1a, +0x88 geloescht), lauf (a0 = 1 -> 0x18), aotbreite (sce-8-Zone
-#                            Breite 38950 stempelt), zensus (FLR 0x97 an den sechs Flecken von ROOM1260).
+#                            Breite 38950 stempelt), zensus (FLR 0x97 an den sechs Flecken von ROOM1260), skriptlauf
+#                            (Lauf 3: Boden/Bild/Anker des gezeichneten Bilds, wenn die Skript-Bewegung vor dem
+#                            Spielschritt laeuft; ohne Zeichner-Fuetterung bzw. nach Raumwechsel der Schnappschuss).
 #   integration_r38_wasser   echte exe (Messkopie): Leon ROOM1260 und Elza ROOM1261 gehen in den Fleck P0 —
 #                            RE15_WASSER_LOG zweig=boden mit dem Original-Anker, RE15_FX_LOG zeichnet id=6 sub=5,
 #                            [foot] VAG 7 (Wasser) im Fleck und VAG 1 (Beton) davor; ROOM2090 Watschritt (Stempel);
@@ -20,7 +22,7 @@ target_compile_definitions(test_r38_wasser PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r38_wasser PRIVATE m)
 endif()
-foreach(_fall pfuetze zeitfolge trocken stempel lauf aotbreite zensus)
+foreach(_fall pfuetze zeitfolge trocken stempel lauf aotbreite zensus skriptlauf)
     add_test(NAME unit_r38_wasser_${_fall} COMMAND test_r38_wasser ${_fall})
     set_tests_properties(unit_r38_wasser_${_fall} PROPERTIES TIMEOUT 120)
 endforeach()
