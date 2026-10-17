@@ -637,8 +637,9 @@ Kanal gegen das Original:
 | ROOM20A0 Cut 3, Wasser obj 6 (ABR 2) | Kanal x 140..249 y 180..235 | (7.1,5.8,6.4) | (11.9,14.6,11.9) MAD 12.4 | wie v0.8.25 | **(6.8,5.5,6.0) MAD 1.1** (das Sprenkelmuster des Hintergrunds minus Wasser stimmt Pixel fuer Pixel) |
 | ROOM4090 Cut 0, Nebel obj 0-2 (ABR 3) | Boden x 20..299 y 160..235, 21 280 px | (140.5,139.4,147.9) | (56.5,55.7,55.1) MAD 85.2 (36 030 px dunkle deckende Schlieren) | wie v0.8.25 | **(140.6,138.9,147.2) MAD 3.3** |
 
-Bilder (scratchpad W38nb1): `v5060_orig_alt_neu.png`, `v20a0_orig_alt_neu.png`, `v20a0c3_orig_alt_neu.png`,
-`v4090_orig_alt_neu.png` (je Original | v0.8.25 | nach N1). ROOM5060: das linke Fenster zeigt wie im Original das
+Bilder (W_belege): `n1_5060_cut4_orig_v0825_neu.png`, `n1_20a0_cut2_orig_v0825_neu.png` (Port-Laeufe hier noch mit
+der angreifenden Spinne), `n1_20a0_cut3_orig_v0825_neu.png`, `n1_4090_cut0_orig_v0825_neu.png` (je Original | v0.8.25 |
+nach N1), `n1_11b0_cut5_v0825_neu.png` (v0.8.25 | nach N1); Laeufer `W_belege/lauf_n1.sh`. ROOM5060: das linke Fenster zeigt wie im Original das
 Gitter halb abgedunkelt durch die Scheibe. ROOM4090: v0.8.25 zeigte die drei Nebel-Modelle als dunkle deckende
 Schlieren ueber dem ganzen Boden, nach N1 heller Bodennebel wie im Original. ROOM20A0: der Kanal wie im Original fast
 schwarz (B - F), Cut 3 mit dem Sprenkelmuster des Originals.
