@@ -116,6 +116,15 @@ RDT-Nachrichten: 1011 = 24 (0..23), 1021 = 15, 1131 = 6, 1141 = 15. Port-Ids F: 
   0x0B `00 00 ad 00` -> VAG 6 (12480 B).
   => **Klopfen = RE2 ROOM1060 snd0 Satz 0x0A/0x0B, Takt = dieselbe Schleifenform** (Schlag, 30, Schlag, 30, ...,
   90 Pause) — Beta->Retail, RE2 ist die Vorlage fuer "in regelmaessigen Abstaenden".
+- **Musikwahl "panische Musik" (Fortsetzung 4 nachgetragen):** der Raum-Titel von 1141 selbst. BGM-Tabelle Raum 0x14
+  (Stage 1) = Eintrag 0xFF56 -> MAIN16 mit Handstart-Flag (debug.log int_d3 `[bgm] stage=0 room=14 entry=FF56 ->
+  MAIN16(flag 1)`): der Titel laeuft nur, wenn ein Skript ihn startet — im Original ausschliesslich in der John-/
+  Gorilla-Lage: sub00 @0x00B4E `54 00 01 00 00 00` (Start beim Betreten mit der Szene), sub02 @0x00E5C (Gorillas
+  brechen ein), Stopp sub01 @0x00C06 `54 00 02 ..`, sobald beide Gorillas tot sind. Das Original koppelt diesen Titel
+  also genau an die Bedrohung in diesem Raum. Tempo gemessen: `[bgm] loaded: 11 VAGs, SEQ 5916B, PPQN=48
+  tempo=394736us` = 152 Viertel/min (zum Vergleich der Flur 1131 MAIN17: tempo=1250000us = 48/min). Die
+  Klopf-Schleife startet ihn mit derselben Zeile (HAEMMERN +0000 = @0x00B4E), BEFREIUNG stoppt ihn mit der Zeile von
+  @0x00C06, wenn John frei ist; der Gorilla-Einbruch startet ihn wieder (@0x00E5C, Original).
 - "Are you okay? What's happened?" (1141 msg 2 ohne "Same here..."): synchro/STAGE1/room1141/main02.wav = "Same here.
   Are you okay? What's happened?" (Sprache 0,16-0,98 / 1,50-2,33 / 2,82-3,54 s). Schnitt ab 1,24 s ->
   main40.wav (Whisper: "Are you okay? What's happened?"). Id 2 bleibt unangetastet (VERTRAG 1.2).
@@ -318,9 +327,10 @@ Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
 | unit_r38_dining1141_leiche1021 | Ereignis 6 -> msg 40 mit Hinweis (Anker bytegleich) | 1, 2 |
 | unit_r38_dining1141_schluessel1011 | Schluessel nur nach der 1021-Szene, Aufnahme-Modal -> Item 0x43 + (9,64), danach weg | 2 |
 | unit_r38_dining1141_tuer1131 | zu ohne Schluessel, msg 41 + (9,66) + Wegwerf-Abfrage, dann Raumwechsel 1141 | 2 |
-| unit_r38_dining1141_phase_h | John ab Bild 0 hinter dem Rolladen, in keinem Cut ausser 5/6 im Bild, Takt 30/30/90/90, keine Nachricht, "ja", Rolladen-Ton, Szene, keine Spruenge, Sperre msg 41, Abgang in Cut 7 ausserhalb des Bildes, Riegel/Tueren, 1171, Wiederbetreten | 2, 4 |
+| unit_r38_dining1141_phase_h | John ab Bild 0 hinter dem Rolladen, in keinem Cut ausser 5/6 im Bild, Takt 30/30/90/90, keine Nachricht, "ja", Rolladen-Ton, Szene, keine Spruenge, Sperre msg 41, Abgang in Cut 7 ausserhalb des Bildes, Kamera danach zurueck auf den vorigen Cut + Automatik (Fortsetzung 4), Riegel/Tueren, 1171, Wiederbetreten | 2, 4 |
 | unit_r38_dining1141_leon1140 | Leon: 0x3B 0x0C/0x0A/0x0B in der 1131-Folge, Abstand Sleep 15, Rolladen faehrt | 3 |
-| integration_r38_dining1141 | echte exe: W 1021->1011->1021, Z 1131 zu, D 1131->1141->1171 (Zustands-Log: John ab Bild 0, kein Sprung, Parken hinter Cut 7), L Leon 1140 | 1-4 |
+| integration_r38_dining1141_w/z/d/l | echte exe: W 1021->1011->1021, Z 1131 zu, D 1131->1141->1171 (Zustands-Log: John ab Bild 0, kein Sprung, Parken hinter Cut 7, Kamera verlaesst Cut 7 danach), L Leon 1140 | 1-4 |
+| integration_r38_dining1141_s | Nachtrag 2 per Framedump (Fortsetzung 4): zwei Laeufe des Weges D (mit / ohne Johns Bild), JEDES Bild von 1141 zurueckgelesen und verglichen, Regeln R0-R3 (Abschnitt 4.4) | 4 |
 Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel): `test_r38_dining1141 takt`
 (Druckzahlen je Abfrage fuer die Wegplaene).
 
@@ -329,11 +339,22 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
   Phase (4,0xFA)=1) und Spur F (Schluessel nach der 1021-Szene, (3,0x5F)=1, (4,0xFA)=0 seit ROOM1211 sub02 @0x01F7A)
   liegen in verschiedenen Phasen; F belegt Prop obj 6 / Zone Slot 14, obj 5 bleibt fuer G. ROOM1171 (Spur I) betritt
   Elza bei F ueber die Dachtuer mit (3,0xC2)=1 wie im Original.
-- Befund fuer den Orchestrator (nicht Teil der Nutzer-Punkte dieser Spur): Leons ROOM1140-Gemaelde feuert seit e53fb043
-  (2026-08-06, sub01 je Bild neu geseedet, scd_room_setup.c) immer sub05 "The switch is not responding..." — sub01
-  @0x00C7A setzt Slot 5 auf sub05; die Strom-Rekonstruktion scd_vm.c s_power_gates (Ereignis 3 -> 5 bei Strom aus,
-  2026-06-28) bekommt Ereignis 3 vom Gemaelde nie zu sehen. Der Rolladen-Ton haengt an sub03 und spielt, sobald sub03
-  laeuft (Lauf int_l3).
+- Befund fuer den Orchestrator (nicht Teil der Nutzer-Punkte dieser Spur): Leons ROOM1140-Gemaelde feuert im Port
+  immer sub05 "The switch is not responding..." — sub01 @0x00C7A `46 05 03 31 ff 00 18 05` setzt Slot 5 unbedingt auf
+  sub05. Das ist ORIGINAL-Verhalten: das Original seedet Thread-Slot 1 jedes Gameplay-Bild neu auf sub01 (FUN_8003f038
+  @0x8003f064-84, im Port seit e53fb043), und schon vorher lief sub01 im Port einmal beim Eintritt NACH sub00 (seit
+  aa346af1, `git show aa346af1:re15_port/engine/src/scd_room_setup.c` Zeile 162-163) — die Korrektur "seit e53fb043"
+  aus Fortsetzung 3 ist damit zurueckgenommen (nur Code-Lesung, kein Bisect-Lauf). Die nutzer-gelenkte
+  Strom-Rekonstruktion scd_vm.c s_power_gates (2026-06-14: Strom aus -> Ereignis 3 auf 5) bekommt Ereignis 3 vom
+  Gemaelde deshalb nie zu sehen; bei Leon faehrt der Rolladen am echten Weg nicht. Der Rolladen-Ton haengt an sub03 und
+  spielt, sobald sub03 laeuft (Lauf int_l3, RE15_FORCE_EVENT=3); bei Elza (1141) laeuft er am echten Weg (Lauf int_d3).
+- Lesart Nachtrag 2 (Orchestrator, AUFTRAG.md Runde 38) enthaelt zwei Saetze, die sich ausschliessen: "Der Riegel der
+  Dachtuer bleibt fuer Elza wie im Original ("You've opened the lock." danach)" und "Johns Weg aufs Dach danach: durch
+  den Gang und die Dachtuer" (ebenso Nachtrag 14 Schritt 6 "kurzer Abgang durch die Dachtuer"). Der Riegel sitzt innen
+  (Riegel-Zone Slot 2 im Rechteck der Dachtuer x -8250..-6250, z -750..250, Elza loest sie auf der Gangseite aus); geht
+  John hinaus, kann er ihn von aussen nicht wieder vorlegen. Umgesetzt ist der Weg durch die Dachtuer (beide Texte
+  verlangen ihn; ein danach wieder verriegeltes "You've opened the lock." waere ein neues Logikloch): John oeffnet den
+  Riegel beim Hinausgehen (sub05-Zeilen @0x00FC8..@0x00FD5 ohne Nachricht + @0x00FDC), Elza findet die Tuer offen.
 - Beobachtung aus Lauf int_wzl/Z (`F_belege/n2_tuer1131_zu.png`): ueber der Tuer in ROOM1131 haengt im Hintergrundbild
   das Original-Schild "Briefing Room"; die Texte folgen dem Nutzer-Wortlaut "Dining Room" (Hinweis und Schluesselname).
 
@@ -345,7 +366,9 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
   out." mit der Kampfmusik des Raums — das Gemaelde ("There's a switch below.") hebt den Rolladen, John steht dahinter
   und kommt heraus, dann direkt "Are you okay? What's happened?" — solange die Gorillas leben, sagt jede Tuer "I cannot
   leave him alone with those monsters." — danach laeuft John (Kamera Blick nach Sueden) aus dem Bild zur Dachtuer, man
-  hoert sie auf- und zugehen; die Dachtuer ist dann offen und fuehrt zu John aufs Dach (ROOM1171).
+  hoert sie auf- und zugehen, danach springt die Kamera auf Elzas Ansicht zurueck (Fortsetzung 4: vorher blieb sie auf
+  der Szenen-Kamera stehen und Elza lief aus dem Bild); die Dachtuer ist dann offen und fuehrt zu John aufs Dach
+  (ROOM1171).
 - **Riegel der Dachtuer:** John hat ihn auf der Gangseite vorgelegt und oeffnet ihn beim Hinausgehen. "You've opened
   the lock." kommt in diesem Ablauf deshalb nicht mehr (sonst oeffnete Elza einen Riegel, durch den John eben gegangen
   ist).
