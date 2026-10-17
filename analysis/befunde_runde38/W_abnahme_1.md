@@ -209,3 +209,53 @@ Batch `batch_e.sh`, dieselben Parameter wie die Abnahme-0-Laeufe (exe VOR N1), `
 Damit ist belegt: das Eckpunkt-Alpha im beleuchteten Weg und der Zwei-Durchgang-Flush aendern an Figuren und deckenden
 Objekten **kein einziges Pixel**; N1 wirkt nur auf Objekte mit Attribut-Bit 0x2. Leistung (Hinweis H2): 4090 mit
 `RE15_FPS=240`, 2500 Bilder: neu 33.8 / 33.9 s, v0.8.25 34.3 / 34.2 s — am PC kein Unterschied.
+
+## 7. M2 — Zensus in beide Richtungen
+
+Behoben und nachgefahren (§3 letzter Absatz): `zensus_beidseitig.py` / `zensus_abe.py` reproduzieren die eingecheckten
+Ausgaben byte-gleich; MEHR 3 / WENIGER 22 inkl. Typ 3 / Eltern 4 gerechnet / pc[5]=0x80 gemeldet / ABE sichtbar 364.
+Jeder MEHR-Fall ist am Spiel gemessen: ROOM1170 Cut 0 (Intro) **0 von 281 Bildern** gegen den Stand vor N1 (§5.4) und
+<= 96 px gegen v0.8.25 (Abnahme 0 §5.2); ROOM5060/5061 Cut 4 = Original (§5.2). Die Typ-3-WENIGER-Faelle: 2050 Cut 11
+0 px gegen vor N1 (§5.4), 20A0 Cut 3 = Wasser (§5.3). Dossier §8 traegt den Verweis auf §10.7; die falsche Aussage
+"= wie das Original" fuer 5060 Cut 4 ist dort korrigiert. **M2 ist behoben.**
+
+## 8. Weitere Pruefungen
+
+### 8.1 Vertrag (VERTRAG.md)
+* Pfade (`git diff master...HEAD --name-only`): keine `release/`, `platform/android/`, `shared_assets/PSX/`, keine
+  Test-CMakeLists (Registrierung ueber `tests/unit/probes/r38_rolltor20a0.cmake`).
+* Bank-9-Bits / Nachrichten-Ids / Items / Ereignisse: keine (`grep game_flag_set|MSG_ID|k_port|bank9|Se_on|se_play` in
+  den hinzugefuegten Zeilen: 0).
+* Gemeinsame Dateien: `render_pc.c` N1 24 geaenderte Zeilen an 5 Stellen (Include, Wertebereich set_tri_blend, Zugriff
+  auf den Renderer, Flush-Haken, Eckpunkt-Alpha), jede mit "Runde 38 Spur W"; `main.c` N1 30 Zeilen (Include, zwei
+  Lade-Haken, Flach-Bedingung, Aufrufe ueber re15_objabe_r38_pc_dreieck). Logik in eigenen Dateien. Groesser als
+  "1-5 Zeilen" je Datei, aber Haken-Charakter (Hinweis H3, wie H2 der Abnahme 0).
+* Lesender Merge-Test gegen den aktuellen `r38/integration` 127100ef (`git merge-tree --write-tree`): Konflikt NUR in
+  `platform/pc/main.c`, Include-Zeilen (E/I/T/D gegen W) — beide behalten. render_pc.c merget ohne Konflikt. Im
+  Integrationsbaum und in `r38/wasser` 28cb1b9c (Spur N, noch nicht integriert; merget konfliktfrei) gibt es keinen
+  weiteren Setzer von `re15_render_pc_set_tri_alpha` (git grep) — der beleuchtete Weg liest das Alpha also gefahrlos.
+* Riegel je Punkt: integration_r38_rolltor20a0 (Nutzer-Punkt, 4 Laeufe), integration_r38_rolltor20a0_abe (M1, 5 Laeufe
+  gegen Original-Werte; trennscharf: deckend 25.3 / v0.8.25 15.6 / 79.5 / 85 liegen weit ausserhalb der Toleranzen 4..8),
+  unit_r38_rolltor20a0(_windung|_abe).
+
+### 8.2 Die gruenen Flecken in ROOM20A0/20A1 (Hinweis H1, selbst nachgeprueft)
+* Der Port startet beim Betreten von 20A0/20A1 die im Original ungetriggerte sub02 (`scd_room_setup.c`
+  `if (rid == 0x20A0 || rid == 0x20A1) scd_event_fire(2);`, Kartierung `analysis/nutzer_batch_2026-08-29/
+  schlafender-content.md:194` "Echte deaktivierte Ambient-Effektschleife ... Visuelle Identitaet UNSICHER — nicht gerendert
+  geprueft", Nutzer-Auftrag 2026-08-30).
+* `RE15_FX_LOG` (Lauf `d4_20a0c2c3`): **17 aktive Effekte id=6** (Slot 36), Weltlagen x 20842..21800, y -360..-720 (unter
+  der Wasserflaeche obj 6 y -1800), Bildschirm sx 156..249, sy 152..175 = genau die Flecken; sie stehen von F300 bis F2400
+  unveraendert auf ihren letzten Anim-Bildern (frame 14/19/24, Zaehler 0) — also stehende Flecken, keine Tropfen.
+* Original: ESP-Pool @0x800A73B8 in Cut 2 dreimal gelesen = 0 aktive Plaetze (`W_belege/orig_abe_20a0_esp_log.txt`).
+* Sichtbar seit N1, weil das Wasser jetzt wie im Original B - F rechnet statt deckend grau: Cut 2 **73 px** (auf dem
+  Tuerweg zur Leiter, Leon UND Elza, §4), Cut 3 **305 px** > 24 gegen das Original (§5.3).
+* Der Bau-Agent fuehrt das korrekt unter "Fuer den Nutzer" und OFFEN (Ursache = Port-Aktivierung, nicht der
+  Zeichenweg); dass die Sprites auf dem letzten Anim-Bild stehen bleiben, steht dort nicht.
+
+### 8.3 Dinge, die ich geprueft und in Ordnung befunden habe
+* Typ-3-Kachel-Verwurf FUN_8003e64c/FUN_80014368 (Punkt-im-Viereck der Kachelmitte gegen den Bereich @0x800AC790,
+  Decompilat FUN_80014368.c) bleibt vorbestehend unportiert — dokumentiert (OFFEN); in den gemessenen Schnitten 20A0
+  Cut 2/3 ohne Bildwirkung (MAD 0.1/1.2 in den Kanal-Flaechen).
+* 11B0/11B1 Kiste (einziges Objekt mit STP-0- und STP-1-Texeln): Bild `c_11B0_c12.png`/`c_11B0_c6.png` — Koerper flach
+  (Regel @0x8002c2f4, Farbe @0x8002b8fc-91c), der Schattenteil unter der Kiste halbtransparent; ohne Original-Bild
+  (Debug-Sprung haelt dort die Kamera, Dossier §10.6). Mechanik belegt, Bild nicht gegengeprueft (Hinweis H4).
