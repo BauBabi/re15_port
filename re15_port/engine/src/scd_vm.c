@@ -3924,6 +3924,7 @@ static int op_sce_em_set(scd_thread_t *t)
                                  * RAMP env-stamp gate, and any per-floor event AOT) read the wrong band for
                                  * a non-floor-0 enemy. (audit wf_27ae1ea7) */
         re15_schwerkraft_seed(a);   /* Runde 35 Spur H: +0x1ba = -(pc[4]*1800) @0x80042210 (Zombie-Wurzel-Typen) */
+        a->fall_1c0 = 0;            /* Runde 38 Spur M: +0x1c0 = 0 fuer JEDEN Spawn, `sh zero,448(s0)` @0x800421f4 (NPC-Schwerkraft) */
         /* hp=100 is harmless nominal init. Sce_em_set (0x44) carries NO hp
          * field — the `hp` struct member is RE2 +0x1C2 (Member ID 0x13), a
          * SEPARATE field written only via Member_set, not by this opcode.

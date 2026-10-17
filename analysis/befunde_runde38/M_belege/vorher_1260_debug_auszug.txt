@@ -1,0 +1,5 @@
+[boot] room RDT: STAGE1/ROOM11B0.RDT (232492 bytes)
+[save] CONTINUE: resumed in room 11b0 (hp=100)
+[fire-aot] slot=5 at F40 (Raum 11B0)
+[room] PC loaded room1260.rdt (287920 bytes)
+[flow] EXIT_AT: Bild 1200 in Raum 1260 erreicht -> exit

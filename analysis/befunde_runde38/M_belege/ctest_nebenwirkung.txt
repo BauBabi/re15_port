@@ -1,0 +1,31 @@
+# Nebenwirkungs-Laeufe Runde 38 Spur M (2026-10-17), ctest-Aufrufe woertlich
+
+## 82 Unit-/Probe-Tests
+ctest --test-dir re15_port/build -R "^(unit_npc_ai|unit_npc_scd_pose|unit_sherry_wall_pin|unit_elliot_1170_run|unit_stair_1170_regression|unit_door_1170_lock|unit_marvin_spawn_bank|unit_zombie_10d0_reentry_a|unit_zombie_10d0_reentry_b|unit_marvin_render_pose|unit_irons_neck_1150|unit_zombie_se_ab_10d0|unit_re2_room1090_ab|unit_1090_room_pin|unit_1090_push_pin|unit_1090_fire_pin|unit_1090_push_anim|unit_plc_back_yaw_1090|unit_npc_back_walk|unit_1090_climb_pin|unit_re2_crow_shadow_release|unit_1090_stay_on_crate|unit_re2z_bump_walk|probe_1090_flame_touch|probe_10d0_situp_handoff|probe_1090_flinch_anim|unit_1090_flame_out_pin|unit_1090_nodraw_pin|unit_1090_npc_prop_push|unit_npc_wall_clamp|unit_map_1090|unit_ada_eintritt_1050|unit_irons_mittelmodell|r19_marke1_10d0_c1|unit_r27_ada_cutscene_1050|unit_r30_android_n3_plc_aim|unit_r30_irons_diary_dokument|unit_r30_irons_diary_ablauf|unit_r30_irons_tisch|unit_r30_irons_tisch_licht|unit_r34n_d_adaruf_szene|unit_r34n_d_adaruf_doppel|unit_r34n_d_adaruf_sperre|unit_r34n_d_adaruf_frei|unit_r34n_d_adaruf_rettung|unit_r34n_d_adaruf_speicher|unit_r34n_d_adaruf_elza|unit_r34n_d_adaruf_raster|unit_r35_affen_ada|unit_r35_affen_npcband|unit_r35_raeume_hundeschatten|unit_r35_raeume_trage|unit_r36_elza_irons|unit_r36_elza_roy|unit_r36_pri_schatten|unit_r36_story_roy|unit_r36_szenenleon_programm|unit_r36_szenenleon_schub|unit_r36_szenenleon_erweiterung|unit_r36_szenenleon_tuer|unit_r36_szenenleon_abgang10f0|unit_r36_szenenleon_irons|unit_r36_zombieki_wecker|unit_r36_zombieki_szenen|unit_r36_zombieki_affen|unit_r36_zombieki_sicht|unit_r36_zombieki_affen_block|unit_r36_zombieki_eintritt|unit_r37_roy_toc|unit_r37_roy_weiche|unit_r37_roy_szene1011|unit_r37_roy_szene1021|unit_r37_roy_leon1170|unit_r38_npckante_clips|unit_r38_npckante_sonde|unit_r38_npckante_john1261|unit_r38_npckante_ada1260|unit_r38_npckante_john10b1|unit_r38_npckante_gegen|unit_r38_npckante_j2000|unit_r38_npckante_schwerkraft|unit_tor_1170_anfrage)$" --timeout 600 -j4 --output-on-failure
+100% tests passed, 0 tests failed out of 82
+
+## 10 Integrationstests (seriell)
+ctest --test-dir re15_port/build -R "^(integration_r30_irons_tisch_laden|integration_r30_irons_tisch_bild|integration_r30_irons_tisch_licht|integration_r36_elza_irons|integration_r36_pri_schatten|integration_r36_szenenleon|integration_r37_elzaems_elza1141|integration_r37_roy_szene1011|integration_r37_roy_szene1021|integration_r37_roy_leon1170)$" --timeout 600 --output-on-failure
+ 1/10 Test #351: integration_r30_irons_tisch_laden ...   Passed   29.87 sec
+ 2/10 Test #352: integration_r30_irons_tisch_bild ....   Passed   44.43 sec
+ 3/10 Test #354: integration_r30_irons_tisch_licht ...   Passed   38.29 sec
+ 4/10 Test #583: integration_r36_elza_irons ..........   Passed   13.46 sec
+ 5/10 Test #626: integration_r36_pri_schatten ........   Passed   27.74 sec
+ 6/10 Test #664: integration_r36_szenenleon ..........   Passed  161.43 sec
+ 7/10 Test #710: integration_r37_elzaems_elza1141 ....   Passed   11.24 sec
+ 8/10 Test #752: integration_r37_roy_szene1011 .......   Passed   90.34 sec
+ 9/10 Test #753: integration_r37_roy_szene1021 .......   Passed   54.47 sec
+10/10 Test #754: integration_r37_roy_leon1170 ........   Passed   43.83 sec
+100% tests passed, 0 tests failed out of 10
+
+## eigene Riegel
+ctest --test-dir re15_port/build -R "r38_npckante" --timeout 600 --output-on-failure
+1/8 Test #768: unit_r38_npckante_clips ..........   Passed    0.02 sec
+2/8 Test #769: unit_r38_npckante_sonde ..........   Passed    0.01 sec
+3/8 Test #770: unit_r38_npckante_john1261 .......   Passed    0.04 sec
+4/8 Test #771: unit_r38_npckante_ada1260 ........   Passed    0.06 sec
+5/8 Test #772: unit_r38_npckante_john10b1 .......   Passed    0.11 sec
+6/8 Test #773: unit_r38_npckante_gegen ..........   Passed    0.04 sec
+7/8 Test #774: unit_r38_npckante_j2000 ..........   Passed    0.13 sec
+8/8 Test #775: unit_r38_npckante_schwerkraft ....   Passed    0.05 sec
+100% tests passed, 0 tests failed out of 8

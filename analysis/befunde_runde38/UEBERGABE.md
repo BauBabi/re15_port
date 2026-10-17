@@ -6,6 +6,14 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-16 23:05: P (r37 masken36) BESTANDEN (Abnahme 2, wf_6fbf718a-cd3, Bericht 0ce11f5f). Merge nach dem laufenden Q/E/J-Test.
+* 2026-10-16 22:45: Integration: L gruen (210 Unit + 7 Integration), r37_re2zombie-Baum entfernt. Q, E gemergt (konfliktfrei), J gemergt (Konflikte scd_vm.c/audio_pc.c = Haken nebeneinander, beide Seiten via konflikt_beide.py, 63ea4222). Bau + gezielte Tests Q/E/J laufen.
+* 2026-10-16 22:20: J rekorder BESTANDEN (Abnahme 0, wf_fe613bfa-201). S fortgesetzt wf_350d90f9-b55 (r38_w2b.js).
+* 2026-10-16 22:12: Bau-Fortsetzung R wf_ad7a778e-ca5 (r38.js), U wf_dc602f1a-a19 (r38_w2b.js). Warten: S (stand), D, M, N, O (neu).
+* 2026-10-16 22:10: E elzaintro BESTANDEN (Abnahme 0, wf_4385667f-bb0, Bericht f6b23e6d). Merge nach dem laufenden L-Test (mit Q).
+* 2026-10-16 22:05: Q kleinkram BESTANDEN (Abnahme 0, wf_a6f0cd46-193, 150/150 gezielt). Merge nach dem laufenden L-Test.
+* 2026-10-16 21:55: L (r37 re2zombie) BESTANDEN (Abnahme 2, wf_232032c3-de2, Bericht ca4f0879): Erholungsleiter P3 wie RE2, Texte richtig. In r38_integration gemergt, Bau + Zombie-Tests laufen.
+* 2026-10-16 21:40: Nutzer-Nachtrag 2 (AUFTRAG): John darf in 1141 nicht hereinploppen. F-Lauf wf_9ab3a238-dfd GESTOPPT (TaskStop, Mess-exe PID 46072 beendet), Reste 32754a59 UNGEPRUEFT, master (Nachtrag 2) in r38/dining1141 gemergt (0a680a7d). Neue Loesung: John steht schon beim Betreten im Dachgang hinter dem Rolladen, sichtbar erst beim Hochfahren. F neu gestartet mit r38_f.js (Punkt 4 = Nachtrag 2, Hinweise angepasst): wf_0cca805e-279.
 * 2026-10-16 21:15: ⛔ SITZUNGSLIMIT ~18:18 (Reset 21:00) brach ALLE Laeufe ab. Reste gesichert: wip UNGEPRUEFT in r38_cursor/dining1141/heliport1171/itemorte/spinnen, Abnahme-TEILBERICHTE in elzaintro/elzatoene/rekorder/spiderman/tagebuch und r37 L/P. Neuer Nutzer-Befund -> AUFTRAG Nachtrag 1 / Spur W (ROOM20A0 Rolladen vor der Kamera), r38_w3.js (BASIS df08d83a). Fortsetzung 21:05-21:15: Abnahme per Resume (Bau aus dem Cache) E wf_4385667f-bb0, H wf_10922d64-fbc, J wf_fe613bfa-201, Q wf_a6f0cd46-193, G wf_fef4a19f-77f, T wf_7931fdbe-adb, V wf_9f166cb7-bd0; L wf_232032c3-de2 / P wf_6fbf718a-cd3 (modus abnahme, runde0 2, max_nach 1); Bau-Fortsetzung mit stand: F wf_9ab3a238-dfd, B wf_74e3029b-16f, I wf_88be68ba-db7, A wf_9a07eaab-cd0, K wf_239fbc09-716; neu W wf_3d75f890-088. Warten: R, S, U (Bau mit stand), D, M, N, O (neu).
 * 2026-10-16 18:30: Integration C gruen 27/27 (r38_werkstatt11b0 + szenenleon + Ton/Dialog), Baum r38_werkstatt11b0 entfernt. CPU ~80 %, RAM 12,9 GB frei, Platte 83 GB -> Welle 2b nur teilweise: S wf_8071033e-d91, U wf_7508e561-3ed (r38_w2b.js, BASIS cb782bda). D, M, N, O folgen, wenn weitere Spuren fertig sind.
 * 2026-10-16 18:15: C werkstatt11b0 BESTANDEN (Abnahme 0, wf_55628571-c21): "But, hold on...", Schiebe-Ton aus ROOM1171 Satz 7 (11B0 Satz 7 @0xE4A0 leer), keine Fall-Pose (Bank folgt dem Clip). Integrationsbaum r38_integration angelegt (98d35560), C gemergt (869b9374), Bau + gezielte Tests laufen. Offen fuer die Integration: Spur I gegen szenenleon_r36.c (Sub 0x13 auch in 1171), Android-Configure wegen werkstatt11b0_pc.c.
@@ -25,24 +33,24 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | B | r38_szenenschutz | kein Angriff in Szenen ohne Bewegung (1190/11D0), Ausnahme 1171 | offen |
 | C | r38_werkstatt11b0 | 11B0: "But, hold on...", Schiebe-Ton, keine Fall-Animation | BESTANDEN (A0), integriert |
 | D | r38_zopf | Elzas Zopf wie Claire (RE2) | offen |
-| E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | offen |
+| E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | BESTANDEN (A0) |
 | F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | offen |
 | G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | offen |
 | H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | offen |
 | I | r38_heliport1171 | Elza haengt in 1171 | offen |
-| J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | offen |
+| J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0) |
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | offen |
 | M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | offen |
 | N | r38_wasser | Wasser-Effekt 1260+ | offen |
 | O | r38_montage | Montage-Zombies Richtung Kamera | offen |
-| Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | offen |
+| Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0) |
 | R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | offen |
 | S | r38_affen3 | kleine Affen Stage 3 treffen | offen |
 | T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | offen |
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | offen |
 | V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | offen |
-| L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | offen |
-| P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | offen |
+| L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | BESTANDEN (A2), integriert |
+| P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | BESTANDEN (A2) |
 
 ## 2. Bei einem Abbruch (Sitzungs-/Wochen-/Monatslimit)
 1. Verwaiste Prozesse beenden (`tasklist`; nur per PID, nie /IM), DuckStation `settings.ini` EnableGDBServer = false pruefen.
