@@ -399,6 +399,81 @@ static void teil_b3(void)
           "Gift-Treffer %u", hp, pl->status_flags, re15_spinnen_r38_gift_treffer());
 }
 
+/* B4 (Nachbesserung 1, Mangel 1): der Gift-Takt im ECHTEN Spielschritt (re15_game_step mit rdt_ok, ESP-Takt wie bild())
+ * ist KEIN Treffer. Original RE1.5 @0x80031e44-ec8: Stores nur auf den Zaehler 0x800acc27 (@0x80031e70/80/94) und die HP
+ * (@0x80031eac/ec8), kein `jal`, kein Kommandowort 0x800aca58, kein +0x93; RE2 @0x8003c12c-180 ebenso. Die Treffer-Reaktion
+ * (Clip 8/9/0xa, Rueckstoss 0xc8, SE CORE 1/2, Zielabbruch) schreibt im Original nur ein Kommando-2-Schreiber (z.B.
+ * `sb v0(=2),4(s1)` @0x80012ebc). Vorher (Stand e7131aca) loeste jeder Takt ueber den Port-Detektor `hp < s_prev_hp`
+ * (game_step_common.c) re15_player_stagger_cmd2 aus: Periode 143 statt 121, Zielabbruch (R0/p2b, unit_r34_wurf 119-121). */
+extern int g_test_core_se_last, g_test_core_se_count;   /* tests/test_support.c (re15_audio_core_se) */
+extern void re15_player_aim_reset(void);
+extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
+static void teil_b4(void)
+{
+    printf("\n== B4 Gift-Takt im Spielschritt: nur HP und Zaehler (@0x80031e44-ec8), keine Treffer-Reaktion\n");
+    /* (a) Spieler steht (Kommando 1, kein Pad), vergiftet, keine Gegner: 4 Takte */
+    if (!raum("STAGE2/ROOM2060.RDT", 0x2060, RE15_AI_FLAVOR_RE15, 5975, 0, 1137, 3072, 1)) { s_fails++; return; }
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    for (int f = 0; f < 5; f++) bild();                       /* Spieler im Kommando 1 einschwingen */
+    pl->hp = 100; pl->status_flags = 2; pl->hit_react = 0;
+    re15_spinnen_r38_reset();
+    const int32_t x0 = pl->x, z0 = pl->z;
+    const int se0 = g_test_core_se_count;
+    int takt[4] = { -1, -1, -1, -1 }, nt = 0, abzug_falsch = 0, flinch = 0, clip = 0, weg = 0;
+    for (int f = 0; f < 400; f++) {
+        int16_t vor = pl->hp;
+        bild();
+        if (pl->hp != vor) { if (nt < 4) takt[nt] = f; nt++; if (vor - pl->hp != 2) abzug_falsch++; }
+        if (re15_player_hit_flinch_active()) flinch++;
+        if (pl->motion == 8 || pl->motion == 9 || pl->motion == 0x0a) clip++;
+        int w = abs(pl->x - x0) + abs(pl->z - z0);
+        if (w > weg) weg = w;
+    }
+    CHECK(nt == 4 && abzug_falsch == 0 && takt[1] - takt[0] == 121 && takt[2] - takt[1] == 121 && takt[3] - takt[2] == 121,
+          "stehend: %d Takte zu -2 HP in Bild %d/%d/%d/%d = Periode 121 (Zaehler 0x78 + 1 @0x80031e78; vorher 143)",
+          nt, takt[0], takt[1], takt[2], takt[3]);
+    CHECK(flinch == 0 && clip == 0 && weg == 0 && g_test_core_se_count == se0,
+          "stehend: keine Treffer-Reaktion (Flinch-Bilder %d, Clip 8/9/0xa %d, Rueckstoss %d, SE CORE %d; vorher je Takt "
+          "22 Bilder Clip 8/9 + 500 Rueckstoss)", flinch, clip, weg, g_test_core_se_count - se0);
+
+    /* (b) Spieler ZIELT (R1 gehalten, Zielbereit), dann vergiftet: der erste Takt kommt sofort (Zaehler 0 @0x80031e74)
+     * und darf das Zielen nicht abbrechen (re15_player_aim_interrupt sitzt nur im Kommando-2-Arm). */
+    if (!raum("STAGE2/ROOM2060.RDT", 0x2060, RE15_AI_FLAVOR_RE15, 5975, 0, 1137, 3072, 1)) { s_fails++; return; }
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    re15_player_aim_reset();
+    {   uint16_t fcs[16];                                     /* Cliplaengen-Mock wie probe_r34_wurf (PLW nicht geladen) */
+        for (int i = 0; i < 16; i++) fcs[i] = 12;
+        re15_player_set_aim_clip_lens(fcs, 16); }
+    g_inv.slots[3].id = 9; g_inv.slots[3].qty = 5; g_inv.slots[3].flags = 0;
+    re15_player_set_equipped_weapon(9);
+    int bereit = -1;
+    for (int f = 0; f < 80 && bereit < 0; f++) {
+        const unsigned char *raw; int len, id;
+        re15_msg_tick(&raw, &len, &id);
+        s_ctx.pad_current = RE15_PAD_BIT_R1; s_ctx.pad_pressed = (f == 0) ? RE15_PAD_BIT_R1 : 0;
+        scd_vm_tick(); re15_game_step(&s_ctx); re15_esp_fx_tick(re15_esp_room_bank());
+        if (re15_player_aim_ready()) bereit = f;
+    }
+    pl->hp = 100; pl->status_flags = 2; pl->hit_react = 0;
+    re15_spinnen_r38_reset();
+    int takt_b = -1, nicht_bereit = 0, flinch_b = 0;
+    for (int f = 0; f < 60; f++) {
+        const unsigned char *raw; int len, id;
+        int16_t vor = pl->hp;
+        re15_msg_tick(&raw, &len, &id);
+        s_ctx.pad_current = RE15_PAD_BIT_R1; s_ctx.pad_pressed = 0;
+        scd_vm_tick(); re15_game_step(&s_ctx); re15_esp_fx_tick(re15_esp_room_bank());
+        if (takt_b < 0 && pl->hp == vor - 2) takt_b = f;
+        if (!re15_player_aim_ready()) nicht_bereit++;
+        if (re15_player_hit_flinch_active()) flinch_b++;
+    }
+    CHECK(bereit >= 0 && takt_b >= 0 && pl->hp == 98 && nicht_bereit == 0 && flinch_b == 0,
+          "zielend: Zielbereit nach %d Bildern, Gift-Takt in Bild %d (HP %d), danach %d Bilder NICHT zielbereit, %d Flinch-"
+          "Bilder (vorher: Zielabbruch im ersten Takt, unit_r34_wurf 119-121)", bereit, takt_b, pl->hp, nicht_bereit, flinch_b);
+    re15_player_aim_reset();
+}
+
 static void teil_b_wirkung(void)
 {
     printf("\n== B Gift-Wirkung (@0x80031e44-ecc) und Gegengift (@0x8004af8c)\n");
@@ -697,6 +772,7 @@ int main(int argc, char **argv)
     teil_b_wirkung();
     teil_b2();
     teil_b3();
+    teil_b4();
     teil_a2(RE15_AI_FLAVOR_RE15, "RE1.5");
     re15_actor_t *a2 = teil_a(RE15_AI_FLAVOR_RE2, "RE2");
     if (a2) teil_b(a2, 1, "RE2");

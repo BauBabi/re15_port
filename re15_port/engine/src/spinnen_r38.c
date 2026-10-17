@@ -422,19 +422,27 @@ int re15_spinnen_r38_routine_a(re15_esp_fx_t *f)
  *   80031e7c sb 0x78 ; andi v1,a0,0x4 ; beq ; Delay `ori v0,zero,0x8` ; sb 8   (0x78 bzw. 8)
  *   80031e98 lhu HP ; addiu -2 ; sh ; sll 16 ; bgez -> Ende            (HP - 2)
  *   80031ebc bne v1,zero -> Ende ; Delay `ori v0,zero,0x1` ; sh 1      (nie toedlich ohne Bit 0x4)
- * Periode also 121 Bilder (Zaehler 0x78 .. 0, dann wieder Abzug). */
-void re15_spinnen_r38_gift_tick(re15_actor_t *pl)
+ * Periode also 121 Bilder (Zaehler 0x78 .. 0, dann wieder Abzug).
+ * Im ganzen Bereich 0x80031e44-0x80031ec8 stehen NUR diese Stores (0x800acc27 @0x80031e70/80/94, HP @0x80031eac/ec8):
+ * kein `jal` (kein SE), kein Store auf das Kommandowort 0x800aca58 oder +0x93 — der Gift-Takt ist KEIN Treffer
+ * (eine Treffer-Reaktion schreibt im Original nur ein Kommando-2-Schreiber, z.B. `sb v0(=2),4(s1)` @0x80012ebc im
+ * Resolver FUN_80012d60). RE2 ebenso (@0x8003c12c-180: nur 0x800cfe12 und HP +0x156).
+ * Rueckgabe (Nachbesserung 1): der HP-Abzug dieses Takts (0 ohne Abzug), damit der Aufrufer ihn aus dem Port-Detektor
+ * "HP gefallen -> Treffer" (game_step_common.c s_prev_hp) herausnimmt. */
+int re15_spinnen_r38_gift_tick(re15_actor_t *pl)
 {
-    if (!pl) return;
+    if (!pl) return 0;
     uint16_t a0 = pl->status_flags;
-    if ((a0 & 7u) == 0) return;                               /* @0x80031e50-54 */
+    if ((a0 & 7u) == 0) return 0;                             /* @0x80031e50-54 */
     uint8_t v1 = s_gift_zaehler;
     s_gift_zaehler = (uint8_t)(v1 + 255u);                    /* @0x80031e68-70 */
-    if (v1 != 0) return;                                      /* @0x80031e74 */
+    if (v1 != 0) return 0;                                    /* @0x80031e74 */
     s_gift_zaehler = (a0 & 4u) ? 8u : 0x78u;                  /* @0x80031e78-94 */
+    const int16_t vor = pl->hp;
     int16_t hp = (int16_t)(pl->hp - 2);                       /* @0x80031e9c-ac */
     pl->hp = hp;
     if (hp < 0 && !(a0 & 4u)) pl->hp = 1;                     /* @0x80031eb4-c8 */
+    return (int)vor - (int)pl->hp;
 }
 
 /* ============================================================================================

@@ -40,8 +40,11 @@ void re15_spinnen_r38_spucken(re15_actor_t *e, int re2);
 int re15_spinnen_r38_routine_a(re15_esp_fx_t *f);
 
 /* Gift-Wirkung im Spieler-Kommando 1 (Handler 0x80031de8, @0x80031e44-ecc): alle 121 Bilder
- * HP -2, nie toedlich (ausser Status-Bit 0x4). Gerufen aus game_step_common.c (cmd-1-Prolog). */
-void re15_spinnen_r38_gift_tick(re15_actor_t *pl);
+ * HP -2, nie toedlich (ausser Status-Bit 0x4). Gerufen aus game_step_common.c (cmd-1-Prolog).
+ * Rueckgabe: HP-Abzug dieses Takts (0 = kein Abzug). Der Takt schreibt im Original NUR HP und
+ * Zaehler (kein Kommando-2-Schreiber, @0x80031e44-ec8) — der Aufrufer nimmt den Abzug aus dem
+ * Port-Treffer-Detektor heraus (Nachbesserung 1, Mangel 1). */
+int re15_spinnen_r38_gift_tick(re15_actor_t *pl);
 /* Neues Spiel / Testanfang: Gift-Zaehler (Spieler+0x1d3) auf 0. */
 void re15_spinnen_r38_reset(void);
 /* Messschiene/Test: aktueller Gift-Zaehler (Spieler+0x1d3 des Originals). */
