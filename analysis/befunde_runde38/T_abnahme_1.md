@@ -161,3 +161,51 @@ Bilder), vorher (v0.8.25, Abnahme 0) 27 058 Einheiten auf (-724,761) ausserhalb.
 Sprung von 607 Einheiten im Bild des Todes (Lage von (-26336,-7418) nach (-25936,-7875), beide im Gang; s. Beobachtung B2).
 Die generelle Regel (alle Greifer) ist von der Nachbesserung unberuehrt; ihre zehn Riegel-Faelle unit_r38_griff_* laufen
 gruen (beide Sitzungen).
+
+## 4. RE-Gate (selbst disassembliert, `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`, Binaerdatei je Zeile)
+
+| Adresse (Binaerdatei) | Instruktionen (selbst gelesen) | Behauptung NB1 | Befund |
+|---|---|---|---|
+| EXE 0x8001f314-0x8001f390 | `lbu v0,148(t0)` Clip; a2 == 0: `lbu v0,149(t0)` @0x8001f35c, sonst fc - (+0x95) - 1 (@0x8001f340-54); `sw a2,360(t0)` @0x8001f36c; `jal 0x8001f3bc` @0x8001f38c, `addu a3,t1,zero` (fc) @0x8001f390 | anim_set waehlt Bild +0x95 | stimmt; zusaetzlich belegt: a2 = Rueckwaerts-Argument |
+| EXE 0x8001f534 / 0x8001f574 / 0x8001f5a8-b4 / 0x8001f5d0 / 0x8001f5f0 | `jal 0x8001f664` (Keyframe); `jal 0x80068098` (RotMatrix, ohne/mit Ueberblendung); `lbu/addiu -1/sb 143` (+0x8F); `jal 0x80020510` | Pose VOR dem Hochzaehlen | stimmt |
+| EXE 0x8001f610-0x8001f63c | `lbu v0,149` / `addiu v0,v0,1` / `sb v0,149`; `sltu v0,v0,s4`; `ori v0,zero,0x1` @0x8001f638; `sb zero,149(v1)` @0x8001f63c | Hochzaehlen danach, Wrap 0, Rueckgabe 1 | stimmt |
+| STAGE4 0x80112B9C-0x80112BD8 | +0x94 = 0xF @0x80112BA8, +0x6 = 3 @0x80112BB8, +0x9C = 0x64 @0x80112BC8, +0x9E = 0x32 @0x80112BD8, kein +0x95 | Griff 1 P2 ohne +0x95 | stimmt |
+| STAGE4 0x80112D20-0x80112E14 | P5: SE 0 bei +0x95 == 0x18; P1: `jal 0x8001ad68` @0x80112D5C, anim_set (a2 = 0) @0x80112D78, `lbu v1,6 / addu / sb v1,6` @0x80112D8C-9C; P6 @0x80112DA0: +0x1DE = 0x3C, +0x5 = 3, +0x6 = 0, word0 &= ~0x1000, +0x93 &= 0xFE, `jr ra` @0x80112E10 ohne `jal` | Griff 1 P1/P5/P6 | stimmt |
+| STAGE4 0x801142C8-0x801142F4, 0x801143D8-0x80114488 | P2: +0x94 = 0x19, +0x6 = 3, +0x9C = 0x64, kein +0x95; P1 = P5: anim_set @0x801143EC, `+0x6 += fertig` @0x80114400-10; P6 @0x80114414: +0x1DE = 0x1E, +0x5 = 0xD, ..., `jr ra` @0x80114484 ohne `jal` | Griff 2 | stimmt |
+| STAGE5 0x801156FC-0x80115718 | `jal 0x8001f314`, `beq v0,zero`, `ori v0,zero,0x101` @0x80115708, `sw v0,4(v1)` @0x80115718 | STAGE5 = STAGE4 +0x180 | stimmt |
+| STAGE4 0x80112294-0x801123D8 (B[2]) | P0 @0x801122E0: +0x6 = 1, +0x94 = 2 @0x801122F0, +0x95 = 0 @0x80112300, +0x96 = 0 @0x80112310, +0x8F = 7 @0x80112320; P1 @0x80112324: SE 1 bei +0x95 == 0x14 (`jal 0x800453d0` @0x80112340); **`lbu a2,7(v0)` @0x8011235C** -> `jal 0x8001f314` @0x80112360 (a3 = 0x200); `lbu v1,6(a2)` / `addu` @0x80112374-7C, **`jal 0x80115bec` (a0 = a1 = 0) @0x80112380**, `sb v1,6(a2)` im Verzoegerungsslot @0x80112384; P2 @0x80112390: `lbu v0,7(a0)`, == 0 -> +0x5 = 3 @0x801123C4, +0x6 = 0 @0x801123D4, sonst +0x5/+0x6/+0x7 = 0 @0x801123A0-C0 | re15_r38_sm_bruellen | Phasen/Adressen stimmen; **zwei Elemente fehlen im Port und im Dossier: Rueckwaerts-Argument a2 = +0x7 und der Aufruf 0x80115bec** (Mangel M3) |
+| STAGE4 0x801123E8-0x80112540 (A[3], nicht Teil des Diffs) | Bruellen nur wenn `lhu v0,464(v1)` (+0x1D0) `andi 0x1` == 0 (`bne` @0x80112500) und +0x1D4 >= 0x1B59 (`sltiu`/`bne` @0x80112510-14); dann +0x5 = 2 @0x8011251C, +0x6 = 0 @0x8011252C, **+0x7 = 1** (`ori v0,zero,0x1` @0x80112538, `sb v0,7(v1)` @0x80112540) | — | Port-A[3] (enemy_ai_common.c re15_tyrant_ai_tick Fall 3: `else if (dist >= 7001) { sub_state_1 = 2; ... }`) hat weder die +0x1D0-Sperre noch +0x7 = 1 -> Beobachtung B1 |
+
+Weitere Pruefungen:
+- Rate-Woerter in den hinzugefuegten Zeilen (`deferred|tunable|interim|for now|faithful|plausib|TODO|FIXME|approx|geraten|vermutlich`):
+  keine. Einziger getenv im Spur-Diff: `R38_GRIFF_LOG` im Test (Logausgabe). NB1 fuehrt keine neue Zahl ein: fc-1 aus der
+  Bank (re15_birkin_fc), 0 = Wrap-Wert @0x8001f63c.
+- Erklaert der Fix den Befund? Ja: M1 = Port zeichnet nach dem Vorschub, am Clip-Ende stand Bild 0 (exe Abnahme 0: `af=0`
+  in F253/F320/F376); Original rechnet die Pose vor dem Hochzaehlen (oben) -> Wechselbild = fc-1; nachher an der exe
+  `af=34` und gezeichnet (0x1D, 34) in allen drei Raeumen (Abschnitt 2), die Pose des Riegels und der exe stimmen ueberein.
+- **Misst der Riegel? Gegenlauf mit Mutation (Scratch-Bau ausserhalb des Repos):** `git archive HEAD re15_port/{CMakeLists.txt,
+  cmake,engine,include,platform,tests,targets,tools}` nach `abn1t_mut/`, Asset-Pfad der Sonde auf den Spurbaum gestellt,
+  Configure mit den Optionen von local_build.sh und msys64-PATH vorn, `cmake --build build_mut --target test_r38_spiderman`
+  (155/155).
+  - Mutation 1 (`sm_anim_halten` ohne Halten): `test_r38_spiderman: 16 FAIL`, u. a. `FAIL: M1: Wechselbild zeigt Clip 0x1D
+    Bild 34 (...), gezeichnet Clip 0x1D Bild 0`, `FAIL: M1: Ueberblendung startet an der Austritts-Endpose (Abstand 2084 <= 21)`,
+    `FAIL: Bruellen B[2]: Fertig-Bild und P2-Bild zeigen Clip 2 Bild fc-1 ...`, `FAIL: M2 Griff 2: kein Ruecksprung auf Bild 0: 2`.
+  - Mutation 2 (Griff-P2 ohne `anim_frame = 0`): `test_r38_spiderman: 4 FAIL` (`M2 FEHLER: erstes Halte-Bild Clip 0xF Bild 15
+    (soll 1)`, `M2 FEHLER (Griff 2): erstes Halte-Bild Clip 0x19 Bild 5`).
+  Beide Zahlen = Angabe des Bau-Agenten. Der Riegel faengt M1 und M2.
+
+## 5. Vertrag
+- Pfade (`git diff master...HEAD --name-only`): engine/src/enemy_ai_common.c, engine/src/re15_damage.c, engine/src/spiderman_r38.c
+  (neu), include/re15_spiderman_r38.h (neu), platform/pc/main.c, tests/integration/test_r37_beretta.cmake,
+  tests/unit/probes/r38_spiderman.cmake (neu), tests/unit/test_r38_griff_alle.c / test_r38_spiderman.c (neu), analysis/befunde_runde38/T_*.
+  Kein release/, platform/android/, shared_assets/, keine Test-CMakeLists.txt.
+- Nachbesserung 1 (`git diff 1488abd8..HEAD --name-only`): nur spiderman_r38.c, re15_spiderman_r38.h, test_r38_spiderman.c,
+  Dossier/Bilder und in enemy_ai_common.c **ein** Haken (Fall 2 Bruellen, +3/-5 Zeilen, "Runde 38 Spur T"; enemy_ai_common.c ist
+  T zugeteilt, VERTRAG §1.4). re15_tyrant_ai_tick wird nur fuer Typ 0x2B gerufen (enemy_ai_common.c:14798-14801) — keine
+  Nebenwirkung auf andere Gegner.
+- Bank-9-Bits, Nachrichten-Ids, Items: keine belegt. re15_damage.c (Bauphase, 3 Zeilen) steht nicht in §1.4 — Hinweis fuer die
+  Integration mit R/S (wie Abnahme 0 B7); der Fall-2-Haken ist bei der Integration mit Spur B (gleiche Datei) zusammenzufuehren.
+- Riegel je Punkt: Punkt 1 unit_r38_spiderman (austritt + Wechselbild, Mutationsproben oben), Punkt 2 unit_r38_spiderman
+  (griff1/griff2) + zehn unit_r38_griff_*; beide Szenarien an der exe gemessen (Elza 4001, Leon 5040/5070).
+- Nebenwirkung geprueft: ROOM5110 (Typ 0x2B ohne Schacht, grid 0, Leon) — Bruellen wird mit P2-Bild beendet (s. B1); in
+  v0.8.25 (Gegenprobe, Messkopie `re15_pc_abn1t_v0825.exe` im Bau-Ordner des Spurbaums, nach dem Lauf entfernt) derselbe Ablauf.
