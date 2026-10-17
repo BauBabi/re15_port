@@ -146,6 +146,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_zopf_r38.h"     /* Runde 38 Spur D: Elzas Zopf (FUN_80024c30/FUN_80024e40) */
 #include "re15_objpoly_r38.h"  /* Runde 38 Spur W: Polygon-Schranken des Objektzeichners (Rolladen ROOM20A0) */
 #include "re15_objabe_r38.h"   /* Runde 38 Spur W: halbtransparente Raum-Objekte (Attribut-Bit 0x2, ABR, STP) */
+#include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen der Wasserzombies (Bank, Pose, Schatten) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -930,6 +931,7 @@ static void pc_enemy_hybrid_re15_models(uint8_t type, re15_enemy_bank_t *eb)
         s_an15_sit = s_an15;
         re15_re2z_set_re15_pose_bank(&s_sk15_sit, &s_an15_sit);
     }
+    re15_wasserzombie_bank_merken(type, &s_sk15, &s_an15);   /* Runde 38 Spur U: RE1.5-Aktionsbank je Typ (Clip 0x16 Hochziehen, wasserzombie_r38.c) */
     int slot = (eb->pc_tex_slot >= 0) ? eb->pc_tex_slot : 11 + (int)(eb - g_enemy);
     if (tim.width > 0 && tim.height > 0 && slot < 24) {
         re15_render_pc_upload_tim_slot(&tim, slot);    /* RE1.5-TIM ersetzt die RE2-Textur */
@@ -9853,6 +9855,7 @@ re_title:;
                      * / RE2 +0x1C2 @0x800268c8), nicht der Koerper. re15_hundeschatten.h */
                     if (npc->type == RE15_HUNDESCHATTEN_TYP) nsh_y = re15_hundeschatten_y(npc);
                     { int32_t ky; if (re15_npckante_schatten_y(npc, &ky)) nsh_y = ky; }   /* Runde 38 Spur M: +0x1ba @0x8011dd78 */
+                    re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
@@ -10047,6 +10050,11 @@ re_title:;
                         npc_remap = NULL;
                     }
                 }
+                {   /* Runde 38 Spur U: RE2-KI-Zombie im RE1.5-Hochziehen posiert die RE1.5-Aktionsbank SEINES Typs
+                     * (anim_set(+0x170,+0x174) @0x801032f8/@0x80103414; wie SITZ-IMPORT ohne Hybrid-Remap). */
+                    const re15_emd_skeleton_t *wz_sk = NULL; const re15_emd_animation_t *wz_an = NULL;
+                    if (re15_wasserzombie_bank(npc, &wz_sk, &wz_an)) {
+                        npc_skel = wz_sk; npc_anim = wz_an; av.clip_override = (int)npc->motion; npc_remap = NULL; } }
 
                 /* DIAG (RE15_ENEMY_DIAG=1): one line per actor on first render — proves the
                  * generic enemy uses its OWN model (mesh != Leon's def_mesh) vs a Leon fallback,

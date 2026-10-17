@@ -53,6 +53,7 @@
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Typ 0x2B Schacht-Austritt + Griffe mit Anker */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Angriff, solange die Szene den Spieler haelt */
 #include "re15_npckante_r38.h" /* Runde 38 Spur M: NPC-Kanten (Sonde FUN_8002d7d8, Subs 0x12/0x16/0x17/0x18) */
+#include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen an der u1=1-Kante (ANIMATE[0x0A] 0x8010325c) */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
@@ -3396,48 +3397,6 @@ static void re15_enemy_ai_live_contact_stagger(re15_actor_t *e)
     e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
 }
 
-/* EDGE-FALL (+0x5=0xa) — byte-true FUN_801033c8 (@0x8011f890[0xa]): the OTHER contact roll — the
- * zombie walks INTO the contact heading (clip 1 while slewing +0x10/tick to (+0x90&0xf0)<<4), then
- * TUMBLES OVER THE EDGE: clip 0x16, yaw snapped to the contact heading, +0x8c=0x474; at clip frame
- * 0x46 the fall lands (fall-vel +0xb0=0x474, HP -= 0x708=1800); clip done -> +0x82(floor) += 1,
- * Y -= 0x708 (the literal store `+0x38 += -0x708`; the port world IS the PSX frame — copy the
- * bytes, not an interpretation), +0x4 = 1 (idle re-init on the lower floor). THE BRIEFING-ROOM
- * PIT: a zombie chasing across the floor hole falls in. */
-static void re15_enemy_ai_live_edge_fall(re15_actor_t *e)
-{
-    switch (e->sub_state_2) {
-        case 0:
-            e->sub_state_2 = 1;
-            e->motion = 0x01; e->anim_frame = 0;
-            e->anim_frac = 7; e->anim_blend_rate = 0x200;
-            /* fallthrough into the [1] turn-to-contact */
-        case 1: {
-            int heading = ((int)(e->ai_contact & 0xf0) << 4) & 0x0fff;
-            if (re15_slew_to_angle(e, heading, 0x10) == 0)
-                e->sub_state_2 = 2;                 /* aligned -> the stumble */
-            return;
-        }
-        case 2:
-            e->sub_state_2 = 3;
-            e->motion = 0x16; e->anim_frame = 0;
-            e->anim_frac = 7; e->anim_blend_rate = 0x200;
-            e->speed_h = 0x474;                     /* +0x8c = 0x474 */
-            e->rot_y = (int16_t)((((int)(e->ai_contact & 0xf0) << 4)) & 0x0fff);  /* yaw snap */
-            /* fallthrough */
-        case 3:
-            /* frame 0x46 (@0x80103554): +0xb0 = 0x474 fall velocity + +0x1ba -= 0x708 = the GROUND-Y
-             * CACHE moves one band (cluster F0.1: +0x1ba is NOT hp — the original deals NO damage
-             * here; the port's y/floor update below covers the ground shift; +0xb0 vel deferred). */
-            if (re15_enemy_clip_done(e)) {          /* fall complete -> the floor below */
-                e->floor = (uint8_t)(e->floor + 1);
-                e->y -= 0x708;                      /* the literal +0x38 += -0x708 */
-                re15_ai_set_state_word(e, 0x0001);  /* +0x4 word = 1 -> state 1 / +0x5 = 0 idle */
-            }
-            return;
-        default: return;
-    }
-}
-
 /* PUSH-OFF / Wegstoß-Stagger (+0x5=0xb) — byte-true FUN_8010385c (@0x8011f890[0xb]; decide
  * @0x8011f840[0xb] = jr-ra stub). Entered via the 0xb01 state-word: the grab machine's DOMINO shove
  * ([5] writes 0xb01 into the contacted bystander +0x1ac) — the zombie is KNOCKED back: one-shot
@@ -4798,9 +4757,9 @@ int re15_enemy_ai_live_active(int slot)
                     /* CONTACT-STAGGER (@0x8011f890[9]=FUN_801031e4): bumped from ahead. */
                     re15_enemy_ai_live_contact_stagger(e);
                 else if (e->sub_state_1 == 0x0a)
-                    /* EDGE-FALL (@0x8011f890[0xa]=FUN_801033c8): tumbles over the contact edge
-                     * (the briefing-room pit) down one floor. */
-                    re15_enemy_ai_live_edge_fall(e);
+                    /* Runde 38 Spur U: HOCHZIEHEN an der u1=1-Kante (@0x8011f890[0xa]=FUN_801033c8 / STAGE2 0x8010325c):
+                     * +0x38 -= 1800 und +0x82 += 1 = ein Band HOCH, +0x1ba @0x801033f8, Vorschub @0x80103474 (wasserzombie_r38.c). */
+                    re15_wasserzombie_hochziehen(e);
                 else if (e->sub_state_1 == 2)
                     /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2]) — THE AWARE WALK,
                      * factored into re15_enemy_ai_live_engage_animate (pure code motion; the zombie
@@ -5546,6 +5505,8 @@ int re15_actor_clip_len_legacy(const re15_actor_t *a)
 int re15_actor_clip_len(const re15_actor_t *a)
 {
     if (!a) return 0;
+    { const re15_emd_animation_t *wz_an = NULL;   /* Runde 38 Spur U: RE2-KI-Hochziehen taktet auf der RE1.5-Aktionsbank (wasserzombie_r38.c) */
+      if (re15_wasserzombie_bank(a, NULL, &wz_an)) return wz_an->clips[a->motion].frame_count; }
     /* SITZ-IMPORT (10D0, s. Delegation oben): der Sitzer taktet auf der registrierten
      * RE1.5-Aktions-Bank (Clip 0x2A = 28f, 0x29 = 59f), nicht auf der RE2-Bank —
      * dieselbe Bank wie der Render-Override (platform main.c), sonst laufen Uhr und
