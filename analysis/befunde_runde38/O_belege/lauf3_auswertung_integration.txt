@@ -1,0 +1,51 @@
+== auswerten r38_montage_lauf/lauf_2c011746 ==
+  38 Zombie-Zeilen, 4 Schnitte gelesen
+  ok: exe: alle vier Montage-Schnitte gemessen (1130/0, 1040/1, 1030/7, 1030/12): 4
+  [exe] ROOM1130 Cut 0, 176 Bilder:
+    Aktor  1 Typ 16 Bit  40: Abstand zur Kamera  6821 ->  5480 ->  3961 ( -1341 /  -1519), Tiefe   6762 ->   3921, Bild 1..176, angehalten 0, Kriech 0/0, Warte 0, Ende (-1860,-11377)
+    Aktor  2 Typ 10 Bit  41: Abstand zur Kamera  5648 ->  3924 ->  1969 ( -1724 /  -1955), Tiefe   5648 ->   1898, Bild 1..176, angehalten 0, Kriech 0/0, Warte 0, Ende (-1364,-9134)
+    Aktor  3 Typ 10 Bit  42: Abstand zur Kamera  4565 ->  3336 ->  1734 ( -1229 /  -1602), Tiefe   4482 ->   1707, Bild 1..176, angehalten 0, Kriech 0/0, Warte 0, Ende (-2216,-9177)
+    Aktor  4 Typ 11 Bit  43: Abstand zur Kamera  3521 ->  1609 ->   438 ( -1912 /  -1171), Tiefe   3518 ->     -1, Bild 1..176, angehalten 142, Kriech 0/0, Warte 0, Ende (-1965,-7331)
+    Aktor  5 Typ 11 Bit  46: Abstand zur Kamera  4478 ->  2456 ->  1295 ( -2022 /  -1161), Tiefe   4451 ->    -18, Bild 1..176, angehalten 161, Kriech 0/0, Warte 0, Ende (-1145,-7081)
+  ok: ROOM1130 Cut 0: alle fuenf kommen der Kamera mindestens 1000 naeher (5 von 5, kleinste Annaeherung 2831)
+  ok: ROOM1130 Cut 0: ueber die Schnittdauer — in beiden Haelften je mindestens 400 naeher oder hinter der Kamera angehalten (5 von 5, kleinste Haelfte 1229)
+  ok: ROOM1130 Cut 0: Einzelstopp nur hinter der Kamera (vor der Kamera angehalten: 0)
+  ok: ROOM1130 Cut 0: Navigator-Ziel = Spielerlage fuer jeden Zombie in der Zone des Spielers (fremd in 0 Bildern)
+  ok: ROOM1130 Cut 0: Spieler-HP unveraendert (min 100)
+  [exe] ROOM1040 Cut 1, 405 Bilder:
+    Aktor  1 Typ 16 Bit  20: Abstand zur Kamera 12391 -> 10810 ->  7136 ( -1581 /  -3674), Tiefe  12390 ->   7135, Bild 1..405, angehalten 0, Kriech 0/0, Warte 173, Ende (-25369,-3612)
+    Aktor  2 Typ 16 Bit  21: Abstand zur Kamera 13004 -> 10531 ->  5663 ( -2473 /  -4868), Tiefe  12944 ->   5642, Bild 1..405, angehalten 0, Kriech 0/0, Warte 170, Ende (-25971,-5036)
+    Aktor  3 Typ 16 Bit  22: Abstand zur Kamera 13941 -> 11722 ->  8286 ( -2219 /  -3436), Tiefe  13919 ->   8259, Bild 1..405, angehalten 0, Kriech 0/0, Warte 226, Ende (-24447,-2607)
+    Aktor  4 Typ 16 Bit  23: Abstand zur Kamera 14897 -> 10932 ->  5395 ( -3965 /  -5537), Tiefe  14893 ->   5360, Bild 1..405, angehalten 0, Kriech 0/0, Warte 177, Ende (-24909,-5469)
+    Aktor  5 Typ 16 Bit  24: Abstand zur Kamera 15496 -> 11436 ->  7046 ( -4060 /  -4390), Tiefe  15393 ->   6990, Bild 1..405, angehalten 0, Kriech 0/0, Warte 203, Ende (-26171,-3647)
+  ok: ROOM1040 Cut 1 (Rolltor): alle fuenf kommen der Kamera mindestens 1000 naeher (5 von 5, kleinste 5255)
+  ROOM1040 Cut 1 (Rolltor, Vorbild): in beiden Haelften naeher oder hinter der Kamera angehalten: 5 von 5 (kleinste Haelfte 1581)
+  ok: ROOM1040 Cut 1: Spieler-HP unveraendert (min 100)
+  ok: exe Rolltor-Bilanz: 5 Zombies, 5 durchs Tor, Kappe 0, Spieler-HP min 100
+  [exe] ROOM1030 Cut 7, 207 Bilder:
+    Aktor  7 Typ 10 Bit  47: Abstand zur Kamera  8272 ->  6571 ->  4671 ( -1701 /  -1900), Tiefe   8223 ->   4660, Bild 1..207, angehalten 0, Kriech 0/0, Warte 0, Ende (-22203,-3283)
+    Aktor  8 Typ 10 Bit  48: Abstand zur Kamera  6235 ->  3917 ->  1476 ( -2318 /  -2441), Tiefe   6162 ->   1402, Bild 1..207, angehalten 0, Kriech 0/0, Warte 0, Ende (-25351,-2432)
+    Aktor  9 Typ 10 Bit  49: Abstand zur Kamera  4644 ->  3123 ->  1377 ( -1521 /  -1746), Tiefe   4625 ->   1335, Bild 1..207, angehalten 0, Kriech 0/0, Warte 0, Ende (-25592,-3197)
+    Aktor 10 Typ 11 Bit  75: Abstand zur Kamera  7222 ->  4723 ->  2371 ( -2499 /  -2352), Tiefe   7006 ->   2213, Bild 1..207, angehalten 0, Kriech 0/0, Warte 0, Ende (-24474,-2230)
+    Aktor 11 Typ 11 Bit  76: Abstand zur Kamera  5599 ->  3362 ->   562 ( -2237 /  -2800), Tiefe   5537 ->    547, Bild 1..207, angehalten 0, Kriech 0/0, Warte 0, Ende (-26314,-2819)
+  [exe] ROOM1030 Cut 12, 335 Bilder:
+    Aktor  1 Typ 16 Bit   0: Abstand zur Kamera 12906 -> 10084 ->  8400 ( -2822 /  -1684), Tiefe  12887 ->   8320, Bild 1..335, angehalten 0, Kriech 0/112, Warte 112, Ende (-8418,-22976)
+    Aktor  2 Typ 16 Bit   1: Abstand zur Kamera 11389 ->  8512 ->  5982 ( -2877 /  -2530), Tiefe  10988 ->   5616, Bild 1..335, angehalten 0, Kriech 0/47, Warte 47, Ende (-12253,-21246)
+    Aktor  3 Typ 16 Bit   2: Abstand zur Kamera 13727 -> 11172 ->  8691 ( -2555 /  -2481), Tiefe  13586 ->   8268, Bild 1..335, angehalten 0, Kriech 0/238, Warte 238, Ende (-12129,-23966)
+    Aktor  4 Typ 16 Bit   3: Abstand zur Kamera 14331 -> 10506 ->  9091 ( -3825 /  -1415), Tiefe  14079 ->   9063, Bild 1..335, angehalten 0, Kriech 0/111, Warte 111, Ende (-8643,-23811)
+    Aktor  5 Typ 16 Bit   4: Abstand zur Kamera 11303 ->  9156 ->  7105 ( -2147 /  -2051), Tiefe  11201 ->   7080, Bild 1..335, angehalten 0, Kriech 0/31, Warte 31, Ende (-9299,-21936)
+    Aktor  6 Typ 16 Bit   5: Abstand zur Kamera 14332 -> 11771 ->  9736 ( -2561 /  -2035), Tiefe  14317 ->   9732, Bild 1..335, angehalten 0, Kriech 0/234, Warte 234, Ende (-8891,-24576)
+    Aktor 12 Typ 16 Bit  77: Abstand zur Kamera  9827 ->  8326 ->  5404 ( -1501 /  -2922), Tiefe   9819 ->   5370, Bild 1..335, angehalten 0, Kriech 1/0, Warte 0, Ende (-9746,-20285)
+    Aktor 13 Typ 16 Bit  78: Abstand zur Kamera 10558 ->  8745 ->  5954 ( -1813 /  -2791), Tiefe  10415 ->   5815, Bild 1..335, angehalten 0, Kriech 1/0, Warte 0, Ende (-8981,-20532)
+    Aktor 14 Typ 16 Bit  79: Abstand zur Kamera  9560 ->  7648 ->  4925 ( -1912 /  -2723), Tiefe   9277 ->   4562, Bild 1..335, angehalten 0, Kriech 1/0, Warte 0, Ende (-12339,-20176)
+  ok: ROOM1030 Cut 7: alle fuenf Kopien kommen der Kamera mindestens 1000 naeher (5 von 5, kleinste 3267) und in beiden Haelften je mindestens 400 (5 von 5, kleinste Haelfte 1521)
+  ok: ROOM1030 Cut 7: die Zombies hinter dem Tor warten auf ihren Schnitt (Baustein 5): 9 gesehen, 9 ab dem ersten Bild angehalten, Raum-Records im Warte-Rechteck 0
+  ok: ROOM1030: Einzelstopp nur hinter der Kamera (vorn angehalten: Cut 7 0, Cut 12 0)
+  ok: ROOM1030 Cut 7: Navigator-Ziel = Spielerlage fuer jeden Zombie in der Zone des Spielers (fremd in 0 Bildern; der erste Runde-38-Parkplatz lag in keiner Zone -> veraltetes Ziel aus ROOM1040)
+  ok: ROOM1030: Kamera nur Cut 7 (207 Bilder) und Cut 12 (335 Bilder), keine andere (0 Bilder)
+  ok: ROOM1030 Cut 12: jeder Zombie, der aufrecht ins Warte-Rechteck kommt, bekommt das Kriech-Bit (sub06/sub07-Regel) (6 von 6)
+  ok: ROOM1030 Cut 12: alle 9 Zombies vor der Kamera kommen ihr mindestens 500 naeher (9, kleinste 4198) und in beiden Haelften je mindestens 400 (9, kleinste Haelfte 1415)
+  ok: ROOM1030: Spieler-HP unveraendert (min Cut 7 100, Cut 12 100)
+  ok: ROOM1030 Cut 12: der geparkte Spieler steht auf der Kameraachse (-12869,-11445) = Parkplatz (-12869,-11445)
+  ROOM1030 Cut 12: 5 von 9 unter dem Tor durch (Endlage z > -22771)
+auswerten: 0 Fehler

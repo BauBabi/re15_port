@@ -135,6 +135,21 @@
  *   1030 Cut 7 (Kamera (-26820,-3114,-2574) -> (-15858,-936,-5040)) und Cut 6 (Kamera
  *        (-11790,-3870,-15282) -> (-8640,-684,-26478)): Tuer-Rechteck Slot 2 @0x01CAA
  *        (-27500,-4700,1200,2100) -> (-27300,-3650): hinter beiden Kameras.
+ *        RUNDE 38 SPUR O: (-27300,-3650) lag IN der Gangwand SCA 5 (@0x01A4C x -27776..-26732, z -6392..-1208)
+ *        und wurde ab Bild 6 auf (-28244,-3650) ausgeschoben (gemessen) = 1153 hinter der Kamera Cut 7, 1362 seitlich.
+ *        Seit die Kopien dort auf die Kamera zugehen (re15_montage_r38.h), ist ihr Ziel der Spieler. Jetzt AUF der
+ *        Achse von Cut 7 (Achse (10962,-2466) / 11235,9 aus RID ROOM1030 @0x140: pos @0x144/@0x14C, target
+ *        @0x150/@0x158), in der MITTE des Teils der BLK-Zone 7 (@0x01C10: x -29340..-19550, z -6000..-1190), der
+ *        hinter der Wand SCA 5 liegt (Rueckseite x -27776): x = (-27776 + -29340) / 2 = -28558, z = -2574 + (28558 -
+ *        26820) * 2466 / 10962 = -2183 (1781 hinter der Kamera). Warum IN Zone 7: FUN_80039e7c steuert einen Zombie
+ *        nur dann auf die Spielerlage, wenn dessen Zone bekannt ist — gleiche Zone: `bne a0,a1` @0x80039fbc, Ziel =
+ *        Spielerlage @0x80039fd0/@0x80039fe0; sonst Pfadsuche FUN_8003a524 und UNBEDINGTE Kopie der geteilten Globals
+ *        0x800AFBB0/B2 @0x8003a040/@0x8003a058. GEMESSEN (Lauf x_kette, Dossier "Zwischenmessung"): der erste
+ *        Runde-38-Platz (-30708,-1699) lag ausserhalb jeder Zone (Zone 0xff, @0x8003a198) -> alle Zombies in 1030
+ *        steuerten auf die veraltete Spielerlage aus ROOM1040 (-24950,-14060) und liefen an die Suedwand SCA 4 statt auf
+ *        die Kamera zu. Am neuen Platz: keine SCA-Zelle (SCA 8 endet bei x -27992), Hinter-der-Wand = kein Zombie
+ *        erreicht den Spieler, Kamera bleibt Cut 7 (RVD 28 = cam 7 -> 8 beginnt erst bei x -26600). Riegel
+ *        unit_r38_montage_kameras rechnet den Platz aus RID-/BLK-/SCA-Bytes nach.
  *   11C0 Cut 13 (Kamera (-11300,-3788,-8584) -> (-1688,-832,-21500)): Tuer-Rechteck Slot 0 @0x01712
  *        (-27100,15900,4000,2700) -> (-25100,17250), Gierung 3067 = die der Tuer.
  *   1150 Rueckkehr: Couchplatz der ersten Szene (-20538,-25147) (Plc_dest @0x01136), Gierung 1500
@@ -143,8 +158,8 @@
 #define RE15_IT_PARK_1130_Z   (-2150)
 #define RE15_IT_PARK_1040_X   (-24950)
 #define RE15_IT_PARK_1040_Z   (-14900)
-#define RE15_IT_PARK_1030_X   (-27300)
-#define RE15_IT_PARK_1030_Z   (-3650)
+#define RE15_IT_PARK_1030_X   (-28558)   /* Runde 38 Spur O (BLK @0x01C10 / SCA @0x01A4C / RID @0x140); bis v0.8.25 (-27300) */
+#define RE15_IT_PARK_1030_Z   (-2183)    /* Runde 38 Spur O; bis v0.8.25 (-3650) */
 #define RE15_IT_PARK_11C0_X   (-25100)
 #define RE15_IT_PARK_11C0_Z   (17250)
 #define RE15_IT_PARK_11C0_YAW 3067
