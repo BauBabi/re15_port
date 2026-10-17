@@ -11,14 +11,22 @@ Nichts aus der Behauptung des Bau-Agenten wird ungeprueft uebernommen. Dieser Be
       (`git status --short` leer); exe md5 e81c5047f3c0da6642f2338f75c1a5aa (17:21, letzte Engine-Aenderung fb151062
       17:08); Test-exes enthalten die Nachbesserungs-Texte (`grep -c` je 1)
 - [x] Maengel 1/2 der Abnahme 0 (Alt-Riegel) gemessen + eigene Mutationsproben (MA1, MD2, MD3) + RE-Gate der neuen Belege
-- [ ] Gezielte Tests
-- [ ] Punkt 1 an der exe (echter Weg)
-- [ ] Punkt 2 an der exe
+- [x] 2. Sitzung (2026-10-17 ab 04:55, nach Sitzungslimit der 1.; deren 151er-Lauf brach bei 72/151 ab): Bau erneut
+      `configure` + `build` = LOCAL-BUILD-OK, "ninja: no work to do", exe md5 weiterhin e81c5047...; Maschine ruhig
+      (CPU 16 %, 0 fremde re15_pc, 0 ctest)
+- [ ] Gezielte Tests (151er-Regex des Bau-Agenten, seriell, laeuft)
+- [x] Punkt 1 an der exe (echter Weg: Tuer ROOM1021 -> ROOM1011, Roys Szene, Roy erneut untersuchen) — Laeufe a1/a2
+- [x] Punkt 2 an der exe (Hinweis-Schirm 2F -> B2 + normale Karte) — Laeufe a1/a2
 - [ ] RE-Gate (Stichproben selbst disassembliert)
 - [ ] Vertrag / Pfade / Nebenwirkungen
 - [ ] Gesamturteil
 
-Messwerkzeuge (Scratchpad `scratchpad/G1A/`, nicht im Baum): `dis.py` (eigener Aufruf von `dis_one` aus
+Messwerkzeuge 2. Sitzung (Scratchpad `scratchpad/G1B/`, nicht im Baum): `lauf.sh` (Karte ueber
+`probe_r36_elza_karte`, Messkopie `re15_pc_abn1g2_<name>.exe` neben der Bau-exe, eigener Arbeitsordner, Ende ueber
+RE15_EXIT_AT), `montage.py` (PPM -> PNG-Kacheln), `gruen.py` (gruene Pixel eines Framedumps + CLUT-Eintraege 9..14
+der Seiten-TIMs).
+
+Messwerkzeuge 1. Sitzung (Scratchpad `scratchpad/G1A/`, nicht im Baum): `dis.py` (eigener Aufruf von `dis_one` aus
 `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` fuer PSX.EXE, RE2-PSX.EXE und DEBUG.BIN mit Basis 0x800c0000),
 `mut/` (eigene Mutanten: mutierte Kopie EINER Engine-Datei, mit den Bau-Flags kompiliert und VOR `libre15_engine.a`
 an das vorhandene Test-Objekt gelinkt; das Bauverzeichnis bleibt unberuehrt).
@@ -89,3 +97,91 @@ Wertung: die alte Grenze (Gleichung + >= 850) war fuer eine Basisverschiebung be
   Debug-Itemwaehler — Zustand 1 laedt Datei 0xb (ITEMALL.PIX) nach 0x801a0000 (@0x8004a194-9c), Zustand 2 zeichnet Bild
   Id x 1200 (@0x8004a1bc-d8), Zustand 3 +-1/+-10 und Klemme auf 0x47. ITEMALL.PIX 86400 B = 72 x 1200, ITPS.ITP 884736
   B = 72 x 12288 -> 72 = 0x48 Items. BESTAETIGT.
+
+## Punkt 1 — Roys Tagebuch statt der Code-Nachricht (Elza, ROOM1011), 2. Sitzung, selbst gemessen
+
+Gemeinsame Umgebung (beide Laeufe): `RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_NOAUDIO=1 RE15_CONTINUE_TEST=1
+RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_MSG_LOG=1 RE15_STATE_LOG=state.log RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=60`, Spielstand ueber `probe_r36_elza_karte` (Elza = Figur 4 aus der Raumvariante xxx1),
+Bau-exe md5 e81c5047... als Messkopie.
+
+### Lauf a2 — der GANZE Nutzerweg: Tuer, Roys Szene, Roy "noch einmal anklicken"
+Karte `1021 -4000 -18000 0 3:0xC9` (Elza im Main Office vor der Tuer zu ROOM1011, Roys Dialog NOCH NICHT gesehen),
+`RE15_INPUT_SCRIPT=A0.1,W78,U0.45,W0.3,A0.1,W3,(R0.1,W1.2)x6,W0.5,A0.1,W2.5,A0.1,W12`, `RE15_FRAMEDUMP=100-3300/10:f_`,
+`RE15_EXIT_AT=3300`. debug.log:
+
+    [save] CONTINUE: resumed in room 1021 (hp=100)
+    [input-script] Tick 0 -> F60 Tasten 0x8000                          <- Viereck an der Tuer
+    [room] PC loaded room1011.rdt (210440 bytes)                         <- ueber die TUER
+    [msgtext] room=1011 id=1 "Elza: Hang in there! ..." ... id=16 "Roy: Please, you have to help him..." /
+      id=24 "Roy: groans" / id=17 "Elza: Roy, wake up! Please wake up!"  <- Roys Szene sub02 laeuft echt
+    [scd F2221] letterbox closed -> gameplay (player_mode=0)
+    [input-script] Tick 2366 -> F2426 Tasten 0x8000                      <- Roy noch einmal anklicken
+    [schluessel] ROOM1011: Roy -> sub07 (Zettel 0513) statt sub06 (Prison key)
+    [tagebuch] ROOM1011 msg 18 -> Roys Diary (Dokument 5, Bildsatz 30, erstes Mal: ablegen)
+    ... 6x RECHTS F2519..F2714, Viereck F2768 (EXIT), Viereck F2846 (Meldung) ...
+    [tagebuch] Leser zu: Bit (9,68)=1, Kartenkette nach dem Evt_end
+    [tagebuch] Evt_end erreicht: Kartenkette Eintrag 3 (ROOM10F1 Blatt 3 Rechteck 9) -> Folge 4 (ROOM1211 Blatt 1 Rechteck 3)
+    [hint] F2901 begin / F3019 Folge-Hinweis 3 -> 4 (Zeit) / F3138 Zeit um / F3138 schliessen (Abbruch)
+
+`grep -c "msgtext] room=1011 id=18"` = **0** (die Code-Nachricht erscheint nicht). Bilder (Montage
+`scratchpad/G1B/a2_e2e.png`): F2200 Szenenende, F2380/F2430 Elza vor dem liegenden Roy, F2480 Titelseite "ROYS DIARY"
+1/6, F2740 Seite 6/6 mit gruenem "0513" + EXIT, F2810 "The Roys Diary has been filed.", F2960 Hinweis 2F,
+F3040/F3100 Hinweis B2, F3160/F3290 zurueck im Raum.
+
+### Lauf a1 — Tuer mit Stand NACH dem Dialog, dann Lesen, zweites Untersuchen, Akten, Karte
+Karte `1021 -4000 -18000 0 4:0xF1 4:0xFA 3:0x74` (sub02 setzt diese drei Flags am Ende des Dialogs),
+`RE15_INPUT_SCRIPT=A0.1,W1,U2.5,R0.35,W0.5,A0.1,W5,(R0.1,W1.2)x6,W0.5,A0.1,W2.5,A0.1,W12,A0.1,W3,R0.1,W1.2,X0.1,W3,
+S0.1,W2.5,M0.1,W3,X0.1,W2,Q0.1,W3,U0.1,W2,D0.1,W1.5,D0.1,W3`, `RE15_FRAMEDUMP=150-2250/5:f_`, `RE15_EXIT_AT=2250`.
+debug.log (Auszug):
+
+    [room] PC loaded room1011.rdt (210440 bytes)                     <- Tuer (Viereck F60)
+    [input-script] Tick 134 -> F194 Tasten 0x8000                     <- Roy untersuchen
+    [tagebuch] ROOM1011 msg 18 -> Roys Diary (Dokument 5, Bildsatz 30, erstes Mal: ablegen)
+    [tagebuch] Leser zu: Bit (9,68)=1, Kartenkette nach dem Evt_end
+    [tagebuch] Evt_end erreicht: Kartenkette Eintrag 3 (...) -> Folge 4 (...)
+    [hint] F729 begin / F847 Folge-Hinweis 3 -> 4 (Zeit) / F965 Zeit um / F965 schliessen (Abbruch)
+    [input-script] Tick 977 -> F1037 Tasten 0x8000                    <- ZWEITES Untersuchen
+    [tagebuch] ROOM1011 msg 18 -> Roys Diary (Dokument 5, Bildsatz 30, schon abgelegt: nur lesen)
+    [tagebuch] Leser zu: Bit (9,68)=1, kein Hinweis (schon abgelegt)   <- KREUZ F1169 schliesst
+    START F1262 / R1 F1340 (FILE) / KREUZ F1433 / L1 F1496 (MAP) / HOCH F1589 / RUNTER F1652 / RUNTER F1700
+
+`grep -c msgtext debug.log` = **0**. Bilder (Montagen `scratchpad/G1B/a1_m1_anlauf.png`, `a1_p2p3.png`,
+`a1_p4p5.png`, `a1_p6end.png`, `a1_m3_filed_hint.png`, `a1_m4_zweit_files_karte.png`):
+- F150..F210 Elza vor dem liegenden Roy; F250..F300 Titelseite "ROYS DIARY" auf der Organizer-Illustration, 1/6,
+  gruener Weiter-Pfeil.
+- Seiten (je eingeschwungen, 2x vergroessert gelesen) gegen AUFTRAG.md Z. 39-59 Zeile fuer Zeile:
+  F380 2/6 "September 22nd / - / Umbrella... those bastards... / It was Umbrella who created / these freaks now
+  crawling all / over the station. / - / The S.T.A.R.S. members told us / what was going on in the / Arklay Mountains,
+  and what did / we do? ...We laughed them off." | F420 3/6 "Worse, we practically held the / door open for those
+  things by / letting every bitten survivor / inside... / How could we have been so / stupid..." | F460 4/6
+  "September 28th / - / Damn it, we're screwed. / Now someone has sabotaged / the Communications Room and / wrecked the
+  radio equipment. / And of course, the others / didn't have to look far for / someone to blame. They went / straight
+  for my friend John. / He's the only outsider here," | F500 5/6 "and he only got in because I / signed him in on a
+  visitor's / pass... / They didn't even hesitate. / They threw him into a holding / cell downstairs. / - / There's no
+  way in hell he did / this... / - / Anyway, they took the cell" | F535/F575 6/6 "key from me and locked it up / in the
+  Communications Room so / I can't let him out. All I've / got left is my keycard for the / outer door... and its code:
+  / 0513. / - / I just hope he's okay..." + EXIT.
+  Jeder Satz und jede Leerzeile des Nutzertexts vorhanden, Reihenfolge gleich, kein Wort zusaetzlich; Abweichungen nur
+  Form: Zeilenumbruch auf die Seitenbreite, Seitenwechsel (jedes Datum oben auf einer Seite), typografischer Apostroph
+  -> Apostroph der Schrift, Titel auf der Titelseite in Grossbuchstaben ("ROYS DIARY"; in der FILE-Liste und der
+  Meldung "Roys Diary" wie im Auftrag).
+- Gruen (`gruen.py`, eingeschwungene Ende-Stellung F560/F575/F590 und a2 F2740/F2750): je **87** gruene Pixel, Huelle
+  (36,114)-(67,121) = genau das "0513", sonst KEIN gruenes Pixel auf der Seite; Farben (0,184,40) x19, (0,160,32) x17,
+  (0,136,24) x26, (0,96,16) x12, (0,80,8) x13 = CLUT-Eintraege 9..14 `16e0 1280 0e20 09e0 0980 0540` von
+  FILE30_p05_page.TIM — **identisch** mit FILE28_p01 ("4312") und FILE29_p01 ("5632"), den vorhandenen
+  Code-Dokumenten ("wie alle Codes in den Dokumenten"). Der Punkt hinter 0513 und der uebrige Text sind weiss.
+- F610/F650 "The Roys Diary has been filed." (Name gruen wie bei jedem Dokument), F690 zurueck im Raum.
+- Zweites Untersuchen: F1050 Raum, F1100 Titelseite 1/6, F1160 Seite 2/6, KREUZ -> F1200 direkt zurueck im Raum:
+  keine "filed"-Meldung, kein Hinweis-Schirm.
+- Akten: F1300 Statusschirm, F1380/F1420 "Files" = genau EIN Eintrag "Roys Diary" (kein Doppel nach zwei
+  Untersuchungen).
+
+### Urteil Punkt 1: ERFUELLT
+Wortlaut je Teil: "in Elzas Szenario fuer Roy ein Tagebuch" (Elza-Lauf, Figur 4, Roys Diary) | "Hintergrund
+FILE16_title_paper" (Organizer-Illustration auf Titel- und Textseiten; Byte-Gleichheit FILE30_title_paper == FILE16
+prueft unit_r38_tagebuch_dokument, Abnahme 0 per md5) | "muss nicht unbedingt ein Welt Model haben, das taucht
+einfach auf, wenn man Roy, der am Boden liegt noch einmal anklickt im Room 1011" (a2: nach der Szene Roy anklicken ->
+Leser direkt, kein Weltmodell) | "statt der Code Message" (msg 18 0x im Log, bei jedem Untersuchen) | Header "Roys
+Diary" + Text woertlich (s. o.) | "Code ... gruen wie alle Codes in den Dokumenten" (87 Pixel, CLUT identisch mit
+FILE28/29).
