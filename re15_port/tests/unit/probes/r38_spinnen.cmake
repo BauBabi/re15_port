@@ -1,0 +1,36 @@
+# Runde 38 Spur R "spinnen" — Stage-2-Spinnen (Nutzerpunkte AUFTRAG.md Z. 68-70: Schacht/Luft, Gift, Minispinnen).
+#
+# Dossier: analysis/befunde_runde38/R_spinnen.md; Code: engine/src/spinnen_r38.c, include/re15_spinnen_r38.h,
+# Haken in enemy_ai_common.c, enemy_ai_re2_spider.c, re15_esp.c, game_step_common.c, platform/pc/main.c.
+#
+#   unit_r38_spinnen   Mechanik im echten Spielschritt (scd_vm_tick + re15_game_step + ESP-Tick) mit den echten
+#                      STAGE2-RDTs und EM025-Baenken: A Schacht ROOM2060 (RE1.5- und RE2-KI): Halten bis Cut 1,
+#                      neun Phasen @0x80114ec8 mit den Original-Bildabstaenden, Landung auf dem Boden; B Gift: Spucken
+#                      (Effekt 0x0d, 3 Stroeme), Treffer -10 HP + Gift-Bit, Wirkung -2 HP alle 121 Bilder, nie
+#                      toedlich, Gegengift; B2 Effekt 0x0d ohne Spinne trifft, vergiftet aber nicht (RE2 @0x80020118);
+#                      C Minispinnen (RE2-KI, ROOM2030): Boden des Elternteils, Bisse, GEZEICHNET auf der Lage (Babybank =
+#                      RE2-Paar 1, Binder @0x8001abb0/c0); D Zensus aller Stage-2-Spinnen (7 Raum-Lagen x 2 KI): am Boden
+#                      oder wartend im Schacht, keine schwebt. Gegenprobe ohne die Haken: 20 FAIL (R_belege/gegenprobe_test.txt).
+add_executable(test_r38_spinnen ${CMAKE_CURRENT_LIST_DIR}/../test_r38_spinnen.c)
+target_link_libraries(test_r38_spinnen PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r38_spinnen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r38_spinnen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+if(NOT WIN32)
+    target_link_libraries(test_r38_spinnen PRIVATE m)
+endif()
+add_test(NAME unit_r38_spinnen COMMAND test_r38_spinnen)
+set_tests_properties(unit_r38_spinnen PROPERTIES TIMEOUT 300)
+
+# integration_r38_spinnen_echtlauf   echte exe (Leon ROOM2030, Elza ROOM2031): Babys am Boden (SCA-Boden bu), Bisse,
+#                                    keine Adultspinne in der Luft, Gift-Bit; Auswerter `test_r38_spinnen pruef_log`.
+if(TARGET re15_pc)
+    add_test(NAME integration_r38_spinnen_echtlauf
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_TOOL=$<TARGET_FILE:test_r38_spinnen>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_spinnen_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_spinnen_echtlauf.cmake)
+    set_tests_properties(integration_r38_spinnen_echtlauf PROPERTIES TIMEOUT 900)
+endif()

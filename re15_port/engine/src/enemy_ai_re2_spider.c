@@ -89,6 +89,7 @@
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5-Blut-Stand-in) */
 #include "re15_aot.h"        /* re15_aot_water_at (== FUN_800527B4, Wasser-Pull) */
 #include "re15_math.h"      /* re15_squareroot0 (== SquareRoot0 0x8008D2F4) */
+#include "re15_spinnen_r38.h" /* Runde 38 Spur R: Spucken (Effekt 0x0d) + RE2-Spieler-Radius 450 */
 
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
 
@@ -765,7 +766,10 @@ static void re2s_m0_switch(re15_actor_t *e)
     case 0:                                                /* @0x80100FF0 */
         re2s_clip(e, 0x0003000bu);                         /* @0x80100FF0-000 */
         e->sub_state_2 = 1;                                /* @0x80101004-08 */
-        /* FUN_801058A4(self, +0x222+8, yaw+0x21A) @0x8010101C — OPEN (s.o.) */
+        /* FUN_801058A4(self, +0x222+8, yaw+0x21A) @0x8010101C = das SPUCKEN: `lui v0,0x1d00 /
+         * ori 0x1000` @0x801058f0-f4, `jal 0x8001bf10` @0x801059c4 (Effekt 0x1D sub 8 -> Op 32
+         * @0x800200b0 vergiftet). Runde 38 Spur R: Gift-Effekt der RE1.5-Raumdaten (spinnen_r38.c). */
+        re15_spinnen_r38_spucken(e, 1);
         /* fallthrough */
     case 1: {                                              /* @0x80101024 */
         int wrapped = re2s_advance(e, 1024);               /* @0x80101030 */
@@ -1814,6 +1818,13 @@ static int re2s_spawn_babies(re15_actor_t *e, uint16_t mode, unsigned count)
         c->re2z_f10e = (uint16_t)(e->re2s_water10c ? (mode | 1u) : mode);   /* @0x80105E0C */
         c->grid_id   = (uint8_t)(c->re2z_f10e & 0xffu);    /* Port-Spiegel des Spawn-Bytes */
         c->x = e->x; c->y = e->y; c->z = e->z;             /* @0x80105E18-30 */
+        /* Runde 38 Spur R: +0x1C2 (Port dog_floor_y) = Boden unter der Entity — RE2 setzt ihn fuer
+         * JEDE Entity je Bild (`jal 0x8004fba0` @0x8002686c, `sh v0,0x1c2(s0)` @0x80026874); der
+         * Spawner selbst schreibt ihn nicht. PORT-ZUORDNUNG: die Kinder stehen auf dem Boden des
+         * Elternteils (gleiche Lage @0x80105E18-30), also dessen +0x1C2 und Band. Vorher 0 -> die
+         * Babys fielen in ROOM2030 von y -5400 bis y 0 unter den Boden (Dossier 1.3). */
+        c->dog_floor_y = e->dog_floor_y;
+        c->floor       = e->floor;
         c->rot_y = (e->re2s_mode222 < 2u)                                   /* @0x80105E3C */
                  ? (int16_t)(re2s_rand() << 4)                              /* @0x80105E50-58 */
                  : (int16_t)(((uint32_t)e->re2s_q230 << 10) - 512u
@@ -2663,7 +2674,10 @@ static int re2sb_bite(re15_actor_t *e, re15_actor_t *pl)
 {
     /* Ziel+0x9A ist der Nahkampf-Radius des OPFERS; der Port fuehrt ihn nicht als eigenes Feld
      * -> es bleibt die reine +10-Reichweite. OPEN (deklariert, kein geschaetzter Radius). */
-    uint32_t reach = (uint32_t)RE2SPIDER_BABY_BITE_PAD;
+    /* Runde 38 Spur R: Ziel+0x9A = Radius des RE2-Spielers 450 (`addiu v1,zero,450` @0x8003bdc0 /
+     * `sh v1,154(s2)` @0x8003bdc4, RE2 PSX.EXE) -> dist < 460. Vorher nur +10 = nie in Reichweite
+     * (gemessen 0 Bisse, Dossier 1.3). */
+    uint32_t reach = (uint32_t)RE15_SPINNEN_R38_RE2_SPIELER_9A + (uint32_t)RE2SPIDER_BABY_BITE_PAD;
     if (!(e->ai_dist < reach)) return 0;                   /* @0x80100E40 */
     if (!((uint32_t)(pl->y - e->y) < 3000u)) return 0;     /* @0x80100E5C (unsigned!) */
     if (e->re2s_legn221 != 0u) return 0;                   /* +0x221 @0x80100E70 */
@@ -2974,6 +2988,9 @@ int re15_re2spider_baby_tick(int slot)
     }
 
     e->re2s_f106 = (uint8_t)((-e->y) / 1800);              /* @0x80100080-B0 */
+    re15_spinnen_r38_baby_schwanz(e, (int32_t)s_re2s_prev_x, (int32_t)s_re2s_prev_y,
+                                  (int32_t)s_re2s_prev_z);   /* Runde 38 Spur R:
+                                     * Wurzel-Schwanz @0x801000ac-c4 (Schub FUN_80035530 + Wandpass FUN_8003567C) */
     return 1;
 }
 

@@ -43,6 +43,7 @@
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
+#include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
@@ -11025,6 +11026,7 @@ static void re15_adult_spider_ai_tick(int slot)
     /* MIXED: typ-bezogen (0x25 != 0x20) -> Adult-Spinne bleibt dort auf RE1.5. */
     if (re15_ai_re2_for_type(e->type) && e->type == 0x25 && re15_re2spider_owns(e)) {
         if (!s_ai_paused) {
+            if (re15_spinnen_r38_lauer_re2(e)) return;   /* Runde 38 Spur R: Schacht grid 0x41 (spinnen_r38.c) */
             e->re2z_f10e = (uint16_t)e->grid_id;   /* +0x10E <- RE1.5-Spawn-Byte (MAPPING) */
             e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);
             re15_re2spider_tick(slot);
@@ -11051,6 +11053,7 @@ static void re15_adult_spider_ai_tick(int slot)
         if (e->grid_id == 0x40)      { e->state = 4; e->sub_state_1 = 0; }   /* +0x4=0x004 @0x80110cf0 */
         else if (e->grid_id == 0x41) { e->state = 4; e->sub_state_1 = 1; }   /* +0x4=0x104 @0x80110d14 */
         else                         { e->state = 1; e->sub_state_1 = 0; }
+        (void)re15_aspider_anim(e);   /* Runde 38 Spur R: anim_set `jal 0x8001f314` @0x80110d60 (Bild 0 -> 1) */
         break;
 
     case 1: {  /* ACTIVE brain 0x80110e50 — DUAL-TABLE driver. Head: LOS(+0x1d0 bit0)+dist(+0x1d4). Then
@@ -11205,7 +11208,8 @@ static void re15_adult_spider_ai_tick(int slot)
         case 7:   /* SPIT 0x801126d4 (venom, distinct from GRAB-A): clip 0xc + FX + SE(4) -> CREEP + lockout */
             if (e->sub_state_3 == 0) {                                                         /* phase 0 @0x80112720 */
                 re15_aspider_clip(e, 0x0c);                                                    /* clip 0xc @0x80112750 */
-                /* venom particle 0x80019700(0x0d002000,rot_y,bone+0x40,@0x80118ee8) @0x80112770 = OPEN (FX) */
+                re15_spinnen_r38_spucken(e, 0);   /* Runde 38 Spur R: 0x80019700(0x0d002000,+0x6a,*(+0x188)+0x40,
+                                                   * @0x80118ee8) `jal 0x80019700` @0x80112770 */
                 re15_audio_room_se(4);                                                         /* SE 0x800453d0(4) @0x80112778 */
                 e->sub_state_3 = 1;
             } else if (e->sub_state_3 == 1) {                                                  /* phase 1 @0x80112780 */
@@ -11256,6 +11260,8 @@ static void re15_adult_spider_ai_tick(int slot)
                * until the grid is changed EXTERNALLY (SCD trigger), then drop. Both handlers do NOTHING
                * while their spawn grid is unchanged. The 9-phase wall-DROP choreography (Y-descent/rot_x/
                * SCA floor) and the grid-0x40 CLIMB descent are subsystem-scale -> OPEN. */
+        if (e->sub_state_1 == 1) { re15_spinnen_r38_lauer(e); break; }   /* Runde 38 Spur R: 0x80114ec8,
+                                                               * 9 Phasen @0x8010027c (spinnen_r38.c) */
         if (e->motion != 0x10) re15_aspider_clip(e, 0x10);    /* cling pose clip 0x10 @0x80114f34 */
         if (e->sub_state_1 == 1) {                            /* grid-0x41 @0x80114ec8: phase 0 waits while grid==0x41 @0x80114f14 */
             if (e->grid_id != 0x41) {                         /* externally triggered -> land into APPROACH */
@@ -14348,6 +14354,8 @@ void re15_actor_prop_pushout(void)
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *ac = &g_actors[i];
         if (!ac->active) continue;                        /* @0x8002be2c Wort-0 & 1 */
+        if (ac->type == 0x25) { re15_spinnen_r38_objekt_pass(ac); continue; }   /* Runde 38 Spur R: Spinne
+                                                          * mit eigenem Kasten +0x78, FUN_8002cabc @0x8002be40 */
         if (ac->type < 0x40 || ac->type > 0x4d) continue; /* s. Begrenzung oben */
         int32_t ax = ac->x, az = ac->z;
         re15_collision_objects_actor(&ax, &az, ac->y);    /* jal 0x8002cabc, a2 = 0; Runde 36 Spur R: Aktor +0x38 fuer den Y-Test @0x8002cb84-cbc8 */
@@ -14660,6 +14668,13 @@ void re15_enemy_ai_run_all(int combat_active)
             {   /* Spinnen-Freeze 2026-09-10..11 ENTFERNT (Nutzer-Freigabe). */
                 int32_t asp_ox = e->x, asp_oz = e->z;
                 re15_adult_spider_ai_tick(s);
+                re15_enemy_selfpush_from_player(s, e);   /* Runde 38 Spur R: Spinnen-Root `jal 0x8002aec4`
+                                                          * @0x80110a6c (a0 = Spieler `addiu a0,s0,20`
+                                                          * @0x80110a70, a1 = Spinne); gemessen: Landung
+                                                          * (5975,3137) -> (5740,4332) neben dem Spieler.
+                                                          * RE2-Wurzel ebenso: `jal 0x80035530` @0x8010016c ->
+                                                          * FUN_80034d0c(Spieler, self) schreibt self x/z
+                                                          * (`sw v0,56(s1)` / `sw v1,64(s1)` @0x800350c8/cc) */
                 re15_enemy_body_push_tail(s, e);
                 re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
             }

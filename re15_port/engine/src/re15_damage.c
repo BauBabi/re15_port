@@ -75,12 +75,11 @@ const uint8_t re15_react_table[11] = {
 };
 
 /* Bleed/poison RNG. The PSX calls FUN_8001af20 twice (@80012e78/e80) — a stateless
- * hash (x + (x>>7)) & 0xff fed leftover register a0 (incidental, NON-reproducible by
- * construction — same documented stance as the idle-timer rand in player_common.c).
- * We preserve the EXACT hash and the EXACT 1/4 trigger probability (both draws odd)
- * by feeding a documented xorshift32 entropy source in place of the unreachable
- * register value. Cycle-identical reproduction is impossible; the OBSERVABLE
- * behaviour (a type<2 hit bleeds ~1/4 of the time) is faithful. */
+ * hash (x + (x>>7)) & 0xff fed leftover register a0.
+ * ⛔ WIDERLEGT (Runde 38 Spur R): a0 ist dort der Rueckgabestand von FUN_800453d0(10), KEIN Zufall — gemessen
+ * ROOM2060 0x0A in 13/13 Treffern -> beide Ergebnisse gerade -> Bit nie gesetzt. Die "1/4"-Annahme galt nie;
+ * die Port-Wahl steht in re15_player_take_damage unten. Der xorshift32-Strom bleibt als gemeinsame Port-Quelle
+ * fuer die KI-Ziehungen (re15_engine_rand8). */
 static uint32_t s_rng = 0x2545f491u;
 
 void re15_damage_seed_rng(uint32_t seed) { s_rng = seed ? seed : 1u; }
@@ -241,8 +240,17 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
         re15_audio_room_se(10);                /* hit SE #10 @0x80012e70 — plays before the bleed roll */
         uint32_t r1 = dmg_rng() & 1;
         uint32_t r2 = dmg_rng() & 1;           /* draw BOTH, unconditionally, before testing */
-        if (r1 && r2)
-            p->status_flags |= 0x2;            /* DAT_800acaec bit0x2 = bleed/poison */
+        /* Runde 38 Spur R (Dossier R_spinnen.md 1.4/2.7): KEIN Zufall. FUN_8001af20 ist ein zustandsloser Hash von
+         * a0 (`srl v1,a0,7 / andi 0xff / addu / andi 0xff` @0x8001af30-3c); a0 ist der Rueckgabestand von
+         * FUN_800453d0(10) (Delay-Slot `ori a0,zero,0xa` @0x80012e74): 10 auf dem Frueh-Ende und auf dem Pfad ohne
+         * Zusatzstimmen (`andi a0,s5,0xff` @0x80045508, s3 = 0 @0x80045554), sonst ein SPU-Tabellenzeiger. GEMESSEN
+         * ROOM2060 (DuckStation-GDB @0x80012e78): a0 = 0x0A in 13/13 Treffern -> gerade -> `mult` = 0 @0x80012e90 ->
+         * `ori v0,v0,0x2` @0x80012eac nie. PORT-WAHL nach NUTZER-VORGABE ("das Gift ist das einzige, das die
+         * Charaktere vergiften kann") + RE2 (Gift nur ueber Op 32, Spinnen-sub `andi 0x8` @0x80020118): dieser Pfad
+         * vergiftet nie; das Bit setzt allein der Klumpen einer Spinne (spinnen_r38.c Routine 25). Die zwei
+         * Port-Ziehungen bleiben (gemeinsamer Port-Strom, test_bleed_rng). Im Port laufen hier nur Routine 25 und
+         * die ruhende Ausfall-Attacke re15_enemy_attack (alle anderen Gegner ziehen HP direkt ab). */
+        (void)r1; (void)r2;
     }
 
     /* hurt state (@80012ebc-eec). */

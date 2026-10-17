@@ -434,6 +434,8 @@ void re15_player_cmd_zero(void)
                                            * setzt die Bank ohnehin neu */
     s_ev_reach = 0;
     s_prev_hp = -1;
+    { extern void re15_spinnen_r38_gift_cmd0(void);   /* Runde 38 Spur R: Gift-Zaehler 0x800acc27 := 0, */
+      re15_spinnen_r38_gift_cmd0(); }                 /* `sb zero,-13273(at)` @0x8003196c (cmd-0-Handler) */
     re15_player_aim_interrupt();
     re15_player_idle_reset();
     /* Derselbe Wort-Store `sw 1,0x800aca58` @0x8003192c nullt auch den Schiebe-Substate 8
@@ -1632,6 +1634,10 @@ void re15_game_step(const re15_game_ctx_t *c)
                     if (re15_autolook_scan(pl, 0xfa0))               /* @0x80031e20-24 */
                         pl->neck_flags = (uint8_t)(pl->neck_flags & 0xed);  /* @0x80031e3c-40 */
                 }
+                { extern int re15_spinnen_r38_gift_tick(re15_actor_t *);    /* Runde 38 Spur R: Gift- */
+                  int abzug = re15_spinnen_r38_gift_tick(pl);              /* Wirkung @0x80031e44-ecc schreibt NUR */
+                  if (abzug > 0 && pl->hp >= 0)                            /* HP + Zaehler, kein Kommando 2: nicht */
+                      s_prev_hp = (int16_t)(s_prev_hp - abzug); }          /* als Treffer werten (Nachbesserung 1) */
             }
         }
         /* AIM-Zustand ZUM DECIDE-ZEITPUNKT festhalten (= DAT_800aca59 == 7, BEVOR die Aim-FSM

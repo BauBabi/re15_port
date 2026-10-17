@@ -1,0 +1,18 @@
+Nachbesserung 1 / Mangel 3 (2026-10-17): Giftklumpen (Routine 25, ESP-Takt) waehrend eine Szene den Spieler haelt
+Stand: r38/spinnen + Merge Spur B 2af9d15f (e2afbd1f), unit_r38_spinnen Teil B5 (ROOM2060, Klumpen einer echten Spinne, g_scd.player_mode 2 bzw. 0)
+
+--- VORHER (Merge-Stand ohne Haken in routine25) ---
+== B5 Giftklumpen, waehrend eine Szene den Spieler haelt (player_mode 2, Spur B re15_szenenschutz_haelt)
+FAIL: Szene haelt: HP 88, status 0x0002, Gift-Treffer 1, +0x93 vom ESP-Takt veraendert 1 mal (kein Schaden, kein Gift; vorher 88 + Gift)
+ok    Gegenprobe frei (player_mode 0): HP 88 = 100 - 10 - 2, status 0x0002, Gift-Treffer 1
+
+
+--- NACHHER (re15_szenenschutz_haelt vor Gift-Tor und re15_resolve_attack) ---
+== B5 Giftklumpen, waehrend eine Szene den Spieler haelt (player_mode 2, Spur B re15_szenenschutz_haelt)
+ok    Szene haelt: HP 100, status 0x0000, Gift-Treffer 0, +0x93 vom ESP-Takt veraendert 0 mal (kein Schaden, kein Gift; vorher 88 + Gift)
+ok    Gegenprobe frei (player_mode 0): HP 88 = 100 - 10 - 2, status 0x0002, Gift-Treffer 1
+
+stderr:
+[szenenschutz] Giftklumpen abgefangen (Absender Slot 1, Spieler HP 100)
+[szenenschutz] Giftklumpen abgefangen (Absender Slot 1, Spieler HP 100)
+[szenenschutz] Giftklumpen abgefangen (Absender Slot 1, Spieler HP 100)

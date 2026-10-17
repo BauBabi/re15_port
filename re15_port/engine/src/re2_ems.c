@@ -14,6 +14,7 @@
 #include "re15_md1.h"
 #include "re15_skeleton.h"   /* re15_skel_compute_pose + g_anim_pose_actor (Wurzelhoehen-Messung) */
 #include "re15_bissarm_r37.h"   /* Runde 37 Spur J */
+#include "re15_spinnen_r38.h"   /* Runde 38 Spur R: Animationspaar der RE2-Babybank */
 
 #include "gen/re2_ems_toc.inc"   /* s_re2_cdemd0_toc[600] + s_re2_enemse_toc[292] */
 
@@ -178,6 +179,7 @@ int re2_ems_load_bank(const uint8_t *ems, size_t ems_size, int kind,
         return -1;
     int rc = re2_emd_parse_bank(emd, emd_len, eb);
     if (rc != 0) return rc;
+    re15_spinnen_r38_re2_bank(kind, eb);   /* Runde 38 Spur R: Baby 0x26 = Paar 1 (+0x17C/+0x108 @0x8001abb0/c0) */
     if (out_tim) {
         /* TIM = eigener TOC-Record (Binder-Index |2 @0x8001ab4c; EM010: type-9-TIM
          * 8bpp+CLUT @Sektor 52, 0x10420 B — byte-verifiziert). Optional: Parse-Fehler

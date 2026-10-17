@@ -1,0 +1,18 @@
+# Sonde sonde_adult_hybrid.c (Runde 38 Spur R): gezeichnete Unterkante (tiefster Vertex relativ zur Lage-Y, y nach unten) der RE2-Hybrid-Adultspinne (RE1.5-EM025-Mesh/Bind + RE2-Keyframes, wie main.c pc_enemy_hybrid_re15_models) je Clip
+hybrid rc 0 unmapped 0 bones 20 meshes 20 clips 16 rootfix 00007ff7787e7b80
+  clip  0 ( 16 Bilder): gezeichnete Unterkante 122 .. 122
+  clip  1 (  8 Bilder): gezeichnete Unterkante 56 .. 119
+  clip  2 ( 16 Bilder): gezeichnete Unterkante 56 .. 119
+  clip  3 ( 31 Bilder): gezeichnete Unterkante 56 .. 119
+  clip  4 ( 21 Bilder): gezeichnete Unterkante 55 .. 197
+  clip  5 (  6 Bilder): gezeichnete Unterkante 123 .. 166
+  clip  6 ( 10 Bilder): gezeichnete Unterkante 76 .. 166
+  clip  7 ( 17 Bilder): gezeichnete Unterkante 49 .. 180
+  clip  8 (  5 Bilder): gezeichnete Unterkante 102 .. 112
+  clip  9 ( 29 Bilder): gezeichnete Unterkante 98 .. 149
+  clip 10 ( 55 Bilder): gezeichnete Unterkante 55 .. 251
+  clip 11 ( 42 Bilder): gezeichnete Unterkante 89 .. 190
+  clip 12 (206 Bilder): gezeichnete Unterkante 7 .. 188
+  clip 13 ( 68 Bilder): gezeichnete Unterkante 109 .. 115
+  clip 14 ( 32 Bilder): gezeichnete Unterkante 19 .. 381
+  clip 15 ( 32 Bilder): gezeichnete Unterkante 56 .. 3692

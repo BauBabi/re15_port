@@ -122,3 +122,12 @@ dann die Szene ("Are you okay? What's happened?" ...). Der Riegel der Dachtuer b
 ("You've opened the lock." danach). Johns Weg aufs Dach danach: durch den Gang und die Dachtuer, ohne dass er im Bild
 verschwindet, wo man es sieht (Kamera/Schnitt so, dass der Abgang natuerlich wirkt). Gilt sinngemaess fuer alle Figuren
 dieser Runde.
+## Nachtrag Integration (2026-10-17 07:36, Orchestrator) — Spieler-Tor fuer neue Angriffswege (Spur B integriert)
+
+Spur B (szenenschutz) ist im Integrationsbaum. Solange eine Szene den Spieler haelt, sieht jeder freie Gegner
+(+0x4 == 1) den Spieler ueber die ORIGINAL-Tore als "nicht angreifbar": RE1.5 Spieler+0x93 Bit 0 (Port
+`pl->hit_react & 1`, Tor @0x8010e5c4) und RE2 PL+0x1D3 & 0x80 (Port `re15_player_is_grabbed()`, Tor @0x80104D84-90).
+Jeder NEUE Angriffsweg dieser Spur (Biss, Griff, Schlag, Spucke/Gift) liest vor dem Commit dasselbe Tor wie das
+Original (Adresse des Tor-Lesens im Original zitieren). Liest der Original-Weg KEIN Tor, im Dossier vermerken. Ein Weg
+ohne Tor wird in der Integration nur vom Sicherheitsnetz (HP-Rueckgabe) abgefangen — ein Status wie Vergiftung wuerde
+trotzdem gesetzt. Die Abnahme prueft diesen Punkt mit.
