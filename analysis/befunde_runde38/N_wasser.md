@@ -353,6 +353,32 @@ F77..F137 room=1261 (z -9775 .. -14275, hinter dem Fleck)  boden=0x1d zweig=troc
 `frame=0 ... F=98`, `frame=1 F=99`; Elza: F39/F39). Original ebenso: Spieler-Takt `jal 0x80031c44` @0x8001ce0c (Schritt +
 Spawn) vor dem ESP-Takt `jal 0x80019e20` @0x8001ce2c im selben Hauptschleifen-Durchlauf (B7); im GDB-Paketlauf folgt auf
 jedes SPAWN unmittelbar BAU c0 = 0 (`gdb_1260_paket.txt`).
+**Leon 20B0 / Elza 20B1 (neu gemessen, Lauf 3; die 20B0-Zeile der Raumliste hatte kein auffindbares Protokoll):** Sprung in
+den Raum, kein Eingabe-Skript — das Raum-Skript (Flut-Szene, "L TUNNEL FLOOD") laesst die Figur per Plc_dest auf Band 1 entlang
+z -6355 nach -x rennen (200/Bild, a0 = 0):
+```
+Leon 20B0:  F16 x 2380 boden 0x97 -> boden part 4 | F29 x -220 0x1d trocken | F39 x -2220 0x17 (ohne Bit) trocken edt 0x17 |
+            F51 x -4620 0x97 boden | F61 x -6620 0x97 boden | F73 -9020 / F83 -11020 / F95 -13420 / F105 -15420 trocken 0x1d
+Elza 20B1:  F16 x 2380 boden part 7 | F28 -20 trocken | F39 -2220 0x17 trocken | F50 -4420 boden part 4 | F61 -6620 boden part 7 |
+            F72.. trocken 0x1d   (Elzas Laufclip: Fuss 7/4 im Wechsel; Leons Laufclip: Bildwort[0]/[12] beide Bit 12 -> Part 4)
+```
+**Befund Skriptlauf (Lauf 3):** relativ zur Figur liegt der Port-Anker im Skriptlauf um genau einen Laufschritt neben dem
+Original-Wert: Leon F51 (Bild 34 = 12 im 22er-Zyklus, Blick 2047) rel (1003,-1075,195), Original Bild 12 an der Wand
+(`gdb_1260_lauf.txt`, Blick 0) rel (-804,-1075,-196) -> gedreht (804,-1075,196); F61 (Bild 0) rel (-321,-91,55) gegen (-520,-91,56).
+Differenz +199 in Laufrichtung = Laufschritt 200. Im Echtzeit-Gehen dagegen kein Versatz (Elza F84 bewegt / F114 an der Wand,
+beide Bild 8: rel (-542,-65,117)). Ursache: die Skript-Bewegung `re15_actor_step_all_walkers()` laeuft im PC-Hauptlauf VOR
+`re15_game_step` (main.c:5712 gegen :7663), der Zeichner danach (:8452) — der Bildanfang-Schnappschuss liegt dort schon einen
+Schritt vor dem gezeichneten Bild. Original: in ALLEN vier Executoren liegt der Schritt vor pos_advance (selbst disassembliert):
+```
+Echtzeit-Gehen 0x80032498: jal 0x80045630 @0x8003255c  vor  jal 0x800245d8 @0x800325ec
+Echtzeit-Lauf  0x80032778: jal 0x80045630 @0x80032868  vor  jal 0x800245d8 @0x8003295c
+Plc-Gehen      0x80030af0: jal 0x80045630 @0x80030c3c  vor  jal 0x800245d8 @0x80030c5c
+Plc-Lauf       0x80030d28: jal 0x80045630 @0x80030e90  vor  jal 0x800245d8 @0x80030eb0
+```
+und der Boden wird an x +0x34 / z +0x3c dieser Lage geprueft (@0x80045664/68) = die Lage des gezeichneten Vorbilds (GDB 1260:
+Anker relativ bewegt = stehend). Der Port prueft im Skriptlauf also den Boden einen Schritt zu weit vorn. Original-Gegenprobe
+der Flut-Szene: siehe unten (DuckStation 20B0).
+
 Hinweis zum Vergleichsstreifen `vergleich_original_leon_elza.png`: er belegt Form/Farbe/Verlauf, NICHT den Zeitpunkt. Der
 Original-Mitschnitt (Lauf 2, `ds1260_c`, Mitschnitt AN 37,0 s bis AUS 43,6 s) lief mit aktiven Haltepunkten @0x80045630 /
 @0x80045710 / @0x80045798 ("Stopps: 12"), die Emulation hielt also genau in den Schrittbildern an; die Zuordnung der
