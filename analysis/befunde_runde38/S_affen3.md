@@ -553,3 +553,39 @@ Freigabe" — das widerspricht o11 (gesperrt in Zustand 4.1) und wird auf das Or
   Clip-Bilder 15/14/13/13/13) — Takt 58/57/57/57 identisch, Clip-Bilder der Treffer identisch, Affen-Lage im Biss
   (-25326,2920) .. (-25424,2962) gegen o11 (-25323,2926) .. (-25417,2968). Der erste Treffer liegt 1 Bild spaeter, die
   Bisse 1 Bild frueher: der Anlauf B[4] wuerfelt +0x8c/+0x9e (Zufallsquelle, OFFEN 1).
+
+### Mangel 1 — Ursache (zusammengefasst)
+Drei fehlende Original-Stuecke, alle drei noetig fuer den Fall von der Decke:
+1. **Spawn-Wurzelaufruf** (PSX.EXE Sce_em_set FUN_800420a0: `andi v0,v1,0xdf` @0x8004256c, `jalr v0` @0x8004259c,
+   `or v0,v0,s4` / `sb v0,9(s0)` @0x80042604-08) war im Port nur fuer 0x30/0x36/0x27 verdrahtet. Fuer 0x29 lief der INIT
+   erst im ersten UNGESPERRTEN run_all-Bild, also nach Member_set(12,0x41) — mit +0x9 = 0x41 statt beim Spawn.
+2. **INIT-Zweig** @0x80110e80-eb8 (+0x9 == 0x40 -> Zustandswort 4, == 0x41 -> 0x104) fehlte -> der Port setzte Zustand 1
+   Sub 1 (Schlaf, +0x9 & 1) an der Pos_set-Lage y = -10000.
+3. **Zustand 4/5** 0x80115734 (Tabelle @0x8011eca4 [4] = [5], Unter-Tabelle @0x8011ee34) fehlte ganz -> nichts leitete
+   ACTIVE B[10] Phase 2 (den Fall c1a4(0,0,-70) bis +0x1ba) ein. B[10] selbst (b_decke_runter) war schon da.
+Der Fehler war vor der Spur stumm (Affe schlief auf y = -10000, 0 Treffer) und wurde mit dem Biss-Quadrat (prueft nur X/Z,
+FUN_8001bff8) sichtbar: Bisse aus 10000 Einheiten Hoehe (Abnahme M5).
+
+### Mangel 1 — Aenderung (Commit 6bd30a91, Code; Riegel 3bfe08ef + aad46e72)
+| Datei | Aenderung | Beleg |
+|---|---|---|
+| engine/src/enemy_ai_common.c `re15_enemy_spawn_root` | 0x29 in die Typ-Liste; ruft fuer 0x29 `re15_affen3_wurzel_rumpf` (statt re15_birkin_root) zwischen Sperrbit-Loeschen und -Zuruecksetzen | `andi` @0x8004256c, `jalr` @0x8004259c, `or`/`sb` @0x80042604-08; Original o11 F0 (st0 g41 = Halt im Spawn-Aufruf) -> F18 4.1.0.0 g61; o1 Klemme beim Spawn (z -6150 -> -6082) |
+| enemy_ai_common.c `re15_affen3_wurzel_rumpf` (neu, static) | Rumpf der Wurzel 0x80110b00 hinter den Toren: Zustand, aec4, b498/b544, Wandklemme — aus run_all (jedes Bild, hinter dem Tor +0x9 & 0x20 @0x80110b34-40) und aus dem Spawn-Aufruf; run_all-Zweig 0x29 ruft ihn (vorher dieselben vier Aufrufe inline) | `jalr` @0x80110b68, `jal 0x8002b498` @0x80110b78, `jal 0x8002aec4` @0x80110b88, `jal 0x8002b544` @0x80110b98, `jal 0x8003b0a4` @0x80110bb8 |
+| enemy_ai_common.c `re15_cockroach_ai_tick` | `case 4: case 5:` -> `re15_affen3_zustand4(e)` | Tabelle @0x8011eca4 [4] = [5] = 0x80115734 |
+| engine/src/affen3_r38.c `re15_affen3_init` | nach dem Grid-Block: `grid == 0x40` -> state 4 / Sub 0, `grid == 0x41` -> state 4 / Sub 1 (+0x6 = +0x7 = 0) | @0x80110e80-e94 (`sw v0,4(a0)` Wort 0x4), @0x80110ea4-eb8 (Wort 0x104) |
+| affen3_r38.c `re15_affen3_zustand4` (neu) | Unterzustand 0 (0x8011577c): Phase 0 Clip 0x1f / +0x95 0 / +0x8f 7 / +0x8c 0 / +0x9c 0, faellt in Phase 1 (anim_set, +0x6 += Ende), Phase 2: +0x9 &= 0xbf, ACTIVE Sub 2 Phase 1, Clip 3 ab Bild 0x1d. Unterzustand 1 (0x801158e8), EIN Bild: +0x93 \|= 1 \|= 2, +0x1e0 = 1, Luftkasten, +0x9 &= 0xbf, ACTIVE Sub 10 Phase 2, Clip 0xd Bild 0x13 -> anim_set -> Bild 0x14, +0x8f 0, +0x8c 0, +0x9c 0. Unterzustand 2/3 `jr ra` | 0x8011577c..0x801158e0 und 0x801158e8..0x80115a54 selbst disassembliert (alle Stores, s. RE-Belege); Luftkasten-Zeiger `*(0x8011ec48 + 4*+0x1e4)` = @0x8011ec44[1] = 0x8011ec20 {0,-1530,0,800,1530,800} (r 800) |
+| include/re15_affen3_r38.h | Deklaration re15_affen3_zustand4, Kopf-Kommentar Spawn-Aufruf | — |
+Neue Konstanten: keine Zahl ohne Adresse — 0x40/0x41/0x4/0x104 @0x80110e84/ea8/e90/eb4, Clip 0x1f @0x801157d4, 7 @0x801157f4,
+0x1d @0x801158b0, 3 @0x801158d0, 0xa @0x80115998, 2 @0x801159a8, 0xd @0x801159c8, 0x13 @0x801159d8, 0x14 @0x80115a34,
+0xbf @0x80115978 / @0x80115860.
+Pausen-Tor @0x80110b14-20 im Spawn-Aufruf: nicht nachgebildet (wie beim Gorilla 0x27). Geprueft: keines der Skripte mit
+`Sce_em_set` Typ 0x29 (3040/3041, 4000, 4040/4041, 4080/4081, 5000/5001, 5031, 50A0/50A1, 50B0, 5100/5101) setzt
+`Set(2,2,*)` (= RE15_PAUSE_AI 0x20000000); o11 F0 zeigt den INIT im Spawn-Aufruf.
+
+### Mangel 1 — Zensus erweitert (alle RDTs, scd_dump_room.py)
+Zusaetzlich zum Zensus oben: ROOM50B0 (Platz 1/2 0x61, Member_set(12, 0x41 @0x008E6 / 0x61 @0x00936 / 0x00 @0x00968 /
+0x41 @0x0097C)), ROOM5100/5101 (Platz 0/1 0x61; sub01 Pos_set y = -10000 + Member_set(12,0x41) @0x008F8/@0x0092E; sub00
+beim Wiederbetreten Pos_set y = 0 + Member_set(12,0x00) @0x0088C/@0x008CE), ROOM5031 (Platz 1 0x61; Zwischensequenz sub03:
+Member_set(12,0x41) @0x0119E, 20 Bilder spaeter Member_set(12,0x61) @0x011AC = wieder gesperrt). Weder `Sce_em_set` 0x29 mit
++0x9 = 0x40/0x60 noch `Member_set(12,0x40)` -> Unterzustand 0 (0x8011577c) wird im Auslieferungsstand nicht erreicht; jede
+Freigabe eines 0x61-Affen (auch mit 0x00) faehrt Unterzustand 1, weil der Spawn-INIT das Wort 0x104 schon gesetzt hat.
