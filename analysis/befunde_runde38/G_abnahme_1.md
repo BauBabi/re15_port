@@ -1,7 +1,7 @@
 # Runde 38 — Spur G "tagebuch": UNABHAENGIGE ABNAHME 1
 
-Pruefer: Abnahme 1 (2026-10-16/17). Baum `.claude/worktrees/r38_tagebuch`, Zweig `r38/tagebuch`, HEAD 70143c31,
-Basis e2cc7673. Massstab: AUFTRAG.md (Wortlaut), VERTRAG.md §1/§2, Maengel 1-3 der Abnahme 0 (`G_abnahme_0.md`).
+Pruefer: Abnahme 1 (2026-10-16/17). Baum `.claude/worktrees/r38_tagebuch`, Zweig `r38/tagebuch`, geprueft wird der
+Stand 70143c31 (danach nur Commits dieses Berichts), Basis e2cc7673. Massstab: AUFTRAG.md (Wortlaut), VERTRAG.md §1/§2, Maengel 1-3 der Abnahme 0 (`G_abnahme_0.md`).
 Nichts aus der Behauptung des Bau-Agenten wird ungeprueft uebernommen. Dieser Bericht wird FORTLAUFEND geschrieben.
 
 ## Stand
@@ -14,17 +14,19 @@ Nichts aus der Behauptung des Bau-Agenten wird ungeprueft uebernommen. Dieser Be
 - [x] 2. Sitzung (2026-10-17 ab 04:55, nach Sitzungslimit der 1.; deren 151er-Lauf brach bei 72/151 ab): Bau erneut
       `configure` + `build` = LOCAL-BUILD-OK, "ninja: no work to do", exe md5 weiterhin e81c5047...; Maschine ruhig
       (CPU 16 %, 0 fremde re15_pc, 0 ctest)
-- [ ] Gezielte Tests (151er-Regex des Bau-Agenten, seriell, laeuft)
+- [x] Gezielte Tests: G1 151er-Regex des Bau-Agenten seriell 151/151, G2 uebrige unit_/prop_ 519/519, G3 28/28
 - [x] Punkt 1 an der exe (echter Weg: Tuer ROOM1021 -> ROOM1011, Roys Szene, Roy erneut untersuchen) — Laeufe a1/a2
-- [x] Punkt 2 an der exe (Hinweis-Schirm 2F -> B2 + normale Karte) — Laeufe a1/a2
-- [ ] RE-Gate (Stichproben selbst disassembliert)
-- [ ] Vertrag / Pfade / Nebenwirkungen
-- [ ] Gesamturteil
+      (+ a3 vorzeitig geschlossen, a4 aus den Akten, v1 = v0.8.25 vorher)
+- [x] Punkt 2 an der exe (Hinweis-Schirm 2F -> B2 + normale Karte) — Laeufe a1/a2, Leon-Gegenlauf l1
+- [x] RE-Gate (Stichproben S1-S4 selbst gelesen/disassembliert)
+- [x] Vertrag / Pfade / Nebenwirkungen
+- [x] Gesamturteil: BESTANDEN (Abschnitt am Ende)
 
 Messwerkzeuge 2. Sitzung (Scratchpad `scratchpad/G1B/`, nicht im Baum): `lauf.sh` (Karte ueber
 `probe_r36_elza_karte`, Messkopie `re15_pc_abn1g2_<name>.exe` neben der Bau-exe, eigener Arbeitsordner, Ende ueber
 RE15_EXIT_AT), `montage.py` (PPM -> PNG-Kacheln), `gruen.py` (gruene Pixel eines Framedumps + CLUT-Eintraege 9..14
-der Seiten-TIMs).
+der Seiten-TIMs), `mitte.py` (Farbe eines Pixels je Bild, Kachel-Blinken), `tim2png.py` (TIM -> PNG), `dis.py` (wie
+1. Sitzung).
 
 Messwerkzeuge 1. Sitzung (Scratchpad `scratchpad/G1A/`, nicht im Baum): `dis.py` (eigener Aufruf von `dis_one` aus
 `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` fuer PSX.EXE, RE2-PSX.EXE und DEBUG.BIN mit Basis 0x800c0000),
@@ -211,8 +213,9 @@ Tuer), `RE15_INPUT_SCRIPT=A0.2,W5`, `RE15_FRAMEDUMP=100-3200/10:f_`, `RE15_EXIT_
 
 Bilder (`scratchpad/G1B/l1_leon_kette.png`): F2750..F2800 "POLICE STATION B1" Parkplatz-Kachel gefuellt/Umriss,
 F2860..F2900 "POLICE STATION 3F" ROOM1150-Kachel gefuellt/Umriss, F2990 zurueck im Raum. Elzas Kette hat GENAU diese
-Form (Schirm, Kachel-Blinken gefuellt/Umriss, Ton je Periode Se(2,0x2B), 3 Perioden ~118 Bilder je Ziel, Folge-Ziel,
-schliessen).
+Form (Schirm, Kachel-Blinken gefuellt/Umriss, Ton je Periode Se(2,0x2B), 3 Perioden je Ziel nach Wanduhr ~3,9 s —
+l1 112/110 Bilder, a1 118/118 —, Folge-Ziel, schliessen; l1-Log `F2743 ... rot +Ton Se(2,0x2B)` / `F2763 ... umriss`
+gleich a1 `F730 ... rot +Ton Se(2,0x2B)` / `F750 ... umriss`).
 
 ### Normale Karte danach (Lauf a1)
 START F1262 -> Statusschirm, L1 F1496 -> MAP "POLICE STATION 1F" (besuchte Raeume 1021/1011, Standort), HOCH F1589 ->
@@ -228,7 +231,7 @@ Comms blinkt weiter", "Prison Key genommen -> nur noch Prison", "John befreit ->
 Beide Raeume werden markiert (Hinweis-Schirm nacheinander + Blinken in der normalen Karte), nach dem Tagebuch, in
 Leons Form (Gegenlauf l1 mit derselben exe).
 
-## RE-Gate (2. Sitzung, drei weitere Stichproben selbst gelesen; Werkzeug `scratchpad/G1B/dis.py` = `dis_one` aus
+## RE-Gate (2. Sitzung, vier weitere Stichproben selbst gelesen; Werkzeug `scratchpad/G1B/dis.py` = `dis_one` aus
 `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`, Rohbytes aus `info/`)
 
 | # | Behauptung im Diff | Selbst gelesen | Ergebnis |
@@ -316,3 +319,102 @@ laufen; nachher (a1/a2) 0 x msgtext id 18, Leser, Evt_end, Kette. Ja.
   Satztext 183 Woerter, zurueckgelesen 183: WORTGLEICH", "PRUEFUNG FILE30: ALLE BESTANDEN"; alle 8 erzeugten
   FILE30-TIMs md5-GLEICH mit den installierten (p00/title abc21631..., p01 7847a21e..., p02 e6d71733..., p03
   255734bd..., p04 feb272c1..., p05 ebecd336..., paper a2510fd6...). Arbeitsbaum danach sauber.
+
+## Gezielte Tests (2. Sitzung; Bau = Quellstand 70143c31, "ninja: no work to do", exe md5 e81c5047...)
+
+Vorab geprueft: die Nachbesserung (6470b5a2..70143c31) aendert nur `G_tagebuch.md`, `tests/unit/probe_r26_inventar.c`
+und `tests/unit/test_re2doc_bildebene.c` — Spur-Logik, exe und Assets unveraendert (Behauptung des Bau-Agenten
+bestaetigt); `build/r38_g` (Abnahme 0 H3) existiert nicht mehr.
+
+### Lauf G1 — die 151er-Regex des Bau-Agenten (seriell)
+Menge selbst nachgezaehlt (`ctest -N` je Regex, `sort`/`comm`): die 151 = GENAU T1 (85) u T2 (59) u T4 (21) der
+Abnahme 0, nichts fehlt, nichts darueber hinaus. Alle Verbraucher der beruehrten APIs (Datei-Zensur `grep -l
+"re15_map_hint_anzahl|re15_files_doc_count|re15_map_hint_eintrag_fuer|re15_files_get|re15_menu_request_doc|
+re15_map_hint_request" tests/` -> probe_r26_inventar, probe/test_r30_irons_diary_*, test_r30_irons_tisch,
+test_r30_pfeil, test_r34n_e_dokumente, test_r35_cut10f0, test_r38_tagebuch, test_re2doc_bildebene) sind darin.
+`ctest --test-dir re15_port/build -R "<Regex woertlich aus G_tagebuch.md Z. 346>" --timeout 1200 --output-on-failure`
+(Log `scratchpad/G1B/ctest151.log`, 04:56:54-05:45:52):
+
+    100% tests passed, 0 tests failed out of 151
+    Total Test time (real) = 2937.32 sec
+
+Darin u. a.: unit_re2doc_bildebene 0.13 s, unit_r26_inventar, **integration_elza_vollstart Passed 100.10 sec** (beim
+Bau-Agenten unter Volllast rot, hier im ersten Durchgang gruen — passt zu seiner Erklaerung Wanduhr-Riegel),
+unit_r36_schluessel_zelle, unit_r38_tagebuch_dokument/_ablauf/_karte/_leon, integration_r38_tagebuch_lesen 45.87 s /
+_karte 20.80 s / _leon 23.16 s, integration_r36_story_leon 370.61 s / _elza 212.60 s, integration_r37_roy_szene1011
+94.59 s / _szene1021 59.22 s / _leon1170 86.66 s, integration_r35_cut10f0 239.56 s, integration_r30_irons_tisch_*
+(3), integration_r34n_e_dokumente_bild 121.26 s, integration_r36_kartenitems_bild 482.40 s, integration_r36_karte
+215.62 s, integration_r36_schluessel 82.44 s / _befreiung 73.25 s. Last: Start ruhig (CPU 16 %), ab ~05:20 liefen
+bis zu 14 fremde re15_pc-Messkopien anderer Spurbaeume parallel — kein Test rot.
+
+### Lauf G2 — Sweep aller uebrigen unit_/prop_-Tests
+`ctest ... -R "^(unit|prop)_" -E "unit_r35_android_bash_mutanten|<151er-Regex>" -j6 --timeout 600` (519 Tests):
+`100% tests passed, 0 tests failed out of 519` (187.59 s). Ausgenommen nur unit_r35_android_bash_mutanten (prueft
+release/apk_pruefen.sh mit eigenen Attrappen; der Diff beruehrt release/, tests/unit/r35_android/ und
+platform/android/ nicht; lastempfindlich, Abnahme 0 T3/T3b).
+
+### Lauf G3 — die 28 Tests ohne unit_/prop_/integration_-Praefix (probe_*, Riegel r19..r33, re15_tests)
+`ctest ... -E "^(unit|prop|integration)_"`: `100% tests passed, 0 tests failed out of 28` (5.89 s).
+
+### Spur-Riegel einzeln (direkt ausgefuehrt, Ausgabe gelesen)
+`test_r38_tagebuch.exe dokument|ablauf|karte|leon`: 21 / 18 / 14 / 2 Pruefungen, je 0 Fehler (ablauf-Protokoll:
+"erstes Mal: ablegen" -> "Leser zu ... Kartenkette nach dem Evt_end" -> Kette 3 -> 4 -> zweites Untersuchen "nur
+lesen", "kein Hinweis").
+
+Gefahren insgesamt 698 der 795 Tests; nicht gefahren: die 96 Integrationen ausserhalb der Spur-Regex (volle Suite =
+Orchestrator im Integrationsbaum) und unit_r35_android_bash_mutanten.
+
+## Gates
+
+| Gate | Ergebnis | Beleg |
+|---|---|---|
+| Punkt 1 (Roys Tagebuch statt Code-Nachricht, FILE16-Papier, Wortlaut, 0513 gruen) | ERFUELLT | a1/a2/a3/a4 + v1 (v0.8.25 vorher), Seiten Zeile fuer Zeile, 87 Gruen-Pixel = CLUT FILE28/29 = TEX.TIM Zeile 482 |
+| Punkt 2 (Karte: Communications Room + Prison Room, wie bei Leon) | ERFUELLT | a1/a2 Hinweis 2F -> B2, normale Karte blinkt (Pixel), Leon-Gegenlauf l1 gleiche Form |
+| Maengel 1-3 der Abnahme 0 | BEHOBEN | 1. Sitzung: eigene Mutanten MA1/MD2/MD3 (rot), Kontrollen MA0/MD0 (gruen), Belege DEBUG.BIN/PSX.EXE selbst disassembliert; 2. Sitzung: 151/151 |
+| RE-Gate | HAELT | S1-S4 (2. Sitzung) + die Belege der Nachbesserung (1. Sitzung); 0 Rate-Woerter, 0 getenv im Diff |
+| Vertrag / Pfade / Ressourcen | HAELT | Abschnitt Vertrag; keine TABU-Pfade, nur Bit 68, keine Kollision mit anderen r38-Baeumen |
+| Tests der Spur + Nebenwirkungen | GRUEN | G1 151/151, G2 519/519, G3 28/28 |
+
+## Maengel
+Keine.
+
+## Hinweise (nicht blockierend)
+
+- H-A (Rest von Abnahme 0 H1): das Dossier ist korrigiert, die CODE-Kommentare behaupten die Pose aber weiter:
+  `include/re15_tagebuch_r38.h` Z. 17 "@0x00E5C Plc_motion(1,11) (Elza beugt sich)" und Z. 23-24 "Elzas Beugen davor
+  und das Aufrichten danach bleiben die des Originals (sub07)", `engine/src/tagebuch_r38.c` Z. 12 "(Evt_next, Elza
+  richtet sich auf, ...)". Gemessen (a2): nach dem Untersuchen bleibt `mo=200` (Leerlauf-Marke, `[walk] F2430..F2850`),
+  KEINE `[knee]`-Zeile (platform/pc/main.c:7898 schreibt sie fuer Bewegung 10..12) — anders als in Roys Szene
+  sub02, in der die Spielfigur mit Bewegung 11 kniet (a2: 80 `[knee]`-Zeilen F158..F2206 mit `mo=11`). v0.8.25
+  (Lauf v1) zeigt nach dem Untersuchen dieselben Zeilen (`mo=200 af=15..29`, 0 `[knee]`), also Vorbestand, vom
+  Nutzer hier nicht verlangt, kein Mangel dieser Spur. Bei Gelegenheit die Kommentare auf "die
+  Opcodes des Originals (Plc_motion(1,11) @0x00E5C/@0x00E6A) laufen weiter" stellen; die Pose selbst waere ein eigener
+  Befund fuer den Orchestrator (so auch der Bau-Agent).
+- H-B: Die Hinweiskette schaltet nach Wanduhr (Form der Runde 35 K): a1 118 Bilder je Ziel, a4 (ruhigere Maschine)
+  101/103 Bilder — dieselbe Zeit (~3,9 s), unterschiedliche Bildzahl. Leons Kette (l1) verhaelt sich gleich. Kein
+  Mangel, nur fuer Bild-Riegel wichtig (integration_r38_tagebuch_lesen prueft deshalb ueber ein Fenster 480..1100).
+- H-C: Satzwerkzeug: die Glyphenbreite von "?" ist in `re2_doc_satz.py` (Vorbestand, nicht in diesem Diff) "in
+  ANALOGIE" 9 gesetzt (`zeichen_pruefung.txt`: "VORSCHUB NICHT BEOBACHTET"); im Satz folgt auf "?" ein Leerzeichen,
+  im Bild ist der Abstand unauffaellig ("we do? ...We laughed them off."). Hinweis, kein Mangel.
+- H-D (Integration): menu_common.c — Q- und G-Include an derselben Stelle (beide behalten); test_r36_kartenbits.c
+  k_port[] F (64/66/67) + G (68); map_hint_common.c Folge-Index 4 positionsabhaengig (unit_r38_tagebuch_karte
+  prueft `folge(k1) == k2`); neue Assets FILE30_* (8 Dateien) muessen ins Paket (Asset-Gate beim Release).
+
+## Gesamturteil Abnahme 1: BESTANDEN
+
+- Punkt 1 (Elza, ROOM1011: Roy, der am Boden liegt, noch einmal anklicken -> "Roys Diary" statt der Code-Nachricht,
+  Hintergrund FILE16_title_paper, Text woertlich mit Absaetzen, 0513 gruen wie alle Codes in den Dokumenten):
+  **erfuellt** — ueber den ganzen Nutzerweg gemessen (Tuer ROOM1021 -> ROOM1011, Roys Szene, Untersuchen), Vorher-
+  Gegenprobe mit v0.8.25, Wortlaut Seite fuer Seite, Gruen pixelgenau gleich den vorhandenen Code-Dokumenten.
+- Punkt 2 (danach auf der Karte Communications Room und Prison Room markieren, wie bei Leon): **erfuellt** —
+  Hinweis-Schirm 2F (ROOM10F1) -> B2 (ROOM1211, Johns Zelle) nach dem Tagebuch, Blinken in der normalen Karte, gleiche
+  Form wie Leons Kette im Communications Room (Gegenlauf mit derselben exe).
+- Maengel 1-3 der Abnahme 0: behoben (Alt-Riegel pruefen ihren Zweck jetzt genauer, eigene Mutanten rot, Kontrollen
+  gruen; 151er-Regex = T1 u T2 u T4, 151/151 gruen).
+- RE-Gate, Vertrag, Nebenwirkungen: halten (G1 151/151, G2 519/519, G3 28/28; Leon unveraendert; Akten, vorzeitiges
+  Schliessen, zweites Untersuchen, Speicherstand geprueft).
+- Offen bleiben nur die nicht blockierenden Hinweise H-A..H-D (Pose-Kommentar im Code, Wanduhr-Kette, "?"-Breite im
+  Vorbestand-Werkzeug, Integrationsstellen).
+
+Commits dieses Berichts: ddbd4ea9 (1. Sitzung), 462d8d68, 82086fca, 95909364, 6672167e (Zwischenstaende 2. Sitzung),
+dieser.
