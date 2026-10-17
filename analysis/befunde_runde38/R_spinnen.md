@@ -582,3 +582,45 @@ RE2 (Ziel Beta -> Retail) gleich: 0x8003c12c `lhu v0,-496(v0)` (0x800cfe10) / `b
 0x8003c158-64 `bne v1,zero` / `addiu v0,zero,30` / `sb` ; 0x8003c168-80 `lh v0,342(s0)` / `slti v0,v0,2` / `addiu v0,v1,-1` /
 `sh v0,342(s0)` (HP - 1, nicht unter 1) ; danach sofort der Zustands-Dispatch `lbu v0,4(s0)` / `lw v0,16432(at)` / `jalr`
 @0x8003c188-1a4 — ebenfalls kein Kommando-/Zustandsschreiber.
+
+**Aenderung** (a8d7fc05): `re15_spinnen_r38_gift_tick` gibt seinen HP-Abzug zurueck (0 ohne Abzug); der Haken im
+Kommando-1-Prolog (game_step_common.c, 4 Zeilen) zieht ihn von der Basislinie `s_prev_hp` ab — der Port-Detektor
+sieht im naechsten Bild nur noch FREMDE Abzuege. Nicht bei HP < 0 (nur mit Status-Bit 0x4 erreichbar, das im Port
+niemand setzt): dort bleibt der bestehende Todesweg des Detektors. Spucken/Biss bleiben echte Treffer (Kommando 2
+im Original ueber den Resolver @0x80012ebc).
+
+**Messung nachher** (exe, Aufbau der Abnahme p2b: `N1/lauf_nb1.sh n1_gift_2030 "1300#2030" RE15_DEBUG_JUMP=2030@250
+RE15_PLAYER_POS=6550,2000,3072,3 RE15_GIVE=35:1 RE15_STATE_LOG=state.log RE15_FRAMEDUMP=150-330/2:fd_`, Auswerter
+gift_takt_ana.py): 10 Gift-Takte, **0 mit Treffer-Reaktion** (mo bleibt der Ruhe-Clip 200/211/212/213, Verschiebung
+0..25 = Koerperschub der Spinne, vorher 500); Perioden **121** (F42 -> F163 -> F284 -> F405 -> F526), 165 bzw. 143 nur
+dort, wo Spucktreffer dazwischen liegen (je +22 Reaktionsbilder, im Original ebenso: der Takt laeuft nur im
+Kommando 1). Die 4 Spucktreffer (F19/F580/F639/F1041, HP -10) loesen weiter je 22 Bilder Clip 8 aus. Bild
+`R_belege/nb1_gift_takt_ruhig_F160-174.png` (Takt F163: Leon steht ruhig; vorher R0/belege/gift_tick_zuckt_F182-198.png
+Arme hoch, Taumeln).
+
+**Riegel**: unit_r38_spinnen **B4** (echter Spielschritt re15_game_step mit rdt_ok + ESP-Takt): (a) stehend 4 Takte in
+Bild 0/121/242/363, 0 Flinch-Bilder, 0 Bilder Clip 8/9/0xa, Rueckstoss 0, kein SE CORE; (b) zielend (R1 gehalten,
+zielbereit nach 11 Bildern): Takt in Bild 0, danach 0 Bilder nicht zielbereit. integration_r38_spinnen_echtlauf:
+pruef_log prueft je Gift-Takt ohne fremden Abzug (+-25 Bilder) keine Reaktion (neue Schienen-Felder `pmo`/`phf`
+hinter der PL-Klammer) und Perioden ohne Fremdtreffer = 121 — Endstand L/E: 6 Takte, 5 sauber, 0 Reaktionen, 3
+Perioden 121. **Gegenproben** (Haken ausgeschaltet, `if (0 && ...)`): B4 3 FAIL (Periode 141, 57 Flinch-Bilder,
+Rueckstoss 1500, 31 Bilder Zielabbruch; `R_belege/gegenprobe_nb1_gift.txt`), Echtlauf FAIL (3/3 Takte mit Reaktion,
+2 Perioden != 121; `R_belege/gegenprobe_nb1_echtlauf.txt`).
+
+### N1.M2 Mangel 2 — Regression unit_r34_wurf (FAIL 119/120/121)
+**Ursache** = Mangel 1: im Fall "HOCH vergiftet" stand der Port-Zaehler auf 0, der erste Takt im Halten loeste ueber den
+Detektor `re15_player_stagger_cmd2` -> `re15_player_aim_interrupt` aus -> keine Granate (Abzug -1, Spawn A+0).
+**Messung vorher**: Gegenprobe ohne Haken `FAIL 119: HOCH vergiftet: Hoehe 1, Abzug -1, Spawn A+0 (soll 1 / 0 / A+19)`,
+`FAIL 120` (xlat 0), `FAIL 121` (Zaehler 65535) — deckungsgleich mit der Abnahme. **Nachher**: `6d HOCH vergiftet :
+Hoehe 1 Wort 8002, Abzug 0, Spawn A+19 ... Zaehler 9`, `probe_r34_wurf: ALLE PRUEFUNGEN GRUEN`. unit_r34_wurf steht
+jetzt in der gezielten Auswahl (prueft den Gift-Status `pl->status_flags |= 0x0002`, probe_r34_wurf.c:916).
+
+### N1.H1 Abnahme-Hinweis 1 — Gift-Zaehler ueberlebte Raumwechsel/Laden (kein Mangel, mit Beleg behoben)
+**RE-Beleg**: ghidra1_V2 XREF[5] auf 0x800acc27: nur der Takt (@0x80031e60/70/80/94) und **`sb zero,-13273(at)`
+@0x8003196c** im cmd-0-Handler 0x800318f8 (= 0x80073f90[0], bedingungslos, zwischen `sb zero` +0x93 @0x80031964 und
+0x800acc0c @0x80031974; der Handler setzt danach Kommando 1 `sw v0(1),-13736(at)` @0x8003192c). Kommando 0 folgt auf
+`sb zero,0x800aca58` @0x8001cbdc (Raumwechsel und Inventar-Ende) und `sw zero` @0x80031518 (Spieler-Laden).
+**Aenderung** (dc7c0d92): `re15_spinnen_r38_gift_cmd0()` (Zaehler := 0) aus `re15_player_cmd_zero` (game_step_common.c,
+2 Zeilen; der Port-Ort fuer genau diese Stores, Aufrufer room_common.c:309, main.c:3852, menu_common.c:1480). Folge
+wie im Original: nach Raumwechsel, Laden oder Schliessen des Inventars kommt der erste Gift-Takt sofort.
+**Riegel**: B4 (c) Zaehler 84 -> 0, Takt im naechsten Bild (HP 92 -> 90, Zaehler 0x78).
