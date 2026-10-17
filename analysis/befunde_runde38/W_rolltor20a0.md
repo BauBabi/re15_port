@@ -255,6 +255,21 @@ Lauf (gezielt, keine volle Suite):
 -> `100% tests passed, 0 tests failed out of 3` (integration 214 s).
 Testgruppen der beruehrten Module: siehe §7b.
 
+### 7b. Testgruppen der beruehrten Module (Prop-Zeichenweg main.c, Kisten)
+
+Der Diff beruehrt die Prop-Schleife in `platform/pc/main.c` (jedes Raum-Objekt und jedes eingebackene Port-Modell)
+-> alle Riegel mit Bild-/Lade-Pruefung von Raum-Objekten plus die Kisten-Riegel (24 Tests, seriell, 3519 s):
+```
+ctest --test-dir re15_port/build -R "^(integration_(r30_irons_tisch_bild|r30_irons_tisch_licht|r30_sicherung_bild|r30_sicherung_laden|r34n_e_dokumente_bild|r36_kartenitems_bild|r32_tor_hell|r37_feuerloescher|r36_schluessel|r30_granate_laden|r30_irons_tisch_laden|r36_dachkiste|r37_kiste|r37_kiste2feld|r37_kistenregel|r38_rolltor20a0)|unit_r38_rolltor20a0|unit_r38_rolltor20a0_windung|unit_prop_texel_key_11f0|unit_r30_irons_tisch|unit_r36_kartenitems|unit_r37_feuerloescher_modell|unit_r30_sicherung_modell|unit_r36_objfall)$" --timeout 1200 --output-on-failure
+-> 96% tests passed, 1 tests failed out of 24
+```
+Alle 23 fremden Riegel gruen (u. a. integration_r30_irons_tisch_bild 38,6 s, r30_sicherung_bild 11,5 s,
+r34n_e_dokumente_bild 105 s, r36_kartenitems_bild 483 s, r37_feuerloescher 385 s, r36_schluessel 108 s,
+r36_dachkiste 1716 s, r37_kiste/kiste2feld/kistenregel 105/64/288 s). Der eine rote war `integration_r38_rolltor20a0`
+selbst, und zwar ein Artefakt: ich hatte waehrend des Laufs das Skript um die CONTINUE-Laeufe erweitert, die
+Registrierung aus dem alten Configure gab `RE15_KARTE_TOOL` noch nicht mit (`RE15_KARTE_TOOL fehlt/existiert nicht:
+''`, 0,05 s). Nach Configure + Build gesondert nachgefahren, Ergebnis unten (§7c).
+
 ## 8. Nebenwirkungen (Zensus) — wo der Port jetzt sonst noch anders (= wie das Original) zeichnet
 
 Der Fix gilt fuer alle RDT-Objekte (derselbe Original-Zeichner). Zensus `W_belege/zensus_objpoly.py` ->
