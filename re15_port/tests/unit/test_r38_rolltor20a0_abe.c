@@ -21,7 +21,7 @@
  *     weicht fuer alle B, F in 0..255 hoechstens 1 Stufe von der GPU-Formel (psx-spx) ab.
  *
  * Werkzeug-Modus fuer integration_r38_rolltor20a0_abe:
- *   test_r38_rolltor20a0_abe --fall <5060c4|20a0c2|4090c0> <framedump.ppm>
+ *   test_r38_rolltor20a0_abe --fall <5060c4|5060c3|20a0c2|4090c0> <framedump.ppm>
  *   -> Mittelwert RGB der Messflaeche gegen das ORIGINAL-Bild desselben Kamera-Schnitts (W_belege/orig_abe_*.png,
  *      DuckStation-Bildpuffer); exit 0 = innerhalb der Toleranz.
  */
@@ -214,6 +214,10 @@ static const fall_t k_fall[] = {
     /* ROOM4090 Cut 0, Boden mit Nebel (obj 0-2, ABR 3 = B + F/4). Original (140.5,139.4,147.9); v0.8.25 (56.5,55.7,55.1). */
     { "4090c0", 0, { 20, 160, 300, 236, 0, 0 }, { 140.5, 139.4, 147.9 }, 8.0,
       "W_belege/orig_abe_4090_cut0_buf0.png (Spieler (-21000,0,-24600), Cut 0)" },
+    /* ROOM5060 Cut 3, Licht-Bodenplatte obj 5 (Attribut 0x0006, ABR 1 = B + F). Original (125.4,46.2,44.0);
+     * v0.8.25 graue deckende Platte (45.9,45.1,43.9). */
+    { "5060c3", 0, { 95, 180, 135, 230, 0, 0 }, { 125.4, 46.2, 44.0 }, 6.0,
+      "W_belege/orig_abe_5060_cut3_buf0.png (Spieler (-23375,0,-23075), Cut 3)" },
 };
 
 static uint8_t *lies_ppm(const char *path, int *w, int *h)
