@@ -24,6 +24,8 @@
 #include "re15_esp_brocken.h"   /* re15_esp_fx_zeile_weiter = FUN_800174e4 */
 #include "re15_scd.h"            /* g_scd.props = Obj_model_set-Pool 0x800b3f98 (Teil 4) */
 #include "re15_ai_flavor.h"      /* re15_ai_re2_for_type / re15_re2spider_owns (Teil 4) */
+#include "re15_math.h"          /* re15_squareroot0 = FUN_8008d2f4 (Teil 3b) */
+#include "re15_enemy_ai.h"      /* RE15_AI_STATE_CORPSE (Teil 3b) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -456,21 +458,54 @@ void re15_spinnen_r38_re2_bank(int kind, re15_enemy_bank_t *eb)
 }
 
 /* ============================================================================================
- * Teil 3b — RE2-MINISPINNEN: der WURZEL-SCHWANZ (Wandpass) des Babys
+ * Teil 3b - RE2-MINISPINNEN: der WURZEL-SCHWANZ des Babys (Schub + Wandpass)
  * ============================================================================================
  * GEMESSEN (Fortsetzung 2026-10-17, echte exe, ROOM2030, RE15_SPINNEN_LOG mit der UNABHAENGIGEN
  * Bodengroesse bu = hoechste SCA-Bodenflaeche auf/unter der Figur): 9 von 9 Babys verlassen den Steg,
  * in 14485 von 20025 Baby-Bildern liegt ihre Lage-Y (-5400) UEBER dem Boden unter ihnen (0); sie
  * laufen durch Gelaender und Waende (Lagen bis (42446,-5400,50409), weit ausserhalb des Raums) und
- * schweben ueber der unteren Ebene. Der Port rief fuer das RE2-Baby KEINE Wandklemme (Zweig 0x26 in
- * re15_enemy_ai_run_all: "does NOT translate -> no wall-clamp", ein Satz fuer den RE1.5-Feuer-Emitter).
+ * schweben ueber der unteren Ebene. Der Port rief fuer das RE2-Baby weder Schub noch Wandklemme (Zweig
+ * 0x26 in re15_enemy_ai_run_all: "does NOT translate -> no wall-clamp" = der RE1.5-Feuer-Emitter).
  * ORIGINAL (RE2 EMS26.BIN, Wurzel @0x8010001C, selbst disassembliert):
  *   80100094  lw   a0,0(s0)             ; word0
  *   801000ac  beq  a0,zero,0x801000c8   ; geloescht -> fertig
- *   801000b4  jal  0x80035530           ; Schub aus allen anderen Entities (a0 = self)
- *   801000c0  jal  0x8003567c           ; Wandpass
+ *   801000b4  jal  0x80035530           ; SCHUB aus allen anderen Entities (a0 = self)
+ *   801000c0  jal  0x8003567c           ; WANDPASS
  *   801000c4  addiu a1,zero,1024        ; Maske 0x400
- * FUN_8003567C (RE2 PSX.EXE): `sw zero,272(s0)` @0x8003569c (+0x110 = 0); word0 & 8 -> fertig
+ *
+ * SCHUB FUN_80035530 (RE2 PSX.EXE): FUN_80035408(self, self+56) (Kugeln aus der Lage), +0xD = 255, dann je
+ *   Eintrag der Entity-Liste ab 0x800cfe14 (`addiu s0,s0,-492` @0x80035560) ausser self (`beq s1,a0`
+ *   @0x80035574) mit word0 & 1 (@0x8003557c-88): `jal 0x80034d0c` (a0 = andere, a1 = self) @0x80035590.
+ * FUN_80034d0c(A, B) verschiebt B (self) aus der Kugel von A (je EINE Kugel: +0x1E8 = 1 am Spieler
+ *   `sw v0,488(s2)` @0x8003bddc und am Baby @0x80100164):
+ *   80034d48-50  (A.w0 | B.w0) & 2 -> nichts;  80034d58-60  (A.w0 & B.w0) & 0x1000 -> nichts
+ *   80034d68-6c  B.w0 & 4 -> nichts
+ *   80034de8     R = A.r (+0x9A) + B.r;  dx = B.x - A.x (@0x80034dec), dz analog (@0x80034e10)
+ *   80034df4-fc / 80034e14-1c  `sltu (2R),(d+R)` -> zu weit
+ *   80034e38     dist = SquareRoot0(dx*dx + dz*dz) (`jal 0x8008d2f4`); pen = R - dist (@0x80034e44), <= 0 -> nichts
+ *   80034e50-78  dy = (B.y + B.ofs) - (A.y + A.ofs) (ofs = +0x98), hs = A.h + B.h (h = +0x9E): -hs < dy < hs
+ *   80034e7c-f00 a3 = dx*pen / (dist+1), a2 = dz*pen / (dist+1)
+ *   80034ec4-f10 Vor-Bild-Hoehe (B+0x46 + ofs) ausserhalb -hs..hs -> Kreuzungsausstoss je Achse
+ *                (@0x80034f18-fac / @0x80034fb0-35044): A zwischen Vor- und Jetzt-Lage ->
+ *                a = (+-2*A.r) - (-(d*pen)/(dist+1))
+ *   80035048-a8  A.w0 & 0x100000 -> Kappe +-100 (kein Port-Bit: alle Port-Figuren 0)
+ *   800350b8-cc  `sw v0,56(s1)` / `sw v1,64(s1)`: B.x += a3, B.z += a2
+ * Kugeln (Radius +0x9A, Versatz +0x98, Halbhoehe +0x9E), alle selbst gelesen:
+ *   Spieler 450 / -1530 / 1530: `addiu v1,zero,450 / sh v1,154(s2)` @0x8003bdc0-c4, `addiu v0,zero,-1530 /
+ *     sh v0,152(s2)` @0x8003bde0-e4, `addiu v0,zero,1530 / sh v0,158(s2)` @0x8003bde8-ec
+ *   Baby 10 / -10 / 10: `addiu v0,zero,-10 / sh v0,152(s0)` @0x80100168-6c, `addiu v0,zero,10 / sh v0,154(s0)
+ *     / sh v0,158(s0)` @0x80100170-78
+ *   Adult (RE2-Gehirn) 1000 / +0x98 / +0x9E: alle drei Adult-Tabellen @0x801063A0/@0x801063C0/@0x801063E0
+ *     tragen +0x9A = 1000; +0x98/+0x9E fuehrt der Port (re2_hit_b98/re2_hit_h9e)
+ * word0 & 2: Adult im Tod `ori v0,v0,0x42` @0x80103df4 / @0x801044a0 (Port: Zustand 3 DEATH / 7 CORPSE);
+ *   Baby im Fall `ori v1,v1,0x2` @0x8010078c, geloescht bei der Landung `addiu v1,zero,-3 / and` @0x801007dc-ec
+ *   (Port: Zustand 1 Unterzustand 2 = FALL).
+ * PORT-ZUORDNUNG: die Entity-Liste = g_actors (Spieler-Platz zuerst, dann die Plaetze); andere Figurentypen
+ *   (keine RE2-Kugel im Port) mit ihrem RE1.5-Kasten (hit_radius_min / hit_offset_y / hit_height), wenn sie einen
+ *   tragen und keine Leiche sind - dieselbe Zuordnung wie re15_enemy_body_push_tail; der tote Spieler (hp < 0)
+ *   schiebt nicht (wie re15_body_push_player).
+ *
+ * WANDPASS FUN_8003567C (RE2 PSX.EXE): `sw zero,272(s0)` @0x8003569c (+0x110 = 0); word0 & 8 -> fertig
  *   (`andi v0,v1,0x8 / bne` @0x80035694-98); +0x1E4 != 0 -> fertig (@0x800356a0-a8); sonst
  *   FUN_8004c1bc(self+0x84, `lhu a1,144(s0)` = +0x90, `sllv a2,1,+0x106` = Bandbit, 0x400|0x01000000)
  *   `jal 0x8004c1bc` @0x800356d0 -> +0x110. Radius +0x90 = 10: Baby-INIT `addiu v0,zero,10`
@@ -479,9 +514,80 @@ void re15_spinnen_r38_re2_bank(int kind, re15_enemy_bank_t *eb)
  *   FUN_8004c1bc liest RE2-SCA-Daten, die der Port nicht hat; die Klemme laeuft auf den RE1.5-Raumdaten
  *   ueber re15_collision_constrain_enemy (Band aus Y, Solid-Maske 4 = RE2 0x400). +0x1E4 hat am Baby
  *   keinen Schreiber im Port (memset beim Allokieren) -> 0. */
-void re15_spinnen_r38_baby_schwanz(re15_actor_t *e, int32_t ox, int32_t oz)
+typedef struct { int32_t r, ofs, h; } r38_kugel_t;
+
+static const r38_kugel_t k_kugel_spieler = { 450, -1530, 1530 };   /* @0x8003bdc0-ec */
+static const r38_kugel_t k_kugel_baby    = {  10,   -10,   10 };   /* @0x80100168-78 */
+#define R38_ADULT_KUGEL_R 1000                                       /* +0x9A @0x801063A0/C0/E0 */
+
+/* Kugel und word0 & 2 der anderen Figur A (s.o.). Rueckgabe 0 = A schiebt nicht. */
+static int kugel_von(const re15_actor_t *A, int slot, r38_kugel_t *k)
+{
+    if (slot == RE15_ACTOR_SLOT_PLAYER) { *k = k_kugel_spieler; return 1; }
+    if (A->type == 0x26 && re15_re2spider_baby_owns(A)) {
+        if (A->state == 1 && A->sub_state_1 == 2) return 0;          /* FALL: word0 |= 2 @0x8010078c */
+        *k = k_kugel_baby; return 1;
+    }
+    if (A->type == 0x25 && re15_ai_re2_for_type(A->type) && re15_re2spider_owns(A)) {
+        if (A->state == 3 || A->state == 7) return 0;                /* word0 |= 0x42 @0x80103df4/@0x801044a0 */
+        k->r = R38_ADULT_KUGEL_R; k->ofs = A->re2_hit_b98; k->h = A->re2_hit_h9e; return 1;
+    }
+    if (A->hit_radius_min == 0 || A->state == (uint8_t)RE15_AI_STATE_CORPSE) return 0;   /* PORT-ZUORDNUNG */
+    k->r = (int32_t)A->hit_radius_min; k->ofs = A->hit_offset_y; k->h = (int32_t)A->hit_height;
+    return 1;
+}
+
+/* Kreuzungsausstoss einer Achse (@0x80034f18-fac fuer x, @0x80034fb0-35044 fuer z). */
+static int32_t kreuzung(int32_t a, int32_t d, int32_t pen, int32_t dist, int32_t ar,
+                        int32_t vor_b, int32_t ax, int32_t bx)
+{
+    if (!((vor_b < ax && ax < bx) || (ax < vor_b && bx < ax))) return a;   /* `slt` @0x80034f24-5c */
+    int32_t t = (int32_t)(0u - (uint32_t)(d * pen)) / (dist + 1);         /* `subu v0,zero,t2 / div` */
+    int32_t v = (t > 0) ? (ar << 1) : -(ar << 1);                         /* `bgtz` / `sll v0,s7,1` / `subu` */
+    return v - t;                                                         /* `subu a3,v0,a3` @0x80034fac */
+}
+
+static void kugel_schub(const re15_actor_t *A, r38_kugel_t ka, re15_actor_t *B, r38_kugel_t kb,
+                        int32_t vor_x, int32_t vor_y, int32_t vor_z)
+{
+    const int32_t R  = ka.r + kb.r;                                       /* @0x80034de8 */
+    const int32_t dx = B->x - A->x;                                       /* @0x80034dec */
+    if ((uint32_t)(R << 1) < (uint32_t)(dx + R)) return;                  /* @0x80034df4-fc */
+    const int32_t dz = B->z - A->z;                                       /* @0x80034e10 */
+    if ((uint32_t)(R << 1) < (uint32_t)(dz + R)) return;                  /* @0x80034e14-1c */
+    const int32_t dist = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));   /* @0x80034e38 */
+    const int32_t pen  = R - dist;                                        /* @0x80034e44 */
+    if (pen <= 0) return;                                                 /* `blez` @0x80034e48 */
+    const int32_t hs = ka.h + kb.h;                                       /* @0x80034e64 */
+    const int32_t ay = A->y + ka.ofs;
+    const int32_t dy = (B->y + kb.ofs) - ay;                              /* @0x80034e54-60 */
+    if (!(-hs < dy) || !(dy < hs)) return;                                /* @0x80034e6c-78 */
+    int32_t a3 = (dx * pen) / (dist + 1);                                 /* @0x80034e7c-eb4 */
+    int32_t a2 = (dz * pen) / (dist + 1);                                 /* @0x80034ec0-f00 */
+    const int32_t vdy = (vor_y + kb.ofs) - ay;                            /* `lh 20(s2)` + `lh 70(s1)` @0x80034ec4-d4 */
+    if (!(-hs < vdy && vdy < hs)) {                                       /* @0x80034f04-10 */
+        a3 = kreuzung(a3, dx, pen, dist, ka.r, vor_x, A->x, B->x);         /* +0x44 `lh a0,68(s1)` */
+        a2 = kreuzung(a2, dz, pen, dist, ka.r, vor_z, A->z, B->z);         /* +0x48 `lh a0,72(s1)` */
+    }
+    B->x += a3;                                                           /* `sw v0,56(s1)` @0x800350c8 */
+    B->z += a2;                                                           /* `sw v1,64(s1)` @0x800350cc */
+}
+
+void re15_spinnen_r38_baby_schwanz(re15_actor_t *e, int32_t ox, int32_t oy, int32_t oz)
 {
     if (!e || !e->active) return;                             /* `beq a0,zero,0x801000c8` @0x801000ac */
+    /* SCHUB FUN_80035530 @0x801000b4 - B.w0 & 2 (eigener Fall @0x8010078c) sperrt jedes Paar (@0x80034d48-50) */
+    if (!(e->state == 1 && e->sub_state_1 == 2)) {
+        for (int s = RE15_ACTOR_SLOT_PLAYER; s < RE15_ACTOR_MAX; s++) {
+            const re15_actor_t *A = &g_actors[s];
+            if (A == e || !A->active) continue;               /* `beq s1,a0` @0x80035574, word0 & 1 @0x8003557c-88 */
+            if (s == RE15_ACTOR_SLOT_PLAYER && A->hp < 0) continue;
+            r38_kugel_t ka;
+            if (!kugel_von(A, s, &ka)) continue;
+            kugel_schub(A, ka, e, k_kugel_baby, ox, oy, oz);  /* `jal 0x80034d0c` @0x80035590 */
+        }
+    }
+    /* WANDPASS FUN_8003567C(self, 0x400) @0x801000c0 */
     if (e->flags & 0x8u) return;                              /* word0 & 8 @0x80035694-98 */
     if (!g_room_rdt_ok) return;
     int32_t nx = e->x, nz = e->z;
