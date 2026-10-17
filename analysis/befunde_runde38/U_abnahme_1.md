@@ -237,6 +237,31 @@ note=61 ... -> SE-Stimme 4 (SPU 20)` genau einmal zwischen `[walk] F240` und `[w
 einmal zwischen `[framedump] ... f000279.ppm` und `f000280.ppm` (= F280, Clip-Bild 130). Die Klettertoene des
 RE1.5-Clips laufen also auch im RE2-Zweig (`wz_frame_se`), je SE-Bild einmal.
 
+### M4b — ROOM2020 laenger (alle Wasser-Zombies des Raums), Standard-KI
+
+Wie M4 ohne Bild, `RE15_EXIT_AT=1000#2020`: der stillstehende Leon stirbt bei ~F903 (danach Titel-/Neustart-Ablauf in
+R1240/R1170, Lauf per timeout 300 s beendet — die Zaehlung unten ist auf die R2020-Bilder beschraenkt, `gy_2020.log`).
+wz.log (Auszug, woertlich):
+```
+F80 R2020 slot=4 t=16 re2-eintritt st=1/10/0 mo=0 af=31 @(-10756,0,1082) b0 f1ba=0 rot=3527 kontakt=c9
+F267 R2020 slot=4 t=16 oben st=1/0/0 mo=22 af=158 @(-10756,-1800,2222) b1 f1ba=-1800 rot=3072 kontakt=c0
+F347 R2020 slot=3 t=16 re2-eintritt st=1/10/0 mo=0 af=53 @(-8650,0,1082) b0 f1ba=0 rot=3007 kontakt=c9
+F415 R2020 slot=2 t=16 re2-eintritt st=1/10/0 mo=2 af=5 @(-9553,0,1082) b0 f1ba=0 rot=2947 kontakt=c9
+F510 R2020 slot=3 t=16 oben st=1/0/0 mo=22 af=158 @(-8650,-1800,2222) b1 f1ba=-1800 rot=3072 kontakt=c0
+F581 R2020 slot=2 t=16 oben st=1/0/0 mo=22 af=158 @(-9553,-1800,2222) b1 f1ba=-1800 rot=3072 kontakt=c0
+```
+Beide Band-0-Wasserzombies (Aktor 4 und 3) ziehen sich an der Suedwand hoch; Aktor 2 (Spawn auf dem Nordsteg
+(-11250,-1800,-3100) Band 1, gy.log F1) faellt ueber die Absturzkante in den Kanal (F300 `[2 ... @(-9433,0,-992) b0]`)
+und zieht sich danach ebenfalls hoch. R2020: 3612 Gegner-Eintraege, **0 unter dem Wasserboden, 0 auf Band >= 2**.
+
+### Zensus — welche Stage-2-Zombies stehen im Wasser? (eigener Lauf)
+
+Skript `U38abn1c/re/zensus_em.py` (Sce_em_set 0x44 ueber den SCD-Walker von `re15_port/tools/aot_sce_census.py`, alle
+`shared_assets/PSX/STAGE2/ROOM*.RDT`): `Sce_em_set gesamt STAGE2: 150 | Zombie-Typen 0x10-0x1F: 12` — alle Typ 0x16, nur
+in ROOM2000/2001 (sub00 @0x017cc/@0x017e0 bzw. @0x0182e/@0x01842, Band pc4 = 0) und ROOM2020/2021 (main00 @0x008f6/
+@0x0090a Band 1, @0x0091e/@0x00932 Band 0). Damit sind alle Wasserzombies der Stage 2 von M1-M4b abgedeckt (2000/2001
+echter Tuerweg Leon/Elza, 2020 Raumlader, 2020/2021 CONTINUE im Riegel a/b/c).
+
 ## 3. Mangel 2 der Abnahme 0 (Code-Hygiene) geprueft
 
 - Suche nach `re15_enemy_ai_live_edge_fall`, `EDGE-FALL`, `edge_fall` in re15_port/engine/src, include, tests, platform:
