@@ -51,6 +51,15 @@ F104-F106, zerfaellt F108 in Tropfen, F110 weg. Vollbild `m1_sheet_full.png`. Fo
 `N_belege/vergleich_original_leon_elza.png` (Original-Zeile).
 Ton (eigener Mitschnitt): F83 EDT 0x1d/VAG1 r=0.46; F98 EDT 0x17/VAG7 r=0.48; F113 EDT 0x17/VAG7 r=0.43; Kontrollfenster
 F76/F91 (kein Schritt) alle r <= 0.08. => Wasser-Schritt-Ton im Fleck, Beton-Ton davor.
+Pixelgenauer Bildvergleich (eigener Lauf `m1b_trilog`, `RE15_TRILOG=tri.log@120,140,170,190`, EXIT_AT 111): die 13 Quads in
+TIM-Slot 37 (Effekt-Id 6) gegen die 13 Original-POLY_FT4 aus `N_belege/gdb_1260_paket.txt` (Schritt Part 4, wpos (-7555,-1873,-7385)):
+```
+c0=0  Port xy (140,166)-(143,169) uv (224,24)   Original xy (140,166)-(143,169) uv (224,96)
+c0=1  Port xy (138,162)-(145,169) uv (184,32)   Original xy (138,162)-(145,169) uv (184,104)
+c0=3  Port xy (136,160)-(147,171) uv (224,0)    Original xy (136,160)-(147,171) uv (224,72)
+c0=4..12 Port xy (135,159)-(148,172) uv (184,48),(216,48),(0,0),(32,0)..(192,0)   Original gleiche xy, uv v+72
+```
+Alle 13 Bildschirm-Rechtecke identisch; uv = Datei-v + 72 (VRAM-Versatz des Originals, FUN_800194f8) in allen Zellen.
 **Ergebnis M1: Effekt (Bild) + Wasser-Ton vorhanden, Lage = Original.**
 
 ### M2 Elza ueber den echten Tuerweg ROOM10B1 -> ROOM1261 (Fleck P5)
@@ -149,6 +158,22 @@ M11 "W0.5,D2.5,W1" ab (-6900,-7900): F83 bild=7 fuss=4 lage=(-7628,..,-7900) bod
 M12 "W0.5,L2,W1"  ab (-7200,-7900): F83/F98/F113/F128 im Fleck je zweig=boden (fuss 7/4), [foot] type=23 vag=7 (4x); sub5 52 Bilder
 ```
 Beide laufen ueber denselben Fusstakt (Motion 105); keine Abstuerze, keine Doppel-Ausloesung.
+
+### M13/M14 ROOM2070/2071 "TUN. FLOOD DRY" ueber den ECHTEN Tuerweg (knoecheltiefes Wasser, Spiegel -200)
+Selbst ermittelt (SCD-Dump `tools/scd_dump_room.py`): ROOM2070 main00 setzt die sce-8-Zone slot 6 (x -19400..5450,
+z -21000..-17450, Band 0, Spiegel -200) NUR in `Switch work_vars[0x0a]` (= Ankunfts-Cut) Fall 9 und 12 (@0xc2e / @0xc94).
+Der Debug-Sprung kommt mit Cut 0 an -> keine Zone (daher die Dossier-Zeile "im Sprung-Zustand keine Zone aktiv"). Tueren mit
+Ankunft Cut 9/12 (eigener Scan aller Door_aot_set): ROOM2040/2041 slot 4 (Band 5) -> 2070/2071 Cut 9 (4650,0,-19200);
+ROOM11A0/11A1 slot 0 -> Cut 12 (-18650,0,-19300). Gemessen ueber 2040 -> 2070 (Leon) und 2041 -> 2071 (Elza):
+```
+lauf.sh m13_leon2040_tuer leon 2040 "-20450,-19800,2048,5" "W0.3,A0.2,W0.5,U3" 30 "160#2070"
+  [tuer] Sequenz Archiv 2 DOOR0A ... ; F69..F144 room=2070 je stempel=-200 zweig=stempel code=0x06032000 part=6/3
+  anker rel (+232,-836,-175) bzw. (+215,-837,+165) (Blick 2048, = Original-Relativanker gedreht); [foot] type=26 vag=3 (6x); sub3 78 Bilder
+lauf.sh m14_elza2041_tuer elza 2041 ... "160#2071"
+  Elza-Bit=1; F70..F144 room=2071 je stempel=-200 zweig=stempel part=6/3 anker rel y -799/-783; [foot] type=26 vag=3; sub3 78 Bilder
+```
+Bild `m13_sheet_full.png`: heller gruen-weisser Spritzer neben Leons Knie F134-F138 (Kamera nah), F74/F78 hinter der Spinne.
+Damit ist das "flache Wasser" der Kanalraeume ausserhalb der Pfuetzen (Stempel-Zweig) ueber den echten Weg fuer Leon UND Elza belegt.
 
 ### Gegenprobe v0.8.25 (Paket `release/pkg-win/re15_port_v0.8.25`, nach scratchpad/v0825 kopiert, md5 7aa892fc...)
 Gleicher Lauf wie M1 (`ABN0_EXE=.../v0825/re15_pc.exe lauf.sh v0825_leon1260 ...`): `[foot] SE foot=4 type=151 vag=7` (Ton da),
