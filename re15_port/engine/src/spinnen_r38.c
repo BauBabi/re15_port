@@ -445,6 +445,13 @@ int re15_spinnen_r38_gift_tick(re15_actor_t *pl)
     return (int)vor - (int)pl->hp;
 }
 
+/* Kommando 0 (Handler 0x800318f8 = Tabelle 0x80073f90[0]; laeuft nach jedem Kommando-Nullen: Raumwechsel und
+ * Inventar-Ende `sb zero,0x800aca58` @0x8001cbdc, Spieler-Laden `sw zero,0x800aca58` @0x80031518) nullt den
+ * Gift-Zaehler bedingungslos: `sb zero,-13273(at)` @0x8003196c (0x800acc27, zwischen +0x93 @0x80031964 und
+ * 0x800acc0c @0x80031974; einziger weiterer Schreiber ausser dem Takt selbst, ghidra1_V2 XREF[5]). Der erste Takt
+ * danach kommt deshalb sofort (@0x80031e74). Port: re15_player_cmd_zero (game_step_common.c). Abnahme 0 Hinweis 1. */
+void re15_spinnen_r38_gift_cmd0(void) { s_gift_zaehler = 0; }
+
 /* ============================================================================================
  * Teil 3 — RE2-MINISPINNEN: das ANIMATIONSPAAR der Babybank (EM026)
  * ============================================================================================

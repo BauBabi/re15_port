@@ -437,6 +437,21 @@ static void teil_b4(void)
           "stehend: keine Treffer-Reaktion (Flinch-Bilder %d, Clip 8/9/0xa %d, Rueckstoss %d, SE CORE %d; vorher je Takt "
           "22 Bilder Clip 8/9 + 500 Rueckstoss)", flinch, clip, weg, g_test_core_se_count - se0);
 
+    /* (c) Kommando 0 (Raumwechsel / Spieler-Laden / Inventar-Ende -> re15_player_cmd_zero) nullt den Zaehler:
+     * `sb zero,-13273(at)` @0x8003196c im cmd-0-Handler 0x800318f8 -> der naechste Takt kommt SOFORT (@0x80031e74).
+     * Vorher (Stand e7131aca) ueberlebte der Zaehler jeden Raumwechsel/jedes Laden (Abnahme 0, Hinweis 1). */
+    {
+        extern void re15_player_cmd_zero(void);              /* game_step_common.c */
+        unsigned z_vor = re15_spinnen_r38_gift_zaehler();
+        re15_player_cmd_zero();
+        unsigned z_nach = re15_spinnen_r38_gift_zaehler();
+        int16_t vor = pl->hp;
+        bild();
+        CHECK(z_vor > 0 && z_nach == 0 && pl->hp == vor - 2 && re15_spinnen_r38_gift_zaehler() == 0x78,
+              "Kommando 0: Zaehler %u -> %u (@0x8003196c), naechstes Bild Takt HP %d -> %d, Zaehler %u (0x78)",
+              z_vor, z_nach, vor, pl->hp, re15_spinnen_r38_gift_zaehler());
+    }
+
     /* (b) Spieler ZIELT (R1 gehalten, Zielbereit), dann vergiftet: der erste Takt kommt sofort (Zaehler 0 @0x80031e74)
      * und darf das Zielen nicht abbrechen (re15_player_aim_interrupt sitzt nur im Kommando-2-Arm). */
     if (!raum("STAGE2/ROOM2060.RDT", 0x2060, RE15_AI_FLAVOR_RE15, 5975, 0, 1137, 3072, 1)) { s_fails++; return; }

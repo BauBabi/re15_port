@@ -45,6 +45,9 @@ int re15_spinnen_r38_routine_a(re15_esp_fx_t *f);
  * Zaehler (kein Kommando-2-Schreiber, @0x80031e44-ec8) — der Aufrufer nimmt den Abzug aus dem
  * Port-Treffer-Detektor heraus (Nachbesserung 1, Mangel 1). */
 int re15_spinnen_r38_gift_tick(re15_actor_t *pl);
+/* Kommando 0 nullt den Gift-Zaehler (`sb zero,-13273(at)` @0x8003196c im cmd-0-Handler 0x800318f8). Gerufen aus
+ * game_step_common.c re15_player_cmd_zero (Raumwechsel, Spieler-Laden, Inventar-Ende). */
+void re15_spinnen_r38_gift_cmd0(void);
 /* Neues Spiel / Testanfang: Gift-Zaehler (Spieler+0x1d3) auf 0. */
 void re15_spinnen_r38_reset(void);
 /* Messschiene/Test: aktueller Gift-Zaehler (Spieler+0x1d3 des Originals). */

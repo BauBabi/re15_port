@@ -432,6 +432,8 @@ void re15_player_cmd_zero(void)
                                            * setzt die Bank ohnehin neu */
     s_ev_reach = 0;
     s_prev_hp = -1;
+    { extern void re15_spinnen_r38_gift_cmd0(void);   /* Runde 38 Spur R: Gift-Zaehler 0x800acc27 := 0, */
+      re15_spinnen_r38_gift_cmd0(); }                 /* `sb zero,-13273(at)` @0x8003196c (cmd-0-Handler) */
     re15_player_aim_interrupt();
     re15_player_idle_reset();
     /* Derselbe Wort-Store `sw 1,0x800aca58` @0x8003192c nullt auch den Schiebe-Substate 8
