@@ -1,0 +1,75 @@
+# vergleich_orig.py: Zopf an der exe (mess_laufen.sh) gegen orig_zopf_frames.txt (Original-RAM), Stand 447c0e35+Arbeitsbaum 2026-10-17
+
+######## mess_laufen.sh origfolge
+Port: 396 Schritte, Drehbeginn 160, Gehbeginn 280 | Original: 235 Bilder, Drehbeginn Bild 16, Gehbeginn Bild 135
+== Drehung + Nachlauf: Port Schritte 160..278 gegen Original Bilder 16..134 (119 Bilder)
+   Eingang: Blick-Abweichung max 96; Animationswinkel Teil0 vy/vz + Teil8 vy max 17 (Mittel 2.5)
+   Glied 17 xang: Abweichung Mittel    3.5 max   20 (= 1.8 Grad) | Original-Spanne im Fenster 108
+   Glied 17 zang: Abweichung Mittel    3.4 max   16 (= 1.4 Grad) | Original-Spanne im Fenster 84
+   Glied 18 xang: Abweichung Mittel   10.5 max   84 (= 7.4 Grad) | Original-Spanne im Fenster 468
+   Glied 18 zang: Abweichung Mittel   10.2 max   72 (= 6.3 Grad) | Original-Spanne im Fenster 340
+   Glied 19 xang: Abweichung Mittel   21.8 max  122 (= 10.7 Grad) | Original-Spanne im Fenster 870
+   Glied 19 zang: Abweichung Mittel   20.8 max  160 (= 14.1 Grad) | Original-Spanne im Fenster 632
+   Glied 20 xang: Abweichung Mittel   24.6 max  106 (= 9.3 Grad) | Original-Spanne im Fenster 1062
+   Glied 20 zang: Abweichung Mittel   46.4 max  354 (= 31.1 Grad) | Original-Spanne im Fenster 934
+== Gehen + Stehen (alle Bilder): Port Schritte 280..379 gegen Original Bilder 135..234 (100 Bilder)
+   Eingang: Blick-Abweichung max 96; Animationswinkel Teil0 vy/vz + Teil8 vy max 1 (Mittel 0.1)
+   Schrittweite der Lage: Port 21..74 (Mittel 71.5), Original 37..90 (Mittel 75.7)
+   Glied 17 xang: Abweichung Mittel    1.0 max   16 (= 1.4 Grad) | Original-Spanne im Fenster 70
+   Glied 17 zang: Abweichung Mittel    8.9 max   40 (= 3.5 Grad) | Original-Spanne im Fenster 404
+   Glied 18 xang: Abweichung Mittel    3.9 max   30 (= 2.6 Grad) | Original-Spanne im Fenster 226
+   Glied 18 zang: Abweichung Mittel   12.4 max   52 (= 4.6 Grad) | Original-Spanne im Fenster 666
+   Glied 19 xang: Abweichung Mittel    9.2 max   30 (= 2.6 Grad) | Original-Spanne im Fenster 292
+   Glied 19 zang: Abweichung Mittel   14.8 max   58 (= 5.1 Grad) | Original-Spanne im Fenster 880
+   Glied 20 xang: Abweichung Mittel    8.3 max   52 (= 4.6 Grad) | Original-Spanne im Fenster 292
+   Glied 20 zang: Abweichung Mittel   13.1 max   38 (= 3.3 Grad) | Original-Spanne im Fenster 840
+   Gehfenster endet bei Port-Schritt 318 / Original-Bild 173: Nacken Port 0 / Original 0, Schritt 26 / 40
+== Gehen bis die Eingaenge auseinanderlaufen: Port Schritte 280..317 gegen Original Bilder 135..172 (38 Bilder)
+   Eingang: Blick-Abweichung max 96; Animationswinkel Teil0 vy/vz + Teil8 vy max 1 (Mittel 0.1)
+   Schrittweite der Lage: Port 74..74 (Mittel 74.0), Original 55..90 (Mittel 77.7)
+   Glied 17 xang: Abweichung Mittel    1.1 max    4 (= 0.4 Grad) | Original-Spanne im Fenster 14
+   Glied 17 zang: Abweichung Mittel   18.9 max   32 (= 2.8 Grad) | Original-Spanne im Fenster 280
+   Glied 18 xang: Abweichung Mittel    2.9 max   14 (= 1.2 Grad) | Original-Spanne im Fenster 32
+   Glied 18 zang: Abweichung Mittel   18.6 max   34 (= 3.0 Grad) | Original-Spanne im Fenster 364
+   Glied 19 xang: Abweichung Mittel    5.3 max   18 (= 1.6 Grad) | Original-Spanne im Fenster 50
+   Glied 19 zang: Abweichung Mittel   25.2 max   44 (= 3.9 Grad) | Original-Spanne im Fenster 504
+   Glied 20 xang: Abweichung Mittel    5.1 max   18 (= 1.6 Grad) | Original-Spanne im Fenster 50
+   Glied 20 zang: Abweichung Mittel   20.9 max   38 (= 3.3 Grad) | Original-Spanne im Fenster 528
+   Endblick Port 4928 / Original 4832, Endlage Port (990, 0, 6868) / Original (1454, 0, 6868)
+
+######## mess_laufen.sh origfolge29
+Port: 396 Schritte, Drehbeginn 160, Gehbeginn 280 | Original: 235 Bilder, Drehbeginn Bild 16, Gehbeginn Bild 135
+== Drehung + Nachlauf: Port Schritte 160..278 gegen Original Bilder 16..134 (119 Bilder)
+   Eingang: Blick-Abweichung max 0; Animationswinkel Teil0 vy/vz + Teil8 vy max 17 (Mittel 2.4)
+   Glied 17 xang: Abweichung Mittel    1.5 max   20 (= 1.8 Grad) | Original-Spanne im Fenster 108
+   Glied 17 zang: Abweichung Mittel    1.8 max   16 (= 1.4 Grad) | Original-Spanne im Fenster 84
+   Glied 18 xang: Abweichung Mittel   10.7 max   84 (= 7.4 Grad) | Original-Spanne im Fenster 468
+   Glied 18 zang: Abweichung Mittel    9.1 max   72 (= 6.3 Grad) | Original-Spanne im Fenster 340
+   Glied 19 xang: Abweichung Mittel   16.1 max  122 (= 10.7 Grad) | Original-Spanne im Fenster 870
+   Glied 19 zang: Abweichung Mittel   18.5 max  160 (= 14.1 Grad) | Original-Spanne im Fenster 632
+   Glied 20 xang: Abweichung Mittel   20.0 max  106 (= 9.3 Grad) | Original-Spanne im Fenster 1062
+   Glied 20 zang: Abweichung Mittel   33.3 max  194 (= 17.1 Grad) | Original-Spanne im Fenster 934
+== Gehen + Stehen (alle Bilder): Port Schritte 280..379 gegen Original Bilder 135..234 (100 Bilder)
+   Eingang: Blick-Abweichung max 0; Animationswinkel Teil0 vy/vz + Teil8 vy max 1 (Mittel 0.1)
+   Schrittweite der Lage: Port 74..74 (Mittel 73.8), Original 37..90 (Mittel 75.7)
+   Glied 17 xang: Abweichung Mittel    5.1 max  108 (= 9.5 Grad) | Original-Spanne im Fenster 70
+   Glied 17 zang: Abweichung Mittel   18.9 max  196 (= 17.2 Grad) | Original-Spanne im Fenster 404
+   Glied 18 xang: Abweichung Mittel   21.2 max  296 (= 26.0 Grad) | Original-Spanne im Fenster 226
+   Glied 18 zang: Abweichung Mittel   24.3 max  200 (= 17.6 Grad) | Original-Spanne im Fenster 666
+   Glied 19 xang: Abweichung Mittel   49.1 max  444 (= 39.0 Grad) | Original-Spanne im Fenster 292
+   Glied 19 zang: Abweichung Mittel   39.6 max  288 (= 25.3 Grad) | Original-Spanne im Fenster 880
+   Glied 20 xang: Abweichung Mittel   81.7 max  448 (= 39.4 Grad) | Original-Spanne im Fenster 292
+   Glied 20 zang: Abweichung Mittel   51.4 max  384 (= 33.8 Grad) | Original-Spanne im Fenster 840
+   Gehfenster endet bei Port-Schritt 316 / Original-Bild 171: Nacken Port -96 / Original 0, Schritt 74 / 57
+== Gehen bis die Eingaenge auseinanderlaufen: Port Schritte 280..315 gegen Original Bilder 135..170 (36 Bilder)
+   Eingang: Blick-Abweichung max 0; Animationswinkel Teil0 vy/vz + Teil8 vy max 1 (Mittel 0.1)
+   Schrittweite der Lage: Port 74..74 (Mittel 73.8), Original 55..90 (Mittel 78.5)
+   Glied 17 xang: Abweichung Mittel    1.3 max    4 (= 0.4 Grad) | Original-Spanne im Fenster 14
+   Glied 17 zang: Abweichung Mittel   20.1 max   36 (= 3.2 Grad) | Original-Spanne im Fenster 280
+   Glied 18 xang: Abweichung Mittel    2.4 max    8 (= 0.7 Grad) | Original-Spanne im Fenster 32
+   Glied 18 zang: Abweichung Mittel   19.1 max   34 (= 3.0 Grad) | Original-Spanne im Fenster 364
+   Glied 19 xang: Abweichung Mittel    5.7 max   18 (= 1.6 Grad) | Original-Spanne im Fenster 50
+   Glied 19 zang: Abweichung Mittel   26.9 max   48 (= 4.2 Grad) | Original-Spanne im Fenster 504
+   Glied 20 xang: Abweichung Mittel    6.6 max   40 (= 3.5 Grad) | Original-Spanne im Fenster 50
+   Glied 20 zang: Abweichung Mittel   21.8 max   38 (= 3.3 Grad) | Original-Spanne im Fenster 528
+   Endblick Port 4832 / Original 4832, Endlage Port (1390, 0, 6870) / Original (1454, 0, 6868)

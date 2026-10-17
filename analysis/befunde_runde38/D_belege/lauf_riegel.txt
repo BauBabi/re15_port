@@ -1,0 +1,12 @@
+[lauf] lauf/zopf.log
+  ok: Referenz: Original-RAM bitgleich nachgerechnet (235/235 Bilder), Gehbeginn Bild 135, Wand Bild 173
+    exe: 556 Schritte, Gehbeginn Schritt 280, gleiche Eingaenge 36 Bilder (Schrittweite exe 74, Original 60..90)
+  ok: Gehfenster mit gleichen Eingaengen: 36 Bilder (>= 30)
+  ok: Gehen, Glied 17: groesster zang exe 339 / Original 367 (29.8 / 32.3 Grad), Abweichung 28 <= 36 (konstante Schrittweite 74)
+  ok: Gehen, Glied 18: groesster zang exe 745 / Original 765 (65.5 / 67.2 Grad), Abweichung 20 <= 36 (konstante Schrittweite 74)
+  ok: Gehen, Glied 19: groesster zang exe 615 / Original 637 (54.1 / 56.0 Grad), Abweichung 22 <= 48 (konstante Schrittweite 74)
+  ok: Gehen, Glied 20: groesster zang exe 637 / Original 645 (56.0 / 56.7 Grad), Abweichung 8 <= 40 (konstante Schrittweite 74)
+  ok: Rennen: 14 Schritte mit Schritt >= 150 (ab Schritt 431)
+  ok: Rennen reisst den Zopf weiter nach hinten als Gehen: Glied 17 zang 667 > 339 (58.6 > 29.8 Grad)
+  ok: nach dem Rennen schwingt Glied 17 durch die Ruhelage nach vorn: zang -219 (Schritt 449) < Ruhe 3 - 11
+  ok: Glied 17 schwingt aus: Abstand zur Ruhelage 336 (Schritte 1..10 nach dem Halt) -> 80 (Schritte 11..30), weniger als die Haelfte

@@ -1,0 +1,22 @@
+[skelett] PL04 Keyframe 0, Koerperrahmen (Gier 0, Lage 0; PSX: -y = oben)
+    Teil  0 Elter -1 EMR (    0,-1709,    0) Lage (    0,-1709,    0)  Netz x  -143..  256 y -2398..-1804 z  -281..  280
+    Teil  1 Elter  0 EMR (    0,    0,    0) Lage (    0,-1709,    0)  Netz x  -240..  128 y -1898..-1406 z  -271..  234
+    Teil  2 Elter  1 EMR (  -25,  199, -140) Lage (  -16,-1523, -158)  Netz x  -168..  374 y -1644.. -866 z  -299..  -16
+    Teil  3 Elter  2 EMR (  -22,  609,   -9) Lage (  249, -976, -155)  Netz x    39..  332 y -1078.. -194 z  -283..  -41
+    Teil  4 Elter  3 EMR (  -12,  815,   -3) Lage (   72, -183, -177)  Netz x   -41..  417 y  -283..  -85 z  -265..  -84
+    Teil  5 Elter  1 EMR (  -25,  199,  139) Lage (  -30,-1499,  119)  Netz x  -188..  170 y -1616.. -776 z   -24..  261
+    Teil  6 Elter  5 EMR (  -22,  609,    9) Lage (   45, -895,  118)  Netz x  -162..  129 y  -997.. -110 z   -11..  232
+    Teil  7 Elter  6 EMR (  -12,  815,    3) Lage ( -124,  -99,  104)  Netz x  -236..  221 y  -199..    1 z    10..  194
+    Teil  8 Elter  0 EMR (  -21, -623,    0) Lage (   31,-2332,    0)  Netz x   -96..  277 y -2778..-2290 z  -148..  148
+    Teil  9 Elter  0 EMR (  -40, -571, -285) Lage (    8,-2282, -285)  Netz x  -135..   71 y -2347..-1838 z  -357.. -199
+    Teil 10 Elter  9 EMR (    0,  406,  -55) Lage (  -80,-1883, -303)  Netz x  -155..   -4 y -1891..-1492 z  -376.. -248
+    Teil 11 Elter 10 EMR (   14,  360,  -46) Lage (  -35,-1524, -321)  Netz x  -100..   78 y -1528..-1215 z  -381.. -272
+    Teil 12 Elter  0 EMR (  -40, -571,  285) Lage (    8,-2282,  285)  Netz x   -99..   84 y -2339..-1828 z   198..  360
+    Teil 13 Elter 12 EMR (    0,  406,   55) Lage (  -32,-1876,  307)  Netz x  -100..   63 y -1886..-1488 z   251..  379
+    Teil 14 Elter 13 EMR (   14,  360,   46) Lage (   32,-1520,  333)  Netz x   -30..  129 y -1523..-1213 z   279..  393
+    Zopf Teil 17 Lage (    4,-2695,    0) rot (1,0,1)  Netz x  -111..    6 y -2794..-2696 z   -58..   57
+    Zopf Teil 18 Lage (  -41,-2727,   -1) rot (1,0,305)  Netz x  -241..  -68 y -2804..-2634 z   -71..   69
+    Zopf Teil 19 Lage ( -176,-2686,   -1) rot (1,0,1)  Netz x  -239.. -129 y -2667..-2523 z   -72..   70
+    Zopf Teil 20 Lage ( -178,-2580,   -1) rot (1,0,1)  Netz x  -233.. -128 y -2564..-2366 z   -55..   53
+    hoechster Koerperpunkt y -2778, hoechster Zopfpunkt y -2804, Zopf waagerecht hoechstens 251 von der Achse
+skelett: 0 Fehler

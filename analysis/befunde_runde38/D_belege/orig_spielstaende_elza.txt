@@ -1,0 +1,23 @@
+# Elza-Spielstaende des Nutzers im ORIGINAL (DuckStation, %LOCALAPPDATA%/DuckStation/savestates/HASH-957757946319438E_*.sav,
+# 2026-10-08..12), gelesen mit .claude/skills/re15-savestate-ghidra/scripts/re15_ss.py (Kopien, nur lesen).
+# stub@0x80026e4c 0800e003 = Auslieferungs-EXE (nicht die gepatchte 24c20108). Teile +0x83 (FUN_8001e56c), Flags Teil 15..20 (Teile-Feld 0x800acbdc, Stride 0xac).
+HASH-957757946319438E_1.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x0b Teile+0x83=21 pos=(-20303,0,1579) Blick -1390 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+HASH-957757946319438E_2.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x01 Teile+0x83=21 pos=(2039,0,7709) Blick 4029 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+HASH-957757946319438E_3.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x01 Teile+0x83=21 pos=(-150,0,7139) Blick 2157 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+HASH-957757946319438E_4.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x21 Teile+0x83=21 pos=(-19479,0,-21615) Blick 1219 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+HASH-957757946319438E_5.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x02 Teile+0x83=21 pos=(-26000,0,-8700) Blick -4199 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+HASH-957757946319438E_6.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x1b Teile+0x83=21 pos=(-26483,0,-18094) Blick 0 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+HASH-957757946319438E_7.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x17 Teile+0x83=21 pos=(-21937,0,-25713) Blick 3072 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+HASH-957757946319438E_10.sav stub@0x80026e4c=0800e003 char=0x04 Stage 0 Raum 0x26 Teile+0x83=21 pos=(-20250,-1800,-6700) Blick 1024 Flags15..20=0x0,0x0,0x41,0x41,0x41,0x41
+
+# Teile 17..20 im Detail (Weltlage +0x54.., rot +0x60.., v94/v96 +0x94/+0x96):
+elza_2.sav stub 0800e003 char 04 raum 0x01 pos 2039 0 7709 blick 4029
+  Teil 17 flag 0x41 welt t (1905,-2664,7630) rot (3,8093,9) v 1/3
+  Teil 18 flag 0x41 welt t (1860,-2696,7623) rot (-11,8093,307) v -3/13
+  Teil 19 flag 0x41 welt t (1727,-2655,7602) rot (-83,8093,11) v -3/18
+  Teil 20 flag 0x41 welt t (1726,-2549,7588) rot (-77,8093,27) v 0/-2
+elza_3.sav stub 0800e003 char 04 raum 0x01 pos -150 0 7139 blick 2157
+  Teil 17 flag 0x41 welt t (-4,-2665,7179) rot (-1,6223,-1) v 2/4
+  Teil 18 flag 0x41 welt t (40,-2696,7173) rot (-27,6223,305) v -3/12
+  Teil 19 flag 0x41 welt t (173,-2655,7158) rot (-83,6223,11) v -3/10
+  Teil 20 flag 0x41 welt t (177,-2549,7171) rot (7,6223,13) v -1/-12
