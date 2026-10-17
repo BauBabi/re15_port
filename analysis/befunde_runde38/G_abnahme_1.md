@@ -295,3 +295,24 @@ laufen; nachher (a1/a2) 0 x msgtext id 18, Leser, Evt_end, Kette. Ja.
   lesen) + integration_r38_tagebuch_lesen (exe: kein msgtext 18, Gruen im Bild, Kette im Bild); Punkt 2
   unit_r38_tagebuch_karte (Kette/Folge/Ziele/Erreicht-Regeln, Leon unveraendert) + integration_r38_tagebuch_karte
   (normale Karte, beide Kacheln blinken); Gegenprobe unit/integration_r38_tagebuch_leon.
+
+## Ergaenzende Messungen (2. Sitzung)
+
+* **Vorher-Gegenprobe v0.8.25** (Lauf v1; exe `scratchpad/v0825/re15_port_v0.8.25/re15_pc.exe` md5 7aa892fc... mit
+  ihren eigenen shared_assets, Messkopie daneben; dieselbe Karte und dieselben Tasten wie a1 bis zum Untersuchen):
+  `[msg] room=1011 id=18` + `[msgtext] room=1011 id=18 "He has passed out from his injuries.He is holding a slip.The
+  numbers 0513" are printed on the slip."` — dort kommt die Code-Nachricht; im Spurbau (a1/a2) nicht mehr.
+* **Akten** (Lauf a4, Karte `1011 -1900 6830 3072 4:0xF1 4:0xFA 3:0x74`, erstes Lesen per KREUZ abgebrochen,
+  bestaetigt, Kette, dann START / R1 / Viereck / ... / Viereck): FILE-Liste "Files: Roys Diary" (F760..F1100), das
+  zweite Viereck oeffnet den Leser aus der Liste: Titelseite "ROYS DIARY" 1/6 (F1140..F1300). Montage
+  `scratchpad/G1B/a4_files_lesen.png`.
+* **Titelseiten-Form**: `FILE16_title_page.TIM` (RE2 "CHIEF'S DIARY") und `FILE30_title_page.TIM` ("ROYS DIARY")
+  selbst nach PNG gewandelt (`scratchpad/G1B/tim2png.py`): beide 256x176, 4 bpp, Titel in Versalien mittig in
+  derselben Schrift — die Grossschreibung des Kopfs ist RE2s Titelseiten-Form, der Listenname bleibt "Roys Diary".
+* **Hintergrund**: md5 `FILE30_title_paper.TIM` = `FILE16_title_paper.TIM` = a2510fd6f608472c777e195675290bf0
+  (byte-gleich).
+* **Satz reproduzierbar**: `C:/Python310/python.exe re15_port/tools/r38_g/tagebuch_satz.py --out
+  scratchpad/G1B/satz` (liest den Text direkt aus AUFTRAG.md Z. 37/39-59, md5 a2e4a298...) -> rc 0, "Wortfolge:
+  Satztext 183 Woerter, zurueckgelesen 183: WORTGLEICH", "PRUEFUNG FILE30: ALLE BESTANDEN"; alle 8 erzeugten
+  FILE30-TIMs md5-GLEICH mit den installierten (p00/title abc21631..., p01 7847a21e..., p02 e6d71733..., p03
+  255734bd..., p04 feb272c1..., p05 ebecd336..., paper a2510fd6...). Arbeitsbaum danach sauber.
