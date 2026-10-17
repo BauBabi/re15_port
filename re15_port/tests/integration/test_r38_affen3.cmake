@@ -12,7 +12,7 @@
 #   - mindestens 5 HP-Abzuege in 700 Bildern, JEDER genau -5 (STAGE3.BIN `addiu v0,v0,-5` @0x80111f60)
 #   - im Treffer-Bild steht Affe Platz 1 (t=29) in Sub 5 (Biss) mit Clip 0x12 und Bild 12..15
 #     (Fenster-Tabelle @0x8011ed48 = {12,13,14,15})
-#   - im Folgebild ist Leon im Treffer-Zustand (pst=2, cmd 2 = aca58 2 @0x80111f7c) und flincht
+#   - im Folgebild flincht Leon von vorn: Clip 8 (cmd 2, aca59 = a780 + 2 = 2 @0x80111f7c-94 -> @0x80035e38-40)
 #   - der Abstand zweier Treffer liegt bei 57..61 Bildern (Original o4: 57; Sperre 0x2d @0x80111f68 + Fensterbild)
 # Vorher (master cb782bda): 0 Abzuege in 1200 Bildern bei Bissen aus 2278..2740 Mitten-Abstand (Messung m2).
 #
@@ -53,7 +53,7 @@ function(r38s_lauf _lauf _flavor)
         unset(ENV{RE15_AI_FLAVOR})
     endif()
     set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 ${_st}
-             RE15_DEBUG_JUMP=3040@250 "RE15_PLAYER_POS=-8800,-4531,3072,1"
+             RE15_DEBUG_JUMP=3040@250 "RE15_PLAYER_POS=-8800,-4531,0,1"
              RE15_STATE_LOG=state.log "RE15_EXIT_AT=700#3040")
     re15_start_spiel(_rv 300 ${_env} "${RE15_PC_EXE}")
     if(NOT _rv EQUAL 0)
@@ -73,7 +73,7 @@ function(r38s_lauf _lauf _flavor)
     if(NOT _ex)
         message(FATAL_ERROR "${_tag} [${_lauf}]: RE15_EXIT_AT nicht erreicht — Haenger?")
     endif()
-    file(STRINGS "${_dir}/debug.log" _pp REGEX "RE15_PLAYER_POS \\(-8800,-4531\\) rot=3072 band=1")
+    file(STRINGS "${_dir}/debug.log" _pp REGEX "RE15_PLAYER_POS \\(-8800,-4531\\) rot=0 band=1")
     if(NOT _pp)
         message(FATAL_ERROR "${_tag} [${_lauf}]: Leon nicht auf die Plattform gesetzt (keine [parity]-Zeile)")
     endif()
@@ -102,8 +102,10 @@ function(r38s_lauf _lauf _flavor)
             continue()
         endif()
         if(_warte_pst)
-            if(NOT _pst EQUAL 2)
-                string(APPEND _fehler " F${_f}:pst=${_pst}(Soll 2)")
+            # Port-Form von cmd 2: re15_player_stagger_cmd2 setzt den Treffer-Clip (Spieler-Zustand bleibt 1);
+            # aca59 = a780 + 2 = 2 (Original-Spur o4: aca58..59 = 02 02) -> Clip 8 (@0x80035e38-40).
+            if(NOT _l MATCHES " mo=8 ")
+                string(APPEND _fehler " F${_f}:kein-Clip-8")
             endif()
             set(_warte_pst 0)
         endif()
