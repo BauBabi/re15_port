@@ -14,6 +14,8 @@ Baum `.claude/worktrees/r38_wasser`, Zweig `r38/wasser`, Basis d70c234e (2026-10
 - [x] Umsetzung (FUN_80045630-Zwilling, Schritt am Bildwort des gezeichneten Bilds, op_aot_set-Breite)
 - [x] Messung nachher (Leon + Elza, alle Wasser-Raeume des Zensus; Bild am Original, Ton per Mitschnitt-Korrelation)
 - [x] Tests (unit_r38_wasser_* 7x, integration_r38_wasser; gezielte Gruppen)
+- [x] Lauf 3 (Abschluss 2026-10-17): Endstand gebaut, 20A0-/2090-Band-Messung an den Zonen-Bytes eingeordnet (B11),
+      Zensus op_aot_set auf Breite UND Tiefe erweitert, Elza ueber den echten Tuerweg 10B1 -> 1261, gezielte Tests am Endstand
 
 ## Messung vorher
 
@@ -217,6 +219,36 @@ Der Port las im Kurzform-Aot_set (op_aot_set, scd_vm.c) Breite/Tiefe als s16. Ze
 1260/1261 @0x11ca (38950) und @0x11de (46000), 2020/2021 @0x8ac (34100). Diese Wasserzonen stempelten im Port nie
 (Mitte/Halbmass aus negativer Breite). Fuer Leon/Elza ohne Folge (Rinnen = SCA-Waende bzw. Band 0 unter dem Laufsteg),
 fuer Figuren im Kanal (Gegner) ja; Stempel-Leser ist bisher nur der Schritt-Zwilling.
+Lauf 3 (Zensus erweitert, `N_belege/breite_zensus.py` ueber aot_sce_census.walk): 1859 Kurzform-Saetze mit Rechteck
+(0x2C 1046, 0x3B 649, 0x50 164); Breite ODER Tiefe > 32767 haben genau dieselben 8 Saetze, alle op 0x2C, alle sce 8, Tiefe
+ueberall <= 3650. Fuer jeden anderen Satz ist u16 == s16 — die Aenderung wirkt nur auf diese 8 Wasserzonen.
+
+### B11 Original-GDB ROOM20A0 (Band-1-Zone) + Band-Gegenprobe ROOM2090 — eingeordnet (Lauf 3)
+Gemessen in Lauf 2 (`N_belege/gdb_20a0_band1_zone.txt`, `N_belege/gdb_2090_band1_gegenprobe.txt`; `ds_wasser.py` mit DS_BAND=1
+schreibt +0x38/+0x42 = -1800 und +0x82 = 1). Zonen aus den Datei-Bytes (`N_belege/wasser_zensus.py 2090 20A0`, Aot_set 0x2C sce 8):
+
+| Raum | Satz | Band (rec+2) | x | z | Spiegel |
+|---|---|---|---|---|---|
+| 2090 | main00 @0x9d6 slot 2 | 0 | -8900..7200 | -27000..-18100 | -1620 |
+| 2090 | main00 @0x9ea slot 3 | 0 | -8900..7200 | -14500..-5400 | -1620 |
+| 2090 | main00 @0x9fe slot 4 | 0 | -8900..-1700 | -18100..-14500 | -1620 |
+| 20A0 | main00 @0x1810 slot 5 | 1 | -3600..20550 | -26900..-23400 | -540 |
+| 20A0 | main00 @0x1824 slot 6 | 0 | 20550..24100 | -26900..50 | -540 |
+
+- **20A0:** Leon auf Band 1, Schritte bei x 8696 / 9850 / 11032, z -25000 = in slot 5 (Band 1). Je Schritt +0x88 = -540,
+  SPAWN a0 = 0x06032000, a1 = 0x800, a2 = Part[a1]+0x40-0xac (a1 = 7 -> 0x801d38e0, a1 = 4 -> 0x801d36dc, Abstand 0x204 = 3*0xac),
+  Anker relativ zu Leon (-233,-836,+174) / (-216,-837,-166), TON v0 = 0x1a (= 0x1d - 3). Port (Raumliste unten): zweig=stempel
+  -540, Part 6/3, edt 0x1a — gleich. Damit ist 20A0 der Raum, in dem der Stempel-Zweig auf dem LAUFSTEG (Band 1) greift.
+- **2090 (Gegenprobe):** vorher Leon im Becken (-8200,0,-25550) Band 0 mit +0x88 = -1620; auf Band 1 gestellt laufen alle drei
+  Schritte bei (6732,-1800,-25000) = INNERHALB des x/z-Rechtecks von slot 2 (x <= 7200), aber Band 1 != Zonen-Band 0
+  -> +0x88 = 0, KEIN SPAWN, TON 0x1d. Mechanismus (selbst disassembliert, Lauf 3):
+  ```
+  80042cac lbu  v0,2(s0)        Band-Byte des Satzes (rec+2 = Aot_set pc[4])
+  80042cb4 andi v0,v0,0x80 / 80042cb8 bne v0,zero,0x80042cd4     Bit 0x80 = Band egal
+  80042cc0 lbu  v1,130(s1)      Figur +0x82 (Band)
+  80042cc4 lbu  v0,2(s0) / 80042ccc bne v1,v0,0x8004301c          ungleich -> naechster Satz (vor der Geometrie @0x80042cd4)
+  ```
+  Port: aot_common.c Wasser-/Rampen-Zweig `if (!(a->band & 0x80) && g_actors[es].floor != a->band) continue;` — gleich.
 
 ## Umsetzung
 
@@ -305,6 +337,30 @@ anker=(-7578,-1862,-7336), F114 bild=38 — zweig=boden code=0x06050d00 edt=0x17
 **Lauf (Original-GDB):** a0 = 1, Bildwort[0] = 0x5000 und [12] = 0x700c -> beide Part 4, Anker (-6548,-1891,-7302) /
 (-7872,-2875,-7442), Tonsatz 0x18 (Pfuetze) / 0x1e (Beton) — Port (unit_r38_wasser_lauf) Wert fuer Wert gleich.
 
+### Lauf 3 — Endstand (Stand 53a33885 + Testerweiterung), keine Vorgaenger-Messung wiederholt
+Bau: `local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK (build)`, 718/718, keine Compiler-Warnung.
+
+**Elza ueber den echten Weg** (neu; Spielerwahl RE15_PSELECT_AUTO=1/_SWITCH=1, Sprung nur nach 10B1 (-21370,3000) Blick 3072,
+`U0.6,A0.2,U3` ab Bild 30, Tuer -> 1261, Ankunft vor Fleck P5 (x -20800..-19500, z -9550..-7350)):
+```
+F39  room=10B1 fuss=7 bild=8  lage=(-21370,0,3308)     boden=0x1d zweig=trocken edt=0x1d
+F39  room=1261 fuss=7 bild=8  lage=(-20250,-1800,-7375) boden=0x97 zweig=boden code=0x06050d00 part=7 anker=(-20133,-1865,-6834) edt=0x17
+F63  room=1261 fuss=7 bild=8  lage=(-20250,-1800,-8725) boden=0x97 zweig=boden code=0x06050d00 part=7 anker=(-20133,-1865,-8184) edt=0x17
+F77..F137 room=1261 (z -9775 .. -14275, hinter dem Fleck)  boden=0x1d zweig=trocken edt=0x1d
+[foot] SE foot=7 type=23 vag=7 (2x im Fleck), type=29 vag=1 (Beton); FX_LOG id=6 sub=5 in 26 Bildern (2 x 13), frame=0 bei F=39
+```
+**Bild im Schritt-Takt:** der Port zeichnet c0 = 0 im SELBEN Spielbild wie der Schritt (Leon 1260: Schritt F98, FX_LOG
+`frame=0 ... F=98`, `frame=1 F=99`; Elza: F39/F39). Original ebenso: Spieler-Takt `jal 0x80031c44` @0x8001ce0c (Schritt +
+Spawn) vor dem ESP-Takt `jal 0x80019e20` @0x8001ce2c im selben Hauptschleifen-Durchlauf (B7); im GDB-Paketlauf folgt auf
+jedes SPAWN unmittelbar BAU c0 = 0 (`gdb_1260_paket.txt`).
+Hinweis zum Vergleichsstreifen `vergleich_original_leon_elza.png`: er belegt Form/Farbe/Verlauf, NICHT den Zeitpunkt. Der
+Original-Mitschnitt (Lauf 2, `ds1260_c`, Mitschnitt AN 37,0 s bis AUS 43,6 s) lief mit aktiven Haltepunkten @0x80045630 /
+@0x80045710 / @0x80045798 ("Stopps: 12"), die Emulation hielt also genau in den Schrittbildern an; die Zuordnung der
+Video-Bilder zum Spieltakt ist fuer diese Bilder nicht belegt. Im Streifen erscheint der Fleck in der Original-Zeile zwei
+Spalten spaeter als in der Port-Zeile — das ist darum KEIN Zeitbefund. Der Zeitpunkt ist ueber Bildwort/Bildnummer (B9:
+Original +0x95 = 23 mit Bildwort[22], Port akt = 23 / bild = 22), die c0-Folge des Paketlaufs und den FX_LOG (c0 = 0 im
+Schrittbild) belegt.
+
 ## Tests
 
 Riegel (registriert in `tests/unit/probes/r38_wasser.cmake`):
@@ -316,7 +372,8 @@ Riegel (registriert in `tests/unit/probes/r38_wasser.cmake`):
 - `unit_r38_wasser_aotbreite` — 1260-Zone Breite 38950 stempelt -900 (vorher nie).
 - `unit_r38_wasser_zensus` — FLR 0x97 an den sechs Flecken von 1260.
 - `integration_r38_wasser` — echte exe: Leon 1260 (boden, Original-Anker, id=6 sub=5 >= 13 Bilder, VAG 7 / VAG 1),
-  Elza 1261 (boden, id=6 sub=5, VAG 7), Leon 2090 (stempel, 0x06032000 Part 6, 0x1a, VAG 3).
+  Elza 1261 (boden, id=6 sub=5, VAG 7), Leon 2090 (stempel, 0x06032000 Part 6, 0x1a, VAG 3), Leon Tuerweg 10B0 -> 1260
+  (Fleck P5) und (Lauf 3) Elza Tuerweg 10B1 -> 1261 (Fleck P5: boden + id=6 sub=5 + VAG 7, Beton in 1261 trocken 0x1d).
 
 Gegen v0.8.25 (2077bb8e) rot: re15_wasser_r38_* existiert nicht (Unit-Riegel bauen nicht), kein RE15_WASSER_LOG,
 kein id=6 im FX_LOG, im Becken `[foot] ... type=29 vag=1`.
@@ -329,6 +386,11 @@ kein id=6 im FX_LOG, im Becken `[foot] ... type=29 vag=1`.
   Hunde @0x80111da4, Affen @0x8011c4f0) sind nicht Teil dieses Punkts (Nutzer: Leon/Elza) und nicht portiert.
 - Beobachtung ohne Urteil: im Original-Mitschnitt 2090 bewegte sich Leon bei Blick 0 langsam nach +z (Port: +x mit
   Gehgeschwindigkeit); nicht untersucht (Bewegung/Kollision im Becken, nicht Teil dieses Punkts).
+- Beobachtung ohne Urteil (Lauf 3, Fortbewegung, nicht Teil dieses Punkts): erster Geh-Schritt nach dem Losgehen bei
+  (-8404,-7246) Blick 0 — Original (`gdb_1260_gehen.txt`) bei x -7710 (+0x95 = 8, schon im Fleck P0, nass), Port bei x -7804
+  (akt = 8, 4 Einheiten vor dem Fleck, trocken). Gleiche Bildnummer, 94 Einheiten mehr Weg im Original; Port-Gehtempo
+  WALK_SPEED_PER_FRAME 75 (player_common.c:33). Ob das am Anlauf des Original-Executors oder an der Stellung per RAM (Lage
+  3 s vor dem Losgehen geschrieben) liegt, ist nicht untersucht. Die Schritte an der Wand (x -7068, Bild 22/37) sind Wert fuer Wert gleich.
 - vab_common.c (re15_footstep_vag) traegt noch den alten Kommentar "-3 / ->9 / -8 ... wired when those exist";
   -3 und 9 sind jetzt in wasser_r38.c verdrahtet (Kommentar nicht angefasst, fremde Datei).
 

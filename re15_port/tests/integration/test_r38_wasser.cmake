@@ -14,6 +14,7 @@
 #             (der Alligator greift ab ~F52 an, der erste Schritt liegt davor):
 #               zweig=stempel code=0x06032000 part=6 stempel=-1620 edt=0x1a, [foot] type=26 vag=3 (Watschritt).
 #   leon10b0_tuer  echter Weg: Sprung nach 10B0, durch die Tuer nach 1260 (Ankunft vor Fleck P5), Wasserschritt + Spritzer.
+#   elza10b1_tuer  echter Weg mit Elza: 10B1 -> Tuer -> 1261, Wasserschritt + Spritzer + VAG 7 im Fleck P5, Beton ohne Effekt.
 # v0.8.25 (2077bb8e) faellt hier durch: kein RE15_WASSER_LOG, kein id=6 im FX_LOG, im Becken Betonschritt vag=1.
 # Die exe laeuft als Messkopie re15_pc_r38n_haken_<id> neben der Original-exe (Muster test_r34n_b_cursor.cmake).
 
@@ -156,5 +157,19 @@ r38n_zeile(leon10b0_tuer "${_d}/wasser.log" "room=1260;zweig=boden;code=0x06050d
            "nach der Tuer: Wasserschritt im Fleck P5 von ROOM1260")
 r38n_fx_bilder(leon10b0_tuer "${_d}/fx.log" 13)
 
+# ---- Elza durch die Tuer ROOM10B1 -> ROOM1261 (echter Weg mit Elza, Lauf 3 2026-10-17) -----------------------------
+# Elza-RDT = Leon-RDT + 1 (@0x800397e4/ec): dieselbe Tuer fuehrt Elza nach 1261, Ankunft vor Fleck P5. Gemessen:
+# F39 room=1261 zweig=boden part=7 edt=0x17, F63 dito, danach Beton 0x1d; [foot] type=23 vag=7 / type=29 vag=1.
+r38n_exe(elza10b1_tuer elza 10B1 "-21370,3000,3072,0" "U0.6,A0.2,U3" 30 "150#1261")
+set(_d "${_wurzel}/elza10b1_tuer")
+r38n_zeile(elza10b1_tuer "${_d}/debug.log" "Elza-Bit=1" "Spielerin Elza (PL04)")
+r38n_zeile(elza10b1_tuer "${_d}/debug.log" "JUMP -> 10b" "Sprung nur nach 10B1")
+r38n_zeile(elza10b1_tuer "${_d}/wasser.log" "room=10B1;zweig=trocken" "Schritt vor der Tuer (10B1)")
+r38n_zeile(elza10b1_tuer "${_d}/wasser.log" "room=1261;zweig=boden;code=0x06050d00;edt=0x17"
+           "nach der Tuer: Wasserschritt Elza im Fleck P5 von ROOM1261")
+r38n_zeile(elza10b1_tuer "${_d}/wasser.log" "room=1261;zweig=trocken;edt=0x1d" "Elza auf Beton in 1261: kein Effekt")
+r38n_fx_bilder(elza10b1_tuer "${_d}/fx.log" 13)
+r38n_zeile(elza10b1_tuer "${_d}/debug.log" "type=23 vag=7" "Wasser-Schritt-Ton Elza nach der Tuer (VAG 7)")
+
 file(REMOVE "${_exe_kopie}")
-message(STATUS "${_tag}: OK — Leon/Elza Wasserschritt mit Effekt 6 Sub 5 + VAG 7, Becken Effekt 6 Sub 3 + VAG 3, Tuerweg 10B0 -> 1260")
+message(STATUS "${_tag}: OK — Leon/Elza Wasserschritt mit Effekt 6 Sub 5 + VAG 7, Becken Effekt 6 Sub 3 + VAG 3, Tuerwege 10B0 -> 1260 / 10B1 -> 1261")
