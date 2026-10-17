@@ -310,7 +310,12 @@ def baue_befreiung():
     op([0x46, 0x00, 0x02, 0x31] + list(d[0x00A52 + 14:0x00A52 + 20]),
        "Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14)")
     sleep(15, "Sleep 15")
-    op([0x3C, 0x01], "Cut_auto 1 (Form ROOM1141 sub06 @0x010D0)")
+    # Cut 7 ist eine reine Szenen-Kamera: die RVD-Gruppe 7 von ROOM1141 hat nur den Anker (Satz 21 `from 7 to 0`), aus Cut 7
+    # fuehrt keine Zone heraus — Cut_auto allein liess die Kamera dort stehen (Lauf int_d3: cam=7 bis zur Dachtuer, Elza
+    # hinter der Kamera; Dossier 4.3). Das Original beendet eine Szenen-Kamera mit Cut_old: zurueck auf den vor Cut_chg
+    # angezeigten Cut (FUN_8004032c @0x8004033c liest DAT_800b3f7b, gemerkt von LAB_800402a0 @0x800402e4).
+    op([0x2A, 0x00], "Cut_old + Nop: zurueck auf Elzas Kamera vor Cut 7 (Form ROOM1150 @0x010F2 `2a 00 3c 01`)")
+    op([0x3C, 0x01], "Cut_auto 1 (Form ROOM1150 @0x010F4 / ROOM1141 sub06 @0x010D0)")
     set_flag(2, 0x07, 0, "Set(2,7)=0 (Form sub06 @0x010C8)")
     set_flag(1, 0x1B, 0, "Set(1,0x1B)=0 (Form sub06 @0x010CC)")
     op([0x08, 0x00], "Endif = Ende des Ja-Zweigs (Form sub06 @0x010D8)")

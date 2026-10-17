@@ -616,10 +616,12 @@ static void teil_phase_h(void)
     re15_game_flag_set(7, 0xCC, 1);
     int park_bild = -1, park_cut = -1, vorher_sichtbar = 0, war_sichtbar_cut7 = 0;
     int tuer_auf = 0, tuer_zu = 0;
+    int cut_vor7 = -1, cut7_gesehen = 0;   /* Fortsetzung 4 (Dossier 4.3): angezeigter Cut unmittelbar vor Cut 7 */
     const int se_abgang = s_n_se;
     jx = john->x; jz = john->z; sprung = 0;
     for (int f = 0; f < 3000; f++) {
         const int sicht = john->active ? sichtbar(s_shown, john) : 0;
+        if (!cut7_gesehen) { if (s_shown == 7) cut7_gesehen = 1; else cut_vor7 = s_shown; }
         frame(0, 0);
         if (s_shown == 7 && john->x > -29000 && sichtbar(7, john)) war_sichtbar_cut7 = 1;
         if (john->x <= -29000 && park_bild < 0) { park_bild = (int)s_bild; park_cut = s_shown; vorher_sichtbar = sicht; }
@@ -646,6 +648,13 @@ static void teil_phase_h(void)
     PRUEF(g_aot.slots[0].active && g_aot.slots[0].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[0].dest_room == 0x13,
           "Slot 0 = Doppeltuer -> Raum 0x%02X (soll 0x13 = ROOM1131)", g_aot.door_params[0].dest_room);
     PRUEF(g_scd.player_mode == 0, "Steuerung frei");
+    /* Fortsetzung 4 (Dossier 4.3): Cut 7 ist eine reine Szenen-Kamera (RVD ROOM1141 Gruppe 7 = nur der Anker, Satz 21) —
+     * das Programm muss mit Cut_old + Cut_auto enden (Form ROOM1150 @0x010F2 `2a 00 3c 01`), sonst bleibt die Kamera auf
+     * Cut 7 stehen und Elza laeuft aus dem Bild (Lauf int_d3). */
+    for (int f = 0; f < 5; f++) frame(0, 0);
+    PRUEF(cut7_gesehen && cut_vor7 >= 0 && cut_vor7 != 7 && s_shown == cut_vor7 && g_scd.cut_auto_enabled,
+          "Kamera nach dem Abgang zurueck auf Cut %d (vor Cut 7 angezeigt, jetzt Cut %d), Kamera-Automatik an (%d)",
+          cut_vor7, s_shown, (int)g_scd.cut_auto_enabled);
     {
         druck_t r = druecke(-7250, -250 - 620, 3072, 200);
         PRUEF(r.raumwechsel && r.ziel == 0x1171, "Dachtuer -> ROOM%04X (soll 1171)", (unsigned)r.ziel);
@@ -759,6 +768,161 @@ static void teil_leon1140(void)
     PRUEF(prop >= 0 && ymin < y0 - 1000, "Rolladen (Prop obj 0) faehrt hoch: y %d -> %d", y0, ymin);
 }
 
+/* ---- Teil: sicht (Werkzeug des Riegels integration_r38_dining1141_s; Dossier 4.4) ------------------------------------
+ * Aufruf: test_r38_dining1141 sicht <laufA> <laufB> <praefix>
+ * A = Lauf mit John, B = derselbe Lauf mit RE15_R38F_JOHN_AUS=1 (John weder Mesh noch Schatten, Spiel unveraendert). Beide
+ * mit RE15_R38F_SICHT=<praefix>: je Bild von ROOM1141 das fertig komponierte Bild <praefix>NNNNNN.ppm (Ruecklese-Weg von
+ * RE15_FRAMEDUMP) und eine Zeile "[r38f-sicht] ..." in debug.log (platform/pc/src/dining_r38_pc.c). Johns sichtbare Pixel
+ * je Bild = die Pixel, in denen A und B sich unterscheiden. Geprueft (Nachtrag 2: "keine plötzlich rein poppenden
+ * Charaktere"; Auftrag: in keinem Bild erscheint John ohne vorherige Bewegung ins Bild):
+ *   R0  A und B tragen dieselben Messzeilen (das Spiel lief ohne Johns Bild gleich, sonst waere der Vergleich ungueltig),
+ *       jedes Bild beider Laeufe ist da.
+ *   R1  solange der Notrolladen nicht faehrt, ist John in keinem Bild sichtbar (verdeckt im Dachgang).
+ *   R2  innerhalb derselben Kamera wird John nur sichtbar (0 -> >0 Pixel), wenn er sich bewegt (Schritt 1..400 Einheiten
+ *       je Bild) oder der Rolladen faehrt.
+ *   R3  innerhalb derselben Kamera verschwindet John nur (>0 -> 0 Pixel), wenn er sich bewegt (Schritt 1..400); ein Parken
+ *       (x <= -29000) oder Sprung (> 400) waehrend er sichtbar ist, ist ein Verstoss.
+ * Kamerawechsel (angeforderter oder angezeigter Cut aendert sich) sind Schnitte: dort darf sich alles aendern.
+ * Schreibt <laufA>/sicht.txt (je Bild F, Kamera, Pixel, Kasten, Lagen). */
+typedef struct { int da, cam, anz, jda, jx, jz, rda, ry, ex, ez; } sicht_t;
+#define SICHT_MAX 20000
+static sicht_t s_sicht_a[SICHT_MAX], s_sicht_b[SICHT_MAX];
+
+static int sicht_lesen(const char *lauf, sicht_t *out)
+{
+    char p[1024];
+    snprintf(p, sizeof p, "%s/debug.log", lauf);
+    FILE *f = fopen(p, "rb");
+    if (!f) return -1;
+    char z[4096];
+    int n = 0;
+    while (fgets(z, sizeof z, f)) {
+        if (strncmp(z, "[r38f-sicht] F", 14) != 0) continue;
+        unsigned fr; sicht_t s;
+        if (sscanf(z, "[r38f-sicht] F%u cam=%d anz=%d john=%d (%d,%d) rolladen=%d y=%d elza=(%d,%d)", &fr, &s.cam, &s.anz,
+                   &s.jda, &s.jx, &s.jz, &s.rda, &s.ry, &s.ex, &s.ez) != 10 || fr >= SICHT_MAX || out[fr].da) continue;
+        s.da = 1;
+        out[fr] = s;
+        n++;
+    }
+    fclose(f);
+    return n;
+}
+
+static uint8_t *ppm_lesen(const char *p, int *w, int *h)
+{
+    FILE *f = fopen(p, "rb");
+    if (!f) return NULL;
+    char mag[3] = { 0 };
+    int mx = 0;
+    if (fscanf(f, "%2s %d %d %d", mag, w, h, &mx) != 4 || strcmp(mag, "P6") || mx != 255 || *w <= 0 || *h <= 0) {
+        fclose(f); return NULL;
+    }
+    fgetc(f);
+    const size_t n = (size_t)(*w) * (size_t)(*h) * 3u;
+    uint8_t *b = (uint8_t *)malloc(n);
+    if (!b || fread(b, 1, n, f) != n) { free(b); fclose(f); return NULL; }
+    fclose(f);
+    return b;
+}
+
+static int teil_sicht(int argc, char **argv)
+{
+    printf("== sicht ==\n");
+    if (argc < 5) { printf("Aufruf: test_r38_dining1141 sicht <laufA> <laufB> <praefix>\n"); return 2; }
+    const char *la = argv[2], *lb = argv[3], *pf = argv[4];
+    const int na = sicht_lesen(la, s_sicht_a), nb = sicht_lesen(lb, s_sicht_b);
+    PRUEF(na > 0 && nb > 0, "Messzeilen [r38f-sicht]: A %d, B %d", na, nb);
+    if (na <= 0 || nb <= 0) return 1;
+    int erst = -1, letzt = -1, abweich = -1;
+    for (int f = 0; f < SICHT_MAX; f++) {
+        const sicht_t *a = &s_sicht_a[f], *b = &s_sicht_b[f];
+        if (abweich < 0 && (a->da != b->da || (a->da && memcmp(a, b, sizeof *a) != 0))) abweich = f;
+        if (a->da) { if (erst < 0) erst = f; letzt = f; }
+    }
+    PRUEF(abweich < 0, "R0 A und B mit gleichen Messzeilen (Spiel ohne Johns Bild unveraendert), erste Abweichung %d", abweich);
+    char p[1200];
+    snprintf(p, sizeof p, "%s/sicht.txt", la);
+    FILE *out = fopen(p, "w");
+    if (out) fprintf(out, "# Bild cam anz Pixel Kasten(x0,y0,x1,y1) John(da,x,z) Rolladen(da,y) Elza(x,z)\n");
+    int fehlend = 0, bilder = 0, sichtbar_n = 0, erst_sicht = -1, letzt_sicht = -1, verstoss = 0;
+    int r1 = 0, r2 = 0, r3 = 0, erscheinen = 0, verschwinden = 0;
+    int px_vor = -1, f_vor = -1, rolladen_faehrt_seit = -1;
+    const int ry0 = s_sicht_a[erst].ry;
+    for (int f = erst; f <= letzt; f++) {
+        const sicht_t *s = &s_sicht_a[f];
+        if (!s->da) { px_vor = -1; continue; }
+        int wa = 0, ha = 0, wb = 0, hb = 0;
+        char pa[1200], pb[1200];
+        snprintf(pa, sizeof pa, "%s/%s%06d.ppm", la, pf, f);
+        snprintf(pb, sizeof pb, "%s/%s%06d.ppm", lb, pf, f);
+        uint8_t *ba = ppm_lesen(pa, &wa, &ha), *bb = ppm_lesen(pb, &wb, &hb);
+        if (!ba || !bb || wa != wb || ha != hb) { fehlend++; free(ba); free(bb); px_vor = -1; continue; }
+        bilder++;
+        int px = 0, x0 = wa, y0 = ha, x1 = -1, y1 = -1;
+        for (int y = 0; y < ha; y++)
+            for (int x = 0; x < wa; x++) {
+                const size_t i = ((size_t)y * wa + x) * 3u;
+                if (ba[i] != bb[i] || ba[i + 1] != bb[i + 1] || ba[i + 2] != bb[i + 2]) {
+                    px++;
+                    if (x < x0) x0 = x;
+                    if (x > x1) x1 = x;
+                    if (y < y0) y0 = y;
+                    if (y > y1) y1 = y;
+                }
+            }
+        free(ba); free(bb);
+        if (out) fprintf(out, "F%d %d %d %d (%d,%d,%d,%d) (%d,%d,%d) (%d,%d) (%d,%d)\n", f, s->cam, s->anz, px,
+                         px ? x0 : -1, px ? y0 : -1, x1, y1, s->jda, s->jx, s->jz, s->rda, s->ry, s->ex, s->ez);
+        if (rolladen_faehrt_seit < 0 && s->rda && s->ry != ry0) rolladen_faehrt_seit = f;
+        if (px > 0) { sichtbar_n++; if (erst_sicht < 0) erst_sicht = f; letzt_sicht = f; }
+        /* R1: verdeckt, solange der Rolladen nicht faehrt */
+        if (rolladen_faehrt_seit < 0 && px > 0) {
+            r1++; verstoss++;
+            if (r1 <= 5) printf("  VERSTOSS R1 Bild %d: John sichtbar (%d px, Kasten %d,%d-%d,%d), Rolladen steht noch\n",
+                               f, px, x0, y0, x1, y1);
+        }
+        if (px_vor >= 0 && f_vor == f - 1) {
+            const sicht_t *v = &s_sicht_a[f - 1];
+            const int schnitt = (s->cam != v->cam) || (s->anz != v->anz);
+            const int park = s->jda && s->jx <= -29000, park_v = v->jda && v->jx <= -29000;
+            int schritt = -1;
+            if (s->jda && v->jda && !park && !park_v) schritt = abs(s->jx - v->jx) + abs(s->jz - v->jz);
+            const int laeuft = schritt >= 1 && schritt <= 400;
+            const int rolladen = s->rda && v->rda && s->ry != v->ry;
+            if (!schnitt && px_vor == 0 && px > 0) {
+                erscheinen++;
+                printf("  erscheint Bild %d (Cut %d): %d px Kasten %d,%d-%d,%d, John-Schritt %d, Rolladen %s\n", f, s->anz,
+                       px, x0, y0, x1, y1, schritt, rolladen ? "faehrt" : "steht");
+                if (!(laeuft || rolladen)) { r2++; verstoss++; printf("  VERSTOSS R2 Bild %d: ohne Bewegung ins Bild\n", f); }
+            }
+            if (!schnitt && px_vor > 0 && px == 0) {
+                verschwinden++;
+                printf("  verschwindet Bild %d (Cut %d): vorher %d px, John-Schritt %d%s\n", f, s->anz, px_vor, schritt,
+                       park ? ", GEPARKT" : "");
+                if (!laeuft) { r3++; verstoss++; printf("  VERSTOSS R3 Bild %d: verschwindet ohne Bewegung aus dem Bild\n", f); }
+            }
+            if (!schnitt && (px > 0 || px_vor > 0) && schritt > 400) {
+                r3++; verstoss++;
+                printf("  VERSTOSS R3 Bild %d: Sprung %d Einheiten, waehrend John sichtbar ist\n", f, schritt);
+            }
+        }
+        px_vor = px; f_vor = f;
+    }
+    if (out) fclose(out);
+    PRUEF(fehlend == 0 && bilder > 0, "R0 Bilder: %d verglichen (Bild %d..%d), %d fehlen", bilder, erst, letzt, fehlend);
+    PRUEF(rolladen_faehrt_seit > 0, "Rolladen faehrt ab Bild %d", rolladen_faehrt_seit);
+    PRUEF(r1 == 0, "R1 vor dem Hochfahren in keinem Bild sichtbar (%d Verstoesse)", r1);
+    PRUEF(sichtbar_n > 0 && erst_sicht >= rolladen_faehrt_seit,
+          "John sichtbar in %d Bildern, zuerst Bild %d (Rolladen ab %d), zuletzt Bild %d", sichtbar_n, erst_sicht,
+          rolladen_faehrt_seit, letzt_sicht);
+    PRUEF(r2 == 0, "R2 %d mal ins Bild gekommen, jedes Mal mit Bewegung (%d Verstoesse)", erscheinen, r2);
+    PRUEF(r3 == 0, "R3 %d mal aus dem Bild gegangen, jedes Mal mit Bewegung, kein Parken/Sprung im Bild (%d Verstoesse)",
+          verschwinden, r3);
+    printf("  sicht.txt: %s\n", p);
+    return (g_fail || verstoss) ? 1 : 0;
+}
+
 /* Tuersequenz-Laeufer: faengt jede Anfrage (im Spiel spielt ihn die Plattform; Muster test_r37_sperre1050.c). */
 static int s_n_seq = 0;
 static void fang(const re15_door_seq_anfrage_t *a) { (void)a; s_n_seq++; }
@@ -767,6 +931,7 @@ int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     const int alle = !strcmp(teil, "alle");
+    if (!strcmp(teil, "sicht")) return teil_sicht(argc, argv);   /* Werkzeug des Riegels integration_r38_dining1141_s */
     re15_door_seq_setze_laeufer(fang);
     if (alle || !strcmp(teil, "texte"))          teil_texte();
     if (alle || !strcmp(teil, "programme"))      teil_programme();

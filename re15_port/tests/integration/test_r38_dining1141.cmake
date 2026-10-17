@@ -12,6 +12,8 @@ cmake_minimum_required(VERSION 3.16)
 #      Tuersperre msg 41 an der Doppeltuer; Kampfende (Messhaken RE15_R38F_GORILLAS_TOT) -> Johns Abgang in Cut 7;
 #      Dachtuer -> ROOM1171. Zustands-Log: John nie gesprungen, beim Parken hinter der Kamera von Cut 7.
 #   L  LEON 1140: Gemaelde -> Rolladen-Ton 0x3B 0x0C/0x0A/0x0B (Punkt 3)
+#   S  ELZA wie D bis zur Dachtuer, ZWEI Laeufe (mit/ohne Johns Bild), jedes Bild von 1141 zurueckgelesen und verglichen:
+#      John erscheint/verschwindet in keinem Bild ohne Bewegung (Nachtrag 2; Werkzeug test_r38_dining1141 sicht)
 #
 # Druckzahlen je Abfrage (AKTION + WARTE 60) gemessen mit `test_r38_dining1141 takt`: Gemaelde 1+3, Tuer 1131 mit
 # Doppeltuer im Kampf 1+1 mit WARTE 90 (zwei Zeilen; nach WARTE 45 lief die Schrift noch, der Druck beschleunigte
@@ -20,7 +22,7 @@ cmake_minimum_required(VERSION 3.16)
 # @0x02216 stellt Slot 6 wieder scharf).
 # Bilder je Lauf per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) und Ton-Mitschnitt RE15_AUDIO_CAP_SYNC im Arbeitsordner;
 # geprueft werden debug.log, state.txt und wegplan_log.txt.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=W|Z|D|L] -P test_r38_dining1141.cmake
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=W|Z|D|L|S] [-DRE15_R38F_WERKZEUG=<test_r38_dining1141>] -P test_r38_dining1141.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r38_dining1141: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
@@ -293,6 +295,7 @@ ENDE
         set(_sperre 0)
         set(_fvor -1)
         set(_fertig 0)
+        set(_cam_frei "")
         foreach(_z IN LISTS _zeilen)
             # Tuersperre im Kampf: msg 41 offen, waehrend John (t=49) im Raum ist = ROOM1141 (in 1131 gibt es keinen John)
             if(_z MATCHES "msg\\(a=1 fsm=1 id=41 " AND _z MATCHES "\\[1 t=49 ")
@@ -320,6 +323,11 @@ ENDE
                     set(_in1141 1)
                 endif()
                 if(_in1141)
+                    # Fortsetzung 4 (Dossier 4.3): nach dem Parken muss die Kamera Cut 7 wieder verlassen (Cut_old, Form
+                    # ROOM1150 @0x010F2) — Lauf int_d3 blieb auf Cut 7, Elza lief hinter der Kamera zur Dachtuer.
+                    if(NOT _park STREQUAL "" AND _x EQUAL -30000 AND NOT _cam EQUAL 7 AND _cam_frei STREQUAL "")
+                        set(_cam_frei "${_z}")
+                    endif()
                     if(_x EQUAL -30000 AND _park STREQUAL "")
                         set(_park "cam=${_cam} vorher=(${_px},${_pz})")
                         if(NOT _cam EQUAL 7 OR _pz LESS -9613)
@@ -364,12 +372,99 @@ ENDE
         endif()
         pruef_wahr(D _b "John wurde beim Abgang geparkt (${_park})")
         set(_b FALSE)
+        if(NOT "${_cam_frei}" STREQUAL "")
+            set(_b TRUE)
+        endif()
+        string(SUBSTRING "${_cam_frei}" 0 120 _cam_frei_kurz)
+        pruef_wahr(D _b "nach dem Abgang verlaesst die Kamera Cut 7 (Cut_old): ${_cam_frei_kurz}")
+        set(_b FALSE)
         if(_sperre EQUAL 1)
             set(_b TRUE)
         endif()
         pruef_wahr(D _b "Doppeltuer im Kampf -> msg 41 (I cannot leave him alone with those monsters.)")
     else()
         list(APPEND _fehler "D: kein state.txt")
+    endif()
+endif()
+
+# --- S: Sichtbarkeit per Framedump (Nachtrag 2, Fortsetzung 4, Dossier 4.4) -----------------------------------------
+# "Ich möchte keine plötzlich rein poppenden Charaktere haben..." -> in keinem Bild von ROOM1141 erscheint John ohne
+# vorherige Bewegung ins Bild. Zwei gleiche Laeufe des Weges D bis nach Johns Abgang und Elzas Gang zur Dachtuer (ohne
+# Eintritt in 1171): A mit John, B mit RE15_R38F_JOHN_AUS=1 (John weder Mesh noch Schatten, Spiel unveraendert). Beide
+# lesen mit RE15_R38F_SICHT=sicht_ JEDES Bild von 1141 fertig komponiert zurueck (dining_r38_pc.c, Weg von RE15_FRAMEDUMP).
+# Das Werkzeug `test_r38_dining1141 sicht` vergleicht A/B Bild fuer Bild: die verschiedenen Pixel sind Johns sichtbare
+# Pixel; Regeln R0-R3 im Kopf von teil_sicht (test_r38_dining1141.c). Die Bilder (2 x ~1 GB) werden nach gruener Pruefung
+# geloescht, sicht.txt (je Bild Kamera, Pixel, Kasten, Lagen) bleibt.
+if(TEIL MATCHES "S")
+    if(NOT AUSWERTEN AND (NOT RE15_R38F_WERKZEUG OR NOT EXISTS "${RE15_R38F_WERKZEUG}"))
+        message(FATAL_ERROR "r38_dining1141[S]: RE15_R38F_WERKZEUG fehlt/existiert nicht: '${RE15_R38F_WERKZEUG}'")
+    endif()
+    set(_weg_s "RAUM 1131
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+BLICK 0
+AKTION
+RAUM 1141
+WARTE 600
+GEHE -7600 -12000 150
+GEHE -8150 -10250 80
+BLICK 2048
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 120
+GEHE -7900 -15000 150
+GEHE -7900 -17750 80
+BLICK 2048
+AKTION
+WARTE 90
+AKTION
+WARTE 30
+GEHE -5500 -19000 150
+WARTE 700
+GEHE -6000 -12000 150
+GEHE -7350 -7600 150
+GEHE -7250 -1000 80
+BLICK 3072
+WARTE 60
+ENDE
+")
+    set(_env_s "${_nach1021};RE15_GIVE=0x43:1;RE15_DEBUG_JUMP=1131@gp;RE15_PLAYER_POS=-1300,-13900,0;RE15_R38F_GORILLAS_TOT=600;RE15_R38F_GORILLAS_STARR=1;RE15_R38F_SICHT=sicht_")
+    f_lauf(sa ELZA "4450#1141" "${_weg_s}" "${_env_s}" _sa _wpsa)
+    f_lauf(sb ELZA "4450#1141" "${_weg_s}" "${_env_s};RE15_R38F_JOHN_AUS=1" _sb _wpsb)
+    pruef(S _sa "ROOM1141 Phase H: John im Dachgang hinter dem Rolladen")
+    pruef(S _sa "MESSHAKEN RE15_R38F_GORILLAS_TOT")
+    pruef(S _sa "[r38f-sicht] F")
+    pruef(S _sb "[r38f-sicht] F")
+    if(NOT AUSWERTEN OR RE15_R38F_WERKZEUG)
+        execute_process(COMMAND "${RE15_R38F_WERKZEUG}" sicht "${_basis}_sa" "${_basis}_sb" sicht_
+                        RESULT_VARIABLE _rv_s OUTPUT_VARIABLE _out_s ERROR_VARIABLE _out_s TIMEOUT 900)
+        message(STATUS "${_out_s}")
+        set(_b FALSE)
+        if("${_rv_s}" STREQUAL "0")
+            set(_b TRUE)
+        endif()
+        pruef_wahr(S _b "Sichtbarkeit je Bild (test_r38_dining1141 sicht, exit ${_rv_s})")
+        if(_b)
+            foreach(_l sa sb)
+                file(GLOB _ppm "${_basis}_${_l}/sicht_*.ppm")
+                if(_ppm)
+                    file(REMOVE ${_ppm})
+                endif()
+            endforeach()
+        endif()
     endif()
 endif()
 

@@ -14,6 +14,9 @@
 #   unit_r38_dining1141_leon1140       Punkt 3: Rolladen-Ton Leon ROOM1140
 #   integration_r38_dining1141_w|z|d|l echte exe (test_r38_dining1141.cmake): Elza-Weg 1021 -> 1011 -> 1021, 1131 -> 1141
 #                                      -> 1171 mit Bildern/Ton-Mitschnitt, Leon 1140
+#   integration_r38_dining1141_s       Nachtrag 2 per Framedump: zwei Laeufe (mit/ohne Johns Bild), JEDES Bild von 1141
+#                                      verglichen (Werkzeug test_r38_dining1141 sicht) — John erscheint/verschwindet nie
+#                                      ohne Bewegung (Fortsetzung 4, Dossier 4.4)
 add_executable(test_r38_dining1141 ${CMAKE_CURRENT_LIST_DIR}/../test_r38_dining1141.c)
 target_link_libraries(test_r38_dining1141 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_dining1141 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -31,11 +34,12 @@ endforeach()
 #   Je Teil ein eigener Test (gemessen unter Last 2026-10-16: W ~25 min, Z ~8, D ~40, L ~10 — zusammen ueber jedem
 #   vernuenftigen Einzel-Zeitlimit); eigener Arbeitsordner und eigene exe-Kopie je Teil.
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_dining1141.cmake)
-    foreach(_teil W Z D L)
+    foreach(_teil W Z D L S)
         string(TOLOWER ${_teil} _klein)
         add_test(NAME integration_r38_dining1141_${_klein}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_R38F_WERKZEUG=$<TARGET_FILE:test_r38_dining1141>
                          -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_dining1141_${_klein}_wd
                          -DTEIL=${_teil}
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_dining1141.cmake)

@@ -9658,6 +9658,7 @@ re_title:;
                     }
                     if (!g5_front_in) npc_region_culled = 1;   /* posieren, nicht zeichnen (s.o.) */
                 }
+                { extern int re15_pc_dining_r38_sicht(const re15_actor_t *); if (re15_pc_dining_r38_sicht(npc)) npc_region_culled = 1; }   /* Runde 38 Spur F: Messhaken Sichtbarkeit (dining_r38_pc.c) */
 
                 /* RE2-ZELLENARM (Runde 16 / Phase 2): solange das Entity-Bit 2 gesetzt ist
                  * (0x80101164 mit a2 = 0: INIT @0x80100304, Rueckzug-Ende @0x80100E38), ist

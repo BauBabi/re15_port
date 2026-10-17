@@ -125,6 +125,57 @@ static void spielen(int bank, int satz)
 
 unsigned re15_pc_dining_r38_gespielt(int k) { return (k >= 0 && k < 3) ? s_gespielt[k] : 0u; }
 
+/* ============ MESSHAKEN Sichtbarkeit per Framedump (Dossier 4.3; env-gegatet, kein Spielverhalten) ============
+ * Nachtrag 2 (Nutzer 2026-10-16 21:33): "Ich möchte keine plötzlich rein poppenden Charaktere haben...". Geprueft
+ * wird: in keinem Bild von ROOM1141 erscheint John ohne vorherige Bewegung ins Bild. Methode (Riegel
+ * integration_r38_dining1141_s): zwei gleiche Laeufe, A mit John, B mit unsichtbarem John (Mesh und Schatten aus, die
+ * Spiellogik laeuft unveraendert — main.c posiert einen gecullten NPC weiter). Je Bild von ROOM1141 liest der Haken
+ * das fertig komponierte Bild zurueck (re15_render_pc_request_readback = derselbe Weg wie RE15_FRAMEDUMP, unmittelbar
+ * vor SDL_RenderPresent); die Pixel, in denen sich A und B unterscheiden, sind genau Johns sichtbare Pixel (Riegel-
+ * Werkzeug test_r38_dining1141 sicht).
+ *   RE15_R38F_SICHT=<praefix>  je Bild in ROOM1141: <praefix>NNNNNN.ppm (NNNNNN = g_engine.frame_count wie
+ *                              RE15_FRAMEDUMP) und eine Zeile "[r38f-sicht] F<n> cam=<angefordert> anz=<angezeigt>
+ *                              john=<da> (<x>,<z>) rolladen=<da> y=<y> elza=(<x>,<z>)" (Kamera, Lage Johns, des
+ *                              Notrolladens Prop obj 0 und Elzas fuer die Regeln des Werkzeugs; angezeigt =
+ *                              work_vars[0x0A], room_common.c re15_cam_present_tick @0x80021bfc)
+ *   RE15_R38F_JOHN_AUS=1       John (Typ 0x49) in ROOM1141 nicht zeichnen.
+ * Aufruf je NPC im Zeichendurchgang (main.c, hinter dem Regionen-Cull); Rueckgabe 1 = diesen NPC nicht zeichnen. */
+#include "re15_actor.h"
+#include "re15_scd.h"
+
+int re15_pc_dining_r38_sicht(const re15_actor_t *npc)
+{
+    static int s_init = 0, s_aus = 0;
+    static char s_praefix[256];
+    static unsigned s_bild = 0xFFFFFFFFu;
+    if (!s_init) {
+        s_init = 1;
+        const char *e = getenv("RE15_R38F_SICHT");
+        if (e && *e) snprintf(s_praefix, sizeof s_praefix, "%s", e);
+        e = getenv("RE15_R38F_JOHN_AUS");
+        s_aus = (e && *e && *e != '0');
+    }
+    if ((!s_praefix[0] && !s_aus) || g_current_room_id != RE15_R38F_RAUM_1141 || !npc) return 0;
+    if (s_praefix[0] && s_bild != (unsigned)g_engine.frame_count) {   /* einmal je Bild */
+        s_bild = (unsigned)g_engine.frame_count;
+        extern void re15_render_pc_request_readback(const char *path);
+        char p[300];
+        snprintf(p, sizeof p, "%s%06u.ppm", s_praefix, s_bild);
+        re15_render_pc_request_readback(p);
+        int jx = 0, jz = 0, jda = 0, ry = 0, rda = 0;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == RE15_R38F_JOHN_TYP) {
+                jx = g_actors[s].x; jz = g_actors[s].z; jda = 1; break;
+            }
+        for (int pi = 0; pi < g_scd.prop_count && pi < RE15_SCD_MAX_PROPS; pi++)
+            if (g_scd.props[pi].active && g_scd.props[pi].obj_id == 0) { ry = g_scd.props[pi].y; rda = 1; break; }
+        fprintf(stderr, "[r38f-sicht] F%u cam=%d anz=%d john=%d (%d,%d) rolladen=%d y=%d elza=(%d,%d)\n", s_bild,
+                (int)g_scd.cam_id, (int)g_scd.work_vars[0x0A], jda, jx, jz, rda, ry,
+                (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+    }
+    return s_aus && npc->type == RE15_R38F_JOHN_TYP;
+}
+
 void re15_pc_dining_r38_init(void)
 {
     re15_dining_r38_se_hook = spielen;
