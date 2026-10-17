@@ -9,6 +9,14 @@ Baum `.claude/worktrees/r38_npckante`, Zweig `r38/npckante`, Basis f587d34e.
 Lesart (AUFTRAG "Lesarten"): Elza-Szenario -> ROOM10B1 (John = Typ 0x49, Kendo-Modell aus CDEMD1) und ROOM1261;
 Leon-Szenario -> Marvin (0x40) und Ada (0x42) in ROOM1260 und wo sie sonst Hoehenkanten queren (Zensus unten: ROOM2000).
 
+"Am Ende von ROOM 10B0" (selbst geprueft, SCD ROOM10B1 linear dekodiert): John hat in 10B1 drei Auftritte — sub02
+@0x0182E (Lauf vom oberen Steg Band 5 nach Westen bis zum Stegende; der letzte Plc_dest @0x01896 fuehrt ueber die
+Absprungzelle [31]), sub03 @0x018B2 (Pos_set auf den Boden (-9278,0,-6842) Band 0, Lauf nach Nordwesten, Band 0, keine Kante
+laut kanten_zensus.py) und sub04 @0x0195A (Schlussgespraech msg 0-5 am Kanaldeckel, John nur Pos_set + Drehung Modus 9
+@0x01A84, Aot_on(1) @0x01A8E fuer die Tuer nach 1261). Die einzige Kante ist das Stegende in sub02 = "am Ende" des Raums
+(oben); dort lief John vorher 7200 ueber dem Block weiter ("laeuft in die Luft weiter"). "Room 1260 ... Kendo" = Elzas
+Variante ROOM1261 (Elza-RDT = Leon-RDT + 1, PSX.EXE `srl a0,a0,31` @0x800397e4 / `addu a0,a0,v0` @0x800397ec).
+
 ## Stand (Schritte)
 - [x] Pflichtlektuere (AUFTRAG/VERTRAG, Memory cutscene-npc-system / npc-ai / npc-global-yield / npc-crossfade-decay)
 - [x] Messung vorher (exe, Lade-Weg, alle drei Raeume)
