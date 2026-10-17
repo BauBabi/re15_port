@@ -147,6 +147,32 @@ Effekt-Id 6 = Index 1, Koerper @0x2dd4, count_a 45, count_b 41, Zeilenblock @0x2
 Routine 10 (@0x800176b0: Flags := Zeile[0x0e] @0x800176c0/c8, TPAGE |= Zeile[0x16] @0x800176d8-ec, Vorschub)
 und Routine 0 sind im Port vorhanden (re15_esp.c case 10). Kein Routine-B-Boden (B = 0) -> keine Bodenklemme.
 
+## Fortsetzung (Lauf 2, 2026-10-17) — Pruefung des Vorgaenger-Stands
+
+Vorgaenger (wf_9fc9967b-c4b) vom Sitzungslimit beendet; Stand 67aa565c. Geprueft, nicht wiederholt:
+
+- **RE-Belege selbst nachdisassembliert** (re15_disasm.py, info/Re1.5/PSX.EXE): B1/B2 (FUN_80045630 @0x80045630-0x8004580c,
+  jede zitierte Instruktion stimmt; Part-Stride `0xac` = Schiebe-/Subtraktionskette @0x8004567c-0x800456a4 = a1*172),
+  B3 (Geh-Executor 0x80032498: `lw v0,-13380` = 0x800acbbc Bildwort-Zeiger, `andi 0x4000` @0x8003253c, a0 = 0
+  @0x80032544, a1 = 7-3*Bit12 @0x80032548-60, Lauf 0x80032778 `ori a0,zero,0x1` @0x80032850, Tabellen @0x80073ff0
+  [1..4] = 0x80032498/0x80032778/0x80032ae4/0x80032d20, @0x80073f90[1] = 0x80031de8), B4 (FUN_80019700: erster freier
+  Platz `sltiu v0,t3,0x60` @0x8001978c, Flags 3 @0x800197b4/d0, +0x2e = a1 @0x800197e4, Versatz a3 -> +0x40..
+  @0x800197e8-804, +0x74 = a2 @0x8001980c/1c, Matrix -> +0x4c..+0x68 @0x80019820-5c), B5 (Hauptlauf Flags&0x80 == 0
+  @0x8001a118-0x8001a2a4: RotMatrix(Euler + (0,+0x2e,0)) * xlat + Anker.R*Versatz + Anker.T; FOLGEN @0x80019f54-a4),
+  B6 (FUN_8001e9ec: m1 = Part+0x40 = CompMatrix(Eltern, lokal)), B7 (Hauptschleife @0x8001ce04-2c: Gegner, Spieler
+  0x80031c44, Objekte, AOT-Scan 0x800436a8, ESP-Takt; Spieler+0x88 := 0 `sh zero,-13604(at)` @0x80031da4 NACH dem
+  Dispatch @0x80031cb4; Bit 0x4000 von 0x800aca3c geloescht @0x80031cdc-e4, neu gesetzt @0x80031d24 = der Schritt
+  sieht das Bit des Vorbilds). FLR-Abfrage FUN_800437d4 @0x800437d4-0x80043848: nur x/z (`lh`/`sltu`), KEINE Hoehe.
+- **Raum-Zensus** neu gerechnet (scratchpad N38w/wasser_zensus.py, Baum-Assets): deckungsgleich mit dem Vorgaenger.
+- **Was ist "flaches Wasser"?** Sichtlauf aller sechs FLR-0x97-Flecken von ROOM1260 (Leon auf die Fleckmitte, Kamera per
+  RVD-Ankerregion, RE15_FORCE_CUT): P1 (Cut 1), P2 (Cut 7), P3 (Cut 8), P4/P5 (Cut 15) liegen genau auf den
+  gruenlichen PFUETZEN der Gangboeden im Hintergrundbild. Die sce-8-Zonen (Spiegel -900, Band 0) sind die tiefen
+  Rinnen neben den Gaengen (Kanalwasser, Gegner/Spur U). => Fuer Leon/Elza ist das flache Wasser der FLR-0x97-Zweig
+  (Effekt 6 Sub 5 + Wasserschritt EDT 0x17); der Stempel-Zweig (Effekt 6 Sub 3 + Watschritt) greift dort, wo der
+  Spieler in einer sce-8-Zone steht (2090: Becken, 20A0 Zone 5 auf Band 1).
+- **Messung nachher reproduziert** (exe Stand 67aa565c, Leon 1260 P0): F97/F112 `zweig=boden code=0x06050d00`,
+  Anker = Fuss-Part (Part 4/7 = linker/rechter Fuss, stair_common.c STAIR_FOOT_L/R) + (0,100,0).
+
 ## Umsetzung
 
 (folgt)
