@@ -19,7 +19,6 @@ Maengel der Abnahme 0: M1 (ROOM5060/5061 Cut 4 deckend dunkles Halbviereck statt
   `platform/pc/src/objabe_r38_pc.c` 08:45:03.44, Objekt `objabe_r38_pc.c.obj` 08:45:04.56, `re15_pc.exe` 08:45:04.79 ->
   die exe entspricht HEAD.
 
-(Fortsetzung folgt.)
 
 ## 1. Code-Diff der Nachbesserung 1 (gelesen)
 
@@ -94,3 +93,75 @@ Ausgabe **byte-gleich** mit den eingecheckten `zensus_beidseitig.txt` / `zensus_
 (ROOM1170 obj 3 Cut 0; ROOM5060/5061 obj 4 Cut 4), WENIGER 22 (18 aus §8 + ROOM2050 obj 4 Cut 11/12/13 und ROOM20A0
 obj 6 Cut 3, alle Typ 3), Eltern 4 Saetze gerechnet, pc[5]=0x80 (ROOM4030/4031) gemeldet — das sind genau die Faelle,
 die meine Abnahme-0-Skripte (`zensus_mehr.py`, `zensus_typ3.py`) gefunden hatten.
+
+## 4. Nutzer-Punkt am ECHTEN Tuerweg nach N1 (Leon 2090 -> 20A0, Elza 2091 -> 20A1)
+
+Derselbe Weg wie in Abnahme 0 §3/§4 (ROOM2090.RDT @0x009B6 Door_aot_set slot 1 -> ROOM20A0 Cut 13, Band 2, zu Fuss zur
+Leiter, Schalter, Ja, Cut 11, Kiste nach Norden). Laeufer `abnW1_rolltor/lauf_w1.sh` (Messkopie
+`re15_pc_abnW1_<lauf>.exe`, RE15_WINDOW_SCALE=1), Wegplaene `wp_tuer_20a0.txt` / `wp_tuer_20a1_elza.txt` (Abnahme 0):
+* Leon `t1_tuer_leon_n1`: `RE15_PSELECT_AUTO=1 RE15_KEIN_GATOR=1 RE15_DEBUG_JUMP=2090@250
+  RE15_PLAYER_POS=6300,-16250,2048,1 RE15_FRAMEDUMP=300-3600/10:fd_ RE15_EXIT_AT=3600#20A0`.
+* Elza `t5_tuer_elza_n1`: dasselbe mit `RE15_PSELECT_AUTO_SWITCH=1`, 2091/20A1; debug.log
+  `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, wegplan `F46 room=20A1 ... RAUM 20A1 geladen`.
+
+Ablauf (wegplan/objfall, beide = Abnahme 0 Bild fuer Bild): Rolladen `F1263 ... obj1=(7942,-10800,-20510)`; Kiste
+Leon `F2282 AUSLOESER wort=0x4206 band=4`, `F2301 LANDUNG y=-3600 band=2`, `F2320 LANDUNG y=-1800 band=1`; Elza
+`F2288 AUSLOESER`, `F2307 LANDUNG band=2`, `F2326 LANDUNG band=1`.
+
+| Messung | Abnahme 0 (vor N1) | nach N1 (diese Abnahme) |
+|---|---|---|
+| Cut 11, Raumhintergrund-Anteil (`test_r38_rolltor20a0 --bild <ppm> ROOM20A.BSS 11 0`, Bild UND Vorbild cam=11; Helfer `tools/bg11.sh`) | Leon 69 Bilder 0.8998..0.9678, Elza 70 Bilder 0.9026..0.9684 | **Leon 69 Bilder 0.8998..0.9678, Elza 70 Bilder 0.9026..0.9684 — Datei fuer Datei identisch** (`diff` leer) |
+| Pixelvergleich aller 331 Bilder gegen den Abnahme-0-Lauf (`tools/diff_dumps.py`, max\|d\| > 24) | — | Leon und Elza je **36 Bilder verschieden: nur Cut 1 (8 Bilder, 8042 px = das Wasser im Kanal, jetzt B - F) und Cut 2 (28 Bilder, 73 px = die gruenen Flecken am Kanalende, §8.2)**; Cut 11/12/13/14/15 0 px |
+| Bild | `abnW0_rolltor/t1_bogen_cut11.png` | `abnW1_rolltor/t1_bogen_cut11_n1.png`, `t5_bogen_cut11_n1.png` (Plattform, Kiste, Faesser, Regal, Figur; kein Rolladen vor der Kamera) |
+
+v0.8.25 am selben Weg (Abnahme 0): 69/69 Bilder 0.1305 (ganzes Bild Lamellen). **Der Nutzer-Punkt bleibt nach N1 erfuellt,
+Leon und Elza, echter Tuerweg.** Vergleichsbild der geaenderten Schnitte: `abnW1_rolltor/tuer_leon_n1_vs_vorN1_cut1_2.png`.
+
+## 5. M1 und die vier Mischarten am Spiel gegen die ORIGINAL-Bildpuffer (eigenes Werkzeug)
+
+Werkzeug `abnW1_rolltor/tools/orig_vgl.py` (PIL, unabhaengig vom Riegel-Werkzeug): Mittel RGB und MAD je Kanal der
+Messflaeche gegen das Original-PNG, Anzahl Pixel mit max|d| > 24, Bildbogen Original | Port.
+Vorbemerkung: ein Lauf mit `RE15_PLAYER_POS` an der Original-Stelle OHNE `RE15_FORCE_CUT` bleibt im Port in Cut 0
+(`b1_5060c4_leon`, `b3_5060c3`, `b4_20a0c2`, `b5_20a0c3`: state.txt 73/73 Bilder `cam=0`) — der Port wechselt den Schnitt
+nur ueber die Zonen-Kette vom aktuellen Schnitt aus, genau wie das Original-Werkzeug sie Zone fuer Zone abgeht. Darum
+messe ich die Schnitte 2/3/4 zu Fuss (Wegplaene durch die Zonen-Mitten des Original-Logs, Gegner weg, §5.2) und nicht
+mit erzwungenem Schnitt.
+
+### 5.1 ROOM4090 Cut 0 (ABR 3, Nebel obj 0-2, Attribut 0x000e) — Start-Schnitt, ohne Erzwingen
+Lauf `b6_4090c0` (`RE15_PSELECT_AUTO=1 RE15_DEBUG_JUMP=4090@250 RE15_PLAYER_POS=-21000,-24600,0,0
+RE15_FRAMEDUMP=270-330/2:fd_ RE15_EXIT_AT=332#4090`, cam=0 in 73/73 Bildern), Gegenprobe v0.8.25 `b6a_4090c0_alt`:
+
+| Bild | Mittel RGB (Boden x 20..299, y 160..235, 21280 px) | MAD je Kanal | Pixel max\|d\| > 24 |
+|---|---|---|---|
+| Original `orig_abe_4090_cut0_buf0.png` | (140.5,139.4,147.9) | — | — |
+| nach N1 F270 / F300 / F330 | (140.6,138.9,147.2) | (3.2,3.2,3.5) | **7 von 21280** |
+| v0.8.25 F300 | (56.5,55.7,55.1) | (85.6,85.3,94.2) | 19720 von 21280 |
+
+Bild `abnW1_rolltor/vgl_4090c0.png`: Original und N1 zeigen den hellen, durchscheinenden Bodennebel; v0.8.25 dunkle
+deckende Schlieren ueber dem ganzen Boden.
+
+## 6. Nebenwirkungen der Nachbesserung in Raeumen OHNE Original-Bild (exe nach N1 gegen v0.8.25)
+
+Batch `abnW1_rolltor/batch_c.sh`: je Raum `RE15_PSELECT_AUTO=1 RE15_DEBUG_JUMP=<raum>@250 RE15_FORCE_CUT=<cut>
+RE15_FRAMEDUMP=270-330/30:fd_ RE15_EXIT_AT=332#<raum> RE15_CUT_SYNC_LOG=cutsync.txt`, Schnitt = der mit der groessten
+ABE-Bedeckung laut Zensus; Vergleich F300 neu | v0.8.25 | Differenz (`tools/vergleich.py`, Bilder `c_<raum>_c<cut>.png`).
+Alle 24 Laeufe exit 0, state.txt cam = erzwungener Schnitt.
+
+| Raum / Cut | ABE-Objekt | px max\|d\|>24 | gezeichnete Dreiecke neu / v0.8.25 (cutsync `tris=`) | Bildbefund |
+|---|---|---|---|---|
+| 1040 / 3 | Glas obj 3 (0x0012, ABR 0) | 2648 | 1234 / 1234 | v0.8.25: Fenster als deckend dunkelgruene Flaeche; neu: Scheibe 50 % ueber dem gemalten Hintergrund (Gitter, Gestalt dahinter sichtbar) |
+| 11A0 / 4 | Wasser (0x001a, ABR 2) | 2275 | 48 / 36 | v0.8.25 graue deckende Flaeche; neu dunkler Kanal mit den gemalten Lampen-Spiegelungen |
+| 11B0 / 12 | Kiste obj 0 (0x0012, STP gemischt) | 17015 | 108 / 83 | Kiste flach 0x808080 (heller, beide Seiten gleich hell); der Schattenteil unter der Kiste jetzt 50 % durchscheinend (Kanaldeckel sichtbar) statt deckend schwarz |
+| 11B0 / 6 | dieselbe | 5042 | 118 / 83 | wie Cut 12 |
+| 1260 / 12 | Wasser | 0 (>8: 0) | 140 / 88 | keine sichtbare Aenderung |
+| 2000 / 15 | Wasser | 523 (>8: 20571) | 462 / 392 | grau deckend -> dunkler Kanal mit hellen Spiegelflecken des Hintergrunds |
+| 2050 / 9 | Wasser | 0 (>8: 0) | 1311 / 1521 | keine sichtbare Aenderung |
+| 2080 / 6 | Wasser | 2971 (>8: 57549) | 432 / 216 | v0.8.25 deckte die gemalte Vordergrund-Reling mit dunkelgruenem Wasser zu; neu Reling und Becken sichtbar |
+| 2090 / 5 | Wasser (Gator-Raum) | 329 (>8: 40143) | 4077 / 4348 | dunkelgruen deckend -> schwarz mit Sprenkeln (wie das Original-Wasser 20A0 Cut 3) |
+| 20B0 / 2 | Wasser | 5349 | 270 / 138 | grau deckend -> dunkler Kanal mit Spiegelflecken |
+| 2070 / 12 | — | 0 | 0 / 0 | kein Objekt im Bild |
+| 5030 / 9 | Typ 3 (0x0012, ABR 0) Monitore | 4863 | 44 / 22 | Monitor-Zeilen 50 % ueber den gemalten Bildschirmen statt deckend grau |
+
+Befund: in keinem Bild Muell, fehlende Objekte oder Loecher; jede Aenderung ist die Anwendung derselben, an 5 Schnitten
+gegen das Original gemessenen Regel (ABE/ABR/STP, Flach-Farbe). Die Dreieckszahl waechst durch den zweiten Durchgang
+(4090 Cut 0: **2130 statt 1232** Dreiecke in der Queue, Kapazitaet `TEXTRI_QUEUE_MAX` 8192) — Hinweis H2.
