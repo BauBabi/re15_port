@@ -126,4 +126,29 @@ OBJPOLY im Tuerweg (Auszug): Cut 13/14 obj 1 `otz=48` (Rolladen hinter der Kamer
 Cut 15 obj 4 `gezeichnet=9 otz=6 gpu=11`, Cut 2 obj 4 `gezeichnet=18 otz=6 gpu=2`; die Bilder dieser Cuts
 (`t1_bogen_alle1.png`) zeigen Gaenge und Rolllaeden ohne Loecher oder Riesendreiecke.
 
+### 5.3b Erklaert der Fix den Befund?
+`abnW0_rolltor/rolladen_aufschluesselung.py` (Zensus-Rechnung, ROOM20A0 obj 1 offen, Cut 11): vom alten Weg gezeichnet
+wurden nur Vierecke mit allen Scheiteln vz >= 64; davon nimmt die Original-Schranke
+`NCLIP: 17 Vierecke, 68220 ALT-Pixel` (Summe je Viereck), `GPU: 3 Vierecke, 0 Pixel`, `gezeichnet: 5 Vierecke, 0 Pixel`
+(ausserhalb des Bilds). Die Lamellen vor der Kamera sind also die RUECKSEITEN des offenen Rolladens, die der Port ohne
+NCLIP zeichnete; das Original verwirft genau diese an `bgez v0` @0x80023190 (Haltepunkt-Messung 20/48 OPZ < 0). Die
+OTZ-, Saettigungs- und GPU-Schranken tragen zu diesem Bild nichts bei; sie sind weitere Original-Regeln desselben
+Zeichners (Wirkung §5.1/5.2). Der Fix erklaert den Befund.
+
+Unit-Riegel-Tabelle `k_orig` (test_r38_rolltor20a0.c) gegen `W_belege/orig1_log.txt` maschinell verglichen: 48/48
+Vierecke gleich (OPZ, OTZ, eingehaengt, SXY). Echtheit des Logs: der Port trifft die GDB-SXY auf 0 Pixel, die
+Python-Nachrechnung mit exakter Wurzel (psxsim.py) nur auf 3 Pixel — passt zu einem Original mit SquareRoot0, nicht zu
+einem aus psxsim erzeugten Log. ROOM20A0.RDT @0x01932 selbst gelesen: `2d 01 00 00 05 00 98 00 10 00 06 1f e0 e3 e2 af
+00 00 00 04` = obj 1, Typ 0, Attribut 0x0010 (Flach-Zeichner), (7942,-7200,-20510), ry 1024; ROOM1050.RDT @0x00C36 =
+obj 0, Attribut 0, (15432,0,-10424), ry 2048.
+
+### 5.4 Bildgenau um die Cut-Wechsel (prueft die Bildwahl e4c0cb9e des exe-Riegels)
+Der exe-Riegel wertet seit e4c0cb9e nur Bilder, deren Zustand UND Vorbild cam=11 tragen (Umschaltbild F650 =
+"Messartefakt"). Gegenprobe ohne diese Auswahl: Lauf `t6_tuer_leon_jedes` (Tuerweg Leon, `RE15_FRAMEDUMP=1350-1670/1`),
+JEDES Bild gegen beide Hintergruende gemessen (`bg_jedes.txt`): kleinstes max(BG11, BG12) = **0.8249 (F1358)**, kein
+Bild unter 0.80. An den Wechseln zeigt das Dumpbild noch den alten Schnitt: `F1358 cam=11 bg11=0.0042 bg12=0.8249`,
+`F1359 cam=11 bg11=0.9389`; `F1610 cam=12 bg11=0.9435 bg12=0.0020`, `F1611 cam=12 bg12=0.8264`; `F1662 cam=11
+bg12=0.8288`, `F1663 bg11=0.9414`. Die Erklaerung des Bau-Agenten (Zustandslog ein Bild vor dem Bild) stimmt; in
+keinem einzigen Bild steht der Rolladen vor der Kamera.
+
 (weitere Abschnitte folgen: Testgruppen, Vertrag, Urteil)
