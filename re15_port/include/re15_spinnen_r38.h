@@ -79,5 +79,9 @@ void re15_spinnen_r38_objekt_pass(re15_actor_t *e);
  * Spinne (Typ 0x25/0x26) mit Lage X/Y/Z, Zustandsbytes, Modus und Boden. Gerufen einmal je
  * Spielbild aus platform/pc/main.c (Haken "Runde 38 Spur R"). */
 void re15_spinnen_r38_log_frame(unsigned frame);
+/* Messgroesse (Schiene + Test, kein Spielverhalten): die hoechste SCA-Bodenflaeche AUF ODER UNTER der Figur =
+ * FUN_8001c6e8(&P, 0, (-y + 1799) / 1800, 0x100) (Aufruf wie Routine 25 @0x80017fe0-f4, Startband aus der eigenen
+ * Hoehe). Unabhaengig vom eigenen Bodenfeld +0x1ba/+0x1C2 der Figur. */
+int16_t re15_spinnen_r38_boden_unter(const re15_actor_t *a);
 
 #endif /* RE15_SPINNEN_R38_H */

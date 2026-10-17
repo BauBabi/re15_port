@@ -366,7 +366,15 @@ static void routine25(re15_esp_fx_t *f)
     /* Gift NUR fuer den Klumpen einer SPINNE: RE2 Op 32 vergiftet nur bei Spinnen-sub 8..11 (`andi v0,v0,0x8`
      * @0x80020118); Effekt 0x0d steht in 41 Raum-ESPs (auch ROOM1260/4001/50x0, Birkins Hieb-Effekt
      * 0x0d002000 @0x801146d4-ec) — dort bleibt Routine 25 der reine Original-Treffer (10 HP, Wuerfel tot). */
-    if (besitzer > 0 && besitzer < RE15_ACTOR_MAX && g_actors[besitzer].type == 0x25 &&
+    /* Fortsetzung 2: Gift nur, wenn der Treffer den Spieler auch ERREICHT. RE2 Op 32 vergiftet nur, wenn der
+     * Applier FUN_80047664 den Spieler zurueckgibt (`jal 0x80047664` @0x800200e0, `beq v0,zero` @0x800200e8);
+     * der ueberspringt ihn bei +0x1D3 != 0 (Schutz-/Griffzaehler, `lbu v0,467(s0) / bne` @0x800476ec-f4) und
+     * HP < 0 (`lh v0,342(s0) / bltz` @0x800476fc-704). Port: dieselben Tore wie der Spielerzweig von
+     * FUN_80012d60 (+0x93 & 1 `hit-once` @0x80012e24-30) und der Babybiss (+0x1D3 & 0x80 =
+     * re15_player_is_grabbed @0x80100E84) — VOR dem Resolver gelesen, der +0x93 selbst setzt. */
+    const re15_actor_t *spl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int frei = !(spl->hit_react & 0x1u) && !re15_player_is_grabbed() && spl->hp >= 0;
+    if (besitzer > 0 && besitzer < RE15_ACTOR_MAX && g_actors[besitzer].type == 0x25 && frei &&
         re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], &box)) {
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;   /* Gift (s.o.) */
         s_gift_treffer++;
@@ -714,12 +722,13 @@ void re15_spinnen_r38_objekt_pass(re15_actor_t *e)
 /* Messgroesse "bu": die hoechste SCA-Bodenflaeche AUF ODER UNTER der Figur — FUN_8001c6e8 mit dem Startband
  * aus der eigenen Hoehe ((-y + 1799) / 1800, Baender start-1 .. 0), damit eine Ebene UEBER der Figur (Steg,
  * Decke) nicht als ihr Boden zaehlt. Reine Messgroesse der Schiene (kein Spielverhalten). */
-static int16_t boden_unter(const re15_rdt_t *rdt, const re15_actor_t *a)
+int16_t re15_spinnen_r38_boden_unter(const re15_actor_t *a)
 {
-    int32_t sb = (-a->y + 1799) / 1800;
+    if (!a) return 0;
+    int32_t sb = (-a->y + 1799) / 1800;                       /* Band b traegt die Oberkante -(b+1)*1800 */
     if (sb < 0) sb = 0;
-    if (sb > 8) sb = 8;
-    return re15_collision_room_coll(rdt, a->x, a->z, 0, (int)sb, 0x100u);
+    if (sb > 16) sb = 16;                                     /* Bandnibble 0..15 (`& 0xf002` @FUN_8001c6e8) */
+    return re15_collision_room_coll(g_room_rdt_ok ? &g_room_rdt : NULL, a->x, a->z, 0, (int)sb, 0x100u);
 }
 
 void re15_spinnen_r38_log_frame(unsigned frame)
@@ -740,7 +749,7 @@ void re15_spinnen_r38_log_frame(unsigned frame)
     fprintf(s_fp, "F%u R%04X PL(%d,%d,%d hp=%d st=%d ps=%04x fl=%d gz=%u bo=%d bu=%d) fx=%d", frame,
             (unsigned)g_current_room_id, (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->hp,
             (int)pl->state, (unsigned)pl->status_flags, (int)pl->floor, (unsigned)s_gift_zaehler,
-            (int)re15_collision_room_coll(rdt, pl->x, pl->z, 0, 8, 0x100u), (int)boden_unter(rdt, pl),
+            (int)re15_collision_room_coll(rdt, pl->x, pl->z, 0, 8, 0x100u), (int)re15_spinnen_r38_boden_unter(pl),
             re15_esp_fx_count());
     for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
         const re15_actor_t *e = &g_actors[i];
@@ -749,7 +758,7 @@ void re15_spinnen_r38_log_frame(unsigned frame)
                       " @(%d,%d,%d) r=(%d,%d,%d) hp=%d h93=%02x]",
                 i, e->type, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3,
                 e->grid_id, e->floor, e->re2s_mode222, (int)e->dog_floor_y,
-                (int)re15_collision_room_coll(rdt, e->x, e->z, 0, 8, 0x100u), (int)boden_unter(rdt, e),
+                (int)re15_collision_room_coll(rdt, e->x, e->z, 0, 8, 0x100u), (int)re15_spinnen_r38_boden_unter(e),
                 e->motion,
                 (int)e->anim_frame, (int)e->x, (int)e->y, (int)e->z,
                 (int)e->rot_x, (int)e->rot_y, (int)e->rot_z, (int)e->hp, e->hit_react);

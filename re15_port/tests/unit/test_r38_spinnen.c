@@ -49,6 +49,7 @@
 #include "re15_anim_select.h"
 #include "re15_md1.h"
 #include "re15_spinnen_r38.h"
+#include "re15_math.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -353,6 +354,51 @@ static void teil_b2(void)
           re15_spinnen_r38_gift_treffer());
 }
 
+/* B3 (Fortsetzung 2): Gift nur am ERREICHBAREN Spieler. RE2 Op 32 vergiftet nur, wenn der Applier FUN_80047664 den
+ * Spieler zurueckgibt (`beq v0,zero` @0x800200e8); der ueberspringt ihn bei +0x1D3 != 0 (@0x800476ec-f4) und HP < 0
+ * (@0x800476fc-704). Port-Tor = der Schutz des Spielerzweigs von FUN_80012d60 (+0x93 & 1 @0x80012e24-30). Der Klumpen
+ * einer echten Spinne (re15_spinnen_r38_spucken, KI angehalten) trifft einmal den geschuetzten und einmal den freien
+ * Spieler. Bild-Schritt wie bild(), der Schutz wird direkt VOR dem ESP-Takt gesetzt (der Spieler-Takt loescht ihn). */
+static int b3_lauf(int schutz)
+{
+    if (!raum("STAGE2/ROOM2060.RDT", 0x2060, RE15_AI_FLAVOR_RE15, 5975, 0, 1137, 3072, 1)) { s_fails++; return -1; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *sp = NULL;
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        if (g_actors[s].active && g_actors[s].type == 0x25 && !sp) sp = &g_actors[s];
+        else g_actors[s].active = 0;
+    }
+    if (!sp) { printf("FAIL: B3 keine Spinne\n"); s_fails++; return -1; }
+    re15_enemy_ai_set_paused(1);
+    sp->x = 5975; sp->y = 0; sp->z = 3137; sp->rot_y = 1024; sp->state = 1; sp->grid_id = 5;
+    pl->hp = 100; pl->status_flags = 0; pl->state = 1; pl->hit_react = 0;
+    re15_spinnen_r38_spucken(sp, 0);
+    for (int f = 0; f < 60; f++) {
+        const unsigned char *raw; int len, id;
+        re15_msg_tick(&raw, &len, &id);
+        s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
+        scd_vm_tick();
+        re15_game_step(&s_ctx);
+        if (schutz) pl->hit_react |= 0x1u;
+        re15_esp_fx_tick(re15_esp_room_bank());
+    }
+    re15_enemy_ai_set_paused(0);
+    return pl->hp;
+}
+static void teil_b3(void)
+{
+    printf("\n== B3 Gift nur am erreichbaren Spieler (Schutz +0x93 & 1 @0x80012e24-30 / RE2 +0x1D3 @0x800476ec-f4)\n");
+    int hp = b3_lauf(1);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    CHECK(hp == 100 && !(pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() == 0,
+          "geschuetzter Spieler: HP %d, status 0x%04X, Gift-Treffer %u (kein Schaden, kein Gift)", hp, pl->status_flags,
+          re15_spinnen_r38_gift_treffer());
+    hp = b3_lauf(0);
+    CHECK(hp == 88 && (pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() >= 1,
+          "Gegenprobe freier Spieler: HP %d = 100 - 10 (Treffer) - 2 (Gift sofort, Zaehler 0 @0x80031e74), status 0x%04X, "
+          "Gift-Treffer %u", hp, pl->status_flags, re15_spinnen_r38_gift_treffer());
+}
+
 static void teil_b_wirkung(void)
 {
     printf("\n== B Gift-Wirkung (@0x80031e44-ecc) und Gegengift (@0x8004af8c)\n");
@@ -456,6 +502,13 @@ static void teil_c(void)
     int bisse = 0, unter_boden = 0, max_hoch = 0;
     int32_t zeichen_min = 0x7fffffff, zeichen_max = -0x7fffffff;   /* gezeichneter tiefster Punkt - Lage-Y */
     int zeichen_n = 0;
+    /* Fortsetzung 2 (2026-10-17): UNABHAENGIGE Bodenmessung statt `y == +0x1C2` (das Feld setzt der Port selbst):
+     * bu = hoechste SCA-Bodenflaeche auf/unter dem Baby (re15_spinnen_r38_boden_unter = FUN_8001c6e8 ab dem
+     * eigenen Band). Am Boden (Zustand 1 Unterzustand 1, nicht Sprung 3 / Fall 2) muss y == bu sein; vorher lagen
+     * 72 % der Baby-Bilder 5400 ueber dem Boden (Dossier 1.6, ohne Wandpass @0x801000c0). */
+    int boden_bilder = 0, schwebt = 0, steg_weg = 0;
+    int32_t schwebt_x = 0, schwebt_z = 0, schwebt_bu = 0;
+    int32_t min_abstand = 0x7fffffff;                              /* Baby am Boden <-> Spieler (Kugel-Schub) */
     for (int f = 0; f < 600; f++) {
         int16_t vor = pl->hp;
         bild();
@@ -464,6 +517,15 @@ static void teil_c(void)
         for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
             re15_actor_t *b = &g_actors[s];
             if (!b->active || b->type != 0x26) continue;
+            if (b->state == 1 && b->sub_state_1 == 1) {
+                const int32_t bu = re15_spinnen_r38_boden_unter(b);
+                boden_bilder++;
+                if (b->y < bu - 100) { schwebt++; schwebt_x = b->x; schwebt_z = b->z; schwebt_bu = bu; }
+                if (bu != -5400) steg_weg++;
+                const int64_t ddx = b->x - pl->x, ddz = b->z - pl->z;
+                const int32_t d = (int32_t)re15_squareroot0((uint32_t)(ddx * ddx + ddz * ddz));
+                if (d < min_abstand) min_abstand = d;
+            }
             if (b->y > -5400) unter_boden++;
             if (-5400 - b->y > max_hoch) max_hoch = -5400 - b->y;
             int ok = 0;
@@ -489,6 +551,15 @@ static void teil_c(void)
     printf("   Babys aktiv %d, Bisse %d, Bilder unter dem Boden %d, hoechster Sprung %d\n", auf_boden, bisse, unter_boden,
            max_hoch);
     CHECK(unter_boden == 0, "kein Baby unter dem Boden (y > -5400) in 600 Bildern (%d)", unter_boden);
+    printf("   Babys am Boden: %d Bilder, davon ueber dem SCA-Boden %d, nicht mehr auf dem Steg %d%s\n", boden_bilder,
+           schwebt, steg_weg, schwebt ? " (letztes: siehe naechste Zeile)" : "");
+    if (schwebt) printf("   schwebend zuletzt bei (%d,%d), Boden darunter %d\n", schwebt_x, schwebt_z, schwebt_bu);
+    CHECK(boden_bilder > 0 && schwebt == 0 && steg_weg == 0,
+          "Babys bleiben auf dem Steg: 0 von %d Boden-Bildern ueber dem SCA-Boden (Wandpass FUN_8003567C(self,0x400) "
+          "@0x801000c0, Radius +0x90 = 10 @0x80100180)", boden_bilder);
+    CHECK(min_abstand >= 400,
+          "Kugel-Schub FUN_80035530 @0x801000b4: kein Baby am Boden naeher als 400 am Spieler (min %d; Kugeln 450 + 10 "
+          "@0x8003bdc0 / @0x80100174, ohne Schub bis 0)", min_abstand);
     CHECK(bisse > 0, "Babys beissen: %d Bisse a 1 HP (`addiu a0,zero,1` @0x80100EA8, Reichweite Ziel+0x9A 450 + 10)", bisse);
     /* Sprung @0x80100880: vy = -300 (@0x801008C4), y += vy, vy += 40 (@0x801008FC-904) -> Scheitel nach 8 Bildern
      * 300+260+220+180+140+100+60+20 = 1280 ueber dem Absprung (Boden). */
@@ -499,10 +570,12 @@ static void teil_c(void)
 /* ============================== D: ZENSUS "keine Spinne schwebt" ============================== */
 /* Nutzerpunkt 1 ("die Spinnen fliegen FAST ALLE in der Luft"): jede Sce_em_set-Spinne (Typ 0x25) ALLER Stage-2-Raeume,
  * beide KI-Geschmaecker, 300 Bilder am Sprungpunkt des Debug-Menues (DEBUG.BIN-Tabelle, gemessen in der exe) bzw. an der
- * Tuerlage 2060 -> 2030 (Cut 13, oberer Steg). Erlaubt sind genau zwei Lagen: (a) auf dem eigenen Boden y == +0x1ba
- * (Sce_em_set `sh v0,442(s0)` @0x80042210 = -(pc[4]*1800), RE1.5-INIT y = -1800*floor @0x80110c54-74) oder (b) wartend im
- * Schacht (grid 0x41, Zustand 4/1, y = Spawnhoehe; Ausloeser erst Cut 1/5 bzw. 4/5, Teil A). Vorher (Stand e2cc7673)
- * liefen die Schachtspinnen unter der RE2-KI im Bodenmodus frei auf der Schachthoehe herum (Dossier 1.2). */
+ * Tuerlage 2060 -> 2030 (Cut 13, oberer Steg). Erlaubt sind genau zwei Lagen: (a) auf dem SCA-Boden unter der Spinne
+ * (|y - bu| <= 100, bu = re15_spinnen_r38_boden_unter = FUN_8001c6e8 ab dem eigenen Band — UNABHAENGIG vom eigenen Feld
+ * +0x1ba, das Sce_em_set selbst setzt (`sh v0,442(s0)` @0x80042210); Fortsetzung 2 ersetzt damit die
+ * selbstbestaetigende Pruefung `y == +0x1ba`) oder (b) wartend im Schacht (grid 0x41, Zustand 4/1, y = Spawnhoehe;
+ * Ausloeser erst Cut 1/5 bzw. 4/5, Teil A). Vorher (Stand e2cc7673) liefen die Schachtspinnen unter der RE2-KI im
+ * Bodenmodus frei auf der Schachthoehe herum (Dossier 1.2). */
 static void teil_d(void)
 {
     static const struct { const char *datei; unsigned id; int32_t x, y, z; int16_t rot; uint8_t cut; } R[] = {
@@ -520,7 +593,7 @@ static void teil_d(void)
         for (size_t r = 0; r < sizeof R / sizeof R[0]; r++) {
             if (!raum(R[r].datei, R[r].id, flv, R[r].x, R[r].y, R[r].z, R[r].rot, R[r].cut)) { s_fails++; continue; }
             re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-            int n_sp = 0, boden = 0, schacht = 0, schwebt = 0;
+            int n_sp = 0, boden = 0, schacht = 0, schwebt = 0, im_block = 0;
             int32_t schwebt_y = 0, schwebt_gy = 0;
             for (int f = 0; f < 300; f++) {
                 pl->hp = 100;                                   /* Messlauf: Leon bleibt stehen, stirbt nicht */
@@ -538,14 +611,18 @@ static void teil_d(void)
                         if (e->state == 4 && e->sub_state_1 == 1) schacht++;
                         else { schwebt++; schwebt_y = e->y; schwebt_gy = e->dog_floor_y; }
                     }
-                    else if (e->y == (int32_t)e->dog_floor_y) boden++;
-                    else { schwebt++; schwebt_y = e->y; schwebt_gy = e->dog_floor_y; }
+                    else {
+                        const int32_t bu = re15_spinnen_r38_boden_unter(e);
+                        if (e->y < bu - 100)      { schwebt++; schwebt_y = e->y; schwebt_gy = bu; }
+                        else if (e->y > bu + 100) im_block++;
+                        else                      boden++;
+                    }
                 }
             }
-            CHECK(n_sp > 0 && schwebt == 0,
-                  "%s ROOM%04X Cut %u: %d Spinnen, Spinnen-Bilder am Boden %d, im Schacht wartend %d, schwebend %d%s",
-                  fl ? "RE2" : "RE1.5", R[r].id, (unsigned)R[r].cut, n_sp, boden, schacht, schwebt,
-                  schwebt ? " (letzte: y/Boden siehe naechste Zeile)" : "");
+            CHECK(n_sp > 0 && schwebt == 0 && im_block == 0,
+                  "%s ROOM%04X Cut %u: %d Spinnen, Spinnen-Bilder am SCA-Boden %d, im Schacht wartend %d, schwebend %d, "
+                  "im Block %d%s", fl ? "RE2" : "RE1.5", R[r].id, (unsigned)R[r].cut, n_sp, boden, schacht, schwebt,
+                  im_block, schwebt ? " (letzte: y/Boden siehe naechste Zeile)" : "");
             if (schwebt) printf("   schwebend zuletzt y %d Boden %d\n", schwebt_y, schwebt_gy);
         }
     }
@@ -557,6 +634,7 @@ int main(void)
     if (a15) teil_b(a15, 0, "RE1.5");
     teil_b_wirkung();
     teil_b2();
+    teil_b3();
     teil_a2(RE15_AI_FLAVOR_RE15, "RE1.5");
     re15_actor_t *a2 = teil_a(RE15_AI_FLAVOR_RE2, "RE2");
     if (a2) teil_b(a2, 1, "RE2");
