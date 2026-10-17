@@ -1,0 +1,31 @@
+# Runde 38 Spur W (integration_r38_rolltor20a0): Kisten-Ablauf ROOM20A0 nach dem Oeffnen des Rolladens.
+# Rolladen hoch (sub07 @0x01E40 setzt Zelle 32 aller 5 Regionen auf u0 = 0, Sca_id_set @0x01E5E-6E) -> Kiste obj 0
+# (Obj_model_set @0x01854, (12250,-7200,-12400) Band 4) von Sueden nach Norden durch die Oeffnung schieben -> Fall.
+OBJ 1
+RAUM 20A0
+GEGNERWEG
+WARTE 30
+BLICK 3072
+WARTE 5
+AKTION
+WARTE 150
+GEGNERWEG
+GEHE 16450 -19300 120
+GEHE 15300 -19450 120
+BLICK 1024
+WARTE 10
+AKTION
+WARTE 40
+AKTION
+WARTE 40
+AKTION
+WARTE 150
+OBJ 0
+GEHE 13700 -17300 200
+GEHE 13700 -11000 150
+GEHE 12250 -10850 100
+BLICK 1024
+WARTE 10
+SCHIEB 1024 Z <= -23000 1500
+WARTE 120
+ENDE

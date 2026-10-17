@@ -144,6 +144,8 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 nach HERKUNFT -> RE1.5-Bank */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht ohne Schatten */
 #include "re15_zopf_r38.h"     /* Runde 38 Spur D: Elzas Zopf (FUN_80024c30/FUN_80024e40) */
+#include "re15_objpoly_r38.h"  /* Runde 38 Spur W: Polygon-Schranken des Objektzeichners (Rolladen ROOM20A0) */
+#include "re15_objabe_r38.h"   /* Runde 38 Spur W: halbtransparente Raum-Objekte (Attribut-Bit 0x2, ABR, STP) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -1453,6 +1455,7 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
      * an ihrer Stelle ein gelbes Viereck. Herleitung + Zensus stehen bei
      * RE15_RDT_MAX_PROPS in re15_rdt.h. */
     for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) ok[op] = 0;
+    re15_objabe_r38_pc_raum_neu();   /* Runde 38 Spur W: STP-Teil-Texturen des alten Raums verwerfen */
     if (!rdt) return;
     int nprops = rdt->prop_count < RE15_RDT_MAX_PROPS ? rdt->prop_count
                                                       : RE15_RDT_MAX_PROPS;
@@ -1486,8 +1489,9 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
          * dadurch byte-genau NICHT. Game-weit betrifft die Regel 122 von 570 Prop-Modellen;
          * dieselbe 92.8%-Textur taucht in 18 Raeumen auf = EIN wiederverwendetes
          * Cursor-/Marker-Modell. Gepinnt in tests/unit/test_prop_texel_key_11f0.c. */
-        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
-                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op)); }
+        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0) {
+                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op));
+                      re15_objabe_r38_pc_textur(&tt, RE15_TIM_SLOT_PROP(op)); } }   /* Runde 38 Spur W: STP-Teile */
     }
 
     /* SICHERUNG im Hebetisch von Irons' Buero: ein ZUSAETZLICHES Prop, dessen MD1+TIM
@@ -10888,6 +10892,7 @@ re_title:;
                     const int irons_sort_max = re15_dokumente_sort_max_mit(re15_irons_tisch_sort_max(
                         (uint16_t)g_current_room_id, active_cut_idx, oid),
                         (uint16_t)g_current_room_id, active_cut_idx, oid);
+                    re15_objpoly_r38_objekt(oid, active_cut_idx, (unsigned)g_current_room_id);   /* Runde 38 Spur W: Messschiene */
                     for (int hbi = 0; hbi < prop_md1->mesh_count; hbi++) {
                         const re15_md1_mesh_t *hm = &prop_md1->meshes[hbi];
                         int32_t world_trans[3] = { prop_x, prop_y, prop_z };
@@ -10906,29 +10911,14 @@ re_title:;
                             if (tr->v1 >= (uint32_t)hm->tri_vertex_count) continue;
                             if (tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
                             int ax[3], ay[3], wz_avg = 0;
-                            int ok = 1;
                             const re15_md1_vertex_t *vp[3] = {
                                 &hm->tri_vertices[tr->v0],
                                 &hm->tri_vertices[tr->v1],
                                 &hm->tri_vertices[tr->v2],
                             };
-                            for (int v = 0; v < 3; v++) {
-                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
-                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
-                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
-                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
-                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
-                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
-                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
-                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
-                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
-                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
-                                wz_avg += (int)_vz;
-                            }
-                            if (!ok) continue;
-                            if (re15_nclip_r38_verwerfen(ax[0], ay[0], ax[1], ay[1], ax[2], ay[2])) continue;   /* Runde 38 Spur A: Rueckseite, FUN_800254a0 NCLIP @0x80025580 bgez @0x800255a8 */
-                            wz_avg /= 3;
+                            /* Runde 38 Spur W: RTPT + NCLIP (@0x80022fec/@0x80025580) + OTZ<64 (@0x80023044/@0x80025654)
+                             * + GPU-Groessengrenze, gesaettigte SXY (objpoly_r38.c) statt Port-Ausschnitt `_vz < 64`. */
+                            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg)) continue;
                             int wz_for_sort = wz_avg;
                             if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
                                 wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
@@ -10951,18 +10941,16 @@ re_title:;
                                 pg0 = pg1 = pg2 = g_re15_light_tint[1];
                                 pb0 = pb1 = pb2 = g_re15_light_tint[2];
                             }
-                            if ((g_scd.props[pi].attr & 0x12) == 0x10)
+                            if (re15_objabe_r38_flach(g_scd.props[pi].attr, g_scd.props[pi].obj_type))   /* Runde 38 Spur W */
                                 /* FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10`: FLACH statt NCCT -> FUN_80022f0c
                                  * @0x8002c320 mit Farbe obj+0x70 = 0x808080 (FUN_8002b898.c:16, Textur
-                                 * unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h). NUR deckende
-                                 * Objekte: Bit 0x2 (@0x8002c2b4, Prim-Code 0x36 = halbtransparent je STP-Texel)
-                                 * kann dieser Zeichner nicht (Texel-Alpha immer 0xFF, render_pc.c ABE-Kommentar);
-                                 * die 91 flach+halbtransparenten Objekte (Zensus re15_scd.h; ihre Texel tragen zu
-                                 * 100 % das STP-Bit, das Original mischt sie 50/50) bleiben bis zur Portierung von
-                                 * Parameter 4 auf dem bisherigen Weg — flach-deckend waere doppelt so hell wie das
-                                 * Original. Runde 36 Spur N (Nachbesserung 1, Dossier 8.7). */
+                                 * unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h). Runde 36 Spur N
+                                 * liess die halbtransparenten (Bit 0x2) hier aus, bis Parameter 4 portiert ist —
+                                 * seit Runde 38 Spur W (Nachbesserung 1) ist er es (re15_objabe_r38_pc_dreieck:
+                                 * STP-0-Texel deckend, STP-1-Texel nach ABR gemischt), also gilt der Flach-Weg fuer
+                                 * JEDES Objekt mit Bit 0x10 und fuer Typ 3 (FUN_8003e64c), re15_objabe_r38.h. */
                                 pr0 = pr1 = pr2 = pg0 = pg1 = pg2 = pb0 = pb1 = pb2 = 0x80;
-                            re15_render_textured_tri_lit(
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,   /* Runde 38 Spur W: ABE/ABR/STP */
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
                                 ax[2], ay[2], (int)uv->u2 + page_off, (int)uv->v2,
@@ -10982,24 +10970,10 @@ re_title:;
                                 &hm->quad_vertices[qd->v2],
                                 &hm->quad_vertices[qd->v3],
                             };
-                            int ok = 1;
-                            for (int v = 0; v < 4; v++) {
-                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
-                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
-                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
-                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
-                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
-                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
-                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
-                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
-                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
-                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
-                                wz_avg += (int)_vz;
-                            }
-                            if (!ok) continue;
-                            if (re15_nclip_r38_verwerfen(ax[0], ay[0], ax[1], ay[1], ax[2], ay[2])) continue;   /* Runde 38 Spur A: Rueckseite (v0,v1,v2), FUN_800256b0 NCLIP @0x80025798 bgez @0x800257c0 */
-                            wz_avg /= 4;
+                            /* Runde 38 Spur W: RTPT/RTPS + NCLIP (@0x80023168/@0x80025798) + OTZ<64 (@0x80023224/@0x800258b0)
+                             * + GPU-Groessengrenze je Dreieck (0,1,2)/(1,2,3) (objpoly_r38.c) statt `_vz < 64`. */
+                            uint8_t gpu_ok[2];
+                            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg, gpu_ok)) continue;
                             if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
                                 wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
@@ -11025,21 +10999,24 @@ re_title:;
                                 pqg0=pqg1=pqg2=pqg3=g_re15_light_tint[1];
                                 pqb0=pqb1=pqb2=pqb3=g_re15_light_tint[2];
                             }
-                            if ((g_scd.props[pi].attr & 0x12) == 0x10)   /* wie beim Dreieck: FUN_80023098 @0x8002c350, flach 0x808080,
-                                                                           * nur deckende Objekte. Runde 36 Spur N. */
+                            if (re15_objabe_r38_flach(g_scd.props[pi].attr, g_scd.props[pi].obj_type))   /* wie beim Dreieck: FUN_80023098
+                                                                           * @0x8002c350, flach 0x808080. Runde 36 Spur N / Runde 38 Spur W */
                                 pqr0=pqr1=pqr2=pqr3=pqg0=pqg1=pqg2=pqg3=pqb0=pqb1=pqb2=pqb3=0x80;
-                            re15_render_textured_tri_lit(
+                            if (gpu_ok[0] && gpu_ok[1]) {   /* Runde 38 Spur W: beide GPU-Dreiecke -> wie bisher */
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,   /* Runde 38 Spur W: ABE/ABR/STP */
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
                                 ax[3], ay[3], (int)uv->u3 + page_off, (int)uv->v3,
                                 0, (int)uv->clut, wz_avg,
                                 pqr0, pqg0, pqb0, pqr1, pqg1, pqb1, pqr3, pqg3, pqb3);
-                            re15_render_textured_tri_lit(
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[3], ay[3], (int)uv->u3 + page_off, (int)uv->v3,
                                 ax[2], ay[2], (int)uv->u2 + page_off, (int)uv->v2,
                                 0, (int)uv->clut, wz_avg,
                                 pqr0, pqg0, pqb0, pqr3, pqg3, pqb3, pqr2, pqg2, pqb2);
+                            } else re15_objpoly_r38_halbviereck_pc(g_scd.props[pi].attr, ax, ay, uv, page_off, wz_avg, gpu_ok,   /* Runde 38 Spur W */
+                                       (const uint8_t[12]){ pqr0, pqg0, pqb0, pqr1, pqg1, pqb1, pqr2, pqg2, pqb2, pqr3, pqg3, pqb3 });
                         }
                     }
                     continue;

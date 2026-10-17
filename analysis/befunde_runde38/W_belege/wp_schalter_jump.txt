@@ -1,0 +1,16 @@
+# Runde 38 Spur W: Sprung auf die Plattform (Band 4) an den Rolladen-Schalter (Slot 3 @0x017E8,
+# Rechteck x 14900..15700 z -20400..-19600, floor 4) -> Aktion -> Frage "Press it?" -> Ja -> sub05/06/07.
+OBJ 1
+RAUM 20A0
+GEGNERWEG
+WARTE 30
+AOTS
+BLICK 1024
+WARTE 10
+AKTION
+WARTE 40
+AKTION
+WARTE 40
+AKTION
+WARTE 200
+ENDE

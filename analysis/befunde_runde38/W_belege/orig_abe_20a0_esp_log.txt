@@ -1,0 +1,22 @@
+DuckStation gestartet {'43992'}
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Debug-Menue gesetzt: Zeile 1 Stage 1 Raumidx [36, 10, 0, 0, 0, 0]
+Gegner beim Laden ausgeschaltet: 2 Aktiv-Bits geloescht
+Raumindex: 10 Cut: 0 Spieler: (-2800, -3600, -22200, 0, 2)
+Zonen-Kette von Cut 0 nach 2: [(0, 1), (1, 2)]
+  Zone 0->1 Mitte (1250,-24000): Cut 1 Spieler (1250, -3600, -22932, 0, 2)
+  Zone 1->2 Mitte (8750,-24000): Cut 2 Spieler (8750, -3600, -22932, 0, 2)
+Cut 2, Spieler (8750, -3600, -22932, 0, 2), Puffer-Index @0x800ACA34 = 1
+Pool 4: Flags 0000000b Typ 3 Attribut 0x001a (Bit2 1, Bits 2-3 = 2) Lage (-2840, -2376, -23400) Farbe+Code obj+0x70 8080803e
+   Viereck x26: Code 0x3e (ABE 1) Texpage 0x00c7 (ABR 2)
+     Q00 tag 0c0abb28 code 0x3e tpage 0x00c7
+     Q01 tag 0c0ababc code 0x3e tpage 0x00c7
+     Q02 tag 0c0aba50 code 0x3e tpage 0x00c7
+     Q03 tag 0c0ab6fc code 0x3e tpage 0x00c7
+ESP-Pool Durchgang 0: 0 aktive Plaetze
+ESP-Pool Durchgang 1: 0 aktive Plaetze
+ESP-Pool Durchgang 2: 0 aktive Plaetze
+Ende: Spieler (8750, -3600, -22932, 0, 2) Cut 2
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+resume.sav kopiert
+Bildpuffer buf0.png (VRAM 0,0) / buf1.png (VRAM 0,240) geschrieben

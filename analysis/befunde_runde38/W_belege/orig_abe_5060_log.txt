@@ -1,0 +1,36 @@
+DuckStation gestartet {'43672'}
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Debug-Menue gesetzt: Zeile 1 Stage 4 Raumidx [36, 0, 0, 0, 6, 0]
+Gegner beim Laden ausgeschaltet: 5 Aktiv-Bits geloescht
+Raumindex: 6 Cut: 0 Spieler: (-25500, 0, -11100, 0, 0)
+  Probe: Spieler (-25500, 0, -11100, 0, 0) Cut 0 Status 00000000010007000001ffff00000000
+  Probe: Spieler (-25500, 0, -11100, 0, 0) Cut 0 Status 00000000010005000001ffff00000000
+Zonen-Kette von Cut 0 nach 4: [(0, 1), (1, 2), (2, 3), (3, 4)]
+  Zone 0->1 Mitte (-23025,-12425): Cut 1 Spieler (-23025, 0, -12425, 0, 0)
+  Zone 1->2 Mitte (-25475,-18725): Cut 2 Spieler (-25475, 0, -18725, 0, 0)
+  Zone 2->3 Mitte (-23375,-23075): Cut 3 Spieler (-23375, 0, -23075, 0, 0)
+  Zone 3->4 Mitte (-20926,-25850): Cut 4 Spieler (-20926, 0, -25850, 0, 0)
+Cut 4, Spieler (-20926, 0, -25850, 0, 0), Puffer-Index @0x800ACA34 = 0
+Pool 2: Flags 0000000b Typ 0 Attribut 0x0012 (Bit2 1, Bits 2-3 = 0) Lage (-19548, -3780, -15516) Farbe+Code obj+0x70 8080803e
+   Viereck x1: Code 0x34 (ABE 0) Texpage 0x0086 (ABR 0)
+   Viereck x1: Code 0x3e (ABE 1) Texpage 0x0086 (ABR 0)
+     Q00 tag 0c0aa96c code 0x3e tpage 0x0086
+     Q01 tag 0c000000 code 0x34 tpage 0x0086
+Pool 3: Flags 0000000b Typ 0 Attribut 0x0012 (Bit2 1, Bits 2-3 = 0) Lage (-24174, -3370, -17296) Farbe+Code obj+0x70 8080803e
+   Viereck x2: Code 0x3e (ABE 1) Texpage 0x0086 (ABR 0)
+     Q00 tag 0c0aa8cc code 0x3e tpage 0x0086
+     Q01 tag 0c176de8 code 0x3e tpage 0x0086
+Pool 4: Flags 0000000b Typ 0 Attribut 0x0012 (Bit2 1, Bits 2-3 = 0) Lage (-19548, -3780, -23346) Farbe+Code obj+0x70 8080803e
+   Viereck x2: Code 0x3e (ABE 1) Texpage 0x0086 (ABR 0)
+     Q00 tag 0c12802c code 0x3e tpage 0x0086
+     Q01 tag 0c0aa73c code 0x3e tpage 0x0086
+Pool 5: Flags 0000000b Typ 0 Attribut 0x0006 (Bit2 1, Bits 2-3 = 1) Lage (-22140, 0, -19674) Farbe+Code obj+0x70 8080803e
+   Viereck x11: Code 0x3e (ABE 1) Texpage 0x00a6 (ABR 1)
+     Q00 tag 0c0aa780 code 0x3e tpage 0x00a6
+     Q01 tag 0c0aa794 code 0x3e tpage 0x00a6
+     Q02 tag 0c12804c code 0x3e tpage 0x00a6
+     Q03 tag 0c127d4c code 0x3e tpage 0x00a6
+Ende: Spieler (-20926, 0, -25850, 0, 0) Cut 4
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+resume.sav kopiert
+Bildpuffer buf0.png (VRAM 0,0) / buf1.png (VRAM 0,240) geschrieben
