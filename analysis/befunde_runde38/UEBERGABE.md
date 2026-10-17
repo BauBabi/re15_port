@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 11:22: Integration O gruen (122/122: O-Auswahl + Zombies L + Szenenschutz + Irons/1150/1030/1040), Baum r38_montage entfernt.
 * 2026-10-17 11:10: O montage BESTANDEN (Abnahme 0, wf_ec75d894-03c), gemergt (127100ef, konfliktfrei; enthaelt den L-Merge), configure + Bau OK, gezielte Tests laufen (O-Auswahl + Zombies L + Szenenschutz).
 * 2026-10-17 11:04: Zwischenpruefung Integration (18 Spuren, HEAD 72653ac1): alle unit_/prop_/probe_ 755/755 gruen (-j3, 574 s); Suite jetzt 919 Tests.
 * 2026-10-17 10:51: Integration D gruen (114/114: D-Auswahl + alle Elza-/Masken-/Skelett-/Cursor-/Tagebuch-Riegel), Baum r38_zopf entfernt.
@@ -78,7 +79,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | BESTANDEN (A1), integriert |
 | M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | BESTANDEN (A0), integriert |
 | N | r38_wasser | Wasser-Effekt 1260+ | offen |
-| O | r38_montage | Montage-Zombies Richtung Kamera | BESTANDEN (A0), gemergt |
+| O | r38_montage | Montage-Zombies Richtung Kamera | BESTANDEN (A0), integriert |
 | Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0), integriert |
 | R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | BESTANDEN (A1), integriert |
 | S | r38_affen3 | kleine Affen Stage 3 treffen | offen |
