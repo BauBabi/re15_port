@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 06:30: Integration K gruen (53/53 gezielt: itemorte, Feuerloescher, Schluessel, Kistenregel, Kartenitems/-bits, 10F0, 1030, Tagebuch), Baum r38_itemorte entfernt.
 * 2026-10-17 06:16: Integration G gruen (148/148 gezielt), Baum r38_tagebuch entfernt. K gemergt (97490964, konfliktfrei); Bau scheiterte zuerst am Linker (neue Datei itemorte_r38.c -> GLOB) -> configure + build OK, gezielte K-Tests laufen.
 * 2026-10-17 05:56: D fortgesetzt wf_76712d27-884 (r38_w4.js). Warten: M, N, O.
 * 2026-10-17 05:55: K itemorte BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_02f9bc41-f8f; Prison Key = RE2 Small Key). Merge nach dem G-Test.
@@ -57,7 +58,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | BESTANDEN (A1), integriert |
 | I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0), integriert |
 | J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0), integriert |
-| K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | BESTANDEN (A1), gemergt |
+| K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | BESTANDEN (A1), integriert |
 | M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | offen |
 | N | r38_wasser | Wasser-Effekt 1260+ | offen |
 | O | r38_montage | Montage-Zombies Richtung Kamera | offen |
