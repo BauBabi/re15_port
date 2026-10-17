@@ -589,3 +589,21 @@ beim Wiederbetreten Pos_set y = 0 + Member_set(12,0x00) @0x0088C/@0x008CE), ROOM
 Member_set(12,0x41) @0x0119E, 20 Bilder spaeter Member_set(12,0x61) @0x011AC = wieder gesperrt). Weder `Sce_em_set` 0x29 mit
 +0x9 = 0x40/0x60 noch `Member_set(12,0x40)` -> Unterzustand 0 (0x8011577c) wird im Auslieferungsstand nicht erreicht; jede
 Freigabe eines 0x61-Affen (auch mit 0x00) faehrt Unterzustand 1, weil der Spawn-INIT das Wort 0x104 schon gesetzt hat.
+
+### Mangel 1 — Messung nachher (exe dieses Baums, Stand aad46e72 = Code 6bd30a91; Messkopie re15_pc_s_nb1c.exe)
+Gemeinsame Umgebung: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp
+RE15_TITLE_SHOT_AF=2 RE15_GEGNER_Y_LOG=gy.log RE15_STATE_LOG=state.log`; Auswertung mit eigenem Skript (Scratch
+s_nb1c/auswert.py, gy.log + state.log je Bild). R = erstes Bild nach der Freigabe.
+| Lauf | Aufbau | Freigabe | Fallbahn y R..R+18 | Landung / Sub 4 | HP-Abzuege (Affe dabei) |
+|---|---|---|---|---|---|
+| m1_4040_std | **Aufbau der Abnahme M5**: `RE15_DEBUG_JUMP=4040@250 RE15_PLAYER_POS=-25000,4000,1024,0 RE15_EXIT_AT=900#4040`, RE2-KI | F16: 1/10/2 g01 Clip 13 Bild 20 @(-25090,-10000,9230); F1..F15 gesperrt 4/1/0 g61 | -10000 -10000 -9930 -9790 -9580 -9300 -8950 -8530 -8040 -7480 -6850 -6150 -5380 -4540 -3630 -2650 -1600 -480 0 (= o11 F58..F76) | R+18 / R+34 | F87 (R+71) 100->90 Sub 6 Clip 19 Bild 23 y 0; dann 13 x -5 Sub 5 Clip 18 (F193 .. F885), alle y 0; Affe ab R+19 nur y = 0 |
+| m2_4040_re15 | wie m1, `RE15_AI_FLAVOR=re15` | wie m1 | wie m1 | R+18 / R+34 | bildgleich zu m1 |
+| m3_50A0_std | Stage 5: `RE15_DEBUG_JUMP=50A0@250 RE15_PLAYER_POS=-12350,150,1024,0` (im Ausloeser AOT 0 sce 3 @0x0165C), RE2-KI | F16: 1/10/2 g01 Clip 13 Bild 20 @(-12490,-10000,3080) (Pos_set @0x01982) | wie o11 | R+18 / R+34 | F83 (R+67) 100->90 Sub 6 y 0; dann -5 Sub 5 im Takt 56 (F187, 243, 299, ...), alle y 0 |
+| m4_50A0_re15 | wie m3, RE1.5-KI | wie m3 | wie m3 | R+18 / R+34 | bildgleich zu m3 |
+| m5_5100_wieder | Stage 5, Wiederbetreten: `RE15_DEBUG_JUMP=5100@250 RE15_SET_FLAG=3:0x2d` (sub00: Pos_set y = 0 + Member_set(12,0) @0x0088C) | F6: 1/10/2 g00 @(-10588,0,-14198) | y 0 (Start am Boden) | Phase 3 F8 (R+2), Phase 4 Bild 25 F9, Sub 4 F24 (R+18) | Leon ausser Reichweite (kein Abzug); zweiter Affe (g61) bleibt gesperrt 4/1/0 |
+Gegen die Abnahme (vorher, M5): Affe bis F900 auf y = -10000, Bisse F324/F380 aus der Luft. Nachher: Fall in 18 Bildern
+wie das Original, jeder HP-Abzug vom Boden.
+Bildkontrolle (Hardware-Renderer, OHNE RE15_SOFTWARE_RENDER, `RE15_WINDOW_SCALE=1 RE15_FRAMEDUMP=10-100/3:fd_`, Aufbau m1):
+Kontaktbogen `C:\Users\MJOEDI~1\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\s_nb1c\laeufe\b1_4040_bild\fall_zoom.png` — F25 die Deckenklappe
+oeffnet sich (Evt_exec sub04), F28 Klappe im Bild, F31/F34/F37 der Affe faellt im Vordergrund herab, F40 Landung,
+F43..F52 kauert er am Boden; Modell geschlossen.
