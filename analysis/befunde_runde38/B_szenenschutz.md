@@ -495,7 +495,18 @@ Messkopie `re15_pc_r38b_nb1.exe` (md5 81fa7d42... = re15_pc.exe), Laeufe unter `
 - Unit-Auswahl (systematisch, s. N1.M1): `ctest --test-dir re15_port/build -R "<B_belege/unit_regex_nb1.txt>" -j 4 --timeout 600`
   -> `100% tests passed, 0 tests failed out of 438`
 - Integration (Raum-Zensus, s. N1.M1): `ctest --test-dir re15_port/build -R "<^(...)$ aus B_belege/integ_auswahl_nb1.txt>" -j 3 --timeout 1500 --output-on-failure`
-  -> (laeuft)
+  (79 Tests, u.a. story_leon/story_elza, feuerloescher, ziel1190_scheiben, zgirl_5090, szene11c0, kleidung_hundeweg,
+  roy_leon1170, elzaems_*kraehe, r38_szenenschutz) -> `100% tests passed, 0 tests failed out of 79`
+  (`Total Test time (real) = 3606.27 sec`, ohne Wiederholung).
+- Spur-Riegel an der exe nochmals mit `-V` (`ctest --test-dir re15_port/build -R "^integration_r38_szenenschutz$" --timeout 1500 --output-on-failure -V`)
+  -> `100% tests passed, 0 tests failed out of 1`; Statuszeilen (1190/11D0/1171/1171s bytegleich zu Abnahme 0):
+  `r38_szenenschutz[1190] Szene F521..F738 hp-Verlust=0 Angriffs-Bilder=0 erster Biss F805; [szenenschutz] F739 aus (94
+  geschuetzte Gegner-Ticks)` / `r38_szenenschutz[11D0] Szene F331..F524 hp-Verlust=0 Angriffs-Bilder=0 erster Biss F550` /
+  `r38_szenenschutz[1171] Szenen-Kraehe greift bei F101 (hp 92, pm=2)` / `r38_szenenschutz[1171s]: kein geschuetzter
+  Akteur in ROOM1171 (John NPC, Kraehen grid 0x40)` / NEU `r38_szenenschutz[1230] Executor-Bilder ohne (2,7)/Nachricht
+  mit Hund: 30, Leon-Weg z 2100; Szenenschutz-Fenster in ROOM1230: ''`.
+- Bau: `bash re15_port/tools/local_build.sh build` -> `ninja: no work to do.` / `=== LOCAL-BUILD-OK (build)` (Engine-
+  Stand 432487fa; Nachbesserung-1-Fortsetzung aendert nur Test-Skript und Doku).
 
 ### N1.OFFEN
 - VORBESTEHENDE Port-Abweichung (nicht Spur B, fuer den Orchestrator): das Bewegungs-Gate des Spielers

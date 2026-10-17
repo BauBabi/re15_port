@@ -241,6 +241,8 @@ if(NOT _nach_laden)
     message(FATAL_ERROR "r38_szenenschutz[1230]: ROOM1230 nicht geladen (Sprung)")
 endif()
 # Vorbedingung aus state.log Segment 1: Bilder mit pst=4, pm=0, ohne Nachricht, Hund (t=20) im Raum; Leon laeuft.
+# Schwellen: >= 20 Bilder (das Fenster ist Sleep `09 0a 1e 00` @0x014B8 = 30 Bilder, gemessen e14n F302..F331) und
+# >= 1000 Einheiten Weg (gemessen e14n 2100: z 25000 -> 27100 bis zur Wand).
 file(STRINGS "${_dir}/state.log" _zeilen REGEX "^F[0-9]+ ")
 set(_seg 0)
 set(_vorF -1)
