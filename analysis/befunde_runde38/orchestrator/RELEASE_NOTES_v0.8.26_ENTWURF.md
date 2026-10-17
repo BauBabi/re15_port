@@ -40,6 +40,14 @@ Code-Nachricht jetzt "Roys Diary" - Ihr Text auf RE2-Papier (der FILE16-Hintergr
 Dokumenten; es wird in den Akten abgelegt und kann dort wieder gelesen werden. Danach markiert die Karte erst den
 Communications Room (2F), dann den Prison Room (B2, Johns Zelle) - so wie bei Leons Communications-Room-Hinweis.
 
+**Die kleinen Affen (Stage 3 bis 5) treffen.** Ihr Biss pruefte bisher einen Abstand, den die Koerper-Kollision nie
+zuliess - sie bissen ins Leere. Jetzt wie im Original (Bild fuer Bild am laufenden Original gemessen): ein Biss kostet
+5 HP und Leon zuckt zurueck; aus groesserer Entfernung greift der Affe schwer an (-10 HP, Leon geht zu Boden) oder
+springt. Ein angeschossener Affe springt an die Decke, kriecht ueber den Gang, schlaegt von oben zu und springt Leon
+von hinten an; mit schnellem Tastendruecken kommt man frei. Unter 50 HP kann ein Sprung toedlich sein - wie im
+Original. Die Affen, die in Stage 4 und 5 erst bei einem Ereignis auftauchen, fallen jetzt aus der Deckenklappe und
+greifen vom Boden aus an (vorher liefen sie hoch ueber dem Boden umher).
+
 **Spinnen in Stage 2.** Die Schachtspinnen (ROOM2060, ROOM20A0) warten im Schacht, bis Sie den Ausloesebereich
 betreten, kriechen dann heraus, klettern die Wand hinunter und landen am Boden; keine Spinne schwebt mehr in der Luft.
 Die Spinnen spucken Gift: Ein Treffer kostet 10 HP und vergiftet (im Statusschirm "Poison"; alle paar Sekunden gehen

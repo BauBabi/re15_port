@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 11:25: S affen3 BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_d92ecd29-8d1), gemergt (f1511069; AUFTRAG.md = Integrationsseite, der wortgleiche Nachtrag stand schon drin), configure + Bau OK, gezielte Tests laufen (S-Auswahl 107 + 13 exe + Spiderman/Griffe/Spinnen/Szenenschutz).
 * 2026-10-17 11:22: Integration O gruen (122/122: O-Auswahl + Zombies L + Szenenschutz + Irons/1150/1030/1040), Baum r38_montage entfernt.
 * 2026-10-17 11:10: O montage BESTANDEN (Abnahme 0, wf_ec75d894-03c), gemergt (127100ef, konfliktfrei; enthaelt den L-Merge), configure + Bau OK, gezielte Tests laufen (O-Auswahl + Zombies L + Szenenschutz).
 * 2026-10-17 11:04: Zwischenpruefung Integration (18 Spuren, HEAD 72653ac1): alle unit_/prop_/probe_ 755/755 gruen (-j3, 574 s); Suite jetzt 919 Tests.
@@ -82,7 +83,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | O | r38_montage | Montage-Zombies Richtung Kamera | BESTANDEN (A0), integriert |
 | Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0), integriert |
 | R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | BESTANDEN (A1), integriert |
-| S | r38_affen3 | kleine Affen Stage 3 treffen | offen |
+| S | r38_affen3 | kleine Affen Stage 3 treffen | BESTANDEN (A1), gemergt |
 | T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | BESTANDEN (A1), integriert |
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | offen |
 | V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | BESTANDEN (A1), integriert |
