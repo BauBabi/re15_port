@@ -71,6 +71,113 @@ ueber die Absturzkante (u1=2) und landet bei F416 im Wasser in 1/5 (Sturz). Beid
 hoch (F902/F956). Beides ist die RE2-Griffmechanik (Domino `sw 0x901` @0x80102E90-98, Rueckstoss EXEC[9]) — sie
 traf vorher ebenso einen an der Wand stehenden Zombie; der Ablauf ist im Dossier unter OFFEN gefuehrt.
 
+### M1-vorher — derselbe Weg mit der v0.8.25-exe (Gegenprobe: erklaert der Fix den Befund?)
+
+`release/pkg-win/re15_port_v0.8.25/re15_pc.exe` als Kopie im Scratchpad (`re15_pc_v0825_u.exe`), Assets des Pakets
+(`RE15_CD_ROOT=<paket>/shared_assets/PSX RE15_RE2_ASSET_ROOT=<paket>/shared_assets/RE2`), identischer Wegplan/Tuerweg,
+`RE15_EXIT_AT=700#2000`. Tuer feuert identisch (`DOOR FIRE slot=0 ... spawn=(-20650,-1800,-6200)`). gy.log: beide
+Wasserzombies erreichen die Kanalwand x = -22068 (F151 bzw. F401) und pendeln dort bis F700 zwischen RE2 1/1 und 1/14
+(z.B. F601 `[4 t=16 st=1/14/2/0 ... @(-22068,0,-10986) b0]`); **0 Bilder auf Band 1**. Das ist der Nutzerbefund;
+mit a4809c35 ziehen sie sich auf demselben Weg hoch (M1). Der Fix erklaert den Befund: das RE2-Gehirn hat kein
+Hochziehen (eigene Gegenprobe RE2-Overlays, Abschnitt 3 Nr. 8), der neue Dispatch fuehrt die RE1.5-Maschine ein.
+
+### M2 — ECHTER WEG 2070 -> 2000, Leon, `RE15_AI_FLAVOR=re15`, mit Bild
+
+Gleicher Wegplan. wz.log:
+```
+F146 R2000 slot=4 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-9931) b0 f1ba=0 rot=4002 kontakt=09
+F152 R2000 slot=4 t=16 klettern st=1/10/3 mo=22 af=0 @(-22068,0,-9931) b0 f1ba=0 rot=0 kontakt=00
+F222 R2000 slot=4 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-22068,0,-9931) b0 f1ba=-1800 rot=0 kontakt=00
+F310 R2000 slot=4 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-9931) b1 f1ba=-1800 rot=0 kontakt=00
+F426 R2000 slot=3 t=16 drehen ...  F430 klettern ...  F500 boden-1800 ...
+F588 R2000 slot=3 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10474) b1 f1ba=-1800 rot=0 kontakt=00
+```
+gy.log: 0 Bilder mit einem Typ-0x16 unter dem Wasserboden (y > 0), 0 auf Band 2+ (Vorbefund: Sturz bis y = +1800,
+Band 2). Danach greifen beide den stillstehenden Leon an, er stirbt (Lauf endet im Neustart — erwartbar, der
+Wegplan wehrt sich nicht). Bild (`m_tuer2000r15v/crop_r15.png`, F140-F320): Haende auf die Kante, Oberkoerper drueber,
+Knie hoch, Hocke, Aufrichten auf dem Steg (F310/F320 steht er). Kein Unterschied zur RE2-KI im Bild.
+
+### M3 — ECHTER WEG 2071 -> 2001, Elza (`RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`), Standard-KI
+
+Erster Lauf ohne Flag: `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, Tuer feuert, ROOM2001 geladen — aber
+KEIN Gegner. Ursache (RE15_SCD_TRACE=1, Rohbytes): ROOM2001 sub00 @0x1826 `06 00 2e 00` (If) / @0x182A
+`21 03 45 01` (Ck Flag (3,0x45) == 1) umschliesst die beiden Sce_em_set @0x182E/@0x1842; der Trace springt von
+@0x182A nach @0x1858. Leon-ROOM2000 dagegen: @0x1794 If Ck(4,0xF4) -> Ada/John (Sce_em_set Typ 0x42/0x40), Else
+@0x17C6 `07 00 2e 00` -> die beiden 0x16-Wasserzombies. Elza trifft die 2001-Wasserzombies also erst ab Flag
+(3,0x45) — Original-Skript, nicht Spur U.
+Zweiter Lauf mit `RE15_SET_FLAG=3:69`: identisch zu M1 —
+```
+F144 R2001 slot=2 t=16 re2-eintritt ... F150 klettern ... F220 boden-1800 ...
+F308 R2001 slot=2 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10290) b1 f1ba=-1800 rot=0 kontakt=00
+F340 R2001 slot=1 t=16 re2-eintritt ... F351 klettern ... F401 abbruch st=1/9/0 (Partner-Domino, s. M1)
+```
+0 Bilder unter dem Wasserboden / auf Band 2+. Bild (`m_elza2001/crop_elza.png`, F150-F310): derselbe Ablauf neben Elza.
+ROOM2021 (Elza; die vier Sce_em_set @0x08F6-0x0932 stehen in main00 ohne If/Ck-Klammer davor, Rohbytes) deckt der
+Riegel `integration_r38_wasserzombie` Lauf c ab (gruen, s. 0).
+
+### M4 — ROOM2020 ueber den Raumlader (Debug-Sprung), Leon, Standard-KI, mit Bild
+
+`RE15_DEBUG_JUMP=2020@250 RE15_PLAYER_POS=-9500,2600,1024,1`, `RE15_EXIT_AT=700#2020`. (Die Tuer 2050 -> 2020 liess sich
+im Messlauf nicht ausloesen: der Spieler wird in 2050 bei F6 auf z = 4718 gesetzt und die Tuer feuerte weder mit Blick
++Z noch -Z — nicht weiter verfolgt, ROOM2000/2001 sind ueber echte Tueren gemessen.) wz.log:
+```
+F80 R2020 slot=4 t=16 re2-eintritt st=1/10/0 mo=0 af=31 @(-10756,0,1082) b0 f1ba=0 rot=3527 kontakt=c9
+F109 R2020 slot=4 t=16 klettern st=1/10/3 mo=22 af=0 @(-10756,0,1082) b0 f1ba=0 rot=3072 kontakt=c0
+F179 R2020 slot=4 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-10756,0,1082) b0 f1ba=-1800 rot=3072 kontakt=c0
+F267 R2020 slot=4 t=16 oben st=1/0/0 mo=22 af=158 @(-10756,-1800,2222) b1 f1ba=-1800 rot=3072 kontakt=c0
+F347 slot=3 re2-eintritt @(-8650,0,1082) ...   F415 slot=2 re2-eintritt @(-9553,0,1082) ...
+```
+Kontakt 0xc9 = Richtung 0xC, +8, u1 = 1 (Suedwand z = 1500); Vorschub +1140 in z. Bemerkenswert (gy.log): der
+Band-1-Zombie Slot 2 (Spawn Nordsteg (-11250,-1800,-3100)) laeuft auf Leon zu, geht bei F281 ueber die Absturzkante
+(u1 = 2) in den Kanal (y -1650 -> 0, Band 1 -> 0), durchquert ihn und zieht sich F421-F581 an der Suedwand hoch
+(F581 (-9725,-1800,2101) b1). 0 Bilder unter dem Wasserboden / auf Band 2+.
+Bild mit `RE15_FORCE_CUT=6` (Kanalblick, nur zur Sicht; `m_2020c6/sheet_2020c6.png`): F80/F110 Arme auf der Stegkante,
+F140-F170 Oberkoerper ueber der Kante, F200-F230 Aufrichten auf dem Steg. Ohne FORCE_CUT bleibt die Kamera nach dem
+Sprung auf Cut 0 (Tuer-Ende des Raums) — Folge des Teleports, nicht der Spur.
+
+### M1-Ton — Frame-Wort-SE des Kletter-Clips in der RE2-KI
+
+Lauf wie M1 mit `RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1` (statt NOAUDIO), `RE15_EXIT_AT=300#2000`: zwischen
+`[walk] F270` und `[walk] F300` steht `[se] Stimme: se=1 layer=0 vag=2 ... -> SE-Stimme 4` — passend zu Clip-Bild 130
+(Klettern ab F150 -> F280; Bit 23 = SE 1, Unit-Riegel A). Der Ton des RE1.5-Clips laeuft also auch im RE2-Zweig
+(`wz_frame_se`). (Eine zweite se=1-Zeile zwischen F240 und F270 laesst sich ohne Bildnummer im SE-Log nicht zuordnen.)
+
+### M6 — Nebenwirkung: Abbruch des RE2-Hochziehens durch fremden Zustandsschreiber (Bild fuer Bild)
+
+Lauf wie M1, `RE15_FRAMEDUMP=396-404/1:fd/f`, `RE15_EXIT_AT=406#2000` (deterministisch: dieselben Bilder wie M1).
+gy.log Slot 3 (zweiter Kletterer) — woertlich gekuerzt:
+```
+F399 [3 t=16 st=1/10/3/0 mo=22 af=48 @(-22068,0,-9970) b0 f1ba=0]
+F400 [3 t=16 st=1/9/0/0  mo=22 af=49 @(-22068,0,-9970) b0 f1ba=0]   <- 0x901 von Slot 4 (Griff P8) NACH Slot 3s Tick
+F401 [3 t=16 st=1/9/1/0  mo=13 af=23 @(-22468,0,-9970) b0 f1ba=0]   (wz.log: F401 abbruch st=1/9/0 mo=22 af=9)
+```
+Bild (`m_domino/crop_domino2.png`): F398/F399 haengt der Zombie mit dem Oberkoerper auf der Stegkante; **F400 ist er bis
+auf ein Bein unten links verschwunden**; F401 steht er im Taumel-Clip 13 im Kanal. Ursache im Code: die Bank-Abfrage
+`re15_wasserzombie_bank` (Renderer main.c, Uhr `re15_actor_clip_len`, Schuss-Anker) gilt nur, solange `wz_marke_gilt`
+(Zustand 1 UND Sub 0x0A). Schreibt ein anderer Aktor im selben Bild nach dem Tick des Kletterers ein Zustandswort
+(Partner-Domino 0x901 aus RE2-Griff-P8, Slot 4 > Slot 3), zeichnet der Renderer den Zombie in diesem Bild mit
+RE1.5-Clipnummer 22 / Bild 49 auf der **RE2-Bank** (EM016, 31 Clips) — ein falscher Clip auf dem falschen Rig. Auch
+der Bildzaehler wird im naechsten Bild VOR dem Abbruch auf der RE2-Clip-22-Laenge weitergezaehlt (af 49 -> 9).
+Die Spur erzeugt diesen Ein-Bild-Sprung (vorher gab es kein RE1.5-Posing auf dem RE2-Zombie); der Riegel F prueft
+nach dem Abbruch nur y/+0x1ba/Band, nicht Clip/Bank. -> Mangel 1.
+
+### M5 — Nebenwirkung: andere Raeume mit u1&1-Zellen (Mechanismus ist raumunabhaengig)
+
+Eigener SCA-Zensus (RDT u32 @0x20, Kopf 24 B, Zellen 12 B `w,d,x,z,type,u0,u1,floor`, Band = floor >> 4; Skript
+Scratchpad `re/sca_u1.py`) fuer die im Dossier genannten Raeume:
+- ROOM1090: eine Zelle [3] x -15243..10285 z -6284..8458 floor 0x03 = **Band 0**; alle vier Zombie-Spawns
+  (Sce_em_set @0x023a0-0x023dc) stehen auf **Band 1** (pc[4] = 1, y = -1800). Die Klemme FUN_8003b0a4, die +0x90 setzt, sieht
+  nur Zellen des eigenen Bands (selbst disassembliert: `lhu a0,0(s2)` mit s2 = Zelle+10 / `sll 16` / `srl 28` /
+  `lbu v1,130(ent)` / `bne -> naechste Zelle` @0x8003b224-23c) -> kein Hochziehen im normalen Spiel.
+- ROOM10B0: eine Zelle [6] floor 0x01 = Band 0; alle vier Spawns @0x01726-0x01762 auf Band 1 -> ebenso.
+- ROOM3010: Zellen [4] und [17] auf Band 0, Spawns 1-5 auf Band 0 (Deskriptoren 0x84/0x85/0x87/0x88). Spawn-Block
+  @0x210E `06 00 0c 00 / 21 04 0a 00` = nur bei Flag (4,0x0A) = 1. Lauf `RE15_SET_FLAG=4:10 RE15_DEBUG_JUMP=3010@250
+  RE15_PLAYER_POS=-23700,-9100,0,1`, 900 Bilder Standard-KI: alle 7 Gegner gespawnt, kein Hochziehen ausgeloest
+  (wz.log leer), keine Auffaelligkeit in gy.log (Zombie 7 faellt regulaer von Band 1 auf Band 0).
+- ROOM5020: Zellen auf Band 0/1/3; ein Typ-0x18-Spawn auf Band 0 — nicht gelaufen (Stage 5, Spawn-Bedingung nicht
+  geprueft). Restrisiko gering: derselbe Mechanismus, dieselbe Bank (Unit-Riegel A prueft 0x18).
+Ergebnis: Stage 1 (1090/10B0) ist im normalen Spiel nicht betroffen; 3010 unauffaellig.
+
 ## 3. RE-Gate — selbst disassembliert (`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`, Hauptbaum, nur lesend)
 
 Binaerdateien: `info/Re1.5/PSX/BIN/STAGE2.BIN` (roh @0x80100000), `info/Re1.5/PSX/BIN/STAGE1.BIN`, `info/Re1.5/PSX.EXE`.
@@ -129,5 +236,50 @@ RE15_WZ_CLIP_KLETTER 0x16 (@0x80103368), RE15_WZ_FRAC 7 (@0x801032dc-e0/@0x80103
 RE15_WZ_BODENBILD 0x46 (@0x801033d0), RE15_WZ_BAND 1800 (@0x801033f8/@0x80103454). Gekennzeichnet als PORT-WAHL:
 Rig-Wechsel ohne Ueberblendung, +0x1ba-Ruecksetzen beim RE2-Abbruch; als PORT-EMULATION: LOOP-Bit in Phase 0/1.
 Port-Abbildung ohne Original-Gegenstueck (RE2-Gehirn hat kein Hochziehen): Eintritt aus dem RE2-Gang (Zustand 1/Sub 1,
-aufrecht) — im Kopf als "PORT-ABBILDUNG" beschrieben. Suchwoerter `deferred|tunable|interim|for now|faithful|plausibel|
-TODO` im Diff: (laufend)
+aufrecht) — im Kopf als "PORT-ABBILDUNG" beschrieben. Suchwoerter `deferred|tunable|interim|for now|faithful|plausib|
+TODO|approx|geschaetzt|vermut|ungefaehr` in den `+`-Zeilen des Code-Diffs: **0 Treffer**. Einziger neuer getenv:
+`RE15_WASSERZOMBIE_LOG` (Messschiene, oeffnet nur eine Logdatei, kein Verhalten) — kein Env-Schalter als Abschluss.
+
+Weitere eigene Pruefungen zum Gate:
+- Die Gegenprobe "kein Zombie-Zustand setzt +0x1ba zurueck" (Grundlage des RE1.5-Abbruch-Restpunkts im Dossier):
+  die drei uebrigen EXE-Schreiber @0x80043300 (Funktion ~0x800431cc, nur ueber Tabelle @0x8007469c-b8),
+  @0x80052750 (~0x80052508) und @0x80052d98 (~0x80052c14, `jal 0x8001c6e8` room_coll davor) haben keine jal-Aufrufer
+  und stehen nur in den EXE-Tabellen @0x80073e70-90 / @0x80076ce0-d00 (eigener Wort-Scan) — nicht in den
+  STAGE1/STAGE2-Zombie-Tabellen. Die Aussage haelt, soweit statisch pruefbar; dynamisch bleibt sie offen (Dossier 6).
+- Die Klemme FUN_8003b0a4 filtert Zellen nach Band (@0x8003b224-23c, s. M5) — Grundlage dafuer, dass Band-1-Zombies in
+  1090/10B0 nicht auf Band-0-Kletterzellen reagieren.
+
+## 4. Gezielte Tests (keine volle Suite)
+
+- `ctest -R "^unit_r38_wasserzombie$" -V`: gruen; Ausgabe u.a. `[C RE1.5 2020] ... oben=F258 landung(slot 4)=(-11536,-1800,2222)
+  ... danach max_y=-1800 band 1..1`, `[D RE2 2020] ... re15bank=1 len=159 ... st=1/0 mo=0`, `[D-Gegenprobe ohne Bank]
+  eintritt=F-1 y=0`, `[F] Abbruch: st=1 y=0 f1ba=0 band=0`, `[E RE1.5 2000]` / `[E RE2 2000]` je oben (-20928,-1800,z) b1.
+- `ctest -R "^integration_r38_wasserzombie$"`: `100% tests passed, 0 tests failed out of 1` (88.94 s).
+- Gruppe der beruehrten Module (Regex des Bau-Agenten + `unit_re2_hybrid_rig|unit_r36_pri_schatten|unit_enemy_.*|
+  .*schwerkraft.*|.*gravity.*`, -j 4): `100% tests passed, 0 tests failed out of 103` (20.6 s).
+- Integrationsgruppe seriell (`integration_r36_schuss|r36_elza_schuss|r37_beretta|r37_zombieaktiv|r36_pri_schatten|
+  r36_gegnerzahl|r36_klettern|r36_szenenleon`): (laufend)
+
+## 5. Vertrag
+
+- Pfade (`git diff master...HEAD --name-only`, 11 Dateien): nur Dossier, neues Modul + Kopf, Haken in
+  enemy_ai_common.c / enemy_ai_re2_zombie.c / schuss_r36.c / platform/pc/main.c, Riegel unter tests/unit (Sonde
+  `tests/unit/probes/r38_wasserzombie.cmake`, keine Test-CMakeLists) und tests/integration. **Kein** release/,
+  platform/android/, shared_assets/PSX/.
+- Ressourcen: keine Bank-9-Bits, keine Nachrichten-Ids, keine Items/Dokumente, keine Sprachdateien (VERTRAG 1.1-1.3
+  nicht beruehrt).
+- Gemeinsame Dateien: alle Haken klein und mit "Runde 38 Spur U" gekennzeichnet (enemy_ai_common.c: Include, ein
+  ersetzter Aufruf, 2 Zeilen in re15_actor_clip_len, eine Hinweiszeile; enemy_ai_re2_zombie.c: Include + 1 Zeile vor
+  dem switch; schuss_r36.c: Include + 2 Zeilen; main.c: Include + 1 + 1 + 5 Zeilen). VERTRAG 1.4 nennt
+  enemy_ai_common.c fuer B/T und schuss_r36.c gar nicht — die Tabelle ist sichtbar nicht abschliessend (R, S, M haben
+  enemy_ai_common.c ebenfalls beruehrt); Form der Haken ist vertragsgemaess.
+- Probe-Merge (nur Objekte, kein Arbeitsbaum): `git merge-tree --write-tree r38/integration a4809c35` -> Konflikte NUR
+  in den Include-Zeilen von enemy_ai_common.c (Spur I/T an derselben Stelle) und main.c (Spur E/I/T) — beide Seiten
+  behalten; enemy_ai_re2_zombie.c (Spur L) automatisch.
+- Riegel je Punkt: unit_r38_wasserzombie (A-F) + integration_r38_wasserzombie (a-d) — messend (Log-Folge, Lage, Band,
+  +0x1ba, Invariante "nie unter dem Wasserboden / nie Band 2").
+- Code-Hygiene (kein Verhaltensfehler): die alte `static` Funktion `re15_enemy_ai_live_edge_fall` bleibt unbenutzt
+  im Code (enemy_ai_common.c:3380, -Wunused-function), der Kommentar direkt ueber dem neuen Aufruf (enemy_ai_common.c
+  ~4774) beschreibt weiter "EDGE-FALL ... tumbles over the contact edge ... down one floor" — widerspricht der neuen
+  Einordnung; `include/re15_wasserzombie_r38.h:84` erzeugt `-Wcomment` ("*sk/*an" in einem Kommentar) in jeder
+  einbindenden Datei.
