@@ -135,6 +135,16 @@
  *   1030 Cut 7 (Kamera (-26820,-3114,-2574) -> (-15858,-936,-5040)) und Cut 6 (Kamera
  *        (-11790,-3870,-15282) -> (-8640,-684,-26478)): Tuer-Rechteck Slot 2 @0x01CAA
  *        (-27500,-4700,1200,2100) -> (-27300,-3650): hinter beiden Kameras.
+ *        RUNDE 38 SPUR O: (-27300,-3650) lag IN der Gangwand SCA 5 (@0x01A4C x -27776..-26732, z -6392..-1208)
+ *        und wurde ab Bild 6 auf (-28244,-3650) ausgeschoben (gemessen) = nur 1153 hinter der Kamera Cut 7. Seit die
+ *        Kopien dort auf die Kamera zugehen (re15_montage_r38.h), ist das zu nah: GEMESSEN (unit_r38_montage s1030,
+ *        vor dieser Aenderung) schob ein Zombie den Spieler auf (-27120,-3934), und die RVD-Automatik schaltete in Bild
+ *        162 auf Cut 8 (Zone RVD ROOM1030 cam 7 -> 8). Jetzt die Rolltor-Form (Parkplatz 1040 liegt 3985,5 hinter der
+ *        Kamera Cut 1, re15_montage_r38.h) auf der Achse von Cut 7: (-26820 - 3985,5 * 0,97562, -2574 + 3985,5 *
+ *        0,21948) = (-30708,-1699) (Achse (10962,-2466) / 11235,9 aus RID ROOM1030 @0x140: pos @0x144/@0x14C, target
+ *        @0x150/@0x158). Dort liegt keine SCA-Zelle (westlichste Wand SCA 8 endet bei x -27992) und keine RVD-Zone
+ *        (RVD 26 beginnt bei x -29700): kein Ausschub, kein Zonen-Kamerawechsel. Die Kopien bleiben an der Gangwand
+ *        SCA 5 stehen, 3985 vor dem Spieler. Riegel unit_r38_montage_kameras rechnet den Wert aus den RID-Bytes nach.
  *   11C0 Cut 13 (Kamera (-11300,-3788,-8584) -> (-1688,-832,-21500)): Tuer-Rechteck Slot 0 @0x01712
  *        (-27100,15900,4000,2700) -> (-25100,17250), Gierung 3067 = die der Tuer.
  *   1150 Rueckkehr: Couchplatz der ersten Szene (-20538,-25147) (Plc_dest @0x01136), Gierung 1500
@@ -143,8 +153,8 @@
 #define RE15_IT_PARK_1130_Z   (-2150)
 #define RE15_IT_PARK_1040_X   (-24950)
 #define RE15_IT_PARK_1040_Z   (-14900)
-#define RE15_IT_PARK_1030_X   (-27300)
-#define RE15_IT_PARK_1030_Z   (-3650)
+#define RE15_IT_PARK_1030_X   (-30708)   /* Runde 38 Spur O; bis v0.8.25 (-27300) */
+#define RE15_IT_PARK_1030_Z   (-1699)    /* Runde 38 Spur O; bis v0.8.25 (-3650) */
 #define RE15_IT_PARK_11C0_X   (-25100)
 #define RE15_IT_PARK_11C0_Z   (17250)
 #define RE15_IT_PARK_11C0_YAW 3067

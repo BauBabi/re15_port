@@ -77,6 +77,7 @@ typedef struct {
     int32_t  d0, d1;       /* Abstand zur Kamera-Bodenprojektion */
     int32_t  t0, t1;       /* Tiefe vor der Kamera */
     int      angehalten;   /* Abschnitts-Bild des Einzelstopps, 0 = nie */
+    uint8_t  halt0;        /* 1 = beim ersten Sehen im Abschnitt schon angehalten (Stopp aus einem frueheren Schnitt) */
 } re15_r38_spur_t;
 int  re15_r38_spuren(const re15_r38_spur_t **out);
 int  re15_r38_abschnitt_bilder(uint16_t raum, uint8_t cut);   /* Laenge des (letzten) Abschnitts in Bildern */

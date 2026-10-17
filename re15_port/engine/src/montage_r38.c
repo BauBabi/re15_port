@@ -95,8 +95,9 @@ static void abschnitt_schliessen(void)
     for (int i = s_offen_von; i < s_n_spur; i++) {
         const re15_r38_spur_t *p = &s_spur[i];
         fprintf(stderr, "[montage-r38] ROOM%04X Cut %d Bild %d: Aktor %d Typ %02x Bit %d Abstand zur Kamera %d -> %d"
-                " (Tiefe %d -> %d, Bild %d..%d) angehalten %d\n", (unsigned)p->raum, p->cut, s_bild, p->aktor, p->typ,
-                p->bit, (int)p->d0, (int)p->d1, (int)p->t0, (int)p->t1, p->bild0, p->bild1, p->angehalten);
+                " (Tiefe %d -> %d, Bild %d..%d) angehalten %d%s\n", (unsigned)p->raum, p->cut, s_bild, p->aktor, p->typ,
+                p->bit, (int)p->d0, (int)p->d1, (int)p->t0, (int)p->t1, p->bild0, p->bild1, p->angehalten,
+                p->halt0 ? " (schon vorher)" : "");
     }
 #endif
     s_offen = NULL;
@@ -111,6 +112,7 @@ static re15_r38_spur_t *spur(const re15_actor_t *a, int aktor)
     memset(p, 0, sizeof *p);
     p->raum = s_offen->raum; p->cut = s_offen->cut; p->aktor = (uint8_t)aktor; p->typ = a->type; p->bit = a->em_flag_id;
     p->bild0 = s_bild;
+    p->halt0 = (a->grid_id & RE15_AI_GRID_SKIP) ? 1 : 0;
     return p;
 }
 
