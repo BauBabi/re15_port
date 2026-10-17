@@ -25,6 +25,16 @@
  *      @0x80100450, `andi v0,v0,0x20` @0x80100458, `bne v0,zero,0x80100658` @0x8010045c; Port RE15_AI_GRID_SKIP vor
  *      Navigator und Gehirn). Rolltor: irons_tod_1150.c bilanz_takt (z < Kamera-z). Hier allgemein: Skalarprodukt
  *      (Lage - Kamera) . Blickrichtung < 0 = hinter der Bildebene der Kamera des LAUFENDEN Schnitts.
+ *   4. DURCH DAS AUFGEBROCHENE TOR NUR KRIECHEND (ROOM1030 Cut 12). Die Torzelle SCA 18/28 (@0x01AE8/@0x01B60, z
+ *      -24420..-22771) wird in der Szene mit `37 02 06 f7` / `37 03 06 f7` (sub08 @0x0278E/@0x02792, Sca_id_set u0 0xff
+ *      -> 0xf7) nur fuer Kriecher frei; aufrechte Zombies stehen an ihr fest (GEMESSEN Lauf x_kette: z -24838). Das
+ *      Original laesst im Spiel JEDEN Zombie kriechen, der im Warte-Rechteck hinter dem Tor steht: ROOM1030 sub06
+ *      @0x024C8.. je Gegner-Index i = 0x00..0x13 (`21 05 i 00` Ck(5,i)=0, `2e 02 i` Work_set, `3e 00 0f 00 05 00`
+ *      Member_cmp AOT-Stempel == 5, `18 07` Gosub sub07, `22 05 i 01` Set(5,i)=1); sub07 @0x02754 `3d 04 10` /
+ *      `26 00 05 04 00 10` / `35 10 04` = member 0x10 (entity+0x1c4) |= 0x1000. Die Szene selbst (sub08) ruft nur
+ *      viermal sub09 (dieselbe Regel, ein Zombie je Aufruf, `59 05 04 01` @0x02822 = Set(5,i)). NUTZER-VORGABE "alle"
+ *      -> im Montage-Schritt auf Cut 12 gilt die sub06-Regel fuer jeden Zombie (ohne die Spiel-Drossel sub02 @0x021CC
+ *      "weniger als 4 im Hauptraum" und ohne das Spiel-Bit (5,0x22) @0x024CC, die der Montage-Ablauf nicht setzt).
  *
  * KAMERAS = RDT-RID (RDT+0x24 = camera_start 0x60 in allen vier Raeumen, 32 Byte je Schnitt, re15_camera.h: +0x04 pos_x,
  * +0x0C pos_z, +0x10 target_x, +0x18 target_z); Datei-Offset je Schnitt in der Tabelle (montage_r38.c), Riegel
@@ -59,6 +69,13 @@ int  re15_r38_kameras(const re15_r38_kamera_t **out);   /* Tabelle (Riegel) */
 #define RE15_R38_PARK_1030_12_Z    (-11445)
 #define RE15_R38_PARK_1030_12_YAW  845
 
+/* BAUSTEIN 4 (Kriechen durchs Tor, ROOM1030 Cut 12) — Werte aus ROOM1030.RDT sub06/sub07 (Datei-Offsets oben). */
+#define RE15_R38_KRIECH_CUT      12        /* Cut_chg 12 @0x027AA (sub08) = das aufgebrochene Tor */
+#define RE15_R38_WARTE_STEMPEL   5         /* `3e 00 0f 00 05 00` @0x024E0 (sub06) / @0x02804 (sub09): member 0x0F == 5 */
+#define RE15_R38_KRIECH_BIT      0x1000u   /* `26 00 05 04 00 10` @0x02758 (sub07): Calc ODER 0x1000 auf member 0x10 */
+#define RE15_R38_KRIECH_BANK     5         /* `22 05 i 01` @0x024E8.. (sub06) / `59 05 04 01` @0x02822 (sub09) */
+#define RE15_R38_KRIECH_N        20        /* sub06 prueft die Indizes 0x00 (@0x024D4) .. 0x13 (@0x02734) */
+
 /* HAKEN re15_irons_tod_tick (jedes Bild, Kopf des VM-Laufs): Einzelstopp hinter der Kamera (Baustein 3) in den
  * Schnitten mit halt = 1 waehrend ihres Montage-Schritts, dazu die Messung je Schnitt (s.u.). */
 void re15_r38_montage_takt(void);
@@ -78,13 +95,17 @@ typedef struct {
     int32_t  t0, t1;       /* Tiefe vor der Kamera */
     int      angehalten;   /* Abschnitts-Bild des Einzelstopps, 0 = nie */
     uint8_t  halt0;        /* 1 = beim ersten Sehen im Abschnitt schon angehalten (Stopp aus einem frueheren Schnitt) */
+    uint8_t  kriech0;      /* 1 = beim ersten Sehen im Abschnitt schon mit Kriech-Bit (sub09 der Szene) */
+    int      kriecht;      /* Abschnitts-Bild, in dem Baustein 4 das Kriech-Bit setzte, 0 = nie */
 } re15_r38_spur_t;
 int  re15_r38_spuren(const re15_r38_spur_t **out);
 int  re15_r38_abschnitt_bilder(uint16_t raum, uint8_t cut);   /* Laenge des (letzten) Abschnitts in Bildern */
 void re15_r38_montage_reset(void);
 
 /* Nur fuer Sonden/Riegel: 0 = Stand v0.8.25 (stehende Listen, kein Einzelstopp ausser im Rolltor-Schnitt, kein
- * Umparken in Cut 12) als Gegenprobe im selben Binary. Wirkt beim naechsten Programmbau. */
+ * Umparken in Cut 12, keine Kriech-Regel auf Cut 12) als Gegenprobe im selben Binary. Wirkt beim naechsten Programmbau
+ * (Listen, Umparken) bzw. sofort (Einzelstopp, Kriech-Regel). Den Tuer-Parkplatz RE15_IT_PARK_1030 setzt der Riegel
+ * in der Gegenprobe selbst auf den alten Wert. */
 void re15_r38_montage_enable(int an);
 int  re15_r38_montage_enabled(void);
 

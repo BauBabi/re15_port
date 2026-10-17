@@ -369,10 +369,11 @@ static const uint8_t k_p_1040_nach[] = { OP_ZAEHLER_1040, EM_1040_LISTE, OP_END 
 /* RUNDE 38 SPUR O (wie EM_1130_DURCH): im Montage-Schritt die Durchbruch-Form grid 0x0d (@0x80100f40-44 /
  * @0x80100ab8-abc) — Typen, Tot-Bits, Lagen, Blick wie EM_1070_LISTE. GEMESSEN vorher: mit grid 0x00 standen alle fuenf
  * auf Cut 7 still (unter der RE2-KI ist die Runde-37-Abbildung 0x00 -> Gang waehrend eines Montage-Schritts aus,
- * zombieaktiv_r37.c). Ziel = der geparkte Spieler (Tuer-Spawn (-27300,-3650), gemessen ab Bild 6 (-28244,-3650) hinter
- * der Gangwand SCA 5 @0x01A4C x -27776..-26732): 1153 hinter der Kamera Cut 7 (RID ROOM1030 @0x140: pos (-26820,-2574)
- * @0x144/@0x14C, target (-15858,-5040) @0x150/@0x158). Der Nachspawn beim spaeteren Betreten (k_p_1030_nach_tuer)
- * behaelt EM_1070_LISTE. */
+ * zombieaktiv_r37.c). Ziel = der geparkte Spieler RE15_IT_PARK_1030 (-28558,-2183): auf der Achse von Cut 7, 1781
+ * hinter der Kamera (RID ROOM1030 @0x140: pos (-26820,-2574) @0x144/@0x14C, target (-15858,-5040) @0x150/@0x158),
+ * hinter der Gangwand SCA 5 @0x01A4C und IN derselben BLK-Zone 7 (@0x01C10) wie die Kopien, damit der Navigator
+ * FUN_80039e7c die Spielerlage selbst als Ziel nimmt (gleiche Zone @0x80039fbc; Herleitung re15_irons_tod.h). Der
+ * Nachspawn beim spaeteren Betreten (k_p_1030_nach_tuer) behaelt EM_1070_LISTE. */
 #define EM_1070_DURCH \
     OP_EM(0, 0x10, 0x0d, 0x00, 47, -18600, -3500, 2048), \
     OP_EM(0, 0x10, 0x0d, 0x01, 48, -20600, -3000, 2048), \

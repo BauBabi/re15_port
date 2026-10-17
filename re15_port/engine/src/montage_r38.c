@@ -113,7 +113,32 @@ static re15_r38_spur_t *spur(const re15_actor_t *a, int aktor)
     p->raum = s_offen->raum; p->cut = s_offen->cut; p->aktor = (uint8_t)aktor; p->typ = a->type; p->bit = a->em_flag_id;
     p->bild0 = s_bild;
     p->halt0 = (a->grid_id & RE15_AI_GRID_SKIP) ? 1 : 0;
+    p->kriech0 = (a->anim_flags & RE15_R38_KRIECH_BIT) ? 1 : 0;
     return p;
+}
+
+/* Baustein 4 (re15_montage_r38.h): die Regel von ROOM1030 sub06 @0x024C8.. fuer jeden Gegner-Index i = 0..0x13 (Aktor
+ * i + 1, Work_set(2,i) = scd_work_bind kind 2): noch nicht geschickt (Ck(5,i) = 0) und im Warte-Rechteck (member 0x0F ==
+ * 5) -> sub07 (member 0x10 |= 0x1000) und Set(5,i) = 1. Liefert die Zahl der neu geschickten. */
+static int kriech_regel(const re15_r38_kamera_t *k)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_R38_KRIECH_N && i + 1 < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *a = &g_actors[i + 1];
+        if (!a->active) continue;                                                    /* Work_set bindet nur aktive */
+        if (re15_game_flag_get(RE15_R38_KRIECH_BANK, (uint8_t)i)) continue;         /* Ck(5,i) @0x024D4.. */
+        if (a->member_0b != RE15_R38_WARTE_STEMPEL) continue;                        /* @0x024E0 */
+        a->anim_flags = (uint16_t)(a->anim_flags | RE15_R38_KRIECH_BIT);             /* sub07 @0x02754-5E */
+        re15_game_flag_set(RE15_R38_KRIECH_BANK, (uint8_t)i, 1);                    /* @0x024E8 */
+        re15_r38_spur_t *p = spur(a, i + 1);
+        if (p && !p->kriecht) p->kriecht = s_bild;
+        n++;
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[montage-r38] ROOM%04X Cut %d Bild %d: Aktor %d im Warte-Rechteck -> kriecht (member 0x10 |= 0x1000,"
+                " Set(5,%d))\n", (unsigned)k->raum, k->cut, s_bild, i + 1, i);
+#endif
+    }
+    return n;
 }
 
 /* ---- Takt --------------------------------------------------------------------------------------------------------- */
@@ -157,4 +182,6 @@ void re15_r38_montage_takt(void)
 #endif
         }
     }
+    /* Baustein 4: durch das aufgebrochene Tor nur kriechend — jeder, der im Warte-Rechteck steht (sub06-Regel). */
+    if (s_an && k->raum == RE15_IT_RAUM_1030 && k->cut == RE15_R38_KRIECH_CUT) (void)kriech_regel(k);
 }

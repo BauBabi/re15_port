@@ -42,6 +42,7 @@
 #include "re2_ems.h"
 #include "re15_irons_tod.h"
 #include "re15_montage_r38.h"
+#include "re15_damage.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,18 +84,25 @@ static uint8_t *slurp(const char *p, size_t *n)
     return b;
 }
 
+/* Immer FRISCH von der Platte: Sca_id_set (ROOM1030 sub08 @0x0278E/@0x02792, scd_vm.c op_sca_id_set) aendert die
+ * SCA-Zellen im geladenen RDT (wie im Original bis zum naechsten Laden) — ein zweiter Lauf im selben Prozess saehe sonst
+ * das offene Tor. Und in g_room_rdt: der Navigator (nav_zone_common.c, BLK-Graph) und die Gegner-Wandklemme
+ * (re15_collision_constrain_enemy(&g_room_rdt, ..)) lesen NUR ihn (probe_1030_crawl_live.c Defekt 3) — ohne ihn
+ * liefen die Zombies im Riegel durch Waende und Tor (Dossier O_montage.md "Zwischenmessung", Befund 3). */
 static int rdt_laden(uint16_t room)
 {
-    if (s_raw && s_rdt_raum == room) return 0;
     char rp[600];
     snprintf(rp, sizeof rp, "%s/STAGE%u/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, (unsigned)(room >> 12), (unsigned)room);
-    free(s_raw); s_raw = slurp(rp, &s_rawsz); s_rdt_raum = 0;
+    free(s_raw); s_raw = slurp(rp, &s_rawsz); s_rdt_raum = 0; g_room_rdt_ok = 0;
     if (!s_raw || s_rawsz < 0x100) return -1;
-    if (re15_rdt_parse(s_raw, s_rawsz, &s_rdt) < 0) return -1;
+    if (re15_rdt_parse(s_raw, s_rawsz, &g_room_rdt) < 0) return -1;
+    g_room_rdt_ok = 1;
+    s_rdt = g_room_rdt;
     s_rdt_raum = room;
     return 0;
 }
 static int32_t s32(const uint8_t *p) { return (int32_t)((uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24)); }
+static int16_t s16(const uint8_t *p) { return (int16_t)((uint16_t)p[0] | ((uint16_t)p[1] << 8)); }
 
 /* ---- Gegner-Baenke wie die exe je KI-Wahl ------------------------------------------------------------------------ */
 static uint8_t *s_re2_ems = NULL; static size_t s_re2_n = 0;
@@ -173,13 +181,15 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     banken();
     re15_player_cmd_reset();
     re15_pauseflags_clear();
+    re15_damage_seed_rng(0x2545f491u);                     /* reproduzierbar (Muster test_r37_zombieaktiv.c) */
     g_letterbox_level = 0;
     g_current_room_id = room; g_room_change.pending = 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
-    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    pl->state = 0; pl->motion = 0; pl->y = 0;
     pl->x = px; pl->z = pz; pl->rot_y = rot;
-    re15_collision_set_band(0);
+    pl->floor = (uint8_t)re15_collision_band_from_y(0);   /* wie test_r37_zombieaktiv.c grundzustand */
+    re15_collision_set_band(pl->floor);
     s_shown = cut; s_cine_was = 0;
     g_scd.player_mode = 0; g_scd.letterbox_countdown = 0;
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
@@ -270,21 +280,46 @@ static void teil_kameras(void)
                   "RE15_R38_PARK_1030_12 = (%d,%d) = Kameraachse Cut 12 im Rolltor-Abstand (%.1f,%.1f)",
                   RE15_R38_PARK_1030_12_X, RE15_R38_PARK_1030_12_Z, px, pz);
             PRUEF(abs(yaw - RE15_R38_PARK_1030_12_YAW) <= 1, "Gierung %d = Blick entlang der Achse Cut 12 (%d)", RE15_R38_PARK_1030_12_YAW, yaw);
-            /* Parkplatz ROOM1030 (Tuer aus 1040, Cut 7): dieselbe Rolltor-Form auf der Achse von Cut 7 (RID @0x140) */
+            /* Parkplatz ROOM1030 (Tuer aus 1040, Cut 7): auf der Achse von Cut 7 (RID @0x140), in der Mitte des Teils der
+             * BLK-Zone 7 (@0x01C10), der hinter der Wand SCA 5 (@0x01A4C) liegt (re15_irons_tod.h). */
             const uint8_t *c7 = s_raw + 0x140;
             double ax = s32(c7 + 4), az = s32(c7 + 0x0C), hx = s32(c7 + 0x10) - ax, hz = s32(c7 + 0x18) - az, hn = sqrt(hx * hx + hz * hz);
-            double qx = ax + tiefe * hx / hn, qz = az + tiefe * hz / hn;
-            printf("  Rolltor-Form auf der Achse Cut 7: (%.1f,%.1f)\n", qx, qz);
-            PRUEF(fabs(qx - RE15_IT_PARK_1030_X) <= 1.0 && fabs(qz - RE15_IT_PARK_1030_Z) <= 1.0,
-                  "RE15_IT_PARK_1030 = (%d,%d) = Kameraachse Cut 7 im Rolltor-Abstand (%.1f,%.1f)", RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, qx, qz);
-            {   /* keine SCA-Zelle am Parkplatz (sonst schiebt die Kollision den Spieler aus, wie (-27300,-3650) aus SCA 5) */
+            const uint32_t blk = (uint32_t)s32(s_raw + 0x38);
+            const uint8_t *z7 = s_raw + blk + 4 + 7 * 12;
+            const re15_sca_entry_t *w5 = (s_rdt.sca_count > 5) ? &s_rdt.sca[5] : NULL;
+            PRUEF(blk + 4 + 7 * 12 == 0x01C10 && s16(z7) == -29340 && w5 && (const uint8_t *)w5 - s_raw == 0x01A4C && w5->x == -27776,
+                  "Quellen: BLK-Knoten 7 @0x%05X x1 %d, SCA 5 @0x%05X Rueckseite x %d", (unsigned)(blk + 4 + 7 * 12), (int)s16(z7),
+                  w5 ? (unsigned)((const uint8_t *)w5 - s_raw) : 0u, w5 ? (int)w5->x : 0);
+            double qx = w5 ? (w5->x + s16(z7)) / 2.0 : 0.0, qz = az + (qx - ax) * hz / hx;
+            double q_tiefe = ((qx - ax) * hx + (qz - az) * hz) / hn;
+            printf("  Parkplatz Cut 7: Mitte Zone 7 hinter SCA 5 auf der Achse = (%.1f,%.1f), %.1f hinter der Kamera\n", qx, qz, -q_tiefe);
+            PRUEF(fabs(qx - RE15_IT_PARK_1030_X) <= 1.0 && fabs(qz - RE15_IT_PARK_1030_Z) <= 1.0 && q_tiefe < 0,
+                  "RE15_IT_PARK_1030 = (%d,%d) = (%.1f,%.1f) hinter der Kamera Cut 7", RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, qx, qz);
+            {   /* Navigator: gleiche Zone wie die Kopien = Ziel ist die Spielerlage (FUN_80039e7c `bne a0,a1` @0x80039fbc) */
+                const uint8_t zp = re15_nav_zone_from_pos((int16_t)RE15_IT_PARK_1030_X, (int16_t)RE15_IT_PARK_1030_Z);
+                const uint8_t z_alt = re15_nav_zone_from_pos(-28244, -3650), z_r38a = re15_nav_zone_from_pos(-30708, -1699);
+                static const int16_t kop[5][2] = { { -18600, -3500 }, { -20600, -3000 }, { -22400, -4000 }, { -19600, -2400 }, { -21600, -4600 } };
+                int in7 = 0;
+                for (int i = 0; i < 5; i++) in7 += (re15_nav_zone_from_pos(kop[i][0], kop[i][1]) == 7);
+                printf("  BLK-Zonen: Parkplatz %d, v0.8.25-Platz (-28244,-3650) %d, erster Runde-38-Platz (-30708,-1699) %d (255 = keine),"
+                       " Kopien in Zone 7: %d von 5\n", zp, z_alt, z_r38a, in7);
+                PRUEF(zp == 7 && in7 >= 4 && z_r38a == 0xff, "Parkplatz in BLK-Zone 7 wie %d von 5 Kopien (der erste Runde-38-Platz lag in "
+                      "keiner Zone = veraltetes Navigator-Ziel)", in7);
+            }
+            {   /* Cut 12: der umgeparkte Spieler liegt in BLK-Zone 2 = dort, wo die Kriecher nach dem Tor hinkommen */
+                const uint8_t z12 = re15_nav_zone_from_pos((int16_t)RE15_R38_PARK_1030_12_X, (int16_t)RE15_R38_PARK_1030_12_Z);
+                PRUEF(z12 == 2, "Parkplatz Cut 12 (%d,%d) in BLK-Zone 2 (@0x01BD4, Hauptraum vor dem Tor): %d", RE15_R38_PARK_1030_12_X,
+                      RE15_R38_PARK_1030_12_Z, z12);
+            }
+            {   /* keine SCA-Zelle am Parkplatz (sonst schiebt die Kollision den Spieler aus, wie (-27300,-3650) aus SCA 5):
+                 * jede Zelle um den Spielerradius 450 vergroessert (re15_collision.c PR = DAT_80073e94[6]) */
                 int drin = 0;
                 for (int i = 0; i < s_rdt.sca_count; i++) {
                     const re15_sca_entry_t *e = &s_rdt.sca[i];
-                    if (RE15_IT_PARK_1030_X >= e->x - 600 && RE15_IT_PARK_1030_X <= e->x + (int)e->width + 600 &&
-                        RE15_IT_PARK_1030_Z >= e->z - 600 && RE15_IT_PARK_1030_Z <= e->z + (int)e->density + 600) drin++;
+                    if (RE15_IT_PARK_1030_X >= e->x - 450 && RE15_IT_PARK_1030_X <= e->x + (int)e->width + 450 &&
+                        RE15_IT_PARK_1030_Z >= e->z - 450 && RE15_IT_PARK_1030_Z <= e->z + (int)e->density + 450) drin++;
                 }
-                PRUEF(drin == 0, "Parkplatz ROOM1030 ausserhalb jeder SCA-Zelle (+600): %d Zellen", drin);
+                PRUEF(drin == 0, "Parkplatz ROOM1030 ausserhalb jeder SCA-Zelle (+ Spielerradius 450): %d Zellen", drin);
             }
         }
     }
