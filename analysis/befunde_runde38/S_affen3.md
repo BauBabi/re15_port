@@ -148,3 +148,11 @@ Menues @0x80014a44-58, den die Hauptschleife @0x8001c994 liest. Danach Haltepunk
   (-9118,-4240) — er ist im allerersten Biss (ohne Ruhephase, Pool-Ueberblendung vom INIT-Clip 0) durch den Gang
   nach Norden gerutscht. Mechanik (Sperre 0x2d, Fenster, -5, cmd 2) gleich, Lage verschieden, weil die Vorgeschichte
   verschieden ist -> der Riegel startet den Port aus dem Original-Zustand F137 (s. Tests).
+
+### 2026-10-17 (zweite Fortsetzung nach Sitzungslimit ~23:45)
+- Baum geprueft: `git status --porcelain` leer, HEAD 930e385c (Vorgaenger-Commits 49a4b741..930e385c), Basis cb782bda.
+  master hat seit cb782bda nur Doku-Commits (Orchestrator); Spur T (spiderman) liegt in r38/integration, Spur B
+  (szenenschutz) noch in ihrem Baum (Nachbesserung 1).
+- Offen beim Abbruch: 930e385c (integration-Riegel: Leon-Gier 0 statt 3072, Folgebild-Pruefung Clip 8 statt pst=2)
+  UNGEPRUEFT, nichts gebaut/getestet seit da97247d, Messung nachher an der exe, Tests-Abschnitt, OFFEN, Fuer den Nutzer.
+- Bau gestartet (local_build.sh configure + build).
