@@ -740,8 +740,10 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
           RE15_AFFEN3_BISS_SCHADEN);
 }
 
-/* Unterzustand 0 (0x8011577c, +0x9 == 0x40): im Auslieferungsstand von keinem Skript erreicht (Zensus: alle Freigaben
- * Member_set(12,0x41)); gegen die Befehle gemessen: Affe A in ROOM3040 bekommt das Zustandswort 4 und +0x9 = 0x40.
+/* Unterzustand 0 (0x8011577c, +0x9 == 0x40): im Auslieferungsstand von keinem Skript erreicht (Zensus aller RDTs: kein
+ * Sce_em_set 0x29 mit +0x9 0x40/0x60, kein Member_set(12,0x40); ein 0x61-Affe bekommt beim Spawn 0x104 = Unterzustand 1,
+ * gleich ob ihn Member_set(12,0x41) oder (12,0x00) freigibt); gegen die Befehle gemessen: Affe A in ROOM3040 bekommt das
+ * Zustandswort 4 und +0x9 = 0x40.
  * Phase 0 @0x801157c8 (Clip 0x1f, +0x95 0, +0x8f 7) faellt in Phase 1 (anim_set, +0x6 += Ende); Phase 2 @0x80115858:
  * +0x9 &= 0xbf, ACTIVE Sub 2 Phase 1, Clip 3 ab Bild 0x1d; B[2] (+0x7 = 0) spielt Clip 3 zu Ende und geht nach Sub 3. */
 static void teil_ereignis40(void)

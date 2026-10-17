@@ -408,14 +408,14 @@ Laeufe (Stand mit Wurzel-Tor, gebaut mit `local_build.sh build`; `ctest --test-d
 3. **Anzeige-Bits aca3c:** der Opfer-Haken cmd 5 setzt `aca3c |= 0xc0` (@0x80115df8-e00) und loescht sie beim Freiwerden
    (@0x80116020-44); der Port hat dafuer kein Gegenstueck (wie beim Gorilla-Finisher). Sichtbare Folge nicht gemessen.
 4. **o3 (Original-Fehler):** steht Leon schon beim allerersten aktiven Bild des Affen im Biss-Bereich, versetzt das Original
-   den Affen in einem Bild nach (245,747) (Fuss-Sperre auf nie gezeichnete Records). Der Port bildet das nicht nach (sein
-   Zeichenstand entsteht im INIT). Gesehen nur bei kuenstlich gesetzter Lage.
-5. **Ereignis-Affen Stage 4/5 (grid 0x61) nicht gegen das Original gemessen:** das Tor ist portiert (s. oben). Mit Tor
-   steht der gesperrte Affe bis zur Freigabe ungestartet an seiner Spawn-Stelle (ROOM4040: (-14040,19130)); der Port
-   zeichnet jeden aktiven Aktor. Framedump aller 9 Schnitte von ROOM4040 mit Leon daneben (-15500,19130), RE15_FORCE_CUT
-   1..8 + Schnitt 0: weder Affe noch Leon im Bild — die Stelle liegt ausserhalb der Kameras (Parkstelle). Offen bleibt,
-   wie der freigegebene Affe aus y = -10000 (Pos_set @0x011CE) herunterkommt — im state.log steht kein y; dieser Teil
-   laeuft mit und ohne Tor gleich (g3/g4), war also schon vor dem Tor so.
+   den Affen in einem Bild nach (245,747) (Fuss-Sperre auf nie gezeichnete Records). Der Port bildet das nicht nach.
+   Nachbesserung 1 dazu gemessen/gelesen: der INIT laeuft jetzt wie im Original im Spawn-Aufruf (@0x8004259c); das Original
+   hat die EMD dort schon geladen (FUN_80022300 aus Sce_em_set @0x80042328, VOR dem `jalr`), die exe laedt die Bank erst
+   nach scd_vm_tick (main.c RL-4-Vorladen) — der Spawn-INIT findet im Port also noch keinen Pool-Stand. Wirkung nur in
+   genau diesem o3-Randfall (erstes aktives Bild mit Fuss-Sperre; B[0]/B[1] rufen keine Fuss-Sperre); Ereignis-Affen:
+   keine (Fallbahn und Treffer-Clipbilder = o11).
+5. ~~Ereignis-Affen Stage 4/5 nicht gegen das Original gemessen~~ — **erledigt in Nachbesserung 1** (Spawn-Wurzelaufruf,
+   INIT-Zweig 0x40/0x41, Zustand 4/5; gegen Original o11 gemessen, s. Abschnitt "Nachbesserung 1").
 
 ## Fuer den Nutzer
 **Was war falsch:** Die kleinen Affen in Stage 3 (ROOM3040 und ROOM3041, je zwei) bissen im Port ins Leere — ihr Biss
@@ -436,6 +436,11 @@ Affen blieben in ihrer Nische sitzen.
 - Dieselben Affen kommen auch in Stage 4 und 5 vor. Die, die dort erst bei einem Ereignis auftauchen (z.B. ROOM4040:
   das Skript setzt den Affen erst um und gibt ihn frei, wenn Leon einen bestimmten Bereich des Gangs betritt), warten
   jetzt wie im Original gesperrt auf ihren Auftritt — vorher liefen sie sofort los.
+- (Nachbesserung 1) Bei ihrem Auftritt fallen diese Affen jetzt wie im Original aus der Deckenklappe (18 Bilder, gut eine
+  halbe Sekunde), landen und greifen erst vom Boden aus an (zuerst meist der schwere Angriff, -10 HP). Vorher liefen sie
+  10000 Einheiten ueber dem Boden umher und bissen Leon von dort aus. Skripte mit diesem Deckenfall (Pos_set y = -10000
+  bzw. -10800 + Freigabe): ROOM4040/4041, 4080/4081, 50A0/50A1, 5100/5101, 50B0; in der Zwischensequenz von ROOM5031 wird
+  der Affe am Boden freigegeben und 20 Bilder spaeter wieder gesperrt.
 
 **Zum Ausprobieren:** Stage 3, ROOM3040, auf die Plattform mit den zwei Affen gehen (der erste sitzt in der Nische an der
 Suedwand) und auf ihn zulaufen. Fuer die Decke: einen Affen anschiessen (z. B. Browning) und Leon umdrehen.
