@@ -16,6 +16,9 @@
 #      (platform/pc/main.c, s_preintro) haelt sub00 zurueck, sobald main00 ein Ereignis startet — ROOM2000 main00
 #      @0x0177c `04 ff 18 07` (Evt_exec sub07) — und sub00 traegt die Spawns (@0x017cc/@0x017e0). Vorbestehend,
 #      im Dossier unter OFFEN.
+#   e  Nachbesserung 1: ROOM2000 Leon, Standard-KI, ueber die TUER 2070 -> 2000 (Wegplan): der greifende Zombie schreibt
+#      dem kletternden im Griff-Ende 0x901 NACH dessen eigenem Tick -> wz.log "zwischenbild" (RE1.5-Bank, Clip 22) und
+#      der Abbruch im eigenen Tick mit Bild + 1 (Uhr auf der RE1.5-Bank).
 # Fuer jeden Lauf: kein Gegner jemals unter dem Wasserboden (y > 0) und keiner auf Band 2 (der Vorbefund: y = +1800,
 # danach Band 2).
 #
@@ -71,6 +74,21 @@ function(wz_lauf _name _raum _karte_extra _ki _ende _out_wz _out_gy)
             ${_ki_env}
             "${RE15_PC_EXE}")
         set(_marke "(ROOM${_raum})")
+    elseif("${_karte_extra}" STREQUAL "tuer")
+        # Nachbesserung 1: ECHTER WEG der Abnahme 0 (M1/M5) - Debug-Sprung nach ROOM2070, Wegplan (RE15_WEGPLAN,
+        # engine/src/dachkiste_r36.c) durch die Tuer nach ROOM2000 und auf den Oststeg vor die Wasserzombies.
+        file(WRITE "${WORKDIR}/plan.txt" "RAUM 2070\nWARTE 20\nBLICK 2048\nWARTE 10\nAKTION\nRAUM 2000\nWARTE 10\n"
+                                         "GEHE -20600 -10600 200\nBLICK 2048\nWARTE 1500\nENDE\n")
+        re15_start_spiel(_rv 300
+            RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1
+            RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+            "RE15_DEBUG_JUMP=2070@250" "RE15_PLAYER_POS=-18500,-6400,2048,0"
+            "RE15_WEGPLAN=${WORKDIR}/plan.txt"
+            RE15_WASSERZOMBIE_LOG=wz.log RE15_GEGNER_Y_LOG=gy.log
+            "RE15_EXIT_AT=${_ende}#${_raum}"
+            ${_ki_env}
+            "${RE15_PC_EXE}")
+        set(_marke "PC loaded room${_raum}.rdt")
     else()
         execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" "${_raum}" ${_karte_extra}
                         WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60
@@ -176,5 +194,33 @@ if(NOT _n4 GREATER 0)
 endif()
 wz_invariante(d "${_gy}")
 
+# --- e: Tuer 2070 -> 2000 (Wegplan), Leon, Standard-KI - fremder Schreiber NACH dem eigenen Tick (Nachbesserung 1) --
+# Gemessen (Abnahme 0 M5, Dossier 8.1): der greifende Zombie schreibt im Griff-Ende P8 das Wort 0x901 in den
+# kletternden (RE2-Partner-Domino `sw v0,4(s0)` @0x80102E98), nachdem dessen Tick in diesem Bild schon gelaufen ist.
+# Im Original bleibt die Pose bis zum eigenen Tick die des eigenen letzten anim_set (Teileblock +0x188 @0x8001f40c).
+# Pflicht: wz.log "zwischenbild" (Bank/Uhr fragen im Zwischenbild die RE1.5-Bank, Clip 22, fremdes Wort 1/9) und der
+# folgende "abbruch" desselben Slots mit Bild + 1 (Advancer auf Clip 0x16 = 159 Bilder; vorher a4809c35: RE2-Clip 22 =
+# 10 Bilder -> af 49 -> 9, Bild F400 bis auf ein Bein leer).
+wz_lauf(e 2000 "tuer" "" 406 _wz _gy)
+string(REGEX MATCH "slot=([0-9]+) t=16 zwischenbild st=1/9/[0-9]+ mo=22 af=([0-9]+)" _zw "${_wz}")
+if(NOT _zw)
+    message(FATAL_ERROR "r38_wasserzombie[e]: kein Zwischenbild mit RE1.5-Bank nach fremdem 0x901 (Szenario der Abnahme 0 M5) "
+                        "- Bank haengt am Zustandswort statt an der Marke?\n${_wz}")
+endif()
+set(_zslot ${CMAKE_MATCH_1})
+set(_zaf ${CMAKE_MATCH_2})
+math(EXPR _zaf1 "${_zaf} + 1")
+string(REGEX MATCH "slot=${_zslot} t=16 abbruch st=1/9/0 mo=22 af=([0-9]+)" _ab "${_wz}")
+if(NOT _ab OR NOT CMAKE_MATCH_1 EQUAL _zaf1)
+    message(FATAL_ERROR "r38_wasserzombie[e]: Abbruch nach dem Zwischenbild '${_zw}' mit '${_ab}' - erwartet af=${_zaf1} "
+                        "(Uhr auf der RE1.5-Bank bis zum eigenen Tick)\n${_wz}")
+endif()
+wz_zahl("${_wz}" "R2000 slot=[0-9]+ t=16 oben st=1/0/0 mo=22 af=158 @\\(-20928,-1800,[-0-9]+\\) b1 f1ba=-1800 rot=0" _n4)
+if(NOT _n4 GREATER 0)
+    message(FATAL_ERROR "r38_wasserzombie[e]: ROOM2000 (Tuerweg) - kein Zombie oben auf dem Oststeg\n${_wz}")
+endif()
+wz_invariante(e "${_gy}")
+
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r38_wasserzombie: a/b/c/d gruen (Wasserzombies ziehen sich hoch, RE2- und RE1.5-KI, Leon und Elza)")
+message(STATUS "r38_wasserzombie: a/b/c/d/e gruen (Wasserzombies ziehen sich hoch, RE2- und RE1.5-KI, Leon und Elza, "
+               "Zwischenbild nach fremdem Schreiber)")

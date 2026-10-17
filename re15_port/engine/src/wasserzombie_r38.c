@@ -216,7 +216,8 @@ static int wz_bank_fuer(uint8_t type, const re15_emd_skeleton_t **sk, const re15
  * eigene Tick bricht ab, sobald Typ, Zustand 1 oder Sub 0x0A nicht mehr passen (wz_marke_gilt: Treffer -> Zustand 2,
  * Partner-Domino 0x901, neuer Spawn Zustand 0). Bank/Uhr/Schatten lesen den Stand des letzten eigenen Ticks
  * (wz_marke_bank). */
-typedef struct { uint8_t aktiv; uint8_t type; int16_t boden_vorher; } wz_marke_t;
+typedef struct { uint8_t aktiv; uint8_t type; int16_t boden_vorher;
+                 uint8_t zwischen; /* Messschiene: Zwischenbild dieser Marke schon gemeldet */ } wz_marke_t;
 static wz_marke_t s_marke[RE15_ACTOR_MAX];
 
 void re15_wasserzombie_reset(void)
@@ -260,6 +261,11 @@ int re15_wasserzombie_bank(const re15_actor_t *e, const re15_emd_skeleton_t **sk
     const re15_emd_skeleton_t *s = NULL; const re15_emd_animation_t *a = NULL;
     if (!wz_bank_fuer(e->type, &s, &a)) return 0;
     if (e->motion < 0 || (int)e->motion >= a->clip_count) return 0;
+    if (!wz_marke_gilt(slot, e) && !s_marke[slot].zwischen) {
+        /* Messschiene: fremdes Zustandswort, eigener Tick steht noch aus -> Bank/Uhr bleiben RE1.5 (einmal je Marke) */
+        s_marke[slot].zwischen = 1;
+        WZ_LOG(e, "zwischenbild");
+    }
     if (sk) *sk = s;
     if (an) *an = a;
     return 1;
@@ -324,6 +330,7 @@ int re15_wasserzombie_re2_dispatch(int slot, re15_actor_t *e)
         s_marke[slot].aktiv = 1;
         s_marke[slot].type = e->type;
         s_marke[slot].boden_vorher = e->dog_floor_y;
+        s_marke[slot].zwischen = 0;
         e->anim_prev_valid = 0;                                     /* PORT-WAHL: Rig RE2 -> RE1.5 ohne Ueberblendung */
         WZ_LOG(e, "re2-eintritt");
     } else {

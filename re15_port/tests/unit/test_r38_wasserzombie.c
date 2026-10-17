@@ -420,7 +420,9 @@ int main(void)
                         memcpy(g_actors, snap, sizeof snap);
                         printf("  [F] Zwischenbild: st=%d/%d mo=%d af=%d bank_re15=%d len=%d schatten=%d(%d) advancer af=%d\n",
                                e->state, e->sub_state_1, (int)e->motion, af0, zbank, zlen, zsch, (int)zsy, zaf);
-                        CHECK(zbank == 1 && zsk != NULL && zan != NULL && zan->clips == m15->an.clips,
+                        CHECK(zbank == 1 && zsk != NULL && zan != NULL && zan->clip_count == m15->an.clip_count
+                              && zan->frame_count == m15->an.frame_count
+                              && memcmp(zan->clips, m15->an.clips, sizeof zan->clips) == 0,
                               "F: Zwischenbild posiert nicht die RE1.5-Aktionsbank (bank=%d)", zbank);
                         CHECK(e->motion == (int16_t)RE15_WZ_CLIP_KLETTER && zan && (int)e->motion < zan->clip_count,
                               "F: Zwischenbild Clip %d (erwartet 0x16 auf der RE1.5-Bank)", (int)e->motion);

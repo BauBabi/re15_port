@@ -9,7 +9,9 @@
 #                                 +1444 vor), B Ausloeser @0x80101f00-44, C RE1.5-KI 2020 (Clip 1 -> 0x16, Bild 0x46
 #                                 +0x1ba -1800, oben y -1800/Band 1, Vorschub 1140 @0x80103474, kein Sturz danach),
 #                               D RE2-KI 2020 (dieselbe Maschine, RE1.5-Bank je Typ; Gegenprobe ohne Bank), E ROOM2000
-#                               beide KI (Deskriptor 0x84), F RE2-Abbruch (Partner-Domino 0x901) setzt +0x1ba zurueck.
+#                               beide KI (Deskriptor 0x84), F RE2-Abbruch (Partner-Domino 0x901) NACH dem eigenen Tick:
+#                               Zwischenbild = RE1.5-Bank/Clip 0x16/Uhr 159/Schatten +0x1ba, Advancer Bild + 1; erst der
+#                               eigene Tick bricht ab (+0x1ba zurueck, RE2-Bank, EXEC[9]-Clip); F-Neuspawn (Zustand 0).
 add_executable(test_r38_wasserzombie ${CMAKE_CURRENT_LIST_DIR}/../test_r38_wasserzombie.c)
 target_link_libraries(test_r38_wasserzombie PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_wasserzombie PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -31,7 +33,8 @@ endif()
 #   integration_r38_wasserzombie   echte exe (Messkopie re15_pc_r38u_haken_*), LADE-Weg CONTINUE:
 #                                  a ROOM2020 Leon Standard-KI (RE2), b ROOM2020 Leon RE1.5-KI, c ROOM2021 Elza,
 #                                  d ROOM2000 Leon (0x84) — RE15_WASSERZOMBIE_LOG-Folge eintritt/klettern/boden-1800/
-#                                  oben (x,-1800,2222) Band 1 +0x1ba -1800; kein Gegner unter dem Wasserboden/auf Band 2.
+#                                  oben (x,-1800,2222) Band 1 +0x1ba -1800; kein Gegner unter dem Wasserboden/auf Band 2;
+#                                  e Tuer 2070 -> 2000 (Wegplan): Zwischenbild nach fremdem 0x901 (Nachbesserung 1).
 if(TARGET re15_pc)
     add_test(NAME integration_r38_wasserzombie
              COMMAND "${CMAKE_COMMAND}"
