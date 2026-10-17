@@ -18,14 +18,15 @@
  *       NCLIP-Verwurf; Belege re15_objpoly_r38.h). Dafuer muss jedes Port-Modell wie das Original gewickelt sein.
  *       Stand 2026-10-16 (vor dem Merge): Feuerloescher R37 nur 36 von 148 in s -> damals PORT-WAHL "Port-Modelle
  *       zweiseitig"; Spur A hat ihn neu gewickelt (A_cursor.md §3b, 148/148), die PORT-WAHL entfaellt. Schlaegt O2 an,
- *       ist ein Port-Modell verkehrt gewickelt (es wuerde im Spiel zerrissen/unsichtbar). Flache Modelle prueft O2 nur
- *       gegen ihre gespeicherte Normale; ob ihre Vorderseite in der Port-LAGE zur Kamera zeigt, ist Sache der Lage
- *       (Spur A §4.6).
+ *       ist ein raeumliches Port-Modell verkehrt gewickelt (es wuerde im Spiel zerrissen). FLACHE Modelle (alle
+ *       Umlauf-Normalen parallel, Kriterium wie Spur A) bewertet O2 nicht: ihre Sichtseite bestimmt die LAGE (Spur A
+ *       §4.6/§8, exe-Riegel integration_r38_cursor E/F).
  *   O3  Der Rolladen (ROOM20A0 obj 1) folgt s (Gegenprobe: Original-Messung zeigt ihn in Cut 12 von vorn).
  *   O4  EIN NCLIP-Weg: re15_objpoly_r38_quad (Weg der Prop-Schleife) rechnet OPZ mit Spur As re15_nclip_r38_mac0 und
  *       verwirft ueber re15_nclip_r38_verwerfen — die Rueckseite erhoeht g_re15_nclip_r38_verworfen um genau 1, die
  *       Vorderseite nicht.
  */
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,16 +118,62 @@ static zaehl_t zaehle_md1(const uint8_t *data, int size)
 static int s_port_verkehrt = 0;   /* Port-Modelle mit < 90 % Original-Windung */
 static int s_loescher_verkehrt = 0;
 
+/* FLACH = alle Umlauf-Normalen (v1-v0)x(v2-v0) parallel oder gegenparallel (|cos| > 0.999), dasselbe Kriterium wie
+ * Spur A (probe_r38_cursor.c flach_fn). Ein flaches Modell hat nur eine Seite; welche die Kamera sieht, entscheidet
+ * seine LAGE, nicht die gespeicherte Licht-Normale (Spur A §4.6/§8: Parking Lot Key -Y, Prison Key +Y). Es wird hier
+ * darum nur gezaehlt, nicht nach w.n bewertet; seine Sichtbarkeit pruefen As exe-Riegel integration_r38_cursor E/F. */
+static int ist_flach(const uint8_t *data, int size)
+{
+    re15_md1_t m;
+    if (!data || size <= 0 || re15_md1_parse(data, size, &m) != 0) return 0;
+    double g0[3] = { 0, 0, 0 };
+    int gesetzt = 0, flach = 1;
+    for (int i = 0; i < m.mesh_count && flach; i++) {
+        const re15_md1_mesh_t *h = &m.meshes[i];
+        const int n_flaechen = h->triangle_count + h->quad_count;
+        for (int k = 0; k < n_flaechen && flach; k++) {
+            const re15_md1_vertex_t *a, *b, *c;
+            if (k < h->triangle_count) {
+                const re15_md1_triangle_t *f = &h->triangles[k];
+                if (f->v0 >= (unsigned)h->tri_vertex_count || f->v1 >= (unsigned)h->tri_vertex_count ||
+                    f->v2 >= (unsigned)h->tri_vertex_count) continue;
+                a = &h->tri_vertices[f->v0]; b = &h->tri_vertices[f->v1]; c = &h->tri_vertices[f->v2];
+            } else {
+                const re15_md1_quad_t *f = &h->quads[k - h->triangle_count];
+                if (f->v0 >= (unsigned)h->quad_vertex_count || f->v1 >= (unsigned)h->quad_vertex_count ||
+                    f->v2 >= (unsigned)h->quad_vertex_count) continue;
+                a = &h->quad_vertices[f->v0]; b = &h->quad_vertices[f->v1]; c = &h->quad_vertices[f->v2];
+            }
+            const double ux = b->x - a->x, uy = b->y - a->y, uz = b->z - a->z;
+            const double vx = c->x - a->x, vy = c->y - a->y, vz = c->z - a->z;
+            double g[3] = { uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx };
+            double l = g[0] * g[0] + g[1] * g[1] + g[2] * g[2];
+            if (l <= 0) continue;
+            l = 1.0 / sqrt(l);
+            for (int j = 0; j < 3; j++) g[j] *= l;
+            if (!gesetzt) { for (int j = 0; j < 3; j++) g0[j] = g[j]; gesetzt = 1; continue; }
+            const double cs = g0[0] * g[0] + g0[1] * g[1] + g0[2] * g[2];
+            if (cs < 0.999 && cs > -0.999) flach = 0;
+        }
+    }
+    return gesetzt && flach;
+}
+
+static int s_port_flach = 0;
+
 static int pruefe_port(const char *name, const uint8_t *data, int size, int s)
 {
     if (!data || size <= 0) return 0;
     const zaehl_t z = zaehle_md1(data, size);
     const long gut = (s > 0) ? z.plus : z.minus, schlecht = (s > 0) ? z.minus : z.plus;
-    const int verkehrt = gut * 10 < (gut + schlecht) * 9;
+    const int flach = ist_flach(data, size);
+    const int verkehrt = !flach && gut * 10 < (gut + schlecht) * 9;
     printf("  Port-Modell %-34s Polygone %4ld: Original-Windung %4ld, verkehrt %4ld%s\n", name, gut + schlecht, gut,
-           schlecht, verkehrt ? "  <- VERKEHRT: mit NCLIP zerrissen" : "");
+           schlecht, flach ? "  (flach: Sichtseite = Lage, nicht bewertet)"
+                           : (verkehrt ? "  <- VERKEHRT: mit NCLIP zerrissen" : ""));
     CHECK(gut + schlecht > 0, "O2: %s ohne auswertbare Polygone", name);
     s_port_verkehrt += verkehrt;
+    s_port_flach += flach;
     if (verkehrt && strstr(name, "Feuerloescher")) s_loescher_verkehrt++;
     return 1;
 }
@@ -212,8 +259,8 @@ int main(void)
             }
         }
     }
-    printf("O2: %d port-eigene Modelle geprueft, %d davon nicht in Original-Windung (Feuerloescher-Lagen: %d)\n", n,
-           s_port_verkehrt, s_loescher_verkehrt);
+    printf("O2: %d port-eigene Modelle geprueft (%d flach, nicht bewertet), %d raeumliche nicht in Original-Windung "
+           "(Feuerloescher-Lagen: %d)\n", n, s_port_flach, s_port_verkehrt, s_loescher_verkehrt);
     CHECK(n >= 5, "O2: zu wenige port-eigene Modelle gefunden (%d)", n);
     CHECK(s_port_verkehrt == 0, "O2: %d Port-Modell(e) verkehrt gewickelt (Feuerloescher: %d) - mit NCLIP fuer alle "
           "Objekte zerrissen", s_port_verkehrt, s_loescher_verkehrt);
