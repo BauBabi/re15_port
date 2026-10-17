@@ -22,7 +22,8 @@
  * Tabelle @0x80073000 = CDEMD0-Blob EM029, Riegel unit_r38_affen3_typ). Sein ACTIVE-Gehirn (affen3_r38.c, alle 16 Subs)
  * ist animationsgetrieben: Fuss-Sperre FUN_80115b68/FUN_80115c3c und Treffer-Quadrat FUN_8001bff8 um einen GEZEICHNETEN
  * Knochenpunkt brauchen die EM029-Bank (affe29_bank) und einen Pool-Stand. Die Aufbauten kommen aus den GDB-Spuren des
- * Originals (S-Dossier "Original gemessen"): Biss aus o4 F137, schwerer Angriff aus o6 F1006 (affe29_o4/affe29_o6).
+ * Originals: Biss aus o4 F137 (S-Dossier "Original gemessen"), schwerer Angriff aus o6 F1006 (nur im S-Riegel
+ * test_r38_affen3.c teil_schwer dokumentiert) (affe29_o4/affe29_o6).
  * Teil 2 (d): die Szene beginnt MITTEN im Angriff — dort muessen die Treffer-Tore B[5]/B[6] selbst greifen.
  */
 #include "re15_scd.h"
@@ -247,7 +248,7 @@ static void affe29_o4(re15_actor_t *e, re15_actor_t *pl)
     e->hit_react = 0; e->roach_los = 0;
     e->anim_frame = 55; re15_affen_pool_anim(e); e->anim_frame = 56;
 }
-/* Kleiner Affe 0x29, SCHWERER ANGRIFF — Aufbau aus der GDB-Spur o6 (S-Dossier "Schwerer Angriff", test_r38_affen3.c
+/* Kleiner Affe 0x29, SCHWERER ANGRIFF — Aufbau aus der GDB-Spur o6 (dokumentiert nur im S-Riegel test_r38_affen3.c
  * teil_schwer): F1006 Affe B in Sub 4 (B[4] Anlauf, +0x6 1, +0x7 0), Clip 6 Bild 12 (Pool Bild 11), +0x8f 0, bei
  * (-13618,-1800,-10549) r1005, +0x8c 196, +0x1d0 1; F1007 Leon (-13500,-1800,-14200) -> Affe relativ zu Leon
  * (-118, +3651), Abstand 3653 < 0xfa0 -> A[4] im selben Bild Sub 6 (@0x80111ad4-b18, Original F1007), Treffer -10
