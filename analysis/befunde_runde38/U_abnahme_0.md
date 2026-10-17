@@ -11,12 +11,12 @@ Datum 2026-10-17. Baum `.claude/worktrees/r38_wasserzombie`, Zweig `r38/wasserzo
       neuer als alle Quellen (wasserzombie_r38.c 23:33, main.c 22:59), Arbeitsbaum sauber, exe enthaelt die Strings
       `re2-eintritt` und `RE15_WASSERZOMBIE_LOG` -> die exe ist der Stand a4809c35.
 - [x] Riegel der Spur: `unit_r38_wasserzombie` gruen (0.06 s), `integration_r38_wasserzombie` gruen (88.9 s)
-- [x] RE-Gate (Abschnitt 3): 6 Stellen selbst disassembliert, alle stimmen
-- [ ] Gezielte Gruppen der beruehrten Module
-- [ ] Eigene Messung an der exe (Abschnitt 2)
-- [ ] Nebenwirkungen (andere u1=1-Raeume, beide Szenarien)
-- [ ] Vertrag
-- [ ] Urteil
+- [x] RE-Gate (Abschnitt 3): 8 Stellen/Behauptungen selbst disassembliert bzw. gescannt, alle stimmen
+- [x] Gezielte Gruppen der beruehrten Module (Abschnitt 4): 103/103 Unit, 8/8 Integration
+- [x] Eigene Messung an der exe (Abschnitt 2): echter Tuerweg Leon/Elza, beide KI, Bild, Vorher-Gegenprobe v0.8.25
+- [x] Nebenwirkungen (M5, M6): **ein Ein-Bild-Darstellungsfehler beim Abbruch (Mangel 1)**; andere Raeume unauffaellig
+- [x] Vertrag (Abschnitt 5)
+- [x] Urteil (Abschnitt 6): Punkt erfuellt, Nebenwirkungs-Gate verletzt -> **nicht bestanden**
 
 ## 1. Nutzer-Punkt (Wortlaut)
 
@@ -142,7 +142,7 @@ Lauf wie M1 mit `RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1` (statt NOAUDIO), `
 (Klettern ab F150 -> F280; Bit 23 = SE 1, Unit-Riegel A). Der Ton des RE1.5-Clips laeuft also auch im RE2-Zweig
 (`wz_frame_se`). (Eine zweite se=1-Zeile zwischen F240 und F270 laesst sich ohne Bildnummer im SE-Log nicht zuordnen.)
 
-### M6 — Nebenwirkung: Abbruch des RE2-Hochziehens durch fremden Zustandsschreiber (Bild fuer Bild)
+### M5 — Nebenwirkung: Abbruch des RE2-Hochziehens durch fremden Zustandsschreiber (Bild fuer Bild)
 
 Lauf wie M1, `RE15_FRAMEDUMP=396-404/1:fd/f`, `RE15_EXIT_AT=406#2000` (deterministisch: dieselben Bilder wie M1).
 gy.log Slot 3 (zweiter Kletterer) — woertlich gekuerzt:
@@ -161,7 +161,7 @@ der Bildzaehler wird im naechsten Bild VOR dem Abbruch auf der RE2-Clip-22-Laeng
 Die Spur erzeugt diesen Ein-Bild-Sprung (vorher gab es kein RE1.5-Posing auf dem RE2-Zombie); der Riegel F prueft
 nach dem Abbruch nur y/+0x1ba/Band, nicht Clip/Bank. -> Mangel 1.
 
-### M5 — Nebenwirkung: andere Raeume mit u1&1-Zellen (Mechanismus ist raumunabhaengig)
+### M6 — Nebenwirkung: andere Raeume mit u1&1-Zellen (Mechanismus ist raumunabhaengig)
 
 Eigener SCA-Zensus (RDT u32 @0x20, Kopf 24 B, Zellen 12 B `w,d,x,z,type,u0,u1,floor`, Band = floor >> 4; Skript
 Scratchpad `re/sca_u1.py`) fuer die im Dossier genannten Raeume:
@@ -246,7 +246,7 @@ Weitere eigene Pruefungen zum Gate:
   @0x80052750 (~0x80052508) und @0x80052d98 (~0x80052c14, `jal 0x8001c6e8` room_coll davor) haben keine jal-Aufrufer
   und stehen nur in den EXE-Tabellen @0x80073e70-90 / @0x80076ce0-d00 (eigener Wort-Scan) — nicht in den
   STAGE1/STAGE2-Zombie-Tabellen. Die Aussage haelt, soweit statisch pruefbar; dynamisch bleibt sie offen (Dossier 6).
-- Die Klemme FUN_8003b0a4 filtert Zellen nach Band (@0x8003b224-23c, s. M5) — Grundlage dafuer, dass Band-1-Zombies in
+- Die Klemme FUN_8003b0a4 filtert Zellen nach Band (@0x8003b224-23c, s. M6) — Grundlage dafuer, dass Band-1-Zombies in
   1090/10B0 nicht auf Band-0-Kletterzellen reagieren.
 
 ## 4. Gezielte Tests (keine volle Suite)
@@ -258,7 +258,11 @@ Weitere eigene Pruefungen zum Gate:
 - Gruppe der beruehrten Module (Regex des Bau-Agenten + `unit_re2_hybrid_rig|unit_r36_pri_schatten|unit_enemy_.*|
   .*schwerkraft.*|.*gravity.*`, -j 4): `100% tests passed, 0 tests failed out of 103` (20.6 s).
 - Integrationsgruppe seriell (`integration_r36_schuss|r36_elza_schuss|r37_beretta|r37_zombieaktiv|r36_pri_schatten|
-  r36_gegnerzahl|r36_klettern|r36_szenenleon`): (laufend)
+  r36_gegnerzahl|r36_klettern|r36_szenenleon`, unter Last durch parallele Agenten): `100% tests passed, 0 tests failed
+  out of 8` (elza_schuss 47.6 s, gegnerzahl 99.8 s, klettern 506.7 s, pri_schatten 27.7 s, schuss 142.6 s,
+  szenenleon 168.7 s, beretta 167.7 s, zombieaktiv 25.2 s).
+- Kein Riegel prueft Clip/Bank in dem Bild, in dem ein ANDERER Aktor dem Kletterer ein Zustandswort schreibt (der
+  Riegel F setzt 0x901 vor dem eigenen Tick des Kletterers) — deshalb blieb Mangel 1 gruen.
 
 ## 5. Vertrag
 
@@ -283,3 +287,51 @@ Weitere eigene Pruefungen zum Gate:
   ~4774) beschreibt weiter "EDGE-FALL ... tumbles over the contact edge ... down one floor" — widerspricht der neuen
   Einordnung; `include/re15_wasserzombie_r38.h:84` erzeugt `-Wcomment` ("*sk/*an" in einem Kommentar) in jeder
   einbindenden Datei.
+
+## 6. Urteil
+
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| "Die Zombies in Stage2 die sich unten im Wasser befinden und zum Rand des Wassers laufen müssen sich an den Rand hochziehen können, wie im Original Resident Evil 1.5" | **erfuellt** | M1 (echte Tuer 2070->2000, Standard-KI, Bild F140-F320: Haende auf die Kante, hochstemmen, knien, aufrichten; Landung (-20928,-1800,z) Band 1 +0x1ba -1800), M1-vorher (v0.8.25 auf demselben Weg: 0 Bilder auf Band 1 = Nutzerbefund), M2 (RE1.5-KI, beide hoch, nie unter dem Wasserboden), M3 (Elza 2071->2001), M4 (ROOM2020, auch ein vom Nordsteg gefallener Zombie zieht sich an der Suedwand hoch), Mechanik byte-gleich zu ANIMATE[0x0A] 0x8010325c / Ausloeser @0x80101f00-44 (Abschnitt 3, selbst disassembliert) |
+
+Gates:
+- RE-Gate: **haelt** — alle Konstanten mit Adresse, 8 Stellen selbst nachgeprueft, keine Rate-Woerter, kein
+  Env-Schalter; PORT-WAHL/PORT-EMULATION gekennzeichnet; der Fix erklaert den Befund (Vorher/Nachher auf demselben Weg).
+- Vertrag: **haelt** (Pfade, Ressourcen, Hakenform; Probe-Merge nur triviale Include-Konflikte).
+- Tests: **halten** (Riegel je Punkt vorhanden und messend; 1/1 + 103/103 + 8/8 gruen).
+- Nebenwirkungen: **verletzt** — Mangel 1 (von der Spur erzeugter, reproduzierbarer Ein-Bild-Darstellungsfehler).
+
+**Ergebnis: NICHT BESTANDEN** (einziger Grund: Mangel 1; der Nutzer-Punkt selbst ist erfuellt).
+
+## 7. Maengel (nummeriert, nachpruefbar)
+
+1. **Ein-Bild-Sprung beim Abbruch des RE2-Hochziehens durch einen fremden Zustandsschreiber** (Nebenwirkung der Spur).
+   Nachpruefen: M5 — `RE15_DEBUG_JUMP=2070@250 RE15_PLAYER_POS=-18500,-6400,2048,0`, Wegplan aus M1,
+   `RE15_FRAMEDUMP=396-404/1:fd/f RE15_EXIT_AT=406#2000 RE15_GEGNER_Y_LOG=gy.log`: in F400 steht Slot 3 auf
+   `st=1/9/0 mo=22 af=49` (0x901 vom greifenden Slot 4 NACH Slot 3s Tick); das Bild F400 zeigt den Kletterer bis auf
+   ein Bein verschwunden (F399 haengt er noch auf der Stegkante, F401 taumelt er im Kanal). Ursache:
+   `re15_wasserzombie_bank` haengt an `wz_marke_gilt` (Zustand 1 UND Sub 0x0A); sobald ein anderer Aktor das Wort
+   ueberschreibt, posiert der Renderer (main.c) Clip 22 / Bild 49 auf der RE2-Bank, und `re15_actor_clip_len` zaehlt im
+   naechsten Bild VOR dem Abbruch auf der RE2-Clip-22-Laenge (wz.log `abbruch ... af=9`). Erwartet: bis der eigene Tick
+   den Abbruch verarbeitet und der RE2-Executor einen RE2-Clip gesetzt hat, bleibt die RE1.5-Bank massgeblich (z.B.
+   Bank-Gueltigkeit an `s_marke[slot].aktiv` + Typ + Lebendigkeit statt an Sub 0x0A koppeln; Neuspawn Zustand 0
+   ausnehmen). Riegel F um den Fall "fremder Schreiber nach dem eigenen Tick" erweitern (Bank/Clip/Laenge im Zwischenbild
+   pruefen). Tritt in ROOM2000/2001 (RE2-KI, Standard) regelmaessig auf, sobald der erste Zombie Leon/Elza greift,
+   waehrend der zweite klettert (gemessen Leon ROOM2000 F400 `m_domino/crop_domino2.png`; Elza ROOM2001 mit
+   `RE15_SET_FLAG=3:69` identisch: gy.log F400 `[1 t=16 st=1/9/0/0 mo=22 af=49 ...]`, Bild F400 bis auf ein Bein
+   leer, `m_domino_elza/crop.png`).
+2. **Code-Hygiene (niedrig):** (a) `static void re15_enemy_ai_live_edge_fall` (enemy_ai_common.c:3380) ist tot —
+   `gcc -Wall -c` meldet `'re15_enemy_ai_live_edge_fall' defined but not used [-Wunused-function]`; entfernen statt
+   stehen lassen. (b) Der Kommentar direkt ueber dem neuen Aufruf in `re15_enemy_ai_live_active` (~Zeile 4774) sagt
+   weiterhin "EDGE-FALL ... tumbles over the contact edge (the briefing-room pit) down one floor" — falsch, es ist das
+   Hochziehen. (c) `include/re15_wasserzombie_r38.h:84` (`*sk/*an` im Kommentar) erzeugt `-Wcomment` in jeder
+   einbindenden Datei.
+
+Hinweise (keine Maengel dieser Spur, fuer den Nutzer sichtbar, im Dossier unter OFFEN gefuehrt):
+- RE2-Partner-Domino (0x901 aus Griff-P8) unterbricht ein laufendes Hochziehen und schiebt den Zombie ~2700 Einheiten
+  durchs Wasser zurueck; der Greifer wird nach dem Griff ueber die Kante zurueck ins Wasser gestossen (M1). Beide setzen
+  erneut an und kommen hoch.
+- RE1.5-KI: Abbruch nach Bild 0x46 laesst +0x1ba auf -1800 (byte-true nach statischer Pruefung, Abschnitt 3); ein
+  zweites Hochziehen desselben Zombies setzt dann -3600 — dynamisch am Original nicht gegengeprueft.
+- Elza trifft die ROOM2001-Wasserzombies nur mit Flag (3,0x45) (Original-Skript @0x1826/@0x182A, M3).
+- Tuer 2050 -> 2020 feuerte im Messlauf nicht (M4) — nicht weiter verfolgt, ausserhalb der Spur.
