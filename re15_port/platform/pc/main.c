@@ -102,6 +102,7 @@ static inline int RNDI(float f) {
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Schluessel 10F0/10F1, Tuer 11B0, Icon/Bild/Modell */
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte (Boot-/CONTINUE-Weg + Prop-Lader) */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher (Boot-/CONTINUE-Weg + Prop-Lader) */
+#include "re15_itemorte_r38.h"      /* Runde 38 Spur K: Sichtbarkeitsregel Loescher 1030 / Schluessel 10F0 */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -10750,6 +10751,9 @@ re_title:;
                                      prop_w[0], prop_w[2],
                                      cam_has_region, cam_region_xs, cam_region_zs))
                     continue;
+                if (re15_itemorte_r38_verdeckt((uint16_t)g_current_room_id, active_cut_idx,
+                                               (int)g_scd.props[pi].obj_id))
+                    continue;   /* Runde 38 Spur K: Port-Gegenstand hinter maskenlosem Vordergrund (re15_itemorte_r38.h) */
                 int oid = (int)g_scd.props[pi].obj_id;
 #ifdef RE15_PROP_TRACE
                 { static int pn=0; if((pn++%60)==0)

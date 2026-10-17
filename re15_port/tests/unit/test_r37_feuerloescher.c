@@ -1,15 +1,17 @@
 /* test_r37_feuerloescher.c — Runde 37 Spur I: Feuerloescher-Modell, leerer Loescher bei Elza (1091) und bei
- * Leon nach dem Loeschen (1090), Leons Loescher aus dem Spind ROOM1000 an die Wand ROOM1050.
+ * Leon nach dem Loeschen (1090), Leons Loescher aus dem Spind ROOM1000 an die Wand ROOM1050 - seit Runde 38 Spur K
+ * (NUTZER-VORGABE fire_extinguisher.bmp) an den Pfeiler ROOM1030 (include/re15_itemorte_r38.h); die Teile raum/aufnahme
+ * pruefen die neue Stelle, test_r38_itemorte.c die Herleitung.
  * Dossier: analysis/befunde_runde37/I_feuerloescher.md, Konstanten include/re15_feuerloescher_r37.h.
  *
  * Jeder Teil misst die MECHANIK am echten Port-Code (echte RDT, scd_room_reenter mit allen Port-Installern,
  * echte AOT-Scans, Item-Modal, SCD-VM, Wegwerf-Abfrage):
  *   modell     MD1 stehend/liegend + TIM + Text: Kopf 65/0/2, Masse (Leon 3022 = 1,78 m), Normalen Q12 nach
  *              aussen, Vierecke in Z-Ordnung (Port teilt (0,1,3)+(0,3,2)), CLUT-Index 0 frei, Text 04 02..01 00
- *   raum       Raumstart: 1050 Prop + Aufnahme-Zone (Item 0x31 x1, Bit 0x86, tk_prop 5) / mit Bit nichts / 1051
+ *   raum       Raumstart: 1030 Prop + Aufnahme-Zone (Item 0x31 x1, Bit 0x86, tk_prop 5) / mit Bit nichts / 1031 + 1051
  *              (Elza) nichts; 1090 nur mit (3,0x81) UND ohne Loescher im Inventar; 1091 immer; 1000 Spind ->
  *              msg 0; 1001 (Elza) unveraendert 30 Patronen; Installer idempotent
- *   aufnahme   echter Druck in 1050 vor der Wand -> Modal Item 0x31 -> Ja: (9,0x86), (3,0x85) (ROOM1000 sub01
+ *   aufnahme   echter Druck in 1030 vor dem Pfeiler -> Modal Item 0x31 -> Ja: (9,0x86), (3,0x85) (ROOM1000 sub01
  *              @0x00D0C), Loescher im Inventar, Modell weg, Zone weg; ROOM1090 legt danach Slot 2 sce 3 (sub06)
  *   loeschen   ROOM1090 mit Loescher: Druck am Feuer -> sub06 msg 7/8 -> Ja -> (3,0x81)/(3,0x84) + Selbst-Tuer;
  *              Neuladen -> sub03 msg 9 -> Wegwerf-Abfrage: Ja -> Loescher liegt (2500,-1800,-1300) + Platz
@@ -278,7 +280,7 @@ static void teil_modell(void)
     md1_pruefen("stehend", RE15_FL37_STEHEND);
     md1_pruefen("liegend", RE15_FL37_LIEGEND);
     int tsz = 0;
-    const uint8_t *tb = re15_feuerloescher_r37_tim_bytes(0x1050, &tsz);
+    const uint8_t *tb = re15_feuerloescher_r37_tim_bytes(0x1030, &tsz);   /* Runde 38: Fundort 1030 */
     re15_tim_t t;
     CHECK(tb && re15_tim_parse(tb, tsz, &t) == 0 && t.bpp == 8 && t.width == 128 && t.height == 128 &&
           t.has_clut && t.clut_entries == 256 && t.clut_x == 0 && t.clut_y == 480,
@@ -299,14 +301,15 @@ static void teil_modell(void)
     re15_msg_install_text(RE15_FL37_MSG_LEER, tx, (size_t)tl);
     const char *s = re15_msg_get_text(RE15_FL37_MSG_LEER);
     CHECK(s && strcmp(s, "It's an empty fire extinguisher.") == 0, "M Text liest sich \"%s\"", s ? s : "(null)");
-    CHECK(re15_feuerloescher_r37_obj_id(0x1050) == 5 && re15_feuerloescher_r37_obj_id(0x1090) == 5 &&
+    CHECK(re15_feuerloescher_r37_obj_id(0x1030) == 5 && re15_feuerloescher_r37_obj_id(0x1090) == 5 &&
           re15_feuerloescher_r37_obj_id(0x1091) == 5 && re15_feuerloescher_r37_obj_id(0x1051) == -1 &&
+          re15_feuerloescher_r37_obj_id(0x1050) == -1 && re15_feuerloescher_r37_obj_id(0x1031) == -1 &&
           re15_feuerloescher_r37_obj_id(0x1000) == -1,
-          "M Prop obj 5 nur in 1050/1090/1091 (TIM-Slot RE15_TIM_SLOT_PROP(5) = 9)");
+          "M Prop obj 5 nur in 1030/1090/1091 (Runde 38: nicht mehr 1050; TIM-Slot RE15_TIM_SLOT_PROP(5) = 9)");
     int s1 = 0, s2 = 0;
-    CHECK(re15_feuerloescher_r37_md1_bytes(0x1050, &s1) == re15_feuerloescher_r37_md1(RE15_FL37_STEHEND, NULL) &&
+    CHECK(re15_feuerloescher_r37_md1_bytes(0x1030, &s1) == re15_feuerloescher_r37_md1(RE15_FL37_STEHEND, NULL) &&
           re15_feuerloescher_r37_md1_bytes(0x1091, &s2) == re15_feuerloescher_r37_md1(RE15_FL37_LIEGEND, NULL),
-          "M 1050 = stehendes Netz (Wand), 1090/1091 = liegendes Netz");
+          "M 1030 = stehendes Netz (Pfeiler, Runde 38), 1090/1091 = liegendes Netz");
 }
 
 /* ========================================================================================= raum */
@@ -317,37 +320,45 @@ static const uint8_t K_LOESCHER[] = { RE15_FL37_ITEM, 1, 0 };
 
 static void teil_raum(void)
 {
-    raum_t r50, r51, r90, r91, r00, r01;
+    raum_t r30, r31, r50, r51, r90, r91, r00, r01;
     printf("\n[raum]\n");
-    if (raum_laden(&r50, 0x1050) || raum_laden(&r51, 0x1051) || raum_laden(&r90, 0x1090) ||
+    if (raum_laden(&r30, 0x1030) || raum_laden(&r31, 0x1031) ||
+        raum_laden(&r50, 0x1050) || raum_laden(&r51, 0x1051) || raum_laden(&r90, 0x1090) ||
         raum_laden(&r91, 0x1091) || raum_laden(&r00, 0x1000) || raum_laden(&r01, 0x1001)) return;
 
-    /* 1050 Leon, nicht genommen */
-    start(&r50, 18300, 0, -21500, 0, NULL, NULL, 0, 1);
+    /* 1030 Leon, nicht genommen - Runde 38 Spur K: Pfeiler unter dem Notruf-Monitor (re15_itemorte_r38.h) */
+    start(&r30, -11500, 0, -19500, 2048, NULL, NULL, 0, 1);
     int p = slot_von(RE15_FL37_OBJ);
-    CHECK(p >= 0 && g_scd.props[p].active && g_scd.props[p].x == 17200 && g_scd.props[p].y == -1150 &&
-          g_scd.props[p].z == -23775 && g_scd.props[p].rot_y == 0 && g_scd.props[p].obj_type == 0 &&
+    CHECK(p >= 0 && g_scd.props[p].active && g_scd.props[p].x == -2813 && g_scd.props[p].y == -2122 &&
+          g_scd.props[p].z == -17904 && g_scd.props[p].rot_y == 3072 && g_scd.props[p].obj_type == 0 &&
           g_scd.props[p].band == 1 && g_scd.props[p].flags == 0x000B && g_scd.props[p].attr == 0x0000 &&
           g_scd.props[p].parent_obj == -1,
-          "R 1050: Prop obj 5 an der Wand (17200,-1150,-23775), Typ 0, Band 1, Flags 0x000B, Attribut 0 (NCCT wie ROOM1010 @0x00930)");
-    const re15_aot_t *a = &g_aot.slots[13];
-    CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[13].item_type == 0x31 &&
-          g_aot.item_params[13].amount == 1 && g_aot.item_params[13].taken_bit == 0x86 &&
-          g_aot.item_params[13].taken_prop == 5 && a->sce_flags == 0x31 && a->band == 0 &&
-          a->x - a->half_w == 16700 && a->x + a->half_w == 17700 && a->z - a->half_h == -23900 && a->z + a->half_h == -22900,
-          "R 1050: Slot 13 Aufnahme wie ROOM1000 @0x00C24 (Item 0x31 x1, Bit 0x86) mit tk_prop 5, x[16700..17700] z[-23900..-22900]");
-    CHECK(g_aot.slots[5].active && g_aot.slots[5].type == RE15_AOT_TYPE_DOOR &&
-          g_aot.slots[5].x - g_aot.slots[5].half_w == 18100 &&
-          g_aot.slots[6].active && g_aot.slots[6].type == RE15_AOT_TYPE_ITEM && g_aot.item_params[6].item_type == 0x15 &&
-          g_aot.slots[6].x + g_aot.slots[6].half_w == 16650,
-          "R 1050: Tuer Slot 5 (ab x 18100) und Patronen Slot 6 (bis x 16650) unveraendert, kein Ueberlapp");
+          "R 1030: Prop obj 5 am Pfeiler (-2813,-2122,-17904) rot_y 3072, Typ 0, Band 1, Flags 0x000B, Attribut 0 (NCCT wie ROOM1010 @0x00930)");
+    const re15_aot_t *a = &g_aot.slots[14];
+    CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[14].item_type == 0x31 &&
+          g_aot.item_params[14].amount == 1 && g_aot.item_params[14].taken_bit == 0x86 &&
+          g_aot.item_params[14].taken_prop == 5 && a->sce_flags == 0x31 && a->band == 0 &&
+          a->x - a->half_w == -3980 && a->x + a->half_w == -2980 && a->z - a->half_h == -18370 && a->z + a->half_h == -17370,
+          "R 1030: Slot 14 Aufnahme wie ROOM1000 @0x00C24 (Item 0x31 x1, Bit 0x86) mit tk_prop 5, x[-3980..-2980] z[-18370..-17370]");
+    CHECK(g_aot.slots[20].active && g_aot.slots[20].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[20].event_id == 14 &&
+          g_aot.slots[20].x - g_aot.slots[20].half_w == -4190 && g_aot.slots[20].z + g_aot.slots[20].half_h == -17198,
+          "R 1030: Monitor-Satz msg 14 (main00 @0x01DA6) unveraendert nach Slot 20 umgezogen");
     int pc0 = (int)g_scd.prop_count;
-    re15_feuerloescher_r37_install(0x1050);
-    CHECK((int)g_scd.prop_count == pc0, "R 1050: Installer idempotent (zweiter Lauf, Boot-Weg nach Tuer-Weg)");
+    re15_feuerloescher_r37_install(0x1030);
+    CHECK((int)g_scd.prop_count == pc0 && g_aot.slots[20].event_id == 14,
+          "R 1030: Installer idempotent (zweiter Lauf, Boot-Weg nach Tuer-Weg)");
 
-    start(&r50, 18300, 0, -21500, 0, K_GENOMMEN, K_LOESCHER, 0, 1);
-    CHECK(slot_von(RE15_FL37_OBJ) < 0 && !(g_aot.slots[13].active && g_aot.slots[13].type == RE15_AOT_TYPE_ITEM),
-          "R 1050: Bit (9,0x86) gesetzt -> weder Prop noch Zone");
+    start(&r30, -11500, 0, -19500, 2048, K_GENOMMEN, K_LOESCHER, 0, 1);
+    CHECK(slot_von(RE15_FL37_OBJ) < 0 && g_aot.slots[14].active && g_aot.slots[14].type == RE15_AOT_TYPE_MESSAGE &&
+          g_aot.slots[14].event_id == 14,
+          "R 1030: Bit (9,0x86) gesetzt -> weder Prop noch Zone, Slot 14 bleibt der Monitor-Satz");
+    start(&r31, -11500, 0, -19500, 2048, NULL, NULL, 1, 1);
+    CHECK(slot_von(RE15_FL37_OBJ) < 0 && g_aot.slots[14].event_id == 14,
+          "R 1031 (Elza): kein Loescher (Leon war zuerst da), Monitor-Satz unberuehrt");
+    start(&r50, 18300, 0, -21500, 0, NULL, NULL, 0, 1);
+    CHECK(slot_von(RE15_FL37_OBJ) < 0 &&
+          !(g_aot.slots[13].active && g_aot.slots[13].type == RE15_AOT_TYPE_ITEM && g_aot.item_params[13].item_type == 0x31),
+          "R 1050: kein Loescher mehr (Runde 38: 'anstatt in room 1050')");
     start(&r51, 18300, 0, -21500, 0, NULL, NULL, 1, 1);
     CHECK(slot_von(RE15_FL37_OBJ) < 0 && !g_aot.slots[13].active, "R 1051 (Elza): kein Loescher");
 
@@ -406,25 +417,25 @@ static void teil_aufnahme(void)
 {
     raum_t r50, r90;
     printf("\n[aufnahme]\n");
-    if (raum_laden(&r50, 0x1050) || raum_laden(&r90, 0x1090)) return;
-    /* vor der Wand, Blick Norden (-z) = rot 1024: 620 voraus (@0x80042bd0) = (17200,-23120) */
-    start(&r50, 17200, 0, -22500, 1024, NULL, NULL, 0, 1);
-    for (int f = 0; f < 12; f++) { scd_vm_tick(); re15_aot_scan(17200, -22500, 0); }
-    g_actors[RE15_ACTOR_SLOT_PLAYER].x = 17200; g_actors[RE15_ACTOR_SLOT_PLAYER].z = -22500;
-    g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 1024;
+    if (raum_laden(&r50, 0x1030) || raum_laden(&r90, 0x1090)) return;   /* Runde 38: Fundort ROOM1030 */
+    /* vor den Tischen, Blick +x = rot 0: 620 voraus (@0x80042bd0) = (-3680,-17904) im Rechteck x -3980..-2980 */
+    start(&r50, -4300, 0, -17904, 0, NULL, NULL, 0, 1);
+    for (int f = 0; f < 12; f++) { scd_vm_tick(); re15_aot_scan(-4300, -17904, 0); }
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x = -4300; g_actors[RE15_ACTOR_SLOT_PLAYER].z = -17904;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0;
     int p = slot_von(RE15_FL37_OBJ);
     druck();
     uint8_t typ = 0; int wahl = -1, w = 0;
     int modal = re15_item_modal_active();
     while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && w++ < 800) re15_item_modal_tick(0, 0);
     re15_item_modal_prompt(&typ, &wahl);
-    CHECK(modal && typ == RE15_FL37_ITEM, "A Druck (17200,-22500) Blick Norden: Aufnahme-Modal Item 0x31 (ist 0x%02X)", typ);
+    CHECK(modal && typ == RE15_FL37_ITEM, "A Druck (-4300,-17904) Blick +x: Aufnahme-Modal Item 0x31 (ist 0x%02X)", typ);
     w = 0;
     while (re15_item_modal_active() && w++ < 1600) re15_item_modal_tick((uint16_t)0x4000u, 0);
     CHECK(re15_game_flag_get(9, 0x86) && menge(RE15_FL37_ITEM) == 1,
           "A Ja: Taken-Bit (9,0x86) (FUN_8001db28 @0x8001e0d0) und Loescher x1 im Inventar");
     CHECK(re15_game_flag_get(3, 0x85), "A Ja: (3,0x85)=1 wie ROOM1000 sub01 @0x00D0C (Haken item_modal_common.c)");
-    CHECK(p >= 0 && !g_scd.props[p].active && !g_aot.slots[13].active,
+    CHECK(p >= 0 && !g_scd.props[p].active && !(g_aot.slots[14].active && g_aot.slots[14].type == RE15_AOT_TYPE_ITEM),
           "A Ja: Modell weg (@0x80021fc8) und Zone tot (@0x8001e090)");
     /* Folge in ROOM1090: das Original liest (3,0x85) in sub00 @0x02306 */
     int fl[20], n = 0;

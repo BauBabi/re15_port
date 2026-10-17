@@ -1,0 +1,600 @@
+# Runde 38 — Spur K "itemorte" (Dossier, fortlaufend)
+
+Baum `.claude/worktrees/r38_itemorte` (Zweig `r38/itemorte`, Basis 1bcbd0ff). Beginn 2026-10-16 16:34.
+
+## Punkte (Wortlaut, AUFTRAG.md)
+
+1. „Ich hätte den fire extinguisher gerne in room 1030 hängen an der stelle von fire_extinguisher.bmp, anstatt in room 1050."
+2. „Ich möchte das du den Parking Lot key, und den Prison Key - je nach Szenario - gut sichtbar an die Location platzierst,
+   die ich im Bild key_location.bmp markiert habe."
+
+Ressourcen (VERTRAG §1.2): Nachrichten-Ids 1030/1031 29-31 (Loescher), 10F0/10F1 nur vorhandene Ids — beide NICHT
+gebraucht (keine neue Nachricht). Gemeinsame Dateien (VERTRAG §1.4): schluessel_r36.c + feuerloescher_r37.c gehoeren
+dieser Spur. Kein Bank-9-Bit neu (Loescher (9,0x86)/(3,0x85) wie Runde 37, Schluessel (9,82)/(9,83)/(4,0xEC) wie Runde 36).
+
+## Stand
+
+- 16:34 Dossier angelegt; Pflichtlektuere AUFTRAG/VERTRAG/UEBERGABE, Runde-37-Dossier I (Loescher) + Abnahme 1,
+  Runde-36-Dossier Q (Schluessel), Runde-36-Dossier N (Lageplaene = dasselbe Verfahren "Marke im Nutzerbild -> Wand").
+- 17:17 (Commit d7934141) Messung vorher, Cut-Zuordnung, Geometrie (Pfeiler/Pinnwand), RE-Belege fertig (Abschnitte 1/2); Werkzeug
+  `re15_port/tools/r38_itemorte/itemorte_export.py` rechnet Lage, Drehung, Massstab.
+- 17:37 (e8461907) Umsetzung; 17:48 (36a14abc) Riegel; 18:00 (025531bb) Messung nachher (Abschnitte 3/4), RE2-Licht der
+  Schluessel belegt (2.7).
+- 18:18 Gezielter Lauf 112/112 gruen (5.3); Dossier fertig. Danach Sitzungslimit (Reste c01e409e, ungeprueft).
+- 21:05 FORTSETZUNG: Stand gelesen (Dossier, `git log --stat master..HEAD`, Code-Diff), Bau am Endstand neu
+  (`local_build.sh build` OK 21:11; die gen/*.inc trugen mtime 18:18:52 = Neuerzeugung beim Abbruch, Inhalt
+  bytegleich mit e8461907, `git status` leer). Wortlaut-Pruefung (Abschnitt 8): Luecken waren nur die Elza-Messung
+  der anderen Pinnwand-Cuts (10F1 Cut 6/7) und eine Zahl fuer "gut sichtbar" in der Fenstergroesse, in der gespielt
+  wird -> gemessen (4.2a), Riegel V4/V5/B4 (8544862d), gezielter Lauf am Endstand 112/112 gruen (5.4, Ende 21:50).
+- Abnahme 0 (f63a9634): Punkt 1 erfuellt, Punkt 2 teilweise — Mangel M1 (Prison Key nicht gut sichtbar).
+- 23:00..23:45 Nachbesserung 1, erster Anlauf (ecb84654/801d3c55/ebc05a7e/2129a121): Modellwahl RE2 Small Key
+  gemessen (9.3), Umsetzung + Riegel; vom Sitzungslimit beendet (ungetestet).
+- 2026-10-17 04:55..05:35 Nachbesserung 1, Fortsetzung: Stand geprueft (9.4/9.5), gebaut, gemessen (9.6), gezielt
+  119/119 gruen (9.7), Zusammenfassung je Mangel (9.8).
+
+## 1. Messung vorher (Stand 1bcbd0ff, Baum gebaut 16:40, Messkopie `re15_pc_r38k_mess.exe`)
+
+Lade-Weg: Kartenwerkzeug `probe_r37_feuerloescher_karte` + CONTINUE (`RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1`),
+Bilder `RE15_FRAMEDUMP` mit `RE15_WINDOW_SCALE=1`; Lauf-Skript + Rohdaten im Scratchpad (`k/lauf.sh`, `k/runs/`).
+
+* **ROOM1030 Leon, Cut 0** (Karte `1030 -11500 -19500 2048 cut:0`, Bild 100): debug.log OHNE jede
+  `[feuerloescher]`-Zeile, `[prop-render]` nur obj 0 (Deckenventilator) und obj 15 (1F-Lageplan Runde 36); an der
+  Marke (x 38..48, y 111..122) die leere Pfeilerflaeche (8 von 132 Pixeln weichen vom Engine-Dekoder-Hintergrund um
+  > 30 ab = Dekoderrauschen, kein Objekt). Der Loescher haengt heute in ROOM1050 (Runde 37: obj 5 bei
+  (17200,-1150,-23775), Slot 13).
+* **ROOM10F0 Leon, Cut 5** (Karte `10F0 0 4000 1024 cut:5 flag:9:71 flag:3:94`, Bild 100): an der Marke
+  (x 133..143, y 77..85) **0 von 99** Pixeln anders als der Hintergrund; `[schluessel] ROOM10F0: PARKING LOT KEY ...
+  Prop obj 4 bei (8050,-1460,2700), Zone Slot 15` = Runde-36-Lage auf der Funkkonsole (im Cut 5 nicht im Bild).
+* Sonde `probe_r34n_e_dokumente aots` (echter Raumstart mit allen Port-Installern): ROOM1030 Slots 0..17 Original,
+  8 = 1F-Lageplan (Telefon nach 39), erster freier Slot 18; ROOM1031 zusaetzlich 18 = Tuer (Opening), erster freier 19;
+  ROOM10F0/10F1 Slots 0..14 Original, 15 = Schluessel (Runde 36), erster freier 16.
+
+### 1.1 Welcher Raum, welcher Cut (Bildvergleich, kein Augenmass)
+Engine-Dekoder `probe_bg_dump` (alle 428 STAGE1-Hintergruende, standalone gebaut aus bss_common/bss_vlc/bss_mdec),
+mittlere Abweichung je Pixel AUSSERHALB der Marke (Verfahren `tools/r34n_e/marken.py`, hier ueber alle Raeume):
+
+| Nutzerbild | bester Cut | Abweichung | naechste | Marke (Huelle, Mitte) |
+|---|---|---|---|---|
+| fire_extinguisher.bmp | **ROOM1030 Cut 0** | 15,94 | Cut 9 (dieselbe Kamera, Zustand nach Cut_replace) 22,29; Rest >= 62,09 | x 38..48, y 111..122 (132 Pixel, voll), (43,5 ; 117,0) |
+| key_location.bmp | **ROOM10F0 Cut 5** | 4,34 | ROOM1030 Cut 8: 90,92 | x 133..143, y 77..85 (99 Pixel, voll), (138,5 ; 81,5) |
+
+=> Feuerloescher: Lobby ROOM1030 (Rolltor im Hintergrund), Marke auf dem Pfeiler unter dem Notruf-Monitor.
+=> Schluessel: ROOM10F0 = Communications Room (derselbe Raum wie Runde 36), Marke auf der Pinnwand an der Rueckwand
+   unten rechts. Der Prison Key bleibt damit im Communications Room (VERTRAG §1.5, Spur G Tagebuch).
+
+## 2. RE-Belege und Geometrie
+
+### 2.1 Aktions-Scan (Vorrang, Pruefpunkt) — PSX.EXE, `re15_disasm.py dis`
+```
+80042bd0  ori  v0,zero,0x26c        ; Pruefpunkt 620 vor dem Spieler
+80042c50  lw   s0,0(s4)             ; Schleife ueber die AOT-Saetze in Slot-Reihenfolge (s2 = Slot+1)
+80042ea8  andi v0,v1,0x40           ; sat 0x40: Spieler-Lage gegen das Rechteck (bei sat 0x31 aus)
+80042ef8  andi v0,v1,0x20           ; sat 0x20: 620-Punkt (sp+24) gegen das Rechteck
+80042f50  beq  v0,zero,0x8004301c   ; sce == 0 (genommene Item-Zone) -> weiter zum naechsten Slot
+80042f8c  jalr v0                   ; Handler PTR_8007469c[sce]
+80042f94  j    0x80043028           ; -> Ende: der KLEINSTE treffende Slot gewinnt
+```
+Folge: eine Aufhebe-Zone muss im Rechteck ihres Pruefpunkts den kleinsten Slot haben. ROOM1030 Slot 14 (msg 14
+"Seems like even the emergency broadcast has gone offline...", main00 @0x01DA6 `2c 0e 01 31 ...`, x -4190..-2860
+z -18984..-17198) deckt die ganze Stelle vor dem Pfeiler; ROOM10F0/10F1 Slot 8 (msg 4 "Several files from past
+cases. Nothing useful here.", main00 @0x00FEA `2c 08 01 31 ...`, x 700..2300 z -3800..-3000) deckt die Pinnwand.
+Loesung wie Runde 36 N (Lageplan 1F nimmt Slot 8 des Muenztelefons, das Telefon zieht nach 39, kartenitems_r36.c):
+die Zone nimmt den Slot, der Original-Satz zieht UNVERAENDERT in einen freien Slot (ROOM1030: 20, frei in 1030 UND
+1031; 10F0/10F1: 15, frei geworden). Ausserhalb des Zonen-Rechtecks antwortet der Satz wie bisher; nach der Aufnahme
+ist die Zone sce 0 (@0x80042f50 uebersprungen) und der Satz antwortet ueberall. Kein Skript fasst die Slots an
+(scd_dump_room.py: ROOM1030/1031 nur main00 Aot_set 14; ROOM10F0/10F1 nur main00 Aot_set 8).
+
+### 2.2 ROOM1030 — der Pfeiler (Triangulation, Strahlen der Engine-Matrix `probe_r34n_e_dokumente kamera 1030`)
+Der Pfeiler ist in Cut 0, 1, 2, 3 sichtbar. Senkrechte Kanten: jede Bildspalte ergibt in der Draufsicht eine Gerade,
+Schnitt kleinster Quadrate (Kantenspalte = 50-%-Uebergang im Helligkeitsprofil, Pixel p deckt [p, p+1)):
+
+| Kante | Beobachtungen (Cut: Spalte @ Zeile) | Ergebnis (x, z) | Rest |
+|---|---|---|---|
+| (-x,+z) | Cut 3: 228,6 @55; Cut 1: 296,6 @62 | (-2668, -17564) | 0 |
+| (-x,-z) | Cut 0: 49,4 @72; Cut 1: 318,3 @57, 317,5 @67, 314,6 @110, 313,8 @125 | (-2709, -18459) | <= 8 |
+| (+x,+z) | Cut 3: 206,5 @55; Cut 0: 23,3 @72 | (-1790, -17606) | 0 |
+
+Pfeiler ~ 900 x 880 Einheiten (0,53 m). Kontrollpunkte: Aushang-Mitte (Cut 0/2/3) = (-2268,-3871,-17581), liegt auf
+der +z-Flaeche (Bildfehler <= 0,6 px in allen drei Cuts); Monitor-Anzeige (Cut 0/1/2) = (-3225,-3940,-18026).
+In Cut 0 zeigt der Pfeiler links die +z-Flaeche (Spalten 24..35,3, mit Aushang) und rechts die -x-Flaeche
+(35,3..49,4, mit der hellen Platte unter dem Monitor). **Die Marke (Spalten 38..48) liegt auf der -x-Flaeche.**
+In Cut 1 (Spalten 296..318) dieselbe -x-Flaeche frontal mit Monitor und heller Platte (Bild z_c1_rechts).
+-x-Flaeche achsparallel: x = Mittel der beiden -x-Ecken = -2688.
+
+### 2.3 ROOM10F0 — die Pinnwand
+Rueckwand: SCA-Zelle 0 (x -600..11300, z -5400..-3400, alle 5 Baender) mit Flaeche z = -3400. Gegenprobe:
+zwei Zettel der Pinnwand aus Cut 5 + Cut 6 trianguliert (kleiner Zettel unten rechts (1001,-2443,-3481), Foto oben
+Mitte (1790,-3277,-3352), Bildfehler <= 0,2 px). Pinnwand auf z -3400: x 691..3240, y -3659..-2222 (Cut 5,
+Rahmenlinien Spalte 107/149, Zeile 62/86); Marke = x 1074..1678, y -2769..-2277.
+
+### 2.4 Sicht in den anderen Cuts (Sonde `sicht`, Anker-Viereck FUN_80014368)
+Das Original zeichnet ein Objekt nur, wenn sein Ursprung im Anker-Viereck des aktiven Cuts liegt (FUN_8002c18c:
+`FUN_80014368(&pos, DAT_800ac790)`, Port re15_prop_culled) und verdeckt es mit den Masken des Cuts.
+* ROOM1030, Loescher-Mitte (-2813,-2518,-17904): Cut 0 (43,4 ; 117,1) keine verdeckende Maske (Maske 49 des
+  Pfeilers erst ab vz 12236, Loescher 11277); Cut 1 (299,9 ; 115,1) frei; Cut 2 (276,0 ; 99,1) frei; Cut 3
+  (225,1 ; 118,2) VERDECKT von Maske 2 (Pfeiler, ab vz 8200) — richtig, die -x-Flaeche liegt aus Kamera 3 hinter dem
+  Pfeiler. ⛔ **Cut 10** (= Kamera 3 nach `Cut_replace 3 -> 10`, sub00 @0x01FF7 / sub08 @0x02785, sobald (4,0x0F)
+  steht — Rolltor-Szene sub08) traegt fuer denselben Pfeiler Maske 2 mit Tiefe 164 (ab vz 10570): der Loescher
+  (vz 8295) schiene DURCH den Pfeiler. Das Anker-Viereck von Cut 10 ist nach dem Tausch das alte von Cut 3 (Zone 12,
+  op_cut_replace tauscht cam_from/cam_to), der Loescher liegt darin.
+  Cut 9 (= Kamera 0 nach dem Tausch): die Sonde meldet die Tisch-Maske 3 (Rechteck x 0..47, y 121..136) ueber den
+  untersten Zeilen; an der exe gemessen deckt sie dort nichts (58 Pixel, Huelle y 110..123, Cut 0: 59) — die Maske
+  ist ein Sprite, nur ihre Tisch-Pixel sind deckend, die Pfeilerflaeche im Rechteck ist durchsichtig.
+* ROOM10F0, Schluessel-Mitte (Vorab-Punkt (1348,-2494,-3390), endgueltig (1358,-2495,-3400)): Cut 5 (138,7 ; 81,5) frei; Cut 6 (90,6 ; 72,8) frei, auf der
+  Pinnwand; Cut 0/1/11 auf den Trennwaenden (Anker-Vierecke enthalten den Ursprung NICHT -> gar nicht gezeichnet,
+  richtig). ⛔ **Cut 7**: Ursprung im Anker-Viereck (Zone 20), Bildpunkt (99,0 ; 76,8) liegt auf dem Buecherregal
+  (das Regal steht aus Kamera 7 vor dem unteren rechten Teil der Pinnwand), Cut 7 hat **keine** Masken -> der
+  Schluessel schiene durch das Regal.
+  => Fuer diese zwei Faelle ist ein Sichtbarkeits-Haken noetig (Abschnitt 3); Masken nachzeichnen ginge nur ueber
+  shared_assets/PSX/MASKS (TABU).
+
+### 2.5 Kamera bei der Aufnahme
+ROOM1030: an jeder Standstelle vor den Tischen (x -4100..-4600, z -17700..-18200) fuehren alle Zonen nach Cut 0
+(`zonen 1030`): beim Aufheben sieht der Spieler genau das Nutzerbild. ROOM10F0: vor der Pinnwand (x 500..1800,
+z -2900..-1300 begehbar, `stand 10F0`) gelten Cut 5/6/7-Vierecke; Uebergaenge 5->6 nur bei x -1500..-1000.
+
+### 2.6 Die RE2-Schluesselmodelle (aus den Bytes, md5 wie Runde 36)
+* P. Room Key (ROOM6150.RDT MD1 @0x004FBC): 5 Ecken (+-76, 0, +-38) + Mitte, 4 Dreiecke, Normalen (0,+4096,0);
+  UV: u waechst mit Modell +x (0..127), v mit +z (192..255), CLUT-Feld 0x78C0 = Zeile 483. Von -y (oben) gesehen ist
+  die Textur gespiegelt (det -0,693) und die Dreiecke sind Rueckseiten (Kreuzprodukt -5776); von +y nicht gespiegelt,
+  Vorderseite (+5776). Der Port zeichnet Props ohne Rueckseiten-Test (Prop-Pfad main.c), die Seite entscheidet also
+  nur, ob die Textur gespiegelt erscheint.
+* Cabin Key (ROOM1050.RDT MD1 @0x001558): 1 Viereck (+-90, 0, +-90), Normale (0,-4096,0), UV-Parallelogramm
+  (93,28)(58,58)(55,1)(20,31), CLUT 0x7800; von -y nicht gespiegelt (det +0,064), Vorderseite (+32400).
+* Sichtbare Texel (CLUT-Farbe != 0x0000): P. Room Key 3642, Cabin Key 313.
+* Natuerliche Groesse an der Pinnwand (Cut 5, vz ~ 13000): 152 Einheiten = 2,4 Bildpunkte — NICHT "gut sichtbar".
+
+### 2.7 Licht der RE2-Schluesselmodelle — RE2 zeichnet sie FLACH (selbst disassembliert, info/re2leon/PSX.EXE)
+RE2-SCD-Opcode-Tabelle 0x800a74c8 (geprueft: Eintrag 0x37 -> LAB_8005655c = Sca_id_set, Eintrag 0x2E = 0x80055904 =
+Work_set mit Pool 0x800d0324 + id*0x1F8 @0x80055994..ac). Eintrag 0x2D @0x800a757c = **0x80055260 = Obj_model_set**:
+```
+80055290  lbu  t1,1(s2)          ; pc[1] = Objekt-Id
+80055298..800552a8               ; s1 = 0x800cc1e8 + 16700 + id*504 = Pool 0x800d0324 + id*0x1F8
+800552d0  lhu  v0,10(s2)         ; pc[10..11] Freigabe-Wort
+800552d8  ori  v0,v0,0x1         ; |1 -> Pool+0 (@0x800552e4)
+8005530c  lh   a1,12(s2)         ; pc[12..13] ATTRIBUT-WORT
+80055320  sw   a1,16(s1)         ; -> Pool+0x10
+```
+Zeichner FUN_800363f0: @0x800365e0 `lw v0,16(s1)`, @0x800365e8 `andi v0,v0,0x10` -> mit Bit FUN_8002d0e8 (@0x80036610,
+unbeleuchtet), sonst FUN_80027bec (NCCT). Die Schluessel-Saetze in RE2 Retail:
+`ROOM6150.RDT @0x02C98 2d 08 00 00 00 00 00 00 00 00 00 00 10 00 ...` (P. Room Key, Objekt 8) und
+`ROOM1050.RDT @0x01274 2d 00 00 00 00 00 00 00 00 00 0a 00 10 00 ...` (Cabin Key, Objekt 0): pc[12..13] = 0x0010.
+=> RE2 stellt BEIDE Schluessel flach auf (Textur unveraendert, 0x808080). Runde 36 hatte sie mit Attribut 0 (NCCT)
+gesetzt; an der Pinnwand gemessen ist der Parking Lot Key damit ein dunkelgrauer Strich (Messung 4.2). RE1.5-Gegenstueck
+des Zweigs: FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10` -> FUN_80022f0c @0x8002c320 (Runde 36 N 8.3). (Damit ist auch die
+Luecke der Runde 36 N geschlossen, die den RE2-Handler "positionell" angenommen hatte: er steht jetzt mit Adresse fest.)
+
+### 2.8 Vorgaben, die NICHT aus dem Original kommen (NUTZER-VORGABE / PORT-WAHL, Form belegt)
+| Groesse | Wert | Herkunft |
+|---|---|---|
+| Ort Loescher | Mitte = Sehstrahl der Markenmitte (43,5 ; 117,0) x Achsenebene x = -2688 - 125 | NUTZER-VORGABE (Marke); Form Runde 36 N ("Mitte = Sehstrahl der Markenmitte x Ebene") |
+| Wandabstand | Achse R + 15 = 125 vor der Flaeche | Runde 37 Dossier I 3.2 (dieselbe Regel wie ROOM1050) |
+| rot_y Loescher | 3072 (Modell -z = Wandseite -> Welt +x, Etikett zum Raum) | Runde 37: "rot_y 0 = Etikett zum Raum" an einer z-Wand |
+| Groesse Loescher | unveraendert 0,47 m (Netz Runde 37) | derselbe Loescher wie in 1090/1091 (dort liegt er spaeter leer) |
+| Ort Schluessel | Mitte des SICHTBAREN Texel-Rechtecks auf dem Sehstrahl der Markenmitte (138,5 ; 81,5), Ebene z -3400 | NUTZER-VORGABE (Marke) |
+| Massstab Schluessel | groesster Wert, bei dem alle sichtbaren Texel in der Marke liegen (+-0,5/+1,5 px): P. Room Key 6,4636, Cabin Key 3,5896 | NUTZER-VORGABE "gut sichtbar"; Form Runde 36 N ("Massstab s = groesster Wert ... in der Marken-Huelle") |
+| Lage in der Ebene | Textur-u waagerecht nach rechts, Sichtseite = Wicklungs-Vorderseite = nicht gespiegelte Seite | PORT-WAHL (2.6); P. Room Key: Kopf rechts wie im RE2-Itembild ITPS 95 |
+| Zonen | 1000 x 1000 (r35-Muster, 69 von 162 Item_aot_set); 1030 Mitte x = Klemmgrenze -4100 + 620 (@0x80042bd0), z ab -18370 (Slot 13 endet -18372); 10F0 Mitte (x_Marke, Wand + 300) wie Runde 36 N, rechts vor Slot 12 (x 1800) beendet | Runde 35/36-Muster |
+| Ausweich-Slots | ROOM1030 20 (frei in 1030 und 1031), 10F0/10F1 15 (bisheriger Schluessel-Slot) | Muster Runde 36 N (Telefon 8 -> 39) |
+
+## 3. Umsetzung
+
+### 3.1 Dateien
+Neu: `engine/src/itemorte_r38.c`, `include/re15_itemorte_r38.h`, `engine/src/gen/itemorte_r38_lage.inc` (#define-Lagen),
+`engine/src/gen/itemorte_r38_md1.inc` (zwei skalierte RE2-MD1), Werkzeug `tools/r38_itemorte/itemorte_export.py`
+(erzeugt beide .inc aus Nutzer-BMP, Engine-Kameramatrix, gemessener Ebene; RE2-Bytes md5-geprueft wie Runde 36),
+`tests/unit/test_r38_itemorte.c`, `tests/unit/probes/r38_itemorte.cmake`, `tests/integration/test_r38_itemorte.cmake`.
+Haken (Kommentar "Runde 38 Spur K"):
+* `engine/src/feuerloescher_r37.c` (Spur-K-Datei laut VERTRAG 1.4): Lage-Zeile 0x1050 -> RE15_R38K_FL_* (0x1030, Slot 14),
+  1 Haken `re15_itemorte_r38_platz_frei(room_id, slot)` vor dem Zonen-Test, Include, Kommentare; Kopf
+  `include/re15_feuerloescher_r37.h` (Fundort-Satz, Pool-Id-Kommentar).
+* `engine/src/schluessel_r36.c` (Spur-K-Datei): schluessel_anlegen nimmt Lage/Drehung aus re15_itemorte_r38_schluessel_lage,
+  Attribut RE15_R38K_SCHL_ATTR, Zone Slot 8 + Haken platz_frei; re15_schluessel_r36_md1_bytes liefert das skalierte MD1.
+  `include/re15_schluessel_r36.h`: Konsolen-Lage der Runde 36 (X/Y/Z/ROT_Y/SLOT/RECT_*) entfernt, Verweis auf R38.
+* `platform/pc/main.c`: Include + 3 Zeilen nach `re15_prop_culled` im Prop-Zeichner (`re15_itemorte_r38_verdeckt`).
+Keine Bank-9-Bits, keine Nachrichten-Ids, kein Asset, kein Patch an shared_assets.
+
+### 3.2 Konstanten (gen/itemorte_r38_lage.inc, Herleitung 2.2/2.3/2.8)
+* Loescher: Ursprung (Bodenmitte) (-2813,-2122,-17904), rot_y 3072, Zone x -3980..-2980 z -18370..-17370 (Slot 14).
+* Parking Lot Key: (1358,-2495,-3400) rot (3072,0,2048), Massstab 6,4636 (sichtbar 735 x 468 Einheiten).
+* Prison Key: (1358,-2495,-3400) rot (1024,0,0), Massstab 5,3032 (sichtbar 736 x 345) = **RE2 Small Key** seit
+  Nachbesserung 1 (9.3/9.5); bis dahin RE2 Cabin Key rot (1024,3618,2048), Massstab 3,5896 (sichtbar 538 x 620).
+* Schluessel-Zone x 798..1798 z -3600..-2600 (Slot 8); Licht 0x0010 (2.7).
+
+### 3.3 Sichtbarkeitsregel (PORT-ZUSATZ, gemessen begruendet)
+`re15_itemorte_r38_verdeckt`: ROOM1030 Cut 3 und Cut 10 (Loescher obj 5), ROOM10F0/10F1 Cut 7 (Schluessel obj 4) werden
+nicht gezeichnet. Messung ohne Regel (Lauf mit ausgeschaltetem Haken, sonst identisch, Unterschied mit/ohne Taken-Bit):
+Cut 10 102 Pixel x 222..227 y 108..127 (Loescher VOR dem Pfeiler), Cut 3 36 Pixel x 224..227 y 109..124 (rechts neben
+der Maske 2, die bei x 226 endet, die Pfeilerkante liegt bei 228,5), 10F0 Cut 7 44 Pixel x 94..104 y 72..80 (Schluessel
+ueber dem Buecherregal). Mit Regel jeweils 0 Pixel. Geometrisch liegt der Loescher aus Kamera 3/10 hinter dem Pfeiler
+(sichtbarer Rand rechnerisch 13 Einheiten = 0,3 px), der Schluessel aus Kamera 7 hinter dem Regal (Bildpunkt im Regal).
+Bild `K_belege/k3_ohne_regel_cut10_mit_regel_cut10_ohne_regel_cut7.png`.
+
+## 4. Messung nachher (Baum gebaut, Messkopie `re15_pc_r38k_mess.exe`, Lade-Weg CONTINUE)
+
+### 4.1 Punkt 1 — Feuerloescher
+* `aots 1030`: `[itemorte] ROOM1030: Slot 14 (msg 14) -> Slot 20`, `[feuerloescher] ROOM1030: Loescher an der Wand obj 5 bei
+  (-2813,-2122,-17904) rot_y 3072, Zone Slot 14 Aufnahme Item 0x31 Bit (9,0x86)`; Slot 14 ITEM x[-3980..-2980]
+  z[-18370..-17370] prop 5; Slot 20 MESSAGE evt 14 x[-4190..-2860]. `aots 1031`: kein Loescher, Slot 14 msg 14.
+  `aots 1050`: kein Slot 13, kein obj 5.
+* Bild Nutzer-Cut (ROOM1030 Cut 0, Bild 100, mit/ohne (9,0x86)): **59 Pixel, Huelle x 40..45 y 110..123, 50 davon in der
+  Marke x 38..48 y 111..122**, ausserhalb des Fensters (Marke +-2 px) 0. Netz-Projektion (Unit-Riegel, Engine-Kamera):
+  x 40,9..46,3 y 109,6..124,4, Mitte (43,6 ; 117,0) = Markenmitte (43,5 ; 117,0). Bilder
+  `K_belege/k1_nutzerbild_vs_port_1030_cut0.png` (links Nutzerbild, rechts Port, Marke rot umrandet),
+  `k1_1030_cut0_mit_ohne_6x.png`.
+* Andere Cuts (RE15_FORCE_CUT, mit/ohne): Cut 1 90 Pixel x 296..303 y 106..122 (frontal auf der -x-Flaeche), Cut 2 175
+  Pixel x 271..280 y 87..110, Cut 9 (= Kamera 0 nach dem Rolltor-Tausch) 58 Pixel x 40..45 y 110..123, Cut 3 0, Cut 10 0.
+* Aufnahme (exe, Stand (-4300,-17904) Blick +x, Cut 0, Skript A@90/A@198/A@321): Modal mit ITPS-Bild, "Will you take the
+  Fire Extinguisher?", Ja -> `[feuerloescher] Aufnahme Item 0x31 (9,0x86) -> Set(3,0x85)=1 wie ROOM1000 sub01 @0x00D0C`;
+  Bild 200: der Pfeiler ist leer; dritter Druck an derselben Stelle -> `[msgtext] room=1030 id=14 "Seems like even the
+  emergency broadcast has gone offline..."` (Bild `K_belege/k1_aufnahme_1030_ablauf.png`).
+* Kamera beim Aufheben = Cut 0 (alle Zonen an der Standstelle fuehren nach Cut 0, 2.5): der Spieler sieht das Nutzerbild.
+* Elza: ROOM1031 kein Loescher (Runde 37: in ROOM1051 hing auch keiner — Leon war zuerst da und hat ihn benutzt),
+  ROOM1091 der leere Loescher am Boden unveraendert (`Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300)`).
+  Leon ROOM1090 Loesch-Ablauf unveraendert (Riegel unit_r37_feuerloescher_loeschen/kiste, integration A/F/G/I/M/N/O).
+
+### 4.2 Punkt 2 — Schluessel an der Pinnwand
+(Prison-Key-Zahlen in 4.2/4.2a = Stand VOR Nachbesserung 1 mit dem Cabin Key; nachher: 9.6.)
+* `aots 10F0/10F1`: `[itemorte] ROOM10F0: Slot 8 (msg 4) -> Slot 15`, `[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45,
+  Bit (9,82)) Prop obj 4 bei (1358,-2495,-3400) rot (3072,0,2048), Zone Slot 8`; 10F1 PRISON KEY rot (1024,3618,2048).
+* Bild Nutzer-Cut (ROOM10F0/10F1 Cut 5, Bild 100, mit/ohne Taken-Bit): Parking Lot Key **55 Pixel, Huelle x 132..143
+  y 78..84**, Prison Key **14 Pixel, Huelle x 134..143 y 78..85**, ausserhalb des Fensters (Marke +-2) je 0.
+  Erste Fassung mit NCCT-Licht (Runde-36-Attribut 0): Parking Lot Key 50 Pixel, mittlere Farbe (91,82,82) gegen Kork
+  (71,70,55) = dunkler Strich; mit RE2-Attribut 0x0010 (2.7) silberne Klinge, schwarzer Kopf, rotes Emblem.
+  Netz-Abtastung (Unit-Riegel): ALLE sichtbaren Texel in der Marke (+-0,5/+1,5), Huelle x 132,59..144,41 (Park) bzw.
+  134,08..144,47 (Prison) = die Marke ist ausgefuellt.
+* Fensterskala 3 (RE15_WINDOW_SCALE=3, so spielt der Nutzer; 3D-Geometrie in Fensteraufloesung): der Parking Lot Key als
+  Schluessel mit Zacken und rotem Emblem, der Prison Key als Ring mit kleinem Schluessel (`K_belege/
+  k2_10f0_10f1_fensterskala3.png`). Bei Skala 1 ist die Ringlinie des Cabin Key (1..1,5 Texel = 0,3 px) nur
+  stellenweise getroffen.
+* Cut 6 (die zweite Kamera auf die Pinnwand): 108 Pixel x 81..98 y 67..76; Cut 7: 0 (Regel 3.3); Cut 0/1/11: das
+  Anker-Viereck enthaelt den Ursprung nicht (Original-Cull, nichts gezeichnet).
+* Aufnahme (exe, Stand (1300,-2900) Blick -z): Modal mit RE2-Bild P. Room Key / Cabin Key, Ja ->
+  `PARKING LOT KEY genommen: Item 0x45, Bit (9,82)` bzw. `PRISON KEY genommen: Item 0x42, Bit (9,83)` + `Prison Key
+  genommen -> Flag (4,0xEC) = 1 (Zelle ROOM1211)`; dritter Druck -> `[msgtext] room=10f0 id=4 "Several files from past
+  cases.Nothing useful here."` (Bild `K_belege/k2_aufnahme_10f0_10f1_ablauf.png`).
+* Parkplatz-Tuer 11B0 und Zelle 1211 unveraendert (Riegel unit_r36_schluessel_tuer/zelle/befreiung, integration
+  zu/auf/check/befreiung).
+
+#### 4.2a Fortsetzung 2026-10-16 21:16 (exe des Baus 21:11 = Code-Stand c01e409e, 8544862d aendert danach nur einen
+Kommentar und die Riegel; Messkopie `re15_pc_r38k_mess.exe` frisch kopiert)
+Lade-Weg CONTINUE mit Elza-Karte (`elza` -> debug.log `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`,
+`CONTINUE: resumed in room 10f1`), je zwei Laeufe mit/ohne (9,83), Bild 100, Werkzeug `probe_r34n_e_bild`:
+* **Elza Cut 6** (RE15_FORCE_CUT=6, debug.log `[pri] cut=6 ... masks=102`): **29 Pixel, Huelle x 83..97 y 67..78**
+  (auf der Pinnwand), aussen 0. **Elza Cut 7** (`[pri] cut=7 ... masks=0`): **0 Pixel** (Regel 3.3 gilt fuer 10F1
+  wie fuer 10F0). Bild `K_belege/k2_10f1_elza_cut6_cut7.png`.
+* **Skala 3** (RE15_WINDOW_SCALE=3, `[framedump] 960x720`; so oeffnet das Fenster auf einem 1080p-Bildschirm:
+  render_pc.c nimmt die groesste ganze Skala, deren Fenster in 90 % der Arbeitsflaeche passt; 3D-Geometrie wird in
+  Fensteraufloesung gezeichnet), Fenster = B3-Fenster x 3 (x 393..437 y 225..263):
+  | Schluessel | Pixel | Huelle | aussen | mittlere Farbe mit / ohne |
+  |---|---|---|---|---|
+  | Prison Key (10F1, Elza) | **112** | x 402..431 y 234..257 (30 x 24) | 0 | (70,67,67) / (68,67,53) |
+  | Parking Lot Key (10F0, Leon) | **491** | x 397..432 y 233..255 (36 x 23) | 0 | (80,72,72) / (71,69,55) |
+  Bei Skala 1 trifft die Abtastung die Ringlinie des Prison Key nur stellenweise (B3: 14 Pixel): 1..1,5 Texel x
+  13,9 Einheiten/Texel (Viereck-Kante 180 x 3,5896 = 646 Einheiten auf 46,6 Texel der UV-Kante (55,1)-(93,28)) =
+  14..21 Einheiten bei ~51 Einheiten/Bildpunkt (sichtbar 538 Einheiten auf 10,5 Spalten) = 0,27..0,41 px;
+  in der Spielgroesse ist sie eine zusammenhaengende Linie (112 Pixel ~ Umfang 85 + Bart). Die Ringlinie ist im
+  RE2-Asset dunkles Eisen (Farben der sichtbaren Texel, aus dem Texturbild des Werkzeugs gezaehlt: (24,16,16) ..
+  (115,115,115), am haeufigsten (74,74,74) / (49,41,41) / (115,115,115)): sie hebt sich vom Kork ueber Farbton und
+  Glanzpunkte ab, nicht ueber die Helligkeit. Bild `K_belege/k2_nutzerbild_vs_port_skala3_10f0_10f1.png` (links
+  die Nutzer-Marke x3, Mitte Leon, rechts Elza, rote Linie = Marke).
+
+## 5. Tests
+
+### 5.1 Neu (registriert nur in `tests/unit/probes/r38_itemorte.cmake`)
+* `unit_r38_itemorte_lage` — das GEZEICHNETE Netz im Nutzer-Cut (Engine-Kamera re15_camera_build_view): Loescher
+  ROOM1030 Cut 0 Mitte (43,6 ; 117,0) auf der Markenmitte +-1 px, Spalten 40,9..46,3 in der Marke, Rueckseite x -2703 =
+  15 vor der Pfeilerflaeche, z -18074..-17761 auf der -x-Flaeche, rot_y 3072, Attribut 0; Schluessel 10F0/10F1 Cut 5:
+  jede sichtbare Texel-Abtastung (CLUT != 0, Vierecke wie der Port (0,1,3)+(0,3,2)) in der Marke (0 ausserhalb von 2221
+  bzw. 355), Huelle 11,8 bzw. 10,4 von 11 Spalten, Attribut 0x0010, Massstab > 1.
+* `unit_r38_itemorte_raum` — Raumstart 1030 (Prop, Zone Slot 14, Monitor-Satz in 20 mit Original-Rechteck), 1031/1050
+  ohne Loescher, genommen -> Slot 14 Original; 10F0/10F1 (Prop an der Pinnwand mit Drehung, Zone Slot 8, Satz msg 4 in
+  15), genommen -> Slot 8 Original; zweiter Installer-Lauf aendert nichts.
+* `unit_r38_itemorte_aufnahme` — echter Druck: 1030 ausserhalb der Zone -> msg 14 aus Slot 20; vor dem Pfeiler -> Modal
+  0x31 -> Ja -> (9,0x86), (3,0x85), Inventar, Modell weg; danach an derselben Stelle msg 14 (sce-0-Zone uebersprungen,
+  @0x80042f50); 10F0/10F1 genauso mit msg 4 / Slot 15, (4,0xEC) nur beim Prison Key.
+* `unit_r38_itemorte_sicht` — Regel-Tabelle + Mechanik: Raumstart mit (4,0x0F) -> Cut_replace 3->10, Anker-Viereck von
+  Cut 10 enthaelt den Loescher, Pfeiler-Maske ueber dem Bildpunkt verdeckt bei vz 8297 NICHT, Sehstrahl Kamera 3 geht
+  durch den Pfeiler-Quader; 10F0 Cut 7: Anker enthaelt den Schluessel, 0 Masken; Cut 5 Anker enthaelt ihn.
+  `test_r38_itemorte` ohne Argument: **50 Pruefungen, 0 Fehler**.
+* `integration_r38_itemorte` — ECHTE exe (Lade-Weg CONTINUE): B1/B2/B3 Bilder mit/ohne Bit im Nutzer-Cut (59 / 55 / 14
+  Pixel im Fenster, 0 aussen), A/K1/K2 Aufnahme + verschobener Satz danach, V1/V2 0 Pixel (1030 Cut 10 nach Tausch,
+  10F0 Cut 7), V3 108 Pixel (10F0 Cut 6), E Elza 1031 ohne / 1091 mit leerem Loescher, O 1050 ohne. 326 s.
+  Fortsetzung (8544862d): **B4** Prison Key bei RE15_WINDOW_SCALE=3 >= 90 Pixel im Fenster x3 (gemessen 112), aussen 0;
+  **V4** Elza 10F1 Cut 7 0 Pixel; **V5** Elza 10F1 Cut 6 >= 20 Pixel (gemessen 29), aussen 0 — sechs Laeufe mehr.
+
+### 5.2 Angepasst (gewollte Verhaltensaenderung = NUTZER-VORGABE, nur die Orte)
+* `test_r37_feuerloescher.c` Teile modell/raum/aufnahme: 1050 -> 1030 (Lage, Slot 14, Monitor-Satz in 20, 1031/1050/
+  1051 ohne Loescher, Druck (-4300,-17904) Blick +x). Alle anderen Teile (loeschen/elza/spind/spielstand/leer/kiste)
+  unveraendert gruen.
+* `test_r37_feuerloescher.cmake` Laeufe A (Aufnahme jetzt in 1030), B (`pruef_nicht "[feuerloescher] ROOM1050"`),
+  E (Bild jetzt 1030 Cut 0); C/D/F..O unveraendert.
+* `test_r36_schluessel.c` Teil raum: Stand (1300,-2900) Blick -z, Prop an der Pinnwand mit Drehung + Attribut 0x0010,
+  Zone Slot 8 x 798..1798 z -3600..-2600, kein Slot 0..7 schneidet, msg 4 in 15. `test_r36_schluessel.cmake` Laeufe
+  leon/elza: Stand (1300,-2900) rot 1024. Tuer/Zelle/Namen/Befreiung unveraendert.
+
+### 5.3 Gezielter Lauf (KEINE volle Suite; -j 3, --timeout 600), -R woertlich:
+`^(unit_r38_itemorte|integration_r38_itemorte|unit_r37_feuerloescher|integration_r37_feuerloescher|unit_r36_schluessel|integration_r36_schluessel|unit_r37_kistenregel|integration_r37_kistenregel|unit_r36_kartenitems|integration_r36_kartenitems_bild|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_szenenleon_abgang10f0|unit_r36_klettern_10f0|unit_r22_10f0_figur|unit_1030_|unit_cam_1030_reentry|unit_r36_gegnerzahl_raum103|unit_r35_cut1150_montage_1030|unit_r34n_e_dokumente|integration_r34n_e_dokumente_bild|unit_aot_sce_census|integration_flag_census|integration_item_name_census|unit_r35_inhalt|unit_r35_inventar1050|integration_r35_inventar1050|unit_r34n_d_adaruf|unit_ada_eintritt_1050|unit_r27_ada_cutscene_1050|unit_r19_marke3_1050_c1_tiefe|unit_room1050_sicherung|unit_r37_sperre1050|integration_r37_sperre1050|unit_r36_story|integration_r36_story_leon|integration_r36_story_elza|unit_r21_discard_wegwerfen|unit_inv_|unit_item_|unit_itembox|unit_room1150_itembox|unit_r26_inventar|integration_r36_inventar|unit_r30_sicherung|integration_r30_sicherung)`
+-> **`100% tests passed, 0 tests failed out of 112`** (1110,74 s). Darin alle Gruppen der beruehrten Module
+(feuerloescher_r37.c, schluessel_r36.c, main.c-Prop-Zeichner) und Raeume (1030/1031, 1050/1051, 10F0/10F1, 1090/1091,
+11B0-Tuer, 1211-Zelle, Kistenregel K1/K11, Lageplan 1030, Szene 10F0, Montage 1030, Story-Laeufe Leon/Elza).
+Vorher einzeln: `^(unit_r38_itemorte|unit_r37_feuerloescher|unit_r36_schluessel)` -> `100% tests passed, 0 tests failed
+out of 18`; `^integration_r38_itemorte$` -> `100% tests passed, 0 tests failed out of 1` (258 s).
+
+### 5.4 Gezielter Lauf AM ENDSTAND (Fortsetzung, Baum 8544862d neu gebaut 21:25, -j 3, --timeout 600)
+Derselbe -R-Ausdruck wie 5.3 (woertlich oben; er deckt auch kistenregel_r37.c, dessen Kommentar 8544862d nachzieht):
+-> **`100% tests passed, 0 tests failed out of 112`** (Total Test time (real) = 1512.51 sec; Maschine voll mit
+Spurlaeufen anderer Baeume, daher langsamer als 5.3). Darin `integration_r38_itemorte` Passed 377.24 sec mit den
+neuen Pruefungen `ok   B4: Fenster 112 >= 90, aussen 0`, `ok   V4: 0 Pixel (nicht gezeichnet)`,
+`ok   V5: Fenster 29 >= 20, aussen 0`; nachgerechnet an den Framedumps des Laufs: B1 59 / B2 55 / B3 14 / B4 112 /
+V3 108 / V4 0 / V5 29 Pixel, aussen ueberall 0 (bitgleich mit den Messungen 4.1/4.2/4.2a).
+
+## 6. OFFEN
+* Nichts Funktionales. Ehrliche Grenzen:
+  - ERLEDIGT mit Nachbesserung 1 (Abschnitt 9): der Prison Key war der RE2 "Cabin Key" (duenner dunkler Ring, 14 / 112
+    Pixel bei Skala 1 / 3) und ist jetzt der RE2 "Small Key" (heller Bartschluessel, flach wie in RE2 @0x00706): 27 / 217
+    Pixel, je Pixel derselbe Kontrast wie der Parking Lot Key (9.6). Verbleibende Grenze: er hat ~halb so viel FLAECHE
+    wie der Parking Lot Key (Ring + Schaft gegen breite Klinge + Kopf, beide 12 Spalten breit = Marke voll); groesser
+    geht nicht, ohne die Marke zu verlassen. Bei Skala 1 zeigt der 1-Pixel-Schaft seine dunkle Unterkante (Ring hell).
+  - Die Schluessel sind groesser als echte Schluessel (Parking Lot Key sichtbar 735 x 468 Einheiten = 43 x 28 cm, Prison
+    Key 736 x 345 = 43 x 20 cm): "gut sichtbar" aus Cut 5 (Kamera ~7,6 m entfernt) — in RE2-Groesse waeren es 2..3
+    Bildpunkte.
+  - Sichtbarkeitsregel ist ein PORT-ZUSATZ (das Original hatte an beiden Stellen kein Objekt, die Masken
+    shared_assets/PSX/MASKS sind TABU); der PSX-Port zeichnet diese Port-Gegenstaende nicht (platform/psx/main.c:
+    nur obj < 6 mit RDT-Modell), braucht die Regel also nicht.
+* Fuer die Integration: neue Quelldatei `engine/src/itemorte_r38.c` (GLOB) -> Android-Bau neu konfigurieren (Memory
+  reai-v2-android-glob-cache). Merge-Stellen: `platform/pc/main.c` (Include neben re15_feuerloescher_r37.h, 3 Zeilen nach
+  `re15_prop_culled` im Prop-Zeichner), `schluessel_r36.c` (schluessel_anlegen + md1_bytes; Spur G koennte
+  `re15_schluessel_r36_umleiten` (Roy, Ereignis 6->7) anfassen — andere Funktion), `feuerloescher_r37.c` (Lage-Zeile +
+  1 Haken). Kein k_port[]-Eintrag (keine neuen Bank-9-Bits), keine Nachrichten-Ids.
+* Spur G (Roys Tagebuch, Kartenmarke Communications Room) liest das Aufnahme-Bit `RE15_R36Q_PRISON_BIT` (9,83):
+  unveraendert (include/re15_schluessel_r36.h:67, nur Lage/Drehung/Slot/Licht sind neu; Riegel K2 `PRISON KEY genommen:
+  Item 0x42, Bit (9,83)`). Der Prison Key liegt weiter im Communications Room (VERTRAG 1.5, passt zum Tagebuchtext
+  "locked it up in the Communications Room").
+* Kommentar-Drift in der gemeinsamen Datei `scd_room_setup.c` (Z. 43 und 466: "Feuerloescher 1050/1090/1091")
+  absichtlich nicht angefasst (nur Kommentar; gemeinsame Datei, Merge-Risiko ohne Nutzen). Der K1-Kommentar in
+  `kistenregel_r37.c` ("Port: Aufnahme in 1050") ist nachgezogen (8544862d, nur Kommentar).
+* Volle Suite NICHT gefahren (Spurbaum-Regel); gezielt 112/112 (5.3) und am Endstand erneut 112/112 (5.4).
+
+## 7. Fuer den Nutzer
+
+### Was sich aendert
+* **Feuerloescher (Leon):** haengt jetzt in der Lobby (ROOM1030) am Pfeiler unter dem Notruf-Monitor, genau an der Stelle
+  aus fire_extinguisher.bmp (Bild `K_belege/k1_nutzerbild_vs_port_1030_cut0.png`: links dein Bild, rechts das Spiel).
+  Aufheben: vor den Tischen links neben dem Pfeiler stehen, Blick zum Pfeiler, Aktionstaste -> "Will you take the Fire
+  Extinguisher?" -> Ja. Danach ist der Pfeiler leer; der Monitor antwortet wie immer ("Seems like even the emergency
+  broadcast has gone offline..."). In ROOM1050 haengt keiner mehr. Elza findet wie bisher keinen (Leon war zuerst da),
+  in ROOM1091 liegt fuer sie weiter der leere am Boden. Loeschen in ROOM1090 unveraendert.
+* **Parking Lot Key (Leon) / Prison Key (Elza):** haengen an der Pinnwand im Communications Room (ROOM10F0/10F1) unten
+  rechts, wie in key_location.bmp (Bild `K_belege/k2_nutzerbild_vs_port_10f0_cut5.png`), so gross, dass sie deine Marke
+  ausfuellen, und ohne Raumlicht gezeichnet wie in Resident Evil 2 (dort stehen beide Schluessel mit dem Flach-Attribut):
+  der Parking Lot Key zeigt die silberne Klinge und den schwarzen Kopf mit rotem Emblem, der Prison Key (seit der
+  Nachbesserung 1) einen silbernen Bartschluessel mit grossem Ring — RE2s "Small Key"; Item-Bild beim Aufheben und
+  Inventar-Symbol zeigen denselben Schluessel (`K_belege/k2_nb1_cut5_skala3_2x.png`, `k2_nb1_aufnahme_inventar_10f1.png`).
+  Aufheben: vor die Pinnwand stellen, Blick zur Wand, Aktionstaste. Die Konsole ist leer.
+* Neue Assets fuer das Paket-Gate: **keine** (alles in die exe gebacken: gen/itemorte_r38_*.inc). Keine Sprachdateien,
+  keine neuen Texte.
+
+### Hinweis
+* Prison Key (Nachbesserung 1): der duenne dunkle Ring (RE2 "Cabin Key") war an der Pinnwand kaum zu sehen und ist
+  durch RE2s "Small Key" ersetzt (Begruendung der Wahl: Abschnitt 9.3). Er ist so hell wie der Parking Lot Key, aber
+  schlanker (Ring + Schaft statt breiter Klinge) und fuellt deine Marke in der Breite ganz aus
+  (`K_belege/k2_nb1_cut5_skala1_5x.png`: links dein Bild, dann Leon, Elza, Elza nach dem Aufheben). Der Text beim
+  Untersuchen bleibt "I can access the / prison cells / with this." (dieselbe Satzform wie RE2s Small Key "I can open a /
+  simple lock / with this." @0x800A11EF).
+
+## 8. Wortlaut-Pruefung (Fortsetzung 2026-10-16)
+
+| Wortlaut | erfuellt durch | Beleg |
+|---|---|---|
+| "fire extinguisher ... in room 1030" | Prop obj 5 + Aufhebe-Zone Slot 14 in ROOM1030 (Leon) | 4.1, B1/A, unit_r38_itemorte_raum/aufnahme |
+| "haengen" | an der -x-Flaeche des Pfeilers, Rueckseite 15 vor der Flaeche, Unterkante y -2122 ueber dem Boden (wie Runde 37 an der Wand in 1050) | 2.2/3.2, unit_r38_itemorte_lage |
+| "an der stelle von fire_extinguisher.bmp" | Nutzer-Cut = ROOM1030 Cut 0 (Bildvergleich gegen 428 Hintergruende); gezeichnete Mitte (43,6 ; 117,0) auf der Markenmitte (43,5 ; 117,0); 50 von 59 Pixeln in der Marke, aussen 0; beim Aufheben ist Cut 0 aktiv | 1.1, 2.5, 4.1, B1 |
+| "anstatt in room 1050" | ROOM1050 ohne Prop/Zone, Spind 1000 unveraendert Raumtext | O, unit raum |
+| (Elza) | der Wand-Loescher war in Runde 37 nur Leons (1051 ohne; Elza findet den leeren am Boden in 1091 — Nutzer-Wortlaut Runde 37 Nachtrag 4) -> 1031 ohne, 1091 unveraendert | E, unit raum |
+| "Parking Lot key, und den Prison Key - je nach Szenario" | Leon ROOM10F0 Item 0x45 Bit (9,82), Elza ROOM10F1 Item 0x42 Bit (9,83) + Zellen-Flag (4,0xEC) | B2/B3/K1/K2 |
+| "an die Location ... key_location.bmp" | ROOM10F0/10F1 Cut 5 (Bildvergleich 4,34 gegen >= 90,9), Pinnwand unten rechts, jeder sichtbare Texel in der Marke | 1.1, 2.3, unit_r38_itemorte_lage |
+| "gut sichtbar" | fuellt die Marke (Huelle 11,8 / 10,4 von 11 Spalten), Licht flach wie RE2 (@0x80055320 Attribut 0x0010), in Cut 5 UND Cut 6 beider Szenarien gezeichnet; Skala 3: Prison Key 217 (Small Key, Nachbesserung 1; vorher 112), Parking Lot Key 491 Pixel, je Pixel gleicher Kontrast (9.6); in Cut 7 (Regal davor, keine Masken) bewusst nicht | 4.2/4.2a, B2/B3/B4/V3/V5, V2/V4 |
+
+Die Grenze des Prison-Key-Modells (duenne dunkle Ringlinie des Cabin Key) ist mit Nachbesserung 1 behoben (Abschnitt 9);
+der Small Key ist schlanker als der Parking Lot Key, je Pixel aber gleich kontrastreich.
+
+## 9. Nachbesserung 1 (nach Abnahme 0, Beginn 2026-10-16 ~23:00)
+
+Abnahme `K_abnahme_0.md`: Punkt 1 erfuellt, Punkt 2 teilweise — **Mangel M1**: der Prison Key (Elza, ROOM10F1 Cut 5)
+haengt an der Marke, ist aber nicht "gut sichtbar" (Skala 1: 14 Pixel gegen 55 beim Parking Lot Key, Sum|dL| ~500 gegen
+~3430; Skala 3: 112 gegen 491; Skala 4: 215; Luminanz der geaenderten Pixel 68,3 gegen 65,6 auf dem Kork). Ursache laut
+Abnahme und Bau-Agent: das Modell (RE2 "Cabin Key", duenner dunkler Ring; Runde-36-Wahl, vom Nutzer nicht festgelegt).
+
+### 9.1 Stand / Vorgehen
+- Messung vorher = die Abnahme-Messung (nicht wiederholt): 14 / 112 / 215 Pixel, Sum|dL| ~500 (Skala 1).
+- Weg: ein kraeftigeres RE2-Schluesselmodell fuer den Prison Key, Wahl gemessen (alle RE2-Schluesselmodelle an der Marke
+  gerechnet), Weltmodell + Icon + Item-Bild aus DEMSELBEN RE2-Gegenstand (Runde-36-Regel "Modell und Bild passen
+  zusammen"), Licht wie im RE2-Satz dieses Modells (Obj_model_set-Attribut nachlesen), Riegel B3/B4 angehoben.
+
+### 9.2 Messung vorher (eigenes Werkzeug gegen die Abnahme geeicht)
+Messkopie `re15_pc_r38k_nb1.exe` (exe 21:23 = Code-Stand HEAD), Lade-Weg CONTINUE wie die Riegel (Kartenwerkzeug
+`probe_r37_feuerloescher_karte 10F1 0 4000 1024 cut:5 elza [flag:9:83]`, Bild 100), Differenzwerkzeug im Scratchpad
+(`diff.py`: |dR|+|dG|+|dB| > 30 wie probe_r34n_e_bild, dazu Sum|dL| mit L = 0,299R + 0,587G + 0,114B ueber die
+geaenderten Pixel). Ergebnis = Abnahme-Zahlen (das Werkzeug misst dasselbe):
+| Lauf | Pixel | Huelle | Sum|dL| | L mit / ohne |
+|---|---|---|---|---|
+| Elza 10F1 Cut 5 Skala 1 (Cabin Key) | 14 | x 134..143 y 78..85 | 502 | 68,6 / 63,2 |
+| Elza 10F1 Cut 5 Skala 3 (Cabin Key) | 112 | x 402..431 y 234..257 | 3193 | 68,3 / 65,6 |
+
+### 9.3 Modellwahl gemessen: alle flachen RE2-Schluesselmodelle an der Marke
+Verfahren: jedes Schluessel-Netz aus `extracted_re2_items/platzierungen.csv` (MD1/TIM aus dem RE2-RDT gelesen, gegen
+die Katalog-Dateien bytegleich geprueft) nach DERSELBEN Regel wie `itemorte_export.py` an die Marke gelegt (Massstab =
+groesster Wert, bei dem alle sichtbaren Texel in der Marke liegen; Textur-u waagerecht) und in Software auf das
+Elza-Bild ohne Schluessel (Cut 5, Skala 1 und 3) gezeichnet (flach = Texel unveraendert). Werkzeug `screen.py`
+(Scratchpad). Gegenprobe der Schaetzung an der exe: Cabin Key Schaetzung 11 px / 324 (exe 14 / 502), P. Room Key
+50 / 2885 (exe 55 / ~3430) — die Schaetzung liegt in der Groessenordnung der exe, Rangfolge ist belastbar.
+| RE2-Modell | Item | sichtbar (Einheiten) | S1 Pixel | S1 Sum|dL| | S3 Pixel | S3 Sum|dL| | Modell = Icon = Item-Bild? | RE2-Attribut pc[12..13] |
+|---|---|---|---|---|---|---|---|---|
+| mesh071 P. Room Key (= Parking Lot Key) | 0x5F | 735 x 468 | 50 | 2885 | 466 | 28742 | ja | 0x0010 (ROOM6150 @0x02C98) |
+| mesh062 Cabin Key (heute Prison Key) | 0x58 | 538 x 620 | 11 | 324 | 123 | 3815 | ja | 0x0010 (ROOM1050 @0x01274) |
+| **mesh028 Small Key** | **0x1F** | 740 x 347 | **24** | **1049** | **240** | **13006** | **ja** (ITPS 3100, Icon 32: derselbe Bartschluessel mit Ringreide) | **0x0010** (ROOM10F0 @0x00706, ROOM20E0 @0x018F8/@0x01A96, ROOM2020 @0x01C1E) |
+| mesh070 C. Panel Key | 0x5E | 742 x 273 | 24 | 2224 | 243 | 25260 | NEIN (Item-Bild ITPS 9400/Icon 95: gelber Kunststoffkopf + gruener Anhaenger; Weltmodell: Messingschluessel ohne Anhaenger) | 0x0010 (ROOM5070 @0x02356) |
+| mesh049 W. Box Key | 0x3F | 751 x 365 | 34 | 2536 | 323 | 20839 | ja | **0x0000** (ROOM5010 @0x01408: RE2 BELEUCHTET ihn, im Raumlicht von 10F0 dunkel — Runde 36: NCCT machte den Parking Lot Key zum "dunkelgrauen Strich") |
+| mesh063..068 Precinct Keys | 0x59..0x5C | 743 x 214..235 | 15..18 | 1263..1767 | 128..144 | 7865..10192 | nein (Icons: dunkler Schluessel mit farbigem Spielkarten-Symbol, Modelle silber/gold ohne Farbe) | - |
+| mesh074 Platform Key | 0x63 | wie Cabin Key | 11 | 324 | 123 | 3815 | nein (Runde 36) | - |
+| mesh069 C. Panel Key, mesh072/073 Lab Card | | nicht flach (y != 0) | - | - | - | - | - | - |
+
+Regel der Wahl (vor der exe-Messung festgelegt): Modell, Icon und Item-Bild zeigen DENSELBEN Schluessel (Runde-36-Regel,
+Q_schluessel.md 2.4: "Modell und Bild passen nicht zusammen" verwarf den Platform Key), RE2 stellt ihn FLACH auf
+(dasselbe Licht wie der Parking Lot Key, 2.7), und unter diesen der kontrastreichste an der Marke. Das trifft genau EIN
+Modell: **RE2 0x1F "Small Key"** — ein heller Bartschluessel mit grosser Ringreide (der klassische Zellenschluessel).
+Gegenueber dem Cabin Key: S1 2,2x Pixel, 3,2x Sum|dL|; S3 2,0x Pixel, 3,4x Sum|dL|.
+RE-Belege (selbst gelesen, info/re2leon):
+* `ROOM10F0.RDT @0x006F0 4e 05 02 31 00 00 05 b0 c5 9c 36 06 12 07 1f 00 01 00 26 00 04 a0` = Item_aot_set Slot 5,
+  sat 0x31, Item **0x001F**, Menge 1, Merkbit 0x26, **md1 = 4**; direkt dahinter `@0x00706 2d 04 00 00 00 00 00 00 00 00
+  0a 00 10 00 ...` = Obj_model_set (Opcode 0x2D -> 0x80055260, Tabelle 0x800a74c8) Objekt 4, pc[12..13] = **0x0010**
+  (-> Pool+0x10 @0x80055320, Zeichner @0x800365e8 andi 0x10 = flach, 2.7). Ebenso `ROOM20E0.RDT @0x019C0 4e 04 02 31 ...
+  1f 00 01 00 3c 00 02 a0` (md1 = 2) mit `@0x018F8 2d 02 ... 0a 00 10 00`.
+* MD1 = ROOM10F0.RDT @0x001650, 236 B, md5 c5d49ef60b6b111ecac53a19652f3278 (= ROOM20E0 @0x002A98, bytegleich);
+  TIM = ROOM10F0.RDT @0x0215BC, 34848 B, md5 326b822bb81b07ecb6d3544ce6e094a6 (8 bpp, CLUT (0,480) 256x4, Bild 64x256
+  — dieselbe Form wie der P. Room Key ROOM6150 @0x030B74).
+* Icon: `ITEMALL.PIX` Tile 31 (@0x9150 = 31 x 1200, 1200 B) == Bild von `ITEMALL/ITEMALL_032.TIM` (bytegleich), CLUT dieselbe wie
+  bei Tile 88/95 (md5 15a5a175 der CLUT von ITEMALL_032/089/096), **Index 0 kommt in Tile 31 nicht vor** -> wie in
+  Runde 36 ohne Aenderung einsetzbar (RE1.5- und RE2-Icon-CLUT unterscheiden sich nur in Eintrag 0).
+* Item-Bild: `ITPS.ITP` Block 31 (@0x5D000, 0x3000 B) = `ITPS/ITPS3100_0549.bmp` (derselbe Schluessel).
+* Texel-Helligkeit (sichtbare Texel, Rec.601): Small Key Mittel 102 / Median 104 (51 % > 100), Cabin Key 69 / 74
+  (22 %), P. Room Key 114 / 128; Kork der Pinnwand L ~ 63.
+
+### 9.4 Fortsetzung nach dem Sitzungslimit (2026-10-17 ab 04:55)
+Der erste Anlauf der Nachbesserung 1 wurde ~23:45 vom Sitzungslimit beendet (Commits ecb84654, 801d3c55, ebc05a7e
+"Umsetzung, UNGETESTET", 2129a121 "Reste, UNGEPRUEFT"; die Verweise auf "Dossier 9.5" im Werkzeug-Kopf zielten auf
+einen nie geschriebenen Abschnitt — er folgt hier als 9.5). Pruefung des vorgefundenen Stands:
+* Erzeugte Dateien: `schluessel_export.py` und `itemorte_export.py --schreiben` mit umgelenktem Ziel (Scratchpad
+  `nb1/regen.py`) -> `gen/schluessel_r36.inc`, `gen/itemorte_r38_lage.inc`, `gen/itemorte_r38_md1.inc` **bitgleich** mit
+  dem Commit-Stand (`cmp` ohne Ausgabe) — nichts von Hand geaendert. Werkzeug-Ausgabe: Parking Lot Key s 6,4636,
+  gezeichnete Huelle x 132,51..144,45 y 77,28..85,28, 0 Verkleinerungsschritte (MD1 unveraendert gegen den abgenommenen
+  Stand); Prison Key (Small Key) s 5,3297 -> **5,3032** nach 10 Schritten, gezeichnete Huelle x 132,53..144,49
+  y 78,35..84,28, sichtbar 736 x 345 Einheiten, 2596 sichtbare Texel, rot (1024,0,0).
+* Doku-Fehler gefunden: Kopf von `schluessel_export.py` nannte das Icon "Tile 31 @0x9168" — 31 x 1200 = 37200 =
+  **0x9150** (die Werkzeug-Ausgabe druckt `@0x009150`; Code rechnet `31 * 1200`, war also richtig). Kopf berichtigt.
+* exe im Baum (23:44) ist nicht sicher der Commit-Stand -> neu bauen, dann messen (Skala 1 und 3, gegen den Parking Lot
+  Key), dann die gezielten Riegel.
+
+### 9.5 Massstab gegen die GEZEICHNETE Huelle (Werkzeug-Aenderung 2129a121, hier geprueft)
+Der erste Anlauf rechnete den Small Key mit s 5,3297 (Regel 2.8: groesster Wert, bei dem alle sichtbaren Texel in der
+Marken-Huelle liegen, ueber die affine UV->Modell-Abbildung = Ausgleich ueber alle Flaechen, Rest bis 1 Modell-Einheit).
+Laut Werkzeug-Kommentar lag die so gerechnete Huelle 0,07 px innerhalb, die GEZEICHNETE (gerundete Ecken, Dreiecke wie
+der Port) bei x 144,52 > 144,5 = ausserhalb der Toleranz des Riegels unit_r38_itemorte_lage. `itemorte_export.py`
+prueft seitdem die gezeichnete Huelle wie Port und Riegel (gerundete Ecken, Dreiecke direkt / Vierecke (0,1,3)+(0,3,2),
+Texel = (int) des baryzentrisch interpolierten UV, Raster 48 und 480) und verkleinert s in Schritten von 0,05 %:
+Parking Lot Key 0 Schritte (MD1 bitgleich mit dem abgenommenen Stand), Small Key 10 Schritte -> **s 5,3032**
+(sichtbar 736 x 345 Einheiten). Am gebauten Stand nachgeprueft (`unit_r38_itemorte_lage`, eigener Lauf 05:01):
+`ROOM10F1 Cut 5: 1565 sichtbare Abtastpunkte, Huelle x 132.57..144.49 y 78.35..84.23, 0 ausserhalb`, "11.9 von 11
+Spalten", `16 Pruefungen, 0 Fehler`; Parking Lot Key unveraendert `x 132.59..144.41 y 77.28..85.13`.
+Nachgerechnet, weil 9.3 eine Zahl nennt, die ich nicht reproduziere: Texel-Helligkeit der sichtbaren Texel (TIM + die
+CLUT-Zeile der Flaeche = Feld >> 6, 5 Bit -> x 255/31, Rec. 601, UV-Rechteck der Flaechen; Skript `nb1/texhell.py`):
+P. Room Key Mittel 69,1 / Median 57,6 (26 % > 100), **Small Key 84,4 / 82,3 (39 %)**, Cabin Key 69,6 / 74,0 (22 %). Der
+Cabin-Key-Wert stimmt mit 9.3 ueberein, die 9.3-Werte fuer Small Key (102/104) und P. Room Key (114/128) nicht — an der
+Wahl aendert das nichts (der Small Key ist auch so der hellste der drei); massgeblich ist die Messung an der exe (9.6).
+
+### 9.6 Messung nachher (exe = Code-Stand HEAD; Lade-Weg CONTINUE wie die Riegel)
+Bau: `local_build.sh configure` + `build` 04:58 -> `ninja: no work to do` (exe 23:44 aus dem Generatorstand 23:44:05,
+Objekte 23:44:15 = s 5,3032); nach dem Kommentar-Commit 0a2f02bc neu gebaut 05:09, exe bis auf PE-Zeitstempel,
+Pruefsumme und __TIME__ bytegleich (`cmp -l`: 10 Bytes). Messkopie `re15_pc_r38k_nb1f.exe` (eigener Name neben der
+exe, nach der Messung geloescht; die liegengebliebene Kopie `re15_pc_r38k_nb1.exe` des ersten Anlaufs ebenso).
+Laeufe: Kartenwerkzeug `probe_r37_feuerloescher_karte` + `RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1`, Skript `W3`,
+Bild 100, `RE15_FRAMEDUMP`; Leon `10F0 0 4000 1024 cut:5 flag:9:71 flag:3:94` [+ `flag:9:82`], Elza
+`10F1 0 4000 1024 cut:5 elza` [+ `flag:9:83`]. Auswertung mit EIGENEM Werkzeug (`nb1/diff.py`, Python/PIL, nicht der
+C-Auswerter des Riegels): |dR|+|dG|+|dB| > 30 im Fenster Marke +-2 px (x 131..145 y 75..87, Skala k: x k), Sum|dL| mit
+L = 0,299R + 0,587G + 0,114B. debug.log je Lauf: `CONTINUE: resumed in room 10f1`, `[schluessel] ROOM10F1: PRISON KEY
+(Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,0,0), Zone Slot 8`, `[framedump] 960x720` bei Skala 3.
+
+| Skala | Schluessel | Pixel | aussen | Sum\|dL\| | \|dL\| je Pixel | Huelle | L mit / ohne | vorher Cabin Key (Abnahme 0) |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Parking Lot Key (Leon) | 55 | 0 | 3428 | 62,3 | x 132..143 y 78..84 | 84,6 / 68,3 | |
+| 1 | **Prison Key = Small Key (Elza)** | **27** | 0 | **1627** | **60,3** | x 132..143 y 79..83 | 57,3 / 73,3 | 14 Pixel, Sum ~500 (35,9 je Pixel) |
+| 1 | Verhaeltnis Prison/Parking | **49 %** | | **47 %** | 97 % | | | 25 % / 15 % |
+| 3 | Parking Lot Key | 491 | 0 | 28852 | 58,8 | x 397..432 y 233..255 | 74,0 / 68,0 | |
+| 3 | **Prison Key = Small Key** | **217** | 0 | **11899** | **54,8** | x 397..432 y 236..250 | 80,3 / 71,7 | 112 Pixel, Sum 3193 (28,5 je Pixel) |
+| 3 | Verhaeltnis | **44 %** | | **41 %** | 93 % | | | 23 % / 11 % |
+| 4 | Parking Lot Key | 865 | 0 | 48354 | 55,9 | x 529..576 y 311..340 | 67,4 / 67,8 | |
+| 4 | **Prison Key = Small Key** | **345** | 0 | **18015** | **52,2** | x 530..576 y 315..334 | 89,4 / 72,9 | 215 Pixel, \|dL\| 30,7 je Pixel (~6600) |
+| 4 | Verhaeltnis | **40 %** | | **37 %** | 93 % | | | 25 % / ~14 % |
+
+Lesart: der Prison Key aendert jetzt halb so viele Pixel wie der Parking Lot Key (vorher ein Viertel) und hat **je
+Pixel denselben Kontrast** (93..97 %; der Cabin Key hatte 49..58 %). Was fehlt, ist nur Flaeche: beide sind gleich
+breit (12 Spalten bei Skala 1, die Marke ist voll), der Small Key ist ein Bartschluessel aus Ring und Schaft (5 Zeilen),
+der Parking Lot Key eine breite Klinge mit Kopf (7 Zeilen). Gegenueber dem Cabin Key: Pixel x 1,9 (Skala 1 und 3),
+Sum|dL| x 3,2 (Skala 1) / x 3,7 (Skala 3). Gleiche Groessenordnung wie der Parking Lot Key — so, wie es die Abnahme
+verlangt (M1 "Erwartet").
+Bild: `K_belege/k2_nb1_cut5_skala3_2x.png` (Skala 3: silberner Bartschluessel mit Ring, Schaft und zwei Barten auf dem
+dunklen Kork, ganz in der Marke) und `K_belege/k2_nb1_cut5_skala1_5x.png` (Skala 1: heller Ring, dunkler Schaft — bei
+320 x 240 trifft die Abtastung den Schaft auf seiner dunklen Unterkante; links das Nutzerbild).
+Hingehen (Gehweg der Abnahme ohne Aktion, `W1,U3.2,W0.3,L0.36,W0.3,U0.45,W0.3,R0.36,W0.3,U1.6,W3`, Serie
+`RE15_FRAMEDUMP=60-400/20`, je mit/ohne Bit, Kamera durchgehend Cut 5): Bild 60..220 wie oben (27 / 55 Pixel); Bild 260
+21 / 37; ab Bild 300 (Figur steht bei (1036,-2932) vor der Pinnwand und deckt den rechten Teil der Marke) Prison Key
+20 Pixel / Sum 1083, Parking Lot Key 26 / 1898 — der Prison Key bleibt beim Hingehen bis zum Stehen sichtbar (Abnahme 0
+beim Cabin Key: "nur einzelne graue Pixel eines Rings").
+Aufnahme Elza (Stand (1300,-2900) Blick -z, `W1,A0.1,W3.5,A0.1,W4,A0.1,W6`, Serie 100..520/20): Bild 140/180 Modal
+"Will you take the Prison Key?" mit dem RE2-Bild ITPS 31 (derselbe Bartschluessel), Log `[schluessel] PRISON KEY
+genommen: Item 0x42, Bit (9,83)`, `Prison Key genommen -> Flag (4,0xEC) = 1 (Zelle ROOM1211)`, Bild 260 Pinnwand leer,
+Bild 400 `[msgtext] room=10f1 id=4 "Several files from past cases.Nothing useful here."`; danach Inventar (START @321):
+Icon = RE2-Tile 31 (Bartschluessel) in der Item-Liste. Bild `K_belege/k2_nb1_aufnahme_inventar_10f1.png`.
+
+### 9.7 Tests am Endstand (Baum 0a2f02bc gebaut 05:09; danach nur Dossier/Belegbilder)
+* Riegel-Stand (ebc05a7e, hier erstmals gefahren): `integration_r38_itemorte` B3 >= 22 Pixel, B3K Sum|dL| >= 1300,
+  B3V >= 38 % von B2K, B4 >= 180, B4K >= 9500, B5 (neu: Parking Lot Key Skala 3) B5K >= 400 / 23000, B4V >= 33 %, V5 >= 45;
+  Auswerter `probe_r38_itemorte_kontrast` (C, Pixel + Sum|dL|, nur Werkzeug); `unit_r36_schluessel_raum/namen` auf
+  MD1 236 B / TIM 34848 B, Icon-Tile 31 (ohne CLUT-Index 0), ITPS-Block 31, Modal-Leser 0x42 > 4000 Bildpunkte.
+* Einzeln vorab: `^(unit_r38_itemorte|unit_r36_schluessel|unit_r37_feuerloescher)` -> `100% tests passed, 0 tests failed
+  out of 18` (unit_r38_itemorte_lage: `16 Pruefungen, 0 Fehler`, Prison Key Huelle x 132.57..144.49 y 78.35..84.23).
+* Gezielter Lauf (KEINE volle Suite; sauberer PATH wie local_build.sh, `-j 3 --timeout 600 --output-on-failure`,
+  05:09..05:28), -R woertlich = der 117er-Ausdruck der Abnahme 0 + `unit_r36_elza_unlock|integration_r36_elza_unlock`
+  (Prison Key an der Zelle 1211):
+  `^(unit_r38_itemorte|integration_r38_itemorte|unit_r37_feuerloescher|integration_r37_feuerloescher|unit_r36_schluessel|integration_r36_schluessel|unit_r37_kistenregel|integration_r37_kistenregel|unit_r36_kartenitems|integration_r36_kartenitems_bild|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_szenenleon_abgang10f0|unit_r36_klettern_10f0|unit_r22_10f0_figur|unit_1030_|unit_cam_1030_reentry|unit_r36_gegnerzahl_raum103|unit_r35_cut1150_montage_1030|unit_r34n_e_dokumente|integration_r34n_e_dokumente_bild|unit_aot_sce_census|integration_flag_census|integration_item_name_census|unit_r35_inhalt|unit_r35_inventar1050|integration_r35_inventar1050|unit_r34n_d_adaruf|unit_ada_eintritt_1050|unit_r27_ada_cutscene_1050|unit_r19_marke3_1050_c1_tiefe|unit_room1050_sicherung|unit_r37_sperre1050|integration_r37_sperre1050|unit_r36_story|integration_r36_story_leon|integration_r36_story_elza|unit_r21_discard_wegwerfen|unit_inv_|unit_item_|unit_itembox|unit_room1150_itembox|unit_r26_inventar|integration_r36_inventar|unit_r30_sicherung|integration_r30_sicherung|unit_r36_kartenbits|unit_1090_fire_pin|unit_1090_flame_out_pin|unit_1090_room_pin|unit_re2_room1090_ab|unit_r36_elza_unlock|integration_r36_elza_unlock)`
+  -> **`100% tests passed, 0 tests failed out of 119`** (Total Test time (real) = 1091.25 sec); darin
+  integration_r38_itemorte Passed 428.06 sec, integration_r37_feuerloescher 337.44, integration_r37_kistenregel 314.85,
+  integration_r36_story_elza 226.47, integration_r36_inventar 141.75, integration_r36_schluessel 81.87,
+  integration_r36_schluessel_befreiung 74.01, integration_r36_elza_unlock 40.51.
+* Die Framedumps dieses Laufs (`build/tests/integration/r38_itemorte_wd/lauf_a7443449_*`) mit dem eigenen Werkzeug
+  nachgerechnet: B2 55 / 3428, B3 27 / 1627, B4 217 / 11899, B5 491 / 28852, V3 (Leon Cut 6) 108 / 5607, **V5 (Elza
+  Cut 6) 56 / 2690** (Huelle x 81..98 y 69..75; Cabin Key vorher 29), V2/V4 (Cut 7) 0 — bitgleich mit 9.6.
+
+### 9.8 Nachbesserung 1 — je Mangel (Zusammenfassung)
+
+**M1 — Prison Key (Elza, ROOM10F1 Cut 5) an der Marke, aber nicht "gut sichtbar"**
+* Ursache: die Runde-36-Modellwahl RE2 "Cabin Key" (ROOM1050.RDT MD1 @0x001558) — ein grosser duenner Ring (Linie
+  1..1,5 Texel, 313 sichtbare Texel, Texel-Helligkeit Mittel 69,6 nahe am Kork ~63). Ort, Massstab-Regel und Licht waren
+  richtig; das Modell traegt zu wenig Flaeche und Kontrast fuer eine 11 x 9-Pixel-Marke in 7,6 m Abstand.
+* Messung vorher (Abnahme 0, mit eigenem Werkzeug bestaetigt 9.2): Skala 1 14 Pixel / Sum|dL| 502, Skala 3 112 / 3193,
+  Skala 4 215; Parking Lot Key 55 / ~3430 bzw. 491.
+* Beleg der neuen Wahl (9.3, Bytes selbst gelesen und hier an ROOM10F0.RDT @0x006F0 gegengeprueft):
+  `4e 05 02 31 .. 1f 00 01 00 26 00 04 a0` = Item_aot_set Item **0x1F** (Small Key), md1 4;
+  `@0x00706 2d 04 00 00 00 00 00 00 00 00 0a 00 10 00` = Obj_model_set Objekt 4, Attribut **0x0010** (flach; Handler
+  RE2 0x80055260 @0x8005530c `lh a1,12(s2)` -> @0x80055320 `sw a1,16(s1)`, Zeichner FUN_800363f0 @0x800365e8 `andi 0x10`).
+  Modell MD1 @0x001650 (236 B, md5 c5d49ef6...), TIM @0x0215BC (34848 B, md5 326b822b...), Icon ITEMALL.PIX Tile 31
+  @0x9150, Item-Bild ITPS.ITP Block 31 @0x5D000 = derselbe Bartschluessel (Runde-36-Regel "Modell und Bild passen
+  zusammen"); Untersuchen-Text unveraendert (Satzform = RE2 Small Key @0x800A11EF "I can open a / simple lock / with
+  this.", Bytes ab @0x800A11EF (Datei 0x919EF, davor `fe` = Ende des Vorgaengers) `00 25 00 3f 3d 4a 00 4b 4c 41 4a 00 3d fc 4f 45 49 4c 48 41 00 48 4b 3f 47 00 fc 53 45 50 44 00 50 44 45 4f 01 fe`
+  im RE2-Zeichensatz gelesen). Einziges RE2-Schluesselmodell ausser P. Room Key und Cabin Key, das flach steht UND dessen
+  Modell, Icon und Item-Bild denselben Schluessel zeigen (Tabelle 9.3: C. Panel Key Modell != Bild, W. Box Key in RE2
+  beleuchtet = im Raumlicht von 10F1 dunkel, Precinct/Platform Keys Modell != Bild).
+* Aenderung: `tools/r36_schluessel/schluessel_export.py` (QUELLEN prison -> ROOM10F0 @0x001650/@0x0215BC, ITEMALL/ITPS 31)
+  -> `gen/schluessel_r36.inc`; `tools/r38_itemorte/itemorte_export.py` (SCHLUESSEL prison -> Small Key; Massstab gegen die
+  GEZEICHNETE Huelle, 9.5) -> `gen/itemorte_r38_lage.inc` (rot (1024,0,0), s 5,3032) + `gen/itemorte_r38_md1.inc`; beide
+  .inc mit umgelenktem Ziel bitgleich reproduziert (9.4). Code unveraendert bis auf Kommentare (`schluessel_r36.c`
+  Beschreibungs-Herkunft, `re15_itemorte_r38.h` Licht-Beleg). Keine neuen Bits/Ids/Assets/Texte.
+* Messung nachher (9.6): Skala 1 **27 Pixel / Sum|dL| 1627** (Parking Lot Key 55 / 3428 -> 49 % / 47 %), Skala 3
+  **217 / 11899** (491 / 28852 -> 44 % / 41 %), Skala 4 **345 / 18015** (865 / 48354 -> 40 % / 37 %); |dL| je Pixel
+  93..97 % des Parking Lot Key (Cabin Key 49..58 %); aussen ueberall 0, Huelle in der Marke; sichtbar beim Hingehen bis
+  zum Stehen; Aufnahme, Item-Bild, Inventar-Icon passen zum Modell.
+* Riegel (integration_r38_itemorte, angehoben): B3 >= 22 Pixel, B3K Sum|dL| >= 1300, B3V >= 38 % des Parking Lot Key
+  (B2K), B4 (Skala 3) >= 180 Pixel, B4K >= 9500, B5K Parking Lot Key Skala 3 >= 400 / 23000, B4V >= 33 %, V5 (Cut 6)
+  >= 45 Pixel — der Cabin Key faellt durch jede dieser Schwellen (14 / 502 / 15 % / 112 / 3193 / 11 % / 29).
+
+### 9.9 OFFEN nach Nachbesserung 1 / Hinweise fuer die Integration
+* M1 erledigt (9.8). Bleibende, gemessene Grenze: der Small Key hat ~halb so viel Flaeche wie der Parking Lot Key
+  (Form Ring + Schaft; Breite = Marke voll; je Pixel gleicher Kontrast). Groesser ginge nur ueber die Nutzer-Marke hinaus.
+* Hinweis H1 der Abnahme 0 (kein Mangel, unveraendert): die Ausweich-Slots ROOM1030 Slot 20 und ROOM10F0/10F1 Slot 15
+  muessen bei der Integration frei bleiben (sonst bleibt der Original-Satz im Zonen-Slot: Gegenstand sichtbar, aber nicht
+  aufnehmbar; die Logzeile `[schluessel] ... Zone Slot 8` erschiene trotzdem). Heute frei (unit_r38_itemorte_raum).
+* H2 (Kommentar-Drift scd_room_setup.c) und H4 (neue Quelldatei itemorte_r38.c -> Android neu konfigurieren) wie in
+  Abschnitt 6; die Nachbesserung bringt keine neue Engine-Quelldatei (nur das Test-Werkzeug probe_r38_itemorte_kontrast.c).
+* Fuer den Nutzer neu: keine Assets (RE2-Bytes in gen/schluessel_r36.inc + gen/itemorte_r38_md1.inc gebacken), keine
+  Sprachdateien, keine neuen Texte; Bedienung unveraendert (vor die Pinnwand, Blick zur Wand, Aktionstaste).
