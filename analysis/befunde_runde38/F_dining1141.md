@@ -475,3 +475,75 @@ eigenen Modul-Commit 6ae7118b (0x43 als Schluessel, Tuer 1131 gesperrt), angepas
 - Ton-Mitschnitt gegen die Se_on-Takte: `python re15_port/tools/r38_dining/ton_mitschnitt.py <arbeitsordner des Laufs>`.
 - Druckzahlen je Abfrage: `re15_port/build/tests/unit/test_r38_dining1141.exe takt`.
 - Programme neu erzeugen/pruefen: `python re15_port/tools/r38_dining/programme_bauen.py [--pruefen]`.
+
+## 9. Nachbesserung 1 (nach Abnahme 0, 2026-10-17)
+Grundlage: `analysis/befunde_runde38/F_abnahme_0.md` (Maengel M1-M4). Die Messungen der Abnahme (E1a/E1b, E2, E5-E7, E10)
+werden NICHT wiederholt; ihre Werte sind hier die "Messung vorher". Belege unten selbst gelesen
+(`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`, RDT-Bytes per Python), BEVOR Code geaendert wurde.
+
+### 9.0 Stand / Fortschritt
+- Start: Kopf cde46d8f (Abnahme 0), Baum sauber, Bau = c6fe0fd0 (LOCAL-BUILD-OK, keine Quellaenderung seither).
+
+### 9.1 M1 — Hinweis an Roys Leiche direkt nach der 1021-Szene nicht erreichbar
+**Messung vorher (Abnahme E1a/E1b, nicht wiederholt):** nach der ECHTEN Szene 6 Drucke bei (-3803,-9601) ohne Nachricht;
+msg 40 erst nach Verlassen und Wiederbetreten.
+**RE-Beleg (ROOM1021.RDT, Bytes selbst gelesen):**
+- main00 @0x01DE2 `2c 05 03 41 00 00 d4 cc 74 dc 34 08 a0 0f ff 00 18 02 00 00` = Aot_set Slot 5 sce 3 (Begehzone
+  (-13100,-9100) 2100x4000) -> Ereignis 2 = sub02 (die Szene).
+- main00 @0x01E24 `06 00 3c 00` Ifel_ck, @0x01E28 `21 03 5f 01` Ck(3,0x5F)==1, @0x01E2C
+  `2c 06 03 31 00 00 0e ed 8c d8 e8 03 e8 03 ff 00 18 06 00 00` = Aot_set Slot 6 sce 3 sat 0x31 (Aktionstaste),
+  Rechteck (-4850,-10100) 1000x1000 -> Ereignis 6 = sub06 (Roys Leiche); @0x01E40 Obj_model_set obj 6 = die Leiche als
+  Prop (-4488,0,-10684) fuer den Wiederbetritt.
+- sub02 (die Szene) @0x01FD8..@0x021BD: Set(4,0x60)=0 @0x01FD8, Set(4,0xF0)=1 @0x01FE0, Set(3,0x5F)=1 @0x01FE4,
+  Aot_reset Slot 5 aus @0x01FE8 `46 05 00 00 ..`; Schluss @0x021B2 `3c 01` Cut_auto 1, @0x021B4 `22 02 07 00`,
+  @0x021B8 `22 01 1b 00`, @0x021BC `01 00` Evt_end. Walk aller Opcodes: in sub02 KEIN Aot_set/Aot_reset auf Slot 6.
+  => Original-Mechanik: die Leichen-Zone entsteht nur beim Raumaufbau (main00) unter Ck(3,0x5F); im Besuch der Szene
+  gibt es sie nicht. Im Original nur "He's dead. Poor Roy..." (Zierde) — im Port traegt die Zone den Hinweis, der den
+  Spieler nach 1011 fuehrt, er muss also direkt nach der Szene erreichbar sein.
+- Gosub-/Rueckkehr-Semantik (PSX.EXE): Gosub LAB_8003fbe8 @0x8003fc04 `sw v1,324(v0)` (Ruecksprung pc+2 je Ebene),
+  @0x8003fc2c..@0x8003fc44 Ziel = Sub-Tabelle des GELADENEN RDT (DAT_800b3f70), @0x8003fc3c Ebene+1; Evt_end
+  FUN_8003f1f0 @0x8003f1fc `bne v1,zero` -> Ebene > 0: @0x8003f218 `lw v0,324(v0)` / @0x8003f220 `sw v0,28(a1)`
+  (zurueck zum Aufrufer), @0x8003f230 Ebene-1; Ebene 0: @0x8003f204 Faden aus. Ein Programm `18 02` + Zeilen + `01 00`
+  laeuft also sub02 AUS DEM RDT (Anker anderer Spuren in sub02 — elza_r36.c @0x020CE/@0x020D6, Runde 38 Spur H
+  @0x020B2 — bleiben gueltig) und danach die eigenen Zeilen.
+
+### 9.2 M2 — Tuertext 1131 "The door is marked "Dining Room"" widerspricht dem Schild "Briefing Room"
+**Messung vorher (Abnahme E2, Bild F38abn0/e2_tuer_zu.png selbst angesehen):** ueber genau dieser Doppeltuer haengt
+im Hintergrundbild das Schild "Briefing Room"; msg 40 behauptet ein Schild "Dining Room".
+**RE-Beleg (RE2 Retail, info/re2leon/SLUS_007.48, Gruppe 0x100: Offsettabelle @0x8009F368, Basis @0x8009EFCC):** der
+Tuer-Handler LAB_80051514 waehlt den Verschlossen-Text als key_type - 0x4C (@0x800516b4 `addiu a2,s0,-0x4c`,
+Q_schluessel.md 2.2). Unser Schluesselmodell ist RE2-Item 0x5B (Herz-Schluessel) -> Text 0x5B-0x4C = **0x0F
+@0x8009F230 "It's locked." [Seite] "A heart is etched under / the key hole."** (die anderen Wappen-Schluessel: 0x0D
+spade, 0x0E diamond, 0x10 club; 0x13 "The door is marked "Power Room"" gehoert zum P. Room Key 0x5F). Das ist RE2s
+eigener Text fuer genau die Tuer, die dieser Schluessel oeffnet — er nennt kein Schild, widerspricht dem Bild also nicht.
+
+### 9.3 M3 — Johns Abgangslauf schiebt Elza
+**Messung vorher (Abnahme E5/E6/E7/E10, nicht wiederholt):** E10 (-7418,-14952) -> (-8132,-12820) sichtbar in Cut 7
+(Durchdringung, Rutschen); E5 (-7342,-4062) -> (-6488,-714); E6 (-7263,-1030) -> (-6503,-718); E7 (-7332,-718) ->
+(-6493,-701). Gleichgewichtsabstand nach dem Schieben 858..902.
+**RE-Beleg:**
+- Koerper-Schub FUN_8002aec4 (PSX.EXE): @0x8002aef8 `lw a0,0(s3)` / @0x8002aefc `lw v1,0(s2)` (Wort 0 beider
+  Figuren), @0x8002af04 `or v0,a0,v1`, @0x8002af08 `andi v0,v0,0x2`, @0x8002af0c `bne v0,zero,0x8002af30` ->
+  @0x8002af30 `j 0x8002b464` / `addu v0,zero,zero` = kein Schub, wenn EINE der beiden Bit 0x2 traegt (Port:
+  enemy_ai_common.c re15_body_push). Original-Setzer von Bit 0x2: Spinne beim Auftauchen @0x801163dc, Kriecher
+  @0x80104134, Kraehe @0x80114acc (alle Overlay-Code).
+- Wort 0 per Skript: Member_set LAB_800410b8 (@0x800410d0 `lbu a1,1(v0)` Member-Id, @0x800410d4 `lh a2,2(v0)` Wert,
+  @0x800410e8 pc+4) -> FUN_8004116c Tabelle @0x80010c8c, Id 6 -> @0x800411c4 `j 0x80041230` / @0x800411c8
+  `sw a2,0(a0)` = Wort 0 der Arbeitsfigur. RE1.5-Form `34 06 lo hi`: ROOM11B0 sub06 @0x01706 `34 06 01 02`,
+  ROOM20A0 sub08 @0x01EDA `34 06 11 00` (dort auf Objekten).
+- Radien: Spieler-Kasten PSX.EXE @0x80073e94 `00 00 06 fa 00 00 c2 01 fa 05 c2 01` (+6 = 450); John (Typ 0x49) INIT
+  STAGE1.BIN @0x8011ddd8 `lw v0,6148(v0)` (*(0x80121804) = 0x801217f8) / @0x8011dde0 `sw v0,120(v1)` (+0x78 =
+  Kasten) — Kasten @0x801217f8 `00 00 06 fa 00 00 c2 01 fa 05 c2 01` (+6 = 450). Summe 900 = radSum
+  (@0x8002b164); gemessenes Gleichgewicht 858..902 (E5-E7) passt.
+- Lage-Abfrage per Skript: Member_cmp LAB_80041290 @0x800412a8 `lhu s0,2(v0)` (Low-Byte Member-Id, High-Byte
+  Operator @0x800412c8 `sra s0,s0,8`), @0x800412ac `lh s1,4(v0)` Wert, @0x800412bc `jal 0x80041358` GET; GET-Tabelle
+  @0x80010cfc: Id 0 -> @0x80041384 `lw v0,52(a0)` (+0x34 = x), Id 2 -> @0x8004139c `lw v0,60(a0)` (+0x3c = z);
+  Operatoren @0x80010cdc: 2 = `>=` (@0x8004130c `slt v0,v1,s1` / @0x80041314 `xori v0,v0,1`), 4 = `<=` (@0x80041320
+  `slt v0,s1,v1` / @0x80041328 `xori`). Form `3e 00 <id> <op> lo hi`: ROOM1040 sub05 @0x018C0 `3e 00 0c 06 80 00`.
+- While mit verketteter Bedingung LAB_8003f6f4: @0x8003f74c `lh s2,2(a2)` Blocklaenge, @0x8003f790 `lbu v1,-3(a2)`
+  Kettenlaenge (pc+1), @0x8003f7ac erstes Glied ueber die Tabelle 0x800744a8, @0x8003f7cc `lhu s0,0(a2)` Verbinder,
+  @0x8003f7fc `beq s0,zero` -> @0x8003f80c `and s2,s2,v0` (UND) / @0x8003f808 `or s2,s2,v0` (ODER), @0x8003f810
+  bis Kettenende; @0x8003f818 falsch -> pc = Blockende. Form `0f 04 08 00` + Ck + `02 00` + `10 00`: ROOM1141 sub03
+  @0x00FA8 (Blocklaenge = Kette + Rumpf + Ewhile).
+- Kamera Cut 7: ROOM1141.RDT Satz @0x00140 (RDT-Kopf +0x24 = 0x60, 32 B je Cut): Lage (-7465,-3024,-9613) (pos_z
+  @0x0014C `73 da ff ff`), Ziel (-4265,2209,-27792) — blickt nach Sueden; was noerdlich von z -9613 liegt, ist hinter ihr.
