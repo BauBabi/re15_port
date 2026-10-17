@@ -22,7 +22,11 @@ Punkte (Wortlaut AUFTRAG.md Runde 38 + Nachtrag 14 Runde 37):
   (7fa09458); Laeufe int_d2/int_d3 (echter Tuerweg 1131 -> 1141 -> 1171), int_wzl (W/Z), int_l3 (Leon 1140), v1011.
 - **Fortsetzung 4 (2026-10-17, nach Sitzungslimit 23:45):** Endstand 18e09882 gebaut (`configure` + `build`,
   LOCAL-BUILD-OK, 730/730). Offen laut Auftrag: Framedump-Pruefung "John erscheint in keinem Bild ohne vorherige
-  Bewegung ins Bild" als Riegel (Abschnitt 4.3), gezielte Tests am Endstand, Abschluss.
+  Bewegung ins Bild" als Riegel, gezielte Tests am Endstand, Abschluss.
+  Dabei gefunden und behoben: Kamera blieb nach Johns Abgang auf der Szenen-Kamera Cut 7 (Abschnitt 4.3, Cut_old);
+  zwei Riegel anderer Runden waren seit dem eigenen Modul-Commit 6ae7118b rot (unit_r26_inventar, unit_r30_tuer_
+  verschlossen; Abschnitt 3.1/5). Neu: Riegel integration_r38_dining1141_s (Framedump, Abschnitt 4.4). Endstand
+  gezielt gruen: 89/89 (Abschnitt 5).
 
 ## 1. Messung vorher (Stand e2cc7673, echte exe)
 
@@ -369,6 +373,8 @@ Johns Pixeln magenta `F_belege/n4_sicht_john_framedump.png`):
 - Ausgabe: "R0 Bilder: 4451 verglichen (Bild 0..4450), 0 fehlen", "R1 vor dem Hochfahren in keinem Bild sichtbar
   (0 Verstoesse)", "R2 1 mal ins Bild gekommen, jedes Mal mit Bewegung (0 Verstoesse)", "R3 2 mal aus dem Bild gegangen,
   jedes Mal mit Bewegung, kein Parken/Sprung im Bild (0 Verstoesse)".
+- Wiederholung im Endlauf (ctest, Lauf `lauf_9dbae2ef`, Stand cfe5394e): Messzeilen beider A-Laeufe bitgleich, sicht.txt
+  (Pixel je Bild) bitgleich zu e7035a6f — sichtbar in 2055 Bildern, zuerst F1090, zuletzt F3352; Test gruen (546 s).
 
 ## 5. Tests
 Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
@@ -385,6 +391,23 @@ Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
 | integration_r38_dining1141_s | Nachtrag 2 per Framedump (Fortsetzung 4): zwei Laeufe des Weges D (mit / ohne Johns Bild), JEDES Bild von 1141 zurueckgelesen und verglichen, Regeln R0-R3 (Abschnitt 4.4) | 4 |
 Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel): `test_r38_dining1141 takt`
 (Druckzahlen je Abfrage fuer die Wegplaene).
+
+**Endstand gezielt (Fortsetzung 4, 2026-10-17, Stand cfe5394e + Dossier, gebaut mit local_build.sh; keine volle Suite):**
+eigene Riegel + die Gruppen jedes beruehrten Moduls (Gegenstand/Inventar/Wegwerfen/Icon/ITPS: item_*, inv_*, r21/r26/
+r35/r36/r37-Inventar und -Schluessel, kartenbits/kartenitems; SCD/AOT: scd_*, aot_*, npc_scd_pose, prop_scd_pc_advance,
+r35_inhalt_*; Raeume 1011/1021/1140/1141: r37_roy_szene*, room1140_*, r34n_a_rolltor, r37_elzaems_elza1141; Ton/Stimme:
+audio_*, se_*, synchro_stimme, voice_ausreden; Tueren: r30_tuer*, r33_tuer1120_*, door_seq; Nachrichten: msg_dialog,
+action_msg_gate), `ctest --test-dir re15_port/build -R "<Ausdruck>" -j3 --timeout 3600 --output-on-failure`:
+
+    -R "r38_dining1141|^(unit_r36_kartenbits|unit_r36_kartenitems|unit_r36_schluessel_.*|unit_r36_inventar|unit_r36_elza_unlock|unit_r36_elza_bank|unit_r36_szenenleon_tuer|unit_r26_inventar|unit_r21_discard_wegwerfen|unit_item_icon|unit_item_use|unit_item_modal|unit_item_stack_press|unit_inv_fsm|unit_inv_grant|unit_pri_inventar_riegel|unit_r35_inventar1050_.*|unit_r37_itemband|unit_r37_roy_szene1011|unit_r37_roy_szene1021|unit_room1140_.*|unit_r34n_a_rolltor|unit_r35_inhalt_.*|unit_scd_.*|unit_aot_.*|unit_npc_scd_pose|prop_scd_pc_advance|unit_se_bank_routing|unit_se_voice_machine|unit_synchro_stimme|unit_audio_.*|unit_voice_ausreden|unit_r30_tuerse_bank|unit_r30_hinweis_bank|unit_r30_tuer_.*|unit_r33_tuer1120_.*|unit_door_seq|unit_msg_dialog|unit_action_msg_gate|integration_r37_roy_szene1011|integration_r37_roy_szene1021|integration_r37_elzaems_elza1141|integration_r36_schluessel|integration_r36_schluessel_befreiung|integration_r36_inventar|integration_item_name_census)$"
+    100% tests passed, 0 tests failed out of 89
+    Total Test time (real) = 640.97 sec
+
+Darin die 12 eigenen: unit_r38_dining1141_{texte,programme,leiche1021,schluessel1011,tuer1131,phase_h,leon1140} und
+integration_r38_dining1141_w (181,7 s), _z (113,4 s), _d (270,4 s), _l (41,6 s), _s (546,5 s). Der erste Lauf derselben
+Modul-Gruppen (77 Unit-Tests, vor dea65e67) war 75/77: unit_r26_inventar (B3a/B3b/B4: 9 statt 8 Schluessel-Namen) und
+unit_r30_tuer_verschlossen ("ROOM1131 Platz 0 (keine Tabellen-Nachricht): 1 Tuer-Toene") — beide verursacht durch den
+eigenen Modul-Commit 6ae7118b (0x43 als Schluessel, Tuer 1131 gesperrt), angepasst in dea65e67 (Abschnitt 3.1).
 
 ## 6. OFFEN
 - Keine offenen Mechanik-Punkte der Spur. Zur Integration (VERTRAG 1.5): ROOM1011 — Spur G (Tagebuch beim liegenden Roy,
@@ -421,6 +444,10 @@ Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel
   hoert sie auf- und zugehen, danach springt die Kamera auf Elzas Ansicht zurueck (Fortsetzung 4: vorher blieb sie auf
   der Szenen-Kamera stehen und Elza lief aus dem Bild); die Dachtuer ist dann offen und fuehrt zu John aufs Dach
   (ROOM1171).
+- **Kein Hereinploppen (Nachtrag 2), Bild fuer Bild geprueft:** in allen 4451 Bildern des Besprechungsraums (Eintritt
+  bis Elza an der Dachtuer) ist John zuerst hinter dem geschlossenen Rolladen unsichtbar, wird ab dem Hochfahren von
+  unten nach oben sichtbar (erst die Fuesse unter der Rolladen-Kante) und verlaesst das Bild zweimal laufend am unteren
+  Rand — er erscheint und verschwindet nirgends ohne Bewegung (Bildbogen `F_belege/n4_sicht_john_framedump.png`).
 - **Riegel der Dachtuer:** John hat ihn auf der Gangseite vorgelegt und oeffnet ihn beim Hinausgehen. "You've opened
   the lock." kommt in diesem Ablauf deshalb nicht mehr (sonst oeffnete Elza einen Riegel, durch den John eben gegangen
   ist).
