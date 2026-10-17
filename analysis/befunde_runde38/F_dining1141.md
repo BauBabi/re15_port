@@ -161,7 +161,7 @@ genau ein solches Auftauchen und ist ersetzt (6f1890c5):
 | John kommt heraus | Musik aus (Form sub01 @0x00C06), Flags sub02 @0x00C18/@0x00C1C/@0x00C20, Gorillas geparkt (sub00 @0x00B1A..@0x00B41), John RUN an seinen Platz + Gosub sub04 (Form sub02 @0x00F8E/@0x00F96) | |
 | Szene | sub02 @0x00CD4..@0x00FA1 (Elza an ihren Platz mode 4, Drehungen, msg 2 -> Port-Nachricht 40 ... msg 11, Gorillas durch die Fenster, John in die Ecke) — Cut_chg 0 @0x00D08/@0x00E80 -> 5; 12 Ziele umgesetzt: Elza (-7200,-15500) -> (-8000,-10250), John (-6750,-13350) -> (-5800,-10250), Blickpunkte (-1300,-15500)/(-850,-13350) -> Platz + (5900,0) | Cut 0 (893,-3929,-11697) -> (-17202,3679,-26058) blickt nach WSW auf die Doppeltuer; Cut 5 (-7266,-3806,-17278) -> (-3224,2605,2675) blickt nach NNO auf Rolladen + Gemaelde. Plaetze PORT-WAHL: Elza = Ostkante/z-Mitte der Gemaelde-Zone (Aot slot 3 @0x00B88: x -9000..-8000, z -11000..-9500), John 2200 oestlich = Original-Abstand (2196). Blickpunkt-Regel aus dem Original: (-1300,-15500) = (-7200,-15500)+(5900,0), (-850,-13350) = (-6750,-13350)+(5900,0) |
 | Tuersperre | VOR der Rueckgabe der Steuerung (@0x00F4E): Aot_reset Slot 0 und Slot 2 (Riegel im Rechteck der Dachtuer) -> msg 41; warten, bis sub01 (4,0xF2) loescht | Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`; Slot 1 ist bei zu Riegel sce 0 (main00 @0x00A7A) |
-| Johns Abgang | Pad-Sperre + Balken, Cut 7 (Blick nach Sueden), John RUN zum Gang-Ausgang und vor die Dachtuer (er laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand), DOOR1A auf/zu im Off, geparkt, (9,67)=1; Riegel-Zustand wie nach sub05 (@0x00FC8..@0x00FD5 ohne Nachricht, @0x00FDC), Slot 0 wieder Tuer; zum Schluss Cut_old + Cut_auto zurueck auf Elzas Kamera (Fortsetzung 4, Abschnitt 4.3) | Cut 7 (-7465,-3024,-9613) -> (-4265,2209,-27792); DOOR1A = tuer_zuordnung.inc S064 ROOM1141 Slot 1; `2a 00 3c 01` Form ROOM1150 @0x010F2 |
+| Johns Abgang | (Nachbesserung 1 M3, Abschnitt 9: Doppeltuer frei ab dem Tod der Gorillas; Warten, solange Elza in Johns sichtbarer Bahn steht; John mit Wort-0-Bit 0x2 = kein Koerper-Schub) Pad-Sperre + Balken, Cut 7 (Blick nach Sueden), John RUN zum Gang-Ausgang und vor die Dachtuer (er laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand), DOOR1A auf/zu im Off, geparkt, (9,67)=1; Riegel-Zustand wie nach sub05 (@0x00FC8..@0x00FD5 ohne Nachricht, @0x00FDC), Slot 0 wieder Tuer; zum Schluss Cut_old + Cut_auto zurueck auf Elzas Kamera (Fortsetzung 4, Abschnitt 4.3) | Cut 7 (-7465,-3024,-9613) -> (-4265,2209,-27792); DOOR1A = tuer_zuordnung.inc S064 ROOM1141 Slot 1; `2a 00 3c 01` Form ROOM1150 @0x010F2 |
 | Riegel | Ereignis 5 hat KEIN Port-Programm mehr (Original sub05). John oeffnet ihn beim Abgang; danach ist die Dachtuer offen | Begruendung: John hat ihn auf der Gangseite vorgelegt; geht er hinaus, kann er ihn nicht wieder vorlegen — ein "You've opened the lock." danach waere ein neues Logikloch |
 
 ### 3.1 Dateien
@@ -201,6 +201,12 @@ genau ein solches Auftauchen und ist ersetzt (6f1890c5):
 | Klopf-Takt | 30/30/90/90 Bilder | RE2 ROOM1060 sub05 +0x2E/+0x3E/+0x58/+0x5E |
 | Port-Baenke | 0x3B Rolladen (ROOM1131 snd0), 0x3C Klopfen (KLOPF1060), 0x3D Hilferuf | Abschnitt 2.1/2.5 |
 | Ende des Abgangs | `2a 00` Cut_old + `3c 01` Cut_auto 1 | Form ROOM1150 @0x010F2..0x010F5; FUN_8004032c @0x8004033c; RVD 1141 Gruppe 7 nur Anker (Abschnitt 4.3) |
+| 1021 Szene (Nachbesserung 1 M1) | Ereignis 2 -> SZENE1021 = Gosub sub02 + Aot_set Slot 6 | main00 @0x01DE2 (Ereignis 2), @0x01E2C (Zone), Gosub @0x8003fc04 |
+| 1131 msg 40 (Nachbesserung 1 M2) | RE2 Text 0x0F "It's locked. / A heart is etched under / the key hole." | RE2 @0x8009F230, key_type - 0x4C @0x800516b4 |
+| Koerper-Radien (Nachbesserung 1 M3) | 450 + 450 = 900 | PSX.EXE @0x80073e94 +6, STAGE1.BIN @0x801217f8 +6 (INIT @0x8011dde0), radSum @0x8002b164 |
+| Bildgrenze Cut 7 fuer John | z -9775 | gemessen Lauf e7035a6f F3352 (-9975, 945 px) / F3353 (-9775, 0 px) |
+| Johns sichtbare Bahn (Abgang wartet) | x -8450..-6450, z -22400..-8875 | Ecke @0x00F8E (-7550,-21500), GANG_X -7350, +-900, Nordrand -9775+900 |
+| John Wort 0 beim Abgang | 0x0003 (Bit 0x2 = kein Schub) | Member_set Id 6 @0x800411c8, FUN_8002aec4 @0x8002af04-@0x8002af0c |
 | Schnitt-Schwelle des Werkzeugs `sicht` (kein Spielverhalten) | 10,0 (mittlere Abweichung je Kanal) | gemessen Lauf e7035a6f: Kamerawechsel 13,2..38,5, im Spiel sonst <= 5,3 (Abschnitt 4.4) |
 
 ## 4. Messung nachher
@@ -388,6 +394,11 @@ Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
 | unit_r38_dining1141_phase_h | John ab Bild 0 hinter dem Rolladen, in keinem Cut ausser 5/6 im Bild, Takt 30/30/90/90, keine Nachricht, "ja", Rolladen-Ton, Szene, keine Spruenge, Sperre msg 41, Abgang in Cut 7 ausserhalb des Bildes, Kamera danach zurueck auf den vorigen Cut + Automatik (Fortsetzung 4), Riegel/Tueren, 1171, Wiederbetreten | 2, 4 |
 | unit_r38_dining1141_leon1140 | Leon: 0x3B 0x0C/0x0A/0x0B in der 1131-Folge, Abstand Sleep 15, Rolladen faehrt | 3 |
 | integration_r38_dining1141_w/z/d/l | echte exe: W 1021->1011->1021, Z 1131 zu, D 1131->1141->1171 (Zustands-Log: John ab Bild 0, kein Sprung, Parken hinter Cut 7, Kamera verlaesst Cut 7 danach), L Leon 1140 | 1-4 |
+| unit_r38_dining1141_szene1021 | Nachbesserung 1 M1: echte 1021-Szene im Engine-Weg, danach Roys Leiche im SELBEN Besuch -> msg 40 | 1, 2 |
+| unit_r38_dining1141_abgang | Nachbesserung 1 M3: Johns Abgang mit Elza an sechs Lagen (E10/E5/E6/E7 der Abnahme + knapp neben der Bahn + neben John): nie verschoben, im Bild nie naeher als 900, in der Bahn wartet der Abgang, Doppeltuer frei | 4 |
+| unit_r38_dining1141_weg1131 | Nachbesserung 1 M3: Elza geht waehrend des Wartens hinaus -> 1131 setzt (9,67)/(4,0xC3), zurueck: kein John, Dachtuer offen | 4 |
+| integration_r38_dining1141_r | Nachbesserung 1 M1 an der exe: echte Szene, msg 40 im selben Besuch (1021 nur einmal geladen) | 1, 2 |
+| integration_r38_dining1141_a | Nachbesserung 1 M3 an der exe: Elza auf Johns Bahn -> John wartet; sie geht in den Dachgang -> Abgang, Elza waehrend Cut 7 unverrueckt | 4 |
 | integration_r38_dining1141_s | Nachtrag 2 per Framedump (Fortsetzung 4): zwei Laeufe des Weges D (mit / ohne Johns Bild), JEDES Bild von 1141 zurueckgelesen und verglichen, Regeln R0-R3 (Abschnitt 4.4) | 4 |
 Dazu `unit_r36_kartenbits` (k_port[] traegt 64/66/67). Messwerkzeug (kein Riegel): `test_r38_dining1141 takt`
 (Druckzahlen je Abfrage fuer die Wegplaene).
@@ -430,17 +441,20 @@ eigenen Modul-Commit 6ae7118b (0x43 als Schluessel, Tuer 1131 gesperrt), angepas
   John hinaus, kann er ihn von aussen nicht wieder vorlegen. Umgesetzt ist der Weg durch die Dachtuer (beide Texte
   verlangen ihn; ein danach wieder verriegeltes "You've opened the lock." waere ein neues Logikloch): John oeffnet den
   Riegel beim Hinausgehen (sub05-Zeilen @0x00FC8..@0x00FD5 ohne Nachricht + @0x00FDC), Elza findet die Tuer offen.
-- Beobachtung aus Lauf int_wzl/Z (`F_belege/n2_tuer1131_zu.png`): ueber der Tuer in ROOM1131 haengt im Hintergrundbild
-  das Original-Schild "Briefing Room"; die Texte folgen dem Nutzer-Wortlaut "Dining Room" (Hinweis und Schluesselname).
+- (erledigt in Nachbesserung 1, M2) Ueber der Tuer in ROOM1131 haengt im Hintergrundbild das Original-Schild "Briefing
+  Room"; der Tuertext nennt jetzt kein Schild mehr, sondern RE2s Herz-Text (Abschnitt 9.2). "Dining Room" steht weiter
+  dort, wo der Nutzer es vorgegeben hat: Roys Schluesselanhaenger (Hinweis) und der Schluesselname.
 
 ## 7. Fuer den Nutzer
-- **Ablauf Elza (neu):** Roys Leiche in ROOM1021 zeigt nach "He's dead. / Poor Roy..." den Hinweis "There's an empty key
+- **Ablauf Elza (neu):** Roys Leiche in ROOM1021 zeigt — direkt nach der Szene (Nachbesserung 1) — nach "He's dead. / Poor Roy..." den Hinweis "There's an empty key
   tag on his belt. / It reads "Dining Room"." — in ROOM1011 liegt an Roys alter Liegestelle der **Dining Room Key**
-  (RE2-Herz-Schluessel) — die Tuer ROOM1131 -> Besprechungsraum ist bis dahin verschlossen ("It's locked. / The door is
-  marked "Dining Room".") — im Besprechungsraum hoert man hinter dem geschlossenen Notrolladen Klopfen und Johns "Help me
+  (RE2-Herz-Schluessel, "It's in the shape of a heart.") — die Tuer ROOM1131 -> Besprechungsraum ist bis dahin
+  verschlossen ("It's locked." / "A heart is etched under the key hole." — RE2s eigener Text fuer die Tuer des
+  Herz-Schluessels; das Schild ueber der Tuer zeigt "Briefing Room", deshalb nennt der Text kein Schild) — im Besprechungsraum hoert man hinter dem geschlossenen Notrolladen Klopfen und Johns "Help me
   out." mit der Kampfmusik des Raums — das Gemaelde ("There's a switch below.") hebt den Rolladen, John steht dahinter
   und kommt heraus, dann direkt "Are you okay? What's happened?" — solange die Gorillas leben, sagt jede Tuer "I cannot
-  leave him alone with those monsters." — danach laeuft John (Kamera Blick nach Sueden) aus dem Bild zur Dachtuer, man
+  leave him alone with those monsters." — danach ist die Doppeltuer frei; steht Elza auf Johns Weg, wartet er, bis sie
+  zur Seite geht, und er schiebt sie nirgends (Nachbesserung 1) — dann laeuft John (Kamera Blick nach Sueden) aus dem Bild zur Dachtuer, man
   hoert sie auf- und zugehen, danach springt die Kamera auf Elzas Ansicht zurueck (Fortsetzung 4: vorher blieb sie auf
   der Szenen-Kamera stehen und Elza lief aus dem Bild); die Dachtuer ist dann offen und fuehrt zu John aufs Dach
   (ROOM1171).
@@ -472,6 +486,9 @@ eigenen Modul-Commit 6ae7118b (0x43 als Schluessel, Tuer 1131 gesperrt), angepas
   `ctest --test-dir re15_port/build -R "^integration_r38_dining1141_s$" --timeout 3600 --output-on-failure`; nur das
   Werkzeug auf zwei vorhandene Laeufe: `re15_port/build/tests/unit/test_r38_dining1141.exe sicht <laufA> <laufB> sicht_`
   (schreibt `<laufA>/sicht.txt`).
+- Nachbesserung 1: `ctest --test-dir re15_port/build -R "^unit_r38_dining1141_(szene1021|abgang|weg1131)$"` (Engine-Weg,
+  Sekunden) und `-R "^integration_r38_dining1141_(r|a)$"` (exe); Programme mit Listing `python re15_port/tools/r38_dining/
+  programme_bauen.py` (SZENE1021, BEFREIUNG +0x0402..).
 - Ton-Mitschnitt gegen die Se_on-Takte: `python re15_port/tools/r38_dining/ton_mitschnitt.py <arbeitsordner des Laufs>`.
 - Druckzahlen je Abfrage: `re15_port/build/tests/unit/test_r38_dining1141.exe takt`.
 - Programme neu erzeugen/pruefen: `python re15_port/tools/r38_dining/programme_bauen.py [--pruefen]`.
