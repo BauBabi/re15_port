@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 04:55: ⛔ ZWEITES SITZUNGSLIMIT ~23:45 (Reset 02:00) brach alle Laeufe ab; DuckStation PID 33976 beendet, EnableGDBServer zurueck auf false (BOM entfernt). Reste gesichert (wip UNGEPRUEFT: affen3, itemorte, montage, npckante, rolltor20a0, spinnen, zopf; Abnahme-1-Teilberichte V, T). Lehre: 15 parallele Laeufe erschoepfen das Fenster in ~2,5 h, die meisten Bauten brechen ab -> jetzt hoechstens 8 gleichzeitig. Neu gestartet: V wf_9f166cb7-bd0 / G wf_fef4a19f-77f / T wf_7931fdbe-adb (Resume, Abnahme 1), U wf_ff1d4812-6d4 (Abnahme 0), K wf_02f9bc41-f8f / B wf_2545408e-a2b (Nachbesserung 1 mit stand), F wf_356a3960-7df / A wf_283a8270-fcf (Bau-Abschluss). Warten: W, R, S, D, M, N, O.
 * 2026-10-16 23:42: Zeitstempel 22:20-23:38 nach den Commit-Zeiten berichtigt (vorher geschaetzt, bis zu 1,5 h daneben).
 * 2026-10-16 23:38: Integration H/I gruen (168/168 gezielt), Baeume elzatoene/heliport1171 entfernt.
 * 2026-10-16 23:20: Integration P gruen (53/53), Baum r37_masken36 entfernt. H gemergt (scd_vm.c beide Seiten, 2a8b9abf), I gemergt (main.c Include beide Seiten, e10d9efb), Bau OK, gezielte Tests H/I laufen.
