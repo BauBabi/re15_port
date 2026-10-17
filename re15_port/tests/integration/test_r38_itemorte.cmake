@@ -23,7 +23,7 @@ cmake_minimum_required(VERSION 3.16)
 #   O         ROOM1050 (Leon): kein Loescher mehr
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r37_feuerloescher_karte> -DRE15_BILD_TOOL=<probe_r34n_e_bild>
-#               -DWORKDIR=<dir> -P test_r38_itemorte.cmake
+#               -DRE15_KONTRAST_TOOL=<probe_r38_itemorte_kontrast> -DWORKDIR=<dir> -P test_r38_itemorte.cmake
 # =============================================================================
 foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_BILD_TOOL RE15_KONTRAST_TOOL)
     if(NOT ${_v} OR NOT EXISTS "${${_v}}")
@@ -204,11 +204,11 @@ pruef(B3 _b3 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj
 k_lauf(b3_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd}" _b3o)
 k_bild(B3 b3_mit b3_ohne 131 75 145 87 22)
 # B3K "gut sichtbar" bei Skala 1 (Nachbesserung 1): RE2 Small Key (ROOM10F0.RDT MD1 @0x001650, flach @0x00706) gemessen
-# 2026-10-16 27 Pixel, Sum|dL| 1627 (Cabin Key vorher 14 / 502), Parking Lot Key 55 / 3428 -> 47 %.
+# 2026-10-17 (Massstab 5,3032, gen/itemorte_r38_lage.inc) 27 Pixel, Sum|dL| 1627 (Cabin Key vorher 14 / 502), Parking Lot Key 55 / 3428 -> 47 %.
 k_kontrast(B3K b3_mit b3_ohne 131 75 145 87 22 1300 _dl_prison1)
 k_verhaeltnis(B3V "${_dl_prison1}" "${_dl_park1}" 38)
 # B4: der Prison Key in der Fenstergroesse, in der gespielt wird — RE15_WINDOW_SCALE=3 (960x720, 3D in Fensteraufloesung,
-# render_pc.c Fenster = groesste ganze Skala <= 90 % des Bildschirms). Fenster = B3-Fenster x 3. Gemessen 2026-10-16
+# render_pc.c Fenster = groesste ganze Skala <= 90 % des Bildschirms). Fenster = B3-Fenster x 3. Gemessen 2026-10-17
 # (Small Key): 217 Pixel, Sum|dL| 11899, Huelle x 397..432 y 236..250, aussen 0 (Cabin Key vorher 112 / 3193).
 k_lauf(b4_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4)
 k_lauf(b4_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4o)
