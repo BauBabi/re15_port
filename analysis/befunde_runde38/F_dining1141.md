@@ -157,7 +157,7 @@ genau ein solches Auftauchen und ist ersetzt (6f1890c5):
 | John kommt heraus | Musik aus (Form sub01 @0x00C06), Flags sub02 @0x00C18/@0x00C1C/@0x00C20, Gorillas geparkt (sub00 @0x00B1A..@0x00B41), John RUN an seinen Platz + Gosub sub04 (Form sub02 @0x00F8E/@0x00F96) | |
 | Szene | sub02 @0x00CD4..@0x00FA1 (Elza an ihren Platz mode 4, Drehungen, msg 2 -> Port-Nachricht 40 ... msg 11, Gorillas durch die Fenster, John in die Ecke) — Cut_chg 0 @0x00D08/@0x00E80 -> 5; 12 Ziele umgesetzt: Elza (-7200,-15500) -> (-8000,-10250), John (-6750,-13350) -> (-5800,-10250), Blickpunkte (-1300,-15500)/(-850,-13350) -> Platz + (5900,0) | Cut 0 (893,-3929,-11697) -> (-17202,3679,-26058) blickt nach WSW auf die Doppeltuer; Cut 5 (-7266,-3806,-17278) -> (-3224,2605,2675) blickt nach NNO auf Rolladen + Gemaelde. Plaetze PORT-WAHL: Elza = Ostkante/z-Mitte der Gemaelde-Zone (Aot slot 3 @0x00B88: x -9000..-8000, z -11000..-9500), John 2200 oestlich = Original-Abstand (2196). Blickpunkt-Regel aus dem Original: (-1300,-15500) = (-7200,-15500)+(5900,0), (-850,-13350) = (-6750,-13350)+(5900,0) |
 | Tuersperre | VOR der Rueckgabe der Steuerung (@0x00F4E): Aot_reset Slot 0 und Slot 2 (Riegel im Rechteck der Dachtuer) -> msg 41; warten, bis sub01 (4,0xF2) loescht | Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`; Slot 1 ist bei zu Riegel sce 0 (main00 @0x00A7A) |
-| Johns Abgang | Pad-Sperre + Balken, Cut 7 (Blick nach Sueden), John RUN zum Gang-Ausgang und vor die Dachtuer (er laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand), DOOR1A auf/zu im Off, geparkt, (9,67)=1; Riegel-Zustand wie nach sub05 (@0x00FC8..@0x00FD5 ohne Nachricht, @0x00FDC), Slot 0 wieder Tuer | Cut 7 (-7465,-3024,-9613) -> (-4265,2209,-27792); DOOR1A = tuer_zuordnung.inc S064 ROOM1141 Slot 1 |
+| Johns Abgang | Pad-Sperre + Balken, Cut 7 (Blick nach Sueden), John RUN zum Gang-Ausgang und vor die Dachtuer (er laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand), DOOR1A auf/zu im Off, geparkt, (9,67)=1; Riegel-Zustand wie nach sub05 (@0x00FC8..@0x00FD5 ohne Nachricht, @0x00FDC), Slot 0 wieder Tuer; zum Schluss Cut_old + Cut_auto zurueck auf Elzas Kamera (Fortsetzung 4, Abschnitt 4.3) | Cut 7 (-7465,-3024,-9613) -> (-4265,2209,-27792); DOOR1A = tuer_zuordnung.inc S064 ROOM1141 Slot 1; `2a 00 3c 01` Form ROOM1150 @0x010F2 |
 | Riegel | Ereignis 5 hat KEIN Port-Programm mehr (Original sub05). John oeffnet ihn beim Abgang; danach ist die Dachtuer offen | Begruendung: John hat ihn auf der Gangseite vorgelegt; geht er hinaus, kann er ihn nicht wieder vorlegen — ein "You've opened the lock." danach waere ein neues Logikloch |
 
 ### 3.1 Dateien
@@ -174,6 +174,12 @@ genau ein solches Auftauchen und ist ersetzt (6f1890c5):
   zwei Ladestellen, Port-Bank-Init, Messhaken), audio_pc.c (Se_on der Port-Baenke vor der Bankweiche + Mitschnitt-Takt),
   item_discard_common.c / item_icon_common.c / item_prompt_common.c / itps_common.c / re15_inv_screen.c /
   inv_render_pc.c (Gegenstand 0x43 wie Runde 36 Spur Q), tests/unit/test_r36_kartenbits.c k_port[] (Bits 64/66/67).
+- Fortsetzung 4: HAKEN main.c 1 Zeile im NPC-Zeichendurchgang hinter dem Regionen-Cull (`re15_pc_dining_r38_sicht`,
+  Messhaken RE15_R38F_SICHT / RE15_R38F_JOHN_AUS, ohne Umgebungsvariable wirkungslos); Riegel anderer Runden an den neuen
+  Schluessel angepasst: `tests/unit/probe_r26_inventar.c` (B3: 9 Schluessel-Namen mit 0x43, B4c: 0x43 traegt den
+  Port-Namen wie 0x42/0x45) und `tests/unit/test_r30_tuer.c` (ROOM1131 Slot 0 msg 40 = Port-Schlossstelle Art M,
+  Zaehlung 52/16/36/0, 47) — beide rot seit dem eigenen Modul-Commit 6ae7118b, gefunden mit den Modul-Gruppen am
+  Endstand (Abschnitt 5).
 - Tests: `re15_port/tests/unit/test_r38_dining1141.c`, `re15_port/tests/unit/probes/r38_dining1141.cmake`,
   `re15_port/tests/integration/test_r38_dining1141.cmake`.
 
@@ -190,6 +196,8 @@ genau ein solches Auftauchen und ist ersetzt (6f1890c5):
 | Plaetze | Elza (-8000,-10250), John (-5800,-10250) | Gemaelde-Zone @0x00B88; Abstand 2196 = @0x00CD8/@0x00B06 |
 | Klopf-Takt | 30/30/90/90 Bilder | RE2 ROOM1060 sub05 +0x2E/+0x3E/+0x58/+0x5E |
 | Port-Baenke | 0x3B Rolladen (ROOM1131 snd0), 0x3C Klopfen (KLOPF1060), 0x3D Hilferuf | Abschnitt 2.1/2.5 |
+| Ende des Abgangs | `2a 00` Cut_old + `3c 01` Cut_auto 1 | Form ROOM1150 @0x010F2..0x010F5; FUN_8004032c @0x8004033c; RVD 1141 Gruppe 7 nur Anker (Abschnitt 4.3) |
+| Schnitt-Schwelle des Werkzeugs `sicht` (kein Spielverhalten) | 10,0 (mittlere Abweichung je Kanal) | gemessen Lauf e7035a6f: Kamerawechsel 13,2..38,5, im Spiel sonst <= 5,3 (Abschnitt 4.4) |
 
 ## 4. Messung nachher
 
@@ -304,6 +312,10 @@ Cut 7 steht bei (-7465,-3024,-9613) und blickt nach Sueden; ab z > -9613 ist Elz
 fd_004065/004140/004215/004290: nur in F4065 ist Elza im Bild, danach der leere Raum
 (`F_belege/n4_cut7_haengt.png`). Der Spieler steuerte also eine unsichtbare Elza bis zur Dachtuer — der alte Riegel
 pruefte nur "loaded room1171.rdt".
+**Herkunft (Code-Geschichte von tools/r38_dining/programme_bauen.py, `git show <commit>:...`):** 6ae7118b/32754a59
+beendeten den Abgang auf Cut 6 (Dachgang; RVD-Gruppe 6 fuehrt mit Satz 20 `from 6 to 5` weiter), eingefuehrt wurde der
+Defekt mit **6f1890c5** (Nachtrag-2-Umbau: Abgang auf Cut 7 = reine Szenen-Kamera, danach nur Cut_auto 1); gemessen am
+Lauf int_d3 (Stand 7fa09458 + 95fc8af6, enthaelt 6f1890c5).
 **RE-Beleg:**
 - RVD ROOM1141 (RDT-Kopf +0x28, 20-B-Saetze, rdt_common.c parse_zones): Satz 21 `from 7 to 0` ist der EINZIGE Satz
   der Gruppe 7 = der Anker, den FUN_80014230 nie testet (Gruppensuche FUN_80014324, Scan ab dem zweiten Satz;
