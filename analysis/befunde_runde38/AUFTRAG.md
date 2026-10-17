@@ -98,3 +98,27 @@ v0.8.25 "Folgt am Samstag". Sie laufen als Fortsetzung in ihren Runde-37-Baeumen
   Leon-RDT + 1 (PSX.EXE @0x800397e4/@0x800397ec).
 - "neue Versionsnummer - minor": wie alle bisherigen Releases die LETZTE Stelle hochzaehlen (0.8.25 -> 0.8.26, 0.8.99 ->
   0.9.0 wie v0.7.99 -> v0.8.0); das Skript nimmt optional eine explizite Version.
+
+## Nachtrag 1 — 2026-10-16 21:00 (woertlich) -> Spur W
+
+> And additionally: in ROOM 20A0 the shutter that you have to open to push the box down is somehow DIRECTLY in the camera. I cannot see anything... this is not like this in the original....
+
+Lesart: ROOM20A0 (Stage 2, Leon; Elza-Variante ROOM20A1 mitpruefen) — das Rolltor/der Rolladen, der geoeffnet werden muss,
+damit man die Kiste hinunterschieben kann, steht/faehrt im Port direkt vor der Kamera und verdeckt das ganze Bild; im
+Original nicht. Neue Spur W (VERTRAG §0).
+
+## Nachtrag 2 — 2026-10-16 21:33 (woertlich, zu Spur F) -> Spur F
+
+> In Room 1141 mit dem reinkommenden John musst du anders lösen. Ich möchte keine plötzlich rein poppenden Charaktere haben...
+
+Lesart (Orchestrator, nachpruefbar): KEINE Figur darf im Bild auftauchen, wo vorher keine war (kein Spawn im Blickfeld,
+kein Hereinspringen durch eine Tuer). Loesung mit vorhandener Geometrie: ROOM1141 hat zwischen dem Notrolladen (Prop obj 0,
+(-7124,0,-6976), Rolladen-Zelle) und der Dachtuer (Nordende, z -750..250) einen kurzen Dachgang (SCA x -8600..-5750,
+z -6700..-250; Kamera Cut 6 zeigt ihn). John ist schon BEIM BETRETEN von 1141 dort — hinter dem geschlossenen Rolladen,
+verdeckt —, er ist vom Dach durch die Dachtuer in den Gang geflohen und hat den Riegel hinter sich vorgelegt, kommt aber
+nicht in den Raum, weil der Rolladen unten ist. Das Klopfen/Haemmern und "Help" kommen von dort (Ton). Hebt Elza den
+Rolladen mit dem Gemaelde-Schalter, wird John beim Hochfahren sichtbar (er war die ganze Zeit da) und laeuft in den Raum;
+dann die Szene ("Are you okay? What's happened?" ...). Der Riegel der Dachtuer bleibt fuer Elza wie im Original
+("You've opened the lock." danach). Johns Weg aufs Dach danach: durch den Gang und die Dachtuer, ohne dass er im Bild
+verschwindet, wo man es sieht (Kamera/Schnitt so, dass der Abgang natuerlich wirkt). Gilt sinngemaess fuer alle Figuren
+dieser Runde.

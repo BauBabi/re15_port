@@ -1,0 +1,13 @@
+48:[scd F0] Cut_chg(0)
+56:[goto] queued room change -> ROOM1140 at F30
+57:[room] PC loaded room1140.rdt (147176 bytes)
+76:[prop-render] pi=1 oid=0x0F pos=(-2051,-2832,-8667) rot=(0,1024,1024) meshes=1
+78:[scd F15] letterbox closed -> gameplay (player_mode=0)
+82:[force-event] scd_event_fire(3) at F60
+84:[msg] room=1140 id=1 savepoint=0
+85:[msgtext] room=1140 id=1 "A beautiful painting.There's a switch below. Will you push it?"
+94:[msg] room=1140 id=1 savepoint=0
+95:[scd F293] Cut_chg(5)
+98:[prop-render] pi=0 oid=0x00 pos=(-7124,-6,-6976) rot=(0,0,0) meshes=1
+106:[scd F487] letterbox closed -> gameplay (player_mode=0)
+121:[flow] EXIT_AT: Bild 900 in Raum 1140 erreicht -> exit

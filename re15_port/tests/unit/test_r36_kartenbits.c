@@ -64,6 +64,7 @@
 #include "re15_szenenleon_r36.h"
 #include "re15_tuer1060.h"
 #include "re15_tagebuch_r38.h"   /* Runde 38 Spur G: Bit 68 Roys Diary */
+#include "re15_dining_r38.h"   /* Runde 38 Spur F: Bank-9-Bits 64/66/67 (VERTRAG Runde 38 1.1) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -506,6 +507,9 @@ static const port_bit_t k_port[] = {
     { RE15_TUER1060_K_BANK, RE15_TUER1060_K_BIT, "RE15_TUER1060_K_BIT",    "liest 10F0-Szene 71, tuer1060_1040.c (Runde 35)" },
     { RE15_TUER1060_TOD_BANK, RE15_TUER1060_TOD_BIT, "RE15_TUER1060_TOD_BIT", "liest Irons-Tod 73, tuer1060_1040.c (Runde 35)" },
     { RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT, "RE15_TAGEBUCH_R38_BIT", "Roys Diary abgelegt, tagebuch_r38.c (Runde 38 G)" },
+    { 9, RE15_R38F_BIT_GENOMMEN,          "RE15_R38F_BIT_GENOMMEN",          "Dining Room Key genommen, dining_r38.c (Runde 38 F)" },
+    { 9, RE15_R38F_BIT_TUER,              "RE15_R38F_BIT_TUER",              "Tuer 1131->1141 aufgeschlossen, dining_r38.c (Runde 38 F)" },
+    { 9, RE15_R38F_BIT_JOHN_WEG,          "RE15_R38F_BIT_JOHN_WEG",          "John hat 1141 verlassen, gen/dining_r38_programme.inc (Runde 38 F)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

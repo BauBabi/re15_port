@@ -276,6 +276,7 @@ static FILE *s_audio_cap = NULL;   /* RE15_AUDIO_CAP=<raw>: dump mixed output (v
 static int   s_audio_cap_sync = 0; /* RE15_AUDIO_CAP_SYNC: frame-locked render, no SDL device */
 static long  s_cap_ticks      = 0; /* gerenderte Spielframes in diesem Modus (== PCM/1470)     */
 static long  s_cap_limit      = 0; /* RE15_AUDIO_CAP_FRAMES: danach Datei schliessen + exit(0)  */
+long re15_audio_cap_tick(void) { return s_cap_ticks; }   /* Runde 38 Spur F: Mitschnitt-Takt im Ton-Messschrieb (dining_r38_pc.c) */
 static int   s_audio_mono = 0;     /* OPTIONS SOUND: 1 = mono (collapse final mix), 0 = stereo */
 void re15_audio_set_mono(int mono) { s_audio_mono = mono ? 1 : 0; }
 
@@ -2396,6 +2397,8 @@ static void re15_voice_play(uint16_t room, int voice_id)
     re15_xa_set_filter((uint8_t)(room & 0xFF), (uint8_t)voice_id);
     re15_xa_read_s(s_voice_clip[voice_id].pcm, s_voice_clip[voice_id].len);
 }
+/* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */
+void re15_audio_stimme(uint16_t room, int voice_id) { re15_voice_play(room, voice_id); }
 
 /* ── re15_ss implementation: VAB soundfont + SEQp software synth ─────────── */
 
@@ -3722,6 +3725,8 @@ void re15_audio_tick(void)
                  * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
                 if (re15_cut10f0_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
                 if (evt.bank == RE15_SZL_SE_BANK) { re2_schloss_se((int)evt.sample_id); break; }   /* Runde 36 Spur J */
+                { extern int re15_dining_r38_se_on(unsigned, int);   /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
+                  if (re15_dining_r38_se_on((unsigned)evt.bank, (int)evt.sample_id)) break; }
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);

@@ -104,6 +104,7 @@ static inline int RNDI(float f) {
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte (Boot-/CONTINUE-Weg + Prop-Lader) */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher (Boot-/CONTINUE-Weg + Prop-Lader) */
 #include "re15_itemorte_r38.h"      /* Runde 38 Spur K: Sichtbarkeitsregel Loescher 1030 / Schluessel 10F0 */
+#include "re15_dining_r38.h" /* Runde 38 Spur F: Dining Room Key (Boot-/CONTINUE-Weg, Prop-Lader, Icon/Bild) */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -1579,6 +1580,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_feuerloescher_r37_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (fl_oid >= 0 && nprops <= fl_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[fl_oid]) == 0) ok[fl_oid] = 1;
         if (fl_oid >= 0 && nprops <= fl_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(fl_oid)); }
+    {   /* Runde 38 Spur F: Dining Room Key ROOM1011 — eingebackenes RE2-MD1+TIM (gen/dining_r38_schluessel.inc), Muster oben. */
+        const int f_oid = re15_dining_r38_obj_id((uint16_t)g_current_room_id);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_dining_r38_md1_bytes((uint16_t)g_current_room_id, &msz);
+        const uint8_t *tb = re15_dining_r38_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
+        if (f_oid >= 0 && nprops <= f_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[f_oid]) == 0) ok[f_oid] = 1;
+        if (f_oid >= 0 && nprops <= f_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(f_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -3983,6 +3990,7 @@ re_title:;
     { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
     { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
     { extern void re15_pc_w11b0_init(void); re15_pc_w11b0_init(); }   /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (Satz 7 aus ROOM1171) */
+    { extern void re15_pc_dining_r38_init(void); re15_pc_dining_r38_init(); }     /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -4489,6 +4497,7 @@ re_title:;
          * bleibt byte-true. Herleitung: include/re15_sicherung.h. */
         if (ipix) re15_sicherung_icon_einsetzen(ipix, isz);
         if (ipix) re15_schluessel_r36_icon_einsetzen(ipix, isz);   /* Runde 36 Spur Q: Tiles 0x42/0x45 */
+        if (ipix) re15_dining_r38_icon_einsetzen(ipix, isz);       /* Runde 38 Spur F: Tile 0x43 */
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
@@ -4499,6 +4508,7 @@ re_title:;
         /* Item-Bild der Sicherung (Block 0x40 @0xC0000) im GELADENEN Puffer einsetzen. */
         if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_schluessel_r36_bild_einsetzen(ipic, psz);   /* Runde 36 Spur Q: Bloecke 0x42/0x45 */
+        if (ipic) re15_dining_r38_bild_einsetzen(ipic, psz);       /* Runde 38 Spur F: Block 0x43 */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
     }
     /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
@@ -4967,6 +4977,7 @@ re_title:;
     /* Runde 36 Spur H: Scheiben-Texte ROOM1190/1191 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter). */
     { extern void re15_ziel1190_install(uint16_t); re15_ziel1190_install((uint16_t)g_current_room_id); }
     re15_kartenitems_r36_install((uint16_t)g_current_room_id);   /* Runde 36 Spur N: Lageplan-Karte, derselbe Grund */
+    re15_dining_r38_install((uint16_t)g_current_room_id);        /* Runde 38 Spur F: 1011/1021/1131/1141, derselbe Grund (Boot-/CONTINUE-Weg) */
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -5183,6 +5194,7 @@ re_title:;
           if (s_kill_at == -2) { const char *k = getenv("RE15_KILL_AT"); s_kill_at = k ? atoi(k) : -1; }
           if (s_kill_at >= 0 && (int)g_engine.frame_count == s_kill_at) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1; }  /* dead = hp<0 */
         { extern void re15_r37a_gegner_pos_haken(void); re15_r37a_gegner_pos_haken(); }  /* Runde 37 Spur A: Messhaken RE15_GEGNER_POS (re15_pri1100_r37.h) */
+        re15_dining_r38_messhaken();   /* Runde 38 Spur F: Messhaken RE15_R38F_GORILLAS_TOT (re15_dining_r38.h) */
 
         /* DEBUG: RE15_INV_SHOT=<path> — wave-1 acceptance harness: force-open the status
          * screen at frame 30 (briefing loadout = the mzd_inv_open.sav items); the render
@@ -9658,6 +9670,7 @@ re_title:;
                     }
                     if (!g5_front_in) npc_region_culled = 1;   /* posieren, nicht zeichnen (s.o.) */
                 }
+                { extern int re15_pc_dining_r38_sicht(const re15_actor_t *); if (re15_pc_dining_r38_sicht(npc)) npc_region_culled = 1; }   /* Runde 38 Spur F: Messhaken Sichtbarkeit (dining_r38_pc.c) */
 
                 /* RE2-ZELLENARM (Runde 16 / Phase 2): solange das Entity-Bit 2 gesetzt ist
                  * (0x80101164 mit a2 = 0: INIT @0x80100304, Rueckzug-Ende @0x80100E38), ist
