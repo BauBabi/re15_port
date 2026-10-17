@@ -235,9 +235,9 @@ Gegenprobe-Experiment (Baustein 5 aus, sonst gleich; RE1.5-KI): 3 Zombies stehen
 * Die Ende-Zeile traegt die KI der Zombies (re15_ai_re2_for_type(0x10)); das Haelften-Kriterium ist unter der Standard-KI
   RE2 Pflicht, unter der RE1.5-KI (Menue-Option) wird es gemeldet (s. OFFEN).
 
-## Umsetzung (Stand zweiter Lauf; Dateien, Konstanten mit Beleg)
+## Umsetzung (Dateien, Konstanten mit Beleg; Stand dritter Lauf)
 
-Bausteine 1-3 (Vorgaenger, nachgeprueft) + zwei Korrekturen + Baustein 4 (neu):
+Bausteine 1-3 (Vorgaenger, nachgeprueft) + zwei Korrekturen + Baustein 4 (zweiter Lauf) + Baustein 5 (dritter Lauf):
 
 | Datei | Aenderung | Beleg |
 |---|---|---|
@@ -249,6 +249,9 @@ Bausteine 1-3 (Vorgaenger, nachgeprueft) + zwei Korrekturen + Baustein 4 (neu):
 | engine/src/montage_r38.c | Messung (kein Spielverhalten): je Schnitt/Zombie Abstand zur Kamera-Bodenprojektion, Tiefe, Kriech-Bit, Endlage; je Schnitt Spielerlage, HP, "Navigator-Ziel fremd" (laenger als ein Pfadsuch-Takt +0x91 = 7 Bilder, @0x80039eb8/@0x80039ed4), Kamera ausserhalb der Montage-Schnitte | debug.log `[montage-r38]` |
 | tests/unit/test_r38_montage.c | **KORREKTUR Riegel**: g_room_rdt/g_room_rdt_ok gesetzt (Navigator + Gegner-Wandklemme), RDT je Lauf frisch, RNG-Saat; Kriterien je Schnitt in EINER Bewertung fuer Prozess und exe (`auswerten <lauf>`) | — |
 | tests/integration/test_r38_montage.cmake, probes/r38_montage.cmake | integration_r38_montage: echte exe ueber den echten Weg | — |
+| engine/src/montage_r38.c `tor_warten`, include/re15_montage_r38.h RE15_R38_ZONE_HINTER_TOR_A/B | **Baustein 5 (dritter Lauf)**: im 1030-Schritt halten die Zombies hinter dem Tor (BLK-Zone 0/10) still, solange nicht Cut 12 gezeigt wird; mit dem ersten Bild von Cut 12 laufen genau diese los (Freigabe nur durch dieselbe Regel) | ROOM1141 sub02 `34 0c 30 00` @0x00E70/@0x00E78 vor Cut_chg 0 @0x00E80, Freigabe `34 0c 10 00` @0x00F64/@0x00F74; Wirkung @0x80100450-5c; BLK Zone 0 @0x01BBC, Zone 10 @0x01C34 |
+| engine/src/montage_r38.c (Messung) | dm = Abstand in der Mitte der eigenen Sichtzeit (16-Bilder-Raster, 48 Proben uint16 je Spur), Warte = erstes Bild aufrecht im Warte-Rechteck (Stempel 5), KI der Zombies in der Ende-Zeile | @0x024E0 (Member_cmp 0x0F == 5) |
+| tests/unit/test_r38_montage.c | **Riegel dritter Lauf**: "ueber die Schnittdauer" = beide Haelften je >= 400 (Radius, @0x8003a408-410), Klemmen-Ausnahme entfernt, Kriech-Kriterium ueber Stempel 5, Baustein-5-Pruefung (Cut 7), ohne7-Gegenprobe ueber die Haelften, Spur-Ausgabe mit Gierung + naechstem Nachbarn (`mess <aktor> <takt>`) | — |
 
 NUTZER-VORGABE / PORT-WAHL (keine Original-Szene): die Montage selbst; "Ziel = der geparkte Spieler hinter der Kamera"
 (Form des Rolltor-Schnitts); die sub06-Regel ohne die Spiel-Drossel sub02 @0x021CC ("weniger als 4 im Hauptraum") und
@@ -284,6 +287,30 @@ Gruppe vor der Briefing-Room-Tuer auf die Kamera zu, die vorderen verlassen das 
 F240..F540: die Zombies hinter dem Gitter gehen zu Boden und kriechen unter dem Tor durch nach vorn). Vergleich vorher:
 `O_belege/vor_1130.png`, `O_belege/vor_1030.png` (stehende Gruppen).
 
+### Dritter Lauf (ECHTE exe, Stand b490ed78 = Baustein 5, gebaut 2026-10-17 ~10:10)
+
+Weg wie oben (Karte 1130 nach10f0 ersteszene, CONTINUE in 1130, Tuer -> 1150, Irons' Tod, Montage 1130 -> 1040 -> 1030 ->
+11C0): `integration_r38_montage` (lauf_2c011746, **Passed 99,31 s**), ausgewertet mit `test_r38_montage auswerten`:
+`O_belege/lauf3_auswertung_integration.txt` (0 Fehler), Messzeilen `O_belege/lauf3_montage_zeilen_integration.txt`.
+Abstand zur Kamera-Bodenprojektion Anfang -> Mitte -> Ende (Haelften):
+
+| Schnitt | Zombies | exe nachher (dritter Lauf) |
+|---|---|---|
+| 1130 Cut 0 (176) | 5 Kopien aus 1140 | 6821->5480->3961, 5648->3924->1969, 4565->3336->1734, 3521->1609->438 (Stopp hinter der Kamera Bild 142), 4478->2456->1295 (Stopp Bild 161); kleinste Haelfte 1229; Ziel fremd 0; HP 100 |
+| 1040 Cut 1 Rolltor (405) | 5 Raum-Records | Endabstaende **7136/5663/8286/5395/7046 = bitgleich** mit v0.8.25 und dem zweiten Lauf; Bilanz 5/5 durchs Tor, Kappe 0, HP 100; beide Haelften naeher (kleinste 1581) |
+| 1030 Cut 7 (207) | 5 Kopien aus 1070 | 8272->6571->4671, 6235->3917->1476, 4644->3123->1377, 7222->4723->2371, 5599->3362->562; kleinste Haelfte 1521; Ziel fremd 0; nur Cut 7/12; die 9 Zombies hinter dem Tor ab Bild 1 angehalten, kein Raum-Record im Warte-Rechteck |
+| 1030 Cut 12 (335) | 6 Raum-Records + 3 Kriecher | Bit 0 12906->10084->8400, Bit 1 11389->8512->5982 (**vorher +120, Klemme**), Bit 2 13727->11172->8691, Bit 3 14331->10506->9091, Bit 4 11303->9156->7105, Bit 5 14332->11771->9736, Bit 77 9827->8326->5404, Bit 78 10558->8745->5954, Bit 79 9560->7648->4925; **alle 9 in beiden Haelften naeher (kleinste Haelfte 1415, kleinste Gesamt 4198)**; 6 von 6 Aufrechten bekommen am Warte-Rechteck das Kriech-Bit (Bild 31..238); 5 von 9 am Schnittende unter dem Tor durch; Spieler auf der Kameraachse (-12869,-11445), HP 100 |
+
+Die Zahlen des Riegels im Prozess (unit_r38_montage_s1030_re2 / _s1130_re2) sind Zeile fuer Zeile dieselben wie die der exe.
+Die Cut-7-Kopien gehen anders als im zweiten Lauf (z.B. 8272 -> 4671 statt -> 4995): die angehaltenen Zombies hinter dem Tor
+ziehen keine KI-Zufallszahlen mehr — alle fuenf kommen weiter in beiden Haelften naeher.
+
+Bild (RE15_FRAMEDUMP "30-540/30", RE15_WINDOW_SCALE=1, beschleunigter Renderer, echte exe, Lauf `O_belege/lauf.sh l3_1030 l3b
+"540#1030"`, debug.log "EXIT_AT: Bild 540 in Raum 1030"): `O_belege/nach3_1030.png` — Cut 7 (F30..F210) die Kopien kommen den
+Gang herauf bis vor die Kamera; Cut 12 (F240..F540): bei F240 stehen die Zombies hinter dem Gitter noch an ihren Plaetzen
+(Baustein 5), F300/F360 gehen sie aufs Tor zu und gehen zu Boden, F450/F540 kriechen alle unter dem Tor durch nach vorn auf
+die Kamera zu; bei F540 steht keiner mehr hinter dem Gitter.
+
 ## Nebenwirkungen (geprueft)
 
 * Elza: die Szene startet nur in Leons ROOM1150 (re15_irons_tod_install `case RE15_IT_RAUM_1150` = 0x1150; Elzas Raum
@@ -294,33 +321,34 @@ F240..F540: die Zombies hinter dem Gitter gehen zu Boden und kriechen unter dem 
   Cut-7-Teil). Bank 5 (Kriech-Marken Set(5,i)) ist raumlokal.
 * Ohne Cut-7-Teil (1070 leer, (9,76)=0): Tuer zeigt gleich Cut 12, Kriech-Regel + Umparken gelten dort ebenso
   (Riegel unit_r38_montage_s1030_ohne7_*, exe-Weg integration_r35_cut1150 Lauf B).
-* Rolltor 1040: bitgleich (Riegel unit_r38_montage_rolltor Bild fuer Bild; exe Endlagen gleich).
+* Rolltor 1040: bitgleich (Riegel unit_r38_montage_rolltor Bild fuer Bild; exe Endlagen gleich, dritter Lauf ebenso).
+* Baustein 5 (dritter Lauf): wirkt nur bei re15_irons_tod_zustand() == S1030 in ROOM1030 und nur, solange NICHT Cut 12
+  gezeigt wird; ohne Cut-7-Teil zeigt die Tuer gleich Cut 12 -> nie aktiv (unit_r38_montage_s1030_ohne7_* unveraendert gruen);
+  Gegenprobe (re15_r38_montage_enable(0)) -> aus; Elza (0x1151) und spaetere Besuche (Zustand AUS) -> aus. Freigegeben wird nur,
+  wen dieselbe Regel angehalten hat (s_wartet), der Einzelstopp hinter der Kamera (Baustein 3) bleibt unberuehrt.
 
 ## OFFEN
 
-1. **Klemme an der Zellenecke SCA 30 (Cut 12, KI RE2) — vorbestehend, nicht durch Spur O.** Ein Kriecher (Raum-Record
-   ROOM1030 main00 Bit 1 = Aktor 2) haengt am Zone-9-Uebergang fest: Abstand zur Kamera +12 (exe vorher, d70c234e),
-   +1 (Gegenprobe im Riegel), +120 (jetzt; die Nachbarn kriechen zum selben Uebergang und schieben ihn nach Westen).
-   Mechanismus (gelesen + gemessen, Spur-Ausgabe `test_r38_montage s1030_re2 mess 2`): der Navigator setzt das Ziel auf
-   den Uebergang Zone 0 -> 9 (-12195,-23860) (Mitte der Ueberlappung x -13070..-11320, BLK @0x01C28; FUN_8003a31c
-   selbst disassembliert: Mitte `addu v0,v1,a3` / `sra v0,v0,1` @0x8003a3f0-f4, die eigene x nur wenn lo + 2r < x <
-   hi - 2r, r = `lhu v0,6(v0)` aus dem +0x78-Satz @0x8003a408-410, `sll v0,v0,1` @0x8003a418, Ersatz `sh v0,0(a2)`
-   @0x8003a440); dieser Punkt liegt nur 371 von der Ostkante der Zelle SCA 30 (@0x01B78,
-   x -15518..-12566, z -24134..-22694) — weniger als der Zombie-Radius 400 (+0x78-Satz +6). Wer von WESTEN kommt,
-   drueckt in die Ecke, die Wandklemme setzt ihn auf z -24552 zurueck (Zyklus ~50 Bilder). Navigator (FUN_8003a524 /
-   FUN_8003a31c) und Wandklemme sind byte-true Ports anderer Spuren (nav_zone_common.c, re15_collision.c,
-   enemy_ai_common.c = B/T); eine Loesung waere dort ein Eingriff gegen das Original und gehoert nicht zu Spur O. Unter
-   der RE1.5-KI tritt sie nicht auf (alle 9 naeher, unit_r38_montage_s1030_re15). Der Riegel laesst hoechstens EINE
-   solche Klemme zu und verlangt, dass es dasselbe Bit ist wie in der Gegenprobe v0.8.25 (sonst rot).
-2. Cut 12 endet (Original-Sleeps sub08 @0x027BC..@0x027C4 + Port 120, Runde 35) mit 6 von 9 Zombies unter dem Tor
-   durch; 3 (startet erst in Bild 30 aus der zweiten Reihe) und 12 (wartet am Uebergang) sind noch im Durchgang —
-   beide kommen der Kamera naeher (-1189 / -779). Die Schnittlaenge ist nicht Teil des Auftrags (unveraendert).
+1. ~~Klemme an der Zellenecke SCA 30 (Cut 12)~~ — **behoben im dritten Lauf** (Baustein 5): die Ursache war der Stau der
+   Zombies hinter dem Tor im Cut-7-Teil, nicht der Navigator; exe: alle 9 in beiden Haelften naeher.
+2. RE1.5-KI (Menue-Option, NICHT Standard): in Cut 12 dreht je Lauf ein Zombie im Unterzustand 0x13 (Decide FUN_8010561c,
+   enemy_ai_common.c re15_ai_dispatch_decision) in der ersten Haelfte auf der Stelle — gemessen `test_r38_montage s1030_re15
+   mess 5 8`: Gierung 3072 (Bild 209) -> 3729 (Bild 289) -> 3243 (Bild 345) bei Ziel NNW (-8695,-23860), Lage (-7300,-25655)
+   -> (-6734,-25356) = 640 nach OSTEN/Norden in 136 Bildern; Hauptweg Bit 4: -71 / -926,
+   ohne Cut-7-Teil Bit 0: +7 / -996. Gesamt kommen unter der RE1.5-KI alle 9 mindestens 989 naeher; ohne Baustein 5 waeren es
+   3 statt 1 Zombie mit einer stehenden Haelfte (Experiment). Das Wendeverhalten gehoert der RE1.5-KI (andere Spuren), nicht
+   der Montage; der Riegel meldet die Haelften unter der RE1.5-KI nur (unter RE2 = Standard Pflicht).
+3. Cut 12 endet (Original-Sleeps sub08 @0x027BC..@0x027C4 + Port 120, Runde 35) mit 5 von 9 Zombies unter dem Tor durch;
+   die uebrigen kriechen noch auf das Tor bzw. durch den Durchgang zu — alle in Bewegung auf die Kamera zu. Die Schnittlaenge
+   ist nicht Teil des Auftrags (unveraendert).
 
 ## Fuer den Nutzer
 
 * Neue Assets fuer das Paket-Gate: keine. Sprachdateien: keine. Keine Bedienung.
 * Text fuer die Release-Notes (Vorschlag): "Montage nach Irons' Tod (Leon): Die Zombies, die in den Gang vor dem
   Briefing Room und vor die Tuer zu Raum 1070 durchbrechen, gehen jetzt auf die Kamera zu — wie die hinter dem Rolltor.
-  Am aufgebrochenen Gitter-Tor in der Lobby kriechen jetzt alle Zombies hinter dem Gitter unter dem Tor durch nach vorn
-  (vorher standen die aufrechten nur hinter dem Gitter). Der Rolltor-Schnitt ist unveraendert."
-* Bekannt (OFFEN 1): an der linken Torecke kann ein Kriecher haengen bleiben (war schon vorher so).
+  Am aufgebrochenen Gitter-Tor in der Lobby setzen sich die Zombies hinter dem Gitter mit dem Schnitt in Bewegung, gehen
+  zu Boden und kriechen alle unter dem Tor durch auf die Kamera zu (vorher standen die aufrechten nur hinter dem Gitter,
+  und einer hing an der linken Torecke fest). Der Rolltor-Schnitt ist unveraendert."
+* Mit der RE1.5-KI (Menue) dreht sich in der Tor-Einstellung ein Zombie anfangs eine Weile auf der Stelle, bevor er
+  losgeht (Verhalten dieser KI, s. OFFEN 2); mit der Standard-KI (RE2) gehen alle sofort los.
