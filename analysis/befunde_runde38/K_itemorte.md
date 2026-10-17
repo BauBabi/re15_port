@@ -26,6 +26,11 @@ dieser Spur. Kein Bank-9-Bit neu (Loescher (9,0x86)/(3,0x85) wie Runde 37, Schlu
   bytegleich mit e8461907, `git status` leer). Wortlaut-Pruefung (Abschnitt 8): Luecken waren nur die Elza-Messung
   der anderen Pinnwand-Cuts (10F1 Cut 6/7) und eine Zahl fuer "gut sichtbar" in der Fenstergroesse, in der gespielt
   wird -> gemessen (4.2a), Riegel V4/V5/B4 (8544862d), gezielter Lauf am Endstand 112/112 gruen (5.4, Ende 21:50).
+- Abnahme 0 (f63a9634): Punkt 1 erfuellt, Punkt 2 teilweise — Mangel M1 (Prison Key nicht gut sichtbar).
+- 23:00..23:45 Nachbesserung 1, erster Anlauf (ecb84654/801d3c55/ebc05a7e/2129a121): Modellwahl RE2 Small Key
+  gemessen (9.3), Umsetzung + Riegel; vom Sitzungslimit beendet (ungetestet).
+- 2026-10-17 04:55..05:35 Nachbesserung 1, Fortsetzung: Stand geprueft (9.4/9.5), gebaut, gemessen (9.6), gezielt
+  119/119 gruen (9.7), Zusammenfassung je Mangel (9.8).
 
 ## 1. Messung vorher (Stand 1bcbd0ff, Baum gebaut 16:40, Messkopie `re15_pc_r38k_mess.exe`)
 
@@ -531,3 +536,65 @@ Aufnahme Elza (Stand (1300,-2900) Blick -z, `W1,A0.1,W3.5,A0.1,W4,A0.1,W6`, Seri
 genommen: Item 0x42, Bit (9,83)`, `Prison Key genommen -> Flag (4,0xEC) = 1 (Zelle ROOM1211)`, Bild 260 Pinnwand leer,
 Bild 400 `[msgtext] room=10f1 id=4 "Several files from past cases.Nothing useful here."`; danach Inventar (START @321):
 Icon = RE2-Tile 31 (Bartschluessel) in der Item-Liste. Bild `K_belege/k2_nb1_aufnahme_inventar_10f1.png`.
+
+### 9.7 Tests am Endstand (Baum 0a2f02bc gebaut 05:09; danach nur Dossier/Belegbilder)
+* Riegel-Stand (ebc05a7e, hier erstmals gefahren): `integration_r38_itemorte` B3 >= 22 Pixel, B3K Sum|dL| >= 1300,
+  B3V >= 38 % von B2K, B4 >= 180, B4K >= 9500, B5 (neu: Parking Lot Key Skala 3) B5K >= 400 / 23000, B4V >= 33 %, V5 >= 45;
+  Auswerter `probe_r38_itemorte_kontrast` (C, Pixel + Sum|dL|, nur Werkzeug); `unit_r36_schluessel_raum/namen` auf
+  MD1 236 B / TIM 34848 B, Icon-Tile 31 (ohne CLUT-Index 0), ITPS-Block 31, Modal-Leser 0x42 > 4000 Bildpunkte.
+* Einzeln vorab: `^(unit_r38_itemorte|unit_r36_schluessel|unit_r37_feuerloescher)` -> `100% tests passed, 0 tests failed
+  out of 18` (unit_r38_itemorte_lage: `16 Pruefungen, 0 Fehler`, Prison Key Huelle x 132.57..144.49 y 78.35..84.23).
+* Gezielter Lauf (KEINE volle Suite; sauberer PATH wie local_build.sh, `-j 3 --timeout 600 --output-on-failure`,
+  05:09..05:28), -R woertlich = der 117er-Ausdruck der Abnahme 0 + `unit_r36_elza_unlock|integration_r36_elza_unlock`
+  (Prison Key an der Zelle 1211):
+  `^(unit_r38_itemorte|integration_r38_itemorte|unit_r37_feuerloescher|integration_r37_feuerloescher|unit_r36_schluessel|integration_r36_schluessel|unit_r37_kistenregel|integration_r37_kistenregel|unit_r36_kartenitems|integration_r36_kartenitems_bild|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_szenenleon_abgang10f0|unit_r36_klettern_10f0|unit_r22_10f0_figur|unit_1030_|unit_cam_1030_reentry|unit_r36_gegnerzahl_raum103|unit_r35_cut1150_montage_1030|unit_r34n_e_dokumente|integration_r34n_e_dokumente_bild|unit_aot_sce_census|integration_flag_census|integration_item_name_census|unit_r35_inhalt|unit_r35_inventar1050|integration_r35_inventar1050|unit_r34n_d_adaruf|unit_ada_eintritt_1050|unit_r27_ada_cutscene_1050|unit_r19_marke3_1050_c1_tiefe|unit_room1050_sicherung|unit_r37_sperre1050|integration_r37_sperre1050|unit_r36_story|integration_r36_story_leon|integration_r36_story_elza|unit_r21_discard_wegwerfen|unit_inv_|unit_item_|unit_itembox|unit_room1150_itembox|unit_r26_inventar|integration_r36_inventar|unit_r30_sicherung|integration_r30_sicherung|unit_r36_kartenbits|unit_1090_fire_pin|unit_1090_flame_out_pin|unit_1090_room_pin|unit_re2_room1090_ab|unit_r36_elza_unlock|integration_r36_elza_unlock)`
+  -> **`100% tests passed, 0 tests failed out of 119`** (Total Test time (real) = 1091.25 sec); darin
+  integration_r38_itemorte Passed 428.06 sec, integration_r37_feuerloescher 337.44, integration_r37_kistenregel 314.85,
+  integration_r36_story_elza 226.47, integration_r36_inventar 141.75, integration_r36_schluessel 81.87,
+  integration_r36_schluessel_befreiung 74.01, integration_r36_elza_unlock 40.51.
+* Die Framedumps dieses Laufs (`build/tests/integration/r38_itemorte_wd/lauf_a7443449_*`) mit dem eigenen Werkzeug
+  nachgerechnet: B2 55 / 3428, B3 27 / 1627, B4 217 / 11899, B5 491 / 28852, V3 (Leon Cut 6) 108 / 5607, **V5 (Elza
+  Cut 6) 56 / 2690** (Huelle x 81..98 y 69..75; Cabin Key vorher 29), V2/V4 (Cut 7) 0 — bitgleich mit 9.6.
+
+### 9.8 Nachbesserung 1 — je Mangel (Zusammenfassung)
+
+**M1 — Prison Key (Elza, ROOM10F1 Cut 5) an der Marke, aber nicht "gut sichtbar"**
+* Ursache: die Runde-36-Modellwahl RE2 "Cabin Key" (ROOM1050.RDT MD1 @0x001558) — ein grosser duenner Ring (Linie
+  1..1,5 Texel, 313 sichtbare Texel, Texel-Helligkeit Mittel 69,6 nahe am Kork ~63). Ort, Massstab-Regel und Licht waren
+  richtig; das Modell traegt zu wenig Flaeche und Kontrast fuer eine 11 x 9-Pixel-Marke in 7,6 m Abstand.
+* Messung vorher (Abnahme 0, mit eigenem Werkzeug bestaetigt 9.2): Skala 1 14 Pixel / Sum|dL| 502, Skala 3 112 / 3193,
+  Skala 4 215; Parking Lot Key 55 / ~3430 bzw. 491.
+* Beleg der neuen Wahl (9.3, Bytes selbst gelesen und hier an ROOM10F0.RDT @0x006F0 gegengeprueft):
+  `4e 05 02 31 .. 1f 00 01 00 26 00 04 a0` = Item_aot_set Item **0x1F** (Small Key), md1 4;
+  `@0x00706 2d 04 00 00 00 00 00 00 00 00 0a 00 10 00` = Obj_model_set Objekt 4, Attribut **0x0010** (flach; Handler
+  RE2 0x80055260 @0x8005530c `lh a1,12(s2)` -> @0x80055320 `sw a1,16(s1)`, Zeichner FUN_800363f0 @0x800365e8 `andi 0x10`).
+  Modell MD1 @0x001650 (236 B, md5 c5d49ef6...), TIM @0x0215BC (34848 B, md5 326b822b...), Icon ITEMALL.PIX Tile 31
+  @0x9150, Item-Bild ITPS.ITP Block 31 @0x5D000 = derselbe Bartschluessel (Runde-36-Regel "Modell und Bild passen
+  zusammen"); Untersuchen-Text unveraendert (Satzform = RE2 Small Key @0x800A11EF "I can open a / simple lock / with
+  this.", Bytes ab @0x800A11EF (Datei 0x919EF, davor `fe` = Ende des Vorgaengers) `00 25 00 3f 3d 4a 00 4b 4c 41 4a 00 3d fc 4f 45 49 4c 48 41 00 48 4b 3f 47 00 fc 53 45 50 44 00 50 44 45 4f 01 fe`
+  im RE2-Zeichensatz gelesen). Einziges RE2-Schluesselmodell ausser P. Room Key und Cabin Key, das flach steht UND dessen
+  Modell, Icon und Item-Bild denselben Schluessel zeigen (Tabelle 9.3: C. Panel Key Modell != Bild, W. Box Key in RE2
+  beleuchtet = im Raumlicht von 10F1 dunkel, Precinct/Platform Keys Modell != Bild).
+* Aenderung: `tools/r36_schluessel/schluessel_export.py` (QUELLEN prison -> ROOM10F0 @0x001650/@0x0215BC, ITEMALL/ITPS 31)
+  -> `gen/schluessel_r36.inc`; `tools/r38_itemorte/itemorte_export.py` (SCHLUESSEL prison -> Small Key; Massstab gegen die
+  GEZEICHNETE Huelle, 9.5) -> `gen/itemorte_r38_lage.inc` (rot (1024,0,0), s 5,3032) + `gen/itemorte_r38_md1.inc`; beide
+  .inc mit umgelenktem Ziel bitgleich reproduziert (9.4). Code unveraendert bis auf Kommentare (`schluessel_r36.c`
+  Beschreibungs-Herkunft, `re15_itemorte_r38.h` Licht-Beleg). Keine neuen Bits/Ids/Assets/Texte.
+* Messung nachher (9.6): Skala 1 **27 Pixel / Sum|dL| 1627** (Parking Lot Key 55 / 3428 -> 49 % / 47 %), Skala 3
+  **217 / 11899** (491 / 28852 -> 44 % / 41 %), Skala 4 **345 / 18015** (865 / 48354 -> 40 % / 37 %); |dL| je Pixel
+  93..97 % des Parking Lot Key (Cabin Key 49..58 %); aussen ueberall 0, Huelle in der Marke; sichtbar beim Hingehen bis
+  zum Stehen; Aufnahme, Item-Bild, Inventar-Icon passen zum Modell.
+* Riegel (integration_r38_itemorte, angehoben): B3 >= 22 Pixel, B3K Sum|dL| >= 1300, B3V >= 38 % des Parking Lot Key
+  (B2K), B4 (Skala 3) >= 180 Pixel, B4K >= 9500, B5K Parking Lot Key Skala 3 >= 400 / 23000, B4V >= 33 %, V5 (Cut 6)
+  >= 45 Pixel — der Cabin Key faellt durch jede dieser Schwellen (14 / 502 / 15 % / 112 / 3193 / 11 % / 29).
+
+### 9.9 OFFEN nach Nachbesserung 1 / Hinweise fuer die Integration
+* M1 erledigt (9.8). Bleibende, gemessene Grenze: der Small Key hat ~halb so viel Flaeche wie der Parking Lot Key
+  (Form Ring + Schaft; Breite = Marke voll; je Pixel gleicher Kontrast). Groesser ginge nur ueber die Nutzer-Marke hinaus.
+* Hinweis H1 der Abnahme 0 (kein Mangel, unveraendert): die Ausweich-Slots ROOM1030 Slot 20 und ROOM10F0/10F1 Slot 15
+  muessen bei der Integration frei bleiben (sonst bleibt der Original-Satz im Zonen-Slot: Gegenstand sichtbar, aber nicht
+  aufnehmbar; die Logzeile `[schluessel] ... Zone Slot 8` erschiene trotzdem). Heute frei (unit_r38_itemorte_raum).
+* H2 (Kommentar-Drift scd_room_setup.c) und H4 (neue Quelldatei itemorte_r38.c -> Android neu konfigurieren) wie in
+  Abschnitt 6; die Nachbesserung bringt keine neue Engine-Quelldatei (nur das Test-Werkzeug probe_r38_itemorte_kontrast.c).
+* Fuer den Nutzer neu: keine Assets (RE2-Bytes in gen/schluessel_r36.inc + gen/itemorte_r38_md1.inc gebacken), keine
+  Sprachdateien, keine neuen Texte; Bedienung unveraendert (vor die Pinnwand, Blick zur Wand, Aktionstaste).
