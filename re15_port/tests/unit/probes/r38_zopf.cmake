@@ -3,7 +3,8 @@
 # (FUN_8001844c / FUN_80018728). Dossier analysis/befunde_runde38/D_zopf.md.
 #
 # RIEGEL (Unit, misst die Mechanik): libgte init ruhe drehung laufen freeze original (Original-RAM, bitgleich) — und
-# `test_r38_zopf spur <zopf.log>` / `pixel <mit.ppm> <ohne.ppm> x0 y0 x1 y1` fuer die Integration.
+# `test_r38_zopf spur <zopf.log>` / `pixel <mit.ppm> <ohne.ppm> x0 y0 x1 y1` / `lauf <zopf.log>` (Gehen + Rennen gegen
+# das Original, Dossier §4.4) fuer die Integration; Werkzeuge `huelle <zopf.log>` (§4.5), `konst <frames.txt> <schritt>`.
 add_executable(test_r38_zopf ${CMAKE_CURRENT_LIST_DIR}/../test_r38_zopf.c)
 target_link_libraries(test_r38_zopf PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_zopf PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -25,4 +26,4 @@ add_test(NAME integration_r38_zopf
         -DRE15_ZOPF_TOOL=$<TARGET_FILE:test_r38_zopf>
         -DWORKDIR=${CMAKE_BINARY_DIR}/r38_zopf_wd
         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_zopf.cmake)
-set_tests_properties(integration_r38_zopf PROPERTIES TIMEOUT 900)
+set_tests_properties(integration_r38_zopf PROPERTIES TIMEOUT 1200)

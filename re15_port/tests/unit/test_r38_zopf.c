@@ -702,6 +702,62 @@ static int teil_orig(const char *pfad)
     return g_fail ? 1 : 0;
 }
 
+/* konst <frames.txt> <schritt> (Werkzeug, Dossier §4.4): dieselbe fortlaufende Nachrechnung wie "orig", aber in der
+ * Phase "gehen" (bis zur Wand: Originalschritt >= 50) bewegt sich der Koerper mit KONSTANTER Schrittweite <schritt> in
+ * der mittleren Gehrichtung des Originals, statt mit der Original-Lage (die mit dem Gang 55..90 je Bild schwankt).
+ * Alle anderen Eingaenge bleiben Original. Ausgabe: Abweichung xang/zang je Glied gegen die Original-RAM — misst, wie viel
+ * der Abweichung exe gegen Original (vergleich_orig.py) allein die gleichmaessige Port-Schrittweite erklaert. */
+static int teil_konst(const char *pfad, int schritt)
+{
+    printf("[konst] %s, Schritt %d je Bild\n", pfad, schritt);
+    static orig_bild_t b[ORIG_MAX];
+    int n = orig_lesen(pfad, b, ORIG_MAX);
+    if (n <= 0) { printf("  FEHLER: keine Bilder in %s\n", pfad); return 1; }
+    int g0 = -1, g1 = -1;   /* erstes Gehbild, letztes Gehbild vor der Wand */
+    for (int i = 1; i < n; i++) {
+        double dx = b[i].in.ent_pos[0] - b[i - 1].in.ent_pos[0], dz = b[i].in.ent_pos[2] - b[i - 1].in.ent_pos[2];
+        double s = sqrt(dx * dx + dz * dz);
+        if (!strcmp(b[i].phase, "gehen") && s >= 50) { if (g0 < 0) g0 = i; g1 = i; }
+        else if (g0 >= 0 && s < 50) break;
+    }
+    if (g0 < 1) { printf("  FEHLER: keine Gehbilder\n"); return 1; }
+    double ux = b[g1].in.ent_pos[0] - b[g0 - 1].in.ent_pos[0], uz = b[g1].in.ent_pos[2] - b[g0 - 1].in.ent_pos[2];
+    double ul = sqrt(ux * ux + uz * uz); ux /= ul; uz /= ul;
+    printf("    Gehbilder %d..%d, mittlere Original-Schrittweite %.1f, Richtung (%.3f,%.3f)\n", g0, g1, ul / (g1 - g0 + 1), ux, uz);
+    for (int lauf = 0; lauf < 2; lauf++) {        /* 0 = Original-Lage (Gegenprobe), 1 = konstante Schrittweite */
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) re15_zopf_r38_glied_setzen(k, &b[0].vor[k]);
+        double sum[4][2] = {{0}}; int mx[4][2] = {{0}}, nb = 0;
+        for (int i = 0; i < n && i <= g1; i++) {
+            re15_zopf_eingang_t in = b[i].in;
+            if (lauf && i >= g0) {
+                in.ent_pos[0] = b[g0 - 1].in.ent_pos[0] + (int32_t)lround(ux * schritt * (i - g0 + 1));
+                in.ent_pos[2] = b[g0 - 1].in.ent_pos[2] + (int32_t)lround(uz * schritt * (i - g0 + 1));
+            }
+            re15_zopf_r38_schritt(&in);
+            if (i < g0) continue;
+            nb++;
+            for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+                const re15_zopf_glied_t *g = re15_zopf_r38_glied(k);
+                for (int a = 0; a < 2; a++) {
+                    int ax = a ? 2 : 0;
+                    int d = abs((((int)g->rot[ax] - (int)b[i].nach[k].rot[ax]) % 4096 + 6144) % 4096 - 2048);
+                    sum[k][a] += d; if (d > mx[k][a]) mx[k][a] = d;
+                }
+            }
+        }
+        printf("    %s:\n", lauf ? "KONSTANTE Schrittweite" : "Original-Lage (Gegenprobe, muss 0 sein)");
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++)
+            printf("      Glied %d xang Mittel %6.1f max %4d | zang Mittel %6.1f max %4d\n", RE15_ZOPF_ERSTES_TEIL + k,
+                   sum[k][0] / nb, mx[k][0], sum[k][1] / nb, mx[k][1]);
+        if (!lauf) {
+            int null = 1;
+            for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) if (mx[k][0] || mx[k][1]) null = 0;
+            PRUEF(null, "Gegenprobe: mit der Original-Lage rechnet der Port die %d Gehbilder bitgleich", nb);
+        }
+    }
+    return g_fail ? 1 : 0;
+}
+
 /* original (RIEGEL): der Datensatz r38_zopf_orig.inc (aus orig_zopf_frames.txt erzeugt, orig_zopf_inc.py) — Zustand der
  * Glieder 17..20 aus der Original-RAM vor Bild 0, danach rechnet der Port 235 Bilder FORTLAUFEND mit seinem eigenen
  * Zustand und den Original-Eingaengen; je Bild muss der FNV-1a ueber die 80 Werte (Glieder m/t/rot/v94/v96, Teil 8 +0x40)
@@ -821,11 +877,288 @@ static int teil_pixel(const char *mit, const char *ohne, int x0, int y0, int x1,
     return g_fail ? 1 : 0;
 }
 
+/* ------------------------------------------------------------------------- Zopf-Log lesen (lauf / huelle) */
+/* Eine Zeile "Z<n> s0=.. g0=(rx,ry,rz v94=.. v96=.. t=x,y,z) .. g3=(..) kopf=.. w8=[..] ein=(..) pos=x,y,z"
+ * (zopf_r38.c, RE15_ZOPF_LOG), gelesen ab der letzten Raum-Marke "R kommando0". rot = (xang, s0, zang) wie
+ * FUN_80024e40 Schritt 7 sie ablegt (@0x80025304/0c, rot.vy = s0 @0x80025328). */
+typedef struct { int s0; int rot[4][3]; int v94[4], v96[4]; int t[4][3]; int pos[3]; int yaw, ng; } zl_schritt_t;
+#define ZL_MAX 4096
+static zl_schritt_t s_zl[ZL_MAX];
+
+static int zl_lesen(const char *pfad)
+{
+    FILE *f = fopen(pfad, "r");
+    if (!f) { printf("  FEHLER: %s fehlt\n", pfad); return -1; }
+    static char z[1024];
+    int n = 0;
+    while (fgets(z, sizeof z, f)) {
+        if (!strncmp(z, "R kommando0", 11)) { n = 0; continue; }
+        zl_schritt_t s; int idx;
+        if (sscanf(z, "Z%d s0=%d", &idx, &s.s0) != 2) continue;
+        const char *p = z; int ok = 1;
+        for (int k = 0; k < 4 && ok; k++) {
+            char key[8]; snprintf(key, sizeof key, " g%d=(", k);
+            p = strstr(p, key);
+            if (!p || sscanf(p + 5, "%d,%d,%d v94=%d v96=%d t=%d,%d,%d", &s.rot[k][0], &s.rot[k][1], &s.rot[k][2],
+                             &s.v94[k], &s.v96[k], &s.t[k][0], &s.t[k][1], &s.t[k][2]) != 8) ok = 0;
+            else p += 5;
+        }
+        const char *q = strstr(z, " pos=");
+        if (!ok || !q || sscanf(q + 5, "%d,%d,%d", &s.pos[0], &s.pos[1], &s.pos[2]) != 3) continue;
+        int ex, ez, t0vy, t0vz, t8vy;
+        const char *e = strstr(z, " ein=(ent ");
+        if (!e || sscanf(e + 10, "%d,%d,%d t0vy %d t0vz %d t8vy %d ng %d", &ex, &s.yaw, &ez, &t0vy, &t0vz, &t8vy,
+                         &s.ng) != 7) continue;
+        if (n < ZL_MAX) s_zl[n++] = s;
+    }
+    fclose(f);
+    return n;
+}
+
+/* huelle <zopf.log>: das Zopf-NETZ (PL04.MD1 Teile 17..20) je Schritt in Weltlage — Matrix wie FUN_80024e40 Schritt 7
+ * (RotMatrixYXZ(xang,0,zang) @0x80025308, RotMatrixY(s0) @0x80025324), Lage t — gegen die Spielerlage pos: hoechster
+ * Zopfpunkt ueber dem Boden (PSX -y = oben) und groesster waagerechter Abstand von der Figurachse. Vergleich mit dem
+ * Figurkasten der Runde-37-Spur P (r37/masken36 tests/unit/test_r37_masken36.c FIGUR_HOCH 3000 / FIGUR_HALB 350, dort
+ * an der exe an Leon gemessen: Hoehe 2999, quer 706). Werkzeug (Dossier §4.5): schreibt den Verlauf nach <log>.huelle,
+ * Rueckgabe 0 = Datei lesbar; die Kastenpruefung steht als Zeile "KASTEN" in der Ausgabe. */
+#define P_FIGUR_HOCH 3000
+#define P_FIGUR_HALB 350
+static int teil_huelle(const char *pfad)
+{
+    printf("[huelle] %s\n", pfad);
+    int n = zl_lesen(pfad);
+    if (n <= 0) { printf("  FEHLER: keine Schritte mit pos= in %s\n", pfad); return 1; }
+    char p[512]; size_t nb = 0;
+    snprintf(p, sizeof p, "%s/PLD/PL04.MD1", RE15_ASSET_PSX_DIR);
+    uint8_t *b = slurp(p, &nb);
+    static re15_md1_t md;
+    if (!b || re15_md1_parse(b, (int)nb, &md) != 0 || md.mesh_count < RE15_ZOPF_ERSTES_TEIL + RE15_ZOPF_GLIEDER) {
+        printf("  FEHLER: %s\n", p); free(b); return 1;
+    }
+    char vp[600]; snprintf(vp, sizeof vp, "%s.huelle", pfad);
+    FILE *vo = fopen(vp, "w");
+    int hmax = -(1 << 30), rmax = 0, hmax_i = -1, rmax_i = -1, ueber_r = 0, ueber_h = 0;
+    for (int i = 0; i < n; i++) {
+        const zl_schritt_t *s = &s_zl[i];
+        int h_i = -(1 << 30), r_i = 0;
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+            int16_t r[3] = { (int16_t)s->rot[k][0], 0, (int16_t)s->rot[k][2] }, m[9];
+            re15_zopf_r38_rotmatrix_yxz(r, m);
+            re15_zopf_r38_rotmatrix_y(s->rot[k][1], m);
+            const re15_md1_mesh_t *ms = &md.meshes[RE15_ZOPF_ERSTES_TEIL + k];
+            for (int pass = 0; pass < 2; pass++) {
+                const re15_md1_vertex_t *vs = pass ? ms->quad_vertices : ms->tri_vertices;
+                int cnt = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+                for (int j = 0; vs && j < cnt; j++) {
+                    int32_t w[3];
+                    for (int a = 0; a < 3; a++)
+                        w[a] = ((m[a*3+0] * vs[j].x + m[a*3+1] * vs[j].y + m[a*3+2] * vs[j].z) >> 12) + s->t[k][a];
+                    int h = s->pos[1] - w[1];
+                    double dx = w[0] - s->pos[0], dz = w[2] - s->pos[2];
+                    int rr = (int)sqrt(dx * dx + dz * dz);
+                    if (h > h_i) h_i = h;
+                    if (rr > r_i) r_i = rr;
+                }
+            }
+        }
+        if (vo) fprintf(vo, "%d pos=%d,%d,%d hoch=%d quer=%d\n", i, s->pos[0], s->pos[1], s->pos[2], h_i, r_i);
+        if (h_i > hmax) { hmax = h_i; hmax_i = i; }
+        if (r_i > rmax) { rmax = r_i; rmax_i = i; }
+        if (r_i > P_FIGUR_HALB) ueber_r++;
+        if (h_i > P_FIGUR_HOCH) ueber_h++;
+    }
+    if (vo) fclose(vo);
+    free(b);
+    printf("    %d Schritte: hoechster Zopfpunkt %d ueber dem Boden (Schritt %d), weitester %d von der Figurachse (Schritt %d)\n",
+           n, hmax, hmax_i, rmax, rmax_i);
+    printf("    KASTEN Spur P (Hoehe %d, quer %d): %d Schritte hoeher, %d Schritte weiter als der Kasten -> %s\n",
+           P_FIGUR_HOCH, P_FIGUR_HALB, ueber_h, ueber_r, (ueber_h || ueber_r) ? "RAGT HINAUS" : "innerhalb");
+    return 0;
+}
+
+/* ------------------------------------------------------------------- lauf: Gehen/Rennen an der exe gegen das Original */
+static void orig_start_setzen(void)
+{
+    for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+        re15_zopf_glied_t g;
+        const int32_t *s = k_r38_orig_start[k];
+        memset(&g, 0, sizeof g);
+        for (int i = 0; i < 3; i++) g.off[i] = s[i];
+        for (int i = 0; i < 9; i++) g.m[i] = (int16_t)s[3 + i];
+        for (int i = 0; i < 3; i++) g.t[i] = s[12 + i];
+        for (int i = 0; i < 3; i++) g.rot[i] = (int16_t)s[15 + i];
+        g.v94 = (int16_t)s[18]; g.v96 = (int16_t)s[19];
+        re15_zopf_r38_glied_setzen(k, &g);
+    }
+}
+
+static void orig_eingang(int b, re15_zopf_eingang_t *in)
+{
+    const int32_t *e = k_r38_orig_ein[b];
+    memset(in, 0, sizeof *in);
+    int p = 0;
+    for (int i = 0; i < 3; i++) in->ent_rot[i] = (int16_t)e[p++];
+    for (int i = 0; i < 3; i++) in->ent_pos[i] = e[p++];
+    for (int i = 0; i < 9; i++) in->l0_rot[i] = e[p++];
+    for (int i = 0; i < 3; i++) in->l0_t[i] = e[p++];
+    for (int i = 0; i < 9; i++) in->l8_rot[i] = e[p++];
+    for (int i = 0; i < 3; i++) in->l8_t[i] = e[p++];
+    in->teil0_vy = (int16_t)e[p++]; in->teil0_vz = (int16_t)e[p++]; in->teil8_vy = (int16_t)e[p++];
+    in->nacken_gier = (int16_t)e[p++]; in->nacken_flags = (uint8_t)e[p++];
+}
+
+static uint32_t zustand_hash(void)
+{
+    uint32_t h = 0x811c9dc5u;
+    for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+        const re15_zopf_glied_t *g = re15_zopf_r38_glied(k);
+        for (int i = 0; i < 9; i++) h = fnv_i32(h, g->m[i]);
+        for (int i = 0; i < 3; i++) h = fnv_i32(h, g->t[i]);
+        for (int i = 0; i < 3; i++) h = fnv_i32(h, g->rot[i]);
+        h = fnv_i32(h, g->v94); h = fnv_i32(h, g->v96);
+    }
+    int16_t m8[9]; int32_t t8[3];
+    re15_zopf_r38_kopf_welt(m8, t8);
+    for (int i = 0; i < 9; i++) h = fnv_i32(h, m8[i]);
+    for (int i = 0; i < 3; i++) h = fnv_i32(h, t8[i]);
+    return h;
+}
+
+static double orig_schritt(int b)   /* Lage-Schritt des Originals von Bild b-1 nach b (Spieler +0x34/+0x3c) */
+{
+    double dx = k_r38_orig_ein[b][3] - k_r38_orig_ein[b - 1][3], dz = k_r38_orig_ein[b][5] - k_r38_orig_ein[b - 1][5];
+    return sqrt(dx * dx + dz * dz);
+}
+
+static double zl_schritt(int i)
+{
+    double dx = s_zl[i].pos[0] - s_zl[i - 1].pos[0], dz = s_zl[i].pos[2] - s_zl[i - 1].pos[2];
+    return sqrt(dx * dx + dz * dz);
+}
+
+/* lauf <zopf.log> (INTEGRATION, Dossier §4.4): Elza an der exe mit der Eingabe der ORIGINAL-MESSUNG (mess_laufen.sh
+ * lauf: ROOM1121 (150,9550) Blick 2048, stehen, R 29 Bilder, stehen, U 40 Bilder — wie orig_zopf_gdb.py), danach Kehrt,
+ * Rennen X+U 14 Bilder, stehen.
+ *  Gehen   ausgerichtet am Gehbeginn (Original Bild 135 = erste neue Lage), Fenster solange die Eingaenge gleich sind
+ *          (Nacken-Gier Teil 8 +0x94 exe == Original, Schritt >= 50 in beiden: vor der Wand / vor der Port-Nackendrehung).
+ *          Je Glied der groesste zang (Ausschlag nach hinten, FUN_80024e40 Schritt 4 @0x80025140) exe gegen Original.
+ *          Schranke je Glied = die Abweichung, die die GLEICHMAESSIGE Port-Schrittweite allein erzeugt: das Original
+ *          (r38_zopf_orig.inc, bitgleich nachgerechnet) noch einmal mit konstanter Schrittweite = der an der exe gemessenen
+ *          (player_common.c WALK_SPEED_PER_FRAME 75 statt der Original-Lage, die mit dem Gang 55..90 je Bild schwankt).
+ *  Rennen  groesster zang von Glied 17 beim Rennen (Schritt >= 150) > beim Gehen; nach dem Rennen schwingt Glied 17 durch
+ *          die Ruhelage nach vorn (zang < Ruhe - 11 = 1 Grad) und schwingt aus (Abstand zur Ruhe in den Schritten 11..30
+ *          nach dem Halt < halber Abstand in 1..10; Glied 17 hat den Daempfer p6 = 2 @0x80024d04-50, v94 halbiert sich
+ *          je Bild). */
+static int teil_lauf(const char *pfad)
+{
+    printf("[lauf] %s\n", pfad);
+    int n = zl_lesen(pfad);
+    if (n < 100) { printf("  FEHLER: nur %d Schritte mit pos= in %s\n", n, pfad); return 1; }
+    /* Original: Gehbeginn og, erstes Bild an der Wand oe */
+    int og = -1, oe = R38_ORIG_BILDER;
+    for (int b = 1; b < R38_ORIG_BILDER; b++) {
+        double s = orig_schritt(b);
+        if (og < 0 && s > 0) og = b;
+        else if (og >= 0 && s < 50) { oe = b; break; }
+    }
+    /* 1. Original-Referenz (fortlaufend, Hash je Bild) */
+    static int16_t oz[R38_ORIG_BILDER][RE15_ZOPF_GLIEDER];
+    re15_zopf_eingang_t in;
+    orig_start_setzen();
+    int bit = 0;
+    for (int b = 0; b < R38_ORIG_BILDER; b++) {
+        orig_eingang(b, &in);
+        re15_zopf_r38_schritt(&in);
+        if (zustand_hash() == k_r38_orig_hash[b]) bit++;
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) oz[b][k] = re15_zopf_r38_glied(k)->rot[2];
+    }
+    PRUEF(bit == R38_ORIG_BILDER, "Referenz: Original-RAM bitgleich nachgerechnet (%d/%d Bilder), Gehbeginn Bild %d, Wand Bild %d",
+          bit, R38_ORIG_BILDER, og, oe);
+    /* 2. exe: Gehbeginn pg, Fenster w gleicher Eingaenge */
+    int pg = -1;
+    for (int i = 1; i < n; i++) if (zl_schritt(i) > 0) { pg = i; break; }
+    if (pg < 16 || og < 1) { printf("  FEHLER: kein Gehbeginn (exe %d, Original %d)\n", pg, og); return 1; }
+    int w = 0; double ssum = 0;
+    while (pg + w < n && og + w < oe) {
+        double sp = zl_schritt(pg + w);
+        if (sp < 50 || s_zl[pg + w].ng != k_r38_orig_ein[og + w][33]) break;
+        ssum += sp; w++;
+    }
+    int S = w ? (int)lround(ssum / w) : 0;
+    printf("    exe: %d Schritte, Gehbeginn Schritt %d, gleiche Eingaenge %d Bilder (Schrittweite exe %d, Original %.0f..%.0f)\n",
+           n, pg, w, S, orig_schritt(og), orig_schritt(og + 3));
+    PRUEF(w >= 30, "Gehfenster mit gleichen Eingaengen: %d Bilder (>= 30)", w);
+    if (w < 1) return 1;
+    /* 3. Schranke: Original mit konstanter Schrittweite S */
+    double ux = k_r38_orig_ein[oe - 1][3] - k_r38_orig_ein[og - 1][3], uz = k_r38_orig_ein[oe - 1][5] - k_r38_orig_ein[og - 1][5];
+    double ul = sqrt(ux * ux + uz * uz); ux /= ul; uz /= ul;
+    int schranke[RE15_ZOPF_GLIEDER] = {0};
+    orig_start_setzen();
+    for (int b = 0; b < og + w; b++) {
+        orig_eingang(b, &in);
+        if (b >= og) {
+            in.ent_pos[0] = k_r38_orig_ein[og - 1][3] + (int32_t)lround(ux * S * (b - og + 1));
+            in.ent_pos[2] = k_r38_orig_ein[og - 1][5] + (int32_t)lround(uz * S * (b - og + 1));
+        }
+        re15_zopf_r38_schritt(&in);
+        if (b < og) continue;
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+            int d = abs(re15_zopf_r38_glied(k)->rot[2] - oz[b][k]);
+            if (d > schranke[k]) schranke[k] = d;
+        }
+    }
+    /* 4. Ausschlag nach hinten beim Gehen: exe gegen Original */
+    int zmax_geh0 = -100000;
+    for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+        int pe = -100000, po = -100000;
+        for (int j = 0; j < w; j++) {
+            if (s_zl[pg + j].rot[k][2] > pe) pe = s_zl[pg + j].rot[k][2];
+            if (oz[og + j][k] > po) po = oz[og + j][k];
+        }
+        if (k == 0) zmax_geh0 = pe;
+        PRUEF(abs(pe - po) <= schranke[k], "Gehen, Glied %d: groesster zang exe %d / Original %d (%.1f / %.1f Grad), "
+              "Abweichung %d <= %d (konstante Schrittweite %d)", RE15_ZOPF_ERSTES_TEIL + k, pe, po, pe * 360.0 / 4096,
+              po * 360.0 / 4096, abs(pe - po), schranke[k], S);
+    }
+    /* 5. Rennen: Block mit Schritt >= 150 nach dem Gehfenster */
+    int rs = -1, re = -1;
+    for (int i = pg + w; i < n; i++) {
+        double sp = zl_schritt(i);
+        if (sp >= 150) { if (rs < 0) rs = i; re = i; }
+        else if (rs >= 0) break;
+    }
+    PRUEF(rs >= 0 && re - rs + 1 >= 5, "Rennen: %d Schritte mit Schritt >= 150 (ab Schritt %d)", rs >= 0 ? re - rs + 1 : 0, rs);
+    if (rs < 0) return 1;
+    int zmax_renn = -100000;
+    for (int i = rs; i <= re; i++) if (s_zl[i].rot[0][2] > zmax_renn) zmax_renn = s_zl[i].rot[0][2];
+    PRUEF(zmax_renn > zmax_geh0, "Rennen reisst den Zopf weiter nach hinten als Gehen: Glied 17 zang %d > %d (%.1f > %.1f Grad)",
+          zmax_renn, zmax_geh0, zmax_renn * 360.0 / 4096, zmax_geh0 * 360.0 / 4096);
+    double ruhe = 0;
+    for (int i = pg - 15; i < pg; i++) ruhe += s_zl[i].rot[0][2];
+    ruhe /= 15;
+    int zmin = 100000, zmin_i = -1;
+    for (int i = re + 1; i < n && i <= re + 40; i++) if (s_zl[i].rot[0][2] < zmin) { zmin = s_zl[i].rot[0][2]; zmin_i = i; }
+    PRUEF(zmin < ruhe - 11, "nach dem Rennen schwingt Glied 17 durch die Ruhelage nach vorn: zang %d (Schritt %d) < Ruhe %.0f - 11",
+          zmin, zmin_i, ruhe);
+    /* Ausschwingen: groesster Abstand von der Ruhelage in den ersten 10 Schritten nach dem Halt gegen die 20 danach
+     * (Daempfer v94 -= v94/p6 @0x800251ec-260). Spaeter (Nacken-Blick, Leerlauf-Animation der Port-Figur) wird der
+     * Zopf neu angestossen — darum kein "Ruhe"-Fenster hier; das Einschwingen prueft der Riegel "spur" (Drehung). */
+    double a1 = 0, a2 = 0;
+    for (int i = re + 1; i < n && i <= re + 10; i++) if (fabs(s_zl[i].rot[0][2] - ruhe) > a1) a1 = fabs(s_zl[i].rot[0][2] - ruhe);
+    for (int i = re + 11; i < n && i <= re + 30; i++) if (fabs(s_zl[i].rot[0][2] - ruhe) > a2) a2 = fabs(s_zl[i].rot[0][2] - ruhe);
+    PRUEF(a1 > 0 && a2 < a1 * 0.5, "Glied 17 schwingt aus: Abstand zur Ruhelage %.0f (Schritte 1..10 nach dem Halt) -> %.0f "
+          "(Schritte 11..30), weniger als die Haelfte", a1, a2);
+    return g_fail ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2) { printf("Teil fehlt\n"); return 2; }
+    if (!strcmp(argv[1], "lauf") && argc >= 3) return teil_lauf(argv[2]);
     const char *t = argv[1];
     if (!strcmp(t, "spur") && argc >= 3) return teil_spur(argv[2]);
+    if (!strcmp(t, "huelle") && argc >= 3) return teil_huelle(argv[2]);
+    if (!strcmp(t, "konst") && argc >= 4) return teil_konst(argv[2], atoi(argv[3]));
     if (!strcmp(t, "orig") && argc >= 3) return teil_orig(argv[2]);
     if (!strcmp(t, "pixel") && argc >= 8)
         return teil_pixel(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));

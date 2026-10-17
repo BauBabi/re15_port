@@ -9,6 +9,12 @@
 #   elza_aus  dieselbe Fahrt mit der Mess-Sonde RE15_ZOPF_SONDE_AUS=1 (Zopf gerechnet, NICHT gezeichnet), Bild 50:
 #             pixel -> test_r38_zopf pixel: >= 25 Pixel verschieden, alle am Hinterkopf-Fenster
 #   leon      Gegenprobe Leon (ROOM1120, gleiche Stelle): kein Zopf-Schritt, Leon-Mesh 17 Teile
+#   elza_lauf Gehen + Rennen (Dossier §4.4): Elza (150,9550) Blick 2048 mit der Eingabe der ORIGINAL-Messung
+#             (D_belege/orig_zopf_gdb.py: stehen, R 29 Bilder, stehen, U 40 Bilder), danach Kehrt + Rennen 14 Bilder:
+#             lauf   -> test_r38_zopf lauf: Ausschlag nach hinten beim Gehen je Glied wie im Original (Referenz
+#                       r38_zopf_orig.inc, Schranke = Abweichung allein durch die gleichmaessige Port-Schrittweite),
+#                       Rennen reisst weiter, nach dem Halt Schwung durch die Ruhelage und Ausschwingen
+#             huelle -> test_r38_zopf huelle (nur Ausgabe): Zopf-Netz gegen den Figurkasten der Runde-37-Spur P
 # Die exe laeuft als Messkopie re15_pc_r38d_haken_<id> neben der Original-exe (Muster test_r34n_b_cursor.cmake).
 # Ein Lauf ohne Ergebnis (exit=1/-1 = von aussen beendet; debug.log < 10 Zeilen) wird EINMAL wiederholt.
 
@@ -124,4 +130,18 @@ list(LENGTH _zl _nz)
 if(NOT _nz EQUAL 0)
     r38_fehler("leon" "Leon rechnet einen Zopf (${_nz} Schritte) — darf er nicht (Modell-Bit 2 @0x80031d8c)")
 endif()
-message(STATUS "${_tag}: ALLE TEILE OK (elza spur, pixel, leon ohne Zopf) in ${_wurzel}")
+# ---- Elza: Gehen + Rennen, Eingabe der Original-Messung (Dossier §4.4)
+set(_d4 "${_wurzel}/elza_lauf")
+r38_exe("elza_lauf" "${_d4}" elza "560#1121"
+        "RE15_ZOPF_LOG=zopf.log;RE15_PLAYER_POS=150,9550,2048;RE15_INPUT_SCRIPT=W4.5,R0.9667,W3.0333,U1.3333,W2.0,R0.7,W1.0,XU0.4667,W3.0")
+if(NOT EXISTS "${_d4}/zopf.log")
+    r38_fehler("elza_lauf" "zopf.log fehlt in ${_d4}")
+endif()
+execute_process(COMMAND "${RE15_ZOPF_TOOL}" lauf "${_d4}/zopf.log" RESULT_VARIABLE _rl OUTPUT_VARIABLE _ol ERROR_VARIABLE _ol)
+message(STATUS "${_ol}")
+if(NOT _rl EQUAL 0)
+    r38_fehler("elza_lauf" "Zopf beim Gehen/Rennen nicht wie im Original (test_r38_zopf lauf)")
+endif()
+execute_process(COMMAND "${RE15_ZOPF_TOOL}" huelle "${_d4}/zopf.log" OUTPUT_VARIABLE _oh ERROR_VARIABLE _oh)
+message(STATUS "${_oh}")
+message(STATUS "${_tag}: ALLE TEILE OK (elza spur, pixel, leon ohne Zopf, elza_lauf) in ${_wurzel}")

@@ -1,0 +1,12 @@
+######## mess_laufen.sh origfolge29
+[huelle] origfolge29/zopf.log
+    396 Schritte: hoechster Zopfpunkt 2847 ueber dem Boden (Schritt 292), weitester 484 von der Figurachse (Schritt 285)
+    KASTEN Spur P (Hoehe 3000, quer 350): 0 Schritte hoeher, 314 Schritte weiter als der Kasten -> RAGT HINAUS
+######## mess_laufen.sh lauf
+[huelle] lauf/zopf.log
+    556 Schritte: hoechster Zopfpunkt 2847 ueber dem Boden (Schritt 292), weitester 809 von der Figurachse (Schritt 526)
+    KASTEN Spur P (Hoehe 3000, quer 350): 0 Schritte hoeher, 416 Schritte weiter als der Kasten -> RAGT HINAUS
+######## mess_laufen.sh rennen
+[huelle] rennen/zopf.log
+    416 Schritte: hoechster Zopfpunkt 2853 ueber dem Boden (Schritt 86), weitester 718 von der Figurachse (Schritt 263)
+    KASTEN Spur P (Hoehe 3000, quer 350): 0 Schritte hoeher, 382 Schritte weiter als der Kasten -> RAGT HINAUS
