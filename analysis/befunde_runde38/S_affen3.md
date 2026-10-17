@@ -494,3 +494,39 @@ Zustand 4 0x80115734: `lbu v0,5(v0)` @0x80115744, Tabelle @0x8011ee34 (`addiu at
   im Port luft_treffer -> blut() (vorhanden).
 - Wurzel-Schattenblock @0x80110bd0-c64: +0x9 & 0x40 -> KEINE Schattengroessen-Aktualisierung (+0x1d8 -> +0xb4/+0xb6); danach
   FUN_8001b064(&+0xb0, +0x1ba) @0x80110c7c. Nur der Schatten; der Port zeichnet den Gegnerschatten anders (nicht diese Spur).
+
+### Mangel 1 — Original gemessen: o11 (DuckStation-GDB, ROOM4040, Freigabe im Ausloeser)
+Werkzeug `s_nb1/gdb/affen_spur4.py` (Scratch) = affen_spur3.py mit einstellbarer Wurzel (`--root 8010c1a0` = STAGE4.BIN-Wurzel,
+Registrierung @0x801183e8); DuckStation per Start-Process (`-batch -statefile stage_saves/mzd_debugmenu.sav <MZD-cue>`),
+`--attach <PID>`; Sprung Stage-Index 3 / Raumindex 4 (ROOM4040); Spieler nach 40 aufgezeichneten Bildern auf (-25000,0,4000)
+Band 0 (im Rechteck von AOT 5). settings.ini `[Debug] EnableGDBServer` nur waehrend der Messung true, danach die Sicherung
+byte-gleich zurueckgespielt (kein BOM, `EnableGDBServer = false`). **Code-Identitaet: RAM 0x8010c1a0..+0x5730 (22320 B) ==
+STAGE4.BIN, 0 Abweichungen.** 450 Bilder (Zeile = Halt an der Wurzel mit cur = Entity 0 = Platz 0 des Raums).
+| Zeile (Bild) | Affe +0x4.5.6.7 | +0x9 | Lage (x,y,z) | weitere |
+|---|---|---|---|---|
+| F0  | 0.0.0.0 | **41** | (-14040,0,19130) | +0x78 = 0x80072be0 (Sce_em_set-Vorgabe @0x800422cc-d0) — DER SPAWN-WURZELAUFRUF (s. unten) |
+| F18..F56 | **4.1.0.0** | 61 | (-14040,0,19130) | gesperrt; der INIT lief schon beim Spawn |
+| F57 | 4.1.0.0 | 41 | (-25090,**-10000**,9230) | Freigabe im selben Bild (Pos_set @0x011CE + Member_set @0x011D6); dieser Wurzel-Halt faehrt Zustand 4/1 |
+| F58 | 1.10.2.0 | 01 | (-25090,-10000,9230) | +0x1e0 1, +0x93 03, Clip 13 Bild 20, +0x78 = 0x80119e50 (Luftkasten) |
+| F59 | 1.10.2.0 | 01 | y -10000 | +0x93 01 (A[10] loescht Bit 1, Effekt), Bild 21, +0x9c 1 |
+| F60..F75 | 1.10.2.0 | 01 | y -9930, -9790, -9580, -9300, -8950, -8530, -8040, -7480, -6850, -6150, -5380, -4540, -3630, -2650, -1600, -480 | Bild 22, 23, dann 23 gehalten; +0x9c 2..17 |
+| F76 | 1.10.3.0 | 01 | y **0** (= +0x1ba) | gelandet |
+| F77 | 1.10.4.0 | 01 | y 0 | +0x1e0 0, +0x93 0, Bild 25, +0x78 = 0x80119e44 (Bodenkasten) |
+| F92 | 1.4.0.0 | 01 | (-25090,0,9230) | Clip 13 zu Ende -> Sub 4 (Anlauf), F93 Clip 6 +0x8c 185 |
+| F106 | 1.6.1.0 | 01 | (-23859,0,7548) | Sub 6 schwerer Angriff (Clip 19) |
+| F128 | | | | **erster Treffer: Leon 100 -> 90** (schwer, cmd 02 04), danach Bisse -5 bei F225, 283, 340, 397, 454 |
+Der Fall: y(n) = -10000 + 70*n(n-1)/2 (c1a4(0,0,-70) mit +0x9c = n), 18 Fallbilder, Landung im 18., Clip 0xd danach 15 Bilder.
+**Der Affe greift erst nach der Landung an, vom Boden aus.**
+
+### Mangel 1 — der Spawn-Wurzelaufruf (warum der gesperrte Affe schon in Zustand 4 steht)
+Sce_em_set FUN_800420a0 (PSX.EXE, selbst disassembliert): `sb v0,9(s0)` @0x80042164 (+0x9 = pc[3] = 0x61);
+@0x80042564 `lbu v1,9(s0)` / @0x8004256c `andi v0,v1,0xdf` / @0x80042570 `sb v0,9(s0)` (Sperrbit 0x20 geloescht) /
+@0x80042578 `sw s0,-14460(at)` (cur = Affe) / @0x8004257c-94 `lbu v0,8(s0)` .. `lw v0,0(0x80072bac + 4*Typ)` /
+**@0x8004259c `jalr v0`** (die Typ-Wurzel EINMAL, INIT sieht +0x9 = 0x41 -> Zustandswort 0x104) / Delay @0x800425a0
+`andi s4,v1,0x20` / @0x80042604 `or v0,v0,s4` / @0x80042608 `sb v0,9(s0)` (Sperrbit zurueck, +0x9 = 0x61).
+Der Port hat diesen Aufruf (`re15_enemy_spawn_root`, enemy_ai_common.c, aus op_sce_em_set), aber nur fuer 0x30/0x36/0x27
+verdrahtet ("fuer die uebrigen Typen OFFEN"). Fuer 0x29 lief der INIT deshalb erst im ersten ungesperrten run_all-Bild —
+also NACH Member_set(12,0x41) — und kannte den 0x40/0x41-Zweig nicht (Zustand 1 / Sub 1 = Schlaf auf y = -10000).
+Folge fuer die Umsetzung: (1) 0x29 in re15_enemy_spawn_root, (2) INIT-Zweig 0x40/0x41, (3) Zustand 4/5 mit beiden
+Unterzustaenden. Der alte Riegel integration_r38_affen3_tor erwartete "gesperrt in Zustand 0, INIT erst nach der
+Freigabe" — das widerspricht o11 (gesperrt in Zustand 4.1) und wird auf das Original umgestellt.
