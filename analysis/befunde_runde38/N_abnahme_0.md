@@ -175,6 +175,19 @@ lauf.sh m14_elza2041_tuer elza 2041 ... "160#2071"
 Bild `m13_sheet_full.png`: heller gruen-weisser Spritzer neben Leons Knie F134-F138 (Kamera nah), F74/F78 hinter der Spinne.
 Damit ist das "flache Wasser" der Kanalraeume ausserhalb der Pfuetzen (Stempel-Zweig) ueber den echten Weg fuer Leon UND Elza belegt.
 
+### M15 ROOM11A0 Band 0 — die u16-Breite (B10) wird im Spiel wirksam
+Eigener Door-Scan: ROOM2070 slot 4 (nach Flag (3,151), sub02) fuehrt nach 11A0 Ankunft (6500,0,-3200) Blick 3072 Cut 7, und
+11A0 slot 0 (Band 0, rect x 5400..7600 z -4300..-3400) zurueck nach 2070 — der Spieler steht in 11A0 also auf Band 0 IN der
+sce-8-Zone slot 7 (x -20150..28900, z -3850..-200, Breite 49050 > 32767, Spiegel -900). Die Dossier-Zeile "11A0 ... Spieler
+erreicht sie nicht" stimmt damit nicht (Doku-Ungenauigkeit, der Code deckt den Fall ab).
+```
+lauf.sh m15_leon11a0_b0 leon 11A0 "6500,-3200,3072,0" "W0.5,U2.5,W1" 60 160 RE15_FORCE_CUT=7 (= Ankunfts-Cut der Tuer)
+  F83..F143 je stempel=-900 zweig=stempel code=0x06032000 part=6/3 anker rel (-175,-836,-233)/(+165,-837,-216); [foot] type=26 vag=3; sub3 65 Bilder
+v0.8.25 gleicher Lauf: [foot] type=29 vag=1 (Beton!), kein fx.log
+```
+Bild `m15_sheet_full.png`: Spritzer am Knie F86/F90, F102-F106, F118. Ohne die u16-Korrektur haette 11A0 hier weder Effekt noch
+Wat-Ton (v0.8.25 belegt).
+
 ### Gegenprobe v0.8.25 (Paket `release/pkg-win/re15_port_v0.8.25`, nach scratchpad/v0825 kopiert, md5 7aa892fc...)
 Gleicher Lauf wie M1 (`ABN0_EXE=.../v0825/re15_pc.exe lauf.sh v0825_leon1260 ...`): `[foot] SE foot=4 type=151 vag=7` (Ton da),
 KEIN fx.log (kein einziger Effekt gezeichnet), kein Spritzer in F97-F110 (`v0825_sheet_crop.png`, gleiche Posen wie M1).
