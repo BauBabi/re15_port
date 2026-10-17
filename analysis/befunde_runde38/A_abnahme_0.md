@@ -75,3 +75,34 @@ mit dickem dunklem inneren L in jedem Eckwinkel und versetzter Kreuz-Kopie, neu 
 Saum rechts/unten ist der in die Textur gemalte Schlagschatten (TIM @0x018DAC selbst dekodiert,
 `scratchpad/abn/cursor_tim_oberseite.png`: dunkelgruene/braune Kante +5u/+3v an jedem Element) — im Original ebenso
 sichtbar und bei Skala 3 sogar ANTEILIG kleiner als im Original (1,30 statt 1,79).
+
+## 4. Messung Punkt 1 — ROOM1150 Hebetisch-Cursor ueber den LADE-Weg
+
+Weg wie ein Spieler: Spielstand (probe_r30_granate_karte, ROOM1150) -> Titel -> LOAD GAME (`RE15_CONTINUE_TEST=1
+RE15_CARD_AUTO=1`) -> `[save] CONTINUE: resumed in room 1150 (hp=100)` -> Aktionstaste am Tisch (F90) -> cursor.log
+`F101 raum=1150 aktiv cursor=2 ... cam=4`, dann Steuerkreuz R/D/L/U (Cursor wandert sx 160->200, sy 119->158 und
+zurueck). Laeufe `runs/m2_{neu,alt}_s{1,3}`, RE15_TRILOG ganzer Schirm, Bilder F140..F460.
+
+| Lauf | Platz 28 (RE15_HC_TIM_SLOT) eingereihte Dreiecke | NCLIP < 0 | = 0 | > 0 |
+|---|---|---|---|---|
+| alt (v0.8.25) | 76744 | **8056** | 27858 | 40830 |
+| neu | 68688 | **0** | 27858 | 40830 |
+
+Bild `scratchpad/abn/m2_1150_zoom.png` (5 Cursor-Lagen x [alt S1 | neu S1 | alt S3 | neu S3]): alt an jeder Lage die
+versetzte dunkle Kopie (abseits der Mitte deutlich verschoben), neu an keiner. Nebenwirkung derselben Ansicht (Cut 4,
+`scratchpad/abn/m2_1150_cut4_alt_neu_mark.png`): 1326 Punkte (x 78..237, y 37..165) = das dunkelbraune Band zwischen den
+Papierstapel-Hochhaeusern (Rueckseite von Prop 0, Original-Objekt aus ROOM1150 Obj_model_set) faellt weg, dahinter
+Boden/Gitter. Das ist dasselbe Original-Zeichnerpaar FUN_800254a0/FUN_800256b0 mit demselben `bgez` (s. §7) — kein
+DuckStation-Bild dieser Ansicht vorhanden (stage_saves/ und analysis/grundwahrheit/ selbst durchsucht), Bewertung
+daher nur ueber den Mechanismus.
+
+## 5. Messung Punkt 1 — Elza (ROOM11F1) ueber den echten Raetsel-Einstieg
+
+`RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, Debug-Sprung 11F0@250 -> debug.log `[pl] Spieler-Familie PL04
+(character=4, Elza-Bit=1)`, `EXIT_AT: Bild 1302 in Raum 11f1`; Panel per Aktionstaste wie §3 -> `[scd F833]
+Cut_chg(10)`. Laeufe `runs/m3_elza_{neu,alt}`:
+
+| Lauf | Platz 4 Dreiecke | NCLIP < 0 | Klassenkarte gegen das Original (F900 / F950) |
+|---|---|---|---|
+| alt | 99428 | 10297 | 21 Abweichungen (F900) |
+| neu | 89131 | **0** | **0 / 0** (G 38, g 68, Y 14, y 22 = Original) |
