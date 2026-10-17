@@ -624,3 +624,34 @@ jetzt in der gezielten Auswahl (prueft den Gift-Status `pl->status_flags |= 0x00
 2 Zeilen; der Port-Ort fuer genau diese Stores, Aufrufer room_common.c:309, main.c:3852, menu_common.c:1480). Folge
 wie im Original: nach Raumwechsel, Laden oder Schliessen des Inventars kommt der erste Gift-Takt sofort.
 **Riegel**: B4 (c) Zaehler 84 -> 0, Takt im naechsten Bild (HP 92 -> 90, Zaehler 0x78).
+
+### N1.M3 Mangel 3 — Giftklumpen ausserhalb des Szenenschutzes (Nachtrag Integration 07:36)
+**Ursache**: Routine 25 (spinnen_r38.c `routine25`) laeuft im ESP-Takt NACH re15_enemy_ai_run_all; Spur Bs Sicht gilt nur
+je geschuetztem Gegner-Tick (szenenschutz_r38.c: `re15_szenenschutz_gegner(slot)` setzt +0x93 Bit 0 nur fuer diesen
+Tick, `abschliessen` stellt den echten Wert her), ihr HP-Netz ebenso.
+**Grundlage im Baum**: Merge von Spur B (`r38/szenenschutz` 2af9d15f = derselbe Commit, den der Orchestrator in
+r38/integration als 8877e863 gemergt hat; Merge e2afbd1f, konfliktfrei, enemy_ai_common.c automatisch zusammengefuehrt).
+Damit steht `re15_szenenschutz_haelt()` hier wie auf dem Integrationsstand zur Verfuegung.
+**Messung vorher** (Merge-Stand ohne Haken, unit_r38_spinnen Teil B5: ROOM2060, Klumpen einer echten Spinne,
+`g_scd.player_mode = 2`): `FAIL: Szene haelt: HP 88, status 0x0002, Gift-Treffer 1, +0x93 vom ESP-Takt veraendert 1 mal`
+— der Klumpen kostet 10 HP (+ 2 HP Gift-Takt) und setzt das Gift-Bit, obwohl die Szene den Spieler haelt.
+**Tor-Lesen des Originals (selbst disassembliert)**:
+| Angriffsweg dieser Spur | Original-Tor | Port |
+|---|---|---|
+| Giftklumpen RE1.5 (Routine 25 -> FUN_80012d60) | `lbu v0,-13593(v0)` (+0x93) @0x80012e24 / `andi v0,v0,0x1` / `bne v0,zero,0x80012f00` @0x80012e30 | `re15_resolve_attack` -> `re15_player_take_damage` (+0x93 & 1) und Gift-Tor `frei` |
+| Gift RE2 (Op 32 -> FUN_80047664) | `lbu v0,467(s0)` (+0x1D3) / `bne` @0x800476ec-f4, HP `bltz` @0x800476fc-704, `beq v0,zero` @0x800200e8 | Gift-Tor `frei` (2.9) |
+| Spuck-Entscheid RE1.5 (Unterzustand 6/7 @0x8011114c-64) | `lbu v0,-13593(v0)` @0x801111fc / `andi 0x1` @0x80111204 / `beq` @0x80111208 -> Unterzustand 0xb ueberschreibt das Spucken (@0x8011121c-2c) | vorbestehend enemy_ai_common.c `if (pl->hit_react & 1) -> 0xb` — Spur Bs Sicht greift dort |
+| Spuck-Entscheid RE2 (Wort 0x801 @0x801008a4-ac) | **KEIN Tor**: die Leiter @0x80100784-8c0 liest nur +0x237, +0x1F0/+0x1F4, den Bogentest 0x80105190, 0x800cfbf6, +0x218 und rng | — (vermerkt; der Klumpen selbst ist unten gesperrt) |
+| Babybiss RE2 (EMS26) | `lbu v0,467(s1)` / `andi 0x80` / `bne` @0x80100e78-84 | `re15_player_is_grabbed()` -> Spur Bs Sicht |
+**Aenderung** (a3c1fec7, spinnen_r38.c `routine25`): `szene = re15_szenenschutz_haelt()`; bei Szene wird fuer die Dauer
+der Routine +0x93 Bit 0 gesetzt — VOR dem Gift-Tor `frei` und VOR `re15_resolve_attack` — und danach der echte Wert
+zurueckgeschrieben (dieselbe Form wie Spur B je Gegner-Tick). Wirkung wie im Original bei geschuetztem Spieler: kein
+HP-Abzug, kein Kommando 2, kein Gift; der Klumpen zerplatzt am Spieler (cVar9 = 1 auch bei gesperrtem Spieler,
+@0x80012e18-f00). Andere Gegner im Kasten trifft er unveraendert. Protokoll `[szenenschutz] Giftklumpen abgefangen`.
+Keine "Teil der Szene"-Ausnahme: gespuckt wird nur aus dem freien Gehirn (Zustand 1: RE1.5 Unterzustand 7
+@0x80112770, RE2 Unterzustand 8 @0x8010101C), kein SCD-Skript spawnt Effekt 0x0d (Zensus Abnahme 0).
+Der GIFT-TAKT selbst laeuft in Szenen weiter, solange der Spieler im Kommando 1 steht (Set(2,7) sperrt im Original nur
+das Pad, @0x800304f4-500; im Plc-Executor Kommando 4 pausiert er, `pl->state != 4`) — er ist kein Angriff.
+**Messung nachher / Riegel** unit_r38_spinnen **B5**: Szene haelt -> HP 100, status 0x0000, Gift-Treffer 0, +0x93 nach dem
+ESP-Takt unveraendert; Gegenprobe frei (player_mode 0) -> HP 88 = 100 - 10 - 2, Gift-Bit
+(`R_belege/gegenprobe_nb1_szenenschutz.txt`).
