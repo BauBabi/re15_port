@@ -19,7 +19,8 @@ Nutzer-Wortlaut (AUFTRAG.md Nachtrag 1, 2026-10-16 21:00):
 - [x] Elza 20A1 — RDT byte-gleich, exe-Lauf B mit Elza (PL04) gruen
 - [x] Nebenwirkungen — §8 (Zensus aller Raeume; Port-Modelle ohne NCLIP — ueberholt durch §9)
 - [x] Fortsetzung 2026-10-17: Merge r38/cursor (Spur A), EIN NCLIP-Weg, EINE Regel fuer Port-Modelle — §9
-- [ ] nach dem Merge: Bau, gezielte Tests (A + W + Module), Messung nachher 20A0/20A1 Cut 11 + ROOM1050 Cut 5 — §9.4/§9.5
+- [x] nach dem Merge: Bau, Messung nachher 20A0/20A1 Cut 11 + ROOM1050 Cut 5 (+ 20A0 Cut 2) — §9.4; eigene + A-Riegel 8/8 — §9.5
+- [ ] Modul-Testgruppen nach dem Merge — §9.5 (MODUL-LAUF)
 
 ## 1. Messung vorher (Port, Basis df08d83a = v0.8.25 + Doku)
 
@@ -195,9 +196,11 @@ dem der Unterschied das ganze Bild kostet.
   Vierecks-Schleife ersetzen `re15_objpoly_r38_tri_mesh` / `_quad_mesh` die bisherige Projektion samt Port-Ausschnitt
   `if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */` (kein Original-Gegenstueck); beim Viereck zeichnet der
   bisherige Aufruf-Block (Teilung (0,1,3)+(0,3,2)) nur noch, wenn beide GPU-Dreiecke bestehen, sonst der Halbfall;
-  eine Zeile meldet der Messschiene den Objekt-Beginn; eine Zeile setzt `r38_nclip` = MD1 liegt im RDT-Puffer
-  (`rdt_buf`/`rdt_size`), d. h. NCLIP nur fuer Original-Modelle (PORT-WAHL fuer eingebackene Port-Modelle, §8).
-  Diff main.c gegen df08d83a: `14 insertions(+), 34 deletions(-)`.
+  eine Zeile meldet der Messschiene den Objekt-Beginn; ~~eine Zeile setzt `r38_nclip` = MD1 liegt im RDT-Puffer
+  (`rdt_buf`/`rdt_size`), d. h. NCLIP nur fuer Original-Modelle (PORT-WAHL fuer eingebackene Port-Modelle, §8).~~
+  **Ueberholt 2026-10-17 (§9): `r38_nclip` entfaellt, NCLIP gilt fuer jedes Objekt; die NCLIP-Rechnung ist Spur As
+  re15_nclip_r38.** Diff main.c gegen df08d83a (Stand 2e2f9579): `14 insertions(+), 34 deletions(-)`; nach dem Merge
+  gegen master: `13 insertions(+), 34 deletions(-)` (§9.2).
 * Keine Konstante ohne Adresse: 341/256 (ZSF), 64 (OTZ-Schranke), -400h/3FFh (SX/SY), 1023/511 (GPU) — Belege oben
   und im Kopf von re15_objpoly_r38.h.
 * Bekannte Rest-Abweichung (vorbestehend, NICHT Teil des Fixes): der PC teilt ein voll gezeichnetes Viereck weiter an
@@ -243,6 +246,8 @@ Neu (nur aus `re15_port/tests/unit/probes/r38_rolltor20a0.cmake` registriert):
 * `unit_r38_rolltor20a0_windung` (`tests/unit/test_r38_rolltor20a0_windung.c`): Windungs-Zensus 568 Objekt-Modelle
   aus 206 RDTs: w.n < 0 bei 30037 von 30188 Polygonen (99,5 %) = Original-Konvention; 20 Port-Modelle, davon nur der
   Feuerloescher R37 verkehrt (36/148) -> NCLIP im PC nur fuer RDT-Modelle; Schalter nclip wirkt (O4).
+  **Ueberholt 2026-10-17 (§9.5): O2 prueft jetzt, dass jedes RAEUMLICHE Port-Modell wie das Original gewickelt ist
+  (Feuerloescher von Spur A neu gewickelt: 148/148), O4 dass der Verwurf ueber re15_nclip_r38 laeuft.**
 * `integration_r38_rolltor20a0` (`tests/integration/test_r38_rolltor20a0.cmake`, Wegplaene
   `tests/integration/r38_rolltor20a0/wp_cut11.txt`, `wp_kiste.txt`; Messkopie `re15_pc_r38w_haken_*`):
   A Leon ROOM20A0 echter Weg -> Cut 11 F700/F850/F1000: Raumhintergrund-Anteil 0,9424 / 0,9432 / 0,9430
@@ -270,7 +275,19 @@ r34n_e_dokumente_bild 105 s, r36_kartenitems_bild 483 s, r37_feuerloescher 385 s
 r36_dachkiste 1716 s, r37_kiste/kiste2feld/kistenregel 105/64/288 s). Der eine rote war `integration_r38_rolltor20a0`
 selbst, und zwar ein Artefakt: ich hatte waehrend des Laufs das Skript um die CONTINUE-Laeufe erweitert, die
 Registrierung aus dem alten Configure gab `RE15_KARTE_TOOL` noch nicht mit (`RE15_KARTE_TOOL fehlt/existiert nicht:
-''`, 0,05 s). Nach Configure + Build gesondert nachgefahren, Ergebnis unten (§7c).
+''`, 0,05 s). Nach Configure + Build gesondert nachgefahren, Ergebnis §7c.
+
+### 7c. Nachgefahren (Fortsetzung 2026-10-17): Umschaltbild F650 ist ein Messartefakt
+
+Der Vorgaenger hat den exe-Riegel um die CONTINUE-Laeufe B/D erweitert und die Bilder aus dem Zustandslog gewaehlt
+(f60148cd, UNGEPRUEFT). Sein letzter Lauf (scratchpad W38/ctest_final.log, 23:4x) war ROT: `a_leon / b_elza /
+d_leon_karte: Bild 650 zugedeckt — Hintergrund-Anteil 0.0042 < 0.80`, alle uebrigen Cut-11-Bilder 0,942..0,950.
+Nachgemessen (Lauf lauf_389ac10d_a_leon): Zustand F649 `cam=12`, F650 `cam=11` — F650 ist das Umschaltbild, der
+Framedump F650 zeigt noch die **Cut-12-Ansicht** (Schalterwand, Figur aus Cut-12-Sicht, Rolladen von vorn oben;
+Bild verglichen gegen F700). Das Zustandslog schreibt den Schnitt NACH dem Logikschritt, gezeichnet wurde F650 noch mit
+dem alten. Also kein Rolladen vor der Kamera, sondern die falsche Bildwahl des Riegels. Behebung e4c0cb9e: gewertet
+wird nur ein Bild, dessen Zustand UND Vorbild-Zustand cam=11 tragen (F650 faellt heraus, F700..F1100 bleiben).
+Ergebnis nach dem Merge: §9.4.
 
 ## 8. Nebenwirkungen (Zensus) — wo der Port jetzt sonst noch anders (= wie das Original) zeichnet
 
@@ -292,9 +309,10 @@ als 2 % des Bilds weniger nur in 18 Faellen (9 je Leon/Elza-Paar):
 Jede dieser Zahlen folgt aus denselben drei Schranken, die am Original zweimal Polygon fuer Polygon bestaetigt sind
 (20A0 Flach-Zeichner 48/48, 1050 Licht-Zeichner 15/15).
 **Port-Modelle** (eingebacken, nicht aus der RDT: Sicherung, Granate, Irons-Tisch, Dokumente, Inhalt R35, Schluessel
-R36, Kartenitems R36, Feuerloescher R37): bleiben zweiseitig (kein NCLIP, PORT-WAHL — der Feuerloescher hat 112 von
-148 Polygonen verkehrt herum gewickelt und waere sonst zerrissen); OTZ < 64, Saettigung und GPU-Grenze gelten auch fuer
-sie (wirken nur unmittelbar vor der Kamera).
+R36, Kartenitems R36, Feuerloescher R37): ~~bleiben zweiseitig (kein NCLIP, PORT-WAHL — der Feuerloescher hat 112 von
+148 Polygonen verkehrt herum gewickelt und waere sonst zerrissen)~~ **ueberholt 2026-10-17 (§9.3): NCLIP fuer alle
+Objekte; Feuerloescher von Spur A neu gewickelt, Parking Lot Key von Spur A gewendet;** OTZ < 64, Saettigung und
+GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
 
 ## OFFEN
 
@@ -304,8 +322,9 @@ sie (wirken nur unmittelbar vor der Kamera).
 * Figuren (Spieler/Gegner/NPC) laufen im PC NICHT durch diese Schranken; im Original zeichnet derselbe Licht-Viereck-
   Zeichner FUN_800256b0 auch Leons Koerperteile (Messung §4b: 16 Aufrufe je Bild). Kein Nutzer-Befund dazu — nicht
   angefasst.
-* Feuerloescher-Modell (gen/feuerloescher_r37.inc, Runde 37 Spur I / Runde 38 Spur K): Windung uneinheitlich; mit
-  einheitlicher Windung koennte auch er NCLIP bekommen. Hinweis an Spur K, keine Aenderung hier (Datei gehoert K).
+* ~~Feuerloescher-Modell (gen/feuerloescher_r37.inc, Runde 37 Spur I / Runde 38 Spur K): Windung uneinheitlich; mit
+  einheitlicher Windung koennte auch er NCLIP bekommen. Hinweis an Spur K, keine Aenderung hier (Datei gehoert K).~~
+  Erledigt durch Spur A (§3b, neu gewickelt), mit dem Merge in diesem Zweig (§9).
 * Runde-36-Satz "die Kiste in ROOM20A0/20A1 faellt nie" (A_klettern.md) ist durch den Rolladen ueberholt: sub07
   @0x01E5E-6E schaltet Zelle 32 (die "Wand 32" der Runde 36) in allen Regionen auf u0 = 0, danach faellt die Kiste
   durch die Oeffnung (§6, Lauf C). Die Lage (3,0xCC)=1 @0x0187A verlangt dann noch die Kerbe 7 (Member_cmp m0F == 7
@@ -319,8 +338,10 @@ sie (wirken nur unmittelbar vor der Kamera).
   Kisten-Ablauf bleibt: Rolladen auf, Kiste nach Norden durch die Oeffnung schieben, sie faellt.
 * Dieselbe Original-Regel gilt jetzt fuer alle Raum-Objekte: Rueckseiten von Toren/Rolllaeden werden nicht mehr
   gemalt, wo die Kamera von hinten draufschaut (z. B. ROOM10D0 Cut 13 am Anfang der Marvin-Szene, ROOM1050 Cut 5,
-  ROOM1130 Cut 8/9). Die eingebauten Port-Modelle (Sicherung, Dokumente, Schluessel, Feuerloescher ...) sehen aus wie
-  bisher.
+  ROOM1130 Cut 8/9). Das gilt (zusammen mit Spur A, Cursor-Schatten) auch fuer die eingebauten Port-Modelle
+  (Sicherung, Dokumente, Schluessel, Feuerloescher ...); sie sehen aus wie bisher — der Feuerloescher wurde dafuer von
+  Spur A neu gewickelt (gleiches Bild), der Parking Lot Key in ROOM10F0 liegt jetzt mit der Vorderseite nach oben
+  (wie in RE2; vorher war seine Rueckseite zu sehen).
 * Neue Assets: keine (Paket-Gate unveraendert). Sprachdateien: keine. Bank-9-Bits/Nachrichten-Ids: keine.
 * Bau: neue Quelldateien `re15_port/engine/src/objpoly_r38.c` und `re15_port/platform/pc/src/objpoly_r38_pc.c`
   (GLOB) — der Android-Bau braucht einen frischen Configure (Memory reai-v2-android-glob-cache).
@@ -386,6 +407,74 @@ Konflikt nur in main.c (zwei Stuecke: Dreiecks- und Vierecks-Projektion der Prop
   Riegel: unit_r38_rolltor20a0_windung O2 (jedes Port-Modell in Original-Windung, jetzt PRUEFUNG statt Ausgabe) + O4
   (der Verwurf laeuft ueber re15_nclip_r38), As unit_r38_cursor_wicklung (Wicklung + Mechanik an 60 Blicken).
 
-### 9.4 Messung nachher (nach dem Merge) — folgt
-### 9.5 Tests (nach dem Merge) — folgt
-### 9.6 OFFEN (nach dem Merge) — folgt
+Weitere Merges von r38/cursor (konfliktfrei): **0a04fd5b** (A cd41f6b2: Parking Lot Key gewendet `rot_x 2048`
+nach RE2 ROOM6150 @0x02C98, Riegel fuer flache Port-Modelle E/F) und **5551ce9c** (A f3e30a33, nur As Dossier). Danach
+O2 auf As Regel gebracht (7e3371ae): bewertet werden nur RAEUMLICHE Port-Modelle; FLACHE (alle Umlauf-Normalen
+parallel, Kriterium wie As probe_r38_cursor.c flach_fn) haben nur eine Seite, die ihre LAGE zur Kamera dreht — die
+prueft As exe-Riegel integration_r38_cursor E/F (10F0/10F1).
+
+### 9.4 Messung nachher (nach dem Merge, exe dieses Zweigs)
+
+Bau `local_build.sh configure` + `build` nach 2291b2c5 -> `=== LOCAL-BUILD-OK (configure)` / `(build)`; nach 0a04fd5b
+und 7e3371ae je `build` -> `=== LOCAL-BUILD-OK (build)`. Keine neue Warnung in objpoly/nclip/r38-Dateien (die drei
+`-Wdiscarded-qualifiers` in main.c Z. 8739/10041/10421 liegen ausserhalb der Prop-Schleife und sind vorbestehend).
+
+**ROOM20A0/20A1 Cut 11 (Nutzer-Befund), exe-Riegel integration_r38_rolltor20a0, Lauf lauf_21debfa5** (echter Weg:
+Leiter -> Schalter -> Ja -> Rolladen hoch -> Sueden in Cut 11):
+
+| Lauf | Eintritt | Cut-11-Bilder F700..F1100 (je 50): Raumhintergrund-Anteil | OBJPOLY Cut 11 obj 1 |
+|---|---|---|---|
+| A Leon ROOM20A0 | Debug-Sprung vor die Leiter | 0,9424 / 0,9424 / 0,9429 / 0,9432 / 0,9431 / 0,9431 / 0,9430 / 0,9428 / 0,9424 | 450 Bilder, alle `gezeichnet=6 nclip=20 otz=16 gpu=6` |
+| B Elza ROOM20A1 | Spielstand + CONTINUE (Figur 4, PL04) | 0,9488 / 0,9488 / 0,9493 / 0,9492 / 0,9493 / 0,9493 / 0,9493 / 0,9503 / 0,9492 | 450 Bilder, alle 6/20/16/6 |
+| D Leon ROOM20A0 | Spielstand + CONTINUE | 0,9424 / 0,9424 / 0,9426 / 0,9426 / 0,9427 / 0,9427 / 0,9428 / 0,9420 / 0,9426 | 450 Bilder, alle 6/20/16/6 |
+
+Vorher (Basis df08d83a, §1/§6): 0,1305 (Bild voller Lamellen). 6/20/16/6 = Original-Messung (§4: 20 NCLIP, 16 OTZ<64,
+6 eingehaengte Vierecke mit beiden GPU-Dreiecken zu gross). Die Zahlen sind bitgleich mit dem Stand vor dem Merge (§7:
+A 0,9424/0,9432/0,9430, B 0,9488/0,9493/0,9493) — fuer RDT-Modelle aendert der Merge nichts (As Verwurf ist im
+W-Weg schon enthalten). Bilder: `W_belege/nachher_merge_leon20A0_cut11_F850.png`,
+`W_belege/nachher_merge_elza20A1_cut11_F850.png` — Plattform mit Kiste, Faessern, Regal und Figur, kein Rolladen; neben
+dem Original-Bild `W_belege/orig_cut11_offen_buf0.png` angesehen: gleiche Ansicht.
+Rolladen-Lage: Wegplan-Log `obj1=(7942,-10800,-20510)` = Original-Endlage (DuckStation §4: Pool 1 (7942,-10800,-20510)).
+**Kiste (Lauf C)**: `F1259 room=20A0 p=0 AUSLOESER wort=0x4206 band=4 pos=(12250,-7200,-21473)`, `F1278 ... LANDUNG
+y=-3600 band=2`, `F1280 ... AUSLOESER wort=0x2102 band=2`, `F1297 ... LANDUNG y=-1800 band=1` — faellt durch die
+Rolladen-Oeffnung wie vor dem Merge (§7).
+
+**ROOM1050 Cut 5 (zweiter Original-Fall, §4b)** — Lauf `W_belege/lauf_merge_1050_20a0.sh` m1050_cut5: Debug-Sprung,
+Spieler an der Original-Messstelle (16050,0,-16200) (orig1050_log.txt "Zone 4->5"), Zustand `F400 ... cam=5`.
+Messschiene: obj 0 (Rolltor, Obj_model_set @0x00C36) in **402 von 402 Bildern `gezeichnet=0 nclip=15 otz=0 gpu=0`** =
+Original (alle 15 Vierecke OPZ < 0 am Haltepunkt `bgez` @0x800257c0). Nebenbei obj 5 = Port-Feuerloescher (148
+Flaechen) `otz=148`: er haengt hinter der Kamera von Cut 5 (SZ auf 0 gesaettigt -> OTZ 0) — vorher wie nachher nicht im
+Bild (alter Weg: `_vz < 64`).
+
+**ROOM20A0 Cut 2 (Hinweis Spur A §4.4, Rolllaeden obj 4/5 Typ 3)** — Lauf m20a0_cut2 (Debug-Sprung, Cut 2 erzwungen,
+F400): obj 4 `gezeichnet=18 nclip=0 otz=6 gpu=2`, obj 5 `gezeichnet=0 nclip=30`. sub01 setzt in Cut 2/3 obj 4 auf
+y -2376 und obj 5 auf -16200 (`Cmp(var0A op0 2)` @0x01B18 -> `Member_set m=0x01 val=-2376` @0x01B22, `val=-16200`
+@0x01B2A; Cut 3 @0x01B46/@0x01B50/@0x01B58). Typ 3 zeichnet das Original ueber FUN_8003e64c, das dieselben Flach-
+Zeichner ruft (`jal 0x80022f0c` @0x8003e6ac, `jal 0x80023098` @0x8003e6dc) — also dieselben Schranken wie fuer obj 1.
+Gegenueber As Stand (nur NCLIP) faellt dort zusaetzlich weg, was das Original an OTZ < 64 (6) und an der GPU-Grenze (2)
+verwirft. Kein Nutzer-Befund zu Cut 2, kein eigener DuckStation-Abzug (OFFEN 9.6).
+
+### 9.5 Tests (nach dem Merge)
+
+Eigene Riegel + As Riegel (exe nach 0a04fd5b):
+`ctest --test-dir re15_port/build -R "^(unit_r38_(rolltor20a0(_windung)?|cursor_(nclip|kasten|raeume|wicklung|sicht))|integration_r38_(rolltor20a0|cursor))$" --timeout 1500 --output-on-failure -V`
+-> **`100% tests passed, 0 tests failed out of 8`** (Total Test time (real) = 416.09 sec; integration_r38_cursor
+171,42 s mit A..F: Klassenkarte 11F0/11F1 0 Abweichungen gegen das Original, 0 rueckseitige Cursor-Dreiecke,
+Schluessel 10F0/10F1 vorderseitig; integration_r38_rolltor20a0 244,36 s, Werte §9.4).
+unit_r38_rolltor20a0_windung nach 7e3371ae direkt: `O2: 20 port-eigene Modelle geprueft (9 flach, nicht bewertet), 0
+raeumliche nicht in Original-Windung`, `O4 NCLIP-Weg: Vorderseite opz 11025 -> 1 (Zaehler +0), Rueckseite opz -11025
+-> 0 (Zaehler +1)`, OK. Gegenprobe O2: der Stand vor dem Merge (2e2f9579, alter Feuerloescher) meldete den Loescher mit
+36 von 148 in Original-Windung (§7) — O2 haette dort angeschlagen.
+
+Testgruppen der beruehrten Module (Prop-Schleife = alle Bild-/Lade-Riegel mit Raum- und Port-Objekten; Hebetisch-
+Cursor/Panels aus As Diff; Feuerloescher-Modell; Kisten) — Lauf folgt (MODUL-LAUF).
+
+### 9.6 OFFEN (nach dem Merge)
+
+* Integration: r38/cursor ist bis f3e30a33 enthalten. Spaetere A-Commits mergt der Orchestrator nach; aendert A die
+  Prop-Schleife in main.c noch einmal, gilt weiter EIN Weg (objpoly_r38 -> re15_nclip_r38), kein zweiter Verwurf.
+* Spur K (r38/itemorte) haengt die Schluessel an die Pinnwand (schluessel_r36.c/.h): nach As §8 gilt dort K's Lage;
+  As Rechnung zeigt K's Lage vorderseitig, integration_r38_cursor E/F prueft das an der exe nach dem K-Merge. Jedes
+  NEUE flache Port-Modell muss mit der Vorderseite zur Kamera liegen (As §8), sonst ist es mit dem Verwurf unsichtbar.
+* ROOM20A0 Cut 2 (obj 4/5): kein DuckStation-Abzug; Mechanismus ueber FUN_8003e64c belegt (§9.4), kein Nutzer-Befund.
+* Vorbestehend (unveraendert): Viereck-Teilung 0-3 statt 1-2; Figuren laufen nicht durch diese Schranken (OFFEN oben).
