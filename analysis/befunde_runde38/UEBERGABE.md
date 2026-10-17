@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 13:41: N wasser BESTANDEN (Abnahme 0, wf_a76ae9bd-445) -> ALLE 23 Spuren bestanden. N-Merge nach dem Affen-Fix (wf_061cea9f-6a9, gleicher Baum). Fuer N: op_aot_set u16 (@0x80042b70/8c) -> breite AOT/Tuer/Item-Auswahl; Schritt-Toene 1 Bild spaeter; nach dem Merge integration_r38_wasser gegen Ws subtraktives Wasser pruefen (Spritzer sichtbar?).
 * 2026-10-17 13:40: ⛔ INTEGRATIONS-BEFUND nach U-Merge (gezielte Tests 143/144): integration_r37_beretta roach_std_w5 reproduzierbar rot - kein Riegel-Fehler, sondern Spur S: der schwere Affen-Angriff (0x29, -10 @0x801122b4) in ROOM3040 laesst Leon ab F29 mit ~1000 Einheiten/Bild ~14 700 Einheiten weit rutschen (F27 hp 100->90, F61 (-12322,4369) statt (-13497,-10204)), Leon feuert nie. Verletzt die T-Invariante "Spieler verschwindet bei keinem Angriff von der Karte". Fix-Workflow wf_061cea9f-6a9 im Integrationsbaum (Original-Beleg, byte-true Fix, Riegel, Beretta-Aufbau ggf. messend umstellen, unabhaengige Pruefung). Erst danach N-Merge.
 * 2026-10-17 13:24: U gemergt (b579ebe8): Include-Zeilen beide Seiten; main.c Schatten-Haken M (re15_npckante_schatten_y, nur NPCs) und U (re15_wasserzombie_schatten_y, nur Wasserzombie-Typen) schliessen sich aus -> beide behalten. configure + Bau OK, gezielte Tests laufen (U-Auswahl + NPC-Kante/Montage/L/Szenenschutz, 144).
 * 2026-10-17 13:24: Integration W gruen (109/109: W-Auswahl 81 + Cursor/Itemorte/Zopf/Masken/1141-Sicht/Spinnen/Dachkiste), Baum r38_rolltor20a0 entfernt.
@@ -86,7 +87,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0), integriert |
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | BESTANDEN (A1), integriert |
 | M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | BESTANDEN (A0), integriert |
-| N | r38_wasser | Wasser-Effekt 1260+ | offen |
+| N | r38_wasser | Wasser-Effekt 1260+ | BESTANDEN (A0) |
 | O | r38_montage | Montage-Zombies Richtung Kamera | BESTANDEN (A0), integriert |
 | Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0), integriert |
 | R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | BESTANDEN (A1), integriert |

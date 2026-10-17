@@ -57,6 +57,12 @@ Lichtplatte leuchtet rot auf den Boden, das Wasser in den Kanaelen (Stage 2, ROO
 im Original statt einer grauen Flaeche, und der Bodennebel im Kuehlraum (ROOM4090) ist hell und durchscheinend statt
 dunkler Schlieren.
 
+**Wasser-Effekt ab ROOM1260.** In den gruenlichen Pfuetzen der Kanal-Gaenge (ROOM1260, 2000, 2050, 20B0 und Elzas
+Varianten) spritzt bei jedem Schritt am Fuss Wasser auf, dazu der Wasser-Schritt-Ton; im Alligator-Becken (ROOM2090)
+und im Wasser von ROOM20A0 spritzt es am Schienbein mit dem Wat-Ton. Laufen hat wie im Original einen eigenen Ton,
+und auch in gefuehrten Szenen (Flut-Szene ROOM20B0) spritzt es an derselben Stelle wie im Original. Alle Schritt-Toene
+kommen jetzt einen Takt (1/30 s) spaeter - im Gleichtakt mit dem Original.
+
 **Zombies im Wasser (Stage 2) ziehen sich am Rand hoch.** Wie in RE1.5 laufen die Zombies im Kanal zum Rand, greifen
 die Kante, stemmen sich hoch und richten sich neben Ihnen auf (ROOM2000 und ROOM2020, Leon und Elza, beide KI-Varianten).
 Vorher blieben sie dauerhaft an der Kanalwand stehen.
