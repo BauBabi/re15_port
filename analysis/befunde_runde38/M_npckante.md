@@ -34,6 +34,10 @@ CONTINUE (Lade-Weg) und `RE15_FIRE_AOT` (= Tuer betreten, derselbe Pfad wie Hine
 | Elza 10B1 | Karte 10B1 (0,-9000,-12000) Band 5, Cut 2, Flags (3,0x80)(3,0x82) (= Stand nach ROOM1171 sub02 @0x0139C/@0x013A4) | John startet auf dem Band-5-Steg (15600,-9000,-9884), laeuft sub02; **F115** (-3661,-9000,-8275): Sonde = 2 (Zelle [31], Band 5, u1 0x0e); der Port laeuft in y -9000 weiter bis (-6419,-9000,-7759) = **7200 ueber dem Block [6]** |
 | Leon 2000 (Fortsetzung 2026-10-17, exe aus re15_port/build_bisect = Haken-AUS-Stand) | Karte 1260 (-8750,-1800,-8400) Band 1 Cut 0, Flag (4,0xF4) -> Tuer Slot 1 (@0x0114A) -> ROOM2000, sub02-Szene (Viereck alle 25 Bilder) | Ada (Slot 1): ab **F1536** (-6242,-1800,-22108) **41 Bilder in der Luft** ueber dem Kanal; Marvin (Slot 2): ab **F1663** (-5287,-1800,-22052) **46 Bilder**; kein Kanten-Sub (`M_belege/vorher_2000_*`) |
 
+Bilder vorher/nachher (Framedump, gleiche Bildnummern): `M_belege/bild_1261_john_vorher_nachher.png` (VORHER geht John
+auf Steghoehe weiter auf die Kamera zu, NACHHER springt er ab F166 in den Kanal) und `bild_1260_ada_vorher_nachher.png`
+(VORHER laeuft Ada in Steghoehe in die Luft, NACHHER springt sie ab F68).
+
 (Ohne die Tuer-Flagge (4,0xCD) ist ROOM11B0 Slot 5 der gesperrte Satz @0x01010 — der erste 1260-Lauf blieb in 11B0.)
 
 ## RE-Belege (info/Re1.5/PSX.EXE + STAGE*.BIN, selbst disassembliert mit re15_disasm.py)
