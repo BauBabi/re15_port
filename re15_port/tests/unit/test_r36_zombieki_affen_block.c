@@ -809,27 +809,49 @@ int main(int argc, char **argv)
          * NB2 (Abnahme 1, Mangel 4): Anker 400 (Spruenge/Pendeln auf der Stelle zaehlen jetzt als blockiert):
          * AUS 38439 / 73 Griffe, AN 4568 / 76 (11,9 %), kein Seed schlechter (schlechtester -100).
          * NB3 (Abnahme 2): AUS 38439 / 73, AN 5725 / 74 (14,9 %), schlechtester +59.
-         * NB4 (Abnahme 3, Vortritt): AN 5174 / 71 (13,5 %), schlechtester +40. */
-        long su_aus = 0, su_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000; uint32_t s_schl = 0;
+         * NB4 (Abnahme 3, Vortritt): AN 5174 / 71 (13,5 %), schlechtester +40.
+         * RUNDE 38 INTEGRATION (Niederschlag [4]/[5] = Original-Phasentabellen, 7d0eccdb): das Verhaeltnis wird an den FERN-Bildern
+         * gemessen (Leon >= 6001 = 0x1771: `lhu v0,468(v1)` @0x80117bc0 / `sltiu v0,v0,0x1771` @0x80117bc8 = 71 17 42 2c, STAGE1.BIN —
+         * NAH bleibt A[3] ohne Ausgang, FERN ist der Bereich, in dem der Umweg (re15_r36_affen_padsuche_decide) ueberhaupt eingreift).
+         * Warum: die Summe AUS ist chaotisch — jeder Niederschlag laeuft jetzt einen Tick kuerzer ([5] Phase 0 faellt in Phase 1,
+         * 62 -> 61 Bilder; [4] mit Wand-Slam 63 -> 62), Leon liegt danach anderswo, der ganze Gang laeuft anders (Seed 0xbeef: erster
+         * Niederschlag F187 bis F248 statt F249, danach ein anderer Weg; alt hing Gorilla 1 F2760-F6000 FERN an der Ostgasse fest = 3241
+         * der 3367 AUS-Bilder dieses Seeds, neu 468). Gemessen je 16er-Block (Seeds 0..15 = Riegel / 16..31 / 32..47, je Lauf eigener
+         * Prozess, Anker 400): AUS gesamt neu 21344 / 34274 / 35770, alt 38439 / 39681 / 30886; AN gesamt neu 5835 / 5971 / 6982, alt
+         * 5817 / 5386 / 5161. Der Rest AN ist zu ~80 % NAH (neu 4619 von 5835; 52 Seeds neu 16321 von 20169, alt 14273 von 17655) =
+         * die Original-Nahjagd (B[3] gerade auf playerX @0x80117d4c; Dossier F NB2 OFFEN), die der FERN-Umweg nicht anfasst — AUS hat
+         * NAH etwa gleich viel (52 Seeds neu 15782, alt 19663). Das Gesamt-Verhaeltnis AN/AUS mass damit vor allem, wie gross die
+         * chaotische AUS-FERN-Summe des Seed-Satzes ausfiel: neu 27,3 / 17,4 / 19,5 %, und schon ALT haette der Block 32..47 die
+         * Schranke 1/6 gerissen (5161 x 6 = 30966 > 30886). FERN allein: neu AUS 17655 -> AN 1216 (6,9 %), Bloecke 6,9 / 6,1 / 1,8 %
+         * (1216/17655, 1704/27883, 559/30588); alt 32907 -> 1606 (4,9 %), Bloecke 4,9 / 3,8 / 1,1 % (1606/32907, 1286/33853, 267/24695)
+         * — dieselbe Schranke 1/6 haelt in jedem Block mit beiden Niederschlaegen. */
+        long su_aus = 0, su_an = 0, fe_aus = 0, fe_an = 0, na_aus = 0, na_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000;
+        uint32_t s_schl = 0;
         for (int i = 0; i < 16; i++) {
-            long bl[2] = { -1, -1 }; int gr[2] = { 0, 0 };
+            long bl[2] = { -1, -1 }, na[2] = { 0, 0 }, fe[2] = { 0, 0 }; int gr[2] = { 0, 0 };
             for (int m = 0; m < 2; m++) {
                 char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" eins %d %d 6000", argv[0], i, m);
                 FILE *pp = popen(cmd, "r"); char zl[512];
                 while (pp && fgets(zl, sizeof zl, pp)) {
-                    unsigned sd; int mm; long b; int g2;
-                    if (sscanf(zl, "EINS seed 0x%x modus %d blockiert %ld griffe %d", &sd, &mm, &b, &g2) == 4) { bl[m] = b; gr[m] = g2; }
+                    unsigned sd; int mm; long b, n1, f1; int g2;
+                    if (sscanf(zl, "EINS seed 0x%x modus %d blockiert %ld griffe %d nah %ld fern %ld", &sd, &mm, &b, &g2, &n1, &f1) == 6) {
+                        bl[m] = b; gr[m] = g2; na[m] = n1; fe[m] = f1; }
                 }
                 if (pp) pclose(pp);
             }
             if (bl[0] < 0 || bl[1] < 0) continue;
             n_ok++; su_aus += bl[0]; su_an += bl[1]; gr_aus += gr[0]; gr_an += gr[1];
+            fe_aus += fe[0]; fe_an += fe[1]; na_aus += na[0]; na_an += na[1];
             if (bl[1] - bl[0] > schlimmer) { schlimmer = bl[1] - bl[0]; s_schl = zg_seed(i); }
-            printf("  Seed 0x%08x: AUS %ld blockiert / %d Griffe | AN %ld / %d\n", zg_seed(i), bl[0], gr[0], bl[1], gr[1]);
+            printf("  Seed 0x%08x: AUS %ld blockiert (nah %ld / fern %ld) / %d Griffe | AN %ld (nah %ld / fern %ld) / %d\n", zg_seed(i), bl[0], na[0],
+                   fe[0], gr[0], bl[1], na[1], fe[1], gr[1]);
         }
+        printf("  Summe: AUS %ld (nah %ld / fern %ld) | AN %ld (nah %ld / fern %ld)\n", su_aus, na_aus, fe_aus, su_an, na_an, fe_an);
         CHECK(n_ok == 16, "16 Zufallsgaenge je AUS und AN gelaufen (%d)", n_ok);
-        CHECK(su_aus >= 10000, "Gegenprobe Original-Regel: %ld blockierte Gorilla-Bilder (Befund 'noch oft blockiert')", su_aus);
-        CHECK(su_an * 6 <= su_aus, "Umweg: blockierte Bilder (Anker %d) %ld <= 1/6 von %ld", s_zg_anker, su_an, su_aus);
+        CHECK(fe_aus >= 10000, "Gegenprobe Original-Regel: %ld FERN-blockierte Gorilla-Bilder (Leon >= 0x1771; gesamt %ld) — Befund 'noch oft blockiert' "
+              "= Jagd ohne Sicht FERN", fe_aus, su_aus);
+        CHECK(fe_an * 6 <= fe_aus, "Umweg: FERN-blockierte Bilder (Anker %d, Leon >= 0x1771 @0x80117bc8) %ld <= 1/6 von %ld (NAH = Original-Nahjagd, "
+              "nicht Ziel des Umwegs: AN %ld / AUS %ld)", s_zg_anker, fe_an, fe_aus, na_an, na_aus);
         CHECK(schlimmer <= 600, "kein Seed mehr als 600 Bilder schlechter (schlechtester 0x%08x: %+ld)", s_schl, schlimmer);
         CHECK(gr_an * 10 >= gr_aus * 8, "Griffe AN %d >= 80%% von AUS %d (die Gorillas erreichen Leon)", gr_an, gr_aus);
     }
@@ -1026,24 +1048,54 @@ int main(int argc, char **argv)
             CHECK(ag[1] > 400 && ag[1] <= 400 + 450, "Nachruecken NB6: Gorilla 2 nimmt den freien Bissplatz und greift Bild %d an = %d Bilder nach dem Tod (<= 450)",
                   ag[1], ag[1] - 400);
         }
-        {   /* NB5: J-FENSTER — der kanonische Ankunftskampf (Harness des J-Riegels szene) bleibt bitgleich: Slot 2 wartet vor seinem
-             * ersten Biss hoechstens 353 Bilder im NAH-Anker (< R36_NAH_START = 354); Heavy + Bisse mit Nah-Umweg = Original-Liste
-             * (jnb1/g_orig.txt, J szene: +363 Heavy, 468, 521, ... 1139, Tod +1194). */
+        {   /* NB5: J-FENSTER — der kanonische Ankunftskampf (Harness des J-Riegels szene) bleibt mit Nah-Umweg Original-gleich, und Slot 2
+             * wartet vor seinem ersten Angriff weniger als R36_NAH_START = 354 Bilder im NAH-Anker (der Nah-Umweg greift dort nie).
+             * RUNDE 38 INTEGRATION (Niederschlag [4]/[5] = Original-Phasentabellen, 7d0eccdb): Bisse und Tod werden ab dem SCHWEREN
+             * TREFFER gemessen. Original selbst dekodiert aus der GDB-Rohspur jnb1/g_orig.txt (Runde 35 Spur J: eine Zeile je Bild am
+             * Haltepunkt 0x80116db8 mit cur = Entity 1, Spalten VSync / cmd @0x800aca58 / Spieler / e1 / e2; HP = Spieler +0x9a):
+             *   schwerer Treffer Zeile 55 (VSync 9765, cmd 02 05 01 = Niederschlag [5], HP 100 -> 88; [5] bis Zeile 145, Zeile 146 cmd 01),
+             *   Bisse Zeilen 159 212 262 315 365 418 469 521 573 624 677 727 781 830, Tod Zeile 885 (HP 4 -> -2); zwischen Zeile 55 und 885
+             *   je Zeile genau 2 VSyncs (9765 + 2 x 830 = 11425), Zeilenabstand = Bildabstand;
+             *   Slot 2 (= e1, die NAH-Wartende an der V-Spitze d 3041..3099) geht Zeile 153 in den Angriff (+0x5 3 -> 5) = Treffer + 98.
+             * Bis 7d0eccdb verglich der Riegel relativ zur FREIGABE gegen 363 (Port-Treffer) und 468, 521, ... 1139, Tod 1194 (= Original +364
+             * + Abstand). 15/15 nur, weil sich zwei 1-Bild-Fehler aufhoben: der alte Niederschlag lief einen Tick zu lang (Phase 0 fiel nicht
+             * in Phase 1, [5] 0x80036488 -> 0x80036510) und der Port-Treffer liegt ein Bild frueher nach der Freigabe als im Original.
+             * BEKANNTE ABWEICHUNG (Bildschleife): das Original faehrt die Entity-Schleife VOR dem Spieler-Dispatcher (`jal 0x8001a50c`
+             * @0x8001ce04 = 43 69 00 0c, `jal 0x80031c44` @0x8001ce0c = 11 c7 00 0c, PSX.EXE), der Port die Gegner (re15_enemy_ai_run_all) am
+             * Ende von re15_game_step NACH dem Spieler. Die Freigabe (Spieler, aca58 4 -> 1, jnb2/g_frei.txt VSync 9037) und jeder Gegner-
+             * Treffer liegen im Port deshalb ein Bild naeher beieinander (Original (9765 - 9037) / 2 = 364, Port 363); Abstaende Gegner zu
+             * Gegner (Treffer -> Bisse -> Tod) haengen davon nicht ab.
+             * Gemessen (kanon 0 1 1, Stand 7d0eccdb): Treffer +363, Bisse 467 520 570 623 673 726 777 829 881 932 985 1035 1089 1138, Tod
+             * +1193 = Treffer + 104 157 ... 775 / 830 = Original; Slot 2 erster Angriff +461 = Treffer + 98 = Original; NAH-Anker 352 (Anker
+             * ab F1175, max F1526 = Bild vor dem Angriff). Gegenprobe alter Niederschlag (b579ebe8): Treffer + 105 158 ... 776 / 831, Slot 2
+             * Treffer + 99, NAH-Anker 353 (das alte Pin-Mass), Tod +1194. */
             char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" kanon 0 1 1", argv[0]);
-            FILE *pp = popen(cmd, "r"); char zl[1024]; int tod = -1, bi[16]; int nahv = -1; memset(bi, 0, sizeof bi);
+            FILE *pp = popen(cmd, "r"); char zl[1024]; int tod = -1, bi[16], nb = -1; int nahv = -1, s2a = -1; memset(bi, 0, sizeof bi);
             while (pp && fgets(zl, sizeof zl, pp)) {
                 if (!strncmp(zl, "KANON Freigabe", 14)) {
                     char *q = strstr(zl, "Tod +"); if (q) tod = atoi(q + 5);
-                    q = strstr(zl, "Bisse "); if (q) q = strchr(q, ':');
+                    q = strstr(zl, "Bisse "); if (q) { nb = atoi(q + 6); q = strchr(q, ':'); }
                     for (int i = 0; q && i < 16; i++) bi[i] = (int)strtol(q + 1, &q, 10);
                 }
-                if (!strncmp(zl, "KANON S2", 8)) { char *q = strstr(zl, "max vor dem Angriff "); if (q) nahv = atoi(q + 20); }
+                if (!strncmp(zl, "KANON S2", 8)) { char *q = strstr(zl, "max vor dem Angriff "); if (q) nahv = atoi(q + 20);
+                                                   q = strstr(zl, "erster Angriff F"); if (q) q = strstr(q, "(+"); if (q) s2a = atoi(q + 2); }
             }
             if (pp) pclose(pp);
-            static const int orig[15] = { 363, 468, 521, 571, 624, 674, 727, 778, 830, 882, 933, 986, 1036, 1090, 1139 };
-            int gl = 0; for (int i = 0; i < 15; i++) gl += (bi[i] == orig[i]);
-            CHECK(nahv == 353 && tod == 1194 && gl == 15, "J-Fenster: kanonischer Kampf mit Nah-Umweg bitgleich (Heavy + 14 Bisse %d/15 = Original, Tod +%d); "
-                  "Slot 2 NAH-Anker vor dem ersten Biss %d < R36_NAH_START 354", gl, tod, nahv);
+            /* Original: Bisse 1..14 + Tod, Abstand zum schweren Treffer = Zeile - 55 (jnb1/g_orig.txt, s. oben); bi[0] = Treffer,
+             * bi[1..14] = Bisse, bi[15] = Todesbiss (kanon zaehlt jeden HP-Abfall nach der Freigabe) */
+            static const int ab_orig[15] = { 104, 157, 207, 260, 310, 363, 414, 466, 518, 569, 622, 672, 726, 775, 830 };
+            const int heavy = bi[0];
+            int gl = 0; for (int i = 0; i < 15; i++) gl += (bi[i + 1] - heavy == ab_orig[i]);
+            printf("J-Fenster: Treffer +%d, Bisse ab dem Treffer:", heavy);
+            for (int i = 1; i < 16; i++) printf(" %d", bi[i] - heavy);
+            printf(" (Original 104 157 207 260 310 363 414 466 518 569 622 672 726 775 / Tod 830); Slot 2 Angriff +%d, NAH-Anker %d\n", s2a, nahv);
+            CHECK(nb == 16 && heavy == 364 - 1, "J-Fenster: schwerer Treffer Freigabe +%d = Original +364 (VSync (9765 - 9037) / 2) - 1 (bekannte Abweichung "
+                  "Bildschleife @0x8001ce04/@0x8001ce0c); %d HP-Abfaelle", heavy, nb);
+            CHECK(gl == 15 && tod - heavy == 830, "J-Fenster: 14 Bisse + Tod ab dem schweren Treffer %d/15 = Original (jnb1/g_orig.txt Zeile - 55), "
+                  "Tod Treffer +%d (Original +830)", gl, tod - heavy);
+            CHECK(s2a - heavy == 98, "J-Fenster: Slot 2 erster Angriff Treffer +%d (Original e1 +0x5 3 -> 5 Zeile 153 = Treffer + 98)", s2a - heavy);
+            CHECK(nahv == 352 && nahv < 354, "J-Fenster: Slot 2 NAH-Anker vor dem ersten Angriff %d < R36_NAH_START 354 (der Nah-Umweg greift im "
+                  "kanonischen Kampf nie)", nahv);
         }
         {   /* NB6 (Abnahme 5, Mangel 1): OSTGASSE — ein NAHER Gorilla, den nur das 0x10-Pad #36 (ROOM11C0.RDT 0x015d8, x 4900..9500,
              * z -6080..-2180) von Leon trennt. Stand NB5 (Modus 6) = Befund der Abnahme 5: "Gasse einzeln" G1 ~1530 Bilder in der
@@ -1086,10 +1138,24 @@ int main(int argc, char **argv)
                         /* Kriterium der Abnahme 5 (Mangel 1): "greift nach hoechstens 450 Bildern NAH fest an ODER steht nachweislich an".
                          * NB6b: gemessen wird die NAH-fest-Zeit VOR dem ersten Angriff; eine spaetere Wartezeit ist nur als Anstehen
                          * zulaessig (am Ende kein freier Bissplatz-Knoten) — O1 nach der Korrektur: G2 springt Bild 900 ueber #36,
-                         * beisst ab 937, steht ab ~1650 an der Wand x 8382 an, Leon in der Ecke (11159,-1181) hinter G1, frei 0. */
-                        CHECK(fv6[0][k] >= 0 && fv6[0][k] <= 450 && (nf <= 450 || fr6[0][k] == 0),
+                         * beisst ab 937, steht ab ~1650 an der Wand x 8382 an, Leon in der Ecke (11159,-1181) hinter G1, frei 0.
+                         * RUNDE 38 INTEGRATION (Niederschlag [4]/[5] = Original-Phasentabellen, 7d0eccdb): die Wartezeit DANACH wird fuer
+                         * sich gegen 450 gemessen — wie es NB6b beschreibt ("spaetere Wartezeit nur als Anstehen oder <= 450"); bis hierher
+                         * zaehlte der Code sie mit der Wartezeit VOR dem ersten Angriff zusammen. Das Kriterium der Abnahme 5 gilt je
+                         * Wartezeit, und dazwischen liegen Angriffe (O1 G2: Bild 937..1987, 415 Angriffsbilder). Gemessen O1 Modus 1 (Spur
+                         * je Bild, Zaehlung wie `lage` nachgerechnet): bis F957 bitgleich (G2 NAH fest F507-612 + F614-755 = 248, springt
+                         * F900, Angriff 937); F957 trifft G2 schwer, der Niederschlag endet jetzt F1019 bei (7498,525) statt F1020 bei
+                         * (7498,608) (einen Tick kuerzer, 83 kuerzer gerutscht), danach laufen Bisse und Griffe anders: neu wirft der Griff
+                         * F1380 bei (9147,3875) Leon nach (9927,6000) statt der Griffe F1287/F1462 in die Ostecke, G1 schiebt Leon mit Bissen
+                         * nach Nordwesten (Ende (3002,14936)), G2 folgt NAH mit Sicht an der Kante x 6418 (Original-Nahjagd, B[3] auf playerX
+                         * @0x80117d4c) und steht EINE Strecke F1988-F2228 = 241 Bilder nach seinem letzten Angriff F1987, dann laeuft er Leon
+                         * nach und greift wieder an (Lauf 3000 / 3600 / 4800 Bilder: letzter Angriff 2994 / 3565 / 4781, fest bleibt 489).
+                         * Alt: danach F1646-1767 + F1769-1969 = 323, Angriff F1970. Das alte 'frei 0' war eine Momentaufnahme in F2400:
+                         * derselbe alte Lauf hat in F3600 frei 3 bei fest 571 > 450 und risse die alte Pruefung ebenso. */
+                        const long nach = nf - fv6[0][k];
+                        CHECK(fv6[0][k] >= 0 && fv6[0][k] <= 450 && (nach <= 450 || fr6[0][k] == 0),
                               "%s NB6: Gorilla %d greift an (Bild %d..%d), NAH fest vor dem ersten Angriff %ld <= 450; danach %ld (%s)", ort6[i], k + 1, er6[0][k],
-                              la6[0][k], fv6[0][k], nf - fv6[0][k], (nf <= 450) ? "<= 450" : (fr6[0][k] == 0 ? "steht an: freie Bissplatz-Knoten 0" : "FREIE PLAETZE"));
+                              la6[0][k], fv6[0][k], nach, (nach <= 450) ? "<= 450" : (fr6[0][k] == 0 ? "steht an: freie Bissplatz-Knoten 0" : "FREIE PLAETZE"));
                         continue;
                     }
                     /* greift nicht an: nur zulaessig mit NAH fest <= 450 und nachweislichem Anstehen — am Ende KEIN freier Bissplatz-Knoten
