@@ -28,6 +28,10 @@ Rolltor-Schnitts im Port, deren Bausteine Original-Adressen tragen (unten).
 - [x] Schritt 2b: Bauen + Zwischenmessung an der exe -> zwei Befunde am Stand des Vorgaengers (veraltetes
       Navigator-Ziel in Cut 7, aufrechte Zombies am Tor in Cut 12) + Riegel-Defekt (ohne g_room_rdt), behoben
 - [x] Schritt 3: Messen nachher an der exe (echter Weg) + Riegel (unit + integration) gruen, Gegenprobe v0.8.25 rot
+- [x] Schritt 4 (dritter Lauf, Abschluss): Reste aus acdbfe7c gebaut + gefahren -> 2 neue Teile rot (Riegel-Defekte);
+      Pruefung gegen den Wortlaut -> die Klemme (OFFEN 1 alt) erfuellt "alle" nicht; Mechanismus gemessen; Baustein 5
+      (Zombies hinter dem Tor warten auf Cut 12, Form ROOM1141 sub02) behebt sie; Riegel misst "ueber die Schnittdauer"
+- [ ] Schritt 5: exe ueber den echten Weg nachher (Baustein 5), Framedump Cut 12, gezielte ctest-Laeufe, Abschluss-Commit
 
 ## Messung vorher
 
@@ -163,6 +167,73 @@ Riegel liefen die aufrechten Zombies durch das Tor (Cut 12: 9 von 9 naeher, auch
 Kopien auf Cut 7 direkt zum Spieler. Ausserdem mutiert Sca_id_set das RDT im Speicher, und der Riegel lud es pro Raum
 nur einmal (zweiter Lauf im selben Prozess sah das offene Tor). Gezielte Laeufe: `unit_r38_montage_s1030_re2` und
 `_re15` ROT (Gegenprobe), die anderen gruen — die Zahlen fuer 1030 sind aber nicht die der exe.
+
+## Dritter Lauf (Abschluss, 2026-10-17 ab ~09:55): Reste geprueft, Klemme behoben (Baustein 5), Riegel ueber die Schnittdauer
+
+### Pruefung der Reste aus acdbfe7c (gebaut, gezielt gefahren)
+
+Gebaut (local_build.sh configure + build, Stand acdbfe7c), `ctest -R "^unit_r38_montage"`: **6 von 8 gruen, die zwei neuen
+Teile ROT**:
+* `unit_r38_montage_s1030_ohne7_re2`: die Gegenprobe v0.8.25 war NICHT rot — ohne Cut-7-Teil kamen auch in v0.8.25 alle 9
+  mindestens 500 naeher (kleinste 1424), weil sie aus ihren Spawn-Lagen (z -26000..-30000) erst zum Tor GEHEN. Danach standen
+  die aufrechten am Tor (z -24838) still. Das Mass "Anfang minus Ende" sieht dieses Stehen nicht -> Riegel-Defekt.
+* `unit_r38_montage_s1030_ohne7_re15`: ein Zombie (Bit 0) kam nie ins Warte-Rechteck (RE1.5-KI, Unterzustand 0x13 wendet auf
+  der Stelle, s.u.) -> "jeder aufrechte bekommt das Kriech-Bit" verfehlt (8 von 9).
+
+### Pruefung gegen den Wortlaut: die Klemme an SCA 30 erfuellt "Die anderen sollen das auch machen" NICHT
+
+OFFEN 1 des zweiten Laufs (ein Kriecher +120 von der Kamera WEG, KI RE2 = Standard) ist eine Abweichung vom Wortlaut ("alle")
+und vom Auftrags-Riegel ("Abstand nimmt ab, alle Zombies"). Mechanismus selbst gemessen (Spur-Ausgabe, jetzt mit Gierung und
+naechstem Nachbarn: `test_r38_montage s1030_re2 mess 2 1`):
+* Im Cut-7-Teil (Bild 1..210, Kamera auf dem 1070-Gang) laufen die sechs Raum-Records hinter dem Tor zum Uebergang Zone 0 -> 9
+  (-12195,-23860) und draengen sich 120 Bilder am GESCHLOSSENEN Tor (z -24838). Aktor 2 (Bit 1) wird dabei von Bild 126 (x
+  -12195) bis Bild 166 (x -12338) nach Westen geschoben — WESTLICH der Klemmlinie der Zelle SCA 30 (x -12566 + 400 = -12166).
+* Ab dem Kriech-Bit (Bild ~196, sub09 der Szene) steht er mit Ziel NNO (Gierung 3127..3263) unter der Suedflaeche von SCA 30;
+  der naechste Nachbar haelt konstant 800 Abstand (= 2 Radien, Aktor 14 / 3 schieben). FUN_8003bca8 (re15_collision.c
+  push_rect, code 0 = "Schritt in die Flaeche": `*lx = prevx; *lz = prevz`) nimmt jeden Vorwaertsschritt GANZ zurueck, die
+  Rueckwaerts-Phase des Kriechens (Bild 220 -> 247: z -24539 -> -24652 bei gleicher Gierung) nicht -> Netto-Drift nach
+  Westsuedwest = +120.
+* Ohne Cut-7-Teil (Cut 12 ab dem ersten Bild) gibt es diesen Stau nicht: die Zombies kommen zu verschiedenen Zeiten ans Tor
+  und kriechen sofort (Baustein 4) -> keine Klemme (`s1030_ohne7_re2`, alle 9 naeher).
+
+Ursache also: die Zombies des Tor-Schnitts laufen schon los, waehrend die Montage einen ANDEREN Schnitt zeigt (Cut 7), und
+stauen sich. Die anderen Montage-Schnitte haben das nicht: 1130 Cut 0, 1040 Cut 1 (Rolltor) und 1030 Cut 7 setzen ihre Zombies
+im Raumaufbau und zeigen sie ab dem ersten Bild — sie laufen los, wenn IHR Schnitt beginnt.
+
+### Baustein 5 (neu): die Zombies hinter dem Tor warten auf ihren Schnitt
+
+Original-Form (selbst gelesen, `scd_dump_room.py ROOM1141.RDT` + `xxd -s 0xE6C -l 0x14`): ROOM1141 sub02
+`2e 02 01 00 34 0c 30 00 2e 02 02 00 34 0c 30 00 09 0a 01 00` @0x00E6C = Work_set(2,1) + Member_set(12, 0x30), Work_set(2,2)
++ Member_set(12, 0x30), Sleep 1, danach `29 00` Cut_chg 0 @0x00E80: die Szene haelt die beiden Zombies an (entity+0x9 Bit 0x20,
+Member 12 = +0x09 `sb`, actor_common.c re15_actor_set_member case 12), BEVOR sie den Schnitt von ihnen wegnimmt, und gibt sie
+mit `34 0c 10 00` @0x00F64 / @0x00F74 (Bit 0x20 wieder aus) frei, wenn das Spiel weiterlaeuft. Wirkung des Bits: STAGE1.BIN
+`lbu v0,9(a0)` @0x80100450 / `andi v0,v0,0x20` @0x80100458 / `bne v0,zero,0x80100658` @0x8010045c (Takt uebersprungen; Port
+RE15_AI_GRID_SKIP, enemy_ai_common.c `if (e->grid_id & RE15_AI_GRID_SKIP) return 0;` fuer beide KI-Geschmaecker).
+
+Umsetzung (montage_r38.c `tor_warten`, Konstanten re15_montage_r38.h): im Montage-Schritt ROOM1030, solange NICHT Cut 12
+(Cut_chg 12 @0x027AA) gezeigt wird, bekommt jeder Zombie in BLK-Zone 0 (@0x01BBC, x -13470..-3660, z -32760..-23860) oder
+Zone 10 (@0x01C34, x -21290..-13470, z -31360..-26960) = HINTER dem Tor Bit 0x20; mit dem ersten Bild von Cut 12 gibt die
+Regel genau die frei, die sie angehalten hat. Ohne Cut-7-Teil zeigt die Tuer gleich Cut 12 -> die Regel greift nie (dasselbe
+Bild wie bisher). NUTZER-VORGABE ("alle"), FORM = ROOM1141 sub02 + die Startregel der anderen Montage-Schnitte.
+
+Gemessen im Riegel (KI RE2, Stand 28bb1d5d): Cut 7: 9 Zombies hinter dem Tor ab ihrem ersten Bild angehalten, kein Raum-Record
+im Warte-Rechteck; Cut 12: alle 9 in BEIDEN Haelften naeher (kleinste Haelfte 1415, kleinste Gesamt-Annaeherung 4198 statt
+vorher -120), 6 von 6 Aufrechten bekommen am Warte-Rechteck das Kriech-Bit, 5 von 9 am Schnittende unter dem Tor durch.
+Gegenprobe-Experiment (Baustein 5 aus, sonst gleich; RE1.5-KI): 3 Zombies stehen in einer Haelfte statt 1.
+
+### Riegel: "nimmt ueber die Schnittdauer ab"
+
+* je Zombie d0 -> dm -> d1 (dm = Abstand in der Mitte der eigenen Sichtzeit, 16-Bilder-Raster, montage_r38.c s_probe); in
+  BEIDEN Haelften mindestens R38_NAEHER_HALB = 400 naeher = ein Koerperradius (+0x78-Satz +6, FUN_8003a31c `lhu v0,6(v0)`
+  @0x8003a408-410), ausgenommen nur, wer hinter die Kamera gelangt und dort angehalten wurde (Ziel erreicht). Das Vorbild
+  Rolltor erfuellt es (5 von 5, kleinste Haelfte 1581). Die Gesamtschwellen 1000 (Gehen) / 500 (Tor) bleiben.
+* Klemmen-Ausnahme entfernt (es gibt keine mehr).
+* Kriech-Kriterium: jeder, der AUFRECHT ins Warte-Rechteck kommt (AOT-Stempel 5, @0x024E0), bekommt das Kriech-Bit.
+* Baustein 5: alle Zombies hinter dem Tor ab ihrem ersten Bild in Cut 7 angehalten, kein Raum-Record im Warte-Rechteck.
+* Gegenproben v0.8.25 rot ueber dieselben Masse (Cut 12 Hauptweg: in beiden Haelften naeher nur 3 von 9; ohne Cut-7-Teil:
+  5 von 9 — "die aufrechten stehen nach der Haelfte am Tor").
+* Die Ende-Zeile traegt die KI der Zombies (re15_ai_re2_for_type(0x10)); das Haelften-Kriterium ist unter der Standard-KI
+  RE2 Pflicht, unter der RE1.5-KI (Menue-Option) wird es gemeldet (s. OFFEN).
 
 ## Umsetzung (Stand zweiter Lauf; Dateien, Konstanten mit Beleg)
 
