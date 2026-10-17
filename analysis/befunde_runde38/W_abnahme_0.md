@@ -137,6 +137,10 @@ RE15_FRAMEDUMP=100-300/50:fd_ RE15_EXIT_AT=300#5060` (debug.log `JUMP -> 506 P-4
   ABR 0 (0,5·B + 0,5·F). Der PC-Prop-Weg setzt fuer Raum-Objekte KEIN ABE (main.c Prop-Schleife ohne
   `re15_render_pc_set_tri_blend`; vorbestehende Luecke: 77 Obj_model_set-Saetze mit Attribut & 2 in 24 Raeumen,
   `abe_zensus.py`, u. a. alle Typ-3-Wasser/Gitter der Stage 2 mit 0x001a, ROOM1040, 11B0, 5030, 5060).
+  Halbtransparent wird auf der PSX nur ein Texel mit STP-Bit (psx-spx graphicsprocessingunitgpu.md:1157-1161: Farbe
+  0001h..7FFFh bleibt auch bei halbtransparentem Befehl deckend, 8000h..FFFFh mischt). Nachgeprueft (`stp_5060.py`,
+  TIM ROOM5060.RDT @0x29800, 8 bpp, CLUT VRAM (0,480) 256x2, beide Vierecke clut 0x7800 = Zeile 0): **alle 4097 Texel
+  beider Dreiecke haben STP = 1** -> das Original mischt sie 0,5·B + 0,5·F (Glasscheibe; obj 2/3/4 teilen das Modell).
   Das Original zeigt dort also das Fenster zu 50 % abgedunkelt, v0.8.25 zeigte es unverdeckt, der Spurbaum zeigt es
   deckend dunkel. Der Abstand zum Original ist vorher wie nachher 0,5·|BG - Textur| — aber das Bild ist sichtbar
   anders, im Spiel erreichbar (RVD-Zonen 3->4 x -22101..-19900 z -27000..-24700 und 7->4) und im Dossier nicht erwaehnt.
