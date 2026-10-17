@@ -192,7 +192,10 @@ naechstem Nachbarn: `test_r38_montage s1030_re2 mess 2 1`):
   der naechste Nachbar haelt konstant 800 Abstand (= 2 Radien, Aktor 14 / 3 schieben). FUN_8003bca8 (re15_collision.c
   push_rect, code 0 = "Schritt in die Flaeche": `*lx = prevx; *lz = prevz`) nimmt jeden Vorwaertsschritt GANZ zurueck, die
   Rueckwaerts-Phase des Kriechens (Bild 220 -> 247: z -24539 -> -24652 bei gleicher Gierung) nicht -> Netto-Drift nach
-  Westsuedwest = +120.
+  Westsuedwest = +120. Original selbst disassembliert (`re15_disasm.py dis 0x8003be34 30`, PSX.EXE): Zweig code 0 vergleicht
+  die neue Lage mit der vorigen (`lw a3,0(a1)` / `bne a3,v0` @0x8003be38-40, `lw a0,8(a1)` / `bne a0,v0` @0x8003be4c-54) und
+  schreibt bei Bewegung die VORIGE Lage zurueck: `lh v0,0(a2)` / `sw v0,0(a1)` @0x8003be8c-94 (x), `lh v1,4(a2)` /
+  `sw v1,8(a1)` @0x8003be98-a0 (z), Rueckgabe 0 (`addu v0,zero,zero` @0x8003be9c) — wie der Port (push_rect).
 * Ohne Cut-7-Teil (Cut 12 ab dem ersten Bild) gibt es diesen Stau nicht: die Zombies kommen zu verschiedenen Zeiten ans Tor
   und kriechen sofort (Baustein 4) -> keine Klemme (`s1030_ohne7_re2`, alle 9 naeher).
 
