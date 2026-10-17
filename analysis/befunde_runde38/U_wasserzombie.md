@@ -262,4 +262,49 @@ Stand: 2026-10-17, Baum `r38_wasserzombie` auf `371f4dc8`. Zwei Maengel der Abna
    Zustand 1 + Sub 0x0A statt an der Marke des letzten eigenen Ticks).
 2. Code-Hygiene: tote `re15_enemy_ai_live_edge_fall`, falscher Kommentar ueber dem Aufruf, `-Wcomment` im Kopf.
 
-(Abschnitte 8.1 ff. werden fortlaufend gefuellt.)
+### 8.1 Mangel 1 — Messung vorher (Stand a4809c35, echte exe, eigene Messkopie `re15_pc_u_nb1v.exe`)
+
+Lauf = M5 der Abnahme: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+RE15_DEBUG_JUMP=2070@250 RE15_PLAYER_POS=-18500,-6400,2048,0 RE15_WEGPLAN=plan.txt` (Plan `RAUM 2070 / WARTE 20 /
+BLICK 2048 / WARTE 10 / AKTION / RAUM 2000 / WARTE 10 / GEHE -20600 -10600 200 / BLICK 2048 / WARTE 1500 / ENDE`),
+`RE15_WASSERZOMBIE_LOG=wz.log RE15_GEGNER_Y_LOG=gy.log RE15_FRAMEDUMP=396-404/1:fd/f RE15_EXIT_AT=406#2000`.
+Reproduziert, Bild fuer Bild identisch mit der Abnahme (deterministisch):
+```
+gy.log F399 [3 t=16 st=1/10/3/0 g=00 mo=22 af=48 @(-22068,0,-9970) b0 f1ba=0 ...]
+gy.log F400 [3 t=16 st=1/9/0/0  g=00 mo=22 af=49 @(-22068,0,-9970) b0 f1ba=0 ...]   <- 0x901 von Slot 4 nach Slot 3s Tick
+gy.log F401 [3 t=16 st=1/9/1/0  g=00 mo=13 af=23 @(-22468,0,-9970) b0 f1ba=0 ...]
+wz.log F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=9 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+```
+Bild (Scratchpad `U38nb1/m5_vorher/strip2.png`, F398-F402): F398/F399 haengt der Kletterer mit dem Oberkoerper auf
+der Stegkante, **F400 ist bis auf ein Bein verschwunden**, F401 steht er im Taumel-Clip 13 im Kanal.
+`af=9` im Abbruch: der globale Advancer (player_common.c, laeuft in game_step VOR re15_enemy_ai_run_all) hat F401
+Clip 22 auf der RE2-Bank getaktet (RE2-Clip 22 = 10 Bilder, play-once -> auf Bild 9 gepinnt) statt 49 -> 50 auf
+der RE1.5-Bank (159 Bilder).
+
+### 8.2 Mangel 1 — RE-Beleg: was zeigt das Original im Zwischenbild?
+
+Selbst disassembliert (`re15_disasm.py` / `re2_disasm.py` im Baum):
+- RE1.5 anim_set FUN_8001f314 (PSX.EXE): Clip `lbu v0,148(t0)` (+0x94) @0x8001f324, Clipzeile aus der UEBERGEBENEN
+  Bank `addu a2,a1,v0 / lw v0,0(a2)` @0x8001f330-34, Bild `lbu v0,149(t0)` (+0x95) @0x8001f35c, `sw a2,360(t0)`
+  (+0x168) @0x8001f36c, `jal 0x8001f3bc` @0x8001f38c. Der Auswerter FUN_8001f3bc rechnet die POSE IM Aufruf in den
+  Teileblock des Aktors: `lw s1,392(v1)` (+0x188) @0x8001f40c, Wurzel `sw v0,44(s1)`/`sh v0,56(s1)` @0x8001f42c-30,
+  `sw v0,48(s1)`/`sh v0,58(s1)` @0x8001f43c-40, je Teil `jal 0x80068098` (RotMatrix) @0x8001f574 (a0 = s1+120) und
+  @0x8001f5f0, danach +0x95 += 1 @0x8001f610-1c.
+- Gegenprobe "liest die Darstellung +0x94/+0x95 neu?": Scan aller Lasten mit Offset 148/149 (Basis != sp) in PSX.EXE
+  (Scratchpad `U38nb1/tools/scan94.py`): 31 Stellen, die Byte-Leser liegen in anim_set/FUN_8001f3bc/FUN_8001f8b4
+  (0x8001f324-0x8001fb4c), im Bildwort-Leser FUN_8001ae38 (`lbu v0,148(a0)` @0x8001ae48 mit a0 = g_entity(cur), also
+  ebenfalls im eigenen Tick) und in NPC-Funktionen 0x800526d4-0x80052cbc — kein Zeichner. Die gezeigte Pose ist also
+  die, die der EIGENE letzte anim_set-Aufruf mit SEINER Bank (+0x170/+0x174, @0x801032f8/@0x80103414) gerechnet hat.
+- Der fremde Schreiber im gemessenen Fall, RE2-Partner-Domino (EMOVL10_S0.BIN): `addiu v0,zero,2305` @0x80102E90,
+  `sw v0,4(s0)` @0x80102E98 (Delay-Slot von `jal 0x80015910`), danach nur `sb v0,363(s0)` @0x80102EA8 (+0x16B;
+  FUN_80015910 PSX.EXE RE2 @0x80015910-2c ist eine reine Seitenpruefung ohne Speicherzugriff ausser zwei `lh 118`).
+  Er schreibt weder Clip noch Bild noch Teileblock des Partners.
+- Folge fuer den Port: im Zwischenbild (Wort 0x901 steht, eigener Tick noch nicht gelaufen) zeigt das Original die
+  Kletterpose (Clip 0x16 Bild 49 aus der RE1.5-Bank); erst der eigene Tick (EXEC[9] P0 `sw v0,332(s1)` @0x80103F30)
+  setzt den neuen Clip. Der Port rechnet die Pose erst beim Zeichnen aus (Bank, motion, anim_frame) — die Bank muss
+  deshalb dem Stand des letzten eigenen Ticks folgen, nicht dem aktuellen Zustandswort. Dieser Stand ist die Marke
+  (gesetzt/geloescht nur in `re15_wasserzombie_re2_dispatch`, also im eigenen Tick). Ausgenommen: Neuspawn im Slot
+  (Sce_em_set `sw zero,4(s0)` @0x800421e0 = Zustand 0, frische +0x1ba `sh v0,442(s0)` @0x80042210) und jeder Aktor,
+  den nicht das RE2-Gehirn fuehrt (die RE1.5-KI posiert ohnehin ihre eigene RE1.5-Bank).
+
+(Abschnitte 8.3 ff. werden fortlaufend gefuellt.)
