@@ -25,15 +25,15 @@
 #define RE15_R38K_PARK_ROT_Z    2048
 #define RE15_R38K_PARK_S10000   64636   /* Massstab x 10000 (Sonden/Riegel) */
 
-/* SCHLUESSEL PRISON (Item 0x42, RE2-MD1 md5 c5d49ef60b6b111ecac53a19652f3278): s = 5.3297 -> sichtbar 740 x 347 Einheiten;
- * Sichtseite Modell +1y, Textur-u nach Bild-rechts; Huelle im Nutzer-Cut x 132.50..144.45 y 78.66..84.29. */
+/* SCHLUESSEL PRISON (Item 0x42, RE2-MD1 md5 c5d49ef60b6b111ecac53a19652f3278): s = 5.3032 -> sichtbar 736 x 345 Einheiten;
+ * Sichtseite Modell +1y, Textur-u nach Bild-rechts; Huelle im Nutzer-Cut x 132.53..144.42 y 78.68..84.28. */
 #define RE15_R38K_PRISON_X        (1358)
 #define RE15_R38K_PRISON_Y        (-2495)
 #define RE15_R38K_PRISON_Z        (-3400)
 #define RE15_R38K_PRISON_ROT_X    1024
 #define RE15_R38K_PRISON_ROT_Y    0
 #define RE15_R38K_PRISON_ROT_Z    0
-#define RE15_R38K_PRISON_S10000   53297   /* Massstab x 10000 (Sonden/Riegel) */
+#define RE15_R38K_PRISON_S10000   53032   /* Massstab x 10000 (Sonden/Riegel) */
 
 /* Aufhebe-Rechteck der Schluessel (beide Varianten derselbe Ort): 1000 x 1000 um (x_Marke, Wand -3400 + 300),
  * rechts vor Slot 12 (x ab 1800) beendet. */

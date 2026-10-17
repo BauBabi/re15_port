@@ -39,6 +39,9 @@ PORT-WAHL (die FORM ist jeweils belegt, die Zahlen kommen aus der Messung):
     im Nutzer-Cut innerhalb der Marken-Huelle liegen (+-0,5 / +1,5 px wie karten_export.py, Runde 36 N 3.3),
     Mitte des sichtbaren Rechtecks auf dem Sehstrahl der Markenmitte. Das MD1 wird gleichmaessig skaliert und in der
     Modellebene verschoben (nur die Ecken @0x44, Normalen/UV/Topologie unveraendert — wie karten_export.py).
+    KONTROLLE (Nachbesserung 1, Dossier 9.5): die GEZEICHNETE Huelle (gerundete Ecken, Dreiecke wie der Port, Texel =
+    (int) des baryzentrisch interpolierten UV wie unit_r38_itemorte_lage) muss in der Marke liegen; sonst wird s in
+    Schritten von 0,05 % kleiner (Parking Lot Key: 0 Schritte, Small Key des Prison Key: 10 Schritte, s 5,3297 -> 5,3032).
 
 Aufruf: python re15_port/tools/r38_itemorte/itemorte_export.py [--schreiben]
 """
@@ -291,16 +294,62 @@ def schluessel_rechnen(name, raum, cut, mk):
         else:
             hi = mi
     s = lo
-    # skaliertes + verschobenes MD1 (nur die Ecken @0x44)
-    sk = bytearray(md1)
-    neu = []
-    for i, v in enumerate(V):
-        nx = int(round((v[0] - mx) * s)); nz = int(round((v[2] - mz) * s))
-        assert -32768 <= nx <= 32767 and -32768 <= nz <= 32767
-        struct.pack_into("<3h", sk, VERT_OFF + 8 * i, nx, 0, nz)
-        neu.append((nx, 0, nz))
-    # Kontrolle mit den GERUNDETEN Werten: sichtbare Huelle im Bild
     pos = np.round(mitte).astype(int)
+
+    def md1_skaliert(s):
+        # skaliertes + verschobenes MD1 (nur die Ecken @0x44)
+        sk = bytearray(md1)
+        neu = []
+        for i, v in enumerate(V):
+            nx = int(round((v[0] - mx) * s)); nz = int(round((v[2] - mz) * s))
+            assert -32768 <= nx <= 32767 and -32768 <= nz <= 32767
+            struct.pack_into("<3h", sk, VERT_OFF + 8 * i, nx, 0, nz)
+            neu.append((nx, 0, nz))
+        return sk, neu
+    # Nachbesserung 1 (Runde 38 K, Dossier 9.5): die affine UV->Modell-Abbildung X ist ein Ausgleich ueber ALLE Flaechen
+    # (Rest bis 1 Modell-Einheit = bis ~0,09 px); beim Small Key lag die so gerechnete Huelle 0,07 px innerhalb, die
+    # GEZEICHNETE ausserhalb der Toleranz (unit_r38_itemorte_lage: x 144,52 > 144,5). Kontrolle deshalb wie Port und Riegel:
+    # GERUNDETE Ecken, Dreiecke direkt / Vierecke (0,1,3)+(0,3,2), Texel = (int) des baryzentrisch interpolierten UV, Raster
+    # N = 48 (das des Riegels) und N = 480; liegt ein sichtbarer Punkt ausserhalb, wird s in Schritten von 0,05 % kleiner.
+    def huelle_gezeichnet(sk):
+        Vn, fn, _nv = md1_lesen(bytes(sk))
+        R_, T_, H_ = kamera(raum, cut)
+        sxs_, sys__ = [], []
+        for vi, uvs, _c in fn:
+            tris = [(0, 1, 2)] if len(vi) == 3 else [(0, 1, 3), (0, 3, 2)]
+            for t in tris:
+                P = np.array([Vn[vi[j]] for j in t], float)
+                UVt = np.array([uvs[j] for j in t], float)
+                for N in (48, 480):
+                    a, b = np.meshgrid(np.arange(N + 1), np.arange(N + 1), indexing="ij")
+                    m = (a + b) <= N
+                    l1 = a[m] / float(N); l2 = b[m] / float(N); l0 = 1.0 - l1 - l2
+                    fu = l0 * UVt[0, 0] + l1 * UVt[1, 0] + l2 * UVt[2, 0]
+                    fv = l0 * UVt[0, 1] + l1 * UVt[1, 1] + l2 * UVt[2, 1]
+                    if N == 48:   # bitgleich mit dem Riegel (C: (int) des double-Ausdrucks in derselben Reihenfolge)
+                        tu = fu.astype(int); tv = fv.astype(int)
+                    else:         # feines Raster mit exakter Arithmetik: 191,9999999 an der Flaechenkante ist Zeile 192,
+                                  # nicht der Nachbar-Ausschnitt des geteilten TIM (sonst Streupunkte ausserhalb)
+                        tu = np.floor(fu + 1e-7).astype(int); tv = np.floor(fv + 1e-7).astype(int)
+                    ok = (tu >= 0) & (tv >= 0) & (tu < sicht.shape[1]) & (tv < sicht.shape[0])
+                    ok[ok] = sicht[tv[ok], tu[ok]]
+                    Pm = l0[ok, None] * P[0] + l1[ok, None] * P[1] + l2[ok, None] * P[2]
+                    W_ = pos + Pm @ Mq.T
+                    v_ = W_ @ R_.T + T_
+                    sxs_.append(160.0 + H_ * v_[:, 0] / v_[:, 2]); sys__.append(120.0 + H_ * v_[:, 1] / v_[:, 2])
+        sxs_ = np.concatenate(sxs_); sys__ = np.concatenate(sys__)
+        return float(sxs_.min()), float(sxs_.max()), float(sys__.min()), float(sys__.max())
+
+    schritte = 0
+    while True:
+        sk, neu = md1_skaliert(s)
+        hg = huelle_gezeichnet(sk)
+        if hg[0] >= x0 - 0.5 and hg[1] <= x1 + 1.5 and hg[2] >= y0 - 0.5 and hg[3] <= y1 + 1.5:
+            break
+        s *= 0.9995
+        schritte += 1
+        assert schritte < 200, "Huelle passt nicht in die Marke"
+    # Kontrolle mit den GERUNDETEN Werten: sichtbare Huelle im Bild
     sxs, sys_ = [], []
     for ex, ez in ecken:
         w = pos + Mq @ np.array([(ex - mx) * s, 0.0, (ez - mz) * s])
@@ -311,7 +360,7 @@ def schluessel_rechnen(name, raum, cut, mk):
     return dict(name=name, item=q["item"], md1=bytes(sk), md1_md5=hashlib.md5(md1).hexdigest(), s=s, pos=pos,
                 rot=(RX, RY, RZ), seite_y=seite_y, wick=wick, mitte=mitte, sichtbar=len(pts),
                 huelle=(min(sxs), max(sxs), min(sys_), max(sys_)), ecken_neu=neu, breite=breite, tiefe=tiefe,
-                det_oben=det_oben)
+                det_oben=det_oben, huelle_gezeichnet=hg, schritte=schritte)
 
 
 def loescher_rechnen(mk):
@@ -360,7 +409,8 @@ def main():
               " -> sichtbar %.0f x %.0f | Ursprung (%d,%d,%d) rot (%d,%d,%d) | Huelle Cut 5 x %.2f..%.2f y %.2f..%.2f"
               % (name, k["item"], int(k["seite_y"]), ["%.0f" % w for w in k["wick"]], k["det_oben"], k["sichtbar"],
                  k["s"], k["breite"], k["tiefe"], *k["pos"], *k["rot"], *k["huelle"]))
-        print("           Ecken neu", k["ecken_neu"])
+        print("           Ecken neu", k["ecken_neu"], "| gezeichnete Huelle (gerundete Ecken, Raster 48/480) x %.2f..%.2f y %.2f..%.2f,"
+              " %d Verkleinerungsschritte" % (*k["huelle_gezeichnet"], k["schritte"]))
     rx1 = min(int(round(ks[0]["pos"][0])) + 500, SLOT12_X0 - 2)
     rect_ks = (rx1 - 1000, WAND_Z + ZONE_VOR_WAND - 500)
     print("SCHLUESSEL-Zone Rechteck (%d,%d) 1000x1000 (Mitte (x_Marke, %d + %d), rechts vor Slot 12 x %d)"
