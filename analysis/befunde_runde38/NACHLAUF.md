@@ -20,3 +20,4 @@ gefunden hat, und die Stelle im Dossier mit den Belegen. Kandidaten fuer eine ei
 | 13 | Der PC teilt Vierecke an der Diagonale 0-3, die PSX an 1-2. | W, `W_rolltor20a0.md` §9.6 | Texturverzerrung an nicht ebenen Vierecken. |
 | 14 | Kommentar enemy_ai_common.c (Schwerkraft 0x8001bd60 "hier noch nicht portiert") veraltet, seit M sie verdrahtet. | M Abnahme 0 | Nur Doku. |
 | 15 | RE2-Spuck-Entscheid liest kein Spieler-Tor (@0x80100784-8c0): eine freie RE2-Spinne spuckt auch waehrend einer Szene, der Klumpen wird erst am Spieler abgefangen. | R, `R_spinnen.md` N1.M3 | Original-Verhalten, nur vermerkt. |
+| 16 | Figurkasten der Masken-Ausschluss-Tabelle (Runde 37 Spur P, quer +-350) deckt weder ausgestreckte Arme/Waffen (P OFFEN 2) noch Elzas Zopf (seitlich bis 404 / 485 / 809 beim Stehen / Gehen / Rennen). | D N5, `D_zopf.md` §4.5 | Generator-Masken der Stages 3-6 koennen die Zopfspitze an Kanten anschneiden. Anpassung in gen/masken36_ausschluss_r37.inc. |

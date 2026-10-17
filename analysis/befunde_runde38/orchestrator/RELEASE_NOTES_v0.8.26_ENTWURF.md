@@ -79,6 +79,11 @@ ist sie abgeschaltet (auch der Kranpult-Cursor in ROOM3050 bleibt frei).
 erst wenn sie zu Ende ist, kommen der Piep (Eingabe angenommen) und das Aufschliessen - zusammen mit der Anzeige ACCEPTED
 auf dem Panel, so wie RE2 Ton und Anzeige an seinen Schloessern koppelt. Vorher kam beim Benutzen gar kein Ton.
 
+**Elzas Zopf.** Elza hat ihren Pferdeschwanz. Er war in RE1.5 schon angelegt: Elzas Modell traegt vier Zopfglieder,
+und das Original rechnet sie mit derselben Pendel-Routine, die RE2 fuer Claires Zopf benutzt - der Port hatte sie nur
+nicht gezeichnet. Jetzt haengt der Zopf am Hinterkopf, schwingt beim Gehen und Rennen nach hinten und pendelt beim
+Anhalten aus; am Original Bild fuer Bild nachgemessen (235 Bilder rechnet der Port bitgleich nach).
+
 **Elzas Vorspann.** Elzas Intro spricht jetzt dieselben Zeilen wie Leons (dieselben Aufnahmen; legen Sie eigene
 Aufnahmen fuer Elza unter `synchro/STAGE1/room1241/` ab, haben diese Vorrang). Im schwarzen Bild hinter dem Erzaehltext
 ("We barricaded ourselves...") schien bei Elza der Lageplan 1F durch - ein Fehler seit v0.8.24, als die Lageplaene als
@@ -123,7 +128,9 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
   hinunter, obwohl das Original-Skript eine Geste setzt. Wenn Sie das aendern moechten, sagen Sie Bescheid.
 
 * Verdeckung Stages 3-6: rund ein Fuenftel der ergaenzten Masken bleibt aus, damit keine Figur VOR einem Objekt uebermalt
-  wird; volle Verdeckung braeuchte Freistellungen wie in Stage 1. An einer Bodenkante in ROOM5090 bleiben einzelne Pixel.
+  wird; volle Verdeckung braeuchte Freistellungen wie in Stage 1. An einer Bodenkante in ROOM5090 bleiben einzelne Pixel. Rennt Elza
+  von der Seite gesehen, kann ihre Zopfspitze an einer solchen Maskenkante einzelne Punkte verlieren (dieselbe Art wie
+  der ausgestreckte Arm beim Zielen).
 
 * Bekannt, nicht beauftragt (alte Abweichung, auch in v0.8.25): Bei kurzen Skript-Bewegungen ohne Text (z.B.
   ROOM1230, Leon hockt sich eine Sekunde vor der Nachricht hin) kann Leon im Port schon laufen, im Original nicht.
