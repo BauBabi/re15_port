@@ -18,13 +18,14 @@ jede Aussage hier ist in dieser Sitzung neu gemessen bzw. neu disassembliert. Fo
       enemy_ai_common.c 06:36:42, main.c 2026-10-16 22:59); exe enthaelt `zwischenbild` und `RE15_WASSERZOMBIE_LOG`;
       md5 re15_pc.exe `2a5d6e340081ecbae35df3a9e45f7f55`
 - [x] Riegel der Spur: 2/2 gruen (Abschnitt 5)
-- [ ] Gezielte Gruppen der beruehrten Module
-- [ ] Nutzer-Punkt an der exe (Leon/Elza, beide KI, echter Tuerweg, Bild)
+- [x] Gezielte Gruppen der beruehrten Module: Unit 118/118, Integration 8/8 (Abschnitt 5)
+- [x] Nutzer-Punkt an der exe: M1/M2/M3/M8 (Leon/Elza x RE2-/RE1.5-KI, echter Tuerweg, Bild), M4/M4b (ROOM2020),
+      M6 (Ton), M7 (bis F1100), M1-vorher (v0.8.25-Gegenprobe) — erfuellt
 - [x] Mangel 1 der Abnahme 0 nachgemessen (M5): behoben
-- [ ] Mangel 2 der Abnahme 0 geprueft
-- [ ] RE-Gate (Stichproben selbst disassembliert)
-- [ ] Vertrag
-- [ ] Urteil
+- [x] Mangel 2 der Abnahme 0 geprueft (Abschnitt 3): behoben
+- [x] RE-Gate (Abschnitt 4): 10 Stellen selbst disassembliert, haelt
+- [x] Vertrag (Abschnitt 7): haelt; Nebenwirkungen (Abschnitt 6): keine neue
+- [x] Urteil (Abschnitt 8): Punkt erfuellt, alle Gates halten -> **BESTANDEN**
 
 ## 1. Nutzer-Punkt (Wortlaut)
 
@@ -355,3 +356,139 @@ Evil 1.5").
 (`wz_marke_bank`). Gemessen: F400 Kletterpose statt "bis auf ein Bein leer", Abbruch af 49 -> 50 statt 49 -> 9 (M5),
 Ausfuehrung sonst byte-gleich (M5/M7). Die RE-Begruendung (die Pose wird im eigenen Tick gerechnet, der fremde Schreiber
 aendert sie nicht) ist durch Nr. 5-9 belegt. **RE-Gate haelt.**
+
+## 5. Tests (gezielt, keine volle Suite)
+
+- **Riegel der Spur:** `ctest --test-dir re15_port/build -R "^(unit_r38_wasserzombie|integration_r38_wasserzombie)$"
+  --timeout 900 --output-on-failure -V` -> `100% tests passed, 0 tests failed out of 2` (unit 0.12 s, integration
+  123.27 s; `-- r38_wasserzombie: a/b/c/d/e gruen ...`). Unit-Ausgabe woertlich u.a.: `[A] Clip 0x16 Wurzel f0 (0,-1817,0)
+  f150 (1444,-3278,111) f158 (0,-1698,0)`, `[C RE1.5 2020] ... oben=F258 landung(slot 4)=(-11536,-1800,2222) ... danach
+  max_y=-1800 band 1..1`, `[D RE2 2020] ... klettern=F103 (re15bank=1 len=159) ... oben=F261 ...`, `[D-Gegenprobe ohne
+  Bank] eintritt=F-1 y=0`, `[F] Zwischenbild: st=1/9 mo=22 af=76 bank_re15=1 len=159 schatten=1(-1800) advancer af=77`,
+  `[F] Abbruch: st=1/9 mo=3 af=2 y=0 f1ba=0 band=0 bank_re15=0 len=40 (RE2 40)`, `[E RE1.5 2000] ... oben=F327`,
+  `[E RE2 2000] ... oben=F269`, `== OK ==`. Integrations-Logs (`build/tests/integration/r38_wasserzombie_wd/lauf_e74c2573_*`):
+  a 2020 Leon RE2 `F261 R2020 slot=4 ... oben ... @(-10756,-1800,2222) b1`; b 2020 RE1.5 `F258`/`F304 ... oben`;
+  c `[save] CONTINUE: resumed in room 2021 (hp=100)`, `F261 R2021 slot=4 ... oben`; d 2000 Raumlader `F275 ... oben
+  @(-20928,-1800,-9715) b1` und `F407 ... zwischenbild ... af=63` / `F408 ... abbruch ... af=64`; e Tuerweg
+  `F400 ... zwischenbild ... af=49` / `F401 ... abbruch ... af=50`, `F308 ... oben`.
+- **Messkraft von Riegel F gegen den alten Modulstand (eigene Gegenprobe, Baum unberuehrt):** Scratchpad `alt_riegel/` —
+  `git show 371f4dc8:re15_port/engine/src/wasserzombie_r38.c` (Stand vor der Nachbesserung; der Kopf unterscheidet sich nur in
+  Kommentaren) und das aktuelle Modul je mit den Bau-Flags kompiliert und mit dem gebauten Test-Objekt
+  `test_r38_wasserzombie.c.obj` + `libre15_engine.a` + `libre15_test_support.a` gelinkt: alt -> `exit=1`,
+  `[F] Zwischenbild: st=1/9 mo=22 af=76 bank_re15=0 len=10 schatten=0(12345) advancer af=9` und `FAIL: F: Zwischenbild
+  posiert nicht die RE1.5-Aktionsbank (bank=0)`, `FAIL: F: Zwischenbild Clip 22 (erwartet 0x16 auf der RE1.5-Bank)`,
+  `FAIL: F: Zwischenbild-Uhr 10 statt 159 (RE1.5-Clip 0x16)`, `FAIL: F: Zwischenbild-Schatten 0/12345 statt +0x1ba -1800`,
+  `FAIL: F: Advancer im Folgebild af 76 -> 9 (erwartet 77)`, `== 5 FEHLER ==`; neu -> `exit=0`, `== OK ==`. Der Riegel misst
+  genau den Abnahme-0-Befund.
+- **Unit-Gruppe der beruehrten Module** (Regex des Bau-Agenten + `unit_.*hund.*schatten.*|unit_r35_.*schatten.*|unit_.*sitz.*|
+  unit_.*10d0.*|unit_.*schatten.*|unit_.*shadow.*|unit_.*clip_len.*|unit_.*anim_advance.*|unit_r36_szenen.*|unit_.*kante.*|
+  unit_.*edge.*|unit_r36_klettern_.*|unit_r34_wasser|unit_re2_spider_water_2090`, -j 4, Log `U38abn1c/ctest_unitgruppe.txt`):
+  `100% tests passed, 0 tests failed out of 118` (13.24 s).
+- **Integrationsgruppe** (Zombie-Schuss, RE2-Dispatch, Schatten/Renderer, Klettern, Szenen; seriell, Log
+  `U38abn1c/ctest_integgruppe.txt`): `100% tests passed, 0 tests failed out of 8` (1160.05 s): elza_schuss 48.90 s,
+  gegnerzahl 87.74 s, klettern 518.03 s, pri_schatten 28.04 s, schuss 126.04 s, szenenleon 161.14 s, beretta 165.14 s,
+  zombieaktiv 25.00 s.
+
+## 6. Nebenwirkungen (Code-Pfade selbst nachgelesen, dazu Laeufe)
+
+`wz_marke_bank` (neu) gilt, solange die Marke steht, Typ gleich, `active`, `state != 0` und das RE2-Gehirn den Typ fuehrt;
+gesetzt/geloescht wird die Marke nur in `re15_wasserzombie_re2_dispatch`, das in `re15_re2z_tick` direkt vor dem
+Zustands-`switch` fuer jeden aktiven Aktor laeuft (enemy_ai_re2_zombie.c:8906; davor nur Prolog: Abklingzaehler,
+Sicht, Kriecher-/Liege-Eintritt). Aufrufer von `re15_wasserzombie_bank`: Renderer main.c:10011, Uhr `re15_actor_clip_len`
+enemy_ai_common.c:5479, Schuss-Anker schuss_r36.c:72; Schatten main.c:9813; Bank-Meldung main.c:924 (Hybrid-Lader).
+Bildreihenfolge (game_step_common.c): `re15_player_tick` :1644 -> `re15_actors_anim_advance` :2323 ->
+`re15_enemy_ai_run_all` :2344. Gepruefte Faelle:
+- Fremder Schreiber NACH dem eigenen Tick (Partner-Domino aus hoeherem Slot): Zwischenbild = Stand des eigenen Ticks
+  (gemessen M5/M3, Riegel d/e). Der Port-Domino schreibt nur Wort (+ Gang-Zeile, + SE 4), nicht `motion`.
+- Spieler-Treffer: landen im Spieler-Tick VOR dem Advancer und dem eigenen Tick desselben Bilds -> der eigene Tick bricht
+  im selben Bild ab (+0x1ba zurueck, RE2-Executor), gezeichnet wird danach mit der RE2-Bank. Kein Zwischenbild.
+- Neuspawn / Raumwechsel: `re15_wasserzombie_reset` ruft die exe nicht (nur Tests) — eine Marke ueberlebt einen
+  Raumwechsel; ein neuer Aktor im Slot steht aber auf Zustand 0 (Sce_em_set @0x800421e0, Abschnitt 4 Nr. 10) -> keine
+  RE1.5-Bank, und sein erster eigener Tick loescht die Marke ueber den Abbruch-Zweig (ohne +0x1ba-Ruecksetzen, weil
+  `state == 0`). Riegel F-Neuspawn prueft genau das. Kein Fehlerpfad gefunden.
+- RE1.5-KI: `wz_marke_bank` = 0 (nicht RE2-Gehirn) -> von der Nachbesserung unberuehrt; ihr Schatten haengt weiter an
+  Zustand 1 / Sub 0x0A.
+- Ausfuehrung: gy.log des Tuerwegs bis F1100 byte-gleich zum alten Stand (M7) — die Nachbesserung aendert nur
+  Darstellung/Uhr/Schatten/Schuss-Anker im Zwischenbild.
+- Andere Raeume mit u1=1-Zellen: SCA-Zensus (Skript der Abnahme 0 `scratchpad/re/sca_u1.py`, selbst gelesen und neu
+  gelaufen: `sca_u1.py 5020 2000`): ROOM5020 hat eine Band-0-Zelle
+  [14] u1=0x01 (x 4450..6350, z -14975..-13275) und einen Typ-0x18-Spawn auf Band 0 (@0x012d6, Deskriptor 0xae). Lauf
+  `m9_5020` (`RE15_DEBUG_JUMP=5020@250 RE15_PLAYER_POS=5400,-14125,2048,1`, 900 Bilder, Standard-KI): kein Hochziehen
+  (wz.log leer), der Aktor bleibt in Zustand 0/0/0/0 — **gy.log byte-gleich zur v0.8.25-exe** auf demselben Lauf
+  (`m9v_5020_v0825`, `cmp` ohne Ausgabe). ROOM3010 hat Abnahme 0 (M6) gelaufen (kein Hochziehen ausgeloest); der
+  Ausloeser ist seit Abnahme 0 unveraendert (`git diff 371f4dc8 HEAD` beruehrt `kante_vorn`/`hochziehen` nicht).
+  ROOM1090/10B0: Band-0-Kletterzellen, Zombies auf Band 1, die Klemme FUN_8003b0a4 filtert nach Band (Abnahme 0 M6).
+- Integrationsbaum (Hinweis, kein Mangel): `git merge-tree --write-tree r38/integration HEAD` (Integration jetzt `741e3269`)
+  -> Konflikte nur in den Include-Bloecken von `enemy_ai_common.c` (Spuren I/T/B/M) und `platform/pc/main.c` (E/I/T/D) und
+  in der Schattenzeile `main.c` ~9856 neben Spur M (`re15_npckante_schatten_y`) — jeweils beide Zeilen behalten (Spur U
+  greift nur fuer die Zombie-Wurzel-Typen 0x10/0x11/0x12/0x16/0x18). Im zusammengefuehrten Baum gibt es keinen Aufrufer von
+  `re15_enemy_ai_live_edge_fall` mehr (geprueft auf dem merge-tree-Ergebnis).
+
+## 7. Vertrag
+
+- Pfade (`git diff cb782bda HEAD --name-only`, 14 Dateien vor diesem Bericht): Dossier + Abnahmeberichte unter `analysis/befunde_runde38/`,
+  neues Modul `engine/src/wasserzombie_r38.c` + Kopf `include/re15_wasserzombie_r38.h`, Haken in `enemy_ai_common.c`,
+  `enemy_ai_re2_zombie.c`, `schuss_r36.c`, `platform/pc/main.c`, Riegel `tests/unit/test_r38_wasserzombie.c`,
+  `tests/unit/probe_r38_wasserzombie_karte.c`, Sonde `tests/unit/probes/r38_wasserzombie.cmake` (Sonden-Mechanismus
+  probes/<thema>.cmake), `tests/integration/test_r38_wasserzombie.cmake`. **Kein** `release/`, `platform/android/`,
+  `shared_assets/PSX/`, keine Test-CMakeLists (Grep auf die Namensliste: leer).
+- Ressourcen: keine Bank-9-Bits, keine Nachrichten-Ids, keine Items/Dokumente, keine Sprachdateien (Grep der Plus-Zeilen
+  auf `game_flag_set|MSG_ID|msg_id|item_id|k_port|re15_inv_add|flag_set(|RE15_FLAG`: 0 Treffer).
+- Gemeinsame Dateien: Haken klein und mit "Runde 38 Spur U" gekennzeichnet (enemy_ai_common.c: Include, Aufruf +
+  2-zeiliger Kommentar, 2 Zeilen in `re15_actor_clip_len`; enemy_ai_re2_zombie.c: Include + 1 Zeile; schuss_r36.c:
+  Include + 2 Zeilen; main.c: Include + 1 + 1 + 5 Zeilen). Die 43 entfernten Zeilen in enemy_ai_common.c sind die tote
+  Vorgaengerfunktion (Mangel 2 der Abnahme 0 verlangte das Entfernen).
+- Riegel je Punkt: `unit_r38_wasserzombie` (A-F + F-Neuspawn) und `integration_r38_wasserzombie` (a-e, echte exe, Lade-
+  und Tuerweg) — messend (Riegel F gegen den alten Modulstand rot, Abschnitt 5).
+- **Vertrag haelt.**
+
+## 8. Urteil
+
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| "Die Zombies in Stage2 die sich unten im Wasser befinden und zum Rand des Wassers laufen müssen sich an den Rand hochziehen können, wie im Original Resident Evil 1.5" | **erfuellt** | M1 (echte Tuer 2070->2000, Leon, Standard-KI: wz.log drehen/klettern/boden-1800/oben, Landung (-20928,-1800,-10290) Band 1, +0x1ba -1800; Bild F140-F310 Haende auf die Kante, Hochstemmen, Knien, Aufrichten neben Leon), M2 (RE1.5-KI, beide Wasserzombies oben F310/F588), M3/M8 (Elza 2071->2001, beide KI, Bild), M4/M4b (ROOM2020: alle drei Zombies im Kanal ziehen sich an der Suedwand hoch), M7 (bis F1100: auch der zweite kommt nach dem RE2-Domino-Abbruch hoch, F956), M6 (Klettertoene SE 1 an Clip-Bild 102/130), M1-vorher (v0.8.25 auf demselben Weg: 0 von 1400 Typ-0x16-Eintraegen auf Band 1, 673 an der Kanalwand = Nutzerbefund); in allen Laeufen 0 Eintraege unter dem Wasserboden und 0 auf Band >= 2; Zensus: alle 12 Zombie-Sce_em_set der Stage 2 liegen in 2000/2001/2020/2021. Mechanik = ANIMATE[0x0A] 0x8010325c / Ausloeser @0x80101f00-44 (Abschnitt 4, selbst disassembliert); Riegel 2/2 gruen (a-e inkl. ROOM2021 Elza per CONTINUE) |
+
+Maengel der Abnahme 0:
+- Mangel 1 (Ein-Bild-Sprung im Zwischenbild nach fremdem Schreiber): **behoben** — M5 (Leon) und M3 (Elza): F400
+  Kletterpose an der Kante statt "bis auf ein Bein leer", wz.log `abbruch ... af=50` statt `af=9`; Ausfuehrung sonst
+  byte-gleich zum alten Stand (gy.log bis F1100, M7); Riegel F gegen den alten Modulstand rot (5 Fehler, Abschnitt 5).
+- Mangel 2 (Code-Hygiene): **behoben** — Abschnitt 3.
+
+Gates:
+- RE-Gate: **haelt** (Abschnitt 4: 10 Stellen selbst disassembliert, darunter alle 5 neuen Belege der Nachbesserung;
+  31-Lasten-Scan selbst nachgezaehlt; 0 Rate-Woerter; einziger neuer Env-Schalter ist die Messschiene; keine neue
+  Konstante; PORT-WAHL/PORT-EMULATION/PORT-ABBILDUNG gekennzeichnet; der Fix erklaert den gemessenen Befund).
+- Vertrag: **haelt** (Abschnitt 7).
+- Tests: **halten** (Riegel je Punkt vorhanden und messend; 2/2 Spur, 118/118 Unit-Gruppe, 8/8 Integrationsgruppe).
+- Nebenwirkungen: **keine neue gefunden** (Abschnitt 6; ROOM5020 byte-gleich zu v0.8.25).
+
+**Ergebnis: BESTANDEN.**
+
+## 9. Maengel
+
+Keine.
+
+## 10. Hinweise (keine Maengel dieser Spur; fuer den Nutzer sichtbar oder fuer die Integration)
+
+1. RE2-Griffmechanik nach dem Hochziehen (Standard-KI, vorbestehender Code der RE2-Zombie-Spur): der erste Zombie greift
+   Leon/Elza; im Griff-Ende P8 (`re15_re2z_move_root` + `re2z_thrust(e,-30)`, enemy_ai_re2_zombie.c, @0x80102C60-CAC)
+   rutscht er mit Clip 13 rueckwaerts (gy.log Slot 4: F399 x -21192 -> F410 x -23326), faellt ab F405 ueber die
+   Absturzkante zurueck in den Kanal (F419 y 0, Zustand 1/5) und zieht sich spaeter erneut hoch (F902). Zugleich trifft
+   sein Partner-Domino 0x901 (Port-Abbildung von +0xD ueber `contact_slot`, ohne Aktualitaetspruefung) den zweiten
+   Kletterer: dessen eigener Tick bricht das Hochziehen ab, und er springt in EINEM Bild von "haengt an der Kante" (F400)
+   auf "steht im Kanal im Taumel-Clip 13, 400 zurueck" (F401; Schub @0x80103F60-64; Rig-Wechsel ohne Ueberblendung =
+   gekennzeichnete PORT-WAHL). Mit v0.8.25 kam auf diesem Weg kein Zombie auf den Steg, deshalb trat das dort nicht auf.
+   Domino, Rueckstoss und Schwerkraft stammen nicht aus Spur U (im Dossier unter OFFEN 6/8.7). Zustaendig: RE2-Zombie-Spur.
+2. RE1.5-KI: Schatten ausserhalb von 0x0A auf y statt +0x1ba (Original zeichnet jeden Wurzel-Aufruf auf +0x1ba,
+   @0x801004fc — Abschnitt 4 Nr. 4); ein Abbruch nach Bild 0x46 laesst +0x1ba stehen (nur statisch belegt). Betrifft alle
+   Zombie-Wurzel-Typen -> eigener Punkt (Dossier 8.7).
+3. Tuerweg nach ROOM2020 nicht fahrbar: in ROOM2050 ist Slot 1 (Tuer nach 2020) installiert, feuert aber auch mit dem
+   Spieler im Rechteck in keiner Blickrichtung (M4). CONTINUE in ROOM2000 startet ohne sub00 (keine Gegner, Dossier 6).
+   Beides ist der Lade-/Tuerweg, nicht Spur U.
+4. Elza trifft die ROOM2001-Wasserzombies nur mit Flag (3,0x45) (Original-Skript @0x1826/@0x182A, Abnahme 0 M3).
+5. Integration: `git merge-tree --write-tree r38/integration HEAD` (741e3269) -> nur Konflikte in den Include-Bloecken
+   (enemy_ai_common.c, main.c) und in der Schattenzeile main.c neben Spur M — beide Seiten behalten. `r38/integration`
+   aendert `enemy_ai_re2_zombie.c` (Spur L, +232/-84 gegen die Basis). Lauf e von `integration_r38_wasserzombie` braucht
+   das Domino-Szenario (Griff-Ende waehrend eines Hochziehens) vor F406; faellt er nach dem Merge mit "kein Zwischenbild"
+   rot aus, zuerst pruefen, ob das Szenario dort noch eintritt — die Mechanik selbst prueft Riegel F (Unit)
+   szenariounabhaengig.
