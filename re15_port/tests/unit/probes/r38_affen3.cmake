@@ -1,7 +1,7 @@
 # Runde 38 Spur S "affen3" — die kleinen Affen (Typ 0x29, EM029) in Stage 3 treffen wie im Original.
 # Nutzer: "In Stage 3 die kleinen Affen koennen einen nicht treffen, es passiert nichts".
 # Dossier analysis/befunde_runde38/S_affen3.md, Code engine/src/affen3_r38.c + include/re15_affen3_r38.h
-# (Haken: enemy_ai_common.c INIT/ACTIVE/Dispatch je 1 Zeile, affen_11c0.c Bank des Aktor-Typs 3 Zeilen).
+# (Haken: enemy_ai_common.c INIT/ACTIVE/HURT/DEATH/Dispatch/Opfer-Wege, affen_11c0.c Bank + Griff-Paar, re15_damage.c Zielband).
 #
 #   unit_r38_affen3_typ      Typ 0x29 = der Blob, den der Original-Lader FUN_80022300 fuer 0x29 laedt (@0x80073000)
 #   unit_r38_affen3_biss     Port ab dem Original-Zustand F137 der GDB-Spur o4: Commit, Treffer -5 im Fenster, Takt 57
@@ -12,6 +12,8 @@
 #   unit_r38_affen3_griff    Griff von der Decke (Sub 15 + Spieler-Haken cmd 5) und Bisse danach wie GDB-Spur o8
 #   unit_r38_affen3_sprung   Sprung Sub 7 / Todessprung Sub 8 (HP < 50 -> -500 -> cmd 6 -> Tod) wie GDB-Spur o9
 #   integration_r38_affen3   echte exe, ROOM3040 per Debug-Sprung, Leon auf der Plattform: Bisse treffen (-5),
+#                            RE2-KI (Standard) und RE1.5-KI
+#   integration_r38_affen3_decke  echte exe: angeschossener Affe -> Decke -> Griff von hinten (kein HP) -> Bisse -5,
 #                            RE2-KI (Standard) und RE1.5-KI
 add_executable(test_r38_affen3 ${CMAKE_CURRENT_SOURCE_DIR}/test_r38_affen3.c)
 target_link_libraries(test_r38_affen3 PRIVATE re15_engine re15_test_support)
@@ -34,4 +36,10 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_affen3_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_affen3.cmake)
     set_tests_properties(integration_r38_affen3 PROPERTIES TIMEOUT 900)
+    add_test(NAME integration_r38_affen3_decke
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_affen3_decke_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_affen3_decke.cmake)
+    set_tests_properties(integration_r38_affen3_decke PROPERTIES TIMEOUT 900)
 endif()
