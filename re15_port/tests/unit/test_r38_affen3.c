@@ -18,6 +18,9 @@
  *           RE1.5-Gehirn; re15_ai_re2_for_type wird fuer 0x29 nirgends gefragt).
  *   quadrat FUN_8001bff8 als QUADRAT um den gezeichneten Knochenpunkt (@0x8001c080-c0c0): Treffer bei Mitten-
  *           Abstand 1572 (Original F150), kein Treffer, wenn Leon 1100 weiter weg steht.
+ *   ereignis    (Nachbesserung 1) ROOM4040: Spawn-Wurzelaufruf -> gesperrt in Zustand 4/1; Freigabe -> Fall von der Decke
+ *               Bild fuer Bild wie Original o11, Angriff erst am Boden; RE2-KI und RE1.5-KI.
+ *   ereignis40  (Nachbesserung 1) Unterzustand 0 (+0x9 == 0x40): Clip 0x1f, dann ACTIVE Sub 2 (Clip 3 ab 0x1d), dann Sub 3.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -640,6 +643,108 @@ static void teil_griff_fl(re15_ai_flavor_t fl)
 static void teil_decke(void) { teil_decke_fl(RE15_AI_FLAVOR_RE2); teil_decke_fl(RE15_AI_FLAVOR_RE15); }
 static void teil_griff(void) { teil_griff_fl(RE15_AI_FLAVOR_RE2); teil_griff_fl(RE15_AI_FLAVOR_RE15); }
 
+/* ---- Nachbesserung 1: Ereignis-Affen (Stage 4/5) -------------------------------------------------------------------
+ * Original o11 (DuckStation-GDB, ROOM4040, STAGE4-Code == STAGE4.BIN): Sce_em_set ruft die Wurzel beim Spawn mit
+ * geloeschtem Sperrbit (`andi v0,v1,0xdf` @0x8004256c, `jalr` @0x8004259c, Bit zurueck @0x80042604-08) -> der INIT sieht
+ * +0x9 = 0x41 und setzt das Zustandswort 0x104 (@0x80110ea4-eb8) -> gesperrt in 4.1.0.0 (o11 F18..F56). Freigabe durch
+ * sub04 (Pos_set (-25090,-10000,9230) @0x011CE, Member_set(12,0x41) @0x011D6) -> Zustand 4/1 0x801158e8 in EINEM Bild ->
+ * ACTIVE B[10] Phase 2: Fall c1a4(0,0,-70) bis +0x1ba. Bahn nach der Freigabe (o11 F58..F76, ein Wert je Bild): */
+static const int32_t s_o11_y[19] = { -10000, -10000, -9930, -9790, -9580, -9300, -8950, -8530, -8040, -7480, -6850, -6150,
+                                     -5380, -4540, -3630, -2650, -1600, -480, 0 };
+static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
+{
+    re15_ai_flavor_set(fl);
+    re15_damage_seed_rng(0x2545f491u);
+    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }
+    /* Leon im Ausloeser AOT 5 (@0x00E9C, Rechteck x -27899..-22159, z 2608..5608), Gier 0 wie Original o11 */
+    if (room_boot(0x4040, -25000, 0, 4000, 0, 0, 0, 0) != 0) return;
+    re15_actor_t *a = aktor_vom_typ(0x29, 0);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    PRUEF(a != NULL, "[%s] Ereignis-Affe 0x29 aus Sce_em_set ROOM4040 @0x00EB0", name);
+    if (!a) return;
+    PRUEF(a->grid_id == 0x61 && a->state == 4 && a->sub_state_1 == 1 && a->sub_state_2 == 0,
+          "[%s] Spawn-Wurzelaufruf: gesperrt (g=%02x) in Zustand %d/%d/%d (Original o11 F18: 4.1.0.0 g61; INIT @0x80110eb8 Wort 0x104)",
+          name, (unsigned)a->grid_id, a->state, a->sub_state_1, a->sub_state_2);
+    PRUEF(a->x == -14040 && a->z == 19130 && a->render_scale_q12 == RE15_AFFEN3_MASSSTAB,
+          "[%s] INIT lief beim Spawn: Parkstelle (%d,%d), Massstab 0x%x (@0x80110f54-58)", name, (int)a->x, (int)a->z, (unsigned)a->render_scale_q12);
+    int R = -1, lande = -1, sub4 = -1, gesperrt_aktiv = 0, hp_ab_luft = 0, erster_treffer = -1, erster_treffer_y = 1;
+    int bahn_ok = 1, hp_alt = pl->hp; int32_t bahn[19]; int nb = 0;
+    uint8_t hr_R = 0, hr_R1 = 0, air_R = 0, air_19 = 1; uint16_t rad_R = 0, rad_19 = 0; uint8_t s2_19 = 0, bild_19 = 0, bild_R = 0;
+    for (int k = 1; k <= 400; k++) {
+        frame(0, 0);
+        if (R < 0) {
+            if (a->grid_id == 0x61) { if (a->state != 4 || a->sub_state_1 != 1) gesperrt_aktiv++; continue; }
+            R = k; hr_R = a->hit_react; air_R = a->roach_air; rad_R = a->hit_radius_min; bild_R = a->anim_frame;
+            PRUEF(a->state == 1 && a->sub_state_1 == 10 && a->sub_state_2 == 2 && a->grid_id == 0x01 && a->motion == 0x0d,
+                  "[%s] Freigabe-Bild T%d: Zustand %d/%d/%d g=%02x Clip %d (Original o11 F58: 1.10.2.0 g01 Clip 13; 0x801158e8)",
+                  name, k, a->state, a->sub_state_1, a->sub_state_2, (unsigned)a->grid_id, (int)a->motion);
+            PRUEF(a->x == -25090 && a->z == 9230, "[%s] Lage nach Pos_set @0x011CE: (%d,%d)", name, (int)a->x, (int)a->z);
+        }
+        int t = k - R;
+        if (t == 1) hr_R1 = a->hit_react;
+        if (t >= 0 && t < 19) { bahn[nb++] = a->y; if (a->y != s_o11_y[t]) bahn_ok = 0; }
+        if (lande < 0 && a->sub_state_1 == 10 && a->sub_state_2 == 3) lande = t;
+        if (t == 19) { s2_19 = a->sub_state_2; bild_19 = a->anim_frame; air_19 = a->roach_air; rad_19 = a->hit_radius_min; }
+        if (sub4 < 0 && a->sub_state_1 == 4) sub4 = t;
+        if (pl->hp != hp_alt) {
+            if (a->y != (int32_t)a->dog_floor_y) hp_ab_luft++;
+            if (erster_treffer < 0) { erster_treffer = t; erster_treffer_y = a->y; }
+        }
+        hp_alt = pl->hp;
+    }
+    printf("  [%s] Freigabe T%d, Bahn y:", name, R);
+    for (int i = 0; i < nb; i++) printf(" %d", (int)bahn[i]);
+    printf("\n  [%s] Landung R+%d, Sub 4 R+%d, erster HP-Abzug R+%d (Affe y=%d), Leon HP %d\n", name, lande, sub4, erster_treffer,
+           (int)erster_treffer_y, (int)pl->hp);
+    PRUEF(R > 0 && gesperrt_aktiv == 0, "[%s] bis zur Freigabe kein Bild ausserhalb von Zustand 4/1 (%d)", name, gesperrt_aktiv);
+    PRUEF(hr_R == 3 && air_R == 1 && rad_R == RE15_AFFEN3_KASTEN_LUFT_R && bild_R == 0x14,
+          "[%s] Zustand 4/1: +0x93 = %d (|= 3 @0x80115900-20), +0x1e0 = %d (@0x80115930), Kasten r %u (@0x8011ec48), Bild 0x%x (@0x80115a38)",
+          name, hr_R, air_R, (unsigned)rad_R, bild_R);
+    PRUEF(hr_R1 == 1, "[%s] erstes Fallbild: A[10] loescht +0x93 Bit 1 (@0x80113094-98; Original o11 F59 hr01): %d", name, hr_R1);
+    PRUEF(nb == 19 && bahn_ok, "[%s] Fallbahn y Bild fuer Bild = Original o11 F58..F76 (c1a4(0,0,-70) @0x8011322c)", name);
+    PRUEF(lande == 18 && s2_19 == 4 && bild_19 == 25 && air_19 == 0 && rad_19 == RE15_AFFEN3_KASTEN_BODEN_R,
+          "[%s] Landung R+%d auf +0x1ba (Original R+18), danach Phase %d Bild %d, +0x1e0 %d, Bodenkasten r %u (Original o11 F77: 1.10.4.0 Bild 25)",
+          name, lande, s2_19, bild_19, air_19, (unsigned)rad_19);
+    PRUEF(sub4 == 34, "[%s] Clip 0xd zu Ende -> Sub 4 in R+%d (Original o11 F92 = R+34)", name, sub4);
+    PRUEF(erster_treffer > 18 && erster_treffer_y == 0 && hp_ab_luft == 0,
+          "[%s] erster HP-Abzug erst nach der Landung (R+%d), Affe dabei auf +0x1ba (y=%d); Abzuege aus der Luft: %d", name,
+          erster_treffer, (int)erster_treffer_y, hp_ab_luft);
+}
+
+/* Unterzustand 0 (0x8011577c, +0x9 == 0x40): im Auslieferungsstand von keinem Skript erreicht (Zensus: alle Freigaben
+ * Member_set(12,0x41)); gegen die Befehle gemessen: Affe A in ROOM3040 bekommt das Zustandswort 4 und +0x9 = 0x40.
+ * Phase 0 @0x801157c8 (Clip 0x1f, +0x95 0, +0x8f 7) faellt in Phase 1 (anim_set, +0x6 += Ende); Phase 2 @0x80115858:
+ * +0x9 &= 0xbf, ACTIVE Sub 2 Phase 1, Clip 3 ab Bild 0x1d; B[2] (+0x7 = 0) spielt Clip 3 zu Ende und geht nach Sub 3. */
+static void teil_ereignis40(void)
+{
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_damage_seed_rng(0x2545f491u);
+    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }
+    if (room_boot(0x3040, -25600, 0, -1350, 0, 0, 0, 40) != 0) return;
+    re15_actor_t *a = aktor_vom_typ(0x29, 0);
+    if (!a) { printf("  FEHLER: kein Affe\n"); g_fail++; return; }
+    a->state = 4; a->sub_state_1 = 0; a->sub_state_2 = 0; a->sub_state_3 = 0; a->grid_id = 0x40;   /* Wort 0x4 @0x80110e94 */
+    int t_ende = -1, t_wach = -1, t_sub3 = -1; uint8_t clip1 = 0, bild1 = 0, s2_1 = 0, clip_w = 0, bild_w = 0, g_w = 0xff, s2_w = 0;
+    for (int k = 1; k <= 200; k++) {
+        frame(0, 0);
+        if (k == 1) { clip1 = a->motion; bild1 = a->anim_frame; s2_1 = a->sub_state_2; }
+        if (t_ende < 0 && a->state == 4 && a->sub_state_2 == 2) t_ende = k;
+        if (t_wach < 0 && a->state == 1 && a->sub_state_1 == 2) { t_wach = k; clip_w = a->motion; bild_w = a->anim_frame; g_w = a->grid_id; s2_w = a->sub_state_2; }
+        if (t_sub3 < 0 && a->state == 1 && a->sub_state_1 == 3) t_sub3 = k;
+    }
+    printf("  Clip 0x1f-Ende T%d, Sub 2 ab T%d (Clip %d Bild 0x%x g=%02x), Sub 3 ab T%d\n", t_ende, t_wach, clip_w, bild_w, g_w, t_sub3);
+    PRUEF(clip1 == 0x1f && bild1 == 1 && s2_1 == 1, "T1: Phase 0 -> 1 im selben Bild, Clip 0x%x Bild %d (@0x801157d4-d8, anim_set @0x80115830)", clip1, bild1);
+    PRUEF(t_ende == 70, "Clip 0x1f (70 Bilder, EDD EM029) zu Ende in T%d -> +0x6 = 2 (@0x8011584c-54)", t_ende);
+    PRUEF(t_wach == 71 && clip_w == 3 && bild_w == 0x1d && g_w == 0x00 && s2_w == 1,
+          "Phase 2 in T%d: ACTIVE Sub 2 Phase %d, Clip %d ab Bild 0x%x, +0x9 = %02x (@0x80115858-8d4)", t_wach, s2_w, clip_w, bild_w, g_w);
+    PRUEF(t_sub3 == 113, "B[2] spielt Clip 3 ab 0x1d zu Ende (41 Bilder) und geht nach Sub 3 in T%d (@0x80111744-7c4)", t_sub3);
+}
+static void teil_ereignis(void)
+{
+    teil_ereignis_fl(RE15_AI_FLAVOR_RE2, "RE2-KI (Standard)");
+    teil_ereignis_fl(RE15_AI_FLAVOR_RE15, "RE1.5-KI");
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -653,6 +758,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "decke"))   teil_decke();
     if (alle || !strcmp(teil, "griff"))   teil_griff();
     if (alle || !strcmp(teil, "sprung"))  teil_sprung();
+    if (alle || !strcmp(teil, "ereignis"))   teil_ereignis();     /* Nachbesserung 1 */
+    if (alle || !strcmp(teil, "ereignis40")) teil_ereignis40();   /* Nachbesserung 1 */
     if (!strcmp(teil, "spur_o7") || !strcmp(teil, "spur_o8")) {   /* Messlauf ohne Pruefung (R38_AFFEN3_SPUR=1 fuer jedes Bild) */
         decke_t ev[256]; int ab[64], tk[64];
         int rv = lauf_decke(!strcmp(teil, "spur_o7") ? 1024 : 3072, 1450, ev, 256, ab, tk, 64);

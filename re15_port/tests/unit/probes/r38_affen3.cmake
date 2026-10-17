@@ -16,8 +16,13 @@
 #                            RE2-KI (Standard) und RE1.5-KI
 #   integration_r38_affen3_decke  echte exe: angeschossener Affe -> Decke -> Griff von hinten (kein HP) -> Bisse -5,
 #                            RE2-KI (Standard) und RE1.5-KI
+#   unit_r38_affen3_ereignis    Nachbesserung 1, ROOM4040 ueber Skript/AOT: Spawn-Wurzelaufruf (@0x8004259c) -> gesperrt in
+#                            Zustand 4/1 (INIT @0x80110eb8), Freigabe -> Zustand 4/1 0x801158e8 -> Fall Bild fuer Bild wie
+#                            Original o11 (GDB), Landung R+18, Sub 4 R+34, HP-Abzug erst am Boden; beide KI
+#   unit_r38_affen3_ereignis40  Nachbesserung 1: Unterzustand 0 (0x8011577c, +0x9 == 0x40): Clip 0x1f, dann Sub 2 / Clip 3
 #   integration_r38_affen3_tor    echte exe, ROOM4040: Wurzel-Tor +0x9 & 0x20 @0x80110b34-40 — der Ereignis-Affe (g=61)
-#                            bleibt in Zustand 0, bis Member_set(12, 0x41) @0x011D6 ihn freigibt; beide KI
+#                            wartet in Zustand 4/1 (Spawn-INIT), bis Member_set(12, 0x41) @0x011D6 ihn freigibt; dann
+#                            Fall von y -10000 auf +0x1ba wie Original o11 und Angriffe nur vom Boden; beide KI
 add_executable(test_r38_affen3 ${CMAKE_CURRENT_SOURCE_DIR}/test_r38_affen3.c)
 target_link_libraries(test_r38_affen3 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r38_affen3 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -27,7 +32,7 @@ target_compile_definitions(test_r38_affen3 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r38_affen3 PRIVATE m)
 endif()
-foreach(_teil typ biss flavor quadrat schwer decke griff sprung)
+foreach(_teil typ biss flavor quadrat schwer decke griff sprung ereignis ereignis40)
     add_test(NAME unit_r38_affen3_${_teil} COMMAND test_r38_affen3 ${_teil})
     set_tests_properties(unit_r38_affen3_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()
