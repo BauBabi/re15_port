@@ -502,4 +502,91 @@ Abnahmebericht `analysis/befunde_runde38/W_abnahme_0.md` (HEAD d6a55686): Nutzer
   dunkel; das Original mischt es halbtransparent (ABE). Der PC-Prop-Weg kennt kein ABE (vorbestehend).
 * **M2** Nebenwirkungs-Zensus nur in eine Richtung (WENIGER), ohne Typ 3 und ohne Eltern-Objekte.
 
-Stand: in Arbeit (Abschnitte folgen je Schritt).
+### 10.1 M1 — Ursache
+
+Der Original-Polygon-Weg (§5) zeichnet in ROOM5060/5061 Cut 4 von obj 4 (Obj_model_set @0x02D72, Attribut **0x0012**,
+(-19548,-3780,-23346)) das GPU-Dreieck (1,2,3) des Vierecks P01, dessen Scheitel 0 bei vz 21 liegt; der alte
+Port-Ausschnitt `_vz < 64` hatte das ganze Viereck verworfen. Die GEOMETRIE ist die des Originals (Abnahme 0 §5.2b,
+nachgerechnet). Falsch war das ZEICHNEN: der PC-Prop-Weg kannte kein ABE, jedes Objekt-Polygon ging deckend an SDL.
+Das ist vorbestehend (seit aa346af1) und Runde 36 Spur N bekannt — sie hat es in main.c ausdruecklich stehen lassen,
+"bis zur Portierung von Parameter 4" (analysis/befunde_runde36/N_kartenitems.md 8.7/8.8, N_abnahme_1.md H1). Der neue
+Weg hat die Luecke hier nur erstmals an einer Stelle sichtbar gemacht, an der vorher gar nichts gezeichnet wurde.
+Entscheidung: Abhilfe (a) der Abnahme — Parameter 4 byte-true portiert (Original oder nicht: das Original mischt, also
+ist "deckend" falsch, gleich wo). Damit aendert sich das Bild in ALLEN Raeumen mit halbtransparenten Objekten (§10.4).
+
+### 10.2 M1 — RE-Belege (PSX.EXE Auslieferung, `re15_disasm.py dis`, selbst gelesen)
+
+| Stelle | Bytes/Instruktionen | Bedeutung |
+|---|---|---|
+| FUN_8002c18c | @0x8002c2ac `lw v0,12(s1)` / @0x8002c2b4 `andi v0,v0,0x2` / @0x8002c2b8 `sltu s2,zero,v0` | ABE = Attribut (Pool+0x0C) & 2 |
+| | @0x8002c304 / @0x8002c32c / @0x8002c364 / @0x8002c38c `addu a3,s2,zero` vor `jal 0x80022f0c/0x80023098/0x800254a0/0x800256b0` | Parameter 4 aller vier Zeichner |
+| | @0x8002c2bc `ori v0,zero,0x3` / @0x8002c2c0 `bne v1,v0` / @0x8002c2c8 `jal 0x8003e64c` / @0x8002c2cc `addu a1,s2,zero` | Typ 3 bekommt ABE als a1 |
+| FUN_8003e64c | @0x8003e66c / @0x8003e6b8 `addu a3,s2,zero` vor `jal 0x80022f0c` @0x8003e6ac / `jal 0x80023098` @0x8003e6dc | Typ 3: nur Flach-Zeichner, mit ABE |
+| FUN_80022f0c (Flach-Dreieck) | @0x80022f18 `sll a3,a3,1` / @0x80022f1c `ori a3,a3,0x34` / @0x80022f38 `sb a3,3(a2)`; je Dreieck @0x80023024 `lw v0,0(a2)` / @0x8002302c `sw v0,4(a1)` | Code 0x34 bzw. **0x36** in obj+0x73, Wort 1 des GT3 |
+| FUN_80023098 (Flach-Viereck) | @0x800230ac `sll a3,a3,1` / @0x800230b0 `ori a3,a3,0x3c` / @0x800230d0 `sb a3,3(s0)` | 0x3C bzw. **0x3E** |
+| FUN_800254a0 / FUN_800256b0 (Licht) | @0x800254ac/@0x800254b0 (`0x34`)/@0x800254d4; @0x800256bc/@0x800256c0 (`0x3c`)/@0x800256ec; RGBC per `lwc2` @0x800254e4 / @0x800256fc | Code-Byte reist mit NCCT ins Primitiv |
+| FUN_80025940 (GT3 beim Modell-Bind) | @0x800259bc `lw v0,0(a0)` (a0 = Pool+0x0C) / @0x800259c4 `andi v0,v0,0xc` / @0x800259cc `sll t7,v0,19` / @0x80025a08 `lw v0,-4(t1)` (MD1 u1 v1 Seite) / @0x80025a14 `or v0,t7,v0` / @0x80025a18 `sw v0,-8(a3)` (Wort 6) | Texpage ODER (Attribut & 0xC) << 3 |
+| FUN_80025a98 (GT4) | @0x80025b1c / @0x80025b24 / @0x80025b2c / @0x80025b68 / @0x80025b70 / @0x80025b74 `sw v0,-24(a3)` | ebenso |
+| FUN_8002b898 | `*(obj+0x70) = 0x808080` (Decompilat Z. 16) | Farbe der Flach-Zeichner = Textur x 1 |
+| psx-spx `graphicsprocessingunitgpu.md` | :381 Texpage-Bits 5-6 "0=B/2+F/2, 1=B+F, 2=B-F, 3=B+F/4"; :1129-1132 und :1158-1161 "Color 0000h = Fully-transparent ... 8000h..FFFFh = Semi-transparent (*) or Non-transparent for opaque commands"; :1430-1433 "bit 15 of each CLUT entry acts as a semi-transparency flag ... If the semi-transparency flag is off, the new pixel is written to VRAM as-is"; :1434-1436 Klemmung 255 / 0 | GPU-Regel je Texel |
+
+### 10.3 M1 — Original zur Laufzeit gemessen (DuckStation-GDB, Auslieferungs-EXE `0800e003` @0x80026e4c)
+
+Werkzeug `W_belege/orig_abe_messung.py` (Muster orig_objmessung.py; neu: Gegner schon WAEHREND des Ladens aus — in
+ROOM5060 hatte sonst ein Zombie Leon gepackt und jede Lage-Setzung zurueckgenommen; danach Pool-Objekte, Primitiv-
+Puffer obj+0x14/+0x1C, Puffer-Index u8 @0x800ACA34, Code-Byte und Texpage je Primitiv; Bildpuffer aus dem
+SaveStateOnExit-Spielstand). Logs `W_belege/orig_abe_5060_log.txt`, `orig_abe_20a0_log.txt`, `orig_abe_4090_log.txt`:
+
+| Raum / Cut | Pool | Attribut | Code (Primitiv Byte 7) | Texpage | ABR |
+|---|---|---|---|---|---|
+| 5060 / 4 | 2, 3, **4** | 0x0012 | 0x3e | 0x0086 | 0 |
+| 5060 / 4 | 5 | 0x0006 | 0x3e | 0x00a6 | **1** (aus Attribut-Bit 2) |
+| 20A0 / 2 | 4, 5, 6 (Typ 3) | 0x001a | 0x3e | 0x00c7 | **2** (aus Attribut-Bit 3) |
+| 4090 / 0 | 0, 1, 2 | 0x000e | 0x3e / 0x36 (Dreiecke) | 0x00e5 | **3** |
+
+obj+0x70 traegt in allen Faellen `80 80 80 3e` (Farbe 0x808080 + zuletzt geschriebener Code). Primitive, die in diesem
+Bild noch nie gezeichnet wurden, tragen den Grundcode des Builders 0x34 (z. B. 5060 Pool 2 Q01 — der Zeichner schreibt
+Wort 1 erst nach bestandenem NCLIP).
+
+### 10.4 M1 — Zensus aller halbtransparenten Raum-Objekte
+
+`W_belege/zensus_abe.py` -> `zensus_abe.txt` (152 inhaltsverschiedene RDTs, 457 Obj_model_set-Saetze): **74 mit
+Attribut & 2**: 0x0012 x37 (ABR 0: 1040/1041 obj 1-3 Glas, 11B0/11B1 obj 0 Kiste, 5030/5031 obj 1-11 Typ 3, 5060/5061
+obj 2-4 Glas), 0x001a x32 (ABR 2: alle Typ-3-Wasserflaechen 11A0/11A1, 1260/1261, 2000-20B0), 0x000e x3 (ABR 3: 4090
+obj 0-2), 0x0006 x2 (ABR 1: 5060/5061 obj 5). Alle MD1-Seiten sind 0x0080 (ABR-Bits 0) -> das wirksame ABR kommt
+allein aus dem Attribut. STP der Texel UNTER den Polygonen (UV-Dreiecke, je Polygon dessen CLUT-Zeile): STP 1
+13 668 719, STP 0 91 689, 0000h 704 — STP 0 kommt nur bei der Kiste 11B0/11B1 obj 0 vor (679 STP 1 / 30 563 STP 0):
+dort zeigt die GPU 98 % deckend und nur die STP-1-Texel gemischt. (Spur N hatte 20A0 obj 4-6 und 1040 obj 1-3 mit
+"0 % STP" gefuehrt — offenbar ueber CLUT-Zeile 0 gezaehlt; die Polygone benutzen Zeile 1 (Wort 0x7840): 20A0 Zeile 1
+hat 252/256 Eintraege mit STP, 1040 nutzt dort nur Eintrag 1 = 0x90a1 mit STP; nachgeprueft mit stp_check.py.)
+
+### 10.5 M1 — Umsetzung
+
+* NEU `re15_port/include/re15_objabe_r38.h` + `re15_port/engine/src/objabe_r38.c` (engine, ohne SDL):
+  `re15_objabe_r38_abe` (Attribut & 2, @0x8002c2b4), `re15_objabe_r38_abr` (Seite ODER (Attribut & 0xC) << 3, Bits
+  5-6, @0x800259c4/@0x80025b24), `re15_objabe_r38_flach` (Attribut & 0x10 oder Typ 3, @0x8002c2f4 / FUN_8003e64c),
+  `re15_objabe_r38_mische` (GPU-Formel, Referenz der Riegel), `re15_objabe_r38_texel_klasse`, `re15_objabe_r38_teilen`
+  (die Slot-Textur in zwei Teile: STP 0 = deckend, STP 1 = halb; Layout wie re15_render_pc_upload_tim_slot).
+* NEU `re15_port/platform/pc/src/objabe_r38_pc.c`: je Raum-Objekt-Slot die zwei Teil-Texturen (nur wenn die TIM STP-1-
+  Texel hat); `re15_objabe_r38_pc_dreieck` zeichnet ein ABE-Polygon in ZWEI Durchgaengen — STP-0-Texel deckend (SDL
+  BLEND, Alpha FF), STP-1-Texel gemischt: ABR 0 BLEND mit Eckpunkt-Alpha 128, ABR 1 ADD, ABR 2 render_pc.c B-F
+  (ONE, ONE, REV_SUBTRACT), ABR 3 ADD mit Alpha 64. Beide Teile sind texelweise disjunkt -> zusammen genau die GPU-
+  Regel. Ohne ABE: unveraendert EIN Aufruf re15_render_textured_tri_lit.
+* Haken `platform/pc/main.c` (Prop-Schleife + Raum-Objekt-Laden, "Runde 38 Spur W"): Include;
+  `re15_objabe_r38_pc_raum_neu()` am Anfang von pc_load_room_prop_set, `re15_objabe_r38_pc_textur()` nach jedem
+  Raum-Objekt-TIM-Upload; die drei Dreiecks-Aufrufe der Prop-Schleife gehen ueber
+  `re15_objabe_r38_pc_dreieck(attr, uv->page, ...)`; die Flach-Bedingung `(attr & 0x12) == 0x10` (Runde 36 Spur N,
+  "nur deckende Objekte, bis Parameter 4 portiert ist") ist jetzt `re15_objabe_r38_flach(attr, typ)` — die
+  halbtransparenten Flach-Objekte bekommen wie im Original 0x808080 (Kommentar der Spur N angepasst).
+* Haken `platform/pc/src/render_pc.c` ("Runde 38 Spur W"): Include; `re15_render_pc_set_tri_blend` nimmt 0..7
+  (3..7 = RE15_OBJABE_BLEND_*); der Flush holt fuer 3..7 die Teil-Textur (`re15_objabe_r38_pc_flush_textur`, NULL =
+  Stapel auslassen); `re15_render_textured_tri_lit` nimmt das Eckpunkt-Alpha aus s_tri_alpha statt fest 0xFF (alle
+  Setzer stellen es nach Gebrauch auf 255 zurueck: main.c Effekte, glas1120_pc.c, objabe_r38_pc.c — glas1120 und die
+  Effekte benutzen ausserdem den unbeleuchteten Weg, der s_tri_alpha schon immer las); `re15_render_pc_renderer()`
+  steht nicht mehr nur unter `__ANDROID__` (objabe_r38_pc.c legt Texturen an).
+* `objpoly_r38_pc.c` (Halbviereck) zeichnet ueber denselben ABE-Weg (Attribut als neuer erster Parameter).
+* Konstanten mit Adresse: 0x0002 (@0x8002c2b4), 0x000C und << 3 (@0x800259c4/@0x800259cc, @0x80025b24/@0x80025b2c),
+  0x0010 (@0x8002c2f4), Typ 3 (@0x8002c2bc), Codes 0x34/0x3C | ABE<<1 (Zeichner oben); SDL-Alpha 128 / 64 = psx-spx
+  0,5 / 0,25 (Riegel A4: <= 1 Stufe gegen die GPU-Formel).
+
+Stand: Messung nachher, Riegel und M2 folgen (§10.6 ff.).
