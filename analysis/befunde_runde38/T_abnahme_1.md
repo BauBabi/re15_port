@@ -9,7 +9,8 @@ ab Abschnitt 2 neu gemessen).
 Messwerkzeuge (Scratchpad, nicht im Repo): `abn1t/lauf1.sh` (Messkopie `re15_pc_abn1t_<name>.exe` neben der Bau-exe,
 RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1, nach dem Lauf geloescht), `abn1t_tools/sprung.py` (groesster
 Bild-zu-Bild-Sprung des Spielers je Raum aus RE15_STATE_LOG), `abn1t_tools/sca.py` (SCA-Zellen einer RDT, Format
-rdt_common.c:250-272), `abn1t_tools/montage.py`/`crop.py` (Framedump-Tafeln). Gezeichnetes Bild = RE15_ANIM_TRACE
+rdt_common.c:250-272), `abn1t_tools/wandcheck.py` (je Bild Spielerlage gegen die SCA-Rechteckzellen Typ 1 mit u0&1),
+`abn1t_tools/wurzel.py`/`kette.py` (Wurzel/Knochenlagen eines EM2B-Clips ueber tools/emd_ansichtsblatt.py), `abn1t_tools/montage.py`/`crop.py` (Framedump-Tafeln). Gezeichnetes Bild = RE15_ANIM_TRACE
 (anim_select_common.c:135, Spalten Bild/Slot/Typ/motion/Clip/fc/anim_frame/aufgeloestes Bild/...).
 
 ## 0. Stand der Pruefung
