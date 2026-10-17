@@ -136,3 +136,45 @@ unit_r38_cursor_raeume.)
 Dreiecke, 33 reingruene Punkte im Rahmen, 21 Abweichungen der Klassenkarte), neu -> OK; alt 1150 F140 -> **FEHLER (2)**
 (8056 / 33), neu -> OK. `probe_r38_cursor sicht 8` auf 10F0 Cut 0: alt -> **FEHLER (1)** (4 Dreiecke MAC0 < 0), neu ->
 OK (4 Dreiecke MAC0 > 0). Die Riegel messen also das Behauptete und schlagen am alten Stand an.
+
+## 8. RE-Gate (selbst disassembliert, `re15_disasm.py` auf info/Re1.5/PSX.EXE, `re2_disasm.py` auf info/re2leon/PSX.EXE)
+
+| Behauptung | selbst gesehen |
+|---|---|
+| FUN_800254a0 (GT3) verwirft MAC0 < 0 | `lh v0,2(t1)` @0x800254f4, `lh v1,6(t1)` @0x800254f8, `lh v0,10(t1)` @0x80025508 (v0,v1,v2) -> lwc2 @0x8002552c..40 -> RTPT `4a280030` @0x8002554c; NCLIP `4b400006` @0x80025580; `swc2 $24,0(t4=sp)` `e9980000` @0x8002559c; `lw v0,0(sp)` @0x800255a0; **`bgez v0,0x800255d0` @0x800255a8**; sonst `addiu a1,a1,80` @0x800255b0, `j 0x80025694` = `bne t2,zero,0x80025520` (naechste Flaeche) |
+| FUN_800256b0 (GT4) auf v0,v1,v2 | `lh` 2/6/10(t2) @0x8002570c/@0x80025710/@0x80025720 -> RTPT @0x80025764; NCLIP @0x80025798; swc2 @0x800257b4; **`bgez v0,0x800257e8` @0x800257c0**; sonst `addiu a1,a1,104`, `j 0x8002591c` (Schleifenende) |
+| FUN_80022f0c (flach GT3) | NCLIP @0x80022fec, swc2 @0x80023004, **`bltz v0,0x80023080` @0x80023010**, Ziel = `bne t1,zero,0x80022f84` (Schleife) |
+| FUN_80023098 (flach GT4) | NCLIP @0x80023168, swc2 @0x80023184, **`bgez v0,0x800231b8` @0x80023190** |
+| Objekt-Schleife ruft nur diese | FUN_8002c18c: Typ (`lbu v1,8(s1)`) == 3 -> `jal 0x8003e64c` @0x8002c2c8; sonst `jal 0x80014368` @0x8002c2dc, Attribut `lw 12(s1) & 0x10` @0x8002c2f4 -> `jal 0x80022f0c` @0x8002c320 + `jal 0x80023098` @0x8002c350, sonst `jal 0x800254a0` @0x8002c380 + `jal 0x800256b0` @0x8002c3b0. `scan`: keine weiteren Aufrufe (kein Schattenzeichner). FUN_8003e64c ruft 0x80022f0c @0x8003e6ac / 0x80023098 @0x8003e6dc |
+| RE2 verwirft genauso | FUN_8002d0e8: RTPT @0x8002d170, NCLIP @0x8002d18c, `swc2 $24,0(sp)` `ebb80000` @0x8002d1a0, **`bgez v0,0x8002d1bc` @0x8002d1ac** (Ziel AVSZ3 `4b58002d`), sonst `j 0x8002d148` + `addiu t0,t0,80`. FUN_80027bec: NCLIP @0x80027ca8, **`bgtz` @0x80027cc8** (RE2 verwirft dort auch = 0; der Port folgt RE1.5 `bgez`) |
+| RE2-Lagen der flachen Schluessel | ROOM6150.RDT @0x2C98 `2d 08 00 .. 10 00 ba f1 b0 f8 b6 bc c0 ff 00 07 00 06` (Dir -64/0x700/0x600), ROOM2020.RDT @0x1D90 `2d 02 .. ea a2 24 fa 6e a6 00 00 00 00 00 00`, ROOM1050.RDT @0x1274 `2d 00 .. e4 cb 88 fa be c4 00 00 00 00 00 00` — bytegleich mit dem Header-Zitat |
+| GTE NCLIP / Saettigung | psx-spx `geometrytransformationenginegte.md` :437-439 (`MAC0 = SX0*SY1 + SX1*SY2 + SX2*SY0 - SX0*SY2 - SX1*SY0 - SX2*SY1`), :418-419 (SX2/SY2 -400h..+3FFh), :294-295 (FLAG 14/13) |
+| Port nimmt dieselben Ecken | `re15_md1.h`: Dreieck `n0,v0,n1,v1,n2,v2` (v0 @+2, v1 @+6, v2 @+10), Viereck `n0,v0,..,n3,v3` = die `lh`-Offsets des Originals; Bildschirmwerte mit OFX/OFY = cx/cy = SCREEN_XRES/2, SCREEN_YRES/2 (main.c:5932) wie SX/SY der GTE |
+| PSX-Ziel des Ports | `platform/psx/src/mesh_psx.c:489-493` `gte_nclip(); ... if (nclip_result < 0) continue;`, `platform/psx/main.c:719/756` backface_cull 1 |
+
+Konstanten im Diff: `RE15_NCLIP_R38_SXY_MIN/MAX` (-0x400/+0x3FF) = psx-spx :418-419; Schwelle "< 0" = die vier Verzweigungen;
+`RE15_R36Q_PRISON_ROT_X 0` = RE2 @0x1274 Dir 0; `RE15_R36Q_PARK_ROT_X 2048` = 180-Grad-Wendung eines flachen Modells mit
+Umlauf-Normale -Y, hergeleitet aus dem Verwurf + RE2 @0x2C98 (RE2 wendet dasselbe Modell) — die Achse (x statt z) ist eine
+benannte Port-Entscheidung zur Lage der Runde 36 (dort PORT-WAHL); Zeile entfaellt laut Dossier beim Merge mit Spur K.
+Feuerloescher-.inc: keine neue Konstante, nur Eckenreihenfolge (Regel w < 0 aus dem Zensus, Riegel unit_r38_cursor_wicklung).
+Wort-Suche im Diff (`deferred|tunable|interim|for now|faithful|plausib|TODO|FIXME|approx`): **0 Treffer**; kein neuer
+`getenv`-Schalter in engine/platform/include (Verwurf ist unbedingt, kein Env-Ausweg).
+**Erklaert der Fix den Befund?** Ja: gemessen fallen genau die NCLIP<0-Dreiecke des Cursor-Platzes weg (Zaehlungen = 0 und
+> 0 alt/neu identisch, §3-§5), und das Bild ist danach klassengleich mit dem Original-Bild.
+
+## 9. Vertrag
+
+* Pfade (`git diff master...HEAD --name-only`): nur analysis/befunde_runde38/A_*, engine/src/{nclip_r38.c,
+  schluessel_r36.c, gen/feuerloescher_r37.inc}, include/{re15_nclip_r38.h, re15_schluessel_r36.h}, platform/pc/{main.c,
+  src/hebetisch_cursor_pc.c}, tests/{integration/test_r38_cursor.cmake, unit/probe_r38_cursor.c, unit/probes/r38_cursor.cmake},
+  tools/r37_feuerloescher/feuerloescher_modell.py. **Kein** release/, platform/android/, shared_assets/PSX/, keine
+  Test-CMakeLists. (`git diff master --stat` zeigt zusaetzlich AUFTRAG/VERTRAG/orchestrator — das sind master-Commits nach der
+  Basis 1bcbd0ff, nicht Aenderungen dieses Zweigs.)
+* Gemeinsame Dateien: main.c +3 (Include + 2 Haken, je Kommentar "Runde 38 Spur A") — klein. schluessel_r36.c +2
+  ("Runde 38 A"), re15_schluessel_r36.h +2 Defines (+10 Kommentarzeilen) — Dateien der Spur K (VERTRAG §1.4), klein;
+  gen/feuerloescher_r37.inc (610 Zeilen, mit dem Werkzeug neu erzeugt) + Werkzeug +29 — kein "Haken", aber notwendig fuer
+  die eigene Nebenwirkung und konfliktfrei (s.u.).
+* Bank-9-Bits / Nachrichten-Ids / Slots / Ereignisse: keine belegt (A hatte keine Zuteilung) — eingehalten.
+* Probe-Merge `git merge-tree --write-tree r38/integration r38/cursor`: Konflikte NUR in schluessel_r36.c und
+  re15_schluessel_r36.h (Spur K, bereits in r38/integration, Commit 97490964) — genau der im Dossier §3c/§8 beschriebene
+  Fall ("K's Seite nehmen"); main.c, .inc, Werkzeug mischen automatisch.
