@@ -227,6 +227,8 @@ Spieler unabhaengig): NEU Platz 28 0 rueckseitige Dreiecke, 0 reingruene Punkte.
   Aenderungen sind deterministisch und stammen vom Verwurf. Bild `A_belege/nebenwirkung_scan_5010_2040_3080.png`
   (alt | neu | Markierung): 5010 ein dunkelroter Streifen (Rueckseite) ueber einem Geraet faellt weg, darunter die
   beleuchtete Kante und die gruene Lampe; 2040 ein 4x4-Block an Leons Hand; 3080 Einzelpunkte entlang einer Kante.
+  **Nachtrag 2026-10-17:** die 5 Punkte in 10F0 (96..99, 169..170) waren KEINE Kleinigkeit, sondern der ganze
+  Parking Lot Key (Port-Prop, flach, Rueckseite oben) — er verschwand. Befund und Behebung §4.6/§3c.
 * **Elza-Raeume (Fortsetzung 2026-10-16 abends).** Statischer Vergleich zuerst (`A_belege/elza_props_vergleich.py`):
   der Verwurf wirkt nur auf Raum-Objekte; in 73 Raeumen sind Modelle (Prop-Tabelle RDT+0x30) und Obj_model_set-Saetze
   von ROOMxxx1 und ROOMxxx0 gleich (Wirkung = Leon-Scan), 30 unterscheiden sich, 17 haben keine Elza-Variante. Scan
@@ -379,10 +381,12 @@ Neu (Registrierung NUR `tests/unit/probes/r38_cursor.cmake`; Sonde `tests/unit/p
 Gezielter Lauf (keine volle Suite), Regex = eigene Tests + Testgruppen aller beruehrten Module (Raum-Prop-Schleife
 -> alle Bild-Riegel mit Raum-Objekten und die Raeume, deren Bild sich im Scan aenderte; Hebetisch; Panels/Cursor;
 Port-eigene Props; Feuerloescher-Modell):
-`ctest --test-dir re15_port/build -R "r38_cursor|r34n_b|hebetisch|11f0|cursor|panel|codepanel|irons_tisch|sicherung|dokumente|schrift1150|kartenitems|feuerloescher|schluessel|kiste|tor_hell|cut1150|szene1150|pri_schatten|pri1100|granate|dachkiste|fahrstuhl|ziel1190|cut10f0|elza_irons|pri_masken|generator|zeiger|r36_elza|r36_kleidung|r36_klettern|r22_10f0|r36_szenenleon|r36_gegnerzahl|r30_tuer_r4000|r36_tueren|r35_cut11c0|r30_cut_blitz|r34_plattform|room1150|irons_neck_1150" --timeout 900 --output-on-failure`
-(193 Tests, davon 49 mit der exe)
+`ctest --test-dir re15_port/build -R "r38_cursor|r34n_b|hebetisch|11f0|cursor|panel|codepanel|irons_tisch|sicherung|dokumente|schrift1150|kartenitems|feuerloescher|schluessel|kiste|tor_hell|cut1150|szene1150|pri_schatten|pri1100|granate|dachkiste|fahrstuhl|ziel1190|cut10f0|elza_irons|pri_masken|generator|zeiger|r36_elza|r36_kleidung|r36_klettern|r22_10f0|r36_szenenleon|r36_gegnerzahl|r30_tuer_r4000|r36_tueren|r35_cut11c0|r30_cut_blitz|r34_plattform|room1150|irons_neck_1150|r35_inhalt" --timeout 900 --output-on-failure`
+(Stand 2026-10-17: 197 Tests = 148 ohne + 49 mit der exe; `r35_inhalt` neu, weil Memory Card/Schrot Port-Props sind.
+Gefahren in zwei Teilen am Endstand cd41f6b2 + Dossier, exe/Sonden gebaut nach 3f11372f/cd41f6b2:)
 
-(Ergebnis: siehe unten, wird nach dem Lauf eingetragen)
+* Teil 1, `-R "<obiger Ausdruck>" -E "^integration_" -j4 --timeout 600`:
+  **`100% tests passed, 0 tests failed out of 148`** (Total Test time (real) = 14.90 sec)
 
 ## 6. OFFEN
 
