@@ -43,35 +43,59 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 set(_fehler "")
 
-# Ein Lauf: _fall = Messflaeche des Werkzeugs, _raum, _pos = RE15_PLAYER_POS (x,z,rot,band), _cut.
+# Ein Lauf: _fall = Messflaeche des Werkzeugs, _raum, _pos = RE15_PLAYER_POS (x,z,rot,band), _cut, ARGN = weitere
+# KEY=WERT. Framedump F270..F330 jedes zweite Bild; gewertet wird jedes Bild, dessen Zustand UND Vorbild-Zustand den
+# Ziel-Schnitt tragen (das Umschaltbild zeigt noch den alten Schnitt, Dossier §7c); mindestens 3, alle im Rahmen.
 function(abe_lauf _fall _raum _pos _cut)
     set(WORKDIR "${_basis}_${_fall}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     re15_start_spiel(_rv 600
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore RE15_TITLE_CONFIRM_MS=1500
         RE15_PSELECT_AUTO=1 "RE15_DEBUG_JUMP=${_raum}@250" "RE15_PLAYER_POS=${_pos}" "RE15_FORCE_CUT=${_cut}"
-        RE15_STATE_LOG=state.txt "RE15_FRAMEDUMP=300-300/1:fd_" "RE15_EXIT_AT=310#${_raum}"
+        RE15_STATE_LOG=state.txt "RE15_FRAMEDUMP=270-330/2:fd_" "RE15_EXIT_AT=332#${_raum}"
+        ${ARGN}
         "${_exe_kopie}")
-    if(NOT EXISTS "${WORKDIR}/fd_000300.ppm")
-        set(_fehler_${_fall} "\n  ${_fall}: kein Framedump F300 (exit ${_rv})" PARENT_SCOPE)
+    if(NOT EXISTS "${WORKDIR}/state.txt")
+        set(_fehler_${_fall} "\n  ${_fall}: state.txt fehlt (exit ${_rv})" PARENT_SCOPE)
         return()
     endif()
-    file(STRINGS "${WORKDIR}/state.txt" _st REGEX "^F300 ")
-    if(NOT _st MATCHES "cam=${_cut} ")
-        set(_fehler_${_fall} "\n  ${_fall}: F300 nicht in Cut ${_cut}: ${_st}" PARENT_SCOPE)
-        return()
+    file(STRINGS "${WORKDIR}/state.txt" _st REGEX "^F(2[6-9][0-9]|3[0-3][0-9]) ")
+    foreach(_z IN LISTS _st)
+        if(_z MATCHES "^F([0-9]+) .* cam=([0-9]+) ")
+            set(_cam_${CMAKE_MATCH_1} ${CMAKE_MATCH_2})
+        endif()
+    endforeach()
+    set(_n 0)
+    set(_f "")
+    foreach(_bild RANGE 270 330 2)
+        math(EXPR _vor "${_bild} - 1")
+        set(_ppm "${WORKDIR}/fd_000${_bild}.ppm")
+        if(NOT EXISTS "${_ppm}" OR NOT "${_cam_${_bild}}" STREQUAL "${_cut}" OR NOT "${_cam_${_vor}}" STREQUAL "${_cut}")
+            continue()
+        endif()
+        execute_process(COMMAND "${RE15_ABE_TOOL}" --fall "${_fall}" "${_ppm}"
+                        RESULT_VARIABLE _rvw OUTPUT_VARIABLE _outw OUTPUT_STRIP_TRAILING_WHITESPACE TIMEOUT 60)
+        math(EXPR _n "${_n} + 1")
+        if(NOT _rvw EQUAL 0)
+            string(APPEND _f "\n  ${_fall} F${_bild}: ${_outw}")
+        elseif(_n EQUAL 1)
+            message(STATUS "r38_rolltor20a0_abe[${_fall}] ROOM${_raum} F${_bild} ${_outw}")
+        endif()
+    endforeach()
+    message(STATUS "r38_rolltor20a0_abe[${_fall}] ROOM${_raum}: ${_n} Bilder in Cut ${_cut} gewertet")
+    if(_n LESS 3)
+        string(APPEND _f "\n  ${_fall}: nur ${_n} Bilder in Cut ${_cut} (mindestens 3; exit ${_rv})")
     endif()
-    execute_process(COMMAND "${RE15_ABE_TOOL}" --fall "${_fall}" "${WORKDIR}/fd_000300.ppm"
-                    RESULT_VARIABLE _rvw OUTPUT_VARIABLE _outw OUTPUT_STRIP_TRAILING_WHITESPACE TIMEOUT 60)
-    message(STATUS "r38_rolltor20a0_abe[${_fall}] ROOM${_raum} ${_outw}")
-    if(NOT _rvw EQUAL 0)
-        set(_fehler_${_fall} "\n  ${_fall}: ${_outw}" PARENT_SCOPE)
-    endif()
+    set(_fehler_${_fall} "${_f}" PARENT_SCOPE)
 endfunction()
 
 abe_lauf(5060c4 5060 "-20926,-25850,0,0" 4)
 string(APPEND _fehler "${_fehler_5060c4}")
-abe_lauf(20a0c2 20A0 "8750,-22932,0,2" 2)
+# Spinne (Akteur 1, Sce_em_set-Lage (8197,-22772)) steht neben der Messstelle, greift sofort an und stoesst Leon in
+# die Zone 2->1 (gemessen: Leon (6745,-22773) hp 80, Zustand cam=1). Das Original wurde ohne Gegner gemessen (Aktiv-
+# Bits geloescht) — hier wird sie vom ersten Bild in 20A0 an hinter die Kamera von Cut 2 ((3672,-4986,-25416) Blick
+# nach +x) gestellt, an die Sprung-Lage des Originals (-2800,-22200) (Messhaken RE15_GEGNER_POS, Runde 37 Spur A).
+abe_lauf(20a0c2 20A0 "8750,-22932,0,2" 2 "RE15_GEGNER_POS=1,-2800,-22200,0@0#20A0")
 string(APPEND _fehler "${_fehler_20a0c2}")
 abe_lauf(4090c0 4090 "-21000,-24600,0,0" 0)
 string(APPEND _fehler "${_fehler_4090c0}")
