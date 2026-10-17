@@ -9,6 +9,12 @@ Integrationsbaum, ohne parallele Agenten).
 
 <!-- je integrierter Spur ein Absatz, Nutzer-Sprache, keine Adressen -->
 
+**Spiderman (Stage 4/5) und Griffe aller Gegner.** Der Spiderman wartet jetzt wie im Original versteckt im Schacht, bis
+Sie den Ausloeser erreichen, und klettert dann heraus (vorher lief er sofort los); beim Herausklettern und in seinen
+Griffen verschwindet er nicht mehr fuer ein Bild. Vor allem: Leon wird beim Griff nicht mehr aus der Karte geworfen
+(vorher bis zu 27 000 Einheiten weit). Fuer alle Gegner gilt jetzt: ein Griff kann den Spieler nicht durch eine Wand
+versetzen - in ROOM1220 setzte der Kriecher Leon bisher hinter die Wand.
+
 **Ein Skript fuer alle Systeme.** Doppelklick auf `release/release_alles.cmd` (oder `bash release/release_alles.sh`):
 Es baut Windows, Android und Linux/Steam Deck, gibt der neuen Version die naechste Nummer (letzte Stelle +1, nach 99
 die naechste mittlere: 0.8.99 -> 0.9.0), packt und prueft die Pakete und bringt die bisherige Version ins Archiv; auf

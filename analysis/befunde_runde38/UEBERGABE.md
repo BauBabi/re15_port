@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 05:36: T spiderman BESTANDEN (Abnahme 1, wf_7931fdbe-adb), gemergt (96be43ad, Includes beide Seiten), Bau OK, Tests laufen. R fortgesetzt wf_40f9724b-eb5.
 * 2026-10-17 05:30: Integration V gruen (9/9: r38_releaseskript + Android-Pruefketten), Baum r38_releaseskript entfernt.
 * 2026-10-17 05:11: W fortgesetzt wf_75bbfb7e-d5f (r38_w3.js) mit Auftrag, r38/cursor zu mergen: A und W bauen beide den NCLIP-Rueckseiten-Verwurf fuer Raum-Props (A wickelt Port-Modelle um, W zeichnet sie zweiseitig) -> EIN Weg im W-Zweig.
 * 2026-10-17 05:11: V releaseskript BESTANDEN (Abnahme 1, wf_9f166cb7-bd0), in r38_integration gemergt (4e3a8f60), Tests laufen. ⛔ FUND der V-Abnahme: C:\workspace\Re15Data (Paketarchiv v0.8.7-v0.8.14 + v0.8.25, ~7,5 GB, und weitere Daten) existiert seit 16.10. 17:19-18:26 nicht mehr (C:\workspace mtime 18:26); kein Agent hat schreibend darauf zugegriffen (Transkripte), Papierkorb leer. Alle Paketversionen liegen vollstaendig in den Git-Tags (je 6 Dateien) -> wiederherstellbar; Nutzer informieren.
@@ -58,7 +59,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0), integriert |
 | R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | offen |
 | S | r38_affen3 | kleine Affen Stage 3 treffen | offen |
-| T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | offen |
+| T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | BESTANDEN (A1), gemergt |
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | offen |
 | V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | BESTANDEN (A1), integriert |
 | L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | BESTANDEN (A2), integriert |
