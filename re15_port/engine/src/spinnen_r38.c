@@ -754,11 +754,13 @@ void re15_spinnen_r38_log_frame(unsigned frame)
      * FUN_8001c6e8(&P, 0, 8, 0x100) — derselbe Aufruf wie Routine 25 (@0x80017fe0-f4). Gegen
      * die SELBSTBESTAETIGENDE Pruefung "y == +0x1ba" (Fortsetzung 2026-10-17). */
     const re15_rdt_t *rdt = g_room_rdt_ok ? &g_room_rdt : NULL;
-    fprintf(s_fp, "F%u R%04X PL(%d,%d,%d hp=%d st=%d ps=%04x fl=%d gz=%u bo=%d bu=%d) fx=%d", frame,
+    /* Nachbesserung 1: pmo = Spieler-Clip +0x94, phf = Treffer-Reaktion (cmd-2-Flinch) laeuft — misst, ob ein Gift-Takt
+     * eine Reaktion ausloest (darf er nicht, @0x80031e44-ec8). Hinter der PL-Klammer, damit alte Auswerter weiterlaufen. */
+    fprintf(s_fp, "F%u R%04X PL(%d,%d,%d hp=%d st=%d ps=%04x fl=%d gz=%u bo=%d bu=%d) pmo=%d phf=%d fx=%d", frame,
             (unsigned)g_current_room_id, (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->hp,
             (int)pl->state, (unsigned)pl->status_flags, (int)pl->floor, (unsigned)s_gift_zaehler,
             (int)re15_collision_room_coll(rdt, pl->x, pl->z, 0, 8, 0x100u), (int)re15_spinnen_r38_boden_unter(pl),
-            re15_esp_fx_count());
+            (int)pl->motion, re15_player_hit_flinch_active(), re15_esp_fx_count());
     for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
         const re15_actor_t *e = &g_actors[i];
         if (!e->active || (e->type != 0x25 && e->type != 0x26)) continue;

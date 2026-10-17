@@ -19,6 +19,11 @@ cmake_minimum_required(VERSION 3.16)
 # Gemessen 2026-10-17 (Endstand 96eca34b, Lauf m5_2030 / e_2031 ueber 2400 Bilder): Babys 0 von 19575 Boden-Bildern
 # schwebend (vorher 14485 von 20025, m2_2030), bis Bild 900: 7 Bisse, Gift gesetzt. Gegenprobe ohne den Baby-Schwanz:
 # unit_r38_spinnen C 2 FAIL (R_belege/gegenprobe_baby_schwanz.txt).
+# Nachbesserung 1 (Mangel 1 der Abnahme 0): der Auswerter prueft zusaetzlich die GIFT-TAKTE (gz 0 -> 0x78 mit HP -2):
+# ohne fremden HP-Abzug im Fenster +-25 keine Treffer-Reaktion (Schiene pmo/phf) und Periode 121 (Original
+# @0x80031e44-ec8 schreibt nur HP + Zaehler). Endstand L/E: 6 Takte, 5 sauber, 0 Reaktionen, 3 Perioden = 121.
+# Gegenprobe ohne den Haken in game_step_common.c: 3 von 3 Takten reagierten, Perioden 2 x != 121 -> FAIL
+# (R_belege/gegenprobe_nb1_echtlauf.txt).
 #
 # Eigener exe-Name (Muster test_r37_bissarm_echtlauf.cmake), SDL_ASSERT=always_ignore.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r38_spinnen> -DWORKDIR=<dir> -P <diese Datei>

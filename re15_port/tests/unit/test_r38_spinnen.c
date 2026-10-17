@@ -710,20 +710,36 @@ static void teil_d(void)
  *            UEBER dem SCA-Boden bu (Wandpass @0x801000c0); Bisse (HP -1) > 0
  *   Punkt 1  keine Adultspinne (Typ 0x25) ausserhalb der Schacht-Choreografie (Zustand 4/1) mehr als 100 ueber bu
  *   Punkt 2  der Spieler traegt mindestens einmal das Gift-Bit 0x2 (Status-Wort ps)
+ *   Punkt 2  (Nachbesserung 1) jeder Gift-Takt (gz 0 -> 0x78/8 mit HP -2, @0x80031e78-ac) OHNE fremden HP-Abzug im Fenster
+ *            +-25 Bilder loest KEINE Treffer-Reaktion aus (phf / Clip 8/9/0xa in den 25 Bildern danach), und zwei Takte
+ *            ohne fremden Abzug dazwischen liegen genau 121 Bilder auseinander (Zaehler 0x78 + 1). Original: der Takt
+ *            schreibt nur HP und Zaehler (@0x80031e44-ec8), die Reaktion nur ein Kommando-2-Schreiber (@0x80012ebc).
  *   Spieler  |y - bu| <= 100 in jedem Bild (Gegenprobe der Messgroesse). */
+#define PRUEF_MAX_BILDER 20000
+static int16_t s_pl_hp[PRUEF_MAX_BILDER];
+static uint8_t s_pl_gz[PRUEF_MAX_BILDER], s_pl_reakt[PRUEF_MAX_BILDER];
+static unsigned s_pl_f[PRUEF_MAX_BILDER];
 static int pruef_log(const char *pfad, unsigned raum)
 {
     FILE *f = fopen(pfad, "r");
     if (!f) { printf("FAIL: pruef_log: %s fehlt\n", pfad); return 1; }
     static char z[65536];
     long bilder = 0, baby_boden = 0, baby_schwebt = 0, adult = 0, adult_schwebt = 0, pl_falsch = 0;
-    int bisse = 0, gift = 0, babys_max = 0, vor_hp = -100000;
+    int bisse = 0, gift = 0, babys_max = 0, vor_hp = -100000, n_pl = 0, mit_reakt_feld = 0;
     while (fgets(z, sizeof z, f)) {
         unsigned fr = 0, r = 0, ps = 0, fl = 0, gz = 0;
         int px = 0, py = 0, pz = 0, hp = 0, st = 0, bo = 0, bu = 0;
         if (sscanf(z, "F%u R%X PL(%d,%d,%d hp=%d st=%d ps=%x fl=%u gz=%u bo=%d bu=%d)", &fr, &r, &px, &py, &pz, &hp,
                    &st, &ps, &fl, &gz, &bo, &bu) != 12) continue;
         if (r != raum) continue;
+        if (n_pl < PRUEF_MAX_BILDER) {
+            int pmo = -1, phf = 0;
+            const char *q = strstr(z, ") pmo=");
+            if (q && sscanf(q, ") pmo=%d phf=%d", &pmo, &phf) == 2) mit_reakt_feld = 1;
+            s_pl_hp[n_pl] = (int16_t)hp; s_pl_gz[n_pl] = (uint8_t)gz; s_pl_f[n_pl] = fr;
+            s_pl_reakt[n_pl] = (uint8_t)(phf != 0 || pmo == 8 || pmo == 9 || pmo == 0x0a);
+            n_pl++;
+        }
         bilder++;
         if (py - bu > 100 || bu - py > 100) pl_falsch++;
         if (ps & 0x2u) gift = 1;
@@ -760,6 +776,36 @@ static int pruef_log(const char *pfad, unsigned raum)
     CHECK(adult > 0 && adult_schwebt == 0, "Punkt 1: keine Adultspinne ueber dem SCA-Boden (%ld von %ld)", adult_schwebt,
           adult);
     CHECK(gift, "Punkt 2: der Spieler wird vergiftet (Status-Bit 0x2, Routine 25 / RE2 Op 32 @0x80020130)");
+
+    /* Nachbesserung 1, Mangel 1: Gift-Takte in der echten exe */
+    int takte = 0, sauber = 0, reakt = 0, perioden = 0, perioden_falsch = 0, letzter = -1, takt_bild[64];
+    for (int i = 1; i < n_pl; i++) {
+        if (!(s_pl_gz[i - 1] == 0 && (s_pl_gz[i] == 0x78 || s_pl_gz[i] == 8) && s_pl_hp[i - 1] - s_pl_hp[i] == 2)) continue;
+        if (takte < 64) takt_bild[takte] = i;
+        takte++;
+        int fremd = 0;                                   /* fremder HP-Abzug (Biss/Spucken) im Fenster +-25 */
+        for (int j = i - 25; j <= i + 25; j++)
+            if (j >= 1 && j < n_pl && j != i && s_pl_hp[j] < s_pl_hp[j - 1]) fremd = 1;
+        if (!fremd) {
+            sauber++;
+            for (int j = i + 1; j <= i + 25 && j < n_pl; j++) if (s_pl_reakt[j]) { reakt++; break; }
+        }
+        if (letzter >= 0) {                              /* Periode nur ohne fremden Abzug dazwischen */
+            int fremd_dazw = 0;
+            for (int j = letzter + 1; j < i; j++) if (s_pl_hp[j] < s_pl_hp[j - 1]) fremd_dazw = 1;
+            if (!fremd_dazw) { perioden++; if (i - letzter != 121) perioden_falsch++; }
+        }
+        letzter = i;
+    }
+    printf("   Gift-Takte %d (Bilder", takte);
+    for (int k = 0; k < takte && k < 64; k++) printf(" F%u", s_pl_f[takt_bild[k]]);
+    printf("), ohne fremden Abzug %d, davon mit Treffer-Reaktion %d; Perioden ohne Fremdtreffer %d, davon != 121: %d\n",
+           sauber, reakt, perioden, perioden_falsch);
+    CHECK(mit_reakt_feld, "Punkt 2: Messschiene traegt pmo/phf (Spieler-Clip, Flinch)");
+    CHECK(sauber > 0 && reakt == 0, "Punkt 2: Gift-Takt ohne Treffer-Reaktion (%d von %d sauberen Takten reagierten; "
+          "Original @0x80031e44-ec8 nur HP + Zaehler)", reakt, sauber);
+    CHECK(perioden > 0 && perioden_falsch == 0, "Punkt 2: Gift-Periode 121 Bilder (%d Perioden, %d abweichend; vorher 143)",
+          perioden, perioden_falsch);
     return s_fails ? 1 : 0;
 }
 
