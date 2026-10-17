@@ -342,8 +342,9 @@ Verwurf unbemerkt, mit Verwurf unsichtbar. Behebung §3c.
 **Laufende Spuren (fuer die Integration, gerechnet mit der Port-Matrix pc_prop_rot_q12 = Ry*Rx*Rz, main.c):**
 * Spur K (r38/itemorte) haengt beide Schluessel an die Pinnwand ROOM10F0/10F1 (gen/itemorte_r38_lage.inc, "Sichtseite
   Modell +1y"): Modelle k_r38k_park_md1 / k_r38k_prison_md1 g = -Y; PARK rot (3072, 0, 2048), PRISON rot (1024, 0, 0) ->
-  Spalte 1 der Matrix = (0, 0, 1) -> g_Welt = (0, 0, -1); die Pinnwand liegt an der Wand z = -3400, die Kamera davor
-  (z > -3400) -> g zeigt von der Kamera weg -> VORDERSEITE, mit dem Verwurf sichtbar. K's gen/feuerloescher_r37.inc ist die
+  Spalte 1 der Matrix = (0, 0, 1) -> g_Welt = (0, 0, -1); die Pinnwand liegt an der Wand z = -3400, ALLE 12 Kameras
+  von ROOM10F0/10F1 davor (RDT cameraStart 0x60, Satz 32 B: pos_z -1637 .. 12824 > -3400) -> g zeigt in jedem Cut von
+  der Kamera weg -> VORDERSEITE, mit dem Verwurf sichtbar. K's gen/feuerloescher_r37.inc ist die
   ALTE Fassung (K aendert nur .c/.h) -> beim Merge gilt die neu gewickelte Datei dieses Zweigs (§3b), kein Konflikt.
   K ersetzt in schluessel_r36.c genau die Lage-Zeilen, die §3c aendert -> beim Merge **K's Seite nehmen** (s. §3c).
 * Spur F (r38/dining1141): Herz-Schluessel re15_r38f_key_md1 (RE2 ROOM2020 @0x003474) g = +Y, Lage ROOM1011 obj 6
