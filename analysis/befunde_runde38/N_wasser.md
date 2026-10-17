@@ -283,6 +283,8 @@ zerfaellt in Tropfen, ~13 Bilder).
 | Leon 2090 | F38 Becken | EDT 0x1a / VAG 3 (0.48) | Beton VAG 1 0.04 (= was d70c234e dort spielte) |
 
 Original-Tonindex (GDB @0x80045798, v0): 1260 Pfuetze 0x17, Beton 0x1d; Lauf 0x18 / 0x1e; Becken 0x1a.
+Gegenprobe Band-Sperre im Original (`N_belege/gdb_2090_band1_gegenprobe.txt`): ROOM2090 auf Band 1 (y -1800) in der
+Becken-Zone (Band 0) -> +0x88 = 0, kein Spawn, Tonindex 0x1d (Port: Band-Gate je Figur aot_common.c, gleich).
 
 **Elza** (Spielerwahl, PL04, ROOM1261 gleiche Lage): F84 bild=8 Part 7 (x -7729: schon im Fleck), F98 bild=22 Part 4
 anker=(-7578,-1862,-7336), F114 bild=38 — zweig=boden code=0x06050d00 edt=0x17; Zeichner id=6 sub=5 in 39 Bildern.
@@ -296,7 +298,7 @@ anker=(-7578,-1862,-7336), F114 bild=38 — zweig=boden code=0x06050d00 edt=0x17
 | 2050 / 2051 | Fleck P0 (1100,550) | zweig=boden im Fleck, danach trocken 0x1d |
 | 20B0 | Raum-Skript (Flut-Szene, Leon rennt auf Band 1) | Fleck 0x97 -> boden; Fleck 0x17 OHNE Bit -> kein Effekt, Wasser-Ton 0x17 (Original-Daten) |
 | 2090 / 2091 | Becken (-8438,-25550) | zweig=stempel -1620, 0x06032000 Part 6, edt 0x1a; Original-GDB: Anker relativ zu Leon (-233,-836,+174) = Port |
-| 20A0 / 20A1 | Zone 5 Band 1 (8000,-25000) | zweig=stempel -540, Part 6/3, edt 0x1a |
+| 20A0 / 20A1 | Zone 5 Band 1 (8000,-25000) | zweig=stempel -540, Part 6/3, edt 0x1a; Original-GDB (`N_belege/gdb_20a0_band1_zone.txt`): +0x88 = -540, SPAWN 0x06032000, Anker relativ (-233,-836,+174) = Port, TON 0x1a |
 | 11A0, 2020 | Zonen Band 0 unter dem Laufsteg | Spieler erreicht sie nicht (Sprung-Spawn Band 1, Gelaender); Stempel jetzt korrekt (B10) |
 | 2070 (TUN. FLOOD DRY) | Zonen in zwei Skript-Zweigen | im Sprung-Zustand keine Zone aktiv, Schritt 0x1d |
 

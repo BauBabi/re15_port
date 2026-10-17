@@ -144,7 +144,7 @@ def main():
         for _ in range(2): tap(B.XUSB_GAMEPAD_DPAD_UP, 0.06, 0.30)
         tap(B.XUSB_GAMEPAD_DPAD_DOWN, 0.06, 0.50)
         for i in range(tri): L("Dreieck", i + 1); tap(B.XUSB_GAMEPAD_Y, 0.06, 0.55)
-        for i in range(rechts): L("Rechts", i + 1); tap(B.XUSB_GAMEPAD_DPAD_RIGHT, 0.08, 0.45)
+        for i in range(rechts): L("Rechts", i + 1); tap(B.XUSB_GAMEPAD_DPAD_RIGHT, 0.10, 0.55)
         L("Quadrat = laden"); tap(B.XUSB_GAMEPAD_X, 0.13, 0.6)
         time.sleep(10 + (8 if tri else 0))
         g = Gdb(PORT); L("GDB verbunden")
@@ -160,6 +160,10 @@ def main():
             g.wmem(PL + 0x34, struct.pack("<i", x)); g.wmem(PL + 0x3C, struct.pack("<i", z))
             g.wmem(PL + 0x40, struct.pack("<h", x)); g.wmem(PL + 0x44, struct.pack("<h", z))
             g.wmem(PL + 0x6A, struct.pack("<h", blick))
+            if os.getenv("DS_BAND") is not None:
+                band = int(os.getenv("DS_BAND")); y = -1800 * band
+                g.wmem(PL + 0x38, struct.pack("<i", y)); g.wmem(PL + 0x42, struct.pack("<h", y))
+                g.wmem(PL + 0x82, bytes([band]))
         L("Stempel +0x88 =", struct.unpack("<h", g.mem(PL + 0x88, 2))[0])
         px, py, pz = struct.unpack("<3i", g.mem(PL + 0x34, 12))
         L("Leon gestellt (%d,%d,%d) Blick %d" % (px, py, pz, struct.unpack("<h", g.mem(PL + 0x6A, 2))[0]))

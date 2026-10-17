@@ -1,7 +1,7 @@
 /*
  * wasser_r38.c — Runde 38 Spur N "wasser": FUN_80045630-Zwilling (Effekt-Zweig + Tonindex) fuer die
  * Spieler-Schritte. Belege und Zeitfolge: include/re15_wasser_r38.h, Dossier
- * analysis/befunde_runde38/N_wasser.md (B1-B8).
+ * analysis/befunde_runde38/N_wasser.md (B1-B10; B9 = DuckStation-GDB-Gegenprobe ROOM1260/2090).
  */
 #include <stdio.h>
 #include <stdlib.h>
