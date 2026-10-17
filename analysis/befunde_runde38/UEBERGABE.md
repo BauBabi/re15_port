@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 08:02: A cursor BESTANDEN (Abnahme 0, wf_283a8270-fcf), gemergt (f27076e4; schluessel_r36.c/.h = Seite K wie A-Dossier §8, A-Aenderungen lagen nur in den Konflikt-Abschnitten), configure + Bau OK, gezielte Tests laufen (A-Auswahl + itemorte). N fortgesetzt wf_7044a5d9-64e (r38_w5.js, stand). REGEL fuer die Integration (A §8): jedes Port-Modell in der Prop-Schleife muss mit dem NCLIP-Verwurf sichtbar sein (raeumlich wie das Original gewickelt, flach mit der Vorderseite zur Kamera) - Pruefwerkzeug A_belege/port_modelle_sicht.py; betrifft F (Herz-Schluessel), W (Rolladen 20A0).
 * 2026-10-17 07:42: Integration B gruen (466/466 gezielt, inkl. 1171-Kraehe RE2/RE1.5 und T-Griffe), Baum r38_szenenschutz entfernt.
 * 2026-10-17 07:36: B szenenschutz BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_2545408e-a2b), gemergt (8877e863, enemy_ai_common.c Include beide Seiten), configure + Bau OK, gezielte Tests laufen (438 Unit aus B_belege + Kraehe/Hund/Griff/1171/Spiderman). T liest das Tor (hit_react==0 vor GRAB2), RE2-Spinne liest re15_player_is_grabbed -> B greift dort. Nachtrag "Spieler-Tor" in AUFTRAG.md von R (54f4aeaa) und S (0686d425). M fortgesetzt wf_bd5754a4-75e (r38_w4.js, stand). NACHLAUF (B, nicht beauftragt): Bewegungs-Gate des Ports ignoriert Spieler+0x4 (Original @0x80031c8c -> Executor @0x80073f90[4]); ROOM1230 sub21 Leon laeuft 30 Bilder - eigene Spur mit Zensus aller Plc-Subs.
 * 2026-10-17 06:30: Integration K gruen (53/53 gezielt: itemorte, Feuerloescher, Schluessel, Kistenregel, Kartenitems/-bits, 10F0, 1030, Tagebuch), Baum r38_itemorte entfernt.
@@ -50,7 +51,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 
 | Spur | Baum | Thema | Status |
 |---|---|---|---|
-| A | r38_cursor | Cursor-Schatten 1150/11F0 | offen |
+| A | r38_cursor | Cursor-Schatten 1150/11F0 | BESTANDEN (A0), gemergt |
 | B | r38_szenenschutz | kein Angriff in Szenen ohne Bewegung (1190/11D0), Ausnahme 1171 | BESTANDEN (A1), integriert |
 | C | r38_werkstatt11b0 | 11B0: "But, hold on...", Schiebe-Ton, keine Fall-Animation | BESTANDEN (A0), integriert |
 | D | r38_zopf | Elzas Zopf wie Claire (RE2) | offen |

@@ -72,6 +72,13 @@ vorbeirennen; aus diesem Gang greifen sie zu. Das gilt fuer alle Zombies, auch d
 Treffer erholen sie sich wie in RE2 (vorher setzte ihr Gang nach jedem Treffer neu an). Mit dem Messer bleibt es je
 Anmarsch etwa gleich schwer (plus/minus ein Treffer, je nach Schlagtakt).
 
+**Cursor ohne Schatten (ROOM1150, ROOM11F0 und alle anderen Cursor-Raetsel).** Der "komische Schatten" war die
+Unterseite des Cursor-Kastens: Sie traegt dasselbe Muster, und der Port zeichnete sie durch die durchsichtige
+Oberseite mit. Wie das Original zeichnet der Port Rueckseiten jetzt nicht mehr. Das gilt fuer alle 23 Cursor-Raeume
+(Generator, Ziffernfelder, Aufzuege, Kranpult usw.) und fuer den Hebetisch in Irons' Buero, bei Leon und Elza.
+Nebenwirkungen wie im Original: In Irons' Buero verschwindet ein dunkles Band hinter den Papierstapeln, und eine
+Karte an der Wand scheint in ROOM11D0 aus einer Kamera hinter der Wand nicht mehr durch.
+
 **Keine Angriffe mehr in Szenen, in denen Sie sich nicht bewegen koennen.** Solange eine Szene Leon (oder Elza)
 festhaelt, greifen Gegner nicht an - sie laufen, kreisen oder knurren, Kraehen im Anflug drehen ab. Das gilt fuer
 alle Gegnerarten, nicht nur fuer die Hunde in ROOM1190 und ROOM11D0. Ist der Angriff selbst Teil der Szene (Elzas
