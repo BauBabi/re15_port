@@ -15,6 +15,20 @@ der Pinnwand im Communications Room. Der Prison Key ist dafuer jetzt RE2s "Small
 der bisherige duenne Eisenring war auf dem dunklen Kork kaum zu erkennen. Aufnahme, Inventar-Symbol und Item-Bild zeigen
 denselben Schluessel.
 
+**Elza: von Roys Tod zu John in den Besprechungsraum (Ihr Ablauf).** Nach der Szene in ROOM1021 zeigt Roys Leiche
+nach "He's dead. / Poor Roy..." den Hinweis "There's an empty key tag on his belt. / It reads "Dining Room".". In
+ROOM1011 liegt an Roys alter Liegestelle der Dining Room Key (RE2s Herz-Schluessel). Bis dahin ist die Tuer zum
+Besprechungsraum (ROOM1141) verschlossen ("It's locked." / "A heart is etched under the key hole." - RE2s eigener Text
+fuer die Herz-Tuer). Im Raum hoert man hinter dem geschlossenen Notrolladen Klopfen und Johns "Help me out." - nur als
+Ton, ohne Text - zur Kampfmusik des Raums. Das Gemaelde hebt den Rolladen; John steht dahinter und wird von den Fuessen
+an sichtbar (Bild fuer Bild geprueft: er ploppt nirgends herein), dann direkt "Are you okay? What's happened?" ohne
+"John, wait" und ohne "sorry". Solange die Gorillas leben, sagt jede Tuer "I cannot leave him alone with those
+monsters.". Danach geht John zur Dachtuer - steht Elza im Weg, wartet er, statt sie zu schieben - und wartet auf dem
+Dach (ROOM1171).
+
+**Rolladen-Ton (ROOM1140/1141).** Jedes Hochfahren des Notrolladens hat jetzt die drei Rolladen-Toene aus ROOM1131
+(Klick, Motor, Anschlag), bei Elza am Gemaelde-Schalter und bei Leon.
+
 **Roys Tagebuch (Elza, ROOM1011).** Untersucht Elza den bewusstlosen Roy ein zweites Mal, erscheint statt der
 Code-Nachricht jetzt "Roys Diary" - Ihr Text auf RE2-Papier (der FILE16-Hintergrund), der Code 0513 gruen wie in allen
 Dokumenten; es wird in den Akten abgelegt und kann dort wieder gelesen werden. Danach markiert die Karte erst den
@@ -103,6 +117,10 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
   In diesen Momenten greifen Gegner deshalb normal an. Die Korrektur braucht eine eigene Durchsicht aller
   Skript-Bewegungen.
 
+* Der Schluessel heisst nach Ihrer Vorgabe "Dining Room Key"; das Schild ueber der Tuer im Hintergrundbild zeigt
+  "Briefing Room". Der Tuertext nennt deshalb kein Schild. Leons Gemaelde in ROOM1140 meldet wie im Original "The
+  switch is not responding...".
+
 ## Zu entscheiden
 
 * Das Archiv wird nie automatisch gekuerzt (Ihr Wortlaut: "die alte ins Archiv bringen"). Soll es kuenftig nur die
@@ -116,5 +134,10 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
 
 * Der Erzaehltext vor der Lobby ("We barricaded ourselves...") hat bei Leon und Elza noch keine Aufnahme:
   `synchro/STAGE1/room1170/main08..11.wav` (Leon) bzw. `synchro/STAGE1/room1031/main20..23.wav` (Elza).
+
+* ROOM1141 (Elza): `synchro/STAGE1/room1141/main40.wav` ("Are you okay? What's happened?", geschnitten aus
+  main02.wav) und `main42.wav` ("Help me out.", geschnitten aus Johns Dachszene room1171/main01.wav, klingt deshalb
+  ruhig). Eine eigene Aufnahme unter demselben Namen ersetzt sie ohne weiteren Schritt. Das Klopfen ist RE2s
+  Klopfgeraeusch (neu im Paket: shared_assets/RE2/KLOPF1060.*).
 
 * Fuer die neue Marvin-Zeile gibt es noch keine Aufnahme: `synchro/STAGE1/room11B0/main20.wav` ("But, hold on...").
