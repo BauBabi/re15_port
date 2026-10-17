@@ -1453,10 +1453,15 @@ int main(int argc, char **argv)
     pass_spinne_raeume();
 
     printf("\nTEIL 2e — die SCHACHTSPINNEN (Runde 38 Spur R): Original-Ausloeser, Herauskriechen, Landung\n");
-    /* Budgets sind Messfenster, keine Spielwerte. Das Original braucht vom Ausloeser bis zum
-     * ACTIVE-Zustand 73 Bilder (ROOM2060, R_belege/orig_2060_schacht_gift.txt Bild 62 -> 135)
-     * bzw. 80 Bilder (ROOM20A0, R_spinnen.md 4.1 Bild ~159 -> 239); 600 Bilder lassen jedem
-     * Ausstieg ein Vielfaches davon. 240 Bilder Beschuss danach wie Teil 3. */
+    /* Budgets sind Messfenster, keine Spielwerte. Das Original braucht vom Ausloeser (grid 0x41 -> 0x42;
+     * bis dahin wartet Phase 0: `lbu v1,9(a0)` / `ori v0,zero,0x41` / `beq v1,v0` @0x80114f14-1c) bis zum
+     * ACTIVE-Zustand (Zustandswort 1: `ori v0,zero,0x1` / `sh v0,4(v1)` @0x8011539c-a0 = 01 00 02 34
+     * 04 00 62 a4, STAGE2.BIN) 73 Bilder (ROOM2060 Spinne 0 aus y -3600, R_belege/orig_2060_schacht_gift.txt
+     * Zeile n62 VSync 5653 -> n135 VSync 5799) bzw. 90 Bilder (ROOM20A0 Spinne 0 aus y -5400,
+     * R_belege/orig_20a0_schacht.txt grid 0x42 Zeile n41 VSync 5625 -> Zustand 1 Zeile n131 VSync 5805;
+     * je Bild 2 VSyncs: (5805 - 5625) / 2 = 131 - 41 = 90). Die frueher hier zitierten 80 Bilder
+     * (R_spinnen.md 4.1, Bild ~159 -> 239) waren die PORT-Messung auf dem echten Weg, nicht das Original.
+     * 600 Bilder lassen jedem Ausstieg ein Vielfaches davon. 240 Bilder Beschuss danach wie Teil 3. */
     for (int i = 0; i < SCHACHT_N; i++) pass_schacht(i, 600, 240);
 
     /* Die Schachtspinne IM SCHACHT (Zielhilfe/Resolver/Latch, RE2- und RE1.5-KI) prueft seit der Integration

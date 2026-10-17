@@ -195,8 +195,9 @@ static int s_zg_anker = 400; /* NB2 (Abnahme 1, Mangel 4): Anker-Radius der Bloc
  * blockierte Bilder mit derselben Definition wie der Zufallsgang (lebt, kein Angriff, >= 90 Bilder im Anker 400). */
 static int s_sz2_spur = 0;   /* Sonde szene2 ... 1: Spur je 60 Bilder */
 typedef struct { int erst[2], dmin[2], spr[2], blind[2], pad36[2]; long blockiert[2], nach[2], nach_fern[2]; } szene2_t;
-    /* NB3: nach = blockiert NACH dem ersten Angriff, nach_fern = davon die Bilder mit Leon >= 0x1771 (@0x80117bc8: der Bereich des Umwegs;
-     * darunter Original-Nahjagd, Spur-J-Riegel griff/szene), pad36 = Umweg hat Pad #36 (Ost) gewaehlt */
+    /* NB3: nach = blockiert NACH dem ersten Angriff, nach_fern = davon die Bilder mit Leon >= 0x1771 (@0x80117bc8: der Bereich des FERN-Umwegs;
+     * darunter die Original-Nahjagd, Spur-J-Riegel griff/szene, und seit NB4-NB6 die NAH-Teile der PORT-WAHL — Vortritt, Nah-Umweg,
+     * Pad-Zweig, zombieki_r36.c:856-882; R38 Pruefmangel 1), pad36 = Umweg hat Pad #36 (Ost) gewaehlt */
 static szene2_t szene2(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilder)
 {
     szene2_t r; memset(&r, 0, sizeof r); r.dmin[0] = r.dmin[1] = 1 << 30;
@@ -241,8 +242,12 @@ static szene2_t szene2(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilde
  * Derselbe Zufallsgang wie unten (alle 90 Bilder neue Blickrichtung, Rennen = UP+CROSS, HP je Bild 100, im Griff
  * abwechselnd Quadrat/Kreuz), dieselbe Blockade-Definition (Gorilla lebt, beisst/greift nicht, bewegt sich >= 90
  * Bilder < 40 Einheiten ab Streckenbeginn), aber nur Summen: blockierte Bilder, Griffe, Sub-Histogramm der
- * blockierten Bilder. Der Riegel vergleicht damit Port-Wahl AN gegen AUS auf demselben Seed-Satz. */
-typedef struct { long blockiert; int griffe; long sub[32]; long nah, fern, los, klemme; } zg_t;
+ * blockierten Bilder. Der Riegel vergleicht damit Port-Wahl AN gegen AUS auf demselben Seed-Satz.
+ * R38 Integration (Pruefmangel 1): nah_jagd = davon NAH-Bilder in der Jagd (Sub 3) mit +0x1d4 in [0xbb8, 0x1771) = Bereich des
+ * Nah-Umwegs (Bissweite a804 `ori a0,zero,0xbb8` @0x80117a60, NAH `sltiu v0,v0,0x1771` @0x80117bc8), nah_biss = NAH-Bilder mit
+ * +0x1d4 < 0xbb8; nah_anker = groesster NAH-Anker-Zaehler des Laufs (re15_r36_affen_nah_lesen = die Groesse, an der der Nah-Umweg
+ * nach R36_NAH_START bzw. R36_FEST_START Bildern startet). Nur Messwerte fuer die Begruendung im Riegel, kein Verhalten. */
+typedef struct { long blockiert; int griffe; long sub[32]; long nah, fern, los, klemme, nah_jagd, nah_biss; int nah_anker; } zg_t;
 static int s_zg_lage = 0;   /* 1: je blockierte Strecke eine LAGE-Zeile (Sonde stat ... 3) */
 static int s_zg_spur_von = 0, s_zg_spur_bis = 0;   /* NB6: Spur je Bild beider Gorillas im Fenster [von, bis] (Sonde eins ... <von> <bis>) */
 static void zg_spur(int f, re15_actor_t *const g[2], const re15_actor_t *pl)
@@ -266,6 +271,7 @@ static zg_t zg_stat(int bilder, uint32_t seed)
     re15_actor_t *g[2]; re15_actor_t *pl;
     if (!aufbau(g, &pl)) { r.blockiert = -1; return r; }
     int32_t ax[2], az[2]; int fa[2] = { 0, 0 }; long subs_akk[2][32]; long akk_nah[2] = { 0, 0 }, akk_los[2] = { 0, 0 }, akk_kl[2] = { 0, 0 };
+    long akk_nj[2] = { 0, 0 }, akk_nb[2] = { 0, 0 };   /* Pruefmangel 1: NAH in der Jagd [0xbb8, 0x1771) / NAH in Bissweite */
     for (int k = 0; k < 2; k++) { ax[k] = g[k]->x; az[k] = g[k]->z; memset(subs_akk[k], 0, sizeof subs_akk[k]); }
     int ziel_rot = pl->rot_y, prev_gr = 0; uint32_t rng = seed;
     for (int f = 1; f <= bilder; f++) {
@@ -288,16 +294,20 @@ static zg_t zg_stat(int bilder, uint32_t seed)
             int lebt = (e->state == 1);
             int kampf = (sub == 5 || sub == 6 || sub == 8 || sub == 15);
             int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= s_zg_anker;
+            { int n = re15_r36_affen_nah_lesen((int)(e - g_actors)); if (n > r.nah_anker) r.nah_anker = n; }
             if (lebt && !kampf && !bewegt) { subs_akk[k][sub]++; if (fa[k] == 0) fa[k] = f;
-                long long ddx = e->x - pl->x, ddz = e->z - pl->z;
-                akk_nah[k] += (ddx * ddx + ddz * ddz < 6001LL * 6001LL); akk_los[k] += (e->dog_flags & 1); akk_kl[k] += (e->sca_wall_hit != 0); }
+                long long ddx = e->x - pl->x, ddz = e->z - pl->z; const uint16_t dd = (uint16_t)e->dog_dist;   /* +0x1d4 */
+                const int nah1 = (ddx * ddx + ddz * ddz < 6001LL * 6001LL);
+                akk_nah[k] += nah1; akk_los[k] += (e->dog_flags & 1); akk_kl[k] += (e->sca_wall_hit != 0);
+                akk_nj[k] += (nah1 && sub == 3 && dd >= 0xbb8u && dd < 0x1771u); akk_nb[k] += (nah1 && dd < 0xbb8u); }
             else {
                 int dauer = fa[k] ? f - fa[k] : 0;
                 if (dauer >= 90 && s_zg_lage) printf("LAGE %08x g%d %d %d leon %d %d dauer %d los %ld ab F%d sub3 %ld sub4 %ld sub7 %ld\n", seed, k, (int)ax[k], (int)az[k],
                                                      (int)pl->x, (int)pl->z, dauer, akk_los[k], fa[k], subs_akk[k][3], subs_akk[k][4], subs_akk[k][7]);
                 if (dauer >= 90) { r.blockiert += dauer; for (int q = 0; q < 32; q++) r.sub[q] += subs_akk[k][q];
-                                   r.nah += akk_nah[k]; r.fern += dauer - akk_nah[k]; r.los += akk_los[k]; r.klemme += akk_kl[k]; }
-                fa[k] = 0; memset(subs_akk[k], 0, sizeof subs_akk[k]); akk_nah[k] = akk_los[k] = akk_kl[k] = 0;
+                                   r.nah += akk_nah[k]; r.fern += dauer - akk_nah[k]; r.los += akk_los[k]; r.klemme += akk_kl[k];
+                                   r.nah_jagd += akk_nj[k]; r.nah_biss += akk_nb[k]; }
+                fa[k] = 0; memset(subs_akk[k], 0, sizeof subs_akk[k]); akk_nah[k] = akk_los[k] = akk_kl[k] = akk_nj[k] = akk_nb[k] = 0;
                 ax[k] = e->x; az[k] = e->z;
             }
         }
@@ -305,7 +315,8 @@ static zg_t zg_stat(int bilder, uint32_t seed)
     for (int k = 0; k < 2; k++) {                                   /* offene Strecke am Laufende mitzaehlen */
         int dauer = fa[k] ? bilder + 1 - fa[k] : 0;
         if (dauer >= 90) { r.blockiert += dauer; for (int q = 0; q < 32; q++) r.sub[q] += subs_akk[k][q];
-                           r.nah += akk_nah[k]; r.fern += dauer - akk_nah[k]; r.los += akk_los[k]; r.klemme += akk_kl[k]; }
+                           r.nah += akk_nah[k]; r.fern += dauer - akk_nah[k]; r.los += akk_los[k]; r.klemme += akk_kl[k];
+                           r.nah_jagd += akk_nj[k]; r.nah_biss += akk_nb[k]; }
     }
     return r;
 }
@@ -644,8 +655,9 @@ int main(int argc, char **argv)
         if (argc > 9) re15_r36_affen_nb6_enable(atoi(argv[9]));       /* NB6: 0 = Stand NB5 */
         if (argc > 11) { s_zg_spur_von = atoi(argv[10]); s_zg_spur_bis = atoi(argv[11]); }   /* NB6: Spur je Bild im Fenster [von, bis] */
         zg_t r = zg_stat(b, zg_seed(i));
-        printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld\n",
-               zg_seed(i), modus, r.blockiert, r.griffe, r.nah, r.fern, r.los, r.klemme, r.sub[3], r.sub[4], r.sub[7]);
+        printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld nah_jagd %ld nah_biss %ld "
+               "nah_anker %d\n", zg_seed(i), modus, r.blockiert, r.griffe, r.nah, r.fern, r.los, r.klemme, r.sub[3], r.sub[4], r.sub[7], r.nah_jagd, r.nah_biss,
+               r.nah_anker);
         return 0;
     }
     if (argc > 3 && strcmp(argv[1], "stat") == 0) {   /* stat <seeds> <bilder> [0|1|2 = nur AUS | nur AN | beide] */
@@ -811,47 +823,83 @@ int main(int argc, char **argv)
          * NB3 (Abnahme 2): AUS 38439 / 73, AN 5725 / 74 (14,9 %), schlechtester +59.
          * NB4 (Abnahme 3, Vortritt): AN 5174 / 71 (13,5 %), schlechtester +40.
          * RUNDE 38 INTEGRATION (Niederschlag [4]/[5] = Original-Phasentabellen, 7d0eccdb): das Verhaeltnis wird an den FERN-Bildern
-         * gemessen (Leon >= 6001 = 0x1771: `lhu v0,468(v1)` @0x80117bc0 / `sltiu v0,v0,0x1771` @0x80117bc8 = 71 17 42 2c, STAGE1.BIN —
-         * NAH bleibt A[3] ohne Ausgang, FERN ist der Bereich, in dem der Umweg (re15_r36_affen_padsuche_decide) ueberhaupt eingreift).
+         * gemessen (Leon >= 6001 = 0x1771: `lhu v0,468(v1)` @0x80117bc0 / `sltiu v0,v0,0x1771` @0x80117bc8 = d4 01 62 94 .. 71 17 42 2c,
+         * STAGE1.BIN) = dem Bereich des FERN-Umwegs (NB1-NB3: Klemmen-Haengen +0x1de, Beginn nach R36_FEST_START).
          * Warum: die Summe AUS ist chaotisch — jeder Niederschlag laeuft jetzt einen Tick kuerzer ([5] Phase 0 faellt in Phase 1,
          * 62 -> 61 Bilder; [4] mit Wand-Slam 63 -> 62), Leon liegt danach anderswo, der ganze Gang laeuft anders (Seed 0xbeef: erster
          * Niederschlag F187 bis F248 statt F249, danach ein anderer Weg; alt hing Gorilla 1 F2760-F6000 FERN an der Ostgasse fest = 3241
          * der 3367 AUS-Bilder dieses Seeds, neu 468). Gemessen je 16er-Block (Seeds 0..15 = Riegel / 16..31 / 32..47, je Lauf eigener
          * Prozess, Anker 400): AUS gesamt neu 21344 / 34274 / 35770, alt 38439 / 39681 / 30886; AN gesamt neu 5835 / 5971 / 6982, alt
-         * 5817 / 5386 / 5161. Der Rest AN ist zu ~80 % NAH (neu 4619 von 5835; 52 Seeds neu 16321 von 20169, alt 14273 von 17655) =
-         * die Original-Nahjagd (B[3] gerade auf playerX @0x80117d4c; Dossier F NB2 OFFEN), die der FERN-Umweg nicht anfasst — AUS hat
-         * NAH etwa gleich viel (52 Seeds neu 15782, alt 19663). Das Gesamt-Verhaeltnis AN/AUS mass damit vor allem, wie gross die
-         * chaotische AUS-FERN-Summe des Seed-Satzes ausfiel: neu 27,3 / 17,4 / 19,5 %, und schon ALT haette der Block 32..47 die
-         * Schranke 1/6 gerissen (5161 x 6 = 30966 > 30886). FERN allein: neu AUS 17655 -> AN 1216 (6,9 %), Bloecke 6,9 / 6,1 / 1,8 %
-         * (1216/17655, 1704/27883, 559/30588); alt 32907 -> 1606 (4,9 %), Bloecke 4,9 / 3,8 / 1,1 % (1606/32907, 1286/33853, 267/24695)
-         * — dieselbe Schranke 1/6 haelt in jedem Block mit beiden Niederschlaegen. */
+         * 5817 / 5386 / 5161. Das Gesamt-Verhaeltnis AN/AUS mass damit vor allem, wie gross die chaotische AUS-FERN-Summe des Seed-
+         * Satzes ausfiel: neu 27,3 / 17,4 / 19,5 %, und schon ALT haette der Block 32..47 die Schranke 1/6 gerissen (5161 x 6 = 30966
+         * > 30886). FERN allein: neu AUS 17655 -> AN 1216 (6,9 %), Bloecke 6,9 / 6,1 / 1,8 % (1216/17655, 1704/27883, 559/30588); alt
+         * 32907 -> 1606 (4,9 %), Bloecke 4,9 / 3,8 / 1,1 % (1606/32907, 1286/33853, 267/24695) — dieselbe Schranke 1/6 haelt in jedem
+         * Block mit beiden Niederschlaegen.
+         * NAH (Pruefmangel 1, R38-Integration — die Fassung 57d3bae8 schrieb hier "NAH bleibt A[3] ohne Ausgang, FERN ist der Bereich,
+         * in dem der Umweg ueberhaupt eingreift"; das gilt nur fuer die Original-Regel AUS). ORIGINAL (STAGE1.BIN selbst disassembliert):
+         * A[3] hat NAH nur den Biss (`ori a0,zero,0xbb8` / `ori a1,zero,0x180` / `jal 0x8001a804` / `bgez v0,0x80117b40` @0x80117a60-74 =
+         * b8 0b 04 34 80 01 05 34 .. 01 6a 00 0c), danach NAH nur +0x6/+0x7 := 0 (@0x80117bc0-c08) und erst FERN mit Sicht Sub 4
+         * (`sltiu v0,v0,0x1771` / `bne` @0x80117c34-38, `ori v0,zero,0x4` / `sb v0,5(v1)` @0x80117c50-54); B[3] steuert gerade auf
+         * playerX (`addiu a0,a0,-13688` @0x80117d4c = 88 ca 84 24, `jal 0x8001a8f8` @0x80117d50). Im Modus AN greift die PORT-WAHL
+         * dagegen auch NAH ein (re15_r36_affen_padsuche_decide, zombieki_r36.c): Vortritt NB4 (zu Fuss, nur solange +0x1d4 < 0x1771,
+         * :856-865), Nah-Umweg NB5/NB6 (Sub 3, +0x1d4 in [0xbb8, 0x1771), NAH-Anker >= R36_NAH_START 354 zu Fuss bzw. >=
+         * R36_FEST_START 45 ueber ein 0x10-Pad, :866-879) und der Pad-Zweig fuer NAH mit der Mitte in einem 0x10-Pad (:882).
+         * DER NAH-ANTEIL BLEIBT HIER UNGEBUNDEN (bis auf +600 je Seed) — gemessen, je Lauf eigener Prozess, Anker 400:
+         *  (1) Zusammensetzung AN, Seeds 0..15: NAH 4619 von 5835 = 4121 Jagd mit +0x1d4 in [0xbb8, 0x1771) (nah_jagd) + 116 in
+         *      Bissweite (nah_biss) + 259 Sub 4 + 123 Sub 7; AUS NAH 3689 (3032 / 116).
+         *  (2) Der Gang erreicht den Fall des Nah-Umwegs nicht (Abnahmen 4/5: STEHENDER Leon, ein Gorilla 900..1875 Bilder NAH an der
+         *      Klemme): Leon dreht alle 90 Bilder und rennt. Der NAH-Anker-Zaehler (nah_anker = re15_r36_affen_nah_lesen, die Groesse,
+         *      an der der Nah-Umweg startet) kommt mit Umweg in 48 Seeds auf hoechstens 407 Bilder — nur Seed 0x76026075 ueber
+         *      R36_NAH_START 354, dort antwortet r36_nah_route Grund 2 (kein freier Bissplatz: der andere Gorilla greift Leon in der
+         *      Nordwest-Ecke an = Anstehen wie im Original) —, sonst <= 304; ohne Nah-Umweg (`eins <i> 1 6000 400 0 1 0`) dieselben
+         *      Hoechstwerte 407 / <= 306. Der Nah-Umweg zu Fuss zum Bissplatz (r36_nah_route Grund 10) laeuft im Gang nie (Spur je
+         *      Bild, Seeds 0..15 und die abweichenden 16..47: Sub 3 mit +0x1d4 in [0xbb8, 0x1771) und aktivem Fussweg ohne Vortritt
+         *      nur mit Grund 11 = Weg zum Pad-Anlauf des NB6-Zweigs, 83 + 3 + 12 Bilder); NAH-Anker > 450 (Kriterium der Abnahmen
+         *      4/5) kommt mit und ohne Nah-Umweg in keinem Bild vor.
+         *  (3) Im Gang wirkt nur der NB6-Pad-Zweig (NAH-Anker 45..182 Bilder, Weg und Sprung ueber Pad #36/#47): 9 von 48 Seeds
+         *      laufen mit und ohne Nah-Umweg verschieden, jeweils ab diesem Zweig (Seeds 0..15: F344 0x8d17c0ea Grund 12 #36, F490
+         *      0xa42d215f Grund 12 #36, F1398 0x67be2dfd Grund 14 #47, F2224 0xeee04739 Grund 12 #47, F5346 0x05f5a7ae Grund 11 #36),
+         *      danach eine andere Bahn.
+         *      Die NAH-Summe aendert sich dadurch OHNE festes Vorzeichen: ohne -> mit Nah-Umweg je 16er-Block 5075 -> 4619 / 4327 -> 4267
+         *      / 5604 -> 6423 (5 Seeds weniger, 4 mehr). Eine NAH-Schranke mit "Nah-Umweg aus -> rot" (z. B. NAH AN < NAH ohne) waere im
+         *      Block 32..47 MIT Nah-Umweg rot: sie maesse wie das alte Gesamt-Verhaeltnis die Bahn-Chaotik des Gangs, nicht den Umweg.
+         *  (4) Den Nah-Umweg pinnen die Szenen mit stehendem Leon unten, jede mit Gegenprobe: Nahwarten O3b/O5 (Modus 4 = ohne
+         *      Nah-Umweg: fest >= 810, kein Angriff), Nachruecken (Stand NB4/NB5), Ostgasse/Gasse einzeln und Stelle 8 verkeilt (Stand
+         *      NB5), Stau mit Vortritt (Stand NB3); das J-Fenster pinnt, dass er den kanonischen Original-Kampf nicht beruehrt. */
         long su_aus = 0, su_an = 0, fe_aus = 0, fe_an = 0, na_aus = 0, na_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000;
         uint32_t s_schl = 0;
+        long nj_an = 0, nb_an = 0; int nk_an = 0; uint32_t s_nk = 0;   /* Pruefmangel 1: AN NAH-Zusammensetzung + groesster NAH-Anker (Ausgabe) */
         for (int i = 0; i < 16; i++) {
-            long bl[2] = { -1, -1 }, na[2] = { 0, 0 }, fe[2] = { 0, 0 }; int gr[2] = { 0, 0 };
+            long bl[2] = { -1, -1 }, na[2] = { 0, 0 }, fe[2] = { 0, 0 }, nj[2] = { 0, 0 }, nb[2] = { 0, 0 }; int gr[2] = { 0, 0 }, nk[2] = { 0, 0 };
             for (int m = 0; m < 2; m++) {
                 char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" eins %d %d 6000", argv[0], i, m);
                 FILE *pp = popen(cmd, "r"); char zl[512];
                 while (pp && fgets(zl, sizeof zl, pp)) {
                     unsigned sd; int mm; long b, n1, f1; int g2;
                     if (sscanf(zl, "EINS seed 0x%x modus %d blockiert %ld griffe %d nah %ld fern %ld", &sd, &mm, &b, &g2, &n1, &f1) == 6) {
-                        bl[m] = b; gr[m] = g2; na[m] = n1; fe[m] = f1; }
+                        bl[m] = b; gr[m] = g2; na[m] = n1; fe[m] = f1;
+                        const char *q = strstr(zl, " nah_jagd ");
+                        if (q) (void)sscanf(q, " nah_jagd %ld nah_biss %ld nah_anker %d", &nj[m], &nb[m], &nk[m]); }
                 }
                 if (pp) pclose(pp);
             }
             if (bl[0] < 0 || bl[1] < 0) continue;
             n_ok++; su_aus += bl[0]; su_an += bl[1]; gr_aus += gr[0]; gr_an += gr[1];
             fe_aus += fe[0]; fe_an += fe[1]; na_aus += na[0]; na_an += na[1];
+            nj_an += nj[1]; nb_an += nb[1]; if (nk[1] > nk_an) { nk_an = nk[1]; s_nk = zg_seed(i); }
             if (bl[1] - bl[0] > schlimmer) { schlimmer = bl[1] - bl[0]; s_schl = zg_seed(i); }
-            printf("  Seed 0x%08x: AUS %ld blockiert (nah %ld / fern %ld) / %d Griffe | AN %ld (nah %ld / fern %ld) / %d\n", zg_seed(i), bl[0], na[0],
-                   fe[0], gr[0], bl[1], na[1], fe[1], gr[1]);
+            printf("  Seed 0x%08x: AUS %ld blockiert (nah %ld / fern %ld) / %d Griffe | AN %ld (nah %ld = Jagd %ld + Biss %ld + sonst %ld, NAH-Anker max %d / "
+                   "fern %ld) / %d\n", zg_seed(i), bl[0], na[0], fe[0], gr[0], bl[1], na[1], nj[1], nb[1], na[1] - nj[1] - nb[1], nk[1], fe[1], gr[1]);
         }
-        printf("  Summe: AUS %ld (nah %ld / fern %ld) | AN %ld (nah %ld / fern %ld)\n", su_aus, na_aus, fe_aus, su_an, na_an, fe_an);
+        printf("  Summe: AUS %ld (nah %ld / fern %ld) | AN %ld (nah %ld = Jagd [0xbb8,0x1771) %ld + Bissweite %ld + sonst %ld / fern %ld); "
+               "NAH-Anker AN max %d (Seed 0x%08x; Nah-Umweg zu Fuss ab R36_NAH_START 354)\n", su_aus, na_aus, fe_aus, su_an, na_an, nj_an, nb_an,
+               na_an - nj_an - nb_an, fe_an, nk_an, s_nk);
         CHECK(n_ok == 16, "16 Zufallsgaenge je AUS und AN gelaufen (%d)", n_ok);
         CHECK(fe_aus >= 10000, "Gegenprobe Original-Regel: %ld FERN-blockierte Gorilla-Bilder (Leon >= 0x1771; gesamt %ld) — Befund 'noch oft blockiert' "
               "= Jagd ohne Sicht FERN", fe_aus, su_aus);
-        CHECK(fe_an * 6 <= fe_aus, "Umweg: FERN-blockierte Bilder (Anker %d, Leon >= 0x1771 @0x80117bc8) %ld <= 1/6 von %ld (NAH = Original-Nahjagd, "
-              "nicht Ziel des Umwegs: AN %ld / AUS %ld)", s_zg_anker, fe_an, fe_aus, na_an, na_aus);
+        CHECK(fe_an * 6 <= fe_aus, "FERN-Umweg: FERN-blockierte Bilder (Anker %d, Leon >= 0x1771 @0x80117bc8) %ld <= 1/6 von %ld (NAH AN %ld / AUS %ld: "
+              "Original-Nahjagd und die NAH-Teile der PORT-WAHL Vortritt/Nah-Umweg/Pad-Zweig; ungebunden bis auf +600 je Seed, Begruendung im "
+              "Kommentar)", s_zg_anker, fe_an, fe_aus, na_an, na_aus);
         CHECK(schlimmer <= 600, "kein Seed mehr als 600 Bilder schlechter (schlechtester 0x%08x: %+ld)", s_schl, schlimmer);
         CHECK(gr_an * 10 >= gr_aus * 8, "Griffe AN %d >= 80%% von AUS %d (die Gorillas erreichen Leon)", gr_an, gr_aus);
     }
@@ -864,8 +912,10 @@ int main(int argc, char **argv)
          * Reihenfolge, nie). 6/7 = Taschenrand: die naechsten Punkte, die Leon zu Fuss erreicht (4b), vor den Abnahme-Plaetzen
          * (-26000,7000)/(-22000,7000). Pruefungen: Gegenprobe Original-Regel; mit Umweg erster Angriff auf Leon (beliebiger Gorilla)
          * vorhanden und nicht spaeter als die Original-Regel; Zahl der angreifenden Gorillas; KEINE FERN-Blockade nach dem ersten
-         * Angriff (>= 0x1771 @0x80117bc8 = Bereich des Umwegs; darunter bleibt die Original-Nahjagd, die die Spur-J-Riegel griff/
-         * szene bildgenau pinnen); keine Blind-Sprung-Schleife (Abnahme 1: 48 blind). Messung 2026-10-11 (Dossier NB3). */
+         * Angriff (>= 0x1771 @0x80117bc8 = Bereich des FERN-Umwegs; darunter blieb bis NB3 die Original-Nahjagd, die die Spur-J-Riegel
+         * griff/szene bildgenau pinnen — seit NB4-NB6 greift die PORT-WAHL dort auch ein (Vortritt, Nah-Umweg, Pad-Zweig; Szenen
+         * unten), die NAH-Zeit nach dem ersten Angriff wird hier nur ausgegeben, R38 Pruefmangel 1); keine Blind-Sprung-Schleife
+         * (Abnahme 1: 48 blind). Messung 2026-10-11 (Dossier NB3). */
         static const int32_t sz[7][6] = {   /* lx, lz, gx, gz, Bilder, angreifende Gorillas mindestens */
             { -7000, 12500, -14000, -3000, 2400, 2 }, { -7000, 12500, -5525, -14883, 2400, 1 },   /* 2: G1 Original-Nahjagd (Dossier) */
             { 7000, 4000, -8915, -12487, 2400, 2 }, { -24000, 10000, 0, 0, 2400, 2 }, { -14000, 2000, -9013, -15461, 2400, 2 },
@@ -898,8 +948,9 @@ int main(int argc, char **argv)
             else        CHECK(v.erst[0] == 0 && v.erst[1] == 0, "Szene %d Gegenprobe (Original-Regel): keiner der beiden Gorillas greift an (Befund)", i + 1);
             CHECK(en > 0 && (ev == 0 || en <= ev), "Szene %d Umweg: erster Angriff auf Leon Bild %d (Original-Regel %d)", i + 1, en, ev);
             CHECK(na_ >= sz[i][5], "Szene %d Umweg: %d Gorilla(s) greifen an (>= %d)", i + 1, na_, (int)sz[i][5]);
-            CHECK(n.nach_fern[0] < 90 && n.nach_fern[1] < 90, "Szene %d Umweg: keine FERN-Blockade nach dem ersten Angriff (%ld/%ld Bilder; nah %ld/%ld = "
-                  "Original-Nahjagd)", i + 1, n.nach_fern[0], n.nach_fern[1], n.nach[0] - n.nach_fern[0], n.nach[1] - n.nach_fern[1]);
+            CHECK(n.nach_fern[0] < 90 && n.nach_fern[1] < 90, "Szene %d Umweg: keine FERN-Blockade nach dem ersten Angriff (%ld/%ld Bilder; nah %ld/%ld: "
+                  "Original-Nahjagd mit den NAH-Teilen der PORT-WAHL, hier nicht gebunden)", i + 1, n.nach_fern[0], n.nach_fern[1], n.nach[0] - n.nach_fern[0],
+                  n.nach[1] - n.nach_fern[1]);
             CHECK(n.blind[0] <= 2 && n.blind[1] <= 2, "Szene %d Umweg: keine Blind-Sprung-Schleife (blind %d / %d; Abnahme 1: 48)", i + 1, n.blind[0], n.blind[1]);
             if (i == 4) CHECK(!n.pad36[0] && !n.pad36[1], "Szene 5 Umweg nach Weglaenge: kein Gorilla laeuft ueber das Ost-Pad #36 (NB2: Gorilla 1 ueber #36, nie)");
         }
@@ -1101,8 +1152,16 @@ int main(int argc, char **argv)
              * z -6080..-2180) von Leon trennt. Stand NB5 (Modus 6) = Befund der Abnahme 5: "Gasse einzeln" G1 ~1530 Bilder in der
              * Gassenmitte ohne Angriff (lage-Mass fest 2291), O1 G1 1368 / G2 1615 NAH fest ohne Angriff. NB6: ohne Fuss-Weg sucht der
              * Nah-Umweg den freien Bissplatz hinter dem Pad (A* mit Pad-Kanten), Sprung = Original A[4] Path A @0x80117ecc-8011802c.
-             * Kriterium: jeder nahe Gorilla NAH fest (fest - fern) <= 450 und greift an — oder steht nachweislich an (kein freier
-             * Bissplatz ausser Koerperkontakt zum anderen, Sonde platz mit Ausschluss). */
+             * Kriterium, wie es die Pruefungen messen (NB6b, F_zombieki.md:1478-1479: je WARTEZEIT, VOR und NACH dem ersten Angriff
+             * getrennt, nicht zusammengezaehlt; NAH fest = Bilder der `lage`-Strecken >= 90 im Anker 400 ohne Angriff mit Leon in
+             * (3000, 0x1771)):
+             *   Gegenprobe Stand NB5 (Modus 6) = Befund (Gasse G1, O1 G1 und G2): NAH fest >= 1000, in den letzten 1000 Bildern kein
+             *   Angriff.
+             *   NB6 (Modus 1), je Gorilla, der angreift: NAH fest VOR dem ersten Angriff (Strecken, die vor oder mit ihm enden) <= 450,
+             *   und NAH fest DANACH (Summe der spaeteren Strecken) <= 450 oder er steht am Laufende an (freie Bissplatz-Knoten 0,
+             *   re15_r36_affen_bissplaetze_frei: Bissweite < 0xbb8 @0x80117a60, ausser Koerperkontakt zum anderen).
+             *   NB6, je Gorilla, der nicht angreift: NAH fest (fest - fern) <= 450 und er steht am Laufende an (freie Bissplatz-Knoten 0);
+             *   die Sonde platz (Ausschluss Koerperkontakt zum anderen) wird dazu nur zum Vergleich ausgegeben. */
             static const int32_t lg6[2][14] = {
                 { 2400, 7873, -1412, 0, 6418, -4333, 3373, 3, 0, -9013, -15461, 2656, 0, 0 },     /* Gasse einzeln (Abnahme 5, 2.5) */
                 { 2400, 6000, -9000, 1332, -5525, -14883, 2731, 3, 0, -8915, -12487, 93, 3, 0 } }; /* O1 im PORT-Modus (Abnahme 5, 2.4) */
