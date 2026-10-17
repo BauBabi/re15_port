@@ -222,3 +222,17 @@ Kontakt 0xc9 = Richtung 0xC / u1 1 (Suedwand des Kanals); Drehen 3527 -> 3072, V
 gy.log: 1200 Eintraege, 0 unter dem Wasserboden, 0 auf Band >= 2. Bild (`m4_2020_sheet.png`, Kanalblick per
 FORCE_CUT 6 nur zur Sicht, F80-F290 je 30): F80/F110 Arme auf der Stegkante, F140/F170 Oberkoerper ueber der Kante,
 F200/F230 die Beine kommen hoch, F260/F290 steht er auf dem Steg (rechts im Bild).
+
+### M6 — Ton des Kletter-Clips in der Standard-KI (RE2-Zweig)
+
+Lauf wie M1, aber MIT Ton: `tools/lauf_ton.sh <exe> m6_ton` (`RE15_SE_DEBUG=1 RE15_AUDIO_CAP_SYNC=cap.raw
+RE15_FRAMEDUMP=270-290/1:fd/f RE15_EXIT_AT=300#2000`, kein RE15_NOAUDIO) -> `exit=0 dauer=26s`, cap.raw 4 627 560 Byte.
+wz.log: `F150 ... klettern`, `F220 ... boden-1800` (Klettern ab F150 wie M1).
+Frame-Woerter von Clip 0x16 (eigenes Mini-Programm `se_bits/se_bits_c.exe`, gegen `build/engine/libre15_engine.a`
+gelinkt, CDEMD0.EMS Typ 0x16): `Typ 0x16: 43 Clips, Clip 0x16 = 159 Bilder`, `Clip 0x16 Bild 102: Frame-Wort 0x0080023b
+-> SE-Bits 0x2`, `Clip 0x16 Bild 130: Frame-Wort 0x00800249 -> SE-Bits 0x2` (= SE 1; Dekodierung FUN_8001b38c selbst
+disassembliert: `lw v0,360(v0)` +0x168 @0x8001b3a4, `srl s0,v0,22` @0x8001b3b4, je Bit `jal 0x800453d0` mit a0 = Bitnummer
+@0x8001b3cc-d0; die Zombie-Wurzel ruft sie `jal 0x8001b38c` @0x801004c8). debug.log: `[se] Stimme: se=1 layer=0 vag=2
+note=61 ... -> SE-Stimme 4 (SPU 20)` genau einmal zwischen `[walk] F240` und `[walk] F270` (= F252, Clip-Bild 102) und
+einmal zwischen `[framedump] ... f000279.ppm` und `f000280.ppm` (= F280, Clip-Bild 130). Die Klettertoene des
+RE1.5-Clips laufen also auch im RE2-Zweig (`wz_frame_se`), je SE-Bild einmal.
