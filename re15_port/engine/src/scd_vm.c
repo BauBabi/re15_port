@@ -2947,8 +2947,10 @@ static int op_aot_set(scd_thread_t *t)
         /* AOT rect is LITTLE-ENDIAN (2026-06-04 fix, same as Door_aot_set). NW corner + extent -> */
         int16_t rect_x = scd_read_le_s16(&t->pc[6]);
         int16_t rect_z = scd_read_le_s16(&t->pc[8]);
-        int16_t rect_w = scd_read_le_s16(&t->pc[10]);
-        int16_t rect_d = scd_read_le_s16(&t->pc[12]);
+        /* Runde 38 Spur N: Breite/Tiefe VORZEICHENLOS (`lhu a0,4(a1)` @0x80042b70 / `lhu a0,6(a1)` @0x80042b8c,
+         * `sltu` @0x80042b78/94, FUN_80042b64); nur 8 Kurzform-Saetze > 32767, alle sce 8 (N_wasser.md B10). */
+        uint16_t rect_w = (uint16_t)scd_read_le_s16(&t->pc[10]);
+        uint16_t rect_d = (uint16_t)scd_read_le_s16(&t->pc[12]);
         cx = (int32_t)rect_x + (int32_t)rect_w / 2;       /* center + half-extents (matches Door/Item) */
         cz = (int32_t)rect_z + (int32_t)rect_d / 2;
         hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
