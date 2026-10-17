@@ -50,7 +50,12 @@ Nutzer-Punkt (AUFTRAG.md Nachtrag 1, woertlich):
 | RE2 (`info/re2leon/PSX.EXE`, re2_disasm.py): FUN_800363f0 @0x80036610/40/6c/9c, FUN_8002d0e8 NCLIP @0x8002d18c `bgez` @0x8002d1ac, FUN_8002d244 `bgez` @0x8002d314, FUN_80027bec `bgtz` @0x80027cc8, FUN_80027dbc `bgez` @0x80027e84 | alle vier `jal` vorhanden; `4b400006` + `swc2 MAC0` (`ebb80000`) + Verzweigung genau an den genannten Stellen | stimmt (Hinweis: FUN_80027bec verwirft auch MAC0 = 0, Port verwirft nur < 0 — entartete Flaechen, ohne Bildwirkung) |
 | psx-spx GPU "Size Restriction" 1023/511, RTPS SX/SY -400h..+3FFh, NCLIP-Formel | `docs/graphicsprocessingunitgpu.md:332-333`, `docs/geometrytransformationenginegte.md:418-419`, `:439` woertlich | stimmt |
 
-Suche nach Rate-Woertern im Code-Diff (`deferred|tunable|interim|for now|faithful|plausibel|TODO`): siehe §5.
+Suche nach Rate-Woertern in den hinzugefuegten Code-Zeilen (`git diff master...HEAD -- re15_port | grep -i -E
+"deferred|tunable|interim|for now|faithful|plausib|TODO|approx|PORT-WAHL|NUTZER-VORGABE"`): keine Treffer ausser drei
+Kommentarstellen, die die AUFGEHOBENE PORT-WAHL "Port-Modelle zweiseitig" beschreiben (re15_objpoly_r38.h,
+test_r38_rolltor20a0_windung.c). Kein Env-Schalter als Abschluss (RE15_OBJPOLY_LOG ist reine Messschiene).
+Gemessen gilt ausserdem: `re15_gte_divide(h, 0)` = 0x1FFFF (re15_math.c:317) wie der GTE-Ueberlauf; gcc -Wall -Wextra
+-fsyntax-only auf objpoly_r38.c / nclip_r38.c / objpoly_r38_pc.c ohne eigene Warnung.
 
 ## 3. Eigene Messung am Spiel — Leon, ECHTER Tuerweg 2090 -> 20A0 (nicht der Weg des Bau-Agenten)
 
@@ -157,6 +162,11 @@ RE15_FRAMEDUMP=100-300/50:fd_ RE15_EXIT_AT=300#5060` (debug.log `JUMP -> 506 P-4
   eingehaengt (OTZ 122, OPZ > 0), seine Dreiecke (804,-76),(481,231),(-114,-344) / (481,231),(-114,-344),(105,395)
   laegen quer ueber dem Bild (dy 575 / 739 > 511), und `orig_cut11_offen_buf0.png` zeigt nichts davon.
 
+* ROOM1050 Cut 5 (zweiter Original-Fall): `RE15_DEBUG_JUMP=1050@250 RE15_PLAYER_POS=16050,-16200,0,0 RE15_FORCE_CUT=5`
+  — OBJPOLY neu **300/300 `room=1050 cut=5 obj=0 gezeichnet=0 nclip=15`** (= Original-Haltepunkt @0x800257c0: alle 15
+  OPZ < 0); v0.8.25 malte die Rueckseite des Rolltors als dunkle Lamellen-Saeule (886 px, `r1050_cut5_vergleich.png`),
+  neu ist dort der Gang zu sehen.
+
 ### 5.3 ROOM20A0 selbst (alle Cuts des Tuerwegs)
 OBJPOLY im Tuerweg (Auszug): Cut 13/14 obj 1 `otz=48` (Rolladen hinter der Kamera — vorher ebenso weg durch `_vz < 64`),
 Cut 15 obj 4 `gezeichnet=9 otz=6 gpu=11`, Cut 2 obj 4 `gezeichnet=18 otz=6 gpu=2`; die Bilder dieser Cuts
@@ -210,4 +220,85 @@ Keine weitere sichtbare Aenderung im Raum.
 * Riegel je Punkt: unit_r38_rolltor20a0 (R1..R7, Original-Tabelle), unit_r38_rolltor20a0_windung, integration_r38_
   rolltor20a0 (A Leon Sprung, B Elza Karte, D Leon Karte, C Kiste) — messend, gruen (§1).
 
-(weitere Abschnitte folgen: Testgruppen, Urteil)
+## 7. Testgruppen der beruehrten Module (selbst gefahren, seriell, exe = HEAD)
+
+Derselbe 67er-Ausdruck wie der Bau-Agent (§9.5 des Dossiers: Prop-Schleife = alle Bild-/Lade-Riegel mit Raum- und
+Port-Objekten, Hebetisch/Panels/Cursor, Loescher, Schluessel, Kisten, eigene + A-Riegel):
+`ctest --test-dir re15_port/build -R "^(integration_(r30_irons_tisch_bild|...|r38_rolltor20a0)|unit_r38_(cursor_[a-z]+|
+rolltor20a0|rolltor20a0_windung)|unit_(sicherung_1150|...|r37_feuerloescher_[a-z]+))$" --timeout 1500 --output-on-failure`
+-> **`100% tests passed, 0 tests failed out of 67`, `Total Test time (real) = 2822.21 sec`** (Log
+`abnW0_rolltor/ctest_gruppen.log`). Darunter 21 exe-Riegel, u. a. r35_cut1150 511 s, r36_kartenitems_bild 419 s,
+r37_feuerloescher 337 s, r37_kistenregel 257 s, r38_cursor 182 s, r38_rolltor20a0 294 s. Kein Flattern, nichts
+nachgefahren. Nicht gefahren: integration_r36_dachkiste (kein Kisten-Code im Diff; Kistenfall in 20A0/20A1 selbst
+gemessen §3/§4) und die volle Suite (Sache der Integration).
+
+## 8. Urteil je Nutzer-Punkt (gegen den Wortlaut)
+
+| Punkt | Urteil | Beleg |
+|---|---|---|
+| "in ROOM 20A0 the shutter that you have to open to push the box down is somehow DIRECTLY in the camera. I cannot see anything... this is not like this in the original" (+ Elza 20A1) | **erfuellt** | Echter Tuerweg 2090 -> 20A0 (Leon) und 2091 -> 20A1 (Elza): Cut 11 mit offenem Rolladen 69/69 bzw. 70/70 Bilder Raumhintergrund 0.8998..0.9684, v0.8.25 am selben Weg 69/69 Bilder 0.1305 (ganz zugedeckt); bildgenau F1350..F1670 kein Bild zugedeckt; OBJPOLY 699/699 bzw. 702/702 = Original-Haltepunkt-Messung 6/20/16/6; Kiste faellt weiter (Band 4 -> 2 -> 1); Ursache erklaert (17 Rueckseiten-Vierecke ohne NCLIP, Original verwirft sie an `bgez` @0x80023190); Bild = Original-Bild `orig_cut11_offen_buf0.png` (§3, §4, §5.3b, §5.4) |
+
+## 9. Gates
+
+* **RE-Gate: haelt.** Alle Stichproben (20+ Adressen in PSX.EXE RE1.5 und RE2-Leon, ROOM20A0/1050-Saetze) enthalten
+  genau das Behauptete (§2, §5.3b); jede neue Konstante (341, 256, 64, -400h/3FFh, 1023/511) traegt @0x... bzw. den
+  psx-spx-Wortlaut; keine Rate-Woerter im Code-Diff; der Fix erklaert den Befund.
+* **Vertrag: haelt** (§6; Hinweis H2 zur Haken-Groesse in main.c).
+* **Riegel: vorhanden, messend, gruen** (§1, §7).
+* **Nebenwirkungen: NICHT vollstaendig geprueft** — der Zensus des Bau-Agenten ist einseitig, und es gibt eine neue,
+  sichtbare, im Spiel erreichbare Aenderung, die das Dossier nicht kennt und die nicht dem Original entspricht (M1, M2).
+
+## 10. Maengel (nummeriert, nachpruefbar)
+
+**M1 — ROOM5060/5061 Cut 4: neues deckend dunkles Dreieck ueber dem linken Fenster, im Original halbtransparent;
+im Dossier nicht erwaehnt.**
+Nachpruefen: `RE15_PSELECT_AUTO=1 RE15_DEBUG_JUMP=5060@250 RE15_FORCE_CUT=4 RE15_FRAMEDUMP=100-300/50:fd_
+RE15_EXIT_AT=300#5060` mit Spurbaum-exe gegen v0.8.25-exe -> 1193 px je Bild verschieden (`r5060_cut4_vergleich.png`).
+Cut 4 ist im Spiel erreichbar (RVD-Zonen 3->4 und 7->4). Mechanismus (§5.2b): obj 4 (`Obj_model_set` @0x02D72,
+Attribut 0x0012) wird vom neuen Weg als Halbviereck gezeichnet (richtig nach der Original-Geometrie), aber DECKEND; das
+Original setzt ABE (@0x800230ac `sll a3,a3,1` / @0x800230b0 `ori a3,a3,0x3c` / @0x800230d0 `sb a3,3(s0)` -> Code
+0x3E), Texturseite 0x0080 -> ABR 0, alle 4097 Texel STP = 1 -> 0,5·B + 0,5·F. Der PC-Prop-Weg kennt kein ABE (vorbestehend,
+77 Saetze in 24 Raeumen), der neue Weg macht die Luecke hier erstmals sichtbar. Dossier §8 ("wo der Port jetzt sonst noch
+anders (= wie das Original) zeichnet") ist fuer diesen Fall falsch.
+Abhilfe (byte-true, eine davon; Entscheidung beim Orchestrator): (a) ABE/ABR mit STP-Texel-Regel fuer Raum-Objekte im
+PC-Prop-Weg nach den Belegen oben nachbilden und die betroffenen Raeume messen; oder (b) den Fall als vorbestehende
+Abweichung (fehlendes ABE der Raum-Objekte, Zensus `abe_zensus.py`) mit Messung an den Orchestrator melden und im Dossier
+sowie unter "Fuer den Nutzer" fuehren — nicht ungenannt ausliefern.
+
+**M2 — Nebenwirkungs-Zensus einseitig (selbstbestaetigendes Mass).**
+`W_belege/zensus_objpoly.py` meldet nur Faelle mit WENIGER Bedeckung (`pa - pb > 1536 or ...`) und laesst Typ 3 und
+Eltern-Objekte aus. Die Gegenrichtung — Polygone, die neu gezeichnet werden, weil der Port-Ausschnitt `_vz < 64`
+entfaellt (Saettigung statt Verwurf) — ist nirgends geprueft. Meine Erweiterungen (`zensus_mehr.py`, `zensus_typ3.py`,
+`mehr_detail.py`, `weniger_detail.py` im Scratchpad `abnW0_rolltor/`) finden 3 MEHR-Faelle (ROOM1170 obj 3 Cut 0
+statisch 11338 px — im Spiel <= 96 px, §5.2; ROOM5060/5061 obj 4 Cut 4 — M1) und Typ-3-WENIGER-Faelle (ROOM2050 obj 4
+Cut 11/12/13, ROOM20A0 obj 6 Cut 3 — im Spiel 82..100 px bzw. 0 px, §5.2c). Abhilfe: Zensus in beide Richtungen inkl.
+Typ 3 ins Dossier §8, jeder MEHR-Fall mit Spielmessung neu gegen v0.8.25.
+
+## 11. Hinweise (nicht blockierend)
+
+* H1 Integration: lesender Merge-Test gegen r38/integration (mit K) — Konflikte nur in `schluessel_r36.c/.h` (A gegen K,
+  Regel A §3c "K's Seite nehmen") und in den Include-Zeilen von `main.c`; die Prop-Schleife merget konfliktfrei.
+  Nach dem K-Merge prueft integration_r38_cursor E/F die Vorderseite der Schluessel an der exe.
+* H2 `main.c`: W-Haken ~12 Zeilen statt 1-5, aber reine Ersetzung der alten Inline-Projektion; Logik in eigenen Dateien.
+* H3 Infrastruktur: ein anderer Abnahme-Agent (Spur R, `scratchpad/abn0/`) hat waehrend meines Laufs mein Skript im
+  gemeinsamen Scratchpad ueberschrieben (bash las den fremden Rest: "EXE: unbound variable"); meine Messdaten waren
+  unberuehrt, alle Laeufe danach in `abnW0_rolltor/`. Eindeutige Unterordner je Spur/Abnahme vergeben.
+* H4 RE2 FUN_80027bec verwirft auch MAC0 = 0 (`bgtz` @0x80027cc8); der Port verwirft wie RE1.5 (`bgez`/`bltz`) nur < 0.
+* H5 vorbestehend (Dossier OFFEN): PC teilt Vierecke an der Diagonale 0-3 (PSX 1-2); Figuren laufen nicht durch die
+  Objekt-Schranken.
+* Positiv (gemessen): derselbe Fehlertyp wie der Nutzer-Befund ist auch in ROOM10D0 Cut 12 behoben (v0.8.25 ganzes Bild
+  Lamellen, jetzt Marvin vor dem Fenster, §5.2c), ROOM1050 Cut 5 Rolltor-Rueckseite weg (§5.2c).
+
+## 12. Ergebnis
+
+**Nicht bestanden.** Der Nutzer-Punkt ist am echten Weg (Leon und Elza) erfuellt, Mechanismus und Original-Belege
+halten, alle 3 + 67 Riegel sind gruen. Offen sind M1 (neue, undokumentierte, nicht originalgetreue Aenderung in
+ROOM5060/5061 Cut 4) und M2 (Nebenwirkungs-Zensus nur in eine Richtung, ohne Typ 3). Beide sind klein: Zensus beidseitig
+ins Dossier, ROOM5060/5061 entweder byte-true mit ABE/STP oder ausdruecklich als vorbestehende Abweichung gemeldet.
+
+Werkzeuge/Bilder dieser Abnahme (Scratchpad `.../scratchpad/abnW0_rolltor/`): `lauf_w0.sh`, `wp_tuer_20a0.txt`,
+`wp_tuer_20a1_elza.txt`, `bogen.py`, `diff_dumps.py`, `vergleich.py`, `zensus_mehr.py`, `zensus_attr.py`,
+`zensus_typ3.py`, `mehr_detail.py`, `weniger_detail.py`, `rolladen_aufschluesselung.py`, `abe_zensus.py`,
+`stp_5060.py`, `ss_info.py`; Bilder `t1_bogen_cut11.png`, `t2_bogen_cut11.png`, `t5_bogen_cut11.png`,
+`t1_bogen_alle1/2.png`, `intro_vergleich.png`, `r5060_cut4_vergleich.png`, `r2050_cut11_vergleich.png`,
+`r10d0_cut12_vergleich.png`, `r1050_cut5_vergleich.png`, `tuer_vergleich_cut2_12.png`.
