@@ -195,3 +195,11 @@ y = +923 = Dreiecke **T03 (u 4..125, v 41..82), T04 (u 65..125, v 0..82), T05 (u
 Ursache "Unterseite mit demselben Muster scheint durch die weitgehend durchsichtige Oberseite" (selbst gezaehlt: im
 Musterfeld u 4..125, v 0..82 sind 7682 von 10126 Texeln = 75,9 % Index 0 = durchsichtig; die 92,8 % des Dossiers beziehen
 sich auf die ganze Oberseite, nicht nachgezaehlt).
+
+## 11. Gezielte Regression (Regex des Bau-Agenten, gegen `ctest -N` und die 20 Bild-Haken-Skripte geprueft)
+
+Regex = r38_cursor + Bild-/Prop-/Panel-/Hebetisch-Gruppen (`scratchpad/abn/rx.txt`; alle 20 Integrationsskripte mit
+RE15_FRAMEDUMP/FBDUMP/TRILOG sind darin, `grep -l` selbst geprueft).
+* Teil 1 (`-E "^integration_" -j4 --timeout 600`): **`100% tests passed, 0 tests failed out of 148`** (7.98 sec).
+* Teil 2 (48 Laeufe mit der exe, `-j2 --timeout 900`, ohne integration_r38_cursor = §1): laeuft
+  (`scratchpad/abn/ctest_teil2.log`), Ergebnis folgt.
