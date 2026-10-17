@@ -5,7 +5,7 @@
  * Alle Adressen STAGE3.BIN (Overlay @0x80100000, kein Kopf), ausser FUN_8001xxxx/FUN_8002xxxx = PSX.EXE.
  *
  * Feld-Abbildung (wie bisher in re15_cockroach_ai_tick): +0x5 sub_state_1, +0x6 sub_state_2, +0x7 sub_state_3,
- * +0x94 motion, +0x95 anim_frame, +0x8f anim_frac, +0x9c ai_timer, +0x8c crow_speed, +0x1dc dog_atk_cd,
+ * +0x94 motion, +0x95 anim_frame, +0x8f anim_frac, +0x9c ai_timer, +0x8c crow_speed, +0x1dc dog_blocked_ctr,
  * +0x1e2 roach_beh2, +0x1d6 sca_wall_hit (Rueckgabe der Wandklemme FUN_8003b0a4, `sh v0,470` @0x80110bcc).
  */
 #include "re15_affen3_r38.h"
@@ -133,7 +133,7 @@ int re15_affen3_quadrat(const re15_actor_t *e, const re15_actor_t *pl, int recor
 static void treffer(re15_actor_t *e, re15_actor_t *pl, int schaden, int se, int niederschlag, int32_t abstand)
 {
     pl->hp = (int16_t)(pl->hp - schaden);
-    e->dog_atk_cd = RE15_AFFEN3_SPERRE_TREFFER;
+    e->dog_blocked_ctr = RE15_AFFEN3_SPERRE_TREFFER;
     re15_audio_room_se(se);
     if (pl->hp >= 0) {
         if (niederschlag) re15_player_knockdown_begin(a780(e, pl));
@@ -223,7 +223,7 @@ static int16_t bogen(const re15_actor_t *e, const re15_actor_t *pl, int tol)
 /* A[0] 0x80111220 — Ruhe. Alles hinter +0x1dc == 0 (@0x8011122c-34). */
 static void a_ruhe(re15_actor_t *e, uint16_t d, int sicht)
 {
-    if (e->dog_atk_cd != 0) return;
+    if (e->dog_blocked_ctr != 0) return;
     if (d < 0x1388 && sicht)                   { wechsel(e, 3, 0); return; }   /* @0x80111244-68, @0x801112a4-c0 */
     if (d < 0x1770 && re15_player_aim_active()) { wechsel(e, 4, 0); return; }  /* aca58 == 0x701 @0x80111280-a0 */
     if (d < 0xbb8)                              wechsel(e, 3, 1);               /* @0x801112d8-304 */
@@ -240,7 +240,7 @@ static void a_schlaf(re15_actor_t *e, uint16_t d, int sicht)
 /* A[3] 0x801117d8 — Jagd. */
 static void a_jagd(re15_actor_t *e, const re15_actor_t *pl, uint16_t d, int sicht)
 {
-    if (pl->hit_react == 0 && a804(e, pl, 0xbb8, 0x180) && e->dog_atk_cd == 0) {   /* @0x801117e8-820 */
+    if (pl->hit_react == 0 && a804(e, pl, 0xbb8, 0x180) && e->dog_blocked_ctr == 0) {   /* @0x801117e8-820 */
         wechsel(e, 5, 0); return;                                                  /* @0x801118dc-8fc */
     }
     if (pl->hit_react != 0) return;                                                /* @0x80111828-834 */
@@ -254,7 +254,7 @@ static void a_jagd(re15_actor_t *e, const re15_actor_t *pl, uint16_t d, int sich
 /* A[4] 0x80111ac0 — Auswahl: schwerer Angriff oder Sprung (Sprung = Sub 7, dessen B[7] faehrt der bisherige Code). */
 static void a_auswahl(re15_actor_t *e, const re15_actor_t *pl, uint16_t d, int sicht)
 {
-    if (pl->hit_react == 0 && a804(e, pl, 0xfa0, 0xc0) && e->dog_atk_cd == 0) {    /* @0x80111ad4-b0c */
+    if (pl->hit_react == 0 && a804(e, pl, 0xfa0, 0xc0) && e->dog_blocked_ctr == 0) {    /* @0x80111ad4-b0c */
         wechsel(e, 6, 0); return;                                                  /* `sb v0,5` @0x80111b18, @0x80111bd4-bf0 */
     }
     if (!sicht) return;                                                            /* +0x1d0 & 1 @0x80111b28-34 */
@@ -354,7 +354,7 @@ static void b_anlauf(re15_actor_t *e, const re15_actor_t *pl, uint16_t d)
 static void b_biss(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 2) {                                        /* @0x80111fd8-2018 */
-        if (e->dog_atk_cd == 0) e->dog_atk_cd = RE15_AFFEN3_SPERRE_ENDE;
+        if (e->dog_blocked_ctr == 0) e->dog_blocked_ctr = RE15_AFFEN3_SPERRE_ENDE;
         wechsel(e, 3, 0);
         return;
     }
@@ -376,9 +376,9 @@ static void b_schwer(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 2) {                                        /* @0x8011232c-3cc */
         if (pl->hit_react == 0 && a804(e, pl, 0xfa0, 0x180)) {        /* @0x80112334-350 */
-            wechsel(e, (e->dog_atk_cd == 0) ? 5 : 3, 0);              /* @0x80112364-378 */
+            wechsel(e, (e->dog_blocked_ctr == 0) ? 5 : 3, 0);              /* @0x80112364-378 */
         } else {
-            if (e->dog_atk_cd == 0) e->dog_atk_cd = RE15_AFFEN3_SPERRE_ENDE;   /* @0x80112388-39c */
+            if (e->dog_blocked_ctr == 0) e->dog_blocked_ctr = RE15_AFFEN3_SPERRE_ENDE;   /* @0x80112388-39c */
             wechsel(e, 3, 0);
         }
         return;
@@ -432,7 +432,7 @@ static void b_sprung(re15_actor_t *e, re15_actor_t *pl)
             return;
         }
         if (e->anim_frame == 0x13 && pl->hp < RE15_AFFEN3_TOD_HP_GRENZE && pl->hit_react == 0   /* @0x8011267c-6b4 */
-            && a804(e, pl, 0x1388, 0xc0) && e->dog_atk_cd == 0) {    /* @0x801126b8-6e4 */
+            && a804(e, pl, 0x1388, 0xc0) && e->dog_blocked_ctr == 0) {    /* @0x801126b8-6e4 */
             wechsel(e, 8, 0);                                         /* @0x801126ec-710 */
             re15_audio_room_se(6);                                    /* a0 = 6 @0x80112708 -> @0x8011270c */
         }
@@ -474,7 +474,7 @@ static void b_todessprung(re15_actor_t *e, re15_actor_t *pl)
         int im_fenster = (e->anim_frame == 8 || e->anim_frame == 9 || e->anim_frame == 10);   /* @0x8011ed54 Schleife @0x80112a5c-ab4 */
         if (!im_fenster || !(h1 || h2)) return;                       /* @0x80112ab8-aec */
         pl->hp = (int16_t)(pl->hp - RE15_AFFEN3_TOD_SCHADEN);         /* @0x80112af0-b04 */
-        e->dog_atk_cd = RE15_AFFEN3_TOD_SPERRE;                       /* @0x80112b08-10 */
+        e->dog_blocked_ctr = RE15_AFFEN3_TOD_SPERRE;                       /* @0x80112b08-10 */
         re15_audio_room_se(0);                                        /* a0 = 0 (`addu a0,zero,zero` @0x80112adc) -> @0x80112b0c */
         pl->hit_react |= 1;                                           /* @0x80112b28-58 */
         /* aca58 = 6 (Wort, @0x80112b1c-24), acbfc/acbcc/acbd0 = Affe/+0x178/+0x17c (@0x80112b34-60): der Spieler-Haken
@@ -640,13 +640,13 @@ static void b_decke_kriechen(re15_actor_t *e)
 static int a_decke(re15_actor_t *e, const re15_actor_t *pl, uint16_t d, int sicht)
 {
     if (luft_treffer(e, 2)) return 1;                                 /* @0x80113978-a18 */
-    if (pl->hit_react == 0 && d < 0x7d0 && a780(e, pl) != 0 && e->dog_atk_cd == 0) {   /* @0x80113a1c-a7c */
+    if (pl->hit_react == 0 && d < 0x7d0 && a780(e, pl) != 0 && e->dog_blocked_ctr == 0) {   /* @0x80113a1c-a7c */
         wechsel(e, 15, 0);                                            /* +0x5 15, +0x6 0 @0x80113a80-94, +0x7 0 @0x80113c0c-18 */
         return 0;
     }
     uint8_t b = e->anim_frame;
     if ((b == 0x31 || b == 0x00) && pl->hit_react == 0                /* Tabelle @0x8011ed59 [1..0] = {0x00, 0x31} @0x80113a98-ae0 */
-        && a804(e, pl, 0x1388, 0x180) && e->dog_atk_cd == 0) {      /* @0x80113af0-b38 */
+        && a804(e, pl, 0x1388, 0x180) && e->dog_blocked_ctr == 0) {      /* @0x80113af0-b38 */
         wechsel(e, 14, 0);                                            /* `j 0x80113a84` mit v0 = 0xe @0x80113b3c-40 */
         return 0;
     }
@@ -772,7 +772,7 @@ static void b_griff(re15_actor_t *e, re15_actor_t *pl)
         if (e->anim_frame == 0x31) e->sub_state_2 = 8;                /* @0x801146f8-70c */
         return;
     case 8:                                                           /* @0x80114710 */
-        e->dog_atk_cd = 0x3c;                                         /* @0x80114718-1c */
+        e->dog_blocked_ctr = 0x3c;                                         /* @0x80114718-1c */
         wechsel(e, 2, 0); e->sub_state_2 = 1;                         /* +0x5 2, +0x6 1, +0x7 0 @0x80114728-74c */
         e->anim_frame = 0x1d; e->anim_frac = 7; e->motion = 3;        /* @0x80114758-77c */
         if (s_griff_slot == (uint8_t)(e - g_actors)) s_griff_slot = 0;

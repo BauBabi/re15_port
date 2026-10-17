@@ -167,7 +167,10 @@ static int bank_laden_29(void)
     if (ok) {
         re15_tim_t tim = (re15_tim_t){0};
         ok = (re15_emd_parse_container(s_blob29, len, &eb->md1, &eb->skel, &eb->anim, &tim) == 0);
-        if (ok) { eb->ok = 1; eb->buf = NULL; } else eb->type = 0;
+        if (ok) { eb->ok = 1; eb->buf = NULL;
+                  /* Opfer-Bank (dir[5]/[6]) wie main.c pc_enemy_load: Leon im Griff / Todessprung */
+                  eb->victim_ok = (re15_emd_parse_victim_bank(s_blob29, len, &eb->skel_victim, &eb->anim_victim) == 0); }
+        else eb->type = 0;
     }
     free(ems);
     return ok;
@@ -221,12 +224,12 @@ static int aufbau_o4(re15_actor_t **pa)
      * +0x6a 3072, +0x1dc 0, HP 105, +0x1d0 0, +0x1d6 1. Affe B ruht weit weg (Original (-13618,-1800,-11800)). */
     a->state = 1; a->sub_state_1 = 0; a->sub_state_2 = 1; a->sub_state_3 = 0;
     a->x = -8800; a->y = -1800; a->z = -6082; a->rot_y = 3072; a->floor = 1;
-    a->motion = 0x16; a->anim_frac = 0; a->dog_atk_cd = 0; a->hp = 105; a->hit_react = 0;
+    a->motion = 0x16; a->anim_frac = 0; a->dog_blocked_ctr = 0; a->hp = 105; a->hit_react = 0;
     a->roach_los = 0; a->sca_wall_hit = 1; a->ai_timer = 200;   /* Ruhe-Zeitgeber laeuft noch (Original wechselt erst durch Leons Naehe) */
     a->anim_frame = 55; re15_affen_pool_anim(a); a->anim_frame = 56;   /* Pool = das zuletzt gezeichnete Bild 55 */
     b->state = 1; b->sub_state_1 = 0; b->sub_state_2 = 1; b->sub_state_3 = 0;
     b->x = -13618; b->y = -1800; b->z = -11800; b->rot_y = 3072; b->floor = 1;
-    b->motion = 0x16; b->anim_frac = 0; b->dog_atk_cd = 0; b->ai_timer = 2000;
+    b->motion = 0x16; b->anim_frac = 0; b->dog_blocked_ctr = 0; b->ai_timer = 2000;
     b->anim_frame = 55; re15_affen_pool_anim(b); b->anim_frame = 56;
     *pa = a;
     return 1;
@@ -246,7 +249,7 @@ static int lauf_o4(int ticks, treffer_t *t, int tmax, int *commit_tick, int32_t 
         if (verbose)
             printf("    T%3d hp%d pl %d/%d c%d (%d,%d) | A %d/%d/%d/%d c%d/%d cd%d (%d,%d) r%d d%.0f\n", k, (int)pl->hp,
                    pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->x, (int)pl->z, a->state, a->sub_state_1,
-                   a->sub_state_2, a->sub_state_3, (int)a->motion, (int)a->anim_frame, (int)a->dog_atk_cd, (int)a->x,
+                   a->sub_state_2, a->sub_state_3, (int)a->motion, (int)a->anim_frame, (int)a->dog_blocked_ctr, (int)a->x,
                    (int)a->z, (int)a->rot_y, dist2d(a->x, a->z, pl->x, pl->z));
         if (pl->hp != hp_alt && nt < tmax) {
             t[nt].tick = k; t[nt].hp_vorher = hp_alt; t[nt].hp_nach = pl->hp; t[nt].sub = a->sub_state_1;
@@ -351,11 +354,11 @@ static void teil_schwer(void)
     re15_actor_t *b = aktor_vom_typ(0x29, 1);
     if (!b) return;
     /* A ruht weit weg und bleibt aus dem Spiel (Original A: Sub 3 blind an seiner Wand, Abstand > 9000) */
-    a->sub_state_1 = 0; a->sub_state_2 = 1; a->ai_timer = 2000; a->dog_atk_cd = 0;
+    a->sub_state_1 = 0; a->sub_state_2 = 1; a->ai_timer = 2000; a->dog_blocked_ctr = 0;
     /* B wie o6 F1006 */
     b->state = 1; b->sub_state_1 = 4; b->sub_state_2 = 1; b->sub_state_3 = 0;
     b->x = -13618; b->y = -1800; b->z = -10549; b->rot_y = 1005; b->floor = 1;
-    b->motion = 6; b->anim_frac = 0; b->dog_atk_cd = 0; b->hit_react = 0; b->crow_speed = 196;
+    b->motion = 6; b->anim_frac = 0; b->dog_blocked_ctr = 0; b->hit_react = 0; b->crow_speed = 196;
     b->roach_los = 1; b->sca_wall_hit = 1;
     b->anim_frame = 11; re15_affen_pool_anim(b); b->anim_frame = 12;
     pl->x = -13500; pl->y = -1800; pl->z = -14200; pl->rot_y = 1024; pl->hp = 100; pl->hit_react = 0;
@@ -372,7 +375,7 @@ static void teil_schwer(void)
         if (getenv("R38_AFFEN3_SPUR"))
             printf("    T%2d hp%d pl c%d (%d,%d) | B %d/%d/%d c%d/%d cd%d (%d,%d) r%d\n", k, (int)pl->hp, (int)pl->motion,
                    (int)pl->x, (int)pl->z, b->sub_state_1, b->sub_state_2, b->sub_state_3, (int)b->motion, (int)b->anim_frame,
-                   (int)b->dog_atk_cd, (int)b->x, (int)b->z, (int)b->rot_y);
+                   (int)b->dog_blocked_ctr, (int)b->x, (int)b->z, (int)b->rot_y);
     }
     re15_affen3_treffer_t log[8]; int nl = re15_affen3_log(log, 8);
     printf("    schwer: Commit Tick %d, Treffer Tick %d Bild %d, %d HP, danach Sub %d; z:", commit, treffer, bild,
@@ -403,6 +406,82 @@ static void teil_schwer(void)
     PRUEF(nach_sub == 3, "Ende mit +0x1dc != 0 -> Sub 3 (@0x80112388-3ac): Sub %d", nach_sub);
 }
 
+/* ==== DECKE / GRIFF (Subs 9..15) gegen die GDB-Spuren o7/o8 ===========================================
+ * Original (DuckStation-GDB, affen_spur2.py): Leon (-8800,-1800,-2400) Band 1, in Bild 150 Affe A per RAM in den HURT
+ * gesetzt (+0x4..7 = 02 03 00 00, HP 73) = die Lage nach einem ueberlebten Treffer (Spur 0, Ausgang +0x1e3 -> Sub 9).
+ * Start des Port-Laufs = Original-Zustand F167 (Affe A: HURT 2/3/0/0, Clip 5 Bild 24, (-8719,-1800,-6082) r3053,
+ * HP 73, +0x93 0, Bodenkasten, +0x1ba -1800; Pool = Bild 23 von Clip 5). */
+typedef struct { int tick; uint8_t st, s1, s2, clip, bild; int32_t x, y, z; int16_t r; } decke_t;
+
+/* Leons COMMON-Bank PL00 (PLD/PL00.EDD + .EMR = DAT_800acbc0/acad8) fuer die Haken-Phasen aca5a 6..9 (Clip 0x10/0xb). */
+static re15_emd_animation_t s_pl00_anim; static re15_emd_skeleton_t s_pl00_skel;
+static uint8_t *s_pl00_edd = NULL, *s_pl00_emr = NULL;
+static int pl00_laden(void)
+{
+    if (s_pl00_edd && s_pl00_emr) return 1;
+    char p[600]; size_t esz = 0, rsz = 0;
+    snprintf(p, sizeof p, "%s/PLD/PL00.EDD", RE15_ASSET_PSX_DIR); s_pl00_edd = slurp(p, &esz);
+    snprintf(p, sizeof p, "%s/PLD/PL00.EMR", RE15_ASSET_PSX_DIR); s_pl00_emr = slurp(p, &rsz);
+    if (!s_pl00_edd || !s_pl00_emr) return 0;
+    if (re15_emd_parse_animation(s_pl00_edd, esz, &s_pl00_anim) != 0 || re15_emd_parse_skeleton(s_pl00_emr, rsz, &s_pl00_skel) != 0) return 0;
+    re15_player_set_pl00_banks(&s_pl00_skel, &s_pl00_anim);
+    return 1;
+}
+static void pl00_in_ctx(void) { s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim = &s_pl00_anim; }   /* game_step spiegelt c->pl00_* je Bild (@game_step_common.c) */
+
+static int aufbau_decke(re15_actor_t **pa, int16_t leon_gier)
+{
+    if (room_boot(0x3040, -8800, -1800, -2400, leon_gier, 1, 0, 2) != 0) return 0;
+    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return 0; }
+    if (!pl00_laden()) { printf("  FEHLER: PL00.EDD/EMR"); printf("%c", 10); g_fail++; return 0; }
+    pl00_in_ctx();
+    re15_actor_t *a = aktor_vom_typ(0x29, 0), *b = aktor_vom_typ(0x29, 1);
+    if (!a || !b) return 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -8800; pl->y = -1800; pl->z = -2400; pl->rot_y = leon_gier; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 1; pl->sub_state_1 = 0; pl->motion = 0;
+    re15_collision_set_band(1);
+    re15_player_cmd_zero();
+    a->state = 2; a->sub_state_1 = 3; a->sub_state_2 = 0; a->sub_state_3 = 0;
+    a->x = -8719; a->y = -1800; a->z = -6082; a->rot_y = 3053; a->floor = 1; a->dog_floor_y = -1800;
+    a->hp = 73; a->hit_react = 0; a->dog_blocked_ctr = 0; a->roach_air = 0; a->roach_esc = 1; a->roach_beh2 = 0;
+    a->roach_los = 1; a->ai_timer = 252; a->crow_speed = 0;
+    a->motion = 5; a->anim_frac = 0; a->anim_frame = 23; re15_affen_pool_anim(a); a->anim_frame = 24;
+    b->state = 1; b->sub_state_1 = 0; b->sub_state_2 = 1; b->sub_state_3 = 0;
+    b->x = -13618; b->y = -1800; b->z = -11800; b->rot_y = 3072; b->floor = 1;
+    b->motion = 0x16; b->anim_frac = 0; b->dog_blocked_ctr = 0; b->ai_timer = 2000;
+    b->anim_frame = 55; re15_affen_pool_anim(b); b->anim_frame = 56;
+    *pa = a;
+    return 1;
+}
+
+static int lauf_decke(int16_t leon_gier, int ticks, decke_t *ev, int evmax, int *hp_ab, int *hp_tick, int nhp)
+{
+    re15_actor_t *a = NULL;
+    if (!aufbau_decke(&a, leon_gier)) return 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_affen3_log_reset();
+    int n = 0, nh = 0, hp_alt = pl->hp; uint8_t st0 = 0xff, s10 = 0xff, s20 = 0xff, cl0 = 0xff;
+    const char *v = getenv("R38_AFFEN3_SPUR");
+    for (int k = 1; k <= ticks; k++) {
+        frame(0, 0);
+        if ((a->state != st0 || a->sub_state_1 != s10 || a->sub_state_2 != s20 || a->motion != cl0) && n < evmax) {
+            decke_t *d = &ev[n++];
+            d->tick = k; d->st = a->state; d->s1 = a->sub_state_1; d->s2 = a->sub_state_2; d->clip = (uint8_t)a->motion;
+            d->bild = (uint8_t)a->anim_frame; d->x = a->x; d->y = a->y; d->z = a->z; d->r = a->rot_y;
+            st0 = a->state; s10 = a->sub_state_1; s20 = a->sub_state_2; cl0 = (uint8_t)a->motion;
+        }
+        if (pl->hp != hp_alt && nh < nhp) { hp_ab[nh] = hp_alt - pl->hp; hp_tick[nh] = k; nh++; }
+        hp_alt = pl->hp;
+        if (v) printf("    T%4d A %d.%d.%d c%d f%d (%d,%d,%d) r%d hr%x air%d r%u | PL (%d,%d) r%d hp%d vs%d ph%d mo%d f%d\n", k,
+                      a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->y,
+                      (int)a->z, (int)a->rot_y, a->hit_react, a->roach_air, (unsigned)a->hit_radius_min, (int)pl->x, (int)pl->z,
+                      (int)pl->rot_y, (int)pl->hp, re15_player_victim_state(), re15_affen3_opfer_phase(), (int)pl->motion,
+                      (int)pl->anim_frame);
+    }
+    return n | (nh << 16);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -413,6 +492,15 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "flavor"))  teil_flavor();
     if (alle || !strcmp(teil, "quadrat")) teil_quadrat();
     if (alle || !strcmp(teil, "schwer"))  teil_schwer();
+    if (!strcmp(teil, "spur_o7") || !strcmp(teil, "spur_o8")) {   /* Messlauf ohne Pruefung (R38_AFFEN3_SPUR=1 fuer jedes Bild) */
+        decke_t ev[256]; int ab[64], tk[64];
+        int rv = lauf_decke(!strcmp(teil, "spur_o7") ? 1024 : 3072, 1450, ev, 256, ab, tk, 64);
+        int n = rv & 0xffff, nh = rv >> 16;
+        for (int i = 0; i < n; i++)
+            printf("  E T%d st%d s%d.%d c%d f%d (%d,%d,%d) r%d\n", ev[i].tick, ev[i].st, ev[i].s1, ev[i].s2, ev[i].clip, ev[i].bild,
+                   (int)ev[i].x, (int)ev[i].y, (int)ev[i].z, (int)ev[i].r);
+        for (int i = 0; i < nh; i++) printf("  HP T%d -%d\n", tk[i], ab[i]);
+    }
     printf("=== %s: %d Fehler ===\n", g_fail ? "FAIL" : "PASS", g_fail);
     return g_fail ? 1 : 0;
 }

@@ -1503,7 +1503,7 @@ int re15_player_victim_own_bank(void)
         && s_gthrow_phase != 0)
         || (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x29 && re15_affen3_opfer_eigenbank());   /* Runde 38 Spur S: aca5a 6..9 = acad8/acbc0 */
 }
-int re15_player_victim_gorilla(void) { return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27; }   /* Runde 35 Spur J (6d) */
+int re15_player_victim_gorilla(void) { return g_player_victim != 0 && (re15_player_victim_grabber_type() == 0x27 || re15_player_victim_grabber_type() == 0x29); }   /* Runde 35 Spur J (6d); Runde 38 Spur S: 0x29-Haken 0x80115d70/0x801160a4 platzieren wie 0x8011c118/0x8011c414 (ad68 -> @0x80031cbc -> @0x80031d70) */
 /* Runde 38 Spur S: Griff des kleinen Affen (B[15] P0 schreibt aca58 = 5 @0x8011440c) an / Haken-Ende (aca58 = 1 @0x80116018). */
 void re15_player_victim_affen3(const re15_actor_t *greifer, int an)
 {
@@ -11343,6 +11343,7 @@ static void re15_cockroach_ai_tick(int slot)
         e->motion = 0x16; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;      /* clip 0x16 @0x80111310 */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;
         e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0;
+        e->dog_blocked_ctr = 0;                              /* Runde 38 Spur S: +0x1dc (s16) = 0 @0x80110da4 */
         e->roach_los = 0; e->roach_air = 0; e->roach_fade = 0;
         e->roach_esc  = 1;                                                            /* +0x1e3 = 1 default @0x80110e18 (sb a0,483; a0=1) */
         if (e->grid_id & 4) e->roach_esc = 0;                                         /* cleared by beh&4 @0x80110e28-3c */
@@ -11472,7 +11473,7 @@ static void re15_cockroach_ai_tick(int slot)
             re15_dog_sub(e, 0); re15_roach_anim(e);
             break;
         }
-        if (e->dog_atk_cd) e->dog_atk_cd--;                                            /* +0x1dc-- ONCE per ACTIVE frame (brain tail @0x801111c4-d4) */
+        if (e->dog_blocked_ctr) e->dog_blocked_ctr--;                                  /* +0x1dc-- ONCE per ACTIVE frame (brain tail @0x801111c4-d4); Runde 38 Spur S: s16-Feld */
         break;
     }
 
@@ -14071,7 +14072,8 @@ static void re15_enemy_selfpush_from_player(int s, re15_actor_t *e)
     if (e->state == (uint8_t)RE15_AI_STATE_CORPSE || e->hit_radius_min == 0) return;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (!pl->active || pl->hp < 0) return;
-    if (re15_player_is_grabbed() && s == g_player_victim_zombie) return;
+    if (re15_player_is_grabbed() && s == g_player_victim_zombie && e->type != 0x29u) return;
+    if (re15_affen3_griff_paar(e)) return;   /* Runde 38 Spur S: Affen-Paar = beide Bits 0x1000 (@0x8002af14), nicht der ganze cmd 5 */
     re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);   /* @0x8010d880 */
 }
 
@@ -14704,6 +14706,7 @@ void re15_enemy_ai_run_all(int combat_active)
             int32_t rc_ox = e->x, rc_oz = e->z;
             re15_affen_zeichen_merk(e);   /* Runde 38 Spur S: Zeichenstand des Vorbilds (Record+0x40, Zeichen-Schleife @0x8001d108) */
             re15_cockroach_ai_tick(s);
+            re15_enemy_selfpush_from_player(s, e);   /* Runde 38 Spur S: aec4(&Spieler, Affe) `jal 0x8002aec4` @0x80110b88 */
             re15_enemy_body_push_tail(s, e);
             (void)re15_enemy_sca_clamp_band(e, rc_ox, rc_oz, 4u);   /* Runde 38 Spur S: FUN_8003b0a4 JEDES Bild @0x80110ba0-cc, Radius = Kasten+6 (`lhu a1,6(v0)` @0x80110bb4), Band +0x82, +0x1d6 = v0 */
         }
