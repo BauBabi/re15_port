@@ -1,6 +1,8 @@
-import sys, struct, importlib.util
+"""stp_check.py - Runde 38 Spur W N1: CLUT-Zeilen (STP-Anteil) einer Objekt-TIM und die Seiten/CLUT-Woerter ihrer Polygone.
+Aufruf: python stp_check.py <RDT> <obj>"""
+import os, sys, struct, importlib.util
 sys.argv = [sys.argv[0]] + sys.argv[1:]
-spec = importlib.util.spec_from_file_location('z', r'C:/workspace/git/reAi_v2/.claude/worktrees/r38_rolltor20a0/analysis/befunde_runde38/W_belege/zensus_abe.py')
+spec = importlib.util.spec_from_file_location('z', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zensus_abe.py'))
 src = open(spec.origin, encoding='utf-8').read().replace('\nmain()\n', '\n')
 ns = {'__name__': 'z', '__file__': spec.origin}
 exec(compile(src, spec.origin, 'exec'), ns)
