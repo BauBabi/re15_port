@@ -530,3 +530,11 @@ also NACH Member_set(12,0x41) — und kannte den 0x40/0x41-Zweig nicht (Zustand 
 Folge fuer die Umsetzung: (1) 0x29 in re15_enemy_spawn_root, (2) INIT-Zweig 0x40/0x41, (3) Zustand 4/5 mit beiden
 Unterzustaenden. Der alte Riegel integration_r38_affen3_tor erwartete "gesperrt in Zustand 0, INIT erst nach der
 Freigabe" — das widerspricht o11 (gesperrt in Zustand 4.1) und wird auf das Original umgestellt.
+
+### 2026-10-17 ~09:55 — Fortsetzung der Nachbesserung 1 (Vorgaenger beim Sitzungslimit ~09:25 beendet)
+- Stand: 6bd30a91 (Code: INIT-Zweig, Zustand 4/5, Spawn-Wurzelaufruf 0x29), 3bfe08ef (Riegel `ereignis`/`ereignis40` +
+  `integration_r38_affen3_tor` umgestellt, UNGEPRUEFT). `local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK (build)`.
+- Erster Lauf der neuen Unit-Riegel: `ereignis40` gruen; `ereignis` ROT — (a) RE1.5-Durchgang im selben Prozess spawnt
+  den Nach-Ereignis-Affen (g=00 bei (-23590,-4320)), weil room_boot die Spielflags behaelt und der RE2-Durchgang
+  `Set(4,0xd0)` (sub04) schon gesetzt hat -> Riegel-Fehler (Flag vor dem Lauf loeschen); (b) RE2-Durchgang: Fallbahn
+  Bild fuer Bild = o11, Landung R+18, Sub 4 R+34 (gruen), aber in 400 Bildern kein HP-Abzug -> wird untersucht.
