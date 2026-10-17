@@ -27,6 +27,8 @@ static int     s_modell = -1;      /* zuletzt gesehenes Spielermodell (PLD-Index
 static int     s_init_ok = 0;      /* Kommando-0-Init lief fuer ein Elza-Modell 4/5/6 */
 static int     s_geschritten = 0;  /* mindestens ein Treiber-Schritt seit dem PLD-Laden (Weltmatrizen gueltig) */
 static int32_t s_lokal[RE15_EMD_MAX_BONES][9];   /* lokale Rotationen der Pose (Teil 8 = +0x578) */
+static int16_t s_w8r[9];           /* Teil-8-Weltmatrix des letzten Schritts (+0x40, @0x80024c9c) — nur Riegel */
+static int32_t s_w8t[3];
 
 /* ---- libgte-Nachbauten ---------------------------------------------------------------------------- */
 
@@ -287,6 +289,8 @@ void re15_zopf_r38_schritt(const re15_zopf_eingang_t *in)
     for (int i = 0; i < 9; i++) { l0r[i] = (int16_t)in->l0_rot[i]; l8r[i] = (int16_t)in->l8_rot[i]; }
     comp(er, in->ent_pos, l0r, in->l0_t, tr, tt);                      /* FUN_80022da0 @0x80024c88 */
     comp(tr, tt, l8r, in->l8_t, w8r, w8t);                             /* FUN_80022da0 @0x80024c9c -> Teil 8 +0x40 */
+    memcpy(s_w8r, w8r, sizeof s_w8r);
+    memcpy(s_w8t, w8t, sizeof s_w8t);
 
     /* Koerperwinkel (@0x80024ca4-d34): lhu-Summe, +0x800 bei Teil0.vz in [0x5dd, 0x5dd+0x3e7), + Nacken-Gier
      * ohne Bit 0 von 0x800acc0c, dann (short). */
@@ -404,6 +408,17 @@ int re15_zopf_r38_welt(int k, int32_t rot[9], int32_t t[3])
 const re15_zopf_glied_t *re15_zopf_r38_glied(int k)
 {
     return (k >= 0 && k < RE15_ZOPF_GLIEDER) ? &s_gl[k] : NULL;
+}
+
+void re15_zopf_r38_glied_setzen(int k, const re15_zopf_glied_t *g)
+{
+    if (k >= 0 && k < RE15_ZOPF_GLIEDER && g) s_gl[k] = *g;
+}
+
+void re15_zopf_r38_kopf_welt(int16_t m[9], int32_t t[3])
+{
+    memcpy(m, s_w8r, sizeof s_w8r);
+    memcpy(t, s_w8t, sizeof s_w8t);
 }
 
 int32_t (*re15_zopf_r38_lokal(void))[9] { return s_lokal; }

@@ -70,6 +70,10 @@ int  re15_zopf_r38_zeichnen(int modell, int mesh_count);
 int  re15_zopf_r38_welt(int k, int32_t rot[9], int32_t t[3]);
 /* Riegel-Zugriff auf den Zustand. */
 const re15_zopf_glied_t *re15_zopf_r38_glied(int k);
+/* Riegel (Nachrechnung gegen die Original-RAM, D_zopf.md §4.6): Glied-Zustand setzen und die Teil-8-Weltmatrix
+ * (+0x40, FUN_80022da0 @0x80024c9c) des letzten Treiber-Schritts lesen. Kein Spielpfad ruft das. */
+void re15_zopf_r38_glied_setzen(int k, const re15_zopf_glied_t *g);
+void re15_zopf_r38_kopf_welt(int16_t m[9], int32_t t[3]);
 /* Fangpuffer fuer die lokalen Knochen-Rotationen der Spielerpose (skeleton_common.c g_skel_lokal_rot);
  * Teil 8 = die lokale Matrix +0x578, die FUN_80024c30 @0x80024c9c verkettet. */
 int32_t (*re15_zopf_r38_lokal(void))[9];

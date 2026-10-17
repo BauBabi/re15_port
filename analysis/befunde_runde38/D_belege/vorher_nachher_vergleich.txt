@@ -1,0 +1,30 @@
+# mess_vorher_nachher.sh: Basis-exe f587d34e (re15_pc_r38d_basis.exe) gegen Zweig-exe (re15_pc_r38d_mess.exe), ROOM1120/1121 (2500,10000) Blick 2048, W1,R1.0,W4, Bilder 20..200/30
+# leon_vor: exit=0, 125 Logzeilen, [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0) [md1] loaded test.md1: 17 meshes 
+# leon_nach: exit=0, 125 Logzeilen, [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0) [md1] loaded test.md1: 17 meshes 
+# elza_vor: exit=0, 131 Logzeilen, [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1) [md1] loaded test.md1: 21 meshes 
+# elza_aus: exit=0, 131 Logzeilen, [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1) [md1] loaded test.md1: 21 meshes 
+# elza_nach: exit=0, 135 Logzeilen, [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1) [md1] loaded test.md1: 21 meshes 
+== leon_vor gegen leon_nach
+f000020.ppm: bitgleich (320x240)
+f000050.ppm: bitgleich (320x240)
+f000080.ppm: bitgleich (320x240)
+f000110.ppm: bitgleich (320x240)
+f000140.ppm: bitgleich (320x240)
+f000170.ppm: bitgleich (320x240)
+f000200.ppm: bitgleich (320x240)
+== elza_vor gegen elza_aus (RE15_ZOPF_SONDE_AUS=1: Zopf gerechnet, nicht gezeichnet)
+f000020.ppm: bitgleich (320x240)
+f000050.ppm: bitgleich (320x240)
+f000080.ppm: bitgleich (320x240)
+f000110.ppm: bitgleich (320x240)
+f000140.ppm: bitgleich (320x240)
+f000170.ppm: bitgleich (320x240)
+f000200.ppm: bitgleich (320x240)
+== elza_vor gegen elza_nach (mit Zopf)
+f000020.ppm: 126 Pixel verschieden, Huelle (218,94)-(227,117)
+f000050.ppm: 125 Pixel verschieden, Huelle (218,94)-(227,116)
+f000080.ppm: 8 Pixel verschieden, Huelle (225,97)-(228,99)
+f000110.ppm: 26 Pixel verschieden, Huelle (229,93)-(234,107)
+f000140.ppm: 24 Pixel verschieden, Huelle (229,93)-(234,107)
+f000170.ppm: 24 Pixel verschieden, Huelle (229,93)-(234,107)
+f000200.ppm: 24 Pixel verschieden, Huelle (229,93)-(234,107)

@@ -11,9 +11,17 @@ Baum `.claude/worktrees/r38_zopf` (Zweig `r38/zopf`, Basis f587d34e).
 - [x] Schritt 0: Pflichtlektuere (AUFTRAG, VERTRAG, UEBERGABE Runde 38; Runde 37 N_elzaems)
 - [x] Schritt 1: Messen — Elzas PL04 hat den Zopf (Teile 17..20), der Port zeichnet nur 15 Teile (§1)
 - [x] Schritt 2: RE — RE1.5 HAT die Zopf-Mechanik (FUN_80024c30/FUN_80024e40); RE2 Claire = dieselbe Routine (§2)
-- [ ] Schritt 3: Bauen
-- [ ] Schritt 4: Messung nachher
-- [ ] Schritt 5: Riegel probes/r38_zopf.cmake
+- [x] Schritt 3: Bauen (Vorgaenger 6f162af1/03dd8cbc; Fortsetzung 2026-10-17 geprueft, §3)
+- [x] Schritt 4a: Messung nachher an der exe — Drehung (Winkelverlauf), Pixel am Hinterkopf, Leon bitgleich zur
+      Basis-exe, Elza ohne Zopfglieder bitgleich zur Basis-exe (§4.1-4.3)
+- [ ] Schritt 4b: Laufen an der exe, Huelle der Spur P (§4.4/4.5)
+- [ ] Schritt 4c: Gegenprobe am ORIGINAL (DuckStation-GDB, Elza): Teile 17..20 vor/nach FUN_80024c30 aus der RAM,
+      Port-Schritt darauf nachgerechnet (§4.6)
+- [x] Schritt 5: Riegel probes/r38_zopf.cmake (7/7 gruen am Fortsetzungsbeginn, §5)
+
+Fortsetzung 2026-10-17 (Vorgaenger am 2026-10-16 ~23:45 vom Sitzungslimit beendet): Endstand 5782ec05 gebaut
+(`ninja: no work to do`), `ctest -R r38_zopf` 7/7 gruen; die Reste aus 5782ec05 (D_belege) sind die Ausgaben
+derselben Riegel und stimmen mit dem Nachlauf ueberein (unit_ruhe/unit_drehung unveraendert reproduziert).
 
 
 ## 1. Messung vorher (Daten + Port-Code)

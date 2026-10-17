@@ -308,6 +308,67 @@ static void teil_ruhe(void)
     }
 }
 
+/* skelett (Werkzeug, kein Riegel): PL04 Keyframe 0 im Koerperrahmen (Gier 0, Lage 0) — je Knochen Elter, EMR-Versatz,
+ * Lage und die Vertex-Huelle des Netzes; danach der eingeschwungene Zopf (Teile 17..20) mit derselben Huelle. */
+static void huelle_netz(const re15_md1_mesh_t *ms, const int32_t *m, int m_stride16, const int32_t t[3], int32_t lo[3],
+                        int32_t hi[3])
+{
+    for (int i = 0; i < 3; i++) { lo[i] = 1 << 30; hi[i] = -(1 << 30); }
+    for (int pass = 0; pass < 2; pass++) {
+        const re15_md1_vertex_t *vs = pass ? ms->quad_vertices : ms->tri_vertices;
+        int cnt = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+        for (int i = 0; vs && i < cnt; i++)
+            for (int r = 0; r < 3; r++) {
+                int32_t w = ((m[r*3+0] * vs[i].x + m[r*3+1] * vs[i].y + m[r*3+2] * vs[i].z) >> 12) + t[r];
+                if (w < lo[r]) lo[r] = w;
+                if (w > hi[r]) hi[r] = w;
+            }
+    }
+    (void)m_stride16;
+}
+
+static void teil_skelett(void)
+{
+    printf("[skelett] PL04 Keyframe 0, Koerperrahmen (Gier 0, Lage 0; PSX: -y = oben)\n");
+    if (!pose_laden()) { g_fail++; return; }
+    char p[512]; size_t n = 0;
+    snprintf(p, sizeof p, "%s/PLD/PL04.MD1", RE15_ASSET_PSX_DIR);
+    uint8_t *b = slurp(p, &n);
+    static re15_md1_t md;
+    if (!b || re15_md1_parse(b, (int)n, &md) != 0) { printf("  FEHLER: %s\n", p); g_fail++; free(b); return; }
+    int32_t ymin_koerper = 1 << 30;
+    for (int k = 0; k < s_sk.bone_count && k < md.mesh_count; k++) {
+        int32_t lo[3], hi[3];
+        huelle_netz(&md.meshes[k], s_po[k].rot, 0, s_po[k].trans, lo, hi);
+        if (lo[1] < ymin_koerper) ymin_koerper = lo[1];
+        printf("    Teil %2d Elter %2d EMR (%5d,%5d,%5d) Lage (%5d,%5d,%5d)  Netz x %5d..%5d y %5d..%5d z %5d..%5d\n", k,
+               (int)s_sk.bone_parent[k], (int)s_sk.bone_relative_pos[k][0], (int)s_sk.bone_relative_pos[k][1],
+               (int)s_sk.bone_relative_pos[k][2], (int)s_po[k].trans[0], (int)s_po[k].trans[1], (int)s_po[k].trans[2],
+               (int)lo[0], (int)hi[0], (int)lo[1], (int)hi[1], (int)lo[2], (int)hi[2]);
+    }
+    (void)re15_zopf_r38_aktiv(0, 17); (void)re15_zopf_r38_aktiv(4, 21);
+    ruhe_einschwingen(0, 0, 0, 400);
+    int32_t ymin_zopf = 1 << 30, rmax = 0;
+    for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+        const re15_zopf_glied_t *g = re15_zopf_r38_glied(k);
+        int32_t m[9], lo[3], hi[3];
+        for (int i = 0; i < 9; i++) m[i] = g->m[i];
+        huelle_netz(&md.meshes[RE15_ZOPF_ERSTES_TEIL + k], m, 0, g->t, lo, hi);
+        if (lo[1] < ymin_zopf) ymin_zopf = lo[1];
+        for (int sx = 0; sx < 2; sx++) for (int sz = 0; sz < 2; sz++) {
+            int32_t x = sx ? hi[0] : lo[0], z = sz ? hi[2] : lo[2];
+            int32_t r = (int32_t)sqrt((double)x * x + (double)z * z);
+            if (r > rmax) rmax = r;
+        }
+        printf("    Zopf Teil %d Lage (%5d,%5d,%5d) rot (%d,%d,%d)  Netz x %5d..%5d y %5d..%5d z %5d..%5d\n",
+               RE15_ZOPF_ERSTES_TEIL + k, (int)g->t[0], (int)g->t[1], (int)g->t[2], g->rot[0], g->rot[1], g->rot[2],
+               (int)lo[0], (int)hi[0], (int)lo[1], (int)hi[1], (int)lo[2], (int)hi[2]);
+    }
+    printf("    hoechster Koerperpunkt y %d, hoechster Zopfpunkt y %d, Zopf waagerecht hoechstens %d von der Achse\n",
+           (int)ymin_koerper, (int)ymin_zopf, (int)rmax);
+    free(b);
+}
+
 static void teil_drehung(void)
 {
     printf("[drehung]\n");
@@ -476,6 +537,167 @@ static int teil_spur(const char *pfad)
     return g_fail ? 1 : 0;
 }
 
+/* orig <frames.txt>: Nachrechnung gegen die ORIGINAL-RAM (D_belege/orig_zopf_gdb.py, DuckStation-GDB, Haltepunkte
+ * @0x80024c30 / @0x80024e10). Je Bild: Eingang (Spieler +0x68/+0x34.., Teil 0 +0x18, Teil 8 +0x18, Winkel, Nacken) und
+ * die Glieder 17..20 VOR dem Treiber; erwartet die Glieder NACH dem Treiber und Teil 8 +0x40.
+ *   einzeln     je Bild Zustand aus "vor" setzen, ein re15_zopf_r38_schritt, Vergleich BITGENAU mit "nach"/"w8"
+ *   fortlaufend Zustand nur aus Bild 0, danach traegt der Port seinen eigenen Zustand weiter (Vergleich wie oben)
+ *   Kette       Original selbst: "vor" von Bild n+1 == "nach" von Bild n (sonst schreibt noch jemand in die Teile) */
+#define ORIG_MAX 1024
+typedef struct {
+    re15_zopf_eingang_t in;
+    re15_zopf_glied_t vor[RE15_ZOPF_GLIEDER];
+    re15_zopf_glied_t nach[RE15_ZOPF_GLIEDER];
+    int16_t w8m[9];
+    int32_t w8t[3];
+    char phase[16];
+} orig_bild_t;
+
+static int orig_lesen(const char *pfad, orig_bild_t *b, int max)
+{
+    FILE *f = fopen(pfad, "r");
+    if (!f) return -1;
+    static char z[16384];
+    int n = 0;
+    while (n < max && fgets(z, sizeof z, f)) {
+        if (z[0] != 'F') continue;
+        orig_bild_t *o = &b[n];
+        memset(o, 0, sizeof *o);
+        long v[400]; int nv = 0;
+        int feld = 0;   /* Felder 0..2 = "F", Bildnummer, Phase; danach Marken und Zahlen */
+        char *s = z;
+        for (;;) {
+            while (*s == ' ' || *s == '\t' || *s == '\n' || *s == '\r') s++;
+            if (!*s) break;
+            char *tok = s;
+            while (*s && *s != ' ' && *s != '\t' && *s != '\n' && *s != '\r') s++;
+            char ende = *s; *s = '\0';
+            if (feld < 3) { if (feld == 2) snprintf(o->phase, sizeof o->phase, "%s", tok); feld++; }
+            else if ((tok[0] >= '0' && tok[0] <= '9') || tok[0] == '-') { if (nv < 400) v[nv++] = strtol(tok, NULL, 10); }
+            /* sonst Marke: pad=.., ent, l0, l8, a, vor, nach, w8 */
+            if (!ende) break;
+            s++;
+        }
+        if (nv != 6 + 12 + 12 + 5 + 4 * 20 + 4 * 17 + 12) { printf("  Zeile %d: %d Zahlen\n", n, nv); continue; }
+        int p = 0;
+        for (int i = 0; i < 3; i++) o->in.ent_rot[i] = (int16_t)v[p++];
+        for (int i = 0; i < 3; i++) o->in.ent_pos[i] = (int32_t)v[p++];
+        for (int i = 0; i < 9; i++) o->in.l0_rot[i] = (int32_t)v[p++];
+        for (int i = 0; i < 3; i++) o->in.l0_t[i] = (int32_t)v[p++];
+        for (int i = 0; i < 9; i++) o->in.l8_rot[i] = (int32_t)v[p++];
+        for (int i = 0; i < 3; i++) o->in.l8_t[i] = (int32_t)v[p++];
+        o->in.teil0_vy = (int16_t)v[p++]; o->in.teil0_vz = (int16_t)v[p++]; o->in.teil8_vy = (int16_t)v[p++];
+        o->in.nacken_gier = (int16_t)v[p++]; o->in.nacken_flags = (uint8_t)v[p++];
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+            re15_zopf_glied_t *g = &o->vor[k];
+            for (int i = 0; i < 3; i++) g->off[i] = (int32_t)v[p++];
+            for (int i = 0; i < 9; i++) g->m[i] = (int16_t)v[p++];
+            for (int i = 0; i < 3; i++) g->t[i] = (int32_t)v[p++];
+            for (int i = 0; i < 3; i++) g->rot[i] = (int16_t)v[p++];
+            g->v94 = (int16_t)v[p++]; g->v96 = (int16_t)v[p++];
+        }
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+            re15_zopf_glied_t *g = &o->nach[k];
+            g->off[0] = o->vor[k].off[0]; g->off[1] = o->vor[k].off[1]; g->off[2] = o->vor[k].off[2];
+            for (int i = 0; i < 9; i++) g->m[i] = (int16_t)v[p++];
+            for (int i = 0; i < 3; i++) g->t[i] = (int32_t)v[p++];
+            for (int i = 0; i < 3; i++) g->rot[i] = (int16_t)v[p++];
+            g->v94 = (int16_t)v[p++]; g->v96 = (int16_t)v[p++];
+        }
+        for (int i = 0; i < 9; i++) o->w8m[i] = (int16_t)v[p++];
+        for (int i = 0; i < 3; i++) o->w8t[i] = (int32_t)v[p++];
+        n++;
+    }
+    fclose(f);
+    return n;
+}
+
+static int glied_gleich(const re15_zopf_glied_t *a, const re15_zopf_glied_t *b)
+{
+    for (int i = 0; i < 9; i++) if (a->m[i] != b->m[i]) return 0;
+    for (int i = 0; i < 3; i++) if (a->t[i] != b->t[i] || a->rot[i] != b->rot[i]) return 0;
+    return a->v94 == b->v94 && a->v96 == b->v96;
+}
+
+static void glied_zeigen(const char *tag, const re15_zopf_glied_t *g)
+{
+    printf("      %s m=[%d %d %d|%d %d %d|%d %d %d] t=(%d,%d,%d) rot=(%d,%d,%d) v=%d/%d\n", tag, g->m[0], g->m[1], g->m[2],
+           g->m[3], g->m[4], g->m[5], g->m[6], g->m[7], g->m[8], (int)g->t[0], (int)g->t[1], (int)g->t[2], g->rot[0],
+           g->rot[1], g->rot[2], g->v94, g->v96);
+}
+
+/* Ein Bild vergleichen; liefert Zahl der abweichenden Glieder (+1 fuer Teil 8). */
+static int orig_bild_pruefen(const orig_bild_t *o, int bild, int zeigen)
+{
+    int fehl = 0;
+    for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+        const re15_zopf_glied_t *g = re15_zopf_r38_glied(k);
+        if (!glied_gleich(g, &o->nach[k])) {
+            fehl++;
+            if (zeigen) {
+                printf("    Bild %d (%s) Glied %d (Teil %d) weicht ab:\n", bild, o->phase, k, RE15_ZOPF_ERSTES_TEIL + k);
+                glied_zeigen("Port    ", g);
+                glied_zeigen("Original", &o->nach[k]);
+            }
+        }
+    }
+    int16_t m[9]; int32_t t[3];
+    re15_zopf_r38_kopf_welt(m, t);
+    if (memcmp(m, o->w8m, sizeof m) || t[0] != o->w8t[0] || t[1] != o->w8t[1] || t[2] != o->w8t[2]) {
+        fehl++;
+        if (zeigen)
+            printf("    Bild %d Teil 8 +0x40 weicht ab: Port t=(%d,%d,%d) m0=%d, Original t=(%d,%d,%d) m0=%d\n", bild,
+                   (int)t[0], (int)t[1], (int)t[2], m[0], (int)o->w8t[0], (int)o->w8t[1], (int)o->w8t[2], o->w8m[0]);
+    }
+    return fehl;
+}
+
+static int teil_orig(const char *pfad)
+{
+    printf("[orig] %s\n", pfad);
+    static orig_bild_t b[ORIG_MAX];
+    int n = orig_lesen(pfad, b, ORIG_MAX);
+    if (n <= 0) { printf("  FEHLER: keine Bilder in %s\n", pfad); return 1; }
+    /* Kette im Original */
+    int bruch = 0;
+    for (int i = 1; i < n; i++)
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++)
+            if (!glied_gleich(&b[i].vor[k], &b[i - 1].nach[k])) { bruch++; break; }
+    PRUEF(bruch == 0, "Original: %d Bilder, 'vor' von Bild n+1 == 'nach' von Bild n in %d von %d Uebergaengen", n,
+          n - 1 - bruch, n - 1);
+    /* einzeln */
+    int fehl_b = 0, gezeigt = 0;
+    for (int i = 0; i < n; i++) {
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) re15_zopf_r38_glied_setzen(k, &b[i].vor[k]);
+        re15_zopf_r38_schritt(&b[i].in);
+        int f = orig_bild_pruefen(&b[i], i, gezeigt < 3);
+        if (f) { fehl_b++; gezeigt++; }
+    }
+    PRUEF(fehl_b == 0, "einzeln: Port-Schritt == Original in %d von %d Bildern (Glieder 17..20 + Teil 8, bitgenau)",
+          n - fehl_b, n);
+    /* fortlaufend */
+    for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) re15_zopf_r38_glied_setzen(k, &b[0].vor[k]);
+    int fehl_f = 0, erst = -1;
+    for (int i = 0; i < n; i++) {
+        re15_zopf_r38_schritt(&b[i].in);
+        int f = orig_bild_pruefen(&b[i], i, erst < 0 && fehl_f == 0 && 0);
+        if (f) { fehl_f++; if (erst < 0) erst = i; }
+    }
+    PRUEF(fehl_f == 0, "fortlaufend ab Bild 0: Port-Zustand == Original in %d von %d Bildern (erste Abweichung %d)",
+          n - fehl_f, n, erst);
+    /* Umfang der Messung: Drehung und Ausschlag */
+    int vmax = 0, dreh = 0;
+    for (int i = 0; i < n; i++)
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+            if (abs(b[i].nach[k].v94) > vmax) vmax = abs(b[i].nach[k].v94);
+            if (abs(b[i].nach[k].v96) > vmax) vmax = abs(b[i].nach[k].v96);
+        }
+    for (int i = 1; i < n; i++) dreh += abs(((b[i].in.ent_rot[1] - b[i - 1].in.ent_rot[1]) % 4096 + 6144) % 4096 - 2048);
+    printf("    Messumfang: Koerper dreht sich um %d, max |v94|/|v96| = %d\n", dreh, vmax);
+    PRUEF(dreh >= 0x200 && vmax >= 8, "Messung enthaelt Drehung (%d >= 0x200) und Pendelausschlag (%d >= 8)", dreh, vmax);
+    return g_fail ? 1 : 0;
+}
+
 static uint8_t *ppm(const char *p, int *w, int *h)
 {
     size_t n = 0;
@@ -529,6 +751,7 @@ int main(int argc, char **argv)
     if (argc < 2) { printf("Teil fehlt\n"); return 2; }
     const char *t = argv[1];
     if (!strcmp(t, "spur") && argc >= 3) return teil_spur(argv[2]);
+    if (!strcmp(t, "orig") && argc >= 3) return teil_orig(argv[2]);
     if (!strcmp(t, "pixel") && argc >= 8)
         return teil_pixel(argv[2], argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
     if (!strcmp(t, "libgte")) teil_libgte();
@@ -537,6 +760,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "drehung")) teil_drehung();
     else if (!strcmp(t, "laufen")) teil_laufen();
     else if (!strcmp(t, "freeze")) teil_freeze();
+    else if (!strcmp(t, "skelett")) teil_skelett();
     else { printf("unbekannter Teil %s\n", t); return 2; }
     printf("%s: %d Fehler\n", t, g_fail);
     return g_fail ? 1 : 0;
