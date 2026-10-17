@@ -538,3 +538,47 @@ nur INNERHALB von re15_enemy_ai_run_all) und gibt dort abgezogene HP im selben D
   * Ein Giftklumpen, der Leon trifft, waehrend er gerade schon getroffen zurueckweicht (Schutzfenster), vergiftet nicht
     zusaetzlich — wie in RE2 nur der Treffer, der ihn auch erreicht.
 * **Entscheidungsfragen:** keine.
+
+## Nachbesserung 1 (2026-10-17, nach Abnahme 0 `R_abnahme_0.md`)
+
+Baum geprueft: `git status --porcelain` leer, HEAD e05ec5f7 (Abnahme 0), Basis e2cc7673. Abnahme 0: Punkt 1 und 3 erfuellt,
+Punkt 2 teilweise; drei Maengel. Messordner der Abnahme `scratchpad/r38R_abn0` (unten R0) liegt im selben scratchpad und
+wird nur GELESEN (keine Messung wiederholt). Eigener Messordner `scratchpad/r38R_nb1` (unten N1).
+
+### N1.M1 Mangel 1 — der Gift-Takt loest im Port eine Treffer-Reaktion aus
+
+**Messung vorher** (Lauf der Abnahme R0/p2b_gift_2030, Stand e7131aca, RE15_SPINNEN_LOG + RE15_STATE_LOG desselben Laufs;
+neu ausgewertet mit `R_belege/gift_takt_ana.py`, das beide Logs Zeile fuer Zeile zusammenfuehrt): 1300 Bilder ROOM2030,
+9 Gift-Takte (gz 0 -> 120 mit HP -2), **9 von 9 mit Treffer-Reaktion**: je 22 Bilder Clip 8 (einmal 9), Rueckstoss
+500 Einheiten; Perioden 143/143/165/143/143/143/143/187 Bilder statt 121 (die 22 Reaktionsbilder laufen nicht durch den
+Kommando-1-Prolog; 165/187 = zusaetzliche Spucktreffer). Ausgabe:
+```
+Takt F42    HP  90-> 88 gz 120 | Periode -   | Treffer-Clip-Bilder 22 | mo danach 8,8,8,...(22x),200
+Takt F185   HP  88-> 86 gz 120 | Periode 143 | Treffer-Clip-Bilder 22 | mo danach 8,8,8,...(22x),211
+...
+Ergebnis: 9 Takte, 9 mit Treffer-Reaktion; ohne Spucktreffer im Fenster: 8 mit Reaktion, 0 ohne
+```
+**Ursache im Port**: `re15_spinnen_r38_gift_tick` (game_step_common.c Kommando-1-Prolog) senkt die HP NACH der Basislinie
+`s_prev_hp = pl->hp` desselben Schritts; der Port-Detektor `pl->hp < s_prev_hp` (Kopf des naechsten Schritts) haelt den
+Abfall fuer einen Gegnertreffer und ruft `re15_player_stagger_cmd2` (Clip 8/9/0xa, Rueckstoss 0xc8, Treffer-SE,
+`re15_player_aim_interrupt`). Der Detektor ist eine PORT-Konstruktion fuer Gegner, die HP direkt schreiben (Kommentar
+dort: "no attacker (poison/environment) -> clip 0xa" war eine Annahme, kein Beleg).
+
+**RE-Beleg (selbst disassembliert, info/Re1.5/PSX.EXE bzw. info/re2leon/PSX.EXE):**
+| Adresse | Instruktion | Bedeutung |
+|---|---|---|
+| RE1.5 0x80031e48-54 | `lhu a0,-13588(a0)` (0x800acaec) / `andi v0,a0,0x7` / `beq v0,zero,0x80031ecc` | kein Gift -> Ende |
+| 0x80031e60-70 | `lbu v1,-13273(v1)` (0x800acc27) / `addiu v0,v1,255` / `sb v0,-13273(at)` | Zaehler - 1 |
+| 0x80031e74-94 | `bne v1,zero,0x80031ecc` / `ori v0,zero,0x78` / `sb` / `andi v1,a0,0x4` / `ori v0,zero,0x8` / `sb` | Zaehler 0x78 bzw. 8 |
+| 0x80031e9c-ac | `lhu v0,-13586(v0)` (HP +0x9a) / `addiu v0,v0,-2` / `sh v0,-13586(at)` | HP - 2 |
+| 0x80031eb4-c8 | `bgez` / `bne v1,zero` / `ori v0,zero,0x1` / `sh v0,-13586(at)` | nie toedlich ohne Bit 0x4 |
+| 0x80031ecc-f1c | `lbu v0,0(s0)` (0x800aca59) / `lw v0,0(at)` (0x80073fb0 + 4*aca59) / `jalr` ; dann 0x80073ff0-Tabelle / `jalr` | weiter mit DECIDE/EXECUTE des Kommandos 1 |
+Im Bereich 0x80031e44-0x80031ec8 stehen NUR Stores auf 0x800acc27 (@0x80031e70/80/94) und HP (@0x80031eac/ec8): kein `jal`
+(kein SE), kein Store auf das Kommandowort 0x800aca58, auf +0x93 (0x800acae7) oder einen Clip. Die Treffer-Reaktion
+entsteht im Original NUR durch einen ausdruecklichen Kommando-2-Schreiber, z.B. der Spielerzweig von FUN_80012d60:
+`sb v0(=2),4(s1)` @0x80012ebc (s1 = 0x800aca54, +4 = Kommandowort), Richtung `sb v0,5(s1)` @0x80012ed4, `sb v0,147(s1)`
+(+0x93 |= 1) @0x80012eec — der Gift-Takt ruft ihn nicht.
+RE2 (Ziel Beta -> Retail) gleich: 0x8003c12c `lhu v0,-496(v0)` (0x800cfe10) / `beq` ; 0x8003c144-54 Zaehler 0x800cfe12 - 1 ;
+0x8003c158-64 `bne v1,zero` / `addiu v0,zero,30` / `sb` ; 0x8003c168-80 `lh v0,342(s0)` / `slti v0,v0,2` / `addiu v0,v1,-1` /
+`sh v0,342(s0)` (HP - 1, nicht unter 1) ; danach sofort der Zustands-Dispatch `lbu v0,4(s0)` / `lw v0,16432(at)` / `jalr`
+@0x8003c188-1a4 — ebenfalls kein Kommando-/Zustandsschreiber.
