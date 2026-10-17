@@ -359,7 +359,8 @@ GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
 * Nachbesserung 1 — HALBTRANSPARENTE Raum-Objekte wie im Original (das Original mischt sie mit dem Hintergrund, der
   Port zeichnete sie bisher deckend). Sichtbar anders als in v0.8.25, jeweils gegen das Original-Bild gemessen (§10.6):
   - ROOM5060/5061 (Labor): die Glasscheiben dunkeln das Fenster zur Haelfte ab (vorher: Scheibe fehlte bzw. nach dem
-    Rolladen-Fix ein deckend dunkles Dreieck — der Abnahme-Befund).
+    Rolladen-Fix ein deckend dunkles Dreieck — der Abnahme-Befund); die Licht-Bodenplatte (obj 5) leuchtet rot auf den
+    Boden wie im Original (vorher eine graue deckende Platte).
   - Die Typ-3-Wasserflaechen in 11A0, 1260 und Stage 2 (2000/2020/2040/2050/2070/2080/2090/20A0/20B0) werden wie im
     Original vom Hintergrund ABGEZOGEN (fast schwarzer Kanal, in 20A0 Cut 3 das Sprenkelmuster des Originals) statt
     als graue deckende Flaeche gemalt.
@@ -636,6 +637,7 @@ Kanal gegen das Original:
 | ROOM20A0 Cut 2, Wasser obj 4 Typ 3 (ABR 2) | Kanal x 160..299 y 180..235, 7840 px | (0.4,0.4,0.3) | (11.8,14.3,11.7) | wie v0.8.25 | **(0.4,0.4,0.3)**; MAD 12.8 -> 0.3 (13 200 px Kanal) |
 | ROOM20A0 Cut 3, Wasser obj 6 (ABR 2) | Kanal x 140..249 y 180..235 | (7.1,5.8,6.4) | (11.9,14.6,11.9) MAD 12.4 | wie v0.8.25 | **(6.8,5.5,6.0) MAD 1.1** (das Sprenkelmuster des Hintergrunds minus Wasser stimmt Pixel fuer Pixel) |
 | ROOM4090 Cut 0, Nebel obj 0-2 (ABR 3) | Boden x 20..299 y 160..235, 21 280 px | (140.5,139.4,147.9) | (56.5,55.7,55.1) MAD 85.2 (36 030 px dunkle deckende Schlieren) | wie v0.8.25 | **(140.6,138.9,147.2) MAD 3.3** |
+| ROOM5060 Cut 3, Licht-Bodenplatte obj 5 (Attribut 0x0006, ABR 1 = B + F) + Glas | Pixel, in denen v0.8.25 und N1 abweichen (8595 px) | (106.8,44.8,49.3) | (32.0,30.2,30.7) MAD 37.6 (graue deckende Platte) | wie v0.8.25 | **(106.4,45.5,50.9) MAD 3.3** (rotes Licht auf dem Boden wie im Original) |
 
 Bilder (W_belege): `n1_5060_cut4_orig_v0825_neu.png`, `n1_20a0_cut2_orig_v0825_neu.png` (Port-Laeufe hier noch mit
 der angreifenden Spinne), `n1_20a0_cut3_orig_v0825_neu.png`, `n1_4090_cut0_orig_v0825_neu.png` (je Original | v0.8.25 |
@@ -643,8 +645,9 @@ nach N1), `n1_11b0_cut5_v0825_neu.png` (v0.8.25 | nach N1); Laeufer `W_belege/la
 Gitter halb abgedunkelt durch die Scheibe. ROOM4090: v0.8.25 zeigte die drei Nebel-Modelle als dunkle deckende
 Schlieren ueber dem ganzen Boden, nach N1 heller Bodennebel wie im Original. ROOM20A0: der Kanal wie im Original fast
 schwarz (B - F), Cut 3 mit dem Sprenkelmuster des Originals.
-ABR 1 (5060 obj 5, 0x0006) ist an der Laufzeit (Texpage 0x00a6) und im Riegel A2 belegt; ein eigenes Bild davon gibt es
-nicht (in Cut 4 nicht im Bild).
+ABR 1 (5060 obj 5, 0x0006): Laufzeit (Texpage 0x00a6) in Cut 4 und Cut 3 (W_belege/orig_abe_5060_cut3_log.txt),
+Bild Cut 3 `orig_abe_5060_cut3_buf0.png` / `n1_5060_cut3_orig_v0825_neu.png` (Spieler (-23375,0,-23075), Port-Lauf mit
+`RE15_FORCE_CUT=3`; der Zombie unten rechts ist im Port aktiv, im Original-Abzug ausgeschaltet).
 ROOM11B0/11B1 Kiste obj 0 (einziges Objekt mit STP-0- UND STP-1-Texeln): im Port gemessen (Lauf m11b0, Cut 5) —
 heller als v0.8.25 (Flach-Zeichner 0x808080 statt NCCT, wie FUN_80023098), 679 Texel halbtransparent; eine Original-
 Gegenprobe war per Debug-Sprung nicht moeglich (11B0 haelt nach dem Sprung die Kamera fest — Zonen-Kette ohne
