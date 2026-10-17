@@ -16,13 +16,13 @@ alles hier ist neu gemessen. Fortlaufend geschrieben (Sitzungslimit).
 - [x] Riegel der Spur: `ctest -R "^(unit_r38_wasserzombie|integration_r38_wasserzombie)$" --timeout 900` ->
       `100% tests passed, 0 tests failed out of 2` (unit 0.16 s, integration 135.22 s, Laeufe a-e); Lauf e wz.log
       woertlich: `F400 R2000 slot=3 t=16 zwischenbild st=1/9/0 mo=22 af=49 ...` / `F401 ... abbruch st=1/9/0 mo=22 af=50`
-- [ ] Gezielte Gruppen der beruehrten Module
-- [ ] Nutzer-Punkt an der exe (Leon/Elza, beide KI, Bild, echter Tuerweg)
-- [ ] Mangel 1 nachgemessen
-- [ ] Mangel 2 geprueft
-- [ ] Nebenwirkungen der Nachbesserung (Code-Pfade)
-- [ ] RE-Gate (Stichproben selbst disassembliert)
-- [ ] Vertrag
+- [x] Gezielte Unit-Gruppe der beruehrten Module: 105/105 (Abschnitt 5); Integrationsgruppe: Abschnitt 5
+- [x] Nutzer-Punkt an der exe (M1-M4, M6: Leon beide KI + Elza, echter Tuerweg 2070->2000 / 2071->2001, ROOM2020, Bild, Ton, v0.8.25-Gegenprobe)
+- [x] Mangel 1 nachgemessen (M5, M3): behoben
+- [x] Mangel 2 geprueft (Abschnitt 3): behoben
+- [x] Nebenwirkungen der Nachbesserung (Abschnitt 6)
+- [x] RE-Gate (Abschnitt 4): 8 Stellen selbst disassembliert, haelt
+- [x] Vertrag (Abschnitt 7): haelt
 - [ ] Urteil
 
 ## 1. Nutzer-Punkt (Wortlaut)
@@ -156,6 +156,16 @@ F267 R2020 slot=4 t=16 oben st=1/0/0 mo=22 af=158 @(-10756,-1800,2222) b1 f1ba=-
 Kontakt 0xc9 = Richtung 0xC / u1 = 1 (Suedwand z = 1500); Vorschub +1140 in z. gy.log: 0 unter dem Wasserboden, 0 auf
 Band 2+. Bild (`m4_2020_sheet.png`, Kanalblick per FORCE_CUT 6, nur zur Sicht): F80-F170 Arme/Oberkoerper auf der
 Stegkante, F200-F230 Beine kommen hoch. ROOM2021 (Elza) deckt der Riegel `integration_r38_wasserzombie` Lauf c ab (gruen).
+
+### M6 — Ton des Kletter-Clips in der Standard-KI (RE2-Zweig)
+
+Lauf wie M1, aber MIT Ton: `tools/lauf_ton.sh` (`RE15_SE_DEBUG=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_FRAMEDUMP=270-290/1:fd/f
+RE15_EXIT_AT=300#2000`, kein RE15_NOAUDIO) -> `exit=0 dauer=27s`, cap.raw 4.6 MB. Klettern wieder ab F150 (wz.log).
+Frame-Woerter von Clip 0x16 (eigenes Mini-Programm `se_bits/se_bits.c` gegen `libre15_engine.a`, CDEMD0.EMS Typ 0x16):
+`Clip 0x16 Bild 102: Frame-Wort 0x0080023b -> SE-Bits 0x2`, `Clip 0x16 Bild 130: Frame-Wort 0x00800249 -> SE-Bits 0x2`
+(= SE 1, Dekodierung `srl 22` wie FUN_8001b38c @0x8001b3b4). debug.log: `[se] Stimme: se=1 layer=0 vag=2 ... -> SE-Stimme 4`
+einmal zwischen `[walk] F240` und `[walk] F270` (= F252, Bild 102) und einmal zwischen den Bildankern `fd/f000279.ppm` und
+`fd/f000280.ppm` (= F280, Bild 130). Die Klettertoene des RE1.5-Clips laufen also auch im RE2-Zweig (`wz_frame_se`).
 
 ## 3. Mangel 2 (Code-Hygiene) geprueft
 
