@@ -1,0 +1,84 @@
+DuckStation gestartet {'25432'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Debug-Menue vorher: Zeile 1 Stage 0 Raumidx [36, 0, 0, 0, 0, 0]
+Debug-Menue nach Hoch/Hoch/Runter: Zeile 1 Stage 0 Raumidx [36, 0, 0, 0, 0, 0]
+Debug-Menue gesetzt: Zeile 1 Stage 1 Raumidx [36, 10, 0, 0, 0, 0] (JUMP 20A)
+Quadrat (Laden) gedrueckt, warte 25 s
+Raumindex @0x800b0fe2: 10 Cut: 0 Spieler: (-2800, -3600, -22200, 0, 2)
+  Pool 0: flags/pos/ry/typ/attr (1, 12250, -7200, -12400, 0, 4, 0)
+  Pool 1: flags/pos/ry/typ/attr (153, 7942, -7200, -20510, 1024, 0, 16)
+  Pool 2: flags/pos/ry/typ/attr (153, 22532, -6610, -27050, 1024, 0, 0)
+  Pool 3: flags/pos/ry/typ/attr (153, 20448, -4860, -13500, 0, 0, 0)
+  Pool 4: flags/pos/ry/typ/attr (11, -2840, -2376, -23400, 1024, 3, 26)
+  Pool 5: flags/pos/ry/typ/attr (11, 20460, -540, -27000, 0, 3, 26)
+  Pool 6: flags/pos/ry/typ/attr (11, 20600, -1800, -26850, 0, 3, 26)
+  Pool 7: flags/pos/ry/typ/attr (153, 3268, -3600, 4980, 1024, 0, 16)
+Entity 0 @800acc2c: w0 0801 typ 0x04 -> Aktiv-Bit geloescht
+Entity 1 @800ace20: w0 0801 typ 0x04 -> Aktiv-Bit geloescht
+nach der Leiter: Spieler (16500, -7200, -20000, 3072, 4) Cut 12
+am Schalter: Spieler (15348, -7200, -19456, 1024, 4) Cut 12 Pool1 (153, 7942, -7200, -20510, 1024, 0, 16)
+  nach Quadrat 1: Pool1 y=-7200 Spieler (15348, -7200, -19456, 1024, 4) Cut 12
+  nach Quadrat 2: Pool1 y=-7200 Spieler (15348, -7200, -19456, 1024, 4) Cut 12
+  nach Quadrat 3: Pool1 y=-9120 Spieler (15348, -7200, -19456, 1024, 4) Cut 12
+Rolladen: (153, 7942, -10800, -20510, 1024, 0, 16) Spieler (15348, -7200, -19456, 1024, 4) Cut 12
+in der Zone 12->11: Spieler (12500, -7200, -15700, 3072, 4) Cut 11 Pool1 (153, 7942, -10800, -20510, 1024, 0, 16)
+Z0 80023098: b'OK'
+Z0 80023190: b'OK'
+Z0 80023228: b'OK'
+Z0 8002325c: b'OK'
+FUN_80023098 Eintritt a0=8011c974 Anzahl 48 (Rolladen)
+Vierecke aufgezeichnet: 48
+Q00 opz=-3521 otz=- sxy=[(491, 251), (576, 210), (600, 157)] eingehaengt=0
+Q01 opz=3410 otz=437 sxy=[(630, 166), (710, 131), (508, 262), (593, 217)] eingehaengt=1 T0:ok/aus T1:ok/aus
+Q02 opz=-2177 otz=- sxy=[(576, 210), (593, 217), (683, 126)] eingehaengt=0
+Q03 opz=-1360 otz=- sxy=[(593, 217), (576, 210), (508, 262)] eingehaengt=0
+Q04 opz=-6175 otz=- sxy=[(683, 126), (864, -16), (600, 157)] eingehaengt=0
+Q05 opz=7351 otz=322 sxy=[(912, -18), (710, 131), (883, -33), (630, 166)] eingehaengt=1 T0:ok/aus T1:ok/aus
+Q06 opz=-4739 otz=- sxy=[(683, 126), (710, 131), (864, -16)] eingehaengt=0
+Q07 opz=0 otz=111 sxy=[(1023, -307), (1023, -1024), (1023, -579), (1023, -1024)] eingehaengt=1 T0:ZU-GROSS/aus T1:ok/aus
+Q08 opz=-15453 otz=- sxy=[(864, -16), (1023, -307), (818, -29)] eingehaengt=0
+Q09 opz=0 otz=95 sxy=[(1023, -1024), (1023, -339), (1023, -1024), (1023, -695)] eingehaengt=1 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q10 opz=39516 otz=206 sxy=[(1023, -339), (912, -18), (1023, -695), (883, -33)] eingehaengt=1 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q11 opz=0 otz=151 sxy=[(1023, -1024), (1023, -1024), (1023, -339), (1023, -307)] eingehaengt=1 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q12 opz=-13650 otz=- sxy=[(864, -16), (912, -18), (1023, -307)] eingehaengt=0
+Q13 opz=0 otz=47 sxy=[(1023, -1024), (1023, -1024), (1023, -1024), (1023, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q14 opz=-5323 otz=- sxy=[(491, 251), (600, 157), (359, 316)] eingehaengt=0
+Q15 opz=6374 otz=337 sxy=[(630, 166), (508, 262), (481, 231), (374, 333)] eingehaengt=1 T0:ok/aus T1:ok/aus
+Q16 opz=-2681 otz=- sxy=[(508, 262), (491, 251), (374, 333)] eingehaengt=0
+Q17 opz=-15288 otz=- sxy=[(600, 157), (818, -29), (451, 214)] eingehaengt=0
+Q18 opz=26600 otz=222 sxy=[(883, -33), (630, 166), (804, -76), (481, 231)] eingehaengt=1 T0:ok/aus T1:ok/aus
+Q19 opz=0 otz=35 sxy=[(1023, -579), (1023, -1024), (1023, -1024), (1023, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q20 opz=-70770 otz=- sxy=[(818, -29), (1023, -579), (702, -63)] eingehaengt=0
+Q21 opz=0 otz=24 sxy=[(1023, -1024), (1023, -695), (1023, -1024), (1023, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q22 opz=46060 otz=107 sxy=[(1023, -695), (883, -33), (1023, -1024), (804, -76)] eingehaengt=1 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q23 opz=0 otz=0 sxy=[(1023, -1024), (1023, -1024), (1023, -1024), (1023, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q24 opz=-56166 otz=- sxy=[(-1024, 1001), (-382, 678), (104, 346)] eingehaengt=0
+Q25 opz=-13166 otz=- sxy=[(359, 316), (451, 214), (128, 429)] eingehaengt=0
+Q26 opz=-34464 otz=- sxy=[(-444, 765), (-382, 678), (-1024, 1023)] eingehaengt=0
+Q27 opz=27970 otz=138 sxy=[(-444, 765), (-1024, 1023), (131, 461), (105, 395)] eingehaengt=1 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q28 opz=20804 otz=238 sxy=[(481, 231), (374, 333), (105, 395), (131, 461)] eingehaengt=1 T0:ok T1:ok/aus
+Q29 opz=-28932 otz=- sxy=[(-382, 678), (-444, 765), (128, 429)] eingehaengt=0
+Q30 opz=-6051 otz=- sxy=[(374, 333), (359, 316), (131, 461)] eingehaengt=0
+Q31 opz=-964525 otz=- sxy=[(-1024, -24), (-1024, 1001), (-83, -289)] eingehaengt=0
+Q32 opz=-62987 otz=- sxy=[(451, 214), (702, -63), (104, 346)] eingehaengt=0
+Q33 opz=0 otz=20 sxy=[(-1024, 1023), (-1024, 1001), (-1024, 54), (-1024, -24)] eingehaengt=0 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q34 opz=1094001 otz=44 sxy=[(-1024, 1023), (-1024, 54), (105, 395), (-114, -344)] eingehaengt=0 T0:ZU-GROSS T1:ZU-GROSS
+Q35 opz=368390 otz=122 sxy=[(804, -76), (481, 231), (-114, -344), (105, 395)] eingehaengt=1 T0:ZU-GROSS T1:ZU-GROSS
+Q36 opz=0 otz=0 sxy=[(-1024, -1024), (-1024, -1024), (-162, -1024), (-162, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q37 opz=0 otz=4 sxy=[(1023, -1024), (1023, -1024), (-162, -1024), (-162, -1024)] eingehaengt=0 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q38 opz=-862000 otz=- sxy=[(-1024, -1024), (-1024, -24), (-162, -1024)] eingehaengt=0
+Q39 opz=-826931 otz=- sxy=[(702, -63), (1023, -1024), (-83, -289)] eingehaengt=0
+Q40 opz=0 otz=0 sxy=[(-1024, -1024), (-1024, -1024), (-1024, -1024), (-1024, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q41 opz=0 otz=0 sxy=[(-1024, 54), (-1024, -24), (-1024, -1024), (-1024, -1024)] eingehaengt=0 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q42 opz=0 otz=0 sxy=[(-1024, -1024), (-1024, -1024), (-114, -1024), (-114, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q43 opz=0 otz=0 sxy=[(1023, -1024), (1023, -1024), (-114, -1024), (-114, -1024)] eingehaengt=0 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q44 opz=980980 otz=3 sxy=[(-1024, 54), (-1024, -1024), (-114, -344), (-114, -1024)] eingehaengt=0 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q45 opz=1077876 otz=32 sxy=[(1023, -1024), (804, -76), (-114, -1024), (-114, -344)] eingehaengt=0 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Q46 opz=0 otz=0 sxy=[(-1024, -1024), (-1024, -1024), (-114, -1024), (-162, -1024)] eingehaengt=0 T0:ok/aus T1:ok/aus
+Q47 opz=0 otz=0 sxy=[(1023, -1024), (1023, -1024), (-162, -1024), (-114, -1024)] eingehaengt=0 T0:ZU-GROSS/aus T1:ZU-GROSS/aus
+Dreiecke eingehaengt, GPU-gross ok und auf dem Schirm: 1
+Ende: Spieler (12500, -7200, -15700, 3072, 4) Cut 11 Pool1 (153, 7942, -10800, -20510, 1024, 0, 16)
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+resume.sav kopiert

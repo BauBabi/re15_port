@@ -1,0 +1,362 @@
+# Runde 38 — Spur Q "kleinkram": UNABHAENGIGE ABNAHME 0
+
+Pruefer: Abnahme-Agent 0 (2026-10-16). Baum `.claude/worktrees/r38_kleinkram`, Zweig `r38/kleinkram`, Kopf 7271cf80,
+Basis 1bcbd0ff (= merge-base mit master; `git diff master...HEAD`). Massgeblich: `AUFTRAG.md` (Wortlaut), `VERTRAG.md`.
+Nichts aus dem Bau-Dossier wird ohne eigene Messung uebernommen.
+
+STAND: ABGESCHLOSSEN (Sitzung 2, 2026-10-16 22:02) — Urteil Abschnitt 11: **bestanden** (P1/P2/P3 erfuellt, Gates halten).
+
+## 0. Bau
+
+* `bash re15_port/tools/local_build.sh configure` -> `LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work to do`,
+  `LOCAL-BUILD-OK (build)`, EXIT 0. Die exe (17:03:19) ist juenger als jede geaenderte Quelle (elza_r36.c 17:02:15,
+  kleinkram_r38.c 17:03:13, menu_common.c 17:02:44, scd_vm.c 17:01:47, re15_kleinkram_r38.h 17:00:14), kleinkram_r38.c.obj
+  17:03:18 -> gebauter Stand == Kopf 7271cf80 (Baum sauber, `git status` clean).
+* ctest -N: 794 Tests registriert (788 + 6 neue der Spur).
+
+## 1. Code-Diff (gelesen)
+
+`git diff master...HEAD -- re15_port`: neu `engine/src/kleinkram_r38.c`, `include/re15_kleinkram_r38.h`,
+`tests/unit/test_r38_kleinkram.c`, `tests/unit/probes/r38_kleinkram.cmake`, `tests/integration/test_r38_kleinkram.cmake`;
+Haken in `menu_common.c` (include + 3 Rufstellen), `scd_vm.c` (include + Raum-Scan + Opcode-Haken, je 1-2 Zeilen),
+`elza_r36.c` (1 Bedingung `re15_game_flag_get(3, 0x9D)` vor dem Slot-2-Umbau); Alt-Riegel `test_r36_elza.c` /
+`test_r36_elza.cmake` Teil irons umgestellt.
+
+## 2. Riegel der Spur (selbst gefahren, Spurbaum, seriell)
+
+```
+ctest --test-dir re15_port/build -R "^(unit_r38_kleinkram_.*|unit_r36_elza_.*)$" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 11
+ctest --test-dir re15_port/build -R "^(integration_r38_kleinkram_.*|integration_r36_elza_irons)$" --timeout 1200 -V
+583 r36_elza_irons: OK — Irons 151/151 Bilder tot (Clip 2 Bild 89), Kopf fest 60/60, Anklicken -> Text 20      11.78 s
+771 r38_kleinkram_inventar: OK — Satz 6 in F400 (Mitschnitt-Bild 654), Satz 5 in F500 (Bild 754), 14 abw. Bilder 70.88 s
+772 r38_kleinkram_irons: OK — Text 20 ab F141 mit Elza gebeugt (mo=11), msg 2 nie, Irons 561/561 tot              26.43 s
+773 r38_kleinkram_flammenwerfer: OK — ja: Modal 0x0E x100, genommen 0 -> 2 Zellen, msg 15 nie; nein: ...           48.52 s
+100% tests passed, 0 tests failed out of 4
+```
+Die Riegel messen je Punkt die Mechanik (Unit: echter Viereck-Druck ueber den Scan-Stempel, nicht RE15_FIRE_AOT) und
+das Ergebnis an der echten exe (Integration). Inhaltlich gelesen: test_r38_kleinkram.c / test_r38_kleinkram.cmake.
+
+## 3. P1 — Inventar oeffnen mit Ton (Wortlaut: "Das öffnen des Player Inventories hat keinen Sounds, wenn Resident Evil 2
+dort Sound hat, möchte ich auch Sound haben.")
+
+### 3.1 RE-Beleg (selbst disassembliert, info/re2leon/PSX.EXE, re2_disasm.py)
+* Gate vor der Annahme: `800263fc lbu v0,-3256(v0)` (0x800df348) / `80026404 bne v0,zero,0x80026540` — Wege, deren
+  Handler den Schirm selbst anfordern, springen ueber den ganzen Block (Box/Aufnahme/Kartenhinweis ohne Ton) — bestaetigt.
+* Annahme: `800264dc andi v0,v1,0x8000` / `800264e0 beq v0,zero,0x80026540` / `800264e8 sw v0,0(a0)` (|0x40),
+  `80026518 lbu v1,0x800d5c00`, `80026528 beq v1,v0(=2),0x80026738` (Verzoegerungsplatz `8002652c lui a0,0x406`),
+  **`80026530 jal 0x8005ba28` / `80026534 addu a1,zero,zero`** -> Se_on(0x04060000, 0) — bestaetigt.
+* Sprungziel 0x8005ba28 selbst disassembliert: `srl t1,a0,24` (Bank) @0x8005ba30, `srl v0,a0,16; andi s7,v0,0xff`
+  (Satz) @0x8005ba7c-80, Satz-Tabelle `lw a1,0x800dbb78[bank*4]` @0x8005ba8c = Se_on mit Bank 4, Satz 6.
+* Bank 4 = CORE in RE2 (die Skepsis "fuer RE2 unbelegt" aus analysis/re2_ermittlung_2026-08-30/STRAENGE_ROH.md hier
+  geschlossen): Lader @0x80059a90 `sw s0,0x800dbb88` (= 0x800dbb78 + 4*4, s0 = 0x801f9d10), Etikett a3 = 0x80011548
+  ("CORE EDH", Datei-Text @0x80011556), VB-Zeiger @0x80059ac8 `sw v0,0x800d75b0` (= 0x800d75a0 + 4*4, der Zeiger, den Se_on
+  @0x8005bac8 liest).
+* Samples: sha256 RE1.5 `SOUND/CORE00.EDH/.VB` == RE2 `CORE00.EDH/.VB` (7948e41e.. / 78514738..) und RE1.5 `CORE04.EDH/.VB`
+  == RE2 `CORE01.EDH/.VB` (57e3f9cf.. / 0ae86dd9..) — der Port spielt fuer Leon und Elza damit bytegleich die Saetze 5/6
+  der RE2-Leon- bzw. RE2-Claire-Bank.
+* Schliessen (Zustand 2 der Kommandoleiste 0x8006a7f0): EXIT Cursor 3 `8006a8cc addiu v0,zero,3` / `8006a8d0 beq
+  v1,v0,0x8006a910` mit `8006a8d4 lui a0,0x405` -> `8006a910 sb zero,1(s0)` / `8006a918 jal 0x8005ba28`; Abbruch
+  `8006a928 andi v0,v0,0x2000` / `8006a930 lui a0,0x405` / `8006a934 jal`; Statustaste `8006a94c andi v0,v0,0x4000` /
+  `8006a968 lui a0,0x405` / `8006a96c jal` / `8006a978 sb zero,0x800d5bf1` — Satz 5 auf allen drei Wegen, bestaetigt.
+  (Cursor 0..2 = Reiter: `8006a8c8 lui a0,0x406` -> Satz 6 — der Port behaelt dort se4(6).)
+* Konstanten im Diff: `RE15_R38Q_INV_TON_AUF 6` (@0x8002652c/@0x80026530), `RE15_R38Q_INV_TON_ZU 5`
+  (@0x8006a930/@0x8006a968/@0x8006a8d4) — Adressen tragen das Behauptete.
+
+### 3.2 Messung (eigene Messkopie `build/platform/pc/re15_pc_abn0q.exe`, Arbeitsordner im Scratchpad)
+Env: `RE15_NO_INTRO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_AUDIO_CAP_SYNC=cap.raw RE15_WINDOW_SCALE=1
+RE15_DEBUG_JUMP=1000@250 RE15_PLAYER_POS=21850,-13400,2048 RE15_SE_DEBUG=1 RE15_STATE_LOG=state.log
+RE15_EXIT_AT=600#1000`, Lauf "mit" zusaetzlich `RE15_PRESS=start@400,start@500`.
+* NEU mit: debug.log Z.124 `[se] Stimme: se=6 layer=0 vag=3 note=64 ... vol=90` / Z.125 `[r38q] F400 Inventar-Ton
+  Satz 6 (Oeffnen)` / Z.126 `[inv] Sicherung im Statusschirm ...` / Z.130 `[se] Stimme: se=5 ... vag=2 note=63 vol=80` /
+  Z.131 `[r38q] F500 Inventar-Ton Satz 5 (Abbruch)`; exit 0.
+* NEU mit gegen NEU ohne (je 854 Mitschnitt-Bilder a 5880 B): 14 abweichende Bilder, genau zwei Laeufe
+  [654..660] (Spitzen-Differenz 5488/5464/4563/2694/5496/3907/1772) und [754..760] (1232..4863) = Bild 400 und 500.
+* GEGENPROBE v0.8.25 (Paket `release/pkg-win/re15_port_v0.8.25`, Kopie im Scratchpad) mit START@400/500 gegen NEU ohne:
+  **0 abweichende Bilder** (bytegleich) — vorher stumm, Nutzerbefund reproduziert; die Ursache (einziger Oeffnen-Ton im
+  Debug-Umschalter `re15_menu_toggle`, d4b41678) ist im Code nachvollzogen: alle `re15_menu_toggle`-Aufrufer in main.c
+  (Z.5192/5441/5464/5677) sind Env-Messhaken; der echte Weg ist game_step_common.c:1260 -> `re15_menu_start_poll`.
+* Weg-Abdeckung: Tastatur, Pad und Android-Overlay-START enden alle in derselben START-Flanke -> derselbe Haken.
+  Box/Dokument/Kartenhinweis (`re15_menu_request_box/_doc/_map_hint`) setzen s_stage selbst -> kein Oeffnen-Ton, wie
+  RE2 @0x80026404. Alle Schliesswege der Reiterwahl (START, Kreuz, EXIT) -> Satz 5; Raster-START hatte schon se4(5).
+* Elza (eigener Lauf, Spielstand ROOM1131, START@100/200): `[se] Stimme: se=6 ... vag=8 note=66` + `[r38q] F100
+  Inventar-Ton Satz 6 (Oeffnen)`, `[se] Stimme: se=5 ... vag=6 note=65` + `F200 ... Satz 5 (Abbruch)` — auch bei Elza
+  hoerbar (ihre CORE-Bank CORE04 = RE2 CORE01, dieselben Saetze, die ihr Inventar fuer Auswahl/Abbruch spielt).
+
+**Urteil P1: erfuellt.**
+
+## 4. P2 — Elza ROOM1151 Irons (Wortlaut: "... erst - he already passed - und dann beugt sie sich hin und es kommt
+"I'll be fine, just worry About yourself for now" ... sie soll sich nur hinbeugen, und es soll stehen "he already passed"...")
+
+### 4.1 RE-Beleg (selbst geprueft)
+* RDT-Bytes ROOM1151 (shared_assets, Python-Dump): @0x00D92 `2c 02 05 31 00 00 1c a8 b4 97 a4 06 78 05 00 00 ..` (Slot 2
+  sce 5 Flags 0x31); sub01 @0x00E9E `23 00 00 00 02 00` Cmp(var00==2), @0x00EA4 `21 03 9d 00`, @0x00EA8 `22 03 9d 01`,
+  @0x00EAC `04 ff 18 03`; sub03 @0x00EEC `3f 01 0b 00` (Hinbeugen), @0x00EF4 `29 07`, **@0x00EFA `2b 02 00 00 2e 02 00 00`**,
+  @0x00F02/@0x00F0A `3f 00 06 00 09 0a 32 00`, @0x00F12 `3f 00 03 00 43 00 04 00`, @0x00F16 `43 00 04 00 09 0a 14 00`,
+  @0x00F72 `01 00 22 02 00 01 22 02` — alle 6 Anker-Signaturen aus kleinkram_r38.c byte-gleich.
+* RE1.5 PSX.EXE (re15_disasm.py): Scan FUN_80042bac `80042ef8 andi v0,v1,0x20` (Vorwaerts-Test), `80042f34 addiu v0,s2,-1`
+  / **`80042f3c sh v0,0x800b0fd0`** (Stempel work_vars[0]) VOR `80042f48 lbu v0,0(s0)` (sce) — der Stempel ist sce-blind,
+  bestaetigt. Bild-Treiber `8003f040 lw v0,g_pauseflags` / `8003f044 lui v1,0x200` / `8003f04c bne v0,zero,0x8003f090`
+  ueberspringt den VM-Lauf samt `jal 0x8003f0a0` (@0x8003f088); der Wisch `8003ebf4..8003ec14 sh -1 -> 0x800b0fd0..fd6`
+  wird aus FUN_8003f0a0 @0x8003f18c gerufen (jal-Zensus: 0x8003e5c0 / 0x8003ef7c / 0x8003f18c) — bestaetigt.
+
+### 4.2 Messung UEBER DEN ECHTEN WEG (Tuer 1131 -> 1151, gehen, Viereck)
+Spielstand Elza ROOM1131 (-5900,16350) Gier 2048 (= Ankunftsort der 1151-Tuer, Blick auf die Tuer; probe_r36_elza_karte),
+CONTINUE, `RE15_PRESS=square@60` -> `[aot] DOOR FIRE slot=2 ... spawn=(-17150,0,-11960)`, `[room] PC loaded room1151.rdt`,
+`[r38q] F60 ROOM1151: 6 Anker armiert`; AOT-Dump nach der Tuer: `2 EXAMINE Mitte(-21650,-26000) halb(850,700) ev=2` (Original-
+Platz sce 5). Gehen per `RE15_INPUT_SCRIPT=U2.3333,R0.1667,U0.6,L0.3667,U2.8333,L0.0667,U1.5667,R0.0667,W0.5,A0.1,W5,A0.1,
+W8,A0.1,W3` (BASIS spiel, START 100): Westgang zwischen Konsole (SCA x>=-21782) und Regal, Halt (-21485,-24908) Gier 1024,
+Viereck F355. (Der Autopilot `aot:2` blieb am Eingang haengen — reiner Reglerfehler, mit der Hand-Eingabe kein Hindernis,
+RE15_COLL_TRACE ohne Treffer an der Haltestelle.)
+* NEU (state.log, Wechsel je Bild): F356 pm=2 (Szene) -> **F366 Elza mo=11** (Plc_motion 0x0B Hinbeugen) -> F406 cam 7 ->
+  **F436 `msg(a=1 fsm=1 id=20)`** bei mo=11 (= Szenenstart + 80) -> F509 weggedrueckt -> F636 cam 5 -> F696 mo=200 / pm=1 ->
+  F710 pm=0 -> zweites Anklicken F751: nur `id=20`, pm bleibt 0 (keine Szene). **msg 2 in keinem Bild**; Irons in jedem
+  Bild `st=4 ss2=2 mo=2 af=89` (Totenpose). debug.log: `F436 ROOM1151 sub03 @0x00EFA Message_on 2 -> Text 20`, Gesten
+  @0x00F02/@0x00F0A/@0x00F12/@0x00F16 entfallen, `F696 sub03 Ende: Slot 2 -> Text-Platz 20, (3,0x9D)=1`.
+* Bild (Framedump 340..800/10, `p2_tuer6/sheet.png` im Pruefer-Scratchpad): Szene Kamera 7, Elza ueber den toten Irons
+  gebeugt, Untertitel "He has already passed..." (Schreibmaschine), danach Aufrichten; zweiter Klick nur Untertitel.
+* GEGENPROBE v0.8.25, identische Eingabe: F355 sofort `id=20` OHNE Szene (pm 0); nach dem Wegdruecken F510 Szene, F520 mo=11,
+  F560 cam 7, **F590 `msg(a=1 fsm=1 id=2)`** und Irons `mo=6 af=1..33` / `mo=3` (der Tote gestikuliert) — exakt der
+  Nutzerbefund. Verursacher 3eaf631d (Runde 36, Irons-tot-Umbau 1151): `git merge-base --is-ancestor` -> nicht in v0.8.23,
+  in v0.8.24 und v0.8.25. Der Fix (Slot 2 bleibt bis zur Szene sce 5; @0x00EFA -> Text 20; Gesten aus) erklaert den
+  Befund: der Stempel aus 4.1 traf vorher den Text-Platz und loeste nach dem Text sub03 aus.
+* Leon ROOM1150: keine Anker (Raum-Id-Filter + Signatur), unit_r38_kleinkram_irons `Leon ROOM1150: Original-Gespraech mit
+  msg 2 laeuft weiter` — gruen.
+
+**Urteil P2: erfuellt.**
+
+## 5. P3 — ROOM30E0 Flammenwerfer (Wortlaut: "... soll beim aufnehmen des Flammenwerfers nicht mehr kommen - not available
+in the preview, sondern einfach der Flammenwerfer aufgenommen werden.")
+
+### 5.1 RE-Beleg (selbst geprueft)
+* ROOM30E0 (scd_dump_room.py + Bytes): main00 @0x00A52 `06 00 64 00`, @0x00A56 `21 03 9c 00`, @0x00A5A
+  `2c 03 03 31 00 00 e0 98 ec 96 e8 03 e8 03 ff 00 18 09 00 00` (Slot 3 sce 3 Flags 0x31, Nutzlast `ff 00 18 09` ->
+  RE15_R38Q_FW_PANEL_P0 0x00FF / P1 0x0918 korrekt); sub04 @0x00FE0 `46 03 ..` Aot_reset(3), **@0x00FEE `2b 0f ff ff 02 00 29 02`**,
+  **@0x00FFA `22 03 9c 01 22 02 07 00`** — Anker-Signaturen byte-gleich; sub09 @0x01038 `29 02` + Set(5,0..4,6), sub10
+  @0x01054 `29 03` Set(5,4,0)/(5,5,1).
+* Waffen-Record: `re15_disasm.py bytes 0x80074e50` -> `64 00 00 00 a8 4c 07 80 02 01 00 00`; Tabellenbasis/Schritt selbst
+  disassembliert: `80049788 sll v0,a0,1 / 8004978c addu / 80049790 sll v0,v0,2 / 80049798 addiu at,at,0x4da8` (= Id*12 +
+  0x80074da8) -> Id 0x0E -> 0x80074e50, Magazin 100. Nachbarn passend zum Zensus der Spur: 0x07 -> 6 (@0x80074dfc),
+  0x08 -> 7 (@0x80074e08), 0x0c -> 100 (@0x80074e38), 0x0d -> 12 (@0x80074e44). Port-Name Id 0x0e = "FLAMETHROWER"
+  (inventory_common.c:416), Port-Waffentabelle `{100,0x18}` fuer 14 (inventory_common.c:209).
+* Item-Handler @0x80043328: `8004332c lbu v0,0x80072d3b` / `80043334 bne v0,zero,..` (nur aus Zustand 0), `8004334c sb 1`,
+  `8004335c sb v0,0x800afbb6`, `80043364 sw a0,0x800aca30` — bestaetigt (Haken parkt den Faden waehrend des Modals).
+
+### 5.2 Messung (Leon-Spielstand ROOM30E0 (-25000,-26400) Gier 2048 + CONTINUE, echter Panel-Ablauf)
+Eingabe `RE15_INPUT_SCRIPT=A0.1,W0.5,L0.8,W0.5,A0.1,W1,R0.13,W0.5,A0.1,W3,A0.1,W3` (BASIS spiel, START 60), Framedump 60..460/10.
+* NEU "Ja": debug.log `[r38q] F170 ROOM30E0 sub04 @0x00FEE Message_on 15 -> Aufnahme-Modal Item 0x0E x100`, `F263 ...
+  Flammenwerfer genommen: Zellen 0 -> 2`, danach `Cut_chg(2)`; state.log: 0 Bilder mit `id=15`. Bilder: Panel (Cut 2),
+  Spind offen mit Fadenkreuz (Cut 3), Modal mit ITPS-Bild + "Will you take the Flamethrower? > Yes No", danach Cut 2
+  (geschlossene Spindtuer, kein Rest-Flammenwerfer im Bild) und Cut 1.
+* NEU "Nein" und zweiter Anlauf (Eingabe + `W4,R0.1,W0.3,A0.1,W3,A0.1,W0.5,L0.13,W0.5,A0.1,W1,R0.13,W0.5,A0.1,W4,A0.1,W3,
+  S0.1,W2,A0.1,W2`): `F322 Flammenwerfer NICHT genommen (No/voll): Panel Slot 3 wieder scharf, Zellen 0`, `F353 sub04
+  @0x00FFA Set(3,0x9C) entfaellt`, Panel erneut (`first_op=0x29`, Cut 2/3), `F487 ... Aufnahme-Modal`, **`F610 ... genommen:
+  Zellen 0 -> 2`**, `F702 Inventar-Ton Satz 6`; Framedump F800: Statusschirm, Item list = 2-Zellen-Flammenwerfer "100",
+  Name "Flamethrower" (`p3_nein/inv_800.png`).
+* GEGENPROBE v0.8.25, gleiche Eingabe: 291 Bilder `msg(a=1 fsm=1 id=15)`, Framedump F200 "There's a Flamethrow..." —
+  Nutzerbefund reproduziert.
+* ROOM30E1 (Elza): Anker nur fuer Raum 0x30E0 (k_anker), Zensus der Spur: kein Flammenwerfer/Panel in 30E1 -> unberuehrt.
+
+**Urteil P3: erfuellt.**
+
+## 6. RE-Gate (Diff gegen Belege)
+
+Selbst disassembliert / byte-geprueft (Auswahl, mehr als 3): RE2 @0x800263fc/@0x80026404, @0x8002652c/@0x80026530/
+@0x80026534, Sprungziel 0x8005ba28, Lader @0x80059a90/@0x80059ac8, @0x8006a8c8..@0x8006a978; RE1.5 @0x80042ef8/@0x80042f3c/
+@0x80042f48, @0x8003f040-4c, @0x8003ebf4-ec14 + Aufrufer @0x8003f18c, Record @0x80074e50 + Indexierung @0x80049788-98,
+Item-Handler @0x80043328-64, Modal @0x8001df40/@0x8001df44 (Typ 14..19 = 2-Zellen-Waffe), @0x8001e054 `bltz` / @0x8001e068
+`andi 0x1` (voll / "No" -> Zustand 8, kein Einfuegen); RDT-Bytes aller 8 Anker. **Jede zitierte Stelle traegt das Behauptete.**
+
+| Konstante im Diff | Beleg | geprueft |
+|---|---|---|
+| RE15_R38Q_INV_TON_AUF 6 | RE2 `8002652c lui a0,0x406` + `80026530 jal 0x8005ba28` | ja |
+| RE15_R38Q_INV_TON_ZU 5 | RE2 `8006a930`/`8006a968`/`8006a8d4 lui a0,0x405` | ja |
+| Anker 1151 0x00EFA/F02/F0A/F12/F16/F72 + 8-Byte-Signaturen | ROOM1151.RDT Datei-Offsets | ja, byte-gleich |
+| Anker 30E0 0x00FEE/0x00FFA + Signaturen | ROOM30E0.RDT Datei-Offsets | ja, byte-gleich |
+| RE15_R38Q_FW_ITEM 0x0E | Record @0x80074da8 + 14*12 = @0x80074e50, Name "FLAMETHROWER" | ja |
+| RE15_R38Q_FW_MENGE 100 | `64 00 00 00` @0x80074e50; Regel Menge == Magazin: eigener Zensus 240 RDTs = 13 Waffen-Item_aot_set, 7 Typen, 13/13 EQ | ja |
+| PANEL_SLOT 3 / SCE 3 / FLAGS 0x31 / P0 0x00FF / P1 0x0918 | main00 @0x00A5A `2c 03 03 31 .. ff 00 18 09 00 00` | ja |
+| (3,0x9D) / (3,0x9C) | Zensus 240 RDTs: nur 1150/1151 @0x0EC6/0x0ECA bzw. 0x0EA4/0x0EA8; nur 30E0 @0x0A56/0x0FFA | ja |
+| Maske `pc[2..3] << 16` (irons_text) | wie op_message_on (scd_vm.c, @0x80040508/@0x8004051c) | ja |
+
+Grep im Code-Diff nach deferred/tunable/interim/for now/faithful/plausib/TODO/FIXME/getenv: einziger Treffer ist das
+Nutzerzitat "... for now" im Kopfkommentar — kein Env-Schalter, kein Platzhalter. `re15_item_modal_start(0x0E, 100, 0, -1,
+0xFF)`: taken_bit 0 = keines (item_modal_common.c `s_taken`), kein Zonen-Slot, kein Weltmodell; die Nutzer-Halbierung
+`re15_pickup_menge_nutzer` laesst Waffen unveraendert (inventory_common.c:278) -> 100 im Inventar gemessen.
+**Fix erklaert den Befund** (P2 Gegenprobe v0.8.25 + Stempel @0x80042f3c; P1 einziger Oeffnen-Ton im Debug-Umschalter;
+P3 msg 15 @0x00FEE).
+
+## 7. Vertrag
+
+* Pfade (`git diff master...HEAD --name-only`): analysis/befunde_runde38/Q_* (Dossier + 4 Belegbilder), engine/src/
+  {kleinkram_r38.c (neu), menu_common.c, scd_vm.c, elza_r36.c}, include/re15_kleinkram_r38.h (neu), tests/unit/
+  {test_r38_kleinkram.c (neu), probes/r38_kleinkram.cmake (neu), test_r36_elza.c}, tests/integration/{test_r38_kleinkram.cmake
+  (neu), test_r36_elza.cmake}. Kein release/, kein platform/android/, kein shared_assets/PSX/, keine Test-CMakeLists
+  (Registrierung ueber probes/<thema>.cmake). `git diff master --stat` zeigt zusaetzlich r38_w2.js/UEBERGABE.md als
+  "geloescht" — das ist nur master, der nach der Basis 1bcbd0ff weiterlief (98d35560); der Zweig selbst beruehrt sie nicht.
+* Bank-9-Bits: keine. Nachrichten-Ids: keine neuen (1151 Text 20 = Runde 36; 30E0 ohne Text) — VERTRAG §1.2 Spur Q erfuellt.
+* Gemeinsame Dateien: scd_vm.c 3 Zeilen (include, Raum-Scan, Opcode-Haken; §1.4 gelistet); menu_common.c include + 3
+  Rufstellen (je 1-2 Zeilen, "Runde 38 Spur Q") — die Inventar-FSM liegt in menu_common.c, nicht in den fuer Q gelisteten
+  re15_inv_screen.c/inventory_common.c; elza_r36.c 1 Bedingung (§1.4: "H; F/G nur Haken" — Q ist dort nicht gelistet).
+  Beides kleine, kommentierte Haken und im Dossier als Integrations-Hinweis ausgewiesen -> **kein Mangel, Hinweis an die
+  Integration** (Konflikt-Kandidat elza_r36.c mit Spur H).
+* Riegel je Punkt vorhanden und messend (6 neu, ctest -N = 794). RE15_MIN_TESTS (local_build.sh, 788) hebt laut Dossier der
+  Orchestrator um 6 an.
+* Alt-Riegel test_r36_elza (Teil irons) umgestellt: die alte Behauptung "kein sce-5-Platz mehr -> work_vars[0] wird nie 2"
+  war der Fehler selbst (Gegenprobe 4.2); neu: (3,0x9D)=0 -> sce 5, (3,0x9D)=1 -> Text-Platz + Anklicken = Text 20 ohne msg 2.
+  Der erste Klick wird jetzt ueber den echten Stempel-Weg in unit/integration_r38_kleinkram_irons geprueft — keine
+  Abschwaechung der Abdeckung.
+
+## 8. Weitere Gegenpruefungen
+* RE1.5 selbst ist beim Oeffnen stumm: jal-Zensus `jal 0x80045024` ueber info/Re1.5/PSX.EXE = 41 Stellen, keine in
+  0x8001ca00..0x8001cf00 (Oeffnen-Poll/Blende) und keine in 0x80049700..0x80049b00 (Reiterwahl) -> RE2 ist das Ziel
+  (Beta -> Retail), wie der Nutzer es verlangt ("wenn Resident Evil 2 dort Sound hat").
+* ROOM30E1 (Elza) gegengelesen: msg 15 ist dort "Elza: We have no choice but to go / inside..." — der Anker ist an die
+  Raum-Id 0x30E0 gebunden und trifft 30E1 nicht (sonst waere Elzas Dialog zerstoert).
+* Sprachdatei: synchro/STAGE1/room1151 existiert nicht -> Text 20 bleibt stumm wie vorher; die 1150-Stimme main02.wav
+  ("I'll be fine") ist an Raum 1150 gebunden (audio_pc.c sucht `room%04X` exakt) und kann in 1151 nicht spielen.
+
+## 9. Fortsetzung Sitzung 2 (2026-10-16 ab 21:08)
+
+### 9.1 Stand des Baus erneut geprueft
+* Kopf 33ecd643 (nur dieser Bericht) ueber 7271cf80; `git status` sauber; `bash re15_port/tools/local_build.sh build` ->
+  `ninja: no work to do.` / `LOCAL-BUILD-OK (build)` — die exe (17:03) ist der Code-Stand 7271cf80.
+* Der breite Regressionslauf der Sitzung 1 (141 Tests, `ctest_breit_q0.log` im Pruefer-Scratchpad) ist bei 91/141 abgebrochen
+  (Sitzungsende; 91 Passed, 0 Failed, zuletzt gestartet integration_r35_werfer) -> in Sitzung 2 komplett neu gefahren (9.3).
+
+### 9.2 RE-Stichproben, in Sitzung 2 noch einmal SELBST disassembliert
+* RE2 (info/re2leon/PSX.EXE, re2_disasm.py): `800263fc lbu v0,-3256(v0)` / `80026404 bne v0,zero,0x80026540`;
+  `80026528 beq v1,v0,0x80026738` / `8002652c lui a0,0x406` / `80026530 jal 0x8005ba28` / `80026534 addu a1,zero,zero`.
+  Kommandoleiste: `8006a8a4 andi v0,v0,0x1000` (Bestaetigen), `8006a8c0 slti v0,v1,3` / `8006a8c4 bne v0,zero,0x8006a8e0`
+  mit `8006a8c8 lui a0,0x406` (Reiter 0..2 -> Satz 6), `8006a8cc addiu v0,zero,3` / `8006a8d0 beq v1,v0,0x8006a910` mit
+  `8006a8d4 lui a0,0x405` -> `8006a910 sb zero,1(s0)` / `8006a918 jal 0x8005ba28` (EXIT -> Satz 5 + Zustand 0);
+  `8006a928 andi v0,v0,0x2000` / `8006a930 lui a0,0x405` / `8006a934 jal` / `8006a93c sb zero,1(s0)` (Abbruch);
+  `8006a94c andi v0,v0,0x4000` / `8006a968 lui a0,0x405` / `8006a96c jal` / `8006a978 sb zero,0x800d5bf1` (Statustaste;
+  s0 = 0x800d5bf0 @0x8006a814-18, also derselbe Zustandsbyte 0x800d5bf1; 0x800d5c06 wird @0x8006a800 in jedem Bild dieses
+  Zustands auf 1 gesetzt). Sprungziel `8005ba28`: `8005ba30 srl t1,a0,24` (Bank), `8005ba7c srl v0,a0,16` /
+  `8005ba80 andi s7,v0,0xff` (Satz), `8005ba8c lw a1,0x800dbb78(bank*4)` — Se_on(Bank 4, Satz 6 bzw. 5). Bestaetigt.
+* RE1.5 (info/Re1.5/PSX.EXE, re15_disasm.py): `80042f34 addiu v0,s2,-1` / `80042f3c sh v0,0x800b0fd0` VOR `80042f48 lbu
+  v0,0(s0)`; `8003f040 lw v0,g_pauseflags` / `8003f044 lui v1,0x200` / `8003f04c bne v0,zero,0x8003f090`; Record
+  `bytes 0x80074e50` = `64 00 00 00 a8 4c 07 80 02 01 00 00`, Index `80049788 sll v0,a0,1` / `8004978c addu` / `80049790 sll
+  v0,v0,2` / `80049798 addiu at,at,0x4da8` -> 0x80074da8 + 0x0E*12 = 0x80074e50. Bestaetigt.
+* RDT-Anker (re15_port/shared_assets/PSX, Python): ROOM1151 @0x0D92 `2c 02 05 31 00 00 1c a8`, @0x0E9E `23 00 00 00 02 00 ..`,
+  @0x0EA4 `21 03 9d 00`, @0x0EA8 `22 03 9d 01`, @0x0EAC `04 ff 18 03`, @0x0EEC `3f 01 0b 00`, @0x0EF4 `29 07`, @0x0EFA
+  `2b 02 00 00 2e 02 00 00`, @0x0F02/@0x0F0A `3f 00 06 00 09 0a 32 00`, @0x0F12 `3f 00 03 00 43 00 04 00`, @0x0F16
+  `43 00 04 00 09 0a 14 00`, @0x0F72 `01 00 22 02 00 01 22 02`; ROOM30E0 @0x0A52 `06 00 64 00`, @0x0A56 `21 03 9c 00`,
+  @0x0A5A `2c 03 03 31 00 00 e0 98 ec 96 e8 03 e8 03 ff 00 18 09 00 00`, @0x0FE0 `46 03 ..`, @0x0FEE `2b 0f ff ff 02 00 29 02`,
+  @0x0FFA `22 03 9c 01 22 02 07 00` — jede Signatur in k_anker[] byte-gleich.
+
+### 9.3 Code-Pfade gegengelesen (Nebenwirkungen P1)
+* `tab_select` Reiter 2 = EXIT (`case 2: /* EXIT @0x800499b4-c4 */` -> s_phase = 2) -> der Haken `tab == 2` trifft genau EXIT.
+* Item-Box schliesst ueber Unterzustand 4 (`re15_itembox_screen_tick`), NICHT ueber tab_select -> kein neuer Schliess-Ton
+  an der Box; Kartenhinweis schliesst ueber seinen eigenen Zweig (`se4(5)` + s_phase 2, RE2 @0x8006F890-94) -> kein
+  Doppel-Ton; `close_phase` spielt selbst keinen Ton (kein se4 in close_phase) -> EXIT/Abbruch je genau EIN Satz 5.
+* Box/Dokument/Kartenhinweis (`re15_menu_request_box/_doc/_map_hint`) setzen s_stage selbst und laufen nicht durch
+  `re15_menu_start_poll` -> kein Oeffnen-Ton, wie RE2 @0x80026404.
+* Debug-Umschalter `re15_menu_toggle` behaelt sein se4(6) (nur Env-Messhaken) — unveraendert.
+
+### 9.4 P3 UEBER DEN ECHTEN WEG (Tuer ROOM3070 -> ROOM30E0) + Nebenwirkung "ausruesten und feuern"
+Sitzung 1 hatte P3 per Spielstand ROOM30E0 + CONTINUE gemessen; hier zusaetzlich durch die Tuer. Die Anker werden im
+gemeinsamen Raumstart armiert (scd_room_setup.c:368 `scd_register_room_events` -> `scd_register_current_rdt` ->
+`re15_kleinkram_r38_raum_scan`), also unabhaengig vom Eintrittsweg — gemessen trotzdem.
+* Tuer: ROOM3070 Slot 1 (Door_aot_set @0x03322 `3b 01 02 31 .. 44 cb 0c b3 98 08 b0 04 c4 9b 00 00 8e a9 80 01 02 0e 01`,
+  Rechteck (-13500,-19700,2200,1200), Ziel Stage 3 Raum 0x0E, Ankunft (-25660,-22130) Gier 384, Kamera 1).
+  Leon-Spielstand ROOM3070 (-12400,-18140) Gier 1024 (`probe_r36_elza_karte re15_card.mcr 3070 -12400 -18140 1024`),
+  CONTINUE, Messkopie `re15_pc_abn0q.exe` (md5 763443de.. == re15_pc.exe).
+* Eingabe (BASIS spiel, START 60; das Skript beginnt in jedem Raum neu bei Tick 0):
+  `A0.1,W1,R0.1667,U2.5,W0.5,R0.4,U0.6,W0.5,A0.1,W0.5,L0.8,W0.5,A0.1,W1,R0.13,W0.5,A0.1,W3,A0.1,W3,S0.1,W2`
+  -> debug.log `[aot] DOOR FIRE slot=1 ... spawn=(-25660,0,-22130)`, `[room] PC loaded room30e0.rdt`, `[r38q] F60 ROOM30E0:
+  2 Anker armiert`, Gang zum Panel (state.log F181 (-24310,-26390) -> F221 (-25086,-26444) Gier 2016), Panel cam 2 (F241),
+  Zelle 5 cam 3 (F291), **`F343 ROOM30E0 sub04 @0x00FEE Message_on 15 -> Aufnahme-Modal Item 0x0E x100`**, **`F436
+  Flammenwerfer genommen: Zellen 0 -> 2`**, cam 2 (F441) / cam 1 (F471), `F528 Inventar-Ton Satz 6 (Oeffnen)`.
+  state.log: **0 Bilder mit `id=15`**, ueberhaupt kein `msg(a=1 ...)`.
+  Bilder (Framedump 60..640/10, `q0b/p3_tuer3/sheet_p3_tuer.png` im Pruefer-Scratchpad): F300 offener Spind mit Fadenkreuz
+  auf dem Flammenwerfer, F350 ITPS-Bild faehrt ein, F380/F420 "Will you take the Flamethr..." ueber dem Spind, F440 Cut 2
+  (Spind zu), F470 Leon im Raum, F560/F630 Statusschirm: Item list = Flammenwerfer "100".
+* Nebenwirkung Ausruesten/Feuern (`q0b/p3_tuer4_equip`, gleiche Eingabe + `A0.1,W1,A0.1,W1,A0.1,W1.5,S0.1,W2.5,M0.5,MA1.5,
+  W1`, RE15_WAFFEN_LOG): ITEM -> Flammenwerfer -> EQUIP -> debug.log `[equip] W-bank -> W0E (Clips 16, Rueckstoss-Clip7
+  fc=21)`, wf.log `w=14` ab F722, Feuern 45 Bilder `pad=8800` mit 15 Strahl-Spawns `RE2SPAWN a0=031d1200` und 5 `re2arms`-
+  Tonzeilen; Treibstoff im state.log `mg=100 -> 98 -> 96 -> 94 -> 92 -> 90` (2 je 8 Bilder, wie integration_r35_werfer
+  w14); kein Absturz, EXIT_AT 940 erreicht, exit 0. Bild `q0b/p3_tuer4_equip/sheet_equip_fire.png`: Equip Arms =
+  Flammenwerfer, Name "Flamethrower", Leon zielt mit der Waffe.
+* -> P3 haelt auch ueber die Tuer; der aufgenommene Flammenwerfer ist eine voll benutzbare Waffe.
+
+### 9.5 P1 alle Schliess-Wege an der echten exe (ein Lauf, `q0b/p1_wege`)
+Env wie 3.2 (ROOM1000, RE15_SE_DEBUG=1), `RE15_PRESS=start@400,down@450,square@470,start@560,cross@620,start@700,up@750,
+square@770,start@830`, `RE15_EXIT_AT=900#1000`, exit 0. debug.log in Reihenfolge:
+* F400 START -> `[se] Stimme: se=6 ... vag=3 note=64` + `[r38q] F400 Inventar-Ton Satz 6 (Oeffnen)`
+* F450 RUNTER -> `se=4` (Cursor-Ton, wie vorher) ; F470 VIERECK auf EXIT -> `se=5 ... vag=2 note=63` + `[r38q] F470
+  Inventar-Ton Satz 5 (EXIT)` — genau EIN Ton, kein se=6 mehr an EXIT (RE2 @0x8006a8d0-d4: Cursor 3 -> Satz 5)
+* F560 START -> Satz 6 (Oeffnen) ; F620 KREUZ -> `se=5` + `[r38q] F620 Inventar-Ton Satz 5 (Abbruch)`
+* F700 START -> Satz 6 ; F750 HOCH -> se=4 ; F770 VIERECK auf ITEM -> `se=6` (Auswahl, unveraendert; RE2 @0x8006a8c8
+  Reiter -> Satz 6) ; F830 START im Raster -> `se=5` (vorbestehender Raster-Schliess-Ton), KEINE `[r38q]`-Zeile -> kein
+  Doppel-Ton.
+Jeder Oeffnen-/Schliess-Vorgang spielt genau einen Ton, jeweils den RE2-Satz.
+
+### 9.6 Gegenszenario P3: Elza ROOM30E1 (`q0b/p3_elza30e1`)
+Elza-Spielstand ROOM30E1 an derselben Stelle (-25000,-26400) Gier 2048 (`Figur 4`), CONTINUE, `RE15_PRESS=square@60,
+square@120`, `RE15_EXIT_AT=200#30E1`: `[save] CONTINUE: resumed in room 30e1`, KEINE `[r38q]`-Zeile (kein Anker armiert —
+Raum-Id-Filter 0x30E0), kein `msg(a=1 ...)` im state.log, exit 0. Elzas Raum bleibt unberuehrt.
+
+### 9.7 Bisect P2 nachgeprueft
+`git merge-base --is-ancestor 3eaf631d <tag>`: v0.8.23 ohne, v0.8.24 und v0.8.25 mit 3eaf631d ("wip(r36-elza): ... Irons
+tot 1151 ...", 2026-10-10) — passt zur Gegenprobe 4.2 (v0.8.25 zeigt exakt den Nutzerbefund).
+
+### 9.8 Breiter Regressionslauf (gezielt, KEINE volle Suite; seriell im Spurbaum, unter Last paralleler Spur-Agenten)
+Regex = Riegel der Spur + jede Testgruppe der beruehrten Module/Raeume: menu_common.c (inv/itembox/weapon_select/
+debug_menu/pri_inventar/discard/r26_inventar/android-Inventar/hinweis/pfeil/karte/adaruf/dokumente/inventar1050/r36_inventar/
+kiste), scd_vm.c (scd_*/prop_scd_pc_advance/aot_*/msg_dialog/action_msg_gate/npc_scd_pose), Aufnahme-Modal + Waffen
+(item_modal/inv_grant/re2_weapon_rows/r35_werfer*/r37_feuerloescher_*), elza_r36.c (r36_elza_* unit + ALLE integration_r36_elza_*,
+integration_r36_story_elza, elza_zweig, integration_elza_vollstart), 1150/1151 (irons_*/r30_irons_*/r30_sicherung_*/
+sicherung_1150/r31/r32 hebetisch/r35_cut1150_*/r36_szene1150_*/r36_szenenleon_irons), Ton (audio_sperren/re2z_grab_core_se),
+r36_kartenbits:
+```
+ctest --test-dir re15_port/build -R "$(cat q0b_regex.txt)" --timeout 600 --output-on-failure   (150 Tests, davon 23 integration_)
+100% tests passed, 0 tests failed out of 150
+Total Test time (real) = 3112.24 sec          EXIT=0
+```
+Log `q0b_ctest_breit.log`, Regex `q0b_regex.txt` (Pruefer-Scratchpad). Darunter integration_r35_cut1150 (737 s),
+integration_r35_inventar1050, integration_r35_werfer (+ton/elza/form), integration_r36_elza_{fenster,irons,unlock,schuss,
+stoehnen}, integration_r36_story_elza, integration_r36_inventar, integration_r36_szene1150, integration_r37_kiste/kiste2feld,
+integration_r34n_b_cursor, integration_r30_sicherung_laden, integration_r30_irons_tisch_laden, integration_elza_vollstart und
+die 6 Riegel der Spur — alle gruen, kein Wiederholungslauf noetig.
+
+## 10. Gates (Zusammenfassung)
+
+| Gate | Ergebnis | Beleg |
+|---|---|---|
+| Bau = Kopf | haelt | local_build.sh build: `ninja: no work to do`, md5 exe == Messkopie (9.1) |
+| Jeder Punkt am Spiel gemessen, gegen den Wortlaut | haelt | P1 3.2 + 9.5, P2 4.2 (Tuer 1131 -> 1151), P3 5.2 + 9.4 (Tuer 3070 -> 30E0) |
+| Gegenprobe v0.8.25 (Befund reproduziert, Ursache erklaert) | haelt | P1 bytegleich stumm, P2 msg 2 nach Text 20 (3eaf631d, 9.7), P3 291 Bilder msg 15 |
+| RE-Gate: jede Konstante mit @0x / Byte-Offset | haelt | Tabelle Abschnitt 6; Stichproben 6 + 9.2 selbst disassembliert/gelesen |
+| Keine Guess-Tells / Env-Schalter als Abschluss | haelt | grep im Code-Diff: nur das Nutzerzitat "for now" (6, erneut 9.x) |
+| Fix erklaert den Befund | haelt | P2 Stempel @0x80042f3c vor sce @0x80042f48 + VM-Stillstand @0x8003f04c; P1 einziger Ton im Debug-Umschalter; P3 @0x00FEE |
+| Vertrag: Pfade / Bank-9 / Nachrichten-Ids | haelt | 7; keine Bits, keine neuen Ids, keine Tabu-Pfade, Registrierung ueber probes/r38_kleinkram.cmake |
+| Gemeinsame Dateien nur kleine Haken | haelt (mit Hinweis H2) | scd_vm.c 3 Zeilen, menu_common.c include + 3 Rufstellen, elza_r36.c 1 Bedingung |
+| Riegel je Punkt, messend, gruen | haelt | 3 Unit + 3 Integration (echte exe), 9.8 |
+| Nebenwirkungen beide Szenarien | haelt | P1 Leon + Elza; P2 Leon 1150 unveraendert (Unit); P3 Elza 30E1 unberuehrt (9.6), Flammenwerfer ausruest- und feuerbar (9.4) |
+| Breite Regression der beruehrten Module | haelt | 150/150 (9.8) |
+
+## 11. Urteil
+
+| Punkt | Urteil | Kernbeleg |
+|---|---|---|
+| P1 Inventar oeffnen mit RE2-Ton | **erfuellt** | RE2 `8002652c lui a0,0x406` / `80026530 jal 0x8005ba28`; exe: `[se] Stimme: se=6` + `[r38q] F400 Inventar-Ton Satz 6 (Oeffnen)`, Mitschnitt mit/ohne START: genau 2 hoerbare Abschnitte (654/754); v0.8.25 bytegleich stumm; Schliessen EXIT/Kreuz/START je genau ein Satz 5 (9.5) |
+| P2 Elza 1151: nur Hinbeugen + "He has already passed..." | **erfuellt** | Tuerweg 1131 -> 1151: F366 Elza mo=11, F436 `id=20` bei mo=11, msg 2 in keinem Bild, Irons jedes Bild Totenpose; zweiter Klick nur Text 20; v0.8.25: Text 20 zuerst, dann Szene + msg 2 (= Nutzerbefund) |
+| P3 30E0 Flammenwerfer aufnehmen statt "not available" | **erfuellt** | Tuerweg 3070 -> 30E0: `F343 ... Message_on 15 -> Aufnahme-Modal Item 0x0E x100`, `F436 Flammenwerfer genommen: Zellen 0 -> 2`, 0 Bilder `id=15`; Statusschirm Flammenwerfer 100; ausruesten + feuern funktioniert; Nein -> Panel wieder scharf, zweiter Anlauf nimmt ihn |
+
+**bestanden: ja.** Maengel: **keine**.
+
+Hinweise (nicht blockierend):
+* **H1** `elza_r36.c:280` Messzeile `[elza] ROOM1151: Irons gefunden=%u, Slot %u -> Text %u %u` (nur RE15_ELZA_LOG) behauptet
+  den Umbau auf Text 20 auch dann, wenn er seit dieser Spur wegen (3,0x9D) = 0 NICHT stattfindet. Kein Riegel liest die Zeile
+  (grep re15_port/tests: 0 Treffer) — Messschienen-Hygiene, bei Gelegenheit den Umbau-Zustand mitschreiben.
+* **H2 (Integration)** VERTRAG §1.4 listet fuer Q re15_inv_screen.c/inventory_common.c; die Inventar-FSM liegt aber in
+  menu_common.c (include + 3 Rufstellen, je 1-2 Zeilen, Kommentar "Runde 38 Spur Q"). elza_r36.c ist Spur H zugeordnet ("H; F/G nur
+  Haken"); Q fuegt dort eine Bedingung im Irons-Block ein -> Konflikt-Kandidat mit Spur H (1041/1021 in derselben Datei) und mit
+  jeder Spur, die menu_common.c beruehrt (z.B. G Tagebuch/Dokument-Leser). RE15_MIN_TESTS um 6 anheben (794 registriert).
+* **H3 (Lesart P3)** Der Flammenwerfer wird ueber die normale Aufnahme-Frage "Will you take the Flamethrower? Yes/No" genommen
+  (dieselbe FSM FUN_8001db28 wie jedes Item, RE2 ebenso) — "einfach aufgenommen" ist als "normal aufnehmen statt
+  Preview-Meldung" gelesen. Menge 100 = Magazin des Waffen-Records @0x80074e50 (Regel aus allen 13 ausgelieferten Waffen-Items).
+* **H4** Nachtrag 1 des Nutzers (ROOM20A0 Rolladen vor der Kamera, AUFTRAG.md auf master df08d83a) gehoert zu Spur W und ist
+  nicht Gegenstand dieser Abnahme.

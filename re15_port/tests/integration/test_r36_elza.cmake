@@ -122,7 +122,9 @@ if(TEIL STREQUAL "fenster")
     message(STATUS "${_tag}: OK — 4 Kraehen (Slot 3 bei (5327,0,10217)), Schaden ${_formel}/${_ops} Pixel nach Formel")
 
 elseif(TEIL STREQUAL "irons")
-    karte(irons 1151 -17150 -11960 1600)
+    # Runde 38 Spur Q: Stand NACH der Hinbeuge-Szene ((3,0x9D) = 1) — erst dann ist Slot 2 der Text-Platz 20, den
+    # RE15_FIRE_AOT direkt feuert. Den ersten Klick (Hinbeugen + Text 20, kein msg 2) misst integration_r38_kleinkram_irons.
+    karte(irons 1151 -17150 -11960 1600 3:0x9D)
     lauf_elza(irons 300 ${_basis} RE15_NOAUDIO=1 ${_continue} RE15_STATE_LOG=state.log RE15_ELZA_LOG=elza.log
               RE15_FORCE_CUT=7 RE15_NECK_TRACE=neck.log "RE15_FIRE_AOT=2@60#1151" "RE15_EXIT_AT=150#1151")
     file(READ "${WORKDIR}/irons/debug.log" _dbg)
@@ -191,16 +193,32 @@ elseif(TEIL STREQUAL "schuss")
         fail("Abstand Schuss 1->2 = ${_d} (soll 30 = Sleep @0x020D2), Roy ${_r0} (soll = Schuss 2 ${_s2})")
     endif()
     math(EXPR _r5 "${_r0} + 10")
-    mitschnitt("${WORKDIR}/schuss/cap.raw" 800 ${_s1} 2 ${_s2} 2 ${_r5} 40)
-    list(GET _sp 0 _p1)
-    list(GET _sp 1 _p2)
-    list(GET _sp 2 _p3)
-    math(EXPR _schwelle "${_median} * 4")
-    math(EXPR _schwelle_r "${_median} * 2")
-    if(_p1 LESS _schwelle OR _p2 LESS _schwelle OR _p3 LESS _schwelle_r)
-        fail("Mitschnitt: Schuss ${_p1}/${_p2} (>= ${_schwelle}), Roy ${_p3} (>= ${_schwelle_r}), Median ${_median}")
+    # Runde 38 Spur H: Bezug = SPITZE der 28 Bilder vor Schuss 1 (John zielt, Sleep 110 @0x020CA — dort klingt nur der
+    # Raum), nicht mehr der Median aller Raum-Bilder: der haengt an Sprachzeilen und Roys Stoehnen (Runde 38 P2) und
+    # stieg damit 1640 -> 2086 (gemessen, gleicher Weg), obwohl die Schuesse selbst lauter wurden (6742/7193 ->
+    # 7101/7512). Die Spitze ist strenger als ein Median desselben Fensters.
+    math(EXPR _bg0 "${_s1} - 30")
+    mitschnitt("${WORKDIR}/schuss/cap.raw" 800 ${_bg0} 28 ${_s1} 2 ${_s2} 2 ${_r5} 40)
+    list(GET _sp 0 _pbg)
+    list(GET _sp 1 _p1)
+    list(GET _sp 2 _p2)
+    list(GET _sp 3 _p3)
+    if(_pbg LESS 1)
+        set(_pbg 1)
     endif()
-    message(STATUS "${_tag}: OK — Schuesse Bild ${_s1}/${_s2} (Spitzen ${_p1}/${_p2}), Roy ab Bild ${_r0} (Spitze ${_p3}), Median ${_median}")
+    math(EXPR _schwelle "${_pbg} * 4")
+    math(EXPR _schwelle_r "${_pbg} * 2")
+    # Untergrenze fuer einen stillen Raum (Bezug ~0): die Toene liegen gemessen bei 7101/7512 (Schuss) und 8407 (Roy).
+    if(_schwelle LESS 3000)
+        set(_schwelle 3000)
+    endif()
+    if(_schwelle_r LESS 1500)
+        set(_schwelle_r 1500)
+    endif()
+    if(_p1 LESS _schwelle OR _p2 LESS _schwelle OR _p3 LESS _schwelle_r)
+        fail("Mitschnitt: Schuss ${_p1}/${_p2} (>= ${_schwelle}), Roy ${_p3} (>= ${_schwelle_r}), Raum vor dem Schuss ${_pbg}")
+    endif()
+    message(STATUS "${_tag}: OK — Schuesse Bild ${_s1}/${_s2} (Spitzen ${_p1}/${_p2}), Roy ab Bild ${_r0} (Spitze ${_p3}), Raum vor dem Schuss ${_pbg} (Median ${_median})")
 
 elseif(TEIL STREQUAL "stoehnen")
     if(NOT RE15_SYNCHRO_WAV OR NOT EXISTS "${RE15_SYNCHRO_WAV}")

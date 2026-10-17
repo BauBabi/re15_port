@@ -38,6 +38,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"
 #include "re15_ai_flavor.h"
+#include "re15_spinnen_r38.h"   /* Runde 38 Integration: re15_spinnen_r38_band_stempel (Geruest-Stempel, s. arm) */
 #include "re15_player.h"
 #include "re15_damage.h"
 
@@ -116,6 +117,11 @@ static void arm(int slot, uint8_t type, int hp, int dist)
     e->grid_id = (uint8_t)(e->grid_id & 0x7f);   /* aufrecht -> LEVEL-Band @0x801015F4-FC */
     e->anim_flags = 0;
     pl->x = e->x - dist; pl->z = e->z; pl->y = e->y; pl->rot_y = 0; pl->hit_react = 0;
+    /* Runde 38 Integration: die RE1.5-Spinne 0x25 ist erst nach ihrem ACTIVE-Stempel ein Kandidat (word0-Band = Port
+     * aim_band: INIT loescht @0x80110d38-48, ACTIVE stempelt FUN_80012aa4(0xfa0) @0x80110f94-fd4, Resolver @0x800120e4-ec).
+     * Dieses Geruest setzt state 1 ohne Takt — es stempelt deshalb einmal wie der ACTIVE-Schwanz (hier grid 0x01, gleiche
+     * Hoehe, Abstand 3000 -> LEVEL|DOWN). Unter der RE2-KI wirkt das Feld nicht (RE2 hat kein Hoehenband). */
+    if (type == 0x25u) { e->aim_band = 0; re15_spinnen_r38_band_stempel(e, pl); }
 }
 
 int main(void)

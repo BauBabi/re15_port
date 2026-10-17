@@ -73,6 +73,7 @@
 #include "re2_ems.h"
 #include "re15_ems.h"          /* Nachbesserung 3: Hybrid-Bank wie die exe (re15_ems_index_for_type/_get_entry) */
 #include "re15_schuss_r36.h"
+#include "re15_re2zombie_r37.h"   /* Runde 37 Spur L: Referenzszenario (Sonden-Maske 0), s. main */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -305,6 +306,15 @@ int main(int argc, char **argv)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    /* Runde 37 Spur L: die Pins messen den Blut-ANKER im Referenzszenario der Runde 36 (gemessene Werte eben 24 / tief 32
+     * / rip 0) und laufen deshalb im RE2-Zombie-Strom bis Runde 37 (Sonden-Maske 0 = Basis e399ee3f bitgleich). Mit den
+     * 0x201-Produzenten (@0x80101D68-DBC/EC4-F10/F14-F60) wuerfelt der Strom andere Wege: (a) AUF trifft die andere
+     * Liegeseite (Clip 9 statt 8), wo der Anker der Port-Konvention ("Pose des LAUFENDEN Bilds", re15_schuss_r36.h) ein
+     * Bild vor der vom Blend-Byte 15 (`sb 15,334` @0x80107B3C) eingefrorenen gezeichneten Pose liegt: 46 / 67 statt 24 / 32
+     * (= Kopfweg eines Bilds); (b) RIP aus dem Arme-hoch-Gang (Loco-Clip 4 -> Haupt-Clip 4, gleiche Motion): P1 faehrt
+     * NACH dem Spawn den e7c-Wurzelschritt des Bilds 0 = root(kf0) = (-277,-26) (@0x80015F04-1C, @0x80109084/@0x801090B0)
+     * — Bewegung im Handler nach dem Spawn wie der MG-Schub. Beides Dossier analysis/befunde_runde37/L_re2zombie.md 5b. */
+    re15_re2z_r37_produzenten(0u);
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset(); re15_player_aim_reset();

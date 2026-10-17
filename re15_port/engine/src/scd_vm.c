@@ -65,6 +65,11 @@
 #include "re15_lift2030_r37.h" /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (lift2030_r37.c) */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 (zombieaktiv_r37.c) */
 #include "re15_kistenregel_r37.h" /* Runde 37 Spur Q: Besitz-Bit nur mit Gegenstand im Inventar (kistenregel_r37.c) */
+#include "re15_kleinkram_r38.h"   /* Runde 38 Spur Q: Irons 1151 sub03 + Flammenwerfer 30E0 sub04 (kleinkram_r38.c) */
+#include "re15_rekorder_r38.h" /* Runde 38 Spur J: Stimmschloss ROOM1100/1101, Rekorder-Aufnahme (rekorder_r38.c) */
+#include "re15_elzatoene_r38.h" /* Runde 38 Spur H: Schuss 1041 statt Text, Roys Stoehnen 1021 (elzatoene_r38.c) */
+#include "re15_tagebuch_r38.h" /* Runde 38 Spur G: ROOM1011 msg 18 -> Roys Diary (tagebuch_r38.c) */
+#include "re15_dining_r38.h" /* Runde 38 Spur F: Programme 1140/1141/1021, Tuer 1131, Phase H 1141 (dining_r38.c) */
 
 scd_vm_t g_scd;
 
@@ -192,6 +197,12 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_codepanel_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
     /* Runde 37 Spur C N1: Lift-Anker ROOM2030/2031 (sub02/sub04, re15_lift2030_r37.h). */
     re15_lift2030_r37_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 38 Spur Q: Anker ROOM1151 sub03 / ROOM30E0 sub04 (re15_kleinkram_r38.h). */
+    re15_kleinkram_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 38 Spur J: sub02-Anker des Stimmschlosses ROOM1100/1101 (re15_rekorder_r38.h). */
+    re15_rekorder_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 38 Spur H: Anker ROOM1041 @0x02200 (Text -> Schuss) und ROOM1021 @0x020B2 (Roys Stoehnen), re15_elzatoene_r38.h. */
+    re15_elzatoene_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -652,6 +663,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_szl_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 36 Spur J: 22/23 in ROOM11B0 */
     if (!pc) pc = re15_schluessel_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur Q: 11B0 Ereignis 25 */
     if (!pc) pc = re15_kartenitems_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur N: Karte, Ereignis 28 */
+    if (!pc) pc = re15_dining_r38_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 38 Spur F: 1140/3, 1141/5+6, 1021/6, 1131/29 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -770,6 +782,12 @@ void scd_vm_tick(void)
             if (g_re15_codepanel_anker_n) { int cp = re15_codepanel_r37_pc(t); if (cp == 2) break; if (cp == 1) continue; }
             /* Runde 37 Spur C N1: RE2-Lift-Ton ROOM2030/2031 (Wachposten = Ankerzahl, sonst 0). */
             if (g_re15_lift2030_anker_n) re15_lift2030_r37_pc(t->pc);
+            /* Runde 38 Spur Q: 1151 Text 20 statt msg 2 / Irons-Gesten aus, 30E0 Aufnahme statt msg 15 (re15_kleinkram_r38.h). */
+            if (g_re15_r38q_anker_n) { int q = re15_kleinkram_r38_pc(t); if (q == 2) break; if (q == 1) continue; }
+            /* Runde 38 Spur J: ROOM1100/1101 sub02 wartet an @0x00C96 auf das Ende der Rekorder-Aufnahme (re15_rekorder_r38.h). */
+            if (g_re15_rekorder_anker_n && re15_rekorder_r38_pc(t) == 2) break;
+            /* Runde 38 Spur H: Roys Stoehnen am Gang-Anker ROOM1021 @0x020B2 (Wachposten = Ankerzahl, sonst 0). */
+            if (g_re15_elzatoene_anker_n) re15_elzatoene_r38_pc(t->pc);
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
@@ -1203,6 +1221,8 @@ static int op_evt_exec(scd_thread_t *t)
                 return 1;       /* PC steht bereits hinter dem Opcode */
     }
     const uint8_t *target_pc = s_current_rdt->sub_scd[sub_id];
+    /* Runde 38 Spur F: ROOM1141 sub00 @0x00B02 Evt_exec sub02 -> Klopf-Schleife in Phase H (re15_dining_r38.h). */
+    target_pc = re15_dining_r38_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
@@ -1842,6 +1862,11 @@ static int op_message_on(scd_thread_t *t)
      * Munitions-Angebot). HINTER dem Stimmen-Riegel, damit auch dieser Text eine laufende Aufnahme
      * ausreden laesst. Herleitung: include/re15_leiche.h. */
     if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }
+    /* Runde 38 Spur H: ROOM1041 msg 3 "*gunshot*" @0x02200 ist ein Ton, kein Text (re15_elzatoene_r38.h). */
+    if (re15_elzatoene_r38_message_on(t->pc)) { t->pc += 4; return 1; }
+    /* Runde 38 Spur G: ROOM1011 msg 18 (Roys Zettel "0513", sub07 @0x00E64) -> Roys Diary statt der Nachricht;
+     * 2 = parken, solange der Leser laeuft (include/re15_tagebuch_r38.h). */
+    { const int tb = re15_tagebuch_r38_message_on(t); if (tb == 2) return 2; if (tb == 1) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text
@@ -1873,7 +1898,9 @@ static int op_message_on(scd_thread_t *t)
      * durch (t->pc += 4 am Ende). Skript-Wege mit EIGENEM RE1.5-Se_on (ROOM4000 sub02
      * @Datei 0x0142E Se_on(2,0x0f)) stehen nicht in der Tabelle und bleiben RE1.5. */
     re15_lock_se_notice(g_current_room_id, t->pc[1], RE15_LOCK_WEG_SKRIPT);
-    re15_aufschliessen_r36_notice(g_current_room_id, t->pc[1], RE15_AUF_WEG_SKRIPT);   /* Runde 36 Spur G: Piep + Aufschliessen (RE2 ROOM2110 sub08) */
+    /* Runde 38 Spur J: ROOM1100/1101 msg 2 - Piep + Aufschliessen liefen schon am ACCEPTED @0x00C9C (re15_rekorder_r38.h). */
+    if (!re15_rekorder_r38_message_on(g_current_room_id, t->pc))
+        re15_aufschliessen_r36_notice(g_current_room_id, t->pc[1], RE15_AUF_WEG_SKRIPT);   /* Runde 36 Spur G: Piep + Aufschliessen (RE2 ROOM2110 sub08) */
 
     if (re15_room_full_text(g_current_room_id)) {
         /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:
@@ -2947,8 +2974,10 @@ static int op_aot_set(scd_thread_t *t)
         /* AOT rect is LITTLE-ENDIAN (2026-06-04 fix, same as Door_aot_set). NW corner + extent -> */
         int16_t rect_x = scd_read_le_s16(&t->pc[6]);
         int16_t rect_z = scd_read_le_s16(&t->pc[8]);
-        int16_t rect_w = scd_read_le_s16(&t->pc[10]);
-        int16_t rect_d = scd_read_le_s16(&t->pc[12]);
+        /* Runde 38 Spur N: Breite/Tiefe VORZEICHENLOS (`lhu a0,4(a1)` @0x80042b70 / `lhu a0,6(a1)` @0x80042b8c,
+         * `sltu` @0x80042b78/94, FUN_80042b64); nur 8 Kurzform-Saetze > 32767, alle sce 8 (N_wasser.md B10). */
+        uint16_t rect_w = (uint16_t)scd_read_le_s16(&t->pc[10]);
+        uint16_t rect_d = (uint16_t)scd_read_le_s16(&t->pc[12]);
         cx = (int32_t)rect_x + (int32_t)rect_w / 2;       /* center + half-extents (matches Door/Item) */
         cz = (int32_t)rect_z + (int32_t)rect_d / 2;
         hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
@@ -3887,6 +3916,8 @@ static int op_sce_em_set(scd_thread_t *t)
         a->x = (int32_t)x;
         a->y = (int32_t)y;
         a->z = (int32_t)z;
+        a->pos_s_x = (uint16_t)a->x; a->pos_s_y = (uint16_t)a->y; a->pos_s_z = (uint16_t)a->z;   /* Runde 38 Spur R:
+                                                   * Lage-Spiegel +0x40/+0x42/+0x44 `sh` @0x800421a0-b8 */
         a->rot_x  = 0;
         a->rot_y  = dir;
         a->rot_z  = 0;
@@ -3897,6 +3928,7 @@ static int op_sce_em_set(scd_thread_t *t)
                                  * RAMP env-stamp gate, and any per-floor event AOT) read the wrong band for
                                  * a non-floor-0 enemy. (audit wf_27ae1ea7) */
         re15_schwerkraft_seed(a);   /* Runde 35 Spur H: +0x1ba = -(pc[4]*1800) @0x80042210 (Zombie-Wurzel-Typen) */
+        a->fall_1c0 = 0;            /* Runde 38 Spur M: +0x1c0 = 0 fuer JEDEN Spawn, `sh zero,448(s0)` @0x800421f4 (NPC-Schwerkraft) */
         /* hp=100 is harmless nominal init. Sce_em_set (0x44) carries NO hp
          * field — the `hp` struct member is RE2 +0x1C2 (Member ID 0x13), a
          * SEPARATE field written only via Member_set, not by this opcode.

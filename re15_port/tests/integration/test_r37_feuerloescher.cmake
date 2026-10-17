@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 3.16)
 # Konstanten include/re15_feuerloescher_r37.h. Die Unit-Riegel unit_r37_feuerloescher_* pruefen die Mechanik
 # am Engine-Code; dieser Riegel prueft den Nutzerweg an der exe (Lade-Weg CONTINUE, Eingabeskript, Tuer-Weg):
 #
-#   A  ENDE-ZU-ENDE Leon: Spielstand ROOM1050 vor der Wand (17200,-22500) Blick Norden, Cut 6 -> Aktion ->
+#   A  ENDE-ZU-ENDE Leon: Spielstand ROOM1030 vor dem Pfeiler (-4300,-17904) Blick +x, Cut 0 (Runde 38 Spur K,
+#      fire_extinguisher.bmp; bis v0.8.25 ROOM1050 an der Wand) -> Aktion ->
 #      "Will you take the Fire Extinguisher?" -> Ja -> (3,0x85) (ROOM1000 sub01 @0x00D0C); Sprung (Debug-Menue)
 #      nach ROOM1090 an den Feuer-Platz (300,-1800,-300) -> Aktion -> msg 7/8 -> Ja -> Selbst-Tuer (@0x02726) ->
 #      Neueintritt OHNE Loescher (Leon traegt ihn) -> msg 9 -> Wegwerf-Abfrage -> Ja -> Loescher liegt
@@ -13,7 +14,7 @@ cmake_minimum_required(VERSION 3.16)
 #      abgelegt -> Aktion an der Tuer -> ROOM1090 (Tuer-Weg scd_room_reenter) -> Loescher liegt
 #   C  ELZA ROOM1091: Spielstand neben dem Loescher -> liegt von Anfang an; Aktion -> msg 29
 #   D  SPIND ROOM1000 Leon: Aktion am Spind -> "Nothing unusual.", keine Aufnahme
-#   E  ROOM1050 Leon ohne Aufnahme (Bild): Loescher haengt an der Wand und wird gezeichnet
+#   E  ROOM1030 Leon ohne Aufnahme (Bild): Loescher haengt am Pfeiler und wird gezeichnet (Runde 38 Spur K)
 #   F  Spielstand + CONTINUE in ROOM1090 (Feuer aus, Loescher abgelegt) -> liegt und wird gezeichnet
 #   G  dasselbe mit dem Loescher im Inventar -> liegt NICHT (kein Doppel)
 #   H  Elza Tuer-Weg ROOM1051 -> ROOM1091 -> liegt; in ROOM1051 haengt keiner
@@ -117,11 +118,11 @@ endfunction()
 # --- A: Ende-zu-Ende ---------------------------------------------------------------------------
 # Skript-Takte (30 Hz ab Spielbild 60): A@30 Aufnahme, A@138 Ja; Sprung F420; A@381 Feuer (msg 7),
 # A@444 weiter (msg 8), A@537 Ja (Loeschen), danach A je 2 s (msg 9 zu, Wegwerf-Abfrage Ja auf "Yes").
-fl_lauf(a 1050 "1050;17200;-22500;1024;cut:6"
+fl_lauf(a 1030 "1030;-4300;-17904;0;cut:0"
     "W1,A0.1,W3.5,A0.1,W8,A0.1,W2,A0.1,W3,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W20"
     1400 "RE15_DEBUG_JUMP=1090@420;RE15_PLAYER_POS=300,-300,0,1;RE15_FRAMEDUMP=300-1400/50:fd_" _a)
-pruef(A _a "[feuerloescher] ROOM1050: Loescher an der Wand obj 5 bei (17200,-1150,-23775)")
-pruef(A _a "oid=0x05 pos=(17200,-1150,-23775)")
+pruef(A _a "[feuerloescher] ROOM1030: Loescher an der Wand obj 5 bei (-2813,-2122,-17904)")
+pruef(A _a "oid=0x05 pos=(-2813,-2122,-17904)")
 pruef(A _a "[feuerloescher] Aufnahme Item 0x31 (9,0x86) -> Set(3,0x85)=1")
 pruef(A _a "[feuerloescher] ROOM1090: kein Loescher (Feuer brennt noch, (3,0x81)=0)")
 pruef(A _a "id=8 \"Will you use the Fire Extinguisher?\"")
@@ -135,7 +136,7 @@ pruef(A _a "oid=0x05 pos=(2500,-1800,-1300) rot=(0,3250,0)")
 # Tuer: 9 Bilder Halten (aot_common.c door_hold, FUN_8002bd44) -> A0.5 = 15 Bilder.
 fl_lauf(b 1050 "1050;19850;-22300;1024;cut:6;flag:9:0x86;flag:3:0x85;flag:3:0x81"
     "W1,A0.5,W12" 520 "" _b)
-pruef(B _b "[feuerloescher] ROOM1050: kein Loescher (schon genommen, (9,0x86)=1)")
+pruef_nicht(B _b "[feuerloescher] ROOM1050")   # Runde 38 Spur K: ROOM1050 ist kein Loescher-Raum mehr
 pruef(B _b "[feuerloescher] ROOM1090: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300)")
 
 # --- C: Elza ROOM1091 ------------------------------------------------------------------------------
@@ -154,9 +155,9 @@ pruef(D _d "[feuerloescher] ROOM1000: Spind Slot 3 (Item 0x31 @0x00C24) -> Raumt
 pruef(D _d "room=1000 id=0 \"Nothing unusual.\"")
 pruef_nicht(D _d "Aufnahme Item 0x31")
 
-# --- E: Bild ROOM1050 ------------------------------------------------------------------------------
-fl_lauf(e 1050 "1050;18900;-20800;0;cut:6" "W3" 140 "RE15_FRAMEDUMP=120-120/50:fd_" _e)
-pruef(E _e "oid=0x05 pos=(17200,-1150,-23775)")
+# --- E: Bild ROOM1030 (Runde 38 Spur K) -------------------------------------------------------------
+fl_lauf(e 1030 "1030;-11500;-19500;2048;cut:0" "W3" 140 "RE15_FRAMEDUMP=120-120/50:fd_" _e)
+pruef(E _e "oid=0x05 pos=(-2813,-2122,-17904)")
 
 # --- F/G: Spielstand + CONTINUE direkt in ROOM1090 (Leon, Feuer aus, Rettung durch) -------------------
 fl_lauf(f 1090 "1090;0;250;0;y:-1800;cut:5;flag:9:0x86;flag:3:0x85;flag:3:0x81;flag:3:0xbb;flag:3:0x6e"

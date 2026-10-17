@@ -1,0 +1,97 @@
+[   3.2] vgamepad bereit, XInput vorher [] nachher [0] mein [0]
+[   4.5] DuckStation gestartet {'44924'}
+[  21.9] Rechts 1
+[  22.4] Rechts 2
+[  22.9] Quadrat = laden
+[  33.7] GDB verbunden
+[  34.3] Stopp: b'S02'
+[  34.6] RDT 801219b0 FLR 80122a80 n=7 e0 x=-7800 z=-8700 w=1200 d=1600 typ=0x97
+[  34.9] Leon vorher (-8750,-1800,-6900) Blick 0 Band 1
+[  35.7] Leon gestellt (-8404,-1800,-7246) Blick 0
+[  35.8] Z0 80045710: b'OK'
+[  35.9] Z0 800534c4: b'OK'
+[  36.9] UP halten 2.5s
+[  37.2] SPAWN a0=06050d00 a1=0x0 a2=801d398c versatz=(0, 100, 0) s0(boden)=0x97 anker=(-8235,-1887,-7100) R=(4067, -346, -129, 341, 4069, 66, 115, -83, 4083) T=(-8226, -1986, -7097) Leon=(-7708,-1800,-7246)
+[  37.2] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=0 n=1 dur=1 S=8) a3=0 sp16=208 pkt=80093394
+[  37.2]   PAKET q0 code=2c rgb=808080 xy=[(164, 172), (167, 172), (164, 175), (167, 175)] uv=[(224, 96), (232, 96), (224, 104), (232, 104)] clut=0x7852 tpage=0x006f
+[  37.3] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=1 n=1 dur=1 S=16) a3=0 sp16=208 pkt=8009d394
+[  37.3]   PAKET q0 code=2c rgb=808080 xy=[(162, 168), (169, 168), (162, 175), (169, 175)] uv=[(184, 104), (200, 104), (184, 120), (200, 120)] clut=0x7852 tpage=0x006f
+[  37.3] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=2 n=1 dur=1 S=16) a3=0 sp16=208 pkt=80093394
+[  37.4]   PAKET q0 code=2c rgb=808080 xy=[(162, 168), (169, 168), (162, 175), (169, 175)] uv=[(200, 104), (216, 104), (200, 120), (216, 120)] clut=0x7852 tpage=0x006f
+[  37.4] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=3 n=1 dur=1 S=24) a3=0 sp16=208 pkt=8009d394
+[  37.4]   PAKET q0 code=2c rgb=808080 xy=[(160, 166), (171, 166), (160, 177), (171, 177)] uv=[(224, 72), (248, 72), (224, 96), (248, 96)] clut=0x7852 tpage=0x006f
+[  37.5] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=4 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  37.5]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(184, 120), (216, 120), (184, 152), (216, 152)] clut=0x7852 tpage=0x006f
+[  37.5] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=5 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  37.5]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(216, 120), (248, 120), (216, 152), (248, 152)] clut=0x7852 tpage=0x006f
+[  37.6] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=6 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  37.6]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(0, 72), (32, 72), (0, 104), (32, 104)] clut=0x7852 tpage=0x006f
+[  37.6] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=7 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  37.6]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(32, 72), (64, 72), (32, 104), (64, 104)] clut=0x7852 tpage=0x006f
+[  37.7] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=8 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  37.7]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(64, 72), (96, 72), (64, 104), (96, 104)] clut=0x7852 tpage=0x006f
+[  37.7] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=9 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  37.7]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(96, 72), (128, 72), (96, 104), (128, 104)] clut=0x7852 tpage=0x006f
+[  37.8] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=10 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  37.8]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(128, 72), (160, 72), (128, 104), (160, 104)] clut=0x7852 tpage=0x006f
+[  37.8] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=11 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  37.8]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(160, 72), (192, 72), (160, 104), (192, 104)] clut=0x7852 tpage=0x006f
+[  37.9] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-8235,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=12 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  37.9]   PAKET q0 code=2c rgb=808080 xy=[(158, 164), (173, 164), (158, 179), (173, 179)] uv=[(192, 72), (224, 72), (192, 104), (224, 104)] clut=0x7852 tpage=0x006f
+[  38.0] SPAWN a0=06050d00 a1=0x0 a2=801d3788 versatz=(0, 100, 0) s0(boden)=0x97 anker=(-7555,-1873,-7385) R=(4067, -326, 167, 322, 4073, -73, -170, 81, 4084) T=(-7547, -1972, -7386) Leon=(-7068,-1800,-7246)
+[  38.0] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=0 n=1 dur=1 S=8) a3=0 sp16=208 pkt=8009d394
+[  38.0]   PAKET q0 code=2c rgb=808080 xy=[(140, 166), (143, 166), (140, 169), (143, 169)] uv=[(224, 96), (232, 96), (224, 104), (232, 104)] clut=0x7852 tpage=0x006f
+[  38.1] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=1 n=1 dur=1 S=16) a3=0 sp16=208 pkt=80093394
+[  38.1]   PAKET q0 code=2c rgb=808080 xy=[(138, 162), (145, 162), (138, 169), (145, 169)] uv=[(184, 104), (200, 104), (184, 120), (200, 120)] clut=0x7852 tpage=0x006f
+[  38.1] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=2 n=1 dur=1 S=16) a3=0 sp16=208 pkt=8009d394
+[  38.1]   PAKET q0 code=2c rgb=808080 xy=[(138, 162), (145, 162), (138, 169), (145, 169)] uv=[(200, 104), (216, 104), (200, 120), (216, 120)] clut=0x7852 tpage=0x006f
+[  38.2] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=3 n=1 dur=1 S=24) a3=0 sp16=208 pkt=80093394
+[  38.2]   PAKET q0 code=2c rgb=808080 xy=[(136, 160), (147, 160), (136, 171), (147, 171)] uv=[(224, 72), (248, 72), (224, 96), (248, 96)] clut=0x7852 tpage=0x006f
+[  38.2] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=4 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  38.2]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(184, 120), (216, 120), (184, 152), (216, 152)] clut=0x7852 tpage=0x006f
+[  38.3] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=5 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  38.3]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(216, 120), (248, 120), (216, 152), (248, 152)] clut=0x7852 tpage=0x006f
+[  38.3] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=6 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  38.3]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(0, 72), (32, 72), (0, 104), (32, 104)] clut=0x7852 tpage=0x006f
+[  38.4] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=7 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  38.4]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(32, 72), (64, 72), (32, 104), (64, 104)] clut=0x7852 tpage=0x006f
+[  38.4] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=8 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  38.4]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(64, 72), (96, 72), (64, 104), (96, 104)] clut=0x7852 tpage=0x006f
+[  38.5] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=9 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  38.5]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(96, 72), (128, 72), (96, 104), (128, 104)] clut=0x7852 tpage=0x006f
+[  38.5] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=10 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  38.5]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(128, 72), (160, 72), (128, 104), (160, 104)] clut=0x7852 tpage=0x006f
+[  38.6] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=11 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  38.6]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(160, 72), (192, 72), (160, 104), (192, 104)] clut=0x7852 tpage=0x006f
+[  38.6] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7555,-1873,-7385) tpage=0x006f clut=0x7852 rec=(c0=12 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  38.6]   PAKET q0 code=2c rgb=808080 xy=[(135, 159), (148, 159), (135, 172), (148, 172)] uv=[(192, 72), (224, 72), (192, 104), (224, 104)] clut=0x7852 tpage=0x006f
+[  38.8] SPAWN a0=06050d00 a1=0x0 a2=801d398c versatz=(0, 100, 0) s0(boden)=0x97 anker=(-7595,-1887,-7100) R=(4067, -346, -129, 341, 4069, 66, 115, -83, 4083) T=(-7586, -1986, -7097) Leon=(-7068,-1800,-7246)
+[  38.8] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=0 n=1 dur=1 S=8) a3=0 sp16=208 pkt=80093394
+[  38.8]   PAKET q0 code=2c rgb=808080 xy=[(142, 173), (145, 173), (142, 176), (145, 176)] uv=[(224, 96), (232, 96), (224, 104), (232, 104)] clut=0x7852 tpage=0x006f
+[  38.8] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=1 n=1 dur=1 S=16) a3=0 sp16=208 pkt=8009d394
+[  38.8]   PAKET q0 code=2c rgb=808080 xy=[(140, 169), (147, 169), (140, 176), (147, 176)] uv=[(184, 104), (200, 104), (184, 120), (200, 120)] clut=0x7852 tpage=0x006f
+[  38.9] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=2 n=1 dur=1 S=16) a3=0 sp16=208 pkt=80093394
+[  38.9]   PAKET q0 code=2c rgb=808080 xy=[(140, 169), (147, 169), (140, 176), (147, 176)] uv=[(200, 104), (216, 104), (200, 120), (216, 120)] clut=0x7852 tpage=0x006f
+[  38.9] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=3 n=1 dur=1 S=24) a3=0 sp16=208 pkt=8009d394
+[  38.9]   PAKET q0 code=2c rgb=808080 xy=[(138, 167), (149, 167), (138, 178), (149, 178)] uv=[(224, 72), (248, 72), (224, 96), (248, 96)] clut=0x7852 tpage=0x006f
+[  39.0] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=4 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  39.0]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(184, 120), (216, 120), (184, 152), (216, 152)] clut=0x7852 tpage=0x006f
+[  39.0] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=5 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  39.0]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(216, 120), (248, 120), (216, 152), (248, 152)] clut=0x7852 tpage=0x006f
+[  39.1] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=6 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  39.1]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(0, 72), (32, 72), (0, 104), (32, 104)] clut=0x7852 tpage=0x006f
+[  39.1] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=7 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  39.1]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(32, 72), (64, 72), (32, 104), (64, 104)] clut=0x7852 tpage=0x006f
+[  39.2] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=8 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  39.2]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(64, 72), (96, 72), (64, 104), (96, 104)] clut=0x7852 tpage=0x006f
+[  39.2] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=9 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  39.2]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(96, 72), (128, 72), (96, 104), (128, 104)] clut=0x7852 tpage=0x006f
+[  39.3] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=10 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  39.3]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(128, 72), (160, 72), (128, 104), (160, 104)] clut=0x7852 tpage=0x006f
+[  39.3] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=11 n=1 dur=1 S=32) a3=0 sp16=208 pkt=8009d394
+[  39.4]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(160, 72), (192, 72), (160, 104), (192, 104)] clut=0x7852 tpage=0x006f
+[  39.4] BAU slot=800a73b8 fl=03 id=6 sub=5 skala=0xd00 defwh=(4096,4096) wpos=(-7595,-1887,-7100) tpage=0x006f clut=0x7852 rec=(c0=12 n=1 dur=1 S=32) a3=0 sp16=208 pkt=80093394
+[  39.4]   PAKET q0 code=2c rgb=808080 xy=[(136, 165), (151, 165), (136, 180), (151, 180)] uv=[(192, 72), (224, 72), (192, 104), (224, 104)] clut=0x7852 tpage=0x006f
+[  39.5] losgelassen, Stopps: 81
+[  41.3] Stopp2: b'S05'
+[  65.6] settings.ini zurueckgeschrieben

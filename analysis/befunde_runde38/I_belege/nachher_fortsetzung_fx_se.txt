@@ -1,0 +1,65 @@
+# Runde 38 Spur I — Messung nachher (Fortsetzung, Stand 645f925a), echte exe, Lade-Weg ROOM1171 (Elza)
+# Karte: probe_r36_elza_karte re15_card.mcr 1171 2300 14365 1024 3:194
+# Umgebung: RE15_NO_INTRO=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_EVT_TRACE=1 RE15_MSG_LOG=1
+#           RE15_STATE_LOG=state.log RE15_EXIT_AT=60#10b1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1 RE15_WINDOW_SCALE=1
+#           RE15_FRAMEDUMP=94-112/2:fd/f   (Standard-KI = RE2; exit=0)
+
+## A. Effekt-Pool (state.log, Spalte fx = re15_esp_fx_count, Spalte gr = Griff) — nur Aenderungen
+F89 fx=0 gr=0
+F95 fx=0 gr=1
+F96 fx=1 gr=1
+F103 fx=2 gr=1
+F111 fx=3 gr=1
+F118 fx=2 gr=1
+F119 fx=3 gr=1
+F125 fx=2 gr=1
+F127 fx=3 gr=1
+F133 fx=2 gr=1
+F135 fx=3 gr=1
+F141 fx=2 gr=1
+F143 fx=3 gr=1
+F149 fx=2 gr=1
+F151 fx=3 gr=1
+F157 fx=2 gr=1
+F162 fx=1 gr=1
+F165 fx=0 gr=1
+# F95 Griff (HOVER-Kontakt), F96 ORIENT-Eintritt -> Effekt @0x80115334, danach je 8 Bilder (Clip 8 = 8 Bilder)
+# ein Spawn @0x80115394: F103, F111, F119, F127, F135, F143, F151 (Rueckgang = abgelaufene Effekte); F156 SPIN (Wurf).
+
+## B. Ton (debug.log, RE15_SE_DEBUG, Reihenfolge der Zeilen; se=N = Raum-SE N der snd1-Bank auf SE-Stimme 4/6)
+8:[se] Stimme: se=0 layer=0 vag=4 note=60 fine=0 center=60 vol=127 pitch=0x1000 (44100 Hz) -> SE-Stimme -16 (SPU 0)
+9:[se] Stimme: se=0 layer=1 vag=5 note=60 fine=0 center=60 vol=127 pitch=0x1000 (44100 Hz) -> SE-Stimme -15 (SPU 1)
+53:[evt] F0 room=1171 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+54:[evt] F0 room=1171 Set(3,0x80) op=1 (vorher 0)
+67:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+68:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+109:[se] Stimme: se=2 layer=0 vag=3 note=62 fine=0 center=74 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 6 (SPU 22)
+117:[se] Stimme: se=2 layer=0 vag=3 note=62 fine=0 center=74 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 6 (SPU 22)
+121:[se] Stimme: se=2 layer=0 vag=3 note=62 fine=0 center=74 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 6 (SPU 22)
+123:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+124:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+131:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+132:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+139:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+140:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+145:[se] SCD Se_on: bank=2 id=10 flags=0 origin=2/0
+149:[se] SCD Se_on: bank=2 id=10 flags=0 origin=2/0
+154:[se] SCD Se_on: bank=2 id=10 flags=0 origin=2/0
+159:[se] SCD Se_on: bank=2 id=10 flags=0 origin=2/0
+164:[se] Stimme: se=0 layer=0 vag=1 note=60 fine=0 center=72 vol=127 pitch=0x800 (22050 Hz) -> SE-Stimme 4 (SPU 20)
+165:[se] SCD Se_on: bank=2 id=10 flags=0 origin=2/0
+170:[se] SCD Se_on: bank=2 id=10 flags=0 origin=2/0
+180:[msg] room=1171 id=0 savepoint=0
+208:[msg] room=1171 id=1 savepoint=0
+226:[evt] F847 room=1171 Evt_exec sub=3 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=1
+228:[evt] F847 room=1171 Evt_exec sub=4 cond=0xff -> slot 12 (aktive Event-Slots 3) flag(3,0x80)=1
+245:[se] SCD Se_on: bank=2 id=6 flags=0 origin=0/0
+248:[se] SCD Se_on: bank=2 id=6 flags=0 origin=0/0
+252:[msg] room=1171 id=3 savepoint=0
+264:[evt] F1077 room=10b1 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=1
+265:[evt] F1077 room=10b1 Set(3,0x80) op=0 (vorher 1)
+# Zeile 8/9: Ton VOR dem Raum (Titel/Laden, Kernbank SPU 0/1) — nicht die Szene.
+# Zeile 67/68: zwei se=0 nach dem Szenenstart F0 = ASCEND-Eintritt beider Ereignis-Kraehen (@0x80115004, a0=0 @0x80115008).
+# se=2 (3x) = Se_on 0x03020001 im Griff / Clip-0-Ende / Halte-Umlauf (@0x80115c04/@0x80115c3c/@0x80115ca4).
+# se=0-Paare danach = SPIN-Eintritte beider Kraehen (@0x801153f8), solange (5,0x1D) steht; dann Johns 6 Schuesse
+# (SCD Se_on bank=2 id=10 @0x01438..0x0148C), msg 0/1, sub03/04 F847, msg 3, ROOM10B1 F1077.

@@ -1,0 +1,13 @@
+[konst] C:/workspace/git/reAi_v2/.claude/worktrees/r38_zopf/analysis/befunde_runde38/D_belege/orig_zopf_frames.txt, Schritt 74 je Bild
+    Gehbilder 135..172, mittlere Original-Schrittweite 77.3, Richtung (0.419,-0.908)
+    Original-Lage (Gegenprobe, muss 0 sein):
+      Glied 17 xang Mittel    0.0 max    0 | zang Mittel    0.0 max    0
+      Glied 18 xang Mittel    0.0 max    0 | zang Mittel    0.0 max    0
+      Glied 19 xang Mittel    0.0 max    0 | zang Mittel    0.0 max    0
+      Glied 20 xang Mittel    0.0 max    0 | zang Mittel    0.0 max    0
+  ok: Gegenprobe: mit der Original-Lage rechnet der Port die 38 Gehbilder bitgleich
+    KONSTANTE Schrittweite:
+      Glied 17 xang Mittel    0.7 max    4 | zang Mittel   19.8 max   36
+      Glied 18 xang Mittel    2.2 max    8 | zang Mittel   17.9 max   36
+      Glied 19 xang Mittel    3.4 max   10 | zang Mittel   25.8 max   48
+      Glied 20 xang Mittel    3.0 max   10 | zang Mittel   19.1 max   40

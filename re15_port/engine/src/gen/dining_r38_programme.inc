@@ -1,0 +1,721 @@
+/* GENERIERT von re15_port/tools/r38_dining/programme_bauen.py - NICHT HAND-EDITIEREN.
+ * Runde 38 Spur F: SCD-Programme (Original-Bytes + eingefuegte Zeilen, Listing beim Werkzeugaufruf) und
+ * Texte. Dossier: analysis/befunde_runde38/F_dining1141.md. */
+
+#define RE15_R38F_ANKER_ROLL1140_SUB03_OFF 0x00CA6u  /* ROOM1140 */
+#define RE15_R38F_ANKER_ROLL1140_SUB03_LEN 172u
+#define RE15_R38F_ANKER_ROLL1140_SUB03_FNV 0xB15F10EDu
+#define RE15_R38F_ANKER_ROLL1141_SUB06_OFF 0x00FE8u  /* ROOM1141 */
+#define RE15_R38F_ANKER_ROLL1141_SUB06_LEN 244u
+#define RE15_R38F_ANKER_ROLL1141_SUB06_FNV 0x98A57297u
+#define RE15_R38F_ANKER_LEICHE1021_SUB06_OFF 0x021ECu  /* ROOM1021 */
+#define RE15_R38F_ANKER_LEICHE1021_SUB06_LEN 54u
+#define RE15_R38F_ANKER_LEICHE1021_SUB06_FNV 0xE3209EFDu
+#define RE15_R38F_ANKER_SZENE1141_SUB02_05_OFF 0x00C18u  /* ROOM1141 */
+#define RE15_R38F_ANKER_SZENE1141_SUB02_05_LEN 976u
+#define RE15_R38F_ANKER_SZENE1141_SUB02_05_FNV 0xC944DCF3u
+#define RE15_R38F_ANKER_SZENE1141_SUB00_OFF 0x00AFAu  /* ROOM1141 */
+#define RE15_R38F_ANKER_SZENE1141_SUB00_LEN 72u
+#define RE15_R38F_ANKER_SZENE1141_SUB00_FNV 0x8FBECF21u
+#define RE15_R38F_ANKER_SZENE1141_MAIN00_OFF 0x00A52u  /* ROOM1141 */
+#define RE15_R38F_ANKER_SZENE1141_MAIN00_LEN 152u
+#define RE15_R38F_ANKER_SZENE1141_MAIN00_FNV 0xF31299BAu
+#define RE15_R38F_ANKER_SZENE1021_SUB02_05_OFF 0x01FD8u  /* ROOM1021 */
+#define RE15_R38F_ANKER_SZENE1021_SUB02_05_LEN 532u
+#define RE15_R38F_ANKER_SZENE1021_SUB02_05_FNV 0x94BC6DB4u
+#define RE15_R38F_ANKER_SZENE1021_MAIN00_OFF 0x01DE2u  /* ROOM1021 */
+#define RE15_R38F_ANKER_SZENE1021_MAIN00_LEN 94u
+#define RE15_R38F_ANKER_SZENE1021_MAIN00_FNV 0x40492B6Fu
+
+/* k_r38f_p_roll1140: 220 Byte
+ *   +0000 2b 01 80 ff                          ROOM1140 @0x00CA6 Message_on
+ *   +0004 02                                   ROOM1140 @0x00CAA Evt_next
+ *   +0005 00                                   ROOM1140 @0x00CAB Nop
+ *   +0006 06 00 d0 00                          ROOM1140 @0x00CAC Ifel_ck  -> Ifel-Laenge 0xA0 -> 0xD0 (+0x30 = 3 Se_on + 3 Sleep, wie ROOM1131 @0x00A28 0xa0->0xd0)
+ *   +000A 21 0c 1f 00                          ROOM1140 @0x00CB0 Ck
+ *   +000E 22 03 6a 01                          ROOM1140 @0x00CB4 Set
+ *   +0012 46 05 00 00 00 00 00 00 00 00        ROOM1140 @0x00CB8 Aot_reset
+ *   +001C 22 02 07 01                          ROOM1140 @0x00CC2 Set
+ *   +0020 22 01 1b 01                          ROOM1140 @0x00CC6 Set
+ *   +0024 29 05                                ROOM1140 @0x00CCA Cut_chg
+ *   +0026 36 3b 0c 00 01 00 00 00 00 00 00 00  Se_on(0x3B,0x0C) = ROOM1131 sub02 @0x00A48 bytegleich, Bank 2 -> Port-Bank 0x3B
+ *   +0032 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A54
+ *   +0036 36 3b 0a 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0A) = ROOM1131 sub02 @0x00A58 bytegleich, Port-Bank
+ *   +0042 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A64
+ *   +0046 2e 03 00                             ROOM1140 @0x00CCC Work_set (Work_set Prop 0 = Rolladen)
+ *   +0049 00                                   ROOM1140 @0x00CCF Nop
+ *   +004A 2f 01 00 00                          ROOM1140 @0x00CD0 Speed_set
+ *   +004E 2f 07 fe ff                          ROOM1140 @0x00CD4 Speed_set
+ *   +0052 0d 00 06 00 14 00                    ROOM1140 @0x00CD8 For
+ *   +0058 31                                   ROOM1140 @0x00CDE Add_aspeed
+ *   +0059 30                                   ROOM1140 @0x00CDF Add_speed
+ *   +005A 02                                   ROOM1140 @0x00CE0 Evt_next
+ *   +005B 00                                   ROOM1140 @0x00CE1 Nop
+ *   +005C 0e 00                                ROOM1140 @0x00CE2 Next
+ *   +005E 0d 00 2c 00 0a 00                    ROOM1140 @0x00CE4 For
+ *   +0064 0d 00 04 00 0a 00                    ROOM1140 @0x00CEA For
+ *   +006A 30                                   ROOM1140 @0x00CF0 Add_speed
+ *   +006B 02                                   ROOM1140 @0x00CF1 Evt_next
+ *   +006C 0e 00                                ROOM1140 @0x00CF2 Next
+ *   +006E 2f 07 03 00                          ROOM1140 @0x00CF4 Speed_set
+ *   +0072 0d 00 06 00 03 00                    ROOM1140 @0x00CF8 For
+ *   +0078 31                                   ROOM1140 @0x00CFE Add_aspeed
+ *   +0079 30                                   ROOM1140 @0x00CFF Add_speed
+ *   +007A 02                                   ROOM1140 @0x00D00 Evt_next
+ *   +007B 00                                   ROOM1140 @0x00D01 Nop
+ *   +007C 0e 00                                ROOM1140 @0x00D02 Next
+ *   +007E 2f 07 fd ff                          ROOM1140 @0x00D04 Speed_set
+ *   +0082 0d 00 06 00 03 00                    ROOM1140 @0x00D08 For
+ *   +0088 31                                   ROOM1140 @0x00D0E Add_aspeed
+ *   +0089 30                                   ROOM1140 @0x00D0F Add_speed
+ *   +008A 02                                   ROOM1140 @0x00D10 Evt_next
+ *   +008B 00                                   ROOM1140 @0x00D11 Nop
+ *   +008C 0e 00                                ROOM1140 @0x00D12 Next
+ *   +008E 0e 00                                ROOM1140 @0x00D14 Next
+ *   +0090 36 3b 0b 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0B) = ROOM1131 sub02 @0x00AB2 bytegleich, Port-Bank
+ *   +009C 09 0a 0a 00                          Sleep 10 = ROOM1131 sub02 @0x00ABE
+ *   +00A0 37 00 0d 00                          ROOM1140 @0x00D16 Sca_id_set (Sca_id_set = Original hinter der letzten Next)
+ *   +00A4 37 01 0d 00                          ROOM1140 @0x00D1A Sca_id_set
+ *   +00A8 37 02 0d 00                          ROOM1140 @0x00D1E Sca_id_set
+ *   +00AC 37 03 0d 00                          ROOM1140 @0x00D22 Sca_id_set
+ *   +00B0 37 04 0d 00                          ROOM1140 @0x00D26 Sca_id_set
+ *   +00B4 39 00 0d 00                          ROOM1140 @0x00D2A Sca_floor_set
+ *   +00B8 39 01 0d 00                          ROOM1140 @0x00D2E Sca_floor_set
+ *   +00BC 39 02 0d 00                          ROOM1140 @0x00D32 Sca_floor_set
+ *   +00C0 39 03 0d 00                          ROOM1140 @0x00D36 Sca_floor_set
+ *   +00C4 39 04 0d 00                          ROOM1140 @0x00D3A Sca_floor_set
+ *   +00C8 22 02 07 00                          ROOM1140 @0x00D3E Set
+ *   +00CC 22 01 1b 00                          ROOM1140 @0x00D42 Set
+ *   +00D0 3c 01                                ROOM1140 @0x00D46 Cut_auto
+ *   +00D2 2e 01 00                             ROOM1140 @0x00D48 Work_set
+ *   +00D5 00                                   ROOM1140 @0x00D4B Nop
+ *   +00D6 42                                   ROOM1140 @0x00D4C Plc_ret
+ *   +00D7 00                                   ROOM1140 @0x00D4D Nop
+ *   +00D8 08 00                                ROOM1140 @0x00D4E Endif
+ *   +00DA 01 00                                ROOM1140 @0x00D50 Evt_end
+ */
+static const uint8_t k_r38f_p_roll1140[220] = {
+    0x2b,0x01,0x80,0xff,0x02,0x00,0x06,0x00,0xd0,0x00,0x21,0x0c,0x1f,0x00,0x22,0x03,
+    0x6a,0x01,0x46,0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x02,0x07,0x01,
+    0x22,0x01,0x1b,0x01,0x29,0x05,0x36,0x3b,0x0c,0x00,0x01,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x09,0x0a,0x0f,0x00,0x36,0x3b,0x0a,0x00,0x03,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x09,0x0a,0x0f,0x00,0x2e,0x03,0x00,0x00,0x2f,0x01,0x00,0x00,0x2f,0x07,
+    0xfe,0xff,0x0d,0x00,0x06,0x00,0x14,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x0d,0x00,
+    0x2c,0x00,0x0a,0x00,0x0d,0x00,0x04,0x00,0x0a,0x00,0x30,0x02,0x0e,0x00,0x2f,0x07,
+    0x03,0x00,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x2f,0x07,
+    0xfd,0xff,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x0e,0x00,
+    0x36,0x3b,0x0b,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0a,0x00,
+    0x37,0x00,0x0d,0x00,0x37,0x01,0x0d,0x00,0x37,0x02,0x0d,0x00,0x37,0x03,0x0d,0x00,
+    0x37,0x04,0x0d,0x00,0x39,0x00,0x0d,0x00,0x39,0x01,0x0d,0x00,0x39,0x02,0x0d,0x00,
+    0x39,0x03,0x0d,0x00,0x39,0x04,0x0d,0x00,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,
+    0x3c,0x01,0x2e,0x01,0x00,0x00,0x42,0x00,0x08,0x00,0x01,0x00,
+};
+
+/* k_r38f_p_roll1141: 292 Byte
+ *   +0000 2b 0d 80 ff                          ROOM1141 @0x00FE8 Message_on
+ *   +0004 02                                   ROOM1141 @0x00FEC Evt_next
+ *   +0005 00                                   ROOM1141 @0x00FED Nop
+ *   +0006 06 00 18 01                          ROOM1141 @0x00FEE Ifel_ck  -> Ifel-Laenge 0xE8 -> 0x118 (+0x30 = 3 Se_on + 3 Sleep, wie ROOM1131 @0x00A28 0xa0->0xd0)
+ *   +000A 21 0c 1f 00                          ROOM1141 @0x00FF2 Ck
+ *   +000E 22 03 6a 01                          ROOM1141 @0x00FF6 Set
+ *   +0012 46 03 00 00 00 00 00 00 00 00        ROOM1141 @0x00FFA Aot_reset
+ *   +001C 22 02 07 01                          ROOM1141 @0x01004 Set
+ *   +0020 22 01 1b 01                          ROOM1141 @0x01008 Set
+ *   +0024 29 05                                ROOM1141 @0x0100C Cut_chg
+ *   +0026 06 00 0e 00                          ROOM1141 @0x0100E Ifel_ck
+ *   +002A 21 08 cb 00                          ROOM1141 @0x01012 Ck
+ *   +002E 2e 02 01                             ROOM1141 @0x01016 Work_set
+ *   +0031 00                                   ROOM1141 @0x01019 Nop
+ *   +0032 34 0c 30 00                          ROOM1141 @0x0101A Member_set
+ *   +0036 08 00                                ROOM1141 @0x0101E Endif
+ *   +0038 06 00 0e 00                          ROOM1141 @0x01020 Ifel_ck
+ *   +003C 21 08 cc 00                          ROOM1141 @0x01024 Ck
+ *   +0040 2e 02 02                             ROOM1141 @0x01028 Work_set
+ *   +0043 00                                   ROOM1141 @0x0102B Nop
+ *   +0044 34 0c 30 00                          ROOM1141 @0x0102C Member_set
+ *   +0048 08 00                                ROOM1141 @0x01030 Endif
+ *   +004A 36 3b 0c 00 01 00 00 00 00 00 00 00  Se_on(0x3B,0x0C) = ROOM1131 sub02 @0x00A48 bytegleich, Bank 2 -> Port-Bank 0x3B
+ *   +0056 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A54
+ *   +005A 36 3b 0a 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0A) = ROOM1131 sub02 @0x00A58 bytegleich, Port-Bank
+ *   +0066 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A64
+ *   +006A 2e 03 00                             ROOM1141 @0x01032 Work_set (Work_set Prop 0 = Rolladen)
+ *   +006D 00                                   ROOM1141 @0x01035 Nop
+ *   +006E 2f 01 00 00                          ROOM1141 @0x01036 Speed_set
+ *   +0072 2f 07 fe ff                          ROOM1141 @0x0103A Speed_set
+ *   +0076 0d 00 06 00 14 00                    ROOM1141 @0x0103E For
+ *   +007C 31                                   ROOM1141 @0x01044 Add_aspeed
+ *   +007D 30                                   ROOM1141 @0x01045 Add_speed
+ *   +007E 02                                   ROOM1141 @0x01046 Evt_next
+ *   +007F 00                                   ROOM1141 @0x01047 Nop
+ *   +0080 0e 00                                ROOM1141 @0x01048 Next
+ *   +0082 0d 00 2c 00 0a 00                    ROOM1141 @0x0104A For
+ *   +0088 0d 00 04 00 0a 00                    ROOM1141 @0x01050 For
+ *   +008E 30                                   ROOM1141 @0x01056 Add_speed
+ *   +008F 02                                   ROOM1141 @0x01057 Evt_next
+ *   +0090 0e 00                                ROOM1141 @0x01058 Next
+ *   +0092 2f 07 03 00                          ROOM1141 @0x0105A Speed_set
+ *   +0096 0d 00 06 00 03 00                    ROOM1141 @0x0105E For
+ *   +009C 31                                   ROOM1141 @0x01064 Add_aspeed
+ *   +009D 30                                   ROOM1141 @0x01065 Add_speed
+ *   +009E 02                                   ROOM1141 @0x01066 Evt_next
+ *   +009F 00                                   ROOM1141 @0x01067 Nop
+ *   +00A0 0e 00                                ROOM1141 @0x01068 Next
+ *   +00A2 2f 07 fd ff                          ROOM1141 @0x0106A Speed_set
+ *   +00A6 0d 00 06 00 03 00                    ROOM1141 @0x0106E For
+ *   +00AC 31                                   ROOM1141 @0x01074 Add_aspeed
+ *   +00AD 30                                   ROOM1141 @0x01075 Add_speed
+ *   +00AE 02                                   ROOM1141 @0x01076 Evt_next
+ *   +00AF 00                                   ROOM1141 @0x01077 Nop
+ *   +00B0 0e 00                                ROOM1141 @0x01078 Next
+ *   +00B2 0e 00                                ROOM1141 @0x0107A Next
+ *   +00B4 36 3b 0b 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0B) = ROOM1131 sub02 @0x00AB2 bytegleich, Port-Bank
+ *   +00C0 09 0a 0a 00                          Sleep 10 = ROOM1131 sub02 @0x00ABE
+ *   +00C4 37 00 0d 00                          ROOM1141 @0x0107C Sca_id_set (Sca_id_set = Original hinter der letzten Next)
+ *   +00C8 37 01 0d 00                          ROOM1141 @0x01080 Sca_id_set
+ *   +00CC 37 02 0d 00                          ROOM1141 @0x01084 Sca_id_set
+ *   +00D0 37 03 0d 00                          ROOM1141 @0x01088 Sca_id_set
+ *   +00D4 37 04 0d 00                          ROOM1141 @0x0108C Sca_id_set
+ *   +00D8 39 00 0d 00                          ROOM1141 @0x01090 Sca_floor_set
+ *   +00DC 39 01 0d 00                          ROOM1141 @0x01094 Sca_floor_set
+ *   +00E0 39 02 0d 00                          ROOM1141 @0x01098 Sca_floor_set
+ *   +00E4 39 03 0d 00                          ROOM1141 @0x0109C Sca_floor_set
+ *   +00E8 39 04 0d 00                          ROOM1141 @0x010A0 Sca_floor_set
+ *   +00EC 06 00 0e 00                          ROOM1141 @0x010A4 Ifel_ck
+ *   +00F0 21 08 cb 00                          ROOM1141 @0x010A8 Ck
+ *   +00F4 2e 02 01                             ROOM1141 @0x010AC Work_set
+ *   +00F7 00                                   ROOM1141 @0x010AF Nop
+ *   +00F8 34 0c 10 00                          ROOM1141 @0x010B0 Member_set
+ *   +00FC 08 00                                ROOM1141 @0x010B4 Endif
+ *   +00FE 06 00 0e 00                          ROOM1141 @0x010B6 Ifel_ck
+ *   +0102 21 08 cc 00                          ROOM1141 @0x010BA Ck
+ *   +0106 2e 02 02                             ROOM1141 @0x010BE Work_set
+ *   +0109 00                                   ROOM1141 @0x010C1 Nop
+ *   +010A 34 0c 10 00                          ROOM1141 @0x010C2 Member_set
+ *   +010E 08 00                                ROOM1141 @0x010C6 Endif
+ *   +0110 22 02 07 00                          ROOM1141 @0x010C8 Set
+ *   +0114 22 01 1b 00                          ROOM1141 @0x010CC Set
+ *   +0118 3c 01                                ROOM1141 @0x010D0 Cut_auto
+ *   +011A 2e 01 00                             ROOM1141 @0x010D2 Work_set
+ *   +011D 00                                   ROOM1141 @0x010D5 Nop
+ *   +011E 42                                   ROOM1141 @0x010D6 Plc_ret
+ *   +011F 00                                   ROOM1141 @0x010D7 Nop
+ *   +0120 08 00                                ROOM1141 @0x010D8 Endif
+ *   +0122 01 00                                ROOM1141 @0x010DA Evt_end
+ */
+static const uint8_t k_r38f_p_roll1141[292] = {
+    0x2b,0x0d,0x80,0xff,0x02,0x00,0x06,0x00,0x18,0x01,0x21,0x0c,0x1f,0x00,0x22,0x03,
+    0x6a,0x01,0x46,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x02,0x07,0x01,
+    0x22,0x01,0x1b,0x01,0x29,0x05,0x06,0x00,0x0e,0x00,0x21,0x08,0xcb,0x00,0x2e,0x02,
+    0x01,0x00,0x34,0x0c,0x30,0x00,0x08,0x00,0x06,0x00,0x0e,0x00,0x21,0x08,0xcc,0x00,
+    0x2e,0x02,0x02,0x00,0x34,0x0c,0x30,0x00,0x08,0x00,0x36,0x3b,0x0c,0x00,0x01,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0f,0x00,0x36,0x3b,0x0a,0x00,0x03,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0f,0x00,0x2e,0x03,0x00,0x00,0x2f,0x01,
+    0x00,0x00,0x2f,0x07,0xfe,0xff,0x0d,0x00,0x06,0x00,0x14,0x00,0x31,0x30,0x02,0x00,
+    0x0e,0x00,0x0d,0x00,0x2c,0x00,0x0a,0x00,0x0d,0x00,0x04,0x00,0x0a,0x00,0x30,0x02,
+    0x0e,0x00,0x2f,0x07,0x03,0x00,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,
+    0x0e,0x00,0x2f,0x07,0xfd,0xff,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,
+    0x0e,0x00,0x0e,0x00,0x36,0x3b,0x0b,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x09,0x0a,0x0a,0x00,0x37,0x00,0x0d,0x00,0x37,0x01,0x0d,0x00,0x37,0x02,0x0d,0x00,
+    0x37,0x03,0x0d,0x00,0x37,0x04,0x0d,0x00,0x39,0x00,0x0d,0x00,0x39,0x01,0x0d,0x00,
+    0x39,0x02,0x0d,0x00,0x39,0x03,0x0d,0x00,0x39,0x04,0x0d,0x00,0x06,0x00,0x0e,0x00,
+    0x21,0x08,0xcb,0x00,0x2e,0x02,0x01,0x00,0x34,0x0c,0x10,0x00,0x08,0x00,0x06,0x00,
+    0x0e,0x00,0x21,0x08,0xcc,0x00,0x2e,0x02,0x02,0x00,0x34,0x0c,0x10,0x00,0x08,0x00,
+    0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x3c,0x01,0x2e,0x01,0x00,0x00,0x42,0x00,
+    0x08,0x00,0x01,0x00,
+};
+
+/* k_r38f_p_leiche1021: 54 Byte
+ *   +0000 46 06 00 00 00 00 00 00 00 00        ROOM1021 @0x021EC Aot_reset (sub06 Roys Leiche)
+ *   +000A 2e 01 00                             ROOM1021 @0x021F6 Work_set
+ *   +000D 00                                   ROOM1021 @0x021F9 Nop
+ *   +000E 3f 01 0b 00                          ROOM1021 @0x021FA Plc_motion
+ *   +0012 09 0a 1e 00                          ROOM1021 @0x021FE Sleep
+ *   +0016 2b 28 ff ff                          ROOM1021 @0x02202 Message_on  -> Port-Nachricht 40 (msg 9 + Hinweis)
+ *   +001A 02                                   ROOM1021 @0x02206 Evt_next
+ *   +001B 00                                   ROOM1021 @0x02207 Nop
+ *   +001C 3f 01 0b 00                          ROOM1021 @0x02208 Plc_motion
+ *   +0020 43 00 80 00                          ROOM1021 @0x0220C Plc_flg
+ *   +0024 09 0a 1e 00                          ROOM1021 @0x02210 Sleep
+ *   +0028 42                                   ROOM1021 @0x02214 Plc_ret
+ *   +0029 00                                   ROOM1021 @0x02215 Nop
+ *   +002A 46 06 03 31 ff 00 18 06 00 00        ROOM1021 @0x02216 Aot_reset
+ *   +0034 01 00                                ROOM1021 @0x02220 Evt_end
+ */
+static const uint8_t k_r38f_p_leiche1021[54] = {
+    0x46,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x01,
+    0x0b,0x00,0x09,0x0a,0x1e,0x00,0x2b,0x28,0xff,0xff,0x02,0x00,0x3f,0x01,0x0b,0x00,
+    0x43,0x00,0x80,0x00,0x09,0x0a,0x1e,0x00,0x42,0x00,0x46,0x06,0x03,0x31,0xff,0x00,
+    0x18,0x06,0x00,0x00,0x01,0x00,
+};
+
+/* k_r38f_p_szene1021: 24 Byte
+ *   +0000 18 02                                Gosub sub02 = die ausgelieferte Szene, laeuft aus dem RDT (Gosub LAB_8003fbe8 @0x8003fc04/@0x8003fc3c; Rueckkehr am Evt_end @0x021BC: FUN_8003f1f0 @0x8003f218/@0x8003f230)
+ *   +0002 2c 06 03 31 00 00 0e ed 8c d8 e8 03  ROOM1021 @0x01E2C Aot_set (Aot_set Slot 6 = Roys Leiche -> sub06, bytegleich main00 — dort unter Ck(3,0x5F) @0x01E28, das sub02 @0x01FE4 eben gesetzt hat)
+ *   +0016 01 00                                Evt_end (Ebene 0: Faden aus, FUN_8003f1f0 @0x8003f204)
+ */
+static const uint8_t k_r38f_p_szene1021[24] = {
+    0x18,0x02,0x2c,0x06,0x03,0x31,0x00,0x00,0x0e,0xed,0x8c,0xd8,0xe8,0x03,0xe8,0x03,
+    0xff,0x00,0x18,0x06,0x00,0x00,0x01,0x00,
+};
+
+/* k_r38f_p_haemmern: 122 Byte
+ *   +0000 54 00 01 00 00 00                    Sce_bgm_control MAIN Play = ROOM1141 sub00 @0x00B4E (Raum-Titel MAIN16)
+ *   +0006 0f 04 6e 00                          While (Laenge 110 bis hinter das Ewhile) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`
+ *   +000A 21 03 6a 00                            Ck(3,0x6A)==0 (Schleife laeuft, solange der Rolladen zu ist)
+ *   +000E 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0012 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +0016 36 3c 0a 00 00 00 00 00 00 00 00 00    Se_on(0x3C,0x0A) Klopfen = RE2 ROOM1060 sub05 +0x22 (Datei 0x0F48)
+ *   +0022 08 00                                Endif = sub01 @0x00C10
+ *   +0024 09 0a 1e 00                          Sleep 30  = RE2 ROOM1060 sub05 +0x2E
+ *   +0028 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +002C 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +0030 36 3c 0b 00 00 00 00 00 00 00 00 00    Se_on(0x3C,0x0B) Klopfen = RE2 ROOM1060 sub05 +0x32
+ *   +003C 08 00                                Endif = sub01 @0x00C10
+ *   +003E 09 0a 1e 00                          Sleep 30  = RE2 ROOM1060 sub05 +0x3E
+ *   +0042 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0046 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +004A 36 3c 0b 00 00 00 00 00 00 00 00 00    Se_on(0x3C,0x0B) Klopfen = RE2 ROOM1060 sub05 +0x4C
+ *   +0056 08 00                                Endif = sub01 @0x00C10
+ *   +0058 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x58
+ *   +005C 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0060 21 03 6a 00                            Ck(3,0x6A)==0 = sub00 @0x00B84 (Rolladen noch zu)
+ *   +0064 36 3d 00 00 00 00 00 00 00 00 00 00    Se_on(0x3D,0) "Help me out." (NUTZER-VORGABE: Help als Ton; Sprachzeile main42.wav)
+ *   +0070 08 00                                Endif = sub01 @0x00C10
+ *   +0072 09 0a 5a 00                          Sleep 90  = RE2 ROOM1060 sub05 +0x5E
+ *   +0076 10 00                                Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test; RE2 ROOM1060 sub05 +0x62 Goto)
+ *   +0078 01 00                                Evt_end (Rolladen offen: Klopfen und Hilferuf sind zu Ende)
+ */
+static const uint8_t k_r38f_p_haemmern[122] = {
+    0x54,0x00,0x01,0x00,0x00,0x00,0x0f,0x04,0x6e,0x00,0x21,0x03,0x6a,0x00,0x06,0x00,
+    0x12,0x00,0x21,0x03,0x6a,0x00,0x36,0x3c,0x0a,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x08,0x00,0x09,0x0a,0x1e,0x00,0x06,0x00,0x12,0x00,0x21,0x03,0x6a,0x00,
+    0x36,0x3c,0x0b,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,
+    0x1e,0x00,0x06,0x00,0x12,0x00,0x21,0x03,0x6a,0x00,0x36,0x3c,0x0b,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,0x12,0x00,
+    0x21,0x03,0x6a,0x00,0x36,0x3d,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x08,0x00,0x09,0x0a,0x5a,0x00,0x10,0x00,0x01,0x00,
+};
+
+/* k_r38f_p_befreiung: 1200 Byte
+ *   +0000 2b 0d 80 ff                          ROOM1141 @0x00FE8 Message_on (sub06: Gemaelde-Frage; Ja-Zweig)
+ *   +0004 02                                   ROOM1141 @0x00FEC Evt_next
+ *   +0005 00                                   ROOM1141 @0x00FED Nop
+ *   +0006 06 00 a4 04                          ROOM1141 @0x00FEE Ifel_ck  -> Laenge 0xE8 -> 0x4A4 (Ja-Zweig mit Ton, Szene, Sperre, Abgang)
+ *   +000A 21 0c 1f 00                          ROOM1141 @0x00FF2 Ck
+ *   +000E 22 03 6a 01                          ROOM1141 @0x00FF6 Set
+ *   +0012 46 03 00 00 00 00 00 00 00 00        ROOM1141 @0x00FFA Aot_reset
+ *   +001C 22 02 07 01                          ROOM1141 @0x01004 Set
+ *   +0020 22 01 1b 01                          ROOM1141 @0x01008 Set
+ *   +0024 29 05                                ROOM1141 @0x0100C Cut_chg
+ *   +0026 36 3b 0c 00 01 00 00 00 00 00 00 00  Se_on(0x3B,0x0C) = ROOM1131 sub02 @0x00A48 bytegleich, Bank 2 -> Port-Bank 0x3B
+ *   +0032 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A54
+ *   +0036 36 3b 0a 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0A) = ROOM1131 sub02 @0x00A58 bytegleich, Port-Bank
+ *   +0042 09 0a 0f 00                          Sleep 15 = ROOM1131 sub02 @0x00A64
+ *   +0046 2e 03 00                             ROOM1141 @0x01032 Work_set (Work_set Prop 0 = Rolladen; Bewegung bytegleich)
+ *   +0049 00                                   ROOM1141 @0x01035 Nop
+ *   +004A 2f 01 00 00                          ROOM1141 @0x01036 Speed_set
+ *   +004E 2f 07 fe ff                          ROOM1141 @0x0103A Speed_set
+ *   +0052 0d 00 06 00 14 00                    ROOM1141 @0x0103E For
+ *   +0058 31                                   ROOM1141 @0x01044 Add_aspeed
+ *   +0059 30                                   ROOM1141 @0x01045 Add_speed
+ *   +005A 02                                   ROOM1141 @0x01046 Evt_next
+ *   +005B 00                                   ROOM1141 @0x01047 Nop
+ *   +005C 0e 00                                ROOM1141 @0x01048 Next
+ *   +005E 0d 00 2c 00 0a 00                    ROOM1141 @0x0104A For
+ *   +0064 0d 00 04 00 0a 00                    ROOM1141 @0x01050 For
+ *   +006A 30                                   ROOM1141 @0x01056 Add_speed
+ *   +006B 02                                   ROOM1141 @0x01057 Evt_next
+ *   +006C 0e 00                                ROOM1141 @0x01058 Next
+ *   +006E 2f 07 03 00                          ROOM1141 @0x0105A Speed_set
+ *   +0072 0d 00 06 00 03 00                    ROOM1141 @0x0105E For
+ *   +0078 31                                   ROOM1141 @0x01064 Add_aspeed
+ *   +0079 30                                   ROOM1141 @0x01065 Add_speed
+ *   +007A 02                                   ROOM1141 @0x01066 Evt_next
+ *   +007B 00                                   ROOM1141 @0x01067 Nop
+ *   +007C 0e 00                                ROOM1141 @0x01068 Next
+ *   +007E 2f 07 fd ff                          ROOM1141 @0x0106A Speed_set
+ *   +0082 0d 00 06 00 03 00                    ROOM1141 @0x0106E For
+ *   +0088 31                                   ROOM1141 @0x01074 Add_aspeed
+ *   +0089 30                                   ROOM1141 @0x01075 Add_speed
+ *   +008A 02                                   ROOM1141 @0x01076 Evt_next
+ *   +008B 00                                   ROOM1141 @0x01077 Nop
+ *   +008C 0e 00                                ROOM1141 @0x01078 Next
+ *   +008E 0e 00                                ROOM1141 @0x0107A Next
+ *   +0090 36 3b 0b 00 03 00 00 00 00 00 00 00  Se_on(0x3B,0x0B) = ROOM1131 sub02 @0x00AB2 bytegleich, Port-Bank
+ *   +009C 09 0a 0a 00                          Sleep 10 = ROOM1131 sub02 @0x00ABE
+ *   +00A0 37 00 0d 00                          ROOM1141 @0x0107C Sca_id_set (Sca-Saetze: Rolladen-Zellen frei)
+ *   +00A4 37 01 0d 00                          ROOM1141 @0x01080 Sca_id_set
+ *   +00A8 37 02 0d 00                          ROOM1141 @0x01084 Sca_id_set
+ *   +00AC 37 03 0d 00                          ROOM1141 @0x01088 Sca_id_set
+ *   +00B0 37 04 0d 00                          ROOM1141 @0x0108C Sca_id_set
+ *   +00B4 39 00 0d 00                          ROOM1141 @0x01090 Sca_floor_set
+ *   +00B8 39 01 0d 00                          ROOM1141 @0x01094 Sca_floor_set
+ *   +00BC 39 02 0d 00                          ROOM1141 @0x01098 Sca_floor_set
+ *   +00C0 39 03 0d 00                          ROOM1141 @0x0109C Sca_floor_set
+ *   +00C4 39 04 0d 00                          ROOM1141 @0x010A0 Sca_floor_set
+ *   +00C8 54 00 02 00 00 00                    Sce_bgm_control MAIN Stop = ROOM1141 sub01 @0x00C06 (John ist frei)
+ *   +00CE 22 04 f0 00                          ROOM1141 @0x00C18 Set (sub02: Set(4,0xF0)=0 / (4,0xF2)=1 / (3,0xC2)=1)
+ *   +00D2 22 04 f2 01                          ROOM1141 @0x00C1C Set
+ *   +00D6 22 03 c2 01                          ROOM1141 @0x00C20 Set
+ *   +00DA 44 01 27 30 00 00 00 cb a6 27 00 00  ROOM1141 @0x00B1A Sce_em_set (Gorillas geparkt wie sub00 beim Original-Szenenstart)
+ *   +00EE 44 02 27 30 00 00 00 cc a6 27 00 00  ROOM1141 @0x00B2E Sce_em_set
+ *   +0102 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
+ *   +0106 40 00 05 01 58 e9 f6 d7              Plc_dest RUN John aus dem Gang an seinen Platz (Form ROOM1141 sub02 @0x00F8E `40 00 05 01`)
+ *   +010E 18 04                                Gosub sub04 = ROOM1141 sub02 @0x00F96 (warten, bis John steht)
+ *   +0110 2e 01 00                             ROOM1141 @0x00CD4 Work_set (sub02: Elza an ihren Platz, Drehungen, Szene ab msg 2)
+ *   +0113 00                                   ROOM1141 @0x00CD7 Nop
+ *   +0114 40 00 04 00 c0 e0 f6 d7              ROOM1141 @0x00CD8 Plc_dest  -> Ziel (-8000,-10250) statt (-7200,-15500)
+ *   +011C 18 03                                ROOM1141 @0x00CE0 Gosub
+ *   +011E 40 00 09 00 58 e9 f6 d7              ROOM1141 @0x00CE2 Plc_dest  -> Ziel (-5800,-10250) statt (-6750,-13350)
+ *   +0126 18 03                                ROOM1141 @0x00CEA Gosub
+ *   +0128 2e 02 00                             ROOM1141 @0x00CEC Work_set
+ *   +012B 00                                   ROOM1141 @0x00CEF Nop
+ *   +012C 41 01 c0 e0 00 00 f6 d7 64 00        ROOM1141 @0x00CF0 Plc_neck  -> Blickpunkt (-8000,-10250) statt (-7200,-15500)
+ *   +0136 09 0a 01 00                          ROOM1141 @0x00CFA Sleep
+ *   +013A 40 00 09 01 c0 e0 f6 d7              ROOM1141 @0x00CFE Plc_dest  -> Ziel (-8000,-10250) statt (-7200,-15500)
+ *   +0142 18 04                                ROOM1141 @0x00D06 Gosub
+ *   +0144 29 05                                ROOM1141 @0x00D08 Cut_chg  -> Cut_chg 5: Cut 0 blickt nach Suedwesten (Ziel (-17202,-26058)), der Platz am Gemaelde liegt im Bild von Cut 5
+ *   +0146 2b 28 00 00                          ROOM1141 @0x00D0A Message_on  -> Port-Nachricht 40 = msg 2 ohne "Same here..." (Nachtrag 14 Punkt 5)
+ *   +014A 2e 01 00                             ROOM1141 @0x00D0E Work_set
+ *   +014D 00                                   ROOM1141 @0x00D11 Nop
+ *   +014E 3f 00 12 00                          ROOM1141 @0x00D12 Plc_motion
+ *   +0152 09 0a 19 00                          ROOM1141 @0x00D16 Sleep
+ *   +0156 3f 00 12 00                          ROOM1141 @0x00D1A Plc_motion
+ *   +015A 43 00 80 00                          ROOM1141 @0x00D1E Plc_flg
+ *   +015E 09 0a 19 00                          ROOM1141 @0x00D22 Sleep
+ *   +0162 3f 00 13 00                          ROOM1141 @0x00D26 Plc_motion
+ *   +0166 09 0a 19 00                          ROOM1141 @0x00D2A Sleep
+ *   +016A 3f 00 13 00                          ROOM1141 @0x00D2E Plc_motion
+ *   +016E 43 00 80 00                          ROOM1141 @0x00D32 Plc_flg
+ *   +0172 09 0a 19 00                          ROOM1141 @0x00D36 Sleep
+ *   +0176 3f 00 18 00                          ROOM1141 @0x00D3A Plc_motion
+ *   +017A 09 0a 14 00                          ROOM1141 @0x00D3E Sleep
+ *   +017E 2b 03 00 00                          ROOM1141 @0x00D42 Message_on
+ *   +0182 2e 02 00                             ROOM1141 @0x00D46 Work_set
+ *   +0185 00                                   ROOM1141 @0x00D49 Nop
+ *   +0186 3f 00 13 00                          ROOM1141 @0x00D4A Plc_motion
+ *   +018A 09 0a 19 00                          ROOM1141 @0x00D4E Sleep
+ *   +018E 3f 00 13 00                          ROOM1141 @0x00D52 Plc_motion
+ *   +0192 43 00 80 00                          ROOM1141 @0x00D56 Plc_flg
+ *   +0196 09 0a 19 00                          ROOM1141 @0x00D5A Sleep
+ *   +019A 3f 00 0f 00                          ROOM1141 @0x00D5E Plc_motion
+ *   +019E 09 0a 19 00                          ROOM1141 @0x00D62 Sleep
+ *   +01A2 3f 00 0f 00                          ROOM1141 @0x00D66 Plc_motion
+ *   +01A6 43 00 80 00                          ROOM1141 @0x00D6A Plc_flg
+ *   +01AA 09 0a 19 00                          ROOM1141 @0x00D6E Sleep
+ *   +01AE 3f 00 17 00                          ROOM1141 @0x00D72 Plc_motion
+ *   +01B2 09 0a 14 00                          ROOM1141 @0x00D76 Sleep
+ *   +01B6 2b 04 00 00                          ROOM1141 @0x00D7A Message_on
+ *   +01BA 2e 01 00                             ROOM1141 @0x00D7E Work_set
+ *   +01BD 00                                   ROOM1141 @0x00D81 Nop
+ *   +01BE 3f 00 10 00                          ROOM1141 @0x00D82 Plc_motion
+ *   +01C2 09 0a 32 00                          ROOM1141 @0x00D86 Sleep
+ *   +01C6 3f 00 10 00                          ROOM1141 @0x00D8A Plc_motion
+ *   +01CA 43 00 80 00                          ROOM1141 @0x00D8E Plc_flg
+ *   +01CE 09 0a 32 00                          ROOM1141 @0x00D92 Sleep
+ *   +01D2 3f 00 18 00                          ROOM1141 @0x00D96 Plc_motion
+ *   +01D6 09 0a 14 00                          ROOM1141 @0x00D9A Sleep
+ *   +01DA 2b 05 00 00                          ROOM1141 @0x00D9E Message_on
+ *   +01DE 2e 02 00                             ROOM1141 @0x00DA2 Work_set
+ *   +01E1 00                                   ROOM1141 @0x00DA5 Nop
+ *   +01E2 3f 00 0f 00                          ROOM1141 @0x00DA6 Plc_motion
+ *   +01E6 09 0a 19 00                          ROOM1141 @0x00DAA Sleep
+ *   +01EA 3f 00 0f 00                          ROOM1141 @0x00DAE Plc_motion
+ *   +01EE 43 00 80 00                          ROOM1141 @0x00DB2 Plc_flg
+ *   +01F2 09 0a 19 00                          ROOM1141 @0x00DB6 Sleep
+ *   +01F6 3f 00 11 00                          ROOM1141 @0x00DBA Plc_motion
+ *   +01FA 09 0a 32 00                          ROOM1141 @0x00DBE Sleep
+ *   +01FE 3f 00 17 00                          ROOM1141 @0x00DC2 Plc_motion
+ *   +0202 09 0a 14 00                          ROOM1141 @0x00DC6 Sleep
+ *   +0206 2b 06 00 00                          ROOM1141 @0x00DCA Message_on
+ *   +020A 2e 01 00                             ROOM1141 @0x00DCE Work_set
+ *   +020D 00                                   ROOM1141 @0x00DD1 Nop
+ *   +020E 41 01 cc f7 00 00 f6 d7 64 00        ROOM1141 @0x00DD2 Plc_neck  -> Blickpunkt (-2100,-10250) statt (-1300,-15500)
+ *   +0218 09 0a 05 00                          ROOM1141 @0x00DDC Sleep
+ *   +021C 2e 02 00                             ROOM1141 @0x00DE0 Work_set
+ *   +021F 00                                   ROOM1141 @0x00DE3 Nop
+ *   +0220 41 01 64 00 00 00 f6 d7 64 00        ROOM1141 @0x00DE4 Plc_neck  -> Blickpunkt (100,-10250) statt (-850,-13350)
+ *   +022A 09 0a 05 00                          ROOM1141 @0x00DEE Sleep
+ *   +022E 2e 01 00                             ROOM1141 @0x00DF2 Work_set
+ *   +0231 00                                   ROOM1141 @0x00DF5 Nop
+ *   +0232 40 00 09 00 cc f7 f6 d7              ROOM1141 @0x00DF6 Plc_dest  -> Ziel (-2100,-10250) statt (-1300,-15500)
+ *   +023A 09 0a 05 00                          ROOM1141 @0x00DFE Sleep
+ *   +023E 2e 02 00                             ROOM1141 @0x00E02 Work_set
+ *   +0241 00                                   ROOM1141 @0x00E05 Nop
+ *   +0242 40 00 09 01 64 00 f6 d7              ROOM1141 @0x00E06 Plc_dest  -> Ziel (100,-10250) statt (-850,-13350)
+ *   +024A 18 04                                ROOM1141 @0x00E0E Gosub
+ *   +024C 09 0a 56 00                          ROOM1141 @0x00E10 Sleep
+ *   +0250 2b 07 00 00                          ROOM1141 @0x00E14 Message_on
+ *   +0254 3f 00 11 00                          ROOM1141 @0x00E18 Plc_motion
+ *   +0258 09 0a 32 00                          ROOM1141 @0x00E1C Sleep
+ *   +025C 3f 00 14 00                          ROOM1141 @0x00E20 Plc_motion
+ *   +0260 09 0a 19 00                          ROOM1141 @0x00E24 Sleep
+ *   +0264 3f 00 14 00                          ROOM1141 @0x00E28 Plc_motion
+ *   +0268 43 00 80 00                          ROOM1141 @0x00E2C Plc_flg
+ *   +026C 09 0a 1a 00                          ROOM1141 @0x00E30 Sleep
+ *   +0270 2e 02 01                             ROOM1141 @0x00E34 Work_set
+ *   +0273 00                                   ROOM1141 @0x00E37 Nop
+ *   +0274 32 00 1c 25 00 00 08 d5              ROOM1141 @0x00E38 Pos_set
+ *   +027C 34 0c 10 00                          ROOM1141 @0x00E40 Member_set
+ *   +0280 09 0a 01 00                          ROOM1141 @0x00E44 Sleep
+ *   +0284 2e 02 02                             ROOM1141 @0x00E48 Work_set
+ *   +0287 00                                   ROOM1141 @0x00E4B Nop
+ *   +0288 32 00 a6 27 00 00 dc ba              ROOM1141 @0x00E4C Pos_set
+ *   +0290 34 0c 10 00                          ROOM1141 @0x00E54 Member_set
+ *   +0294 09 0a 0a 00                          ROOM1141 @0x00E58 Sleep
+ *   +0298 54 00 01 00 00 00                    ROOM1141 @0x00E5C Sce_bgm_control
+ *   +029E 29 02                                ROOM1141 @0x00E62 Cut_chg
+ *   +02A0 2b 08 00 00                          ROOM1141 @0x00E64 Message_on
+ *   +02A4 09 0a 65 00                          ROOM1141 @0x00E68 Sleep
+ *   +02A8 2e 02 01                             ROOM1141 @0x00E6C Work_set
+ *   +02AB 00                                   ROOM1141 @0x00E6F Nop
+ *   +02AC 34 0c 30 00                          ROOM1141 @0x00E70 Member_set
+ *   +02B0 2e 02 02                             ROOM1141 @0x00E74 Work_set
+ *   +02B3 00                                   ROOM1141 @0x00E77 Nop
+ *   +02B4 34 0c 30 00                          ROOM1141 @0x00E78 Member_set
+ *   +02B8 09 0a 01 00                          ROOM1141 @0x00E7C Sleep
+ *   +02BC 29 05                                ROOM1141 @0x00E80 Cut_chg  -> Cut_chg 5 (wie @0x00D08)
+ *   +02BE 2e 02 00                             ROOM1141 @0x00E82 Work_set
+ *   +02C1 00                                   ROOM1141 @0x00E85 Nop
+ *   +02C2 41 01 c0 e0 00 00 f6 d7 64 00        ROOM1141 @0x00E86 Plc_neck  -> Blickpunkt (-8000,-10250) statt (-7200,-15500)
+ *   +02CC 09 0a 01 00                          ROOM1141 @0x00E90 Sleep
+ *   +02D0 40 00 09 01 c0 e0 f6 d7              ROOM1141 @0x00E94 Plc_dest  -> Ziel (-8000,-10250) statt (-7200,-15500)
+ *   +02D8 09 0a 05 00                          ROOM1141 @0x00E9C Sleep
+ *   +02DC 2e 01 00                             ROOM1141 @0x00EA0 Work_set
+ *   +02DF 00                                   ROOM1141 @0x00EA3 Nop
+ *   +02E0 41 01 58 e9 00 00 f6 d7 64 00        ROOM1141 @0x00EA4 Plc_neck  -> Blickpunkt (-5800,-10250) statt (-6750,-13350)
+ *   +02EA 09 0a 01 00                          ROOM1141 @0x00EAE Sleep
+ *   +02EE 40 00 09 00 58 e9 f6 d7              ROOM1141 @0x00EB2 Plc_dest  -> Ziel (-5800,-10250) statt (-6750,-13350)
+ *   +02F6 18 03                                ROOM1141 @0x00EBA Gosub
+ *   +02F8 2b 09 00 00                          ROOM1141 @0x00EBC Message_on
+ *   +02FC 2e 02 00                             ROOM1141 @0x00EC0 Work_set
+ *   +02FF 00                                   ROOM1141 @0x00EC3 Nop
+ *   +0300 3f 00 0f 00                          ROOM1141 @0x00EC4 Plc_motion
+ *   +0304 09 0a 19 00                          ROOM1141 @0x00EC8 Sleep
+ *   +0308 3f 00 0f 00                          ROOM1141 @0x00ECC Plc_motion
+ *   +030C 43 00 80 00                          ROOM1141 @0x00ED0 Plc_flg
+ *   +0310 09 0a 19 00                          ROOM1141 @0x00ED4 Sleep
+ *   +0314 3f 00 10 00                          ROOM1141 @0x00ED8 Plc_motion
+ *   +0318 09 0a 19 00                          ROOM1141 @0x00EDC Sleep
+ *   +031C 3f 00 10 00                          ROOM1141 @0x00EE0 Plc_motion
+ *   +0320 43 00 80 00                          ROOM1141 @0x00EE4 Plc_flg
+ *   +0324 09 0a 1a 00                          ROOM1141 @0x00EE8 Sleep
+ *   +0328 2b 0a 00 00                          ROOM1141 @0x00EEC Message_on
+ *   +032C 2e 01 00                             ROOM1141 @0x00EF0 Work_set
+ *   +032F 00                                   ROOM1141 @0x00EF3 Nop
+ *   +0330 3f 00 11 00                          ROOM1141 @0x00EF4 Plc_motion
+ *   +0334 09 0a 65 00                          ROOM1141 @0x00EF8 Sleep
+ *   +0338 2b 0b 00 00                          ROOM1141 @0x00EFC Message_on
+ *   +033C 2e 02 00                             ROOM1141 @0x00F00 Work_set
+ *   +033F 00                                   ROOM1141 @0x00F03 Nop
+ *   +0340 3f 00 0f 00                          ROOM1141 @0x00F04 Plc_motion
+ *   +0344 09 0a 19 00                          ROOM1141 @0x00F08 Sleep
+ *   +0348 3f 00 0f 00                          ROOM1141 @0x00F0C Plc_motion
+ *   +034C 43 00 80 00                          ROOM1141 @0x00F10 Plc_flg
+ *   +0350 09 0a 19 00                          ROOM1141 @0x00F14 Sleep
+ *   +0354 3f 00 10 00                          ROOM1141 @0x00F18 Plc_motion
+ *   +0358 09 0a 19 00                          ROOM1141 @0x00F1C Sleep
+ *   +035C 3f 00 10 00                          ROOM1141 @0x00F20 Plc_motion
+ *   +0360 43 00 80 00                          ROOM1141 @0x00F24 Plc_flg
+ *   +0364 09 0a 1a 00                          ROOM1141 @0x00F28 Sleep
+ *   +0368 2e 01 00                             ROOM1141 @0x00F2C Work_set
+ *   +036B 00                                   ROOM1141 @0x00F2F Nop
+ *   +036C 41 00 00 00 00 00 00 00 64 00        ROOM1141 @0x00F30 Plc_neck
+ *   +0376 09 0a 01 00                          ROOM1141 @0x00F3A Sleep
+ *   +037A 41 03 01 00 00 00 00 00 00 3c        ROOM1141 @0x00F3E Plc_neck
+ *   +0384 09 0a 1e 00                          ROOM1141 @0x00F48 Sleep
+ *   +0388 42                                   ROOM1141 @0x00F4C Plc_ret
+ *   +0389 00                                   ROOM1141 @0x00F4D Nop
+ *   +038A 46 00 01 31 29 00 ff ff 00 00        Aot_reset Slot 0 (Tuer -> 1131) -> Text msg 41 (Form ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00`)
+ *   +0394 46 02 01 31 29 00 ff ff 00 00        Aot_reset Slot 2 (Riegel im Rechteck der Dachtuer main00 @0x00A9A; Slot 1 ist bei zu Riegel sce 0 @0x00A7A) -> msg 41
+ *   +039E 22 02 07 00                          ROOM1141 @0x00F4E Set (sub02-Schluss: Steuerung zurueck, Gorillas, John in die Ecke)
+ *   +03A2 22 01 1b 00                          ROOM1141 @0x00F52 Set
+ *   +03A6 3c 01                                ROOM1141 @0x00F56 Cut_auto
+ *   +03A8 2e 02 01                             ROOM1141 @0x00F58 Work_set
+ *   +03AB 00                                   ROOM1141 @0x00F5B Nop
+ *   +03AC 32 00 84 03 00 00 2a ae              ROOM1141 @0x00F5C Pos_set
+ *   +03B4 34 0c 10 00                          ROOM1141 @0x00F64 Member_set
+ *   +03B8 2e 02 02                             ROOM1141 @0x00F68 Work_set
+ *   +03BB 00                                   ROOM1141 @0x00F6B Nop
+ *   +03BC 32 00 50 14 00 00 00 b5              ROOM1141 @0x00F6C Pos_set
+ *   +03C4 34 0c 10 00                          ROOM1141 @0x00F74 Member_set
+ *   +03C8 09 0a 01 00                          ROOM1141 @0x00F78 Sleep
+ *   +03CC 2e 02 00                             ROOM1141 @0x00F7C Work_set
+ *   +03CF 00                                   ROOM1141 @0x00F7F Nop
+ *   +03D0 41 00 00 00 00 00 00 00 64 00        ROOM1141 @0x00F80 Plc_neck
+ *   +03DA 09 0a 01 00                          ROOM1141 @0x00F8A Sleep
+ *   +03DE 40 00 05 01 82 e2 04 ac              ROOM1141 @0x00F8E Plc_dest
+ *   +03E6 18 04                                ROOM1141 @0x00F96 Gosub
+ *   +03E8 40 00 09 01 82 e2 dc a1              ROOM1141 @0x00F98 Plc_dest
+ *   +03F0 18 04                                ROOM1141 @0x00FA0 Gosub
+ *   +03F2 11 00 08 00                          Do  (Warteschleife Gorillas leben (sub01 @0x00C0C loescht (4,0xF2)); Form ROOM1021 sub04 @0x021D0 / ROOM1050 sub03 @0x00DCA)
+ *   +03F6 02 00                                Evt_next + Nop
+ *   +03F8 12 04                                Edwhile
+ *   +03FA 21 04 f2 01                          Ck(4,0xF2)==1
+ *   +03FE 09 0a 1e 00                          Sleep 30 (Form ROOM1021 sub06 @0x021FE)
+ *   +0402 46 00 02 31 ec fa 00 00 82 c9        Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14; Form sub05 @0x00FDC `46 01 02 31 ..`)
+ *   +040C 2e 01 00 00                          Work_set(1,0)+Nop Spieler = Arbeitsfigur der Lage-Abfrage (Form ROOM1141 sub02 @0x00C2E)
+ *   +0410 0f 1e 22 00                          While Kette 30 B, Block 34 B (Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`; Kettenlaenge pc+1 @0x8003f790, Blocklaenge @0x8003f74c)
+ *   +0414 3e 00 00 02 fe de                      Member_cmp Elza x >= -8450
+ *   +041A 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
+ *   +041C 3e 00 00 04 ce e6                      Member_cmp Elza x <= -6450
+ *   +0422 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
+ *   +0424 3e 00 02 02 80 a8                      Member_cmp Elza z >= -22400
+ *   +042A 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
+ *   +042C 3e 00 02 04 55 dd                      Member_cmp Elza z <= -8875
+ *   +0432 02 00                                  Evt_next + Nop (Form sub03 @0x00FB0)
+ *   +0434 10 00                                Ewhile (Form sub03 @0x00FB2)
+ *   +0436 22 02 07 01                          Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)
+ *   +043A 22 01 1b 01                          Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)
+ *   +043E 29 07                                Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft auf die Kamera zu und verlaesst das Bild am unteren Rand
+ *   +0440 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
+ *   +0444 34 06 03 00                          Member_set(6, 0x0003) John: Wort 0 (`sw a2,0(a0)` @0x800411c8) mit Bit 0x2 = kein Koerper-Schub (FUN_8002aec4 @0x8002af04-@0x8002af0c) — Form ROOM11B0 sub06 @0x01706 `34 06 01 02`
+ *   +0448 40 00 05 01 4a e3 50 e2              Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)
+ *   +0450 18 04                                Gosub sub04 (Form sub02 @0x00F96)
+ *   +0452 40 00 05 01 4a e3 44 fd              Plc_dest RUN John -> vor die Dachtuer
+ *   +045A 18 04                                Gosub sub04
+ *   +045C 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) RE2-Tuerbank DOOR1A Satz 0 = oeffnen (Dachtuer 1141 = DOOR1A, tuer_zuordnung.inc S064; Form ROOM10D0 sub21 @0x01A02)
+ *   +0468 09 0a 0f 00                          Sleep 15 (Form ROOM1131 sub02 @0x00A54)
+ *   +046C 32 00 d0 8a 00 00 d0 8a              Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080) — ausserhalb jedes Bildes
+ *   +0474 36 0e 01 00 00 00 00 00 00 00 00 00  Se_on(0x0E,1) DOOR1A zufallen
+ *   +0480 22 09 43 01                          Set(9,67)=1 John hat 1141 verlassen (VERTRAG 1.1)
+ *   +0484 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 — John hat den Riegel beim Hinausgehen geoeffnet)
+ *   +048E 22 04 c3 01                          ROOM1141 @0x00FD2 Set
+ *   +0492 46 01 02 31 4f aa 00 00 8f 9b        ROOM1141 @0x00FDC Aot_reset (sub05: Dachtuer Slot 1 scharf)
+ *   +049C 09 0a 0f 00                          Sleep 15
+ *   +04A0 2a 00                                Cut_old + Nop: zurueck auf Elzas Kamera vor Cut 7 (Form ROOM1150 @0x010F2 `2a 00 3c 01`)
+ *   +04A2 3c 01                                Cut_auto 1 (Form ROOM1150 @0x010F4 / ROOM1141 sub06 @0x010D0)
+ *   +04A4 22 02 07 00                          Set(2,7)=0 (Form sub06 @0x010C8)
+ *   +04A8 22 01 1b 00                          Set(1,0x1B)=0 (Form sub06 @0x010CC)
+ *   +04AC 08 00                                Endif = Ende des Ja-Zweigs (Form sub06 @0x010D8)
+ *   +04AE 01 00                                Evt_end = sub06 @0x010DA
+ */
+static const uint8_t k_r38f_p_befreiung[1200] = {
+    0x2b,0x0d,0x80,0xff,0x02,0x00,0x06,0x00,0xa4,0x04,0x21,0x0c,0x1f,0x00,0x22,0x03,
+    0x6a,0x01,0x46,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x02,0x07,0x01,
+    0x22,0x01,0x1b,0x01,0x29,0x05,0x36,0x3b,0x0c,0x00,0x01,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x09,0x0a,0x0f,0x00,0x36,0x3b,0x0a,0x00,0x03,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x09,0x0a,0x0f,0x00,0x2e,0x03,0x00,0x00,0x2f,0x01,0x00,0x00,0x2f,0x07,
+    0xfe,0xff,0x0d,0x00,0x06,0x00,0x14,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x0d,0x00,
+    0x2c,0x00,0x0a,0x00,0x0d,0x00,0x04,0x00,0x0a,0x00,0x30,0x02,0x0e,0x00,0x2f,0x07,
+    0x03,0x00,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x2f,0x07,
+    0xfd,0xff,0x0d,0x00,0x06,0x00,0x03,0x00,0x31,0x30,0x02,0x00,0x0e,0x00,0x0e,0x00,
+    0x36,0x3b,0x0b,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0a,0x00,
+    0x37,0x00,0x0d,0x00,0x37,0x01,0x0d,0x00,0x37,0x02,0x0d,0x00,0x37,0x03,0x0d,0x00,
+    0x37,0x04,0x0d,0x00,0x39,0x00,0x0d,0x00,0x39,0x01,0x0d,0x00,0x39,0x02,0x0d,0x00,
+    0x39,0x03,0x0d,0x00,0x39,0x04,0x0d,0x00,0x54,0x00,0x02,0x00,0x00,0x00,0x22,0x04,
+    0xf0,0x00,0x22,0x04,0xf2,0x01,0x22,0x03,0xc2,0x01,0x44,0x01,0x27,0x30,0x00,0x00,
+    0x00,0xcb,0xa6,0x27,0x00,0x00,0x6c,0x20,0x00,0x00,0x00,0x08,0x00,0x00,0x44,0x02,
+    0x27,0x30,0x00,0x00,0x00,0xcc,0xa6,0x27,0x00,0x00,0xa8,0x2f,0x00,0x00,0x00,0x08,
+    0x00,0x00,0x2e,0x02,0x00,0x00,0x40,0x00,0x05,0x01,0x58,0xe9,0xf6,0xd7,0x18,0x04,
+    0x2e,0x01,0x00,0x00,0x40,0x00,0x04,0x00,0xc0,0xe0,0xf6,0xd7,0x18,0x03,0x40,0x00,
+    0x09,0x00,0x58,0xe9,0xf6,0xd7,0x18,0x03,0x2e,0x02,0x00,0x00,0x41,0x01,0xc0,0xe0,
+    0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,0x09,0x01,0xc0,0xe0,
+    0xf6,0xd7,0x18,0x04,0x29,0x05,0x2b,0x28,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x00,
+    0x12,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x12,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,
+    0x19,0x00,0x3f,0x00,0x13,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x13,0x00,0x43,0x00,
+    0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x18,0x00,0x09,0x0a,0x14,0x00,0x2b,0x03,
+    0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x13,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,
+    0x13,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x09,0x0a,
+    0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,
+    0x17,0x00,0x09,0x0a,0x14,0x00,0x2b,0x04,0x00,0x00,0x2e,0x01,0x00,0x00,0x3f,0x00,
+    0x10,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x10,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,
+    0x32,0x00,0x3f,0x00,0x18,0x00,0x09,0x0a,0x14,0x00,0x2b,0x05,0x00,0x00,0x2e,0x02,
+    0x00,0x00,0x3f,0x00,0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,
+    0x80,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x11,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,
+    0x17,0x00,0x09,0x0a,0x14,0x00,0x2b,0x06,0x00,0x00,0x2e,0x01,0x00,0x00,0x41,0x01,
+    0xcc,0xf7,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x05,0x00,0x2e,0x02,0x00,0x00,
+    0x41,0x01,0x64,0x00,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x05,0x00,0x2e,0x01,
+    0x00,0x00,0x40,0x00,0x09,0x00,0xcc,0xf7,0xf6,0xd7,0x09,0x0a,0x05,0x00,0x2e,0x02,
+    0x00,0x00,0x40,0x00,0x09,0x01,0x64,0x00,0xf6,0xd7,0x18,0x04,0x09,0x0a,0x56,0x00,
+    0x2b,0x07,0x00,0x00,0x3f,0x00,0x11,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x14,0x00,
+    0x09,0x0a,0x19,0x00,0x3f,0x00,0x14,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x1a,0x00,
+    0x2e,0x02,0x01,0x00,0x32,0x00,0x1c,0x25,0x00,0x00,0x08,0xd5,0x34,0x0c,0x10,0x00,
+    0x09,0x0a,0x01,0x00,0x2e,0x02,0x02,0x00,0x32,0x00,0xa6,0x27,0x00,0x00,0xdc,0xba,
+    0x34,0x0c,0x10,0x00,0x09,0x0a,0x0a,0x00,0x54,0x00,0x01,0x00,0x00,0x00,0x29,0x02,
+    0x2b,0x08,0x00,0x00,0x09,0x0a,0x65,0x00,0x2e,0x02,0x01,0x00,0x34,0x0c,0x30,0x00,
+    0x2e,0x02,0x02,0x00,0x34,0x0c,0x30,0x00,0x09,0x0a,0x01,0x00,0x29,0x05,0x2e,0x02,
+    0x00,0x00,0x41,0x01,0xc0,0xe0,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x01,0x00,
+    0x40,0x00,0x09,0x01,0xc0,0xe0,0xf6,0xd7,0x09,0x0a,0x05,0x00,0x2e,0x01,0x00,0x00,
+    0x41,0x01,0x58,0xe9,0x00,0x00,0xf6,0xd7,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,
+    0x09,0x00,0x58,0xe9,0xf6,0xd7,0x18,0x03,0x2b,0x09,0x00,0x00,0x2e,0x02,0x00,0x00,
+    0x3f,0x00,0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,
+    0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,
+    0x43,0x00,0x80,0x00,0x09,0x0a,0x1a,0x00,0x2b,0x0a,0x00,0x00,0x2e,0x01,0x00,0x00,
+    0x3f,0x00,0x11,0x00,0x09,0x0a,0x65,0x00,0x2b,0x0b,0x00,0x00,0x2e,0x02,0x00,0x00,
+    0x3f,0x00,0x0f,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,
+    0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,0x09,0x0a,0x19,0x00,0x3f,0x00,0x10,0x00,
+    0x43,0x00,0x80,0x00,0x09,0x0a,0x1a,0x00,0x2e,0x01,0x00,0x00,0x41,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x64,0x00,0x09,0x0a,0x01,0x00,0x41,0x03,0x01,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x3c,0x09,0x0a,0x1e,0x00,0x42,0x00,0x46,0x00,0x01,0x31,0x29,0x00,
+    0xff,0xff,0x00,0x00,0x46,0x02,0x01,0x31,0x29,0x00,0xff,0xff,0x00,0x00,0x22,0x02,
+    0x07,0x00,0x22,0x01,0x1b,0x00,0x3c,0x01,0x2e,0x02,0x01,0x00,0x32,0x00,0x84,0x03,
+    0x00,0x00,0x2a,0xae,0x34,0x0c,0x10,0x00,0x2e,0x02,0x02,0x00,0x32,0x00,0x50,0x14,
+    0x00,0x00,0x00,0xb5,0x34,0x0c,0x10,0x00,0x09,0x0a,0x01,0x00,0x2e,0x02,0x00,0x00,
+    0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x64,0x00,0x09,0x0a,0x01,0x00,0x40,0x00,
+    0x05,0x01,0x82,0xe2,0x04,0xac,0x18,0x04,0x40,0x00,0x09,0x01,0x82,0xe2,0xdc,0xa1,
+    0x18,0x04,0x11,0x00,0x08,0x00,0x02,0x00,0x12,0x04,0x21,0x04,0xf2,0x01,0x09,0x0a,
+    0x1e,0x00,0x46,0x00,0x02,0x31,0xec,0xfa,0x00,0x00,0x82,0xc9,0x2e,0x01,0x00,0x00,
+    0x0f,0x1e,0x22,0x00,0x3e,0x00,0x00,0x02,0xfe,0xde,0x00,0x00,0x3e,0x00,0x00,0x04,
+    0xce,0xe6,0x00,0x00,0x3e,0x00,0x02,0x02,0x80,0xa8,0x00,0x00,0x3e,0x00,0x02,0x04,
+    0x55,0xdd,0x02,0x00,0x10,0x00,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x29,0x07,
+    0x2e,0x02,0x00,0x00,0x34,0x06,0x03,0x00,0x40,0x00,0x05,0x01,0x4a,0xe3,0x50,0xe2,
+    0x18,0x04,0x40,0x00,0x05,0x01,0x4a,0xe3,0x44,0xfd,0x18,0x04,0x36,0x0e,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0f,0x00,0x32,0x00,0xd0,0x8a,
+    0x00,0x00,0xd0,0x8a,0x36,0x0e,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x22,0x09,0x43,0x01,0x46,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x04,
+    0xc3,0x01,0x46,0x01,0x02,0x31,0x4f,0xaa,0x00,0x00,0x8f,0x9b,0x09,0x0a,0x0f,0x00,
+    0x2a,0x00,0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x08,0x00,0x01,0x00,
+};
+
+/* ROOM1021 msg 40: msg 9 @0x024FB ("He's dead.[Seite]Poor Roy...") + Seite `02 00` + NUTZER-VORGABE  [Zeilenbreiten 246, 153 px] */
+static const uint8_t k_r38f_msg1021_leiche[90] = {
+    0x04,0x02,0x24,0x41,0x3a,0x4f,0x00,0x40,0x41,0x3d,0x40,0x57,0x02,0x00,0x2c,0x4b,
+    0x4b,0x4e,0x00,0x2e,0x4b,0x55,0x57,0x57,0x57,0x02,0x00,0x30,0x44,0x41,0x4e,0x41,
+    0x3a,0x4f,0x00,0x3d,0x4a,0x00,0x41,0x49,0x4c,0x50,0x55,0x00,0x47,0x41,0x55,0x00,
+    0x50,0x3d,0x43,0x00,0x4b,0x4a,0x00,0x44,0x45,0x4f,0x00,0x3e,0x41,0x48,0x50,0x57,
+    0x08,0x25,0x50,0x00,0x4e,0x41,0x3d,0x40,0x4f,0x00,0x61,0x20,0x45,0x4a,0x45,0x4a,
+    0x43,0x00,0x2e,0x4b,0x4b,0x49,0x19,0x57,0x01,0x00,
+};
+
+/* ROOM1131 msg 40: "It's locked.[Seite]A heart is etched under / the key hole." = RE2 Text 0x0F @0x8009F230 (Herz-Schluessel 0x5B - 0x4C, @0x800516b4); Form wie Runde 36 Spur Q msg 28 (`04 02` .. Seite `02 00` .. `08` .. `01 00`)  [Zeilenbreiten 74, 159, 86 px] */
+static const uint8_t k_r38f_msg1131_zu[55] = {
+    0x04,0x02,0x25,0x50,0x3a,0x4f,0x00,0x48,0x4b,0x3f,0x47,0x41,0x40,0x57,0x02,0x00,
+    0x1d,0x00,0x44,0x41,0x3d,0x4e,0x50,0x00,0x45,0x4f,0x00,0x41,0x50,0x3f,0x44,0x41,
+    0x40,0x00,0x51,0x4a,0x40,0x41,0x4e,0x08,0x50,0x44,0x41,0x00,0x47,0x41,0x55,0x00,
+    0x44,0x4b,0x48,0x41,0x57,0x01,0x00,
+};
+
+/* ROOM1131 msg 41: "You've used the Dining Room Key." (Form ROOM11E0 msg 12 @0x238C = RE2 Text 5 @0x8009F0E5)  [Zeilenbreiten 221 px] */
+static const uint8_t k_r38f_msg1131_benutzt[40] = {
+    0x04,0x02,0x35,0x4b,0x51,0x3a,0x52,0x41,0x00,0x51,0x4f,0x41,0x40,0x00,0x50,0x44,
+    0x41,0x00,0x05,0x01,0x20,0x45,0x4a,0x45,0x4a,0x43,0x00,0x2e,0x4b,0x4b,0x49,0x00,
+    0x27,0x41,0x55,0x05,0x00,0x57,0x01,0x00,
+};
+
+/* ROOM1141 msg 40: msg 2 @0x0115F ohne den Lauf "Same here... " (13 Glyphen), erster Buchstabe gross  [Zeilenbreiten 132, 118 px] */
+static const uint8_t k_r38f_msg1141_frage[46] = {
+    0x04,0x00,0x05,0x01,0x21,0x48,0x56,0x3d,0x16,0x05,0x00,0x00,0x1d,0x4e,0x41,0x00,
+    0x55,0x4b,0x51,0x00,0x4b,0x47,0x3d,0x55,0x1b,0x08,0x53,0x44,0x3d,0x50,0x3a,0x4f,
+    0x00,0x44,0x3d,0x4c,0x4c,0x41,0x4a,0x41,0x40,0x1b,0x04,0x01,0x01,0x63,
+};
+
+/* ROOM1141 msg 41: NUTZER-VORGABE "I cannot leave him alone with those monsters." (Text-Platz-Form ROOM1131 msg 1 @0x00B42 `04 02 .. 01 00`)  [Zeilenbreiten 164, 137 px] */
+static const uint8_t k_r38f_msg1141_sperre[49] = {
+    0x04,0x02,0x25,0x00,0x3f,0x3d,0x4a,0x4a,0x4b,0x50,0x00,0x48,0x41,0x3d,0x52,0x41,
+    0x00,0x44,0x45,0x49,0x00,0x3d,0x48,0x4b,0x4a,0x41,0x08,0x53,0x45,0x50,0x44,0x00,
+    0x50,0x44,0x4b,0x4f,0x41,0x00,0x49,0x4b,0x4a,0x4f,0x50,0x41,0x4e,0x4f,0x57,0x01,
+    0x00,
+};
+
+/* Name 0x43 (Nachtrag 14: "Dining Room Key")  [Zeilenbreiten 107 px] */
+static const uint8_t k_r38f_name[16] = {
+    0x20,0x45,0x4a,0x45,0x4a,0x43,0x00,0x2e,0x4b,0x4b,0x49,0x00,0x27,0x41,0x55,0x07,
+};
+
+/* CHECK 0x43 = RE2-Beschreibung des Modells 0x5B @0x800A1CDD "It's in the shape of<FC>a heart."  [Zeilenbreiten 128, 52 px] */
+static const uint8_t k_r38f_desc[31] = {
+    0x25,0x50,0x3a,0x4f,0x00,0x45,0x4a,0x00,0x50,0x44,0x41,0x00,0x4f,0x44,0x3d,0x4c,
+    0x41,0x00,0x4b,0x42,0x08,0x3d,0x00,0x44,0x41,0x3d,0x4e,0x50,0x57,0x01,0x00,
+};
+

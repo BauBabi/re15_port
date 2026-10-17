@@ -1,0 +1,23 @@
+Gegenprobe Nachbesserung 1 / Mangel 1 im Echtlauf (integration_r38_spinnen_echtlauf, 2026-10-17)
+OHNE Haken (game_step_common.c `if (0 && abzug > 0 && pl->hp >= 0)` = alter Stand), Lauf L (Leon ROOM2030) und E (Elza ROOM2031):
+   Gift-Takte 6 (Bilder F42 F185 F350 F515 F724 F867), ohne fremden Abzug 3, davon mit Treffer-Reaktion 3; Perioden ohne Fremdtreffer 2, davon != 121: 2
+ok    Punkt 2: Messschiene traegt pmo/phf (Spieler-Clip, Flinch)
+FAIL: Punkt 2: Gift-Takt ohne Treffer-Reaktion (3 von 3 sauberen Takten reagierten; Original @0x80031e44-ec8 nur HP + Zaehler)
+FAIL: Punkt 2: Gift-Periode 121 Bilder (2 Perioden, 2 abweichend; vorher 143)
+   Gift-Takte 6 (Bilder F42 F185 F350 F515 F724 F867), ohne fremden Abzug 3, davon mit Treffer-Reaktion 3; Perioden ohne Fremdtreffer 2, davon != 121: 2
+ok    Punkt 2: Messschiene traegt pmo/phf (Spieler-Clip, Flinch)
+FAIL: Punkt 2: Gift-Takt ohne Treffer-Reaktion (3 von 3 sauberen Takten reagierten; Original @0x80031e44-ec8 nur HP + Zaehler)
+FAIL: Punkt 2: Gift-Periode 121 Bilder (2 Perioden, 2 abweichend; vorher 143)
+0% tests passed, 1 tests failed out of 1
+
+MIT Haken (Endstand):
+pruef_log ROOM2030: 900 Bilder, Babys bis 9, Baby-Boden-Bilder 6380 (schwebend 0), Adult-Bilder 2700 (schwebend 0), Bisse 7, Gift 1, Spieler |y-bu|>100 in 0
+Gift-Takte 6 (Bilder F42 F163 F328 F515 F636 F757), ohne fremden Abzug 5, davon mit Treffer-Reaktion 0; Perioden ohne Fremdtreffer 3, davon != 121: 0
+ok    Punkt 2: Gift-Takt ohne Treffer-Reaktion (0 von 5 sauberen Takten reagierten; Original @0x80031e44-ec8 nur HP + Zaehler)
+ok    Punkt 2: Gift-Periode 121 Bilder (3 Perioden, 0 abweichend; vorher 143)
+pruef_log ROOM2031: 900 Bilder, Babys bis 9, Baby-Boden-Bilder 6380 (schwebend 0), Adult-Bilder 2700 (schwebend 0), Bisse 7, Gift 1, Spieler |y-bu|>100 in 0
+Gift-Takte 6 (Bilder F42 F163 F328 F515 F636 F757), ohne fremden Abzug 5, davon mit Treffer-Reaktion 0; Perioden ohne Fremdtreffer 3, davon != 121: 0
+ok    Punkt 2: Gift-Takt ohne Treffer-Reaktion (0 von 5 sauberen Takten reagierten; Original @0x80031e44-ec8 nur HP + Zaehler)
+ok    Punkt 2: Gift-Periode 121 Bilder (3 Perioden, 0 abweichend; vorher 143)
+The following tests passed:
+100% tests passed, 0 tests failed out of 2

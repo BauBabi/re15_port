@@ -26,6 +26,10 @@ gehört nach `STAGE2`. Groß-Hex wird zuerst gesucht, Klein-Hex als Rückfall �
 
 **Message-IDs 0 … 63.** Höhere Nummern lädt der Port nicht (`VOICE_MAX_MSG`).
 
+**Eine Ausnahme (Runde 38):** Elzas Vorspann `ROOM1241` hat Zeile für Zeile denselben Text wie Leons `ROOM1240`
+und spricht deshalb ohne eigene Dateien `room1240/main00..05.wav` mit. Liegen unter `room1241/` eigene Aufnahmen,
+haben sie Vorrang (`re15_port/include/re15_elzaintro_r38.h`).
+
 ## Das Dateiformat
 
 Angenommen werden **WAV** mit:

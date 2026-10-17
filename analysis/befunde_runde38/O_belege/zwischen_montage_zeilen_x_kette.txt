@@ -1,0 +1,46 @@
+[montage-r38] ROOM1130 Cut 0 Bild 142: Aktor 4 hinter der Kamera angehalten (entity+0x9 |= 0x20)
+[montage-r38] ROOM1130 Cut 0 Bild 161: Aktor 5 hinter der Kamera angehalten (entity+0x9 |= 0x20)
+[montage-r38] ROOM1130 Cut 0 Bild 176: Aktor 1 Typ 16 Bit 40 Abstand zur Kamera 6821 -> 3961 (Tiefe 6762 -> 3921, Bild 1..176) angehalten 0
+[montage-r38] ROOM1130 Cut 0 Bild 176: Aktor 2 Typ 10 Bit 41 Abstand zur Kamera 5648 -> 1969 (Tiefe 5648 -> 1898, Bild 1..176) angehalten 0
+[montage-r38] ROOM1130 Cut 0 Bild 176: Aktor 3 Typ 10 Bit 42 Abstand zur Kamera 4565 -> 1734 (Tiefe 4482 -> 1707, Bild 1..176) angehalten 0
+[montage-r38] ROOM1130 Cut 0 Bild 176: Aktor 4 Typ 11 Bit 43 Abstand zur Kamera 3521 -> 438 (Tiefe 3518 -> -1, Bild 1..176) angehalten 142
+[montage-r38] ROOM1130 Cut 0 Bild 176: Aktor 5 Typ 11 Bit 46 Abstand zur Kamera 4478 -> 1295 (Tiefe 4451 -> -18, Bild 1..176) angehalten 161
+[irons-tod] Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5, letzter bei Bild 270 von 405; 1@218 2@202 3@270 4@209 5@243; Spieler-HP 100 -> min 100; Kappe 0, hinter der Kamera angehalten 0
+[montage-r38] ROOM1040 Cut 1 Bild 405: Aktor 1 Typ 16 Bit 20 Abstand zur Kamera 12391 -> 7136 (Tiefe 12390 -> 7135, Bild 1..405) angehalten 0
+[montage-r38] ROOM1040 Cut 1 Bild 405: Aktor 2 Typ 16 Bit 21 Abstand zur Kamera 13004 -> 5663 (Tiefe 12944 -> 5642, Bild 1..405) angehalten 0
+[montage-r38] ROOM1040 Cut 1 Bild 405: Aktor 3 Typ 16 Bit 22 Abstand zur Kamera 13941 -> 8286 (Tiefe 13919 -> 8259, Bild 1..405) angehalten 0
+[montage-r38] ROOM1040 Cut 1 Bild 405: Aktor 4 Typ 16 Bit 23 Abstand zur Kamera 14897 -> 5395 (Tiefe 14893 -> 5360, Bild 1..405) angehalten 0
+[montage-r38] ROOM1040 Cut 1 Bild 405: Aktor 5 Typ 16 Bit 24 Abstand zur Kamera 15496 -> 7046 (Tiefe 15393 -> 6990, Bild 1..405) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 1 Typ 16 Bit 0 Abstand zur Kamera 30962 -> 27815 (Tiefe 22961 -> 20575, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 2 Typ 16 Bit 1 Abstand zur Kamera 28448 -> 26226 (Tiefe 20040 -> 18591, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 3 Typ 16 Bit 2 Abstand zur Kamera 32173 -> 27967 (Tiefe 22429 -> 19471, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 4 Typ 16 Bit 3 Abstand zur Kamera 33330 -> 28846 (Tiefe 26502 -> 22439, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 5 Typ 16 Bit 4 Abstand zur Kamera 30229 -> 26986 (Tiefe 24110 -> 20343, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 6 Typ 16 Bit 5 Abstand zur Kamera 33383 -> 28593 (Tiefe 24988 -> 21276, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 7 Typ 10 Bit 47 Abstand zur Kamera 8272 -> 6271 (Tiefe 8223 -> 6207, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 8 Typ 10 Bit 48 Abstand zur Kamera 6235 -> 4799 (Tiefe 6162 -> 4638, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 9 Typ 10 Bit 49 Abstand zur Kamera 4644 -> 3158 (Tiefe 4625 -> 2678, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 10 Typ 11 Bit 75 Abstand zur Kamera 7222 -> 5523 (Tiefe 7006 -> 5421, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 11 Typ 11 Bit 76 Abstand zur Kamera 5599 -> 3868 (Tiefe 5537 -> 3577, Bild 1..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 12 Typ 16 Bit 77 Abstand zur Kamera 28208 -> 27991 (Tiefe 21784 -> 21677, Bild 186..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 13 Typ 16 Bit 78 Abstand zur Kamera 29609 -> 29447 (Tiefe 23930 -> 23699, Bild 186..207) angehalten 0
+[montage-r38] ROOM1030 Cut 7 Bild 207: Aktor 14 Typ 16 Bit 79 Abstand zur Kamera 27026 -> 26972 (Tiefe 19833 -> 19757, Bild 186..207) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 1: Aktor 7 hinter der Kamera angehalten (entity+0x9 |= 0x20)
+[montage-r38] ROOM1030 Cut 12 Bild 1: Aktor 8 hinter der Kamera angehalten (entity+0x9 |= 0x20)
+[montage-r38] ROOM1030 Cut 12 Bild 1: Aktor 9 hinter der Kamera angehalten (entity+0x9 |= 0x20)
+[montage-r38] ROOM1030 Cut 12 Bild 1: Aktor 10 hinter der Kamera angehalten (entity+0x9 |= 0x20)
+[montage-r38] ROOM1030 Cut 12 Bild 1: Aktor 11 hinter der Kamera angehalten (entity+0x9 |= 0x20)
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 1 Typ 16 Bit 0 Abstand zur Kamera 10102 -> 9607 (Tiefe 9935 -> 9483, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 2 Typ 16 Bit 1 Abstand zur Kamera 9429 -> 9271 (Tiefe 8773 -> 8787, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 3 Typ 16 Bit 2 Abstand zur Kamera 11152 -> 10059 (Tiefe 10607 -> 9573, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 4 Typ 16 Bit 3 Abstand zur Kamera 10302 -> 8009 (Tiefe 10302 -> 7949, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 5 Typ 16 Bit 4 Abstand zur Kamera 9094 -> 6476 (Tiefe 8957 -> 6106, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 6 Typ 16 Bit 5 Abstand zur Kamera 10694 -> 10343 (Tiefe 10604 -> 10051, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 7 Typ 10 Bit 47 Abstand zur Kamera 13923 -> 13923 (Tiefe -12568 -> -12568, Bild 1..335) angehalten 1
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 8 Typ 10 Bit 48 Abstand zur Kamera 15027 -> 15027 (Tiefe -13001 -> -13001, Bild 1..335) angehalten 1
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 9 Typ 10 Bit 49 Abstand zur Kamera 16524 -> 16524 (Tiefe -13544 -> -13544, Bild 1..335) angehalten 1
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 10 Typ 11 Bit 75 Abstand zur Kamera 14465 -> 14465 (Tiefe -12786 -> -12786, Bild 1..335) angehalten 1
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 11 Typ 11 Bit 76 Abstand zur Kamera 15828 -> 15828 (Tiefe -13307 -> -13307, Bild 1..335) angehalten 1
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 12 Typ 16 Bit 77 Abstand zur Kamera 9532 -> 7039 (Tiefe 9524 -> 6873, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 13 Typ 16 Bit 78 Abstand zur Kamera 10458 -> 10041 (Tiefe 10350 -> 10034, Bild 1..335) angehalten 0
+[montage-r38] ROOM1030 Cut 12 Bild 335: Aktor 14 Typ 16 Bit 79 Abstand zur Kamera 9558 -> 9545 (Tiefe 9249 -> 9261, Bild 1..335) angehalten 0

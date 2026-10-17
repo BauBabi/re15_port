@@ -13,9 +13,18 @@
 #   leon_re2_w3    Gegenprobe Browning: EIN Abzug in E, keiner in E+3/E+6, 15 -> 14 (Handler 0x800337BC unveraendert)
 #   elza_re2_w5    Elza (RE15_PSELECT_AUTO, ROOM11E1, Platz 1 Typ 0x10 vor ihr), M93R: drei HP-Abzuege, 15 -> 12
 # Nachbesserung 1 (Abnahme 0 M1-M3) — Gegner mit RE1.5-Gehirn unter der STANDARD-KI (kein RE15_AI_FLAVOR = RE2-Flavor):
-#   t2b_std_w5     ROOM5040 Platz 1 Typ 0x2b, Leon (-14493,-13185) Blick -z: drei Abzuege E/E+3/E+6 je -10
+#   t2b_std_w5     ROOM5040 Platz 1 Typ 0x2b (Runde 38: schon draussen, Ck(4,0xD6)=1), Leon (-23943,-16785) Blick -z: drei
+#                  Abzuege E/E+3/E+6 je -10
 #                  (= Spalte 3 @0x8006EFA4; Stoss 30 statt vorher 1 x 10), Munition -3
-#   roach_std_w5   ROOM3040 Platz 2 Typ 0x29, Leon (-13500,-10300) Blick -z: drei Abzuege je -14 (Spalte 3 @0x8006EEF4)
+#   roach_std_w5   ROOM3040 Platz 2 Typ 0x29 (der kleine Affe, Spur S Runde 38): drei Abzuege je -14 (Spalte 3 @0x8006EEF4).
+#                  Runde 38 Integration (Spur S Rueckstoss), GEMESSEN umgestellt: seit Spur S greift der Affe wie im Original an.
+#                  Am alten Platz (-13500,-10300) Blick -z (Abstand 1504) startet er beim Zielen den Anlauf (A[0] aca58 == 0x701
+#                  und Abstand < 0x1770 @0x80111280-a0, Port F6) und landet den schweren Treffer F27 (Sub 6 Bild 21, Fenster
+#                  @0x8011ed4c) — Leon liegt (Niederschlag [4]), der Abzug F61 kommt nie. Jetzt steht Leon 6700 vor ihm,
+#                  (-13500,-18500) Blick +z (Band 0, Boden suedlich des Gangs): >= 0x1770 -> kein Anlauf, >= 0x1388 / 0xbb8 ->
+#                  weder Sicht- noch Blind-Zweig (@0x80111244-68 / @0x801112d8-304), der Ruhe-Zeitgeber laeuft fruehestens
+#                  59 Bilder (`addiu v0,v0,59` @0x80111330-44) ab F6 = F65 ab, nach E = F61. Gemessen (exe, Messlauf v2_fern):
+#                  Affe ruht F6..F60 (Sub 0, Clip 0x16), E = F61, Platz 2 -14 / -14 / -14 in E / E+3 / E+6, Leon 100 HP.
 #   Vor der Nachbesserung lieferten beide Laeufe EINEN Abzug (F61 -10 / -14, Dossier G_beretta.md 8.1) — rot.
 # Nachbesserung 2 (Abnahme 1 N1) — GITTERARM 0x1A (ROOM1210, RE2-EM2D-Gehirn in jedem KI-Modus), Aufbau Abnahme 1f:
 #   Leon (-19500,-13000,1024), Eingabe "U0.8,R0.5,M1.0,MA0.1,M2.0,W2" (Laufen weckt die Arme, Arm Platz 5 kommt F38 heraus).
@@ -73,7 +82,7 @@ function(r37_exe _lauf _dir _start _jump _exit _pos _waffe _flavor _input)
              RE15_WINDOW_SCALE=1 "RE15_DEBUG_JUMP=${_jump}@250" "RE15_PLAYER_POS=${_pos}"
              "RE15_GIVE=${_waffe}:15" "RE15_EQUIP=${_waffe}"
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_input}"
-             RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=${_exit}")
+             RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=${_exit}" ${R37_ZUSATZ_ENV})
     re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
     if(NOT _rv EQUAL 0)
         set(_z "")
@@ -215,13 +224,19 @@ function(r37_schaden_pruefen _lauf _dir _dhp)
     message(STATUS "${_tag} [${_lauf}]: OK — Schaden je Kugel ${_dhp}")
 endfunction()
 
+# Runde 38 Spur T: der Spiderman (0x2B) mit grid 0x41 steckt byte-true versteckt im Schacht, bis der Spieler den
+# Ausloeser betritt (Untertabelle @0x8011A270 [1], P1 wartet auf grid 0x42 @0x8011545C-60) — und ist dort kein Ziel
+# (Aim-Latch grid & 0x60 @0x8003710c). Der Fall nimmt deshalb den SCHON DRAUSSEN stehenden Spiderman (Ck(4,0xD6)=1 ->
+# Sce_em_set grid 0 @0x017D4, (-23943,-18285)) und stellt Leon 1500 davor; Absicht des Falls (drei Kugeln je -10) bleibt.
 set(_d "${_wurzel}/t2b_std_w5")
-r37_exe("t2b_std_w5" "${_d}" leon 5040 "200#5040" "-14493,-13185,1024" 5 std "M2.0,MA0.1,M3.0,W2")
+set(R37_ZUSATZ_ENV "RE15_SET_FLAG=4:214")
+r37_exe("t2b_std_w5" "${_d}" leon 5040 "200#5040" "-23943,-16785,1024" 5 std "M2.0,MA0.1,M3.0,W2")
+unset(R37_ZUSATZ_ENV)
 r37_feuerstoss_pruefen("t2b_std_w5" "${_d}")
 r37_schaden_pruefen("t2b_std_w5" "${_d}" -10)
 
 set(_d "${_wurzel}/roach_std_w5")
-r37_exe("roach_std_w5" "${_d}" leon 3040 "200#3040" "-13500,-10300,1024" 5 std "M2.0,MA0.1,M3.0,W2")
+r37_exe("roach_std_w5" "${_d}" leon 3040 "200#3040" "-13500,-18500,3072" 5 std "M2.0,MA0.1,M3.0,W2")   # Runde 38 Integration: s. Kopf
 r37_feuerstoss_pruefen("roach_std_w5" "${_d}")
 r37_schaden_pruefen("roach_std_w5" "${_d}" -14)
 

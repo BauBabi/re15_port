@@ -20,6 +20,7 @@
 #include "re15_scd.h"
 #include "re15_anim_select.h"   /* re15_actor_footstep (foot-plant query) */
 #include "re15_audio.h"         /* re15_audio_footstep */
+#include "re15_wasser_r38.h"    /* Runde 38 Spur N: FUN_80045630-Zwilling (Wasser-Effekt + Tonindex) */
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
 #include "re15_fenster1120.h"   /* Runde 35 Spur M */
@@ -48,6 +49,8 @@
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 ohne Spieler-Schub (zellschub_r36.c) */
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
 #include "re15_beretta_r37.h"   /* Runde 37 Spur G: Feuerstoss 5/6 trifft je Kugel (beretta_r37.c) */
+#include "re15_rekorder_r38.h"  /* Runde 38 Spur J: Rekorder-Aufnahme ROOM1100/1101 (rekorder_r38.c) */
+#include "re15_tagebuch_r38.h"  /* Runde 38 Spur G: Kartenkette nach Roys Diary (tagebuch_r38.c) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -432,6 +435,8 @@ void re15_player_cmd_zero(void)
                                            * setzt die Bank ohnehin neu */
     s_ev_reach = 0;
     s_prev_hp = -1;
+    { extern void re15_spinnen_r38_gift_cmd0(void);   /* Runde 38 Spur R: Gift-Zaehler 0x800acc27 := 0, */
+      re15_spinnen_r38_gift_cmd0(); }                 /* `sb zero,-13273(at)` @0x8003196c (cmd-0-Handler) */
     re15_player_aim_interrupt();
     re15_player_idle_reset();
     /* Derselbe Wort-Store `sw 1,0x800aca58` @0x8003192c nullt auch den Schiebe-Substate 8
@@ -598,79 +603,150 @@ static int kd_adv(re15_actor_t *pl, int fc)
     return (int)pl->anim_frame >= fc - 1;
 }
 
+/* Runde 38 Integration (Spur S Rueckstoss): s_kd_phase IST jetzt aca5a (0x800aca5a) und laeuft die
+ * Original-Sprungtabellen 1:1 ab — [4] 0x800360e8 ueber @0x80010b88 (Phasen 0..11, `sltiu v0,v1,0xc`
+ * @0x800360f8), [5] 0x8003644c ueber @0x80010bb8 (Phasen 0..6, `sltiu v0,v1,0x7` @0x8003645c).
+ * Vorher wich die Port-Maschine an vier Stellen ab, gemessen am schweren Affen-Treffer (ROOM3040, Leon Band 0
+ * vor Affe B, GDB-Spur o17 gegen exe-Lauf roach_std_w5; [5] gegen GDB-Spur o6 der Spur S):
+ *   (1) Phase 0 brach ab — im Original FAELLT sie in Phase 1 (kein Sprung zwischen @0x800361a0 und @0x800361a4
+ *       bzw. @0x8003650c und @0x80036510): der erste Schritt 1000 (500) kommt im Phase-0-Tick, nicht einen danach;
+ *   (2) [4] Phase 1 zog 15 * Bild VOR dem Bild-Vorschub dieses Ticks ab, aber mit dem Port-Bild des VORTICKS
+ *       (Saat-Tick doppelt): Schritte 1000,1000,985,...,460 statt 1000,985,...,460,325 (o17 F50..F59);
+ *   (3) [4] Phase 3 zog -15 VOR dem Vorschub ab — das Original schiebt mit dem alten +0x8c (`jal 0x800245d8`
+ *       @0x800362b0) und zieht erst danach ab (@0x800362bc-e0): 445,430,.. statt 325,310,..,10 (o17 F60..F81);
+ *   (4) [5] Phase 1 pruefte das Bild VOR dem Vorschub; das Tor liest +0x95 NACH anim_set (@0x80036544): ohne den
+ *       Wrap-Schritt (o6 F1061 -25) und mit zwei Schritten zuviel (-25/-100 schon in Bild 15/16).
+ * Folge: 15 025 statt 11 210 Einheiten Rutschweg (o17: z -10241 -> 969), der Port rutschte 3 800 weiter und
+ * damit aus der Raumhuelle (z 4747). Bildkonvention des Ports (kd_clip/kd_adv = Saat-Tick posiert Bild 0, s. Kopf
+ * re15_npc_anim): pl->anim_frame NACH kd_adv = das in diesem Tick posierte Bild = +0x95 VOR anim_set im Original. */
+static void kd_ende(re15_actor_t *pl)
+{
+    /* EXIT ([4] Ph4 @0x800362ec / Ph11 @0x80036404, [5] Ph6 @0x80036674): aca58:=1 (`sw` @0x800362f4 /
+     * @0x8003640c / @0x8003667c), +0x93 = 0 (@0x800362fc / @0x80036420 / @0x80036690), aca3c &= ~0xC0
+     * (@0x80036410-34 / @0x80036680-a4, nur Ph11 und [5]). Clip +0x94 bleibt UNANGETASTET (dieselben
+     * `sw 1`-Wort-Exits wie der Flinch) — kein `motion = 0`-Blitz. Lief der Schluss-Clip RUECKWAERTS
+     * (Aufstehen = 0xb reversed, @0x800363c8/@0x80036638), ist die Endpose der Vorwaerts-Slot 0: Frame
+     * auf 0 setzen, wenn das Reverse-Bit faellt, damit derselbe Keyframe stehen bleibt. */
+    s_knockdown = 0;
+    if (pl->anim_flags & 0x80u) {
+        pl->anim_frame = 0;
+        pl->anim_flags &= (uint16_t)~0x80u;
+    }
+    pl->hit_react &= (uint8_t)~1u;
+}
+
 static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *pl)
 {
     const re15_emd_animation_t *an = c->pl00_anim;
 #define KD_FC(cl) ((an && (int)(cl) < an->clip_count && an->clips[(cl)].frame_count > 0) \
                    ? an->clips[(cl)].frame_count : 20)
-    switch (s_kd_phase) {
-    case 0:
-        if (s_kd_dir == 0) {                      /* [4] Ph0 @0x80036144-a0: Sturz RUECKWAERTS */
-            kd_clip(pl, 0x0d, 0);                 /* Clip 0xd @0x80036144-4c */
-            s_kd_speed = 1000;                    /* Impuls @0x8003616c */
-        } else {                                  /* [5] Ph0 @0x800364a8-50c: Sturz VORWAERTS */
-            kd_clip(pl, 0x0c, 0);                 /* Clip 0xc @0x800364a8-b0 */
-            s_kd_speed = 500;                     /* @0x800364c0/d0 */
+    if (s_kd_dir == 0) {                          /* [4] 0x800360e8 — Treffer von VORN, Sturz RUECKWAERTS */
+        switch (s_kd_phase) {
+        case 0:                                   /* Ph0 0x80036124 */
+            kd_clip(pl, 0x0d, 0);                 /* +0x94 = 0xd @0x80036144-4c, +0x8f = 7 @0x80036150-58,
+                                                   * +0x95 = 0 @0x80036164 */
+            s_kd_speed = 1000;                    /* +0x8c = 0x3e8 `ori v0,zero,0x3e8` @0x8003615c / `sh` @0x8003616c */
+            pl->hit_react |= 1;                   /* i-Frames @0x80036178-80 */
+            re15_audio_core_se(1);                /* SE 0x04010001 (`lui a0,0x401` @0x80036124 / `ori` @0x80036188),
+                                                   * `jal 0x80045024` @0x80036184 */
+            s_kd_phase = 1;                       /* aca5a = 1 @0x80036134-38 */
+            /* faellt durch: Ph0 endet @0x800361a0, Ph1 beginnt @0x800361a4 */
+        case 1: {                                 /* Ph1 0x800361a4 — Sturz-Flug */
+            int ende = kd_adv(pl, KD_FC(pl->motion));          /* anim_set `jal 0x8001f314` @0x800361dc */
+            s_kd_speed -= 15 * (int32_t)pl->anim_frame;        /* +0x8c -= 15 * (+0x95 VOR anim_set): `lbu t0,+0x95`
+                                                                * @0x800361c8, `sll v0,t0,4`/`subu` @0x800361d0-d8,
+                                                                * `sh v1` @0x800361e0 — KEIN Clamp */
+            if (ende) s_kd_phase = 2;                          /* aca5a += Rueckgabe @0x800361e4-f8 */
+            if (kd_move(c, pl, s_kd_speed, 1))                 /* `jal 0x800245d8` (a0 = 0x800) @0x800361fc-200,
+                                                                * Sonde `jal 0x8001c2dc` @0x80036214 */
+                s_kd_phase = 5;                                /* +0x9e != 0 -> aca5a = 5 @0x8003621c-30 (SLAM) */
+            break; }
+        case 2:                                   /* Ph2 0x8003623c */
+            kd_clip(pl, 0x0e, 0);                 /* +0x94 = 0xe @0x80036254-5c, +0x95 0 / +0x8f 7 @0x80036260-70 */
+            re15_audio_core_se(1);                /* SE 0x04010001 (a0 @0x8003623c-40), `jal 0x80045024` @0x80036274 */
+            s_kd_phase = 3;                       /* aca5a = 3 @0x8003624c-50 */
+            /* faellt durch in Ph3 @0x8003627c */
+        case 3:                                   /* Ph3 0x8003627c — am Boden */
+            if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 4;   /* anim_set @0x80036290, aca5a += @0x80036298-ac */
+            (void)kd_move(c, pl, s_kd_speed, 1);                 /* `jal 0x800245d8` (0x800) @0x800362b0 mit dem
+                                                                  * ALTEN +0x8c */
+            s_kd_speed -= 15;                                    /* `addiu v0,v0,-15` @0x800362c4 */
+            if (s_kd_speed < 0) s_kd_speed = 0;                  /* `bgez` @0x800362d4 / `sh zero` @0x800362e0 */
+            break;
+        case 5:                                   /* Ph5 0x80036308 — Wand-Slam */
+            kd_clip(pl, 0x0f, 0);                 /* +0x94 = 0xf @0x80036320-28, +0x95 0 / +0x8f 7 @0x8003632c-3c
+                                                   * (aca3c |= 0x80 @0x80036348-5c dokumentiert, Leser OFFEN KD-11) */
+            re15_audio_core_se(1);                /* SE 0x04010001 (a0 @0x80036308-0c), `jal 0x80045024` @0x80036340 */
+            s_kd_phase = 6;                       /* aca5a = 6 @0x80036318-1c */
+            /* faellt durch in den Anim-Schwanz (`j 0x800363cc` @0x80036360) */
+        case 6:
+            if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 7;   /* anim_set (a2 = 0) @0x800363dc, += @0x800363e4-f8 */
+            break;
+        case 7:                                   /* Ph7 0x80036368 */
+            kd_clip(pl, 0x10, 0);                 /* +0x94 = 0x10 @0x80036374-7c, +0x95 0 / +0x8f 7 @0x80036380-90 */
+            s_kd_phase = 8;                       /* aca5a = 8 @0x80036368-70 */
+            /* faellt durch: `j 0x800363cc` (a2 = 0) @0x80036394 */
+        case 8:
+            if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 9;
+            break;
+        case 9:                                   /* Ph9 0x8003639c — Aufstehen = Clip 0xb RUECKWAERTS */
+            kd_clip(pl, 0x0b, 1);                 /* +0x94 = 0xb @0x800363a8-b0, +0x95 0 / +0x8f 7 @0x800363b4-c4,
+                                                   * a2 = 1 `ori a2,zero,0x1` @0x800363c8 */
+            s_kd_phase = 10;                      /* aca5a = 0xa @0x8003639c-a4 */
+            /* faellt durch in Ph10 @0x800363c8 */
+        case 10:
+            if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 11;
+            break;
+        default:                                  /* Ph4 0x800362ec / Ph11 0x80036404 */
+            kd_ende(pl);
+            break;
         }
-        pl->hit_react |= 1;                       /* i-Frames @0x80036178-80 / @0x800364e4 */
-        re15_audio_core_se(1);                    /* SE 0x04010001 @0x80036184-88 */
-        s_kd_phase = 1;
-        break;
-    case 1: {                                     /* Sturz-Playout + Physik */
-        if (s_kd_dir == 0) {
-            s_kd_speed -= 15 * (int32_t)pl->anim_frame;    /* @0x800361c8-e0, KEIN Clamp */
-            if (kd_move(c, pl, s_kd_speed, 1)) {           /* Wand-Probe @0x8003620c-18 */
-                kd_clip(pl, 0x0f, 0); s_kd_phase = 3;      /* SLAM-Zweig @0x8003622c-30 -> Ph5
-                                                            * (Clip 0xf @0x80036348-5c; das
-                                                            * aca3c|=0x80 ist dokumentiert, Leser
-                                                            * OFFEN KD-11) */
-                break;
+    } else {                                      /* [5] 0x8003644c — Treffer von HINTEN, Sturz VORWAERTS */
+        switch (s_kd_phase) {
+        case 0:                                   /* Ph0 0x80036488 */
+            kd_clip(pl, 0x0c, 0);                 /* +0x94 = 0xc @0x800364a8-b0, +0x8f = 7 @0x800364b4-bc,
+                                                   * +0x95 = 0 @0x800364c8 */
+            s_kd_speed = 500;                     /* +0x8c = 0x1f4 `ori v0,zero,0x1f4` @0x800364c0 / `sh` @0x800364d0 */
+            s_kd_t = 0;                           /* +0x9f = 0 @0x800364dc-e0 */
+            pl->hit_react |= 1;                   /* i-Frames @0x800364e4-ec */
+            re15_audio_core_se(1);                /* SE 0x04010001 (a0 @0x80036488 / `ori` @0x800364f4), `jal 0x80045024`
+                                                   * @0x800364f0 */
+            s_kd_phase = 1;                       /* aca5a = 1 @0x80036498-9c */
+            /* faellt durch: Ph0 endet @0x8003650c, Ph1 beginnt @0x80036510 */
+        case 1: {                                 /* Ph1 0x80036510 */
+            int ende = kd_adv(pl, KD_FC(pl->motion));          /* anim_set `jal 0x8001f314` @0x80036524 */
+            if (ende) s_kd_phase = 2;                          /* aca5a += Rueckgabe @0x80036534-4c */
+            /* Das Tor liest +0x95 NACH anim_set (`lbu a0,0(s0)` @0x8003653c, `sltiu a0,a0,0xf` @0x80036544): das
+             * naechste Bild, am Clip-Ende das gewrappte 0 (`sb zero,149` @0x8001f63c) — o6 F1061 schiebt im
+             * Wrap-Tick noch einmal (-25). */
+            int nach = ende ? 0 : (int)pl->anim_frame + 1;
+            if (nach < 0xf) {
+                s_kd_speed -= 5 * s_kd_t; s_kd_t++;            /* t = +0x9f `lb` @0x8003655c, `sb t+1` @0x80036580,
+                                                                * 5t `sll v1,v0,2`/`addu` @0x8003656c-70, `sh` @0x8003658c */
+                if (re15_affen_kd_sonde(c->rdt, pl->x, pl->y, pl->z, RE15_KD_SONDE_RADIUS)) s_kd_speed = 0;   /* Runde 35 Spur J: Sonde @0x80036594 VOR dem Vorschub -> +0x8c=0 @0x800365ac-b0 */
+                (void)kd_move(c, pl, s_kd_speed, 0);           /* `jal 0x800245d8` (a0 = 0) @0x800365b4 */
             }
-        } else if ((int)pl->anim_frame < 0xf) {            /* Move-Gate frame<15 @0x80036544 */
-            s_kd_speed -= 5 * s_kd_t; s_kd_t++;            /* Decel 5*t @0x8003656c-8c */
-            if (re15_affen_kd_sonde(c->rdt, pl->x, pl->y, pl->z, RE15_KD_SONDE_RADIUS)) s_kd_speed = 0;   /* Runde 35 Spur J: Sonde @0x80036594 -> +0x8c=0 @0x800365ac-b0 */
-            (void)kd_move(c, pl, s_kd_speed, 0);           /* Vorschub 245d8 @0x800365b4 */
+            break; }
+        case 2:                                   /* Ph2 0x800365c4 */
+            kd_clip(pl, 0x10, 0);                 /* +0x94 = 0x10 @0x800365d0-d8, +0x95 0 / +0x8f 7 @0x800365e4-f4
+                                                   * (aca3c |= 0x80 @0x800365dc-600 dokumentiert; Ph2 hat KEIN SE) */
+            s_kd_phase = 3;                       /* aca5a = 3 @0x800365c4-cc */
+            /* faellt durch: `j 0x8003663c` (a2 = 0) @0x80036604 */
+        case 3:
+            if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 4;   /* anim_set @0x8003664c, += @0x80036654-68 */
+            break;
+        case 4:                                   /* Ph4 0x8003660c — Aufstehen = Clip 0xb RUECKWAERTS */
+            kd_clip(pl, 0x0b, 1);                 /* +0x94 = 0xb @0x80036618-20, +0x95 0 / +0x8f 7 @0x80036624-34,
+                                                   * a2 = 1 `ori a2,zero,0x1` @0x80036638 */
+            s_kd_phase = 5;                       /* aca5a = 5 @0x8003660c-14 */
+            /* faellt durch in Ph5 @0x80036638 */
+        case 5:
+            if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 6;
+            break;
+        default:                                  /* Ph6 0x80036674 */
+            kd_ende(pl);
+            break;
         }
-        if (kd_adv(pl, KD_FC(pl->motion))) {
-            if (s_kd_dir == 0) { kd_clip(pl, 0x0e, 0); s_kd_phase = 2; }  /* [4] Ph2/3 Clip 0xe */
-            else               { kd_clip(pl, 0x10, 0); s_kd_phase = 4; }  /* [5] Ph2 Clip 0x10 */
-        }
-        break; }
-    case 2:                                       /* [4] Ph2/3: Aufstehen vorw. + speed-15 Clamp0 */
-        s_kd_speed -= 15; if (s_kd_speed < 0) s_kd_speed = 0;   /* @0x800362bc-e0 */
-        (void)kd_move(c, pl, s_kd_speed, 1);
-        if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 6;      /* Exit Ph4 @0x800362f4 */
-        break;
-    case 3:                                       /* [4] Ph5/6: Slam-Clip 0xf Playout */
-        if (kd_adv(pl, KD_FC(pl->motion))) { kd_clip(pl, 0x10, 0); s_kd_phase = 4; }  /* Ph7 Clip 0x10 */
-        break;
-    case 4:                                       /* Boden-Clip 0x10 Playout */
-        if (kd_adv(pl, KD_FC(pl->motion))) { kd_clip(pl, 0x0b, 1); s_kd_phase = 5; }
-                                                  /* Aufstehen = Clip 0xb RUECKWAERTS
-                                                   * (ori a2,1 @0x800363c8 / @0x80036638) */
-        break;
-    case 5:                                       /* Aufstehen-Playout */
-        if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 6;
-        break;
-    default:                                      /* EXIT ([4] Ph4/Ph11 @0x800362f4/@0x8003640c,
-                                                   * [5] Ph6 @0x8003667c): aca58:=1, +0x93 = 0
-                                                   * (@0x800362f8-Region / @0x80036690),
-                                                   * aca3c &= ~0xC0 (@0x80036410-34/@0x80036680-a4).
-                                                   * Clip +0x94 bleibt UNANGETASTET (dieselben
-                                                   * `sw 1`-Wort-Exits wie der Flinch) — kein
-                                                   * `motion = 0`-Blitz. Lief der Schluss-Clip
-                                                   * RUECKWAERTS (Aufstehen = 0xb reversed,
-                                                   * @0x800363c8/@0x80036638), ist die Endpose
-                                                   * der Vorwaerts-Slot 0: Frame auf 0 setzen,
-                                                   * wenn das Reverse-Bit faellt, damit derselbe
-                                                   * Keyframe stehen bleibt. */
-        s_knockdown = 0;
-        if (pl->anim_flags & 0x80u) {
-            pl->anim_frame = 0;
-            pl->anim_flags &= (uint16_t)~0x80u;
-        }
-        pl->hit_react &= (uint8_t)~1u;
-        break;
     }
 #undef KD_FC
 }
@@ -1011,6 +1087,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     pl->pos_s_y = (uint16_t)(int32_t)pl->y;      /* @0x8001d0dc */
     pl->pos_s_z = (uint16_t)(int32_t)pl->z;      /* @0x8001d0e4 */
     schritt_station(RE15_SCHRITT_ANFANG, pl->x, pl->z);   /* Mess-Schiene, s. Kopf */
+    re15_wasser_r38_bildanfang(c);   /* Runde 38 Spur N: Schnappschuss + Stempel +0x88 latchen/loeschen @0x80031da4 */
 
     /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
@@ -1068,6 +1145,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * include/re15_leiche.h. */
     if (c->rdt_ok) re15_leiche_tick();
     re15_aufschliessen_r36_tick();   /* Runde 36 Spur G: faellige RE2-Aufschliess-Toene (auch bei offener Nachricht) */
+    re15_rekorder_r38_tick();        /* Runde 38 Spur J: Bilder seit der Rekorder-Aufnahme, Ende ins Protokoll */
 
     if (re15_item_modal_active()) return;
 
@@ -1247,6 +1325,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * (RE2: Bit 0x8000 bleibt bis zum Start des Status-Tasks, @0x80025BA8-E0). */
     re15_cut10f0_tick();   /* Runde 35 Spur K: Szenen-Ende ROOM10F0 -> Kartenhinweis + MAIN01 (re15_cut10f0.h) */
     re15_szl_tick();       /* Runde 36 Spur J: Irons-Kopf nach dem Tod, ROOM11B0-Erweiterung (re15_szenenleon_r36.h) */
+    re15_tagebuch_r38_tick();   /* Runde 38 Spur G: nach Roys Diary Kartenkette Comms -> Prison (re15_tagebuch_r38.h) */
     if (re15_map_hint_pending() >= 0 &&
         re15_menu_request_map_hint(re15_map_hint_pending()))
         re15_map_hint_take();
@@ -1371,6 +1450,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * @0x8001ce1c); nur die ACTION-Klasse wird ueber das Press-Flag entwaffnet — alle
      * ACTION-Fire-Pfade in aot_common.c sind auf g_aot_action_pressed gegatet. Gemessen
      * (test_action_msg_gate, vor dem Fix): Knockdown/Flinch/Tod/Aim-LOWER feuerten Examine. */
+    { extern void re15_zopf_r38_takt(int);   /* Runde 38 Spur D: Zopf im Spieler-Dispatcher hinter `bltz` @0x80031c78 */
+      re15_zopf_r38_takt(c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PLAYER)); }
     if (c->rdt_ok && (g_re15_pauseflags & RE15_PAUSE_PLAYER)) {
         /* SPIELER-FREEZE (Bit 0x80000000) — byte-true Spieler-Dispatcher FUN_80031c44:
          *   80031c54  lw   a0,-13760(a0)          a0 = g_pauseflags (0x800aca40)
@@ -1628,6 +1709,10 @@ void re15_game_step(const re15_game_ctx_t *c)
                     if (re15_autolook_scan(pl, 0xfa0))               /* @0x80031e20-24 */
                         pl->neck_flags = (uint8_t)(pl->neck_flags & 0xed);  /* @0x80031e3c-40 */
                 }
+                { extern int re15_spinnen_r38_gift_tick(re15_actor_t *);    /* Runde 38 Spur R: Gift- */
+                  int abzug = re15_spinnen_r38_gift_tick(pl);              /* Wirkung @0x80031e44-ecc schreibt NUR */
+                  if (abzug > 0 && pl->hp >= 0)                            /* HP + Zaehler, kein Kommando 2: nicht */
+                      s_prev_hp = (int16_t)(s_prev_hp - abzug); }          /* als Treffer werten (Nachbesserung 1) */
             }
         }
         /* AIM-Zustand ZUM DECIDE-ZEITPUNKT festhalten (= DAT_800aca59 == 7, BEVOR die Aim-FSM
@@ -2143,25 +2228,10 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Gameplay-Zweig (nicht nur waehrend des Kletterns). */
     if (c->rdt_ok) re15_climb_standing_tick();
 
-    /* FOOTSTEP SE (byte-true LAB_80030af0 walk / LAB_80030d28 run): while the player
-     * walks(105)/runs(100), the W01 clip's CURRENT frame carries a foot-plant flag
-     * (bit 0x4000) → fire one footstep, its material from floor.flr
-     * (re15_rdt_floor_sound at the player XZ). Edge-gate on the anim frame so the
-     * same foot-plant isn't double-fired (PC halves anim_frame at 60fps). */
-    {
-        static uint32_t s_last_foot_cur = 0xFFFFFFFFu;
-        if (c->rdt_ok && c->w01_anim && (pl->motion == 105 || pl->motion == 100)) {
-            uint32_t cur = (uint32_t)pl->anim_frame;
-            if (cur != s_last_foot_cur) {
-                s_last_foot_cur = cur;
-                int clip = (pl->motion == 105) ? 5 : 0;   /* walk=W01 c5, run=c0 */
-                int foot = re15_actor_footstep(c->w01_anim, pl, clip, cur);
-                if (foot) re15_audio_footstep(foot, re15_rdt_floor_sound(c->rdt, pl->x, pl->z));
-            }
-        } else {
-            s_last_foot_cur = 0xFFFFFFFFu;   /* reset when not locomoting */
-        }
-    }
+    /* FOOTSTEP (byte-true LAB_80030af0 walk / LAB_80030d28 run): Runde 38 Spur N — Erkennung am
+     * Bildwort des ZULETZT GEZEICHNETEN Bilds (*(+0x168) aus dem anim_set des Vorbilds @0x8001f36c,
+     * gelesen @0x8003252c-3c) + FUN_80045630-Zwilling (Effekt @0x800456ac-0x80045710, Ton @0x80045718). */
+    re15_wasser_r38_fusstakt(c);
 
     /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die TUERSEQUENZ vor dem Wiedereintritt. RE2
      * FUN_80026b7c startet Door_main (@0x80026bf8/bfc) und wartet am Ende auf deren Ende
@@ -2407,6 +2477,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
      * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
     re15_player_victim_tick();
+    { extern void re15_r38i_rueckgriff_tick(void);   /* Runde 38 Spur I: Hook A [0x21][1] 0x80115b80 */
+      re15_r38i_rueckgriff_tick(); }
     schritt_station(RE15_SCHRITT_OPFER, pl->x, pl->z);
 
     /* cmd 3 = der GENERISCHE Spieler-Tod (Todes-Animation, PL00.EDD Clip 7) — derselbe

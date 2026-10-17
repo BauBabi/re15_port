@@ -165,6 +165,8 @@ void *g_anim_pose_actor = NULL;
 void (*g_anim_bone_angle_hook)(const void *actor, int bone, int16_t *ay, int16_t *az) = NULL;
 /* Aktor-Identitaet fuer den Haken im QUERY-Modus (g_anim_pose_actor == NULL); s. Header. */
 void *g_anim_query_actor = NULL;
+/* Runde 38 Spur D (Zopf): Fangpuffer der lokalen Knochen-Rotationen, NULL = aus. */
+int32_t (*g_skel_lokal_rot)[9] = NULL;
 
 /* 0x8000 marker TWEEN side channel (FUN_8001f8b4) — set by re15_compute_actor_kf, consumed +
  * cleared by the next re15_skel_compute_pose. See re15_skeleton.h. */
@@ -678,6 +680,8 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                 local_rot[k] = (idv * (0x1000 - w) + local_rot[k] * w) >> 12;
             }
         }
+        /* Runde 38 Spur D: lokale Rotation mitschreiben (Zopf-Treiber FUN_80024c30 verkettet Teil 0 +0x18 und Teil 8 +0x578). */
+        if (g_skel_lokal_rot) memcpy(g_skel_lokal_rot[b], local_rot, sizeof local_rot);
 
         int32_t bone_rel_pos[3] = {
             (int32_t)skel->bone_relative_pos[b][0],

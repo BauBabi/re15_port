@@ -115,6 +115,11 @@ void re15_player_continue_reload(void);  /* death sequence complete (timer hit 0
  * are the deferred refinements. */
 int  re15_player_weapon_fire(int weapon_id);
 
+/* Runde 38 Integration: der Elevations-Band-Stempel FUN_80012aa4(R) (@0x80012aa4-bf0) fuer den Takt eines Gegners,
+ * Ergebnis in der aim_band-Kodierung (4 UP / 2 LEVEL / 1 DOWN); Abstand wie im Original intern (SquareRoot0
+ * @0x80012b58). Gerufen vom Spinnen-ACTIVE-Schwanz (@0x80110fd0, R = 0xfa0, spinnen_r38.c). */
+uint8_t re15_band_stamp_aa4_aim(const re15_actor_t *pl, const re15_actor_t *e, int32_t R);
+
 /* The EQUIPPED weapon id (DAT_800aca5d — byte-true FUN_800c00a8: the inventory's equipped-weapon
  * item, fallback 0). The player fires THIS weapon (game_step passes it to re15_player_weapon_fire),
  * and the audio backend loads its ARMS SE bank (FUN_80043d8c). DYNAMIC ground truth: every STAGE1

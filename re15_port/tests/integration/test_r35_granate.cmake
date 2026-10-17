@@ -295,7 +295,10 @@ if(_an)
     r35_exe(zombie "${_dir}" 240 ${_env_basis}
         RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=-1676,-18070,1076" RE15_AI_FLAVOR=re2 RE15_GIVE=9:5 RE15_EQUIP=9
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=MD0.6,MDA0.2,MD2.5,W5"
-        "RE15_EXIT_AT=260#1140")
+        "RE15_EXIT_AT=320#1140")
+    # Runde 37 Spur L: EXIT_AT 260 -> 320 und Leichen-Fenster X+80 -> X+180 (s.u.): Zeile 9 waehlt per Wurf zwischen Bersten
+    # und Zerreissen (`beq s0,zero` @0x80108d10, s = (r1 >> (r2 & 7)) & 3, 1 von 4 Zerreissen); das Zerreissen braucht P1
+    # (Clip 3/4) + P5/P6 ((rand & 0x1f) + 15 @0x80109214-1C) + P3 (Clip 1): gemessen 139 Bilder (Gegner 3, g9_re2-Aufstellung).
     r35_granatenlog("${_dir}/gr.log" _G)
     if("${_G_L}" STREQUAL "" OR "${_G_X}" STREQUAL "")
         r35_fehler(zombie "kein Liegen (${_G_L}) oder keine Explosion (${_G_X}) im Granatenlog")
@@ -310,7 +313,7 @@ if(_an)
     r35_zustand("${_dir}/state.log")
     math(EXPR _xn "${_G_X} + 1")
     math(EXPR _x10 "${_G_X} + 10")
-    math(EXPR _x80 "${_G_X} + 80")
+    math(EXPR _x80 "${_G_X} + 180")   # Runde 37 Spur L: Zerreissen (1 von 4, @0x80108d10) braucht bis ~151 Bilder (s. EXIT_AT)
     math(EXPR _xv "${_G_X} - 1")
     set(_getroffen 0)
     set(_gore 0)
@@ -359,7 +362,7 @@ if(_an)
         r35_fehler(zombie "${_gore}/${_getroffen} getroffene Zombies weggeschleudert (> 600 in 10 Bildern, re2z_death_rip)")
     endif()
     if(NOT _leichen EQUAL _getroffen)
-        r35_fehler(zombie "${_leichen}/${_getroffen} getroffene Zombies in Zustand 7 (Leiche) bis Bild X+80 — Wiederbelebung?")
+        r35_fehler(zombie "${_leichen}/${_getroffen} getroffene Zombies in Zustand 7 (Leiche) bis Bild X+180 — Wiederbelebung?")
     endif()
     r35_pruef_toene("${_dir}/wf.log" zombie)
     message(STATUS "${_tag} [zombie]: ok — X=${_G_X}, ${_getroffen} Zombies zerrissen, ${_G_EINGRIFFE} Eingriffe")

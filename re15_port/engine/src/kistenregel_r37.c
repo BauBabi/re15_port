@@ -20,7 +20,7 @@
  * Riegel unit_r37_kistenregel_tabelle an den ausgelieferten RDTs; Elza-Raeume (ungerade) tragen dieselben Offsets.
  *
  *  K1  ROOM1090 sub00 @0x0230A Ck(3,0x85)==0 — Fire Extinguisher. Bit = ROOM1000 sub01 @0x00D0C (Port: Aufnahme in
- *      1050, feuerloescher_r37.c). fertig (3,0x81) = sub06 @0x0271E. Ohne: Slot 2 sce 1 msg 7 @0x0230E.
+ *      1030 seit Runde 38 Spur K, bis v0.8.25 1050; feuerloescher_r37.c). fertig (3,0x81) = sub06 @0x0271E. Ohne: Slot 2 sce 1 msg 7 @0x0230E.
  *  K2  ROOM10D0/10D1 sub20 @0x019C0/@0x019AA Ck(9,0x34)==1 — Blue Keycard (Taken-Bit 1110/1111 @0x00B2E).
  *      fertig (3,0x32) @0x0152A/@0x01514. Ohne: ELSE msg 8 "You have not the Blue Keycard / to operate it."
  *  K3  ROOM1230/1231 sub20 @0x01488 Ck(9,0x88)==1 — Red Keycard (1190/1191 sub13). fertig (3,0x89). Ohne: msg 8.

@@ -42,6 +42,7 @@
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
+#include "re15_dining_r38.h"     /* Runde 38 Spur F: Name + CHECK-Text der Id 0x43 (Dining Room Key) */
 
 /* Die Archiv-Tabellen bleiben im Uebersetzungslauf REFERENZIERT, damit ihr Wegfall aus
  * dem Spiel keine "unbenutzt"-Warnung wird und der Zensus sie weiter abgleichen kann
@@ -67,6 +68,7 @@ const uint8_t *re15_inv_desc_entry(int id)
     if (id < 0 || id >= RE15_INV_DESC_NIDS) return 0;
     { const uint8_t *q = re15_schluessel_r36_desc((uint8_t)id); if (q) return q; }   /* Runde 36 Spur Q */
     { const uint8_t *q = re15_feuerloescher_r37_desc((uint8_t)id); if (q) return q; } /* Runde 37 Spur I: leerer Loescher */
+    { const uint8_t *q = re15_dining_r38_desc((uint8_t)id); if (q) return q; }       /* Runde 38 Spur F: Dining Room Key */
     return re15_inv_desc_blob + re15_inv_desc_off[id];
 }
 int re15_inv_desc_nids(void) { return RE15_INV_DESC_NIDS; }
@@ -1119,6 +1121,7 @@ static void emit_name_at(emit_t *e, int id, int x0, int y0)
     if (id <= 0 || id >= RE15_INV_NAME_NIDS) return;
     p = re15_schluessel_r36_name((uint8_t)id);                   /* Runde 36 Spur Q */
     if (!p) p = re15_feuerloescher_r37_name((uint8_t)id);        /* Runde 37 Spur I: leerer Loescher */
+    if (!p) p = re15_dining_r38_name((uint8_t)id);               /* Runde 38 Spur F: Dining Room Key */
     if (!p) p = re15_inv_name_blob + re15_inv_name_off[id];
     while ((code = name_next_code(&p)) != 7 && guard-- > 0) {
         sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
@@ -1136,6 +1139,7 @@ static void emit_name(emit_t *e, int id)
     if (id < 0 || id >= RE15_INV_NAME_NIDS) return;
     p = re15_schluessel_r36_name((uint8_t)id);                   /* Runde 36 Spur Q */
     if (!p) p = re15_feuerloescher_r37_name((uint8_t)id);        /* Runde 37 Spur I: leerer Loescher */
+    if (!p) p = re15_dining_r38_name((uint8_t)id);               /* Runde 38 Spur F: Dining Room Key */
     if (!p) p = re15_inv_name_blob + re15_inv_name_off[id];
     while ((code = name_next_code(&p)) != 7 && guard-- > 0) {   /* terminator @0x80028ce4-ce8 */
         /* 16x16 SPRT, prim word 0x7c808080 (rgb neutral) @0x80028d14-1c; glyph cell

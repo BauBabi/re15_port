@@ -1,0 +1,15 @@
+[boot] room RDT: STAGE1/ROOM10B1.RDT (139080 bytes)
+[save] CONTINUE: resumed in room 10b1 (hp=100)
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 2 bei (-3661,-9000,-8275) Band 5 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 2 bei (-6411,-1800,-7776) Band 1 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 1 bei (-7263,0,-7773) Band 0 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 2 bei (-6494,-1800,-7731) Band 1 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 1 bei (-7271,0,-7754) Band 0 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 2 bei (-6493,-1800,-7715) Band 1 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 1 bei (-7271,0,-7738) Band 0 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 2 bei (-6493,-1800,-7699) Band 1 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 1 bei (-7271,0,-7722) Band 0 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 2 bei (-6493,-1800,-7683) Band 1 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 1 bei (-7271,0,-7706) Band 0 -> Sub 0x16
+[npckante] ROOM10B1 slot 1 Typ 49: Sonde 2 bei (-6505,-1800,-7695) Band 1 -> Sub 0x16
+[flow] EXIT_AT: Bild 900 in Raum 10b1 erreicht -> exit

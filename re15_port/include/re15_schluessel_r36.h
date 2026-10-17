@@ -80,39 +80,18 @@
 
 /* ---- Lage im Communications Room (ROOM10F0 Leon / ROOM10F1 Elza: AOT- und Prop-Satz bytegleich,
  * Sonde `aots 10F0/10F1`) ---------------------------------------------------------------------
- * Slot 15 = erster freier Aktions-Slot < 48 (0..14 belegt, Kamerazonen ab 48); obj 4 (nOmodel = 4,
- * obj 0..3 belegt; TIM-Slot RE15_TIM_SLOT_PROP(4) = 8). Props/Zonen: inhalt_r35.c-Muster. */
-#define RE15_R36Q_SLOT             15
+ * obj 4 (nOmodel = 4, obj 0..3 belegt; TIM-Slot RE15_TIM_SLOT_PROP(4) = 8). Props/Zonen: inhalt_r35.c-Muster.
+ * ⛔ SEIT RUNDE 38 (Spur K, NUTZER-VORGABE key_location.bmp): Ort, Drehung, Massstab und Zonen-Slot 8 stehen in
+ * include/re15_itemorte_r38.h (Pinnwand an der Rueckwand, Cut 5). Die Runde-36-Lage auf der Funkkonsole
+ * ((8050,-1460,2700) rot_y 256, Slot 15, Rechteck x 7850..8850 z 2050..3050; Herleitung Q_schluessel.md 3.2)
+ * ist entfernt. */
 #define RE15_R36Q_OBJ              4
 /* Prop-Felder wie die Item-Props des Originals (Obj_model_set LAB_80040914): Flags 0x000B
  * (pc[6..7] 0x000A | 1 @0x80040998), Band 1 — RE15_R35I_PROP_FLAGS / _BAND, 100 von 121. */
 #define RE15_R36Q_PROP_FLAGS       0x000B
 #define RE15_R36Q_PROP_BAND        1
 #define RE15_R36Q_AOT_SAT          0x31     /* 160 von 164 Item_aot_set (RE15_R35I_AOT_SAT) */
-/* LAGE — PORT-WAHL aus Messung (Dossier 3.2): auf dem Suedende der Funkkonsole an der Ostwand
- * (Kollisionszelle SCA 10 x 7400..9300, z 2500..14750), gleich links im Eintrittsbild Cut 0 (Tuer von
- * ROOM10D0, Slot 0). Plattenhoehe TRIANGULIERT am gelben Ordner auf derselben Konsole (Cut 1 (90,8 ;
- * 156,7) + Cut 2 (235,0 ; 150,0), Strahlen der Engine-Matrix, Restabstand je 18): Welt (7808,-1482,
- * 6246) = Ordner-Oberseite -> Platte -1460. Verworfen (gemessen, Dossier 3.2): der Holzschreibtisch
- * (SCA 9 Suedende, Remington-Tisch y -1300) — in Cut 5 und 6, den einzigen Kameras auf ihn, deckt
- * JEDE Stelle der Platte eine Maske (Sonde `sicht`, 28 von 28 Punkten), auch die Original-Remington.
- * Hier: Cut 0 (95..102 ; 170) und Cut 1 ohne Maske (Sonde `sicht`), Framedump-Differenz mit/ohne
- * Bit 82: Cut 0 9 Bildpunkte, Cut 1 2 (der RE2-Schluessel ist 152 x 76 gross, die Kameras weit).
- * rot_y 256 = 22,5 Grad schraeg zur Konsolenkante. */
-#define RE15_R36Q_X                8050
-#define RE15_R36Q_Y                (-1460)
-#define RE15_R36Q_Z                2700
-#define RE15_R36Q_ROT_Y            256
-/* AUFHEBE-RECHTECK — PORT-WAHL 1000 x 1000 (haeufigste Groesse, 69 von 162 Item_aot_set,
- * RE15_R35I_KARTE_RECT_*) x 7850..8850, z 2050..3050: der Aktions-Scan nimmt je Druck den KLEINSTEN
- * treffenden Slot (`j 0x80043028` @0x80042f94) — der Text-Platz Slot 2 "A large communications
- * device..." (x 7000..7800, z 2600..12300) wuerde jede Zone mit x <= 7800 schlucken, deshalb beginnt
- * diese bei 7850. Stand zum Aufheben: suedlich der Konsole (z ~ 2050), Blick +z, 620 voraus
- * (@0x80042bd0) liegt in der Zone. Kein anderer Satz von 10F0/10F1 schneidet sie. */
-#define RE15_R36Q_RECT_X           7850
-#define RE15_R36Q_RECT_Z           2050
-#define RE15_R36Q_RECT_W           1000
-#define RE15_R36Q_RECT_D           1000
+/* (LAGE/AUFHEBE-RECHTECK der Runde 36 entfernt — Runde 38 Spur K, include/re15_itemorte_r38.h.) */
 
 /* ---- Parkplatz-Tuer ROOM11B0 -> ROOM11C0 (nur Leon) ----------------------------------------
  * ROOM11B0 main00 @Datei 0x00FAA `3b 01 02 31 00 00 96 97 0c 8b c4 09 ac 0d 41 9d 00 00 74 43 fb 11

@@ -421,7 +421,12 @@ foreach(_ki re2 re15)
             RE15_AI_FLAVOR=${_ki} RE15_GIVE=${_id}:5 RE15_EQUIP=${_id}
             RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_skript_wurf}"
             RE15_STATE_LOG=state.log RE15_GRANATE_LOG=gr.log RE15_WAFFEN_LOG=wf.log
-            "RE15_EXIT_AT=220#1140")
+            "RE15_EXIT_AT=360#1140")
+        # Runde 37 Spur L: Fenster 220 -> 360. Zeile 9 waehlt der Tod per Wurf zwischen BERSTEN (0x80109610) und ZERREISSEN
+        # (re2z_death_rip): `jal rand` x2 @0x80108cf4/cfc, `srav` / `andi 0x3` / `beq s0,zero` @0x80108d08-10 -> s == 0 (1 von 4)
+        # = Zerreissen mit P1 (Clip 3/4), P5/P6 Torso-Taumeln (rand & 0x1f) + 15 @0x80109214-1C, P3 (Clip 1) -> Zustand 7.
+        # Gemessen (Strom nach Spur L): Gegner 3 zerreisst, Leiche ab Bild 258 (X 119 + 139); der Bersten-Fall ab 165. Mit 220
+        # war das Fenster nur fuer den Bersten-Fall gross genug (Basis-Strom: beide bersten).
         # Zustandslog
         r34_zustand("${_dir}/state.log")
         r34_abzug(_A)

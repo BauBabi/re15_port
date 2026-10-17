@@ -74,12 +74,21 @@ static const uint8_t s_name_dok4[] = {     /* "Armory Notice" */
     0x1d, 0x4e, 0x49, 0x4b, 0x4e, 0x55, 0x00, 0x2a, 0x4b, 0x50, 0x45, 0x3f, 0x41, 0x07
 };
 
+/* RUNDE 38 SPUR G — Dokument 5 "Roys Diary" (include/re15_tagebuch_r38.h; Satz tools/r38_g/tagebuch_satz.py):
+ *   Item-Id 0x4D = 0x48 + 5, Bild-Satz 30, max_page 5, H 176 (Vorlage FILE16, RE2 @0x800AA184 `06 00 50 00`).
+ *   Name   NUTZER-VORGABE "Header: Roys Diary" (AUFTRAG.md Z. 37, so geschrieben), kodiert wie "Chris' Diary"
+ *          @0x800c4e04: Code = ASCII - 0x24 (R 0x2e, o 0x4b, y 0x55, s 0x4f), Leerzeichen 0x00, Ende 0x07. */
+static const uint8_t s_name_roys_diary[] = {
+    0x2e, 0x4b, 0x55, 0x4f, 0x00, 0x20, 0x45, 0x3d, 0x4e, 0x55, 0x07
+};
+
 static const re15_file_doc_t s_docs[] = {
     { RE15_FILES_FIRST_ITEM_ID + 0, 25, 15, 144, s_name_irons_diary },
     { RE15_FILES_FIRST_ITEM_ID + 1, 26,  3, 144, s_name_dok1 },   /* Runde 34 Nacht, Spur E */
     { RE15_FILES_FIRST_ITEM_ID + 2, 27,  4, 144, s_name_dok2 },   /* Runde 34 Nacht, Spur E */
     { RE15_FILES_FIRST_ITEM_ID + 3, 28,  2, 176, s_name_dok3 },   /* Runde 34 Nacht, Spur E */
     { RE15_FILES_FIRST_ITEM_ID + 4, 29,  2, 176, s_name_dok4 },   /* Runde 34 Nacht, Spur E */
+    { RE15_FILES_FIRST_ITEM_ID + 5, 30,  5, 176, s_name_roys_diary },   /* Runde 38 Spur G */
 };
 #define DOC_COUNT ((int)(sizeof s_docs / sizeof s_docs[0]))
 

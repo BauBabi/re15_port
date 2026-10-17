@@ -1,0 +1,152 @@
+# probe_r31_boxen versteckt — GEGENPROBE: derselbe Riegel gegen die Engine von 7fff66c5 (ohne Fix), [scd]-Zeilen entfernt
+=== r31 versteckt: die Schachtspinne IM SCHACHT gegen das Original (RE2- und RE1.5-KI) ===
+  --- RE2-KI ---
+  [2060 Spinne 0] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 49, hoch 1 | danach 7/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 11 Ausstiegsbilder (davon 11 mit grid 0x42): Latch==3 in 0, Zielhilfe 11, Resolver direkt 11 | 1 Schuesse, Treffer 1 | danach 2/3 grid 0x42 y -3600, gelandet 0
+                   L: Phase 8 in Bild 72 (Zustand 0): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [2060 Spinne 1] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 49, hoch 1 | danach 7/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 11 Ausstiegsbilder (davon 11 mit grid 0x42): Latch==3 in 0, Zielhilfe 11, Resolver direkt 11 | 1 Schuesse, Treffer 1 | danach 2/3 grid 0x42 y -3600, gelandet 0
+                   L: Phase 8 in Bild 72 (Zustand 0): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 0] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 49, hoch 0 | danach 7/0 grid 0x41 y -438 (Spawn -5400)
+                   K: ausgeloest 1 | 11 Ausstiegsbilder (davon 11 mit grid 0x42): Latch==3 in 0, Zielhilfe 11, Resolver direkt 11 | 1 Schuesse, Treffer 1 | danach 2/3 grid 0x42 y -5400, gelandet 0
+                   L: Phase 8 in Bild 89 (Zustand 0): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 1] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 49, hoch 1 | danach 7/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 22 Ausstiegsbilder (davon 22 mit grid 0x42): Latch==3 in 0, Zielhilfe 22, Resolver direkt 22 | 3 Schuesse, Treffer 1 | danach 2/3 grid 0x42 y -3600, gelandet 0
+                   L: Phase 8 in Bild 72 (Zustand 0): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  Tuerweg 2030 -> 2060 (Leon) (7600,0,3950) Blick 0x800: Zielhilfe 1 | Blick danach 0xA63 | Treffer 24 | Spinne 0 wartet 0
+  Tuerweg 2031 -> 2061 (Elza) (7600,0,3950) Blick 0x800: Zielhilfe 1 | Blick danach 0xA63 | Treffer 24 | Spinne 0 wartet 0
+  Zensus Hund Fenster  0x20: gespawnt 1 grid 0x41 | versteckt gewaehlt 1 | Freigabe 0x42 -> Bits weg nach 1 Bildern, grid 0x00, gewaehlt 1
+  Zensus Hund Zwinger  0x20: gespawnt 1 grid 0x40 | versteckt gewaehlt 1 | Freigabe 0x43 -> Bits weg nach 35 Bildern, grid 0x00, gewaehlt 1
+  Zensus Affe Ereignis 0x29: gespawnt 1 grid 0x61 | versteckt gewaehlt 1 | Freigabe 0x41 -> Bits weg nach 1 Bildern, grid 0x01, gewaehlt 1
+  Zensus Spiderman     0x2B: gespawnt 1 grid 0x41 | versteckt gewaehlt 0 | Freigabe 0x42 -> Bits weg nach 34 Bildern, grid 0x00, gewaehlt 1
+  Zensus Zombie 1200   0x10: gespawnt 1 grid 0xA1 | versteckt gewaehlt 1 | Freigabe 0x81 -> Bits weg nach 0 Bildern, grid 0x81, gewaehlt 1
+  Zensus Gorilla 11C0  0x27: gespawnt 1 grid 0x30 | versteckt gewaehlt 1 | Freigabe 0x10 -> Bits weg nach 0 Bildern, grid 0x10, gewaehlt 1
+  Zensus Birkin 3070   0x30: gespawnt 1 grid 0x33 | versteckt gewaehlt 1 | Freigabe 0x13 -> Bits weg nach 0 Bildern, grid 0x13, gewaehlt 1
+  Zensus Zombie 5020   0x18: gespawnt 1 grid 0xAE | versteckt gewaehlt 1 | ohne Freigabe 300 Bilder: nie gewaehlt 0, grid 0xAE
+  Zensus Kraehe 1171   0x21: gespawnt 1 grid 0x40 | versteckt gewaehlt 1 | ohne Freigabe 300 Bilder: nie gewaehlt 0, grid 0x40
+  Stegspinne 2050 (y -5400), Spieler auf dem Steg (-949,-5400,-1382), Abstand 1837: Band 0 (FUN_80012aa4(0xfa0)-Soll 3) | Resolver direkt 1
+  Stegspinne 2050 (y -5400), Spieler unten (-949,0,-1414), Abstand 1841: Band 0 (FUN_80012aa4(0xfa0)-Soll 0) | Resolver direkt 1
+  Stegspinne 2050 (y -5400), Spieler unten (1051,0,4718), Abstand 5837: Band 0 (FUN_80012aa4(0xfa0)-Soll 4) | Resolver direkt 1
+  --- RE1.5-KI ---
+  [2060 Spinne 0] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 73, hoch 0 | danach 7/3 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 71, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 1): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [2060 Spinne 1] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 65, hoch 0 | danach 7/3 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 71, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 1): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 0] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 73, hoch 0 | danach 7/3 grid 0x41 y -5400 (Spawn -5400)
+                   K: ausgeloest 1 | 89 Ausstiegsbilder (davon 88 mit grid 0x42): Latch==3 in 89, Zielhilfe 88, Resolver direkt 0 | 14 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 89 (Zustand 1): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 1] W: wartend 1 | Zielhilfe 1 | Resolver direkt 1 | Salven 480 Bilder: eben 65, hoch 0 | danach 7/3 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 71, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 1): Zielhilfe 1, Resolver 1 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  Tuerweg 2030 -> 2060 (Leon) (7600,0,3950) Blick 0x800: Zielhilfe 1 | Blick danach 0xA63 | Treffer 73 | Spinne 0 wartet 0
+  Tuerweg 2031 -> 2061 (Elza) (7600,0,3950) Blick 0x800: Zielhilfe 1 | Blick danach 0xA63 | Treffer 73 | Spinne 0 wartet 0
+  Zensus Hund Fenster  0x20: gespawnt 1 grid 0x41 | versteckt gewaehlt 1 | Freigabe 0x42 -> Bits weg nach 1 Bildern, grid 0x00, gewaehlt 1
+  Zensus Hund Zwinger  0x20: gespawnt 1 grid 0x40 | versteckt gewaehlt 1 | Freigabe 0x43 -> Bits weg nach 35 Bildern, grid 0x00, gewaehlt 1
+  Zensus Affe Ereignis 0x29: gespawnt 1 grid 0x61 | versteckt gewaehlt 1 | Freigabe 0x41 -> Bits weg nach 1 Bildern, grid 0x01, gewaehlt 1
+  Zensus Spiderman     0x2B: gespawnt 1 grid 0x41 | versteckt gewaehlt 0 | Freigabe 0x42 -> Bits weg nach 34 Bildern, grid 0x00, gewaehlt 1
+  Zensus Zombie 1200   0x10: gespawnt 1 grid 0xA1 | versteckt gewaehlt 1 | Freigabe 0x81 -> Bits weg nach 0 Bildern, grid 0x81, gewaehlt 1
+  Zensus Gorilla 11C0  0x27: gespawnt 1 grid 0x30 | versteckt gewaehlt 1 | Freigabe 0x10 -> Bits weg nach 0 Bildern, grid 0x10, gewaehlt 1
+  Zensus Birkin 3070   0x30: gespawnt 1 grid 0x33 | versteckt gewaehlt 1 | Freigabe 0x13 -> Bits weg nach 0 Bildern, grid 0x13, gewaehlt 1
+  Zensus Zombie 5020   0x18: gespawnt 1 grid 0xAE | versteckt gewaehlt 1 | ohne Freigabe 300 Bilder: nie gewaehlt 0, grid 0xAE
+  Zensus Kraehe 1171   0x21: gespawnt 1 grid 0x40 | versteckt gewaehlt 1 | ohne Freigabe 300 Bilder: nie gewaehlt 0, grid 0x40
+  Stegspinne 2050 (y -5400), Spieler auf dem Steg (2300,-5400,-6450), Abstand 1999: Band 0 (FUN_80012aa4(0xfa0)-Soll 3) | Resolver direkt 1
+  Stegspinne 2050 (y -5400), Spieler unten (2300,0,-6902), Abstand 2048: Band 0 (FUN_80012aa4(0xfa0)-Soll 0) | Resolver direkt 1
+  Stegspinne 2050 (y -5400), Spieler unten (4300,0,-1450), Abstand 4990: Band 0 (FUN_80012aa4(0xfa0)-Soll 4) | Resolver direkt 1
+  ABWEICHUNG RE2-KI 2060/0 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE2-KI 2060/0 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE2-KI 2060/0 W: Salven treffen die wartende Spinne (eben 49, hoch 1)
+  ABWEICHUNG RE2-KI 2060/0 W: nach den Salven 7/1 grid 0x41 y -3600 statt wartend 4/1 0x41 y -3600
+  ABWEICHUNG RE2-KI 2060/0 K: Latch (+0x93&3)==3 nur in 0 von 11 Ausstiegsbildern (Original: Phase 0 `ori v0,v0,0x3` @0x80114f84 .. Phase 8 `sb zero,147` @0x80115344, gemessen 03)
+  ABWEICHUNG RE2-KI 2060/0 K: Zielhilfe waehlt die KRIECHENDE Spinne in 11 von 11 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE2-KI 2060/0 K: der Resolver nimmt die KRIECHENDE Spinne in 11 Bildern (Band 0 / Latch @0x80012100)
+  ABWEICHUNG RE2-KI 2060/0 K: 1 Treffer beim Herauskriechen, danach 2/3 grid 0x42 y -3600
+  ABWEICHUNG RE2-KI 2060/0 K: die Spinne landet unter Beschuss nicht (danach 2/3 grid 0x42 y -3600)
+  ABWEICHUNG RE2-KI 2060/0 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE2-KI 2060/1 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE2-KI 2060/1 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE2-KI 2060/1 W: Salven treffen die wartende Spinne (eben 49, hoch 1)
+  ABWEICHUNG RE2-KI 2060/1 W: nach den Salven 7/1 grid 0x41 y -3600 statt wartend 4/1 0x41 y -3600
+  ABWEICHUNG RE2-KI 2060/1 K: Latch (+0x93&3)==3 nur in 0 von 11 Ausstiegsbildern (Original: Phase 0 `ori v0,v0,0x3` @0x80114f84 .. Phase 8 `sb zero,147` @0x80115344, gemessen 03)
+  ABWEICHUNG RE2-KI 2060/1 K: Zielhilfe waehlt die KRIECHENDE Spinne in 11 von 11 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE2-KI 2060/1 K: der Resolver nimmt die KRIECHENDE Spinne in 11 Bildern (Band 0 / Latch @0x80012100)
+  ABWEICHUNG RE2-KI 2060/1 K: 1 Treffer beim Herauskriechen, danach 2/3 grid 0x42 y -3600
+  ABWEICHUNG RE2-KI 2060/1 K: die Spinne landet unter Beschuss nicht (danach 2/3 grid 0x42 y -3600)
+  ABWEICHUNG RE2-KI 2060/1 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE2-KI 20A0/0 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE2-KI 20A0/0 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE2-KI 20A0/0 W: Salven treffen die wartende Spinne (eben 49, hoch 0)
+  ABWEICHUNG RE2-KI 20A0/0 W: nach den Salven 7/0 grid 0x41 y -438 statt wartend 4/1 0x41 y -5400
+  ABWEICHUNG RE2-KI 20A0/0 K: Latch (+0x93&3)==3 nur in 0 von 11 Ausstiegsbildern (Original: Phase 0 `ori v0,v0,0x3` @0x80114f84 .. Phase 8 `sb zero,147` @0x80115344, gemessen 03)
+  ABWEICHUNG RE2-KI 20A0/0 K: Zielhilfe waehlt die KRIECHENDE Spinne in 11 von 11 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE2-KI 20A0/0 K: der Resolver nimmt die KRIECHENDE Spinne in 11 Bildern (Band 0 / Latch @0x80012100)
+  ABWEICHUNG RE2-KI 20A0/0 K: 1 Treffer beim Herauskriechen, danach 2/3 grid 0x42 y -5400
+  ABWEICHUNG RE2-KI 20A0/0 K: die Spinne landet unter Beschuss nicht (danach 2/3 grid 0x42 y -5400)
+  ABWEICHUNG RE2-KI 20A0/0 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE2-KI 20A0/1 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE2-KI 20A0/1 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE2-KI 20A0/1 W: Salven treffen die wartende Spinne (eben 49, hoch 1)
+  ABWEICHUNG RE2-KI 20A0/1 W: nach den Salven 7/1 grid 0x41 y -3600 statt wartend 4/1 0x41 y -3600
+  ABWEICHUNG RE2-KI 20A0/1 K: Latch (+0x93&3)==3 nur in 0 von 22 Ausstiegsbildern (Original: Phase 0 `ori v0,v0,0x3` @0x80114f84 .. Phase 8 `sb zero,147` @0x80115344, gemessen 03)
+  ABWEICHUNG RE2-KI 20A0/1 K: Zielhilfe waehlt die KRIECHENDE Spinne in 22 von 22 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE2-KI 20A0/1 K: der Resolver nimmt die KRIECHENDE Spinne in 22 Bildern (Band 0 / Latch @0x80012100)
+  ABWEICHUNG RE2-KI 20A0/1 K: 1 Treffer beim Herauskriechen, danach 2/3 grid 0x42 y -3600
+  ABWEICHUNG RE2-KI 20A0/1 K: die Spinne landet unter Beschuss nicht (danach 2/3 grid 0x42 y -3600)
+  ABWEICHUNG RE2-KI 20A0/1 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE2-KI Tuerweg 2030 -> 2060: Zielhilfe 1, Treffer 24, Blick 0x800 -> 0xA63, wartet 0 (Original: kein Ziel, kein Treffer, Blick bleibt, sie wartet bis Cut 1)
+  ABWEICHUNG RE2-KI Tuerweg 2031 -> 2061: Zielhilfe 1, Treffer 24, Blick 0x800 -> 0xA63, wartet 0 (Original: kein Ziel, kein Treffer, Blick bleibt, sie wartet bis Cut 1)
+  ABWEICHUNG RE2-KI Zensus Hund Fenster: versteckt (grid 0x41) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Hund Zwinger: versteckt (grid 0x40) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Affe Ereignis: versteckt (grid 0x61) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Zombie 1200: versteckt (grid 0xA1) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Gorilla 11C0: versteckt (grid 0x30) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Birkin 3070: versteckt (grid 0x33) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Zombie 5020: versteckt (grid 0xAE) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Zombie 5020: ohne Freigabe doch gewaehlt bzw. Bits weg (grid 0xAE)
+  ABWEICHUNG RE2-KI Zensus Kraehe 1171: versteckt (grid 0x40) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE2-KI Zensus Kraehe 1171: ohne Freigabe doch gewaehlt bzw. Bits weg (grid 0x40)
+  ABWEICHUNG RE1.5-KI 2060/0 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 2060/0 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE1.5-KI 2060/0 W: Salven treffen die wartende Spinne (eben 73, hoch 0)
+  ABWEICHUNG RE1.5-KI 2060/0 W: nach den Salven 7/3 grid 0x41 y -3600 statt wartend 4/1 0x41 y -3600
+  ABWEICHUNG RE1.5-KI 2060/0 K: Zielhilfe waehlt die KRIECHENDE Spinne in 71 von 71 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 2060/0 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE1.5-KI 2060/0 L: Band nach Phase 8 0 / nach dem ersten ACTIVE 0, erwartet 0 / 3 (INIT @0x80110d38-48, Stempel @0x80110fd0: FUN_80012aa4(0xfa0) mit s0 0 -> LEVEL @0x80012b3c-44, 0 < 2000 < 4000 -> DOWN @0x80012bb8; Original gemessen 0x00000801 -> 0x60000801)
+  ABWEICHUNG RE1.5-KI 2060/1 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 2060/1 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE1.5-KI 2060/1 W: Salven treffen die wartende Spinne (eben 65, hoch 0)
+  ABWEICHUNG RE1.5-KI 2060/1 W: nach den Salven 7/3 grid 0x41 y -3600 statt wartend 4/1 0x41 y -3600
+  ABWEICHUNG RE1.5-KI 2060/1 K: Zielhilfe waehlt die KRIECHENDE Spinne in 71 von 71 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 2060/1 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE1.5-KI 2060/1 L: Band nach Phase 8 0 / nach dem ersten ACTIVE 0, erwartet 0 / 3 (INIT @0x80110d38-48, Stempel @0x80110fd0: FUN_80012aa4(0xfa0) mit s0 0 -> LEVEL @0x80012b3c-44, 0 < 2000 < 4000 -> DOWN @0x80012bb8; Original gemessen 0x00000801 -> 0x60000801)
+  ABWEICHUNG RE1.5-KI 20A0/0 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 20A0/0 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE1.5-KI 20A0/0 W: Salven treffen die wartende Spinne (eben 73, hoch 0)
+  ABWEICHUNG RE1.5-KI 20A0/0 W: nach den Salven 7/3 grid 0x41 y -5400 statt wartend 4/1 0x41 y -5400
+  ABWEICHUNG RE1.5-KI 20A0/0 K: Zielhilfe waehlt die KRIECHENDE Spinne in 88 von 88 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 20A0/0 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE1.5-KI 20A0/0 L: Band nach Phase 8 0 / nach dem ersten ACTIVE 0, erwartet 0 / 3 (INIT @0x80110d38-48, Stempel @0x80110fd0: FUN_80012aa4(0xfa0) mit s0 0 -> LEVEL @0x80012b3c-44, 0 < 2000 < 4000 -> DOWN @0x80012bb8; Original gemessen 0x00000801 -> 0x60000801)
+  ABWEICHUNG RE1.5-KI 20A0/1 W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / `bne` @0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 20A0/1 W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 @0x80110d38-48 -> `beq v0,zero` @0x800120ec)
+  ABWEICHUNG RE1.5-KI 20A0/1 W: Salven treffen die wartende Spinne (eben 65, hoch 0)
+  ABWEICHUNG RE1.5-KI 20A0/1 W: nach den Salven 7/3 grid 0x41 y -3600 statt wartend 4/1 0x41 y -3600
+  ABWEICHUNG RE1.5-KI 20A0/1 K: Zielhilfe waehlt die KRIECHENDE Spinne in 71 von 71 Bildern mit grid 0x42 (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI 20A0/1 L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)
+  ABWEICHUNG RE1.5-KI 20A0/1 L: Band nach Phase 8 0 / nach dem ersten ACTIVE 0, erwartet 0 / 3 (INIT @0x80110d38-48, Stempel @0x80110fd0: FUN_80012aa4(0xfa0) mit s0 0 -> LEVEL @0x80012b3c-44, 0 < 2000 < 4000 -> DOWN @0x80012bb8; Original gemessen 0x00000801 -> 0x60000801)
+  ABWEICHUNG RE1.5-KI Tuerweg 2030 -> 2060: Zielhilfe 1, Treffer 73, Blick 0x800 -> 0xA63, wartet 0 (Original: kein Ziel, kein Treffer, Blick bleibt, sie wartet bis Cut 1)
+  ABWEICHUNG RE1.5-KI Tuerweg 2031 -> 2061: Zielhilfe 1, Treffer 73, Blick 0x800 -> 0xA63, wartet 0 (Original: kein Ziel, kein Treffer, Blick bleibt, sie wartet bis Cut 1)
+  ABWEICHUNG RE1.5-KI Zensus Hund Fenster: versteckt (grid 0x41) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Hund Zwinger: versteckt (grid 0x40) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Affe Ereignis: versteckt (grid 0x61) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Zombie 1200: versteckt (grid 0xA1) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Gorilla 11C0: versteckt (grid 0x30) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Birkin 3070: versteckt (grid 0x33) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Zombie 5020: versteckt (grid 0xAE) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Zombie 5020: ohne Freigabe doch gewaehlt bzw. Bits weg (grid 0xAE)
+  ABWEICHUNG RE1.5-KI Zensus Kraehe 1171: versteckt (grid 0x40) gewaehlt (@0x8003710c-10)
+  ABWEICHUNG RE1.5-KI Zensus Kraehe 1171: ohne Freigabe doch gewaehlt bzw. Bits weg (grid 0x40)
+  ABWEICHUNG RE1.5-KI Stegspinne Lage 0: Band 0, Soll 3 (FUN_80012aa4(0xfa0) @0x80110fd0), Resolver 1 (Soll 1)
+  ABWEICHUNG RE1.5-KI Stegspinne Lage 1: Band 0, Soll 0 (FUN_80012aa4(0xfa0) @0x80110fd0), Resolver 1 (Soll 0)
+  ABWEICHUNG RE1.5-KI Stegspinne Lage 2: Band 0, Soll 4 (FUN_80012aa4(0xfa0) @0x80110fd0), Resolver 1 (Soll 1)
+FEHLGESCHLAGEN: 95 Abweichung(en) vom Original

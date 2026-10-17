@@ -18,6 +18,7 @@
 #include "re15_msg.h"
 #include "re15_scd.h"
 #include "re15_szene11c0_r37.h"   /* Runde 37 Spur O: Port-Takt + Mess-Haken der 11C0-Szene */
+#include "re15_montage_r38.h"     /* Runde 38 Spur O: Zombies gehen in jedem Schnitt auf die Kamera zu */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -169,6 +170,22 @@ static const uint8_t k_p_szene[] = {
     OP_EM(2, 0x10, 0x02, 0x01, 42, -2000, -12000, 3072), \
     OP_EM(3, 0x11, 0x02, 0x01, 43, -1300, -10800, 3072), \
     OP_EM(4, 0x11, 0x02, 0x01, 46,  -700, -11600, 3072)
+/* RUNDE 38 SPUR O (NUTZER-VORGABE "wo die Zombies durchbrechen, sollen sich die Zombies jeweils auch Richtung Kamera
+ * bewegen, also so, wie es bei den Zombies hinter dem Rolltor schon passiert. Die anderen sollen das auch machen"):
+ * im MONTAGE-Schritt tragen die fuenf jetzt die DURCHBRUCH-Form der Rolltor-Zombies, grid 0x0d = Angriff ab INIT
+ * (STAGE1.BIN `ori v0,zero,0x201` / `sw v0,4(v1)` @0x80100f40-44; RE2-KI: Deskriptor 6 = Gang, `addiu v0,zero,257` /
+ * `sw v0,4(s2)` @0x80100ab8-abc) — Typen, Tot-Bits, Lagen und Blick (3072 = zur Kamera) wie EM_1130_LISTE. Ziel = der
+ * geparkte Spieler (Tuer-Spawn (-3050,-2150), gemessen ab Bild 5 (-2582,-2150)): 5154 hinter der Kamera Cut 0 (RID
+ * ROOM1130 @0x60: pos (-2386,-7451) @0x64/@0x6C, target (876,-18973) @0x70/@0x78), wie der Rolltor-Parkplatz 3985
+ * hinter Cut 1. Hinter der Kamera haelt sie der
+ * Einzelstopp an (montage_r38.c, @0x80100450-5c). GEMESSEN vorher (Dossier O_montage.md): mit grid 0x02 standen alle
+ * fuenf 170 Bilder still (Weg 0). Dieselben Bytes wie die Nachspawn-Liste EM_1130_NACH (Runde 37 Spur H). */
+#define EM_1130_DURCH \
+    OP_EM(0, 0x16, 0x0d, 0x00, 40, -1400, -14200, 3072), \
+    OP_EM(1, 0x10, 0x0d, 0x01, 41,  -900, -12900, 3072), \
+    OP_EM(2, 0x10, 0x0d, 0x01, 42, -2000, -12000, 3072), \
+    OP_EM(3, 0x11, 0x0d, 0x01, 43, -1300, -10800, 3072), \
+    OP_EM(4, 0x11, 0x0d, 0x01, 46,  -700, -11600, 3072)
 /* RUNDE 36 SPUR K (K3, NUTZER-VORGABE "Erst 'Tuerknallen' Dann Zombie Spawnen und dann erst der Kamera Wechsel hin zu
  * den Zombies"): GEMESSEN vorher (Lauf vor_1130, Dossier K_szene1150.md §K3.1): Kamera Cut 0 ab Bild 0 (Tuer-Cut,
  * Einblendung), Knall in Bild 21, die Zombies erscheinen in Bild 31 vor der Kamera. Jetzt: der Knall dieses Schritts
@@ -179,7 +196,7 @@ static const uint8_t k_p_szene[] = {
  * Zeiten = PORT-WAHL: Tuer wie bisher 175 Bilder nach dem ersten Takt (r35: 15 + 10 + 150), davon 45 nach dem Knall
  * (wie k_p_szene). */
 static const uint8_t k_p_1130[] = {
-    EM_1130_LISTE,                                          /* Raumaufbau: vor dem ersten Bild */
+    EM_1130_DURCH,                                          /* Raumaufbau: vor dem ersten Bild (Runde 38: Durchbruch-Form) */
     OP_ABSCHNITT_ENDE, OP_RIEGEL,                           /* Riegel im ersten Spieltakt (Bild 6) */
     OP_SLEEP(130),
     OP_KNALL(RE15_IT_SIG_KNALL_1030), OP_SLEEP(45),        /* Knall des 1040-Schritts, noch auf Cut 0 */
@@ -194,7 +211,8 @@ static const uint8_t k_p_1130[] = {
  * (STAGE1.BIN `ori v0,zero,0x201` / `sw v0,4(v1)` @0x80100f40-44; Form der Raum-Records ROOM1040 main00 @0x011FC..
  * und ROOM1030 main00 @0x01DE6.., die durchs Rolltor/Tor kommen) = unter der RE2-KI Deskriptor 6 = Gang ab Spawn
  * (re2z_init sel 0x0d -> 0x0101, RE2 @0x80100ab8-abc; im RE2-Original gemessen, re15_zombieaktiv_r37.h). Typen, Tot-Bits,
- * Lagen und Blick unveraendert. Der MONTAGE-Schritt selbst (k_p_1130, Spieler unsichtbar geparkt) behaelt die Stehform.
+ * Lagen und Blick unveraendert. Der MONTAGE-Schritt selbst (k_p_1130, Spieler unsichtbar geparkt) behielt bis v0.8.25
+ * die Stehform; seit Runde 38 Spur O traegt er dieselbe Durchbruch-Form (EM_1130_DURCH, Einzelstopp hinter der Kamera).
  * Die Liste gilt fuer JEDE KI-Wahl: unter der RE1.5-KI ist grid 0x0d der RE1.5-Angriff ab INIT (gemessen in
  * re15_zombieaktiv_r37.h, Nachbesserung 1). */
 #define EM_1130_NACH \
@@ -348,6 +366,20 @@ static const uint8_t k_p_1040_nach[] = { OP_ZAEHLER_1040, EM_1040_LISTE, OP_END 
     OP_EM(0, 0x10, 0x00, 0x01, 49, -22400, -4000, 2048), \
     OP_EM(0, 0x11, 0x00, 0x01, 75, -19600, -2400, 2048), \
     OP_EM(0, 0x11, 0x00, 0x01, 76, -21600, -4600, 2048)
+/* RUNDE 38 SPUR O (wie EM_1130_DURCH): im Montage-Schritt die Durchbruch-Form grid 0x0d (@0x80100f40-44 /
+ * @0x80100ab8-abc) — Typen, Tot-Bits, Lagen, Blick wie EM_1070_LISTE. GEMESSEN vorher: mit grid 0x00 standen alle fuenf
+ * auf Cut 7 still (unter der RE2-KI ist die Runde-37-Abbildung 0x00 -> Gang waehrend eines Montage-Schritts aus,
+ * zombieaktiv_r37.c). Ziel = der geparkte Spieler RE15_IT_PARK_1030 (-28558,-2183): auf der Achse von Cut 7, 1781
+ * hinter der Kamera (RID ROOM1030 @0x140: pos (-26820,-2574) @0x144/@0x14C, target (-15858,-5040) @0x150/@0x158),
+ * hinter der Gangwand SCA 5 @0x01A4C und IN derselben BLK-Zone 7 (@0x01C10) wie die Kopien, damit der Navigator
+ * FUN_80039e7c die Spielerlage selbst als Ziel nimmt (gleiche Zone @0x80039fbc; Herleitung re15_irons_tod.h). Der
+ * Nachspawn beim spaeteren Betreten (k_p_1030_nach_tuer) behaelt EM_1070_LISTE. */
+#define EM_1070_DURCH \
+    OP_EM(0, 0x10, 0x0d, 0x00, 47, -18600, -3500, 2048), \
+    OP_EM(0, 0x10, 0x0d, 0x01, 48, -20600, -3000, 2048), \
+    OP_EM(0, 0x10, 0x0d, 0x01, 49, -22400, -4000, 2048), \
+    OP_EM(0, 0x11, 0x0d, 0x01, 75, -19600, -2400, 2048), \
+    OP_EM(0, 0x11, 0x0d, 0x01, 76, -21600, -4600, 2048)
 #define EM_KRIECHER_LISTE \
     OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -24800, 3072), \
     OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -24800, 3072), \
@@ -368,7 +400,7 @@ static const uint8_t k_p_1030_kopf[] = {
  * Knall und den ersten Gosub sub09). Ohne Cut-7-Teil ((9,76)=0): der Knall kam am Ende von 1040, Bruch + Kriecher laufen
  * im Raumaufbau, das erste Bild zeigt Cut 12 (Tuer-Cut). */
 static const uint8_t k_p_1030_tuer[] = {
-    EM_1070_LISTE,                                          /* Raumaufbau: vor dem ersten Bild (Cut 7) */
+    EM_1070_DURCH,                                          /* Raumaufbau: vor dem ersten Bild (Cut 7; Runde 38: Durchbruch-Form) */
     OP_ABSCHNITT_ENDE, OP_RIEGEL,                           /* Riegel im ersten Spieltakt */
     OP_SLEEP(174),                                          /* 1 + 174 = 175 */
 };
@@ -387,6 +419,17 @@ static const uint8_t k_p_1030_bruch[] = {
     0x37, 0x02, 0x06, 0xf7, 0x37, 0x03, 0x06, 0xf7,                           /* sub08 @0x0278E/@0x02792 */
     OP_SET(4, 15, 1),                                                         /* sub01 @0x02198 */
 };
+/* RUNDE 38 SPUR O: nach dem Schnitt auf das aufgebrochene Tor (Cut_chg 12 @0x027AA; danach ist die RVD-Automatik aus,
+ * `ori DAT_800aca3c,0x100` @0x800402d4, kein Zonen-Kamerawechsel durch die neue Lage) setzt das Programm den geparkten
+ * Spieler auf die KAMERAACHSE von Cut 12, im Abstand der Rolltor-Form hinter die Kamera (re15_montage_r38.h
+ * RE15_R38_PARK_1030_12_*): die durchs Tor kommenden Zombies gehen/kriechen dann auf die Kamera zu wie die Rolltor-
+ * Zombies auf Cut 1. Vorher lag das Ziel (-28244,-3650) vom Tor (-9500,-24500) aus 28 Grad neben der Richtung zur
+ * Kamera (Kriecher liefen schraeg, die aufrechten hinter dem Tor liefen umher, Dossier "Messung vorher"). Form = ROOM11B0 @0x012B2
+ * `2e 01 00 00 32 00 ae 9a 00 00 47 ba 34 04 ..`: Work_set(1,0) + Nop + Pos_set (LAB_80041048) + Member_set(4, Gierung). */
+#define OP_PARK_1030_12    0x2e, 0x01, 0x00, 0x00, \
+                           0x32, 0x00, LE16(RE15_R38_PARK_1030_12_X), LE16(0), LE16(RE15_R38_PARK_1030_12_Z), \
+                           0x34, 0x04, LE16(RE15_R38_PARK_1030_12_YAW)
+#define OP_PARK_LEN        16
 static const uint8_t k_p_1030_kriechen[] = {
     EM_KRIECHER_LISTE,                                      /* erscheinen im Warte-Rechteck hinter dem Tor */
     /* ein Bild fuer den AOT-Stempel (Scan nach der VM, @0x8001ce1c) = r35 Sleep 2; Runde 36 Spur K: als 1 + 1 mit den
@@ -396,6 +439,7 @@ static const uint8_t k_p_1030_kriechen[] = {
     0x18, 0x09, 0x18, 0x09, 0x18, 0x09, 0x18, 0x09,         /* sub08 @0x0279E/@0x027A4/@0x027B4/@0x027BA: Gosub sub09 x4 */
     OP_SLEEP(20),                                                             /* sub08 @0x027A6 */
     OP_CUT(12),                                                               /* sub08 @0x027AA */
+    OP_PARK_1030_12,                                        /* Runde 38 Spur O: Ziel auf die Kameraachse Cut 12 */
     OP_SLEEP(15), OP_SLEEP(20), OP_SLEEP(180),                                /* sub08 @0x027BC..@0x027C4 */
     OP_SLEEP(120),                                          /* bis die Kriecher durchs Tor sind (gemessen, Dossier §8.3) */
     OP_SET(5, 20, 1),                                                         /* sub08 @0x027DA */
@@ -919,6 +963,8 @@ static int it_opcode_len(uint8_t op)
     case 0x29: return 2;  case 0x36: return 12; case 0x3b: return 32; case 0x44: return 20;
     case 0x47: return 2;  case 0x46: return 10; case 0x4b: return 3;  case 0x37: return 4;
     case 0x18: return 2;
+    /* Runde 38 Spur O (OP_PARK_1030_12): Nop, Work_set, Pos_set, Member_set = s_opcode_sizes (scd_vm.c) */
+    case 0x00: return 1;  case 0x2e: return 3;  case 0x32: return 8;  case 0x34: return 4;
     default:   return 0;
     }
 }
@@ -932,6 +978,31 @@ static void slots_zuweisen(int von)
             while (aktor < RE15_ACTOR_MAX && g_actors[aktor].active) aktor++;
             if (aktor >= RE15_ACTOR_MAX) { s_prog[o + 7] = 0xff; s_prog[o + 1] = (uint8_t)(RE15_ACTOR_MAX - 1); }   /* kein Platz: Slot RE15_ACTOR_MAX-1 -> Aktor RE15_ACTOR_MAX = verworfen (Runde 36 Spur E: war fest 0x0f = Aktor 16, seit RE15_ACTOR_MAX 21 ein gueltiger Platz) */
             else { s_prog[o + 1] = (uint8_t)(aktor - 1); aktor++; }
+        }
+        o += n;
+    }
+}
+
+/* Runde 38 Spur O — GEGENPROBE (nur Sonden, re15_r38_montage_enable(0)): Stand v0.8.25 im selben Binary. Die Listen in
+ * [von, bis) bekommen wieder ihre stehende Form (grid-Byte pc[3] jedes `44`-Satzes), das Umparken OP_PARK_1030_12 wird
+ * zu 16 Nops (op_nop: pc+1, weiter). */
+static void r38_gegenprobe_grid(int von, int bis, uint8_t grid)
+{
+    for (int o = von; o < bis; ) {
+        int n = it_opcode_len(s_prog[o]);
+        if (n <= 0) break;
+        if (s_prog[o] == 0x44) s_prog[o + 3] = grid;
+        o += n;
+    }
+}
+static void r38_gegenprobe_park(int von, int bis)
+{
+    for (int o = von; o < bis; ) {
+        int n = it_opcode_len(s_prog[o]);
+        if (n <= 0) break;
+        if (s_prog[o] == 0x2e && s_prog[o + 1] == 0x01 && o + OP_PARK_LEN <= bis && s_prog[o + 4] == 0x32) {
+            memset(s_prog + o, 0x00, OP_PARK_LEN);
+            n = OP_PARK_LEN;
         }
         o += n;
     }
@@ -992,6 +1063,7 @@ static int programm_bauen(uint16_t room_id)
     case RE15_IT_S1130:
         if (room_id != RE15_IT_RAUM_1130) return 0;
         prog_anhaengen(k_p_1130, (int)sizeof k_p_1130);
+        if (!re15_r38_montage_enabled()) r38_gegenprobe_grid(0, s_prog_len, 0x02);   /* Gegenprobe: EM_1130_LISTE */
         return 1;
     case RE15_IT_S1040:
         if (room_id != RE15_IT_RAUM_1040) return 0;
@@ -1016,14 +1088,20 @@ static int programm_bauen(uint16_t room_id)
         int von = s_prog_len;
         int tuer = re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030);
         if (tuer) {                                          /* Cut-7-Teil, dann der Original-Knall noch auf Cut 7 */
+            int t0 = s_prog_len;
             prog_anhaengen(k_p_1030_tuer, (int)sizeof k_p_1030_tuer);
+            if (!re15_r38_montage_enabled()) r38_gegenprobe_grid(t0, s_prog_len, 0x00);   /* Gegenprobe: EM_1070_LISTE */
             s_1030_knall_off = s_prog_len;
             prog_anhaengen(k_p_1030_tor, (int)sizeof k_p_1030_tor);
         }
         if (!re15_game_flag_get(4, 15))                      /* Tor noch zu: es bricht (bei (4,15)=1 hat sub00 getauscht) */
             prog_anhaengen(k_p_1030_bruch, (int)sizeof k_p_1030_bruch);
         if (tuer) prog_anhaengen(k_p_1030_luecke, (int)sizeof k_p_1030_luecke);
-        prog_anhaengen(k_p_1030_kriechen, (int)sizeof k_p_1030_kriechen);
+        {
+            int k0 = s_prog_len;
+            prog_anhaengen(k_p_1030_kriechen, (int)sizeof k_p_1030_kriechen);
+            if (!re15_r38_montage_enabled()) r38_gegenprobe_park(k0, s_prog_len);   /* Gegenprobe: kein Umparken */
+        }
         slots_zuweisen(von);
         if (re15_irons_tod_ohne_11c0())                      /* Ada steht nicht mehr an Cut 13: gleich zurueck */
             tuer_setzen(s_prog_len - 36, RE15_IT_COUCH_X, RE15_IT_COUCH_Z, RE15_IT_COUCH_YAW, 0x15, RE15_IT_CUT_1150);
@@ -1248,6 +1326,7 @@ void re15_irons_tod_tick(void)
     mess_zeile();
     bilanz_takt();
     folge_takt();
+    re15_r38_montage_takt();   /* Runde 38 Spur O: Einzelstopp hinter der Kamera (1130 Cut 0, 1030 Cut 7/12) + Messung */
     /* Marvins Marker-Alias (Aktor 4 spielt Adas Gesten-Record) JEDEN Takt setzen: auf dem Tuer-Weg bindet
      * main.c das Raum-RBJ erst NACH dem Installer (debug.log: "[irons-tod] ... Montage 11C0" vor "[rbj] room 11C0
      * cinematic overlay"), und re15_rbj_bind_room setzt die Aliase zurueck. Gemessen (Lauf v11c0, Bilder 340/370):
@@ -1315,6 +1394,7 @@ void re15_irons_tod_install(uint16_t room_id)
         if (!irons()) { log_it("kein Irons im Raum - Szene unterbleibt"); return; }
         re15_irons_tod_bilanz_reset();
         re15_irons_tod_folge_reset();                        /* Runde 36 Spur K: K3-Ereignisfolge */
+        re15_r38_montage_reset();                            /* Runde 38 Spur O: Messung je Schnitt */
         umzug_vorbereiten();
         meldungen_einsetzen(room_id);
         knallbank_laden();

@@ -1,0 +1,5 @@
+RDT-Dateien: 240; Item_aot_set-Muster 416, Aot_reset-sce9-Muster 52
+(a) Item-Id 0x4D in Item-Zonen: 0 []
+(b) Bank 9 Bit 68: Skript Set/Ck 0 []; als Aufnahme-Bit einer Item-Zone 0 []
+(c) Bildsaetze unter shared_assets/RE2/FILES: 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
+Gegenprobe ROOM1011: ['0x00954 Bit 0x8A', '0x0096A Bit 0x8D', '0x00980 Bit 0x8E'] (erwartet 0x00954/0x0096A/0x00980, Bits 0x8A/0x8D/0x8E)

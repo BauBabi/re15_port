@@ -144,13 +144,43 @@ int main(void)
         CHECK(px > 500, "Satz 25 Seite p01 hat sichtbare Pixel (%d)", px);
     }
 
-    /* GEGENPROBE: ein Dokument, das es nicht gibt, meldet sauber 0. */
+    /* GEGENPROBE: ein Dokument, das es nicht gibt, meldet sauber 0.
+     * RUNDE 38 SPUR G (Nachbesserung 1, Mangel 1 der Abnahme 0): die Probe nahm fest
+     * RE2_FILES_DOC_COUNT + 5 = Satz 30. Seit Runde 38 Spur G IST Satz 30 ein Dokument
+     * ("Roys Diary", re15_files.c Dokument 5, shared_assets/RE2/FILES/FILE30_*.TIM) - die
+     * feste +5 traf also ein vorhandenes Dokument, und jede kuenftige Spur, die den naechsten
+     * Satz anlegt, traefe es wieder. Der Probe-Satz kommt deshalb jetzt aus dem Asset-Baum:
+     * der ERSTE Satz nn, dessen FILEnn_title_page.TIM unter RE15_ASSET_RE2_DIR/FILES nicht
+     * existiert (Datei-Probe mit fopen, unabhaengig vom Lader = nachweislich nicht vorhanden).
+     * Damit die Probe nicht ins Leere zielt: (a) jeder Satz davor ist da, also liegen RE2s 25
+     * und alle Saetze der Port-Tabelle (re15_files_doc) davor; (b) der Nachbar nn-1 meldet sich
+     * im Lader unmittelbar vorher mit 1 - ein Lader, der Satz-Nummern verwechselt oder den
+     * Cache-Schluessel nicht vergleicht, lieferte sonst dessen Bild statt 0. */
     {
-        int w = 0, h = 0;
-        int got = re15_re2doc_size(RE2_FILES_DOC_COUNT + 5, -1, RE15_RE2DOC_PAGE, &w, &h);
+        char pfad[700];
+        int nn = -1, w = 0, h = 0;
+        for (int d = 0; d < 100 && nn < 0; d++) {
+            snprintf(pfad, sizeof pfad, "%s/FILES/FILE%02d_title_page.TIM", RE15_ASSET_RE2_DIR, d);
+            FILE *f = fopen(pfad, "rb");
+            if (f) fclose(f); else nn = d;
+        }
+        int max_satz = RE2_FILES_DOC_COUNT - 1;
+        for (int i = 0; i < re15_files_doc_count(); i++) {
+            const re15_file_doc_t *fd = re15_files_doc(i);
+            if (fd && (int)fd->bildsatz > max_satz) max_satz = (int)fd->bildsatz;
+        }
+        int nachbar = nn > 0 ? re15_re2doc_size(nn - 1, -1, RE15_RE2DOC_PAGE, NULL, NULL) : 0;
+        int got = nn >= 0 ? re15_re2doc_size(nn, -1, RE15_RE2DOC_PAGE, &w, &h) : 1;
+        printf("  Gegenprobe: erster Satz ohne Titelseite im Asset-Baum = %d "
+               "(hoechster Satz RE2/Port-Tabelle = %d)\n", nn, max_satz);
+        CHECK(nn > max_satz,
+              "der Probe-Satz %d liegt hinter allen RE2-Saetzen und allen Saetzen der "
+              "Port-Tabelle (hoechster %d) - davor fehlt keiner", nn, max_satz);
+        CHECK(nachbar == 1,
+              "der Nachbar Satz %d meldet sich im Lader (1) unmittelbar vor der Probe", nn - 1);
         CHECK(!got,
-              "ein nicht vorhandenes Dokument meldet 0 statt Muell - sonst waere jede "
-              "Zusage oben wertlos");
+              "ein nicht vorhandenes Dokument (Satz %d) meldet 0 statt Muell - sonst waere "
+              "jede Zusage oben wertlos", nn);
     }
 
     if (fails) { printf("\nRE2DOC: FAIL (%d)\n", fails); return 1; }

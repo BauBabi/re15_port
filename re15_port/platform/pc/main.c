@@ -78,6 +78,7 @@ static inline int RNDI(float f) {
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
 #include "re15_pri_schatten_r36.h"   /* Runde 36 Spur O: Schatten-Tag fuer die OT-Ordnung */
+#include "re15_nclip_r38.h"          /* Runde 38 Spur A: Rueckseiten-Verwurf der Objekt-Zeichner */
 #include "re15_collision.h"
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
@@ -102,6 +103,8 @@ static inline int RNDI(float f) {
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Schluessel 10F0/10F1, Tuer 11B0, Icon/Bild/Modell */
 #include "re15_kartenitems_r36.h" /* Runde 36 Spur N: Lageplan-Karte (Boot-/CONTINUE-Weg + Prop-Lader) */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: Feuerloescher (Boot-/CONTINUE-Weg + Prop-Lader) */
+#include "re15_itemorte_r38.h"      /* Runde 38 Spur K: Sichtbarkeitsregel Loescher 1030 / Schluessel 10F0 */
+#include "re15_dining_r38.h" /* Runde 38 Spur F: Dining Room Key (Boot-/CONTINUE-Weg, Prop-Lader, Icon/Bild) */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -119,6 +122,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
+#include "re15_npckante_r38.h"     /* Runde 38 Spur M: NPC-Schatten auf +0x1ba waehrend Kante/Fall */
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
@@ -136,6 +140,13 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 #include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
+#include "re15_elzaintro_r38.h" /* Runde 38 Spur E: Erzaehler-Schwarz ROOM1031 Cut 13 (Elza) */
+#include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 nach HERKUNFT -> RE1.5-Bank */
+#include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht ohne Schatten */
+#include "re15_zopf_r38.h"     /* Runde 38 Spur D: Elzas Zopf (FUN_80024c30/FUN_80024e40) */
+#include "re15_objpoly_r38.h"  /* Runde 38 Spur W: Polygon-Schranken des Objektzeichners (Rolladen ROOM20A0) */
+#include "re15_objabe_r38.h"   /* Runde 38 Spur W: halbtransparente Raum-Objekte (Attribut-Bit 0x2, ABR, STP) */
+#include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen der Wasserzombies (Bank, Pose, Schatten) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -920,6 +931,7 @@ static void pc_enemy_hybrid_re15_models(uint8_t type, re15_enemy_bank_t *eb)
         s_an15_sit = s_an15;
         re15_re2z_set_re15_pose_bank(&s_sk15_sit, &s_an15_sit);
     }
+    re15_wasserzombie_bank_merken(type, &s_sk15, &s_an15);   /* Runde 38 Spur U: RE1.5-Aktionsbank je Typ (Clip 0x16 Hochziehen, wasserzombie_r38.c) */
     int slot = (eb->pc_tex_slot >= 0) ? eb->pc_tex_slot : 11 + (int)(eb - g_enemy);
     if (tim.width > 0 && tim.height > 0 && slot < 24) {
         re15_render_pc_upload_tim_slot(&tim, slot);    /* RE1.5-TIM ersetzt die RE2-Textur */
@@ -1445,6 +1457,7 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
      * an ihrer Stelle ein gelbes Viereck. Herleitung + Zensus stehen bei
      * RE15_RDT_MAX_PROPS in re15_rdt.h. */
     for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) ok[op] = 0;
+    re15_objabe_r38_pc_raum_neu();   /* Runde 38 Spur W: STP-Teil-Texturen des alten Raums verwerfen */
     if (!rdt) return;
     int nprops = rdt->prop_count < RE15_RDT_MAX_PROPS ? rdt->prop_count
                                                       : RE15_RDT_MAX_PROPS;
@@ -1478,8 +1491,9 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
          * dadurch byte-genau NICHT. Game-weit betrifft die Regel 122 von 570 Prop-Modellen;
          * dieselbe 92.8%-Textur taucht in 18 Raeumen auf = EIN wiederverwendetes
          * Cursor-/Marker-Modell. Gepinnt in tests/unit/test_prop_texel_key_11f0.c. */
-        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
-                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op)); }
+        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0) {
+                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op));
+                      re15_objabe_r38_pc_textur(&tt, RE15_TIM_SLOT_PROP(op)); } }   /* Runde 38 Spur W: STP-Teile */
     }
 
     /* SICHERUNG im Hebetisch von Irons' Buero: ein ZUSAETZLICHES Prop, dessen MD1+TIM
@@ -1574,6 +1588,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_feuerloescher_r37_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (fl_oid >= 0 && nprops <= fl_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[fl_oid]) == 0) ok[fl_oid] = 1;
         if (fl_oid >= 0 && nprops <= fl_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(fl_oid)); }
+    {   /* Runde 38 Spur F: Dining Room Key ROOM1011 — eingebackenes RE2-MD1+TIM (gen/dining_r38_schluessel.inc), Muster oben. */
+        const int f_oid = re15_dining_r38_obj_id((uint16_t)g_current_room_id);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_dining_r38_md1_bytes((uint16_t)g_current_room_id, &msz);
+        const uint8_t *tb = re15_dining_r38_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
+        if (f_oid >= 0 && nprops <= f_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[f_oid]) == 0) ok[f_oid] = 1;
+        if (f_oid >= 0 && nprops <= f_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(f_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -3977,6 +3997,8 @@ re_title:;
     re15_pc_glas1120_init();   /* Runde 35 Spur M: RE2-Raum-ESP room1090 + Glas-Texturen + Knall-Haken */
     { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
     { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
+    { extern void re15_pc_w11b0_init(void); re15_pc_w11b0_init(); }   /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (Satz 7 aus ROOM1171) */
+    { extern void re15_pc_dining_r38_init(void); re15_pc_dining_r38_init(); }     /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -4483,6 +4505,7 @@ re_title:;
          * bleibt byte-true. Herleitung: include/re15_sicherung.h. */
         if (ipix) re15_sicherung_icon_einsetzen(ipix, isz);
         if (ipix) re15_schluessel_r36_icon_einsetzen(ipix, isz);   /* Runde 36 Spur Q: Tiles 0x42/0x45 */
+        if (ipix) re15_dining_r38_icon_einsetzen(ipix, isz);       /* Runde 38 Spur F: Tile 0x43 */
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
@@ -4493,6 +4516,7 @@ re_title:;
         /* Item-Bild der Sicherung (Block 0x40 @0xC0000) im GELADENEN Puffer einsetzen. */
         if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_schluessel_r36_bild_einsetzen(ipic, psz);   /* Runde 36 Spur Q: Bloecke 0x42/0x45 */
+        if (ipic) re15_dining_r38_bild_einsetzen(ipic, psz);       /* Runde 38 Spur F: Block 0x43 */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
     }
     /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
@@ -4961,6 +4985,7 @@ re_title:;
     /* Runde 36 Spur H: Scheiben-Texte ROOM1190/1191 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter). */
     { extern void re15_ziel1190_install(uint16_t); re15_ziel1190_install((uint16_t)g_current_room_id); }
     re15_kartenitems_r36_install((uint16_t)g_current_room_id);   /* Runde 36 Spur N: Lageplan-Karte, derselbe Grund */
+    re15_dining_r38_install((uint16_t)g_current_room_id);        /* Runde 38 Spur F: 1011/1021/1131/1141, derselbe Grund (Boot-/CONTINUE-Weg) */
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -5177,6 +5202,7 @@ re_title:;
           if (s_kill_at == -2) { const char *k = getenv("RE15_KILL_AT"); s_kill_at = k ? atoi(k) : -1; }
           if (s_kill_at >= 0 && (int)g_engine.frame_count == s_kill_at) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1; }  /* dead = hp<0 */
         { extern void re15_r37a_gegner_pos_haken(void); re15_r37a_gegner_pos_haken(); }  /* Runde 37 Spur A: Messhaken RE15_GEGNER_POS (re15_pri1100_r37.h) */
+        re15_dining_r38_messhaken();   /* Runde 38 Spur F: Messhaken RE15_R38F_GORILLAS_TOT (re15_dining_r38.h) */
 
         /* DEBUG: RE15_INV_SHOT=<path> — wave-1 acceptance harness: force-open the status
          * screen at frame 30 (briefing loadout = the mzd_inv_open.sav items); the render
@@ -6006,6 +6032,8 @@ re_title:;
                                                                     active_cut_idx);
                         if (moff)
                             pri_n = re15_pri_parse_section(s_msk, (size_t)s_msk_size, moff, &pri);
+                        { extern unsigned re15_pri_masken_raum(unsigned); extern int re15_masken36_filter(unsigned, int, re15_pri_cut_t *);
+                          if (pri_n > 0) pri_n = re15_masken36_filter(re15_pri_masken_raum(g_current_room_id), active_cut_idx, &pri); }  /* Runde 37 Spur P: Generator-Rechtecke VOR jedem Objekt aus (masken36_r37.c) */
                         /* Merker: die Rechtecke stammen aus dem R15M-Container. */
                         if (pri_n > 0) pri_nachgezeichnet = 1;
                     }
@@ -6804,7 +6832,9 @@ re_title:;
                  * narrator (headless-verified: sub11 messages 8-11 run at cut=7 cut_auto=0). */
                 {
                     extern void re15_render_pc_set_scene_black(int on);
-                    re15_render_pc_set_scene_black(g_current_room_id == 0x1170 && active_cut_idx == 7);
+                    /* Runde 38 Spur E: Tabelle der Erzaehler-Schnitte = ROOM1170 Cut 7 (wie bisher) + ROOM1031 Cut 13
+                     * (Elza, sub15 @0x02A74; Lobby-Kamera sieht dort den Port-Lageplan) — elzaintro_r38.c. */
+                    re15_render_pc_set_scene_black(re15_elzaintro_r38_erzaehler_schwarz(g_current_room_id, active_cut_idx));
                 }
             }
             /* Action-button press edge (Square = Enter on PC). */
@@ -7595,8 +7625,9 @@ re_title:;
                          * nur die vom RE2-Adult-Spawner erzeugten (`addiu a0,zero,38`
                          * @0x80105DE8, Feld re2s_baby_spawned) sind echte RE2-Baby-Spinnen. */
                         pc_enemy_load_ex(g_actors[_pi].type,
-                                         g_actors[_pi].type != 0x26u
-                                             || g_actors[_pi].re2s_baby_spawned);
+                                         (g_actors[_pi].type != 0x26u
+                                             || g_actors[_pi].re2s_baby_spawned)
+                                         && !re15_r38i_ereigniskraehe(&g_actors[_pi]));   /* Runde 38 Spur I */
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)   /* Runde 35 Spur I (N1-M2): Elliot beim */
                     if (g_actors[_pi].active && re15_typ47_ist_elliot(g_actors[_pi].type)) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328; Runde 37 Spur K: nur Leons 0x47 */
                 /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
@@ -7828,6 +7859,8 @@ re_title:;
                     fputc('\n', s_state_log); fflush(s_state_log);
                 }
             }
+            { extern void re15_spinnen_r38_log_frame(unsigned);            /* Runde 38 Spur R: Messschiene */
+              re15_spinnen_r38_log_frame((unsigned)g_engine.frame_count); } /* RE15_SPINNEN_LOG (env-gegatet) */
             /* DEATH PRESENTATION (byte-true FUN_8003694c): fade the scene to black over the 0x78 death
              * timer (g_death_fade), then show the YOU DIED graphic (YOUDIED.TIM) for ~2s before the RE
              * continue = reload the current room. (Original: YOU DIED -> title; the port has no title
@@ -8735,7 +8768,11 @@ re_title:;
             int pose_ok = 0;
             if (skel_ok) {                        /* NACHBESSERUNG M-HE-1: auch gecullt (s.o.) */
                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
+                g_skel_lokal_rot = re15_zopf_r38_lokal();   /* Runde 38 Spur D: Teil 0 / Teil 8 lokal fuer den Zopf */
                 pose_ok = (re15_skel_compute_pose(p_skel, kf_idx, poses) == 0);
+                g_skel_lokal_rot = NULL;
+                if (pose_ok && re15_zopf_r38_aktiv(s_player_model_idx, md1.mesh_count))   /* Runde 38 Spur D: FUN_80024c30 (@0x80031d98) */
+                    (void)re15_zopf_r38_bild_aus_pose(player_ref, p_skel, poses);
                 if (pose_ok && re15_player_victim_state() != 0) re15_bissarm_r37_opfer_merken(player_ref, p_skel, kf_idx);   /* Runde 37 Spur J: Opfer-Schultern fuer den Handkontakt (Elza) */
                 /* RE15_POSE_DUMP: LEON render-level pose (grab-start / release investigations) */
                 {
@@ -8872,6 +8909,9 @@ re_title:;
                                            hand_tr[2] + model_pos_z);
                 re15_player_set_hand_rot(hand_rot);   /* R_gunbone (WORLD rot) for the discharge-FX anchor */
             }
+            {   extern void re15_wasser_r38_zeichner(const re15_skel_pose_t *, int, const int32_t *, int32_t, int32_t, int32_t);
+                re15_wasser_r38_zeichner(pose_ok ? poses : NULL, p_skel ? (int)p_skel->bone_count : 0, yaw_rot_q12,
+                                         model_pos_x, model_pos_y, model_pos_z); }   /* Runde 38 Spur N: Part+0x40 (FUN_8001e9ec) je Bild fuer den Schritt-Effekt */
 
             /* RE1.5 CHARACTER SHADOW (FUN_8001b064 + FUN_8001af5c, 2026-05-29).
              * A subtractive textured floor quad under the actor: 4 corners at
@@ -9027,7 +9067,9 @@ re_title:;
              * nur im Viereck (innen-Zweig FUN_8001e9ec @0x8001e990), aussen nichts (FUN_8001ef54). */
             int n_bones = (pose_ok && player_visible) ? skel.bone_count : 0;
             if (n_bones > md1.mesh_count) n_bones = md1.mesh_count;
-            for (int bi = 0; bi < n_bones; bi++) {
+            /* Runde 38 Spur D: Elzas Zopf = Teile 17..20 mit eigener Weltmatrix (Flag 0x40 -> FUN_8001e9ec @0x8001ea10). */
+            int n_zopf = (n_bones > 0 && re15_zopf_r38_zeichnen(s_player_model_idx, md1.mesh_count)) ? RE15_ZOPF_GLIEDER : 0;
+            for (int bi = 0; bi < n_bones + n_zopf; bi++) {
                 /* Phase 4.5.10-L: revert to 1:1 mesh-bone mapping.
                  * Phase 4.5.10-H tried bone_mesh_index[] but that field's
                  * semantics weren't what we thought (it's the EMR child
@@ -9039,7 +9081,7 @@ re_title:;
 
                 /* Phase 4.5.8.2 + 4.4.5.1: pre-rotate pose by R_y(yaw),
                  * then compose view × (R_y × bone) per bone. */
-                const re15_skel_pose_t *p = &poses[bi];
+                const re15_skel_pose_t *p = &poses[bi < n_bones ? bi : 0];   /* Runde 38 Spur D: Zopf-Teile s.u. */
                 int32_t yawed_rot[9];
                 for (int r = 0; r < 3; r++) {
                     for (int c = 0; c < 3; c++) {
@@ -9064,6 +9106,10 @@ re_title:;
                     yawed_trans[1] + model_pos_y,
                     yawed_trans[2] + model_pos_z,
                 };
+                if (bi >= n_bones) {   /* Runde 38 Spur D: Zopfglied = Weltmatrix aus FUN_80024e40 (Teil+0x40) */
+                    mi = RE15_ZOPF_ERSTES_TEIL + (bi - n_bones);
+                    (void)re15_zopf_r38_welt(bi - n_bones, yawed_rot, bone_world_trans);
+                }
                 /* (Knochen-11-Fuetterung re15_player_set_hand_world/_rot: seit der NACHBESSERUNG
                  * M-HE-1 VOR diesem Loop, jedes Bild aus derselben Pose — s. "BLADE/HAND WORLD POINT"
                  * oben. Hier nur noch Zeichnen.) */
@@ -9596,7 +9642,8 @@ re_title:;
                      * Roster-Schleife geholt (gemessen: ohne den Zusatz stand trotz Brain-Fix
                      * weiter "RE2 EM026 loaded: ... 3 clips" im Log). */
                     pc_enemy_load_ex(npc->type,
-                                     npc->type != 0x26u || npc->re2s_baby_spawned);
+                                     (npc->type != 0x26u || npc->re2s_baby_spawned)
+                                     && !re15_r38i_ereigniskraehe(npc));   /* Runde 38 Spur I: RE1.5-Bank */
                 if (re15_typ47_ist_elliot(npc->type)) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o.; Runde 37 Spur K: Elzas 0x47 = Roy laeuft den allgemeinen Weg */
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
@@ -9646,6 +9693,7 @@ re_title:;
                     }
                     if (!g5_front_in) npc_region_culled = 1;   /* posieren, nicht zeichnen (s.o.) */
                 }
+                { extern int re15_pc_dining_r38_sicht(const re15_actor_t *); if (re15_pc_dining_r38_sicht(npc)) npc_region_culled = 1; }   /* Runde 38 Spur F: Messhaken Sichtbarkeit (dining_r38_pc.c) */
 
                 /* RE2-ZELLENARM (Runde 16 / Phase 2): solange das Entity-Bit 2 gesetzt ist
                  * (0x80101164 mit a2 = 0: INIT @0x80100304, Rueckzug-Ende @0x80100E38), ist
@@ -9737,6 +9785,7 @@ re_title:;
                     /* Runde 35 Spur M: die versteckte Fensterkraehe (RE2-State 4, word0 0x80000 =
                      * nicht zeichnen) wirft keinen Schatten an den Fuss der Rueckwand. */
                     if (npc->type == 0x21 && npc->state == 4 && npc->crow_hide) crow_no_record = 1;
+                    if (re15_r38_sm_schatten_aus(npc)) crow_no_record = 1;   /* Runde 38 Spur T: +0xBC/+0xBE = 0 @0x80115370-74 */
                     /* HUND 0x20 - EIGENE Lachen-Maschine, genau wie die Kraehe:
                      * RE2 0x80104A2C faerbt den Record auf 0x00BFBF10 (@0x80104A50-84) und
                      * laesst rec+4/+6 90 Takte lang um 8 wachsen (@0x80104A8C-C0);
@@ -9808,6 +9857,8 @@ re_title:;
                     /* Runde 35 Spur H: Hund 0x20 -> Boden-Referenz (+0x1ba `lh a1,442` @0x8010d91c
                      * / RE2 +0x1C2 @0x800268c8), nicht der Koerper. re15_hundeschatten.h */
                     if (npc->type == RE15_HUNDESCHATTEN_TYP) nsh_y = re15_hundeschatten_y(npc);
+                    { int32_t ky; if (re15_npckante_schatten_y(npc, &ky)) nsh_y = ky; }   /* Runde 38 Spur M: +0x1ba @0x8011dd78 */
+                    re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
@@ -10002,6 +10053,11 @@ re_title:;
                         npc_remap = NULL;
                     }
                 }
+                {   /* Runde 38 Spur U: RE2-KI-Zombie im RE1.5-Hochziehen posiert die RE1.5-Aktionsbank SEINES Typs
+                     * (anim_set(+0x170,+0x174) @0x801032f8/@0x80103414; wie SITZ-IMPORT ohne Hybrid-Remap). */
+                    const re15_emd_skeleton_t *wz_sk = NULL; const re15_emd_animation_t *wz_an = NULL;
+                    if (re15_wasserzombie_bank(npc, &wz_sk, &wz_an)) {
+                        npc_skel = wz_sk; npc_anim = wz_an; av.clip_override = (int)npc->motion; npc_remap = NULL; } }
 
                 /* DIAG (RE15_ENEMY_DIAG=1): one line per actor on first render — proves the
                  * generic enemy uses its OWN model (mesh != Leon's def_mesh) vs a Leon fallback,
@@ -10739,6 +10795,9 @@ re_title:;
                                      prop_w[0], prop_w[2],
                                      cam_has_region, cam_region_xs, cam_region_zs))
                     continue;
+                if (re15_itemorte_r38_verdeckt((uint16_t)g_current_room_id, active_cut_idx,
+                                               (int)g_scd.props[pi].obj_id))
+                    continue;   /* Runde 38 Spur K: Port-Gegenstand hinter maskenlosem Vordergrund (re15_itemorte_r38.h) */
                 int oid = (int)g_scd.props[pi].obj_id;
 #ifdef RE15_PROP_TRACE
                 { static int pn=0; if((pn++%60)==0)
@@ -10844,6 +10903,7 @@ re_title:;
                     const int irons_sort_max = re15_dokumente_sort_max_mit(re15_irons_tisch_sort_max(
                         (uint16_t)g_current_room_id, active_cut_idx, oid),
                         (uint16_t)g_current_room_id, active_cut_idx, oid);
+                    re15_objpoly_r38_objekt(oid, active_cut_idx, (unsigned)g_current_room_id);   /* Runde 38 Spur W: Messschiene */
                     for (int hbi = 0; hbi < prop_md1->mesh_count; hbi++) {
                         const re15_md1_mesh_t *hm = &prop_md1->meshes[hbi];
                         int32_t world_trans[3] = { prop_x, prop_y, prop_z };
@@ -10862,28 +10922,14 @@ re_title:;
                             if (tr->v1 >= (uint32_t)hm->tri_vertex_count) continue;
                             if (tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
                             int ax[3], ay[3], wz_avg = 0;
-                            int ok = 1;
                             const re15_md1_vertex_t *vp[3] = {
                                 &hm->tri_vertices[tr->v0],
                                 &hm->tri_vertices[tr->v1],
                                 &hm->tri_vertices[tr->v2],
                             };
-                            for (int v = 0; v < 3; v++) {
-                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
-                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
-                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
-                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
-                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
-                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
-                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
-                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
-                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
-                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
-                                wz_avg += (int)_vz;
-                            }
-                            if (!ok) continue;
-                            wz_avg /= 3;
+                            /* Runde 38 Spur W: RTPT + NCLIP (@0x80022fec/@0x80025580) + OTZ<64 (@0x80023044/@0x80025654)
+                             * + GPU-Groessengrenze, gesaettigte SXY (objpoly_r38.c) statt Port-Ausschnitt `_vz < 64`. */
+                            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg)) continue;
                             int wz_for_sort = wz_avg;
                             if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
                                 wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
@@ -10906,18 +10952,16 @@ re_title:;
                                 pg0 = pg1 = pg2 = g_re15_light_tint[1];
                                 pb0 = pb1 = pb2 = g_re15_light_tint[2];
                             }
-                            if ((g_scd.props[pi].attr & 0x12) == 0x10)
+                            if (re15_objabe_r38_flach(g_scd.props[pi].attr, g_scd.props[pi].obj_type))   /* Runde 38 Spur W */
                                 /* FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10`: FLACH statt NCCT -> FUN_80022f0c
                                  * @0x8002c320 mit Farbe obj+0x70 = 0x808080 (FUN_8002b898.c:16, Textur
-                                 * unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h). NUR deckende
-                                 * Objekte: Bit 0x2 (@0x8002c2b4, Prim-Code 0x36 = halbtransparent je STP-Texel)
-                                 * kann dieser Zeichner nicht (Texel-Alpha immer 0xFF, render_pc.c ABE-Kommentar);
-                                 * die 91 flach+halbtransparenten Objekte (Zensus re15_scd.h; ihre Texel tragen zu
-                                 * 100 % das STP-Bit, das Original mischt sie 50/50) bleiben bis zur Portierung von
-                                 * Parameter 4 auf dem bisherigen Weg — flach-deckend waere doppelt so hell wie das
-                                 * Original. Runde 36 Spur N (Nachbesserung 1, Dossier 8.7). */
+                                 * unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h). Runde 36 Spur N
+                                 * liess die halbtransparenten (Bit 0x2) hier aus, bis Parameter 4 portiert ist —
+                                 * seit Runde 38 Spur W (Nachbesserung 1) ist er es (re15_objabe_r38_pc_dreieck:
+                                 * STP-0-Texel deckend, STP-1-Texel nach ABR gemischt), also gilt der Flach-Weg fuer
+                                 * JEDES Objekt mit Bit 0x10 und fuer Typ 3 (FUN_8003e64c), re15_objabe_r38.h. */
                                 pr0 = pr1 = pr2 = pg0 = pg1 = pg2 = pb0 = pb1 = pb2 = 0x80;
-                            re15_render_textured_tri_lit(
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,   /* Runde 38 Spur W: ABE/ABR/STP */
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
                                 ax[2], ay[2], (int)uv->u2 + page_off, (int)uv->v2,
@@ -10937,23 +10981,10 @@ re_title:;
                                 &hm->quad_vertices[qd->v2],
                                 &hm->quad_vertices[qd->v3],
                             };
-                            int ok = 1;
-                            for (int v = 0; v < 4; v++) {
-                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
-                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
-                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
-                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
-                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
-                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
-                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
-                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
-                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
-                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
-                                wz_avg += (int)_vz;
-                            }
-                            if (!ok) continue;
-                            wz_avg /= 4;
+                            /* Runde 38 Spur W: RTPT/RTPS + NCLIP (@0x80023168/@0x80025798) + OTZ<64 (@0x80023224/@0x800258b0)
+                             * + GPU-Groessengrenze je Dreieck (0,1,2)/(1,2,3) (objpoly_r38.c) statt `_vz < 64`. */
+                            uint8_t gpu_ok[2];
+                            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view.fov_screen_dist, cx, cy, ax, ay, &wz_avg, gpu_ok)) continue;
                             if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
                                 wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
@@ -10979,21 +11010,24 @@ re_title:;
                                 pqg0=pqg1=pqg2=pqg3=g_re15_light_tint[1];
                                 pqb0=pqb1=pqb2=pqb3=g_re15_light_tint[2];
                             }
-                            if ((g_scd.props[pi].attr & 0x12) == 0x10)   /* wie beim Dreieck: FUN_80023098 @0x8002c350, flach 0x808080,
-                                                                           * nur deckende Objekte. Runde 36 Spur N. */
+                            if (re15_objabe_r38_flach(g_scd.props[pi].attr, g_scd.props[pi].obj_type))   /* wie beim Dreieck: FUN_80023098
+                                                                           * @0x8002c350, flach 0x808080. Runde 36 Spur N / Runde 38 Spur W */
                                 pqr0=pqr1=pqr2=pqr3=pqg0=pqg1=pqg2=pqg3=pqb0=pqb1=pqb2=pqb3=0x80;
-                            re15_render_textured_tri_lit(
+                            if (gpu_ok[0] && gpu_ok[1]) {   /* Runde 38 Spur W: beide GPU-Dreiecke -> wie bisher */
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,   /* Runde 38 Spur W: ABE/ABR/STP */
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
                                 ax[3], ay[3], (int)uv->u3 + page_off, (int)uv->v3,
                                 0, (int)uv->clut, wz_avg,
                                 pqr0, pqg0, pqb0, pqr1, pqg1, pqb1, pqr3, pqg3, pqb3);
-                            re15_render_textured_tri_lit(
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[3], ay[3], (int)uv->u3 + page_off, (int)uv->v3,
                                 ax[2], ay[2], (int)uv->u2 + page_off, (int)uv->v2,
                                 0, (int)uv->clut, wz_avg,
                                 pqr0, pqg0, pqb0, pqr3, pqg3, pqb3, pqr2, pqg2, pqb2);
+                            } else re15_objpoly_r38_halbviereck_pc(g_scd.props[pi].attr, ax, ay, uv, page_off, wz_avg, gpu_ok,   /* Runde 38 Spur W */
+                                       (const uint8_t[12]){ pqr0, pqg0, pqb0, pqr1, pqg1, pqb1, pqr2, pqg2, pqb2, pqr3, pqg3, pqb3 });
                         }
                     }
                     continue;

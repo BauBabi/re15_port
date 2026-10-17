@@ -17,6 +17,7 @@
 #include "re15_lock_se.h"
 #include "re15_audio.h"
 #include "re15_item_discard.h"
+#include "re15_itemorte_r38.h"    /* Runde 38 Spur K: Pinnwand-Lage, Slot-Freimachen, skaliertes MD1 */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -39,8 +40,11 @@ extern void re15_scd_show_message(uint8_t index, uint32_t pause_mask);
  *   RE2-Beschreibung des jeweiligen MODELLS (RE2 PSX.EXE):
  *     P. Room Key @0x800A1DA4 "It looks unique.<FC>Now I can access<FC>the power room."
  *       -> "It looks unique. / Now I can access / the parking lot."
- *     Cabin Key   @0x800A1C6E "I can access the<FC>cabin in the rear<FC>with this."
- *       -> "I can access the / prison cells / with this."
+ *     Small Key   @0x800A11EF "I can open a<FC>simple lock<FC>with this."  (Modell des Prison Key seit Runde 38 Spur K,
+ *       Nachbesserung 1; Eintrag 0x1F der Beschreibungsbank, Nachbarn 0x1E Ink Ribbon @0x800A11C9 / 0x20 @0x800A1215)
+ *     Cabin Key   @0x800A1C6E "I can access the<FC>cabin in the rear<FC>with this."  (Modell bis Runde 38)
+ *       -> "I can access the / prison cells / with this."  — beide Saetze haben dieselbe Form (3 Zeilen, "... with
+ *          this."), der Port-Text bleibt deshalb beim Modellwechsel unveraendert.
  *   (RE2 0xFC = Zeilenumbruch = RE1.5 0x08.)
  * TUER-MELDUNGEN (Raummeldung, Kopf 04 02 wie ROOM11B0 msg 13/14/15 @0x1BFE/@0x1C37/@0x1C62):
  *   msg 28 = RE2 key_type-0x4C-Text des Modells P. Room Key (0x5F -> Index 0x13 @0x8009F2BB)
@@ -145,6 +149,10 @@ static void schluessel_anlegen(uint16_t room_id)
     /* schon genommen -> weder Prop noch Zone (Item_aot_set @0x800406dc-718; inhalt_r35.c) */
     if (re15_game_flag_get(9, bit)) return;
 
+    /* LAGE — Runde 38 Spur K (NUTZER-VORGABE key_location.bmp "gut sichtbar"): an der Pinnwand, je Schluessel eigene
+     * Drehung + skaliertes MD1 (include/re15_itemorte_r38.h, gen/itemorte_r38_lage.inc). */
+    int32_t lp[3]; int16_t lr[3];
+    if (!re15_itemorte_r38_schluessel_lage(item, lp, lr)) return;
     /* PROP — Felder wie ein Obj_model_set (LAB_80040914), Muster inhalt_r35.c */
     if (slot_von_obj_id(RE15_R36Q_OBJ) < 0 && g_scd.prop_count < RE15_SCD_MAX_PROPS) {
         int i = (int)g_scd.prop_count++;
@@ -154,27 +162,32 @@ static void schluessel_anlegen(uint16_t room_id)
         g_scd.props[i].obj_type   = 0;                       /* pc[2] -> pool+8 @0x8004095c   */
         g_scd.props[i].band       = RE15_R36Q_PROP_BAND;     /* pc[4] -> pool+130 @0x80040974 */
         g_scd.props[i].parent_obj = -1;                      /* pc[5] = 0x00 = Weltraum       */
-        g_scd.props[i].x = RE15_R36Q_X;
-        g_scd.props[i].y = RE15_R36Q_Y;
-        g_scd.props[i].z = RE15_R36Q_Z;
-        g_scd.props[i].rot_y = RE15_R36Q_ROT_Y;
+        g_scd.props[i].x = lp[0];
+        g_scd.props[i].y = lp[1];
+        g_scd.props[i].z = lp[2];
+        g_scd.props[i].rot_x = lr[0];
+        g_scd.props[i].rot_y = lr[1];
+        g_scd.props[i].rot_z = lr[2];
         g_scd.props[i].flags = RE15_R36Q_PROP_FLAGS;         /* 0x000A | 1 @0x80040998         */
+        g_scd.props[i].attr  = RE15_R38K_SCHL_ATTR;          /* RE2 @0x02C98/@0x01274: flach (Runde 38 K) */
     }
-    /* ZONE — wie op_item_aot_set: Mitte + halbe Ausdehnung, sat (+3), Etage (+4) 0. Nur frei. */
-    if (!g_aot.slots[RE15_R36Q_SLOT].active) {
-        re15_aot_set_item_tk_prop(RE15_R36Q_SLOT,
-                                  RE15_R36Q_RECT_X + RE15_R36Q_RECT_W / 2,
-                                  RE15_R36Q_RECT_Z + RE15_R36Q_RECT_D / 2,
-                                  RE15_R36Q_RECT_W / 2, RE15_R36Q_RECT_D / 2,
+    /* ZONE — wie op_item_aot_set: Mitte + halbe Ausdehnung, sat (+3), Etage (+4) 0. Slot 8 (Vorrang vor dem Satz
+     * msg 4 der Pinnwand, der nach Slot 15 zieht — re15_itemorte_r38_platz_frei, Runde 38 Spur K). Nur frei. */
+    re15_itemorte_r38_platz_frei(room_id, RE15_R38K_SCHL_SLOT);
+    if (!g_aot.slots[RE15_R38K_SCHL_SLOT].active) {
+        re15_aot_set_item_tk_prop(RE15_R38K_SCHL_SLOT,
+                                  RE15_R38K_KS_RECT_X + RE15_R38K_KS_RECT_W / 2,
+                                  RE15_R38K_KS_RECT_Z + RE15_R38K_KS_RECT_D / 2,
+                                  RE15_R38K_KS_RECT_W / 2, RE15_R38K_KS_RECT_D / 2,
                                   item, RE15_R36Q_MENGE, bit, RE15_R36Q_OBJ);
-        g_aot.slots[RE15_R36Q_SLOT].sce_flags = RE15_R36Q_AOT_SAT;
-        g_aot.slots[RE15_R36Q_SLOT].band      = 0;
+        g_aot.slots[RE15_R38K_SCHL_SLOT].sce_flags = RE15_R36Q_AOT_SAT;
+        g_aot.slots[RE15_R38K_SCHL_SLOT].band      = 0;
     }
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[schluessel] ROOM%04X: %s (Item 0x%02X, Bit (9,%u)) Prop obj %d bei (%d,%d,%d), "
-                    "Zone Slot %d\n", (unsigned)room_id, re15_schluessel_r36_name_ascii(item),
-            (unsigned)item, (unsigned)bit, RE15_R36Q_OBJ, RE15_R36Q_X, RE15_R36Q_Y, RE15_R36Q_Z,
-            RE15_R36Q_SLOT);
+    fprintf(stderr, "[schluessel] ROOM%04X: %s (Item 0x%02X, Bit (9,%u)) Prop obj %d bei (%ld,%ld,%ld) "
+                    "rot (%d,%d,%d), Zone Slot %d\n", (unsigned)room_id, re15_schluessel_r36_name_ascii(item),
+            (unsigned)item, (unsigned)bit, RE15_R36Q_OBJ, (long)lp[0], (long)lp[1], (long)lp[2],
+            (int)lr[0], (int)lr[1], (int)lr[2], RE15_R38K_SCHL_SLOT);
 #endif
 }
 
@@ -343,6 +356,8 @@ const uint8_t *re15_schluessel_r36_md1_bytes(uint16_t room_id, int *out_size)
 {
     uint8_t item = item_des_raums(room_id, NULL);
     if (out_size) *out_size = 0;
+    /* Runde 38 Spur K: das an der Pinnwand skalierte RE2-MD1 (gen/itemorte_r38_md1.inc, nur die Ecken @0x44). */
+    { const uint8_t *r38 = re15_itemorte_r38_schluessel_md1(item, out_size); if (r38) return r38; }
     if (item == RE15_R36Q_PARK_ITEM) {
         if (out_size) *out_size = (int)sizeof re15_r36q_park_md1;
         return re15_r36q_park_md1;

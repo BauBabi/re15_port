@@ -1,0 +1,21 @@
+Raeume (inhaltsgleich zusammengefasst): 152, Kombinationen Objekt x Cut im Regions-Viereck: 1757
+Summe Bildbedeckung ALT 4193818 px, NEU 3810642 px
+Faelle mit > 2 % des Bilds weniger (oder NEU < 50 % von ALT bei ALT > 1000 px): 18
+  ROOM10D1 obj  0 Cut 12 @(6964,0,21694): ALT 76800 px ( 11 Poly) -> NEU     0 px (  8 Poly), weniger 76800 px (100.0 %)
+  ROOM10D0 obj  0 Cut 12 @(6964,0,21694): ALT 76800 px ( 11 Poly) -> NEU     0 px (  8 Poly), weniger 76800 px (100.0 %)
+  ROOM10D1 obj  0 Cut 13 @(6964,0,21694): ALT 53884 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger 53884 px (70.2 %)
+  ROOM10D0 obj  0 Cut 13 @(6964,0,21694): ALT 53884 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger 53884 px (70.2 %)
+  ROOM1130 obj  0 Cut  8 @(-1240,0,16300): ALT 25597 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger 25597 px (33.3 %)
+  ROOM1131 obj  0 Cut  9 @(-1240,0,16228): ALT 22378 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger 22378 px (29.1 %)
+  ROOM1130 obj  0 Cut  9 @(-1240,0,16228): ALT 22378 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger 22378 px (29.1 %)
+  ROOM1170 obj  3 Cut  3 @(-1161,-12296,1991): ALT 40108 px ( 26 Poly) -> NEU 30771 px ( 11 Poly), weniger  9337 px (12.2 %)
+  ROOM1211 obj  0 Cut  5 @(-21750,0,-20760): ALT  9463 px ( 39 Poly) -> NEU   384 px ( 14 Poly), weniger  9079 px (11.8 %)
+  ROOM1210 obj  0 Cut  5 @(-21750,0,-20760): ALT  9419 px ( 39 Poly) -> NEU   399 px ( 13 Poly), weniger  9020 px (11.7 %)
+  ROOM10D1 obj  0 Cut  6 @(6964,0,21694): ALT  8162 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger  8162 px (10.6 %)
+  ROOM10D0 obj  0 Cut  6 @(6964,0,21694): ALT  8162 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger  8162 px (10.6 %)
+  ROOM1051 obj  0 Cut  5 @(15432,0,-10424): ALT  4542 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger  4542 px (5.9 %)
+  ROOM1050 obj  0 Cut  5 @(15432,0,-10424): ALT  4542 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger  4542 px (5.9 %)
+  ROOM1211 obj  0 Cut  8 @(-21750,0,-20760): ALT  2832 px ( 39 Poly) -> NEU  1381 px ( 16 Poly), weniger  1451 px (1.9 %)
+  ROOM1210 obj  0 Cut  8 @(-21750,0,-20760): ALT  2597 px ( 39 Poly) -> NEU  1247 px ( 15 Poly), weniger  1350 px (1.8 %)
+  ROOM10D1 obj  0 Cut  7 @(6964,0,21694): ALT  1289 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger  1289 px (1.7 %)
+  ROOM10D0 obj  0 Cut  7 @(6964,0,21694): ALT  1289 px ( 15 Poly) -> NEU     0 px (  0 Poly), weniger  1289 px (1.7 %)

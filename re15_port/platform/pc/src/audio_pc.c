@@ -35,9 +35,12 @@
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
 #include "re15_elza_r36.h"  /* Runde 36 Spur L: re15_elza_stimme_datei (main16.5.wav) */
+#include "re15_elzaintro_r38.h"  /* Runde 38 Spur E: Elzas Montage ROOM1241 -> Aufnahmen room1240 */
+#include "re15_rekorder_r38.h"  /* Runde 38 Spur J: re15_rekorder_r38_stimme (Irons_Rekorder_Sound.wav) */
 #include "re15_aufschliessen_r36.h"  /* Runde 36 Spur G: Satz-TOC der Mini-Bank KARTSE.VBS */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Port-Bank 0x3A = RE2-Schlossbank SCHLOSS1010 */
+#include "re15_werkstatt11b0_r38.h" /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (re15_w11b0_snd0_hook) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 
@@ -273,6 +276,7 @@ static FILE *s_audio_cap = NULL;   /* RE15_AUDIO_CAP=<raw>: dump mixed output (v
 static int   s_audio_cap_sync = 0; /* RE15_AUDIO_CAP_SYNC: frame-locked render, no SDL device */
 static long  s_cap_ticks      = 0; /* gerenderte Spielframes in diesem Modus (== PCM/1470)     */
 static long  s_cap_limit      = 0; /* RE15_AUDIO_CAP_FRAMES: danach Datei schliessen + exit(0)  */
+long re15_audio_cap_tick(void) { return s_cap_ticks; }   /* Runde 38 Spur F: Mitschnitt-Takt im Ton-Messschrieb (dining_r38_pc.c) */
 static int   s_audio_mono = 0;     /* OPTIONS SOUND: 1 = mono (collapse final mix), 0 = stereo */
 void re15_audio_set_mono(int mono) { s_audio_mono = mono ? 1 : 0; }
 
@@ -849,6 +853,7 @@ void re15_audio_room_se(int se_id)
  * layering as room_se (snd1), on the resident snd0 bank the footsteps also use. */
 void re15_audio_room_se_snd0(int se_id)
 {
+    if (re15_w11b0_snd0_hook && re15_w11b0_snd0_hook(se_id)) return;   /* Runde 38 Spur C: 11B0 Satz 7 leer -> ROOM1171 */
     if (!g_audio.initialized || !s_foot_loaded || se_id < 0) return;
     se_play_layers(s_foot_edt, &s_foot_vab, s_foot_decoded, s_foot_decoded_len, se_id);
 }
@@ -2242,6 +2247,7 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     /* Runde 36 Spur L: Sonderdatei je (Raum, Id) — Nutzer-Aufnahme synchro/STAGE1/room1011/main16.5.wav (re15_elza_r36.h). */
     char stamm[24]; snprintf(stamm, sizeof stamm, "main%02d", voice_id);
     { const char *sd = re15_elza_stimme_datei((unsigned)room, voice_id); if (sd) snprintf(stamm, sizeof stamm, "%s", sd); }
+    re15_rekorder_r38_stimme((unsigned)room, voice_id, reldir, sizeof reldir, stamm, sizeof stamm);   /* Runde 38 Spur J: ROOM1100/1101 Id 40 */
     snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
     wav = re15_pc_read_base(path, &wsz);
     /* the synchro dirs are lower-case "room1170" on disk; retry lower-hex if the
@@ -2252,6 +2258,10 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
         wav = re15_pc_read_base(path, &wsz);
     }
+    /* Runde 38 Spur E: Elzas Montage ROOM1241 spricht Leons room1240 (re15_elzaintro_r38.h), nur ohne eigene Datei. */
+    if (!wav && re15_elzaintro_r38_stimme_pfad((unsigned)room, voice_id, stamm, path, sizeof path) &&
+        (wav = re15_pc_read_base(path, &wsz)) != NULL)
+        fprintf(stderr, "[voice] ROOM%04X msg %d <- %s (Runde 38 Spur E)\n", (unsigned)room, voice_id, path);
     int rate, ch, bits, dbytes, fmt_tag;
     const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes, &fmt_tag);
     if (!data || dbytes < 2 || ch < 1) { free(wav); return 0; }
@@ -2387,6 +2397,8 @@ static void re15_voice_play(uint16_t room, int voice_id)
     re15_xa_set_filter((uint8_t)(room & 0xFF), (uint8_t)voice_id);
     re15_xa_read_s(s_voice_clip[voice_id].pcm, s_voice_clip[voice_id].len);
 }
+/* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */
+void re15_audio_stimme(uint16_t room, int voice_id) { re15_voice_play(room, voice_id); }
 
 /* ── re15_ss implementation: VAB soundfont + SEQp software synth ─────────── */
 
@@ -3713,6 +3725,8 @@ void re15_audio_tick(void)
                  * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
                 if (re15_cut10f0_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
                 if (evt.bank == RE15_SZL_SE_BANK) { re2_schloss_se((int)evt.sample_id); break; }   /* Runde 36 Spur J */
+                { extern int re15_dining_r38_se_on(unsigned, int);   /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
+                  if (re15_dining_r38_se_on((unsigned)evt.bank, (int)evt.sample_id)) break; }
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);

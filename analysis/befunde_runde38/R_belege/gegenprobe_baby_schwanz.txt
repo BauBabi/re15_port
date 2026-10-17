@@ -1,0 +1,11 @@
+   Phasen: T=0 p2=30 p3=31 p4=32 p6=40 p7=70 p8=71 aktiv=72
+   Landebild: Spinne (5740,4332) Spieler (6000,3000); naechstes Bild Spinne (5740,4333) Spieler (6018,2906)
+   Phasen: T=0 p2=30 p3=31 p4=32 p6=40 p7=70 p8=71 aktiv=72
+== C Minispinnen (RE2-KI, ROOM2030, Boden -5400)
+   gezeichnete Unterkante der Babys relativ zur Lage: 0 .. 0 (4800 Messungen)
+   Babys aktiv 8, Bisse 9, Bilder unter dem Boden 0, hoechster Sprung 1280
+   Babys am Boden: 4624 Bilder, davon ueber dem SCA-Boden 3281, nicht mehr auf dem Steg 3281 (letztes: siehe naechste Zeile)
+   schwebend zuletzt bei (10830,5054), Boden darunter 0
+FAIL: Babys bleiben auf dem Steg: 0 von 4624 Boden-Bildern ueber dem SCA-Boden (Wandpass FUN_8003567C(self,0x400) @0x801000c0, Radius +0x90 = 10 @0x80100180)
+FAIL: Kugel-Schub FUN_80035530 @0x801000b4: kein Baby am Boden naeher als 400 am Spieler (min 112; Kugeln 450 + 10 @0x8003bdc0 / @0x80100174, ohne Schub bis 0)
+test_r38_spinnen: 2 FAIL

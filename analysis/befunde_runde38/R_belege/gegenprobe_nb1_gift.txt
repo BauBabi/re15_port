@@ -1,0 +1,31 @@
+Gegenprobe Nachbesserung 1 / Mangel 1 (2026-10-17): Haken in game_step_common.c ausgeschaltet
+(`if (0 && abzug > 0 && pl->hp >= 0)` = alter Stand: der Gift-Takt-Abzug bleibt im Port-Detektor hp < s_prev_hp)
+
+--- test_r38_spinnen (B4) ---
+== B4 Gift-Takt im Spielschritt: nur HP und Zaehler (@0x80031e44-ec8), keine Treffer-Reaktion
+FAIL: stehend: 3 Takte zu -2 HP in Bild 0/141/282/-1 = Periode 121 (Zaehler 0x78 + 1 @0x80031e78; vorher 143)
+FAIL: stehend: keine Treffer-Reaktion (Flinch-Bilder 57, Clip 8/9/0xa 60, Rueckstoss 1500, SE CORE 0; vorher je Takt 22 Bilder Clip 8/9 + 500 Rueckstoss)
+FAIL: zielend: Zielbereit nach 11 Bildern, Gift-Takt in Bild 0 (HP 98), danach 31 Bilder NICHT zielbereit, 19 Flinch-Bilder (vorher: Zielabbruch im ersten Takt, unit_r34_wurf 119-121)
+
+test_r38_spinnen: 3 FAIL
+
+--- probe_r34_wurf (unit_r34_wurf) ---
+FAIL 119: HOCH vergiftet: Hoehe 1, Abzug -1, Spawn A+0 (soll 1 / 0 / A+19)
+FAIL 120: HOCH vergiftet: xlat (0,0,0) vel (0,0,0) acc_x 0 (soll (380,-110,21) / (378,-100,21) / -2)
+FAIL 121: HOCH vergiftet: Zaehler +0x26 = 65535 (soll 9)
+  6d HOCH gesund    : Hoehe 1 Wort 8000, Abzug 0, Spawn A+19, xlat (380,-110,21) vel (378,-100,21) acc_x -2 Zaehler 7
+  6d HOCH vergiftet : Hoehe 1 Wort 8002, Abzug -1, Spawn A+0, xlat (0,0,0) vel (0,0,0) acc_x 0 Zaehler 65535
+  6d TIEF vergiftet : Hoehe -1 Wort 2002, Abzug 0, Spawn A+24, xlat (80,0,1) vel (79,10,1) acc_x -1 Zaehler 5
+  6d MITTE vergiftet: Hoehe 0 Wort 4002, Abzug 0, Spawn A+22, xlat (280,-50,24) vel (279,-40,24) acc_x -1 Zaehler 9
+
+--- MIT Haken (Endstand) ---
+== B4 Gift-Takt im Spielschritt: nur HP und Zaehler (@0x80031e44-ec8), keine Treffer-Reaktion
+ok    stehend: 4 Takte zu -2 HP in Bild 0/121/242/363 = Periode 121 (Zaehler 0x78 + 1 @0x80031e78; vorher 143)
+ok    stehend: keine Treffer-Reaktion (Flinch-Bilder 0, Clip 8/9/0xa 0, Rueckstoss 0, SE CORE 0; vorher je Takt 22 Bilder Clip 8/9 + 500 Rueckstoss)
+ok    zielend: Zielbereit nach 11 Bildern, Gift-Takt in Bild 0 (HP 98), danach 0 Bilder NICHT zielbereit, 0 Flinch-Bilder (vorher: Zielabbruch im ersten Takt, unit_r34_wurf 119-121)
+
+  6d HOCH gesund    : Hoehe 1 Wort 8000, Abzug 0, Spawn A+19, xlat (380,-110,21) vel (378,-100,21) acc_x -2 Zaehler 7
+  6d HOCH vergiftet : Hoehe 1 Wort 8002, Abzug 0, Spawn A+19, xlat (380,-110,21) vel (378,-100,21) acc_x -2 Zaehler 9
+  6d TIEF vergiftet : Hoehe -1 Wort 2002, Abzug 0, Spawn A+24, xlat (80,0,1) vel (79,10,1) acc_x -1 Zaehler 5
+  6d MITTE vergiftet: Hoehe 0 Wort 4002, Abzug 0, Spawn A+22, xlat (280,-50,24) vel (279,-40,24) acc_x -1 Zaehler 9
+probe_r34_wurf: ALLE PRUEFUNGEN GRUEN

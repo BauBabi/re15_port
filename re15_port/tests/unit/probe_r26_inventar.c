@@ -36,6 +36,7 @@
 #include "re15_inv_ui.h"
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (Ausnahme in B4, Pruefung B5) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Port-Namen der Ids 0x42/0x45 (Ausnahme in B4, Pruefung B4c) */
+#include "re15_dining_r38.h"     /* Runde 38 Spur F: Port-Name der Id 0x43 "Dining Room Key" (B3 + B4c wie 0x42/0x45) */
 
 /* Die AUSGELIEFERTEN Prompt-Tabellen als Vergleichsquelle (dieselbe Datei, die die Engine
  * einbindet; erzeugt von tools/gen_item_prompt_data.py aus DEBUG.BIN @0x800c4fc6/@0x800c495c).
@@ -231,7 +232,9 @@ int main(void)
     /* B3 ZENSUS ueber alle 102 ausgelieferten Namen: genau die acht Namen mit "Key"/"key"
      * behalten die Original-Zeile. Die Menge kommt aus dem VERHALTEN, nicht aus einer Liste. */
     {
-        static const uint8_t soll[] = { 0x36, 0x37, 0x38, 0x39, 0x42, 0x45, 0x46, 0x47 };
+        /* Runde 38 Spur F: 0x43 (ausgeliefert "Communications Card") ist der Dining Room Key ->
+         * re15_dining_r38_ist_schluessel, item_prompt_common.c re15_prompt_name_ist_schluessel. */
+        static const uint8_t soll[] = { 0x36, 0x37, 0x38, 0x39, 0x42, 0x43, 0x45, 0x46, 0x47 };
         unsigned char ref[512];
         int nref = ref_lauf((int)re15_item_prompt_script_off[6], 0x00, ref, (int)sizeof ref);
         int gefunden = 0, falsch = 0;
@@ -242,8 +245,8 @@ int main(void)
             if (ist_key != soll_key) falsch++;
             if (ist_key) gefunden++;
         }
-        PRUEFE("B3a genau 8 von 102 Namen behalten 'key'", gefunden == 8);
-        PRUEFE("B3b und es sind genau die acht erwarteten Ids", falsch == 0);
+        PRUEFE("B3a genau 9 von 102 Namen behalten 'key' (Runde 38 Spur F: + 0x43)", gefunden == 9);
+        PRUEFE("B3b und es sind genau die neun erwarteten Ids", falsch == 0);
     }
     /* B4 KEIN KOLLATERAL: alle uebrigen Skripte sind fuer alle 102 Namen unveraendert.
      * prompt_key -> Skriptindex (item_prompt_common.c prompt_key_to_script).
@@ -257,16 +260,29 @@ int main(void)
         static const int key2script[10] = { 0, 0, 1, 0, 4, 2, 3, 5, 6, 7 };
         unsigned char ref[512];
         int ok = 1, gefahren = 0, dokumente = 0, port_namen = 0, port_ok = 1, port_einsatz = 0;
+        /* Runde 38 Spur G (s. B4 unten): die Dokument-Basis kommt aus den ORIGINAL-Bytes, nicht aus
+         * dem Engine-Makro RE15_FILES_FIRST_ITEM_ID, das hier mitgeprueft wird - DEBUG.BIN (Modul
+         * @0x800c0000) Datei 0x7370 = u8 @0x800c7370, gelesen @0x800c72dc `addiu v1,v1,0x7370` /
+         * @0x800c72f8 `lbu s1,0(v1)`. */
+        int basis = -1, gefahren_unter_basis = 0, dokumente_unter_basis = 0;
+        {
+            FILE *f = fopen(RE15_ASSET_PSX_DIR "/BIN/DEBUG.BIN", "rb");
+            if (f) { if (fseek(f, 0x7370, SEEK_SET) == 0) basis = fgetc(f); fclose(f); }
+        }
         for (int pk = 0; pk <= 9; pk++) {
             if (key2script[pk] == 6) continue;                 /* Skript [6] = B1/B2 */
             for (int id = 0; id < re15_item_prompt_name_count(); id++) {
-                if (re15_files_doc_from_item(id) >= 0) { dokumente++; continue; } /* -> B5 */
+                if (re15_files_doc_from_item(id) >= 0) {       /* -> B5 */
+                    if (id < basis) dokumente_unter_basis++;
+                    dokumente++; continue;
+                }
                 /* Runde 36 Spur Q: 0x42/0x45 tragen den Port-Namen (Prison Key / Parking Lot Key,
                  * re15_schluessel_r36.h) statt "Key Disc"/"Water Key". B4c: setzt das Skript einen
                  * Namen ein (der Soll-Lauf mit dem AUSGELIEFERTEN Namen enthaelt ihn), steht im Lauf
                  * der Port-Name und nicht mehr der ausgelieferte; sonst ist der Lauf bit-gleich. */
-                if (re15_schluessel_r36_name((uint8_t)id)) {
+                if (re15_schluessel_r36_name((uint8_t)id) || re15_dining_r38_name((uint8_t)id)) {   /* + 0x43 Runde 38 Spur F */
                     const uint8_t *pn = re15_schluessel_r36_name((uint8_t)id);
+                    if (!pn) pn = re15_dining_r38_name((uint8_t)id);
                     const uint8_t *an = re15_item_prompt_name_blob + re15_item_prompt_name_off[id];
                     int pl = 0, al = 0; while (pn[pl] != 0x07) pl++; while (an[al] != 0x07) al++;
                     lauf_t lq; int nq = lauf_holen(pk, (uint8_t)id, &lq);
@@ -286,19 +302,45 @@ int main(void)
                                  (uint8_t)id, ref, (int)sizeof ref);
                 if (n != m || memcmp(l.g, ref, (size_t)m) != 0) ok = 0;
                 gefahren++;
+                if (id < basis) gefahren_unter_basis++;
             }
         }
         printf("  (B4 Vergleiche gefahren: %d, Dokument-Ids ausgenommen: %d)\n",
                gefahren, dokumente);
+        printf("  (B4 Dokument-Basis aus DEBUG.BIN @0x800c7370: 0x%02X; Nicht-Dokument-Ids darunter: "
+               "%d gefahren, %d als Dokument geschluckt)\n", basis, gefahren_unter_basis,
+               dokumente_unter_basis);
         /* Runde 34 Nacht (Spur E): die Dokument-Tabelle fuehrt jetzt 0x48..0x4C (Irons Diary +
          * vier Dokumente, re15_files.c) — ausgenommen werden genau ihre Ids, alle anderen
          * (102 - Tabellengroesse) werden je Schluessel verglichen. */
+        /* RUNDE 38 SPUR G (Nachbesserung 1, Mangel 2 der Abnahme 0): die feste Untergrenze
+         * "gefahren >= 850" stammt aus Runde 34 Nacht (damals 9 x (102 - 5) = 873, Luft fuer
+         * hoechstens 7 Dokumente); seit Runde 36 Q (- 2 fuer 0x42/0x45) liess sie nur noch 5
+         * Dokumente zu (9 x 95 = 855). Dokument 5 "Roys Diary" (Item 0x4D = 0x48 + 5,
+         * re15_files.c) macht 9 x (102 - 6 - 2) = 846 -> rot, obwohl die Tabelle nur eine
+         * RE1.5-Dokument-Id mehr fuehrt. Der Zweck der Grenze — die Tabelle darf keine
+         * Nicht-Dokument-Id schlucken — wird jetzt GENAU geprueft statt ueber die Tabellengroesse:
+         *   RE1.5s Item-Ids enden bei 0x47: PSX.EXE @0x8004a350 `sltiu v0,v0,0x48`,
+         *   @0x8004a358 `ori v0,zero,0x47` (Klemme); die FILE-Zeilen beginnen bei 0x48:
+         *   DEBUG.BIN @0x800c7370 (Datei 0x7370) = `48 52 5c` (Basis je FILE-Seite), der
+         *   Zeilenmaler @0x800c72f8 `lbu s1,0(v1)` -> @0x800c7320 `jal 0x80028840` (Item-Name,
+         *   u16 @0x800c495c) mit a0 = s1, @0x800c7350 `addiu s1,s1,1` je Zeile (10 Zeilen,
+         *   @0x800c7344 `ori v0,zero,0xa`); die Namensbank (gen/item_prompt_data.inc) traegt
+         *   0x47 "Blue Master Keycard", 0x48 "Chris' Diary", 0x49 "Operation Report",
+         *   0x4A..0x4F "File 3".."File 8".
+         * Die Basis liest der Riegel aus DEBUG.BIN selbst (oben), nicht aus RE15_FILES_FIRST_ITEM_ID:
+         * eine verschobene Basis im Engine-Makro wanderte sonst mit dem Riegel mit. Jede Id UNTER
+         * der Basis — ausser den Port-Namen 0x42/0x45 (+ 0x43 Runde 38 Spur F) aus B4c — muss je Schluessel verglichen
+         * sein: 9 x (0x48 - 3) = 621, unabhaengig davon, wie viele RE1.5-Dokument-Ids (0x48..) die
+         * Tabelle fuehrt. Die Gleichung ueber alle 102 Ids bleibt. */
         const int n_dok = re15_files_doc_count();
         PRUEFE("B4 kein Kollateral in den uebrigen Skripten",
-               ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok - 2) && gefahren >= 850);
-        printf("  (B4c Laeufe 0x42/0x45: %d, davon mit Namens-Einsatz: %d)\n", port_namen, port_einsatz);
-        PRUEFE("B4c 0x42/0x45: Port-Name statt ausgeliefertem Namen, sonst bit-gleich (Runde 36 Spur Q)",
-               port_ok && port_namen == 9 * 2 && port_einsatz >= 2 * 2);
+               ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok - 3) &&
+               basis == 0x48 && gefahren_unter_basis == 9 * (basis - 3) && dokumente_unter_basis == 0);
+        /* Integration Runde 38: G (genaue Pruefung unter der Basis) + F (dritter Port-Name 0x43 < 0x48). */
+        printf("  (B4c Laeufe 0x42/0x43/0x45: %d, davon mit Namens-Einsatz: %d)\n", port_namen, port_einsatz);
+        PRUEFE("B4c 0x42/0x45 (Runde 36 Spur Q) + 0x43 (Runde 38 Spur F): Port-Name statt ausgeliefertem Namen, sonst bit-gleich",
+               port_ok && port_namen == 9 * 3 && port_einsatz >= 3 * 2);
         PRUEFE("B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal",
                dokumente == 9 * n_dok);
     }

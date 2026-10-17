@@ -34,6 +34,7 @@
 #include "re15_item_prompt.h"
 #include "re15_inventory.h"
 #include "re15_inv_screen.h"
+#include "re15_menu.h"          /* Runde 38 Spur G: Roys Diary statt msg 18 (Pruefung R in teil_zelle) */
 #include "re15_itps.h"
 #include "re15_files.h"
 #include "re15_lock_se.h"
@@ -175,44 +176,53 @@ static void teil_raum(void)
         { 0x10F0, 0x45, 82, 0, "Parking Lot Key" },
         { 0x10F1, 0x42, 83, 1, "Prison Key" },
     };
-    /* Stand suedlich der Konsole (SCA 10 beginnt bei z 2500), Blick +z: 620 voraus = (8350,2670) */
-    const int32_t stand_x = 8350, stand_z = 2050; const int16_t stand_rot = 3072;   /* Blick +z */
+    /* Runde 38 Spur K (NUTZER-VORGABE key_location.bmp): der Schluessel haengt an der Pinnwand der Rueckwand
+     * (z -3400). Stand davor an der Klemmgrenze z -2900 (probe_r34n_e_dokumente stand 10F0), Blick -z (rot 1024):
+     * 620 voraus (@0x80042bd0) = (1300,-3520) im Rechteck x 798..1798 z -3600..-2600. */
+    const int32_t stand_x = 1300, stand_z = -2900; const int16_t stand_rot = 1024;   /* Blick -z */
+    /* gen/itemorte_r38_lage.inc; Prison Key seit Runde 38 K Nachbesserung 1 = RE2 Small Key (vorher Cabin Key 1024/3618/2048) */
+    static const int16_t k_rot[2][3] = { { 3072, 0, 2048 }, { 1024, 0, 0 } };
     for (int i = 0; i < 2; i++) {
         raum_t r;
         if (raum_laden(&r, k[i].raum) != 0) { printf("FAIL: ROOM%04X nicht lesbar\n", k[i].raum); fails++; continue; }
         printf("\n[raum] ROOM%04X %s\n", k[i].raum, k[i].name);
         hochfahren(&r, stand_x, stand_z, stand_rot, NULL, k[i].elza);
         int p = slot_von(4);
-        CHECK(p >= 0 && g_scd.props[p].x == 8050 && g_scd.props[p].y == -1460 && g_scd.props[p].z == 2700 &&
-              g_scd.props[p].rot_y == 256 && g_scd.props[p].flags == 0x000B && g_scd.props[p].parent_obj == -1 &&
-              g_scd.props[p].band == 1,
-              "P obj 4 bei (8050,-1460,2700) rot 256, Flags 0x000B, Band 1, Welt");
-        const re15_aot_t *a = &g_aot.slots[15];
-        CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[15].item_type == k[i].item &&
-              g_aot.item_params[15].amount == 1 && g_aot.item_params[15].taken_bit == k[i].bit &&
-              g_aot.item_params[15].taken_prop == 4 && a->sce_flags == 0x31 && a->band == 0 &&
-              a->x - a->half_w == 7850 && a->x + a->half_w == 8850 && a->z - a->half_h == 2050 &&
-              a->z + a->half_h == 3050,
-              "Z Slot 15: Item 0x%02X x1, Bit (9,%d), Prop 4, sat 0x31, x[7850..8850] z[2050..3050]",
+        CHECK(p >= 0 && g_scd.props[p].x == 1358 && g_scd.props[p].y == -2495 && g_scd.props[p].z == -3400 &&
+              g_scd.props[p].rot_x == k_rot[i][0] && g_scd.props[p].rot_y == k_rot[i][1] &&
+              g_scd.props[p].rot_z == k_rot[i][2] && g_scd.props[p].flags == 0x000B && g_scd.props[p].parent_obj == -1 &&
+              g_scd.props[p].band == 1 && g_scd.props[p].attr == 0x0010,
+              "P obj 4 an der Pinnwand (1358,-2495,-3400) rot (%d,%d,%d), Flags 0x000B, Band 1, Attribut 0x0010 (RE2 flach)",
+              k_rot[i][0], k_rot[i][1], k_rot[i][2]);
+        const re15_aot_t *a = &g_aot.slots[8];
+        CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[8].item_type == k[i].item &&
+              g_aot.item_params[8].amount == 1 && g_aot.item_params[8].taken_bit == k[i].bit &&
+              g_aot.item_params[8].taken_prop == 4 && a->sce_flags == 0x31 && a->band == 0 &&
+              a->x - a->half_w == 798 && a->x + a->half_w == 1798 && a->z - a->half_h == -3600 &&
+              a->z + a->half_h == -2600,
+              "Z Slot 8: Item 0x%02X x1, Bit (9,%d), Prop 4, sat 0x31, x[798..1798] z[-3600..-2600]",
               k[i].item, k[i].bit);
-        /* Kein Original-Aktionssatz (Slots 0..14) schneidet die neue Zone — sonst nimmt der Scan den
-         * kleineren Slot (@0x80042f94); insbesondere Slot 2 (Text x 7000..7800, z 2600..12300). */
+        /* Runde 38: die Zone nimmt Slot 8 (Satz msg 4 "Several files..." der Pinnwand, main00 @0x00FEA), der Satz zieht
+         * unveraendert nach Slot 15 (re15_itemorte_r38_platz_frei). Kein kleinerer Slot 0..7 schneidet die Zone (der
+         * Scan nimmt den kleinsten, @0x80042f94); Slot 12 (Patronen) beginnt rechts davon bei x 1800. */
         {
             int schnitt = -1;
-            for (int s2 = 0; s2 < 15; s2++) {
+            for (int s2 = 0; s2 < 8; s2++) {
                 const re15_aot_t *b = &g_aot.slots[s2];
                 if (!b->active || b->has_quad) continue;
                 if (b->x - b->half_w <= a->x + a->half_w && a->x - a->half_w <= b->x + b->half_w &&
                     b->z - b->half_h <= a->z + a->half_h && a->z - a->half_h <= b->z + b->half_h) schnitt = s2;
             }
-            CHECK(schnitt < 0 && g_aot.slots[2].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[2].x + g_aot.slots[2].half_w < a->x - a->half_w,
-                  "Z kein Original-Satz 0..14 schneidet die Zone (zuletzt gefunden: %d); Slot 2 endet bei x %d", schnitt,
-                  g_aot.slots[2].x + g_aot.slots[2].half_w);
+            CHECK(schnitt < 0 && g_aot.slots[15].active && g_aot.slots[15].type == RE15_AOT_TYPE_MESSAGE &&
+                  g_aot.slots[15].event_id == 4 && g_aot.slots[12].x - g_aot.slots[12].half_w > a->x + a->half_w,
+                  "Z kein Satz 0..7 schneidet die Zone (zuletzt gefunden: %d); msg 4 in Slot 15; Slot 12 beginnt bei x %d", schnitt,
+                  g_aot.slots[12].x - g_aot.slots[12].half_w);
         }
         const int bitflag[3] = { 9, k[i].bit, -1 };
         hochfahren(&r, stand_x, stand_z, stand_rot, bitflag, k[i].elza);
-        CHECK(slot_von(4) < 0 && !(g_aot.slots[15].active && g_aot.slots[15].type == RE15_AOT_TYPE_ITEM),
-              "G Bit (9,%d) gesetzt: weder Prop noch Zone", k[i].bit);
+        CHECK(slot_von(4) < 0 && g_aot.slots[8].active && g_aot.slots[8].type == RE15_AOT_TYPE_MESSAGE &&
+              g_aot.slots[8].event_id == 4,
+              "G Bit (9,%d) gesetzt: weder Prop noch Zone, Slot 8 bleibt der Satz msg 4", k[i].bit);
 
         /* D: echter Aktionsdruck vom Platz vor dem Tisch -> Modal -> Ja */
         hochfahren(&r, stand_x, stand_z, stand_rot, NULL, k[i].elza);
@@ -222,7 +232,7 @@ static void teil_raum(void)
         int modal = re15_item_modal_active();
         while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && w++ < 800) re15_item_modal_tick(0, 0);
         re15_item_modal_prompt(&typ, &wahl);
-        CHECK(modal && typ == k[i].item, "D Druck (%d,%d) Blick +z vor der Konsole: Aufnahme-Modal Item 0x%02X (ist 0x%02X)",
+        CHECK(modal && typ == k[i].item, "D Druck (%d,%d) Blick -z vor der Pinnwand: Aufnahme-Modal Item 0x%02X (ist 0x%02X)",
               stand_x, stand_z, k[i].item, typ);
         w = 0;
         while (re15_item_modal_active() && w++ < 1600) re15_item_modal_tick((uint16_t)0x4000u, 0);
@@ -239,8 +249,9 @@ static void teil_raum(void)
         static re15_md1_t md; re15_tim_t tim;
         memset(&md, 0, sizeof md); memset(&tim, 0, sizeof tim);
         CHECK(mb && tb && re15_md1_parse(mb, (size_t)mn, &md) == 0 && re15_tim_parse(tb, tn, &tim) == 0 &&
-              re15_schluessel_r36_obj_id(k[i].raum) == 4 && mn == (i == 0 ? 236 : 140),
-              "E Modell: MD1 %d B + TIM %d B parsen (RE2 %s)", mn, tn, i == 0 ? "P. Room Key" : "Cabin Key");
+              re15_schluessel_r36_obj_id(k[i].raum) == 4 && mn == 236 && tn == 34848,
+              "E Modell: MD1 %d B + TIM %d B parsen (RE2 %s)", mn, tn,
+              i == 0 ? "P. Room Key ROOM6150 @0x004FBC/@0x030B74" : "Small Key ROOM10F0 @0x001650/@0x0215BC");
         free(r.buf);
     }
     CHECK(re15_schluessel_r36_obj_id(0x1011) < 0 && re15_schluessel_r36_obj_id(0x11B0) < 0 &&
@@ -395,13 +406,33 @@ static void teil_zelle(void)
     CHECK(g_aot.slots[5].active && g_aot.slots[5].event_id == 6,
           "R ROOM1011 Slot 5 zeigt (Original) auf sub06 (Prison key, @0x00A52)");
     (void)scd_event_fire(g_aot.slots[5].event_id);
-    int msg = -1, sah19 = 0;
+    int msg = -1, sah19 = 0, tagebuch = 0;
     for (int f = 0; f < 120; f++) {
         scd_vm_tick();
         if (g_scd.message_active) { if (msg < 0) msg = g_scd.message_id; if (g_scd.message_id == 19 || g_scd.message_id == 20) sah19 = 1; }
+        if (re15_menu_doc_active()) tagebuch = 1;
     }
-    CHECK(msg == 18 && !sah19 && !re15_game_flag_get(4, 0xEC),
-          "R Roy untersuchen: msg %d (18 = Zettel 0513, sub07), keine msg 19/20, (4,0xEC) bleibt 0", msg);
+    /* Runde 38 Spur G (NUTZER-VORGABE "Das Tagebuch soll kommen statt der Code Message"): an sub07 @0x00E64 steht
+     * statt msg 18 (Zettel 0513) jetzt Roys Diary — der Faden parkt dort, keine Nachricht oeffnet. Der Beleg der
+     * Runde 36 bleibt derselbe: sub07 statt sub06, keine msg 19/20, (4,0xEC) bleibt 0 (include/re15_tagebuch_r38.h). */
+    long park = -1;
+    for (int i = 0; i < SCD_THREAD_COUNT; i++)
+        if (g_scd.threads[i].active && g_scd.threads[i].pc >= r.rdt.raw && g_scd.threads[i].pc < r.rdt.raw + r.n &&
+            (long)(g_scd.threads[i].pc - r.rdt.raw) == 0x00E64) park = 0x00E64;
+    CHECK(msg < 0 && tagebuch && park == 0x00E64 && !sah19 && !re15_game_flag_get(4, 0xEC),
+          "R Roy untersuchen: sub07 parkt an @0x00E64 mit Roys Diary statt msg 18 (Runde 38 G; msg %d), keine msg 19/20, "
+          "(4,0xEC) bleibt 0", msg);
+    {   /* Statusschirm abbauen (prozessweit): Leser zu (KREUZ), Meldung bestaetigen (VIERECK) */
+        for (int n = 0; n < 2000 && (re15_menu_is_open() || re15_menu_gameplay_frozen()); n++) {
+            uint16_t p = 0; uint8_t id = 0; int rev = 0;
+            if (re15_menu_phase() == 1 && g_inv_screen.item_state == 3) p = RE15_PAD_BIT_CROSS;
+            else if (re15_menu_doc_msg(&id, &rev) && rev >= re15_menu_doc_msg_total()) p = RE15_PAD_BIT_SQUARE;
+            re15_menu_fsm_tick(p, p);
+            if (re15_menu_is_open()) re15_inv_screen_ecg_tick();
+            re15_fade_tick();
+        }
+        CHECK(!re15_menu_gameplay_frozen(), "R Statusschirm des Tagebuchs wieder zu");
+    }
 
     /* Zelle ROOM1211 */
     hochfahren(&z, -26000, -20000, 0, NULL, 1);
@@ -666,7 +697,8 @@ static void teil_namen(void)
     CHECK(re15_schluessel_r36_name(0x38) == NULL && re15_inv_desc_entry(0x38) != NULL &&
           re15_schluessel_r36_desc(0x38) == NULL, "C fremde Id 0x38 (Blue Keycard) unveraendert");
 
-    /* Icon: RE1.5 ITEMALL.PIX laden, einsetzen, gegen RE2 ITEMALL.PIX Tile 95/88 */
+    /* Icon: RE1.5 ITEMALL.PIX laden, einsetzen, gegen RE2 ITEMALL.PIX Tile 95 (P. Room Key) / 31 (Small Key, Prison Key seit
+     * Runde 38 Spur K Nachbesserung 1; vorher Tile 88 Cabin Key) */
     char p[600]; int n15 = 0, n2 = 0;
     snprintf(p, sizeof p, "%s/DATA/ITEMALL.PIX", RE15_ASSET_PSX_DIR);
     uint8_t *pix = slurp(p, &n15);
@@ -677,8 +709,13 @@ static void teil_namen(void)
         re15_schluessel_r36_icon_einsetzen(pix, n15);
         int anders = 0;
         for (int b = 0; b < n15; b++) if (pix[b] != orig[b] && (b / 1200 != 0x45 && b / 1200 != 0x42)) anders++;
-        CHECK(memcmp(pix + 0x45 * 1200, pix2 + 95 * 1200, 1200) == 0 && memcmp(pix + 0x42 * 1200, pix2 + 88 * 1200, 1200) == 0 &&
-              anders == 0, "I Icon-Tiles 0x45 = RE2-Tile 95, 0x42 = RE2-Tile 88; %d fremde Bytes veraendert", anders);
+        CHECK(memcmp(pix + 0x45 * 1200, pix2 + 95 * 1200, 1200) == 0 && memcmp(pix + 0x42 * 1200, pix2 + 31 * 1200, 1200) == 0 &&
+              anders == 0, "I Icon-Tiles 0x45 = RE2-Tile 95, 0x42 = RE2-Tile 31; %d fremde Bytes veraendert", anders);
+        {   /* Index 0 (RE1.5-CLUT 0x0000 durchsichtig / RE2 0x8000 schwarz) kommt im eingesetzten Prison-Key-Icon nicht vor */
+            int null = 0;
+            for (int b = 0; b < 1200; b++) null += pix[0x42 * 1200 + b] == 0;
+            CHECK(null == 0, "I Icon 0x42 (RE2-Tile 31) ohne CLUT-Index 0 (%d Vorkommen) -> ohne Aenderung einsetzbar", null);
+        }
         re15_itemall_set_pix(pix, n15);
         CHECK(re15_itemall_tile_raw(0x45) && memcmp(re15_itemall_tile_raw(0x45), pix2 + 95 * 1200, 1200) == 0,
               "I Leser re15_itemall_tile_raw(0x45) liefert das RE2-Icon");
@@ -693,7 +730,7 @@ static void teil_namen(void)
     uint8_t *itps2 = slurp(p, &t2);
     if (itps && itps2) {
         re15_schluessel_r36_bild_einsetzen(itps, t15);
-        static const struct { uint8_t id; int re2; } bl[2] = { { 0x45, 95 }, { 0x42, 88 } };
+        static const struct { uint8_t id; int re2; } bl[2] = { { 0x45, 95 }, { 0x42, 31 } };   /* 31 = RE2 Small Key */
         for (int i = 0; i < 2; i++) {
             const uint8_t *b = itps + bl[i].id * 0x3000, *q = itps2 + bl[i].re2 * 0x3000;
             int cx = b[12] | (b[13] << 8), cy = b[14] | (b[15] << 8);
@@ -707,6 +744,9 @@ static void teil_namen(void)
         int sicht = 0; uint8_t rr, gg, bb;
         for (int v = 0; v < RE15_ITPS_H; v++) for (int u = 0; u < RE15_ITPS_W; u++) sicht += re15_itps_pixel(0x45, u, v, &rr, &gg, &bb);
         CHECK(sicht > 4000, "B Modal-Leser re15_itps_pixel(0x45): %d von %d Bildpunkten gezeichnet", sicht, RE15_ITPS_W * RE15_ITPS_H);
+        sicht = 0;
+        for (int v = 0; v < RE15_ITPS_H; v++) for (int u = 0; u < RE15_ITPS_W; u++) sicht += re15_itps_pixel(0x42, u, v, &rr, &gg, &bb);
+        CHECK(sicht > 4000, "B Modal-Leser re15_itps_pixel(0x42): %d von %d Bildpunkten gezeichnet", sicht, RE15_ITPS_W * RE15_ITPS_H);
     } else { printf("FAIL: ITPS.ITP nicht lesbar\n"); fails++; }
 }
 

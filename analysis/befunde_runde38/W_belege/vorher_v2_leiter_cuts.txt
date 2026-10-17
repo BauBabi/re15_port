@@ -1,0 +1,7 @@
+F0 cam=0
+F161 cam=1
+F1 cam=0
+F69 cam=12
+F650 cam=11
+F763 cam=12
+F889 cam=11

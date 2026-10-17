@@ -518,6 +518,8 @@ int main(int argc, const char **argv)
                                                               cam_active_cut);
                     if (mo)
                         re15_pri_parse_section(s_msk, (size_t)s_msk_size, mo, &s_pri_cut);
+                    { extern int re15_masken36_filter(unsigned, int, re15_pri_cut_t *);   /* Runde 37 Spur P (masken36_r37.c) */
+                      if (s_pri_cut.mask_count > 0) re15_masken36_filter(re15_pri_masken_raum(g_current_room_id), cam_active_cut, &s_pri_cut); }
                 }
             }
             /* RE2 adaptive frame-skip: this frame just did the heavy MDEC decode →

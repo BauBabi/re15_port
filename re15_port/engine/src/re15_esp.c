@@ -19,6 +19,7 @@
 #include "re15_granate_r35.h"   /* Runde 35 Spur A: Wand/Kontakt im Flug, RE2-Reichweite, RE2-SE */
 #include "re15_granate_r36.h"   /* Runde 36 Spur D: Platzvergabe des Wurfkoerpers bei vollem Pool */
 #include "re15_esp_brocken.h" /* Runde 35 Spur D: Routinen B 36/37 (esp_brocken.c) */
+#include "re15_spinnen_r38.h"  /* Runde 38 Spur R: Routinen A 24/25 (Gift, spinnen_r38.c) */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_GRANATE_LOG (Diagnose, kein Verhalten) */
@@ -640,6 +641,7 @@ static int esp_treffer_test(const int32_t p[3], int r)
 static void esp_fx_dispatch(re15_esp_fx_t *f)
 {
     if (!f->rows_base) return;
+    if (re15_spinnen_r38_routine_a(f)) return;   /* Runde 38 Spur R: A 24 @0x80017f50 / 25 @0x80017fa4 */
     uint16_t A = row_u16(f->row, 0x00);
     switch (A) {
         case 0: break;
@@ -1304,6 +1306,9 @@ static int esp_fx_spawn_kind(const re15_esp_t *bank, uint32_t code, int16_t gier
                     code, n, k ? (int)(k - s_esp_fx) : -1, (int)p[0], (int)p[1], (int)p[2], (int)gier);
     return n;
 }
+/* Runde 38 Spur R: FUN_800199d4-Kind fuer Routine 25 (spinnen_r38.c, `jal 0x800199d4` @0x80018054). */
+int re15_esp_kind_r38(const re15_esp_t *bank, uint32_t code, int16_t gier, const int32_t p[3])
+{ return esp_fx_spawn_kind(bank, code, gier, p); }
 
 /* FUN_80019700-ZWILLING fuer den Wurfkoerper 0x040D1000 (Runde 34 A8, Deklaration mit Belegen
  * in re15_esp.h). Effekt 4 sub 0x0D hat 1 Strom mit 2 Zeilen (CORE00.ESP @0x1AB0 `01 00 00 00

@@ -88,7 +88,7 @@ static int test_instakill_type2(void)
     return 0;
 }
 
-/* ----- Test 5: Bleed/Poison-Gate — nur type<2 setzt +0x98 bit0x2 ----- */
+/* ----- Test 5: Bleed/Poison-Gate — KEIN Typ setzt +0x98 bit0x2 (type>=2 ohne Wurf, type<2 Wurf tot; Runde 38 Spur R) ----- */
 static int test_bleed_gate(void)
 {
     re15_damage_seed_rng(0x13571357u);                   /* deterministisch */
@@ -103,20 +103,19 @@ static int test_bleed_gate(void)
         if (p->state != 2) { fprintf(stderr, "FAIL: type5 von 100 -> hurt(2), ist %d\n", p->state); return 1; }
     }
 
-    /* type 0 (<2): blutet manchmal (~1/4). */
+    /* type 0 (<2): Runde 38 Spur R — KEIN Zufall im Original (a0 = Rueckgabestand von FUN_800453d0(10), gemessen
+     * ROOM2060 0x0A an `jal 0x8001af20` @0x80012e78 in 13/13; Hash @0x8001af30-3c -> 10 -> gerade -> `mult` 0
+     * @0x80012e90). PORT-WAHL nach NUTZER-VORGABE ("das Gift ist das einzige, das vergiften kann") + RE2 (Gift nur
+     * Op 32 / Spinnen-sub @0x80020118): kein Treffer ueber FUN_80012d60 setzt das Gift-Bit @0x80012eac; das setzt
+     * allein der Spinnen-Klumpen (spinnen_r38.c). Vorher pinnte dieser Test die widerlegte 1/4-Rate. */
     int bleeds = 0;
     for (int i = 0; i < 2000; i++) {
         re15_actor_t *p = fresh_player();
         re15_player_take_damage(p, 0, 0, 0);
         if (p->status_flags & 0x2) bleeds++;
     }
-    if (bleeds == 0)    { fprintf(stderr, "FAIL: type<2 sollte manchmal bluten, war 0\n"); return 1; }
-    if (bleeds >= 2000) { fprintf(stderr, "FAIL: type<2 blutet immer? (%d/2000)\n", bleeds); return 1; }
-    /* ~1/4 erwartet; lockere Schranken gegen Brittleness. */
-    if (bleeds < 200 || bleeds > 800) {
-        fprintf(stderr, "FAIL: Bleed-Rate ~1/4 erwartet, war %d/2000\n", bleeds); return 1;
-    }
-    printf("PASS: test_bleed_gate (%d/2000 ~ 1/4)\n", bleeds);
+    if (bleeds != 0) { fprintf(stderr, "FAIL: type<2 darf nie vergiften (a0 = 0x0A gemessen @0x80012e78, Port-Wahl), war %d/2000\n", bleeds); return 1; }
+    printf("PASS: test_bleed_gate (0/2000, wie ROOM2060 gemessen: a0 = 0x0A -> nie)\n");
     return 0;
 }
 

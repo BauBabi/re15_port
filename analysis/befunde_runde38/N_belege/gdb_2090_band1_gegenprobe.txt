@@ -1,0 +1,36 @@
+[   3.2] vgamepad bereit, XInput vorher [] nachher [0] mein [0]
+[   4.6] DuckStation gestartet {'38976'}
+[  21.9] Dreieck 1
+[  22.5] Rechts 1
+[  23.2] Rechts 2
+[  23.9] Rechts 3
+[  24.5] Rechts 4
+[  25.2] Rechts 5
+[  25.9] Rechts 6
+[  26.5] Rechts 7
+[  27.2] Rechts 8
+[  27.9] Rechts 9
+[  28.5] Rechts 10
+[  29.2] Quadrat = laden
+[  48.0] GDB verbunden
+[  48.5] Stopp: b'S02'
+[  48.9] RDT 80119330 FLR 80119cb4 n=1 e0 x=-11050 z=-29200 w=20450 d=26050 typ=0x1d
+[  49.2] Leon vorher (-8200,0,-25550) Blick 0 Band 0
+[  50.2] Stempel +0x88 = -1620
+[  50.4] Leon gestellt (8000,-1800,-25000) Blick 0
+[  50.5] Z0 80045630: b'OK'
+[  50.6] Z0 80045710: b'OK'
+[  50.7] Z0 80045798: b'OK'
+[  51.8] Mitschnitt AN
+[  53.5] UP halten 1.6s
+[  53.8] EIN  a0=0 a1=7 Leon=(6732,-1800,-25000) Blick=0 +0x88=0 clip(+0x94)=5 bild(+0x95)=8 +0x168=801d7990 wort=0000606d
+[  53.8] TON  index(v0)=0x1d s0=0x1d Leon=(6732,-1800,-25000)
+[  54.3] EIN  a0=0 a1=4 Leon=(6732,-1800,-25000) Blick=0 +0x88=0 clip(+0x94)=5 bild(+0x95)=23 +0x168=801d79cc wort=0000507c
+[  54.4] TON  index(v0)=0x1d s0=0x1d Leon=(6732,-1800,-25000)
+[  54.9] EIN  a0=0 a1=7 Leon=(6732,-1800,-25000) Blick=0 +0x88=0 clip(+0x94)=5 bild(+0x95)=8 +0x168=801d7990 wort=0000606d
+[  54.9] TON  index(v0)=0x1d s0=0x1d Leon=(6732,-1800,-25000)
+[  55.1] losgelassen, Stopps: 6
+[  57.0] Stopp2: b'S05'
+[  58.0] Mitschnitt AUS
+[  82.9] settings.ini zurueckgeschrieben
+[  83.0] Video: Biohazard 1.5 (MZD Mod) Update 25-01-2025 2026-10-17-09-33-17.mp4

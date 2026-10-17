@@ -34,6 +34,8 @@
 #include "re15_door_seq.h"   /* re15_door_rotmatrix = RE2 libgte RotMatrix @0x8008e1f4 (Runde 34 B4) */
 #include "re15_enemy_ai_re2_zellenarm.h" /* re15_re2arm_owns (RE2-GL-Applier-Kandidat, Runde 34 B4) */
 #include "re15_schuss_r36.h" /* re15_schuss_r36_sichtlinie_blockiert — FUN_8001b9b4 @0x80012168 (Runde 36 C) */
+#include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht kein Ziel (@0x8003710c / @0x80111C14-20) */
+#include "re15_spinnen_r38.h"  /* Runde 38 Integration: Schachtspinne ohne Band (@0x800120e4-ec), Latch im Schacht */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
@@ -74,12 +76,11 @@ const uint8_t re15_react_table[11] = {
 };
 
 /* Bleed/poison RNG. The PSX calls FUN_8001af20 twice (@80012e78/e80) — a stateless
- * hash (x + (x>>7)) & 0xff fed leftover register a0 (incidental, NON-reproducible by
- * construction — same documented stance as the idle-timer rand in player_common.c).
- * We preserve the EXACT hash and the EXACT 1/4 trigger probability (both draws odd)
- * by feeding a documented xorshift32 entropy source in place of the unreachable
- * register value. Cycle-identical reproduction is impossible; the OBSERVABLE
- * behaviour (a type<2 hit bleeds ~1/4 of the time) is faithful. */
+ * hash (x + (x>>7)) & 0xff fed leftover register a0.
+ * ⛔ WIDERLEGT (Runde 38 Spur R): a0 ist dort der Rueckgabestand von FUN_800453d0(10), KEIN Zufall — gemessen
+ * ROOM2060 0x0A in 13/13 Treffern -> beide Ergebnisse gerade -> Bit nie gesetzt. Die "1/4"-Annahme galt nie;
+ * die Port-Wahl steht in re15_player_take_damage unten. Der xorshift32-Strom bleibt als gemeinsame Port-Quelle
+ * fuer die KI-Ziehungen (re15_engine_rand8). */
 static uint32_t s_rng = 0x2545f491u;
 
 void re15_damage_seed_rng(uint32_t seed) { s_rng = seed ? seed : 1u; }
@@ -240,8 +241,17 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
         re15_audio_room_se(10);                /* hit SE #10 @0x80012e70 — plays before the bleed roll */
         uint32_t r1 = dmg_rng() & 1;
         uint32_t r2 = dmg_rng() & 1;           /* draw BOTH, unconditionally, before testing */
-        if (r1 && r2)
-            p->status_flags |= 0x2;            /* DAT_800acaec bit0x2 = bleed/poison */
+        /* Runde 38 Spur R (Dossier R_spinnen.md 1.4/2.7): KEIN Zufall. FUN_8001af20 ist ein zustandsloser Hash von
+         * a0 (`srl v1,a0,7 / andi 0xff / addu / andi 0xff` @0x8001af30-3c); a0 ist der Rueckgabestand von
+         * FUN_800453d0(10) (Delay-Slot `ori a0,zero,0xa` @0x80012e74): 10 auf dem Frueh-Ende und auf dem Pfad ohne
+         * Zusatzstimmen (`andi a0,s5,0xff` @0x80045508, s3 = 0 @0x80045554), sonst ein SPU-Tabellenzeiger. GEMESSEN
+         * ROOM2060 (DuckStation-GDB @0x80012e78): a0 = 0x0A in 13/13 Treffern -> gerade -> `mult` = 0 @0x80012e90 ->
+         * `ori v0,v0,0x2` @0x80012eac nie. PORT-WAHL nach NUTZER-VORGABE ("das Gift ist das einzige, das die
+         * Charaktere vergiften kann") + RE2 (Gift nur ueber Op 32, Spinnen-sub `andi 0x8` @0x80020118): dieser Pfad
+         * vergiftet nie; das Bit setzt allein der Klumpen einer Spinne (spinnen_r38.c Routine 25). Die zwei
+         * Port-Ziehungen bleiben (gemeinsamer Port-Strom, test_bleed_rng). Im Port laufen hier nur Routine 25 und
+         * die ruhende Ausfall-Attacke re15_enemy_attack (alle anderen Gegner ziehen HP direkt ab). */
+        (void)r1; (void)r2;
     }
 
     /* hurt state (@80012ebc-eec). */
@@ -1069,6 +1079,16 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
     for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
         re15_actor_t *e = &g_actors[s2];
         if (!e->active) continue;
+        /* Runde 38 Integration — VERSTECKTE WESEN (allgemein, nicht nur 0x2B/0x25): FUN_8003703c ueberspringt JEDES
+         * Wesen mit +0x09 & 0x60 (`lbu a0,-145(s0)` @0x80037104 mit s0 = Wesen+0x9a, `andi v0,a0,0x60` @0x8003710c,
+         * `bne v0,zero,0x80037174` @0x80037110 = naechstes Wesen) — vor dem HP-Eimer, fuer alle Radien (Waffe heben
+         * 0x7530 @0x80032fac, Messer 0x7d0 @0x800355d0 / 0x1388 @0x80034f7c, 0x64 @0x80031c30, 0xfa0 @0x80031e24).
+         * Bit 0x20 = Takt-Sperre (z.B. Spinnen-Wurzel `andi v0,v0,0x20` @0x80110a20), 0x40 = Skript-/Schacht-Marke
+         * (Spinne 0x41/0x42 @0x80110d08-14 / @0x80114f18, Hund 0x40-0x43, Affe 0x61/0x41, Spiderman 0x41/0x42).
+         * Gemessen im Original (R_belege/orig_2060_zielhilfe_messer.txt): Messer heben mit der kriechenden Spinne
+         * (grid 0x42) 1230 entfernt -> 0x800acaf3 = 0, Blick bleibt; nach der Landung (grid 5) -> 1, Blick dreht 0xC0/Bild.
+         * Ersetzt die Spur-T-Abfrage nur fuer 0x2B (re15_r38_sm_versteckt, im Resolver weiter in Gebrauch). */
+        if (e->grid_id & 0x60u) continue;
         if (e->hit_radius_min <= 0) continue;   /* byte-true: the aim-latch (FUN_8003703c), like the fire
                                                  * resolver, considers any entity with a DAMAGE HITBOX —
                                                  * not a zombie-only whitelist. So the player auto-turns
@@ -1489,6 +1509,18 @@ static uint32_t re15_band_stamp_aa4(const re15_actor_t *pl, const re15_actor_t *
         ring < (int32_t)dist)                          /* slt  @0x80012b90-94 */
         band |= (s0 > 0) ? 0x80000000u : 0x20000000u;  /* @0x80012b9c/ba0 UP | @0x80012bb8 DOWN */
     return band;
+}
+/* Runde 38 Integration: FUN_80012aa4(R) fuer einen Gegner-Takt (Spinnen-ACTIVE @0x80110fd0, R = 0xfa0), Ergebnis in der
+ * aim_band-Kodierung (re15_actor.h: 4 = UP 0x80000000, 2 = LEVEL 0x40000000, 1 = DOWN 0x20000000). Der Abstand wird wie
+ * im Original IN der Funktion gerechnet: playerX/Z (0x800aca88/90) - Gegner +0x34/+0x3c @0x80012ae0-b08, SquareRoot0
+ * @0x80012b58 (dmg_isqrt = derselbe BIOS-Zwilling wie im Resolver). */
+uint8_t re15_band_stamp_aa4_aim(const re15_actor_t *pl, const re15_actor_t *e, int32_t R)
+{
+    if (!pl || !e) return 0;
+    int32_t dx = pl->x - e->x, dz = pl->z - e->z;              /* `subu a3,a3,v0` @0x80012b08 / `subu a2,a2,a0` @0x80012b28 */
+    uint32_t dist = (uint32_t)dmg_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
+    uint32_t b = re15_band_stamp_aa4(pl, e, dist, R);
+    return (uint8_t)(((b & 0x80000000u) ? 4u : 0u) | ((b & 0x40000000u) ? 2u : 0u) | ((b & 0x20000000u) ? 1u : 0u));
 }
 /* Die Zombie-Familie = genau die Typen, deren ACTIVE-Tail der oben zitierte Block ist
  * (Live-Zombies 0x10/0x11/0x12/0x16/0x18 ueber FUN_80101224 @0x80101600, Zombie-Girl 0x13 ueber
@@ -1990,6 +2022,7 @@ retry_after_latch:
          * automatically (the ivy is a dormant weapon-immune prop, audit wf_efd92a2c ivy #77).
          * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
+        if (re15_r38_sm_versteckt(e)) continue; /* Runde 38 Spur T: 0x2B ohne Hoehenband ausser ACTIVE (@0x80111C14-20, @0x80111DCC-E24) */
         /* RE2-ADULT-SPINNE (Runde 7, spinne-todeszyklus.md 5.2): das Original kennt
          * KEIN state-Gate (Kandidaten-Gates @0x8004712C-30/@0x80047138-40/
          * @0x80047148-50/@0x80047158-64) - die generische Leiche (HP=1) bleibt
@@ -2460,7 +2493,7 @@ retry_after_latch:
                      * die niedrigen Arme nach UNTEN zielte, traf NIE (Nutzer-Report 2026-08-29
                      * "keinerlei Treffer-Feedback"; dieselbe Klasse wie der Hund-Befund). */
                     eband = 0x40000000u | 0x20000000u;
-                } else if (e->type == 0x27) {
+                } else if (e->type == 0x27 || e->type == 0x29) {   /* Runde 38 Spur S: kleiner Affe 0x29 = derselbe Schwanz @0x80111148-1b0 */
                     /* GORILLA-BOSS: Band aus dem Brain-Tail-Stempel (enemy_ai_common.c,
                      * @0x80117380-e8): Boden = LEVEL + DOWN(dist<0xfa0=4000, FUN_80012974
                      * @0x801173a4 -> @0x800129cc-f0); airborne (+0x1e0) = NUR UP
@@ -2539,6 +2572,12 @@ retry_after_latch:
                         if (sdy >= fw[4] && sdy <= fw[5]) eband |= 0x20000000u;  /* DOWN-Fenster */
                         if (sdy >= fw[0] && sdy <= fw[1]) eband |= 0x80000000u;  /* UP-Fenster */
                     }
+                    /* Runde 38 Integration — LEERES BAND = KEIN KANDIDAT (`and` / `lui v1,0xe000` / `and` /
+                     * `beq v0,zero,0x80012128` @0x800120e0-ec): die Schachtspinne traegt vom INIT (@0x80110d38-48)
+                     * ueber den ganzen Zustand 4 bis zum ersten ACTIVE-Stempel (@0x80110f94-fd4) kein Band; im
+                     * Original gemessen word0 0x00000801 bis Phase 8, 0x60000801 ab dem ersten ACTIVE-Bild. Die
+                     * Bitauswahl oben bleibt das Port-Modell; hier nur der leere Fall (spinnen_r38.c Teil 5). */
+                    if (re15_spinnen_r38_band_leer(e)) eband = 0u;
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
                      * uebrigen Familien stempeln mit anderen Helfern/Radien — die generischen
@@ -3924,6 +3963,13 @@ void re15_re2_pause_filter_apply(int slot)
     if (!e->active) return;
     if (e->type != 0x20u && e->type != 0x21u && e->type != 0x25u && e->type != 0x26u) return;
     if (!re15_ai_re2_for_type(e->type)) return;          /* RE1.5-Pfad bleibt unberuehrt */
+    /* Runde 38 Integration: die Schachtspinne laeuft auch unter der RE2-KI die RE1.5-Choreografie (Zustand 4,
+     * spinnen_r38.c lauer_re2); ihr +0x93 ist dort der RE1.5-Latch — Phase 0 `lbu v0,147(v1)` / `ori v0,v0,0x3` /
+     * `sb v0,147(v1)` @0x80114f7c-88, frei erst Phase 8 `sb zero,147(v0)` @0x80115344 — und schliesst sie im Resolver
+     * aus (`lui s4,0x300` @0x800120c0, `beq v0,s4` @0x80012100). Gemessen vorher (exe, RE2-KI): +0x93 = 02 statt 03
+     * im ganzen Ausstieg, weil diese Zeile Bit 0 je Bild freigab. RE2 hat keine Schachtspinne (INIT-Sprungtabelle
+     * @0x80100004 Eintrag 1 = Epilog), also auch keine RE2-Pause, die hier etwas freigeben koennte. */
+    if (re15_spinnen_r38_schacht_re15(e)) return;
     /* ⛔ NUR FREIGEBEN, NIE SETZEN - und das ist eine Messung, keine Vorsicht.
      * Ein `|= 1`, solange die Pause laeuft, sperrt DAUERHAFT, sobald ihr Dekrement einmal
      * ausfaellt. Vier solche Loecher sind gemessen und erreichbar:

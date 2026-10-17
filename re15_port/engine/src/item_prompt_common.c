@@ -42,6 +42,7 @@
 #include "re15_files.h"       /* Runde 30: Dokument-Namen ab Item-Id 0x48 (Dokument-Tabelle) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Namen der Ids 0x42/0x45 (Prison/Parking Lot Key) */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
+#include "re15_dining_r38.h"     /* Runde 38 Spur F: "Dining Room Key" (Id 0x43) */
 #include "gen/item_prompt_data.inc"
 
 /* Port-Prompt-Schluessel -> BSS-Skriptindex. Die Zuordnung der vier bisher genutzten
@@ -79,6 +80,7 @@ static int prompt_key_to_script(int prompt_type)
  * @0x800c4df0 — und das sind ausschliesslich Schluessel. */
 static int re15_prompt_name_ist_schluessel(uint8_t item_id)
 {
+    if (re15_dining_r38_ist_schluessel(item_id)) return 1;   /* Runde 38 Spur F: 0x43 traegt ausgeliefert "Card", ist der Dining Room Key */
     if ((int)item_id >= RE15_ITEM_PROMPT_NIDS) return 0;
     const unsigned char *nm =
         re15_item_prompt_name_blob + re15_item_prompt_name_off[item_id];
@@ -175,6 +177,7 @@ int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
             {   /* Runde 36 Spur Q: Port-Name der zwei Schluessel (re15_schluessel_r36.h), 0x07-terminiert. */
                 const uint8_t *nm = re15_schluessel_r36_name(item_id);
                 if (!nm) nm = re15_feuerloescher_r37_name(item_id);   /* Runde 37 Spur I: leerer Loescher */
+                if (!nm) nm = re15_dining_r38_name(item_id);          /* Runde 38 Spur F: Dining Room Key */
                 if (nm) { for (; *nm != 0x07; nm++) { if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0); total++; } continue; }
             }
             /* Grenze = die physische Ausdehnung der Original-Offsettabelle (102, s. Kopf),

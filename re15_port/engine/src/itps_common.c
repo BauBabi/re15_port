@@ -10,6 +10,7 @@
 #include "re15_itps.h"
 #include "re15_sicherung.h"   /* re15_sicherung_bild_einsetzen (Runde 30, Thema H) */
 #include "re15_schluessel_r36.h" /* re15_schluessel_r36_bild_einsetzen (Runde 36 Spur Q) */
+#include "re15_dining_r38.h"     /* re15_dining_r38_bild_einsetzen (Runde 38 Spur F) */
 #include <stddef.h>
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
@@ -52,6 +53,7 @@ int re15_itps_load(void)
      * (platform/pc/main.c, inv_render_pc.c). Herleitung: include/re15_sicherung.h. */
     re15_sicherung_bild_einsetzen(data, sz);
     re15_schluessel_r36_bild_einsetzen(data, sz);   /* Runde 36 Spur Q: Bloecke 0x42/0x45 */
+    re15_dining_r38_bild_einsetzen(data, sz);       /* Runde 38 Spur F: Block 0x43 */
     s_itps  = data;
     s_loaded = 1;
     return 0;

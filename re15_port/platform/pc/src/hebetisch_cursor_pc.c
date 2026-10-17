@@ -15,6 +15,8 @@
  *     page&0xF * 128; CLUT-Wort je Flaeche), damit das Kreuz dieselben Pixel trifft (Abtastphase
  *     re15_abtastphase.h, Runde 26/27);
  *   * opak (11F0 obj+0x0C = 0 -> ABE-Bit 0, main.c zu LAB_80040914 @0x800409a8/@0x800409b0);
+ *   * Rueckseiten verworfen wie jedes Original-Objekt (GTE NCLIP, MAC0 < 0; include/re15_nclip_r38.h,
+ *     Runde 38 Spur A — ohne das schien die Unterseite y=+923 als dunkle Kopie durch);
  *   * Tiefe = eigene Kameratiefe - RE15_HC_TIEFE_VERSATZ: vor jedem Raum-Dreieck und jeder PRI-Maske,
  *     untereinander nach Tiefe wie in 11F0 (PORT-WAHL, Kopf).
  */
@@ -27,6 +29,7 @@
 #include "re15_light.h"      /* g_re15_active_cut, Lichtsatz + NCCT-Schattierung */
 #include "re15_md1.h"
 #include "re15_tim.h"
+#include "re15_nclip_r38.h"  /* Runde 38 Spur A: Rueckseiten-Verwurf */
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 extern void re15_render_pc_bind_tim_slot(int slot);
@@ -113,6 +116,9 @@ void re15_hebetisch_cursor_zeichnen_pc(void)
                 wz += vz;
             }
             if (!ok) continue;
+            /* Runde 38 Spur A: Rueckseite verwerfen wie das Original-Objekt in 11F0 (FUN_800254a0 NCLIP
+             * @0x80025580, `bgez` @0x800255a8) — sonst schien die Unterseite y=+923 als Schatten durch. */
+            if (re15_nclip_r38_verwerfen(ax[0], ay[0], ax[1], ay[1], ax[2], ay[2])) continue;
             const int n_ok = m->tri_normals && tr->n0 < (uint32_t)m->tri_normal_count &&
                              tr->n1 < (uint32_t)m->tri_normal_count && tr->n2 < (uint32_t)m->tri_normal_count;
             uint8_t c[3][3];
@@ -144,6 +150,8 @@ void re15_hebetisch_cursor_zeichnen_pc(void)
                 wz += vz;
             }
             if (!ok) continue;
+            /* Runde 38 Spur A: Viereck nach (v0,v1,v2) wie FUN_800256b0 (NCLIP @0x80025798, `bgez` @0x800257c0). */
+            if (re15_nclip_r38_verwerfen(ax[0], ay[0], ax[1], ay[1], ax[2], ay[2])) continue;
             const int n_ok = m->quad_normals && q->n0 < (uint32_t)m->quad_normal_count &&
                              q->n1 < (uint32_t)m->quad_normal_count && q->n2 < (uint32_t)m->quad_normal_count &&
                              q->n3 < (uint32_t)m->quad_normal_count;

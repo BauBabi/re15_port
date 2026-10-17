@@ -13,7 +13,7 @@
  *   schuss     P4 ROOM1021: zwei Schuss-Toene je 1 Takt nach @0x020CE / @0x020D6
  *   roy        P5 ROOM1021: Roys Sterbe-Ton = Raum-SE 5 im Takt von Schuss 2, hinter dem Schuss
  *   stoehnen   P6 ROOM1011: Nachricht 24 = ROOM1011 msg 10 woertlich + Stimme 24 -> main16.5 im Takt von @0x00D54
- *   bank       ELZASE.VBS: zwei Saetze, VAG-Groessen 5264/4736, EDT/Tone wie die RE2-Quelle
+ *   bank       ELZASE.VBS: zwei Saetze, VAG-Groessen 5264/5824 (Runde 38: Satz 1 = ROOM4040 0x0A), EDT/Tone wie die RE2-Quelle
  *   signatur   Anker armieren nur bei passender Signatur; Leon-Raeume ohne Anker */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -247,8 +247,17 @@ static void teil_irons(void)
           "Kopf fest: Flags 0x%02X Geschwindigkeit %d Akku (%d,%d), Kopf-Part %d", ir->neck_flags, ir->neck_speed,
           ir->neck_yaw, ir->neck_pitch, ir->neck_bone);
     const re15_aot_t *a = &g_aot.slots[RE15_ELZA_IRONS_SLOT];
+    /* Runde 38 Spur Q: vor der Hinbeuge-Szene ((3,0x9D) = 0) bleibt Slot 2 der Original-Platz (sce 5) — der Scan
+     * stempelt work_vars[0] auch fuer einen Text-Platz (@0x80042f3c), sub03 lief deshalb NACH Text 20 doch (Nutzerbefund
+     * Runde 38). Die Szene selbst (Hinbeugen + Text 20, kein msg 2) misst unit_r38_kleinkram_irons. */
+    PRUEF(a->active && a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR,
+          "(3,0x9D)=0: Slot 2 = Original-Platz sce 5 (Typ %d)", a->type);
+    /* nach der Szene ((3,0x9D) = 1, z.B. Spielstand): Text-Platz 20 wie Runde 36 */
+    re15_game_flag_set(3, 0x9D, 1);
+    if (room_boot(0x1151, -20538, -25147, 1500, 5) != 0) return;
+    for (int f = 0; f < 5; f++) frame();
     PRUEF(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == RE15_ELZA_IRONS_MSG_ID && a->pause_mask16 == 0xFFFF,
-          "Slot 2 = Text-Platz msg %d Maske 0x%04X (Typ %d)", a->event_id, a->pause_mask16, a->type);
+          "(3,0x9D)=1: Slot 2 = Text-Platz msg %d Maske 0x%04X (Typ %d)", a->event_id, a->pause_mask16, a->type);
     /* Anklicken = derselbe Pfad wie der AOT-Scan (re15_aot_fire_slot) */
     re15_aot_fire_slot(RE15_ELZA_IRONS_SLOT);
     int msg20 = 0, msg2 = 0;
@@ -257,10 +266,7 @@ static void teil_irons(void)
         if (g_scd.message_active && g_scd.message_id == RE15_ELZA_IRONS_MSG_ID) msg20 = 1;
         if (g_scd.message_active && g_scd.message_id == 2) msg2 = 1;
     }
-    PRUEF(msg20 && !msg2 && re15_game_flag_get(3, 0x9D) == 0, "Anklicken: Text 20, kein msg 2, (3,0x9D)=%d", re15_game_flag_get(3, 0x9D));
-    /* auch der Original-Ansprech-Weg (work_vars[0] = 2) startet sub03 nicht mehr? Nein — er WUERDE (sub01 ist
-     * unveraendert); der Slot stempelt ihn nur nicht mehr. Gegenprobe: Slot ist kein sce 5 mehr. */
-    PRUEF(a->type != RE15_AOT_TYPE_EXAMINE_WORKVAR, "kein sce-5-Platz mehr in Slot 2 -> work_vars[0] wird nie 2");
+    PRUEF(msg20 && !msg2, "Anklicken nach der Szene: Text 20, kein msg 2");
     int tl = 0; const uint8_t *tt = re15_elza_r36_meldung(0, &tl);
     char txt[96]; int n = re15_msg_decode_text(tt, (size_t)tl, txt, sizeof txt);
     PRUEF(n > 0 && strstr(txt, "He has already passed...") != NULL, "Text dekodiert: \"%s\"", txt);
@@ -385,8 +391,10 @@ static void teil_bank(void)
     if (!b) return;
     uint32_t vh = (uint32_t)b[RE2_ELZA_EDT_SIZE - 8] | ((uint32_t)b[RE2_ELZA_EDT_SIZE - 7] << 8);
     re15_vab_t vab; int rc = re15_vab_parse(b + vh, RE2_ELZA_EDT_SIZE - vh, &vab);
-    PRUEF(rc == 0 && vab.vag_count == 2 && vab.samples[0].size == 5264 && vab.samples[1].size == 4736,
-          "VH @0x%X: %d VAGs, %u / %u B (ROOM1140 Satz 0x25 / ROOM40A0 Satz 0x08)", (unsigned)vh, vab.vag_count,
+    /* Runde 38 Spur H: Satz 1 = RE2-Skript-Pistolenschuss aus dem Gegnerfeld ROOM4040 Satz 0x0A (Annette, Art 3);
+     * vorher ROOM40A0 0x08 = Schuss der Partnerin Ada (Art 2) — analysis/befunde_runde38/H_elzatoene.md §8. */
+    PRUEF(rc == 0 && vab.vag_count == 2 && vab.samples[0].size == 5264 && vab.samples[1].size == 5824,
+          "VH @0x%X: %d VAGs, %u / %u B (ROOM1140 Satz 0x25 / ROOM4040 Satz 0x0A)", (unsigned)vh, vab.vag_count,
           (unsigned)vab.samples[0].size, (unsigned)vab.samples[1].size);
     re15_edt_rec_t e0, e1;
     PRUEF(re15_edt_decode(b, RE2_ELZA_SE_AUF, &e0) == 0 && re15_edt_decode(b, RE2_ELZA_SE_SCHUSS, &e1) == 0 &&
@@ -396,13 +404,13 @@ static void teil_bank(void)
     {
         char q[600]; size_t n1 = 0, n2 = 0;
         snprintf(q, sizeof q, "%s/../../../info/re2leon/PL0/RDT/ROOM1140.RDT", RE15_ASSET_PSX_DIR); uint8_t *a = slurp(q, &n1);
-        snprintf(q, sizeof q, "%s/../../../info/re2leon/PL0/RDT/ROOM40A0.RDT", RE15_ASSET_PSX_DIR); uint8_t *c = slurp(q, &n2);
+        snprintf(q, sizeof q, "%s/../../../info/re2leon/PL0/RDT/ROOM4040.RDT", RE15_ASSET_PSX_DIR); uint8_t *c = slurp(q, &n2);
         if (a && c) {
             PRUEF(!memcmp(b + RE2_ELZA_VBD_OFF + vab.samples[0].offset, a + 0x04480, 5264) &&
-                  !memcmp(b + RE2_ELZA_VBD_OFF + vab.samples[1].offset, c + 0x17B80, 4736),
-                  "VAG-Daten bytegleich ROOM1140 @0x04480 / ROOM40A0 @0x17B80");
-            PRUEF(a[0x01484 + 3] == b[3] && c[0x09E00 + 3] == b[7] && (a[0x01484 + 2] & 0x0F) == (b[2] & 0x0F) &&
-                  (c[0x09E00 + 2] & 0x0F) == (b[6] & 0x0F),
+                  !memcmp(b + RE2_ELZA_VBD_OFF + vab.samples[1].offset, c + 0x18CC8, 5824),
+                  "VAG-Daten bytegleich ROOM1140 @0x04480 / ROOM4040 @0x18CC8");
+            PRUEF(a[0x01484 + 3] == b[3] && c[0x0BF60 + 3] == b[7] && (a[0x01484 + 2] & 0x0F) == (b[2] & 0x0F) &&
+                  (c[0x0BF60 + 2] & 0x0F) == (b[6] & 0x0F),
                   "EDT-Stimmen-/Prioritaetsbyte unveraendert (0x%02X / 0x%02X)", b[3], b[7]);
         } else printf("  (info/re2leon fehlt — Quellvergleich uebersprungen)\n");
         free(a); free(c);
