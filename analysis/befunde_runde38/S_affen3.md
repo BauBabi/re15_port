@@ -612,3 +612,34 @@ Bildkontrolle (Hardware-Renderer, OHNE RE15_SOFTWARE_RENDER, `RE15_WINDOW_SCALE=
 Kontaktbogen `C:\Users\MJOEDI~1\AppData\Local\Temp\claude\c--workspace-git-reAi-v2\c41eae99-e724-4cb3-afb9-119709f20a9d\scratchpad\s_nb1c\laeufe\b1_4040_bild\fall_zoom.png` — F25 die Deckenklappe
 oeffnet sich (Evt_exec sub04), F28 Klappe im Bild, F31/F34/F37 der Affe faellt im Vordergrund herab, F40 Landung,
 F43..F52 kauert er am Boden; Modell geschlossen.
+
+### Mangel 1 — Tests (gezielt, keine volle Suite; Stand Code 6bd30a91 + Riegel aad46e72/5c54afd7, `local_build.sh build` OK)
+Neu/umgestellt (`re15_port/tests/unit/probes/r38_affen3.cmake`):
+| Test | prueft |
+|---|---|
+| unit_r38_affen3_ereignis | ROOM4040 ueber Skript/AOT 5: Spawn-Wurzelaufruf -> gesperrt in 4/1 (g61, Parkstelle, Massstab = INIT lief); Freigabe-Bild 1/10/2 g01 Clip 13 Bild 0x14, +0x93 3, +0x1e0 1, Luftkasten r 800; erstes Fallbild +0x93 1; Fallbahn Bild fuer Bild = o11 F58..F76; Landung R+18 (Phase 4 Bild 25, Bodenkasten), Sub 4 R+34; kein HP-Abzug aus der Luft; erster Treffer -10 aus Sub 6 in R+70 +-2 (o11 R+70); danach Bisse -5 aus Sub 5 im Takt 58/57/57/57 (o11 F225/283/340/397/454); RE2-KI und RE1.5-KI |
+| unit_r38_affen3_ereignis40 | Unterzustand 0 (+0x9 0x40): Clip 0x1f ab Bild 0 -> Ende T70 (70 Bilder, EDD EM029) -> T71 ACTIVE Sub 2 Phase 1 Clip 3 Bild 0x1d, +0x9 0 -> T113 Sub 3 (Clip 3 ab 0x1d zu Ende, B[2] @0x80111744-7c4) |
+| integration_r38_affen3_tor | exe ROOM4040, je KI: [ruhe] 400 Bilder gesperrt 4/1 an der Parkstelle; [frei] (Leon im Ausloeser, Gier 0 wie o11) Freigabe-Bild = o11 F58, Fallbahn = o11, Landung R+18 / Phase 4 Bild 25 R+19, Sub 4 R+34, jeder HP-Abzug nach R+18 mit Affe auf y = 0 |
+Laeufe:
+- `ctest --test-dir re15_port/build -j3 -R "^(unit_(cockroach_ai|maggot_|enemy_body_push|re2_victim_collapse|dog_grab_anchor|re2_dog_grab_anchor|re2z_|dog_aim_band|dog_devour|sca_wall_hit|knockdown_|re2_stagger_knockdown|r35_affen_|r35_cut1150_montage_11c0|r36_kleidung_|r36_zombieki_|r36_szenenleon_|r36_dachkiste_|r36_schuss|r36_elza_schuss|r36_ziel1190|r36_karte_tuer11c0|r37_szene11c0_|r37_bissarm_|r38_affen3_|npc_wall_clamp|r20_birkin_push_pin|1090_push_pin|r34n_f_leiche_latch|sherry_wall_pin|birkin_ai|g5_|room1140_spawn|marvin_spawn_bank|1030_spawncap|r37_zombieaktiv_nachspawn1130)|probe_p2_birkin_g5|prop_spawn_entered)" --timeout 600`
+  -> `100% tests passed, 0 tests failed out of 107` (Total Test time (real) = 26.52 sec) — alle Unit-Riegel der Abnahme +
+  die Aufrufer von re15_enemy_spawn_root (birkin_ai, g5_*, Spawn-Riegel).
+- exe seriell: `ctest --test-dir re15_port/build -V -R "^integration_(r38_affen3|r38_affen3_decke|r38_affen3_tor|r37_szene11c0|r36_kleidung_hundeweg|r36_kleidung_spielweg|r37_elzaems_elza1181griff|r36_schuss|r36_elza_schuss|r36_ziel1190_scheiben|r36_dachkiste|r36_szenenleon|r37_bissarm_echtlauf)$" --timeout 900`
+  -> `100% tests passed, 0 tests failed out of 13` (Total Test time (real) = 2513.69 sec). Wortlaut der Spur-Riegel:
+  `r38_affen3 [std]: 15 Treffer in Bild 169;225;281;337;393;450;506;562;618;674;730;786;842;898;954; Abstaende
+  56;56;56;56;57;56;56;56;56;56;56;56;56;56` (re15 identisch; = Abnahme 0, Stage 3 durch den Spawn-Aufruf unveraendert);
+  `r38_affen3_decke [std]: getroffen=1, ... Griff F350, Sub 2 F561; ... HP-Abzuege im Griff 0; Bisse danach 8` (re15
+  identisch); `r38_affen3_tor [std_frei]: Fallbahn -10000;-10000;-9930;...;-480;0; Sub 4 R+34; HP-Abzuege
+  F87(R+71,100->90,y=0);F182(R+166,90->85,y=0);F240(R+224,85->80,y=0);F297(R+281,80->75,y=0);F354(R+338,75->70,y=0)` (re15
+  identisch), `[std_ruhe]: gesperrt (g=61) 400 Bilder, davon nicht 4/1 an (-14040,19130): 0`.
+- nach dem letzten (Kommentar-)Commit neu gebaut: `ctest --test-dir re15_port/build -R "^unit_(r38_affen3_|cockroach_ai$)"
+  --timeout 600` -> `100% tests passed, 0 tests failed out of 11`.
+Gegenprobe: derselbe Riegel `integration_r38_affen3_tor` mit dem Stand der Abnahme (vor 6bd30a91) — Mangel-Aufbau der Abnahme
+M5 (Affe bleibt auf y = -10000, Bisse aus der Luft) erfuellt weder "gesperrt in 4/1" (dort Zustand 0) noch die Fallbahn;
+gemessen hat das die Abnahme selbst (M5), nicht wiederholt.
+
+### Nachbesserung 1 — Ergebnis
+Mangel 1 behoben und gegen das Original gemessen: Ereignis-Affen (Typ 0x29, Stage 4/5) bekommen ihren INIT wie im Original im
+Spawn-Aufruf (Zustandswort 0x104), warten gesperrt und fallen nach der Freigabe in 18 Bildern Bild fuer Bild wie o11 von der
+Decke; Angriffe nur vom Boden, Treffer-Werte (-10 schwer, -5 Biss) und Biss-Takt wie o11. Der Nutzer-Punkt (Stage 3) ist
+unveraendert erfuellt (integration_r38_affen3 bildgleich zur Abnahme). Neue Assets: keine. Sprachdateien: keine.
