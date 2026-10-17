@@ -159,3 +159,37 @@ F430-F590 je 20): Haende auf der Kante, Oberkoerper drueber, Knien, Aufrichten n
 F430-F510 der zweite an der Kante; ab F530 stirbt Elza (wehrt sich nicht). Damit sind alle vier Kombinationen
 (Leon/Elza x RE2-/RE1.5-KI) auf dem echten Tuerweg gemessen (M1, M2, M3, M8) — in allen vier ziehen sich beide
 Wasserzombies hoch (bzw. der zweite in M1/M3 setzt nach dem RE2-Domino-Abbruch spaeter erneut an, siehe M7).
+
+### M1-vorher — derselbe Tuerweg mit der v0.8.25-exe (erklaert der Fix den Nutzerbefund?)
+
+`release/pkg-win/re15_port_v0.8.25/re15_pc.exe` (Hauptbaum, nur gelesen) als Kopie `U38abn1c/v0825/re15_pc_v0825_u1c.exe`
+(md5 `7aa892fce28a1d12b6f589cfc9fa9893` beide), Assets des Pakets (`RE15_CD_ROOT=<paket>/shared_assets/PSX
+RE15_RE2_ASSET_ROOT=<paket>/shared_assets/RE2`, debug.log `[asset] cd-root: .../re15_port_v0.8.25/shared_assets/PSX`),
+identischer Wegplan, `RE15_EXIT_AT=700#2000 RE15_FRAMEDUMP=150-700/50:fd/f` -> `exit=0 dauer=41s`. Tuer feuert identisch
+(`[aot] DOOR FIRE slot=0 rect=(-19450,-6400,hw=500,hh=1500) target_cut=13 spawn=(-20650,-1800,-6200)`,
+`[room] PC loaded room2000.rdt (359612 bytes)`). gy.log ausgezaehlt (`tools/band.py`): **1400 Typ-0x16-Eintraege,
+0 auf Band 1, 673 an der Kanalwand x = -22068**, Zustaende nur 1/1 (759), 1/14 (342), 1/8 (253), 1/12, 1/0, 0/0 —
+z.B. `F600 ... [3 t=16 st=1/14/2/0 ... @(-22067,0,-10184) b0 ...] [4 t=16 st=1/14/2/0 ... @(-22068,0,-10986) b0 ...]`.
+Bild (`m1v_v0825_sheet.png`, F150-F650 je 100): beide Zombies stehen die ganze Zeit unten im Kanal an der Wand unter
+Leon. **Das ist der Nutzerbefund** (laufen zum Rand, kommen nie hoch). Mit dem Spurstand auf demselben Weg (M7, bis
+F1100): 441 Eintraege auf Band 1, erster `F308 slot 4`; Zustand 1/10 (Hochziehen) 567 Eintraege. Der Fix erklaert den
+Befund: das RE2-Gehirn hat kein Hochziehen (RE2-Overlays ohne +-1800, Abnahme 0 Nr. 8), der neue Dispatch fuehrt bei
+u1=1-Kante vorn die RE1.5-Maschine ANIMATE[0x0A] ein (Abschnitt 4).
+
+### M7 — Gegenprobe "aendert die Nachbesserung sonst etwas?" bis F1100 (Leon, Standard-KI, Tuerweg)
+
+`tools/lauf.sh <exe> m7_f1100 "1100#2000" leon 400` -> `exit=0 dauer=53s`. Referenz: Abnahme-0-Lauf desselben Wegs auf
+dem alten Stand (`scratchpad/m_tuer2000/`, gy.log 2026-10-17 05:41 = vor dem Bau der Nachbesserungs-exe 06:53,
+`RE15_EXIT_AT=1100#2000`). gy.log (1414 Zeilen, Zustand/Clip/Bild/Lage/Band/+0x1ba aller Gegner je Bild): **byte-gleich**
+(`cmp` ohne Ausgabe, md5 beide `4188d6f12f90fd029ad5f82863ed7cd6`). `diff` der wz.log: einziger Unterschied
+```
+< F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=9 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+---
+> F400 R2000 slot=3 t=16 zwischenbild st=1/9/0 mo=22 af=49 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+> F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=50 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+```
+Beide Zombies kommen danach hoch (woertlich): `F724 ... slot=4 ... re2-eintritt`, `F744 ... klettern`,
+`F902 R2000 slot=4 t=16 oben st=1/0/0 mo=22 af=158 @(-20926,-1800,-9605) b1 f1ba=-1800`, `F791 ... slot=3 ...
+re2-eintritt`, `F956 R2000 slot=3 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10407) b1 f1ba=-1800`.
+gy.log: 2200 Typ-0x16-Eintraege, 0 unter dem Wasserboden, 0 auf Band >= 2. Die Behauptung des Bau-Agenten (gy.log bis
+F1000 byte-gleich, wz.log nur Abbruch-Zeile) haelt, hier sogar bis F1100.
