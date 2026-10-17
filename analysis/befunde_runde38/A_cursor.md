@@ -412,8 +412,17 @@ Gefahren in zwei Teilen am Endstand cd41f6b2 + Dossier, exe/Sonden gebaut nach 3
 
 * Teil 1, `-R "<obiger Ausdruck>" -E "^integration_" -j4 --timeout 600`:
   **`100% tests passed, 0 tests failed out of 148`** (Total Test time (real) = 14.90 sec)
+* Teil 2, `-R "<obiger Ausdruck>" -E "^unit_" -j2 --timeout 900` (die 49 Laeufe mit der exe, parallel zum
+  Port-Modell-Scan und zu Laeufen anderer Spuren auf derselben Maschine):
+  **`100% tests passed, 0 tests failed out of 49`** (Total Test time (real) = 3523.69 sec), darunter
+  integration_r38_cursor (A-F) Passed 170.61 sec, integration_r36_schluessel, integration_r37_feuerloescher,
+  integration_r36_kartenitems_bild, integration_r34n_e_dokumente_bild, integration_r34n_b_cursor, integration_r37_codepanel.
+  Kein Nachfahren noetig (kein roter Fenster-Haken).
 
 ## 6. OFFEN
+
+* Nichts zum Nutzer-Punkt. Fuer die Integration: Konflikt mit Spur K an der Schluessel-Lage (§8: K's Seite nehmen);
+  danach integration_r38_cursor (E/F prueft K's Pinnwand-Schluessel an der exe) und unit_r38_cursor_wicklung fahren.
 
 * Kein eigener DuckStation-Abzug fuer ROOM1150 Cut 4 (Hebetisch-Sicht, Nebenwirkung §4.4) und ROOM10D0. Begruendung:
   derselbe Original-Zeichner (FUN_8002c18c -> FUN_800254a0/FUN_800256b0) mit derselben Verzweigung zeichnet alle
