@@ -35,7 +35,7 @@ rdt_common.c:250-272), `abn1t_tools/montage.py`/`crop.py` (Framedump-Tafeln). Ge
       (`Total Test time (real) = 181.98 sec`)
 - [x] RE-Gate (Abschnitt 4)
 - [x] Vertrag (Abschnitt 5)
-- [ ] Urteil
+- [x] Urteil (Abschnitt 6)
 
 ## 1. Gezielte Tests (diese Sitzung)
 `ctest --test-dir re15_port/build -R "<R>" --timeout 600 -j 5 --output-on-failure` mit R = Auswahl des Bau-Agenten
@@ -209,3 +209,63 @@ Weitere Pruefungen:
   (griff1/griff2) + zehn unit_r38_griff_*; beide Szenarien an der exe gemessen (Elza 4001, Leon 5040/5070).
 - Nebenwirkung geprueft: ROOM5110 (Typ 0x2B ohne Schacht, grid 0, Leon) — Bruellen wird mit P2-Bild beendet (s. B1); in
   v0.8.25 (Gegenprobe, Messkopie `re15_pc_abn1t_v0825.exe` im Bau-Ordner des Spurbaums, nach dem Lauf entfernt) derselbe Ablauf.
+
+## 6. Urteil
+
+| Punkt | Urteil | Beleg (kurz) |
+|---|---|---|
+| 1 Spiderman kommen richtig aus den Schaechten | **erfuellt** | M1 behoben an der exe: Wechselbild zeichnet Clip 0x1D Bild 34 in 4001 (Tuer-Weg, F485), 5040 (F320), 5070 (F376) statt Bild 0 (Abnahme 0); Framedumps 4001 F481-F488 und 5070 F372-F379 durchgehend sichtbar, kein Bild in Wand/Boden. Austritts-Mechanismus wie in Abnahme 0 (Warten auf grid 0x42 ueber 445 Bilder im Tuer-Lauf, Freigabe 0x21, ACTIVE nach 35 Bildern, zweiter Schacht bleibt zu). Original-Beleg FUN_8001f3bc @0x8001f534..@0x8001f63c selbst disassembliert; Riegel faengt die Mutation (16 FAIL). |
+| 2 Spieler verschwindet bei keinem Gegnerangriff von der Karte | **erfuellt** | 4 exe-Laeufe (4001 Tuer-Weg, 4001 Abnahme-0-Lauf, 4001 Losreissen, 5040 Leon), 4550 Bilder: 0 Bilder in einer Wandzelle, 0 Wanddurchgaenge, groesster Sprung 607 im Todesbild (im Gang, s. B2) — vorher (v0.8.25) 27 058 auf (-724,761) ausserhalb. M2 an der exe: Griff P1 -> P2 (0x12, 33) und Loese-Ende P5 -> P6 (0x14, 40) gehalten. Generelle Regel und ihre zehn Riegel unveraendert gruen. |
+
+Gates: Bau gruen (beide Sitzungen); gezielte Tests 204/204 (erste Sitzung) und 14/14 (zweite Sitzung); RE-Gate gehalten
+(Abschnitt 4: alle Stichproben stimmen, keine Rate-Woerter, keine neue Zahl, Mutationsproben 16 / 4 FAIL); Vertrag gehalten
+(Abschnitt 5).
+
+**bestanden: JA.** M1 und M2 aus Abnahme 0 sind behoben und an der exe gemessen; beide Punkte erfuellt. Die folgenden
+Punkte sind NICHT urteilsrelevant (nicht im Wortlaut, vorbestehend, in v0.8.25 gleich) und gehoeren in den NACHLAUF.
+
+### Maengel (nicht urteilsrelevant)
+- **M3 (Dokumentation/RE-Vollstaendigkeit, neu geschriebener Code B[2]):** re15_r38_sm_bruellen (spiderman_r38.c, Kommentar
+  "(1b) BRUELLEN") nennt fuer P1 "anim_set @0x80112360 mit a2 = +0x7" und "`+0x6 += fertig` @0x80112374-84", setzt aber
+  (a) das Rueckwaerts-Argument nicht um (sm_anim_halten spielt immer vorwaerts; Original `lbu a2,7(v0)` @0x8011235C, in
+  FUN_8001f314 a2 != 0 -> Bild = fc - (+0x95) - 1 @0x8001f340-54) und laesst (b) den Aufruf `jal 0x80115bec` (a0 = a1 = 0)
+  @0x80112380 weg, der mitten im zitierten Bereich liegt (Matrizenkette Teile 0/19/20/21 = Bein 0 ueber FUN_80022da0
+  @0x80115c1c-60, danach Modell-Translation +0x34/+0x3C -= Differenz @0x80115c78-a4; B[7] ruft dasselbe mit a1 = 1
+  @0x8011473C). Beides steht nicht im Dossier-OFFEN (dort 0x80115bec nur fuer B[7], OFFEN 10). (a) ist im Port derzeit
+  unerreichbar, weil +0x7 beim Bruellen immer 0 ist (s. B1); die Wirkung von (b) im Bild ist nicht ermittelt. Nachpruefbar:
+  `re15_disasm.py dis 0x80112294 82 --bin STAGE4.BIN`. Erwartet: OFFEN-Eintrag im Dossier (oder Umsetzung) im NACHLAUF.
+
+### Beobachtungen (vorbestehend, fuer NACHLAUF/Integration)
+- **B1 Dauer-Bruellen auf Abstand (A[3] unvollstaendig).** Original A[3] 0x801123E8 bruellt nur bei GELOESCHTEM Sichtbit
+  (+0x1D0 & 1, `andi`/`bne` @0x801124FC-500) und Abstand >= 7001 (@0x80112510) und setzt dann **+0x7 = 1** (`sb v0,7(v1)`
+  @0x80112540) -> B[2] spielt rueckwaerts und endet in P2 im Leerlauf (+0x5 = +0x6 = +0x7 = 0 @0x801123A0-C0). Port-A[3]
+  (re15_tyrant_ai_tick Fall 3): `else if (dist >= 7001) { sub_state_1 = 2; sub_state_2 = 0; }` — ohne Sichtbit, ohne +0x7.
+  Folge an der exe: ROOM5110 Leon steht am Sprungziel (-25000,-13000), Spiderman Slot 2 bei (-19484,-7209) (Abstand ~7998)
+  bruellt endlos: `F413 ss1=2` ... `F463 ss1=3 ss2=0` -> `F464 ss1=2 ss2=1 mo=2 af=1` -> ... (9 Bruellen in 450 Bildern, ohne
+  sich zu bewegen). v0.8.25 (Gegenprobe, gleicher Lauf) identisch (F413/F463/F513/..., Periode 50 statt 51). In den
+  Schacht-Raeumen tritt das ein, sobald der Spieler am Ende eines Bruellens >= 7001 entfernt ist. Lauf: `lauf1.sh <exe> n5110
+  <wd> RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 "RE15_DEBUG_JUMP=5110@250" RE15_STATE_LOG=state.log
+  RE15_ANIM_TRACE=anim.log "RE15_EXIT_AT=900#5110"`.
+- **B2 Sprung 607 im Todesbild.** In allen vier Laeufen springt der Spieler im Bild des Todes (Kollaps-Bild 0x23, hp -1,
+  pst 7) um 607 Einheiten, z. B. 4001 `F1036 PL(-26336,-7418)` -> `F1037 PL(-25936,-7875)`, 5040 `F873` -> `F874
+  (-25428,-24618)`. Vorher steht der Spieler waehrend Griff und Kollaps mit z = -7418 an der Nordwand des Gangs (SCA-Zelle #5
+  ROOM4001 x -27776..-15968, z -6950..-5222; -6950 - Radius 468 = -7418), danach liegt er ungeklemmt im Gang. Beide Lagen im
+  Raum (wandcheck 0/0); gleiche Werte wie Abnahme 0 (dort F798). Ursache (Wechsel der Platzierung zwischen Opfer-Kollaps und
+  Todes-Zweig) nicht ermittelt — kein "Verschwinden", aber ein sichtbarer Ruck von ~0,6 m.
+- **B3 Charge B[7] direkt nach dem Bruellen** (Dossier OFFEN 10, selbst bestaetigt: +0x9E = 1 @0x80114634, `lb a2,158(v0)`
+  @0x80114718 -> anim_set rueckwaerts, im Handler nur arc_test/FX/anim_set/0x80115bec, kein Walker): der Port laeuft
+  stattdessen vorwaerts (4001 Lauf n4001r `F348 ss1=7 mo=4 @(-23894,-8587)` -> `F357 @(-24389,-8362)` = 540 Einheiten in 9
+  Bildern). B[7] folgt in den Schacht-Raeumen regelmaessig auf das erste Bruellen (Spieler-hp >= 81): n4001t F543, n4001r F348.
+- **B4 Koerperschub** (Abnahme 0 B1, unveraendert): 5040 schiebt der Spiderman Leon mit B[3] bis 494 Einheiten je Bild um die
+  Ecke (F498-F503, hp 80, kein Griff), im Raum.
+- **B5 Zeichen-Konvention** (Dossier OFFEN 12 / Abnahme 0 B6): innerhalb eines Clips zeigt der Port das Bild, das das Original
+  ein Bild spaeter zeigt (erstes sichtbares Austrittsbild 7 statt 6, erstes Halte-Bild 1 statt 0); am Clip-Ende stimmen beide
+  jetzt ueberein (fc-1).
+- **B6** Integration: Fall-2-Haken in enemy_ai_common.c mit Spur B zusammenfuehren; re15_damage.c-Haken (Bauphase) mit R/S.
+  Der relayte Nutzer-Nachtrag ROOM20A0 (Rolltor vor der Kamera) gehoert zu Spur W, hier nicht geprueft.
+
+### Messdaten (Scratchpad dieser Sitzung, nicht im Repo)
+`abn1t/n4001t`, `n4001u` (Tuer-Weg), `n4001a` (Abnahme-0-Lauf), `n4001m` (Losreissen), `n4001r` (Weglaufen), `n5040`, `n5070`,
+`n5070b`, `n5110`, `a5110` (v0.8.25), `mut_run/mut1_out.txt` / `mut2_out.txt` (Mutationsproben); Tafeln `n4001t_F481-488.png`,
+`n4001_austritt_F448-484.png`, `n4001_austritt_crop.png`, `n4001t_griff_F912-1008.png`, `n4001t_griff_crop.png`,
+`n5070_F372-379.png`, `n5070_crop_F374-377.png`.
