@@ -199,11 +199,11 @@ kein `gen/*.inc`, kein `shared_assets/RE2/`. Leon (Modelle 0/1/2, 17 Teile) laeu
 ## 4. Messung nachher
 
 ### 4.1 Drehung an der exe (Winkelverlauf) — Riegel `integration_r38_zopf` Teil "elza"
-ROOM1121 (2500,10000) Blick 2048, Eingabe `W1,R1.0,W4`, `RE15_ZOPF_LOG`. `test_r38_zopf spur` (Lauf dieser Fortsetzung,
-§5): siehe Riegel-Ausgabe; Stand des Vorgaengers (ctest 2026-10-16 23:43): Koerperwinkel s0 dreht sich um 2383, max
-|v94|/|v96| = 102, Zopfspitze schlaegt 20,2 Grad seitlich gegen die Ruhelage 0,3 Grad aus, 6 Seitenwechsel, danach 52
-Schritte ruhig. (Der Koerperwinkel s0 enthaelt wie im Original die Nacken-Gier: beim Raumeintritt dreht der Port-Nacken
-dort auf 512 — §6 N4.)
+ROOM1121 (2500,10000) Blick 2048, Eingabe `W1,R1.0,W4`, `RE15_ZOPF_LOG`. `test_r38_zopf spur` im Abschluss-Lauf (§5.1,
+Laufordner `build/r38_zopf_wd/lauf_4d50c91b`), gleich dem Stand des Vorgaengers (2026-10-16 23:43): 216 Zopf-Schritte im
+Zielraum, Koerperwinkel s0 dreht sich um 2383, max |v94|/|v96| = 102, Zopfspitze schlaegt 20,2 Grad seitlich gegen die
+Ruhelage 0,3 Grad aus (Schritt 59), 6 Seitenwechsel, danach 52 Schritte ruhig. (Der Koerperwinkel s0 enthaelt wie im
+Original die Nacken-Gier: beim Raumeintritt dreht der Port-Nacken dort auf 512 — §6 N4.)
 
 ### 4.2 Pixel am Hinterkopf — Riegel `integration_r38_zopf` Teil "elza_aus"
 Gleiches Bild 50 mit Zopf und mit der Mess-Sonde (Zopf gerechnet, nicht gezeichnet): 102 Pixel verschieden, alle im
@@ -227,7 +227,7 @@ nichts am Bild); Elza mit Zopf: Unterschiede nur am Kopf (8..126 Pixel, Huellen 
 **Eingaenge exe == Original** (der Port fuettert die Routine richtig): Blick-Abweichung 0 (origfolge29), Animationswinkel
 Teil0 vy/vz + Teil8 vy beim Gehen hoechstens 1 Einheit (Mittel 0,1), bei der Drehung hoechstens 17 (Mittel 2,4; Phase der
 Leerlauf-Animation beim Druck). Nicht gleich: die Lage-Schrittweite (exe 74 je Bild gleichmaessig, Original 55..90 mit dem
-Gang, Mittel 77,7) und ab Port-Schritt 316 die Nacken-Gier (Port -96..-512, Original 0) — §6 N3/N4.
+Gang, Bilder 135..172 Mittel 77,3) und ab Port-Schritt 316 die Nacken-Gier (Port -96..-512, Original 0) — §6 N3/N4.
 
 **Zopf beim Gehen, solange die Eingaenge gleich sind** (36 Bilder, Port-Schritte 280..315 / Original-Bilder 135..170):
 
@@ -269,6 +269,9 @@ Gemessen (Zopf-NETZ Teile 17..20 je Schritt mit der Weltmatrix aus FUN_80024e40 
   (Halt + Leerlauf-Animation) -> **ragt seitlich hinaus** (350), wenn Elza von der Seite gesehen wird.
 - Berichtigung zum Vorgaenger (Commit 65dd6d59, `skelett_pl04.txt`): "Zopf waagerecht hoechstens 251" galt fuer Keyframe 0
   der EMR (Kopf geneigt), nicht fuer die Spielpose; im Spiel haengt der Zopf-Ansatz 124 hinter der Kopfmitte.
+- Das ist das ORIGINAL-Mass, kein Port-Artefakt: in den Original-Spielstaenden (§4.6) liegt das Gelenk von Teil 20 im
+  Stehen 328 (elza_3, ROOM1011) / 336 (elza_2) waagerecht von der Figurachse, im Port 341 (ROOM1121); das Netz reicht von
+  dort noch bis 214 weiter (Teil 20 y 17..214).
 Folge: die Ausschluss-Tabelle der Spur P prueft keine Zopfpunkte ausserhalb ihres Kastens; wo ein nicht ausgeschlossenes
 Rechteck dort ohne Wand davor liegt, kann eine Generator-Maske (nur Stages 3-6) die Zopfspitze uebermalen — dieselbe Klasse
 wie P OFFEN 2 ("ausgestreckter Arm/Waffe beim Zielen"). Fuer die Integration: §6 N5.
@@ -282,6 +285,17 @@ Weltmatrix (Flag 0x40). Haltepunkte @0x80024c30 (Eingang + Glieder vorher) / @0x
 Bild n+1 == "nach" von Bild n). Port-Schritt darauf: einzeln 235/235, fortlaufend ab Bild 0 235/235 BITGLEICH (Glieder
 m/t/rot/v94/v96 + Teil 8 +0x40). Riegel `unit_r38_zopf_original` (Datensatz `tests/unit/r38_zopf_orig.inc`, erzeugt von
 `orig_zopf_inc.py`). Mutation p7 0x12c -> 0x96 (RE2-Wert) faellt im Riegel durch (Vorgaenger, 65dd6d59).
+
+**Unabhaengig davon: Elza-Spielstaende des Nutzers im Original** (Fortsetzung 3, nur gelesen;
+`D_belege/orig_spielstaende_elza.txt`): 8 DuckStation-Staende `HASH-957757946319438E_{1..7,10}.sav` (2026-10-08..12,
+Auslieferungs-EXE: Stub @0x80026e4c = `08 00 e0 03`) in 7 Raeumen (ROOM10B1, 1011 zweimal, 1211, 1021, 11B1, 1171, 1261):
+ueberall Charakter 0x04, Teile +0x83 = 21, Flags Teil 15..20 = 0x0,0x0,0x41,0x41,0x41,0x41; ruhender Zopf z.B. elza_3
+Teil 18 rot.vz 305 (Ruhewinkel p7 0x12c = 300 @0x80024d58-98; Port im Stehen 301). Bild aus dem VRAM der Staende
+(`re15_ss.Ram.vpix`): `D_belege/original_port_hinterkopf.png` — links/Mitte ORIGINAL (elza_2/elza_3, ROOM1011, Elza von
+hinten: der Zopf haengt vom Hinterkopf bis zum Kragen), rechts PORT (ROOM1121 Bild 50 des Riegels, Kopf durch den
+Nacken-Blick seitlich gedreht). Ein Original-Bild an genau derselben Stelle wie der Port wurde nicht gefahren: der Port
+startet per Sprung in ROOM1011 die Roy-Szene (anderer Schnitt), und eine DuckStation-Steuerung ueber das virtuelle Gamepad
+haette waehrend der laufenden exe-Riegel anderer Spuren deren Eingaben gestoert.
 
 ## 5. Tests (probes/r38_zopf.cmake)
 
@@ -301,7 +315,21 @@ Werkzeuge (kein Riegel): `test_r38_zopf orig <frames.txt>`, `skelett`, `huelle <
 Mutation zum neuen Riegel `lauf`: Zopf im Gehfenster auf Ruhe gesetzt (zang 3) -> 4 FEHLER (Glied 17..20, Abweichung
 364..762 > Schranke).
 
-Gezielter Lauf (Ausgabe des Abschluss-Laufs unten, §5.1).
+### 5.1 Gezielter Abschluss-Lauf (keine volle Suite)
+Bau `bash re15_port/tools/local_build.sh build` (LOCAL-BUILD-OK), dann
+
+    ctest --test-dir re15_port/build -R "r38_zopf|anim_pose_order|npc_scd_pose|zombie_pose|marvin_render_pose|neck_headlook|room_transition_cmd|eintritt_pose_einmal|elza_zweig|integration_elza_vollstart|r37_pri1100_elza|r37_bissarm_elza|r36_elza_fenster" --timeout 1200 --output-on-failure
+
+Auswahl: eigene Tests + die Gruppen der beruehrten Module (skeleton_common.c Pose: anim_pose_order, npc_scd_pose,
+zombie_pose, marvin_render_pose, re2_zombie_pose_bank, eintritt_pose_einmal, neck_headlook; room_common.c:
+room_transition_cmd; game_step_common.c / main.c Elza-Zeichenpfad: elza_zweig, integration_elza_vollstart,
+integration_r36_elza_fenster, r37_pri1100_elza, r37_bissarm_elza_*). Ergebnis woertlich:
+
+    100% tests passed, 0 tests failed out of 24
+    Total Test time (real) = 374.11 sec
+
+`integration_r38_zopf` 117,12 s (vier exe-Laeufe elza / elza_aus / leon / elza_lauf); Ausgaben der Riegel-Werkzeuge auf
+dem Laufordner `lauf_4d50c91b` siehe §4.1, §4.2, §4.4 (`D_belege/lauf_riegel.txt` = derselbe `lauf`-Text).
 
 ## 6. OFFEN
 
@@ -326,6 +354,10 @@ Nebenbefunde (NICHT beauftragt, nicht geaendert):
   `gen/masken36_ausschluss_r37.inc` + Riegel `unit_r37_masken36_ausschluss`), nicht in diesen Baum.
 - **N6 Modell 7:** der Original-Init kennt nur 4/5/6 (@0x80031a88-aa0); PL07 hat ebenfalls 21 Teile, bekaeme im Original
   keinen Zopf-Init (Teile 15..20 Flag 1 an der Einheitsmatrix). Der Port laedt fuer Elza PL04; fuer 7 zeichnet er keinen Zopf.
+
+Merge (geprueft mit `git merge-tree` auf dem Inhalt des Abschluss-Commits): gegen master konfliktfrei; gegen r38/integration (f50f9eda) EIN
+Konflikt in `platform/pc/main.c` — nur die Include-Zeilen hinter `re15_roy_r37.h` (Integration: E/I/T-Includes, hier
+`re15_zopf_r38.h`). Aufloesung: alle vier Include-Zeilen behalten; game_step_common.c laeuft automatisch zusammen.
 
 ## 7. Fuer den Nutzer
 
