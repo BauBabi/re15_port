@@ -615,3 +615,20 @@ ausserhalb (x > -6450).
   Abnahme E1a), abgang 7 Fehler — E10 verschoben 2876 und im Bild 701 an Elza (Abnahme E10: Durchdringung, 2,3 m),
   E5 verschoben 4202 (Abnahme E5: (-7342,-4062) -> (-6488,-714) = 854+3348 = 4202, exakt), E6 verschoben, E7 verschoben
   856 (Abnahme E7: 839+17 = 856, exakt), E10/neben John ohne Warten; weg1131 3 Fehler; texte 3, programme 4 Fehler.
+- **Messung nachher an der exe** (eigene exe-Kopie je Teil, Wegplan, ctest `-R "^integration_r38_dining1141_(r|a)$"`:
+  "100% tests passed, 0 tests failed out of 2", R 185,6 s, A 280,8 s):
+  - Lauf R (lauf_ab16ac76_r, Stand 06d53363): `[dining] F64 ROOM1021 Ereignis 2 (Szene sub02) -> Programm SZENE1021`,
+    Szene msg 0..8, danach geht Elza zu Fuss an die Leiche und drueckt bei **(-3803,-9601) Blick 2053 — genau die Stelle
+    der Abnahme E1a** —: Zustands-Log `msg(a=1 fsm=1 id=40` F2056..F2277, debug.log `[msg] room=1021 id=40`, ROOM1021 nur
+    einmal geladen. Roy liegt als Aktor (t=47) bei (-4431,-10689), John steht bei (-4274,-8765). Bildbogen
+    `F_belege/nb1_m1_leiche_selber_besuch.png` (F1700 Elza nach der Szene im Flur, F2060..F2270 "He's dead." / "Poor
+    Roy..." / "There's an empty key tag on his belt. / It reads “Dining Room”.").
+  - Lauf A (lauf_fe54fef0_a, Stand 06d53363): Messhaken F3247 (Gorillas tot), Elza steht auf Johns Bahn bei
+    (-7442,-14881) — Zustands-Log F3255/F3600/F3900: Elza dort, cam 0, John (-7531,-21363) in der Ecke = **928 Bilder ohne
+    Abgang**; Elza geht nach Norden, F4176 bei (-7371,-8823) (z > -8875) -> Cut 7, pm 2; John dreht (r933, r165, r3493) und
+    laeuft (-7398,-20175) F4200 ... (-7354,-8975) F4256 — 152 Einheiten an Elzas Lage vorbei, hinter der Kamera, OHNE Schub
+    — (-7351,-975) F4304, geparkt F4320, DOOR1A auf/zu; Elza waehrend Cut 7 und bis zur Steuerungsrueckgabe F4344 exakt
+    (-7371,-8823) (0 Abweichungen), dann weiter zur Dachtuer -> `loaded room1171.rdt`. Bildbogen
+    `F_belege/nb1_m3_abgang_wartet.png`: F3255-F3900 Cut 0, John wartet in der Ecke, Elza an der Doppeltuer; F4140/F4170
+    Cut 5, Elza geht in den Gang; F4185-F4245 Cut 7, John laeuft auf die Kamera zu (Elza ist nicht in diesem Bild), F4260
+    aus dem Bild; F4335-F4395 Cut 5, Elza an derselben Stelle, geht weiter.
