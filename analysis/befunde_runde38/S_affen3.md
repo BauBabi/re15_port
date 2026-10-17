@@ -451,3 +451,46 @@ auf y = -10000 umher und beissen Leon aus 10000 Einheiten Hoehe. Ursache laut Ab
 ### Stand beim Start
 - Baum geprueft: `git status --porcelain` leer, HEAD 8bb74063 (Abnahme 0), Basis cb782bda.
 - Abnahmebericht, Dossier, AUFTRAG.md, VERTRAG.md gelesen.
+
+### Mangel 1 — Messung vorher (aus der Abnahme, nicht wiederholt)
+Abnahme M5 (Lauf s4_4040, Spur-exe 4ff3b973): `RE15_DEBUG_JUMP=4040@250 RE15_PLAYER_POS=-25000,4000,1024,0
+RE15_GEGNER_Y_LOG=gy.log RE15_STATE_LOG=state.log RE15_EXIT_AT=900#4040` -> Affe Platz 1 ab F16 bei (-25090,-10000,9230),
+INIT -> Zustand 1 Sub 1 (Schlaf), F224 wach, F311 Biss auf y = -10000, F324 / F380 je -5 HP (Leon y = 0), bis F900 auf
+y = -10000. Basis-exe cb782bda: Affe ebenfalls auf y = -10000, schlaeft, 0 Treffer.
+
+### Mangel 1 — RE-Belege (selbst disassembliert, re15_disasm.py)
+ROOM4040 (scd_dump_room.py): `Ifel_ck` / `Ck(4,0xd0) == 0` -> @0x00EB0 `Sce_em_set 44 00 29 61 00 00 ..` (Platz 0, Typ 0x29,
+grid 0x61 = gesperrt (0x20) + 0x40 + 0x01, Band pc[4] = 0 -> +0x1ba = 0, Parkstelle (-14040,0,19130)); Aot_set Platz 5 sce 3
+flags 0x41 @0x00E9C, Rechteck x -27899..-22159, z 2608..5608; sub04: `Set(4,0xd0)`, Aot_reset 5, Se_on, Evt_exec 5/6
+(Klappen obj 1/2 auf y -6300 oeffnen), `Work_set(2,0)` @0x011CA, `Pos_set(-25090,-10000,9230)` @0x011CE,
+`Member_set(12,0x41)` @0x011D6 (= +0x9 := 0x41, Port actor_common.c case 12).
+
+INIT 0x80110c98 (STAGE3.BIN; STAGE4.BIN 0x8010c338, Zweig @0x8010c520-558 befehlsgleich):
+- `ori v0,zero,0x1` / `sw v0,4(v1)` @0x80110ca4-ac (Zustandswort 1), +0x9 & 1 -> `ori v0,zero,0x101` / `sw` @0x80110cd0-d4.
+- +0x94/+0x95/+0x8f/+0x93 = 0 @0x80110ce4/cf4/d04/d14; +0x1dc = 0 @0x80110da4; +0x1e0 = 0 @0x80110dc4; +0x1e4 = (grid&8)?4:0.
+- **@0x80110e80 `lbu v1,9(a0)` / `ori v0,zero,0x40` / `bne v1,v0,0x80110eac` / (Delay `ori v0,zero,0x41`) / `ori v0,zero,0x4` /
+  `sw v0,4(a0)` @0x80110e94; @0x80110ea4 `lbu v1,9(a0)` / `ori v0,zero,0x41` / `bne v1,v0,0x80110ebc` / `ori v0,zero,0x104` /
+  `sw v0,4(a0)` @0x80110eb8** -> +0x9 == 0x40: Zustandswort 4 (+0x4 4, +0x5 0); +0x9 == 0x41: 0x104 (+0x4 4, +0x5 1).
+- danach anim_set @0x80110ed0 (Clip 0 Bild 0), HP-Zeile, +0x166 = 0x14cc, Kasten +0x78 = @0x8011ec44[+0x1e4] — fuer alle Faelle.
+Zustandstabelle @0x8011eca4: [4] = [5] = 0x80115734 (STAGE4 @0x80119ed4: [4] = [5] = 0x80110dd4).
+Zustand 4 0x80115734: `lbu v0,5(v0)` @0x80115744, Tabelle @0x8011ee34 (`addiu at,at,-4556`), `jalr` @0x80115764;
+@0x8011ee34 = {0x8011577c, 0x801158e8, 0x80115a5c (`jr ra`), 0x80115a64 (`jr ra`)} (STAGE4 @0x8011a064 = {0x80110e1c,
+0x80110f88, ..}).
+- **Unterzustand 0 (+0x9 == 0x40) 0x8011577c**, Phase +0x6: 0 (@0x801157c8): +0x6 = 1, +0x94 = 0x1f (`ori v0,zero,0x1f` /
+  `sb v0,148` @0x801157d4-d8), +0x95 = 0, +0x8f = 7, +0x8c = 0 (`sh zero,140` @0x80115808), +0x9c = 0 (@0x80115818), faellt in
+  Phase 1 (@0x8011581c): anim_set `jal 0x8001f314` @0x80115830, +0x6 += Rueckgabe (`addu v1,v1,v0` / `sb v1,6` @0x8011584c-54);
+  Phase 2 (@0x80115858): +0x9 &= 0xbf (`andi v0,v0,0xbf` @0x80115860), +0x4 = 1 @0x80115874, +0x5 = 2 @0x80115884, +0x6 = 1
+  @0x80115894, +0x7 = 0 @0x801158a4, +0x95 = 0x1d @0x801158b4, +0x8f = 0 @0x801158c4, +0x94 = 3 @0x801158d4 (= B[2] Phase 1,
+  Clip 3 ab Bild 0x1d).
+- **Unterzustand 1 (+0x9 == 0x41) 0x801158e8**, EIN Bild: +0x93 |= 1 (@0x80115900-04), |= 2 (@0x8011591c-20), +0x1e0 = 1
+  (`sb a0,480` @0x80115930), +0x78 = @0x8011ec48[+0x1e4] (Luftkasten, @0x80115940-60), +0x9 &= 0xbf (@0x80115978-7c), +0x4 = 1
+  @0x8011598c, +0x5 = 0xa @0x8011599c, +0x6 = 2 @0x801159ac, +0x7 = 0 @0x801159bc, +0x94 = 0xd @0x801159cc, +0x95 = 0x13
+  @0x801159dc, +0x8f = 0 @0x801159ec, +0x8c = 0 @0x801159fc, +0x9c = 0 @0x80115a0c, anim_set @0x80115a24, +0x95 = 0x14
+  @0x80115a38, +0x8f = 0 @0x80115a48 -> naechstes Bild ACTIVE B[10] Phase 2 = der Fall (c1a4(+0x8c,0,-70) bis +0x1ba, im Port
+  b_decke_runter) — Landung Phase 3 (SE 1, Bodenkasten, +0x93 = 0), Phase 4 Clip 0xd zu Ende -> Sub 4.
+- A[10] 0x80113010 im ersten Fallbild: +0x6 < 3 (`sltiu v0,v0,0x3` @0x80113028) und +0x93 & 2 (@0x8011303c) -> ohne 0x40:
+  +0x93 &= 0xfd (@0x80113094-98) und FUN_80019700(0x2000, +0x6a, Record 0 + 0x40, &0x8011ec84 = {200,-800,0,0})
+  @0x801130e0 (Effekt-Instanz: Pool 0x800a73b8, Bank a0>>24 = 0, Effekt (a0>>16)&0xff = 0, Flags 0x2000 @0x800197d0-dc) —
+  im Port luft_treffer -> blut() (vorhanden).
+- Wurzel-Schattenblock @0x80110bd0-c64: +0x9 & 0x40 -> KEINE Schattengroessen-Aktualisierung (+0x1d8 -> +0xb4/+0xb6); danach
+  FUN_8001b064(&+0xb0, +0x1ba) @0x80110c7c. Nur der Schatten; der Port zeichnet den Gegnerschatten anders (nicht diese Spur).
