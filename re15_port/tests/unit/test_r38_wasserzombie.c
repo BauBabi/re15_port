@@ -413,7 +413,7 @@ int main(void)
                         const int zbank = re15_wasserzombie_bank(e, &zsk, &zan);
                         const int zlen = re15_actor_clip_len(e);
                         int32_t zsy = 12345; const int zsch = re15_wasserzombie_schatten_y(e, &zsy);
-                        re15_actor_t snap[RE15_ACTOR_MAX];
+                        static re15_actor_t snap[RE15_ACTOR_MAX];  /* statisch: nicht auf dem Stapel */
                         memcpy(snap, g_actors, sizeof snap);
                         re15_actors_anim_advance();                /* der Advancer des Folgebilds (game_step, vor der KI) */
                         const int zaf = (int)g_actors[s].anim_frame;

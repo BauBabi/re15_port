@@ -12,6 +12,9 @@ Baum `.claude/worktrees/r38_wasserzombie`, Zweig `r38/wasserzombie`, Basis `cb78
 - 2026-10-16 18:16: Dossier angelegt (Vorgaenger, Sitzungslimit nach 3 min).
 - 2026-10-16 (Fortsetzung): Zensus + RE-Belege (Abschnitte 0 und 2), Messung vorher (1), Umsetzung (3),
   Messung nachher (4), Riegel unit_ + integration_r38_wasserzombie gruen (5).
+- 2026-10-17 Nachbesserung 1 (Abschnitt 8): Mangel 1 (Zwischenbild nach fremdem Schreiber) gemessen, belegt,
+  behoben, nachgemessen (Leon + Elza, echter Tuerweg); Mangel 2 (Hygiene) behoben; Riegel F + Lauf e; gezielte
+  Gruppen gruen (2/2, 103/103, 8/8).
 
 ## 0. Zensus — welche Stage-2-Zombies stehen im Wasser?
 
@@ -233,9 +236,10 @@ Gezielte Laeufe (KEINE volle Suite), Ergebnis woertlich:
 ## 6. OFFEN
 
 - RE1.5-KI, byte-true belassen: wird das Hochziehen NACH Bild 0x46 unterbrochen (Treffer), bleibt +0x1ba auf dem
-  Steg (-1800), der Zombie steht im Wasser (kein Schreiber setzt es zurueck, Zensus Abschnitt 2). Folge im Original
-  wie im Port: Schatten 1800 hoeher bis zum naechsten Hochziehen. Statisch hergeleitet, nicht dynamisch (DuckStation)
-  gegengeprueft.
+  Steg (-1800), der Zombie steht im Wasser (kein Schreiber setzt es zurueck, Zensus Abschnitt 2). Folge im Original:
+  Schatten 1800 hoeher bis zum naechsten Hochziehen. Statisch hergeleitet, nicht dynamisch (DuckStation)
+  gegengeprueft. (Korrektur Nachbesserung 1, siehe 8.7: der PORT zeichnet den Schatten ausserhalb von 0x0A auf y,
+  nicht auf +0x1ba — die Aussage "wie im Port" galt nur fuer +0x1ba selbst.)
 - RE2-KI, vorbestehend (nicht Spur U): der Partner-Domino der Griffphase P8 (`sw 0x901` @0x80102E90-98) nimmt den
   Partner aus `contact_slot` (Port-Abbildung von +0xD, dessen Produzent nicht RE'd ist) ohne Aktualitaetspruefung —
   ein frueherer Koerperkontakt im Wasser reicht. Gemessen ROOM2000 RE2-KI: der zweite Wasserzombie wird bei F408
@@ -358,7 +362,7 @@ wz.log F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=50 @(-22068,0,-9970) b0 
   `include/re15_wasserzombie_r38.h:84` (`*sk/*an` im Kommentar) -> `-Wcomment` in jeder einbindenden Datei; Kommentar am
   Aufruf beschrieb "EDGE-FALL ... down one floor".
 - (a) `static void re15_enemy_ai_live_edge_fall` samt Hinweiszeile aus `enemy_ai_common.c` entfernt (43 Zeilen; einziger
-  Aufrufer war der in Abschnitt 3 ersetzte; `re15_slew_to_angle` hat weitere Aufrufer @7876/@10689 und bleibt).
+  Aufrufer war der in Abschnitt 3 ersetzte; `re15_slew_to_angle` hat weitere Aufrufer in den Zeilen 7876/10689 und bleibt).
   (b) Kommentar am Aufruf in `re15_enemy_ai_live_active`: "HOCHZIEHEN an der u1=1-Kante (@0x8011f890[0xa]=FUN_801033c8 /
   STAGE2 0x8010325c): +0x38 -= 1800 und +0x82 += 1 = ein Band HOCH, +0x1ba @0x801033f8, Vorschub @0x80103474".
   (c) Kopfkommentar ohne `/*` neu formuliert ("stehen in sk und an ...").
@@ -367,4 +371,54 @@ wz.log F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=50 @(-22068,0,-9970) b0 
   edge_fall, re15_wasserzombie_r38.h oder einer Spur-U-Zeile. Uebrig sind nur `-Wcomment` aus `include/re15_emd.h:37` und
   `include/re15_collision.h:85/90` (vorbestehend, nicht Spur U).
 
-(Abschnitte 8.6 ff. werden fortlaufend gefuellt.)
+### 8.6 Tests (Nachbesserung 1)
+
+- `unit_r38_wasserzombie`, Riegel F neu gefasst: fremder Schreiber NACH dem eigenen Tick (0x901 nach `bild()`), dann im
+  Zwischenbild: `re15_wasserzombie_bank` = 1 mit der gemeldeten RE1.5-Aktionsbank (Clips inhaltsgleich), motion 0x16,
+  `re15_actor_clip_len` = 159, Schatten = +0x1ba (-1800), und der Advancer des Folgebilds (Kopie von g_actors,
+  `re15_actors_anim_advance()`, zurueckgespielt) zaehlt af + 1. Folgebild (`bild()`): eigener Abbruch -> y 0 / +0x1ba 0 /
+  Band 0 / Sub 9, Bank 0, Clip aus EXEC[9] P0 {3,3,4,0x0D} (@0x801000D8), Uhr = RE2-Laenge
+  (`re15_actor_clip_len_legacy`), Schatten nicht mehr +0x1ba. Neu `F-Neuspawn`: Marke steht, Zustand 0 -> keine
+  RE1.5-Bank, kein Kletter-Schatten.
+  Gegenprobe gegen den alten Stand (Modul aus 371f4dc8 + neuer Riegel, gebaut und gelaufen): 5 Fehler
+  `F: Zwischenbild posiert nicht die RE1.5-Aktionsbank (bank=0)`, `... Clip 22 ...`, `F: Zwischenbild-Uhr 10 statt 159`,
+  `F: Zwischenbild-Schatten 0/12345 ...`, `F: Advancer im Folgebild af 76 -> 9 (erwartet 77)` — genau der Abnahmebefund.
+  Mit der Nachbesserung: `[F] Zwischenbild: st=1/9 mo=22 af=76 bank_re15=1 len=159 schatten=1(-1800) advancer af=77`,
+  `[F] Abbruch: st=1/9 mo=3 af=2 y=0 f1ba=0 band=0 bank_re15=0 len=40 (RE2 40)`, `== OK ==`.
+- `integration_r38_wasserzombie`, neuer Lauf e: echter Tuerweg 2070 -> 2000 (Wegplan wie Abnahme M1/M5), Standard-KI,
+  `RE15_EXIT_AT=406#2000`; Pflicht: wz.log `zwischenbild st=1/9/.. mo=22` und der folgende `abbruch` desselben Slots mit
+  af = Zwischenbild-af + 1; dazu ein Zombie oben auf dem Oststeg (-20928,-1800,z) und die Invariante (nie unter dem
+  Wasserboden, nie Band 2). Gemessen: `F400 ... slot=3 t=16 zwischenbild st=1/9/0 mo=22 af=49`, `F401 ... abbruch ...
+  af=50`, `F308 ... slot=4 ... oben ... @(-20928,-1800,-10290) b1`.
+
+Gezielte Laeufe nach der Nachbesserung (KEINE volle Suite), Ergebnis woertlich:
+- `ctest --test-dir re15_port/build -R "^(unit_r38_wasserzombie|integration_r38_wasserzombie)$" --timeout 1500`
+  -> `100% tests passed, 0 tests failed out of 2` (integration 120.56 s, Laeufe a-e).
+- Unit-Gruppe der beruehrten Module (Regex des Bau-Agenten + Erweiterung der Abnahme, -j 4):
+  `-R '^(unit_enemy_ai|unit_room1140_spawn|unit_room1140_combat|unit_zombie_.*|unit_re2_zombie_.*|unit_re2_room.*|unit_re2z_.*|unit_knockdown_.*|unit_re15_zombie_death_anim|unit_re15_re2z_.*|unit_1090_.*|unit_1030_.*|unit_cam_1030_reentry|unit_re2_stagger_knockdown|unit_dog_grab_anchor|unit_re2_dog_grab_anchor|unit_rvd_scan_ungated_by_climb|unit_plc_back_yaw_1090|probe_10d0_situp_handoff|probe_1090_.*|probe_re2z_stomp|unit_map_1090|unit_r16_liegende_unschiessbar|unit_r16_aufstehen_schuss|r19_marke1_10d0_c1|unit_r35_cut1150_montage_1030|unit_r35_inhalt_zombies|unit_r35_raeume_.*|unit_r36_schuss.*|unit_r36_elza_schuss|unit_r36_blut_pin_.*|unit_r36_zombieki_.*|unit_r36_gegnerzahl_raum1030|unit_r37_beretta|unit_r37_zombieaktiv_.*|unit_r38_wasserzombie|unit_re2_hybrid_rig|unit_r36_pri_schatten|unit_enemy_.*|unit_.*schwerkraft.*|unit_.*gravity.*)$'`
+  -> `100% tests passed, 0 tests failed out of 103` (19.66 s).
+- Integrationsgruppe (Zombie-Schuss, RE2-Dispatch, Schatten, Klettern, Szenen; seriell, unter Last paralleler Agenten):
+  `-R '^(integration_r36_schuss|integration_r36_elza_schuss|integration_r37_beretta|integration_r37_zombieaktiv|integration_r36_pri_schatten|integration_r36_gegnerzahl|integration_r36_klettern|integration_r36_szenenleon)$'`
+  -> `100% tests passed, 0 tests failed out of 8` (1135.89 s; klettern 504.73 s).
+
+### 8.7 OFFEN nach Nachbesserung 1 (unveraendert vorbestehend oder ausserhalb der Maengel)
+
+- Nach dem Zwischenbild springt das Bild im eigenen Abbruch-Tick von "haengt an der Kante" (F400) auf "steht im Kanal,
+  Taumel-Clip 13" (F401): das ist der RE2-Partner-Domino (EXEC[9] P0, Schub +0x144 = 400 @0x80103F60-64) — vorbestehend,
+  Abschnitt 6 Punkt 2 — plus die PORT-WAHL "Rig-Wechsel ohne Ueberblendung" (Abschnitt 3). Mangel 1 betraf nur das
+  Zwischenbild davor; es ist behoben.
+- Schatten der RE1.5-KI ausserhalb des Hochziehens: die Zombie-Wurzel zeichnet ihn im Original in JEDEM Aufruf auf +0x1ba
+  (`lh a1,442(v0)` @0x801004fc / `jal 0x8001b064` @0x80100500 / a0 = +0xb0 @0x80100504; auch der KI-Freeze
+  `lw v0,-13760(v0)` / `and 0x20000000` / `bne v0,zero,0x801004ec` @0x801002c0-d0 und der Slot-Skip `lbu v0,9(a0)` /
+  `andi 0x20` / `bne v0,zero,0x801004ec` @0x801002e4-f0 springen direkt davor), der Port (main.c `nsh_y = npc->y`)
+  nur waehrend 0x0A auf +0x1ba. Sichtbar nur, wenn y != +0x1ba: RE1.5-KI-Abbruch nach Bild 0x46 (Original: Schatten
+  auf Steghoehe ueber dem Zombie im Wasser) und der Schwerkraft-Sturz (Runde 35 Spur H). Nicht Teil der Maengel; eine
+  Aenderung betraefe den Schatten ALLER Zombie-Wurzel-Typen in der RE1.5-KI -> eigener Punkt.
+- Unveraendert: RE2-Partner-Domino ohne Aktualitaetspruefung von `contact_slot` (Abschnitt 6), CONTINUE-Weg ROOM2000
+  ohne sub00 (Abschnitt 6), RE1.5-KI-Abbruch nach Bild 0x46 laesst +0x1ba stehen (Abschnitt 6).
+
+### 8.8 Fuer den Nutzer (Nachbesserung 1)
+
+- Keine neuen Assets, keine Sprachdateien, keine Flags/Nachrichten-Ids, kein Paket-Gate-Eintrag.
+- Sichtbar: wird ein Zombie mitten im Hochziehen vom anderen (der dich gerade gepackt hat) angestossen, verschwindet er
+  nicht mehr fuer ein Bild bis auf ein Bein, sondern haengt bis zu seinem naechsten Schritt weiter an der Kante.
