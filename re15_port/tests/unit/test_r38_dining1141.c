@@ -17,6 +17,12 @@
  *               msg 0/1, Sperre msg 41 an beiden Tueren, Gorillas tot -> Abgang ausserhalb des Bildes (Cut 7), Riegel offen,
  *               Dachtuer -> ROOM1171; Wiederbetreten danach: kein John
  *   leon1140    ROOM1140 (Leon): Gemaelde -> Rolladen-Ton 0x3B 0x0C/0x0A/0x0B (Form ROOM1131 sub02), Rolladen faehrt
+ *   Nachbesserung 1 (Abnahme 0):
+ *   szene1021   M1: die ECHTE 1021-Szene laeuft (Begehzone Slot 5 -> Ereignis 2 -> Programm SZENE1021), danach zeigt Roys
+ *               Leiche im SELBEN Besuch msg 40 (Leichen-Zone Slot 6 = main00 @0x01E2C)
+ *   abgang      M3: Johns Abgang mit Elza an sechs Lagen (die vier der Abnahme E10/E5/E6/E7 + knapp neben der Bahn + neben
+ *               John): Elza wird nie verschoben, John im Bild nie naeher als 900, in seiner sichtbaren Bahn wartet der Abgang
+ *   weg1131     M3: Elza geht waehrend des Wartens durch die Doppeltuer -> 1131: John ist fort, Dachtuer offen
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -41,6 +47,7 @@
 #include "re15_tim.h"
 #include "re15_dining_r38.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -107,28 +114,30 @@ static void frame(uint16_t held, uint16_t edge)
  * test_r35_cut1150.c). Elza-Raeume laden ihn aus CDEMD1.EMS (Messlauf m1: "[elzaems] Typ 0x49 aus EMD/CDEMD1.EMS"). */
 static uint8_t *s_ems = NULL;
 static int      s_ems_sz = 0;
-static uint8_t  s_bank[0x60000];
-static void bank_john(void)
+static uint8_t  s_bank[2][0x60000];
+static void bank_laden(uint8_t typ, int platz)
 {
     if (!s_ems) {
         char p[600]; snprintf(p, sizeof p, "%s/EMD/CDEMD1.EMS", RE15_ASSET_PSX_DIR);
         size_t n = 0; s_ems = slurp(p, &n); s_ems_sz = (int)n;
     }
     if (!s_ems) { printf("  FEHLER: CDEMD1.EMS fehlt\n"); g_fail++; return; }
-    int idx = re15_ems_index_for_type(0x49);
+    int idx = re15_ems_index_for_type(typ);
     size_t off = 0, len = 0;
-    if (idx < 0 || re15_ems_get_entry(s_ems, (size_t)s_ems_sz, idx, &off, &len) != 0 || len > sizeof s_bank) {
-        printf("  FEHLER: Bank 0x49 nicht im Archiv\n"); g_fail++; return; }
-    re15_enemy_bank_t *eb = re15_enemy_alloc(0x49);
+    if (idx < 0 || re15_ems_get_entry(s_ems, (size_t)s_ems_sz, idx, &off, &len) != 0 || len > sizeof s_bank[0]) {
+        printf("  FEHLER: Bank 0x%02X nicht im Archiv\n", typ); g_fail++; return; }
+    re15_enemy_bank_t *eb = re15_enemy_alloc(typ);
     if (!eb) return;
-    memcpy(s_bank, s_ems + off, len);
+    uint8_t *bank = s_bank[platz & 1];
+    memcpy(bank, s_ems + off, len);
     re15_tim_t tim = (re15_tim_t){0};
-    if (re15_emd_parse_container(s_bank, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) return;
+    if (re15_emd_parse_container(bank, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) return;
     eb->ok = 1; eb->buf = NULL;
-    eb->loco_ok   = (re15_emd_parse_loco_bank(s_bank, len, &eb->skel_loco, &eb->anim_loco) == 0);
-    eb->victim_ok = (re15_emd_parse_victim_bank(s_bank, len, &eb->skel_victim, &eb->anim_victim) == 0);
-    eb->own_ok    = (re15_emd_parse_own_bank(s_bank, len, &eb->skel_own, &eb->anim_own) == 0);
+    eb->loco_ok   = (re15_emd_parse_loco_bank(bank, len, &eb->skel_loco, &eb->anim_loco) == 0);
+    eb->victim_ok = (re15_emd_parse_victim_bank(bank, len, &eb->skel_victim, &eb->anim_victim) == 0);
+    eb->own_ok    = (re15_emd_parse_own_bank(bank, len, &eb->skel_own, &eb->anim_own) == 0);
 }
+static void bank_john(void) { bank_laden(0x49, 0); }
 
 static void spielbild(uint16_t held, uint16_t edge)
 {
@@ -174,6 +183,7 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     g_game = flags_vorher;
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     if (room == RE15_R38F_RAUM_1141) bank_john();
+    if (room == RE15_R38F_RAUM_1021) { bank_john(); bank_laden(0x47, 1); }   /* Szene 1021: John + Roy (Nachbesserung 1 M1) */
     re15_discard_reset();
     re15_player_cmd_reset();
     re15_pauseflags_clear();
@@ -252,7 +262,9 @@ static void teil_texte(void)
          * Seiten ohne Leerzeichen an und kennt das oeffnende Anfuehrungszeichen 0x61 nicht (Font-Glyphe, ROOM1011
          * msg 18 @0x1231) — die Rohbytes prueft unten anfz_ok. */
         "He's dead.Poor Roy...There's an empty key tag on his belt. It reads Dining Room\".",
-        "It's locked.The door is marked Dining Room\".",
+        /* Nachbesserung 1 M2: RE2 Text 0x0F @0x8009F230 (Herz-Schluessel 0x5B - 0x4C @0x800516b4) statt "The door is
+         * marked "Dining Room"." — ueber der Tuer haengt im Hintergrundbild das Schild "Briefing Room" (Abnahme E2). */
+        "It's locked.A heart is etched under the key hole.",
         "You've used the Dining Room Key.",
         "Elza: Are you okay? what's happened?",
         "I cannot leave him alone with those monsters.",
@@ -263,7 +275,20 @@ static void teil_texte(void)
         printf("    Text %d: \"%s\"\n", i, t);
         PRUEF(!strcmp(t, soll[i]), "Text %d = \"%s\"", i, soll[i]);
         PRUEF(!enthaelt_help(t), "Text %d zeigt kein \"Help\"", i);
-        if (i < 2) PRUEF(anfz_ok(i), "Text %d: \"Dining Room\" in Anfuehrungszeichen (Rohbytes 61 .. 19)", i);
+        if (i == 0) PRUEF(anfz_ok(i), "Text %d: \"Dining Room\" in Anfuehrungszeichen (Rohbytes 61 .. 19)", i);
+        if (i == 1) PRUEF(!anfz_ok(i), "Text %d: nennt kein Schild \"Dining Room\" (Nachbesserung 1 M2)", i);
+    }
+    {   /* Nachbesserung 1 M2: die Zeilen 2/3 des Tuertexts tragen die Glyphen von RE2 Text 0x0F @0x8009F230
+         * (`.. fd 00 1d 00 44 41 3d 4e 50 .. 4e fc 50 44 41 00 47 41 55 00 44 4b 48 41 01 fe`). */
+        static const uint8_t z2[23] = { 0x1D, 0x00, 0x44, 0x41, 0x3D, 0x4E, 0x50, 0x00, 0x45, 0x4F, 0x00, 0x41, 0x50, 0x3F, 0x44,
+                                        0x41, 0x40, 0x00, 0x51, 0x4A, 0x40, 0x41, 0x4E };
+        static const uint8_t z3[12] = { 0x50, 0x44, 0x41, 0x00, 0x47, 0x41, 0x55, 0x00, 0x44, 0x4B, 0x48, 0x41 };
+        int len = 0, a = 0, c = 0;
+        const uint8_t *t1 = re15_dining_r38_text(1, &len);
+        for (int i = 0; t1 && i + 23 <= len; i++) if (!memcmp(t1 + i, z2, 23)) a = 1;
+        for (int i = 0; t1 && i + 12 <= len; i++) if (!memcmp(t1 + i, z3, 12)) c = 1;
+        PRUEF(a && c, "Text 1 = RE2 Text 0x0F @0x8009F230 (Herz-Schluessel): \"A heart is etched under\" / \"the key hole\" "
+                      "glyphengleich");
     }
 }
 
@@ -309,6 +334,54 @@ static void teil_programme(void)
         PRUEF(programm_hat(b, nb, s0, 10) && programm_hat(b, nb, s2, 10), "BEFREIUNG: Tuersperre Slot 0 + Slot 2 -> msg 41");
     }
     PRUEF(re15_dining_r38_anker_ok() >= 0, "Anker-Abfrage laeuft");
+    {   /* Nachbesserung 1 M1: SZENE1021 = `18 02` Gosub sub02 + Aot_set main00 @0x01E2C bytegleich + `01 00` */
+        char rp[600]; size_t rn = 0;
+        snprintf(rp, sizeof rp, "%s/STAGE1/ROOM1021.RDT", RE15_ASSET_PSX_DIR);
+        uint8_t *raw = slurp(rp, &rn);
+        int ns = 0;
+        const uint8_t *sz = re15_dining_r38_programm(5, &ns);
+        PRUEF(raw && rn > 0x01E40 && sz && ns == 24 && sz[0] == 0x18 && sz[1] == 0x02 && !memcmp(sz + 2, raw + 0x01E2C, 20) &&
+              sz[2] == 0x2C && sz[3] == 0x06 && sz[22] == 0x01 && sz[23] == 0x00,
+              "SZENE1021 (%d B) = Gosub sub02 + Aot_set Slot 6 = ROOM1021 main00 @0x01E2C bytegleich + Evt_end", ns);
+        free(raw);
+    }
+    {   /* Nachbesserung 1 M3: Abgang — Doppeltuer frei, While (Elza in Johns sichtbarer Bahn), Pad-Sperre, Cut 7,
+         * Work_set(2,0) + Member_set(6, JOHN_WORT0), dann erst Johns RUN. */
+        const int16_t g[4] = { RE15_R38F_BAHN_X_MIN, RE15_R38F_BAHN_X_MAX, RE15_R38F_BAHN_Z_MIN, RE15_R38F_BAHN_Z_MAX };
+        const uint8_t id[4] = { 0, 0, 2, 2 }, opr[4] = { 2, 4, 2, 4 };
+        uint8_t w[4 + 30 + 4]; int k = 0;
+        w[k++] = 0x0F; w[k++] = 30; w[k++] = 34; w[k++] = 0;
+        for (int i = 0; i < 4; i++) {
+            if (i) { w[k++] = 0; w[k++] = 0; }
+            w[k++] = 0x3E; w[k++] = 0; w[k++] = id[i]; w[k++] = opr[i];
+            w[k++] = (uint8_t)((uint16_t)g[i] & 0xFF); w[k++] = (uint8_t)((uint16_t)g[i] >> 8);
+        }
+        w[k++] = 0x02; w[k++] = 0x00; w[k++] = 0x10; w[k++] = 0x00;
+        const uint8_t ms[8] = { 0x2E, 0x02, 0x00, 0x00, 0x34, 0x06, (uint8_t)(RE15_R38F_JOHN_WORT0 & 0xFF),
+                                (uint8_t)(RE15_R38F_JOHN_WORT0 >> 8) };
+        const uint8_t tuer0[4] = { 0x46, 0x00, 0x02, 0x31 }, sperre[4] = { 0x22, 0x02, 0x07, 0x01 }, cut7[2] = { 0x29, 0x07 };
+        const uint8_t warte_f2[4] = { 0x21, 0x04, 0xF2, 0x01 };
+        int iw = -1, im = -1, it = -1, isp = -1, ic = -1, if2 = -1, irun = -1;
+        for (int i = 0; i + (int)sizeof w <= nb && iw < 0; i++) if (!memcmp(b + i, w, sizeof w)) iw = i;
+        for (int i = 0; i + 4 <= nb; i++) if (!memcmp(b + i, warte_f2, 4)) if2 = i;
+        for (int i = (if2 > 0 ? if2 : 0); i + 4 <= nb && it < 0; i++) if (!memcmp(b + i, tuer0, 4)) it = i;
+        for (int i = (iw > 0 ? iw : 0); i + 4 <= nb && isp < 0; i++) if (!memcmp(b + i, sperre, 4)) isp = i;
+        for (int i = (isp > 0 ? isp : 0); i + 2 <= nb && ic < 0; i++) if (!memcmp(b + i, cut7, 2)) ic = i;
+        for (int i = (ic > 0 ? ic : 0); i + 8 <= nb && im < 0; i++) if (!memcmp(b + i, ms, 8)) im = i;
+        for (int i = (im > 0 ? im : 0); i + 4 <= nb && irun < 0; i++) if (b[i] == 0x40 && b[i + 1] == 0 && b[i + 2] == 5) irun = i;
+        printf("    BEFREIUNG Abgang: Gorillas-Warten @+%04X, Tuer 0 frei @+%04X, While @+%04X, Pad-Sperre @+%04X, Cut 7 @+%04X, "
+               "Member_set 6 @+%04X, RUN @+%04X\n", if2, it, iw, isp, ic, im, irun);
+        PRUEF(if2 > 0 && it > if2 && iw > it, "Doppeltuer -> ROOM1131 frei NACH dem Tod der Gorillas, VOR dem Warten auf Johns Bahn");
+        PRUEF(iw > 0, "While (Elza x %d..%d, z %d..%d) mit vier Member_cmp (UND) = re15_dining_r38.h", g[0], g[1], g[2], g[3]);
+        PRUEF(isp > iw && ic > isp && im > ic && irun > im,
+              "danach Pad-Sperre, Cut 7, John Member_set(6, 0x%04X) (Bit 0x2: kein Koerper-Schub), erst dann RUN",
+              RE15_R38F_JOHN_WORT0);
+        PRUEF(RE15_R38F_BAHN_X_MIN == -7550 - RE15_R38F_KOERPER_R && RE15_R38F_BAHN_X_MAX == RE15_R38F_GANG_X + RE15_R38F_KOERPER_R &&
+              RE15_R38F_BAHN_Z_MIN == -21500 - RE15_R38F_KOERPER_R &&
+              RE15_R38F_BAHN_Z_MAX == RE15_R38F_CUT7_AUS_Z + RE15_R38F_KOERPER_R && RE15_R38F_KOERPER_R == 450 + 450,
+              "Bahn = Ecke sub02 @0x00F8E (-7550,-21500) .. Gang-Ausgang x %d, +-%d (450 + 450), Nordrand Cut-7-Bildgrenze %d + %d",
+              RE15_R38F_GANG_X, RE15_R38F_KOERPER_R, RE15_R38F_CUT7_AUS_Z, RE15_R38F_KOERPER_R);
+    }
 }
 
 /* ---- Teil: leiche1021 ------------------------------------------------------------------------------------- */
@@ -669,6 +742,203 @@ static void teil_phase_h(void)
     PRUEF(!john_da && re15_dining_r38_phase_h() == 0, "Wiederbetreten: kein John, keine Phase H");
 }
 
+/* ---- Teil: szene1021 (Nachbesserung 1 M1) ------------------------------------------------------------------------
+ * Abnahme 0 E1a: nach der ECHTEN 1021-Szene liess sich Roys Leiche nicht untersuchen — die Zone Slot 6 entsteht im Original
+ * nur beim Raumaufbau (main00 @0x01E24 Ck(3,0x5F) -> @0x01E2C). Hier laeuft die Szene selbst (Stand vor der Szene, Ausloese-
+ * Zone Slot 5 main00 @0x01DE2 -> Ereignis 2); danach muss der Druck auf die Leiche im SELBEN Besuch msg 40 zeigen. */
+static void teil_szene1021(void)
+{
+    printf("== szene1021 ==\n");
+    re15_game_state_init();
+    /* Stand vor der Szene (ablauf_elza.md E12, wie Abnahme E1a): (4,0x60) Szene offen (main00 @0x01DDE), (3,0xC9) = 1 -> keine
+     * Zombies im Raumaufbau (main00 @0x01E68), die Szene setzt sie @0x01FDC zurueck. */
+    re15_game_flag_set(4, 0x60, 1);
+    re15_game_flag_set(3, 0xC9, 1);
+    if (room_boot(RE15_R38F_RAUM_1021, -15500, -7100, 0, 0) != 0) return;
+    PRUEF((re15_dining_r38_anker_ok() & 64) != 0, "ROOM1021 sub02..sub05 @0x01FD8 und main00 @0x01DE2..@0x01E40 bytegleich (Anker)");
+    PRUEF(!g_aot.slots[6].active, "vor der Szene: keine Leichen-Zone Slot 6 ((3,0x5F) = 0)");
+    for (int f = 0; f < 10; f++) frame(0, 0);
+    /* in die Begehzone Slot 5 (x -13100..-11000, z -9100..-5100) gehen wie der Spieler: hinstellen, Bilder laufen */
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -12050; pl->z = -7100; pl->rot_y = 0;
+    int szene = 0, frei = 0, n_msg = 0, last = -1, msg8 = 0;
+    for (int f = 0; f < 6000 && !frei; f++) {
+        uint16_t e = (g_scd.message_active && (f % 15) == 0) ? RE15_PAD_BIT_SQUARE : 0;
+        frame(e, e);
+        if (g_scd.player_mode == 2) szene = 1;
+        if (g_scd.message_active && (int)g_scd.message_id != last) { last = (int)g_scd.message_id; n_msg++; if (last == 8) msg8 = 1; }
+        if (!g_scd.message_active) last = -1;
+        if (szene && g_scd.player_mode == 0 && !g_scd.message_active && re15_game_flag_get(3, 0x5F) &&
+            !re15_game_flag_get(2, 7) && f > 300) frei = 1;
+    }
+    printf("    Szene: %d Nachrichten, msg 8 %d, frei %d in Bild %ld; Spieler (%d,%d)\n", n_msg, msg8, frei, s_bild, pl->x, pl->z);
+    PRUEF(szene && frei && msg8, "Szene sub02 gelaufen (msg 0..8, \"I'd like to be alone now...\") und Steuerung zurueck");
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    const re15_aot_t *a = &g_aot.slots[6];
+    printf("    Slot 6 aktiv %d Typ %d Ereignis %d Mitte (%d,%d) halb (%d,%d) sat 0x%02X\n", a->active, a->type, a->event_id, a->x, a->z,
+           a->half_w, a->half_h, a->sce_flags);
+    PRUEF(a->active && a->event_id == RE15_R38F_1021_EREIGNIS && a->x == -4350 && a->z == -9600 && a->half_w == 500 &&
+          a->half_h == 500, "direkt nach der Szene: Leichen-Zone Slot 6 -> Ereignis 6, Rechteck (-4850,-10100) 1000x1000 "
+          "(main00 @0x01E2C)");
+    int john = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == 0x49) john = s;
+    if (john > 0) printf("    John bei (%d,%d)\n", g_actors[john].x, g_actors[john].z);
+    /* Druck wie der Spieler: von Osten (Vorwaerts-Punkt (-4350,-9600) in der Zone), Blick -X */
+    druck_t r = druecke(-3730, -9600, 2048, 200);
+    PRUEF(r.msg_id == RE15_R38F_MSG_1021_LEICHE && !r.raumwechsel,
+          "IM SELBEN BESUCH: Druck auf Roys Leiche -> msg %d (soll 40, Hinweis \"There's an empty key tag ...\")", r.msg_id);
+}
+
+/* ---- Teil: abgang (Nachbesserung 1 M3) --------------------------------------------------------------------------
+ * Abnahme 0 E5/E6/E7/E10: Johns Abgangslauf schob Elza (Koerper-Schub FUN_8002aec4), im Bild von Cut 7 sichtbar (E10).
+ * Je Lage: Phase H bis John in der Ecke steht, Elza an die Lage, Gorillas tot. Geprueft: Elza wird NIE verschoben (sie hat
+ * keine Eingabe), John ist im Bild nie naeher als KOERPER_R an ihr, steht sie in seiner sichtbaren Bahn (BAHN_*), WARTET der
+ * Abgang (Steuerung frei, Doppeltuer frei), bis sie die Bahn verlaesst; danach Abgang, Parken, Kamera zurueck. */
+static int bis_zur_ecke(void)
+{
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_game_flag_set(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT, 1);
+    re15_game_flag_set(9, RE15_R38F_BIT_TUER, 1);   /* wie im Spiel: Elza kam durch die aufgeschlossene Tuer 1131 ((9,66)) */
+    if (room_boot(RE15_R38F_RAUM_1141, -7600, -17600, 0, 0) != 0) return 0;
+    if (re15_dining_r38_phase_h() != 1) return 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER], *john = &g_actors[1];
+    for (int f = 0; f < 60; f++) frame(0, 0);
+    pl->x = -8300; pl->z = -10250; pl->rot_y = 2048;   /* Gemaelde wie teil_phase_h */
+    frame(0, 0);
+    int ja = 0;
+    for (int f = 0; f < 600 && !ja; f++) {
+        uint16_t e = (f == 0 || (g_scd.message_active && (f % 20) == 0)) ? RE15_PAD_BIT_SQUARE : 0;
+        frame(e, e);
+        ja = re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT);
+    }
+    if (!ja) return 0;
+    int pm2 = 0, frei = 0;
+    for (int f = 0; f < 4000 && !frei; f++) {
+        frame(0, 0);
+        if (g_scd.player_mode == 2) pm2 = 1;
+        if (pm2 && g_scd.player_mode == 0 && !g_scd.message_active && f > 200) frei = 1;
+    }
+    if (!frei) return 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) g_actors[s].grid_id |= 0x20;
+    for (int f = 0; f < 900 && !(abs(john->x - (-7550)) < 400 && abs(john->z - (-21500)) < 400); f++) frame(0, 0);
+    for (int f = 0; f < 60; f++) frame(0, 0);   /* TURN @0x00F98 + Warten auf (4,0xF2) */
+    return abs(john->x - (-7550)) < 400 && abs(john->z - (-21500)) < 400;
+}
+
+static int in_bahn(int32_t x, int32_t z)
+{
+    return x >= RE15_R38F_BAHN_X_MIN && x <= RE15_R38F_BAHN_X_MAX && z >= RE15_R38F_BAHN_Z_MIN && z <= RE15_R38F_BAHN_Z_MAX;
+}
+
+static void gorillas_tot(void)
+{
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) re15_actor_free(s);
+    re15_game_flag_set(7, 0xCB, 1);   /* Kill-Flags pc[7] 0xCB/0xCC (sub00 @0x00B1A/@0x00B2E), gelesen sub01 @0x00BFA/@0x00C02 */
+    re15_game_flag_set(7, 0xCC, 1);
+}
+
+typedef struct { const char *name; int32_t x, z; int16_t rot; int32_t weg_x, weg_z; } abgang_lage_t;
+
+static void abgang_lage(const abgang_lage_t *L)
+{
+    printf("  -- Lage %s (%d,%d)\n", L->name, L->x, L->z);
+    if (!bis_zur_ecke()) { printf("  FEHLER: Phase H bis zur Ecke nicht erreicht\n"); g_fail++; return; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER], *john = &g_actors[1];
+    pl->x = L->x; pl->z = L->z; pl->rot_y = L->rot;
+    for (int f = 0; f < 10; f++) frame(0, 0);
+    int32_t ex = pl->x, ez = pl->z;
+    const int bahn = in_bahn(ex, ez);
+    PRUEF(abs(ex - L->x) + abs(ez - L->z) == 0, "Elza steht bei (%d,%d) %s Johns sichtbarer Bahn", ex, ez, bahn ? "IN" : "ausserhalb");
+    gorillas_tot();
+    int max_abw = 0, cut7 = -1, park = -1, min_sicht = 1 << 30, warte_ok = 1;
+    for (int f = 0; f < 2400; f++) {
+        frame(0, 0);
+        const int abw = abs(pl->x - ex) + abs(pl->z - ez);
+        if (abw > max_abw) { max_abw = abw; if (abw > 0) printf("    Bild %ld: Elza (%d,%d) Abweichung %d, John (%d,%d)\n", s_bild, pl->x,
+                                                                   pl->z, abw, john->x, john->z); }
+        if (s_shown == 7 && cut7 < 0) cut7 = f;
+        if (john->x > -29000 && sichtbar(s_shown, john)) {
+            const double dx = john->x - pl->x, dz = john->z - pl->z;
+            const int d = (int)sqrt(dx * dx + dz * dz);
+            if (d < min_sicht) min_sicht = d;
+        }
+        if (john->x <= -29000 && park < 0) park = f;
+        if (bahn && f == 300) {
+            /* 300 Bilder in der Bahn: kein Abgang, Steuerung frei, Doppeltuer frei (keine Sperre mehr) */
+            warte_ok = (cut7 < 0 && park < 0 && g_scd.player_mode == 0 && abs(john->x - (-7550)) < 400 &&
+                        abs(john->z - (-21500)) < 400);
+            PRUEF(warte_ok, "  in der Bahn: 300 Bilder nach dem Tod der Gorillas KEIN Abgang (Cut 7 %d, Park %d, pm %d, John (%d,%d))",
+                  cut7, park, (int)g_scd.player_mode, john->x, john->z);
+            PRUEF(g_aot.slots[0].active && g_aot.slots[0].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[0].dest_room == 0x13,
+                  "  ... Doppeltuer frei: Slot 0 = Tuer -> Raum 0x%02X (soll 0x13 = ROOM1131, keine Sperre msg 41)",
+                  g_aot.door_params[0].dest_room);
+            pl->x = L->weg_x; pl->z = L->weg_z;   /* Elza geht aus der Bahn (Ortswechsel des Riegels, ohne Gangbild) */
+            frame(0, 0);
+            ex = pl->x; ez = pl->z;
+            PRUEF(!in_bahn(ex, ez), "  Elza verlaesst die Bahn: (%d,%d)", ex, ez);
+        }
+        if (park >= 0 && f > park + 60 && g_scd.player_mode == 0) break;
+    }
+    PRUEF(max_abw == 0, "  Elza wird nie verschoben (groesste Abweichung %d)", max_abw);
+    PRUEF(park >= 0, "  John geht (geparkt in Bild %d, Cut 7 ab Bild %d)", park, cut7);
+    if (bahn) PRUEF(cut7 > 300, "  ... erst NACHDEM Elza die Bahn verlassen hat (Cut 7 ab Bild %d)", cut7);
+    else      PRUEF(cut7 >= 0 && cut7 < 60, "  ... sofort (Cut 7 ab Bild %d)", cut7);
+    PRUEF(min_sicht >= RE15_R38F_KOERPER_R, "  John im Bild nie naeher als %d an Elza (kleinster Abstand %d)", RE15_R38F_KOERPER_R,
+          min_sicht == (1 << 30) ? -1 : min_sicht);
+    PRUEF(s_shown != 7 && g_scd.player_mode == 0 && g_scd.cut_auto_enabled, "  danach Kamera %d (nicht mehr Cut 7), Steuerung frei",
+          s_shown);
+    PRUEF(re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG) == 1 && re15_game_flag_get(4, 0xC3) == 1, "  (9,67) = 1, Riegel (4,0xC3) = 1");
+    (void)warte_ok;
+}
+
+static void teil_abgang(void)
+{
+    printf("== abgang ==\n");
+    static const abgang_lage_t lagen[] = {
+        /* die vier Lagen der Abnahme (E10 in der Bahn, E5/E6/E7 im Dachgang/an der Dachtuer hinter der Kamera von Cut 7) */
+        { "E10 Suedteil auf Johns Weg",      -7418, -14952, 3072, -5600, -14952 },
+        { "E5 Dachgang Mitte",               -7342,  -4062, 1024,     0,      0 },
+        { "E6 vor der Dachtuer",             -7263,  -1030, 3072,     0,      0 },
+        { "E7 auf Johns Zielpunkt",          -7332,   -718, 3072,     0,      0 },
+        /* dazu: knapp neben der Bahn (kein Warten, Abstand im Bild), neben John in der Ecke (Warten) */
+        { "knapp oestlich der Bahn",         -6400, -15000, 2048,     0,      0 },
+        { "neben John in der Ecke",          -6500, -20500, 2048, -5600, -20500 },
+    };
+    for (unsigned i = 0; i < sizeof lagen / sizeof lagen[0]; i++) abgang_lage(&lagen[i]);
+}
+
+/* ---- Teil: weg1131 (Nachbesserung 1 M3): Elza geht waehrend des Wartens durch die Doppeltuer hinaus — beim
+ * Zurueckkommen ist John fort (er ging aufs Dach, waehrend sie fort war), die Dachtuer offen; kein John taucht auf. */
+static void teil_weg1131(void)
+{
+    printf("== weg1131 ==\n");
+    if (!bis_zur_ecke()) { printf("  FEHLER: Phase H bis zur Ecke nicht erreicht\n"); g_fail++; return; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -7980; pl->z = -17750; pl->rot_y = 2048;   /* vor der Doppeltuer (Slot 0 x -9100..-8100, z -19750..-15750) */
+    for (int f = 0; f < 10; f++) frame(0, 0);
+    PRUEF(in_bahn(pl->x, pl->z), "Elza vor der Doppeltuer (%d,%d) steht in Johns sichtbarer Bahn", pl->x, pl->z);
+    gorillas_tot();
+    for (int f = 0; f < 120; f++) frame(0, 0);
+    PRUEF(s_shown != 7 && g_scd.player_mode == 0, "Gorillas tot, Elza in der Bahn: kein Abgang, Steuerung frei");
+    druck_t r = druecke(-7980, -17750, 2048, 200);
+    PRUEF(r.raumwechsel && r.ziel == 0x1131, "Doppeltuer -> ROOM%04X (soll 1131)", (unsigned)r.ziel);
+    PRUEF(re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG) == 0, "John beim Hinausgehen noch nicht fort ((9,67) = 0)");
+    /* Raumaufbau 1131 (room_boot behaelt die Flags; die Installer-Regel tuer_1131 laeuft darin) */
+    if (room_boot(RE15_R38F_RAUM_1131, -1300, -13950, 0, 0) != 0) return;   /* Ruecksprung-Spawn aus 1141 */
+    PRUEF(re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG) == 1 && re15_game_flag_get(4, 0xC3) == 1,
+          "ROOM1131: John ist aufs Dach gegangen, waehrend Elza fort war: (9,67) = 1, Riegel (4,0xC3) = 1");
+    if (room_boot(RE15_R38F_RAUM_1141, -7600, -17600, 0, 0) != 0) return;
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    int john_da = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == RE15_R38F_JOHN_TYP) john_da = 1;
+    PRUEF(!john_da && re15_dining_r38_phase_h() == 0, "zurueck in 1141: kein John, keine Phase H");
+    PRUEF(g_aot.slots[1].active && g_aot.slots[1].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[1].dest_room == 0x17 &&
+          !g_aot.slots[2].active, "Dachtuer offen: Slot 1 = Tuer -> Raum 0x%02X (soll 0x17), Riegel-Zone Slot 2 aus (aktiv %d)",
+          g_aot.door_params[1].dest_room, g_aot.slots[2].active);
+}
+
 /* ---- Teil: takt (Messwerkzeug, kein Riegel): wie viele Aktionsdrucke im Abstand von 60 Bildern (RE15_WEGPLAN
  * AKTION + WARTE 60) braucht jede Abfrage? Liefert die Zahlen fuer tests/integration/test_r38_dining1141.cmake. */
 static int drucke_bis(int (*offen)(void), int max)
@@ -966,6 +1236,9 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "tuer1131"))       teil_tuer1131();
     if (alle || !strcmp(teil, "phase_h"))        teil_phase_h();
     if (alle || !strcmp(teil, "leon1140"))       teil_leon1140();
+    if (alle || !strcmp(teil, "szene1021"))      teil_szene1021();   /* Nachbesserung 1 M1 */
+    if (alle || !strcmp(teil, "abgang"))         teil_abgang();      /* Nachbesserung 1 M3 */
+    if (alle || !strcmp(teil, "weg1131"))        teil_weg1131();     /* Nachbesserung 1 M3 */
     if (!strcmp(teil, "takt"))                       teil_takt();   /* Messwerkzeug, kein Riegel */
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler (Tuersequenzen %d)\n", teil, g_fail, s_n_seq);

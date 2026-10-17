@@ -17,7 +17,8 @@
  * Opcode-Form (engine/src/gen/dining_r38_programme.inc, Werkzeug tools/r38_dining/programme_bauen.py mit Listing).
  *
  * ABLAUF (nur Elza-RDTs 1011/1021/1131/1141; Leon nur der Rolladen-Ton in 1140):
- *   1021  Roys Leiche (sub06, Ereignis 6): msg 9 -> Port-Nachricht 40 = msg 9 + Seite + Hinweis.
+ *   1021  Roys Leiche (sub06, Ereignis 6): msg 9 -> Port-Nachricht 40 = msg 9 + Seite + Hinweis. Die Leichen-Zone
+ *         (Slot 6) ist direkt nach der Szene da (Nachbesserung 1 M1: Programm SZENE1021 am Ereignis 2).
  *   1011  nach der 1021-Szene ((3,0x5F) = 1, ROOM1021 sub02 @0x01FE4) liegt der Dining Room Key an Roys Liegestelle.
  *   1131  Tuer Slot 0 -> 1141 verschlossen, bis der Schluessel benutzt ist (RE2-Tuer-Handler wie Runde 36 Spur Q).
  *   1141  Phase H ((4,0xF0) = 1 und Notrolladen zu (3,0x6A) = 0): John ist schon beim Betreten im Dachgang HINTER
@@ -29,6 +30,8 @@
  *         sub02 ab Elzas Gang an ihren Platz (msg 2 -> 40 ohne "Same here..."), Tuersperre (msg 41) solange die
  *         Gorillas leben, dann laeuft John durch den Gang und die Dachtuer aufs Dach, AUSSERHALB des Bildes ((9,67)).
  *         Der Riegel sub05 bleibt Original (kein Port-Programm am Ereignis 5); John oeffnet ihn beim Hinausgehen.
+ *         Nachbesserung 1 M3: der Abgang wartet, solange Elza in Johns SICHTBARER Bahn steht, und John laeuft ohne
+ *         Koerper-Schub (Wort-0-Bit 0x2) — er schiebt Elza nirgends; die Doppeltuer ist ab dem Tod der Gorillas frei.
  */
 #ifndef RE15_DINING_R38_H
 #define RE15_DINING_R38_H
@@ -93,8 +96,13 @@
 
 /* ---- ROOM1021: Roys Leiche ----------------------------------------------------------------------------------------
  * Leiche = main00 @0x01E24 Ifel Ck(3,0x5F)==1 -> @0x01E2C Aot_set Slot 6 sce 3 -> sub06 (Ereignis 6) + @0x01E40 Prop.
- * sub06 @0x021EC..0x02221: Message_on 9 @0x02202 `2b 09 ff ff` ("He's dead.[Seite]Poor Roy...", @0x024FB). */
+ * sub06 @0x021EC..0x02221: Message_on 9 @0x02202 `2b 09 ff ff` ("He's dead.[Seite]Poor Roy...", @0x024FB).
+ * Nachbesserung 1 M1: die Szene sub02 (Ereignis 2 = Begehzone Slot 5 main00 @0x01DE2 `.. ff 00 18 02 ..`) setzt
+ * (3,0x5F) @0x01FE4, aber keine Zone Slot 6 (Walk: kein Aot_set/Aot_reset auf 6 in sub02) — im Besuch der Szene war die
+ * Leiche nicht zu untersuchen (Abnahme E1a). Programm SZENE1021 = `18 02` Gosub sub02 (laeuft aus dem RDT: Gosub
+ * LAB_8003fbe8 @0x8003fc04, Rueckkehr FUN_8003f1f0 @0x8003f218) + Aot_set main00 @0x01E2C bytegleich + Evt_end. */
 #define RE15_R38F_1021_EREIGNIS     6
+#define RE15_R38F_1021_EREIGNIS_SZENE 2
 #define RE15_R38F_MSG_1021_LEICHE   40   /* VERTRAG 1.2: 1021 40-44 */
 
 /* ---- ROOM1131: die Tuer zum Besprechungsraum ----------------------------------------------------------------------
@@ -104,7 +112,9 @@
 #define RE15_R38F_1131_TUER_SLOT    0
 #define RE15_R38F_1131_EREIGNIS     29   /* Port-Ereignis (< RE15_RDT_MAX_SUB_SCD; in 1131 frei: sub00..sub02) */
 #define RE15_R38F_TUER_FLAGS        0x31 /* sat des Tuer-Satzes selbst (pc[3] @0x00891) */
-#define RE15_R38F_MSG_1131_ZU       40   /* "It's locked. / The door is marked "Dining Room"." (VERTRAG 1.2: 1131 40-44) */
+#define RE15_R38F_MSG_1131_ZU       40   /* "It's locked. / A heart is etched under / the key hole." = RE2 Text 0x0F
+                                          * @0x8009F230 (Herz-Schluessel 0x5B - 0x4C @0x800516b4; Nachbesserung 1 M2:
+                                          * ueber der Tuer haengt das Schild "Briefing Room") (VERTRAG 1.2: 1131 40-44) */
 #define RE15_R38F_MSG_1131_BENUTZT  41   /* "You've used the Dining Room Key."                                       */
 #define RE15_R38F_MASKE             0xffffu   /* Pausemaske aller 524 ausgelieferten sce-1-Saetze */
 
@@ -169,6 +179,24 @@
 #define RE15_R38F_GANG_Z            (-7600)
 #define RE15_R38F_TUER_INNEN_X      (-7350)
 #define RE15_R38F_TUER_INNEN_Z      (-700)
+/* Nachbesserung 1 M3 (Abnahme 0 E5/E6/E7/E10: Johns Abgangslauf schob Elza). Werkzeug-Konstanten, der Riegel vergleicht:
+ *   KOERPER_R   = Spieler-Kasten PSX.EXE @0x80073e94 `00 00 06 fa 00 00 c2 01 ..` (+6 = 450) + John-Kasten STAGE1.BIN
+ *                 @0x801217f8 (INIT @0x8011ddd8 `lw v0,6148(v0)` / @0x8011dde0 `sw v0,120(v1)`; +6 = 450) = radSum
+ *                 FUN_8002aec4 @0x8002b164; gemessenes Schub-Gleichgewicht der Abnahme 858..902.
+ *   CUT7_AUS_Z  = John verlaesst das Bild von Cut 7 (Satz @0x00140, Blick nach Sueden): F3352 z -9975 945 px, F3353
+ *                 z -9775 0 px (Lauf e7035a6f, F_belege/n4_sicht_lauf_e7035a6f.txt).
+ *   BAHN_*      = Elzas Lagen, in denen John auf dem sichtbaren Teil seiner Bahn (Ecke sub02 @0x00F8E (-7550,-21500) ->
+ *                 GANG_X/Z, x -7550..-7350) naeher als KOERPER_R kaeme: x -7550-900 .. -7350+900, z -21500-900 ..
+ *                 CUT7_AUS_Z+900. Dort WARTET der Abgang (While + Member_cmp-UND-Kette, LAB_8003f6f4 @0x8003f7cc).
+ *   JOHN_WORT0  = Member_set Id 6 (`sw a2,0(a0)` @0x800411c8) auf John vor dem Lauf: 0x1 wie jede Figur des Ports
+ *                 (scd_vm.c Sce_em_set) + Bit 0x2 = kein Koerper-Schub (FUN_8002aec4 @0x8002af04 `or`/`andi 0x2`/`bne`). */
+#define RE15_R38F_KOERPER_R         900
+#define RE15_R38F_CUT7_AUS_Z        (-9775)
+#define RE15_R38F_BAHN_X_MIN        (-8450)
+#define RE15_R38F_BAHN_X_MAX        (-6450)
+#define RE15_R38F_BAHN_Z_MIN        (-22400)
+#define RE15_R38F_BAHN_Z_MAX        (-8875)
+#define RE15_R38F_JOHN_WORT0        0x0003
 
 /* ---- Haken ------------------------------------------------------------------------------------------------------- */
 /* Raumaufbau NACH dem Init-Lauf (scd_room_setup.c Blockende, platform/pc/main.c Boot/CONTINUE). */
@@ -197,7 +225,8 @@ const uint8_t *re15_dining_r38_md1_bytes(uint16_t room_id, int *out_size);
 const uint8_t *re15_dining_r38_tim_bytes(uint16_t room_id, int *out_size);
 
 /* ---- Pruefhaken (Riegel) --------------------------------------------------------------------------------------- */
-const uint8_t *re15_dining_r38_programm(int nr, int *out_len);   /* 0 ROLL1140 1 ROLL1141 2 LEICHE 3 HAEMMERN 4 BEFREIUNG */
+const uint8_t *re15_dining_r38_programm(int nr, int *out_len);   /* 0 ROLL1140 1 ROLL1141 2 LEICHE 3 HAEMMERN 4 BEFREIUNG
+                                                                    * 5 SZENE1021 (Nachbesserung 1 M1) */
 const uint8_t *re15_dining_r38_text(int nr, int *out_len);       /* 0 1021/40 1 1131/40 2 1131/41 3 1141/40 4 1141/41 */
 int  re15_dining_r38_phase_h(void);         /* 1 = aktueller Raumaufbau 1141 in Phase H                          */
 int  re15_dining_r38_tuer_gesperrt(void);   /* 1 = 1131 Slot 0 ist umgewidmet                                     */

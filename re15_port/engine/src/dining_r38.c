@@ -56,7 +56,7 @@ static void log_f(const char *s)
 /* ============================ Anker (Quellbereiche im GELADENEN RDT) ============================
  * Die Programme bestehen aus Original-Bytes. Bevor eines laeuft, wird der Quellbereich im geladenen RDT per
  * FNV-1a gegen den Wert beim Bauen geprueft — weicht er ab (fremde RDT), bleibt der Original-Sub. */
-enum { A_ROLL1140 = 1, A_ROLL1141 = 2, A_LEICHE = 4, A_SUB02_05 = 8, A_SUB00 = 16, A_MAIN00 = 32 };
+enum { A_ROLL1140 = 1, A_ROLL1141 = 2, A_LEICHE = 4, A_SUB02_05 = 8, A_SUB00 = 16, A_MAIN00 = 32, A_SZENE1021 = 64 };
 
 static uint32_t fnv(const uint8_t *p, uint32_t n)
 {
@@ -91,6 +91,11 @@ static int anker(uint16_t room_id)
     if (room_id == RE15_R38F_RAUM_1021 &&
         bereich_ok(RE15_R38F_ANKER_LEICHE1021_SUB06_OFF, RE15_R38F_ANKER_LEICHE1021_SUB06_LEN, RE15_R38F_ANKER_LEICHE1021_SUB06_FNV))
         m |= A_LEICHE;
+    /* Nachbesserung 1 M1: die Szene sub02..sub05 (Gosub-Ziel sub04) und main00 Slot 5 .. Slot 6 bytegleich. */
+    if (room_id == RE15_R38F_RAUM_1021 &&
+        bereich_ok(RE15_R38F_ANKER_SZENE1021_SUB02_05_OFF, RE15_R38F_ANKER_SZENE1021_SUB02_05_LEN, RE15_R38F_ANKER_SZENE1021_SUB02_05_FNV) &&
+        bereich_ok(RE15_R38F_ANKER_SZENE1021_MAIN00_OFF, RE15_R38F_ANKER_SZENE1021_MAIN00_LEN, RE15_R38F_ANKER_SZENE1021_MAIN00_FNV))
+        m |= A_SZENE1021;
     return m;
 }
 
@@ -134,14 +139,15 @@ const uint8_t *re15_dining_r38_text(int nr, int *out_len)
 
 const uint8_t *re15_dining_r38_programm(int nr, int *out_len)
 {
-    static const struct { const uint8_t *b; int n; } p[5] = {
+    static const struct { const uint8_t *b; int n; } p[6] = {
         { k_r38f_p_roll1140,   (int)sizeof k_r38f_p_roll1140   },
         { k_r38f_p_roll1141,   (int)sizeof k_r38f_p_roll1141   },
         { k_r38f_p_leiche1021, (int)sizeof k_r38f_p_leiche1021 },
         { k_r38f_p_haemmern,   (int)sizeof k_r38f_p_haemmern   },
         { k_r38f_p_befreiung,  (int)sizeof k_r38f_p_befreiung  },
+        { k_r38f_p_szene1021,  (int)sizeof k_r38f_p_szene1021  },   /* Nachbesserung 1 M1 */
     };
-    if (nr < 0 || nr >= 5) { if (out_len) *out_len = 0; return NULL; }
+    if (nr < 0 || nr >= 6) { if (out_len) *out_len = 0; return NULL; }
     if (out_len) *out_len = p[nr].n;
     return p[nr].b;
 }
@@ -196,6 +202,18 @@ static void tuer_1131(void)
 {
     meldung(RE15_R38F_MSG_1131_ZU, k_r38f_msg1131_zu, sizeof k_r38f_msg1131_zu);
     meldung(RE15_R38F_MSG_1131_BENUTZT, k_r38f_msg1131_benutzt, sizeof k_r38f_msg1131_benutzt);
+    /* Nachbesserung 1 M3: die Doppeltuer 1141 -> 1131 ist frei, sobald die Gorillas tot sind; Johns Abgang wartet, solange
+     * Elza in seiner sichtbaren Bahn steht. Geht sie in dieser Zeit hinaus, geht John aufs Dach, waehrend sie fort ist —
+     * derselbe Endzustand wie nach dem Abgang im Raum (BEFREIUNG: Set(9,67)=1, sub05 @0x00FD2 Set(4,0xC3)=1 = Riegel offen).
+     * Erkennung: Szene 1141 gelaufen ((3,0xC2) = sub02 @0x00C20), Gorillas tot ((4,0xF2) = 0, sub01 @0x00C0C), John noch
+     * nicht fort ((9,67) = 0), Port-Weg ((9,66) = Tuer aufgeschlossen). Beim naechsten Eintritt baut main00 @0x00A72
+     * Ck(4,0xC3) die Dachtuer offen, sub00 setzt bei (4,0xF0) = (4,0xF2) = 0 keinen John (@0x00AFE/@0x00B4A). */
+    if (re15_game_flag_get(9, RE15_R38F_BIT_TUER) && re15_game_flag_get(3, 0xC2) &&
+        !re15_game_flag_get(RE15_R38F_F2_BANK, RE15_R38F_F2_BIT) && !re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG)) {
+        re15_game_flag_set(9, RE15_R38F_BIT_JOHN_WEG, 1);
+        re15_game_flag_set(4, 0xC3, 1);
+        log_f("ROOM1131: Elza hat 1141 vor Johns Abgang verlassen -> John ist aufs Dach gegangen: (9,67) = 1, Riegel (4,0xC3) = 1");
+    }
     if (re15_game_flag_get(9, RE15_R38F_BIT_TUER)) return;
     const re15_aot_t *a = &g_aot.slots[RE15_R38F_1131_TUER_SLOT];
     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) return;
@@ -274,6 +292,12 @@ const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id)
         return k_r38f_p_roll1141;
     if (room_id == RE15_R38F_RAUM_1021 && event_id == RE15_R38F_1021_EREIGNIS && (anker(room_id) & A_LEICHE))
         return k_r38f_p_leiche1021;
+    /* Nachbesserung 1 M1: die Szene (Begehzone Slot 5 -> Ereignis 2) laeuft als Gosub sub02 aus dem RDT, danach entsteht die
+     * Leichen-Zone Slot 6 in der Form von main00 @0x01E2C — der Hinweis ist direkt nach der Szene erreichbar. */
+    if (room_id == RE15_R38F_RAUM_1021 && event_id == RE15_R38F_1021_EREIGNIS_SZENE && (anker(room_id) & A_SZENE1021)) {
+        log_f("ROOM1021 Ereignis 2 (Szene sub02) -> Programm SZENE1021: Gosub sub02, danach Leichen-Zone Slot 6 (main00 @0x01E2C)");
+        return k_r38f_p_szene1021;
+    }
     if (room_id == RE15_R38F_RAUM_1131 && event_id == RE15_R38F_1131_EREIGNIS && s_gesperrt) {
         /* RE2 LAB_80051514: Besitz-Test im INVENTAR (`jal FUN_800696cc` @0x80051628, `bltz` @0x80051634). */
         if (re15_inv_find_item(RE15_R38F_ITEM) >= 0) {

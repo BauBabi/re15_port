@@ -19,6 +19,9 @@ PROGRAMME
              Bank = Port-Bank 0x3B (die snd0-Bank von ROOM1131, die einzige mit den Rolladen-Wellen).
   LEICHE1021 ROOM1021 Ereignis 6 (Roys Leiche): sub06 @0x021EC, Message_on 9 @0x02202 -> Port-Nachricht 40
              (= msg 9 + Seite + NUTZER-VORGABE "There's an empty key tag on his belt. / It reads "Dining Room".").
+  SZENE1021  ROOM1021 Ereignis 2 (Begehzone Slot 5 main00 @0x01DE2 = die Szene, Nachbesserung 1 M1): Gosub sub02 (laeuft
+             unveraendert aus dem RDT), danach Aot_set Slot 6 = main00 @0x01E2C bytegleich — die Leiche ist direkt nach der
+             Szene zu untersuchen (im Original erst nach dem Wiederbetreten, main00 @0x01E24 Ck(3,0x5F)).
   HAEMMERN   ROOM1141 Phase H (John sitzt im Dachgang hinter dem geschlossenen Notrolladen fest): ersetzt das
              Evt_exec sub02 @0x00B02 beim Betreten. John steht schon im Dachgang HINTER dem Rolladen (Nachtrag 2: er ist
              da, wenn Elza den Raum betritt — kein Auftauchen): der Installer setzt den Spawn sub00 @0x00B06 vor dem
@@ -40,6 +43,9 @@ PROGRAMME
              Tuersperre msg 41 (Slot 0 + Riegel-Slot 2) bis die Gorillas tot sind, dann Johns Abgang durch den Gang
              und die Dachtuer AUSSERHALB des Bildes (Cut 7 blickt nach Sueden, John laeuft auf die Kamera zu und
              verlaesst das Bild am unteren Rand; Tuer-Toene DOOR1A im Off), Riegel-Zustand wie nach sub05.
+             Nachbesserung 1 M3: Doppeltuer frei, sobald die Gorillas tot sind; der Abgang wartet, solange Elza in Johns
+             SICHTBARER Bahn steht (While mit Member_cmp-Kette, BAHN_*); John laeuft mit Wort-0-Bit 0x2 (kein
+             Koerper-Schub, FUN_8002aec4 @0x8002af04) — er schiebt Elza nirgends.
 """
 import io, os, struct, sys
 
@@ -78,6 +84,22 @@ TUER_INNEN = (-7350, -700)      # RE15_R38F_TUER_INNEN_X/Z  vor der Dachtuer (Re
 PARK = (-30000, -30000)         # ROOM11B0 main00 @0x01080 `d0 8a` (geparkt)
 ORIG_ELZA = (-7200, -15500)     # Original-Dialogplatz Elza (sub02 @0x00CD8)
 ORIG_JOHN = (-6750, -13350)     # Original-Dialogplatz John (sub00 @0x00B06)
+# ---- Nachbesserung 1, M3 (Abnahme 0: Johns Abgangslauf schob Elza, E5/E6/E7/E10) ----
+ECKE = (-7550, -21500)          # Johns Platz im Kampf = Ziel sub02 @0x00F8E `40 00 05 01 82 e2 04 ac` (Start des Abgangs)
+KOERPER_R = 900                 # RE15_R38F_KOERPER_R  Spieler-Kasten PSX.EXE @0x80073e94 +6 = 450 + John-Kasten STAGE1.BIN
+                                #   @0x801217f8 +6 = 450 (INIT @0x8011ddd8/@0x8011dde0 +0x78) = radSum FUN_8002aec4 @0x8002b164
+Z_AUS_DEM_BILD = -9775          # RE15_R38F_CUT7_AUS_Z  John verlaesst das Bild von Cut 7 (Blick nach Sueden, Satz @0x00140):
+                                #   gemessen Lauf e7035a6f (F_belege/n4_sicht_lauf_e7035a6f.txt) F3352 z -9975 945 px, F3353
+                                #   z -9775 0 px — noerdlich davon ist er in keinem Bild von Cut 7
+# Elzas Lagen, in denen John auf dem SICHTBAREN Teil seiner Bahn (Ecke -> z -9775) naeher als KOERPER_R kaeme: die Bahn
+# ECKE -> GANG_AUSGANG verlaeuft in x -7550..-7350; ihr sichtbarer Teil endet bei Z_AUS_DEM_BILD.
+BAHN_X_MIN = min(ECKE[0], GANG_AUSGANG[0]) - KOERPER_R     # RE15_R38F_BAHN_X_MIN  -8450
+BAHN_X_MAX = max(ECKE[0], GANG_AUSGANG[0]) + KOERPER_R     # RE15_R38F_BAHN_X_MAX  -6450
+BAHN_Z_MIN = ECKE[1] - KOERPER_R                            # RE15_R38F_BAHN_Z_MIN  -22400
+BAHN_Z_MAX = Z_AUS_DEM_BILD + KOERPER_R                     # RE15_R38F_BAHN_Z_MAX  -8875
+JOHN_WORT0 = 0x0003             # RE15_R38F_JOHN_WORT0  Member_set Id 6 (`sw a2,0(a0)` @0x800411c8): Bit 0x1 = der Wert, den
+                                #   der Port jeder Figur gibt (scd_vm.c Sce_em_set `a->flags = 0x01`), + Bit 0x2 = kein
+                                #   Koerper-Schub (FUN_8002aec4 @0x8002af04-@0x8002af0c, Port re15_body_push)
 
 prog = []
 
@@ -179,6 +201,42 @@ def baue_leiche():
     kopie("1021", 0x021EC, 0x02222, [0x46, 0x06], "(sub06 Roys Leiche)")
     ersetze([0x2B, 0x09, 0xFF, 0xFF], [0x2B, MSG_1021_LEICHE, 0xFF, 0xFF], "Port-Nachricht 40 (msg 9 + Hinweis)")
     return list(prog)
+
+
+def baue_szene1021():
+    """Nachbesserung 1, M1: die Leichen-Zone Slot 6 entsteht im Original nur beim Raumaufbau (main00 @0x01E24 Ck(3,0x5F)
+    -> @0x01E2C Aot_set); die Szene sub02 setzt (3,0x5F) @0x01FE4, aber keine Zone. Ereignis 2 (Begehzone Slot 5 main00
+    @0x01DE2) laeuft deshalb als: sub02 unveraendert AUS DEM RDT (Gosub), danach die Zone in der Raumaufbau-Form."""
+    del prog[:]
+    op([0x18, 0x02], "Gosub sub02 = die ausgelieferte Szene, laeuft aus dem RDT (Gosub LAB_8003fbe8 @0x8003fc04/@0x8003fc3c; "
+                     "Rueckkehr am Evt_end @0x021BC: FUN_8003f1f0 @0x8003f218/@0x8003f230)")
+    kopie("1021", 0x01E2C, 0x01E40, [0x2C, 0x06, 0x03, 0x31],
+          "(Aot_set Slot 6 = Roys Leiche -> sub06, bytegleich main00 — dort unter Ck(3,0x5F) @0x01E28, das sub02 @0x01FE4 "
+          "eben gesetzt hat)")
+    op([0x01, 0x00], "Evt_end (Ebene 0: Faden aus, FUN_8003f1f0 @0x8003f204)")
+    return list(prog)
+
+
+def while_elza_in_bahn():
+    """While (Elza in Johns sichtbarer Bahn) { Evt_next } — Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00` + Ck + `02 00` +
+    `10 00`, mit einer UND-Kette aus vier Member_cmp (LAB_8003f6f4: Verbinder u16 @0x8003f7cc, 0 = UND @0x8003f80c).
+    Member_cmp `3e 00 <id> <op> lo hi` (Form ROOM1040 sub05 @0x018C0): Id 0 = x (+0x34, @0x80041384), Id 2 = z (+0x3c,
+    @0x8004139c); Operator 2 = >= (@0x8004130c), 4 = <= (@0x80041320). Arbeitsfigur = Spieler (Work_set(1,0) davor)."""
+    glieder = [(0, 2, BAHN_X_MIN, "x >= %d" % BAHN_X_MIN), (0, 4, BAHN_X_MAX, "x <= %d" % BAHN_X_MAX),
+               (2, 2, BAHN_Z_MIN, "z >= %d" % BAHN_Z_MIN), (2, 4, BAHN_Z_MAX, "z <= %d" % BAHN_Z_MAX)]
+    kette = []
+    for i, (mid, opr, wert, c) in enumerate(glieder):
+        if i:
+            kette.append((b"\x00\x00", "  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)"))
+        kette.append((bytes([0x3E, 0x00, mid, opr]) + s16(wert), "  Member_cmp Elza %s" % c))
+    laenge_kette = sum(len(b) for b, _ in kette)
+    rumpf = [(b"\x02\x00", "  Evt_next + Nop (Form sub03 @0x00FB0)"), (b"\x10\x00", "Ewhile (Form sub03 @0x00FB2)")]
+    block = laenge_kette + sum(len(b) for b, _ in rumpf)
+    op(bytes([0x0F, laenge_kette]) + struct.pack("<H", block),
+       "While Kette %d B, Block %d B (Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`; Kettenlaenge pc+1 @0x8003f790, "
+       "Blocklaenge @0x8003f74c)" % (laenge_kette, block))
+    for b, c in kette + rumpf:
+        op(b, c)
 
 
 def ifel_6a(inner, c):
@@ -289,11 +347,23 @@ def baue_befreiung():
     # ---- Gorillas tot -> Tueren frei, John geht durch den Gang aufs Dach (ausserhalb des Bildes) ----
     warte(4, 0xF2, 1, "Gorillas leben (sub01 @0x00C0C loescht (4,0xF2))")
     sleep(30, "Sleep 30 (Form ROOM1021 sub06 @0x021FE)")
+    # Nachbesserung 1, M3: die Doppeltuer ist frei, sobald die Gorillas tot sind (vorher erst am Ende des Abgangs) —
+    # Johns Abgang kann jetzt warten (s.u.), und "I cannot leave him alone with those monsters." gilt nur, solange sie leben.
+    op([0x46, 0x00, 0x02, 0x31] + list(d[0x00A52 + 14:0x00A52 + 20]),
+       "Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14; Form sub05 @0x00FDC `46 01 02 31 ..`)")
+    # Nachbesserung 1, M3: John laeuft erst los, wenn Elza NICHT in seiner sichtbaren Bahn steht (sonst durchdringt er sie
+    # im Bild von Cut 7 — Abnahme E10). Den unsichtbaren Teil (hinter der Kamera, Dachgang, Dachtuer) laeuft er ohne
+    # Koerper-Schub (Bit 0x2 unten) — Elza bleibt stehen, wo sie steht (Abnahme E5/E6/E7).
+    work_player("Work_set(1,0)+Nop Spieler = Arbeitsfigur der Lage-Abfrage (Form ROOM1141 sub02 @0x00C2E)")
+    while_elza_in_bahn()
     set_flag(2, 0x07, 1, "Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)")
     set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)")
     cut_chg(7, "Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft auf die Kamera "
                "zu und verlaesst das Bild am unteren Rand")
     work_npc(0)
+    op([0x34, 0x06] + list(s16(JOHN_WORT0)),
+       "Member_set(6, 0x%04X) John: Wort 0 (`sw a2,0(a0)` @0x800411c8) mit Bit 0x2 = kein Koerper-Schub "
+       "(FUN_8002aec4 @0x8002af04-@0x8002af0c) — Form ROOM11B0 sub06 @0x01706 `34 06 01 02`" % JOHN_WORT0)
     dest(5, 1, GANG_AUSGANG, "Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)")
     op([0x18, 0x04], "Gosub sub04 (Form sub02 @0x00F96)")
     dest(5, 1, TUER_INNEN, "Plc_dest RUN John -> vor die Dachtuer")
@@ -307,8 +377,6 @@ def baue_befreiung():
     kopie("1141", 0x00FC8, 0x00FD6, [0x46, 0x02, 0x00, 0x00],
           "(sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 — John hat den Riegel beim Hinausgehen geoeffnet)")
     kopie("1141", 0x00FDC, 0x00FE6, [0x46, 0x01, 0x02, 0x31], "(sub05: Dachtuer Slot 1 scharf)")
-    op([0x46, 0x00, 0x02, 0x31] + list(d[0x00A52 + 14:0x00A52 + 20]),
-       "Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14)")
     sleep(15, "Sleep 15")
     # Cut 7 ist eine reine Szenen-Kamera: die RVD-Gruppe 7 von ROOM1141 hat nur den Anker (Satz 21 `from 7 to 0`), aus Cut 7
     # fuehrt keine Zone heraus — Cut_auto allein liess die Kamera dort stehen (Lauf int_d3: cam=7 bis zur Dachtuer, Elza
@@ -373,10 +441,17 @@ def baue_texte():
     z1, z2 = "There's an empty key tag on his belt.", "It reads “Dining Room\"."
     text("k_r38f_msg1021_leiche", msg9[:-2] + b"\x02\x00" + enc(z1) + b"\x08" + enc(z2) + b"\x01\x00",
          "ROOM1021 msg 40: msg 9 @0x024FB (\"He's dead.[Seite]Poor Roy...\") + Seite `02 00` + NUTZER-VORGABE", [z1, z2])
-    z1, z2 = "The door is marked", "“Dining Room\"."
+    # Nachbesserung 1 (Abnahme 0, M2): ueber dieser Doppeltuer haengt im Hintergrundbild das Schild "Briefing Room" — der
+    # fruehere Text "The door is marked "Dining Room"." (RE2 0x13-Muster) widersprach dem Bild. RE2 waehlt den Verschlossen-
+    # Text nach dem Schluesselmodell (LAB_80051514 @0x800516b4 `addiu a2,s0,-0x4c`): Herz-Schluessel 0x5B -> Text 0x0F
+    # @0x8009F230 `fc 25 50 3a 4f 00 48 4b 3f 47 41 40 01 fd 00 1d 00 44 41 3d 4e 50 00 45 4f 00 41 50 3f 44 41 40 00 51 4a
+    # 40 41 4e fc 50 44 41 00 47 41 55 00 44 4b 48 41 01 fe` = "It's locked." [Seite] "A heart is etched under / the key
+    # hole." — RE2s eigener Text fuer die Tuer dieses Schluessels; er nennt kein Schild.
+    z1, z2 = "A heart is etched under", "the key hole."
     text("k_r38f_msg1131_zu", b"\x04\x02" + enc("It's locked.") + b"\x02\x00" + enc(z1) + b"\x08" + enc(z2) + b"\x01\x00",
-         "ROOM1131 msg 40: \"It's locked.[Seite]The door is marked / \"Dining Room\".\" (RE2 Text 0x13 @0x8009F2BB; "
-         "Form wie Runde 36 Spur Q msg 28, Punkt hinter dem Anfuehrungszeichen wie im Auftragstext)", ["It's locked.", z1, z2])
+         "ROOM1131 msg 40: \"It's locked.[Seite]A heart is etched under / the key hole.\" = RE2 Text 0x0F @0x8009F230 "
+         "(Herz-Schluessel 0x5B - 0x4C, @0x800516b4); Form wie Runde 36 Spur Q msg 28 (`04 02` .. Seite `02 00` .. `08` .. "
+         "`01 00`)", ["It's locked.", z1, z2])
     text("k_r38f_msg1131_benutzt",
          b"\x04\x02" + enc("You've used the ") + b"\x05\x01" + enc("Dining Room Key") + b"\x05\x00" + enc(".") + b"\x01\x00",
          "ROOM1131 msg 41: \"You've used the Dining Room Key.\" (Form ROOM11E0 msg 12 @0x238C = RE2 Text 5 @0x8009F0E5)",
@@ -428,6 +503,8 @@ QUELLEN = (   # (Name, Raum, von, bis) — der C-Teil prueft diese Bereiche im G
     ("SZENE1141_SUB02_05", "1141", 0x00C18, 0x00FE8),   # sub02 + sub03/sub04 (Gosub-Ziele) + sub05
     ("SZENE1141_SUB00", "1141", 0x00AFA, 0x00B42),      # Evt_exec sub02 + Spawns John/Gorillas
     ("SZENE1141_MAIN00", "1141", 0x00A52, 0x00AEA),     # Tueren Slot 0/1, Riegel Slot 2, Tisch
+    ("SZENE1021_SUB02_05", "1021", 0x01FD8, 0x021EC),   # Nachbesserung 1 M1: die Szene sub02 + sub03/sub04 (Gosub-Ziel) + sub05
+    ("SZENE1021_MAIN00", "1021", 0x01DE2, 0x01E40),     # Begehzone Slot 5 (-> Ereignis 2), Spawns, Ck(3,0x5F), Aot_set Slot 6
 )
 
 
@@ -437,6 +514,7 @@ def main():
         ("k_r38f_p_roll1140", baue_rolladen("1140", 0x00CA6, 0x00CAC, 0xA0, 0xD0, 0x00CCC, 0x00D16, 0x00D52)),
         ("k_r38f_p_roll1141", baue_rolladen("1141", 0x00FE8, 0x00FEE, 0xE8, 0x118, 0x01032, 0x0107C, 0x010DC)),
         ("k_r38f_p_leiche1021", baue_leiche()),
+        ("k_r38f_p_szene1021", baue_szene1021()),
         ("k_r38f_p_haemmern", baue_haemmern()),
         ("k_r38f_p_befreiung", baue_befreiung()),
     ]

@@ -12,6 +12,10 @@
 #   unit_r38_dining1141_phase_h        Nachtrag 2 + Punkt 2: John ab Bild 0 hinter dem Rolladen, Ton-Takt, Gemaelde,
 #                                      Szene ohne msg 0/1, Sperre msg 41, Abgang ausserhalb des Bildes, 1171
 #   unit_r38_dining1141_leon1140       Punkt 3: Rolladen-Ton Leon ROOM1140
+#   unit_r38_dining1141_szene1021      Nachbesserung 1 M1: echte 1021-Szene, danach Roys Leiche im SELBEN Besuch -> msg 40
+#   unit_r38_dining1141_abgang         Nachbesserung 1 M3: Johns Abgang mit Elza an sechs Lagen (Abnahme E10/E5/E6/E7 + 2):
+#                                      nie verschoben, im Bild nie naeher als 900, in der sichtbaren Bahn wartet der Abgang
+#   unit_r38_dining1141_weg1131        Nachbesserung 1 M3: Elza geht waehrend des Wartens hinaus -> John fort, Dachtuer offen
 #   integration_r38_dining1141_w|z|d|l echte exe (test_r38_dining1141.cmake): Elza-Weg 1021 -> 1011 -> 1021, 1131 -> 1141
 #                                      -> 1171 mit Bildern/Ton-Mitschnitt, Leon 1140
 #   integration_r38_dining1141_s       Nachtrag 2 per Framedump: zwei Laeufe (mit/ohne Johns Bild), JEDES Bild von 1141
@@ -25,7 +29,7 @@ target_compile_definitions(test_r38_dining1141 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r38_dining1141 PRIVATE m)
 endif()
-foreach(_teil texte programme leiche1021 schluessel1011 tuer1131 phase_h leon1140)
+foreach(_teil texte programme leiche1021 schluessel1011 tuer1131 phase_h leon1140 szene1021 abgang weg1131)
     add_test(NAME unit_r38_dining1141_${_teil} COMMAND test_r38_dining1141 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r38_dining1141_${_teil} PROPERTIES TIMEOUT 300)

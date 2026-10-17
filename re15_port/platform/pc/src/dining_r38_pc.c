@@ -3,7 +3,8 @@
  * include/re15_dining_r38.h; Dossier analysis/befunde_runde38/F_dining1141.md).
  *
  *   0x3B  Rolladen = die snd0-Bank von ROOM1131.RDT (RDT-Kopf +0x08 EDT / +0x0C VH / +0x10 VB, FUN_80045024 Bank 2
- *         -> `lw a0,0x8` @0x80045138 = RDT-snd0), gelesen aus dem ausgelieferten CD-Baum (kein Asset-Patch).
+ *         -> `lw a0,8(v0)` @0x8004513c mit v0 = *(0x800ac778) = geladenes RDT (@0x80045134; @0x80045138 ist das nop
+ *         davor) = RDT-snd0), gelesen aus dem ausgelieferten CD-Baum (kein Asset-Patch).
  *         Saetze 0x0A/0x0B/0x0C = VAG 4/5/8 (rolltor_sound.md 4.4, Pitch -41/-40/-36 Halbtoene ueber note2pitch2).
  *   0x3C  Klopfen  = RE2 ROOM1060 snd0, bytegleich als shared_assets/RE2/KLOPF1060.EDT/.VH/.VB
  *         (tools/r38_dining/re2_export.py), Saetze 0x0A/0x0B.
