@@ -307,4 +307,64 @@ Selbst disassembliert (`re15_disasm.py` / `re2_disasm.py` im Baum):
   (Sce_em_set `sw zero,4(s0)` @0x800421e0 = Zustand 0, frische +0x1ba `sh v0,442(s0)` @0x80042210) und jeder Aktor,
   den nicht das RE2-Gehirn fuehrt (die RE1.5-KI posiert ohnehin ihre eigene RE1.5-Bank).
 
-(Abschnitte 8.3 ff. werden fortlaufend gefuellt.)
+### 8.3 Mangel 1 — Ursache und Umsetzung
+
+Ursache (Code a4809c35): `re15_wasserzombie_bank` (Renderer main.c, Uhr `re15_actor_clip_len`, Schuss-Anker schuss_r36.c)
+und der RE2-Zweig von `re15_wasserzombie_schatten_y` fragten `wz_marke_gilt` = Marke UND Zustand 1 UND Sub 0x0A, also
+das AKTUELLE Zustandswort. Schreibt ein anderer Aktor dieses Wort nach dem eigenen Tick (Slot 4 > Slot 3), faellt die
+Bank sofort auf die RE2-Bank zurueck, waehrend motion/anim_frame noch die RE1.5-Werte des eigenen Ticks tragen
+(Clip 22 Bild 49 auf der 31-Clip-RE2-Bank = falscher Clip auf falschem Rig; Uhr = RE2-Clip 22 mit 10 Bildern).
+
+Aenderung, nur `re15_port/engine/src/wasserzombie_r38.c` (+ Kopfkommentar `include/re15_wasserzombie_r38.h`):
+- neu `wz_marke_bank(slot, e)` = Marke aktiv && gleicher Typ && `e->active` && `e->state != 0` && RE2-Gehirn fuehrt
+  den Typ (`re15_ai_re2_for_type` && `re15_re2z_owns_type`). Die Marke wird nur im eigenen Tick gesetzt/geloescht
+  (`re15_wasserzombie_re2_dispatch`) und ist damit genau der Stand, mit dem das Original die Pose gerechnet hat
+  (8.2: anim_set in den Teileblock +0x188 @0x8001f40c). Zustand 0 = Neuspawn (Sce_em_set `sw zero,4(s0)`
+  @0x800421e0); RE1.5-KI ausgenommen (posiert die eigene RE1.5-Bank, braucht keine Import-Bank).
+- `re15_wasserzombie_bank` und der RE2-Zweig von `re15_wasserzombie_schatten_y` fragen `wz_marke_bank`;
+  `wz_marke_gilt` (Zustand 1 / Sub 0x0A) bleibt allein die Abbruch-Erkennung im eigenen Tick. Der eigene Tick bricht
+  unveraendert ab (+0x1ba zurueck = PORT-WAHL aus Abschnitt 3, Marke faellt, RE2-Executor im selben Tick).
+- Messschiene (env-gegatet, kein Verhalten): `RE15_WASSERZOMBIE_LOG` meldet einmal je Marke `zwischenbild`, wenn
+  Bank/Uhr bei fremdem Zustandswort abgefragt werden.
+- Keine neue Konstante; keine neuen Haken in gemeinsamen Dateien (die vorhandenen Haken main.c/schuss_r36.c/
+  enemy_ai_common.c rufen dieselbe Abfrage).
+
+### 8.4 Mangel 1 — Messung nachher (echte exe, Messkopie `re15_pc_u_nb1n.exe`, derselbe Lauf wie 8.1)
+
+```
+gy.log F399 [3 t=16 st=1/10/3/0 g=00 mo=22 af=48 @(-22068,0,-9970) b0 f1ba=0 ...]
+gy.log F400 [3 t=16 st=1/9/0/0  g=00 mo=22 af=49 @(-22068,0,-9970) b0 f1ba=0 ...]
+gy.log F401 [3 t=16 st=1/9/1/0  g=00 mo=13 af=23 @(-22468,0,-9970) b0 f1ba=0 ...]
+wz.log F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=50 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00   (vorher af=9)
+```
+- Bild (Scratchpad `U38nb1/m5_nachher/strip2.png`, F398-F402): **F400 haengt der Kletterer weiter mit dem
+  Oberkoerper auf der Stegkante** (Clip 0x16 Bild 49 der RE1.5-Bank, wie F399 + 1 Bild); F401 Taumel-Clip 13 im Kanal
+  (der eigene Tick hat EXEC[9] P0 ausgefuehrt).
+- Elza (Tuer 2071 -> 2001, `RE15_SET_FLAG=3:69`, Start `RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1
+  RE15_PSELECT_AUTO_SWITCH=1`, `[pl] Spieler-Familie PL04`): wz.log `F401 R2001 slot=1 ... abbruch st=1/9/0 mo=22 af=50`,
+  Bild `U38nb1/m3_elza_nachher/strip2.png`: F400 haengt der Kletterer auf der Kante (vorher Abnahme: bis auf ein Bein leer).
+- Gegenprobe "aendert die Nachbesserung sonst etwas?": derselbe Tuerweg bis F1000 mit alter (`re15_pc_u_nb1v.exe`) und
+  neuer exe: `gy.log` (Zustand/Clip/Bild/Lage/Band/+0x1ba aller Gegner je Bild) **byte-gleich** (`cmp`), `wz.log`
+  unterscheidet sich nur in der Abbruch-Zeile (af 9 -> 50). Beide Zombies kommen spaeter hoch (F902 Slot 4
+  (-20926,-1800,-9605) b1, F956 Slot 3 (-20928,-1800,-10407) b1). Die Nachbesserung wirkt also nur im Zwischenbild
+  (Darstellung + Uhr); die RE2-Ausfuehrung danach (EXEC[9] P0 setzt Clip und Startbild selbst, `sw v0,332(s1)`
+  @0x80103F30) ist unveraendert.
+- Integrationslauf e (siehe 8.6) am echten Tuerweg, SOFTWARE_RENDER: `F400 R2000 slot=3 t=16 zwischenbild st=1/9/0
+  mo=22 af=49 ...` (Renderer im Bild des fremden Schreibers) und `F401 ... abbruch st=1/9/0 mo=22 af=50`.
+
+### 8.5 Mangel 2 — Code-Hygiene
+
+- Messung vorher (Abnahme): `gcc -Wall -c` -> `'re15_enemy_ai_live_edge_fall' defined but not used [-Wunused-function]`;
+  `include/re15_wasserzombie_r38.h:84` (`*sk/*an` im Kommentar) -> `-Wcomment` in jeder einbindenden Datei; Kommentar am
+  Aufruf beschrieb "EDGE-FALL ... down one floor".
+- (a) `static void re15_enemy_ai_live_edge_fall` samt Hinweiszeile aus `enemy_ai_common.c` entfernt (43 Zeilen; einziger
+  Aufrufer war der in Abschnitt 3 ersetzte; `re15_slew_to_angle` hat weitere Aufrufer @7876/@10689 und bleibt).
+  (b) Kommentar am Aufruf in `re15_enemy_ai_live_active`: "HOCHZIEHEN an der u1=1-Kante (@0x8011f890[0xa]=FUN_801033c8 /
+  STAGE2 0x8010325c): +0x38 -= 1800 und +0x82 += 1 = ein Band HOCH, +0x1ba @0x801033f8, Vorschub @0x80103474".
+  (c) Kopfkommentar ohne `/*` neu formuliert ("stehen in sk und an ...").
+- Messung nachher: `gcc -std=c11 -Wall -fsyntax-only -DRE15_PLATFORM_PC=1 -Iinclude` auf enemy_ai_common.c,
+  wasserzombie_r38.c, enemy_ai_re2_zombie.c, schuss_r36.c, tests/unit/test_r38_wasserzombie.c: keine Meldung zu
+  edge_fall, re15_wasserzombie_r38.h oder einer Spur-U-Zeile. Uebrig sind nur `-Wcomment` aus `include/re15_emd.h:37` und
+  `include/re15_collision.h:85/90` (vorbestehend, nicht Spur U).
+
+(Abschnitte 8.6 ff. werden fortlaufend gefuellt.)
