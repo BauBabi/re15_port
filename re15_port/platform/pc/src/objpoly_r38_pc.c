@@ -12,17 +12,18 @@
 #include <stdint.h>
 
 #include "re15_objpoly_r38.h"
-#include "re15_engine.h"     /* re15_render_textured_tri_lit */
+#include "re15_objabe_r38.h" /* Nachbesserung 1: halbtransparente Objekte (ABE/ABR/STP) zeichnen ueber denselben Weg */
 
-void re15_objpoly_r38_halbviereck_pc(const int ax[4], const int ay[4], const re15_md1_quad_uv_t *uv, int page_off,
-                                     int wz, const uint8_t gpu_ok[2], const uint8_t rgb[12])
+void re15_objpoly_r38_halbviereck_pc(uint16_t attr, const int ax[4], const int ay[4], const re15_md1_quad_uv_t *uv,
+                                     int page_off, int wz, const uint8_t gpu_ok[2], const uint8_t rgb[12])
 {
     const int u[4] = { uv->u0, uv->u1, uv->u2, uv->u3 };
     const int v[4] = { uv->v0, uv->v1, uv->v2, uv->v3 };
     for (int t = 0; t < 2; t++) {
         if (!gpu_ok[t]) continue;
         const int a = t, b = t + 1, c = t + 2;      /* (0,1,2) bzw. (1,2,3) */
-        re15_render_textured_tri_lit(ax[a], ay[a], u[a] + page_off, v[a],
+        re15_objabe_r38_pc_dreieck(attr, uv->page,
+                                     ax[a], ay[a], u[a] + page_off, v[a],
                                      ax[b], ay[b], u[b] + page_off, v[b],
                                      ax[c], ay[c], u[c] + page_off, v[c],
                                      0, (int)uv->clut, wz,

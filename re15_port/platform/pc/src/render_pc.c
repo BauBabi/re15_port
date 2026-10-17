@@ -32,6 +32,7 @@
 #include "touch_overlay_pc.h" /* On-Screen-Pad (Android: an; Desktop: RE15_TOUCH_OVERLAY=1) */
 #include "re15_entladen.h"    /* Runde 35 Spur I: Generation je Cache + Entladen (Block vor re15_render_pc_set_pri_atlas) */
 #include "re15_pri_schatten_r36.h"  /* Runde 36 Spur O: Schatten in der OT-Ordnung der Masken/Dreiecke */
+#include "re15_objabe_r38.h"         /* Runde 38 Spur W: STP-Teil-Texturen halbtransparenter Raum-Objekte */
 extern unsigned g_current_room_id;   /* nur fuer die RE15_PRI_LOG-Messschiene */
 /* Der gezeigte Cut. Ohne ihn ist eine Maskenmessung nicht zuzuordnen: unsere
  * nachgezeichneten Masken liegen je Cut vor, und "0 Masken" kann heissen "Cut ohne
@@ -587,7 +588,7 @@ void re15_render_pc_set_tri_alpha(int a) { s_tri_alpha = (a < 0) ? 0 : (a > 255)
  *                            dst + src*srcA/255 rechnet — 64/255 = 0.251 ~ 1/4)
  *   2 = REV_SUBTRACT custom (ABR2 B-F; wie der Shadow-Blob s_shadow_blend) */
 static int s_tri_blend = 0;
-void re15_render_pc_set_tri_blend(int m) { s_tri_blend = (m < 0 || m > 2) ? 0 : m; }
+void re15_render_pc_set_tri_blend(int m) { s_tri_blend = (m < 0 || m > 7) ? 0 : m; }   /* 3..7: Runde 38 Spur W, RE15_OBJABE_BLEND_* */
 int re15_render_pc_dbg_tim_loaded(void)      { return s_tim_texture != NULL ? 1 : 0; }
 int re15_render_pc_dbg_min_sx(void)          { return s_dbg_last_min_sx; }
 int re15_render_pc_dbg_max_sx(void)          { return s_dbg_last_max_sx; }
@@ -1185,14 +1186,16 @@ void re15_render_end_frame(void)
                          * (SW-Renderer) faellt auf BLEND zurueck (SetTextureBlendMode
                          * schlaegt fehl und der Modus bleibt der zuletzt gesetzte). */
                         SDL_Texture *btex = s_tim_slots[cur_slot].tex;
-                        if (cur_blend == 1)      SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_ADD);
-                        else if (cur_blend == 2) {
+                        int bl = cur_blend;   /* Runde 38 Spur W: 3..7 = STP-Teil-Textur (objabe_r38_pc.c) */
+                        if (cur_blend >= 3) btex = re15_objabe_r38_pc_flush_textur(cur_slot, cur_blend, btex, &bl);
+                        if (bl == 1)      SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_ADD);
+                        else if (bl == 2) {
                             if (SDL_SetTextureBlendMode(btex, s_tri_sub_blend) != 0)
                                 SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_BLEND);
                         }
-                        SDL_RenderGeometry(s_renderer, btex,
+                        if (btex) SDL_RenderGeometry(s_renderer, btex,
                                             s_textri_flush_buf, n * 3, NULL, 0);
-                        if (cur_blend != 0)
+                        if (btex && bl != 0)
                             SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_BLEND);
                     }
                     batch_start = i;
@@ -2768,7 +2771,7 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     t->v[0].position.y = (float)y0 + ab;
     t->v[0].color      = (SDL_Color){psx_prim_to_sdl_vert(r0),
                                      psx_prim_to_sdl_vert(g0),
-                                     psx_prim_to_sdl_vert(b0), 0xFF};
+                                     psx_prim_to_sdl_vert(b0), (Uint8)s_tri_alpha};   /* Runde 38 Spur W: ABE-Durchgang */
     t->v[0].tex_coord.x =  (float)u0                 * inv_w;
     t->v[0].tex_coord.y = ((float)v0 + (float)v_offset) * inv_h;
 
@@ -2776,7 +2779,7 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     t->v[1].position.y = (float)y1 + ab;
     t->v[1].color      = (SDL_Color){psx_prim_to_sdl_vert(r1),
                                      psx_prim_to_sdl_vert(g1),
-                                     psx_prim_to_sdl_vert(b1), 0xFF};
+                                     psx_prim_to_sdl_vert(b1), (Uint8)s_tri_alpha};   /* Runde 38 Spur W: ABE-Durchgang */
     t->v[1].tex_coord.x =  (float)u1                 * inv_w;
     t->v[1].tex_coord.y = ((float)v1 + (float)v_offset) * inv_h;
 
@@ -2784,7 +2787,7 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     t->v[2].position.y = (float)y2 + ab;
     t->v[2].color      = (SDL_Color){psx_prim_to_sdl_vert(r2),
                                      psx_prim_to_sdl_vert(g2),
-                                     psx_prim_to_sdl_vert(b2), 0xFF};
+                                     psx_prim_to_sdl_vert(b2), (Uint8)s_tri_alpha};   /* Runde 38 Spur W: ABE-Durchgang */
     t->v[2].tex_coord.x =  (float)u2                 * inv_w;
     t->v[2].tex_coord.y = ((float)v2 + (float)v_offset) * inv_h;
 }

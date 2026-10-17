@@ -138,6 +138,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 #include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
 #include "re15_objpoly_r38.h"  /* Runde 38 Spur W: Polygon-Schranken des Objektzeichners (Rolladen ROOM20A0) */
+#include "re15_objabe_r38.h"   /* Runde 38 Spur W: halbtransparente Raum-Objekte (Attribut-Bit 0x2, ABR, STP) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -1447,6 +1448,7 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
      * an ihrer Stelle ein gelbes Viereck. Herleitung + Zensus stehen bei
      * RE15_RDT_MAX_PROPS in re15_rdt.h. */
     for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) ok[op] = 0;
+    re15_objabe_r38_pc_raum_neu();   /* Runde 38 Spur W: STP-Teil-Texturen des alten Raums verwerfen */
     if (!rdt) return;
     int nprops = rdt->prop_count < RE15_RDT_MAX_PROPS ? rdt->prop_count
                                                       : RE15_RDT_MAX_PROPS;
@@ -1480,8 +1482,9 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
          * dadurch byte-genau NICHT. Game-weit betrifft die Regel 122 von 570 Prop-Modellen;
          * dieselbe 92.8%-Textur taucht in 18 Raeumen auf = EIN wiederverwendetes
          * Cursor-/Marker-Modell. Gepinnt in tests/unit/test_prop_texel_key_11f0.c. */
-        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
-                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op)); }
+        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0) {
+                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op));
+                      re15_objabe_r38_pc_textur(&tt, RE15_TIM_SLOT_PROP(op)); } }   /* Runde 38 Spur W: STP-Teile */
     }
 
     /* SICHERUNG im Hebetisch von Irons' Buero: ein ZUSAETZLICHES Prop, dessen MD1+TIM
@@ -10895,18 +10898,16 @@ re_title:;
                                 pg0 = pg1 = pg2 = g_re15_light_tint[1];
                                 pb0 = pb1 = pb2 = g_re15_light_tint[2];
                             }
-                            if ((g_scd.props[pi].attr & 0x12) == 0x10)
+                            if (re15_objabe_r38_flach(g_scd.props[pi].attr, g_scd.props[pi].obj_type))   /* Runde 38 Spur W */
                                 /* FUN_8002c18c @0x8002c2f4 `andi v0,v0,0x10`: FLACH statt NCCT -> FUN_80022f0c
                                  * @0x8002c320 mit Farbe obj+0x70 = 0x808080 (FUN_8002b898.c:16, Textur
-                                 * unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h). NUR deckende
-                                 * Objekte: Bit 0x2 (@0x8002c2b4, Prim-Code 0x36 = halbtransparent je STP-Texel)
-                                 * kann dieser Zeichner nicht (Texel-Alpha immer 0xFF, render_pc.c ABE-Kommentar);
-                                 * die 91 flach+halbtransparenten Objekte (Zensus re15_scd.h; ihre Texel tragen zu
-                                 * 100 % das STP-Bit, das Original mischt sie 50/50) bleiben bis zur Portierung von
-                                 * Parameter 4 auf dem bisherigen Weg — flach-deckend waere doppelt so hell wie das
-                                 * Original. Runde 36 Spur N (Nachbesserung 1, Dossier 8.7). */
+                                 * unveraendert). Attribut = Obj_model_set pc[8..9] (re15_scd.h). Runde 36 Spur N
+                                 * liess die halbtransparenten (Bit 0x2) hier aus, bis Parameter 4 portiert ist —
+                                 * seit Runde 38 Spur W (Nachbesserung 1) ist er es (re15_objabe_r38_pc_dreieck:
+                                 * STP-0-Texel deckend, STP-1-Texel nach ABR gemischt), also gilt der Flach-Weg fuer
+                                 * JEDES Objekt mit Bit 0x10 und fuer Typ 3 (FUN_8003e64c), re15_objabe_r38.h. */
                                 pr0 = pr1 = pr2 = pg0 = pg1 = pg2 = pb0 = pb1 = pb2 = 0x80;
-                            re15_render_textured_tri_lit(
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,   /* Runde 38 Spur W: ABE/ABR/STP */
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
                                 ax[2], ay[2], (int)uv->u2 + page_off, (int)uv->v2,
@@ -10955,23 +10956,23 @@ re_title:;
                                 pqg0=pqg1=pqg2=pqg3=g_re15_light_tint[1];
                                 pqb0=pqb1=pqb2=pqb3=g_re15_light_tint[2];
                             }
-                            if ((g_scd.props[pi].attr & 0x12) == 0x10)   /* wie beim Dreieck: FUN_80023098 @0x8002c350, flach 0x808080,
-                                                                           * nur deckende Objekte. Runde 36 Spur N. */
+                            if (re15_objabe_r38_flach(g_scd.props[pi].attr, g_scd.props[pi].obj_type))   /* wie beim Dreieck: FUN_80023098
+                                                                           * @0x8002c350, flach 0x808080. Runde 36 Spur N / Runde 38 Spur W */
                                 pqr0=pqr1=pqr2=pqr3=pqg0=pqg1=pqg2=pqg3=pqb0=pqb1=pqb2=pqb3=0x80;
                             if (gpu_ok[0] && gpu_ok[1]) {   /* Runde 38 Spur W: beide GPU-Dreiecke -> wie bisher */
-                            re15_render_textured_tri_lit(
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,   /* Runde 38 Spur W: ABE/ABR/STP */
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[1], ay[1], (int)uv->u1 + page_off, (int)uv->v1,
                                 ax[3], ay[3], (int)uv->u3 + page_off, (int)uv->v3,
                                 0, (int)uv->clut, wz_avg,
                                 pqr0, pqg0, pqb0, pqr1, pqg1, pqb1, pqr3, pqg3, pqb3);
-                            re15_render_textured_tri_lit(
+                            re15_objabe_r38_pc_dreieck(g_scd.props[pi].attr, uv->page,
                                 ax[0], ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                                 ax[3], ay[3], (int)uv->u3 + page_off, (int)uv->v3,
                                 ax[2], ay[2], (int)uv->u2 + page_off, (int)uv->v2,
                                 0, (int)uv->clut, wz_avg,
                                 pqr0, pqg0, pqb0, pqr3, pqg3, pqb3, pqr2, pqg2, pqb2);
-                            } else re15_objpoly_r38_halbviereck_pc(ax, ay, uv, page_off, wz_avg, gpu_ok,   /* Runde 38 Spur W */
+                            } else re15_objpoly_r38_halbviereck_pc(g_scd.props[pi].attr, ax, ay, uv, page_off, wz_avg, gpu_ok,   /* Runde 38 Spur W */
                                        (const uint8_t[12]){ pqr0, pqg0, pqb0, pqr1, pqg1, pqb1, pqr2, pqg2, pqb2, pqr3, pqg3, pqb3 });
                         }
                     }

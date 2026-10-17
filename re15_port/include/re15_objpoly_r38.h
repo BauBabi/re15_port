@@ -104,9 +104,10 @@ int re15_objpoly_r38_quad_mesh(const re15_md1_vertex_t *const v[4], const int32_
                                int h, int ofx, int ofy, int ax[4], int ay[4], int *wz, uint8_t tri_ok[2]);
 
 /* NUR PC (platform/pc/src/objpoly_r38_pc.c): Viereck, von dem genau ein GPU-Dreieck (0,1,2)/(1,2,3) besteht ->
- * nur dieses zeichnen. rgb = je Scheitel 0..3 die Farbe (r,g,b). */
-void re15_objpoly_r38_halbviereck_pc(const int ax[4], const int ay[4], const re15_md1_quad_uv_t *uv, int page_off,
-                                     int wz, const uint8_t gpu_ok[2], const uint8_t rgb[12]);
+ * nur dieses zeichnen. rgb = je Scheitel 0..3 die Farbe (r,g,b); attr = Objekt-Attribut (halbtransparent ueber
+ * re15_objabe_r38_pc_dreieck, Nachbesserung 1). */
+void re15_objpoly_r38_halbviereck_pc(uint16_t attr, const int ax[4], const int ay[4], const re15_md1_quad_uv_t *uv,
+                                     int page_off, int wz, const uint8_t gpu_ok[2], const uint8_t rgb[12]);
 
 /* Messschiene RE15_OBJPOLY_LOG=<datei> (Diagnose, kein Verhalten): der Zeichenweg meldet den Beginn jedes Objekts;
  * je Bild und Objekt schreibt die Datei eine Zeile "F<bild> room=<raum> cut=<cut> obj=<id> gezeichnet=<n>
