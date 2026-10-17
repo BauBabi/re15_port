@@ -26,6 +26,7 @@
 #include "re15_ai_flavor.h"      /* re15_ai_re2_for_type / re15_re2spider_owns (Teil 4) */
 #include "re15_math.h"          /* re15_squareroot0 = FUN_8008d2f4 (Teil 3b) */
 #include "re15_enemy_ai.h"      /* RE15_AI_STATE_CORPSE (Teil 3b) */
+#include "re15_engine.h"         /* g_engine.frame_count (Protokollzeile des Szenenschutzes) */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: re15_szenenschutz_haelt (Routine 25, Nachbesserung 1 Mangel 3) */
 
 #include <stdio.h>
@@ -388,7 +389,8 @@ static void routine25(re15_esp_fx_t *f)
     if (szene) spl->hit_react = (uint8_t)(hr_echt | 0x1u);
     const int frei = !(spl->hit_react & 0x1u) && !re15_player_is_grabbed() && spl->hp >= 0;
     if (szene && re15_hitbox_test(spl, &box))
-        fprintf(stderr, "[szenenschutz] Giftklumpen abgefangen (Absender Slot %d, Spieler HP %d)\n", besitzer, (int)spl->hp);
+        fprintf(stderr, "[szenenschutz] F%u Giftklumpen abgefangen (Absender Slot %d, Spieler HP %d)\n",
+                (unsigned)g_engine.frame_count, besitzer, (int)spl->hp);
     if (besitzer > 0 && besitzer < RE15_ACTOR_MAX && g_actors[besitzer].type == 0x25 && frei &&
         re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], &box)) {
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;   /* Gift (s.o.) */

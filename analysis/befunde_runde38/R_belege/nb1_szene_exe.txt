@@ -1,0 +1,18 @@
+Nachbesserung 1 / Mangel 3 in der echten exe (2026-10-17)
+Aufbau wie Abnahme p2b: RE15_DEBUG_JUMP=2030@250 RE15_PLAYER_POS=6550,2000,3072,3 RE15_GIVE=35:1, Ende 900#2030
+Szene: RE15_SET_FLAG_AT=2:7@260 (flag(2,7) = Cutscene-Latch -> player_mode 2 ab F261, Spur B re15_szenenschutz_haelt)
+
+HP-Abzuege bis F900 (Messschiene RE15_SPINNEN_LOG):
+  ohne Szene (Kontrolle)   F19:100->90 F42:90->88 F163:88->86 F284:86->84 F405:84->82 F526:82->80 F580:80->70 F639:70->60 F691:60->58 F812:58->56
+  Szene haelt ab F261      F19:100->90 F42:90->88 F163:88->86 F284:86->84 F405:84->82 F526:82->80 F647:80->78 F768:78->76 F889:76->74
+
+debug.log (Szene):
+[szenenschutz] F6 aus (0 geschuetzte Gegner-Ticks)
+[setflag-at] Frame 260: flag(2,7/0x07) = 1
+[szenenschutz] F261 an (Szene haelt den Spieler)
+[szenenschutz] F580 Giftklumpen abgefangen (Absender Slot 1, Spieler HP 80)
+[szenenschutz] F580 Giftklumpen abgefangen (Absender Slot 1, Spieler HP 80)
+[szenenschutz] F580 Giftklumpen abgefangen (Absender Slot 1, Spieler HP 80)
+[szenenschutz] F638 Giftklumpen abgefangen (Absender Slot 1, Spieler HP 80)
+[szenenschutz] F638 Giftklumpen abgefangen (Absender Slot 1, Spieler HP 80)
+[szenenschutz] F638 Giftklumpen abgefangen (Absender Slot 1, Spieler HP 80)
