@@ -3,7 +3,8 @@ Aufruf: python stp_check.py <RDT> <obj>"""
 import os, sys, struct, importlib.util
 sys.argv = [sys.argv[0]] + sys.argv[1:]
 spec = importlib.util.spec_from_file_location('z', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zensus_abe.py'))
-src = open(spec.origin, encoding='utf-8').read().replace('\nmain()\n', '\n')
+src = open(spec.origin, encoding='utf-8').read()
+src = src[:src.rfind('main()')]
 ns = {'__name__': 'z', '__file__': spec.origin}
 exec(compile(src, spec.origin, 'exec'), ns)
 rdt, oid = sys.argv[1], int(sys.argv[2])

@@ -17,7 +17,7 @@ import os, sys, struct, hashlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 _src = open(os.path.join(HERE, 'zensus_objpoly.py'), encoding='utf-8').read()
-_src = _src[:_src.rfind('\nmain()')]
+_src = _src[:_src.rfind('main()')]
 Z = {'__name__': 'zensus_objpoly', '__file__': os.path.join(HERE, 'zensus_objpoly.py')}
 exec(compile(_src, 'zensus_objpoly.py', 'exec'), Z)
 L = Z['L']
