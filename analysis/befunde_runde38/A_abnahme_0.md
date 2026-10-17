@@ -2,7 +2,9 @@
 
 Stand: 2026-10-17, Baum `.claude/worktrees/r38_cursor` (Zweig `r38/cursor`, Basis 1bcbd0ff, HEAD 8b8cd852).
 Pruefer: unabhaengige Abnahme 0. Geglaubt wird nur, was hier selbst gemessen/disassembliert ist.
-Messdaten (nicht versioniert): Scratchpad der Abnahme-Sitzung (`.../scratchpad/abn/`), Pfade je Messung unten.
+Messdaten (nicht versioniert): Scratchpad der Abnahme-Sitzung
+`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn/`
+(unten kurz `scratchpad/abn/`; Laeufe unter `runs/<marke>/` mit debug.log, trilog.txt, Framedumps).
 
 ## Nutzer-Punkt (Wortlaut, AUFTRAG.md)
 
@@ -13,7 +15,6 @@ Messdaten (nicht versioniert): Scratchpad der Abnahme-Sitzung (`.../scratchpad/a
 
 * `bash re15_port/tools/local_build.sh configure && ... build` am HEAD 8b8cd852: `=== LOCAL-BUILD-OK (build)`,
   "ninja: no work to do" (exe 05:17 = Stand nach der letzten Code-Aenderung; Tests/Sonden ebenfalls aktuell).
-
 
 ## 1. Tests der Spur (selbst gefahren, HEAD 8b8cd852)
 
@@ -98,7 +99,7 @@ Bild `scratchpad/abn/m2_1150_zoom.png` (5 Cursor-Lagen x [alt S1 | neu S1 | alt 
 versetzte dunkle Kopie (abseits der Mitte deutlich verschoben), neu an keiner. Nebenwirkung derselben Ansicht (Cut 4,
 `scratchpad/abn/m2_1150_cut4_alt_neu_mark.png`): 1326 Punkte (x 78..237, y 37..165) = das dunkelbraune Band zwischen den
 Papierstapel-Hochhaeusern (Rueckseite von Prop 0, Original-Objekt aus ROOM1150 Obj_model_set) faellt weg, dahinter
-Boden/Gitter. Das ist dasselbe Original-Zeichnerpaar FUN_800254a0/FUN_800256b0 mit demselben `bgez` (s. §7) — kein
+Boden/Gitter. Das ist dasselbe Original-Zeichnerpaar FUN_800254a0/FUN_800256b0 mit demselben `bgez` (s. §8) — kein
 DuckStation-Bild dieser Ansicht vorhanden (stage_saves/ und analysis/grundwahrheit/ selbst durchsucht), Bewertung
 daher nur ueber den Mechanismus.
 
