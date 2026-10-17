@@ -14,7 +14,6 @@ Messdaten (nicht versioniert): Scratchpad der Abnahme-Sitzung (`.../scratchpad/a
 * `bash re15_port/tools/local_build.sh configure && ... build` am HEAD 8b8cd852: `=== LOCAL-BUILD-OK (build)`,
   "ninja: no work to do" (exe 05:17 = Stand nach der letzten Code-Aenderung; Tests/Sonden ebenfalls aktuell).
 
-(laufend — wird nach jeder Messung ergaenzt)
 
 ## 1. Tests der Spur (selbst gefahren, HEAD 8b8cd852)
 
@@ -205,8 +204,14 @@ sich auf die ganze Oberseite, nicht nachgezaehlt).
 Regex = r38_cursor + Bild-/Prop-/Panel-/Hebetisch-Gruppen (`scratchpad/abn/rx.txt`; alle 20 Integrationsskripte mit
 RE15_FRAMEDUMP/FBDUMP/TRILOG sind darin, `grep -l` selbst geprueft).
 * Teil 1 (`-E "^integration_" -j4 --timeout 600`): **`100% tests passed, 0 tests failed out of 148`** (7.98 sec).
-* Teil 2 (48 Laeufe mit der exe, `-j2 --timeout 900`, ohne integration_r38_cursor = §1): laeuft
-  (`scratchpad/abn/ctest_teil2.log`), Ergebnis folgt.
+* Teil 2 (48 Laeufe mit der exe, `-E "^unit_|^integration_r38_cursor$" -j2 --timeout 900`; integration_r38_cursor
+  separat in §1): **`100% tests passed, 0 tests failed out of 48`** (Total Test time (real) = 3367.40 sec, parallel zu
+  Laeufen anderer Spuren auf derselben Maschine; kein roter Fenster-Haken, nichts nachzufahren). Darunter
+  integration_r34n_b_cursor, integration_r37_codepanel, integration_r36_schluessel(+_befreiung),
+  integration_r37_feuerloescher, integration_r36_kartenitems_bild, integration_r34n_e_dokumente_bild,
+  integration_r30_irons_tisch_bild, integration_r30_sicherung_bild, integration_r36_pri_schatten,
+  integration_r37_pri1100_{marke,elza}, integration_pri_masken.
+* Summe gezielt: 148 + 48 + 1 = **197/197 gruen**.
 
 ## 12. Integration mit K (bereits in r38/integration) und F — selbst nachgerechnet
 
@@ -222,3 +227,30 @@ RE15_FRAMEDUMP/FBDUMP/TRILOG sind darin, `grep -l` selbst geprueft).
 * Daraus fuer die Integration: Konflikt schluessel_r36.c/.h -> K's Seite (wie Dossier §8); danach
   `integration_r38_cursor` (E/F an K's Pinnwand-Cuts 5/6) und `unit_r38_cursor_wicklung` an der Integrations-exe fahren;
   Spur W (r38/rolltor20a0) hat r38/cursor bis 10e39eda bereits gemergt (fb5111e8) und misst mit dem Verwurf.
+
+## 13. Urteil
+
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| "Der Cursor, der zum Beispiel in ROOM 1150 oder ROOM 11F0 verwendet wird, hat immer noch so einen komischen Schatten. Den hat er im Original nicht..." | **erfuellt** | 11F0 ueber Aktionstaste am Panel (Debug-Sprung UND Lade-Weg) und Elza 11F1: 0 rueckseitige Cursor-Dreiecke (alt 10345/10297), Klassenkarte = DuckStation-Original (0 Abweichungen; alt 21); 1150/1151 Lade-Weg: 0 (alt 8056/4192); bewegter Cursor an 4 bzw. 5 Lagen ohne Kopie; Nutzerfenster Skala 3 (befund.log des Nutzers: `[window] windowed 960x720`): keine versetzte Kopie mehr, verbleibender feiner Saum = gemalter Textur-Schlagschatten, anteilig kleiner als im Original (dunkel/hell 1,30 gegen 1,79). Ursache (Unterseite T03/T04/T05/T11 mit dem Muster, gegensinnig gewunden) selbst im MD1 nachgelesen, Original-Verwurf an vier Zeichnern + Dispatch selbst disassembliert. |
+
+Gates: Bau OK (§0); RE-Gate OK (§8); Vertrag OK (§9, Hinweis H1); Riegel vorhanden und messend (§1, §7);
+gezielte Regression 197/197 gruen (§11). **Ergebnis: bestanden.**
+
+## 14. Maengel / Hinweise
+
+Maengel: keine.
+
+Hinweise (nicht blockierend, fuer Integration/Orchestrator):
+* H1 Vertrag §1.4: ausserhalb der eigenen Module geaendert — re15_schluessel_r36.h (+2 Defines, +10 Kommentarzeilen),
+  gen/feuerloescher_r37.inc (mit dem Runde-37-Werkzeug neu erzeugt, nur Eckenreihenfolge von 112 Vierecken) und
+  tools/r37_feuerloescher/feuerloescher_modell.py (+29). Notwendig fuer die eigenen Nebenwirkungen (§6: Loescher 1050
+  danach pixelgleich), Probe-Merge gegen r38/integration: nur schluessel_r36.c/.h im Konflikt -> K's Seite nehmen.
+* H2 Nach dem Merge an der Integrations-exe fahren: integration_r38_cursor (E/F = K's Pinnwand-Cuts 5/6; nachgerechnet
+  §12: sichtbar), unit_r38_cursor_wicklung; Spur-W-Messung ROOM20A0 Cut 2 mit Verwurf (W hat r38/cursor bis 10e39eda
+  bereits gemergt); Spur F (Herz-Schluessel) ist nachgerechnet sichtbar (§12).
+* H3 Fuer ROOM1150 Cut 4 (Band hinter den Papierstapel-Hochhaeusern faellt weg) und ROOM10D0 gibt es kein
+  DuckStation-Bild; Bewertung nur ueber den disassemblierten Mechanismus (derselbe Zeichner fuer alle Objekte).
+* H4 Harness-Beobachtung (nicht Spur A, alt und neu gleich): Text 0 des 11F0-Panels ist mehrseitig und langsam; ein
+  Messlauf braucht ~16 Aktions-Druecke im Abstand von 1 s, bis `Cut_chg(10)` kommt (F603) — kein Haenger, nur Tipp fuer
+  kuenftige Messlaeufe.
