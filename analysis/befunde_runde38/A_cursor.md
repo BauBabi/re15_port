@@ -275,6 +275,61 @@ Bild `A_belege/nebenwirkung_loescher_alt_vorw_neu.png` (oben ROOM1050 Skala 3, u
 ALT | VORWICKLUNG | NEU): NEU ist am Loescher pixelgleich mit dem Stand vor dem Verwurf, VORWICKLUNG zeigt die
 Innenseite. Riegel: unit_r38_cursor_wicklung (§5).
 
+### 4.6 Nebenwirkung auf FLACHE Port-Modelle: der Parkplatz-Schluessel ROOM10F0 verschwand (Fortsetzung 2026-10-17)
+
+**Messung.** Der 120-Raum-Scan (§4.4) meldete ROOM10F0 mit 5 Punkten bei (96..99, 169..170). Ausschnitt ALT/NEU: in ALT
+liegt dort ein kleiner dunkler Gegenstand mit rotem Punkt auf der Konsole, in NEU fehlt er. RDT-Kopf ROOM10F0
+`00 0c 04` = nCut 12, nOmodel 4 -> obj 4 ist kein Original-Prop, sondern der Port-Schluessel der Runde 36 Spur Q
+(RE15_R36Q_OBJ 4, TIM-Platz RE15_TIM_SLOT_PROP(4) = 8). RE15_TRILOG (exe ALT 1bcbd0ff, Debug-Sprung 10F0, Bild 200,
+Fenster 85,155..115,185): Platz 8 = 4 Dreiecke, ALLE mit NCLIP < 0; NEU: Platz 8 fehlt. Je Cut (`A_belege/
+port_modelle_sicht.py`, RE15_FORCE_CUT 0..11): Cut 0, 2..10 je 4 von 4 Dreiecken NCLIP < 0 (WEG), Cut 1 2x < 0 + 2x = 0
+(Flaeche 0). -> Mit dem Verwurf ist der Parking Lot Key in KEINEM Cut sichtbar (Runde 36 Q hatte ihn in Cut 0 mit
+9 Bildpunkten abgenommen, `analysis/befunde_runde36/Q_schluessel.md` §3.2). Echte Regression dieses Stands.
+
+**Warum §4.5 das nicht sah.** Die Wicklungs-Pruefung nimmt die gespeicherte Normale als "aussen". Ein FLACHES Modell hat
+aber nur eine Seite; welche die Kamera sieht, bestimmt allein die LAGE. Die Normale der flachen RE2-Items ist bei allen
+gleich (0,4096,0), ihr Umlauf aber verschieden (Zensus `scratchpad` flach_zensus, Port-Modelle in gen/*.inc):
+
+| Modell | Flaechen | Umlauf-Normale g = (v1-v0)x(v2-v0) | Lage im Port |
+|---|---|---|---|
+| Parking Lot Key `re15_r36q_park_md1` (RE2 ROOM6150 @0x004FBC) | 4 Dreiecke, flach | **-Y** | flach auf der Konsole, nur rot_y 256 (ungewendet) -> Rueckseite oben (s.u.) |
+| Prison Key `re15_r36q_prison_md1` (RE2 Cabin Key ROOM1050 @0x001558) | 1 Viereck, flach | +Y | flach |
+| Irons Keycard `re15_irons_karte_md1` | 2, flach | +Y | Schreibtisch |
+| Lageplan-Karten `k_r36k_md1_0..4` | je 4, flach | +Y | an Waenden (rot_z 1024 / 3072) |
+| Dokument 3/4 | 8, fast flach | ~+Y | - |
+
+**Regel (RE-Beleg).** Gezeichnet wird bei MAC0 >= 0 (§2.1), d.h. wenn g im Bild VON der Kamera weg zeigt (Blickraum:
+Dreieck (0,0),(1,0),(0,1) bei y nach unten hat MAC0 = +1 und g = +z = in den Schirm). Fuer ein flaches Modell auf einer
+Platte, von oben gesehen (PSX: y nach unten), muss g also nach +Y zeigen. Der Parking Lot Key hat g = -Y und liegt
+ungewendet (nur rot_y) -> Rueckseite oben -> verworfen.
+RE2 Retail verwirft genauso (info/re2leon/PSX.EXE, selbst disassembliert, re2_disasm.py): Objekt-Schleife FUN_800363f0
+(Pool 0x800d0324, Schritt 0x1F8) -> FUN_8002d0e8 (Attribut & 0x10) RTPT `4a280030` @0x8002d170, NCLIP `4b400006`
+@0x8002d18c, `swc2 $24` @0x8002d1a0, `lw v0,0(sp)` @0x8002d1a4, `bgez v0,0x8002d1bc` @0x8002d1ac, sonst `j 0x8002d148`
++ `addiu t0,t0,80` @0x8002d1b4/b8 (naechste Flaeche); FUN_80027bec (Attribut & 0x10 == 0) NCLIP @0x80027ca8,
+`bgtz v0,0x80027ce4` @0x80027cc8. Und RE2 legt jedes flache Item so, dass seine NCLIP-Vorderseite zur Kamera zeigt
+(re15_port/tools/r34n_c/re2_scd_dump.py):
+
+| RE2-Raum, Satz | Modell | g im Modell | Dir (x, y, z) |
+|---|---|---|---|
+| ROOM6150 MAIN sub00 @0x02C98 `2d 08 .. 10 00 ba f1 b0 f8 b6 bc c0 ff 00 07 00 06` | obj 8 = P. Room Key (= unser Parking Lot Key) | -Y | (-64, 0x700, **0x600**) = um z GEWENDET (135 Grad) |
+| ROOM2020 MAIN sub00 @0x01D90 `2d 02 .. 10 00 ea a2 24 fa 6e a6 00 00 00 00 00 00` | obj 2 = Herz-Schluessel (Spur F) | +Y | (0, 0, 0) = flach |
+| ROOM1050 MAIN @0x01274 `2d 00 .. 10 00 e4 cb 88 fa be c4 00 00 00 00 00 00` | obj 0 = Cabin Key (= unser Prison Key) | +Y | (0, 0, 0) = flach |
+
+-> Die Port-Lage des Parking Lot Key (Runde 36 Q, ungewendet) zeigte die RUECKSEITE (Textur gespiegelt gegen RE2) — ohne
+Verwurf unbemerkt, mit Verwurf unsichtbar. Behebung §3c.
+
+**Laufende Spuren (fuer die Integration, gerechnet mit der Port-Matrix pc_prop_rot_q12 = Ry*Rx*Rz, main.c):**
+* Spur K (r38/itemorte) haengt beide Schluessel an die Pinnwand ROOM10F0/10F1 (gen/itemorte_r38_lage.inc, "Sichtseite
+  Modell +1y"): Modelle k_r38k_park_md1 / k_r38k_prison_md1 g = -Y; PARK rot (3072, 0, 2048), PRISON rot (1024, 0, 0) ->
+  Spalte 1 der Matrix = (0, 0, 1) -> g_Welt = (0, 0, -1); die Pinnwand liegt an der Wand z = -3400, die Kamera davor
+  (z > -3400) -> g zeigt von der Kamera weg -> VORDERSEITE, mit dem Verwurf sichtbar. K's gen/feuerloescher_r37.inc ist die
+  ALTE Fassung (K aendert nur .c/.h) -> beim Merge gilt die neu gewickelte Datei dieses Zweigs (§3b), kein Konflikt.
+  K ersetzt in schluessel_r36.c genau die Lage-Zeilen, die §3c aendert -> beim Merge **K's Seite nehmen** (s. §3c).
+* Spur F (r38/dining1141): Herz-Schluessel re15_r38f_key_md1 (RE2 ROOM2020 @0x003474) g = +Y, Lage ROOM1011 obj 6
+  (-2000, 0, 7450) rot 0 = flach auf dem Boden wie RE2 @0x01D90 -> g_Welt = +Y, Kamera oben -> VORDERSEITE, sichtbar.
+  Achtung: die Normalen-Pruefung (unit_r38_cursor_wicklung Teil 2) wuerde dieses Modell faelschlich anmahnen (w > 0) —
+  deshalb gilt sie seit §3c nur noch fuer RAEUMLICHE Modelle; flache prueft die Lage (§5).
+
 ## 5. Tests
 
 Neu (Registrierung NUR `tests/unit/probes/r38_cursor.cmake`; Sonde `tests/unit/probe_r38_cursor.c`, exe-Haken
