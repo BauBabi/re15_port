@@ -26,6 +26,9 @@
  *      (Tabelle @0x8011eca4, `jalr` @0x80110b68), Schub FUN_8002b498 @0x80110b78, Selbst-Schub aec4(&Spieler, Affe)
  *      @0x80110b88 (+0x1d2), FUN_8002b544 @0x80110b98, Wandklemme FUN_8003b0a4(+0x34, Kasten[6], 4) @0x80110bb8
  *      (+0x1d6). Gesperrte Affen (+0x9 = 0x61) stehen in Stage 4/5 und werden per Member_set(12, 0x41) frei.
+ *      SPAWN-AUFRUF (Nachbesserung 1): Sce_em_set loescht das Sperrbit (`andi v0,v1,0xdf` @0x8004256c), ruft die Wurzel
+ *      EINMAL (`jalr` @0x8004259c) und setzt es zurueck (@0x80042604-08) -> der INIT laeuft beim Spawn, ein 0x61-Affe
+ *      wartet gesperrt in Zustand 4/1 und faellt nach der Freigabe von der Decke (re15_affen3_zustand4, Original o11).
  *
  * SUBS 7..15 (Fortsetzung 2026-10-17; Messung + Belege im Dossier, Abschnitt "Weitere Treffer-Wege"):
  *      7 Sprung B[7] 0x801123fc   8 Todessprung B[8] 0x80112784 (HP -500 @0x80112b00, Spieler cmd 6 = derselbe
@@ -101,8 +104,15 @@ int  re15_affen3_griff_paar(const re15_actor_t *e);
 /* Mess-/Riegel-Zugang: Haken-Phase (= aca5a; 0xff = kein Griff) */
 int  re15_affen3_opfer_phase(void);
 
-/* INIT-Haken (Zustand 0, 0x80110c98): Massstab 1,3 und der erste Pool-Stand (anim_set @0x80110ed0). */
+/* INIT-Haken (Zustand 0, 0x80110c98): Massstab 1,3 und der erste Pool-Stand (anim_set @0x80110ed0); Ereignis-Affen
+ * +0x9 == 0x40 / 0x41 -> Zustandswort 0x4 / 0x104 (@0x80110e80-eb8, Nachbesserung 1). */
 void re15_affen3_init(re15_actor_t *e);
+
+/* Zustand 4/5 (0x80115734, Unter-Tabelle @0x8011ee34 nach +0x5), Nachbesserung 1: Unterzustand 1 (0x801158e8, grid 0x41)
+ * leitet in EINEM Bild den Fall von der Decke ein (ACTIVE B[10] Phase 2, Luftkasten, +0x1e0 = 1, +0x93 |= 3);
+ * Unterzustand 0 (0x8011577c, grid 0x40) spielt Clip 0x1f und geht nach ACTIVE B[2] Phase 1 (Clip 3 ab Bild 0x1d).
+ * Haken: re15_cockroach_ai_tick case 4/5 (enemy_ai_common.c). */
+void re15_affen3_zustand4(re15_actor_t *e);
 
 /* ACTIVE-Haken (Zustand 1, 0x8011101c). dist = +0x1d4 (SquareRoot0 @0x801110c8), sicht = +0x1d0 & 1 (Latch
  * @0x8011105c-88). Rueckgabe 1 = A und B dieses Ticks liefen hier (alle 16 Subs); 0 nur bei ungueltigem Platz. */

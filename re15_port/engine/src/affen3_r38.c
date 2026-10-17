@@ -876,6 +876,15 @@ void re15_affen3_opfer_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
 void re15_affen3_init(re15_actor_t *e)
 {
     if (!e) return;
+    /* Nachbesserung 1: Ereignis-Affen. Nach den Grid-Bit-Bloecken (+0x1e2/+0x1e3/+0x1e4) prueft der INIT die EXAKTEN Werte
+     * +0x9 == 0x40 / 0x41 und schreibt das Zustandswort neu (`sw v0,4(a0)` = +0x4..7):
+     *   @0x80110e80 `lbu v1,9(a0)` / `ori v0,zero,0x40` / `bne v1,v0,0x80110eac` / `ori v0,zero,0x4` / `sw v0,4(a0)` @0x80110e94
+     *   @0x80110ea4 `lbu v1,9(a0)` / `ori v0,zero,0x41` / `bne v1,v0,0x80110ebc` / `ori v0,zero,0x104` / `sw v0,4(a0)` @0x80110eb8
+     * (STAGE4.BIN @0x8010c520-558 befehlsgleich). Sce_em_set ruft die Wurzel beim Spawn mit geloeschtem Sperrbit
+     * (`andi v0,v1,0xdf` @0x8004256c, `jalr` @0x8004259c): ein gesperrter Affe grid 0x61 sieht hier 0x41 und wartet danach
+     * gesperrt in Zustand 4/1 (Original o11 ROOM4040: F18..F56 `4.1.0.0 g61`). Alles danach (anim_set, HP, Kasten) wie sonst. */
+    if (e->grid_id == 0x40) { e->state = 4; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }   /* Wort 0x4 */
+    if (e->grid_id == 0x41) { e->state = 4; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }   /* Wort 0x104 */
     e->render_scale_q12 = RE15_AFFEN3_MASSSTAB;   /* +0x0 |= 0x800 @0x80110f44-48, +0x166 = 0x14cc @0x80110f54-58 */
     e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* +0x94 = 0 @0x80110ce4, +0x95 @0x80110cf4, +0x8f @0x80110d04 */
     (void)anim_set(e);                            /* `jal 0x8001f314` (a3 = 0x200) @0x80110ed0: Pool des INIT-Clips 0 */
@@ -883,6 +892,62 @@ void re15_affen3_init(re15_actor_t *e)
                                                   * @0x80042210 (-(+0x82)*0x708, wie Hund/Gorilla-INIT im Port) */
     kasten_boden(e);                              /* +0x78 = *(0x8011ec44 + 4*(+0x1e4)) @0x80110f68-88 */
     e->roach_air = 0;                             /* +0x1e0 = 0 @0x80110dc4 */
+}
+
+/* Zustand 4/5 0x80115734 (Tabelle @0x8011eca4 [4] = [5]; STAGE4 0x80110dd4): `lbu v0,5(v0)` @0x80115744, Unter-Tabelle
+ * @0x8011ee34 (`addiu at,at,-4556` @0x80115754) = {0x8011577c, 0x801158e8, 0x80115a5c `jr ra`, 0x80115a64 `jr ra`},
+ * `jalr` @0x80115764. Gemessen (Original o11, ROOM4040): Freigabe F57 -> F58 `1.10.2.0 g01`, Fall bis +0x1ba in 18 Bildern. */
+void re15_affen3_zustand4(re15_actor_t *e)
+{
+    if (!e) return;
+    if (e->sub_state_1 == 0) {                    /* 0x8011577c — Ereignis-Affe +0x9 == 0x40 */
+        switch (e->sub_state_2) {                 /* +0x6 `lbu v1,6(a0)` @0x8011578c, Verteiler @0x80115790-7c0 */
+        case 0:                                   /* @0x801157c8 */
+            e->sub_state_2 = 1;                   /* `sb v0,6(a0)` (v0 = 1 aus dem Delay @0x801157a8) @0x801157c8 */
+            e->motion = 0x1f;                     /* `ori v0,zero,0x1f` / `sb v0,148` @0x801157d4-d8 */
+            e->anim_frame = 0;                    /* `sb zero,149` @0x801157e8 */
+            e->anim_frac = 7;                     /* `ori v0,zero,0x7` / `sb v0,143` @0x801157f4-f8 */
+            e->crow_speed = 0;                    /* +0x8c `sh zero,140` @0x80115808 */
+            e->ai_timer = 0;                      /* +0x9c `sh zero,156` @0x80115818 */
+            /* faellt in Phase 1 (@0x8011581c) */
+        case 1:
+            e->sub_state_2 = (uint8_t)(e->sub_state_2 + anim_set(e));   /* `jal 0x8001f314` @0x80115830, `addu`/`sb v1,6` @0x8011584c-54 */
+            return;
+        case 2:                                   /* @0x80115858 */
+            e->grid_id = (uint8_t)(e->grid_id & 0xbf);   /* `andi v0,v0,0xbf` / `sb v0,9(a0)` @0x80115860-64 */
+            e->state = 1;                         /* `sb a0,4(v0)` (a0 = 1) @0x80115874 */
+            e->sub_state_1 = 2;                   /* `ori v0,zero,0x2` / `sb v0,5(v1)` @0x80115880-84 */
+            e->sub_state_2 = 1;                   /* `sb a0,6(v0)` @0x80115894 */
+            e->sub_state_3 = 0;                   /* `sb zero,7(v0)` @0x801158a4 */
+            e->anim_frame = 0x1d;                 /* `ori v0,zero,0x1d` / `sb v0,149` @0x801158b0-b4 */
+            e->anim_frac = 0;                     /* `sb zero,143` @0x801158c4 */
+            e->motion = 3;                        /* `ori v0,zero,0x3` / `sb v0,148` @0x801158d0-d4 -> B[2] Phase 1, Clip 3 ab 0x1d */
+            return;
+        default:                                  /* `j 0x801158d8` */
+            return;
+        }
+    }
+    if (e->sub_state_1 == 1) {                    /* 0x801158e8 — Ereignis-Affe +0x9 == 0x41: EIN Bild, dann ACTIVE B[10] Phase 2 */
+        e->hit_react |= 1;                        /* `ori v0,v0,0x1` / `sb v0,147` @0x80115900-04 */
+        e->hit_react |= 2;                        /* `ori v0,v0,0x2` / `sb v0,147` @0x8011591c-20 */
+        e->roach_air = 1;                         /* +0x1e0 `sb a0,480(v0)` @0x80115930 */
+        kasten_luft(e);                           /* +0x78 = *(0x8011ec48 + 4*(+0x1e4)) @0x80115940-60 */
+        e->grid_id = (uint8_t)(e->grid_id & 0xbf);   /* `andi v0,v0,0xbf` / `sb v0,9(v1)` @0x80115978-7c */
+        e->state = 1;                             /* `sb a0,4(v0)` (a0 = 1) @0x8011598c */
+        e->sub_state_1 = 10;                      /* `ori v0,zero,0xa` / `sb v0,5(v1)` @0x80115998-9c */
+        e->sub_state_2 = 2;                       /* `ori v0,zero,0x2` / `sb v0,6(v1)` @0x801159a8-ac */
+        e->sub_state_3 = 0;                       /* `sb zero,7(v0)` @0x801159bc */
+        e->motion = 0x0d;                         /* `ori v0,zero,0xd` / `sb v0,148` @0x801159c8-cc */
+        e->anim_frame = 0x13;                     /* `ori v0,zero,0x13` / `sb v0,149` @0x801159d8-dc */
+        e->anim_frac = 0;                         /* `sb zero,143` @0x801159ec */
+        e->crow_speed = 0;                        /* +0x8c `sh zero,140` @0x801159fc */
+        e->ai_timer = 0;                          /* +0x9c `sh zero,156` @0x80115a0c */
+        (void)anim_set(e);                        /* `jal 0x8001f314` (a3 = 0x200) @0x80115a24 */
+        e->anim_frame = 0x14;                     /* `ori v0,zero,0x14` / `sb v0,149` @0x80115a34-38 */
+        e->anim_frac = 0;                         /* `sb zero,143` @0x80115a48 */
+        return;
+    }
+    /* +0x5 2 / 3: 0x80115a5c / 0x80115a64 = `jr ra` */
 }
 
 void re15_affen3_luft_landung(re15_actor_t *e)

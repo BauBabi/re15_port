@@ -11617,6 +11617,10 @@ static void re15_cockroach_ai_tick(int slot)
         }
         break; }
 
+    case 4: case 5:   /* Runde 38 Spur S: Zustand 4/5 0x80115734 (@0x8011eca4 [4] = [5]) — Ereignis-Affen, affen3_r38.c */
+        re15_affen3_zustand4(e);
+        break;
+
     case 7:   /* CORPSE 0x80115a6c: flags|0x2|0x40, 0x5a fade counter, then inert */
         if (e->sub_state_3 == 0) {                                                    /* phase 0 @0x80115a98 */
             e->roach_fade = 0x5a;                                                      /* +0x9e=90 fade counter @0x80115a98 */
@@ -14477,12 +14481,24 @@ static void re15_birkin_root(int s)
  * enemy_ai_boss_g5.c, das seinen eigenen Konstruktor hat (Ctor @0x8010076C) und scharf wird, sobald
  * grid == 0x13 ist — ein Aufruf mit geloeschtem Bit wuerde ihn beim Spawn schaerfen. Fuer die
  * uebrigen Typen ist der Spawn-Aufruf nicht verdrahtet (OFFEN, Dossier 9). */
+/* Runde 38 Spur S: Rumpf der Affen-Wurzel 0x80110b00 hinter den Toren — Zustand (`jalr` @0x80110b68), Selbst-Schub
+ * aec4(&Spieler, Affe) @0x80110b88, Schub b498/b544, Wandklemme FUN_8003b0a4 @0x80110ba0-cc. Aus run_all (jedes Bild)
+ * und aus dem Spawn-Aufruf (@0x8004259c): Original o1 ROOM3040 klemmt Affe A schon beim Spawn (z -6150 -> -6082). */
+static void re15_affen3_wurzel_rumpf(int s, re15_actor_t *e)
+{
+    int32_t ox = e->x, oz = e->z;
+    re15_cockroach_ai_tick(s);
+    re15_enemy_selfpush_from_player(s, e);
+    re15_enemy_body_push_tail(s, e);
+    (void)re15_enemy_sca_clamp_band(e, ox, oz, 4u);   /* Radius = Kasten+6 (`lhu a1,6(v0)` @0x80110bb4), Band +0x82, +0x1d6 = v0 */
+}
+
 void re15_enemy_spawn_root(int slot)
 {
     if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
     if (!e->active) return;
-    if (e->type != 0x30 && e->type != 0x36 && e->type != 0x27) return;   /* Runde 35 Spur J: 0x27 Spawn-Wurzel */
+    if (e->type != 0x30 && e->type != 0x36 && e->type != 0x27 && e->type != 0x29) return;   /* Runde 35 Spur J: 0x27 Spawn-Wurzel; Runde 38 Spur S: 0x29 (Original o11/o1: INIT im Spawn-Bild) */
     if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {   /* G5-Modul */
         /* Runde 35 Spur C: +0x4 = 0 @0x800421e0 -> RE2-Ctor @0x801003CC (HP 600 @0x801003fc) */
         extern void re15_g5_boss_spawn(int slot);
@@ -14492,6 +14508,7 @@ void re15_enemy_spawn_root(int slot)
     uint8_t s4 = (uint8_t)(e->grid_id & 0x20);          /* @0x800425a0 andi s4,v1,0x20 */
     e->grid_id = (uint8_t)(e->grid_id & 0xdf);          /* @0x8004256c andi / @0x80042570 sb */
     if (e->type == 0x27) re15_maggot_ai_tick(slot);     /* Runde 35 Spur J: Gorilla-INIT im Spawn-Bild (re15_affen.h (4f)) */
+    else if (e->type == 0x29) re15_affen3_wurzel_rumpf(slot, e);   /* Runde 38 Spur S: Affen-Wurzel 0x80110b00 (STAGE4 0x8010c1a0) einmal */
     else re15_birkin_root(slot);                        /* @0x8004259c jalr 0x80072bac[typ] */
     e->grid_id = (uint8_t)(e->grid_id | s4);            /* @0x80042604 or / @0x80042608 sb */
 }
@@ -14703,14 +14720,9 @@ void re15_enemy_ai_run_all(int combat_active)
         else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small FLYING scurrier. Root 0x80110b00
                                  * dispatches +0x4 via the 8-entry table @0x8011eca4. Scurries toward the player +
                                  * bites, and LEAPS/FLIES AWAY after a survived hit -> SCA wall-clamp after the tick. */
-            int32_t rc_ox = e->x, rc_oz = e->z;
             re15_affen_zeichen_merk(e);   /* Runde 38 Spur S: Zeichenstand des Vorbilds (Record+0x40, Zeichen-Schleife @0x8001d108) */
-            if (!(e->grid_id & RE15_AI_GRID_SKIP)) {   /* Runde 38 Spur S: Tor +0x9 & 0x20 `lbu v0,9(v1)`/`andi v0,v0,0x20`/`bne v0,zero,0x80110bd0` @0x80110b34-40 (Freigabe per Member_set(12,0x41), z.B. ROOM4040 @0x011D6) */
-            re15_cockroach_ai_tick(s);
-            re15_enemy_selfpush_from_player(s, e);   /* Runde 38 Spur S: aec4(&Spieler, Affe) `jal 0x8002aec4` @0x80110b88 */
-            re15_enemy_body_push_tail(s, e);
-            (void)re15_enemy_sca_clamp_band(e, rc_ox, rc_oz, 4u);   /* Runde 38 Spur S: FUN_8003b0a4 JEDES Bild @0x80110ba0-cc, Radius = Kasten+6 (`lhu a1,6(v0)` @0x80110bb4), Band +0x82, +0x1d6 = v0 */
-            }
+            if (!(e->grid_id & RE15_AI_GRID_SKIP))   /* Runde 38 Spur S: Tor +0x9 & 0x20 `lbu v0,9(v1)`/`andi v0,v0,0x20`/`bne v0,zero,0x80110bd0` @0x80110b34-40 (Freigabe per Member_set(12,0x41), z.B. ROOM4040 @0x011D6) */
+                re15_affen3_wurzel_rumpf(s, e);   /* Runde 38 Spur S: Zustand, aec4 @0x80110b88, Schub, Wandklemme JEDES Bild @0x80110ba0-cc */
         }
         else if (t == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {
             /* ENDKAMPF-G5 (Runde 6, birkin-g5-ki.md): eigenes byte-true Modul
