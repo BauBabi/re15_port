@@ -3,6 +3,7 @@
  * Belege und Messungen: include/re15_affen.h (Kopf) und analysis/befunde_runde35/J_affen.md.
  */
 #include "re15_affen.h"
+#include "re15_affen3_r38.h"   /* Runde 38 Spur S: re15_affen3_griff_paar */
 #include "re15_collision.h"     /* re15_collision_floor_typeword = FUN_8003b7f0 */
 #include "re15_enemy.h"         /* re15_enemy_find (Bank: re2_rig, Skelett/Clips des Gorillas) */
 #include "re15_enemy_ai.h"      /* re15_clip_anchor_set_pub */
@@ -372,7 +373,8 @@ uint8_t re15_affen_flinch_exit_sub(re15_actor_t *e)
  *      Gorilla-Spanne Phase 3/4 von sub 15. GDB (jnb1/g_griff.txt Wort 0): e1 0x60001811 ab T254, 0x60000811 ab T302. */
 int re15_affen_griff_paar(const re15_actor_t *e)
 {
-    return e && e->type == 0x27 && e->sub_state_1 == 15 && (e->sub_state_2 == 3 || e->sub_state_2 == 4);
+    return (e && e->type == 0x27 && e->sub_state_1 == 15 && (e->sub_state_2 == 3 || e->sub_state_2 == 4))
+        || re15_affen3_griff_paar(e);   /* Runde 38 Spur S: Affe 0x29, Bit 0x1000 @0x801143c4-c8/@0x80114670-7c, Spieler @0x801143e4-ec/@0x80115f68-78 */
 }
 
 /* (7) FUN_8001af20 = Hash des a0-Registers des AUFRUFERS (der State @0x800ac774 ist ein toter Store):

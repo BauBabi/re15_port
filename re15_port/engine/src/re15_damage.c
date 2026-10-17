@@ -2460,7 +2460,7 @@ retry_after_latch:
                      * die niedrigen Arme nach UNTEN zielte, traf NIE (Nutzer-Report 2026-08-29
                      * "keinerlei Treffer-Feedback"; dieselbe Klasse wie der Hund-Befund). */
                     eband = 0x40000000u | 0x20000000u;
-                } else if (e->type == 0x27) {
+                } else if (e->type == 0x27 || e->type == 0x29) {   /* Runde 38 Spur S: kleiner Affe 0x29 = derselbe Schwanz @0x80111148-1b0 */
                     /* GORILLA-BOSS: Band aus dem Brain-Tail-Stempel (enemy_ai_common.c,
                      * @0x80117380-e8): Boden = LEVEL + DOWN(dist<0xfa0=4000, FUN_80012974
                      * @0x801173a4 -> @0x800129cc-f0); airborne (+0x1e0) = NUR UP

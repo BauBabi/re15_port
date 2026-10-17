@@ -16,17 +16,26 @@
  *      Knochenpunkt (FUN_8001bff8 @0x8001c080-c0c0) und schiebt den Affen per Fuss-Sperre (FUN_80115b68 /
  *      FUN_80115c3c) in den Sprung hinein.
  *
- * DIESES MODUL faehrt das ACTIVE-Gehirn 0x8011101c fuer die Subs 0..6 (A[+0x5] und B[+0x5] im SELBEN Tick,
- *      `jalr` @0x8011110c / @0x80111140). Subs 7..15 (Sprung/Flug) bleiben beim bisherigen Code in
- *      enemy_ai_common.c re15_cockroach_ai_tick. Die Knochenkette, der Pool und der Zeichenstand kommen aus
- *      affen_11c0.c (re15_affen_pool_anim / _zeichen_merk / _fusssperre / _trefferpunkt), die seit Runde 38
- *      die Bank des Aktor-Typs nehmen (vorher fest 0x27).
+ * DIESES MODUL faehrt das ganze ACTIVE-Gehirn 0x8011101c (A[+0x5] und B[+0x5] im SELBEN Tick, `jalr`
+ *      @0x8011110c / @0x80111140, alle 16 Subs) samt Schwanz (Zielbaender @0x80111148-1b0). Die Knochenkette,
+ *      der Pool und der Zeichenstand kommen aus affen_11c0.c (re15_affen_pool_anim / _zeichen_merk /
+ *      _fusssperre / _trefferpunkt), die seit Runde 38 die Bank des Aktor-Typs nehmen (vorher fest 0x27).
+ *
+ * SUBS 7..15 (Fortsetzung 2026-10-17; Messung + Belege im Dossier, Abschnitt "Weitere Treffer-Wege"):
+ *      7 Sprung B[7] 0x801123fc   8 Todessprung B[8] 0x80112784 (HP -500 @0x80112b00, Spieler cmd 6 = derselbe
+ *      Haken wie beim Gorilla: 0x80116064 -> 0x801160a4 ist befehlsgleich zu 0x8011c3d4 -> 0x8011c414)
+ *      9 an die Decke B[9] 0x80112d48   10 von der Decke B[10] 0x801130f8   11 Drehen B[11] 0x80113448
+ *      12 Kriechen B[12] 0x801136e8   13 Jagd A[13] 0x8011394c / B[13] 0x80113c3c   14 Hieb B[14] 0x80113e90
+ *      (HP -10 @0x801141f4)   15 Griff B[15] 0x801142c4 + Spieler-Haken cmd 5 0x80115d30 -> 0x80115d70
+ *      (Phasen @0x80100364, kein HP-Abzug — Original o8). Treffer im Flug/an der Decke: A[9..14] (+0x93 & 2:
+ *      0x40 -> HURT/Absturz, sonst Blut), Landung im HURT/DEATH-Kopf @0x801147a0-804 / @0x80114fc4-5028.
  */
 #ifndef RE15_AFFEN3_R38_H
 #define RE15_AFFEN3_R38_H
 
 #include <stdint.h>
 #include "re15_actor.h"
+#include "re15_enemy.h"   /* re15_enemy_bank_t (Opfer-Bank des Griffs) */
 
 #define RE15_AFFEN3_TYP             0x29u
 #define RE15_AFFEN3_MASSSTAB        0x14cc   /* +0x166 `ori v0,zero,0x14cc` @0x80110f54-58, Flag +0x0|=0x800 @0x80110f44-48 */
@@ -50,6 +59,41 @@
 /* Sperre +0x1dc */
 #define RE15_AFFEN3_SPERRE_TREFFER  0x2d     /* @0x80111f68 / @0x801122bc */
 #define RE15_AFFEN3_SPERRE_ENDE     0x14     /* @0x80111fe4 / @0x80112398 */
+
+/* B[8] TODESSPRUNG 0x80112784 */
+#define RE15_AFFEN3_TOD_CLIP        0x15     /* `ori v0,zero,0x15` / `sb v0,148` @0x801127f8-fc */
+#define RE15_AFFEN3_TOD_SCHADEN     500      /* `addiu v0,v0,-500` @0x80112b00 */
+#define RE15_AFFEN3_TOD_SPERRE      0x12c    /* `ori v0,zero,0x12c` / `sh v0,476` @0x80112b08-10 */
+#define RE15_AFFEN3_TOD_HP_GRENZE   50       /* B[7] `slti v0,v0,50` @0x8011269c: Spieler-HP < 50 */
+/* B[14] HIEB VON DER DECKE 0x80113e90 */
+#define RE15_AFFEN3_HIEB_CLIP       0x1a     /* `ori v0,zero,0x1a` @0x80113f0c */
+#define RE15_AFFEN3_HIEB_SCHADEN    10       /* `addiu v0,v0,-10` @0x801141f4 */
+#define RE15_AFFEN3_HIEB_SE         5        /* `ori a0,zero,0x5` @0x801141d4 -> jal 0x800453d0 @0x80114208 */
+/* B[9] Decke: y = +0x1ba - 2700 (`addiu v1,v1,-2700` @0x80112f18) */
+#define RE15_AFFEN3_DECKE_HOEHE     2700
+/* Kaesten +0x78 (STAGE3.BIN, je {x,y,z, r, h, r}): Boden @0x8011ec14 {0,-1080,0,1100,1080,1100} bzw. grid&8
+ * @0x8011ec2c {..,800,1080,800}; Luft/Decke @0x8011ec20 / @0x8011ec38 {0,-1530,0,800,1530,800}. */
+#define RE15_AFFEN3_KASTEN_BODEN_R    1100
+#define RE15_AFFEN3_KASTEN_BODEN8_R    800
+#define RE15_AFFEN3_KASTEN_BODEN_H    1080
+#define RE15_AFFEN3_KASTEN_LUFT_R      800
+#define RE15_AFFEN3_KASTEN_LUFT_H     1530
+
+/* HURT/DEATH-Kopf (Zustand 2 @0x80114790 / 3 @0x80114fb4): +0x1e0 -> FUN_8001c1a4(0,0,-50,+0x1ba); gelandet ->
+ * +0x1e0 = 0, Bodenkasten, SE 1 (@0x801147a0-804 / @0x80114fc4-5028). Haken am Anfang beider Zustaende. */
+void re15_affen3_luft_landung(re15_actor_t *e);
+
+/* Spieler-Seite des Griffs (cmd 5, Haken 0x80115d70, Phasen aca5a 0..10 @0x80100364). Aufgerufen aus
+ * re15_player_victim_tick (enemy_ai_common.c), solange der Affe greift. vb = Opfer-Bank des Affen (EM029). */
+void re15_affen3_opfer_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb);
+/* 1 = der Haken spielt gerade Leons EIGENE Bank (aca5a 6..9: acad8/acbc0, Clip 0x10 / 0xb) */
+int  re15_affen3_opfer_eigenbank(void);
+/* Griff-Paar fuer den Koerper-Schub (FUN_8002aec4 `and`/`andi 0x1000` @0x8002af14): Affe UND Spieler tragen Bit
+ * 0x1000 — Affe ab B[15] P0 (@0x801143c4-c8) bis P6 (@0x80114670-7c), Spieler ab P0 (@0x801143e4-ec) bis zum
+ * Ende des Loesen-Clips (Haken aca5a 5 @0x80115f68-78). */
+int  re15_affen3_griff_paar(const re15_actor_t *e);
+/* Mess-/Riegel-Zugang: Haken-Phase (= aca5a; 0xff = kein Griff) */
+int  re15_affen3_opfer_phase(void);
 
 /* INIT-Haken (Zustand 0, 0x80110c98): Massstab 1,3 und der erste Pool-Stand (anim_set @0x80110ed0). */
 void re15_affen3_init(re15_actor_t *e);

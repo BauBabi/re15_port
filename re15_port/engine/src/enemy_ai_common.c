@@ -1360,7 +1360,7 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
         return;
     }
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    if (zombie->type == 0x27) { g_player_victim_type = 0x27; g_player_victim_zombie = (int)(zombie - g_actors);   /* Runde 35 Spur J (15): cmd 6 -> */
+    if (zombie->type == 0x27 || zombie->type == 0x29) { g_player_victim_type = zombie->type; g_player_victim_zombie = (int)(zombie - g_actors);   /* Runde 35 Spur J (15): cmd 6 -> ; Runde 38 Spur S: 0x29-Haken 0x801160a4 = befehlsgleich */
         g_player_victim_variant = 0; g_player_victim = 2; re15_affen_finisher_start(); return; }                /* Hook 0x8011c3d4, re15_affen.h (15) */
     g_player_victim_type    = zombie->type;
     g_player_victim_zombie  = (int)(zombie - g_actors);
@@ -1499,10 +1499,19 @@ static uint8_t re15_player_victim_grabber_type(void)
 static uint8_t s_gthrow_phase = 0;
 int re15_player_victim_own_bank(void)
 {
-    return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27
-        && s_gthrow_phase != 0;
+    return (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27
+        && s_gthrow_phase != 0)
+        || (g_player_victim != 0 && re15_player_victim_grabber_type() == 0x29 && re15_affen3_opfer_eigenbank());   /* Runde 38 Spur S: aca5a 6..9 = acad8/acbc0 */
 }
 int re15_player_victim_gorilla(void) { return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27; }   /* Runde 35 Spur J (6d) */
+/* Runde 38 Spur S: Griff des kleinen Affen (B[15] P0 schreibt aca58 = 5 @0x8011440c) an / Haken-Ende (aca58 = 1 @0x80116018). */
+void re15_player_victim_affen3(const re15_actor_t *greifer, int an)
+{
+    extern void re15_player_aim_interrupt(void);   /* player_common.c */
+    if (an && greifer) { g_player_victim_type = greifer->type; g_player_victim_zombie = (int)(greifer - g_actors);
+                         g_player_victim_variant = 0; g_player_victim = 1; s_player_grabbed = 1; s_victim_fresh = 0; re15_player_aim_interrupt(); }
+    else if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) g_player_victim = 0;
+}
 
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
 static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int clip, int frame)
@@ -1613,7 +1622,8 @@ void re15_player_victim_tick(void)
      * blend seed (7) never decayed = a non-terminating fade that leaked into the post-release idle.
      * Skipped on the seed tick (fresh) so the full 7 renders once — the same first-frame-87.5%
      * cadence the zombie side shows (F84 frac=7 in the pose dump). */
-    if (g_player_victim == 2 && re15_player_victim_grabber_type() == 0x27) { s_gthrow_phase = 0; re15_affen_finisher_tick(player, vb); return; }   /* Runde 35 Spur J (15): Finisher = cmd-6-Hook 0x8011c414, nicht der Wurf */
+    if (g_player_victim == 2 && (re15_player_victim_grabber_type() == 0x27 || re15_player_victim_grabber_type() == 0x29)) { s_gthrow_phase = 0; re15_affen_finisher_tick(player, vb); return; }   /* Runde 35 Spur J (15): Finisher = cmd-6-Hook 0x8011c414, nicht der Wurf; Runde 38 Spur S: 0x29 = 0x801160a4 */
+    if (g_player_victim == 1 && re15_player_victim_grabber_type() == 0x29) { re15_affen3_opfer_tick(player, vb); return; }   /* Runde 38 Spur S: Griff-Haken cmd 5 0x80115d70 (affen3_r38.c) */
     if (player->anim_frac > 0 && !s_victim_fresh) player->anim_frac--;
     /* ==== GORILLA-BOSS (0x27): dedizierter Pin-Opfer-Handler 0x8011c118 — EIGENE
      * Leon-Timeline statt der generischen Zombie-Halte-Maschine (gorilla_11c0/
@@ -11471,6 +11481,7 @@ static void re15_cockroach_ai_tick(int slot)
                 * Clip 8/9 gehoert aber der LUFT-SPUR, gewaehlt ueber +0x5, nicht ueber den Flugzustand.
                 * Die Luft-Landung des Wurzelkopfs (+0x1e0 != 0 -> 0x8001c1a4(0,0,-50,+0x1ba), Kasten
                 * @0x8011ec44[+0x1e4], SE 1 @0x801147a0-804) bleibt OFFEN (Flug-Subsystem, s. Kopf). */
+        re15_affen3_luft_landung(e);                       /* Runde 38 Spur S: +0x1e0-Landung @0x801147a0-804 */
         const uint8_t spur = re15_spur(s_spur_hurt, e->sub_state_1);   /* @0x80114814-34 */
         if (spur == 0u) {                                     /* 0x8011484c ZUCKEN (+0x7-Phasen) */
             switch (e->sub_state_3) {
@@ -11560,6 +11571,7 @@ static void re15_cockroach_ai_tick(int slot)
                 * `jal 0x8004ef90` je Spur (@0x801151dc / @0x80115414 / @0x8011566c) = em_flag-Commit
                 * von run_all; Blut 0x80019700 = Render OFFEN. Der letzte Bild wird GEHALTEN (die Leiche
                 * posiert nicht neu, s. case 7). */
+        re15_affen3_luft_landung(e);                       /* Runde 38 Spur S: +0x1e0-Landung @0x80114fc4-5028 */
         const uint8_t spur = re15_spur(s_spur_death, e->sub_state_1);  /* @0x80115038-58 */
         switch (e->sub_state_3) {
         case 0:
@@ -14693,11 +14705,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_affen_zeichen_merk(e);   /* Runde 38 Spur S: Zeichenstand des Vorbilds (Record+0x40, Zeichen-Schleife @0x8001d108) */
             re15_cockroach_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != rc_ox || e->z != rc_oz)) {
-                int32_t nx = e->x, nz = e->z;
-                e->sca_wall_hit = (uint8_t)(re15_collision_constrain_contact(&g_room_rdt, rc_ox, rc_oz, &nx, &nz, e->hit_radius_min, e->y, 4u, NULL, NULL) != 0);   /* Runde 38 Spur S: +0x1d6 = Rueckgabe FUN_8003b0a4 `sh v0,470` @0x80110bb8-cc (Lage wie bisher) */
-                e->x = nx; e->z = nz;
-            }
+            (void)re15_enemy_sca_clamp_band(e, rc_ox, rc_oz, 4u);   /* Runde 38 Spur S: FUN_8003b0a4 JEDES Bild @0x80110ba0-cc, Radius = Kasten+6 (`lhu a1,6(v0)` @0x80110bb4), Band +0x82, +0x1d6 = v0 */
         }
         else if (t == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {
             /* ENDKAMPF-G5 (Runde 6, birkin-g5-ki.md): eigenes byte-true Modul
