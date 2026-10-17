@@ -17,7 +17,9 @@ Nutzer-Wortlaut (AUFTRAG.md Nachtrag 1, 2026-10-16 21:00):
 - [x] Messung nachher — §6 (Cut 11 frei, Bild = Original, OBJPOLY = Original)
 - [x] Tests — §7 (unit_r38_rolltor20a0, unit_r38_rolltor20a0_windung, integration_r38_rolltor20a0)
 - [x] Elza 20A1 — RDT byte-gleich, exe-Lauf B mit Elza (PL04) gruen
-- [x] Nebenwirkungen — §8 (Zensus aller Raeume; Port-Modelle ohne NCLIP)
+- [x] Nebenwirkungen — §8 (Zensus aller Raeume; Port-Modelle ohne NCLIP — ueberholt durch §9)
+- [x] Fortsetzung 2026-10-17: Merge r38/cursor (Spur A), EIN NCLIP-Weg, EINE Regel fuer Port-Modelle — §9
+- [ ] nach dem Merge: Bau, gezielte Tests (A + W + Module), Messung nachher 20A0/20A1 Cut 11 + ROOM1050 Cut 5 — §9.4/§9.5
 
 ## 1. Messung vorher (Port, Basis df08d83a = v0.8.25 + Doku)
 
@@ -324,3 +326,66 @@ sie (wirken nur unmittelbar vor der Kamera).
   (GLOB) — der Android-Bau braucht einen frischen Configure (Memory reai-v2-android-glob-cache).
 * Messschiene fuer Rueckmeldungen: `RE15_OBJPOLY_LOG=objpoly.txt` schreibt je Bild und Objekt gezeichnet/NCLIP/OTZ/GPU.
 * Entscheidungsfragen: keine.
+
+## 9. Fortsetzung 2026-10-17: Merge r38/cursor (Spur A) — EIN NCLIP-Weg, EINE Regel fuer Port-Modelle
+
+Auftrag (Orchestrator 2026-10-17 05:11): Spur A (r38/cursor, Cursor-Schatten 1150/11F0) baut denselben Rueckseiten-
+Verwurf (GTE NCLIP, MAC0 < 0) in der Raum-Prop-Schleife und am Hebetisch-Cursor; A wickelt Port-Modelle um, W zeichnete
+sie zweiseitig. Zweig r38/cursor (Stand c4182ed1, 2026-10-17 05:11) in diesen Zweig gemergt: **2291b2c5**.
+
+### 9.1 Was beide Zweige trugen
+
+| | Spur A (r38/cursor) | Spur W (bis 2e2f9579) |
+|---|---|---|
+| Prop-Schleife main.c | alte Projektion (Scheitel `_vz < 64`, ungesaettigt) + `re15_nclip_r38_verwerfen` nach Dreieck/Viereck | objpoly_r38 (RTPS gesaettigt, NCLIP, OTZ < 64, GPU-Groessengrenze, Halbviereck) statt der alten Projektion |
+| NCLIP-Rechnung | include/re15_nclip_r38.h + engine/src/nclip_r38.c (psx-spx woertlich, saettigt -400h..3FFh, Zaehler) | eigene `nclip_opz` in objpoly_r38.c (gleiche Formel auf gesaettigten SXY) |
+| Port-Modelle (eingebacken) | NCLIP wie RDT-Modelle; Feuerloescher R37 dafuer neu gewickelt (gen/feuerloescher_r37.inc, 112 Vierecke v1<->v2) | zweiseitig (PORT-WAHL `r38_nclip` = MD1 im RDT-Puffer) |
+| Hebetisch-Cursor 1150 | NCLIP (hebetisch_cursor_pc.c) | - |
+
+Konflikt nur in main.c (zwei Stuecke: Dreiecks- und Vierecks-Projektion der Prop-Schleife).
+
+### 9.2 Aufloesung (2291b2c5)
+
+* **EIN NCLIP-Weg.** Prop-Schleife = W-Weg objpoly_r38 (er enthaelt As Verwurf und dazu OTZ < 64, Saettigung, GPU-Grenze).
+  Die NCLIP-Rechnung selbst ist As Funktion: objpoly_r38.c ruft `re15_nclip_r38_mac0` (OPZ fuer Messschiene/Riegel) und
+  verwirft ueber `re15_nclip_r38_verwerfen` (MAC0 < 0; Zaehler `g_re15_nclip_r38_verworfen` zaehlt damit wie bei A jeden
+  Verwurf der Prop-Schleife). As Saettigung ist auf den schon gesaettigten SXY wirkungslos (gleiches Ergebnis).
+  Original-Adressen unveraendert: FUN_80022f0c `bltz` @0x80023010, FUN_80023098 `bgez` @0x80023190, FUN_800254a0
+  `bgez` @0x800255a8, FUN_800256b0 `bgez` @0x800257c0; OTZ `srl/sra 6` + `beq` @0x80023044/48, @0x80023224/28,
+  @0x80025654/58, @0x800258b0/b4; ZSF3 341 @0x80066c70, ZSF4 256 @0x80066c7c.
+* Hebetisch-Cursor (As Modul hebetisch_cursor_pc.c) unveraendert mit As Verwurf — derselbe NCLIP-Code.
+* objpoly_r38: Parameter `nclip` entfernt (main.c, Riegel angepasst). As Include in main.c bleibt (unbenutzt, haelt
+  den spaeteren Merge der Folge-Commits von A konfliktarm).
+
+### 9.3 Port-Modelle: EINE Regel = NCLIP fuer jedes Objekt-Polygon (Wahl mit Beleg und Messung)
+
+**Beleg (Original kennt keinen zweiseitigen Objekt-Zeichner):**
+* RE1.5: FUN_8002c18c ruft fuer jedes Objekt nur die vier Zeichner aus §3.1 (Aufrufliste A §2.1: @0x8002c320/350/380/3b0,
+  Typ 3 ueber FUN_8003e64c @0x8002c2c8 auf dieselben zwei Flach-Zeichner) — alle mit NCLIP-Verwurf.
+* RE2 Retail (Ziel, wo RE1.5 unfertig ist; die Port-Modelle sind RE2-Items bzw. Nachbauten), `info/re2leon/PSX.EXE`
+  mit re2_disasm.py selbst nachgeprueft: Objekt-Schleife FUN_800363f0 ruft FUN_8002d0e8 @0x80036610, FUN_8002d244
+  @0x80036640, FUN_80027bec @0x8003666c, FUN_80027dbc @0x8003669c:
+  - FUN_8002d0e8: RTPT `4a280030` @0x8002d170, NCLIP `4b400006` @0x8002d18c, `swc2 MAC0` `ebb80000` @0x8002d1a0,
+    `lw v0,0(sp)` @0x8002d1a4, `bgez v0,0x8002d1bc` @0x8002d1ac, sonst `j 0x8002d148` + `addiu t0,t0,80` (naechste Flaeche)
+  - FUN_8002d244: NCLIP @0x8002d2f4, `bgez v0,0x8002d324` @0x8002d314, sonst `j 0x8002d2a4` + `addiu t0,t0,104`
+  - FUN_80027bec: NCLIP @0x80027ca8, `bgtz v0,0x80027ce4` @0x80027cc8
+  - FUN_80027dbc: NCLIP @0x80027e64, `bgez v0,0x80027eac` @0x80027e84, sonst `addiu t1,t1,104`
+  (FUN_8002d3c8 @0x80036588 / FUN_8002d718 @0x800365b4 ohne NCLIP sind der Sonderweg Attribut & 0x8 mit dem
+  30-Bilder-Zaehler obj+492 @0x800365bc..d0 — kein Item-/Kulissen-Objekt.)
+**Messung (warum die PORT-WAHL "zweiseitig" entfaellt):**
+* Ihr einziger Grund war der verkehrt gewickelte Feuerloescher R37 (W-Zensus §7: 36 von 148 Polygonen in Original-
+  Windung). Spur A hat ihn an der Quelle neu gewickelt (A_cursor.md §3b) und gemessen: mit NCLIP + neuem Modell
+  **0 Bildpunkte** Unterschied am Loescher gegen den Stand ohne Verwurf (ROOM1050 Cut 6 Skala 1 und 3, ROOM1090 Cut 5;
+  A §4.5).
+* A-Scan aller 120 Leon- und 75 Elza-Raeume mit NCLIP fuer alle Objekte: nur Einzelpunkte (<= 41) geaendert (A §4.4);
+  der einzige echte Ausfall ist der Parking Lot Key ROOM10F0 (A §4.6) — ein LAGE-Fehler der Runde 36 Q (flaches
+  RE2-Modell mit der Rueckseite nach oben, RE2 ROOM6150 legt ihn gewendet, Dir z 0x600). Zweiseitig zeigt ihn der Port
+  heute gespiegelt (Rueckseite), mit NCLIP gar nicht. Behebung = Lage (A §3c bzw. Spur K, die beide Schluessel an die
+  Pinnwand haengt; A hat Ks Lage nachgerechnet: Vorderseite zur Kamera) — siehe OFFEN 9.6.
+* Damit gilt ab 2291b2c5: **NCLIP fuer alle Objekte** (RDT- und Port-Modelle, Prop-Schleife und Hebetisch-Cursor).
+  Riegel: unit_r38_rolltor20a0_windung O2 (jedes Port-Modell in Original-Windung, jetzt PRUEFUNG statt Ausgabe) + O4
+  (der Verwurf laeuft ueber re15_nclip_r38), As unit_r38_cursor_wicklung (Wicklung + Mechanik an 60 Blicken).
+
+### 9.4 Messung nachher (nach dem Merge) — folgt
+### 9.5 Tests (nach dem Merge) — folgt
+### 9.6 OFFEN (nach dem Merge) — folgt
