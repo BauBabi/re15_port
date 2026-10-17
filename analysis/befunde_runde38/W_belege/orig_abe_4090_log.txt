@@ -1,0 +1,33 @@
+DuckStation gestartet {'44064'}
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+Debug-Menue gesetzt: Zeile 1 Stage 3 Raumidx [36, 0, 0, 9, 0, 0]
+Gegner beim Laden ausgeschaltet: 0 Aktiv-Bits geloescht
+Raumindex: 9 Cut: 0 Spieler: (-21000, 0, -24600, 0, 0)
+Cut 0, Spieler (-21000, 0, -24600, 0, 0), Puffer-Index @0x800ACA34 = 0
+Pool 0: Flags 0000000b Typ 0 Attribut 0x000e (Bit2 1, Bits 2-3 = 3) Lage (-21263, 0, -19884) Farbe+Code obj+0x70 8080803e
+   Viereck x172: Code 0x3e (ABE 1) Texpage 0x00e5 (ABR 3)
+   Dreieck x2: Code 0x36 (ABE 1) Texpage 0x00e5 (ABR 3)
+     T00 tag 090aa7c0 code 0x36 tpage 0x00e5
+     T01 tag 090aa7d0 code 0x36 tpage 0x00e5
+     Q00 tag 0c0aa76c code 0x3e tpage 0x00e5
+     Q01 tag 0c0aa780 code 0x3e tpage 0x00e5
+Pool 1: Flags 0000000b Typ 0 Attribut 0x000e (Bit2 1, Bits 2-3 = 3) Lage (-22063, 0, -20684) Farbe+Code obj+0x70 8080803e
+   Viereck x1: Code 0x34 (ABE 0) Texpage 0x00e5 (ABR 3)
+   Viereck x147: Code 0x3e (ABE 1) Texpage 0x00e5 (ABR 3)
+   Dreieck x2: Code 0x36 (ABE 1) Texpage 0x00e5 (ABR 3)
+     T00 tag 09128ee8 code 0x36 tpage 0x00e5
+     T01 tag 091e31d8 code 0x36 tpage 0x00e5
+     Q00 tag 0ced43db code 0x3e tpage 0x00e5
+     Q01 tag 0c0aa6e8 code 0x3e tpage 0x00e5
+Pool 2: Flags 0000000b Typ 0 Attribut 0x000e (Bit2 1, Bits 2-3 = 3) Lage (-21263, 1, -19884) Farbe+Code obj+0x70 8080803e
+   Viereck x7: Code 0x34 (ABE 0) Texpage 0x00e5 (ABR 3)
+   Viereck x133: Code 0x3e (ABE 1) Texpage 0x00e5 (ABR 3)
+   Dreieck x12: Code 0x36 (ABE 1) Texpage 0x00e5 (ABR 3)
+     T00 tag 0912bdd8 code 0x36 tpage 0x00e5
+     T01 tag 0912c458 code 0x36 tpage 0x00e5
+     T02 tag 09128a08 code 0x36 tpage 0x00e5
+     T03 tag 09128c10 code 0x36 tpage 0x00e5
+Ende: Spieler (-21000, 0, -24600, 0, 0) Cut 0
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)
+resume.sav kopiert
+Bildpuffer buf0.png (VRAM 0,0) / buf1.png (VRAM 0,240) geschrieben

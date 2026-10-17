@@ -57,3 +57,30 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_rolltor20a0.cmake)
     set_tests_properties(integration_r38_rolltor20a0 PROPERTIES TIMEOUT 1200)
 endif()
+
+# ---- Nachbesserung 1 (Abnahme-Mangel M1): halbtransparente Raum-Objekte (Attribut-Bit 0x2) ------------------------
+#   unit_r38_rolltor20a0_abe      Regeln gegen den Disassembler (ABE @0x8002c2b4, ABR = MD1-Seite | (Attribut & 0xC)
+#                                 << 3 @0x800259c4/@0x80025b24, Flach @0x8002c2f4 / Typ 3), gegen die ORIGINAL-
+#                                 Laufzeitmessung (DuckStation-GDB: 5060 obj 2-5, 20A0 obj 4-6, 4090 obj 0-2, Code
+#                                 0x3e + Texpage-ABR je Polygon), STP-Teilung echter Texturen (11B0 obj 0 gemischt,
+#                                 5060 obj 4), SDL-Mischung gegen die GPU-Formel (<= 1 Stufe). Werkzeug --fall fuer:
+#   integration_r38_rolltor20a0_abe  echte exe: ROOM5060 Cut 4 (ABR 0, der Abnahme-Fall), ROOM20A0 Cut 2 (ABR 2,
+#                                 Wasser Typ 3), ROOM4090 Cut 0 (ABR 3, Nebel) — Mittelwert der Messflaeche = Original-
+#                                 Bildpuffer (W_belege/orig_abe_*_buf0.png).
+add_executable(test_r38_rolltor20a0_abe ${CMAKE_CURRENT_LIST_DIR}/../test_r38_rolltor20a0_abe.c)
+target_link_libraries(test_r38_rolltor20a0_abe PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r38_rolltor20a0_abe PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(test_r38_rolltor20a0_abe PRIVATE m)
+endif()
+add_test(NAME unit_r38_rolltor20a0_abe COMMAND test_r38_rolltor20a0_abe)
+set_tests_properties(unit_r38_rolltor20a0_abe PROPERTIES TIMEOUT 120)
+if(TARGET re15_pc)
+    add_test(NAME integration_r38_rolltor20a0_abe
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_ABE_TOOL=$<TARGET_FILE:test_r38_rolltor20a0_abe>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r38_rolltor20a0_abe_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_rolltor20a0_abe.cmake)
+    set_tests_properties(integration_r38_rolltor20a0_abe PROPERTIES TIMEOUT 1200)
+endif()

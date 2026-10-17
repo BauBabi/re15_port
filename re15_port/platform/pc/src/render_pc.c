@@ -705,10 +705,9 @@ void re15_render_init(void)
     re15_touch_pc_init(s_renderer);
 }
 
-#if defined(__ANDROID__)
-/* Fuer die Entpack-Fortschrittsanzeige des Android-Bootstraps (android_glue.c). */
+/* Fuer die Entpack-Fortschrittsanzeige des Android-Bootstraps (android_glue.c) und die STP-Teil-Texturen der
+ * halbtransparenten Raum-Objekte (objabe_r38_pc.c, Runde 38 Spur W) — darum nicht mehr nur unter __ANDROID__. */
 SDL_Renderer *re15_render_pc_renderer(void) { return s_renderer; }
-#endif
 
 /* Toggle windowed <-> (desktop) fullscreen. Bound to F11 / Alt+Enter (event loop below) and to a
  * SELECT+START controller combo (input_pc.c). Desktop fullscreen + the logical render size scales
