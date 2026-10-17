@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 10:07: Integration M gruen (117/117: M-Nebenwirkungsauswahl + 1141/1171/11B0/Szenenschutz), Baeume r38_npckante und r38_dining1141 entfernt.
 * 2026-10-17 09:55: M npckante BESTANDEN (Abnahme 0, wf_bd5754a4-75e), gemergt (81f90f2e, enemy_ai_common.c Include beide Seiten), configure + Bau OK, gezielte Tests laufen (M-Nebenwirkungsauswahl + 1141/1171/11B0/Szenenschutz).
 * 2026-10-17 09:55: Integration F gruen (142/142: F-Auswahl + H/G/I), Herz-Schluessel ROOM1011 unter NCLIP gemessen: Integrations-exe und F-exe (ohne Verwurf) zeigen dieselben 2 Pixel (x 114-115, y 156-157, Cut 3, Skala 1) -> Verwurf unschaedlich; Schluessel ist aber nur ein Punkt (Release Notes Grenzen).
 * 2026-10-17 09:55: Fortsetzungen nach dem Limit (≤6 parallel): D Abnahme 0 (RESUME wf_3c7f69c5-a0f, Bau aus Cache), W Nachbesserung 1 (RESUME wf_75bbfb7e-d5f), R Abnahme 1 (RESUME wf_40f9724b-eb5), S Nachbesserung 1 (RESUME wf_d92ecd29-8d1), U Abnahme 1 (RESUME wf_ff1d4812-6d4), O Bau-Abschluss neu wf_ec75d894-03c (stand). Warten: N. Args fuer Resumes aus dem Sitzungsprotokoll (scratchpad/run_args.json, ueber "Run ID" im tool_result zugeordnet).
@@ -69,7 +70,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0), integriert |
 | J | r38_rekorder | Rekorder: WAV -> Piep + Tuer + Meldung | BESTANDEN (A0), integriert |
 | K | r38_itemorte | Loescher 1030, Schluessel an die Pinnwand-Marke | BESTANDEN (A1), integriert |
-| M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | BESTANDEN (A0), gemergt |
+| M | r38_npckante | NPC-Kantensprung (John 10B1/1261, Marvin/Ada) | BESTANDEN (A0), integriert |
 | N | r38_wasser | Wasser-Effekt 1260+ | offen |
 | O | r38_montage | Montage-Zombies Richtung Kamera | offen |
 | Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0), integriert |
