@@ -9,6 +9,12 @@ Integrationsbaum, ohne parallele Agenten).
 
 <!-- je integrierter Spur ein Absatz, Nutzer-Sprache, keine Adressen -->
 
+**Feuerloescher und Schluessel an Ihren Markierungen.** Der Feuerloescher haengt jetzt in der Lobby (ROOM1030) am Pfeiler,
+genau an der Stelle aus Ihrem Bild (statt in ROOM1050). Parking Lot Key (Leon) und Prison Key (Elza) haengen gut sichtbar an
+der Pinnwand im Communications Room. Der Prison Key ist dafuer jetzt RE2s "Small Key" (heller Bartschluessel mit Ring) -
+der bisherige duenne Eisenring war auf dem dunklen Kork kaum zu erkennen. Aufnahme, Inventar-Symbol und Item-Bild zeigen
+denselben Schluessel.
+
 **Roys Tagebuch (Elza, ROOM1011).** Untersucht Elza den bewusstlosen Roy ein zweites Mal, erscheint statt der
 Code-Nachricht jetzt "Roys Diary" - Ihr Text auf RE2-Papier (der FILE16-Hintergrund), der Code 0513 gruen wie in allen
 Dokumenten; es wird in den Akten abgelegt und kann dort wieder gelesen werden. Danach markiert die Karte erst den
