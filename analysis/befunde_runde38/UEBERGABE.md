@@ -6,6 +6,8 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 13:24: U gemergt (b579ebe8): Include-Zeilen beide Seiten; main.c Schatten-Haken M (re15_npckante_schatten_y, nur NPCs) und U (re15_wasserzombie_schatten_y, nur Wasserzombie-Typen) schliessen sich aus -> beide behalten. configure + Bau OK, gezielte Tests laufen (U-Auswahl + NPC-Kante/Montage/L/Szenenschutz, 144).
+* 2026-10-17 13:24: Integration W gruen (109/109: W-Auswahl 81 + Cursor/Itemorte/Zopf/Masken/1141-Sicht/Spinnen/Dachkiste), Baum r38_rolltor20a0 entfernt.
 * 2026-10-17 12:41: U wasserzombie BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_ff1d4812-6d4). Merge nach dem laufenden W-Test.
 * 2026-10-17 12:41: W rolltor20a0 BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_75bbfb7e-d5f; N1 = halbtransparente Raum-Objekte ABE/ABR/STP), gemergt (4c3bf9d2, main.c Includes beide Seiten; schluessel_r36 bleibt Ks Seite, da W nur As alten Stand trug), configure + Bau OK, gezielte Tests laufen (W-Auswahl 81 + Cursor/Itemorte/Zopf/Masken/1141-Sicht/Spinnen/Dachkiste). Alle tri_alpha-Setzer setzen auf 255 zurueck (geprueft). Hinweis Nutzer: gruene Flecken 20A0 (aktivierte schlafende Effekt-Schleife unter dem jetzt subtraktiven Wasser) -> Release Notes. Fuer N: Wasser-Spritzer gegen die subtraktiven Wasserflaechen pruefen.
 * 2026-10-17 12:25: Integration S gruen: Riegel szenenschutz_alle umgestellt (741e3269 + Kommentar 447f7260; Fall "kleiner Affe 0x29" Biss aus o4 F137 + schwer aus o6 F1006, Teil 2(d) Szene mitten im Angriff; Gegenprobe Schutz aus -> 8 gehaltene Checks rot, Tore B[5]/B[6] aus -> T2d rot mit netz>0; unabhaengige Pruefung bestanden). Kein Engine-Befund: alle 0x29-Angriffswege lesen +0x93 an den Original-Stellen. Baum r38_affen3 entfernt.
@@ -89,9 +91,9 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | BESTANDEN (A1), integriert |
 | S | r38_affen3 | kleine Affen Stage 3 treffen | BESTANDEN (A1), integriert |
 | T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | BESTANDEN (A1), integriert |
-| U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | BESTANDEN (A1) |
+| U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | BESTANDEN (A1), gemergt |
 | V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | BESTANDEN (A1), integriert |
-| W | r38_rolltor20a0 | Nachtrag 1: ROOM20A0 Rolladen vor der Kamera (+ halbtransparente Raum-Objekte) | BESTANDEN (A1), gemergt |
+| W | r38_rolltor20a0 | Nachtrag 1: ROOM20A0 Rolladen vor der Kamera (+ halbtransparente Raum-Objekte) | BESTANDEN (A1), integriert |
 | L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | BESTANDEN (A2), integriert |
 | P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | BESTANDEN (A2), integriert |
 
