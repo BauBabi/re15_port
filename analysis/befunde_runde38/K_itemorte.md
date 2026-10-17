@@ -481,3 +481,47 @@ CLUT-Zeile der Flaeche = Feld >> 6, 5 Bit -> x 255/31, Rec. 601, UV-Rechteck der
 P. Room Key Mittel 69,1 / Median 57,6 (26 % > 100), **Small Key 84,4 / 82,3 (39 %)**, Cabin Key 69,6 / 74,0 (22 %). Der
 Cabin-Key-Wert stimmt mit 9.3 ueberein, die 9.3-Werte fuer Small Key (102/104) und P. Room Key (114/128) nicht — an der
 Wahl aendert das nichts (der Small Key ist auch so der hellste der drei); massgeblich ist die Messung an der exe (9.6).
+
+### 9.6 Messung nachher (exe = Code-Stand HEAD; Lade-Weg CONTINUE wie die Riegel)
+Bau: `local_build.sh configure` + `build` 04:58 -> `ninja: no work to do` (exe 23:44 aus dem Generatorstand 23:44:05,
+Objekte 23:44:15 = s 5,3032); nach dem Kommentar-Commit 0a2f02bc neu gebaut 05:09, exe bis auf PE-Zeitstempel,
+Pruefsumme und __TIME__ bytegleich (`cmp -l`: 10 Bytes). Messkopie `re15_pc_r38k_nb1f.exe` (eigener Name neben der
+exe, nach der Messung geloescht; die liegengebliebene Kopie `re15_pc_r38k_nb1.exe` des ersten Anlaufs ebenso).
+Laeufe: Kartenwerkzeug `probe_r37_feuerloescher_karte` + `RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1`, Skript `W3`,
+Bild 100, `RE15_FRAMEDUMP`; Leon `10F0 0 4000 1024 cut:5 flag:9:71 flag:3:94` [+ `flag:9:82`], Elza
+`10F1 0 4000 1024 cut:5 elza` [+ `flag:9:83`]. Auswertung mit EIGENEM Werkzeug (`nb1/diff.py`, Python/PIL, nicht der
+C-Auswerter des Riegels): |dR|+|dG|+|dB| > 30 im Fenster Marke +-2 px (x 131..145 y 75..87, Skala k: x k), Sum|dL| mit
+L = 0,299R + 0,587G + 0,114B. debug.log je Lauf: `CONTINUE: resumed in room 10f1`, `[schluessel] ROOM10F1: PRISON KEY
+(Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,0,0), Zone Slot 8`, `[framedump] 960x720` bei Skala 3.
+
+| Skala | Schluessel | Pixel | aussen | Sum\|dL\| | \|dL\| je Pixel | Huelle | L mit / ohne | vorher Cabin Key (Abnahme 0) |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Parking Lot Key (Leon) | 55 | 0 | 3428 | 62,3 | x 132..143 y 78..84 | 84,6 / 68,3 | |
+| 1 | **Prison Key = Small Key (Elza)** | **27** | 0 | **1627** | **60,3** | x 132..143 y 79..83 | 57,3 / 73,3 | 14 Pixel, Sum ~500 (35,9 je Pixel) |
+| 1 | Verhaeltnis Prison/Parking | **49 %** | | **47 %** | 97 % | | | 25 % / 15 % |
+| 3 | Parking Lot Key | 491 | 0 | 28852 | 58,8 | x 397..432 y 233..255 | 74,0 / 68,0 | |
+| 3 | **Prison Key = Small Key** | **217** | 0 | **11899** | **54,8** | x 397..432 y 236..250 | 80,3 / 71,7 | 112 Pixel, Sum 3193 (28,5 je Pixel) |
+| 3 | Verhaeltnis | **44 %** | | **41 %** | 93 % | | | 23 % / 11 % |
+| 4 | Parking Lot Key | 865 | 0 | 48354 | 55,9 | x 529..576 y 311..340 | 67,4 / 67,8 | |
+| 4 | **Prison Key = Small Key** | **345** | 0 | **18015** | **52,2** | x 530..576 y 315..334 | 89,4 / 72,9 | 215 Pixel, \|dL\| 30,7 je Pixel (~6600) |
+| 4 | Verhaeltnis | **40 %** | | **37 %** | 93 % | | | 25 % / ~14 % |
+
+Lesart: der Prison Key aendert jetzt halb so viele Pixel wie der Parking Lot Key (vorher ein Viertel) und hat **je
+Pixel denselben Kontrast** (93..97 %; der Cabin Key hatte 49..58 %). Was fehlt, ist nur Flaeche: beide sind gleich
+breit (12 Spalten bei Skala 1, die Marke ist voll), der Small Key ist ein Bartschluessel aus Ring und Schaft (5 Zeilen),
+der Parking Lot Key eine breite Klinge mit Kopf (7 Zeilen). Gegenueber dem Cabin Key: Pixel x 1,9 (Skala 1 und 3),
+Sum|dL| x 3,2 (Skala 1) / x 3,7 (Skala 3). Gleiche Groessenordnung wie der Parking Lot Key — so, wie es die Abnahme
+verlangt (M1 "Erwartet").
+Bild: `K_belege/k2_nb1_cut5_skala3_2x.png` (Skala 3: silberner Bartschluessel mit Ring, Schaft und zwei Barten auf dem
+dunklen Kork, ganz in der Marke) und `K_belege/k2_nb1_cut5_skala1_5x.png` (Skala 1: heller Ring, dunkler Schaft — bei
+320 x 240 trifft die Abtastung den Schaft auf seiner dunklen Unterkante; links das Nutzerbild).
+Hingehen (Gehweg der Abnahme ohne Aktion, `W1,U3.2,W0.3,L0.36,W0.3,U0.45,W0.3,R0.36,W0.3,U1.6,W3`, Serie
+`RE15_FRAMEDUMP=60-400/20`, je mit/ohne Bit, Kamera durchgehend Cut 5): Bild 60..220 wie oben (27 / 55 Pixel); Bild 260
+21 / 37; ab Bild 300 (Figur steht bei (1036,-2932) vor der Pinnwand und deckt den rechten Teil der Marke) Prison Key
+20 Pixel / Sum 1083, Parking Lot Key 26 / 1898 — der Prison Key bleibt beim Hingehen bis zum Stehen sichtbar (Abnahme 0
+beim Cabin Key: "nur einzelne graue Pixel eines Rings").
+Aufnahme Elza (Stand (1300,-2900) Blick -z, `W1,A0.1,W3.5,A0.1,W4,A0.1,W6`, Serie 100..520/20): Bild 140/180 Modal
+"Will you take the Prison Key?" mit dem RE2-Bild ITPS 31 (derselbe Bartschluessel), Log `[schluessel] PRISON KEY
+genommen: Item 0x42, Bit (9,83)`, `Prison Key genommen -> Flag (4,0xEC) = 1 (Zelle ROOM1211)`, Bild 260 Pinnwand leer,
+Bild 400 `[msgtext] room=10f1 id=4 "Several files from past cases.Nothing useful here."`; danach Inventar (START @321):
+Icon = RE2-Tile 31 (Bartschluessel) in der Item-Liste. Bild `K_belege/k2_nb1_aufnahme_inventar_10f1.png`.
