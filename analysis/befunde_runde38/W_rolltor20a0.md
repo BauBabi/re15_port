@@ -20,7 +20,7 @@ Nutzer-Wortlaut (AUFTRAG.md Nachtrag 1, 2026-10-16 21:00):
 - [x] Nebenwirkungen — §8 (Zensus aller Raeume; Port-Modelle ohne NCLIP — ueberholt durch §9)
 - [x] Fortsetzung 2026-10-17: Merge r38/cursor (Spur A), EIN NCLIP-Weg, EINE Regel fuer Port-Modelle — §9
 - [x] nach dem Merge: Bau, Messung nachher 20A0/20A1 Cut 11 + ROOM1050 Cut 5 (+ 20A0 Cut 2) — §9.4; eigene + A-Riegel 8/8 — §9.5
-- [ ] Modul-Testgruppen nach dem Merge — §9.5 (MODUL-LAUF)
+- [x] Modul-Testgruppen nach dem Merge — §9.5: 67/67 gruen
 
 ## 1. Messung vorher (Port, Basis df08d83a = v0.8.25 + Doku)
 
@@ -344,7 +344,8 @@ GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
   (wie in RE2; vorher war seine Rueckseite zu sehen).
 * Neue Assets: keine (Paket-Gate unveraendert). Sprachdateien: keine. Bank-9-Bits/Nachrichten-Ids: keine.
 * Bau: neue Quelldateien `re15_port/engine/src/objpoly_r38.c` und `re15_port/platform/pc/src/objpoly_r38_pc.c`
-  (GLOB) — der Android-Bau braucht einen frischen Configure (Memory reai-v2-android-glob-cache).
+  (GLOB; mit dem Merge von Spur A dazu `re15_port/engine/src/nclip_r38.c`) — der Android-Bau braucht einen frischen
+  Configure (Memory reai-v2-android-glob-cache).
 * Messschiene fuer Rueckmeldungen: `RE15_OBJPOLY_LOG=objpoly.txt` schreibt je Bild und Objekt gezeichnet/NCLIP/OTZ/GPU.
 * Entscheidungsfragen: keine.
 
@@ -466,8 +467,22 @@ raeumliche nicht in Original-Windung`, `O4 NCLIP-Weg: Vorderseite opz 11025 -> 1
 -> 0 (Zaehler +1)`, OK. Gegenprobe O2: der Stand vor dem Merge (2e2f9579, alter Feuerloescher) meldete den Loescher mit
 36 von 148 in Original-Windung (§7) — O2 haette dort angeschlagen.
 
-Testgruppen der beruehrten Module (Prop-Schleife = alle Bild-/Lade-Riegel mit Raum- und Port-Objekten; Hebetisch-
-Cursor/Panels aus As Diff; Feuerloescher-Modell; Kisten) — Lauf folgt (MODUL-LAUF).
+Testgruppen der beruehrten Module, seriell, exe nach 7e3371ae (Diff gegen master: main.c Prop-Schleife = alle Bild-/
+Lade-Riegel mit Raum- UND Port-Objekten, weil NCLIP jetzt auch fuer Port-Modelle gilt; aus As Diff
+hebetisch_cursor_pc.c (Hebetisch/Panels/Cursor), gen/feuerloescher_r37.inc (Loescher), schluessel_r36.c/.h
+(Schluessel); Kisten-Riegel mit Bild; eigene + As Riegel):
+```
+ctest --test-dir re15_port/build -R "^(integration_(r30_irons_tisch_bild|r30_irons_tisch_licht|r30_irons_tisch_laden|r30_sicherung_bild|r30_sicherung_laden|r30_granate_laden|r34n_e_dokumente_bild|r34n_g_schrift1150|r34n_b_cursor|r36_kartenitems_bild|r36_schluessel|r36_szene1150|r35_cut1150|r32_tor_hell|r37_feuerloescher|r37_codepanel|r37_kiste|r37_kiste2feld|r37_kistenregel|r38_cursor|r38_rolltor20a0)|unit_r38_(cursor_[a-z]+|rolltor20a0|rolltor20a0_windung)|unit_(sicherung_1150|prop_texel_key_11f0|r30_irons_tisch|r30_irons_tisch_licht|r30_sicherung_[a-z]+|r31_hebetisch|r32_hebetisch_faecher|r34n_b_[a-z_]+|r34n_e_dokumente|room1050_sicherung|r36_kartenitems|r36_objfall|r36_schluessel_[a-z]+|r37_codepanel_[a-z]+|r37_feuerloescher_[a-z]+))$" --timeout 1500 --output-on-failure
+-> 100% tests passed, 0 tests failed out of 67
+   Total Test time (real) = 2956.64 sec
+```
+Darunter 21 exe-Riegel: r30_granate_laden 75,7 s, r30_irons_tisch_laden/_bild/_licht 30,5/52,5/42,1 s,
+r30_sicherung_laden/_bild 36,5/13,4 s, r32_tor_hell 5,8 s, r34n_b_cursor 92,8 s, r34n_e_dokumente_bild 118,4 s,
+r34n_g_schrift1150 57,0 s, r35_cut1150 527,5 s, r36_kartenitems_bild 444,4 s, r36_schluessel 94,0 s, r36_szene1150
+117,9 s, r37_codepanel 79,2 s, r37_feuerloescher 323,0 s, r37_kiste/_kiste2feld/_kistenregel 59,1/40,0/295,3 s,
+r38_cursor 186,8 s, r38_rolltor20a0 262,0 s. Kein Flattern, kein Nachfahren noetig.
+Nicht im Lauf: integration_r36_dachkiste (1716 s; prueft nur Kisten-Logs, kein Bild — weder der Merge noch objpoly
+beruehren Kisten-Code; am selben Kisten-Code 2026-10-16 gruen, §7b).
 
 ### 9.6 OFFEN (nach dem Merge)
 
