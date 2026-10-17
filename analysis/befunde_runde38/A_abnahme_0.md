@@ -48,10 +48,16 @@ Schirmecken v0,v1,v2) und `scratchpad/abn/klassen.py` (eigene Klassen G/g/Y/y na
 
 | Lauf | Platz 4 (Cursor) eingereihte Dreiecke | NCLIP < 0 | = 0 | > 0 |
 |---|---|---|---|---|
-| alt (v0.8.25) | 71868 | **9065** | 23456 | 39347 |
-| neu | 62803 | **0** | 23456 | 39347 |
+| alt (v0.8.25) | 76108 | **10345** | 24296 | 41467 |
+| neu | 65763 | **0** | 24296 | 41467 |
 
--> genau die rueckseitigen Dreiecke fallen weg, alle anderen bleiben (= 0 und > 0 bitgleich gezaehlt).
+-> genau die rueckseitigen Dreiecke fallen weg, alle anderen bleiben (= 0 und > 0 bitgleich gezaehlt). (Vorlauf `m1_*` mit
+2 Druecken zu viel im Raetsel — ein Schalter umgelegt —: alt 9065, neu 0 rueckseitige von 71868/62803.)
+
+Cursor BEWEGT (Steuerkreuz R/D/L/U, Bilder F740/F820/F900/F960, Cursor-Mitte (191,118)/(156,150)/(127,86)):
+`scratchpad/abn/m1b_bewegt_zoom.png` (Spalten alt S1 | neu S1 | alt S3 | neu S3): alt zeigt abseits der Bildmitte
+eine deutlich VERSETZTE, kleinere dunkle Kopie von Kreuz und Eckwinkeln (= "verzerrter/versetzter Schatten" der
+frueheren Meldung 2026-09-26), neu an allen vier Lagen und in beiden Skalen keine Kopie.
 
 Cursor-Fenster x 140..179, y 100..137, Bild F640 (Cursor auf der Startzelle, gleiche Schalterlage wie im Original):
 
