@@ -2,7 +2,7 @@
 
 Baum `.claude/worktrees/r38_npckante`, Zweig `r38/npckante`, HEAD aebc671a, Basis f587d34e (merge-base mit master).
 Abnahme 2026-10-17. Grundlage: AUFTRAG.md (Wortlaut), VERTRAG.md, Dossier M_npckante.md, `git diff master...HEAD`.
-Stand: IN ARBEIT (wird fortlaufend geschrieben).
+Stand: ABGESCHLOSSEN — **bestanden** (beide Punkte erfuellt, alle Gates halten; 3 nicht blockierende Doku-Hinweise, Abschnitt 7).
 
 ## Punkte (Wortlaut)
 1. "Kendo springt am Ende von ROOM 10B0 nicht die Kante runter, wie im Original, sondern läuft in die Luft weiter"
@@ -46,7 +46,8 @@ Guess-Tells im Code-Diff (`deferred|tunable|interim|for now|faithful|plausib|TOD
 
 Zitierfehler (nur Dossier, kein Code): Dossier "OFFEN" nennt `addiu s3,a0,-8` @0x8005175c; dort steht `jal 0x80065f60`
 (SquareRoot0, Sub 5). Die Instruktion steht @0x8004575c (`addu s3,a0,zero` @0x80045738, FUN_80045630) — selbst
-disassembliert. Der Fehler ist aus einem master-Kommentar (enemy_ai_common.c:9964) uebernommen. Siehe Maengel.
+disassembliert. Der Fehler ist aus einem master-Kommentar (enemy_ai_common.c:9964 in master, :9967 im Spurzweig) uebernommen.
+Siehe Abschnitt 7 (Hinweis 1, nicht blockierend: keine Konstante im Code).
 
 ## 2. Riegel der Spur
 
@@ -95,11 +96,13 @@ debug.log: CONTINUE resumed in room 1260 / [fire-aot] slot=1 at F40 / PC loaded 
   Marvin F1642 Sonde 2 (-4321,-1800,-20813) -> F1652 Sub 0x18, F1666 Band 1->0, F1737 Sonde 1 -> F1777 Band 0->1
 ```
 Bild `abn/l2000_sprung.png`: Ada geht an die Stegkante (F1520-1535), springt in den Kanal (F1540-1550), Hocke/Klettern am
-Gegenufer F1630-F1645, steht F1660 oben; Marvin springt F1665-F1670. Waehrend aller Kanten-Wege Luft A/B/C = 0.
-Beobachtung (kein Mangel dieser Spur): nach dem Abgang setzt das ORIGINAL-SCD beide per Pos_set auf Band-1-Hoehe ohne
-Boden darunter — Marvin sub02 @0x01A62 `32 00 60 09 F8 F8 48 0D` = (2400,-1800,3400), Ada sub03 @0x01AC6 `32 00 F4 1A F8 F8
-48 0D` = (6900,-1800,3400); dort liegt keine SCA-Zelle (selbst geprueft), FUN_8001bd60 loest ohne Bit-1-Zelle nicht aus
-(@0x8001bdb0-b4) — Original-Parklage, in meiner Auswertung ab F1926/F1996 als "Luft A" sichtbar, kein Kanten-Weg.
+Gegenufer F1630-F1645, steht F1660 oben (Zoom `abn/l2000_klettern_zoom.png`); Marvin springt F1665-F1670.
+auswert.py bis zum Abgang (Ada bis F1925, Marvin bis F1995) Luft A/B/C = 0; auswert2.py ueber den ganzen Lauf D = 0, B = 0.
+Einordnung meiner Auswertung A (kein Mangel): nach dem Abgang setzt das ORIGINAL-SCD beide per Pos_set auf Band 1 —
+Marvin sub02 @0x01A62 `32 00 60 09 F8 F8 48 0D` = (2400,-1800,3400), Ada sub03 @0x01AC6 `32 00 F4 1A F8 F8 48 0D` = (6900,-1800,3400).
+Dort liegt keine SCA-Zelle (selbst geprueft), also auch keine Absprungzelle (D = 0, B = 0); room_coll findet unter Band-1-Boden ohne
+Block nur 0 — dieselbe Fehlanzeige wie auf dem 10B1-Steg (s. 3.4). Original-Parklage per Pos_set, kein Kanten-Weg, kein Fall
+(FUN_8001bd60 braucht eine Bit-1-Zelle, @0x8001bdb0-b4).
 
 ### 3.3 Punkt 2 (Teil Elza/Kendo): ROOM1261 John — ueber die Tuer aus ROOM10B1
 
@@ -158,7 +161,12 @@ Der Diff wirkt auf JEDE NPC 0x40..0x4d (Schwerkraft in der Wurzel, Sonde in Sub 
   10b|11b0|126|1150|1141|1171|1011|1021|2000|schwer|trage|schatten|plc|walk|motion|spawn|neck|turn|dog|hund|crow|zombie|1090 ...,
   Ausdruck in scratchpad `abn/unit_regex.txt`, -j4): **100% tests passed, 0 tests failed out of 179** (Obermenge der 82 des Bau-Agenten,
   u.a. alle unit_1090_* (Kistenraum mit Absprungzellen), unit_elliot_1170_run, unit_r37_roy_leon1170, unit_r36_szenenleon_*).
-- Integration seriell (16, `abn/integ_regex.txt`): ERGEBNIS UNTEN (Abschnitt 4a).
+- Integration seriell (16, beide Szenarien, alle mit NPC-Szenen; Maschine unter Last durch Parallel-Spuren):
+  `ctest -R "^(integration_elza_vollstart|integration_r30_irons_tisch_laden|integration_r35_cut1150|integration_r36_elza_irons|
+  integration_r36_pri_schatten|integration_r36_story_elza|integration_r36_szene1150|integration_r36_szenenleon|integration_r37_elzaems_leon1100|
+  integration_r37_elzaems_elza11b1|integration_r37_elzaems_elza1141|integration_r37_roy_leon1170|integration_r37_roy_szene1011|
+  integration_r37_roy_szene1021|integration_r37_szene11c0|integration_r37_zombieaktiv)$" --timeout 600` ->
+  **100% tests passed, 0 tests failed out of 16** (cut1150 520 s, story_elza 212 s, szenenleon 174 s; kein Wiederholungslauf noetig).
 - Eigener Weg-Zensus `abn/fall_weg_zensus.py` (alle 34 RDTs mit Absprungzellen; jede Original-SCD-Plc_dest-Bahn Modus 4/5 mit Sonde und
   7/8 ohne Sonde einer NPC 0x40..0x4d; Kriterium FUN_8001bd60 Zellwort(&pos,-450,Band) & 2 und y == Bandhoehe, bevor die Sonde greift):
   **Treffer: 0**. Zusammen mit dem Stell-Zensus des Bau-Agenten (schwerkraft_zensus.py, selbst ausgefuehrt: **0**) faellt keine NPC
@@ -183,4 +191,36 @@ Der Diff wirkt auf JEDE NPC 0x40..0x4d (Schwerkraft in der Wurzel, Sonde in Sub 
   mehr vor, die v0.8.25-exe-Gegenprobe oben zeigt den Befund am alten Stand).
 - Integration: neue Quelldatei npckante_r38.c (GLOB; Android-Configure-Cache erneuern, s. Dossier); Include-Block enemy_ai_common.c
   teilt Spur B.
+
+## 6. Urteile je Punkt (gegen den Wortlaut)
+
+| Punkt | Urteil | Beleg (kurz) |
+|---|---|---|
+| 1 "Kendo springt am Ende von ROOM 10B0 nicht die Kante runter ... laeuft in die Luft weiter" | **erfuellt** | Echter Weg 1171 -> Tuer 2 -> 10B1, Elza zu Fuss bis Cut 2 (F199): John Sonde 2 am Stegende (-3682,-9000,-8344) F205, Hocke + Sprung F210-F231, Fall auf Block [6] (Band 5 -> 1), D/B = 0; v0.8.25 gleicher Lauf: laeuft in Steghoehe ueber die Bruestung. Mechanik = FUN_8002d7d8 / 0x80052508 / 0x80052c14 selbst disassembliert; Lagen = DuckStation-Originalmessung. |
+| 2 "Room 1260 ... Kendo ... Marvin und Ada in Leons Szenario ... immer nicht" | **erfuellt** | Elza 10B1 -> Tuer 1 -> 1261: John springt F166 (Band 1 -> 0) und klettert F461 (0 -> 1); Leon 11B0 -> Tuer 5 -> 1260: Ada F68 / Marvin F133 springen, klettern F348 / F397; Leon 1260 -> Tuer 1 -> 2000: Ada F1540 / Marvin F1666 springen, klettern F1644 / F1777 (sichtbar, `l2000_klettern_zoom.png`). D/B = 0 ueberall; v0.8.25 auf 1260 und 1261 reproduziert den Befund. Kanten-Zensus: keine weiteren NPC-Kantenwege in irgendeinem RDT. |
+
+## 7. Maengel / Hinweise
+
+Keine Maengel an den Nutzer-Punkten. Hinweise (nicht blockierend, Doku):
+1. Zitierfehler im Dossier (M_npckante.md, OFFEN, 1. Punkt): "`addiu s3,a0,-8` @0x8005175c" — @0x8005175c steht `jal 0x80065f60`
+   (SquareRoot0 in Sub 5). Richtig: `addiu s3,a0,-8` @0x8004575c, `addu s3,a0,zero` @0x80045738 (FUN_80045630; selbst disassembliert).
+   Uebernommen aus enemy_ai_common.c:9964 (master) / :9967 (Spurzweig), dort ebenfalls falsch. Betrifft nur die Beschreibung einer NICHT
+   portierten Stelle (NPC-Schritt-Ton der Rast-Phase), keine Konstante im Code. Beim naechsten Anfassen beide Stellen korrigieren.
+2. Veralteter Kommentar enemy_ai_common.c:14767 (master-Bestand): "Schwerkraft 0x8001bd60 [hier noch nicht portiert]" — mit dieser Spur ist
+   die NPC-Schwerkraft verdrahtet (enemy_ai_common.c re15_npc_ai_tick, Haken @0x8011dcc4); der Kommentar wurde nicht nachgezogen.
+3. Am Original (DuckStation) hat der Bau-Agent nur 10B1 gemessen; 1260/1261/2000 laufen ueber dieselben, gegen PSX.EXE byte-geprueften
+   Funktionen (von mir unabhaengig disassembliert). Kein Mangel, nur Reichweite der Original-Messung.
+
+## 8. Gates und Gesamturteil
+
+| Gate | Ergebnis |
+|---|---|
+| Messung je Punkt an der exe, echter Weg (Tuer) | ja: 1171->10B1 (+ zu Fuss bis Cut 2), 10B1->1261, 11B0->1260, 1260->2000; Gegenprobe v0.8.25 fuer 10B1/1260/1261 |
+| RE-Gate (@0x je Konstante, Stichproben selbst disassembliert) | haelt: 11 Stellen/Tabellen geprueft, alle = Behauptung; keine Guess-Tells; einziger Env-Schalter = Messhaken; PORT-WAHL gekennzeichnet |
+| Fix erklaert den Befund | ja: Sonde/Kanten-/Sprung-Sub fehlten im Port (vorher kein Sub 0x12..0x18, y blieb auf Startband), jetzt am Original-Aufrufort |
+| Vertrag (Pfade, gemeinsame Dateien nur Haken, Ressourcen) | haelt |
+| Riegel je Punkt, messend | 8/8 gruen; messen Bandwechsel/Fallkurve/Lagen |
+| Nebenwirkungen | 179/179 Unit/Probe, 16/16 Integration (beide Szenarien), Weg- und Stell-Zensus 0 Treffer |
+
+**Gesamturteil: bestanden.**
 
