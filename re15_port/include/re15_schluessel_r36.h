@@ -103,6 +103,18 @@
 #define RE15_R36Q_Y                (-1460)
 #define RE15_R36Q_Z                2700
 #define RE15_R36Q_ROT_Y            256
+/* WENDUNG je Modell — Runde 38 Spur A (analysis/befunde_runde38/A_cursor.md §4.6/§3c): beide RE2-Modelle sind FLACH,
+ * und Objekt-Polygone werden nur mit NCLIP MAC0 >= 0 gezeichnet (RE1.5 FUN_800254a0 @0x800255a8 / FUN_800256b0
+ * @0x800257c0, RE2 FUN_8002d0e8 @0x8002d1ac). Sichtbar ist also nur die Seite, zu der die Umlauf-Normale
+ * (v1-v0)x(v2-v0) NICHT zeigt. P. Room Key (Parking Lot Key, RE2 ROOM6150 @0x004FBC): Umlauf-Normale -Y -> RE2 legt
+ * GENAU dieses Modell gewendet (ROOM6150 MAIN sub00 @0x02C98 Obj_model_set obj 8, Dir z 0x600) -> hier flach gewendet,
+ * 2048 = 180 Grad (Vorderseite nach oben). Achse x statt z: Rx(180) = Ry(180)*Rz(180), beide zeigen dieselbe Seite;
+ * um x bleibt der Schluesselkopf an dem Ende, an das Runde 36 ihn gelegt hat (Dossier §3c). Cabin Key (Prison Key, RE2
+ * ROOM1050 @0x001558): Umlauf-Normale +Y -> RE2 legt ihn UNGEWENDET (ROOM1050 MAIN @0x01274 Obj_model_set obj 0,
+ * Dir 0,0,0) -> 0. Ungewendet zeigte der Parking Lot Key seine Rueckseite und war mit dem Verwurf in keinem Cut von
+ * ROOM10F0 sichtbar (gemessen, Dossier §4.6). */
+#define RE15_R36Q_PARK_ROT_X       2048
+#define RE15_R36Q_PRISON_ROT_X     0
 /* AUFHEBE-RECHTECK — PORT-WAHL 1000 x 1000 (haeufigste Groesse, 69 von 162 Item_aot_set,
  * RE15_R35I_KARTE_RECT_*) x 7850..8850, z 2050..3050: der Aktions-Scan nimmt je Druck den KLEINSTEN
  * treffenden Slot (`j 0x80043028` @0x80042f94) — der Text-Platz Slot 2 "A large communications
