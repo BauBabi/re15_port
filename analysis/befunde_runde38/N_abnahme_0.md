@@ -23,7 +23,7 @@ Pruefer: Abnahme-Agent 0 (glaubt dem Bau-Agenten nichts, was nicht selbst gemess
 `ctest --test-dir re15_port/build -R "r38_wasser" --timeout 900 --output-on-failure` ->
 `100% tests passed, 0 tests failed out of 9` (unit_r38_wasser_pfuetze/zeitfolge/trocken/stempel/lauf/aotbreite/zensus/
 skriptlauf je 0.01 s, integration_r38_wasser 182.43 s, Lauf-Verzeichnis `build/tests/integration/r38_wasser_wd/lauf_d46043b6`).
-Die Unit-exe einzeln (`test_r38_wasser.exe alle`) meldet 49 `ok`, `alle: 0 Fehler`; die Checks messen echte Werte
+Die Unit-exe einzeln (`test_r38_wasser.exe alle`) meldet 50 `ok`, 0 `FAIL`, `alle: 0 Fehler`; die Checks messen echte Werte
 (Anker/Part/Tonsatz/Skala/Flags am echten ROOM1260/2090-RDT + PL00/PL00W01), keine Platzhalter.
 
 ## 2. Messung am gebauten Spiel (eigene Laeufe, Messkopie `re15_pc_abn0n_mess.exe`, md5 = re15_pc.exe)
@@ -218,6 +218,11 @@ Stichprobe weit ueber 3 Adressen — jede zitierte Stelle enthaelt das Behauptet
 | Breite/Tiefe vorzeichenlos | FUN_80042b64: `80042b70 lhu a0,4(a1)` / `80042b78 sltu a0,a0,v1` / `80042b8c lhu a0,6(a1)` / `80042b94 sltu`; Aufrufer FUN_80042bac `jal 0x80042b64` @0x80042ecc / @0x80042f20 |
 | Band-Sperre | `80042cac lbu v0,2(s0)` / `80042cb4 andi v0,v0,0x80` / `80042cc0 lbu v1,130(s1)` / `80042ccc bne v1,v0,0x8004301c` |
 
+Original-LAUFZEIT-Werte (Anker, Tonindex, POLY_FT4) stammen aus den GDB-Protokollen des Bau-Agenten (`N_belege/gdb_*.txt`) —
+von mir gelesen, NICHT in DuckStation wiederholt. Gegenprobe ihrer inneren Stimmigkeit: SPAWN Part 4 `R=(4067,-326,167, 322,4073,-73,
+-170,81,4084) T=(-7547,-1972,-7386)` -> R·(0,100,0)>>12 + T = (-7555,-1873,-7385) = der protokollierte Anker (GTE-Abschneiden); die
+Werte passen zur selbst disassemblierten Rechnung und der Port trifft sie pixel-/einheitengenau (M1-TRILOG, M3, M5, M8).
+
 Zensus selbst nachgerechnet (`N_belege/breite_zensus.py`): 1859 Kurzform-Saetze (0x2c 1046, 0x3b 649, 0x50 164), Breite oder
 Tiefe > 32767 genau 8 Saetze, alle op 0x2c, alle sce 8 (11A0/11A1 @0x1108, 1260/1261 @0x11ca/@0x11de, 2020/2021 @0x8ac).
 
@@ -259,6 +264,23 @@ Gegenprobe v0.8.25 zeichnet in derselben Lage keinen einzigen Effekt, der Spurst
 - RE-Gate: haelt (Abschnitt 3, 15 Stellen selbst disassembliert, keine Rate-Woerter, keine Env-Schalter als Abschluss).
 - Vertrag: haelt (Abschnitt 4).
 
+## 7. Gezielte Testgruppen (seriell, KEINE volle Suite)
+
+Auswahl = eigene Riegel + Gruppen jedes beruehrten Moduls: op_aot_set (scd_vm.c) -> aot/door/tuer/item/karte/map_/stair/treppe/scd;
+Schritt-Erkennung/Ton (game_step_common.c) -> audio_decode/room1140_combat/re2_gore_fly/zombie_step_sfx/foot/stepsize/wallstep und
+alle exe-Tests mit Ton-Mitschnitt/SE-Protokoll (werfer_ton, r36_elza, r36_szenenleon, r37_codepanel, r37_fahrstuhl, cut10f0);
+Effekt-Spawn/Zeichnen (ESP) -> esp/_fx/re2fx; Wasser-Stempel -> spider_water, r34_wasser. Gegenueber der Bau-Agenten-Auswahl
+(160) zusaetzlich esp/_fx/re2fx/stepsize/wallstep/foot (174).
+```
+ctest --test-dir re15_port/build -R "r38_wasser|r34_wasser|aot|door|tuer|item|karte|map_|stair|treppe|scd|audio_decode|spider_water|
+  room1140_combat|re2_gore_fly|zombie_step_sfx|werfer_ton|r36_elza|r36_szenenleon|r37_codepanel|r37_fahrstuhl|cut10f0|esp|_fx|re2fx|
+  stepsize|wallstep|foot" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 174      Total Test time (real) = 3754.39 sec   (Maschine durch Parallel-Agenten belastet)
+```
+Darunter 27 exe-Tests, u.a. integration_r38_wasser 186 s, integration_r36_elza_schuss/_stoehnen, integration_r35_werfer_ton,
+integration_r36_szenenleon, integration_r37_codepanel, integration_r37_itemband (954 s), integration_fx_region_cull,
+integration_r34_plattform_esp_eintritt — alle gruen. Kein roter Fenster-Haken, keine Wiederholung noetig.
+
 ## 8. Maengel (blockierend)
 
 Keine.
@@ -283,5 +305,19 @@ Keine.
    Original (1260: -7804 gegen -7710; 20A0: 8600 gegen 8696 bei gleicher Bildnummer); 2090-Becken: Original-Leon bewegt sich bei
    Blick 0 langsam nach +z, Port mit Gehtempo nach +x; Port-Debug-Sprung nach 20B0/20B1 startet die Flut-Szene, Original nicht.
 6. Release: neue Engine-Datei `wasser_r38.c` -> Android-GLOB-Cache beim Paketbau erneuern.
+7. Code-Hygiene: in op_aot_set (scd_vm.c:2956/2957) ist `rect_w < 0 ? -rect_w : rect_w` mit `uint16_t` toter Code (gcc -Wextra:
+   "comparison is always false due to limited range of data type"); wirkungslos (hw = rect_w/2), im Projekt-Bau ohne Warnung.
+   wasser_r38.c selbst ist mit -Wall -Wextra warnungsfrei (nur vorbestehende Kommentar-Warnungen aus re15_emd.h).
 
-(in Arbeit)
+## 10. Ergebnis
+
+**BESTANDEN.** Der einzige Nutzer-Punkt ist erfuellt: in ROOM1260 und den folgenden Wasser-Raeumen (1261, 20B0/20B1, 2050,
+2070/2071, 2090/2091, 20A0, dazu 11A0 Band 0) erscheint beim Gehen/Laufen von Leon UND Elza der Original-Wasser-Effekt mit dem
+Original-Schritt-Ton — in Pfuetzen (FLR-Bit 0x80, Effekt 6/5 am Fuss) und in Wasserzonen (sce-8-Stempel, Effekt 6/3 am Knie,
+Wat-Ton). Gemessen ueber die echten Tuerwege (10B0 -> 1260, 10B1 -> 1261, 2040 -> 2070, 2041 -> 2071), Bild pixelgleich zum
+Original-POLY_FT4, Anker und Tonindex = Original-GDB, Gegenprobe v0.8.25 ohne Effekt. RE-Gate, Vertrag und die gezielten Tests
+(9/9 eigene, 174/174 Gruppen) halten. Hinweise in Abschnitt 9 (Dossier-Genauigkeit 2000/11A0/2070, PORT-WAHL-Etiketten,
+Elza-Lauf ohne Original-Messung, vorbestehende Bewegungsabweichungen, Android-GLOB) sind nicht blockierend.
+
+Messlaeufe/Bilder: `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn0/`
+(m1..m15, v0825_*, *_sheet*.png); Laufskript `scratchpad/abn0/lauf.sh`.
