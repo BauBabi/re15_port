@@ -17,7 +17,7 @@ Leon-Szenario -> Marvin (0x40) und Ada (0x42) in ROOM1260 und wo sie sonst Hoehe
 - [x] Messung nachher an der exe (1261 / 1260 / 10B1, gleiche Wege wie vorher)
 - [x] ROOM2000 (Leon, Stage 2: Marvin sub02 @0x01A44, Ada sub03 @0x01A8A — "immer"): vorher/nachher an der exe
 - [x] Original-Messung DuckStation (10B1: Sprung/Klettern-Wechsel am Westrand von Block [6] = Original, gleiche Lagen)
-- [ ] Tests (Riegel schaerfen, ROOM2000, Gegenprobe)
+- [x] Tests (Riegel geschaerft, ROOM2000, Schwerkraft, Gegenprobe rot, Nebenwirkungen 82 + 10 gruen)
 
 ## Messung vorher (Stand f587d34e + nur Messhaken RE15_NPCKANTE_LOG)
 
@@ -32,6 +32,7 @@ CONTINUE (Lade-Weg) und `RE15_FIRE_AOT` (= Tuer betreten, derselbe Pfad wie Hine
 | Elza 1261 | Karte 10B1 (-21370,0,3000) Cut 7, Flag (3,0x41) -> Tuer Slot 1 (@0x016F2) -> ROOM1261 Cut 15 | John (Slot 1) geht auf dem Steg (y -1800, Band 1) nach Sueden; **F143** (-20477,-1800,-17374): Sonde = 2 (Absprungkante); der Port geht weiter, ab F156 `boden=0`: **298 Bilder in 1800 Hoehe ueber dem Boden** (bis F400), laeuft unten die ganze Laenge nach Osten in der Luft (z -19224, x -19155 -> 19845), y bleibt -1800 |
 | Leon 1260 | Karte 11B0 (-60,0,-18900), Flags (4,0xF4)(4,0xCD) -> Tuer Slot 5 (@0x01034) -> ROOM1260 Cut 7 | Ada (Slot 1, 0x42): F53 (26750,-1800,14500) Sonde = 2, **241 Bilder in der Luft** (F63..F304); Marvin (Slot 2, 0x40): F118 Sonde = 2, **224 Bilder in der Luft** (F128..F352); beide laufen in y -1800 ueber den Kanal und "landen" erst wieder ueber dem Mittelblock |
 | Elza 10B1 | Karte 10B1 (0,-9000,-12000) Band 5, Cut 2, Flags (3,0x80)(3,0x82) (= Stand nach ROOM1171 sub02 @0x0139C/@0x013A4) | John startet auf dem Band-5-Steg (15600,-9000,-9884), laeuft sub02; **F115** (-3661,-9000,-8275): Sonde = 2 (Zelle [31], Band 5, u1 0x0e); der Port laeuft in y -9000 weiter bis (-6419,-9000,-7759) = **7200 ueber dem Block [6]** |
+| Leon 2000 (Fortsetzung 2026-10-17, exe aus re15_port/build_bisect = Haken-AUS-Stand) | Karte 1260 (-8750,-1800,-8400) Band 1 Cut 0, Flag (4,0xF4) -> Tuer Slot 1 (@0x0114A) -> ROOM2000, sub02-Szene (Viereck alle 25 Bilder) | Ada (Slot 1): ab **F1536** (-6242,-1800,-22108) **41 Bilder in der Luft** ueber dem Kanal; Marvin (Slot 2): ab **F1663** (-5287,-1800,-22052) **46 Bilder**; kein Kanten-Sub (`M_belege/vorher_2000_*`) |
 
 (Ohne die Tuer-Flagge (4,0xCD) ist ROOM11B0 Slot 5 der gesperrte Satz @0x01010 — der erste 1260-Lauf blieb in 11B0.)
 
@@ -154,7 +155,13 @@ Gegenprobe gelinkt).
 | engine/src/enemy_ai_common.c (Haken) | re15_npc_sub_walk: Sonde nach dem Schritt (2 Zeilen); re15_npc_sub_dispatch: case 0x12/0x16/0x17/0x18; re15_npc_ai_tick: Schwerkraft re15_schwerkraft_8001bd60(e, -10, 0x14, Box +6) VOR dem Dispatch (@0x8011dcc4), Yield-Gate laesst die Kanten-Subs laufen, Alte Lage vor der Klemme, Messhaken; Bank-Auskunft re15_actor_uses_own_bank / _loco_bank |
 | engine/src/scd_vm.c (1 Zeile) | Sce_em_set: +0x1c0 = 0 fuer jeden Spawn (@0x800421f4) |
 | platform/pc/main.c (2 Zeilen) | NPC-Schatten auf +0x1ba, solange Kanten-Sub oder Schwerkraft-Fall laeuft |
-| tests/unit/probes/r38_npckante.cmake, test_r38_npckante.c, probe_r38_npckante_karte.c | Riegel + Karten-Werkzeug |
+| tests/unit/probes/r38_npckante.cmake, test_r38_npckante.c, probe_r38_npckante_karte.c | Riegel + Karten-Werkzeug (Fortsetzung: Mechanik Bild fuer Bild, john10b1 gegen die Original-Messung, j2000, schwerkraft; Szenen-Schritt mit Spieler-Walker) |
+
+Fortsetzung 2026-10-17 (ohne Verhaltensaenderung am Spiel): Messhaken um `fall=` (Schwerkraft-Kriterium
+FUN_8003b7f0(&+0x34, -r, +0x82) & 2, @0x8001bd94-b4) und `f1c0=` erweitert; Werkzeuge `M_belege/luft_auswertung.py`,
+`kontaktbogen.py`, `nachher_laeufe.sh` (+ MESS_BUILD fuer die Gegenprobe in messlauf.sh), `orig_10b1_john.py`,
+`orig_uebergaenge.py`, `schwerkraft_zensus.py`. Die Spiel-Logik des Vorgaengers (a279c9b9) blieb unveraendert — jede
+Zeile gegen die Bytes geprueft (Abschnitt "Pruefung der Fortsetzung"), durch die Original-Messung bestaetigt.
 
 ## Messung nachher
 
@@ -221,6 +228,64 @@ Einheit), nicht ein Port-Fehler; er liegt ausserhalb von Cut 2 und endet mit Cut
 
 ## Tests
 
+Riegel `re15_port/tests/unit/test_r38_npckante.c` (registriert NUR in `tests/unit/probes/r38_npckante.cmake`, je Teil ein
+ctest `unit_r38_npckante_<teil>`), headless am Engine-Kern mit den echten RDTs und Modellarchiven:
+
+| Teil | misst |
+|---|---|
+| clips | Kanten-Clips 2..5 der Loco-Bank je NPC (John CDEMD1, Marvin/Ada CDEMD0): Bildzahl reicht fuer Bild 0x11/0x1d/0x25 (Klettern) und 0xd (Absprung); Wurzel-Y/Frame-Wort-SE-Bits je Bild (Info) |
+| sonde | FUN_8002d7d8-Zwilling an den Messstellen (1261 Zelle [29]/[15], 1260 [28]/[12], 10B1 [31]/[18]) inkl. "ein Schritt davor = 0" |
+| john1261 | Elza ROOM1261 (3,0x41) Cut 15: Sprung (Clips 3/4/5), genau 1 Sprung + 1 Hochklettern, nie in der Luft, Ende Band 1 am Ziel; Fallkurve Bild fuer Bild (+590, dann +90+50k), Landung = +0x1ba, Kletterstufe -1800/0x47c/Band+1 |
+| ada1260 | Leon ROOM1260 (4,0xF4) Cut 7: Ada UND Marvin springen + klettern, nie in der Luft, Ende Band 1; Mechanik wie oben je Figur |
+| john10b1 | Elza ROOM10B1 sub02 Cut 2: Sprung 5 -> 1 (genau einmal), danach Wechsel Sprung/Klettern mit Landung bei x -7460 und Stufe bei x -6314 = DuckStation-Messung am Original; Mechanik |
+| gegen | Ada ROOM1050 (Weg ohne Kante): kein Kanten-Sub, kein Bandwechsel |
+| j2000 | Leon ROOM2000 (4,0xF4) sub02/sub03 (Szenen-Schritt wie test_r36_szenenleon, Viereck alle 25 Bilder): Ada und Marvin springen genau einmal (Clips 3/4/5) und klettern genau einmal, nie in der Luft; Mechanik |
+| schwerkraft | NPC-Wurzel ruft FUN_8001bd60: Ada (Sub 6) mitten in Zelle [28] gesetzt -> y += -10 + 20 t Bild fuer Bild, Landung y 0 / Band 0 / +0x1ba 0 / Fallbit geloescht, Schatten auf +0x1ba |
+
+Ergebnisse (woertlich):
+- `ctest --test-dir re15_port/build -R "r38_npckante" --timeout 600 --output-on-failure`:
+  **100% tests passed, 0 tests failed out of 8**
+- Gegenprobe gegen den Haken-AUS-Stand (enemy_ai_common.c / scd_vm.c / main.c aus 0bcf46ac = f587d34e + Messhaken; zwischen
+  v0.8.25 2077bb8e und f587d34e gibt es keine Aenderung unter re15_port/engine|platform|include), gebaut in
+  re15_port/build_bisect, `ctest --test-dir re15_port/build_bisect -R "r38_npckante" --timeout 600`:
+  **38% tests passed, 5 tests failed out of 8** (rot: john1261, ada1260, john10b1, j2000, schwerkraft; gruen wie erwartet:
+  clips, sonde, gegen — die messen Daten bzw. den Weg ohne Kante). Einzelheiten `M_belege/riegel_ohne_haken.txt`.
+- Nebenwirkungen, alle NPC-/Szenen-/Raum-Gruppen, die der Diff beruehrt (enemy_ai_common.c NPC-Tick, scd_vm.c Sce_em_set,
+  main.c NPC-Schatten; Namensliste aus `ctest -N` gefiltert nach npc|marvin|ada|elliot|irons|sherry|szenen|11b0|1260|1261|
+  10b1|10d0|1170|1090|2000|schwer|trage|schatten|plc_|walk|roy|1141|1021|1011|zombieki|r38_ ...):
+  - 82 Unit-/Probe-Tests (-R-Ausdruck woertlich in `M_belege/ctest_nebenwirkung.txt`, beginnt `^(unit_npc_ai|unit_npc_scd_pose|unit_sherry_wall_pin|unit_elliot_1170_run|...`, `-j4`):
+    **100% tests passed, 0 tests failed out of 82**
+  - 10 Integrationstests seriell (`-R "^(integration_r30_irons_tisch_laden|integration_r30_irons_tisch_bild|integration_r30_irons_tisch_licht|integration_r36_elza_irons|integration_r36_pri_schatten|integration_r36_szenenleon|integration_r37_elzaems_elza1141|integration_r37_roy_szene1011|integration_r37_roy_szene1021|integration_r37_roy_leon1170)$"`):
+    **100% tests passed, 0 tests failed out of 10**
+- Schwerkraft-Zensus `M_belege/schwerkraft_zensus.py` (alle 34 RDTs mit Absprungzellen, jede Sce_em_set-/Pos_set-/
+  Member_set-0x12-Stelle einer NPC 0x40..0x4d): **0** Stellen, an denen eine Original-Szene eine NPC auf Bandhoehe in eine
+  Absprungzelle stellt -> die neue Schwerkraft greift nur ueber Bewegung an Kanten. ROOM11B0 (Spur C, Marvin-Container)
+  hat KEINE Absprungzelle (u1 & 2), dort kann die Schwerkraft nicht ausloesen.
+
 ## OFFEN
 
+- **NPC-Schritt-Ton in der Rast-Phase [1]** (`lw v0,360` +0x168, `andi 0x4000` @0x800525b4 -> FUN_80045630(0, 7 -
+  3*((w>>12)&1)) @0x800525d4): die Rast-Pose ist Clip 5 der eigenen Bank (= derselbe Clip wie der NPC-Gehzyklus,
+  Schritt-Bit in Bild 7/22, Ada 8/22). Der Port spielt NPC-Schritte generell nicht (vorbestehende, im Code benannte Luecke
+  re15_npc_sub_walk "OPEN (Footstep-SE der Phase 1 ...)": FUN_80045630 nimmt fuer Typ >= 0x40 den Zweig `addiu s3,a0,-8`
+  @0x8005175c, den re15_audio_footstep nicht abbildet, ohne audio_pc.c anzufassen). In allen gemessenen Kanten liest Phase
+  [1] Bild 7 nie (sie endet nach 1-8 Bildern, das Bit wird erst im Folgebild gelesen) — hoerbar waere hoechstens ein
+  Schritt im ersten Rastbild aus dem letzten Gehbild. Nicht Teil der Nutzer-Punkte; bleibt bei der NPC-Schritt-Luecke.
+- Die Kanten-Clips selbst tragen KEINE Frame-Wort-SE-Bits (FUN_8001b38c spielt beim Sprung/Klettern am Original nichts) —
+  kein offener Ton fuer Sprung/Landung.
+- Original-Messung nur fuer 10B1 (der einzige Raum mit einem Verhalten, das nach einem Port-Fehler aussehen koennte). 1260 /
+  1261 / 2000 laufen ueber dieselben, gegen PSX.EXE byte-gleich geprueften Funktionen (Code RAM == PSX.EXE am Original).
+
 ## Fuer den Nutzer
+
+- Neue Assets: keine. Sprachdateien: keine. Paket-Gate: nichts Neues.
+- Wo zu sehen: Leon — ROOM11B0 Tuer zur Kanalisation -> ROOM1260: Ada und Marvin springen nacheinander vom Steg in den Kanal,
+  gehen unten weiter und klettern auf den Mittelblock; Stage 2 ROOM2000 (nach der Unterhaltung): beide springen in den
+  Kanal und ziehen sich am anderen Ufer hoch. Elza — ROOM10B1 (Kamera auf dem oberen Steg): John laeuft zum Stegende und
+  springt hinunter (Fall ueber vier Stockwerke auf den Block); ROOM1261: John springt vom Steg in den Kanal und klettert
+  am Ostende wieder hinauf.
+- Zu wissen (kein Fehler): in ROOM10B1 springt John unten am Westrand des Blocks noch einmal hinunter und klettert wieder
+  hinauf, solange die Kamera auf dem oberen Steg bleibt — genau so am Original gemessen (DuckStation, dieselben Lagen); das
+  Ziel des Skripts liegt knapp neben der Kante. Von der Steg-Kamera aus ist das nicht zu sehen; sobald Elza Kameraschnitt 8 erreicht
+  (sub02 `While(Cmp(0x0A != 8))` @0x0189E -> sub03), stellt das Skript John unten westlich des Blocks ab (wie im Original).
+- Entscheidungsfragen: keine.
