@@ -40,6 +40,13 @@ Code-Nachricht jetzt "Roys Diary" - Ihr Text auf RE2-Papier (der FILE16-Hintergr
 Dokumenten; es wird in den Akten abgelegt und kann dort wieder gelesen werden. Danach markiert die Karte erst den
 Communications Room (2F), dann den Prison Room (B2, Johns Zelle) - so wie bei Leons Communications-Room-Hinweis.
 
+**Spinnen in Stage 2.** Die Schachtspinnen (ROOM2060, ROOM20A0) warten im Schacht, bis Sie den Ausloesebereich
+betreten, kriechen dann heraus, klettern die Wand hinunter und landen am Boden; keine Spinne schwebt mehr in der Luft.
+Die Spinnen spucken Gift: Ein Treffer kostet 10 HP und vergiftet (im Statusschirm "Poison"; alle paar Sekunden gehen
+2 HP verloren, das Gift toetet aber nicht). Das Antidote Spray (oder ein blaues Kraut) heilt. Nur die Spinne
+vergiftet, wie in RE2 - im ausgelieferten RE1.5 setzt der Treffer das Gift nie, dort war das Spiel unfertig. Die
+Minispinnen nach dem Tod einer Spinne krabbeln am Boden, bleiben auf ihrem Steg, springen Sie an und beissen (je 1 HP).
+
 **Spiderman (Stage 4/5) und Griffe aller Gegner.** Der Spiderman wartet jetzt wie im Original versteckt im Schacht, bis
 Sie den Ausloeser erreichen, und klettert dann heraus (vorher lief er sofort los); beim Herausklettern und in seinen
 Griffen verschwindet er nicht mehr fuer ein Bild. Vor allem: Leon wird beim Griff nicht mehr aus der Karte geworfen
