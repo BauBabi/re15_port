@@ -316,7 +316,16 @@ pruefte nur "loaded room1171.rdt".
   (scd_vm.c op_cut_chg/op_cut_old); dazu loescht FUN_8004032c Bit 0x100 von DAT_800aca3c = Kamera-Automatik an.
 **Umsetzung:** Abgangs-Programm (tools/r38_dining/programme_bauen.py, BEFREIUNG-Schluss) endet jetzt mit
 `2a 00` Cut_old + Nop vor `3c 01` Cut_auto 1 (Form ROOM1150 @0x010F2) — die Kamera kehrt auf den Cut zurueck, der vor
-Cut 7 angezeigt war (Elzas Standort, eine Lauf-Kamera mit Zonen).
+Cut 7 angezeigt war (Elzas Standort, eine Lauf-Kamera mit Zonen). Ifel-Laenge des Ja-Zweigs 0x474 -> 0x476 (vom
+Werkzeug nachgerechnet).
+**Messung nachher** (Lauf `integration_r38_dining1141_d` = lauf_425d9435_d, Stand 9736579e, alle Pruefungen gruen):
+Kamerafolge 1141 laut Zustands-Log F1 cam 0 -> F800 5 -> F2119 2 -> F2221 5 -> F2788 0 -> F3277 7 (Abgang) ->
+**F3429 0** (Cut_old, Elza bei (-5605,-18938)) -> F4108 5 (Elza (-6010,-11959) auf dem Weg nach Norden) -> F4267 6
+(Elza (-7391,-1499) vor der Dachtuer) -> ROOM1171. Bildbogen `F_belege/n4_kamera_nach_abgang.png` (F3420 Cut 7,
+F3435 Cut 0, F4125/F4200 Cut 5, F4275 Cut 6): Elza ist in jedem Bild zu sehen. Neue Pruefungen:
+`unit_r38_dining1141_phase_h` "Kamera nach dem Abgang zurueck auf Cut 6 (vor Cut 7 angezeigt, jetzt Cut 6),
+Kamera-Automatik an (1)" und `integration_r38_dining1141_d` "nach dem Abgang verlaesst die Kamera Cut 7 (Cut_old):
+F3429 ... cam=0".
 
 ## 5. Tests
 Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
