@@ -17,7 +17,10 @@ cmake_minimum_required(VERSION 3.16)
 #   C  ROOM10D0 Ziffernfeld (Runde 37 Spur E, Weg D): sub17 per RE15_SUBSTART, Nachricht zu; Bild 260. MUSS: kein
 #      rueckseitiges Cursor-Dreieck (Platz 5 = Prop 1), Rahmen-Inneres ohne Schatten-Kopie.
 #   D  ELZA (RE15_PSELECT_AUTO + _SWITCH) in ROOM11F1, sonst wie A; Bild 500. MUSS wie A + "[pl] Spieler-Familie PL04".
-# Bildpruefung + RE15_TRILOG-Auswertung: probe_r38_cursor bild.
+#   E  Nebenwirkung auf flache Port-Modelle (Dossier §4.6/§3c): ROOM10F0 Cut 0 + 5, Parking Lot Key (Platz 8) zeigt in
+#      mindestens einem Cut seine Vorderseite (MAC0 > 0).
+#   F  dasselbe mit Elza in ROOM10F1 (Prison Key), Cut 0 + 6.
+# Bildpruefung + RE15_TRILOG-Auswertung: probe_r38_cursor bild (A-D) / sicht (E, F).
 #
 # GEGENPROBE (Dossier §4/§5): dieselben drei Laeufe mit der exe vor dem Fix (Stand 1bcbd0ff) liefern 4 bzw. 4 bzw. 4
 # rueckseitige Muster-Dreiecke, 32..33 reingruene Bildpunkte im Rahmen und 21 Abweichungen gegen das Original.
@@ -126,4 +129,52 @@ if(_p1 LESS 0 OR _p2 LESS 0)
 endif()
 a_bild(d 4 psx11f0)
 
-message(STATUS "r38_cursor: A ROOM11F0, B ROOM1150, C ROOM10D0, D Elza ROOM11F1 - kein rueckseitiges Cursor-Dreieck, kein Schatten im Rahmen, 11F0/11F1 gleich dem Original")
+# --- E: Nebenwirkung auf FLACHE Port-Modelle (Dossier §4.6/§3c): die Schluessel der Runde 36 Spur Q --------------
+#        ROOM10F0 (Leon, Parking Lot Key, RE2-Modell mit Umlauf-Normale -Y, gewendet RE15_R36Q_PARK_ROT_X) und ROOM10F1
+#        (Elza, Prison Key, +Y, ungewendet), je zwei Cuts mit RE15_FORCE_CUT, RE15_TRILOG ueber den ganzen Schirm.
+#        MUSS: Platz 8 (obj 4) zeigt in mindestens einem der zwei Cuts seine Vorderseite (MAC0 > 0). Zwei Cuts, damit
+#        der Riegel auch nach dem Merge der Spur K gilt (Pinnwand: 10F0 Cut 5, 10F1 Cut 6). GEGENPROBE: exe 1bcbd0ff
+#        (ohne Verwurf, ungewendet) -> 10F0 alle 4 Dreiecke MAC0 < 0; Stand 3f11372f~1 (Verwurf, ungewendet) -> Platz 8
+#        fehlt ganz.
+function(e_lauf _name _bild)
+    set(WORKDIR "${_basis}_${_name}")
+    file(MAKE_DIRECTORY "${WORKDIR}")
+    file(REMOVE "${WORKDIR}/trilog.txt" "${WORKDIR}/debug.log")
+    re15_start_spiel(_rv 240 RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 "RE15_TRILOG=trilog.txt" ${ARGN}
+                     "${RE15_PC_EXE}")
+    if(NOT EXISTS "${WORKDIR}/trilog.txt")
+        message(FATAL_ERROR "r38_cursor[${_name}]: Trilog fehlt (exit=${_rv}, ${WORKDIR})")
+    endif()
+endfunction()
+function(e_sicht _name _raum)
+    execute_process(COMMAND "${RE15_PROBE}" sicht 8 ${ARGN}
+                    RESULT_VARIABLE _rv OUTPUT_VARIABLE _out ERROR_VARIABLE _err TIMEOUT 120)
+    message(STATUS "r38_cursor[${_name}] ${_raum}:\n${_out}")
+    if(NOT _rv EQUAL 0)
+        message(FATAL_ERROR "r38_cursor[${_name}]: Schluessel in ${_raum} in keinem Cut sichtbar (exit=${_rv})\n${_out}${_err}")
+    endif()
+    foreach(_t IN LISTS ARGN)
+        file(REMOVE "${_t}")   # ganzer Schirm, ~10 MB je Lauf
+    endforeach()
+endfunction()
+foreach(_c 0 5)
+    e_lauf(e_${_c} 200 RE15_TITLE_SHOT=title.bmp RE15_DEBUG_JUMP=10F0@60 RE15_FORCE_CUT=${_c} "RE15_EXIT_AT=202")
+    file(READ "${_basis}_e_${_c}/debug.log" _dbg_e)
+    string(FIND "${_dbg_e}" "in Raum 10f0" _p)
+    if(_p LESS 0)
+        message(FATAL_ERROR "r38_cursor[e_${_c}]: Lauf endet nicht in ROOM10F0 (${_basis}_e_${_c})")
+    endif()
+endforeach()
+e_sicht(e "ROOM10F0 (Leon, Parking Lot Key)" "${_basis}_e_0/trilog.txt" "${_basis}_e_5/trilog.txt")
+foreach(_c 0 6)
+    e_lauf(f_${_c} 330 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
+           RE15_DEBUG_JUMP=10F0@250 RE15_FORCE_CUT=${_c} "RE15_EXIT_AT=332")
+    file(READ "${_basis}_f_${_c}/debug.log" _dbg_f)
+    string(FIND "${_dbg_f}" "in Raum 10f1" _p)
+    if(_p LESS 0)
+        message(FATAL_ERROR "r38_cursor[f_${_c}]: Elza-Lauf endet nicht in ROOM10F1 (${_basis}_f_${_c})")
+    endif()
+endforeach()
+e_sicht(f "ROOM10F1 (Elza, Prison Key)" "${_basis}_f_0/trilog.txt" "${_basis}_f_6/trilog.txt")
+
+message(STATUS "r38_cursor: A ROOM11F0, B ROOM1150, C ROOM10D0, D Elza ROOM11F1 - kein rueckseitiges Cursor-Dreieck, kein Schatten im Rahmen, 11F0/11F1 gleich dem Original; E/F Schluessel 10F0/10F1 sichtbar")

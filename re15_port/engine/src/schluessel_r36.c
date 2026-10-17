@@ -158,6 +158,8 @@ static void schluessel_anlegen(uint16_t room_id)
         g_scd.props[i].y = RE15_R36Q_Y;
         g_scd.props[i].z = RE15_R36Q_Z;
         g_scd.props[i].rot_y = RE15_R36Q_ROT_Y;
+        g_scd.props[i].rot_x = (item == RE15_R36Q_PARK_ITEM) ? RE15_R36Q_PARK_ROT_X   /* Runde 38 A: Vorderseite */
+                                                             : RE15_R36Q_PRISON_ROT_X; /* oben, RE2 @0x02C98/@0x01274 */
         g_scd.props[i].flags = RE15_R36Q_PROP_FLAGS;         /* 0x000A | 1 @0x80040998         */
     }
     /* ZONE — wie op_item_aot_set: Mitte + halbe Ausdehnung, sat (+3), Etage (+4) 0. Nur frei. */

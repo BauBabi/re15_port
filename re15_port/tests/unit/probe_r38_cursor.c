@@ -512,6 +512,63 @@ static int teil_bild(int argc, char **argv)
     return 0;
 }
 
+/* --------------------------------------------------------------- sicht */
+/* Sichtbarkeit eines FLACHEN Port-Modells unter dem Verwurf (Dossier §4.6/§3c): je RE15_TRILOG-Datei das LETZTE Bild
+ * des Platzes (hinter der vorletzten Wiederholung der letzten Zeile — Kamera per RE15_FORCE_CUT fest, das Prop steht
+ * still), gezaehlt nach dem NCLIP-Vorzeichen. Sichtbar = mindestens ein Dreieck mit MAC0 > 0 (Flaeche > 0, Vorderseite).
+ * Bestanden, wenn das Modell in MINDESTENS EINER der Dateien (= Cuts) sichtbar ist — so gilt der Riegel fuer die
+ * Runde-36-Lage (Konsole, alle Cuts) ebenso wie fuer die Pinnwand-Lage der Spur K (Cut 5/6). */
+typedef struct { int x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2; } tri_sig_t;
+
+static int teil_sicht(int argc, char **argv)
+{
+    if (argc < 4) { printf("sicht: <slot> <trilog> [<trilog> ...]\n"); return 2; }
+    const int slot = atoi(argv[2]);
+    int sichtbar_in = 0;
+    for (int a = 3; a < argc; a++) {
+        long n = 0;
+        uint8_t *t = slurp(argv[a], &n);
+        if (!t) { printf("       %s: nicht lesbar\n", argv[a]); continue; }
+        tri_sig_t *s = NULL; int ns = 0, cap = 0;
+        char *z = (char *)t;
+        while (z && *z) {
+            char *nl = strchr(z, '\n');
+            if (nl) *nl = 0;
+            unsigned seq; char fn[32]; int sl, clut, zz; tri_sig_t q;
+            if (sscanf(z, "%u %31s slot=%d clut=0x%X z=%d (%d,%d)uv(%d,%d) (%d,%d)uv(%d,%d) (%d,%d)uv(%d,%d)",
+                       &seq, fn, &sl, (unsigned *)&clut, &zz, &q.x0, &q.y0, &q.u0, &q.v0, &q.x1, &q.y1, &q.u1, &q.v1,
+                       &q.x2, &q.y2, &q.u2, &q.v2) == 17 && sl == slot) {
+                if (ns == cap) {
+                    cap = cap ? cap * 2 : 256;
+                    tri_sig_t *neu = (tri_sig_t *)realloc(s, (size_t)cap * sizeof *s);
+                    if (!neu) break;
+                    s = neu;
+                }
+                s[ns++] = q;
+            }
+            z = nl ? nl + 1 : NULL;
+        }
+        free(t);
+        int start = 0;
+        if (ns > 0)
+            for (int i = ns - 2; i >= 0; i--)
+                if (!memcmp(&s[i], &s[ns - 1], sizeof s[i])) { start = i + 1; break; }
+        int pos = 0, null = 0, neg = 0;
+        for (int i = start; i < ns; i++) {
+            const int32_t m = re15_nclip_r38_mac0(s[i].x0, s[i].y0, s[i].x1, s[i].y1, s[i].x2, s[i].y2);
+            if (m > 0) pos++; else if (m == 0) null++; else neg++;
+        }
+        printf("       %s: Platz %d letztes Bild %d Dreiecke, MAC0 > 0: %d, = 0: %d, < 0: %d\n", argv[a], slot,
+               ns - start, pos, null, neg);
+        if (pos > 0) sichtbar_in++;
+        free(s);
+    }
+    printf("       sichtbar in %d von %d Laeufen\n", sichtbar_in, argc - 3);
+    CHECK("das flache Port-Modell zeigt in mindestens einem Cut seine Vorderseite (MAC0 > 0, nicht verworfen)",
+          sichtbar_in > 0);
+    return 0;
+}
+
 /* --------------------------------------------------------------- wicklung */
 #define R38_PI 3.14159265358979323846
 typedef struct { long neg, pos, null; } wzahl_t;
@@ -676,6 +733,26 @@ static void blicke(const re15_md1_t *m, int umgekehrt, blick_t *summe)
     }
 }
 
+/* FLACH = alle Flaechen-Normalen (v1-v0)x(v2-v0) parallel oder gegenparallel (|cos| > 0,999). Ein flaches Modell hat
+ * nur EINE sichtbare Seite; welche, entscheidet allein seine LAGE zur Kamera — die gespeicherte (Licht-)Normale sagt
+ * darueber nichts (Dossier §4.6: der Runde-36-Parking-Lot-Key hatte w < 0 und war doch unsichtbar, der Herz-Schluessel
+ * der Spur F hat w > 0 und ist sichtbar). Flache Modelle prueft deshalb die LAGE (sicht / integration_r38_cursor E). */
+typedef struct { double g[3]; int gesetzt, flach; } flach_t;
+
+static void flach_fn(const re15_md1_vertex_t *const *p, const re15_md1_vertex_t *const *n, int k, void *ctx)
+{
+    (void)n; (void)k;
+    flach_t *f = (flach_t *)ctx;
+    const double ax = p[1]->x - p[0]->x, ay = p[1]->y - p[0]->y, az = p[1]->z - p[0]->z;
+    const double cx = p[2]->x - p[0]->x, cy = p[2]->y - p[0]->y, cz = p[2]->z - p[0]->z;
+    const double g[3] = { ay * cz - az * cy, az * cx - ax * cz, ax * cy - ay * cx };
+    const double l = sqrt(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+    if (l < 1e-9) return;
+    if (!f->gesetzt) { for (int i = 0; i < 3; i++) f->g[i] = g[i] / l; f->gesetzt = 1; f->flach = 1; return; }
+    const double c = (f->g[0] * g[0] + f->g[1] * g[1] + f->g[2] * g[2]) / l;
+    if (fabs(c) < 0.999) f->flach = 0;
+}
+
 typedef struct { const char *name; const uint8_t *b; int n; } port_modell_t;
 
 static int port_dazu(port_modell_t *l, int *nl, int max, const char *name, const uint8_t *b, int n)
@@ -742,7 +819,7 @@ static int teil_wicklung(void)
     printf("       %d eingebackene Port-Modelle\n", nl);
     CHECK("mindestens 15 Port-Modelle gefunden (Cursor, Sicherung, Granate, 2 Irons, 2 Loescher, Dokumente, ...)",
           nl >= 15);
-    int alle_ok = 1, mech_ok = 1, gegen_ok = 1, fl_gesehen = 0;
+    int alle_ok = 1, mech_ok = 1, gegen_ok = 1, fl_gesehen = 0, raeumlich = 0, flache = 0;
     for (int i = 0; i < nl; i++) {
         static re15_md1_t m;
         if (re15_md1_parse(l[i].b, l[i].n, &m) != 0) {
@@ -750,6 +827,16 @@ static int teil_wicklung(void)
         }
         wzahl_t z = { 0, 0, 0 };
         flaechen_je(&m, w_zaehle_fn, &z);
+        flach_t fl = { { 0, 0, 0 }, 0, 0 };
+        flaechen_je(&m, flach_fn, &fl);
+        if (fl.flach) {
+            printf("       %-24s FLACH (Umlauf-Normale %+.0f,%+.0f,%+.0f; w<0 %ld w>0 %ld) -> Sichtseite haengt an der "
+                   "Lage: Teil sicht / integration_r38_cursor E, A_belege/port_modelle_sicht.py\n", l[i].name,
+                   fl.g[0], fl.g[1], fl.g[2], z.neg, z.pos);
+            flache++;
+            continue;
+        }
+        raeumlich++;
         blick_t s, g;
         blicke(&m, 0, &s);
         blicke(&m, 1, &g);
@@ -761,11 +848,15 @@ static int teil_wicklung(void)
         if (g.falsch_verworfen == 0 || g.falsch_gezeichnet == 0) gegen_ok = 0;
         if (!strncmp(l[i].name, "Feuerloescher", 13)) fl_gesehen++;
     }
+    printf("       %d raeumliche Modelle (Normalen-Pruefung), %d flache (Lage-Pruefung)\n", raeumlich, flache);
     CHECK("Feuerloescher (stehend + liegend) unter den Port-Modellen", fl_gesehen >= 2);
-    CHECK("jedes Port-Modell wie das Original gewickelt: keine Flaeche w > 0 (Feuerloescher vorher 112 von 148)",
-          alle_ok);
+    CHECK("flache Modelle erkannt (Parking Lot Key, Prison Key, Keycard, 5 Lageplan-Karten) und nicht nach Normalen "
+          "bewertet", flache >= 8);
+    CHECK("jedes RAEUMLICHE Port-Modell wie das Original gewickelt: keine Flaeche w > 0 (Feuerloescher vorher 112 von "
+          "148)", alle_ok && raeumlich >= 8);
     CHECK("Mechanik: an 60 Blicken verwirft NCLIP keine Aussenseite und zeichnet keine abgewandte Flaeche", mech_ok);
-    CHECK("GEGENPROBE: mit v1 <-> v2 (umgekehrte Wicklung) schlaegt der Riegel an jedem Modell an", gegen_ok);
+    CHECK("GEGENPROBE: mit v1 <-> v2 (umgekehrte Wicklung) schlaegt der Riegel an jedem raeumlichen Modell an",
+          gegen_ok);
     return 0;
 }
 
@@ -778,6 +869,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "raeume") || !strcmp(teil, "alle")) rc |= teil_raeume();
     if (!strcmp(teil, "wicklung") || !strcmp(teil, "alle")) rc |= teil_wicklung();
     if (!strcmp(teil, "bild")) rc |= teil_bild(argc, argv);
+    if (!strcmp(teil, "sicht")) rc |= teil_sicht(argc, argv);
     if (rc || s_fail) { printf("probe_r38_cursor %s: FEHLER (%d)\n", teil, s_fail); return 1; }
     printf("probe_r38_cursor %s: OK\n", teil);
     return 0;
