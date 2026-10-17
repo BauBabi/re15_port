@@ -21,15 +21,20 @@
  *   kameras      Kamera-Tabelle = RID-Bytes der ausgelieferten RDTs (Datei-Offset camera_start + Cut*32); Parkplatz
  *                Cut 12 aus den RID-Bytes nachgerechnet (Abstand der Rolltor-Form, Kameraachse Cut 12, Gierung); Parkplatz
  *                1030 (Cut 7) = Mitte BLK-Zone 7 hinter der Wand SCA 5 auf der Achse Cut 7, in Zone 7, ohne SCA-Zelle.
- *   s1130_re2 / s1130_re15     ROOM1130 Cut 0: alle Zombies kommen der Kamera naeher (KI RE2 = Standard / RE1.5);
- *                Einzelstopp nur hinter der Kamera; Navigator-Ziel = Spieler; HP unveraendert. Gegenprobe v0.8.25 ROT.
- *   s1030_re2 / s1030_re15     ROOM1030 Cut 7 (Kopien aus 1070) und Cut 12 (Tor, Kriech-Regel): ebenso; nur Cut 7/12;
+ *   s1130_re2 / s1130_re15     ROOM1130 Cut 0: alle Zombies kommen der Kamera naeher, UEBER DIE SCHNITTDAUER (beide
+ *                Haelften je >= 400 = ein Koerperradius; KI RE2 = Standard Pflicht / RE1.5 gemeldet); Einzelstopp nur
+ *                hinter der Kamera; Navigator-Ziel = Spieler; HP unveraendert. Gegenprobe v0.8.25 ROT.
+ *   s1030_re2 / s1030_re15     ROOM1030 Cut 7 (Kopien aus 1070) und Cut 12 (Tor): ebenso; die Zombies hinter dem Tor warten
+ *                waehrend Cut 7 (Baustein 5); wer aufrecht ans Tor kommt, bekommt das Kriech-Bit (Baustein 4); nur Cut 7/12;
  *                Spieler auf der Kameraachse Cut 12. Gegenprobe Stand v0.8.25 ROT.
- *   s1030_ohne7_re2 / _re15    1070 leer ((9,76) = 0): die Tuer zeigt gleich Cut 12 — dieselben Cut-12-Kriterien.
+ *   s1030_ohne7_re2 / _re15    1070 leer ((9,76) = 0): die Tuer zeigt gleich Cut 12 — dieselben Cut-12-Kriterien; Gegenprobe
+ *                ROT ueber die Haelften (v0.8.25: die aufrechten stehen nach der Haelfte am Tor).
  *   rolltor      ROOM1040 Cut 1: mit und ohne die Aenderung Bild fuer Bild dieselben Lagen aller Zombies, 5 durchs Tor,
  *                Spieler-HP unveraendert (= Rolltor-Schnitt unveraendert).
  *   auswerten <lauf>           integration_r38_montage: dieselben Kriterien aus den [montage-r38]-Zeilen eines
- *                exe-Laufs (debug.log). */
+ *                exe-Laufs (debug.log).
+ *   <teil> mess [<aktor> [<takt>]]  Messlauf ohne Gegenprobe; mit <aktor>: Spur-Zeile (Lage, Gierung, Ziel, Zustand, Zone,
+ *                naechster Nachbar) alle <takt> Bilder (Standard 5). */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
