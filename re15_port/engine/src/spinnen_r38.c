@@ -26,6 +26,7 @@
 #include "re15_ai_flavor.h"      /* re15_ai_re2_for_type / re15_re2spider_owns (Teil 4) */
 #include "re15_math.h"          /* re15_squareroot0 = FUN_8008d2f4 (Teil 3b) */
 #include "re15_enemy_ai.h"      /* RE15_AI_STATE_CORPSE (Teil 3b) */
+#include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: re15_szenenschutz_haelt (Routine 25, Nachbesserung 1 Mangel 3) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -372,14 +373,29 @@ static void routine25(re15_esp_fx_t *f)
      * HP < 0 (`lh v0,342(s0) / bltz` @0x800476fc-704). Port: dieselben Tore wie der Spielerzweig von
      * FUN_80012d60 (+0x93 & 1 `hit-once` @0x80012e24-30) und der Babybiss (+0x1D3 & 0x80 =
      * re15_player_is_grabbed @0x80100E84) — VOR dem Resolver gelesen, der +0x93 selbst setzt. */
-    const re15_actor_t *spl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *spl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    /* Nachbesserung 1, Mangel 3 (Runde 38 Spur B, NUTZER-VORGABE "nicht angreifbar, solange die Szene ihn haelt"):
+     * Routine 25 laeuft im ESP-Takt AUSSERHALB von re15_enemy_ai_run_all, Spur Bs Sicht (je geschuetztem Gegner-Tick)
+     * erfasst sie nicht. Haelt die Szene den Spieler (re15_szenenschutz_haelt), sieht der Klumpen ihn durch DASSELBE
+     * Original-Tor wie Spur Bs Gegner: +0x93 Bit 0 — gelesen vom Resolver FUN_80012d60 (`lbu v0,player.hit_react`
+     * @0x80012e24 / `andi v0,v0,0x1` / `bne` @0x80012e30: kein HP-Abzug, kein Kommando 2) und vom Gift-Tor `frei`
+     * unten (RE2-Gegenstueck FUN_80047664 +0x1D3 @0x800476ec-f4). Danach steht wieder der echte Wert (wie
+     * szenenschutz_r38.c abschliessen). Jeder Klumpen ist ein FREIER Angriff: gespuckt wird nur im Zustand 1 (RE1.5
+     * Unterzustand 7 @0x80112770, RE2 Unterzustand 8 @0x8010101C), kein SCD-Skript spawnt Effekt 0x0d (Zensus Abnahme 0,
+     * alle ROOM*.RDT) -> keine "Teil der Szene"-Ausnahme. */
+    const uint8_t hr_echt = spl->hit_react;
+    const int szene = re15_szenenschutz_haelt();
+    if (szene) spl->hit_react = (uint8_t)(hr_echt | 0x1u);
     const int frei = !(spl->hit_react & 0x1u) && !re15_player_is_grabbed() && spl->hp >= 0;
+    if (szene && re15_hitbox_test(spl, &box))
+        fprintf(stderr, "[szenenschutz] Giftklumpen abgefangen (Absender Slot %d, Spieler HP %d)\n", besitzer, (int)spl->hp);
     if (besitzer > 0 && besitzer < RE15_ACTOR_MAX && g_actors[besitzer].type == 0x25 && frei &&
         re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], &box)) {
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;   /* Gift (s.o.) */
         s_gift_treffer++;
     }
     int treffer = re15_resolve_attack(&box, 0, besitzer);     /* FUN_80012d60(500,&P,0) @0x80018008 */
+    if (szene) spl->hit_react = hr_echt;                      /* echter +0x93 zurueck (die Sicht gilt nur hier) */
     if (treffer == 0 && P[1] < (int32_t)boden) return;        /* `slt v1,v1,v0 / bne` @0x80018024-28 */
     /* AUFSCHLAG */
     (void)re15_esp_kind_r38(f->bank, 0x030c0000u | (uint16_t)(f->scale16 + 500u), f->param, P);

@@ -399,6 +399,59 @@ static void teil_b3(void)
           "Gift-Treffer %u", hp, pl->status_flags, re15_spinnen_r38_gift_treffer());
 }
 
+/* B5 (Nachbesserung 1, Mangel 3 — Nachtrag Integration 2026-10-17 07:36, Spur B): der Giftklumpen laeuft im ESP-Takt
+ * AUSSERHALB von re15_enemy_ai_run_all, Spur Bs Sicht (je geschuetztem Gegner-Tick) erfasst ihn nicht. Haelt eine Szene
+ * den Spieler (g_scd.player_mode == 2 = re15_szenenschutz_haelt()), sieht Routine 25 den Spieler durch das Original-Tor
+ * +0x93 Bit 0 als nicht angreifbar: der Resolver FUN_80012d60 ueberspringt ihn (`lbu v0,player.hit_react` @0x80012e24 /
+ * `andi v0,v0,0x1` / `bne` @0x80012e30), das Gift-Tor `frei` (RE2 FUN_80047664 +0x1D3 @0x800476ec-f4) ebenso.
+ * Erwartet: Szene haelt -> keine HP, kein Gift; Gegenprobe frei -> 10 HP (Treffer) + 2 HP (Takt sofort) und Gift. */
+static int s_b5_hr_falsch = 0;
+static int b5_lauf(int szene)
+{
+    if (!raum("STAGE2/ROOM2060.RDT", 0x2060, RE15_AI_FLAVOR_RE15, 5975, 0, 1137, 3072, 1)) { s_fails++; return -1; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *sp = NULL;
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        if (g_actors[s].active && g_actors[s].type == 0x25 && !sp) sp = &g_actors[s];
+        else g_actors[s].active = 0;
+    }
+    if (!sp) { printf("FAIL: B5 keine Spinne\n"); s_fails++; return -1; }
+    re15_enemy_ai_set_paused(1);
+    sp->x = 5975; sp->y = 0; sp->z = 3137; sp->rot_y = 1024; sp->state = 1; sp->grid_id = 5;
+    pl->hp = 100; pl->status_flags = 0; pl->state = 1; pl->hit_react = 0;
+    re15_spinnen_r38_spucken(sp, 0);
+    int hr_falsch = 0;
+    for (int f = 0; f < 60; f++) {
+        const unsigned char *raw; int len, id;
+        re15_msg_tick(&raw, &len, &id);
+        s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
+        g_scd.player_mode = szene ? 2 : 0;
+        scd_vm_tick();
+        re15_game_step(&s_ctx);
+        g_scd.player_mode = szene ? 2 : 0;                 /* die Szene haelt den Spieler auch im ESP-Takt */
+        uint8_t hr = pl->hit_react;
+        re15_esp_fx_tick(re15_esp_room_bank());
+        if (szene && pl->hit_react != hr) hr_falsch++;     /* die Sicht darf den echten +0x93 nicht verstellen */
+    }
+    g_scd.player_mode = 0;
+    re15_enemy_ai_set_paused(0);
+    s_b5_hr_falsch = hr_falsch;
+    return pl->hp;
+}
+static void teil_b5(void)
+{
+    printf("\n== B5 Giftklumpen, waehrend eine Szene den Spieler haelt (player_mode 2, Spur B re15_szenenschutz_haelt)\n");
+    int hp = b5_lauf(1);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    CHECK(hp == 100 && !(pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() == 0 && s_b5_hr_falsch == 0,
+          "Szene haelt: HP %d, status 0x%04X, Gift-Treffer %u, +0x93 vom ESP-Takt veraendert %d mal (kein Schaden, "
+          "kein Gift; vorher 88 + Gift)", hp, pl->status_flags, re15_spinnen_r38_gift_treffer(), s_b5_hr_falsch);
+    hp = b5_lauf(0);
+    CHECK(hp == 88 && (pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() >= 1,
+          "Gegenprobe frei (player_mode 0): HP %d = 100 - 10 - 2, status 0x%04X, Gift-Treffer %u", hp, pl->status_flags,
+          re15_spinnen_r38_gift_treffer());
+}
+
 /* B4 (Nachbesserung 1, Mangel 1): der Gift-Takt im ECHTEN Spielschritt (re15_game_step mit rdt_ok, ESP-Takt wie bild())
  * ist KEIN Treffer. Original RE1.5 @0x80031e44-ec8: Stores nur auf den Zaehler 0x800acc27 (@0x80031e70/80/94) und die HP
  * (@0x80031eac/ec8), kein `jal`, kein Kommandowort 0x800aca58, kein +0x93; RE2 @0x8003c12c-180 ebenso. Die Treffer-Reaktion
@@ -834,6 +887,7 @@ int main(int argc, char **argv)
     teil_b2();
     teil_b3();
     teil_b4();
+    teil_b5();
     teil_a2(RE15_AI_FLAVOR_RE15, "RE1.5");
     re15_actor_t *a2 = teil_a(RE15_AI_FLAVOR_RE2, "RE2");
     if (a2) teil_b(a2, 1, "RE2");
