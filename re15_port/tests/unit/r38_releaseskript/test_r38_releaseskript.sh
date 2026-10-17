@@ -29,6 +29,11 @@
 # Rueckgabe 0 = alles gruen.
 # =============================================================================
 set -uo pipefail
+# Saubere Umgebung: release_alles.sh liest RE15_CTEST_JOBS (Schritt linux) und RE15_ARCHIV (Standard fuer --archiv).
+# Laeuft diese Suite selbst im Linux-Release-Container (RE15_CTEST_JOBS=6 von --linux-jobs 6), erbten die Attrappen
+# sonst "jobs=6" und die erwarteten Aufruflisten passten nicht (v0.8.26: ablauf/fehler_bau/fehler_umfeld rot);
+# RE15_ARCHIV des Aufrufers duerfte nie auf das echte Archiv zeigen. Faelle, die sie brauchen, setzen sie selbst.
+unset RE15_CTEST_JOBS RE15_ARCHIV
 REPO_ECHT="$(cd "$1" && pwd)"
 ARBEIT="$2"
 TEIL="$3"

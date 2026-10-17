@@ -661,6 +661,27 @@ void re15_render_init(void)
         fprintf(stderr, "SDL_CreateRenderer failed: %s\n", SDL_GetError());
         exit(1);
     }
+    /* ABR2 (PSX B - F) laeuft ueber SDL_ComposeCustomBlendMode(ONE, ONE, REV_SUBTRACT | ZERO, ONE, REV_SUBTRACT).
+     * Die Alpha-Operation MUSS dieselbe sein wie die der Farbe: SDLs OpenGL-Renderer (Standard unter Linux und auf
+     * dem Steam Deck) lehnt jeden Modus mit colorOperation != alphaOperation ab (SDL 2.28.5
+     * src/render/opengl/SDL_render_gl.c:404-406 GL_SupportsBlendMode), Direct3D 11 (Windows) und GLES2 (Android) nicht.
+     * Bis Runde 38 stand dort ADD: unter Linux fiel damit JEDE B-F-Flaeche still auf BLEND zurueck (gemessen im
+     * Linux-Release-Bau v0.8.26: integration_r38_rolltor20a0_abe ROOM20A0 Cut 2 Wasser (31.3,35.0,31.2) statt
+     * Original (0.4,0.4,0.3)). Das Alpha-Ergebnis ist gleich: dst*1 - src*0 = dst = src*0 + dst*1.
+     * Die Zeile unten nennt Renderer und Videotreiber und meldet, wenn B - F trotzdem nicht geht. */
+    {
+        SDL_RendererInfo ri;
+        const char *rname = (SDL_GetRendererInfo(s_renderer, &ri) == 0) ? ri.name : "?";
+        const char *vname = SDL_GetCurrentVideoDriver();
+        SDL_BlendMode abr2 = SDL_ComposeCustomBlendMode(
+            SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
+        SDL_Texture *probe = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 1, 1);
+        int abr2_ok = probe && SDL_SetTextureBlendMode(probe, abr2) == 0;
+        if (probe) SDL_DestroyTexture(probe);
+        fprintf(stderr, "[render] SDL-Renderer %s, Videotreiber %s, ABR2 (B-F) %s\n", rname, vname ? vname : "?",
+                abr2_ok ? "ok" : "NICHT unterstuetzt -> Rueckfall BLEND");
+    }
 
     s_texture = SDL_CreateTexture(s_renderer,
         SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
@@ -697,7 +718,7 @@ void re15_render_init(void)
                           RE15_SHADOW_BLOB_W * (int)sizeof(uint32_t));
         s_shadow_blend = SDL_ComposeCustomBlendMode(
             SDL_BLENDFACTOR_ONE,  SDL_BLENDFACTOR_ONE,  SDL_BLENDOPERATION_REV_SUBTRACT, /* RGB: dst - src */
-            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE,  SDL_BLENDOPERATION_ADD);          /* A: keep dst */
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE,  SDL_BLENDOPERATION_REV_SUBTRACT);          /* A: dst - 0 = dst */
         SDL_SetTextureBlendMode(s_shadow_tex, s_shadow_blend);
     }
 
@@ -1023,7 +1044,7 @@ void re15_render_end_frame(void)
         if (s_pselect_dim > 0) {
             SDL_BlendMode sub = SDL_ComposeCustomBlendMode(
                 SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-                SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+                SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
             if (SDL_SetRenderDrawBlendMode(s_renderer, sub) != 0)
                 SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);   /* SW fallback = alpha blend */
             SDL_SetRenderDrawColor(s_renderer, (Uint8) s_pselect_dim, (Uint8) s_pselect_dim, (Uint8) s_pselect_dim, 255);
@@ -1156,7 +1177,7 @@ void re15_render_end_frame(void)
             if (s_tri_sub_blend == SDL_BLENDMODE_INVALID)
                 s_tri_sub_blend = SDL_ComposeCustomBlendMode(
                     SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-                    SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+                    SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
             uint8_t cur_slot  = s_textri_slot [order[0]];
             uint8_t cur_blend = s_textri_blend[order[0]];
             int batch_start = 0;
@@ -1265,7 +1286,7 @@ void re15_render_end_frame(void)
         if (fc->abr == 1) bm = SDL_BLENDMODE_ADD;
         else bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src per channel */
                  SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-                 SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+                 SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
         SDL_SetRenderDrawBlendMode(s_renderer, bm);
         SDL_SetRenderDrawColor(s_renderer, fc->out_r, fc->out_g, fc->out_b, 255);
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
@@ -1284,7 +1305,7 @@ void re15_render_end_frame(void)
     if (g_letterbox_level != 0) {
         SDL_BlendMode bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src per channel */
             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
         SDL_SetRenderDrawBlendMode(s_renderer, bm);
         SDL_SetRenderDrawColor(s_renderer, g_letterbox_level, g_letterbox_level,
                                g_letterbox_level, 255);
@@ -1321,7 +1342,7 @@ void re15_render_end_frame(void)
     if (s_dbgmenu_box) {
         SDL_BlendMode bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src per channel */
             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
         SDL_SetRenderDrawBlendMode(s_renderer, bm);
         SDL_SetRenderDrawColor(s_renderer, (Uint8)s_dbgmenu_box_rg, (Uint8)s_dbgmenu_box_rg, 0, 255);
         SDL_Rect dbgb = { 0x20, 0x4c, 0x100, 0x38 };     /* @0x800144E4-0x8001450C */
@@ -1517,7 +1538,7 @@ void re15_render_end_frame(void)
          * normal run) does the exact subtractive. */
         SDL_BlendMode sub = SDL_ComposeCustomBlendMode(
             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
         if (SDL_SetRenderDrawBlendMode(s_renderer, sub) == 0) {
             if (getenv("RE15_PSELECT_DIAG")) { static int once=0; if(!once){once=1; fprintf(stderr,"PSELECT DIM: SUBTRACT path (leon_dim=%d elza_dim=%d)\n",leon_dim,elza_dim);} }
             SDL_SetRenderDrawColor(s_renderer, (Uint8) leon_dim, (Uint8) leon_dim, (Uint8) leon_dim, 255);
@@ -1594,7 +1615,7 @@ void re15_render_end_frame(void)
     if (s_tfade_sub > 0) {
         SDL_BlendMode bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src */
                  SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-                 SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+                 SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT);
         SDL_SetRenderDrawBlendMode(s_renderer, bm);
         SDL_SetRenderDrawColor(s_renderer, s_tfade_sub, s_tfade_sub, s_tfade_sub, 255);
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };

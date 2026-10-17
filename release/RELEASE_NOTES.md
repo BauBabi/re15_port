@@ -137,6 +137,12 @@ Lichtplatte leuchtet rot auf den Boden, das Wasser in den Kanaelen (Stage 2, ROO
 im Original statt einer grauen Flaeche, und der Bodennebel im Kuehlraum (ROOM4090) ist hell und durchscheinend statt
 dunkler Schlieren.
 
+**Linux und Steam Deck: dunkle Halbtransparenz wie unter Windows.** Alles, was das Original vom Hintergrund abzieht
+(das fast schwarze Kanalwasser, die Figurenschatten, dunkle Effekte), zeichnete der Port unter Linux und auf dem Steam
+Deck bisher als gewoehnliche Ueberblendung: Die Grafikschnittstelle, die SDL dort verwendet (OpenGL), lehnte die
+Mischart des Ports ab, ohne dass es auffiel. Unter Windows war alles richtig. Jetzt sieht es auf allen Systemen gleich
+aus. Gefunden hat das der Linux-Testlauf dieses Release.
+
 **Verdeckung in den Stages 3 bis 6 (Rest aus Runde 37).** Seit v0.7.19 zeichnete der Port die ergaenzten Vordergrund-
 Masken der Stages 3 bis 6 nicht mehr (ein Lader-Fehler) - Figuren liefen dort ueber Maschinen, Moebel und Wandteile, die
 sie verdecken muessten. Jetzt verdecken sie wieder. Wo eine ergaenzte Maske eine Figur VOR dem Objekt uebermalen wuerde,

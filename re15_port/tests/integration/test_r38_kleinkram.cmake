@@ -27,11 +27,13 @@ file(MAKE_DIRECTORY "${_dir}")
 set(WORKDIR "${_dir}")
 # Messkopie unter eigenem Namen neben der exe (Asset-Wurzel = exe-Verzeichnis; Muster test_r34n_b_cursor.cmake).
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
-file(GLOB _alte "${_exe_dir}/re15_pc_r38q_haken_*.exe")
+# Praefix JE TEIL: ctest -j startet inventar/irons/flammenwerfer gleichzeitig; ein gemeinsamer Glob loeschte
+# die laufende Kopie eines Geschwister-Teils (Linux-Release v0.8.26: inventar "exit=No such file or directory").
+file(GLOB _alte "${_exe_dir}/re15_pc_r38q_haken_${TEIL}_*.exe")
 foreach(_k IN LISTS _alte)
     file(REMOVE "${_k}")
 endforeach()
-set(_exe "${_exe_dir}/re15_pc_r38q_haken_${_lauf_id}.exe")
+set(_exe "${_exe_dir}/re15_pc_r38q_haken_${TEIL}_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 
 macro(fail)
