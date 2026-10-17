@@ -7,12 +7,13 @@
 #   unit_r38_cursor_kasten   ROOM11F0-Cursor unter Cut 10 an 25 Lagen: Oberseite gezeichnet, Unterseite verworfen;
 #                            Gegenprobe: ohne Verwurf 4 Unterseiten-Dreiecke im Oberseiten-Umriss
 #   unit_r38_cursor_raeume   Zensus aller 23 Cursor-Raeume (gleiche Kasten-Bauart, Unterseite gegensinnig gewunden)
-#   unit_r38_cursor_wicklung Nebenwirkung auf Port-Modelle: jedes eingebackene Modell wie das Original gewickelt
-#                            (Feuerloescher gen/feuerloescher_r37.inc war es nicht: 112 von 148 Flaechen), Mechanik an
-#                            60 Blicken + GEGENPROBE v1<->v2
+#   unit_r38_cursor_wicklung Nebenwirkung auf Port-Modelle: jedes eingebackene RAEUMLICHE Modell wie das Original
+#                            gewickelt (Feuerloescher gen/feuerloescher_r37.inc war es nicht: 112 von 148 Flaechen),
+#                            Mechanik an 60 Blicken + GEGENPROBE v1<->v2; FLACHE Modelle (Schluessel, Karten, Keycard)
+#                            erkannt und an die Lage-Pruefung verwiesen (ihre Normale entscheidet die Sichtseite nicht)
 #   integration_r38_cursor   echte exe: ROOM11F0 Cut 10 (gegen das DuckStation-Bild), ROOM1150 Hebetisch-Cursor
-#                            (Lade-Weg), ROOM10D0 Ziffernfeld, Elza ROOM11F1; RE15_TRILOG + Framedump
-#                            (test_r38_cursor.cmake)
+#                            (Lade-Weg), ROOM10D0 Ziffernfeld, Elza ROOM11F1; RE15_TRILOG + Framedump; E/F: die
+#                            flachen Schluessel ROOM10F0/10F1 zeigen ihre Vorderseite (test_r38_cursor.cmake)
 # Eigene Datei (nicht tests/unit/CMakeLists.txt), s. probes/README.md.
 add_executable(probe_r38_cursor ${CMAKE_CURRENT_LIST_DIR}/../probe_r38_cursor.c)
 target_link_libraries(probe_r38_cursor PRIVATE re15_engine re15_test_support)
