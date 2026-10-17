@@ -156,3 +156,27 @@ Menues @0x80014a44-58, den die Hauptschleife @0x8001c994 liest. Danach Haltepunk
 - Offen beim Abbruch: 930e385c (integration-Riegel: Leon-Gier 0 statt 3072, Folgebild-Pruefung Clip 8 statt pst=2)
   UNGEPRUEFT, nichts gebaut/getestet seit da97247d, Messung nachher an der exe, Tests-Abschnitt, OFFEN, Fuer den Nutzer.
 - Bau gestartet (local_build.sh configure + build).
+
+## Messung vorher/nachher an der EXE — Weg wie im Spiel (2026-10-17)
+Der alte Integrations-Riegel (930e385c, UNGEPRUEFT) setzte Leon schon in Bild 0 neben Affe A (Lage o3). Gemessen
+(lauf_90edaa30): der Affe beisst im 3. aktiven Bild und rutscht dabei durch den Gang nach Norden ((-8713,-6082) ->
+(-9118,-5743) -> -5111 -> -4470 je Bild), Leon flincht deshalb mit Clip 9 statt 8 -> "F68/F127: kein Clip 8" ROT. Der Fall
+entspricht o3 (Original-Fehler beim allerersten aktiven Bild, s. oben), nicht dem Spiel. Neuer Aufbau, so wie der Nutzer
+auf die Affen trifft: Leon steht im Nordgang der Plattform (-8800,-2400, Band 1, Gier 1024 = Blick nach Sueden), Affe A
+sieht ihn und wartet in Sub 3 an seiner Nische (-8707..-8722,-6082) wie im Original o2; nach 5 s geht Leon 25 s geradeaus
+auf ihn zu (`RE15_DEBUG_JUMP=3040@250 RE15_PLAYER_POS=-8800,-2400,1024,1 RE15_INPUT_SCRIPT_START=250
+RE15_INPUT_SCRIPT=W5,U25 RE15_EXIT_AT=1000#3040`).
+
+| Lauf | Stand | KI | HP-Abzuege in 1000 Bildern | Bisse | Affe A |
+|---|---|---|---|---|---|
+| v1_std  | master cb782bda (Quellen per `git archive`, eigener Bau im Scratch) | RE2 (Standard) | **0** | 22 Biss-Starts (alle ~45 Bilder) | rutscht in den Gang bis (-9118,-4893..-4981) |
+| v1_re15 | master cb782bda | RE1.5 | **0** | 531 Biss-Bilder | dito |
+| w1_re2  | dieser Baum (Stand 930e385c + Riegel) | RE2 (Standard) | **15 x -5** | Treffer F169 (Bild 14), F225 (Bild 12), dann F282..F909 alle **57** Bilder in **Bild 13** | steht an der Nische, Lunge ostwaerts -8707 -> -8127; Gleichtakt bei **(-8307,-6082) r2787** |
+| w1_re15 | dieser Baum | RE1.5 | **15 x -5** | identisch zu w1_re2 | identisch |
+
+Vergleich Original o4 (GDB-Spur, s. oben): Gleichtakt-Treffer alle **57** Bilder in **Bild 13**, -5, Affe bei
+**(-8297,-6082) r2813**; Rueckstoss 200/150/100/50 — Port w1: z -4125 -> -3925/-3775/-3675/-3625 = **200/150/100/50**;
+Flinch-Clip im Folgebild **8** (a780 = ((1024-3053+0x400)&0xfff) = 3091 >= 0x800 -> 0 -> aca59 = 2). Affe B (blind, Sub 3
+Clip 4) kriecht im Port von -11800 nach (-13618,-10663..-10680) — Original o4 B: (-13618,-10662..-10691).
+Langer Lauf w2_tod (U45, bis Bild 1700): 21 Treffer, HP 0 -> -5 in F1308 (Leon Clip 7), Spieler-Zustand 7 ab ~F1430,
+danach der Tod-Ablauf des Ports (zurueck zum Titel) — der Affe toetet Leon wie im Original o4 (F1290 HP 0 -> -5, cmd 3).
