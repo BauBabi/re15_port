@@ -263,3 +263,14 @@ INIT-Haken: +0x1ba = -(+0x82)*0x708 (Sce_em_set-Saat `sh v0,442(s0)` @0x80042210
   Entscheid zieht rng&1 @0x80111b88-ac; FUN_8001af20 haengt im Original am a0 des Aufrufers, re15_damage.c).
 - Alt-Riegel `unit_cockroach_ai` (1) begruendet nachgezogen: INIT schreibt Clip 0 (`sb zero,148` @0x80110ce4), den
   Ruhe-Clip 0x16 setzt erst B[0] (@0x80111348-384).
+
+## Messung nachher an der EXE — angeschossener Affe (Decke, Griff, Bisse)
+Aufbau s3 (wie w1, dazu `RE15_EQUIP=3` Browning, Eingabe `W5,M1,MA0.3,M1,L2.2,W40`: zielen, EIN Schuss, 2,2 s nach links
+drehen = Ruecken zum Affen): F177 Treffer 87 -> 73 (HURT), F189 Sub 9, F214 an der Decke, F286 Sub 12, F336 Sub 13,
+**F350 Griff (Sub 15)**, Leon-Clips 1 -> 2 -> 3 (Opfer-Bank EM029) -> 16 -> 11 (eigene Bank), F541 Affe auf dem Boden, F561
+Sub 2, **kein HP-Abzug im Griff**; danach Bisse aus dem Gang **F645, 700, 763, 822, 881, 940, 999 je -5**.
+Vorher (Stand 930e385c, Subs 7..15 im alten Port-Code, Messung s2_schuss): Treffer 87 -> 73, Sub 9 spielte Clip 0xc AM
+PLATZ (-8720,-6082), F343 zurueck in Sub 0/3 — der Affe blieb in seiner Nische, kein Angriff.
+Bildkontrolle (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, Schnitt per RE15_FORCE_CUT 5/6/12, weil der Sprung-Teleport keinen
+Zonenwechsel ausloest): F340 Affe haengt kopfueber an der Decke (Schnitt 5/12), F360-F610 Griff von hinten, Ringen, Wurf,
+Aufstehen, Affe daneben — Modelle und Opfer-Posen geschlossen, keine zerrissenen Meshes.
