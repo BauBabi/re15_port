@@ -449,3 +449,18 @@ RE-Belege (selbst gelesen, info/re2leon):
 * Item-Bild: `ITPS.ITP` Block 31 (@0x5D000, 0x3000 B) = `ITPS/ITPS3100_0549.bmp` (derselbe Schluessel).
 * Texel-Helligkeit (sichtbare Texel, Rec.601): Small Key Mittel 102 / Median 104 (51 % > 100), Cabin Key 69 / 74
   (22 %), P. Room Key 114 / 128; Kork der Pinnwand L ~ 63.
+
+### 9.4 Fortsetzung nach dem Sitzungslimit (2026-10-17 ab 04:55)
+Der erste Anlauf der Nachbesserung 1 wurde ~23:45 vom Sitzungslimit beendet (Commits ecb84654, 801d3c55, ebc05a7e
+"Umsetzung, UNGETESTET", 2129a121 "Reste, UNGEPRUEFT"; die Verweise auf "Dossier 9.5" im Werkzeug-Kopf zielten auf
+einen nie geschriebenen Abschnitt — er folgt hier als 9.5). Pruefung des vorgefundenen Stands:
+* Erzeugte Dateien: `schluessel_export.py` und `itemorte_export.py --schreiben` mit umgelenktem Ziel (Scratchpad
+  `nb1/regen.py`) -> `gen/schluessel_r36.inc`, `gen/itemorte_r38_lage.inc`, `gen/itemorte_r38_md1.inc` **bitgleich** mit
+  dem Commit-Stand (`cmp` ohne Ausgabe) — nichts von Hand geaendert. Werkzeug-Ausgabe: Parking Lot Key s 6,4636,
+  gezeichnete Huelle x 132,51..144,45 y 77,28..85,28, 0 Verkleinerungsschritte (MD1 unveraendert gegen den abgenommenen
+  Stand); Prison Key (Small Key) s 5,3297 -> **5,3032** nach 10 Schritten, gezeichnete Huelle x 132,53..144,49
+  y 78,35..84,28, sichtbar 736 x 345 Einheiten, 2596 sichtbare Texel, rot (1024,0,0).
+* Doku-Fehler gefunden: Kopf von `schluessel_export.py` nannte das Icon "Tile 31 @0x9168" — 31 x 1200 = 37200 =
+  **0x9150** (die Werkzeug-Ausgabe druckt `@0x009150`; Code rechnet `31 * 1200`, war also richtig). Kopf berichtigt.
+* exe im Baum (23:44) ist nicht sicher der Commit-Stand -> neu bauen, dann messen (Skala 1 und 3, gegen den Parking Lot
+  Key), dann die gezielten Riegel.

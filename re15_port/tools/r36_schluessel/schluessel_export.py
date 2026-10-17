@@ -27,7 +27,7 @@ den Resident Evil 2 Items aus ..."), Begruendung im Dossier 2.4:
     Weltmodell  ROOM10F0.RDT Prop-Slot 4: MD1 @0x001650 236 B (md5 c5d49ef60b6b111ecac53a19652f3278),
                 TIM @0x0215BC 34848 B (md5 326b822bb81b07ecb6d3544ce6e094a6) — Platzierung
                 room10F0 sub00 @0x006F0 (Item_aot_set Item 0x1F, md1 4), Obj_model_set @0x00706 Attribut 0x0010
-    Icon        ITEMALL.PIX Tile 31 @0x9168, 1200 B (== ITEMALL/ITEMALL_032.TIM, Index 0 kommt nicht vor)
+    Icon        ITEMALL.PIX Tile 31 @0x9150 (= 31 x 1200), 1200 B (== ITEMALL/ITEMALL_032.TIM, Index 0 kommt nicht vor)
     Item-Bild   ITPS.ITP Block 31 @0x5D000, 0x3000 B
 
 EINZIGE DATEN-AENDERUNG: die zwei Rechtecke im TIM-Kopf des Item-Bilds. RE2 laedt das Bild an
