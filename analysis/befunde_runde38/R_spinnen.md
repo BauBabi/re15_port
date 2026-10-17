@@ -28,6 +28,8 @@ Baum `.claude/worktrees/r38_spinnen` (Zweig `r38/spinnen`, Basis e2cc7673). Ange
 - 06:00 Baby-Wurzel-Schwanz portiert (Wandpass + Kugel-Schub, 2.8, 45da274d/02982a08), gemessen (4.4).
 - 06:30 Tests C/D auf die unabhaengige Messgroesse umgestellt, Gegenprobe 2 (5); Gift-Tor am erreichbaren Spieler
   (2.9, Test B3, 96eca34b). Gezielte Tests 39/39 gruen (5). Endmessung in der exe (4.4).
+- 07:10 Echtlauf-Riegel integration_r38_spinnen_echtlauf (Leon 2030 / Elza 2031, Auswerter pruef_log, 76272c5a);
+  Endstand gezielt 40/40 gruen (5). Abschluss-Commit fix(r38-spinnen).
 - ⛔ Gemeinsamer scratchpad: das Laufskript `lauf.sh` im scratchpad-Wurzelordner wurde von einem anderen Agenten
   (Abnahme Spur B) ueberschrieben; ein Aufruf brach mit "exe fehlt" ab, bevor er etwas anlegte. Eigene Skripte liegen jetzt
   in `scratchpad/R38_spinnen_fort2/` und im Baum unter `R_belege/` (lauf.sh, ana_bo.py).
@@ -474,9 +476,10 @@ Spieler |y - bu| > 100 in 0 Bildern; Laufzeit 114 s. Gegenprobe des Auswerters a
 **2 FAIL** — "Babys bleiben auf dem Steg" (3281 von 4624 Boden-Bildern schwebend, zuletzt (10830,5054) ueber Boden 0) und
 "Kugel-Schub" (min Abstand 112).
 **Gezielte Tests (Endstand, keine volle Suite)**, `ctest --test-dir re15_port/build -R "<R>" --timeout 600 --output-on-failure` mit
-R = `^(unit_r38_spinnen|unit_damage|unit_bleed_rng|unit_enemy_ai|unit_spider_ai|unit_adult_spider_ai|unit_re2_spider_ai|unit_re2_spider_water_2090|unit_re2_baby_spider_dmg|unit_re2_hit_repeat_crow_spider|unit_re2_room1090_ab|unit_ai_flavor_mixed|probe_spinne_elevation|unit_esp_parse|unit_espr_11e0|integration_r34_plattform_esp_eintritt|unit_ems|unit_re2_ems|unit_re2_enemse|unit_re2_enemse_bank|unit_item_use|unit_enemy_body_push|unit_1090_npc_prop_push|unit_1090_fire_pin|unit_1090_flame_out_pin|probe_1090_flame_touch|unit_scd_opcodes|unit_aot_sce_census|unit_r30_granate|unit_r35_granate|unit_r36_granate|unit_r36_objfall|unit_r36_dachkiste_zellschub|unit_r36_szenenleon_schub|unit_r37_elzaems_toc|unit_r37_elzaems_weiche|unit_r37_elzaems_raeume|unit_r37_fahrstuhl_lift2030|unit_r34_re2fx)$`
+R = `^(unit_r38_spinnen|integration_r38_spinnen_echtlauf|unit_damage|unit_bleed_rng|unit_enemy_ai|unit_spider_ai|unit_adult_spider_ai|unit_re2_spider_ai|unit_re2_spider_water_2090|unit_re2_baby_spider_dmg|unit_re2_hit_repeat_crow_spider|unit_re2_room1090_ab|unit_ai_flavor_mixed|probe_spinne_elevation|unit_esp_parse|unit_espr_11e0|integration_r34_plattform_esp_eintritt|unit_ems|unit_re2_ems|unit_re2_enemse|unit_re2_enemse_bank|unit_item_use|unit_enemy_body_push|unit_1090_npc_prop_push|unit_1090_fire_pin|unit_1090_flame_out_pin|probe_1090_flame_touch|unit_scd_opcodes|unit_aot_sce_census|unit_r30_granate|unit_r35_granate|unit_r36_granate|unit_r36_objfall|unit_r36_dachkiste_zellschub|unit_r36_szenenleon_schub|unit_r37_elzaems_toc|unit_r37_elzaems_weiche|unit_r37_elzaems_raeume|unit_r37_fahrstuhl_lift2030|unit_r34_re2fx)$`
 (Spinnen-KI beider Geschmaecker, Babys/1090-Feuer-Emitter, Schaden/Gift/Gegengift, ESP-Routinen, EMS-Baenke, SCD
-Sce_em_set, Objekt-/Koerperschub): **"100% tests passed, 0 tests failed out of 39"**.
+Sce_em_set, Objekt-/Koerperschub, Echtlauf Leon/Elza): **"100% tests passed, 0 tests failed out of 40"** (Endstand,
+Total Test time 124.49 s; vorher ohne den Echtlauf-Riegel 39/39).
 
 ## 6. OFFEN
 
