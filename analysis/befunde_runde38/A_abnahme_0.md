@@ -123,3 +123,16 @@ spielerunabhaengig): `CONTINUE: resumed in room 1151`, `F101 raum=1151 aktiv cur
 | 2040 Debug-Sprung, Bild 200 | 38 Punkte: dunkler 4x4-Block (3,10,12) neben Leons Hand wird Hintergrund (48,48,44) | Rueckseite eines Raum-Objekts, nicht Leon |
 | 20A0 Debug-Sprung, Cut 0, Bild 200 | 0 Punkte | (Spur W: Rolladen in Cut 2, Dossier §4.4 — in der Integration nachmessen) |
 | 11D0 Cut 7 (Debug-Sprung, RE15_FORCE_CUT=7) | 493 Punkte (0..35,196..225): helles Blatt (Rueckseite der B1-Lageplan-Karte) lag alt AUF der Mauerkrone ausserhalb des Raums, neu weg (`scratchpad/abn/m7_11d0_cut7_alt_neu.png`) | Artefakt beseitigt; Karte in den Cuts mit Kamera im Raum sichtbar (Scan des Bau-Agenten 14/15) |
+
+Weiterer Cursor-Raum ausserhalb Stage 1 (Stichprobe "zum Beispiel"): ROOM5050 Debug-Sprung, Cut-Durchlauf 0..5 mit
+RE15_FORCE_CUT (`runs/m8_5050_c*`): Cursor (Platz 4) nur in Cut 4/5 im Bild; neu 0 von 27968 rueckseitig, alt (Cut 4)
+4256 von 32224; Bild `scratchpad/abn/m8_5050_c4_alt_neu.png`: alt mit innerer dunkler Kopie, neu ohne. (ROOM1100: in
+keinem der 13 Cuts liegt der Cursor ohne laufendes Raetsel im Bild — nicht weiter verfolgt, gleiche Bauart laut
+unit_r38_cursor_raeume.)
+
+## 7. Gegenproben der Riegel (selbst, an MEINEN Laeufen statt an denen des Bau-Agenten)
+
+`probe_r38_cursor bild` auf die Ausgaben der echten Wege (§3/§4): alt 11F0 F640 -> **FEHLER (3)** (10345 rueckseitige
+Dreiecke, 33 reingruene Punkte im Rahmen, 21 Abweichungen der Klassenkarte), neu -> OK; alt 1150 F140 -> **FEHLER (2)**
+(8056 / 33), neu -> OK. `probe_r38_cursor sicht 8` auf 10F0 Cut 0: alt -> **FEHLER (1)** (4 Dreiecke MAC0 < 0), neu ->
+OK (4 Dreiecke MAC0 > 0). Die Riegel messen also das Behauptete und schlagen am alten Stand an.
