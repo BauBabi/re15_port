@@ -18,6 +18,9 @@
 #   unit_r38_dining1141_weg1131        Nachbesserung 1 M3: Elza geht waehrend des Wartens hinaus -> John fort, Dachtuer offen
 #   integration_r38_dining1141_w|z|d|l echte exe (test_r38_dining1141.cmake): Elza-Weg 1021 -> 1011 -> 1021, 1131 -> 1141
 #                                      -> 1171 mit Bildern/Ton-Mitschnitt, Leon 1140
+#   integration_r38_dining1141_r       Nachbesserung 1 M1: echte 1021-Szene (exe), Roys Leiche im SELBEN Besuch -> msg 40
+#   integration_r38_dining1141_a       Nachbesserung 1 M3: Elza auf Johns Bahn -> John wartet; Elza in den Dachgang -> Abgang
+#                                      ohne Schub (Zustands-Log: Elza waehrend Cut 7 unverrueckt)
 #   integration_r38_dining1141_s       Nachtrag 2 per Framedump: zwei Laeufe (mit/ohne Johns Bild), JEDES Bild von 1141
 #                                      verglichen (Werkzeug test_r38_dining1141 sicht) — John erscheint/verschwindet nie
 #                                      ohne Bewegung (Fortsetzung 4, Dossier 4.4)
@@ -38,7 +41,7 @@ endforeach()
 #   Je Teil ein eigener Test (gemessen unter Last 2026-10-16: W ~25 min, Z ~8, D ~40, L ~10 — zusammen ueber jedem
 #   vernuenftigen Einzel-Zeitlimit); eigener Arbeitsordner und eigene exe-Kopie je Teil.
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r38_dining1141.cmake)
-    foreach(_teil W Z D L S)
+    foreach(_teil W Z D L S R A)
         string(TOLOWER ${_teil} _klein)
         add_test(NAME integration_r38_dining1141_${_klein}
                  COMMAND "${CMAKE_COMMAND}"

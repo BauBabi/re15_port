@@ -12,6 +12,9 @@ cmake_minimum_required(VERSION 3.16)
 #      Tuersperre msg 41 an der Doppeltuer; Kampfende (Messhaken RE15_R38F_GORILLAS_TOT) -> Johns Abgang in Cut 7;
 #      Dachtuer -> ROOM1171. Zustands-Log: John nie gesprungen, beim Parken hinter der Kamera von Cut 7.
 #   L  LEON 1140: Gemaelde -> Rolladen-Ton 0x3B 0x0C/0x0A/0x0B (Punkt 3)
+#   R  ELZA 1021 mit der ECHTEN Szene (Nachbesserung 1 M1): danach Roys Leiche im SELBEN Besuch -> msg 40
+#   A  ELZA Johns Abgang (Nachbesserung 1 M3): Elza auf Johns Bahn -> er wartet; sie geht in den Dachgang -> Abgang, Elza
+#      unverrueckt (kein Schub), John geparkt, Dachtuer -> 1171
 #   S  ELZA wie D bis zur Dachtuer, ZWEI Laeufe (mit/ohne Johns Bild), jedes Bild von 1141 zurueckgelesen und verglichen:
 #      John erscheint/verschwindet in keinem Bild ohne Bewegung (Nachtrag 2; Werkzeug test_r38_dining1141 sicht)
 #
@@ -22,7 +25,7 @@ cmake_minimum_required(VERSION 3.16)
 # @0x02216 stellt Slot 6 wieder scharf).
 # Bilder je Lauf per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) und Ton-Mitschnitt RE15_AUDIO_CAP_SYNC im Arbeitsordner;
 # geprueft werden debug.log, state.txt und wegplan_log.txt.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=W|Z|D|L|S] [-DRE15_R38F_WERKZEUG=<test_r38_dining1141>] -P test_r38_dining1141.cmake
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=W|Z|D|L|S|R|A] [-DRE15_R38F_WERKZEUG=<test_r38_dining1141>] -P test_r38_dining1141.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r38_dining1141: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
@@ -465,6 +468,208 @@ ENDE
                 endif()
             endforeach()
         endif()
+    endif()
+endif()
+
+# --- R: die ECHTE 1021-Szene, danach Roys Leiche im SELBEN Besuch (Nachbesserung 1 M1) ------------------------------
+# Abnahme 0 E1a: nach der Szene liess sich Roys Leiche nicht untersuchen (Zone Slot 6 nur im Raumaufbau, main00 @0x01E24);
+# msg 40 kam erst nach Verlassen und Wiederbetreten. Stand vor der Szene = nach ROOM1211 (ablauf_elza.md E12, wie E1a):
+# (4,0xF1) (3,0x74) (4,0xEC) (4,0xFC) (4,0x60) (3,0xC9) (3,0x2C) (3,0xBA) + Tot-Bits der Zombies 1021/1011. Start im
+# Westteil wie vom 1041-Eintritt, in die Begehzone Slot 5 (main00 @0x01DE2, x -13100..-11000) gehen -> Szene; danach
+# zu Fuss an die Leiche (Vorwaerts-Punkt (-4350,-9600) von (-3730,-9600) Blick -X) und druecken (Leiche 1+4).
+if(TEIL MATCHES "R")
+    f_lauf(r ELZA "2600#1021" "RAUM 1021
+GEHE -12050 -7100 150
+WARTE 30
+GEHE -3730 -9600 100
+BLICK 2048
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+ENDE
+" "RE15_SET_FLAG=4:0xF1,3:0x74,4:0xEC,4:0xFC,4:0x60,3:0xC9,3:0x2C,3:0xBA,7:0xAA,7:0xAB,7:0xAD,7:0xB5,7:0xB8,7:0xB9;RE15_DEBUG_JUMP=1021@gp;RE15_PLAYER_POS=-15500,-7100,0;RE15_FRAMEDUMP=1700-2600/15:fd_" _r _wpr)
+    pruef(R _r "ROOM1021 Ereignis 2 (Szene sub02) -> Programm SZENE1021")
+    pruef(R _r "[msg] room=1021 id=0 ")
+    pruef(R _r "[msg] room=1021 id=8 ")
+    pruef(R _r "[msg] room=1021 id=40")
+    # im SELBEN Besuch: msg 40 nach dem Ende der Szene (msg 8), 1021 nur EINMAL geladen
+    string(FIND "${_r}" "[msg] room=1021 id=8 " _p8)
+    string(FIND "${_r}" "[msg] room=1021 id=40" _p40)
+    set(_b FALSE)
+    if(_p8 GREATER -1 AND _p40 GREATER _p8)
+        set(_b TRUE)
+    endif()
+    pruef_wahr(R _b "msg 40 (Hinweis) nach dem Ende der Szene (msg 8)")
+    string(FIND "${_r}" "loaded room1021.rdt" _q1)
+    string(FIND "${_r}" "loaded room1021.rdt" _q2 REVERSE)
+    set(_b FALSE)
+    if(_q1 GREATER -1 AND _q1 EQUAL _q2)
+        set(_b TRUE)
+    endif()
+    pruef_wahr(R _b "ROOM1021 nur EINMAL geladen: der Hinweis kam im Besuch der Szene, ohne Verlassen und Wiederbetreten")
+endif()
+
+# --- A: Johns Abgang mit Elza in seiner Bahn und im Dachgang (Nachbesserung 1 M3) ----------------------------------
+# Abnahme 0 E10/E5: Johns Abgangslauf schob Elza (Koerper-Schub FUN_8002aec4). Weg wie D bis nach der Szene; dann steht
+# Elza auf Johns sichtbarer Bahn (E10-Lage (-7418,-14952)), waehrend die Gorillas sterben (Messhaken nach 600 freien
+# Kampfbildern) -> John WARTET; danach geht sie nach Norden in den Dachgang: beim Verlassen der Bahn (z > -8875) beginnt
+# der Abgang, sie steht dann auf Johns (unsichtbarem) Weg — er laeuft ohne Schub durch (Bit 0x2); danach weiter zur
+# Dachtuer -> 1171. Zustands-Log: Cut 7 erst NACH dem Verlassen der Bahn, Elza waehrend Cut 7 unverrueckt, John geparkt.
+if(TEIL MATCHES "A")
+    f_lauf(a ELZA "60#1171" "RAUM 1131
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+BLICK 0
+AKTION
+RAUM 1141
+WARTE 600
+GEHE -7600 -12000 150
+GEHE -8150 -10250 80
+BLICK 2048
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 60
+AKTION
+WARTE 120
+GEHE -7418 -14952 100
+BLICK 3072
+WARTE 1200
+GEHE -7400 -9600 100
+GEHE -7342 -4062 100
+WARTE 120
+GEHE -7250 -1000 80
+BLICK 3072
+AKTION
+RAUM 1171
+WARTE 30
+ENDE
+" "${_nach1021};RE15_GIVE=0x43:1;RE15_DEBUG_JUMP=1131@gp;RE15_PLAYER_POS=-1300,-13900,0;RE15_R38F_GORILLAS_TOT=600;RE15_R38F_GORILLAS_STARR=1;RE15_FRAMEDUMP=90-9000/15:fd_" _a _wpa)
+    pruef(A _a "ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG")
+    pruef(A _a "MESSHAKEN RE15_R38F_GORILLAS_TOT")
+    pruef(A _a "Se_on bank=14 id=0 -> RE2-Tuerbank")
+    pruef(A _a "loaded room1171.rdt")
+    # Zeitpunkt des Messhakens (Bild in 1141) aus debug.log
+    string(REGEX MATCH "\\[dining\\] F([0-9]+) MESSHAKEN RE15_R38F_GORILLAS_TOT" _m "${_a}")
+    set(_f_tot "${CMAKE_MATCH_1}")
+    set(_st "${_basis}_a/state.txt")
+    if(EXISTS "${_st}" AND NOT "${_f_tot}" STREQUAL "")
+        file(STRINGS "${_st}" _zeilen)
+        set(_in1141 0)
+        set(_fvor -1)
+        set(_fertig 0)
+        set(_c7 "")            # erstes Bild mit cam=7 nach dem Messhaken
+        set(_vor_c7 "")        # Elza im Bild davor
+        set(_c7_lage "")       # Elza waehrend Cut 7 (erste Zeile)
+        set(_c7_abw 0)         # Zeilen mit cam=7, in denen Elza woanders steht
+        set(_in_bahn_n 0)      # Bilder nach dem Messhaken mit Elza in der Bahn und ohne Cut 7
+        set(_park 0)
+        set(_nach_c7 "")       # Elza in der ersten Zeile nach Cut 7
+        set(_ex "")
+        set(_ez "")
+        foreach(_z IN LISTS _zeilen)
+            if(_z MATCHES "^F([0-9]+) ")
+                set(_fn ${CMAKE_MATCH_1})
+                if(_fn LESS _fvor AND _in1141)
+                    set(_fertig 1)
+                endif()
+                set(_fvor ${_fn})
+            endif()
+            if(_fertig)
+                break()
+            endif()
+            if(_z MATCHES "\\[1 t=49 ")
+                set(_in1141 1)
+            endif()
+            if(NOT _in1141 OR _fn LESS _f_tot)
+                continue()
+            endif()
+            string(REGEX MATCH "PL\\((-?[0-9]+),(-?[0-9]+)," _pl "${_z}")
+            set(_ex ${CMAKE_MATCH_1})
+            set(_ez ${CMAKE_MATCH_2})
+            string(REGEX MATCH "cam=([0-9]+)" _c "${_z}")
+            set(_cam ${CMAKE_MATCH_1})
+            if(_z MATCHES "@\\(-30000,-30000,")
+                set(_park 1)
+            endif()
+            if(_cam EQUAL 7)
+                if(_c7 STREQUAL "")
+                    set(_c7 ${_fn})
+                    set(_c7_lage "${_ex},${_ez}")
+                elseif(NOT "${_ex},${_ez}" STREQUAL "${_c7_lage}")
+                    math(EXPR _c7_abw "${_c7_abw} + 1")
+                endif()
+            else()
+                if(_c7 STREQUAL "")
+                    set(_vor_c7 "${_ex},${_ez}")
+                    if(_ex GREATER_EQUAL -8450 AND _ex LESS_EQUAL -6450 AND _ez GREATER_EQUAL -22400 AND _ez LESS_EQUAL -8875)
+                        math(EXPR _in_bahn_n "${_in_bahn_n} + 1")
+                    endif()
+                elseif(_nach_c7 STREQUAL "")
+                    set(_nach_c7 "${_ex},${_ez}")
+                endif()
+            endif()
+        endforeach()
+        message(STATUS "     A: Messhaken F${_f_tot}, Cut 7 ab F${_c7}, Elza davor (${_vor_c7}), in Cut 7 (${_c7_lage}), danach (${_nach_c7}), Bilder in der Bahn ${_in_bahn_n}")
+        set(_b FALSE)
+        if(_in_bahn_n GREATER 300)
+            set(_b TRUE)
+        endif()
+        pruef_wahr(A _b "Gorillas tot, Elza auf Johns Bahn: ${_in_bahn_n} Bilder ohne Abgang (John wartet)")
+        set(_b FALSE)
+        if(NOT "${_c7}" STREQUAL "" AND NOT "${_vor_c7}" STREQUAL "")
+            string(REPLACE "," ";" _v "${_vor_c7}")
+            list(GET _v 1 _vz)
+            if(_vz GREATER -8875)
+                set(_b TRUE)
+            endif()
+        endif()
+        pruef_wahr(A _b "Abgang (Cut 7 ab F${_c7}) erst, nachdem Elza die Bahn verlassen hat (Elza davor ${_vor_c7}, Nordrand -8875)")
+        # Im Ausloesebild geht Elza noch (sie verlaesst die Bahn zu Fuss): der Schritt vom letzten Bild vor Cut 7 ist ein
+        # Gehschritt, kein Schub (Schub der Abnahme: 856..4202 Einheiten). Waehrend Cut 7 und danach: exakt dieselbe Lage.
+        set(_schritt 99999)
+        if(NOT "${_vor_c7}" STREQUAL "" AND NOT "${_c7_lage}" STREQUAL "")
+            string(REPLACE "," ";" _v "${_vor_c7}")
+            string(REPLACE "," ";" _w "${_c7_lage}")
+            list(GET _v 0 _vx)
+            list(GET _v 1 _vz)
+            list(GET _w 0 _wx)
+            list(GET _w 1 _wz)
+            math(EXPR _dx "${_wx} - (${_vx})")
+            math(EXPR _dz "${_wz} - (${_vz})")
+            if(_dx LESS 0)
+                math(EXPR _dx "-(${_dx})")
+            endif()
+            if(_dz LESS 0)
+                math(EXPR _dz "-(${_dz})")
+            endif()
+            math(EXPR _schritt "${_dx} + ${_dz}")
+        endif()
+        set(_b FALSE)
+        if(_c7_abw EQUAL 0 AND _schritt LESS_EQUAL 150 AND "${_nach_c7}" STREQUAL "${_c7_lage}")
+            set(_b TRUE)
+        endif()
+        pruef_wahr(A _b "Elza waehrend des ganzen Abgangs unverrueckt: davor (${_vor_c7}, Gehschritt ${_schritt}) -> Cut 7 (${_c7_lage}, ${_c7_abw} Abweichungen) = danach (${_nach_c7})")
+        pruef_wahr(A _park "John beim Abgang geparkt")
+    else()
+        list(APPEND _fehler "A: kein state.txt oder kein Messhaken")
     endif()
 endif()
 
