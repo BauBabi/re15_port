@@ -408,6 +408,35 @@ Port-eigene Props; Feuerloescher-Modell):
 * Der in Runde 37 neu gebaute Feuerloescher war als einziges Port-Modell "falsch herum" gewickelt und waere mit dem
   Verwurf von innen gezeichnet worden; sein Modell ist neu erzeugt (nur die Eckenreihenfolge, Form/Textur gleich) und
   sieht wieder genau so aus wie vorher (§4.5).
+* Der Parkplatz-Schluessel (Parking Lot Key) im Funkraum ROOM10F0 lag seit Runde 36 mit der RUECKSEITE nach oben —
+  ein flaches RE2-Modell hat nur eine Vorderseite, und RE2 selbst legt genau dieses Modell gewendet hin. Mit dem
+  Verwurf waere er unsichtbar gewesen; er liegt jetzt gewendet an derselben Stelle (Kopf links wie bisher) und zeigt
+  seine Vorderseite (§3c/§4.6). Elzas Prison Key in ROOM10F1 lag schon richtig herum.
+* Ebenfalls wie im Original: eine Lageplan-Karte oder ein Dokument an der Wand ist aus einer Kamera HINTER der Wand
+  nicht mehr zu sehen (ROOM11D0 Cut 7: die B1-Karte schien vorher durch die Wand; ROOM1020 Cut 5 Dokument 3 hochkant,
+  14 Punkte; ROOM1010 Cut 2 ohne sichtbare Aenderung). In allen anderen Cuts sind sie unveraendert sichtbar (§4.6).
 * Keine neuen Assets, keine Sprachdateien, keine Bedienaenderung, keine Entscheidungsfrage. Neue Engine-Datei
   `engine/src/nclip_r38.c` (Android: release/build_android.sh verwirft den GLOB-Cache bereits); geaendert
-  `engine/src/gen/feuerloescher_r37.inc` (mit tools/r37_feuerloescher/feuerloescher_modell.py erzeugt).
+  `engine/src/gen/feuerloescher_r37.inc` (mit tools/r37_feuerloescher/feuerloescher_modell.py erzeugt),
+  `engine/src/schluessel_r36.c` + `include/re15_schluessel_r36.h` (Wendung des Parking Lot Key).
+
+## 8. Fuer die Integration
+
+* **Regel fuer JEDES Port-Modell, das durch die Raum-Prop-Schleife (main.c pc_load_room_prop_set) oder den
+  Hebetisch-Cursor geht:** sichtbar ist nur, was mit NCLIP MAC0 >= 0 auf v0,v1,v2 auf dem Schirm liegt (§2.1).
+  RAEUMLICHE Modelle muessen wie das Original gewickelt sein (Umlauf-Normale gegen die Licht-Normale, w < 0;
+  unit_r38_cursor_wicklung); FLACHE Modelle muessen so LIEGEN, dass ihre Vorderseite (die Seite, von der die
+  Umlauf-Normale (v1-v0)x(v2-v0) weg zeigt) zur Kamera zeigt — wie RE2 (ROOM6150 @0x02C98 gewendet, ROOM2020
+  @0x01D90 / ROOM1050 @0x01274 ungewendet). Pruefen an der exe: `analysis/befunde_runde38/A_belege/
+  port_modelle_sicht.py <aus> --exe neu <RAUM[:elza]>` (je Cut, Platz mit "KEIN MAC0>0" = unsichtbar).
+* **Spur K (r38/itemorte):** `schluessel_r36.c` / `re15_schluessel_r36.h` — Konflikt an der Lage des Schluessels:
+  **K's Seite nehmen** (K's Pinnwand-Lage ersetzt die Konsolen-Lage samt RE15_R36Q_X/Y/Z/ROT_Y; meine Konstanten
+  RE15_R36Q_PARK_ROT_X/PRISON_ROT_X und die `rot_x`-Zeile entfallen). K's Lage zeigt die Vorderseite (gerechnet §4.6:
+  g_Welt = (0,0,-1) vor der Wand z = -3400); integration_r38_cursor E/F (10F0 Cut 0+5, 10F1 Cut 0+6) prueft das danach
+  an der exe. `gen/feuerloescher_r37.inc`: K aendert es nicht -> die neu gewickelte Fassung dieses Zweigs gilt; erzeugt
+  K es spaeter neu, dann mit dem Werkzeugstand dieses Zweigs (§3b).
+* **Spur F (r38/dining1141):** Herz-Schluessel (re15_r38f_key_md1, flach, Umlauf-Normale +Y) liegt ungewendet auf dem
+  Boden von ROOM1011 wie in RE2 ROOM2020 @0x01D90 -> Vorderseite oben, mit dem Verwurf sichtbar (§4.6). Nicht in die
+  Normalen-Pruefung von unit_r38_cursor_wicklung aufnehmen (flach); falls gewuenscht, dort `port_dazu(...,
+  re15_dining_r38_md1_bytes(0x1011, &n))` — der Teil erkennt es als flach.
+* Die uebrigen laufenden Spuren fuegen keine Weltmodelle hinzu (git diff je Zweig auf main.c/gen/*.inc, 2026-10-17).
