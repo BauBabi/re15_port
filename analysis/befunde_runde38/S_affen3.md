@@ -180,3 +180,42 @@ Flinch-Clip im Folgebild **8** (a780 = ((1024-3053+0x400)&0xfff) = 3091 >= 0x800
 Clip 4) kriecht im Port von -11800 nach (-13618,-10663..-10680) — Original o4 B: (-13618,-10662..-10691).
 Langer Lauf w2_tod (U45, bis Bild 1700): 21 Treffer, HP 0 -> -5 in F1308 (Leon Clip 7), Spieler-Zustand 7 ab ~F1430,
 danach der Tod-Ablauf des Ports (zurueck zum Titel) — der Affe toetet Leon wie im Original o4 (F1290 HP 0 -> -5, cmd 3).
+
+## Weitere Treffer-Wege des Originals (Subs 7..15) — Befund 2026-10-17
+Der Vorgaenger hat nur die Subs 0..6 umgestellt; 7..15 liefen weiter im alten Port-Code ("LEAP-ESCAPE / FLIGHT-ESCAPE
+-> idle"). Selbst disassembliert (STAGE3.BIN, Tabellen A @0x8011ecc4 / B @0x8011ed04):
+- **B[7] 0x801123fc Sprung** (Clip 0x14, +0x8c (rng&0x1f)+180 / beim Absprung Bild 0xa (rng&0x1f)+200, +0x1e0 = 1,
+  ballistisch FUN_8001c1a4(+0x8c, 600, -60, +0x1ba) @0x8011261c, Landung -> SE 1, +0x8c 100, Phase 3 -> Sub 4); in der
+  Luft bei Bild 0x13: **Spieler-HP < 50** (`slti v0,v0,50` @0x8011269c) + +0x93 == 0 + a804(0x1388,0xc0) + +0x1dc == 0
+  -> **Sub 8** + SE 6 @0x801126c0-710.
+- **B[8] 0x80112784 Todessprung** (Clip 0x15): Quadrate Records 6/10 r 0x320 (@0x80112a34/@0x80112a54), Fenster
+  @0x8011ed54 = {8,9,10}; Treffer: **HP -= 500** (`addiu v0,v0,-500` @0x80112b00), +0x1dc = 0x12c, SE 0, aca58 = 6
+  (`sw` @0x80112b24), acbfc/acbcc/acbd0 = Affe/+0x178/+0x17c, +0x93 |= 1, Wundstempel FUN_80037edc(0,0x32) @0x80112b64.
+- **HURT-Ausgang** (Spur 0 @0x801149ac-a2c): +0x1e3 (INIT-Standard 1 @0x80110e18) -> **Sub 9**. Port: dorthin, aber der
+  alte Sub-9-Code spielt nur Clip 0xc am Platz und kehrt nach Sub 0 zurueck (gemessen s2_schuss, Browning RE15_EQUIP=3:
+  Treffer 87 -> 73, HURT, Sub 9 Clip 12 am Platz (-8720,-6082), F343 Sub 0, F344 Sub 3 — der Affe bleibt in seiner Nische).
+- **B[9] 0x80112d48 Sprung an die Decke** (Phasen @0x801002d4): Clip 0xc, Bild 0x10 -> +0x1e0 = 1, Kasten +0x78 =
+  @0x8011ec48[+0x1e4] (**Radius 800** statt 1100, Hoehe 1530 @0x8011ec20), FUN_8001c1a4(0, 0x190, -20, +0x1ba) bis
+  y = +0x1ba - 2700 (@0x80112f10-28) -> Sub 12.
+- **B[12]/A[13]/B[13]** Decke: kriechen (Clip 0xf / 0x18, Fuss-Sperre FUN_80115c3c), Lenken auf den Spieler;
+  **B[14] 0x80113e90 Hieb von der Decke** (Clip 0x1a): Fenster @0x8011ed5c {8..13} Record 6 / @0x8011ed64 {43..48}
+  Record 10, r 0x320; Treffer **HP -10** (@0x801141f4), +0x1dc 0x2d, SE 5, aca58 = 2, aca59 = a780+2.
+  **B[15] 0x801142c4 Griff von der Decke** (A[13]: Abstand < 0x7d0, a780(Spieler) != 0 = Spieler kehrt den Ruecken zu,
+  +0x1dc == 0 @0x80113a24-a94): y = +0x1ba + 400, aca58 = 5, Opfer-Bank +0x178/+0x17c, Ringen +0x9c = 100 - Druecken
+  (FUN_80037024), danach Fall auf den Boden (y = +0x1ba, Kasten zurueck) -> Sub 2. **B[10] 0x801130f8** Absprung von
+  der Decke -> Sub 4.
+
+### Original gemessen (DuckStation-GDB, Werkzeug affen_spur2.py = affen_spur.py + `--write Bild:Adresse:Bytes`)
+Aufbau wie w1 (Leon (-8800,-2400) Band 1), in Bild 150 Affe A in den HURT gesetzt (+0x4..7 = 02 03 00 00, HP 73) —
+dieselbe Lage wie nach einem ueberlebten Treffer (Spur 0 -> Ausgang Sub 9).
+- **o7 (Leon blickt zum Affen, Gier 1024):** F180 Sub 9, F205 y -1800 -> **-4500** (Decke), Kasten 0x8011ec20; F277
+  Sub 12 (Clip 15), F327 Sub 13 (Clip 24) — der Affe kriecht AN DER DECKE durch den Gang (z -6371 -> -4994 -> -3763),
+  den er am Boden (Radius 1100) nicht passiert; F377.. Sub 14 Hiebe (Clip 26) im Wechsel mit Sub 13, alle ~71 Bilder;
+  **kein HP-Abzug** in 1600 Bildern (Leon wird nur geschoben). Kein Griff (a780 = 0: Leon blickt den Affen an).
+- **o8 (Leon kehrt den Ruecken zu, Gier 3072):** wie o7 bis F337; **F341 Sub 15 = Griff**: Affe faellt auf
+  (-8818,-1400,-3283), Spieler cmd 05 (aca5a 1 -> 2 -> 3 -> 5 -> 6 -> 7 -> 9), Spieler-Clips 1/2/3/16/11 aus der
+  Opfer-Bank; **kein HP-Abzug im Griff**; F532 Affe auf dem Boden (-9118,-1800,-3547), Kasten 0x8011ec14, F552 Sub 2,
+  F573 Spieler frei; danach Bisse aus dem Gang: **F625, 683, 741, 799, 857, 915, 973, 1031 je -5** (Leon von hinten:
+  aca59 = 3, Clip 9). Der Affe verlaesst seine Nische also im Original ueber die Decke.
+Folge fuer den Nutzer-Punkt: ein angeschossener Affe greift im Original von der Decke an und kommt aus der Nische,
+im Port bleibt er dort. Wird in diesem Baum nachgezogen (Subs 7..15 nach den obigen Adressen).
