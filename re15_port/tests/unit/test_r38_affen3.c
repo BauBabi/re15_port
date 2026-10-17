@@ -655,9 +655,14 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
 {
     re15_ai_flavor_set(fl);
     re15_damage_seed_rng(0x2545f491u);
-    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }
+    /* room_boot behaelt die Spielflags: der vorige Durchgang hat in sub04 `Set(4,0xd0)` gesetzt -> ohne Loeschen spawnt
+     * ROOM4040 den Nach-Ereignis-Affen (Ifel_ck Ck(4,0xd0) == 0 vor `Sce_em_set` @0x00EB0). */
+    re15_game_flag_set(4, 0xd0, 0);
     /* Leon im Ausloeser AOT 5 (@0x00E9C, Rechteck x -27899..-22159, z 2608..5608), Gier 0 wie Original o11 */
     if (room_boot(0x4040, -25000, 0, 4000, 0, 0, 0, 0) != 0) return;
+    /* Bank NACH room_boot (dessen re15_enemy_reset wirft alle Banken weg) — wie die exe: main.c laedt die Raum-Banken
+     * nach scd_vm_tick, also nach dem Spawn (RL-4-Vorladen); der Spawn-INIT laeuft dort ebenfalls ohne Bank. */
+    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }
     re15_actor_t *a = aktor_vom_typ(0x29, 0);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     PRUEF(a != NULL, "[%s] Ereignis-Affe 0x29 aus Sce_em_set ROOM4040 @0x00EB0", name);
@@ -669,9 +674,16 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
           "[%s] INIT lief beim Spawn: Parkstelle (%d,%d), Massstab 0x%x (@0x80110f54-58)", name, (int)a->x, (int)a->z, (unsigned)a->render_scale_q12);
     int R = -1, lande = -1, sub4 = -1, gesperrt_aktiv = 0, hp_ab_luft = 0, erster_treffer = -1, erster_treffer_y = 1;
     int bahn_ok = 1, hp_alt = pl->hp; int32_t bahn[19]; int nb = 0;
+    int n_ab = 0, ab_t[16] = {0}, ab_d[16] = {0}, ab_sub[16] = {0};   /* HP-Abzuege: Bild R+t, Betrag, Affen-Sub */
     uint8_t hr_R = 0, hr_R1 = 0, air_R = 0, air_19 = 1; uint16_t rad_R = 0, rad_19 = 0; uint8_t s2_19 = 0, bild_19 = 0, bild_R = 0;
+    const char *spur = getenv("R38_AFFEN3_SPUR");   /* Messlauf: jedes Bild ausgeben */
     for (int k = 1; k <= 400; k++) {
         frame(0, 0);
+        if (spur)
+            printf("    T%d g=%02x st=%d/%d/%d/%d mo=%d af=%d @(%d,%d,%d) rot=%d | PL(%d,%d,%d) rot=%d hp=%d hr=%02x mo=%d\n", k,
+                   (unsigned)a->grid_id, a->state, a->sub_state_1, a->sub_state_2, a->sub_state_3, (int)a->motion, (int)a->anim_frame,
+                   (int)a->x, (int)a->y, (int)a->z, (int)a->rot_y, (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y, (int)pl->hp,
+                   (unsigned)pl->hit_react, (int)pl->motion);
         if (R < 0) {
             if (a->grid_id == 0x61) { if (a->state != 4 || a->sub_state_1 != 1) gesperrt_aktiv++; continue; }
             R = k; hr_R = a->hit_react; air_R = a->roach_air; rad_R = a->hit_radius_min; bild_R = a->anim_frame;
@@ -689,9 +701,13 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
         if (pl->hp != hp_alt) {
             if (a->y != (int32_t)a->dog_floor_y) hp_ab_luft++;
             if (erster_treffer < 0) { erster_treffer = t; erster_treffer_y = a->y; }
+            if (n_ab < 16) { ab_t[n_ab] = t; ab_d[n_ab] = hp_alt - pl->hp; ab_sub[n_ab] = a->sub_state_1; n_ab++; }
         }
         hp_alt = pl->hp;
     }
+    printf("  [%s] HP-Abzuege (R+t, -d, Sub):", name);
+    for (int i = 0; i < n_ab; i++) printf(" R+%d(-%d,Sub %d)", ab_t[i], ab_d[i], ab_sub[i]);
+    printf("\n");
     printf("  [%s] Freigabe T%d, Bahn y:", name, R);
     for (int i = 0; i < nb; i++) printf(" %d", (int)bahn[i]);
     printf("\n  [%s] Landung R+%d, Sub 4 R+%d, erster HP-Abzug R+%d (Affe y=%d), Leon HP %d\n", name, lande, sub4, erster_treffer,
@@ -709,6 +725,19 @@ static void teil_ereignis_fl(re15_ai_flavor_t fl, const char *name)
     PRUEF(erster_treffer > 18 && erster_treffer_y == 0 && hp_ab_luft == 0,
           "[%s] erster HP-Abzug erst nach der Landung (R+%d), Affe dabei auf +0x1ba (y=%d); Abzuege aus der Luft: %d", name,
           erster_treffer, (int)erster_treffer_y, hp_ab_luft);
+    /* Werte wie Original o11: zuerst der schwere Angriff -10 (Sub 6, -10 @0x801122b4; o11 F128 = R+70, 100 -> 90), dann
+     * Bisse -5 (Sub 5, @0x80111f60) im Takt von o11 F225 -> 283 -> 340 -> 397 -> 454 = 58, 57, 57, 57. Die Lage des ersten
+     * Treffers (R+70 +-2) haengt am Anlauf B[4], dessen +0x8c/+0x9e wuerfeln (Zufallsquelle OFFEN 1); der Biss-Takt nicht. */
+    static const int o11_takt[4] = { 58, 57, 57, 57 };
+    int takt_ok = (n_ab >= 5);
+    for (int i = 1; i < 5 && i < n_ab; i++)
+        if (ab_d[i] != RE15_AFFEN3_BISS_SCHADEN || ab_sub[i] != 5 || (i >= 2 && ab_t[i] - ab_t[i - 1] != o11_takt[i - 2])) takt_ok = 0;
+    if (n_ab >= 6 && ab_t[5] - ab_t[4] != o11_takt[3]) takt_ok = 0;
+    PRUEF(n_ab >= 1 && ab_d[0] == 10 && ab_sub[0] == 6 && ab_t[0] >= 68 && ab_t[0] <= 72,
+          "[%s] erster Treffer schwer -%d aus Sub %d in R+%d (Original o11: -10 schwer in R+70)", name,
+          n_ab ? ab_d[0] : 0, n_ab ? ab_sub[0] : -1, n_ab ? ab_t[0] : -1);
+    PRUEF(takt_ok, "[%s] danach Bisse -%d aus Sub 5 im Takt 58/57/57/57 wie Original o11 (F225/283/340/397/454)", name,
+          RE15_AFFEN3_BISS_SCHADEN);
 }
 
 /* Unterzustand 0 (0x8011577c, +0x9 == 0x40): im Auslieferungsstand von keinem Skript erreicht (Zensus: alle Freigaben
@@ -719,8 +748,8 @@ static void teil_ereignis40(void)
 {
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     re15_damage_seed_rng(0x2545f491u);
-    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }
     if (room_boot(0x3040, -25600, 0, -1350, 0, 0, 0, 40) != 0) return;
+    if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return; }   /* nach room_boot (re15_enemy_reset) */
     re15_actor_t *a = aktor_vom_typ(0x29, 0);
     if (!a) { printf("  FEHLER: kein Affe\n"); g_fail++; return; }
     a->state = 4; a->sub_state_1 = 0; a->sub_state_2 = 0; a->sub_state_3 = 0; a->grid_id = 0x40;   /* Wort 0x4 @0x80110e94 */

@@ -538,3 +538,18 @@ Freigabe" — das widerspricht o11 (gesperrt in Zustand 4.1) und wird auf das Or
   den Nach-Ereignis-Affen (g=00 bei (-23590,-4320)), weil room_boot die Spielflags behaelt und der RE2-Durchgang
   `Set(4,0xd0)` (sub04) schon gesetzt hat -> Riegel-Fehler (Flag vor dem Lauf loeschen); (b) RE2-Durchgang: Fallbahn
   Bild fuer Bild = o11, Landung R+18, Sub 4 R+34 (gruen), aber in 400 Bildern kein HP-Abzug -> wird untersucht.
+- Riegel-Fehler behoben (Test-Code, nicht Engine): (a) `ereignis` loescht vor jedem Durchgang `Set(4,0xd0)` (sonst
+  Nach-Ereignis-Affe); (b) beide neuen Unit-Teile laden die EM029-Bank NACH room_boot — room_boot ruft
+  re15_enemy_reset, das ALLE Banken verwirft; mit der Bank davor fehlten Pool/Fuss-Sperre/Trefferpunkt (Affe stand im
+  schweren Angriff still, kein Treffer). Nach der Reihenfolge der exe: main.c laedt die Raum-Banken nach scd_vm_tick
+  (RL-4-Vorladen), also nach dem Spawn — der Spawn-INIT laeuft dort ebenso ohne Bank. (c) integration_r38_affen3_tor:
+  der gy.log-Ausdruck hatte 10 Gruppen; CMake setzt nur CMAKE_MATCH_0..9 (gemessen, cmake 4.3.2: CMAKE_MATCH_10 leer,
+  CMAKE_MATCH_COUNT = 9) -> z war leer, jeder gesperrte Bild "falsch". Jetzt 9 Gruppen (+0x7 nicht eingefangen).
+- Original o11 (Scratch s_nb1/gdb/o11_4040.txt, selbst mit dec11.py dekodiert) — alle HP-Wechsel:
+  F128 100->90 Affe st1.6.1 Clip 19 Bild 23 (schwer, -10) | F225 90->85 st1.5.1 Clip 18 Bild 15 | F283 -> 80 Bild 14 |
+  F340 -> 75 Bild 13 | F397 -> 70 Bild 13 | F454 -> 65 Bild 13 (Bisse -5). Relativ zu R = F58: R+70, R+167, R+225, R+282,
+  R+339, R+396; Biss-Takt 58/57/57/57.
+- Port (Unit `ereignis`, beide KI): R+71 (-10, Sub 6, Clip 19 Bild 23), R+166 / 224 / 281 / 338 / 395 (je -5, Sub 5,
+  Clip-Bilder 15/14/13/13/13) — Takt 58/57/57/57 identisch, Clip-Bilder der Treffer identisch, Affen-Lage im Biss
+  (-25326,2920) .. (-25424,2962) gegen o11 (-25323,2926) .. (-25417,2968). Der erste Treffer liegt 1 Bild spaeter, die
+  Bisse 1 Bild frueher: der Anlauf B[4] wuerfelt +0x8c/+0x9e (Zufallsquelle, OFFEN 1).
