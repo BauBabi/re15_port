@@ -2,7 +2,7 @@
 # @0x800318f8, Aufruf @0x80031d98 hinter `andi v0,v0,0x4` @0x80031d8c). Dieselbe Routine fuehrt RE2 fuer Claire
 # (FUN_8001844c / FUN_80018728). Dossier analysis/befunde_runde38/D_zopf.md.
 #
-# RIEGEL (Unit, misst die Mechanik): libgte init ruhe drehung laufen freeze — und
+# RIEGEL (Unit, misst die Mechanik): libgte init ruhe drehung laufen freeze original (Original-RAM, bitgleich) — und
 # `test_r38_zopf spur <zopf.log>` / `pixel <mit.ppm> <ohne.ppm> x0 y0 x1 y1` fuer die Integration.
 add_executable(test_r38_zopf ${CMAKE_CURRENT_LIST_DIR}/../test_r38_zopf.c)
 target_link_libraries(test_r38_zopf PRIVATE re15_engine re15_test_support)
@@ -12,7 +12,7 @@ target_compile_definitions(test_r38_zopf PRIVATE
 if(NOT MSVC)
     target_link_libraries(test_r38_zopf PRIVATE m)
 endif()
-foreach(_teil libgte init ruhe drehung laufen freeze)
+foreach(_teil libgte init ruhe drehung laufen freeze original)
     add_test(NAME unit_r38_zopf_${_teil} COMMAND test_r38_zopf ${_teil})
     set_tests_properties(unit_r38_zopf_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()

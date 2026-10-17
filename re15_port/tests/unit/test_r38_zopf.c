@@ -13,6 +13,10 @@
  *            Winkelgeschwindigkeit) und kehrt in die Ruhelage zurueck — der Winkelverlauf
  *   laufen   Koerper laeuft vorwaerts: die Zopfspitze bleibt HINTER der Ruhelage zurueck
  *   freeze   ohne Takt (Spieler-Freeze `bltz` @0x80031c78) kein Schritt, Zustand steht
+ *   original Datensatz aus der ORIGINAL-RAM (r38_zopf_orig.inc, DuckStation-GDB @0x80024c30/@0x80024e10, Elza ROOM1121):
+ *            der Port rechnet 235 Bilder (Ruhe, Drehung R, Nachlauf, Gehen U, Stehen) fortlaufend BITGLEICH nach
+ *   orig <frames.txt>                     Werkzeug: dieselbe Nachrechnung gegen die volle Messung (Glied fuer Glied)
+ *   skelett                               Werkzeug: PL04 Keyframe 0 + eingeschwungener Zopf, Huellen je Teil
  *   spur <zopf.log>                       Integration: Winkelverlauf aus RE15_ZOPF_LOG (Drehung -> Ausschlag -> Ruhe)
  *   pixel <mit.ppm> <ohne.ppm>            Integration: Pixel am Hinterkopf (Bild mit Zopf gegen Mess-Sonde ohne)
  */
@@ -698,6 +702,77 @@ static int teil_orig(const char *pfad)
     return g_fail ? 1 : 0;
 }
 
+/* original (RIEGEL): der Datensatz r38_zopf_orig.inc (aus orig_zopf_frames.txt erzeugt, orig_zopf_inc.py) — Zustand der
+ * Glieder 17..20 aus der Original-RAM vor Bild 0, danach rechnet der Port 235 Bilder FORTLAUFEND mit seinem eigenen
+ * Zustand und den Original-Eingaengen; je Bild muss der FNV-1a ueber die 80 Werte (Glieder m/t/rot/v94/v96, Teil 8 +0x40)
+ * dem Original entsprechen. Phasen: ruhe 15, drehung (R) 30, nachlauf 90, gehen (U) 40, stehen 60. */
+#include "r38_zopf_orig.inc"
+
+static uint32_t fnv_i32(uint32_t h, int32_t w)
+{
+    uint32_t u = (uint32_t)w;
+    for (int i = 0; i < 4; i++) { h ^= (u >> (8 * i)) & 0xffu; h *= 0x01000193u; }
+    return h;
+}
+
+static void teil_original(void)
+{
+    printf("[original] %d Bilder aus der Original-RAM (ROOM1121, Elza PL04)\n", R38_ORIG_BILDER);
+    for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+        re15_zopf_glied_t g;
+        const int32_t *s = k_r38_orig_start[k];
+        memset(&g, 0, sizeof g);
+        for (int i = 0; i < 3; i++) g.off[i] = s[i];
+        for (int i = 0; i < 9; i++) g.m[i] = (int16_t)s[3 + i];
+        for (int i = 0; i < 3; i++) g.t[i] = s[12 + i];
+        for (int i = 0; i < 3; i++) g.rot[i] = (int16_t)s[15 + i];
+        g.v94 = (int16_t)s[18]; g.v96 = (int16_t)s[19];
+        re15_zopf_r38_glied_setzen(k, &g);
+    }
+    int gleich[5] = {0}, gesamt[5] = {0}, erst = -1;
+    const char *ph = "rdngs";
+    for (int b = 0; b < R38_ORIG_BILDER; b++) {
+        const int32_t *e = k_r38_orig_ein[b];
+        re15_zopf_eingang_t in;
+        memset(&in, 0, sizeof in);
+        int p = 0;
+        for (int i = 0; i < 3; i++) in.ent_rot[i] = (int16_t)e[p++];
+        for (int i = 0; i < 3; i++) in.ent_pos[i] = e[p++];
+        for (int i = 0; i < 9; i++) in.l0_rot[i] = e[p++];
+        for (int i = 0; i < 3; i++) in.l0_t[i] = e[p++];
+        for (int i = 0; i < 9; i++) in.l8_rot[i] = e[p++];
+        for (int i = 0; i < 3; i++) in.l8_t[i] = e[p++];
+        in.teil0_vy = (int16_t)e[p++]; in.teil0_vz = (int16_t)e[p++]; in.teil8_vy = (int16_t)e[p++];
+        in.nacken_gier = (int16_t)e[p++]; in.nacken_flags = (uint8_t)e[p++];
+        re15_zopf_r38_schritt(&in);
+        uint32_t h = 0x811c9dc5u;
+        for (int k = 0; k < RE15_ZOPF_GLIEDER; k++) {
+            const re15_zopf_glied_t *g = re15_zopf_r38_glied(k);
+            for (int i = 0; i < 9; i++) h = fnv_i32(h, g->m[i]);
+            for (int i = 0; i < 3; i++) h = fnv_i32(h, g->t[i]);
+            for (int i = 0; i < 3; i++) h = fnv_i32(h, g->rot[i]);
+            h = fnv_i32(h, g->v94); h = fnv_i32(h, g->v96);
+        }
+        int16_t m8[9]; int32_t t8[3];
+        re15_zopf_r38_kopf_welt(m8, t8);
+        for (int i = 0; i < 9; i++) h = fnv_i32(h, m8[i]);
+        for (int i = 0; i < 3; i++) h = fnv_i32(h, t8[i]);
+        const char *q = strchr(ph, k_r38_orig_phase[b]);
+        int pi = q ? (int)(q - ph) : 0;
+        gesamt[pi]++;
+        if (h == k_r38_orig_hash[b]) gleich[pi]++;
+        else if (erst < 0) erst = b;
+    }
+    int alle = 0;
+    for (int i = 0; i < 5; i++) alle += gleich[i];
+    printf("    ruhe %d/%d, drehung %d/%d, nachlauf %d/%d, gehen %d/%d, stehen %d/%d bitgleich\n", gleich[0], gesamt[0],
+           gleich[1], gesamt[1], gleich[2], gesamt[2], gleich[3], gesamt[3], gleich[4], gesamt[4]);
+    PRUEF(alle == R38_ORIG_BILDER, "Port-Zopf == ORIGINAL-RAM in %d von %d Bildern, fortlaufend (erste Abweichung Bild %d)",
+          alle, R38_ORIG_BILDER, erst);
+    PRUEF(gesamt[1] >= 20 && gesamt[3] >= 20, "Datensatz enthaelt Drehung (%d Bilder) und Gehen (%d Bilder)",
+          gesamt[1], gesamt[3]);
+}
+
 static uint8_t *ppm(const char *p, int *w, int *h)
 {
     size_t n = 0;
@@ -761,6 +836,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "laufen")) teil_laufen();
     else if (!strcmp(t, "freeze")) teil_freeze();
     else if (!strcmp(t, "skelett")) teil_skelett();
+    else if (!strcmp(t, "original")) teil_original();
     else { printf("unbekannter Teil %s\n", t); return 2; }
     printf("%s: %d Fehler\n", t, g_fail);
     return g_fail ? 1 : 0;

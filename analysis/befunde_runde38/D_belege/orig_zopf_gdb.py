@@ -12,7 +12,8 @@ Ablauf:
      Phasen (je Bild ein BP_IN/BP_OUT-Paar): ruhe 15 | drehung R 30 | nachlauf 90 | gehen U 40 | stehen 60.
   5. Zurueck auf (2500,10000) Blick 2048, 5 s laufen lassen, geordnet schliessen (SaveStateOnExit) -> Bild aus dem VRAM.
 Ausgabe <ordner>/frames.txt (eine Zeile je Bild, Felder s.u.), log.txt, resume.sav.
-Aufruf: python orig_zopf_gdb.py <ausgabeordner>
+Aufruf: python orig_zopf_gdb.py <ausgabeordner> [blick_ende=2048] [--nur-bild]
+  --nur-bild: ohne Haltepunkt-Phasen, nur Laden + Stellen auf (2500,10000) blick_ende + 6 s + Schliessen (Bild).
 settings.ini wird gesichert und am Ende zurueckgeschrieben (EnableGDBServer = false)."""
 import glob, os, shutil, struct, subprocess, sys, time
 
@@ -54,6 +55,8 @@ def glied(t):
 
 def main():
     out = os.path.abspath(sys.argv[1])
+    blick_ende = int(sys.argv[2]) if len(sys.argv) > 2 and not sys.argv[2].startswith("--") else 2048
+    nur_bild = "--nur-bild" in sys.argv
     os.makedirs(out, exist_ok=True)
     log = open(os.path.join(out, "log.txt"), "w")
     fr = open(os.path.join(out, "frames.txt"), "w")
@@ -214,18 +217,19 @@ def main():
             p = g.mem(PL, 0x70)
             L("Phase %s: %d Bilder, Lage (%d,%d) Blick %d" % (name, n, s32(p, 0x34), s32(p, 0x3C), s16(p, 0x6A)))
 
-        phase("ruhe", (), 15)
-        phase("drehung", (B.XUSB_GAMEPAD_DPAD_RIGHT,), 30)
-        phase("nachlauf", (), 90)
-        phase("gehen", (B.XUSB_GAMEPAD_DPAD_UP,), 40)
-        phase("stehen", (), 60)
+        if not nur_bild:
+            phase("ruhe", (), 15)
+            phase("drehung", (B.XUSB_GAMEPAD_DPAD_RIGHT,), 30)
+            phase("nachlauf", (), 90)
+            phase("gehen", (B.XUSB_GAMEPAD_DPAD_UP,), 40)
+            phase("stehen", (), 60)
         pad()
         g.cmd("z0,%x,4" % BP_IN)
         g.cmd("z0,%x,4" % BP_OUT)
         # zurueck auf die Bildstelle und ausschwingen lassen
         g.cmd("M%x,4:%s" % (PL + 0x34, struct.pack("<i", 2500).hex()))
         g.cmd("M%x,4:%s" % (PL + 0x3C, struct.pack("<i", 10000).hex()))
-        g.cmd("M%x,2:%s" % (PL + 0x6A, struct.pack("<h", 2048).hex()))
+        g.cmd("M%x,2:%s" % (PL + 0x6A, struct.pack("<h", blick_ende).hex()))
         g.cont()
         time.sleep(6.0)
         g.stop()
