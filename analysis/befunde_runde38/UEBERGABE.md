@@ -6,6 +6,8 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 05:11: W fortgesetzt wf_75bbfb7e-d5f (r38_w3.js) mit Auftrag, r38/cursor zu mergen: A und W bauen beide den NCLIP-Rueckseiten-Verwurf fuer Raum-Props (A wickelt Port-Modelle um, W zeichnet sie zweiseitig) -> EIN Weg im W-Zweig.
+* 2026-10-17 05:11: V releaseskript BESTANDEN (Abnahme 1, wf_9f166cb7-bd0), in r38_integration gemergt (4e3a8f60), Tests laufen. ⛔ FUND der V-Abnahme: C:\workspace\Re15Data (Paketarchiv v0.8.7-v0.8.14 + v0.8.25, ~7,5 GB, und weitere Daten) existiert seit 16.10. 17:19-18:26 nicht mehr (C:\workspace mtime 18:26); kein Agent hat schreibend darauf zugegriffen (Transkripte), Papierkorb leer. Alle Paketversionen liegen vollstaendig in den Git-Tags (je 6 Dateien) -> wiederherstellbar; Nutzer informieren.
 * 2026-10-17 04:55: ⛔ ZWEITES SITZUNGSLIMIT ~23:45 (Reset 02:00) brach alle Laeufe ab; DuckStation PID 33976 beendet, EnableGDBServer zurueck auf false (BOM entfernt). Reste gesichert (wip UNGEPRUEFT: affen3, itemorte, montage, npckante, rolltor20a0, spinnen, zopf; Abnahme-1-Teilberichte V, T). Lehre: 15 parallele Laeufe erschoepfen das Fenster in ~2,5 h, die meisten Bauten brechen ab -> jetzt hoechstens 8 gleichzeitig. Neu gestartet: V wf_9f166cb7-bd0 / G wf_fef4a19f-77f / T wf_7931fdbe-adb (Resume, Abnahme 1), U wf_ff1d4812-6d4 (Abnahme 0), K wf_02f9bc41-f8f / B wf_2545408e-a2b (Nachbesserung 1 mit stand), F wf_356a3960-7df / A wf_283a8270-fcf (Bau-Abschluss). Warten: W, R, S, D, M, N, O.
 * 2026-10-16 23:42: Zeitstempel 22:20-23:38 nach den Commit-Zeiten berichtigt (vorher geschaetzt, bis zu 1,5 h daneben).
 * 2026-10-16 23:38: Integration H/I gruen (168/168 gezielt), Baeume elzatoene/heliport1171 entfernt.
@@ -57,7 +59,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | S | r38_affen3 | kleine Affen Stage 3 treffen | offen |
 | T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | offen |
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | offen |
-| V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | offen |
+| V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | BESTANDEN (A1), gemergt |
 | L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | BESTANDEN (A2), integriert |
 | P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | BESTANDEN (A2), integriert |
 

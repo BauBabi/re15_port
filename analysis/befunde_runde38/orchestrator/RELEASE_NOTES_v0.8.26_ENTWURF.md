@@ -9,6 +9,12 @@ Integrationsbaum, ohne parallele Agenten).
 
 <!-- je integrierter Spur ein Absatz, Nutzer-Sprache, keine Adressen -->
 
+**Ein Skript fuer alle Systeme.** Doppelklick auf `release/release_alles.cmd` (oder `bash release/release_alles.sh`):
+Es baut Windows, Android und Linux/Steam Deck, gibt der neuen Version die naechste Nummer (letzte Stelle +1, nach 99
+die naechste mittlere: 0.8.99 -> 0.9.0), packt und prueft die Pakete und bringt die bisherige Version ins Archiv; auf
+Wunsch auch Release-Commit, Tag und Push. Vorher zeigt ein Trockenlauf, was passieren wuerde. Bricht ein Schritt ab,
+nennt das Skript die Zeile zum Weitermachen. Anleitung: `release/README.md`.
+
 **Elza, Toene in ROOM1041 und ROOM1021.** In 1041 faellt statt des Platzhalter-Textes "gunshot" jetzt ein hoerbarer
 Schuss, danach dreht sich Elza um ("What was that!?"). In 1021 stoehnt Roy wie ein Zombie, wenn er auf John zugeht.
 Johns Schuesse waren schon da, aber mit einer duennen, hellen Aufnahme, die man kaum als Pistole erkannte; jetzt
@@ -60,6 +66,9 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
   wird; volle Verdeckung braeuchte Freistellungen wie in Stage 1. An einer Bodenkante in ROOM5090 bleiben einzelne Pixel.
 
 ## Zu entscheiden
+
+* Das Archiv wird nie automatisch gekuerzt (Ihr Wortlaut: "die alte ins Archiv bringen"). Soll es kuenftig nur die
+  letzten N Versionen behalten (heute rund 0,9 GB je Version)?
 
 ## Neu fuer das Paket / Ihre Dateien
 
