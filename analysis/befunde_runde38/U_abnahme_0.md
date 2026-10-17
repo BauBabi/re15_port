@@ -26,7 +26,9 @@ Datum 2026-10-17. Baum `.claude/worktrees/r38_wasserzombie`, Zweig `r38/wasserzo
 ## 2. Messung an der exe
 
 Messkopie `re15_port/build/platform/pc/re15_pc_u_abn0.exe` (eigener Name, kein taskkill). Arbeitsordner im Scratchpad
-der Abnahme-Sitzung (nicht eingecheckt). Gemeinsame Umgebung: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
+der Abnahme-Sitzung (nicht eingecheckt; Wurzel
+`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad`,
+je Lauf ein Unterordner `m_*` mit debug.log, wz.log, gy.log und fd/*.ppm). Gemeinsame Umgebung: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
 SDL_ASSERT=always_ignore RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2`, Logs `RE15_WASSERZOMBIE_LOG=wz.log
 RE15_GEGNER_Y_LOG=gy.log`, Steuerung geschlossen geregelt ueber `RE15_WEGPLAN` (engine/src/dachkiste_r36.c).
 
