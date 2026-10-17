@@ -464,3 +464,20 @@ einen nie geschriebenen Abschnitt — er folgt hier als 9.5). Pruefung des vorge
   **0x9150** (die Werkzeug-Ausgabe druckt `@0x009150`; Code rechnet `31 * 1200`, war also richtig). Kopf berichtigt.
 * exe im Baum (23:44) ist nicht sicher der Commit-Stand -> neu bauen, dann messen (Skala 1 und 3, gegen den Parking Lot
   Key), dann die gezielten Riegel.
+
+### 9.5 Massstab gegen die GEZEICHNETE Huelle (Werkzeug-Aenderung 2129a121, hier geprueft)
+Der erste Anlauf rechnete den Small Key mit s 5,3297 (Regel 2.8: groesster Wert, bei dem alle sichtbaren Texel in der
+Marken-Huelle liegen, ueber die affine UV->Modell-Abbildung = Ausgleich ueber alle Flaechen, Rest bis 1 Modell-Einheit).
+Laut Werkzeug-Kommentar lag die so gerechnete Huelle 0,07 px innerhalb, die GEZEICHNETE (gerundete Ecken, Dreiecke wie
+der Port) bei x 144,52 > 144,5 = ausserhalb der Toleranz des Riegels unit_r38_itemorte_lage. `itemorte_export.py`
+prueft seitdem die gezeichnete Huelle wie Port und Riegel (gerundete Ecken, Dreiecke direkt / Vierecke (0,1,3)+(0,3,2),
+Texel = (int) des baryzentrisch interpolierten UV, Raster 48 und 480) und verkleinert s in Schritten von 0,05 %:
+Parking Lot Key 0 Schritte (MD1 bitgleich mit dem abgenommenen Stand), Small Key 10 Schritte -> **s 5,3032**
+(sichtbar 736 x 345 Einheiten). Am gebauten Stand nachgeprueft (`unit_r38_itemorte_lage`, eigener Lauf 05:01):
+`ROOM10F1 Cut 5: 1565 sichtbare Abtastpunkte, Huelle x 132.57..144.49 y 78.35..84.23, 0 ausserhalb`, "11.9 von 11
+Spalten", `16 Pruefungen, 0 Fehler`; Parking Lot Key unveraendert `x 132.59..144.41 y 77.28..85.13`.
+Nachgerechnet, weil 9.3 eine Zahl nennt, die ich nicht reproduziere: Texel-Helligkeit der sichtbaren Texel (TIM + die
+CLUT-Zeile der Flaeche = Feld >> 6, 5 Bit -> x 255/31, Rec. 601, UV-Rechteck der Flaechen; Skript `nb1/texhell.py`):
+P. Room Key Mittel 69,1 / Median 57,6 (26 % > 100), **Small Key 84,4 / 82,3 (39 %)**, Cabin Key 69,6 / 74,0 (22 %). Der
+Cabin-Key-Wert stimmt mit 9.3 ueberein, die 9.3-Werte fuer Small Key (102/104) und P. Room Key (114/128) nicht — an der
+Wahl aendert das nichts (der Small Key ist auch so der hellste der drei); massgeblich ist die Messung an der exe (9.6).
