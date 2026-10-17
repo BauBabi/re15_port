@@ -48,6 +48,19 @@ von hinten an; mit schnellem Tastendruecken kommt man frei. Unter 50 HP kann ein
 Original. Die Affen, die in Stage 4 und 5 erst bei einem Ereignis auftauchen, fallen jetzt aus der Deckenklappe und
 greifen vom Boden aus an (vorher liefen sie hoch ueber dem Boden umher).
 
+**ROOM20A0: der Rolladen steht nicht mehr vor der Kamera (Ihr Nachtrag), dazu durchscheinende Objekte.** Im
+Kamerabild ueber der Plattform sieht man beim Kistenschieben jetzt Kiste, Faesser, Regal und die Figur wie im Original
+(auch Elza in ROOM20A1): der Zeichner des Originals verwirft Rueckseiten und zu nahe Flaechen, das macht der Port jetzt
+genauso - fuer alle Raum-Objekte. Ausserdem mischt der Port halbtransparente Raum-Objekte jetzt wie das Original mit
+dem Hintergrund, statt sie deckend zu malen: die Glasscheiben im Labor (ROOM5060) dunkeln das Fenster halb ab, die
+Lichtplatte leuchtet rot auf den Boden, das Wasser in den Kanaelen (Stage 2, ROOM11A0, ROOM1260) ist fast schwarz wie
+im Original statt einer grauen Flaeche, und der Bodennebel im Kuehlraum (ROOM4090) ist hell und durchscheinend statt
+dunkler Schlieren.
+
+**Zombies im Wasser (Stage 2) ziehen sich am Rand hoch.** Wie in RE1.5 laufen die Zombies im Kanal zum Rand, greifen
+die Kante, stemmen sich hoch und richten sich neben Ihnen auf (ROOM2000 und ROOM2020, Leon und Elza, beide KI-Varianten).
+Vorher blieben sie dauerhaft an der Kanalwand stehen.
+
 **Spinnen in Stage 2.** Die Schachtspinnen (ROOM2060, ROOM20A0) warten im Schacht, bis Sie den Ausloesebereich
 betreten, kriechen dann heraus, klettern die Wand hinunter und landen am Boden; keine Spinne schwebt mehr in der Luft.
 Die Spinnen spucken Gift: Ein Treffer kostet 10 HP und vergiftet (im Statusschirm "Poison"; alle paar Sekunden gehen
@@ -157,6 +170,10 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
   Raumkameras ist er nur ein heller Punkt (Cut 3: 2 Bildpunkte bei Skala 1). Aufgehoben wird er an Roys Liegestelle mit
   der Aktionstaste. Leons Gemaelde in ROOM1140 meldet wie im Original "The
   switch is not responding...".
+
+* ROOM20A0/20A1: Am Kanalende scheinen gruene Flecken durch das Wasser. Das ist die Effekt-Schleife, die auf Ihren
+  Wunsch vom 30.08. ("schlafender Inhalt") aktiviert wurde - das Original startet sie nie. Sie liegt unter dem Wasser;
+  seit das Wasser wie im Original durchscheint, sieht man sie. Wenn sie dort stoert, sagen Sie Bescheid.
 
 ## Zu entscheiden
 
