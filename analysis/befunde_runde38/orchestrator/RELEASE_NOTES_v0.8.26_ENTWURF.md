@@ -98,6 +98,13 @@ passed..." - die alte Zeile "I'll be fine..." kommt nicht mehr (ein Fehler seit 
 **ROOM30E0, Flammenwerfer.** Er wird jetzt normal aufgenommen (Aufnahme-Abfrage, volle Ladung) statt "not available
 in this preview". Sagen Sie Nein, koennen Sie ihn spaeter holen.
 
+**Montage nach Irons' Tod (Leon).** Die Zombies, die in den Gang vor dem Besprechungsraum und vor die Tuer zu ROOM1070
+durchbrechen, gehen jetzt auf die Kamera zu - wie die hinter dem Rolltor. Am aufgebrochenen Gittertor in der Lobby
+setzen sich die Zombies hinter dem Gitter mit dem Schnitt in Bewegung, gehen zu Boden und kriechen alle unter dem Tor
+durch auf die Kamera zu (vorher standen die aufrechten nur hinter dem Gitter, und einer hing an der Torecke fest). Der
+Rolltor-Schnitt ist unveraendert. Mit der RE1.5-KI (Menue) dreht sich am Tor ein Zombie anfangs eine Weile auf der
+Stelle, bevor er losgeht; mit der Standard-KI gehen alle sofort los.
+
 **Zombies wie in RE2 (Rest aus Runde 37).** Zombies heben jetzt wie in RE2 von sich aus die Arme und kommen im
 schnelleren Angriffsgang auf Sie zu - wenn Sie naeher kommen, nach einer Weile von selbst und wenn Sie an ihnen
 vorbeirennen; aus diesem Gang greifen sie zu. Das gilt fuer alle Zombies, auch die im Gang nach Irons' Tod. Nach einem
