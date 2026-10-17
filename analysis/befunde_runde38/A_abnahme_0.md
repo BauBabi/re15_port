@@ -54,6 +54,13 @@ Schirmecken v0,v1,v2) und `scratchpad/abn/klassen.py` (eigene Klassen G/g/Y/y na
 -> genau die rueckseitigen Dreiecke fallen weg, alle anderen bleiben (= 0 und > 0 bitgleich gezaehlt). (Vorlauf `m1_*` mit
 2 Druecken zu viel im Raetsel — ein Schalter umgelegt —: alt 9065, neu 0 rueckseitige von 71868/62803.)
 
+Zweiter Weg OHNE Debug-Sprung (`runs/m9_11f0_laden_neu`): Spielstand in ROOM11F0 vor dem Panel
+(probe_r37_feuerloescher_karte `11F0 -1800 -14500 1024 cut:0`) -> Titel -> LOAD GAME -> `[save] CONTINUE: resumed in
+room 11f0` -> 16 Aktions-Druecke -> Text 0/1 -> `[scd F543] Cut_chg(10)`; Platz 4: 0 von 29256 rueckseitig; Klassenkarte
+F560 und F700 gegen das Original **0 Abweichungen**. (Tuer-Weg 11E0 -> 11F0 nicht gefahren: die Tuer @0x01512 in
+ROOM11E0.RDT setzt in 11F0 bei (250,0,250) ab, das Panel liegt ~14800 Einheiten entfernt; Raumlader und Objekt-Zeichner
+sind fuer Tuer, Sprung und Laden derselbe — der Cursor-Zeichenweg haengt nicht vom Eintrittsweg ab.)
+
 Cursor BEWEGT (Steuerkreuz R/D/L/U, Bilder F740/F820/F900/F960, Cursor-Mitte (191,118)/(156,150)/(127,86)):
 `scratchpad/abn/m1b_bewegt_zoom.png` (Spalten alt S1 | neu S1 | alt S3 | neu S3): alt zeigt abseits der Bildmitte
 eine deutlich VERSETZTE, kleinere dunkle Kopie von Kreuz und Eckwinkeln (= "verzerrter/versetzter Schatten" der
