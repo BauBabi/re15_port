@@ -229,6 +229,8 @@ int re15_spinnen_r38_lauer_re2(re15_actor_t *e)
         e->rot_x = 0; e->rot_z = 0;
         e->y = -1800 * (int32_t)e->floor;
         e->hit_react = 0;
+        e->aim_band = 0;                                       /* Runde 38 Integration: word0 &= 0x1fffffff
+                                                                * (`lui v1,0x1fff` / `and` / `sw v0,0(a0)` @0x80110d38-48) */
         lauer_clip(e, 1, 0x10, 0);
         (void)lauer_anim(e, 1);
         return 1;
@@ -244,6 +246,56 @@ int re15_spinnen_r38_lauer_re2(re15_actor_t *e)
         return 1;
     }
     return 0;
+}
+
+/* ============================================================================================
+ * Teil 5 (Runde 38 Integration) — DIE SPINNE IM SCHACHT IST KEIN ZIEL
+ * ============================================================================================
+ * Original, selbst disassembliert (PSX.EXE bzw. STAGE2.BIN roh @0x80100000):
+ *   Resolver FUN_80011f50: Spieler-word0 = (word0 & 0x1fffffff) | (acaec << 16) @0x80011fb0-e8; je Kandidat
+ *     `lw v0,0(s0)` @0x800120d0, `lw v1,-13740(v1)` (0x800aca54) @0x800120d8, `and v0,v0,v1` @0x800120e0,
+ *     `lui v1,0xe000` @0x800120e4, `and v0,v0,v1` @0x800120e8, `beq v0,zero,0x80012128` @0x800120ec -> naechster.
+ *   Spinne INIT 0x80110b6c: `sw v0(1),4(v1)` @0x80110b80, grid 0x41 -> Zustandswort 0x104 (`ori v0,zero,0x104` /
+ *     `sw v0,4(a0)` @0x80110d10-14), Band weg: `lui v1,0x1fff` @0x80110d38 / `lw v0,0(a0)` / `ori v1,v1,0xffff` /
+ *     `and v0,v0,v1` / `sw v0,0(a0)` @0x80110d48.
+ *   Zustand 4 (Tabelle @0x80118e24 [4..6] = 0x80114e18, Ende 0x801153d0): KEIN Store auf +0..+3 (Vollscan; die
+ *     Aufrufe 0x800245d8 / 0x8001f314 / 0x8001af20 schreiben word0 ebenfalls nicht).
+ *   ACTIVE 0x80110e50 (Schwanz): `lui v1,0x1fff` / `and` / `sw v0,0(a0)` @0x80110f94-a4, `lbu v1,9(v0)` @0x80110fb4,
+ *     `sltiu v0,v1,0x2` @0x80110fbc, `bne v0,zero,0x80110fd0` @0x80110fc0, `ori v0,zero,0x5` / `bne v1,v0,0x80110fd8`
+ *     @0x80110fc4-c8, `jal 0x80012aa4` / `ori a0,zero,0xfa0` @0x80110fd0-d4.
+ * Gemessen im Original (DuckStation-GDB, MZD-Disc, ROOM2060, R_belege/orig_2060_zielhilfe_messer.txt): Wort 0 der
+ *   Schachtspinne 0x00000801 (Band 0) im Warten (grid 0x41) und Kriechen (grid 0x42, +0x93 = 03), nach Phase 7
+ *   (grid 5) und Phase 8 (Zustand 1, +0x93 = 00) weiter Band 0, ab dem ersten ACTIVE-Bild 0x60000801 (LEVEL|DOWN).
+ * PORT: aim_band (re15_actor.h: "word0-Bits 29-31: Elevation-Band fuer den Schuss-Resolver") traegt dieses Band fuer
+ *   die RE1.5-Spinne; der Resolver-Zweig Typ 0x25 (re15_damage.c) fuehrt die BITAUSWAHL weiter ueber sein bisheriges
+ *   Modell (LEVEL + RE2-Fenster) und nimmt hier nur das LEERE Band des Originals: kein Kandidat. */
+int re15_spinnen_r38_band_leer(const re15_actor_t *e)
+{
+    if (!e || e->type != 0x25u) return 0;
+    /* Zustand 0: Sce_em_set-Satz vor dem INIT (word0 = 1 bzw. 0x2001 @0x8004228c-b0, Bandbits leer) — unter der RE2-KI
+     * auch die Uebergabe nach Phase 8 (spinnen_r38.c lauer_re2: Zustand 0 bis zum RE2-INIT). Zustand 4: INIT-Zweig grid
+     * 0x40/0x41 (@0x80110cec-d14) und die Schacht-Choreografie, beide ohne Stempel. */
+    if (e->state == 0 || e->state == 4) return 1;
+    /* RE1.5-Gehirn: das Band ist der ACTIVE-Stempel (re15_spinnen_r38_band_stempel); leer bis zum ersten ACTIVE-Schwanz
+     * nach INIT/Phase 8 und wann immer FUN_80012aa4(0xfa0) nichts setzt. */
+    if (!re15_ai_re2_for_type(0x25u)) return e->aim_band == 0;
+    /* RE2-Gehirn nach seinem INIT: RE2s Kandidatenfilter hat kein Hoehenband (FUN_800470C0 Gates @0x8004712C/38/48/58,
+     * FUN_800410CC ueber die Haltungsklasse) — Port-Abbildung wie fuer jeden RE2-eigenen Typ. */
+    return 0;
+}
+
+void re15_spinnen_r38_band_stempel(re15_actor_t *e, const re15_actor_t *pl)
+{
+    if (!e || !pl) return;
+    e->aim_band = 0;                                           /* word0 &= 0x1fffffff @0x80110f94-a4 */
+    if (e->grid_id < 2u || e->grid_id == 5u)                   /* `sltiu v0,v1,0x2` @0x80110fbc / `ori v0,zero,0x5` +
+                                                                * `bne v1,v0` @0x80110fc4-c8 (ganzes Byte +0x9) */
+        e->aim_band = re15_band_stamp_aa4_aim(pl, e, 0xfa0);   /* `jal 0x80012aa4` / `ori a0,zero,0xfa0` @0x80110fd0-d4 */
+}
+
+int re15_spinnen_r38_schacht_re15(const re15_actor_t *e)
+{
+    return e && e->type == 0x25u && e->state == 4;            /* Zustand 4 = 0x80114e18 (Tabelle @0x80118e24 [4]) */
 }
 
 /* ============================================================================================
@@ -786,6 +838,16 @@ void re15_spinnen_r38_log_frame(unsigned frame)
             (int)pl->state, (unsigned)pl->status_flags, (int)pl->floor, (unsigned)s_gift_zaehler,
             (int)re15_collision_room_coll(rdt, pl->x, pl->z, 0, 8, 0x100u), (int)re15_spinnen_r38_boden_unter(pl),
             (int)pl->motion, re15_player_hit_flinch_active(), re15_esp_fx_count());
+    /* Runde 38 Integration (versteckte Schachtspinne): pr = Spieler-Blick +0x6a (Port rot_y), zh = der Platz, den die
+     * Zielhilfe FUN_8003703c mit dem Radius des Waffe-Hebens (`ori a0,zero,0x7530` @0x80032fac) JETZT waehlen wuerde
+     * (re15_player_aim_target, reine Abfrage), -1 = kein Ziel. Hinter fx=, damit die bisherigen Auswerter
+     * (ana_bo.py, test_r38_spinnen pruef_log) unveraendert lesen. Messgroesse, kein Spielverhalten. */
+    {   extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);
+        int32_t tx = 0, tz = 0; int zh = -1;
+        if (re15_player_aim_target(0x7530, &tx, &tz))
+            for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX && zh < 0; i++)
+                if (g_actors[i].active && g_actors[i].x == tx && g_actors[i].z == tz) zh = i;
+        fprintf(s_fp, " pr=%d zh=%d", (int)pl->rot_y, zh); }
     for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
         const re15_actor_t *e = &g_actors[i];
         if (!e->active || (e->type != 0x25 && e->type != 0x26)) continue;

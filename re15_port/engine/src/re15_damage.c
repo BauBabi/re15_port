@@ -35,6 +35,7 @@
 #include "re15_enemy_ai_re2_zellenarm.h" /* re15_re2arm_owns (RE2-GL-Applier-Kandidat, Runde 34 B4) */
 #include "re15_schuss_r36.h" /* re15_schuss_r36_sichtlinie_blockiert — FUN_8001b9b4 @0x80012168 (Runde 36 C) */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht kein Ziel (@0x8003710c / @0x80111C14-20) */
+#include "re15_spinnen_r38.h"  /* Runde 38 Integration: Schachtspinne ohne Band (@0x800120e4-ec), Latch im Schacht */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
@@ -1078,7 +1079,16 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
     for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
         re15_actor_t *e = &g_actors[s2];
         if (!e->active) continue;
-        if (re15_r38_sm_versteckt(e)) continue; /* Runde 38 Spur T: grid & 0x60 `andi v0,a0,0x60` @0x8003710c */
+        /* Runde 38 Integration — VERSTECKTE WESEN (allgemein, nicht nur 0x2B/0x25): FUN_8003703c ueberspringt JEDES
+         * Wesen mit +0x09 & 0x60 (`lbu a0,-145(s0)` @0x80037104 mit s0 = Wesen+0x9a, `andi v0,a0,0x60` @0x8003710c,
+         * `bne v0,zero,0x80037174` @0x80037110 = naechstes Wesen) — vor dem HP-Eimer, fuer alle Radien (Waffe heben
+         * 0x7530 @0x80032fac, Messer 0x7d0 @0x800355d0 / 0x1388 @0x80034f7c, 0x64 @0x80031c30, 0xfa0 @0x80031e24).
+         * Bit 0x20 = Takt-Sperre (z.B. Spinnen-Wurzel `andi v0,v0,0x20` @0x80110a20), 0x40 = Skript-/Schacht-Marke
+         * (Spinne 0x41/0x42 @0x80110d08-14 / @0x80114f18, Hund 0x40-0x43, Affe 0x61/0x41, Spiderman 0x41/0x42).
+         * Gemessen im Original (R_belege/orig_2060_zielhilfe_messer.txt): Messer heben mit der kriechenden Spinne
+         * (grid 0x42) 1230 entfernt -> 0x800acaf3 = 0, Blick bleibt; nach der Landung (grid 5) -> 1, Blick dreht 0xC0/Bild.
+         * Ersetzt die Spur-T-Abfrage nur fuer 0x2B (re15_r38_sm_versteckt, im Resolver weiter in Gebrauch). */
+        if (e->grid_id & 0x60u) continue;
         if (e->hit_radius_min <= 0) continue;   /* byte-true: the aim-latch (FUN_8003703c), like the fire
                                                  * resolver, considers any entity with a DAMAGE HITBOX —
                                                  * not a zombie-only whitelist. So the player auto-turns
@@ -1499,6 +1509,18 @@ static uint32_t re15_band_stamp_aa4(const re15_actor_t *pl, const re15_actor_t *
         ring < (int32_t)dist)                          /* slt  @0x80012b90-94 */
         band |= (s0 > 0) ? 0x80000000u : 0x20000000u;  /* @0x80012b9c/ba0 UP | @0x80012bb8 DOWN */
     return band;
+}
+/* Runde 38 Integration: FUN_80012aa4(R) fuer einen Gegner-Takt (Spinnen-ACTIVE @0x80110fd0, R = 0xfa0), Ergebnis in der
+ * aim_band-Kodierung (re15_actor.h: 4 = UP 0x80000000, 2 = LEVEL 0x40000000, 1 = DOWN 0x20000000). Der Abstand wird wie
+ * im Original IN der Funktion gerechnet: playerX/Z (0x800aca88/90) - Gegner +0x34/+0x3c @0x80012ae0-b08, SquareRoot0
+ * @0x80012b58 (dmg_isqrt = derselbe BIOS-Zwilling wie im Resolver). */
+uint8_t re15_band_stamp_aa4_aim(const re15_actor_t *pl, const re15_actor_t *e, int32_t R)
+{
+    if (!pl || !e) return 0;
+    int32_t dx = pl->x - e->x, dz = pl->z - e->z;              /* `subu a3,a3,v0` @0x80012b08 / `subu a2,a2,a0` @0x80012b28 */
+    uint32_t dist = (uint32_t)dmg_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
+    uint32_t b = re15_band_stamp_aa4(pl, e, dist, R);
+    return (uint8_t)(((b & 0x80000000u) ? 4u : 0u) | ((b & 0x40000000u) ? 2u : 0u) | ((b & 0x20000000u) ? 1u : 0u));
 }
 /* Die Zombie-Familie = genau die Typen, deren ACTIVE-Tail der oben zitierte Block ist
  * (Live-Zombies 0x10/0x11/0x12/0x16/0x18 ueber FUN_80101224 @0x80101600, Zombie-Girl 0x13 ueber
@@ -2550,6 +2572,12 @@ retry_after_latch:
                         if (sdy >= fw[4] && sdy <= fw[5]) eband |= 0x20000000u;  /* DOWN-Fenster */
                         if (sdy >= fw[0] && sdy <= fw[1]) eband |= 0x80000000u;  /* UP-Fenster */
                     }
+                    /* Runde 38 Integration — LEERES BAND = KEIN KANDIDAT (`and` / `lui v1,0xe000` / `and` /
+                     * `beq v0,zero,0x80012128` @0x800120e0-ec): die Schachtspinne traegt vom INIT (@0x80110d38-48)
+                     * ueber den ganzen Zustand 4 bis zum ersten ACTIVE-Stempel (@0x80110f94-fd4) kein Band; im
+                     * Original gemessen word0 0x00000801 bis Phase 8, 0x60000801 ab dem ersten ACTIVE-Bild. Die
+                     * Bitauswahl oben bleibt das Port-Modell; hier nur der leere Fall (spinnen_r38.c Teil 5). */
+                    if (re15_spinnen_r38_band_leer(e)) eband = 0u;
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
                      * uebrigen Familien stempeln mit anderen Helfern/Radien — die generischen
@@ -3935,6 +3963,13 @@ void re15_re2_pause_filter_apply(int slot)
     if (!e->active) return;
     if (e->type != 0x20u && e->type != 0x21u && e->type != 0x25u && e->type != 0x26u) return;
     if (!re15_ai_re2_for_type(e->type)) return;          /* RE1.5-Pfad bleibt unberuehrt */
+    /* Runde 38 Integration: die Schachtspinne laeuft auch unter der RE2-KI die RE1.5-Choreografie (Zustand 4,
+     * spinnen_r38.c lauer_re2); ihr +0x93 ist dort der RE1.5-Latch — Phase 0 `lbu v0,147(v1)` / `ori v0,v0,0x3` /
+     * `sb v0,147(v1)` @0x80114f7c-88, frei erst Phase 8 `sb zero,147(v0)` @0x80115344 — und schliesst sie im Resolver
+     * aus (`lui s4,0x300` @0x800120c0, `beq v0,s4` @0x80012100). Gemessen vorher (exe, RE2-KI): +0x93 = 02 statt 03
+     * im ganzen Ausstieg, weil diese Zeile Bit 0 je Bild freigab. RE2 hat keine Schachtspinne (INIT-Sprungtabelle
+     * @0x80100004 Eintrag 1 = Epilog), also auch keine RE2-Pause, die hier etwas freigeben koennte. */
+    if (re15_spinnen_r38_schacht_re15(e)) return;
     /* ⛔ NUR FREIGEBEN, NIE SETZEN - und das ist eine Messung, keine Vorsicht.
      * Ein `|= 1`, solange die Pause laeuft, sperrt DAUERHAFT, sobald ihr Dekrement einmal
      * ausfaellt. Vier solche Loecher sind gemessen und erreichbar:

@@ -81,6 +81,24 @@ void re15_spinnen_r38_baby_schwanz(re15_actor_t *e, int32_t ox, int32_t oy, int3
  * enemy_ai_common.c re15_actor_prop_pushout fuer Typ 0x25 (Haken "Runde 38 Spur R"). */
 void re15_spinnen_r38_objekt_pass(re15_actor_t *e);
 
+/* ---- Teil 5 (Runde 38 Integration): die Spinne IM SCHACHT ist kein Ziel ----------------------------
+ * Resolver FUN_80011f50 nimmt einen Kandidaten nur mit word0 & Spieler-word0 & 0xe0000000 != 0 (@0x800120d0-ec).
+ * Das Band der Spinne (Port: aim_band, re15_actor.h = word0-Bits 29-31) ist leer vom Sce_em_set-Satz (word0 1/0x2001)
+ * ueber den INIT (`word0 &= 0x1fffffff` @0x80110d38-48) und den ganzen Zustand 4 (0x80114e18-0x801153d0 ohne
+ * word0-Schreiber) bis zum ersten ACTIVE-Stempel (@0x80110f94-fd4: grid < 2 oder grid == 5 -> FUN_80012aa4(0xfa0)).
+ * Rueckgabe 1 = Band leer -> kein Kandidat. RE2-Gehirn (Standard-KI): nur in den RE1.5-Phasen (Zustand 0 vor dem INIT
+ * bzw. vor der RE2-Uebergabe, Zustand 4 = Schacht-Choreografie); danach hat RE2 kein Hoehenband. Gerufen aus
+ * re15_damage.c (Resolver-Zweig Typ 0x25). Belege und Messung: Dossier R_spinnen.md "Integration: versteckte
+ * Schachtspinne". */
+int re15_spinnen_r38_band_leer(const re15_actor_t *e);
+/* ACTIVE-Stempel der RE1.5-Spinne (@0x80110f94-fd4) in aim_band: loeschen, dann bei grid < 2 oder grid == 5
+ * FUN_80012aa4(0xfa0). Gerufen aus enemy_ai_common.c re15_adult_spider_ai_tick (ACTIVE-Schwanz). */
+void re15_spinnen_r38_band_stempel(re15_actor_t *e, const re15_actor_t *pl);
+/* 1 = die RE1.5-Schacht-Choreografie (Zustand 4, 0x80114e18) fuehrt die Spinne: +0x93 ist dann der RE1.5-Latch
+ * (Phase 0 `ori v0,v0,0x3` @0x80114f84 .. Phase 8 `sb zero,147` @0x80115344), nicht RE2s Trefferpause — der
+ * RE2-Pausenfilter (re15_damage.c re15_re2_pause_filter_apply) laesst ihn stehen. */
+int re15_spinnen_r38_schacht_re15(const re15_actor_t *e);
+
 /* MESSSCHIENE (env RE15_SPINNEN_LOG=<datei>, kein Spielverhalten): eine Zeile je Bild und
  * Spinne (Typ 0x25/0x26) mit Lage X/Y/Z, Zustandsbytes, Modus und Boden. Gerufen einmal je
  * Spielbild aus platform/pc/main.c (Haken "Runde 38 Spur R"). */

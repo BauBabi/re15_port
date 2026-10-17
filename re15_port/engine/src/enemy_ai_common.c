@@ -10961,8 +10961,10 @@ static void re15_zgirl_ai_tick(int slot)
  * GRAB-A wall/ceiling transit (SCA +0x90/+0x1b4 data, wall-helper 0x801118a8); the 9-phase AMBUSH wall-
  * DROP trajectory (Y-descent/rot_x/floor) — only its trigger-gate is modeled; leg-dismember/debris
  * (model-part pool, +0x93&0x40) and the blood/gore FX 0x80019700; CORPSE color-tint/sink and DEATH
- * gore phases (render). The 0x80012aa4(4000) body-contact call @0x80110fd0 and +0x166=0xccc @0x80110df8
- * (unidentified consumer) are not modeled. */
+ * gore phases (render). +0x166=0xccc @0x80110df8 (unidentified consumer) is not modeled. The 0x80012aa4(0xfa0)
+ * call @0x80110fd0 is the word0 BAND STAMP (not a body-contact call) — modeled since Runde 38 Integration in
+ * aim_band (INIT clear @0x80110d38-48, ACTIVE tail spinnen_r38.c re15_spinnen_r38_band_stempel); the DEATH-state
+ * band writes (@0x80114bec-c30 / @0x80114cec-d1c: clear + DOWN) are still not modeled. */
 static const uint16_t s_aspider_hp_row[16] =    /* HP table @0x8011761c = HPbase 0x8011717c + 0x25*0x20 */
     { 76,105,125,78,80,109,129,83,113,132,87,117,136,93,99,121 };   /* hp = row[rng()&0xf] @0x80110da0 */
 /* idle-next-substep table @0x80118ea4 [2 rows x 8, idx=(LOS&1)*8 + (rng&7)] (byte-true). NOTE: consumed
@@ -11025,6 +11027,7 @@ static void re15_adult_spider_ai_tick(int slot)
         if (e->grid_id == 0x40)      { e->state = 4; e->sub_state_1 = 0; }   /* +0x4=0x004 @0x80110cf0 */
         else if (e->grid_id == 0x41) { e->state = 4; e->sub_state_1 = 1; }   /* +0x4=0x104 @0x80110d14 */
         else                         { e->state = 1; e->sub_state_1 = 0; }
+        e->aim_band = 0;              /* Runde 38 Integration: word0 &= 0x1fffffff @0x80110d38-48 (Band leer bis ACTIVE) */
         (void)re15_aspider_anim(e);   /* Runde 38 Spur R: anim_set `jal 0x8001f314` @0x80110d60 (Bild 0 -> 1) */
         break;
 
@@ -11222,7 +11225,10 @@ static void re15_adult_spider_ai_tick(int slot)
 
         /* ACTIVE tail @0x80110f8c: lockout-- (AFTER decide) then stuck-counter += 1 if wall-blocked. */
         if (e->dog_atk_cd) e->dog_atk_cd--;                   /* +0x1d6-- @0x80110fe4 (port: was at head, moved to tail) */
-        /* 0x80012aa4(4000) body-contact call (grid<2||grid==5) @0x80110fd0 = OPEN */
+        /* Runde 38 Integration: 0x80012aa4(0xfa0) ist der BAND-STEMPEL (kein Koerperkontakt): word0 &= 0x1fffffff
+         * @0x80110f94-a4, grid < 2 oder grid == 5 -> `jal 0x80012aa4` / `ori a0,zero,0xfa0` @0x80110fd0-d4 (spinnen_r38.c
+         * Teil 5; im Original gemessen 0x60000801 ab dem ersten ACTIVE-Bild nach der Landung). */
+        re15_spinnen_r38_band_stempel(e, pl);
         rr = re15_dog_blocked(e);                             /* +0x1da SCA wall-clamp proxy (ai_contact) */
         e->ai_target_x = (int16_t)(rr ? e->ai_target_x + 1 : 0);  /* +0x1dc stuck counter @0x80110ffc-30 */
         break;

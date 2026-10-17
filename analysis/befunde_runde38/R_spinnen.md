@@ -709,3 +709,113 @@ Spray aus der Liste; F480 wieder im Spiel.
   routine25 braucht re15_szenenschutz_r38.h. Gemeinsame Dateien der Nachbesserung: game_step_common.c (2 Haken: Kommando-1-
   Prolog 4 Zeilen, re15_player_cmd_zero 2 Zeilen), sonst nur spinnen_r38.c/.h und die eigenen Tests.
 - **Entscheidungsfragen:** keine.
+
+## Integration: versteckte Schachtspinne (2026-10-17, Baum r38_integration)
+
+**Befund** (Riegel-Agent 7fff66c5): der Port zielt auf die Schachtspinnen in ROOM2060/20A0 (Elza 2061/20A1, gleiche Saetze)
+und trifft sie im Schacht; danach laeuft die Spinne unter der RE2-KI auf Schachthoehe herum (= "Spinnen fliegen in der Luft").
+
+### Messung vorher (echte exe, Messschiene RE15_SPINNEN_LOG + neue Felder `pr` Blick / `zh` Zielhilfe-Platz)
+Laeufe `R_belege/integ_lauf_v.sh`, Auswertung `R_belege/ana_versteckt.py`, Gesamttabelle `R_belege/integ_exe_vorher_nachher.txt`.
+T = Tuerweg 2030 -> 2060 bzw. 2031 -> 2061 per Aktionstaste (Door_aot_set ROOM2030 @Datei 0x1B4C, Ziel (7600,0,3950) Blick 0x800),
+dann nur R1 + Feuer. K = an der Tuerlage, 0,5 s vorwaerts in Cut 1 (Ausloeser sub01 -> Member_set 0x0C 0x42), dann R1 + Feuer.
+
+| Lauf | Zielhilfe auf versteckter Spinne | Blick | Treffer im Schacht | Latch beim Kriechen | Bilder ueber dem Boden |
+|---|---|---|---|---|---|
+| T Leon/Elza, RE2- und RE1.5-KI | 760 von 760 Bildern | 0x800 -> 0xA63 | 0 (Sichtlinie FUN_8001b9b4 sperrt dort) | - | 0 |
+| K Leon/Elza RE2-KI | 420 von 420 | 0x800 -> 0x4FF | 2 (F32, F148) | +0x93 = 02 | 389 (grid 0x42, y -3600) |
+| K Leon/Elza RE1.5-KI | 84 (alle Schachtbilder) | 0x800 -> 0x67F | 0 (Latch 03) | 03 | 0 |
+
+### Original (selbst disassembliert; dynamisch: DuckStation-GDB, MZD-Disc, `R_belege/gdb_spinne_band.py`)
+| Adresse | Instruktion | Bedeutung |
+|---|---|---|
+| 0x80037104 / 0x8003710c / 0x80037110 | `lbu a0,-145(s0)` (s0 = Wesen+0x9a) / `andi v0,a0,0x60` / `bne v0,zero,0x80037174` | Zielhilfe FUN_8003703c: JEDES Wesen mit +0x09 & 0x60 uebersprungen (alle Radien: 0x7530 @0x80032fac/0x800340f4, 0x1388 @0x80034f7c, 0x7d0 @0x800355d0, 0x64 @0x80031c30, 0xfa0 @0x80031e24) |
+| 0x80011fb0-e8 | `word0 &= 0x1fffffff`, `\| acaec << 16` | Spieler-Band im word0 von 0x800aca54 |
+| 0x800120d0 / d8 / e0 / e4 / e8 / ec | `lw v0,0(s0)` / `lw v1,-13740(v1)` / `and` / `lui v1,0xe000` / `and` / `beq v0,zero,0x80012128` | Resolver FUN_80011f50: leeres Band -> kein Kandidat |
+| 0x800120c0 / 0x800120f4 / 0x80012100 | `lui s4,0x300` / `lw v0,144(s0)` / `beq v0,s4` | (+0x93 & 3) == 3 -> kein Kandidat |
+| 0x80110d10-14 / 0x80110d38-48 | `ori v0,zero,0x104` + `sw v0,4(a0)` / `lui v1,0x1fff` ... `sw v0,0(a0)` | Spinnen-INIT: grid 0x41 -> Zustand 4/1, Band geloescht |
+| 0x80114e18-0x801153d0 | kein Store auf +0..+3 (Vollscan, Aufrufe 0x800245d8/0x8001f314/0x8001af20 ebenso) | Zustand 4 schreibt word0 nie |
+| 0x80114f7c-88 / 0x80115344 | `lbu`/`ori v0,v0,0x3`/`sb v0,147(v1)` / `sb zero,147(v0)` | Latch 3 ab Phase 0, frei in Phase 8 |
+| 0x80115250-54 / 0x8011539c-a0 | `ori v0,zero,0x5`+`sb v0,9(v1)` / `ori v0,zero,0x1`+`sh v0,4(v1)` | Phase 7 grid 5, Phase 8 Zustand 1 |
+| 0x80110f94-a4 / 0x80110fbc-d4 | Band loeschen / `sltiu v0,v1,0x2`, `ori v0,zero,0x5`, `jal 0x80012aa4` + `ori a0,zero,0xfa0` | ACTIVE stempelt (nur grid < 2 oder 5) |
+| 0x80012aa4-bf0 | s0 = dY/1800, LEVEL bei (unsigned)s0 < 2, UP/DOWN im Ring 1000\|s0\| < d < R + 1000\|s0\| | der Stempel |
+Gemessen (`R_belege/orig_2060_zielhilfe_messer.txt`, Spieler (6000,3000) = Cut 1, virtuelles R1 = 0x800ac768 \|= 0x0500):
+word0 der Schachtspinne **0x00000801 (Band 0)** im Warten, Kriechen (+0x93 = 03), nach Phase 7 (grid 5) und nach Phase 8
+(Zustand 1, +0x93 = 00); **0x60000801 (LEVEL\|DOWN)** ab dem ersten ACTIVE-Bild. Messer gehoben bei der kriechenden Spinne
+(grid 0x42, 1230 entfernt): **0x800acaf3 = 0, Blick bleibt 1024**; nach der Landung: **0x800acaf3 = 1, Blick 1024 -> 1216 -> 1408
+(0xC0 je Bild)**. RE2 (Gegenbeleg): Zielhilfe FUN_80042144 ueberspringt ebenfalls versteckte Wesen (`lhu v0,270(s0)` / `andi
+v0,v0,0xc000` / `bne` @0x800421c8-d4, wie Gate 4 des Appliers @0x80047158-64); eine Schachtspinne hat RE2 nicht (EMS25.BIN INIT
+`lhu v0,270(s2)` @0x80100430 / `sltiu v0,v1,0xc` @0x8010043c, Tabelle @0x80100004: [0] 0x80100460 Boden, [1] 0x8010058C =
+Epilog, [2]/[3] 0x8010047C Decke, [4..7] 0x801004B4 Wand).
+
+### Aenderung (re15_damage.c, spinnen_r38.c/.h, enemy_ai_common.c, re15_damage.h)
+1. **Zielhilfe** `re15_player_aim_target`: `grid_id & 0x60 -> continue` fuer JEDES Wesen (ersetzt die Spur-T-Abfrage nur fuer 0x2B).
+2. **Band-Tor**: das Port-Feld fuer word0-Bits 29-31 ist `aim_band` (re15_actor.h). Fuer die Spinne belegt: INIT (RE1.5 und
+   RE2-KI-Schacht-INIT) loescht, Zustand 4 schreibt nicht, der RE1.5-ACTIVE-Schwanz stempelt FUN_80012aa4(0xfa0)
+   (`re15_spinnen_r38_band_stempel`, neuer Zugang `re15_band_stamp_aa4_aim`). Der Resolver-Zweig 0x25 nimmt bei leerem Band
+   keinen Kandidaten (`re15_spinnen_r38_band_leer`: Zustand 0/4 immer; RE1.5-Gehirn `aim_band == 0`; RE2-Gehirn nach dem
+   RE2-INIT nie - RE2 hat kein Hoehenband). Die Bitauswahl bei nicht leerem Band bleibt das bisherige Port-Modell.
+3. **Latch**: der RE2-Pausenfilter laesst +0x93 der Spinne in Zustand 4 stehen (`re15_spinnen_r38_schacht_re15`).
+4. Messschiene: `pr`/`zh` hinter `fx=` (bisherige Auswerter lesen unveraendert).
+
+### Messung nachher (gleiche Laeufe)
+| Lauf | Zielhilfe versteckt | Blick | Treffer im Schacht | Latch | ueber dem Boden | nach der Landung |
+|---|---|---|---|---|---|---|
+| T Leon/Elza, beide KI | 0 | bleibt 0x800 | 0 | - | 0 | Spinne wartet |
+| K Leon/Elza RE2-KI | 0 | -> 0x7B9 (Landestelle) | 0 | 03 | 0 | Zielhilfe 211 Bilder, 7 Treffer |
+| K Leon/Elza RE1.5-KI | 0 | -> 0x60F | 0 | 03 | 0 | Zielhilfe 336 Bilder, 6 Treffer |
+
+### Riegel `r31_trefferboxen_versteckt` (`probe_r31_boxen versteckt`, registriert in probes/r31_boxen.cmake)
+RE2- und RE1.5-KI, je Schachtspinne (2060/0, 2060/1, 20A0/0, 20A0/1): W wartend (Zielhilfe, direkter Resolver-Aufruf, Salven
+eben/hoch, wartet danach unveraendert), K Herauskriechen (Latch == 3 in jedem Ausstiegsbild, Zielhilfe 0 solange grid 0x42,
+Resolver 0, Schuesse treffen nicht, landet), L Grenze (nach Phase 8 Resolver 0, nach dem ersten ACTIVE/RE2-INIT Resolver 1 +
+Zielhilfe 1, RE1.5-KI Band 0 -> 3 wie 0x00000801 -> 0x60000801, danach Treffer, kein Bild ueber dem Boden), T Tuerweg Leon/Elza,
+Zensus grid & 0x60 (unten), Stegspinne ROOM2050 (Band = FUN_80012aa4(0xfa0)-Soll an drei Spielerlagen). Ergebnis: `OK`.
+**Gegenprobe** (Engine-Stand 7fff66c5, Riegel unveraendert): `FEHLGESCHLAGEN: 95 Abweichung(en) vom Original` (W/K/L je Schachtspinne in beiden KI, Tuerweg Leon/Elza, Zensus, Stegspinne;
+`R_belege/integ_riegel_versteckt_gegenprobe.txt`; mit Fix `R_belege/integ_riegel_versteckt_nachher.txt`).
+
+### Zensus grid & 0x60 (alle 240 RDTs, `R_belege/zensus_grid60.py` / `.txt`) und Wirkung des neuen Tors
+| Typ | Saetze (Sce_em_set +0x09) | Freigabe im Original | Port | Wirkung (gemessen im Riegel, beide KI) |
+|---|---|---|---|---|
+| NPC 0x40-0x4D | ~60 Saetze grid 0x40 (1011, 1021, 1050, 10D0, 11B0, 1260, 2000, 3000, 4000, 5011, 6020, ...) | - | HP -1 (@0x8011c744) -> war schon kein Ziel | keine |
+| Hund 0x20 | 1190/1191 sub13 0x40 (-> sub10 0x43 @0x27E6); 11D0/11D1 0x41, 3060 0x41, 3061 0x41 (-> 0x42) | grid := 0 `sb zero,9` @0x8011161c / @0x80111718 | re15_dog_state456, beide KI, gleiche Stellen | versteckt kein Ziel; Fenster-Hund nach 1 Bild, Zwinger-Hund nach 35 Bildern wieder Ziel |
+| Kraehe 0x21 | 1171 sub07 em1/em2 0x40 (Ck(3,194)) | keine (STAGE1 0x80111a00-0x80116000 ohne grid-Store, kein Member_set) | ebenso | Szenenkraehen nie Ziel der Zielhilfe (Original ebenso); Spur B (re15_szenenschutz_gegen liest grid & 0x40) unberuehrt |
+| Spinne 0x25 | 2060/2061, 20A0/20A1 0x41 (-> 0x42) | Phase 7 grid 5 @0x80115250-54 | spinnen_r38.c | Ziel des Fixes (oben) |
+| Affe 0x29 | 4000, 4040/4041, 4080/4081, 5031, 50A0/50A1, 50B0, 5100/5101 0x61 (-> 0x41/0x61/0x00) | grid &= 0xbf @0x80115860-64 / @0x80115978-7c | affen3_r38.c | versteckt kein Ziel; nach 0x41 in 1 Bild 0x01 -> Ziel |
+| Spiderman 0x2B | 4001, 5040/5041, 5070/5071 0x41 (-> 0x42) | grid := 0 @0x80115564 (Bild 0x21) | spiderman_r38.c | wie vorher (Spur-T-Tor jetzt allgemein); nach 34 Bildern Ziel |
+| Zombie 0x10 | 1200/1201 em2 0xA1 (-> sub02 0x81) | Freigabewert ohne 0x60 | Member_set | eingefroren kein Ziel, nach Freigabe sofort |
+| Zombie 0x18 | 5020 em0 0xAE | keine | - | nie Ziel (Original ebenso) |
+| Gorilla 0x27 | 1141 sub00 0x30 (Ck(4,240)), 11C0 sub00 0x30 (-> 0x10) | Freigabewert ohne 0x60 | Member_set; Messhaken dining_r38 (RE15_R38F_GORILLAS_STARR) | eingefroren kein Ziel |
+| Birkin 0x30/0x36 | 3070, 5080/5081, 5090/5091, 50E0, 50F1 0x33; 3071 0x21; 3080 0x24 (-> 0x13/0x01/0x12/0x04) | Freigabewert ohne 0x60 | Member_set | eingefroren kein Ziel, nach Freigabe Ziel |
+| Port-Halt 0x20 | irons_tod_1150.c (1040 hinter der Kamera), montage_r38.c (1030 hinter dem Tor) | - | Port-Szenen | angehaltene Zombies kein Ziel (Bedeutung wie Original-Bit 0x20) |
+Stegspinne ROOM2050 (y -5400; Wirkung des Band-Tors ausserhalb des Schachts, gemessen im Riegel): RE1.5-KI Kandidat genau bei
+nicht leerem ACTIVE-Stempel - auf dem Steg 1999 entfernt Band 3 (LEVEL|DOWN), Treffer; unten (y 0) 2048 waagerecht Band 0
+(s0 3, ausserhalb des Rings 3000 < d < 7000), KEIN Treffer (vorher LEVEL pauschal = Treffer); unten 4990 Band 4 (UP), Treffer.
+RE2-KI in allen drei Lagen Treffer wie vorher (RE2 hat kein Hoehenband).
+
+### Tests
+`ctest --test-dir re15_port/build -R "trefferboxen|r38_spinnen|spider|r31_|aim|ziel|r38_affen3|r38_szenenschutz|crow|kraehe|r36_schuss|beretta|r38_griff" -j 3 --timeout 1500`:
+`100% tests passed, 0 tests failed out of 69` / `Total Test time (real) = 407.44 sec` (darin r31_trefferboxen_versteckt,
+r31_trefferboxen, unit_r38_spinnen, integration_r38_spinnen_echtlauf, unit_r38_spiderman, r38_affen3*, r38_szenenschutz*,
+Kraehen-, Schuss-, Beretta- und Griff-Riegel). Zusaetzlich die Spinnen-/Schadens-/Flavor-Tests, die einen 0x25 beschiessen
+(`unit_re2_baby_spider_dmg|unit_re2_hp_model|unit_re15_re2z_import|unit_re15_re2z_gore_se|unit_r38_npckante_*|probe_spinne_elevation|
+unit_ai_flavor_mixed|unit_adult_spider_ai|unit_spider_ai|unit_enemy_ai|unit_damage|unit_re2_spider_ai|unit_aim_all_around|
+unit_r38_spiderman|unit_1090_*|...`, 44 Tests): `100% tests passed, 0 tests failed out of 44`.
+Nebenwirkung, gemessen und behoben: `unit_re2_baby_spider_dmg` Abschnitt 6 baut eine RE1.5-0x25 als Geruest (state 1 ohne Takt)
+und feuerte sofort -> "Schuss kam nicht an" (Band leer wie im Original vor dem ersten ACTIVE). Das Geruest stempelt jetzt einmal
+wie der ACTIVE-Schwanz (`re15_spinnen_r38_band_stempel`, grid 0x01, gleiche Hoehe, 3000 -> LEVEL|DOWN); danach gruen.
+
+### Offen
+1. Zielhilfe: die drei Eimer des Originals (stehend > liegend grid & 0x80 > HP < 0 mit Rueckgabe 2 ohne Drehung,
+   @0x80037118-0x80037170 / @0x80037190-0x800371ec) fuehrt der Port nicht (ein Eimer, HP < 0 uebersprungen); der Port prueft
+   zusaetzlich den Trefferkasten (hit_radius_min), das Original nicht. Vorbestehend.
+2. RE1.5-Spinne: der DEATH-Zustand schreibt das Band (loeschen + DOWN ab +0x95 >= 0xe @0x80114bec-c30, loeschen + DOWN
+   @0x80114cec-d1c) - nicht abgebildet; die Bitauswahl bei nicht leerem Band ist weiter das Port-Modell (LEVEL + RE2-Fenster).
+3. Eingefrorene Wesen (grid & 0x20, z.B. ROOM5020 0xAE) sind jetzt kein Ziel der Zielhilfe, der Resolver des Ports kann sie
+   aber weiter treffen (Band je Typ im Resolver gerechnet); im Original stempelt kein ACTIVE-Takt. Je Typ nachzumessen.
+4. RE2-KI-Skripthunde (Zustand 4/5/6 = RE1.5-Maschine, Latch `+0x93 |= 3` @0x801113f8): der RE2-Pausenfilter gibt Bit 0
+   frei wie vorher bei der Spinne (Kommentar dort nennt den ROOM1190-Zwingerhund) - gleiche Fehlerklasse, nicht Teil dieses Fixes.
+5. Kunstfall Ausloeser vor dem INIT (nur Debug-Sprung direkt in Cut 1/5): RE2-KI-Spinne laeuft mit grid 0x42 auf Schachthoehe
+   (R_spinnen OFFEN 3); unter der RE1.5-KI jetzt wie im Original ohne Band.
+6. DuckStation-GDB beantwortet `P` (Register schreiben) leer - ein direkter Aufruf der Zielhilfe ging nicht; gemessen wurde ueber
+   das virtuelle R1 (0x800ac768).

@@ -1,0 +1,57 @@
+# probe_r31_boxen versteckt — Stand mit Fix (Runde 38 Integration), [scd]/[prop]-Zeilen entfernt
+=== r31 versteckt: die Schachtspinne IM SCHACHT gegen das Original (RE2- und RE1.5-KI) ===
+  --- RE2-KI ---
+  [2060 Spinne 0] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 0, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 0/0 grid 0x00 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 0): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [2060 Spinne 1] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 0, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 0/0 grid 0x00 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 0): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 0] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -5400 (Spawn -5400)
+                   K: ausgeloest 1 | 89 Ausstiegsbilder (davon 88 mit grid 0x42): Latch==3 in 89, Zielhilfe 0, Resolver direkt 0 | 14 Schuesse, Treffer 0 | danach 0/0 grid 0x00 y 0, gelandet 1
+                   L: Phase 8 in Bild 89 (Zustand 0): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 1] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 0, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 0/0 grid 0x00 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 0): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 0 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  Tuerweg 2030 -> 2060 (Leon) (7600,0,3950) Blick 0x800: Zielhilfe 0 | Blick danach 0x800 | Treffer 0 | Spinne 0 wartet 1
+  Tuerweg 2031 -> 2061 (Elza) (7600,0,3950) Blick 0x800: Zielhilfe 0 | Blick danach 0x800 | Treffer 0 | Spinne 0 wartet 1
+  Zensus Hund Fenster  0x20: gespawnt 1 grid 0x41 | versteckt gewaehlt 0 | Freigabe 0x42 -> Bits weg nach 1 Bildern, grid 0x00, gewaehlt 1
+  Zensus Hund Zwinger  0x20: gespawnt 1 grid 0x40 | versteckt gewaehlt 0 | Freigabe 0x43 -> Bits weg nach 35 Bildern, grid 0x00, gewaehlt 1
+  Zensus Affe Ereignis 0x29: gespawnt 1 grid 0x61 | versteckt gewaehlt 0 | Freigabe 0x41 -> Bits weg nach 1 Bildern, grid 0x01, gewaehlt 1
+  Zensus Spiderman     0x2B: gespawnt 1 grid 0x41 | versteckt gewaehlt 0 | Freigabe 0x42 -> Bits weg nach 34 Bildern, grid 0x00, gewaehlt 1
+  Zensus Zombie 1200   0x10: gespawnt 1 grid 0xA1 | versteckt gewaehlt 0 | Freigabe 0x81 -> Bits weg nach 0 Bildern, grid 0x81, gewaehlt 1
+  Zensus Gorilla 11C0  0x27: gespawnt 1 grid 0x30 | versteckt gewaehlt 0 | Freigabe 0x10 -> Bits weg nach 0 Bildern, grid 0x10, gewaehlt 1
+  Zensus Birkin 3070   0x30: gespawnt 1 grid 0x33 | versteckt gewaehlt 0 | Freigabe 0x13 -> Bits weg nach 0 Bildern, grid 0x13, gewaehlt 1
+  Zensus Zombie 5020   0x18: gespawnt 1 grid 0xAE | versteckt gewaehlt 0 | ohne Freigabe 300 Bilder: nie gewaehlt 1, grid 0xAE
+  Zensus Kraehe 1171   0x21: gespawnt 1 grid 0x40 | versteckt gewaehlt 0 | ohne Freigabe 300 Bilder: nie gewaehlt 1, grid 0x40
+  Stegspinne 2050 (y -5400), Spieler auf dem Steg (-949,-5400,-1382), Abstand 1837: Band 0 (FUN_80012aa4(0xfa0)-Soll 3) | Resolver direkt 1
+  Stegspinne 2050 (y -5400), Spieler unten (-949,0,-1414), Abstand 1841: Band 0 (FUN_80012aa4(0xfa0)-Soll 0) | Resolver direkt 1
+  Stegspinne 2050 (y -5400), Spieler unten (1051,0,4718), Abstand 5837: Band 0 (FUN_80012aa4(0xfa0)-Soll 4) | Resolver direkt 1
+  --- RE1.5-KI ---
+  [2060 Spinne 0] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 0, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 1): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 3 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [2060 Spinne 1] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 0, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 1): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 3 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 0] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -5400 (Spawn -5400)
+                   K: ausgeloest 1 | 89 Ausstiegsbilder (davon 88 mit grid 0x42): Latch==3 in 89, Zielhilfe 0, Resolver direkt 0 | 14 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 89 (Zustand 1): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 3 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  [20A0 Spinne 1] W: wartend 1 | Zielhilfe 0 | Resolver direkt 0 | Salven 480 Bilder: eben 0, hoch 0 | danach 4/1 grid 0x41 y -3600 (Spawn -3600)
+                   K: ausgeloest 1 | 72 Ausstiegsbilder (davon 71 mit grid 0x42): Latch==3 in 72, Zielhilfe 0, Resolver direkt 0 | 12 Schuesse, Treffer 0 | danach 1/0 grid 0x05 y 0, gelandet 1
+                   L: Phase 8 in Bild 72 (Zustand 1): Zielhilfe 1, Resolver 0 | erstes ACTIVE: Zielhilfe 1, Resolver 1 | Band 0 -> 3 | Salve 240 Bilder: Treffer 22, y 0..0, ueber dem Boden 0
+  Tuerweg 2030 -> 2060 (Leon) (7600,0,3950) Blick 0x800: Zielhilfe 0 | Blick danach 0x800 | Treffer 0 | Spinne 0 wartet 1
+  Tuerweg 2031 -> 2061 (Elza) (7600,0,3950) Blick 0x800: Zielhilfe 0 | Blick danach 0x800 | Treffer 0 | Spinne 0 wartet 1
+  Zensus Hund Fenster  0x20: gespawnt 1 grid 0x41 | versteckt gewaehlt 0 | Freigabe 0x42 -> Bits weg nach 1 Bildern, grid 0x00, gewaehlt 1
+  Zensus Hund Zwinger  0x20: gespawnt 1 grid 0x40 | versteckt gewaehlt 0 | Freigabe 0x43 -> Bits weg nach 35 Bildern, grid 0x00, gewaehlt 1
+  Zensus Affe Ereignis 0x29: gespawnt 1 grid 0x61 | versteckt gewaehlt 0 | Freigabe 0x41 -> Bits weg nach 1 Bildern, grid 0x01, gewaehlt 1
+  Zensus Spiderman     0x2B: gespawnt 1 grid 0x41 | versteckt gewaehlt 0 | Freigabe 0x42 -> Bits weg nach 34 Bildern, grid 0x00, gewaehlt 1
+  Zensus Zombie 1200   0x10: gespawnt 1 grid 0xA1 | versteckt gewaehlt 0 | Freigabe 0x81 -> Bits weg nach 0 Bildern, grid 0x81, gewaehlt 1
+  Zensus Gorilla 11C0  0x27: gespawnt 1 grid 0x30 | versteckt gewaehlt 0 | Freigabe 0x10 -> Bits weg nach 0 Bildern, grid 0x10, gewaehlt 1
+  Zensus Birkin 3070   0x30: gespawnt 1 grid 0x33 | versteckt gewaehlt 0 | Freigabe 0x13 -> Bits weg nach 0 Bildern, grid 0x13, gewaehlt 1
+  Zensus Zombie 5020   0x18: gespawnt 1 grid 0xAE | versteckt gewaehlt 0 | ohne Freigabe 300 Bilder: nie gewaehlt 1, grid 0xAE
+  Zensus Kraehe 1171   0x21: gespawnt 1 grid 0x40 | versteckt gewaehlt 0 | ohne Freigabe 300 Bilder: nie gewaehlt 1, grid 0x40
+  Stegspinne 2050 (y -5400), Spieler auf dem Steg (2300,-5400,-6450), Abstand 1999: Band 3 (FUN_80012aa4(0xfa0)-Soll 3) | Resolver direkt 1
+  Stegspinne 2050 (y -5400), Spieler unten (2300,0,-6902), Abstand 2048: Band 0 (FUN_80012aa4(0xfa0)-Soll 0) | Resolver direkt 0
+  Stegspinne 2050 (y -5400), Spieler unten (4300,0,-1450), Abstand 4990: Band 4 (FUN_80012aa4(0xfa0)-Soll 4) | Resolver direkt 1
+OK

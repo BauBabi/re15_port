@@ -27,9 +27,11 @@
  *   (5) RUNDE 38 (Spur R, Schachtspinnen ROOM2060/20A0): der Zensus sieht jetzt JEDE
  *       ausgelieferte Spinne; die vier Schachtspinnen warten mit leerem RE2-Kasten, der
  *       Original-Ausloeser (Raumskript sub01 -> Member_set grid 0x42) holt sie heraus, nach der
- *       Landung tragen sie -1400/1400 und werden getroffen (Teil 2e). Dass der Port sie IM
- *       Schacht anzielt und trifft (das Original nicht), ist ein gemeldeter Spielfehler: Block
- *       SPIELFEHLER in jedem Lauf, Urteil mit dem Argument `versteckt`.
+ *       Landung tragen sie -1400/1400 und werden getroffen (Teil 2e).
+ *   (6) RUNDE 38 INTEGRATION (Argument `versteckt`, ctest r31_trefferboxen_versteckt): IM Schacht
+ *       ist die Spinne wie im Original kein Ziel (Zielhilfe grid & 0x60 @0x8003710c-10, leeres
+ *       Band @0x800120e4-ec, Latch @0x80012100) — RE2- und RE1.5-KI, Tuerweg Leon/Elza, plus
+ *       der Zensus aller ausgelieferten Typen mit grid & 0x60.
  * ============================================================================================ */
 #include "re15_emd.h"
 #include "re15_rdt.h"
@@ -48,6 +50,8 @@
 #include "re15_inventory.h"
 #include "re15_msg.h"
 #include "re2_ems.h"
+#include "re15_ems.h"      /* Runde 38 Integration: RE1.5-Bank (re15_ems_index_for_type / re15_ems_get_entry) */
+#include "re15_math.h"     /* Runde 38 Integration: re15_squareroot0 = SquareRoot0 (Band-Soll der Stegspinne) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -90,9 +94,13 @@ static void frame(uint16_t cur, uint16_t edge)
     re15_game_step(&s_ctx);
 }
 
+/* Runde 38 Integration (Zensus grid & 0x60): ein Spielflag, das das Raumskript fuer den versteckten Zweig verlangt
+ * (Ifel_ck vor dem Sce_em_set), NACH scd_vm_init setzen — re15_game_state_init loescht die Flags. -1 = keins. */
+static int s_vorflag_bank = -1, s_vorflag_bit = 0;
 static void bringup(void)
 {
     re15_actor_init(); re15_aot_init(); scd_vm_init();
+    if (s_vorflag_bank >= 0) re15_game_flag_set((uint8_t)s_vorflag_bank, (uint8_t)s_vorflag_bit, 1);
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset(); re15_player_aim_reset();
     re15_esp_fx_reset();
@@ -636,12 +644,8 @@ static void pass_spinne_raeume(void)
  *   (c) Landung + RE2-INIT: Kasten -1400/1400, box_set 1 (Tabelle @0x801063A0+20/+26);
  *   (d) danach treffen echte Schuesse (> 0) - keine Schachtspinne bleibt dauerhaft untreffbar.
  * Bis zur Landung wird dabei nicht geschossen.
- * NICHT als richtig festgeschrieben wird die Spinne IM SCHACHT (wartend und beim Herauskriechen):
- * im Original ist sie kein Ziel (Zielhilfe und Resolver, s.o.); der Port zielt auf sie und
- * trifft sie, und beim Kriechen gibt sein RE2-Pausenfilter (re15_re2_pause_filter_apply,
- * re15_damage.c, je Schritt nach dem Gegner-Takt) Bit 0 des Latches wieder frei (gemessen,
- * Block SPIELFEHLER in jedem Lauf). Das ist ein gemeldeter Spielfehler; die Probe prueft ihn
- * mit dem Argument `versteckt` gegen das Original (Exit 1, solange er besteht). */
+ * Die Spinne IM SCHACHT (wartend und beim Herauskriechen) — im Original kein Ziel (Zielhilfe und
+ * Resolver, s.o.) — prueft der eigene Riegel `versteckt` (Block "RIEGEL `versteckt`" unten). */
 typedef struct {
     const char *sub; int id; int em; int cut; int32_t sx, sy, sz;
     const char *quelle;
@@ -667,17 +671,6 @@ typedef struct {
 } schacht_mess_t;
 static schacht_mess_t s_schacht[SCHACHT_N];
 
-/* SPIELFEHLER-Messung (Block `versteckt`): die Spinne im Schacht gegen das Original.
- * W = wartend (vor dem Ausloeser), K = beim Herauskriechen (nach dem Ausloeser, vor der Landung). */
-typedef struct {
-    int ok, wartet, ziel_rastet, treffer_eben, treffer_hoch, bilder;
-    int zustand_nach, sub_nach, grid_nach; int32_t y_nach;
-    int k_ok, k_bilder, k_latch3, k_ziel, k_schuesse, k_treffer;
-    int k_zustand_nach, k_sub_nach, k_grid_nach; int32_t k_y_nach;
-} versteckt_mess_t;
-static versteckt_mess_t s_versteckt[SCHACHT_N];
-static int s_tuer_ok = 0, s_tuer_treffer = -1, s_tuer_wartet = 0, s_tuer_ziel = 0;
-static int16_t s_tuer_blick_vor = 0, s_tuer_blick_nach = 0;
 extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);
 
 /* Spieler auf den BODEN unter dem Schacht stellen (y 0 = die Landehoehe: +0x1ba := 0
@@ -732,8 +725,7 @@ static void pass_schacht(int i, int budget_aus, int budget_nach)
     /* (b)/(c): sub01-Reseed je Bild und Evt_exec brauchen das registrierte RDT (scd_vm.c
      * s_current_rdt); danach wieder abmelden, damit die uebrigen Teile unveraendert laufen.
      * Bis zur Landung wird NICHT geschossen: im Original ist die Spinne bis dahin kein Ziel
-     * (Blockkopf), der Port trifft sie aber (SPIELFEHLER-Block) und wuerde sie damit aus dem
-     * Ausstieg werfen - der Lauf soll den Ausstieg messen, nicht den Spielfehler. */
+     * (Blockkopf); das prueft der Riegel `versteckt`, dieser Lauf misst den Ausstieg. */
     scd_register_current_rdt(&s_rdt);
     re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
     for (int f = 0; f < budget_aus; f++) {
@@ -782,171 +774,560 @@ static void pass_schacht(int i, int budget_aus, int budget_nach)
            m->box_nach_set, m->treffer_nach, m->bilder_nach);
 }
 
-/* SPIELFEHLER-Messung: die Spinne IM SCHACHT. Original: kein Ziel der Zielhilfe (grid & 0x60
- * @0x80037104-10) und kein Kandidat des Resolvers (Band 0, @0x800120e4-ec; beim Kriechen
- * zusaetzlich der Latch @0x80114f7c-88 -> @0x80012100). Gemessen wird
- *   W (wartend): ob die Zielhilfe des Ports (re15_player_aim_target = FUN_8003703c, Radius
- *     0x7530 @0x80032fac) einrastet, echte Schuesse vom Boden unter dem Schacht (eben, hoch),
- *     und wo die Spinne danach steht;
- *   K (Herauskriechen, frischer Raum, Original-Ausloeser): je Bild der Latch (+0x93 & 3) zu
- *     Bildbeginn, die Zielhilfe, echte Schuesse, und wo die Spinne danach steht. */
-static void pass_versteckt(int i, int budget)
+/* ===== RIEGEL `versteckt` (Runde 38 Integration): DIE SCHACHTSPINNE IM SCHACHT, RE2- UND RE1.5-KI ==========
+ * Nutzer-Befund "Spinnen fliegen in der Luft" — gemessen in der echten exe (Tuerweg 2030 -> 2060 / 2031 -> 2061,
+ * Leon und Elza): die Zielhilfe dreht den Spieler auf die versteckte Spinne (Blick 0x800 -> 0xA63), und unter der
+ * RE2-KI trifft der Schuss die herauskriechende Spinne (+0x93 = 02 statt 03), die danach mit grid 0x42 auf y -3600
+ * im RE2-Bodenmodus laeuft (Dossier R_spinnen.md "Integration: versteckte Schachtspinne").
+ * ORIGINAL (selbst disassembliert und in DuckStation-GDB gemessen, R_belege/orig_2060_zielhilfe_messer.txt):
+ *   Zielhilfe FUN_8003703c: `lbu a0,-145(s0)` @0x80037104 (+0x09), `andi v0,a0,0x60` @0x8003710c,
+ *     `bne v0,zero,0x80037174` @0x80037110 -> jedes Wesen mit grid & 0x60 wird uebersprungen. Gemessen: Messer heben
+ *     neben der kriechenden Spinne (grid 0x42, 1230 entfernt) -> 0x800acaf3 = 0, Blick bleibt; nach der Landung
+ *     (grid 5) -> 1, Blick dreht 0xC0 je Bild.
+ *   Resolver FUN_80011f50: Kandidat nur mit word0 & Spieler & 0xe0000000 (@0x800120d0-ec) und ohne (+0x93 & 3) == 3
+ *     (`lui s4,0x300` @0x800120c0, `beq v0,s4` @0x80012100). Band der Spinne: INIT loescht (@0x80110d38-48),
+ *     Zustand 4 schreibt word0 nie, ACTIVE stempelt (@0x80110f94-fd4). Gemessen: word0 0x00000801 im Warten, Kriechen,
+ *     nach Phase 7 und Phase 8; 0x60000801 ab dem ersten ACTIVE-Bild. Latch: Phase 0 |= 3 (@0x80114f7c-88), 03 im
+ *     ganzen Ausstieg, Phase 8 = 0 (@0x80115344).
+ * Je Schachtspinne (4 Saetze grid 0x41) und KI misst der Riegel:
+ *   W  wartend: Zielhilfe (re15_player_aim_target, Radius 0x7530 @0x80032fac) waehlt sie nicht; ein direkter
+ *      Resolver-Aufruf (re15_player_weapon_fire, ohne Pad/FSM) trifft sie nicht; Salven eben/hoch vom Boden
+ *      unter dem Schacht treffen nicht; danach wartet sie unveraendert (Zustand 4/1, grid 0x41, Spawn-Hoehe).
+ *   K  Herauskriechen (Original-Ausloeser work[0x0A] -> sub01 -> Member_set 0x0C 0x42): Latch (+0x93&3)==3 zu
+ *      Beginn JEDES Ausstiegsbildes, Zielhilfe 0, direkter Resolver 0, echte Schuesse treffen nicht, und die Spinne
+ *      landet (verlaesst Zustand 4) — sie wird nicht aus dem Schacht geschossen.
+ *   L  Landung (ohne Beschuss bis Phase 8): direkt nach dem Phase-8-Takt ist das Band noch leer -> Resolver 0
+ *      (Zielhilfe darf sie schon waehlen: grid 5 bzw. 0); nach dem ersten ACTIVE-/RE2-INIT-Takt -> Resolver trifft,
+ *      Zielhilfe waehlt sie; danach echte Treffer > 0 und kein Bild ueber dem Boden (y < -100, ausser RE2-Sprung).
+ *   T  Tuerweg (ROOM2060 Leon / ROOM2061 Elza, Ziel (7600,0,3950) Blick 0x800, Door_aot_set ROOM2030 @Datei 0x1B4C):
+ *      nur R1 + Feuer -> keine Zielhilfe, kein Treffer, Blick bleibt 0x800, Spinne wartet.
+ * Dazu der ZENSUS grid & 0x60 (Block Z60 unten): jeder ausgelieferte Gegner-Typ mit einem solchen Spawn wird
+ * versteckt nicht gewaehlt und nach seiner Original-Freigabe wieder gewaehlt. */
+static const re15_ai_flavor_t VFL[2] = { RE15_AI_FLAVOR_RE2, RE15_AI_FLAVOR_RE15 };
+static const char *const VFN[2] = { "RE2-KI", "RE1.5-KI" };
+
+/* RE1.5-Bank (CDEMD0.EMS, Muster test_r38_spinnen.c bank_re15) — eigener Puffer je Typ (eb->buf, re15_enemy_reset
+ * gibt ihn frei), damit mehrere Typen gleichzeitig geladen sein duerfen. */
+static uint8_t *s_ems15 = NULL; static size_t s_ems15_n = 0;
+static re15_enemy_bank_t *load_re15_bank(uint8_t type)
 {
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return eb;
+    if (!s_ems15) s_ems15 = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &s_ems15_n);
+    if (!s_ems15) return NULL;
+    int idx = re15_ems_index_for_type(type);
+    size_t off = 0, len = 0;
+    if (idx < 0 || re15_ems_get_entry(s_ems15, s_ems15_n, idx, &off, &len) != 0 || len == 0) return NULL;
+    uint8_t *blob = (uint8_t *)malloc(len);
+    if (!blob) return NULL;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) { free(blob); return NULL; }
+    memcpy(blob, s_ems15 + off, len);
+    re15_tim_t tim = (re15_tim_t){0};
+    if (re15_emd_parse_container(blob, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) {
+        free(blob); eb->type = 0; return NULL; }
+    eb->ok = 1; eb->buf = blob;
+    return eb;
+}
+/* Bank je KI wie im Spiel: die RE2-Gehirne (Zombie-Familie, Hund, Kraehe, Spinnen) auf der RE2-Bank, alle anderen
+ * Typen (0x27/0x29/0x2B/0x30 haben kein RE2-Gehirn) auf ihrer RE1.5-Bank. */
+static void bank_fuer(re15_ai_flavor_t fl, uint8_t type)
+{
+    int re2 = (fl == RE15_AI_FLAVOR_RE2) &&
+              (type == 0x10 || type == 0x11 || type == 0x12 || type == 0x13 || type == 0x16 || type == 0x18 ||
+               type == 0x20 || type == 0x21 || type == 0x25 || type == 0x26);
+    if (re2) (void)load_re2_bank(type); else (void)load_re15_bank(type);
+}
+static void raum_aufbau_fl(re15_ai_flavor_t fl, uint8_t type)
+{
+    re15_ai_flavor_set(fl);
+    bringup();
+    bank_fuer(fl, type);
+    re15_inv_load_briefing();
+    re15_player_set_equipped_weapon(3);
+    {   int es = re15_inv_equipped_slot();
+        if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 250; }
+    for (int f = 0; f < 60; f++) { g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100; frame(0, 0); }
+}
+
+/* Waehlt die Zielhilfe des Ports (re15_player_aim_target = FUN_8003703c, Radius 0x7530) GENAU diesen Aktor? */
+static int ziel_ist(const re15_actor_t *e)
+{
+    int32_t tx = 0, tz = 0;
+    if (!re15_player_aim_target(0x7530, &tx, &tz)) return 0;
+    return e->active && e->x == tx && e->z == tz;
+}
+
+/* Direkter Resolver-Aufruf (FUN_80011f50-Zwilling re15_player_weapon_fire, Waffe 3) ohne Pad/FSM: trifft er GENAU
+ * diesen Platz? Ziel und Spieler werden danach zurueckgesetzt — der Aufruf ist die Messung, nicht Spiel. */
+static int direkter_treffer(int slot)
+{
+    re15_actor_t *e = &g_actors[slot], *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t se = *e, sp = *pl;
+    int r = re15_player_weapon_fire(3);
+    *e = se; *pl = sp;
+    return r == slot + 1;
+}
+
+typedef struct {
+    int ok, wartet;
+    int w_ziel, w_res, w_eben, w_hoch, w_bilder, w_zustand, w_sub, w_grid; int32_t w_y, w_y0;
+    int k_ok, k_bilder, k_bilder42, k_latch3, k_ziel, k_res, k_schuesse, k_treffer, k_gelandet;
+    int k_zustand, k_sub, k_grid; int32_t k_y;
+    int l_ok, l_bild, l_zustand_p8, l_ziel_p8, l_res_p8, l_ziel_a1, l_res_a1, l_treffer, l_bilder, l_schwebt;
+    int l_band_p8, l_band_a1;     /* aim_band (Port-word0-Band) nach Phase 8 / nach dem ersten ACTIVE */
+    int32_t l_y_min, l_y_max;
+} versteckt_mess_t;
+static versteckt_mess_t s_versteckt[2][SCHACHT_N];
+
+static void pass_versteckt(int fi, int i, int budget)
+{
+    const re15_ai_flavor_t fl = VFL[fi];
     const schacht_t *S = &SCHACHT[i];
-    versteckt_mess_t *v = &s_versteckt[i];
+    versteckt_mess_t *v = &s_versteckt[fi][i];
     memset(v, 0, sizeof *v);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int slot = S->em + 1;
+
+    /* ---- W: wartend ---- */
     if (!load_room(S->sub, S->id, -1)) return;
-    raum_aufbau_re2();
+    raum_aufbau_fl(fl, 0x25);
     re15_actor_t *e = schacht_spinne(S);
     if (!e) return;
-    const int slot = S->em + 1;
     v->wartet = schacht_wartet(e);
+    v->w_y0 = e->y;
     track_boden(slot, 2000);
-    v->ziel_rastet = ziel_auf_schacht();
+    v->w_ziel = ziel_ist(e);
+    v->w_res = direkter_treffer(slot);
     for (int hoch = 0; hoch < 2; hoch++) {
         re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
         for (int f = 0; f < budget; f++) {
-            pl->hp = 100; e->hp = 30000;
+            pl->hp = 100;
             if (!e->active) break;
+            int16_t vor = e->hp;
             track_boden(slot, 2000);
             frame((uint16_t)(RE15_PAD_BIT_R1 | (hoch ? RE15_PAD_BIT_UP : 0u) | RE15_PAD_BIT_SQUARE),
                   (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
-            v->bilder++;
-            if (e->hp < 30000) { if (hoch) v->treffer_hoch++; else v->treffer_eben++; }
+            v->w_bilder++;
+            if (e->hp < vor || e->state == 2) { if (hoch) v->w_hoch++; else v->w_eben++; }
         }
     }
-    v->zustand_nach = e->state; v->sub_nach = e->sub_state_1; v->grid_nach = e->grid_id; v->y_nach = e->y;
+    v->w_zustand = e->state; v->w_sub = e->sub_state_1; v->w_grid = e->grid_id; v->w_y = e->y;
     v->ok = 1;
 
-    /* K: Herauskriechen. Waffe heben, solange sie wartet (ohne Feuer), Ausloeser, dann Feuer in
-     * jedem Bild, in dem sie zu Bildbeginn im Ausstieg steht (Zustand 4/1, Phase >= 1). */
+    /* ---- K: Herauskriechen (Original-Ausloeser), Feuer in jedem Ausstiegsbild ---- */
     if (!load_room(S->sub, S->id, -1)) return;
-    raum_aufbau_re2();
+    raum_aufbau_fl(fl, 0x25);
     e = schacht_spinne(S);
     if (!e || !schacht_wartet(e)) return;
     scd_register_current_rdt(&s_rdt);
     re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
     int ausgeloest = 0;
-    for (int f = 0; f < budget; f++) {
-        pl->hp = 100; e->hp = 30000;
+    for (int f = 0; f < 600; f++) {
+        pl->hp = 100;
         if (!e->active) break;
         if (!ausgeloest) g_scd.work_vars[0x0A] = (int16_t)S->cut;
         scd_vm_tick();
         if (e->grid_id == 0x42) ausgeloest = 1;
         const int kriecht = (e->state == 4 && e->sub_state_1 == 1 && e->sub_state_3 >= 1);
+        track_boden(slot, 2000);
         if (kriecht) {
             v->k_bilder++;
             if ((e->hit_react & 3u) == 3u) v->k_latch3++;
+            /* Zielhilfe nur, solange grid die Marke traegt (0x42): nach Phase 7 steht grid 5 (@0x80115250-54)
+             * und die Spinne ist im Original fuer FUN_8003703c wieder waehlbar — das Band ist dann noch leer
+             * (Phase 8 / erstes ACTIVE, Teil L). */
+            if (e->grid_id & 0x60u) { v->k_bilder42++; if (ziel_ist(e)) v->k_ziel++; }
+            if (direkter_treffer(slot)) v->k_res++;
         }
-        track_boden(slot, 2000);
-        if (kriecht && ziel_auf_schacht()) v->k_ziel++;
-        frame((uint16_t)(RE15_PAD_BIT_R1 | (kriecht ? RE15_PAD_BIT_SQUARE : 0u)),
-              (uint16_t)((kriecht && (f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+        int16_t vor = e->hp;
+        frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
+              (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
         if (kriecht && (f % 6) == 0) v->k_schuesse++;
-        if (kriecht && e->hp < 30000) v->k_treffer++;
-        if (ausgeloest && !kriecht && e->state != 4) break;     /* gelandet oder herausgeworfen */
+        if (kriecht && (e->hp < vor || e->state == 2)) v->k_treffer++;
+        if (ausgeloest && e->state != 4) {              /* Zustand 4 verlassen: Phase 8 (Landung) oder Treffer */
+            v->k_gelandet = (e->state == 1 || e->state == 0) && e->y >= -100 && e->grid_id != 0x42;
+            break;
+        }
     }
     scd_register_current_rdt(NULL);
-    v->k_zustand_nach = e->state; v->k_sub_nach = e->sub_state_1; v->k_grid_nach = e->grid_id;
-    v->k_y_nach = e->y;
+    v->k_zustand = e->state; v->k_sub = e->sub_state_1; v->k_grid = e->grid_id; v->k_y = e->y;
     v->k_ok = ausgeloest;
+
+    /* ---- L: Landung ohne Beschuss, dann das Band-Tor an der Grenze Phase 8 / erstes ACTIVE ---- */
+    if (!load_room(S->sub, S->id, -1)) return;
+    raum_aufbau_fl(fl, 0x25);
+    e = schacht_spinne(S);
+    if (!e || !schacht_wartet(e)) return;
+    scd_register_current_rdt(&s_rdt);
+    re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
+    ausgeloest = 0;
+    int f8 = -1;
+    for (int f = 0; f < 600; f++) {
+        pl->hp = 100;
+        if (!ausgeloest) g_scd.work_vars[0x0A] = (int16_t)S->cut;
+        scd_vm_tick();
+        if (e->grid_id == 0x42) ausgeloest = 1;
+        track_boden(slot, 2000);
+        frame(0, 0);
+        if (ausgeloest && e->state != 4) { f8 = f; break; }   /* dieser Takt war Phase 8 (@0x80115338) */
+    }
+    scd_register_current_rdt(NULL);
+    if (f8 < 0) return;
+    v->l_bild = f8; v->l_zustand_p8 = e->state;
+    track_boden(slot, 2000);
+    v->l_ziel_p8 = ziel_ist(e);
+    v->l_res_p8  = direkter_treffer(slot);                  /* Original: word0 0x00000801 -> kein Kandidat */
+    v->l_band_p8 = e->aim_band;
+    frame(0, 0);                                            /* erster ACTIVE- (RE1.5) bzw. RE2-INIT-Takt */
+    track_boden(slot, 2000);
+    v->l_ziel_a1 = ziel_ist(e);
+    v->l_res_a1  = direkter_treffer(slot);                  /* Original: word0 0x60000801 -> Kandidat */
+    v->l_band_a1 = e->aim_band;
+    v->l_y_min = 0x7fffffff; v->l_y_max = -0x7fffffff;
+    aim_up(slot, 2000);
+    for (int f = 0; f < budget; f++) {
+        pl->hp = 100; e->hp = 30000;
+        if (!e->active) break;
+        track(slot, 2000);
+        frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
+              (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+        v->l_bilder++;
+        if (e->hp < 30000) v->l_treffer++;
+        if (e->y < v->l_y_min) v->l_y_min = e->y;
+        if (e->y > v->l_y_max) v->l_y_max = e->y;
+        if (e->y < -100 && !(fl == RE15_AI_FLAVOR_RE2 && e->re2s_mode222 == 1)) v->l_schwebt++;
+    }
+    v->l_ok = 1;
 }
 
-/* Der Spieler-Weg: Tuer 2030 -> 2060 (ROOM2030 Door_aot_set Platz 3 @Datei 0x1B4C: Ziel
- * (7600,0,3950), Blick 0x800, Raum 0x06, Cut 0), dort nur Waffe heben + feuern - ohne Teleport,
- * ohne Nachfuehren. */
-static void pass_versteckt_tuer(int budget)
+/* T: der Spielerweg Tuer 2030 -> 2060 bzw. 2031 -> 2061 (Door_aot_set ROOM2030 Platz 3 @Datei 0x1B4C: Ziel
+ * (7600,0,3950), Blick 0x800), dort nur Waffe heben + feuern — ohne Teleport, ohne Nachfuehren. */
+typedef struct { int ok, ziel, treffer, wartet; int16_t blick_vor, blick_nach; } tuer_mess_t;
+static tuer_mess_t s_tuer[2][2];
+static void pass_versteckt_tuer(int fi, int elza, int budget)
 {
+    tuer_mess_t *t = &s_tuer[fi][elza];
+    memset(t, 0, sizeof *t);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    s_tuer_ok = 0; s_tuer_treffer = -1;
-    if (!load_room("STAGE2/ROOM2060.RDT", 0x2060, -1)) return;
-    raum_aufbau_re2();
+    if (!load_room(elza ? "STAGE2/ROOM2061.RDT" : "STAGE2/ROOM2060.RDT", elza ? 0x2061 : 0x2060, -1)) return;
+    raum_aufbau_fl(VFL[fi], 0x25);
     re15_actor_t *e = schacht_spinne(&SCHACHT[0]);
     if (!e || !schacht_wartet(e)) return;
     pl->x = 7600; pl->y = 0; pl->z = 3950; pl->rot_y = 0x800;
-    s_tuer_blick_vor = pl->rot_y;
+    t->blick_vor = pl->rot_y;
     re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
-    s_tuer_ziel = ziel_auf_schacht();
-    s_tuer_treffer = 0;
+    t->ziel = ziel_ist(e);
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
         int16_t vor = e->hp;
         frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
               (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
-        if (e->hp < vor) s_tuer_treffer++;
+        if (e->hp < vor || e->state == 2) t->treffer++;
     }
-    s_tuer_blick_nach = pl->rot_y;
-    s_tuer_wartet = schacht_wartet(e);
-    s_tuer_ok = 1;
-    printf("  Tuerweg 2030 -> 2060 (7600,0,3950) Blick 0x%03X, nur Waffe heben + feuern %d Bilder: Zielhilfe "
-           "rastet auf Spinne 0 %d | Blick danach 0x%03X | Treffer %d | Spinne 0 danach Zustand %d/%d grid 0x%02X "
-           "y %d\n", (unsigned)(uint16_t)s_tuer_blick_vor, budget, s_tuer_ziel,
-           (unsigned)(uint16_t)s_tuer_blick_nach, s_tuer_treffer, e->state, e->sub_state_1, e->grid_id, e->y);
+    t->blick_nach = pl->rot_y;
+    t->wartet = schacht_wartet(e);
+    t->ok = 1;
+}
+
+/* ===== ZENSUS grid & 0x60 — jeder ausgelieferte Typ mit einem versteckten Spawn ==================================
+ * Quelle: Sce_em_set (0x44, pc[3] = +0x09) und Member_set 0x0C ueber alle 240 RDTs (info/Re1.5/PSX; Werkzeug
+ * R_belege/zensus_grid60.py, Ausgabe zensus_grid60.txt). Je Fall: versteckt nicht gewaehlt; nach der Original-
+ * Freigabe (Member_set-Wert aus dem RDT, hier gesetzt wie actor_common.c case 12 `sb`) loescht das Gehirn die Bits an
+ * der Original-Stelle bzw. traegt der Freigabewert sie schon nicht mehr -> wieder gewaehlt. Ohne Freigabe im RDT
+ * bleibt das Wesen versteckt (Original ebenso). NPC-Typen (0x40-0x4d, grid 0x40) stehen nicht hier: sie tragen
+ * HP -1 (@0x8011c744) und waren schon vorher kein Ziel. */
+typedef struct {
+    const char *tag, *sub; int id, fire_sub, em; uint8_t type, grid0; int freigabe, hirn, fbank, fbit; const char *quelle;
+} zensus60_t;
+static const zensus60_t Z60[] = {
+  { "Hund Fenster", "STAGE1/ROOM11D0.RDT", 0x11D0, -1, 0, 0x20, 0x41, 0x42, 1, -1, 0,
+    "Sce_em_set main00 @Datei 0x12BE | sub02 Member_set 0x42 @0x172C | grid := 0 `sb zero,9` @0x80111718" },
+  { "Hund Zwinger", "STAGE1/ROOM1190.RDT", 0x1190, 13, 0, 0x20, 0x40, 0x43, 1, -1, 0,
+    "Sce_em_set sub13 @Datei 0x2900 | sub10 Member_set 0x43 @0x27E6 | grid := 0 `sb zero,9` @0x8011161c" },
+  { "Affe Ereignis", "STAGE4/ROOM4040.RDT", 0x4040, -1, 0, 0x29, 0x61, 0x41, 1, -1, 0,
+    "Sce_em_set main00 @Datei 0x0EB0 | sub04 Member_set 0x41 @0x11D6 | grid &= 0xbf @0x80115978-7c" },
+  { "Spiderman", "STAGE4/ROOM4001.RDT", 0x4001, -1, 2, 0x2B, 0x41, 0x42, 1, 4, 20,
+    "Ck(4,20)=1 @0x120C, Sce_em_set sub00 @Datei 0x122C | sub05 Member_set 0x42 @0x15BA | grid := 0 `sb zero,9` @0x80115564" },
+  { "Zombie 1200", "STAGE1/ROOM1200.RDT", 0x1200, -1, 2, 0x10, 0xA1, 0x81, 0, -1, 0,
+    "Sce_em_set main00 @Datei 0x087E | sub02 Member_set 0x81 @0x09A4" },
+  { "Gorilla 11C0", "STAGE1/ROOM11C0.RDT", 0x11C0, -1, 1, 0x27, 0x30, 0x10, 0, -1, 0,
+    "Ck(4,64)=0 @0x176C, Sce_em_set sub00 @Datei 0x1784 | sub02 Member_set 0x10 @0x1A3A" },
+  { "Birkin 3070", "STAGE3/ROOM3070.RDT", 0x3070, -1, 0, 0x30, 0x33, 0x13, 0, -1, 0,
+    "Sce_em_set sub00 @Datei 0x33CE | sub02 Member_set 0x13 @0x358E" },
+  { "Zombie 5020", "STAGE5/ROOM5020.RDT", 0x5020, -1, 0, 0x18, 0xAE, -1, 0, -1, 0,
+    "Sce_em_set sub00 @Datei 0x12D6 | kein Member_set 0x0C im Raum" },
+  { "Kraehe 1171", "STAGE1/ROOM1171.RDT", 0x1171, 7, 1, 0x21, 0x40, -1, 0, 3, 194,
+    "Ck(3,194)=1 @0x16C4, Sce_em_set sub07 @Datei 0x16DC | kein Member_set 0x0C; Kraehen-Code STAGE1 0x80111a00-0x80116000 ohne grid-Store" },
+};
+#define Z60_N ((int)(sizeof Z60 / sizeof Z60[0]))
+typedef struct { int ok, gespawnt, grid_spawn, ziel_versteckt, frei_bild, grid_frei, ziel_frei, nie_gewaehlt, bilder; } z60_mess_t;
+static z60_mess_t s_z60[2][Z60_N];
+
+/* Spieler 1500 vor das Wesen auf dessen Hoehe (wie track), dann die Zielhilfe fragen — nur dieses Wesen aktiv
+ * (die uebrigen fuer die reine Abfrage kurz aus, danach zurueck), damit ein naeherer Nachbar das Urteil nicht stellt. */
+static int ziel_nah(int slot)
+{
+    uint8_t aktiv[RE15_ACTOR_MAX];
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        aktiv[s] = g_actors[s].active;
+        if (s != slot) g_actors[s].active = 0;
+    }
+    track(slot, 1500);
+    int r = ziel_ist(&g_actors[slot]);
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = aktiv[s];
+    return r;
+}
+
+static void pass_zensus60(int fi, int k)
+{
+    const zensus60_t *Z = &Z60[k];
+    z60_mess_t *m = &s_z60[fi][k];
+    memset(m, 0, sizeof *m);
+    m->frei_bild = -1;
+    if (!load_room(Z->sub, Z->id, Z->fire_sub)) return;
+    re15_ai_flavor_set(VFL[fi]);
+    s_vorflag_bank = Z->fbank; s_vorflag_bit = Z->fbit;   /* Zweig des versteckten Spawns (Ifel_ck) */
+    bringup();
+    s_vorflag_bank = -1;
+    bank_fuer(VFL[fi], Z->type);
+    for (int f = 0; f < 30; f++) { g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100; frame(0, 0); }
+    const int slot = Z->em + 1;
+    re15_actor_t *e = &g_actors[slot];
+    m->ok = 1;
+    if (!e->active || e->type != Z->type) return;
+    m->gespawnt = 1;
+    m->grid_spawn = e->grid_id;
+    m->ziel_versteckt = ziel_nah(slot);
+    if (Z->freigabe < 0) {                               /* keine Freigabe im RDT: 300 Bilder versteckt? */
+        m->nie_gewaehlt = 1;
+        for (int f = 0; f < 300; f++) {
+            g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100;
+            frame(0, 0);
+            if (!e->active) break;
+            m->bilder++;
+            if (!(e->grid_id & 0x60u) || ziel_nah(slot)) m->nie_gewaehlt = 0;
+        }
+        m->grid_frei = e->grid_id;
+        return;
+    }
+    e->grid_id = (uint8_t)Z->freigabe;                  /* Member_set 0x0C = actor_common.c case 12 `sb` +0x09 */
+    for (int f = 0; f < 600; f++) {
+        if (!(e->grid_id & 0x60u)) { m->frei_bild = f; break; }
+        g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100;
+        frame(0, 0);
+        if (!e->active) break;
+    }
+    /* das Gehirn noch ein paar Bilder laufen lassen (INIT nach Takt-Sperre 0x20, ACTIVE), dann fragen */
+    for (int f = 0; f < 10 && e->active; f++) { g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100; frame(0, 0); }
+    m->grid_frei = e->grid_id;
+    m->ziel_frei = e->active && ziel_nah(slot);
+}
+
+/* ===== B: das Band der STEGSPINNE (ROOM2050, grid 0x00 floor 3, y -5400) — die Wirkung des Band-Tors ausserhalb
+ * des Schachts. RE1.5-KI: das Band ist der ACTIVE-Stempel FUN_80012aa4(0xfa0) (@0x80110fd0) mit
+ *   s0 = (SpielerY - SpinneY) / 1800 (Abschneiden, @0x80012abc-b1c), LEVEL bei (unsigned)s0 < 2 (@0x80012b20-44),
+ *   UP (s0 > 0) bzw. DOWN im Ring 1000*|s0| < Abstand < 0xfa0 + 1000*|s0| (@0x80012b64-bb8);
+ * leer -> kein Kandidat (@0x800120e4-ec). RE2-KI: kein Hoehenband (Port-Abbildung wie vorher) -> immer Kandidat.
+ * Drei Spielerlagen: auf dem Steg 2000 entfernt, unten (y 0) 2000 bzw. 5000 waagerecht entfernt. */
+typedef struct { int ok, band, soll, treffer; int32_t dist, px, py, pz; } stegband_t;
+static stegband_t s_steg[2][3];
+static const struct { int unten; int32_t dx, dz; } STEG_LAGE[3] = { { 0, -2000, 0 }, { 1, -2000, 0 }, { 1, 0, 5000 } };
+static int aa4_soll(const re15_actor_t *pl, const re15_actor_t *e, int32_t *dist_out)
+{
+    int32_t s0 = (pl->y - e->y) / 1800;                                   /* @0x80012ad8 / @0x80012b0c-1c */
+    int64_t dx = pl->x - e->x, dz = pl->z - e->z;
+    int32_t dist = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));   /* SquareRoot0 @0x80012b58 */
+    int32_t ring = (s0 < 0 ? -s0 : s0) * 1000;                            /* @0x80012b64-84 */
+    int b = 0;
+    if ((uint32_t)s0 < 2u) b |= 2;                                        /* LEVEL @0x80012b2c-44 */
+    if ((uint32_t)dist < (uint32_t)(0xfa0 + ring) && ring < dist) b |= (s0 > 0) ? 4 : 1;   /* @0x80012b88-bb8 */
+    if (dist_out) *dist_out = dist;
+    return b;
+}
+static void pass_stegband(int fi)
+{
+    for (int k = 0; k < 3; k++) {
+        stegband_t *m = &s_steg[fi][k];
+        memset(m, 0, sizeof *m);
+        if (!load_room("STAGE2/ROOM2050.RDT", 0x2050, -1)) return;
+        raum_aufbau_fl(VFL[fi], 0x25);
+        const int slot = 1;
+        re15_actor_t *e = &g_actors[slot], *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (!e->active || e->type != 0x25) return;
+        for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
+        pl->x = e->x + STEG_LAGE[k].dx; pl->z = e->z + STEG_LAGE[k].dz; pl->y = STEG_LAGE[k].unten ? 0 : e->y;
+        pl->rot_y = (int16_t)(((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0x0fff);
+        pl->hp = 100;
+        frame(0, 0);                                    /* ACTIVE-Takt der Spinne stempelt mit dieser Spielerlage */
+        m->band = e->aim_band;
+        m->soll = aa4_soll(pl, e, &m->dist);
+        m->px = pl->x; m->py = pl->y; m->pz = pl->z;
+        pl->rot_y = (int16_t)(((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0x0fff);
+        m->treffer = direkter_treffer(slot);
+        m->ok = 1;
+    }
 }
 
 static void drucke_versteckt(void)
 {
-    for (int i = 0; i < SCHACHT_N; i++) {
-        const versteckt_mess_t *v = &s_versteckt[i];
-        printf("  [%04X Spinne %d] W: wartend %d | Zielhilfe rastet ein %d | Schuesse vom Boden %d Bilder: "
-               "Treffer eben %d, hoch %d | danach Zustand %d/%d grid 0x%02X y %d\n", SCHACHT[i].id,
-               SCHACHT[i].em, v->wartet, v->ziel_rastet, v->bilder, v->treffer_eben, v->treffer_hoch,
-               v->zustand_nach, v->sub_nach, v->grid_nach, v->y_nach);
-        printf("                   K: ausgeloest %d | %d Bilder im Ausstieg, Latch (+0x93&3)==3 zu Bildbeginn in %d, "
-               "Zielhilfe rastet ein in %d | %d Schuesse, Treffer %d | danach Zustand %d/%d grid 0x%02X y %d\n",
-               v->k_ok, v->k_bilder, v->k_latch3, v->k_ziel, v->k_schuesse, v->k_treffer, v->k_zustand_nach,
-               v->k_sub_nach, v->k_grid_nach, v->k_y_nach);
+    for (int fi = 0; fi < 2; fi++) {
+        printf("  --- %s ---\n", VFN[fi]);
+        for (int i = 0; i < SCHACHT_N; i++) {
+            const versteckt_mess_t *v = &s_versteckt[fi][i];
+            printf("  [%04X Spinne %d] W: wartend %d | Zielhilfe %d | Resolver direkt %d | Salven %d Bilder: eben %d, "
+                   "hoch %d | danach %d/%d grid 0x%02X y %d (Spawn %d)\n", SCHACHT[i].id, SCHACHT[i].em, v->wartet,
+                   v->w_ziel, v->w_res, v->w_bilder, v->w_eben, v->w_hoch, v->w_zustand, v->w_sub, v->w_grid, v->w_y,
+                   v->w_y0);
+            printf("                   K: ausgeloest %d | %d Ausstiegsbilder (davon %d mit grid 0x42): Latch==3 in %d, "
+                   "Zielhilfe %d, Resolver direkt %d | %d Schuesse, Treffer %d | danach %d/%d grid 0x%02X y %d, "
+                   "gelandet %d\n", v->k_ok, v->k_bilder, v->k_bilder42, v->k_latch3, v->k_ziel, v->k_res,
+                   v->k_schuesse, v->k_treffer, v->k_zustand, v->k_sub, v->k_grid, v->k_y, v->k_gelandet);
+            printf("                   L: Phase 8 in Bild %d (Zustand %d): Zielhilfe %d, Resolver %d | erstes ACTIVE: "
+                   "Zielhilfe %d, Resolver %d | Band %d -> %d | Salve %d Bilder: Treffer %d, y %d..%d, ueber dem Boden "
+                   "%d\n", v->l_bild, v->l_zustand_p8, v->l_ziel_p8, v->l_res_p8, v->l_ziel_a1, v->l_res_a1,
+                   v->l_band_p8, v->l_band_a1, v->l_bilder, v->l_treffer, v->l_y_min, v->l_y_max, v->l_schwebt);
+        }
+        for (int el = 0; el < 2; el++) {
+            const tuer_mess_t *t = &s_tuer[fi][el];
+            printf("  Tuerweg %s (7600,0,3950) Blick 0x%03X: Zielhilfe %d | Blick danach 0x%03X | Treffer %d | "
+                   "Spinne 0 wartet %d\n", el ? "2031 -> 2061 (Elza)" : "2030 -> 2060 (Leon)",
+                   (unsigned)(uint16_t)t->blick_vor, t->ziel, (unsigned)(uint16_t)t->blick_nach, t->treffer, t->wartet);
+        }
+        for (int k = 0; k < Z60_N; k++) {
+            const z60_mess_t *m = &s_z60[fi][k];
+            printf("  Zensus %-13s 0x%02X: gespawnt %d grid 0x%02X | versteckt gewaehlt %d | ", Z60[k].tag, Z60[k].type,
+                   m->gespawnt, m->grid_spawn, m->ziel_versteckt);
+            if (Z60[k].freigabe >= 0)
+                printf("Freigabe 0x%02X -> Bits weg nach %d Bildern, grid 0x%02X, gewaehlt %d\n", Z60[k].freigabe,
+                       m->frei_bild, m->grid_frei, m->ziel_frei);
+            else
+                printf("ohne Freigabe %d Bilder: nie gewaehlt %d, grid 0x%02X\n", m->bilder, m->nie_gewaehlt,
+                       m->grid_frei);
+        }
+        for (int k = 0; k < 3; k++) {
+            const stegband_t *m = &s_steg[fi][k];
+            printf("  Stegspinne 2050 (y -5400), Spieler %s (%d,%d,%d), Abstand %d: Band %d (FUN_80012aa4(0xfa0)-Soll %d) | "
+                   "Resolver direkt %d\n", STEG_LAGE[k].unten ? "unten" : "auf dem Steg", m->px, m->py, m->pz, m->dist,
+                   m->band, m->soll, m->treffer);
+        }
     }
 }
 
-/* Urteil des SPIELFEHLER-Blocks gegen das Original; Rueckgabe = Zahl der Abweichungen. */
+/* Urteil gegen das Original; Rueckgabe = Zahl der Abweichungen. */
 static int urteil_versteckt(void)
 {
     int abw = 0;
-    for (int i = 0; i < SCHACHT_N; i++) {
-        const versteckt_mess_t *v = &s_versteckt[i];
-        if (!v->ok || !v->wartet) {
-            printf("  FEHLER: %04X Spinne %d nicht wartend gemessen - sagt NICHTS\n", SCHACHT[i].id, SCHACHT[i].em);
-            abw++; continue; }
-        if (v->ziel_rastet) {
-            printf("  ABWEICHUNG: %04X Spinne %d - die Zielhilfe rastet auf die WARTENDE Spinne ein; Original "
-                   "ueberspringt grid & 0x60 (`andi v0,a0,0x60` / `bne` @0x8003710c-10)\n",
-                   SCHACHT[i].id, SCHACHT[i].em);
-            abw++; }
-        if (v->treffer_eben + v->treffer_hoch > 0) {
-            printf("  ABWEICHUNG: %04X Spinne %d - die WARTENDE Spinne wird getroffen (eben %d, hoch %d) und steht "
-                   "danach in Zustand %d/%d auf y %d; Original: Band 0 (INIT @0x80110d38-48, Stempel nur ACTIVE "
-                   "@0x80110fd0) -> kein Kandidat (@0x800120e4-ec)\n", SCHACHT[i].id, SCHACHT[i].em,
-                   v->treffer_eben, v->treffer_hoch, v->zustand_nach, v->sub_nach, v->y_nach);
-            abw++; }
-        if (!v->k_ok || v->k_bilder == 0) {
-            printf("  FEHLER: %04X Spinne %d Ausstieg nicht gemessen - sagt NICHTS\n", SCHACHT[i].id, SCHACHT[i].em);
-            abw++; continue; }
-        if (v->k_latch3 != v->k_bilder) {
-            printf("  ABWEICHUNG: %04X Spinne %d - beim Herauskriechen steht der Latch (+0x93&3)==3 nur in %d von %d "
-                   "Bildern zu Bildbeginn; Original setzt ihn in Phase 0 (`ori v0,v0,0x3` @0x80114f84) und loescht "
-                   "ihn erst in Phase 8 (`sb zero,147` @0x80115344)\n", SCHACHT[i].id, SCHACHT[i].em,
-                   v->k_latch3, v->k_bilder);
-            abw++; }
-        if (v->k_ziel) {
-            printf("  ABWEICHUNG: %04X Spinne %d - die Zielhilfe rastet in %d Bildern auf die KRIECHENDE Spinne "
-                   "(grid 0x42) ein; Original ueberspringt grid & 0x60 (@0x8003710c-10)\n", SCHACHT[i].id,
-                   SCHACHT[i].em, v->k_ziel);
-            abw++; }
-        if (v->k_treffer > 0) {
-            printf("  ABWEICHUNG: %04X Spinne %d - die KRIECHENDE Spinne wird %d mal getroffen und steht danach in "
-                   "Zustand %d/%d auf y %d; Original: kein Kandidat (Band 0 @0x800120e4-ec, Latch `beq v0,s4` "
-                   "@0x80012100)\n", SCHACHT[i].id, SCHACHT[i].em, v->k_treffer, v->k_zustand_nach,
-                   v->k_sub_nach, v->k_y_nach);
-            abw++; }
+    for (int fi = 0; fi < 2; fi++) {
+        const char *K = VFN[fi];
+        for (int i = 0; i < SCHACHT_N; i++) {
+            const versteckt_mess_t *v = &s_versteckt[fi][i];
+            const int id = SCHACHT[i].id, em = SCHACHT[i].em;
+            if (!v->ok || !v->wartet) {
+                printf("  FEHLER %s %04X/%d: nicht wartend gemessen - sagt NICHTS\n", K, id, em); abw++; continue; }
+            if (v->w_ziel) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d W: Zielhilfe waehlt die WARTENDE Spinne (Original: `andi v0,a0,0x60` / "
+                       "`bne` @0x8003710c-10)\n", K, id, em); }
+            if (v->w_res) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d W: der Resolver nimmt die WARTENDE Spinne (Original: Band 0 "
+                       "@0x80110d38-48 -> `beq v0,zero` @0x800120ec)\n", K, id, em); }
+            if (v->w_eben + v->w_hoch > 0) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d W: Salven treffen die wartende Spinne (eben %d, hoch %d)\n", K, id, em,
+                       v->w_eben, v->w_hoch); }
+            if (v->w_zustand != 4 || v->w_sub != 1 || v->w_grid != 0x41 || v->w_y != v->w_y0) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d W: nach den Salven %d/%d grid 0x%02X y %d statt wartend 4/1 0x41 y %d\n",
+                       K, id, em, v->w_zustand, v->w_sub, v->w_grid, v->w_y, v->w_y0); }
+            if (!v->k_ok || v->k_bilder == 0) {
+                printf("  FEHLER %s %04X/%d: Ausstieg nicht gemessen\n", K, id, em); abw++; continue; }
+            if (v->k_latch3 != v->k_bilder) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d K: Latch (+0x93&3)==3 nur in %d von %d Ausstiegsbildern (Original: "
+                       "Phase 0 `ori v0,v0,0x3` @0x80114f84 .. Phase 8 `sb zero,147` @0x80115344, gemessen 03)\n",
+                       K, id, em, v->k_latch3, v->k_bilder); }
+            if (v->k_ziel || v->k_bilder42 == 0) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d K: Zielhilfe waehlt die KRIECHENDE Spinne in %d von %d Bildern mit grid "
+                       "0x42 (@0x8003710c-10)\n", K, id, em, v->k_ziel, v->k_bilder42); }
+            if (v->k_res) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d K: der Resolver nimmt die KRIECHENDE Spinne in %d Bildern (Band 0 / "
+                       "Latch @0x80012100)\n", K, id, em, v->k_res); }
+            if (v->k_treffer) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d K: %d Treffer beim Herauskriechen, danach %d/%d grid 0x%02X y %d\n", K,
+                       id, em, v->k_treffer, v->k_zustand, v->k_sub, v->k_grid, v->k_y); }
+            if (!v->k_gelandet) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d K: die Spinne landet unter Beschuss nicht (danach %d/%d grid 0x%02X y %d)\n",
+                       K, id, em, v->k_zustand, v->k_sub, v->k_grid, v->k_y); }
+            if (!v->l_ok) {
+                printf("  FEHLER %s %04X/%d: Landung nicht erreicht\n", K, id, em); abw++; continue; }
+            if (v->l_res_p8) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d L: direkt nach Phase 8 nimmt der Resolver die Spinne (Original: word0 "
+                       "0x00000801 bis zum ersten ACTIVE, Stempel @0x80110fd0)\n", K, id, em); }
+            if (!v->l_res_a1 || !v->l_ziel_a1) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d L: nach dem ersten ACTIVE-Takt Resolver %d / Zielhilfe %d (Original: "
+                       "0x60000801 + 0x800acaf3 = 1)\n", K, id, em, v->l_res_a1, v->l_ziel_a1); }
+            if (VFL[fi] == RE15_AI_FLAVOR_RE15 && (v->l_band_p8 != 0 || v->l_band_a1 != 3)) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d L: Band nach Phase 8 %d / nach dem ersten ACTIVE %d, erwartet 0 / 3 "
+                       "(INIT @0x80110d38-48, Stempel @0x80110fd0: FUN_80012aa4(0xfa0) mit s0 0 -> LEVEL @0x80012b3c-44, "
+                       "0 < 2000 < 4000 -> DOWN @0x80012bb8; Original gemessen 0x00000801 -> 0x60000801)\n", K, id, em,
+                       v->l_band_p8, v->l_band_a1); }
+            if (v->l_treffer == 0) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d L: nach der Landung NIE getroffen (%d Bilder)\n", K, id, em, v->l_bilder); }
+            if (v->l_schwebt) { abw++;
+                printf("  ABWEICHUNG %s %04X/%d L: %d Bilder ueber dem Boden (y %d..%d)\n", K, id, em, v->l_schwebt,
+                       v->l_y_min, v->l_y_max); }
+        }
+        for (int el = 0; el < 2; el++) {
+            const tuer_mess_t *t = &s_tuer[fi][el];
+            const char *W = el ? "2031 -> 2061" : "2030 -> 2060";
+            if (!t->ok) { printf("  FEHLER %s Tuerweg %s nicht gemessen\n", K, W); abw++; continue; }
+            if (t->ziel || t->treffer || !t->wartet || t->blick_nach != t->blick_vor) { abw++;
+                printf("  ABWEICHUNG %s Tuerweg %s: Zielhilfe %d, Treffer %d, Blick 0x%03X -> 0x%03X, wartet %d "
+                       "(Original: kein Ziel, kein Treffer, Blick bleibt, sie wartet bis Cut 1)\n", K, W, t->ziel,
+                       t->treffer, (unsigned)(uint16_t)t->blick_vor, (unsigned)(uint16_t)t->blick_nach, t->wartet); }
+        }
+        for (int k = 0; k < Z60_N; k++) {
+            const zensus60_t *Z = &Z60[k];
+            const z60_mess_t *m = &s_z60[fi][k];
+            if (!m->ok || !m->gespawnt) {
+                printf("  (Zensus %s %s: im Testaufbau nicht gespawnt - nicht gemessen)\n", K, Z->tag); continue; }
+            if (m->grid_spawn != Z->grid0) { abw++;
+                printf("  FEHLER %s Zensus %s: Spawn-grid 0x%02X, erwartet 0x%02X (%s)\n", K, Z->tag, m->grid_spawn,
+                       Z->grid0, Z->quelle); }
+            if (m->ziel_versteckt) { abw++;
+                printf("  ABWEICHUNG %s Zensus %s: versteckt (grid 0x%02X) gewaehlt (@0x8003710c-10)\n", K, Z->tag,
+                       m->grid_spawn); }
+            if (Z->freigabe >= 0) {
+                if (m->frei_bild < 0 || !m->ziel_frei) { abw++;
+                    printf("  UNERWUENSCHT %s Zensus %s: nach der Freigabe 0x%02X Bits weg nach %d Bildern, grid 0x%02X, "
+                           "gewaehlt %d — der Port loescht die Original-Stelle nicht (%s)\n", K, Z->tag, Z->freigabe,
+                           m->frei_bild, m->grid_frei, m->ziel_frei, Z->quelle); }
+            } else if (!m->nie_gewaehlt) { abw++;
+                printf("  ABWEICHUNG %s Zensus %s: ohne Freigabe doch gewaehlt bzw. Bits weg (grid 0x%02X)\n", K, Z->tag,
+                       m->grid_frei); }
+        }
+        for (int k = 0; k < 3; k++) {
+            const stegband_t *m = &s_steg[fi][k];
+            if (!m->ok) { printf("  FEHLER %s Stegspinne 2050 Lage %d nicht gemessen\n", K, k); abw++; continue; }
+            if (VFL[fi] == RE15_AI_FLAVOR_RE15) {
+                /* RE1.5-Gehirn: Band = ACTIVE-Stempel, Kandidat genau bei nicht leerem Band (@0x800120e4-ec) */
+                if (m->band != m->soll || m->treffer != (m->band != 0)) { abw++;
+                    printf("  ABWEICHUNG %s Stegspinne Lage %d: Band %d, Soll %d (FUN_80012aa4(0xfa0) @0x80110fd0), Resolver %d "
+                           "(Soll %d)\n", K, k, m->band, m->soll, m->treffer, m->soll != 0); }
+            } else if (!m->treffer) { abw++;   /* RE2-Gehirn: kein Hoehenband, Kandidat wie vorher */
+                printf("  UNERWUENSCHT %s Stegspinne Lage %d: der Resolver nimmt die RE2-Spinne nicht mehr\n", K, k); }
+        }
     }
-    if (!s_tuer_ok) { printf("  FEHLER: Tuerweg 2030 -> 2060 nicht gemessen\n"); abw++; }
-    else if (s_tuer_ziel || s_tuer_treffer > 0 || !s_tuer_wartet) {
-        printf("  ABWEICHUNG: Tuerweg 2030 -> 2060 - Zielhilfe %d, Treffer %d, Spinne 0 wartet danach %d (Original: "
-               "kein Ziel, kein Treffer, sie wartet bis Cut 1)\n", s_tuer_ziel, s_tuer_treffer, s_tuer_wartet);
-        abw++; }
     return abw;
+}
+
+static void lauf_versteckt(int budget)
+{
+    for (int fi = 0; fi < 2; fi++) {
+        for (int i = 0; i < SCHACHT_N; i++) pass_versteckt(fi, i, budget);
+        pass_versteckt_tuer(fi, 0, budget);
+        pass_versteckt_tuer(fi, 1, budget);
+        for (int k = 0; k < Z60_N; k++) pass_zensus60(fi, k);
+        pass_stegband(fi);
+    }
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 }
 
 static void pass_spinne_decke(int scharf, int budget)
@@ -1020,8 +1401,9 @@ static re15_emd_animation_t s_pl00_anim;
 int main(int argc, char **argv)
 {
     int riegel = (argc > 1 && strcmp(argv[1], "riegel") == 0);
-    /* `versteckt`: NUR der SPIELFEHLER-Block, mit Urteil gegen das Original (Exit 1, solange
-     * der Port die wartende Schachtspinne anzielt oder trifft). Nicht als ctest registriert. */
+    /* `versteckt` (Runde 38 Integration, ctest r31_trefferboxen_versteckt): NUR der Riegel der versteckten
+     * Schachtspinne (RE2- und RE1.5-KI, Tuerweg Leon/Elza) und der Zensus grid & 0x60, Urteil gegen das Original
+     * (Exit 1 bei jeder Abweichung). Block "RIEGEL `versteckt`" oben. */
     int versteckt = (argc > 1 && strcmp(argv[1], "versteckt") == 0);
     setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -1038,12 +1420,11 @@ int main(int argc, char **argv)
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim = &s_pl00_anim;
     if (versteckt) {
-        printf("=== r31 versteckt: die Schachtspinne IM SCHACHT gegen das Original ===\n");
-        for (int i = 0; i < SCHACHT_N; i++) pass_versteckt(i, 240);
+        printf("=== r31 versteckt: die Schachtspinne IM SCHACHT gegen das Original (RE2- und RE1.5-KI) ===\n");
+        lauf_versteckt(240);
         drucke_versteckt();
-        pass_versteckt_tuer(240);
         int abw = urteil_versteckt();
-        if (abw) { printf("SPIELFEHLER: %d Abweichung(en) vom Original\n", abw); return 1; }
+        if (abw) { printf("FEHLGESCHLAGEN: %d Abweichung(en) vom Original\n", abw); return 1; }
         printf("OK\n");
         return 0;
     }
@@ -1078,13 +1459,8 @@ int main(int argc, char **argv)
      * Ausstieg ein Vielfaches davon. 240 Bilder Beschuss danach wie Teil 3. */
     for (int i = 0; i < SCHACHT_N; i++) pass_schacht(i, 600, 240);
 
-    printf("\nSPIELFEHLER (gemeldet, Runde 38) — die Schachtspinne IM SCHACHT (W wartend, K Herauskriechen); "
-           "Urteil: Argument `versteckt`\n");
-    for (int i = 0; i < SCHACHT_N; i++) pass_versteckt(i, 240);
-    drucke_versteckt();
-    pass_versteckt_tuer(240);
-    {   int abw = urteil_versteckt();
-        printf("  -> %d Abweichung(en) vom Original (kein Teil dieses Riegels, s. Kopf von Teil 2e)\n", abw); }
+    /* Die Schachtspinne IM SCHACHT (Zielhilfe/Resolver/Latch, RE2- und RE1.5-KI) prueft seit der Integration
+     * Runde 38 der eigene Riegel `probe_r31_boxen versteckt` (ctest r31_trefferboxen_versteckt). */
 
     printf("\nTEIL 3 — Gegen-Ueberkorrektur: jeder Typ wird weiter getroffen\n");
     int t[SOLL_N];

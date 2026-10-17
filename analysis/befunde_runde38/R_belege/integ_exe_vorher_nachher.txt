@@ -1,0 +1,244 @@
+# Runde 38 Integration — versteckte Schachtspinne, echte exe (re15_pc.exe), Auswertung ana_versteckt.py
+# v_* = Tuerweg 2030->2060 / 2031->2061 (Door_aot_set @Datei 0x1B4C, Aktionstaste), dann R1 + Feuer (Skript ab F300 je Raum)
+# k_* = Debug-Sprung 2060/2061 an die Tuerlage (7600,0,3950) Blick 0x800, U0.5 in Cut 1 (Ausloeser), dann R1 + Feuer
+# VORHER = Stand 7fff66c5 + Messschiene (pr/zh); NACHHER = Fix
+
+## VORHER v_leon_re2
+Raum 2060 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0xA63
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 760 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nv_leon_re2
+Raum 2060 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0x800
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## VORHER v_leon_re15
+Raum 2060 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0xA63
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 760 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nv_leon_re15
+Raum 2060 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0x800
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## VORHER v_elza_re2
+Raum 2061 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0xA63
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 760 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nv_elza_re2
+Raum 2061 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0x800
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## VORHER v_elza_re15
+Raum 2061 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0xA63
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 760 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nv_elza_re15
+Raum 2061 ab Bild 0: 760 Bilder; Blick erstes Bild 0x800, letztes 0x800
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## VORHER k_leon_re2
+Raum 2060 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x4FF
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 420 Bilder, offen 0 Bilder | Treffer versteckt 2, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 389 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 02
+      F32   Zustand 2/3 grid 0x42 y -3600 +0x93 01
+      F40   Zustand 1/9 grid 0x42 y -3600 +0x93 00
+      F46   Zustand 1/0 grid 0x42 y -3600 +0x93 00
+      F47   Zustand 1/5 grid 0x42 y -3600 +0x93 00
+      F62   Zustand 1/0 grid 0x42 y -3600 +0x93 00
+      F63   Zustand 1/7 grid 0x42 y -3600 +0x93 00
+      F134  Zustand 1/0 grid 0x42 y -3600 +0x93 00
+      F135  Zustand 1/5 grid 0x42 y -3600 +0x93 00
+      F148  Zustand 2/3 grid 0x42 y -3600 +0x93 01
+      F156  Zustand 1/9 grid 0x42 y -3600 +0x93 00
+      F162  Zustand 1/0 grid 0x42 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nk_leon_re2
+Raum 2060 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x7B9
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 211 Bilder | Treffer versteckt 0, offen 7 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 03
+      F85   Zustand 4/1 grid 0x05 y 0 +0x93 03
+      F86   Zustand 0/0 grid 0x00 y 0 +0x93 00
+      F87   Zustand 1/0 grid 0x00 y 0 +0x93 00
+      F88   Zustand 1/5 grid 0x00 y 0 +0x93 00
+      F102  Zustand 1/0 grid 0x00 y 0 +0x93 00
+      F103  Zustand 1/8 grid 0x00 y 0 +0x93 00
+      F104  Zustand 2/3 grid 0x00 y 0 +0x93 01
+      F112  Zustand 1/9 grid 0x00 y 0 +0x93 00
+      F118  Zustand 1/0 grid 0x00 y 0 +0x93 00
+      F119  Zustand 1/8 grid 0x00 y 0 +0x93 00
+      F153  Zustand 2/3 grid 0x00 y 0 +0x93 01
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## VORHER k_leon_re15
+Raum 2060 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x67F
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 84 Bilder, offen 336 Bilder | Treffer versteckt 0, offen 6 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 03
+      F85   Zustand 4/1 grid 0x05 y 0 +0x93 03
+      F86   Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F87   Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F101  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F102  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F140  Zustand 2/3 grid 0x05 y 0 +0x93 01
+      F148  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F149  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F150  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F164  Zustand 2/3 grid 0x05 y 0 +0x93 01
+      F172  Zustand 1/1 grid 0x05 y 0 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nk_leon_re15
+Raum 2060 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x60F
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 336 Bilder | Treffer versteckt 0, offen 6 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 03
+      F85   Zustand 4/1 grid 0x05 y 0 +0x93 03
+      F86   Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F87   Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F101  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F102  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F104  Zustand 2/3 grid 0x05 y 0 +0x93 01
+      F112  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F113  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F116  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F117  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F140  Zustand 2/3 grid 0x05 y 0 +0x93 01
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## VORHER k_elza_re2
+Raum 2061 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x4FF
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 420 Bilder, offen 0 Bilder | Treffer versteckt 2, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 389 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 02
+      F32   Zustand 2/3 grid 0x42 y -3600 +0x93 01
+      F40   Zustand 1/9 grid 0x42 y -3600 +0x93 00
+      F46   Zustand 1/0 grid 0x42 y -3600 +0x93 00
+      F47   Zustand 1/5 grid 0x42 y -3600 +0x93 00
+      F62   Zustand 1/0 grid 0x42 y -3600 +0x93 00
+      F63   Zustand 1/7 grid 0x42 y -3600 +0x93 00
+      F134  Zustand 1/0 grid 0x42 y -3600 +0x93 00
+      F135  Zustand 1/5 grid 0x42 y -3600 +0x93 00
+      F148  Zustand 2/3 grid 0x42 y -3600 +0x93 01
+      F156  Zustand 1/9 grid 0x42 y -3600 +0x93 00
+      F162  Zustand 1/0 grid 0x42 y -3600 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nk_elza_re2
+Raum 2061 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x7B9
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 211 Bilder | Treffer versteckt 0, offen 7 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 03
+      F85   Zustand 4/1 grid 0x05 y 0 +0x93 03
+      F86   Zustand 0/0 grid 0x00 y 0 +0x93 00
+      F87   Zustand 1/0 grid 0x00 y 0 +0x93 00
+      F88   Zustand 1/5 grid 0x00 y 0 +0x93 00
+      F102  Zustand 1/0 grid 0x00 y 0 +0x93 00
+      F103  Zustand 1/8 grid 0x00 y 0 +0x93 00
+      F104  Zustand 2/3 grid 0x00 y 0 +0x93 01
+      F112  Zustand 1/9 grid 0x00 y 0 +0x93 00
+      F118  Zustand 1/0 grid 0x00 y 0 +0x93 00
+      F119  Zustand 1/8 grid 0x00 y 0 +0x93 00
+      F153  Zustand 2/3 grid 0x00 y 0 +0x93 01
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## VORHER k_elza_re15
+Raum 2061 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x67F
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 84 Bilder, offen 336 Bilder | Treffer versteckt 0, offen 6 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 03
+      F85   Zustand 4/1 grid 0x05 y 0 +0x93 03
+      F86   Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F87   Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F101  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F102  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F140  Zustand 2/3 grid 0x05 y 0 +0x93 01
+      F148  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F149  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F150  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F164  Zustand 2/3 grid 0x05 y 0 +0x93 01
+      F172  Zustand 1/1 grid 0x05 y 0 +0x93 00
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+
+## NACHHER nk_elza_re15
+Raum 2061 ab Bild 0: 420 Bilder; Blick erstes Bild 0x800, letztes 0x60F
+  Spinne Slot 1: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 336 Bilder | Treffer versteckt 0, offen 6 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
+      F14   Zustand 4/1 grid 0x42 y -3600 +0x93 03
+      F85   Zustand 4/1 grid 0x05 y 0 +0x93 03
+      F86   Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F87   Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F101  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F102  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F104  Zustand 2/3 grid 0x05 y 0 +0x93 01
+      F112  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F113  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F116  Zustand 1/0 grid 0x05 y 0 +0x93 00
+      F117  Zustand 1/1 grid 0x05 y 0 +0x93 00
+      F140  Zustand 2/3 grid 0x05 y 0 +0x93 01
+  Spinne Slot 2: Zielhilfe auf sie VERSTECKT (grid&0x60) 0 Bilder, offen 0 Bilder | Treffer versteckt 0, offen 0 | schwebt (y < bu-100 ausserhalb 4/1, ohne Sprung) 0 Bilder
+      F1    Zustand 0/0 grid 0x41 y -3600 +0x93 00
+      F6    Zustand 4/1 grid 0x41 y -3600 +0x93 00
