@@ -12,12 +12,19 @@
  * Schirm prueft) gegen n = Summe der gespeicherten Scheitelnormalen (Licht, zeigt nach aussen). Vorzeichen von w.n.
  *   O1  Zensus ueber ALLE Objekt-Modelle aller ausgelieferten RDTs (RDT+0x30, nOmodel): das vorherrschende Vorzeichen
  *       s (Original-Konvention, bei der NCLIP die Aussenseite zeigt) — eindeutig (>= 99 %).
- *   O2  Zensus der port-eigenen Modelle (nur Ausgabe). ERGEBNIS 2026-10-16: alle folgen s, AUSSER dem Feuerloescher
- *       R37 (36 von 148 Polygonen in s, 112 verkehrt; gen/feuerloescher_r37.inc, PORT-WAHL-Modell der Runde 37). Mit
- *       NCLIP waere er zerrissen. Deshalb gilt NCLIP im PC-Weg NUR fuer Modelle aus der RDT (main.c: md1 im RDT-Puffer);
- *       Port-Modelle bleiben zweiseitig wie bisher (PORT-WAHL, re15_objpoly_r38.h).
+ *   O2  Zensus der port-eigenen Modelle: JEDES folgt s (>= 90 % seiner Polygone). Seit dem Merge von r38/cursor
+ *       (2026-10-17) gilt NCLIP im PC-Weg fuer ALLE Objekte, RDT- wie Port-Modelle — eine Regel wie das Original
+ *       (RE1.5 vier Zeichner, RE2 FUN_800363f0 -> FUN_8002d0e8/FUN_8002d244/FUN_80027bec/FUN_80027dbc, alle mit
+ *       NCLIP-Verwurf; Belege re15_objpoly_r38.h). Dafuer muss jedes Port-Modell wie das Original gewickelt sein.
+ *       Stand 2026-10-16 (vor dem Merge): Feuerloescher R37 nur 36 von 148 in s -> damals PORT-WAHL "Port-Modelle
+ *       zweiseitig"; Spur A hat ihn neu gewickelt (A_cursor.md §3b, 148/148), die PORT-WAHL entfaellt. Schlaegt O2 an,
+ *       ist ein Port-Modell verkehrt gewickelt (es wuerde im Spiel zerrissen/unsichtbar). Flache Modelle prueft O2 nur
+ *       gegen ihre gespeicherte Normale; ob ihre Vorderseite in der Port-LAGE zur Kamera zeigt, ist Sache der Lage
+ *       (Spur A §4.6).
  *   O3  Der Rolladen (ROOM20A0 obj 1) folgt s (Gegenprobe: Original-Messung zeigt ihn in Cut 12 von vorn).
- *   O4  Der Schalter nclip: ein Rueckseiten-Viereck wird mit nclip = 1 verworfen und mit nclip = 0 gezeichnet.
+ *   O4  EIN NCLIP-Weg: re15_objpoly_r38_quad (Weg der Prop-Schleife) rechnet OPZ mit Spur As re15_nclip_r38_mac0 und
+ *       verwirft ueber re15_nclip_r38_verwerfen — die Rueckseite erhoeht g_re15_nclip_r38_verworfen um genau 1, die
+ *       Vorderseite nicht.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +44,7 @@
 #include "re15_schluessel_r36.h"
 #include "re15_sicherung.h"
 #include "re15_objpoly_r38.h"
+#include "re15_nclip_r38.h"
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -116,7 +124,7 @@ static int pruefe_port(const char *name, const uint8_t *data, int size, int s)
     const long gut = (s > 0) ? z.plus : z.minus, schlecht = (s > 0) ? z.minus : z.plus;
     const int verkehrt = gut * 10 < (gut + schlecht) * 9;
     printf("  Port-Modell %-34s Polygone %4ld: Original-Windung %4ld, verkehrt %4ld%s\n", name, gut + schlecht, gut,
-           schlecht, verkehrt ? "  <- mit NCLIP zerrissen (darum: Port-Modelle ohne NCLIP)" : "");
+           schlecht, verkehrt ? "  <- VERKEHRT: mit NCLIP zerrissen" : "");
     CHECK(gut + schlecht > 0, "O2: %s ohne auswertbare Polygone", name);
     s_port_verkehrt += verkehrt;
     if (verkehrt && strstr(name, "Feuerloescher")) s_loescher_verkehrt++;
@@ -207,23 +215,30 @@ int main(void)
     printf("O2: %d port-eigene Modelle geprueft, %d davon nicht in Original-Windung (Feuerloescher-Lagen: %d)\n", n,
            s_port_verkehrt, s_loescher_verkehrt);
     CHECK(n >= 5, "O2: zu wenige port-eigene Modelle gefunden (%d)", n);
+    CHECK(s_port_verkehrt == 0, "O2: %d Port-Modell(e) verkehrt gewickelt (Feuerloescher: %d) - mit NCLIP fuer alle "
+          "Objekte zerrissen", s_port_verkehrt, s_loescher_verkehrt);
 
-    /* O4: der Schalter nclip (main.c: 1 fuer RDT-Modelle, 0 fuer Port-Modelle) */
+    /* O4: EIN NCLIP-Weg (Spur A re15_nclip_r38) im Weg der Prop-Schleife */
     {
         /* Viereck 2000 vor der Kamera in Z-Ordnung; "hinten" = dieselben Ecken gespiegelt (OPZ < 0). */
         const int32_t vorn[4][3]   = { { -500, -500, 2000 }, { 500, -500, 2000 }, { -500, 500, 2000 }, { 500, 500, 2000 } };
         const int32_t hinten[4][3] = { { 500, -500, 2000 }, { -500, -500, 2000 }, { 500, 500, 2000 }, { -500, 500, 2000 } };
         re15_objpoly_t p;
-        const int v1 = re15_objpoly_r38_quad(vorn, 208, 160, 120, 1, &p);
+        const unsigned z0 = g_re15_nclip_r38_verworfen;
+        const int v1 = re15_objpoly_r38_quad(vorn, 208, 160, 120, &p);
         const int opz_vorn = (int)p.opz;
-        const int h1 = re15_objpoly_r38_quad(hinten, 208, 160, 120, 1, &p);
+        const int gleich_vorn = p.opz == re15_nclip_r38_mac0(p.sx[0], p.sy[0], p.sx[1], p.sy[1], p.sx[2], p.sy[2]);
+        const unsigned z1 = g_re15_nclip_r38_verworfen;
+        const int h1 = re15_objpoly_r38_quad(hinten, 208, 160, 120, &p);
         const int opz_hinten = (int)p.opz;
-        const int h0 = re15_objpoly_r38_quad(hinten, 208, 160, 120, 0, &p);
-        printf("O4 nclip: Vorderseite opz %d -> %d, Rueckseite opz %d -> nclip=1: %d, nclip=0: %d\n", opz_vorn, v1,
-               opz_hinten, h1, h0);
+        const int gleich_hinten = p.opz == re15_nclip_r38_mac0(p.sx[0], p.sy[0], p.sx[1], p.sy[1], p.sx[2], p.sy[2]);
+        const unsigned z2 = g_re15_nclip_r38_verworfen;
+        printf("O4 NCLIP-Weg: Vorderseite opz %d -> %d (Zaehler +%u), Rueckseite opz %d -> %d (Zaehler +%u)\n",
+               opz_vorn, v1, z1 - z0, opz_hinten, h1, z2 - z1);
         CHECK(opz_vorn >= 0 && opz_hinten < 0, "O4: Testvierecke falsch orientiert (%d/%d)", opz_vorn, opz_hinten);
-        CHECK(v1 == 1 && h1 == 0 && h0 == 1, "O4: nclip-Schalter wirkt nicht (vorn %d, hinten nclip=1 %d, nclip=0 %d)",
-              v1, h1, h0);
+        CHECK(gleich_vorn && gleich_hinten, "O4: OPZ nicht = re15_nclip_r38_mac0");
+        CHECK(v1 == 1 && h1 == 0 && z1 == z0 && z2 == z1 + 1u,
+              "O4: Verwurf nicht ueber re15_nclip_r38 (vorn %d +%u, hinten %d +%u)", v1, z1 - z0, h1, z2 - z1);
     }
 
     if (g_fail) { printf("test_r38_rolltor20a0_windung: %d FEHLER\n", g_fail); return 1; }
