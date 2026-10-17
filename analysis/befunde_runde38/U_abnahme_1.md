@@ -193,3 +193,32 @@ Beide Zombies kommen danach hoch (woertlich): `F724 ... slot=4 ... re2-eintritt`
 re2-eintritt`, `F956 R2000 slot=3 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10407) b1 f1ba=-1800`.
 gy.log: 2200 Typ-0x16-Eintraege, 0 unter dem Wasserboden, 0 auf Band >= 2. Die Behauptung des Bau-Agenten (gy.log bis
 F1000 byte-gleich, wz.log nur Abbruch-Zeile) haelt, hier sogar bis F1100.
+
+### M4 — ROOM2020 (Leon) ueber den Raumlader (Debug-Sprung), Standard-KI, Bild; Tuerweg 2050 -> 2020 versucht
+
+Tuerweg-Versuch (echter Weg in den zweiten Wasserraum): die Engine stellt in ROOM2050 die Tuer nach 2020 als Slot 1 auf
+(`tools/engine_tueren.txt` Z. 127 `2050 2020 -5150 4450 11350 -3150 0`; Wegplan `AOTS` woertlich: `AOT slot 1 typ 1 ev 0
+flags 0x31 band 0 mitte (-5150,4450) halb (1000,500)`). Lauf `m4t_2050` (`RE15_DEBUG_JUMP=2050@250
+RE15_PLAYER_POS=-5150,4450,3072,0`, Wegplan `GEHE -5150 4450 120` + `BLICK 3072/1024/0/2048` je mit `AKTION`): der
+Spieler steht bei (-5124,4718) (also im Rechteck), die Tuer feuert in keiner Blickrichtung (kein `DOOR FIRE`, Lauf endet
+per timeout 200 s). Zweiter Versuch `m4t_2050b` (Start an der 2040-Ankunft, zu Fuss): der Spieler klemmt bei
+(-8018,-5650). Wie in Abnahme 0 (dort ebenso nicht ausloesbar) ist das der Lade-/Tuerweg von ROOM2050, nicht Spur U;
+ROOM2020/2021 decken deshalb der LADE-Weg CONTINUE (Riegel `integration_r38_wasserzombie` a/b Leon, c Elza 2021,
+Abschnitt 5) und der Raumlader ab. Die 2020-Spawns stehen in main00 ohne If/Ck-Klammer (Abnahme 0 M3) und erscheinen
+damit auf jedem Weg in den Raum.
+
+Raumlader: `RE15_DEBUG_JUMP=2020@250 RE15_PLAYER_POS=-9500,2600,1024,1 RE15_FORCE_CUT=6 RE15_FRAMEDUMP=60-300/10:fd/f
+RE15_EXIT_AT=300#2020` -> `exit=0 dauer=19s` (`[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-9500,2600) rot=1024
+band=1`, `[room] PC loaded room2020.rdt (322276 bytes)`). wz.log (vollstaendig, woertlich):
+```
+F80 R2020 slot=4 t=16 re2-eintritt st=1/10/0 mo=0 af=31 @(-10756,0,1082) b0 f1ba=0 rot=3527 kontakt=c9
+F80 R2020 slot=4 t=16 drehen st=1/10/1 mo=1 af=0 @(-10756,0,1082) b0 f1ba=0 rot=3527 kontakt=c9
+F109 R2020 slot=4 t=16 klettern st=1/10/3 mo=22 af=0 @(-10756,0,1082) b0 f1ba=0 rot=3072 kontakt=c0
+F179 R2020 slot=4 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-10756,0,1082) b0 f1ba=-1800 rot=3072 kontakt=c0
+F267 R2020 slot=4 t=16 oben st=1/0/0 mo=22 af=158 @(-10756,-1800,2222) b1 f1ba=-1800 rot=3072 kontakt=c0
+F267 R2020 slot=4 t=16 re2-uebergabe st=1/0/1 mo=0 af=1 @(-10756,-1800,2222) b1 f1ba=-1800 rot=3072 kontakt=c0
+```
+Kontakt 0xc9 = Richtung 0xC / u1 1 (Suedwand des Kanals); Drehen 3527 -> 3072, Vorschub +1140 in z (1082 -> 2222).
+gy.log: 1200 Eintraege, 0 unter dem Wasserboden, 0 auf Band >= 2. Bild (`m4_2020_sheet.png`, Kanalblick per
+FORCE_CUT 6 nur zur Sicht, F80-F290 je 30): F80/F110 Arme auf der Stegkante, F140/F170 Oberkoerper ueber der Kante,
+F200/F230 die Beine kommen hoch, F260/F290 steht er auf dem Steg (rechts im Bild).
