@@ -27,6 +27,9 @@ Punkte (Wortlaut AUFTRAG.md Runde 38 + Nachtrag 14 Runde 37):
   zwei Riegel anderer Runden waren seit dem eigenen Modul-Commit 6ae7118b rot (unit_r26_inventar, unit_r30_tuer_
   verschlossen; Abschnitt 3.1/5). Neu: Riegel integration_r38_dining1141_s (Framedump, Abschnitt 4.4). Endstand
   gezielt gruen: 89/89 (Abschnitt 5).
+- **Nachbesserung 1 (2026-10-17, nach Abnahme 0 `F_abnahme_0.md`):** M1 Leiche direkt nach der 1021-Szene
+  (Programm SZENE1021), M2 Tuertext 1131 = RE2 Text 0x0F (Herz-Schluessel, kein Schild), M3 Johns Abgang wartet in seiner
+  sichtbaren Bahn und laeuft ohne Koerper-Schub, M4 Zitat @0x8004513c. Alles in Abschnitt 9.
 
 ## 1. Messung vorher (Stand e2cc7673, echte exe)
 
