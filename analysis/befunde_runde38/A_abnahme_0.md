@@ -137,6 +137,10 @@ RE15_FORCE_CUT (`runs/m8_5050_c*`): Cursor (Platz 4) nur in Cut 4/5 im Bild; neu
 keinem der 13 Cuts liegt der Cursor ohne laufendes Raetsel im Bild — nicht weiter verfolgt, gleiche Bauart laut
 unit_r38_cursor_raeume.)
 
+ROOM10D0 Ziffernfeld im Nutzerfenster (Skala 3; Weg wie Riegel C: Debug-Sprung, sub17 per RE15_SUBSTART, Text zu,
+Bild 260; `runs/m10_10d0_{neu,alt}_s3`): Platz 5 neu 0 von 20535 rueckseitig, alt 2997 von 23532; Bild
+`scratchpad/abn/m10_10d0_s3_alt_neu.png`: alt dunkle innere L-Kopien + Kreuz-Kopie, neu ohne.
+
 ## 7. Gegenproben der Riegel (selbst, an MEINEN Laeufen statt an denen des Bau-Agenten)
 
 `probe_r38_cursor bild` auf die Ausgaben der echten Wege (§3/§4): alt 11F0 F640 -> **FEHLER (3)** (10345 rueckseitige
