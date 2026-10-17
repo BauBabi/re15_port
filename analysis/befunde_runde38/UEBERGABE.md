@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 08:49: Integration A gruen (202/202 gezielt, inkl. integration_r38_cursor E/F mit K-Schluessellage), Baum r38_cursor entfernt. F gemergt (f50f9eda): Include-/Haken-Zeilen beide Seiten; probe_r26_inventar.c B4 von Hand vereint (G: genaue Pruefung unter Basis 0x48; F: dritter Port-Name 0x43 -> 9 x (0x48 - 3)); configure + Bau OK; gezielte Tests laufen (F-Auswahl + H/G/I). Danach: Herz-Schluessel 1011 unter NCLIP an der exe pruefen.
 * 2026-10-17 08:44: F dining1141 BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_356a3960-7df). Merge nach dem laufenden A-Test. Integration F: neue Assets shared_assets/RE2/KLOPF1060.EDT/.VH/.VB (Paket + Android-Gate pruefen), ROOM1021 Ereignis 2 jetzt Programm SZENE1021 (Gosub sub02) -> gemeinsamer Lauf mit H (PC-Anker @0x020B2) fahren; Herz-Schluessel mit NCLIP-Verwurf (A) in ROOM1011 an der exe pruefen (A_belege/port_modelle_sicht.py). O fortgesetzt wf_8204134c-a42 (r38_w5.js, stand: r37/re2zombie zuerst mergen).
 * 2026-10-17 08:02: A cursor BESTANDEN (Abnahme 0, wf_283a8270-fcf), gemergt (f27076e4; schluessel_r36.c/.h = Seite K wie A-Dossier §8, A-Aenderungen lagen nur in den Konflikt-Abschnitten), configure + Bau OK, gezielte Tests laufen (A-Auswahl + itemorte). N fortgesetzt wf_7044a5d9-64e (r38_w5.js, stand). REGEL fuer die Integration (A §8): jedes Port-Modell in der Prop-Schleife muss mit dem NCLIP-Verwurf sichtbar sein (raeumlich wie das Original gewickelt, flach mit der Vorderseite zur Kamera) - Pruefwerkzeug A_belege/port_modelle_sicht.py; betrifft F (Herz-Schluessel), W (Rolladen 20A0).
 * 2026-10-17 07:42: Integration B gruen (466/466 gezielt, inkl. 1171-Kraehe RE2/RE1.5 und T-Griffe), Baum r38_szenenschutz entfernt.
@@ -52,12 +53,12 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 
 | Spur | Baum | Thema | Status |
 |---|---|---|---|
-| A | r38_cursor | Cursor-Schatten 1150/11F0 | BESTANDEN (A0), gemergt |
+| A | r38_cursor | Cursor-Schatten 1150/11F0 | BESTANDEN (A0), integriert |
 | B | r38_szenenschutz | kein Angriff in Szenen ohne Bewegung (1190/11D0), Ausnahme 1171 | BESTANDEN (A1), integriert |
 | C | r38_werkstatt11b0 | 11B0: "But, hold on...", Schiebe-Ton, keine Fall-Animation | BESTANDEN (A0), integriert |
 | D | r38_zopf | Elzas Zopf wie Claire (RE2) | offen |
 | E | r38_elzaintro | Elza-Intro Voiceover, Pre-Intro-Schwarz ohne Raum | BESTANDEN (A0), integriert |
-| F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | BESTANDEN (A1) |
+| F | r38_dining1141 | John 1021 -> 1141 (Dining Room Key, Dach, Haemmern, Gorilla-Sperre) + Rolltor-Ton 1140 | BESTANDEN (A1), gemergt |
 | G | r38_tagebuch | Roys Tagebuch 1011 + Kartenmarken Comms/Prison | BESTANDEN (A1), integriert |
 | H | r38_elzatoene | Schuss 1041, Roy-Stoehnen + John-Schuss 1021 | BESTANDEN (A1), integriert |
 | I | r38_heliport1171 | Elza haengt in 1171 | BESTANDEN (A0), integriert |
