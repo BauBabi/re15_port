@@ -316,10 +316,12 @@ void re15_zopf_r38_schritt(const re15_zopf_eingang_t *in)
                 fprintf(lf, " g%d=(%d,%d,%d v94=%d v96=%d t=%d,%d,%d)", k, (int)s_gl[k].rot[0], (int)s_gl[k].rot[1],
                         (int)s_gl[k].rot[2], (int)s_gl[k].v94, (int)s_gl[k].v96,
                         (int)s_gl[k].t[0], (int)s_gl[k].t[1], (int)s_gl[k].t[2]);
-            fprintf(lf, " kopf=%d,%d,%d w8=[%d %d %d|%d %d %d|%d %d %d] ein=(ent %d,%d,%d t0vy %d t0vz %d t8vy %d ng %d nf %02x)\n",
+            fprintf(lf, " kopf=%d,%d,%d w8=[%d %d %d|%d %d %d|%d %d %d] ein=(ent %d,%d,%d t0vy %d t0vz %d t8vy %d ng %d nf %02x)"
+                        " pos=%d,%d,%d\n",
                     (int)w8t[0], (int)w8t[1], (int)w8t[2], w8r[0], w8r[1], w8r[2], w8r[3], w8r[4], w8r[5], w8r[6], w8r[7],
                     w8r[8], (int)in->ent_rot[0], (int)in->ent_rot[1], (int)in->ent_rot[2], (int)in->teil0_vy,
-                    (int)in->teil0_vz, (int)in->teil8_vy, (int)in->nacken_gier, (unsigned)in->nacken_flags);
+                    (int)in->teil0_vz, (int)in->teil8_vy, (int)in->nacken_gier, (unsigned)in->nacken_flags,
+                    (int)in->ent_pos[0], (int)in->ent_pos[1], (int)in->ent_pos[2]);
             fflush(lf);
         }
     }
