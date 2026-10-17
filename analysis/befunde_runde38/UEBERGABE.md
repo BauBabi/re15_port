@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 10:16: Integration R gruen (122/122: R-Auswahl + Spiderman/Griffe/1171-Szene), Baum r38_spinnen entfernt.
 * 2026-10-17 10:12: R spinnen BESTANDEN (Nachbesserung 1 + Abnahme 1, wf_40f9724b-eb5), gemergt (078b62af; nur AUFTRAG.md-Nachtraege beide Seiten), configure + Bau OK, gezielte Tests laufen (R-Auswahl 109 + Spiderman/Griffe). N fortgesetzt wf_a76ae9bd-445 (r38_w5.js, stand; ⛔ N aendert op_aot_set Breite/Tiefe vorzeichenlos -> bei der Integration breite Tuer-/AOT-/Item-Auswahl).
 * 2026-10-17 10:07: Integration M gruen (117/117: M-Nebenwirkungsauswahl + 1141/1171/11B0/Szenenschutz), Baeume r38_npckante und r38_dining1141 entfernt.
 * 2026-10-17 09:55: M npckante BESTANDEN (Abnahme 0, wf_bd5754a4-75e), gemergt (81f90f2e, enemy_ai_common.c Include beide Seiten), configure + Bau OK, gezielte Tests laufen (M-Nebenwirkungsauswahl + 1141/1171/11B0/Szenenschutz).
@@ -75,7 +76,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | N | r38_wasser | Wasser-Effekt 1260+ | offen |
 | O | r38_montage | Montage-Zombies Richtung Kamera | offen |
 | Q | r38_kleinkram | Inventar-Ton, Elza 1151 Irons, 30E0 Flammenwerfer | BESTANDEN (A0), integriert |
-| R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | BESTANDEN (A1), gemergt |
+| R | r38_spinnen | Spinnen Stage 2 (Schaechte, Gift, Minispinnen) | BESTANDEN (A1), integriert |
 | S | r38_affen3 | kleine Affen Stage 3 treffen | offen |
 | T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | BESTANDEN (A1), integriert |
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | offen |
