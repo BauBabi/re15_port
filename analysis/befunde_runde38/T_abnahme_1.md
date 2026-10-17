@@ -30,9 +30,11 @@ rdt_common.c:250-272), `abn1t_tools/montage.py`/`crop.py` (Framedump-Tafeln). Ge
       `LOCAL-BUILD-OK (build)`; re15_pc.exe unveraendert 2026-10-16 23:06:09, Arbeitsbaum sauber,
       `git diff 2029729b..HEAD -- re15_port` leer.
 - [x] Messung Punkt 1 (M1) an der exe (Abschnitt 2)
-- [ ] Messung Punkt 2 an der exe (nicht verschlechtert)
-- [ ] RE-Gate (Stichproben NB1)
-- [ ] Vertrag
+- [x] Messung Punkt 2 an der exe (Abschnitt 3)
+- [x] gezielte Tests zweite Sitzung: `ctest -R "r38_|tyrant|beretta"` -> `100% tests passed, 0 tests failed out of 14`
+      (`Total Test time (real) = 181.98 sec`)
+- [x] RE-Gate (Abschnitt 4)
+- [x] Vertrag (Abschnitt 5)
 - [ ] Urteil
 
 ## 1. Gezielte Tests (diese Sitzung)
@@ -111,3 +113,51 @@ M1 ist an der exe in 4001 (Tuer-Weg), 5040 und 5070 behoben: das Wechselbild zei
 das Bruellen ist weich, kein Bild zeigt den Spiderman in der Wand oder unter dem Boden. Der uebrige Austritts-Mechanismus
 ist unveraendert wie in Abnahme 0 gemessen (Warten auf grid 0x42 ueber 445 Bilder im Tuer-Lauf, Freigabe bei Bild 0x21,
 ACTIVE nach 35 Bildern, zweiter Schacht bleibt zu). Urteil s. Abschnitt 6.
+
+## 3. Punkt 2 — "In Stage 4 die Spiderman führen - mal wieder - dazu das Leon teilweise komplett von der Karte verschwindet, wenn sie einen Angreifen. Sowas darf GARNICHT passieren, bei keinen Gegner."
+
+Massstab: Abnahme 0 hat Punkt 2 als erfuellt gemessen (v0.8.25: Sprung 27 058 auf (-724,761) ausserhalb; neu: im Gang).
+Nachbesserung 1 aendert die Opfer-Maschine nicht (`git diff 1488abd8..HEAD -- re15_port/engine/src/enemy_ai_common.c` =
+nur Fall 2 Bruellen). Hier: nicht verschlechtert, M2 an der exe, dazu der Griff ueber den Tuer-Weg und das Losreissen.
+Werkzeuge: `sprung.py` (groesster Bild-zu-Bild-Sprung), `wandcheck.py` (je Bild Spielerlage gegen die SCA-Rechteckzellen
+Typ 1 mit u0&1 der RDT: Lage im Inneren einer Zelle? Strecke Vorbild->Bild durch das Innere einer Zelle?).
+
+### 3.1 ROOM4001 Elza — Tuer-Weg (Lauf n4001t aus 2.1, bis F1250)
+- Griff hinten B[9]: `F916 [4 ss1=9 ss2=0 mo=12 af=10]` -> `F917 PL(-26516,-7418) gr=1 [4 ss1=9 ss2=1 mo=18 af=1]`; Kollaps
+  B[10] ab F1001 (`ss1=10`), Tod `F1037 PL(-25936,-7875) hp=-1 pst=7`.
+- `sprung.py`: 1250 Bilder, x -26526..-15500, z -9888..-3524; **groesster Sprung 607 bei F1037** (Uebergang in den Tod),
+  danach 215 (F591/F592, Koerperschub vor dem Griff, hp 90). `wandcheck.py`: **0 Bilder in einer Wandzelle, 0 Wanddurchgaenge**.
+- M2 an der exe (anim.log Slot 4): `949 ... 18 18 34 33 33`, **`950 ... 18 18 34 33 33`** (P1 -> P2), `951 ... 19 19 21 1 1`
+  (Halte-Clip); Kollaps-Start `1001 ... 19 19 21 9 9` -> `1002 ... 21 21 85 1 1`.
+- Framedump F912-F1010 (`abn1t/n4001t_griff_F912-1008.png`, Ausschnitt `abn1t/n4001t_griff_crop.png`): Elza bleibt im Griff
+  am Spiderman, am Ende des Gangs, in jedem Bild sichtbar.
+
+### 3.2 ROOM4001 Elza — Abnahme-0-Lauf 3.1 unveraendert (Vergleichszahlen)
+`lauf1.sh <exe> n4001a <wd> RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 "RE15_SET_FLAG=4:20,3:33"
+"RE15_DEBUG_JUMP=4000@250" "RE15_PLAYER_POS=-15608,-3524,1024" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60
+"RE15_INPUT_SCRIPT=U3,L1,U3,W60" RE15_STATE_LOG=state.log RE15_ANIM_TRACE=anim.log "RE15_EXIT_AT=1000#4001"`:
+Ausloeser F219, Wechselbild F253, Griff hinten `F679 PL(-26516,-7418) gr=1`, Kollaps F763, Tod F799. `sprung.py`: groesster
+Sprung **607 bei F799** (Tod), sonst <= 288 (F357/F358 Koerperschub, hp 90). `wandcheck.py`: 0 / 0. Gleiche Werte wie der
+Bau-Agent (F679, 607 bei F799) und wie Abnahme 0 (dort F678/F798, ein Bild frueher, weil das Bruellen jetzt sein P2-Bild hat).
+
+### 3.3 ROOM4001 Elza — Losreissen (Tasten im Griff; Abnahme 0 konnte P5 -> P6 nicht an der exe messen)
+Wie 3.2, aber `"RE15_INPUT_SCRIPT=U3,L1,U3,W13.3,B15"` (ab F669 Tastenhaemmern, input_pc.c 'B') und `"RE15_EXIT_AT=1300#4001"`:
+- Drei Griffe losgerissen (Latch F679 / F826 / F974, Loesen bis F755 / F903 / F1051), der vierte (F1122, nach Ende des
+  Haemmerns) fuehrt in Kollaps (F1206) und Tod (F1242).
+- anim.log Slot 4, erster Griff: `711 ... 18 34 33 33`, `712 ... 18 34 33 33` (P1 -> P2), `713 ... 19 21 1 1` (erstes
+  Halte-Bild, im selben Bild losgerissen: ss2=4), `714 ... 20 41 1 1` (Loese-Clip 0x14) ... `753 ... 20 41 40 40`,
+  **`754 ... 20 41 40 40`** (P5 -> P6), **`755 ... 20 41 40 40`** (P6 ohne anim_set), `756 ... 3 15 1 1` (B[3]).
+- Spieler: Clip 4 (Zugriff hinten) Bild 0..33, ab F713 Clip 6 (Loesen) Bild 0..47; Lage bleibt (-26516,-7418) bis F761.
+- `sprung.py`: groesster Sprung 607 bei F1242 (Tod), sonst <= 288; `wandcheck.py`: 0 / 0 in 1300 Bildern.
+
+### 3.4 ROOM5040 Leon (Lauf n5040 aus 2.3)
+Griff hinten `F754 PL(-25886,-25198) gr=1 [1 ss1=9 ss2=1 mo=18 af=1]`, Kollaps F838, Tod F874. `sprung.py`: groesster Sprung
+**607 bei F874** (Tod); danach 494 / 421 bei F499 / F500 (hp 80, kein Griff: der Spiderman schiebt Leon mit B[3] um die Ecke
+nach Sueden = Abnahme 0 B1, in v0.8.25 gleich). `wandcheck.py` (ROOM5040.RDT): 0 / 0 in 1000 Bildern.
+
+### 3.5 Zwischenurteil Punkt 2
+In keinem der vier Laeufe verlaesst Elza/Leon den Raum, steht in einer Wand oder springt durch eine (0 / 0 je Lauf, 4550
+Bilder), vorher (v0.8.25, Abnahme 0) 27 058 Einheiten auf (-724,761) ausserhalb. Unveraendert gegenueber Abnahme 0: ein
+Sprung von 607 Einheiten im Bild des Todes (Lage von (-26336,-7418) nach (-25936,-7875), beide im Gang; s. Beobachtung B2).
+Die generelle Regel (alle Greifer) ist von der Nachbesserung unberuehrt; ihre zehn Riegel-Faelle unit_r38_griff_* laufen
+gruen (beide Sitzungen).
