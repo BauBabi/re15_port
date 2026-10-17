@@ -81,10 +81,14 @@ int  re15_wasserzombie_re2_dispatch(int slot, re15_actor_t *e);
 void re15_wasserzombie_bank_merken(uint8_t type, const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an);
 void re15_wasserzombie_bank_vergessen(void);   /* Tests */
 
-/* Renderer/Uhr: 1 = RE2-KI-Zombie im RE1.5-Hochziehen, *sk/*an = seine RE1.5-Aktionsbank (motion gueltig). */
+/* Renderer/Uhr/Schuss-Anker: 1 = RE2-KI-Zombie, dessen letzter EIGENER Tick die RE1.5-Maschine lief (Marke); dann
+ * stehen in sk und an seine RE1.5-Aktionsbank (motion gueltig). Haengt NICHT am aktuellen Zustandswort: ein fremder
+ * Schreiber (RE2-Partner-Domino 0x901 @0x80102E90-98) aendert die Pose im Original erst im eigenen Tick
+ * (anim_set rechnet sie dort in den Teileblock +0x188, @0x8001f40c) — Nachbesserung 1, wasserzombie_r38.c. */
 int  re15_wasserzombie_bank(const re15_actor_t *e, const re15_emd_skeleton_t **sk, const re15_emd_animation_t **an);
 
-/* Schatten-Hoehe (FUN_8001b064 a1 = +0x1ba @0x801004fc): waehrend des Hochziehens +0x1ba statt y. 1 = gesetzt. */
+/* Schatten-Hoehe (FUN_8001b064 a1 = +0x1ba @0x801004fc): waehrend des Hochziehens +0x1ba statt y. 1 = gesetzt.
+ * RE2-KI: nach demselben Stand wie re15_wasserzombie_bank. */
 int  re15_wasserzombie_schatten_y(const re15_actor_t *e, int32_t *y);
 
 /* Testhaken: RE2-Marker ruecksetzen (Raumwechsel im Test). */

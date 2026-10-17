@@ -12,7 +12,10 @@
  *   D  RE2-KI (Standard), derselbe Raum: dieselbe Mechanik ueber re15_wasserzombie_re2_dispatch (RE1.5-Bank je Typ
  *      gemeldet), am Ende RE2-Zustand 1/0 mit RE2-Clip; Gegenprobe ohne gemeldete Bank: kein Hochziehen.
  *   E  ROOM2000 (Deskriptor 0x84, Modus 4 -> Engage) beide KI: beide Wasserzombies stehen am Ende auf einem Steg.
- *   F  RE2-Abbruch nach Bild 0x46 (Treffer -> Zustand 2): +0x1ba zurueck auf den Wert vor dem Hochziehen.
+ *   F  RE2-Abbruch nach Bild 0x46 durch einen fremden Schreiber NACH dem eigenen Tick (Partner-Domino 0x901):
+ *      Zwischenbild = Stand des eigenen Ticks (RE1.5-Bank, Clip 0x16, Uhr 159, Schatten +0x1ba, Advancer Bild + 1);
+ *      erst der eigene Tick bricht ab (+0x1ba zurueck, RE2-Bank, EXEC[9]-Clip mit RE2-Laenge). Nachbesserung 1.
+ *      F-Neuspawn: Zustand 0 im Slot -> keine RE1.5-Bank trotz stehender Marke.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -382,11 +385,20 @@ int main(void)
                 CHECK(v.eintritt < 0 && g_actors[s].y == 0, "D: ohne RE1.5-Bank darf der RE2-Zombie nicht hochziehen");
             }
         }
-        /* F: RE2-Abbruch nach Bild 0x46 -> +0x1ba zurueck */
+        /* F: RE2-Abbruch durch einen FREMDEN Schreiber NACH dem eigenen Tick (gemessener Fall, Abnahme 0 M5: ROOM2000
+         *    F400 schreibt der greifende Slot 4 im Griff-Ende P8 das Wort 0x901 in den kletternden Slot 3, dessen Tick in
+         *    diesem Bild schon gelaufen ist — RE2-Partner-Domino `addiu v0,zero,2305` / `sw v0,4(s0)` @0x80102E90/98).
+         *    Zwischenbild (Zeichnen, Schuss-Anker, Advancer des Folgebilds): im Original zeigt der Aktor die Pose seines
+         *    letzten eigenen anim_set (Teileblock +0x188 @0x8001f40c, RotMatrix @0x8001f574/@0x8001f5f0) -> RE1.5-Bank,
+         *    Clip 0x16 gueltig, Laenge 159, Schatten +0x1ba; der Advancer des Folgebilds taktet 0x16 auf 159 (Bild + 1).
+         *    Erst der eigene Tick bricht ab: +0x1ba zurueck, RE2-Bank, RE2-Clip aus EXEC[9] P0 (Tabelle {3,3,4,0x0D}
+         *    @0x801000D8, `sw v0,332(s1)` @0x80103F30) mit RE2-Laenge. Vorher (a4809c35) hing die Bank am Zustandswort:
+         *    im Zwischenbild Clip 22 auf der RE2-Bank (10 Bilder) -> Advancer pinnte af 49 -> 9, Bild F400 leer. */
         {
             raum_start(RE15_AI_FLAVOR_RE2, -9500, 2600, 0x400, 1);
             int s = slot_bei(-11300, 0, 300);
-            if (s > 0) {
+            emd15_t *m15 = emd15(0x16);
+            if (s > 0 && m15) {
                 re15_actor_t *e = &g_actors[s];
                 int abgebrochen = 0;
                 for (int f = 0; f < 400 && !abgebrochen; f++) {
@@ -394,20 +406,72 @@ int main(void)
                     bild();
                     if (e->state == 1 && e->sub_state_1 == RE15_WZ_SUB && e->anim_frame > RE15_WZ_BODENBILD + 5) {
                         CHECK(e->dog_floor_y == -RE15_WZ_BAND, "F: vor dem Abbruch f1ba=%d", (int)e->dog_floor_y);
-                        re15_ai_set_state_word(e, 0x0901u);       /* gemessener Fall: RE2-Partner-Domino 0x901
-                                                                   * (@0x80102E90-98) mitten im Hochziehen */
+                        const int af0 = (int)e->anim_frame;
+                        re15_ai_set_state_word(e, 0x0901u);       /* fremder Schreiber NACH dem eigenen Tick dieses Bilds */
+                        /* --- Zwischenbild: Stand des letzten eigenen Ticks --- */
+                        const re15_emd_skeleton_t *zsk = NULL; const re15_emd_animation_t *zan = NULL;
+                        const int zbank = re15_wasserzombie_bank(e, &zsk, &zan);
+                        const int zlen = re15_actor_clip_len(e);
+                        int32_t zsy = 12345; const int zsch = re15_wasserzombie_schatten_y(e, &zsy);
+                        re15_actor_t snap[RE15_ACTOR_MAX];
+                        memcpy(snap, g_actors, sizeof snap);
+                        re15_actors_anim_advance();                /* der Advancer des Folgebilds (game_step, vor der KI) */
+                        const int zaf = (int)g_actors[s].anim_frame;
+                        memcpy(g_actors, snap, sizeof snap);
+                        printf("  [F] Zwischenbild: st=%d/%d mo=%d af=%d bank_re15=%d len=%d schatten=%d(%d) advancer af=%d\n",
+                               e->state, e->sub_state_1, (int)e->motion, af0, zbank, zlen, zsch, (int)zsy, zaf);
+                        CHECK(zbank == 1 && zsk != NULL && zan != NULL && zan->clips == m15->an.clips,
+                              "F: Zwischenbild posiert nicht die RE1.5-Aktionsbank (bank=%d)", zbank);
+                        CHECK(e->motion == (int16_t)RE15_WZ_CLIP_KLETTER && zan && (int)e->motion < zan->clip_count,
+                              "F: Zwischenbild Clip %d (erwartet 0x16 auf der RE1.5-Bank)", (int)e->motion);
+                        CHECK(zlen == 159, "F: Zwischenbild-Uhr %d statt 159 (RE1.5-Clip 0x16)", zlen);
+                        CHECK(zsch == 1 && zsy == -RE15_WZ_BAND, "F: Zwischenbild-Schatten %d/%d statt +0x1ba -1800",
+                              zsch, (int)zsy);
+                        CHECK(af0 + 1 < 159 && zaf == af0 + 1, "F: Advancer im Folgebild af %d -> %d (erwartet %d)",
+                              af0, zaf, af0 + 1);
+                        /* --- Folgebild: der eigene Tick bricht ab --- */
                         bild();
-                        printf("  [F] Abbruch: st=%d y=%d f1ba=%d band=%d\n", e->state, (int)e->y,
-                               (int)e->dog_floor_y, (int)e->floor);
+                        const int nbank = re15_wasserzombie_bank(e, NULL, NULL);
+                        const int nlen = re15_actor_clip_len(e), nlen2 = re15_actor_clip_len_legacy(e);
+                        printf("  [F] Abbruch: st=%d/%d mo=%d af=%d y=%d f1ba=%d band=%d bank_re15=%d len=%d (RE2 %d)\n",
+                               e->state, e->sub_state_1, (int)e->motion, (int)e->anim_frame, (int)e->y,
+                               (int)e->dog_floor_y, (int)e->floor, nbank, nlen, nlen2);
                         CHECK(e->y == 0 && e->dog_floor_y == 0 && e->floor == 0 && e->sub_state_1 == 9,
                               "F: nach Abbruch y=%d f1ba=%d band=%d (erwartet 0/0/0)", (int)e->y, (int)e->dog_floor_y,
                               (int)e->floor);
+                        CHECK(nbank == 0, "F: nach dem eigenen Abbruch-Tick noch RE1.5-Bank");
+                        CHECK(e->motion == 3 || e->motion == 4 || e->motion == 0x0D,
+                              "F: nach Abbruch Clip %d (erwartet EXEC[9] P0 {3,3,4,0x0D} @0x801000D8)", (int)e->motion);
+                        CHECK(nlen == nlen2 && nlen > 0, "F: nach Abbruch Uhr %d statt RE2-Laenge %d", nlen, nlen2);
                         int32_t sy = 12345;
                         CHECK(re15_wasserzombie_schatten_y(e, &sy) == 0, "F: Schatten haengt nach Abbruch an +0x1ba");
                         abgebrochen = 1;
                     }
                 }
                 CHECK(abgebrochen, "F: Hochziehen nicht ueber Bild 0x46 hinaus erreicht");
+            }
+        }
+        /* F-Neuspawn: steht die Marke noch, wenn im Slot neu gespawnt wird (Sce_em_set `sw zero,4(s0)` @0x800421e0 =
+         * Zustand 0), gilt die RE1.5-Bank NICHT — der neue Aktor hat keinen eigenen Tick im Hochziehen. */
+        {
+            raum_start(RE15_AI_FLAVOR_RE2, -9500, 2600, 0x400, 1);
+            int s = slot_bei(-11300, 0, 300);
+            if (s > 0) {
+                re15_actor_t *e = &g_actors[s];
+                int geprueft = 0;
+                for (int f = 0; f < 400 && !geprueft; f++) {
+                    g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100;
+                    bild();
+                    if (e->state == 1 && e->sub_state_1 == RE15_WZ_SUB && e->motion == (int16_t)RE15_WZ_CLIP_KLETTER) {
+                        CHECK(re15_wasserzombie_bank(e, NULL, NULL) == 1, "F-Neuspawn: Klettern ohne RE1.5-Bank");
+                        re15_ai_set_state_word(e, 0x0000u);       /* Neuspawn im Slot */
+                        CHECK(re15_wasserzombie_bank(e, NULL, NULL) == 0, "F-Neuspawn: Zustand 0 posiert die RE1.5-Bank");
+                        int32_t sy = 12345;
+                        CHECK(re15_wasserzombie_schatten_y(e, &sy) == 0, "F-Neuspawn: Zustand 0 nimmt den Kletter-Schatten");
+                        geprueft = 1;
+                    }
+                }
+                CHECK(geprueft, "F-Neuspawn: Klettern nie erreicht");
             }
         }
     }

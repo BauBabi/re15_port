@@ -212,8 +212,10 @@ static int wz_bank_fuer(uint8_t type, const re15_emd_skeleton_t **sk, const re15
 }
 
 /* ---- RE2-KI: Marke "dieser RE2-Zombie fuehrt gerade die RE1.5-Maschine" ------------------------------------- *
- * Eigene Marke statt eines Aktorfelds; gilt nur, solange Typ, Zustand 1 und Sub 0x0A passen (ein Treffer setzt
- * Zustand 2, ein neuer Spawn Zustand 0 -> die Marke faellt beim naechsten Blick). */
+ * Eigene Marke statt eines Aktorfelds; nur der eigene Tick setzt/loescht sie (re15_wasserzombie_re2_dispatch). Der
+ * eigene Tick bricht ab, sobald Typ, Zustand 1 oder Sub 0x0A nicht mehr passen (wz_marke_gilt: Treffer -> Zustand 2,
+ * Partner-Domino 0x901, neuer Spawn Zustand 0). Bank/Uhr/Schatten lesen den Stand des letzten eigenen Ticks
+ * (wz_marke_bank). */
 typedef struct { uint8_t aktiv; uint8_t type; int16_t boden_vorher; } wz_marke_t;
 static wz_marke_t s_marke[RE15_ACTOR_MAX];
 
@@ -223,6 +225,7 @@ void re15_wasserzombie_reset(void)
     s_landung.slot = -1;
 }
 
+/* Eigener Tick: steht das Zustandswort noch auf dem Hochziehen? (Abbruch-Erkennung in re15_wasserzombie_re2_dispatch) */
 static int wz_marke_gilt(int slot, const re15_actor_t *e)
 {
     if (slot < 1 || slot >= RE15_ACTOR_MAX || !e) return 0;
@@ -230,11 +233,30 @@ static int wz_marke_gilt(int slot, const re15_actor_t *e)
         && e->state == 1 && e->sub_state_1 == RE15_WZ_SUB;
 }
 
+/* Nachbesserung 1 (Mangel 1 der Abnahme 0): Bank, Uhr und Schatten folgen dem Stand des LETZTEN EIGENEN Ticks, nicht
+ * dem aktuellen Zustandswort. Im Original rechnet anim_set die Pose IM eigenen Tick in den Teileblock des Aktors
+ * (FUN_8001f314 -> FUN_8001f3bc: `lw s1,392(v1)` +0x188 @0x8001f40c, Wurzel `sw/sh ..(s1)` @0x8001f42c-40, je Teil
+ * `jal 0x80068098` RotMatrix @0x8001f574/@0x8001f5f0); ein fremder Schreiber auf +0x4 — gemessen der RE2-Partner-
+ * Domino `addiu v0,zero,2305` / `sw v0,4(s0)` @0x80102E90/98 (EMOVL10_S0.BIN), daneben nur `sb v0,363(s0)`
+ * @0x80102EA8 — aendert die gezeigte Pose nicht; erst der eigene Tick setzt den neuen Clip (EXEC[9] P0 `sw v0,332(s1)`
+ * @0x80103F30). Der Port rechnet die Pose beim Zeichnen aus (Bank, motion, anim_frame), also muss die Bank zum Stand
+ * des eigenen Ticks passen — das ist die Marke (gesetzt/geloescht nur in re15_wasserzombie_re2_dispatch).
+ * Ausgenommen: Neuspawn im Slot (Sce_em_set `sw zero,4(s0)` @0x800421e0 = Zustand 0) und jeder Aktor, den nicht das
+ * RE2-Gehirn fuehrt (die RE1.5-KI posiert ohnehin die eigene RE1.5-Bank). Vorher (a4809c35) hing die Bank an
+ * wz_marke_gilt: Wort 0x901 nach dem eigenen Tick -> Clip 22 Bild 49 auf der RE2-Bank (Bild F400 leer bis auf ein
+ * Bein) und der globale Advancer taktete im Folgebild auf der RE2-Clip-22-Laenge (af 49 -> 9). */
+static int wz_marke_bank(int slot, const re15_actor_t *e)
+{
+    if (slot < 1 || slot >= RE15_ACTOR_MAX || !e) return 0;
+    return s_marke[slot].aktiv && s_marke[slot].type == e->type && e->active && e->state != 0
+        && re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type);
+}
+
 int re15_wasserzombie_bank(const re15_actor_t *e, const re15_emd_skeleton_t **sk, const re15_emd_animation_t **an)
 {
     if (!e) return 0;
     const int slot = (int)(e - g_actors);
-    if (!wz_marke_gilt(slot, e)) return 0;
+    if (!wz_marke_bank(slot, e)) return 0;
     const re15_emd_skeleton_t *s = NULL; const re15_emd_animation_t *a = NULL;
     if (!wz_bank_fuer(e->type, &s, &a)) return 0;
     if (e->motion < 0 || (int)e->motion >= a->clip_count) return 0;
@@ -247,11 +269,14 @@ int re15_wasserzombie_schatten_y(const re15_actor_t *e, int32_t *y)
 {
     if (!e || !y) return 0;
     if (!re15_wasserzombie_typ(e->type)) return 0;
-    if (!(e->state == 1 && e->sub_state_1 == RE15_WZ_SUB)) return 0;
-    /* RE1.5-KI: Zustand 1 / Sub 0x0A IST das Hochziehen (Grid 0/2). RE2-KI: nur mit der eigenen Marke
-     * (das RE2-Gehirn schreibt 0x0A01 in DECISION[1]/[2], dessen Executor bricht im selben Bild ab). */
-    if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)
-        && !wz_marke_gilt((int)(e - g_actors), e)) return 0;
+    if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)) {
+        /* RE2-KI: nur mit der eigenen Marke (das RE2-Gehirn schreibt 0x0A01 in DECISION[1]/[2], dessen Executor bricht
+         * im selben Bild ab) — und wie Bank/Uhr nach dem Stand des letzten eigenen Ticks (wz_marke_bank), damit ein
+         * fremder Schreiber nach dem eigenen Tick den Schatten nicht ein Bild vor der Pose umsetzt. */
+        if (!wz_marke_bank((int)(e - g_actors), e)) return 0;
+    } else if (!(e->state == 1 && e->sub_state_1 == RE15_WZ_SUB)) {
+        return 0;                                                   /* RE1.5-KI: Zustand 1 / Sub 0x0A IST das Hochziehen */
+    }
     *y = (int32_t)e->dog_floor_y;                                   /* lh a1,442(v0) @0x801004fc -> FUN_8001b064 */
     return 1;
 }
