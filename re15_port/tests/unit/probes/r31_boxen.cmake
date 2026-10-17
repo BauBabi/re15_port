@@ -9,6 +9,16 @@
 #       * die KRIECHER-Box des Zombies ist KEINE Sackgasse: die Rampe @0x8010366C-94
 #         zieht sie messbar wieder auf -1500/1500;
 #       * kein Typ wurde durch die Aenderung zugemacht (Treffer > 0 je Typ).
+#     RUNDE 38 (Integration, Schachtspinnen der Spur R in ROOM2060/20A0):
+#       * Zensus ueber JEDE ausgelieferte Spinne (+ ROOM2090); ausserhalb des Schacht-Wartens
+#         traegt keine die Unterkante 0;
+#       * genau die vier Sce_em_set-Saetze mit grid 0x41 warten im Schacht (Zustand 4/1) mit
+#         leerem RE2-Kasten;
+#       * je Schachtspinne: Original-Ausloeser (work[0x0A] -> sub01 -> Member_set 0x0C 0x42),
+#         Landung + RE2-INIT mit -1400/1400 (Tabelle @0x801063A0), danach Treffer > 0.
+#     NICHT im Riegel: die Treffbarkeit IM Schacht. Das Original zielt und trifft dort nicht
+#     (FUN_8003703c grid & 0x60 @0x8003710c, Resolver-Band @0x800120e4-ec), der Port schon —
+#     gemeldeter Spielfehler, gemessen in jedem Lauf; Urteil: `probe_r31_boxen versteckt`.
 add_executable(probe_r31_boxen probe_r31_boxen.c)
 target_link_libraries(probe_r31_boxen PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r31_boxen PRIVATE ${CMAKE_SOURCE_DIR}/include)

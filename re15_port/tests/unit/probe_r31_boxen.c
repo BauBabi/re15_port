@@ -24,6 +24,12 @@
  *       die Klasse gelesen wird (muss bei Applier-Typen > 0 sein).
  *       Die Boxen +0x98/+0x9E bleiben gemessen und gepinnt — sie sind weiterhin die Eingabe
  *       des MESSER-Tors.
+ *   (5) RUNDE 38 (Spur R, Schachtspinnen ROOM2060/20A0): der Zensus sieht jetzt JEDE
+ *       ausgelieferte Spinne; die vier Schachtspinnen warten mit leerem RE2-Kasten, der
+ *       Original-Ausloeser (Raumskript sub01 -> Member_set grid 0x42) holt sie heraus, nach der
+ *       Landung tragen sie -1400/1400 und werden getroffen (Teil 2e). Dass der Port sie IM
+ *       Schacht anzielt und trifft (das Original nicht), ist ein gemeldeter Spielfehler: Block
+ *       SPIELFEHLER in jedem Lauf, Urteil mit dem Argument `versteckt`.
  * ============================================================================================ */
 #include "re15_emd.h"
 #include "re15_rdt.h"
@@ -495,8 +501,37 @@ static void pass_scharf(int si, int scharf, int budget)
  * den ein Deckenraum nimmt. Gemessen wird wieder mit ECHTEN Treffern. */
 static const char NL[2] = { 10, 0 };
 static int s_decke_aus = -1, s_decke_scharf = -1, s_decke_b = 0, s_decke_h = 0;
-static int s_nullbox_raeume = 0;    /* Raeume mit einer AUSGELIEFERTEN Spinne, deren
-                                     * Unterkante 0 ist (Decken-/Wandspawn) */
+static int s_nullbox_raeume = 0;    /* AUSGELIEFERTE Spinnen AUSSERHALB des Schacht-Wartens,
+                                     * deren Unterkante 0 ist (Decken-/Wandspawn) */
+static int s_spinnen_raeume = 0, s_spinnen_n = 0;
+static int s_schacht_wartend = 0, s_schacht_box_falsch = 0;
+
+extern void scd_register_current_rdt(const re15_rdt_t *rdt);
+
+/* Spinnenraum aufbauen wie setup_target (RE2-KI, Bank, Waffe 3, 60 Bilder), aber OHNE die
+ * uebrigen Aktoren abzuschalten: ROOM2060/20A0 tragen je ZWEI Schachtspinnen, und der Zensus
+ * soll jede ausgelieferte Spinne sehen, nicht nur die erste. */
+static void raum_aufbau_re2(void)
+{
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    bringup();
+    load_re2_bank(0x25);
+    re15_inv_load_briefing();
+    re15_player_set_equipped_weapon(3);
+    {   int es = re15_inv_equipped_slot();
+        if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 250; }
+    for (int f = 0; f < 60; f++) { g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100; frame(0, 0); }
+}
+
+/* SCHACHT-WARTEN (Runde 38 Spur R, Dossier analysis/befunde_runde38/R_spinnen.md 2.1): der
+ * RE1.5-INIT @0x80110b6c setzt fuer grid 0x41 das Zustandswort 0x104 (`ori v0,zero,0x104` /
+ * `sw v0,4(a0)` @0x80110d10-14 = Zustand 4, Unterzustand 1); Phase 0 @0x80114f08 wartet, solange
+ * grid == 0x41 (`ori v0,zero,0x41` / `beq v1,v0,0x801153b4` @0x80114f18-1c). */
+static int schacht_wartet(const re15_actor_t *e)
+{
+    return e->active && e->type == 0x25 && e->grid_id == 0x41 &&
+           e->state == 4 && e->sub_state_1 == 1;
+}
 
 /* Welche Box traegt eine AUSGELIEFERTE Spinne je Raum? Das entscheidet, ob das fuenfte Tor
  * fuer 0x25 gefahrlos scharf darf: der Boden-Spawn traegt -1400/1400 (Tabelle @0x801063A0,
@@ -510,30 +545,408 @@ static int s_nullbox_raeume = 0;    /* Raeume mit einer AUSGELIEFERTEN Spinne, d
  * (Tabelle @0x801063E0 @0x801004EC-52C) tragen 0/1400 (Fenster [-1500, 1500) -> gesperrt). */
 static void pass_spinne_raeume(void)
 {
+    /* ROOM2090 ergaenzt (Runde 38): Zensus Spur R 1.1 (tools/scd_dump_room.py ueber alle
+     * ROOM*.RDT) — Typ 0x25 steht in ROOM2030/2050/2060/2070/2090/20A0 (+ die bytegleichen
+     * Elza-Zeilen 20x1); 2090 fehlte hier. */
     static const struct { const char *sub; int id; } RAUM[] = {
         { "STAGE1/ROOM1090.RDT", 0x1090 }, { "STAGE1/ROOM10D0.RDT", 0x10D0 },
         { "STAGE1/ROOM1260.RDT", 0x1260 }, { "STAGE2/ROOM2000.RDT", 0x2000 },
         { "STAGE2/ROOM2010.RDT", 0x2010 }, { "STAGE2/ROOM2020.RDT", 0x2020 },
         { "STAGE2/ROOM2030.RDT", 0x2030 }, { "STAGE2/ROOM2050.RDT", 0x2050 },
         { "STAGE2/ROOM2060.RDT", 0x2060 }, { "STAGE2/ROOM2070.RDT", 0x2070 },
+        { "STAGE2/ROOM2090.RDT", 0x2090 },
         { "STAGE2/ROOM20A0.RDT", 0x20A0 }, { "STAGE3/ROOM3010.RDT", 0x3010 },
         { "STAGE3/ROOM3020.RDT", 0x3020 }, { "STAGE4/ROOM4050.RDT", 0x4050 },
         { "STAGE4/ROOM4070.RDT", 0x4070 },
     };
-    int gefunden = 0;
     for (unsigned i = 0; i < sizeof RAUM / sizeof RAUM[0]; i++) {
         if (!load_room(RAUM[i].sub, RAUM[i].id, -1)) continue;
-        int slot = setup_target(0x25, 3, 0);
-        if (slot < 0) continue;
-        re15_actor_t *e = &g_actors[slot];
-        gefunden++;
-        if (e->re2_hit_b98 == 0) s_nullbox_raeume++;
-        printf("    %04X: Modus %u | Box %6d/%-5d %s\n", RAUM[i].id,
-               (unsigned)e->re2s_mode222, e->re2_hit_b98, (int)e->re2_hit_h9e,
-               (e->re2_hit_b98 == 0) ? "-> Fenster [-1500,1500) = GESPERRT" : "-> DURCH");
+        raum_aufbau_re2();
+        int n = 0;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+            re15_actor_t *e = &g_actors[s];
+            if (!e->active || e->type != 0x25) continue;
+            n++; s_spinnen_n++;
+            if (schacht_wartet(e)) {
+                /* Der RE2-INIT (re2s_init, einziger Schreiber von +0x98/+0x9E/box_set vor dem
+                 * ersten Zustands-Handler: Blockkopie @0x801003BC-400) laeuft fuer die
+                 * Schachtspinne erst NACH der Landung (spinnen_r38.c re15_spinnen_r38_lauer_re2).
+                 * Bis dahin bleibt der Kasten leer (0/0, box_set 0). */
+                s_schacht_wartend++;
+                int leer = (e->re2_hit_b98 == 0 && e->re2_hit_h9e == 0 && !e->re2_hit_box_set);
+                if (!leer) s_schacht_box_falsch++;
+                printf("    %04X Slot %2d: grid 0x%02X Zustand %d/%d Phase %d y %6d | Box %6d/%-5d set %d "
+                       "-> WARTET IM SCHACHT (4/1 @0x80110d10-14)%s\n", RAUM[i].id, s, e->grid_id,
+                       e->state, e->sub_state_1, e->sub_state_3, e->y, e->re2_hit_b98,
+                       (int)e->re2_hit_h9e, e->re2_hit_box_set,
+                       leer ? "" : "  <== Kasten NICHT leer");
+                continue;
+            }
+            if (e->re2_hit_b98 == 0) s_nullbox_raeume++;
+            printf("    %04X Slot %2d: grid 0x%02X Zustand %d/%d Modus %u y %6d | Box %6d/%-5d set %d %s\n",
+                   RAUM[i].id, s, e->grid_id, e->state, e->sub_state_1,
+                   (unsigned)e->re2s_mode222, e->y, e->re2_hit_b98, (int)e->re2_hit_h9e,
+                   e->re2_hit_box_set,
+                   (e->re2_hit_b98 == 0) ? "-> Fenster [-1500,1500) = GESPERRT" : "-> DURCH");
+        }
+        if (n) s_spinnen_raeume++;
     }
-    printf("  %d Raeume mit lebender 0x25 geprueft, davon %d mit Unterkante 0 (gesperrt)\n",
-           gefunden, s_nullbox_raeume);
+    printf("  %d Raeume mit lebender 0x25, %d Spinnen: %d warten im Schacht, %d ausserhalb mit "
+           "Unterkante 0 (gesperrt)\n", s_spinnen_raeume, s_spinnen_n, s_schacht_wartend,
+           s_nullbox_raeume);
+}
+
+/* ===== TEIL 2e: DIE SCHACHTSPINNEN NACH DEM ORIGINAL-AUSLOESER (Runde 38 Spur R) ===========
+ * ROOM2060 und ROOM20A0 liefern je zwei Spinnen mit Sce_em_set grid 0x41 (im Schacht). Sie
+ * warten in Zustand 4/1, bis das Raumskript ihren grid auf 0x42 setzt, kriechen heraus, steigen
+ * ab und landen auf y 0 (Phasen @0x80114ec8, Tabelle @0x8010027c; Original per GDB gemessen,
+ * R_belege/orig_2060_schacht_gift.txt / orig_20a0_schacht.txt). Der Ausloeser wird hier GENAU
+ * wie im Original gefahren und wie Spur R ihn misst (test_r38_spinnen.c Teil A): der angezeigte
+ * Cut work[0x0A] (DAT_800b0fe4) wird gesetzt, sub01 laeuft je Spielbild (Reseed FUN_8003f038
+ * @0x8003f064-84) und ruft ueber Evt_exec das Unterskript mit `Member_set 0x0C 0x42`.
+ *
+ * ORIGINAL (RE1.5, selbst disassembliert): die wartende Spinne ist KEIN Ziel des Resolvers.
+ *   INIT        word0 &= 0x1fffffff        `lui v1,0x1fff`/`and`/`sw v0,0(a0)` @0x80110d38-48
+ *               (+0x93 = 0 @0x80110bc0, +0x78 = Kasten A *(0x80118e04) @0x80110d20-2c)
+ *   Zustand 4/1 Phase 0 wartet ohne jeden Schreibzugriff (`beq` -> Epilog @0x80114f1c), die
+ *               Phasen 0..8 @0x80114f08-0x801153b0 schreiben word0 nie
+ *   ACTIVE      erst hier der Band-Stempel: word0 &= 0x1fffffff @0x80110f94-a4, grid < 2 oder
+ *               grid == 5 -> `jal 0x80012aa4` (a0 = 0xfa0) @0x80110fd0
+ *   Resolver    FUN_80011f50 nimmt nur Kandidaten mit word0 & Spieler & 0xe0000000 != 0
+ *               (`lui v1,0xe000`/`and`/`beq v0,zero,0x80012128` @0x800120e4-ec) und ohne
+ *               (+0x93 & 3) == 3 (`lui s4,0x300` @0x800120c0, `beq v0,s4` @0x80012100)
+ *   Ausstieg    Phase 0 nach dem Ausloeser: +0x78 = Kasten C @0x80114f64-6c, +0x93 |= 3
+ *               @0x80114f7c-88 (Latch -> kein Kandidat, solange sie kriecht)
+ *   Landung     Phase 7: grid = 5 @0x80115250-54, Kasten A @0x8011522c-34; Phase 8: +0x93 = 0
+ *               @0x80115344, Zustandswort 1 @0x8011539c-a0 -> naechstes ACTIVE stempelt das Band.
+ *   Zielhilfe   FUN_8003703c (Waffe heben: `jal 0x8003703c` / `ori a0,zero,0x7530` @0x80032fa8-ac)
+ *               ueberspringt JEDES Wesen mit grid & 0x60 (`lbu a0,-145(s0)` = +0x09,
+ *               `andi v0,a0,0x60` / `bne v0,zero,0x80037174` @0x80037104-10) - grid 0x41/0x42.
+ * Im RE2 gibt es keine Schachtspinne (INIT-Sprungtabelle @0x80100004 Eintrag 1 = Epilog
+ * @0x8010058C); der Port faehrt den RE1.5-Ausstieg und uebergibt danach an den RE2-INIT
+ * (Boden-Zweig @0x80100460), der den Kasten -1400/1400 aus Tabelle @0x801063A0 kopiert
+ * (`lw a0,20(a1)`/`sw a0,152(s2)` @0x801003E4/F0, `lw v0,24(a1)`/`sw v0,156(s2)` @0x801003F4/FC).
+ *
+ * DER RIEGEL (Argument `riegel`) PRUEFT JE SCHACHTSPINNE (RE2-KI wie Teil 1-3):
+ *   (a) nach dem Aufbau wartend (Zustand 4/1, grid 0x41) mit LEEREM RE2-Kasten (0/0, box_set 0):
+ *       der RE2-INIT laeuft im Port erst nach der Landung (spinnen_r38.c
+ *       re15_spinnen_r38_lauer_re2). Das ist ein PORT-Zustand und KEIN Treffer-Tor - das fuenfte
+ *       Tor gilt nur mit box_set und nur fuer das Messer (Teil 2c, re15_damage.c);
+ *   (b) der Original-Ausloeser setzt grid 0x41 -> 0x42;
+ *   (c) Landung + RE2-INIT: Kasten -1400/1400, box_set 1 (Tabelle @0x801063A0+20/+26);
+ *   (d) danach treffen echte Schuesse (> 0) - keine Schachtspinne bleibt dauerhaft untreffbar.
+ * Bis zur Landung wird dabei nicht geschossen.
+ * NICHT als richtig festgeschrieben wird die Spinne IM SCHACHT (wartend und beim Herauskriechen):
+ * im Original ist sie kein Ziel (Zielhilfe und Resolver, s.o.); der Port zielt auf sie und
+ * trifft sie, und beim Kriechen gibt sein RE2-Pausenfilter (re15_re2_pause_filter_apply,
+ * re15_damage.c, je Schritt nach dem Gegner-Takt) Bit 0 des Latches wieder frei (gemessen,
+ * Block SPIELFEHLER in jedem Lauf). Das ist ein gemeldeter Spielfehler; die Probe prueft ihn
+ * mit dem Argument `versteckt` gegen das Original (Exit 1, solange er besteht). */
+typedef struct {
+    const char *sub; int id; int em; int cut; int32_t sx, sy, sz;
+    const char *quelle;
+} schacht_t;
+static const schacht_t SCHACHT[] = {
+    { "STAGE2/ROOM2060.RDT", 0x2060, 0, 1,  5800, -3600,   6400,
+      "Sce_em_set @Datei 0x0E26 | sub01 Cmp(work[0x0A]==1) @0x110A -> sub02 Member_set 0x0C 0x42 @0x1342" },
+    { "STAGE2/ROOM2060.RDT", 0x2060, 1, 5, -6600, -3600,    800,
+      "Sce_em_set @Datei 0x0E5C | sub01 Cmp(work[0x0A]==5) @0x1128 -> sub03 Member_set 0x0C 0x42 @0x13E8" },
+    { "STAGE2/ROOM20A0.RDT", 0x20A0, 0, 4, 22600, -5400, -29000,
+      "Sce_em_set @Datei 0x18CE | sub01 Cmp(work[0x0A]==4) @0x1A9C -> sub03 Member_set 0x0C 0x42 @0x1CB4" },
+    { "STAGE2/ROOM20A0.RDT", 0x20A0, 1, 5, 19400, -3600, -13400,
+      "Sce_em_set @Datei 0x1904 | sub01 Cmp(work[0x0A]==5) @0x1ABA -> sub04 Member_set 0x0C 0x42 @0x1D5A" },
+};
+#define SCHACHT_N ((int)(sizeof SCHACHT / sizeof SCHACHT[0]))
+
+typedef struct {
+    int ok, wartet, box_vor_b, box_vor_h, box_vor_set;
+    int ausgeloest, gelandet, bilder_kriechen;
+    int box_nach_b, box_nach_h, box_nach_set, zustand_nach;
+    int32_t land_x, land_y, land_z;
+    int bilder_nach, treffer_nach;
+} schacht_mess_t;
+static schacht_mess_t s_schacht[SCHACHT_N];
+
+/* SPIELFEHLER-Messung (Block `versteckt`): die Spinne im Schacht gegen das Original.
+ * W = wartend (vor dem Ausloeser), K = beim Herauskriechen (nach dem Ausloeser, vor der Landung). */
+typedef struct {
+    int ok, wartet, ziel_rastet, treffer_eben, treffer_hoch, bilder;
+    int zustand_nach, sub_nach, grid_nach; int32_t y_nach;
+    int k_ok, k_bilder, k_latch3, k_ziel, k_schuesse, k_treffer;
+    int k_zustand_nach, k_sub_nach, k_grid_nach; int32_t k_y_nach;
+} versteckt_mess_t;
+static versteckt_mess_t s_versteckt[SCHACHT_N];
+static int s_tuer_ok = 0, s_tuer_treffer = -1, s_tuer_wartet = 0, s_tuer_ziel = 0;
+static int16_t s_tuer_blick_vor = 0, s_tuer_blick_nach = 0;
+extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);
+
+/* Spieler auf den BODEN unter dem Schacht stellen (y 0 = die Landehoehe: +0x1ba := 0
+ * `sh zero,442` @0x80115044, y := +0x1ba @0x80115264-6c), `back` vor der Spinne, Blick auf sie. */
+static void track_boden(int slot, int32_t back)
+{
+    track(slot, back);
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = 0;
+}
+
+/* Rastet die Zielhilfe des Ports (re15_player_aim_target = FUN_8003703c mit dem Radius des
+ * Waffe-Hebens 0x7530 @0x80032fac) auf eine Spinne ein, die das Original ueberspringt
+ * (grid & 0x60 != 0: `andi v0,a0,0x60` / `bne` @0x8003710c-10 - grid 0x41 wartend, 0x42
+ * kriechend; erst Phase 7 setzt grid 5 @0x80115250-54)? */
+static int ziel_auf_schacht(void)
+{
+    int32_t tx = 0, tz = 0;
+    if (!re15_player_aim_target(0x7530, &tx, &tz)) return 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (e->active && e->type == 0x25 && e->x == tx && e->z == tz && (e->grid_id & 0x60u)) return 1;
+    }
+    return 0;
+}
+
+static re15_actor_t *schacht_spinne(const schacht_t *S)
+{
+    /* Work_set kind 2 idx -> Aktor-Slot idx + 1 (scd_work_bind); die Sce_em_set-Lage prueft,
+     * dass es wirklich die Spinne dieses Satzes ist. */
+    re15_actor_t *e = &g_actors[S->em + 1];
+    if (!e->active || e->type != 0x25 || e->x != S->sx || e->z != S->sz) return NULL;
+    return e;
+}
+
+/* (a)-(d): Aufbau, Original-Ausloeser, Landung mit Kasten, Treffer danach. */
+static void pass_schacht(int i, int budget_aus, int budget_nach)
+{
+    const schacht_t *S = &SCHACHT[i];
+    schacht_mess_t *m = &s_schacht[i];
+    memset(m, 0, sizeof *m);
+    m->ausgeloest = m->gelandet = -1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!load_room(S->sub, S->id, -1)) { printf("  FEHLLAUF: %s fehlt\n", S->sub); return; }
+    raum_aufbau_re2();
+    re15_actor_t *e = schacht_spinne(S);
+    if (!e) { printf("  FEHLLAUF: keine Spinne %d in %04X\n", S->em, S->id); return; }
+    const int slot = S->em + 1;
+    m->wartet = schacht_wartet(e);                                   /* (a) */
+    m->box_vor_b = e->re2_hit_b98; m->box_vor_h = (int)e->re2_hit_h9e;
+    m->box_vor_set = e->re2_hit_box_set;
+
+    /* (b)/(c): sub01-Reseed je Bild und Evt_exec brauchen das registrierte RDT (scd_vm.c
+     * s_current_rdt); danach wieder abmelden, damit die uebrigen Teile unveraendert laufen.
+     * Bis zur Landung wird NICHT geschossen: im Original ist die Spinne bis dahin kein Ziel
+     * (Blockkopf), der Port trifft sie aber (SPIELFEHLER-Block) und wuerde sie damit aus dem
+     * Ausstieg werfen - der Lauf soll den Ausstieg messen, nicht den Spielfehler. */
+    scd_register_current_rdt(&s_rdt);
+    re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
+    for (int f = 0; f < budget_aus; f++) {
+        pl->hp = 100;
+        if (!e->active) break;
+        if (m->ausgeloest < 0) g_scd.work_vars[0x0A] = (int16_t)S->cut;   /* angezeigter Cut */
+        scd_vm_tick();
+        track_boden(slot, 2000);
+        frame(0, 0);
+        if (m->ausgeloest < 0 && e->grid_id == 0x42) m->ausgeloest = f;   /* Member_set 0x0C 0x42 */
+        if (m->ausgeloest >= 0 && m->gelandet < 0) {
+            if (e->re2_hit_box_set) {                    /* RE2-INIT nach der Landung gelaufen */
+                m->gelandet = f; m->land_x = e->x; m->land_y = e->y; m->land_z = e->z;
+                break;
+            }
+            m->bilder_kriechen++;
+        }
+    }
+    scd_register_current_rdt(NULL);
+    m->box_nach_b = e->re2_hit_b98; m->box_nach_h = (int)e->re2_hit_h9e;   /* (c) */
+    m->box_nach_set = e->re2_hit_box_set; m->zustand_nach = e->state;
+
+    /* (d) NACH DER LANDUNG: echte Schuesse wie Teil 3 (gleiche Ebene). */
+    if (m->gelandet >= 0) {
+        aim_up(slot, 2000);
+        for (int f = 0; f < budget_nach; f++) {
+            pl->hp = 100; e->hp = 30000;
+            if (!e->active) break;
+            track(slot, 2000);
+            frame((uint16_t)(RE15_PAD_BIT_R1 | elev_pad_for(e) | RE15_PAD_BIT_SQUARE),
+                  (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+            m->bilder_nach++;
+            if (e->hp < 30000) m->treffer_nach++;
+        }
+    }
+    m->ok = 1;
+    printf("  [%04X Spinne %d, Cut %d] %s\n", S->id, S->em, S->cut, S->quelle);
+    printf("    (a) wartend %d | RE2-Kasten %d/%d set %d\n", m->wartet, m->box_vor_b, m->box_vor_h,
+           m->box_vor_set);
+    printf("    (b) grid 0x41 -> 0x42 in Bild %d | Herauskriechen %d Bilder (ohne Beschuss)\n",
+           m->ausgeloest, m->bilder_kriechen);
+    printf("    (c) Landung + RE2-INIT %d Bilder nach dem Ausloeser auf (%d,%d,%d): Zustand %d, Kasten %d/%d "
+           "set %d | (d) Treffer %d in %d Bildern\n",
+           (m->gelandet >= 0 && m->ausgeloest >= 0) ? m->gelandet - m->ausgeloest : -1,
+           m->land_x, m->land_y, m->land_z, m->zustand_nach, m->box_nach_b, m->box_nach_h,
+           m->box_nach_set, m->treffer_nach, m->bilder_nach);
+}
+
+/* SPIELFEHLER-Messung: die Spinne IM SCHACHT. Original: kein Ziel der Zielhilfe (grid & 0x60
+ * @0x80037104-10) und kein Kandidat des Resolvers (Band 0, @0x800120e4-ec; beim Kriechen
+ * zusaetzlich der Latch @0x80114f7c-88 -> @0x80012100). Gemessen wird
+ *   W (wartend): ob die Zielhilfe des Ports (re15_player_aim_target = FUN_8003703c, Radius
+ *     0x7530 @0x80032fac) einrastet, echte Schuesse vom Boden unter dem Schacht (eben, hoch),
+ *     und wo die Spinne danach steht;
+ *   K (Herauskriechen, frischer Raum, Original-Ausloeser): je Bild der Latch (+0x93 & 3) zu
+ *     Bildbeginn, die Zielhilfe, echte Schuesse, und wo die Spinne danach steht. */
+static void pass_versteckt(int i, int budget)
+{
+    const schacht_t *S = &SCHACHT[i];
+    versteckt_mess_t *v = &s_versteckt[i];
+    memset(v, 0, sizeof *v);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!load_room(S->sub, S->id, -1)) return;
+    raum_aufbau_re2();
+    re15_actor_t *e = schacht_spinne(S);
+    if (!e) return;
+    const int slot = S->em + 1;
+    v->wartet = schacht_wartet(e);
+    track_boden(slot, 2000);
+    v->ziel_rastet = ziel_auf_schacht();
+    for (int hoch = 0; hoch < 2; hoch++) {
+        re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
+        for (int f = 0; f < budget; f++) {
+            pl->hp = 100; e->hp = 30000;
+            if (!e->active) break;
+            track_boden(slot, 2000);
+            frame((uint16_t)(RE15_PAD_BIT_R1 | (hoch ? RE15_PAD_BIT_UP : 0u) | RE15_PAD_BIT_SQUARE),
+                  (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+            v->bilder++;
+            if (e->hp < 30000) { if (hoch) v->treffer_hoch++; else v->treffer_eben++; }
+        }
+    }
+    v->zustand_nach = e->state; v->sub_nach = e->sub_state_1; v->grid_nach = e->grid_id; v->y_nach = e->y;
+    v->ok = 1;
+
+    /* K: Herauskriechen. Waffe heben, solange sie wartet (ohne Feuer), Ausloeser, dann Feuer in
+     * jedem Bild, in dem sie zu Bildbeginn im Ausstieg steht (Zustand 4/1, Phase >= 1). */
+    if (!load_room(S->sub, S->id, -1)) return;
+    raum_aufbau_re2();
+    e = schacht_spinne(S);
+    if (!e || !schacht_wartet(e)) return;
+    scd_register_current_rdt(&s_rdt);
+    re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
+    int ausgeloest = 0;
+    for (int f = 0; f < budget; f++) {
+        pl->hp = 100; e->hp = 30000;
+        if (!e->active) break;
+        if (!ausgeloest) g_scd.work_vars[0x0A] = (int16_t)S->cut;
+        scd_vm_tick();
+        if (e->grid_id == 0x42) ausgeloest = 1;
+        const int kriecht = (e->state == 4 && e->sub_state_1 == 1 && e->sub_state_3 >= 1);
+        if (kriecht) {
+            v->k_bilder++;
+            if ((e->hit_react & 3u) == 3u) v->k_latch3++;
+        }
+        track_boden(slot, 2000);
+        if (kriecht && ziel_auf_schacht()) v->k_ziel++;
+        frame((uint16_t)(RE15_PAD_BIT_R1 | (kriecht ? RE15_PAD_BIT_SQUARE : 0u)),
+              (uint16_t)((kriecht && (f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+        if (kriecht && (f % 6) == 0) v->k_schuesse++;
+        if (kriecht && e->hp < 30000) v->k_treffer++;
+        if (ausgeloest && !kriecht && e->state != 4) break;     /* gelandet oder herausgeworfen */
+    }
+    scd_register_current_rdt(NULL);
+    v->k_zustand_nach = e->state; v->k_sub_nach = e->sub_state_1; v->k_grid_nach = e->grid_id;
+    v->k_y_nach = e->y;
+    v->k_ok = ausgeloest;
+}
+
+/* Der Spieler-Weg: Tuer 2030 -> 2060 (ROOM2030 Door_aot_set Platz 3 @Datei 0x1B4C: Ziel
+ * (7600,0,3950), Blick 0x800, Raum 0x06, Cut 0), dort nur Waffe heben + feuern - ohne Teleport,
+ * ohne Nachfuehren. */
+static void pass_versteckt_tuer(int budget)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    s_tuer_ok = 0; s_tuer_treffer = -1;
+    if (!load_room("STAGE2/ROOM2060.RDT", 0x2060, -1)) return;
+    raum_aufbau_re2();
+    re15_actor_t *e = schacht_spinne(&SCHACHT[0]);
+    if (!e || !schacht_wartet(e)) return;
+    pl->x = 7600; pl->y = 0; pl->z = 3950; pl->rot_y = 0x800;
+    s_tuer_blick_vor = pl->rot_y;
+    re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
+    s_tuer_ziel = ziel_auf_schacht();
+    s_tuer_treffer = 0;
+    for (int f = 0; f < budget; f++) {
+        pl->hp = 100;
+        int16_t vor = e->hp;
+        frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
+              (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+        if (e->hp < vor) s_tuer_treffer++;
+    }
+    s_tuer_blick_nach = pl->rot_y;
+    s_tuer_wartet = schacht_wartet(e);
+    s_tuer_ok = 1;
+    printf("  Tuerweg 2030 -> 2060 (7600,0,3950) Blick 0x%03X, nur Waffe heben + feuern %d Bilder: Zielhilfe "
+           "rastet auf Spinne 0 %d | Blick danach 0x%03X | Treffer %d | Spinne 0 danach Zustand %d/%d grid 0x%02X "
+           "y %d\n", (unsigned)(uint16_t)s_tuer_blick_vor, budget, s_tuer_ziel,
+           (unsigned)(uint16_t)s_tuer_blick_nach, s_tuer_treffer, e->state, e->sub_state_1, e->grid_id, e->y);
+}
+
+static void drucke_versteckt(void)
+{
+    for (int i = 0; i < SCHACHT_N; i++) {
+        const versteckt_mess_t *v = &s_versteckt[i];
+        printf("  [%04X Spinne %d] W: wartend %d | Zielhilfe rastet ein %d | Schuesse vom Boden %d Bilder: "
+               "Treffer eben %d, hoch %d | danach Zustand %d/%d grid 0x%02X y %d\n", SCHACHT[i].id,
+               SCHACHT[i].em, v->wartet, v->ziel_rastet, v->bilder, v->treffer_eben, v->treffer_hoch,
+               v->zustand_nach, v->sub_nach, v->grid_nach, v->y_nach);
+        printf("                   K: ausgeloest %d | %d Bilder im Ausstieg, Latch (+0x93&3)==3 zu Bildbeginn in %d, "
+               "Zielhilfe rastet ein in %d | %d Schuesse, Treffer %d | danach Zustand %d/%d grid 0x%02X y %d\n",
+               v->k_ok, v->k_bilder, v->k_latch3, v->k_ziel, v->k_schuesse, v->k_treffer, v->k_zustand_nach,
+               v->k_sub_nach, v->k_grid_nach, v->k_y_nach);
+    }
+}
+
+/* Urteil des SPIELFEHLER-Blocks gegen das Original; Rueckgabe = Zahl der Abweichungen. */
+static int urteil_versteckt(void)
+{
+    int abw = 0;
+    for (int i = 0; i < SCHACHT_N; i++) {
+        const versteckt_mess_t *v = &s_versteckt[i];
+        if (!v->ok || !v->wartet) {
+            printf("  FEHLER: %04X Spinne %d nicht wartend gemessen - sagt NICHTS\n", SCHACHT[i].id, SCHACHT[i].em);
+            abw++; continue; }
+        if (v->ziel_rastet) {
+            printf("  ABWEICHUNG: %04X Spinne %d - die Zielhilfe rastet auf die WARTENDE Spinne ein; Original "
+                   "ueberspringt grid & 0x60 (`andi v0,a0,0x60` / `bne` @0x8003710c-10)\n",
+                   SCHACHT[i].id, SCHACHT[i].em);
+            abw++; }
+        if (v->treffer_eben + v->treffer_hoch > 0) {
+            printf("  ABWEICHUNG: %04X Spinne %d - die WARTENDE Spinne wird getroffen (eben %d, hoch %d) und steht "
+                   "danach in Zustand %d/%d auf y %d; Original: Band 0 (INIT @0x80110d38-48, Stempel nur ACTIVE "
+                   "@0x80110fd0) -> kein Kandidat (@0x800120e4-ec)\n", SCHACHT[i].id, SCHACHT[i].em,
+                   v->treffer_eben, v->treffer_hoch, v->zustand_nach, v->sub_nach, v->y_nach);
+            abw++; }
+        if (!v->k_ok || v->k_bilder == 0) {
+            printf("  FEHLER: %04X Spinne %d Ausstieg nicht gemessen - sagt NICHTS\n", SCHACHT[i].id, SCHACHT[i].em);
+            abw++; continue; }
+        if (v->k_latch3 != v->k_bilder) {
+            printf("  ABWEICHUNG: %04X Spinne %d - beim Herauskriechen steht der Latch (+0x93&3)==3 nur in %d von %d "
+                   "Bildern zu Bildbeginn; Original setzt ihn in Phase 0 (`ori v0,v0,0x3` @0x80114f84) und loescht "
+                   "ihn erst in Phase 8 (`sb zero,147` @0x80115344)\n", SCHACHT[i].id, SCHACHT[i].em,
+                   v->k_latch3, v->k_bilder);
+            abw++; }
+        if (v->k_ziel) {
+            printf("  ABWEICHUNG: %04X Spinne %d - die Zielhilfe rastet in %d Bildern auf die KRIECHENDE Spinne "
+                   "(grid 0x42) ein; Original ueberspringt grid & 0x60 (@0x8003710c-10)\n", SCHACHT[i].id,
+                   SCHACHT[i].em, v->k_ziel);
+            abw++; }
+        if (v->k_treffer > 0) {
+            printf("  ABWEICHUNG: %04X Spinne %d - die KRIECHENDE Spinne wird %d mal getroffen und steht danach in "
+                   "Zustand %d/%d auf y %d; Original: kein Kandidat (Band 0 @0x800120e4-ec, Latch `beq v0,s4` "
+                   "@0x80012100)\n", SCHACHT[i].id, SCHACHT[i].em, v->k_treffer, v->k_zustand_nach,
+                   v->k_sub_nach, v->k_y_nach);
+            abw++; }
+    }
+    if (!s_tuer_ok) { printf("  FEHLER: Tuerweg 2030 -> 2060 nicht gemessen\n"); abw++; }
+    else if (s_tuer_ziel || s_tuer_treffer > 0 || !s_tuer_wartet) {
+        printf("  ABWEICHUNG: Tuerweg 2030 -> 2060 - Zielhilfe %d, Treffer %d, Spinne 0 wartet danach %d (Original: "
+               "kein Ziel, kein Treffer, sie wartet bis Cut 1)\n", s_tuer_ziel, s_tuer_treffer, s_tuer_wartet);
+        abw++; }
+    return abw;
 }
 
 static void pass_spinne_decke(int scharf, int budget)
@@ -607,6 +1020,9 @@ static re15_emd_animation_t s_pl00_anim;
 int main(int argc, char **argv)
 {
     int riegel = (argc > 1 && strcmp(argv[1], "riegel") == 0);
+    /* `versteckt`: NUR der SPIELFEHLER-Block, mit Urteil gegen das Original (Exit 1, solange
+     * der Port die wartende Schachtspinne anzielt oder trifft). Nicht als ctest registriert. */
+    int versteckt = (argc > 1 && strcmp(argv[1], "versteckt") == 0);
     setvbuf(stdout, NULL, _IONBF, 0);
 
     /* ⛔ OHNE die PL00-Bank liefert re15_player_muzzle_world 0 und das Tor-Urteil waere
@@ -621,6 +1037,16 @@ int main(int argc, char **argv)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim = &s_pl00_anim;
+    if (versteckt) {
+        printf("=== r31 versteckt: die Schachtspinne IM SCHACHT gegen das Original ===\n");
+        for (int i = 0; i < SCHACHT_N; i++) pass_versteckt(i, 240);
+        drucke_versteckt();
+        pass_versteckt_tuer(240);
+        int abw = urteil_versteckt();
+        if (abw) { printf("SPIELFEHLER: %d Abweichung(en) vom Original\n", abw); return 1; }
+        printf("OK\n");
+        return 0;
+    }
     printf("=== r31: DIE TREFFERBOXEN ALLER RE2-TYPEN, gemessen ===\n");
 
     printf("\nTEIL 1 — Box-Zensus je Typ (Soll = Vollscan der Overlays, Welle 2)\n");
@@ -644,6 +1070,21 @@ int main(int argc, char **argv)
     pass_spinne_decke(1, 900);
     printf("  Box je AUSGELIEFERTEM Spinnenraum:\n");
     pass_spinne_raeume();
+
+    printf("\nTEIL 2e — die SCHACHTSPINNEN (Runde 38 Spur R): Original-Ausloeser, Herauskriechen, Landung\n");
+    /* Budgets sind Messfenster, keine Spielwerte. Das Original braucht vom Ausloeser bis zum
+     * ACTIVE-Zustand 73 Bilder (ROOM2060, R_belege/orig_2060_schacht_gift.txt Bild 62 -> 135)
+     * bzw. 80 Bilder (ROOM20A0, R_spinnen.md 4.1 Bild ~159 -> 239); 600 Bilder lassen jedem
+     * Ausstieg ein Vielfaches davon. 240 Bilder Beschuss danach wie Teil 3. */
+    for (int i = 0; i < SCHACHT_N; i++) pass_schacht(i, 600, 240);
+
+    printf("\nSPIELFEHLER (gemeldet, Runde 38) — die Schachtspinne IM SCHACHT (W wartend, K Herauskriechen); "
+           "Urteil: Argument `versteckt`\n");
+    for (int i = 0; i < SCHACHT_N; i++) pass_versteckt(i, 240);
+    drucke_versteckt();
+    pass_versteckt_tuer(240);
+    {   int abw = urteil_versteckt();
+        printf("  -> %d Abweichung(en) vom Original (kein Teil dieses Riegels, s. Kopf von Teil 2e)\n", abw); }
 
     printf("\nTEIL 3 — Gegen-Ueberkorrektur: jeder Typ wird weiter getroffen\n");
     int t[SOLL_N];
@@ -731,10 +1172,44 @@ int main(int argc, char **argv)
                    "wie gebaut (%d); die Stauchung wirkt nicht\n",
                    aus->treffer, sch->treffer); fail++; }
     }
-    /* Alle ausgelieferten Spinnenraeume muessen eine tragende Box haben. */
+    /* Jede ausgelieferte Spinne ausserhalb des Schacht-Wartens muss eine tragende Box haben. */
+    if (s_spinnen_n == 0) {
+        printf("  FEHLER: keine ausgelieferte Spinne gefunden — der Zensus sagt NICHTS\n"); fail++; }
     if (s_nullbox_raeume != 0) {
-        printf("  FEHLER: %d ausgelieferte Spinnenraeume mit Unterkante 0 — das scharfe Tor "
-               "sperrt sie dauerhaft\n", s_nullbox_raeume); fail++; }
+        printf("  FEHLER: %d ausgelieferte Spinne(n) ausserhalb des Schachts mit Unterkante 0 — das scharfe "
+               "Tor sperrt sie dauerhaft\n", s_nullbox_raeume); fail++; }
+    /* Genau die vier Sce_em_set-Saetze mit grid 0x41 (ROOM2060 @Datei 0x0E26/0x0E5C, ROOM20A0
+     * @0x18CE/0x1904) warten im Schacht — und zwar mit leerem RE2-Kasten (Teil 2e (a)). */
+    if (s_schacht_wartend != SCHACHT_N) {
+        printf("  FEHLER: %d Spinnen warten im Schacht, erwartet die %d Saetze mit grid 0x41\n",
+               s_schacht_wartend, SCHACHT_N); fail++; }
+    if (s_schacht_box_falsch != 0) {
+        printf("  FEHLER: %d wartende Schachtspinne(n) mit gefuelltem RE2-Kasten — der RE2-INIT lief vor "
+               "der Landung\n", s_schacht_box_falsch); fail++; }
+    /* ===== TEIL 2e: je Schachtspinne nach dem Original-Ausloeser (Blockkopf Teil 2e (a)-(d)) ===== */
+    for (int i = 0; i < SCHACHT_N; i++) {
+        const schacht_mess_t *m = &s_schacht[i];
+        const char *ort = SCHACHT[i].quelle;
+        if (!m->ok) { printf("  FEHLER: Schachtspinne %04X/%d nicht gemessen (%s)\n", SCHACHT[i].id,
+                             SCHACHT[i].em, ort); fail++; continue; }
+        if (!m->wartet || m->box_vor_b != 0 || m->box_vor_h != 0 || m->box_vor_set != 0) {
+            printf("  FEHLER: %04X/%d (a) vor dem Ausloeser wartend %d, RE2-Kasten %d/%d set %d (erwartet "
+                   "wartend, 0/0, set 0)\n", SCHACHT[i].id, SCHACHT[i].em, m->wartet, m->box_vor_b,
+                   m->box_vor_h, m->box_vor_set); fail++; }
+        if (m->ausgeloest < 0) {
+            printf("  FEHLER: %04X/%d (b) der Original-Ausloeser setzte grid nicht auf 0x42 (%s)\n",
+                   SCHACHT[i].id, SCHACHT[i].em, ort); fail++; continue; }
+        if (m->gelandet < 0) {
+            printf("  FEHLER: %04X/%d (c) keine Landung mit RE2-INIT nach dem Ausloeser — die Spinne bleibt "
+                   "ohne Kasten\n", SCHACHT[i].id, SCHACHT[i].em); fail++; continue; }
+        if (m->box_nach_b != -1400 || m->box_nach_h != 1400 || m->box_nach_set != 1) {
+            printf("  FEHLER: %04X/%d (c) Kasten nach der Landung %d/%d set %d, erwartet -1400/1400 set 1 "
+                   "(Boden-INIT @0x80100460, Tabelle @0x801063A0+20/+26 via @0x801003E4-FC)\n",
+                   SCHACHT[i].id, SCHACHT[i].em, m->box_nach_b, m->box_nach_h, m->box_nach_set); fail++; }
+        if (m->treffer_nach == 0) {
+            printf("  FEHLER: %04X/%d (d) nach der Landung NIE getroffen (%d Bilder)\n", SCHACHT[i].id,
+                   SCHACHT[i].em, m->bilder_nach); fail++; }
+    }
     if (fail) { printf("FEHLGESCHLAGEN: %d Pruefung(en)\n", fail); return 1; }
     printf("OK\n");
     return 0;
