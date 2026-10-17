@@ -139,6 +139,21 @@ Knie, Knien, Aufrichten, Griff); F397-F400 haengt der zweite Kletterer an der Ka
 Stand: bis auf ein Bein leer); F401/F402 Taumel im Kanal. (Die 2001-Wasserzombies spawnen nur mit Flag (3,0x45),
 Original-Skript ROOM2001 sub00 @0x1826/@0x182A — Abnahme 0 M3; deshalb `RE15_SET_FLAG=3:69`.)
 
+### M8 — ECHTER WEG 2071 -> 2001, Elza, `RE15_AI_FLAVOR=re15`, Bild
+
+`tools/lauf.sh <exe> m8_elza_re15 "620#2001" elza 300 RE15_AI_FLAVOR=re15 "RE15_FRAMEDUMP=150-310/20:fd/f"` ->
+`exit=0 dauer=53s`; `[pl] Spieler-Familie PL04`, `DOOR FIRE slot=0 ...`, `PC loaded room2001.rdt`. wz.log (woertlich, Auszug):
+```
+F146 R2001 slot=2 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-9931) b0 f1ba=0 rot=4002 kontakt=09
+F222 R2001 slot=2 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-22068,0,-9931) b0 f1ba=-1800 rot=0 kontakt=00
+F310 R2001 slot=2 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-9931) b1 f1ba=-1800 rot=0 kontakt=00
+F424 R2001 slot=1 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-10516) b0 f1ba=0 rot=93 kontakt=09
+F588 R2001 slot=1 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10516) b1 f1ba=-1800 rot=0 kontakt=00
+```
+gy.log: 0 unter dem Wasserboden, 0 auf Band 2+. Bild (`m8_elza_re15_crop.png`, F150-F310): Haende auf der Kante,
+Oberkoerper drueber, Knien, Aufrichten neben Elza. Damit sind alle vier Kombinationen (Leon/Elza x RE2-/RE1.5-KI) auf
+dem echten Tuerweg gemessen (M1, M2, M3, M8).
+
 ### M4 — ROOM2020 ueber den Raumlader (Debug-Sprung), Leon, Standard-KI, Bild
 
 Ein Tuerweg nach ROOM2020 war nicht fahrbar: Door_aot_set-Zensus (eigenes Skript `re/doors.py` ueber den
@@ -166,6 +181,22 @@ Frame-Woerter von Clip 0x16 (eigenes Mini-Programm `se_bits/se_bits.c` gegen `li
 (= SE 1, Dekodierung `srl 22` wie FUN_8001b38c @0x8001b3b4). debug.log: `[se] Stimme: se=1 layer=0 vag=2 ... -> SE-Stimme 4`
 einmal zwischen `[walk] F240` und `[walk] F270` (= F252, Bild 102) und einmal zwischen den Bildankern `fd/f000279.ppm` und
 `fd/f000280.ppm` (= F280, Bild 130). Die Klettertoene des RE1.5-Clips laufen also auch im RE2-Zweig (`wz_frame_se`).
+
+### M7 — Gegenprobe "aendert die Nachbesserung sonst etwas?" bis F1100 (Leon, Standard-KI, Tuerweg)
+
+`tools/lauf.sh <exe> m7_f1100 "1100#2000" leon 400` -> `exit=0 dauer=54s`. Referenz: Abnahme-0-Lauf desselben Wegs auf dem
+alten Stand a4809c35 (`scratchpad/m_tuer2000/`, `RE15_EXIT_AT=1100#2000`). gy.log (Zustand/Clip/Bild/Lage/Band/+0x1ba
+aller Gegner je Bild, 1414 Zeilen): **byte-gleich** (`cmp` ohne Ausgabe, md5 beide `4188d6f12f90fd029ad5f82863ed7cd6`).
+`diff` der wz.log: einziger Unterschied
+```
+< F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=9 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+---
+> F400 R2000 slot=3 t=16 zwischenbild st=1/9/0 mo=22 af=49 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+> F401 R2000 slot=3 t=16 abbruch st=1/9/0 mo=22 af=50 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+```
+Beide Zombies kommen spaeter hoch: `F902 ... slot=4 ... oben ... @(-20926,-1800,-9605) b1`, `F956 ... slot=3 ... oben ...
+@(-20928,-1800,-10407) b1`. Die Behauptung des Bau-Agenten (gy.log bis F1000 byte-gleich, wz.log nur Abbruch-Zeile)
+haelt bis F1100.
 
 ## 3. Mangel 2 (Code-Hygiene) geprueft
 
