@@ -1,7 +1,7 @@
 # Runde 38 Spur U "wasserzombie" — Abnahme 1 (unabhaengig, nach Nachbesserung 1)
 
-Datum 2026-10-17. Baum `.claude/worktrees/r38_wasserzombie`, Zweig `r38/wasserzombie`, geprueft HEAD `76b6fa12`
-(letzter Code-Commit `2e04fd53`; merge-base mit master `cb782bda`). Vorgaenger: `U_abnahme_0.md` (a4809c35, 2 Maengel).
+Datum 2026-10-17. Baum `.claude/worktrees/r38_wasserzombie`, Zweig `r38/wasserzombie`, geprueft Stand `76b6fa12`
+(letzter Code-Commit `2e04fd53`; spaetere Commits sind nur dieser Bericht; merge-base mit master `cb782bda`). Vorgaenger: `U_abnahme_0.md` (a4809c35, 2 Maengel).
 Der Teilbericht `U_abnahme_1_teil_haenger.md` (abgebrochener Vorlauf dieser Abnahme) ist NICHT Grundlage dieses Urteils —
 alles hier ist neu gemessen. Fortlaufend geschrieben (Sitzungslimit).
 
@@ -17,7 +17,8 @@ alles hier ist neu gemessen. Fortlaufend geschrieben (Sitzungslimit).
       `100% tests passed, 0 tests failed out of 2` (unit 0.16 s, integration 135.22 s, Laeufe a-e); Lauf e wz.log
       woertlich: `F400 R2000 slot=3 t=16 zwischenbild st=1/9/0 mo=22 af=49 ...` / `F401 ... abbruch st=1/9/0 mo=22 af=50`
 - [x] Gezielte Unit-Gruppe der beruehrten Module: 105/105 (Abschnitt 5); Integrationsgruppe: Abschnitt 5
-- [x] Nutzer-Punkt an der exe (M1-M4, M6: Leon beide KI + Elza, echter Tuerweg 2070->2000 / 2071->2001, ROOM2020, Bild, Ton, v0.8.25-Gegenprobe)
+- [x] Nutzer-Punkt an der exe (M1-M8: Leon und Elza je mit RE2- und RE1.5-KI auf dem echten Tuerweg 2070->2000 /
+      2071->2001, ROOM2020 ueber den Raumlader, Bild, Ton, v0.8.25-Gegenprobe, Gegenprobe bis F1100)
 - [x] Mangel 1 nachgemessen (M5, M3): behoben
 - [x] Mangel 2 geprueft (Abschnitt 3): behoben
 - [x] Nebenwirkungen der Nachbesserung (Abschnitt 6)
