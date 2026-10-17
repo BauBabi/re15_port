@@ -49,6 +49,7 @@
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
 #include "re15_beretta_r37.h"   /* Runde 37 Spur G: Feuerstoss 5/6 trifft je Kugel (beretta_r37.c) */
 #include "re15_rekorder_r38.h"  /* Runde 38 Spur J: Rekorder-Aufnahme ROOM1100/1101 (rekorder_r38.c) */
+#include "re15_tagebuch_r38.h"  /* Runde 38 Spur G: Kartenkette nach Roys Diary (tagebuch_r38.c) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -1249,6 +1250,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * (RE2: Bit 0x8000 bleibt bis zum Start des Status-Tasks, @0x80025BA8-E0). */
     re15_cut10f0_tick();   /* Runde 35 Spur K: Szenen-Ende ROOM10F0 -> Kartenhinweis + MAIN01 (re15_cut10f0.h) */
     re15_szl_tick();       /* Runde 36 Spur J: Irons-Kopf nach dem Tod, ROOM11B0-Erweiterung (re15_szenenleon_r36.h) */
+    re15_tagebuch_r38_tick();   /* Runde 38 Spur G: nach Roys Diary Kartenkette Comms -> Prison (re15_tagebuch_r38.h) */
     if (re15_map_hint_pending() >= 0 &&
         re15_menu_request_map_hint(re15_map_hint_pending()))
         re15_map_hint_take();

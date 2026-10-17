@@ -1,0 +1,113 @@
+Quelle: analysis/befunde_runde38/AUFTRAG.md (md5 a2e4a298c36e6fffab8d5e5d5c39bba5) Kopf Z. 37, Text Z. 39..59
+   Listenname 'Roys Diary', Titel 'ROYS DIARY'; Nutzertext 1029 Zeichen md5 0babc8d9fb3b55f20024a9c1d6b2b4d7, Zeilen 21 (leer 7)
+   Zeichen ausserhalb ASCII: {'U+2019': 9} -> im Satz '\'' (U+0027); Satztext md5 9cfb466482242d055484c517e4eb72a4
+   Zeilen danach (gehoeren NICHT dazu): ['', '', 'Den Code bitte wieder grün hervorheben, wie alle Codes in den Dokumenten']
+Zensus RE2-Tagebuecher: Datumskoepfe als ERSTE Seitenzeile 20, anderswo 3
+   FILE00 S01 'August 8th'
+   FILE00 S03 'August 17th'
+   FILE00 S04 'August 24th'
+   FILE04 S01 Zeile 1 'September 26th' (NICHT oben)
+   FILE04 S07 Zeile 1 'September 27th' (NICHT oben)
+   FILE07 S01 'April 6th'
+   FILE07 S03 'April 7th'
+   FILE07 S05 'May 10th'
+   FILE08 S01 'June 8th'
+   FILE08 S03 'June 15th'
+   FILE09 S01 Zeile 1 'September 28th' (NICHT oben)
+   FILE15 S01 'August 11th'
+   FILE15 S03 'September 5th'
+   FILE15 S05 'September 9th'
+   FILE15 S07 'September 12th'
+   FILE16 S01 'September 23rd'
+   FILE16 S02 'September 24th'
+   FILE16 S04 'September 26th'
+   FILE17 S01 'June 28th'
+   FILE17 S03 'July 7th'
+   FILE17 S05 'July 21st'
+   FILE17 S06 'August 16th'
+   FILE17 S08 'August 21st'
+Vorlage FILE16: Seite 256x176, 11 Zeilen je Seite; Satzspiegel gemessen: Rand 10 (Verteilung [(10, 39)], 54 Zeilen), Grenze x 253
+Titel 'ROYS DIARY': eine Zeile (Breite 83 <= 247) (breiteste einzeilige RE2-Titelzeile 247, FILE23 'HINT FILES FOR THE ROOKIE MODE' x 4..250); Vorlagenband [(83, 91)] -> Oberkanten [80]
+   'ROYS DIARY' Oberkante 80 x 86..168 (Mitte 127.0)
+FILE30_title_page.TIM  22592 B
+FILE30_p00_page.TIM  22592 B
+FILE30_title_paper.TIM  33312 B = byte-gleiche Kopie von FILE16_title_paper.TIM
+Eintraege: [('September 22nd', 8), ('September 28th', 12)]
+FILE30_p01_page.TIM  22592 B  11 Zeilen  Kern-x 10..252
+      | September 22nd
+      | 
+      | Umbrella... those bastards...
+      | It was Umbrella who created
+      | these freaks now crawling all
+      | over the station.
+      | 
+      | The S.T.A.R.S. members told us
+      | what was going on in the
+      | Arklay Mountains, and what did
+      | we do? ...We laughed them off.
+FILE30_p02_page.TIM  22592 B  6 Zeilen  Kern-x 10..251
+      | Worse, we practically held the
+      | door open for those things by
+      | letting every bitten survivor
+      | inside...
+      | How could we have been so
+      | stupid...
+FILE30_p03_page.TIM  22592 B  11 Zeilen  Kern-x 10..237
+      | September 28th
+      | 
+      | Damn it, we're screwed.
+      | Now someone has sabotaged
+      | the Communications Room and
+      | wrecked the radio equipment.
+      | And of course, the others
+      | didn't have to look far for
+      | someone to blame. They went
+      | straight for my friend John.
+      | He's the only outsider here,
+FILE30_p04_page.TIM  22592 B  11 Zeilen  Kern-x 10..238
+      | and he only got in because I
+      | signed him in on a visitor's
+      | pass...
+      | They didn't even hesitate.
+      | They threw him into a holding
+      | cell downstairs.
+      | 
+      | There's no way in hell he did
+      | this...
+      | 
+      | Anyway, they took the cell
+FILE30_p05_page.TIM  22592 B  8 Zeilen  Kern-x 10..252  (CLUT 9..14 gruen)
+      | key from me and locked it up
+      | in the Communications Room so
+      | I can't let him out. All I've
+      | got left is my keycard for the
+      | outer door... and its code:
+      | 0513.
+      | 
+      | I just hope he's okay...
+GRUEN (Steuerbyte 0x05 Arg 1 -> TEX.TIM CLUT-Zeile 482, @0x80028974-94): CLUT 9..14 = ['16e0', '1280', '0e20', '09e0', '0980', '0540']
+   p05 Zeile 5 (y 80..95): '0513' Kern-x 11..42 gruen
+
+max_page (RE2-Record +0, u16) = 5   y_off (+2, u8) = 80   H = 176
+
+[2] 5 Textseiten zurueckgelesen: Kernpixel ohne Glyphe 0, Abstaende ausserhalb der Metrik 0
+[3] Wortfolge: Satztext 183 Woerter, zurueckgelesen 183: WORTGLEICH
+[4] Nutzerzeilen, die NICHT am Anfang einer Satzzeile beginnen: 0 []
+    p01: September 22nd /  / Umbrella... those bastards... / It was Umbrella who created / these freaks now crawling all / over the station. /  / The S.T.A.R.S. members told us / what was going on in the / Arklay Mountains, and what did / we do? ...We laughed them off.
+    p02: Worse, we practically held the / door open for those things by / letting every bitten survivor / inside... / How could we have been so / stupid...
+    p03: September 28th /  / Damn it, we're screwed. / Now someone has sabotaged / the Communications Room and / wrecked the radio equipment. / And of course, the others / didn't have to look far for / someone to blame. They went / straight for my friend John. / He's the only outsider here,
+    p04: and he only got in because I / signed him in on a visitor's / pass... / They didn't even hesitate. / They threw him into a holding / cell downstairs. /  / There's no way in hell he did / this... /  / Anyway, they took the cell
+    p05: key from me and locked it up / in the Communications Room so / I can't let him out. All I've / got left is my keycard for the / outer door... and its code: / 0513. /  / I just hope he's okay...
+[5] gruene Kernpixel (Index 9..14) 87, Soll 87 (Kernpixel der Glyphen von '0513'); Zeilen [(5, 5, 87)]: STIMMT
+[6] Titel zurueckgelesen ['ROYS DIARY'] (Soll 'ROYS DIARY'), title_page == p00: True, title_paper == FILE16: True
+[7] Dateibestand p00..p05, kein p06
+PRUEFUNG FILE30: ALLE BESTANDEN
+
+md5 abc21631794ec82a8b2e67ae3634c210 FILE30_p00_page.TIM
+md5 7847a21efe8d5b0cbe2d255a06daa7c4 FILE30_p01_page.TIM
+md5 e6d717330a66c9e715287653bca75bb1 FILE30_p02_page.TIM
+md5 255734bd96b95bb822bc196e68c80105 FILE30_p03_page.TIM
+md5 feb272c1f65058e003af23bd824492ab FILE30_p04_page.TIM
+md5 ebecd33641364b8c5f524b2875c92e0e FILE30_p05_page.TIM
+md5 abc21631794ec82a8b2e67ae3634c210 FILE30_title_page.TIM
+md5 a2510fd6f608472c777e195675290bf0 FILE30_title_paper.TIM

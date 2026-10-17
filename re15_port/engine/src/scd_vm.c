@@ -68,6 +68,7 @@
 #include "re15_kleinkram_r38.h"   /* Runde 38 Spur Q: Irons 1151 sub03 + Flammenwerfer 30E0 sub04 (kleinkram_r38.c) */
 #include "re15_rekorder_r38.h" /* Runde 38 Spur J: Stimmschloss ROOM1100/1101, Rekorder-Aufnahme (rekorder_r38.c) */
 #include "re15_elzatoene_r38.h" /* Runde 38 Spur H: Schuss 1041 statt Text, Roys Stoehnen 1021 (elzatoene_r38.c) */
+#include "re15_tagebuch_r38.h" /* Runde 38 Spur G: ROOM1011 msg 18 -> Roys Diary (tagebuch_r38.c) */
 
 scd_vm_t g_scd;
 
@@ -1859,6 +1860,9 @@ static int op_message_on(scd_thread_t *t)
     if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }
     /* Runde 38 Spur H: ROOM1041 msg 3 "*gunshot*" @0x02200 ist ein Ton, kein Text (re15_elzatoene_r38.h). */
     if (re15_elzatoene_r38_message_on(t->pc)) { t->pc += 4; return 1; }
+    /* Runde 38 Spur G: ROOM1011 msg 18 (Roys Zettel "0513", sub07 @0x00E64) -> Roys Diary statt der Nachricht;
+     * 2 = parken, solange der Leser laeuft (include/re15_tagebuch_r38.h). */
+    { const int tb = re15_tagebuch_r38_message_on(t); if (tb == 2) return 2; if (tb == 1) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text
