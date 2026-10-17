@@ -178,3 +178,12 @@ Wort-Suche im Diff (`deferred|tunable|interim|for now|faithful|plausib|TODO|FIXM
 * Probe-Merge `git merge-tree --write-tree r38/integration r38/cursor`: Konflikte NUR in schluessel_r36.c und
   re15_schluessel_r36.h (Spur K, bereits in r38/integration, Commit 97490964) — genau der im Dossier §3c/§8 beschriebene
   Fall ("K's Seite nehmen"); main.c, .inc, Werkzeug mischen automatisch.
+
+## 10. Befund des Bau-Agenten selbst nachgeprueft (Modell)
+
+Eigener MD1-Leser auf ROOM11F0.RDT @0x001928 (65 Bytes Kopf-Laenge-Feld, 1 Netz, 16 Dreiecke, 98 Vierecke): Unterseite
+y = +923 = Dreiecke **T03 (u 4..125, v 41..82), T04 (u 65..125, v 0..82), T05 (u 4..125, v 0..41), T11 (u 4..65, v 0..82)**
+— das ganze Muster-Feld; Oberseite y = -900: 49 Vierecke im Musterfeld (v <= 82). Umlauf in (x,z) von oben: Unterseite
+"+", Oberseite "-" — gegensinnig, also ist bei Blick von oben genau eine der beiden Flaechen rueckseitig. Das deckt die
+Ursache "Unterseite mit demselben Muster scheint durch die zu 92,8 % durchsichtige Oberseite" (TIM: Index 0 = 7682 von
+10126 Texeln im Musterfeld u 4..125, v 0..82).
