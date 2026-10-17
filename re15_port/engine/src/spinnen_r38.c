@@ -315,7 +315,10 @@ void re15_spinnen_r38_spucken(re15_actor_t *e, int re2)
     gift_anker(e, re2 ? ofs2 : ofs15, w);
     int16_t gier = re2 ? (int16_t)(e->rot_y + e->re2s_yaw21a) : e->rot_y;
     uint8_t vorher[RE15_ESP_FX_MAX];
-    for (int i = 0; i < RE15_ESP_FX_MAX; i++) vorher[i] = (re15_esp_fx_get(i) != NULL);
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        vorher[i] = (re15_esp_fx_get(i) != NULL);
+        if (!vorher[i]) s_gift_besitzer[i] = 0;               /* freier Platz: kein (veralteter) Absender */
+    }
     /* Boden: das Original klemmt im Tick nicht (FUN_80019e20 ohne Bodenpruefung); den Boden
      * bestimmt Routine 25 selbst ueber FUN_8001c6e8 -> keine Port-Klemme (INT32_MAX). */
     (void)re15_esp_fx_spawn_rows(bank, 0x0d, 0x00, 0x2000, w[0], w[1], w[2], INT32_MAX, gier);

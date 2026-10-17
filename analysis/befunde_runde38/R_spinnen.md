@@ -298,6 +298,10 @@ Je Raum 1300 Bilder ab dem Sprungpunkt (Leon steht), Auswertung je Spinne (`ana.
 | ROOM2060 | 2 x grid 0x41 floor 2 | -3600 | 0 | 0 | warten im Schacht (Zustand 4/1), bis Cut 1/5 |
 | ROOM20A0 | grid 0x41 floor 3/2 | -5400/-3600 | 0 | 0 | warten im Schacht, bis Cut 4/5 |
 Alle Spinnen ausser den Schachtspinnen stehen in jedem Bild auf ihrer Sce_em_set-Hoehe = Boden des Stegs (y = +0x1ba).
+GEZEICHNET (Sonde `R_belege/sonde_adult_hybrid.c`, Ausgabe `sonde_adult_hybrid_ausgabe.txt`, RE2-Hybrid wie in der exe):
+die tiefste Vertex-Lage der Adultspinne liegt je Clip +7..+251 unter ihrer Lage-Y (Beine auf/knapp im Boden; reines RE2-EM025
+Clip 0: +122) — keine Adultspinne wird ueber dem Boden gezeichnet (Ausnahme Clip 15 = Schacht-Haltepose, bis +3692 = haengt
+aus dem Schacht; nur in Zustand 4).
 Elza-Raeume ROOM20x1: Sce_em_set/Member_set-Zeilen bytegleich mit ROOM20x0 (md5 der Zeilen: 2030/2031 d4ad8ac5,
 2050/2051 bbb2dd03, 2060/2061 bc29823b, 2070/2071 8a3c7569, 2090/2091 edfe6258, 20A0/20A1 d5eb059c).
 **Schacht ROOM2060, echter Weg** (`w_2060`: Spawn an der Tuerlage aus 2030 (7600,0,3950), zu Fuss in Cut 1): Bild 19
