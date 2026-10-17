@@ -19,6 +19,7 @@
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r38_affen3_decke.cmake
 # =============================================================================
+cmake_minimum_required(VERSION 3.16)   # Policies NEW (CMP0012/CMP0054/CMP0007) auch unter dem Container-CMake 3.28 im Skriptmodus wie auf dem Host (Memory reai-v2-linux-test-portabilitaet; Linux-Release v0.8.26)
 set(_tag "r38_affen3_decke")
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "${_tag}: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")

@@ -17,7 +17,7 @@ endforeach()
 # und getaktet wie der Mischer: re15_vag_adpcm_decode + re15_vab_note2pitch2, Schritt = pitch << 4) mit einem
 # RE15_AUDIO_CAP_SYNC-Mitschnitt an einem Raum-Bild.
 add_executable(probe_r38_elzatoene_kreuz ${CMAKE_CURRENT_LIST_DIR}/../probe_r38_elzatoene_kreuz.c)
-target_link_libraries(probe_r38_elzatoene_kreuz PRIVATE re15_engine)
+target_link_libraries(probe_r38_elzatoene_kreuz PRIVATE re15_engine m)   # m: sqrt (glibc-libm; mingw hat sie in msvcrt, darum unter Windows unsichtbar - Linux-Release v0.8.26 brach hier ab)
 target_include_directories(probe_r38_elzatoene_kreuz PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 # INTEGRATION (echte exe, Elza-Spiel ueber Spielstand + CONTINUE + Tuer + Gehen): je Nutzer-Punkt ein Lauf, gemessen in

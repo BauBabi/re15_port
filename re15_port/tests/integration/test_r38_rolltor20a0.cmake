@@ -23,6 +23,7 @@
 #               -DRE15_BILD_TOOL=<test_r38_rolltor20a0> -DRE15_BSS=<ROOM20A.BSS>
 #               -DDATEN=<tests/integration/r38_rolltor20a0> -DWORKDIR=<dir> -P test_r38_rolltor20a0.cmake
 # =============================================================================
+cmake_minimum_required(VERSION 3.16)   # Policies NEW (CMP0012/CMP0054/CMP0007) auch unter dem Container-CMake 3.28 im Skriptmodus wie auf dem Host (Memory reai-v2-linux-test-portabilitaet; Linux-Release v0.8.26)
 foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_BILD_TOOL RE15_BSS DATEN)
     if(NOT ${_v} OR NOT EXISTS "${${_v}}")
         message(FATAL_ERROR "r38_rolltor20a0: ${_v} fehlt/existiert nicht: '${${_v}}'")

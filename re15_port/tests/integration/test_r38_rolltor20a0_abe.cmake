@@ -22,6 +22,7 @@
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_ABE_TOOL=<test_r38_rolltor20a0_abe> -DWORKDIR=<dir>
 #               -P test_r38_rolltor20a0_abe.cmake
 # =============================================================================
+cmake_minimum_required(VERSION 3.16)   # Policies NEW (CMP0012/CMP0054/CMP0007) auch unter dem Container-CMake 3.28 im Skriptmodus wie auf dem Host (Memory reai-v2-linux-test-portabilitaet; Linux-Release v0.8.26)
 foreach(_v RE15_PC_EXE RE15_ABE_TOOL)
     if(NOT ${_v} OR NOT EXISTS "${${_v}}")
         message(FATAL_ERROR "r38_rolltor20a0_abe: ${_v} fehlt/existiert nicht: '${${_v}}'")
