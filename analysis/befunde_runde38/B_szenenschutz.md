@@ -125,7 +125,9 @@ RE15_DEBUG_JUMP=1170@250 (laedt ROOM1171). sub07 spawnt John (0x49) + 2 Kraehen 
   [1] = 0x80031de8 (Pad-Zweig).
 - Zensus (alle 240 RDTs, tools/scd_dump_room.py): 15 Subs fuehren den Spieler (Work_set(1,0) + Plc_motion/Plc_dest)
   OHNE Set(2,7)/(1,27) in derselben Sub, z.B. **ROOM1230 sub21** (Hocke @0x014B4 `3f 01 0b 00`, Plc_ret @0x014CE) —
-  im Hunderaum 1230. Auch dort kann sich Leon nicht bewegen.
+  im Hunderaum 1230. Auch dort kann sich Leon im ORIGINAL nicht bewegen. [Nachbesserung 1, N1.M2: im PORT laeuft
+  Leon dort (das Bewegungs-Gate player_common.c prueft +0x4 nicht, vorbestehend) — die Halte-Bedingung ist darum auf
+  Bilder beschraenkt, in denen der Port das Pad sperrt.]
 
 ### 2.5 Zensus "Szene haelt den Spieler" x Gegner (wer ist betroffen)
 Raeume mit Set(2,7)=1-Fenster UND Gegner-Spawns (Typ < 0x40), Auszug: Zombies 0x10/0x11/0x16/0x18 (1011, 1021, 1030,
@@ -201,7 +203,8 @@ Haken (gemeinsame Dateien, je 1-2 Zeilen, Kommentar "Runde 38 Spur B"):
 
 (A) SZENENSCHUTZ — NUTZER-VORGABE, Form aus dem Original (2.1-2.4):
 - Halten = `g_scd.player_mode == 2` (einziger Schreiber platform/pc/main.c cine_active = (1,27)||(2,7)) ODER
-  Spieler+0x4 == 4 (Plc-Executor, 2.4).
+  Spieler+0x4 == 4 (Plc-Executor, 2.4) [Nachbesserung 1, N1.M2: nur solange das Nachrichten-Tor des Bewegungs-Gates
+  `re15_player_msg_sperre()` das Pad sperrt].
 - Waehrend des Ticks eines Gegners im FREIEN Gehirn (+0x4 == 1, Typ < 0x40, nicht Kraehe mit Skript-Marke grid&0x40)
   sieht er den Spieler durch die Original-Tore als nicht angreifbar: Spieler+0x93 Bit 0 (RE1.5, 2.2) und
   PL+0x1D3&0x80 (RE2, Port `re15_player_is_grabbed`). Danach steht wieder der echte Wert; Szenen-Rollen (+0x4 != 1)
@@ -380,7 +383,8 @@ Aufbau damals noch nicht angriff — Affe ohne EM027-Bank, RE1.5-Spinne ohne GRA
 ## 7. Fuer den Nutzer
 
 - Keine neuen Assets, keine Sprachdateien, keine Bank-/Message-Ids.
-- Verhalten: Solange eine Szene Leon festhaelt (Letterbox/Skript oder eine Skript-Bewegung wie Hocken), greifen
+- Verhalten: Solange eine Szene Leon festhaelt (Letterbox/Skript; eine Skript-Bewegung wie Hocken nur, solange dabei
+  eine Nachricht das Pad sperrt — Nachbesserung 1), greifen
   Gegner ihn nicht an — sie laufen, kreisen oder knurren; das gilt fuer alle Gegnerarten (Zombies, Hunde, Kraehen,
   Spinnen, Gorillas/Affen 0x27, die kleinen Stage-3/4-Gegner 0x29, Gitterarme, Tyrant, Birkin), Kraehen im
   Anflug drehen ab. Ist der Angriff selbst Teil der
@@ -484,3 +488,33 @@ Messkopie `re15_pc_r38b_nb1.exe` (md5 81fa7d42... = re15_pc.exe), Laeufe unter `
   Halte-Fenster Set(2,7)=1/Set(1,27)=1/Plc_motion/Plc_dest UND Sce_em_set Typ < 0x40) = **68 Raeume** (gleiche Zahl
   wie der Nachzensus 2.5), Ergebnis `B_belege/zensus_raeume_nb1.txt`; jedes Integrations-Skript, das einen dieser Raeume
   nennt (49 Skripte) -> **79 Tests** (`B_belege/integ_auswahl_nb1.txt`), `-j 3`. Ergebnis: Abschnitt N1.Tests.
+
+### N1.Tests (gezielt, keine volle Suite; woertlich)
+- Spur + M1-Riegel: `ctest --test-dir re15_port/build -R "^(unit_sca_wall_hit|unit_r38_szenenschutz|unit_r38_szenenschutz_alle|unit_r38_szenenschutz_arm)$" --timeout 600 --output-on-failure -V`
+  -> `100% tests passed, 0 tests failed out of 4`
+- Unit-Auswahl (systematisch, s. N1.M1): `ctest --test-dir re15_port/build -R "<B_belege/unit_regex_nb1.txt>" -j 4 --timeout 600`
+  -> `100% tests passed, 0 tests failed out of 438`
+- Integration (Raum-Zensus, s. N1.M1): `ctest --test-dir re15_port/build -R "<^(...)$ aus B_belege/integ_auswahl_nb1.txt>" -j 3 --timeout 1500 --output-on-failure`
+  -> (laeuft)
+
+### N1.OFFEN
+- VORBESTEHENDE Port-Abweichung (nicht Spur B, fuer den Orchestrator): das Bewegungs-Gate des Spielers
+  (player_common.c re15_player_tick) bindet nicht an Spieler+0x4. Im Original laeuft bei +0x4 == 4 der Executor statt
+  des Pad-Zweigs (@0x80031c8c `lbu aca58` -> @0x80073f90[4] = 0x80030660 statt [1] = 0x80031de8); im Port kann Leon in
+  Executor-Fenstern ohne (2,7) und ohne Nachricht laufen (ROOM1230 sub21: 30 Bilder, gemessen e14n, v0.8.25 gleich;
+  Zensus 2.4: 15 Spieler-Plc-Subs ohne (2,7)/(1,27)). Die Korrektur gehoert in eine eigene Spur mit Zensus aller
+  Plc-Subs (jeder Zustand 4 braucht ein erreichbares Plc_ret, sonst steht Leon fest). Danach meldet der Riegel
+  integration_r38_szenenschutz Lauf 1230 ausdruecklich "Bewegungs-Gate bindet jetzt an Spieler+0x4" — dann darf die
+  Halte-Bedingung (2) wieder `Spieler+0x4 == 4` allein sein (die Fassung vor Nachbesserung 1).
+- Die Nachrichten des Originals frieren die Gegner ohnehin ein, wenn ihre Maske Bit 0x20000000 traegt (e14n: Message_on
+  `2b 0a ff ff` -> pf=FFFF0007, kein Gegner-Tick); die Halte-Bedingung (2) wirkt darum nur bei Nachrichten ohne dieses
+  Bit (Mechanik-Riegel unit_r38_szenenschutz T1/T4b).
+- Unveraendert aus Abschnitt 6: neue Angriffswege der Spuren R/S/T muessen ein Spieler-Tor lesen oder
+  `re15_szenenschutz_sicht()` abfragen; Feuer 0x26 Sicherheitsnetz.
+
+### N1 Fuer den Nutzer
+- Keine neuen Assets, Sprachdateien, Bank-/Message-/Item-Ids.
+- Verhalten gegenueber Abnahme 0 enger: geschuetzt wird nur, solange der Port Leon wirklich festhaelt (Letterbox-Szene
+  bzw. Skript-Bewegung mit Nachricht). In der kurzen Hocke ohne Nachricht (z.B. ROOM1230, eine Sekunde vor dem Text)
+  kann Leon im Port laufen (alte Abweichung, s. N1.OFFEN) — dort greifen Gegner normal an. Die Faelle des Nutzers
+  (1190/11D0 Hunde, 1171 Elza) sind unveraendert (Szene ueber Letterbox/pm=2).
