@@ -320,10 +320,13 @@ do_build() {
     # PowerShell ueber den ABSOLUTEN Pfad und KEIN /IM-Rueckfall mehr: lieber nichts beenden
     # (dann scheitert hoechstens der Link sichtbar mit "Permission denied") als fremde Prozesse.
     _ps=/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
+    # ⛔ Runde 38 (2026-10-17, gemessen im Integrationsbaum): StartsWith('<repo>\re15_port\build') ohne
+    # Trennzeichen traf auch re15_port\build_suite\... -> ein Bau in build/ haette die exe einer PARALLEL
+    # laufenden Suite in build_suite/ beendet. Deshalb das Verzeichnis-Trennzeichen [char]92 anhaengen.
     if [ -x "$_ps" ] && command -v cygpath >/dev/null 2>&1; then
         _bw="$(cygpath -w "$(cd "$BUILD_REL" && pwd)")"
         "$_ps" -NoProfile -Command \
-          "Get-Process re15_pc -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path.StartsWith('$_bw', [System.StringComparison]::OrdinalIgnoreCase) } | Stop-Process -Force" \
+          "Get-Process re15_pc -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path.StartsWith('$_bw' + [char]92, [System.StringComparison]::OrdinalIgnoreCase) } | Stop-Process -Force" \
           >/dev/null 2>&1 || true
     fi
     if [ -n "${RE15_JOBS:-}" ]; then
