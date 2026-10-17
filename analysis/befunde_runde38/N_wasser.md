@@ -387,6 +387,31 @@ und der Boden wird an x +0x34 / z +0x3c dieser Lage geprueft (@0x80045664/68) = 
 Anker relativ bewegt = stehend). Der Port prueft im Skriptlauf also den Boden einen Schritt zu weit vorn. Original-Gegenprobe
 der Flut-Szene: siehe unten (DuckStation 20B0).
 
+**Original-Gegenprobe 20B0 (DuckStation-GDB, Lauf 3, `N_belege/gdb_20b0_sprung.txt`):** JUMP Stage 2 Raum 0x0B geladen (FLR n=8,
+erster Eintrag x -13800 z -4060 w 2330 d 2310 Typ 0x97 = ROOM20B0), Leon nach dem Sprung bei (-20657,-1800,-9629) Blick 2779
+Band 1 — die Flut-Szene startet im Original nach dem Debug-Sprung NICHT (UP gehalten: 24 Geh-Schritte gegen eine Wand bei
+(-21182,-1800,-8818), Beton, Tonindex 0x1d, Bild 8/23 mit Bildwort 0x606d/0x507c wie 1260). Ein Original-Skriptlauf ist so nicht
+messbar; der Lage-Befund stuetzt sich auf die Executor-Reihenfolge (statisch, alle vier) und die GDB-Messung 1260 (Anker relativ
+bewegt = stehend). Dass im Port die Flut-Szene nach dem Debug-Sprung laeuft, ist ein Unterschied des Sprung-Zustands, nicht
+dieses Punkts (OFFEN).
+
+**Messung nachher Skriptlauf (Stand 28cb1b9c gebaut, Messkopie re15_pc_r38w_lauf3.exe):**
+```
+Leon 20B0  F17 bild=0  lage=( 2380) vor=( 2180) zustand=gezeichnet 0x97 boden part 4 anker (2377,-1850,-6122)  [erster Schritt, Ueberblend-Pose]
+           F29 bild=12 lage=(  -20) vor=( -220) 0x1d trocken | F39 bild=22 lage=(-2020) 0x17 trocken edt 0x17
+           F51 bild=34 lage=(-4420) vor=(-4620) 0x97 boden part 4 anker (-3617,-2875,-6160) -> rel (803,-1075,195)
+           F61 bild=44 lage=(-6420) vor=(-6620) 0x97 boden part 4 anker (-6941,-1891,-6300) -> rel (-521,-91,55)
+           F73.. trocken 0x1d
+Original (gdb_1260_lauf.txt, Blick 0) Bild 12 rel (-804,-1075,-196), Bild 0 rel (520,-91,-56); um 180 Grad (Blick 2047) gedreht
+(804,-1075,196) / (-520,-91,56) -> Port jetzt +-1 (vorher +199 in Laufrichtung).
+Elza 20B1  F17 bild=0 part 7 boden | F28 bild=11 trocken | F39 0x17 trocken | F50 bild=33 part 4 boden | F61 bild=44 part 7 boden
+           | F72.. trocken; alle zustand=gezeichnet, lage = vor + 200.
+```
+Weltlage der Anker unveraendert (sie kam schon aus der Zeichner-Matrix); geaendert hat sich die Lage der Boden-Abfrage (jetzt die
+gezeichnete) und der erste Schritt nach dem Losrennen (F17 statt F16: das gezeichnete Vorbild F16 war noch nicht im Laufclip —
+Original: der Executor prueft das Bildwort des Vorbilds *(+0x168) — Plc-Lauf `lw v0,-13380(v0)` (0x800acbbc) @0x80030e60,
+`andi v0,v1,0x4000` @0x80030e70, a0 = 0 @0x80030e7c, Aufruf @0x80030e90; Plc-Gehen `andi` @0x80030c1c; Echtzeit-Gehen @0x8003253c).
+
 Hinweis zum Vergleichsstreifen `vergleich_original_leon_elza.png`: er belegt Form/Farbe/Verlauf, NICHT den Zeitpunkt. Der
 Original-Mitschnitt (Lauf 2, `ds1260_c`, Mitschnitt AN 37,0 s bis AUS 43,6 s) lief mit aktiven Haltepunkten @0x80045630 /
 @0x80045710 / @0x80045798 ("Stopps: 12"), die Emulation hielt also genau in den Schrittbildern an; die Zuordnung der
