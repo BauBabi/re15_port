@@ -121,6 +121,38 @@ F1230..F1320 0 Pixel. Bild `intro_vergleich.png`: nur Kantenpixel (Rotorblatt-Ka
 Zahl des statischen Zensus (Rotor in Ruhelage ry 0) tritt im Spiel nicht auf (der Rotor dreht, Pool 3 ry 2048/2560/
 12800/5632 in den Original-Spielstaenden lamp_1170_run2/3, orig_1170_gp/gp2).
 
+### 5.2b Am Spiel gemessen: ROOM5060 Cut 4 (Zensus-Fall MEHR, Halbtransparenz-Objekt) — NEUE sichtbare Aenderung
+Laeufe `t7_5060_cut4_neu` / `t8_5060_cut4_alt`: `RE15_PSELECT_AUTO=1 RE15_DEBUG_JUMP=5060@250 RE15_FORCE_CUT=4
+RE15_FRAMEDUMP=100-300/50:fd_ RE15_EXIT_AT=300#5060` (debug.log `JUMP -> 506 P-4 LABORATORY (ROOM5060)`, state cam=4).
+* OBJPOLY neu: `room=5060 cut=4 obj=4 gezeichnet=1 nclip=1 otz=0 gpu=0` (299 Bilder).
+* Pixelvergleich neu gegen v0.8.25: **1193 px in jedem Bild** (`diff_dumps.py`); Bild `r5060_cut4_vergleich.png`: das
+  linke Fenster, in dem v0.8.25 den Raumhintergrund zeigt (Streifen; Hintergrund-Anteil tol 24: alt 0.9541, neu 0.9377
+  gegen ROOM506.BSS Cut 4), ist im Spurbaum von einem **deckend dunklen Dreieck** zugedeckt.
+* Ursache (selbst nachgerechnet, `mehr_detail.py`): obj 4 (`Obj_model_set` @0x02D72, Typ 0, **Attribut 0x0012**,
+  (-19548,-3780,-23346)), Viereck P01 mit Scheitel 0 bei vz 21 -> SXY (-1024,1023); Dreieck (0,1,2) zu gross, (1,2,3)
+  = (-666,509),(-20,20),(36,142) besteht; NCLIP 156982, OTZ 422 -> der neue Weg zeichnet das Halbviereck (alter Weg:
+  `vz < 64` -> weg). Das entspricht der Original-Geometrie-Regel. ABER: Attribut-Bit 0x02 = ABE; FUN_8002c18c reicht es
+  als 4. Parameter an den Flach-Viereck-Zeichner, der den Primitivcode baut: @0x800230ac `sll a3,a3,1`, @0x800230b0
+  `ori a3,a3,0x3c`, @0x800230d0 `sb a3,3(s0)` -> Code **0x3E = halbtransparent**; Texturseite des Modells 0x0080 ->
+  ABR 0 (0,5·B + 0,5·F). Der PC-Prop-Weg setzt fuer Raum-Objekte KEIN ABE (main.c Prop-Schleife ohne
+  `re15_render_pc_set_tri_blend`; vorbestehende Luecke: 77 Obj_model_set-Saetze mit Attribut & 2 in 24 Raeumen,
+  `abe_zensus.py`, u. a. alle Typ-3-Wasser/Gitter der Stage 2 mit 0x001a, ROOM1040, 11B0, 5030, 5060).
+  Das Original zeigt dort also das Fenster zu 50 % abgedunkelt, v0.8.25 zeigte es unverdeckt, der Spurbaum zeigt es
+  deckend dunkel. Der Abstand zum Original ist vorher wie nachher 0,5·|BG - Textur| — aber das Bild ist sichtbar
+  anders, im Spiel erreichbar (RVD-Zonen 3->4 x -22101..-19900 z -27000..-24700 und 7->4) und im Dossier nicht erwaehnt.
+
+### 5.2c Typ-3-Objekte (vom Zensus des Bau-Agenten ausgenommen) und grosse WENIGER-Faelle am Spiel
+* `zensus_typ3.py` (Zensus nur Typ 3, beide Richtungen): keine MEHR-Faelle; WENIGER u. a. ROOM2050 obj 4 Cut 11
+  (statisch 12674 -> 0 px, Rueckseiten von unten) und ROOM20A0 obj 6 Cut 3 (1906 -> 0). Am Spiel (`RE15_FORCE_CUT`):
+  ROOM2050 Cut 11 neu gegen v0.8.25 **82..100 px** (nur Kanten, `r2050_cut11_vergleich.png`; das Skript setzt obj 4
+  je Cut um), ROOM20A0 Cut 3 **0 px**.
+* ROOM10D0 Cut 12 (Dossier §8, Zensus ALT 76800 px): `RE15_DEBUG_JUMP=10D0@250 RE15_FORCE_CUT=12` — v0.8.25 zeigt
+  das **ganze Bild voller Rolladen-Lamellen** (derselbe Fehler wie der Nutzer-Befund), der Spurbaum Marvin vor dem
+  Fenster (`r10d0_cut12_vergleich.png`, 24643..24744 px Unterschied); OBJPOLY `gezeichnet=8 nclip=0 otz=2 gpu=5` — hier
+  entscheiden GPU-Grenze und OTZ, nicht NCLIP. Die GPU-Grenze ist am Original-Bild belegt: Q35 des 20A0-Rolladens ist
+  eingehaengt (OTZ 122, OPZ > 0), seine Dreiecke (804,-76),(481,231),(-114,-344) / (481,231),(-114,-344),(105,395)
+  laegen quer ueber dem Bild (dy 575 / 739 > 511), und `orig_cut11_offen_buf0.png` zeigt nichts davon.
+
 ### 5.3 ROOM20A0 selbst (alle Cuts des Tuerwegs)
 OBJPOLY im Tuerweg (Auszug): Cut 13/14 obj 1 `otz=48` (Rolladen hinter der Kamera — vorher ebenso weg durch `_vz < 64`),
 Cut 15 obj 4 `gezeichnet=9 otz=6 gpu=11`, Cut 2 obj 4 `gezeichnet=18 otz=6 gpu=2`; die Bilder dieser Cuts
