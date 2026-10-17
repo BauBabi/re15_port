@@ -286,6 +286,29 @@ Auswertung `cmake -DTEIL=D -DAUSWERTEN=<lauf> -P tests/integration/test_r38_dini
   Rohbytes `61 20 45 4a 45 4a 43 00 2e 4b 4b 49 19` geprueft).
 - leon1140: 0x3B 0x0C Bild 143, 0x0A Bild 158 (Abstand 15 = Sleep @0x00A54), 0x0B Bild 353; Rolladen-Prop faehrt hoch.
 
+### 4.3 Fortsetzung 4 — Befund: Kamera blieb nach Johns Abgang auf Cut 7 (Elza lief aus dem Bild)
+**Messung vorher** (Lauf int_d3 = `build/tests/integration/r38_dining1141_d_wd/lauf_2879b87c_d`, Stand 7fa09458/95fc8af6,
+Abgangs-Programm unveraendert bis 18e09882): Zustands-Log 1141 `cam=7` ab F3277 (Cut_chg 7 des Abgangs) bis zum
+Raumwechsel; `[scd F3443] letterbox closed -> gameplay` (Programm-Ende), danach geht Elza (Wegplan) von (-5605,-18938)
+nach Norden: F4065 (-5696,-14003), F4140 (-6810,-9719), F4215 (-7429,-5345), F4290 (-7264,-1071) — immer `cam=7`.
+Cut 7 steht bei (-7465,-3024,-9613) und blickt nach Sueden; ab z > -9613 ist Elza HINTER der Kamera. Framedumps
+fd_004065/004140/004215/004290: nur in F4065 ist Elza im Bild, danach der leere Raum
+(`F_belege/n4_cut7_haengt.png`). Der Spieler steuerte also eine unsichtbare Elza bis zur Dachtuer — der alte Riegel
+pruefte nur "loaded room1171.rdt".
+**RE-Beleg:**
+- RVD ROOM1141 (RDT-Kopf +0x28, 20-B-Saetze, rdt_common.c parse_zones): Satz 21 `from 7 to 0` ist der EINZIGE Satz
+  der Gruppe 7 = der Anker, den FUN_80014230 nie testet (Gruppensuche FUN_80014324, Scan ab dem zweiten Satz;
+  rdt_common.c re15_rdt_apply_zones_as_aots). Cut 7 ist eine reine Szenen-Kamera (Original nur sub02 @0x00C24
+  `29 07`): aus Cut 7 fuehrt keine Zone heraus, Cut_auto 1 allein laesst die Kamera dort stehen.
+- Das Original beendet eine solche Szenen-Kamera mit `2a 00 3c 01` = Cut_old, Nop, Cut_auto 1, z.B. ROOM1150
+  @0x010F2..0x010F5 (nach `29 06` Cut_chg 6 @0x010EA + Message_on 1 "It's a phone..."), ebenso ROOM10D0 @0x018D0,
+  ROOM11F0 @0x016F0 (16 RDTs in STAGE1 tragen die Folge). Cut_old = FUN_8004032c: @0x8004033c `lbu a0,DAT_800b3f7b`
+  = der ANGEZEIGTE Cut, den Cut_chg (LAB_800402a0) @0x800402c0/@0x800402e4 vor dem Wechsel gemerkt hat
+  (scd_vm.c op_cut_chg/op_cut_old); dazu loescht FUN_8004032c Bit 0x100 von DAT_800aca3c = Kamera-Automatik an.
+**Umsetzung:** Abgangs-Programm (tools/r38_dining/programme_bauen.py, BEFREIUNG-Schluss) endet jetzt mit
+`2a 00` Cut_old + Nop vor `3c 01` Cut_auto 1 (Form ROOM1150 @0x010F2) — die Kamera kehrt auf den Cut zurueck, der vor
+Cut 7 angezeigt war (Elzas Standort, eine Lauf-Kamera mit Zonen).
+
 ## 5. Tests
 Registriert NUR aus `re15_port/tests/unit/probes/r38_dining1141.cmake`:
 | Test | misst | Nutzer-Punkt |
