@@ -339,6 +339,30 @@ RE2 Retail verwirft genauso (info/re2leon/PSX.EXE, selbst disassembliert, re2_di
 -> Die Port-Lage des Parking Lot Key (Runde 36 Q, ungewendet) zeigte die RUECKSEITE (Textur gespiegelt gegen RE2) — ohne
 Verwurf unbemerkt, mit Verwurf unsichtbar. Behebung §3c.
 
+**Alle Port-Modelle, alle Cuts (Leon + Elza).** `A_belege/port_modelle_sicht.py` (exe ALT 1bcbd0ff, RE15_TRILOG ganzer
+Schirm, RE15_FORCE_CUT 0..nCut-1, Debug-Sprung; Elza ueber RE15_PSELECT_AUTO + _SWITCH, alle 136 Elza-Laeufe enden in
+ROOMxxx1) ueber die 12 Raeume mit Port-Modellen = 271 Laeufe; Port-Platz nur, wenn obj >= nOmodel des Raums (RDT-Byte 2).
+Zusammenfassung `A_belege/port_modelle_sicht_alt_271.txt` (Werkzeug `port_modelle_sicht_aggregat.py`). Ein Modell ohne
+jedes Dreieck mit MAC0 > 0 ist mit dem Verwurf in diesem Cut UNSICHTBAR:
+
+| Raum (Leon / Elza gleich) | Port-Modell | Cuts mit dem Modell | ohne Vorderseite (mit Verwurf weg) | Bewertung |
+|---|---|---|---|---|
+| 10F0 | Parking Lot Key (flach) | 12 | **alle 12** | Regression -> §3c behoben (NEU: in allen 12 gezeichnet) |
+| 10F1 | Prison Key (flach) | 12 | keiner (Cut 11 gemischt) | - |
+| 1010/1011 | Dokument 4 (fast flach) | 9 | Cut 2 | Bild ALT = NEU (0 Punkte; dort ohnehin verdeckt) |
+| 1020/1021 | Dokument 3 (fast flach) | 5 | Cut 5 | hochkant von hinten: 6 Dreiecke Flaeche 0 + 2 Rueckseiten, 14 Einzelpunkte |
+| 11D0/11D1 | Lageplan-Karte B1 (flach, Wand) | 15 | Cut 7 | Kamera HINTER der Wandebene (unten) |
+| 1030/1031, 1140/1141, 10D0/10D1, 1200/1201 | Lageplan-Karten 1F/3F/2F/B2 | 13-14 / 10 / 3 / 2 | keiner | - |
+| 1150/1151 | Memory Card (flach) | 4 | keiner | - |
+| 1000/1001, 1050/1051, 1090/1091, 1150/1151, 1010 | Dokument 1/2, Feuerloescher, Schrot, Irons Diary, Memory Card (raeumlich) | je 1-16 | keiner | Rueckseiten raeumlicher Modelle (gemischt) wie im Original |
+
+ROOM11D0 Cut 7 nachgerechnet (RDT cameraStart 0x60, Satz 32 B; Karte (1694,-2199,-19149) rot (2048,3871,3072) ->
+g_Welt = (0,941; 0; -0,338)): die Kamera von Cut 7 steht bei (3845,-6762,-21508), also auf der +x-Seite der Kartenebene
+(g.(P-C) = -2822), alle 14 anderen Kameras davor (g.(P-C) 18..13427). Ohne Verwurf malte der Port die Kartenrueckseite
+durch die Wand (Bild ALT: helles Blatt unten links, 493 Punkte x 0..34, y 196..224); das Original verwirft sie — wie der
+Verwurf jetzt. KEINE Regression, sondern Original-Verhalten; der Nutzer sieht die Karte in den 14 Cuts, in denen die
+Kamera im Raum steht.
+
 **Laufende Spuren (fuer die Integration, gerechnet mit der Port-Matrix pc_prop_rot_q12 = Ry*Rx*Rz, main.c):**
 * Spur K (r38/itemorte) haengt beide Schluessel an die Pinnwand ROOM10F0/10F1 (gen/itemorte_r38_lage.inc, "Sichtseite
   Modell +1y"): Modelle k_r38k_park_md1 / k_r38k_prison_md1 g = -Y; PARK rot (3072, 0, 2048), PRISON rot (1024, 0, 0) ->
