@@ -192,7 +192,8 @@ Keine Bank-9-Bits, keine Nachrichten-Ids, kein Asset, kein Patch an shared_asset
 ### 3.2 Konstanten (gen/itemorte_r38_lage.inc, Herleitung 2.2/2.3/2.8)
 * Loescher: Ursprung (Bodenmitte) (-2813,-2122,-17904), rot_y 3072, Zone x -3980..-2980 z -18370..-17370 (Slot 14).
 * Parking Lot Key: (1358,-2495,-3400) rot (3072,0,2048), Massstab 6,4636 (sichtbar 735 x 468 Einheiten).
-* Prison Key: (1358,-2495,-3400) rot (1024,3618,2048), Massstab 3,5896 (sichtbar 538 x 620).
+* Prison Key: (1358,-2495,-3400) rot (1024,0,0), Massstab 5,3032 (sichtbar 736 x 345) = **RE2 Small Key** seit
+  Nachbesserung 1 (9.3/9.5); bis dahin RE2 Cabin Key rot (1024,3618,2048), Massstab 3,5896 (sichtbar 538 x 620).
 * Schluessel-Zone x 798..1798 z -3600..-2600 (Slot 8); Licht 0x0010 (2.7).
 
 ### 3.3 Sichtbarkeitsregel (PORT-ZUSATZ, gemessen begruendet)
@@ -228,6 +229,7 @@ Bild `K_belege/k3_ohne_regel_cut10_mit_regel_cut10_ohne_regel_cut7.png`.
   Leon ROOM1090 Loesch-Ablauf unveraendert (Riegel unit_r37_feuerloescher_loeschen/kiste, integration A/F/G/I/M/N/O).
 
 ### 4.2 Punkt 2 — Schluessel an der Pinnwand
+(Prison-Key-Zahlen in 4.2/4.2a = Stand VOR Nachbesserung 1 mit dem Cabin Key; nachher: 9.6.)
 * `aots 10F0/10F1`: `[itemorte] ROOM10F0: Slot 8 (msg 4) -> Slot 15`, `[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45,
   Bit (9,82)) Prop obj 4 bei (1358,-2495,-3400) rot (3072,0,2048), Zone Slot 8`; 10F1 PRISON KEY rot (1024,3618,2048).
 * Bild Nutzer-Cut (ROOM10F0/10F1 Cut 5, Bild 100, mit/ohne Taken-Bit): Parking Lot Key **55 Pixel, Huelle x 132..143
@@ -324,15 +326,14 @@ V3 108 / V4 0 / V5 29 Pixel, aussen ueberall 0 (bitgleich mit den Messungen 4.1/
 
 ## 6. OFFEN
 * Nichts Funktionales. Ehrliche Grenzen:
-  - Prison Key = RE2 "Cabin Key" (Runde-36-Modellwahl): ein grosser DUENNER Ring (Linie 1..1,5 Texel) mit kleinem
-    Schluessel. Er fuellt die Marke wie der Parking Lot Key, im 320x240-Bild aendern sich aber nur 14 Pixel (Parking Lot
-    Key 55); in der Fensteraufloesung (Skala 3) ist er klar als Ring mit Schluessel zu erkennen
-    (`K_belege/k2_10f0_10f1_fensterskala3.png`; gezaehlt 4.2a: 112 Pixel zusammenhaengende Ringlinie, Parking Lot Key
-    491; Riegel B4). Ein kraeftigerer Prison Key braeuchte ein anderes Modell (Runde-36-Wahl, nicht der Ort): groesser
-    geht nicht, ohne die Marke zu verlassen (Huelle 10,5 x 8,4 px in der 11 x 9-Marke), eine dickere Linie waere ein
-    veraendertes RE2-Asset.
+  - ERLEDIGT mit Nachbesserung 1 (Abschnitt 9): der Prison Key war der RE2 "Cabin Key" (duenner dunkler Ring, 14 / 112
+    Pixel bei Skala 1 / 3) und ist jetzt der RE2 "Small Key" (heller Bartschluessel, flach wie in RE2 @0x00706): 27 / 217
+    Pixel, je Pixel derselbe Kontrast wie der Parking Lot Key (9.6). Verbleibende Grenze: er hat ~halb so viel FLAECHE
+    wie der Parking Lot Key (Ring + Schaft gegen breite Klinge + Kopf, beide 12 Spalten breit = Marke voll); groesser
+    geht nicht, ohne die Marke zu verlassen. Bei Skala 1 zeigt der 1-Pixel-Schaft seine dunkle Unterkante (Ring hell).
   - Die Schluessel sind groesser als echte Schluessel (Parking Lot Key sichtbar 735 x 468 Einheiten = 43 x 28 cm, Prison
-    Key 32 x 37 cm): "gut sichtbar" aus Cut 5 (Kamera ~7,6 m entfernt) — in RE2-Groesse waeren es 2..3 Bildpunkte.
+    Key 736 x 345 = 43 x 20 cm): "gut sichtbar" aus Cut 5 (Kamera ~7,6 m entfernt) — in RE2-Groesse waeren es 2..3
+    Bildpunkte.
   - Sichtbarkeitsregel ist ein PORT-ZUSATZ (das Original hatte an beiden Stellen kein Objekt, die Masken
     shared_assets/PSX/MASKS sind TABU); der PSX-Port zeichnet diese Port-Gegenstaende nicht (platform/psx/main.c:
     nur obj < 6 mit RDT-Modell), braucht die Regel also nicht.
@@ -362,15 +363,20 @@ V3 108 / V4 0 / V5 29 Pixel, aussen ueberall 0 (bitgleich mit den Messungen 4.1/
 * **Parking Lot Key (Leon) / Prison Key (Elza):** haengen an der Pinnwand im Communications Room (ROOM10F0/10F1) unten
   rechts, wie in key_location.bmp (Bild `K_belege/k2_nutzerbild_vs_port_10f0_cut5.png`), so gross, dass sie deine Marke
   ausfuellen, und ohne Raumlicht gezeichnet wie in Resident Evil 2 (dort stehen beide Schluessel mit dem Flach-Attribut):
-  der Parking Lot Key zeigt die silberne Klinge und den schwarzen Kopf mit rotem Emblem, der Prison Key den Ring mit dem
-  kleinen Schluessel. Aufheben: vor die Pinnwand stellen, Blick zur Wand, Aktionstaste. Die Konsole ist leer.
+  der Parking Lot Key zeigt die silberne Klinge und den schwarzen Kopf mit rotem Emblem, der Prison Key (seit der
+  Nachbesserung 1) einen silbernen Bartschluessel mit grossem Ring — RE2s "Small Key"; Item-Bild beim Aufheben und
+  Inventar-Symbol zeigen denselben Schluessel (`K_belege/k2_nb1_cut5_skala3_2x.png`, `k2_nb1_aufnahme_inventar_10f1.png`).
+  Aufheben: vor die Pinnwand stellen, Blick zur Wand, Aktionstaste. Die Konsole ist leer.
 * Neue Assets fuer das Paket-Gate: **keine** (alles in die exe gebacken: gen/itemorte_r38_*.inc). Keine Sprachdateien,
   keine neuen Texte.
 
 ### Hinweis
-* Der Prison Key ist RE2s "Cabin Key" (duenner Ring): er ist bei normaler Fenstergroesse gut zu erkennen, wirkt aber
-  feiner als der Parking Lot Key (`K_belege/k2_10f0_10f1_fensterskala3.png`, `k2_nutzerbild_vs_port_skala3_10f0_10f1.png`:
-  links deine Marke, Mitte Leon, rechts Elza).
+* Prison Key (Nachbesserung 1): der duenne dunkle Ring (RE2 "Cabin Key") war an der Pinnwand kaum zu sehen und ist
+  durch RE2s "Small Key" ersetzt (Begruendung der Wahl: Abschnitt 9.3). Er ist so hell wie der Parking Lot Key, aber
+  schlanker (Ring + Schaft statt breiter Klinge) und fuellt deine Marke in der Breite ganz aus
+  (`K_belege/k2_nb1_cut5_skala1_5x.png`: links dein Bild, dann Leon, Elza, Elza nach dem Aufheben). Der Text beim
+  Untersuchen bleibt "I can access the / prison cells / with this." (dieselbe Satzform wie RE2s Small Key "I can open a /
+  simple lock / with this." @0x800A11EF).
 
 ## 8. Wortlaut-Pruefung (Fortsetzung 2026-10-16)
 
@@ -383,10 +389,10 @@ V3 108 / V4 0 / V5 29 Pixel, aussen ueberall 0 (bitgleich mit den Messungen 4.1/
 | (Elza) | der Wand-Loescher war in Runde 37 nur Leons (1051 ohne; Elza findet den leeren am Boden in 1091 — Nutzer-Wortlaut Runde 37 Nachtrag 4) -> 1031 ohne, 1091 unveraendert | E, unit raum |
 | "Parking Lot key, und den Prison Key - je nach Szenario" | Leon ROOM10F0 Item 0x45 Bit (9,82), Elza ROOM10F1 Item 0x42 Bit (9,83) + Zellen-Flag (4,0xEC) | B2/B3/K1/K2 |
 | "an die Location ... key_location.bmp" | ROOM10F0/10F1 Cut 5 (Bildvergleich 4,34 gegen >= 90,9), Pinnwand unten rechts, jeder sichtbare Texel in der Marke | 1.1, 2.3, unit_r38_itemorte_lage |
-| "gut sichtbar" | fuellt die Marke (Huelle 11,8 / 10,4 von 11 Spalten), Licht flach wie RE2 (@0x80055320 Attribut 0x0010), in Cut 5 UND Cut 6 beider Szenarien gezeichnet; Skala 3: Prison Key 112, Parking Lot Key 491 Pixel; in Cut 7 (Regal davor, keine Masken) bewusst nicht | 4.2/4.2a, B2/B3/B4/V3/V5, V2/V4 |
+| "gut sichtbar" | fuellt die Marke (Huelle 11,8 / 10,4 von 11 Spalten), Licht flach wie RE2 (@0x80055320 Attribut 0x0010), in Cut 5 UND Cut 6 beider Szenarien gezeichnet; Skala 3: Prison Key 217 (Small Key, Nachbesserung 1; vorher 112), Parking Lot Key 491 Pixel, je Pixel gleicher Kontrast (9.6); in Cut 7 (Regal davor, keine Masken) bewusst nicht | 4.2/4.2a, B2/B3/B4/V3/V5, V2/V4 |
 
-Offen gegen den Wortlaut bleibt nur die Grenze des Prison-Key-Modells (Abschnitt 6): die Ringlinie ist duenn und
-dunkel, weil sie es im RE2-Asset ist.
+Die Grenze des Prison-Key-Modells (duenne dunkle Ringlinie des Cabin Key) ist mit Nachbesserung 1 behoben (Abschnitt 9);
+der Small Key ist schlanker als der Parking Lot Key, je Pixel aber gleich kontrastreich.
 
 ## 9. Nachbesserung 1 (nach Abnahme 0, Beginn 2026-10-16 ~23:00)
 
