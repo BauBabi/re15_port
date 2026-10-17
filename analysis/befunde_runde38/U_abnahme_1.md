@@ -91,3 +91,71 @@ F250-F270 kniet auf der Kante; F280-F300 richtet sich neben Leon auf; F310 steht
   `m_domino/crop_domino2.png`); F401-F405 taumelt er im RE2-Taumel-Clip 13 rueckwaerts durch den Kanal (eigener
   Abbruch-Tick: EXEC[9] P0 + Schub 400, siehe Hinweise).
 - **Mangel 1 ist behoben.**
+
+### M2 — ECHTER WEG 2070 -> 2000, Leon, `RE15_AI_FLAVOR=re15` (RE1.5-KI), Bild
+
+`tools/lauf.sh <exe> m2_leon_re15 "620#2000" leon 300 RE15_AI_FLAVOR=re15 "RE15_FRAMEDUMP=140-620/10:fd/f"` ->
+`exit=0 dauer=38s`; `[pl] Spieler-Familie PL00`, `[aot] DOOR FIRE slot=0 ...`, `[room] PC loaded room2000.rdt`.
+(`RE15_AI_FLAVOR=re15` -> RE15_AI_FLAVOR_RE15, enemy_ai_re2_zombie.c:112-123; kein `re2-eintritt` im wz.log = RE1.5-Zweig.)
+wz.log (vollstaendig, woertlich):
+```
+F146 R2000 slot=4 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-9931) b0 f1ba=0 rot=4002 kontakt=09
+F152 R2000 slot=4 t=16 klettern st=1/10/3 mo=22 af=0 @(-22068,0,-9931) b0 f1ba=0 rot=0 kontakt=00
+F222 R2000 slot=4 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-22068,0,-9931) b0 f1ba=-1800 rot=0 kontakt=00
+F310 R2000 slot=4 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-9931) b1 f1ba=-1800 rot=0 kontakt=00
+F426 R2000 slot=3 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-10474) b0 f1ba=0 rot=63 kontakt=09
+F430 R2000 slot=3 t=16 klettern st=1/10/3 mo=22 af=0 @(-22068,0,-10474) b0 f1ba=0 rot=0 kontakt=00
+F500 R2000 slot=3 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-22068,0,-10474) b0 f1ba=-1800 rot=0 kontakt=00
+F588 R2000 slot=3 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10474) b1 f1ba=-1800 rot=0 kontakt=00
+```
+gy.log (`tools/inv.py`): 1366 Gegner-Eintraege, **0 unter dem Wasserboden (y > 0), 0 auf Band >= 2** (Vorbefund der
+RE1.5-KI laut Dossier 1: Sturz bis y = +1800, danach Band 2). Bild (`m2_re15_crop.png`, F150-F310 und F430-F590 je 20,
+Ausschnitt x30-200/y40-200, 2x): F150-F250 Haende/Oberkoerper auf der Kante, Beine im Kanal; F270-F290 Knien und
+Aufrichten; F310 steht er auf dem Steg und greift Leon; F430-F510 der zweite mit dem Oberkoerper auf der Kante.
+Leon wehrt sich im Wegplan nicht und stirbt (F530 Weissblitz, F550-F590 Todesszene/"YOU DIED") — erwartbar, nicht Spur U.
+
+### M3 — ECHTER WEG 2071 -> 2001, Elza, Standard-KI (RE2), Bild inkl. Zwischenbild
+
+`tools/lauf.sh <exe> m3_elza_re2 "410#2001" elza 300 "RE15_FRAMEDUMP=130-410/1:fd/f"` -> `exit=0 dauer=47s`.
+debug.log: `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `[debug-menu] AUTO-JUMP -> ROOM2070 (Frame 250)`,
+`[room] PC loaded room2071.rdt`, `[aot] DOOR FIRE slot=0 ...`, `[room] PC loaded room2001.rdt (360660 bytes)`.
+wz.log (vollstaendig, woertlich):
+```
+F144 R2001 slot=2 t=16 re2-eintritt st=1/10/0 mo=27 af=18 @(-22068,0,-10290) b0 f1ba=0 rot=87 kontakt=09
+F144 R2001 slot=2 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-10290) b0 f1ba=0 rot=87 kontakt=09
+F150 R2001 slot=2 t=16 klettern st=1/10/3 mo=22 af=0 @(-22068,0,-10290) b0 f1ba=0 rot=0 kontakt=00
+F220 R2001 slot=2 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-22068,0,-10290) b0 f1ba=-1800 rot=0 kontakt=00
+F308 R2001 slot=2 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10290) b1 f1ba=-1800 rot=0 kontakt=00
+F308 R2001 slot=2 t=16 re2-uebergabe st=1/0/1 mo=0 af=3 @(-20928,-1800,-10290) b1 f1ba=-1800 rot=0 kontakt=00
+F340 R2001 slot=1 t=16 re2-eintritt st=1/10/0 mo=0 af=63 @(-22068,0,-9970) b0 f1ba=0 rot=165 kontakt=09
+F340 R2001 slot=1 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-9970) b0 f1ba=0 rot=165 kontakt=09
+F351 R2001 slot=1 t=16 klettern st=1/10/3 mo=22 af=0 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+F400 R2001 slot=1 t=16 zwischenbild st=1/9/0 mo=22 af=49 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+F401 R2001 slot=1 t=16 abbruch st=1/9/0 mo=22 af=50 @(-22068,0,-9970) b0 f1ba=0 rot=0 kontakt=00
+```
+gy.log: 946 Eintraege, 0 unter dem Wasserboden, 0 auf Band >= 2. Bild (`m3_elza_crop.png`, F150-F310 je 20 und
+F397-F402 einzeln, Ausschnitt x30-200/y50-220, 2x): F150-F290 Hochziehen neben Elza (Haende, Oberkoerper, Knie,
+Aufrichten), F310 steht er auf dem Steg und greift Elza; F397-F400 haengt der zweite Kletterer an der Kante — **auch
+F400** —, F401/F402 Taumel im Kanal. (Die 2001-Wasserzombies spawnen nur mit Flag (3,0x45): ROOM2001 sub00
+`06 00 2e 00` @0x1826 / `21 03 45 01` @0x182A, Abnahme 0 M3 — deshalb `RE15_SET_FLAG=3:69`.)
+
+### M8 — ECHTER WEG 2071 -> 2001, Elza, `RE15_AI_FLAVOR=re15`, Bild
+
+`tools/lauf.sh <exe> m8_elza_re15 "620#2001" elza 300 RE15_AI_FLAVOR=re15 "RE15_FRAMEDUMP=150-610/20:fd/f"` ->
+`exit=0 dauer=53s`; `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `PC loaded room2071.rdt`, `DOOR FIRE slot=0 ...`,
+`PC loaded room2001.rdt`. wz.log (vollstaendig, woertlich):
+```
+F146 R2001 slot=2 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-9931) b0 f1ba=0 rot=4002 kontakt=09
+F152 R2001 slot=2 t=16 klettern st=1/10/3 mo=22 af=0 @(-22068,0,-9931) b0 f1ba=0 rot=0 kontakt=00
+F222 R2001 slot=2 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-22068,0,-9931) b0 f1ba=-1800 rot=0 kontakt=00
+F310 R2001 slot=2 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-9931) b1 f1ba=-1800 rot=0 kontakt=00
+F424 R2001 slot=1 t=16 drehen st=1/10/1 mo=1 af=0 @(-22068,0,-10516) b0 f1ba=0 rot=93 kontakt=09
+F430 R2001 slot=1 t=16 klettern st=1/10/3 mo=22 af=0 @(-22068,0,-10516) b0 f1ba=0 rot=0 kontakt=00
+F500 R2001 slot=1 t=16 boden-1800 st=1/10/3 mo=22 af=70 @(-22068,0,-10516) b0 f1ba=-1800 rot=0 kontakt=00
+F588 R2001 slot=1 t=16 oben st=1/0/0 mo=22 af=158 @(-20928,-1800,-10516) b1 f1ba=-1800 rot=0 kontakt=00
+```
+gy.log: 1366 Eintraege, 0 unter dem Wasserboden, 0 auf Band >= 2. Bild (`m8_elza_re15_crop.png`, F150-F310 und
+F430-F590 je 20): Haende auf der Kante, Oberkoerper drueber, Knien, Aufrichten neben Elza (F310 steht er auf dem Steg);
+F430-F510 der zweite an der Kante; ab F530 stirbt Elza (wehrt sich nicht). Damit sind alle vier Kombinationen
+(Leon/Elza x RE2-/RE1.5-KI) auf dem echten Tuerweg gemessen (M1, M2, M3, M8) — in allen vier ziehen sich beide
+Wasserzombies hoch (bzw. der zweite in M1/M3 setzt nach dem RE2-Domino-Abbruch spaeter erneut an, siehe M7).
