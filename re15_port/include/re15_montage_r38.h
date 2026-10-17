@@ -80,6 +80,12 @@ int  re15_r38_kameras(const re15_r38_kamera_t **out);   /* Tabelle (Riegel) */
 #define RE15_R38_KRIECH_BANK     5         /* `22 05 i 01` @0x024E8.. (sub06) / `59 05 04 01` @0x02822 (sub09) */
 #define RE15_R38_KRIECH_N        20        /* sub06 prueft die Indizes 0x00 (@0x024D4) .. 0x13 (@0x02734) */
 
+/* BAUSTEIN 5 (Zombies hinter dem Tor warten auf ihren Schnitt, ROOM1030) — BLK-Zonen hinter dem Tor (ROOM1030.RDT BLK
+ * @0x01BB8, 12 Byte je Knoten): Zone 0 @0x01BBC (x -13470..-3660, z -32760..-23860) und Zone 10 @0x01C34 (x -21290..-13470,
+ * z -31360..-26960, Nachbar nur Zone 0). */
+#define RE15_R38_ZONE_HINTER_TOR_A  0
+#define RE15_R38_ZONE_HINTER_TOR_B  10
+
 /* HAKEN re15_irons_tod_tick (jedes Bild, Kopf des VM-Laufs): Einzelstopp hinter der Kamera (Baustein 3) in den
  * Schnitten mit halt = 1 waehrend ihres Montage-Schritts, dazu die Messung je Schnitt (s.u.). */
 void re15_r38_montage_takt(void);
@@ -102,6 +108,9 @@ typedef struct {
     uint8_t  kriech0;      /* 1 = beim ersten Sehen im Abschnitt schon mit Kriech-Bit (sub09 der Szene) */
     int      kriecht;      /* Abschnitts-Bild, in dem Baustein 4 das Kriech-Bit setzte, 0 = nie */
     int32_t  x1, z1;       /* Lage im letzten Bild des Abschnitts */
+    int32_t  dm;           /* Abstand zur Kamera-Bodenprojektion in der Mitte der eigenen Sichtzeit ((bild0+bild1)/2,
+                            * auf das 16-Bilder-Raster abgerundet) — "nimmt ueber die Schnittdauer ab" = d0 > dm > d1 */
+    int      warte;        /* Abschnitts-Bild, in dem er AUFRECHT im Warte-Rechteck stand (AOT-Stempel 5), 0 = nie */
 } re15_r38_spur_t;
 /* Je Abschnitt: Laenge, Spielerlage im letzten Bild, kleinste Spieler-HP, Zahl der Bilder mit einem Navigator-Ziel
  * ungleich der Spielerlage bei einem Zombie in DERSELBEN BLK-Zone wie der Spieler (FUN_80039e7c gleiche Zone
@@ -114,6 +123,7 @@ typedef struct {
     int      hp_min;
     int      ziel_fremd;
     int      kriech;
+    uint8_t  ki_re2;        /* 1 = die Zombies laufen mit dem RE2-Gehirn (Standard-KI, re15_ai_re2_for_type), 0 = RE1.5 */
 } re15_r38_abschnitt_t;
 int  re15_r38_abschnitte(const re15_r38_abschnitt_t **out);
 int  re15_r38_fremde_kamera(void);   /* Bilder eines Montage-Schritts auf einer Kamera ausserhalb der Schnitt-Tabelle */

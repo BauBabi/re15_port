@@ -62,7 +62,8 @@
 
 void re15_actor_step_all_walkers(void);
 
-static int g_fail = 0, g_mess = 0, g_spur = 0;   /* g_spur: Aktor, dessen Lage je 5 Bilder ausgegeben wird (argv[3]) */
+static int g_fail = 0, g_mess = 0, g_spur = 0;   /* g_spur: Aktor, dessen Lage je g_spur_takt Bilder ausgegeben wird (argv[3]) */
+static int g_spur_takt = 5;                        /* argv[4], Standard 5 */
 #define PRUEF(c, ...) do { if (!(c)) { printf("  FEHLER: "); printf(__VA_ARGS__); printf("\n"); g_fail++; } \
                            else { printf("  ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
@@ -219,11 +220,20 @@ static void lauf(lauf_t *L, int max)
         frame();
         L->bilder = f + 1;
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        if (g_spur > 0 && g_spur < RE15_ACTOR_MAX && (f % 5) == 0 && g_actors[g_spur].active) {
+        if (g_spur > 0 && g_spur < RE15_ACTOR_MAX && (f % g_spur_takt) == 0 && g_actors[g_spur].active) {
             const re15_actor_t *a = &g_actors[g_spur];
-            printf("    [spur] Bild %d cam %d Aktor %d (%d,%d) Ziel (%d,%d) Zustand %d/%d st %d fl %04x Radius %d Maske %d Zone %d\n", f + 1,
-                   (int)g_scd.cam_id, g_spur, (int)a->x, (int)a->z, (int)a->steer_x, (int)a->steer_z, a->state, a->sub_state_1,
-                   a->member_0b, a->anim_flags, (int)a->hit_radius_min, a->sca_mask, re15_nav_zone_from_pos((int16_t)a->x, (int16_t)a->z));
+            int nb = -1; long nd = 1L << 30;                  /* naechster andere Gegner (Gedraenge) */
+            for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+                if (s == g_spur || !g_actors[s].active || !g_actors[s].type) continue;
+                long ddx = (long)g_actors[s].x - a->x, ddz = (long)g_actors[s].z - a->z;
+                long d = (long)lround(sqrt((double)(ddx * ddx + ddz * ddz)));
+                if (d < nd) { nd = d; nb = s; }
+            }
+            printf("    [spur] Bild %d cam %d Aktor %d (%d,%d) Gier %d Ziel (%d,%d) Zustand %d/%d st %d fl %04x Radius %d Maske %d Zone %d"
+                   " naechster %d (%ld)\n", f + 1,
+                   (int)g_scd.cam_id, g_spur, (int)a->x, (int)a->z, (int)a->rot_y, (int)a->steer_x, (int)a->steer_z, a->state, a->sub_state_1,
+                   a->member_0b, a->anim_flags, (int)a->hit_radius_min, a->sca_mask, re15_nav_zone_from_pos((int16_t)a->x, (int16_t)a->z),
+                   nb, nd);
         }
         if (g_mess && (int)g_scd.cam_id != cam_alt) {
             printf("    [mess] Bild %d: Kamera Cut %d (angezeigt %d), Spieler (%d,%d) pm=%d auto=%d\n", f + 1, (int)g_scd.cam_id, s_shown,
@@ -318,24 +328,25 @@ static int bit_in(int bit, const int *liste, int n) { for (int i = 0; i < n; i++
 
 /* ---- Bewertung je Schnitt (DIESELBE fuer den Riegel im Prozess und fuer die exe-Auswertung `auswerten <lauf>`) ------ *
  * Zombies eines Schnitts: die Bits in `bits`, oder (bits == NULL) alle, die im ersten Bild des Schnitts VOR der Kamera
- * standen. naeher = Abstand zur Kamera-Bodenprojektion am Anfang minus am Ende des Schnitts.
+ * standen. Auftrag "je Schnitt Abstand Zombie->Kamera nimmt UEBER DIE SCHNITTDAUER ab (alle Zombies)" = zwei Mass-Stufen:
+ *   naeher: Abstand zur Kamera-Bodenprojektion am Anfang minus am Ende >= schwelle (1000 Gehen / 500 Tor-Schnitt);
+ *   halb:   in BEIDEN Haelften der eigenen Sichtzeit (d0 -> dm -> d1) je mindestens R38_NAEHER_HALB naeher — wer nach
+ *           der halben Zeit steht (v0.8.25: die aufrechten Zombies am Tor, Dossier "Messung vorher"), faellt durch;
+ *           ausgenommen nur, wer HINTER die Kamera gelangt und dort angehalten wurde (Ziel erreicht, Baustein 3).
  * Cut 12 (das aufgebrochene Tor) zusaetzlich:
- *   kriech_noetig / kriech_bekommen: aufrecht vor der Kamera beim Schnittanfang (ohne Kriech-Bit der Szene) / davon mit
- *       Kriech-Bit aus Baustein 4 (sub06/sub07-Regel, re15_montage_r38.h);
- *   durchs_tor: Endlage hinter der Nordkante der Torzelle SCA 18 (@0x01AE8: z -24420 + 1649 = -22771);
- *   klemme: weniger als R38_NAEHER_TOR naeher UND Endlage an der Suedost-Ecke der Zelle SCA 30 (@0x01B78: x -15518..-12566,
- *       z -24134..-22694) innerhalb zweier Zombie-Radien (400, +0x78-Satz +6) = der VORBESTEHENDE Grenzzyklus am
- *       Zone-9-Uebergang (-12195,-23860) (Dossier "Zwischenmessung"; Gegenprobe v0.8.25 ebenso). */
+ *   kriech_noetig / kriech_bekommen: AUFRECHT ins Warte-Rechteck gekommen (AOT-Stempel 5, @0x024E0; ohne Kriech-Bit der
+ *       Szene beim Schnittanfang) / davon mit Kriech-Bit aus Baustein 4 (sub06/sub07-Regel, re15_montage_r38.h);
+ *   durchs_tor: Endlage hinter der Nordkante der Torzelle SCA 18 (@0x01AE8: z -24420 + 1649 = -22771) — nur Ausgabe. */
 #define R38_NAEHER_TOR   500     /* Kriecher sind langsamer; stehend 0..20, Klemme +-130 (gemessen, Dossier) */
+#define R38_NAEHER_HALB  400     /* je Haelfte ein Koerperradius: Zombie-Radius 400 = +0x78-Satz +6 (FUN_8003a31c
+                                  * `lhu v0,6(v0)` @0x8003a408-410) — mehr als jedes gemessene Stehen (0..20) und die
+                                  * Klemm-Schwingung (+-130) */
 #define R38_TOR_NORD     (-22771)
-#define R38_ECKE_X       (-12566)
-#define R38_ECKE_Z       (-24134)
-#define R38_ECKE_R2      800
-typedef struct { int n, naeher, min_naeher, stopp_vorn, kriech_noetig, kriech_bekommen, durchs_tor, klemme, klemme_bit; } bew_t;
+typedef struct { int n, naeher, halb, min_naeher, min_halb, stopp_vorn, kriech_noetig, kriech_bekommen, durchs_tor; } bew_t;
 static bew_t bewerte(const re15_r38_spur_t *sp, int n, uint16_t raum, uint8_t cut, const int *bits, int nbits, int schwelle,
                      const char *was, int bilder)
 {
-    bew_t r; memset(&r, 0, sizeof r); r.min_naeher = 1 << 30; r.klemme_bit = -1;
+    bew_t r; memset(&r, 0, sizeof r); r.min_naeher = 1 << 30; r.min_halb = 1 << 30;
     printf("  [%s] ROOM%04X Cut %d, %d Bilder:\n", was, raum, cut, bilder);
     for (int i = 0; i < n; i++) {
         const re15_r38_spur_t *p = &sp[i];
@@ -343,21 +354,24 @@ static bew_t bewerte(const re15_r38_spur_t *sp, int n, uint16_t raum, uint8_t cu
         if (bits ? !bit_in(p->bit, bits, nbits) : !(p->t0 > 0 && p->bild0 == 1)) continue;
         r.n++;
         const int naeher = (int)(p->d0 - p->d1);
-        int klemme = 0;
+        const int h1 = (int)(p->d0 - p->dm), h2 = (int)(p->dm - p->d1);
+        const int ziel = p->angehalten && p->t1 <= 0;               /* hinter die Kamera gelangt und dort angehalten */
+        const int halb_ok = ziel ? (naeher >= schwelle) : (h1 >= R38_NAEHER_HALB && h2 >= R38_NAEHER_HALB);
         if (cut == 12) {
-            if (!p->kriech0) { r.kriech_noetig++; if (p->kriecht) r.kriech_bekommen++; }
+            if (!p->kriech0 && p->warte) { r.kriech_noetig++; if (p->kriecht) r.kriech_bekommen++; }
             if (p->z1 > R38_TOR_NORD) r.durchs_tor++;
-            klemme = naeher < schwelle && p->x1 >= R38_ECKE_X - R38_ECKE_R2 && p->x1 <= R38_ECKE_X + R38_ECKE_R2 &&
-                     p->z1 >= R38_ECKE_Z - R38_ECKE_R2 && p->z1 <= R38_ECKE_Z;
-            if (klemme) { r.klemme++; r.klemme_bit = p->bit; }
         }
         if (naeher >= schwelle) r.naeher++;
-        if (!klemme && naeher < r.min_naeher) r.min_naeher = naeher;
+        if (halb_ok) r.halb++;
+        if (naeher < r.min_naeher) r.min_naeher = naeher;
+        if (!ziel) { const int m = h1 < h2 ? h1 : h2; if (m < r.min_halb) r.min_halb = m; }
         if (p->angehalten && p->t1 > 0) r.stopp_vorn++;
-        printf("    Aktor %2d Typ %02x Bit %3d: Abstand zur Kamera %5d -> %5d (%+6d), Tiefe %6d -> %6d, Bild %d..%d, angehalten %d,"
-               " Kriech %d/%d, Ende (%d,%d)%s\n", p->aktor, p->typ, p->bit, (int)p->d0, (int)p->d1, -naeher, (int)p->t0, (int)p->t1,
-               p->bild0, p->bild1, p->angehalten, p->kriech0, p->kriecht, (int)p->x1, (int)p->z1, klemme ? " KLEMME SCA 30" : "");
+        printf("    Aktor %2d Typ %02x Bit %3d: Abstand zur Kamera %5d -> %5d -> %5d (%+6d / %+6d), Tiefe %6d -> %6d, Bild %d..%d,"
+               " angehalten %d, Kriech %d/%d, Warte %d, Ende (%d,%d)%s\n", p->aktor, p->typ, p->bit, (int)p->d0, (int)p->dm,
+               (int)p->d1, -h1, -h2, (int)p->t0, (int)p->t1, p->bild0, p->bild1, p->angehalten, p->kriech0, p->kriecht, p->warte,
+               (int)p->x1, (int)p->z1, halb_ok ? "" : "  << STEHT in einer Haelfte");
     }
+    if (r.min_halb == (1 << 30)) r.min_halb = 0;
     return r;
 }
 static const re15_r38_abschnitt_t *abschnitt(const re15_r38_abschnitt_t *ab, int n, uint16_t raum, uint8_t cut)
@@ -369,22 +383,46 @@ static const re15_r38_abschnitt_t *abschnitt(const re15_r38_abschnitt_t *ab, int
 
 static const int k_bits_1130[5] = { 40, 41, 42, 43, 46 };
 static const int k_bits_1070[5] = { 47, 48, 49, 75, 76 };
+/* Baustein 5: die Zombies hinter dem Tor = die Raum-Records ROOM1030 main00 Bit 0..5 (@0x01DE6..@0x01E4A, je 20 Byte) und
+ * die Kriecher der Montage (EM_KRIECHER_LISTE, Bit 77..79) */
+static const int k_bits_tor[9] = { 0, 1, 2, 3, 4, 5, 77, 78, 79 };
+
+/* Baustein 5 im Cut-7-Teil: jeder Zombie hinter dem Tor ist ab seinem ersten Bild in Cut 7 angehalten (halt0), und keiner
+ * der Raum-Records (Bit 0..5) kommt waehrend Cut 7 ins Warte-Rechteck (AOT-Stempel 5) — v0.8.25: sie drangen sich dort
+ * (Dossier "Zwischenmessung" Befund 4). Die Kriecher der Montage erscheinen IM Warte-Rechteck (EM_KRIECHER_LISTE z -24800).
+ * (Der einmalige Ausschub aus der Suedwand beim Erscheinen, z.B. Bit 2 z -30000 -> -28892, ist kein Gehen.) */
+static void tor_wartet(const re15_r38_spur_t *sp, int n, int *anz, int *halt, int *am_tor)
+{
+    *anz = 0; *halt = 0; *am_tor = 0;
+    for (int i = 0; i < n; i++) {
+        const re15_r38_spur_t *p = &sp[i];
+        if (p->raum != 0x1030 || p->cut != 7 || !bit_in(p->bit, k_bits_tor, 9)) continue;
+        (*anz)++;
+        if (p->halt0) (*halt)++;
+        if (p->bit <= 5 && p->warte) (*am_tor)++;
+    }
+}
 
 /* Die Kriterien des Nutzer-Punkts je Schnitt; liefert die Zahl der verfehlten (pruefen = 1: als PRUEF melden). */
 static int kriterien_1130(const re15_r38_spur_t *sp, int n, const re15_r38_abschnitt_t *ab, int nab, const char *was, int pruefen)
 {
     const re15_r38_abschnitt_t *a = abschnitt(ab, nab, 0x1130, 0);
     bew_t s = bewerte(sp, n, 0x1130, 0, k_bits_1130, 5, R38_NAEHER_MIN, was, a ? a->bilder : -1);
-    int ok1 = (s.n == 5 && s.naeher == 5), ok2 = (s.stopp_vorn == 0), ok3 = (a && a->ziel_fremd == 0), ok4 = (a && a->hp_min == 100);
+    const int pflicht = !a || a->ki_re2;                      /* Haelften: Pflicht unter der Standard-KI (RE2) */
+    int ok1 = (s.n == 5 && s.naeher == 5), ok1b = (s.n == 5 && s.halb == 5) || !pflicht, ok2 = (s.stopp_vorn == 0);
+    int ok3 = (a && a->ziel_fremd == 0), ok4 = (a && a->hp_min == 100);
     if (pruefen) {
         PRUEF(ok1, "ROOM1130 Cut 0: alle fuenf kommen der Kamera mindestens %d naeher (%d von %d, kleinste Annaeherung %d)",
               R38_NAEHER_MIN, s.naeher, s.n, s.min_naeher);
+        PRUEF(ok1b, "ROOM1130 Cut 0: ueber die Schnittdauer — in beiden Haelften je mindestens %d naeher oder hinter der Kamera "
+              "angehalten (%d von %d, kleinste Haelfte %d)%s", R38_NAEHER_HALB, s.halb, s.n, s.min_halb,
+              pflicht ? "" : " [RE1.5-KI: nur gemeldet]");
         PRUEF(ok2, "ROOM1130 Cut 0: Einzelstopp nur hinter der Kamera (vor der Kamera angehalten: %d)", s.stopp_vorn);
         PRUEF(ok3, "ROOM1130 Cut 0: Navigator-Ziel = Spielerlage fuer jeden Zombie in der Zone des Spielers (fremd in %d Bildern)",
               a ? a->ziel_fremd : -1);
         PRUEF(ok4, "ROOM1130 Cut 0: Spieler-HP unveraendert (min %d)", a ? a->hp_min : -1);
     }
-    return !ok1 + !ok2 + !ok3 + !ok4;
+    return !ok1 + !ok1b + !ok2 + !ok3 + !ok4;
 }
 static int kriterien_1040(const re15_r38_spur_t *sp, int n, const re15_r38_abschnitt_t *ab, int nab, const char *was, int pruefen)
 {
@@ -394,6 +432,8 @@ static int kriterien_1040(const re15_r38_spur_t *sp, int n, const re15_r38_absch
     if (pruefen) {
         PRUEF(ok1, "ROOM1040 Cut 1 (Rolltor): alle fuenf kommen der Kamera mindestens %d naeher (%d von %d, kleinste %d)",
               R38_NAEHER_MIN, s.naeher, s.n, s.min_naeher);
+        printf("  ROOM1040 Cut 1 (Rolltor, Vorbild): in beiden Haelften naeher oder hinter der Kamera angehalten: %d von %d"
+               " (kleinste Haelfte %d)\n", s.halb, s.n, s.min_halb);
         PRUEF(ok2, "ROOM1040 Cut 1: Spieler-HP unveraendert (min %d)", a ? a->hp_min : -1);
     }
     return !ok1 + !ok2;
@@ -404,34 +444,41 @@ static int kriterien_1030(const re15_r38_spur_t *sp, int n, const re15_r38_absch
     const re15_r38_abschnitt_t *a7 = abschnitt(ab, nab, 0x1030, 7), *a12 = abschnitt(ab, nab, 0x1030, 12);
     bew_t s7 = bewerte(sp, n, 0x1030, 7, k_bits_1070, 5, R38_NAEHER_MIN, was, a7 ? a7->bilder : -1);
     bew_t s12 = bewerte(sp, n, 0x1030, 12, NULL, 0, R38_NAEHER_TOR, was, a12 ? a12->bilder : -1);
+    int tor_n = 0, tor_halt = 0, tor_am_tor = 0;
+    tor_wartet(sp, n, &tor_n, &tor_halt, &tor_am_tor);
     if (out12) *out12 = s12;
-    int ok1 = (s7.n == 5 && s7.naeher == 5);
+    const int pflicht = !a12 || a12->ki_re2;                  /* Haelften: Pflicht unter der Standard-KI (RE2) */
+    int ok1 = (s7.n == 5 && s7.naeher == 5 && (s7.halb == 5 || !pflicht));
     int ok2 = (s7.stopp_vorn == 0 && s12.stopp_vorn == 0);
     int ok3 = (a7 && a7->ziel_fremd == 0);
     int ok4 = (fremde_kamera == 0 && a7 && a12);
-    int ok5 = (s12.n >= 9 && s12.kriech_noetig >= 1 && s12.kriech_bekommen == s12.kriech_noetig);
-    int ok6 = (s12.n >= 9 && s12.naeher + s12.klemme == s12.n && s12.klemme <= 1);
+    int ok5 = (s12.n >= 9 && s12.kriech_bekommen == s12.kriech_noetig);
+    int ok6 = (s12.n >= 9 && s12.naeher == s12.n && (s12.halb == s12.n || !pflicht));
     int ok7 = (a7 && a12 && a7->hp_min == 100 && a12->hp_min == 100);
     int ok8 = (a12 && labs((long)a12->px - RE15_R38_PARK_1030_12_X) <= 1 && labs((long)a12->pz - RE15_R38_PARK_1030_12_Z) <= 1);
+    int ok9 = (tor_n >= 6 && tor_halt == tor_n && tor_am_tor == 0);
     if (pruefen) {
-        PRUEF(ok1, "ROOM1030 Cut 7: alle fuenf Kopien kommen der Kamera mindestens %d naeher (%d von %d, kleinste %d)",
-              R38_NAEHER_MIN, s7.naeher, s7.n, s7.min_naeher);
+        PRUEF(ok1, "ROOM1030 Cut 7: alle fuenf Kopien kommen der Kamera mindestens %d naeher (%d von %d, kleinste %d) und in beiden "
+              "Haelften je mindestens %d (%d von %d, kleinste Haelfte %d)%s", R38_NAEHER_MIN, s7.naeher, s7.n, s7.min_naeher,
+              R38_NAEHER_HALB, s7.halb, s7.n, s7.min_halb, pflicht ? "" : " [Haelften RE1.5-KI: nur gemeldet]");
+        PRUEF(ok9, "ROOM1030 Cut 7: die Zombies hinter dem Tor warten auf ihren Schnitt (Baustein 5): %d gesehen, %d ab dem ersten "
+              "Bild angehalten, Raum-Records im Warte-Rechteck %d", tor_n, tor_halt, tor_am_tor);
         PRUEF(ok2, "ROOM1030: Einzelstopp nur hinter der Kamera (vorn angehalten: Cut 7 %d, Cut 12 %d)", s7.stopp_vorn, s12.stopp_vorn);
         PRUEF(ok3, "ROOM1030 Cut 7: Navigator-Ziel = Spielerlage fuer jeden Zombie in der Zone des Spielers (fremd in %d Bildern;"
               " der erste Runde-38-Parkplatz lag in keiner Zone -> veraltetes Ziel aus ROOM1040)", a7 ? a7->ziel_fremd : -1);
         PRUEF(ok4, "ROOM1030: Kamera nur Cut 7 (%d Bilder) und Cut 12 (%d Bilder), keine andere (%d Bilder)", a7 ? a7->bilder : -1,
               a12 ? a12->bilder : -1, fremde_kamera);
-        PRUEF(ok5, "ROOM1030 Cut 12: jeder aufrechte Zombie vor der Kamera bekommt das Kriech-Bit (sub06/sub07-Regel) und kommt "
-              "unter dem Tor durch (%d von %d)", s12.kriech_bekommen, s12.kriech_noetig);
-        PRUEF(ok6, "ROOM1030 Cut 12: alle %d Zombies vor der Kamera kommen ihr mindestens %d naeher (%d), ausser hoechstens einem "
-              "vorbestehend an der Zellenecke SCA 30 Festgeklemmten (%d, Bit %d); kleinste Annaeherung %d", s12.n, R38_NAEHER_TOR,
-              s12.naeher, s12.klemme, s12.klemme_bit, s12.min_naeher);
+        PRUEF(ok5, "ROOM1030 Cut 12: jeder Zombie, der aufrecht ins Warte-Rechteck kommt, bekommt das Kriech-Bit (sub06/sub07-Regel)"
+              " (%d von %d)", s12.kriech_bekommen, s12.kriech_noetig);
+        PRUEF(ok6, "ROOM1030 Cut 12: alle %d Zombies vor der Kamera kommen ihr mindestens %d naeher (%d, kleinste %d) und in beiden "
+              "Haelften je mindestens %d (%d, kleinste Haelfte %d)%s", s12.n, R38_NAEHER_TOR, s12.naeher, s12.min_naeher,
+              R38_NAEHER_HALB, s12.halb, s12.min_halb, pflicht ? "" : " [Haelften RE1.5-KI: nur gemeldet]");
         PRUEF(ok7, "ROOM1030: Spieler-HP unveraendert (min Cut 7 %d, Cut 12 %d)", a7 ? a7->hp_min : -1, a12 ? a12->hp_min : -1);
         PRUEF(ok8, "ROOM1030 Cut 12: der geparkte Spieler steht auf der Kameraachse (%d,%d) = Parkplatz (%d,%d)", a12 ? (int)a12->px : 0,
               a12 ? (int)a12->pz : 0, RE15_R38_PARK_1030_12_X, RE15_R38_PARK_1030_12_Z);
         printf("  ROOM1030 Cut 12: %d von %d unter dem Tor durch (Endlage z > %d)\n", s12.durchs_tor, s12.n, R38_TOR_NORD);
     }
-    return !ok1 + !ok2 + !ok3 + !ok4 + !ok5 + !ok6 + !ok7 + !ok8;
+    return !ok1 + !ok2 + !ok3 + !ok4 + !ok5 + !ok6 + !ok7 + !ok8 + !ok9;
 }
 
 /* ---- Montage-Schritte im Prozess ----------------------------------------------------------------------------------- */
@@ -509,10 +556,9 @@ static void teil_s1030(re15_ai_flavor_t fl)
     bew_t g7 = bewerte(sp, n, 0x1030, 7, k_bits_1070, 5, R38_NAEHER_MIN, "Gegenprobe v0.8.25 (Zaehlung)", re15_r38_abschnitt_bilder(0x1030, 7));
     PRUEF(verfehlt > 0 && g7.n == 5 && g7.naeher == 0, "Gegenprobe Stand v0.8.25 (grid 0x00, alter Parkplatz) ist ROT: auf Cut 7 kommt keine "
           "Kopie naeher (%d von %d), %d Kriterien verfehlt", g7.naeher, g7.n, verfehlt);
-    PRUEF(g12.kriech_bekommen == 0 && g12.durchs_tor < j12.durchs_tor, "Gegenprobe v0.8.25 auf Cut 12: kein aufrechter Zombie kriecht "
-          "(%d von %d), unter dem Tor durch %d (jetzt %d)", g12.kriech_bekommen, g12.kriech_noetig, g12.durchs_tor, j12.durchs_tor);
-    PRUEF(j12.klemme == 0 || (g12.klemme == 1 && g12.klemme_bit == j12.klemme_bit), "Klemme an SCA 30 vorbestehend: jetzt Bit %d, "
-          "Gegenprobe v0.8.25 Bit %d (%d)", j12.klemme_bit, g12.klemme_bit, g12.klemme);
+    PRUEF(g12.kriech_bekommen == 0 && g12.halb < g12.n, "Gegenprobe v0.8.25 auf Cut 12 ist ROT: kein aufrechter Zombie kriecht "
+          "(%d von %d), in beiden Haelften naeher nur %d von %d (jetzt %d von %d)", g12.kriech_bekommen, g12.kriech_noetig,
+          g12.halb, g12.n, j12.halb, j12.n);
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 }
 
@@ -544,10 +590,14 @@ static void teil_s1030_ohne7(re15_ai_flavor_t fl)
     bew_t s12 = bewerte(sp, n, 0x1030, 12, NULL, 0, R38_NAEHER_TOR, "jetzt", a12 ? a12->bilder : -1);
     PRUEF(a12 && !abschnitt(ab, nab, 0x1030, 7) && re15_r38_fremde_kamera() == 0, "ROOM1030 ohne Cut-7-Teil: nur Cut 12 (%d Bilder), "
           "keine andere Kamera (%d Bilder)", a12 ? a12->bilder : -1, re15_r38_fremde_kamera());
-    PRUEF(s12.n >= 9 && s12.kriech_noetig >= 1 && s12.kriech_bekommen == s12.kriech_noetig, "Cut 12: jeder aufrechte Zombie vor der "
-          "Kamera bekommt das Kriech-Bit (%d von %d)", s12.kriech_bekommen, s12.kriech_noetig);
-    PRUEF(s12.n >= 9 && s12.naeher + s12.klemme == s12.n && s12.klemme <= 1, "Cut 12: alle %d kommen mindestens %d naeher (%d), ausser "
-          "hoechstens einer Klemme an SCA 30 (%d); kleinste %d", s12.n, R38_NAEHER_TOR, s12.naeher, s12.klemme, s12.min_naeher);
+    PRUEF(s12.n >= 9 && s12.kriech_noetig >= 1 && s12.kriech_bekommen == s12.kriech_noetig, "Cut 12: jeder Zombie, der aufrecht ins "
+          "Warte-Rechteck kommt, bekommt das Kriech-Bit (%d von %d)", s12.kriech_bekommen, s12.kriech_noetig);
+    {
+        const int pflicht = !a12 || a12->ki_re2;
+        PRUEF(s12.n >= 9 && s12.naeher == s12.n && (s12.halb == s12.n || !pflicht), "Cut 12: alle %d kommen mindestens %d naeher (%d,"
+              " kleinste %d) und in beiden Haelften je mindestens %d (%d, kleinste Haelfte %d)%s", s12.n, R38_NAEHER_TOR, s12.naeher,
+              s12.min_naeher, R38_NAEHER_HALB, s12.halb, s12.min_halb, pflicht ? "" : " [Haelften RE1.5-KI: nur gemeldet]");
+    }
     PRUEF(s12.stopp_vorn == 0 && a12 && a12->hp_min == 100 && L.hp_min == 100, "Cut 12: Einzelstopp nur hinter der Kamera (%d), Spieler-HP "
           "unveraendert (min %d)", s12.stopp_vorn, L.hp_min);
     PRUEF(a12 && labs((long)a12->px - RE15_R38_PARK_1030_12_X) <= 1 && labs((long)a12->pz - RE15_R38_PARK_1030_12_Z) <= 1,
@@ -558,8 +608,9 @@ static void teil_s1030_ohne7(re15_ai_flavor_t fl)
     n = re15_r38_spuren(&sp); nab = re15_r38_abschnitte(&ab);
     a12 = abschnitt(ab, nab, 0x1030, 12);
     bew_t g12 = bewerte(sp, n, 0x1030, 12, NULL, 0, R38_NAEHER_TOR, "Gegenprobe v0.8.25", a12 ? a12->bilder : -1);
-    PRUEF(g12.kriech_bekommen == 0 && g12.naeher + g12.klemme < g12.n, "Gegenprobe v0.8.25 ist ROT: kein aufrechter Zombie kriecht "
-          "(%d von %d), naeher %d + Klemme %d von %d", g12.kriech_bekommen, g12.kriech_noetig, g12.naeher, g12.klemme, g12.n);
+    PRUEF(g12.kriech_bekommen == 0 && g12.halb < g12.n, "Gegenprobe v0.8.25 ist ROT: kein aufrechter Zombie kriecht (%d von %d), "
+          "in beiden Haelften naeher nur %d von %d (die aufrechten stehen nach der Haelfte am Tor)", g12.kriech_bekommen,
+          g12.kriech_noetig, g12.halb, g12.n);
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 }
 
@@ -630,23 +681,24 @@ static int teil_auswerten(const char *dir)
         if (m) {
             unsigned raum = 0; int cut = 0, bild = 0;
             re15_r38_spur_t s; memset(&s, 0, sizeof s);
-            int aktor, typ, bit, d0, d1, t0, t1, b0, b1, ang, vor, k0, kr, x1, z1;
-            if (sscanf(m, "[montage-r38] ROOM%x Cut %d Bild %d: Aktor %d Typ %x Bit %d Abstand zur Kamera %d -> %d (Tiefe %d -> %d, "
-                          "Bild %d..%d) angehalten %d vorher %d Kriech %d/%d Lage (%d,%d)", &raum, &cut, &bild, &aktor, &typ, &bit,
-                       &d0, &d1, &t0, &t1, &b0, &b1, &ang, &vor, &k0, &kr, &x1, &z1) == 18 && n < 256) {
+            int aktor, typ, bit, d0, dm, d1, t0, t1, b0, b1, ang, vor, k0, kr, wa, x1, z1;
+            if (sscanf(m, "[montage-r38] ROOM%x Cut %d Bild %d: Aktor %d Typ %x Bit %d Abstand zur Kamera %d -> %d -> %d (Tiefe %d -> %d, "
+                          "Bild %d..%d) angehalten %d vorher %d Kriech %d/%d Warte %d Lage (%d,%d)", &raum, &cut, &bild, &aktor, &typ, &bit,
+                       &d0, &dm, &d1, &t0, &t1, &b0, &b1, &ang, &vor, &k0, &kr, &wa, &x1, &z1) == 20 && n < 256) {
                 s.raum = (uint16_t)raum; s.cut = (uint8_t)cut; s.aktor = (uint8_t)aktor; s.typ = (uint8_t)typ; s.bit = (uint8_t)bit;
-                s.d0 = d0; s.d1 = d1; s.t0 = t0; s.t1 = t1; s.bild0 = b0; s.bild1 = b1; s.angehalten = ang; s.halt0 = (uint8_t)vor;
-                s.kriech0 = (uint8_t)k0; s.kriecht = kr; s.x1 = x1; s.z1 = z1;
+                s.d0 = d0; s.dm = dm; s.d1 = d1; s.t0 = t0; s.t1 = t1; s.bild0 = b0; s.bild1 = b1; s.angehalten = ang;
+                s.halt0 = (uint8_t)vor; s.kriech0 = (uint8_t)k0; s.kriecht = kr; s.warte = wa; s.x1 = x1; s.z1 = z1;
                 s_ls[n++] = s;
                 continue;
             }
             int px, pz, hp, zf, kri;
-            if (sscanf(m, "[montage-r38] ROOM%x Cut %d Ende Bild %d: Spieler (%d,%d) HP min %d, Navigator-Ziel fremd %d, Kriech-Regel %d",
-                       &raum, &cut, &bild, &px, &pz, &hp, &zf, &kri) == 8 && nab < 16) {
+            char ki[16] = "";
+            if (sscanf(m, "[montage-r38] ROOM%x Cut %d Ende Bild %d: Spieler (%d,%d) HP min %d, Navigator-Ziel fremd %d, Kriech-Regel %d,"
+                          " KI %15s", &raum, &cut, &bild, &px, &pz, &hp, &zf, &kri, ki) == 9 && nab < 16) {
                 re15_r38_abschnitt_t *a = &s_lab[nab++];
                 memset(a, 0, sizeof *a);
                 a->raum = (uint16_t)raum; a->cut = (uint8_t)cut; a->bilder = bild; a->px = px; a->pz = pz; a->hp_min = hp;
-                a->ziel_fremd = zf; a->kriech = kri;
+                a->ziel_fremd = zf; a->kriech = kri; a->ki_re2 = (uint8_t)(strcmp(ki, "RE2") == 0);
                 continue;
             }
             if (strstr(m, "ausserhalb der Montage-Schnitte")) { fremd++; printf("  %s", m); }
@@ -687,6 +739,7 @@ int main(int argc, char **argv)
     }
     if (argc > 2 && !strcmp(argv[2], "mess")) g_mess = 1;
     if (g_mess && argc > 3) g_spur = atoi(argv[3]);
+    if (g_mess && argc > 4 && atoi(argv[4]) > 0) g_spur_takt = atoi(argv[4]);
     int alle = !strcmp(teil, "alle");
     if (alle || !strcmp(teil, "kameras"))   teil_kameras();
     if (alle || !strcmp(teil, "s1130_re2"))  teil_s1130(RE15_AI_FLAVOR_RE2);

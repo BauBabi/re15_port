@@ -58,6 +58,11 @@ static const re15_r38_kamera_t *kamera(uint16_t raum, int cut)
 /* ---- Messung ------------------------------------------------------------------------------------------------------ */
 #define R38_MAX_SPUREN 128
 static re15_r38_spur_t s_spur[R38_MAX_SPUREN];
+/* Abstand je Spur im 16-Bilder-Raster ab bild0 (Mitte der Sichtzeit = dm); 48 Proben = 768 Bilder (der laengste Montage-
+ * Schnitt, das Rolltor, dauert 405). uint16: Abstaende in einem Raum < 65536. */
+#define R38_PROBE_TAKT 16
+#define R38_PROBEN     48
+static uint16_t s_probe[R38_MAX_SPUREN][R38_PROBEN];
 static int s_n_spur = 0;
 static const re15_r38_kamera_t *s_offen = NULL;   /* laufender Abschnitt */
 static int s_offen_von = 0;                        /* erster Spur-Index des Abschnitts */
@@ -69,12 +74,46 @@ static re15_r38_abschnitt_t s_ab_offen;            /* laufender Abschnitt (Kopf)
 static int s_fremde_kamera = 0;                    /* Bilder eines Montage-Schritts auf einer Kamera ausserhalb der Tabelle */
 #define R38_PFAD_TAKT 7                            /* FUN_80039e7c +0x91: `ori v0,v1,0x7` @0x80039eb8 */
 static uint8_t s_ziel_lauf[RE15_ACTOR_MAX];        /* Bilder in Folge mit fremdem Navigator-Ziel je Aktor */
+static uint8_t s_wartet[RE15_ACTOR_MAX];           /* Baustein 5: von DIESER Regel angehalten (nur diese gibt sie frei) */
 
 void re15_r38_montage_reset(void)
 {
     s_n_spur = 0; s_offen = NULL; s_offen_von = 0; s_bild = 0; s_n_ab = 0; s_fremde_kamera = 0;
     memset(&s_ab_offen, 0, sizeof s_ab_offen);
     memset(s_ziel_lauf, 0, sizeof s_ziel_lauf);
+    memset(s_wartet, 0, sizeof s_wartet);
+}
+
+/* Baustein 5 (re15_montage_r38.h): im Montage-Schritt ROOM1030 halten die Zombies HINTER DEM TOR (BLK-Zonen 0 und 10)
+ * still, solange ein anderer Schnitt als das Tor (Cut 12) zu sehen ist; mit dem ersten Bild von Cut 12 laufen sie los.
+ * Form ROOM1141 sub02: `34 0c 30 00` (Member_set(12,0x30) = entity+0x9 Bit 0x20) @0x00E70/@0x00E78 unmittelbar vor
+ * `29 00` (Cut_chg 0) @0x00E80, Freigabe `34 0c 10 00` @0x00F64/@0x00F74; Wirkung @0x80100450-5c (Takt uebersprungen). */
+static void tor_warten(const re15_r38_kamera_t *k)
+{
+    const int tor_schnitt = (k && k->cut == RE15_R38_KRIECH_CUT);
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *a = &g_actors[i];
+        if (!a->active || !a->type || !re15_re2z_owns_type(a->type)) { s_wartet[i] = 0; continue; }
+        if (tor_schnitt) {
+            if (!s_wartet[i]) continue;
+            a->grid_id = (uint8_t)(a->grid_id & ~RE15_AI_GRID_SKIP);              /* Freigabe @0x00F64 */
+            s_wartet[i] = 0;
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[montage-r38] ROOM%04X Cut %d: Aktor %d hinter dem Tor freigegeben (entity+0x9 &= ~0x20) bei (%d,%d)\n",
+                    (unsigned)RE15_IT_RAUM_1030, RE15_R38_KRIECH_CUT, i, (int)a->x, (int)a->z);
+#endif
+            continue;
+        }
+        if (s_wartet[i] || (a->grid_id & RE15_AI_GRID_SKIP)) continue;
+        const uint8_t zone = re15_nav_zone_from_pos((int16_t)a->x, (int16_t)a->z);
+        if (zone != RE15_R38_ZONE_HINTER_TOR_A && zone != RE15_R38_ZONE_HINTER_TOR_B) continue;
+        a->grid_id = (uint8_t)(a->grid_id | RE15_AI_GRID_SKIP);                   /* @0x00E70: Bit 0x20 */
+        s_wartet[i] = 1;
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[montage-r38] ROOM%04X Cut %d: Aktor %d hinter dem Tor (Zone %d) wartet auf Cut %d (entity+0x9 |= 0x20)"
+                " bei (%d,%d)\n", (unsigned)RE15_IT_RAUM_1030, k ? (int)k->cut : -1, i, zone, RE15_R38_KRIECH_CUT, (int)a->x, (int)a->z);
+#endif
+    }
 }
 
 /* Den laufenden Abschnitt schliessen (Riegel im Prozess: der Lauf endet mit der Tuer-Anforderung, bevor der naechste
@@ -108,18 +147,24 @@ static void abschnitt_schliessen(void)
 {
     if (!s_offen) return;
     s_ab_offen.bilder = s_bild;
+    for (int i = s_offen_von; i < s_n_spur; i++) {          /* Mitte der eigenen Sichtzeit (16er-Raster, abgerundet) */
+        re15_r38_spur_t *p = &s_spur[i];
+        int k = ((p->bild1 - p->bild0) / 2) / R38_PROBE_TAKT;
+        if (k >= R38_PROBEN) k = R38_PROBEN - 1;
+        p->dm = (int32_t)s_probe[i][k];
+    }
     if (s_n_ab < R38_MAX_ABSCHNITTE) s_ab[s_n_ab++] = s_ab_offen;
 #ifdef RE15_PLATFORM_PC
     for (int i = s_offen_von; i < s_n_spur; i++) {
         const re15_r38_spur_t *p = &s_spur[i];
-        fprintf(stderr, "[montage-r38] ROOM%04X Cut %d Bild %d: Aktor %d Typ %02x Bit %d Abstand zur Kamera %d -> %d"
-                " (Tiefe %d -> %d, Bild %d..%d) angehalten %d vorher %d Kriech %d/%d Lage (%d,%d)\n", (unsigned)p->raum, p->cut,
-                s_bild, p->aktor, p->typ, p->bit, (int)p->d0, (int)p->d1, (int)p->t0, (int)p->t1, p->bild0, p->bild1,
-                p->angehalten, p->halt0, p->kriech0, p->kriecht, (int)p->x1, (int)p->z1);
+        fprintf(stderr, "[montage-r38] ROOM%04X Cut %d Bild %d: Aktor %d Typ %02x Bit %d Abstand zur Kamera %d -> %d -> %d"
+                " (Tiefe %d -> %d, Bild %d..%d) angehalten %d vorher %d Kriech %d/%d Warte %d Lage (%d,%d)\n", (unsigned)p->raum,
+                p->cut, s_bild, p->aktor, p->typ, p->bit, (int)p->d0, (int)p->dm, (int)p->d1, (int)p->t0, (int)p->t1, p->bild0,
+                p->bild1, p->angehalten, p->halt0, p->kriech0, p->kriecht, p->warte, (int)p->x1, (int)p->z1);
     }
-    fprintf(stderr, "[montage-r38] ROOM%04X Cut %d Ende Bild %d: Spieler (%d,%d) HP min %d, Navigator-Ziel fremd %d, Kriech-Regel %d\n",
-            (unsigned)s_ab_offen.raum, s_ab_offen.cut, s_bild, (int)s_ab_offen.px, (int)s_ab_offen.pz, s_ab_offen.hp_min,
-            s_ab_offen.ziel_fremd, s_ab_offen.kriech);
+    fprintf(stderr, "[montage-r38] ROOM%04X Cut %d Ende Bild %d: Spieler (%d,%d) HP min %d, Navigator-Ziel fremd %d, Kriech-Regel %d,"
+            " KI %s\n", (unsigned)s_ab_offen.raum, s_ab_offen.cut, s_bild, (int)s_ab_offen.px, (int)s_ab_offen.pz, s_ab_offen.hp_min,
+            s_ab_offen.ziel_fremd, s_ab_offen.kriech, s_ab_offen.ki_re2 ? "RE2" : "RE1.5");
 #endif
     s_offen = NULL;
 }
@@ -180,6 +225,9 @@ void re15_r38_montage_takt(void)
 #endif
         s_fremd_alt = fremd;
     }
+    /* Baustein 5: vor der Messung, damit das erste Bild von Cut 12 die Freigegebenen als laufend sieht */
+    if (s_an && raum_soll == RE15_IT_RAUM_1030 && (int)(uint16_t)g_current_room_id == raum_soll) tor_warten(k);
+    else memset(s_wartet, 0, sizeof s_wartet);
     if (k != s_offen) {                                   /* Schnitt- oder Raumwechsel: Abschnitt wechseln */
         abschnitt_schliessen();
         if (k) {
@@ -187,6 +235,7 @@ void re15_r38_montage_takt(void)
             memset(&s_ab_offen, 0, sizeof s_ab_offen);
             memset(s_ziel_lauf, 0, sizeof s_ziel_lauf);
             s_ab_offen.raum = k->raum; s_ab_offen.cut = k->cut; s_ab_offen.hp_min = 1 << 30;
+            s_ab_offen.ki_re2 = (uint8_t)(re15_ai_re2_for_type(0x10) ? 1 : 0);   /* Zombie-Familie 0x10/0x11/0x16 */
         }
     }
     if (!k) return;
@@ -226,6 +275,11 @@ void re15_r38_montage_takt(void)
             p->t1 = (int32_t)lround((double)tiefe / fn);
             p->x1 = a->x; p->z1 = a->z;
             if (p->bild0 == s_bild) { p->d0 = p->d1; p->t0 = p->t1; }
+            {   const int rel = s_bild - p->bild0;
+                if (rel % R38_PROBE_TAKT == 0 && rel / R38_PROBE_TAKT < R38_PROBEN)
+                    s_probe[p - s_spur][rel / R38_PROBE_TAKT] = (uint16_t)(p->d1 < 65535 ? p->d1 : 65535); }
+            if (!p->warte && a->member_0b == RE15_R38_WARTE_STEMPEL && !(a->anim_flags & RE15_R38_KRIECH_BIT))
+                p->warte = s_bild;                                /* aufrecht im Warte-Rechteck (@0x024E0) */
         }
         /* Baustein 3: Einzelstopp hinter der Bildebene (entity+0x9 |= 0x20, @0x80100450-5c) — nur in den Schnitten mit
          * halt = 1 (der Rolltor-Schnitt behaelt seine Regel in irons_tod_1150.c bilanz_takt). */
