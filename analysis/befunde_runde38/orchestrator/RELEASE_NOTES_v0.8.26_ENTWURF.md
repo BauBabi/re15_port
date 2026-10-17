@@ -72,6 +72,12 @@ vorbeirennen; aus diesem Gang greifen sie zu. Das gilt fuer alle Zombies, auch d
 Treffer erholen sie sich wie in RE2 (vorher setzte ihr Gang nach jedem Treffer neu an). Mit dem Messer bleibt es je
 Anmarsch etwa gleich schwer (plus/minus ein Treffer, je nach Schlagtakt).
 
+**Keine Angriffe mehr in Szenen, in denen Sie sich nicht bewegen koennen.** Solange eine Szene Leon (oder Elza)
+festhaelt, greifen Gegner nicht an - sie laufen, kreisen oder knurren, Kraehen im Anflug drehen ab. Das gilt fuer
+alle Gegnerarten, nicht nur fuer die Hunde in ROOM1190 und ROOM11D0. Ist der Angriff selbst Teil der Szene (Elzas
+Kraehe auf dem Hubschrauberlandeplatz), bleibt er. Nach der Szene greifen die Gegner wieder normal an; die
+Zwingerhunde in ROOM1190 beissen wie im Original erst vier Sekunden nach ihrer Landung.
+
 **ROOM11B0, Marvin und der Container.** Marvin sagt jetzt "But, hold on...". Das gemeinsame Verschieben hat einen
 Schiebe-Ton - derselbe, den Leon beim Kistenschieben in ROOM1090 hoert (die Tonbank von 11B0 ist an dieser Stelle im
 Original leer, die Szene war dort also stumm). Die "Fall"-Bewegung war ein Port-Fehler: Marvin sackte im letzten
@@ -84,6 +90,11 @@ Bild des Schiebens noch einmal in die tiefe Schiebehaltung; jetzt bleibt er in s
 
 * Verdeckung Stages 3-6: rund ein Fuenftel der ergaenzten Masken bleibt aus, damit keine Figur VOR einem Objekt uebermalt
   wird; volle Verdeckung braeuchte Freistellungen wie in Stage 1. An einer Bodenkante in ROOM5090 bleiben einzelne Pixel.
+
+* Bekannt, nicht beauftragt (alte Abweichung, auch in v0.8.25): Bei kurzen Skript-Bewegungen ohne Text (z.B.
+  ROOM1230, Leon hockt sich eine Sekunde vor der Nachricht hin) kann Leon im Port schon laufen, im Original nicht.
+  In diesen Momenten greifen Gegner deshalb normal an. Die Korrektur braucht eine eigene Durchsicht aller
+  Skript-Bewegungen.
 
 ## Zu entscheiden
 
