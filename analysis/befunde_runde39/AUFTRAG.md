@@ -1,0 +1,64 @@
+# Runde 39 — Auftrag des Nutzers (woertlich, 2026-10-17 ~22:00, Antwort im Release-Dialog v0.8.26)
+
+Nutzer-Vorgabe zum Ablauf: "Schließe die vorherigen Punkte ab, Release und dann bauen wir mit all den neuen Punkten die
+nächste Version" — also erst v0.8.26 (Runde 38) releasen, DANN diese Liste als naechste Version. "Baue erst einmal fertig,
+nutze diese und baue das Stück für Stück, damit nicht zu viel Tokens verbrannt werden, wenn das Limit erreicht ist."
+Rekorder: "ich wollte erst Irons_Rekorder_Sound2.wav nehmen statt Irons_Rekorder_Sound1.wav, habe mich dann aber zunächst
+doch dagegen entschieden. Es bleibt erst einmal wie es ist."
+Dazu offen aus Runde 38: Zweig r38/testtempo (Test-Parallelitaet + Test-Turbo, Workflow wf_8317b9d7-a4e angehalten, Umsetzung
+f4412ec1 / a0619152 committet, Messreihen + Pruefung fehlen), NACHLAUF analysis/befunde_runde38/NACHLAUF.md.
+
+## Liste (woertlich)
+
+- In Room 1050 wird das Voiceover nicht abgespielt von vor dem Retten von Ada - das ich unter main09-main11 abgelegt habe. Also die Voiceovers für unsere neue Cutscene
+- In Room 1000 möchte ich im Spind, wo vorher der Feuerlöscher drin war jetzt einmal Handfeuerwaffen Munition drin haben. Erst danach den text "Nothing useful", den du jetzt schon hast.
+- Memory Cards sind noch nicht Stapelbar, das ist falsch, alles mit einer Zahl dran an amounts was gleich ist muss stapelbar sein.
+- Zombies die halb am aufstehen sind, sind nicht treffbar. Das ist so im Original Resident Evil 2 auf jeden Fall nicht.
+- Zombies sind über den Tisch hinweg nicht treffbar. Das darf so nicht sein
+- Wenn der Spieler verletzt wurde, hat dann kaputte Klamotten und heilt sich aber wieder vollständig - zum Beispiel mit Heilspray - dann muss er auch wieder die ganzen Klamotten haben.
+- Das Auto Aim darf nicht gelten für Gegner die der Spieler sonst garnicht sehen könnte, zum Beispiel wenn sie um die Ecke sind und nicht mal ansatzweise in Leons Blickfeld mit Wand davor.
+- In Room 10F0 fehlt noch beim öffnen der Schublade der Sound. Den könnte man zum Beispiel aus Resident Evil 2 holen, wenn dort eine Schublade geöffnet wird.
+- In Room 1090, wenn die Hunde in der Cutscene rein gesprungen wird, fehlt noch der Sound vom öffnenden Gitter, den könnte man von den öffnenden Gittern der Spinnen aus STAGE2 holen.
+- In Room 1090 fehlt noch Sound für den bewegenden Schrank nach dem lösen des Rätsels. Den könnte man aus Resident Evil 2 holen von den bewegenden Regalen in der 2. Etage.
+- Ich habe noch mal einen Marker mit F9 gemacht. Leon ist immer noch vom Boden überdeckt an den einen Streifen.
+- Der Schlüssel im Raum 10F0 und 10F1 sollte schon kleiner/subtiler sein, wie er dran hängt, nicht so riesig.
+- Die Voiceovers für die letzte Cutscene in ROOM 1150, wenn Irons stirbt sind nicht drin....
+- In ROOM 11B0 bei der finalen Cutscene mit Ada und Marvin, fehlt das neue Voiceover von But hold on und I want to make sure we don't have any unexpected Visitors. Was dir eigentlich vorliegt.
+- Die Gorillas beim Parking Lot können ruhig doppelt so viel Energie haben. Außerdem sollten sie erst die flinch Animation machen, wenn sie von der Energie her 3x mit der Handfeuerwaffe getroffen wurden, nicht bei jeden Schuss.
+- Der "Poison" Zustand ist zwar jetzt da, aber er zieht keine Energie ab Stück für Stück, so wie im Originalen Resident Evil 2. Zumindest zeigt er es vom EKG her nicht so an. Da ist noch ein Fehler.
+- Bei den Maps des Police Departement passt es noch nicht so ganz. Also, ich habe dir Dateien hinterlegt:
+	- map3F_correct.png, map2F_correct.png, map1F_correct.png, mapB2_correct.png. Dort ist immer links, wie es bei uns aussieht und rechts wie es eigentlich aussehen sollte. Keine Doppelwände, Tür immer genau auf Wand platziert, treppen nicht in der Wand platziert usw. Und natürlich muss der Spielermarker da entsprechend passen. Der Room B1 den habe ich nicht gemacht. Da muss du generell noch einmal schauen, da passt nichts so richtig zusammen mit dem wie man sich bewegt im Vergleich zu der Karte. Die Karte von B1 ist noch ziemlicher schrott.
+- Bei Elza, direkt in ROOM 1031 in der 1. Cutscene direkt am Anfang hebt sie die Hand aus irgendeinen Grund 2x, also lässt sie einmal fallen zwischendurch und hebt sie nochmal. Im Original hebt sie die Hand nur einmal und senkt sie dann wieder.
+- Elza hat im Player Inventory noch das Bild und die Karte von Leon oben drin.
+- Bei Elza, nach aufnehmen von Roys Diary muss direkt die Karte kommen, mit den Markern wo man hin muss, noch bevor das Spiel zum bewegen wieder zurückgeben wird nach dem schließen des Tagebuchs.
+- Elza kann in ROOM 1090 bei dem Feuerlöscher, bei dem ausgebrannten Fahrzeug hochklettern warum auch immer... das ist falsch...
+- Wenn ich einmal von einem Hund gerade angegriffen/gebissen werde, soll ich nicht parallel noch von anderen Hunden angegriffen/gebissen werden können, wenn ich mich nicht wehren kann, so zum Beispiel bei Room 1090.
+- Die Zombies in ROOM 1220/1221 und in ROOM 1010 die am Boden liegen kriechen im Original. Das sollen sie bei uns auch.
+- In ROOM 1090 ist Leons Positionsmarker der Map außerhalb des aktuellen Raums.
+
+- Ich habe die gelbe Karte bei Elza noch, obwohl ich gesagt habe "discard".
+- In Room 10F1 möchte ich, das wenn Elza ihn betritt eine Cutscene läuft wo sie Rechts zum Kommunikationssystem geht und von der Animation her drauf drückt und sagt "Hello, anyone, can you hear me? We Need help!"
+- Dann kommt "..."
+- Dann "Uhh, this Thing is broken!".
+- Suche die dir passenden Animationen dafür heraus.
+- Mit Room 1141 bin ich noch überhaupt nicht zufrieden:
+	- 1. kommen komische Zombie Geräusche im Hintergrund, die will ich nicht. Es gibt ja keine Zombies.
+	- 2. Finde ich es doch besser, wenn John durch die Tür kommt, statt durch das Tor. Es macht keinen Sinn das er dazwischen rein kam. Kannst du nicht während des Tür öffnens die Kamera vorne auf Elza irgendwie machen, dann Tür schließen Sound und dann Kamera auf Tür, wo John bereits da ist?
+	- 3. Du hast irgendeinen komischen shout voiceover für John eingebaut. Denn will ich nicht.
+	- 4. Ich möchte das du immer im Mix mit einigen Abständen die Voiceovers 1-5 stattdessen abspielst. Dazwischen möchte ich das du immer wieder ein mehrfachen Klopf gegen Tür Sound abspielst, den du aktuell noch garnicht hier drin hast.
+	- 5. Ich möchte das Elza darauf reagiert, das sie das das erste mal hört wenn du den Raum betrittst. Sie soll sowas sagen wie "Oh, no, this is Roy! He is in Trouble, I have to help him!".
+	- 6. Vor Elzas "What was that?" Möchte ich das du einen Scheiben zerspringen Sound abspielst.
+	- 7. Bei Johns Text "It's some Kind of Gorilla...." schaut er ab da nicht mehr vernünftig zu Elza. Das musst du fixen.
+	- 8. Nachdem die Monkeys tot sind, rennt John einfach raus. Das macht keinen Sinn. Da muss schon noch etwas kommen wie: "John: Puuuh, that was close! I thought we end up as Gorilla meal….".
+	- "John: Elza, follow me, I think I might have found a way out of here!".
+	- Alles natürlich mit passenden Animationen.
+- Wenn man ROOM 1141 danach verlässt zu room 1171 kommt am anfang noch kurz die Panik Musik. Warum auch immer...
+- Wenn John in Room 1171 sagt - "Elza hurry up" macht er so eine komische Kletter Animation statt der ran wink Animation, die er im Original nicht macht. Auch sonst scheinen die Animationen hier noch nicht ganz zu passen.
+- Bei "Alright, let's get down from here" fehlt aus irgendeinen Grund mal wieder das Voiceover.
+
+## Hinweise des Orchestrators (beim Sichern, ohne Wertung)
+- Die Hilferufe in ROOM1141 meint Punkt 4: synchro/STAGE1/room1141/help01..05.wav (Nutzer, 2026-10-17 13:17-13:20).
+- Neue, nach Namensregel automatisch genutzte Aufnahmen liegen in synchro/STAGE2/room2001 (main02..05), synchro/STAGE3/room3000
+  (main02..08), synchro/STAGE1/room1241.
+- Karten-Vorlagen: map1F_correct.png, map2F_correct.png, map3F_correct.png, mapB2_correct.png (Repo-Wurzel bzw. nutzer/ - beim
+  Start der Runde suchen und committen).
