@@ -151,4 +151,27 @@ Bild unter 0.80. An den Wechseln zeigt das Dumpbild noch den alten Schnitt: `F13
 bg12=0.8288`, `F1663 bg11=0.9414`. Die Erklaerung des Bau-Agenten (Zustandslog ein Bild vor dem Bild) stimmt; in
 keinem einzigen Bild steht der Rolladen vor der Kamera.
 
-(weitere Abschnitte folgen: Testgruppen, Vertrag, Urteil)
+### 5.5 ROOM20A0 neu gegen v0.8.25, ganzer Tuerweg
+`diff_dumps.py t1_tuer_leon t2_tuer_leon_v0825` (331 Bilder, max|d| > 24) je Cut: Cut 15 2 px, Cut 1 27 px, Cut 2
+104..107 px (Rueckseiten des Typ-3-Rolladens obj 4 oben links, Bild `tuer_vergleich_cut2_12.png`), Cut 12 7..71 px
+(Kanten von Kiste/Rolladen; Ausnahme F1610 = Umschaltbild mit Cut-11-Inhalt), **Cut 11 32629..36499 px** (der Fix).
+Keine weitere sichtbare Aenderung im Raum.
+
+## 6. Vertrag (VERTRAG.md)
+
+* Pfade (`git diff master...HEAD --name-only`): keine `release/`, `platform/android/`, `shared_assets/PSX/`, keine
+  Test-CMakeLists; Registrierung ueber `tests/unit/probes/r38_rolltor20a0.cmake` (Muster "Sonden je Thema").
+* Bank-9-Bits / Nachrichten-Ids / Items / Ereignisse: keine belegt (grep `game_flag_set|MSG_ID|k_port` im Diff leer).
+* Gemeinsame Datei `platform/pc/main.c`: W-Haken = 1 Include + 1 Messschienen-Aufruf + je Dreieck/Viereck der Aufruf
+  von objpoly_r38 (mit Kommentar "Runde 38 Spur W"), dafuer 34 Zeilen alte Inline-Projektion entfernt; die Logik liegt in
+  eigenen Dateien (objpoly_r38.c / objpoly_r38_pc.c). Mehr als "1-5 Zeilen", aber reine Ersetzung des Port-Ausschnitts
+  durch den Modulaufruf — vertragsgemaess im Sinn (Hinweis H2).
+* Gemergte Spur-A-Aenderungen (Auftrag des Orchestrators 2026-10-17 05:11) beruehren K-Dateien (`schluessel_r36.c/.h`,
+  `gen/feuerloescher_r37.inc`). Lesender Merge-Test `git merge-tree <base> r38/integration HEAD` (Integrationsbaum
+  97490964 mit K): Konflikte NUR in `schluessel_r36.c` (Lage-Zeilen A gegen K), `re15_schluessel_r36.h` (A-Konstanten
+  gegen K's Entfernung) und `main.c` (nur die Include-Zeilen, beide behalten). Die Prop-Schleife merget konfliktfrei.
+  Aufloesungsregel steht in A_cursor.md §3c ("K's Seite nehmen") und W §9.6.
+* Riegel je Punkt: unit_r38_rolltor20a0 (R1..R7, Original-Tabelle), unit_r38_rolltor20a0_windung, integration_r38_
+  rolltor20a0 (A Leon Sprung, B Elza Karte, D Leon Karte, C Kiste) — messend, gruen (§1).
+
+(weitere Abschnitte folgen: Testgruppen, Urteil)
