@@ -123,3 +123,42 @@ Kein Original-Vorbild fuer "Ziel = Kamera" (RE1.5 hat die Montage nicht) -> NUTZ
   re15_actor_set_member).
 * RID-Bytes `xxd -s <off+4> -l 24` in ROOM1130/1040/1030.RDT: alle vier Zeilen der Kamera-Tabelle oben bytegleich;
   camera_start @0x24 = `60 00 00 00` in allen drei RDTs.
+
+## Zwischenmessung im zweiten Lauf (Stand des Vorgaengers + L-Merge, gebaut 2026-10-17 08:45, ECHTE exe)
+
+Lauf `x_kette` (O_belege/lauf.sh: Karte 1130 nach10f0 ersteszene, CONTINUE, Tuer 1130 -> 1150, Szene, Montage,
+`RE15_EXIT_AT=60#11C0`, RE15_IT_LOG=5). Auswertung `O_belege/zwischen_messung_x_kette.txt` (ausw.py) und die
+`[montage-r38]`-Zeilen des Mess-Hakens `O_belege/zwischen_montage_zeilen_x_kette.txt`. Abstand zur Kamera-Bodenprojektion
+(Anfang -> Ende des Schnitts):
+
+| Schnitt | Zombies | Ergebnis |
+|---|---|---|
+| 1130 Cut 0 (176 Bilder) | 1..5 | 6821->3961, 5648->1969, 4565->1734, 3521->438 (Stopp Bild 142), 4478->1295 (Stopp Bild 161) — alle naeher |
+| 1040 Cut 1 Rolltor (405) | 1..5 | Endlagen bitgleich mit "vorher" (7136/5663/8286/5395/7046), 5 durchs Tor (letzter Bild 270), HP 100 |
+| 1030 Cut 7 (207) | Kopien 7..11 | 8225->6268, 6154->4800, 4553->3154, 7169->5523, 5570->3869 (je -1354..-1958) |
+| 1030 Cut 12 (335) | 1..6, 12..14 | 1 -473, 2 -81, 3 -1067, 4 -2229, 5 -2558, 6 -317, 12 -2407, 13 -410, **14 -12** |
+
+**Befund 1 (Cut 7, Defekt des Vorgaengers): Navigator-Ziel VERALTET.** In den Messzeilen steuern ab T590 ALLE Zombies in
+ROOM1030 auf (-24950,-14060) = die Spielerlage des VORIGEN Raums ROOM1040 (Parkplatz 1040). Ursache (gelesen +
+nachgerechnet): der neue Parkplatz (-30708,-1699) liegt AUSSERHALB jeder BLK-Zone von ROOM1030 (`O_belege/blk.py`: Zone 7
+@0x01C10 x -29340..-19550, z -6000..-1190 ist die westlichste) -> re15_nav_zone_from_pos = 0xff -> FUN_8003a524 kehrt ohne
+Ausgabe zurueck und FUN_80039e7c kopiert die geteilten Globals 0x800AFBAE/B0/B2 UNBEDINGT (nav_zone_common.c
+"stale-on-unreachable is byte-true") = das Ergebnis aus ROOM1040. Die Kopien liefen deshalb zur Suedwand SCA 4
+(z -5212 - Radius = -4794..-4810) und an ihr entlang, statt auf die Kamera zu. Der v0.8.25-Parkplatz (-28244,-3650) lag
+IN Zone 7 (gleiche Zone wie die Kopien -> Ziel = Spieler direkt).
+
+**Befund 2 (Cut 12): die aufrechten Zombies hinter dem Tor kommen nicht durch.** Sie steuern auf die Zonen-Uebergaenge
+(-12195,-23860) (Zone 0 -> 9) / (-8695,-23860) (Zone 0 -> 1) und stehen an der Torzelle SCA 18/28 (@0x01AE8/@0x01B60,
+z -24420..-22771) bei z = -24838 fest. Die Torzelle wird in der Szene mit `37 02 06 f7` / `37 03 06 f7` (sub08
+@0x0278E/@0x02792, Sca_id_set u0 0xff -> 0xf7) nur fuer KRIECHER durchlaessig; durch kommt nur, wer das Kriech-Bit
+(member 0x10 |= 0x1000) hat. Die Szene vergibt es viermal (Gosub sub09 x4); 1/13/14 stehen mit AOT-Stempel 5 im
+Warte-Rechteck und bekommen es nie, 3/6 stehen dahinter. Kriecher 2 haengt an der Ecke SCA 30 (x -15518..-12566) fest
+(war schon vorher so: +12).
+
+**Befund 3 (Riegel des Vorgaengers misst nicht, was die exe tut).** test_r38_montage.c setzte g_room_rdt/g_room_rdt_ok
+nie (nur eine lokale Kopie s_rdt): ohne g_room_rdt gibt es KEINEN Navigator-Graphen (nav_tbl() == 0 -> Rohziel) und
+KEINE Gegner-Wandklemme (re15_collision_constrain_enemy(&g_room_rdt, ..), vgl. probe_1030_crawl_live.c Defekt 3) -> im
+Riegel liefen die aufrechten Zombies durch das Tor (Cut 12: 9 von 9 naeher, auch in der Gegenprobe = rot) und die
+Kopien auf Cut 7 direkt zum Spieler. Ausserdem mutiert Sca_id_set das RDT im Speicher, und der Riegel lud es pro Raum
+nur einmal (zweiter Lauf im selben Prozess sah das offene Tor). Gezielte Laeufe: `unit_r38_montage_s1030_re2` und
+`_re15` ROT (Gegenprobe), die anderen gruen — die Zahlen fuer 1030 sind aber nicht die der exe.
