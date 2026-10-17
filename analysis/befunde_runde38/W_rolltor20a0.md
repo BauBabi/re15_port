@@ -23,6 +23,8 @@ Nutzer-Wortlaut (AUFTRAG.md Nachtrag 1, 2026-10-16 21:00):
 - [x] Modul-Testgruppen nach dem Merge — §9.5: 67/67 gruen
 - [x] Nachbesserung 1 (Abnahme 0, M1 + M2) — §10: halbtransparente Raum-Objekte (ABE/ABR/STP) wie im Original
   (5060/5061 Cut 4 = Original-Bild), Zensus in beide Richtungen mit Typ 3 + Eltern, MEHR-Faelle am Spiel gemessen
+- [x] N1 Fortsetzung (nach Sitzungslimit): Riegel um ABR 1 (5060 Cut 3) und Elza (5061 Cut 4) erweitert — §10.8;
+  Nutzer-Punkt nach N1 unveraendert (Cut 11 0 px gegen vor N1) — §10.9; gezielt 81/81 gruen — §10.10; Merge-Test — §10.11
 
 ## 1. Messung vorher (Port, Basis df08d83a = v0.8.25 + Doku)
 
@@ -343,6 +345,12 @@ GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
   (MAD 0.3 / 1.1, §10.6) — dort fiel keine Kachel ab.
 * Nachbesserung 1: ROOM11B0/11B1 Kiste (obj 0, einziges Objekt mit gemischten STP-Texeln) ohne Original-Bild — der
   Debug-Sprung haelt dort die Kamera fest (§10.6); Mechanik im Riegel A3 an genau dieser Textur geprueft.
+* Nachbesserung 1: ohne eigenes Original-Bild sind auch 1040/1041 (Glas 0x0012), 5030/5031 (Typ 3 0x0012), 11A0/11A1,
+  1260/1261 und die Stage-2-Raeume ausser 20A0 (Wasser 0x001a) — dieselben Attribute und Zeichner wie die gemessenen
+  Faelle 5060 obj 2-4 (0x0012) und 20A0 obj 4-6 (0x001a).
+* Integration (§10.11): main.c-Include-Zeilen beide behalten; neue Alpha-Setzer anderer Spuren muessen auf 255
+  zuruecksetzen (der beleuchtete Weg liest das Eckpunkt-Alpha jetzt); Spur N (Wasser-Spritzer) nach dem Merge im Bild
+  gegen die nun subtraktiven Wasserflaechen ansehen.
 
 ## Fuer den Nutzer
 
@@ -357,7 +365,9 @@ GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
   Spur A neu gewickelt (gleiches Bild), der Parking Lot Key in ROOM10F0 liegt jetzt mit der Vorderseite nach oben
   (wie in RE2; vorher war seine Rueckseite zu sehen).
 * Nachbesserung 1 — HALBTRANSPARENTE Raum-Objekte wie im Original (das Original mischt sie mit dem Hintergrund, der
-  Port zeichnete sie bisher deckend). Sichtbar anders als in v0.8.25, jeweils gegen das Original-Bild gemessen (§10.6):
+  Port zeichnete sie bisher deckend). Sichtbar anders als in v0.8.25. Gegen ein Original-Bild gemessen sind ROOM5060/
+  5061 Cut 4 und Cut 3, ROOM20A0 Cut 2 und Cut 3, ROOM4090 Cut 0 (§10.6, §10.8 — alle vier Mischarten der GPU); die
+  uebrigen Raeume folgen derselben Regel mit denselben Attributen (0x0012 Glas, 0x001a Wasser), ohne eigenes Original-Bild:
   - ROOM5060/5061 (Labor): die Glasscheiben dunkeln das Fenster zur Haelfte ab (vorher: Scheibe fehlte bzw. nach dem
     Rolladen-Fix ein deckend dunkles Dreieck — der Abnahme-Befund); die Licht-Bodenplatte (obj 5) leuchtet rot auf den
     Boden wie im Original (vorher eine graue deckende Platte).
@@ -366,7 +376,10 @@ GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
     als graue deckende Flaeche gemalt.
   - ROOM4090 (Kuehlraum): der Bodennebel ist hell und durchscheinend wie im Original — v0.8.25 zeigte dunkle deckende
     Schlieren ueber dem halben Bild.
-  - ROOM1040, 5030 (Glas/Roehren), 11B0 (die Kiste: in Texturhelligkeit wie im Original, einzelne Texel halbtransparent).
+  - ROOM1040, 5030 (Glas/Roehren), 11B0 (die Kiste: in Texturhelligkeit wie der Flach-Zeichner des Originals, einzelne
+    Texel halbtransparent) — Regel wie oben, kein eigenes Original-Bild (11B0: der Debug-Sprung haelt die Kamera fest).
+  - Das Kamerabild des Nutzer-Befunds (ROOM20A0/20A1 Cut 11, Rolladen offen) aendert N1 nicht: 0 Pixel gegen den Stand
+    vor N1, Leon und Elza (§10.9).
   - ROOM20A0/20A1: die vom Port aktivierte "schlafende" Effekt-Schleife am Kanalende (sub02, Auftrag 2026-08-30) liegt
     unter dem Wasser und scheint jetzt als gruene Flecken durch; vorher deckte das falsch deckende Wasser sie zu. Das
     Original startet die Schleife nie (gemessen: 0 aktive Effekte); die Flecken sind also Port-Inhalt (die Aktivierung),
@@ -720,3 +733,46 @@ integration_r37_feuerloescher) — er wird unten vollstaendig neu gefahren.
   geprueft, der Abnahme-Fall mit Leon und Elza.
   `ctest --test-dir re15_port/build -R "^(unit_r38_rolltor20a0_abe|integration_r38_rolltor20a0_abe)$" --timeout 1200
   --output-on-failure` -> **`100% tests passed, 0 tests failed out of 2`** (`Total Test time (real) = 188.95 sec`).
+
+### 10.9 Nutzer-Punkt nach N1 nicht verschlechtert (Messung, exe dieses Stands)
+
+Die Laeufe des Riegels integration_r38_rolltor20a0 (Gruppenlauf §10.10, Arbeitsordner
+`build/tests/integration/r38_rolltor20a0_wd/lauf_9e6a52c3_*`) mit `test_r38_rolltor20a0 --bild <ppm> ROOM20A.BSS 11 0`
+nachgerechnet (Bildwahl wie der Riegel: Bild UND Vorbild cam=11):
+* A Leon (Sprung) 9 Bilder F700..F1100: Raumhintergrund-Anteil **0.9424..0.9432**; B Elza 20A1 (Spielstand +
+  CONTINUE) 9 Bilder **0.9488..0.9503**; D Leon (Spielstand + CONTINUE) 9 Bilder **0.9420..0.9428** — wie vor N1
+  (§9.4: 0.942..0.950), v0.8.25 am selben Weg 0.1305.
+* Bild F850 gegen den Stand nach dem Merge (vor N1, W_belege `nachher_merge_leon20A0_cut11_F850.png` /
+  `nachher_merge_elza20A1_cut11_F850.png`): **0 Pixel verschieden** (Leon und Elza) — N1 aendert das Kamerabild des
+  Nutzer-Befunds nicht (in Cut 11 liegt kein Objekt mit Attribut & 2 im Bild). Vergleich Original | nach Merge | nach
+  N1: `W_belege/n1_20a0_cut11_orig_merge_n1.png`.
+* Kiste (Lauf C): der Riegel prueft Ausloeser und Landung (Band 2, dann Band 1) — gruen (§10.10).
+
+### 10.10 Tests (gezielt, keine volle Suite)
+
+* Eigene Riegel + Spur-A-Riegel + Testgruppen jedes beruehrten Moduls (Prop-Schleife main.c = alle Bild-/Lade-Riegel mit
+  Raum- und Port-Objekten, Hebetisch/Panels/Cursor, Loescher, Schluessel, Kisten; render_pc.c-Mischwege = re2fx,
+  Fenster-Glas 1120, ESP-Eintritt, fx_region_cull; Tueren), derselbe Ausdruck wie der Vorgaenger (81 Tests = die 67
+  der Abnahme 0 + 14: unit/integration_r38_rolltor20a0_abe, unit_r34_re2fx/_bild/_knochen/_pc/_raum,
+  unit_r35_fenster_glas, unit_espr_11e0, integration_r34_plattform_esp_eintritt, integration_fx_region_cull,
+  integration_door_traversal/_door_lock/_keydoor — die Nutzer des Eckpunkt-Alphas und der Mischmodi), seriell:
+  `ctest --test-dir re15_port/build -R "^(integration_(r30_irons_tisch_bild|r30_irons_tisch_licht|r30_irons_tisch_laden|r30_sicherung_bild|r30_sicherung_laden|r30_granate_laden|r34n_e_dokumente_bild|r34n_g_schrift1150|r34n_b_cursor|r36_kartenitems_bild|r36_schluessel|r36_szene1150|r35_cut1150|r32_tor_hell|r37_feuerloescher|r37_codepanel|r37_kiste|r37_kiste2feld|r37_kistenregel|r38_cursor|r38_rolltor20a0(_abe)?|r34_plattform_esp_eintritt|door_traversal|door_lock|fx_region_cull|keydoor)|unit_r38_(cursor_[a-z]+|rolltor20a0(_windung|_abe)?)|unit_(sicherung_1150|prop_texel_key_11f0|r30_irons_tisch|r30_irons_tisch_licht|r30_sicherung_[a-z]+|r31_hebetisch|r32_hebetisch_faecher|r34n_b_[a-z_]+|r34n_e_dokumente|room1050_sicherung|r36_kartenitems|r36_objfall|r36_schluessel_[a-z]+|r37_codepanel_[a-z]+|r37_feuerloescher_[a-z]+|r34_re2fx[a-z_]*|r35_fenster_glas|espr_11e0))$" --timeout 1500 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 81`**, `Total Test time (real) = 3347.55 sec` (Log
+  `scratchpad/W38nb2/ctest_gruppen.log`; laengste: integration_r35_cut1150 516.8 s, r36_kartenitems_bild 460.4 s,
+  r37_feuerloescher 410.6 s, r38_rolltor20a0 283.2 s, r37_kistenregel 273.4 s, r38_rolltor20a0_abe 225.8 s,
+  r38_cursor 181.1 s). Kein Flattern, nichts nachgefahren.
+* Nicht gefahren: integration_r36_dachkiste (1716 s; prueft nur Kisten-Logs, kein Kisten-Code im Diff; Kistenfall in
+  20A0/20A1 prueft integration_r38_rolltor20a0 Lauf C) und die volle Suite (Sache der Integration).
+
+### 10.11 Integration (lesender Merge-Test gegen r38/integration 81f90f2e)
+
+* `git merge-tree --write-tree r38/integration HEAD`: Konflikt NUR in `platform/pc/main.c`, Include-Zeilen (Spuren E/I/T
+  gegen W) — beide behalten. render_pc.c, die Prop-Schleife und alle uebrigen Dateien mergen ohne Konflikt.
+* Eckpunkt-Alpha im beleuchteten Weg (render_pc.c, §10.5): im gemergten Baum setzen nur main.c (ESP-Effekte),
+  glas1120_pc.c, re2fx_pc.c und objabe_r38_pc.c das Alpha, jeder setzt nach Gebrauch 255 zurueck; door_scene_pc.c und
+  hebetisch_cursor_pc.c setzen nur den Mischmodus. Kein Zeichner hinterlaesst ein Alpha != 255 fuer Figuren/Objekte.
+  Neue Setzer (andere Spuren) muessen ebenso zuruecksetzen.
+* Spur N (r38/wasser, Wasser-Spritzer in 1260/2090/10B0 ...): die Typ-3-Wasserflaechen dieser Raeume werden seit N1 wie
+  im Original subtraktiv (ABR 2) gezeichnet statt grau deckend. Ns Riegel pruefen Logs (RE15_FX_LOG), keine Pixel — nach
+  dem Merge im Bild nachsehen, dass ein Spritzer vor bzw. unter dem Wasser so liegt wie die Ordnung der Tiefen es sagt.
+* Spuren U/R (Stage-2-Zombies im Wasser, Spinnen): Riegel ueber Logs/Lagen, keine Pixel ueber dem Wasser — kein Einfluss.
