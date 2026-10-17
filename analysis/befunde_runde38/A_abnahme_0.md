@@ -106,3 +106,20 @@ Cut_chg(10)`. Laeufe `runs/m3_elza_{neu,alt}`:
 |---|---|---|---|
 | alt | 99428 | 10297 | 21 Abweichungen (F900) |
 | neu | 89131 | **0** | **0 / 0** (G 38, g 68, Y 14, y 22 = Original) |
+
+ROOM1151 (Raumvariante, Lade-Weg mit Raum 1151; das Kartenwerkzeug schreibt Familie PL00 — der Cursor-Zeichner ist
+spielerunabhaengig): `CONTINUE: resumed in room 1151`, `F101 raum=1151 aktiv cursor=2 cam=4`; Platz 28: alt 4192 von
+42824 rueckseitig, **neu 0** von 38632.
+
+## 6. Nebenwirkungen (selbst gemessen, alt = v0.8.25-exe, neu = dieser Baum)
+
+| Raum / Lauf | Ergebnis | Bewertung |
+|---|---|---|
+| 10F0 Leon, Debug-Sprung, Cut 0, Bild 200 (`runs/m4_10f0_*`) | debug.log neu `[prop-render] pi=4 oid=0x04 pos=(8050,-1460,2700) rot=(2048,256,0)` (alt `rot=(0,256,0)`); Platz 8: neu 560 Dreiecke MAC0 > 0, 0 < 0; alt 560 < 0 | Schluessel sichtbar, Vorderseite (`scratchpad/abn/m4_10f0_schluessel.png`) |
+| 1050 Loescher an der Wand (Lade-Weg wie test_r37_feuerloescher Lauf E, Cut 6, Bild 120) | alt gegen neu **0 Punkte** bei Skala 1 und Skala 3 | unveraendert, neu gewickeltes Modell + Verwurf = altes Bild |
+| 1090 Loescher liegend (Lauf F, Cut 5, Bild 98) | Skala 1: 2 Punkte (155..158,75..77, Kante eines Original-Props); Skala 3: 16 Punkte derselben Kante + 3 Randpunkte am Loescher (489..492,392..393) | Loescher praktisch unveraendert |
+| 1150 Cut 4 (Hebetisch-Sicht) | dunkelbraunes Band faellt weg (§4) | Original-Mechanismus |
+| 5010 Debug-Sprung, Bild 200 | 89 Punkte (142..172,117..121): dunkelroter Rueckseiten-Streifen ueber einem Geraet faellt weg, gruene Lampe wird sichtbar (`scratchpad/abn/m6_5010_zoom.png`) | Original-Mechanismus, sieht richtiger aus |
+| 2040 Debug-Sprung, Bild 200 | 38 Punkte: dunkler 4x4-Block (3,10,12) neben Leons Hand wird Hintergrund (48,48,44) | Rueckseite eines Raum-Objekts, nicht Leon |
+| 20A0 Debug-Sprung, Cut 0, Bild 200 | 0 Punkte | (Spur W: Rolladen in Cut 2, Dossier §4.4 — in der Integration nachmessen) |
+| 11D0 Cut 7 (Debug-Sprung, RE15_FORCE_CUT=7) | 493 Punkte (0..35,196..225): helles Blatt (Rueckseite der B1-Lageplan-Karte) lag alt AUF der Mauerkrone ausserhalb des Raums, neu weg (`scratchpad/abn/m7_11d0_cut7_alt_neu.png`) | Artefakt beseitigt; Karte in den Cuts mit Kamera im Raum sichtbar (Scan des Bau-Agenten 14/15) |
