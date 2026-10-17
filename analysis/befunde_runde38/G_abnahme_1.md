@@ -251,3 +251,47 @@ ZIEL1 0x10F1/(9,83) schluessel_r36.h:60/67; ZIEL2 S4). Listenname "Roys Diary": 
 Erklaert der Fix den Befund? Vorher sub07 @0x00E64 oeffnet msg 18 (Abnahme 0 Lauf v1 mit v0.8.25); der Haken ersetzt
 genau dieses Message_on (Raum 0x1011 + Id 18) durch den Dokument-Leser und laesst den Faden danach hinter das Opcode
 laufen; nachher (a1/a2) 0 x msgtext id 18, Leser, Evt_end, Kette. Ja.
+
+## Vertrag / Pfade / Nebenwirkungen (2. Sitzung, selbst geprueft)
+
+* Pfade (`git diff master...HEAD --name-only`, ohne analysis/): engine/src game_step_common.c, map_hint_common.c,
+  menu_common.c, re15_files.c, scd_vm.c, tagebuch_r38.c (neu); include/re15_tagebuch_r38.h (neu);
+  shared_assets/RE2/FILES/FILE30_* (8 neu); tests (integration/test_r38_tagebuch.cmake, unit/probes/r38_tagebuch.cmake,
+  unit/test_r38_tagebuch.c, unit/probe_r38_tagebuch_bild.c, Alt-Riegel probe_r26_inventar.c, test_r36_kartenbits.c,
+  test_r36_schluessel.c, test_re2doc_bildebene.c); tools/r38_g/*.py. `grep -E "^release/|platform/android|
+  shared_assets/PSX/|CMakeLists"` = **leer** (Test-Einbindung ueber probes/*.cmake-GLOB). master hat seit der Basis
+  e2cc7673 keine re15_port-Aenderung (`git diff e2cc7673 master --stat -- re15_port` leer).
+* Gemeinsame Dateien = Haken (numstat): game_step_common.c +2, scd_vm.c +4, map_hint_common.c +9 (Include + 2
+  Tabellenzeilen + Kommentar), re15_files.c +9 (Name + 1 Zeile), menu_common.c +9/-1; je Kommentar "Runde 38 Spur G".
+  Die Logik liegt in tagebuch_r38.c (111 Zeilen).
+* Ressourcen: Bank-9-Bit 68 (Zuteilung G) als einziges neu belegtes Bit, in k_port[] eingetragen
+  (test_r36_kartenbits.c +2); gelesen (nicht belegt) werden (9,83) Prison Key und (4,0xFC) John befreit. Keine
+  Nachrichten-Id belegt (1011 40-44 ungenutzt). Dokument 5 / Item 0x4D / Bildsatz 30 per Zensus.
+  Kollisionssuche ueber alle anderen `.claude/worktrees/r38_*` (Diff je ab merge-base mit master, `+`-Zeilen in
+  re15_port nach "9,68 | 9:68 | BIT 68 | 0x4D | FILE30 | Roys Diary"): keine Treffer ausser Binaerdaten-Bytes 0x4d und
+  NPC-Typbereichen 0x40..0x4d (r38_cursor/dining1141/itemorte/npckante/szenenschutz/integration) — kein Bezug.
+  Keine andere Spur aendert re15_files.c, map_hint_common.c oder legt FILE3x an.
+* Integrationsstellen (kein Mangel, Hinweis): menu_common.c aendert im Integrationszweig r38/integration auch Spur Q
+  (Inventar-Ton in re15_menu_start_poll / tab_select) — andere Hunks, aber das Q-Include steht an DERSELBEN Stelle wie
+  das G-Include (beide direkt nach `#include "re15_cut10f0.h"`) -> beim Merge beide Zeilen behalten. Der Leser des
+  Tagebuchs laeuft nicht ueber re15_menu_start_poll/tab_select (Anforderung re15_menu_request_doc; "nur lesen"
+  schliesst ueber file_reader_close -> s_phase 2). test_r36_kartenbits.c k_port[]: Spur F traegt 64/66/67 ein, G 68 ->
+  beide Seiten uebernehmen. scd_vm.c / game_step_common.c werden von F, M, R, N, D und der Integration an anderen
+  Stellen beruehrt.
+* Nebenwirkungen, selbst gemessen:
+  - Leon: Lauf l1 (Leons Szene im Communications Room + Kette 11C0 -> 1150) unveraendert; die Eintraege 3/4 haengen
+    an (9,68), das nur das Ablegen von Dokument 5 in ROOM1011 setzt.
+  - Erstes Lesen VORZEITIG abgebrochen (Lauf a3, Karte `1011 -1900 6830 3072 4:0xF1 4:0xFA 3:0x74`,
+    `RE15_INPUT_SCRIPT=A0.1,W4,R0.1,W1.2,X0.1,W3,A0.1,W12`): KREUZ auf Seite 2 (F222) -> trotzdem "filed"-Meldung
+    (Viereck F315) -> `Leser zu: Bit (9,68)=1, Kartenkette nach dem Evt_end` -> Kette F370 / F488 / F606 — RE2-Form
+    (das Dokument kommt beim Aufheben in die Akten, nicht erst am Ende).
+  - Zweites Untersuchen (a1): nur lesen, Liste bleibt 1 Eintrag, kein zweiter Hinweis.
+  - Speicherstand: die FILE-Liste ist Teil des Spielstands (re15_savedata.c:233 `re15_files_export(out->files)`,
+    :333 `re15_files_import`, v9), Bit 68 liegt in g_game.flags -> "nur lesen" und das Blinken ueberleben
+    Speichern/Laden.
+* Tests je Punkt (vorhanden und messend, Code gelesen): Punkt 1 unit_r38_tagebuch_dokument (Tabelle, FILE30-Bytes,
+  Papier == FILE16, 87 Gruen-Pixel ueber den echten Seitenlader) + _ablauf (echte VM + Statusschirm: Parken an
+  @0x00E64, keine Nachricht, Liste vor dem Lesen, "filed", Bit 68, Kette erst am Evt_end, zweites Untersuchen nur
+  lesen) + integration_r38_tagebuch_lesen (exe: kein msgtext 18, Gruen im Bild, Kette im Bild); Punkt 2
+  unit_r38_tagebuch_karte (Kette/Folge/Ziele/Erreicht-Regeln, Leon unveraendert) + integration_r38_tagebuch_karte
+  (normale Karte, beide Kacheln blinken); Gegenprobe unit/integration_r38_tagebuch_leon.
