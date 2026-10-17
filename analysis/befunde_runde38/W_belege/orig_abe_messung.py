@@ -184,6 +184,22 @@ def main():
                   % ('Dreieck' if art == 'T' else 'Viereck', nn, code, (code >> 1) & 1, tpage, (tpage >> 5) & 3))
             for art, i, code, tpage, tag in ps[:4]:
                 L("     %s%02d tag %08x code 0x%02x tpage 0x%04x" % (art, i, tag, code, tpage))
+        if os.environ.get("ORIG_ESP"):
+            # ESP-Effekt-Pool @0x800a73b8, 96 Plaetze zu 0x84 (re15_esp.h RE15_ESP_FX_MAX, FUN_80019700 @0x8001978c);
+            # Byte +0x6C = Flags (Bit 0 aktiv, Bit 1 sichtbar: FUN_80053240 @0x800532f4 `lbu v1,0(s0)` mit s0 = Platz+0x6C,
+            # @0x800532fc/@0x80053308), Lage s16 an +0x28/
+            # +0x2A/+0x2C (@0x80053314/@0x80053330, `lh` @0x80018594/a0/b0).
+            for durchgang in range(3):
+                pool = g.mem(0x800A73B8, 96 * 0x84)
+                aktiv = []
+                for k in range(96):
+                    e = pool[k * 0x84:(k + 1) * 0x84]
+                    if e[0x6C] & 1:
+                        aktiv.append((k, e[0x6C], struct.unpack_from('<hhh', e, 0x28), e[0x6C:0x74].hex()))
+                L("ESP-Pool Durchgang %d: %d aktive Plaetze" % (durchgang, len(aktiv)))
+                for k, fl, pos, kopf in aktiv[:24]:
+                    L("   Platz %2d Flags 0x%02x Lage %s Kopf %s" % (k, fl, pos, kopf))
+                g.cont(); time.sleep(0.4); g.stop()
         g.cont(); time.sleep(2.0); g.stop()
         L("Ende: Spieler", pl(), "Cut", cut())
         g.cont(); time.sleep(0.5)

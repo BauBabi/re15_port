@@ -21,6 +21,8 @@ Nutzer-Wortlaut (AUFTRAG.md Nachtrag 1, 2026-10-16 21:00):
 - [x] Fortsetzung 2026-10-17: Merge r38/cursor (Spur A), EIN NCLIP-Weg, EINE Regel fuer Port-Modelle — §9
 - [x] nach dem Merge: Bau, Messung nachher 20A0/20A1 Cut 11 + ROOM1050 Cut 5 (+ 20A0 Cut 2) — §9.4; eigene + A-Riegel 8/8 — §9.5
 - [x] Modul-Testgruppen nach dem Merge — §9.5: 67/67 gruen
+- [x] Nachbesserung 1 (Abnahme 0, M1 + M2) — §10: halbtransparente Raum-Objekte (ABE/ABR/STP) wie im Original
+  (5060/5061 Cut 4 = Original-Bild), Zensus in beide Richtungen mit Typ 3 + Eltern, MEHR-Faelle am Spiel gemessen
 
 ## 1. Messung vorher (Port, Basis df08d83a = v0.8.25 + Doku)
 
@@ -291,6 +293,11 @@ Ergebnis nach dem Merge: §9.4.
 
 ## 8. Nebenwirkungen (Zensus) — wo der Port jetzt sonst noch anders (= wie das Original) zeichnet
 
+**Nachbesserung 1 (Abnahme 0, M1/M2):** dieser Zensus zaehlte nur WENIGER, ohne Typ 3 und Eltern-Objekte; der
+vollstaendige Zensus in BEIDE Richtungen steht in §10.7 (MEHR 3, WENIGER 22). Die Aussage "= wie das Original" stimmte
+fuer den MEHR-Fall ROOM5060/5061 Cut 4 nicht (Halbviereck deckend statt halbtransparent) — seit §10.5 (ABE/ABR/STP der
+Raum-Objekte) stimmt sie, gemessen gegen das Original-Bild (§10.6).
+
 Der Fix gilt fuer alle RDT-Objekte (derselbe Original-Zeichner). Zensus `W_belege/zensus_objpoly.py` ->
 `W_belege/zensus_objpoly.txt`: 152 inhaltsverschiedene RDTs, jedes Obj_model_set (alle Skript-Lagen) x jeder Cut,
 dessen Regions-Viereck die Lage enthaelt = 1757 Faelle; Summe Bildbedeckung alt 4 193 818 px, neu 3 810 642 px. Mehr
@@ -329,6 +336,13 @@ GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
   @0x01E5E-6E schaltet Zelle 32 (die "Wand 32" der Runde 36) in allen Regionen auf u0 = 0, danach faellt die Kiste
   durch die Oeffnung (§6, Lauf C). Die Lage (3,0xCC)=1 @0x0187A verlangt dann noch die Kerbe 7 (Member_cmp m0F == 7
   @0x01ADC) unten am Kanal — nicht Teil dieses Befunds, nicht gemessen.
+* Nachbesserung 1 — vorbestehend, nicht Teil des Befunds: der Typ-3-Zeichner FUN_8003e64c verwirft nach dem Zeichnen
+  einzelne Kacheln per FUN_80014368 (Tag-Laenge 0 / 0x0C, Decompilat FUN_8003e64c.c); der Port zeichnet alle Kacheln
+  (re15_prop_culled Typ 3 -> 0; Runde 36 Spur N 8.8). Mit dem subtraktiven Wasser (ABR 2) ist eine zu viel gezeichnete
+  Kachel dunkler statt deckend grau. In den gemessenen Schnitten (20A0 Cut 2 und 3) stimmt das Bild mit dem Original
+  (MAD 0.3 / 1.1, §10.6) — dort fiel keine Kachel ab.
+* Nachbesserung 1: ROOM11B0/11B1 Kiste (obj 0, einziges Objekt mit gemischten STP-Texeln) ohne Original-Bild — der
+  Debug-Sprung haelt dort die Kamera fest (§10.6); Mechanik im Riegel A3 an genau dieser Textur geprueft.
 
 ## Fuer den Nutzer
 
@@ -342,10 +356,26 @@ GPU-Grenze gelten auch fuer sie (wirken nur unmittelbar vor der Kamera).
   (Sicherung, Dokumente, Schluessel, Feuerloescher ...); sie sehen aus wie bisher — der Feuerloescher wurde dafuer von
   Spur A neu gewickelt (gleiches Bild), der Parking Lot Key in ROOM10F0 liegt jetzt mit der Vorderseite nach oben
   (wie in RE2; vorher war seine Rueckseite zu sehen).
+* Nachbesserung 1 — HALBTRANSPARENTE Raum-Objekte wie im Original (das Original mischt sie mit dem Hintergrund, der
+  Port zeichnete sie bisher deckend). Sichtbar anders als in v0.8.25, jeweils gegen das Original-Bild gemessen (§10.6):
+  - ROOM5060/5061 (Labor): die Glasscheiben dunkeln das Fenster zur Haelfte ab (vorher: Scheibe fehlte bzw. nach dem
+    Rolladen-Fix ein deckend dunkles Dreieck — der Abnahme-Befund).
+  - Die Typ-3-Wasserflaechen in 11A0, 1260 und Stage 2 (2000/2020/2040/2050/2070/2080/2090/20A0/20B0) werden wie im
+    Original vom Hintergrund ABGEZOGEN (fast schwarzer Kanal, in 20A0 Cut 3 das Sprenkelmuster des Originals) statt
+    als graue deckende Flaeche gemalt.
+  - ROOM4090 (Kuehlraum): der Bodennebel ist hell und durchscheinend wie im Original — v0.8.25 zeigte dunkle deckende
+    Schlieren ueber dem halben Bild.
+  - ROOM1040, 5030 (Glas/Roehren), 11B0 (die Kiste: in Texturhelligkeit wie im Original, einzelne Texel halbtransparent).
+  - ROOM20A0/20A1: die vom Port aktivierte "schlafende" Effekt-Schleife am Kanalende (sub02, Auftrag 2026-08-30) liegt
+    unter dem Wasser und scheint jetzt als gruene Flecken durch; vorher deckte das falsch deckende Wasser sie zu. Das
+    Original startet die Schleife nie (gemessen: 0 aktive Effekte); die Flecken sind also Port-Inhalt (die Aktivierung),
+    der Zeichenweg darunter ist der des Originals.
 * Neue Assets: keine (Paket-Gate unveraendert). Sprachdateien: keine. Bank-9-Bits/Nachrichten-Ids: keine.
-* Bau: neue Quelldateien `re15_port/engine/src/objpoly_r38.c` und `re15_port/platform/pc/src/objpoly_r38_pc.c`
-  (GLOB; mit dem Merge von Spur A dazu `re15_port/engine/src/nclip_r38.c`) — der Android-Bau braucht einen frischen
-  Configure (Memory reai-v2-android-glob-cache).
+* Bau: neue Quelldateien `re15_port/engine/src/objpoly_r38.c`, `re15_port/platform/pc/src/objpoly_r38_pc.c`,
+  `re15_port/engine/src/objabe_r38.c`, `re15_port/platform/pc/src/objabe_r38_pc.c` (GLOB; mit dem Merge von Spur A dazu
+  `re15_port/engine/src/nclip_r38.c`) — der Android-Bau braucht einen frischen Configure (Memory
+  reai-v2-android-glob-cache). render_pc.c bietet `re15_render_pc_renderer()` jetzt auf allen Plattformen an (vorher nur
+  Android; android_glue.c nutzt sie unveraendert).
 * Messschiene fuer Rueckmeldungen: `RE15_OBJPOLY_LOG=objpoly.txt` schreibt je Bild und Objekt gezeichnet/NCLIP/OTZ/GPU.
 * Entscheidungsfragen: keine.
 
@@ -589,4 +619,67 @@ hat 252/256 Eintraege mit STP, 1040 nutzt dort nur Eintrag 1 = 0x90a1 mit STP; n
   0x0010 (@0x8002c2f4), Typ 3 (@0x8002c2bc), Codes 0x34/0x3C | ABE<<1 (Zeichner oben); SDL-Alpha 128 / 64 = psx-spx
   0,5 / 0,25 (Riegel A4: <= 1 Stufe gegen die GPU-Formel).
 
-Stand: Messung nachher, Riegel und M2 folgen (§10.6 ff.).
+### 10.6 M1 — Messung vorher / nachher gegen das ORIGINAL-Bild
+
+Bau `local_build.sh configure` + `build` -> `=== LOCAL-BUILD-OK`. Laeufer `scratchpad W38nb1/lauf_n1.sh` (Messkopie
+`re15_pc_W38nb1.exe`; v0.8.25 = Paket-exe aus der Abnahme 0), RE15_WINDOW_SCALE=1, Debug-Sprung, Spieler an die Stelle
+des Original-Abzugs, Kamera-Schnitt erzwungen; Original-Bildpuffer aus `orig_abe_messung.py` (W_belege/
+`orig_abe_5060_cut4_buf0.png`, `orig_abe_20a0_cut2_buf0.png`, `orig_abe_20a0_cut3_buf0.png`, `orig_abe_4090_cut0_buf0.png`).
+Mittelwerte RGB einer Messflaeche (Werkzeug `test_r38_rolltor20a0_abe --fall`) bzw. mittlere absolute Abweichung (MAD) je
+Kanal gegen das Original:
+
+| Fall (ABR) | Messflaeche | Original | v0.8.25 | Spurbaum vor N1 (deckend) | **nach N1** |
+|---|---|---|---|---|---|
+| ROOM5060 Cut 4, Glas obj 4 (ABR 0) — der Abnahme-Fall | Halbviereck (1,2,3) (-666,509),(-20,20),(36,142), 1749 px | (31.6,15.3,26.1) | (47.2,30.5,36.6) Abstand 15.6 | (6.3,0.5,6.6) Abstand 25.3 | **(32.2,15.4,26.5) Abstand 0.6** |
+| dasselbe, Elza ROOM5061 (PL04, `RE15_PSELECT_AUTO_SWITCH=1`) | dieselbe | (31.6,15.3,26.1) | (47.2,30.5,36.6) | — | **(32.2,15.4,26.5)** (F270/F300/F330) |
+| ROOM5060 Cut 4, Abnahme-Maske (Dreieck t7 gegen t8, 1119 px) | MAD | — | 23.9 | 30.6 | **2.3** |
+| ROOM20A0 Cut 2, Wasser obj 4 Typ 3 (ABR 2) | Kanal x 160..299 y 180..235, 7840 px | (0.4,0.4,0.3) | (11.8,14.3,11.7) | wie v0.8.25 | **(0.4,0.4,0.3)**; MAD 12.8 -> 0.3 (13 200 px Kanal) |
+| ROOM20A0 Cut 3, Wasser obj 6 (ABR 2) | Kanal x 140..249 y 180..235 | (7.1,5.8,6.4) | (11.9,14.6,11.9) MAD 12.4 | wie v0.8.25 | **(6.8,5.5,6.0) MAD 1.1** (das Sprenkelmuster des Hintergrunds minus Wasser stimmt Pixel fuer Pixel) |
+| ROOM4090 Cut 0, Nebel obj 0-2 (ABR 3) | Boden x 20..299 y 160..235, 21 280 px | (140.5,139.4,147.9) | (56.5,55.7,55.1) MAD 85.2 (36 030 px dunkle deckende Schlieren) | wie v0.8.25 | **(140.6,138.9,147.2) MAD 3.3** |
+
+Bilder (scratchpad W38nb1): `v5060_orig_alt_neu.png`, `v20a0_orig_alt_neu.png`, `v20a0c3_orig_alt_neu.png`,
+`v4090_orig_alt_neu.png` (je Original | v0.8.25 | nach N1). ROOM5060: das linke Fenster zeigt wie im Original das
+Gitter halb abgedunkelt durch die Scheibe. ROOM4090: v0.8.25 zeigte die drei Nebel-Modelle als dunkle deckende
+Schlieren ueber dem ganzen Boden, nach N1 heller Bodennebel wie im Original. ROOM20A0: der Kanal wie im Original fast
+schwarz (B - F), Cut 3 mit dem Sprenkelmuster des Originals.
+ABR 1 (5060 obj 5, 0x0006) ist an der Laufzeit (Texpage 0x00a6) und im Riegel A2 belegt; ein eigenes Bild davon gibt es
+nicht (in Cut 4 nicht im Bild).
+ROOM11B0/11B1 Kiste obj 0 (einziges Objekt mit STP-0- UND STP-1-Texeln): im Port gemessen (Lauf m11b0, Cut 5) —
+heller als v0.8.25 (Flach-Zeichner 0x808080 statt NCCT, wie FUN_80023098), 679 Texel halbtransparent; eine Original-
+Gegenprobe war per Debug-Sprung nicht moeglich (11B0 haelt nach dem Sprung die Kamera fest — Zonen-Kette ohne
+Schnittwechsel, zwei Versuche `orig11b0`/`orig11b0b`). Die Regel je Texel ist die GPU-Regel (psx-spx :1430-1433),
+im Riegel A3 an genau dieser Textur geprueft.
+
+**Port-eigener Inhalt, jetzt sichtbar (ROOM20A0/20A1):** der Port startet beim Betreten die "schlafende" Ambient-Effekt-
+Schleife sub02 (@0x1BF0-0x1CB0, 11x Sce_espr_on Effekt-Id 6; Aktivierung scd_room_setup.c, Nutzer-Auftrag 2026-08-30
+"schlafender Content"). Ihre Sprites (TIM-Slot 36, z 17 462..17 998, RE15_TRILOG) liegen UNTER dem Wasser (Wasser-
+Polygone z 10 052..14 018). Das deckende Wasser von v0.8.25 deckte sie zu; das subtraktive Wasser (B - F) laesst sie als
+gruene Flecken am Kanalende durchscheinen. Das Original startet die Schleife nie: ESP-Pool @0x800A73B8 (96 x 0x84,
+Flags an Platz+0x6C, FUN_80053240 @0x800532f4) in Cut 2 dreimal gelesen = **0 aktive Plaetze**
+(W_belege/orig_abe_20a0_esp_log.txt). Das ist die Folge der Port-Aktivierung, nicht des Zeichenwegs -> "Fuer den Nutzer".
+
+### 10.7 M2 — Nebenwirkungs-Zensus in BEIDE Richtungen, mit Typ 3 und Eltern-Objekten
+
+`W_belege/zensus_beidseitig.py` -> `zensus_beidseitig.txt` (baut auf zensus_objpoly.py auf): jedes Obj_model_set
+(alle Skript-Lagen) aller 152 inhaltsverschiedenen RDTs, **Typ 3 in jedem Cut** (der Port zeichnet sie ohne Objekt-
+Ausschnitt, re15_prop_culled), **Eltern-Objekte** (pc[5] = 0xC0: Weltmatrix = Eltern x lokal, LAB_80040914 @0x80040a84,
+FUN_80022da0 @0x8002c22c; gerechnet: ROOM1150/1151 obj 1/2), pc[5] = 0x80 (Figuren-Anhang ROOM4030/4031 obj 0, im Port
+nicht umgesetzt) gemeldet: 2499 Kombinationen Objekt x Cut (54 Typ-3-Saetze, 4 Eltern-Saetze).
+
+* **MEHR (NEU > ALT + 300 px): 3** — ROOM1170 obj 3 Cut 0 (Hubschrauber-Rotor, statisch 0 -> 11 338 px), ROOM5060/5061
+  obj 4 Cut 4 (1849 px = M1). Am Spiel neu gegen v0.8.25:
+  - 1170: New-Game-Intro mit der exe NACH N1 (`RE15_PSELECT_AUTO=1 RE15_FRAMEDUMP=0-1400/5 RE15_EXIT_AT=1400#1170`,
+    Lauf n_intro1170) gegen v0.8.25 (Abnahme t4_intro1170_alt): 146 von 281 Bildern verschieden, **hoechstens 96 px**
+    (nur Rotorkanten; der Rotor dreht, die statische Ruhelage tritt nicht auf); gegen den Stand vor N1 (t3): **0 von
+    281 Bildern verschieden** — N1 aendert 1170 nicht (kein Objekt mit Attribut & 2).
+  - 5060/5061: §10.6 — nach N1 = Original (Abstand 0.6), Leon und Elza.
+* **WENIGER: 22** — die 18 Faelle aus §8 plus **4 Typ-3-Faelle**: ROOM2050 obj 4 Cut 11/12/13 (statisch 12 674 /
+  4878 / 4038 -> 0 px, Rueckseiten von unten), ROOM20A0 obj 6 Cut 3 (1906 -> 0). Am Spiel mit der exe nach N1:
+  2050 Cut 11 (`RE15_DEBUG_JUMP=2050@250 RE15_FORCE_CUT=11`, Lauf n_2050_c11) gegen v0.8.25 **82..89 px** (Kanten; das
+  Skript setzt obj 4 je Cut um), gegen den Stand vor N1 **0 px**; 20A0 Cut 3 (n_20a0_c3) gegen v0.8.25 1134 px — das
+  ist das Wasser (ABR 2, §10.6: jetzt = Original, MAD 1.1), nicht der Polygon-Weg (vor N1: 0 px, Abnahme 0 §5.2c).
+* Eltern-Objekte: kein Fall ueber den Schwellen.
+* **HALBTRANSPARENT sichtbar: 364 Faelle** (Objekt x Cut mit NEU > 0 px, Attribut & 2) in 1040/1041, 11A0/11A1,
+  11B0/11B1, 1260/1261, 2000/2001, 2020/2021, 2040/2041, 2050/2051, 2070/2071, 2080/2081, 2090/2091, 20A0/20A1,
+  20B0/20B1, 4090/4091, 5030/5031, 5060/5061 — dort zeigt der Port seit N1 die Original-Mischung statt einer deckenden
+  Flaeche (gemessen an 5060/5061, 20A0 Cut 2 und 3, 4090: §10.6).
