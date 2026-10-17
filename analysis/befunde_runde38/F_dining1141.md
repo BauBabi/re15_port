@@ -547,3 +547,54 @@ eigener Text fuer genau die Tuer, die dieser Schluessel oeffnet — er nennt kei
   @0x00FA8 (Blocklaenge = Kette + Rumpf + Ewhile).
 - Kamera Cut 7: ROOM1141.RDT Satz @0x00140 (RDT-Kopf +0x24 = 0x60, 32 B je Cut): Lage (-7465,-3024,-9613) (pos_z
   @0x0014C `73 da ff ff`), Ziel (-4265,2209,-27792) — blickt nach Sueden; was noerdlich von z -9613 liegt, ist hinter ihr.
+- Ursache M3 (Code): BEFREIUNG-Schluss +0x0402.. setzte Pad-Sperre + Cut 7 und schickte John per RUN durch Raum und
+  Dachgang, ohne Elzas Lage zu beachten; der Koerper-Schub (Port re15_body_push = FUN_8002aec4) schob die Spielfigur vor
+  ihm her. Eingefuehrt mit dem Abgang selbst (6ae7118b, Abgang ueber Cut 6; in 6f1890c5 auf Cut 7 umgestellt).
+
+### 9.4 M4 — Zitat FUN_80045024
+`lw a0,8(v0)` steht @0x8004513c (v0 = *(0x800ac778) = geladenes RDT, @0x80045130/@0x80045134); @0x80045138 ist `nop`
+(selbst disassembliert). Nur der Kommentar in platform/pc/src/dining_r38_pc.c war falsch, Inhalt (Bank 2 = RDT+0x08 = snd0)
+stimmt.
+
+### 9.5 Umsetzung (Commits 7a0bb681, 06d53363)
+| Mangel | Aenderung | Datei / Form |
+|---|---|---|
+| M1 | Programm SZENE1021 (24 B) am Ereignis 2 in ROOM1021: `18 02` Gosub sub02 + `2c 06 03 31 00 00 0e ed 8c d8 e8 03 e8 03 ff 00 18 06 00 00` (main00 @0x01E2C bytegleich) + `01 00`. Anker: sub02..sub05 @0x01FD8..@0x021EB (Szene + Gosub-Ziel sub04) und main00 @0x01DE2..@0x01E3F (Begehzone, Spawns, Ck(3,0x5F), Aot_set Slot 6). sub02 laeuft aus dem RDT — die Anker anderer Spuren in sub02 (elza_r36.c @0x020CE/@0x020D6, Runde 38 Spur H @0x020B2) bleiben gueltig | tools/r38_dining/programme_bauen.py baue_szene1021, engine/src/dining_r38.c re15_dining_r38_ereignis |
+| M2 | ROOM1131 msg 40 = "It's locked." [Seite] "A heart is etched under / the key hole." = RE2 Text 0x0F @0x8009F230 (Glyphen der Zeilen 2/3 bytegleich RE2) | programme_bauen.py baue_texte, Zeilenbreiten 74/159/86 px |
+| M3 | BEFREIUNG-Schluss neu: Warten auf den Tod der Gorillas (wie bisher) -> Sleep 30 -> **Aot_reset Slot 0 -> Tuer ROOM1131** (vorher erst am Ende des Abgangs) -> Work_set(1,0) -> **While (Elza x -8450..-6450 UND z -22400..-8875) { Evt_next }** -> Pad-Sperre, Balken, Cut 7 -> Work_set(2,0) -> **Member_set(6, 0x0003)** (John: Bit 0x2, kein Koerper-Schub) -> RUN wie bisher | programme_bauen.py while_elza_in_bahn / baue_befreiung; Konstanten include/re15_dining_r38.h RE15_R38F_KOERPER_R/CUT7_AUS_Z/BAHN_*/JOHN_WORT0 |
+| M3 | Raumaufbau 1131: Szene 1141 gelaufen ((3,0xC2) sub02 @0x00C20), Gorillas tot ((4,0xF2)=0), John noch nicht fort ((9,67)=0), Tuer aufgeschlossen ((9,66)) -> Elza ging waehrend des Wartens hinaus -> (9,67)=1, (4,0xC3)=1 (Endzustand wie nach dem Abgang). Querverweis (3,0xC2): nur 1141 sub02 @0x00C20 setzt, 1171 sub02 @0x01398 loescht, 1171 sub07 @0x016C4 liest | engine/src/dining_r38.c tuer_1131 |
+| M4 | Kommentar `lw a0,8(v0)` @0x8004513c | platform/pc/src/dining_r38_pc.c Kopf |
+
+Bahn-Grenzen (Herleitung, keine Zahl nach Gefuehl): x = Johns Bahn x -7550 (Ecke sub02 @0x00F8E) .. -7350 (GANG_X) +-900;
+z Sued = Ecke -21500 - 900; z Nord = Bildgrenze von Cut 7 fuer John -9775 (gemessen, F3353 0 px) + 900 — noerdlich davon
+kaeme John Elza nur noch hinter der Kamera nahe, wo es niemand sieht und das Bit 0x2 den Schub verhindert. 900 = 450 + 450
+(beide Kaesten byte-gelesen). Die Lagen der Abnahme: E10 (-7418,-14952) IN der Bahn (wartet); E5/E6/E7 (z -4062/-1030/-718)
+ausserhalb (sofortiger Abgang, John laeuft hinter der Kamera ohne Schub durch Elzas Lage); Laeufe D/S (-5500,-19000)
+ausserhalb (x > -6450).
+
+### 9.6 Messung nachher (Unit-Riegel, echter Engine-Weg: scd_room_reenter, SCD-VM, Walker, re15_game_step)
+- `unit_r38_dining1141_szene1021`: Stand vor der Szene ((4,0x60), (3,0xC9)), Elza in die Begehzone Slot 5 -> die Szene
+  laeuft (9 Nachrichten bis msg 8 "I'd like to be alone now...", Steuerung frei in Bild 1510), danach Slot 6 aktiv,
+  Ereignis 6, Mitte (-4350,-9600) halb (500,500) sat 0x31; John steht bei (-4274,-8765) (wie Abnahme E1a); Druck von
+  (-3730,-9600) Blick -X -> **msg 40 im selben Besuch**.
+- `unit_r38_dining1141_abgang` (Phase H -> Szene -> John in der Ecke -> Elza an die Lage -> Gorillas tot):
+
+| Lage | Bahn | Abgang | groesste Verschiebung Elzas | kleinster Abstand John-Elza im Bild |
+|---|---|---|---|---|
+| E10 (-7418,-14952) | ja | wartet 300 Bilder (Steuerung frei, Slot 0 = Tuer -> 0x13), nach dem Verlassen der Bahn (-5600,-14952) Cut 7 ab Bild 301 | 0 | 1773 |
+| E5 (-7342,-4062) | nein | Cut 7 ab Bild 30 | 0 | 6913 |
+| E6 (-7263,-1030) | nein | Cut 7 ab Bild 30 | 0 | 9945 |
+| E7 (-7332,-718) | nein | Cut 7 ab Bild 30 | 0 | 10257 |
+| knapp oestlich (-6400,-15000) | nein | Cut 7 ab Bild 30 | 0 | 973 |
+| neben John (-6500,-20500) | ja | wartet, nach (-5600,-20500) Cut 7 ab Bild 301 | 0 | 1801 |
+
+  Jedes Mal danach Kamera zurueck (Cut 5/6), Steuerung frei, (9,67)=1, (4,0xC3)=1.
+- `unit_r38_dining1141_weg1131`: Elza vor der Doppeltuer (-7980,-17750) = in der Bahn, Gorillas tot -> kein Abgang, Druck
+  auf die Doppeltuer -> Raumwechsel ROOM1131 ((9,67) noch 0); Raumaufbau 1131 -> `[dining] ROOM1131: Elza hat 1141 vor
+  Johns Abgang verlassen -> John ist aufs Dach gegangen: (9,67) = 1, Riegel (4,0xC3) = 1`; zurueck in 1141: kein John,
+  keine Phase H, Slot 1 = Dachtuer -> 0x17, Riegel-Zone Slot 2 aus.
+- **Gegenprobe (Riegel messen die Mechanik):** dieselben Riegel gegen den alten Modulstand (dining_r38.c + gen-Datei aus
+  c6fe0fd0, neuer Test, Bau im eigenen build/, danach zurueck): szene1021 3 Fehler (keine Zone Slot 6, Druck -> msg -1 =
+  Abnahme E1a), abgang 7 Fehler — E10 verschoben 2876 und im Bild 701 an Elza (Abnahme E10: Durchdringung, 2,3 m),
+  E5 verschoben 4202 (Abnahme E5: (-7342,-4062) -> (-6488,-714) = 854+3348 = 4202, exakt), E6 verschoben, E7 verschoben
+  856 (Abnahme E7: 839+17 = 856, exakt), E10/neben John ohne Warten; weg1131 3 Fehler; texte 3, programme 4 Fehler.
