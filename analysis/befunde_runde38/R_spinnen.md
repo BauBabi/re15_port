@@ -19,6 +19,12 @@ Baum `.claude/worktrees/r38_spinnen` (Zweig `r38/spinnen`, Basis e2cc7673). Ange
 - ~18:18 Sitzungslimit; Reste als a7a84080 "UNGEPRUEFT" gesichert.
 - 22:10 FORTSETZUNG (neue Sitzung): `local_build.sh build` -> "ninja: no work to do" (Stand a7a84080 war bereits
   gebaut), `unit_r38_spinnen` gruen (0 FAIL, Ausgabe 4.0). Danach Messung NACHHER in der echten exe (Abschnitt 4).
+- ~23:45 zweites Sitzungslimit; Reste als 1014136f "UNGEPRUEFT" gesichert.
+- 2026-10-17 05:30 FORTSETZUNG 2: Stand 1014136f gebaut (`local_build.sh build` OK), `unit_r38_spinnen` + `unit_damage`
+  gruen. KRITISCHE PRUEFUNG gegen den Wortlaut: Test D und die Messung 4.1/4.3 werteten "am Boden" als `y == +0x1ba`
+  bzw. `y == +0x1C2` — beide Felder setzt der Port selbst (Sce_em_set `-(pc[4]*1800)`, Baby = Elternteil), das ist eine
+  SELBSTBESTAETIGENDE Pruefung. Neue unabhaengige Messgroesse `bu` (Abschnitt 1.6) -> die Minispinnen schwebten weiter
+  (1.6), Ursache und Fix in 2.8/3/4.4.
 
 ## 1. Messung vorher
 
@@ -111,6 +117,25 @@ reiner Vorschub (@0x800245d8-70c, kein Klemmaufruf).
   @0x8001d13c/@0x8001d154) mit der schon geklemmten Lage = Lage-Spiegel +0x40/+0x42/+0x44 NACH dem Objekt-Tick.
 - ROOM20A0 (`orig_20a0_schacht.txt` Bild 50/51): Gitter obj 2 (22532,-6610,-27050) -> z -27250 = -27050 - 200,
   x 22732 = 22532 + 200: derselbe Mechanismus.
+
+### 1.6 Unabhaengige Bodenmessung (Fortsetzung 2, echte exe): die Minispinnen SCHWEBEN weiter
+Messgroesse (Messschiene RE15_SPINNEN_LOG erweitert, `boden_unter` in spinnen_r38.c, kein Spielverhalten): `bu` = die
+hoechste SCA-Bodenflaeche AUF ODER UNTER der Figur = FUN_8001c6e8(&P, 0, start, 0x100) (derselbe Aufruf wie Routine 25
+@0x80017fe0-f4) mit start = (-y + 1799) / 1800, damit ein Steg/eine Decke UEBER der Figur nicht als ihr Boden zaehlt.
+Gegenprobe der Groesse am Spieler: |y - bu| <= 100 in 2400 von 2400 Bildern (Leon auf dem Steg -5400). Auswertung
+`R_belege/ana_bo.py`, Laufskript `R_belege/lauf.sh`.
+Lauf `m2_2030` (Stand 1014136f, RE2-KI, `RE15_DEBUG_JUMP=2030@250 RE15_PLAYER_POS=6550,2000,3072,3 RE15_GIVE=8:30
+RE15_EQUIP=8`, Feuerskript `M1,MA0.2,M1.2,...,W40` mit `RE15_INPUT_SCRIPT_BASIS=spiel`, 2400 Bilder, Spinne 1 stirbt,
+Babys ab Bild 176):
+| Typ | Figuren | Bilder | SCHWEBT (y < bu - 100, ohne Sprung) | im Sprung | auf dem Boden |
+|---|---|---|---|---|---|
+| 0x25 Adult | 3 | 7200 | 0 | 0 | 7200 |
+| 0x26 Baby | 9 | 20025 | **14485 (72 %)** | 511 | 4835 |
+9 von 9 Babys verlassen den Steg (erstes Schweben Bild 188-344), Lagen bis (42446,-5400,50409) = weit ausserhalb des
+Raums: sie laufen durch Gelaender und Waende und schweben 5400 ueber der unteren Ebene. Bild `R_belege/babys_wand_vorher.png`
+(Bilder 400/800/1200/2000): braune Klumpen VOR dem Gelaender ueber dem Rohrgang "05". => Nutzerpunkt 3 "fliegen
+weitestgehend in der Luft" war mit dem Paar-1-Fix (2.6) NICHT erledigt. Die Adultspinnen bleiben auf dem Steg (ihr
+Zweig ruft die SCA-Klemme `re15_enemy_sca_clamp(e, ..., 4u)` nach jedem Tick).
 
 ## 2. RE-Belege
 
@@ -244,6 +269,29 @@ auf die Paar-Zeiger aufgezaehlt).
   und die ruhende Ausfall-Attacke re15_enemy_attack — alle anderen Gegner ziehen HP direkt ab (game_step_common.c).
   test_damage (test_bleed_gate) pinnte die widerlegte 1/4-Rate und erwartet jetzt 0/2000.
 
+### 2.8 Wurzel-Schwanz des RE2-Babys: der Wandpass (Fortsetzung 2, selbst disassembliert)
+Port vorher: der Zweig Typ 0x26 in re15_enemy_ai_run_all ruft nach `re15_spider_ai_tick` KEINE Wandklemme (Kommentar
+"stationary web-spitter ... does NOT translate -> no wall-clamp" = der RE1.5-Feuer-Emitter); `re15_re2spider_baby_tick`
+endet nach `+0x106` ohne Schwanz.
+| Adresse (RE2 EMS26.BIN) | Bytes/Instruktion | Bedeutung |
+|---|---|---|
+| 0x80100080-b0 | `lui v1,0x91a2 / lw v0,60(s0) / ori 0xb3c5 / subu / mult / mfhi / sra 10 ... sb v1,262(s0)` | +0x106 = (-Y)/1800 |
+| 0x80100094 / 0x801000ac | `lw a0,0(s0)` / `beq a0,zero,0x801000c8` | word0 == 0 (geloescht) -> fertig |
+| 0x801000b4-b8 | `jal 0x80035530` / `addu a0,s0,zero` | Schub aus allen anderen Entities |
+| 0x801000bc-c4 | `addu a0,s0,zero` / `jal 0x8003567c` / `addiu a1,zero,1024` | **Wandpass, Maske 0x400** |
+FUN_8003567C (RE2 PSX.EXE): `sw zero,272(s0)` @0x8003569c (+0x110 = 0); `andi v0,v1,0x8 / bne` @0x80035694-98
+(word0 & 8 -> fertig); `lw v0,484(s0) / bne` @0x800356a0-a8 (+0x1E4 != 0 -> fertig); word0 &= ~0x4000 @0x800356ac-b4;
+`addiu a0,s0,132` / `lhu a1,144(s0)` / `lbu a2,262(s0)` + `sllv a2,1,a2` / `or a3,a1,0x01000000` -> `jal 0x8004c1bc`
+@0x800356d0 -> +0x110. Radius +0x90 des Babys = 10: Baby-INIT `addiu v0,zero,10` @0x80100170, `sh v0,144(s0)`
+@0x80100180. Der RE2-Engine-Takt setzt vor jedem Tick +0x1C2 = FUN_8004fba0(...) (`jal 0x8004fba0` @0x8002686c,
+`sh v0,450(s0)` @0x80026874) und ruft danach den Tick (`lw v0,516(s0)` / `jalr v0` @0x80026878-88).
+PORT-ZUORDNUNG (dieselbe wie Hund/Kraehe/Adult, enemy_ai_common.c Hundezweig "EIN Klemmpfad fuer BEIDE Flavors"):
+FUN_8004c1bc liest RE2-SCA-Daten, die der Port nicht hat -> re15_collision_constrain_enemy auf den RE1.5-Raumdaten,
+Band aus Y (= +0x106), Solid-Maske 4 (= RE2 0x400 wie beim Hund `jal 0x8003567c` a1 = 0x400), Radius 10.
+Der Schub FUN_80035530 (Kugel-Schub FUN_80034d0c(andere, self) mit RE2-Spieler-Kugel r 450 / Versatz -1530 /
+Halbhoehe 1530 (`addiu v1,zero,450` @0x8003bdc0, `addiu v0,zero,-1530 / sh 152` @0x8003bde0-e4, `addiu v0,zero,1530 /
+sh 158` @0x8003bde8-ec) und Baby-Kugel r 10 / -10 / 10 (@0x80100168-78)) ist NICHT portiert: OFFEN 6.
+
 ## 3. Umsetzung
 
 Neue Datei `re15_port/engine/src/spinnen_r38.c` + `re15_port/include/re15_spinnen_r38.h`; Haken (je 1-3 Zeilen,
@@ -260,6 +308,7 @@ Kommentar "Runde 38 Spur R"):
 | engine/src/enemy_ai_re2_spider.c | Unterzustand 8: `re15_spinnen_r38_spucken(e,1)` | RE2-Spucken FUN_801058A4 @0x8010101C (2.3) |
 | engine/src/enemy_ai_re2_spider.c | Baby-Spawner: `dog_floor_y`/`floor` = Elternteil | +0x1C2 = Boden unter der Entity (RE2 @0x8002686c/74) |
 | engine/src/enemy_ai_re2_spider.c | Biss: Reichweite 450 + 10 | Ziel+0x9A = 450 (RE2 @0x8003bdc0/c4), @0x80100E40 |
+| engine/src/enemy_ai_re2_spider.c | Baby-Wurzel: `re15_spinnen_r38_baby_schwanz(e, prev_x, prev_z)` | **Fortsetzung 2**: Wandpass FUN_8003567C @0x801000c0 (2.8) |
 | engine/src/re2_ems.c | `re15_spinnen_r38_re2_bank(kind, eb)` in re2_ems_load_bank | **neu in der Fortsetzung**: Baby 0x26 = Paar 1 (2.6) |
 | engine/src/re15_esp.c | `re15_spinnen_r38_routine_a(f)` | ESP-Routinen A 24 @0x80017f50 / 25 @0x80017fa4 (2.2); Gift nur bei Absender Typ 0x25 (2.7, neu) |
 | engine/src/re15_damage.c | FUN_80012d60-Spielerzweig: Gift-Bit nie (Ziehungen bleiben) | **neu**: 2.7, a0 = 0x0A @0x80012e78 gemessen; test_damage angepasst |

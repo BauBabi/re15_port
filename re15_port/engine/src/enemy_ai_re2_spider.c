@@ -2988,6 +2988,8 @@ int re15_re2spider_baby_tick(int slot)
     }
 
     e->re2s_f106 = (uint8_t)((-e->y) / 1800);              /* @0x80100080-B0 */
+    re15_spinnen_r38_baby_schwanz(e, (int32_t)s_re2s_prev_x, (int32_t)s_re2s_prev_z);   /* Runde 38 Spur R:
+                                     * Wurzel-Schwanz @0x801000ac-c4 (Wandpass FUN_8003567C, spinnen_r38.c) */
     return 1;
 }
 

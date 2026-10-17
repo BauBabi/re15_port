@@ -456,6 +456,42 @@ void re15_spinnen_r38_re2_bank(int kind, re15_enemy_bank_t *eb)
 }
 
 /* ============================================================================================
+ * Teil 3b — RE2-MINISPINNEN: der WURZEL-SCHWANZ (Wandpass) des Babys
+ * ============================================================================================
+ * GEMESSEN (Fortsetzung 2026-10-17, echte exe, ROOM2030, RE15_SPINNEN_LOG mit der UNABHAENGIGEN
+ * Bodengroesse bu = hoechste SCA-Bodenflaeche auf/unter der Figur): 9 von 9 Babys verlassen den Steg,
+ * in 14485 von 20025 Baby-Bildern liegt ihre Lage-Y (-5400) UEBER dem Boden unter ihnen (0); sie
+ * laufen durch Gelaender und Waende (Lagen bis (42446,-5400,50409), weit ausserhalb des Raums) und
+ * schweben ueber der unteren Ebene. Der Port rief fuer das RE2-Baby KEINE Wandklemme (Zweig 0x26 in
+ * re15_enemy_ai_run_all: "does NOT translate -> no wall-clamp", ein Satz fuer den RE1.5-Feuer-Emitter).
+ * ORIGINAL (RE2 EMS26.BIN, Wurzel @0x8010001C, selbst disassembliert):
+ *   80100094  lw   a0,0(s0)             ; word0
+ *   801000ac  beq  a0,zero,0x801000c8   ; geloescht -> fertig
+ *   801000b4  jal  0x80035530           ; Schub aus allen anderen Entities (a0 = self)
+ *   801000c0  jal  0x8003567c           ; Wandpass
+ *   801000c4  addiu a1,zero,1024        ; Maske 0x400
+ * FUN_8003567C (RE2 PSX.EXE): `sw zero,272(s0)` @0x8003569c (+0x110 = 0); word0 & 8 -> fertig
+ *   (`andi v0,v1,0x8 / bne` @0x80035694-98); +0x1E4 != 0 -> fertig (@0x800356a0-a8); sonst
+ *   FUN_8004c1bc(self+0x84, `lhu a1,144(s0)` = +0x90, `sllv a2,1,+0x106` = Bandbit, 0x400|0x01000000)
+ *   `jal 0x8004c1bc` @0x800356d0 -> +0x110. Radius +0x90 = 10: Baby-INIT `addiu v0,zero,10`
+ *   @0x80100170 / `sh v0,144(s0)` @0x80100180. Band +0x106 = (-Y)/1800 (@0x80100080-b0).
+ * PORT-ZUORDNUNG (dieselbe wie Hund/Kraehe/Adult, enemy_ai_common.c "EIN Klemmpfad fuer BEIDE Flavors"):
+ *   FUN_8004c1bc liest RE2-SCA-Daten, die der Port nicht hat; die Klemme laeuft auf den RE1.5-Raumdaten
+ *   ueber re15_collision_constrain_enemy (Band aus Y, Solid-Maske 4 = RE2 0x400). +0x1E4 hat am Baby
+ *   keinen Schreiber im Port (memset beim Allokieren) -> 0. */
+void re15_spinnen_r38_baby_schwanz(re15_actor_t *e, int32_t ox, int32_t oz)
+{
+    if (!e || !e->active) return;                             /* `beq a0,zero,0x801000c8` @0x801000ac */
+    if (e->flags & 0x8u) return;                              /* word0 & 8 @0x80035694-98 */
+    if (!g_room_rdt_ok) return;
+    int32_t nx = e->x, nz = e->z;
+    re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
+                                   10,                        /* +0x90 = 10 @0x80100170/@0x80100180 */
+                                   e->y, 4u);                 /* Band (-Y)/1800, Maske 0x400 -> 4 */
+    e->x = nx; e->z = nz;
+}
+
+/* ============================================================================================
  * Teil 4 — OBJEKT-AUSSCHIEBUNG (der Aktor-Durchgang des Objekt-Ticks FUN_8002bd44)
  * ============================================================================================
  * GEMESSEN (DuckStation-GDB, R_belege/orig_2060_klemme.txt + orig_2060_watch.txt): die Schachtspinne
@@ -569,6 +605,17 @@ void re15_spinnen_r38_objekt_pass(re15_actor_t *e)
 /* ---- MESSSCHIENE RE15_SPINNEN_LOG ------------------------------------------------------------
  * Reiner Messhaken (env-gegated, kein Spielverhalten): je Bild und Spinne eine Zeile. Die GUI-exe
  * hat kein nutzbares stderr, deshalb eine Datei (Muster RE15_STATE_LOG, platform/pc/main.c). */
+/* Messgroesse "bu": die hoechste SCA-Bodenflaeche AUF ODER UNTER der Figur — FUN_8001c6e8 mit dem Startband
+ * aus der eigenen Hoehe ((-y + 1799) / 1800, Baender start-1 .. 0), damit eine Ebene UEBER der Figur (Steg,
+ * Decke) nicht als ihr Boden zaehlt. Reine Messgroesse der Schiene (kein Spielverhalten). */
+static int16_t boden_unter(const re15_rdt_t *rdt, const re15_actor_t *a)
+{
+    int32_t sb = (-a->y + 1799) / 1800;
+    if (sb < 0) sb = 0;
+    if (sb > 8) sb = 8;
+    return re15_collision_room_coll(rdt, a->x, a->z, 0, (int)sb, 0x100u);
+}
+
 void re15_spinnen_r38_log_frame(unsigned frame)
 {
     static FILE *s_fp = NULL;
@@ -580,17 +627,24 @@ void re15_spinnen_r38_log_frame(unsigned frame)
     }
     if (!s_fp) return;
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    fprintf(s_fp, "F%u R%04X PL(%d,%d,%d hp=%d st=%d ps=%04x fl=%d gz=%u) fx=%d", frame,
+    /* bo = SCA-Bodenhoehe unter der Figur, unabhaengig von ihrem eigenen Bodenfeld +0x1ba/+0x1C2:
+     * FUN_8001c6e8(&P, 0, 8, 0x100) — derselbe Aufruf wie Routine 25 (@0x80017fe0-f4). Gegen
+     * die SELBSTBESTAETIGENDE Pruefung "y == +0x1ba" (Fortsetzung 2026-10-17). */
+    const re15_rdt_t *rdt = g_room_rdt_ok ? &g_room_rdt : NULL;
+    fprintf(s_fp, "F%u R%04X PL(%d,%d,%d hp=%d st=%d ps=%04x fl=%d gz=%u bo=%d bu=%d) fx=%d", frame,
             (unsigned)g_current_room_id, (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->hp,
             (int)pl->state, (unsigned)pl->status_flags, (int)pl->floor, (unsigned)s_gift_zaehler,
+            (int)re15_collision_room_coll(rdt, pl->x, pl->z, 0, 8, 0x100u), (int)boden_unter(rdt, pl),
             re15_esp_fx_count());
     for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
         const re15_actor_t *e = &g_actors[i];
         if (!e->active || (e->type != 0x25 && e->type != 0x26)) continue;
-        fprintf(s_fp, " [%d t=%02x st=%d s=%d.%d.%d g=%02x fl=%d m=%d gy=%d mo=%d af=%d"
+        fprintf(s_fp, " [%d t=%02x st=%d s=%d.%d.%d g=%02x fl=%d m=%d gy=%d bo=%d bu=%d mo=%d af=%d"
                       " @(%d,%d,%d) r=(%d,%d,%d) hp=%d h93=%02x]",
                 i, e->type, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3,
-                e->grid_id, e->floor, e->re2s_mode222, (int)e->dog_floor_y, e->motion,
+                e->grid_id, e->floor, e->re2s_mode222, (int)e->dog_floor_y,
+                (int)re15_collision_room_coll(rdt, e->x, e->z, 0, 8, 0x100u), (int)boden_unter(rdt, e),
+                e->motion,
                 (int)e->anim_frame, (int)e->x, (int)e->y, (int)e->z,
                 (int)e->rot_x, (int)e->rot_y, (int)e->rot_z, (int)e->hp, e->hit_react);
     }

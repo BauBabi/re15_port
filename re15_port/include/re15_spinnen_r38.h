@@ -61,6 +61,13 @@ unsigned re15_spinnen_r38_gift_treffer(void);
  * Babys schwebten 1166..1797 ueber ihrer Lage. Gerufen aus re2_ems_load_bank (Haken "Runde 38 Spur R"). */
 void re15_spinnen_r38_re2_bank(int kind, re15_enemy_bank_t *eb);
 
+/* Wurzel-Schwanz des RE2-Babys (EMS26.BIN @0x801000ac-c4): word0 == 0 -> nichts; sonst der Wandpass
+ * FUN_8003567C(self, 0x400) mit dem Baby-Radius +0x90 = 10 (@0x80100180) im eigenen Band (-Y)/1800 —
+ * Port-Zuordnung auf die RE1.5-SCA-Klemme wie bei Hund/Kraehe/Adult (Maske 4). ox/oz = Lage am
+ * Bildanfang (+0x44/+0x48, re2s_pos_snapshot). Gerufen aus enemy_ai_re2_spider.c
+ * re15_re2spider_baby_tick (Haken "Runde 38 Spur R"). */
+void re15_spinnen_r38_baby_schwanz(re15_actor_t *e, int32_t ox, int32_t oz);
+
 /* ---- Teil 4: Objekt-Ausschiebung (Aktor-Durchgang des Objekt-Ticks FUN_8002bd44 @0x8002be0c-4c) ---
  * FUN_8002cabc(a0 = Spinne, a1 = Objekt, a2 = 0) je aktivem Obj_model_set-Objekt (obj_id von hinten,
  * @0x8002bdb0-c8), danach der Lage-Spiegel +0x40/+0x42/+0x44 (@0x8001d124-154). Gerufen aus
