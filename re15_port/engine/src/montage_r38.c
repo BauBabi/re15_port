@@ -2,7 +2,8 @@
  * Runde 38 Spur O "montage" — Montage nach Irons' Tod: die durchbrechenden Zombies gehen in jedem Schnitt auf die
  * Kamera zu (Form des Rolltor-Schnitts). Herleitung, Belege, Konstanten: include/re15_montage_r38.h, Dossier
  * analysis/befunde_runde38/O_montage.md. Die Listen (Durchbruch-Form) und das Umparken in Cut 12 stehen im Programm
- * (irons_tod_1150.c); hier der Einzelstopp hinter der Kamera und die Messung je Schnitt.
+ * (irons_tod_1150.c); hier der Einzelstopp hinter der Kamera (Baustein 3), die Kriech-Regel am aufgebrochenen Tor
+ * (Baustein 4), das Warten der Zombies hinter dem Tor auf ihren Schnitt (Baustein 5) und die Messung je Schnitt.
  */
 #include "re15_montage_r38.h"
 #include "re15_irons_tod.h"

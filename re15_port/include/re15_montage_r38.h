@@ -39,6 +39,15 @@
  *      viermal sub09 (dieselbe Regel, ein Zombie je Aufruf, `59 05 04 01` @0x02822 = Set(5,i)). NUTZER-VORGABE "alle"
  *      -> im Montage-Schritt auf Cut 12 gilt die sub06-Regel fuer jeden Zombie (ohne die Spiel-Drossel sub02 @0x021CC
  *      "weniger als 4 im Hauptraum" und ohne das Spiel-Bit (5,0x22) @0x024CC, die der Montage-Ablauf nicht setzt).
+ *   5. DIE ZOMBIES HINTER DEM TOR WARTEN AUF IHREN SCHNITT (ROOM1030, Cut-7-Teil). GEMESSEN (Dossier "Dritter Lauf"): liefen
+ *      sie schon waehrend Cut 7 (Kamera auf dem 1070-Gang) los, stauten sie sich 120 Bilder am geschlossenen Tor vor dem
+ *      Zone-9-Uebergang; einer wurde westlich der Klemmlinie von SCA 30 (@0x01B78, x -12566 + Radius 400) geschoben und kam
+ *      in Cut 12 nie durch (+120 von der Kamera weg; FUN_8003bca8 code 0 nimmt jeden Schritt in die Flaeche zurueck). Form
+ *      ROOM1141 sub02: `2e 02 01 00 34 0c 30 00 2e 02 02 00 34 0c 30 00` @0x00E6C (Work_set(2,i) + Member_set(12,0x30) =
+ *      entity+0x9 Bit 0x20) unmittelbar vor `29 00` Cut_chg 0 @0x00E80, Freigabe `34 0c 10 00` @0x00F64/@0x00F74; Wirkung
+ *      @0x80100450-5c (s. 3). Hier: solange der 1030-Schritt NICHT Cut 12 zeigt, haelt jeder Zombie in BLK-Zone 0/10 (hinter
+ *      dem Tor) an; mit dem ersten Bild von Cut 12 laufen genau diese los — wie in 1130 Cut 0, 1040 Cut 1 und 1030 Cut 7,
+ *      deren Zombies mit IHREM Schnitt losgehen.
  *
  * KAMERAS = RDT-RID (RDT+0x24 = camera_start 0x60 in allen vier Raeumen, 32 Byte je Schnitt, re15_camera.h: +0x04 pos_x,
  * +0x0C pos_z, +0x10 target_x, +0x18 target_z); Datei-Offset je Schnitt in der Tabelle (montage_r38.c), Riegel
