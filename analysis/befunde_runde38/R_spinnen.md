@@ -30,6 +30,9 @@ Baum `.claude/worktrees/r38_spinnen` (Zweig `r38/spinnen`, Basis e2cc7673). Ange
   (2.9, Test B3, 96eca34b). Gezielte Tests 39/39 gruen (5). Endmessung in der exe (4.4).
 - 07:10 Echtlauf-Riegel integration_r38_spinnen_echtlauf (Leon 2030 / Elza 2031, Auswerter pruef_log, 76272c5a);
   Endstand gezielt 40/40 gruen (5). Abschluss-Commit fix(r38-spinnen).
+- 2026-10-17 08:45-09:30 NACHBESSERUNG 1 nach Abnahme 0 (`R_abnahme_0.md`, 3 Maengel): M1/M2 Gift-Takt ist kein Treffer
+  (Periode 121, unit_r34_wurf gruen), Hinweis 1 Kommando 0 nullt den Gift-Zaehler, Merge Spur B + M3 Giftklumpen sieht den
+  Szenenschutz. Abschnitt "Nachbesserung 1" am Ende; gezielt 109/109 gruen.
 - ⛔ Gemeinsamer scratchpad: das Laufskript `lauf.sh` im scratchpad-Wurzelordner wurde von einem anderen Agenten
   (Abnahme Spur B) ueberschrieben; ein Aufruf brach mit "exe fehlt" ab, bevor er etwas anlegte. Eigene Skripte liegen jetzt
   in `scratchpad/R38_spinnen_fort2/` und im Baum unter `R_belege/` (lauf.sh, ana_bo.py).
@@ -515,9 +518,10 @@ nur INNERHALB von re15_enemy_ai_run_all) und gibt dort abgezogene HP im selben D
   von Spur B automatisch erfasst. Der Kugel-Schub (Teil 3b) ist kein Angriff.
 * **Giftklumpen** (spinnen_r38.c routine25, im ESP-Takt NACH der Gegner-Schleife): Gift-Tor `frei` liest +0x93 & 1,
   re15_player_is_grabbed() und HP >= 0 (2.9); der Schaden laeuft ueber re15_resolve_attack -> re15_player_take_damage
-  (+0x93 & 1). Ausserhalb von run_all greift Spur Bs Sicht NICHT -> bei der Integration in routine25 vor Gift UND
-  re15_resolve_attack `re15_szenenschutz_haelt()` abfragen (Klumpen, der waehrend einer Szene ankommt). Das Spucken selbst
-  startet im Spinnen-Takt (RE1.5 Unterzustand 7 / RE2 Unterzustand 8) — dort ohne Spieler-Tor im Original.
+  (+0x93 & 1). Ausserhalb von run_all greift Spur Bs Sicht NICHT -> **ERLEDIGT in Nachbesserung 1 (N1.M3)**: Spur B ist
+  in diesen Zweig gemergt (2af9d15f), routine25 fragt `re15_szenenschutz_haelt()` vor dem Gift-Tor und vor
+  re15_resolve_attack ab (Riegel B5). Das Spucken selbst: RE1.5-Entscheid liest +0x93 (@0x801111fc-208 -> Unterzustand
+  0xb, Spur Bs Sicht greift), RE2-Entscheid (Wort 0x801 @0x801008a4-ac) liest KEIN Tor (N1.M3, Tabelle).
 
 ## 7. Fuer den Nutzer
 
@@ -655,3 +659,53 @@ das Pad, @0x800304f4-500; im Plc-Executor Kommando 4 pausiert er, `pl->state != 
 **Messung nachher / Riegel** unit_r38_spinnen **B5**: Szene haelt -> HP 100, status 0x0000, Gift-Treffer 0, +0x93 nach dem
 ESP-Takt unveraendert; Gegenprobe frei (player_mode 0) -> HP 88 = 100 - 10 - 2, Gift-Bit
 (`R_belege/gegenprobe_nb1_szenenschutz.txt`).
+**Messung nachher in der echten exe** (`R_belege/nb1_szene_exe.txt`): Aufbau p2b + `RE15_SET_FLAG_AT=2:7@260` (Cutscene-Latch
+flag(2,7) -> player_mode 2 ab F261, Protokoll `[szenenschutz] F261 an`): beide Spuck-Salven der RE2-Spinne (F580, F638, je 3
+Klumpen) werden abgefangen (`[szenenschutz] F580 Giftklumpen abgefangen (Absender Slot 1, Spieler HP 80)`), HP bleibt 80 bis
+auf die Gift-Takte (F647/F768/F889, Periode 121). Kontrolle ohne Szene (n1_gift_2030, sonst gleich): F580 80 -> 70, F639
+70 -> 60. Bild `R_belege/nb1_szene_klumpen_abgefangen_F574-588.png`: Leon steht, der Klumpen zerplatzt an seinen Beinen.
+
+### N1.P2 Endkette Gift -> Gegengift nach der Nachbesserung (exe, Aufbau der Abnahme p2d)
+`N1/lauf_nb1.sh n1_gegengift "700#2030" ... RE15_GIVE=35:1 RE15_INPUT_SCRIPT=S0.1,W2,A0.1,W1,D0.1,W0.6,A0.1,W1,A0.1,W2,S0.1,W3
+RE15_INPUT_SCRIPT_START=250 RE15_INPUT_SCRIPT_BASIS=spiel`: F19 Spucktreffer HP 100 -> 90, Status 0x0002; Gift-Takte F42/F163
+(Periode 121, vorher F42/F185); F439 Antidote Spray HP 86 -> 111, Status 0x0000; F470 Statusschirm zu -> Kommando 0 -> Zaehler
+34 -> 0 (@0x8003196c). Bild `R_belege/nb1_gegengift_F300-480.png`: EKG "Poison" (violett) F300-F420, nach USE "Fine" (gruen),
+Spray aus der Liste; F480 wieder im Spiel.
+
+### N1 Tests (gezielt, keine volle Suite)
+- unit_r38_spinnen: neu **B4** (Gift-Takt im Spielschritt: Periode 121, keine Reaktion, Zielen bleibt; (c) Kommando 0 nullt den
+  Zaehler) und **B5** (Klumpen bei player_mode 2: HP 100, kein Gift, +0x93 unveraendert; frei: HP 88 + Gift). Ausgabe
+  "test_r38_spinnen: 0 FAIL".
+- integration_r38_spinnen_echtlauf: pruef_log prueft zusaetzlich die Gift-Takte (keine Reaktion ohne Fremdtreffer, Perioden 121);
+  L/E: 6 Takte, 5 sauber, 0 Reaktionen, 3 Perioden 121.
+- unit_r34_wurf: wieder gruen (6d HOCH vergiftet Abzug 0, Spawn A+19).
+- Gegenproben (Haken aus): B4 3 FAIL, unit_r34_wurf FAIL 119-121, Echtlauf FAIL (3/3 Reaktionen, 2 Perioden != 121); B5 auf
+  dem Merge-Stand ohne Haken: FAIL (HP 88 + Gift).
+- Auswahl: die 86 Tests der Abnahme 0 (40 des Bau-Agenten + Spieler-Status/Gift, ESP, Gegner-KI, 1090/SCD, Stage 2), dazu fuer
+  game_step_common.c (Treffer-Detektor, Kommando 0) unit_hit_reaction, unit_re2_hit_reaction, unit_knockdown_*,
+  unit_room_transition_cmd, integration_room_transition, unit_r30_android_n1_inventar_cmd, unit_load_after_death,
+  unit_writher_hit_feedback, unit_zombie_hit_fixes, unit_dog_hit, unit_re2_stagger_knockdown, unit_crow_death_corpse,
+  unit_re2_crow_kill_cmd3, unit_re2_victim_collapse, unit_re2_hit_repeat, unit_inv_grant, und fuer den Merge von Spur B deren
+  Riegel unit_r38_szenenschutz(_alle/_arm), integration_r38_szenenschutz, integration_r36_kleidung_hundeweg.
+  `ctest --test-dir re15_port/build -R "<R>" --timeout 900 --output-on-failure -j 3` mit
+  R = `^(unit_r38_spinnen|integration_r38_spinnen_echtlauf|unit_damage|unit_bleed_rng|unit_enemy_ai|unit_spider_ai|unit_adult_spider_ai|unit_re2_spider_ai|unit_re2_spider_water_2090|unit_re2_baby_spider_dmg|unit_re2_hit_repeat_crow_spider|unit_re2_room1090_ab|unit_ai_flavor_mixed|probe_spinne_elevation|unit_esp_parse|unit_espr_11e0|integration_r34_plattform_esp_eintritt|unit_ems|unit_re2_ems|unit_re2_enemse|unit_re2_enemse_bank|unit_item_use|unit_enemy_body_push|unit_1090_.*|probe_1090_.*|unit_scd_.*|unit_aot_sce_census|unit_r30_granate|unit_r35_granate|unit_r36_granate|unit_r36_objfall|unit_r36_dachkiste_zellschub|unit_r36_szenenleon_schub|unit_r37_elzaems_toc|unit_r37_elzaems_weiche|unit_r37_elzaems_raeume|unit_r37_fahrstuhl_lift2030|unit_r34_re2fx.*|unit_member|unit_inv_fsm|unit_savedata|unit_dog_grab_anchor|unit_r34_wurf|unit_r36_blut_pin_.*|unit_r26_mg_blut|unit_fx_emitter_ai|integration_fx_region_cull|unit_weste_effekt|unit_montage_fx|unit_dog_ai|unit_crow_ai|unit_birkin_ai|unit_re2_dog_ai|unit_re2_crow_ai|unit_re2_zombie_ai|unit_g5_tentakel|unit_r20_birkin_push_pin|unit_r36_gegnerzahl_raum20b0|unit_r34_wasser|unit_hit_reaction|unit_re2_hit_reaction|unit_knockdown_frontback|unit_knockdown_handoff_bank|unit_knockdown_fall_seq|unit_room_transition_cmd|integration_room_transition|unit_r30_android_n1_inventar_cmd|unit_load_after_death|unit_writher_hit_feedback|unit_zombie_hit_fixes|unit_dog_hit|unit_re2_stagger_knockdown|unit_crow_death_corpse|unit_re2_crow_kill_cmd3|unit_re2_victim_collapse|unit_re2_hit_repeat|unit_inv_grant|unit_r38_szenenschutz|unit_r38_szenenschutz_alle|unit_r38_szenenschutz_arm|integration_r38_szenenschutz|integration_r36_kleidung_hundeweg)$`
+  Endstand (557a0ece-Code, gebaut): **"100% tests passed, 0 tests failed out of 109"** (Total Test time 177.24 s).
+
+### N1 OFFEN
+- Die Dossier-Punkte OFFEN 1-7 (Abschnitt 6) gelten unveraendert.
+- RE2-Spuck-Entscheid ohne Spieler-Tor (Original, @0x80100784-8c0): eine freie RE2-Spinne spuckt auch waehrend einer Szene;
+  der Klumpen wird dann am Spieler abgefangen (N1.M3). Kein Port-Tor erfunden.
+- Der Gift-TAKT laeuft in Szenen weiter, solange der Spieler im Kommando 1 steht (Original: Set(2,7) sperrt nur das Pad) — er
+  ist kein Angriff; im Plc-Executor (Kommando 4) pausiert er wie im Original.
+
+### N1 Fuer den Nutzer
+- **Neue Assets / Sprachdateien:** keine. Paket-Gate unberuehrt.
+- Vergiftet taumelt Leon/Elza NICHT mehr alle paar Sekunden zurueck: der Gift-Abzug (2 HP alle ~4 s) laeuft still wie im
+  Original, Zielen und Granatenwurf werden nicht mehr abgebrochen. Echte Treffer (Spucke, Biss) werfen weiter zurueck.
+- Nach einem Raumwechsel, Laden oder dem Schliessen des Statusschirms kommt der naechste Gift-Abzug sofort (wie im Original).
+- Waehrend einer Szene, in der Leon/Elza festgehalten werden, zerplatzt ein ankommender Giftklumpen ohne Schaden und ohne
+  Vergiftung (Spur B "nicht angreifbar in Szenen").
+- **Fuer die Integration:** dieser Zweig enthaelt den Merge von Spur B (2af9d15f, wie r38/integration 8877e863); der Haken in
+  routine25 braucht re15_szenenschutz_r38.h. Gemeinsame Dateien der Nachbesserung: game_step_common.c (2 Haken: Kommando-1-
+  Prolog 4 Zeilen, re15_player_cmd_zero 2 Zeilen), sonst nur spinnen_r38.c/.h und die eigenen Tests.
+- **Entscheidungsfragen:** keine.
