@@ -13,9 +13,10 @@
 #   B  Elza  ROOM20A1, Eintritt per Spielstand + CONTINUE (Karte aus probe_r38_rolltor20a0_karte, Figur 4).
 #   D  Leon  ROOM20A0, Eintritt per Spielstand + CONTINUE.
 #   C  Leon  ROOM20A0 (Sprung): Kiste obj 0 von Sueden durch die Oeffnung schieben -> Fall (Kisten-Ablauf loesbar).
-# Pruefungen A/B/D: Rolladen y -10800; alle Framedumps (F600..F1100 je 50) in Cut 11 (RE15_STATE_LOG cam=11,
-# mindestens 3) zeigen den Raumhintergrund (Werkzeug test_r38_rolltor20a0 --bild ... 11 0: Anteil der Pixel gleich
-# dem dekodierten BSS-Bild >= 0.80; vor dem Fix 0.1305, nachher 0.94); RE15_OBJPOLY_LOG Cut 11 obj 1 =
+# Pruefungen A/B/D: Rolladen y -10800; alle Framedumps (F600..F1100 je 50) in Cut 11 (RE15_STATE_LOG cam=11 im Bild
+# und im Vorbild — das Umschaltbild zeigt noch den alten Schnitt; mindestens 3) zeigen den Raumhintergrund
+# (Werkzeug test_r38_rolltor20a0 --bild ... 11 0: Anteil der Pixel gleich dem dekodierten BSS-Bild >= 0.80;
+# vor dem Fix 0.1305, nachher 0.94); RE15_OBJPOLY_LOG Cut 11 obj 1 =
 # Original-Messung (gezeichnet 6, nclip 20, otz 16, gpu 6 — W_belege/orig1_log.txt) in jedem Bild.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r38_rolltor20a0_karte>
@@ -104,8 +105,13 @@ function(pruefe_cut11 _name _raum)
     endif()
     set(_n_cut11 0)
     foreach(_bild RANGE 600 1100 50)
+        # Bild N zeigt noch den Schnitt des Vorbilds: im Umschaltbild (Zustand F649 cam=12, F650 cam=11) liegt im
+        # Framedump F650 noch der Hintergrund von Cut 12 (gemessen 2026-10-17, Dossier §9.4: Anteil 0.0042, Bild =
+        # Cut-12-Ansicht). Gewertet wird darum nur ein Bild, dessen Zustand UND Vorbild-Zustand cam=11 tragen.
+        math(EXPR _vorbild "${_bild} - 1")
         file(STRINGS "${WORKDIR}/state.txt" _st REGEX "^F${_bild} ")
-        if(NOT _st MATCHES " cam=11 ")
+        file(STRINGS "${WORKDIR}/state.txt" _st_vor REGEX "^F${_vorbild} ")
+        if(NOT _st MATCHES " cam=11 " OR NOT _st_vor MATCHES " cam=11 ")
             continue()
         endif()
         if(_bild LESS 1000)
