@@ -8,6 +8,8 @@
 #   unit_r38_affen3_flavor   dasselbe unter RE2-KI (Standard) und RE1.5-KI
 #   unit_r38_affen3_quadrat  FUN_8001bff8 = Quadrat um den gezeichneten Knochenpunkt (Record 9 + 0x64)
 #   unit_r38_affen3_schwer   schwerer Angriff Sub 6: -10 im Fenster {21..24,33,34}, Records 6/10
+#   unit_r38_affen3_decke    angeschossener Affe: Sub 9 an die Decke, Kriechen/Jagd/Hieb wie GDB-Spur o7
+#   unit_r38_affen3_griff    Griff von der Decke (Sub 15 + Spieler-Haken cmd 5) und Bisse danach wie GDB-Spur o8
 #   integration_r38_affen3   echte exe, ROOM3040 per Debug-Sprung, Leon auf der Plattform: Bisse treffen (-5),
 #                            RE2-KI (Standard) und RE1.5-KI
 add_executable(test_r38_affen3 ${CMAKE_CURRENT_SOURCE_DIR}/test_r38_affen3.c)
@@ -19,7 +21,7 @@ target_compile_definitions(test_r38_affen3 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r38_affen3 PRIVATE m)
 endif()
-foreach(_teil typ biss flavor quadrat schwer)
+foreach(_teil typ biss flavor quadrat schwer decke griff)
     add_test(NAME unit_r38_affen3_${_teil} COMMAND test_r38_affen3 ${_teil})
     set_tests_properties(unit_r38_affen3_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

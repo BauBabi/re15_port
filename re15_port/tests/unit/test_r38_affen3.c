@@ -431,6 +431,7 @@ static void pl00_in_ctx(void) { s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim 
 
 static int aufbau_decke(re15_actor_t **pa, int16_t leon_gier)
 {
+    re15_damage_seed_rng(0x2545f491u);   /* Ersatz-Zufallsquelle (FUN_8001af20-Hash, re15_damage.c) je Lauf gleich: Lauf-Reihenfolge egal */
     if (room_boot(0x3040, -8800, -1800, -2400, leon_gier, 1, 0, 2) != 0) return 0;
     if (!bank_laden_29()) { printf("  FEHLER: EM029-Bank\n"); g_fail++; return 0; }
     if (!pl00_laden()) { printf("  FEHLER: PL00.EDD/EMR"); printf("%c", 10); g_fail++; return 0; }
@@ -455,6 +456,11 @@ static int aufbau_decke(re15_actor_t **pa, int16_t leon_gier)
     return 1;
 }
 
+typedef struct { uint8_t st, s1, s2, clip, bild, air, band; uint16_t rad; int32_t x, y, z; int16_t r;
+                 int32_t px, pz; int16_t php; int vs, ph, pmo, pbild; } snap_t;
+#define SNAP_N 1500
+static snap_t s_snap[SNAP_N + 1];
+
 static int lauf_decke(int16_t leon_gier, int ticks, decke_t *ev, int evmax, int *hp_ab, int *hp_tick, int nhp)
 {
     re15_actor_t *a = NULL;
@@ -473,6 +479,13 @@ static int lauf_decke(int16_t leon_gier, int ticks, decke_t *ev, int evmax, int 
         }
         if (pl->hp != hp_alt && nh < nhp) { hp_ab[nh] = hp_alt - pl->hp; hp_tick[nh] = k; nh++; }
         hp_alt = pl->hp;
+        if (k <= SNAP_N) {
+            snap_t *q = &s_snap[k];
+            q->st = a->state; q->s1 = a->sub_state_1; q->s2 = a->sub_state_2; q->clip = (uint8_t)a->motion; q->bild = (uint8_t)a->anim_frame;
+            q->air = a->roach_air; q->band = a->aim_band; q->rad = a->hit_radius_min; q->x = a->x; q->y = a->y; q->z = a->z; q->r = a->rot_y;
+            q->px = pl->x; q->pz = pl->z; q->php = pl->hp; q->vs = re15_player_victim_state(); q->ph = re15_affen3_opfer_phase();
+            q->pmo = (int)pl->motion; q->pbild = (int)pl->anim_frame;
+        }
         if (v) printf("    T%4d A %d.%d.%d c%d f%d (%d,%d,%d) r%d hr%x air%d r%u | PL (%d,%d) r%d hp%d vs%d ph%d mo%d f%d\n", k,
                       a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->y,
                       (int)a->z, (int)a->rot_y, a->hit_react, a->roach_air, (unsigned)a->hit_radius_min, (int)pl->x, (int)pl->z,
@@ -481,6 +494,84 @@ static int lauf_decke(int16_t leon_gier, int ticks, decke_t *ev, int evmax, int 
     }
     return n | (nh << 16);
 }
+
+/* Pruefung eines Bildes gegen das Original (exakt). */
+static int snap_gleich(int t, uint8_t st, uint8_t s1, uint8_t s2, int clip, int bild, int32_t x, int32_t y, int32_t z)
+{
+    const snap_t *q = &s_snap[t];
+    return q->st == st && q->s1 == s1 && q->s2 == s2 && (clip < 0 || q->clip == clip) && (bild < 0 || q->bild == bild)
+        && q->x == x && q->y == y && q->z == z;
+}
+
+/* o7: Leon blickt den Affen an (Gier 1024). Original-Bilder (T = F - 167, GDB-Spur o7_decke.txt):
+ *   T13 Sub 9 (HURT-Ausgang +0x1e3 @0x80114a1c-2c), T38 Decke y -4500 (@0x80112f10-28), T110 Sub 12, T111 Clip 15
+ *   (-8706,-4500,-6076), T160 Sub 13 (-8701,-4500,-6382), T161 Clip 24 (-8685,-4500,-6371), T177 vom Spieler
+ *   zurueckgeschoben (-8818,-4500,-3646), T210 Sub 14 Hieb (-8987,-4500,-3763) r3075, T281 Hieb 2 (-8989,-4500,-3651)
+ *   r3243; in 1600 Bildern KEIN HP-Abzug (Leon blickt den Affen an, die Hiebe gehen am geschobenen Leon vorbei). */
+static void teil_decke_fl(re15_ai_flavor_t fl)
+{
+    decke_t ev[256]; int ab[64], tk[64];
+    re15_ai_flavor_set(fl);
+    printf("  [%s]\n", fl == RE15_AI_FLAVOR_RE2 ? "RE2-KI (Standard)" : "RE1.5-KI");
+    int rv = lauf_decke(1024, 1450, ev, 256, ab, tk, 64);
+    int nh = rv >> 16;
+    PRUEF(snap_gleich(13, 1, 9, 0, 7, 0, -8719, -1800, -6082), "T13 HURT-Ausgang -> Sub 9 (Original F180)");
+    PRUEF(snap_gleich(38, 1, 9, 3, 0x0c, 25, -8719, -4500, -6082) && s_snap[38].air == 1 && s_snap[38].rad == 800,
+          "T38 an der Decke: y = +0x1ba - 2700 = -4500 (@0x80112f10-28), Luftkasten r 800 (@0x8011ec20), +0x1e0 = 1 (Original F205)");
+    PRUEF(snap_gleich(110, 1, 12, 0, 0x0c, 0, -8719, -4500, -6082), "T110 Sub 12 (Original F277)");
+    PRUEF(snap_gleich(111, 1, 12, 1, 0x0f, 1, -8706, -4500, -6076), "T111 Kriechen Clip 0xf, Fuss-Sperre c3c (-8706,-6076) (Original F278)");
+    PRUEF(snap_gleich(160, 1, 13, 0, 0x0f, 50, -8701, -4500, -6382), "T160 Sub 13 bei Bild 0x32 (@0x801137bc) (-8701,-6382) (Original F327)");
+    PRUEF(snap_gleich(161, 1, 13, 1, 0x18, 1, -8685, -4500, -6371), "T161 Jagd Clip 0x18 (-8685,-6371) (Original F328)");
+    PRUEF(snap_gleich(177, 1, 13, 1, 0x18, 17, -8818, -4500, -3646),
+          "T177 an der Decke durch den Gang, vom Spieler zurueckgeschoben (aec4 @0x80110b88): (%d,%d) (Original -8818/-3646)",
+          (int)s_snap[177].x, (int)s_snap[177].z);
+    PRUEF(snap_gleich(210, 1, 14, 1, 0x1a, 1, -8987, -4500, -3763) && s_snap[210].r == 3075,
+          "T210 Hieb Sub 14 (A[13] Fenster {0,0x31} @0x8011ed59) bei (-8987,-3763) r3075 (Original F377)");
+    PRUEF(snap_gleich(281, 1, 14, 1, 0x1a, 1, -8989, -4500, -3651) && s_snap[281].r == 3243,
+          "T281 zweiter Hieb (-8989,-3651) r3243 (Original F448)");
+    PRUEF(s_snap[300].band == 4 && s_snap[300].air == 1,
+          "Zielband an der Decke = NUR UP (@0x80111184-1b0 / FUN_80012a0c(0x1388)): %u", (unsigned)s_snap[300].band);
+    PRUEF(nh == 0, "kein HP-Abzug in 1450 Bildern (Original o7: 0 in 1600) - %d", nh);
+}
+
+/* o8: Leon kehrt den Ruecken zu (Gier 3072). Original-Bilder (o8_griff.txt): T174 GRIFF Sub 15 (A[13] @0x80113a1c-a94),
+ *   Affe (-8818,-1400,-3283), Spieler cmd 5; Haken-Phasen (aca5a) 1 -> 2 (T212) -> 3 (T213, Clip 2) -> 5 (T313, Clip 3)
+ *   -> 6 (T364) -> 7 (T365, eigener Clip 0x10) -> 8 (T380) -> 9 (T381, Clip 0xb) -> 10 (T405) -> frei (T406);
+ *   Leon (-8777,-2711) T210, (-9132,-1993) T330; Affe auf dem Boden (-9118,-1800,-3547) T365, Sub 2 T385;
+ *   im Griff KEIN HP-Abzug; danach Bisse T458/516/574/632/... je -5. */
+static void teil_griff_fl(re15_ai_flavor_t fl)
+{
+    decke_t ev[256]; int ab[64], tk[64];
+    re15_ai_flavor_set(fl);
+    printf("  [%s]\n", fl == RE15_AI_FLAVOR_RE2 ? "RE2-KI (Standard)" : "RE1.5-KI");
+    int rv = lauf_decke(3072, 1450, ev, 256, ab, tk, 64);
+    int nh = rv >> 16;
+    PRUEF(snap_gleich(174, 1, 15, 1, 0x1c, 1, -8818, -1400, -3283) && s_snap[174].vs == 1 && s_snap[174].ph == 1 && s_snap[174].pmo == 1,
+          "T174 Griff von der Decke: Affe (-8818,-1400,-3283) Clip 0x1c, Spieler cmd 5 Haken-Phase 1 Clip 1 (Original F341)");
+    PRUEF(s_snap[210].px == -8777 && s_snap[210].pz == -2711,
+          "T210 Leon-Platzierung ad68 (-8777,-2711) (Original F377): (%d,%d)", (int)s_snap[210].px, (int)s_snap[210].pz);
+    PRUEF(s_snap[213].ph == 3 && s_snap[213].pmo == 2 && s_snap[213].s2 == 3, "T213 Ringen: Haken 3 Clip 2, Affe Phase 3 (Original F380)");
+    PRUEF(s_snap[312].ph == 3 && s_snap[313].ph == 5 && s_snap[313].pmo == 3,
+          "T313 Ringen vorbei (+0x9c 100 -> < 0 @0x80114524) -> Haken 5 Clip 3 (Original F480)");
+    PRUEF(s_snap[330].px == -9132 && s_snap[330].pz == -1993,
+          "T330 Leon (-9132,-1993) (Platzierung, dann Wand @0x80031d70) (Original F497): (%d,%d)", (int)s_snap[330].px, (int)s_snap[330].pz);
+    PRUEF(snap_gleich(365, 1, 15, 7, 3, 30, -9118, -1800, -3547) && s_snap[365].rad == 1100 && s_snap[365].air == 0,
+          "T365 Affe faellt auf den Boden (-9118,-1800,-3547), Bodenkasten (@0x80114608-6cc) (Original F532)");
+    PRUEF(s_snap[365].ph == 7 && s_snap[365].pmo == 0x10 && s_snap[365].pbild == 1, "T365 Leon eigene Bank Clip 0x10 Bild 1 (Original F532)");
+    PRUEF(s_snap[381].ph == 9 && s_snap[381].pmo == 0x0b && s_snap[381].pbild == 1, "T381 Leon Clip 0xb (a2 = 1) Bild 1 (Original F548)");
+    PRUEF(s_snap[405].ph == 10 && s_snap[406].vs == 0 && s_snap[406].ph == 0xff, "T405 Haken 10, T406 frei (aca58 = 1 @0x80116018) (Original F572/F573)");
+    PRUEF(s_snap[385].s1 == 2 && s_snap[385].s2 == 1, "T385 Affe Sub 2 nach dem Griff (@0x80114710-77c) (Original F552)");
+    int im_griff = 0; for (int i = 0; i < nh; i++) if (tk[i] >= 174 && tk[i] <= 406) im_griff++;
+    PRUEF(im_griff == 0, "kein HP-Abzug im Griff (Original o8): %d", im_griff);
+    static const int soll[8] = { 458, 516, 574, 632, 690, 748, 806, 864 };
+    int ok = (nh >= 8);
+    for (int i = 0; i < 8 && i < nh; i++) if (tk[i] != soll[i] || ab[i] != RE15_AFFEN3_BISS_SCHADEN) ok = 0;
+    PRUEF(ok, "danach Bisse aus dem Gang in den Original-Bildern T458/516/574/632/690/748/806/864 je -5: %d Treffer, erster T%d",
+          nh, nh > 0 ? tk[0] : -1);
+}
+
+static void teil_decke(void) { teil_decke_fl(RE15_AI_FLAVOR_RE2); teil_decke_fl(RE15_AI_FLAVOR_RE15); }
+static void teil_griff(void) { teil_griff_fl(RE15_AI_FLAVOR_RE2); teil_griff_fl(RE15_AI_FLAVOR_RE15); }
 
 int main(int argc, char **argv)
 {
@@ -492,6 +583,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "flavor"))  teil_flavor();
     if (alle || !strcmp(teil, "quadrat")) teil_quadrat();
     if (alle || !strcmp(teil, "schwer"))  teil_schwer();
+    if (alle || !strcmp(teil, "decke"))   teil_decke();
+    if (alle || !strcmp(teil, "griff"))   teil_griff();
     if (!strcmp(teil, "spur_o7") || !strcmp(teil, "spur_o8")) {   /* Messlauf ohne Pruefung (R38_AFFEN3_SPUR=1 fuer jedes Bild) */
         decke_t ev[256]; int ab[64], tk[64];
         int rv = lauf_decke(!strcmp(teil, "spur_o7") ? 1024 : 3072, 1450, ev, 256, ab, tk, 64);
