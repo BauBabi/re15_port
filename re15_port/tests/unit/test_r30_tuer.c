@@ -445,6 +445,10 @@ static int tabellen_art(unsigned room, int msg)
         re15_lock_se_site(i, &r, &m, &art, &wege);
         if (r == room && m == msg) return art;
     }
+    /* Runde 38 Spur F: Port-Schlossstelle mit eigenem Tuer-Handler im RE2-Muster LAB_80051514 (Ton @0x800516a0/a4 =
+     * Art M, dining_r38.c) — ROOM1131 Slot 0 -> 1141, Port-Nachricht 40 "It's locked. / The door is marked "Dining
+     * Room"." (re15_dining_r38.h RE15_R38F_MSG_1131_ZU), bis der Dining Room Key benutzt ist. */
+    if (room == 0x1131u && msg == 40) return RE15_LOCK_SE_ART_M;
     return -1;
 }
 
@@ -528,8 +532,9 @@ static void teil_raeume(void)
            plaetze, ohne, offen, tab, tabK, tabM, tabS, n_stellen, still);
     /* Art S (ROOM5080/5081 msg 2) liegt im Frisch-Zustand NICHT auf einem Platz: erst sub02
      * (Generator) setzt ihn per Aot_reset. Den Weg prueft Teil (e). */
-    CHECK(tab == 51 && tabK == 16 && tabM == 35 && tabS == 0 && n_stellen == 46,
-          "Tabellen-Plaetze %d (K %d / M %d / S %d, %d Stellen) statt 51 (16 / 35 / 0, 46)",
+    /* Runde 38 Spur F: + 1 Platz / 1 Stelle Art M (ROOM1131 Slot 0, Port-Nachricht 40, s. tabellen_art). */
+    CHECK(tab == 52 && tabK == 16 && tabM == 36 && tabS == 0 && n_stellen == 47,
+          "Tabellen-Plaetze %d (K %d / M %d / S %d, %d Stellen) statt 52 (16 / 36 / 0, 47)",
           tab, tabK, tabM, tabS, n_stellen);
     CHECK(p10d0_0,  "Pflichtfall ROOM10D0 Platz 0 -> msg 6, 1 x ZU_E");
     CHECK(p1170_5,  "Pflichtfall ROOM1170 Platz 5 -> msg 12, 1 x ZU_A");
