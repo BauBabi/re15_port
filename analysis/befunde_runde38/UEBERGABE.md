@@ -6,6 +6,7 @@ Verfahren wie Runde 37 (`analysis/befunde_runde37/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-17 11:04: Zwischenpruefung Integration (18 Spuren, HEAD 72653ac1): alle unit_/prop_/probe_ 755/755 gruen (-j3, 574 s); Suite jetzt 919 Tests.
 * 2026-10-17 10:51: Integration D gruen (114/114: D-Auswahl + alle Elza-/Masken-/Skelett-/Cursor-/Tagebuch-Riegel), Baum r38_zopf entfernt.
 * 2026-10-17 10:30: D zopf BESTANDEN (Abnahme 0, wf_3c7f69c5-a0f), gemergt (72653ac1, main.c Include beide Seiten), configure + Bau OK, gezielte Tests laufen (D-Auswahl + alle Elza-/Masken-/Skelett-Riegel). N5 (Zopf ueber P-Kasten) -> Grenzen + NACHLAUF #16.
 * 2026-10-17 10:16: Integration R gruen (122/122: R-Auswahl + Spiderman/Griffe/1171-Szene), Baum r38_spinnen entfernt.
