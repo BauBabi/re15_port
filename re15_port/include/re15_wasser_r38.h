@@ -19,11 +19,12 @@
  * Der Port spielte bisher nur den Ton (re15_audio_footstep mit dem rohen Bodentyp) — Effekt, Watsatz
  * (-3), Lauf-Versatz (a0 = 1 @0x80032850) und Objekt-Index fehlten, +0x88 wurde nie gelesen/geloescht.
  *
- * Zeitfolge (B3/B6/B7): der Schritt liegt im Geh-Executor VOR anim_set (@0x80032578) und pos_advance
+ * Zeitfolge (B3/B6/B7/B9): der Schritt liegt im Geh-Executor VOR anim_set (@0x80032578) und pos_advance
  * (@0x800325ec), die Part-Weltmatrizen fuellt der Zeichner (FUN_8001e9ec) — der Schritt sieht also Lage,
- * Pose und Stempel des zuletzt gezeichneten Bilds. Der Port haelt dafuer am Anfang von re15_game_step
- * einen Schnappschuss des Spielers (re15_wasser_r38_bildanfang) und rechnet Boden, Anker und Stempel
- * daraus.
+ * Pose und Stempel des zuletzt gezeichneten Bilds. Auch das gepruefte Bildwort ist das des gezeichneten
+ * Bilds: *(+0x168) setzt der anim_set des Vorbilds (`sw a2,360(t0)` @0x8001f36c) auf +0x95 VOR dessen
+ * Vorschub (@0x8001f618/1c). Der Port haelt dafuer am Anfang von re15_game_step einen Schnappschuss des
+ * Spielers (re15_wasser_r38_bildanfang) und rechnet Schritt-Erkennung, Boden, Anker und Stempel daraus.
  */
 #ifndef RE15_WASSER_R38_H
 #define RE15_WASSER_R38_H
@@ -52,6 +53,12 @@ void re15_wasser_r38_bildanfang(const re15_game_ctx_t *c);
  * @0x80032850, sonst 0), fuss = Part-Index 7/4 (7 - 3*Bit12, @0x80032548-60). Spawnt den Effekt,
  * spielt den Schritt-Ton (re15_audio_footstep) und liefert den EDT-Index (Mess-Schiene). */
 int  re15_wasser_r38_schritt(const re15_game_ctx_t *c, int a0, int fuss);
+
+/* Schritt-Erkennung je Spielschritt (ersetzt den alten FOOTSTEP-Block in re15_game_step): laeuft in
+ * diesem Takt der Geh-/Lauf-Executor (Motion 105/100) und traegt das Bildwort des ZULETZT GEZEICHNETEN
+ * Bilds (Schnappschuss) Bit 0x4000 (`andi v0,v1,0x4000` @0x8003253c), dann re15_wasser_r38_schritt mit
+ * Fuss 7 - 3*Bit12 (@0x80032548-60). Kantensperre auf die Bildnummer (60-fps-Halbtakt). */
+void re15_wasser_r38_fusstakt(const re15_game_ctx_t *c);
 
 /* Tonversatz a0 des Original-Aufrufers aus dem Port-Zustand: Echtzeit-Lauf (Sub 2 @0x80073ff0 ->
  * 0x80032778, `ori a0,zero,0x1` @0x80032850) = 1; Gehen/Rueckwaerts/Drehen (@0x80032544/b6c/dd0) und

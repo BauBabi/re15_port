@@ -2145,25 +2145,10 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Gameplay-Zweig (nicht nur waehrend des Kletterns). */
     if (c->rdt_ok) re15_climb_standing_tick();
 
-    /* FOOTSTEP SE (byte-true LAB_80030af0 walk / LAB_80030d28 run): while the player
-     * walks(105)/runs(100), the W01 clip's CURRENT frame carries a foot-plant flag
-     * (bit 0x4000) → fire one footstep, its material from floor.flr
-     * (re15_rdt_floor_sound at the player XZ). Edge-gate on the anim frame so the
-     * same foot-plant isn't double-fired (PC halves anim_frame at 60fps). */
-    {
-        static uint32_t s_last_foot_cur = 0xFFFFFFFFu;
-        if (c->rdt_ok && c->w01_anim && (pl->motion == 105 || pl->motion == 100)) {
-            uint32_t cur = (uint32_t)pl->anim_frame;
-            if (cur != s_last_foot_cur) {
-                s_last_foot_cur = cur;
-                int clip = (pl->motion == 105) ? 5 : 0;   /* walk=W01 c5, run=c0 */
-                int foot = re15_actor_footstep(c->w01_anim, pl, clip, cur);
-                if (foot) re15_wasser_r38_schritt(c, re15_wasser_r38_a0(pl->motion, pl->walk_active), foot);   /* Runde 38 Spur N: FUN_80045630 (Effekt @0x800456ac-0x80045710, Ton @0x80045718) */
-            }
-        } else {
-            s_last_foot_cur = 0xFFFFFFFFu;   /* reset when not locomoting */
-        }
-    }
+    /* FOOTSTEP (byte-true LAB_80030af0 walk / LAB_80030d28 run): Runde 38 Spur N — Erkennung am
+     * Bildwort des ZULETZT GEZEICHNETEN Bilds (*(+0x168) aus dem anim_set des Vorbilds @0x8001f36c,
+     * gelesen @0x8003252c-3c) + FUN_80045630-Zwilling (Effekt @0x800456ac-0x80045710, Ton @0x80045718). */
+    re15_wasser_r38_fusstakt(c);
 
     /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die TUERSEQUENZ vor dem Wiedereintritt. RE2
      * FUN_80026b7c startet Door_main (@0x80026bf8/bfc) und wartet am Ende auf deren Ende

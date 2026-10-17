@@ -173,6 +173,37 @@ Vorgaenger (wf_9fc9967b-c4b) vom Sitzungslimit beendet; Stand 67aa565c. Geprueft
 - **Messung nachher reproduziert** (exe Stand 67aa565c, Leon 1260 P0): F97/F112 `zweig=boden code=0x06050d00`,
   Anker = Fuss-Part (Part 4/7 = linker/rechter Fuss, stair_common.c STAIR_FOOT_L/R) + (0,100,0).
 
+### B9 Original-Gegenprobe DuckStation (Lauf 2, 2026-10-17) — Bild, Ton-Index, Zeitfolge
+
+Werkzeug: scratchpad `N38w/ds_wasser.py` / `ds_paket.py` (MZD-Disc = Auslieferungs-EXE, Spielstand
+`stage_saves/mzd_debugmenu.sav`, JUMP 0x126 per virtuellem Pad, GDB 127.0.0.1:2345, Leon per RAM auf (-8404,-7246)
+Blick 0 gestellt = dieselbe Lage wie der Port-Lauf, UP gehalten; settings.ini gesichert und zurueckgeschrieben).
+Raum belegt: FLR-Zeiger *(0x800ac778)+0x34 -> erster Eintrag x -7800 z -8700 w 1200 d 1600 Typ 0x97 (= ROOM1260 P0).
+Haltepunkte @0x80045630 (Eintritt), @0x80045710 (Spawn-jal), @0x80045798 (Tonindex in v0), @0x800534c4/@0x800537b4
+(Sprite-Bau, POLY_FT4 gelesen). Ergebnis (drei Laeufe, deterministisch gleich):
+```
+EIN   a0=0 a1=4 Leon=(-7068,-1800,-7246) clip(+0x94)=5 bild(+0x95)=23 +0x168=801d79cc wort=0000507c
+SPAWN a0=06050d00 a1=0 versatz=(0,100,0) s0=0x97 anker=(-7555,-1873,-7385) T=(-7547,-1972,-7386)
+TON   index(v0)=0x17
+EIN   a0=0 a1=7 ... bild(+0x95)=8 +0x168=801d7990 wort=0000606d
+SPAWN ... anker=(-7595,-1887,-7100) T=(-7586,-1986,-7097)
+PAKET code=2c (deckend, kein ABE) rgb=808080 clut=0x7852 tpage=0x006f, je Bild c0 0..12:
+      c0=0 xy (140,166)-(143,169) uv (224,96); c0=1/2 (138,162)-(145,169); c0=3 (136,160)-(147,171);
+      c0=4..12 (135,159)-(148,172) uv (184,120)/(216,120)/(0,72)/(32,72)/../(192,72)   [v = Datei-v + 72 VRAM-Versatz]
+```
+Medienmitschnitt (Bild+Ton, `ds1260_c/*.mp4`): der Spritzer am hinteren Fuss waechst, wird weisslich und zerfaellt
+in Tropfen, je Schritt ~13 Bilder.
+**Zeitfolge-Befund:** *(+0x168) zeigt beim Schritt auf Bild (+0x95 - 1): anim_set (FUN_8001f314) setzt
+`sw a2,360(t0)` @0x8001f36c auf das Bild +0x95 und schiebt erst danach vor (`lbu`/`addiu`/`sb v0,149` @0x8001f610-1c).
+Der Schritt des Bilds N prueft also das Bild, das N-1 gezeichnet hat, mit dessen Pose (Part+0x40).
+Der Vorgaenger-Stand pruefte das Bild NACH dem Vorschub dieses Takts (pl->anim_frame, re15_player_tick
+`anim_frame++` player_common.c:860) = einen Takt zu frueh und mit der Pose davor: Anker (-7502,-1858,-7381) statt
+(-7555,-1873,-7385); der Spritzer sass 53 Einheiten zu weit vorn und halb unter Leons Schatten (Schatten-Bucket
+< Effekt-Bucket 99 -> Schatten darueber, re15_pri_schatten_r36.h) — darum wirkte er im Port kleiner und dunkler.
+**CLUT:** FUN_800194f8 ueberschreibt das Kopf-CLUT-Wort (`jal 0x8006b3d8` GetClut(0x120, s4) / `sh v0,4(s1)`
+@0x80019640-48, s4 = 480 + Summe der CLUT-Hoehen der vorigen Effekte @0x8001954c/0x800196c4) = erste Palettenzeile
+des EIGENEN TIM-Blocks; der Port nimmt fuer Raumeffekte die erste Palette des Effekt-TIMs = dieselbe Zeile (kein Defekt).
+
 ## Umsetzung
 
 (folgt)
