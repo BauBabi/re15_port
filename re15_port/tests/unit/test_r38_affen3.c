@@ -495,6 +495,73 @@ static int lauf_decke(int16_t leon_gier, int ticks, decke_t *ev, int evmax, int 
     return n | (nh << 16);
 }
 
+/* ==== SPRUNG / TODESSPRUNG (Subs 7/8) gegen die GDB-Spur o9 ===========================================
+ * Original (affen_spur2.py --write, Bild 150): Affe A auf den offenen Boden versetzt (+0x34/+0x3c = (-17000,-9000),
+ * +0x38 = 0, +0x82 = 0, +0x1ba = 0), Sub 0 Phase 1 mit Zeitgeber +0x9c = 30 (ohne Fuss-Sperre, damit die Zeichen-
+ * Records am neuen Ort neu entstehen); Leon (-8000,0,-3000) Band 0, Gier 1665 (blickt zum Affen: a780 = 0), HP 40.
+ * Original-Ablauf (T = F - 167): T31 Sub 3 (Zeitgeber), T32 Sub 4 (Abstand >= 0x1771 + Sicht, A[3] @0x801118b4-8fc),
+ * T41 SPRUNG Sub 7 (A[4] @0x80111b28-bf0), T50 Absprung Bild 0xa (+0x1e0 = 1), T72 Landung, T80 Sub 4, T81 SCHWER Sub 6,
+ * T102 Treffer 40 -> 30; ... T284 Sprung Bild 0x13 bei HP 20 < 50 -> TODESSPRUNG Sub 8 (@0x8011267c-710), T293 Treffer im
+ * Fenster {8,9,10} (@0x8011ed54): HP 20 -> -480 (-500 @0x80112b00), Spieler cmd 6 Clip 0 (Haken 0x801160a4), +0x1dc 0x12c,
+ * T297 Landung, T305 Sub 2 (Spieler-HP < 0 @0x80112bbc-c30), T363 Spieler cmd 7 (tot). Die Ersatz-Zufallsquelle des Ports
+ * (re15_damage.c, FUN_8001af20 haengt im Original am a0 des Aufrufers) laesst Bahn und Takt abweichen; geprueft wird die
+ * Mechanik: Sprung -> Schwer/Treffer -> Todessprung bei HP < 50 -> -500 im Fenster -> cmd 6 -> Tod. */
+static void teil_sprung_fl(re15_ai_flavor_t fl)
+{
+    re15_ai_flavor_set(fl);
+    printf("  [%s]\n", fl == RE15_AI_FLAVOR_RE2 ? "RE2-KI (Standard)" : "RE1.5-KI");
+    re15_damage_seed_rng(0x2545f491u);
+    if (room_boot(0x3040, -8000, 0, -3000, 1665, 0, 0, 2) != 0) return;
+    if (!bank_laden_29() || !pl00_laden()) { printf("  FEHLER: Banken\n"); g_fail++; return; }
+    pl00_in_ctx();
+    re15_actor_t *a = aktor_vom_typ(0x29, 0), *b = aktor_vom_typ(0x29, 1);
+    if (!a || !b) { g_fail++; return; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -8000; pl->y = 0; pl->z = -3000; pl->rot_y = 1665; pl->hp = 40; pl->hit_react = 0;
+    pl->state = 1; pl->sub_state_1 = 0; pl->motion = 0;
+    re15_collision_set_band(0);
+    re15_player_cmd_zero();
+    a->state = 1; a->sub_state_1 = 0; a->sub_state_2 = 1; a->sub_state_3 = 0;
+    a->x = -17000; a->y = 0; a->z = -9000; a->rot_y = 3087; a->floor = 0; a->dog_floor_y = 0;
+    a->hp = 105; a->hit_react = 0; a->dog_blocked_ctr = 0; a->roach_air = 0; a->roach_esc = 1; a->roach_beh2 = 0;
+    a->roach_los = 1; a->ai_timer = 30; a->crow_speed = 0;
+    a->motion = 5; a->anim_frac = 0; a->anim_frame = 23; re15_affen_pool_anim(a); a->anim_frame = 24;
+    b->state = 1; b->sub_state_1 = 0; b->sub_state_2 = 1; b->sub_state_3 = 0; b->ai_timer = 2000;
+    re15_affen3_log_reset();
+    int t_sprung = -1, t_schwer = -1, t_tod_sub8 = -1, t_tod = -1, tod_bild = -1, t_cmd6 = -1, t_sub2 = -1;
+    int n_sprung = 0, n_schwer_treffer = 0, hp_alt = pl->hp, tod_ab = 0, s1_alt = a->sub_state_1, sprung_bild13_hp = -1;
+    const char *v = getenv("R38_AFFEN3_SPUR");
+    for (int k = 1; k <= 700; k++) {
+        frame(0, 0);
+        if (a->sub_state_1 == 7 && s1_alt != 7) { n_sprung++; if (t_sprung < 0) t_sprung = k; }
+        if (a->sub_state_1 == 6 && s1_alt != 6 && t_schwer < 0) t_schwer = k;
+        if (a->sub_state_1 == 8 && s1_alt != 8 && t_tod_sub8 < 0) { t_tod_sub8 = k; sprung_bild13_hp = hp_alt; }
+        if (pl->hp != hp_alt) {
+            int d = hp_alt - pl->hp;
+            if (d == RE15_AFFEN3_SCHWER_SCHADEN) n_schwer_treffer++;
+            if (d == RE15_AFFEN3_TOD_SCHADEN && t_tod < 0) { t_tod = k; tod_bild = a->anim_frame; tod_ab = d; }
+        }
+        if (t_tod > 0 && t_cmd6 < 0 && re15_player_victim_state() == 2) t_cmd6 = k;
+        if (t_tod > 0 && t_sub2 < 0 && a->sub_state_1 == 2) t_sub2 = k;
+        if (v) printf("    T%3d A %d.%d.%d c%d f%d (%d,%d,%d) r%d hr%x air%d | PL (%d,%d) hp%d vs%d st%d mo%d f%d\n", k, a->state,
+                      a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->y, (int)a->z,
+                      (int)a->rot_y, a->hit_react, a->roach_air, (int)pl->x, (int)pl->z, (int)pl->hp, re15_player_victim_state(),
+                      pl->state, (int)pl->motion, (int)pl->anim_frame);
+        hp_alt = pl->hp; s1_alt = a->sub_state_1;
+    }
+    printf("    Sprung T%d (%d Spruenge), Schwer T%d (%d Treffer -10), Todessprung T%d (HP davor %d), Treffer -%d T%d Bild %d, cmd 6 T%d, Sub 2 T%d\n",
+           t_sprung, n_sprung, t_schwer, n_schwer_treffer, t_tod_sub8, sprung_bild13_hp, tod_ab, t_tod, tod_bild, t_cmd6, t_sub2);
+    PRUEF(t_sprung > 0, "Sprung Sub 7 aus A[4] (Original T41)");
+    PRUEF(n_schwer_treffer >= 1, "schwerer Angriff trifft -10 (Original T102 40 -> 30)");
+    PRUEF(t_tod_sub8 > 0 && sprung_bild13_hp < RE15_AFFEN3_TOD_HP_GRENZE, "Todessprung Sub 8 erst bei Spieler-HP < 50 (@0x8011269c): HP davor %d", sprung_bild13_hp);
+    PRUEF(t_tod > 0 && tod_ab == RE15_AFFEN3_TOD_SCHADEN && tod_bild >= 8 && tod_bild <= 10,
+          "Todessprung trifft -500 im Fenster {8,9,10} (@0x80112b00 / @0x8011ed54): Bild %d", tod_bild);
+    PRUEF(t_cmd6 > 0, "Spieler cmd 6 = Haken 0x801160a4 (Gorilla-Finisher-Weg) nach dem Treffer");
+    PRUEF(t_sub2 > 0, "Affe danach Sub 2 (Spieler-HP < 0 @0x80112bbc-c30)");
+    PRUEF(pl->state == 7, "Spieler am Ende tot (aca58 = 7 @0x80116214): Zustand %d", pl->state);
+}
+static void teil_sprung(void) { teil_sprung_fl(RE15_AI_FLAVOR_RE2); teil_sprung_fl(RE15_AI_FLAVOR_RE15); }
+
 /* Pruefung eines Bildes gegen das Original (exakt). */
 static int snap_gleich(int t, uint8_t st, uint8_t s1, uint8_t s2, int clip, int bild, int32_t x, int32_t y, int32_t z)
 {
@@ -585,6 +652,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "schwer"))  teil_schwer();
     if (alle || !strcmp(teil, "decke"))   teil_decke();
     if (alle || !strcmp(teil, "griff"))   teil_griff();
+    if (alle || !strcmp(teil, "sprung"))  teil_sprung();
     if (!strcmp(teil, "spur_o7") || !strcmp(teil, "spur_o8")) {   /* Messlauf ohne Pruefung (R38_AFFEN3_SPUR=1 fuer jedes Bild) */
         decke_t ev[256]; int ab[64], tk[64];
         int rv = lauf_decke(!strcmp(teil, "spur_o7") ? 1024 : 3072, 1450, ev, 256, ab, tk, 64);
