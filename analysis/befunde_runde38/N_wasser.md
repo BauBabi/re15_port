@@ -8,12 +8,12 @@ Baum `.claude/worktrees/r38_wasser`, Zweig `r38/wasser`, Basis d70c234e (2026-10
 
 ## Stand
 
-- [ ] Messung vorher (Port: was passiert heute in 1260 beim Gehen im Wasser? Bild + Ton + FX-Log)
-- [ ] RE-Beleg Original (Mechanismus: Bodentyp -> Effekt + Schritt-Ton)
-- [ ] Raumliste (Zensus)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
+- [x] Messung vorher (Port d70c234e: 1260 Wasser-Ton da, Effekt fehlt; Becken 2090 Beton-Ton statt Watschritt)
+- [x] RE-Beleg Original (B1-B10, selbst disassembliert; DuckStation-GDB-Gegenprobe 1260 + 2090, Bild + Ton-Index)
+- [x] Raumliste (Zensus Datei-Bytes, neu gerechnet; Sichtlauf: FLR-0x97 = gruene Pfuetzen der Gaenge)
+- [x] Umsetzung (FUN_80045630-Zwilling, Schritt am Bildwort des gezeichneten Bilds, op_aot_set-Breite)
+- [x] Messung nachher (Leon + Elza, alle Wasser-Raeume des Zensus; Bild am Original, Ton per Mitschnitt-Korrelation)
+- [x] Tests (unit_r38_wasser_* 7x, integration_r38_wasser; gezielte Gruppen)
 
 ## Messung vorher
 
@@ -204,52 +204,136 @@ Der Vorgaenger-Stand pruefte das Bild NACH dem Vorschub dieses Takts (pl->anim_f
 @0x80019640-48, s4 = 480 + Summe der CLUT-Hoehen der vorigen Effekte @0x8001954c/0x800196c4) = erste Palettenzeile
 des EIGENEN TIM-Blocks; der Port nimmt fuer Raumeffekte die erste Palette des Effekt-TIMs = dieselbe Zeile (kein Defekt).
 
+
+### B10 sce-8-Zonen: Breite/Tiefe sind vorzeichenlos (FUN_80042b64)
+```
+80042b68 lh  v0,0(a1)    x  (s16)          80042b84 lh  v0,2(a1)    z  (s16)
+80042b6c lw  v1,0(a2)    Figur x (s32)     80042b88 lw  v1,8(a2)    Figur z
+80042b70 lhu a0,4(a1)    BREITE (u16!)     80042b8c lhu a0,6(a1)    TIEFE (u16!)
+80042b74 subu v1,v1,v0   / 80042b78 sltu a0,a0,v1 -> ausserhalb, wenn Breite < (x - x0) vorzeichenlos
+```
+Der Port las im Kurzform-Aot_set (op_aot_set, scd_vm.c) Breite/Tiefe als s16. Zensus aller Kurzform-Saetze 0x2C/0x3B/0x50
+(Walker tools/aot_sce_census.py): genau **8** Saetze mit Breite > 32767, **alle sce 8** — 11A0/11A1 @0x1108 (49050),
+1260/1261 @0x11ca (38950) und @0x11de (46000), 2020/2021 @0x8ac (34100). Diese Wasserzonen stempelten im Port nie
+(Mitte/Halbmass aus negativer Breite). Fuer Leon/Elza ohne Folge (Rinnen = SCA-Waende bzw. Band 0 unter dem Laufsteg),
+fuer Figuren im Kanal (Gegner) ja; Stempel-Leser ist bisher nur der Schritt-Zwilling.
+
 ## Umsetzung
 
-(folgt)
+Dateien (eigene): `re15_port/engine/src/wasser_r38.c`, `re15_port/include/re15_wasser_r38.h`.
+Haken in gemeinsamen Dateien (klein, kommentiert "Runde 38 Spur N"):
+- `engine/src/game_step_common.c`: `re15_wasser_r38_bildanfang(c)` nach dem Positions-Spiegel (Schnappschuss des
+  gezeichneten Bilds, Stempel +0x88 latchen und loeschen @0x80031da4); der alte FOOTSTEP-Block (15 Zeilen) ist durch
+  `re15_wasser_r38_fusstakt(c)` ersetzt (Logik jetzt in wasser_r38.c).
+- `platform/pc/main.c`: `re15_wasser_r38_zeichner(...)` im Spieler-Zeichenblock neben der Hand-Fuetterung (Part+0x40
+  aller Parts je Bild, wie FUN_8001e9ec).
+- `engine/src/scd_vm.c` op_aot_set: `rect_w`/`rect_d` als u16 (B10), 2 Zeilen + Kommentar.
+
+Mechanik (re15_wasser_r38.h, jede Konstante mit Adresse):
+
+| Konstante | Wert | Beleg |
+|---|---|---|
+| Effekt Boden-Zweig | 0x06050D00 (Id 6, Sub 5, Skala 0x0D00) | `lui a0,0x605` / `ori a0,a0,0xd00` @0x800456b8/bc |
+| Effekt Stempel-Zweig | 0x06032000 (Id 6, Sub 3, Skala 0x2000) | `lui a0,0x603` / `ori a0,a0,0x2000` @0x800456f0/f4 |
+| Wasser-Bit | 0x80 | `andi v0,s0,0x80` @0x800456ac |
+| Versatz | (0,100,0) | `ori v0,zero,0x64` @0x800456b4 / @0x80045700, `sw` @0x800456c4-cc |
+| Gier Stempel | 0x800 | `ori a1,zero,0x800` @0x800456e8 |
+| Part Stempel | a1 - 1 | `addiu a2,a2,-108` @0x800456f8 |
+| Watsatz | Bodentyp - 3 | `addiu s0,a0,-3` @0x800456ec |
+| Tonindex | a0 + (Typ & 0x7f), Objekt -> 9 | @0x80045718-24, `ori s3,zero,0x9` @0x80045790 |
+| a0 Lauf | 1 (Echtzeit-Lauf), sonst 0 | `ori a0,zero,0x1` @0x80032850; 0 @0x80032544/b6c/dd0, Plc @0x80030e18/e7c |
+| Schritt-Bild | Bildwort des gezeichneten Bilds | `sw a2,360(t0)` @0x8001f36c vor `sb v0,149` @0x8001f61c; Pruefung @0x8003252c-3c |
+
+Spawn ueber den vorhandenen FUN_80019700-Zwilling `re15_esp_fx_spawn_rows` (Flags 3); Anker = Part-Weltmatrix des
+gezeichneten Bilds * (0,100,0) + T (Zeichner-Fuetterung, Rueckfall: Pose des Schnappschusses mit derselben Bankwahl);
+FOLGE-Plaetze (Sub 3, Zeilen-Flags 0x07 Bit 2) werden je Bildanfang auf den Part-Anker gesetzt (@0x80019f54-a4).
+
+**Lauf-2-Korrektur am Vorgaenger-Stand:** Schritt-Erkennung + Pose am GEZEICHNETEN Bild (B9). Vorher pruefte der
+Port das Bildwort nach dem Vorschub dieses Takts = einen Takt zu frueh mit der Pose davor (Anker 53 Einheiten daneben,
+Spritzer halb unter Leons Schatten). Betrifft alle Schritt-Toene: sie kommen jetzt einen Takt spaeter, wie im Original.
+Kein Regressions-Fall (Bisect entfaellt): der Effekt-Zweig fehlte im Port seit der ersten Schritt-Ton-Umsetzung.
 
 ## Messung nachher
 
-Messkopie `re15_pc_r38w_mess.exe` (Stand ace4282a + Umbenennung der Schiene auf `RE15_WASSER_LOG`), gleiche Laeufe wie vorher.
-`RE15_WASSER_LOG` = neue Schritt-Schiene (je Schritt eine Zeile); `RE15_FX_LOG` = VORHANDENE Zeichen-Spur des
-PC-Renderers (main.c:288, je gezeichnetem Partikel `id= sub= ... -> sx= sy= S=`).
+Bau Stand 957e81f2 (Messkopie `re15_pc_r38w_mess.exe` = re15_pc.exe). Schienen: `RE15_WASSER_LOG` (je Schritt eine
+Zeile, neu), `RE15_FX_LOG` (vorhandene Zeichen-Spur), `RE15_TRILOG` (Dreiecke), `RE15_FOOT_DEBUG` (`[foot] SE`),
+`RE15_AUDIO_CAP_SYNC` (Ton-Mitschnitt), `RE15_FRAMEDUMP` (WINDOW_SCALE 1).
 
-Leon ROOM1260 (Sprung, Band 1, (-8600,-7900) rot 0, `W0.5,U1.5,W1`):
+**Leon ROOM1260** (Sprung 1260@250, (-8600,-7900) Band 1 Blick 0, `W0.5,U1.5,W2` ab Bild 60):
 ```
-F82  schritt fuss=7 lage=(-7879,-1800,-7246) boden=0x1d zweig=trocken plaetze=0 edt=0x1d
-F97  schritt fuss=4 lage=(-7068,-1800,-7246) boden=0x97 zweig=boden code=0x06050d00 part=4 anker=(-7502,-1858,-7381) quelle=zeichner plaetze=1 edt=0x17 fx=1
-F112 schritt fuss=7 lage=(-7068,-1800,-7246) boden=0x97 zweig=boden code=0x06050d00 part=7 anker=(-7543,-1878,-7100) quelle=zeichner plaetze=1 edt=0x17 fx=1
+F83  fuss=7 bild=7  akt=8  lage=(-7804,-1800,-7246) boden=0x1d zweig=trocken edt=0x1d
+F98  fuss=4 bild=22 akt=23 lage=(-7068,-1800,-7246) boden=0x97 zweig=boden code=0x06050d00 part=4 anker=(-7555,-1873,-7385) edt=0x17
+F113 fuss=7 bild=37 akt=38 lage=(-7068,-1800,-7246) boden=0x97 zweig=boden code=0x06050d00 part=7 anker=(-7595,-1887,-7100) edt=0x17
 ```
-debug.log: `[foot] SE foot=4 type=23 vag=7` (Wasserschritt, wie vorher). state.log `fx=1` F97-F109 (13 Anim-Saetze
-x 1 Takt, Satz 13 = Ende), vorher 0. Zeichen-Spur: `id=6 sub=5 ... wpos=(-7502,-1858,-7381) ... fl=03 -> sx=141 sy=167
-S=8..32`. Differenzbild Bild 102 vorher/nachher: 28 Pixel in (136..147, 162..171) direkt am Fuss, gruenlich-weiss
-(ABR 3 = B+F/4, Zeile[0x16] = 0x60) — sonst bitgleich.
+= Original-GDB (B9) Wert fuer Wert: Bild +0x95 = akt (8/23), Bildwort[bild], Part, Anker, Tonsatz.
+RE15_TRILOG des Spritzers (Part-4-Schritt): c0=0 (140,166)-(143,169) uv(224,24); c0=1/2 (138,162)-(145,169);
+c0=3 (136,160)-(147,171); c0=4..12 (135,159)-(148,172) — **deckungsgleich mit den Original-POLY_FT4** (Datei-v =
+VRAM-v - 72; FUN_800194f8 addiert den VRAM-Versatz @0x80019680-8c). Bild: `N_belege/vergleich_original_leon_elza.png`
+(oben Original-Mitschnitt, Mitte Port Leon, unten Port Elza; der Spritzer am hinteren Fuss waechst, wird weisslich,
+zerfaellt in Tropfen, ~13 Bilder).
 
-Elza ROOM1261 (`RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, debug.log
-`[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, Sprung 1261 gleiche Lage):
-```
-F83  boden=0x1d zweig=trocken edt=0x1d
-F97  boden=0x97 zweig=boden code=0x06050d00 part=4 anker=(-7556,-1832,-7338) quelle=zeichner plaetze=1 edt=0x17
-F113 boden=0x97 zweig=boden code=0x06050d00 part=7 anker=(-7596,-1841,-7135) quelle=zeichner plaetze=1 edt=0x17
-```
-(eigene Anker = Elzas Skelett), Zeichen-Spur 26x `id=6 sub=5` (2 Spritzer x 13 Bilder).
+**Ton** (Mitschnitt RE15_AUDIO_CAP_SYNC, Korrelation mit den dekodierten VAGs der Raum-Bank snd0, `N_belege/vag_korr.py`):
 
-Leon ROOM2090 (Alligator-Becken, Sprung-Spawn (-8200,0,-25550), Band 0 in der sce-8-Zone, Spiegel -1620):
-```
-F87  boden=0x1d stempel=-1620 zweig=stempel code=0x06032000 part=6 anker=(-8632,-837,-26362) quelle=zeichner plaetze=1 edt=0x1a
-F102 boden=0x1d stempel=-1620 zweig=stempel code=0x06032000 part=3 anker=(-8626,-832,-26695) quelle=zeichner plaetze=1 edt=0x1a
-```
-debug.log `[foot] SE foot=7 type=26 vag=3` — vorher spielte der Port hier den Betonschritt 0x1d (VAG 1).
-Effekt-6-Zeilen von 2090/2000/2050/11A0 = byte-gleich zu 1260 (gleiche Sub 3/5).
+| Lauf | Schritt | bester VAG (r) | naechster |
+|---|---|---|---|
+| Leon 1260 | F83 Beton | EDT 0x1d / VAG 1 (0.46) | 0.19 |
+| Leon 1260 | F98 Pfuetze | EDT 0x17 / VAG 7 (0.48) | 0x18 = derselbe VAG, andere Tonhoehe (0.31); Beton 0.12 |
+| Leon 1260 | F113 Pfuetze | EDT 0x17 / VAG 7 (0.43) | 0.28 |
+| Elza 1261 | F84/F98/F114 Pfuetze | EDT 0x17 / VAG 7 (0.42/0.48/0.43) | Beton <= 0.12 |
+| Leon 2090 | F38 Becken | EDT 0x1a / VAG 3 (0.48) | Beton VAG 1 0.04 (= was d70c234e dort spielte) |
+
+Original-Tonindex (GDB @0x80045798, v0): 1260 Pfuetze 0x17, Beton 0x1d; Lauf 0x18 / 0x1e; Becken 0x1a.
+
+**Elza** (Spielerwahl, PL04, ROOM1261 gleiche Lage): F84 bild=8 Part 7 (x -7729: schon im Fleck), F98 bild=22 Part 4
+anker=(-7578,-1862,-7336), F114 bild=38 — zweig=boden code=0x06050d00 edt=0x17; Zeichner id=6 sub=5 in 39 Bildern.
+
+**Alle Wasser-Raeume des Zensus** (Leon / Elza, RE15_WASSER_LOG):
+
+| Raum | Weg | Ergebnis |
+|---|---|---|
+| 1260 / 1261 | P0 (s.o.) | zweig=boden 0x06050d00, edt 0x17 |
+| 2000 / 2001 | Fleck P2 (-7260,-6000) Blick 1024/3072 | zweig=boden, Anker y -73/-87 ueber Boden 0, edt 0x17 |
+| 2050 / 2051 | Fleck P0 (1100,550) | zweig=boden im Fleck, danach trocken 0x1d |
+| 20B0 | Raum-Skript (Flut-Szene, Leon rennt auf Band 1) | Fleck 0x97 -> boden; Fleck 0x17 OHNE Bit -> kein Effekt, Wasser-Ton 0x17 (Original-Daten) |
+| 2090 / 2091 | Becken (-8438,-25550) | zweig=stempel -1620, 0x06032000 Part 6, edt 0x1a; Original-GDB: Anker relativ zu Leon (-233,-836,+174) = Port |
+| 20A0 / 20A1 | Zone 5 Band 1 (8000,-25000) | zweig=stempel -540, Part 6/3, edt 0x1a |
+| 11A0, 2020 | Zonen Band 0 unter dem Laufsteg | Spieler erreicht sie nicht (Sprung-Spawn Band 1, Gelaender); Stempel jetzt korrekt (B10) |
+| 2070 (TUN. FLOOD DRY) | Zonen in zwei Skript-Zweigen | im Sprung-Zustand keine Zone aktiv, Schritt 0x1d |
+
+**Lauf (Original-GDB):** a0 = 1, Bildwort[0] = 0x5000 und [12] = 0x700c -> beide Part 4, Anker (-6548,-1891,-7302) /
+(-7872,-2875,-7442), Tonsatz 0x18 (Pfuetze) / 0x1e (Beton) — Port (unit_r38_wasser_lauf) Wert fuer Wert gleich.
 
 ## Tests
 
-(folgt)
+Riegel (registriert in `tests/unit/probes/r38_wasser.cmake`):
+- `unit_r38_wasser_pfuetze` — 1260 P0: Effekt 6/5, Flags 3, Skala 0x0D00, Gier, Part 4/7, Anker = Original-GDB +-3, Tonsatz 0x17.
+- `unit_r38_wasser_zeitfolge` — gezeichnet 21 / aktuell 22 -> kein Schritt; 22/23 -> Schritt (alt genau umgekehrt).
+- `unit_r38_wasser_trocken` — Beton: kein Effekt, 0x1d.
+- `unit_r38_wasser_stempel` — 2090: Effekt 6/3, Gier 0x800, Part 6, Anker relativ = Original, 0x1a, +0x88 geloescht.
+- `unit_r38_wasser_lauf` — a0 = 1 -> 0x18 (Anker Bild 0/12 = Original), Plc-Lauf 0x17.
+- `unit_r38_wasser_aotbreite` — 1260-Zone Breite 38950 stempelt -900 (vorher nie).
+- `unit_r38_wasser_zensus` — FLR 0x97 an den sechs Flecken von 1260.
+- `integration_r38_wasser` — echte exe: Leon 1260 (boden, Original-Anker, id=6 sub=5 >= 13 Bilder, VAG 7 / VAG 1),
+  Elza 1261 (boden, id=6 sub=5, VAG 7), Leon 2090 (stempel, 0x06032000 Part 6, 0x1a, VAG 3).
+
+Gegen v0.8.25 (2077bb8e) rot: re15_wasser_r38_* existiert nicht (Unit-Riegel bauen nicht), kein RE15_WASSER_LOG,
+kein id=6 im FX_LOG, im Becken `[foot] ... type=29 vag=1`.
 
 ## OFFEN
 
-(folgt)
+- Objekt-Index 9 (Spieler steht auf einem Objekt, `ori s3,zero,0x9` @0x80045790) ist umgesetzt (Latch des
+  Steh-Zustands re15_climb_standing_tick = @0x80031d24), aber nicht am Spiel gemessen (kein Wasser-Raum mit Kiste im Weg).
+- NPC-Schritte (Typ >= 0x40: Index - 8, @0x8004573c-5c) und Koerperfall `FUN_80045630(2,0)` (Tod @0x80036804,
+  Hunde @0x80111da4, Affen @0x8011c4f0) sind nicht Teil dieses Punkts (Nutzer: Leon/Elza) und nicht portiert.
+- Beobachtung ohne Urteil: im Original-Mitschnitt 2090 bewegte sich Leon bei Blick 0 langsam nach +z (Port: +x mit
+  Gehgeschwindigkeit); nicht untersucht (Bewegung/Kollision im Becken, nicht Teil dieses Punkts).
+- vab_common.c (re15_footstep_vag) traegt noch den alten Kommentar "-3 / ->9 / -8 ... wired when those exist";
+  -3 und 9 sind jetzt in wasser_r38.c verdrahtet (Kommentar nicht angefasst, fremde Datei).
 
 ## Fuer den Nutzer
 
-(folgt)
+- Keine neuen Assets (Effekt 6 liegt in den Raum-ESP-Banken der Original-RDTs), keine Sprachdateien.
+- Sichtbar: in den gruenlichen Pfuetzen der Kanal-Gaenge (1260, 2000, 2050, 20B0 + Elza-Varianten) spritzt bei jedem
+  Schritt am Fuss Wasser auf, dazu der Wasser-Schritt-Ton; im Alligator-Becken 2090 und im Wasser von 20A0 spritzt es
+  am Schienbein mit dem Wat-Ton. Laufen hat (wie im Original) einen eigenen Lauf-Ton.
+- Alle Schritt-Toene kommen jetzt einen Takt (1/30 s) spaeter, im Gleichtakt mit dem Original.

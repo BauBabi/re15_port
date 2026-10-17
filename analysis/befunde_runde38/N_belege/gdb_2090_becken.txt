@@ -1,0 +1,38 @@
+[   3.1] vgamepad bereit, XInput vorher [] nachher [0] mein [0]
+[   4.5] DuckStation gestartet {'18072'}
+[  21.8] Dreieck 1
+[  22.4] Rechts 1
+[  23.0] Rechts 2
+[  23.5] Rechts 3
+[  24.1] Rechts 4
+[  24.6] Rechts 5
+[  25.2] Rechts 6
+[  25.7] Rechts 7
+[  26.3] Rechts 8
+[  26.8] Rechts 9
+[  27.4] Quadrat = laden
+[  46.1] GDB verbunden
+[  46.7] Stopp: b'S02'
+[  47.0] RDT 80119330 FLR 80119cb4 n=1 e0 x=-11050 z=-29200 w=20450 d=26050 typ=0x1d
+[  47.4] Leon vorher (-8438,0,-25550) Blick 0 Band 0
+[  47.5] Stempel +0x88 = -1620
+[  47.7] Leon gestellt (-8438,0,-25550) Blick 0
+[  47.8] Z0 80045630: b'OK'
+[  47.9] Z0 80045710: b'OK'
+[  48.0] Z0 80045798: b'OK'
+[  49.0] Mitschnitt AN
+[  50.8] UP halten 1.6s
+[  51.1] EIN  a0=0 a1=7 Leon=(-8433,0,-25503) Blick=0 +0x88=-1620 clip(+0x94)=5 bild(+0x95)=8 +0x168=801d7990 wort=0000606d
+[  51.1] SPAWN a0=06032000 a1=0x800 a2=801d38e0 versatz=(0, 100, 0) s0(boden)=0x1a anker=(-8666,-836,-25329) R=(3601, -1358, -1377, 1293, 3856, -408, 1429, -79, 3829) T=(-8632, -930, -25327) Leon=(-8433,0,-25503)
+[  51.1] TON  index(v0)=0x1a s0=0x1a Leon=(-8433,0,-25503)
+[  51.6] EIN  a0=0 a1=4 Leon=(-8412,0,-25348) Blick=0 +0x88=-1620 clip(+0x94)=5 bild(+0x95)=23 +0x168=801d79cc wort=0000507c
+[  51.6] SPAWN a0=06032000 a1=0x800 a2=801d36dc versatz=(0, 100, 0) s0(boden)=0x1a anker=(-8628,-837,-25514) R=(3664, -1210, 1351, 1160, 3906, 336, -1398, 80, 3843) T=(-8598, -932, -25515) Leon=(-8412,0,-25348)
+[  51.6] TON  index(v0)=0x1a s0=0x1a Leon=(-8412,0,-25348)
+[  52.2] EIN  a0=0 a1=7 Leon=(-8290,0,-24998) Blick=0 +0x88=-1620 clip(+0x94)=5 bild(+0x95)=8 +0x168=801d7990 wort=0000606d
+[  52.2] SPAWN a0=06032000 a1=0x800 a2=801d38e0 versatz=(0, 100, 0) s0(boden)=0x1a anker=(-8523,-836,-24824) R=(3601, -1358, -1377, 1293, 3856, -408, 1429, -79, 3829) T=(-8489, -930, -24822) Leon=(-8290,0,-24998)
+[  52.2] TON  index(v0)=0x1a s0=0x1a Leon=(-8290,0,-24998)
+[  52.4] losgelassen, Stopps: 9
+[  54.2] Stopp2: b'S05'
+[  55.2] Mitschnitt AUS
+[  80.5] settings.ini zurueckgeschrieben
+[  80.5] Video: Biohazard 1.5 (MZD Mod) Update 25-01-2025 2026-10-17-09-02-53.mp4
