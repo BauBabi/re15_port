@@ -212,3 +212,30 @@ Gruppe vor der Briefing-Room-Tuer auf die Kamera zu, die vorderen verlassen das 
 (Cut 7 F30..F210: die Kopien kommen den Gang herauf bis direkt vor die Kamera, Koepfe fuellen das Bild; Cut 12
 F240..F540: die Zombies hinter dem Gitter gehen zu Boden und kriechen unter dem Tor durch nach vorn). Vergleich vorher:
 `O_belege/vor_1130.png`, `O_belege/vor_1030.png` (stehende Gruppen).
+
+## OFFEN
+
+1. **Klemme an der Zellenecke SCA 30 (Cut 12, KI RE2) — vorbestehend, nicht durch Spur O.** Ein Kriecher (Raum-Record
+   ROOM1030 main00 Bit 1 = Aktor 2) haengt am Zone-9-Uebergang fest: Abstand zur Kamera +12 (exe vorher, d70c234e),
+   +1 (Gegenprobe im Riegel), +120 (jetzt; die Nachbarn kriechen zum selben Uebergang und schieben ihn nach Westen).
+   Mechanismus (gelesen + gemessen, Spur-Ausgabe `test_r38_montage s1030_re2 mess 2`): der Navigator setzt das Ziel auf
+   den Uebergang Zone 0 -> 9 (-12195,-23860) (Mitte der Ueberlappung x -13070..-11320, BLK @0x01C28; FUN_8003a31c
+   nimmt die eigene x nur in [lo+2r, hi-2r]); dieser Punkt liegt nur 371 von der Ostkante der Zelle SCA 30 (@0x01B78,
+   x -15518..-12566, z -24134..-22694) — weniger als der Zombie-Radius 400 (+0x78-Satz +6). Wer von WESTEN kommt,
+   drueckt in die Ecke, die Wandklemme setzt ihn auf z -24552 zurueck (Zyklus ~50 Bilder). Navigator (FUN_8003a524 /
+   FUN_8003a31c) und Wandklemme sind byte-true Ports anderer Spuren (nav_zone_common.c, re15_collision.c,
+   enemy_ai_common.c = B/T); eine Loesung waere dort ein Eingriff gegen das Original und gehoert nicht zu Spur O. Unter
+   der RE1.5-KI tritt sie nicht auf (alle 9 naeher, unit_r38_montage_s1030_re15). Der Riegel laesst hoechstens EINE
+   solche Klemme zu und verlangt, dass es dasselbe Bit ist wie in der Gegenprobe v0.8.25 (sonst rot).
+2. Cut 12 endet (Original-Sleeps sub08 @0x027BC..@0x027C4 + Port 120, Runde 35) mit 6 von 9 Zombies unter dem Tor
+   durch; 3 (startet erst in Bild 30 aus der zweiten Reihe) und 12 (wartet am Uebergang) sind noch im Durchgang —
+   beide kommen der Kamera naeher (-1189 / -779). Die Schnittlaenge ist nicht Teil des Auftrags (unveraendert).
+
+## Fuer den Nutzer
+
+* Neue Assets fuer das Paket-Gate: keine. Sprachdateien: keine. Keine Bedienung.
+* Text fuer die Release-Notes (Vorschlag): "Montage nach Irons' Tod (Leon): Die Zombies, die in den Gang vor dem
+  Briefing Room und vor die Tuer zu Raum 1070 durchbrechen, gehen jetzt auf die Kamera zu — wie die hinter dem Rolltor.
+  Am aufgebrochenen Gitter-Tor in der Lobby kriechen jetzt alle Zombies hinter dem Gitter unter dem Tor durch nach vorn
+  (vorher standen die aufrechten nur hinter dem Gitter). Der Rolltor-Schnitt ist unveraendert."
+* Bekannt (OFFEN 1): an der linken Torecke kann ein Kriecher haengen bleiben (war schon vorher so).
