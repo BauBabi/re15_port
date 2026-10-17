@@ -1,0 +1,8 @@
+DuckStation {'145320'}
+GDB verbunden
+Stopp: b'S02'
+stage 1 room 10 PL -15554 -15268 yaw -40 PLw4 00000001
+Z0: b'OK'
+Takte je Entity: {'8011e758': 900, '8014777c': 900, '8014f270': 900, '80156d64': 900, '8015e858': 900, '8016634c': 900} Zeit 79 s
+settings.ini zurueckgeschrieben
+resume.sav zurueckgeschrieben
