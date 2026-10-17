@@ -34,6 +34,7 @@
 #include "re15_door_seq.h"   /* re15_door_rotmatrix = RE2 libgte RotMatrix @0x8008e1f4 (Runde 34 B4) */
 #include "re15_enemy_ai_re2_zellenarm.h" /* re15_re2arm_owns (RE2-GL-Applier-Kandidat, Runde 34 B4) */
 #include "re15_schuss_r36.h" /* re15_schuss_r36_sichtlinie_blockiert — FUN_8001b9b4 @0x80012168 (Runde 36 C) */
+#include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht kein Ziel (@0x8003710c / @0x80111C14-20) */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
@@ -1069,6 +1070,7 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
     for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
         re15_actor_t *e = &g_actors[s2];
         if (!e->active) continue;
+        if (re15_r38_sm_versteckt(e)) continue; /* Runde 38 Spur T: grid & 0x60 `andi v0,a0,0x60` @0x8003710c */
         if (e->hit_radius_min <= 0) continue;   /* byte-true: the aim-latch (FUN_8003703c), like the fire
                                                  * resolver, considers any entity with a DAMAGE HITBOX —
                                                  * not a zombie-only whitelist. So the player auto-turns
@@ -1990,6 +1992,7 @@ retry_after_latch:
          * automatically (the ivy is a dormant weapon-immune prop, audit wf_efd92a2c ivy #77).
          * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
+        if (re15_r38_sm_versteckt(e)) continue; /* Runde 38 Spur T: 0x2B ohne Hoehenband ausser ACTIVE (@0x80111C14-20, @0x80111DCC-E24) */
         /* RE2-ADULT-SPINNE (Runde 7, spinne-todeszyklus.md 5.2): das Original kennt
          * KEIN state-Gate (Kandidaten-Gates @0x8004712C-30/@0x80047138-40/
          * @0x80047148-50/@0x80047158-64) - die generische Leiche (HP=1) bleibt

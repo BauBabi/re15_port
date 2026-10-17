@@ -48,6 +48,7 @@
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
 #include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 (Rueckgriff, Wurf) */
+#include "re15_spiderman_r38.h" /* Runde 38 Spur T: Typ 0x2B Schacht-Austritt + Griffe mit Anker */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
@@ -1059,6 +1060,7 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
 static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_release, uint8_t *c_collapse)
 {
     uint8_t v = g_player_victim_variant;
+    if (re15_r38_sm_opfer_clips(g_player_victim_type, v, c_intro, c_hold, c_release, c_collapse)) return;   /* Runde 38 Spur T: Hook A/B [0x2B] */
     if (g_player_victim_type == 0x20) {                 /* DOG (EM020) */
         /* MIXED (2026-08-23): typ-bezogen — der GREIFER ist hier der Hund, und im MIXED-Modus
          * faehrt genau er das RE2-Brain. Greift der Hund Leon, laeuft also auch die
@@ -1373,6 +1375,9 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
               /* KRIECH-Devour: FUN_80104548 schreibt ((+0x5)-1)<<8|6 (@0x801045c4-dc)
                * -> aca59 = 2/3; Kollaps-Clip = acaf3+6 = 6/7 (FUN_8010a6f8) */
         : (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* ZOMBIE (Steh): (+0x5)-5 */
+    /* Runde 38 Spur T: Kollaps OHNE vorherigen Griff (RE2-Hund-Latch -> devour): Standpunkt = Lage jetzt = RE2
+     * +0x118/+0x11A (Vorbildlage, `sh` @0x800356f4-f8) statt des Standpunkts eines alten Griffs. */
+    if (g_player_victim != 1 && g_player_victim != 2) re15_victim_anchor_calibrate(player->x, player->z);
     g_player_victim = 2;
     s_victim_groan_done = 0;                            /* O3: neuer Kollaps -> Todes-SE wieder scharf */
     if (!re15_victim_is_re2_dog())
@@ -1579,6 +1584,7 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
         re15_collision_constrain(&g_room_rdt, s_victim_ok_x, s_victim_ok_z, &nx, &nz);
         int32_t cx = nx, cz = nz;
         re15_collision_constrain(&g_room_rdt, nx, nz, &cx, &cz);
+        if (re15_r38_griff_durch_wand(s_victim_ok_x, s_victim_ok_z, nx, nz)) { nx = s_victim_ok_x; nz = s_victim_ok_z; cx = nx; cz = nz; }   /* Runde 38 Spur T: NUTZER-VORGABE kein Griff durch eine Wand (spiderman_r38.c (3)) */
         if ((cx == nx && cz == nz) || re15_bissarm_r37_ein_durchgang(vg_ty)) { s_victim_ok_x = nx; s_victim_ok_z = nz; }   /* Runde 37 Spur J: Zombie = EIN Durchgang je Bild (FUN_8003567c `jal 0x8004c1bc` @0x800356d0) */
         else                      { nx = s_victim_ok_x; nz = s_victim_ok_z; }
         pl->x = nx; pl->z = nz;
@@ -1743,10 +1749,11 @@ void re15_player_victim_tick(void)
         }
         s_victim_fresh = 0;
         player->motion = clip;
-        if (g_player_victim_type != 0x21)              /* the crow victim FSM 0x801159bc-0x80115b7c has
+        if (g_player_victim_type != 0x21              /* the crow victim FSM 0x801159bc-0x80115b7c has
                                                         * NO func_0x8001ad68 root-motion placement — only
                                                         * f314 (@0x80115a6c/abc/b08): Leon holds his XZ
                                                         * during the peck pin (crow_victim_anim.md F1) */
+            && !re15_r38_sm_griff2_opfer(g_player_victim_type, g_player_victim_variant))   /* Runde 38 Spur T: 0x80115FF0 ohne ad68 */
             re15_victim_place(player, vb, clip, (int)player->anim_frame);
     } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): collapse clip, play once +
                                                         * ROOT MOTION (the ~600-unit devour drag), hold last */
@@ -1967,7 +1974,9 @@ void re15_player_victim_tick(void)
              * zum Greifer), und die 180-Grad-Drehung der vorn-Clips steckt im Pose-Offset
              * PL+0x158 (@0x8010AA6C). Der Port fuhr den RE1.5-Flip auch unter RE2 mit — auf
              * einen Yaw, der nie geschnappt wurde. */
-            if ((g_player_victim_variant == 0 || g_player_victim_variant == 2) &&
+            if (re15_r38_sm_griff2_opfer(g_player_victim_type, g_player_victim_variant))
+                ;   /* Runde 38 Spur T: Release-Ende 0x80116174-C8 schreibt keinen Yaw */
+            else if ((g_player_victim_variant == 0 || g_player_victim_variant == 2) &&
                 g_player_victim_type != 0x21 && !re15_victim_is_re2_zombie())
                 /* acaf3==0 (Varianten 0 UND 2 — der Kriech-Front-Fall gehoert dazu):
                  * `acabe += 0x800` @0x8010a614-624 */
@@ -1986,7 +1995,8 @@ void re15_player_victim_tick(void)
         }
         s_victim_fresh = 0;
         player->motion = clip;
-        if (g_player_victim_type != 0x21)              /* crow: no ad68 placement (see STRUGGLE) */
+        if (g_player_victim_type != 0x21              /* crow: no ad68 placement (see STRUGGLE) */
+            && !re15_r38_sm_griff2_opfer(g_player_victim_type, g_player_victim_variant))   /* Runde 38 Spur T */
             re15_victim_place(player, vb, clip, (int)player->anim_frame);
     }
 }
@@ -11696,6 +11706,13 @@ static int re15_birkin_fc(const re15_actor_t *e)
         fc = bb->anim.clips[e->motion].frame_count;
     return fc;
 }
+/* Runde 38 Spur T: schmale Zugaenge fuer spiderman_r38.c (Typ 0x2B) — Griff-Pin (aca58 = 5), Opfer-Latch mit
+ * expliziter Variante (aca59), Variante nach dem Kollaps-Latch, Clip-Vorschub/-Laenge wie der Rest des Typs. */
+void re15_r38_griff_pin(void) { s_player_grabbed = 1; }
+void re15_r38_opfer_latch(const re15_actor_t *e, re15_actor_t *pl, int variante) { re15_player_victim_latch_ex(e, pl, variante); }
+void re15_r38_opfer_variante(uint8_t v) { g_player_victim_variant = v; }
+int  re15_r38_birkin_anim(re15_actor_t *e) { return re15_birkin_anim(e); }
+int  re15_r38_birkin_fc(const re15_actor_t *e) { return re15_birkin_fc(e); }
 /* MASSE-VORLAUF des laufenden Birkin-Ticks (0 ausserhalb; Runde 4,
  * birkin-bewegung.md Plan 2): der Endkampf-G5 (0x36) traegt die MASSE (Mesh 2)
  * ~4494 Einheiten VOR dem Entity-Ursprung (gemessene Masse-Front, birkin_dbg
@@ -13655,12 +13672,10 @@ static void re15_tyrant_ai_tick(int slot)
             re15_birkin_anim(e);
             break;
         }
-        case 2: {  /* B[2] ROAR 0x80112294: clip 2, SE1@frame 0x14 -> sub 3 (audit #10: +0x7==0 -> sub 3). */
-            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 2); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 2 @0x801122f0 */
-            if (e->anim_frame == 0x14) re15_audio_room_se(1);                       /* SE 1 @0x80112334-44 */
-            if (re15_birkin_anim(e)) { e->sub_state_1 = 3; e->sub_state_2 = 0; }    /* roar done -> sub 3 @0x801123c4 */
+        case 2:    /* B[2] ROAR 0x80112294 — Runde 38 Spur T: spiderman_r38.c (Clip-Ende haelt Bild fc-1, P2 @0x80112390
+                    * schaltet im naechsten Bild auf sub 3; vorher Clip 2 Bild 0 im Wechselbild). */
+            re15_r38_sm_bruellen(e);
             break;
-        }
         case 3: {  /* B[3] WALK (fast) 0x801125dc: fast regime, A[3] decides the attacks above. */
             if (e->sub_state_2 == 0) { re15_birkin_clip(e, 3); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 3 @0x8011264c */
             int16_t sp   = (int16_t)((re15_engine_rand8() & 0x3f) + 130);           /* +0x8c=(rng&0x3f)+130 @0x80112610 */
@@ -13728,73 +13743,12 @@ static void re15_tyrant_ai_tick(int slot)
             }
             break;
         }
-        case 5:    /* B[5] GRAB1 front 0x80112a64 (clip 0xe) */
-        case 9: {  /* B[9] GRAB1 rear  0x80112f58 (clip 0x12, aca59=1) — shared machine, variant by sub. */
-            int rear = (e->sub_state_1 == 9);
-            if (e->sub_state_2 == 0) {                                              /* LATCH phase */
-                re15_birkin_clip(e, (uint8_t)(rear ? 0x12 : 0x0e)); e->anim_frac = 7;  /* clip 0xe/0x12 @0x80112ac4 / @0x80112fb8 */
-                s_player_grabbed = 1; e->birkin_grab = 1;                          /* aca58=5 PIN @0x80112b34 / @0x8011302c */
-                re15_player_victim_latch(e, pl); g_player_victim_variant = (uint8_t)rear;  /* aca59=rear @0x80113034 */
-                pl->hit_react |= 1;                                               /* player+0x93|=1 @0x80112b80 */
-                e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);  /* a8f8(±0x800) @0x80112b8c */
-                e->ai_timer = 100;                                                /* +0x9c escape budget @0x80112bc8 */
-                e->grab_kill_ctr = 0x32;                                          /* +0x9e HOLD timer = 50 @0x80112bd8 */
-                e->sub_state_2 = 1;
-            } else {                                                               /* HOLD/DRAIN phase */
-                s_player_grabbed = 1;
-                re15_birkin_anim(e);
-                /* hold expiry (+0x9e) OR player dead -> COLLAPSE sub 8 (cmd 6 throw/finish) @0x80112c58 */
-                if (e->grab_kill_ctr <= 0 || pl->hp < 0) { e->sub_state_1 = 8; e->sub_state_2 = 0; e->sub_state_3 = 0; break; }
-                e->grab_kill_ctr--;                                               /* +0x9e-- HOLD countdown */
-                e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 100 * re15_mash_pressed()));  /* +0x9c -= 1+100*mash @0x80112c6c-9c */
-                if (e->ai_timer < 0) {                                             /* MASHED FREE -> release @0x80112cc4 */
-                    s_player_grabbed = 0; e->birkin_grab = 0;
-                    re15_player_victim_throwoff(); s_grab_mercy_timer = 0x5a;      /* aca5a=4 release @0x80112cc4 */
-                    re15_birkin_clip(e, 0x10); e->anim_frac = 7;                   /* release clip 0x10 @0x80112cd8 */
-                    e->birkin_hurt_cd = 0x3c;                                      /* +0x1de=0x3c (60) @0x80112dac */
-                    e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;     /* -> sub 3 @0x80112dbc */
-                }
-            }
-            break;
-        }
-        case 8: {  /* B[8] COLLAPSE 0x80112e20: clip 0x11 + grab-cmd 6 (throw/finish) + SE 8 -> devour. */
-            s_player_grabbed = 1;
-            if (e->sub_state_2 == 0) {
-                re15_birkin_clip(e, 0x11); e->anim_frac = 7;                        /* clip 0x11 @0x80112e5c */
-                re15_audio_room_se(8);                                            /* SE 8 @0x80112ee0 */
-                re15_player_victim_devour(e);                                     /* aca58=6 devour/finish @0x80112ea4 */
-                e->sub_state_2 = 1;
-            } else if (re15_birkin_anim(e)) {                                       /* collapse played out -> release to sub 3 */
-                s_player_grabbed = 0; e->birkin_grab = 0;
-                e->birkin_hurt_cd = 0x3c;
-                e->sub_state_1 = 3; e->sub_state_2 = 0;
-            }
-            break;
-        }
-        case 15: { /* B[15] GRAB2 0x8011411c: carry-pin — clip 0x18 drag, cmd5, clip 0x19, +0x9c=100 mash,
-                    * clip 0x1a, cooldown +0x1de=0x1e -> sub 13 (audit #5). */
-            s_player_grabbed = 1;
-            if (e->sub_state_2 == 0) {
-                re15_birkin_clip(e, 0x18); e->anim_frac = 7;                        /* clip 0x18 @0x80114178 */
-                e->birkin_grab = 1; re15_player_victim_latch(e, pl); pl->hit_react |= 1;
-                e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
-                e->ai_timer = 100;                                                /* +0x9c mash budget @0x801142f4 */
-                e->sub_state_2 = 1;
-            } else {
-                re15_dog_advance(e, 40);                                          /* drag: pos_advance(0x66c) @0x801141e0-e4 (player X/Z follow) */
-                pl->x = e->x; pl->z = e->z;                                       /* drag playerX/Z @0x80114204/14 */
-                re15_birkin_anim(e);
-                e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 100 * re15_mash_pressed()));  /* mash 0x80037024 @0x80114340 */
-                if (e->ai_timer < 0 || pl->hp < 0) {                              /* release clip 0x1a @0x801143a4 */
-                    s_player_grabbed = 0; e->birkin_grab = 0;
-                    re15_player_victim_throwoff(); s_grab_mercy_timer = 0x5a;
-                    re15_birkin_clip(e, 0x1a); e->anim_frac = 7;
-                    e->birkin_hurt_cd = 0x1e;                                      /* +0x1de=0x1e @0x8011441c-20 */
-                    e->sub_state_1 = 13; e->sub_state_2 = 0;                       /* -> sub 13 (0xd) @0x8011442c-30 */
-                }
-            }
-            break;
-        }
+        /* Runde 38 Spur T: die Griffe B[5]/B[9] (gemeinsamer Anker FUN_8001ac38 @0x80112B08/@0x80113000 + Kopie
+         * auf den Spieler), die Kollapse B[8]/B[10] und Griff 2 B[15] (einmalige Spielerlage @0x80114204/14)
+         * stehen in spiderman_r38.c — vorher kein Anker (Spieler 14 600 Einheiten weit platziert). */
+        case 5: case 9: re15_r38_sm_griff1(e, pl, e->sub_state_1 == 9); break;   /* B[5] 0x80112A64 / B[9] 0x80112F58 */
+        case 8: case 10: re15_r38_sm_kollaps(e, pl, e->sub_state_1 == 10); break; /* B[8] 0x80112E20 / B[10] 0x80113300 */
+        case 15: re15_r38_sm_griff2(e, pl); break;                                /* B[15] 0x8011411C */
         case 6: {  /* B[6] STAGGER->CHARGE 0x80114494 (audit #8): post-hurt threat pose clip 6, hold
                     * ~120-135f, snapshot hp -> +0x1dc, break into CHARGE sub 7 on timer==0 OR front arc. */
             if (e->sub_state_2 == 0) {                                              /* phase 0 @0x801144c4 */
@@ -13913,6 +13867,7 @@ static void re15_tyrant_ai_tick(int slot)
 
     case 4:   /* EMERGE 0x80114fe4 (audit #11): variant clips 0x1c/0x1d (sub0/grid-0x41) & 0xa (sub2) —
                * NOT clip 0x10 (the GRAB1 release clip). sub_state_1 = the emerge variant from INIT. */
+        if (re15_r38_sm_austritt(e)) break;   /* Runde 38 Spur T: [0]/[1] warten auf grid 0x42 (@0x8011545C-60) */
         if (e->sub_state_2 == 0) {
             uint8_t clip = (e->sub_state_1 == 2) ? 0x0a                             /* sub2 0x801155ac: clip 0xa @0x8011569c + 8x dust FX (OPEN) */
                          : (e->sub_state_1 == 1) ? 0x1d                             /* grid-0x41 override: clip 0x1d @0x801150e4 */

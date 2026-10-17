@@ -138,6 +138,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_roy_r37.h"      /* Runde 37 Spur K: Elzas Typ 0x47 (Roy) ohne Elliot-Sonderweg */
 #include "re15_elzaintro_r38.h" /* Runde 38 Spur E: Erzaehler-Schwarz ROOM1031 Cut 13 (Elza) */
 #include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 nach HERKUNFT -> RE1.5-Bank */
+#include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht ohne Schatten */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -9746,6 +9747,7 @@ re_title:;
                     /* Runde 35 Spur M: die versteckte Fensterkraehe (RE2-State 4, word0 0x80000 =
                      * nicht zeichnen) wirft keinen Schatten an den Fuss der Rueckwand. */
                     if (npc->type == 0x21 && npc->state == 4 && npc->crow_hide) crow_no_record = 1;
+                    if (re15_r38_sm_schatten_aus(npc)) crow_no_record = 1;   /* Runde 38 Spur T: +0xBC/+0xBE = 0 @0x80115370-74 */
                     /* HUND 0x20 - EIGENE Lachen-Maschine, genau wie die Kraehe:
                      * RE2 0x80104A2C faerbt den Record auf 0x00BFBF10 (@0x80104A50-84) und
                      * laesst rec+4/+6 90 Takte lang um 8 wachsen (@0x80104A8C-C0);
