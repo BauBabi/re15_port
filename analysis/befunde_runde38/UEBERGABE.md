@@ -91,6 +91,7 @@ Zeiten IMMER aus der Uhr (PowerShell Get-Date) oder der Commit-Zeit, nie schaetz
 | T | r38_spiderman | Spiderman Stage 4 + Spieler bleibt auf der Karte (alle Gegner) | BESTANDEN (A1), integriert |
 | U | r38_wasserzombie | Zombies ziehen sich am Wasserrand hoch | BESTANDEN (A1) |
 | V | r38_releaseskript | Release-Skript alle Plattformen + Version + Archiv | BESTANDEN (A1), integriert |
+| W | r38_rolltor20a0 | Nachtrag 1: ROOM20A0 Rolladen vor der Kamera (+ halbtransparente Raum-Objekte) | BESTANDEN (A1), gemergt |
 | L (r37) | r37_re2zombie | Nachbesserung 2: Texte + Inversion re2z_hit_main case 3 | BESTANDEN (A2), integriert |
 | P (r37) | r37_masken36 | Nachbesserung 2: Cut 15 3050/3051, Kopfoberkante | BESTANDEN (A2), integriert |
 
