@@ -288,6 +288,11 @@ Ergebnisse (woertlich):
 - Original-Messung nur fuer 10B1 (der einzige Raum mit einem Verhalten, das nach einem Port-Fehler aussehen koennte). 1260 /
   1261 / 2000 laufen ueber dieselben, gegen PSX.EXE byte-gleich geprueften Funktionen (Code RAM == PSX.EXE am Original).
 
+- Integration: neue Quelldatei `engine/src/npckante_r38.c` (CMake-GLOB) — Android-Bau mit erneuertem Configure-Cache
+  (Memory reai-v2-android-glob-cache); gemeinsame Dateien nur mit Haken: enemy_ai_common.c (Include-Block, re15_actor_uses_
+  own_bank/_loco_bank, re15_npc_sub_walk, re15_npc_sub_dispatch, re15_npc_ai_tick), scd_vm.c op_sce_em_set (1 Zeile),
+  platform/pc/main.c (Include + NPC-Schatten, 2 Zeilen). Spur B fasst denselben Include-Block in enemy_ai_common.c an.
+
 ## Fuer den Nutzer
 
 - Neue Assets: keine. Sprachdateien: keine. Paket-Gate: nichts Neues.
