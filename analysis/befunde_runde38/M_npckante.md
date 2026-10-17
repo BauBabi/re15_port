@@ -13,9 +13,11 @@ Leon-Szenario -> Marvin (0x40) und Ada (0x42) in ROOM1260 und wo sie sonst Hoehe
 - [x] Pflichtlektuere (AUFTRAG/VERTRAG, Memory cutscene-npc-system / npc-ai / npc-global-yield / npc-crossfade-decay)
 - [x] Messung vorher (exe, Lade-Weg, alle drei Raeume)
 - [x] RE-Belege (Sonde FUN_8002d7d8, Kanten-Sub 0x80052508, Sprung-Sub 0x80052c14, Schwerkraft FUN_8001bd60)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
+- [x] Umsetzung (Vorgaenger a279c9b9, Fortsetzung 2026-10-17 gegen die Bytes nachgeprueft, s. "Pruefung der Fortsetzung")
+- [x] Messung nachher an der exe (1261 / 1260 / 10B1, gleiche Wege wie vorher)
+- [ ] ROOM2000 (Leon, Stage 2: Marvin sub02 @0x01A44, Ada sub03 @0x01A8A — "immer")
+- [ ] Original-Messung DuckStation (10B1: zweiter Sprung am Westrand von Block [6] + Hochklettern)
+- [ ] Tests (Riegel schaerfen, ROOM2000, Gegenprobe)
 
 ## Messung vorher (Stand f587d34e + nur Messhaken RE15_NPCKANTE_LOG)
 
@@ -102,9 +104,88 @@ u0 = 0x01 (nur Spieler fest, Klemm-Maske 4 der NPCs greift nicht) bzw. 0xff.
   Treffer nur in ROOM10B1 (John), ROOM1260 (Ada, Marvin), ROOM1261 (John), ROOM2000 (Marvin sub2 @0x01A44, Ada sub3
   @0x01A8A — Leon, Stage 2).
 
+## Pruefung der Fortsetzung (2026-10-17, Abbruch des Vorgaengers ~23:45)
+
+Selbst nachdisassembliert (re15_disasm.py, info/Re1.5/PSX.EXE + STAGE1.BIN), alle Aussagen der RE-Belege 1-5 bestaetigt:
+- FUN_8002d7d8 @0x8002d7d8-da44: Vektor @0x800109c8, Kurs `lhu a0,106(s2)` / `addiu a0,a0,512` / `and a0,a0,v0(-1024)`
+  @0x8002d82c-838, Zellwort `jal 0x8003b7f0` @0x8002d874 (a1 = 0 im Delay-Slot @0x8002d878, a2 = `lbu 130(s2)`), Bit 0
+  `beq` @0x8002d884 -> Objektschleife ueber 0x800b3f98 (Zahl `lbu s1,2(v0)` aus *(0x800ac778)) mit `lhu a2,6(v0)` +
+  `srl a2,a2,1` (Objektbox hx/2) und Band+1 / Band-2 -> `ori v0,zero,0x1` @0x8002d948; sonst Objektschleife mit der
+  ENTITY-Box `lw v0,120(s2)` / `lhu a2,6(v0)` (= hit_radius_min, NPC-Familie 450, re15_damage.c Kasten @0x80121658) und
+  Band / Band-1; Bit 1 @0x8002d9f0 -> `jal 0x8001c6e8` @0x8002da04 (a1 = 1, a3 = 0x100) -> `slt v1,v1,v0` @0x8002da14 ->
+  `ori v0,zero,0x2` @0x8002da1c. FUN_8002da4c @0x8002da4c = Punkt in (Box +6 + Rand) x (Box +10 + Rand) bei gleichem Band
+  = re15_collision_prop_box_hit.
+- Sub 4: `jal 0x800245d8` @0x80051344 -> anim_set @0x80051360 -> `jal 0x8002d7d8` @0x80051374 -> `sb v0,159(v1)`
+  @0x80051388 -> `ori v1,zero,0x12` @0x80051394 / `sb v1,5(v0)` @0x800513a4 / `sb zero,6(v0)` @0x800513b4 / `j 0x80051470`.
+  Sub 5: Schritt @0x800516b0 -> `jal 0x8002d7d8` @0x800516c4 -> +0x9f @0x800516d8 -> 0x16 @0x800516e4/f4, +0x6 = 0
+  @0x80051704, `j 0x800517dc`; anim_set erst @0x8005171c. Der Port-Haken sitzt genau so (Sub 5 vor, Sub 4 nach
+  re15_npc_anim; Ankunftstest uebersprungen).
+- Kanten-Sub 0x80052508 und Sprung-Sub 0x80052c14: alle Phasen, Konstanten und Reihenfolgen wie unter 3./4. (Tabellen
+  @0x800112e4 = {0x80052548, 0x80052598, 0x80052688, 0x800526c8, 0x80052820}, @0x8001131c = {0x80052c54, 0x80052c94,
+  0x80052cd4, 0x80052e1c, 0x80052ea8, 0x80052f50, 0x80052f8c}); 0x12 -> 0x18 / 0x16 -> 0x17 (`bne v1,v0` mit Delay-Slot
+  `ori v0,zero,0x17` @0x80052678-7c, sonst `ori v0,zero,0x18` @0x80052684); Fall y += 90 + 50*t (`addiu a0,a0,90`
+  @0x80052e34, 25*t*2 @0x80052e44-54); Kehrwert 0x91a2b3c5 @0x80052da4-dc = -(+0x1ba / 1800) mit C-Rundung.
+- NPC-Wurzel 0x49 (STAGE1 0x8011dc68): Pause-Gate `g_pauseflags & 0x20000000` @0x8011dc84, +0x9 & 0x20 @0x8011dca4,
+  dann `jal 0x8001bd60` @0x8011dcc4 (a0 = -10 @0x8011dcb4, a1 = 0x14 @0x8011dcac), Steuerung 0x80039e7c, Dispatch
+  @0x8011dd08, Tail 0x8002b498 / 0x8002aec4 / 0x8002b544 / Klemme 0x8003b0a4 (a1 = Box +6, a2 = 4) @0x8011dd50 / 0x80037358
+  / 0x8001b38c @0x8011dd60, Schatten `lh a1,442` @0x8011dd78 + `jal 0x8001b064` @0x8011dd7c.
+- Sce_em_set: `sh zero,448(s0)` @0x800421f4 (+0x1c0 = 0) und +0x1ba = -(Band*1800) `sh v0,442(s0)` @0x80042210 fuer
+  JEDEN Spawn. Im Port seedet scd_vm.c:3893 (Runde 35 Spur J) +0x1ba schon fuer alle Typen; neu nur +0x1c0 = 0.
+- Kein zweiter Pfad: alle NPC-Plc_dest-Walks (Typ 0x40-0x4d, Modi 4/5/7/8/9) laufen im Port durch die State-4-Sub-VM
+  (scd_vm.c npc_subvm, walk_active = 0), also durch re15_npc_sub_walk; der NPC-Tick laeuft in JEDEM KI-Flavor ueber
+  re15_npc_ai_tick (enemy_ai_common.c Typ-Kette); der generische Anim-Vorschub ueberspringt State-4-NPCs
+  (player_common.c:1440). Die Eskorte (State 1, 0x8011ce54 -> 0x8004f100/3a4/4e0) ruft die Sonde NICHT (Byte-Suche).
+- Frame-Wort-Toene: die Kanten-Clips 2..5 der Loco-Bank tragen bei John (CDEMD1), Marvin und Ada (CDEMD0) KEIN SE-Bit
+  (Wort >> 22 = 0 in allen Bildern, test_r38_npckante clips) -> FUN_8001b38c spielt beim Sprung/Klettern nichts. Clip 5
+  der eigenen Bank (Rast-Pose der Phase [1]) traegt das Schritt-Bit 0x4000 in Bild 7/22 (Ada 8/22); Phase [1] liest
+  +0x168 VOR anim_set (@0x800525a4-b4) = das im Vorbild posierte Bild und dauert in allen Messungen 1-8 Bilder (Bild 7
+  wird erst im letzten Phase-1-Bild posiert, also nie gelesen) -> s. OFFEN.
+
+Bau: `local_build.sh build` gruen; die exe des Vorgaengers (23:43:56) war juenger als die zuletzt geaenderte Quelle
+(23:43:34) und enthielt die Haken; der Testlauf wurde neu gelinkt (er war noch gegen die Haken-AUS-Bibliothek der
+Gegenprobe gelinkt).
+
 ## Umsetzung
 
+| Datei | Inhalt |
+|---|---|
+| engine/src/npckante_r38.c (neu) | Sonde re15_npckante_sonde (= FUN_8002d7d8), Haken re15_npckante_nach_schritt (Sub 4/5), Kanten-Sub sub_kante (0x80052508), Sprung-Sub sub_sprung (0x80052c14), Kanal-Auskunft re15_npckante_kanal (Phasen [0..2] der Kante = eigene Bank +0x170/+0x174, sonst Loco +0x84/+0x16c), Alte-Lage-Schnappschuss re15_npckante_altlage (+0x40/+0x44 nach dem Schub, @0x80052784 / @0x80052de8), Schatten re15_npckante_schatten_y (+0x1ba, @0x8011dd78), Messhaken re15_npckante_spur (RE15_NPCKANTE_LOG, inkl. fall= = Schwerkraft-Kriterium) |
+| include/re15_npckante_r38.h (neu) | alle Konstanten mit Adresse (Sondenweg 800 @0x800109c8, Tempo 0x4b @0x80052550, Clips 5/2/3/4/5, Bild 0x11/0x1d/0x25/0xd, Schub 0x47c @0x80052710 / 0x320 @0x80052d48, Hub 500 @0x80052d68, Fall 90 + 50 t @0x80052e34-5c, Landeabstand 800 @0x80052e90, Band 1800) |
+| engine/src/enemy_ai_common.c (Haken) | re15_npc_sub_walk: Sonde nach dem Schritt (2 Zeilen); re15_npc_sub_dispatch: case 0x12/0x16/0x17/0x18; re15_npc_ai_tick: Schwerkraft re15_schwerkraft_8001bd60(e, -10, 0x14, Box +6) VOR dem Dispatch (@0x8011dcc4), Yield-Gate laesst die Kanten-Subs laufen, Alte Lage vor der Klemme, Messhaken; Bank-Auskunft re15_actor_uses_own_bank / _loco_bank |
+| engine/src/scd_vm.c (1 Zeile) | Sce_em_set: +0x1c0 = 0 fuer jeden Spawn (@0x800421f4) |
+| platform/pc/main.c (2 Zeilen) | NPC-Schatten auf +0x1ba, solange Kanten-Sub oder Schwerkraft-Fall laeuft |
+| tests/unit/probes/r38_npckante.cmake, test_r38_npckante.c, probe_r38_npckante_karte.c | Riegel + Karten-Werkzeug |
+
 ## Messung nachher
+
+Gleiche Wege wie vorher (`M_belege/nachher_laeufe.sh` -> messlauf.sh: Speicherkarte + CONTINUE + RE15_FIRE_AOT = Tuer
+betreten), exe dieses Baums, Messhaken RE15_NPCKANTE_LOG je Bild, Auswertung `M_belege/luft_auswertung.py` ("in der Luft"
+= Geh-/Lauf-/Stand-Sub mit y != -(Band*1800) oder Schwerkraft-Kriterium fall=1; geparkte Aktoren (-30000,*,-30000)
+ausgenommen). Logs `M_belege/nachher_*_npckante.log`, debug.log-Auszuege `M_belege/nachher_*_debug_auszug.txt`.
+
+| Lauf | Weg (debug.log) | Ergebnis |
+|---|---|---|
+| Elza 1261 | `CONTINUE: resumed in room 10b1` -> `[fire-aot] slot=1 at F40` -> `PC loaded room1261.rdt` | John: F143 Sonde 2 bei (-20477,-1800,-17374) Band 1 -> Sub 0x12 (Rast, Clip 5 eigene Bank) -> F151 Sub 0x18 -> Clips 3/4/5, F165 Band 1 -> 0 (y -1800 -> -1210, fallend) -> landet auf 0; laeuft unten nach Osten; F430 Sonde 1 bei (20057,0,-18847) -> Sub 0x12 Clip 2, F461 Band 0 -> 1; Ende F1200 (20885,-1800,-5250) Band 1 Sub 6. **0 Bilder in der Luft** (vorher 249 von 400 Stichproben) |
+| Leon 1260 | `CONTINUE: resumed in room 11b0` -> `[fire-aot] slot=5 at F40` -> `PC loaded room1260.rdt` | Ada: F53 Sonde 2 (26750,-1800,14500) -> F54 Sub 0x18, F68 Band 1 -> 0; F317 Sonde 1 (-7489,0,16038) -> Clip 2, F348 Band 0 -> 1; Ende (-7502,-1800,-6005). Marvin: F118 Sonde 2 (25400,-1800,14500) -> F119 Sub 0x18, F133 Band 1 -> 0; F366 Sonde 1 (-8820,0,15980), F397 Band 0 -> 1; Ende (-8901,-1800,-4453). **0 Bilder in der Luft** (vorher Ada 241 / Marvin 224) |
+| Elza 10B1 | `CONTINUE: resumed in room 10b1` (Band 5, Cut 2, (3,0x80)(3,0x82)) | John: F115 Sonde 2 (-3661,-9000,-8275) Band 5 -> F120 Sub 0x17, F134 Band 5 -> 1 (Fall ueber 7200 auf Block [6]); F180 Sonde 2 (-6411,-1800,-7776) am Westrand von Block [6] (Zelle [18]) -> F200 Band 1 -> 0; F245 Sonde 1 (-7460,0,-7773) -> F280 Band 0 -> 1 (Hochklettern); danach im Wechsel Sprung (F342/F485/F628/F771) und Klettern (F423/F566/F709/F852) bis F900. **0 Bilder in der Luft** (vorher 7200 ueber Block [6]) |
+
+Bilder (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1): `M_belege/bild_nachher_1261.png`, `bild_nachher_1260.png`,
+`bild_nachher_10b1.png`. 10B1 Cut 2: John laeuft links am Steg vorbei, springt (F128-F140 Absprung-Hocke) und faellt aus
+dem Bild nach unten (F146 klein unten links); der Wechsel Sprung/Klettern am Westrand von Block [6] liegt AUSSERHALB von
+Cut 2.
+
+### Warum John in 10B1 springt UND wieder hochklettert (Herleitung aus Daten + Mechanismus, s. auch Original-Messung)
+sub02 @0x01896 schickt John im LAUF (Modus 5, Ankunftsradius 300 @0x80051764) nach (-6694,-7709) — das Ziel liegt AUF
+Block [6] (x -6992..-350), 298 vom Westrand. Die Sonde schaut 800 voraus in den gerasteten Kurs (Westen); Zelle [18]
+(Band 1, u1 0x02) beginnt bei x < -7162, die Sonde feuert also ab John.x < -6362. Ankommen verlangt Abstand < 300, also
+John.x < ~-6400. Jede Lage, die ankommen liesse, laesst zuerst die Sonde feuern (Sub 5 ruft die Sonde @0x800516c4 VOR dem
+Ankunftstest @0x80051764) -> John springt am Westrand hinunter, ehe er ankommt. Unten (Band 0) liegt das Ziel wieder
+OSTLICH auf dem Block, Sub 5 laeuft dorthin, die Sonde sieht Block [6] (Band 0, u1 0x01) -> Klettern (Ergebnis 1) ->
+oben wieder Sprung. Das endet erst, wenn der Spieler Cut 8 erreicht: sub02 `While(Cmp(0x0A != 8))` @0x0189E ->
+Evt_exec sub03 @0x018AC setzt John per Pos_set @0x018B6 auf (-9278,0,-6842) Band 0 (Member_set 0x12/0x13 = 0) — genau
+der Boden westlich des Blocks, wo ein Sprung von Zelle [18] endet. Dieselbe Folge liefert die unabhaengige Python-
+Nachbildung `M_belege/kanten_zensus.py` (SPRUNG an (-6383,-7711), KLETTERN an (-6984,-7711) im Wechsel).
+
 
 ## Tests
 

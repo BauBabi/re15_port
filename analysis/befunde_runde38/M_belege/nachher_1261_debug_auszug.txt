@@ -1,0 +1,7 @@
+[boot] room RDT: STAGE1/ROOM10B1.RDT (139080 bytes)
+[save] CONTINUE: resumed in room 10b1 (hp=100)
+[fire-aot] slot=1 at F40 (Raum 10B1)
+[room] PC loaded room1261.rdt (287712 bytes)
+[npckante] ROOM1261 slot 1 Typ 49: Sonde 2 bei (-20477,-1800,-17374) Band 1 -> Sub 0x12
+[npckante] ROOM1261 slot 1 Typ 49: Sonde 1 bei (20057,0,-18847) Band 0 -> Sub 0x12
+[flow] EXIT_AT: Bild 1200 in Raum 1261 erreicht -> exit

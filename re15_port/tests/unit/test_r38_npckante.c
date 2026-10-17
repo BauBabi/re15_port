@@ -128,6 +128,22 @@ static void teil_clips(void)
             for (int f = 0; f < fc; f++)
                 printf(" %d:(%d,%d,%d)", f, wurzel(sk, an, c, f, 0), wurzel(sk, an, c, f, 1), wurzel(sk, an, c, f, 2));
             printf("\n");
+            /* Frame-Wort-SE-Bits (FUN_8001b38c: `srl s0,v0,22` @0x8001b3b4, Wurzel-Tail 0x49 @0x8011dd60) und das
+             * Schritt-Bit 0x4000 (Kanten-Sub [1] @0x800525b4, nur Clip 5 der eigenen Bank) */
+            printf("    Clip %d Frame-Wort >> 22 (SE-Bits) je Bild:", c);
+            for (int f = 0; f < fc; f++) {
+                uint32_t w = re15_emd_get_frame_entry(an, c, f);
+                if (w >> 22) printf(" %d:0x%03x", f, (unsigned)(w >> 22));
+            }
+            printf("\n");
+        }
+        if (eb->own_ok && clip_fc(&eb->anim_own, 5) > 0) {
+            printf("    eigene Bank Clip 5 (Rast, Kanten-Sub [1]) Frame-Wort & 0x4000 / >> 22 je Bild:");
+            for (int f = 0; f < clip_fc(&eb->anim_own, 5); f++) {
+                uint32_t w = re15_emd_get_frame_entry(&eb->anim_own, 5, f);
+                if ((w & 0x4000u) || (w >> 22)) printf(" %d:%s0x%03x", f, (w & 0x4000u) ? "S+" : "", (unsigned)(w >> 22));
+            }
+            printf("\n");
         }
         PRUEF(clip_fc(an, 2) > 0x25, "%s: Kletter-Clip 2 hat %d Bilder (> 0x25: Bild 0x11/0x1d/0x25 @0x800526d8/704/7c8)",
               k[i].wer, clip_fc(an, 2));

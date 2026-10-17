@@ -368,10 +368,16 @@ void re15_npckante_spur(const re15_actor_t *e)
     if (!f || !ist_npc(e) || !e->active) return;
     int s = slot_of(e);
     int16_t unten = re15_collision_room_coll(&g_room_rdt, e->x, e->z, 0, (int)e->floor, RE15_NPK_SONDE_MASKE);
-    fprintf(f, "F%u R%04X s%d t%02X x=%d y=%d z=%d b=%d fy=%d st=%d s1=%d s2=%d mo=%d af=%d k=%d sonde=%d boden=%d r=%d\n",
+    /* fall = das Kriterium der Engine-Schwerkraft FUN_8001bd60: Mittelpunkt mindestens den Radius tief in einer
+     * Absprungzelle (Bit 1) des eigenen Bandes (FUN_8003b7f0(&+0x34, -r, +0x82) @0x8001bd94-b4) */
+    int fall = (re15_collision_floor_typeword(&g_room_rdt, e->x, e->z, (int)e->floor,
+                                              -(int32_t)e->hit_radius_min) & RE15_NPK_ZELLE_SPRUNG) ? 1 : 0;
+    fprintf(f, "F%u R%04X s%d t%02X x=%d y=%d z=%d b=%d fy=%d st=%d s1=%d s2=%d mo=%d af=%d k=%d sonde=%d boden=%d r=%d"
+               " fall=%d f1c0=%04x\n",
             (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, s, e->type, (int)e->x, (int)e->y, (int)e->z,
             (int)e->floor, (int)e->dog_floor_y, e->state, e->sub_state_1, e->sub_state_2, (int)e->motion,
-            (int)e->anim_frame, re15_npckante_kanal(e), re15_npckante_sonde(e), (int)unten, (int)(uint16_t)e->rot_y);
+            (int)e->anim_frame, re15_npckante_kanal(e), re15_npckante_sonde(e), (int)unten, (int)(uint16_t)e->rot_y,
+            fall, (unsigned)e->fall_1c0);
     fflush(f);
 #else
     (void)e;
