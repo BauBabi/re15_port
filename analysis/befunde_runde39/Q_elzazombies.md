@@ -162,8 +162,49 @@ Bilder Q_belege/q_kette_erstlauf.png: Reihe 1 = 1061 Cut 2 Bilder 10..170 (vier 
 zur Kamera), Reihe 2 links = 1031 Cut 7 Bilder 40..160 (Kopien aus dem 1071-Gang auf die Kamera zu), danach Cut 12 Bilder
 220..520 (aufgebrochenes Rollo, Kriecher unter dem Rollo durch auf die Kamera zu).
 
+### 4.2 Nachspawn ROOM1061, echter Weg (Tuer 1041 -> 1061, Treppe A und B)
+* Lauf t6 (Freigabe noch bei Band 4 allein): Band 4 springt mitten im Treppen-Clip (Elza bei z 23503, Ankunft z 24568);
+  frei ab dort liefen die Kopien ~1 s, bevor Elza die Steuerung hatte, und standen bei der Ankunft schon halb heran (Bild
+  540 in Q_belege/q_1061_aufstieg_vorher_freigabe_im_clip.png). => Freigabe erst, wenn die Treppe zu Ende ist
+  (re15_stair_active() = 0; "Etage erreicht").
+* Lauf t7 / t8 (t8 = echter Weg: Spielstand 1041 an der Tuer Slot 2, Aktion -> DOOR FIRE slot=2 -> ROOM1061 -> Nachspawn;
+  dasselbe Eingabeskript laeuft je Raum von vorn): Kopien bei der Freigabe (20218,26533), (20218,25732), (21019,26532),
+  (20916,25341) = Westseite unter dem Fenster; Elza bei (25424,24568) = Treppenende; Abstaende 5565/5335/4823/4574.
+  Bild 500 (Q_belege/q_1061_ankunft_von_unten.png, q_integration_treppe_ankunft.png): Elza rechts an der Tuer, die vier
+  links unter dem Fenster; Bilder 540..620: danach gehen sie auf sie zu (RE2-KI Gang). Waehrend Etage 0 und 2 standen sie
+  (gehalten, Lage bei der Freigabe = Spawn +-18).
+
+### 4.3 Nachspawn ROOM1031 (Lauf n1031, CONTINUE mit (9,95), (4,15)=1)
+Aktoren 7..11 = Typen 0x10/0x10/0x10/0x11/0x11 (1071-Kopien, Bits 128..132), 12..14 Typ 0x16 (Kriecher 133/144/145), 1..6
+die Rollo-Zombies des Raums. Wie Leons k_p_1030_nach: die Kopien stehen im Gang zwischen 1041- und 1071-Tuer.
+
+### 4.4 Nebenwirkungen
+* Leon (Lauf leon): Spielstand ROOM1040 Figur 0, Flanke (9,97) bei Bild 200 -> bis Bild 500 keine [elzazombies-r39]-
+  Zeile, kein Raumwechsel. Leons Montage-Riegel (unit_r35_cut1150_*, unit_r38_montage_*, integration_r35_cut1150,
+  integration_r38_montage) s. 5.
+* Laden (Lauf geladen97): Elza-Spielstand mit (9,97)=1 -> CONTINUE -> keine Flanke, keine Kette (re15_elzazombies_r39_
+  geladen setzt den Flanken-Speicher auf das geladene Bit).
+* Speichern: (9,95) und die Kopie-Bits (Zone 7) liegen in g_game.flags (re15_savedata_capture) -> Nachspawn nach dem
+  Laden (Laeufe n1031, t5..t8 = Spielstand mit (9,95)).
+* Ohne (9,97): keine Kette (Messung vorher 1.1 = Verhalten ohne Flanke; unit _ohne).
+
+### 4.5 Ton (Laeufe ton_laut / ton_stumm, RE15_AUDIO_CAP_SYNC, Mess-Haken RE15_R39Q_KNALL_STUMM)
+Differenz der Mitschnitte = Bilder 624..665 (42) und 805..846 (42), Differenz-RMS je 6567 = zweimal der Tuerknall (Knall-
+Bank Satz 0, Folge #1 K ROOM1041 und #5 K ROOM1061). Der Original-Se_on @0x02862 in 1031 laeuft ueber die Raumbank (Folge
+K 2, vom Haken nicht betroffen).
+
 ## 5. Tests
-(offen)
+Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake):
+* unit_r39_elzazombies_zensus — Quell-Records, Kopie-Bits frei (132 RDTs, 706 Sce_em_set, 176 Bits, 0 Desync), 1031-Zeilen
+  woertlich, sub06/07/09 = ROOM1030, Kameras = RID, Tuer 10C1 -> 1061, Slot/Ereignis/Bank 5 frei.
+* unit_r39_elzazombies_kette_45/_05/_00/_21 — die Kette im Prozess je Ueberlebenden-Fall (4/5, 0/5, 0/0, 2/1): Raumfolge,
+  Schnitte, Zahl der Kopien = lebende, jede Kopie >= 400 naeher, HP 100, Rueckkehr, (9,95), zweite Flanke wirkungslos;
+  kette_45 mit GEGENPROBE (Modul aus = keine Kette).
+* unit_r39_elzazombies_nach1061 — Westseite, 200 Bilder gehalten, frei auf Etage 4 (kleinster Abstand 4179 >= 4000), kommen
+  danach naeher (4179 -> 2670), getoetete Kopie fehlt.
+* unit_r39_elzazombies_nach1031 / _ohne — Nachspawn 1031 mit/ohne (9,95); Laden mit (9,97), ohne (9,97), Leon.
+* integration_r39_elzazombies_kette / _knall / _treppe / _ohne — echte exe (s. 4.1, 4.2, 4.4, 4.5).
+Gezielter Lauf (00:5x): `ctest -R "r39_elzazombies"` -> "100% tests passed, 0 tests failed out of 12".
 
 ## 6. OFFEN
 (offen)
