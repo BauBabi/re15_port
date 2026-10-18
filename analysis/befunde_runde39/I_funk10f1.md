@@ -159,6 +159,15 @@ ROOM10D1 main00 @0x01026 Ck(3,0x32)==0 legt dort einen Text-Platz statt der Tuer
 - `[debug-menu] AUTO-JUMP -> ROOM10F1 (Frame 620)` (Raum neu aufgebaut, (9,70)=1): danach 0 Zeilen `Plc_dest|Message_on|funk10f1`,
   state.txt F1..F700 (8400,-350) mo=211 pm=0 msg(a=0) — Bilder `echt2_wieder.png`: Elza steht an der Tuer, keine Balken.
 
+### 4.3 Lauf echt3 = echter Weg mit Bildern + Ton-Mitschnitt (Scratch `laeufe/echt3`, `RE15_AUDIO_CAP_SYNC=cap.raw`)
+- Bilder nach der Tuer (Scratch `echt3_anfang.png`, angesehen): F0 schwarz (Einblendung nach der Tuersequenz), F10 Elza an der
+  Tuer (Cut 0), Balken fahren ein, F20..F30 sie dreht sich nach IHRER RECHTEN (zur Kamera), F40..F60 geht auf die Konsole im
+  linken Vordergrund zu, F80 Cut 1 den Gang entlang.
+- Ton: normierte Kreuzkorrelation der Stellvertreter-Datei (main40.wav, 32 kHz -> 44,1 kHz) gegen den Mitschnitt: Maximum
+  0,698 bei Mitschnitt-Bild 380,00 (naechstbester Wert ausserhalb +-3 Bilder 0,095), Verstaerkung 1,003; Beginn 373 Bilder vor
+  dem Mitschnitt-Ende (= 10F1-Bild 520) -> Bild 147 = erste state-Zeile mit msg id=40 (F147). Die Stimme spielt GENAU mit
+  der Zeile 40, ueber die Raummusik gemischt.
+
 ## 5. Tests (probes/r39_funk10f1.cmake, nur dort registriert)
 | Test | misst | Ergebnis |
 |---|---|---|
