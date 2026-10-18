@@ -16,6 +16,32 @@ Punkte:
 
 ## 1. Messung vorher
 
+Bau des Baums b1309110 + Dossier (local_build.sh configure + build = LOCAL-BUILD-OK). Messordner scratchpad `p39/`
+(nicht committet), Laufskript `p39/lauf.sh` (Elza-Spielstand per probe_r36_elza_karte, CONTINUE, Messkopie
+re15_pc_p39_<lauf>.exe neben der exe, RE15_WEGPLAN = echte Tueren).
+
+### 1.1 Lauf v1: ECHTER Weg 1021 -> 1041 nach der John-Szene (Elza)
+Spielstand ROOM1021 (-25500,-8200) Blick 2048 mit den Flags nach der 1021-Szene wie integration_r39_dining1141_d
+(3:0x5F 4:0xF0 4:0xF1 4:0xEC 3:0x78; (4,0x60)=0 -> kein John), Wegplan: zur Tuer slot 2, Aktion, 1041, 500 Bilder warten.
+debug.log: `[save] CONTINUE: resumed in room 1021`, `[room] PC loaded room1041.rdt`, `[bgm] stage=0 room=04 entry=FF00 ->
+MAIN00(flag 0) ... [unveraendert, laeuft durch]`; in 1041 0 Zeilen `[msg]`, 0 `[voice]`, kein `[hint]` -> kein Hilferuf,
+kein Satz Elzas, keine Karte, keine andere Musik. Elza steht bei (-24194,16500) in Cut 6 (Bild `l_v1/v1_f60.png`: Gang
+nach Norden, Kamera bei (-25668,-3114,8442) blickt nach Sueden auf Elza). Im Gang laufen Zombies (Typ 0x16, RE2 EM016,
+Raum-Records main00 @0x01224..): Aktor 1 Abstand 15290 (F28) -> 9384 (F568), ~11 Einheiten/Bild.
+
+### 1.2 Lauf v2: ECHTER Weg 1121 -> 1131 mit Bit 97 = 1 (Spielstand, Flags wie v1 + 9:97)
+`[bgm] stage=0 room=12 entry=FF17 -> MAIN17`, `room=13 entry=FF17 -> MAIN17 [unveraendert, laeuft durch]`; in 1131 0
+`[voice]`, 0 `[msg]` in 300 Bildern -> Bit 97 hat keine Wirkung, kein Ruf in 1131, Musik = Tabelle (MAIN17).
+
+### 1.3 Leon (Vergleich, Form der Panikmusik)
+integration_r35_cut10f0 (Runde 35 K) haelt Leons MAIN01-Fenster fest: "MAIN01-Fenster auf" erst nach dem Szenen-Ende,
+`entry=FF01 -> MAIN01` von Raum zu Raum, Ende am Parkplatz (11C0 = Gorillas). Gezielt nachgefahren in Abschnitt 5.
+
+### 1.4 ROOM1141 heute (Spur J, Dossier J_dining1141.md 1.4/4.1)
+Phase H: HAEMMERN39 startet MAIN16 (`54 00 01` @+0000 = sub00 @0x00B4E), Klopfen + help01..05 im Mix (help03 zuerst),
+Elzas Reaktion msg 50 nach dem ersten Ruf (Spur J entfernt sie, Nachtrag 10); Kampfende sub01 @0x00C06 MAIN16 Stop,
+@0x00C0C Set(4,0xF2)=0. Die Hilferufe spielen mit Standard-Pegel (help03 RMS 3348 im Mitschnitt, J 4.1).
+
 ## 2. RE-Belege
 
 ### 2.1 Wo/wann "verschwindet" John? (ROOM1021/1041/1141, selbst gelesen, tools/scd_dump_room.py + Flag-Zensus)
