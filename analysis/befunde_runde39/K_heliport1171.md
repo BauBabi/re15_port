@@ -302,3 +302,4 @@ RE15_EXIT_AT=1200#1170), beide exit 0, ROOM1170 geladen. Pose-Strom 4360 Zeilen 
   - F920-F1200: Plc_motion(0,15,0) "Hey!" ab Bild 0 statt 1, rueckwaerts ab 19 statt 18 (K3). Bei RE15_FPS=240 posiert
     der Renderer anim_frame>>1, darum [0,0,1,1,..] statt [0,1,1,2,..].
   Das Zustandslog weicht nur in Elliots af ab (44 Zeilen, z.B. `st=4 ss1=6 ss2=0 g=40 mo=2 af=1` -> `af=0`).
+- 18:12: Gegenprobe der neuen Riegel: enemy_ai_common.c/szenenleon_r36.c/scd_room_setup.c stehen VORUEBERGEHEND auf b35c66bd (Bau re15_port/build_bisect mit den NEUEN Testquellen). Steht beim Lesen ein ' M' auf diesen Dateien ohne Rueckmeldung hier: `git checkout HEAD -- re15_port/engine/src/enemy_ai_common.c re15_port/engine/src/szenenleon_r36.c re15_port/engine/src/scd_room_setup.c`, NICHT committen.
