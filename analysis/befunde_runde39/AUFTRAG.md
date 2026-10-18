@@ -119,3 +119,15 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
 - Antwort auf die Rueckfragen der Spur I: "1. ok, zu 2. nein, korrekt soll es geschrieben werden." -> Funkszene: "We need help!",
   "Uhh, this thing is broken!" (umgesetzt). Orchestrator: dieselbe Regel fuer neue Nutzer-Zeilen der Spur J ("He is in
   trouble", "gorilla meal") - korrekte Gross-/Kleinschreibung.
+
+## Nachtrag 7 des Nutzers (woertlich, 2026-10-18 20:28, fuer Spur J)
+- "Nein, die Animation beim follow me in room 1141 von John ist schon wieder falsch... die soll so aussehen wie in room 1171, die du jetzt korrigiert hast..."
+  Orchestrator (Belege aus Spur K, Zweig r39/heliport1171, Dossier K_heliport1171.md Abschnitte 1/2, Commits 18940e95 + ab223800):
+  das korrigierte Heranwinken in 1171 ("Elza, hurry up!") ist Original Plc_motion(0,2,0) @0x014CE = RBJ-Record 1 (Marker 0x2 =
+  Gegner 0 = John) Clip 2, 96 Bilder, aus ROOM1171.RDT (RBJ @RDT+0x5C -> @0x188C, 0x409C B; rec1 EDD @0x3E34, 3 Clips {20,30,96});
+  Lader FUN_8001b3f8 (RBJ = Raumkopf+0x5C, lw a2,92(v0) @0x8001b404). Der Port zeigte statt dessen Bank 0 Clip 2 = Kletter-Clip
+  (RE15_NPK_KANTE_CLIP_HOCH), weil der RBJ-Kanal-Cache (RE15_RBJ_CACHE_MAX 2, enemy_common.c) von den Kraehen belegt war (Fix K
+  18940e95: Slot ohne Record belegt keinen Platz). FUER 1141: Johns "follow me"-Heranwinken (Ende der Szene, Nutzer-Punkt 8 /
+  Nachtrag 4 Punkt 4) = GENAU dieser Clip (ROOM1171 RBJ rec1 Clip 2), in 1141 aus ROOM1171 geliehen (Muster Spur I: RBJ-Leihe
+  "[rbj] ... von ROOM1031 geliehen", platform/pc/src/cut10f0_pc.c); den Cache-Fix aus K beachten (bei der Integration zusammen).
+  Riegel: Clip-Folge Johns bei "follow me" = 1171-Clip (Bildzahl 96, Quelle ROOM1171), kein Waffe-auf-Elza-Clip.
