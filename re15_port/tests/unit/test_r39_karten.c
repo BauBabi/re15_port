@@ -203,11 +203,196 @@ static int teil_marker(int argc, char **argv)
     return 0;
 }
 
+/* ---- Begehbare Flaeche per ECHTEM Kollisionsloeser -------------------------------------
+ * re15_collision_constrain_contact_band (re15_collision.c: Port von FUN_8003b0a4 mit
+ * push_rect / push_circle / push_diag2..7): ein Rasterschritt von P nach Q gilt als begehbar,
+ * wenn der Loeser Q UNVERAENDERT laesst (Band <band>, Radius <r>, Maske 1 wie der Spieler).
+ * Breitensuche ab der Saat, Gitter = SCA-Huelle +- 3000 Einheiten. Messwerkzeug: dieselbe
+ * Kollision, an der der Spieler im Spiel haengen bleibt - keine Nachbildung der Zellformen. */
+#define FL_MAX 900
+static unsigned char s_fl[FL_MAX][FL_MAX];
+static int32_t s_flx0, s_flz0;
+static int s_flnx, s_flnz, s_flst;
+static int s_qi[FL_MAX * FL_MAX];
+
+static int fl_frei(int band, int32_t r, int32_t px, int32_t pz, int32_t qx, int32_t qz)
+{
+    int32_t x = qx, z = qz;
+    re15_collision_constrain_contact_band(&s_rdt, px, pz, &x, &z, r, band, 1u, NULL, NULL);
+    return x == qx && z == qz;
+}
+
+static int flut(int band, int32_t sx, int32_t sz, int32_t r, int schritt)
+{
+    int i, kopf = 0, fuss = 0, n = 0;
+    int32_t hx0 = 0x7fffffff, hx1 = -0x7fffffff, hz0 = 0x7fffffff, hz1 = -0x7fffffff;
+    for (i = 0; i < s_rdt.sca_count; i++) {
+        const re15_sca_entry_t *e = &s_rdt.sca[i];
+        if (e->x < hx0) hx0 = e->x;
+        if (e->z < hz0) hz0 = e->z;
+        if (e->x + (int32_t)e->width > hx1) hx1 = e->x + (int32_t)e->width;
+        if (e->z + (int32_t)e->density > hz1) hz1 = e->z + (int32_t)e->density;
+    }
+    if (hx0 > hx1) return 0;
+    s_flst = schritt;
+    s_flx0 = hx0 - 3000; s_flz0 = hz0 - 3000;
+    s_flnx = (hx1 + 3000 - s_flx0) / schritt + 1;
+    s_flnz = (hz1 + 3000 - s_flz0) / schritt + 1;
+    if (s_flnx > FL_MAX || s_flnz > FL_MAX) return 0;
+    memset(s_fl, 0, sizeof s_fl);
+    {
+        int gx = (sx - s_flx0 + schritt / 2) / schritt, gz = (sz - s_flz0 + schritt / 2) / schritt;
+        int32_t wx = s_flx0 + gx * schritt, wz = s_flz0 + gz * schritt;
+        if (!fl_frei(band, r, wx, wz, wx, wz)) return 0;
+        s_fl[gz][gx] = 1; s_qi[fuss++] = gz * FL_MAX + gx; n = 1;
+    }
+    while (kopf < fuss) {
+        static const int dx[4] = { 1, -1, 0, 0 }, dz[4] = { 0, 0, 1, -1 };
+        int c = s_qi[kopf++], gz = c / FL_MAX, gx = c % FL_MAX, k;
+        for (k = 0; k < 4; k++) {
+            int ax = gx + dx[k], az = gz + dz[k];
+            if (ax < 0 || az < 0 || ax >= s_flnx || az >= s_flnz || s_fl[az][ax]) continue;
+            if (!fl_frei(band, r, s_flx0 + gx * schritt, s_flz0 + gz * schritt,
+                         s_flx0 + ax * schritt, s_flz0 + az * schritt)) continue;
+            s_fl[az][ax] = 1; s_qi[fuss++] = az * FL_MAX + ax; n++;
+        }
+    }
+    return n;
+}
+
+static void flut_bbox(int32_t *x0, int32_t *x1, int32_t *z0, int32_t *z1, int *leck)
+{
+    int gx, gz;
+    *x0 = *z0 = 0x7fffffff; *x1 = *z1 = -0x7fffffff; *leck = 0;
+    for (gz = 0; gz < s_flnz; gz++)
+        for (gx = 0; gx < s_flnx; gx++) {
+            int32_t wx, wz;
+            if (!s_fl[gz][gx]) continue;
+            wx = s_flx0 + gx * s_flst; wz = s_flz0 + gz * s_flst;
+            if (wx < *x0) *x0 = wx;
+            if (wx > *x1) *x1 = wx;
+            if (wz < *z0) *z0 = wz;
+            if (wz > *z1) *z1 = wz;
+            if (gx == 0 || gz == 0 || gx == s_flnx - 1 || gz == s_flnz - 1) *leck = 1;
+        }
+}
+
+/* flut <hexraum> <band> <x> <z> <r> [schritt]: Bbox + Zeilen-Laeufe (von +z nach -z). */
+static int teil_flut(int argc, char **argv)
+{
+    unsigned rid; int band, r, st = 100, n, gz, leck;
+    int32_t x0, x1, z0, z1;
+    char alt[600] = "", neu[600];
+    if (argc < 7) { printf("FAIL: flut <hexraum> <band> <x> <z> <r> [schritt]\n"); return 2; }
+    rid = (unsigned)strtoul(argv[2], NULL, 16); band = atoi(argv[3]); r = atoi(argv[6]);
+    if (argc > 7) st = atoi(argv[7]);
+    if (!betrete(rid, atoi(argv[4]), atoi(argv[5]), band)) { printf("FAIL: Raum\n"); return 1; }
+    n = flut(band, atoi(argv[4]), atoi(argv[5]), r, st);
+    if (n <= 0) { printf("FAIL: Saat (%s,%s) Band %d r %d nicht begehbar\n", argv[4], argv[5], band, r); return 1; }
+    flut_bbox(&x0, &x1, &z0, &z1, &leck);
+    printf("ROOM%04X Band %d r %d Schritt %d: %d Punkte, Mitten x %d..%d z %d..%d%s\n", rid, band, r, st, n,
+           x0, x1, z0, z1, leck ? " LECKT" : "");
+    for (gz = s_flnz - 1; gz >= 0; gz--) {
+        int gx, lauf = -1, len = 0;
+        neu[0] = 0;
+        for (gx = 0; gx <= s_flnx; gx++) {
+            int an = gx < s_flnx && s_fl[gz][gx];
+            if (an && lauf < 0) lauf = gx;
+            if (!an && lauf >= 0) {
+                len += snprintf(neu + len, sizeof neu - (size_t)len, " [%d..%d]",
+                                s_flx0 + lauf * st, s_flx0 + (gx - 1) * st);
+                if (len >= (int)sizeof neu - 32) break;
+                lauf = -1;
+            }
+        }
+        if (strcmp(neu, alt)) {
+            if (neu[0]) printf("   ab z %6d:%s\n", s_flz0 + gz * st, neu);
+            strcpy(alt, neu);
+        }
+    }
+    return 0;
+}
+
+/* Liegt der Kartenpunkt auf der GEZEICHNETEN Flaeche der Zone? Gemalte Kachel: Index != 0 im
+ * eigenen Rechteck (Wand 4 zaehlt mit - der Marker darf auf der Wand stehen, wenn der Spieler
+ * an ihr klebt); Schema-Zeichnung: in einer ihrer Zellen. */
+static int auf_zone(const marker_t *m, unsigned rid, int32_t x, int32_t z)
+{
+    const re15_map_zone_t *zn = re15_map_zone_at(rid, x, z);
+    int fp, fr;
+    if (!zn) return 0;
+    if (re15_map_floor_lookup(zn->room, zn->idx, re15_map_player_band(), &fp, &fr)) {
+        const re15_map_zone_t *zg = re15_map_zone_fuer(zn->room, zn->idx, (unsigned)fp);
+        if (zg) zn = zg;
+    }
+    if (zn->rect != 255) return m->tex > 0;
+    {
+        int sx, sy, sw, sh, erste, nz, k, cx, cy, cw, ch;
+        if (!re15_map_zone_synth(zn, &sx, &sy, &sw, &sh, &erste, &nz)) return 0;
+        for (k = 0; k < nz; k++) {
+            if (!re15_map_synth_cell(erste + k, &cx, &cy, &cw, &ch)) continue;
+            if (m->mx >= cx && m->mx < cx + cw && m->my >= cy && m->my < cy + ch) return 1;
+        }
+    }
+    return 0;
+}
+
+/* markerflaeche <hexraum> <band> <x> <z> <y> [schritt] [dichte]: Flut mit dem Spieler-Radius
+ * (PR 450, re15_collision.c) ab der Saat, an jedem <dichte>-ten Rasterpunkt der echte
+ * Kartenpfad (miss_marker) - Zahl der Punkte, deren Marker NICHT auf der Zeichnung der eigenen
+ * Zone liegt, mit Beispielen. */
+static int markerflaeche(unsigned rid, int band, int32_t sx, int32_t sz, int32_t y, int st, int dichte,
+                         int laut, int *geprueft)
+{
+    int n, gx, gz, gepr = 0, aus = 0, gez = 0;
+    int mx0 = 999, mx1 = -999, my0 = 999, my1 = -999;
+    if (!betrete(rid, sx, sz, band)) { printf("FAIL: Raum %04X\n", rid); return -1; }
+    n = flut(band, sx, sz, 450, st);
+    if (n <= 0) { printf("FAIL: Saat (%d,%d) ROOM%04X Band %d nicht begehbar\n", sx, sz, rid, band); return -1; }
+    for (gz = 0; gz < s_flnz; gz += dichte)
+        for (gx = 0; gx < s_flnx; gx += dichte) {
+            marker_t m;
+            int32_t wx, wz;
+            if (!s_fl[gz][gx]) continue;
+            wx = s_flx0 + gx * st; wz = s_flz0 + gz * st;
+            miss_marker(rid, wx, y, wz, &m);
+            gepr++;
+            if (m.mx < mx0) mx0 = m.mx;
+            if (m.mx > mx1) mx1 = m.mx;
+            if (m.my < my0) my0 = m.my;
+            if (m.my > my1) my1 = m.my;
+            if (!auf_zone(&m, rid, wx, wz)) {
+                aus++;
+                if (laut && gez < 12) {
+                    printf("   AUSSERHALB: Welt (%d,%d) -> Blatt %d rect %d Marker (%d,%d) Index %d\n", wx, wz,
+                           m.page, m.zrect, m.mx, m.my, m.tex);
+                    gez++;
+                }
+            }
+        }
+    printf("ROOM%04X Band %d Saat (%d,%d) y %d: %d begehbare Rasterpunkte, %d geprueft, Marker x %d..%d y %d..%d, "
+           "ausserhalb der Zeichnung %d\n", rid, band, sx, sz, y, n, gepr, mx0, mx1, my0, my1, aus);
+    if (geprueft) *geprueft = gepr;
+    return aus;
+}
+
+static int teil_markerflaeche(int argc, char **argv)
+{
+    int st = 100, dichte = 3;
+    if (argc < 7) { printf("FAIL: markerflaeche <hexraum> <band> <x> <z> <y> [schritt] [dichte]\n"); return 2; }
+    if (argc > 7) st = atoi(argv[7]);
+    if (argc > 8) dichte = atoi(argv[8]);
+    return markerflaeche((unsigned)strtoul(argv[2], NULL, 16), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]),
+                         atoi(argv[6]), st, dichte, 1, NULL) < 0 ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "";
     if (!strcmp(teil, "ops")) return teil_ops(argc, argv);
     if (!strcmp(teil, "marker")) return teil_marker(argc, argv);
+    if (!strcmp(teil, "flut")) return teil_flut(argc, argv);
+    if (!strcmp(teil, "markerflaeche")) return teil_markerflaeche(argc, argv);
     printf("FAIL: unbekannter Teil '%s'\n", teil);
     (void)g_fail;
     return 2;

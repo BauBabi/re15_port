@@ -150,8 +150,22 @@ static const re15_map_zone_t s_map_zones[] = {
      * Nummer teilen es sich. Gemessen hat das unit_map_marke_haengt_an sofort gemeldet:
      * mit 37 schwebten auf Blatt 6 fuenf Tuermarken frei im Blau (vorher null). 22 ist die
      * einzige Luecke im dicht belegten Bereich 0..101. */
-    { 0x1090, -17500, -18700,  10285,  11754,  2,   5, 0,  22,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x1091, -17500, -18700,  10285,  11754,  2,   5, 0,  22,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* Runde 39 Spur G (Nutzer 2026-10-17: "In ROOM 1090 ist Leons Positionsmarker der Map ausserhalb
+     * des aktuellen Raums"). GEMESSEN (probe_r39_karten markerflaeche, Dossier G_karten.md P2): die
+     * Bbox-Streckung bildete die Huelle BEIDER Ebenen (x -17500..10285, z -18700..11754) auf das Rechteck
+     * ab - die obere Ebene landete gestaucht und nach unten versetzt (Nutzerpunkt (-12528,-9000,959) ->
+     * (187,84), Index 0 = neben dem gemalten Gamma), 160 von 1225 begehbaren Rasterpunkten ausserhalb.
+     * Die Original-Zeile @0x800768F8 (Index 9) ist der Stub 00 00 00 00 01 00 01 00; ersetzt wird sie
+     * hier je Ebene durch eine Zeile fuer DIESELBE Formel FUN_800473f8 (@0x8004741c-0x80047528,
+     * re15_map_zone_marker), PORT-ERGAENZUNG wie die ausgelieferten Zeilen der Nachbarn: jede Weltwand
+     * der begehbaren Flaeche faellt auf ihre gemalte Wandlinie (Kleinste Quadrate, Werkzeug
+     * G_karten_werkzeug/zeile_fit.py; Wand = SCA-Zelle des Bands, Datei-Offset ROOM1090.RDT).
+     * HOF (Band 1, Blatt 2 rect 5, MAP03.PIX uv(112,64)): x -14546 (@0x01E84) -> 180, -4414 (@0x01EC0)
+     * -> 203, 3972 (@0x01E00, Diagonale Typ 4) -> 222, Reste 0; z 7720 (@0x01DF4) -> 59, 3800 (@0x01E30)
+     * -> 69, -4214 (@0x01F5C) -> 88, Reste 0/-1/0. Probe: die Tuer -> ROOM1050 (Mitte (-10080,3060))
+     * faellt auf (190,70) = das gemalte Tuerblatt / die Marke (191,69). */
+    { 0x1090, -17500, -18700,  10285,  11754,  2,   5, 0,  22,   140,   155,  2376,  2535, 0, 0,   0, 0 },
+    { 0x1091, -17500, -18700,  10285,  11754,  2,   5, 0,  22,   140,   155,  2376,  2535, 0, 0,   0, 0 },
     { 0x10C0,  -9600,  -8250,   8750,  13100,  3,   0, 0,  12,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x10C1,  -9600,  -8250,   8750,  13100,  3,   0, 0,  12,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x10D0, -21495, -10512,  10650,  30850,  3,   3, 0,  13,     0,     0,     0,     0, 1, 1,   0, 0 },
@@ -461,8 +475,14 @@ static const re15_map_zone_t s_map_zones[] = {
      * hinaus nach ROOM1100 auf Band 6). rect2 (x160..211 / y226..253) beruehrt ROOM10F0
      * gar nicht. Ein Tuer-Anker aus einer ausgelieferten Massstabszeile ist hier nicht zu
      * haben - ROOM10F0 (@0x80076928) und ROOM1100 (@0x80076930) tragen beide den Stub. */
-    { 0x1090, -17500, -18700,  10285,  11754,  3,   7, 0,  22,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x1091, -17500, -18700,  10285,  11754,  3,   7, 0,  22,     0,     0,     0,     0, 0, 0,   0, 1 },
+    /* Runde 39 Spur G: Zeile der OBEREN Ebene (Band 5/6, Blatt 3 rect 7, MAP04.PIX uv(112,74), Gamma
+     * aus Querband + Steg + Block), Herleitung wie die Hof-Zeile oben. Weltwaende ROOM1090.RDT ->
+     * gemalte Linie: x -14672 (@0x01E54) -> 179, -6878 (@0x01FBC) -> 197, -4814 (@0x01E48) -> 204,
+     * 2752 (@0x01F38) -> 222, Reste 0/1/-1/0; z 3404 (@0x01E6C) -> 67, 491 (@0x01FC8) -> 76, -5276
+     * (@0x01F2C) -> 87, -16403 (@0x01F20) -> 114, Reste 1/-1/1/0. Acht Waende, hoechstens 1 px -
+     * die Kachel IST die obere Ebene. Nutzerpunkt (-12528,959) -> (184,72) im Querband. */
+    { 0x1090, -17500, -18700,  10285,  11754,  3,   7, 0,  22,   136,   150,  2597,  2435, 0, 0,   0, 1 },
+    { 0x1091, -17500, -18700,  10285,  11754,  3,   7, 0,  22,   136,   150,  2597,  2435, 0, 0,   0, 1 },
     /* ⛔ AUSWEICH-KACHEL, NUR GEDULDET (2026-09-12): diese 1F-Gastlage von
      * ROOM10F0/10F1 sitzt auf Blatt 2 Rect 8 - einer AUSWEICH-Kachel des
      * Loesers; Rect 8 gehoert pixelgenau belegt ROOM1010-Nord (Dossier
