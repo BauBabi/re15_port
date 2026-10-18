@@ -422,3 +422,62 @@ Maengel aus `K_abnahme_0.md` §6: M1 Elzas Event-Reach-Saatbild (Spieler-Pfad, K
 Bit-Takt (Spieler-Pfad, K4-Klasse), M3 (a) Einzelbilder Clip 1 Bild 1 zwischen TURN-Ankunft und naechstem Gang,
 (b) Kraehen-Animationen der Szene gegen das Original. Baum sauber, HEAD a2d1e1dc, exe 18:59 = Code-Stand 6d027394.
 Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher (fortlaufend unten).
+
+### 12.1 M1 + M3(a) — Elzas Sub 6 (Event-Reach) nach Ankunft/Wurf/Schub, Einzelbilder zwischen Gang und Drehen
+
+**Ursache (Port).** `re15_player_event_reach_begin` (game_step_common.c) setzte Clip 1 / Bild 0, und der Event-Reach-Takt
+im SELBEN Bild schob sofort auf Bild 1 vor -> Bild 0 wurde nie gezeigt (15 statt 16 Bilder). Die Walker-Ankunft
+(actor_locomotion.c) und der Schub-Ausgang (szenenleon_r36.c) riefen begin im Ankunfts-/Phase-7-Bild -> statt der
+Gang-/Drehpose dieses Bildes stand dort schon Clip 1 Bild 1; folgte im naechsten Bild ein neuer Plc_dest, blieb genau
+EIN Bild Clip 1 Bild 1 uebrig (M3a).
+
+**Messung vorher** (eigener Lade-Weg `K39nb1/vorher_laden`, Stand 6d027394 = Abnahme-Stand; echter Weg = Abnahme
+`K39abn0/runA_neu`, +66/67 Bilder): Elza (Aktor 0) Clip 1 je Bild 1..15 bei F37-F51, F186-F200, F591-F605, F669-F683,
+F943-F957 (Lade-Weg); Einzelbilder `mo=1 Bild 1` bei F1, F840, F846 jeweils zwischen mo 105 (Gang/Drehen) und dem
+naechsten Plc_dest; SCD-Spur (RE15_SCD_TRACE) zeigt: F1 Ankunft, F2 `@0x16A0 While` falsch -> `@0x16AC Evt_end` ->
+`@0x13D4 Plc_dest` im selben Takt; F841 bzw. F847 ebenso (`@0x1558` / `@0x1566`+`@0x1572`).
+
+**Beleg (selbst disassembliert, info/Re1.5/PSX.EXE md5 b55fdaa5):**
+- Sub 6 0x800517f0 (`table 0x80073e30`: [6] = 0x800517f0): Phase 0 `80051844 sb v1(=1),6(a0)`, `80051854 sb v1,148(v0)`
+  (+0x94 = 1), `80051864 sb zero,149(v0)` (+0x95 = 0), `80051874 sb v0(=7),143(v1)`, faellt OHNE Sprung in
+  `80051878` (Phase-1-Rumpf): `80051884 lw a0,368` / `80051888 lw a1,372` / `8005188c jal 0x8001f314` -> posiert Bild 0;
+  `800518a8 addu v1,v1,v0` / `800518b0 sb v1,6(a0)` (+0x6 += Rueckgabe = 1 im Takt, der Bild 15 posiert); Phase 2
+  `800518b8 sb v0(=3),6(a0)`, `800518c8 sb v0(=2),148(v1)`, `800518d8 sb v0(=7),143(v1)` faellt in `800518f0 jal
+  0x8001f314` (Clip 2 Bild 0 im selben Takt). => Clip 1 = 16 Takte (Bild 0..15), Clip 2 ab dem 17.
+- Wer +0x5 = 6 setzt, und wann Sub 6 laeuft: Kommando 4 = 0x80030660 dispatcht +0x5 EINMAL je Bild
+  (`8003068c lbu v0,0x800aca59` / `8003069c addiu at,at,15920` (0x80073e30) / `800306ac jalr v0`). Gang [4] 0x80030af0:
+  f314 `80030c78` VOR der Ankunft (`80030cc4 slti v0,v0,100`, Bit-SET `80030cd8`, `80030cf0 sb v0(=6),0x800aca59`,
+  `80030cfc sb zero` +0x6); Drehen [9] 0x80031360: `800313ec sb v0(=6),0x800aca59` / `800313f4 sb zero` +0x6, danach
+  f314 `80031494`; Lauf [5] 0x80030d28 f314 `80030e4c`; rueckwaerts [8] 0x800311f0: f314 `800312b0` vor `80031318`.
+  Im Ankunftsbild steht also die Gang-/Drehpose; Sub 6 Phase 0 laeuft fruehestens im naechsten Bild.
+- Bildreihenfolge FUN_8001c6e8: `8001cdec jal 0x8003f038` (SCD; `8003f088 jal 0x8003f0a0` scd_execute_scripts) VOR
+  `8001ce04 jal 0x8001a50c` (Gegner) VOR `8001ce0c jal 0x80031c44` (Spieler-Dispatcher). SCD-Opcodes (Tabelle
+  @0x800744a8, gefunden ueber das Paar 0x3F->0x80041b90 / 0x40->0x80041be4 @0x800745a4): While 0x0F 0x8003f6f4 kehrt
+  in BEIDEN Zweigen mit 1 zurueck (`8003f81c` wahr / `8003f840` falsch, PC = Schleifenende `8003f830-38`), Evt_end
+  0x01 im Gosub-Rahmen mit 1 (`8003f22c`), Evt_next 0x02 mit 2 (`8003f26c`). Plc_dest 0x40 0x80041be4:
+  `80041c14 sb v0(=4),4(a1)` / `80041c18 sb a2,5(a1)` (+0x5 = Modus) / `80041c1c sb zero,6(a1)`. => ist die
+  Warteschleife `@0x169C` (Set / While Ck(5,bit)==0 {Evt_next}) im Folgebild erfuellt, ersetzt der naechste Plc_dest
+  +0x5 noch vor dem Dispatcher: Sub 6 laeuft GAR NICHT, es gibt kein Clip-1-Bild (M3a: die drei Einzelbilder sind falsch,
+  nicht "Bild 0 statt 1").
+- Kraehen-Wurf: Rueck-FSM P4 `80115cf0 jal 0x8001f314`, bei Rueckgabe 1 `80115d04 sb v0(=4),0x800aca58`,
+  `80115d10 sb v0(=6),0x800aca59`, `80115d18 sh zero,0x800aca5a` (STAGE1.BIN) — im Takt, der Wurf-Bild 29 posiert;
+  Sub 6 Phase 0 im Folgebild. Der Port beendet P4 erst im Folgebild (`++s_bild >= 30`, heliport1171_r38.c) und ruft dort
+  begin -> dort ist die Saat im SELBEN Bild richtig (Clip 1 Bild 0 im Bild nach Wurf-Bild 29).
+- Schub Phase 7 0x80052bc0: `80052bcc jal 0x80045024` (SE), `80052be0` +0x5 = 6, `80052bf0` +0x6 = 0, kein anim_set ->
+  Pose von Phase 6 (Clip 0x11 rueckwaerts Bild 0) bleibt stehen; Sub 6 im Folgebild.
+
+**Aenderung** (alle Haken "Runde 39 Spur K NB1"):
+- `heliport1171_r39.c` / `re15_heliport1171_r39.h`: Saat-Zustand `re15_r39k_reach_*` — 1 = Phase 0 im naechsten
+  Event-Reach-Takt (posiert Bild 0 OHNE Vorschub, +0x8f = 7), 2 = Dispatcher-Bild (Sub 6 erst im naechsten Bild; bis
+  dahin rendert die Gang-/Dreh-/Schub-Pose, `re15_player_event_reach_clip` = -1).
+- `game_step_common.c`: begin (SCD-Modus 6 scd_vm.c:2651, Kraehen-Wurf) -> Saat 1; NEU
+  `re15_player_event_reach_begin_naechstes_bild` -> Saat 2; end loescht die Saat; Takt ruft `re15_r39k_reach_takt` vor
+  dem Vorschub.
+- `actor_locomotion.c`: Spieler-Ankunft ruft `..._begin_naechstes_bild`; im Walker-Takt des Folgebildes (hinter dem
+  Spieler-Pause-Gate @0x80031c78) `re15_r39k_reach_bildanfang` (2 -> 1). Die Saat selbst bleibt im Event-Reach-Takt =
+  nach den Gegnern wie der Dispatcher.
+- `player_common.c`: die pm-2-Leerlauf-Ruecksetzung (105/100 ohne Walker -> 200) laeuft im Dispatcher-Bild nicht
+  (sonst stand dort Leerlauf statt Gang-Pose; gemessen nach dem ersten Umbau: F1 `mo=200`).
+- `elza_r39.c` (Spur H, Walker-Init): zusaetzlich `motion_init_delay = 1` — Phase 0 von Gang/Lauf/Drehen faellt in f314
+  (`80030bf8` / `80030e4c` / `80031494`) und posiert Bild 0 auch bei GLEICHEM Clip. Vorher verdeckt, weil zwischen zwei
+  Plc_dest immer das (falsche) Sub-6-Bild den Clip wechselte; ohne es begann das Drehen F841 mit Bild 1 (gemessen).
