@@ -113,3 +113,4 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
 - John sollte auch ab und an mal auf die Gorillas schießen in ROOM 1141 und dann ihre Aufmerksamkeit erhalten, sonst ist es komisch
 - John sollte am Ende der Cutscene in ROOM 1141, bevor sie den Raum verlassen nicht die Waffe auf Elza richten, sondern das heranwinken/Folge Animation abspielen stattdessen....
 - (Nachschub 19:25) "Oder falls Elza keine Waffe ausgerüstet hat eben das Messer...." (zu Punkt 2: hebt die Waffe - ohne ausgeruestete Waffe das Messer)
+- (Nachschub 19:25) "Ich meine mit ausgerüstet - keine Waffe im Inventar hat" -> Regel fuer Punkt 2: hat Elza eine Schusswaffe im INVENTAR, hebt sie diese (die ausgeruestete; ist keine ausgeruestet, eine aus dem Inventar), auch wenn sie nicht ausgeruestet ist; nur ohne jede Schusswaffe im Inventar hebt sie das Messer.
