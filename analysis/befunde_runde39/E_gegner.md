@@ -35,6 +35,50 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   RE2-Zombiemodul (enemy_ai_re2_zombie.c); der Gorilla 0x27 hat in beiden Flavors das RE1.5-Gehirn
   (enemy_ai_common.c re15_maggot_ai_tick, Wurzel STAGE1.BIN 0x80116db8).
 
+### 2026-10-18 12:05 — Fortsetzung (zweiter Agent nach dem Sitzungslimit, Stand 9ddf0bbc)
+- Vorgefunden: exe 11:00, test_r39_gegner.exe 11:05, ctest-Lauf 11:08 des Vorgaengers mit `LastTestsFailed.log` =
+  unit_r35_affen_sprung / _wagen / _schrot (rot); integration_r39_gegner_hunde1190 war nie gruen (s.u.).
+- Eigener Lauf 12:05 `ctest -R "r39_gegner|r35_affen"`: 7 Unit-Teile gruen, integration_r39_gegner_schatten gruen (58,6 s),
+  **integration_r39_gegner_hunde1190 Timeout (900 s)**, **unit_r35_affen_sprung/wagen/schrot rot**.
+- Zensus ROOM11C1 (Elza-Variante des Parking Lot, `scd_dump_room.py`): **keine 0x27**, sondern fuenf Hunde 0x20
+  (`44 00 20 00 ..` @0x016F8, @0x0170C, @0x01720, @0x01734, @0x01748, grid 0x00). Das Raum-Tor 0x11C0 der Punkt-1-Haken
+  ist damit vollstaendig (Elza trifft im Parking Lot auf Hunde — fuer Punkt 2 unten als zweite Messung genutzt).
+
+#### Befund A — die drei roten Runde-35-Riegel (Regression dieser Spur, Ursache belegt)
+- Ausgabe (12:05): sprung `Treffer 1: Flinch-Exit -> Sub 0 (erwartet 3)`, `Treffer 4: -> Sub 7 (erwartet 3)` (15 Fehler);
+  wagen `HP 360 / 360 = 180 (Original t=6.11: 180/180)`; schrot `3. Treffer Spur 1: Exit F251 -> Sub 3 (Original F276 -> 7)`,
+  `Landung F-1 bei (0,0)`.
+- Ursache: alle drei Riegel booten ROOM11C0 (test_r35_affen.c room_boot, Kampf-Layout Flag 4/0x40) und messen den
+  ORIGINAL-Mechanismus (HP 180 @0x8011f514, Flinch bei jedem Treffer, Vergeltungs-Sprung beim 3.) gegen DuckStation-
+  Savestates (t=6.11, F276). Genau diesen Mechanismus aendert die NUTZER-VORGABE fuer den Parking Lot absichtlich.
+- Fix: test_r35_affen.c room_boot `re15_r39_gegner_enable(0)` (+ include, 2 Zeilen, Kommentar "Runde 39 Spur E") — der
+  Original-Riegel misst die unveraenderte Basis (sie gilt weiter in ROOM1141), die Vorgabe misst test_r39_gegner.
+  Danach 20/20 r35_affen gruen (s. Tests).
+
+#### Befund B — der Schatten-Haken des Vorgaengers zeichnete Phantom-/Schwebe-Schatten (Root-Skip fehlte)
+- Gemessen (gegner_r39.log des gruenen Schatten-Laufs, Zeilen mit Koerper-Y != Boden-Y je Slot/Zustand):
+  `29x slot=2 st=1/0 koerper=-20000 boden=-3600`, `29x slot=3 ... -20000/-3600`, `35x slot=2 st=1/0 koerper=-2500 boden=-3600`,
+  `311x slot=3 st=1/0 koerper=-2500 boden=-3600`, dazu 24x slot=3 st=1/7 (der Sprung, boden=0). Die Szenen-Gorillas stehen
+  laut RDT bei y=-20000 (`44 01 27 30 02 00 00 60 3c fb e0 b1 c0 ab ..` @0x01784: `e0 b1` = -20000, pc[4]=2 -> +0x1ba=-3600)
+  und per `Member_set 01=-2500` @0x0198E/@0x01996 im Wagen (J_affen.md: Original t=34.89 sitzt der Gorilla sichtbar in der
+  Heckklappe). Mit dem ersten Haken lag ihr Quad auf -3600: 1,1 m UEBER dem Wagen-Gorilla bzw. auf dem Dach unter dem
+  geparkten — zwei neue sichtbare Fehler.
+- Original (selbst disassembliert, STAGE1.BIN): Gorilla-Wurzel FUN_80116db8 `lw v1,-14460(v1)` (g_entity) @0x80116de4,
+  `lbu v0,9(v1)` @0x80116dec, **`andi v0,v0,0x20` @0x80116df4 / `bne v0,zero,0x80116e88` @0x80116df8** -> mit grid-Bit 0x20
+  wird die GANZE Wurzel uebersprungen, also auch der Schatten-Schwanz `lh a1,442(v0)` @0x80116f30 / `jal 0x8001b064`
+  @0x80116f34 / `addiu a0,a0,176` @0x80116f38. Die Szenen-Variante traegt grid 0x30 (Bit 0x20 gesetzt) bis
+  `Member_set 0C=16` @0x01A3A/@0x01AC6 (+0x9 := 0x10) — zusammen mit `01=0` und `13=0` (@0x01A32/@0x01A3E: y = +0x1ba = 0).
+  Kleiner Affe 0x29 (STAGE3.BIN FUN_80110b10): `lbu v0,9(v1)` @0x80110b34 / `andi 0x20` @0x80110b3c / `bne` @0x80110b40,
+  Schwanz `lh a1,442(v0)` @0x80110c78 / `jal 0x8001b064` @0x80110c7c / `addiu a0,a0,176` @0x80110c80 — gleiches Muster.
+- Fix: `re15_r39_schatten_aus(npc)` (0x27/0x29 mit grid&0x20 -> 1) als zweiter Haken in main.c neben
+  `re15_r38_sm_schatten_aus` (`crow_no_record = 1`, 1 Zeile); `re15_r39_schatten_y` laesst grid&0x20 unberuehrt.
+  Logzeilen jetzt mit Bildnummer (`schatten F.. slot=.. grid=..`, `schatten_aus F.. ..`).
+
+#### Befund C — integration_r39_gegner_hunde1190 lief in den Timeout: Leon stirbt
+- Beide Laeufe (11:08 und 12:16) bildgleich: Bisse F685 (-20), F720, F753, F833, **F1042 (hp 0), F1074 (hp -20 = Tod)**,
+  danach CONTINUE -> der raumgebundene `RE15_EXIT_AT=2600#1190` kam nie, 2 x 480 s. Fix: `RE15_EXIT_AT=1000` (ohne Raum),
+  Timeout 300 s, Pruefung (d) "Leon lebt am Ende"; der Lauf misst die vier Bisse F685/720/753/833.
+
 ## Punkt 1 — Parking-Lot-Gorillas: doppelte Energie, Flinch erst nach 3 Handfeuerwaffen-Treffern (Energie)
 
 ### RE-Belege (Original, selbst gelesen)
@@ -180,6 +224,10 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 - Geprueft, nicht geaendert: Hund 0x20 (Runde 35 H, +0x1ba @0x8010d91c / RE2 +0x1C2 @0x800268c8), RE2-Spinne 0x25
   (Sprung Sub 7 P5 @0x80100E50 ist waagerecht: Thrust + Vorschub, kein +0x38-Schreiber; Decken-/Wasserwege fuehren
   +0x1C2 selbst, Runde 38 R) — kein Luft-Schatten-Fall.
+- **Root-Skip (Fortsetzung, Befund B)**: `re15_r39_schatten_aus` — 0x27/0x29 mit +0x9 & 0x20 (`andi v0,v0,0x20 / bne`
+  @0x80116df4-f8; STAGE3 @0x80110b3c-40) bekommen KEINEN Schatten (die Wurzel samt Schatten-Schwanz laeuft im Original
+  nicht): Szenen-Gorillas geparkt (-20000) und im Wagen (-2500) — vorher Quad am Koerper, nach dem ersten Haken auf -3600.
+  Haken main.c `if (re15_r39_schatten_aus(npc)) crow_no_record = 1;` (neben Runde 38 T). Gilt fuer ROOM11C0 und 1141.
 
 ## Messungen (Riegel test_r39_gegner, jeder Teil misst "vorher" = Haken aus und "nachher" im selben Lauf)
 
@@ -191,6 +239,14 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   Blut-Effekt (fx 0->1->2), +0x93 = 0; Treffer 3 (36 Energie): Clip 7, 12 Bilder, Exit Sub 7 (Sprung; Runde 35:
   3 Treffer -> Sprung); HP 360 -> 324. Echter Schuss: `360->348 Clip7=0 | 348->336 Clip7=0 | 336->324 Clip7=1`.
   Schrotflinte (Zeile 8 = 38 >= 36): Reaktion sofort (Spur 1, Clip 8/9), 312 -> 274.
+- **Echte exe (Fortsetzung 12:40), ROOM11C0 Kampf-Layout**: `RE15_SET_FLAG=4:0x40 RE15_DEBUG_JUMP=11C0@240
+  RE15_PLAYER_POS=-6729,-12800,1486 RE15_EQUIP=3 RE15_INPUT_SCRIPT=M1.5,MA0.1,M0.6,... (R1 halten, Quadrat-Flanken alle
+  0,7 s) RE15_STATE_LOG RE15_R39_LOG`. gegner_r39.log: `affen init slot=2/3 raum=11c0 hp=360 (tabelle 180 @0x8011f514)`;
+  `affen treffer slot=2 hp=348 akku=12 -> OHNE ZUCKEN (zurueck in 1/5/1/0)` / `hp=336 akku=24 -> OHNE ZUCKEN (1/3/1/0)` /
+  `hp=324 akku=36 -> FLINCH (Schwelle 36)` / `hp=312 akku=12 -> OHNE ZUCKEN (1/7/1/0)`. state.log Gorilla Platz 2:
+  F335 hp 348 st=1/5 mo=18, F379 hp 336 st=1/3 mo=5, **F440 hp 324 st=2/3 mo=7 (Clip 7 F440-F452 = 13 Bilder)**, F462 hp
+  312 st=1/7 mo=20 (Vergeltungs-Sprung nach dem Flinch, danach wieder ohne Zucken). Schuesse (pad 8800 = R1+Quadrat)
+  F335/356/377/398/419/440/461/482, Treffer bei F335/F379/F440/F462 (die uebrigen gingen am anlaufenden Gorilla vorbei).
 
 ### Punkt 2 (unit_r39_gegner_hund_riegel; zwei RE2-Hunde im Flug am Spieler, echte EM020-Bank, Kiefer 600 vor dem Spieler)
 - vorher: Bild 1: `hp 100 -> 80 (Hund 1) -> 60 (Hund 2)` — beide beissen IM SELBEN BILD, PL+0x1D3 = 0x00 (kein Riegel)
@@ -203,6 +259,20 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   der 22 Flinch-Bilder; der parallele Fall entsteht, wenn zwei Hunde im selben Flug treffen (Unit-Riegel oben).
   Der RE1.5-Flavor-Hund prueft schon im Original +0x93 == 0 vor dem Biss (`acae7==0` @0x8010f294) — dort gab es den
   Doppelbiss nie; der Nutzer spielt RE2-KI.
+- **RE1.5-Flavor gemessen (unit_r39_gegner_hund_re15, Fortsetzung)**: zwei RE1.5-Hunde in BITE Sub 8 am Spieler, Haken aus
+  und an: `erster Abzug in Bild 12, hp=90, acae7=0x01, Hund 1 Sub 8/5 (Recoil), Hund 2 Sub 8/1` — nur EIN Abzug (-10
+  @0x8010f2c4-d0), Niederschlag setzt acae7 |= 1 (@0x8010f338-44), 5 weitere Bilder kein zweiter Biss (`lbu acae7 / bne`
+  @0x8010f294). Port enemy_ai_common.c case 8 (`pl->hit_react == 0 && re15_dog_arc(...)`), kein Haken dieser Spur beteiligt.
+- **Echte exe ROOM1190 (integration_r39_gegner_hunde1190, gruen 12:27)**: Bisse F685/F720/F753/F833 (je -20), Abstaende
+  35/33/80 >= 24; gegner_r39.log `hund riegel GESETZT hp=80 / FREI hp=80 / GESETZT 60 / FREI 60 / GESETZT 40 / FREI 40 /
+  GESETZT 20 / FREI 20` (4 Paare = 4 Bisse); die Hunde greifen nacheinander an (F685 Hund 1 Sub 3, F710 Hund 2 Sub 3).
+  Gegen den Basislauf (F685/720/749/829/942/1000) verschieben sich der 3./4. Biss um 4 Bilder und der 5. um 100 Bilder:
+  der jeweils naechste Hund kam waehrend der Reaktion nicht mehr an Leon heran.
+- **Echte exe ROOM11C1 mit Elza (Fortsetzung 12:47; Parking Lot der Elza-Variante hat fuenf Hunde 0x20)**: Spielstand per
+  probe_r36_elza_karte (Figur 4, Lage (-22604,14455)), `RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0`: Bisse
+  F779/F862/F906/F947/F1008/F1040 (je -20), Abstaende 83/44/41/61/32 >= 24; `hund riegel GESETZT/FREI` je Biss (hp 80, 60, 40,
+  20, 0). Elza stirbt mit dem 6. Biss (F1040, hp -20) — fuenf Hunde ohne Gegenwehr; der Riegel laesst waehrend jeder
+  Reaktion keinen zweiten Biss zu, er macht den Spieler nicht unsterblich.
 
 ### Punkt 3 (unit_r39_gegner_kriecher_1010 / _1220, RE2-KI, echte RDTs, RE2-Bank EM010/EM016)
 - ROOM1010 Cut 4 (Suedtuer, Spawns @0x0A12/@0x0A26): Kriecher (950,-1700). Spieler fern am Tuer-Ziel (dist 3510,
@@ -214,6 +284,25 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   (der erste liegt vom Spawn-Schub bei (-25398,-6739)); dieselbe Messung: vorher Weg 0, nachher Weg 1657.
   ROOM1011/1221 (Elza) tragen dieselben Spawn-Zeilen (@0x00ACE/@0x00AE2 bzw. identische sub00) — derselbe Code-Pfad
   (re2z_crawl, typ-unabhaengig).
+- **RE1.5-Flavor gemessen (unit_r39_gegner_kriecher_1010_re15 / _1220_re15, Fortsetzung)**: fern `st=1/5 mo=0x0c` (DECIDE[5]
+  FUN_8010466C, Sub 5); nah (dist 2495, arc 0) `Wort 1 nach 0 Bildern, Kriech-Clip 0x1A, Weg 1360 bzw. 1373` in 120 Bildern,
+  vorher wie nachher (Block B ist dort nativ, Haken unbeteiligt).
+- **Echte exe ROOM1010 ueber den echten Weg (Fortsetzung 12:46)**: Debug-Sprung nach 1010 traegt Eintritts-Case 0 (sub00
+  `Switch 0x0a` @0x009D8: Case 0 @0x009DC spawnt zwei stehende 0x10, die 0x81-Kriecher liegen in **Case 4** @0x00A0C =
+  Suedtuer). Deshalb: `RE15_DEBUG_JUMP=1020@240 RE15_FIRE_AOT=0@60#1020` (ROOM1020 Door_aot_set 0 @0x01C82 `.. 00 01 04 ..`
+  -> ROOM1010 Cut 4, Ziel (3650,-3950) rot 2048) + `RE15_INPUT_SCRIPT=R0.25,U2` ab Bild 420. state.log: nach der Tuer beide
+  Kriecher `st=1 ss1=2 g=81 mo=23` bei (950,-1700) r0 und (-50,-3800) r3584 (liegend, RE2-WAIT); Leon laeuft (F430
+  rot 2816), **F440: `kriecher weckt slot=3 typ=10 dist=2996 -> Lokomotion`**, Kriecher A `ss1=0 mo=5` kriecht
+  (950,-1700) -> (1195,-1732) F440 -> (1630,-1889) F450 -> (2161,-1951) F460 = Griff `ss1=1 mo=14/15/16`, Leon hp
+  100 -> 95 (F480) -> 90 (F500) -> 85 (F540), F600 Kriecher A `st=7` (Kopf zertreten, RE2-Griffausgang). Kriecher B
+  (dist > 3000, ausserhalb des 0x200-Kegels) liegt bis zum Ende — wie Block B es vorsieht.
+- **Echte exe ROOM1220 mit Leon (Debug-Sprung 1220@240, Case 0 = die Kriecher-Spawns, `RE15_PLAYER_POS=-23500,-7700`)**:
+  `kriecher weckt slot=1 typ=16 dist=2126` und `slot=2 typ=16 dist=1999` (beide < 0xbb8, im Kegel), Leon hp 100 -> 95
+  (F35) -> 90 -> 85 -> 80 -> 75 (Kriecher-Griff), F260 Kriecher 2 `st=7` (zertreten), Kriecher 1 `ss1=1` (Griff).
+- **Echte exe ROOM1221 mit ELZA (Spielstand probe_r36_elza_karte 1221 (-23500,-7700) rot 2048, CONTINUE)**: F0 beide
+  `st=1 ss1=2 mo=23` (liegend) bei (-25398,-6739) / (-23500,-9700); **F5 beide `ss1=0 mo=5`** (`kriecher weckt`
+  dist=2126 / 1999), Kriecher 2 kriecht (-23500,-9700) -> (-23500,-9374) F10 -> (-23494,-8890) F20 = Griff `ss1=1`,
+  Elza hp 100 -> 95 (F40) -> 90 -> 85 -> 80 -> 70; F180 Kriecher 2 `st=7`, Kriecher 1 greift (F180 `ss1=1`), F300 `st=7`.
 
 ### Punkt 4 (Basislauf c71fa144, ROOM11C0 Szene, RE15_FRAMEDUMP 1340-1400/5)
 - state.log: Gorilla Platz 3 in Sub 7 (Fernsprung) F1352 fuer 39 Bilder. Framedumps F1355/F1365/F1375/F1385
@@ -221,9 +310,48 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   Koerper (F1365: Quad links oben in Koerperhoehe, der stehende Gorilla in der Mitte hat seinen auf dem Boden).
 - unit_r39_gegner_schatten: 0x27 mit Koerper -5200 ueber Boden -3600: vorher Quad-Y = -5200, nachher -3600; 0x29
   ebenso; Hund/Zombie unveraendert. ROOM11C0 Kampf-Variante (`44 01 27 10 00 ..` pc[4] = 0): +0x1ba = 0 = Quad-Y.
+  Fortsetzung: grid 0x30 (Wagen y=-2500/+0x1ba -3600) -> `schatten_aus == 1`, Quad unberuehrt; ROOM11C0 Szenen-Layout
+  (ohne Flag 4/0x40): beide Gorillas `grid 0x30, y=-20000` -> kein Schatten; Kampf-Layout grid 0x10 -> Schatten auf 0.
+- **Echte exe (integration_r39_gegner_schatten, gruen 12:27, Lauf lauf_5613f23f)**: Sprung-Bilder F1362-F1385 (24 Zeilen
+  `schatten F.. slot=3 grid=10 st=1/7 koerper_y=-720..-4680 boden_y=0 quad_y=0`), alle Quad-Y == Boden-Y; 595
+  `schatten_aus`-Zeilen F185-F1110 (die Szenen-Gorillas grid 0x30 vor ihrer Freigabe — kein Quad mehr). Framedump
+  `E_gegner_bilder/nachher_sprung_F1370.png` (Gorilla in der Luft ueber dem Auto, der Schatten-Blob liegt auf dem
+  Asphalt) gegen `vorher_sprung_F1365.png` (Blob in Koerperhoehe).
+
+## Tests (Namen, Ergebnis)
+- tests/unit/probes/r39_gegner.cmake -> test_r39_gegner.c, Teile: unit_r39_gegner_affen_hp, _affen_zucken, _affen_schuss,
+  _hund_riegel, _hund_re15, _kriecher_1010, _kriecher_1220, _kriecher_1010_re15, _kriecher_1220_re15, _schatten;
+  Integration: integration_r39_gegner_schatten (echte exe ROOM11C0, Sprung + Root-Skip), integration_r39_gegner_hunde1190
+  (echte exe ROOM1190, vier Bisse, Riegel-Protokoll, Leon lebt).
+- Beruehrte Testgruppen des Diffs: r35_affen (Gorilla-Original-Riegel, test_r35_affen.c mit `re15_r39_gegner_enable(0)`).
+- Zwischenstand 12:34 (`ctest -R "unit_r39_gegner|unit_r35_affen"`): `100% tests passed, 0 tests failed out of 30`;
+  12:27 (`ctest -R "integration_r39_gegner"`): `100% tests passed, 0 tests failed out of 2`.
+- Abschlusslauf: s. Ende des Dossiers.
 
 ## OFFEN
-- (wird fortlaufend gepflegt)
+- Der "parallele" Biss in ROOM1190 liess sich am skriptierten Basislauf (Leon steht am Spawn) nicht reproduzieren — die
+  Hunde kommen dort nacheinander (Abstaende >= 29 Bilder) durch die Luke. Vorher/nachher am ECHTEN Weg unterscheiden sich
+  nur in der Verschiebung der Bisse 3-5 (749->753, 829->833, 942->1042); den Doppelbiss im selben Bild misst der Unit-Riegel
+  (zwei Hunde im Flug: vorher -40, nachher -20). Der Nutzer-Fall (zwei Hunde treffen in Leons Flinch) ist damit mechanisch
+  abgedeckt (Kontakt-Tor @0x80104e5c-68 + Flug-Tor @0x80104d84-94 am Byte PL+0x1D3), nicht als Spielszene nachgestellt.
+- RE1.5-KI-Flavor nur im Riegel gemessen (unit hund_re15, kriecher_*_re15 mit echten RDTs/Baenken), die Exe-Laeufe im
+  RE2-Flavor (Standard des Nutzers). Gorilla (RE1.5-Gehirn in beiden Flavors) und Schatten sind flavor-unabhaengig.
+- Im Debug-Sprung-Lauf 1220 (Leon) fehlten dem state.log in den ersten 240 Bildern die Gegner-Spalten (pm=2 aus der
+  Startraum-Szene); die Wecker-Zeilen und Leons HP-Verlauf sind vorhanden, der Elza-Lauf 1221 per CONTINUE ist vollstaendig.
+- Treffer-Schwelle fuer andere Waffen folgt dem Schaden (Orchestrator-Vorgabe "entsprechend ihrem Schaden"): Messer (7 je
+  Treffer, @0x8006ee3c) flincht erst beim 6. Treffer (42 >= 36); Schrotflinte 38/50, Magnum 40: sofort. Krit-Treffer
+  (+0x93 & 0x40) flinchen immer (>= 38).
 
 ## Fuer den Nutzer
-- (wird am Ende ausgefuellt)
+- Neue Assets / Sprachdateien / Paket-Gate: keine (nur Code + Tests; shared_assets unveraendert).
+- Bedienung: Parking-Lot-Gorillas (nur ROOM11C0, Leon — Elzas Parking Lot 11C1 hat Hunde) haben 360 statt 180 Energie und
+  zucken erst beim 3. Pistolentreffer (36 Energie seit dem letzten Zucken); jeder 3. Treffer ist damit zugleich der
+  Vergeltungs-Sprung des Originals (3-Treffer-Zaehler @0x8011b194-98). Dazwischen: Blut + Treffer-Ton, der Gorilla laeuft
+  weiter. Schrotflinte und Magnum zucken sofort (>= 36), Messer erst beim 6. Treffer. ROOM1141 bleibt beim Original (180,
+  jeder Treffer zuckt).
+- Hunde (RE2-KI): waehrend der eigenen Treffer-Reaktion (22 Bilder Flinch, Niederschlag) beisst kein zweiter Hund; danach
+  sofort wieder. Gilt in allen Hunde-Raeumen (1190, 11C1, ...). Der toedliche Biss und das Fressen sind unveraendert.
+- Liegende Zombies (1010/1011, 1220/1221): sie liegen still, bis der Spieler naeher als 3000 im 90-Grad-Sichtkegel vor ihnen
+  steht (RE1.5-Original Block B), dann kriechen sie heran; naeher als 1300 greifen sie wie im RE2-Original.
+- Entscheidungsfrage: Soll die 3-Treffer-Schwelle auch fuer die Gorillas in ROOM1141 gelten? (Wortlaut "beim Parking Lot"
+  -> nur 11C0 umgesetzt.)

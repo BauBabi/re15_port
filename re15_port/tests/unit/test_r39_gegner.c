@@ -567,7 +567,7 @@ static void kriecher_messen(int flavor, uint16_t room, uint8_t typ, int32_t ziel
             if (k->state == 1 && k->sub_state_1 == 0 && k->motion == kriech_clip) kroch = 1;   /* RE2: Lokomotion P0 Clip 5 @0x80103064; RE1.5: Kriech-Clip 0x1A */
         }
         double weg = dist2d(k->x, k->z, kx0, kz0);
-        printf("    [%s] nah (dist beim Wecken %d, arc=%d): geweckt nach %d Bildern, Clip 5 gesehen=%d, Ende st=%d/%d mo=0x%02x dist=%u, Weg %.0f\n",
+        printf("    [%s] nah (dist beim Wecken %d, arc=%d): geweckt nach %d Bildern, Kriech-Clip gesehen=%d, Ende st=%d/%d mo=0x%02x dist=%u, Weg %.0f\n",
                tag, dist_weck, re15_ai_arc_test(k, pl->x, pl->z, 0x200), geweckt, kroch, k->state, k->sub_state_1, (unsigned)k->motion,
                k->ai_dist, weg);
         if (!re2) {

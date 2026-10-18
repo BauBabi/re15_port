@@ -121,7 +121,7 @@ void re15_r39_hund_riegel_setzen(re15_actor_t *pl)
     if (!s_an || !pl) return;
     pl->re2z_self1d3 |= 0x80u;                                   /* ori 0x80 @0x801051f8 / sb @0x80105200 */
     s_hund_riegel = 1;
-    re15_r39_log("hund riegel GESETZT hp=%d", (int)pl->hp);
+    re15_r39_log("hund riegel GESETZT F%u hp=%d", r39_bild(), (int)pl->hp);
 }
 
 int re15_r39_hund_riegel_vom_hund(void) { return s_hund_riegel; }
@@ -135,7 +135,7 @@ void re15_r39_hund_riegel_tick(void)
     if ((pl->hit_react & 1u) || re15_player_hit_flinch_active() || re15_player_knockdown_active()) return;
     pl->re2z_self1d3 &= 0x7Fu;
     s_hund_riegel = 0;
-    re15_r39_log("hund riegel FREI hp=%d", (int)pl->hp);
+    re15_r39_log("hund riegel FREI F%u hp=%d", r39_bild(), (int)pl->hp);
 }
 
 /* ================================================================ (3) Kriecher-Wecker (RE1.5 Block B) ==== */
