@@ -34,6 +34,8 @@
  *     @0x80116f34; kleiner Affe 0x29 STAGE3.BIN @0x80110c78/@0x80110c7c; FUN_8001b064 `local_88.t[1] = param_2`
  *     = Quad-Hoehe. Port (main.c) nahm npc->y (Koerper). +0x1ba = Sce_em_set-Saat -(pc[4]*1800) @0x800421d4-
  *     0x80042210 (scd_vm.c dog_floor_y), bleibt waehrend der Ballistik (c1a4 landet auf +0x1ba).
+ *     Root-Skip: mit +0x9 & 0x20 (`andi v0,v0,0x20 / bne` @0x80116df4-f8; STAGE3 @0x80110b3c-40) laeuft die Wurzel
+ *     samt Schatten-Schwanz NICHT -> Szenen-Gorillas (grid 0x30: geparkt -20000 / im Wagen -2500) ohne Schatten.
  */
 #ifndef RE15_GEGNER_R39_H
 #define RE15_GEGNER_R39_H
@@ -70,7 +72,8 @@ int     re15_r39_hund_riegel_vom_hund(void);                              /* Son
 int     re15_r39_kriecher_weckt(const re15_actor_t *e, const re15_actor_t *pl);   /* RE1.5 Block B @0x80104718-48 */
 
 /* (4) Schatten */
-int     re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y);        /* 0x27/0x29: Quad-Y = +0x1ba */
+int     re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y);        /* 0x27/0x29 (grid ohne 0x20): Quad-Y = +0x1ba */
+int     re15_r39_schatten_aus(const re15_actor_t *npc);                  /* 0x27/0x29 mit grid&0x20: Root-Skip = kein Schatten */
 
 /* Mess-Schiene (kein Spielverhalten): RE15_R39_LOG=1 -> gegner_r39.log im Arbeitsordner. */
 void    re15_r39_log(const char *fmt, ...);

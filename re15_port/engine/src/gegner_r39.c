@@ -14,6 +14,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef RE15_PLATFORM_PC
+#include "re15_engine.h"      /* g_engine.frame_count — nur fuer die Messzeile (wie hundeschatten_1190.c) */
+#endif
+
+static unsigned r39_bild(void)
+{
+#ifdef RE15_PLATFORM_PC
+    return (unsigned)g_engine.frame_count;
+#else
+    return 0u;
+#endif
+}
 
 void re15_r39_affen_blut(re15_actor_t *e);   /* enemy_ai_common.c: re15_maggot_gore (vec @0x80121388) + Se 3 */
 
@@ -138,14 +150,34 @@ int re15_r39_kriecher_weckt(const re15_actor_t *e, const re15_actor_t *pl)
 }
 
 /* ================================================================ (4) Schatten auf der Boden-Referenz ===== */
+/* Root-Skip (selbst disassembliert 2026-10-18): die Gorilla-Wurzel FUN_80116db8 prueft `lbu v0,9(v1)` @0x80116dec /
+ * `andi v0,v0,0x20` @0x80116df4 / `bne v0,zero,0x80116e88` @0x80116df8 — mit grid-Bit 0x20 (Szenen-Variante
+ * `44 01 27 30 ..` @0x01784: geparkt y=-20000 aus dem RDT, dann `Member_set 01=-2500` @0x0198E/@0x01996 im Wagen)
+ * laeuft die GANZE Wurzel samt Schatten-Schwanz (@0x80116f30-38) nicht; erst `Member_set 0C=16` (+0x9 := 0x10,
+ * @0x01A3A/@0x01AC6) mit 01=0 / 13=0 (y = +0x1ba = 0) gibt sie frei. Kleiner Affe 0x29 ebenso: STAGE3.BIN
+ * FUN_80110b10 `lbu v0,9(v1)` @0x80110b34 / `andi 0x20` @0x80110b3c / `bne` @0x80110b40, Schwanz @0x80110c78-80.
+ * Der Port zeichnet den NPC-Schatten im Zeichner (main.c) unabhaengig vom Gehirn — ohne diese Sperre laege der
+ * Quad des Wagen-Gorillas (y=-2500) auf +0x1ba = -3600, 1,1 m UEBER ihm, und der des geparkten (-20000) auf dem Dach. */
+int re15_r39_schatten_aus(const re15_actor_t *npc)
+{
+    if (!s_an || !npc) return 0;
+    if (npc->type != 0x27u && npc->type != 0x29u) return 0;
+    if ((npc->grid_id & 0x20u) == 0) return 0;
+    re15_r39_log("schatten_aus F%u slot=%d typ=%02x grid=%02x st=%d/%d koerper_y=%d boden_y=%d (Root-Skip @0x80116df4-f8)",
+                 r39_bild(), r39_slot(npc), npc->type, npc->grid_id, npc->state, npc->sub_state_1, (int)npc->y, (int)npc->dog_floor_y);
+    return 1;
+}
+
 int re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y)
 {
     if (!s_an || !npc || !y) return 0;
     if (npc->type != 0x27u && npc->type != 0x29u) return 0;
+    if (npc->grid_id & 0x20u) return 0;   /* Root-Skip: kein Schatten (re15_r39_schatten_aus), Quad bleibt unberuehrt */
     int32_t alt = *y;
     *y = (int32_t)npc->dog_floor_y;    /* +0x1ba: `lh a1,442(v0)` @0x80116f30 (0x27) / @0x80110c78 (0x29) */
     if (alt != *y)
-        re15_r39_log("schatten slot=%d typ=%02x st=%d/%d koerper_y=%d boden_y=%d quad_y=%d",
-                     r39_slot(npc), npc->type, npc->state, npc->sub_state_1, (int)npc->y, (int)npc->dog_floor_y, (int)*y);
+        re15_r39_log("schatten F%u slot=%d typ=%02x grid=%02x st=%d/%d koerper_y=%d boden_y=%d quad_y=%d",
+                     r39_bild(), r39_slot(npc), npc->type, npc->grid_id, npc->state, npc->sub_state_1,
+                     (int)npc->y, (int)npc->dog_floor_y, (int)*y);
     return 1;
 }

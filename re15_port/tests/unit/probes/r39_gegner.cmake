@@ -13,7 +13,10 @@
 #   unit_r39_gegner_kriecher_1010   ROOM1010 Cut 4, RE2-KI: 0x81-Kriecher liegt fern, kriecht ab < 3000 in Sicht
 #                                   (RE1.5 Block B @0x80104718-48)
 #   unit_r39_gegner_kriecher_1220   dasselbe fuer die 0x16-Kriecher in ROOM1220/1221
-#   unit_r39_gegner_schatten        Quad-Hoehe 0x27/0x29 = +0x1ba (@0x80116f30 / @0x80110c78), andere Typen unveraendert
+#   unit_r39_gegner_hund_re15       RE1.5-Flavor: zwei Hunde im Biss-Bild, nur einer zieht ab (acae7-Tor @0x8010f294, Original nativ)
+#   unit_r39_gegner_kriecher_*_re15 dieselbe Kriecher-Messung im RE1.5-Flavor (Block B nativ, Sub 5 -> Wort 1)
+#   unit_r39_gegner_schatten        Quad-Hoehe 0x27/0x29 = +0x1ba (@0x80116f30 / @0x80110c78), andere Typen unveraendert;
+#                                   grid&0x20 (Szenen-Gorillas geparkt/im Wagen) = Root-Skip @0x80116df4-f8 -> KEIN Schatten
 #   integration_r39_gegner_schatten echte exe ROOM11C0: waehrend des Gorilla-Sprungs (Sub 7) Quad-Y = Boden-Y je Bild
 #                                   (gegner_r39.log), Koerper-Y darueber; Framedumps der Sprungbilder
 #   integration_r39_gegner_hunde1190 echte exe ROOM1190 (Hunde-Luke, Szene sub10): kein zweiter HP-Abzug durch einen
@@ -26,7 +29,7 @@ target_compile_definitions(test_r39_gegner PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_gegner PRIVATE m)
 endif()
-foreach(_teil affen_hp affen_zucken affen_schuss hund_riegel kriecher_1010 kriecher_1220 schatten)
+foreach(_teil affen_hp affen_zucken affen_schuss hund_riegel hund_re15 kriecher_1010 kriecher_1220 kriecher_1010_re15 kriecher_1220_re15 schatten)
     add_test(NAME unit_r39_gegner_${_teil} COMMAND test_r39_gegner ${_teil})
     set_tests_properties(unit_r39_gegner_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

@@ -27,7 +27,12 @@
  *                 Clip 5) und er kommt naeher (RE1.5 Block B @0x80104718-48)
  *   kriecher_1220 dasselbe fuer die zwei 0x16-Kriecher in ROOM1220 (Elza-Raum 1221 = gleiche Spawns @0x00F2A/0x00F3E)
  *   schatten      Quad-Hoehe des NPC-Schattens: 0x27/0x29 mit Koerper-Y ueber dem Boden -> +0x1ba (dog_floor_y);
- *                 Hund/Zombie unveraendert; vorher Koerper-Y
+ *                 Hund/Zombie unveraendert; vorher Koerper-Y. Root-Skip: Szenen-Gorillas mit grid&0x20 (geparkt
+ *                 y=-20000 / im Wagen y=-2500) bekommen KEINEN Schatten (`andi 0x20 / bne` @0x80116df4-f8)
+ *   hund_re15     RE1.5-Flavor: zwei RE1.5-Hunde im selben Biss-Bild — das Original gatet den Biss auf acae7 == 0
+ *                 (@0x8010f294) vor dem Schaden (@0x8010f2c4-d0); nur der erste zieht -10 ab. Kein Haken beteiligt.
+ *   kriecher_1010_re15 / kriecher_1220_re15  dieselbe Kriecher-Messung im RE1.5-Flavor: Block B ist dort nativ
+ *                 (DECIDE[5] Sub 5 -> Wort 1, Kriech-Clip 0x1A), vorher wie nachher
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -467,20 +472,64 @@ static void teil_hund_riegel(void)
     }
 }
 
+/* ================================================================== 2b: RE1.5-Flavor-Hund ================== */
+static void teil_hund_re15(void)
+{
+    /* Das RE1.5-Original (STAGE1.BIN FUN_8010f15c, BITE Sub 8 Phase 1): im Sprungfenster (+0x95 > 0x0c @0x8010f254)
+     * `lbu acae7 / bne -> kein Biss` @0x8010f294 VOR dem Schaden `acaee -= 10` @0x8010f2c4-d0; der Niederschlag setzt
+     * acae7 |= 1 (@0x8010f338-44). Zwei Hunde im selben Bild: der zweite sieht acae7 != 0 -> kein zweiter Abzug.
+     * Port: enemy_ai_common.c case 8 (`pl->hit_react == 0 && re15_dog_arc(...)`). Kein Haken dieser Spur beteiligt —
+     * gemessen mit Haken aus UND an (gleiches Ergebnis). */
+    for (int an = 0; an <= 1; an++) {
+        const char *tag = an ? "nachher" : "vorher";
+        re15_r39_gegner_enable(an);
+        re15_actor_init(); re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        memset(pl, 0, sizeof *pl);
+        pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 0; pl->y = 0; pl->z = 1000; pl->rot_y = 0;
+        re15_actor_t *d[2] = { &g_actors[1], &g_actors[2] };
+        for (int i = 0; i < 2; i++) {
+            memset(d[i], 0, sizeof *d[i]);
+            d[i]->active = 1; d[i]->type = 0x20; d[i]->state = 1; d[i]->sub_state_1 = 8; d[i]->sub_state_2 = 0;   /* BITE, Phase 0 */
+            d[i]->x = i ? 300 : -300; d[i]->y = 0; d[i]->z = 0; d[i]->hp = 20; d[i]->dog_grab_armed = 0; d[i]->em_flag_id = 0xFF;
+            d[i]->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - d[i]->z, pl->x - d[i]->x) - 0x400) & 0xfff);
+            re15_enemy_apply_hitbox(d[i], 0x20);
+        }
+        int bild = -1, hp_bild = 0;
+        for (int f = 0; f < 90 && bild < 0; f++) {
+            re15_enemy_ai_run_all(0);
+            if (pl->hp < 100) { bild = f; hp_bild = pl->hp; }
+        }
+        printf("    [%s] RE1.5: erster Abzug in Bild %d, hp=%d, acae7=0x%02x, Hund 1 Sub %d/%d, Hund 2 Sub %d/%d\n", tag, bild, hp_bild,
+               pl->hit_react, d[0]->sub_state_1, d[0]->sub_state_2, d[1]->sub_state_1, d[1]->sub_state_2);
+        PRUEF(bild >= 0 && hp_bild == 90, "[%s] RE1.5-Flavor: im Biss-Bild zieht nur EIN Hund ab (-10 @0x8010f2c4-d0, nicht -20): hp %d", tag, hp_bild);
+        PRUEF((pl->hit_react & 1) != 0, "[%s] RE1.5-Flavor: Niederschlag setzt acae7 |= 1 (@0x8010f338-44): 0x%02x", tag, pl->hit_react);
+        int hp_vor = pl->hp;
+        for (int f = 0; f < 5; f++) re15_enemy_ai_run_all(0);
+        PRUEF(pl->hp == hp_vor, "[%s] RE1.5-Flavor: solange acae7 steht, kein zweiter Biss (`lbu acae7 / bne` @0x8010f294): hp %d", tag, (int)pl->hp);
+    }
+}
+
 /* ================================================================== 3: Kriecher ============================= */
 /* room/typ/ziel = der gemessene 0x81-Kriecher (Spawn-Position), cut = Eintritts-Cut (work_vars[0x0A], Switch des
  * Spawn-Skripts), boot = Spieler-Startpunkt (begehbar), R = begehbarer Bezugspunkt (Tuer-Ziel bzw. der zweite
  * Liegeplatz): der Kriecher wird auf R gedreht (seine RDT-Gier ist nicht das Mass; das Mass sind Distanz < 0xbb8 und
  * der Sichtkegel 0x200 des Weckers), der Spieler steht fern auf R (>= 3000) und nah 2500 davor auf der Linie zu R. */
-static void kriecher_messen(uint16_t room, uint8_t typ, int32_t ziel_x, int32_t ziel_z, uint8_t cut,
+static void kriecher_messen(int flavor, uint16_t room, uint8_t typ, int32_t ziel_x, int32_t ziel_z, uint8_t cut,
                             int32_t boot_px, int32_t boot_pz, int32_t rx, int32_t rz)
 {
+    /* RE2-Flavor: WAIT = Wort 0x201 (Sub 2, Clip 23 @0x80103B5C), Lokomotion P0 = Clip 5 (@0x80103064).
+     * RE1.5-Flavor: der 0x81-Spawn wartet in DECIDE[5] (FUN_8010466C, Sub 5) und kriecht nativ ueber Block B
+     * (@0x80104718-48) in Wort 1 (Sub 0, Kriech-Clip 0x1A) — dort ist der Haken dieser Spur unbeteiligt. */
+    const int re2 = (flavor == RE15_AI_FLAVOR_RE2);
+    const int wait_sub = re2 ? 2 : 5, kriech_clip = re2 ? 5 : 0x1a;
     for (int an = 0; an <= 1; an++) {
         const char *tag = an ? "nachher" : "vorher";
         re15_r39_gegner_enable(an);
-        re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+        re15_ai_flavor_set(flavor);
         if (room_boot(room, boot_px, 0, boot_pz, 0, 0, cut, 0) != 0) return;
-        (void)bank_re2(typ);
+        if (re2) (void)bank_re2(typ); else (void)bank_re15(typ);
         re15_actor_t *k = NULL;
         for (int s = 1; s < RE15_ACTOR_MAX; s++)
             if (g_actors[s].active && g_actors[s].type == typ && g_actors[s].x == ziel_x && g_actors[s].z == ziel_z) { k = &g_actors[s]; break; }
@@ -503,9 +552,11 @@ static void kriecher_messen(uint16_t room, uint8_t typ, int32_t ziel_x, int32_t 
         /* fern (R, >= 3000, ausserhalb Block B): liegt */
         pl->y = k->y; pl->floor = k->floor;
         for (int f = 0; f < 30; f++) { pl->x = rx; pl->z = rz; frame(0, 0); }
-        PRUEF(k->state == 1 && k->sub_state_1 == 2 && k->motion == 0x17 && k->ai_dist >= 0xbb8u,
-              "[%s] fern (dist %u >= 0xbb8, arc=%d): liegt (Wort 0x201 @0x80100B74, Clip 23 @0x80103B5C): st=%d/%d mo=0x%02x",
-              tag, k->ai_dist, re15_ai_arc_test(k, pl->x, pl->z, 0x200), k->state, k->sub_state_1, (unsigned)k->motion);
+        PRUEF(k->state == 1 && k->sub_state_1 == wait_sub && (!re2 || k->motion == 0x17) && k->ai_dist >= 0xbb8u,
+              "[%s] fern (dist %u >= 0xbb8, arc=%d): liegt (%s): st=%d/%d mo=0x%02x",
+              tag, k->ai_dist, re15_ai_arc_test(k, pl->x, pl->z, 0x200),
+              re2 ? "RE2 Wort 0x201 @0x80100B74, Clip 23 @0x80103B5C" : "RE1.5 DECIDE[5] FUN_8010466C, Sub 5",
+              k->state, k->sub_state_1, (unsigned)k->motion);
         /* nah: 2500 vor dem Kriecher auf der Linie zu R */
         int32_t kx0 = k->x, kz0 = k->z;
         int geweckt = -1, kroch = 0, dist_weck = -1;
@@ -513,13 +564,17 @@ static void kriecher_messen(uint16_t room, uint8_t typ, int32_t ziel_x, int32_t 
             pl->x = kx0 + ux; pl->z = kz0 + uz;
             frame(0, 0);
             if (geweckt < 0 && k->state == 1 && k->sub_state_1 == 0) { geweckt = f; dist_weck = (int)k->ai_dist; }
-            if (k->state == 1 && k->sub_state_1 == 0 && k->motion == 5) kroch = 1;   /* Lokomotion P0 Clip 5 @0x80103064 */
+            if (k->state == 1 && k->sub_state_1 == 0 && k->motion == kriech_clip) kroch = 1;   /* RE2: Lokomotion P0 Clip 5 @0x80103064; RE1.5: Kriech-Clip 0x1A */
         }
         double weg = dist2d(k->x, k->z, kx0, kz0);
         printf("    [%s] nah (dist beim Wecken %d, arc=%d): geweckt nach %d Bildern, Clip 5 gesehen=%d, Ende st=%d/%d mo=0x%02x dist=%u, Weg %.0f\n",
                tag, dist_weck, re15_ai_arc_test(k, pl->x, pl->z, 0x200), geweckt, kroch, k->state, k->sub_state_1, (unsigned)k->motion,
                k->ai_dist, weg);
-        if (!an) {
+        if (!re2) {
+            PRUEF(geweckt >= 0 && dist_weck < 0xbb8 && kroch && weg > 200.0,
+                  "[%s] RE1.5-Flavor: Block B nativ (@0x80104718-48) -> Wort 1 nach %d Bildern, Kriech-Clip 0x1A gesehen=%d, Weg %.0f (Haken dieser Spur unbeteiligt)",
+                  tag, geweckt, kroch, weg);
+        } else if (!an) {
             PRUEF(geweckt < 0 && weg < 1.0, "[vorher] RE2-WAIT ohne Distanz-Wecker: liegt weiter, Weg %.0f (der Nutzer-Befund)", weg);
         } else {
             PRUEF(geweckt >= 0 && dist_weck < 0xbb8, "[nachher] Spieler in Sicht < 3000 (dist %d) -> Wort 1 (RE1.5 Block B @0x80104718-48) nach %d Bildern", dist_weck, geweckt);
@@ -529,12 +584,14 @@ static void kriecher_messen(uint16_t room, uint8_t typ, int32_t ziel_x, int32_t 
     }
 }
 /* ROOM1010 Cut 4 = Suedtuer (sub00 Case 4, Spawns @0x0A12/@0x0A26), Tuer-Ziel (3650,-3950) begehbar (probe_r16_kriecher1010) */
-static void teil_kriecher_1010(void) { re15_game_state_init(); kriecher_messen(0x1010, 0x10, 950, -1700, 4, 3650, -3950, 3650, -3950); }
+static void teil_kriecher_1010(void) { re15_game_state_init(); kriecher_messen(RE15_AI_FLAVOR_RE2, 0x1010, 0x10, 950, -1700, 4, 3650, -3950, 3650, -3950); }
+static void teil_kriecher_1010_re15(void) { re15_game_state_init(); kriecher_messen(RE15_AI_FLAVOR_RE15, 0x1010, 0x10, 950, -1700, 4, 3650, -3950, 3650, -3950); }
 /* ROOM1220 sub00 `Switch 0x0a` (Eintritts-Cut) Case 0 @0x00F24: zwei 0x16-Kriecher @0x00F2A (-25000,-6700) / @0x00F3E (-23500,-9700);
  * der zweite Liegeplatz ist der begehbare Bezugspunkt */
 /* Gemessen wird der zweite (@0x00F3E, (-23500,-9700), liegt exakt dort); der erste wird vom Spawn-Schub auf
  * (-25398,-6739) gesetzt (Spawn in der Wand) — sein Liegeplatz ist der Bezugspunkt R (3517 entfernt). */
-static void teil_kriecher_1220(void) { re15_game_state_init(); kriecher_messen(0x1220, 0x16, -23500, -9700, 0, -25398, -6739, -25398, -6739); }
+static void teil_kriecher_1220(void) { re15_game_state_init(); kriecher_messen(RE15_AI_FLAVOR_RE2, 0x1220, 0x16, -23500, -9700, 0, -25398, -6739, -25398, -6739); }
+static void teil_kriecher_1220_re15(void) { re15_game_state_init(); kriecher_messen(RE15_AI_FLAVOR_RE15, 0x1220, 0x16, -23500, -9700, 0, -25398, -6739, -25398, -6739); }
 
 /* ================================================================== 4: Schatten ============================= */
 static void teil_schatten(void)
@@ -552,13 +609,32 @@ static void teil_schatten(void)
     e.type = 0x29; { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 1 && y == -3600, "kleiner Affe 0x29: Quad-Y = +0x1ba (STAGE3 @0x80110c78)"); }
     e.type = 0x20; { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 0 && y == e.y, "Hund 0x20: nicht angefasst (Runde 35 H eigener Weg)"); }
     e.type = 0x10; { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 0 && y == e.y, "Zombie 0x10: nicht angefasst"); }
-    /* im Raum: Gorilla aus ROOM11C0 traegt +0x1ba aus Sce_em_set pc[4] (-(pc[4]*1800) @0x800421d4-0x80042210):
-     * Kampf-Variante `44 01 27 10 00 ..` @0x017E8 -> pc[4] = 0 -> +0x1ba = 0 (steht bei y = 0); die Szenen-Variante
-     * `44 01 27 30 02 ..` @0x01784 traegt 2 -> -3600. */
+    /* Root-Skip: grid-Bit 0x20 (`lbu v0,9(v1) / andi 0x20 / bne` @0x80116dec-f8) -> die Wurzel samt Schatten-Schwanz
+     * laeuft nicht -> KEIN Schatten; der Quad des Zeichners bleibt unberuehrt (kein Quad auf -3600 ueber dem Wagen-Gorilla) */
+    e.type = 0x27; e.grid_id = 0x30; e.y = -2500; e.dog_floor_y = -3600;
+    { int32_t y = e.y; PRUEF(re15_r39_schatten_aus(&e) == 1 && re15_r39_schatten_y(&e, &y) == 0 && y == e.y,
+                              "Szenen-Gorilla grid 0x30 (im Wagen y=-2500, +0x1ba=-3600): Root-Skip @0x80116df4-f8 -> kein Schatten, Quad-Y unberuehrt (%d)", (int)y); }
+    e.grid_id = 0x10; PRUEF(re15_r39_schatten_aus(&e) == 0, "Kampf-Gorilla grid 0x10: Wurzel laeuft -> Schatten");
+    e.type = 0x29; e.grid_id = 0x20; PRUEF(re15_r39_schatten_aus(&e) == 1, "kleiner Affe 0x29 mit grid&0x20: Root-Skip STAGE3 @0x80110b3c-40 -> kein Schatten");
+    e.type = 0x20; e.grid_id = 0x20; PRUEF(re15_r39_schatten_aus(&e) == 0, "Hund 0x20 mit grid&0x20: nicht angefasst");
+    /* Szenen-Layout ROOM11C0 (ohne Flag 4/0x40): beide 0x27 kommen mit grid 0x30 und y=-20000 aus dem RDT (@0x01784/@0x01798) */
+    re15_game_state_init();
+    if (room_boot(0x11C0, -22604, 0, 14455, 0, 0, 0, 3) != 0) return;
+    {
+        re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+        PRUEF(a && b && (a->grid_id & 0x20) && (b->grid_id & 0x20) && a->y == -20000 && b->y == -20000,
+              "ROOM11C0 Szene: beide Gorillas grid 0x%02x/0x%02x, y=%d/%d (RDT `e0 b1` = -20000, +0x1ba = -3600)",
+              a ? a->grid_id : 0, b ? b->grid_id : 0, a ? (int)a->y : 0, b ? (int)b->y : 0);
+        PRUEF(a && b && re15_r39_schatten_aus(a) == 1 && re15_r39_schatten_aus(b) == 1,
+              "ROOM11C0 Szene: geparkte Gorillas ohne Schatten (Root-Skip; vorher Quad am Koerper -20000 bzw. nach dem ersten Haken auf -3600)");
+    }
+    /* Kampf-Layout: `44 01 27 10 00 ..` @0x017E8 -> grid 0x10, pc[4] = 0 -> +0x1ba = 0 (steht bei y = 0); die
+     * Szenen-Variante `44 01 27 30 02 ..` @0x01784 traegt 2 -> -3600 (Sce_em_set -(pc[4]*1800) @0x800421d4-0x80042210). */
     re15_game_state_init(); re15_game_flag_set(4, 0x40, 1);
     if (room_boot(0x11C0, -9013, 0, -15461, 0, 5, 3, 3) != 0) return;
     re15_actor_t *g = aktor_vom_typ(0x27, 0);
     if (g) {
+        PRUEF((g->grid_id & 0x20) == 0 && re15_r39_schatten_aus(g) == 0, "ROOM11C0 Kampf: grid 0x%02x, Wurzel laeuft -> Schatten", g->grid_id);
         int32_t boden = g->dog_floor_y;
         int32_t y = boden - 1500;   /* wie im Flug */
         g->y = y;
@@ -577,8 +653,11 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "affen_zucken"))  { printf("== affen_zucken ==\n");  teil_affen_zucken(); }
     if (alle || !strcmp(teil, "affen_schuss"))  { printf("== affen_schuss ==\n");  teil_affen_schuss(); }
     if (alle || !strcmp(teil, "hund_riegel"))   { printf("== hund_riegel ==\n");   teil_hund_riegel(); }
+    if (alle || !strcmp(teil, "hund_re15"))     { printf("== hund_re15 ==\n");     teil_hund_re15(); }
     if (alle || !strcmp(teil, "kriecher_1010")) { printf("== kriecher_1010 ==\n"); teil_kriecher_1010(); }
     if (alle || !strcmp(teil, "kriecher_1220")) { printf("== kriecher_1220 ==\n"); teil_kriecher_1220(); }
+    if (alle || !strcmp(teil, "kriecher_1010_re15")) { printf("== kriecher_1010_re15 ==\n"); teil_kriecher_1010_re15(); }
+    if (alle || !strcmp(teil, "kriecher_1220_re15")) { printf("== kriecher_1220_re15 ==\n"); teil_kriecher_1220_re15(); }
     if (alle || !strcmp(teil, "schatten"))      { printf("== schatten ==\n");      teil_schatten(); }
     printf("test_r39_gegner %s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

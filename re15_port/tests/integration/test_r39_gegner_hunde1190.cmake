@@ -18,7 +18,9 @@
 # FUN_800401D4(20) @0x80104EB8-C0) mit Bildnummer.
 # Geprueft: (a) mindestens 3 Bisse (sonst misst der Lauf nichts); (b) KEINE zwei Bisse naeher als 24 Bilder
 # (22 Bilder Flinch + Exit-Bild + Freigabe-Bild) — waehrend der Reaktion darf kein zweiter Hund treffen;
-# (c) gegner_r39.log traegt zu jedem Biss "hund riegel GESETZT" und danach "hund riegel FREI".
+# (c) gegner_r39.log traegt zu jedem Biss "hund riegel GESETZT" und danach "hund riegel FREI"; (d) Leon lebt am Ende.
+# Der Lauf endet bei Bild 1000 (RE15_EXIT_AT ohne Raum): gemessen (zweimal bildgleich, 2026-10-18) beissen die Hunde
+# F685/F720/F753/F833 (je -20), F1042 (hp 0) und F1074 (hp -20 = Tod -> CONTINUE, der Raum-gebundene Exit kaeme nie).
 # Basislauf (c71fa144, derselbe Aufbau): 6 Bisse F685/720/749/829/942/1000 — Abstaende 35/29/80/113/58, also auch
 # dort kein Paar < 24 (der Nutzer-Fall "parallel" entsteht, wenn zwei Hunde im selben Flug treffen; das misst der
 # Unit-Riegel unit_r39_gegner_hund_riegel deterministisch: vorher -40 im selben Bild, nachher -20).
@@ -55,12 +57,12 @@ set(WORKDIR "${_dir}")
 set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
          RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
          RE15_DEBUG_JUMP=1190@250 RE15_FORCE_EVENT=10@400
-         RE15_STATE_LOG=state.log RE15_R39_LOG=1 "RE15_EXIT_AT=2600#1190")
-re15_start_spiel(_rv 480 ${_env} "${_exe_kopie}")
+         RE15_STATE_LOG=state.log RE15_R39_LOG=1 "RE15_EXIT_AT=1000")
+re15_start_spiel(_rv 300 ${_env} "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     message(STATUS "${_tag}: Lauf ohne Ergebnis (exit=${_rv}) -> EIN Wiederholungsversuch")
     file(REMOVE "${_dir}/debug.log" "${_dir}/state.log" "${_dir}/gegner_r39.log")
-    re15_start_spiel(_rv 480 ${_env} "${_exe_kopie}")
+    re15_start_spiel(_rv 300 ${_env} "${_exe_kopie}")
 endif()
 if(NOT _rv EQUAL 0)
     message(FATAL_ERROR "${_tag}: re15_pc exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
@@ -108,6 +110,9 @@ foreach(_l IN LISTS _zl)
     endif()
     set(_hp_alt ${_hp})
 endforeach()
+if(_hp LESS 0)
+    message(FATAL_ERROR "${_tag}: Leon ist im Lauf gestorben (hp ${_hp}) — der Lauf soll bei Bild 1000 vor dem 6. Biss enden (${_bisse})")
+endif()
 list(LENGTH _bisse _n)
 if(_n LESS 3)
     message(FATAL_ERROR "${_tag}: nur ${_n} HP-Abzuege (${_bisse}) — die Hunde haben Leon nicht angegriffen? ${_dir}")

@@ -16,6 +16,9 @@
 # Schatten-Zeilen mit Koerper-Y != Boden-Y (der Gorilla war in der Luft und wurde gezeichnet); (c) in JEDER dieser
 # Zeilen quad_y == boden_y (Quad auf +0x1ba, nicht am Koerper). Vorher (Basisstand c71fa144, derselbe Aufbau):
 # Quad-Y = Koerper-Y, Framedumps F1355..F1385 zeigen den Blob unter dem fliegenden Gorilla (Dossier).
+# (d) Root-Skip: fuer die Szenen-Gorillas mit grid 0x30 (geparkt y=-20000 aus dem RDT @0x01784, im Wagen y=-2500 per
+# Member_set @0x0198E) wird KEIN Schatten gezeichnet (`andi v0,v0,0x20 / bne` @0x80116df4-f8 ueberspringt die ganze
+# Wurzel samt Schatten-Schwanz) — keine "schatten "-Zeile mit koerper_y=-20000/-2500, dafuer "schatten_aus"-Zeilen.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r39_gegner_schatten.cmake
 # =============================================================================
@@ -102,4 +105,16 @@ endif()
 if(_fehler)
     message(FATAL_ERROR "${_tag}: Quad-Y != Boden-Y in Luft-Bildern:${_fehler}")
 endif()
-message(STATUS "${_tag}: OK — ${_n_sprung} Sprung-Bilder (Sub 7/8), ${_n_luft} Luft-Bilder mit Quad-Y == Boden-Y (+0x1ba @0x80116f30), ${_dir}")
+# (d) Root-Skip: geparkte/Wagen-Gorillas (grid 0x30) ohne Schatten
+file(STRINGS "${_dir}/gegner_r39.log" _park REGEX "^schatten .*koerper_y=-(20000|2500) ")
+list(LENGTH _park _n_park)
+if(_n_park GREATER 0)
+    list(GET _park 0 _park0)
+    message(FATAL_ERROR "${_tag}: Schatten-Quad fuer geparkte/Wagen-Gorillas gezeichnet (${_n_park} Zeilen, z.B. [${_park0}]; Root-Skip @0x80116df4-f8)")
+endif()
+file(STRINGS "${_dir}/gegner_r39.log" _aus REGEX "^schatten_aus ")
+list(LENGTH _aus _n_aus)
+if(_n_aus LESS 1)
+    message(FATAL_ERROR "${_tag}: keine schatten_aus-Zeile — die Szenen-Gorillas haetten grid 0x30 (Root-Skip) tragen muessen")
+endif()
+message(STATUS "${_tag}: OK — ${_n_sprung} Sprung-Bilder (Sub 7/8), ${_n_luft} Luft-Bilder mit Quad-Y == Boden-Y (+0x1ba @0x80116f30), ${_n_aus} Root-Skip-Bilder ohne Schatten (grid 0x30), ${_dir}")
