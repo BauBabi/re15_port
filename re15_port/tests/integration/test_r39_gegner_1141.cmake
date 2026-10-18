@@ -1,8 +1,8 @@
 # =============================================================================
 # Runde 39 Spur E "gegner", Nachbesserung 2 — die Gorilla-Regel (HP x2, Flinch erst nach 36 Energie) an der ECHTEN exe
 # in ROOM1141 mit ELZA (der zweite 0x27-Raum des Zensus neben ROOM11C0), echter Weg 1131 -> Tuer -> 1141 (Phase H,
-# Gemaelde, Szene BEFREIUNG: die Gorillas brechen ein), dann der Kampf mit Elzas SIG P228 bis Spielbild 3900 (beide
-# Gorillas haben dann ihren ersten Flinch hinter sich). Tod beider Gorillas -> Kill-Flags -> sub01 (4,0xF2)=0 -> Johns
+# Gemaelde, Szene BEFREIUNG: die Gorillas brechen ein), dann der Kampf mit Elzas SIG P228 bis Spielbild 4500 (im Messlauf
+# haben beide Gorillas ihren ersten Flinch bei F3129 / F3780 hinter sich; 600 Bilder Spielraum fuer Szenen-Aenderungen). Tod beider Gorillas -> Kill-Flags -> sub01 (4,0xF2)=0 -> Johns
 # Abgang misst unit_r39_gegner_1141_ablauf1141 (echte Engine-Wege, 31 Treffer je Gorilla); der lange Exe-Kampf steht im
 # Dossier (Versuche 2-6: der stehende Skript-Schuetze ist dafuer kein stabiler Riegel, Befund E).
 #
@@ -15,16 +15,17 @@
 # RE15_PSELECT_AUTO(_SWITCH)), Nach-1021-Flags, Dining Room Key 0x43, P228 0x04, RE15_DEBUG_JUMP=1131@gp, Wegplan
 # 1131 Schluessel -> Tuer -> 1141 Phase H -> Gemaelde "ja" -> BEFREIUNG. Ab Spielbild 2760 schiesst ein STEHENDER
 # Skript-Schuetze (RE15_INPUT_SCRIPT: R1 gehalten, alle sechs Druecke neu zielen).
-# Mess-Aufbau = Messlauf n1141_m des Dossiers (bis F3900 bildgleich): Messhaken RE15_R39_MESS_SPIELER_HP=100 (gegner_r39.c,
+# Mess-Aufbau = Messlauf n1141_m des Dossiers (bis F4500 bildgleich): Messhaken RE15_R39_MESS_SPIELER_HP=100 (gegner_r39.c,
 # nur mit Env; haelt die Spieler-HP >= 50 und damit den Luft-Finisher fern, Commit nur bei player.hp < 50 @0x80118cf4 —
-# die Gorilla-Seite bleibt unabhaengig davon, wie oft Elza gebissen wird) und 99 Schuss im Magazin (RE15_GIVE; bis F3900
-# fallen 14 Schuss, kein Nachladen). Gemessen wird die Gorilla-Seite: Energie und Zucken.
+# die Gorilla-Seite bleibt unabhaengig davon, wie oft Elza gebissen wird) und 99 Schuss im Magazin (RE15_GIVE; bis F4500
+# fallen 24 Schuss, kein Nachladen; erwartet: 20 Treffer-Zeilen, 6 x FLINCH = 6 Flinch-Beginne). Gemessen wird die Gorilla-Seite: Energie und Zucken.
 #
 # Geprueft: (a) gegner_r39.log: Messhaken aktiv; jeder 0x27-INIT in ROOM1141 mit hp=360 (regel 1), keiner mit 180;
-# (b) jede Treffer-Zeile folgt der Schwelle (FLINCH nur bei akku >= 36, OHNE ZUCKEN nur darunter) und BEIDE Gorillas
-# zeigen das Muster (OHNE akku=12, OHNE akku=24, FLINCH akku=36; gemessen n1141_m: Platz 2 F3081/F3105/F3129, Platz 3
-# F3513/F3756/F3780); (c) state.txt: in jedem Bild mit Clip 7 in Zustand 2 (Flinch) ging ein FLINCH-Eintrag voraus —
-# kein Flinch ohne Schwelle; (d) EXIT_AT erreicht.
+# (b) jede Treffer-Zeile folgt der Schwelle (FLINCH nur bei akku >= 36, OHNE ZUCKEN nur darunter) und mindestens ein
+# Gorilla zeigt das Muster OHNE akku=12, OHNE akku=24, FLINCH akku=36 (gemessen n1141_m: beide, Platz 2 F3081/F3105/F3129,
+# Platz 3 F3513/F3756/F3780); (c) state.txt: in jedem Bild mit Clip 7 in Zustand 2 (Flinch) ging ein FLINCH-Eintrag voraus —
+# kein Flinch ohne Schwelle; (d) EXIT_AT erreicht. Haengt am Runde-38-F-Ablauf von ROOM1141 (Wegplan bis zum Gemaelde);
+# aendert eine spaetere Spur die Szene, ist der Wegplan bei der Integration nachzuziehen.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r39_gegner_1141.cmake
 # =============================================================================
@@ -106,7 +107,7 @@ set(_env RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSE
          RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78 RE15_GIVE=0x43:1,0x04:99,0x15:60 RE15_EQUIP=4
          RE15_DEBUG_JUMP=1131@gp RE15_PLAYER_POS=-1300,-13900,0 RE15_R39_MESS_SPIELER_HP=100
          "RE15_INPUT_SCRIPT=${_skript}" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=2760
-         "RE15_EXIT_AT=3900")
+         "RE15_EXIT_AT=4500")
 re15_start_spiel(_rv 900 ${_env} "${_exe_kopie}")
 file(REMOVE "${_dir}/cap.raw")
 file(REMOVE "${_exe_kopie}")
@@ -165,14 +166,24 @@ foreach(_l IN LISTS _tr)
         list(APPEND _slots "${_s}O${_a}")
     endif()
 endforeach()
+# Muster je Gorilla-Platz; verlangt fuer mindestens EINEN Platz (welcher Gorilla zuerst dreimal getroffen wird, haengt am
+# Kampfverlauf; im Messlauf n1141_m zeigen es beide). Die Regel selbst prueft jede Zeile oben.
+set(_muster_plaetze "")
 foreach(_s 2 3)
+    set(_voll 1)
     foreach(_m O12 O24 F36)
         list(FIND _slots "${_s}${_m}" _p)
         if(_p LESS 0)
-            string(APPEND _fehler " (b)Gorilla-Platz${_s}-ohne-${_m}")
+            set(_voll 0)
         endif()
     endforeach()
+    if(_voll)
+        list(APPEND _muster_plaetze ${_s})
+    endif()
 endforeach()
+if(NOT _muster_plaetze)
+    string(APPEND _fehler " (b)kein-Gorilla-mit-OHNE12/OHNE24/FLINCH36")
+endif()
 # ---- (c) state.txt: jeder Flinch-Beginn (Zustand 2 + Clip 7, Bild davor nicht) hat einen FLINCH-Eintrag ----
 file(STRINGS "${_dir}/state.txt" _zl)
 set(_fl_state 0)

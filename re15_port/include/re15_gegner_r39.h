@@ -90,7 +90,8 @@ int     re15_r39_kriecher_weckt(const re15_actor_t *e, const re15_actor_t *pl); 
 /* (4) Schatten */
 int     re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y);        /* 0x27/0x29 (auch grid&0x20): Quad-Y = +0x1ba */
 
-/* Mess-Schiene (kein Spielverhalten): RE15_R39_LOG=1 -> gegner_r39.log im Arbeitsordner. */
+/* Mess-Schiene (kein Spielverhalten): RE15_R39_LOG=1 -> gegner_r39.log im Arbeitsordner. Messhaken (nur Messlauf, Nachbesserung 2):
+ * RE15_R39_MESS_SPIELER_HP=<n> hebt die Spieler-HP je KI-Bild auf >= n (gegner_r39.c r39_mess_spieler_hp; Begruendung im Dossier). */
 void    re15_r39_log(const char *fmt, ...);
 
 #endif /* RE15_GEGNER_R39_H */
