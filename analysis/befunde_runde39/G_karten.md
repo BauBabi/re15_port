@@ -677,3 +677,27 @@ aktuell + Plan: Wand 3/3, Umriss leer, offen 0).
 |---|---|---|---|---|
 | N1 Kammer | begehbare dritte West-Zelle (offen) ohne Zeichnung; Original-Kachel/-Zeile/Vorlage zeichnen sie nicht | RVD @0x002DC..@0x00340 (Schnitte 6/7), Door_aot_set nur fuenf Zellen, SCA @0x01BEC/@0x01BF8/@0x01BE0/@0x01C40/@0x01BC8 | Zone 1 (zid 112, synth 12, Zeile @0x800769B8), Zelle (186,112) 15x18 auf den gemalten Linien, Durchgang x201 y117..119 (Traeger Kammer mit Koerper), Ostkante entfaellt mit r3 | markerflaeche 1210 Kammer 1509 -> 0; echte exe Ring (191,117) im Blau -> im Rot der Kammer |
 | N1 Rest | Querbalken der Kachel gestaucht (8 px gemalt, 11,7 px Welt) - Suedstreifen projiziert auf y79 in die Zellen r4/r6 | Mitten @0x01B8C -> py70, @0x01BD4 -> py82; r3 Zeilen 0/8 Index 4 | Klemmfenster r3 y70..78 im Balken ausserhalb der Flurspanne (@0x01BC8/@0x01C04) | 184 -> 0 (1210 gesamt 1693 -> 0 von 10387) |
+
+### OFFEN (Stand Nachbesserung 2)
+* Keine offenen Punkte aus N1. Die Entscheidungsfrage "ROOM1210-Kammer zeichnen oder B2 wie die Vorlage" ist durch den
+  Orchestrator-Entscheid erledigt (gezeichnet, s.u.).
+* Vorbestehend, unveraendert und nicht Teil von N1 (Hinweise der Abnahme 1): Kerben (187,71)/(187,77) der Schwenk-Tilgung
+  am Tuerbalken 11E0<->1210 (im Lauf K ausserhalb des Kammer-Kastens: 4 Koerperpixel am Grund, mit ROOM11E0 gezeichnet
+  steht die Wand x186 direkt daneben); Kachel-Klemmung reserve 4 (H2); Tuer 1030<->1050 bei ungezeichnetem 1030 (H1);
+  1130 Wandnasen (H4); 11A0 Band 1 102/444 (Blatt 6, nicht Polizeistation); 10B0/1260 ohne Kartenblatt.
+
+### Fuer den Nutzer (Nachbesserung 2)
+* **B2: die Suedwest-Kammer in ROOM1210 ist jetzt auf der Karte.** Unten links im Zellentrakt gibt es eine dritte Zelle
+  auf der Westseite, deren Tuer offen steht - man kann aus dem Flur hineinlaufen (das Original hat dafuer sogar zwei eigene
+  Kamerawinkel). Weder das Original noch deine Vorlage mapB2_correct.png zeichnen sie; dort stand der Marker deshalb im
+  Blauen neben der Karte. Jetzt ist sie gezeichnet wie die Zellen daneben (gleiche Breite, Waende auf denselben Linien, keine
+  Doppelwand), mit einer Oeffnung in der Flurwand, wo die Zellentuer offen steht. Sie erscheint, sobald du sie einmal
+  betreten hast (wie die WCs in ROOM1000), und ist nur rot, solange du drin stehst. Das ist eine bewusste Abweichung von
+  deiner Vorlage - Bild: analysis/befunde_runde39/G_karten_bilder/b2_kammer_soll_nachher_x4.png (links deine Vorlage,
+  rechts jetzt) und b2_kammer_echtlauf_vorher_nachher_x4.png (Marker vorher im Blau, jetzt in der Kammer).
+* Bei Elza ist dieselbe Zelle im Original zunaechst verschlossen (das Raumskript macht die Tuer fest, bis zwei
+  Story-Flags gesetzt sind); ist sie offen, gilt dasselbe wie bei Leon.
+* Nebenbei behoben (gleiche Fehlerklasse, derselbe Raum): ganz unten im Querbalken des T-Flurs von ROOM1210 rutschte der
+  Marker 1 Pixel in die Zellen darunter (die Kachel malt den Balken schmaler, als er im Raum ist). Er bleibt jetzt auf dem
+  Balken. Damit steht der Marker in ROOM1210 an jedem begehbaren Punkt auf der Zeichnung (vorher 1693 von 10387 daneben).
+* Keine neuen Assets, keine Sprachdateien, keine neuen Flags/Nachrichten.
