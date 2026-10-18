@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 08:10: Spur B toene BESTANDEN (Abnahme 0, 52b39720; Bau 66aea987): Schublade = ROOM11F0/11F1 (RE2 ROOM1130
+  0x28), Gitter + Schrank = ROOM1190/1191 (RE1.5 ROOM2060 0x0E/0x0D, RE2 ROOM1120 0x0C), 31/31 gezielte Tests. Maengel M1/M2
+  (Kommentare) vom Orchestrator nachgezogen. Integrationsbaum .claude/worktrees/r39_integration (r39/integration von master
+  6d4abe35), B per --no-ff gemergt. Paket-Gate TOENE39.VBS in release/make_package.sh (H6). FUER DEN NUTZER (Release Notes
+  "Zu entscheiden"): H1 Raumnummern (genannt 10F0/1090, gemessen 11F0/1190 - 10F0/1090 haben keine Schublade/keinen
+  Schrank), H2 Regal-Welle klingt ~1 s nach dem Halt aus (RE2-Form), H3 Zu-Ton am Gitter zusaetzlich, H4 Schubladen-Ton bei
+  jedem Oeffnen.
 * 2026-10-18 07:20: WOCHENLIMIT beendete um ~03:10 alle vier Bau-Agenten der Welle 1 ("weekly limit, resets Oct 23";
   danach Kontowechsel, Modell Fable 5.1). Dossiers + wip-Commits lagen vor (A 3, B 4, C 3, L 3 Commits); Reste als
   UNGEPRUEFT gesichert (inventar dfde7745, optik 9bd581fe). Nutzer-Nachtrag (cb7d7855): 1141 Punkt 5 = JOHN, nicht Roy;
