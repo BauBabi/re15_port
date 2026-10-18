@@ -804,3 +804,63 @@ Pause-Tor @0x80112120 (-> @0x8011221c). Zustandstabelle `table 0x8012111c`: [0] 
   Bit 2 traegt (Ghidra FUN_8002aec4.c `((*param_1 | uVar8) & 2) != 0 -> return 0`); die Todes-Lanes setzen es
   (FUN_80114738.c `|= 2`). INIT-Takt: die Ereignis-Kraehen spawnen > 17000 Einheiten von Elza (state.log F0) -> kein
   Kontakt moeglich. Zustand 4 hat den Schub schon. Kein messbarer Unterschied -> nur der Wand-Pass wird nachgezogen.
+
+### 13.4 Umsetzung (Dateien, Konstanten)
+
+- `engine/src/enemy_ai_common.c` (Haken "Runde 39 Spur K NB2", 3 Stellen):
+  - FLIGHT-2 Fall 1 HOVER: Phase-0-Block endet mit `break` = `j 0x801152cc` @0x801151d8 (kein `re15_crow_anim`, keine
+    Lenkung, kein `y += vvel`, kein `re15_crow_advance`, keine Kontaktabfrage in diesem Takt).
+  - FLIGHT-2 Fall 3 SPIN: `e->rot_y += 60` in den Zweig `sub_state_2 == 1` (Phase 0 setzt 1 und faellt hinein) =
+    @0x80115460-6c; Phase 2 (`else`, @0x801154d0-e8) dreht nicht.
+  - Kraehen-Wurzel: vor dem Zustand `r39k_st` / Lage gemerkt, nach dem Zustand fuer `r39k_st != 1`
+    `re15_r39k_kraehe_wandpass(e, alt_x, alt_z)` (Zustand 1 fuehrt den Pass schon selbst).
+- `engine/src/heliport1171_r39.c` + `include/re15_heliport1171_r39.h`: `re15_r39k_kraehe_wandpass` = FUN_8003b0a4 mit den
+  Wurzel-Argumenten: Radius 200 (`lhu a1,6(v0)` @0x80112200), Band = +0x82 (`sb v0,130(a0)` @0x80112154, Port
+  `e->floor`), Maske 4 (`ori a2,zero,0x4` @0x801121fc), alte Lage = Lage vor dem Zustand; Wort0 Bit 3 -> kein Pass
+  (@0x8003b134-44); +0x1d1 = Rueckgabe (@0x80112218, Port `crow_wall`). Resolver = `re15_collision_constrain_contact_band`
+  (der byte-true FUN_8003b0a4-Port mit explizitem Band).
+- Keine neue .c-Datei, keine Bank-9-Bits, keine Nachrichten-Ids, keine Assets.
+
+### 13.5 Messung nachher
+
+- Lade-Weg `K39nb2/nach1_laden` (Stand 274c60fb = nur M1/M2) und `K39nb2/nach2_laden` (Stand 21bb3788 = M1/M2/N1, mit
+  RE15_COLL_TRACE), EXIT 0, Szene bis ROOM10B1:
+  - M1: Kraehe 2 HOVER `1:0 2:0 3:0 4:1 ... 12:9 13:9 14:0 ... 23:9 24:9 25:0` (Umschalt-Takt, Halt, Bild 0..9, Halt) =
+    die Original-Folge; Phase-0-Takte 10, **0/10 mit anderem Bild, 0/10 mit Lage-/Gier-Aenderung** (F2:
+    `(-9813,-5651,r3980) -> (-9813,-5651,r3980)`), Abstand 11 (9 von 9). Kraehe 3 ebenso (`10:9 11:9 12:0 ...`).
+    Griff Kraehe 2 F105 (vorher F95), Kraehe 3 F116 (nur M1/M2) bzw. F112 (mit N1; vorher F106).
+  - M2: SPIN-Phase-2-Takte Kraehe 2 109 / Kraehe 3 123, Gier-Aenderung je Takt `{0: 109}` / `{0: 123}` (vorher +60).
+  - N1: `[coll] cell#37 typ=1 band=4 ... r=200 (-9700,-7680)->(-8784,-7680)`, `[coll] cell#43 typ=3 ... (-8784,-7680)->
+    (-8842,-7623)` im INIT-Takt, danach Kreis-Zelle #13 in F1-F4 (`(-8683,-7618)->(-8746,-7536)` ...), dann Band 5 frei;
+    Kraehe 2 nie (6 Kraehen-Schuebe insgesamt). state.txt F0 `[3 t=21 st=4 ... @(-8842,-7623,r0)]`.
+- Folgen fuer die Szene: der Griff (Warten @0x013F4 auf (5,0x1C)) liegt 10 Bilder spaeter (F105 statt F95), damit Wurf,
+  Kraehen-Tod und der Rest der Szene; Elzas Sub-6-Laeufe im Unit-Lauf ab Bild 38/196/601/679/953 (vorher 38/186/592/670/
+  945), Schub-Bit-Takt Elza = John Bild 941 (vorher 933). Die Szene laeuft weiter bis ROOM10B1 (beide Wege).
+- Riegel mit Bildnummern: alle 1171-Riegel messen RELATIV zum Griff/Wurf (test_r38_heliport1171 `szene_*`: Warten =
+  Griff + 1, Wurf = Griff + 1 + 60, Modus 6 = Wurf + 30; test_r39_heliport1171 `elza`/`kraehen`: Laeufe/Folgen ohne feste
+  Bildnummer; Integration: Elza F = John F) -> nichts nachzuziehen, alle gruen (13.6).
+
+### 13.6 Tests (Riegel) und Gegenprobe
+
+- NEU `unit_r39_heliport1171_flug` (M1/M2): ganze Szene; je Kraehe HOVER-Phase-0-Takte (vorher st 4/ss1 1/ss2 0) ohne
+  Aenderung von motion/anim_frame/x/y/z/Gier, danach Clip 4 Bild 0; Abstand zweier Phase-0-Takte vor dem Griff = 11;
+  SPIN-Phase-2-Takte ohne Gier-Aenderung, Laeufe zu 41 Takten; SPIN-Phase-0/1-Takte +60.
+  Messzeile Endstand: `Kraehe Slot 2: HOVER-Halt-Takte 10 (Pose/Lage veraendert 0, danach Clip 4 Bild 0 10), Abstand 11: 9
+  von 9; Griff Bild 105; SPIN Phase 2 109 Takte (Gier veraendert 0), Laeufe 41 Takte 2 (andere 0), Phase 0/1 99 Takte
+  (nicht +60 0)`; Slot 3 `... Griff Bild 116; SPIN Phase 2 123 Takte (Gier veraendert 0), Laeufe 41 Takte 3 ...`.
+- NEU `unit_r39_heliport1171_wand` (N1): Raum in g_room_rdt wie der Raumaufbau, ein Bild (INIT-Takt): Kraehe Slot 3
+  `(-9700,-7680) -> (-8842,-7623)` = genau ein Resolver-Durchlauf mit den Wurzel-Argumenten, Kraehe Slot 2 (Band 5) bleibt
+  bei `(-9970,-5680)`.
+- `integration_r39_heliport1171_weg/_laden` zusaetzlich (letzter Block, RE15_STATE_LOG): M1 Halt-Takte unveraendert +
+  Abstand 11, M2 Phase-2-Gier konstant, N1 erste Lage `-8842,-7623` (nie `-9700,-7680`). Endstand: beide gruen, Messzeile
+  `Kraehe 2: erste Lage (-9970,-5680), HOVER-Halt-Takte 10 (veraendert 0), Abstaende 9 (nicht 11: ), SPIN-Phase-2-Takte 109
+  (gedreht 0); Kraehe 3: erste Lage (-8842,-7623), HOVER-Halt-Takte 10 (veraendert 0), Abstaende 9 (nicht 11: ),
+  SPIN-Phase-2-Takte 123 (gedreht 0)` (weg: state.txt-Abschnitt 1, laden: 0).
+- GEGENPROBE Unit (alter Motor 97b42ad2 = Abnahme-1-Stand per `git archive` nach `K39nb2/alt/`, neue Testquellen,
+  eigener Configure + Bau NUR des Ziels test_r39_heliport1171, 186 Schritte): `flug` **EXIT 1, 6 Fehler** (je Kraehe
+  "Halt-Takte 10 (Pose/Lage veraendert 10, danach Clip 4 Bild 0 0), Abstand 11: 0 von 9", "SPIN Phase 2 109 Takte (Gier
+  veraendert 108)" bzw. 123/123); `wand` **EXIT 1, 1 Fehler** ("(-9700,-7680) -> (-9700,-7680), Soll ... (-8842,-7623)").
+- GEGENPROBE Integration (Block trocken als `cmake -P` gegen aufgezeichnete Spuren, `K39nb2/trocken_nb2.cmake`):
+  alter Motor Lade-Weg `vorher_laden` ROT (Halt veraendert 10/10, Abstaende 10, gedreht 108/123, erste Lage -9700,-7680),
+  alter Motor echter Weg `K39abn1/echtA` ROT (dasselbe), Stand nur M1/M2 `nach1_laden` ROT nur an N1
+  ("erste Lagen: -9970,-5680;-9700,-7680"), Endstand `nach2_laden` GRUEN.
