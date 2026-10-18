@@ -173,3 +173,10 @@ Loescher (2500,−1300) entfernt, weit ausserhalb der Reichweite 563 + 900 (FUN_
 ein ueber den ganzen Platz geschobener Tritt koennte das aendern — dieselbe Eigenheit gilt fuer das Original-Wrack obj 2
 (Band 2). Kein Mangel, als Hinweis vermerkt.
 Der echte Weg (Tuer 1051 → 1091) folgt unten (Lauf `p3_tuer`).
+
+**Echter Weg (Tuer) — Lauf `abn_H_elza/p3_tuer`:** Spielstand Elza in ROOM1051 vor der Tuer (`1051 19850 -22300 1024
+cut:6 elza`, Form von Lauf H des r37-Riegels), Skript `W1,A0.5,W12` → `[tuer] Sequenz Archiv 2 DOOR1D …`, `[room] PC
+loaded room1091.rdt`, **`[feuerloescher] ROOM1091: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300) rot_y 3250,
+Zone Slot 3 Untersuchen msg 29`** — der Installer (und damit das Band Spielerband(y)+1 = 2) laeuft auch beim
+Tuer-Eintritt; Elza steht nach der Tuer bei (−10100,−1800,4200) rot 3072 auf **Band 1** (CLIMB_TRACE `band=1`,
+`rc_bnd=-1800`), d.h. dieselben Gate-Eingaben wie im Spielstand am Loescher. Fussweg-Lauf zum Loescher: s.u.
