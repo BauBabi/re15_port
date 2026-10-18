@@ -422,14 +422,16 @@ static void teil_programme(void)
     {   /* Punkt 8: nach der Warteschleife (4,0xF2): Cut 8, msg 51 + Gesten (0,15)/(0,23), Plc_motion(2,6), msg 52 */
         const uint8_t w[4] = { 0x21, 0x04, 0xF2, 0x01 }, c8[2] = { 0x29, RE15_R39J_CUT_GESPRAECH };
         const uint8_t m51[4] = { 0x2B, RE15_R39J_MSG_PUH, 0, 0 }, m52[4] = { 0x2B, RE15_R39J_MSG_FOLGEN, 0, 0 };
-        const uint8_t g15[4] = { 0x3F, 0x00, 0x0F, 0x00 }, g23[4] = { 0x3F, 0x00, 0x17, 0x00 }, wink[4] = { 0x3F, 0x00, 0x11, 0x00 };
+        const uint8_t g15[4] = { 0x3F, 0x00, 0x0F, 0x00 }, g23[4] = { 0x3F, 0x00, 0x17, 0x00 };
+        const uint8_t wink[4] = { 0x3F, 0x00, RE15_R39J_WINK_CLIP, 0x00 };   /* ROOM1171 sub02 @0x014CE (Nachtrag 7) */
         const uint8_t ziel[4] = { 0x3F, 0x02, 0x06, 0x00 };
         const int iw = finde(b, nb, w, 4, 0), i8 = finde(b, nb, c8, 2, iw > 0 ? iw : 0);
         const int i51 = finde(b, nb, m51, 4, i8 > 0 ? i8 : 0), i15 = finde(b, nb, g15, 4, i51 > 0 ? i51 : 0);
         const int i23 = finde(b, nb, g23, 4, i15 > 0 ? i15 : 0), i52 = finde(b, nb, m52, 4, i23 > 0 ? i23 : 0);
         const int iwk = finde(b, nb, wink, 4, i52 > 0 ? i52 : 0);
         PRUEF(iw > 0 && i8 > iw && i51 > i8 && i15 > i51 && i23 > i15 && i52 > i23 && iwk > i52,
-              "ENTRIEGELN39 Punkt 8: Gorillas tot -> Cut 8 -> msg 51 + Gesten 15/23 -> msg 52 + Folge-Geste Clip 17 (M2)");
+              "ENTRIEGELN39 Punkt 8: Gorillas tot -> Cut 8 -> msg 51 + Gesten 15/23 -> msg 52 + Heranwinken (0,2) (M2, Nachtrag 7)");
+        PRUEF(iwk == re15_dining_r39_off_wink(), "ENTRIEGELN39: Anker WINK (Leihe ROOM1171) liegt auf dem Plc_motion(0,2) @+%04X", iwk);
         const uint8_t run[4] = { 0x40, 0x00, 0x05, 0x01 };
         const int ir = finde(b, nb, run, 4, i52 > 0 ? i52 : 0);
         PRUEF(ir > iwk, "ENTRIEGELN39 Punkt 8: Johns Abgang (RUN) erst NACH msg 52 und der Geste");
@@ -468,8 +470,24 @@ static int ausgerichtet(const re15_actor_t *a, const re15_actor_t *ziel, int keg
     return re15_ai_arc_test(a, ziel->x, ziel->z, kegel) == 0;
 }
 
+/* Plattform-Haken fuer die Heranwinken-Leihe (wie platform/pc/src/dining_r39_pc.c): RBJ-Block von ROOM1171. */
+static uint8_t   *s_rbj1171 = NULL;
+static re15_rdt_t s_rdt1171;
+static const uint8_t *test_rbj_1171(int *size)
+{
+    if (!s_rbj1171) {
+        char rp[600]; size_t n = 0;
+        snprintf(rp, sizeof rp, "%s/STAGE1/ROOM1171.RDT", RE15_ASSET_PSX_DIR);
+        s_rbj1171 = slurp(rp, &n);
+        if (!s_rbj1171 || re15_rdt_parse(s_rbj1171, n, &s_rdt1171) != 0 || !s_rdt1171.animation) return NULL;
+    }
+    if (size) *size = s_rdt1171.animation_size;
+    return s_rdt1171.animation;
+}
+
 static void teil_phase_h(void)
 {
+    re15_dining_r39_rbj_hook = test_rbj_1171;
     printf("== phase_h ==\n");
     re15_game_state_init();
     re15_inv_load_briefing();
@@ -761,7 +779,12 @@ static void teil_phase_h(void)
         if (!g_scd.message_active) last = -1;
         if (b51 >= 0 && b52 < 0 && john->sub_state_1 == 0 && john->motion == 15) geste15 = 1;
         if (b51 >= 0 && b52 < 0 && john->sub_state_1 == 0 && john->motion == 23) geste23 = 1;
-        if (b52 >= 0 && john->sub_state_1 == 0 && john->motion == 17) wink = 1;   /* Nachbesserung 1 M2: Clip 17 */
+        if (b52 >= 0 && john->sub_state_1 == 0 && john->motion == RE15_R39J_WINK_CLIP && re15_dining_r39_leihe_aktiv()) {
+            extern const re15_emd_animation_t *re15_actor_rbj_anim(int slot);
+            const re15_emd_animation_t *ra = re15_actor_rbj_anim((int)(john - g_actors));
+            if (ra && ra->clip_count > RE15_R39J_WINK_CLIP && ra->clips[RE15_R39J_WINK_CLIP].frame_count == RE15_R39J_WINK_BILDER)
+                wink = 1;   /* Nachbesserung 1 M2 / Nachtrag 7: Clip 2 aus ROOM1171 RBJ Record 1 */
+        }
         if (b51 >= 0 && b_run < 0 && john->sub_state_1 == 2 && john->motion == 6) zielt_auf_elza++;
         if (b52 >= 0 && b_run < 0 && john->state == 4 && john->sub_state_1 == 5) b_run = s_bild;
         if (b_run >= 0 && john->x > -29000) {   /* Runde 38 Nachbesserung 1 M3 weiter gueltig: kein Schub, Abstand im Bild */
@@ -781,7 +804,8 @@ static void teil_phase_h(void)
     PRUEF(m51 == 0 && m52 == 1 && b52 > b51, "Punkt 8: msg 51 (Bild %ld) vor msg 52 (Bild %ld)", b51, b52);
     PRUEF(blick51 == 1, "Punkt 8: John blickt bei msg 51 zu Elza");
     PRUEF(geste15 && geste23, "Punkt 8: zu msg 51 Johns Gesten Clip 15 und 23 (Form sub02 @0x00CB8/@0x00CCC)");
-    PRUEF(wink, "Punkt 8 / M2: zu msg 52 die Folge-Geste Clip 17 (John 1141 @0x00DBA, ROOM3070 @0x03724)");
+    PRUEF(wink, "Punkt 8 / M2 / Nachtrag 7: zu msg 52 Johns Heranwinken = ROOM1171 RBJ Record 1 Clip 2 (%d Bilder), geliehen",
+          RE15_R39J_WINK_BILDER);
     PRUEF(zielt_auf_elza == 0, "M2/N4.4: John richtet im Gespraech nie die Waffe auf Elza (Sub 2 Clip 6: %d Bilder)", zielt_auf_elza);
     PRUEF(b_run > b52, "Punkt 8: John laeuft erst nach msg 52 los (Bild %ld)", b_run);
     PRUEF(elza_verschoben == 0, "Abgang: Elza wird nicht verschoben (Runde 38 M3, %d Bilder)", elza_verschoben);

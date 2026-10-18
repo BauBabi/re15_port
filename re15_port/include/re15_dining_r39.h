@@ -42,7 +42,17 @@
                                          * wartet darauf (M1). Bank 5 = Skript-Merker (ROOM1141 sub03/sub04 @0x00FA4/
                                          * @0x00FB6 nutzen nur Bit 0/1)                                                  */
 #define RE15_R39J_MERKER_BIT     0x10
-#define RE15_R39J_MSG52_REST     30     /* Sleep nach Johns Folge-Geste: msg 52 stand 99 Bilder (Abnahme H3), Geste 50+20 */
+#define RE15_R39J_MSG52_REST     40     /* nach Sleep 60 (ROOM1171 @0x014D2): 60 + 40 = 100 >= msg 52 (99 Bilder, Abnahme H3)
+                                         * und >= Clip 96 Bilder - John laeuft erst danach los                            */
+/* M2/N4.4 + Nutzer-Nachtrag 7 ("die soll so aussehen wie in room 1171"): Johns Heranwinken = ROOM1171 sub02 @0x014CE
+ * `3f 00 02 00` Plc_motion(0,2), Clip 2 des RBJ-Records 1 (Marker 0x2 = Gegner 0 = John) von ROOM1171 (RBJ = RDT+0x5C
+ * @0x188C, Lader FUN_8001b3f8 `lw a2,92(v0)` @0x8001b404; Record 1 EDD @+0x3E34, 3 Clips 20/30/96). ROOM1141 hat diesen
+ * Clip nicht - er wird fuer die Geste geliehen (Muster Runde 35 Spur K / Runde 39 Spur I: RBJ-Leihe aus einer anderen
+ * RDT, platform/pc/src/cut10f0_pc.c).                                                                                  */
+#define RE15_R39J_WINK_RAUM      0x1171u
+#define RE15_R39J_WINK_REC       1      /* Record-Marker 0x2 = Bit (1 + Gegner 0) = John (Binder @0x8001b480-90)         */
+#define RE15_R39J_WINK_CLIP      2
+#define RE15_R39J_WINK_BILDER    96     /* Bildzahl des Clips (EDD Record 1 @+0x3E34; Riegel prueft)                     */
 #define RE15_R39J_EREIGNIS_RIEGEL 5     /* main00 @0x00A9A `2c 02 03 31 .. 18 05` -> sub05 = Dachtuer entriegeln (N4.2) */
 #define RE15_R39J_W_SUB          2      /* Plc_motion pc[1] = 2 auf dem Spieler = Sub 0x80073e30[2] = 0x80050f00 auf dem
                                          * Kanal +0x170/+0x174 = W-Bank (@0x80036be4/@0x80036c04); Form ROOM3060 sub03
@@ -124,6 +134,14 @@ int  re15_dining_r39_affe_jagt_john(int slot);   /* 1 = Gorilla im Hirn-Kopf auf
 extern int      g_re15_r39j_anker_n;
 extern unsigned g_re15_r39j_schuss_zaehler, g_re15_r39j_treffer_zaehler;
 int  re15_dining_r39_aufmerksam(int slot);   /* Restbilder (Riegel) */
+/* Heranwinken-Leihe: Plattform liefert den RBJ-Block von ROOM1171 (dining_r39_pc.c), die Engine parst Record 1 gegen
+ * Johns Skelett und gibt ihn nur waehrend der Geste (John Zustand 4, Sub 0, Clip 2) als RBJ-Kanal heraus (Haken in
+ * enemy_common.c re15_actor_rbj_anim/_skel). */
+extern const uint8_t *(*re15_dining_r39_rbj_hook)(int *size);
+const void *re15_dining_r39_rbj_anim(int slot);   /* const re15_emd_animation_t * oder NULL */
+const void *re15_dining_r39_rbj_skel(int slot);   /* const re15_emd_skeleton_t *  oder NULL */
+int  re15_dining_r39_leihe_aktiv(void);
+int  re15_dining_r39_off_wink(void);   /* Anker WINK in ENTRIEGELN39 (Riegel) */
 /* Se_on-Zweig (dining_r38.c re15_dining_r38_se_on): 1 = Port-Bank 0x3E erledigt. */
 int re15_dining_r39_se_on(unsigned bank, int satz);
 /* audio_pc.c re15_voice_load_clip: ROOM1141 Id 53..57 -> Stamm "help01".."help05"; sonst unveraendert. */

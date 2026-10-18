@@ -182,7 +182,7 @@ static const uint8_t k_r39j_p_haemmern[654] = {
     0x08,0x00,0x09,0x0a,0x5a,0x00,0x09,0x0a,0x5a,0x00,0x10,0x00,0x01,0x00,
 };
 
-/* k_r39j_p_entriegeln: 1380 Byte
+/* k_r39j_p_entriegeln: 1372 Byte
  *   +0000 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05: Riegel-Slot 2 aus, Set(4,0xC3)=1, msg 12 "You've opened the lock.", Evt_next)
  *   +000A 22 04 c3 01                          ROOM1141 @0x00FD2 Set
  *   +000E 2b 0c ff ff                          ROOM1141 @0x00FD6 Message_on
@@ -452,53 +452,51 @@ static const uint8_t k_r39j_p_haemmern[654] = {
  *   +0478 09 0a 32 00                          Sleep 50 = sub02 @0x00CC8
  *   +047C 3f 00 17 00                          Plc_motion(0,23) = sub02 @0x00CCC
  *   +0480 09 0a 14 00                          Sleep 20 = sub02 @0x00CD0
- *   +0484 2b 34 00 00                          Message_on 52 "John: Elza, follow me, ..." (Form sub02 @0x00D9E `2b 05 00 00`)
- *   +0488 2e 02 00 00                          Work_set(2,0)+Nop John = sub02 @0x00DA2
- *   +048C 3f 00 11 00                          Plc_motion(0,17) Folge-Geste Armschwung = sub02 @0x00DBA (John) / ROOM3070 sub03 @0x03724 "Hurry up! They're coming!" (Nachbesserung 1 M2: statt (2,6) = Zielen)
- *   +0490 09 0a 32 00                          Sleep 50 = sub02 @0x00DBE `09 0a 32 00`
- *   +0494 3f 00 17 00                          Plc_motion(0,23) = sub02 @0x00DC2 (Hand zurueck)
- *   +0498 09 0a 14 00                          Sleep 20 = sub02 @0x00DC6 `09 0a 14 00`
- *   +049C 09 0a 1e 00                          Sleep 30 = Rest der Standzeit von msg 52 (Abnahme H3: Text offen F4505..F4603 = 99 Bilder; 50 + 20 + 30 = 100 >= 99): John laeuft erst los, wenn die Zeile weg ist
- *   +04A0 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (John) = sub02 @0x00F80
- *   +04AA 2e 01 00 00                          Work_set(1,0)+Nop Elza
- *   +04AE 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (Elza) = sub02 @0x00F30
- *   +04B8 46 00 02 31 ec fa 00 00 82 c9        Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14; Runde 38 Nachbesserung 1 M3)
- *   +04C2 2e 01 00 00                          Work_set(1,0)+Nop Spieler = Arbeitsfigur der Lage-Abfrage (Form ROOM1141 sub02 @0x00C2E)
- *   +04C6 0f 1e 22 00                          While Kette 30 B, Block 34 B (Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`; Kettenlaenge pc+1 @0x8003f790, Blocklaenge @0x8003f74c)
- *   +04CA 3e 00 00 02 fe de                      Member_cmp Elza x >= -8450
+ *   +0484 2b 34 00 00                          Message_on 52 "John: Elza, follow me, ..." (Form ROOM1171 sub02 @0x014BA `2b 00 00 00`)
+ *   +0488 2e 02 00 00                          Work_set(2,0)+Nop John = ROOM1171 sub02 @0x014BE
+ *   +048C 3f 00 02 00                          Plc_motion(0,2) Heranwinken = ROOM1171 sub02 @0x014CE `3f 00 02 00` (RBJ ROOM1171 Record 1 Clip 2, 96 Bilder; Anker WINK: Leihe an)
+ *   +0490 09 0a 3c 00                          Sleep 60 = ROOM1171 sub02 @0x014D2 `09 0a 3c 00`
+ *   +0494 09 0a 28 00                          Sleep 40 = Rest: msg 52 stand 99 Bilder (Abnahme H3), der Clip 96 - John laeuft erst los, wenn Zeile und Geste zu Ende sind (60 + 40 = 100)
+ *   +0498 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (John) = sub02 @0x00F80
+ *   +04A2 2e 01 00 00                          Work_set(1,0)+Nop Elza
+ *   +04A6 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (Elza) = sub02 @0x00F30
+ *   +04B0 46 00 02 31 ec fa 00 00 82 c9        Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14; Runde 38 Nachbesserung 1 M3)
+ *   +04BA 2e 01 00 00                          Work_set(1,0)+Nop Spieler = Arbeitsfigur der Lage-Abfrage (Form ROOM1141 sub02 @0x00C2E)
+ *   +04BE 0f 1e 22 00                          While Kette 30 B, Block 34 B (Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`; Kettenlaenge pc+1 @0x8003f790, Blocklaenge @0x8003f74c)
+ *   +04C2 3e 00 00 02 fe de                      Member_cmp Elza x >= -8450
+ *   +04C8 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
+ *   +04CA 3e 00 00 04 ce e6                      Member_cmp Elza x <= -6450
  *   +04D0 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
- *   +04D2 3e 00 00 04 ce e6                      Member_cmp Elza x <= -6450
+ *   +04D2 3e 00 02 02 80 a8                      Member_cmp Elza z >= -22400
  *   +04D8 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
- *   +04DA 3e 00 02 02 80 a8                      Member_cmp Elza z >= -22400
- *   +04E0 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
- *   +04E2 3e 00 02 04 55 dd                      Member_cmp Elza z <= -8875
- *   +04E8 02 00                                  Evt_next + Nop (Form sub03 @0x00FB0)
- *   +04EA 10 00                                Ewhile (Form sub03 @0x00FB2)
- *   +04EC 22 02 07 01                          Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)
- *   +04F0 22 01 1b 01                          Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)
- *   +04F4 29 07                                Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft aus der Ecke auf die Kamera zu und verlaesst das Bild am unteren Rand (Runde 38)
- *   +04F6 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
- *   +04FA 34 06 03 00                          Member_set(6, 0x0003) John: kein Koerper-Schub (FUN_8002aec4 @0x8002af04; Runde 38 M3)
- *   +04FE 40 00 05 01 4a e3 50 e2              Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)
- *   +0506 18 04                                Gosub sub04 (Form sub02 @0x00F96)
- *   +0508 40 00 05 01 4a e3 44 fd              Plc_dest RUN John -> vor die Dachtuer
- *   +0510 18 04                                Gosub sub04
- *   +0512 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) DOOR1A oeffnen (Runde 38)
- *   +051E 09 0a 0f 00                          Sleep 15 (Form ROOM1131 sub02 @0x00A54)
- *   +0522 32 00 d0 8a 00 00 d0 8a              Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080)
- *   +052A 36 0e 01 00 00 00 00 00 00 00 00 00  Se_on(0x0E,1) DOOR1A zufallen
- *   +0536 22 09 43 01                          Set(9,67)=1 John hat 1141 verlassen (Runde 38)
- *   +053A 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 - die Dachtuer ist offen, John kam durch sie herein)
- *   +0544 22 04 c3 01                          ROOM1141 @0x00FD2 Set
- *   +0548 46 01 02 31 4f aa 00 00 8f 9b        ROOM1141 @0x00FDC Aot_reset (sub05: Dachtuer Slot 1 scharf)
- *   +0552 09 0a 0f 00                          Sleep 15
- *   +0556 2a 00                                Cut_old + Nop: zurueck auf die Kamera vor Cut 7 (Form ROOM1150 @0x010F2 `2a 00 3c 01`)
- *   +0558 3c 01                                Cut_auto 1 (Form ROOM1150 @0x010F4)
- *   +055A 22 02 07 00                          Set(2,7)=0 (Form sub06 @0x010C8)
- *   +055E 22 01 1b 00                          Set(1,0x1B)=0 (Form sub06 @0x010CC)
- *   +0562 01 00                                Evt_end = sub05 @0x00FE6
+ *   +04DA 3e 00 02 04 55 dd                      Member_cmp Elza z <= -8875
+ *   +04E0 02 00                                  Evt_next + Nop (Form sub03 @0x00FB0)
+ *   +04E2 10 00                                Ewhile (Form sub03 @0x00FB2)
+ *   +04E4 22 02 07 01                          Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)
+ *   +04E8 22 01 1b 01                          Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)
+ *   +04EC 29 07                                Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft aus der Ecke auf die Kamera zu und verlaesst das Bild am unteren Rand (Runde 38)
+ *   +04EE 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
+ *   +04F2 34 06 03 00                          Member_set(6, 0x0003) John: kein Koerper-Schub (FUN_8002aec4 @0x8002af04; Runde 38 M3)
+ *   +04F6 40 00 05 01 4a e3 50 e2              Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)
+ *   +04FE 18 04                                Gosub sub04 (Form sub02 @0x00F96)
+ *   +0500 40 00 05 01 4a e3 44 fd              Plc_dest RUN John -> vor die Dachtuer
+ *   +0508 18 04                                Gosub sub04
+ *   +050A 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) DOOR1A oeffnen (Runde 38)
+ *   +0516 09 0a 0f 00                          Sleep 15 (Form ROOM1131 sub02 @0x00A54)
+ *   +051A 32 00 d0 8a 00 00 d0 8a              Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080)
+ *   +0522 36 0e 01 00 00 00 00 00 00 00 00 00  Se_on(0x0E,1) DOOR1A zufallen
+ *   +052E 22 09 43 01                          Set(9,67)=1 John hat 1141 verlassen (Runde 38)
+ *   +0532 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 - die Dachtuer ist offen, John kam durch sie herein)
+ *   +053C 22 04 c3 01                          ROOM1141 @0x00FD2 Set
+ *   +0540 46 01 02 31 4f aa 00 00 8f 9b        ROOM1141 @0x00FDC Aot_reset (sub05: Dachtuer Slot 1 scharf)
+ *   +054A 09 0a 0f 00                          Sleep 15
+ *   +054E 2a 00                                Cut_old + Nop: zurueck auf die Kamera vor Cut 7 (Form ROOM1150 @0x010F2 `2a 00 3c 01`)
+ *   +0550 3c 01                                Cut_auto 1 (Form ROOM1150 @0x010F4)
+ *   +0552 22 02 07 00                          Set(2,7)=0 (Form sub06 @0x010C8)
+ *   +0556 22 01 1b 00                          Set(1,0x1B)=0 (Form sub06 @0x010CC)
+ *   +055A 01 00                                Evt_end = sub05 @0x00FE6
  */
-static const uint8_t k_r39j_p_entriegeln[1380] = {
+static const uint8_t k_r39j_p_entriegeln[1372] = {
     0x46,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x04,0xc3,0x01,0x2b,0x0c,
     0xff,0xff,0x02,0x00,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x2e,0x01,0x00,0x00,
     0x40,0x00,0x05,0x00,0x88,0xe1,0x00,0xce,0x0f,0x06,0x0a,0x00,0x3e,0x00,0x02,0x02,
@@ -571,21 +569,20 @@ static const uint8_t k_r39j_p_entriegeln[1380] = {
     0x64,0x00,0x09,0x0a,0x05,0x00,0x40,0x00,0x09,0x01,0x58,0xe9,0x04,0xac,0x18,0x04,
     0x2b,0x33,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x0f,0x00,0x09,0x0a,0x32,0x00,
     0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x17,0x00,
-    0x09,0x0a,0x14,0x00,0x2b,0x34,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x11,0x00,
-    0x09,0x0a,0x32,0x00,0x3f,0x00,0x17,0x00,0x09,0x0a,0x14,0x00,0x09,0x0a,0x1e,0x00,
-    0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x64,0x00,0x2e,0x01,0x00,0x00,0x41,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x64,0x00,0x46,0x00,0x02,0x31,0xec,0xfa,0x00,0x00,
-    0x82,0xc9,0x2e,0x01,0x00,0x00,0x0f,0x1e,0x22,0x00,0x3e,0x00,0x00,0x02,0xfe,0xde,
-    0x00,0x00,0x3e,0x00,0x00,0x04,0xce,0xe6,0x00,0x00,0x3e,0x00,0x02,0x02,0x80,0xa8,
-    0x00,0x00,0x3e,0x00,0x02,0x04,0x55,0xdd,0x02,0x00,0x10,0x00,0x22,0x02,0x07,0x01,
-    0x22,0x01,0x1b,0x01,0x29,0x07,0x2e,0x02,0x00,0x00,0x34,0x06,0x03,0x00,0x40,0x00,
-    0x05,0x01,0x4a,0xe3,0x50,0xe2,0x18,0x04,0x40,0x00,0x05,0x01,0x4a,0xe3,0x44,0xfd,
-    0x18,0x04,0x36,0x0e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,
-    0x0f,0x00,0x32,0x00,0xd0,0x8a,0x00,0x00,0xd0,0x8a,0x36,0x0e,0x01,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x09,0x43,0x01,0x46,0x02,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x22,0x04,0xc3,0x01,0x46,0x01,0x02,0x31,0x4f,0xaa,0x00,0x00,
-    0x8f,0x9b,0x09,0x0a,0x0f,0x00,0x2a,0x00,0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,
-    0x1b,0x00,0x01,0x00,
+    0x09,0x0a,0x14,0x00,0x2b,0x34,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x02,0x00,
+    0x09,0x0a,0x3c,0x00,0x09,0x0a,0x28,0x00,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x64,0x00,0x2e,0x01,0x00,0x00,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x64,0x00,
+    0x46,0x00,0x02,0x31,0xec,0xfa,0x00,0x00,0x82,0xc9,0x2e,0x01,0x00,0x00,0x0f,0x1e,
+    0x22,0x00,0x3e,0x00,0x00,0x02,0xfe,0xde,0x00,0x00,0x3e,0x00,0x00,0x04,0xce,0xe6,
+    0x00,0x00,0x3e,0x00,0x02,0x02,0x80,0xa8,0x00,0x00,0x3e,0x00,0x02,0x04,0x55,0xdd,
+    0x02,0x00,0x10,0x00,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x29,0x07,0x2e,0x02,
+    0x00,0x00,0x34,0x06,0x03,0x00,0x40,0x00,0x05,0x01,0x4a,0xe3,0x50,0xe2,0x18,0x04,
+    0x40,0x00,0x05,0x01,0x4a,0xe3,0x44,0xfd,0x18,0x04,0x36,0x0e,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0f,0x00,0x32,0x00,0xd0,0x8a,0x00,0x00,
+    0xd0,0x8a,0x36,0x0e,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x09,
+    0x43,0x01,0x46,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x04,0xc3,0x01,
+    0x46,0x01,0x02,0x31,0x4f,0xaa,0x00,0x00,0x8f,0x9b,0x09,0x0a,0x0f,0x00,0x2a,0x00,
+    0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x01,0x00,
 };
 
 /* k_r39j_p_rolltor: 224 Byte
@@ -720,6 +717,7 @@ static const uint8_t k_r39j_p_schuetze[116] = {
 #define RE15_R39J_SCHUETZE_OFF_FEUER1 0x003E   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
 #define RE15_R39J_SCHUETZE_OFF_FEUER2 0x0050   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
 #define RE15_R39J_SCHUETZE_OFF_ZIEL 0x0024   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
+#define RE15_R39J_ENTRIEGELN_OFF_WINK 0x048C   /* Anker in ENTRIEGELN39 (dining_r39.c) */
 
 /* ROOM1141 msg 50: NUTZER-VORGABE Punkt 5 (Nachtrag 2026-10-18: John, nicht Roy; Nachtrag 6: "trouble" klein); Form msg 2 @0x0115F (Elza = Farbe 1 `05 01`), Zeilenumbruch `08` wie msg 2  [Zeilenbreiten 167, 235 px] */
 static const uint8_t k_r39j_msg50[75] = {

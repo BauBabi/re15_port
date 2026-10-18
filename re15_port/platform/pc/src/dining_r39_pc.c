@@ -20,6 +20,8 @@
 #include "re15_dining_r38.h"
 #include "re15_dining_r39.h"
 #include "re15_engine.h"
+#include "re15_rdt.h"                 /* re15_rdt_parse: RBJ-Block (RDT+0x5C) von ROOM1171 */
+#include "asset_root_pc.h"            /* re15_pc_read_any */
 
 extern long re15_audio_cap_tick(void);   /* audio_pc.c (Runde 38 Spur F): Mitschnitt-Takt */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
@@ -97,7 +99,32 @@ static void spielen(int satz)
 
 unsigned re15_pc_dining_r39_gespielt(int k) { return (k >= 0 && k < 3) ? s_gespielt[k] : 0u; }
 
+/* M2/N4.4 + Nutzer-Nachtrag 7: Johns Heranwinken liegt im RBJ-Block von ROOM1171 (RDT+0x5C, Lader FUN_8001b3f8 @0x8001b404).
+ * Datei einmal lesen und halten (Muster platform/pc/src/cut10f0_pc.c re15_cut10f0_pc_rbj_leihen). */
+static uint8_t   *s_rbj_buf = NULL;
+static re15_rdt_t s_rbj_rdt;
+static const uint8_t *rbj_1171(int *size)
+{
+    if (!s_rbj_buf) {
+        char rel[48];
+        int n = 0;
+        snprintf(rel, sizeof rel, "STAGE%u/ROOM%04X.RDT", (RE15_R39J_WINK_RAUM >> 12) & 0xFu, RE15_R39J_WINK_RAUM);
+        uint8_t *b = re15_pc_read_any(rel, &n);
+        if (!b) return NULL;
+        if (re15_rdt_parse(b, (size_t)n, &s_rbj_rdt) != 0 || !s_rbj_rdt.animation || s_rbj_rdt.animation_size <= 0) {
+            free(b);
+            return NULL;
+        }
+        s_rbj_buf = b;
+        fprintf(stderr, "[rbj] ROOM1141: Animationsblock von ROOM%04X fuer Johns Heranwinken gelesen (%d B, Runde 39 Spur J)\n",
+                RE15_R39J_WINK_RAUM, s_rbj_rdt.animation_size);
+    }
+    if (size) *size = s_rbj_rdt.animation_size;
+    return s_rbj_rdt.animation;
+}
+
 void re15_pc_dining_r39_init(void)
 {
     re15_dining_r39_se_hook = spielen;
+    re15_dining_r39_rbj_hook = rbj_1171;
 }

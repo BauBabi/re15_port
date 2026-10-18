@@ -63,7 +63,8 @@ DOOR0F_DATEI = 48076            # Dateigroesse laut derselben Tabelle
 MERKER_BANK, MERKER_BIT = 5, 0x10  # RE15_R39J_MERKER_BANK/_BIT: Gemaelde-Programm laeuft (Nachbesserung 1 M1); Bank 5 =
                                 #   Skript-Merker (ROOM1141 sub03/sub04 @0x00FA4/@0x00FB6 nutzen Bit 0/1, sonst keins)
 ELZA_CUT7_Z = -9775             # RE15_R39J_ELZA_CUT7_Z = RE15_R38F_CUT7_AUS_Z: suedlich davon ist Elza im Bild von Cut 7
-MSG52_REST = 30                # RE15_R39J_MSG52_REST: Sleep nach Johns Folge-Geste (Abnahme H3: msg 52 stand 99 Bilder)
+MSG52_REST = 40                 # RE15_R39J_MSG52_REST: nach Sleep 60 (ROOM1171 @0x014D2) bis 100 >= 99 Bilder msg 52 / 96 Clip
+WINK_CLIP = 2                   # RE15_R39J_WINK_CLIP: ROOM1171 sub02 @0x014CE `3f 00 02 00` (RBJ Record 1 Clip 2)
 SCHUETZE_BANK, SCHUETZE_BIT = 5, 0x11  # RE15_R39J_SCHUETZE_BANK/_BIT: Johns Salve laeuft (Nachbesserung 1 N4.3)
 SUB_SCHUETZE = 30               # RE15_R39J_SUB_SCHUETZE: Evt_exec-Nummer des Fadens SCHUETZE39 (< RE15_RDT_MAX_SUB_SCD 32;
                                 #   ROOM1141 hat sub00..sub06; Port-Nummer wie ROOM1131 Ereignis 29, Runde 38)
@@ -304,16 +305,18 @@ def nach_dem_kampf():
     sleep(50, "Sleep 50 = sub02 @0x00CC8")
     op([0x3F, 0x00, 0x17, 0x00], "Plc_motion(0,23) = sub02 @0x00CCC")
     sleep(20, "Sleep 20 = sub02 @0x00CD0")
-    # Zeile 2 + Folge-Geste (Nachbesserung 1 M2/N4.4)
-    op([0x2B, MSG_FOLGEN, 0x00, 0x00], "Message_on 52 \"John: Elza, follow me, ...\" (Form sub02 @0x00D9E `2b 05 00 00`)")
-    R.work_npc(0, "Work_set(2,0)+Nop John = sub02 @0x00DA2")
-    op([0x3F, 0x00, 0x11, 0x00], "Plc_motion(0,17) Folge-Geste Armschwung = sub02 @0x00DBA (John) / ROOM3070 sub03 @0x03724 "
-                                 "\"Hurry up! They're coming!\" (Nachbesserung 1 M2: statt (2,6) = Zielen)")
-    sleep(50, "Sleep 50 = sub02 @0x00DBE `09 0a 32 00`")
-    op([0x3F, 0x00, 0x17, 0x00], "Plc_motion(0,23) = sub02 @0x00DC2 (Hand zurueck)")
-    sleep(20, "Sleep 20 = sub02 @0x00DC6 `09 0a 14 00`")
-    sleep(MSG52_REST, "Sleep %d = Rest der Standzeit von msg 52 (Abnahme H3: Text offen F4505..F4603 = 99 Bilder; "
-                      "50 + 20 + %d = 100 >= 99): John laeuft erst los, wenn die Zeile weg ist" % (MSG52_REST, MSG52_REST))
+    # Zeile 2 + Heranwinken (Nachbesserung 1 M2/N4.4, Nutzer-Nachtrag 7: "die soll so aussehen wie in room 1171"): das
+    # Heranwinken des Originals zu "Elza, hurry up!" = ROOM1171 sub02 @0x014BA msg 0 / @0x014CE `3f 00 02 00` Plc_motion(0,2)
+    # / @0x014D2 Sleep 60, Clip 2 des RBJ-Records 1 (Marker 0x2 = John) von ROOM1171 (96 Bilder); in 1141 aus ROOM1171
+    # geliehen (dining_r39.c am Anker WINK, Plattform-Leser dining_r39_pc.c).
+    op([0x2B, MSG_FOLGEN, 0x00, 0x00], "Message_on 52 \"John: Elza, follow me, ...\" (Form ROOM1171 sub02 @0x014BA `2b 00 00 00`)")
+    R.work_npc(0, "Work_set(2,0)+Nop John = ROOM1171 sub02 @0x014BE")
+    anker_e("WINK")
+    op([0x3F, 0x00, WINK_CLIP, 0x00], "Plc_motion(0,2) Heranwinken = ROOM1171 sub02 @0x014CE `3f 00 02 00` (RBJ ROOM1171 Record 1 "
+                                      "Clip 2, 96 Bilder; Anker WINK: Leihe an)")
+    sleep(60, "Sleep 60 = ROOM1171 sub02 @0x014D2 `09 0a 3c 00`")
+    sleep(MSG52_REST, "Sleep %d = Rest: msg 52 stand 99 Bilder (Abnahme H3), der Clip 96 - John laeuft erst los, wenn Zeile und "
+                      "Geste zu Ende sind (60 + %d = 100)" % (MSG52_REST, MSG52_REST))
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "Plc_neck aus (John) = sub02 @0x00F80")
     R.work_player("Work_set(1,0)+Nop Elza")
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "Plc_neck aus (Elza) = sub02 @0x00F30")
@@ -323,6 +326,7 @@ def baue_entriegeln39():
     """Nachbesserung 1 N4.2: Ereignis 5 (Riegel der Dachtuer, main00 @0x00A9A) in Phase H. Zuerst die Original-Zeilen von
     sub05 (Riegel-Slot aus, (4,0xC3)=1, msg 12 "You've opened the lock."), dann die Szene: Tuer-Auftritt (oben), Szene der
     Runde 38 mit Punkt 6/7, Kampf, Punkt 8, Johns Abgang. Die Dachtuer (Slot 1) wird erst nach Johns Abgang scharf."""
+    ANKER_E.clear()
     del prog[:]
     R.kopie("1141", 0x00FC8, 0x00FDC, [0x46, 0x02, 0x00, 0x00],
             "(sub05: Riegel-Slot 2 aus, Set(4,0xC3)=1, msg 12 \"You've opened the lock.\", Evt_next)")
@@ -432,10 +436,15 @@ def ifel_f2(zeilen_fn, c):
 
 
 ANKER = {}
+ANKER_E = {}
 
 
 def anker(name):
     ANKER[name] = sum(len(b) for b, _ in prog)
+
+
+def anker_e(name):
+    ANKER_E[name] = sum(len(b) for b, _ in prog)
 
 
 def baue_schuetze39():
@@ -569,6 +578,8 @@ def main():
         f.write("\n")
     for k in sorted(ANKER):
         f.write("#define RE15_R39J_SCHUETZE_OFF_%s 0x%04X   /* Anker im Faden SCHUETZE39 (dining_r39.c) */\n" % (k, ANKER[k]))
+    for k in sorted(ANKER_E):
+        f.write("#define RE15_R39J_ENTRIEGELN_OFF_%s 0x%04X   /* Anker in ENTRIEGELN39 (dining_r39.c) */\n" % (k, ANKER_E[k]))
     f.write("\n")
     for name, b, beschr in TEXTE:
         f.write("/* %s */\n" % beschr.replace("*/", "* /"))

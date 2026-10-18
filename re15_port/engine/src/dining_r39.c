@@ -22,6 +22,8 @@
 #include "re15_audio.h"            /* re15_audio_prime_weapon */
 #include "re15_damage.h"           /* re15_player_equipped_weapon / _set_equipped_weapon (aca5d), re15_ai_arc_test */
 #include "re15_elza_r36.h"         /* re15_elza_se_hook / RE15_ELZA_TON_SCHUSS (Johns Schuss-Ton, Runde 36 L / 38 H) */
+#include "re15_emd.h"              /* re15_emd_parse_rbj_record (Heranwinken-Leihe ROOM1171) */
+#include "re15_enemy.h"            /* re15_enemy_find (Johns Skelett als Basis-Hierarchie) */
 
 #include "gen/dining_r39_programme.inc"
 
@@ -136,8 +138,51 @@ static int gorilla_im_angriff(const re15_actor_t *g)
     return g->sub_state_1 == 5 || g->sub_state_1 == 6 || g->sub_state_1 == 7 || g->sub_state_1 == 9 || g->sub_state_1 == 15;
 }
 
+/* ============================ Heranwinken aus ROOM1171 (M2/N4.4, Nutzer-Nachtrag 7) ============================ */
+const uint8_t *(*re15_dining_r39_rbj_hook)(int *size) = NULL;
+static int                  s_leihe_ok = 0, s_leihe_an = 0, s_leihe_slot = -1;
+static re15_emd_skeleton_t  s_leihe_skel;
+static re15_emd_animation_t s_leihe_anim;
+
+static void leihe_starten(void)
+{
+    const re15_actor_t *j = john_aktor();
+    if (!j) return;
+    if (!s_leihe_ok && re15_dining_r39_rbj_hook) {
+        int n = 0;
+        const uint8_t *rbj = re15_dining_r39_rbj_hook(&n);
+        re15_enemy_bank_t *eb = re15_enemy_find(RE15_R38F_JOHN_TYP);   /* Basis-Hierarchie = Johns eigene Bank (wie */
+        if (rbj && n > 0 && eb && eb->ok &&                             /* enemy_common.c rbj_resolve_slot)         */
+            re15_emd_parse_rbj_record(rbj, (size_t)n, RE15_R39J_WINK_REC, &eb->skel, &s_leihe_skel, &s_leihe_anim) == 0 &&
+            s_leihe_anim.clip_count > RE15_R39J_WINK_CLIP)
+            s_leihe_ok = 1;
+    }
+    if (!s_leihe_ok) return;
+    s_leihe_an = 1;
+    s_leihe_slot = (int)(j - g_actors);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[dining39] F%u John winkt heran: RBJ ROOM%04X Record %d Clip %d geliehen (%d Bilder, %d Clips)\n",
+            (unsigned)g_engine.frame_count, RE15_R39J_WINK_RAUM, RE15_R39J_WINK_REC, RE15_R39J_WINK_CLIP,
+            s_leihe_anim.clips[RE15_R39J_WINK_CLIP].frame_count, s_leihe_anim.clip_count);
+#endif
+}
+
+static int leihe_gilt(int slot)
+{
+    if (!s_leihe_an || slot != s_leihe_slot || slot <= 0 || slot >= RE15_ACTOR_MAX) return 0;
+    const re15_actor_t *a = &g_actors[slot];
+    return (g_current_room_id & 0xFFFFu) == RE15_R38F_RAUM_1141 && a->active && a->state == 4 && a->sub_state_1 == 0 &&
+           !a->walk_active && (int)a->motion == RE15_R39J_WINK_CLIP;
+}
+
+const void *re15_dining_r39_rbj_anim(int slot) { return leihe_gilt(slot) ? (const void *)&s_leihe_anim : NULL; }
+const void *re15_dining_r39_rbj_skel(int slot) { return leihe_gilt(slot) ? (const void *)&s_leihe_skel : NULL; }
+int re15_dining_r39_leihe_aktiv(void) { return leihe_gilt(s_leihe_slot); }
+int re15_dining_r39_off_wink(void) { return RE15_R39J_ENTRIEGELN_OFF_WINK; }   /* Riegel */
+
 void re15_dining_r39_pc(const uint8_t *pc)
 {
+    if (pc == k_r39j_p_entriegeln + RE15_R39J_ENTRIEGELN_OFF_WINK) { leihe_starten(); return; }
     if (!pc || pc < s_schuetze || pc >= s_schuetze + sizeof s_schuetze) return;
     const int off = (int)(pc - s_schuetze);
     if (off == RE15_R39J_SCHUETZE_OFF_ZIEL) {
@@ -262,6 +307,10 @@ static void w_halten(void)
 void re15_dining_r39_tick(void)
 {
     w_halten();
+    if (s_leihe_an && !leihe_gilt(s_leihe_slot) && s_leihe_slot >= 0 &&
+        ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 || (int)g_actors[s_leihe_slot].motion != RE15_R39J_WINK_CLIP ||
+         g_actors[s_leihe_slot].sub_state_1 != 0))
+        s_leihe_an = 0;   /* der naechste Befehl (Abgang RUN) hat Clip/Sub ersetzt: die Leihe ist vorbei */
     if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_schuss_offen = 0; return; }
     if (s_schuss_offen) { s_schuss_offen = 0; schuss(); }
     const re15_actor_t *j = john_aktor();
@@ -323,6 +372,8 @@ int re15_dining_r39_waffe_waehlen(void)
 void re15_dining_r39_install(uint16_t room_id, int phase_h)
 {
     s_w_clip = -1;
+    s_leihe_an = 0; s_leihe_slot = -1;   /* s_leihe_ok bleibt: der Record haengt an Johns Bank - neu parsen je Raum */
+    s_leihe_ok = 0;
     s_schuss_offen = 0;
     s_ziel_slot = -1;
     memset(s_aufmerksam, 0, sizeof s_aufmerksam);
