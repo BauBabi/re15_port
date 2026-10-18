@@ -31,7 +31,7 @@
  *
  * traeger (Nachbesserung 1, Abnahme-Mangel M3): das Rechteck DERSELBEN Seite, dessen gemalte Wandlinie die
  * geloeschte ersetzt (Nachbar-Spalte/-Zeile, Kachel-Index 4 in DATA/MAP0<p+1>.PIX - Werkzeug
- * G_karten_werkzeug/nachbar.py, Dossier G_karten.md "Nachbesserung 1"). Die Korrektur gilt NUR, wenn dieser
+ * G_karten_werkzeug/nb1/nachbar.py, Dossier G_karten.md "Nachbesserung 1"; Riegel unit_r39_karten_teil). Die Korrektur gilt NUR, wenn dieser
  * Traeger im selben Kartenschirm gezeichnet wird - sonst bliebe der Raum offen: gemessen an der echten exe, je
  * Ort allein besucht, verlor z.B. ROOM1070 seine ganze Westwand x196 (34 px), ROOM1010 beide Seitenwaende
  * (G_abnahme_0.md Abschnitt 6). Die Vorlagen zeigen den Zustand "alle Raeume gezeichnet"; ist der Nachbar nicht

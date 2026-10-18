@@ -335,7 +335,7 @@ VORHER-Messungen der Abnahme werden NICHT wiederholt.
 - [x] M5 (mittel): Marker neben der Zeichnung - 1030/1110/1170 Z1 Zeilen aus den Waenden, 1060/10A0 ueber M4; 1210 Nutzerfrage
 - [x] M1 (gering): 3F-Treppe (168,107) auf Linie y110 -> (168,106)
 - [x] M2 (gering): B1 10A0-Treppe auf der Unterkante y168 -> (145,164)
-- [ ] Bau, gezielte Tests, Abschluss
+- [x] Bau, gezielte Tests, Abschluss (96/96 gruen, danach 6/6 nach dem letzten Bau)
 
 ### M3 Doppelwand-Korrektur oeffnet Raeume in Teilzustaenden (Regression)
 * BISECT: die Regression liegt in diesem Zweig - `git log -- re15_port/engine/src/karte_r39.c`: ba258ae4 (14:50, "Blaetter
@@ -531,3 +531,17 @@ Kachel (Kachel-Index 4), Zeile fuer FUN_800473f8 per kleinsten Quadraten (zeile_
   Vorlage mapB2_correct.png zeichnet. Soll sie auf B2 als kleiner Raum dazukommen (dann steht der Marker dort im Raum),
   oder bleibt B2 genau wie deine Vorlage?
 * Keine neuen Assets, keine Sprachdateien.
+
+### Nachbesserung 1 - Bau und gezielte Tests (KEINE volle Suite)
+Bau `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`. Gezielter Lauf (die 93 Karten-/Hinweis-/
+Inventar-Gruppen der Abnahme + die drei neuen Riegel), 2026-10-18 20:44..20:54, `-j 4`, Last durch Parallel-Laeufe
+anderer Spuren:
+```
+ctest --test-dir re15_port/build -R "^(unit_map_|unit_karte_|unit_r30_karte|unit_r30_hinweis|unit_r33_karte|unit_r35_karte|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_karte|unit_r36_kartenbits|unit_r36_kartenitems|integration_r36_karte|integration_r36_kartenitems_bild|unit_r38_tagebuch|integration_r38_tagebuch|unit_r39_karten|integration_r39_karten|integration_r39_elza_karte|unit_r39_inventar|integration_r39_inventar|integration_map_uebergang|integration_map_raum_live|integration_r35_karte|unit_inv_|unit_r26_inventar|unit_r35_inventar1050|integration_r35_inventar1050|unit_r36_inventar|integration_r36_inventar|unit_r38_kleinkram_inventar|integration_r38_kleinkram_inventar|unit_pri_inventar_riegel|unit_r30_android_n1_inventar_cmd)" -j 4 --timeout 900 --output-on-failure
+100% tests passed, 0 tests failed out of 96
+```
+Danach nur ein Kommentar in karte_r39.c (Werkzeugpfad) berichtigt, neu gebaut:
+```
+ctest --test-dir re15_port/build -R "^(unit_r39_karten|integration_r39_karten)" --timeout 900 --output-on-failure
+100% tests passed, 0 tests failed out of 6
+```
