@@ -222,9 +222,80 @@ Gezielte Laeufe (Spurbaum, KEINE volle Suite):
 ## Nachbesserung 1 (nach Abnahme 0, `O_abnahme_0.md`; Basis HEAD 72c76540)
 
 Stand:
-- [ ] M1 Messung vorher (Riegel-Teil `ende_gesetzt` am alten Stand rot; exe-Lauf mit der Spur-A-Karte)
-- [ ] M1 RE-Beleg (Freigabeweg sub01 @0x0182E/@0x01842, Setzer von (3,67) im RDT-Zensus)
-- [ ] M1 Aenderung (SZENE nur bei (3,67)==0)
+- [x] M1 Messung vorher (exe mit der Spur-A-Karte; Riegel-Teil `ende_gesetzt` am alten Stand rot)
+- [x] M1 RE-Beleg (Freigabeweg sub01 @0x0182E/@0x01842, Setzer von (3,67)/(4,64) im RDT-Zensus)
+- [x] M1 Aenderung (Programm SZENE nur bei (3,67)==0)
 - [ ] M1 Messung nachher (unit, integration Teil I, `integration_r39_stimmen_11b0`)
-- [ ] Hinweise H1/H2/H3 der Abnahme eingeordnet
+- [x] Hinweise H1/H2/H3 der Abnahme eingeordnet (H2 als Riegel `echt` uebernommen)
 - [ ] gezielte Tests + alle unit_/prop_/probe_
+
+### M1 — Programm SZENE sperrte auch bei schon gesetztem (3,67)
+
+**Ursache.** `re15_parkplatz_r39_evt_exec` (engine/src/parkplatz_r39.c) lieferte fuer sub02 das Programm SZENE ohne Blick
+auf (3,67). Die Sperre hat genau EINE Freigabe: sub01 @0x0182E `21 03 43 00` Ck(3,67)==0 -> Kill-Bits -> @0x01842
+`04 ff 18 03` Evt_exec sub03 = Programm ENDE. Ist (3,67) beim Start der Ada-Szene schon 1, greift sie nie mehr: Slot 0
+(die einzige Tuer des Raums) bleibt fuer den ganzen Besuch Text. Die eigene Definition "Kampf laeuft" ((4,64)=1 &&
+(3,67)=0, sub00 @0x017C8/@0x017D0; `re15_parkplatz_r39_kampf`, Installer) galt fuer SZENE nicht. Den Zustand (4,64)=0 /
+(3,67)=1 erreicht man nur ueber Spielstaende/Debug-Flags (Zensus unten) — genau so startet der master-Riegel
+`integration_r39_stimmen_11b0` (Spur A, test_r39_stimmen.cmake:97 Karte `3:0x43 3:0x82 4:0xf3`, :98
+`RE15_FIRE_AOT=0@60#11c0`).
+
+**Messung vorher** (HEAD 72c76540, exe 23:19 = Code 27d587e1):
+- exe, Karte und Env des Spur-A-Riegels, nur `RE15_EXIT_AT=300#11c0` statt `30#1260` (`O_belege/nb1_vor_m1_exe.txt`,
+  16 s): `[parkplatz] F0 ... Programm SZENE`, `[fire-aot] slot=0 at F60`, `F60 ROOM11C0 Tuer im Kampf -> msg 40`,
+  state.log F61..F299 `msg(a=1 fsm=1 id=40) pf=FFFF0000` (die Maske des Textes friert auch die Szene ein), kein
+  `DOOR FIRE`, `EXIT_AT: Bild 300 in Raum 11c0` — dasselbe Bild wie die beiden 600-s-Abbrueche der Abnahme.
+- neuer Riegel-Teil `unit_r39_parkplatz11c0_ende_gesetzt` gegen den alten Engine-Code (`O_belege/nb1_vor_m1_unit.txt`):
+  **7 Fehler** — Programm SZENE trotz (3,67)=1, Slot 0 schon in der Szene Text, Aot_on(0) in Bild 60 ohne Raumwechsel,
+  nach dem Tod beider Gorillas Slot 0 weiter Text (kein ENDE: Ck(3,67)==0 falsch), Druck -> msg 40 statt ROOM11B0.
+
+**Beleg** (ROOM11C0.RDT selbst gelesen, `tools/scd_dump_room.py`):
+```
+sub01 @0x0181C 06 00 0a 00  Ifel_ck
+      @0x01820 21 04 40 00  Ck(4,64)==0
+      @0x01824 04 0a 18 02  Evt_exec sub02        <- Haken: Programm SZENE (Sperre)
+      @0x01828 08 00        Endif
+      @0x0182A 06 00 1e 00  Ifel_ck
+      @0x0182E 21 03 43 00  Ck(3,67)==0          <- der EINZIGE Weg zur Freigabe
+      @0x01832 06 00 14 00  Ifel_ck
+      @0x01836 21 07 60 01  Ck(7,96)==1
+      @0x0183A 06 00 0a 00  Ifel_ck
+      @0x0183E 21 07 61 01  Ck(7,97)==1
+      @0x01842 04 ff 18 03  Evt_exec sub03        <- Haken: Programm ENDE (Freigabe)
+sub00 @0x017C8 07 00 52 00  Else_ck / @0x017CC 06 00 48 00 / @0x017D0 21 03 43 00 Ck(3,67)==0  = "Kampf laeuft"
+sub02 @0x0184E 22 04 40 01  Set(4,64)=1          sub03 @0x01B02 22 03 43 01  Set(3,67)=1
+```
+Zensus aller 240 RDTs (`O_belege/nb1_zensus_3_67_4_64.txt`, 0 Walk-Abbrueche): (3,67) setzt nur ROOM11C0 sub03
+@0x01B02, (4,64) nur ROOM11C0 sub02 @0x0184E; gelesen werden sie nur in 11C0 (@0x0176C, @0x017D0, @0x01820, @0x0182E)
+und in ROOM11B0 @0x011CE `21 03 43 01` (Ck(3,67)==1, Schlussszene 11B0); kein Opcode loescht sie, kein Port-Code setzt
+sie (grep `flag_set(3, 67|0x43)` / `(4, 64|0x40)` in engine/platform/include: 0 Treffer). Im Original laeuft im
+Zustand (4,64)=0/(3,67)=1 sub02 an und sub03 nie — die Tuer bleibt die Original-Tuer (main00 @0x01712; im Raum kein
+Aot_reset/Aot_set auf Slot 0).
+
+**Aenderung** (`engine/src/parkplatz_r39.c` `re15_parkplatz_r39_evt_exec`): der Zweig sub02 liefert Programm SZENE nur
+bei (3,67)==0; bei (3,67)=1 das Original-sub02 und die Logzeile `ROOM11C0 sub01 @0x01824 Evt_exec sub02 bei (3,67)=1 ->
+keine Sperre (Freigabe sub01 @0x0182E Ck(3,67)==0 greift nie), Original-sub02`. Nach sub02 @0x0184E Set(4,64)=1 ist das
+genau "Kampf laeuft" (sub00 @0x017C8/@0x017D0) = `re15_parkplatz_r39_kampf()` und Installer — EINE Bedingung fuer alle
+drei Stellen. Keine neue Konstante (RE15_R39O_ENDE_BANK/_BIT = sub03 @0x01B02 / sub01 @0x0182E, schon belegt).
+Kopfkommentar `include/re15_parkplatz_r39.h` und Generator-Docstring nachgezogen; das .inc bleibt bitgleich
+(`programme_bauen.py --pruefen` -> ok).
+
+**Randzustand (gleiche Klasse, ebenfalls nur per Spielstand):** (4,64)=0, (3,67)=0, Kill-Bits (7,0x60)/(7,0x61) = 1.
+sub01 startet SZENE (@0x01824) und ENDE (@0x01842) im SELBEN Durchlauf. Beide landen im ersten freien Event-Slot ab 10
+(scd_vm.c op_evt_exec, cond >= 10) und laufen noch im selben Bild in Slot-Reihenfolge (scd_vm_tick: "PSX does NOT defer
+spawned threads", Evt_exec @0x8003f2a0 / scd_execute_scripts @0x8003f0a0) -> die Freigabe (Slot 11) laeuft nach der
+Sperre (Slot 10). Gemessen (Pruefstand, dann Riegel `kills_gesetzt`): Bild 0 SZENE 1 / ENDE 1, Slot 0 am Bildende Tuer,
+msg 7, Raumwechsel ROOM11B0 Bild 876, kein msg 40 — keine Dauersperre, keine zusaetzliche Bedingung noetig.
+
+**Messung nachher:** s. unten (Tests Nachbesserung 1).
+
+### Hinweise der Abnahme (kein Mangel)
+- **H1** Kill-Bit-Zeitpunkt im Port (Leichen-Zustand 7, enemy_ai_common.c run_all) 71 Bilder nach dem Original-Todesbild
+  (STAGE1.BIN @0x8011b7c8/@0x8011b8f4): Gegner-KI, nicht Spur O -> OFFEN (an Orchestrator/Spur E). Wirkung in 11C0, im
+  Riegel `echt` gemessen: Tod Bild 150, Kill-Bits Bild 221, ENDE Bild 222 — so lange zeigt die Tuer nach dem Tod des
+  zweiten Gorillas noch msg 40, die Original-Ende-Szene beginnt ~2,4 s spaeter.
+- **H2** Riegel ohne echten Abschuss: uebernommen als `unit_r39_parkplatz11c0_echt` (Pruefstand der Abnahme 2.3):
+  Pistolen-Treffer mit dem Schreibsatz des Resolvers (Waffe 3, Schaden Zeile 0x27 @0x8006ee38 + 3*4 = @0x8006ee44 = 12,
+  in PSX.EXE selbst gelesen), Kill-Bits NUR vom Todes-Commit der Engine -> ENDE -> msg 7 -> ROOM11B0.
+- **H3** Schreibmaschine wird durch einen Druck nicht beschleunigt: allgemeine Text-FSM (re15_scd_show_message ->
+  re15_dialog_open_mask), nicht Spur O -> OFFEN (Hinweis).
