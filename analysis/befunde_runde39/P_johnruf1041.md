@@ -171,6 +171,32 @@ Pegel (Mitschnitt n1b, `p39/pegel.py`: normierte Kreuzkorrelation + kleinste Qua
 Messfehler der ersten Auswertung (int32-Ueberlauf in np.arange auf Windows) behoben, alle Werte oben neu.
 
 
+### 4.2 Lauf n2: Spielstand 1121 MITTEN in der Panikphase -> 1131 -> 1141 (Spur J unveraendert) -> Rettung -> 1171
+Spielstand ROOM1121 (-7400,-2900) Blick 2048, Flags wie v1 + 9:97, Dining Room Key im Inventar (give:0x43), Wegplan
+1121 -> Tuer -> 1131 -> Tuer (Schluessel) -> 1141 (Wegplan der Spur J) -> Dachtuer -> 1171, RE15_R38F_GORILLAS_TOT=600
+(Kill-Flags, keine Schusszahl). debug.log (Bau 02469270, 1131 noch mit Xa_vol 70):
+- Laden: `[bgm] stage=0 room=12 entry=FF17 -> MAIN17` (Boot-BGM vor dem Restore), dann `[johnruf] F0 Panik-Musikfenster
+  auf in ROOM1121 (Bit 97 = 1)`, `Raummusik-Anstoss ... Soll MAIN01`, `entry=FF01 -> MAIN01` -> Laden mitten in der Phase
+  setzt die Musik fort.
+- 1131: `RUF1131 gestartet`, `F36 Xa_vol(70) -> CD_VOL 9556`, `Ruf help02 (Sprach-Id 54 ...)`, `F126 Xa_vol(120)`,
+  `room=13 entry=FF01 -> MAIN01 [unveraendert, laeuft durch]`.
+- 1141: `entry=FF56 -> MAIN16(flag 1)`, HAEMMERN39 `Sce_bgm_control slot=0 op=1` angewandt (1141 von der Weiche
+  ausgenommen), Klopfen + help01..05 der Spur J wie bisher (Standard 120), msg 50 der Spur J noch da (Spur J entfernt sie in
+  ihrem Baum, Nachtrag 10). Kampfende: `Sce_bgm_control slot=0 op=2 ... capTick=5430` (sub01 @0x00C06) und im selben
+  Bild `[johnruf] F4039 ROOM1141 John gerettet ((4,0xF0)=0, (4,0xF2)=0): Bit 97 = 0, Panikmusik aus`, `Fenster zu`.
+- 1171: `entry=5572 -> MAIN32` (Tabelle), kein FF01 -> "Der Rest bleibt normal".
+Pegel (Mitschnitt n2, `p39/pegel.py`):
+| Zeile | Takt | rho | g | erwartet | RMS Fenster | RMS 1 s davor |
+|---|---|---|---|---|---|---|
+| help02 1131 (Xa 70) | 649 | 0,951 | 0,670 | 1,133 x 0,583 = 0,661 | 1438 | 979 (MAIN01) |
+| help02 1141 (Spur J, 120) | 2507 | 0,870 | 1,146 | 1,133 | 2688 | 2238 |
+| help03 1141 (Spur J, 120) | 1466 | 0,908 | 1,169 | 1,156 | 3348 | 1299 |
+**Wahl 1131 = Xa_vol 100 statt 70 (gemessen):** die Stimme help02 hat im Mix RMS g x 2041: 1041 (50) 984, 1131 (70) 1367,
+1131 (100) 1927. Der Hintergrund ist in 1131 aber MAIN01 (RMS 979), in 1041 MAIN00 + Raum (608). Abstand Stimme - Hintergrund:
+1041 +4,2 dB, 1131 mit 70 nur +2,9 dB (der "lautere" Ruf stuende WENIGER heraus als der leise), mit 100 +5,9 dB. 100 ist der
+RE2-Wert derselben XA-Stimme 0x0B in ROOM1020 (@0x01960 `5f 64`), die ROOM11D0 mit 70 spielt - RE2 regelt dieselbe Stimme je
+Raum. Damit: 1041 0,417 (-7,6 dB) < 1131 0,833 (-1,6 dB) < 1141 1,0. Nachmessung mit 100: Abschnitt 4.3.
+
 ## 5. Tests
 
 ## 6. OFFEN
