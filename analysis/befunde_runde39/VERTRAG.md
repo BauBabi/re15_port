@@ -29,7 +29,7 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | - | N | (entfallen) | Nachtrag 8: Nutzer liess die Dateien auf die Message-Ids umbenennen (main50-52, main40/42) - Ordnerregel genuegt |
 | 3+ | O | parkplatz11c0 / r39_parkplatz11c0 | ROOM11C0: Tueren waehrend des Gorilla-Kampfes gesperrt + Leon-Text (Nachtrag 9) |
 | 4 | P | johnruf1041 / r39_johnruf1041 | Elza: Johns Ruf ab 1041, Satz + Karte, Panikmusik bis zur Rettung, 1131-Ruf (Nachtrag 10) |
-| 4 | Q | elzazombies / r39_elzazombies | Elza: Zombie-Durchbrueche 10C1/1061/1071/1031 in der Panikphase (Nachtrag 10) |
+| 4 | Q | elzazombies / r39_elzazombies | Elza: Zombie-Durchbrueche 10C1/1061/1041/1031 in der Panikphase (Nachtrag 10 + 11: 1041 statt 1071) |
 | 4 | R | hund1121 / r39_hund1121 | Elza: Hund durchs Fenster in 1121 (Nachtrag 10) |
 | 3 | K | heliport1171 / r39_heliport1171 | John 1171 "Elza hurry up": Heran-Winken statt Klettern; uebrige Szenen-Animationen 1171 |
 
