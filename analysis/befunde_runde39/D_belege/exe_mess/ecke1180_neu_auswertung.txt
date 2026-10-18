@@ -1,0 +1,13 @@
+lauf_ecke1180_neu: 761 Bilder, letztes PL F520 pad=0000 (4061,6094) rot=2811
+Treffer (HP faellt): 0
+treffer.log: {'sperre': 18, 'zielhilfe_verdeckt': 18, 'ziel': 1}
+  F118 R1180 ziel slot=2 typ=10 @(5105,15408) st=1/1/1
+  F118 R1180 sperre von=(3800,6000) nach=(-582,12718) slot=1 zelle=51 moebel_uebersprungen=0
+  F118 R1180 zielhilfe_verdeckt von=(3800,6000) nach=(-582,12718) slot=1 zelle=51 moebel_uebersprungen=0
+  F118 R1180 sperre von=(3800,6000) nach=(-3062,-10268) slot=3 zelle=47 moebel_uebersprungen=0
+  F118 R1180 zielhilfe_verdeckt von=(3800,6000) nach=(-3062,-10268) slot=3 zelle=47 moebel_uebersprungen=0
+  F119 R1180 sperre von=(3800,6000) nach=(-567,12721) slot=1 zelle=51 moebel_uebersprungen=0
+  F119 R1180 zielhilfe_verdeckt von=(3800,6000) nach=(-567,12721) slot=1 zelle=51 moebel_uebersprungen=0
+  F119 R1180 sperre von=(3800,6000) nach=(-3075,-10278) slot=3 zelle=47 moebel_uebersprungen=0
+  F119 R1180 zielhilfe_verdeckt von=(3800,6000) nach=(-3075,-10278) slot=3 zelle=47 moebel_uebersprungen=0
+  ... 28 weitere

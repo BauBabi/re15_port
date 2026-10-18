@@ -1,0 +1,58 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/build
+      Start  41: unit_inv_fsm
+ 1/26 Test  #41: unit_inv_fsm ........................   Passed    0.01 sec
+      Start  64: unit_em_status_persist
+ 2/26 Test  #64: unit_em_status_persist ..............   Passed    0.01 sec
+      Start  78: unit_inv_grant
+ 3/26 Test  #78: unit_inv_grant ......................   Passed    0.01 sec
+      Start  82: unit_item_use
+ 4/26 Test  #82: unit_item_use .......................   Passed    0.01 sec
+      Start 114: unit_wound_accumulator
+ 5/26 Test #114: unit_wound_accumulator ..............   Passed    0.01 sec
+      Start 612: unit_r36_kleidung_griff_re2
+ 6/26 Test #612: unit_r36_kleidung_griff_re2 .........   Passed    0.02 sec
+      Start 613: unit_r36_kleidung_griff_re15
+ 7/26 Test #613: unit_r36_kleidung_griff_re15 ........   Passed    0.03 sec
+      Start 614: unit_r36_kleidung_hund
+ 8/26 Test #614: unit_r36_kleidung_hund ..............   Passed    0.02 sec
+      Start 615: unit_r36_kleidung_kraehe
+ 9/26 Test #615: unit_r36_kleidung_kraehe ............   Passed    0.03 sec
+      Start 616: unit_r36_kleidung_lut
+10/26 Test #616: unit_r36_kleidung_lut ...............   Passed    0.01 sec
+      Start 617: integration_r36_kleidung_bild
+11/26 Test #617: integration_r36_kleidung_bild .......   Passed   65.40 sec
+      Start 618: integration_r36_kleidung_spielweg
+12/26 Test #618: integration_r36_kleidung_spielweg ...   Passed   31.72 sec
+      Start 619: integration_r36_kleidung_hundeweg
+13/26 Test #619: integration_r36_kleidung_hundeweg ...   Passed   54.08 sec
+      Start 637: unit_r36_blut_pin_eben
+14/26 Test #637: unit_r36_blut_pin_eben ..............   Passed    0.07 sec
+      Start 638: unit_r36_blut_pin_tief
+15/26 Test #638: unit_r36_blut_pin_tief ..............   Passed    0.05 sec
+      Start 639: unit_r36_blut_pin_mg
+16/26 Test #639: unit_r36_blut_pin_mg ................   Passed    0.09 sec
+      Start 640: unit_r36_blut_pin_rip
+17/26 Test #640: unit_r36_blut_pin_rip ...............   Passed    0.03 sec
+      Start 641: unit_r36_blut_pin_arm
+18/26 Test #641: unit_r36_blut_pin_arm ...............   Passed    0.03 sec
+      Start 642: unit_r36_blut_pin_burst
+19/26 Test #642: unit_r36_blut_pin_burst .............   Passed    0.03 sec
+      Start 643: unit_r36_blut_pin_glied
+20/26 Test #643: unit_r36_blut_pin_glied .............   Passed    0.04 sec
+      Start 644: unit_r36_blut_pin_kriecher
+21/26 Test #644: unit_r36_blut_pin_kriecher ..........   Passed    0.15 sec
+      Start 645: unit_r36_blut_pin_kriecher5
+22/26 Test #645: unit_r36_blut_pin_kriecher5 .........   Passed    0.15 sec
+      Start 903: unit_r38_spinnen
+23/26 Test #903: unit_r38_spinnen ....................   Passed    0.51 sec
+      Start 904: integration_r38_spinnen_echtlauf
+24/26 Test #904: integration_r38_spinnen_echtlauf ....   Passed  113.91 sec
+      Start 942: unit_r39_inventar_status
+25/26 Test #942: unit_r39_inventar_status ............   Passed    0.01 sec
+      Start 946: integration_r39_inventar_status
+26/26 Test #946: integration_r39_inventar_status .....   Passed   27.61 sec
+
+100% tests passed, 0 tests failed out of 26
+
+Total Test time (real) = 294.08 sec
+EXIT=0
