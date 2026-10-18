@@ -672,3 +672,95 @@ Motor rot werden. Johns Zeilen sind in beiden Wegen bytegleich zum Abnahme-Stand
 Maengel aus `K_abnahme_1.md` §8: M1 Ereignis-Kraehen ROOM1171 HOVER 0x80115130 Phase 0 (Port posiert und fliegt im
 Einstiegstakt), M2 SPIN 0x801153ac Phase 2 (Port dreht die Gier weiter). Baum sauber, HEAD 97b42ad2 (Code-Stand 86956b9c).
 Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher (fortlaufend unten).
+
+### 13.1 M1 — Ereignis-Kraehen: HOVER 0x80115130 Phase 0 (Einstiegstakt ohne Posieren/Bewegung)
+
+**Ursache (Port).** `enemy_ai_common.c` `re15_crow_flight2_sub` Fall 1 (HOVER, seit 74121bb81): der Phase-0-Block setzt
+Clip 4 / Tempo / vvel / +0x6 = 1 und faellt im SELBEN Takt weiter in `re15_crow_anim` (f314), Lenkung,
+`y += vvel`, `re15_crow_advance` (pos_advance) und die Kontaktabfrage. NB1 hatte nur die Posier-Reihenfolge (M3b)
+umgestellt, diesen Durchfall nicht.
+
+**Messung vorher** (exe = Code 86956b9c, sha256 cc5086f4 = die exe der Abnahme; Auswerter `K39nb2/flug.py`: Phase-0-Takt =
+Takt F, vor dem der Zustand st 4 / ss1 1 / ss2 0 war; gerendert = letzte anim.txt-Zeile je Bild):
+- Lade-Weg (eigener Lauf `K39nb2/vorher_laden`, EXIT 0, bis ROOM10B1): Kraehe 2 HOVER-Bilder `1:0 2:0 3:1 4:2 ... 11:9
+  12:0 13:1 ... 21:9 22:0` = Zyklus 10, Phase-0-Takte F2/F12/F22/... (10 Stueck) im Abstand 10; 9 von 10 Phase-0-Takten
+  zeigen ein anderes Bild als das Vorbild, **10 von 10 bewegen** x/z/Gier (F2: `(-9813,-5651,r3980) -> (-9639,-5605,r3930)`,
+  F12: `(-8367,-4656,r3480) -> (-8274,-4502,r3430)`). Kraehe 3 ebenso (10/10 anderes Bild, 10/10 Bewegung). Griff
+  (ORIENT) Kraehe 2 ab F95, Kraehe 3 ab F106.
+- Echter Weg (Abnahme-Lauf `K39abn1/echtA`, gleiche exe, selbst ausgewertet): identisch um +66 Bilder (Kraehe 2
+  Phase-0-Takte F68/F78/F88, Griff F161; Kraehe 3 F77/F87/F97, Griff F172).
+
+**Beleg (selbst disassembliert, STAGE1.BIN md5 a482d196; Tabelle FLIGHT-2 `table 0x80121220`: [0] 0x80114fb8 ASCEND,
+[1] 0x80115130 HOVER, [2] 0x801152e0 ORIENT, [3] 0x801153ac SPIN, [4] 0x8011553c):**
+```
+80115144 lbu a0,6(v1)            ; +0x6
+8011514c beq a0,zero,0x80115164  ; Phase 0          (Delay: ori v0,zero,0x1)
+80115154 beq a0,v0,0x801151e0    ; Phase 1          (Delay: addu a2,zero,zero)
+8011515c j 0x801152cc            ; sonst Epilog
+-- Phase 0
+80115164 ori a0,zero,0x4
+80115168 ori v0,zero,0xb4
+8011516c jal 0x80115d94          ; Clip-Setzer (+0x94 = 4, +0x95 = 0, +0x8f = 7; posiert nicht)
+80115170 sh v0,140(v1)           ; +0x8c = 180 (Delay)
+80115180 lbu v0,468(v1) / 80115188 andi v0,v0,0x3f / 8011518c sh v0,484(v1)   ; +0x1e4 = +0x1d4 & 0x3f
+8011519c lh v0,492(v1) / 801151a4 slti v0,v0,2000 / 801151a8 beq v0,zero,0x801151c8
+801151b8 subu v0,zero,v0 / 801151bc sh v0,484(v1)                               ; < 2000 -> negiert
+801151cc lbu v0,6(v1) / 801151d4 addiu v0,v0,1
+801151d8 j 0x801152cc            ; -> EPILOG
+801151dc sb v0,6(v1)             ; +0x6 = 1 (Delay)
+-- Phase 1
+801151e0 lw a0,132(v1) / 801151e4 lw a1,364(v1) / 801151e8 jal 0x8001f314 (a3 = 0x200 @0x801151ec)
+801151f0 beq v0,zero,0x80115214  ; Umlauf -> 8011520c addiu v0,v0,-1 / 80115210 sb v0,6(v1) (+0x6 = 0)
+8011522c lw a2,56(v1) / 80115234 addu v0,v0,a2 / 8011523c sw v0,56(v1)          ; y += +0x1e4 (Delay von ...)
+80115238 jal 0x8001a8f8          ; Lenkung (a1 = 0x32 @0x801151f4)
+80115240 jal 0x800245d8          ; pos_advance (a0 = 0)
+80115254 lbu v0,464(a0) / 8011525c beq v0,zero,0x801152cc                       ; Kontakt +0x1d0 -> Griff 80115264..801152c8
+801152cc lw ra,20(sp) ... 801152d8 jr ra                                        ; Epilog
+```
+Gegenprobe Ghidra `RE_15_Quellcode_Overlays/STAGE1_full/FUN_80115130.c`: `if (+6 == 0) {...; +6 += 1;} else if (+6 == 1)
+{ f314; y += +0x1e4; 0x8001a8f8(&DAT_800aca88,0x32); 0x800245d8(0); Kontakt }` — Phase 0 und 1 schliessen sich aus.
+Der FLIGHT-2-Verteiler 0x80114e54 (selbst disassembliert) bewegt nichts: er schreibt nur +0x82 (@0x80114e98), +0x1ba
+(room_coll @0x80114eb4/@0x80114ec8), +0x1dc (Abstand, SquareRoot0 @0x80114f08, @0x80114f1c), +0x1ec (@0x80114f40),
+prueft Bit 0x1d (@0x80114f3c, -> 0x80115d74(3) @0x80114f68) und springt ueber die Tabelle (@0x80114f9c).
+=> Im Phase-0-Takt kein f314 (die zuletzt posierte Pose bleibt stehen), keine Lenkung, kein y += vvel, kein
+pos_advance, keine Kontaktabfrage. Folge im Original: Umschalt-Takt (ASCEND bzw. letzter Umlauf), Halt-Takt (gleiche
+Pose, gleiche Lage), dann Clip 4 Bild 0..9 -> Zyklus 11 Bilder mit gehaltenem Bild 9.
+
+### 13.2 M2 — Ereignis-Kraehen: SPIN 0x801153ac Phase 2 dreht die Gier nicht
+
+**Ursache (Port).** `re15_crow_flight2_sub` Fall 3 (SPIN, seit 74121bb81): `e->rot_y += 60` steht VOR der
+Phasen-Unterscheidung und laeuft so auch in Phase 2.
+
+**Messung vorher** (Auswerter wie 13.1; SPIN-Phase-2-Takt = Takt F, vor dem st 4 / ss1 3 / ss2 2 stand):
+- Lade-Weg `K39nb2/vorher_laden`: Kraehe 2 109 Phase-2-Takte (F189-F363), Gier-Aenderung je Takt `{0: 1, 60: 108}`
+  (Gier F188 5507 -> F363 15947); Kraehe 3 123 Phase-2-Takte (F189-F377) `{60: 123}`.
+- Echter Weg `K39abn1/echtA`: Kraehe 2 F255-F429 `{0: 1, 60: 108}`, Kraehe 3 F255-F443 `{60: 123}` (= Abnahme: F254
+  5511 -> F294 7911 im ersten Phase-2-Abschnitt).
+
+**Beleg (selbst disassembliert, STAGE1.BIN):**
+```
+801153bc lbu v1,6(a0)            ; +0x6
+801153c4 beq v1,v0(=1),0x80115454        ; Phase 1
+801153cc beq v0(=v1<2),zero,0x801153e4   ; >= 2
+801153d4 beq v1,zero,0x801153f8          ; Phase 0
+801153e8 beq v1,v0(=2),0x801154d0        ; Phase 2   (801153f0 j 0x8011552c: >= 3 Epilog)
+-- Phase 0
+801153f8 jal 0x800453d0 (a0 = 0)         ; Se(0)
+80115410 jal 0x80115d94 (a0 = 4)  / 80115414 sh v0(=0xb4),140(v1)
+80115424 sh v0(=-30),484(v1)      / 80115434 sb v0(=0x20),469(v1)   ; +0x1e4 = -30, +0x1d5 = 32
+8011544c addiu v0,v0,1 / 80115450 sb v0,6(v1)                         ; +0x6 = 1, faellt in Phase 1
+-- Phase 1
+80115460 lhu v0,106(v1) / 80115468 addiu v0,v0,60 / 8011546c sh v0,106(v1)   ; GIER +60 (nur hier)
+8011547c lbu a0,469(v1) / 80115484 addiu v0,a0,255 / 80115488 bne a0,zero,0x801154ec / 8011548c sb v0,469(v1)
+801154a8 sb v0,6(v1) (+0x6 = 2) / 801154b8 sh v0(=10),484(v1) / 801154c8 j 0x801154ec / 801154cc sb v0(=0x28),469(v1)
+-- Phase 2
+801154d0 lbu v1,469(a0) / 801154d8 addiu v0,v1,255 / 801154dc bne v1,zero,0x801154ec / 801154e0 sb v0,469(a0)
+801154e4 jal 0x80115d74 (a0 = 1 @0x801154e8)                              ; Zeitgeber aus -> HOVER
+-- Schwanz (alle Phasen 0-2)
+801154f8 lh v0,484(v1) / 801154fc lw a1,56(v1) / 8011550c sw v0,56(v1)  ; y += +0x1e4
+80115508 jal 0x800245d8 (a0 = 0)                                          ; pos_advance
+80115524 jal 0x8001f314 (a3 = 0x200)                                      ; posieren
+```
+Gegenprobe Ghidra `STAGE1_full/FUN_801153ac.c`: Fall 2 `+0x1d5 -= 1; if (alt == 0) FUN_80115d74(1); goto LAB_801154ec;`
+an `+0x6a += 0x3c` vorbei. => Gier +60 nur in den Phase-0/1-Takten (33 Takte je SPIN-Eintritt), in den 41
+Phase-2-Takten steht die Gier; pos_advance fliegt dann geradeaus entlang +0x6a.
