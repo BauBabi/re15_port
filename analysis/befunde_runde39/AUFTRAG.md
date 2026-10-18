@@ -134,7 +134,7 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   "[rbj] ... von ROOM1031 geliehen", platform/pc/src/cut10f0_pc.c); den Cache-Fix aus K beachten (bei der Integration zusammen).
   Riegel: Clip-Folge Johns bei "follow me" = 1171-Clip (Bildzahl 96, Quelle ROOM1171), kein Waffe-auf-Elza-Clip.
 
-## Nachtrag 8 des Nutzers (woertlich, 2026-10-18 22:05)
+## Nachtrag 8 des Nutzers (woertlich, 2026-10-18 zwischen 22:01 = Ordner-mtime room1141 und 22:19 = d1e9211e)
 - "So, ich habe jetzt die voiceovers ergänzt die fehlen in room 1141: Oh, no, this is Roy! He is in Trouble, I have to help him! ist main 12, Puuuh, that was close! I thought we end up as Gorilla meal…. ist main13 und Elza, follow me, I think I might have found a way out of here! ist main14."
 - "Außerdem habe ich die voiceovers für ROOM 10F1 ergänzt, mit main06 und main08."
   Orchestrator (selbst gemessen 22:10-22:16, Windows-Spracherkennung System.Speech en-US: Diktat + Zwangswahl unter den
@@ -150,12 +150,13 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   | 10F1/main08 | "At this thing is broken" | - | ROOM10F1 msg 42 (Spur I; msg 41 "..." bleibt ohne Stimme) |
   - main12 SAGT "Roy", der Text sagt "John" (Nutzer-Entscheid Nachtrag 1, 1141 = John). Der Text bleibt John; der Nutzer ist
     informiert. Eine neue Aufnahme unter DEMSELBEN Dateinamen braucht keine Code-Aenderung.
-    Nutzer 22:31 (woertlich): "ja, ich meine john...." -> Text John bestaetigt; main12 bleibt zugeordnet, bis eine John-Aufnahme
+    Nutzer (woertlich, vor 22:23:46 = 2b0446a9): "ja, ich meine john...." -> Text John bestaetigt; main12 bleibt zugeordnet, bis eine John-Aufnahme
     unter demselben Namen kommt (auch der Roh-Take 21:47:45 sagt Roy, Wahl 0,607).
     Neuer Take 22:26:29 (Nutzer: "ich mache eine neuen take fuer main12"): room1141/main12.wav 6,00 s, Diktat "All know who
     this is john losing troubled I have to help in", Wahl JOHN 0,784 -> passt zum Text. Der alte Take liegt jetzt unter
     synchro/unused/STAGE1/room1141/main12.wav (vom Nutzer verschoben).
-- Nutzer 22:40 (woertlich): "Ich habe main12 ersetzt. Benenne meine neuen voiceovers um, entsprechend der Nummer die du
+- Nutzer (woertlich, zwischen 22:27:30 = eddbbc0d und 22:30:07 = 1e8cf44c; die Commit-Message 1e8cf44c nennt
+  faelschlich 22:40): "Ich habe main12 ersetzt. Benenne meine neuen voiceovers um, entsprechend der Nummer die du
   brauchst, also auch die Dateien. Ich sehe ja nicht an welcher stelle mit welchen Namen die neuen Texte stehen."
   Orchestrator: per git mv umbenannt (ausdruecklicher Nutzer-Auftrag, ersetzt fuer diese Dateien VERTRAG 1.2 "nie umbenennen"):
   room1141/main12 -> main50, main13 -> main51, main14 -> main52; room10F1/main06 -> main40, main08 -> main42. Damit gilt die
