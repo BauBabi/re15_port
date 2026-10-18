@@ -538,3 +538,7 @@ Tod: Landebild F376 / F425 haelt Clip 4 (Fall-Pose), FINISH Clip 0x0a **0..11**,
 unveraendert: state.log ohne mo/af 1138/1138 Zeilen gleich; Elza/John bytegleich (md5 787b922b vorher = nachher).
 Fremde Riegel angepasst (mit Beleg): `probe_crow_death.c` (unit_crow_death_corpse) Frame 12 -> 11;
 `test_r38_heliport1171.c` flagwort: Effekt-Pose = Kraehen-Aktorfelder VOR dem ORIENT-Bild (vorher Clip 8 Bild 0).
+- (NB1, laufend) Gegenprobe der neuen Riegel: engine/src/{game_step_common,actor_locomotion,player_common,elza_r39,
+  szenenleon_r36,enemy_ai_common,heliport1171_r39}.c und include/re15_heliport1171_r39.h stehen VORUEBERGEHEND auf a2d1e1dc
+  (Abnahme-Stand) in der Arbeitskopie, Bau nur des Ziels test_r39_heliport1171 in re15_port/build_bisect. Steht beim Lesen
+  ein ' M' auf diesen Dateien ohne Rueckmeldung hier: `git checkout HEAD -- <diese Dateien>`, NICHT committen.
