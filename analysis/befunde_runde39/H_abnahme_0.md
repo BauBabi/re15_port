@@ -194,3 +194,46 @@ hinter der Tuer blockiert ein Hindernis, und das Viereck an der Startstelle oeff
 daher der Fussweg vom Messpunkt (0,250); die Tuer selbst ist mit `p3_tuer` belegt.)
 **Urteil Punkt 3: erfuellt** (Elza klettert am Loescher/Autowrack nicht mehr — Spielstand, Fussweg; Leon 1090 ebenso;
 Untersuchen/Aufnehmen unveraendert).
+
+## 4. Regressionen / Nebenwirkungen (Integration, selbst gefahren, seriell; parallel liefen fremde Agenten-exes)
+`ctest -R "^integration_(r37_feuerloescher|r38_tagebuch_lesen|r38_tagebuch_karte|r38_tagebuch_leon|r36_szene1150|r37_roy_szene1021|r38_heliport1171_weg_re15|r35_cut1150|r36_elza_irons)$" --timeout 1800`
+-> **100% tests passed, 0 tests failed out of 9** (`abn_H_elza/ctest_regress.log`): integration_r35_cut1150 511 s (Montage
+1030/1040/1130/11C0 + Szene 1150, Plc_dest-Laeufe beider Figuren), r36_elza_irons 11 s, r36_szene1150 114 s (Irons-Szene,
+Walker), r37_feuerloescher 324 s (Leon: Aufnahme/Loeschen/Wegwerf-Abfrage, Tuer-Weg 1050->1090, Elza 1091, Tuer-Weg
+1051->1091, Spind 1000, ROOM1030-Bild — mit dem neuen Band 2), r37_roy_szene1021 54 s, r38_heliport1171_weg_re15 59 s
+(John/Elza-Szene mit Plc_dest), r38_tagebuch_lesen 43 s / _karte 21 s / _leon 23 s (Leon unberuehrt). Kein Flattern,
+keine Wiederholung noetig (parallel liefen fremde Agenten-exes: `re15_pc_r39d_*`, `re15_pc_r38r_*`, `re15_pc_r35l_*`).
+Zusammen mit §0: unit 144/144, integration r39_elza 3/3 — Nebenwirkung von Punkt 1b (Lauf-Clip in der Align-Phase) und
+Punkt 3 (Band 2 in 1030/1090/1091) in den betroffenen Szenen/Raeumen gruen, beide Figuren.
+
+## 5. Urteile
+| Punkt (Wortlaut AUFTRAG.md) | Urteil | Beleg (Kurz) |
+|---|---|---|
+| 1. ROOM1031 erste Szene: Hand nur einmal heben und senken | **erfuellt** | neu: F451 Clip 11 (Hub, 7-Bild-Blende), F452-F490 gehalten, F491 Clip 0 rueckwaerts (Senken), ab F521 Clip 5 (Drehung/Gang), 0 Bilder Clip 0 vorwaerts; Basis v0.8.26: Hub 1 fehlt, F491 Schnapp, **F521-F528 Clip 0 vorwaerts = zweiter Hub** (Bilder `abn_H_elza/p1_*_cut4/cut6.png`) |
+| 2. Nach Roys Tagebuch sofort die Karte mit Markern, vor der Rueckgabe der Steuerung | **erfuellt** | neu: Leser zu F494 → Anforderung im selben Bild → Hinweis F504/Karte F507 (Marker 2F Comms, dann Prison), Faden parkt auf Message_on @0x0E64 bis F754, Aufrichten F755, Evt_end F785; kein Spieler-Tick/keine Steuerung dazwischen; Basis: 31 Bilder Szene (Aufrichten, Plc_ret) vor der Karte |
+| 3. Elza klettert in ROOM1090/1091 am Loescher/Autowrack nicht mehr | **erfuellt** | neu: Spielstand rot 1024/3072/0 + Fussweg (0,250)→(1918,−1432): sub=0, kein Aufstieg, Untersuchen msg 29/20; Basis: sub=9 kind=0x81, Elza auf Band 2; Leon 1090 ebenso behoben; Tuer-Eintritt 1051→1091 mit Installer |
+
+Gates: Bau gruen; Riegel je Punkt vorhanden und messend (unit 144/144, integration r39_elza 3/3, Regression s. §4);
+RE-Gate: 13 Stichproben Byte fuer Byte bestaetigt, keine Guess-Tells, NUTZER-VORGABE/PORT-WAHL korrekt gekennzeichnet;
+Vertrag: nur eigene Pfade, kleine Haken in player_common.c/actor_locomotion.c, keine neuen Bits/Ids/Assets.
+
+## 6. Maengel
+Keine abnahmerelevanten Maengel. Hinweise (kein Mangel, fuer den Nutzer/Integrator):
+* H1 Punkt 2: 5 Bilder Rueckblende des Raums (2 voll hell) zwischen Dokument-Abblende und Hinweis-Blende — RE2-Form des
+  Status-Tasks; wer die Karte ohne jeden Blick auf den Raum will, braucht einen Port-eigenen Mechanismus ohne RE2-Vorbild
+  (vom Bau-Agenten als OFFEN benannt, hier bestaetigt).
+* H2 Punkt 1b aendert die Align-Phase JEDES Spieler-Plc_dest (Modus 4/5/9): Lauf-Clip ab dem Sub-Init statt Stehen —
+  byte-true (@0x80030b58/@0x80030d90/@0x800313a4 selbst disassembliert); Szenen-Riegel gruen (§0/§4); Sichtpruefung
+  weiterer Szenen (1150/1170/1090-Rettung) bleibt Integrationsbaum/Nutzer.
+* H3 Punkt 3: das Band 2 des Loeschers ist PORT-WAHL (Form der Vorlagen-Records); 51 Original-Null-Box-Records liegen
+  auf dem Spielerband (unveraendert, climb_common.c nicht angefasst). Von einer Band-2-Standflaeche aus (Tritt) waere die
+  Null-Box wieder im Gate — in 1090/1091 liegt die einzige (Kiste obj 0) ~11 800 Einheiten entfernt.
+* H4 r38-Reste (vorher ebenso, nicht Teil des Wortlauts): pst=1 mo=210 beim Schliessen des Dokument-Schirms (Statusschirm-
+  Abbau `sb zero,0x800aca58` @0x8001cbdc), ein Bild Idle-FSM (F754) zwischen Hinweis-Ende und Plc_motion; Punkt 1:
+  ein Bild Sub-6-Clip-1 (F531) zwischen TURN-Ankunft und WALK — Reihenfolge SCD-Poll (sub14 Ck(5,32)) vs. Dispatcher,
+  eigener RE-Punkt.
+* H5 Im Bau-Verzeichnis liegen alte Messkopien des Bau-Agenten (`re15_pc_h2.exe`, `re15_pc_h3.exe`, `re15_pc_h3n.exe`,
+  ignoriert, nicht versioniert) — bei der Integration entfernen.
+
+## 7. Ergebnis
+**bestanden** — alle drei Punkte erfuellt, alle Gates halten.
