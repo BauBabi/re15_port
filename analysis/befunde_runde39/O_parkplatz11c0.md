@@ -178,6 +178,7 @@ Riegel (registriert NUR in `re15_port/tests/unit/probes/r39_parkplatz11c0.cmake`
 | unit_r39_parkplatz11c0_fremd | 1 Byte in sub02 geaendert: Anker greift nicht, keine Sperre, Original-Subs | gruen |
 | integration_r39_parkplatz11c0_k | echte exe, Karte 11B0 -> Tuer -> 11C0, Szene, Kampf (Gorillas eingefroren), Tuer -> msg 40 (`Tuer im Kampf -> msg 40`, Zustands-Log `msg(a=1 fsm=1 id=40` > 20 Bilder, Stimme angefragt `synchro/STAGE1/room11c0/main40.wav`), kein DOOR FIRE vor dem Kampfende, weg von der Tuer (steuerbar), Kampfende -> ENDE, msg 7, `DOOR FIRE slot=0 ... spawn=(-25552,0,-25331)`, `loaded room11b0`; 5 Framedumps | gruen (131 s) |
 | integration_r39_parkplatz11c0_w | echte exe, Wiedereintritt im Kampfzustand: Installer-Zeile, `AOT slot 0 typ 5 ev 40`, Druck -> msg 40, kein DOOR FIRE, EXIT_AT in 11C0 | gruen (41 s) |
+| integration_r39_parkplatz11c0_n | echte exe, nach dem Kampf ((4,64)=1, (3,67)=1): `AOT slot 0 typ 1`, kein `[parkplatz]`, Druck -> `DOOR FIRE slot=0 ... spawn=(-25552,0,-25331)`, ROOM11B0 | gruen (128 s unter Last) |
 | integration_r39_parkplatz11c0_e | echte exe, ELZA 11B1 -> 11C1: `AOT slot 0 typ 1`, kein `[parkplatz]`, Tuer -> zurueck nach 11B1 | gruen (34 s) |
 
 Bild: `O_belege/nach_k_msg40_F1865.png` (Framedump RE15_WINDOW_SCALE=1, Lauf integration K: Leon an der Parkplatz-Tuer,
@@ -185,6 +186,10 @@ Textfenster "I cannot leave Ada alone here / with those monsters!"), `nach_k_msg
 
 Gezielte Laeufe (Spurbaum, KEINE volle Suite):
 - `ctest --test-dir re15_port/build -R "integration_r39_parkplatz11c0" --timeout 1800` -> `100% tests passed, 0 tests failed out of 3`
+  (K/W/E; Teil N danach einzeln: `-R "^integration_r39_parkplatz11c0_n$"` -> `100% tests passed, 0 tests failed out of 1`)
+- Raum 11C0 an der exe (Montage 1150 -> 11C0, Szene 11C0, Parkplatz-Tuer 11B0 -> 11C0, Gorilla-Schatten):
+  `-R "^integration_r37_szene11c0$|^integration_r36_schluessel$|^integration_r39_gegner_schatten$|^integration_r35_cut1150$|^integration_r36_szene1150$|^integration_r38_montage$"`
+  -> `100% tests passed, 0 tests failed out of 6`
 - Modulgruppen (unit), `-R "r39_parkplatz11c0|^unit_r35_affen_|^unit_r36_karte_tuer11c0$|^unit_r35_cut1150_|^unit_r36_szene1150_|^unit_r37_szene11c0_|^unit_r38_montage_|^unit_r39_gegner_|^unit_r36_schluessel_|^unit_r38_dining1141_|^unit_r39_funk10f1_|^unit_r39_stimmen_|^unit_scd_|^unit_aot_|^unit_msg_dialog$|^unit_door_seq$|^unit_synchro_stimme$|^unit_voice_ausreden$|^unit_se_voice_machine$|^prop_scd_pc_advance$|^unit_maggot_|^unit_r38_affen3_|^unit_r38_griff_gorilla$|^unit_r36_zombieki_affen" -E "^integration_" -j 6`
   -> `100% tests passed, 0 tests failed out of 126` (darin unit_r35_affen_szene = Szenen-Gang bitgleich mit der GDB-Spur des
   Originals: die Gosub-Huelle aendert die Szene nicht).
