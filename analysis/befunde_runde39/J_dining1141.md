@@ -610,3 +610,95 @@ v_l3 fielen die ersten Schuesse in Cut 0, John stand aber hinter den Gorillas, d
 | Stimmen | HAEMMERN39: nach msg 50 + Sleep 90 `2b 3a 00 00` (msg 58) vor Set(9,94)=1 / Pad frei; ENTRIEGELN39: nach msg 52 + Sleep 60 + 40 `2b 3a 00 00` vor Plc_neck aus / Abgang | programme_bauen.py |
 | Kamera | Programmende `29 00 3c 01` (Cut_chg 0 + Cut_auto 1) statt `2a 00 3c 01` | programme_bauen.py, `RE15_R39J_CUT_ENDE` 0 (RVD @0x01A8 Satz 0 / Satz 22) |
 | Messschiene | r39.txt `zl=<zielt>/<Ziel-Slot>` vor `blick=` (die Riegel-Regex endet weiter auf `blick=`) | dining_r39.c |
+
+### 9.4 Messung nachher (Stand dccd5f8c, echte exe, gleiche Laeufe/Wegplaene wie 9.1: n_a, n_l, n_l2, n_l3)
+**Stimmen und Ablauf, Lauf n_a** (1141: Takt = F + 3668 aus `F35 tick=3703`):
+
+| Zeile | `[voice] clip loaded` | offen | Kreuzkorrelation | danach |
+|---|---|---|---|---|
+| msg 50 | main50.wav | F176..F356 | rho 0,903 bei Takt 3843 (Haelften 0,920/0,886) | Pad-Sperre F166..F371, frei ab F372 = NACH der Zeile (vorher: frei ab F266 mitten im Satz, 77 freie Bilder mit msg 50) |
+| msg 51 | main51.wav | F4092..F4266 | rho 1,000 bei Takt 7759 | msg 52 wartet auf das Ende (Stimmen-Riegel) |
+| msg 52 | main52.wav | F4268..F4396 | rho 1,000 bei Takt 7935 | `[scd F4397] Cut_chg(7)` + RUN = NACH der Zeile (vorher F4275, 29 Laufbilder mit msg 52); Mitschnitt Takt 8058 RMS 46, ab 8063 Stille |
+
+msg 12 und 13: `[voice] ROOM1141 msg 12/13: keine Aufnahme ... - Zeile bleibt stumm` (unveraendert).
+Kamera nach Johns Abgang: `[scd F4539] Cut_chg(0)`, r39.txt anz=0 ab F4540, anz=5 ab F6130, anz=6 ab F6293 (Elza an der
+Dachtuer). Bilder `j39n2/n_a_ende.png`: F4540 Elza in Cut 0 am Fenster, F5900..F6100 Elza geht durch den Raum (Cut 0), F6200
+Cut 5 mit Elza im Gang. Punkt 9 unveraendert: Werkzeug `pegel` auf n_a "Takte 10188..10213 Pegel 0, Takte 10228..10258
+Pegel 559", 0 Fehler. Gegenprobe Riegel: `integration_r39_dining1141_d` per -DAUSWERTEN auf v_a (vor dem Fix) 3 Fehler
+(Cut 8; 77 freie Bilder mit msg 50; 29 Laufbilder mit msg 52), auf n_a gruen.
+
+**M1 (N4.3), Laeufe n_l / n_l2 / n_l3** (`salven.py`, `aufmerk.py`, debug.log `zugewandt`/`vorbei`):
+
+| Lauf | Salven | Schuesse / Treffer | Treffer mit Elza im Griff (gr=1) | Zuwendung (Log "John zugewandt") | Annaeherung je Episode (Abstand zu John) | Schuesse bei Cut 0 |
+|---|---|---|---|---|---|---|
+| n_l (Elza stirbt F5130, wehrt sich nicht) | 4 | 8 / 8 | 2 | 4 von 4 | 5871->2808, 4264->2529, 7994->2582, 4933->2528 | 6 |
+| n_l2 (Elza im Gang) | 6 | 12 / 12 | 0 (nie gepackt) | 5 von 6 (letzte Salve F5712 am Laufende) | 6513->2798, 9525->2528, 9394->2535, 9402->2529, 9406->2523 | 0 (Cut 5) |
+| n_l3 (Elza neben John) | 5 | 10 / 10 | 6 | 5 von 5 | 3743->3366, 5612->2860, 5239->2790, 5503->3122, 4779->3109 | 8 |
+| vorher v_l/v_l2/v_l3 | 16 | 32 / 17 | 0 | 3 von 16 Salven | 6513->3276, 10355->9241, 13356->3125; sonst 29 Bilder ohne Weg | 4 (John verdeckt) |
+
+- (a) 8 Treffer, waehrend Elza im Griff war, alle auf den Gorilla, der sie nicht hielt; kein Fehlschuss mehr wegen des
+  Opferzustands (Log-Grund `im Angriff`/`tot`/`nicht im Kegel`: in n_l/n_l2/n_l3 keiner).
+- (b) 30 von 30 Schuessen im Kegel (rel -4..0); kein `nicht im Kegel`. Unit: nach 0x400 Abweichung im Zielen wieder im
+  Kegel nach 5 Bildern, groesster Schritt 200 = 0xC8.
+- (c) Der Gorilla am Westrand x -6982 (vorher 8 Treffer ohne Drehung) dreht sich jetzt zu John und laeuft am Rand entlang
+  nach Sueden: n_l2 Gorilla 3 viermal (-6982,-12521) -> (-6985,-19384), je ~200 Bilder, Abstand 9400 -> 2530. Jede Episode
+  endet am Ende mit "festgeklemmt" bei Abstand ~2520..3120 (|dx|+|dz|; euklidisch ~2050 = Gorilla-Radius 1618 + Johns
+  Koerper): der Gorilla steht an John an, dann nimmt er wieder Elza. Bild `j39n2/n_l2_zuwendung.png` (Cut 5: der Gorilla
+  kommt aus dem Gang auf die Kamera zu und laeuft unter ihr durch nach Sueden).
+- John im Bild: n_l3 `j39n2/n_l3_john_zoom.png` F4990..F5025 und F5360..F5400 (Cut 0): John an seinem Platz neben der Pflanze,
+  die Pistole auf den Gorilla gerichtet, der Gorilla dreht sich zu ihm (F5395/F5400). Vorher war John in Cut 0 hinter dem
+  Gorilla verdeckt, der Elza hielt (`j39n2/v_l_schuss1.png`).
+- Querungs-Wache (Spur E): 0 Ereignisse `querung` in n_l/n_l2/n_l3 (vorher v_l 2 x Elza-Wurf in die Westwand, abgefangen);
+  Riegel `kampf`: niemand jenseits der Waende (Elza x >= -8600, Gorillas x >= -7100 / z >= -22100). Zucken nach Spur E: Johns
+  erste zwei Treffer ohne Zucken, der dritte (Akku 36) zuckt (gegner_r39.log n_l2: 3 x FLINCH, 9 x OHNE ZUCKEN).
+
+### 9.5 Tests (Nachbesserung 2)
+- Unit `unit_r39_dining1141_programme`: + HAEMMERN39 msg 50 -> Sleep 90 -> msg 58 -> Set(9,94); SCHUETZE39 Anker ZIEL < ZIELEN
+  < FEUER1/2 < SENKEN; ENTRIEGELN39 Heranwinken -> Sleep 60 + 40 -> msg 58 -> Abgang; Ende `29 00 3c 01`, kein Cut_old nach Cut 8.
+- Unit `unit_r39_dining1141_phase_h`: + (a) Trefferbedingung `re15_dining_r39_trifft` bei Opferzustand 4 (freier Gorilla 0,
+  Greifer Sub 15 = 3, ausser Kegel = 4); (b) Nachfuehren je Bild <= 0xC8, nach 0x400 Abweichung in 5 Bildern im Kegel; Kamera
+  nach dem Abgang Cut 0 und Zonenwechsel nach Cut 5 (RVD Satz 2).
+- Integration `integration_r39_dining1141_d`: + main50/51/52 je Zeile geladen (kein Hash/Dauer-Pin), msg 12/13 stumm, Ausreden
+  msg 50/52, Kamera 0 -> 5/6.
+- NEU `integration_r39_dining1141_kampf` (tests/integration/test_r39_dining1141_kampf.cmake, registriert in
+  probes/r39_dining1141.cmake): echter Weg, Pistole, lebende Gorillas, Elza neben John (L3) - (a) Treffer bei gr=1, (b) kein
+  Schuss ausser Kegel, (c) Mehrheit der Treffer-Salven mit Zuwendung, John beim Schiessen in Cut 0, Querungs-Wache.
+  Gegenprobe -DAUSWERTEN: v_l3 (vor dem Fix) 4 Fehler, n_l3 und n_l gruen.
+
+### 9.6 Je Mangel / Auftrag (Kurzfassung)
+
+| Punkt | Ursache (gemessen) | Beleg | Aenderung | nachher |
+|---|---|---|---|---|
+| Merge | - | - | 25611933, Konflikte beidseitig | Bau gruen |
+| Nachtrag 8 Stimmen | spielen bereits (Ordnerregel); aber Pad frei mitten in msg 50, John rennt mitten in msg 52 | Stimmen-Riegel op_message_on | Warte-Zeile msg 58 an beiden Stellen | n_a: rho 0,903/1,000/1,000, 0 freie Bilder / 0 Laufbilder mit offener Zeile |
+| M1 (a) | Sperre `re15_player_victim_state() == 0` traf auch den freien Gorilla | Wurf im Spieler-Takt 0x8011c118/@0x80031cb4, Ende P7 0x8011c384 | Sperre weg, Greifer ausgenommen, Zielwahl freier Gorilla | 8 Treffer bei gr=1 |
+| M1 (b) | Richtung nur vor den 110 Zielbildern | gun sub5 @0x80033f90/@0x80033f94 | Nachfuehren <= 0xC8 je Bild | 30/30 im Kegel |
+| M1 (c) | Lenkziel = Pad-Umweg zu Elza (Runde 36 F), Prueftakt vor der Drehung | A[3]-Kegel @0x80117a60-74, B[3]-Lenkschritt @0x80117d1c-34 | Lenkziel John ohne Umweg, Takt ab Zuwendung | 14 von 15 Salven mit Zuwendung, Weg bis an John |
+| John im Bild | Cut 0 zeigt Johns Ecke, John verdeckt | Projektion RID Cut 0 | (Folge von (a)/(c)) | n_l3 F4990..F5400 sichtbar beim Schiessen |
+| Kamera (neu) | Cut_old -> Cut 8, Gruppe Cut 8 nur Kopf | RVD @0x01A8 Satz 0/22, sub02 @0x00E80 | Cut_chg 0 | n_a anz 0 -> 5 -> 6 |
+| H6 | Uhrzeit geschaetzt | Commit-Zeiten | 8.8 berichtigt | - |
+
+### 9.7 OFFEN (Nachbesserung 2)
+- Gemeinsame Dateien ausserhalb VERTRAG 1.3 wie in 8.5 (enemy_ai_common.c: der B[3]-Haken bleibt 3 Zeilen, nur auf den
+  Rueckgabewert umgestellt; er wirkt weiter nur bei Aufmerksamkeit > 0 = nur ROOM1141 nach Johns Treffer). Bei der Integration mit Spur E
+  (Gorilla-Hirn) und K (RBJ-Cache) wie in 8.5 zusammen ansehen.
+- Die Aufmerksamkeit endet am Ende mit dem Log "festgeklemmt", auch wenn der Gorilla an John ansteht (Koerperkontakt bei ~2050
+  euklidisch, NAH-Schwelle 2000): sichtbar ist dasselbe (er steht bei John, dann wendet er sich wieder Elza zu).
+- Spieler-Plc_motion(2,c) als W-Bank-Clip nur in ROOM1141 (8.5, unveraendert offen fuer eine spaetere Runde).
+
+### 9.8 Fuer den Nutzer (Nachbesserung 2)
+- **Johns Schuesse im Kampf (so funktioniert es jetzt, in einfachen Worten):** John schiesst etwa alle 12 Sekunden zweimal
+  auf einen Gorilla. Er nimmt den naechsten Gorilla, der Elza gerade NICHT angreift - haelt ein Gorilla Elza fest, schiesst John
+  auf den anderen. Waehrend er zielt, dreht er die Pistole mit, wenn der Gorilla sich bewegt (wie Leon/Elza beim Nachzielen).
+  Ein getroffener Gorilla dreht sich zu John um und geht auf ihn zu, bis zu 7 Sekunden lang; kommt er eine Sekunde lang nicht naeher
+  (Tisch, anderer Gorilla, oder er steht schon bei John), wendet er sich wieder Elza zu. Den Gorilla, der Elza gerade festhaelt, trifft
+  John nicht (das Original kennt keinen Dritten, der so einen Griff unterbricht). Gorillas greifen John nicht an.
+  Gemessen in drei Kampflaeufen: 30 von 30 Schuessen treffen, nach 14 von 15 Salven dreht sich der getroffene Gorilla zu John
+  und geht auf ihn zu; steht Elza im suedlichen Teil des Raums nahe bei John (Kamera mit Blick auf die Doppeltuer),
+  sieht man John schiessen.
+- **Deine Aufnahmen main50/51/52** laufen an ihren Zeilen (Elza "Oh, no, this is John! ...", John "Puuuh ..." und "Elza, follow
+  me ..."), jede ganz. Neu: Elza spricht ihren Satz zu Ende, bevor du wieder steuerst, und John rennt erst los, wenn er "... a
+  way out of here!" fertig gesagt hat. Die alten Zeilen 12/13/14 (Schloss, Gemaelde, Tisch) bleiben stumm.
+- **Kamera nach Johns Abgang:** vorher blieb die Kamera auf der leeren Suedwest-Ecke stehen, waehrend Elza zur Dachtuer ging;
+  jetzt zeigt sie Elza und folgt ihr wie gewohnt.
+- Keine Entscheidungsfrage offen. Paket-Gate: keine neue Datei unter shared_assets/ (Programme in gen/dining_r39_programme.inc).
