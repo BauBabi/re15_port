@@ -200,28 +200,33 @@ k_lauf(b2_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 
 # gen/itemorte_r38_lage.inc RE15_R39L_*). Schwellen = ~60 % der Messung 2026-10-18 (Dossier analysis/befunde_runde39/L_optik.md
 # Punkt 2): Skala 1 Park 7 Pixel / Sum|dL| 506, Prison 5 / 317; Skala 3 Park 69 / 3731, Prison 63 / 3960. Runde-38-Werte in
 # den Kommentaren darunter zur Einordnung.
-k_bild(B2 b2_mit b2_ohne 131 75 145 87 4)
-# Kontrast des Parking Lot Key (abgenommener Stand, Abnahme 0: 55 Pixel, Sum|dL| ~3430) = Bezug fuer B3.
-k_kontrast(B2K b2_mit b2_ohne 131 75 145 87 4 300 _dl_park1)
+# Runde 39 Spur M (NUTZER-VORGABE Nachtrag 5 "maximal halb so gross", Dossier analysis/befunde_runde39/M_schluessel2.md): die
+# GTE-Vierecke sind 2 x 1 (Park) / 3 x 2 (Prison) Bildpunkte (ganzzahlige Ecken, FUN_80022f0c @0x80022fd8); bei Skala 1
+# fallen deren Texel-Mitten auf durchsichtige Texel -> gemessen 0 / 0 Pixel (vorher 7 / 5). B2/B3 pruefen bei Skala 1 darum
+# nur noch, dass sich ausserhalb des Fensters nichts aendert (Mindestwerte 0); die Sichtbarkeit pruefen B4/B5 bei Skala 3,
+# Breite und Hoehe integration_r39_schluessel2. Schwellen B4/B5/V3/V5 = ~60 % der Messung 2026-10-18 nach Spur M.
+k_kontrast(B2K b2_mit b2_ohne 131 75 145 87 0 0 _dl_park1)
 k_lauf(b3_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd}" _b3)
 pruef(B3 _b3 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,0,0), Zone Slot 8")
 k_lauf(b3_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd}" _b3o)
-k_bild(B3 b3_mit b3_ohne 131 75 145 87 3)
 # B3K "gut sichtbar" bei Skala 1 (Nachbesserung 1): RE2 Small Key (ROOM10F0.RDT MD1 @0x001650, flach @0x00706) gemessen
 # 2026-10-17 (Massstab 5,3032, gen/itemorte_r38_lage.inc) 27 Pixel, Sum|dL| 1627 (Cabin Key vorher 14 / 502), Parking Lot Key 55 / 3428 -> 47 %.
-k_kontrast(B3K b3_mit b3_ohne 131 75 145 87 3 190 _dl_prison1)
-k_verhaeltnis(B3V "${_dl_prison1}" "${_dl_park1}" 38)
+# Runde 39 Spur M: bei Skala 1 0 Pixel (s. oben) -> nur AUSSEN == 0; das Verhaeltnis Prison/Park (B3V) entfaellt hier (0/0),
+# es bleibt bei Skala 3 (B4V).
+k_kontrast(B3K b3_mit b3_ohne 131 75 145 87 0 0 _dl_prison1)
 # B4: der Prison Key in der Fenstergroesse, in der gespielt wird — RE15_WINDOW_SCALE=3 (960x720, 3D in Fensteraufloesung,
 # render_pc.c Fenster = groesste ganze Skala <= 90 % des Bildschirms). Fenster = B3-Fenster x 3. Gemessen 2026-10-17
 # (Small Key): 217 Pixel, Sum|dL| 11899, Huelle x 397..432 y 236..250, aussen 0 (Cabin Key vorher 112 / 3193).
 k_lauf(b4_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4)
 k_lauf(b4_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4o)
-k_bild(B4 b4_mit b4_ohne 393 225 437 263 36)
-k_kontrast(B4K b4_mit b4_ohne 393 225 437 263 36 2300 _dl_prison3)
+# Runde 39 Spur M: gemessen 16 Pixel, Sum|dL| 748, Huelle 8 x 5 (Spur L 63 / 3960, 16 x 10).
+k_bild(B4 b4_mit b4_ohne 393 225 437 263 9)
+k_kontrast(B4K b4_mit b4_ohne 393 225 437 263 9 450 _dl_prison3)
 # B5: Parking Lot Key bei Skala 3 = Bezug fuer B4 (gemessen 491 Pixel, Sum|dL| 28852; Prison Key 11899 -> 41 %).
 k_lauf(b5_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b5)
 k_lauf(b5_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b5o)
-k_kontrast(B5K b5_mit b5_ohne 393 225 437 263 40 2200 _dl_park3)
+# Runde 39 Spur M: gemessen 9 Pixel, Sum|dL| 403, Huelle 4 x 3 (Spur L 69 / 3731, 14 x 8); Prison/Park jetzt 186 %.
+k_kontrast(B5K b5_mit b5_ohne 393 225 437 263 5 240 _dl_park3)
 k_verhaeltnis(B4V "${_dl_prison3}" "${_dl_park3}" 33)
 
 # --- A: Aufnahme ROOM1030 vor dem Pfeiler; dritter Druck = Monitor-Satz aus Slot 20 -------------------------------------
@@ -250,7 +255,7 @@ k_lauf(v2_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 
 k_bild(V2 v2_mit v2_ohne 0 0 319 239 0)
 k_lauf(v3_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v3)
 k_lauf(v3_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v3o)
-k_bild(V3 v3_mit v3_ohne 76 62 103 81 6)   # Runde 39 L: Cut 6 gemessen 11 Pixel (vorher 108)
+k_bild(V3 v3_mit v3_ohne 76 62 103 81 1)   # Runde 39 L: Cut 6 gemessen 11 Pixel (vorher 108); Runde 39 M: 2 Pixel
 # V4/V5: dieselbe Sicht bei Elza (ROOM10F1, Prison Key) — Cut 7 (Buecherregal, keine Masken) nicht gezeichnet, Cut 6
 # (zweite Kamera auf die Pinnwand) gezeichnet. Gemessen 2026-10-16: Cut 7 0 Pixel, Cut 6 mit dem Small Key (Nachbesserung 1)
 # 56 Pixel x 81..98 y 69..75, Sum|dL| 2690 (Cabin Key vorher 29 Pixel).
@@ -260,7 +265,7 @@ pruef(V4 _v4 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj
 k_bild(V4 v4_mit v4_ohne 0 0 319 239 0)
 k_lauf(v5_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5)
 k_lauf(v5_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5o)
-k_bild(V5 v5_mit v5_ohne 76 62 103 81 7)   # Runde 39 L: Cut 6 gemessen 13 Pixel (vorher 29)
+k_bild(V5 v5_mit v5_ohne 76 62 103 81 1)   # Runde 39 L: Cut 6 gemessen 13 Pixel (vorher 29); Runde 39 M: 3 Pixel
 
 # --- E: Elza ROOM1031 (kein Loescher) und ROOM1091 (der leere am Boden, Runde 37) ----------------------------------------
 k_lauf(e1 1031 "1031;-11500;-19500;2048;cut:0;elza" "W2" 90 "" _e1)
