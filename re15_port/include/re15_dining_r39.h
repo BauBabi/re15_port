@@ -48,6 +48,7 @@
                                          * Kanal +0x170/+0x174 = W-Bank (@0x80036be4/@0x80036c04); Form ROOM3060 sub03
                                          * @0x010BE `3f 02 06 00`                                                        */
 #define RE15_R39J_W_CLIP_HEBEN   6      /* W-Bank Clip 6 = RAISE (Gun-FSM sub0 / Melee @0x80034ee8)                       */
+#define RE15_R39J_W_CLIP_MESSER  0x0D   /* Messer noch nicht in der Hand: DRAW (Melee sub4 @0x80035538, Clip 0xD)         */
 /* N4.3 (NUTZER-VORGABE Nachtrag 4 "John sollte auch ab und an mal auf die Gorillas schiessen ... und dann ihre
  * Aufmerksamkeit erhalten"; Johns Zeile msg 11 "I'll try to distract them"): Faden SCHUETZE39 in Original-Form der Schuesse
  * auf Roy (ROOM1021 sub02 @0x020C6..@0x020F2). Treffer/Ton/Aufmerksamkeit am Anker FEUER (dining_r39.c).              */

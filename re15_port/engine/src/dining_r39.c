@@ -88,11 +88,13 @@ static void meldung(int id, const uint8_t *b, size_t n)
  * Bild (Phase 2). Rueckwaerts (Plc_flg 0x80) setzt der Zeichner ueber re15_actor_anim_reverse um. Gilt nur in 1141
  * (ROOM3060/3061 tragen dieselbe Form, sind aber nicht Teil dieser Spur - Dossier OFFEN). */
 static int s_w_clip = -1;
+static int s_w_ton = 0;   /* Messer-Zieh-Ton dieser Hebung schon gespielt */
 
 void re15_dining_r39_w_beginn(int entity, int clip)
 {
     if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 || entity != RE15_R39J_W_SUB || clip < 0) { s_w_clip = -1; return; }
     s_w_clip = clip;
+    s_w_ton = 0;
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[dining39] F%u Elza Plc_motion(2,%d) -> W-Bank-Clip %d (Sub 0x80073e30[2] = 0x80050f00, Waffe %d)\n",
             (unsigned)g_engine.frame_count, clip, clip, re15_player_equipped_weapon());
@@ -189,6 +191,19 @@ void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z)
 
 int re15_dining_r39_aufmerksam(int slot) { return (slot > 0 && slot < RE15_ACTOR_MAX) ? s_aufmerksam[slot] : 0; }
 
+/* Der gezeichnete W-Bank-Clip. Schusswaffe: Clip 6 (RAISE, Gun-FSM sub0) = die Original-Form ROOM3060 @0x010BE. Messer
+ * (Waffen-Id < 3, Klassenweiche @0x80074030): ein Messer, das noch nicht in der Hand ist, kommt im Original ueber DRAW
+ * (Melee sub4 @0x80035538, Clip 0x0D, Ton 0x1080001 @0x800355f8) in die Bereitschaft - Clip 6 allein hebt die leere Hand
+ * (Bild n1_hand.png, Lauf n1 F1756). Senken ist fuer beide Clip 6 rueckwaerts (LOWER @0x80033c74 / @0x80035424). */
+int re15_dining_r39_w_clip(void)
+{
+    if (s_w_clip < 0) return -1;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_w_clip == RE15_R39J_W_CLIP_HEBEN && re15_player_equipped_weapon() < 3 && !(pl->anim_flags & 0x80))
+        return RE15_R39J_W_CLIP_MESSER;
+    return s_w_clip;
+}
+
 static void w_halten(void)
 {
     if (s_w_clip < 0) return;
@@ -200,7 +215,13 @@ static void w_halten(void)
         return;
     }
     extern int re15_player_wbank_clip_fc(int clip);   /* player_common.c: W-Bank-EDD-Laengen */
-    const int fc = re15_player_wbank_clip_fc(s_w_clip);
+    const int clip = re15_dining_r39_w_clip();
+    if (clip == RE15_R39J_W_CLIP_MESSER && !s_w_ton) {
+        extern void re15_audio_weapon_se(int idx);
+        re15_audio_weapon_se(8);   /* Messer ziehen, SE 0x1080001 (@0x800355f8; player_common.c DRAW-Eintritt) */
+        s_w_ton = 1;
+    }
+    const int fc = re15_player_wbank_clip_fc(clip);
     if (fc >= 1 && (int)pl->anim_frame > fc - 1) pl->anim_frame = (uint16_t)(fc - 1);   /* halten: Phase 2 (@0x80050fec) */
 }
 
@@ -213,7 +234,6 @@ void re15_dining_r39_tick(void)
         if (s_aufmerksam[s] > 0) s_aufmerksam[s]--;
 }
 
-int re15_dining_r39_w_clip(void) { return s_w_clip; }
 
 /* NUTZER-VORGABE Nachtrag 4 (woertlich): "Oder falls Elza keine Waffe ausgerüstet hat eben das Messer...." / "Ich meine mit
  * ausgerüstet - keine Waffe im Inventar hat" / "Falls sie irgendeine Waffe im Inventar hat, hebt sie halt diese."
@@ -337,7 +357,7 @@ void re15_dining_r39_messhaken(void)
     int blick = 0;
     if (j) blick = (((int)re15_atan2_q12(e->z - j->z, e->x - j->x) - ((int)j->rot_y + 1024)) % 4096 + 4096 + 2048) % 4096 - 2048;
     fprintf(s_f, "F%u cam=%d anz=%d msg=%d/%d john=%d (%d,%d) rot=%d st=%d s1=%d s2=%d mo=%d elza=(%d,%d) rot=%d "
-                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d blick=%d\n",
+                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d pm=%d c3=%d w=%d sch=%u/%u blick=%d\n",
             (unsigned)g_engine.frame_count, (int)g_scd.cam_id, (int)g_scd.work_vars[0x0A],
             (int)g_scd.message_active, (int)g_scd.message_id,
             j ? 1 : 0, j ? (int)j->x : 0, j ? (int)j->z : 0, j ? (int)(j->rot_y & 0xFFF) : 0,
@@ -345,7 +365,9 @@ void re15_dining_r39_messhaken(void)
             (int)e->x, (int)e->z, (int)(e->rot_y & 0xFFF),
             re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT), re15_game_flag_get(RE15_R38F_F2_BANK, RE15_R38F_F2_BIT),
             re15_game_flag_get(9, RE15_R39J_BIT_REAKTION), re15_game_flag_get(9, 67),
-            g_re15_r39j_se_zaehler[0], g_re15_r39j_se_zaehler[1], g_re15_r39j_se_zaehler[2], g_re15_r39j_hilfe_letzte, blick);
+            g_re15_r39j_se_zaehler[0], g_re15_r39j_se_zaehler[1], g_re15_r39j_se_zaehler[2], g_re15_r39j_hilfe_letzte,
+            (int)g_scd.player_mode, re15_game_flag_get(4, 0xC3), re15_dining_r39_w_clip(), g_re15_r39j_schuss_zaehler,
+            g_re15_r39j_treffer_zaehler, blick);
     fflush(s_f);
 #endif
 }
