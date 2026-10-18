@@ -553,7 +553,7 @@ B1/ROOM1000), keine Wahlfrage an den Nutzer (Memory reai-v2-original-oder-nicht,
 begehbare Flaeche). Die Abweichung von mapB2_correct.png wird unten "Fuer den Nutzer" benannt (Bild vorher/nachher).
 Riegel-Soll: markerflaeche 1210 = 0 Punkte neben der Zeichnung (vorher 1693 von 10387); echte exe am Abnahme-Weg
 (Spielstand 1210, W1,U4,W5, RE15_INV_OPEN_AT=200#1210) Ring in der Zeichnung; uebrige Blaetter pixelgleich zu Abnahme 1.
-Arbeitsordner der Messungen: Scratchpad `nb2/` (nicht im Baum).
+Arbeitsordner der Messungen: Scratchpad `nb2/` (nicht im Baum); die Werkzeuge liegen in `G_karten_werkzeug/nb2/` (proj.py = FUN_800473f8 mit der Zeile @0x800769B8, aussen1210.py, scd_dump.py, gdi_k.sh).
 
 ### Fortschritt
 - [x] Messung vorher (Sonde markerflaeche 1210, echte exe am Abnahme-Weg) - a6ba2ff0
@@ -561,8 +561,8 @@ Arbeitsordner der Messungen: Scratchpad `nb2/` (nicht im Baum).
       fuer Leon; Elza: sub00 schliesst) - a6ba2ff0 + unten
 - [x] Umsetzung: Zone 1 von ROOM1210/1211 + Schema-Zeichnung auf B2 + Durchgang; Querbalken-Fenster (184 Punkte) - 8dcd780d
 - [x] Messung nachher (Sonde, echte exe Lauf K, Sweep aller Blaetter gegen Abnahme 1) - d29ee63b + unten
-- [x] Riegel + Gegenprobe (Kammer/Fenster abgeschaltet -> ROT)
-- [ ] gezielte Tests, Abschluss
+- [x] Riegel + Gegenprobe (Kammer/Fenster abgeschaltet -> ROT; Koerper-Gatter abgeschaltet -> ROT)
+- [x] gezielte Tests (99/99), Tuer-Uebergaenge gegen Abnahme 1, gdigrab, Abschluss
 
 ### N1 Messung vorher (Stand b1da8c01/0c1ded3c, Bau der Abnahme; die Abnahme-Zahlen bestaetigt, nicht neu erhoben)
 `probe_r39_karten markerflaeche 1210 0 -25800 -2200 0 100 1` (echter Kollisionsloeser, jeder Rasterpunkt):
@@ -710,3 +710,21 @@ deckungsgleich bis auf 13 Pixel im Kasten (189..193,115..119) = Blinkphase des R
   Marker 1 Pixel in die Zellen darunter (die Kachel malt den Balken schmaler, als er im Raum ist). Er bleibt jetzt auf dem
   Balken. Damit steht der Marker in ROOM1210 an jedem begehbaren Punkt auf der Zeichnung (vorher 1693 von 10387 daneben).
 * Keine neuen Assets, keine Sprachdateien, keine neuen Flags/Nachrichten.
+
+### Nachbesserung 2 - Nebenwirkungen und gezielte Tests (KEINE volle Suite)
+* Tuer-Uebergaenge (test_map_uebergang, RE15_UEBERGANG_LISTE=1, Bau mit allen Aenderungen): `[Sprung] 151 Uebergaenge auf
+  gleichem Blatt: Median 6 px, Mittel 17 px, schlimmster 91 px, ueber 8 px: 62` - je Tuerpaar gegen die Liste der
+  Abnahme 1 (G39abn1/uebergang_neu.txt): 132 Paare, **0 verschieden**.
+* Marker ueber alle Raeume der Stage 1 (alle_raeume.py, jeder 3. Punkt): Polizeistation ueberall 0, ROOM1210 0/1141
+  (vorher 207/1141); unveraendert nur 10B0 508/508 und 1260 266/266 (ohne Kartenblatt) und 11A0 Band 1 102/444 (Blatt 6).
+* Sweep aller 13 Blaetter gegen Abnahme 1: 12 Blaetter pixelgleich, B2 nur im Kammer-Kasten (249 Pixel).
+* Gezielter Lauf (Bau 6027bf4d-Stand, alle Karten-/Hinweis-/Inventar-Gruppen der Nachbesserung 1 + unit_1210_ fuer den
+  Raum), 2026-10-18 ~23:10, `-j 4`:
+```
+ctest --test-dir re15_port/build -R "^(unit_map_|unit_karte_|unit_r30_karte|unit_r30_hinweis|unit_r33_karte|unit_r35_karte|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_karte|unit_r36_kartenbits|unit_r36_kartenitems|integration_r36_karte|integration_r36_kartenitems_bild|unit_r38_tagebuch|integration_r38_tagebuch|unit_r39_karten|integration_r39_karten|integration_r39_elza_karte|unit_r39_inventar|integration_r39_inventar|integration_map_uebergang|integration_map_raum_live|integration_r35_karte|unit_inv_|unit_r26_inventar|unit_r35_inventar1050|integration_r35_inventar1050|unit_r36_inventar|integration_r36_inventar|unit_r38_kleinkram_inventar|integration_r38_kleinkram_inventar|unit_pri_inventar_riegel|unit_r30_android_n1_inventar_cmd|unit_1210_)" -j 4 --timeout 900 --output-on-failure
+100% tests passed, 0 tests failed out of 99
+```
+* Vertrag: keine Bank-9-Bits, keine Nachrichten-Ids, keine Slots; gemeinsame Datei re15_inv_screen.c nur EINE Zeile (Haken
+  re15_karte_r39_fenster, "Runde 39 Spur G"); re15_map_zones.h = Karten-Code (Spur G); kein getenv, keine Aenderung an
+  release/, platform/android/, shared_assets/, CMakeLists.txt; neue Tests nur ueber probes/r39_karten.cmake
+  (integration_r39_karten-Skript cmake_minimum_required, exe-Kopie je Lauf, eigener Laufordner).
