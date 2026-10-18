@@ -1369,7 +1369,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * him LOOPING the walk clip in place — the original stands him idle. Scripted motions
          * (other clip ids), in-progress Plc_dest walks, and the byte-true post-walk hold are
          * all left untouched. */
-        if ((p->motion == 105 || p->motion == 100) && !p->walk_active && !p->anim_freeze) {
+        extern int re15_r39k_reach_wartet(void);   /* Runde 39 Spur K NB1: im Ankunftsbild steht die Gang-Pose (f314 @0x80030c78) */
+        if ((p->motion == 105 || p->motion == 100) && !p->walk_active && !p->anim_freeze && !re15_r39k_reach_wartet()) {
             p->motion = RE15_MOTION_IDLE;
             p->anim_frame = 0;
             p->motion_init_delay = 0;

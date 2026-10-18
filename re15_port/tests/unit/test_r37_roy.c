@@ -381,7 +381,7 @@ static int spur(const char *pfad, const char *raum)
         FILE *g = fopen(pfad, "r");
         PRUEF(g != NULL, "Spur lesbar");
         if (!g) return 1;
-        char zz[256]; int n = 0, c15 = 0, c15ok = 0, c2 = 0, c2ok = 0, uhr = 0;
+        char zz[256]; int n = 0, c15 = 0, c15ok = 0, c2 = 0, c2ok = 0, c2init = 0, uhr = 0, anders = 0;
         while (fgets(zz, sizeof zz, g)) {
             unsigned bild, cur; int akt, typ, mo, clip, fcc, slot, fcu, loco, rev;
             if (sscanf(zz, "%u %d %d %d %d %d %u %d %d %d %d", &bild, &akt, &typ, &mo, &clip, &fcc, &cur, &slot,
@@ -389,14 +389,23 @@ static int spur(const char *pfad, const char *raum)
             n++;
             if (fcc != fcu) uhr++;
             if (mo == 15) { c15++; if (fcc == 20) c15ok++; }
-            if (mo == 2)  { c2++;  if (fcc == 52) c2ok++; }
+            /* Runde 39 Spur K: Elliots INIT (Wurzel 0x8011d6d4, Tabelle @0x80072cc8) posiert das LOCO-Paar Clip 2 Bild 0
+             * (+0x94 = 2 @0x8011d930, f314(+0x84,+0x16c) @0x8011d978) — die Zeilen VOR dem ersten Executor-Takt sind
+             * deshalb Loco Clip 2 (50) Bild 0; alle uebrigen Clip-2-Zeilen weiter eigene Bank 1 (52). */
+            /* Runde 39 Spur K NB1 (Hinweis H3 der Abnahme 0): die INIT-Form gilt nur als zusammenhaengender Lauf AB der
+             * ersten Elliot-Zeile — nach der ersten anderen Zeile waere sie ein Wiederaufleben des Merkers. */
+            int init_form = (mo == 2 && fcc == 50 && loco == 1 && slot == 0);
+            if (mo == 2)  { c2++;  if (fcc == 52) c2ok++;
+                            else if (init_form && !anders) { c2ok++; c2init++; } }
+            if (!init_form) anders = 1;
         }
         fclose(g);
         /* Uhr != Bild bei Elliots Gesten ist der VORBESTEHENDE Leon-Stand (O3-Ausnahme: der Takt liest Clip 15 der
          * eigenen Bank, das Bild das REC0-Overlay; Kommentar re15_actor_clip_len) — hier nur gemeldet, nicht veraendert. */
         PRUEF(n > 100, "Elliot: %d Spurzeilen (Uhr != Bild in %d Zeilen = Leon-Stand vor Runde 37, unveraendert)", n, uhr);
         PRUEF(c15 > 0 && c15ok == c15, "Elliot-Geste Clip 15 = 20 Bilder (RBJ-REC0 auf ELLIOT, %d/%d Zeilen)", c15ok, c15);
-        PRUEF(c2 > 0 && c2ok == c2, "Elliot Clip 2 = 52 Bilder (EM047-Bank 1 CDEMD0, %d/%d Zeilen)", c2ok, c2);
+        PRUEF(c2 > 0 && c2ok == c2, "Elliot Clip 2 = 52 Bilder (EM047-Bank 1 CDEMD0) bzw. INIT-Pose Loco Clip 2 Bild 0 "
+              "(@0x8011d978): %d/%d Zeilen, davon INIT-Pose %d", c2ok, c2, c2init);
         return 0;
     }
     /* erwartete Bildzahl je Clip (-1 = darf nicht vorkommen); schleife = Clip mit Plc_flg 4 im Skript */
