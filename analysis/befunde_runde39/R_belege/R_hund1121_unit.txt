@@ -1,0 +1,69 @@
+=== test_r39_hund1121 ereignis
+Programm 56 B: 37 00 0f 00 37 01 0f 00 37 02 0f 00 37 03 0f 00 37 04 0f 00 44 04 20 00 00 00 00 ae 18 15 dd f8 44 2f 00 00 18 04 00 00 22 07 ae 01 46 04 00 00 00 00 00 00 00 00 01 00
+Hund Slot 5: aktiv 1 Typ 0x20 grid 0x00 Lage (5400,-1827,12100) rot 0x418 Kill 0xae
+OK ereignis
+exit=0
+=== test_r39_hund1121 sprung
+T  0 ph2 ( 5400, -1827, 12100) st1/ 0/0/0 clip 1 v  0 SE -1 -1
+T  1 ph3 ( 5400, -1827, 12100) st1/14/0/0 clip 1 v  0 SE -1 -1 schatten-aus
+T  2 ph4 ( 5397, -1827, 12036) st1/14/0/2 clip20 v 65 SE -1 -1 schatten-aus
+T  3 ph4 ( 5394, -1827, 11972) st1/14/0/2 clip20 v 65 SE 8 -1 schatten-aus
+T  4 ph4 ( 5391, -1827, 11908) st1/14/0/2 clip20 v 65 SE -1 -1 schatten-aus
+T  5 ph4 ( 5388, -1827, 11844) st1/14/0/2 clip20 v 65 SE -1 -1 schatten-aus
+T  6 ph4 ( 5385, -1827, 11780) st1/14/0/2 clip20 v 65 SE -1 -1 schatten-aus
+T  7 ph4 ( 5382, -1827, 11716) st1/14/0/2 clip20 v 65 SE -1 -1 schatten-aus
+T  8 ph4 ( 5379, -1827, 11652) st1/14/0/2 clip20 v 65 SE -1 -1 schatten-aus
+T  9 ph4 ( 5376, -1827, 11588) st1/14/1/0 clip20 v280 SE 3 -1 schatten-aus
+T 10 ph4 ( 5365, -2147, 11309) st1/14/1/0 clip20 v280 SE -1 -1 schatten-aus
+T 11 ph4 ( 5354, -2427, 11030) st1/14/1/0 clip20 v280 SE -1 -1 schatten-aus
+T 12 ph4 ( 5343, -2667, 10751) st1/14/1/0 clip20 v280 SE -1 -1
+T 13 ph4 ( 5332, -2867, 10472) st1/14/1/0 clip20 v280 SE -1 -1
+T 14 ph4 ( 5321, -3027, 10193) st1/14/1/0 clip20 v280 SE -1 -1
+T 15 ph4 ( 5310, -3147,  9914) st1/14/1/0 clip20 v280 SE -1 -1
+T 16 ph4 ( 5299, -3227,  9635) st1/14/1/0 clip20 v280 SE -1 -1
+T 17 ph4 ( 5288, -3267,  9356) st1/14/2/0 clip21 v280 SE -1 -1
+T 18 ph4 ( 5277, -3267,  9077) st1/14/2/0 clip21 v280 SE -1 -1
+T 19 ph4 ( 5266, -3227,  8798) st1/14/2/0 clip21 v280 SE -1 -1
+T 20 ph4 ( 5255, -3147,  8519) st1/14/2/0 clip21 v280 SE -1 -1
+T 21 ph4 ( 5244, -3027,  8240) st1/14/2/0 clip21 v280 SE -1 -1
+T 22 ph4 ( 5233, -2867,  7961) st1/14/2/0 clip21 v280 SE -1 -1
+T 23 ph4 ( 5222, -2667,  7682) st1/14/2/0 clip21 v280 SE -1 -1
+T 24 ph4 ( 5211, -2427,  7403) st1/14/2/0 clip21 v280 SE -1 -1
+T 25 ph4 ( 5200, -2147,  7124) st1/14/2/0 clip21 v280 SE -1 -1
+T 26 ph4 ( 5189, -1827,  6845) st1/14/2/0 clip21 v280 SE -1 -1
+T 27 ph4 ( 5178, -1467,  6566) st1/14/2/0 clip21 v280 SE -1 -1
+T 28 ph4 ( 5167, -1067,  6287) st1/14/2/0 clip21 v280 SE -1 -1
+T 29 ph4 ( 5156,  -627,  6008) st1/14/2/0 clip21 v280 SE -1 -1
+T 30 ph4 ( 5145,  -147,  5729) st1/14/2/0 clip21 v280 SE -1 -1
+T 31 ph4 ( 5134,     0,  5450) st1/14/2/1 clip21 v280 SE 10 -1
+T 32 ph4 ( 5123,     0,  5171) st1/14/2/1 clip21 v240 SE -1 -1
+T 33 ph4 ( 5114,     0,  4932) st1/14/2/1 clip21 v240 SE -1 -1
+T 34 ph4 ( 5105,     0,  4693) st1/14/2/1 clip21 v240 SE -1 -1
+T 35 ph4 ( 5096,     0,  4454) st1/14/2/1 clip21 v240 SE -1 -1
+T 36 ph4 ( 5087,     0,  4215) st1/14/2/1 clip21 v240 SE -1 -1
+T 37 ph4 ( 5078,     0,  3976) st1/14/2/1 clip21 v240 SE -1 -1
+T 38 ph4 ( 5069,     0,  3737) st1/14/2/1 clip21 v240 SE -1 -1
+T 39 ph4 ( 5060,     0,  3498) st1/14/2/1 clip21 v240 SE -1 -1
+T 40 ph4 ( 5051,     0,  3259) st1/14/2/1 clip21 v240 SE -1 -1
+T 41 ph4 ( 5042,     0,  3020) st1/14/2/1 clip21 v240 SE -1 -1
+T 42 ph4 ( 5043,     0,  2949) st1/14/2/1 clip21 v240 SE -1 -1
+T 43 ph4 ( 5050,     0,  2951) st1/ 2/0/0 clip21 v240 SE -1 -1
+T 44 ph5 ( 5050,     0,  2951) st1/ 2/1/0 clip 2 v240 SE 8 -1
+Absprung T9
+Steigflug 7 Bilder geprueft, Scheitel y -3267 (soll -3267)
+Glas T12 (Durchgang nach T11), Splitter 13, Knalle 2 Satz 0x21
+Landung T31 bei (5134,5450), Ende Sub 2
+OK sprung
+exit=0
+=== test_r39_hund1121 re15
+RE1.5: Zustand 4 1, Freigabe T2, Ausgang T31, Glas T18, Knalle 2, Lage (5239,0,7917) Zustand 1 Sub 2
+OK re15
+exit=0
+=== test_r39_hund1121 einmal
+OK einmal
+exit=0
+=== test_r39_hund1121 startmaschine
+Freigabe-Bild: +7 2 Clip 20 Speed 65 +0x158 7 z -65
+Absprung nach 7 weiteren Bildern, Speed 280, SE im Absprung-Bild 3
+OK startmaschine
+exit=0

@@ -12,6 +12,9 @@
 #   B  ohne (9,97)         : kein Hund, Log "aus: (9,97)=0".
 #   C  (9,97) + (7,0xAE)   : schon gesprungen -> kein Hund.
 #   D  Leon ROOM1120       : (9,97) + (9,73): Leons Kraehen-Ereignis wie Runde 35, kein Hund.
+#   E  Tuer-Weg            : Elza-Spielstand in ROOM1061, die ECHTE Tuer Slot 0 (ROOM1061 main00 @0x00D12 -> ROOM1121) per
+#                            RE15_FIRE_AOT (= der Pfad des Hineinlaufens, aot_fire_door) -> Raumaufbau scd_room_setup.c ->
+#                            derselbe Weg durchs Band: dieselbe Kette (Installer am Tuer-Weg statt am CONTINUE-Weg).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_WERKZEUG=<test_r39_hund1121> -DWORKDIR=<dir> -P <diese Datei>
 # =============================================================================
 cmake_minimum_required(VERSION 3.16)
@@ -46,6 +49,8 @@ macro(fail)
 endmacro()
 
 set(_weg "XU1.5,R0.35,XU2.5")
+set(R39R_START 70)
+set(R39R_EXTRA "")
 # Lauf <name> <ton 0/1> <karte-args...>: Spielstand schreiben, CONTINUE, Weg fahren.
 function(lauf _name _ton)
     set(WORKDIR "${_basis}/${_name}")
@@ -57,6 +62,10 @@ function(lauf _name _ton)
         message(FATAL_ERROR "${_tag}[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_ok}")
     endif()
     list(GET ARGN 0 _raum)
+    set(_ende "260#${_raum}")
+    if(R39R_ENDE)
+        set(_ende "${R39R_ENDE}")
+    endif()
     set(_audio RE15_NOAUDIO=1)
     if(_ton)
         set(_audio RE15_AUDIO_CAP_SYNC=cap.raw "RE15_FRAMEDUMP=140-200/1:bild_")
@@ -64,18 +73,18 @@ function(lauf _name _ton)
     re15_start_spiel(_rv 300
         RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 ${_audio}
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=70 "RE15_INPUT_SCRIPT=${_weg}"
-        RE15_SPAWN_DIAG=1 RE15_HUND1121_LOG=hund.log RE15_FENSTER_LOG=fenster.log
-        "RE15_EXIT_AT=260#${_raum}"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=${R39R_START} "RE15_INPUT_SCRIPT=${_weg}"
+        RE15_SPAWN_DIAG=1 RE15_HUND1121_LOG=hund.log RE15_FENSTER_LOG=fenster.log ${R39R_EXTRA}
+        "RE15_EXIT_AT=${_ende}"
         "${_exe}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
         message(STATUS "${_tag}[${_name}]: kein debug.log (exit=${_rv}) -> EIN Wiederholungsversuch")
         re15_start_spiel(_rv 300
             RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 ${_audio}
             RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
-            RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=70 "RE15_INPUT_SCRIPT=${_weg}"
-            RE15_SPAWN_DIAG=1 RE15_HUND1121_LOG=hund.log RE15_FENSTER_LOG=fenster.log
-            "RE15_EXIT_AT=260#${_raum}"
+            RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=${R39R_START} "RE15_INPUT_SCRIPT=${_weg}"
+            RE15_SPAWN_DIAG=1 RE15_HUND1121_LOG=hund.log RE15_FENSTER_LOG=fenster.log ${R39R_EXTRA}
+            "RE15_EXIT_AT=${_ende}"
             "${_exe}")
     endif()
     if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -88,10 +97,12 @@ function(lauf _name _ton)
     endif()
     file(STRINGS "${WORKDIR}/debug.log" _sp REGEX "\\[spawn-diag\\] Sce_em_set type=0x20 ")
     file(STRINGS "${WORKDIR}/debug.log" _cont REGEX "CONTINUE: resumed in room")
+    file(STRINGS "${WORKDIR}/debug.log" _tuer REGEX "\\[fire-aot\\] slot=0|\\[tuer\\] Sequenz")
     message(STATUS "${_tag}[${_name}] exit=${_rv} ${_cont}\n${_h}")
     set(R39R_H "${_h}" PARENT_SCOPE)
     set(R39R_SP "${_sp}" PARENT_SCOPE)
     set(R39R_CONT "${_cont}" PARENT_SCOPE)
+    set(R39R_TUER "${_tuer}" PARENT_SCOPE)
 endfunction()
 
 # ---- A: Panikphase, echter Weg -------------------------------------------------------------------
@@ -210,6 +221,23 @@ string(FIND "${_fl}" "Ausloeser" _f2)
 if(_f1 LESS 0 OR _f2 LESS 0)
     fail("D: Leons Kraehen-Ereignis fehlt:\n${_fl}")
 endif()
+
+# ---- E: Tuer-Weg ROOM1061 -> ROOM1121 ----------------------------------------------------------------
+set(R39R_START 200)
+set(R39R_ENDE "420#1121")
+set(R39R_EXTRA "RE15_FIRE_AOT=0@40#1061")
+lauf(E 0 1061 26600 24300 0 9:97)
+list(LENGTH R39R_TUER _nt)
+if(_nt LESS 2)
+    fail("E: Tuer Slot 0 nicht genommen: '${R39R_TUER}'")
+endif()
+foreach(_muss "ROOM1121 scharf" "Ausloeser: Spieler" "Hund Slot 5 gesetzt bei (5400,-1827,12100) RE2-Hirn 1"
+              "13 Splitter" "Knall 2:" "Zustand 1 Sub 2")
+    string(FIND "${R39R_H}" "${_muss}" _f)
+    if(_f LESS 0)
+        fail("E: '${_muss}' fehlt in hund.log (Tuer-Weg)")
+    endif()
+endforeach()
 
 file(REMOVE "${_exe}")
 file(REMOVE_RECURSE "${_basis}")

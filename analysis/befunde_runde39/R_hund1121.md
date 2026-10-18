@@ -10,15 +10,33 @@ Spur P), einmal; Ort = Fenster von Leons Kraehen-Ereignis in ROOM1120 (Geometrie
 Hunde-Gegner (Typ 0x20). Leon unveraendert, ohne Bit 97 kein Hund.
 
 ## Stand / Schritte
-- [~] 1 Leons Kraehen-Ereignis 1120 belegt (R1); Messung am Bau folgt
-- [ ] 2 Geometrie 1121 (gleiches Fenster? Kameras, Kollision)
-- [x] 3 RE2-Form eines Hunde-Sprungs: ROOM21A0 sub07 + Modul Sub 14 (R2/R3)
-- [ ] 4 Umsetzung (Hund-EMD im Raum, Sprung-Clip, Glas-Ton, danach Gegner)
-- [ ] 5 Messung am echten Weg mit Elza + Riegel unit/integration
-- [ ] 6 gezielte Tests (ctest -R)
+- [x] 1 Leons Kraehen-Ereignis 1120 belegt (R1) und am Bau gemessen (M1)
+- [x] 2 Geometrie 1121: dasselbe RDT und Fenster, Wandzellen je Band (R5), Kamera Cut 1 (R5, N3)
+- [x] 3 RE2-Form eines Hunde-Sprungs: ROOM21A0 sub07 + Modul Sub 14 (R2/R3), RE1.5-Gegenstueck (R4)
+- [x] 4 Umsetzung (U1-U4)
+- [x] 5 Messung am echten Weg mit Elza (CONTINUE + Tuer-Weg) + Riegel unit/integration (N1-N4)
+- [ ] 6 gezielte Tests + alle unit_/prop_/probe_ (T1/T2)
 
 ## Messung vorher
-(folgt)
+
+### M1 Leons Ereignis ROOM1120 am Bau 02dc7917 (`ctest -R "r35_fenster|r36_elza_fenster"`)
+```
+[fenster] ROOM1120 scharf: Slot 4 Band x 3500..6650 z 4300..6400 Ereignis 24
+[fenster] Kraehe Slot 4 versteckt bei (5400,-2500,12100)
+[fenster] Ausloeser: Spieler (5000,4325) im Band, Ereignis 24 0
+[fenster] Splitter Bank 0x10 Platz 95 Lage x 4700 z 10200   ... 13 Splitter
+[fenster] Knall 1: Raumbank-Satz 0x21 (RE2 Se_on 0x02210001) T+5 0
+[fenster] Knall 2: Raumbank-Satz 0x21 (RE2 Se_on 0x02210001) T+10 0
+[fenster] Zeitlinie fertig T+23 Splitter 13 Knalle 2 0
+r35_fenster[A]: Schaden belegt in Bild(ern) 150;180;240;270;300;330
+r36_elza_fenster: OK — 4 Kraehen (Slot 3 bei (5327,0,10217)), Schaden 309/309 Pixel nach Formel
+100% tests passed, 0 tests failed out of 8
+```
+Kamera = Cut 1 (Gameplay-Kamera, kein Cut_chg im Ereignis); Glas-Ton = RE2-Raumbank room1090 Satz 0x21, zweimal.
+
+### M2 Elza ROOM1121 mit (9,97) = 1 am Bau 02dc7917 (Spielstand + CONTINUE, Elza laeuft durchs Band)
+`[spawn-diag]` nur die vier Kraehen (main00 Slot 0..2 und die Elza-Kraehe Slot 3 bei (5327,0,10217)), KEIN Typ 0x20, kein
+Ereignis; `[fenster] ROOM1121 (Elza): Fenster kaputt, Kraehe Slot 3 Kill-Flag 0xAC`. Ausgangsstand: kein Hund.
 
 ## RE-Belege
 
@@ -93,18 +111,142 @@ Hunde-Bank 6 ist Satz 0x13 NICHT belegt (selbst dekodiert, ENEMSE.VBS Bank 6 EDT
 * 0x80015350 (RE2 PSX.EXE): Drehmatrix aus (0, +0x76+a1, +0x78+a2) und (+0x144,+0x146,+0x148) auf x/y/z
   (@0x80015388-0x800153D8) = Port re2d_move3d.
 
+### R4 RE1.5-Gegenstueck (reiner RE1.5-KI-Modus; Standard ist RE2, MIXED legt 0x20 ebenfalls auf RE2)
+* RE1.5-Hunde-INIT STAGE1.BIN @0x8010db88-98: `lbu v1,9(a0)` / `ori v0,zero,0x40` / `bne` / `sw v0,4(a0)` (v0 = 4) ->
+  grid 0x40 = Zustand 4 Sub 0 = Skript-Sprung, wartet; Tor @0x801113e4-ec `lbu v1,9(a0)` / `ori v0,zero,0x43` / `bne`.
+* Freigabe im Original: ROOM1190 sub10 @0x027E6 `34 0c 43 00` (Member_set 0x0C = grid, 0x43) nach `2e 02 00` (Work_set).
+* Sprung 0x80111398 (Clip 0x14 + Se(5), Steigen ab Bild 12, Landeclip 0x15, Ausgang Wort 0x201 @0x8011162c) = im Port
+  re15_dog_state456 (enemy_ai_common.c); laeuft auch im RE2-Modus fuer die Raum-Skript-Hunde von ROOM1190.
+
+### R5 Geometrie ROOM1121 (= ROOM1120.RDT bytegleich, Runde 36 L)
+* SCA @0x2FC: Kopf `50 da 0e cb`, 5 Regionen zu je 39 Zellen (`27 00 00 00` x 5), 195 Zellen, Baender {0,1,2} zu je 65.
+  Die Rueckwand steht in ALLEN drei Baendern; Band 1 = Region r Index 15 = `56 2c d0 07 74 f5 c0 2b 01 ff 00 13`
+  (w 11350, d 2000, x -2700, z 11200, Typ 1, u0 0xFF, floor 0x13) @0x003C8 / @0x0059C / @0x00770 / @0x00944 / @0x00B18.
+* Band eines Gegners = -(y / 0x708) (re15_collision_band_from_y); die Klemme prueft strikt band == floor>>4
+  (re15_collision.c collision_constrain_impl). Der Hund auf der Bruestung (y -1827) ist Band 1.
+* RE1.5-Satzform der Zellen-Freigabe: ROOM1130 sub02 @0x00AC8..@0x00AD8 `37 00 0a 00` .. `37 04 0a 00` (je Region ein
+  Sca_id_set; Handler LAB_8004175c: u0 := Wert, Bit 0 = fest; Port op_sca_id_set in scd_vm.c).
+* Kamera: Cut 0 an der Tuer-0-Ankunft (150,0,9550) (ROOM1061 main00 @0x00D12 Door_aot_set Slot 0 -> Raum 0x12 Cut 0),
+  RVD-Wechsel auf Cut 1 im hinteren Quergang (gemessen x ~4185), Cut 1 = Gang nach Norden auf das Fenster
+  (Runde 35 M §1), Cut 2 suedlich davon (gemessen ab z ~1600).
+
+### R6 Zone-7-Bit fuer den Hund (Tot-Bit + Einmal-Riegel)
+Zensus aller 144 RDTs STAGE1-3 (scd_dump_room.py, 0 Abbrueche; Sce_em_set pc[7] + Ck/Set Bank 7): 80 Bits frei, u.a.
+0xA0-0xA3, 0xAC, 0xAE, 0xAF. Im Port belegt: 0x28-0x2B, 0x2E-0x31, 0x4B-0x4F, 0x53, 0x54, 0x5A, 0x5B, 0x5F (Montage,
+re15_irons_tod.h) und 0xAC (Elza-Kraehe Runde 36). Gewaehlt **0xAE**. Bank 9 hat keinen freien Port-Platz mehr
+(VERTRAG §1.1: 69 C, 70 I, 94 J, 95 Q, 96 O, 97 P).
+
+### R7 Ton
+* Glas = RE2 room1090 Raumbank Satz 0x21 (shared_assets/RE2/GLAS1090.EDT/.VH/.VB, Runde 35) ueber re15_fenster1120_se_hook.
+* Hund: SE 3 beim Absprung (@0x80102D74), SE 10 bei der Landung (@0x801015FC), Clip-Ereignis SE 8 (ACTIVE-Schwanz
+  @0x80100510-30) — ENEMSE-Bank 6 (RE2DOG_ENEMSE_BANK); alle drei belegt (selbst dekodiert, ENEMSE.VBS Bank 6 EDT
+  @0x075800: id 3 = `034b0000`, 8 = `02990000`, 10 = `02b20000`).
+* ROOM21A0 sub07 @0x02126 `36 03 13 00 03 00` = Bank 3 (ENEMSE) Satz 0x13: in Bank 6 nicht belegt -> im Original stumm.
 
 ## Umsetzung
-(folgt)
+
+### U1 Ereignis-Modul (NEU) engine/src/hund1121_r39.c + include/re15_hund1121_r39.h
+| Konstante | Wert | Beleg |
+|---|---|---|
+| RE15_R39R_RAUM | 0x1121 | Elza-Variante (FUN_800396fc @0x800397e4 / @0x800397ec) |
+| RE15_R39R_PANIK_BANK / _BIT | 9 / 97 | VERTRAG §1.1 (Spur P setzt und loescht, R liest nur) |
+| RE15_R39R_EREIGNIS | 30 | Port-Ereignis < 32 (scd_event_fire); belegt 2..6, 13, 20..29 |
+| RE15_R39R_SLOT | 4 | derselbe Platz wie Leons Band in 1120 (main00 0..3) |
+| Band | x 3500..6650, z 4300..6400, sce 3, sat 0x41, p0 0x00FF, p1 (30 << 8) + 0x18 | re15_fenster1120.h (ROOM1050 @0x0C22, RE2 room1090 sub03 @0x0014) |
+| RE15_R39R_EM | 4 (Aktor 5) | main00 0..2, Elza-Kraehe 3 |
+| RE15_R39R_KILL | 0xAE | R6 |
+| RE15_R39R_X / _Z / _DIR | 5400 / 12100 / 0x0418 | Start der Fensterkraehe (RE2 room1090 sub09 Kraehe 0, abgebildet) — PORT-WAHL |
+| RE15_R39R_Y | -1827 | Rahmen-Unterkante, Rueckprojektion Cut 1 (Runde 35 M §1) — PORT-WAHL |
+| RE15_R39R_GLAS_Z | 11200 | Rueckwand (R5) |
+| RE15_R39R_WAND_INDEX / _REGIONEN | 15 / 5 | R5 |
+| RE15_R39R_RE2_STATE / _SUB / _LOS | 1 / 14 / 1 | ROOM21A0 sub07 @0x020FE / @0x02102 / @0x02122 |
+| RE15_R39R_RE15_GRID / _LOS | 0x40 / 0x43 | @0x8010db88-98 / @0x801113e4-ec, ROOM1190 sub10 @0x027E6 |
+| RE15_R39R_T_KNALL1 / 2 | 3 / 8 | room1090 sub15 Sleep 3 @0x0204, Sleep 5 @0x0214 |
+
+Programm (Ereignis 30, 56 B, RE1.5-Opcodes in der vorhandenen VM):
+```
+37 00 0f 00  37 01 0f 00  37 02 0f 00  37 03 0f 00  37 04 0f 00    Sca_id_set Band-1-Rueckwand (Form ROOM1130 @0x00AC8)
+44 04 20 00 00 00 00 ae 18 15 dd f8 44 2f 00 00 18 04 00 00        Sce_em_set Hund (Form ROOM1120 main00 @0x00D0C)
+22 07 ae 01                                                         Set(7,0xAE,1) (Form ROOM1120 sub01 @0x00D6C)
+46 04 00 00 00 00 00 00 00 00                                       Aot_reset(4) (LAB_80040738)
+01 00                                                               Evt_end
+```
+(Im reinen RE1.5-KI-Modus ist pc[3] des Sce_em_set 0x40.) Der Takt vor der KI (game_step_common.c) fuehrt die Schritte:
+Spawn-Bild INIT -> Bild 1 Umstellung wie ROOM21A0 sub07 (+4 = 1, +5 = 14, +6 = 0, +7 = 0) -> Bild 2 Freigabe (+7 = 1;
+RE1.5: grid 0x43) -> Glas im ersten Bild, das den Hund diesseits z 11200 sieht (Rumble @0x003A/@0x0040/@0x0046, 13 Splitter
+@0x0054..0x01D4) -> Knall +3 und +8 -> Wand wieder fest, sobald z + Radius < 11200 -> fertig, wenn der Hund den Sprung
+verlassen hat (Sub 14 -> 2 @0x80102E2C bzw. Zustand 4 -> 0x201 @0x8011162c). Messschiene RE15_HUND1121_LOG=<datei>.
+
+PORT-WAHLEN (Form jeweils belegt): Lage auf der Anfluglinie der Kraehe (der Nutzer: "dort wo bei Leon die Kraehe durch
+das Fenster fliegt"), Hoehe auf der Bruestung (tiefster Punkt, von dem der RE2-Sprung die Scheiben trifft: Fuesse beim
+Durchgang y -2147..-2427 innerhalb der Scheiben y -1953..-3049); Glasbruch im Bild des Durchgangs (room1090: Splitter
+kommen, wenn die Kraehe an der Scheibe ist; ROOM21A0: das Hindernis kippt im Sprung, sub09 Sleep 10); Wand nach dem
+Durchsprung wieder fest (die Band-1-Zelle deckt die ganze Rueckwand x -2700..8650 ab, nicht nur das Fenster); kein
+Bodenschatten jenseits der Glasebene (er laege hinter der Wand am Wandfuss — wie bei der versteckten Fensterkraehe der
+Runde 35).
+
+### U2 RE2-Startmaschine (enemy_ai_re2_dog.c, re2d_windowjump_launch, Kommentar "Runde 39 Spur R")
+* Phase 0: die Port-Zeile `e->sub_state_3 = 1` entfernt — das Original hat dort KEINEN +7-Schreiber (@0x80102CD4-F4); die
+  Phase wartet auf Member_set(+7 = 1) (Setter @0x80055D00).
+* Phase 1: faellt in den Phase-2-Rumpf (@0x80102D20 -> @0x80102D24: Schritt, Advance, +0x158-- im selben Bild).
+* Wirkung sonst keine: Sub 14/15 hatten im Port keinen Produzenten (RE1.5-Spawns liefern Spawn-Wort 0; Sub 15 nur aus
+  Sub 13, das nur aus Sub 15 bzw. Spawn 7 kommt).
+* NICHT modelliert: +0x1C0 |= 2 / &= 0xFD (@0x80102CE8 / @0x80102D18) — Leser nur in der Kopf-/Part-Verfolgung
+  0x80017xxx, die der Port fuer den Hund dokumentiert offen fuehrt (0x80104B98 in enemy_ai_re2_dog.c).
+
+### U3 Haken in gemeinsamen Dateien (je 1-3 Zeilen, Kommentar "Runde 39 Spur R")
+scd_vm.c (Ereignis-Weiche + include), scd_room_setup.c (Installer am Blockende + include), platform/pc/main.c (Installer am
+Boot-/CONTINUE-Weg, Schatten aus jenseits der Glasebene, include), game_step_common.c (Takt vor der KI + include),
+enemy_ai_re2_dog.c (U2).
+
+### U4 Modell im Raum
+Kein eigener Lader noetig: der Original-Lader FUN_80022300 laedt beim Sce_em_set (`jal 0x80022300` @0x80042328), der Port
+in der Bildschleife je aktivem Aktor (pc_enemy_load_ex, platform/pc/main.c ~7633) — im RE2-Modus die RE2-Bank EM020 aus
+shared_assets/RE2/CDEMD0.EMS (Clip 20 = Anlauf, Clip 21 = Landung) mit RE1.5-Netz (Hybrid) und ENEMSE-Bank 6. Das INIT im
+Spawn-Bild braucht die Bank nicht (re2d_clip schreibt nur Felder), ab Bild 1 ist sie geladen (Lauf A: Clip 20 ab F146).
 
 ## Messung nachher
-(folgt)
 
-## Tests
-(folgt)
+### N1 Die erste Messung zeigte den Wandschub (Grund fuer R5 / Sca_id_set)
+Probe ohne Zellen-Freigabe: `F79 Hund Slot 5 gesetzt bei (5400,-1827,12100)`, im Spawn-Bild auf (5400,10682) geschoben
+(= 11200 - Radius, Klemme in Band 1). Mit Sca_id_set: `Freigabe ... Hund (5400,-1827,12100)` — er wartet auf der Bruestung.
 
-## OFFEN
-(folgt)
+### N2 Unit (test_r39_hund1121, Ausgabe R_belege/R_hund1121_unit.txt)
+```
+T  0 ( 5400, -1827, 12100) st1/ 0/0/0 clip 1             INIT
+T  1 ( 5400, -1827, 12100) st1/14/0/0                    ROOM21A0 sub07 @0x020FE
+T  2 ( 5397, -1827, 12036) st1/14/0/2 clip20 v 65        Freigabe @0x02122, Schritt im selben Bild (@0x80102D24)
+T  3                                        SE 8         Clip-20-Ereignis (@0x80100510-30)
+T  9 ( 5376, -1827, 11588) st1/14/1/0 clip20 v280 SE 3   Absprung nach 8 Anlaufbildern (@0x80101398, @0x80102D74)
+T 10 ( 5365, -2147, 11309) .. T17 ( 5288, -3267, 9356) clip21   Steigflug -320/+40, Scheitel y0 - 1440
+T 31 ( 5134,     0,  5450) st1/14/2/1 SE 10              Landung (@0x801015FC)
+T 43 st1/ 2/0/0, T44 fertig                               Sub 2 = RUN (@0x80102E2C)
+Glas T12 (Durchgang nach T11), Splitter 13, Knalle 2 Satz 0x21 (T15 / T20)
+RE1.5: Zustand 4 1, Freigabe T2, Ausgang T31, Glas T18, Knalle 2, Zustand 1 Sub 2
+Startmaschine: 60 Bilder Phase 0 ohne Bewegung; Freigabe-Bild +7 2 Clip 20 Speed 65 +0x158 7 z -65; Absprung nach 7 weiteren
+```
 
-## Fuer den Nutzer
-(folgt)
+### N3 Echter Weg, Elza, Spielstand + CONTINUE (integration_r39_hund1121 Lauf A; R_belege/R_hund1121_echtweg_hund.log)
+Elza an der Tuer-0-Ankunft (150,0,9550) Gier 0, Weg `XU1.5,R0.35,XU2.5` (nach Osten, Drehung, den Gang nach Sueden):
+```
+F143 Ausloeser: Spieler (6020,6207) im Band, Ereignis 30
+F144 Hund Slot 5 gesetzt bei (5400,-1827,12100) RE2-Hirn 1
+F145 RE2: Sub 14 Phase 0       F146 Freigabe (RE2=1), Takt 2, Hund (5400,-1827,12100)
+F156 Glas: Hund bei (5354,-2427,11030) erreicht die Glasebene z 11200, 13 Splitter
+F158 Wand Band 1 wieder zu     F159 Knall 1     F164 Knall 2     F188 fertig T44: Hund (5024,2542) Zustand 1 Sub 2
+```
+Mitschnitt (RE15_AUDIO_CAP_SYNC, je 6 Bilder ab dem Knall-Bild): Lauf A Spitze 26325 (F160) und 29813 (F167), Median 1708;
+derselbe Weg ohne (9,97) (Lauf B) 5742 und 2352, Median 857. Bild F146 (Wartebild) A gegen B: rechte Scheibe (x 196..207,
+y 80..101) 93 verschiedene Pixel, linke Scheibe 0. Sichtpruefung (R_belege/R_hund1121_sprung_cut1.png und
+R_hund1121_fenster_ausschnitt.png): F144-F154 steht der Hund in der rechten Scheibe, F156 springt er hoch durch das
+Fenster, die RE2-Splitter spritzen, F158-F164 fliegt er ueber den Gang (Kraehen daneben), ab F168 Cut 2 (Elza ist
+weitergerannt); danach greift er an (Tuer-Lauf E: Elza hp 100 -> 80 -> 75).
+
+### N4 Gegenlaeufe und Tuer-Weg (integration_r39_hund1121 Laeufe B-E) und RE1.5-KI
+* B ohne (9,97): `ROOM1121 aus: (9,97)=0 (7,0xAE)=0`, kein Typ 0x20.
+* C (9,97) + (7,0xAE): `ROOM1121 aus: (9,97)=1 (7,0xAE)=1`, kein Typ 0x20.
+* D Leon ROOM1120 mit (9,97) + (9,73): Leons Kraehen-Ereignis (`ROOM1120 scharf`, `Ausloeser`), kein Hund, kein hund.log.
+* E Elza ROOM1061 -> die echte Tuer Slot 0 (RE15_FIRE_AOT, `[tuer] Sequenz ... DOOR07`) -> ROOM1121 (Installer am
+  Tuer-Weg scd_room_setup.c, `F40 ROOM1121 scharf`) -> derselbe Weg: `F271 Ausloeser` .. `F316 fertig ... Zustand 1 Sub 2`.
+* RE1.5-KI live (RE15_AI_FLAVOR=1.5): `behavior=0x40`, `RE1.5: Zustand 4 Sub 0 wartet auf grid 0x43`, Glas F163 bei
+  y -1907, zwei Knalle, `fertig T32 ... Zustand 1 Sub 2`.

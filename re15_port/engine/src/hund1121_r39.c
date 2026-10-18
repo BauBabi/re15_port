@@ -168,7 +168,7 @@ const uint8_t *re15_hund1121_r39_ereignis(uint16_t room_id, uint8_t event_id)
     s_wand_offen = 1;                                   /* die ersten 5 Saetze geben die Wand frei */
     logf_("[hund1121] Ausloeser: Spieler (%d,%d) im Band, Ereignis %d, Verhalten 0x%02X %d",
           (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
-          RE15_R39R_EREIGNIS, (int)s_prog[3], 0);
+          RE15_R39R_EREIGNIS, (int)s_prog[RE15_R39R_WAND_REGIONEN * 4 + 3], 0);   /* pc[3] des Sce_em_set */
     return s_prog;
 }
 
