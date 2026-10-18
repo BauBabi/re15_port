@@ -464,3 +464,27 @@ Kachel (Kachel-Index 4), Zeile fuer FUN_800473f8 per kleinsten Quadraten (zeile_
   Unterkante y168 der Absatz-Zelle (141,153,18,16). Marke -> (145,164): Sprossen y162/164/166, eine Zeile Abstand; die
   Projektion bleibt im 5x5-Kasten (Riegel r36 Treppe <= 1 px haelt). Riegel unit_r39_karten_b1 prueft jetzt "keine
   Sprosse beruehrt die Randlinie" (Nachbarpixel jeder Sprosse im Innenraum).
+
+### Nachbesserung 1 - Riegel (neu/erweitert) und Messung an der echten exe
+* `unit_r39_karten_teil` (M3): (a) jede bedingte Korrektur hat einen Traeger, dessen Kachel auf der Ersatzlinie Index 4
+  traegt (15 Eintraege); (b) jeder Ort der Abnahme ALLEIN besucht: kein Raumkoerper grenzt an den Grund (Klassenbild der
+  echten Op-Liste, komposit()); (c) Ort + Traeger besucht: die Korrektur greift (keine Doppelwand); (d) ROOM1000-Kanten
+  mit Traeger weg. NEGATIVPROBE (Traeger-Gatter voruebergehend aus = Stand 40328436, nur die Sonde gebaut, danach
+  zurueckgesetzt): `1050 5, 1020 15, 1040 14, 1070 34, 1010 30/30, 1080 8, 1000 45/28/13, 1110 1, 1220 16/16` -> ROT.
+* `unit_r39_karten_treppen` (M4/M5/M1): jedes Treppensymbol von 1060 (1F/2F/3F), 10A0 (1F/B2/B1) und 1170 Zone 1 (3F)
+  liegt <= 2 px (Chebyshev = 5x5-Kasten) von der Projektion seines STAIR-AOT-Laufs (Aot_set sce 12/13 aus dem
+  geladenen RDT, Zeile des Blatts, re15_map_zone_marker = FUN_800473f8). Gemessen: 1060 1/1, 1/1, 0; 10A0 1/1, 1/2,
+  0/0; 1170 0/1. Vorher (Bbox, Abnahme Abschnitt 7) 5/2, 5/2, 4/2, 4/3 px -> ROT.
+* `unit_r39_karten_marker` (M5): markerflaeche 1030, 1060 Band 0/4/8, 10A0 Band 1/8, 1110 (drei Teile + Elza 1111),
+  1170 Zone 1 3F + Dach, 10C0, 1120 - je 0 begehbare Rasterpunkte neben der Zeichnung.
+* `unit_r39_karten_b1` (M2): zusaetzlich "keine Sprosse beruehrt die Randlinie" - (145,164) und (154,162) PASS; mit
+  (145,165) waere die unterste Sprosse am Rand y168.
+* `integration_r39_karten` (echte exe): Sweep B2/1F/2F 0 Abweichungen; 3F 0 Abweichungen ausserhalb der drei
+  begruendeten Treppen-Kaesten, die neuen Symbole (140,147), (156,98), (168,106) je 15/15 Sprossenpixel; Doppelwand
+  0/0/0/0/0; NEU Laeufe TN/TW/TZ (ROOM1000 Nord-WC, 1070, 1010 Zone 0 je allein): `0 Koerperpixel am Grund` (vorher
+  26/34/30 verlorene Wandpixel). Lauf 92 s, PASS.
+* Echte exe, Stichproben Ring (ring.py der Abnahme, Bau ~22:05): Leon auf der 1060-Treppe (25150,0,22000) -> Ring
+  (122,143) auf dem Vorlagen-Symbol x120..124 (vorher (126,143) daneben); 1030 Westfluegel (-25000,-4500) -> (123,131)
+  in der gemalten Kachel (y126..133); 1110 Tuergang (-2650,-5500) -> (183,117) im gemalten Schwenk. Sonde = exe - 1
+  (Ringsprite). 1170 Zone 1 per CONTINUE nicht abziehbar (der Raum startet mit der Intro-Szene, Spawn am
+  Intro-Wegpunkt) - dort misst die Sonde denselben Pfad (re15_inv_map_marker).
