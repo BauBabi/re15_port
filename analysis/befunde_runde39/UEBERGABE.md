@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 13:46: Spur F zustand BESTANDEN nach Nachbesserung 1 (Abnahme 1 07312f9a; Fix 8c9c104e): volle Heilung = ganze
+  Kleidung (Wund-Tabelle genullt + Spielerhaut neu wie FUN_800314b0, Schwelle 100 @0x8004ae14 / Weste 105; dabei Heap-
+  Absturz bei Vollheilung MIT Weste (free auf Container-Schnittzeiger) gefunden und behoben), Gift -1 HP alle 31 Bilder wie
+  RE2 (Takt @0x8003c154/64), EKG magenta "Poison"; 3 + 39 Tests. In die Integration gemergt (108cc2d7, konfliktfrei).
+  H6 (Zitat-Fehler in Kommentaren: Haut-Upload ist @0x800315b0/@0x80031814, Builder @0x800316c8) vom Orchestrator in der
+  Integration nachgezogen. FUER DEN NUTZER: EKG-Welle unter Gift ist die RE1.5-Welle in RE2-Farbe - die RE2-POISON-Welle
+  passt nicht ohne erfundene Skalierung in den RE1.5-Monitor (Entscheidungsfrage, Dossier F 5).
 * 2026-10-18 13:33: Spur H elza BESTANDEN (Abnahme 0 086a75dd; Fix 564810c0): 1031 Hand einmal (Latch @0x80041bb0 +
   Lauf-Clip am Walker-Sub-Init @0x800313a4/@0x80030b58/@0x80030d90 - gilt fuer JEDE Spieler-Plc_dest-Ausrichtung), Karte
   sofort nach Roys Tagebuch (Faden parkt auf Message_on @0x00E64; RE2 Opcode 0x84 @0x800591C4), Loescher-Prop 1090/1091
