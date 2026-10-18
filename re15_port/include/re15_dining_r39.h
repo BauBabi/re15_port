@@ -50,8 +50,10 @@
 #define RE15_R39J_JOHN_TUER_YAW  1024       /* Blick -Z in den Gang (pos_advance @0x800245d8 z -= sin)                 */
 #define RE15_R39J_ELZA_VORNE_X   (-7800)    /* Elza im Bild von Cut 7 (Blick nach Sueden): Fuss (208,234), Kopf (215,147)*/
 #define RE15_R39J_ELZA_VORNE_Z   (-12800)
-#define RE15_R39J_ELZA_NACH_X    (-6000)    /* Elza beim Gespraech nach dem Kampf, Bild von Cut 8: Fuss (217,232)       */
-#define RE15_R39J_ELZA_NACH_Z    (-20000)
+#define RE15_R39J_ELZA_NACH_X    (-5800)    /* Elza beim Gespraech nach dem Kampf, 1750 oestlich von John: Bild von Cut 8
+                                             * Elza (145,130..215) / John (194,135..200) nebeneinander, Elza ausserhalb
+                                             * von Johns Bahn (BAHN_X_MAX -6450) und nicht vor ihm (Messung 4.2)        */
+#define RE15_R39J_ELZA_NACH_Z    (-21500)
 #define RE15_R39J_ECKE_X         (-7550)    /* Johns Platz im Kampf = sub02 @0x00F8E `40 00 05 01 82 e2 04 ac`         */
 #define RE15_R39J_ECKE_Z         (-21500)
 
