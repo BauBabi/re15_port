@@ -4,10 +4,11 @@ cmake_minimum_required(VERSION 3.16)
 # include/re15_dining_r39.h. Die Unit-Riegel unit_r39_dining1141_* pruefen die Mechanik am Engine-Code; dieser Riegel
 # prueft den Nutzerweg mit Elza an der exe (Debug-Sprung nach ROOM1131, danach nur echte Tueren per RE15_WEGPLAN):
 #   1131 (Dining Room Key benutzen, Tuer) -> 1141 Phase H (Klopfen + help01..05, Elzas Reaktion) -> Gemaelde "ja" ->
-#   Rolladen, Kamera vorne auf Elza, Tuer auf/zu, Kamera auf die Tuer mit John -> Szene (Glasbruch vor msg 6, Blick ab
-#   msg 9) -> Tuersperre msg 41 -> Kampfende per Messhaken RE15_R38F_GORILLAS_TOT (Kill-Flags (7,0xCB)/(7,0xCC), KEINE
-#   Schusszahl: Gorilla-Energie zieht Spur E nach, Hinweis des Orchestrators) -> msg 51/52 -> Johns Abgang -> Dachtuer
-#   -> 1171 (Musik beim Wechsel, Punkt 9).
+#   Rolladen, danach frei laufen (Nachbesserung 1 N4.1) -> Riegel der Dachtuer (msg 12) -> Elza rennt zur Kamera Cut 7,
+#   dreht sich zur Tuer, hebt die Waffe (N4.2; hier ohne Schusswaffe = Messer) -> Tuer auf/zu, Kamera auf die Tuer mit
+#   John -> Szene (Glasbruch vor msg 6, Blick ab msg 9) -> Tuersperre msg 41 -> Kampf, John schiesst ab und an (N4.3) ->
+#   Kampfende per Messhaken RE15_R38F_GORILLAS_TOT (Kill-Flags (7,0xCB)/(7,0xCC), KEINE Schusszahl) -> msg 51/52 mit
+#   Folge-Geste Clip 17 (M2), John springt nicht (M3) -> Johns Abgang -> Dachtuer -> 1171 (Musik beim Wechsel, Punkt 9).
 # Geprueft: debug.log, RE15_R39J_LOG (Messschiene engine/src/dining_r39.c), wegplan_log.txt und der Ton-Mitschnitt
 # (Werkzeug test_r39_dining1141 pegel). Bilder je 10 Takte per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) im Arbeitsordner.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_R39J_WERKZEUG=<test_r39_dining1141> -DWORKDIR=<dir> -P test_r39_dining1141.cmake
@@ -71,7 +72,8 @@ macro(pruef_wahr _bed _text)
 endmacro()
 
 # Wegplan (geschlossen geregelt, engine/src/dachkiste_r36.c): 1131 Schluessel + Tuer (Druckzahl wie integration_r38_
-# dining1141 D), 1141 erst stehen (Klopfen, Hilferuf, Reaktion), Gemaelde (1+3 Drucke), Szene abwarten (WARTE zaehlt nur
+# dining1141 D), 1141 erst stehen (Klopfen, Hilferuf, Reaktion), Gemaelde (1+3 Drucke), nach dem Rolladen 200 freie
+# Bilder (N4.1), durch die Rolladen-Oeffnung zur Dachtuer, Riegel (msg 12 schliessen), Szene abwarten (WARTE zaehlt nur
 # freie Bilder), Doppeltuer im Kampf (msg 41), Warten bis der Messhaken die Gorillas toetet und Gespraech + Abgang durch
 # sind, Dachtuer.
 set(_plan "RAUM 1131
@@ -97,9 +99,17 @@ WARTE 60
 AKTION
 WARTE 60
 AKTION
-WARTE 60
+WARTE 200
+GEHE -7350 -8500 150
+GEHE -7350 -7600 150
+GEHE -7250 -1000 80
+BLICK 3072
 AKTION
-WARTE 120
+WARTE 40
+AKTION
+WARTE 40
+AKTION
+WARTE 60
 GEHE -7900 -15000 150
 GEHE -7900 -17750 80
 BLICK 2048
@@ -164,7 +174,18 @@ string(SUBSTRING "${_d}" ${_a} ${_len} _r)
 # Runde 38 (unveraendert, aus integration_r38_dining1141 D uebernommen): Schluessel gegeben + benutzt, Tuer offen
 pruef(_d "[give] item 67 x1")
 pruef(_d "ROOM1131: Dining Room Key benutzt -> Tuer offen, Flag (9,66) = 1")
-pruef(_r "ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG")
+pruef(_r "ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm ROLLTOR39")
+# Nachbesserung 1 N4.2: die Szene startet am Riegel der Dachtuer (sub05 msg 12), Elza hebt die Waffe (ohne Schusswaffe
+# im Inventar das Messer), N4.3: John schiesst; N6: Zeilen klein geschrieben
+pruef(_r "ROOM1141 Riegel der Dachtuer (Ereignis 5) in Phase H -> Programm ENTRIEGELN39")
+pruef(_r "[msg] room=1141 id=12 ")
+pruef(_r "Dachtuer entriegelt: Elza hebt Waffe 1 (vorher 1, Messer)")
+pruef(_r "Elza Plc_motion(2,6) -> W-Bank-Clip 6")
+pruef(_r "John schiesst (Schuss 2)")
+pruef(_r "He is in trouble, I have to help him!")
+pruef(_r "we end up as gorilla meal....")
+pruef_nicht(_r "He is in Trouble")
+pruef_nicht(_r "as Gorilla meal")
 pruef(_r "Se_on bank=0x3B id=12 -> Runde 38 Spur F")
 pruef(_r "Se_on bank=0x3B id=10 -> Runde 38 Spur F")
 pruef(_r "Se_on bank=0x3B id=11 -> Runde 38 Spur F")
@@ -232,11 +253,23 @@ set(_cut7_seit "")
 set(_blick_n 0)
 set(_blick_aus 0)
 set(_b51_blick 0)
-set(_wink 0)
 set(_geste15 0)
 set(_b67 0)
 set(_cut7_frei 0)
 set(_m5_ende "")
+set(_frei_nach_rolladen 0)
+set(_entriegelt_z "")
+set(_heben "")
+set(_heben_vor_john FALSE)
+set(_schuesse 0)
+set(_treffer 0)
+set(_geste17 0)
+set(_zielt_auf_elza 0)
+set(_sprung_max 0)
+set(_sprung_f "")
+set(_vor_jx "")
+set(_vor_jz "")
+set(_vor_anz "")
 foreach(_z IN LISTS _zeilen)
     # CMake kennt nur CMAKE_MATCH_1..9: Hauptteil mit 8 Gruppen, b67/blick einzeln.
     if(NOT _z MATCHES "^F([0-9]+) cam=[0-9]+ anz=([0-9]+) msg=([01])/([0-9]+) john=[01] \\((-?[0-9]+),(-?[0-9]+)\\) rot=[0-9]+ st=[0-9]+ s1=([0-9]+) s2=[0-9]+ mo=(-?[0-9]+) ")
@@ -261,6 +294,63 @@ foreach(_z IN LISTS _zeilen)
     if(_bl LESS 0)
         math(EXPR _bl "-(${_bl})")
     endif()
+    if(NOT _z MATCHES " 6a=([01]) .* pm=([0-9]+) c3=([01]) w=(-?[0-9]+) sch=([0-9]+)/([0-9]+) ")
+        continue()
+    endif()
+    set(_6a ${CMAKE_MATCH_1})
+    set(_pm ${CMAKE_MATCH_2})
+    set(_c3 ${CMAKE_MATCH_3})
+    set(_w ${CMAKE_MATCH_4})
+    set(_schuesse ${CMAKE_MATCH_5})
+    set(_treffer ${CMAKE_MATCH_6})
+    if(NOT _z MATCHES " elza=\\((-?[0-9]+),(-?[0-9]+)\\) ")
+        continue()
+    endif()
+    set(_ez ${CMAKE_MATCH_2})
+    # N4.1: nach dem Rolladen frei laufen, solange die Dachtuer verriegelt ist
+    if(_6a EQUAL 1 AND _c3 EQUAL 0 AND _pm EQUAL 0)
+        math(EXPR _frei_nach_rolladen "${_frei_nach_rolladen} + 1")
+    endif()
+    if(_c3 EQUAL 1 AND _entriegelt_z STREQUAL "")
+        set(_entriegelt_z ${_ez})
+    endif()
+    # N4.2: Waffe heben (W-Clip 6 Schusswaffe / 13 Messer-DRAW) bei Kamera Cut 7, bevor John im Raum ist
+    if(_heben STREQUAL "" AND (_w EQUAL 6 OR _w EQUAL 13))
+        set(_heben "F${_f} anz=${_anz} w=${_w} elza_z=${_ez}")
+        if(_anz EQUAL 7 AND _jx LESS -29000)
+            set(_heben_vor_john TRUE)
+        endif()
+    endif()
+    # M2: Folge-Geste Clip 17 zu msg 52; nie Sub 2 Clip 6 (Zielen) waehrend msg 51/52
+    if(_ma EQUAL 1 AND _mid EQUAL 52 AND _s1 EQUAL 0 AND _mo EQUAL 17)
+        set(_geste17 1)
+    endif()
+    if(_ma EQUAL 1 AND (_mid EQUAL 51 OR _mid EQUAL 52) AND _s1 EQUAL 2 AND _mo EQUAL 6)
+        math(EXPR _zielt_auf_elza "${_zielt_auf_elza} + 1")
+    endif()
+    # M3: John springt nicht (Schritt je Bild ohne Kameraschnitt und ohne Lauf-Sub 4/5/7/8, nicht geparkt)
+    if(NOT _vor_jx STREQUAL "" AND _jx GREATER -29000 AND _vor_jx GREATER -29000 AND _anz EQUAL _vor_anz
+       AND NOT _s1 EQUAL 4 AND NOT _s1 EQUAL 5 AND NOT _s1 EQUAL 7 AND NOT _s1 EQUAL 8)
+        math(EXPR _dx "${_jx} - ${_vor_jx}")
+        math(EXPR _dz "${_jz} - ${_vor_jz}")
+        if(_dx LESS 0)
+            math(EXPR _dx "-(${_dx})")
+        endif()
+        if(_dz LESS 0)
+            math(EXPR _dz "-(${_dz})")
+        endif()
+        if(_dx GREATER _sprung_max)
+            set(_sprung_max ${_dx})
+            set(_sprung_f "F${_f}")
+        endif()
+        if(_dz GREATER _sprung_max)
+            set(_sprung_max ${_dz})
+            set(_sprung_f "F${_f}")
+        endif()
+    endif()
+    set(_vor_jx ${_jx})
+    set(_vor_jz ${_jz})
+    set(_vor_anz ${_anz})
     if(_anz EQUAL 7 AND _cut7_seit STREQUAL "")
         set(_cut7_seit ${_f})
     endif()
@@ -286,9 +376,6 @@ foreach(_z IN LISTS _zeilen)
     endif()
     if(_ma EQUAL 1 AND _mid EQUAL 51 AND _s1 EQUAL 0 AND _mo EQUAL 15)
         set(_geste15 1)
-    endif()
-    if(_ma EQUAL 1 AND _mid EQUAL 52 AND _s1 EQUAL 2 AND _mo EQUAL 6)
-        set(_wink 1)
     endif()
     if(_b67z EQUAL 1)
         set(_b67 1)
@@ -323,7 +410,33 @@ endif()
 pruef_wahr(_b6b "Punkt 6: Glasbruch (F${_glas_f}) erst am Ende von msg 5 (zuletzt offen F${_m5_ende}), nicht mitten in Johns Satz")
 pruef_wahr(_b51_blick "Punkt 8: John blickt bei msg 51 zu Elza")
 pruef_wahr(_geste15 "Punkt 8: Geste Clip 15 zu msg 51")
-pruef_wahr(_wink "Punkt 8: Heranwinken Sub 2 Clip 6 zu msg 52")
+pruef_wahr(_geste17 "Punkt 8 / M2: Folge-Geste Clip 17 zu msg 52 (John 1141 @0x00DBA, ROOM3070 @0x03724)")
+set(_bm2 FALSE)
+if(_zielt_auf_elza EQUAL 0)
+    set(_bm2 TRUE)
+endif()
+pruef_wahr(_bm2 "M2/N4.4: John richtet im Gespraech nie die Waffe auf Elza (Sub 2 Clip 6: ${_zielt_auf_elza} Bilder)")
+set(_bm3 FALSE)
+if(_sprung_max LESS 41)
+    set(_bm3 TRUE)
+endif()
+pruef_wahr(_bm3 "M3: John springt nie im Bild (groesster Schritt ohne Schnitt/Lauf ${_sprung_max} bei ${_sprung_f}; Abnahme: 138)")
+set(_b41 FALSE)
+if(_frei_nach_rolladen GREATER 100)
+    set(_b41 TRUE)
+endif()
+pruef_wahr(_b41 "N4.1: nach dem Rolladen frei laufen, Dachtuer noch verriegelt (${_frei_nach_rolladen} freie Bilder)")
+message(STATUS "     entriegelt bei Elza z=${_entriegelt_z}; Waffe hoch: ${_heben}")
+set(_b42 FALSE)
+if(_heben_vor_john AND _heben MATCHES "elza_z=-1[0-9][0-9][0-9][0-9]" AND _entriegelt_z GREATER -2000)
+    set(_b42 TRUE)
+endif()
+pruef_wahr(_b42 "N4.2: entriegelt an der Tuer, gerannt (Waffe hoch bei z < -10000), Waffe hoch bei Cut 7 bevor John da ist")
+set(_b43 FALSE)
+if(_schuesse GREATER 1 AND _treffer GREATER 0)
+    set(_b43 TRUE)
+endif()
+pruef_wahr(_b43 "N4.3: John schiesst (${_schuesse} Schuesse, ${_treffer} Treffer)")
 pruef_wahr(_b67 "Abgang: (9,67) = 1 John hat 1141 verlassen")
 pruef_wahr(_cut7_frei "nach dem Abgang verlaesst die Kamera Cut 7 (Cut_old/Cut_auto, Runde 38 Fortsetzung 4)")
 
