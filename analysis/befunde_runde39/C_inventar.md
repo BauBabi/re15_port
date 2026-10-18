@@ -204,7 +204,8 @@ Integrations-Riegel, der die MECHANIK misst)
 
 Alt-Riegel nachgezogen (Sollwerte der Runde 39, mit Kommentar): `r21_discard_wegwerfen.c` (9 Gegenstaende; TEIL R 5 Gates,
 5 lebend + 1 tot), `probe_r26_inventar.c` C7a (Memory Card stapelt: ein Platz, 2+2=4), `test_r37_feuerloescher.c` R/S 1000
-(Slot 3 Munition, Text Slot 11; erster Druck Modal 0x15, zweiter msg 0). `test_r36_kartenbits.c` k_port[] + Bit 69.
+(Slot 3 Munition, Text Slot 11; erster Druck Modal 0x15, zweiter msg 0), `tests/integration/test_r37_feuerloescher.cmake`
+Teil D (Karte mit (9,69), Text wie r37). `test_r36_kartenbits.c` k_port[] + Bit 69.
 
 Ergebnisse (Windows, Spurbaum, gezielt — keine volle Suite):
 * `ctest --test-dir re15_port/build -R "unit_r39_inventar"`: **100% tests passed, 0 tests failed out of 4**
@@ -240,3 +241,10 @@ Ergebnisse (Windows, Spurbaum, gezielt — keine volle Suite):
   "Will you discard …?" — Ja = weg.
 * Entscheidungsfragen: (1) Soll die Spind-Munition 30 statt 15 geben (dann waere diese Aufnahme die einzige ohne die
   Halbierung)? (2) Sollen Granaten-Stapel wie Munition zaehlen (jetzt: ja, Regel "alles mit einer Zahl")?
+* Integration der beruehrten Module: `ctest … -R "integration_(r35_inventar1050|r35_werfer|r36_dachkiste|r36_inventar|
+  r37_codepanel|r37_feuerloescher|r37_kiste|r37_kiste2feld|r37_kistenregel|r38_itemorte|r38_kleinkram_inventar|
+  r38_kleinkram_flammenwerfer)" -j2`: **93% tests passed, 1 tests failed out of 15** — rot nur integration_r37_feuerloescher
+  Teil D ("Aktion am Spind -> Nothing unusual" ohne die neue Munitions-Aufnahme davor). Nachgezogen (Karte `flag:9:69`
+  + Pruefzeile "Munition schon genommen", Kommentar Runde 39 Spur C; die Munition misst integration_r39_inventar_spind),
+  danach `ctest … -R "^integration_r37_feuerloescher$"`: **100% tests passed, 0 tests failed out of 1**.
+  (integration_r36_dachkiste brauchte unter der Doppellast 1414 s — gruen, kein Befund dieser Spur.)

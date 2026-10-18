@@ -149,9 +149,13 @@ pruef(C _c "[feuerloescher] ROOM1091: Loescher liegt leer am Boden obj 5 bei (25
 pruef(C _c "id=29 \"It's an empty fire extinguisher.\"")
 
 # --- D: Spind ROOM1000 -----------------------------------------------------------------------------
-fl_lauf(d 1000 "1000;20900;-1100;3072"
+# Runde 39 Spur C: der Spind gibt ERST einmal Handgun-Munition (Bit (9,69), inventar_r39.c), der Text kommt danach.
+# Mit gesetztem Bit (Karte flag:9:69) misst dieser Teil weiter das r37-Verhalten (Text, keine Loescher-Aufnahme);
+# die Munition selbst misst integration_r39_inventar_spind.
+fl_lauf(d 1000 "1000;20900;-1100;3072;flag:9:69"
     "W1,A0.1,W4" 260 "" _d)
 pruef(D _d "[feuerloescher] ROOM1000: Spind Slot 3 (Item 0x31 @0x00C24) -> Raumtext msg 0")
+pruef(D _d "[inventar-r39] ROOM1000 Spind: Munition schon genommen (9,69)=1 -> Slot 3 Raumtext msg 0")
 pruef(D _d "room=1000 id=0 \"Nothing unusual.\"")
 pruef_nicht(D _d "Aufnahme Item 0x31")
 
