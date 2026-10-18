@@ -352,12 +352,15 @@ void re15_dining_r39_messhaken(void)
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
         if (g_actors[s].active && g_actors[s].type == RE15_R38F_JOHN_TYP) { j = &g_actors[s]; break; }
     const re15_actor_t *e = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const re15_actor_t *ga = NULL, *gb = NULL;   /* die beiden Gorillas (Lage, Energie, Aufmerksamkeit) */
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) { if (!ga) ga = &g_actors[s]; else if (!gb) gb = &g_actors[s]; }
     /* Blick Johns zu Elza: Abweichung in der Konvention von re15_ai_arc_test (re15_damage.c: ausgerichtet, wenn
      * atan2_q12(dz,dx) == rot_y + 1024), auf -2048..2047 gefaltet. */
     int blick = 0;
     if (j) blick = (((int)re15_atan2_q12(e->z - j->z, e->x - j->x) - ((int)j->rot_y + 1024)) % 4096 + 4096 + 2048) % 4096 - 2048;
     fprintf(s_f, "F%u cam=%d anz=%d msg=%d/%d john=%d (%d,%d) rot=%d st=%d s1=%d s2=%d mo=%d elza=(%d,%d) rot=%d "
-                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d pm=%d c3=%d w=%d sch=%u/%u blick=%d\n",
+                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d pm=%d c3=%d w=%d sch=%u/%u g=(%d,%d,%d,%d)/(%d,%d,%d,%d) blick=%d\n",
             (unsigned)g_engine.frame_count, (int)g_scd.cam_id, (int)g_scd.work_vars[0x0A],
             (int)g_scd.message_active, (int)g_scd.message_id,
             j ? 1 : 0, j ? (int)j->x : 0, j ? (int)j->z : 0, j ? (int)(j->rot_y & 0xFFF) : 0,
@@ -367,7 +370,9 @@ void re15_dining_r39_messhaken(void)
             re15_game_flag_get(9, RE15_R39J_BIT_REAKTION), re15_game_flag_get(9, 67),
             g_re15_r39j_se_zaehler[0], g_re15_r39j_se_zaehler[1], g_re15_r39j_se_zaehler[2], g_re15_r39j_hilfe_letzte,
             (int)g_scd.player_mode, re15_game_flag_get(4, 0xC3), re15_dining_r39_w_clip(), g_re15_r39j_schuss_zaehler,
-            g_re15_r39j_treffer_zaehler, blick);
+            g_re15_r39j_treffer_zaehler,
+            ga ? (int)ga->x : 0, ga ? (int)ga->z : 0, ga ? (int)ga->hp : 0, ga ? s_aufmerksam[ga - g_actors] : 0,
+            gb ? (int)gb->x : 0, gb ? (int)gb->z : 0, gb ? (int)gb->hp : 0, gb ? s_aufmerksam[gb - g_actors] : 0, blick);
     fflush(s_f);
 #endif
 }
