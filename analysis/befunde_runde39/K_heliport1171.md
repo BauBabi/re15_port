@@ -764,3 +764,43 @@ Phasen-Unterscheidung und laeuft so auch in Phase 2.
 Gegenprobe Ghidra `STAGE1_full/FUN_801153ac.c`: Fall 2 `+0x1d5 -= 1; if (alt == 0) FUN_80115d74(1); goto LAB_801154ec;`
 an `+0x6a += 0x3c` vorbei. => Gier +60 nur in den Phase-0/1-Takten (33 Takte je SPIN-Eintritt), in den 41
 Phase-2-Takten steht die Gier; pos_advance fliegt dann geradeaus entlang +0x6a.
+
+### 13.3 Eigener Befund N1 — Kraehen-Wurzel: der Wand-Pass laeuft im Original nach JEDEM Zustand (Port nur Zustand 1)
+
+Beim Nachpruefen von M1 ("keine Lageaenderung im Halt-Takt") die Wurzel 0x80112020 (STAGE1.BIN) bis zum Ende
+disassembliert:
+```
+801121a4 addiu at,at,4380 (0x8012111c) / 801121ac lw v0,0(at) / 801121b4 jalr v0     ; Zustand +0x4 (Tabelle s.u.)
+801121c4 jal 0x8002b498                              ; Kasten-Versatz +0x7c
+801121d4 jal 0x8002aec4  (a0 = 0x800aca54 Spieler @0x801121d8, a1 = Kraehe @0x801121d0)   ; Koerper-Schub
+801121e4 jal 0x8002b544  / 801121e8 sb v0,464(v1)    ; +0x1d0 = Rueckgabe aec4 (Delay)
+801121f8 lw v0,120(a0) / 80112200 lhu a1,6(v0)       ; Radius = Kasten[3] = 200 (Kasten @0x801210fc)
+801121fc ori a2,zero,0x4 / 80112204 jal 0x8003b0a4 / 80112208 addiu a0,a0,52   ; WAND-PASS (&+0x34, 200, Maske 4)
+80112218 sb v0,465(v1)                               ; +0x1d1 = Rueckgabe
+80112230 jal 0x8001b064                              ; Schatten (+0xb0, +0x1ba)
+```
+Zwischen `jalr` @0x801121b4 und @0x80112218 steht kein Sprung; der einzige Sprung an diesem Block vorbei ist das
+Pause-Tor @0x80112120 (-> @0x8011221c). Zustandstabelle `table 0x8012111c`: [0] 0x8011224c INIT, [1] 0x80112420 ACTIVE,
+[2]/[5]/[6] 0x80114e4c, [3] 0x801146d0 DEATH, [4] 0x80114e54 FLIGHT-2, [7] 0x801157e8. FLIGHT-2 und INIT kehren mit
+`jr ra` zurueck (@0x80114fb0 / @0x80112418). => Der Wand-Pass laeuft nach JEDEM Zustand, auch im INIT-Takt.
+- Tor im Wand-Pass FUN_8003b0a4 (PSX.EXE): `8003b12c lw v0,0(v1)` / `8003b134 andi v0,v0,0x8` / `8003b138 beq v0,zero` ->
+  sonst `8003b140 j 0x8003b524` (Rueckgabe 0). Wort0 Bit 3 der Ereignis-Kraehen: Sce_em_set 0x800420a0 setzt Wort0 = 1
+  (`80042298 sw s3(=1),0(s0)`) bzw. 0x2001 (`800422b0`); Bit 3 setzt in STAGE1 nur DIVE-ARM 0x8011553c (Ghidra
+  `FUN_8011553c.c`: `|= 8`), und FLIGHT-2 ruft den Sub-Setzer 0x80115d74 nur mit 3/1/2/1 (@0x80114f68/@0x80115118/
+  @0x801152b8/@0x801154e4, Zensus aller `jal 0x80115d74` 0x80111a00-0x80116400) -> Bit 3 bleibt 0, der Pass laeuft.
+- Band = Zustandsbyte +0x82, von der Wurzel VOR dem Zustand geschrieben (`80112154 sb v0,130(a0)`, -(y/1800)).
+  Alte Lage fuer den Rechteck-Schub = +0x40/+0x44 (Handler `(Zelle, +0x34, +0x40)`, Ghidra FUN_8003b0a4.c); Sce_em_set
+  setzt sie auf die Spawn-Lage (`800421a0 sh v0,64(s0)` / `800421b8 sh v0,68(s0)`).
+- Port: der Wand-Pass steht nur in Zustand 1 (enemy_ai_common.c, `re15_collision_constrain_enemy(..., crow_ox, crow_oz,
+  ..., 200, e->y, 4u)`); Zustand 0/2-7 haben keinen, Zustand 4 nur den Koerper-Schub.
+- **Messung** (zeitweilige Diagnose, nicht committet: dieselbe Klemmung ohne Anwenden nach jedem Nicht-1-Zustand, echte
+  exe, Lade-Weg `K39nb2/diag_laden/wand.txt`): in ROOM1171 klemmt sie NUR Kraehe 3 (Slot 3) in ihren ersten 8 Takten
+  (INIT T0 + ASCEND T1-T7, Band 4): `T0 slot=3 st=0->4 y=-8400 b4 (-9700,-7680) -> (-8842,-7623) KLEMMT` (Zelle #37 Typ 1
+  Band 4 Rechteck (-12242,-10442, 3240x27648) -> x = -8784, dann Zelle #43 Typ 3 Kreis (-8912,-9020, 1476) -> (-8842,-7623);
+  RE15_COLL_TRACE). Kraehe 2 startet in Band 5 (y -10400) und wird nie geklemmt; beide Leichen liegen auf dem Dach
+  (y -7600, Boden -7200, Band 4) ohne Klemmung. => Kraehe 3 startet im Original 858 Einheiten weiter oestlich (aus der
+  Westwand-Zelle geschoben) als im Port.
+- Koerper-Schub @0x801121d4 fuer die uebrigen Zustaende: FUN_8002aec4 kehrt mit 0 zurueck, wenn Wort0 eines der beiden
+  Bit 2 traegt (Ghidra FUN_8002aec4.c `((*param_1 | uVar8) & 2) != 0 -> return 0`); die Todes-Lanes setzen es
+  (FUN_80114738.c `|= 2`). INIT-Takt: die Ereignis-Kraehen spawnen > 17000 Einheiten von Elza (state.log F0) -> kein
+  Kontakt moeglich. Zustand 4 hat den Schub schon. Kein messbarer Unterschied -> nur der Wand-Pass wird nachgezogen.
