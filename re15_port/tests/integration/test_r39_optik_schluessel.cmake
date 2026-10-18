@@ -130,7 +130,8 @@ lauf(aufnahme_leon 1 "${_titel};RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=1300,-2
 pruef(A1 _dbg_aufnahme_leon "[schluessel] PARKING LOT KEY genommen: Item 0x45, Bit (9,82)")
 # Elza: RE15_GOTO_ROOM wendet RE15_PLAYER_POS nicht an (Spawn an der Tuer) -> Sprung ueber RE15_DEBUG_JUMP nach der Auswahl
 # (bleibt Elza, "[pl] Spieler-Familie PL04"; gemessen 2026-10-18: "[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS").
-lauf(aufnahme_elza 1 "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1;RE15_DEBUG_JUMP=10F1@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F1")
+# (9,70) = Funkszene ROOM10F1 schon gesehen (Runde 39 Spur I, re15_funk10f1_r39.h) - sonst haelt die Szene das Pad.
+lauf(aufnahme_elza 1 "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1;RE15_SET_FLAG=9:70;RE15_DEBUG_JUMP=10F1@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F1")
 pruef(A2 _dbg_aufnahme_elza "[pl] Spieler-Familie PL04")
 pruef(A2 _dbg_aufnahme_elza "[schluessel] PRISON KEY genommen: Item 0x42, Bit (9,83)")
 file(REMOVE "${_exe_kopie}")
