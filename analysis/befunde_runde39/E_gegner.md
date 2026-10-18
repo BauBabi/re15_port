@@ -596,9 +596,10 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
   Der Lauf haengt danach im Tod (frame_count steht bei F5017, EXIT_AT nie) -> eigene PID 70712 beendet.
 - **ROOM1141, Versuch 3 mit Elzas Schrotflinte (n1141_s, `RE15_GIVE=0x43:1,0x08:7,0x16:63 RE15_EQUIP=8`)**: Schaden 38 (Zeile
   0x27 Waffe 8, re15_damage.c s_wpn_dmg_maggot[8]) >= 36 -> jeder Treffer FLINCH (F3084 G2 322 akku 38, F3087 G3 322, F3117,
-  F3124, F3150, F3273 — "andere Waffen entsprechend ihrem Schaden" an der exe bestaetigt). Nach 7 Schuss kein Nachladen
-  (Statusspalte bx=-1: die gegebenen 0x16-Patronen wurden fuer das Magazin nicht gefunden — Mess-Aufbau, nicht diese Spur),
-  Elza tot F4639 -> PID 8160 beendet. Nicht weiter verfolgt.
+  F3124, F3150, F3273 — "andere Waffen entsprechend ihrem Schaden" an der exe bestaetigt). 7 Schuss bis F3734 (mg 7 -> 0),
+  danach kein Nachladen mehr: Elza wird ab F3528 alle 37-60 Bilder gebissen (88 -> ... -> -2 F4378, 16 Angriffe) und kommt
+  aus der Treffer-Reaktion nicht zum Nachladen (die Statusspalte bx zaehlt nur 0x15, -1 = keine H.GUN BULLETS — kein Befund).
+  Lauf haengt danach im Tod -> PID 8160 beendet. Nicht weiter verfolgt.
 - **Folgerung**: mit einem STEHENDEN Skript-Schuetzen ist der Kampf gegen zwei Gorillas mit je 360 Energie an der exe nicht
   bis zum Ende zu fahren (ein Spieler weicht aus; Munition fuer 62 Treffer liegt auf Elzas Weg reichlich: Zensus
   analysis/story_leon_elza/census.json, H.GUN BULLETS 0x15 in 1001/1011/1021/1051/1071/10E1/10F1/1191/11D1/11F1/1211 —
@@ -610,6 +611,48 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
   dessen Commit verlangt player.hp < 50 (selbst disassembliert: `lbu v1,149(v0)` == 0x13 @0x80118cd4-cdc, `lh v0,0(a2)`
   player.hp @0x80118cec / `slti v0,v0,50` @0x80118cf4 / `beq v0,zero` @0x80118cf8, hit_react == 0 @0x80118d04-0c,
   a804(0x1388,0xc0) @0x80118d18, +0x1dc == 0 @0x80118d34-3c, `sb v0,5(v1)` = Sub 8 @0x80118d44, Se 7 @0x80118d64).
+- **ROOM1141, Versuch 4 mit Messhaken (n1141_h, RE15_R39_MESS_SPIELER_HP=100, sonst wie Versuch 2)**: bis F4585 bildgleich mit
+  Versuch 2 (gleiche Treffer/Flinch-Bilder), Elza bleibt bei >= 88; danach ist das Magazin leer (mg 0, Reserve 105) und das
+  Nachladen (Anschlag-Zustand ac=13 ab F4656) wird von jedem Biss abgebrochen: G2 beisst ab F4757 alle 50-58 Bilder
+  (`messhaken F.. spieler hp 94 -> 100`, 58 Ausgleiche bis F7914) — eine Biss-Schleife gegen den stehenden Schuetzen.
+  Kein weiterer Schuss -> abgebrochen (eigene PID 74492).
+- **ROOM1141, Versuch 5 (n1141_m: Messhaken + `RE15_GIVE=0x43:1,0x04:99,0x15:60` = 99 Schuss im Magazin, Skript `W10` + 80 x
+  `W0.1,M0.6` + 6 x `MA0.1,M0.3`, EXIT_AT 11200 -> erreicht)**: 36 Treffer-Zeilen, alle regelkonform; **G2 stirbt**: F5406
+  hp 0 akku 36 FLINCH (hp >= 0 bleibt HURT, `bgez v1` @0x80012528), der 31. Treffer F5496 -> `st=7` hp -12. **G3 bleibt bei
+  288 und ist ab F4624 AUSSERHALB des Raums** (x = -12218, Westwand-Zelle 0 = x -10600..-8600), wo er bis F11200 in Sub 4
+  an der Aussenkante entlangschiebt (Elza trifft ihn nie wieder; Kampf endet nie, John wartet) -> Raum nicht abschliessbar.
+
+#### Befund E — Gorilla durch die 2000 dicke Westwand gedrueckt (Versuch 5, F4623 -> F4624), Mechanismus belegt
+- Bildfolge (state.txt n1141_m, Gorilla G3 = Platz 3 im Vergeltungs-Sprung Sub 7/Phase 2, Hoehe aus gegner_r39.log
+  `schatten F..`): F4622 (-7368,-9243) y -3420; F4623 (-6982,-9649) y -3000; **F4624 (-12218,-9837)**. G2 (Platz 3 tickt
+  nach Platz 2) steht F4624 bei (-6611,-9865). ROOM1141 SCA (Kopf @0x570, 5 x 19 Zellen): Zelle 0 = Westwand x -10600..-8600,
+  z -25550..1850, Typ 1, u0 0xff (2000 dick).
+- Kette, Schritt fuer Schritt nachgerechnet (alle Funktionen sind Byte-Ports, Original selbst disassembliert):
+  1. Gorilla-Kasten @0x80121350 = {0,-1440,0,1600,1440,1600} (Radius 1600, Halbhoehe 1440, Versatz -1440; `read 0x80121350 6`).
+  2. Koerper-Stoss Gorilla gegen Gorilla (FUN_8002aec4 aus der Wurzel @0x80116e40-54; Port re15_enemy_body_push_tail):
+     dist = SquareRoot0 `jal 0x80065f60` @0x8002b1d8, pen = R - dist @0x8002b1e4 (`blez s0` @0x8002b1e8), Hoehenband
+     `lhu a0,8(s5)` / `lhu v1,8(s6)` / `slt` @0x8002b208-228 (|dy| < 1440 + 1440 = 2880): F4623 dy = -3000 -> KEIN Stoss,
+     F4624 dy ~ -2520 -> Stoss. Versatz x = dx*pen/(dist+1) (`mult s1,s0` / `div v0,a2` @0x8002b22c-260): dx = -6982 -
+     (-6611) = -371, dz = 2, dist = 371, R = 3200, pen = 2829 -> **x -2821** -> G3 bei x = -9803 (jenseits der Wandmitte -9600).
+     Der Querungs-Zweig fuer "Eintritt von oben" (Vorbild-Y +0x42 `lh v0,66(s2)` @0x8002b268, Achsentests alte X +0x40
+     `lh a1,64(s2)` @0x8002b2b8 / alte Z +0x44 `lhu t2,68(s2)` @0x8002b2cc) greift NUR, wenn G3 in diesem Bild die X- bzw.
+     Z-Koordinate von G2 ueberquert hat — hier nicht (x -6982 -> -6982, z -9649 -> -9863 gegen -9865) -> normaler Stoss wie
+     im Port (der Zweig ist im Port nicht portiert, aendert dieses Bild aber nicht).
+  3. Wandklemme FUN_8003b0a4 -> Rechteck-Ausstoss FUN_8003bca8 (Port re15_collision.c push_rect): t1 = (w + x + r) - pos + 18
+     @0x8003bcc4-ce0, a0 = (x - r) - pos - 18 @0x8003bcd4-ce8, `slt v0,-a0,t1` / `beq` / `addu t1,a0,zero` @0x8003bcec-cfc =
+     die NAEHERE erweiterte Kante gewinnt: Ost -8600 + 1600 + 18 = -6982 (Abstand 2821), West -10600 - 1600 - 18 = -12218
+     (Abstand 2415) -> **x = -12218** (genau der gemessene Wert; -6982 ist die Ostkante, an die G3 in F4623 geschoben wurde).
+- Folge: G3 steht hinter der Westwand ausserhalb des begehbaren Raums, seine Wandklemme haelt ihn an der Aussenkante. Das
+  ist der Original-Mechanismus (Stoss 2821 > halbe Wanddicke 1000 + Radius-Rest), KEIN Fehler dieser Spur; die doppelte
+  Energie verlaengert den Kampf (31 statt 16 Treffer je Gorilla, doppelt so viele Vergeltungs-Spruenge = Stoss-Gelegenheiten)
+  und macht ihn wahrscheinlicher. Im Original-Ablauf (E16: "John: Elza, I'll try to distract them, while you try to get out
+  of here") ist der Kampf nicht noetig — Schloss Slot 2 -> sub05 @0x00FD2 Set(4,0xC3)=1 + Aot_reset Slot 1 @0x00FDC macht
+  die Dachtuer scharf; ob der Gang dorthin waehrend des Kampfes frei ist (Rolladen-Zelle 13: x -9000..-5300, z -7200..-6700),
+  entscheidet der Runde-38-F-Ablauf (kein Punkt dieser Spur). -> OFFEN, Entscheidungsfrage an den Nutzer.
+- Gegenprobe "kommt das auch mit 180 vor?": Stoss-Spruenge > 1000 je Bild gibt es in JEDEM Lauf, auch im Vorher-Lauf
+  v1141_vorher (F3536 G3 (-6982,-9418) -> (-7368,-6254)); dort blieben sie im Raum.
+
+
 
 
 
