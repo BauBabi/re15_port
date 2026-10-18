@@ -958,13 +958,13 @@ static int teil_pruef_teil(void)
         if (tr == 255) continue;
         re15_map_rect_geometry((unsigned)pg, (unsigned)rc, &rx, &ry, &rw, &rh);
         if (tr >= 128) {
-            /* Nachbesserung 2 (N1): Traeger = Schema-Zeichnung (128 + synth). Ein DURCHGANG: jedes geoeffnete Pixel
-             * grenzt 4-nachbarlich an eine Zelle dieser Zeichnung - die Luecke fuehrt in sie hinein. */
-            int z2, x, y, alle = 1, hat = 0;
+            /* Nachbesserung 2 (N1): Traeger = Schema-Zeichnung (128 + synth, mit Koerper 192 + synth). Ein DURCHGANG:
+             * jedes geoeffnete Pixel grenzt 4-nachbarlich an eine Zelle dieser Zeichnung - die Luecke fuehrt in sie hinein. */
+            int z2, x, y, alle = 1, hat = 0, syn = (tr >= 192) ? tr - 192 : tr - 128;
             for (z2 = 0; z2 < re15_map_zone_count() && !hat; z2++) {
                 const re15_map_zone_t *zs = re15_map_zone_by_index(z2);
                 int sx, sy, sw, sh, erste, nz, q;
-                if (!zs || zs->page != (unsigned)pg || zs->synth != tr - 128) continue;
+                if (!zs || zs->page != (unsigned)pg || zs->synth != syn) continue;
                 if (!re15_map_zone_synth(zs, &sx, &sy, &sw, &sh, &erste, &nz)) continue;
                 hat = 1;
                 for (y = ry + r; y < ry + r + h; y++)
@@ -983,7 +983,7 @@ static int teil_pruef_teil(void)
                     }
             }
             snprintf(t, sizeof t, "Korrektur %d (Blatt %d r%d Spalte %d Zeile %d %dx%d): Durchgang in die Schema-Zeichnung "
-                     "synth %d (jedes Pixel Koerper, 4-nachbarlich an einer ihrer Zellen)", k, pg, rc, c, r, w, h, tr - 128);
+                     "synth %d (jedes Pixel Koerper, 4-nachbarlich an einer ihrer Zellen)", k, pg, rc, c, r, w, h, syn);
             CHECK(t, hat && alle);
             continue;
         }
@@ -1116,7 +1116,7 @@ static int teil_pruef_teil(void)
         snprintf(t, sizeof t, "1210 Kammer allein (r3 ungezeichnet): Ostkante x200 %d/18 Wand, offene Seite %d", x200, of);
         CHECK(t, x200 == 18 && of == 0);
         /* Zustand 5: nichts besucht, Spieler auf einem anderen Blatt (ROOM1050, 1F), B2-Plan im Besitz (Bank 9 Bit 77) -
-         * Flur und Kammer als Umriss, die Luecke bleibt durchsichtig (Zeile 498: Koerper 0x0000) */
+         * Flur und Kammer als Umriss; der Durchgang braucht die Kammer MIT Koerper (R39_SCHEMA_KOERPER), die Wand bleibt */
         {
             static const r39_ort_t R1050 = { "1050", 0x1050, 20600, 12350, 2, 0 };
             const r39_ort_t *s5[1] = { &R1050 };
@@ -1128,11 +1128,25 @@ static int teil_pruef_teil(void)
         wand = luecke = x200 = 0;
         for (y = 112; y <= 129; y++) wand += (s_kl[y][186] == 2);
         for (x = 186; x <= 201; x++) wand += (s_kl[129][x] == 2);
-        for (y = 117; y <= 119; y++) luecke += (s_kl[y][201] == 0);
+        for (y = 117; y <= 119; y++) luecke += (s_kl[y][201] == 2);
         for (y = 113; y <= 128; y++) x200 += (s_kl[y][200] == 2);
-        snprintf(t, sizeof t, "1210 + Kammer als Umriss (B2-Plan, unbesucht): Linien x186/y129 %d/34, Durchgang offen %d/3, "
-                 "zweite Linie x200 %d (soll 0)", wand, luecke, x200);
+        snprintf(t, sizeof t, "1210 + Kammer als Umriss (B2-Plan, unbesucht): Linien x186/y129 %d/34, x201 y117..119 Wand "
+                 "%d/3, zweite Linie x200 %d (soll 0)", wand, luecke, x200);
         CHECK(t, wand == 34 && luecke == 3 && x200 == 0);
+        /* Zustand 6: Flur besucht und aktuell, B2-Plan, Kammer unbesucht = nur Umriss - der Flur bleibt zu (sonst
+         * Flurkoerper im Durchgang neben dem leeren Umriss = offene Seite) */
+        orte_betreten(s1, 1);
+        re15_game_flag_set(9, 77, 1);
+        n = baue_teil(1); komposit(1, n);
+        wand = luecke = innen = x200 = 0;
+        for (y = 112; y <= 129; y++) wand += (s_kl[y][186] == 2);
+        for (x = 186; x <= 201; x++) wand += (s_kl[129][x] == 2);
+        for (y = 117; y <= 119; y++) luecke += (s_kl[y][201] == 2);
+        for (y = 113; y <= 128; y++) for (x = 187; x <= 200; x++) innen += (s_kl[y][x] != 0);
+        of = offen_zaehlen(184, 110, 203, 131, &bx, &by);
+        snprintf(t, sizeof t, "1210 Flur aktuell + B2-Plan, Kammer nur Umriss: Linien x186/y129 %d/34, x201 y117..119 Wand "
+                 "%d/3, Umriss-Innenraum leer (%d), offene Seite %d", wand, luecke, innen, of);
+        CHECK(t, wand == 34 && luecke == 3 && innen == 0 && of == 0);
         re15_game_flag_set(9, 77, 0);
     }
     return g_fail;

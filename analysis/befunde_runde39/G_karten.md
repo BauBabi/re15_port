@@ -662,3 +662,18 @@ Eine Neu-Eichung der Zeile hilft nicht: kein linearer Massstab trifft Balken UND
   gefahren, danach zurueckgesetzt und neu gebaut): `pruef marker` ROT - 1210 1693 von 10387, 1211 offen 1693 von 10391,
   1211 zu: Flur 184 von 8783, Kammer 2022 von 2022; `pruef teil` ROT - Flur+Kammer Linien 17/65, Durchgang 0/3, Innenraum
   0/224; Kammer allein x200 0/18.
+
+### N1 Nachschaerfung: Durchgang nur mit gefuellter Kammer (Plan-Umriss)
+Beim Durchgehen der Teilzustaende (Muster M3): Flur besucht + B2-Plan, Kammer noch nie betreten -> die Kammer steht als
+UMRISS (RE2 Zeile 498, Koerper 0x0000), der Durchgang haette den roten Flurkoerper in die Luecke neben den LEEREN Umriss
+gelegt (3 Koerperpixel am Grund = offene Seite). Neuer Traeger-Typ `R39_SCHEMA_KOERPER(s)` (karte_r39.c, 192 + synth):
+zaehlt nur eine Zeichnung MIT Koerper (besucht/aktuell, Hinweis nur in der roten Phase), kein Plan-Umriss. Damit bleibt die
+Flur-Westwand bis zum ersten Betreten der Kammer geschlossen (Plan zeigt die Kammer als geschlossenen Umriss an der Wand);
+danach Durchgang offen. Riegel unit_r39_karten_teil (e) Zustaende 5 (alles Umriss: x201 y117..119 Wand 3/3) und 6 (Flur
+aktuell + Plan: Wand 3/3, Umriss leer, offen 0).
+
+### Nachbesserung 2 - Uebersicht
+| Mangel | Ursache | Beleg | Aenderung | vorher -> nachher |
+|---|---|---|---|---|
+| N1 Kammer | begehbare dritte West-Zelle (offen) ohne Zeichnung; Original-Kachel/-Zeile/Vorlage zeichnen sie nicht | RVD @0x002DC..@0x00340 (Schnitte 6/7), Door_aot_set nur fuenf Zellen, SCA @0x01BEC/@0x01BF8/@0x01BE0/@0x01C40/@0x01BC8 | Zone 1 (zid 112, synth 12, Zeile @0x800769B8), Zelle (186,112) 15x18 auf den gemalten Linien, Durchgang x201 y117..119 (Traeger Kammer mit Koerper), Ostkante entfaellt mit r3 | markerflaeche 1210 Kammer 1509 -> 0; echte exe Ring (191,117) im Blau -> im Rot der Kammer |
+| N1 Rest | Querbalken der Kachel gestaucht (8 px gemalt, 11,7 px Welt) - Suedstreifen projiziert auf y79 in die Zellen r4/r6 | Mitten @0x01B8C -> py70, @0x01BD4 -> py82; r3 Zeilen 0/8 Index 4 | Klemmfenster r3 y70..78 im Balken ausserhalb der Flurspanne (@0x01BC8/@0x01C04) | 184 -> 0 (1210 gesamt 1693 -> 0 von 10387) |

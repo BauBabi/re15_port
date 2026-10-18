@@ -40,6 +40,9 @@
  * auf der Ersatzlinie, der mit dem Raum selbst gezeichnet wird). */
 #define R39_IMMER 255
 #define R39_SCHEMA(s) (128 + (s))   /* Traeger = Schema-Zeichnung <s> (zone.synth) derselben Seite */
+/* Traeger = Schema-Zeichnung <s> MIT KOERPER (besucht/aktuell bzw. rote Hinweis-Phase) - ein Umriss (Plan, unbesucht)
+ * zaehlt NICHT: hinter einem Durchgang laege sonst nur der leere Umriss (Nachbesserung 2, Zustand Flur + Plan). */
+#define R39_SCHEMA_KOERPER(s) (192 + (s))
 typedef struct { unsigned char page, rect, c, r, w, h, neu, traeger; } r39_korr_t;
 
 static const r39_korr_t s_korr[] = {
@@ -101,9 +104,10 @@ static const r39_korr_t s_korr[] = {
     /* Nachbesserung 2 (Abnahme 1, N1): DURCHGANG in die Suedwest-Kammer von ROOM1210 (Zone 1, Schema synth 12,
      * re15_map_zones.h). r3 Spalte 14 = x201 (Flur-Westwand, Index 4 auf y110..129), Zeilen 47..49 = y117..119: die
      * Oeffnung zwischen dem Ende der Flur-Westwand @0x01BC8 (z -20746 -> py116) und dem Anfang der Kammer-Ostwand
-     * @0x01C40 (z -22520 -> py120), FUN_800473f8 mit der Zeile @0x800769B8 -> Koerper. Traeger = die Kammer selbst:
-     * ohne ihre Zeichnung bliebe hinter der Luecke nur Grund (offene Raumseite, Abnahme 0 M3). */
-    { 1,  3, 14, 47, 1,  3, 1, R39_SCHEMA(12) },
+     * @0x01C40 (z -22520 -> py120), FUN_800473f8 mit der Zeile @0x800769B8 -> Koerper. Traeger = die Kammer selbst MIT
+     * Koerper: ohne ihre Fuellung laege hinter der Luecke Grund (offene Raumseite, Abnahme 0 M3) - auch dann, wenn sie mit
+     * dem B2-Plan nur als Umriss steht; bis zum ersten Betreten bleibt die Flur-Westwand deshalb geschlossen. */
+    { 1,  3, 14, 47, 1,  3, 1, R39_SCHEMA_KOERPER(12) },
 };
 #define R39_KORR_N ((int)(sizeof s_korr / sizeof s_korr[0]))
 
@@ -152,13 +156,15 @@ static int kachel_gezeichnet(const re15_inv_screen_t *st, unsigned page, int i)
     return 0;
 }
 
-static int schema_gezeichnet(const re15_inv_screen_t *st, unsigned page, int synth)
+/* mit_umriss 0 (Nachbesserung 2): nur eine Zeichnung MIT Koerper zaehlt - kein Plan-Umriss, Hinweis nur in der roten Phase. */
+static int schema_gezeichnet(const re15_inv_screen_t *st, unsigned page, int synth, int mit_umriss)
 {
     const re15_map_zone_t *cur = re15_map_zone_current();
-    int j, nz = re15_map_zone_count();
+    int j, nz = re15_map_zone_count(), zp;
     if (re15_map_stock_mode() || !re15_map_ebene_schema()) return 0;
-    if (re15_karte_r39_schema_ziel(st, page, synth)) return 1;
-    if (re15_map_owned_page(page)) return 1;   /* Umriss der unbesuchten Zeichnung (Runde 39) */
+    zp = re15_karte_r39_schema_ziel(st, page, synth);
+    if (zp == 1 || (zp && mit_umriss)) return 1;
+    if (mit_umriss && re15_map_owned_page(page)) return 1;   /* Umriss der unbesuchten Zeichnung (Runde 39) */
     for (j = 0; j < nz; j++) {
         const re15_map_zone_t *zg = re15_map_zone_by_index(j);
         if (!zg || zg->page != page || zg->synth != synth) continue;
@@ -173,7 +179,8 @@ static int schema_gezeichnet(const re15_inv_screen_t *st, unsigned page, int syn
 static int traeger_gezeichnet(const re15_inv_screen_t *st, unsigned page, unsigned char t)
 {
     if (t == R39_IMMER || !st) return 1;
-    if (t >= 128) return schema_gezeichnet(st, page, t - 128);
+    if (t >= 192) return schema_gezeichnet(st, page, t - 192, 0);   /* Nachbesserung 2: mit Koerper */
+    if (t >= 128) return schema_gezeichnet(st, page, t - 128, 1);
     return kachel_gezeichnet(st, page, t);
 }
 
