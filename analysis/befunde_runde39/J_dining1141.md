@@ -497,3 +497,17 @@ Plc_motion(0,2) @0x014CE = RBJ-Record 1 (Marker 0x2 = John) Clip 2 von ROOM1171,
   (D Passed 643.52 sec, S Passed 1103.82 sec unter Parallellast); Unit, Regex wie 8.3 -> "100% tests passed, 0 tests failed
   out of 122". Damit gesamt am Endstand gruen: Unit 122/122, Integration 15/15 (die 13 Nicht-D/S-Riegel aus dem ersten
   Durchgang beruehren den Nachtrag-7-Code nicht: Leihe nur in ROOM1141 bei John Zustand 4/Sub 0/Clip 2).
+
+
+## 9. Nachbesserung 2 (nach Abnahme 1, `J_abnahme_1.md`; Start 2026-10-18 23:00, Uhrzeiten aus `date`)
+
+Auftrag: (0) `git merge master` (8286bcb6: Welle 1+2, Spur E Nachbesserung 2/3 = Gorilla HP 360 / Flinch ab 36 fuer alle
+0x27 inkl. 1141 + Querungs-Wache in 1141, I funk10f1, M schluessel2, Nutzer-Nachtraege 8 + 9), Konflikte beidseitig
+aufloesen, bauen. (1) Nachtrag 8: Nutzer-Stimmen synchro/STAGE1/room1141/main50/51/52.wav am echten Weg messen
+(Ordnerregel, keine Tabellenzeile), Original-Zeilen 12/13/14 bleiben stumm. (2) Mangel M1 (N4.3) nach dem Merge neu
+messen und beheben: (a) Treffer auch bei gepacktem Elza, (b) Richtung waehrend der Zielbilder nachfuehren, (c) klemmender
+Gorilla: sichtbare Zuwendung oder nachvollziehbares Ende; John beim Schiessen wenigstens einmal im Bild; Regel im
+Abschnitt "Fuer den Nutzer" einfach beschreiben (keine Entscheidungsfrage). (3) H6: Uhrzeit in 8.8 berichtigen.
+
+### 9.0 Stand / Fortschritt
+- 23:00 Baum sauber auf 0aa7b194 (Abnahme 1), master = 8286bcb6. Dossier-Abschnitt angelegt.
