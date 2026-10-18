@@ -9022,9 +9022,9 @@ static void re15_maggot_ai_tick(int slot)
                 int slew = (int)(re15_affen_rng_a0(&a0_b3) & 0x1f) + 6;
                 e->grab_kill_ctr = (int16_t)slew;
                 int32_t st_x, st_z, zx = pl->x, zz = pl->z;
-                { extern void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);   /* Runde 39 Spur J N4.3: */
-                  re15_dining_r39_affe_ziel(slot, &zx, &zz); }   /* 1141: nach Johns Treffer kriecht der Gorilla zu John */
-                re15_r36_affen_padsuche_ziel(e, slot, 3, zx, zz, &st_x, &st_z);   /* Runde 36 Spur F Punkt 2: playerX (@0x80117d4c) oder Pad-Mitte */
+                { extern int re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);   /* Runde 39 Spur J N4.3: 1141 nach Johns */
+                  if (re15_dining_r39_affe_ziel(slot, &zx, &zz)) { st_x = zx; st_z = zz; }   /* Treffer zu John, ohne Elzas Pad-Umweg (NB2) */
+                  else re15_r36_affen_padsuche_ziel(e, slot, 3, zx, zz, &st_x, &st_z); }   /* Runde 36 Spur F Punkt 2: playerX (@0x80117d4c) oder Pad-Mitte */
                 re15_enemy_steer_point(e, st_x, st_z, slew);
             }
             re15_maggot_anim(e);

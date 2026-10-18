@@ -2,10 +2,10 @@
  * Runde 39 Spur J: SCD-Programme (Original-Bytes + eingefuegte Zeilen, Listing beim Werkzeugaufruf), Texte und
  * der Klopf-Tonteil. Dossier: analysis/befunde_runde39/J_dining1141.md. */
 
-/* k_r39j_p_haemmern: 654 Byte
+/* k_r39j_p_haemmern: 658 Byte
  *   +0000 54 00 01 00 00 00                    Sce_bgm_control MAIN Play = ROOM1141 sub00 @0x00B4E (Raum-Titel MAIN16, wie Runde 38)
  *   +0006 09 0a 1e 00                          Sleep 30 (Elza ist eben herein; RE2 ROOM1060 sub05 +0x2E `09 0a 1e 00`)
- *   +000A 0f 04 7e 02                          While (Laenge 638 bis hinter das Ewhile) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`
+ *   +000A 0f 04 82 02                          While (Laenge 642 bis hinter das Ewhile) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`
  *   +000E 21 04 c3 00                            Ck(4,0xC3)==0 (Schleife laeuft, solange die Dachtuer verriegelt ist; main00 @0x00A76) - Nachbesserung 1 N4.1: vorher Ck(3,0x6A)==0 (nur bis zum Rolladen)
  *   +0012 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
  *   +0016 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
@@ -27,7 +27,7 @@
  *   +0068 36 3e 33 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x33) Hilferuf help03.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
  *   +0074 08 00                                Endif = sub01 @0x00C10
  *   +0076 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
- *   +007A 06 00 58 00                          Ifel_ck Laenge 88 (Form sub01 @0x00BFE: Laenge = Ck + Rumpf + Endif)
+ *   +007A 06 00 5c 00                          Ifel_ck Laenge 92 (Form sub01 @0x00BFE: Laenge = Ck + Rumpf + Endif)
  *   +007E 21 09 5e 00                            Ck(9,94)==0 (Elza hat noch nicht reagiert; Ck-Form sub00 @0x00B84 `21 03 6a 00`)
  *   +0082 0f 04 08 00                          While Laenge 8 (Form sub03 @0x00FA8): Gemaelde-Programm laeuft (Merker, Nachbesserung 1 M1)
  *   +0086 21 05 10 01                            Ck(5,0x10)==1
@@ -37,7 +37,7 @@
  *   +0092 21 02 07 01                            Ck(2,0x07)==1
  *   +0096 02 00                                  Evt_next + Nop (Form sub03 @0x00FB0)
  *   +0098 10 00                                Ewhile (Form sub03 @0x00FB2)
- *   +009A 06 00 36 00                            Ifel_ck Laenge 54 (Form sub01 @0x00BFE): nur solange John draussen ist
+ *   +009A 06 00 3a 00                            Ifel_ck Laenge 58 (Form sub01 @0x00BFE): nur solange John draussen ist
  *   +009E 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt)
  *   +00A2 22 02 07 01                            Set(2,7)=1 Pad-Sperre = sub02 @0x00C26 (im selben Takt wie die Pruefungen davor: kein Fenster)
  *   +00A6 2e 01 00 00                            Work_set(1,0)+Nop Elza = sub02 @0x00C2E
@@ -45,144 +45,146 @@
  *   +00B4 09 0a 0a 00                            Sleep 10 = sub02 @0x00C4C
  *   +00B8 2b 32 00 00                            Message_on 50 "Elza: Oh, no, this is John! ..." (Form sub02 @0x00D0A `2b 02 00 00`)
  *   +00BC 09 0a 5a 00                            Sleep 90 (Zeit zum Lesen; RE2 ROOM1060 sub05 +0x58 `09 0a 5a 00`)
- *   +00C0 22 09 5e 01                            Set(9,94)=1 Reaktion gesehen (VERTRAG 1.1)
- *   +00C4 41 00 00 00 00 00 00 00 64 00          Plc_neck aus = sub02 @0x00F30 `41 00 00 00 00 00 00 00 64 00`
- *   +00CE 22 02 07 00                            Set(2,7)=0 = sub02 @0x00F4E
- *   +00D2 08 00                                  Endif = sub01 @0x00C10
- *   +00D4 08 00                                Endif = sub01 @0x00C10
- *   +00D6 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
- *   +00DA 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +00DE 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +00E2 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +00EE 08 00                                Endif = sub01 @0x00C10
- *   +00F0 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +00F4 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +00F8 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +00FC 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +0108 08 00                                Endif = sub01 @0x00C10
- *   +010A 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +010E 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +0112 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0116 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +0122 08 00                                Endif = sub01 @0x00C10
- *   +0124 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
- *   +0128 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +012C 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0130 36 3e 31 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x31) Hilferuf help01.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
- *   +013C 08 00                                Endif = sub01 @0x00C10
- *   +013E 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
- *   +0142 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
- *   +0146 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +014A 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +014E 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +015A 08 00                                Endif = sub01 @0x00C10
- *   +015C 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +0160 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +0164 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0168 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +0174 08 00                                Endif = sub01 @0x00C10
- *   +0176 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +017A 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +017E 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0182 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +018E 08 00                                Endif = sub01 @0x00C10
- *   +0190 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
- *   +0194 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +0198 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +019C 36 3e 34 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x34) Hilferuf help04.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
- *   +01A8 08 00                                Endif = sub01 @0x00C10
- *   +01AA 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
- *   +01AE 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
- *   +01B2 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +01B6 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +01BA 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +01C6 08 00                                Endif = sub01 @0x00C10
- *   +01C8 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +01CC 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +01D0 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +01D4 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +01E0 08 00                                Endif = sub01 @0x00C10
- *   +01E2 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +01E6 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +01EA 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +01EE 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +01FA 08 00                                Endif = sub01 @0x00C10
- *   +01FC 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
- *   +0200 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +0204 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0208 36 3e 32 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x32) Hilferuf help02.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
- *   +0214 08 00                                Endif = sub01 @0x00C10
- *   +0216 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
- *   +021A 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
- *   +021E 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +0222 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0226 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +0232 08 00                                Endif = sub01 @0x00C10
- *   +0234 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +0238 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +023C 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0240 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +024C 08 00                                Endif = sub01 @0x00C10
- *   +024E 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
- *   +0252 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +0256 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +025A 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
- *   +0266 08 00                                Endif = sub01 @0x00C10
- *   +0268 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
- *   +026C 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
- *   +0270 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
- *   +0274 36 3e 35 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x35) Hilferuf help05.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
- *   +0280 08 00                                Endif = sub01 @0x00C10
- *   +0282 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
- *   +0286 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
- *   +028A 10 00                                Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test)
- *   +028C 01 00                                Evt_end (Dachtuer entriegelt: Klopfen und Hilferufe sind zu Ende)
+ *   +00C0 2b 3a 00 00                            Message_on 58 = Port-Warte-Zeile ohne Text (Nachbesserung 2, Nutzer-Nachtrag 8: main50.wav 6,0 s > Sleep 90): parkt, bis Elzas Sprachzeile endet (Stimmen-Riegel scd_vm.c), erst dann Steuerung zurueck; ohne Aufnahme laeuft sie sofort durch
+ *   +00C4 22 09 5e 01                            Set(9,94)=1 Reaktion gesehen (VERTRAG 1.1)
+ *   +00C8 41 00 00 00 00 00 00 00 64 00          Plc_neck aus = sub02 @0x00F30 `41 00 00 00 00 00 00 00 64 00`
+ *   +00D2 22 02 07 00                            Set(2,7)=0 = sub02 @0x00F4E
+ *   +00D6 08 00                                  Endif = sub01 @0x00C10
+ *   +00D8 08 00                                Endif = sub01 @0x00C10
+ *   +00DA 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
+ *   +00DE 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +00E2 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +00E6 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +00F2 08 00                                Endif = sub01 @0x00C10
+ *   +00F4 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +00F8 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +00FC 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +0100 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +010C 08 00                                Endif = sub01 @0x00C10
+ *   +010E 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +0112 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0116 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +011A 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +0126 08 00                                Endif = sub01 @0x00C10
+ *   +0128 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
+ *   +012C 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0130 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +0134 36 3e 31 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x31) Hilferuf help01.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
+ *   +0140 08 00                                Endif = sub01 @0x00C10
+ *   +0142 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
+ *   +0146 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
+ *   +014A 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +014E 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +0152 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +015E 08 00                                Endif = sub01 @0x00C10
+ *   +0160 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +0164 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0168 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +016C 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +0178 08 00                                Endif = sub01 @0x00C10
+ *   +017A 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +017E 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0182 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +0186 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +0192 08 00                                Endif = sub01 @0x00C10
+ *   +0194 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
+ *   +0198 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +019C 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +01A0 36 3e 34 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x34) Hilferuf help04.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
+ *   +01AC 08 00                                Endif = sub01 @0x00C10
+ *   +01AE 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
+ *   +01B2 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
+ *   +01B6 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +01BA 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +01BE 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +01CA 08 00                                Endif = sub01 @0x00C10
+ *   +01CC 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +01D0 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +01D4 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +01D8 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +01E4 08 00                                Endif = sub01 @0x00C10
+ *   +01E6 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +01EA 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +01EE 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +01F2 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +01FE 08 00                                Endif = sub01 @0x00C10
+ *   +0200 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
+ *   +0204 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0208 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +020C 36 3e 32 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x32) Hilferuf help02.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
+ *   +0218 08 00                                Endif = sub01 @0x00C10
+ *   +021A 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
+ *   +021E 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
+ *   +0222 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0226 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +022A 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 1/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +0236 08 00                                Endif = sub01 @0x00C10
+ *   +0238 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +023C 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0240 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +0244 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 2/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +0250 08 00                                Endif = sub01 @0x00C10
+ *   +0252 09 0a 05 00                          Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`
+ *   +0256 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +025A 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +025E 36 3e 00 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0) Klopfen 3/3 = RE2 DOOR0F Satz 0 (Holzschlag)
+ *   +026A 08 00                                Endif = sub01 @0x00C10
+ *   +026C 09 0a 1e 00                          Sleep 30 = RE2 ROOM1060 sub05 +0x2E
+ *   +0270 06 00 12 00                          Ifel_ck Laenge 18 (Form sub01 @0x00BFE)
+ *   +0274 21 04 c3 00                            Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)
+ *   +0278 36 3e 35 00 00 00 00 00 00 00 00 00    Se_on(0x3E,0x35) Hilferuf help05.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)
+ *   +0284 08 00                                Endif = sub01 @0x00C10
+ *   +0286 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x58
+ *   +028A 09 0a 5a 00                          Sleep 90 = RE2 ROOM1060 sub05 +0x5E
+ *   +028E 10 00                                Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test)
+ *   +0290 01 00                                Evt_end (Dachtuer entriegelt: Klopfen und Hilferufe sind zu Ende)
  */
-static const uint8_t k_r39j_p_haemmern[654] = {
-    0x54,0x00,0x01,0x00,0x00,0x00,0x09,0x0a,0x1e,0x00,0x0f,0x04,0x7e,0x02,0x21,0x04,
+static const uint8_t k_r39j_p_haemmern[658] = {
+    0x54,0x00,0x01,0x00,0x00,0x00,0x09,0x0a,0x1e,0x00,0x0f,0x04,0x82,0x02,0x21,0x04,
     0xc3,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,
     0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x1e,0x00,
     0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x33,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,0x58,0x00,0x21,0x09,
+    0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,0x5c,0x00,0x21,0x09,
     0x5e,0x00,0x0f,0x04,0x08,0x00,0x21,0x05,0x10,0x01,0x02,0x00,0x10,0x00,0x0f,0x04,
-    0x08,0x00,0x21,0x02,0x07,0x01,0x02,0x00,0x10,0x00,0x06,0x00,0x36,0x00,0x21,0x04,
+    0x08,0x00,0x21,0x02,0x07,0x01,0x02,0x00,0x10,0x00,0x06,0x00,0x3a,0x00,0x21,0x04,
     0xc3,0x00,0x22,0x02,0x07,0x01,0x2e,0x01,0x00,0x00,0x41,0x01,0x4a,0xe3,0x00,0x00,
     0xec,0xfa,0x64,0x00,0x09,0x0a,0x0a,0x00,0x2b,0x32,0x00,0x00,0x09,0x0a,0x5a,0x00,
-    0x22,0x09,0x5e,0x01,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x64,0x00,0x22,0x02,
-    0x07,0x00,0x08,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,0x12,0x00,0x21,0x04,
+    0x2b,0x3a,0x00,0x00,0x22,0x09,0x5e,0x01,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x64,0x00,0x22,0x02,0x07,0x00,0x08,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,
+    0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,
+    0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,
+    0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x1e,0x00,0x06,0x00,0x12,0x00,
+    0x21,0x04,0xc3,0x00,0x36,0x3e,0x31,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x08,0x00,0x09,0x0a,0x5a,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,0x12,0x00,0x21,0x04,
     0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,
     0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,
     0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     0x00,0x00,0x08,0x00,0x09,0x0a,0x1e,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,
-    0x36,0x3e,0x31,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,
+    0x36,0x3e,0x34,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,
     0x5a,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x05,0x00,
     0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,
     0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,
-    0x09,0x0a,0x1e,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x34,0x00,
+    0x09,0x0a,0x1e,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x32,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x09,0x0a,
     0x5a,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,
     0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x1e,0x00,
-    0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x32,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x09,0x0a,0x5a,0x00,0x06,0x00,
-    0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x08,0x00,0x09,0x0a,0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,
-    0x36,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,
-    0x05,0x00,0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x1e,0x00,0x06,0x00,0x12,0x00,
-    0x21,0x04,0xc3,0x00,0x36,0x3e,0x35,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x08,0x00,0x09,0x0a,0x5a,0x00,0x09,0x0a,0x5a,0x00,0x10,0x00,0x01,0x00,
+    0x06,0x00,0x12,0x00,0x21,0x04,0xc3,0x00,0x36,0x3e,0x35,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x08,0x00,0x09,0x0a,0x5a,0x00,0x09,0x0a,0x5a,0x00,0x10,0x00,
+    0x01,0x00,
 };
 
-/* k_r39j_p_entriegeln: 1372 Byte
+/* k_r39j_p_entriegeln: 1376 Byte
  *   +0000 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05: Riegel-Slot 2 aus, Set(4,0xC3)=1, msg 12 "You've opened the lock.", Evt_next)
  *   +000A 22 04 c3 01                          ROOM1141 @0x00FD2 Set
  *   +000E 2b 0c ff ff                          ROOM1141 @0x00FD6 Message_on
@@ -457,46 +459,47 @@ static const uint8_t k_r39j_p_haemmern[654] = {
  *   +048C 3f 00 02 00                          Plc_motion(0,2) Heranwinken = ROOM1171 sub02 @0x014CE `3f 00 02 00` (RBJ ROOM1171 Record 1 Clip 2, 96 Bilder; Anker WINK: Leihe an)
  *   +0490 09 0a 3c 00                          Sleep 60 = ROOM1171 sub02 @0x014D2 `09 0a 3c 00`
  *   +0494 09 0a 28 00                          Sleep 40 = Rest: msg 52 stand 99 Bilder (Abnahme H3), der Clip 96 - John laeuft erst los, wenn Zeile und Geste zu Ende sind (60 + 40 = 100)
- *   +0498 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (John) = sub02 @0x00F80
- *   +04A2 2e 01 00 00                          Work_set(1,0)+Nop Elza
- *   +04A6 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (Elza) = sub02 @0x00F30
- *   +04B0 46 00 02 31 ec fa 00 00 82 c9        Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14; Runde 38 Nachbesserung 1 M3)
- *   +04BA 2e 01 00 00                          Work_set(1,0)+Nop Spieler = Arbeitsfigur der Lage-Abfrage (Form ROOM1141 sub02 @0x00C2E)
- *   +04BE 0f 1e 22 00                          While Kette 30 B, Block 34 B (Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`; Kettenlaenge pc+1 @0x8003f790, Blocklaenge @0x8003f74c)
- *   +04C2 3e 00 00 02 fe de                      Member_cmp Elza x >= -8450
- *   +04C8 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
- *   +04CA 3e 00 00 04 ce e6                      Member_cmp Elza x <= -6450
- *   +04D0 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
- *   +04D2 3e 00 02 02 80 a8                      Member_cmp Elza z >= -22400
- *   +04D8 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
- *   +04DA 3e 00 02 04 55 dd                      Member_cmp Elza z <= -8875
- *   +04E0 02 00                                  Evt_next + Nop (Form sub03 @0x00FB0)
- *   +04E2 10 00                                Ewhile (Form sub03 @0x00FB2)
- *   +04E4 22 02 07 01                          Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)
- *   +04E8 22 01 1b 01                          Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)
- *   +04EC 29 07                                Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft aus der Ecke auf die Kamera zu und verlaesst das Bild am unteren Rand (Runde 38)
- *   +04EE 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
- *   +04F2 34 06 03 00                          Member_set(6, 0x0003) John: kein Koerper-Schub (FUN_8002aec4 @0x8002af04; Runde 38 M3)
- *   +04F6 40 00 05 01 4a e3 50 e2              Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)
- *   +04FE 18 04                                Gosub sub04 (Form sub02 @0x00F96)
- *   +0500 40 00 05 01 4a e3 44 fd              Plc_dest RUN John -> vor die Dachtuer
- *   +0508 18 04                                Gosub sub04
- *   +050A 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) DOOR1A oeffnen (Runde 38)
- *   +0516 09 0a 0f 00                          Sleep 15 (Form ROOM1131 sub02 @0x00A54)
- *   +051A 32 00 d0 8a 00 00 d0 8a              Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080)
- *   +0522 36 0e 01 00 00 00 00 00 00 00 00 00  Se_on(0x0E,1) DOOR1A zufallen
- *   +052E 22 09 43 01                          Set(9,67)=1 John hat 1141 verlassen (Runde 38)
- *   +0532 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 - die Dachtuer ist offen, John kam durch sie herein)
- *   +053C 22 04 c3 01                          ROOM1141 @0x00FD2 Set
- *   +0540 46 01 02 31 4f aa 00 00 8f 9b        ROOM1141 @0x00FDC Aot_reset (sub05: Dachtuer Slot 1 scharf)
- *   +054A 09 0a 0f 00                          Sleep 15
- *   +054E 2a 00                                Cut_old + Nop: zurueck auf die Kamera vor Cut 7 (Form ROOM1150 @0x010F2 `2a 00 3c 01`)
- *   +0550 3c 01                                Cut_auto 1 (Form ROOM1150 @0x010F4)
- *   +0552 22 02 07 00                          Set(2,7)=0 (Form sub06 @0x010C8)
- *   +0556 22 01 1b 00                          Set(1,0x1B)=0 (Form sub06 @0x010CC)
- *   +055A 01 00                                Evt_end = sub05 @0x00FE6
+ *   +0498 2b 3a 00 00                          Message_on 58 = Port-Warte-Zeile ohne Text (Nachbesserung 2, Nutzer-Nachtrag 8: main52.wav 4,3 s > 100 Bilder): John spricht aus, bevor er losrennt (Lauf v_a: Cut 7 + RUN F4275, Zeile bis F4304); ohne Aufnahme laeuft sie sofort durch
+ *   +049C 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (John) = sub02 @0x00F80
+ *   +04A6 2e 01 00 00                          Work_set(1,0)+Nop Elza
+ *   +04AA 41 00 00 00 00 00 00 00 64 00        Plc_neck aus (Elza) = sub02 @0x00F30
+ *   +04B4 46 00 02 31 ec fa 00 00 82 c9        Aot_reset Slot 0 -> Tuer ROOM1131 (Nutzlast = main00 @0x00A52+14; Runde 38 Nachbesserung 1 M3)
+ *   +04BE 2e 01 00 00                          Work_set(1,0)+Nop Spieler = Arbeitsfigur der Lage-Abfrage (Form ROOM1141 sub02 @0x00C2E)
+ *   +04C2 0f 1e 22 00                          While Kette 30 B, Block 34 B (Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`; Kettenlaenge pc+1 @0x8003f790, Blocklaenge @0x8003f74c)
+ *   +04C6 3e 00 00 02 fe de                      Member_cmp Elza x >= -8450
+ *   +04CC 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
+ *   +04CE 3e 00 00 04 ce e6                      Member_cmp Elza x <= -6450
+ *   +04D4 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
+ *   +04D6 3e 00 02 02 80 a8                      Member_cmp Elza z >= -22400
+ *   +04DC 00 00                                  Verbinder 0 = UND (@0x8003f7fc beq -> @0x8003f80c and)
+ *   +04DE 3e 00 02 04 55 dd                      Member_cmp Elza z <= -8875
+ *   +04E4 02 00                                  Evt_next + Nop (Form sub03 @0x00FB0)
+ *   +04E6 10 00                                Ewhile (Form sub03 @0x00FB2)
+ *   +04E8 22 02 07 01                          Set(2,7)=1 Pad-Sperre (Form ROOM1141 sub06 @0x01004)
+ *   +04EC 22 01 1b 01                          Set(1,0x1B)=1 Balken (Form ROOM1141 sub06 @0x01008)
+ *   +04F0 29 07                                Cut_chg 7 = Kamera (-7465,-3024,-9613) Blick nach Sueden (sub02 @0x00C24): John laeuft aus der Ecke auf die Kamera zu und verlaesst das Bild am unteren Rand (Runde 38)
+ *   +04F2 2e 02 00 00                          Work_set(2,0)+Nop (Form ROOM1141 sub02 @0x00C5C)
+ *   +04F6 34 06 03 00                          Member_set(6, 0x0003) John: kein Koerper-Schub (FUN_8002aec4 @0x8002af04; Runde 38 M3)
+ *   +04FA 40 00 05 01 4a e3 50 e2              Plc_dest RUN John -> Gang-Ausgang (Form sub02 @0x00F8E)
+ *   +0502 18 04                                Gosub sub04 (Form sub02 @0x00F96)
+ *   +0504 40 00 05 01 4a e3 44 fd              Plc_dest RUN John -> vor die Dachtuer
+ *   +050C 18 04                                Gosub sub04
+ *   +050E 36 0e 00 00 00 00 00 00 00 00 00 00  Se_on(0x0E,0) DOOR1A oeffnen (Runde 38)
+ *   +051A 09 0a 0f 00                          Sleep 15 (Form ROOM1131 sub02 @0x00A54)
+ *   +051E 32 00 d0 8a 00 00 d0 8a              Pos_set John geparkt (Form ROOM10D0 sub21 @0x01D9E, Lage ROOM11B0 @0x01080)
+ *   +0526 36 0e 01 00 00 00 00 00 00 00 00 00  Se_on(0x0E,1) DOOR1A zufallen
+ *   +0532 22 09 43 01                          Set(9,67)=1 John hat 1141 verlassen (Runde 38)
+ *   +0536 46 02 00 00 00 00 00 00 00 00        ROOM1141 @0x00FC8 Aot_reset (sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 - die Dachtuer ist offen, John kam durch sie herein)
+ *   +0540 22 04 c3 01                          ROOM1141 @0x00FD2 Set
+ *   +0544 46 01 02 31 4f aa 00 00 8f 9b        ROOM1141 @0x00FDC Aot_reset (sub05: Dachtuer Slot 1 scharf)
+ *   +054E 09 0a 0f 00                          Sleep 15
+ *   +0552 29 00                                Cut_chg 0 = Kamera der RVD-Gruppe 0, in deren Viereck Elza steht (Nachbesserung 2; Form ROOM1141 sub02 @0x00E80 `29 00` vor @0x00F56 Cut_auto 1). Vorher Cut_old (ROOM1150 @0x010F2): der gemerkte Cut war seit dem Gespraech Cut 8, dessen RVD-Gruppe nur ihren Kopf hat - die Kamera blieb stehen
+ *   +0554 3c 01                                Cut_auto 1 (Form ROOM1150 @0x010F4)
+ *   +0556 22 02 07 00                          Set(2,7)=0 (Form sub06 @0x010C8)
+ *   +055A 22 01 1b 00                          Set(1,0x1B)=0 (Form sub06 @0x010CC)
+ *   +055E 01 00                                Evt_end = sub05 @0x00FE6
  */
-static const uint8_t k_r39j_p_entriegeln[1372] = {
+static const uint8_t k_r39j_p_entriegeln[1376] = {
     0x46,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x04,0xc3,0x01,0x2b,0x0c,
     0xff,0xff,0x02,0x00,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x2e,0x01,0x00,0x00,
     0x40,0x00,0x05,0x00,0x88,0xe1,0x00,0xce,0x0f,0x06,0x0a,0x00,0x3e,0x00,0x02,0x02,
@@ -570,19 +573,19 @@ static const uint8_t k_r39j_p_entriegeln[1372] = {
     0x2b,0x33,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x0f,0x00,0x09,0x0a,0x32,0x00,
     0x3f,0x00,0x0f,0x00,0x43,0x00,0x80,0x00,0x09,0x0a,0x32,0x00,0x3f,0x00,0x17,0x00,
     0x09,0x0a,0x14,0x00,0x2b,0x34,0x00,0x00,0x2e,0x02,0x00,0x00,0x3f,0x00,0x02,0x00,
-    0x09,0x0a,0x3c,0x00,0x09,0x0a,0x28,0x00,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x64,0x00,0x2e,0x01,0x00,0x00,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x64,0x00,
-    0x46,0x00,0x02,0x31,0xec,0xfa,0x00,0x00,0x82,0xc9,0x2e,0x01,0x00,0x00,0x0f,0x1e,
-    0x22,0x00,0x3e,0x00,0x00,0x02,0xfe,0xde,0x00,0x00,0x3e,0x00,0x00,0x04,0xce,0xe6,
-    0x00,0x00,0x3e,0x00,0x02,0x02,0x80,0xa8,0x00,0x00,0x3e,0x00,0x02,0x04,0x55,0xdd,
-    0x02,0x00,0x10,0x00,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,0x29,0x07,0x2e,0x02,
-    0x00,0x00,0x34,0x06,0x03,0x00,0x40,0x00,0x05,0x01,0x4a,0xe3,0x50,0xe2,0x18,0x04,
-    0x40,0x00,0x05,0x01,0x4a,0xe3,0x44,0xfd,0x18,0x04,0x36,0x0e,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0f,0x00,0x32,0x00,0xd0,0x8a,0x00,0x00,
-    0xd0,0x8a,0x36,0x0e,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x09,
-    0x43,0x01,0x46,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x22,0x04,0xc3,0x01,
-    0x46,0x01,0x02,0x31,0x4f,0xaa,0x00,0x00,0x8f,0x9b,0x09,0x0a,0x0f,0x00,0x2a,0x00,
-    0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x01,0x00,
+    0x09,0x0a,0x3c,0x00,0x09,0x0a,0x28,0x00,0x2b,0x3a,0x00,0x00,0x41,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x64,0x00,0x2e,0x01,0x00,0x00,0x41,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x64,0x00,0x46,0x00,0x02,0x31,0xec,0xfa,0x00,0x00,0x82,0xc9,0x2e,0x01,
+    0x00,0x00,0x0f,0x1e,0x22,0x00,0x3e,0x00,0x00,0x02,0xfe,0xde,0x00,0x00,0x3e,0x00,
+    0x00,0x04,0xce,0xe6,0x00,0x00,0x3e,0x00,0x02,0x02,0x80,0xa8,0x00,0x00,0x3e,0x00,
+    0x02,0x04,0x55,0xdd,0x02,0x00,0x10,0x00,0x22,0x02,0x07,0x01,0x22,0x01,0x1b,0x01,
+    0x29,0x07,0x2e,0x02,0x00,0x00,0x34,0x06,0x03,0x00,0x40,0x00,0x05,0x01,0x4a,0xe3,
+    0x50,0xe2,0x18,0x04,0x40,0x00,0x05,0x01,0x4a,0xe3,0x44,0xfd,0x18,0x04,0x36,0x0e,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x0a,0x0f,0x00,0x32,0x00,
+    0xd0,0x8a,0x00,0x00,0xd0,0x8a,0x36,0x0e,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x22,0x09,0x43,0x01,0x46,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x22,0x04,0xc3,0x01,0x46,0x01,0x02,0x31,0x4f,0xaa,0x00,0x00,0x8f,0x9b,0x09,0x0a,
+    0x0f,0x00,0x29,0x00,0x3c,0x01,0x22,0x02,0x07,0x00,0x22,0x01,0x1b,0x00,0x01,0x00,
 };
 
 /* k_r39j_p_rolltor: 224 Byte
@@ -682,7 +685,7 @@ static const uint8_t k_r39j_p_rolltor[224] = {
  *   +0020 2e 02 00 00                            Work_set(2,0)+Nop John (sub02 @0x00C5C)
  *   +0024 40 00 09 01 00 00 00 00                Plc_dest TURN John -> naechster Gorilla (Form sub02 @0x00E94 `40 00 09 01 ..`; Ziel x/z traegt dining_r39.c am Anker ZIEL ein)
  *   +002C 18 04                                  Gosub sub04 = sub02 @0x00D06 (warten, bis John ausgerichtet ist)
- *   +002E 3f 02 06 00                            Plc_motion(2,6) Zielen = ROOM1021 sub02 @0x020C6 (eigene Bank Clip 6)
+ *   +002E 3f 02 06 00                            Plc_motion(2,6) Zielen = ROOM1021 sub02 @0x020C6 (eigene Bank Clip 6; Anker ZIELEN: ab hier fuehrt John die Waffe dem Ziel nach - Nachbesserung 2, gun sub5 @0x80033f94)
  *   +0032 09 0a 6e 00                            Sleep 110 = ROOM1021 sub02 @0x020CA `09 0a 6e 00`
  *   +0036 06 00 0e 00                          Ifel_ck Laenge 14 (Form sub01 @0x00BFE): erster Schuss
  *   +003A 21 04 f2 01                            Ck(4,0xF2)==1 = sub00 @0x00B4A (Gorillas leben)
@@ -695,7 +698,7 @@ static const uint8_t k_r39j_p_rolltor[224] = {
  *   +0054 09 0a 1e 00                              Sleep 30 = ROOM1021 sub02 @0x020D2 `09 0a 1e 00`
  *   +0058 08 00                                Endif = sub01 @0x00C10
  *   +005A 2e 02 00 00                            Work_set(2,0)+Nop John
- *   +005E 3f 02 06 00                            Plc_motion(2,6) = ROOM1021 sub02 @0x020EA (senken)
+ *   +005E 3f 02 06 00                            Plc_motion(2,6) = ROOM1021 sub02 @0x020EA (senken; Anker SENKEN: Nachfuehren aus)
  *   +0062 43 00 80 00                            Plc_flg 0x80 rueckwaerts = ROOM1021 sub02 @0x020EE
  *   +0066 09 0a 14 00                            Sleep 20 = ROOM1021 sub02 @0x020F2 `09 0a 14 00`
  *   +006A 22 05 11 00                            Set(5,0x11)=0 Salve fertig
@@ -716,7 +719,9 @@ static const uint8_t k_r39j_p_schuetze[116] = {
 
 #define RE15_R39J_SCHUETZE_OFF_FEUER1 0x003E   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
 #define RE15_R39J_SCHUETZE_OFF_FEUER2 0x0050   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
+#define RE15_R39J_SCHUETZE_OFF_SENKEN 0x005E   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
 #define RE15_R39J_SCHUETZE_OFF_ZIEL 0x0024   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
+#define RE15_R39J_SCHUETZE_OFF_ZIELEN 0x002E   /* Anker im Faden SCHUETZE39 (dining_r39.c) */
 #define RE15_R39J_ENTRIEGELN_OFF_WINK 0x048C   /* Anker in ENTRIEGELN39 (dining_r39.c) */
 
 /* ROOM1141 msg 50: NUTZER-VORGABE Punkt 5 (Nachtrag 2026-10-18: John, nicht Roy; Nachtrag 6: "trouble" klein); Form msg 2 @0x0115F (Elza = Farbe 1 `05 01`), Zeilenumbruch `08` wie msg 2  [Zeilenbreiten 167, 235 px] */

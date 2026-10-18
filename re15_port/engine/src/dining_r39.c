@@ -113,8 +113,12 @@ void re15_dining_r39_w_beginn(int entity, int clip)
  * zu (Aufmerksamkeit, Lenkziel im Gorilla-B[3] statt Elza). */
 static int     s_ziel_slot = -1;
 static int     s_schuss_offen = 0;
+static int     s_zielen = 0;                      /* Nachbesserung 2 (b): Anker ZIELEN..SENKEN = John fuehrt die Waffe nach */
 static int16_t s_aufmerksam[RE15_ACTOR_MAX];
 static int32_t s_auf_abstand[RE15_ACTOR_MAX];   /* Abstand zu John am letzten Prueftakt (Fortschritt der Jagd) */
+static uint8_t s_zugewandt[RE15_ACTOR_MAX];     /* Nachbesserung 2 (c): der Gorilla hat sich John zugewandt (Kegel ZUGEWANDT) */
+static uint8_t s_auf_takt[RE15_ACTOR_MAX];      /* Bilder seit der Zuwendung bzw. seit dem letzten Prueftakt */
+extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);   /* enemy_ai_common.c = FUN_8001a8f8 */
 
 static re15_actor_t *john_aktor(void)
 {
@@ -136,6 +140,30 @@ static int gorilla_im_angriff(const re15_actor_t *g)
     if (g->mag_airborne) return 1;
     if (g->state != 1 || g->sub_state_2 == 0) return 0;
     return g->sub_state_1 == 5 || g->sub_state_1 == 6 || g->sub_state_1 == 7 || g->sub_state_1 == 9 || g->sub_state_1 == 15;
+}
+
+/* Nachbesserung 2 (a): Johns Ziel = der naechste lebende Gorilla, der NICHT gerade angreift - haelt einer Elza (Sub 15) oder
+ * beisst/springt er, nimmt John den anderen. Greifen alle an, bleibt der naechste lebende (der Schuss geht dann daneben,
+ * s.o.: einen Angriff auf den Spieler unterbricht im Original kein Dritter). Abstand wie bisher |dx|+|dz|. Die Wahl ist
+ * die Form des Nachzielens der Pistole (Gun-FSM Sub 5 @0x80033eec: Zielsuche FUN_80037250(0x7530) beim Eintritt, dann
+ * Nachdrehen @0x80033f94) - John waehlt neu, wenn sein Ziel tot ist oder angreift. */
+static int ziel_waehlen(const re15_actor_t *j)
+{
+    int beste = -1, frei = -1;
+    long d_beste = 0x7fffffffL, d_frei = 0x7fffffffL;
+    for (int s = 1; j && s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *g = &g_actors[s];
+        if (!gorilla_lebt(g)) continue;
+        const long d = labs((long)g->x - j->x) + labs((long)g->z - j->z);
+        if (d < d_beste) { d_beste = d; beste = s; }
+        if (!gorilla_im_angriff(g) && d < d_frei) { d_frei = d; frei = s; }
+    }
+    return frei > 0 ? frei : beste;
+}
+
+static int ziel_gilt(int slot)
+{
+    return slot > 0 && slot < RE15_ACTOR_MAX && gorilla_lebt(&g_actors[slot]) && !gorilla_im_angriff(&g_actors[slot]);
 }
 
 /* ============================ Heranwinken aus ROOM1171 (M2/N4.4, Nutzer-Nachtrag 7) ============================ */
@@ -186,21 +214,17 @@ void re15_dining_r39_pc(const uint8_t *pc)
     if (!pc || pc < s_schuetze || pc >= s_schuetze + sizeof s_schuetze) return;
     const int off = (int)(pc - s_schuetze);
     if (off == RE15_R39J_SCHUETZE_OFF_ZIEL) {
-        const re15_actor_t *j = john_aktor();
-        int beste = -1; long best_d = 0x7fffffffL;
-        for (int s = 1; j && s < RE15_ACTOR_MAX; s++) {
-            const re15_actor_t *g = &g_actors[s];
-            if (!gorilla_lebt(g)) continue;
-            const long dx = (long)g->x - j->x, dz = (long)g->z - j->z;
-            const long d = labs(dx) + labs(dz);
-            if (d < best_d) { best_d = d; beste = s; }
-        }
+        const int beste = ziel_waehlen(john_aktor());
         s_ziel_slot = beste;
         if (beste > 0) {   /* Plc_dest-Operand x @+4 / z @+6 (scd_vm.c op_plc_dest scd_read_le_s16(&pc[4]/&pc[6])) */
             const int16_t x = (int16_t)g_actors[beste].x, z = (int16_t)g_actors[beste].z;
             s_schuetze[off + 4] = (uint8_t)(x & 0xFF); s_schuetze[off + 5] = (uint8_t)((uint16_t)x >> 8);
             s_schuetze[off + 6] = (uint8_t)(z & 0xFF); s_schuetze[off + 7] = (uint8_t)((uint16_t)z >> 8);
         }
+    } else if (off == RE15_R39J_SCHUETZE_OFF_ZIELEN) {
+        s_zielen = 1;         /* Nachbesserung 2 (b): ab dem Zielen fuehrt John die Waffe nach (re15_dining_r39_tick) */
+    } else if (off == RE15_R39J_SCHUETZE_OFF_SENKEN) {
+        s_zielen = 0;
     } else if (off == RE15_R39J_SCHUETZE_OFF_FEUER1 || off == RE15_R39J_SCHUETZE_OFF_FEUER2) {
         s_schuss_offen = 1;   /* Verzug 1: Ton + Treffer im naechsten Bild (re15_dining_r39_tick) */
     }
@@ -214,9 +238,17 @@ static void schuss(void)
     re15_actor_t *j = john_aktor();
     re15_actor_t *g = (s_ziel_slot > 0 && s_ziel_slot < RE15_ACTOR_MAX) ? &g_actors[s_ziel_slot] : NULL;
     int treffer = 0;
-    extern int re15_player_victim_state(void);
-    if (j && g && gorilla_lebt(g) && !gorilla_im_angriff(g) && re15_player_victim_state() == 0 &&
-        re15_ai_arc_test(j, g->x, g->z, RE15_R39J_TREFFER_KEGEL) == 0) {
+    const char *grund = "kein Ziel";
+    /* Nachbesserung 2 (a): KEINE Sperre mehr ueber Elzas Opferzustand (re15_player_victim_state) - die traf auch den Gorilla,
+     * der Elza NICHT haelt (Abnahme 1: 5 von 16 Salven). Ausgenommen bleibt nur der Gorilla im Angriff (gorilla_im_angriff:
+     * der Greifer in Sub 15, Biss, Sprung): der Wurf des Spielers laeuft im Spieler-Takt (Opfer-Handler 0x8011c118 als
+     * Kommando 5, jalr v0 @0x80031cb4) und endet nur in P7 (0x8011c384) - einen Abbruch durch einen Dritten hat das
+     * Original nicht. */
+    if (!j || !g) grund = "kein Ziel";
+    else if (!gorilla_lebt(g)) grund = "tot";
+    else if (gorilla_im_angriff(g)) grund = "im Angriff";
+    else if (re15_ai_arc_test(j, g->x, g->z, RE15_R39J_TREFFER_KEGEL) != 0) grund = "nicht im Kegel";
+    else {
         const int dmg = re15_enemy_waffen_schaden(g, RE15_R39J_WAFFE_JOHN);
         g->hp = (int16_t)(g->hp - dmg);                        /* +0x9a -= dmg */
         g->hit_react |= 0x1;                                   /* +0x93 |= 1 */
@@ -227,26 +259,36 @@ static void schuss(void)
         g->anim_flags &= (uint16_t)~0x80u;
         g->sub_state_2 = 1;                                    /* waagerecht (Zielhoehe 0) */
         g->sub_state_1 = (uint8_t)RE15_R39J_WAFFE_JOHN;        /* +0x5 = Waffen-Id (@0x800124bc) */
+        if (s_aufmerksam[s_ziel_slot] <= 0) s_zugewandt[s_ziel_slot] = 0;   /* neue Zuwendung: erst wieder drehen */
+        s_auf_takt[s_ziel_slot] = 0;                                          /* Fortschritts-Takt ab diesem Treffer */
         s_aufmerksam[s_ziel_slot] = RE15_R39J_AUFMERKSAM_BILDER;
         s_auf_abstand[s_ziel_slot] = (int32_t)(labs((long)g->x - j->x) + labs((long)g->z - j->z));
         g_re15_r39j_treffer_zaehler++;
         treffer = 1;
     }
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[dining39] F%u John schiesst (Schuss %u) auf Gorilla Slot %d: %s\n", (unsigned)g_engine.frame_count,
-            g_re15_r39j_schuss_zaehler, s_ziel_slot, treffer ? "Treffer, Aufmerksamkeit" : "daneben (nicht im Kegel / tot)");
+    fprintf(stderr, "[dining39] F%u John schiesst (Schuss %u) auf Gorilla Slot %d: %s%s\n", (unsigned)g_engine.frame_count,
+            g_re15_r39j_schuss_zaehler, s_ziel_slot, treffer ? "Treffer, Aufmerksamkeit" : "daneben - ", treffer ? "" : grund);
 #endif
+    (void)grund;
 }
 
-void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z)
+/* Lenkziel im Gorilla-B[3] (enemy_ai_common.c, Haken): 1 = Johns Lage ersetzt das Ziel. Nachbesserung 2 (c): der Haken
+ * steuert dann OHNE die Umweg-/Pad-Suche der Runde 36 F (re15_r36_affen_padsuche_ziel) - die plant den Weg zu ELZA (r36_uw_route
+ * mit dem Spieler) und hielt den Gorilla am Westrand x -6982 auf Elzas Umweg (Abnahme 1 L2 Gorilla 3: Drehung 3157 -> 3163). */
+int re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z)
 {
-    if (slot <= 0 || slot >= RE15_ACTOR_MAX || s_aufmerksam[slot] <= 0 || !x || !z) return;
-    if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_aufmerksam[slot] = 0; return; }
+    if (slot <= 0 || slot >= RE15_ACTOR_MAX || s_aufmerksam[slot] <= 0 || !x || !z) return 0;
+    if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_aufmerksam[slot] = 0; return 0; }
     const re15_actor_t *j = john_aktor();
-    if (!j || j->x <= -29000) return;
+    if (!j || j->x <= -29000) return 0;
     *x = j->x;
     *z = j->z;
+    return 1;
 }
+
+int re15_dining_r39_ziel_slot(void) { return s_ziel_slot; }
+int re15_dining_r39_zielt(void) { return s_zielen; }
 
 int re15_dining_r39_aufmerksam(int slot) { return (slot > 0 && slot < RE15_ACTOR_MAX) ? s_aufmerksam[slot] : 0; }
 
@@ -311,19 +353,49 @@ void re15_dining_r39_tick(void)
         ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 || (int)g_actors[s_leihe_slot].motion != RE15_R39J_WINK_CLIP ||
          g_actors[s_leihe_slot].sub_state_1 != 0))
         s_leihe_an = 0;   /* der naechste Befehl (Abgang RUN) hat Clip/Sub ersetzt: die Leihe ist vorbei */
-    if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_schuss_offen = 0; return; }
+    if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_schuss_offen = 0; s_zielen = 0; return; }
+    re15_actor_t *jz = john_aktor();
+    /* Nachbesserung 2 (b): Zielen (Anker ZIELEN..SENKEN) = John dreht die Waffe dem Ziel je Bild um hoechstens 0xC8 nach
+     * (FUN_8001a8f8-Kern, Form Gun-FSM Sub 5 @0x80033f90/@0x80033f94); ist sein Ziel tot oder im Angriff, waehlt er neu (a).
+     * Abnahme 1 L2 F4137: Richtung nur vor den 110 Zielbildern bestimmt, das Ziel lief aus dem Kegel (rel -599/-612). */
+    if (s_zielen && jz) {
+        if (!ziel_gilt(s_ziel_slot)) { const int neu = ziel_waehlen(jz); if (neu > 0) s_ziel_slot = neu; }
+        if (s_ziel_slot > 0 && gorilla_lebt(&g_actors[s_ziel_slot]))
+            re15_enemy_steer_point(jz, g_actors[s_ziel_slot].x, g_actors[s_ziel_slot].z, RE15_R39J_NACHFUEHREN);
+    }
     if (s_schuss_offen) { s_schuss_offen = 0; schuss(); }
-    const re15_actor_t *j = john_aktor();
+    const re15_actor_t *j = jz;
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {
         if (s_aufmerksam[s] <= 0) continue;
         s_aufmerksam[s]--;
+        if (!j) continue;
+        const re15_actor_t *g = &g_actors[s];
+        const int32_t d = (int32_t)(labs((long)g->x - j->x) + labs((long)g->z - j->z));
+        /* Nachbesserung 2 (c): erst dreht sich der Gorilla John zu (B[3]-Lenkschritt, Haken enemy_ai_common.c); der Fortschritt
+         * zaehlt ab der Zuwendung (Kegel RE15_R39J_ZUGEWANDT = A[3]-Biss-Kegel @0x80117a60-74). Vorher endete die Aufmerksamkeit
+         * am ersten Prueftakt, bevor er sich drehen konnte (Abnahme 1 L2: 8 Treffer, je 29 Bilder, Drehung 3157 -> 3163). */
+        if (!s_zugewandt[s]) {
+            if (re15_ai_arc_test(g, j->x, j->z, RE15_R39J_ZUGEWANDT) == 0) {
+                s_zugewandt[s] = 1; s_auf_takt[s] = 0; s_auf_abstand[s] = d;
+#ifdef RE15_PLATFORM_PC
+                fprintf(stderr, "[dining39] F%u Gorilla Slot %d John zugewandt (Abstand %d, noch %d Bilder)\n",
+                        (unsigned)g_engine.frame_count, s, (int)d, (int)s_aufmerksam[s]);
+#endif
+            }
+            continue;
+        }
         /* Kein Fortschritt (Tisch, zweiter Gorilla, Wand): alle RE15_R39J_AUFMERKSAM_TAKT Bilder muss der Abstand zu John um
          * RE15_R39J_AUFMERKSAM_SCHRITT kleiner geworden sein, sonst ist die Aufmerksamkeit vorbei (kein Kriechen auf der
          * Stelle) - PORT-WAHL, gemessen Lauf auf2: festgeklemmt 180 Bilder bei Abstand 6600 +-80. */
-        if (j && s_aufmerksam[s] > 0 && (RE15_R39J_AUFMERKSAM_BILDER - s_aufmerksam[s]) % RE15_R39J_AUFMERKSAM_TAKT == 0) {
-            const re15_actor_t *g = &g_actors[s];
-            const int32_t d = (int32_t)(labs((long)g->x - j->x) + labs((long)g->z - j->z));
-            if (d > s_auf_abstand[s] - RE15_R39J_AUFMERKSAM_SCHRITT) s_aufmerksam[s] = 0;
+        if (s_aufmerksam[s] > 0 && ++s_auf_takt[s] >= RE15_R39J_AUFMERKSAM_TAKT) {
+            s_auf_takt[s] = 0;
+            if (d > s_auf_abstand[s] - RE15_R39J_AUFMERKSAM_SCHRITT) {
+#ifdef RE15_PLATFORM_PC
+                fprintf(stderr, "[dining39] F%u Gorilla Slot %d: Aufmerksamkeit vorbei - festgeklemmt (Abstand %d, vorher %d)\n",
+                        (unsigned)g_engine.frame_count, s, (int)d, (int)s_auf_abstand[s]);
+#endif
+                s_aufmerksam[s] = 0;
+            }
             else s_auf_abstand[s] = d;
         }
     }
@@ -375,8 +447,11 @@ void re15_dining_r39_install(uint16_t room_id, int phase_h)
     s_leihe_an = 0; s_leihe_slot = -1;   /* s_leihe_ok bleibt: der Record haengt an Johns Bank - neu parsen je Raum */
     s_leihe_ok = 0;
     s_schuss_offen = 0;
+    s_zielen = 0;
     s_ziel_slot = -1;
     memset(s_aufmerksam, 0, sizeof s_aufmerksam);
+    memset(s_zugewandt, 0, sizeof s_zugewandt);
+    memset(s_auf_takt, 0, sizeof s_auf_takt);
     g_re15_r39j_anker_n = 0;
     if (room_id != RE15_R38F_RAUM_1141) return;
     memcpy(s_schuetze, k_r39j_p_schuetze, sizeof s_schuetze);   /* Ziel-Operand frisch */
@@ -457,7 +532,7 @@ void re15_dining_r39_messhaken(void)
     int blick = 0;
     if (j) blick = (((int)re15_atan2_q12(e->z - j->z, e->x - j->x) - ((int)j->rot_y + 1024)) % 4096 + 4096 + 2048) % 4096 - 2048;
     fprintf(s_f, "F%u cam=%d anz=%d msg=%d/%d john=%d (%d,%d) rot=%d st=%d s1=%d s2=%d mo=%d elza=(%d,%d) rot=%d "
-                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d pm=%d c3=%d w=%d sch=%u/%u g=(%d,%d,%d,%d)/(%d,%d,%d,%d) blick=%d\n",
+                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d pm=%d c3=%d w=%d sch=%u/%u g=(%d,%d,%d,%d)/(%d,%d,%d,%d) zl=%d/%d blick=%d\n",
             (unsigned)g_engine.frame_count, (int)g_scd.cam_id, (int)g_scd.work_vars[0x0A],
             (int)g_scd.message_active, (int)g_scd.message_id,
             j ? 1 : 0, j ? (int)j->x : 0, j ? (int)j->z : 0, j ? (int)(j->rot_y & 0xFFF) : 0,
@@ -469,7 +544,8 @@ void re15_dining_r39_messhaken(void)
             (int)g_scd.player_mode, re15_game_flag_get(4, 0xC3), re15_dining_r39_w_clip(), g_re15_r39j_schuss_zaehler,
             g_re15_r39j_treffer_zaehler,
             ga ? (int)ga->x : 0, ga ? (int)ga->z : 0, ga ? (int)ga->hp : 0, ga ? s_aufmerksam[ga - g_actors] : 0,
-            gb ? (int)gb->x : 0, gb ? (int)gb->z : 0, gb ? (int)gb->hp : 0, gb ? s_aufmerksam[gb - g_actors] : 0, blick);
+            gb ? (int)gb->x : 0, gb ? (int)gb->z : 0, gb ? (int)gb->hp : 0, gb ? s_aufmerksam[gb - g_actors] : 0,
+            s_zielen, s_ziel_slot, blick);
     fflush(s_f);
 #endif
 }

@@ -74,7 +74,21 @@
 #define RE15_R39J_AUFMERKSAM_NAH 2000   /* naeher an John: Aufmerksamkeit vorbei = Gorilla-Kasten 1600 (@0x80121356, Runde 36 F)
                                          * + 400 Abstand, damit er John nicht schiebt - PORT-WAHL                     */
 #define RE15_R39J_AUFMERKSAM_TAKT 30    /* Prueftakt der Jagd: alle 30 Bilder ...                                         */
-#define RE15_R39J_AUFMERKSAM_SCHRITT 300 /* ... mindestens 300 naeher an John, sonst vorbei (festgeklemmt) - PORT-WAHL  */
+#define RE15_R39J_AUFMERKSAM_SCHRITT 300 /* ... mindestens 300 naeher an John, sonst vorbei (festgeklemmt) - PORT-WAHL. Der
+                                          * Takt zaehlt erst, wenn der Gorilla John zugewandt ist (Nachbesserung 2, unten)  */
+/* ---- Nachbesserung 2 (Abnahme 1 Mangel M1, J_dining1141.md Abschnitt 9) ------------------------------------------ */
+#define RE15_R39J_NACHFUEHREN    0xC8   /* (b) Waehrend des Zielens dreht John die Waffe dem Ziel nach, je Bild hoechstens 0xC8
+                                         * = Form des Nachzielens der Pistole: Gun-FSM Sub 5 (Wechsel aufs naechste Ziel,
+                                         * @0x80033eec) Phase >= 1 `ori a1,zero,0xc8` @0x80033f90 / `jal 0x8001a8f8` @0x80033f94
+                                         * (a0 = Ziel+0x34 @0x80033f98), je Bild bis zur Ausrichtung (arc_test @0x80033fcc)   */
+#define RE15_R39J_ZUGEWANDT      0x180  /* (c) Gorilla "John zugewandt" = Kegel +-0x180 des Gorilla-Hirns (A[3] Biss-Kegel
+                                         * a804(0xbb8,0x180) @0x80117a60-74). Erst dann zaehlt der Fortschritts-Takt oben;
+                                         * bis dahin dreht er sich mit dem B[3]-Lenkschritt 6..37 (@0x80117d1c-34) zu John   */
+#define RE15_R39J_CUT_ENDE       0      /* Kamera nach Johns Abgang: RVD ROOM1141 (RDT+0x28 -> @0x01A8) Satz 0 `01 ff 00 00 fc d6
+                                         * 64 9c ..` = Gruppe Cut 0 mit dem Viereck x -10500..3000 z -25500..-8500 um Elzas
+                                         * Gespraechslage; die Gruppe Cut 8 hat nur ihren Kopf (Satz 22 `01 ff 08 00`), aus
+                                         * Cut 8 fuehrt kein Wechsel. Form ROOM1141 sub02 @0x00E80 `29 ..` vor @0x00F56
+                                         * Cut_auto 1 (vorher Cut_old = zurueck auf Cut 8, die Kamera blieb stehen)          */
 
 /* ---- Port-Bank 0x3E (Se_on pc[1]; frei: 0x0E/0x3A/0x3B/0x3C/0x3D sind vergeben, Dossier 3) ------------------------ */
 #define RE15_R39J_SE_BANK        0x3E
@@ -129,8 +143,11 @@ int  re15_dining_r39_w_clip(void);
  * "beachtet". g_re15_r39j_anker_n != 0, solange der Faden in diesem Raum liegt (Wachposten des VM-Hakens). */
 const uint8_t *re15_dining_r39_schuetze(void);
 void re15_dining_r39_pc(const uint8_t *pc);
-void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);
+/* Lenkziel: 1 = John ersetzt das Ziel (dann OHNE Umweg-/Pad-Suche, die gilt Elza), 0 = unveraendert. */
+int  re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);
 int  re15_dining_r39_affe_jagt_john(int slot);   /* 1 = Gorilla im Hirn-Kopf auf Jagd B[3] zu John */
+int  re15_dining_r39_ziel_slot(void);            /* Johns aktuelles Ziel (Riegel/Messschiene), -1 = keins */
+int  re15_dining_r39_zielt(void);                /* 1 = John fuehrt die Waffe gerade nach (Anker ZIELEN..SENKEN) */
 extern int      g_re15_r39j_anker_n;
 extern unsigned g_re15_r39j_schuss_zaehler, g_re15_r39j_treffer_zaehler;
 int  re15_dining_r39_aufmerksam(int slot);   /* Restbilder (Riegel) */

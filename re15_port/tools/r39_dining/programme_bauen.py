@@ -68,6 +68,11 @@ WINK_CLIP = 2                   # RE15_R39J_WINK_CLIP: ROOM1171 sub02 @0x014CE `
 SCHUETZE_BANK, SCHUETZE_BIT = 5, 0x11  # RE15_R39J_SCHUETZE_BANK/_BIT: Johns Salve laeuft (Nachbesserung 1 N4.3)
 SUB_SCHUETZE = 30               # RE15_R39J_SUB_SCHUETZE: Evt_exec-Nummer des Fadens SCHUETZE39 (< RE15_RDT_MAX_SUB_SCD 32;
                                 #   ROOM1141 hat sub00..sub06; Port-Nummer wie ROOM1131 Ereignis 29, Runde 38)
+CUT_ENDE = 0                    # RE15_R39J_CUT_ENDE (Nachbesserung 2): Kamera nach Johns Abgang. RVD ROOM1141 (RDT+0x28 ->
+                                #   @0x01A8, 20 B je Satz): Satz 0 `01 ff 00 00 fc d6 64 9c ..` = Gruppe Cut 0, Viereck x -10500..3000
+                                #   z -25500..-8500 enthaelt Elzas Gespraechslage ELZA_NACH; Satz 22 `01 ff 08 00` ist der EINZIGE
+                                #   Satz der Gruppe Cut 8 (nur der Gruppenkopf, kein Wechsel) - Cut_old kehrte zu Cut 8 zurueck und
+                                #   die Kamera blieb dort stehen (Lauf v_a F4418..F6200)
 
 D1141 = R.RDT["1141"]
 
@@ -136,6 +141,9 @@ def reaktion():
     sleep(10, "  Sleep 10 = sub02 @0x00C4C")
     op([0x2B, MSG_REAKTION, 0x00, 0x00], "  Message_on 50 \"Elza: Oh, no, this is John! ...\" (Form sub02 @0x00D0A `2b 02 00 00`)")
     sleep(90, "  Sleep 90 (Zeit zum Lesen; RE2 ROOM1060 sub05 +0x58 `09 0a 5a 00`)")
+    op([0x2B, MSG_STIMME_WARTEN, 0x00, 0x00], "  Message_on 58 = Port-Warte-Zeile ohne Text (Nachbesserung 2, Nutzer-Nachtrag 8: "
+                                              "main50.wav 6,0 s > Sleep 90): parkt, bis Elzas Sprachzeile endet (Stimmen-Riegel "
+                                              "scd_vm.c), erst dann Steuerung zurueck; ohne Aufnahme laeuft sie sofort durch")
     R.set_flag(9, BIT_REAKTION, 1, "  Set(9,94)=1 Reaktion gesehen (VERTRAG 1.1)")
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "  Plc_neck aus = sub02 @0x00F30 `41 00 00 00 00 00 00 00 64 00`")
     R.set_flag(2, 0x07, 0, "  Set(2,7)=0 = sub02 @0x00F4E")
@@ -318,6 +326,9 @@ def nach_dem_kampf():
     sleep(60, "Sleep 60 = ROOM1171 sub02 @0x014D2 `09 0a 3c 00`")
     sleep(MSG52_REST, "Sleep %d = Rest: msg 52 stand 99 Bilder (Abnahme H3), der Clip 96 - John laeuft erst los, wenn Zeile und "
                       "Geste zu Ende sind (60 + %d = 100)" % (MSG52_REST, MSG52_REST))
+    op([0x2B, MSG_STIMME_WARTEN, 0x00, 0x00], "Message_on 58 = Port-Warte-Zeile ohne Text (Nachbesserung 2, Nutzer-Nachtrag 8: "
+                                              "main52.wav 4,3 s > 100 Bilder): John spricht aus, bevor er losrennt (Lauf v_a: "
+                                              "Cut 7 + RUN F4275, Zeile bis F4304); ohne Aufnahme laeuft sie sofort durch")
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "Plc_neck aus (John) = sub02 @0x00F80")
     R.work_player("Work_set(1,0)+Nop Elza")
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "Plc_neck aus (Elza) = sub02 @0x00F30")
@@ -416,7 +427,9 @@ def baue_entriegeln39():
             "(sub05 ohne Nachricht: Riegel-Slot 2 aus + Set(4,0xC3)=1 - die Dachtuer ist offen, John kam durch sie herein)")
     R.kopie("1141", 0x00FDC, 0x00FE6, [0x46, 0x01, 0x02, 0x31], "(sub05: Dachtuer Slot 1 scharf)")
     sleep(15, "Sleep 15")
-    op([0x2A, 0x00], "Cut_old + Nop: zurueck auf die Kamera vor Cut 7 (Form ROOM1150 @0x010F2 `2a 00 3c 01`)")
+    R.cut_chg(CUT_ENDE, "Cut_chg 0 = Kamera der RVD-Gruppe 0, in deren Viereck Elza steht (Nachbesserung 2; Form ROOM1141 sub02 "
+                        "@0x00E80 `29 00` vor @0x00F56 Cut_auto 1). Vorher Cut_old (ROOM1150 @0x010F2): der gemerkte Cut war seit "
+                        "dem Gespraech Cut 8, dessen RVD-Gruppe nur ihren Kopf hat - die Kamera blieb stehen")
     op([0x3C, 0x01], "Cut_auto 1 (Form ROOM1150 @0x010F4)")
     R.set_flag(2, 0x07, 0, "Set(2,7)=0 (Form sub06 @0x010C8)")
     R.set_flag(1, 0x1B, 0, "Set(1,0x1B)=0 (Form sub06 @0x010CC)")
@@ -471,7 +484,9 @@ def baue_schuetze39():
         R.dest(9, 1, (0, 0), "  Plc_dest TURN John -> naechster Gorilla (Form sub02 @0x00E94 `40 00 09 01 ..`; Ziel x/z traegt "
                              "dining_r39.c am Anker ZIEL ein)")
         op([0x18, 0x04], "  Gosub sub04 = sub02 @0x00D06 (warten, bis John ausgerichtet ist)")
-        op([0x3F, 0x02, 0x06, 0x00], "  Plc_motion(2,6) Zielen = ROOM1021 sub02 @0x020C6 (eigene Bank Clip 6)")
+        anker("ZIELEN")
+        op([0x3F, 0x02, 0x06, 0x00], "  Plc_motion(2,6) Zielen = ROOM1021 sub02 @0x020C6 (eigene Bank Clip 6; Anker ZIELEN: ab hier "
+                                     "fuehrt John die Waffe dem Ziel nach - Nachbesserung 2, gun sub5 @0x80033f94)")
         sleep(110, "  Sleep 110 = ROOM1021 sub02 @0x020CA `09 0a 6e 00`")
 
         def schuss(n):
@@ -484,7 +499,8 @@ def baue_schuetze39():
         ifel_f2(schuss(1), "erster Schuss")
         ifel_f2(schuss(2), "zweiter Schuss")
         R.work_npc(0, "  Work_set(2,0)+Nop John")
-        op([0x3F, 0x02, 0x06, 0x00], "  Plc_motion(2,6) = ROOM1021 sub02 @0x020EA (senken)")
+        anker("SENKEN")
+        op([0x3F, 0x02, 0x06, 0x00], "  Plc_motion(2,6) = ROOM1021 sub02 @0x020EA (senken; Anker SENKEN: Nachfuehren aus)")
         op([0x43, 0x00, 0x80, 0x00], "  Plc_flg 0x80 rueckwaerts = ROOM1021 sub02 @0x020EE")
         sleep(20, "  Sleep 20 = ROOM1021 sub02 @0x020F2 `09 0a 14 00`")
         R.set_flag(SCHUETZE_BANK, SCHUETZE_BIT, 0, "  Set(5,0x11)=0 Salve fertig")
