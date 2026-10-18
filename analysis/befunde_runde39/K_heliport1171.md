@@ -481,3 +481,60 @@ naechsten Plc_dest; SCD-Spur (RE15_SCD_TRACE) zeigt: F1 Ankunft, F2 `@0x16A0 Whi
 - `elza_r39.c` (Spur H, Walker-Init): zusaetzlich `motion_init_delay = 1` — Phase 0 von Gang/Lauf/Drehen faellt in f314
   (`80030bf8` / `80030e4c` / `80031494`) und posiert Bild 0 auch bei GLEICHEM Clip. Vorher verdeckt, weil zwischen zwei
   Plc_dest immer das (falsche) Sub-6-Bild den Clip wechselte; ohne es begann das Drehen F841 mit Bild 1 (gemessen).
+
+**Messung nachher** (Lade-Weg `K39nb1/nach3_laden`, Stand cb17bb39; echter Weg `K39nb1/echt1`, gleicher Stand, Abschnitt
+ROOM1171): Elza Clip 1 nach jeder Ankunft / nach dem Wurf **Bild 0..15 (16 Bilder)** ab dem Folgebild: Lade-Weg F38-F53,
+F186-F201, F592-F607, F670-F685, F945-F960 (echter Weg F105, F252, F658, F736, F1011); Ankunftsbilder F37 / F591 / F669 /
+F840 / F846 zeigen die Gang- bzw. Drehpose (mo 100/105, z.B. F840 Bild 4, F846 Bild 5); **keine** Einzelbilder mehr (F1,
+F840, F846 / echter Weg F68, F906, F912 = Gang/Drehen). Drehen F841 beginnt mit Bild 0. Alle Nicht-Elza-Zeilen bytegleich
+(Lade-Weg md5 acbd458d vorher = nachher; echter Weg Abschnitt 1171 md5 7f8fc006 = Abnahme-Lauf `runA_neu`); Elza aendert
+sich nur in den erwarteten Bereichen (echter Weg F68, F104-F160, F252-F599, F657-F729, F735-F841, F906, F912, F999-F1142).
+Hinweis: die Laenge von ROOM1141 im echten Weg schwankt auch bei GLEICHER exe (Abnahme `runA_neu` 4258 / `runA_neu_1` 4292
+Bilder, v0.8.26 4243 / 4291) — Tonlaufzeit; nicht durch diese Aenderung.
+
+### 12.2 M2 — Elzas Schub-Ruecklauf (Spieler-Sub 0x13, Phase 5 -> 6 -> 7)
+
+**Ursache (Port).** `szenenleon_r36.c re15_szl_schub_spieler_tick` Fall 5 setzte im Bit-Takt sofort Clip 0x11 rueckwaerts
+(`sp_clip(p, RE15_SZL_CLIP_ANSATZ, 1, 0)`), Phase 7 (`default`) loeschte das Rueckwaerts-Bit und rief begin (Sub 6 sofort).
+**Messung vorher** (Lade-Weg): Bit-Takt F933 Elza Clip 17 rueckwaerts Bild 9 (John seit K4: Clip 18), Ruecklauf F933-F942,
+F943 schon Clip 1 Bild 1; echter Weg F999-F1008 / F1009 (Abnahme 4.3).
+**Beleg** (dieselbe Sub fuer Spieler und NPC: `table 0x80073e30` [19] = `table 0x80076ca0` [19] = 0x80052864): Phase 5
+`80052af4 jal 0x8001f314` (Clip 0x12 posiert) VOR `80052b44 jal 0x8004efe4` (Bit-Abfrage), dann `80052b60` +0x6 = 6,
+`80052b6c-70` +0x94 = 0x11, `80052b80` +0x95 = 0, Ausgang `j 0x80052bf4`; Phase 6 `80052b8c ori a2,zero,0x1` /
+`80052b98 jal 0x8001f314` (rueckwaerts), `80052bb4` +0x6 += Rueckgabe; Phase 7 `80052bcc jal 0x80045024` (SE),
+`80052be0` +0x5 = 6, `80052bf0` +0x6 = 0, kein anim_set.
+**Aenderung** (`szenenleon_r36.c`, "Runde 39 Spur K NB1"): Bit-Takt setzt nur +0x6 = 6 und den Merker `s_sp_saat`; Phase 6
+setzt Clip 0x11 rueckwaerts in ihrem ersten Takt; Phase 7 haelt die Pose (Bild fc-1 rueckwaerts = Bild 0, PL00-Bank
+bleibt ueber den Port-Merker `s_sp = 8`), ruft `re15_player_event_reach_begin_naechstes_bild`; der Sub-6-Saattakt im
+Folgebild beendet den Schub (`re15_szl_schub_spieler_ende`, Rueckwaerts-Bit weg).
+**Messung nachher** (Lade-Weg): F933 Elza Clip 18 Bild 0 (= John), F934-F943 Clip 17 rueckwaerts 9..0 (= John), F944 Clip
+17 Bild 0 gehalten (Phase 7, = John), F945 Clip 1 Bild 0 (= John); echter Weg F999 / F1000-F1009 / F1010 / F1011.
+
+### 12.3 M3(b) — die Ereignis-Kraehen (Griff, Wurf, Tod) gegen das Original
+
+**Messung vorher** (Lade-Weg `vorher_laden`, Aktoren 2/3, Typ 0x21 = Ereignis-Kraehe mit RE1.5-Hirn): jede Kraehen-Pose
+ein Bild voraus: F0 Clip 0 Bild 1; HOVER Clip 4 1,1,2,3..; ORIENT (Griff) ab F96 Clip 8 **1..7,0** (die Doppelzeile F96
+"Bild 0" ist die Effekt-Abfrage); Tod: Landebild F376 schon Clip 0x0a Bild 0, FINISH Bild 1..12, **Leiche Bild 12**.
+**Beleg** (STAGE1.BIN / PSX.EXE): Clip-Setzer 0x80115d94 `80115da0 sb a0,148(v0)` (+0x94), `80115db0 sb zero,149(v0)`
+(+0x95 = 0), `80115dc4 sb v0(=7),143(v1)` (+0x8f, Delay-Slot von `jr ra`) — posiert NICHT. f314 posiert +0x95
+(`8001f35c lbu v0,149(t0)`, `8001f36c sw a2,360(t0)`) und schiebt erst danach vor (`8001f618-1c`, +0x8f-- `8001f5b0-b4`,
+Umlauf `8001f63c`). Die Kraehen-Handler lesen +0x95 vor ihrem f314: ASCEND `80115078 lbu v1,149(a0)` vor `801150f0`, Flug
+Sub 4 `80112b00` vor `80112b84`, Sub 5 `80112cac` vor `80112d1c`. ORIENT 0x801152e0: Clip 8 `@0x80115310`, Effekt
+`@0x80115334`, Schritt 1 f314 `@0x8011536c`, Effekt am Umlauf `@0x80115394`. Tod Normal-Lane: Landung `801148e4 sw v1,56(a0)`,
+Clip 0x0a `801148f4 jal 0x80115d94`, Se(5) `8011490c`, +0x1d5 = 11 `80114910`, +0x7++ `80114928-30`, KEIN f314; FINISH
+`8011493c jal 0x8001f314` (+0x84/+0x16c), Timer `80114950-60`, Zustand 7 `80114978` + `80114974 jal 0x80115d74(0)`;
+Zustand 7 0x801157e8 (scan bis `80115828 jr ra`) ohne f314. Effekt-Matrix: `a2 = [+0x188]+408` (Teil 2, Matrix +64) wird
+von der Zeichenschleife gesetzt: `8001d108 jal 0x8001e8c8` je Entity NACH der Logik (`8001ce04` Gegner, `8001ce0c`
+Spieler) — der Effekt sieht die Pose des VORIGEN Bildes. Der alte Port-Kommentar "Freeze-Frame = 12" (crow_death_pool.md
+§1.2) zaehlte +0x95 nach dem 12. f314 (nie gezeichnet).
+**Aenderung**: `heliport1171_r39.c` haelt +0x94/+0x95/+0x8f je Aktor-Slot (`re15_r39k_kraehe_clip/_anim/_bild`), die
+Aktorfelder tragen das zuletzt POSIERTE Bild (= Renderer); fremde Schreiber (RE2-Kraehenhirn, Zwang ROOM1120) werden
+erkannt (Aktorfelder != zuletzt posiert -> alte Form). `enemy_ai_common.c` (Haken "Runde 39 Spur K NB1"):
+`re15_crow_clip`/`re15_crow_anim` gehen darueber, die drei Bild-8-Abfragen lesen +0x95, der ORIENT-Umlauf-Effekt nimmt
+die Pose vor dem f314 dieses Takts. Installer loescht die Tabelle beim Raumaufbau.
+**Messung nachher** (Lade-Weg `K39nb1/kraehe1_laden`, build_bisect = Endstand): F0 Clip 0 Bild 0; Start HOVER 0,0,1,2..;
+ORIENT F96 (Kraehe 2) / F107 (Kraehe 3) Clip 8 **0..7,0..**; Effekt-Abfrage am Eintritt mit der HOVER-Pose (Clip 4 Bild 3);
+Tod: Landebild F376 / F425 haelt Clip 4 (Fall-Pose), FINISH Clip 0x0a **0..11**, **Leiche Bild 11**. Hirn-Zeitachse
+unveraendert: state.log ohne mo/af 1138/1138 Zeilen gleich; Elza/John bytegleich (md5 787b922b vorher = nachher).
+Fremde Riegel angepasst (mit Beleg): `probe_crow_death.c` (unit_crow_death_corpse) Frame 12 -> 11;
+`test_r38_heliport1171.c` flagwort: Effekt-Pose = Kraehen-Aktorfelder VOR dem ORIENT-Bild (vorher Clip 8 Bild 0).

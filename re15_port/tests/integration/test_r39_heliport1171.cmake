@@ -201,7 +201,9 @@ foreach(_z IN LISTS _zz)
     if(_mo EQUAL 2 AND _cl EQUAL 2 AND _fc EQUAL 96)
         math(EXPR _winken "${_winken} + 1")
     endif()
-    if(_nach_plc AND _mo EQUAL 2 AND _cl EQUAL 2 AND _fc EQUAL 50)
+    # Kletter-Clip = Loco Clip 2 (50) mit Bild > 0 — die INIT-Pose (K2) haelt Bild 0; zaehlt auch auf einem Motor, auf dem
+    # nie ein RBJ-Clip-0-Bild kommt (Hinweis H4 der Abnahme 0).
+    if(_mo EQUAL 2 AND _cl EQUAL 2 AND _fc EQUAL 50 AND (_nach_plc OR _sl GREATER 0))
         math(EXPR _klettern "${_klettern} + 1")
     endif()
     if(_mo EQUAL 0 AND _cl EQUAL 0 AND _fc EQUAL 20)
