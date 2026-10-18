@@ -15,7 +15,7 @@ Hunde-Gegner (Typ 0x20). Leon unveraendert, ohne Bit 97 kein Hund.
 - [x] 3 RE2-Form eines Hunde-Sprungs: ROOM21A0 sub07 + Modul Sub 14 (R2/R3), RE1.5-Gegenstueck (R4)
 - [x] 4 Umsetzung (U1-U4)
 - [x] 5 Messung am echten Weg mit Elza (CONTINUE + Tuer-Weg) + Riegel unit/integration (N1-N4)
-- [ ] 6 gezielte Tests + alle unit_/prop_/probe_ (T1/T2)
+- [~] 6 gezielte Tests gruen (T1); alle unit_/prop_/probe_ laufen (T2)
 
 ## Messung vorher
 
@@ -271,7 +271,18 @@ weitergerannt); danach greift er an (Tuer-Lauf E: Elza hp 100 -> 80 -> 75).
 | unit_r39_hund1121_startmaschine | RE2 Sub 14 direkt: Phase 0 wartet 60 Bilder, Phase 1 faellt in den Rumpf, Absprung nach 8 Anlaufbildern |
 | integration_r39_hund1121 | echte exe, Elza: Lauf A (CONTINUE: Kette, Mitschnitt, Bild), B (ohne 97), C (0xAE gesetzt), D (Leon 1120), E (Tuer-Weg 1061 -> 1121) |
 
-Ergebnisse: siehe T1/T2 unten.
+### T1 Gezielte Tests (Endstand, Bau 87307d18; Log R_belege/R_hund1121_ctest_gezielt.txt)
+`ctest --test-dir re15_port/build -R "r39_hund1121|dog|hund|r35_fenster|r36_elza_fenster|1190|crow|kraehe|aot_edge|scd_aot_opcodes|aot_sce_census|r37_elzaems" --timeout 600 --output-on-failure`
+(Hunde-KI RE1.5/RE2, Kraehen, Leons Fenster 1120 + Elza-Fenster 1121, ROOM1190-Hunde, AOT/SCD-Opcodes, Elza-EMS-Lader,
+eigene Riegel):
+```
+100% tests passed, 0 tests failed out of 77
+Total Test time (real) = 891.69 sec
+```
+integration_r39_hund1121 darin 144 s (Laeufe A-E).
+
+### T2 Alle unit_/prop_/probe_ (VERTRAG/Auftrag: vor dem Abschluss)
+(folgt)
 
 ## OFFEN
 * Integration mit Spur P (setzt/loescht (9,97)): hier per Spielstand-Flag gemessen; im Spielablauf kommt das Bit aus P.
