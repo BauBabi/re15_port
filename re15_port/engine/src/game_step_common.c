@@ -1712,10 +1712,9 @@ void re15_game_step(const re15_game_ctx_t *c)
                     if (re15_autolook_scan(pl, 0xfa0))               /* @0x80031e20-24 */
                         pl->neck_flags = (uint8_t)(pl->neck_flags & 0xed);  /* @0x80031e3c-40 */
                 }
-                { extern int re15_spinnen_r38_gift_tick(re15_actor_t *);    /* Runde 38 Spur R: Gift- */
-                  int abzug = re15_spinnen_r38_gift_tick(pl);              /* Wirkung @0x80031e44-ecc schreibt NUR */
-                  if (abzug > 0 && pl->hp >= 0)                            /* HP + Zaehler, kein Kommando 2: nicht */
-                      s_prev_hp = (int16_t)(s_prev_hp - abzug); }          /* als Treffer werten (Nachbesserung 1) */
+                /* Runde 39 Spur F: der RE1.5-Gift-Takt (@0x80031e44-ecc, Runde 38 re15_spinnen_r38_gift_tick) laeuft
+                 * hier nicht mehr — Gift zieht in der RE2-Form im Spieler-Takt re15_zustand_r39_spieler_takt (oben,
+                 * hinter dem Pause-bltz @0x80031c78; RE2 FUN_8003bfac @0x8003c12c-180: alle 31 Bilder -1 HP bis 1). */
             }
         }
         /* AIM-Zustand ZUM DECIDE-ZEITPUNKT festhalten (= DAT_800aca59 == 7, BEVOR die Aim-FSM
