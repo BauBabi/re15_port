@@ -27,8 +27,11 @@ typedef struct { short x, y, w, h; unsigned char u, v, art; } re15_karte_r39_stu
 
 /* Zerlegt das Rechteck <rect> von Blatt <page> (Schirmlage rx,ry,rw,rh, Kachelecke ru,rv),
  * beschnitten auf das Fenster (fx,fy,fw,fh), in Stuecke. Rueckgabe: Zahl der Stuecke,
- * oder -1, wenn fuer das Rechteck keine Korrektur gilt (Aufrufer zeichnet wie bisher). */
-int re15_karte_r39_kachel_stuecke(unsigned page, unsigned rect,
+ * oder -1, wenn fuer das Rechteck keine Korrektur gilt (Aufrufer zeichnet wie bisher).
+ * inv_screen (re15_inv_screen_t*, Nachbesserung 1 / Abnahme-Mangel M3): eine Korrektur, die eine
+ * Wandlinie loescht, gilt nur, wenn ihr TRAEGER - das Nachbar-Rechteck mit der Ersatzlinie - in
+ * diesem Schirm gezeichnet wird; sonst bliebe der Raum offen. NULL = alles gezeichnet (Vorlagen-Zustand). */
+int re15_karte_r39_kachel_stuecke(const void *inv_screen, unsigned page, unsigned rect,
                                   int rx, int ry, int rw, int rh, int ru, int rv,
                                   int fx, int fy, int fw, int fh,
                                   re15_karte_r39_stueck_t *out, int max);
@@ -37,12 +40,13 @@ int re15_karte_r39_kachel_stuecke(unsigned page, unsigned rect,
  * u,v, Zustandszeile clut, Tint r,g,b) MIT den Korrekturen in die Op-Liste ops[*n..max).
  * Rueckgabe 0, wenn fuer das Rechteck keine Korrektur gilt - dann zeichnet der Aufrufer
  * unveraendert seinen sprt() (re15_inv_screen.c, vier Haken "Runde 39 Spur G"). */
-int re15_karte_r39_kachel(void *ops, int *n, int max, unsigned page, int rect, int clut,
-                          int x, int y, int w, int h, int u, int v, int r, int g, int b);
+int re15_karte_r39_kachel(const void *inv_screen, void *ops, int *n, int max, unsigned page, int rect,
+                          int clut, int x, int y, int w, int h, int u, int v, int r, int g, int b);
 
 /* 1, wenn die Seite <seite> (0 oben, 1 unten, 2 links, 3 rechts) der Schema-Zelle
- * (cx,cy,cw,ch) auf Blatt <page> NICHT gezeichnet wird (Doppelwand laut Vorlage). */
-int re15_karte_r39_kante_weg(unsigned page, int cx, int cy, int cw, int ch, int seite);
+ * (cx,cy,cw,ch) auf Blatt <page> NICHT gezeichnet wird (Doppelwand laut Vorlage) - nur, wenn die
+ * Ersatzlinie des Nachbarn in diesem Schirm (inv_screen) gezeichnet wird (Nachbesserung 1, M3). */
+int re15_karte_r39_kante_weg(const void *inv_screen, unsigned page, int cx, int cy, int cw, int ch, int seite);
 
 /* ---- B1 als Schema-Zeichnung (Runde 39 Spur G): Kartenhinweis-Ziel auf einer Schema-Zeichnung ----
  * Das Hinweis-/Ziel-System (map_hint_common.c, RE2 FUN_8006F1C4) fuehrt sein Ziel als (Blatt, Rechteck) und
@@ -62,8 +66,9 @@ int re15_karte_r39_schema_ziel(const void *inv_screen, unsigned page, int synth)
  * ("Auf einer Etagen-Umschaltung ist NUR das Rechteck dieser Etage aktuell"). */
 int re15_karte_r39_etage_hier(const void *zone, unsigned page);
 
-/* Riegel-Zugriff: Zahl der Texel-Korrekturen und ein Eintrag. */
+/* Riegel-Zugriff: Zahl der Texel-Korrekturen und ein Eintrag. traeger = Rechteck derselben Seite,
+ * dessen Wandlinie die geloeschte ersetzt; 255 = gilt immer (Nachbesserung 1, M3). */
 int re15_karte_r39_korrektur_zahl(void);
-int re15_karte_r39_korrektur(int i, int *page, int *rect, int *c, int *r, int *w, int *h, int *neu);
+int re15_karte_r39_korrektur(int i, int *page, int *rect, int *c, int *r, int *w, int *h, int *neu, int *traeger);
 
 #endif

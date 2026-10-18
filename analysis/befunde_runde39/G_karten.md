@@ -330,9 +330,52 @@ Grundlage: analysis/befunde_runde39/G_abnahme_0.md (Maengel M1..M5). Messwerkzeu
 VORHER-Messungen der Abnahme werden NICHT wiederholt.
 
 ### Fortschritt
-- [ ] M3 (hoch, Regression): Doppelwand-Korrekturen nur, wenn die verbleibende Linie gezeichnet wird
+- [x] M3 (hoch, Regression): Doppelwand-Korrekturen nur, wenn die verbleibende Linie gezeichnet wird (Code + Echtlauf, Riegel folgt)
 - [ ] M4 (mittel): Treppenhaeuser 1060/10A0 - Abbildung zu den verschobenen Treppensymbolen
 - [ ] M5 (mittel): Marker neben der Zeichnung 1210/1170 Z1/1030/1110/1060/10A0 B2
 - [ ] M1 (gering): 3F-Treppe (168,107) auf Linie y110
 - [ ] M2 (gering): B1 10A0-Treppe auf der Unterkante y168
 - [ ] Bau, gezielte Tests, Abschluss
+
+### M3 Doppelwand-Korrektur oeffnet Raeume in Teilzustaenden (Regression)
+* URSACHE (Code gelesen): `karte_r39.c` s_korr (19 Texel-Rechtecke) und s_kanten (5 Schema-Kanten von ROOM1000)
+  ersetzten die eigene Wandlinie UNBEDINGT. Die Vorlagen zeigen den Zustand "alle Raeume gezeichnet"; die verbleibende
+  Linie gehoert dem NACHBARN. Ist der Nachbar nicht gezeichnet (unbesucht, Plan nicht im Besitz), fehlt die Wand.
+* MESSUNG VORHER: Abnahme 0 Abschnitt 6 (NICHT wiederholt): je Ort allein besucht, VORHER-exe gegen den Stand 40328436 -
+  1050 8 / 1020 16 / 1040 17 / 1070 34 / 1010 Zone 0+1 je 30 / 1080 8 / ROOM1000 Ostraum 41, Nord-WC 26, Sued-WC 12 /
+  1220 Zone 0+2 je 16 verlorene Wandpixel. Eigene Gegenprobe ohne Referenzbild (G39nb1/offen.py: Raumkoerper rot/gruen
+  grenzt 4-nachbarlich an den Grund) auf denselben Abzuegen der Abnahme: VORHER 0 je Ort (Ausnahmen 1030 2 = das Loch
+  (185,145), das die Korrektur fuellt; 1110 4 und 1210 2, s.u.), Stand 40328436 1050 1 / 1020 15 / 1040 14 / 1070 34 /
+  1010 30+30 / 1080 8 / 1000 38/23/9 / 1220 16+16.
+* MECHANISMUS-BELEG (welche Linie die geloeschte ersetzt): `G39nb1/nachbar.py` liest die Seiten-Tabelle @0x80076840
+  (+8*Seite; Blatt 3 s_map_rectfix) und DATA/MAP0<p+1>.PIX und sucht je Korrektur das ANDERE Rechteck, das auf der
+  Nachbarspalte/-zeile Kachel-Index 4 traegt:
+  1F r0 x187 -> r4 (1030) x186 10/10; r1 x144 -> r3 (1070) x145 16/16; r2 x118 y126..133 -> r4 8/8, y144..154 -> r10
+  (1060) 11/11; r3 x196 -> r0 (1050) x197 34/34; r7 x164 -> r1 (1020) 15/15, x179 -> r6 (10A0) 15/15; r8 x164 -> r1 15/15,
+  x179 y78..87 -> r0, y88..92 -> r6; r9 x118 -> r10 8/8; 2F r5 (186,121) -> r6 (1100) dasselbe Pixel; B2 r4 x187 -> r0
+  (11E0) 16/16, r5 x187 y96..100 -> r0, y101..111 -> r9 (10A0); Schema ROOM1000: x206 = 1F r0 65/65, y88 = 1F r5 (1090)
+  15/15, y139 = Sued-WC-Zeichnung (synth 3).
+  IMMER (kein Wandverlust moeglich): 1F r4 (185,145) fuellt ein Loch; 3F r4 verschiebt seine Linie INNERHALB desselben
+  Rechtecks (x144 -> x145, x152 -> x153); B2 r3 x187 y72..76 - dort steht der Tuerbalken 11E0<->1210 auf x186, der mit
+  ROOM1210 gezeichnet wird (Abzug 1210 allein: D auf x186 y72..76).
+* AENDERUNG: `karte_r39.c` - je Korrektur und je Schema-Kante ein Feld `traeger` (Rechteck derselben Seite bzw.
+  R39_SCHEMA(synth)); die Korrektur gilt nur, wenn der Traeger in DIESEM Kartenschirm gezeichnet wird. Das Gatter
+  (kachel_gezeichnet / schema_gezeichnet) ist dasselbe wie das der Zeichner in re15_inv_screen.c build_status:
+  Hinweis-/Zielkachel immer (RE2 FUN_8006F1C4 @0x8006F4E8-0x8006F608), sonst CURRENT/VISITED, UNVISITED nur mit dem Plan
+  (RE2 @0x8006E744 / @0x8006E66C, Umriss Zeile 498 @0x8006E71C), Teilbereiche je Teil; Schema: Besucht-/Etagen-Bit,
+  aktuell, Hinweisziel, Plan. Zwei Eintraege geteilt, weil zwei Traeger je Teilstueck (1F r8 x179, B2 r5 x187).
+  Haken re15_inv_screen.c: die fuenf vorhandenen "Runde 39 Spur G"-Aufrufe reichen `st` durch (keine neue Zeile).
+  Kein Datenwechsel im Vollzustand: alle Traeger gezeichnet -> dieselben Korrekturen wie vorher.
+* MESSUNG NACHHER (echte exe, Bau 2026-10-18 ~20:45, G39nb1/allein_nb1.sh = Liste und Lauf der Abnahme, nur NEU-exe;
+  Auswertung allein_ausw.py der Abnahme gegen ihre VORHER-Abzuege):
+```
+1050 0  1020 0  1040 0  1070 0  1030 0  1010a 0  1010b 0  1080 0  1000o 0  1000n 0  1000s 0  1110 0  1210 0  1220a 0  1220c 0
+(verlorene Wandpixel VORHER -> NEU; Abnahme: 8/16/17/34/0/30/30/8/41/26/12/0/0/16/16)
+offen.py: alle 0 ausser 1110 4 (VORHER 4) und 1210 4 (VORHER 2)
+```
+  1110: die Ostseite des Evidence-Raums x186 y115..120 ist schon VORHER offen - die Schwenk-Tilgung des Renderers
+  (inv_render_pc.c re15_schwenke_entfernen) nimmt dort den gemalten Tuerschwenk (MAP04.PIX r5, x181..186 y115..120,
+  Index 4) samt Wandstueck weg; geschlossen wird er von der Westwand von ROOM1100 (r6). Nicht durch Runde 39.
+  1210: die Kachel hat auf x187 bei y71 und y77 Index 0 (VORHER wie NEU offen); der Tuerbalken steht jetzt (Vorlage)
+  auf x186, so liegen statt zwei Tuer- jetzt zwei Koerperpixel an den Luecken. ROOM1210 erreicht man nur durch
+  ROOM11E0 (dessen Ostwand x186 dann gezeichnet ist) - im Spiel kein Teilzustand ohne Traeger.

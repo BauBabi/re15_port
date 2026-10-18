@@ -2632,7 +2632,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                                 &rx, &ry, &rw, &rh)) continue;
                     if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
                         continue;
-                    if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
+                    if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
                             st->hint_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
                             rx, ry, rw, rh, ru, rv, 128, 128, 128))
                     sprt(&e, RE15_INV_PAGE_MAP4,
@@ -2659,7 +2659,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                                 &rx, &ry, &rw, &rh)) continue;
                     if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
                         continue;
-                    if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
+                    if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
                             st->ziel_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
                             rx, ry, rw, rh, ru, rv, 128, 128, 128))
                     sprt(&e, RE15_INV_PAGE_MAP4,
@@ -2760,7 +2760,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                          * auf genau den bemalten Texeln — dasselbe Ergebnis wie der
                          * Schleier, aber mit RE2s Mechanismus statt einer zweiten Op.
                          * (Tint 128 ist neutral: mod5(t5,128) == t5.) */
-                        if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i, clut_kachel,
+                        if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_kachel,
                                 rx, ry, rw, rh, ru, rv, cr, cg, cb))   /* Runde 39 Spur G */
                         sprt(&e, RE15_INV_PAGE_MAP4, clut_kachel,
                              rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
@@ -2818,7 +2818,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                             if (tw <= 0 || th <= 0) continue;
                             /* Schleier entfaellt auch hier — die Aktuell-Zeile
                              * 502 traegt 680808+STP selbst (s. ganzes Rechteck). */
-                            if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i, clut_teil,
+                            if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_teil,
                                     tx, ty, tw, th, ru + (tx - rx), rv + (ty - ry), tr, tg, tb))
                             sprt(&e, RE15_INV_PAGE_MAP4, clut_teil,   /* Runde 39 Spur G: Haken oben */
                                  tx, ty, tw, th,
@@ -2983,7 +2983,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                     for (s2 = 0; s2 < 4; s2++) {
                         int laenge = (s2 < 2) ? cw : ch;
                         int lauf = -1, t;
-                        if (re15_karte_r39_kante_weg(st->map_page, cx, cy, cw, ch, s2)) continue;   /* Runde 39 Spur G */
+                        if (re15_karte_r39_kante_weg(st, st->map_page, cx, cy, cw, ch, s2)) continue;   /* Runde 39 Spur G */
                         for (t = 0; t <= laenge; t++) {
                             int frei = 0;
                             if (t < laenge) {
