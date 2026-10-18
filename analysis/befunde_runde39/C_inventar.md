@@ -171,3 +171,12 @@ Bestaetigen = VIERECK (byte-true virtuell 0x4000 @0x80028570; Kreuz = Abbruch/0x
   per RE15_SET_FLAG_AT): nach dem Ja `[msgtext] room=11e1 id=5 "You've opened the lock."` und
   `[inv-r39-menu] F822 … msg=1/5 wegwerf=1` = die Abfrage ist an msg 5 ARMIERT (vorher `wegwerf=0` in jedem Bild).
   Ja-Antwort + Karte weg: Lauf mit erweiterter Schiene (fsm/sel/bereit) s.u. / Riegel unit_r39_inventar_discard W.
+* **P4 gelbe Karte, vollstaendig** `m4c_nachher` (11E1 elza give:0x39:1 flag:9:0x8A; RE15_PRESS=square@100,140,270,320,
+  420,500,560,700,1000; RE15_SET_FLAG_AT=5:13,5:14,5:15,5:16@600), Schiene mit fsm/sel/bereit:
+  msg 7 F101 (vier Seiten: fsm 1 = Seitenende F127/F260/F304, Ja/Nein fsm 3 sel 1 ab F386) -> Ja F420 -> msg 9
+  F423 (zu F501) -> Tastenfeld msg 0 "Enter the first number." F502 (zu F561) -> Code-Bits F600 -> sub19:
+  `[msgtext] room=11e1 id=5 "You've opened the lock."` + `F601 … msg=1/5 wegwerf=1` -> zu F700 -> `[inv-r39] F701 …
+  inv=03:15,15:50,39:0` (Zaehler @0x80051810 auf 0) -> `F788 … wegwerf=1 … bereit=1` (Abfrage getippt) -> Ja F1000 ->
+  `[inv-r39-menu] F1000 … wegwerf=0`, **`[inv-r39] F1000 R11E1 … inv=03:15,15:50,00:0`** = die Yellow Keycard ist
+  weg (vorher: `wegwerf=0` in jedem Bild, `39:1` bleibt). Gegenprobe Leon (ROOM11E0 mit (3,139) wie nach ROOM1240):
+  kein Leser-Prompt, keine Abfrage (Riegel unit_r39_inventar_discard L, integration_r39_inventar_discard H).
