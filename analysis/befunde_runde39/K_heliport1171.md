@@ -542,3 +542,9 @@ Fremde Riegel angepasst (mit Beleg): `probe_crow_death.c` (unit_crow_death_corps
   szenenleon_r36,enemy_ai_common,heliport1171_r39}.c und include/re15_heliport1171_r39.h stehen VORUEBERGEHEND auf a2d1e1dc
   (Abnahme-Stand) in der Arbeitskopie, Bau nur des Ziels test_r39_heliport1171 in re15_port/build_bisect. Steht beim Lesen
   ein ' M' auf diesen Dateien ohne Rueckmeldung hier: `git checkout HEAD -- <diese Dateien>`, NICHT committen.
+- (NB1) Gegenprobe erledigt, Arbeitskopie mit `git checkout HEAD -- ...` zurueckgesetzt, `git status --porcelain` leer.
+  Neue Riegel gegen den ALTEN Motor (a2d1e1dc-Engine, neue Testquellen, nur Ziel test_r39_heliport1171 in build_bisect):
+  `elza` FEHLER (4): "8 Laeufe: Start 0, 16 Bilder 0" (Laeufe ab Bild 1 mit 15 Bildern, Einzelbilder F1/F840/F846),
+  "kein einzelnes Sub-6-Bild (3)", "Ankunftsbilder 0 von 6", "M2 ... Folge FALSCH"; `kraehen` FEHLER (4): Start Clip 0
+  Bild 1, ORIENT-Folge falsch, Landebild schon Clip 10, Leiche Bild 12. Integration (Trockenlauf des neuen Blocks gegen
+  die Spuren): Abnahme-Stand ROT, Stand ohne Kraehen-Fix ROT (M3b), Endstand GRUEN.
