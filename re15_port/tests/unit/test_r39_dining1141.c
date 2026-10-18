@@ -8,18 +8,19 @@
  * Teile (Aufruf: test_r39_dining1141 <teil>):
  *   texte      Port-Texte 50/51/52 dekodiert = Wortlaut des Nutzers (Punkte 5 und 8, Nachtrag 6 klein geschrieben)
  *   programme  Programm-Bytes je Punkt: HAEMMERN39 ohne Zombie-Stoehnen 0x3C/0x0B und ohne "Help me out." 0x3D (1, 3),
- *              Klopfen dreifach + help01..05 je Runde im Mix (4), Reaktion msg 50 unter Ck(9,94) nach Merker/Pad-Sperre
- *              (5, M1), Schleife bis Ck(4,0xC3) (N4.1); ENTRIEGELN39 = sub05 + Rennen + Cut 7 + Waffe heben (N4.2) +
+ *              Klopfen dreifach + help01..05 je Runde im Mix (4), KEINE Reaktion msg 50 mehr (Nutzer-Nachtrag 10;
+ *              vorher Punkt 5/M1), Schleife bis Ck(4,0xC3) (N4.1); ENTRIEGELN39 = sub05 + Rennen + Cut 7 + Waffe heben (N4.2) +
  *              Tuer-Auftritt (2), Glasbruch vor msg 6 (6), Gosub sub04 nach Johns Drehung vor msg 9 (7), msg 51/52 mit
  *              Gesten nach dem Kampf, Heranwinken (0,2) statt (2,6) (8, M2, Nachtrag 7), John im Schnittbild (M3); ROLLTOR39
  *   stamm      Sprach-Stamm: ROOM1141 Id 53..57 -> help01..05, alles andere unveraendert
- *   phase_h    ROOM1141 mit Elza am VM: John ab Bild 0 nicht im Raum; Klopfen/Hilferufe als Ton (Takt), Reaktion msg 50
- *              genau einmal; Gemaelde -> Rolladen -> frei laufen, Klopfen weiter (N4.1); Riegel -> msg 12, Elza rennt,
+ *   phase_h    ROOM1141 mit Elza am VM: John ab Bild 0 nicht im Raum; Klopfen/Hilferufe als Ton (Takt), keine Nachricht
+ *              (Nachtrag 10: Elzas Reaktion entfaellt in 1141); Gemaelde -> Rolladen -> frei laufen, Klopfen weiter (N4.1); Riegel -> msg 12, Elza rennt,
  *              Cut 7, Waffe heben (Pistole aus dem Inventar), Tuer auf, John innen vor der Tuer, Tuer zu, Cut 6 mit John,
  *              Waffe senken (N4.2); Szene mit Glasbruch vor msg 6 und Johns Blick zu Elza ab msg 9; Sperre msg 41; John
  *              schiesst, Treffer, Aufmerksamkeit (N4.3); Gorillas tot -> Cut 8, msg 51 (Gesten 15/23) und msg 52
  *              (Heranwinken ROOM1171 RBJ rec1 Clip 2, 96 Bilder, geliehen; M2/Nachtrag 7), kein Sprung (M3), Abgang
- *   fenster    Gemaelde im Fenster erster Ruf..Reaktion (M1), Wiederbetreten mit offenem Rolladen, Messer-Fall
+ *   fenster    Gemaelde gleich nach dem ersten Ruf: Rolladen, frei laufen, keine Reaktion (Nachtrag 10); Wiederbetreten mit
+ *              offenem Rolladen, Messer-Fall
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -325,20 +326,14 @@ static void teil_programme(void)
         PRUEF(nreihe == 5 && gemischt, "HAEMMERN39: Reihenfolge im Mix %d %d %d %d %d (nicht 1..5)", reihe[0], reihe[1], reihe[2],
               reihe[3], reihe[4]);
     }
-    {   /* Punkt 5: Ifel Ck(9,94)==0 { ... Message_on 50 ... Set(9,94)=1 } genau einmal */
+    {   /* Nutzer-Nachtrag 10 (2026-10-19): "Im ROOM 1141 soll alles so bleiben wie bisher, nur eben ohne die 'Oh, no, this is
+         * John! He is in Trouble, I have to help him!' Cutscene" - HAEMMERN39 traegt weder msg 50 noch Ck/Set(9,94), noch die
+         * Pad-Sperre der Reaktion (Set(2,7)=1); Klopfen und Rufe bleiben (oben). */
         const uint8_t ck[4] = { 0x21, 0x09, RE15_R39J_BIT_REAKTION, 0x00 }, set[4] = { 0x22, 0x09, RE15_R39J_BIT_REAKTION, 0x01 };
         const uint8_t m50[4] = { 0x2B, RE15_R39J_MSG_REAKTION, 0x00, 0x00 };
-        const int a = finde(h, nh, ck, 4, 0), c = finde(h, nh, m50, 4, 0), d = finde(h, nh, set, 4, 0);
-        PRUEF(a > 0 && c > a && d > c && finde(h, nh, m50, 4, c + 1) < 0, "HAEMMERN39: Ck(9,94)==0 -> msg 50 -> Set(9,94)=1, einmal");
-        /* Nachbesserung 2 (Nutzer-Nachtrag 8, main50.wav 6,0 s): nach msg 50 + Sleep 90 die Warte-Zeile msg 58, erst dann
-         * Set(9,94)=1 und Pad frei - Elza spricht ihre Zeile aus, bevor der Spieler weiterlaeuft. */
-        const uint8_t warte50[8] = { 0x09, 0x0A, 0x5A, 0x00, 0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00 };
-        PRUEF(c > 0 && finde(h, nh, warte50, 8, c) == c + 4 && d == c + 12,
-              "HAEMMERN39 NB2: msg 50 -> Sleep 90 -> Message_on 58 (Elza spricht aus) -> Set(9,94)=1 (@+%04X/@+%04X)", c, d);
-        /* die Reaktion folgt dem ersten Hilferuf */
-        const uint8_t h1[3] = { 0x36, RE15_R39J_SE_BANK, (uint8_t)(RE15_R39J_SATZ_HILFE0 + reihe[0] - 1) };
-        const int erster = finde(h, nh, h1, 3, 0);
-        PRUEF(erster > 0 && erster < a, "HAEMMERN39: Reaktion nach dem ersten Hilferuf (help%02d)", reihe[0]);
+        static const uint8_t sperre[4] = { 0x22, 0x02, 0x07, 0x01 };
+        PRUEF(finde(h, nh, ck, 4, 0) < 0 && finde(h, nh, m50, 4, 0) < 0 && finde(h, nh, set, 4, 0) < 0 && finde(h, nh, sperre, 4, 0) < 0,
+              "HAEMMERN39 Nachtrag 10: keine Reaktion in 1141 (kein msg 50, kein Ck/Set(9,94), keine Pad-Sperre)");
     }
     /* ENTRIEGELN39 (Nachbesserung 1: die Szene am Riegel der Dachtuer, frueher BEFREIUNG39) */
     {   /* Punkt 2: Cut 7 -> Tuer auf (0x0E,0) -> Pos_set John innen vor die Tuer + Dir_set -> Tuer zu (0x0E,1) -> Cut 6 */
@@ -396,15 +391,9 @@ static void teil_programme(void)
         PRUEF(r && nr > 40 && !memcmp(r, frage, 4) && finde(r, nr, ton, 3, 0) > 0 && finde(r, nr, ende, 12, 0) > 0 &&
               !memcmp(r + nr - 6, merker_aus, 6) && finde(r, nr, john, 2, 0) < 0 && finde(r, nr, c7r, 2, 0) < 0,
               "ROLLTOR39 N4.1: Frage msg 13, Rolladen-Ton, Steuerung zurueck, Merker (5,0x10) aus, kein John/kein Cut 7 (%d B)", nr);
-        /* N4.1/M1: HAEMMERN39 laeuft bis zum Entriegeln; die Reaktion wartet auf Merker und Pad-Sperre */
+        /* N4.1: HAEMMERN39 laeuft bis zum Entriegeln */
         static const uint8_t schleife[4] = { 0x21, 0x04, 0xC3, 0x00 };
-        const uint8_t warte_m[8] = { 0x0F, 0x04, 0x08, 0x00, 0x21, RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT, 0x01 };
-        static const uint8_t warte_p[8] = { 0x0F, 0x04, 0x08, 0x00, 0x21, 0x02, 0x07, 0x01 };
-        const uint8_t m50[4] = { 0x2B, RE15_R39J_MSG_REAKTION, 0x00, 0x00 };
-        const int iwm = finde(h, nh, warte_m, 8, 0), iwp = finde(h, nh, warte_p, 8, 0), i50 = finde(h, nh, m50, 4, 0);
         PRUEF(nh > 14 && !memcmp(h + 14, schleife, 4), "HAEMMERN39 N4.1: While Ck(4,0xC3)==0 (main00 @0x00A76) statt bis zum Rolladen");
-        PRUEF(iwm > 0 && iwp > iwm && i50 > iwp && finde(h, nh, schleife, 4, iwp) < i50,
-              "HAEMMERN39 M1: Reaktion wartet auf Merker (5,0x10) und Pad-Sperre (2,7), dann Ck(4,0xC3)==0, dann msg 50");
     }
     {   /* Punkt 6: zwei Se_on(0x3E,0x21) mit Sleep 5 dazwischen unmittelbar vor `09 0a 14 00` + Message_on 6 */
         const uint8_t g[24] = { 0x36, RE15_R39J_SE_BANK, RE15_R39J_SATZ_GLAS, 0,0,0,0,0,0,0,0,0, 0x09, 0x0A, 0x05, 0x00,
@@ -541,21 +530,22 @@ static void teil_phase_h(void)
         PRUEF(mit == (int)s_rdt.cut_count && drin == 0, "geparkter John in keinem der %d Cut-Vierecke (%d mit Viereck) = nie gezeichnet",
               (int)s_rdt.cut_count, mit);
     }
-    /* 900 Bilder Phase H: Ton-Takt, Reaktion einmal */
-    int msg50 = 0, msg_sonst = 0, last = -1, pad_gesperrt_bei_50 = 0;
-    long bild50 = -1;
+    /* 900 Bilder Phase H: Ton-Takt; Nutzer-Nachtrag 10: KEINE Reaktion Elzas (msg 50) und keine Pad-Sperre mehr in 1141 */
+    int msg50 = 0, msg_sonst = 0, last = -1, pad_gesperrt = 0;
     for (int f = 0; f < 900; f++) {
         frame(0, 0);
+        if (re15_game_flag_get(2, 7)) pad_gesperrt++;
         if (g_scd.message_active && (int)g_scd.message_id != last) {
             last = (int)g_scd.message_id;
-            if (last == RE15_R39J_MSG_REAKTION) { msg50++; bild50 = s_bild; pad_gesperrt_bei_50 = re15_game_flag_get(2, 7); }
+            if (last == RE15_R39J_MSG_REAKTION) msg50++;
             else msg_sonst++;
         }
         if (!g_scd.message_active) last = -1;
     }
-    PRUEF(msg50 == 1 && msg_sonst == 0, "900 Bilder: Elzas Reaktion msg 50 genau einmal (Bild %ld), sonst keine Nachricht", bild50);
-    PRUEF(pad_gesperrt_bei_50, "Reaktion mit Pad-Sperre (2,7) (Form sub02 @0x00C26)");
-    PRUEF(re15_game_flag_get(9, RE15_R39J_BIT_REAKTION) == 1, "(9,94) = 1 nach der Reaktion");
+    PRUEF(msg50 == 0 && msg_sonst == 0 && pad_gesperrt == 0,
+          "900 Bilder Phase H: keine Nachricht, keine Pad-Sperre (Nachtrag 10: Elzas Reaktion entfaellt in 1141; msg 50 %d, sonst %d)",
+          msg50, msg_sonst);
+    PRUEF(re15_game_flag_get(9, RE15_R39J_BIT_REAKTION) == 0, "(9,94) bleibt 0 (Nachtrag 10)");
     PRUEF(john->x == RE15_R39J_PARK_X && john->z == RE15_R39J_PARK_Z, "John bleibt auf dem Dach (geparkt)");
     {
         int alt = 0, n_klopf = 0, n_hilfe = 0, erster_hilfe = -1, gruppen_ok = 1, hilfe_reihe[16], nh = 0;
@@ -578,7 +568,7 @@ static void teil_phase_h(void)
         PRUEF(n_klopf >= 6 && gruppen_ok, "Klopfen (DOOR0F) in Gruppen, %d Schlaege", n_klopf);
         PRUEF(n_hilfe >= 2 && nh >= 2 && hilfe_reihe[0] != 1, "Hilferufe help%02d, help%02d ... (%d, im Mix)", hilfe_reihe[0],
               nh > 1 ? hilfe_reihe[1] : 0, n_hilfe);
-        PRUEF(erster_hilfe > 0 && bild50 > erster_hilfe, "Reaktion (Bild %ld) nach dem ersten Hilferuf (Bild %d)", bild50, erster_hilfe);
+        PRUEF(erster_hilfe > 0, "erster Hilferuf Bild %d", erster_hilfe);
     }
     /* Gemaelde: Vorwaerts-Punkt in Aot slot 3 (x -9000..-8000, z -11000..-9500), Blick -X; Quadrat, Antwort "ja" */
     pl->x = -8300; pl->z = -10250; pl->rot_y = 2048;
@@ -935,9 +925,9 @@ static void teil_phase_h(void)
 
 /* ---- Teil: fenster (Nachbesserung 1, M1 + N4.1) ---------------------------------------------------------------------
  * Abnahme 0 Lauf F: Gemaelde-Frage zwischen erstem Hilferuf (F75) und Reaktion (F165) geoeffnet, "ja" -> msg 50 erschien
- * mitten in der Rolladen-Szene. Jetzt: die Reaktion wartet, bis ROLLTOR39 fertig ist (Merker (5,0x10), Pad-Sperre (2,7)),
- * und kommt dann genau einmal, solange die Dachtuer verriegelt ist. Danach Wiederbetreten mit offenem Rolladen (Phase H
- * weiter: Klopfen, kein Gemaelde, Riegel = Ereignis 5, keine zweite Reaktion) und Entriegeln von dort. */
+ * mitten in der Rolladen-Szene (M1, Nachbesserung 1). Seit Nutzer-Nachtrag 10 gibt es in 1141 keine Reaktion mehr: Gemaelde
+ * gleich nach dem ersten Ruf -> Rolladen (ROLLTOR39, Merker (5,0x10) an/aus), danach frei, KEINE msg 50. Danach Wiederbetreten
+ * mit offenem Rolladen (Phase H weiter: Klopfen, kein Gemaelde, Riegel = Ereignis 5, keine msg 50) und Entriegeln von dort. */
 static void teil_fenster(void)
 {
     printf("== fenster ==\n");
@@ -951,7 +941,7 @@ static void teil_fenster(void)
     for (int f = 0; f < 400 && ruf < 0; f++) { frame(0, 0); if (g_re15_r39j_se_zaehler[2] > 0) ruf = s_bild; }
     for (int f = 0; f < 5; f++) frame(0, 0);
     PRUEF(ruf > 0 && !g_scd.message_active && re15_game_flag_get(9, RE15_R39J_BIT_REAKTION) == 0,
-          "erster Hilferuf Bild %ld, Reaktion noch nicht da (Fenster der Abnahme F75..F165)", ruf);
+          "erster Hilferuf Bild %ld, keine Nachricht (Fenster der Abnahme 0 F75..F165)", ruf);
     /* Gemaelde im Fenster: Quadrat, Frage, "ja" */
     pl->x = -8300; pl->z = -10250; pl->rot_y = 2048;
     long ja = -1, b50 = -1, frei = -1, merker_bei_50 = -1, roll_bei_50 = -1;
@@ -975,11 +965,10 @@ static void teil_fenster(void)
     }
     printf("    Ruf %ld, ja %ld, Rolladen-Programm zu Ende %ld, msg 50 ab %ld (%d mal)\n", ruf, ja, frei, b50, n50);
     PRUEF(ja > ruf && merker_gesehen, "Gemaelde im Fenster: \"ja\" Bild %ld nach dem ersten Ruf, Merker (5,0x10) gesetzt", ja);
-    PRUEF(n50 == 1, "M1: Reaktion genau einmal (%d)", n50);
-    PRUEF(b50 > frei && frei > ja && merker_bei_50 == 0 && roll_bei_50 == 1,
-          "M1: Reaktion erst nach der Rolladen-Szene (ROLLTOR39 zu Ende Bild %ld, msg 50 Bild %ld, Merker dabei %ld, Balken aus)",
-          frei, b50, merker_bei_50);
-    PRUEF(re15_game_flag_get(9, RE15_R39J_BIT_REAKTION) == 1 && john->x == RE15_R39J_PARK_X, "Reaktion gesehen, John weiter draussen");
+    PRUEF(frei > ja, "Rolladen-Szene zu Ende (Bild %ld), danach frei", frei);
+    PRUEF(n50 == 0 && re15_game_flag_get(9, RE15_R39J_BIT_REAKTION) == 0 && john->x == RE15_R39J_PARK_X,
+          "Nachtrag 10: keine Reaktion (msg 50 %d mal, (9,94) = 0), John weiter draussen", n50);
+    (void)merker_bei_50; (void)roll_bei_50;
     /* Wiederbetreten mit offenem Rolladen (Phase H laeuft weiter, N4.1) */
     re15_game_state_t g = g_game;
     if (room_boot(RE15_R38F_RAUM_1141, -7600, -17600, 0, 0) != 0) return;
@@ -994,7 +983,7 @@ static void teil_fenster(void)
     }
     PRUEF(re15_dining_r38_phase_h() == 1 && john->active && john->x == RE15_R39J_PARK_X,
           "Wiederbetreten mit offenem Rolladen: Phase H, John geparkt");
-    PRUEF(g_re15_r39j_se_zaehler[0] > klopf0 && n50b == 0, "Wiederbetreten: Klopfen laeuft (%u Schlaege), keine zweite Reaktion",
+    PRUEF(g_re15_r39j_se_zaehler[0] > klopf0 && n50b == 0, "Wiederbetreten: Klopfen laeuft (%u Schlaege), keine Reaktion (msg 50)",
           g_re15_r39j_se_zaehler[0] - klopf0);
     PRUEF(!g_aot.slots[3].active,
           "Wiederbetreten: kein Gemaelde-Ereignis mehr (sub00 setzt Slot 3 nur bei (3,0x6A)=0, @0x00B84/@0x00B88)");

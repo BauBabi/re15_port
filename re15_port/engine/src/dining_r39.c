@@ -470,7 +470,8 @@ void re15_dining_r39_install(uint16_t room_id, int phase_h)
     memcpy(s_schuetze, k_r39j_p_schuetze, sizeof s_schuetze);   /* Ziel-Operand frisch */
     g_re15_r39j_anker_n = 1;
     re15_game_flag_set(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT, 0);   /* kein Gemaelde-Programm beim Eintritt */
-    meldung(RE15_R39J_MSG_REAKTION, k_r39j_msg50, sizeof k_r39j_msg50);
+    /* msg 50 (Elzas Reaktion) wird in 1141 nicht mehr gezeigt (Nutzer-Nachtrag 10: die Zeile zieht nach ROOM1041, Spur P);
+     * Text und Zugriff re15_dining_r39_text(0) bleiben fuer den Riegel und die Weiterverwendung. */
     meldung(RE15_R39J_MSG_PUH,      k_r39j_msg51, sizeof k_r39j_msg51);
     meldung(RE15_R39J_MSG_FOLGEN,   k_r39j_msg52, sizeof k_r39j_msg52);
     if (!phase_h) return;

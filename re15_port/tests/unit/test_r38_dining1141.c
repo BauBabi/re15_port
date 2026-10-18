@@ -555,7 +555,8 @@ static void teil_phase_h(void)
     printf("== phase_h ==\n");
     /* Runde 39 Spur J (AUFTRAG Runde 39, ROOM1141 Punkte 1-8, Nutzer 2026-10-17): John sitzt NICHT mehr im Dachgang,
      * sondern kommt nach dem Rolladen durch die Dachtuer (Kamera vorne auf Elza, Tuer-Toene, Kamera auf die Tuer); statt
-     * Krachen/Stoehnen (0x3C) und "Help me out." (0x3D) laufen Klopfen + help01..05, dazu Elzas Reaktion msg 50. Der
+     * Krachen/Stoehnen (0x3C) und "Help me out." (0x3D) laufen Klopfen + help01..05 (Elzas Reaktion msg 50 seit Nutzer-
+     * Nachtrag 10 nicht mehr in 1141). Der
      * Ablauf dieses Teils ist damit vom Nutzer ersetzt; den neuen Ablauf samt der weiter gueltigen Pruefungen dieses Teils
      * (Rolladen-Ton, Szene ohne msg 0/1/2, Sperre msg 41 an beiden Tueren, Ecke, Abgang in Cut 7, Riegel, Dachtuer ->
      * 1171, Wiederbetreten) prueft unit_r39_dining1141_phase_h. */

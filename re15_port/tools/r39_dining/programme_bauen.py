@@ -123,39 +123,9 @@ def klopfen_gruppe():
             sleep(5, "Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`")
 
 
-def reaktion():
-    """Punkt 5: einmal (Bank 9 Bit 94) nach dem ersten Hilferuf beim Betreten. Formen aus ROOM1141 sub02.
-    Nachbesserung 1 (M1): erst warten, bis keine Szene laeuft - das Gemaelde-Programm ROLLTOR39 haelt den Merker
-    (5,0x10) (gesetzt SYNCHRON beim Ausloesen von Ereignis 6 in dining_r38.c, geloescht am Programmende), jede andere
-    Szene haelt die Pad-Sperre (2,7) (sub02 @0x00C26 / sub06 @0x01004); und nur, solange die Dachtuer verriegelt ist
-    (John ist dann noch draussen; nach dem Entriegeln waere die Zeile falsch)."""
-    rumpf_start = len(prog)
-    op([0x21, 0x09, BIT_REAKTION, 0x00], "  Ck(9,94)==0 (Elza hat noch nicht reagiert; Ck-Form sub00 @0x00B84 `21 03 6a 00`)")
-    warte_solange(MERKER_BANK, MERKER_BIT, "Gemaelde-Programm laeuft (Merker, Nachbesserung 1 M1)")
-    warte_solange(2, 0x07, "eine Szene haelt die Pad-Sperre (sub02 @0x00C26 Set(2,7)=1)")
-    innen_start = len(prog)
-    R.set_flag(2, 0x07, 1, "  Set(2,7)=1 Pad-Sperre = sub02 @0x00C26 (im selben Takt wie die Pruefungen davor: kein Fenster)")
-    R.work_player("  Work_set(1,0)+Nop Elza = sub02 @0x00C2E")
-    op(b"\x41\x01" + s16(JOHN_TUER[0]) + s16(0) + s16(JOHN_TUER[1]) + b"\x64\x00",
-       "  Plc_neck Elza -> Dachtuer (%d,%d) Tempo 100 (Form sub02 @0x00C42 `41 01 x 0 z 64 00`)" % JOHN_TUER)
-    sleep(10, "  Sleep 10 = sub02 @0x00C4C")
-    op([0x2B, MSG_REAKTION, 0x00, 0x00], "  Message_on 50 \"Elza: Oh, no, this is John! ...\" (Form sub02 @0x00D0A `2b 02 00 00`)")
-    sleep(90, "  Sleep 90 (Zeit zum Lesen; RE2 ROOM1060 sub05 +0x58 `09 0a 5a 00`)")
-    op([0x2B, MSG_STIMME_WARTEN, 0x00, 0x00], "  Message_on 58 = Port-Warte-Zeile ohne Text (Nachbesserung 2, Nutzer-Nachtrag 8: "
-                                              "main50.wav 6,0 s > Sleep 90): parkt, bis Elzas Sprachzeile endet (Stimmen-Riegel "
-                                              "scd_vm.c), erst dann Steuerung zurueck; ohne Aufnahme laeuft sie sofort durch")
-    R.set_flag(9, BIT_REAKTION, 1, "  Set(9,94)=1 Reaktion gesehen (VERTRAG 1.1)")
-    op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "  Plc_neck aus = sub02 @0x00F30 `41 00 00 00 00 00 00 00 64 00`")
-    R.set_flag(2, 0x07, 0, "  Set(2,7)=0 = sub02 @0x00F4E")
-    innen = sum(len(b) for b, _ in prog[innen_start:]) + 2 + 4
-    prog.insert(innen_start, (b"\x21\x04\xc3\x00", "  Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt)"))
-    prog.insert(innen_start, (b"\x06\x00" + struct.pack("<H", innen),
-                              "  Ifel_ck Laenge %d (Form sub01 @0x00BFE): nur solange John draussen ist" % innen))
-    op(b"\x08\x00", "  Endif = sub01 @0x00C10")
-    rumpf = sum(len(b) for b, _ in prog[rumpf_start:]) + 2
-    prog.insert(rumpf_start, (b"\x06\x00" + struct.pack("<H", rumpf),
-                              "Ifel_ck Laenge %d (Form sub01 @0x00BFE: Laenge = Ck + Rumpf + Endif)" % rumpf))
-    op(b"\x08\x00", "Endif = sub01 @0x00C10")
+# Nutzer-Nachtrag 10 (2026-10-19): Elzas Reaktion "Oh, no, this is John! ..." (bis Nachbesserung 2 hier als reaktion(): Ifel
+# Ck(9,94)==0 nach dem ersten Hilferuf, Merker (5,0x10)/Pad-Sperre abwarten, msg 50, Sleep 90, Warte-Zeile msg 58, Set(9,94)=1)
+# entfaellt in ROOM1141; sie kommt in ROOM1041 (Spur P "johnruf1041").
 
 
 def baue_haemmern39():
@@ -172,8 +142,8 @@ def baue_haemmern39():
         ifel_c3([0x36, BANK, SATZ_HILFE0 + h - 1] + [0] * 9,
                 "Se_on(0x3E,0x%02X) Hilferuf help%02d.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)" % (SATZ_HILFE0 + h - 1, h))
         sleep(90, "Sleep 90 = RE2 ROOM1060 sub05 +0x58")
-        if i == 0:
-            reaktion()
+        # Nutzer-Nachtrag 10 (AUFTRAG.md, 2026-10-19): "Im ROOM 1141 soll alles so bleiben wie bisher, nur eben ohne die 'Oh, no,
+        # this is John! ...' Cutscene" - Elzas Reaktion (vorher hier nach dem ersten Ruf, msg 50) zieht nach ROOM1041 (Spur P).
         sleep(90, "Sleep 90 = RE2 ROOM1060 sub05 +0x5E")
     op(b"\x10\x00", "Ewhile = ROOM1141 sub03 @0x00FB2 (zurueck zum While-Test)")
     laenge = sum(len(b) for b, _ in prog[kopf + 1:])

@@ -28,8 +28,10 @@
 #include "re15_actor.h"   /* re15_actor_t (Nachbesserung 2: re15_dining_r39_trifft) */
 
 /* ---- Ressourcen (analysis/befunde_runde39/VERTRAG.md 1.1/1.2) ----------------------------------------------------- */
-#define RE15_R39J_BIT_REAKTION   94     /* Bank 9: Elza hat auf den ersten Hilferuf reagiert (Punkt 5)                */
-#define RE15_R39J_MSG_REAKTION   50     /* "Elza: Oh, no, this is John! / He is in Trouble, I have to help him!"     */
+#define RE15_R39J_BIT_REAKTION   94     /* Bank 9: Elza hat auf den ersten Hilferuf reagiert (Punkt 5). Seit Nutzer-Nachtrag
+                                         * 10 nicht mehr gesetzt (Reaktion in 1141 entfaellt); bleibt reserviert (k_port[])  */
+#define RE15_R39J_MSG_REAKTION   50     /* "Elza: Oh, no, this is John! / He is in trouble, I have to help him!" - seit
+                                         * Nutzer-Nachtrag 10 nicht mehr in ROOM1141 (die Zeile kommt in ROOM1041, Spur P) */
 #define RE15_R39J_MSG_PUH        51     /* "John: Puuuh, that was close! ..."                                         */
 #define RE15_R39J_MSG_FOLGEN     52     /* "John: Elza, follow me, ..."                                                */
 #define RE15_R39J_HILFE_ID0      53     /* Sprach-Ids 53..57 = synchro/STAGE1/room1141/help01..05.wav (ohne Text)     */
