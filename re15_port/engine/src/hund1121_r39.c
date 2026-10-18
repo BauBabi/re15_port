@@ -200,10 +200,19 @@ static void knall(void)
 
 void re15_hund1121_r39_tick(void)
 {
-    if (s_phase == RE15_R39R_AUS || s_phase == RE15_R39R_FERTIG) return;
+    if (s_phase == RE15_R39R_AUS) return;
     if (g_current_room_id != RE15_R39R_RAUM) { s_phase = RE15_R39R_AUS; return; }
     const int slot = RE15_R39R_EM + 1;                 /* SCRIPT_SLOT_TO_ACTOR (scd_vm.c) */
     re15_actor_t *h = &g_actors[slot];
+    /* Wand wieder fest (PORT-WAHL, Header RE15_R39R_WAND_INDEX), sobald der Hund mit seinem Radius diesseits der Wand
+     * ist oder auf seinem Boden steht (+0x1C2; landet er nach einem Treffer draussen, schiebt ihn die Band-0-Klemme
+     * herein) oder nicht mehr da ist. */
+    if (s_wand_offen && s_phase != RE15_R39R_SCHARF) {
+        if (!h->active || h->type != 0x20) wand_schliessen(NULL);
+        else if (h->z + (int32_t)h->hit_radius_min < RE15_R39R_GLAS_Z || h->y >= (int32_t)h->dog_floor_y)
+            wand_schliessen(h);
+    }
+    if (s_phase == RE15_R39R_FERTIG) return;
     if (s_takt >= 0) s_takt++;
 
     if (s_phase == RE15_R39R_SCHARF) {
@@ -219,7 +228,6 @@ void re15_hund1121_r39_tick(void)
     }
     if (!h->active || h->type != 0x20) {               /* erlegt/entfernt, bevor die Kette durch ist */
         logf_("[hund1121] Hund weg in Phase %d, Takt %d %d %d %d", s_phase, s_takt, 0, 0, 0);
-        wand_schliessen(NULL);
         s_phase = RE15_R39R_FERTIG;
         return;
     }
@@ -241,8 +249,7 @@ void re15_hund1121_r39_tick(void)
         /* Vor dem Glas aus dem Sprung geholt (Treffer): kein Glasbruch mehr, Wand zu, normaler Gegner. */
         logf_("[hund1121] Sprung abgebrochen in Phase %d (Zustand %d Sub %d), Takt %d %d", s_phase, (int)h->state,
               (int)h->sub_state_1, s_takt, 0);
-        wand_schliessen(h);
-        s_phase = RE15_R39R_FERTIG;
+        s_phase = RE15_R39R_FERTIG;                   /* die Wand schliesst die Regel am Kopf */
         return;
     }
     if (s_phase == RE15_R39R_GESPAWNT) {
@@ -275,12 +282,10 @@ void re15_hund1121_r39_tick(void)
         const int d = s_takt - s_glas;
         if (d == RE15_R39R_T_KNALL1 || d == RE15_R39R_T_KNALL2) knall();
     }
-    if (s_wand_offen && h->z + (int32_t)h->hit_radius_min < RE15_R39R_GLAS_Z) wand_schliessen(h);
     /* durch = beide Knalle und der Hund hat den Sprung verlassen (RE2: Sub 14 -> 2 @0x80102E2C; RE1.5: Zustand 4 ->
      * Wort 0x201 @0x8011162c). */
     const int gelandet = s_re2 ? (h->sub_state_1 != RE15_R39R_RE2_SUB) : (h->state != 4);
     if (s_knalle >= 2 && gelandet) {
-        wand_schliessen(h);
         s_phase = RE15_R39R_FERTIG;
         logf_("[hund1121] fertig T%d: Hund (%d,%d) Zustand %d Sub %d", s_takt, (int)h->x, (int)h->z,
               (int)h->state, (int)h->sub_state_1);

@@ -393,7 +393,18 @@ static int pruef_treffer(void)
     if (h->sub_state_1 != 14 || h->sub_state_2 != 0 || h->y != RE15_R39R_Y) return fail(84, "Anlauf auf der Bruestung");
     h->state = 2; h->sub_state_1 = 2; h->sub_state_2 = 0; h->sub_state_3 = 0; h->hp -= 10;
     int boden = -1;
-    for (int f = 0; f < 120 && boden < 0; f++) { bild(); if (h->y == h->dog_floor_y) boden = f; }
+    int z_min = h->z, z_max = h->z, dz_max = 0, z_vor = h->z;
+    for (int f = 0; f < 120 && boden < 0; f++) {
+        bild();
+        if (h->z < z_min) z_min = h->z;
+        if (h->z > z_max) z_max = h->z;
+        if (abs(h->z - z_vor) > dz_max) dz_max = abs(h->z - z_vor);
+        z_vor = h->z;
+        if (h->y == h->dog_floor_y) boden = f;
+    }
+    bild();                                             /* der Takt schliesst die Wand im Bild nach der Landung */
+    printf("Fall: z %d..%d, groesster Bildschritt %d\n", z_min, z_max, dz_max);
+    if (dz_max > 300) return fail(88, "Fall ohne Sprung (Bildschritt <= Luft-Treffer-Tempo)");
     printf("Treffer in T4: Boden nach %d Bildern bei (%d,%d,%d), Zustand %d Sub %d, Phase %d, Glas %d, Knalle %d\n", boden,
            (int)h->x, (int)h->y, (int)h->z, h->state, h->sub_state_1, re15_hund1121_r39_phase(),
            re15_hund1121_r39_glas_takt(), s_knall_n);

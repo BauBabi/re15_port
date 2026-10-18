@@ -190,7 +190,7 @@ Wird der Hund getroffen, bevor er abspringt (er steht 0,6 s in der Scheibe), lae
 +0x219 = 0 (Phase 0 loescht es, `sb zero,537` @0x80102CDC) in den BODEN-Zweig — der Hund bliebe auf Bruestungshoehe
 (RE2s Daten stellen keinen Hund erhoeht auf). Der Takt setzt deshalb fuer einen Treffer ueber dem Boden (y < +0x1C2)
 +0x219 = 1, und RE2s eigener Luft-Treffer-Zweig (@0x8010341C-28, P1 0x801034C8: Fall +40/Bild bis +0x1C2 @0x80103504)
-bringt ihn herunter — PORT-WAHL nach der RE1.5-Regel "ueber dem Boden = in der Luft" (Hunde-HURT/DEATH-Dispatcher
+bringt ihn herunter (gemessen: Treffer in T4, Boden nach 22 Bildern, Bildschritt <= 29) — PORT-WAHL nach der RE1.5-Regel "ueber dem Boden = in der Luft" (Hunde-HURT/DEATH-Dispatcher
 @0x80110928-2c, der RE1.5-Hund faellt dort von selbst). Ohne Glasbruch abgebrochen, Wand wieder fest
 (unit_r39_hund1121_treffer).
 
@@ -280,6 +280,11 @@ Ergebnisse: siehe T1/T2 unten.
 * +0x1C0 Bit 2 (@0x80102CE8 / @0x80102D18) nicht modelliert — Leser nur in der offenen Kopf-/Part-Verfolgung (U2).
 * PSX-Ziel: Ereignis, Hund, Zeitlinie laufen in der Engine; Splitter-Zeichner und Knall sind PC-Plattform
   (glas1120_pc.c, wie Runde 35 M).
+* Treffer auf der Bruestung (nur moeglich, wenn Elza beim ERSTEN Durchgang nach Norden zum Fenster blickt und in den
+  0,33 s zwischen Freigabe und Absprung schiesst — der Schuss-Streifen FUN_80012574 ist unbegrenzt lang): der Luft-
+  Treffer stoesst den Hund vom Schuetzen weg, also nach draussen; er faellt hinter der Wand auf y 0 und wird von der
+  Band-0-Klemme in den Raum geschoben (gemessen z 11415 -> 10682 im Bild nach der Landung). Bewusst so gelassen: kein
+  Original kennt einen erhoehten Hund; Alternativen (Hund draussen entfernen / unverwundbar machen) haetten keinen Beleg.
 * Verhalten nach dem Sprung: einmalig wie Leons Fensterkraehe der Runde 35 — verlaesst Elza ROOM1121, ohne den Hund zu
   erlegen, ist er beim naechsten Betreten nicht mehr da (kein Raum-Skript spawnt ihn; das Zone-7-Bit sperrt das Ereignis).
 
