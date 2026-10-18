@@ -34,10 +34,75 @@ int re15_r39k_init_pose(const re15_actor_t *a)
     return 1;
 }
 
+/* NACHBESSERUNG 1 — M3(b) Kraehen: +0x94/+0x95/+0x8f des Originals je Aktor-Slot (Belege im Header). Die Aktorfelder
+ * motion/anim_frame/anim_frac tragen das zuletzt POSIERTE Bild (= was der Renderer zeichnet). */
+typedef struct {
+    uint8_t gueltig;            /* Tabelle traegt +0x94/+0x95/+0x8f                                               */
+    uint8_t saat;               /* Clip-Setzer seit dem letzten Posieren                                          */
+    uint8_t posiert;            /* dieser Slot hat schon posiert (p_clip/p_bild gelten)                          */
+    uint8_t clip, bild, blende; /* +0x94 / +0x95 / +0x8f                                                         */
+    int16_t p_clip; int32_t p_bild;   /* zuletzt posiert                                                          */
+} r39k_kraehe_t;
+static r39k_kraehe_t s_kraehe[RE15_ACTOR_MAX];
+
+static r39k_kraehe_t *kraehe_von(const re15_actor_t *e)
+{
+    const int slot = e ? (int)(e - g_actors) : -1;
+    return (slot >= 0 && slot < RE15_ACTOR_MAX) ? &s_kraehe[slot] : NULL;
+}
+
+/* 1 = die Aktorfelder selbst tragen +0x94/+0x95/+0x8f (alte Port-Form): nie ueber den Clip-Setzer gelaufen, oder ein
+ * fremder Schreiber (RE2-Kraehenhirn, Zwang ROOM1120) hat seit dem letzten Posieren Clip/Bild umgesetzt. */
+static int kraehe_fremd(const r39k_kraehe_t *k, const re15_actor_t *e)
+{
+    if (!k->gueltig) return 1;
+    if (k->saat || !k->posiert) return 0;
+    return e->motion != k->p_clip || e->anim_frame != k->p_bild;
+}
+
+void re15_r39k_kraehe_clip(re15_actor_t *e, uint8_t clip)
+{
+    r39k_kraehe_t *k = kraehe_von(e);
+    if (!k) return;
+    k->gueltig = 1;
+    k->saat    = 1;
+    k->clip    = clip;   /* +0x94 @0x80115da0 */
+    k->bild    = 0;      /* +0x95 @0x80115db0 */
+    k->blende  = 7;      /* +0x8f @0x80115dc4 */
+}
+
+int re15_r39k_kraehe_anim(re15_actor_t *e, const uint8_t *laengen, int n)
+{
+    r39k_kraehe_t *k = kraehe_von(e);
+    if (!k) return 0;
+    if (kraehe_fremd(k, e)) {
+        k->clip = (uint8_t)e->motion; k->bild = (uint8_t)e->anim_frame; k->blende = (uint8_t)e->anim_frac;
+        k->gueltig = 1;
+    }
+    k->saat = 0;
+    int fc = (k->clip < n) ? laengen[k->clip] : 1;
+    if (fc <= 0) fc = 1;
+    /* posieren (@0x8001f35c-36c): das zeichnet der Renderer */
+    e->motion = (int16_t)k->clip; e->anim_frame = k->bild; e->anim_frac = k->blende;
+    k->p_clip = e->motion; k->p_bild = e->anim_frame; k->posiert = 1;
+    /* dann vorschieben (@0x8001f5b0-b4, @0x8001f618-1c, Umlauf @0x8001f63c) */
+    if (k->blende > 0) k->blende--;
+    if ((int)++k->bild >= fc) { k->bild = 0; return 1; }
+    return 0;
+}
+
+int re15_r39k_kraehe_bild(const re15_actor_t *e)
+{
+    const r39k_kraehe_t *k = kraehe_von(e);
+    if (!k) return e ? (int)e->anim_frame : 0;
+    return kraehe_fremd(k, e) ? (int)e->anim_frame : (int)k->bild;
+}
+
 void re15_r39k_install(uint16_t room)
 {
     (void)room;
     memset(s_init_typ, 0, sizeof s_init_typ);
+    memset(s_kraehe, 0, sizeof s_kraehe);   /* NB1 M3(b): Raumaufbau spawnt neu (Kraehen-INIT setzt den Clip) */
 }
 
 /* ===================================================================================================================

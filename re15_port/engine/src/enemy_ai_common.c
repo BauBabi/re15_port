@@ -5879,7 +5879,8 @@ static int re15_crow_height_dir(const re15_actor_t *e)
 }
 
 /* setters — 0x80115d94 (clip) / 0x80115d74 (sub-state, zeroes the nested step +0x6) */
-static void re15_crow_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static void re15_crow_clip(re15_actor_t *e, uint8_t c) { re15_r39k_kraehe_clip(e, c); }   /* Runde 39 Spur K NB1: 0x80115d94
+                                                    * setzt +0x94/+0x95/+0x8f OHNE zu posieren (re15_heliport1171_r39.h) */
 static void re15_crow_sub (re15_actor_t *e, uint8_t s) { e->sub_state_1 = s; e->sub_state_2 = 0; }
 
 /* horizontal advance along yaw at crow_speed (pos_advance FUN_800245d8, a0=0) */
@@ -5901,12 +5902,9 @@ static const uint8_t s_crow_clip_len[14] =
  * the "clip done" the move handlers branch on. anim_frame==8 is the wing-flap re-thrust key. */
 static int re15_crow_anim(re15_actor_t *e)
 {
-    int fc = (e->motion < 14) ? s_crow_clip_len[e->motion] : 1;
-    if (fc <= 0) fc = 1;
-    e->anim_frame++;                              /* +0x95++ (POST-inc) */
-    if (e->anim_frac > 0) e->anim_frac--;         /* +0x8f blend decay  */
-    if ((int)e->anim_frame >= fc) { e->anim_frame = 0; return 1; }   /* wrap -> clip done */
-    return 0;
+    /* Runde 39 Spur K NB1: posieren (+0x94/+0x95/+0x8f -> Aktorfelder = gezeichnetes Bild), DANN +0x95++ / +0x8f-- /
+     * Umlauf (@0x8001f35c-36c, @0x8001f5b0-b4, @0x8001f618-1c, @0x8001f63c) — vorher zeichnete der Port das Bild danach. */
+    return re15_r39k_kraehe_anim(e, s_crow_clip_len, (int)(sizeof s_crow_clip_len));
 }
 
 /* proximity yaw-weave — byte-true 0x80115e24: latch a bank dir in +0x1d7 when dist<2000,
@@ -6199,7 +6197,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     case 4:
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_diveflag = 1; re15_audio_room_se(1); e->sub_state_2 = 1; }  /* Se(1) @0x80112a7c */
         if (e->sub_state_2 == 1) { e->crow_vvel = -80; e->crow_speed = 60; e->sub_state_2 = 2; }
-        if (e->anim_frame == 8) { e->sub_state_2 = 1; re15_audio_room_se(1); }   /* frame-8 re-thrust + flap Se(1) @0x80112b10 */
+        if (re15_r39k_kraehe_bild(e) == 8) { e->sub_state_2 = 1; re15_audio_room_se(1); }   /* frame-8 re-thrust + flap Se(1) @0x80112b10 (+0x95 @0x80112b00 vor f314 @0x80112b84: Runde 39 Spur K NB1) */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);        /* gravity */
         e->y += e->crow_vvel;
         re15_crow_weave(e);                                /* jal 0x80115e24 @0x80112b60 (Delay-Slot
@@ -6214,7 +6212,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     case 5:
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); re15_audio_room_se(0); e->sub_state_2 = 1; }  /* Se(0) @0x80112c38 */
         if (e->sub_state_2 == 1) { e->crow_vvel = -120; e->crow_speed = 160; e->sub_state_2 = 2; }
-        if (e->anim_frame == 8) e->sub_state_2 = 1;        /* frame-8 re-thrust (@0x80112cac) */
+        if (re15_r39k_kraehe_bild(e) == 8) e->sub_state_2 = 1;   /* frame-8 re-thrust (+0x95 @0x80112cac vor f314 @0x80112d1c: Runde 39 Spur K NB1) */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);
         e->y += e->crow_vvel;
         re15_crow_weave(e);                                /* jal 0x80115e24 @0x80112cf8 — Weave-Bank
@@ -6579,7 +6577,7 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
     case 0:   /* ASCEND 0x80114fb8: climb (vvel -120 + frame-8 re-thrust) -> HOVER when high enough */
         if (e->sub_state_2 == 0) { re15_audio_room_se(0); re15_crow_clip(e, 4); e->sub_state_2 = 1; }   /* Runde 38 Spur I: Se(0) @0x80115004 (a0=0 @0x80115008) */
         if (e->sub_state_2 == 1) { e->crow_vvel = -120; e->crow_speed = 160; e->sub_state_2 = 2; }
-        if (e->anim_frame == 8) e->sub_state_2 = 1;                     /* @0x80115088 re-thrust */
+        if (re15_r39k_kraehe_bild(e) == 8) e->sub_state_2 = 1;          /* @0x80115088 re-thrust (+0x95 @0x80115078 vor f314 @0x801150f0: Runde 39 Spur K NB1) */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);                     /* @0x801150a4 gravity */
         re15_enemy_steer_point(e, player->x, player->z, 0x14);          /* @0x801150cc yaw-slew rate 20 */
         e->y += e->crow_vvel;                                           /* @0x801150d0 integrate */
@@ -6608,7 +6606,12 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
 
     case 2:   /* ORIENT 0x801152e0: hold the attack pose; promoted to SPIN by the dispatcher 0x1d-tick */
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); re15_r38i_orient_blut(e); e->sub_state_2 = 1; }  /* @0x80115310 clip 8, FX @0x80115334 */
-        if (re15_crow_anim(e)) re15_r38i_orient_blut(e);   /* Runde 38 Spur I: Umlauf -> 0x80019700(0x1000, Teil 2) @0x80115394 */
+        {   /* Runde 39 Spur K NB1: der Effekt liest die Teil-2-Matrix (+0x188 + 408), die die Zeichenschleife des VORIGEN
+             * Bildes zusammengesetzt hat (jal 0x8001e8c8 @0x8001d108 nach der Logik @0x8001ce04-34) — also die Pose VOR dem
+             * f314 dieses Takts (@0x8011536c). */
+            re15_actor_t vorbild = *e;
+            if (re15_crow_anim(e)) re15_r38i_orient_blut(&vorbild);   /* Runde 38 Spur I: Umlauf -> 0x80019700(0x1000, Teil 2) @0x80115394 */
+        }
         break;
 
     case 3:   /* SPIN 0x801153ac: spin the yaw, timer -> back to HOVER */
@@ -6738,7 +6741,7 @@ static void re15_crow_death(re15_actor_t *e)
         break;
     }
     case 2:   /* FINISH 0x80114934: der LETZTE Anim-Tick der toten Kraehe (`jal 0x8001f314`
-               * @0x8011493c) — 12 Ticks (Timer 11..0), Freeze-Frame = 12 des Land-Clips 0x0a */
+               * @0x8011493c) — 12 Ticks (Timer 11..0) posieren Bild 0..11 des Land-Clips 0x0a (Runde 39 K NB1: nicht 12) */
         re15_crow_anim(e);
         if (e->crow_timer == 0) {
             e->state = 7; re15_crow_sub(e, 0); e->sub_state_3 = 0;   /* a0=0 @0x80114964 ->
@@ -6757,7 +6760,7 @@ static void re15_crow_death(re15_actor_t *e)
  * Nur die Subs {0,1} sind erreichbar (vollstaendiger jal-0x80115d74-Census ueber
  * 0x80112020-0x80116400: a0=0 @0x80114964 Normal / @0x80114dec Lane 14, a0=1 @0x80114b7c GIB);
  * die Tabelleneintraege [2..4] sind ALIASING mit der Hook-A-Victim-Tabelle @0x8012123c.
- * KEIN f314-Call in state 7 (weder Dispatcher noch Handler) — die Leiche haelt Frame 12 des
+ * KEIN f314-Call in state 7 (weder Dispatcher noch Handler) — die Leiche haelt Frame 11 (Runde 39 K NB1; zuletzt posiert) des
  * Land-Clips 0x0a fuer immer (letzter Anim-Tick = FINISH-f314 @0x8011493c). Der fruehere
  * re15_crow_anim-Tick hier war der Nutzer-Report "tote Kraehen animieren weiter"
  * (crow_death_pool.md §1.3, Handler disasm-reproduziert 2026-08-03). */

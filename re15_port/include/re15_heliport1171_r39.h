@@ -68,4 +68,22 @@ void re15_r39k_reach_bildanfang(void);           /* Walker-Takt des naechsten Bi
 /* Im Event-Reach-Takt (game_step_common.c) VOR dem Vorschub: 1 = Takt verbraucht (Warten bzw. Phase 0 = Bild 0). */
 int  re15_r39k_reach_takt(re15_actor_t *pl);
 
+/* NACHBESSERUNG 1 — M3(b) KRAEHEN (Typ 0x21, RE1.5-Hirn: Ereignis-Kraehen ROOM1171 in jedem KI-Modus). Das Original
+ * fuehrt +0x94 (Clip) / +0x95 (NAECHSTES Bild) / +0x8f (Blende); GEZEICHNET wird, was FUN_8001f314 zuletzt posiert hat:
+ *   Clip-Setzer 0x80115d94: `sb a0,148(v0)` (+0x94) @0x80115da0, `sb zero,149(v0)` (+0x95 = 0) @0x80115db0,
+ *     `sb v0(=7),143(v1)` (+0x8f) @0x80115dc4 — OHNE zu posieren.
+ *   f314 posiert (+0x94, +0x95, +0x8f) (`lbu v0,149(t0)` @0x8001f35c, `sw a2,360(t0)` @0x8001f36c) und schiebt erst
+ *     danach vor (+0x95++ @0x8001f618-1c, +0x8f-- @0x8001f5b0-b4, Umlauf `sb zero,149` @0x8001f63c + Rueckgabe 1).
+ *   Die Kraehen-Handler lesen +0x95 VOR ihrem f314 (ASCEND `lbu v1,149(a0)` @0x80115078 vor f314 @0x801150f0, Flug
+ *     Sub 5 @0x80112cac vor @0x80112d1c, Sub 4 @0x80112b10) = das Bild, das dieser Takt posieren WIRD.
+ *   Tod: Landung setzt Clip 0x0a @0x801148f4 OHNE f314 im selben Takt (die Fall-Pose bleibt), FINISH f314
+ *     @0x8011493c posiert Bild 0..11 bei Timer 11..0 (@0x80114950-60), Zustand 7 @0x80114978 im Takt von Bild 11;
+ *     Zustand 7 0x801157e8 ruft kein f314 -> die Leiche haelt Bild 11.
+ * Der Port renderte (motion, anim_frame, anim_frac) NACH dem Vorschub = immer ein Bild voraus (Gemessen ROOM1171:
+ * ORIENT 1..7,0 statt 0..7; Leiche Clip 0x0a Bild 12 statt 11; Landebild schon Clip 0x0a Bild 0). Jetzt: diese Tabelle
+ * haelt +0x94/+0x95/+0x8f des Originals, die Aktorfelder das zuletzt POSIERTE (= gezeichnete) Bild. */
+void re15_r39k_kraehe_clip(re15_actor_t *e, uint8_t clip);                    /* 0x80115d94 */
+int  re15_r39k_kraehe_anim(re15_actor_t *e, const uint8_t *laengen, int n);  /* f314: posieren, dann vorschieben */
+int  re15_r39k_kraehe_bild(const re15_actor_t *e);                           /* +0x95 (naechstes Bild)          */
+
 #endif /* RE15_HELIPORT1171_R39_H */
