@@ -331,9 +331,10 @@ static void teil_raum(void)
     int p = slot_von(RE15_FL37_OBJ);
     CHECK(p >= 0 && g_scd.props[p].active && g_scd.props[p].x == -2813 && g_scd.props[p].y == -2122 &&
           g_scd.props[p].z == -17904 && g_scd.props[p].rot_y == 3072 && g_scd.props[p].obj_type == 0 &&
-          g_scd.props[p].band == 1 && g_scd.props[p].flags == 0x000B && g_scd.props[p].attr == 0x0000 &&
+          g_scd.props[p].band == 2 && g_scd.props[p].flags == 0x000B && g_scd.props[p].attr == 0x0000 &&
           g_scd.props[p].parent_obj == -1,
-          "R 1030: Prop obj 5 am Pfeiler (-2813,-2122,-17904) rot_y 3072, Typ 0, Band 1, Flags 0x000B, Attribut 0 (NCCT wie ROOM1010 @0x00930)");
+          "R 1030: Prop obj 5 am Pfeiler (-2813,-2122,-17904) rot_y 3072, Typ 0, Band 2 (Runde 39 Spur H: Spielerband(-2122) = 1 + 1, "
+          "Form ROOM1010 @0x00930 Band 1 auf Boden 0), Flags 0x000B, Attribut 0 (NCCT wie ROOM1010 @0x00930)");
     const re15_aot_t *a = &g_aot.slots[14];
     CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[14].item_type == 0x31 &&
           g_aot.item_params[14].amount == 1 && g_aot.item_params[14].taken_bit == 0x86 &&

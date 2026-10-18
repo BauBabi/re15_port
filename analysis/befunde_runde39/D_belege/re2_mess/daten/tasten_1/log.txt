@@ -1,0 +1,81 @@
+Stopp: b'S02'
+overlay @80103568 live=21200002000802241080013c8c7622a4 disk=6a014282000000002110a20314004490 VERSCHIEDEN
+overlay @80103628 live=100162ac1080023cc40b4224040202ae disk=9a00439600000000f401622c0d004010 VERSCHIEDEN
+overlay @80102be8 live=580102960000000001004224580102a6 disk=fff3043cffff843407000224040022ae VERSCHIEDEN
+Z0 80043828 B:square-zweig: b'OK'
+Z0 80043838 B:feuer->sub2: b'OK'
+Z0 80042c64 feuer_T1: b'OK'
+Z0 80043908 feuer_Tgun: b'OK'
+Z0 80047c6c feuer_T3: b'OK'
+Z0 80048314 feuer_T4: b'OK'
+Z0 800487d8 feuer_T5: b'OK'
+Z0 80048b8c feuer_T6: b'OK'
+Z0 800410cc APPLIER: b'OK'
+  herz t=  1.2 taste=A      L w4=01010501 14c=0005000c
+STOPP t=  1.3 pc=80047c6c feuer_T3       taste=A      L w4=00020501 14c=0005000c
+STOPP t=  1.3 pc=800410cc APPLIER        taste=A      L w4=02020501 14c=0007000a
+STOPP t=  1.3 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0006010a
+STOPP t=  1.4 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0005020a
+STOPP t=  1.4 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0004030a
+STOPP t=  1.4 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0003040a
+STOPP t=  1.5 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0002050a
+STOPP t=  1.5 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0001060a
+STOPP t=  1.6 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000070a
+STOPP t=  1.6 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000080a
+STOPP t=  1.6 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000000a
+STOPP t=  1.7 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000010a
+STOPP t=  1.7 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000020a
+STOPP t=  1.8 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000030a
+STOPP t=  1.8 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000040a
+STOPP t=  1.8 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000050a
+STOPP t=  1.9 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000060a
+STOPP t=  1.9 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000070a
+STOPP t=  1.9 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000080a
+STOPP t=  2.0 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000000a
+STOPP t=  2.0 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000010a
+STOPP t=  2.1 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000020a
+STOPP t=  2.1 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000030a
+STOPP t=  2.1 pc=80047c6c feuer_T3       taste=A      L w4=02020501 14c=0000040a
+STOPP t=  2.2 pc=80047c6c feuer_T3       taste=A      L w4=03020501 14c=0000050a
+STOPP t=  2.2 pc=80047c6c feuer_T3       taste=A      L w4=04020501 14c=0006010b
+STOPP t=  2.3 pc=80047c6c feuer_T3       taste=A      L w4=04020501 14c=0005020b
+STOPP t=  2.3 pc=80047c6c feuer_T3       taste=A      L w4=04020501 14c=0004030b
+STOPP t=  2.3 pc=80047c6c feuer_T3       taste=A      L w4=04020501 14c=0003040b
+STOPP t=  2.4 pc=80047c6c feuer_T3       taste=A      L w4=04020501 14c=0002050b
+STOPP t=  2.4 pc=80047c6c feuer_T3       taste=A      L w4=04020501 14c=0001060b
+STOPP t=  2.5 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=0000070b
+STOPP t=  2.5 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=0000080b
+STOPP t=  2.5 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=0000090b
+STOPP t=  2.6 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=00000a0b
+STOPP t=  2.6 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=00000b0b
+STOPP t=  2.7 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=00000c0b
+STOPP t=  2.7 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=00000d0b
+STOPP t=  2.7 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=00000e0b
+STOPP t=  2.8 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=00000f0b
+STOPP t=  2.8 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=0000100b
+STOPP t=  2.9 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=0000110b
+STOPP t=  2.9 pc=80047c6c feuer_T3       taste=B      L w4=04020501 14c=0000120b
+STOPP t=  3.0 pc=80047c6c feuer_T3       taste=B      L w4=05020501 14c=0000000b
+  herz t=  4.2 taste=Y      L w4=01010501 14c=0000000c
+  herz t=  5.4 taste=LB     L w4=01010501 14c=0000000c
+  herz t=  6.6 taste=START  L w4=01010501 14c=0000000c
+  herz t=  7.8 taste=BACK   L w4=01010501 14c=0000000c
+  herz t=  9.0 taste=LTHUMB L w4=01010501 14c=0000000c
+  herz t= 10.2 taste=RTHUMB L w4=01010501 14c=0000000c
+  herz t= 11.4 taste=DL     L w4=01010501 14c=0000000c
+  herz t= 12.6 taste=DR     L w4=01010501 14c=0000000c
+  herz t= 13.8 taste=DU     L w4=01010501 14c=0000000c
+  herz t= 15.0 taste=DD     L w4=01010501 14c=0000000c
+  herz t= 16.3 taste=RT     L w4=01010501 14c=0000000c
+  herz t= 17.5 taste=LT     L w4=01010501 14c=0000000c
+  herz t= 18.7 taste=X      L w4=01010501 14c=0000000c
+  herz t= 19.9 taste=A      L w4=01010501 14c=0000000c
+  herz t= 21.1 taste=B      L w4=01010501 14c=0000000c
+  herz t= 22.3 taste=Y      L w4=01010501 14c=0000000c
+  herz t= 23.5 taste=LB     L w4=01010501 14c=0000000c
+  herz t= 24.7 taste=START  L w4=01030501 14c=000d0309
+  herz t= 26.0 taste=BACK   L w4=00010001 14c=00000e02
+  herz t= 27.2 taste=LTHUMB L w4=00010001 14c=00000e02
+  herz t= 28.4 taste=RTHUMB L w4=00010001 14c=00000e02
+Stopps: 44
+settings.ini zurueckgeschrieben

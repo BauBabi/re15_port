@@ -9437,6 +9437,8 @@ re_title:;
                                       if (s_wdbg > 0) { extern void re15_wound_debug_all(int);
                                                         re15_wound_debug_all(s_wdbg); } }
                 }
+                { extern int re15_zustand_r39_haut_neu_abholen(void); extern void re15_pc_zustand_r39_haut_neu(int);   /* Runde 39 Spur F: volle Heilung -> Haut neu */
+                  if (re15_zustand_r39_haut_neu_abholen()) re15_pc_zustand_r39_haut_neu(s_player_model_idx ? s_player_model_idx : (g_gameflow.character & 0x0F)); }   /* (zustand_r39_pc.c) */
                 unsigned wsg = re15_render_pc_slot0_generation();
                 if (re15_wound_generation() != s_wnd_gen || wsg != s_wnd_slot_gen) {
                     int ok = 1, any = 0;

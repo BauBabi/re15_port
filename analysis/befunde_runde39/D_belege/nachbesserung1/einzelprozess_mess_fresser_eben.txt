@@ -1,0 +1,16 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+== fresser EBEN gap=6 (RE2-KI, ROOM1140, Fresser-Aufsteher EXEC[8]) ==
+  PRE f15 st=1/8/4 mo=0x15 bild=11 maske=3 hp=98 1d3=0x00
+  HIT  f15   st=2/3/4 mo=0x15 bild= 11 maske=3 elev=+0 hp 98->82  hnd=7
+  miss f21   st=2/3/2 mo=0x15 bild= 17 maske=3 elev=+0 hp 82->82 (steht) hnd=7
+  HIT  f27   st=2/3/2 mo=0x15 bild= 23 maske=3 elev=+0 hp 82->66 (steht) hnd=7
+  miss f33   st=2/3/2 mo=0x15 bild= 29 maske=3 elev=+0 hp 66->66 (steht) hnd=7
+  HIT  f39   st=2/3/2 mo=0x15 bild= 35 maske=3 elev=+0 hp 66->50 (steht) hnd=7
+  miss f45   st=2/3/2 mo=0x15 bild= 41 maske=3 elev=+0 hp 50->50 (steht) hnd=7
+  HIT  f51   st=2/3/2 mo=0x15 bild= 47 maske=3 elev=+0 hp 50->34 (steht) hnd=7
+  SUMME EBEN: 7 Schuesse, 4 Treffer; in EXEC[8] Bild<55: 1/1 Treffer, Bild>=55: 0/0 Fehl; erster Treffer Bild 11, aufgestanden f16
+  SUMME EXEC[8]: 1 Schuesse, 1 Treffer; Masken vor Bild 55 OR=3; erster Treffer in EXEC Bild 11 (Maske 3, hnd 7)
+
+PASS test_r39_treffer mess_fresser
