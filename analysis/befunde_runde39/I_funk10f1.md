@@ -159,6 +159,18 @@ ROOM10D1 main00 @0x01026 Ck(3,0x32)==0 legt dort einen Text-Platz statt der Tuer
 - `[debug-menu] AUTO-JUMP -> ROOM10F1 (Frame 620)` (Raum neu aufgebaut, (9,70)=1): danach 0 Zeilen `Plc_dest|Message_on|funk10f1`,
   state.txt F1..F700 (8400,-350) mo=211 pm=0 msg(a=0) — Bilder `echt2_wieder.png`: Elza steht an der Tuer, keine Balken.
 
+## 5. Tests (probes/r39_funk10f1.cmake, nur dort registriert)
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r39_funk10f1_form | Laengen schliessen auf Evt_end; Set(9,70) zuerst; Rahmen/Warteschleife/Druck/Senken/Umsehen/Stirn/Schwanz BYTEGLEICH mit ROOM1031 sub13/sub14 (Datei gelesen); erster Wegpunkt rechts (+Z); Pruefpunkt (7520,6400) in Slot 2 msg 0; Weg 3 x 101 Punkte: kleinster Zellabstand 500 (Zelle 10) > 468 | gruen |
+| unit_r39_funk10f1_texte | msg 40/41/42 = Nutzer-Wortlaut; Kopf/Ende = ROOM1031 msg 19 @0x2FA7/@0x2FC8; nur Ids 40..42 | gruen |
+| unit_r39_funk10f1_szene | echte VM: (9,70) ab Bild 0; erste Gehgierung 2691 (rechts); msg 40 -> 41 -> 42; SCD_AUDIO_VOICE_ON 40, 41, 42; Motions 105 ... 11 0 9 12 200; 99 Bilder Druck gehalten WAEHREND msg 40 bei (6862,6368) Gierung 4057 Cut 1; 30 Bilder Clip 0 rueckwaerts; Balken 476 Bilder, Ende Bild 476, frei Bild 490 | gruen |
+| unit_r39_funk10f1_einmal | zweiter Raumaufbau: keine Szene/Nachricht/Stimme, frei; keine Leihe, Ereignis 27 -> NULL; Leon ROOM10F0: nie, (9,70) bleibt 0 | gruen |
+| integration_r39_funk10f1_echt | echte exe, Elza, Kartenleser-Tuer ROOM10D1 -> RE2-Tuersequenz -> ROOM10F1: Szene genau 1x, Leihe ROOM1031, Plc_dest-Folge, msg 40/41/42 woertlich, Stimme 40 gespielt (Stellvertreter main40.wav im Laufordner), 41/42 angefordert, ANIM_TRACE 11:11:0 -> 0:0:1 -> 9:9:0 -> 12:12:0, Gehgierung 2691, 99 Bilder Druck bei (6862,6368) rot 4057 Cut 1, danach pm=0; zweites Betreten (Raum neu aufgebaut): nichts | gruen (67,9 s) |
+| integration_r39_funk10f1_zweit | echte Tuer mit (9,70)=1: keine Szene, keine Leihe ("room 10F1 has no RBJ"), Spieler frei | gruen (18,5 s) |
+| integration_r39_funk10f1_leon | Leon ROOM10F0 ((9,71)=1): keine Funkszene, keine Leihe von ROOM1031 | gruen (8,6 s) |
+| unit_r36_kartenbits | k_port[] + Bit 70 (im Original frei) | gruen |
+
 ## Stand
 - [x] Messung vorher (Szene fehlt)
 - [ ] RE-Belege (Raum/Form/Bibliothek stehen; Clip-Wahl am Bild offen)
