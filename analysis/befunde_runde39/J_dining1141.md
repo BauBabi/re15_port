@@ -403,3 +403,42 @@ Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r
   Plc-Pfad, Ton/Stimme/BGM audio_pc.c, Nachrichten-FSM, Elza-Anker r36, Heliport 1171), Regex woertlich:
   `unit_r39_dining1141|unit_r38_dining1141|unit_r36_kartenbits|unit_maggot|unit_r35_affen|unit_r38_affen3|unit_r36_zombieki_affen|unit_r38_griff_gorilla|unit_rotor_bgm_pin|unit_r35_cut10f0|unit_synchro_stimme|unit_voice_ausreden|unit_r39_stimmen|unit_r38_rekorder|unit_r38_elzaintro_stimme|unit_se_bank_routing|unit_se_voice_machine|unit_r30_tuer_stimme|unit_audio|unit_r34n_f_leiche_stimme|unit_r38_tagebuch|unit_r38_elzatoene|unit_msg_dialog|unit_action_msg_gate|unit_r38_heliport1171|unit_scd_flag_fade|unit_damage|unit_weapon_select|unit_aim_all_around|unit_aim_lower_exit|unit_plc_back_yaw_1090|unit_r30_android_n3_plc_aim|unit_r36_elza|unit_r39_gegner`
   -> "100% tests passed, 0 tests failed out of 122".
+
+### 8.4 Je Mangel: Ursache / vorher / Beleg / Aenderung / nachher (Kurzfassung)
+| Mangel | Ursache (vorher gemessen) | Beleg | Aenderung | nachher gemessen |
+|---|---|---|---|---|
+| M1 | Reaktion nur unter Ck(9,94); Gemaelde-Frage friert die VM (Pausemaske 0xff80 -> RE15_PAUSE_SCD, scd_vm.c @0x8003f040), nach "ja" lief HAEMMERN in die Reaktion waehrend der Rolladen fuhr (Abnahme Lauf F: msg 50 F291) | Pausemaske `2b 0d 80 ff` sub06 @0x00FE8; Frame-Runner @0x8003f040-4c | Merker (5,0x10) synchron bei Ereignis 6, Reaktion wartet auf Merker + (2,7), nur bei Ck(4,0xC3)==0 | Lauf f: Rolladen F250..F470, msg 50 F481; unit fenster |
+| M2/N4.4 | msg 52 mit Plc_motion(2,6) = Johns Zielen (eigene Bank Clip 6) | ROOM1021 @0x020C6 (Zielen vor dem Schuss), ROOM1141 @0x00C78 (zielt auf die Eintretende, msg 1 "sorry") | Clip 17 (1141 @0x00DBA..@0x00DC6, ROOM3070 @0x03724) | Lauf pist: msg 52 F3015 mo=17, kein (2,6) im Gespraech |
+| M3 | Pos_set John hinter Sleep 1/10/5 (16 Bilder nach dem Schnitt) | Abnahme Lauf B F4358 -> F4359 | Pos_set direkt nach Cut_chg 8 | Lauf pist: Schnitt und Pos_set im selben Bild F2873; Riegel "kein Sprung" (Unit + Integration) |
+| N4.1 | Gemaelde startete die ganze Szene | AUFTRAG Nachtrag 4 | ROLLTOR39, Phase H bis (4,0xC3) | Lauf n1: frei laufen F~1000..F1599, 18 Schlaege |
+| N4.2 | Szene ohne Riegel/Rennen/Waffe | sub05 @0x00FC8..@0x00FDC; ROOM3060 @0x010BE; 0x80073e30[2]; W-Bank @0x80036be4/@0x80036c04; Messer-DRAW @0x80035538 | ENTRIEGELN39 + W-Clip-Maschine | Laeufe n1/pist/mess: msg 12, Rennen, Cut 7, Pistole hoch / Messer gezogen, Senken nach Cut 6 |
+| N4.3 | John schoss nie | ROOM1021 @0x020C6..@0x020F2; Schuss-Ton Runde 36 L/38 H; Schaden @0x8006ee44 | SCHUETZE39 + Treffer + Aufmerksamkeit | Laeufe pist/auf2: Salven alle ~370 Bilder, Treffer, Gorilla dreht zu John |
+| N6 | Grossschreibung im Text | Nachtrag 6 | "trouble", "gorilla" | Laeufe n1/f: [msgtext] klein |
+
+### 8.5 OFFEN (Nachbesserung 1)
+- N4.3 Aufmerksamkeit: der getroffene Gorilla dreht zu John und kriecht zu ihm, solange er in 30 Bildern 300 naeher kommt;
+  der Weg wird oft vom zweiten Gorilla oder vom Tisch versperrt (Lauf auf2) - dann endet die Aufmerksamkeit nach 30 Bildern
+  und der Gorilla nimmt wieder Elza. Gorillas greifen John nicht an (die Angriffe des Originals wirken nur auf den Spieler).
+  Takt der Salven (Pause 90+90), Trefferkegel +-0xC8 und Dauer 180 sind PORT-WAHL (kein RE1.5/RE2-Vorbild fuer einen
+  schiessenden Begleiter).
+- Gemeinsame Dateien ausserhalb von VERTRAG 1.3 fuer J: enemy_ai_common.c (Gorilla-Hirn: 2 Haken, Spur E Nachbesserung 3
+  arbeitet am Gorilla in 1141 - bei der Integration zusammen ansehen), game_step_common.c (1 Zeile), platform/pc/main.c
+  (2 Zeilen), re15_damage.c (Zugriff auf die Schadenszeile, 5 Zeilen), scd_vm.c (2 weitere Zeilen). Alle mit Kommentar
+  "Runde 39 Spur J", alle auf ROOM1141 begrenzt.
+- Spieler-Plc_motion(2,c) = W-Bank-Clip gilt im Port nur in ROOM1141. ROOM3060 sub03 @0x010BE und ROOM3061 sub02 @0x011DE
+  tragen dieselbe Form (Leon/Elza heben die Waffe) und zeigen im Port weiter PL00-Clip 6 - eigener Punkt fuer eine
+  spaetere Runde.
+- Spur K (1171 "Elza, hurry up!"): Johns (2,6) ist Zielen (ROOM1021-Beleg oben); die Folge-Geste des Originals ist RBJ-Clip
+  17. Falls Spur K in 1171 dieselbe Geste waehlt, passt 1141 dazu.
+
+### 8.6 Fuer den Nutzer (Nachbesserung 1)
+- Ablauf jetzt: Eintritt -> Klopfen + Hilferufe -> Elzas Satz (einmal, nie waehrend einer Szene) -> Gemaelde -> Rolladen
+  hoch -> **frei laufen** (John klopft weiter) -> am Riegel der Dachtuer "You've opened the lock." -> Elza **rennt** in den
+  Raum, die Kamera schneidet auf die Ansicht vom Gangende, Elza **dreht sich zur Tuer und hebt die Waffe** (eine Schusswaffe
+  aus dem Inventar, die dabei ausgeruestet wird; ohne Schusswaffe zieht sie das Messer) -> Tuer auf/zu -> Kamera auf John
+  an der Tuer -> Elza senkt die Waffe -> Szene wie bisher -> im Kampf **schiesst John ab und an** (zwei Schuesse je Salve,
+  Pistolenschaden; der getroffene Gorilla wendet sich John zu) -> John: "Puuuh..." -> "Elza, follow me..." mit dem
+  **Armschwung** (die Geste des Originals zu "Hurry up! They're coming!") statt Zielen -> Abgang.
+- Neue Sprachdateien wie bisher moeglich: main50/51/52.wav (Texte jetzt "trouble" / "gorilla" klein).
+- Entscheidungsfragen: (1) Soll ein Gorilla John auch angreifen koennen (dann braucht John Treffer-/Todesverhalten, das
+  RE1.5 nicht hat)? Jetzt: nur Zuwenden/Hinkriechen. (2) Takt "ab und an": jetzt alle ~12 s eine Salve - passt das?
