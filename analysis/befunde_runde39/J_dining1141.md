@@ -77,7 +77,71 @@ op=2 capTick 4939 (John frei), op=1 capTick 5792 (Gorilla-Einbruch @0x00E5C), op
 @0x011D6). Mitschnitt-RMS (30-Takt-Fenster): 6880 1553, 6910 881, 6940 3,6, danach 0 (MAIN16 aus) bis zur Tuer, ab 8110 MAIN32
 (RMS 300-1300). In DIESEM Weg spielt beim Eintritt in 1171 also MAIN32 (der Titel des Raums), nicht MAIN16 — Abschnitt 4.9 klaert,
 was der Nutzer als "kurz Panik Musik" hoert.
+### 1.5 Punkt 9 nachgemessen (Lauf v0, Mitschnitt je Bild): der Hall der Panik-Musik ist MAIN16, entmutet von 1171
+Mitschnitt-RMS je Bild (Takt = 1470 Abtastwerte): 8128..8136 = 0, **8138 = 735, 8140 = 2263**, 8142 2119, 8144 1352 ...
+abklingend bis 8196..8202 = 61..81, ab **8204** steigt MAIN32 (279, 302, 429 ...). `[bgm] Sce_bgm_control slot=0 op=1 capTick=8139`
+= ROOM1171 main00 @0x011D6 `54 00 01 00 00 00`. Der Ton setzt also im Bild des Skript-Befehls ein, nicht beim Raumladen,
+und klingt ueber die 60-Bilder-Ausblendung ab (Lautstaerke 2263 = Pegel von MAIN16, gerendert 1300-1700 je 0,5 s;
+MAIN32 gerendert 233-1104). Gegenprobe Kreuzkorrelation (scratchpad `j39b/xkorr.py`, Renderings `RE15_BGM_DUMP_MAIN`):
+Fenster 8260..8290 = MAIN32 (rho 0,659), Fenster 8137..8160 keine MAIN32-Lage (0,128).
+Mechanismus im Port (audio_pc.c): Sce_bgm_control op=2 (sub01 @0x00C06, Gorillas tot) setzt nur die Lautstaerke von
+Slot 0 auf 0 (`case 2: s->mvol = 0`) - die Sequenz MAIN16 laeuft stumm weiter. Beim Wechsel 1141 -> 1171 (MAIN 0x16 ->
+0x32) stoesst re15_bgm_play_room die Ausblendung an und laedt MAIN32 erst nach 60 Bildern (s_bgm_pending); das
+Raum-Skript von 1171 laeuft aber sofort, sein op=1 setzt `s->mvol = base` auf den NOCH geladenen Track = MAIN16 ->
+2 s Panik-Musik im neuen Raum. Wortlaut des Nutzers "am anfang noch kurz die Panik Musik" = genau diese 2 s.
+
 ## 2. RE-Belege
+
+### 2.1 Punkt 9 - Reihenfolge im Original: erst Musikwechsel (wartend), DANN Raum-Skript
+`re15_disasm.py dis 0x80044210` (FUN_80044210 = Musik des neuen Raums):
+    80044278 andi a0,s0,0x3f / 8004427c andi v1,v1,0x3f / 80044280 beq a0,v1,0x800442f4   (MAIN gleich -> nur SUB)
+    80044288 lbu v0,0x5218(0x800b)          ; Ausblend-Zustand DAT_800b5218
+    80044294 beq v0,zero,0x800442b8
+    8004429c jal 0x80029ac8 / 800442a0 ori a0,zero,0x1   ; ein Bild warten
+    800442a8 lbu v0,0x5218(0x800b) / 800442b0 bne v0,zero,0x8004429c   ; WARTEN bis die Ausblendung fertig ist
+    800442b8 jal 0x80044564                  ; erst dann MAIN laden (+ 800442d8 jal 0x80044774 SUB)
+Aufrufer (jal-Suche 0x0C011084 im PSX.EXE): einzig FUN_800396fc @0x800399b0 `jal 0x80044210`; im selben Raumlader erst
+danach @0x80039a00 `jal 0x8003ef6c` = SCD-INIT-Lauf (main00/sub00, scd_vm.c "INIT FUN_8003ef6c ... @0x8003f018").
+=> Im Original wirkt ein Sce_bgm_control des neuen Raums IMMER auf den NEUEN Track; der alte (hier: gestoppter MAIN16)
+kann nicht wieder hoerbar werden. Der Port blendet nicht wartend aus (Raum laeuft weiter) und latcht den Skript-Status
+schon richtig fuer den aufgeschobenen Load (re15_bgm_load_main: `s_bgm_slot_status[0] == 1` -> hoerbar) - nur die
+sofortige Lautstaerke-Aenderung am ALTEN Track waehrend `s_bgm_pending` ist falsch. Fix: waehrend des aufgeschobenen
+Wechsels nur latchen (Abschnitt 3).
+
+### 2.2 Punkt 7 - warum John ab msg 9 nicht zu Elza schaut
+ROOM1141 sub02: @0x00E86 John Plc_neck -> Elza, @0x00E94 `40 00 09 01 ..` Plc_dest Modus 9 (Drehen) Flag-Bit 1, @0x00E9C
+Sleep 5, Elza @0x00EA4/@0x00EB2 Plc_dest Modus 9 Flag-Bit 0, @0x00EBA `18 03` Gosub sub03 = wartet NUR auf Bit 0 (Elza;
+sub03 @0x00FA4 `22 05 00 00` + While Ck(5,0)==0), dann @0x00EBC msg 9 und @0x00EC4 John `3f 00 0f 00` Plc_motion -> setzt
++0x5 = pc[1] = 0 (@0x80041bc4, scd_vm.c op_plc_motion) = Geste statt Dreh-Sub 9: Johns Drehung wird abgebrochen, wo sie
+gerade steht. Im Original ist Johns Drehung kurz: vom Fensterblick (-850,-13350) (= Platz + (5900,0), Blick 0) zu Elza
+(-7200,-15500) = Richtung (-450,-2150) = 102 Grad. Runde 38 F hat die Plaetze auf Elza (-8000,-10250) / John (-5800,-10250)
+gelegt: Elza liegt genau WESTLICH von John -> 180 Grad; die Drehung ist bei msg 9 noch nicht fertig (gemessen v0: 3341
+statt 2010). Die Original-Form fuer "John dreht, Skript wartet auf ihn" steht im selben Sub: @0x00CFE Plc_dest John Modus 9
+Bit 1 + @0x00D06 `18 04` Gosub sub04 (sub04 @0x00FB6 `22 05 01 00` + While Ck(5,1)==0). Bit 1 setzt der Dreh-Sub beim
+Ausrichten (enemy_ai_common.c re15_npc_sub_turn: `lbu a1,451(v0)` @0x80051dcc / `jal 0x8004ef90` @0x80051dd8).
+
+### 2.3 Punkt 6 - Glasbruch: RE2-Form und RE2-Welle
+RE2 ROOM1090 MAIN sub15 (Kraehen brechen durchs Fenster, re2_scd_dump.py):
+    @0x02BB0 `36 02 21 01 00 00 9c f0 00 00 50 c9` Se_on(2,0x21)   @0x02BBC `09 0a 05 00` Sleep 5
+    @0x02BC0 `36 02 21 01 00 00 9c f0 00 00 50 c9` Se_on(2,0x21)
+Die Welle liegt im Port schon bytegleich als shared_assets/RE2/GLAS1090.EDT/.VH/.VB (Runde 35 Spur M, audio_pc.c
+re15_audio_re2_glas_se, EDT @0x84 Satz 0x21). Im Original-1141 klingt vor msg 6 nichts (sub02 @0x00DC2 Plc_motion 0x17,
+@0x00DC6 Sleep 20, @0x00DCA Message_on 6 "What was that?!"); msg 9 nennt die Ursache ("...enter through the windows!").
+
+### 2.4 Punkt 4 - Klopfen: Zensus der RE2-Toene, Wahl
+- Ist (Abschnitt 1.1): RE2 ROOM1060 snd0 0x0A = Krachen (Rauschen 1,39 s), 0x0B = Stoehnen (Grundton 85-110 Hz) - kein Klopfen.
+- Zensus aller RE2-Raumbaenke snd0+snd1 (scratchpad `j39b/klopfscan.py`: Schlaege mit Anstieg >= 4x in 30 ms, Abklingen
+  auf -20 dB <= 150 ms, Tieftonanteil < 1 kHz >= 50 %): KEIN mehrfacher Tuer-Klopfton in RE2. Mehrschlag-Kandidaten sind
+  Mechanik: 1010/0A = Kendo schliesst die Ladentuer ab (sub09 @0x01C20), 2000/11 dieselbe Welle, 1120/0C..10 Regal,
+  1110/10 Eisenplatte (sub08 @0x02C06), 2070/16 Schloss-Rasseln (Satz 0x16 = "verschlossen", lock_se), 2-Schlag-Paare
+  0x1A..0x1F = Schritte. RE1.5 11A0..20A1 snd1/06 = Gegnerbank (Spinnen-Raeume), kein Klopfen.
+- Tuerarchive (Tonteil je DOOR##.DO2, tueren_02_re2.md Abschnitt 4): DOOR0F = "Treppe Holz", Satz 0 = VAG 2, 0,31 s,
+  44100 Hz, EIN trockener Holzschlag: Abklingen -20 dB in 40 ms, 100 % unter 1 kHz (`j39b/tuer_ton.py`, Bild
+  `j39b/tuer1.png`). RE2 spielt ihn je Treppe dreimal (V4 Bild 65/108/151). Archiv-Tabelle RE2 @0x8009A5D4
+  `88 2a cc 8b 06 00 00 00 db 36 00 00` = Tonteil 0x2A88 B (gen/re2_tuer_tabelle.inc DOOR0F).
+- WAHL (NUTZER-VORGABE "mehrfachen Klopf gegen Tuer", Quelle RE2): Klopfen = DOOR0F Satz 0 dreimal im Abstand 5 Bilder
+  (Form RE2 ROOM1090 @0x02BB0/@0x02BBC/@0x02BC0: Se_on, Sleep 5, Se_on). Tonteil bytegleich als gen/*.inc.
+
 
 ## 3. Umsetzung
 
