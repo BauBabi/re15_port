@@ -6,6 +6,67 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:20: Fable-MONATSLIMIT ("monthly spend limit") beendete die vier Welle-3-Bau-Agenten nach ~30 s (keine Commits,
+  Baeume sauber). Nutzer stellte das Modell auf Opus 5.5 (default). Welle 3 NEU gestartet (gleiche args, basis 1038dc15):
+  G karten wf_96165e9e-aa5, I funk10f1 wf_02f632c1-c4e, J dining1141 wf_78e6cc10-215, K heliport1171 wf_2e231bdd-63d.
+  Commit-Attribution ab jetzt "Claude Opus 5.5". Integrationstest H+F+D (238) laeuft seit 14:04 in r39_integration.
+* 2026-10-18 14:19: WELLE 3 GESTARTET auf master 1038dc15 (= Welle 1 + A1; Welle 2 liegt nur in r39_integration 4e2177bd,
+  deren H+F+D-Tests laufen dort noch, E-Tests danach). Baeume r39_{karten,funk10f1,dining1141,heliport1171}, je Spur ein
+  Lauf, Resume nur mit args `{"welle": ["<X>"], "slots": 1, "max_nach": 1, "basis": "1038dc15"}`: G karten wf_3fcc8bff-38e,
+  I funk10f1 wf_2873e9d0-624, J dining1141 wf_af6323a2-e39, K heliport1171 wf_dcbbfeac-cdc. Danach: Welle 2 -> master +
+  Hauptbaum-exe, Welle-2-Baeume entfernen; Welle 3 in die Integration, volle Suite, Release v0.8.27.
+* 2026-10-18 14:14: Spur E gegner BESTANDEN nach Nachbesserung 1 (Fix f20734fa): Parking-Lot-Gorillas ROOM11C0 HP 360
+  (Saat 180 @0x8011f514 x2) + Flinch erst ab 36 Energie (= 3 Pistolentreffer a 12 @0x8006ee44; NUTZER-VORGABE), Ein-
+  Angreifer-Riegel der RE2-Hunde (ori 0x80 @0x801051f8; 11C1 Doppelbiss F1008/F1019 weg), Kriecher 0x81 in 1010/1011 +
+  1220/1221 (Wecker sltiu 0xbb8 @0x80104718, echte Tuer), Gorilla-Schatten im Sprung auf +0x1ba (Original-Lage, Schwanz
+  @0x80116f20-38 auf jedem Pfad; der Root-Skip-Haken der Abnahme 0 war falsch und ist raus); 49/49 Tests. In die
+  Integration gemergt (4e2177bd, konfliktfrei; H+F+D-Tests laufen noch auf dem Bau davor) -> ALLE VIER Spuren der Welle 2 drin. FUER DEN NUTZER: HP x2 / 3-Treffer auch fuer die 1141-Gorillas
+  (Wortlaut "beim Parking Lot" -> nur 11C0)? NACHLAUF: Gorilla-Schattengroesse Original 1700/1800, Port 500/600.
+* 2026-10-18 14:03: Spur D treffer BESTANDEN nach Nachbesserung 1 (Abnahme 1 f0eec254; Fix bd0f0471): (1) Aufsteher = RE2
+  byte-true - Sturz-Aufsteher bis Clip-Bild 55 nur Beine-Maske (@0x801032b8-fc, @0x801036d0-f0, Maskentor @0x800413c4-d8),
+  EBEN-Schuss trifft erst ab Bild 55, TIEF jederzeit; Port war schon so, Riegel misst jetzt (17 CHECKs); (2) Schuss ueber
+  Moebel: RE2-Flag-Praxis (FUN_80050858 @0x800508bc-c8), Moebel-Liste PORT-WAHL (218 Zellen, 11 Leon-Raeume + Elza),
+  ROOM1250 0/6 -> 6/6 Treffer; (3) Zielhilfe nur bei Sichtlinie (ROOM1180: Ziel hinter Wand -> sichtbarer Zombie); 28/28
+  Tests. In die Integration gemergt (6de53176, konfliktfrei). FUER DEN NUTZER (Entscheidung): Punkt 1 ist in RE2 genau so
+  (Nutzer-Annahme "in RE2 nicht so" widerlegt) - RE2 behalten oder NUTZER-VORGABE "Aufsteher auch in Normalhoehe treffbar"
+  (Nutzerwert, kein RE-Wert); Granate prallt weiter am Tisch ab; Kleinzellen (Lampe/Stativ/Loescher) durchlaessig.
+* 2026-10-18 13:46: Spur F zustand BESTANDEN nach Nachbesserung 1 (Abnahme 1 07312f9a; Fix 8c9c104e): volle Heilung = ganze
+  Kleidung (Wund-Tabelle genullt + Spielerhaut neu wie FUN_800314b0, Schwelle 100 @0x8004ae14 / Weste 105; dabei Heap-
+  Absturz bei Vollheilung MIT Weste (free auf Container-Schnittzeiger) gefunden und behoben), Gift -1 HP alle 31 Bilder wie
+  RE2 (Takt @0x8003c154/64), EKG magenta "Poison"; 3 + 39 Tests. In die Integration gemergt (108cc2d7, konfliktfrei).
+  H6 (Zitat-Fehler in Kommentaren: Haut-Upload ist @0x800315b0/@0x80031814, Builder @0x800316c8) vom Orchestrator in der
+  Integration nachgezogen. FUER DEN NUTZER: EKG-Welle unter Gift ist die RE1.5-Welle in RE2-Farbe - die RE2-POISON-Welle
+  passt nicht ohne erfundene Skalierung in den RE1.5-Monitor (Entscheidungsfrage, Dossier F 5).
+* 2026-10-18 13:33: Spur H elza BESTANDEN (Abnahme 0 086a75dd; Fix 564810c0): 1031 Hand einmal (Latch @0x80041bb0 +
+  Lauf-Clip am Walker-Sub-Init @0x800313a4/@0x80030b58/@0x80030d90 - gilt fuer JEDE Spieler-Plc_dest-Ausrichtung), Karte
+  sofort nach Roys Tagebuch (Faden parkt auf Message_on @0x00E64; RE2 Opcode 0x84 @0x800591C4), Loescher-Prop 1090/1091
+  auf Spielerband+1 (Zensus 558 Null-Boxen, Vorgaenger-Behauptung berichtigt); 144+3+9 Tests. In die Integration gemergt
+  (66d351f1, konfliktfrei). Hinweise: 5 Bilder Rueckblende vor der Karte (RE2-Form); 1 Bild Sub-6-Pose zwischen TURN und
+  WALK (vorher ebenso, eigener RE-Punkt); Sichtpruefung anderer Szenen durch die Walker-Aenderung in der Integration.
+* 2026-10-18 13:02: Integrationsbaum 9e7bab74 (A1+B+C+L) gebaut, A-Tests 94/94 gruen (ctest -j 3, 725 s) - Merge der
+  A-Nachbesserung verifiziert. Welle 2 laeuft (D/E/F/H).
+* 2026-10-18 12:52: Hauptbaum auf master 6926409c neu gebaut (exe 12:50:47, Startlauf exit 0, EXIT_AT erreicht). Welle-1-Baeume
+  r39_{toene,inventar,optik,stimmen} + Zweige entfernt (alle in master; 141 GB frei). Integrationsbaum r39_integration
+  (9e7bab74) bleibt fuer Welle 2; dort laeuft die Gegenprobe der 94 A-Tests nach dem A1-Merge.
+* 2026-10-18 12:50: Spur A Nachbesserung 1 BESTANDEN (Abnahme 1 dfbcf43b; Fix ad16c58f): Stufe-2-Lautheits-Boden
+  stimmen_pegel_r39.c (T=985 R=2040 C=21759 aus dem Zensus aller 216 synchro-Dateien; nur Irons' 10 Dateien 6,9-12,6x,
+  206 bitgleich; Irons in der Sterbeszene -0,1/-4,5/-4,9/+17,1 dB statt -10..-12 dB, 0 geklemmt), 1150 msg 29 <- main22,
+  11B0-Text belegt; 94/94 Tests. Zwei Doku-Maengel vom Orchestrator nachgezogen (82640397). Merges: Integration 9e7bab74,
+  master 6926409c; Hauptbaum-Bau laeuft. FUER DEN NUTZER: main19/main20 ("not going to make it" / "one last favor") bleiben 4,5-4,9 dB
+  unter der BGM, weil je ein 0,2-0,5-ms-Knall die Anhebung ohne Clipping begrenzt - Neuexport dieser zwei Dateien waere der Weg.
+* 2026-10-18 12:06: SITZUNGSLIMIT (~11:08, Reset 12:00) beendete die vier Bau-Agenten der Welle 2 und die Abnahme der
+  A-Nachbesserung (deren Bau-Agent war fertig: ad16c58f, Stufe-2-Lautheits-Boden T=985/R=2040/C=21759 aus dem Zensus der
+  216 synchro-Dateien, 1150 msg 29 <- main22, 94/94 Tests). Reste gesichert: treffer ff1649c1, gegner 9ddf0bbc, zustand
+  87180698 (UNGEPRUEFT), elza sauber (08f3094d). Fortsetzung 12:05: A Abnahme 1 (modus abnahme, runde0 1) wf_63fe7405-030;
+  D wf_6e5db63e-eef, E wf_413d6880-3a4, F wf_d11dbab6-b20, H wf_3b62557a-59b mit stand-Texten (args woertlich in
+  orchestrator/args_welle2_forts.json). Waechter neu.
+* 2026-10-18 10:25: WELLE 1 IN MASTER: merge c71fa144 (A+B+C+L, 237/237 gezielte Tests in der Integration), Hauptbaum
+  configure+build gruen, exe re15_port/build/platform/pc/re15_pc.exe 10:20:06, Startlauf exit 0. Spur A Nachbesserung 1
+  (wf_45b12abc-f7d, Irons-Pegel + main22) laeuft noch -> eigener Merge spaeter. WELLE 2 GESTARTET auf master c71fa144
+  (Baeume r39_{treffer,gegner,zustand,elza}), je Spur ein Lauf, Resume nur mit args `{"welle": ["<X>"], "slots": 1,
+  "max_nach": 1, "basis": "c71fa144"}`: D treffer wf_a1200483-99d, E gegner wf_8c3955b1-9ff, F zustand wf_5a65713f-27b,
+  H elza wf_7e1608d3-5a9. Welle-1-Baeume (toene/inventar/optik) koennen nach dem A-Nachtrag entfernt werden (stimmen
+  bleibt bis zum zweiten Merge).
 * 2026-10-18 10:19: Integration Welle 1 KOMPLETT (fc7a0231 = A+B+C+L): Bau gruen, A-Tests 93/93 (ctest -j 3, 749 s), zusammen
   mit B+C+L 237/237 ohne Wiederholung. Spur A Nachbesserung 1 (wf_45b12abc-f7d) laeuft noch - nach ihrer Abnahme erneut
   mergen, bauen, A-Tests. Naechster Schritt: Integration -> master, Hauptbaum-exe (nur wenn der Nutzer nicht spielt).

@@ -17,7 +17,11 @@
  *         konsistenz= Anteil der Segmente, deren Faktor im Band median +-50 % liegt (ein nicht gespielter Clip
  *                     streut um 0 mit wechselndem Vorzeichen; ein gespielter Clip haelt den Faktor ueber alle
  *                     Segmente, auch unter lauter BGM — gemessen Dossier A_stimmen.md §5)
- *       Ausgabe je Zeile: "zeile F<bild> <datei>: lag <k> korr <c> faktor <g> median <m> konsistenz <a>/<b> rms <r>"
+ *       Ausgabe je Zeile: "zeile F<bild> <datei>: lag <k> korr <c> faktor <g> median <m> konsistenz <a>/<b> rms <r>
+ *                            laenge <s> stimme <v> rest <q> klemm <z>"
+ *         stimme    = Effektivwert der Stimme im Fenster, wie gespielt (|faktor| * rms der Datei)
+ *         rest      = Effektivwert des Rests (BGM/SE) = sqrt(rms^2 - stimme^2) - Stimme/Rest = Hoerbarkeit (Nachbesserung 1)
+ *         klemm     = Zahl der Abtastwerte (L+R) im Fenster, die am Anschlag +-32767 liegen (Uebersteuerung der Summe)"
  *   rms <cap.raw> <state.log> <abschnitt> <bild|msg:ID> <laenge>
  *       RMS des Mono-Mittels im Fenster [bild, bild+laenge): "fenster F<b>..F<e> rms <r>"
  *
@@ -165,9 +169,12 @@ int main(int argc, char **argv)
     if (!cb) { printf("FEHLER: Mitschnitt %s\n", argv[2]); return 1; }
     long takte = cn / (T * 4);
     double *cap = (double *)malloc((size_t)takte * T * sizeof(double));
+    long *klemm = (long *)calloc((size_t)(takte > 0 ? takte : 1), sizeof(long));   /* Anschlag-Werte je Takt */
     for (long i = 0; i < takte * T; i++) {
         int16_t l = (int16_t)(cb[i * 4] | (cb[i * 4 + 1] << 8)), r = (int16_t)(cb[i * 4 + 2] | (cb[i * 4 + 3] << 8));
         cap[i] = ((double)l + r) * 0.5;
+        if (l >= 32767 || l <= -32768) klemm[i / T]++;
+        if (r >= 32767 || r <= -32768) klemm[i / T]++;
     }
     free(cb);
     if (!abschnitte_lesen(argv[3])) return 1;
@@ -218,10 +225,15 @@ int main(int argc, char **argv)
         }
         const char *base = strrchr(argv[a + 1], '/'); base = base ? base + 1 : argv[a + 1];
         { const char *bs = strrchr(base, '\\'); if (bs) base = bs + 1; }
-        printf("zeile F%ld %s: lag %d korr %.3f faktor %.2f median %.2f konsistenz %d/%d rms %.0f laenge %.1f\n",
-               b, base, best_k, best_c, best_g, med, kons, nf, best_rms, (double)n / T);
+        /* Stimme/Rest im Fenster (Nachbesserung 1): Stimme = |faktor| * rms(Datei), Rest = Fenster ohne Stimme */
+        double stimme = fabs(best_g) * sqrt(xx / (n > 0 ? n : 1));
+        double rest = best_rms * best_rms > stimme * stimme ? sqrt(best_rms * best_rms - stimme * stimme) : 0.0;
+        long kl = 0; { long t0 = off + b + best_k, t1 = t0 + (n + T - 1) / T; if (t0 < 0) t0 = 0; if (t1 > takte) t1 = takte;
+                       for (long tt = t0; tt < t1; tt++) kl += klemm[tt]; }
+        printf("zeile F%ld %s: lag %d korr %.3f faktor %.2f median %.2f konsistenz %d/%d rms %.0f laenge %.1f stimme %.0f rest %.0f klemm %ld\n",
+               b, base, best_k, best_c, best_g, med, kons, nf, best_rms, (double)n / T, stimme, rest, kl);
         free(x);
     }
-    free(cap); free(s_state);
+    free(cap); free(klemm); free(s_state);
     return 0;
 }
