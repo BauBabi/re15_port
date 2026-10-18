@@ -4,6 +4,8 @@
  */
 #include "re15_heliport1171_r39.h"
 #include "re15_szenenleon_r36.h"   /* re15_szl_schub_spieler_ende: Sub 0x13 endet mit +0x5 = 6 (@0x80052be0) */
+#include "re15_room.h"             /* NB2: g_room_rdt / g_room_rdt_ok (Wand-Pass der Kraehen-Wurzel) */
+#include "re15_collision.h"        /* NB2: re15_collision_constrain_contact_band = FUN_8003b0a4 mit Band +0x82 */
 #include <string.h>
 
 /* Typ-Byte des Aktors, der seit seiner INIT noch keinen anim_set auf einem anderen Kanal hatte; 0 = kein Merker. */
@@ -96,6 +98,24 @@ int re15_r39k_kraehe_bild(const re15_actor_t *e)
     const r39k_kraehe_t *k = kraehe_von(e);
     if (!k) return e ? (int)e->anim_frame : 0;
     return kraehe_fremd(k, e) ? (int)e->anim_frame : (int)k->bild;
+}
+
+/* NACHBESSERUNG 2 — N1: Wand-Pass der Kraehen-Wurzel nach jedem Zustand (Belege im Header). */
+void re15_r39k_kraehe_wandpass(re15_actor_t *e, int32_t alt_x, int32_t alt_z)
+{
+    if (!e) return;
+    if (!g_room_rdt_ok || (e->flags & 0x08u)) {        /* Wort0 Bit 3 -> `j 0x8003b524`, Rueckgabe 0 (@0x8003b134-44) */
+        e->crow_wall = 0;
+        return;
+    }
+    int32_t nx = e->x, nz = e->z;
+    const int hit = re15_collision_constrain_contact_band(&g_room_rdt, alt_x, alt_z, &nx, &nz,
+                                                          200,             /* Kasten[3] (`lhu a1,6(v0)` @0x80112200) */
+                                                          (int)e->floor,   /* +0x82 (`sb v0,130(a0)` @0x80112154)    */
+                                                          4u,              /* `ori a2,zero,0x4` @0x801121fc           */
+                                                          NULL, NULL);
+    e->x = nx; e->z = nz;
+    e->crow_wall = (uint8_t)(hit ? 1 : 0);             /* +0x1d1 = Rueckgabe (`sb v0,465(v1)` @0x80112218) */
 }
 
 void re15_r39k_install(uint16_t room)

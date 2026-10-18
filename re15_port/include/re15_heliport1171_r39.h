@@ -86,4 +86,13 @@ void re15_r39k_kraehe_clip(re15_actor_t *e, uint8_t clip);                    /*
 int  re15_r39k_kraehe_anim(re15_actor_t *e, const uint8_t *laengen, int n);  /* f314: posieren, dann vorschieben */
 int  re15_r39k_kraehe_bild(const re15_actor_t *e);                           /* +0x95 (naechstes Bild)          */
 
+/* NACHBESSERUNG 2 — N1 Kraehen-Wurzel 0x80112020: nach dem Zustand (`jalr` @0x801121b4) laeuft OHNE Sprung der Nachlauf
+ * Kasten-Versatz @0x801121c4, Koerper-Schub @0x801121d4 (+0x1d0 @0x801121e8) und der WAND-PASS FUN_8003b0a4 @0x80112204
+ * (&+0x34, Radius Kasten[3] = 200 @0x80112200, Maske 4 @0x801121fc; +0x1d1 = Rueckgabe @0x80112218) — fuer JEDEN Zustand
+ * (Tabelle @0x8012111c: INIT 0x8011224c, DEATH 0x801146d0, FLIGHT-2 0x80114e54, 0x801157e8, Stubs 0x80114e4c).
+ * Band = +0x82 der Wurzel (@0x80112154, VOR dem Zustand); Wort0 Bit 3 ueberspringt den Pass (@0x8003b12c-40). Der Port
+ * hatte ihn nur in Zustand 1. alt_x/alt_z = Lage vor dem Zustand (Rechteck-Schub; Spawn-Lage +0x40/+0x44 @0x800421a0-b8).
+ * Gemessen ROOM1171: Kraehe 3 spawnt in der Westwand-Zelle und wird im INIT-Takt hinausgeschoben (Dossier 13.3). */
+void re15_r39k_kraehe_wandpass(re15_actor_t *e, int32_t alt_x, int32_t alt_z);
+
 #endif /* RE15_HELIPORT1171_R39_H */

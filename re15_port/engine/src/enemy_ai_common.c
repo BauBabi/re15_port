@@ -6862,6 +6862,7 @@ static void re15_crow_ai_tick(int slot)
      * (lhu +0x78[6] @0x8011216c), a2=8, a3=0x400) every unfrozen root tick, ALL states
      * (audit wf_827f186d crow #5). */
     e->crow_floor = re15_crow_room_coll(e);
+    const uint8_t r39k_st = e->state; const int32_t r39k_ax = e->x, r39k_az = e->z;   /* Runde 39 Spur K NB2: Lage vor dem Zustand */
 
     switch (e->state) {
     case 0: {  /* INIT — FUN_80111a4c: count-flock, capture perch, lift off, enter ACTIVE */
@@ -7022,6 +7023,9 @@ static void re15_crow_ai_tick(int slot)
     default:   /* states 2/5/6 = HURT (byte-true empty stub, no reaction) — hold */
         break;
     }
+    if (r39k_st != 1)   /* Runde 39 Spur K NB2: Wand-Pass FUN_8003b0a4 @0x80112204 nach JEDEM Zustand (`jalr` @0x801121b4, kein
+                         * Sprung bis @0x80112218); Zustand 1 fuehrt ihn oben selbst */
+        re15_r39k_kraehe_wandpass(e, r39k_ax, r39k_az);
 }
 
 /* ============================================================================
