@@ -548,3 +548,33 @@ Fremde Riegel angepasst (mit Beleg): `probe_crow_death.c` (unit_crow_death_corps
   "kein einzelnes Sub-6-Bild (3)", "Ankunftsbilder 0 von 6", "M2 ... Folge FALSCH"; `kraehen` FEHLER (4): Start Clip 0
   Bild 1, ORIENT-Folge falsch, Landebild schon Clip 10, Leiche Bild 12. Integration (Trockenlauf des neuen Blocks gegen
   die Spuren): Abnahme-Stand ROT, Stand ohne Kraehen-Fix ROT (M3b), Endstand GRUEN.
+
+### 12.4 Tests der Nachbesserung (Riegel)
+
+Registriert nur in `re15_port/tests/unit/probes/r39_heliport1171.cmake` (keine CMakeLists.txt angefasst):
+- NEU `unit_r39_heliport1171_elza` (M1/M2/M3a): ganze Szene mit Elzas echten Baenken (W-Bank PL04W01-EDD wie die
+  Start-Bank in main.c, COMMON-Paar aus PL04.PLD per re15_pld_part): je Sub-6-Lauf Clip 1 Bild 0 / Blende 7 am Anfang,
+  16 Bilder 0..15, dann Clip 2 Bild 0 (5 Laeufe: Bild 38/186/592/670/945); kein einzelnes Sub-6-Bild; Ankunftsbilder
+  (6) zeigen Gang/Drehen; Schub: Bit-Takt Clip 0x12, Phase 6 Clip 0x11 rueckwaerts 9..0, Phase 7 haelt Bild 0, danach
+  Sub 6 Bild 0 — Bit-Takt im selben Bild wie John (933).
+- NEU `unit_r39_heliport1171_kraehen` (M3b): INIT Clip 0 Bild 0, ORIENT Clip 8 ab Bild 0 (0..7,0,1), Landebild = Fall-Pose
+  (Clip 4), FINISH Clip 0x0a Bild 0..11, Leiche haelt Bild 11 (beide Kraehen).
+- `integration_r39_heliport1171_weg/_laden` zusaetzlich (Block am Skriptende): Elzas Clip-1-Laeufe je 0..15 (16 Bilder,
+  >= 5 Laeufe, keine kurzen), Elzas Clip 17 rueckwaerts im Bild Johns, je Kraehe ORIENT ab Bild 0 und Leiche Clip 0x0a
+  Bild 11 (gerendert = letzte Zeile je Bild/Aktor). Kletterzaehler zaehlt jetzt auch Loco 2/50 mit Bild > 0 vor dem ersten
+  RBJ-Clip-0-Bild (Hinweis H4).
+- GEGENPROBE (alter Motor a2d1e1dc, neue Testquellen): `elza` 4 Fehler, `kraehen` 4 Fehler (Abschnitt-Notiz oben);
+  Integrationsblock trocken gegen die aufgezeichneten Spuren: Abnahme-Stand ROT, ohne Kraehen-Fix ROT, Endstand GRUEN.
+- Fremde Riegel angepasst (je mit Beleg, Abschnitte 12.1/12.3): `test_plc_back_yaw_1090.c` (Ankunftsbild posiert noch
+  Modus 8, f314 @0x800312b0 vor +0x5 = 6 @0x80031318; der Riegel faehrt den Sub-6-Takt re15_r39k_reach_takt mit),
+  `probe_crow_death.c` (Leiche Frame 12 -> 11), `test_r38_heliport1171.c` flagwort (ORIENT-Effekt mit der Pose VOR dem
+  ORIENT-Bild), `test_r37_roy.c` spur (Hinweis H3: INIT-Form nur als Lauf ab der ersten Elliot-Zeile).
+
+### 12.5 Wirkung ausserhalb von ROOM1171 (gleiche Original-Funktionen)
+
+- M1/M3a gelten fuer JEDE Plc_dest-Ankunft des SPIELERS (Leon und Elza, alle Szenen): Ankunftsbild = Gang-/Dreh-Pose,
+  Sub 6 Clip 1 ab dem Folgebild Bild 0..15; folgt ein Plc_dest direkt, kein Sub-6-Bild. Die Spieler-Tabelle @0x80073e30
+  ist fuer beide Figuren dieselbe. Beispiel ROOM1141 (echter Weg): F1305-Einzelbild weg, Drehen beginnt mit Bild 0.
+- M2 gilt fuer jeden Spieler-Schub (Sub 0x13): ROOM11B0 (Leon/Marvin, Runde 36 J) und ROOM1171.
+- M3b gilt fuer jede Kraehe mit RE1.5-Hirn: die Ereignis-Kraehen ROOM1171 in jedem KI-Modus, im RE1.5-KI-Modus alle
+  Kraehen (10C0/1120/1170). Im Standard-KI-Modus laufen die uebrigen Kraehen ueber das RE2-Hirn (eigener Code, unberuehrt).
