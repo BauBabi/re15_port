@@ -6,6 +6,9 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:38: Integration Welle 2 Stufe H+F+D (Bau 14:03, 6de53176): 238/238 gezielte Tests gruen (ctest -j 3, 2016 s).
+  Jetzt Bau mit E (4e2177bd) + E-Gruppe (Regex scratchpad/integ_regex_e.txt); danach Welle 2 -> master + Hauptbaum-exe,
+  E-Nachbesserung 2 (Gorillas generell) als eigener Folge-Merge.
 * 2026-10-18 14:27: Nutzer-Nachtrag 3 (dc330054): Aufsteher RE2 bleibt, EKG bleibt, Spind 15 bleibt, Stapeln auch Kiste =
   schon erfuellt (re15_itembox.c:102 nutzt re15_inventar_r39_stapelt); GORILLAS GENERELL -> Spur E Nachbesserung 2
   wf_6101b819-29c (args woertlich in orchestrator/args_e_nach2.json; r39/gegner vorher auf master gemergt 2486a028).
