@@ -50,14 +50,14 @@ endforeach()
 set(_exe_kopie "${_exe_dir}/re15_pc_r39e_hunde_${_lauf_id}${_exe_ext}")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
-foreach(_v RE15_AI_FLAVOR RE15_R39_LOG RE15_FRAMEDUMP RE15_INPUT_SCRIPT RE15_INPUT_SCRIPT_START RE15_PLAYER_POS RE15_FORCE_EVENT)
+foreach(_v RE15_AI_FLAVOR RE15_R39_GEGNER_LOG RE15_FRAMEDUMP RE15_INPUT_SCRIPT RE15_INPUT_SCRIPT_START RE15_PLAYER_POS RE15_FORCE_EVENT)
     unset(ENV{${_v}})
 endforeach()
 set(WORKDIR "${_dir}")
 set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
          RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
          RE15_DEBUG_JUMP=1190@250 RE15_FORCE_EVENT=10@400
-         RE15_STATE_LOG=state.log RE15_R39_LOG=1 "RE15_EXIT_AT=1000")
+         RE15_STATE_LOG=state.log RE15_R39_GEGNER_LOG=1 "RE15_EXIT_AT=1000")
 re15_start_spiel(_rv 300 ${_env} "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     message(STATUS "${_tag}: Lauf ohne Ergebnis (exit=${_rv}) -> EIN Wiederholungsversuch")

@@ -36,7 +36,7 @@ void re15_r39_gegner_enable(int an) { s_an = an ? 1 : 0; }
 void re15_r39_log(const char *fmt, ...)
 {
     static int an = -1; static FILE *lf = NULL;
-    if (an < 0) { an = (getenv("RE15_R39_LOG") != NULL); if (an) lf = fopen("gegner_r39.log", "w"); }
+    if (an < 0) { an = (getenv("RE15_R39_GEGNER_LOG")   /* Runde 39 Integration: eigener Name, RE15_R39_LOG ist der Dateiname der Spur F (zustand_r39.c) */ != NULL); if (an) lf = fopen("gegner_r39.log", "w"); }
     if (!lf) return;
     va_list ap; va_start(ap, fmt); vfprintf(lf, fmt, ap); va_end(ap);
     fputc('\n', lf); fflush(lf);
