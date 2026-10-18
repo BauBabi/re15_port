@@ -488,3 +488,42 @@ Kachel (Kachel-Index 4), Zeile fuer FUN_800473f8 per kleinsten Quadraten (zeile_
   in der gemalten Kachel (y126..133); 1110 Tuergang (-2650,-5500) -> (183,117) im gemalten Schwenk. Sonde = exe - 1
   (Ringsprite). 1170 Zone 1 per CONTINUE nicht abziehbar (der Raum startet mit der Intro-Szene, Spawn am
   Intro-Wegpunkt) - dort misst die Sonde denselben Pfad (re15_inv_map_marker).
+
+### Nachbesserung 1 - Uebersicht je Mangel
+| Mangel | Ursache | Beleg | Aenderung | vorher -> nachher |
+|---|---|---|---|---|
+| M3 (hoch) | Doppelwand-Korrektur loeschte die eigene Wand unbedingt | Traeger je Korrektur aus MAP0x.PIX Index 4 (nachbar.py), Gatter wie RE2 @0x8006E744/@0x8006E66C | `traeger` je Korrektur/Kante, gilt nur mit gezeichnetem Traeger | verlorene Wandpixel je Ort allein 8..41 -> 0 (echte exe, 15 Orte) |
+| M4 (mittel) | Treppenhaeuser 1060/10A0 mit Bbox-Streckung auf nominale 24x24 | Stubs @0x800768E0 / @0x80076900; Waende ROOM1060/10A0.RDT; STAIR-AOTs @0x00D72..@0x00DFE / @0x00E40..@0x00ECC | Zeilen je Blatt aus den Waenden; 3F-Marke 1060 auf die Projektion | Treppe 2..5 px daneben -> im 5x5-Kasten; Ring 1060 (126,143) -> (122,143) |
+| M5 (mittel) | 1030 ausgelieferte Zeile mit falschem Massstab; 1110/1170 Z1 Bbox | 1030 @0x800768C8 bis 5 px gegen die eigene Kachel; 1110 Stub @0x80076938; 1170 @0x80076968 nur Zone 0 | Zeilen aus 8/4/9 Waenden (Reste <= 1) | 1030 63 -> 0, 1110 8 -> 0, 1170 Z1 51 -> 0 (Dach 12 -> 0), 1060 4 -> 0, 10A0 8 -> 0; 1210 Nutzerfrage |
+| M1 (gering) | 1/3-px-Verschiebung der Vorlage bei 1x nicht darstellbar | Beruehrpixel gezaehlt: y107 3, y106 1; Band-4-Treppe @0x013B6 -> y106/107 | (168,106) | 3 -> 1 Beruehrpixel |
+| M2 (gering) | Treppe (145,165) Pixel an Pixel auf der Unterkante y168 | Projektion @0x00E90 (145,165); Zelle (141,153,18,16) | (145,164) | Abstand 0 -> 1 Zeile, Projektion im Kasten |
+
+### OFFEN (Stand Nachbesserung 1)
+* ROOM1210 (B2): begehbare Suedwest-Kammer weder im Original noch in mapB2_correct.png - Marker dort neben der Kachel
+  (207 von 1141 Rasterpunkten). Entscheidungsfrage an den Nutzer (unten), nicht eigenmaechtig gezeichnet.
+* Vorbestehend, nicht durch Runde 39, nicht angefasst: (a) die Kachel-Klemmung des Markers (re15_inv_map_marker,
+  `reserve = 4` ins NOMINALE Rechteck) haelt den Marker 4 px von dessen West-/Nordkante fern - an Tueren dort (1060 ->
+  1040/10C0/1120) springt er beim Raumwechsel 6..8 px (vorher 5..7); (b) im Abzug der echten exe nimmt die
+  Schwenk-Tilgung des Renderers an zwei Stellen Wandtexel mit: Evidence-Raum 1110 Ostseite x186 y115..120 (geschlossen
+  durch ROOM1100s Westwand) und ROOM1210 x187 y71/y77 (geschlossen durch ROOM11E0) - offen nur, solange der Nachbar
+  ungezeichnet ist (1210 ist nur durch 11E0 erreichbar).
+* 11D0-Kammer: Weltbox um ZONE_SLACK eingezogen (Bau) - laut Abnahme 0 an begehbaren Randpunkten nicht reproduziert.
+
+### Fuer den Nutzer (Nachbesserung 1)
+* Raeume bleiben jetzt auch dann geschlossen, wenn der Nachbarraum noch nicht auf der Karte steht: die "keine
+  Doppelwand"-Korrektur nach deinen Vorlagen greift nur, wenn die Wand des Nachbarn gezeichnet ist (vorher z.B. ROOM1000
+  WC ohne Westwand, 1070 ohne Westwand, 1010 ohne Seitenwaende, solange der 1F-Plan fehlte).
+* Treppenhaeuser 1060 und 10A0: der Marker steht auf der Treppe jetzt auf deinen verschobenen Treppensymbolen (vorher
+  2..5 px daneben bzw. auf der Wand).
+* Marker bleibt in der Zeichnung: Eingangshalle 1030 (Westfluegel), Evidence-Raum 1110 (Tuergang), Treppenaufgang 1170
+  (3F und Dach) und die Treppenhaeuser.
+* 3F weicht an DREI Treppensymbolen bewusst von map3F_correct.png ab: (1) Treppenhaus 1060 x144 -> x140 - derselbe
+  Treppenlauf, den du auf 1F/2F an x122/x121 gelegt hast; (2) Treppenaufgang 1170 (159,99) -> (156,98) - auf den echten
+  Lauf; (3) die Treppe (168,107) aus deiner Vorlage ist um 1/3 Spielpixel verschoben, das geht bei 1x nicht: y107 stellt
+  alle drei Sprossen auf die Linie darunter (eine auf den Tuerbalken), y106 beruehrt nur mit einem Eckpixel die Wand
+  darueber - genommen ist y106. Wenn du es anders willst: kurze Ansage reicht.
+* B1: die Treppe nach B2 im Treppenhaus 10A0 sitzt eine Zeile hoeher und beruehrt die Unterkante nicht mehr.
+* Entscheidungsfrage (unveraendert): ROOM1210 hat im Suedwesten eine begehbare Kammer, die weder das Original noch deine
+  Vorlage mapB2_correct.png zeichnet. Soll sie auf B2 als kleiner Raum dazukommen (dann steht der Marker dort im Raum),
+  oder bleibt B2 genau wie deine Vorlage?
+* Keine neuen Assets, keine Sprachdateien.
