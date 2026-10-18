@@ -173,3 +173,11 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   - Zuteilung: neue Spur N "stimmen3" (10F1 msg 40/42 <- main06/main08 + 1141-Zeilen 50/51/52 <- main12/13/14, die 12/13/14
     sperren; Riegel; Messung am echten Weg). Spur J (Nachbesserung 2): dieselben drei 1141-Zeilen in stimmen_r39.c eintragen
     (bei der Integration gilt die Fassung der Spur N) und die Wiedergabe von msg 50/51/52 im neuen 1141-Ablauf messen.
+
+## Nachtrag 9 des Nutzers (woertlich, 2026-10-18 waehrend des Smoke-Laufs smoke_w3a 22:33-22:38)
+- "Ah, eine Sache fehlt mir noch - bei room11C0, während der Kampf gegen die Gorillas noch läuft, soll bei Leon der Text kommen \"I cannot leave Ada alone here with those monsters!\". Wenn Leon versucht durch die Tür aus dem Raum raus zu gehen."
+  Orchestrator: ROOM11C0.RDT msg_sec 0x1C84 hat Original-Zeilen 0..9 (msg 5 "Leon: Ada, you hide inside that patrol car.",
+  msg 6 "Ada: O-okay, I'll do that...", Kampf, msg 7 "Ada: Okay, it's over now."); Nutzer-Aufnahmen room11C0/main00-08.
+  Vorbild Runde 38 F ROOM1141 (Tueren gesperrt solange die Gorillas leben, msg 41 "I cannot leave him alone with those
+  monsters.", include/re15_dining_r38.h RE15_R38F_MSG_1141_SPERRE). Neue Spur O "parkplatz11c0"; Port-Message-Id 11C0 = 40
+  (Sprachdatei spaeter synchro/STAGE1/room11C0/main40.wav).
