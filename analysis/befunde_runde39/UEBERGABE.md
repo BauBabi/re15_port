@@ -6,6 +6,15 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 19:04: Spur E Nachbesserung 2 BESTANDEN (Abnahme 2; Fix b963e6bb): Gorilla-Regel fuer alle 0x27 (Zensus: nur
+  ROOM11C0 + ROOM1141), 1141 mit Elza: 360 Energie, Flinch bei akku 36, 31. Treffer toetet, Szene bis Johns Abgang;
+  unit_maggot_ai (Original-Riegel) misst den Original-INIT mit Haken aus. Integration: ff auf master 3640d6c1, Merge
+  58b8591f, Logschalter-Kollision E/F getrennt (RE15_R39_GEGNER_LOG, 3fe9e358). Bau + alle schnellen Tests + Gorilla-/1141-
+  Integrationen laufen (Regex scratchpad/integ_regex_e2.txt). ⛔ BEFUND E (vor dem Release klaeren): in 1141 kann der
+  Original-Koerperstoss (Gorilla gegen Gorilla, R 3200, Kasten @0x80121350; Wandklemme FUN_8003bca8 nimmt die naehere Kante
+  @0x8003bcec-cfc) einen Gorilla durch die 2000 dicke Westwand schieben -> Kampf endet nie (Versuch 5: x -12218); einmal
+  Elza im Rear-up-Pin hinter der Suedwand (z -26068). Doppelte Energie macht es wahrscheinlicher. Naechster Weg: RE2-
+  Gegenstueck (Koerperstoss + Wandklemme) lesen, Pin-Fall bildgenau messen.
 * 2026-10-18 18:57: master-Regression gefunden (von Spur I gemeldet) und behoben: unit_r38_itemorte_raum seit Welle 2 rot
   - Spur H stellte das Loescher-Band auf Spielerband(y)+1 um, der Runde-38-K-Riegel schrieb fuer 1030 noch Band 1 fest;
   Verhalten richtig (integration_r38_itemorte / r37_feuerloescher / r39_elza_loescher gruen), Riegel auf Band 2 (96ab793c).
