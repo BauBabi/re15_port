@@ -152,6 +152,9 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
     informiert. Eine neue Aufnahme unter DEMSELBEN Dateinamen braucht keine Code-Aenderung.
     Nutzer 22:31 (woertlich): "ja, ich meine john...." -> Text John bestaetigt; main12 bleibt zugeordnet, bis eine John-Aufnahme
     unter demselben Namen kommt (auch der Roh-Take 21:47:45 sagt Roy, Wahl 0,607).
+    Neuer Take 22:26:29 (Nutzer: "ich mache eine neuen take fuer main12"): room1141/main12.wav 6,00 s, Diktat "All know who
+    this is john losing troubled I have to help in", Wahl JOHN 0,784 -> passt zum Text. Der alte Take liegt jetzt unter
+    synchro/unused/STAGE1/room1141/main12.wav (vom Nutzer verschoben).
   - KOLLISION: ROOM1141.RDT (msg_sec 0x10E4, re15_port/tools/rdt_msgdump.py) hat Original-Zeilen id 12 @0x13B6 "You've opened
     the lock.", id 13 @0x13D1 "A beautiful painting.There's a switch below. / Will you push it?", id 14 @0x1417 "It's a big
     table." Nach der Ordnerregel (synchro/README.md: main<MSG-ID>) spielten main12/13/14 dort - beim Entriegeln, am Gemaelde,
