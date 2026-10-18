@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "re15_actor.h"   /* re15_actor_t (Nachbesserung 2: re15_dining_r39_trifft) */
 
 /* ---- Ressourcen (analysis/befunde_runde39/VERTRAG.md 1.1/1.2) ----------------------------------------------------- */
 #define RE15_R39J_BIT_REAKTION   94     /* Bank 9: Elza hat auf den ersten Hilferuf reagiert (Punkt 5)                */
@@ -148,6 +149,9 @@ int  re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);
 int  re15_dining_r39_affe_jagt_john(int slot);   /* 1 = Gorilla im Hirn-Kopf auf Jagd B[3] zu John */
 int  re15_dining_r39_ziel_slot(void);            /* Johns aktuelles Ziel (Riegel/Messschiene), -1 = keins */
 int  re15_dining_r39_zielt(void);                /* 1 = John fuehrt die Waffe gerade nach (Anker ZIELEN..SENKEN) */
+/* Trefferbedingung von Johns Schuss (Riegel): 0 = Treffer, 1 kein Ziel, 2 tot, 3 im Angriff (Greifer/Biss/Sprung), 4 nicht im
+ * Kegel RE15_R39J_TREFFER_KEGEL. Elzas Opferzustand spielt keine Rolle (Nachbesserung 2 (a)). */
+int  re15_dining_r39_trifft(const re15_actor_t *john, const re15_actor_t *gorilla);
 extern int      g_re15_r39j_anker_n;
 extern unsigned g_re15_r39j_schuss_zaehler, g_re15_r39j_treffer_zaehler;
 int  re15_dining_r39_aufmerksam(int slot);   /* Restbilder (Riegel) */
@@ -159,6 +163,7 @@ const void *re15_dining_r39_rbj_anim(int slot);   /* const re15_emd_animation_t 
 const void *re15_dining_r39_rbj_skel(int slot);   /* const re15_emd_skeleton_t *  oder NULL */
 int  re15_dining_r39_leihe_aktiv(void);
 int  re15_dining_r39_off_wink(void);   /* Anker WINK in ENTRIEGELN39 (Riegel) */
+int  re15_dining_r39_schuetze_anker(int k);   /* Anker in SCHUETZE39: 0 ZIEL 1 ZIELEN 2 FEUER1 3 FEUER2 4 SENKEN (Riegel) */
 /* Se_on-Zweig (dining_r38.c re15_dining_r38_se_on): 1 = Port-Bank 0x3E erledigt. */
 int re15_dining_r39_se_on(unsigned bank, int satz);
 /* audio_pc.c re15_voice_load_clip: ROOM1141 Id 53..57 -> Stamm "help01".."help05"; sonst unveraendert. */

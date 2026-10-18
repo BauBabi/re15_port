@@ -330,6 +330,11 @@ static void teil_programme(void)
         const uint8_t m50[4] = { 0x2B, RE15_R39J_MSG_REAKTION, 0x00, 0x00 };
         const int a = finde(h, nh, ck, 4, 0), c = finde(h, nh, m50, 4, 0), d = finde(h, nh, set, 4, 0);
         PRUEF(a > 0 && c > a && d > c && finde(h, nh, m50, 4, c + 1) < 0, "HAEMMERN39: Ck(9,94)==0 -> msg 50 -> Set(9,94)=1, einmal");
+        /* Nachbesserung 2 (Nutzer-Nachtrag 8, main50.wav 6,0 s): nach msg 50 + Sleep 90 die Warte-Zeile msg 58, erst dann
+         * Set(9,94)=1 und Pad frei - Elza spricht ihre Zeile aus, bevor der Spieler weiterlaeuft. */
+        const uint8_t warte50[8] = { 0x09, 0x0A, 0x5A, 0x00, 0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00 };
+        PRUEF(c > 0 && finde(h, nh, warte50, 8, c) == c + 4 && d == c + 12,
+              "HAEMMERN39 NB2: msg 50 -> Sleep 90 -> Message_on 58 (Elza spricht aus) -> Set(9,94)=1 (@+%04X/@+%04X)", c, d);
         /* die Reaktion folgt dem ersten Hilferuf */
         const uint8_t h1[3] = { 0x36, RE15_R39J_SE_BANK, (uint8_t)(RE15_R39J_SATZ_HILFE0 + reihe[0] - 1) };
         const int erster = finde(h, nh, h1, 3, 0);
@@ -370,6 +375,17 @@ static void teil_programme(void)
         const uint8_t senken[8] = { 0x3F, RE15_R39J_W_SUB, RE15_R39J_W_CLIP_HEBEN, 0x00, 0x43, 0x00, 0x80, 0x00 };
         const int is = finde(b, nb, senken, 8, i6 > 0 ? i6 : 0);
         PRUEF(is > i6, "ENTRIEGELN39 N4.2: Waffe senken = Plc_motion(2,6) + Plc_flg 0x80 (ROOM1021 @0x020EA/@0x020EE) nach Cut 6 (@+%04X)", is);
+    }
+    {   /* Nachbesserung 2 (b): Anker ZIELEN auf Plc_motion(2,6) vor Sleep 110 (ROOM1021 @0x020C6/@0x020CA), SENKEN auf
+         * Plc_motion(2,6) + Plc_flg 0x80 (@0x020EA/@0x020EE): dazwischen fuehrt John die Waffe nach (dining_r39.c). */
+        int ns = 0;
+        const uint8_t *sp = re15_dining_r39_programm(3, &ns);
+        static const uint8_t zielen[8] = { 0x3F, 0x02, 0x06, 0x00, 0x09, 0x0A, 0x6E, 0x00 }, senken[8] = { 0x3F, 0x02, 0x06, 0x00, 0x43, 0x00, 0x80, 0x00 };
+        PRUEF(sp && ns > re15_dining_r39_schuetze_anker(4) + 8 && !memcmp(sp + re15_dining_r39_schuetze_anker(1), zielen, 8) &&
+              !memcmp(sp + re15_dining_r39_schuetze_anker(4), senken, 8) && re15_dining_r39_schuetze_anker(0) < re15_dining_r39_schuetze_anker(1) &&
+              re15_dining_r39_schuetze_anker(1) < re15_dining_r39_schuetze_anker(2) && re15_dining_r39_schuetze_anker(3) < re15_dining_r39_schuetze_anker(4),
+              "SCHUETZE39 NB2: Anker ZIEL @+%04X < ZIELEN @+%04X (Plc_motion(2,6)+Sleep 110) < FEUER1/2 < SENKEN @+%04X (rueckwaerts)",
+              re15_dining_r39_schuetze_anker(0), re15_dining_r39_schuetze_anker(1), re15_dining_r39_schuetze_anker(4));
     }
     {   /* N4.1: ROLLTOR39 = Gemaelde-Frage, Rolladen mit Ton, Steuerung zurueck (sub06 @0x010C8..@0x010D8), Merker aus */
         int nr = 0;
@@ -435,6 +451,21 @@ static void teil_programme(void)
         const uint8_t run[4] = { 0x40, 0x00, 0x05, 0x01 };
         const int ir = finde(b, nb, run, 4, i52 > 0 ? i52 : 0);
         PRUEF(ir > iwk, "ENTRIEGELN39 Punkt 8: Johns Abgang (RUN) erst NACH msg 52 und der Geste");
+        /* Nachbesserung 2 (Nachtrag 8, main52.wav 4,3 s > 100 Bilder): nach Geste + Sleep 60 + 40 die Warte-Zeile msg 58, erst
+         * danach Plc_neck aus und der Abgang - John spricht aus, bevor er losrennt (Lauf v_a: RUN F4275, Zeile bis F4304). */
+        const uint8_t warte52[16] = { 0x3F, 0x00, RE15_R39J_WINK_CLIP, 0x00, 0x09, 0x0A, 0x3C, 0x00, 0x09, 0x0A, RE15_R39J_MSG52_REST, 0x00,
+                                      0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00 };
+        const int iw52 = finde(b, nb, warte52, 16, i52 > 0 ? i52 : 0);
+        PRUEF(iw52 == iwk && ir > iw52, "ENTRIEGELN39 NB2: Heranwinken -> Sleep 60 + %d -> Message_on 58 (John spricht aus) -> Abgang",
+              RE15_R39J_MSG52_REST);
+        /* Nachbesserung 2: Kamera am Ende Cut_chg 0 + Cut_auto 1 statt Cut_old (der gemerkte Cut war Cut 8 des Gespraechs; die
+         * RVD-Gruppe Cut 8 hat nur ihren Kopf, die Kamera blieb stehen - Lauf v_a F4418..F6200). Kein Cut_old nach Cut 8. */
+        static const uint8_t ende[14] = { 0x29, RE15_R39J_CUT_ENDE, 0x3C, 0x01, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1B, 0x00, 0x01, 0x00 };
+        int alt_cut = 0;
+        for (int i = 0; i < kb; i++) if (zb[i].pc > i8 && zb[i].op == 0x2A) alt_cut++;
+        PRUEF(nb > 14 && !memcmp(b + nb - 14, ende, 14) && alt_cut == 0,
+              "ENTRIEGELN39 NB2: Ende Cut_chg %d + Cut_auto 1 (Form sub02 @0x00E80/@0x00F56), kein Cut_old nach Cut 8 (%d)",
+              RE15_R39J_CUT_ENDE, alt_cut);
         const int iz = finde(b, nb, ziel, 4, i8 > 0 ? i8 : 0);
         PRUEF(iz < 0 || iz > ir, "ENTRIEGELN39 M2/N4.4: kein Plc_motion(2,6) (= Zielen, ROOM1021 @0x020C6) zwischen Cut 8 und Johns Abgang");
         /* M3: John Pos_set an seinen Platz im selben Takt wie der Schnitt (vor dem ersten Sleep nach Cut_chg 8) */
@@ -726,6 +757,34 @@ static void teil_phase_h(void)
         PRUEF(g_re15_r39j_treffer_zaehler > t0 && getroffen > 0,
               "N4.3: Treffer am Gorilla (Energie gesunken bei %d Gorilla(s)), Schaden der Handfeuerwaffe", getroffen);
         PRUEF(auf && ziel_john, "N4.3: der getroffene Gorilla beachtet John (Lenkziel = Johns Lage)");
+        {   /* Nachbesserung 2 (a): Trefferbedingung ohne Elzas Opferzustand. Elza im Griff (re15_player_victim_force, Greifer 0x27):
+             * der Gorilla, der NICHT angreift, ist im Kegel treffbar (vorher: kein Treffer, Abnahme 1 L/L3 5 von 16 Salven); der
+             * Greifer (Sub 15 Phase 3) nicht (Wurf im Spieler-Takt 0x8011c118, Ende nur P7 0x8011c384); ausserhalb +-0xC8 nicht. */
+            int sl = -1;
+            for (int s2 = 1; s2 < RE15_ACTOR_MAX; s2++)
+                if (g_actors[s2].active && g_actors[s2].type == RE15_R38F_GORILLA_TYP && g_actors[s2].hp >= 0) { sl = s2; break; }
+            int frei = -1, greifer = -1, daneben = -1, opfer = -1;
+            if (sl > 0) {
+                re15_actor_t *g = &g_actors[sl];
+                const uint8_t st = g->state, s1 = g->sub_state_1, s2v = g->sub_state_2, air = g->mag_airborne;
+                const int16_t jr = john->rot_y;
+                re15_player_victim_force(RE15_R38F_GORILLA_TYP, 0, 0);
+                opfer = re15_player_victim_state();
+                john->rot_y = (int16_t)((re15_atan2_q12(g->z - john->z, g->x - john->x) - 0x400) & 0xfff);   /* zum Ziel gedreht */
+                g->state = 1; g->sub_state_1 = 3; g->sub_state_2 = 1; g->mag_airborne = 0;
+                frei = re15_dining_r39_trifft(john, g);
+                g->sub_state_1 = 15; g->sub_state_2 = 3;
+                greifer = re15_dining_r39_trifft(john, g);
+                g->sub_state_1 = 3; g->sub_state_2 = 1;
+                john->rot_y = (int16_t)((john->rot_y + 0x800) & 0xfff);
+                daneben = re15_dining_r39_trifft(john, g);
+                re15_player_victim_force_end();
+                john->rot_y = jr; g->state = st; g->sub_state_1 = s1; g->sub_state_2 = s2v; g->mag_airborne = air;
+            }
+            PRUEF(sl > 0 && opfer != 0 && frei == 0 && greifer == 3 && daneben == 4,
+                  "N4.3 NB2 (a): Elza im Griff (Opferzustand %d): freier Gorilla getroffen (%d), Greifer Sub 15 nicht (%d), ausser Kegel nicht (%d)",
+                  opfer, frei, greifer, daneben);
+        }
         {   /* Jagd zu John (Kopf von Zustand 1): fern -> 1; John naeher als RE15_R39J_AUFMERKSAM_NAH -> 0 und vorbei */
             int sl = -1;
             for (int s2 = 1; s2 < RE15_ACTOR_MAX; s2++) if (re15_dining_r39_aufmerksam(s2) > 0) sl = s2;
@@ -743,6 +802,32 @@ static void teil_phase_h(void)
             PRUEF(sl > 0 && fern == 1 && nah == 0 && danach == 0, "N4.3: Gorilla %d jagt John (fern %d), neben John vorbei (%d, Rest %d)",
                   sl, fern, nah, danach);
         }
+    }
+    {   /* Nachbesserung 2 (b): naechste Salve - waehrend des Zielens (Anker ZIELEN..SENKEN) dreht John die Waffe dem Ziel je Bild um
+         * hoechstens RE15_R39J_NACHFUEHREN = 0xC8 nach (gun sub5 @0x80033f90/@0x80033f94). Gemessen: John wird beim ersten Zielbild
+         * um 0x400 vom Ziel weggedreht; danach Schritt je Bild <= 0xC8 und nach wenigen Bildern wieder im Kegel 0xC8. */
+        int f = 0, gesehen = 0, schritt_max = 0, bilder_bis = -1, ziel = -1;
+        for (; f < 900 && !re15_dining_r39_zielt(); f++) frame(0, 0);
+        if (re15_dining_r39_zielt() && (ziel = re15_dining_r39_ziel_slot()) > 0) {
+            gesehen = 1;
+            john->rot_y = (int16_t)((john->rot_y + 0x400) & 0xfff);
+            int vor = john->rot_y & 0xfff;
+            for (int k = 0; k < 40 && re15_dining_r39_zielt(); k++) {
+                frame(0, 0);
+                int d = ((john->rot_y & 0xfff) - vor) & 0xfff; if (d > 0x800) d = 0x1000 - d;
+                if (d > schritt_max) schritt_max = d;
+                vor = john->rot_y & 0xfff;
+                ziel = re15_dining_r39_ziel_slot();
+                if (bilder_bis < 0 && ziel > 0 && re15_ai_arc_test(john, g_actors[ziel].x, g_actors[ziel].z, RE15_R39J_TREFFER_KEGEL) == 0)
+                    bilder_bis = k + 1;
+            }
+        }
+        printf("    NB2 (b): Zielen gesehen %d, Ziel Slot %d, groesster Schritt %d, wieder im Kegel nach %d Bildern\n", gesehen, ziel,
+               schritt_max, bilder_bis);
+        PRUEF(gesehen && schritt_max <= RE15_R39J_NACHFUEHREN && bilder_bis > 0 && bilder_bis <= 8,
+              "N4.3 NB2 (b): John fuehrt die Waffe nach (Schritt <= 0x%X je Bild: %d; nach 0x400 Abweichung wieder im Kegel nach %d Bildern)",
+              RE15_R39J_NACHFUEHREN, schritt_max, bilder_bis);
+        for (int k = 0; k < 400 && re15_dining_r39_zielt(); k++) frame(0, 0);   /* Salve zu Ende */
     }
     /* Gorillas tot (Kill-Flags pc[7] 0xCB/0xCC, Bank 7 — wie RE15_R38F_GORILLAS_TOT, KEINE Schusszahl) */
     pl->x = -3000; pl->z = -9000; pl->rot_y = 0;
@@ -819,6 +904,19 @@ static void teil_phase_h(void)
     for (int f = 0; f < 5; f++) frame(0, 0);
     PRUEF(g_scd.player_mode == 0 && g_scd.cut_auto_enabled && s_shown != 7, "Steuerung frei, Kamera-Automatik an, Cut 7 verlassen (Cut %d)",
           s_shown);
+    {   /* Nachbesserung 2: Kamera = Cut 0 (RVD-Gruppe mit Elzas Lage), nicht Cut 8 (Gruppe nur Kopf - die Kamera blieb stehen, Lauf v_a
+         * F4418..F6200); Gegenprobe Zonenwechsel: Elza in RVD Satz 2 (Cut 0 -> 5, x -9500..-3500 z -12000..-11000) -> Cut 5. */
+        const int cut_ende = s_shown;
+        re15_actor_t *el = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        const int32_t ex = el->x, ez = el->z;
+        el->x = -6000; el->z = -11500;
+        for (int f = 0; f < 6; f++) frame(0, 0);
+        const int cut_gang = s_shown;
+        el->x = ex; el->z = ez;
+        PRUEF(cut_ende == RE15_R39J_CUT_ENDE && cut_gang == 5,
+              "NB2: nach Johns Abgang Kamera Cut %d (soll %d, RVD @0x01A8 Satz 0), Zonenwechsel greift (Elza bei (-6000,-11500) -> Cut %d, soll 5)",
+              cut_ende, RE15_R39J_CUT_ENDE, cut_gang);
+    }
     PRUEF(g_aot.slots[1].active && g_aot.slots[1].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[1].dest_room == 0x17 &&
           g_aot.slots[0].active && g_aot.slots[0].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[0].dest_room == 0x13,
           "Dachtuer Slot 1 -> 0x17 (ROOM1171), Doppeltuer Slot 0 -> 0x13 (ROOM1131)");

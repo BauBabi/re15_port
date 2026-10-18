@@ -207,6 +207,12 @@ const void *re15_dining_r39_rbj_anim(int slot) { return leihe_gilt(slot) ? (cons
 const void *re15_dining_r39_rbj_skel(int slot) { return leihe_gilt(slot) ? (const void *)&s_leihe_skel : NULL; }
 int re15_dining_r39_leihe_aktiv(void) { return leihe_gilt(s_leihe_slot); }
 int re15_dining_r39_off_wink(void) { return RE15_R39J_ENTRIEGELN_OFF_WINK; }   /* Riegel */
+int re15_dining_r39_schuetze_anker(int k)   /* Riegel: 0 ZIEL, 1 ZIELEN, 2 FEUER1, 3 FEUER2, 4 SENKEN (Nachbesserung 2) */
+{
+    static const int a[5] = { RE15_R39J_SCHUETZE_OFF_ZIEL, RE15_R39J_SCHUETZE_OFF_ZIELEN, RE15_R39J_SCHUETZE_OFF_FEUER1,
+                              RE15_R39J_SCHUETZE_OFF_FEUER2, RE15_R39J_SCHUETZE_OFF_SENKEN };
+    return (k >= 0 && k < 5) ? a[k] : -1;
+}
 
 void re15_dining_r39_pc(const uint8_t *pc)
 {
@@ -230,6 +236,20 @@ void re15_dining_r39_pc(const uint8_t *pc)
     }
 }
 
+/* Trefferbedingung (Riegel): 0 = Treffer, sonst Grund 1 kein Ziel / 2 tot / 3 im Angriff / 4 nicht im Kegel. Nachbesserung 2 (a):
+ * KEINE Sperre mehr ueber Elzas Opferzustand (re15_player_victim_state) - die traf auch den Gorilla, der Elza NICHT haelt
+ * (Abnahme 1: 5 von 16 Salven). Ausgenommen bleibt nur der Gorilla im Angriff (gorilla_im_angriff: der Greifer in Sub 15, Biss,
+ * Sprung): der Wurf des Spielers laeuft im Spieler-Takt (Opfer-Handler 0x8011c118 als Kommando 5, jalr v0 @0x80031cb4) und
+ * endet nur in P7 (0x8011c384) - einen Abbruch durch einen Dritten hat das Original nicht. */
+int re15_dining_r39_trifft(const re15_actor_t *j, const re15_actor_t *g)
+{
+    if (!j || !g) return 1;
+    if (!gorilla_lebt(g)) return 2;
+    if (gorilla_im_angriff(g)) return 3;
+    if (re15_ai_arc_test(j, g->x, g->z, RE15_R39J_TREFFER_KEGEL) != 0) return 4;
+    return 0;
+}
+
 static void schuss(void)
 {
     extern int re15_enemy_waffen_schaden(const re15_actor_t *e, int weapon_id);   /* re15_damage.c, Haken */
@@ -238,17 +258,10 @@ static void schuss(void)
     re15_actor_t *j = john_aktor();
     re15_actor_t *g = (s_ziel_slot > 0 && s_ziel_slot < RE15_ACTOR_MAX) ? &g_actors[s_ziel_slot] : NULL;
     int treffer = 0;
-    const char *grund = "kein Ziel";
-    /* Nachbesserung 2 (a): KEINE Sperre mehr ueber Elzas Opferzustand (re15_player_victim_state) - die traf auch den Gorilla,
-     * der Elza NICHT haelt (Abnahme 1: 5 von 16 Salven). Ausgenommen bleibt nur der Gorilla im Angriff (gorilla_im_angriff:
-     * der Greifer in Sub 15, Biss, Sprung): der Wurf des Spielers laeuft im Spieler-Takt (Opfer-Handler 0x8011c118 als
-     * Kommando 5, jalr v0 @0x80031cb4) und endet nur in P7 (0x8011c384) - einen Abbruch durch einen Dritten hat das
-     * Original nicht. */
-    if (!j || !g) grund = "kein Ziel";
-    else if (!gorilla_lebt(g)) grund = "tot";
-    else if (gorilla_im_angriff(g)) grund = "im Angriff";
-    else if (re15_ai_arc_test(j, g->x, g->z, RE15_R39J_TREFFER_KEGEL) != 0) grund = "nicht im Kegel";
-    else {
+    static const char *const k_grund[5] = { "", "kein Ziel", "tot", "im Angriff", "nicht im Kegel" };
+    const int tr = re15_dining_r39_trifft(j, g);
+    const char *grund = k_grund[(tr >= 0 && tr < 5) ? tr : 1];
+    if (tr == 0) {
         const int dmg = re15_enemy_waffen_schaden(g, RE15_R39J_WAFFE_JOHN);
         g->hp = (int16_t)(g->hp - dmg);                        /* +0x9a -= dmg */
         g->hit_react |= 0x1;                                   /* +0x93 |= 1 */
