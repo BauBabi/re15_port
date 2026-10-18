@@ -383,7 +383,10 @@ static void teil_raum(void)
     start(&r30, -11500, -19500, 2048, NULL, 0);
     int p = slot_von(RE15_FL37_OBJ);
     CHECK(p >= 0 && g_scd.props[p].x == RE15_R38K_FL_X && g_scd.props[p].y == RE15_R38K_FL_Y &&
-          g_scd.props[p].z == RE15_R38K_FL_Z && g_scd.props[p].band == 1 && g_scd.props[p].flags == 0x000B,
+          /* Band seit Runde 39 Spur H (564810c0, Abnahme 0 bestanden): Spielerband(y)+1 = -(y/0x708)+1 = 2 bei y -2122 -
+           * Form der Original-Null-Box-Records ROOM1091 obj 2 @0x02202 pc[4]=2 (y -2653), ROOM1010 @0x00930 pc[4]=1
+           * (y -1600); vorher fest 1 (RE15_FL37_PROP_BAND, Runde 38 K). Bewusst als Zahl, nicht ueber die Regel-Funktion. */
+          g_scd.props[p].z == RE15_R38K_FL_Z && g_scd.props[p].band == 2 && g_scd.props[p].flags == 0x000B,
           "R 1030: Loescher-Prop obj 5 an der gemessenen Lage (%d,%d,%d)", RE15_R38K_FL_X, RE15_R38K_FL_Y, RE15_R38K_FL_Z);
     CHECK(g_aot.slots[14].active && g_aot.slots[14].type == RE15_AOT_TYPE_ITEM &&
           g_aot.item_params[14].item_type == 0x31 && g_aot.item_params[14].taken_bit == 0x86 &&
