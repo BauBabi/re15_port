@@ -38,6 +38,9 @@ Ressourcen (VERTRAG 1.1/1.2): Bank-9-Bits 94, 95; Nachrichten-Ids 1141 50-59.
 - Fortsetzung 1 Ende (~20:15): Modul dining_r39 gebaut und gemessen (Laeufe n1, p5, Riegel-Laeufe), Befund Gespraechslage
   behoben (Elza neben John), Glasbruch an Johns Satzende (Warte-Zeile msg 58), Runde-38-Riegel an den neuen Ablauf angepasst.
   Gezielt gruen: Unit 50/50, Integration 14/14 + integration_r39_dining1141_d.
+- **Nachbesserung 1 (2026-10-18 20:05..21:42, nach `J_abnahme_0.md`):** M1/M2/M3 + Nutzer-Nachtrag 4 (N4.1-N4.4) +
+  Nachtrag 6 (N6) umgesetzt, Abschnitt 8 (Plan/Belege 8.0, Umsetzung 8.1, Messung 8.2, Tests 8.3/8.7, je Mangel 8.4,
+  OFFEN 8.5, Fuer den Nutzer 8.6). Gezielt gruen: Unit 122/122, Integration 15/15 (D/S/elzaems am Endstand).
 
 ## 1. Messung vorher
 

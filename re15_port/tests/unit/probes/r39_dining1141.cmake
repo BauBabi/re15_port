@@ -11,7 +11,8 @@
 #                                  Tuer-Auftritt mit Kameraschnitten, Glasbruch, Blick ab msg 9, Zeilen 51/52, Abgang
 #   unit_r39_dining1141_fenster    Nachbesserung 1: Gemaelde im Fenster erster Ruf..Reaktion -> Reaktion erst nach der Rolladen-
 #                                  Szene, genau einmal (M1); Wiederbetreten mit offenem Rolladen + Entriegeln (N4.1/N4.2)
-#   integration_r39_dining1141_d   echte exe, echter Weg mit Elza 1131 -> 1141 -> 1171 (Ton-Mitschnitt, Messschiene
+#   integration_r39_dining1141_d   echte exe, echter Weg mit Elza 1131 -> 1141 (Gemaelde, frei laufen, Riegel, Szene, John
+#                                  schiesst) -> 1171 (Ton-Mitschnitt, Messschiene
 #                                  RE15_R39J_LOG, debug.log): alle Punkte 1-9 am Lauf, Punkt 9 am Mitschnitt
 add_executable(test_r39_dining1141 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_dining1141.c)
 target_link_libraries(test_r39_dining1141 PRIVATE re15_engine re15_test_support)
