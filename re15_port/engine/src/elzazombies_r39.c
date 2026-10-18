@@ -551,8 +551,6 @@ int re15_elzazombies_r39_sub01_gesperrt(void)
  * Kopie im Zielraum scharf (Kopie-Bit 0); schon tote bekommen eine stille Kopie (Kopie-Bit 1). Kriecher scharf. (9,95)=1. */
 static void umzug_vorbereiten(void)
 {
-    s_n10e1 = re15_elzazombies_r39_lebend_10e1();
-    s_n1071 = re15_elzazombies_r39_lebend_1071();
     for (int i = 0; i < RE15_R39Q_N_10E1; i++) {
         const uint8_t q = (uint8_t)(RE15_R39Q_BIT_10E1_0 + i);
         if (re15_game_flag_get(EM_ZONE, q)) re15_game_flag_set(EM_ZONE, BIT_1061(i), 1);
@@ -590,15 +588,25 @@ static void start_kette(void)
     s_rueck_x = pl->x; s_rueck_y = pl->y; s_rueck_z = pl->z; s_rueck_gier = pl->rot_y; s_rueck_cut = g_scd.cam_id;
     s_folge_n = 0; s_takt = 0; s_folge_gegner = -1; s_folge_cut = -1;
     s_n_spur = 0; s_offen = NULL; s_hp_min = 1 << 30; s_hp_kette = 1 << 30;
+    /* Erst die Zahlen (Programm A waehlt damit die erste Tuer), dann der Faden; erst wenn er laeuft, ziehen die Zombies um
+     * und (9,95) wird gesetzt — sonst (alle Ereignis-Plaetze belegt) bliebe ein Umzug ohne Montage stehen. Kein Platz: der
+     * Start bleibt ausstehend und wird im naechsten freien Bild wiederholt. */
+    s_n10e1 = re15_elzazombies_r39_lebend_10e1();
+    s_n1071 = re15_elzazombies_r39_lebend_1071();
+    s_zustand = RE15_R39Q_AUFTAKT;
+    if (scd_event_fire(RE15_R39Q_EREIGNIS) < 0) {
+        s_zustand = RE15_R39Q_AUS;
+        s_ausstehend = 1;
+        log_q("Auftakt: KEIN Ereignis-Slot frei - Start bleibt ausstehend");
+        return;
+    }
     umzug_vorbereiten();
     knallbank_laden();
-    s_zustand = RE15_R39Q_AUFTAKT;
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[elzazombies-r39] Montage startet in ROOM%04X: Rueckkehr (%d,%d,%d) Gier %d Cut %d\n",
             (unsigned)s_rueck_raum, (int)s_rueck_x, (int)s_rueck_y, (int)s_rueck_z, (int)s_rueck_gier, (int)s_rueck_cut);
 #endif
-    if (scd_event_fire(RE15_R39Q_EREIGNIS) >= 0) log_q("Auftakt (Programm A)");
-    else { s_zustand = RE15_R39Q_AUS; log_q("Auftakt: KEIN Ereignis-Slot frei"); }
+    log_q("Auftakt (Programm A)");
 }
 
 /* ---- Verhalten in den Schnitten (Leons Bausteine, re15_montage_r38.h) --------------------------------------------- */
