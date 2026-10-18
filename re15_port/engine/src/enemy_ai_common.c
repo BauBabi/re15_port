@@ -55,6 +55,7 @@
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Angriff, solange die Szene den Spieler haelt */
 #include "re15_npckante_r38.h" /* Runde 38 Spur M: NPC-Kanten (Sonde FUN_8002d7d8, Subs 0x12/0x16/0x17/0x18) */
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen an der u1=1-Kante (ANIMATE[0x0A] 0x8010325c) */
+#include "re15_heliport1171_r39.h" /* Runde 39 Spur K: NPC-INIT-Pose = Loco-Paar Clip 2 Bild 0 (@0x8011de7c-c4) */
 void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* Runde 37 Spur J: unten definiert, vom Griff-Latch gerufen */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
@@ -5346,6 +5347,7 @@ router_gate:
 int re15_actor_uses_own_bank(const re15_actor_t *a)
 {
     if (!a || a->type < 0x40 || a->type > 0x4d) return 0;
+    if (re15_r39k_init_pose(a)) return 0;   /* Runde 39 Spur K: INIT-Pose = Loco-Paar (@0x8011debc-c4), s. re15_heliport1171_r39.h */
     if (re15_szl_schub_npc_kanal(a)) return re15_szl_schub_npc_kanal(a) == 2;   /* Runde 36 Spur J: Sub 0x13 */
     if (re15_npckante_kanal(a)) return re15_npckante_kanal(a) == 2;   /* Runde 38 Spur M: Kanten-/Sprung-Sub */
     if (a->walk_active) return 1;
@@ -5360,6 +5362,7 @@ int re15_actor_uses_own_bank(const re15_actor_t *a)
 int re15_actor_uses_loco_bank(const re15_actor_t *a)
 {
     if (!a) return 0;
+    if (re15_r39k_init_pose(a)) return 1;   /* Runde 39 Spur K: NPC-INIT f314(+0x84,+0x16c) @0x8011debc-c4 */
     if (re15_szl_schub_npc_kanal(a) == 1) return 1;   /* Runde 36 Spur J: Sub 0x13 [2..7] = +0x84/+0x16c */
     if (re15_npckante_kanal(a) == 1) return 1;        /* Runde 38 Spur M: Kletter-/Sprung-Clips 2..5 = +0x84/+0x16c */
     /* WELLE B (RE2-Flavor): der RE2-WALK (ACTIVE sub 1) posiert/verfaehrt die PAIR-1-Bank —
@@ -9749,8 +9752,9 @@ static int re15_npc_anim(re15_actor_t *e)
      * (Elliot 1170, Marvin 10D0 und jeder andere NPC-Sub). Gegenprobe: in allen Original-
      * Savestates mit laufenden NPCs (mzd_stage1_npc.sav 0x40/0x42/0x4b, orig_1170_gp.sav 0x47)
      * steht +0x8f == 0. Die uebrigen AI-Familien decayen bereits (Kraehe :4120, Hund :5229,
-     * Zombie :2437/:2642) — nur der NPC-Pfad fehlte. Kein Doppel-Decay: der Plc_motion-Executor
-     * fuehrt seine eigene Advance-Schleife (:7442) und ruft diese Funktion nicht. */
+     * Zombie :2437/:2642) — nur der NPC-Pfad fehlte. Kein Doppel-Decay: seit Runde 39 Spur K ruft
+     * auch der Plc_motion-Executor (re15_npc_sub_motion) diese Funktion, einmal je f314-Aufruf, und
+     * fuehrt keine eigene Vorschub-Schleife mehr. */
     if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
@@ -9781,11 +9785,17 @@ static void re15_npc_sub_idle(re15_actor_t *e)
  * the original where anim_set is the sole stepper for a state-4 actor. */
 static void re15_npc_sub_motion(re15_actor_t *e)
 {
-    int fc = re15_npc_motion_clip_len(e); if (fc < 1) fc = 1;   /* KANAL-Laenge (Sub->Kanal-Map oben) */
+    /* Kanal-Laenge (Sub->Kanal-Map oben) liest re15_npc_anim selbst (re15_npc_motion_clip_len). */
     switch (e->sub_state_2) {
     case 0:   /* phase 0 init (@0x80050cec-d0c / sub2 @0x80050f34-54): +0x95=0, seed +0x8f crossfade
                * (UNLESS the no-blend bit +0x1c4&0x40 @0x80050f64-78 -> +0x8f=0), phase->1, fall to play */
         e->anim_frame = 0; e->anim_frac = (uint8_t)((e->anim_flags & 0x40) ? 0 : 7);
+        /* Runde 39 Spur K: der Saattakt POSIERT Bild 0 — Phase 0 (@0x80050cec-d0c) faellt ohne Sprung in den
+         * Rumpf @0x80050d34 und ruft f314 @0x80050d4c, das +0x95 = 0 posiert (@0x8001f35c-36c) und erst danach
+         * vorschiebt (@0x8001f618-1c). Vorher schob der Port im Saattakt sofort auf Bild 1 (ROOM1171 John:
+         * jede Geste ab Bild 1, rueckwaerts ab fc-2; Halten einen Takt zu frueh). op_plc_motion setzt den
+         * Vorhalte-Takt seit b06f2a8f ebenfalls; hier wurde er nie verbraucht. */
+        e->motion_init_delay = 1;
         e->sub_state_2 = 1;
         /* fallthrough — the original phase-0 branch continues into the phase-1 body @0x80050d34 */
     case 1:   /* phase 1 play (@0x80050d34 / sub2 @0x80050f94): advance the clip (TWICE with the
@@ -9809,15 +9819,16 @@ static void re15_npc_sub_motion(re15_actor_t *e)
          *   fuer die Reverse-Gesten (Marvin, Plc_flg 0x80: Original posiert fc-1-(fc-1) = Slot 0,
          *   Port rendert aus fc-1 ueber anim_select_common.c:61-64 ebenfalls Slot 0).
          * Verbleibende (rein numerische) Divergenz: +0x95 selbst liest im Hold fc-1 statt 0. */
-        int steps = (e->anim_flags & 0x08) ? 2 : 1;
+        /* Je f314-Aufruf EIN re15_npc_anim (posieren, dann vorschieben, +0x8f -1; Rueckgabe 1 im Takt, der
+         * fc-1 posiert hat = @0x8001f63c) — Runde 39 Spur K, vorher eigene Vorschub-vor-Posieren-Schleife. */
+        int steps = (e->anim_flags & 0x08) ? 2 : 1;          /* Doppelschritt +0x1C4&8 @0x80050d70 -> f314 @0x80050d88 */
         while (steps-- > 0) {
-            if (e->anim_frame + 1 >= fc) {                   /* anim_set signals clip end (@0x80050d54) */
-                if (e->anim_flags & 0x04) { e->anim_frame = 0; e->sub_state_2 = 1; }  /* LOOP replay */
-                else { e->anim_frame = (uint8_t)(fc - 1); e->sub_state_2 = 2; }        /* HOLD last frame */
+            if (re15_npc_anim(e)) {                          /* anim_set signals clip end (@0x80050d54) */
+                /* HOLD: +0x6 = 2 @0x80050da4, anim_frame bleibt fc-1 (posiert); LOOP +0x1C4&4 -> +0x6 = 1
+                 * @0x80050dbc-c8, der naechste Takt posiert nach dem Umlauf Bild 0. */
+                e->sub_state_2 = (e->anim_flags & 0x04) ? 1 : 2;
                 break;
             }
-            e->anim_frame++;                                 /* +0x95++ */
-            if (e->anim_frac > 0) e->anim_frac--;
         }
         break;
     }
@@ -10044,7 +10055,10 @@ static void re15_npc_sub_dispatch(re15_actor_t *e)
 static void re15_npc_executor(re15_actor_t *e)
 {
     int fr_prev = (int)e->anim_frame;   /* the sub's re15_npc_anim advances anim_frame below */
-    if (!((e->anim_flags & 0x10) && (e->anim_flags & 0x20))) re15_npc_sub_dispatch(e);   /* @0x80050c00-c34 */
+    if (!((e->anim_flags & 0x10) && (e->anim_flags & 0x20))) {   /* @0x80050c00-c34 */
+        re15_r39k_init_pose_loesen((int)(e - g_actors));   /* Runde 39 Spur K: der Sub-anim_set ersetzt die INIT-Pose */
+        re15_npc_sub_dispatch(e);
+    }
     e->anim_flags ^= 0x20;                                        /* @0x80050c50 */
     /* root-motion channel 0 (@0x80050c6c-78): `if (anim_flags & 1) FUN_800369f8(0,0)` mode 0 =
      * re15_clip_root_motion_delta — the current clip's per-frame keyframe root translation, rotated by
@@ -10518,6 +10532,7 @@ static void re15_npc_escort_tick(re15_actor_t *e, re15_actor_t *pl)
      *     3  | 0x8004f7dc | 0x8004f9ec   nah dabei (halbes Tempo)
      *     5  | 0x8004fd3c | 0x8004fe44   laufen
      * (4/6/7 sind nicht portiert, s. Kommentar bei re15_npc_escort_decide0.) */
+    re15_r39k_init_pose_loesen((int)(e - g_actors));   /* Runde 39 Spur K: EXEC-anim_set (eigene Bank) ersetzt die INIT-Pose */
     re15_npc_escort_decide(e);
     re15_npc_escort_exec(e);
     /* (Die Wurzel-Klemme @0x8011cc58-68 laeuft seit 2026-08-29 im Root-Tail von
@@ -10616,10 +10631,14 @@ static void re15_npc_ai_tick(int slot)
     switch (e->state) {
     case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
         e->hp = -1;                                       /* +0x9a = -1 (no HP / invulnerable) @0x8011c744 */
-        e->motion = 2; e->anim_frame = 1; e->anim_frac = 0; e->hit_react = 0;
+        e->motion = 2; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;
         /* idle clip 2 @0x8011c7bc-c0 (+0x95=0 @0x8011c7d0), dann EIN f314-Schritt auf dem
          * Loco-Paar +0x84/+0x16c @0x8011c800-08 -> +0x95=1 am INIT-Ende (marvin_spawn_anim.md
-         * Verify; fuer behavior&0x40 sofort von Sub 6 Clip 1 ueberschrieben). */
+         * Verify; fuer behavior&0x40 sofort von Sub 6 Clip 1 ueberschrieben).
+         * Runde 39 Spur K: f314 POSIERT dabei Bild 0 (@0x8001f35c-36c) und schiebt erst danach vor
+         * (@0x8001f618-1c) — anim_frame ist im Port das posierte Bild, also 0; der Merker waehlt
+         * das Loco-Paar, bis Eskorte-EXEC oder Executor posieren (re15_heliport1171_r39.h). */
+        re15_r39k_init_pose_setzen(slot, e->type);
         e->ai_timer = 0x78;                               /* +0x9e = 120 @0x8011c754 */
         /* NPC-Neck-/Head-Look-Init (byte-true FUN_8011c6dc, cutscene_headlook.md B2/B3/B5):
          * Default-Blickziel = SPIELER (sw &player -> +0x1a8 @0x8011c738), Flags = 0 = TRACK

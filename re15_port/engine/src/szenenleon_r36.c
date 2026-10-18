@@ -28,6 +28,7 @@
  */
 #include "re15_szenenleon_r36.h"
 #include "re15_werkstatt11b0_r38.h"   /* Runde 38 Spur C: Bank im Uebergabebild (Kanal + Phase 7) */
+#include "re15_heliport1171_r39.h"    /* Runde 39 Spur K: Schub Phase 5 -> 6 (RE15_R39K_SCHUB_SAAT) */
 #include "re15_actor.h"
 #include "re15_audio.h"
 #include "re15_collision.h"
@@ -294,12 +295,17 @@ void re15_szl_schub_npc(re15_actor_t *e)
         e->sub_state_3 = (uint8_t)slot;
         if (re15_game_flag_get(5, e->walk_flag_bit)) {        /* @0x80052b38-4c */
             e->sub_state_2 = 6;
-            npc_clip(e, RE15_SZL_CLIP_ANSATZ, 1, 0);          /* @0x80052b60-80, kein +0x8f-Store */
-            e->sub_state_3 = 0;
+            /* Runde 39 Spur K: +0x94 = 0x11 / +0x95 = 0 (@0x80052b6c-80) wirken erst mit dem anim_set von Phase 6
+             * (@0x80052b98) — dieser Takt hat Clip 0x12 schon posiert (@0x80052af4). Clip setzen im 1. Phase-6-Takt. */
+            e->sub_state_3 = RE15_R39K_SCHUB_SAAT;
         }
         break;
     }
     case 6:                                                   /* @0x80052b84, a2 = 1 */
+        if (e->sub_state_3 == RE15_R39K_SCHUB_SAAT) {         /* Runde 39 Spur K: Saat aus dem Bit-Takt */
+            npc_clip(e, RE15_SZL_CLIP_ANSATZ, 1, 0);          /* @0x80052b60-80, kein +0x8f-Store */
+            e->sub_state_3 = 0;
+        }
         if (npc_anim(e, clip_laenge(loco, RE15_SZL_CLIP_ANSATZ))) e->sub_state_2 = 7;
         break;
     default:                                                  /* [7] @0x80052bc0 */
