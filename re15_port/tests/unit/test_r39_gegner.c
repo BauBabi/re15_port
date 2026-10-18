@@ -641,8 +641,13 @@ static void teil_schatten(void)
          * (re15_rdt_get_region_quad = FUN_80014324 -> DAT_800ac790) gegen die Original-RAM-Werte der Runde-35-
          * Savestates (orig_scene/r3: DAT_800ac790 -> 20-Byte-Zone, Ecken @+4..+0x12) und das Ergebnis fuer die
          * beiden Szenen-Positionen (-1220,-21568) = Gorilla 1 geparkt und im Wagen, (-554,-25423) = Gorilla 2. */
+        /* Cut 0: FUN_80014324 (@0x80014324-64: erster 20-Byte-Satz ab RDT+0x28 mit Byte+2 == Cut) liefert den Eintrag
+         * @0x80121bd8 (RAM s000/s001: `8f ff 00 00`, DAT_800ac794 zeigt dorthin). DAT_800ac790 selbst schreibt nur der
+         * Cut-Apply FUN_80021bbc (@0x80021c00 jal / @0x80021c0c sw) — beim Raumeintritt (s000/s001, vor dem ersten
+         * Cut_chg) steht dort noch der STALE Zeiger 0x80121b80 (misaligned in die 11C0-Tabelle: [1530,0; 17586,0;
+         * 10768,-32750; 0,-32590]); beide Vierecke schliessen die geparkten Gorillas aus (0/0). */
         static const struct { int cut; int16_t xs[4], zs[4]; int p1, p2; const char *sav; } zonen[] = {
-            {  0, {  1530,  17586, 10768,     0 }, {      0,      0, -32750, -32590 }, 0, 0, "s001 t=6.11"  },
+            {  0, {-30500, -28600,-10999, -2997 }, {   4500,  28692,  28800,   4200 }, 0, 0, "s000/s001 @0x80121bd8 (DAT_800ac794)" },
             {  1, {-30301, -28200,  1800,  2603 }, {   4702,  27002,  29703,   4502 }, 0, 0, "s002 t=7.64"  },
             {  3, {-29901, -29300, -2098, -3693 }, { -20799,  19505,  19505, -20298 }, 0, 0, "s004 t=10.69" },
             {  4, {-30500, -29700, -2897, -2899 }, { -28901,  19803,  20704, -29900 }, 0, 0, "s005 t=12.19" },

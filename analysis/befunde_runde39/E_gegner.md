@@ -340,7 +340,10 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 - Beruehrte Testgruppen des Diffs: r35_affen (Gorilla-Original-Riegel, test_r35_affen.c mit `re15_r39_gegner_enable(0)`).
 - Zwischenstand 12:34 (`ctest -R "unit_r39_gegner|unit_r35_affen"`): `100% tests passed, 0 tests failed out of 30`;
   12:27 (`ctest -R "integration_r39_gegner"`): `100% tests passed, 0 tests failed out of 2`.
-- **Abschlusslauf 13:02** (`ctest --test-dir re15_port/build -R "r39_gegner|r35_affen" --timeout 900 --output-on-failure`):
+- **Nachbesserung 1, Abschlusslauf 13:55** (`ctest --test-dir re15_port/build -R "r39_gegner|r35_affen|schatten|affen3" --timeout 900
+  --output-on-failure`): **`100% tests passed, 0 tests failed out of 49`**; davor `-R "^unit_r39_gegner_schatten$"`:
+  `100% tests passed, 0 tests failed out of 1`. Details im Abschnitt "Nachbesserung 1".
+- **Abschlusslauf 13:02 (Stand c3823fa4)** (`ctest --test-dir re15_port/build -R "r39_gegner|r35_affen" --timeout 900 --output-on-failure`):
   **`100% tests passed, 0 tests failed out of 32`** (20 x unit_r35_affen_*, 10 x unit_r39_gegner_*, integration_r39_gegner_
   schatten 58,8 s, integration_r39_gegner_hunde1190 42,3 s). Riegel-Protokoll des Abschlusslaufs 1190 (mit Bildnummern):
   `GESETZT F685 / FREI F708`, `GESETZT F720 / FREI F743`, `GESETZT F753 / FREI F776`, `GESETZT F833 / FREI F856` — der
@@ -348,6 +351,13 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   @0x80031964 = RE2 @0x8003f8b4).
 
 ## OFFEN
+- (Nachbesserung 1, Hinweis, kein Punkt dieser Spur) DAT_800ac790 ist beim Raumeintritt bis zum ersten Cut-Apply stale
+  (@0x80021c0c schreibt es, der Eintritt resolviert nur DAT_800ac794); das Original cullt in diesem Fenster Schatten und
+  NPC-Zeichnung mit dem alten Viereck (bei 11C0 s000/s001: Garbage-Viereck, Spieler aussen). Der Port nimmt am Eintritt das
+  echte Cut-0-Viereck. An den Savestates nicht messbar (Einblendung); fuer die Gorillas ergebnisgleich.
+- (Nachbesserung 1) Kleiner Affe 0x29 (STAGE3/4) mit grid&0x20: der Quad liegt jetzt wie im Original auf +0x1ba (STAGE3-
+  Schwanz @0x80110c68-80 auf jedem Pfad); ob in einer 0x29-Szene mit geparkten Affen ein Quad im Bild liegt, das die Masken
+  des Ports anders verdecken als das Original, ist nicht an der exe gemessen (kein Nutzer-Raum dieser Spur).
 - Der "parallele" Biss in ROOM1190 liess sich am skriptierten Basislauf (Leon steht am Spawn) nicht reproduzieren — die
   Hunde kommen dort nacheinander (Abstaende >= 29 Bilder) durch die Luke. Vorher/nachher am ECHTEN Weg unterscheiden sich
   nur in der Verschiebung der Bisse 3-5 (749->753, 829->833, 942->1042); den Doppelbiss im selben Bild misst der Unit-Riegel
@@ -434,4 +444,31 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   Region-Viereck des RDT je Cut 0/1/3/4/5/12/13 == DAT_800ac790 der Savestates; Punkt-im-Viereck fuer beide Szenen-
   Positionen == Original-RAM, beide Port-Fassungen gleich); integration_r39_gegner_schatten (d1-d3) misst an der exe:
   grid-30-Quads auf +0x1ba (>= 10 auf -3600), Cut-13-Fenster leer, Cut-12-Fenster nur der Wagen-Gorilla.
-- **Messung nachher**: (wird nach Bau und Lauf ergaenzt)
+- **Nebenbefund beim Riegelbau (Cut 0, Raumeintritt)**: der erste Entwurf des Unit-Riegels nahm fuer Cut 0 das Viereck aus
+  DAT_800ac790 des Savestates s001 ([1530,0; 17586,0; 10768,-32750; 0,-32590], Zeiger 0x80121b80) — der Port-Loader liefert
+  fuer Cut 0 aber (-30500,4500)(-28600,28692)(-10999,28800)(-2997,4200). Nachgelesen: FUN_80014324 (@0x80014324-64, erster
+  20-Byte-Satz ab RDT+0x28 mit Byte+2 == Cut) liefert fuer Cut 0 den Eintrag @0x80121bd8 (`8f ff 00 00`, genau das Port-
+  Viereck; DAT_800ac794 zeigt bei s000/s001 dorthin). DAT_800ac790 schreibt in der ganzen EXE nur der Cut-Apply FUN_80021bbc
+  (`jal 0x80014324` @0x80021c00 / `sw v0,DAT_800ac790` @0x80021c0c), und der ist beim Raumeintritt vor dem ersten Cut_chg
+  noch nicht gelaufen: 0x80121b80 ist der STALE Zeiger des vorigen Zustands, misaligned in die 11C0-Tabelle (die Anker
+  0x80121c00/c8c/cdc/d18/ed0/ef8 liegen auf dem 20-Byte-Raster, 0x80121b80 = 0x80121c00 - 128 nicht). Fuer die Gorillas ist
+  das Ergebnis gleich (beide Vierecke: 0/0); der Riegel traegt die echte Cut-0-Zone (@0x80121bd8) mit diesem Vermerk. Ob das
+  Original in diesem Fenster (Raumeintritt bis zum ersten Cut_chg, s000/s001) auch den Spieler-Schatten mit dem stalen
+  Viereck cullt (Spieler (-22604,14455) dort = 0), war an den Savestates nicht zu sehen — s000/s001 sind Einblend-Bilder
+  (VRAM schwarz). Kein Punkt dieser Spur; als Hinweis fuer den Orchestrator unter OFFEN.
+- **Messung nachher (gebaut 13:48, exe re15_pc.exe)**:
+  - `ctest -R "^unit_r39_gegner_schatten$"`: `100% tests passed, 0 tests failed out of 1` — alle Pruefungen ok, darunter
+    grid 0x30 im Wagen -> -3600; 0x29 grid&0x20 -> -3600; ROOM11C0-Szene: beide Gorillas grid 0x30, y=-20000, Quad -3600/-3600,
+    Zustand 1/1; Region-Viereck Cut 0/1/3/4/13/12/5 == Original-RAM (Cut 0 = Anker @0x80121bd8), Punkt-im-Viereck
+    Gorilla 1/2 = 0/0, 0/0, 0/0, 0/0, 0/0, 1/0, 1/1 in beiden Port-Fassungen; Kampf-Layout grid 0x10, Quad auf 0.
+  - integration_r39_gegner_schatten (Lauf lauf_59e277d7, 13:52): 404 Quad-Zeilen der grid-30-Gorillas, alle quad_y == boden_y
+    == -3600: cam 5 nach dem Debug-Sprung F185-F212 (28+28), Cut_chg-Bild F213 (1+1, altes Viereck), Cut 12 F764-F798
+    Gorilla 1 im Wagen (35) + F800-F879 Gorilla 2 im Wagen (80), Cut 5 F880-F1110 Gorilla 2 im Wagen (231); Cut-13-Fenster
+    F214-F762 leer; Cut_chg(13) F213 / (12) F763 / (5) F880; 24 Sprung-Zeilen grid 10 st 1/7 mit quad_y == boden_y == 0
+    (Punkt 4 unveraendert). Keine `schatten_aus`-Zeile mehr (Haken entfernt).
+  - `ctest --test-dir re15_port/build -R "r39_gegner|r35_affen|schatten|affen3" --timeout 900 --output-on-failure`:
+    **`100% tests passed, 0 tests failed out of 49`** (20 x unit_r35_affen_*, unit_r35_raeume_hundeschatten,
+    unit_r36_pri_schatten + integration_r36_pri_schatten, 11 x unit_r38_affen3_* + 3 integration_r38_affen3*,
+    10 x unit_r39_gegner_*, integration_r39_gegner_schatten, integration_r39_gegner_hunde1190).
+  - Messkopien: eigene `re15_pc_e_mess.exe` (Messvarianten) nach der Messung geloescht; die Messvarianten selbst sind nicht
+    committet (Diff: nur die beiden Zeilen in gegner_r39.c bzw. die Logzeile in main.c, beide aus dem .orig restauriert).
