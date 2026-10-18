@@ -291,9 +291,9 @@ static void teil_texte(void)
 {
     re15_game_state_init();
     if (room_boot(RE15_FUNK10F1_RAUM, 8400, -350, 2048) != 0) return;
-    PRUEF(text_ist(RE15_FUNK10F1_MSG_HALLO, "Elza: Hello, anyone, can you hear me? We Need help!"), "msg 40 woertlich (Nutzer)");
+    PRUEF(text_ist(RE15_FUNK10F1_MSG_HALLO, "Elza: Hello, anyone, can you hear me? We need help!"), "msg 40 woertlich (Nutzer)");
     PRUEF(text_ist(RE15_FUNK10F1_MSG_PUNKTE, "Elza: ..."), "msg 41 woertlich (Nutzer)");
-    PRUEF(text_ist(RE15_FUNK10F1_MSG_KAPUTT, "Elza: Uhh, this Thing is broken!"), "msg 42 woertlich (Nutzer)");
+    PRUEF(text_ist(RE15_FUNK10F1_MSG_KAPUTT, "Elza: Uhh, this thing is broken!"), "msg 42 woertlich (Nutzer)");
     size_t n31 = 0; uint8_t *d = datei(0x1031, &n31);
     int form = d != NULL;
     for (int id = RE15_FUNK10F1_MSG_HALLO; id <= RE15_FUNK10F1_MSG_KAPUTT && d; id++) {
