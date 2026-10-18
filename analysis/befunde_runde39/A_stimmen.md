@@ -332,7 +332,7 @@ clips don't blow up their noise floor"). `r39A/ableiten.py` leitet daraus die Ko
 Befund — der Bestand ist ZWEIKLASSIG (Werte in Vollaussteuerung FS):
 | Klasse | Dateien | rms | Spitze | Crest | Stufe 1 | rms nach Stufe 1 |
 |---|---|---|---|---|---|---|
-| auf Pegel | 206 (alle Sprecher ausser Irons, alle Raeume) | 0,034-0,092 | 0,21-0,66 | 4,5-13,4 | 1,00-2,11x (nie am Deckel) | 0,0355-0,0995 |
+| auf Pegel | 206 (alle Sprecher ausser Irons, alle Raeume) | 0,034-0,092 | 0,21-0,66 | 4,5-13,4 | 1,00-3,00x (nie am Deckel; room1170/main00-03 48 kHz 2,71-3,00x, Abnahme 1 §3) | 0,0355-0,0995 |
 | leise | 10 = ALLE Irons-Dateien room1150 main02/05/07/09/12/13/18/19/20/21 | 0,0040-0,0062 | 0,053-0,096 | 12,5-20,6 | alle 4,00x (Deckel) | 0,0159-0,0247 |
 Zwischen den Klassen liegt eine Luecke: 0,0247 (Irons main05 nach Stufe 1) .. 0,0355 (room2000/main02). Keine Datei der
 normalen Klasse beruehrt den 4x-Deckel; genau die zehn Irons-Dateien bleiben an ihm haengen.
@@ -484,9 +484,9 @@ msg 29 <- main22.wav (Runde 39 Spur A, Nutzer-Reihenfolge)` + `clip loaded: main
   r35_cut1150|r36_szene1150|r34n_d_adaruf|r35_inventar1050|r27_ada_cutscene_1050|ada_eintritt_1050|
   r38_kleinkram_irons" --timeout 1500 -j1` (94 Tests = 93 wie Abnahme 0 + unit_r39_stimmen_pegel; Lauf 10:19-10:56,
   endgueltiger Bau): **`100% tests passed, 0 tests failed out of 94`** (Total Test time (real) = 2248.26 sec).
-  Kein Flattern, keine Wiederholung noetig. Darin die Szenen mit Irons' alten Zeilen (r35_cut1150, r36_szene1150,
-  r38_kleinkram_irons), die jetzt ebenfalls 6,9-9,3x statt 4x angehoben werden — gruen (sie messen Zuordnung/Ablauf,
-  nicht den alten Faktor).
+  Kein Flattern, keine Wiederholung noetig. Die Szenen-Riegel mit Irons' alten Zeilen (r35_cut1150, r36_szene1150,
+  r38_kleinkram_irons) laufen mit RE15_NOAUDIO=1 (Lader aus) und belegen die Anhebung NICHT; Beleg fuer die erste Szene
+  ist die Messung der Abnahme 1 (A_abnahme_1.md §5.3, Lauf e1150e: main05/07/09/12/13 6,9-9,2x, klemm 0).
 - Linux-/Parallel-Form: neue Dateien ohne libm (isqrt64), Testlisten-Pfad aus CMake, exe-Kopien mit Praefix je Teil
   wie bisher, keine geerbten RE15_*; der Pegel-Riegel liest nur Dateien (kein Fenster, kein Geraet).
 

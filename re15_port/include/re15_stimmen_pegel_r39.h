@@ -32,7 +32,7 @@
  *                           erst die Summe; BGM-Spitzen in den Zeilenluecken der Sterbeszene 0,105-0,276 FS, §9.2).
  *   Ergebnis am Bestand (Riegel unit_r39_stimmen_pegel): genau die 10 Irons-Dateien werden angehoben, alle laufen in
  *   die Spitzenbegrenzung (Gesamtfaktor 6,9-12,6x statt 4x; main18 12,6x, main19 8,9x, main20 7,4x, main21 11,6x),
- *   die 206 anderen Dateien bleiben bitgleich (Leon, Ada, Marvin, John, Elza: Stufe 1 wie bisher, hoechstens 2,1x).
+ *   die 206 anderen Dateien bleiben bitgleich (Leon, Ada, Marvin, John, Elza: Stufe 1 wie bisher; Tabellenzeilen 1,00-1,97x, im Bestand bis 3,00x bei den 48-kHz-Dateien room1170/main00-03 - Abnahme 1 §3).
  *   Rauschteppich: Irons' Dateien haben zwischen den Worten 0,00046-0,00061 FS (10. Perzentil der 20-ms-Fenster),
  *   dasselbe absolute Niveau wie Leons Dateien; angehoben liegt er bei 0,0034-0,0077 FS (-49 .. -42 dBFS), in der
  *   Sterbeszene 16-20 dB unter der BGM (rms 0,05-0,08 FS). Das ist der Preis der NUTZER-VORGABE, gemessen, nicht geraten.
