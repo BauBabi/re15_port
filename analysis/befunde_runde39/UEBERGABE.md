@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 09:12: Spur C inventar BESTANDEN (Abnahme 0, 103347cc; Bau a78ee047): Spind 1000 Munition 0x15 x15 Bit (9,69),
+  Stapeln aller Mengen-Items (sltiu 0x22 @0x80049124, Obergrenze 250 @0x80074DA8, Aktion 5 @0x8004e664), Elza-Status
+  STPIC_04 (DEBUG.BIN FUN_800c01c4), Yellow Keycard: Abfrage nach dem Code (Gate (3,139) @0x01A8A, Generator-E5 je
+  Szenario-Variante); Alt-Riegel r21/r26/r37 nachgezogen. In die Integration gemergt (905e0f6d, konfliktfrei). FUER DEN
+  NUTZER (Zu entscheiden): Spind-Munition 15 (Port-Halbierung 2026-09-20) oder 30 wie der Original-Satz ROOM1001; Granaten
+  0x09..0x0B stapeln jetzt auch (Regel "alles mit Zahl") - gewollt?; "discard"-Abfrage gab es fuer die gelbe Karte vorher
+  nicht - jetzt fragt ROOM11E1 nach dem richtigen Code (RE2-Form, einmal).
 * 2026-10-18 08:10: Spur B toene BESTANDEN (Abnahme 0, 52b39720; Bau 66aea987): Schublade = ROOM11F0/11F1 (RE2 ROOM1130
   0x28), Gitter + Schrank = ROOM1190/1191 (RE1.5 ROOM2060 0x0E/0x0D, RE2 ROOM1120 0x0C), 31/31 gezielte Tests. Maengel M1/M2
   (Kommentare) vom Orchestrator nachgezogen. Integrationsbaum .claude/worktrees/r39_integration (r39/integration von master
