@@ -108,7 +108,68 @@ Zeitpunkt wie Spur H (Roys Tagebuch): Faden parkt, bis der Hinweis zu ist, dann 
 
 ## 3. Umsetzung
 
+### 3.1 Dateien
+- NEU `re15_port/include/re15_johnruf_r39.h` (alle Konstanten mit Beleg), `re15_port/engine/src/johnruf_r39.c` (Installer,
+  Opcode 0x5F, Message_on-Haken, Stimmen-Ordner, Musik-Weiche/-Sperre/-Tick, Rettung), `re15_port/tools/r39_johnruf/
+  programme_bauen.py` -> `re15_port/engine/src/gen/johnruf_r39_programme.inc` (RUF1041 94 B, RUF1131 18 B, msg 40; Listing
+  je Zeile mit Vorbild; `--pruefen` vergleicht).
+- HAKEN (je 1-2 Zeilen, Kommentar "Runde 39 Spur P"): scd_room_setup.c (Include + Installer am ENDE des Blocks nach Spur I),
+  platform/pc/main.c (Boot-/CONTINUE-Weg nach Spur C), scd_vm.c (Include; `s_op_table[0x5F]` mit PC-Schranke wie 0x62 der
+  Runde 34; op_message_on hinter Spur J), game_step_common.c (Tick nach re15_tagebuch_r38_tick, vor der Hinweis-Annahme),
+  audio_pc.c (ss_bgm_entry nach der Weiche der Runde 35 K; SEQ_CTL-Sperre nach K; re15_voice_load_clip Ordner/Stamm nach
+  Spur J; re15_voice_play CD_VOL aus Xa_vol), map_hint_common.c (Include + Eintrag 5), tests/unit/test_r36_kartenbits.c
+  (Include + k_port[] Bit 97). KEIN Asset-Patch, keine neue Datei unter shared_assets/ oder synchro/.
+- Ressourcen: Bank 9 Bit 97 (VERTRAG 1.1), ROOM1041 Id 40 (Text + Stimme main40.wav), Sprach-Ids 53..57 (ohne Text, in
+  1041 und 1131; dieselbe Zuordnung help01..05 wie Spur J in 1141), Warte-Zeile 59 (1041, ohne Text).
+
+### 3.2 Welcher Ruf ist "das please help"? (Spracherkennung, Windows System.Speech en-US, Zwangswahl mit Schwelle 0)
+help01 3,42 s: "hello" 0,38 + "please help" 0,42 (zwei Segmente) | help02 1,96 s: "please help" 0,35 bzw. "please" 0,30 +
+"help" | help03 1,57 s: "help" 0,23 | help04 1,36 s: - | help05 1,18 s: "help" 0,02. Huellkurven (20/s): help02 = zwei
+Woerter, help01 = drei Segmente ("Hello? ... Please help!"). => "das please help" = help02 ("Please help!"); help01 traegt
+dasselbe am Ende. PORT-WAHL: 1041 = help03 ("Help!") + help02, 1131 = help02 noch einmal ("auch noch mal", lauter).
+Skripte scratchpad p39/wahl2.ps1, huelle.py.
+
+### 3.3 Ablauf (je Nutzer-Satz)
+| Nutzer | Mechanik | Beleg / Form |
+|---|---|---|
+| "Hilferufe ... erstmalig leise im ROOM 1040 ..., nachdem John verschwunden ist" | Installer 1041: (4,0xF0)=1 und Bit 97=0 -> RUF1041; Set(2,7)/(1,0x1B), Sleep 30, Xa_vol 50, help03, Work_set, Sleep 25, Plc_dest Modus 9 zur Treppentuer, Warten (5,0x20), Sleep 25, help02, Sleep 90 | 2.1 (F0 = John weg), 2.2 sub11 @0x021F8..@0x02220, 2.3 RE2 Xa_vol 50 @0x01F84, Treppentuer main00 @0x010D8 |
+| "dann soll bereits von Elza kommen: Oh, no, this is John! ..." + "Kopiere mir auch das voicefile" | Xa_vol 120, Message_on 40 (Text k_r39p_msg40, Stimme synchro/STAGE1/room1041/main40.wav = Kopie main50, liegt seit 02dc7917), Sleep 100 | sub11 @0x02224/@0x02228; RE2 ROOM1010 sub22 Xa_vol(120) |
+| "Dann soll die Karte aufgehen und den ROOM 1141 markieren" | Warte-Zeile 59: Stimmen-Riegel laesst main40 ausreden, dann Kartenhinweis Eintrag 5 (ROOM1041 -> ROOM1141, zeitgesteuert), Faden parkt bis zu | RE2 0x84 @0x800591C4, Form Spur H / Runde 35 K |
+| "Danach soll wieder die gleiche Panische finale Musik kommen wie bei Leon" | Set(9,97)=1, Steuerung zurueck; Tick: Fenster auf (keine Szene) -> Weiche 0xFF01 = MAIN01 in allen STAGE1-Raeumen ausser 1141, Sce_bgm_control Slot 0 gesperrt, Raummusik-Anstoss | 2.4 (cut_10f0.c, Eintrag 0xFF01, 11C0 ausgenommen) |
+| "Wenn wir uns den Flur 1131 naehern, ... please help ... etwas lauter" | Installer 1131: Bit 97=1, (4,0xF0)=1, Ruf in dieser Phase noch nicht -> RUF1131: Sleep 30, Xa_vol 70, help02, Sleep 90, Xa_vol 120 (keine Szene) | 2.3 RE2 Xa_vol 70 @0x01F7A |
+| "Im ROOM 1141 soll alles so bleiben wie bisher" | 1141 von der Weiche ausgenommen (eigene Musik MAIN16 und Sce_bgm_control der Spur J wie bisher); Rufe in 1141 Standard 120 | Leon-Form 11C0; Runde 38 F |
+| "Die panische Musik hoert auf, sobald man John gerettet hat. Der Rest bleibt normal." | Tick: Bit 97 und (4,0xF0)=0 und (4,0xF2)=0 -> Bit 97 = 0, Fenster zu, Tabellen-Musik | 2.1 sub02 @0x00C18 / sub01 @0x00C0C (+ @0x00C06 MAIN16 Stop) |
+| (3) Wiederbetreten 1041 / Laden in der Phase | Bit 97 sperrt RUF1041; Bit 97 im Spielstand (Bank 9 mit g_game.flags), Tick stoesst MAIN01 nach dem Laden an | Form cut_10f0.c bgm_fenster_tick |
+
+
 ## 4. Messung nachher
+
+### 4.1 Laeufe n1a/n1b: ECHTER Weg 1021 -> 1041 -> 1061 (Spielstand wie v1 + 4:5 4:4 = Rolladen offen; Bau 02469270)
+n1a (Framedump je 10 Bilder in 1041, Bogen `p39/l_n1a/n1a_bogen.png`), n1b (Wegplan bis 1061, Mitschnitt):
+| Bild (1041) | debug.log |
+|---|---|
+| F91 (Raumaufbau) | `[johnruf] F91 ROOM1041: John verschwunden ((4,0xF0)=1), Bit 97=0 -> RUF1041 gestartet (Faden 10)`, `[szenenschutz] F6 an` |
+| F36 | `Xa_vol(50) ROOM1041 -> CD_VOL 6826`, `Ruf help03 (Sprach-Id 55 ...)`, `[voice] clip loaded: help03.wav` |
+| F98 | `Ruf help02 (Sprach-Id 54, Xa_vol 50 -> CD_VOL 6826)`, `clip loaded: help02.wav` |
+| F188 | `Xa_vol(120) -> CD_VOL 16383`, `[msgtext] room=1041 id=40 "Elza: Oh, no, this is John! He is in trouble, I have to help him!"`, `clip loaded: main40.wav` |
+| F370 | `Kartenhinweis angefordert (Eintrag 5: ROOM1041 -> ROOM1141), Faden parkt` (= F188 + 180 Bilder main40) |
+| F380..F498 | `[hint] F380 begin`, Blinken rot/umriss, `F498 Zeit um (Hinweis 5, 3 Blinkperioden)`, `schliessen` |
+| F512 | `Karte zu: Faden laeuft weiter (Set(9,97)=1 ...)`, `Panik-Musikfenster auf in ROOM1041`, `[bgm] stage=0 room=04 entry=FF01 -> MAIN01` |
+| 1061 | `[bgm] stage=0 room=06 entry=FF01 -> MAIN01 ... [unveraendert, laeuft durch]` |
+Bilder: F40/F130 Elza an der Tuer, dreht sich nach Norden (Gier 923 = Soll 924 zur Treppentuer); F200 Text msg 40; F390/F450
+Karte "POLICE STATION 3F" mit ROOM1141 rot / Umriss; F530 Steuerung zurueck. Szenenschutz (Runde 38 B) haelt die Zombies im
+Gang ab, solange die Szene laeuft (Aktor 1: Abstand 5145 -> 2246, Biss erst F604 nach der Szene, ohne Eingaben).
+
+Pegel (Mitschnitt n1b, `p39/pegel.py`: normierte Kreuzkorrelation + kleinste Quadrate, 44,1 kHz):
+| Zeile | Takt | rho | g (Mitschnitt/Datei) | erwartet = Lader x Xa | RMS Fenster | RMS 1 s davor (Raum) |
+|---|---|---|---|---|---|---|
+| help03 (1041, Xa 50) | 649 | 0,953 | 0,488 | 1,156 x 0,417 = 0,482 | 1333 | 608 |
+| help02 (1041, Xa 50) | 711 | 0,556 | 0,482 | 1,133 x 0,417 = 0,472 | 1770 | 938 |
+| main40 (Elza, Xa 120) | 801 | 0,932 | 1,030 | 1,020 x 1,000 = 1,020 | 2547 | 289 |
+(Lader = Spitzen-Boden audio_pc.c 14745/Spitze; Stufe 2 greift bei keiner der drei Dateien.) => die Rufe in 1041 klingen mit
+0,417 = -7,6 dB ihres Normalpegels, deutlich ueber dem Raumklang (RMS 1333 gegen 608), leiser als Elzas Zeile (2547).
+Messfehler der ersten Auswertung (int32-Ueberlauf in np.arange auf Windows) behoben, alle Werte oben neu.
+
 
 ## 5. Tests
 
