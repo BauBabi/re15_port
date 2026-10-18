@@ -450,3 +450,19 @@ Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r
 - Nach dem Cut-7-Schnitt (fe0c7a97) Unit erneut (Regex oben): "100% tests passed, 0 tests failed out of 122".
 - Port-Bank 0x3E (Hinweis H7 der Abnahme): master enthaelt Spur I (68bfe620); ausser dining_r39 belegt keine Datei 0x3E
   (`git grep` auf master: nur 0x3A Spur 36 J) - kein Konflikt.
+
+### 8.7 Endstand (Bau 6b8c7f69, gezielt)
+- Integration zweiter Durchgang am Endstand (nach fe0c7a97 Cut-7-Schnitt, 4aaece87 Wegplan, 6b8c7f69 Sprung-Riegel):
+  `ctest -R "integration_r39_dining1141_d|integration_r38_dining1141_s|integration_r37_elzaems_elza1141" -j 2` ->
+  r38 S "Passed 717.58 sec" (zwei Laeufe mit Sichtpruefung je Bild: John taucht in keinem Bild ohne Bewegung oder Schnitt
+  auf - auch nicht beim neuen Tuer-Auftritt und beim Schiessen), elzaems_elza1141 "Passed 13.84 sec", r39 D rot nur am
+  Sprung-Riegel (F4296 = RUN-Schritt im Ankunftsbild, Sub 5 -> 6; Riegel berichtigt 6b8c7f69, derselbe Lauf per
+  -DAUSWERTEN gruen). Danach `ctest -R "integration_r39_dining1141_d"` -> "100% tests passed, 0 tests failed out of 1"
+  (Passed 351.08 sec, Lauf lauf_5ecb300d): John erstmals F1784 bei Cut 7 hinter der Kamera, Cut 6 mit John F1854, Cut 7
+  ab F1708 (Elza laeuft ins Bild; Kamerafolge vom Riegel bis zum Heben 6 -> 5 -> 7, kein Cut 0), N4.1 386 freie Bilder
+  nach dem Rolladen, entriegelt bei z -1060, Messer gezogen F1744 (w=13) bei z -12652, N4.3 2 Schuesse / 2 Treffer
+  (F3857/F3887), M2 Clip 17 und 0 Bilder (2,6) im Gespraech, M3 groesster Schritt 0, Punkt 7 0 von 268, Punkt 9 Takte
+  9889..9914 Pegel 0 / 9929..9959 Pegel 559 (Bogen `j39n1/d_final_lauf.png`: F1700 Cut 5, F1710 Cut 7 Elza laeuft ins
+  Bild, F1750 Messer gezogen, F1860 John an der Tuer).
+- Unit am Endstand, Regex wie 8.3 -> "100% tests passed, 0 tests failed out of 122".
+- Gesamt Integration (erster + zweiter Durchgang, gleicher Code fuer alle Nicht-1141-Riegel): 15 von 15 gruen.
