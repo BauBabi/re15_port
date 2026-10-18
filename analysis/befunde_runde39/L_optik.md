@@ -288,7 +288,14 @@ Punkt 2:
   Pinnwand (`genommen`-Zeilen) fuer beide.
 * Angepasst (gewollte Verhaltensaenderung = NUTZER-VORGABE): `unit_r38_itemorte_lage` ("fuellt die Marke >= 9 Spalten" ->
   "Huelle == RE2-Quartil +-0,5, < 9 Spalten"), `integration_r38_itemorte` B2..B5 Schwellen (~60 % der neuen Messung; die
-  Verhaeltnisse B3V/B4V bleiben).
+  Verhaeltnisse B3V/B4V bleiben) und V3/V5 (Cut 6: gemessen 11 / 13 Pixel, Schwelle 6 / 7; vorher 108 / 29 -> 50 / 45).
+* Angepasst (Punkt 1, Folge der Korrektur): `integration_r37_pri1100_marke` / `_elza` prueften "kein Zombie-Punkt im
+  Wandfenster x 168..191 y 126..149" — die Spalten 168..170 sind im Sockelband aber der HINTERE GANG jenseits der gemalten
+  Ecke (Wand ab 171, `k_fenster`), nicht die Wand. Nachgemessen (Szene F892, Laeufe `z_f892_a/b`, `z_ohne_c`): mit Masken
+  liegen die sichtbaren Zombie-Punkte in den Spalten 160..170 (`168:3 169:3 170:10`, Spalten >= 171: 0), ohne Masken bis 183 —
+  der Zombie ist genau bis zur gemalten Kante sichtbar und dahinter verdeckt, wie Leon an der Marke F741 (Bild
+  `L_optik_bilder/p1_1100_c1_zombie_f892_mit_ohne_ohnezombie_x5.png`: mit | ohne | ohne Zombie). Fenster deshalb auf
+  x 171..191 (Begruendung im Kopf beider Skripte).
 
 ### Gezielter Lauf (KEINE volle Suite im Spurbaum; `ctest -j 3 --timeout 1200`), -R woertlich:
 `^(unit_r39_optik_.*|integration_r39_optik_.*|unit_r37_pri1100_.*|integration_r37_pri1100_.*|unit_r37_masken36_.*|integration_r37_masken36_.*|unit_pri_hashes|integration_pri_masken|unit_r38_itemorte_.*|integration_r38_itemorte|unit_r36_schluessel_.*|integration_r36_schluessel.*|unit_r35_cut10f0_.*|integration_r35_cut10f0|unit_r22_10f0_figur|unit_r36_klettern_10f0_.*|unit_r36_szenenleon_abgang10f0|unit_r37_feuerloescher_.*|integration_r37_feuerloescher|unit_r37_kistenregel_.*|integration_r37_kistenregel|integration_item_name_census|unit_r38_dining1141_schluessel1011)$`

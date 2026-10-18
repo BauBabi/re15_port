@@ -250,7 +250,7 @@ k_lauf(v2_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 
 k_bild(V2 v2_mit v2_ohne 0 0 319 239 0)
 k_lauf(v3_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v3)
 k_lauf(v3_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v3o)
-k_bild(V3 v3_mit v3_ohne 76 62 103 81 50)
+k_bild(V3 v3_mit v3_ohne 76 62 103 81 6)   # Runde 39 L: Cut 6 gemessen 11 Pixel (vorher 108)
 # V4/V5: dieselbe Sicht bei Elza (ROOM10F1, Prison Key) — Cut 7 (Buecherregal, keine Masken) nicht gezeichnet, Cut 6
 # (zweite Kamera auf die Pinnwand) gezeichnet. Gemessen 2026-10-16: Cut 7 0 Pixel, Cut 6 mit dem Small Key (Nachbesserung 1)
 # 56 Pixel x 81..98 y 69..75, Sum|dL| 2690 (Cabin Key vorher 29 Pixel).
@@ -260,7 +260,7 @@ pruef(V4 _v4 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj
 k_bild(V4 v4_mit v4_ohne 0 0 319 239 0)
 k_lauf(v5_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5)
 k_lauf(v5_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_FORCE_CUT=6" _v5o)
-k_bild(V5 v5_mit v5_ohne 76 62 103 81 45)
+k_bild(V5 v5_mit v5_ohne 76 62 103 81 7)   # Runde 39 L: Cut 6 gemessen 13 Pixel (vorher 29)
 
 # --- E: Elza ROOM1031 (kein Loescher) und ROOM1091 (der leere am Boden, Runde 37) ----------------------------------------
 k_lauf(e1 1031 "1031;-11500;-19500;2048;cut:0;elza" "W2" 90 "" _e1)

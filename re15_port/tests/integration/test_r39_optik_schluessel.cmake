@@ -43,8 +43,11 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 set(_basis_wd "${WORKDIR}")
 set(_fehler "")
 
-set(_leon "RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=0,4000,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94;RE15_EXIT_AT=150#10F0")
-set(_leon_ohne "RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=0,4000,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94,9:82;RE15_EXIT_AT=150#10F0")
+# Leon-Laeufe: RE15_TITLE_SHOT_AF=2 schaltet den Titel weiter (wie test_r37_pri1100_marke.cmake); Elza-Laeufe steuern den
+# Titel ueber RE15_PSELECT_AUTO (dort KEIN RE15_TITLE_SHOT, sonst bleibt es Leon - gemessen 2026-10-18).
+set(_titel "RE15_TITLE_SHOT=title.bmp;RE15_TITLE_SHOT_AF=2")
+set(_leon "${_titel};RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=0,4000,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94;RE15_EXIT_AT=150#10F0")
+set(_leon_ohne "${_titel};RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=0,4000,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94,9:82;RE15_EXIT_AT=150#10F0")
 set(_elza "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1;RE15_GOTO_ROOM=10F1;RE15_PLAYER_POS=0,4000,1024;RE15_FORCE_CUT=5;RE15_EXIT_AT=150#10F1")
 set(_elza_ohne "${_elza};RE15_SET_FLAG=9:83")
 
@@ -123,7 +126,7 @@ mass(elza_s3 "${_ppm_elza_s3_mit}" "${_ppm_elza_s3_ohne}" 393 225 437 263 36 18)
 
 # Aufnahme unveraendert: vor der Pinnwand (1300,-2900) Blick -z (rot 1024), Aktion -> Modal -> Ja (Skript wie Runde 38 K1/K2).
 # Skript-Zeitachse = Spielbilder (RE15_INPUT_SCRIPT_BASIS=spiel), Start nach dem Sprung (Bild 250) bzw. nach GOTO_ROOM.
-lauf(aufnahme_leon 1 "RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F0")
+lauf(aufnahme_leon 1 "${_titel};RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F0")
 pruef(A1 _dbg_aufnahme_leon "[schluessel] PARKING LOT KEY genommen: Item 0x45, Bit (9,82)")
 # Elza: RE15_GOTO_ROOM wendet RE15_PLAYER_POS nicht an (Spawn an der Tuer) -> Sprung ueber RE15_DEBUG_JUMP nach der Auswahl
 # (bleibt Elza, "[pl] Spieler-Familie PL04"; gemessen 2026-10-18: "[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS").
