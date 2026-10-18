@@ -165,6 +165,7 @@ def tuer_auftritt():
     op([0x18, 0x03], "Gosub sub03 = sub02 @0x00CEA")
     R.cut_chg(CUT_ELZA, "Cut_chg 7 = Kamera am Gangende, Blick nach Sueden: Elza von vorn, Dachtuer hinter der Kamera "
                         "(Form sub02 @0x00C24 `29 07`)")
+    sleep(5, "Sleep 5 = ROOM1171 sub02 @0x0140E nach Cut_chg @0x0140C (das neue Bild steht, bevor die Tuer klingt)")
     R.se_on(R.BANK_TUER, 0, "Se_on(0x0E,0) DOOR1A Satz 0 = Tuer auf (Dachtuer 1141 = DOOR1A, tuer_zuordnung.inc S064; Form "
                             "ROOM10D0 sub21 @0x01A02)")
     R.work_npc(0, "Work_set(2,0)+Nop John (sub02 @0x00C5C)")
