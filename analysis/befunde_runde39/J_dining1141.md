@@ -491,3 +491,9 @@ Plc_motion(0,2) @0x014CE = RBJ-Record 1 (Marker 0x2 = John) Clip 2 von ROOM1171,
   (Arm vor - Hand zurueck, F3036..F3092), in der rechten Hand die Pistole gesenkt, keine Waffe auf Elza.
 - Spur K hat in 1171 den RBJ-Kanal-Cache berichtigt (18940e95, Slot ohne Record belegt keinen Platz); die Leihe hier geht
   am Cache vorbei - bei der Integration zusammen ansehen.
+
+- **Endstand nach Nachtrag 7 (751e3f4d, Bau 2026-10-18 ~22:45):**
+  `ctest -R "integration_r39_dining1141_d|integration_r38_dining1141_s" -j 2` -> "100% tests passed, 0 tests failed out of 2"
+  (D Passed 643.52 sec, S Passed 1103.82 sec unter Parallellast); Unit, Regex wie 8.3 -> "100% tests passed, 0 tests failed
+  out of 122". Damit gesamt am Endstand gruen: Unit 122/122, Integration 15/15 (die 13 Nicht-D/S-Riegel aus dem ersten
+  Durchgang beruehren den Nachtrag-7-Code nicht: Leihe nur in ROOM1141 bei John Zustand 4/Sub 0/Clip 2).

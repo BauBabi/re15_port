@@ -8,7 +8,8 @@ cmake_minimum_required(VERSION 3.16)
 #   dreht sich zur Tuer, hebt die Waffe (N4.2; hier ohne Schusswaffe = Messer) -> Tuer auf/zu, Kamera auf die Tuer mit
 #   John -> Szene (Glasbruch vor msg 6, Blick ab msg 9) -> Tuersperre msg 41 -> Kampf, John schiesst ab und an (N4.3) ->
 #   Kampfende per Messhaken RE15_R38F_GORILLAS_TOT (Kill-Flags (7,0xCB)/(7,0xCC), KEINE Schusszahl) -> msg 51/52 mit
-#   Folge-Geste Clip 17 (M2), John springt nicht (M3) -> Johns Abgang -> Dachtuer -> 1171 (Musik beim Wechsel, Punkt 9).
+#   Heranwinken aus ROOM1171 (M2, Nutzer-Nachtrag 7), John springt nicht (M3) -> Johns Abgang -> Dachtuer -> 1171 (Musik
+#   beim Wechsel, Punkt 9).
 # Geprueft: debug.log, RE15_R39J_LOG (Messschiene engine/src/dining_r39.c), wegplan_log.txt und der Ton-Mitschnitt
 # (Werkzeug test_r39_dining1141 pegel). Bilder je 10 Takte per RE15_FRAMEDUMP (RE15_WINDOW_SCALE=1) im Arbeitsordner.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_R39J_WERKZEUG=<test_r39_dining1141> -DWORKDIR=<dir> -P test_r39_dining1141.cmake
@@ -324,7 +325,7 @@ foreach(_z IN LISTS _zeilen)
             set(_heben_vor_john TRUE)
         endif()
     endif()
-    # M2: Folge-Geste Clip 17 zu msg 52; nie Sub 2 Clip 6 (Zielen) waehrend msg 51/52
+    # M2 / Nachtrag 7: Heranwinken (0,2) zu msg 52 (ROOM1171 @0x014CE, geliehen); nie Sub 2 Clip 6 (Zielen) waehrend msg 51/52
     if(_ma EQUAL 1 AND _mid EQUAL 52 AND _s1 EQUAL 0 AND _mo EQUAL 2)
         set(_geste17 1)
     endif()

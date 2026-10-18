@@ -22,7 +22,7 @@ PROGRAMME (Nachbesserung 1: Ablauf nach Nutzer-Nachtrag 4)
                Elza rennt zur Kamera Cut 7, dreht sich zur Tuer, hebt die Waffe (N4.2), Tuer auf, John innen vor die Tuer,
                Tuer zu, Kamera auf die Tuer (Cut 6, John steht schon da), Cut 5, Elza senkt die Waffe, John laeuft heraus;
                Szene der Runde 38 mit Punkt 6 (Glasbruch vor msg 6) und Punkt 7 (Skript wartet auf Johns Drehung vor msg 9);
-               nach dem Tod der Gorillas Punkt 8 (zwei Zeilen Johns mit Gesten, Folge-Geste Clip 17), dann Johns Abgang.
+               nach dem Tod der Gorillas Punkt 8 (zwei Zeilen Johns mit Gesten, Heranwinken aus ROOM1171), dann Johns Abgang.
   ROLLTOR39    ROOM1141 Ereignis 6 (Gemaelde) in Phase H: Rolladen hoch mit Ton (Runde 38), danach Steuerung zurueck (N4.1).
 """
 import importlib.util, io, os, struct, sys
@@ -271,9 +271,10 @@ def nach_dem_kampf():
     Aufbau = ROOM1141 sub02 @0x00C24..@0x00C76 (Szenenbeginn: Kamera, Sperre, Pos_set, Kopf/Drehung zueinander),
     Erleichterung = Johns Gesten zu msg 1 "I'm glad to see you're still alive" (@0x00CB4..@0x00CD0).
     Nachbesserung 1: M3 - John steht im Schnittbild von Cut 8 schon an seinem Platz (Pos_set im selben Takt wie Elzas
-    Pos_set, vor Sleep 1); M2/N4.4 - zu msg 52 die Folge-Geste Clip 17 (Armschwung) statt Plc_motion(2,6) (= Zielen,
-    ROOM1021 @0x020C6): Johns eigene Folge aus 1141 sub02 @0x00DBA..@0x00DC6 (Clip 17, Sleep 50, Clip 23, Sleep 20), die
-    Bibliotheks-Geste des Originals zu "Hurry up! They're coming!" (ROOM3070 sub03 @0x03724)."""
+    Pos_set, vor Sleep 1); M2/N4.4 + Nutzer-Nachtrag 7 - zu msg 52 das Heranwinken aus ROOM1171 (sub02 @0x014CE Clip 2 des
+    RBJ-Records 1, geliehen) statt Plc_motion(2,6) (= Zielen, ROOM1021 @0x020C6); der zwischenzeitliche Armschwung (Clip 17,
+    1141 sub02 @0x00DBA..@0x00DC6 = Bibliotheks-Geste zu "Hurry up! They're coming!", ROOM3070 sub03 @0x03724) lehnte der
+    Nutzer ab."""
     R.cut_chg(CUT_GESPRAECH, "Cut_chg 8 = Suedwest-Ecke, John und Elza im Bild (Form sub02 @0x00C24 `29 07`)")
     R.set_flag(2, 0x07, 1, "Set(2,7)=1 = sub02 @0x00C26")
     R.set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken = sub02 @0x00C2A")
