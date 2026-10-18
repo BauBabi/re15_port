@@ -20,11 +20,16 @@ ges = 0
 for (ziel, band), ls in sorted(saaten.items()):
     if nur and ziel not in nur: continue
     gesehen = False
+    kand = []
     for (x, z, y, von) in ls:
+        kand.append((x, z, y, von))
+        for dx, dz in ((600, 0), (-600, 0), (0, 600), (0, -600), (900, 900), (-900, -900), (900, -900), (-900, 900)):
+            kand.append((x + dx, z + dz, y, von))   # Ankunft liegt oft naeher als 450 an einer Wand
+    for (x, z, y, von) in kand:
         out = subprocess.run([probe, 'markerflaeche', '%04X' % ziel, str(band), str(x), str(z), str(y)],
                              capture_output=True, text=True).stdout
         zeile = [l for l in out.splitlines() if l.startswith('ROOM') or l.startswith('FAIL')]
-        if not zeile: continue
+        if not zeile or zeile[-1].startswith('FAIL'): continue
         m = re.search(r'ausserhalb der Zeichnung (\d+)', zeile[-1])
         g = re.search(r'(\d+) geprueft', zeile[-1])
         print('%04X Band %d Saat (%d,%d) aus %04X: %s' % (ziel, band, x, z, von,

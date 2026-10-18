@@ -20,11 +20,10 @@ Baum: .claude/worktrees/r39_karten (Zweig r39/karten, Basis 1038dc15). Start 202
       behoben; Bau (configure+build) gruen
 - [x] Messung nachher 1F/2F/3F/B2 an der ECHTEN exe (Sweep, 0 Abweichungen gegen das Soll) - Abschnitt N1
 - [x] Punkt 2 ROOM1090: gemessen (160/1225 Rasterpunkte ausserhalb), Zeilen je Ebene aus den Waenden, nachher 0 - P2
-- [ ] Messung vorher B1
-- [ ] RE-Belege B1
-- [ ] Umsetzung B1
-- [ ] Messung nachher je Etage (FB_SHOT gegen die Soll-Haelfte) + Marker-Lage je Raum (Leon + Elza)
-- [ ] Tests (test_r39_karten + angepasste r35-Riegel begruenden)
+- [x] B1 neu als Schema-Zeichnung aus Kollision + Tueren (B1-M1/R/U/N) - 99a166ca, 7eb1f744
+- [x] Marker-Pruefung ueber alle Raeume der Stage 1 (P1-M), Zeilen 10C0/1120/10E0 - 9ed100c3, 64ee6338
+- [x] Riegel unit_r39_karten_1090 / _b1, integration_r39_karten; alte B1-Riegel umgestellt (Abschnitt Tests) - 4dda19b4
+- [ ] Messung vorher B1 "wie man sich bewegt" (Bau mit dem Kopf von 10876ebb), Echtlauf-Abzug B1, Abschluss
 
 ## Messung vorher
 
