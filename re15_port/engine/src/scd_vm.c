@@ -71,6 +71,7 @@
 #include "re15_tagebuch_r38.h" /* Runde 38 Spur G: ROOM1011 msg 18 -> Roys Diary (tagebuch_r38.c) */
 #include "re15_dining_r38.h" /* Runde 38 Spur F: Programme 1140/1141/1021, Tuer 1131, Phase H 1141 (dining_r38.c) */
 #include "re15_toene_r39.h"  /* Runde 39 Spur B: Toene Schublade 11F0, Gitter + Schrank 1190 (toene_r39.c) */
+#include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Funkszene ROOM10F1, Ereignis 27 (funk10f1_r39.c) */
 
 scd_vm_t g_scd;
 
@@ -667,6 +668,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_schluessel_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur Q: 11B0 Ereignis 25 */
     if (!pc) pc = re15_kartenitems_r36_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 36 Spur N: Karte, Ereignis 28 */
     if (!pc) pc = re15_dining_r38_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 38 Spur F: 1140/3, 1141/5+6, 1021/6, 1131/29 */
+    if (!pc) pc = re15_funk10f1_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur I: 10F1/27 Funkszene */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
