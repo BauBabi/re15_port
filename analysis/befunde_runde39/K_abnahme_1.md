@@ -5,7 +5,7 @@ Merge-Basis mit master 22abaed9; master ist seither nur um Doku + `test_r38_item
 Spur-Dateien = `git diff master...HEAD` (23 Dateien). Abnahme-Laeufe im Scratchpad `K39abn1/`, eigene exe-Kopien
 `re15_pc_k39abn1_*.exe`, kein taskkill.
 
-**Stand: in Arbeit** (Bericht wird fortlaufend geschrieben).
+**Ergebnis: NICHT bestanden.** Nachbesserung 1 ist richtig umgesetzt und belegt: Elzas Sub-6-Saatbild (M1), Schub-Ruecklauf (M2), die Einzelbilder zwischen Gang und Drehen (M3a = im Original gar kein Sub-6-Bild) und die Posier-Reihenfolge der Kraehen (M3b) sind am echten Weg gemessen, selbst disassembliert, mit Riegeln gesichert (am alten Motor selbst rot gefahren), John ist unveraendert (Heran-Winken). Bei der vom Bau-Agenten gemeldeten Pruefung "Kraehen = Original" fehlen aber zwei Stellen des Kraehen-Ablaufs derselben Szene: die HOVER-Phase 0 (kein f314/keine Bewegung im Einstiegstakt, Port posiert und fliegt) und die SPIN-Phase 2 (Original dreht nicht). Punkt 1: **teilweise** (1a erfuellt, 1b teilweise). RE-Gate, Vertrag, Riegel halten; gezielte Tests gruen.
 
 ## 0. Bau
 * `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> `ninja: no work to do.`
@@ -127,9 +127,9 @@ einzige andere Abweichung ist das Landebild (Fall-Pose statt Clip 0x0a Bild 0). 
 `4 4 10 8 8` (kein f314 im Sturz, Normal-Lane 0x80114738: nur `jal 0x800453d0` / `jal 0x800245d8`), Landung F442 `4 4 10 8 8`
 (state.log `st=3 ss3=2 mo=4 af=8`), FINISH F443-F454 `10 10 40 0..11`, ab F454 `st=7 mo=10 af=11` (Leiche haelt 11);
 ORIENT F162 zwei Zeilen `4 4 10 3 3` (Effekt-Abfrage mit der HOVER-Pose des Vorbilds) und `8 8 8 0 0` (gerendert),
-F163-F168 1..6, F169 `6` (Effekt am Umlauf, Vorbild) + `7` (gerendert), F170 0. Start: F61-F66 Clip 0 Bild 0, HOVER "0,0,1,2":
-ASCEND posiert Clip 4 Bild 0, wechselt im selben Takt nach HOVER; HOVER Phase 0 setzt Clip 4 erneut (Setzer @0x80115164
-+ f314 im selben Takt) -> Bild 0 zweimal = Original-Folge (vorher "1,1" = dieselbe Doppelung um eins verschoben).
+F163-F168 1..6, F169 `6` (Effekt am Umlauf, Vorbild) + `7` (gerendert), F170 0. Start: F61-F66 Clip 0 Bild 0 (INIT
+`801122e4 jal 0x80115d94` + `80112300 jal 0x8001f314` im selben Takt = Original), dann HOVER "0,0,1,2" (vorher "1,1,2,3")
+— diese Folge ist NICHT die Original-Folge, s. naechster Absatz (HOVER-Phase 0).
 
 **Kraehen — NEUER BEFUND (gegen das Original geprueft, NICHT behoben): HOVER-Phase 0.** Die Ereignis-Kraehen fliegen nach
 dem ASCEND ~95 Bilder im HOVER (FLIGHT-2 Sub 1, state.log Kraehe 2 `F67 st4/ss1=1` bis `F161 ss1=2`, Kraehe 3 F76-F172), bevor
@@ -211,3 +211,88 @@ msys64 zuerst) und Bau NUR des Ziels `test_r39_heliport1171` (186 Schritte, EXIT
   `K39abn0/runA_neu` (alt) und `K39abn1/echtA` (neu) unterscheiden (Clip-1-Laeufe 1..15 statt 0..15 + Einzelbilder, Clip 17
   rueckw. Elza F999 vs. John F1000, ORIENT ab 1, Leiche 12) -> am alten Motor rot. Riegel **vorhanden und messend**.
   Nicht abgedeckt (naturgemaess): der HOVER-Halt und die SPIN-Gier (§3.1, neue Befunde).
+* Kraehen-Hirn-Zeitachse (state.log ohne mo/af: Zustand, Subs, Position, Gier beider Kraehen) echtA gegen runA_neu:
+  **1083/1083 Bilder gleich** -> M3b aendert nur das gezeichnete Bild, nicht den Ablauf (Bau-Agent-Aussage bestaetigt).
+
+## 6. Nebenwirkungen (beide Szenarien)
+* **Leon ROOM1170** (echter Weg Neuspiel -> Montage 1240 -> Tuer -> 1170, Lauf von `integration_r37_roy_leon1170` in meinem
+  ctest, `r37_roy_wd/lauf_leon1170_1809ccb1/anim.log`) gegen den Abnahme-0-Lauf (`K39abn0/leon1170_neu/.../anim.log`, Stand
+  6d027394): Leon (Aktor 0) 4043 Zeilen md5 **c23ba5ea = c23ba5ea**, Elliot (Aktor 1) 317 Zeilen md5 **98e3583e = 98e3583e**
+  -> bytegleich (Aussage des Bau-Agenten bestaetigt).
+* **John ROOM1171**: bytegleich zum Abnahme-0-Stand (§3.1). **ROOM1141** (Spur J): Elzas/Johns Ankunftsbilder aendern sich
+  nach derselben Regel (Dossier 12.5); `integration_r38_dining1141_d` und `integration_r37_elzaems_elza1141` gruen (§6.1).
+
+### 6.1 Gezielte Integration (echte exe, beide Szenarien; jede Szene mit Spieler-Plc_dest/Sub 6/Schub, Kraehen-Raeume,
+Spur-H-Dateien, 1141/1150/1050/10F0/11B0/1021/1011/1031/1170/1171)
+`ctest --test-dir re15_port/build -R '^integration_(r38_heliport1171_laden|r38_heliport1171_weg_re15|r38_heliport1171_weg_re2|
+r39_stimmen_1171|r37_roy_leon1170|r37_elzaems_elza1141|r38_dining1141_d|r38_werkstatt11b0|r39_stimmen_11b0|r35_cut10f0|
+r36_szene1150|r39_stimmen_1150|r39_stimmen_1050|r37_sperre1050|r39_elza_hand|r39_elza_karte|r39_elza_loescher|
+r38_elzaintro_stimme|r37_roy_szene1011|r37_roy_szene1021|r38_elzatoene_szene1021|r37_elzaems_leon10c0kraehe|
+r37_elzaems_elza10c1kraehe|r35_fenster|r36_elza_fenster|r38_montage|r36_szenenleon|r38_szenenschutz|r38_tagebuch_karte|
+r37_elzaems_elza11b1)$' --timeout 1500 -j 3 --output-on-failure` -> **`100% tests passed, 0 tests failed out of 30`**
+(941,7 s; laengste: dining1141_d 305 s, cut10f0 261 s, sperre1050 252 s). Dazu die Spur-Riegel 2/2 (§0). Keine volle Suite
+(VERTRAG). Kein Fenster-Haken rot, kein Nachfahren noetig.
+
+## 7. Urteile
+
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| 1a "Wenn John in Room 1171 sagt - "Elza hurry up" macht er so eine komische Kletter Animation statt der ran wink Animation, die er im Original nicht macht." | **erfuellt** | Echter Weg (1141 -> Dachtuer -> 1171 -> Tor): F530-F657 RBJ rec1 Clip 2 (96 Bilder) 0..95 statt Bank-0-Kletter-Clip (v0.8.26: mo 2 / fc 50); Bild `K39abn1/hurry_up_head_vs_v0826.png` (HEAD winkt heran, v0.8.26 knickt ein); Johns Pose-Strom bytegleich zum Abnahme-0-Stand; Riegel gruen. |
+| 1b "Auch sonst scheinen die Animationen hier noch nicht ganz zu passen." (VERTRAG: "uebrige Szenen-Animationen 1171") | **teilweise** | Elza: M1/M2/M3a der Abnahme 0 behoben und belegt (§3.1, Riegel am alten Motor rot §5). Kraehen: die Posier-Reihenfolge (M3b) behoben und belegt; aber die HOVER-Phase 0 (0x80115130, kein f314/keine Bewegung im Einstiegstakt) ist im Port weiterhin falsch — Flatterzyklus 10 statt 11 Bilder ohne Halt, Bewegung in jedem 11. Takt zu viel (§3.1), und SPIN-Phase 2 dreht die Gier weiter (0x801154d0 ohne `+0x6a += 60`). Beides liegt im Kraehen-Ablauf "Griff/Wurf" der Szene, den Abnahme 0 M3(b) gegen das Original verlangt hat; der Bau-Agent meldet "Kraehen = Original". |
+| **Punkt 1 gesamt** | **teilweise** | Kernbefund erfuellt; "Auch sonst": Elza + John fertig, Kraehen-HOVER/SPIN offen. |
+
+Gates: RE-Gate **haelt** (10 Stichproben in §2 + Rueckwaerts-Gang [8] §4 + Kraehen-INIT/ASCEND/HOVER/SPIN/Opfer-Hook §3.1/H2 selbst disassembliert, alle Zitate des Diffs stimmen; keine Guess-Tells; jede neue Konstante mit
+Adresse bzw. als Port-Zustand gekennzeichnet). Vertrag **haelt** (Pfade, keine Bits/Ids, kleine kommentierte Haken; H1).
+Riegel **vorhanden und messend** (Gegenprobe am alten Motor selbst: elza 4 / kraehen 4 Fehler). Gezielte Tests gruen.
+
+## 8. Maengel (nummeriert, nachpruefbar)
+
+**M1 — Ereignis-Kraehen ROOM1171: HOVER-Phase 0 posiert und bewegt im Port (Original: nur Einrichten, kein f314).**
+Original 0x80115130 (Tabelle FLIGHT-2 @0x80121220[1], STAGE1.BIN): Phase 0 `8011516c jal 0x80115d94` (Clip 4) /
+`80115170 sh v0(=0xb4),140` / `8011518c sh v0,484` / `801151d4-dc` +0x6++ und `801151d8 j 0x801152cc` (Epilog) — kein
+`jal 0x8001f314`, keine Lenkung `0x8001a8f8`, kein `pos_advance 0x800245d8`, keine Kontaktpruefung +0x1d0 in diesem Takt;
+erst Phase 1 `801151e8 jal 0x8001f314` ff. (Ghidra `STAGE1_full/FUN_80115130.c`: `if (+6==0) {...} else if (+6==1) {...}`).
+Port `engine/src/enemy_ai_common.c:6589-6605` faellt aus dem Phase-0-Block im selben Takt in `re15_crow_anim` + Lenkung +
+`y += vvel` + `re15_crow_advance` + Kontakt. Gemessen (echter Weg `K39abn1/echtA`, Kraehe 2): HOVER-Bilder `68:0 69:1 ...
+77:9 78:0 ... 87:9 88:0` (Zyklus 10, kein Halt); Original-Folge nach den Instruktionen: F67 0, F68 0 (Halt), F69 0, F70 1 ...
+F78 9, F79 9 (Halt), F80 0 (Zyklus 11, im Halt-Takt keine Bewegung). Betrifft die ~95 HOVER-Bilder je Kraehe vor dem Griff
+(Kraehe 2 F67-F161, Kraehe 3 F76-F172) und damit den Griff-Zeitpunkt. Pruefung nach Behebung: HOVER-Zyklus 11 Bilder mit
+gehaltenem Bild 9 (bzw. Bild 0 nach dem ASCEND), keine Positionsaenderung im Halt-Takt (state.log), Riegel am jetzigen
+Stand rot; Folgen fuer Griff-/Wurf-Bildnummern in den 1171-Riegeln mitziehen.
+
+**M2 — Ereignis-Kraehen ROOM1171: SPIN-Phase 2 dreht die Gier weiter (Original: nur Phase 0/1).** Original 0x801153ac
+(@0x80121220[3]): `80115460 lhu v0,106(v1)` / `80115468 addiu v0,v0,60` / `8011546c sh v0,106(v1)` liegt im Phase-1-Rumpf
+(Phase 0 faellt hinein); Phase 2 `801154d0`-`801154e8` (Zeitgeber, bei 0 `jal 0x80115d74` a0 = 1) springt direkt in den
+Schwanz `801154ec` (Ghidra `FUN_801153ac.c`: Fall 2 `goto LAB_801154ec`). Port `engine/src/enemy_ai_common.c:6624`
+`e->rot_y = (int16_t)(e->rot_y + 60);` steht vor der Phasen-Unterscheidung. Gemessen (echtA, Kraehe 2, Phase 2 =
+`ss2=2`): Gier F254 5511 -> F294 7911 (+60 je Bild, 41 Bilder); Original: Gier steht in Phase 2 -> 41 Bilder Geradeausflug
+statt Kreis (pos_advance entlang +0x6a). Flugbahn, kein Clip-Bild — aber der Kraehen-Ablauf nach dem Wurf, den Abnahme 0
+M3(b) gegen das Original verlangt hat. Pruefung: Gier in `ss2=2`-Bildern konstant; Riegel.
+
+Keine Maengel an Johns Szene (Kernbefund) und an Elzas Ablauf (M1/M2/M3a der Abnahme 0 behoben und belegt).
+
+### Hinweise (keine Maengel, fuer Integration/Nachlauf)
+* **H1 Globale Wirkung + fremde Dateien.** NB1 wirkt fuer JEDE Plc_dest-Ankunft des Spielers (Leon und Elza), jeden
+  Spieler-Schub (11B0, 1171) und jede Kraehe mit RE1.5-Hirn (1171 immer; 10C0/1120/1170 nur im RE1.5-KI-Modus). Haken in
+  game_step_common.c, actor_locomotion.c, player_common.c, szenenleon_r36.c, enemy_ai_common.c und in **elza_r39.c (Spur H)**;
+  Spur J (1141) sieht Elzas/Johns Ankunftsbilder geaendert. Bei der Integration diese Dateien gegen D/E/H/J abgleichen.
+* **H2 Ton der Opferphasen P1/P2 einen Takt spaet** (vom Bau-Agenten offen gefuehrt; selbst nachgeprueft: Hook A
+  0x80115b80 P1 `80115c20 jal 0x8001f314` / `80115c28 beq v0,zero` / SE `80115c3c jal 0x80045024` im Takt des letzten
+  INTRO-Bildes; Port `heliport1171_r38.c` erst im Folgetakt). Ton, keine Animation — die Bildfolge P0-P4 ist = Original
+  (P0 faellt in P1 @0x80115c0c, P3 in P4 @0x80115cdc, Umlauf -> aca58 = 4 / aca59 = 6 @0x80115d04-18).
+* **H3 Hund 0x20 / Eskorte-EXEC-Saattakt** (offen laut Dossier 12.7, nicht in 1171) — fuer einen Nachlauf.
+* **H4 Aufraeumen.** Ignorierte Dateien im Baum: `re15_port/build_bisect/`, Messkopie
+  `re15_port/build/platform/pc/re15_pc_r35e_haken_685df09f.exe` (21:36, liegengeblieben). Meine Kopie
+  `re15_pc_k39abn1_A.exe` ist entfernt.
+
+## 9. Ergebnis
+* Punkt 1 (Wortlaut): **teilweise** — 1a Kletter -> Heran-Winken **erfuellt** (unveraendert seit Abnahme 0, Johns
+  Pose-Strom bytegleich); 1b "Auch sonst ... die Animationen hier" **teilweise**: John und Elza = Original (alle Maengel
+  der Abnahme 0 an Elza behoben), Kraehen-Posier-Reihenfolge = Original, aber HOVER-Phase 0 (M1) und SPIN-Phase 2 (M2) der
+  Ereignis-Kraehen weichen ab.
+* Gates: RE-Gate haelt, Vertrag haelt (H1), Riegel vorhanden/messend (Gegenprobe selbst: elza 4 / kraehen 4 Fehler am
+  a2d1e1dc-Motor), gezielte Tests gruen (Spur 10 + 2, Unit/Probe 267, Integration 30).
+* **bestanden = false** (M1, M2). Naechster Schritt fuer die Spur: HOVER 0x80115130 Phase 0 nur einrichten und den Takt
+  beenden (kein `re15_crow_anim`, keine Lenkung/Bewegung/Kontaktpruefung; Halt-Bild = zuletzt posiertes), SPIN 0x801153ac
+  Gier +60 nur in Phase 0/1; Riegel (HOVER-Zyklus 11 mit Halt + Stillstand im Halt-Takt, SPIN-Gier in Phase 2 konstant),
+  Griff-/Wurf-Bildnummern in den 1171-Riegeln nachziehen, Elza/John/Kraehen am echten Weg neu messen.
