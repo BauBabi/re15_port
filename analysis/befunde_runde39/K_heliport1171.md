@@ -637,3 +637,30 @@ Lauf `K39nb1/echt2` (Befehl wie Abnahme `K39abn0/lauf.sh` mit `RE15_FIRE_AOT=5@6
 - Fremde Riegel geaendert: test_plc_back_yaw_1090.c, probe_crow_death.c, test_r38_heliport1171.c, test_r37_roy.c (12.4).
 - Spur J (ROOM1141) sieht Elzas/Johns Ankunfts-Bilder geaendert (Einzelbild F1305 weg, Drehen ab Bild 0); wer dort
   Spieler-Posen pinnt, rechnet mit Sub 6 ab dem Folgebild der Ankunft.
+
+### 12.10 Abschluss Nachbesserung 1 — gezielte Tests am Endstand (build/, exe 21:01 = Code 86956b9c)
+
+Keine volle Suite (VERTRAG). Woertlich:
+- Unit/Probe (NPC-Familie + Spieler-/Walker-/Schub-/Kraehen-Module + eigene Teile inkl. elza/kraehen):
+  `ctest --test-dir re15_port/build -R "npc|marvin|ada|elliot|irons|sherry|ben|annette|roy|john|1170|1171|10d0|11b0|1150|1050|1090|1141|szenenleon|werkstatt|schub|cine|cutscene|eintritt|plc|gest|rbj|neck|kopf|escort|eskorte|10f0|cut10f0|kendo|npckante|montage|elza|crow|kraehe|walk|reach|stair|idle|player|push|tuer|door|10c0|1120|fenster" -E "^integration_" --timeout 600 -j 4 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 250`
+- Integration (echte exe; jede Skript-Szene mit Spieler-Plc_dest/Sub 6/Schub, Kraehen-Raeume, Elza, 1141/1171):
+  `ctest --test-dir re15_port/build -R "^integration_.*(1171|1170|1141|1150|1050|1090|10d0|11b0|10f0|1031|1021|1011|szene|cut|montage|elza|roy|stimmen|werkstatt|heliport|dining|story|intro|vollstart|schrift|sperre|inventar1050|toene|1100|kraehe|eintritt|beretta|marvin|ada|irons|plattform|fenster)" --timeout 1200 -j 3 --output-on-failure`
+  -> `99% tests passed, 1 tests failed out of 73` — der eine: integration_r38_dining1141_s, Teillauf sb mit exit=1 MITTEN
+  im Lauf (Bild 1061, ROOM1131, noch vor 1141; Maschine unter Last durch parallele Spuren), einzeln nachgefahren:
+  `ctest --test-dir re15_port/build -R "^integration_r38_dining1141_s$" --timeout 1200 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 1` (941 s). Im Lauf davor (Motor ohne Kraehen-Fix, gleiche Spieler-Aenderung)
+  war derselbe Test gruen (566 s).
+- Eigene Integration verbose (Messzeilen): laden `Nachbesserung 1: Elza Clip-1-Laeufe 5 (falsch: ); Clip 17 rueckw. ab Elza
+  F934 / John F934; Kraehe 2: ORIENT ab Bild 0, Leiche 10/10/40/0 Bild 11; Kraehe 3: ORIENT ab Bild 0, Leiche 10/10/40/0
+  Bild 11;` / weg dasselbe mit F1000.
+- Verlauf: der erste Integrationslauf (Motor ohne Kraehen-Fix, 72 Tests) hatte genau 2 rote = die eigenen Tests mit dem neuen
+  M3b-Block (Erwartung, die exe war vor dem Kraehen-Fix gebaut); nach dem Neubau die 11 Kraehen-/1171-Tests
+  `ctest --test-dir re15_port/build -R "^integration_(r35_fenster|r36_elza_fenster|r37_elzaems_elza10c1kraehe|r37_elzaems_leon10c0kraehe|r37_roy_leon1170|r38_heliport1171_weg_re2|r38_heliport1171_weg_re15|r38_heliport1171_laden|r39_heliport1171_weg|r39_heliport1171_laden|r39_stimmen_1171)$" --timeout 1200 -j 3 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 11`.
+- Leon ROOM1170 (integration_r37_roy_leon1170, Abnahme-Lauf 19:31 gegen NB1-Lauf): Leon- und Elliot-Zeilen bytegleich.
+
+Stand: M1 (Sub-6-Saatbild), M2 (Schub-Ruecklauf), M3a (Einzelbilder = im Original gar kein Sub-6-Bild) und M3b (Kraehen
+zeichnen das zuletzt posierte Bild: INIT/ORIENT ab Bild 0, Landebild = Fall-Pose, Leiche Bild 11) sind gegen die
+Original-Instruktionen belegt, umgesetzt, am Lade- und am echten Weg nachgemessen und mit Riegeln gesichert, die am alten
+Motor rot werden. Johns Zeilen sind in beiden Wegen bytegleich zum Abnahme-Stand.
