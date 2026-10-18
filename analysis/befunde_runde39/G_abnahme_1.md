@@ -19,7 +19,7 @@ VORHER-exe der Abnahme 0 (Merge-Basis 22abaed9, `G39abn0/vorher_build`) wird wie
   `=== LOCAL-BUILD-OK (build)`, "ninja: no work to do" (exe 20:54:34; der letzte Commit b1da8c01 aenderte in
   karte_r39.c nur einen Kommentar).
 
-- Gezielter Lauf: s. Abschnitt 7 (laeuft im Hintergrund parallel zu den Messungen).
+- Gezielter Lauf: s. Abschnitt 7 (96/96 gruen).
 
 ## 1. Punkt 1a - Blaetter 1F/2F/3F/B2 im Vollzustand gegen die Soll-Haelften der Vorlagen (eigene Messung)
 Werkzeuge (Abnahme-0-Skripte, unveraendert kopiert nach G39abn1/: reg.py, vgl2.py, struktur.py; lauf.sh mit
@@ -247,4 +247,81 @@ West-/Nordtuer eines Raums mit Wandzeile: die Formel legt den Marker auf die Wan
   gedeckt - kein Mangel, Hinweis H3. Bilder: `G39abn1/3F_1060_links_soll_neu.png`, `G39abn1/3F_1170_links_soll_neu.png`
   (je: Vorlage links | Vorlage rechts | NEU, x6).
 
-(in Arbeit)
+## 7. Tests (gezielt, KEINE volle Suite im Spurbaum)
+- Gezielter Lauf, dieselben 96 Tests wie der Bau (alle Karten-/Hinweis-/Inventar-Gruppen, die der Diff beruehrt; mit
+  `ctest -N` gegen alle Tests mit karte/map/hinweis/hint im Namen abgeglichen - die nicht enthaltenen sind PRI-/Biss-/
+  Griff-Riegel ohne Kartenbezug): Regex wie im Dossier (Abschnitt "Nachbesserung 1 - Bau und gezielte Tests"),
+  `-j 4 --timeout 900 --output-on-failure` -> **100% tests passed, 0 tests failed out of 96** (697 s, parallel zu meinen
+  exe-Laeufen). Log: G39abn1/ctest_ziel.log.
+- `integration_r39_karten` einzeln mit -V nachgefahren: S Blatt 1/2/3 je 0 Abweichungen, Blatt 4 0 Abweichungen ausserhalb
+  der drei Kaesten (je 15/15 Sprossenpixel), Doppelwand 0/0/0/0/0, M Ring (183,72) rot=36 besucht=0, TN/TW/TZ je
+  "0 Koerperpixel am Grund" -> Passed (81,9 s).
+- Riegel messen (selbst gegengeprueft): der `offen`-Zaehler der Sonde (Laeufe TN/TW/TZ) auf die REGRESSIONS-Abzuege der
+  Abnahme 0 (Stand 40328436, G39abn0/al_*_neu): 1000 Nord-WC 23, 1070 34, 1010 Z0 30, 1020 15, 1040 14, 1050 1, 1000 Ost 38,
+  Sued-WC 9, 1080 8, 1220 Z0 16 -> ROT; auf meine NEU-Abzuege je 0. unit_r39_karten_teil/_treppen/_marker/_b1/_1090 mit -V:
+  alle PASS-Zeilen deckungsgleich mit den Zahlen dieser Abnahme (z.B. Treppen 1/1, 1/1, 0, 1/1, 1/2, 0/0, 0/1 px).
+- Kein Riegel fuer die 1210-Kammer (bewusst offen) - siehe N1.
+
+## 8. Vertrag / Pfade / Nebenwirkungen
+- Keine Bank-9-Bits, keine Nachrichten-Ids, keine Slots/Ereignisse belegt (Diff gelesen).
+- Pfade (`git diff master...HEAD --name-only`): engine/src/karte_r39.c, map_hint_common.c, re15_inv_screen.c,
+  re15_map_zones.h, include/re15_karte_r39.h, Tests unter tests/unit und tests/integration (*.cmake-Laufskripte, eine
+  Sonde probes/r39_karten.cmake); KEINE release/, platform/android/, shared_assets/PSX/, keine CMakeLists.txt.
+- Gemeinsame Dateien: die Nachbesserung aendert in re15_inv_screen.c nur die fuenf vorhandenen "Runde 39 Spur G"-Aufrufe
+  (Argument `st` durchgereicht, keine neue Zeile); map_hint_common.c unveraendert gegenueber Abnahme 0 (3 Haken).
+- Linux-/Parallel-Festigkeit der neuen Laeufe: `cmake_minimum_required` im -P-Skript, exe-Kopie
+  `re15_pc_r39g_karten_<id>` mit LAST_EXT, eigener Laufordner je Lauf, `m` gelinkt (probes/r39_karten.cmake). **haelt.**
+- Nebenwirkungen: Sweep aller 13 Blaetter NEU gegen VORHER (22abaed9): Blaetter 5..12 je **0** Pixel verschieden (andere
+  Stages unberuehrt); gegen den Stand der Abnahme 0 (40328436) nur B1 30 px (Treppe M2) und 3F 60 px (drei Treppen).
+  Elza (PL04) im echten Weg 10F1 -> 1091 wie Leon. ROOM1000 "Rot nur fuer die Zone, in der man steht" unveraendert
+  (Abnahme 0 Abschnitt 8).
+- Master-Stand: seit der Merge-Basis hat master nur test_r38_itemorte.c (Spur H) geaendert - keine Ueberschneidung.
+
+## 9. Urteile
+| Punkt | Urteil | Kurzbeleg |
+|---|---|---|
+| 1a Blaetter 1F/2F/3F/B2 nach den Vorlagen ("keine Doppelwaende, Tuer genau auf Wand, Treppen nicht in der Wand") | **erfuellt** | echte exe, Vollzustand: B2/1F/2F 0 Klassen-Abweichungen gegen die rechten Haelften, 3F nur die zwei begruendeten Treppensymbole (H3); Doppelwand 0 auf B1..3F, alle Tueren auf Wand, keine Treppe in einer Wand. Teilzustaende (M3): 15 Orte allein klassengleich mit dem Stand vor Runde 39, 0 verlorene Wandpixel (vorher 8..41); 9 weitere Teilzustaende (Paare, Plan) ohne Doppelwand und ohne offene Seite; 3F-Raeume 1130/1120/1140 allein ebenso. gdigrab = FB-Abzug |
+| 1b "natuerlich muss der Spielermarker da entsprechend passen" (Polizeistation) | **teilweise** | Marker in jeder begehbaren Lage auf der Zeichnung: 1030/1060/10A0/1110/1170 Z1/10C0/1120/10E0/1090 je 0 (jeder Rasterpunkt), Treppen <= 2 px am Symbol (echte exe 1060: Ring (122,143) auf (122,144)); Tuerspruenge Stage 1 Mittel 4,9 -> 3,9 px, max 20 -> 9. ABER ROOM1210 Suedwest-Kammer: echte exe, Leon laeuft hinein -> Ring (191,117) 10 px neben der Zeichnung, 1 693/10 387 Punkte (N1) |
+| 1c B1 neu ("passt nichts zusammen mit dem wie man sich bewegt") | **erfuellt** | Abnahme 0 (Gang 2,13..2,29 px/1000, Tuersprung <= 6 px, 0 Punkte neben der Zeichnung) unveraendert bestaetigt (unit_r39_karten_b1 mit -V, Sweep B1 Doppelwand 0); M2 behoben: keine Sprosse beruehrt eine Wand (vorher Unterkante y168) |
+| 1 gesamt | **teilweise** | wegen 1b (N1) |
+| 2 ROOM1090 Leons Marker im aktuellen Raum | **erfuellt** | Nutzerpunkt Ring (183,72) im Rot (vorher (186,83) im gruenen Nachbarraum), gdigrab des echten Fensters bestaetigt; echter Weg Leon 10F0 -> Klettern -> Tuer: Ring (182,72) im Rot; echter Weg Elza 10F1 -> 1091 (PL04): Ring (182,72) im Rot; Flaeche 0 von 11 059 / 5 178 |
+
+## 10. Maengel (nummeriert, nachpruefbar)
+- **N1 (Punkt 1b; Zeichnung oder ausdrueckliche Nutzerentscheidung noetig):** ROOM1210 (B2) Suedwest-Kammer - begehbar
+  (SCA: Oeffnung zwischen dem Ende der Flur-Westwand @0x01BC8 bei z -20746 und dem Beginn der Kammer-Ostwand @0x01C40
+  bei z -22520), aber weder im Original (MAP02.PIX r3, Zeile @0x800769B8) noch in mapB2_correct.png gezeichnet.
+  Pruefen: Spielstand `probe_r36_karte karte re15_card.mcr 1210 -19500 0 -21700 2048 besucht:11E0:0:0
+  besucht:1210:-19500:-21700`, LOAD GAME, `RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT=W1,U4,W5`, Karte bei
+  `RE15_INV_OPEN_AT=200#1210` -> debug.log `pos=(-25500,0,-21700)`, Ring (191,117) im Blau links der Flurwand x201.
+  Flaeche 1 693 von 10 387 Rasterpunkten (`probe_r39_karten markerflaeche 1210 0 -25800 -2200 0 100 1`). Gleiche
+  Fehlerklasse wie Nutzerpunkt 2. Der Bau hat die Wahl an den Nutzer gegeben; nach Memory reai-v2-original-oder-nicht
+  ("keine Wahlfragen") und Beta->Retail (RE2 zeichnet jede begehbare Flaeche) ist das Dazuzeichnen der Kammer samt
+  Durchgang (Methode wie B1 / ROOM1000 aus der Kollision) der vom Wortlaut gedeckte Weg; alternativ bestaetigt der Nutzer
+  ausdruecklich "B2 bleibt wie die Vorlage". Bis dahin ist Punkt 1 teilweise.
+
+## 11. Hinweise (kein Mangel)
+- **H1 (vorbestehend):** Tuer 1030<->1050 `{2,4,186,152,3,4,6,1}` - ist 1050 besucht und 1030 nicht gezeichnet, steht der
+  Balken (186,150..154) eine Spalte links neben der 1050-Wand x187 im Leeren (VORHER- und NEU-Abzug pixelgleich,
+  G39abn0/al_1050_alt gegen G39abn1/zs_al_1050; ebenso Zustand 1050+1070). Im Vollzustand (Vorlage) korrekt auf der einen
+  Wand x186.
+- **H2 (vorbestehend, mit den Wandzeilen sichtbarer):** Klemmung `reserve = 4` ins NOMINALE Kachel-Rechteck
+  (re15_inv_screen.c:869): an West-/Nordwaenden bleibt der Marker 4 px von der Wand (z.B. 1060 1F Marker x 123..135 bei
+  Waenden x119/x136; Ankunft 1130 -> 1170 y91 -> y93), an Ost-/Suedwaenden reicht er bis an die Wand. Folge: vier
+  Tuerpaare springen 1..3 px weiter als vorher (1060->10C0 2->5, 1060->1120 3->6, 10C0<->10D0 5->6, 10D0<->10E0 2->5),
+  bei insgesamt kleineren Spruengen (Abschnitt 3d). Im Dossier offen benannt.
+- **H3:** 3F weicht an zwei Treppensymbolen bewusst von map3F_correct.png ab (Abschnitt 6) - dem Nutzer zur Bestaetigung
+  vorlegen (Dossier "Fuer den Nutzer" tut das).
+- **H4 (neu, kosmetisch):** ROOM1130 (3F r4) allein gezeichnet: die IMMER-Korrektur verschiebt die Westlinie x144 -> x145
+  bzw. x152 -> x153, die Eckpixel der Quer-Linien bleiben stehen -> drei 1-px-Wandnasen (144,80), (144,119), (152,158)
+  (G39abn1/zs_al3_1130). Im Vollzustand von den Nachbarn verdeckt; Raum geschlossen, keine Doppelwand.
+- **H5:** ROOM1170 Zone 1 liess sich auch von mir nicht in der echten exe abziehen (CONTINUE mit (3,125)=1 feuert
+  `DOOR FIRE slot=2 ... spawn=(-26214,0,-3861)` nach ROOM1240; Tuer 1130 slot 3 loeste in drei Standlagen nicht aus).
+  Die Sonde ist an 13 Lagen auf fuenf Blaettern (B1, B2, 1F, 2F, 3F) als identisch zur exe belegt (Abschnitt 3a); ihre 1170-Z1-Zahlen
+  (0/2873, Dach 0/1656) gelten.
+- **H6 (vorbestehend, nicht Polizeistation):** 11A0 Band 1 (Blatt 6) 102/444 Punkte neben der Zeichnung - von Runde 39
+  nicht beruehrt.
+
+## 12. Ergebnis
+**bestanden = false.** Punkt 2 erfuellt; Punkt 1 teilweise (1a und 1c erfuellt, 1b wegen N1: ROOM1210-Kammer). Die
+Maengel M1..M4 der Abnahme 0 und M5 ausser dem 1210-Teil sind an der echten exe nachweislich behoben (M3-Regression weg,
+Treppen am Symbol, Marker in der Zeichnung). Alle Gates (RE, Vertrag, Pfade, gezielte Tests 96/96) halten.
