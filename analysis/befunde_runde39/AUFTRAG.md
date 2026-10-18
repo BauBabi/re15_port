@@ -62,3 +62,29 @@ f4412ec1 / a0619152 committet, Messreihen + Pruefung fehlen), NACHLAUF analysis/
   (main02..08), synchro/STAGE1/room1241.
 - Karten-Vorlagen: map1F_correct.png, map2F_correct.png, map3F_correct.png, mapB2_correct.png (Repo-Wurzel bzw. nutzer/ - beim
   Start der Runde suchen und committen).
+
+## Nachtrag des Nutzers (woertlich, 2026-10-18 ~07:00, nach dem Wochenlimit-Abbruch der Welle 1)
+
+Zur Rueckfrage ROOM1141 Punkt 5 ("Oh, no, this is Roy! ..."): "Das ist natürlich John, nicht Roy. Roy ist nur unten in
+den ROOM 1021 aktiv." -> Elzas Zeile lautet "Oh, no, this is John! He is in Trouble, I have to help him!" (Spur J).
+
+Neuer Punkt (Ende der erneut gesendeten Liste):
+- Die Gorillas haben beim springen direkt ihren Schatten unter dem beim.
+  (Orchestrator: Spur E - der Schatten haengt beim Sprung mit in der Luft unter dem Koerper statt auf dem Boden zu bleiben.)
+
+Ablauf erneut bestaetigt: "Baue erst einmal fertig, nutze diese und baue das Stück für Stück, damit nicht zu viel
+Tokens verbrannt werden, wenn das Limit erreicht ist."
+
+## Nachtrag 2 des Nutzers (woertlich, 2026-10-18 09:48, Antwort auf die Hinweise der Spur A Stimmen)
+
+- "er Port kann die Stimme ruhig lauter anheben das es passt." (Irons' Zeilen ROOM1150 main18-21, -47 dBFS)
+- "Du hast recht, das SIR, sir! habe ich vergessen und jetzt mit main22 ergänzt." (synchro/STAGE1/room1150/main22.wav,
+  Datei vom 2026-10-18 09:45 = Zeile msg 29 "Leon: SIR, Sir?!")
+- "Ändere es zu unwanted followers im Text bei 11B0."
+- "Zu 1171, passt."
+
+Orchestrator (Nachbesserung 1 der Spur A): (1) Port-Anhebung von Irons' Dateien ueber den 4x-Deckel hinaus =
+NUTZER-VORGABE; "dass es passt" ist zu MESSEN (Bezug: Leons Zeilen derselben Szene / BGM MAIN1E), keine geratene Zahl.
+(2) Tabelle: ROOM1150 msg 29 <- main22.wav (Nutzer legt weiter mit der naechsten freien Nummer ab). (3) ROOM11B0 msg 21
+lautet schon "I just want to make sure / we don't have any unwanted followers." (tools/r36_j/szene11b0_bauen.py:286,
+gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aendern; dem Nutzer gemeldet. (4) erledigt.

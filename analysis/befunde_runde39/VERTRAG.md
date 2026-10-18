@@ -19,7 +19,7 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | 1 | C | inventar / r39_inventar | 1000 Spind: erst Handgun-Munition, dann "Nothing useful"; Memory Cards stapelbar; Elza-Inventar ohne Leons Bild/Karte; gelbe Karte nach "discard" weg |
 | 1 | L | optik / r39_optik | F9-Marke 1100 Cut 1: Bodenstreifen deckt Leon; Schluessel 10F0/10F1 kleiner/dezenter |
 | 2 | D | treffer / r39_treffer | halb aufstehende Zombies treffbar; Zombies ueber den Tisch treffbar; Auto-Aim nur fuer sichtbare Gegner |
-| 2 | E | gegner / r39_gegner | Parking-Lot-Gorillas doppelte Energie + Flinch erst nach 3 Handgun-Treffern; kein paralleler Hundebiss (1090); liegende Zombies kriechen (1220/1221, 1010) |
+| 2 | E | gegner / r39_gegner | Parking-Lot-Gorillas doppelte Energie + Flinch erst nach 3 Handgun-Treffern; kein paralleler Hundebiss (1090); liegende Zombies kriechen (1220/1221, 1010); Gorilla-Schatten beim Sprung bleibt am Boden (Nachtrag 2026-10-18) |
 | 2 | F | zustand / r39_zustand | volle Heilung = ganze Kleidung; Gift zieht Energie (EKG) wie RE2 |
 | 2 | H | elza / r39_elza | 1031 Hand nur einmal heben; nach Roys Tagebuch sofort die Karte mit Markern; Elza klettert in 1091 nicht aufs Autowrack |
 | 3 | G | karten / r39_karten | Karten 1F/2F/3F/B2 nach map*_correct.png, B1 neu; 1090-Marker im Raum |

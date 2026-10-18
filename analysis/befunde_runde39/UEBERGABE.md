@@ -6,6 +6,47 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 09:34: Spur A stimmen BESTANDEN (Abnahme 0, bb285672; Bau 90d6395e): Ursache = Lader sucht main<MSG-ID>.wav,
+  Nutzer legte mit der naechsten freien Nummer ab; Tabelle (Raum, Nachricht) -> Datei (stimmen_r39.c): 1050 msg 22-24 <-
+  main09-11, 1150 msg 22-28 <- main15-21, 11B0 msg 20/21 <- main13/14, 1171 msg 3 <- main02 (Form RE2 xa_on @0x80058028),
+  93/93 gezielte Tests. In die Integration gemergt (fc7a0231, konfliktfrei) -> ALLE VIER Spuren der Welle 1 ohne
+  Nachbesserung bestanden. FUER DEN NUTZER: (1) Irons' Zeilen 1150 main18-21 sind -47 dBFS (22 dB leiser als Leon), der
+  Port hebt max. 4x -> Irons liegt 10-12 dB unter der BGM: lauter exportieren oder Port-Anhebung >4x (Port-Wahl)?
+  (2) 1150 msg 29 "Leon: SIR, Sir?!" hat keine Aufnahme (main29.wav wuerde sofort spielen). (3) 11B0 msg 21 spricht
+  "unwanted followers" (Szenentext = Aufnahme), nicht "unexpected visitors". (4) 1171 msg 2 "C'mon, give me a hand!"
+  zeigt das Original nie. Integration: B/C/L-Tests laufen (-j 3), danach Bau mit A + A-Tests.
+* 2026-10-18 09:30: Spur L optik BESTANDEN (Abnahme 0, 9c149629; Bau 9726b606): Westwand-Masken ROOM1100/1101 Cut 1/2 enden
+  an der GEMALTEN Ecke (Original hat dort keine Masken, pri @0x60C/@0x610 FF FF FF FF; Vorbild ROOM1030 Cut 3 Maske 2 endet an
+  der gemalten Kante; Nutzer-Marke F741: Streifen 134 -> 1 Punkt), Schluessel 10F0/10F1 auf RE2-Bildgroesse (oberes Quartil
+  L_nat*H/vz der RE2-Platzierungen; Leon 491 -> 69 px, Elza 217 -> 63 px bei 960x720), 64/64 gezielte Tests. In die
+  Integration gemergt (5ba0cc96, konfliktfrei; r37_pri1100-/r38_itemorte-Riegel = gewollte Anpassungen). FUER DEN NUTZER:
+  H1 Prison Key jetzt 16 px breit (Hebel RE2_QUANTIL in tools/r38_itemorte/itemorte_export.py, Max 1,0 = 26 px); H2 bei Elza
+  bleiben 37 Punkte auf der Sockel-Kantenlinie 171/172 (Wandbasis, Streuung der Original-Masken); H3 zweite Marke
+  befund_1090_F1357 = Kartenbildschirm (Positionsmarke ausserhalb) -> Spur G. Integrationsbaum: configure+build gestartet.
+* 2026-10-18 09:02: Spur C inventar BESTANDEN (Abnahme 0, 103347cc; Bau a78ee047): Spind 1000 Munition 0x15 x15 Bit (9,69),
+  Stapeln aller Mengen-Items (sltiu 0x22 @0x80049124, Obergrenze 250 @0x80074DA8, Aktion 5 @0x8004e664), Elza-Status
+  STPIC_04 (DEBUG.BIN FUN_800c01c4), Yellow Keycard: Abfrage nach dem Code (Gate (3,139) @0x01A8A, Generator-E5 je
+  Szenario-Variante); Alt-Riegel r21/r26/r37 nachgezogen. In die Integration gemergt (905e0f6d, konfliktfrei). FUER DEN
+  NUTZER (Zu entscheiden): Spind-Munition 15 (Port-Halbierung 2026-09-20) oder 30 wie der Original-Satz ROOM1001; Granaten
+  0x09..0x0B stapeln jetzt auch (Regel "alles mit Zahl") - gewollt?; "discard"-Abfrage gab es fuer die gelbe Karte vorher
+  nicht - jetzt fragt ROOM11E1 nach dem richtigen Code (RE2-Form, einmal).
+* 2026-10-18 08:10: Spur B toene BESTANDEN (Abnahme 0, 52b39720; Bau 66aea987): Schublade = ROOM11F0/11F1 (RE2 ROOM1130
+  0x28), Gitter + Schrank = ROOM1190/1191 (RE1.5 ROOM2060 0x0E/0x0D, RE2 ROOM1120 0x0C), 31/31 gezielte Tests. Maengel M1/M2
+  (Kommentare) vom Orchestrator nachgezogen. Integrationsbaum .claude/worktrees/r39_integration (r39/integration von master
+  6d4abe35), B per --no-ff gemergt. Paket-Gate TOENE39.VBS in release/make_package.sh (H6). FUER DEN NUTZER (Release Notes
+  "Zu entscheiden"): H1 Raumnummern (genannt 10F0/1090, gemessen 11F0/1190 - 10F0/1090 haben keine Schublade/keinen
+  Schrank), H2 Regal-Welle klingt ~1 s nach dem Halt aus (RE2-Form), H3 Zu-Ton am Gitter zusaetzlich, H4 Schubladen-Ton bei
+  jedem Oeffnen.
+* 2026-10-18 07:20: WOCHENLIMIT beendete um ~03:10 alle vier Bau-Agenten der Welle 1 ("weekly limit, resets Oct 23";
+  danach Kontowechsel, Modell Fable 5.1). Dossiers + wip-Commits lagen vor (A 3, B 4, C 3, L 3 Commits); Reste als
+  UNGEPRUEFT gesichert (inventar dfde7745, optik 9bd581fe). Nutzer-Nachtrag (cb7d7855): 1141 Punkt 5 = JOHN, nicht Roy;
+  NEUER Punkt "Gorilla-Schatten beim Sprung" -> Spur E (VERTRAG, r39_kopf.js). Welle 1 FORTGESETZT mit stand-Texten,
+  neue Laeufe (args woertlich in orchestrator/args_welle1_forts.json): A wf_04388b3a-a3c, B wf_59e6e9bb-274,
+  C wf_d5013a11-cfa, L wf_ccdd741a-c8e. Waechter neu geschaltet.
+* 2026-10-18 02:36: WELLE 1 GESTARTET auf master 3e49ff87 (nach Release v0.8.26 754f67ad), je Spur ein eigener Lauf von
+  orchestrator/r39.js (Waechter je Lauf). Resume nur mit IDENTISCHEN args `{"welle": ["<X>"], "slots": 1, "max_nach": 1,
+  "basis": "3e49ff87"}`: A stimmen wf_28cb3826-7cd, B toene wf_6b21d705-6d7, C inventar wf_5fada65b-ca3,
+  L optik wf_844e8fa6-7d9. Baeume .claude/worktrees/r39_{stimmen,toene,inventar,optik}.
 * 2026-10-18 01:50: Vorbereitung waehrend des Release-Laufs 3 von v0.8.26 (keine Agenten, keine Last): VERTRAG.md (12 Spuren
   A-L, 3 Wellen zu je 4), orchestrator/r39_kopf.js (Spuren + Wortlaut + Einstiege) ->
   mk_r39.py -> r39.js (Rumpf aus r38.js, Syntax geprueft), mk_wt39.sh, nutzer/ (map*_correct.png, F9-Marken 1100 21:49 und
