@@ -19,7 +19,21 @@ Flag reicht.
 4. Messung am echten Weg mit Elza, Riegel unit + integration.
 
 ## 1. Messung vorher
-(laeuft, s. 1.1)
+
+### 1.1 Stand master 02dc7917 (Baum gebaut 00:35): (9,97) loest nichts aus
+Lauf m_vorher (scratchpad/q/m_vorher): Elza-Spielstand ROOM1041 (-21008,-13134), CONTINUE, `RE15_SET_FLAG_AT=9:97@200`,
+Ende Bild 700. debug.log: `[setflag-at] Frame 200: flag(9,97/0x61) = 1`, danach bis Bild 700 nur `[walk]`-Zeilen im
+selben Raum, kein Raumwechsel, kein Spawn. `grep` im Code: kein Leser von (9,97) in master.
+
+### 1.2 ROOM1061 gemessen (Grundlage der Lagen)
+* Cut 2 (Tuer-Schnitt aus 10C1) = der 2F-Treppenabsatz: Fenster links, "F2", Tuer zu 10C1 rechts, Treppe abwaerts
+  hinter dem Gelaender (Lauf B), Treppe aufwaerts unten links (Lauf A). Bilder: Q_belege/q_1061_cut2_tuer.png (Elza an der
+  Tuer-Ankunft (26000,-7200,25300)), Q_belege/q_1061_westseite_treppenkopf.png (links (20600,26200) = Westseite unter dem
+  Fenster, rechts (25000,24600) = Treppenkopf von unten).
+* Aufstieg von unten (Lauf e1061e): Elza Etage 2 (25000,-3600,19000) Blick +z, Vorwaerts + Aktion -> Treppe (mo 221) von
+  z 19532 nach z 24568, Ende Bild 165 bei (25023,24568), Kamera 4 -> 3 -> 2. = ANKUNFTSPUNKT von unten (Etage 4).
+* Treppen brauchen die Aktionstaste (Sonde 620 vor der Blickrichtung, stair_common.c `@0x80042bd0`; Band-Gate).
+
 
 ## 2. RE-Belege
 
@@ -86,11 +100,67 @@ Raumnamen DEBUG.BIN (include/debug_jump_table.h, Stage 0): 0x03 LOBBY, 0x04 WEST
 * "im ROOM 1031 ueber die Absperrung/Das Rollo, so wie bei der cutscene" = Leons Tor-Schritt: die Original-Szene
   1031 sub08 (s. 2.2), Kriecher durch das aufgebrochene Rollo, Cut 12.
 
+### 2.4 Bits, Plaetze, Ereignis (Zensus)
+* Zone-7-Tot-Bits: Zensus aller Sce_em_set in STAGE1-3 (132 RDTs mit SCD, scd_walk_lib): 176 belegt; frei u.a. 100..105,
+  109..112, 117..119, 124..133, 144, 145. Leons Port-Kopien: 40..43, 46..49, 75..79, 83, 84, 90, 91, 95. Port-Programme mit
+  Sce_em_set sonst nur 0xff (NPCs) und 0xcb/0xcc (1141-Gorillas, Original-Bits). GEWAEHLT: 124..127 (1061), 128..132 (1031
+  Cut 7), 133/144/145 (Kriecher).
+* Bank 9 Bit 95 (VERTRAG 1.1 an Q): kein Ck/Set (9,95) in STAGE1; Riegel unit_r36_kartenbits prueft gegen den Original-Satz.
+* Tuer-Slot 20 frei in 1041 (0..8), 1061 (0..10, 16), 1031 (0..19). Ereignis 30 frei (Port: 2..6, 13, 20..29).
+  Bank 5 Bits 28/29 frei in 1041/1031 (0..20, 32..35) und 1061 (keins).
+* ROOM1031 Tonbank = ROOM1030 (alle 6 Bank-Abschnitte RDT+0x08..0x1C byte-gleich, 0x200 + 0x4000 B verglichen) -> der
+  Original-Se_on `36 02 0c ..` @0x02862 klingt wie Leons @0x02776.
+* ROOM1041 Tueren: Slot 1 @0x010B8 -> 0x03 (1031), Slot 2 @0x010D8 -> 0x06 (1061, Spawn (26000,0,25300) Cut 7).
+* Elza-Intro in 1031: main00 @0x0204A `Ck(3,193)=0` -> Tuer Slot 18 nach 0x24 + sub12 (Set(3,193)) = Intro-Weiterleitung;
+  die Rollo-Zombies (main00 @0x01E58..) nur bei (3,125)=1 (@0x01E54). Im Spiel nach dem Intro gilt (3,125)=(3,193)=1 —
+  Messlaeufe muessen das im Spielstand tragen (Lauf k1 ohne: Sprung nach ROOM1241 = Intro, Kette unterbrochen).
+
+### 2.5 Lagen ROOM1061 (aus 1.2 und der SCA, Regel statt Zahl)
+* Freie Flaeche Etage 4 = SCA-Zellen floor-Byte 0x43 (Waende @0x00584/@0x00590/@0x0059C/@0x005B4, Kern @0x005A8, Lauf-B-
+  Block @0x005C0), Gegner-Radius 400, Abstand >= 800.
+* Montage-Spawn: dichteste Packung um die Tuer-Ankunft (26000,25300) (ROOM10C1 @0x00E42): (26000,25300), (25200,25300),
+  (26000,24500), (26000,26100); Gier 2048 (Eintrittsrichtung der Tuer, @0x00E42 Nutzlast `00 08`).
+* Nachspawn "moeglichst weit weg an der Seite": weiteste Packung vom gemessenen Ankunftspunkt (25023,24568):
+  (20200,26550) 5214, (20200,25750) 4966, (21000,26550) 4485, (20900,25350) 4197 = Westseite unter dem Fenster.
+* Parkplatz Cut 2: hinter der Bildebene, Etage 4, kleinster Winkel zur Linie Tuer -> Kamera: (20200,20400), Tiefe -718,
+  5,4 Grad; ausserhalb der RVD-Zonen von Cut 2; eine BLK-Zone -> Navigator-Ziel = Spielerlage.
+
 ## 3. Umsetzung
-(offen)
+* NEU engine/src/elzazombies_r39.c + include/re15_elzazombies_r39.h (alle Konstanten mit Beleg im Kopf).
+* Haken (je 1-2 Zeilen, "Runde 39 Spur Q"): scd_vm.c (Ereignis 30 in der Ereigniskette, sub01-Sperre im Montage-Schritt,
+  Takt am Kopf des VM-Laufs), scd_room_setup.c (Installer am Ende des Blocks), platform/pc/main.c (CONTINUE-Weg:
+  re15_elzazombies_r39_geladen = Laden ist keine Flanke), tests/unit/test_r36_kartenbits.c (k_port: (9,95)).
+* Kette: Flanke (9,97) 0->1 im Spiel, Elza, (9,95)=0 -> ausstehend; Start sobald frei (re15_cine_active = 0, player_mode
+  != 2, kein Raumwechsel, kein Kartenhinweis angefordert), nicht in 1061/1031 selbst. Start: Umzug (Quell-Bits 1, Kopie-Bits
+  0 bzw. 1 fuer Tote, (9,95)=1), Rueckkehr-Stelle merken, Programm A (Riegel, Sleep 60, Knall, Sleep 45, Tuer).
+  B = 1061 Cut 2 (4 Saetze, Gate entscheidet), C = 1031 (Leons 1030-Programm mit den 1031-Zeilen), D = Rueckkehr.
+* Verhalten in den Schnitten (Leons Bausteine 3/4/5) im eigenen Takt (Leons montage_r38.c bleibt unberuehrt).
+* Nachspawn 1061 (Programm E): die vier Saetze an der Westseite, gehalten (entity+0x9 |= 0x20) solange die Spielerin
+  nicht auf Etage 4 steht (Band = -(y/0x708)); dann frei. Nachspawn 1031 (Programm F) wie Leons k_p_1030_nach.
+
 
 ## 4. Messung nachher
-(offen)
+
+### 4.1 Erstlauf der Kette (Lauf k2, exe aus cc66567d + Kartenhinweis-Fix)
+Elza-Spielstand ROOM1041 (-21008,-13134) mit (3,125),(3,193),(3,116) (Intro durch, 1011 besucht), 10E1/1071 nicht
+betreten (alle leben), `RE15_SET_FLAG_AT=9:97@200`. debug.log (gekuerzt):
+```
+[elzazombies-r39] Flanke (9,97) 0->1 in ROOM1041 Takt 203 -> Montage ausstehend
+[elzazombies-r39] Umzug: 10E1 lebend 4 -> 1061, 1071 lebend 5 -> 1031 Cut 7; (9,95)=1
+[elzazombies-r39] Folge #1 K ROOM1041 T61 0          (Tuerknall)
+[room] PC loaded room1061.rdt                        Folge S +4, C 2
+ROOM1061 Cut 2 Bild 176: Bit 124 Abstand zur Kamera 7062 -> 6245, Bit 125 6421 -> 4849, Bit 126 6638 -> 5476,
+                         Bit 127 7547 -> 5009; Spieler-HP min 100
+[room] PC loaded room1031.rdt                        Folge S +5, C 7
+ROOM1031 Cut 7 Bild 207: Bits 128..132 8272 -> 4671, 6235 -> 1586, 4644 -> 1401, 7222 -> 2406, 5599 -> 729
+Folge K 2 (Original-Se_on @0x02862) T457, S +3 (Kriecher) T467, C 12 T489
+ROOM1031 Cut 12 Bild 335: Raum-Zombies Bits 0..5 12906 -> 8254 .. 14332 -> 9008; Kriecher 9827 -> 5634, 10558 -> 6319,
+                          9560 -> 5262; 1071-Kopien hinter der Kamera angehalten (Baustein 3); Spieler-HP min 100
+[room] PC loaded room1041.rdt -> Rueckkehr (Programm D) -> "Rueckkehr beendet, Steuerung frei" bei (-21008,0,-13134) Cut 0
+```
+Bilder Q_belege/q_kette_erstlauf.png: Reihe 1 = 1061 Cut 2 Bilder 10..170 (vier Zombies an der 10C1-Tuer, gehen nach links
+zur Kamera), Reihe 2 links = 1031 Cut 7 Bilder 40..160 (Kopien aus dem 1071-Gang auf die Kamera zu), danach Cut 12 Bilder
+220..520 (aufgebrochenes Rollo, Kriecher unter dem Rollo durch auf die Kamera zu).
 
 ## 5. Tests
 (offen)

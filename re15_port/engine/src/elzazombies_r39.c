@@ -572,10 +572,10 @@ static void knallbank_laden(void)
 }
 
 /* "Keine Szene laeuft": die Rahmen-Flags jeder Original-Szene ((1,27) || (2,7), re15_cine_active), kein Skript-Spieler
- * (player_mode 2), kein Raumwechsel, kein offener Kartenhinweis. */
+ * (player_mode 2), kein Raumwechsel, kein angeforderter Kartenhinweis (re15_map_hint_pending: -1 = keiner). */
 static int frei(void)
 {
-    return !re15_cine_active() && g_scd.player_mode != 2 && !g_room_change.pending && !re15_map_hint_pending();
+    return !re15_cine_active() && g_scd.player_mode != 2 && !g_room_change.pending && re15_map_hint_pending() < 0;
 }
 
 static void start_kette(void)
