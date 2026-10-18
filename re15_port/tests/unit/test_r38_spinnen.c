@@ -16,7 +16,8 @@
  *     (5975, 4625 - 1488 = 3137). RE2: danach RE2-INIT auf dem Boden (+0x222 = 0, y 0).
  *  B  GIFT (Nutzerpunkt 2): die gelandete Spinne spuckt (RE1.5 Unterzustand 7 / RE2 Unterzustand 8):
  *     drei Effektplaetze 0x0d (Raum-ESP), Treffer -> Spieler HP -10 (Resolver Art 0), Zustand 2,
- *     Gift-Bit 0x2; Wirkung alle 121 Bilder HP -2 (@0x80031e44-ecc), nie toedlich (HP 1);
+ *     Gift-Bit 0x2; Wirkung (seit Runde 39 Spur F in der RE2-Form, FUN_8003bfac @0x8003c12c-180): alle 31 Bilder
+ *     HP -1 bis HP 1 (RE1.5-Beta-Form @0x80031e44-ecc: -2 alle 121 war der Stand der Runde 38);
  *     Gegengift 0x23 loescht das Bit (@0x8004af8c).
  *  C  MINISPINNEN (Nutzerpunkt 3, RE2-KI, ROOM2030, Boden -5400): Spinne mit der Schrotflinte
  *     getoetet -> Babys (Typ 0x26) stehen auf dem Boden des Elternteils (y -5400, +0x1C2 -5400,
@@ -49,6 +50,7 @@
 #include "re15_anim_select.h"
 #include "re15_md1.h"
 #include "re15_spinnen_r38.h"
+#include "re15_zustand_r39.h"   /* Runde 39 Spur F: RE2-Gift-Takt */
 #include "re15_math.h"
 
 #ifndef RE15_ASSET_PSX_DIR
@@ -393,10 +395,15 @@ static void teil_b3(void)
     CHECK(hp == 100 && !(pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() == 0,
           "geschuetzter Spieler: HP %d, status 0x%04X, Gift-Treffer %u (kein Schaden, kein Gift)", hp, pl->status_flags,
           re15_spinnen_r38_gift_treffer());
+    re15_zustand_r39_reset();
     hp = b3_lauf(0);
-    CHECK(hp == 88 && (pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() >= 1,
-          "Gegenprobe freier Spieler: HP %d = 100 - 10 (Treffer) - 2 (Gift sofort, Zaehler 0 @0x80031e74), status 0x%04X, "
-          "Gift-Treffer %u", hp, pl->status_flags, re15_spinnen_r38_gift_treffer());
+    {   /* Runde 39 Spur F: RE2-Takt — Zaehler 30 am Treffer (@0x80020138-40), erster Abzug 31 Bilder spaeter
+         * (@0x8003c12c-180), innerhalb der 60 Bilder also 0 oder 1 Takt zu -1 HP. */
+        int takte = (int)re15_zustand_r39_gift_takte();
+        CHECK(hp == 90 - takte && takte <= 1 && (pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() >= 1,
+              "Gegenprobe freier Spieler: HP %d = 100 - 10 (Treffer) - %d (RE2-Gift-Takte zu -1 HP), status 0x%04X, "
+              "Gift-Treffer %u", hp, takte, pl->status_flags, re15_spinnen_r38_gift_treffer());
+    }
 }
 
 /* B5 (Nachbesserung 1, Mangel 3 — Nachtrag Integration 2026-10-17 07:36, Spur B): der Giftklumpen laeuft im ESP-Takt
@@ -446,10 +453,14 @@ static void teil_b5(void)
     CHECK(hp == 100 && !(pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() == 0 && s_b5_hr_falsch == 0,
           "Szene haelt: HP %d, status 0x%04X, Gift-Treffer %u, +0x93 vom ESP-Takt veraendert %d mal (kein Schaden, "
           "kein Gift; vorher 88 + Gift)", hp, pl->status_flags, re15_spinnen_r38_gift_treffer(), s_b5_hr_falsch);
+    re15_zustand_r39_reset();
     hp = b5_lauf(0);
-    CHECK(hp == 88 && (pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() >= 1,
-          "Gegenprobe frei (player_mode 0): HP %d = 100 - 10 - 2, status 0x%04X, Gift-Treffer %u", hp, pl->status_flags,
-          re15_spinnen_r38_gift_treffer());
+    {   /* Runde 39 Spur F: RE2-Takt (Zaehler 30 am Treffer @0x80020138-40, -1 HP alle 31 Bilder @0x8003c12c-180) */
+        int takte = (int)re15_zustand_r39_gift_takte();
+        CHECK(hp == 90 - takte && takte <= 1 && (pl->status_flags & 2u) && re15_spinnen_r38_gift_treffer() >= 1,
+              "Gegenprobe frei (player_mode 0): HP %d = 100 - 10 - %d (RE2-Gift-Takte), status 0x%04X, Gift-Treffer %u",
+              hp, takte, pl->status_flags, re15_spinnen_r38_gift_treffer());
+    }
 }
 
 /* B4 (Nachbesserung 1, Mangel 1): der Gift-Takt im ECHTEN Spielschritt (re15_game_step mit rdt_ok, ESP-Takt wie bild())
@@ -471,38 +482,44 @@ static void teil_b4(void)
     for (int f = 0; f < 5; f++) bild();                       /* Spieler im Kommando 1 einschwingen */
     pl->hp = 100; pl->status_flags = 2; pl->hit_react = 0;
     re15_spinnen_r38_reset();
+    re15_zustand_r39_reset(); re15_zustand_r39_gift_setzen();   /* Runde 39 Spur F: RE2-Takt, Zaehler 30 (@0x80020138-40) */
     const int32_t x0 = pl->x, z0 = pl->z;
     const int se0 = g_test_core_se_count;
     int takt[4] = { -1, -1, -1, -1 }, nt = 0, abzug_falsch = 0, flinch = 0, clip = 0, weg = 0;
-    for (int f = 0; f < 400; f++) {
+    for (int f = 0; f < 124; f++) {
         int16_t vor = pl->hp;
         bild();
-        if (pl->hp != vor) { if (nt < 4) takt[nt] = f; nt++; if (vor - pl->hp != 2) abzug_falsch++; }
+        if (pl->hp != vor) { if (nt < 4) takt[nt] = f; nt++; if (vor - pl->hp != 1) abzug_falsch++; }
         if (re15_player_hit_flinch_active()) flinch++;
         if (pl->motion == 8 || pl->motion == 9 || pl->motion == 0x0a) clip++;
         int w = abs(pl->x - x0) + abs(pl->z - z0);
         if (w > weg) weg = w;
     }
-    CHECK(nt == 4 && abzug_falsch == 0 && takt[1] - takt[0] == 121 && takt[2] - takt[1] == 121 && takt[3] - takt[2] == 121,
-          "stehend: %d Takte zu -2 HP in Bild %d/%d/%d/%d = Periode 121 (Zaehler 0x78 + 1 @0x80031e78; vorher 143)",
-          nt, takt[0], takt[1], takt[2], takt[3]);
+    CHECK(nt == 4 && abzug_falsch == 0 && takt[0] == 30 && takt[1] - takt[0] == 31 && takt[2] - takt[1] == 31
+          && takt[3] - takt[2] == 31,
+          "stehend: %d Takte zu -1 HP in Bild %d/%d/%d/%d = Periode 31 (RE2 Zaehler 30 @0x8003c15c, Abzug bei 0 "
+          "@0x8003c158-80; Runde 38: -2 alle 121)", nt, takt[0], takt[1], takt[2], takt[3]);
     CHECK(flinch == 0 && clip == 0 && weg == 0 && g_test_core_se_count == se0,
           "stehend: keine Treffer-Reaktion (Flinch-Bilder %d, Clip 8/9/0xa %d, Rueckstoss %d, SE CORE %d; vorher je Takt "
           "22 Bilder Clip 8/9 + 500 Rueckstoss)", flinch, clip, weg, g_test_core_se_count - se0);
 
-    /* (c) Kommando 0 (Raumwechsel / Spieler-Laden / Inventar-Ende -> re15_player_cmd_zero) nullt den Zaehler:
-     * `sb zero,-13273(at)` @0x8003196c im cmd-0-Handler 0x800318f8 -> der naechste Takt kommt SOFORT (@0x80031e74).
-     * Vorher (Stand e7131aca) ueberlebte der Zaehler jeden Raumwechsel/jedes Laden (Abnahme 0, Hinweis 1). */
+    /* (c) Kommando 0 (Raumwechsel / Spieler-Laden / Inventar-Ende -> re15_player_cmd_zero): der RE1.5-Zaehler wird
+     * genullt (`sb zero,-13273(at)` @0x8003196c), der RE2-Takt-Zaehler 0x800cfe12 kennt keinen solchen Schreiber
+     * (Writer: Op 32 @0x80020140, Takt @0x8003c154/64, Skript Poison_clr @0x800591b0/@0x8005933c) — er laeuft weiter
+     * (Runde 39 Spur F). */
     {
         extern void re15_player_cmd_zero(void);              /* game_step_common.c */
-        unsigned z_vor = re15_spinnen_r38_gift_zaehler();
+        unsigned z15_vor = re15_spinnen_r38_gift_zaehler();
+        unsigned z_vor = re15_zustand_r39_gift_zaehler();
         re15_player_cmd_zero();
-        unsigned z_nach = re15_spinnen_r38_gift_zaehler();
+        unsigned z_nach = re15_zustand_r39_gift_zaehler();
         int16_t vor = pl->hp;
         bild();
-        CHECK(z_vor > 0 && z_nach == 0 && pl->hp == vor - 2 && re15_spinnen_r38_gift_zaehler() == 0x78,
-              "Kommando 0: Zaehler %u -> %u (@0x8003196c), naechstes Bild Takt HP %d -> %d, Zaehler %u (0x78)",
-              z_vor, z_nach, vor, pl->hp, re15_spinnen_r38_gift_zaehler());
+        CHECK(re15_spinnen_r38_gift_zaehler() == 0 && z_vor == z_nach && pl->hp == vor - (z_vor == 0 ? 1 : 0)
+              && re15_zustand_r39_gift_zaehler() == (z_vor == 0 ? 30u : z_vor - 1u),
+              "Kommando 0: RE1.5-Zaehler %u -> %u (@0x8003196c), RE2-Takt-Zaehler %u -> %u (unveraendert), naechstes Bild "
+              "HP %d -> %d, Zaehler %u", z15_vor, re15_spinnen_r38_gift_zaehler(), z_vor, z_nach, vor, pl->hp,
+              re15_zustand_r39_gift_zaehler());
     }
 
     /* (b) Spieler ZIELT (R1 gehalten, Zielbereit), dann vergiftet: der erste Takt kommt sofort (Zaehler 0 @0x80031e74)
@@ -525,6 +542,7 @@ static void teil_b4(void)
     }
     pl->hp = 100; pl->status_flags = 2; pl->hit_react = 0;
     re15_spinnen_r38_reset();
+    re15_zustand_r39_reset();                                 /* Runde 39 Spur F: Zaehler 0 -> erster RE2-Takt sofort */
     int takt_b = -1, nicht_bereit = 0, flinch_b = 0;
     for (int f = 0; f < 60; f++) {
         const unsigned char *raw; int len, id;
@@ -532,40 +550,42 @@ static void teil_b4(void)
         re15_msg_tick(&raw, &len, &id);
         s_ctx.pad_current = RE15_PAD_BIT_R1; s_ctx.pad_pressed = 0;
         scd_vm_tick(); re15_game_step(&s_ctx); re15_esp_fx_tick(re15_esp_room_bank());
-        if (takt_b < 0 && pl->hp == vor - 2) takt_b = f;
+        if (takt_b < 0 && pl->hp == vor - 1) takt_b = f;
         if (!re15_player_aim_ready()) nicht_bereit++;
         if (re15_player_hit_flinch_active()) flinch_b++;
     }
-    CHECK(bereit >= 0 && takt_b >= 0 && pl->hp == 98 && nicht_bereit == 0 && flinch_b == 0,
-          "zielend: Zielbereit nach %d Bildern, Gift-Takt in Bild %d (HP %d), danach %d Bilder NICHT zielbereit, %d Flinch-"
-          "Bilder (vorher: Zielabbruch im ersten Takt, unit_r34_wurf 119-121)", bereit, takt_b, pl->hp, nicht_bereit, flinch_b);
+    CHECK(bereit >= 0 && takt_b == 0 && pl->hp == 98 && nicht_bereit == 0 && flinch_b == 0,
+          "zielend: Zielbereit nach %d Bildern, Gift-Takt in Bild %d (HP %d = 100 - 2 Takte in 60 Bildern), danach %d Bilder "
+          "NICHT zielbereit, %d Flinch-Bilder (vorher: Zielabbruch im ersten Takt, unit_r34_wurf 119-121)", bereit, takt_b,
+          pl->hp, nicht_bereit, flinch_b);
     re15_player_aim_reset();
 }
 
 static void teil_b_wirkung(void)
 {
-    printf("\n== B Gift-Wirkung (@0x80031e44-ecc) und Gegengift (@0x8004af8c)\n");
+    printf("\n== B Gift-Wirkung (Runde 39 Spur F: RE2 FUN_8003bfac @0x8003c12c-180) und Gegengift (@0x8004af8c)\n");
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_spinnen_r38_reset();
+    re15_zustand_r39_reset(); re15_zustand_r39_gift_setzen();   /* Zaehler 30 wie Op 32 @0x80020138-40 */
     pl->hp = 100; pl->status_flags = 2; pl->state = 1;
     int drains[4] = { -1, -1, -1, -1 }, nd = 0;
     for (int f = 0; f < 400 && nd < 4; f++) {
         int16_t vor = pl->hp;
-        re15_spinnen_r38_gift_tick(pl);
-        if (pl->hp != vor) { if (nd < 4) drains[nd] = f; nd++; CHECK(vor - pl->hp == 2, "Abzug %d HP", vor - pl->hp); }
+        re15_zustand_r39_spieler_takt(pl, 1);
+        if (pl->hp != vor) { if (nd < 4) drains[nd] = f; nd++; CHECK(vor - pl->hp == 1, "Abzug %d HP", vor - pl->hp); }
     }
-    CHECK(drains[0] == 0 && drains[1] == 121 && drains[2] == 242,
-          "Abzug in Bild %d/%d/%d (Zaehler 0 -> sofort, dann 0x78 + 1 = 121 Bilder Periode)", drains[0], drains[1], drains[2]);
+    CHECK(drains[0] == 30 && drains[1] == 61 && drains[2] == 92,
+          "Abzug in Bild %d/%d/%d (Zaehler 30 -> 0 = 31 Bilder Periode, @0x8003c144-64)", drains[0], drains[1], drains[2]);
     pl->hp = 1;
-    re15_spinnen_r38_reset();
-    re15_spinnen_r38_gift_tick(pl);
-    CHECK(pl->hp == 1, "nie toedlich: HP 1 - 2 -> %d (`ori v0,zero,0x1` @0x80031ec0)", pl->hp);
+    re15_zustand_r39_reset();
+    re15_zustand_r39_spieler_takt(pl, 1);
+    CHECK(pl->hp == 1, "nie toedlich: HP 1 bleibt %d (`slti v0,v0,0x2 / bne` @0x8003c174-78)", pl->hp);
     pl->hp = 50; pl->status_flags = 2;
     re15_item_use_apply(0x23);
     CHECK(!(pl->status_flags & 2u) && pl->hp == 75, "Gegengift 0x23: Bit geloescht (0x%04X), HP +25 = %d", pl->status_flags, pl->hp);
-    re15_spinnen_r38_reset();
+    re15_zustand_r39_reset();
     int16_t h0 = pl->hp;
-    for (int f = 0; f < 300; f++) re15_spinnen_r38_gift_tick(pl);
+    for (int f = 0; f < 300; f++) re15_zustand_r39_spieler_takt(pl, 1);
     CHECK(pl->hp == h0, "ohne Gift kein Abzug (HP %d)", pl->hp);
 }
 
@@ -848,7 +868,8 @@ static int pruef_log(const char *pfad, unsigned raum)
     /* Nachbesserung 1, Mangel 1: Gift-Takte in der echten exe */
     int takte = 0, sauber = 0, reakt = 0, perioden = 0, perioden_falsch = 0, letzter = -1, takt_bild[64];
     for (int i = 1; i < n_pl; i++) {
-        if (!(s_pl_gz[i - 1] == 0 && (s_pl_gz[i] == 0x78 || s_pl_gz[i] == 8) && s_pl_hp[i - 1] - s_pl_hp[i] == 2)) continue;
+        /* Runde 39 Spur F: RE2-Takt — gz = 0x800cfe12 springt 0 -> 30 (@0x8003c15c-64) mit HP -1 (@0x8003c17c-80) */
+        if (!(s_pl_gz[i - 1] == 0 && s_pl_gz[i] == 30 && s_pl_hp[i - 1] - s_pl_hp[i] == 1)) continue;
         if (takte < 64) takt_bild[takte] = i;
         takte++;
         int fremd = 0;                                   /* fremder HP-Abzug (Biss/Spucken) im Fenster +-25 */
@@ -861,19 +882,19 @@ static int pruef_log(const char *pfad, unsigned raum)
         if (letzter >= 0) {                              /* Periode nur ohne fremden Abzug dazwischen */
             int fremd_dazw = 0;
             for (int j = letzter + 1; j < i; j++) if (s_pl_hp[j] < s_pl_hp[j - 1]) fremd_dazw = 1;
-            if (!fremd_dazw) { perioden++; if (i - letzter != 121) perioden_falsch++; }
+            if (!fremd_dazw) { perioden++; if (i - letzter != 31) perioden_falsch++; }   /* Runde 39 Spur F: RE2 31 */
         }
         letzter = i;
     }
     printf("   Gift-Takte %d (Bilder", takte);
     for (int k = 0; k < takte && k < 64; k++) printf(" F%u", s_pl_f[takt_bild[k]]);
-    printf("), ohne fremden Abzug %d, davon mit Treffer-Reaktion %d; Perioden ohne Fremdtreffer %d, davon != 121: %d\n",
+    printf("), ohne fremden Abzug %d, davon mit Treffer-Reaktion %d; Perioden ohne Fremdtreffer %d, davon != 31: %d\n",
            sauber, reakt, perioden, perioden_falsch);
     CHECK(mit_reakt_feld, "Punkt 2: Messschiene traegt pmo/phf (Spieler-Clip, Flinch)");
     CHECK(sauber > 0 && reakt == 0, "Punkt 2: Gift-Takt ohne Treffer-Reaktion (%d von %d sauberen Takten reagierten; "
           "Original @0x80031e44-ec8 nur HP + Zaehler)", reakt, sauber);
-    CHECK(perioden > 0 && perioden_falsch == 0, "Punkt 2: Gift-Periode 121 Bilder (%d Perioden, %d abweichend; vorher 143)",
-          perioden, perioden_falsch);
+    CHECK(perioden > 0 && perioden_falsch == 0, "Punkt 2: Gift-Periode 31 Bilder (RE2 @0x8003c12c-180; %d Perioden, %d "
+          "abweichend; Runde 38: 121)", perioden, perioden_falsch);
     return s_fails ? 1 : 0;
 }
 

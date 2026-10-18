@@ -1,0 +1,30 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/build
+    Start 970: unit_r39_zustand
+1/3 Test #970: unit_r39_zustand ...................   Passed    0.01 sec
+    Start 971: integration_r39_zustand_kleidung
+2/3 Test #971: integration_r39_zustand_kleidung ...   Passed  116.12 sec
+    Start 972: integration_r39_zustand_gift
+3/3 Test #972: integration_r39_zustand_gift .......***Failed   98.62 sec
+-- r39_zustand_gift[g]: rv=0, C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/build/tests/integration/r39_zustand_gift_wd/lauf_d6586c9c_g
+-- r39_zustand_gift[g]: hp: 38 Takte, Summe 38, Abzug min 1 max 1, erster Takt F330, Abstaende 31: 37 von 37, HP-Minimum 62, Giftbilder 1200, letztes Bild F1499
+-- r39_zustand_gift[g] Bild 1540: ekg: Kasten [26,103)x[118,140) hell=23 gruen=0 gelb=0 rot=0 magenta=23 sonst=0
+-- r39_zustand_gift[g] Bild 1560: ekg: Kasten [26,103)x[118,140) hell=33 gruen=0 gelb=0 rot=0 magenta=27 sonst=6
+-- r39_zustand_gift[g] Bild 1580: ekg: Kasten [26,103)x[118,140) hell=19 gruen=0 gelb=0 rot=0 magenta=19 sonst=0
+-- r39_zustand_gift[u]: rv=0, C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/build/tests/integration/r39_zustand_gift_wd/lauf_d6586c9c_u
+-- r39_zustand_gift[u]: hp: 4 Takte, Summe 4, Abzug min 1 max 1, erster Takt F330, Abstaende 31: 3 von 3, HP-Minimum 1, Giftbilder 601, letztes Bild F900
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/tests/integration/test_r39_zustand_gift.cmake:134 (message):
+  r39_zustand_gift: FEHLER
+
+    G: letztes protokolliertes Spielbild , erwartet 1499 (im Statusschirm kein Spielerschritt)
+
+
+
+
+67% tests passed, 1 tests failed out of 3
+
+Total Test time (real) = 214.77 sec
+
+The following tests FAILED:
+	972 - integration_r39_zustand_gift (Failed)
+Errors while running CTest
+EXIT=8

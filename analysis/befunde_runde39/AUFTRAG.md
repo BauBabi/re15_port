@@ -95,3 +95,13 @@ Der Nutzer hat entschieden: "wir machen das Gorilla Verhalten generell so" - die
 @0x8011f514 -> 360) und zucken erst nach 36 Energie (3 Handfeuerwaffen-Treffer), also auch in ROOM1141. Fuer Spur J:
 Riegel, die den Tod der Gorillas in 1141 brauchen, NICHT auf eine Schusszahl festlegen (Tod per Ereignis/Flag (7,0xCB)/(7,0xCC)
 bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie nach. Die Szene muss mit beiden Energien laufen.
+## Nachtrag 3 des Nutzers (woertlich, 2026-10-18 14:25, Antworten auf die Entscheidungsfragen der Wellen 1/2)
+
+- "Zu 1. ok, wenn Resident Evil 2 das so macht, lassen wir das so." (Spur D: Sturz-Aufsteher bis Clip-Bild 55 nur an den
+  Beinen treffbar = RE2 byte-true -> bleibt)
+- "Zu 2. ja, wir machen das Gorilla Verhalten generell so." (Spur E: HP x2 + Flinch erst nach 3 Handfeuerwaffen-Treffern
+  fuer ALLE Gorillas Typ 0x27, nicht nur ROOM11C0 -> Nachbesserung 2 der Spur E)
+- "Zu 3. Ja, dann belasse es so." (Spur F: EKG unter Gift = RE1.5-Welle in RE2-POISON-Farbe -> bleibt)
+- "Zu 4. 15 Schuss - die Halbierung." (Spur C: Spind ROOM1000 = 15 Schuss -> bleibt)
+- "Zu 5. Ja, alles was ein Zahlenammount hat, soll stapelbar sein, auch in der Kiste." (Spur C: Granaten stapeln; die Kiste
+  nutzt dieselbe Regel re15_inventar_r39_stapelt, re15_itembox.c:102 -> erfuellt, nichts zu tun)

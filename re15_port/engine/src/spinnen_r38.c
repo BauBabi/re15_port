@@ -12,6 +12,7 @@
  *      Reichweite mit dem RE2-Spieler-Radius.
  */
 #include "re15_spinnen_r38.h"
+#include "re15_zustand_r39.h"   /* Runde 39 Spur F: RE2-Gift-Takt */
 #include "re15_actor.h"
 #include "re15_room.h"
 #include "re15_esp.h"
@@ -447,6 +448,8 @@ static void routine25(re15_esp_fx_t *f)
         re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], &box)) {
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;   /* Gift (s.o.) */
         s_gift_treffer++;
+        { extern void re15_zustand_r39_gift_setzen(void);          /* Runde 39 Spur F: Takt-Zaehler := 30 wie */
+          re15_zustand_r39_gift_setzen(); }                        /* RE2 Op 32 @0x80020138-40 (0x800cfe12) */
     }
     int treffer = re15_resolve_attack(&box, 0, besitzer);     /* FUN_80012d60(500,&P,0) @0x80018008 */
     if (szene) spl->hit_react = hr_echt;                      /* echter +0x93 zurueck (die Sicht gilt nur hier) */
@@ -835,7 +838,8 @@ void re15_spinnen_r38_log_frame(unsigned frame)
      * eine Reaktion ausloest (darf er nicht, @0x80031e44-ec8). Hinter der PL-Klammer, damit alte Auswerter weiterlaufen. */
     fprintf(s_fp, "F%u R%04X PL(%d,%d,%d hp=%d st=%d ps=%04x fl=%d gz=%u bo=%d bu=%d) pmo=%d phf=%d fx=%d", frame,
             (unsigned)g_current_room_id, (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->hp,
-            (int)pl->state, (unsigned)pl->status_flags, (int)pl->floor, (unsigned)s_gift_zaehler,
+            (int)pl->state, (unsigned)pl->status_flags, (int)pl->floor,
+            (unsigned)re15_zustand_r39_gift_zaehler(),   /* Runde 39 Spur F: gz = RE2-Takt-Zaehler 0x800cfe12 */
             (int)re15_collision_room_coll(rdt, pl->x, pl->z, 0, 8, 0x100u), (int)re15_spinnen_r38_boden_unter(pl),
             (int)pl->motion, re15_player_hit_flinch_active(), re15_esp_fx_count());
     /* Runde 38 Integration (versteckte Schachtspinne): pr = Spieler-Blick +0x6a (Port rot_y), zh = der Platz, den die

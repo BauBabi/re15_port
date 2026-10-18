@@ -1,0 +1,7 @@
+F118 R1250 ziel slot=5 typ=11 @(-16568,-1019) st=1/1/1
+F162 R1250 sperre von=(-12000,-1000) nach=(-16568,-1143) slot=5 zelle=79 moebel_uebersprungen=0
+F197 R1250 sperre von=(-12000,-1000) nach=(-16568,-987) slot=5 zelle=79 moebel_uebersprungen=0
+F232 R1250 sperre von=(-12000,-1000) nach=(-16568,-878) slot=5 zelle=79 moebel_uebersprungen=0
+F267 R1250 sperre von=(-12000,-1000) nach=(-16568,-748) slot=5 zelle=79 moebel_uebersprungen=0
+F302 R1250 sperre von=(-12000,-1000) nach=(-16568,-690) slot=5 zelle=79 moebel_uebersprungen=0
+F337 R1250 sperre von=(-12000,-1000) nach=(-16568,-614) slot=5 zelle=79 moebel_uebersprungen=0

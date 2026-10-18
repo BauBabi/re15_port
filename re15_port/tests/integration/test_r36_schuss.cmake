@@ -59,7 +59,8 @@ function(r36_exe _lauf _dir _pos _waffe _flavor)
              RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=${_pos}"
              "RE15_AI_FLAVOR=${_flavor}" "RE15_GIVE=${_waffe}:6" "RE15_EQUIP=${_waffe}"
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=M0.6,MA1.5,M1.0,W4"
-             RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=200#1140")
+             RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=200#1140"
+             ${ARGN})                                             # Runde 39 Spur D: zusaetzliche Umgebung (RE15_TREFFER_ALT)
     re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
     if(NOT _rv EQUAL 0)
         set(_z "")
@@ -180,6 +181,10 @@ foreach(_s 4 5)
     message(STATUS "${_tag} [frei_re15]: Platz ${_s} HP ${_hp0} -> ${_hpmin} (treffbar)")
 endforeach()
 
+# Runde 39 Spur D (Nutzer: "Zombies sind ueber den Tisch hinweg nicht treffbar. Das darf so nicht sein"): der
+# Spieler-Schuss ueberspringt MOEBEL-Zellen (gen/treffer_r39_moebel.inc, Form RE2 FUN_80050858 @0x800508bc-c8:
+# Zellen ohne Flag 0x80 sperren nicht; Dossier analysis/befunde_runde39/D_treffer.md). Der Konferenztisch [6] sperrt
+# den Python-Schuss deshalb NICHT mehr: Platz 4 und 5 hinter dem Tisch verlieren HP wie in der Gegenprobe frei_re15.
 set(_d "${_wurzel}/tisch_re15")
 r36_exe("tisch_re15" "${_d}" "200,-10300,1024" 20 re15)
 file(STRINGS "${_d}/wf.log" _schuss REGEX "arms_rec=0|SPAWN id=2")
@@ -187,11 +192,29 @@ list(LENGTH _schuss _n_schuss)
 if(_n_schuss LESS 1)
     r36_fehler("tisch_re15" "kein Schuss im wf.log (arms_rec=0 / Muendungsblitz)")
 endif()
-r36_keiner_verliert("tisch_re15" "${_d}/state.log")
+set(_treffer 0)
+foreach(_s 4 5)
+    r36_gegner("${_d}/state.log" ${_s} _hp0 _hpmin)
+    if(_hp0 LESS 1)
+        r36_fehler("tisch_re15" "Platz ${_s} ohne Ausgangs-HP (${_hp0}) - Aufstellung fehlt?")
+    endif()
+    if(_hpmin LESS _hp0)
+        math(EXPR _treffer "${_treffer} + 1")
+    endif()
+    message(STATUS "${_tag} [tisch_re15]: Platz ${_s} HP ${_hp0} -> ${_hpmin}")
+endforeach()
+if(_treffer LESS 1)
+    r36_fehler("tisch_re15" "kein Platz hinter dem Tisch verliert HP - der Tisch [6] sperrt den Schuss noch (Runde 39 Spur D: Moebel durchlaessig)")
+endif()
+# Der byte-true RE1.5-Strahl (FUN_8001b9b4 -> FUN_8003dcc4(0xf00,0x300): JEDE Art-3-Zelle sperrt) bleibt ueber die
+# Mess-Sonde RE15_TREFFER_ALT=1 messbar: dieselbe Aufstellung, der Tisch sperrt, kein Platz verliert HP.
+set(_d "${_wurzel}/tisch_re15_alt")
+r36_exe("tisch_re15_alt" "${_d}" "200,-10300,1024" 20 re15 RE15_TREFFER_ALT=1)
+r36_keiner_verliert("tisch_re15_alt" "${_d}/state.log")
 
 set(_d "${_wurzel}/gl_tisch_re15")
 r36_exe("gl_tisch_re15" "${_d}" "200,-10300,1024" 15 re15)
 r36_keiner_verliert("gl_tisch_re15" "${_d}/state.log")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "-- ${_tag}: OK — Tisch sperrt (Python, GL; RE2- und RE1.5-KI mit treffbaren Zielen), Fresser gesperrt (Python, GL), Gegenproben treffen")
+message(STATUS "-- ${_tag}: OK — Tisch durchlaessig fuer den Python-Schuss (Runde 39 Spur D), RE1.5-Strahl per RE15_TREFFER_ALT=1 sperrend, GL-Runde am Tisch gesperrt, Fresser gesperrt (Python, GL), Gegenproben treffen")

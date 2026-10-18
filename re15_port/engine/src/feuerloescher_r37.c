@@ -14,6 +14,7 @@
 #include "re15_msg.h"
 #include "re15_inventory.h"   /* re15_inv_find_item (FUN_8004dfec) */
 #include "re15_itembox.h"     /* g_itembox (RE2-Box-Feld @0x800d4a68), RE15_BOX_SLOTS */
+#include "re15_elza_r39.h"    /* Runde 39 Spur H: Band eines Null-Box-Props (re15_elza_r39_prop_band_ueber_boden) */
 #include "re15_room.h"        /* g_current_room_id */
 #include "re15_gameflow.h"    /* re15_char_variant (Leon 0 / Elza 1) */
 #include "re15_itemorte_r38.h" /* Runde 38 Spur K: Lage ROOM1030 + Slot-Freimachen */
@@ -177,7 +178,11 @@ void re15_feuerloescher_r37_install(uint16_t room_id)
         g_scd.props[i].active     = 1;
         g_scd.props[i].obj_id     = RE15_FL37_OBJ;
         g_scd.props[i].obj_type   = 0;                    /* pc[2] -> pool+8 @0x8004095c   */
-        g_scd.props[i].band       = RE15_FL37_PROP_BAND;  /* pc[4] -> pool+130 @0x80040974 */
+        /* Runde 39 Spur H: Band = Spielerband des Bodens + 1 (Original-Form der Null-Box-Requisiten ROOM1091 obj 2
+         * @0x02202 pc[4] = 2 / ROOM1010 @0x00930 pc[4] = 1). Fest "1" lag in ROOM1090/1091 AUF dem Spielerband und
+         * machte den Loescher ueber FUN_8002d2c0 @0x8002d364-70 + FUN_8002da4c @0x8002da8c-a0 (Null-Box, Rand -112,
+         * vorzeichenlos) aus schraeger Lage kletterbar (include/re15_elza_r39.h). pc[4] -> pool+130 @0x80040974. */
+        g_scd.props[i].band       = (uint8_t)re15_elza_r39_prop_band_ueber_boden(g->y);
         g_scd.props[i].parent_obj = -1;                   /* pc[5] = 0x00 = Weltraum        */
         g_scd.props[i].x = g->x;
         g_scd.props[i].y = g->y;
