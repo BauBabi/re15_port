@@ -14,8 +14,9 @@
 #   unit_r39_parkplatz11c0_nachher         nach dem Kampf: Tuer normal
 #   unit_r39_parkplatz11c0_elza            ROOM11C1 (Elza) unberuehrt
 #   unit_r39_parkplatz11c0_fremd           geaendertes RDT: Anker greifen nicht, Original-Ablauf
-#   integration_r39_parkplatz11c0_k|w|e    echte exe (test_r39_parkplatz11c0.cmake): Speicherkarte 11B0 -> Tuer -> 11C0,
-#                                          Szene, Kampf, Tuer im Kampf, Kampfende, Raumwechsel; Wiedereintritt; Elza 11C1
+#   integration_r39_parkplatz11c0_k|w|n|e  echte exe (test_r39_parkplatz11c0.cmake): Speicherkarte 11B0 -> Tuer -> 11C0,
+#                                          Szene, Kampf, Tuer im Kampf, Kampfende, Raumwechsel; Wiedereintritt im Kampf;
+#                                          nach dem Kampf Tuer normal; Elza 11C1
 add_executable(test_r39_parkplatz11c0 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_parkplatz11c0.c)
 target_link_libraries(test_r39_parkplatz11c0 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_parkplatz11c0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -33,7 +34,7 @@ endforeach()
 # Je Teil ein eigener Test mit eigenem Arbeitsordner und eigener exe-Kopie (Praefix je Teil, Muster r38_dining1141).
 if(TARGET re15_pc AND TARGET probe_r36_schluessel_karte AND
    EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_parkplatz11c0.cmake)
-    foreach(_teil K W E)
+    foreach(_teil K W N E)
         string(TOLOWER ${_teil} _klein)
         add_test(NAME integration_r39_parkplatz11c0_${_klein}
                  COMMAND "${CMAKE_COMMAND}"

@@ -11,10 +11,11 @@ cmake_minimum_required(VERSION 3.16)
 #      Programm ENDE, msg 7, die Ende-Szene geht selbst durch die Tuer -> ROOM11B0. Bilder per RE15_FRAMEDUMP.
 #   W  LEON Wiedereintritt im Kampfzustand ((4,64)=1, (3,67)=0 — z. B. ein Spielstand von vor dieser Runde, als die Tuer im
 #      Kampf noch ging): Tuer Slot 0 ist ab dem Eintritt der Text; Druck -> msg 40, kein Raumwechsel.
+#   N  LEON nach dem Kampf ((4,64)=1, (3,67)=1): Tuer ist die Original-Tuer, Druck -> ROOM11B0, kein Eingriff.
 #   E  ELZA 11B1 -> 11C1 (Hunde, kein Begleiter): Tuer bleibt Tuer, Druck -> zurueck nach ROOM11B1 (die fuenf Hunde nimmt
 #      WEGPLAN GEGNERWEG heraus, damit kein Biss den Druck schluckt — die Tuer haengt an keinem Gegner).
 # Geprueft werden debug.log, state.txt und wegplan_log.txt.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_schluessel_karte> -DWORKDIR=<dir> -DTEIL=K|W|E
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_schluessel_karte> -DWORKDIR=<dir> -DTEIL=K|W|N|E
 #         -P test_r39_parkplatz11c0.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -241,6 +242,28 @@ ENDE
     pruef(W _d "ROOM11C0 Tuer im Kampf -> msg 40")
     pruef_nicht(W _d "DOOR FIRE slot=0")
     pruef(W _d "EXIT_AT: Bild 420 in Raum 11c0")
+endif()
+
+# --- N: nach dem Kampf ((4,64)=1, (3,67)=1): die Tuer ist wieder die Original-Tuer ----------------------------------
+if(TEIL STREQUAL "N")
+    lauf(n "${_karte_11b0};flag:4:64;flag:3:67" "RAUM 11B0
+WARTE 20
+AKTION
+RAUM 11C0
+AOTS
+FLAG 3 67
+BLICK 3072
+AKTION
+RAUM 11B0
+WARTE 30
+ENDE
+" "RE15_EXIT_AT=200#11b0" _d _st _wp)
+    pruef(N _d "loaded room11c0.rdt")
+    pruef(N _wp "AOT slot 0 typ 1 ev 0 flags 0x31 band 0 mitte (-25100,17250)")
+    pruef(N _wp "FLAG (3,67) = 1")
+    pruef_nicht(N _d "[parkplatz]")
+    pruef(N _d "DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)")
+    pruef(N _d "EXIT_AT: Bild 200 in Raum 11b0")
 endif()
 
 # --- E: Elza ROOM11B1 -> 11C1 -> 11B1 --------------------------------------------------------------------------------
