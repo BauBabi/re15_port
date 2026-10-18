@@ -36,6 +36,7 @@
 #include "re15_affen.h"   /* RE15_AFFEN_TREFFER_BIS_SPRUNG (Runde 35 Spur J) */
 #include "re15_emd.h"
 #include "re15_damage.h"   /* re15_enemy_apply_hitbox, re15_enemy_take_damage */
+#include "re15_gegner_r39.h"   /* Runde 39 Spur E: re15_r39_gegner_enable(0) — die Gorilla-NUTZER-VORGABEN (HP x2, Flinch-Schwelle; alle 0x27) sind in diesem ORIGINAL-Riegel durchsichtig */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -80,6 +81,7 @@ static int load_maggot_bank(void)
 int main(void)
 {
     int fail = 0;
+    re15_r39_gegner_enable(0);   /* Runde 39 Spur E (Nachbesserung 2): dieser Riegel misst den ORIGINAL-INIT (Saat 180 @0x8011f514 / `sh v0,154(a1)` @0x80117104) und den Original-Flinch je Treffer; die NUTZER-VORGABE fuer alle Gorillas 0x27 liegt darueber und ist hier aus — ihr Riegel ist test_r39_gegner / test_r39_gegner_1141 */
     memset(g_actors, 0, sizeof g_actors);
     int bank_ok = load_maggot_bank();
     printf("=== MAGGOTS (type 0x27) byte-true AI (audit wf_827f186d) ===\n");
