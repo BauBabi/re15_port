@@ -78,11 +78,80 @@ Suedende des N-S-Flurs an der Ecke (-15132,-23033), befund.log `[48:(167,63) t=1
 Leons Positionsmarker der Map ausserhalb des aktuellen Raums" (VERTRAG: Spur G). Gehoert nicht zu diesem Befund, hier nicht
 behandelt (Hinweis an Spur G/Orchestrator unter "Fuer den Nutzer").
 
-### RE-Belege
+### RE-Belege (Fortsetzung 2026-10-18, alles selbst nachgelesen: `re15_disasm.py dis`, `xxd`, Skripte in `L_optik_bilder/`)
 
-### Umsetzung
+**1. Mechanismus der Maske (PSX.EXE, FUN_80039590, Maskenschleife):**
+```
+80039628  ori a1,zero,0x1
+8003962c  ori a2,zero,0x1
+80039630  ori a3,zero,0x95        ; SetDrawMode(.., tpage 0x95 = Vordergrundseite des Hintergrunds)
+80039634  jal 0x80069858
+80039640  jal 0x8006b958          ; SPRT-Primitiv des Rechtecks (srcX/srcY -> dstX/dstY, w x h)
+80039650  lh  a0,2(s3)            ; Tiefe (depth) des Satzes, unveraendert aus der RDT
+80039658  sll a0,a0,2             ; x4 Byte = OT-Wort depth
+8003965c  addu a0,a0,s6
+80039660  jal 0x8006b538          ; AddPrim OT[depth]
+```
+Figur: `80025654 sra v0,v1,6` / `80025658 beq v0,zero,..` (Nah-Tor), `8002565c sra v1,v1,4` (OT-Wort = otz>>4);
+ZSF3 `80066c70 addiu t0,zero,341` (otz = (1023*vz)>>12). Eine Maske ist also ein SPRITE, der die HINTERGRUNDPUNKTE ihres
+Rechtecks ueber jede Figur in einem ferneren OT-Eimer legt - ohne Ruecksicht darauf, was diese Punkte zeigen. Ein
+Rechteck, das ueber die gemalte Kante des Verdeckers hinausreicht, malt deshalb den BODEN/die Rueckwand dahinter ueber die
+Figur (Memory reai-v2-sprite-pri-occlusion; Original-Urteil im Port `re15_pri_mask_occludes`).
 
-### Messung nachher
+**2. Original-Daten ROOM1100.RDT (bytegleich ROOM1101.RDT, `cmp`):** Cut 1 Satz @0x80 `00 00 3c 68 be cc ff ff ...`
+(fov 26684, Ort (-13122,-3078,-13608), Ziel (-15912,-954,-25398)), Masken-Offset @0x9C = `0c 06 00 00` -> @0x60C
+`ff ff ff ff`; Cut 2 Satz @0xA0, Offset @0xBC = `10 06 00 00` -> @0x610 `ff ff ff ff`. Das Original hat in diesen Cuts
+KEINE Masken (NULL-Sektion; FUN_800392d4 @0x80039324 lw / @0x8003932c bne -1 / @0x80039338 sb zero). Die Port-Masken
+der Westwand sind NUTZER-VORGABE (Marken F205/F595, Runde 36/37) - strittig ist nur ihre FORM (wo sie enden).
+
+**3. Form-Beleg aus den Masken des Originals (ROOM1030 Cut 3, pri @0xBF8, 4 Gruppen / 40 Masken; `orig_maske_1030.py`):**
+Maske 2 (Gruppe 0) dst (203,66) 24x64 Tiefe 127 = die Pfeilerflaeche; ihre letzte Spalte ist **226**. Die GEMALTE
+Pfeilerkante (Halbwert-Kante je Zeile, Zeilen 66..129, Engine-Dekoder-Bild) liegt bei **227,18** (224,71..228,61, 64
+Zeilen). Die Original-Maske endet also AN der gemalten Kante (Mittel 1,2 px innen, Streuung -1,3..+2,6 px = die
+8er-Kachel des Originals), nicht an einer Kollisionszelle. RE2 Retail dasselbe (Memory reai-v2-re2-pri-vorbild: 66 %
+frei geformte Rechtecke der Objektform). Die Port-Westwand ragte dagegen 5..7 (Cut 1) bzw. 4..5 (Cut 2) Spalten ueber die
+gemalte Ecke hinaus - weil ihr Quaderende die SCA-Zelle 2 ist: ROOM1100.RDT @0x6A4 `d0 07 5c 2b 40 bb 60 a5` (w 2000,
+d 11100, x -17600, z -23200). **Regel: eine Maske endet an der GEMALTEN Kante; ein Zellenmass ist kein Bildmass.**
+Bild `L_optik_bilder/p1_original_1030_c3_maske2_pfeilerkante_x6.png`.
+
+**4. Masken-Zwilling Elza:** ROOM1101 zeichnet die Masken von ROOM1100 (`re15_pri_masken_raum`, Runde 37 Spur A; RDT
+bytegleich, s.o.) - dieselben Fenster gelten fuer Elza.
+
+### Umsetzung (Commit 370793fe, hier gebaut und gemessen)
+* `engine/src/optik_r39.c` + `include/re15_optik_r39.h` (NEU): `re15_optik_r39_kappen(masken_raum, cut, pri)` kappt die
+  Rechtecke von ROOM1100 Cut 1/2 beim Laden an der gemalten Wand. Fenster `k_fenster[]` (am Engine-Dekoder-Bild gemessen,
+  Halbwert-Kanten, Pixelmitte x+0,5): Cut 1 Zeilen 0..110 Wand ab Spalte 173 (Kante x = 172,84), Zeilen 111..239 ab 171
+  (Sockel-Kantenlinie); Cut 2 Zeilen 0..106 Wand bis Spalte 133 (Kante 133,94), Zeilen 107..239 bis 134 (Kante 134,86).
+  Rechtecke ueber beide Baender werden geteilt (Atlas-srcX/srcY ziehen mit), Rechtecke ganz jenseits entfallen, keine
+  Tiefe aendert sich, kein Rechteck waechst. `re15_optik_r39_in_wand()` fuer die Riegel.
+* Haken (je 2 Zeilen): `platform/pc/main.c` nach `re15_masken36_filter` (Runde 37 Spur P) und `platform/psx/main.c`
+  ebenso. MASKS/ * und shared_assets unveraendert; keine neue Datei unter pri/STAGE1 -> `pri_stage1_hashes.inc`
+  unveraendert (Memory reai-v2-pri-hashliste-mitcommitten greift nur bei neuen Nutzer-PRI).
+* Log beim Laden (debug.log): `[optik_r39] ROOM1100 Cut 1: Westwand an der gemalten Ecke gekappt: 52 -> 52 Rechtecke,
+  1395 Rechteckpunkte jenseits der Ecke entfernt (Runde 39 Spur L)` (1395 Rechteckpunkte, davon 474 im Atlas sichtbar).
+
+### Messung nachher (exe des Baums, gebaut 03:05 mit optik_r39.c, Messkopie `re15_pc_r39l_mess.exe`; Laeufe `runs/n2_*`)
+Dieselbe Szene wie "vorher" (`RE15_DEBUG_JUMP=1100@250 RE15_PLAYER_POS=-16007,-23658,3023 RE15_FORCE_CUT=1`, Zombie 1
+hinter die Kamera, Bild 150): A = mit Masken, B = ohne Masken (RE15_NO_PRI=1), C = mit Masken, Leon hinter die Kamera
+gesetzt (-14000,-11000). Punkte mit Kanaldifferenz > 24, Zeilen 40..170 (`streifen_diff.py`):
+
+| Fenster | A gegen B (Maske greift) | A gegen C (Leon sichtbar) | B gegen C |
+|---|---|---|---|
+| Streifen x 166..172 (jenseits der gemalten Ecke) | **1** (vorher 134; der eine Punkt: Spalte 171 im Sockelband = Wand) | **140** | 141 |
+| Wand x 173..180 | 95 (vorher 95) | **0** (ganz hinter der Wand) | 95 |
+| links x 150..165 | 0 (vorher 0) | 179 | 179 |
+
+-> Im Streifen malt die Maske nichts mehr ueber Leon (A == B bis auf den Sockelpunkt), Leon ist dort gezeichnet (A gegen
+C 140 Punkte), und hinter der gemalten Wand bleibt er vollstaendig verdeckt (A gegen C 0). Je Spalte A gegen B: vorher
+`166:11 167:26 168:26 169:21 170:15 171:13 172:22 173:46 174:27 ...`, nachher `171:1 173:46 174:27 175:14 176:3 177:2
+178:2 179:1`. Bild `L_optik_bilder/p1_1100_c1_marke_alt_neu_mit_ohne_x4.png` (alt mit | alt ohne | neu mit | neu ohne).
+
+befund.log an der Lage der Marke (F140, bitgleicher Kopf): `R1100 C1 pos=(-16007,0,-23658) rot=3023 vz=10829/10699/10570
+scr=(169,143) kasten=x158..180,y108..146 masken=52 | [42:(178,59)7x109 t=124 z=8007 DECKT] [43:(176,60)6x104 t=128
+DECKT] [44:(174,61)6x101 t=132 DECKT] [45:(173,61)5x50 t=136 DECKT] [46:(172,111)6x49 t=136 DECKT] [47:(173,62)3x49
+t=140 DECKT] [48:(171,111)5x46 t=140 DECKT] [49:(173,63)1x48 t=144 DECKT] [50:(171,111)3x44 t=144 DECKT] [51:(171,111)
+1x42 t=148 DECKT]` - alle Rechtecke am Kasten beginnen jetzt in der Wand (x >= 173 oberhalb Zeile 111, x >= 171 im
+Sockelband); vorher begannen 45..51 bei 166..172.
 
 ## Punkt 2 — Schluessel an der Pinnwand ROOM10F0/10F1
 
