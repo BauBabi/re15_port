@@ -157,6 +157,10 @@ static const fall_t k_faelle[] = {
      * @0x80115e1c/@0x80115e74/@0x80115f34) — dieselbe Fehlerklasse wie oben, deshalb hier. ROOM3040 Band 0 im
      * Westteil (Leon (-25600,-1350) Blick +z, Westwand Zelle 0 bei x -26800, Nordwand Zelle 3 bei z 200). */
     { "affe3_hinten",    0x3040, RE15_AI_FLAVOR_RE2,  0, 0x29, 0x29, -25600, -1350, 3072, 1000, 1, 15, 100, 0, {{0}} },
+    /* Runde 39 Spur E (Nachbesserung 3, Befund E (b)): Gorilla-Wurf an der Suedwand ROOM1141 (Elza, CDEMD1, Kampf-Lage
+     * Ck(4,0xF2)=1): Lage aus Versuch 6 (Elza (-362,-23142), Gorilla 2065 dahinter, Blick 389) — vorher warf die
+     * RE1.5-Klemme (naehere Kante @0x8003bcec-cfc) Elza nach z -26068 (gegner_r39.c (5), unit_r39_gegner_querung_wurf1141). */
+    { "gorilla1141_sued",0x1141, RE15_AI_FLAVOR_RE2,  1, 0x27, 0x27, -362, -23142, 389, 2065, 1, 15, 100, 1, {{4, 0xF2}} },
 };
 
 static int32_t s_hx0, s_hx1, s_hz0, s_hz1;

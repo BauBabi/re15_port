@@ -160,7 +160,8 @@ _muss("loaded room1090.rdt" _dbg "leon: ROOM1090 nicht geladen")
 _kiste_bleibt(leon 1090 "[(]-5960,-155[0-9][0-9][)]" "${_bruestung}")
 
 # ---- elza: derselbe Weg, ROOM10F1 -> ROOM1091 -------------------------------------------------------------
-_lauf(elza 400 ${_grund} RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=10F0@250 "RE15_PLAYER_POS=-7125,4950,0"
+# (9,70) = Funkszene ROOM10F1 schon gesehen (Runde 39 Spur I, re15_funk10f1_r39.h) - sonst spielt beim Eintritt die Szene.
+_lauf(elza 400 ${_grund} RE15_PSELECT_AUTO_SWITCH=1 RE15_SET_FLAG=9:70 RE15_DEBUG_JUMP=10F0@250 "RE15_PLAYER_POS=-7125,4950,0"
       "RE15_INPUT_SCRIPT=${_weg}" "RE15_EXIT_AT=2000#1091")
 _muss("Spieler-Familie PL04" _dbg "elza: Elza nicht gewaehlt (RE15_PSELECT_AUTO_SWITCH)")
 _muss("loaded room10f1.rdt" _dbg "elza: ROOM10F1 nicht geladen")

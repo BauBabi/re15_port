@@ -139,8 +139,9 @@ klettern_lauf(A_leon_10f0 10f0 1090 1400 240
     RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=W10,${_schluss}")
 
 # B — Elza, ROOM10F1 ueber RE15_GOTO_ROOM (Spawn = Tuer-Eintritt), echter Weg durch den Raum.
+# (9,70) = Funkszene ROOM10F1 schon gesehen (Runde 39 Spur I, re15_funk10f1_r39.h) - sonst spielt beim Eintritt die Szene.
 klettern_lauf(B_elza_10f1 10f1 1091 1320 240
-    RE15_TITLE_SHOT_CHAR=1 RE15_GOTO_ROOM=10F1 "RE15_SET_FLAG=9:71"
+    RE15_TITLE_SHOT_CHAR=1 RE15_GOTO_ROOM=10F1 "RE15_SET_FLAG=9:71,9:70"
     RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_weg_tuer},${_schluss}")
 # Zusatz fuer B: wirklich ELZA im Spiel (Spieler-Familie PL04, Muster test_r35_werfer_elza.cmake), nicht
 # ein stiller Rueckfall auf Leon im Elza-Raum.

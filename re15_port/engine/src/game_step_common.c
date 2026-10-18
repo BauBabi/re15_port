@@ -46,6 +46,7 @@
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13, Irons-Kopf, 11B0-Erweiterung */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
+#include "re15_gegner_r39.h"    /* Runde 39 Spur E: Querungs-Wache im Gorilla-Wurf (re15_r39_wurf_querung) */
 #include "re15_zellschub_r36.h" /* Runde 36 Spur R: Ruhe-Zweig LAB_8002c0b8 ohne Spieler-Schub (zellschub_r36.c) */
 #include "re15_aufschliessen_r36.h" /* Runde 36 Spur G: Aufschliess-Tonfolge (aufschliessen_r36.c) */
 #include "re15_beretta_r37.h"   /* Runde 37 Spur G: Feuerstoss 5/6 trifft je Kugel (beretta_r37.c) */
@@ -2505,7 +2506,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * cannot shove the pinned player through the SCA perimeter). */
     {   extern int re15_re2arm_take_pin_bild(void);    /* Runde 35 Spur H NB3: RE2 schiebt im Pin-Bild */
         if (re15_re2arm_take_pin_bild()) grabbed_branch = 1; }   /* nach dem Pin (FUN_800355C4 @0x80026628) */
-    if (wurf && c->rdt_ok) re15_player_body_and_walls(c, pl, wurf_alt_x, wurf_alt_z);   /* Runde 35 Spur J (6d): Platzierung -> @0x80031cbc -> @0x80031d70 */
+    if (wurf && c->rdt_ok) { re15_player_body_and_walls(c, pl, wurf_alt_x, wurf_alt_z);   /* Runde 35 Spur J (6d): Platzierung -> @0x80031cbc -> @0x80031d70 */
+                             re15_r39_wurf_querung(pl, wurf_alt_x, wurf_alt_z); }      /* Runde 39 Spur E (Nachbesserung 3): kein Wurf durch eine Wand (gegner_r39.c (5)) */
     else if (c->rdt_ok && grabbed_branch && re15_player_is_grabbed()) {
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         int32_t ox = pl->x, oz = pl->z;                   /* the anchored placement = the valid pos */

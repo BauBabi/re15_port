@@ -15,6 +15,12 @@ cmake_minimum_required(VERSION 3.16)
 #   Mass: probe_r38_itemorte_kontrast (Pixel mit |dR|+|dG|+|dB| > 30 im Fenster, Huelle, AUSSEN) ->
 #     KLEINER:  Huellenbreite <= 6 px (Skala 1) bzw. <= 18 px (Skala 3)   [vorher 12 / 36]
 #     SICHTBAR: Pixel >= Mindestzahl (gemessen 2026-10-18, s. unten), AUSSEN == 0 (nichts anderes aendert sich)
+#   RUNDE 39 SPUR M (NUTZER-VORGABE Nachtrag 5 "maximal halb so gross", analysis/befunde_runde39/M_schluessel2.md): seitdem
+#     Skala 3 Huellenbreite <= 7 (Leon) / 8 (Elza) = halbe Spur-L-Messung 14 / 16; Mindestpixel ~60 % der neuen Messung
+#     (Leon 9, Elza 16 Pixel). Skala 1: das GTE-Viereck hat nur noch 2 x 1 / 3 x 2 Bildpunkte (ganzzahlige Ecken,
+#     FUN_80022f0c @0x80022fd8), die Bilder mit/ohne Schluessel sind dort bitgleich — gemessen 0 Pixel; geprueft wird dort
+#     nur noch, dass sich ausserhalb des Fensters nichts aendert (Mindestzahl 0). Breite/Hoehe beider Stufen misst
+#     integration_r39_schluessel2.
 #   aufnahme_leon / aufnahme_elza  Druck vor der Pinnwand (1300,-2900) Blick -z: "[schluessel] ... genommen" im debug.log
 #                        (Aufhebe-Zone Slot 8 unveraendert).
 #
@@ -86,12 +92,17 @@ function(mass _name _mit _ohne _x0 _y0 _x1 _y1 _min_px _max_breite)
                     RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
     string(STRIP "${_o}" _o)
     message(STATUS "r39_optik_schluessel[${_name}]: ${_o}")
-    if(NOT _o MATCHES "FENSTER [^:]*: ([0-9]+) Pixel, SUMDL ([0-9]+), Huelle x([0-9]+)\\.\\.([0-9]+) y([0-9]+)\\.\\.([0-9]+) \\| AUSSEN: ([0-9]+)")
+    # (Runde 39 M: bei 0 Pixel schreibt das Werkzeug die leere Huelle "x320..-1" -> Vorzeichen zulassen, Breite dann 0)
+    if(NOT _o MATCHES "FENSTER [^:]*: ([0-9]+) Pixel, SUMDL ([0-9]+), Huelle x(-?[0-9]+)\\.\\.(-?[0-9]+) y(-?[0-9]+)\\.\\.(-?[0-9]+) \\| AUSSEN: ([0-9]+)")
         set(_fehler "${_fehler};${_name}: Werkzeug-Ausgabe unlesbar '${_o}'" PARENT_SCOPE)
         return()
     endif()
     set(_px "${CMAKE_MATCH_1}")
-    math(EXPR _breite "${CMAKE_MATCH_4} - ${CMAKE_MATCH_3} + 1")
+    if(_px EQUAL 0)
+        set(_breite 0)
+    else()
+        math(EXPR _breite "${CMAKE_MATCH_4} - ${CMAKE_MATCH_3} + 1")
+    endif()
     set(_aussen "${CMAKE_MATCH_7}")
     if(_px LESS _min_px)
         set(_fehler "${_fehler};${_name}: nur ${_px} Pixel (Soll >= ${_min_px}) - nicht sichtbar" PARENT_SCOPE)
@@ -117,12 +128,15 @@ pruef(E1 _dbg_elza_s1_mit "[pl] Spieler-Familie PL04")
 pruef(E1 _dbg_elza_s1_mit "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,0,0), Zone Slot 8")
 pruef(E3 _dbg_elza_s3_mit "[pl] Spieler-Familie PL04")
 
-# Mindest-Pixel = ~60 % der Messung 2026-10-18 (Dossier Punkt 2 "Messung nachher": Leon 7 / 69 Pixel, Elza 5 / 63 bei
-# Skala 1 / 3; Runde 38: 55 / 491 bzw. 27 / 217); Huelle <= RE2-Quartil aufgerundet + 1 (gemessen 5 / 14 bzw. 4 / 16).
-mass(leon_s1 "${_ppm_leon_s1_mit}" "${_ppm_leon_s1_ohne}" 131 75 145 87 4 6)
-mass(leon_s3 "${_ppm_leon_s3_mit}" "${_ppm_leon_s3_ohne}" 393 225 437 263 40 18)
-mass(elza_s1 "${_ppm_elza_s1_mit}" "${_ppm_elza_s1_ohne}" 131 75 145 87 3 6)
-mass(elza_s3 "${_ppm_elza_s3_mit}" "${_ppm_elza_s3_ohne}" 393 225 437 263 36 18)
+# Spur L: Mindest-Pixel = ~60 % der Messung 2026-10-18 (Leon 7 / 69 Pixel, Elza 5 / 63 bei Skala 1 / 3; Runde 38: 55 / 491
+# bzw. 27 / 217); Huelle <= RE2-Quartil aufgerundet + 1 (gemessen 5 / 14 bzw. 4 / 16).
+# Runde 39 Spur M (NUTZER-VORGABE "maximal halb so gross", M_schluessel2.md "Messung nachher"): Skala 3 Leon 9 Pixel, Huelle
+# 4 x 3, Elza 16 Pixel, 8 x 5 -> Mindest-Pixel 5 / 9 (~60 %), Breite <= 7 / 8 (halbe Spur-L-Messung 14 / 16); Skala 1 0 / 0
+# Pixel (GTE-Viereck 2 x 1 / 3 x 2) -> Mindestzahl 0, Breite <= 6 bleibt (leere Huelle = 0).
+mass(leon_s1 "${_ppm_leon_s1_mit}" "${_ppm_leon_s1_ohne}" 131 75 145 87 0 6)
+mass(leon_s3 "${_ppm_leon_s3_mit}" "${_ppm_leon_s3_ohne}" 393 225 437 263 5 7)
+mass(elza_s1 "${_ppm_elza_s1_mit}" "${_ppm_elza_s1_ohne}" 131 75 145 87 0 6)
+mass(elza_s3 "${_ppm_elza_s3_mit}" "${_ppm_elza_s3_ohne}" 393 225 437 263 9 8)
 
 # Aufnahme unveraendert: vor der Pinnwand (1300,-2900) Blick -z (rot 1024), Aktion -> Modal -> Ja (Skript wie Runde 38 K1/K2).
 # Skript-Zeitachse = Spielbilder (RE15_INPUT_SCRIPT_BASIS=spiel), Start nach dem Sprung (Bild 250) bzw. nach GOTO_ROOM.
@@ -130,7 +144,8 @@ lauf(aufnahme_leon 1 "${_titel};RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=1300,-2
 pruef(A1 _dbg_aufnahme_leon "[schluessel] PARKING LOT KEY genommen: Item 0x45, Bit (9,82)")
 # Elza: RE15_GOTO_ROOM wendet RE15_PLAYER_POS nicht an (Spawn an der Tuer) -> Sprung ueber RE15_DEBUG_JUMP nach der Auswahl
 # (bleibt Elza, "[pl] Spieler-Familie PL04"; gemessen 2026-10-18: "[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS").
-lauf(aufnahme_elza 1 "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1;RE15_DEBUG_JUMP=10F1@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F1")
+# (9,70) = Funkszene ROOM10F1 schon gesehen (Runde 39 Spur I, re15_funk10f1_r39.h) - sonst haelt die Szene das Pad.
+lauf(aufnahme_elza 1 "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1;RE15_SET_FLAG=9:70;RE15_DEBUG_JUMP=10F1@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F1")
 pruef(A2 _dbg_aufnahme_elza "[pl] Spieler-Familie PL04")
 pruef(A2 _dbg_aufnahme_elza "[schluessel] PRISON KEY genommen: Item 0x42, Bit (9,83)")
 file(REMOVE "${_exe_kopie}")

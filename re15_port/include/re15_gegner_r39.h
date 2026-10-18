@@ -1,23 +1,33 @@
 /*
- * RE1.5 Rebuilt — Runde 39 Spur E "gegner": Parking-Lot-Gorillas (Energie x2, Flinch erst nach 3 Pistolen-
- * Treffern), kein paralleler Hundebiss (RE2-Ein-Angreifer-Riegel), liegende Zombies kriechen (RE1.5-Wecker),
- * Gorilla-/Affen-Schatten auf der Boden-Referenz. Dossier: analysis/befunde_runde39/E_gegner.md.
+ * RE1.5 Rebuilt — Runde 39 Spur E "gegner": Gorillas 0x27 (Energie x2, Flinch erst nach 3 Pistolen-Treffern; seit
+ * Nachbesserung 2 fuer ALLE Gorillas), kein paralleler Hundebiss (RE2-Ein-Angreifer-Riegel), liegende Zombies kriechen
+ * (RE1.5-Wecker), Gorilla-/Affen-Schatten auf der Boden-Referenz. Dossier: analysis/befunde_runde39/E_gegner.md.
  *
- * (1) GORILLA 0x27 in ROOM11C0 ("PARKING LOT", debug_jump_table.h; Sce_em_set 0x27 @0x01784/0x01798 Szene,
- *     @0x017E8/0x017FC Kampf). ROOM1141 traegt dieselben 0x27 — Nutzer: nur der Parking Lot.
+ * (1) GORILLA Typ 0x27 (STAGE1-Registrierung `lui v0,0x8011 / addiu v0,v0,28088` = Wurzel 0x80116db8 @0x8011e900-04,
+ *     `sw v0,11336(at)` = Dispatch-Platz 0x80072c48 = 0x80072bac + 0x27*4 @0x8011e90c). Zensus Sce_em_set Typ 0x27 in
+ *     allen 240 RDTs beider Szenarien (scd_dump_room.py; Abbrueche nur in 34 Stummel-RDTs zu 4 Byte): ROOM11C0 (Leon,
+ *     "PARKING LOT": Szene @0x01784/@0x01798 grid 0x30, Kampf @0x017E8/@0x017FC grid 0x10) und ROOM1141 (Elza, Briefing
+ *     Room: Szene @0x00B1A/@0x00B2E grid 0x30, Kampf @0x00B54/@0x00B68 grid 0x10; der Port-Ablauf BEFREIUNG setzt
+ *     dieselben Saetze, gen/dining_r38_programme.inc). NUTZER-VORGABE (AUFTRAG.md Nachtrag 3, 2026-10-18: "Zu 2. ja,
+ *     wir machen das Gorilla Verhalten generell so."): die Regel gilt fuer jeden Typ 0x27, in jedem Raum — kein Raum-Tor.
+ *     Die kleinen Affen 0x29 (Stage 3-5, eigene Wurzel 0x80110b00, affen3_r38.c) bleiben unberuehrt.
  *     HP: INIT FUN_80116f50 liest die Zeile Typ 0x27 der HP-Tabelle (`jal 0x8001af20` @0x801170cc, Basis 0x8011f034
- *     @0x801170d4-d8, `andi 0xf` @0x801170e4, `sh v0,154(a1)` = +0x9a @0x80117104) = @0x8011f514: 16 x 180.
+ *     @0x801170d4-d8, `andi 0xf` @0x801170e4, `sh v0,154(a1)` = +0x9a @0x80117104, ohne hp-Bedingung — der einzige
+ *     Zweig des INIT ist grid&1 @0x80116f80) = @0x8011f514: 16 x 180.
  *     NUTZER-VORGABE "doppelt so viel Energie" -> 2 x 180 = 360.
  *     Flinch: der Resolver schreibt +0x4 = 2 (HURT) bei JEDEM Treffer (@0x80012520); Spur 0 FUN_8011b018 spielt
  *     Clip 7 (`ori v1,zero,0x7 / sb v1,148(v0)` @0x8011b08c-90) und endet mit +0x93 = 0 (@0x8011b178), +0x4 = 1
  *     (@0x8011b188), +0x5 = 7 (@0x8011b194-98). Eine Schadens-Schwelle hat das Original nicht.
  *     NUTZER-VORGABE "erst die flinch Animation, wenn sie von der Energie her 3x mit der Handfeuerwaffe getroffen
  *     wurden": Schwelle = 3 x Pistolen-Schaden am Gorilla = 3 x 12 (@0x8006ee44 = 0x8006e0d0 + 0x27*0x58 + 3*4,
- *     Waffe 3 = Pistole, DAT_8006f430[0] = 3) = 36 Energie seit dem letzten Flinch. Darunter: Treffer ohne Zucken
+ *     Waffe 3 = Pistole, DAT_8006f430[0] = 3; Elzas SIG P228 = Waffe 4 = ebenfalls 12 @0x8006ee48) = 36 Energie seit
+ *     dem letzten Flinch. Darunter: Treffer ohne Zucken
  *     (Blut + Se 3 wie der Flinch-Eintritt @0x8011b0bc-138; der Original-Luftschuss ohne Flinch macht ebenfalls nur
  *     Blut @0x80118b78-bd0), das Gehirn laeuft mit den Unterzustaenden des letzten Ticks weiter, +0x93 = 0 wie
  *     der Flinch-Exit (@0x8011b178; sonst bliebe der Einmal-Riegel @0x8001300c zu). Jeder Treffer zaehlt fuer den
  *     Vergeltungs-Sprung der Runde 35 (3 Treffer -> Sprung, re15_affen_treffer_zaehlen) weiter wie bisher.
+ *     Bezug des Akkus (PORT-WAHL der Buchfuehrung): HP beim INIT bzw. beim letzten Flinch; ein Aktor, dessen HP ueber
+ *     dem Bezug liegt (Platz neu belegt ohne INIT), setzt den Bezug am Tick-Ende neu (HP steigen beim Gorilla nie).
  * (2) HUND (RE2-Modul EMD0G_MOD0.BIN): Boden-Biss-Spielerhaken 0x801051BC schreibt PL +0x4 = 2 / +0x5 = dir+2
  *     (@0x801051e0-ec) und PL+0x1D3 |= 0x80 (`ori v1,v1,0x80` @0x801051f8 / `sb v1,467(a0)` @0x80105200);
  *     Kontakt-Tor `lbu v0,467(s1)` @0x80104e5c / `andi 0x80` @0x80104e64 / `bne` @0x80104e68 und Flug-Tor
@@ -49,7 +59,7 @@
 #include <stdint.h>
 #include "re15_actor.h"
 
-#define RE15_R39_PARKPLATZ_RAUM      0x11C0u   /* "PARKING LOT" (debug_jump_table.h), beide 0x27-Varianten */
+#define RE15_R39_AFFEN_TYP           0x27u     /* Gorilla: Wurzel 0x80116db8 -> Dispatch 0x80072c48 (@0x8011e900-0c); 0x29 = kleiner Affe, unberuehrt */
 #define RE15_R39_AFFEN_HP_TABELLE    180       /* @0x8011f514 (Zeile 0x27, 16 Spalten gleich), Saat @0x80117104 */
 #define RE15_R39_AFFEN_HP_FAKTOR     2         /* NUTZER-VORGABE "doppelt so viel Energie" */
 #define RE15_R39_PISTOLE_SCHADEN     12        /* @0x8006ee44 (Zeile 0x27 @0x8006ee38, Waffe 3 = Pistole) */
@@ -61,8 +71,8 @@
 /* NUR Sonden/Tests (Gegenprobe "vorher" im selben Lauf): 0 = alle Haken dieser Spur sind durchsichtig. */
 void    re15_r39_gegner_enable(int an);
 
-/* (1) Gorilla ROOM11C0 */
-int     re15_r39_affen_parkplatz(const re15_actor_t *e);
+/* (1) Gorilla 0x27 (alle Raeume, beide Szenarien; Nachbesserung 2) */
+int     re15_r39_affen_regel(const re15_actor_t *e);                      /* 1 = Typ 0x27 und Haken an */
 int16_t re15_r39_affen_hp_init(const re15_actor_t *e, int16_t tabelle);   /* INIT: 2 x Tabellenwert, Akku-Bezug */
 void    re15_r39_affen_merken(const re15_actor_t *e);                     /* Tick-Ende in Zustand 1: +0x5/+0x6/+0x7 */
 int     re15_r39_affen_zucken_unterdruecken(re15_actor_t *e);             /* HURT-Eintritt: 1 = kein Flinch */
@@ -80,7 +90,16 @@ int     re15_r39_kriecher_weckt(const re15_actor_t *e, const re15_actor_t *pl); 
 /* (4) Schatten */
 int     re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y);        /* 0x27/0x29 (auch grid&0x20): Quad-Y = +0x1ba */
 
-/* Mess-Schiene (kein Spielverhalten): RE15_R39_LOG=1 -> gegner_r39.log im Arbeitsordner. */
+/* (5) Querungs-Wache (Nachbesserung 3, Befund E): nach der RE1.5-Wandklemme (FUN_8003b0a4 -> FUN_8003bca8, naehere Kante
+ *     @0x8003bcec-cfc) die RE2-Retail-Regel FUN_8004c900 (Seite nach der Vorbild-Lage +0x118/+0x11a, @0x8004c930-ca50),
+ *     NUR fuer eine durchquerte solide Rechteckzelle; Rest-Querung -> Vorbild-Lage (Runde-38-T-Form). Belege gegner_r39.c (5). */
+void    re15_r39_affen_querung(re15_actor_t *e, int32_t vx, int32_t vz);    /* Gorilla 0x27 nach re15_enemy_sca_clamp_band */
+void    re15_r39_wurf_querung(re15_actor_t *pl, int32_t vx, int32_t vz);    /* Spieler im Gorilla-Opfer-Haken nach @0x80031d70 */
+int     re15_r39_querung_sonde(int32_t r, int band, uint32_t maske, int32_t vx, int32_t vz, int32_t *x, int32_t *z);
+
+/* Mess-Schiene (kein Spielverhalten): RE15_R39_GEGNER_LOG=1 -> gegner_r39.log im Arbeitsordner (RE15_R39_MESS_STATIONEN=1:
+ * Spielerlage an den Stationen des Vorbildes, Nachbesserung 3). Messhaken (nur Messlauf, Nachbesserung 2):
+ * RE15_R39_MESS_SPIELER_HP=<n> hebt die Spieler-HP je KI-Bild auf >= n (gegner_r39.c r39_mess_spieler_hp; Begruendung im Dossier). */
 void    re15_r39_log(const char *fmt, ...);
 
 #endif /* RE15_GEGNER_R39_H */

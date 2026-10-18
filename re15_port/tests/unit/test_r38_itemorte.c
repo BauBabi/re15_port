@@ -7,8 +7,9 @@
  *   lage      Loescher: das gezeichnete Netz (MD1 stehend mit Prop-Drehung/-Lage) liegt im Nutzer-Cut ROOM1030 Cut 0 AUF
  *             der Marke (Mitte +-1 px, Spalten der Marke), Rueckseite 15 vor der triangulierten Pfeilerflaeche x -2688,
  *             ganz auf ihrer z-Spanne. Schluessel: JEDER sichtbare Texel (CLUT-Farbe != 0) des gezeichneten Netzes
- *             liegt im Nutzer-Cut ROOM10F0 Cut 5 in der Marke; Breite der gezeichneten Huelle = RE2-Median (Runde 39
- *             Spur L "kleiner/subtiler", bis Runde 38: fuellt die Marke >= 9 von 11 Spalten); Licht flach (0x0010,
+ *             liegt im Nutzer-Cut ROOM10F0 Cut 5 in der Marke; Breite der gezeichneten Huelle = Spur-M-Huelle (Runde 39
+ *             Spur M "maximal halb so gross" = <= 0,5 x RE2-Quartil-Groesse der Spur L "kleiner/subtiler"; bis Runde 38:
+ *             fuellt die Marke >= 9 von 11 Spalten); Licht flach (0x0010,
  *             RE2 Obj_model_set @0x80055320 aus pc[12..13], ROOM6150 @0x02C98 / ROOM1050 @0x01274)
  *   raum      Raumstart 1030 (Prop + Zone Slot 14, Monitor-Satz nach 20), 1031/1050/1051 kein Loescher; 10F0/10F1 Prop +
  *             Zone Slot 8, Satz msg 4 nach 15; mit Taken-Bit nichts; Installer idempotent
@@ -354,19 +355,30 @@ static void teil_lage(void)
               "L ROOM%04X: alle sichtbaren Texel in der Marke x %d..%d y %d..%d (+-0,5/+1,5 px, Massstab-Regel Runde 36 N)",
               (unsigned)r->id, KS_MX0, KS_MX1, KS_MY0, KS_MY1);
         /* Runde 39 Spur L (NUTZER-VORGABE "kleiner/subtiler, nicht so riesig"; Dossier analysis/befunde_runde39/L_optik.md
-         * Punkt 2): die gezeichnete Huelle ist so breit, wie RE2 Retail dasselbe Modell an seinen eigenen Platzierungen
+         * Punkt 2): die gezeichnete Huelle war so breit, wie RE2 Retail dasselbe Modell an seinen eigenen Platzierungen
          * in den naeheren Kameras zeigt (oberes Quartil von L_nat*H/vz, gen/itemorte_r38_lage.inc RE15_R39L_*_ZIEL_PX100;
-         * Riegel unit_r39_optik_schluessel rechnet es aus den RE2-Dateien nach). Bis Runde 38: "fuellt die Marke"
-         * (>= 9 von 11 Spalten). */
+         * Riegel unit_r39_optik_schluessel rechnet es aus den RE2-Dateien nach). Runde 39 Spur M (NUTZER-VORGABE Nachtrag 5
+         * "maximal halb so gross", Dossier analysis/befunde_runde39/M_schluessel2.md): hoechstens 0,5 x davon — die
+         * gezeichnete Huelle == RE15_R39M_*_BREITE_PX1000 des Werkzeugs (+-0,1 px: Raster 48 hier, 48 + 480 dort) und
+         * <= RE15_R39M_FAKTOR100/100 x Spur-L-Huelle (RE15_R39L_*_HUELLE_PX100) + 0,05; das Halbieren selbst misst
+         * unit_r39_schluessel2_halb. Bis Runde 38: "fuellt die Marke" (>= 9 von 11 Spalten). */
         {
-            double ziel = (i == 0 ? RE15_R39L_PARK_ZIEL_PX100 : RE15_R39L_PRISON_ZIEL_PX100) / 100.0;
-            CHECK(fabs((x1 - x0) - ziel) <= 0.5 && x1 - x0 < 9.0,
-                  "L ROOM%04X: Runde 39 L \"kleiner/subtiler\" = gezeichnete Huelle %.2f px breit == RE2 oberes Quartil %.2f "
-                  "(+-0,5), nicht mehr die ganze Marke (< 9 von 11 Spalten)", (unsigned)r->id, x1 - x0, ziel);
+            double soll = (i == 0 ? RE15_R39M_PARK_BREITE_PX1000 : RE15_R39M_PRISON_BREITE_PX1000) / 1000.0;
+            double grenze = RE15_R39M_FAKTOR100 / 100.0 *
+                            (i == 0 ? RE15_R39L_PARK_HUELLE_PX100 : RE15_R39L_PRISON_HUELLE_PX100) / 100.0;
+            CHECK(fabs((x1 - x0) - soll) <= 0.1 && x1 - x0 <= grenze + 0.05,
+                  "L ROOM%04X: Runde 39 M \"maximal halb so gross\" = gezeichnete Huelle %.2f px breit == Spur M %.3f (+-0,1),"
+                  " <= 0,5 x Spur L = %.3f (+0,05)", (unsigned)r->id, x1 - x0, soll, grenze);
         }
-        CHECK(re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42) > 10000,
-              "L ROOM%04X: Massstab %d/10000 > 1 (RE2-Groesse waere 2..3 Bildpunkte)", (unsigned)r->id,
-              re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42));
+        /* Bis Runde 39 L: "Massstab > 1 (RE2-Groesse waere 2..3 Bildpunkte)". Runde 39 Spur M ("maximal halb so gross"):
+         * hoechstens 0,5 x Spur-L-Massstab — der Parking Lot Key liegt damit sogar unter der RE2-Weltgroesse (0,81), weil
+         * erst sein 2 x 1-GTE-Viereck die Hoehe halbiert (M_schluessel2.md). */
+        CHECK(re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42) * 100 <=
+                  RE15_R39M_FAKTOR100 * (i == 0 ? RE15_R39M_PARK_SL_10000 : RE15_R39M_PRISON_SL_10000) &&
+              re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42) > 0,
+              "L ROOM%04X: Massstab %d/10000 <= 0,5 x Spur L %d (Runde 39 M)", (unsigned)r->id,
+              re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42),
+              i == 0 ? RE15_R39M_PARK_SL_10000 : RE15_R39M_PRISON_SL_10000);
     }
     free(r30.buf); free(rf0.buf); free(rf1.buf);
 }
