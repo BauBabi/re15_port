@@ -7,7 +7,9 @@
  * Kreuzkorrelation der auf 44100 Hz gerechneten Datei gegen das Mono-Mittel des Mitschnitts, lag 0..3 Bilder; der
  * Lader hebt leise Dateien an, der Pegelfaktor aendert die Korrelation nicht):
  *   1  ROOM1050 msg 22/23/24 -> main09/10/11.wav      (Punkt 1, vorher stumm: main22..24.wav gibt es nicht)
- *   2  ROOM1150 msg 22..28   -> main15..21.wav        (Punkt 2), msg 29 bleibt stumm (keine Aufnahme)
+ *   2  ROOM1150 msg 22..29   -> main15..22.wav        (Punkt 2; 29 <- main22 seit Nutzer-Nachtrag 2), Irons' Zeilen
+ *                                                     25..28 ueber den alten 4x-Deckel hinaus angehoben (Stufe 2,
+ *                                                     re15_stimmen_pegel_r39.h: Faktor 6..16), Leon hoechstens 2,1x
  *   3  ROOM11B0 msg 20/21    -> main13/14.wav         (Punkt 3), msg 13/14 (Original-Untersuchungstexte) stumm,
  *                                                     msg 1 weiter main01.wav (Ordnerregel unberuehrt)
  *   4  ROOM1171 msg 3        -> main02.wav            (Punkt 4), msg 0/1 weiter main00/01.wav, msg 2 stumm
@@ -165,7 +167,6 @@ int main(void)
         ticks((int)((nn + T - 1) / T) + 10);
     }
     /* Sperren und unberuehrte Regel */
-    int b_1150_29 = s_bild; re15_audio_stimme(0x1150, 29); ticks(40);
     int b_11b0_13 = s_bild; re15_audio_stimme(0x11B0, 13); ticks(70);
     int b_11b0_14 = s_bild; re15_audio_stimme(0x11B0, 14); ticks(130);
     int b_11b0_1  = s_bild; re15_audio_stimme(0x11B0, 1);  ticks(160);
@@ -182,11 +183,13 @@ int main(void)
     int nr = 1;
     for (int i = 0; i < nl; i++) {
         double f = 0; double c = korr(L[i].raum, L[i].datei, L[i].bild, &f, NULL);
-        CHECK(nr++, c >= 0.9 && f >= 0.9 && f <= 4.5,
-              "ROOM%04X msg %d -> main%02d.wav im Mitschnitt ab Bild %d: korr %.3f faktor %.2f (%ld Bilder)",
-              L[i].raum, L[i].msg, L[i].datei, L[i].bild, c, f, L[i].bilder);
+        /* Irons (1150 msg 25..28): Stufe 2 ueber den alten 4x-Deckel (Zensus: 7,4..12,6x); alle anderen: nur Stufe 1
+         * (Zensus: hoechstens 2,1x) — "Leon unveraendert" */
+        int irons = (L[i].raum == 0x1150 && L[i].msg >= 25 && L[i].msg <= 28);
+        CHECK(nr++, c >= 0.9 && (irons ? (f >= 6.0 && f <= 16.0) : (f >= 0.9 && f <= 2.1)),
+              "ROOM%04X msg %d -> main%02d.wav im Mitschnitt ab Bild %d: korr %.3f faktor %.2f (%ld Bilder)%s",
+              L[i].raum, L[i].msg, L[i].datei, L[i].bild, c, f, L[i].bilder, irons ? " [Irons: Stufe 2 >= 6x]" : "");
     }
-    CHECK(nr++, energie(b_1150_29, b_1150_29 + 40) == 0, "ROOM1150 msg 29 'SIR, Sir?!' ohne Aufnahme: stumm");
     CHECK(nr++, energie(b_11b0_13, b_11b0_13 + 70) == 0, "ROOM11B0 msg 13 (Untersuchungstext) stumm: main13.wav gehoert zu msg 20");
     CHECK(nr++, energie(b_11b0_14, b_11b0_14 + 130) == 0, "ROOM11B0 msg 14 (Rolltor-Text) stumm: main14.wav gehoert zu msg 21");
     { double f = 0; double c = korr(0x11B0, 1, b_11b0_1, &f, NULL);

@@ -38,6 +38,7 @@
 #include "re15_elzaintro_r38.h"  /* Runde 38 Spur E: Elzas Montage ROOM1241 -> Aufnahmen room1240 */
 #include "re15_rekorder_r38.h"  /* Runde 38 Spur J: re15_rekorder_r38_stimme (Irons_Rekorder_Sound.wav) */
 #include "re15_stimmen_r39.h"   /* Runde 39 Spur A: Nutzer-Reihenfolge der Port-Szenen */
+#include "re15_stimmen_pegel_r39.h"   /* Runde 39 Spur A (Nachbesserung 1): Lautheits-Boden Stufe 2 */
 #include "re15_aufschliessen_r36.h"  /* Runde 36 Spur G: Satz-TOC der Mini-Bank KARTSE.VBS */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Port-Bank 0x3A = RE2-Schlossbank SCHLOSS1010 */
@@ -2380,6 +2381,10 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
             }
         }
     }
+    /* Runde 39 Spur A (Nachbesserung 1), NUTZER-VORGABE "ruhig lauter anheben": Stufe 2 hebt Dateien, die nach der
+     * Spitzen-Stufe noch unter dem leisesten Effektivwert des Bestands liegen (T=1163), auf dessen Median (R=2045),
+     * begrenzt durch die Spitze der lautesten gelieferten Datei (C=21758, kein Clipping) — re15_stimmen_pegel_r39.h. */
+    re15_stimmen_pegel_r39(pcm, (long)out_n, stamm, NULL);
 
     s_voice_clip[voice_id].pcm = pcm;
     s_voice_clip[voice_id].len = (int)out_n;
