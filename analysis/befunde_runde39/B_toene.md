@@ -8,7 +8,10 @@ Baum: `.claude/worktrees/r39_toene` (Zweig `r39/toene`, Basis 3e49ff87). Wortlau
 3. "In Room 1090 fehlt noch Sound für den bewegenden Schrank nach dem lösen des Rätsels. Den könnte man aus Resident Evil 2 holen von den bewegenden Regalen in der 2. Etage."
 
 ## Stand
-- (laufend) Dossier angelegt, Lektuere AUFTRAG/VERTRAG erledigt.
+- 2026-10-18 02:34-03:05 (Sitzung 1, Limit): Lektuere, Raumzuordnung (§0), Messung vorher (§1), RE-Belege (§2), Mini-Bank + Modul (vor Bau).
+- 2026-10-18 07:10-08:xx (Sitzung 2): gebaut (configure + build gruen), Riegel geschrieben und gemessen (§4.1), echter Weg an der
+  exe fuer Leon und Elza (§4.2), Riegel auf die gemessene Struktur gesetzt, Dossier §3-§7, gezielter ctest-Lauf (§5.1). FERTIG
+  aus Sicht der Spur; Entscheidungsfragen und Paket-Gate-Eintrag unter §7.
 
 ## 0. Welche Raeume gemeint sind (gemessen, nicht vermutet)
 
