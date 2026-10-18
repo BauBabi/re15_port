@@ -106,3 +106,4 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
 - Erst wenn sie danach die Tür entriegelt soll die Cutscene losgehen mit John. Am besten rennt sie dann bis zur Szene mit den anderen Kamera, die nicht mehr Richtung Tür zeigt, dreht sich dann zur Tür und hebt die Waffe. Dann kommt alles das, was jetzt schon drin ist. Tür knallen, sicht auf John usw.
 - John sollte auch ab und an mal auf die Gorillas schießen in ROOM 1141 und dann ihre Aufmerksamkeit erhalten, sonst ist es komisch
 - John sollte am Ende der Cutscene in ROOM 1141, bevor sie den Raum verlassen nicht die Waffe auf Elza richten, sondern das heranwinken/Folge Animation abspielen stattdessen....
+- (Nachschub 19:25) "Oder falls Elza keine Waffe ausgerüstet hat eben das Messer...." (zu Punkt 2: hebt die Waffe - ohne ausgeruestete Waffe das Messer)
