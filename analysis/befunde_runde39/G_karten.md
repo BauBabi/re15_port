@@ -728,3 +728,19 @@ ctest --test-dir re15_port/build -R "^(unit_map_|unit_karte_|unit_r30_karte|unit
   re15_karte_r39_fenster, "Runde 39 Spur G"); re15_map_zones.h = Karten-Code (Spur G); kein getenv, keine Aenderung an
   release/, platform/android/, shared_assets/, CMakeLists.txt; neue Tests nur ueber probes/r39_karten.cmake
   (integration_r39_karten-Skript cmake_minimum_required, exe-Kopie je Lauf, eigener Laufordner).
+
+## Nachbesserung 3 (nach Abnahme 2, 2026-10-19)
+Grundlage: analysis/befunde_runde39/G_abnahme_2.md (Mangel N2, Punkt 1a "Tuer immer genau auf Wand platziert").
+N2: solange ROOM1030 (Eingangshalle) nicht gezeichnet ist, schweben seine Tuermarken neben der Wand des Nachbarraums -
+(a) Tuer 1030<->1050 `{ 2, 4, 186, 152, 3, 4, 6, 1 }` (re15_map_zones.h:753) Balken x186 y150..154 links neben der
+1050-Westwand x187; (b) Tuer 1030<->1040 `{ 2, 4, 119, 129, 3, 4, 5, 1 }` (re15_map_zones.h:730) Balken x119 y127..131
+rechts neben der 1040-Ostwand x118. Riegel-Soll: in jedem erreichbaren Kartenzustand liegt jeder gezeichnete
+Tuerbalken auf einer gezeichneten Wand (Einzelzustaende 1050/1040 ohne 1030; die uebrigen Einzelzustaende frei).
+Arbeitsordner der Messungen: Scratchpad `nb3/` (nicht im Baum); Werkzeuge kommen nach `G_karten_werkzeug/nb3/`.
+
+### Fortschritt
+- [ ] Messung vorher (echter Tuerweg 1090 -> 1050, Einzelzustand 1040; Sonde ueber ALLE Tuermarken x Einzelzustaende)
+- [ ] RE: wie RE2 Retail Tuersymbole eines ungezeichneten Raums behandelt; Linien x186/x187, x118/x119 aus MAP03.PIX
+- [ ] Umsetzung
+- [ ] Messung nachher (echte exe + Sonde), Riegel + Gegenprobe
+- [ ] gezielte Tests, Abschluss
