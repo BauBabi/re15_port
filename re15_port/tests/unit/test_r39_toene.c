@@ -265,7 +265,7 @@ static void teil_gitter(void)
     printf("== gitter ==\n");
     szene_1190(0x1190);
     PRUEF(g_re15_toene39_anker_n == 3, "ROOM1190: drei Anker (Schrank, Luke auf, Luke zu): %d", g_re15_toene39_anker_n);
-    PRUEF(s_ea_erst > 3, "sub10 ueber sub01 @0x02468 gestartet: (4,0xEA) ab Bild %d", s_ea_erst);
+    PRUEF(s_ea_erst >= 3, "sub10 ueber sub01 @0x02468 gestartet (Bits nach Bild 2 gesetzt): (4,0xEA) ab Bild %d", s_ea_erst);
     PRUEF(s_cut_erst[11] > s_cut_erst[8] && s_cut_erst[8] > 0, "Cut 8 (Bild %d), dann Cut 11 (Bild %d)", s_cut_erst[8], s_cut_erst[11]);
     int auf[3] = { -1, -1, -1 }, zu[3] = { -1, -1, -1 }, na = 0, nz = 0;
     for (int i = 0; i < s_ton_n; i++) {
@@ -281,7 +281,9 @@ static void teil_gitter(void)
         int b0 = luke_bewegt_ab(such);               /* erster Schritt des Aufschwungs (Add_speed im For-Bild) */
         int b1 = (b0 >= 0) ? luke_ruht_ab(b0) : -1;  /* zurueck in der Ruhelage (Summe +1230 / -1230)         */
         PRUEF(b0 == auf[k], "Hund %d: Auf-Ton im Bild des ersten Luken-Schritts (Ton %d, rot_z != 0 ab %d)", k, auf[k], b0);
-        PRUEF(zu[k] == auf[k] + 20, "Hund %d: Zu-Ton 20 Bilder spaeter (For 10 + For 10 je Evt_next): %d", k, zu[k] - auf[k]);
+        /* 10 Aufschwung-Bilder (For @0x0286A, Evt_next @0x02872) + Evt_next @0x0287E zwischen den Schleifen + 10 Rueckschwung-
+         * Bilder (For @0x02880, Evt_next @0x02888) -> Member_set(5,0) @0x0288C im 21. Bild nach dem For (gemessen 155-134). */
+        PRUEF(zu[k] == auf[k] + 21, "Hund %d: Zu-Ton 21 Bilder spaeter (10 + Evt_next @0x0287E + 10): %d", k, zu[k] - auf[k]);
         PRUEF(b1 >= 0 && b1 <= zu[k] && (zu[k] < MAXB && s_luke_rz[zu[k]] == 0) && s_luke_rz[zu[k] - 2] != 0,
               "Hund %d: Luke ruht im Zu-Bild (rot_z 0 ab %d, zwei Bilder davor %d)", k, b1, (int)s_luke_rz[zu[k] - 2]);
         if (k < 2) PRUEF(zu[k] < auf[k + 1], "Hund %d: Zu-Ton (%d) vor dem naechsten Aufschwung (%d)", k, zu[k], auf[k + 1]);

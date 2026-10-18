@@ -131,3 +131,54 @@ sub10/sub11, s. §0); der Port war nie anders. Kein Bisect noetig.
   ~0,36 s nach dem Schnitt auf Cut 11 (F521). Das ist die RE2-Form (kein Abbruch einer laufenden SE-Stimme in RE2s
   Skript), kein Platzhalter.
 
+
+## 3. Umsetzung (Fortsetzung nach dem Sitzungslimit, Bau 40b03d9b+)
+
+| Datei | Inhalt |
+|---|---|
+| `engine/src/toene_r39.c`, `include/re15_toene_r39.h` (NEU) | Anker = RDT-Datei-Offset + 8-Byte-Signatur (Muster elzatoene_r38.c): ROOM11F0/11F1 @0x017B6 (`29 0b 22 02 07 01 2e 01`, Cut_chg 11 = Schublade), ROOM1190/1191 @0x02796 (`2e 03 05 00 2f 00 9c ff`, Work_set(3,5) = Schrank), @0x0286A (`0d 00 06 00 0a 00 30 31`, For 10 = Aufschwung der Luke), @0x0288C (`34 05 00 00 01 00 2b 00`, Member_set(5,0) = Ruhelage). Signatur weicht ab -> nicht armiert (lieber stumm als falsch). |
+| `platform/pc/src/toene_r39_pc.c` (NEU) | laedt `shared_assets/RE2/TOENE39.VBS` einmal (Satzformat wie ELZASE.VBS, FUN_8005a09c-Trailer), spielt ueber `re15_audio_se_play_bank` (dieselbe Stimmen-/Prioritaets-Maschine wie die Raum-SE), nicht positional (wie RE2 @0x80052188 `addu a1,zero,zero`). |
+| `engine/src/gen/re2_toene39_bank.inc`, `shared_assets/RE2/TOENE39.VBS` (NEU, 23272 B, md5 dc776048cec6fd83af2aa6a881ab99b1) | Satz 0 SCHUBLADE = RE2 ROOM1130 0x28 (VAG @0x15A08 5216 B), 1 GITTER_AUF = RE1.5 ROOM2060 snd0 0x0E (VAG @0x0CA38 2416 B), 2 GITTER_ZU = ROOM2060 0x0D (VAG @0x0C278 1984 B), 3 REGAL = RE2 ROOM1120 0x0C (VAG @0x35C44 10512 B). Werkzeug `tools/r39_b/toene39_se_cut.py` (Selbsttest gegen die zitierten Bytes; Lauf 2026-10-18 07:1x: Ausgabe-md5 == installierte Datei). |
+| `engine/src/scd_vm.c` (Haken, 2 x 2 Zeilen "Runde 39 Spur B") | `scd_register_current_rdt`: Anker-Scan; Opcode-Schleife `scd_vm_tick`: `re15_toene_r39_pc(t->pc)` vor jedem Opcode (Wachposten `g_re15_toene39_anker_n`). |
+| `platform/pc/main.c` (Haken, 1 Zeile) | `re15_pc_toene_r39_init()` neben den anderen VBS-Haken. |
+| `tests/unit/test_r39_toene.c`, `tests/unit/probes/r39_toene.cmake` (NEU) | Riegel `unit_r39_toene_{schublade,gitter,schrank,bank,signatur}` (Mechanik am echten VM, s. §4.1). |
+| `tests/unit/probe_r39_toene_kreuz.c` (NEU) | Kreuzkorrelations-Werkzeug fuer TOENE39.VBS-Saetze (Verfahren probe_r38_elzatoene_kreuz.c). |
+| `tests/integration/test_r39_toene.cmake` (NEU) | `integration_r39_toene_{schublade,schublade_elza,szene,szene_elza}`: Spielstand + CONTINUE + Tuer per Viereck-Druck (RE15_PAD_AT=60:A, Vorwaerts-620-Trefftest @0x80042bd0), Ton-Mitschnitt RE15_AUDIO_CAP_SYNC, Kreuzkorrelation je Satz (s. §4.2). |
+
+Konstanten mit Beleg: Offsets/Signaturen = ausgelieferte RDT-Bytes (scd_dump_room.py, §0/§2); Takt der Toene = Opcode-Takt des
+Original-Skripts (kein eigener Zaehler, keine Framezahl nach Gefuehl): Schublade im Bild von Cut_chg 11 (RE2-Form
+@0x8005218c/@0x800521d8), Schrank im Bild des ersten Fahrschritts (RE2 ROOM1120 @0x02F2E vor `18 08`), Luke 0x0E im Bild des
+For (= erster Add_speed, RE1.5 ROOM2060 @0x0134A vor @0x0135A For 20), 0x0D im Bild der Ruhelage (@0x01376 nach For 20 zurueck).
+
+## 4. Messung nachher
+
+### 4.1 Riegel am VM (`test_r39_toene.exe`, Bau 40b03d9b + Riegel-Korrektur, 2026-10-18)
+Alle Bilder = VM-Takte ab dem Raumaufbau (scd_room_reenter), Spion am Plattform-Haken `re15_toene39_se_hook`.
+* **schublade** ROOM11F0: `re15_aot_fire_slot(13)` (Schreibtisch, derselbe Handler-Pfad @0x800430F0 wie der Aktionsdruck) ->
+  sub19: Cut 11 in Bild 3 (erster Takt des Fadens), **Schubladen-Ton 1x in Bild 3 = Cut-11-Bild**; (9,99) bleibt 0 (Aot_on 14 nur
+  armiert). Zweites Oeffnen mit (9,99)=1: wieder Cut 11 + Ton in Bild 3 (RE1.5 zeigt die Schublade erneut, §2.1).
+  Gegenprobe ohne Anker: Cut 11, 0 Toene. ROOM11F1 (Elza): 1 Anker, Ton im Cut-11-Bild.
+* **schrank** ROOM1190 ueber den ECHTEN Ausloeser: (4,0xF3)=1 im Spielstand, Bank-5-Bits (5,4)/(5,5) nach Bild 2 gesetzt (Bank 5 ist
+  raumlokal) -> sub01 @0x02468 `04 ff 18 0a` startet sub10: (4,0xEA)=1 ab Bild 3, Cut 8 Bild 43 (Sleep 40), **Regal-Ton 1x in
+  Bild 63 = Bild des ersten Fahrschritts** (x 3920 -> 3820; Sleep 20 nach Cut 8), 20 Schritte je 2 Evt_next (Bilder 63..101),
+  Endlage x = 1920, Cut 11 in Bild 123 (= Ton + 40 Fahrt + Sleep 20). ROOM1191 (Elza): 63/63.
+* **gitter** dieselbe Szene: Luke obj 4 (Obj_model_set rot (-2048,1024,0), rot_z 0 = Ruhelage): je Hund **Auf-Ton in Bild 134 /
+  166 / 198 = Bild des ersten Luken-Schritts** (rot_z != 0 ab genau diesem Bild; = Gosub + Sleep 10 + Evt_next @0x02868),
+  **Zu-Ton in Bild 155 / 187 / 219 = Auf + 21** (10 Aufschwung-Bilder For @0x0286A + Evt_next @0x0287E zwischen den Schleifen +
+  10 Rueckschwung-Bilder For @0x02880, dann Member_set(5,0) @0x0288C; rot_z ist im Bild davor (154/186/218) wieder 0, zwei
+  Bilder davor 96 = letzter Rueckschritt). Erster Riegel-Entwurf erwartete +20 — der Evt_next @0x0287E zwischen den Schleifen
+  ist Skript-Bestand (Dump oben), der Riegel wurde auf 21 mit Beleg korrigiert. Gegenprobe ohne Anker: Luke bewegt sich ab 134,
+  0 Toene. ROOM1191 (Elza): 3 Anker, 3/3 Toene, Luke ab 134.
+* **bank**: TOENE39.VBS 23272 B, 4 VAGs; je Satz Welle bytegleich zur Quelle (RE1.5 ROOM2060 @0x0CA38/@0x0C278; RE2 ROOM1130
+  @0x15A08, ROOM1120 @0x35C44, wenn info/re2leon im Baum), Ton-Parameter (vol/pan/center/shift/min/max) wie Quelle, EDT-Prio/-Stimme
+  wie Quelle (Programm 0, Ton-Index = Satz). Die Formen-Quellen stehen in den Dateien: ROOM2060 @0x0134A `36 02 0e 00` /
+  @0x01376 `36 02 0d 00`, RE2 ROOM1130 @0x00D50 Aot_set sce 13, RE2 ROOM1120 @0x02F2E `36 02 0c`.
+* **signatur**: 10F0/10F1/1090/1091 = 0 Anker (die vom Nutzer genannten Raumnummern tragen nichts), 11F0/11F1 = 1, 1190/1191 = 3;
+  Kopie mit einem geaenderten Byte @0x02798 -> nur 2 Anker; ohne RDT 0.
+
+### 4.2 Echter Weg an der exe (`integration_r39_toene_*`, Messkopie `re15_pc_r39b_<id>.exe`, RE15_AUDIO_CAP_SYNC)
+* **schublade (Leon)**: Spielstand ROOM11E0 (-25100,-8300) Blick 0x400 vor Tuer 0, CONTINUE, Viereck in Bild 60 -> `[aot] DOOR FIRE
+  slot=0 rect=(-25100,-9550,hw=2000,hh=750) spawn=(250,0,250)` -> ROOM11F0 (`[toene39] ROOM11F0: 1 Anker armiert`), Schreibtisch
+  `[fire-aot] slot=13 at F200` -> `[toene39] F201 ROOM11F0 Anker @0x017B6 -> Ton 0` und `[scd F201] Cut_chg(11)` im SELBEN Bild;
+  Mitschnitt 5791800 B (985 Bilder), Kreuzkorrelation Satz 0 an Bild 201: **1.000 (Versatz +1 Bild = Mischer-Takt wie Runde 38 H),
+  Gegenprobe -0.006**; Kontrollbilder 171/231: -0.006. Lauf `r39_toene_wd/lauf_schublade_cea2fdc1`, 38.9 s.
