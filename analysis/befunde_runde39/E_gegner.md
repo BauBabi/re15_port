@@ -303,6 +303,12 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   `st=1 ss1=2 mo=23` (liegend) bei (-25398,-6739) / (-23500,-9700); **F5 beide `ss1=0 mo=5`** (`kriecher weckt`
   dist=2126 / 1999), Kriecher 2 kriecht (-23500,-9700) -> (-23500,-9374) F10 -> (-23494,-8890) F20 = Griff `ss1=1`,
   Elza hp 100 -> 95 (F40) -> 90 -> 85 -> 80 -> 70; F180 Kriecher 2 `st=7`, Kriecher 1 greift (F180 `ss1=1`), F300 `st=7`.
+- **Echte exe ROOM1011 mit ELZA ueber den echten Weg (Fortsetzung 12:58)**: Spielstand probe_r36_elza_karte 1021
+  (-2750,-7250) rot 0 + `RE15_FIRE_AOT=0@60#1021` (ROOM1021 Door_aot_set 0 @0x01C82 -> 1011 Cut 4) + `RE15_INPUT_SCRIPT=
+  R0.25,U2` ab Bild 300: nach der Tuer beide 0x81 `st=1 ss1=2 mo=23` (liegend) bei (950,-1700) / (-50,-3800); **F320
+  `kriecher weckt slot=4 typ=10 dist=2996`**, Kriecher A `ss1=0 mo=5` (1195,-1732) F320 -> (1630,-1889) F330 -> Griff
+  F340 (`ss1=1 mo=14`), Elza hp 100 -> 95 (F360) -> 90 (F400) -> 85 (F450), F500 Kriecher A `st=7`; Kriecher B liegt.
+  Bildgleich mit Leons 1010-Lauf (gleiche Spawn-Zeilen @0x00ACE/@0x00AE2).
 
 ### Punkt 4 (Basislauf c71fa144, ROOM11C0 Szene, RE15_FRAMEDUMP 1340-1400/5)
 - state.log: Gorilla Platz 3 in Sub 7 (Fernsprung) F1352 fuer 39 Bilder. Framedumps F1355/F1365/F1375/F1385
@@ -326,7 +332,12 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 - Beruehrte Testgruppen des Diffs: r35_affen (Gorilla-Original-Riegel, test_r35_affen.c mit `re15_r39_gegner_enable(0)`).
 - Zwischenstand 12:34 (`ctest -R "unit_r39_gegner|unit_r35_affen"`): `100% tests passed, 0 tests failed out of 30`;
   12:27 (`ctest -R "integration_r39_gegner"`): `100% tests passed, 0 tests failed out of 2`.
-- Abschlusslauf: s. Ende des Dossiers.
+- **Abschlusslauf 13:02** (`ctest --test-dir re15_port/build -R "r39_gegner|r35_affen" --timeout 900 --output-on-failure`):
+  **`100% tests passed, 0 tests failed out of 32`** (20 x unit_r35_affen_*, 10 x unit_r39_gegner_*, integration_r39_gegner_
+  schatten 58,8 s, integration_r39_gegner_hunde1190 42,3 s). Riegel-Protokoll des Abschlusslaufs 1190 (mit Bildnummern):
+  `GESETZT F685 / FREI F708`, `GESETZT F720 / FREI F743`, `GESETZT F753 / FREI F776`, `GESETZT F833 / FREI F856` — der
+  Riegel steht je Biss genau 23 Bilder (22 Bilder Flinch cmd 2 + das Exit-Bild, Freigabe mit dem NORMAL-Prolog
+  @0x80031964 = RE2 @0x8003f8b4).
 
 ## OFFEN
 - Der "parallele" Biss in ROOM1190 liess sich am skriptierten Basislauf (Leon steht am Spawn) nicht reproduzieren — die
