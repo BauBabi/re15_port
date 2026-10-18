@@ -652,6 +652,23 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
 - Gegenprobe "kommt das auch mit 180 vor?": Stoss-Spruenge > 1000 je Bild gibt es in JEDEM Lauf, auch im Vorher-Lauf
   v1141_vorher (F3536 G3 (-6982,-9418) -> (-7368,-6254)); dort blieben sie im Raum.
 
+- **ROOM1141, Versuch 6 (n1141_sued: wie Versuch 5, Wegplan danach `GEHE -6200 -14000 / -6200 -20000 / -1000 -20500`, also
+  Elza in die freie Suedflaeche)**: 3 Treffer (G2 F3431 OHNE 12 / F3453 OHNE 24 / F3522 FLINCH 36), dann wirft der Gorilla
+  Elza (mo=1) gegen die Suedwand und **Elza landet ausserhalb des Raums**: F3555 z = -23132 (= Innenkante -23600 + 450 + 18,
+  Spieler-Radius 450), F3556 (-2715,-23132) -> **(-2144,-26068)** = Aussenkante -25600 - 450 - 18 (Zelle 1 = Suedwand
+  z -25600..-23600, 2000 dick) — die Endlage ist der Rechteck-Ausstoss FUN_8003bca8 zur naeheren Kante (@0x8003bcec-cfc),
+  diesmal fuer die Spielerin. Lage davor: G3 in Sub 15 (Rear-up-Pin, Elza im Opfer-Clip mo=1), F3555 G3 (-2551,-21646) /
+  Elza (-2715,-23132) Abstand 1495, F3556 G3 (-2359,-21777). Der reine Koerper-Stoss (R = 450 + 1600 = 2050, pen ~680)
+  reicht fuer die Wandmitte -24600 NICHT — welcher Schreiber Elza in diesem Bild ueber die Mitte setzt (Pin-/Wurf-Platzierung
+  der Runde-35-Haken oder Opfer-Wurzelbewegung), ist NICHT ermittelt (OFFEN). Danach 159 Schuss ins Leere, abgebrochen
+  (eigene PID 59416).
+
+#### Neuer Exe-Riegel integration_r39_gegner_1141 (gruen)
+- Aufbau = Versuch 5 bis Spielbild 3900 (bildgleich: F3081/F3105/F3129 Platz 2, F3513/F3756/F3780 Platz 3). Lauf 17:57-18:01:
+  `ctest --test-dir re15_port/build -R "^integration_r39_gegner_1141$" --timeout 1200 --output-on-failure` ->
+  `100% tests passed, 0 tests failed out of 1` (259,95 s). gegner_r39.log des Laufs: Messhaken aktiv, 4 x `affen init
+  ... raum=1141 typ=27 hp=360 (... regel 1)`, Treffer-Zeilen wie Versuch 5; cap.raw und die Messkopie loescht der Test.
+
 #### Riegel, die Gorillas toeten — gegen die neue Energie geprueft
 - integration_r38_dining1141_{w,z,d,l,s,r,a} toeten die Gorillas NICHT ueber HP, sondern ueber den Runde-38-Messhaken
   RE15_R38F_GORILLAS_TOT (dining_r38.c: nach n freien Kampfbildern "Gorillas heraus", Flags (7,0xCB)/(7,0xCC) = 1) und
