@@ -16,6 +16,12 @@
 #   unit_r39_heliport1171_eskorte   K2-Gegenprobe: Eskorte-EXEC ohne Gegner posiert ab dem 1. Takt die eigene Bank
 #   unit_r39_heliport1171_saatbild  K3 Plc_motion-Saattakt posiert Bild 0 / fc-1 (@0x80050cec-d4c), Halten ab fc-1
 #   unit_r39_heliport1171_schub     K4 Schub-Bit-Takt posiert noch Clip 0x12 (@0x80052af4 vor @0x80052b44)
+# NACHBESSERUNG 1 (Abnahme 0, M1-M3; Dossier Abschnitt 12):
+#   unit_r39_heliport1171_elza      M1 Elzas Sub 6 0x800517f0: Clip 1 Bild 0..15 ab Phase 0 (f314 @0x8005188c), M3a kein
+#                                   Sub-6-Bild zwischen zwei Plc_dest (Dispatcher @0x8001ce0c nach dem SCD @0x8001cdec),
+#                                   Ankunftsbild = Gang-/Dreh-Pose, M2 Spieler-Schub Bit-Takt Clip 0x12 / Phase 6 / Phase 7
+#   unit_r39_heliport1171_kraehen   M3b Ereignis-Kraehen zeichnen das zuletzt posierte Bild (0x80115d94 posiert nicht):
+#                                   INIT Bild 0, ORIENT Clip 8 ab Bild 0, Landebild = Fall-Pose, FINISH 0..11, Leiche Bild 11
 add_executable(test_r39_heliport1171 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_heliport1171.c)
 target_link_libraries(test_r39_heliport1171 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_heliport1171 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -24,7 +30,7 @@ target_compile_definitions(test_r39_heliport1171 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_heliport1171 PRIVATE m)
 endif()
-foreach(_teil banken binder szene leon1170 initpose eskorte saatbild schub)
+foreach(_teil banken binder szene leon1170 initpose eskorte saatbild schub elza kraehen)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r39_heliport1171_${_teil}_wd)
     add_test(NAME unit_r39_heliport1171_${_teil} COMMAND test_r39_heliport1171 ${_teil})
     set_tests_properties(unit_r39_heliport1171_${_teil} PROPERTIES TIMEOUT 300
