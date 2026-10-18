@@ -43,8 +43,8 @@ eine Zeile auf `stderr` — er verwirft sie nicht mehr stillschweigend.
 
 Zu leise Aufnahmen hebt der Port beim Laden auf einen gemeinsamen Pegel an, in zwei Stufen:
 erst die Spitze auf ~45 % Vollaussteuerung (höchstens 4×); liegt der Effektivwert danach immer noch
-unter dem leisesten Wert, den eine auf Pegel liegende Datei im Bestand hat (0,0355 FS), wird die Datei
-auf den Mittelwert des Bestands (0,0624 FS) angehoben — begrenzt durch die Spitze der lautesten
+in der leisen Klasse des Bestands (Schwelle 0,0301 FS, die Mitte der Lücke zu den Dateien auf Pegel),
+wird die Datei auf den Mittelwert des Bestands (0,0623 FS) angehoben — begrenzt durch die Spitze der lautesten
 gelieferten Datei (0,664 FS), damit nichts übersteuert (Runde 39, `re15_stimmen_pegel_r39.h`; betrifft
 Aufnahmen mit Sprache um -47 dBFS wie Irons in `room1150`). Wer schon auf Pegel liefert, wird nicht
 angefasst. Jede Anhebung der zweiten Stufe steht im `debug.log` (`[voice] pegel ...`).

@@ -305,4 +305,82 @@ Drei Maengel/Auftraege der Abnahme (A_abnahme_0.md §6.2 + Orchestrator):
 - M3 "Ändere es zu unwanted followers im Text bei 11B0." -> Text ist schon so; mit [msgtext]-Zeile belegt (§9.6).
 
 ### 9.0 Stand / Fortschritt (neueste zuerst)
+- 10:35 Konstanten korrigiert (T 1163 -> 985: Riegel am Bestand kippte room2000/main02 um ein LSB; C 21759, R 2040),
+  Dossier §9.1/§9.2/§9.6 geschrieben; Integration (4 Teile) laeuft mit dem T=1163-Bau (Irons-Zeilen davon unberuehrt).
+- 10:25 Code gebaut (5a402341 + Kommentar-Fix), Unit: tabelle 14 Zeilen gruen, lader gruen (Irons 7,4-12,6x), pegel ROT
+  (room2000/main02 an der Schwelle, s. 10:35).
 - 09:56 Zensus des Bestands gestartet, Spracherkennung main22 gestartet, Dossier-Abschnitt angelegt.
+
+### 9.1 M1 — Zensus des Bestands: die FORM der Anhebung wird gemessen, nicht geraten
+
+Werkzeug (Scratchpad, nicht im Repo): `r39A/zensus.py` (numpy) ueber ALLE 216 Dateien `synchro/STAGE<n>/room<RAUM>/
+main<NN>.wav` (ohne `synchro/unused/`): Rate/Kanaele/Bits, Dauer, Spitze |x|max, Effektivwert rms (ganze Datei),
+aktiver rms (20-ms-Fenster > -30 dB unter dem lautesten Fenster), Rauschteppich (10. Perzentil der 20-ms-Fenster),
+Crest = Spitze/rms, und die Stufe 1 des Laders nachgerechnet (audio_pc.c re15_voice_load_clip "Level-floor": Ziel
+14745 = 45 % Spitze, Deckel 4x; eingefuehrt mit aa346af1 2026-06-28, Kommentar dort: "cap the gain so near-silent
+clips don't blow up their noise floor"). `r39A/ableiten.py` leitet daraus die Konstanten ab. Tabelle: `r39A/zensus.csv`.
+
+Befund — der Bestand ist ZWEIKLASSIG (Werte in Vollaussteuerung FS):
+| Klasse | Dateien | rms | Spitze | Crest | Stufe 1 | rms nach Stufe 1 |
+|---|---|---|---|---|---|---|
+| auf Pegel | 206 (alle Sprecher ausser Irons, alle Raeume) | 0,034-0,092 | 0,21-0,66 | 4,5-13,4 | 1,00-2,11x (nie am Deckel) | 0,0355-0,0995 |
+| leise | 10 = ALLE Irons-Dateien room1150 main02/05/07/09/12/13/18/19/20/21 | 0,0040-0,0062 | 0,053-0,096 | 12,5-20,6 | alle 4,00x (Deckel) | 0,0159-0,0247 |
+Zwischen den Klassen liegt eine Luecke: 0,0247 (Irons main05 nach Stufe 1) .. 0,0355 (room2000/main02). Keine Datei der
+normalen Klasse beruehrt den 4x-Deckel; genau die zehn Irons-Dateien bleiben an ihm haengen.
+
+Irons' neue Zeilen (Sterbeszene) im Einzelnen (32000 Hz mono 16 bit):
+| Datei | Dauer | Spitze | rms | Crest | |x| 99,9 % | Stufe 1 -> rms | F0 |
+|---|---|---|---|---|---|---|---|
+| main18 | 6,049 s | 0,0528 (bei 2,96 s) | 0,00398 | 13,3 | 0,0273 | 4,00x -> 0,0159 | 89 Hz |
+| main19 | 5,224 s | 0,0746 (bei 4,25 s) | 0,00415 | 18,0 | 0,0377 | 4,00x -> 0,0166 | 89 Hz |
+| main20 | 6,049 s | 0,0898 (bei 2,97 s) | 0,00436 | 20,6 | 0,0385 | 4,00x -> 0,0175 | 115 Hz |
+| main21 | 2,601 s | 0,0574 (bei 0,81 s) | 0,00459 | 12,5 | 0,0358 | 4,00x -> 0,0184 | 121 Hz |
+Leons Zeilen derselben Szene: main15 rms 0,0612 Spitze 0,356 (Stufe 1 1,26x), main16 0,0560 / 0,549 (1,00x), main17
+0,0553 / 0,406 (1,11x), main22 0,0607 / 0,418 (1,07x). Die Spitze der Irons-Dateien ist ein EINZELNER Transient: der
+99,9-%-Wert von |x| liegt bei 0,027-0,039, die Spitze 2-3x darueber — darum entscheidet bei ihnen die Spitzenbegrenzung,
+nicht das Lautheitsziel (§9.3).
+
+Rauschteppich (10. Perzentil der 20-ms-Fenster): Irons' Dateien 0,00046-0,00061 FS — dasselbe ABSOLUTE Niveau wie Leons
+Dateien (0,0003-0,0013); Irons' Sprache liegt also 22 dB tiefer im selben Rauschen (SNR ~28 dB statt ~47 dB). Nach der
+Anhebung (6,9-12,6x) liegt sein Teppich bei 0,0034-0,0077 FS (-49 .. -42 dBFS); in der Sterbeszene 16-20 dB unter der
+BGM (rms 0,05-0,08 FS, §9.2). Das ist der gemessene Preis der NUTZER-VORGABE; der alte Deckel-Grund ("noise floor") ist
+damit beziffert, nicht ignoriert.
+
+Herleitung der drei Konstanten (alle aus dem Bestand; Werte der 16-bit-Skala, wie der Lader sie ganzzahlig rechnet —
+Riegel unit_r39_stimmen_pegel druckt sie mit):
+- T (Schwelle "zu leise") = 985 (0,0301 FS) = MITTE DER LUECKE zwischen den Klassen: 808 (room1150/main05 nach Stufe 1,
+  lauteste Datei der leisen Klasse) .. 1162 (room2000/main02, leiseste Datei auf Spitzenpegel); zu beiden 18 % Abstand.
+  Erste Herleitung war T = 1163 = der Randwert selbst (Zensus-Gleitkomma 0,03550 x 32768 = 1163,3): der Riegel am
+  Bestand zeigte sofort, dass die ganzzahlige Rechnung des Laders fuer room2000/main02 1162 liefert — ein LSB unter der
+  Schwelle, die Datei (auf Pegel!) waere mit 1,47x angehoben worden. Eine Schwelle gehoert in die Luecke, nicht auf
+  ihren Rand (das Resampling auf Geraeterate verschiebt rms um < 1 %, die Luecke traegt 18 %).
+- R (Ziel) = 2040 (0,0623 FS) = Median des rms der 206 Dateien auf Spitzenpegel (Quartile 0,0518 / 0,0624 / 0,0719;
+  Leons 1150-Zeilen 0,056-0,077 liegen mittendrin) — "Mitte des Bestands", dieselbe Idee wie das Ziel der Stufe 1
+  ("~45% full-scale, matches the loud clips"). Am heutigen Bestand entscheidet R nicht (alle zehn Dateien laufen vorher
+  in C); R traegt kuenftige leise Dateien mit normalem Crest.
+- C (Spitzen-Deckel) = 21759 (0,664 FS) = Spitze der lautesten gelieferten Datei room1240/main05.wav (48 kHz 24 bit
+  stereo, Leons Vorspann): kein angehobener Clip wird in der Spitze lauter als das, was der Port heute schon ungeklemmt
+  mit BGM mischt. Der Mischer (audio_pc.c :482-486) summiert die Stimme mit cd_vol 0x3FFF>>14 = 1,0 (RE2 CD_initvol) und
+  klemmt erst die SUMME auf int16 — darum ist "Spitze <= 32767 je Datei" KEIN Schutz vor Uebersteuerung, C muss Platz
+  fuer die BGM lassen (§9.2).
+Vorschau der Regel (ableiten.py) = die zehn Irons-Dateien, alle Spitzen-begrenzt: main02 9,3x, main05 6,9x, main07
+7,7x, main09 7,0x, main12 7,5x, main13 9,1x, main18 12,6x, main19 8,9x, main20 7,4x, main21 11,6x (rms danach
+0,032-0,053 FS).
+
+### 9.2 M1 — BGM MAIN1E in der Sterbeszene (Mitschnitt lauf_1150_cd62ee6a, VOR der Aenderung; `r39A/bgm_spitze.py`)
+Abschnitt ROOM1150 (1251 Bilder): max |x| 18246 = 0,557 FS, KEIN Abtastwert am Anschlag, rms 1946. Luecken zwischen den
+Zeilen (nur BGM/SE, kein Clip aktiv): F452-465 Spitze 0,105 FS rms 0,024 | F630-648 0,135 / 0,038 | F790-806 0,276 /
+0,079 | F970-989 0,201 / 0,064 | F1100-1119 0,481 / 0,123 (Schwell vor msg 29). Zeilenfenster mit Irons (4x-Stand):
+F466-559 Spitze 0,290, F649-739 0,423, F807-899 0,412. Mit C = 0,664 FS bleibt die Summe Stimme + BGM in den
+Irons-Fenstern unter 0,664 + 0,276 = 0,94 FS — die Integration zaehlt die geklemmten Werte je Zeilenfenster (muss 0 sein).
+
+### 9.6 M3 — ROOM11B0 msg 21: "unwanted followers" steht schon so im Text (nichts geaendert)
+Nutzer: "Ändere es zu unwanted followers im Text bei 11B0." Der Szenentext ist bereits so: gen/szl11b0_szene.inc:134
+`/* msg 21 Marvin: I just want to make sure / we don't have any unwanted followers. */` (Quelle tools/r36_j/
+szene11b0_bauen.py:286 — die Datei liegt nicht im Baum, nur ihr Erzeugnis). Beleg aus einem Lauf der echten exe
+(lauf_11b0_b1551704, debug.log Z.564/566, RE15_MSG_LOG):
+`[msgtext] room=11b0 id=21 "Marvin: I just want to make sure we don't have any unwanted followers."` gefolgt von
+`[voice] ROOM11B0 msg 21 <- main14.wav (Runde 39 Spur A, Nutzer-Reihenfolge)`; Z.501/503: `[msgtext] room=11b0 id=20
+"Marvin: But, hold on..."` + `msg 20 <- main13.wav`. Die Aufnahme main14 spricht denselben Wortlaut (Dossier §1,
+Abnahme §3: Kandidat "unexpected visitors" angeboten und nicht gewaehlt). Riegel: integration_r39_stimmen_11b0 prueft
+den Wortlaut von msg 20/21 im Log (unveraendert gruen).

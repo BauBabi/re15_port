@@ -14,7 +14,7 @@
  *             (5) unberuehrt: die Ordnerregel fuer alle anderen (Raum, Nachricht), insbesondere ROOM1170 msg 3
  *                 (Leons Helipad) und ROOM11B0 msg 1..12 (alte Aufnahmen), Tabelle ohne Doppel.
  *   pegel     Stufe 2 des Pegel-Bodens (include/re15_stimmen_pegel_r39.h, Nachbesserung 1, NUTZER-VORGABE "ruhig lauter
- *             anheben") am GANZEN Bestand synchro/STAGE*/room*/main*.wav (Liste aus CMake GLOB): nach der Spitzen-Stufe
+ *             anheben") am GANZEN Bestand synchro/STAGE<n>/room<RAUM>/main<NN>.wav (Liste aus CMake GLOB): nach der Spitzen-Stufe
  *             des Laders (audio_pc.c "Level-floor", Ziel 14745, Deckel 4x - hier nachgebildet) greift Stufe 2 genau bei den
  *             Dateien unter T (= den 10 Irons-Dateien room1150, alle am 4x-Deckel), hebt sie auf R oder bis zur Spitze C
  *             (kein Abtastwert ueber C), ist idempotent, und laesst alle anderen Dateien bitgleich (Leon 1150 main15/16/
@@ -273,7 +273,7 @@ static int teil_pegel(void)
     static const char *k_irons[10] = { "02", "05", "07", "09", "12", "13", "18", "19", "20", "21" };   /* Zensus Dossier §9.1 */
     static const char *k_leon1150[4] = { "15", "16", "17", "22" };
     FILE *lf = fopen(RE15_R39_BESTAND, "r");
-    CHECK(lf != NULL, "Bestandsliste %s (CMake GLOB synchro/STAGE*/room*/main*.wav)", RE15_R39_BESTAND);
+    CHECK(lf != NULL, "Bestandsliste %s (CMake GLOB synchro/STAGE<n>/room<RAUM>/main<NN>.wav)", RE15_R39_BESTAND);
     if (!lf) return 1;
     char zeile[1024]; int dateien = 0, unber = 0, gehoben = 0, unlesbar = 0, fremd = 0;
     int irons_da[10] = { 0 }, leon_da[4] = { 0 };

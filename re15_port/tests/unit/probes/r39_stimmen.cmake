@@ -11,7 +11,7 @@
 #                              Sperre (11B0 msg 13/14, 1171 msg 2), Ordnerregel sonst unberuehrt (1170 msg 3, 11B0 msg 1..12);
 #                              1150 msg 29 <- main22 (Nutzer-Nachtrag 2, Nachbesserung 1)
 #   unit_r39_stimmen_pegel     Nachbesserung 1 (NUTZER-VORGABE "ruhig lauter anheben"): Stufe 2 des Pegel-Bodens
-#                              (include/re15_stimmen_pegel_r39.h, T=1163 R=2045 C=21758 aus dem Zensus) am GANZEN Bestand
+#                              (include/re15_stimmen_pegel_r39.h, T=985 R=2040 C=21759 aus dem Zensus) am GANZEN Bestand
 #                              synchro/STAGE*/room*/main*.wav (Liste beim Configure per GLOB): genau die 10 Irons-Dateien
 #                              (room1150, alle am 4x-Deckel) werden angehoben (6,9..12,6x, Spitze <= C), alle anderen
 #                              bleiben bitgleich (Leon 1150 main15/16/17/22), Stufe 2 ist idempotent

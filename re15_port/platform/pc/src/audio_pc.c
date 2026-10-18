@@ -2382,8 +2382,9 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         }
     }
     /* Runde 39 Spur A (Nachbesserung 1), NUTZER-VORGABE "ruhig lauter anheben": Stufe 2 hebt Dateien, die nach der
-     * Spitzen-Stufe noch unter dem leisesten Effektivwert des Bestands liegen (T=1163), auf dessen Median (R=2045),
-     * begrenzt durch die Spitze der lautesten gelieferten Datei (C=21758, kein Clipping) — re15_stimmen_pegel_r39.h. */
+     * Spitzen-Stufe noch in der leisen Klasse des Bestands liegen (T=985 = Mitte der Luecke zu den Dateien auf Pegel),
+     * auf dessen Median (R=2040), begrenzt durch die Spitze der lautesten gelieferten Datei (C=21759, kein Clipping) —
+     * re15_stimmen_pegel_r39.h. */
     re15_stimmen_pegel_r39(pcm, (long)out_n, stamm, NULL);
 
     s_voice_clip[voice_id].pcm = pcm;

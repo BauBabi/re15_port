@@ -6,7 +6,7 @@
  * das es passt." — Irons' Zeilen der Sterbeszene ROOM1150 (main18-21) lagen mit dem alten 4x-Deckel 10-12 dB unter
  * der BGM MAIN1E (A_abnahme_0.md §4.2: Stimme rms 512-577 gegen Rest 1669-2068).
  *
- * BEFUND (Zensus 2026-10-18 ueber alle 216 Dateien synchro/STAGE*/room*/main*.wav, Dossier §9.1): der Bestand ist
+ * BEFUND (Zensus 2026-10-18 ueber alle 216 Dateien synchro/STAGE<n>/room<RAUM>/main<NN>.wav, Dossier §9.1): der Bestand ist
  * zweiklassig. 206 Dateien haben einen Effektivwert (rms) von 0,034-0,092 FS bei Spitzen 0,21-0,66 FS (Crest 4,5-13,4);
  * 10 Dateien — alle Irons, room1150/main02/05/07/09/12/13/18-21 — haben rms 0,0040-0,0062 FS bei Spitzen 0,053-0,096 FS
  * (Crest 12,5-20,6: die Spitze ist ein einzelner Transient, die Sprache liegt 22-26 dB darunter). Die Spitzen-Stufe des
@@ -18,13 +18,15 @@
  * REGEL (Stufe 2, nach der Spitzen-Stufe, auf den auf Geraeterate gerechneten 16-bit-Werten):
  *   Liegt der Effektivwert einer Datei unter T, wird sie auf den Effektivwert R angehoben, hoechstens aber so weit,
  *   dass ihre Spitze C nicht ueberschreitet (Spitzenbegrenzung: kein einziger Abtastwert wird geklemmt). Dateien mit
- *   rms >= T bleiben bitgleich.
- *   T = 1163  (0,0355 FS) = kleinster Effektivwert einer Datei, die nach Stufe 1 auf Spitzenpegel liegt
- *                           (room2000/main02.wav): darunter ist eine Datei leiser als alles, was der Port schon
- *                           unveraendert spielt — die Luecke des Bestands (0,0247 .. 0,0355) liegt darunter.
- *   R = 2045  (0,0624 FS) = Median des Effektivwerts der 201 Dateien auf Spitzenpegel: die Mitte des Bestands, so wie
+ *   rms >= T bleiben bitgleich. Alle drei Zahlen sind Werte der 16-bit-Skala, so wie dieser Code sie rechnet
+ *   (ganzzahlig, Riegel unit_r39_stimmen_pegel druckt sie am Bestand mit).
+ *   T = 985   (0,0301 FS) = Mitte der Luecke zwischen den beiden Klassen des Bestands: lauteste Datei der leisen
+ *                           Klasse nach Stufe 1 rms 808 (room1150/main05, 0,0247 FS), leiseste Datei auf Spitzenpegel
+ *                           rms 1162 (room2000/main02, 0,0355 FS) — je 18 % Abstand zu beiden; eine Schwelle AUF dem
+ *                           Rand (1163, erste Herleitung) kippte um ein LSB und hob room2000/main02 mit an.
+ *   R = 2040  (0,0623 FS) = Median des Effektivwerts der 206 Dateien auf Spitzenpegel: die Mitte des Bestands, so wie
  *                           das Ziel der Stufe 1 ("~45% full-scale, matches the loud clips") die Mitte der Spitzen ist.
- *   C = 21758 (0,664 FS)  = Spitze der lautesten gelieferten Datei (room1240/main05.wav): kein angehobener Clip wird
+ *   C = 21759 (0,664 FS)  = Spitze der lautesten gelieferten Datei (room1240/main05.wav): kein angehobener Clip wird
  *                           in der Spitze lauter als das, was der Port heute schon ungeklemmt mit BGM mischt (der
  *                           Mischer audio_pc.c :482-486 summiert die Stimme mit cd_vol 0x3FFF>>14 = 1,0 und klemmt
  *                           erst die Summe; BGM-Spitzen in den Zeilenluecken der Sterbeszene 0,105-0,276 FS, §9.2).
@@ -40,9 +42,9 @@
 
 #include <stdint.h>
 
-#define RE15_STIMMEN_PEGEL_T 1163    /* 0,0355 FS: kleinster rms einer Datei auf Spitzenpegel (room2000/main02), Zensus 2026-10-18 */
-#define RE15_STIMMEN_PEGEL_R 2045    /* 0,0624 FS: Median rms der 201 Dateien auf Spitzenpegel, Zensus 2026-10-18            */
-#define RE15_STIMMEN_PEGEL_C 21758   /* 0,664 FS: Spitze der lautesten gelieferten Datei (room1240/main05), Zensus 2026-10-18 */
+#define RE15_STIMMEN_PEGEL_T 985     /* 0,0301 FS: Mitte der Luecke 808 (room1150/main05) .. 1162 (room2000/main02), Zensus 2026-10-18 */
+#define RE15_STIMMEN_PEGEL_R 2040    /* 0,0623 FS: Median rms der 206 Dateien auf Spitzenpegel, Zensus 2026-10-18                      */
+#define RE15_STIMMEN_PEGEL_C 21759   /* 0,664 FS: Spitze der lautesten gelieferten Datei (room1240/main05), Zensus 2026-10-18           */
 
 typedef struct {
     int rms_vorher, rms_nachher;        /* Effektivwert in 16-bit-Skala, vor / nach Stufe 2          */
