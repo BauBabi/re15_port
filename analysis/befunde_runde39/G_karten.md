@@ -338,6 +338,10 @@ VORHER-Messungen der Abnahme werden NICHT wiederholt.
 - [ ] Bau, gezielte Tests, Abschluss
 
 ### M3 Doppelwand-Korrektur oeffnet Raeume in Teilzustaenden (Regression)
+* BISECT: die Regression liegt in diesem Zweig - `git log -- re15_port/engine/src/karte_r39.c`: ba258ae4 (14:50, "Blaetter
+  1F/2F/3F/B2 nach den Nutzer-Vorlagen") fuegt die 19 Korrekturen + 5 ROOM1000-Kanten ein; 7eb1f744 aendert nur den
+  B1-Teil. Stand vor der Spur (Merge-Basis 22abaed9 = VORHER-exe der Abnahme) geschlossen, 40328436 offen.
+  Verursachender Commit: ba258ae4. Negativprobe (Gatter aus) reproduziert die Zahlen der Abnahme (s. Riegel).
 * URSACHE (Code gelesen): `karte_r39.c` s_korr (19 Texel-Rechtecke) und s_kanten (5 Schema-Kanten von ROOM1000)
   ersetzten die eigene Wandlinie UNBEDINGT. Die Vorlagen zeigen den Zustand "alle Raeume gezeichnet"; die verbleibende
   Linie gehoert dem NACHBARN. Ist der Nachbar nicht gezeichnet (unbesucht, Plan nicht im Besitz), fehlt die Wand.
