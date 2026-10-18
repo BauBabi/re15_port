@@ -711,7 +711,7 @@ Takt F, vor dem der Zustand st 4 / ss1 1 / ss2 0 war; gerendert = letzte anim.tx
 -- Phase 1
 801151e0 lw a0,132(v1) / 801151e4 lw a1,364(v1) / 801151e8 jal 0x8001f314 (a3 = 0x200 @0x801151ec)
 801151f0 beq v0,zero,0x80115214  ; Umlauf -> 8011520c addiu v0,v0,-1 / 80115210 sb v0,6(v1) (+0x6 = 0)
-8011522c lw a2,56(v1) / 80115234 addu v0,v0,a2 / 8011523c sw v0,56(v1)          ; y += +0x1e4 (Delay von ...)
+8011522c lw a2,56(v1) / 80115234 addu v0,v0,a2 / 8011523c sw v0,56(v1)          ; y += +0x1e4 (Delay-Slot von jal 0x8001a8f8)
 80115238 jal 0x8001a8f8          ; Lenkung (a1 = 0x32 @0x801151f4)
 80115240 jal 0x800245d8          ; pos_advance (a0 = 0)
 80115254 lbu v0,464(a0) / 8011525c beq v0,zero,0x801152cc                       ; Kontakt +0x1d0 -> Griff 80115264..801152c8
@@ -864,3 +864,44 @@ Pause-Tor @0x80112120 (-> @0x8011221c). Zustandstabelle `table 0x8012111c`: [0] 
   alter Motor Lade-Weg `vorher_laden` ROT (Halt veraendert 10/10, Abstaende 10, gedreht 108/123, erste Lage -9700,-7680),
   alter Motor echter Weg `K39abn1/echtA` ROT (dasselbe), Stand nur M1/M2 `nach1_laden` ROT nur an N1
   ("erste Lagen: -9970,-5680;-9700,-7680"), Endstand `nach2_laden` GRUEN.
+- Nebenbei geprueft (kein Eingriff): ASCEND 0x80114fb8 (Phase 0 Se(0) @0x80115004 + Clip 4 @0x8011500c faellt in Phase 1
+  @0x80115030 (+0x1e4 = -120, +0x8c = 160), faellt in Phase 2 @0x8011506c (Bild-8-Neuschub @0x80115078-8c, +0x1e4 += 6
+  @0x801150a4, y += vvel im Delay von `jal 0x8001a8f8` @0x801150cc, pos_advance @0x801150d4, f314 @0x801150f0), Hoehen-
+  Abfrage @0x80115104-18 in jedem Takt) = Port. SPIN-Zeitgeber: das Original zieht in Phase 1/2 IMMER ab (`addiu v0,a0,255`
+  / `sb` @0x80115484-8c, @0x801154d8-e0) und hinterlaesst nach Phase 2 0xFF, der Port 0 — Zensus aller +0x1d5-Zugriffe
+  0x80114e54-0x80115e00: jeder Leser (@0x8011547c, @0x801154d0, @0x80115674, @0x80115710, @0x801158d8) folgt einem
+  Schreiber derselben Sub (@0x80115434, @0x801154cc, @0x801155ec, @0x80115860), DEATH setzt 11 (@0x80114910) vor dem
+  Lesen -> der Restwert ist nie sichtbar, kein Eingriff.
+
+### 13.7 OFFEN nach Nachbesserung 2 (mit Adressen; keine Maengel der Abnahme 1)
+
+- Unveraendert aus 12.7: Ton der Opferphasen P1/P2 einen Takt spaet (heliport1171_r38.c; SE @0x80115c3c/@0x80115ca4 im
+  Takt des letzten f314 @0x80115c20/@0x80115c88), Hund 0x20 zeichnet das Bild nach dem Vorschub, Eskorte-EXEC-Saattakt
+  (NPC), H5 (RBJ-Cache-Grenze 1040/1041), H6 (ignorierte Dateien `re15_port/build_bisect/`, Messkopie
+  `re15_port/build/platform/pc/re15_pc_r35e_haken_685df09f.exe` bei der Integration entfernen).
+- Zustand 1 (ACTIVE, normale Kraehen, nicht ROOM1171-Ereignis): der vorhandene Wand-Pass klemmt mit dem Band aus dem
+  y NACH der Bewegung (`re15_collision_constrain_enemy(..., e->y, 4u)` = -(y/1800)), das Original mit +0x82 aus dem
+  Pre-Pass VOR dem Zustand (@0x80112154). Unterschied nur im Takt, in dem eine Kraehe eine 1800er-Bandgrenze kreuzt;
+  im Standard-KI-Modus laufen diese Kraehen ueber das RE2-Hirn. Fuer eine Kraehen-Runde notiert.
+
+### 13.8 Fuer den Nutzer (Nachbesserung 2)
+
+- Neue Assets: keine. Sprachdateien: keine. Bedienung: unveraendert. Entscheidungsfragen: keine.
+- Sichtbar in ROOM1171 (Elzas Dachszene, die beiden Kraehen):
+  1. Die Kraehen halten im Schwebeflug nach jedem Fluegelschlag einen Augenblick (ein Bild) still — Lage und Haltung —,
+     wie im Original (Schlag-Zyklus 11 statt 10 Bilder). Weil sie dadurch etwas langsamer anfliegen, packt die erste
+     Kraehe Elza 10 Bilder (1/3 s) spaeter; der Rest der Szene verschiebt sich entsprechend.
+  2. Nach dem Wurf kreisen die Kraehen nicht mehr ununterbrochen: sie drehen gut eine Sekunde, fliegen dann 41 Bilder
+     geradeaus und drehen wieder (wie im Original).
+  3. Die zweite Kraehe startet nicht mehr in der Westwand des Daches, sondern wird wie im Original sofort an deren Rand
+     geschoben (sie kommt dadurch ein paar Bilder frueher heran).
+
+### 13.9 Hinweise fuer die Integration (Nachbesserung 2)
+
+- Neue Haken (je "Runde 39 Spur K NB2"): enemy_ai_common.c an drei Stellen — FLIGHT-2 HOVER Phase 0 (`break`), SPIN
+  (Gier +60 in den Phase-1-Zweig), Kraehen-Wurzel (Lage vor dem Zustand + Aufruf `re15_r39k_kraehe_wandpass` nach dem
+  Zustand). Logik in heliport1171_r39.c / re15_heliport1171_r39.h. Keine neue .c-Datei (kein Configure noetig).
+- Wirkung ausserhalb ROOM1171: der Wand-Pass nach Nicht-1-Zustaenden gilt fuer jede Kraehe mit RE1.5-Hirn (im
+  RE1.5-KI-Modus auch 10C0/10C1/1120/1121/1170: INIT-Takt, Tod, Leiche). Gezielte Tests aller Kraehen-Raeume gruen (13.10).
+- enemy_ai_common.c ist auch Datei der Spuren D/E: die NB2-Haken liegen in re15_crow_flight2_sub und am Ende der
+  Kraehen-Wurzel (keine Ueberschneidung mit Zombie-/Hunde-/Gorilla-Code).
