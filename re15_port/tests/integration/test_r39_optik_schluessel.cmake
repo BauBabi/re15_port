@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.16)
 #   RUNDE 39 SPUR M (NUTZER-VORGABE Nachtrag 5 "maximal halb so gross", analysis/befunde_runde39/M_schluessel2.md): seitdem
 #     Skala 3 Huellenbreite <= 7 (Leon) / 8 (Elza) = halbe Spur-L-Messung 14 / 16; Mindestpixel ~60 % der neuen Messung
 #     (Leon 9, Elza 16 Pixel). Skala 1: das GTE-Viereck hat nur noch 2 x 1 / 3 x 2 Bildpunkte (ganzzahlige Ecken,
-#     FUN_80022f0c @0x80022fd8), deren Texel-Mitten auf durchsichtige Texel fallen — gemessen 0 Pixel; geprueft wird dort
+#     FUN_80022f0c @0x80022fd8), die Bilder mit/ohne Schluessel sind dort bitgleich — gemessen 0 Pixel; geprueft wird dort
 #     nur noch, dass sich ausserhalb des Fensters nichts aendert (Mindestzahl 0). Breite/Hoehe beider Stufen misst
 #     integration_r39_schluessel2.
 #   aufnahme_leon / aufnahme_elza  Druck vor der Pinnwand (1300,-2900) Blick -z: "[schluessel] ... genommen" im debug.log

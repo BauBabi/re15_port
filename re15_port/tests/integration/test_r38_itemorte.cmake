@@ -202,7 +202,7 @@ k_lauf(b2_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 
 # den Kommentaren darunter zur Einordnung.
 # Runde 39 Spur M (NUTZER-VORGABE Nachtrag 5 "maximal halb so gross", Dossier analysis/befunde_runde39/M_schluessel2.md): die
 # GTE-Vierecke sind 2 x 1 (Park) / 3 x 2 (Prison) Bildpunkte (ganzzahlige Ecken, FUN_80022f0c @0x80022fd8); bei Skala 1
-# fallen deren Texel-Mitten auf durchsichtige Texel -> gemessen 0 / 0 Pixel (vorher 7 / 5). B2/B3 pruefen bei Skala 1 darum
+# sind die Bilder mit und ohne Schluessel bitgleich -> gemessen 0 / 0 Pixel (vorher 7 / 5). B2/B3 pruefen bei Skala 1 darum
 # nur noch, dass sich ausserhalb des Fensters nichts aendert (Mindestwerte 0); die Sichtbarkeit pruefen B4/B5 bei Skala 3,
 # Breite und Hoehe integration_r39_schluessel2. Schwellen B4/B5/V3/V5 = ~60 % der Messung 2026-10-18 nach Spur M.
 k_kontrast(B2K b2_mit b2_ohne 131 75 145 87 0 0 _dl_park1)

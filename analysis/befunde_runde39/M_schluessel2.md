@@ -191,5 +191,5 @@ Augenschein (`M_bilder/m_s3_s4_vorher_stetig_endstand_x8.png`: Spalten Spur L | 
 Skala 3/4, Elza Skala 3/4; `M_bilder/m_s3_pinnwand_vorher_endstand_x2.png`: die Pinnwand bei 960x720, vorher | nachher):
 der Parking Lot Key ist ein kleiner heller Schaft mit dunklem Kopfende in der richtigen Lage (die stetige Regel hatte ihn
 zu einem senkrechten Strich gemacht), der Prison Key ein kleiner Ring mit Schaft — beide deutlich kleiner als die Zettel.
-Bei 320x240 (Skala 1) zeichnen die 2 x 1 / 3 x 2 Bildpunkte nur durchsichtige Texel (Punktabtastung wie die PSX-GPU):
-der Schluessel ist dort nicht mehr zu sehen (vorher 7 / 5 Pixel).
+Bei 320x240 (Skala 1) sind die Bilder mit und ohne Schluessel BITGLEICH (groesste Abweichung im Fenster 0, aussen 0;
+GTE-Vierecke 2 x 1 / 3 x 2 Bildpunkte): der Schluessel setzt dort keinen Bildpunkt mehr (vorher 7 / 5 Pixel).
