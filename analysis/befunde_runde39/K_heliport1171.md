@@ -246,3 +246,39 @@ Slots (anim_select_common.c), "Original" = was FUN_8001f314 im selben Takt posie
 - Elza (Spieler) in derselben Szene: Einzelbilder Clip 1 Bild 1 zwischen TURN und WALK (F1, F840, F846) und der
   Schub-Ruecklauf ein Bild frueh (F933) — Spieler-Walker (Spur H Welle 2, dort als eigener RE-Punkt vermerkt) bzw.
   Spieler-Schub (Runde 36 J); nicht Johns Animation.
+
+### 6.4 Umsetzung K2/K3/K4 (6d027394)
+
+- NEU `re15_port/engine/src/heliport1171_r39.c` + `re15_port/include/re15_heliport1171_r39.h` (K2): Merker je Aktor-Slot
+  "zeigt noch die INIT-Pose" — gesetzt in der NPC-INIT, geloest beim ersten Eskorte-EXEC-Takt und beim ersten
+  Executor-Takt; gilt nur fuer Typ 0x40..0x4d, state 0/1/4, ohne Plc_dest-Walker und solange motion = 2 /
+  anim_frame = 0 (RE15_R39K_INIT_CLIP @0x8011de7c, RE15_R39K_INIT_BILD @0x8011de8c). Raumaufbau loescht alle Merker
+  (re15_r39k_install, letzte Installer-Zeile in scd_room_setup.c; die INIT laeuft erst im Spieltakt).
+- `enemy_ai_common.c` (Haken, je "Runde 39 Spur K"): Include; re15_actor_uses_own_bank -> 0 und
+  re15_actor_uses_loco_bank -> 1, solange der Merker gilt (die EINE Bank-Regel fuer Renderer main.c:9974/10017,
+  Treffer-Skelett schuss_r36.c und Uhr re15_actor_clip_len); NPC-INIT anim_frame 1 -> 0 + Merker setzen;
+  Merker loesen vor re15_npc_escort_decide/exec und vor re15_npc_sub_dispatch.
+- `enemy_ai_common.c` re15_npc_sub_motion (K3): Phase 0 setzt den Vorhalte-Takt (motion_init_delay = 1), Phase 1
+  ruft je f314 ein re15_npc_anim (posieren -> vorschieben -> +0x8f-1, Rueckgabe 1 im Takt, der fc-1 posiert);
+  Doppelschritt +0x1C4&8 (@0x80050d70/88), HOLD +0x6 = 2 (@0x80050da4), LOOP +0x1C4&4 (@0x80050dbc-c8).
+- `szenenleon_r36.c` re15_szl_schub_npc (K4): im Bit-Takt der Phase 5 nur +0x6 = 6 und der Port-Merker
+  RE15_R39K_SCHUB_SAAT (0xFE in sub_state_3); Phase 6 setzt Clip 0x11 rueckwaerts in ihrem ersten Takt (npc_clip mit
+  Vorhalte-Takt -> posiert Bild fc-1 = 9) und spielt dann wie bisher.
+
+### 6.5 Messung nachher (Stand 6d027394, gleicher Lade-Weg, exit 0, Szene bis ROOM10B1, Bildzahlen unveraendert)
+
+| Bild | Skript | VORHER (b35c66bd) | NACHHER (6d027394) | Original |
+|---|---|---|---|---|
+| F0-F220 | INIT/Eskorte | eigene Clip 2 (52) Bild 1 | **Loco Clip 2 (50) Bild 0** (loco=1) | Loco Clip 2 Bild 0 |
+| F221-F260 | Plc_motion(0,0,0) | RBJ C0: 1..19 | **0..19**, haelt ab F240 | 0..19, haelt ab F240 |
+| F261-F280 | + 0x80 | 18..0 | **19..0** | 19..0 |
+| F281-F443 | Plc_motion(2,6,0) | eigene C6: 1..9 | **0..9** | 0..9 |
+| F444-F463 | + 0x80 | 8..0 | **9..0** | 9..0 |
+| F464-F591 | Plc_motion(0,2,0) Heran-Winken | RBJ C2: 1..95 | **0..95** | 0..95 |
+| F686-F775 | Plc_motion(0,0,0) x2 | 1..19 / 18..0 | **0..19 / 19..0** | dito |
+| F933 | Schub Ph 5 Bit-Takt | Clip 17 rueckw. 9 | **Clip 18 (25) Bild 0** | Clip 0x12 (anim_set @0x80052af4) |
+| F934-F943 | Ph 6 | 9,8..1 (9 doppelt ab F933) | **9..0** | 9..0 |
+| alle uebrigen Zeilen Johns | | | unveraendert | |
+
+Nebenwirkungen im selben Lauf: Pose-Strom ALLER anderen Aktoren (Elza, Kraehen) vorher/nachher bytegleich
+(md5 65b9f910b1e43bd3b5f6fef2582ce04a beide), Zustandslog ohne Johns Klammer 1138/1138 Zeilen gleich.
