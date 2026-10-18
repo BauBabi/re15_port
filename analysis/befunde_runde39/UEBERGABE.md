@@ -6,6 +6,15 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 09:34: Spur A stimmen BESTANDEN (Abnahme 0, bb285672; Bau 90d6395e): Ursache = Lader sucht main<MSG-ID>.wav,
+  Nutzer legte mit der naechsten freien Nummer ab; Tabelle (Raum, Nachricht) -> Datei (stimmen_r39.c): 1050 msg 22-24 <-
+  main09-11, 1150 msg 22-28 <- main15-21, 11B0 msg 20/21 <- main13/14, 1171 msg 3 <- main02 (Form RE2 xa_on @0x80058028),
+  93/93 gezielte Tests. In die Integration gemergt (fc7a0231, konfliktfrei) -> ALLE VIER Spuren der Welle 1 ohne
+  Nachbesserung bestanden. FUER DEN NUTZER: (1) Irons' Zeilen 1150 main18-21 sind -47 dBFS (22 dB leiser als Leon), der
+  Port hebt max. 4x -> Irons liegt 10-12 dB unter der BGM: lauter exportieren oder Port-Anhebung >4x (Port-Wahl)?
+  (2) 1150 msg 29 "Leon: SIR, Sir?!" hat keine Aufnahme (main29.wav wuerde sofort spielen). (3) 11B0 msg 21 spricht
+  "unwanted followers" (Szenentext = Aufnahme), nicht "unexpected visitors". (4) 1171 msg 2 "C'mon, give me a hand!"
+  zeigt das Original nie. Integration: B/C/L-Tests laufen (-j 3), danach Bau mit A + A-Tests.
 * 2026-10-18 09:30: Spur L optik BESTANDEN (Abnahme 0, 9c149629; Bau 9726b606): Westwand-Masken ROOM1100/1101 Cut 1/2 enden
   an der GEMALTEN Ecke (Original hat dort keine Masken, pri @0x60C/@0x610 FF FF FF FF; Vorbild ROOM1030 Cut 3 Maske 2 endet an
   der gemalten Kante; Nutzer-Marke F741: Streifen 134 -> 1 Punkt), Schluessel 10F0/10F1 auf RE2-Bildgroesse (oberes Quartil
