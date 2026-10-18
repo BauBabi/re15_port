@@ -578,3 +578,15 @@ Registriert nur in `re15_port/tests/unit/probes/r39_heliport1171.cmake` (keine C
 - M2 gilt fuer jeden Spieler-Schub (Sub 0x13): ROOM11B0 (Leon/Marvin, Runde 36 J) und ROOM1171.
 - M3b gilt fuer jede Kraehe mit RE1.5-Hirn: die Ereignis-Kraehen ROOM1171 in jedem KI-Modus, im RE1.5-KI-Modus alle
   Kraehen (10C0/1120/1170). Im Standard-KI-Modus laufen die uebrigen Kraehen ueber das RE2-Hirn (eigener Code, unberuehrt).
+
+### 12.6 Messung nachher am Endstand, echter Weg (1131 -> 1141 -> Dachtuer -> 1171 -> Tor Slot 5 -> Szene -> 10B1)
+
+Lauf `K39nb1/echt2` (Befehl wie Abnahme `K39abn0/lauf.sh` mit `RE15_FIRE_AOT=5@60#1171`, exe = build_bisect am Stand
+0b133e27/f6a0b815-Motor, EXIT=0, ROOM10B1 erreicht), Abschnitt ROOM1171:
+- Elza: Drehen F67-F68 Bild 0,1 -> Gang F69 ab Bild 0 (kein Sub-6-Bild); Clip 1 Bild 0..15 bei F105, F252 (nach Wurf-Bild
+  F251), F658, F736, F1011; Ankunftsbilder F104/F657/F735 Gang, F906 / F912 Drehen; Schub F999 Clip 18 / F1000-F1009 Clip
+  17 rueckwaerts 9..0 / F1010 Bild 0 gehalten / F1011 Clip 1 Bild 0 — John F1000 / F1010 / F1011 gleich.
+- Kraehen: F61-F66 Clip 0 Bild 0 (vorher 1); ORIENT F162 (Kraehe 2) / F173 (Kraehe 3) Clip 8 ab Bild 0; Landebild F442 /
+  F491 haelt Clip 4 (vorher Clip 0x0a Bild 0); FINISH Clip 0x0a 0..11; Leiche Bild 11 (vorher 12). Gerenderter Clip je Bild
+  sonst identisch mit dem Abnahme-Lauf (1081 von 1082 Bildern je Kraehe, die Ausnahme ist genau das Landebild).
+- John: alle 1082 Zeilen bytegleich mit dem Abnahme-Lauf `runA_neu`.
