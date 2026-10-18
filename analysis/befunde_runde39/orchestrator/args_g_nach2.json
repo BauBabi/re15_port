@@ -1,0 +1,95 @@
+{
+ "_hinweis": "Spur G Nachbesserung 2 nach Abnahme 1 (Mangel N1 ROOM1210-Suedwest-Kammer). Baum r39_karten HEAD 0c1ded3c. Resume nur mit GENAU diesen args.",
+ "welle": [
+  "G"
+ ],
+ "slots": 1,
+ "max_nach": 1,
+ "basis": "1038dc15",
+ "modus": {
+  "G": "nachbesserung"
+ },
+ "runde0": {
+  "G": 1
+ },
+ "bau": {
+  "G": {
+   "status": "fertig",
+   "zusammenfassung": "Alle fuenf Maengel aus Abnahme 0 sind behoben. Die Commits stehen unter Nachbesserung 1 im Dossier analysis/befunde_runde39/G_karten.md.\nM3 (Regression aus ba258ae4): Die Doppelwand-Korrekturen loeschten die eigene Wand immer. Jetzt hat jede Korrektur bzw. Schema-Kante einen Traeger: das Nachbarrechteck mit der Ersatzlinie, belegt ueber Kachel-Index 4 in MAP0x.PIX. Die Korrektur gilt nur, wenn dieser Traeger gezeichnet wird. Das Gatter entspricht dem der Zeichner (RE2 @0x8006E744 / @0x8006E66C / @0x8006F4E8). Echte exe, je Ort allein besucht: 0 verlorene Wandpixel an allen 15 Orten (vorher 8 bis 41).\nM4: Die Original-Zeilen 1060 @0x800768E0 und 10A0 @0x80076900 sind Stubs (00 00 00 00 01 00 01 00). Neu sind Zeilen fuer die Formel FUN_800473f8, je Blatt aus den SCA-Waenden (1060 @0x004B8/@0x004D0/@0x004E8/@0x004C4, 10A0 @0x005DC/@0x005E8/@0x005D0/@0x00630). Die STAIR-AOTs (@0x00D72..@0x00DFE und @0x00E40..@0x00ECC) liegen jetzt im 5x5-Kasten ihrer Vorlagen-Symbole. Echte exe: Ring auf der 1060-Treppe (126,143) -> (122,143).\nM5: Die ausgelieferte Zeile 1030 @0x800768C8 = (108,194,2428,2229) liegt bis 5 px neben der eigenen Kachel. Neue Massstaebe 2403/2373 aus acht Waenden, Offsets unveraendert, Begruendung Beta->Retail (RE2 FUN_8006e120 /450). 1110 (Stub @0x80076938) und 1170 Zone 1 (3F und Dach) sind ebenfalls aus den Waenden abgeleitet. Marker neben der Zeichnung jetzt ueberall 0 (vorher 1030 63, 1110 8, 1170 Z1 51, 1060 4, 10A0 8). Die 1210-Kammer bleibt eine Frage an den Nutzer.\nM1: 3F-Treppe auf (168,106), 1 statt 3 Beruehrpixel. M2: B1-Treppe auf (145,164), eine Zeile Abstand zur Unterkante.\nRiegel: neu unit_r39_karten_teil, _treppen und _marker; erweitert _b1 und integration_r39_karten (Teilzustaende in der echten exe). Gegenprobe mit ausgeschaltetem Gatter: der Teilzustand-Riegel meldet ROT mit den Zahlen der Abnahme.",
+   "commits": [
+    "efa97816 wip(r39-karten): Nachbesserung 1 - Dossier-Abschnitt angelegt (M1..M5)",
+    "ad1f5cd7 wip(r39-karten): Nachbesserung 1 M3 - Doppelwand-Korrektur nur mit gezeichnetem Traeger",
+    "16fac481 wip(r39-karten): Nachbesserung 1 M4 - Treppenhaeuser 1060/10A0 je Blatt aus den Waenden",
+    "115d054c wip(r39-karten): Nachbesserung 1 M4 - Tuer-Spruenge mit der echten Klemmung nachgemessen",
+    "fb5d474a wip(r39-karten): Nachbesserung 1 M5/M1/M2 - Zeilen 1030/1110/1170 Z1 aus den Waenden, Treppen 3F/B1",
+    "98cca236 wip(r39-karten): Nachbesserung 1 Riegel - Teilzustaende (M3), Treppen (M4/M5/M1), Marker (M5), B1-Treppe (M2)",
+    "b45d8061 wip(r39-karten): Nachbesserung 1 - Riegel und Echtlauf-Messung im Dossier",
+    "9ae182da wip(r39-karten): Nachbesserung 1 - Uebersicht, OFFEN, Fuer den Nutzer",
+    "43dd21ee wip(r39-karten): Nachbesserung 1 M3 - verursachender Commit ba258ae4 im Dossier",
+    "b1da8c01 fix(r39-karten): Nachbesserung 1 - Raeume in Teilzustaenden geschlossen, Treppenhaeuser/1030/1110/1170 aus den Waenden"
+   ],
+   "suite": "100% tests passed, 0 tests failed out of 96 -- ctest --test-dir re15_port/build -R \"^(unit_map_|unit_karte_|unit_r30_karte|unit_r30_hinweis|unit_r33_karte|unit_r35_karte|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_karte|unit_r36_kartenbits|unit_r36_kartenitems|integration_r36_karte|integration_r36_kartenitems_bild|unit_r38_tagebuch|integration_r38_tagebuch|unit_r39_karten|integration_r39_karten|integration_r39_elza_karte|unit_r39_inventar|integration_r39_inventar|integration_map_uebergang|integration_map_raum_live|integration_r35_karte|unit_inv_|unit_r26_inventar|unit_r35_inventar1050|integration_r35_inventar1050|unit_r36_inventar|integration_r36_inventar|unit_r38_kleinkram_inventar|integration_r38_kleinkram_inventar|unit_pri_inventar_riegel|unit_r30_android_n1_inventar_cmd)\" -j 4 --timeout 900 --output-on-failure; nach dem letzten Bau (nur Kommentar geaendert): 100% tests passed, 0 tests failed out of 6 -- -R \"^(unit_r39_karten|integration_r39_karten)\"",
+   "offene_punkte": [
+    "Entscheidung des Nutzers: Die Suedwest-Kammer in ROOM1210 (B2) ist begehbar, aber weder im Original noch in mapB2_correct.png gezeichnet. Dort steht der Marker neben der Kachel (207 von 1141 Rasterpunkten). Soll die Kammer dazugezeichnet werden oder bleibt B2 wie die Vorlage?",
+    "Den Nutzer informieren: Auf 3F weichen drei Treppensymbole bewusst von map3F_correct.png ab. Treppenhaus 1060 x144 -> x140 (derselbe Lauf, den er auf 1F/2F verschoben hat). Treppenaufgang 1170 (159,99) -> (156,98). Treppe (168,107) -> (168,106), weil die 1/3-Pixel-Verschiebung der Vorlage bei 1x nicht darstellbar ist.",
+    "Vorbestehend und nicht angefasst: Die Kachel-Klemmung (reserve 4) haelt den Marker 4 px vom Rand des nominalen Rechtecks fern. Dadurch springt er an den 1060-Tueren beim Raumwechsel 6 bis 8 px (vorher 5 bis 7).",
+    "Vorbestehend und nicht angefasst: Die Schwenk-Tilgung des Renderers nimmt Wandtexel weg, bei 1110 (Ostseite x186, y115..120) und bei 1210 (x187, y71/y77). Offen sind die Stellen nur, solange der Nachbar ungezeichnet ist; 1210 ist nur ueber 11E0 erreichbar.",
+    "ROOM1170 Zone 1 liess sich per CONTINUE nicht in der echten exe abziehen, weil der Raum mit der Intro-Szene startet. Dort misst nur die Sonde, die denselben Kartenpfad re15_inv_map_marker benutzt."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/re15_inv_screen.c (die fuenf vorhandenen 'Runde 39 Spur G'-Haken reichen jetzt st durch, keine neue Zeile)",
+    "re15_port/engine/src/re15_map_zones.h (Karten-Code von Spur G: Zeilen 1030/1060/10A0/1110/1170 Z1, Marken 3F/B1)"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "G": {
+   "bestanden": false,
+   "suite": "Gezielter Lauf im Spurbaum (keine volle Suite): ctest --test-dir re15_port/build -R \"^(unit_map_|unit_karte_|unit_r30_karte|unit_r30_hinweis|unit_r33_karte|unit_r35_karte|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_karte|unit_r36_kartenbits|unit_r36_kartenitems|integration_r36_karte|integration_r36_kartenitems_bild|unit_r38_tagebuch|integration_r38_tagebuch|unit_r39_karten|integration_r39_karten|integration_r39_elza_karte|unit_r39_inventar|integration_r39_inventar|integration_map_uebergang|integration_map_raum_live|integration_r35_karte|unit_inv_|unit_r26_inventar|unit_r35_inventar1050|integration_r35_inventar1050|unit_r36_inventar|integration_r36_inventar|unit_r38_kleinkram_inventar|integration_r38_kleinkram_inventar|unit_pri_inventar_riegel|unit_r30_android_n1_inventar_cmd)\" -j 4 --timeout 900 --output-on-failure: 100% tests passed, 0 tests failed out of 96 (697 s). integration_r39_karten einzeln mit -V nachgefahren: Passed (81,9 s).",
+   "urteile": [
+    {
+     "punkt": "1a Blaetter 1F/2F/3F/B2 nach map*_correct.png (keine Doppelwaende, Tuer genau auf Wand, Treppen nicht in der Wand)",
+     "urteil": "erfuellt",
+     "beleg": "Echte exe, Sweep aller Blaetter (lauf.sh + RE15_MAP_SHOT_SWEEP, LOAD GAME). Gegen die rechten Vorlagenhaelften: B2, 1F und 2F je 0 Klassen-Abweichungen. 3F hat nur zwei bewusst verschobene Treppensymbole: 1060 (144,147)->(140,147) und 1170 Z1 (159,99)->(156,98), begruendet ueber 'Spielermarker passt', siehe H3. Doppelwand-Pixel auf B1..3F: 0 (VORHER 52/40/223/0/5). Alle Tueren liegen auf einer Wand, keine Treppe steht in einer Wand. M3-Regression behoben: 15 Orte je allein besucht sind klassengleich mit der Merge-Basis-exe, 0 verlorene Wandpixel (Abnahme 0: 8..41). 9 weitere Teilzustaende (Paare, mit Plan) und 1130/1120/1140 allein: ohne Doppelwand, ohne offene Seite. gdigrab des echten Fensters ist bis auf den blinkenden Ring identisch mit dem FB-Abzug."
+    },
+    {
+     "punkt": "1b 'natuerlich muss der Spielermarker da entsprechend passen' (Polizeistation)",
+     "urteil": "teilweise",
+     "beleg": "Sonde = exe an 13 Lagen auf 5 Blaettern belegt (exe-Ring = Sonde-(1,1)). markerflaeche an jedem Rasterpunkt: 1030 0/20967, 1060 je 0, 10A0 je 0, 1110 0, 1170 Z1 0/2873 und Dach 0/1656, 10C0/1120/10E0/1090 je 0. Treppensymbol zur Projektion <= 2 px; echte exe 1060 1F: Ring (122,143) auf dem Symbol (122,144), vorher (126,143). Tuerspruenge Stage 1 gegen die Merge-Basis: Mittel 4,9->3,9 px, max 20->9 px. ABER ROOM1210 Suedwest-Kammer: in der echten exe laeuft Leon aus dem Flur hinein (pos (-25500,0,-21700)), der Ring steht bei (191,117), 10 px neben der Zeichnung im Blau. Betroffen sind 1693 von 10387 begehbaren Punkten (N1)."
+    },
+    {
+     "punkt": "1c B1 neu ('passt nichts zusammen mit dem wie man sich bewegt')",
+     "urteil": "erfuellt",
+     "beleg": "Abnahme-0-Messung unveraendert bestaetigt: unit_r39_karten_b1 mit -V zeigt Gang 2,13..2,29 px je 1000 Einheiten, Querversatz 0, Tuerspruenge 0..3 px, 0 Punkte neben der Zeichnung. Sweep B1 hat 0 Doppelwand. M2 behoben: Treppe (145,164), keine Sprosse beruehrt eine Wand. Gegen den Stand der Abnahme 0 unterscheidet sich B1 nur in diesen 30 px."
+    },
+    {
+     "punkt": "1 gesamt (Maps Police Departement)",
+     "urteil": "teilweise",
+     "beleg": "1a und 1c sind erfuellt. 1b ist wegen der ROOM1210-Suedwest-Kammer (N1) nur teilweise erfuellt."
+    },
+    {
+     "punkt": "2 ROOM1090 Leons Positionsmarker ausserhalb des aktuellen Raums",
+     "urteil": "erfuellt",
+     "beleg": "Am Nutzerpunkt (-12528,-9000,959) steht der Ring bei (183,72) mitten im Rot des Gammas; vorher (186,83) im gruenen Nachbarraum. Die gdigrab-Aufnahme des echten Fensters (Direct3D) bestaetigt das. Echter Weg Leon (10F0, Tritt schieben, Klettern, Tuer von oben): Ankunft (-13600,-9000,1300) Band 5, Ring (182,72) im Rot. Echter Weg Elza (10F1 -> 1091, PL04): Ring (182,72) im Rot. Flaeche jeweils 0 von 11059 (Band 5) bzw. 0 von 5178 (Band 1) Punkten."
+    },
+    {
+     "punkt": "Gate RE",
+     "urteil": "erfuellt",
+     "beleg": "Selbst nachgeprueft. PSX.EXE @0x800768C8 = 6c 00 c2 00 7c 09 b5 08. @0x800768E0, @0x80076900, @0x80076938 und @0x800768F8 sind Stubs. @0x80076968 = (100,206,2280,2268), @0x800769B8 = (177,140,2496,2250). FUN_800473f8 (dis 0x8004741c): addiu 32000, x10, sra 20, +5, /10 ueber 0x66666667, z negiert. RE2 @0x8006E66C/@0x8006E744/@0x8006E71C (unbesucht nur mit Plan, Zeile 498) und RE2 @0x8006F4E8..@0x8006F608 (Zielkachel immer gezeichnet) stimmen. Alle 29 SCA-Wandoffsets und die STAIR-AOT-Bytes stimmen. Im Diff keine Woerter wie deferred/tunable/TODO, kein neuer getenv."
+    },
+    {
+     "punkt": "Gate Vertrag/Pfade/Tests",
+     "urteil": "erfuellt",
+     "beleg": "Keine Bank-9-Bits, Nachrichten-Ids oder Slots belegt. Keine Aenderung an release/, android/, shared_assets/ oder CMakeLists.txt. In re15_inv_screen.c reicht die Nachbesserung nur st an die vorhandenen Haken durch. Blaetter 5..12 sind pixelgleich mit der Merge-Basis. Gezielte Tests 96/96 gruen. Die Riegel messen: der offen-Zaehler meldet auf den Regressionsabzuegen der Abnahme 0 23/34/30/15/14/1/38/9/8/16, auf NEU je 0."
+    }
+   ],
+   "maengel": [
+    "N1 (Punkt 1b): Der Marker steht in der Suedwest-Kammer von ROOM1210 (B2) neben der Karte. Die Kammer ist begehbar: Die Flur-Westwand @0x01BC8 endet bei z -20746, die Kammer-Ostwand @0x01C40 beginnt erst bei z -22520. Gezeichnet ist sie weder im Original (MAP02.PIX r3, Zeile @0x800769B8) noch in mapB2_correct.png. Pruefen: Spielstand mit 'probe_r36_karte karte re15_card.mcr 1210 -19500 0 -21700 2048 besucht:11E0:0:0 besucht:1210:-19500:-21700' anlegen, LOAD GAME, dann RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT=W1,U4,W5 und RE15_INV_OPEN_AT=200#1210. Ergebnis: debug.log zeigt pos=(-25500,0,-21700), der Ring steht bei (191,117) im Blau links der Flurwand x201. Betroffen sind 1693 von 10387 begehbaren Rasterpunkten (probe_r39_karten markerflaeche 1210 0 -25800 -2200 0 100 1). Das ist dieselbe Fehlerklasse wie Nutzerpunkt 2. Der Bau hat die Entscheidung als Wahlfrage an den Nutzer weitergegeben. Nach Memory reai-v2-original-oder-nicht und Beta->Retail (RE2 zeichnet jede begehbare Flaeche) gibt es zwei Wege: die Kammer samt Durchgang dazuzeichnen (aus der Kollision, wie bei B1/ROOM1000) oder eine ausdrueckliche Bestaetigung des Nutzers 'B2 bleibt wie die Vorlage' einholen.",
+    "ORCHESTRATOR-ENTSCHEID zu N1 (keine Wahlfrage an den Nutzer, Memory reai-v2-original-oder-nicht + Beta->Retail): die begehbare Suedwest-Kammer ROOM1210 samt Durchgang wird auf B2 DAZUGEZEICHNET - aus der Kollision (SCA-Waende, Form wie B1/ROOM1000 der Spur), weil Nutzerpunkt 1b verlangt, dass der Spielermarker passt, und RE2 jede begehbare Flaeche zeichnet. Die Abweichung von mapB2_correct.png (die Vorlage kennt die Kammer nicht, das Original auch nicht) im Dossier-Abschnitt 'Fuer den Nutzer' benennen (Bild vorher/nachher). Riegel: probe_r39_karten markerflaeche 1210 ueber die Kammer = 0 Punkte neben der Zeichnung (vorher 1693 von 10387); echte exe am Abnahme-Weg (Spielstand 1210, W1,U4,W5, RE15_INV_OPEN_AT=200#1210) Ring in der Zeichnung; uebrige Blaetter pixelgleich zur Abnahme 1."
+   ],
+   "bericht": "Ich habe die Abnahme 1 geschrieben und nur diese Datei committet: C:/workspace/git/reAi_v2/.claude/worktrees/r39_karten/analysis/befunde_runde39/G_abnahme_1.md (Commits 539a2107 Zwischenstand und 0c1ded3c doc(r39-karten): Abnahme 1). Die Messdateien liegen in C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/G39abn1.\n\nErgebnis: bestanden = false. Punkt 2 ist erfuellt. Punkt 1 ist nur teilweise erfuellt, und zwar wegen eines einzigen Mangels: In der begehbaren Suedwest-Kammer von ROOM1210 steht der Marker neben der Karte (N1). Diese Stelle hat der Bau bewusst offen gelassen und als Frage an den Nutzer gestellt.\n\nAn der echten exe gemessen (Bau 'ninja: no work to do', exe 20:54):\n- Blaetter im Vollzustand gegen die Vorlagen: B2, 1F und 2F haben 0 Klassen-Abweichungen. Auf 3F weichen nur zwei Treppensymbole ab (1060 und 1170 Zone 1, je 3..4 px). Die Verschiebung ist gewollt, damit der Marker auf der Treppe zum Symbol passt, und entspricht der Korrektur des Nutzers auf 1F/2F (H3).\n- Doppelwaende: auf B1..3F jetzt 0. Alle Tueren liegen auf einer Wand, keine Treppe steht in einer Wand.\n- M3-Regression ist behoben: Jeder der 15 Orte, allein besucht, ist klassengleich mit der Merge-Basis-exe, 0 verlorene Wandpixel. Weitere Teilzustaende (Paare, mit Plan) sind ebenfalls geschlossen und ohne Doppelwand.\n- Sonde und exe stimmen an 13 Lagen auf 5 Blaettern ueberein (Ring = Sonde - 1). Damit gelten die Flaechenzahlen der Sonde fuer die exe: 0 Punkte neben der Zeichnung in 1030, 1060, 10A0, 1110, 1170 Z1, 10C0, 1120, 10E0 und 1090.\n- Treppen: Symbol und Projektion liegen <= 2 px auseinander. In der echten exe steht der Ring auf dem 1060-Lauf bei (122,143), direkt auf dem Symbol.\n- Tuerspruenge auf Stage 1 gegen den selbst gebauten Merge-Basis-Stand: Mittel 4,9 -> 3,9 px, Maximum 20 -> 9 px.\n- Punkt 2: Am Nutzerpunkt steht der Ring bei (183,72) im Rot; die gdigrab-Aufnahme des echten Fensters bestaetigt das. Ueber den echten Weg (Leon aus 10F0, Elza aus 10F1) steht er jeweils bei (182,72) im Rot.\n- RE-Gate: Alle Stichproben stimmen (PSX.EXE-Zeilen, FUN_800473f8, RE2-Gatter @0x8006E66C/@0x8006E744/@0x8006F4E8, 29 SCA-Offsets, STAIR-AOT-Bytes).\n- Vertrag eingehalten, gezielte Tests 96/96 gruen.\n\nHinweise, die keine Maengel sind:\n- H1: Die Tuer 1030/1050 haengt im Teilzustand '1050 ohne 1030' eine Spalte neben der Wand. Das war vor Runde 39 genauso.\n- H2: Die vorbestehende Klemmung 'reserve 4' haelt den Marker 4 px von West- und Nordwaenden fern. Dadurch springen vier Tuerpaare 1..3 px weiter als vorher, insgesamt sind die Spruenge aber kleiner.\n- H4: ROOM1130 allein gezeichnet hat drei 1-px-Wandnasen. Das ist neu, aber nur kosmetisch.\n- H5: ROOM1170 Zone 1 liess sich auch bei mir nicht in der echten exe abziehen; dort gilt die Sonde.\n- H6: 11A0 auf Blatt 6 ist vorbestehend und gehoert nicht zur Polizeistation."
+  }
+ }
+}

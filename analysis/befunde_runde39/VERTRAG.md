@@ -26,6 +26,7 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | 3 | I | funk10f1 / r39_funk10f1 | neue Elza-Szene 10F1 am Kommunikationssystem (3 Zeilen) |
 | 3 | J | dining1141 / r39_dining1141 | ROOM1141 Umbau (8 Unterpunkte); kurze Panik-Musik beim Wechsel 1141 -> 1171 |
 | 3+ | M | schluessel2 / r39_schluessel2 | Schluessel 10F0/10F1 hoechstens halb so gross (Nachtrag 5) |
+| 3+ | N | stimmen3 / r39_stimmen3 | Nutzer-Aufnahmen 1141 main12-14 + 10F1 main06/main08 zuordnen, 1141 msg 12-14 stumm (Nachtrag 8) |
 | 3 | K | heliport1171 / r39_heliport1171 | John 1171 "Elza hurry up": Heran-Winken statt Klettern; uebrige Szenen-Animationen 1171 |
 
 ## 1. Ressourcen
@@ -48,7 +49,8 @@ nie umwidmen. Nutzer-Dateien unter synchro/ werden NIE umbenannt oder veraendert
 scd_room_setup.c (Installer-Zeile am ENDE des Blocks), scd_vm.c, platform/pc/main.c, audio_pc.c (A, B), render_pc.c (L),
 inventory_common.c / re15_inv_screen.c (C, F), enemy_ai_common.c (D, E), enemy_ai_re2_zombie.c (D, E), enemy_ai_re2_dog.c
 (E), Karten-Code (G), elza_r36.c (H), dining_r38.c + gen/dining_r38_programme.inc (J), heliport1171_r38.c (K),
-test_r36_kartenbits.c k_port[] (C, I, J). `release/`, `platform/android/`, `shared_assets/PSX/*`,
+test_r36_kartenbits.c k_port[] (C, I, J). N: Tabelle engine/src/stimmen_r39.c (Spur A), Riegel test_r39_stimmen.c (A) und
+test_r39_funk10f1.cmake (I, Stellvertreter-Datei). `release/`, `platform/android/`, `shared_assets/PSX/*`,
 `release/RELEASE_NOTES.md`: TABU fuer alle.
 
 ### 1.4 Ueberschneidungen (bekannt, bei der Integration aufzuloesen)

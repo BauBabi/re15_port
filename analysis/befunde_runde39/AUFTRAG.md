@@ -133,3 +133,29 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   Nachtrag 4 Punkt 4) = GENAU dieser Clip (ROOM1171 RBJ rec1 Clip 2), in 1141 aus ROOM1171 geliehen (Muster Spur I: RBJ-Leihe
   "[rbj] ... von ROOM1031 geliehen", platform/pc/src/cut10f0_pc.c); den Cache-Fix aus K beachten (bei der Integration zusammen).
   Riegel: Clip-Folge Johns bei "follow me" = 1171-Clip (Bildzahl 96, Quelle ROOM1171), kein Waffe-auf-Elza-Clip.
+
+## Nachtrag 8 des Nutzers (woertlich, 2026-10-18 22:05)
+- "So, ich habe jetzt die voiceovers ergänzt die fehlen in room 1141: Oh, no, this is Roy! He is in Trouble, I have to help him! ist main 12, Puuuh, that was close! I thought we end up as Gorilla meal…. ist main13 und Elza, follow me, I think I might have found a way out of here! ist main14."
+- "Außerdem habe ich die voiceovers für ROOM 10F1 ergänzt, mit main06 und main08."
+  Orchestrator (selbst gemessen 22:10-22:16, Windows-Spracherkennung System.Speech en-US: Diktat + Zwangswahl unter den
+  Raum-Saetzen; Skript scratchpad/stimmen_n8/erkenne.ps1). Dateien unveraendert uebernommen (32 kHz, 16 bit, mono):
+  room1141/main12 4,97 s (21:43), main13 5,83 s (21:55), main14 4,28 s (21:59); room10F1/main06 4,46 s (21:23),
+  main08 2,82 s (21:40); Roh-Takes synchro/unused/STAGE1/room1141 + room10F1.
+  | Datei | Diktat | Zwangswahl | Zeile im Port |
+  |---|---|---|---|
+  | 1141/main12 | "All know this is rolling he's in trouble I have to help in" | "Oh, no, this is ROY! ..." 0,823 (die John-Fassung nicht unter den Alternativen) | ROOM1141 msg 50 (Spur J, tools/r39_dining/programme_bauen.py:524 "Elza: Oh, no, this is John! / He is in trouble, I have to help him!") |
+  | 1141/main13 | "Path that was coals are that we end up as goal of nearly" | - | ROOM1141 msg 51 (:527 "John: Puuuh, that was close! I thought / we end up as gorilla meal....") |
+  | 1141/main14 | "Goals at fall league and armada fouled away all of you" | "Elza, follow me, I think I might have found a way out of here!" 0,664 | ROOM1141 msg 52 (:530) |
+  | 10F1/main06 | "Carlyle anyone can hear me we need help" | "Hello, anyone, can you hear me? We need help!" 0,772 | ROOM10F1 msg 40 (Spur I) |
+  | 10F1/main08 | "At this thing is broken" | - | ROOM10F1 msg 42 (Spur I; msg 41 "..." bleibt ohne Stimme) |
+  - main12 SAGT "Roy", der Text sagt "John" (Nutzer-Entscheid Nachtrag 1, 1141 = John). Der Text bleibt John; der Nutzer ist
+    informiert. Eine neue Aufnahme unter DEMSELBEN Dateinamen braucht keine Code-Aenderung.
+  - KOLLISION: ROOM1141.RDT (msg_sec 0x10E4, re15_port/tools/rdt_msgdump.py) hat Original-Zeilen id 12 @0x13B6 "You've opened
+    the lock.", id 13 @0x13D1 "A beautiful painting.There's a switch below. / Will you push it?", id 14 @0x1417 "It's a big
+    table." Nach der Ordnerregel (synchro/README.md: main<MSG-ID>) spielten main12/13/14 dort - beim Entriegeln, am Gemaelde,
+    am Tisch. Sie muessen stumm bleiben. Die Tabelle engine/src/stimmen_r39.c (Spur A) sperrt das von selbst: eine Zeile
+    (Raum, msg, datei) macht die gleichnamige msg <datei> stumm (re15_stimmen_r39_stamm, zweite Schleife, "[voice] ... stumm").
+    ROOM10F1 hat Original-Ids 0..5 (I_funk10f1.md: msg_sec @0x1168, 6 Stueck) - keine Kollision.
+  - Zuteilung: neue Spur N "stimmen3" (10F1 msg 40/42 <- main06/main08 + 1141-Zeilen 50/51/52 <- main12/13/14, die 12/13/14
+    sperren; Riegel; Messung am echten Weg). Spur J (Nachbesserung 2): dieselben drei 1141-Zeilen in stimmen_r39.c eintragen
+    (bei der Integration gilt die Fassung der Spur N) und die Wiedergabe von msg 50/51/52 im neuen 1141-Ablauf messen.
