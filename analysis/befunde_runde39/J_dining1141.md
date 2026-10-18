@@ -25,6 +25,16 @@ Ressourcen (VERTRAG 1.1/1.2): Bank-9-Bits 94, 95; Nachrichten-Ids 1141 50-59.
 - 14:27 Basis-Bau `local_build.sh configure` + `build` gruen (LOCAL-BUILD-OK).
 - 14:55 Messung vorher (Lauf v0 = echter Tuerweg 1131 -> 1141 -> 1171, Wegplan wie integration_r38_dining1141_d, plus
   400 Bilder in 1171) ausgewertet; Ton-Quellen vermessen (Abschnitt 1, 2).
+- **Fortsetzung 1 (ab 17:10, nach Sitzungslimit):** Baum = 56ffa0f3 (Merge master Welle 1+2). Plan:
+  neues Modul `engine/src/dining_r39.c` + `include/re15_dining_r39.h` + `platform/pc/src/dining_r39_pc.c`, Programme
+  `engine/src/gen/dining_r39_programme.inc` aus `tools/r39_dining/programme_bauen.py` (baut auf den Helfern des
+  Runde-38-Werkzeugs auf); Haken in dining_r38.c (Phase H: Evt_exec/Ereignis 6 -> Programme der Runde 39), ein
+  Stamm-Haken in audio_pc.c fuer help01..05 (Sprach-Pfad wie main42). Ablauf neu (Nutzer-Punkte 1-8):
+  John ist beim Betreten NICHT im Raum (auf dem Dach, Punkt 2); Schleife = help01..05 gemischt + mehrfaches Klopfen
+  (Punkt 1/3/4); nach dem ersten Ruf Elzas Satz Id 50 (Punkt 5, Bank 9 Bit 94 = einmal); Gemaelde -> Rolladen hoch ->
+  Kamera auf Elza, Tuer auf/zu, Kamera auf die Dachtuer mit John (Punkt 2); Glasbruch vor msg 6 (Punkt 6); Blick
+  Johns ab msg 9 (Punkt 7, RE Plc_dest Mode 9 / Turn-Sub); nach dem Tod der Gorillas Johns Zeilen Id 51/52 mit
+  Gesten, dann Abgang (Punkt 8, Bank 9 Bit 95 = gesagt); Musik beim Wechsel 1141 -> 1171 (Punkt 9).
 
 ## 1. Messung vorher
 
