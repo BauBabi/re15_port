@@ -937,3 +937,22 @@ Punkte 1-4 (Abnahme 2: erfuellt) nicht verschlechtern.
   test): Latch Bild 15, Anker (1058,-24107), 74 Griffbilder, 0 ausserhalb, 0 hinter einer Wand. MUTATIONSPROBE (Wache aus,
   re15_r39_gegner_enable(0) am Anfang von fall_laufen, nicht committet): **FAIL — 50 ausserhalb, 50 hinter einer Wand**
   (Bild 39 Spieler (-2143,-26068)).
+
+### Messung nachher an der exe (Stand 7fb46d07, exe 19:3x = scratchpad e_nb3/exe_nachher.exe)
+- Auswerter scratchpad e_nb3/aussen.py (letztes Segment von state.txt = ROOM1141; "ausserhalb" = x < -8600 (Westwand
+  innen), z < -23600 (Suedwand innen) oder x > 14700, fuer Elza und jeden Gorilla t=27).
+- **Versuch 6 nachher** (e_nb3/v6_nachher, Aufbau wie v6_vorher, `RE15_EXIT_AT=4500`): exit 0; bis F3555 bildgleich mit
+  vorher (F3554/F3555 PL(-2715,-23132)); gegner_r39.log:
+  `querung F3556 spieler zelle=1 code=1 vorbild=(-2715,-23132) re15=(-2144,-26068) -> (-2144,-23149) (RE2 FUN_8004c900)`,
+  `querung F3557 spieler ... re15=(-613,-26068) -> (-613,-23149)`; state.txt F3556 PL(-2144,-23149), F3557..F3562
+  PL(-613,-23149). Im weiteren Kampf noch zwei Wuerfe gegen die Suedwand (F3744/F3745, F4228/F4229 je -26068 -> -23149) und
+  ein GORILLA, den derselbe Mechanismus durch die Suedwand gestellt haette: `querung F4030 gorilla slot=3 zelle=1 code=1
+  vorbild=(-1799,-21982) re15=(-1326,-27218) -> (-1326,-21999)` (-27218 = -25600 - 1600 - 18; -21999 = -24600 + 2601).
+  aussen.py: **Elza 0 / Gorillas 0 Bilder ausserhalb** (F1..F4500). Vorher (v6_vorher bis F3600): Elza 45 Bilder ausserhalb
+  (F3556..F3600 bei z -26068).
+- **Versuch 5 nachher** (e_nb3/v5_nachher, Aufbau wie v5_vorher, `RE15_EXIT_AT=11200`): exit 0; bis F4623 bildgleich;
+  `querung F4624 gorilla slot=3 zelle=0 code=2 vorbild=(-6982,-9649) re15=(-12218,-9837) -> (-6999,-9837) (RE2 FUN_8004c900)`
+  = genau der vorhergesagte Wert. aussen.py ueber F1..F11200: **Elza 0 / Gorillas 0 Bilder ausserhalb** (vorher, v5_vorher
+  bis F4700: G3 77 Bilder bei x -12218). G3 stirbt F6732 (`st 1 -> 3`, hp -12, 31. Treffer), G2 lebt bei F11200 (hp 168,
+  16 Treffer, Sub 3 Jagd bei (1461,-10818) = IM Raum): der stehende Skript-Schuetze hat seine 159 Schuss (99 + 60)
+  verschossen — dieselbe Grenze des Messaufbaus wie Versuch 7 v9 (Nachbesserung 2), kein Softlock.

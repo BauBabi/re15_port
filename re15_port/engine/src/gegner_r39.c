@@ -282,6 +282,11 @@ static int r39_zelle_ok(const re15_sca_entry_t *c, int band, uint32_t maske)
  * (ein schon ueberlappender Aktor, z.B. Landung ueber einem Auto, hat keine Herkunftsseite). */
 static int r39_quert(const re15_sca_entry_t *c, int32_t x0, int32_t z0, int32_t x1, int32_t z1)
 {
+    {   /* billiger Ganzzahl-Vortest (PSX-Budget): Huellrechteck der Strecke gegen das offene Innere */
+        const int32_t cx0 = (int32_t)c->x, cx1 = cx0 + (int32_t)c->width, cz0 = (int32_t)c->z, cz1 = cz0 + (int32_t)c->density;
+        if ((x0 > x1 ? x0 : x1) <= cx0 || (x0 < x1 ? x0 : x1) >= cx1 ||
+            (z0 > z1 ? z0 : z1) <= cz0 || (z0 < z1 ? z0 : z1) >= cz1) return 0;
+    }
     const double ax = (double)c->x, az = (double)c->z;
     const double bx = ax + (double)c->width, bz = az + (double)c->density;
     if ((double)x0 >= ax && (double)x0 <= bx && (double)z0 >= az && (double)z0 <= bz) return 0;
