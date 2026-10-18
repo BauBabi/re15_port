@@ -109,3 +109,10 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
 - (Nachschub 19:25) "Oder falls Elza keine Waffe ausgerüstet hat eben das Messer...." (zu Punkt 2: hebt die Waffe - ohne ausgeruestete Waffe das Messer)
 - (Nachschub 19:25) "Ich meine mit ausgerüstet - keine Waffe im Inventar hat" -> Regel fuer Punkt 2: hat Elza eine Schusswaffe im INVENTAR, hebt sie diese (die ausgeruestete; ist keine ausgeruestet, eine aus dem Inventar), auch wenn sie nicht ausgeruestet ist; nur ohne jede Schusswaffe im Inventar hebt sie das Messer.
 - (Nachschub 19:26) "Falls sie irgendeine Waffe im Inventar hat, hebt sie halt diese."
+
+## Nachtrag 5 des Nutzers (woertlich, 2026-10-18 19:29)
+
+- Und die Schlüssel im Communicationsroom sind immer noch zu groß, die sollten maximal halb so groß sein.
+  (Orchestrator: Spur L Punkt 2 hatte die Schluessel 10F0/10F1 auf RE2-Bildgroesse gebracht - Leon 69 px, Elza 63 px bei
+  960x720, Hebel RE2_QUANTIL in tools/r38_itemorte/itemorte_export.py. NUTZER-VORGABE jetzt: hoechstens halb so gross wie
+  dieser Stand (Faktor 0,5 linear) -> neue Spur M "schluessel2".)
