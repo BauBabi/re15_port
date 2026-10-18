@@ -1,0 +1,59 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+== aufsteher (Riegel Punkt 1: RE2-KI, ROOM1140, Spielschritt) ==
+== aufsteher EBEN gap=6 (RE2-KI, ROOM1140, Pistole, Sturz-Aufsteher EXEC[5]) ==
+  PRE f161 st=1/5/7 mo=0x08 bild=11 maske=1 hp=2000 dist=1498
+  miss f161  st=1/5/7 mo=0x08 bild= 11 maske=1 elev=+0 hp 2000->2000  hnd=0
+  miss f167  st=1/5/7 mo=0x08 bild= 17 maske=1 elev=+0 hp 2000->2000  hnd=0
+  miss f173  st=1/5/7 mo=0x08 bild= 23 maske=1 elev=+0 hp 2000->2000  hnd=0
+  miss f179  st=1/5/7 mo=0x08 bild= 29 maske=1 elev=+0 hp 2000->2000  hnd=0
+  miss f185  st=1/5/7 mo=0x08 bild= 35 maske=1 elev=+0 hp 2000->2000  hnd=0
+  miss f191  st=1/5/7 mo=0x08 bild= 41 maske=1 elev=+0 hp 2000->2000  hnd=0
+  miss f197  st=1/5/7 mo=0x08 bild= 47 maske=1 elev=+0 hp 2000->2000  hnd=0
+  miss f203  st=1/5/7 mo=0x08 bild= 53 maske=1 elev=+0 hp 2000->2000  hnd=0
+  HIT  f209  st=2/3/7 mo=0x08 bild= 59 maske=3 elev=+0 hp 2000->1984  hnd=7
+  miss f215  st=2/3/2 mo=0x08 bild= 65 maske=3 elev=+0 hp 1984->1984 (steht) hnd=7
+  HIT  f221  st=2/3/2 mo=0x08 bild= 71 maske=3 elev=+0 hp 1984->1968 (steht) hnd=7
+  miss f227  st=2/3/2 mo=0x08 bild= 77 maske=3 elev=+0 hp 1968->1968 (steht) hnd=7
+  HIT  f233  st=2/3/1 mo=0x00 bild= 20 maske=3 elev=+0 hp 1968->1952 (steht) hnd=1
+  miss f239  st=2/3/2 mo=0x00 bild= 26 maske=3 elev=+0 hp 1952->1952 (steht) hnd=1
+  HIT  f245  st=2/3/2 mo=0x00 bild= 32 maske=3 elev=+0 hp 1952->1936 (steht) hnd=1
+  SUMME EBEN: 15 Schuesse, 4 Treffer; in EXEC[5] Bild<55: 0/8 Treffer, Bild>=55: 0/1 Fehl; erster Treffer Bild 59, aufgestanden f210
+  SUMME EXEC[5]: 9 Schuesse, 1 Treffer; Masken vor Bild 55 OR=1; erster Treffer in EXEC Bild 59 (Maske 3, hnd 7)
+== aufsteher TIEF gap=6 (RE2-KI, ROOM1140, Pistole, Sturz-Aufsteher EXEC[5]) ==
+  PRE f161 st=1/5/7 mo=0x08 bild=11 maske=1 hp=2000 dist=1498
+  HIT  f161  st=2/3/7 mo=0x08 bild= 11 maske=1 elev=-1 hp 2000->1984  hnd=7
+  miss f167  st=2/3/2 mo=0x08 bild= 17 maske=1 elev=-1 hp 1984->1984 (steht) hnd=7
+  HIT  f173  st=2/3/2 mo=0x08 bild= 23 maske=1 elev=-1 hp 1984->1968 (steht) hnd=7
+  miss f179  st=2/3/2 mo=0x08 bild= 29 maske=1 elev=-1 hp 1968->1968 (steht) hnd=7
+  HIT  f185  st=2/3/2 mo=0x08 bild= 35 maske=1 elev=-1 hp 1968->1952 (steht) hnd=7
+  miss f191  st=2/3/2 mo=0x08 bild= 41 maske=1 elev=-1 hp 1952->1952 (steht) hnd=7
+  HIT  f197  st=2/3/2 mo=0x08 bild= 47 maske=1 elev=-1 hp 1952->1936 (steht) hnd=7
+  SUMME TIEF: 7 Schuesse, 4 Treffer; in EXEC[5] Bild<55: 1/1 Treffer, Bild>=55: 0/0 Fehl; erster Treffer Bild 11, aufgestanden f162
+  SUMME EXEC[5]: 1 Schuesse, 1 Treffer; Masken vor Bild 55 OR=1; erster Treffer in EXEC Bild 11 (Maske 1, hnd 7)
+== fresser EBEN gap=6 (RE2-KI, ROOM1140, Fresser-Aufsteher EXEC[8]) ==
+  PRE f15 st=1/8/4 mo=0x15 bild=11 maske=3 hp=98 1d3=0x00
+  HIT  f15   st=2/3/4 mo=0x15 bild= 11 maske=3 elev=+0 hp 98->82  hnd=7
+  miss f21   st=2/3/2 mo=0x15 bild= 17 maske=3 elev=+0 hp 82->82 (steht) hnd=7
+  HIT  f27   st=2/3/2 mo=0x15 bild= 23 maske=3 elev=+0 hp 82->66 (steht) hnd=7
+  miss f33   st=2/3/2 mo=0x15 bild= 29 maske=3 elev=+0 hp 66->66 (steht) hnd=7
+  HIT  f39   st=2/3/2 mo=0x15 bild= 35 maske=3 elev=+0 hp 66->50 (steht) hnd=7
+  miss f45   st=2/3/2 mo=0x15 bild= 41 maske=3 elev=+0 hp 50->50 (steht) hnd=7
+  HIT  f51   st=2/3/2 mo=0x15 bild= 47 maske=3 elev=+0 hp 50->34 (steht) hnd=7
+  SUMME EBEN: 7 Schuesse, 4 Treffer; in EXEC[8] Bild<55: 1/1 Treffer, Bild>=55: 0/0 Fehl; erster Treffer Bild 11, aufgestanden f16
+  SUMME EXEC[8]: 1 Schuesse, 1 Treffer; Masken vor Bild 55 OR=3; erster Treffer in EXEC Bild 11 (Maske 3, hnd 7)
+== gegenprobe EBEN: Pose wie (a), Maske vor dem ersten Schuss per Sonde auf 3 ==
+  HIT  f162  st=2/3/1 mo=0x08 bild= 11 maske=3(Sonde) elev=+0 hp 2000->1984 hnd=7
+  RIEGEL: (a) EBEN 0/8 Treffer vor Bild 55 (Masken OR=1), erster Treffer in EXEC[5] Bild 59 (Maske 3, hnd 7); (b) TIEF 1/1 vor 55, erster Bild 11 (Maske 1); (c) Fresser EBEN erster Treffer in EXEC[8] Bild 11 (Maske 3); (d) Maske-3-Sonde bei Bild 11: Treffer (hnd 7)
+
+PASS test_r39_treffer aufsteher

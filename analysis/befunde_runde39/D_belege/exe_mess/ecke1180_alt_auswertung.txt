@@ -1,0 +1,4 @@
+lauf_ecke1180_alt: 761 Bilder, letztes PL F520 pad=0000 (4061,6094) rot=2811
+Treffer (HP faellt): 0
+treffer.log: {'ziel': 1}
+  F118 R1180 ziel slot=1 typ=10 @(-582,12718) st=1/1/1

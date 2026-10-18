@@ -4,6 +4,7 @@
  */
 #include "re15_schuss_r36.h"
 #include "re15_room.h"       /* g_room_rdt_ok */
+#include "re15_treffer_r39.h" /* Runde 39 Spur D: Strahl mit Moebel-Ausnahme */
 
 static int s_verworfen = 0;
 
@@ -12,18 +13,17 @@ void re15_schuss_r36_sichtlinie_reset(void)     { s_verworfen = 0; }
 
 int re15_schuss_r36_sichtlinie_blockiert(const re15_actor_t *pl, const re15_actor_t *ziel)
 {
-    int region;
     if (!pl || !ziel) return 0;
     if (!g_room_rdt_ok) return 0;                  /* keine SCA -> leere Regionen -> 0 (@0x8003dd94) */
     /* FUN_8001b9b4: `ori s0,zero,0x3` @0x8001ba08, Schleife `addiu s0,s0,-1` / `bne` @0x8001ba34-38,
      * je Region FUN_8003dcc4(delta, region, 0xf00, 0x300) @0x8001ba1c-24; das Ergebnis wird
      * ODER-verknuepft (`or s1,s1,v0` @0x8001ba28) — der erste Treffer entscheidet. Ursprung und
-     * Band (+0x82) sind die des Spielers (DAT_800ac784, @0x8003dd00/@0x8003de60). */
-    for (region = 3; region >= 0; region--) {
-        if (re15_los_ray_blocked(pl, ziel, region, 0u)) {
-            s_verworfen++;
-            return 1;
-        }
+     * Band (+0x82) sind die des Spielers (DAT_800ac784, @0x8003dd00/@0x8003de60).
+     * Runde 39 Spur D: derselbe Strahl (treffer_r39.c), aber MOEBEL-Zellen sind durchlaessig — RE2
+     * FUN_80050858 ueberspringt Zellen ohne Flag 0x80 (@0x800508bc-c8), Liste gen/treffer_r39_moebel.inc. */
+    if (re15_treffer_r39_los_blockiert(pl, ziel)) {
+        s_verworfen++;
+        return 1;
     }
     return 0;
 }
