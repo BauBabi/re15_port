@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 22:45: Hauptbaum-exe 22:31 aus ecfe0f0f, Smoke gruen (1030@250, EXIT_AT, exit 0; ohne RE15_TITLE_SHOT_AF haengt die exe
+  im Titelmenue = kein Fehler). Spur K Abnahme 1: 2 Maengel (Kraehen HOVER Phase 0 @0x80115130 ohne f314/Bewegung, SPIN
+  Phase 2 @0x801154d0 ohne Gier+60) -> Nachbesserung 2 wf_52b88a82-72c (args_k_nach2.json; abn.K.suite enthaelt
+  "r38_elzaintro_stimme" doppelt = so uebergeben). Nutzer-Nachtrag 9 (fa2c0e7e): 11C0 Tueren im Gorilla-Kampf gesperrt +
+  "I cannot leave Ada alone here with those monsters!" -> Spur O parkplatz11c0, Baum auf fa2c0e7e, Lauf wf_d7e17c17-d93,
+  args {"welle": ["O"], "slots": 1, "max_nach": 1, "basis": "fa2c0e7e"}. Gemergte Baeume gegner/funk10f1/schluessel2
+  entfernt. Aktiv: G wf_0dcedfba-bac, J wf_7cea9b87-5d9, K wf_52b88a82-72c, O wf_d7e17c17-d93.
 * 2026-10-18 22:30: MASTER ecfe0f0f = Integration E2+E3+I+M (unit_r35_android_bash_mutanten einzeln gruen 22:29, 585 s -> der
   rote Lauf war Last). Nutzer-Nachtrag 8 erledigt ohne Spur: neuer Take main12 sagt John (eddbbc0d); auf Nutzer-Auftrag
   umbenannt (1e8cf44c): room1141/main12-14 -> main50-52, room10F1/main06/main08 -> main40/main42 = Ordnerregel, keine
