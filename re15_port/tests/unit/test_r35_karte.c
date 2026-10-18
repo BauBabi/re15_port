@@ -510,14 +510,17 @@ static int teil_r1210(void)
                 int pg, rc, mx, my, kind, w, c;
                 if (!re15_map_mark_get(j, &pg, &rc, &mx, &my, &kind)) continue;
                 if (pg != 1 || kind >= 4) continue;
-                if (abs(mx - px) + abs(my - py) > 3) continue;
+                /* Runde 39 Spur G: die Nutzer-Vorlage mapB2_correct.png legt die 11E0-Tuer auf die
+                 * Flur-Ostwand x186 (vorher x187 = Doppelwand daneben) - Abstand zur Projektion
+                 * (188,76) damit 4 px; die Wand-Bedingung darunter bleibt unveraendert. */
+                if (abs(mx - px) + abs(my - py) > 4) continue;
                 /* Wand der Kachel: rect 3 oder ein Zellen-/Garagen-Rechteck daneben */
                 w = 0;
                 for (c = 0; c <= 8 && !w; c++) w = (texel(1, c, mx, my) == 4);
                 gut = w;
             }
             snprintf(t, sizeof t, "1210 Tuer-AOT %d bei Karte (%d,%d): sichtbare Marke auf "
-                     "gemalter Wand <= 3 px", k, px, py);
+                     "gemalter Wand <= 4 px", k, px, py);
             CHECK(t, gut);
             getroffen += gut;
         }

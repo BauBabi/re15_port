@@ -15,6 +15,8 @@
  * Aufruf: probe_r39_karten <teil> ...
  *   ops <seite> <hexraum> <x> <z> [band]   Op-Liste des Kartenschirms (alle Blaetter
  *                                          aufgedeckt) - Messwerkzeug, kein Urteil
+ *   marker <hexraum> <x> <z> <band> [y]    Kartenpfad wie im Spiel: Raum betreten, Karte oeffnen,
+ *                                          gezeigtes Blatt, Zone, Marker + Kachel-Index darunter
  * ========================================================================== */
 #include <stddef.h>
 #include <stdio.h>
@@ -119,10 +121,96 @@ static int teil_ops(int argc, char **argv)
     return 0;
 }
 
+/* ---- Kachel der Seite: DATA/MAP0<p+1>.PIX, 256x256 4bpp, unteres Nibble = linkes Pixel ---- */
+static uint8_t s_pix[256 * 256];
+static int s_pix_seite = -1;
+static int pix_laden(int seite)
+{
+    char pfad[600];
+    size_t n = 0;
+    uint8_t *roh;
+    int y, x;
+    if (s_pix_seite == seite) return 1;
+    snprintf(pfad, sizeof pfad, "%s/DATA/MAP%02X.PIX", RE15_ASSET_PSX_DIR, seite + 1);
+    roh = slurp(pfad, &n);
+    if (!roh || n < 256 * 128) { free(roh); return 0; }
+    for (y = 0; y < 256; y++)
+        for (x = 0; x < 128; x++) {
+            s_pix[y * 256 + 2 * x]     = roh[y * 128 + x] & 0xF;
+            s_pix[y * 256 + 2 * x + 1] = roh[y * 128 + x] >> 4;
+        }
+    free(roh);
+    s_pix_seite = seite;
+    return 1;
+}
+/* Kachel-Index des Rechtecks am Bildpunkt; -1 = ausserhalb. */
+static int texel(int seite, int rect, int x, int y)
+{
+    int rx, ry, rw, rh, u, v;
+    if (!pix_laden(seite)) return -1;
+    if (!re15_map_rect_geometry((unsigned)seite, (unsigned)rect, &rx, &ry, &rw, &rh)) return -1;
+    if (!re15_map_rect_uv((unsigned)seite, (unsigned)rect, &u, &v)) return -1;
+    if (x < rx || x >= rx + rw || y < ry || y >= ry + rh) return -1;
+    return s_pix[(v + y - ry) * 256 + (u + x - rx)];
+}
+
+typedef struct { int ok, page, zpage, zrect, zid, etage; int16_t mx, my; int tex; } marker_t;
+
+/* Der echte Kartenpfad (menu_common.c map_entry): Zone aus der Lage, Seiten-Setzer der Stage,
+ * gezeigtes Blatt, dann re15_inv_map_marker - dieselbe Funktion, die der Schirm zeichnet. */
+static void miss_marker(unsigned rid, int32_t x, int32_t y, int32_t z, marker_t *m)
+{
+    const re15_map_zone_t *zn;
+    memset(m, 0, sizeof *m);
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x = x;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = y;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].z = z;
+    re15_map_zone_update(rid, x, z);
+    zn = re15_map_zone_current();
+    re15_inv_screen_open();
+    g_inv_screen.substate = 1;
+    g_inv_screen.item_state = 1;
+    re15_inv_map_stage_init((int)((rid >> 12) & 0xfu) - 1, (int)((rid >> 4) & 0xffu));
+    g_inv_screen.map_page = re15_inv_map_page_shown();
+    m->page = g_inv_screen.map_page;
+    m->mx = m->my = -1;
+    if (zn) {
+        int fp, fr;
+        m->ok = 1; m->zpage = zn->page; m->zrect = zn->rect; m->zid = zn->zid; m->etage = zn->etage;
+        if (re15_map_floor_lookup(zn->room, zn->idx, re15_map_player_band(), &fp, &fr)) {
+            m->zpage = fp; m->zrect = fr;
+        }
+    }
+    re15_inv_map_marker(x, z, 0, &m->mx, &m->my);
+    m->tex = (m->zrect != 255) ? texel(m->page, m->zrect, m->mx, m->my) : -2;
+}
+
+static int teil_marker(int argc, char **argv)
+{
+    marker_t m;
+    unsigned rid;
+    int band, y = 0;
+    if (argc < 6) { printf("FAIL: marker <hexraum> <x> <z> <band> [y]
+"); return 2; }
+    rid = (unsigned)strtoul(argv[2], NULL, 16);
+    band = atoi(argv[5]);
+    if (argc > 6) y = atoi(argv[6]);
+    if (!betrete(rid, atoi(argv[3]), atoi(argv[4]), band)) { printf("FAIL: Raum
+"); return 1; }
+    miss_marker(rid, atoi(argv[3]), y, atoi(argv[4]), &m);
+    printf("ROOM%04X (%d,%d,%d) Band %d (Spieler-Band %d): Blatt %d, Zone Blatt %d rect %d zid %d "
+           "etage %d, Marker (%d,%d), Kachel-Index am Marker %d
+", rid, atoi(argv[3]), y,
+           atoi(argv[4]), band, re15_map_player_band(), m.page, m.zpage, m.zrect, m.zid, m.etage,
+           m.mx, m.my, m.tex);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "";
     if (!strcmp(teil, "ops")) return teil_ops(argc, argv);
+    if (!strcmp(teil, "marker")) return teil_marker(argc, argv);
     printf("FAIL: unbekannter Teil '%s'\n", teil);
     (void)g_fail;
     return 2;
