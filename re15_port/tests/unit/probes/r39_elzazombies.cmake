@@ -8,3 +8,29 @@
 add_executable(probe_r39_elzazombies_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r39_elzazombies_karte.c)
 target_link_libraries(probe_r39_elzazombies_karte PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r39_elzazombies_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# RIEGEL (Unit, echte RDTs, Raumaufbau wie der Tuer-Weg, Bilder wie main.c; RE2-Gegnerbaenke wie die exe):
+#   unit_r39_elzazombies_zensus    Quell-Records 10E1/1071 = Konstanten; Kopie-Bits frei (alle Sce_em_set STAGE1-3) und nicht
+#                                  Leons; 1031-Programm = RDT-Zeilen sub08; sub06/07/09 = ROOM1030; Kameras = RID; Tuer
+#                                  10C1 -> 1061 Etage 4; Tuer-Slot/Ereignis/Bank-5-Bits frei
+#   unit_r39_elzazombies_kette_45  Kette 1041 -> 1061 (4 Kopien, Cut 2) -> 1031 (5 Kopien Cut 7, Kriecher Cut 12) -> 1041;
+#                                  jede Kopie >= 400 naeher an der Kamera; HP 100; Rueckkehr an die Stelle; (9,95);
+#                                  zweite Flanke ohne Wirkung; GEGENPROBE Modul aus = keine Kette
+#   unit_r39_elzazombies_kette_05 / _00 / _21  10E1 leer (kein 1061-Schritt) / beide leer (gleich Cut 12) / 2 + 1 Kopien
+#   unit_r39_elzazombies_nach1061  Nachspawn Westseite, gehalten 200 Bilder auf Etage 0, frei auf Etage 4 (>= 4000), kommen
+#                                  danach naeher; getoetete Kopie fehlt
+#   unit_r39_elzazombies_nach1031  Nachspawn 1031 mit (9,95), ohne nicht
+#   unit_r39_elzazombies_ohne      Bit 97 im Spielstand = keine Flanke; ohne Bit 97 nichts; Leon: nichts
+add_executable(test_r39_elzazombies ${CMAKE_CURRENT_LIST_DIR}/../test_r39_elzazombies.c)
+target_link_libraries(test_r39_elzazombies PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r39_elzazombies PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r39_elzazombies PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r39_elzazombies PRIVATE m)
+endif()
+foreach(_teil zensus kette_45 kette_05 kette_00 kette_21 nach1061 nach1031 ohne)
+    add_test(NAME unit_r39_elzazombies_${_teil} COMMAND test_r39_elzazombies ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r39_elzazombies_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
