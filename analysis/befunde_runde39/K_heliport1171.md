@@ -163,3 +163,6 @@ Ergebnisse (eigener Baum, Stand 0b468a87):
 - Nachbarn (Unit/Probe der Module/Raeume mit NPC-RBJ-Kanal):
   `ctest --test-dir re15_port/build -R "^(unit|probe)_.*(marvin|ada|1050|1150|r36_elza|roy|elzaems|szene11c0|dining1141|elzatoene|kleinkram|montage|r39_toene|werkstatt11b0|lane_b1|eintritt|gegnerzahl|schluessel|cut1150|szene1150|npc|10d0|1141|1171|10b1|rbj|cine)|^eintritt_pose_einmal$|^r19_marke1_10d0_c1$" --timeout 600 -j 4`
   -> `100% tests passed, 0 tests failed out of 157`
+- 2026-10-18 14:58: Probe-Merge gegen r39/integration (Welle 2 inkl. Spur H Walker-Fix 564810c0) NUR in der Arbeitskopie
+  (`git merge --no-commit --no-ff r39/integration`), Bau in re15_port/build_bisect, danach `git merge --abort`. Steht beim
+  Lesen ein MERGE_HEAD im Baum, hat das Sitzungslimit die Probe unterbrochen: `git merge --abort`, nichts davon committen.
