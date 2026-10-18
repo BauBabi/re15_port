@@ -743,7 +743,7 @@ Arbeitsordner der Messungen: Scratchpad `nb3/` (nicht im Baum); Werkzeuge kommen
 - [x] RE: wie RE2 Retail Tuersymbole eines ungezeichneten Raums behandelt; Linien x186/x187, x118/x119 aus MAP03.PIX - unten
 - [x] Sonde ueber ALLE Tuermarken x Zustaende (Teilmengen der beteiligten Raeume, mit/ohne Plan) - unten
 - [x] Umsetzung (re15_karte_r39_tuer_lage; B2 1210-Westende ohne 11E0, Nebenbefund) - 5ce60f2e, df42c697
-- [ ] Messung nachher (echte exe + Sonde), Riegel + Gegenprobe
+- [x] Messung nachher (echte exe + Sonde), Riegel + Gegenprobe - unten
 - [ ] gezielte Tests, Abschluss
 
 ### N2 Messung vorher (Stand 4ea5e62c, Bau "ninja: no work to do" = exe der Abnahme 2)
@@ -870,3 +870,51 @@ blinkt bis (4,0xFC); B2 dadurch waehlbar, re15_map_ziel_blatt_frei).
   der drei Treffer-Tueren ist eine - Zug-Ziel unveraendert).
 * `include/re15_karte_r39.h`: Deklaration.
 * Sichtbarkeit der Marken unveraendert (re15_map_mark_get): RE2 zeigt die Tuer mit JEDEM der beiden Raeume.
+
+### N2 Messung nachher (Bau 580928bc-Stand, echte exe + Sonde)
+* (a) ECHTER TUERWEG Hof ROOM1090 -> ROOM1050 (derselbe Spielstand und dieselbe Eingabe wie vorher): debug.log
+  `[aot] DOOR FIRE slot=0 rect=(-10080,3060,hw=2350,hh=800) target_cut=6 spawn=(19850,0,-22300)`, `[room] PC loaded
+  room1050.rdt`; `probe_r39_karten tuerbild`: alle 6 Balken ok, `Balken x187..187 y150..154 ok (Wand quer 0)` - der Balken
+  steht IN der 1050-Westwand x187 (y144..149 und y155 Wand). Gegen den Vorher-Abzug: 10 Pixel verschieden, alle im Kasten
+  x186..187 y150..154. Bild `G_karten_bilder/n2_tuer_1030_1050_vorher_nachher_x6.png` (links vorher: gelb im Blau neben
+  der grauen Wand; rechts nachher: gelb in der Wand).
+* (b) ROOM1040 allein: Balken x118 y127..131 in der 1040-Ostwand (y125/126 und y132..134 Wand), x119 Grund; gegen den
+  Abzug der Abnahme 2 (G39abn2/al_1040) 10 Pixel im Kasten x118..119 y127..131. Bild
+  `G_karten_bilder/n2_tuer_1030_1040_vorher_nachher_x6.png`.
+* ALLE EINZELZUSTAENDE an der echten exe (nb3/allein_nb3.sh = Liste und Weg der Abnahme 2, 46 Lagen; 10F0/1170/11C0/1240
+  oeffnen die Karte wegen ihrer Eintritts-Szene nicht, wie in der Abnahme): 42 Abzuege, tueren_bmp.py 40x `schwebend 0`;
+  uebrig nur die zwei Faelle, die die Abnahme 2 als "kein Schweben" gewertet hat (1090 obere Ebene: Balken x197..201 y114
+  auf dem Eckpixel der Suedwand; 1130: Balkenrest unter dem Spieler-Ring). Gegen die Abzuege der Abnahme 2 (G39abn2/al_*)
+  pixelgleich bis auf: al_1050 10 px (x186..187 y150..154), al_1040 10 px (x118..119 y127..131), al_1210 12 px
+  (x186..187 y71..77: Tuer auf x187, Wand (187,71)/(187,77) - der Zustand ist im Spiel unerreichbar).
+* VOLLZUSTAND: Sweep aller 13 Blaetter (Spielstand ROOM1190, RE15_MAP_SHOT_SWEEP) gegen G39abn2/neu_S: **0 Pixel
+  verschieden auf allen 13 Blaettern** (GESAMT 0) - die Vorlagen-Zustaende (1F/2F/3F/B2) sind unberuehrt. ROOM1090
+  Nutzerpunkt (-12528,-9000,959), Sweep gegen G39abn2/neu_M: 0 Pixel auf allen 13 Blaettern (Punkt 2 unveraendert).
+  Lauf K (ROOM1210 Flur -> Kammer, W1,U4,W5) gegen G39abn2/w1210: 0 Pixel, `pl pos=(-25500,0,-21700)`.
+* TUER-UEBERGAENGE: `RE15_UEBERGANG_LISTE=1 test_map_uebergang.exe`: `[Sprung] 151 Uebergaenge auf gleichem Blatt: Median
+  6 px, Mittel 17 px, schlimmster 91 px, ueber 8 px: 62`; je Paar gegen die Liste der Abnahme 2 (ueb_vgl2.py):
+  **132 Paare, 132 gleich, 0 verschieden**.
+* NEBENBEFUND B2-Zielkachel (Spielstand ROOM1020 + flag:9:68, RUNTER auf B2): Umriss-Phase (Bild 150/180)
+  `WAND 7 von 7 (x187 y71..77)` (vorher 0 von 7); rote Phase (Bild 120) `WAND 7 von 7`, `offen 0` (vorher `7 Koerperpixel
+  am Grund (offene Raumseite), erstes bei (188,71)`). Bild `G_karten_bilder/n2_b2_zielkachel_1211_vorher_nachher_x6.png`.
+* SONDE `probe_r39_karten tueren 0 4`: 798 Zustaende, 3498 Balken, **0 Befunde** (vorher 3).
+
+### N2 Riegel und Gegenprobe
+* NEU `unit_r39_karten_tueren` (probes/r39_karten.cmake, `probe_r39_karten pruef tueren`): (a) die Sonde ueber alle
+  798 Zustaende der Blaetter B1..3F - 0 Befunde; (b) 1050 allein / 1040 allein Pixel fuer Pixel (Balken 5/5 auf x187 bzw.
+  x118, Enden Wand 2/2, x186 bzw. x119 frei) und 1050+1030 / 1040+1030 (Balken auf der 1030-Linie wie map1F_correct.png,
+  die eigene Linie Koerper 5/5); (c) jede Hinweis-Zielkachel (map_hint_common.c s_hints, 5 Eintraege) allein gezeichnet
+  geschlossen, ROOM1211 Westwand x187 y71..77 7/7.
+* `unit_r39_karten_teil`: (a) prueft die R39_OHNE-Korrektur (eigene gemalte Linie Index 4 + Linie des Traegers daneben);
+  (b) "1210 allein": Tuer auf der eigenen Westwand x187 y72..76 5/5, Wand (187,71)/(187,77), x186 frei, 0 offene Pixel
+  (vorher dort "soll <= 4" wegen der Kerben und der Tuer auf x186).
+* `integration_r39_karten` + Laeufe NA (echter Tuerweg 1090 -> 1050: debug.log `PC loaded room1050`, `tuerbild` im Kasten
+  und im ganzen Kartenfeld ohne Schweben, `Balken x187..187 y150..154 ok`), NB (1040 allein: `Balken x118..118 y127..131
+  ok`), NZ (B2 nach Roys Tagebuch: `[inv] Blatt 1:` im debug.log, `WAND 7 von 7`).
+* GEGENPROBE (die drei Engine-Dateien voruebergehend auf 4ea5e62c zurueckgesetzt, gebaut, Riegel gefahren, wieder
+  hergestellt und neu gebaut): `pruef tueren` ROT - 3 Befunde (die drei von vorher), "1050 allein ... x187 0/5 ... x186
+  5 belegt", "1040 allein ... x118 0/5", "Hinweis 4 ... 5 Koerperpixel am Grund, erstes (187,72)", "Westwand x187 y71..77
+  2/7"; die Vollzustands-Pruefungen 1050+1030 / 1040+1030 auch vorher gruen (unveraendert). `pruef teil` ROT nur an
+  "1210 allein ... x187 (0 von 5) ... auf x186 (5)". An den Abzuegen der echten exe: `tuerbild` auf den Vorher-Abzuegen
+  `Balken x186..186 y150..154 SCHWEBT (Wand quer 5)` / `Balken x119..119 y127..131 SCHWEBT (Wand quer 5)` -> FAIL,
+  `wand` auf dem Vorher-Abzug NZ `WAND 0 von 7`.
