@@ -264,8 +264,52 @@ Blick -z, Skript `W1,A0.1,W3.5,A0.1,W4` (Zeitachse Spielbilder, Start 300): `[sc
 nicht an): `[schluessel] PRISON KEY genommen: Item 0x42, Bit (9,83)`, `Prison Key genommen -> Flag (4,0xEC) = 1` (Laeufe
 `k_fin_auf_leon`, `k_fin_auf_elza2`).
 
-## Tests
+## Tests (alle NEU registriert nur in `tests/unit/probes/r39_optik.cmake`; keine CMakeLists angefasst)
+
+Punkt 1:
+* `unit_r39_optik_kappen` - Mechanik des Kappens an einer kuenstlichen Sektion (Teilung je Zeilenband, Atlas-Versatz, Rechtecke
+  ganz jenseits entfallen, draw_count folgt, fremde Raeume/Cuts unveraendert).
+* `unit_r39_optik_ecke` - die Fenster gegen die am Hintergrund NEU gemessene Eckkante (Engine-Dekoder, Halbwert-Kanten); gekappte
+  Deckung == rohe Deckung geschnitten mit der gemalten Wand (Cut 1 / Cut 2: 0 Wandpunkte verloren, 0 Tiefen geaendert, 0 dazu;
+  Gegenprobe: roh 474 / 372 Punkte jenseits der Ecke, gekappt 0).
+* `unit_r39_optik_leon` / `unit_r39_optik_elza` - Leon an der Lage der Marke F741 ueber die Kamera von Cut 1 gegen die Masken
+  (Original-Urteil `re15_pri_mask_occludes`): jenseits der gemalten Ecke deckt nichts mehr (roh > 50 Punkte), hinter der Wand
+  bleibt er verdeckt; ROOM1101 (Elza) ueber den Masken-Zwilling.
+* `integration_r39_optik_marke` - die echte exe an der Marke: Streifen x 166..172: Leon gezeichnet (A/C > 0), Maske ueber
+  Leon <= 1 (vorher 134); Wand x 173..180: Maske an (A/B > 0), Leon verdeckt (A/C == 0); Lader-Zeile `[optik_r39]` muss im
+  debug.log stehen.
+
+Punkt 2:
+* `unit_r39_optik_schluessel` - RE2-Beleg aus den RE2-Dateien mit der Engine-Kamera nachgerechnet (oberes Quartil == Konstanten);
+  Massstab < Runde 38, Huelle 3..9 px am Ziel (+-0,06), Prison-Ziel > Median; MD1-Spanne/s = 152 (RE2-Modell); Lage, Drehung,
+  Aufhebe-Rechteck, Slot unveraendert.
+* `integration_r39_optik_schluessel` - echte exe, Leon 10F0 / Elza 10F1 (PL04) Cut 5 bei Skala 1 und 3: Huelle <= 6 / 18 px
+  breit (vorher 12 / 36), Mindestpixel 4 / 40 (Leon) bzw. 3 / 36 (Elza) = ~60 % der Messung, AUSSEN 0; Aufnahme an der
+  Pinnwand (`genommen`-Zeilen) fuer beide.
+* Angepasst (gewollte Verhaltensaenderung = NUTZER-VORGABE): `unit_r38_itemorte_lage` ("fuellt die Marke >= 9 Spalten" ->
+  "Huelle == RE2-Quartil +-0,5, < 9 Spalten"), `integration_r38_itemorte` B2..B5 Schwellen (~60 % der neuen Messung; die
+  Verhaeltnisse B3V/B4V bleiben).
+
+### Gezielter Lauf (KEINE volle Suite im Spurbaum; `ctest -j 3 --timeout 1200`), -R woertlich:
+`^(unit_r39_optik_.*|integration_r39_optik_.*|unit_r37_pri1100_.*|integration_r37_pri1100_.*|unit_r37_masken36_.*|integration_r37_masken36_.*|unit_pri_hashes|integration_pri_masken|unit_r38_itemorte_.*|integration_r38_itemorte|unit_r36_schluessel_.*|integration_r36_schluessel.*|unit_r35_cut10f0_.*|integration_r35_cut10f0|unit_r22_10f0_figur|unit_r36_klettern_10f0_.*|unit_r36_szenenleon_abgang10f0|unit_r37_feuerloescher_.*|integration_r37_feuerloescher|unit_r37_kistenregel_.*|integration_r37_kistenregel|integration_item_name_census|unit_r38_dining1141_schluessel1011)$`
+
+Ergebnis: (folgt)
 
 ## OFFEN
+* Keine offenen Teilpunkte der zwei Nutzer-Punkte. Nicht Teil dieser Spur: die zweite Marke `befund_1090_F1357_marke1.bmp`
+  (Karte 2F, Positionsmarke ausserhalb des Raums) = AUFTRAG-Punkt "In ROOM 1090 ist Leons Positionsmarker der Map ausserhalb des
+  aktuellen Raums" -> Spur G (karten).
+* PSX-Ziel: Haken in `platform/psx/main.c` (2 Zeilen) nur gegengelesen, nicht gebaut (kein PSn00bSDK auf dieser Maschine).
 
 ## Fuer den Nutzer
+* **Punkt 1 (Streifen an der Ecke, ROOM1100 Cut 1 und 2):** die Westwand-Masken reichten 5..7 Bildspalten ueber die gemalte
+  Ecke hinaus (ihr Ende war die Kollisionszelle, nicht die Wand im Bild) und malten dort Boden und Rueckwand des hinteren
+  Gangs ueber dich. Jetzt enden sie an der gemalten Kante - im Streifen bist du ganz zu sehen, hinter der Wand bleibst du
+  verdeckt (gilt fuer Leon und Elza). Keine neuen Dateien im Paket (MASKS/ unveraendert, Korrektur beim Laden).
+* **Punkt 2 (Schluessel 10F0/10F1):** beide Schluessel haengen an derselben Stelle, sind aber nur noch so gross, wie RE2 die
+  gleichen Modelle in seinen naeheren Kameras zeigt (Parking Lot Key 4,5 statt 12 Bildspalten, Prison Key 5,8 statt 12; bei
+  960x720 also 14 bzw. 16 Pixel breit, schmaler als die Zettel an der Pinnwand). Aufnahme unveraendert (gleiche Stelle,
+  gleicher Druck). Entscheidungsfrage: der Prison Key (Ring + Schaft, grau) ist bei dieser Groesse dezent - wenn er dir zu
+  klein ist, ist die eine Zahl `RE2_QUANTIL` in `tools/r38_itemorte/itemorte_export.py` der Hebel (Maximum 1,0 = 9,0 px,
+  gemessen 26 Pixel breit bei 960x720; alle Kandidaten mit Bildern im Dossier).
+* Neue Assets fuer das Paket-Gate: keine (nur Code + erzeugte .inc). Sprachdateien: keine.
