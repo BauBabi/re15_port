@@ -377,3 +377,16 @@ Registriert nur in `re15_port/tests/unit/probes/r39_heliport1171.cmake` (keine C
 - Dieselben Original-Regeln gelten fuer alle NPCs, weil das Original sie fuer alle gleich ausfuehrt (K2 in allen NPC-INITs,
   K3 im gemeinsamen Executor). Beispiel Leon ROOM1170: Leon bytegleich; Elliot zeigt beim Eintritt 6 Bilder die
   Grundhaltung (INIT @0x8011d978) und sein "Hey!" beginnt mit Bild 0.
+
+## 10. Hinweise fuer die Integration (Orchestrator)
+
+- Dateien gegen master: NEU engine/src/heliport1171_r39.c + include/re15_heliport1171_r39.h (GLOB -> `configure`!);
+  gemeinsame Dateien nur mit "Runde 39 Spur K"-Haken: enemy_ai_common.c (Include, zwei Bank-Regel-Zeilen, INIT-Zeile +
+  Merker, Merker loesen vor Eskorte/Executor, Rumpf von re15_npc_sub_motion), enemy_common.c (K1, 3 Zeilen),
+  szenenleon_r36.c (K4, Phase 5/6 + Include), scd_room_setup.c (Include + Installer-Zeile am ENDE des Blocks — andere
+  Welle-3-Spuren haengen dort ebenfalls an: beide Zeilen behalten, Reihenfolge egal, re15_r39k_install loescht nur die
+  eigenen Merker); Riegel tests/unit/test_r37_roy.c (eine Bedingung, Abschnitt 7).
+- Spur J (dining1141, gleiche Welle) fuehrt John (0x49) in ROOM1141: K2/K3 gelten dort automatisch (gemeinsamer NPC-Weg).
+  Gemessen auf diesem Stand: integration_r38_dining1141_{w,z,d,l,s,r,a} gruen. Wer in 1141 eigene Gesten-Bildfolgen
+  pinnt, sieht jede Plc_motion-Geste ab Bild 0 (vorher Bild 1).
+- Spur A (Stimme 1171 msg 3) unberuehrt: integration_r39_stimmen_1171 gruen.
