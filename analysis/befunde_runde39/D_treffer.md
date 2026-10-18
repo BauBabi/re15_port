@@ -14,9 +14,9 @@ Baum `.claude/worktrees/r39_treffer`, Zweig `r39/treffer`, Basis c71fa144 (maste
 - [x] Schritt 0: Lektuere (AUFTRAG/VERTRAG, Runde-16-Dossiers aufstehen-schuss/trefferhoehe/liegende-und-aufstehen,
       Runde-38 c939ce5d Zielhilfe/Band-Tore, Memory hit-latch-93 / tiefe-aus-kollision / kollisionszellen-sind-waende)
 - [x] Schritt 1: RE-Belege Mechanik (RE1.5 + RE2, alles selbst disassembliert/gedumpt, s. "RE-Belege")
-- [ ] Schritt 2: Messung vorher je Punkt (Sonde + echte exe)
-- [ ] Schritt 3: Umsetzung
-- [ ] Schritt 4: Messung nachher, Tests, Abschluss
+- [x] Schritt 2: Messung vorher je Punkt (Spielschritt + echte exe + RE2 live)
+- [x] Schritt 3: Umsetzung (Punkt 2/3 Code, Punkt 1 Beleg)
+- [x] Schritt 4: Messung nachher, Tests (gezielter ctest s. "Tests"), Abschluss
 
 ## RE-Belege (Mechanik)
 
@@ -257,16 +257,53 @@ pinnt das Verhalten (a/b/c). Offen bleibt die Variante "Maske 0 statt 1" des Liv
 
 ### Echte exe: s. "Echte exe" oben (1250: 0/6 -> 6/6; 1180: Ziel hinter der Wand -> sichtbarer). ROOM1140-Dauerfeuer am
 Nutzerweg (lauf_aufsteher1140/_b): der Fresser (Slot 2, 50 HP) wird nach dem Aufstehen mit EBEN getroffen (4 Treffer bis zum
-Tod); ein Sturz-Aufsteher trat am Nutzerweg nicht auf (die 50-HP-Fresser sterben vor dem Sturz).
+Tod); im zweiten Lauf (Spieler (-3500,-20600) mitten unter den Fressern, D_belege/exe_mess/aufsteher1140b_phasen.txt) stuerzen
+Slot 3 (80 HP) und Slot 4 (250 HP) je ZWEIMAL (1/5/1 -> 1/5/3 liegend -> 1/5/6 -> 1/5/7 Clip 9 -> 1/5/8 -> 1/1/1) unter
+EBEN-Dauerfeuer: waehrend 1/5/3 .. 1/5/7 KEIN Treffer; erster Treffer Slot 3 bei F369 = Clip-Bild 59 (st=2/3/1 = Aufsteher-
+Treffer FUN_80107A78, hp 80->64) - identisch mit dem Spielschritt (Bild 59) und dem RE2-Tor (Bild 55).
 
 ## Tests
 
-(folgt)
+Neue Tests (tests/unit/probes/r39_treffer.cmake, Quelle tests/unit/test_r39_treffer.c, je Lauf eigener Prozess, keine
+Umgebungsvariablen des Aufrufers, absolute Asset-Pfade, kein Fenster):
+* `unit_r39_treffer_tisch` (Punkt 2, Spielschritt ROOM1140: A 5/5, A' alter Stand 0/5 + 5 Verwuerfe Zelle [6], B 5/5, C Wand 0/5)
+* `unit_r39_treffer_zielhilfe` (Punkt 3: ROOM1100 L-Flur sichtbarer vor verdecktem Naeherem, nur verdeckter -> kein Ziel,
+  alter Stand = verdeckter; ROOM1140 ueber den Tisch ja / Liste aus nein / hinter Huelle nein)
+* `unit_r39_treffer_moebel` (Liste gegen RDT-Bytes: Art 3, Geometrie, keine Huelle, Elza-Paar, Obermenge k_r36_moebel)
+* `unit_r39_treffer_aufsteher` (Punkt 1: EBEN 0 Treffer vor Bild 55 + erster ab 55, TIEF vorher, Fresser EBEN)
+Messmodi ohne add_test: `spawns <raum>`, `mess_aufsteher eben|tief [gap]`, `mess_fresser eben|tief [gap]`.
+
+Gezielter Lauf (keine volle Suite):
 
 ## OFFEN
 
-(folgt)
+* RE2-Live: die Treffer-Kette mit der SMG (einzige geladene Schusswaffe des Spielstands _4) traf in keinem Zustand (eben_4/5/7:
+  Leon aufgeschaltet (+0x1B4 = Zombie), Blick 3349 bei Soll ~3372, Abstand 1100-4400, Maske 3 stehend) - Ursache offen
+  (SMG-Fenster/Boxen der Tabelle T3?). Der Beleg "Maske 0 in EXEC[5] P2-P7<55" ist direkte RAM-Beobachtung + EXE-Tor
+  @0x800413d8, aber ohne bestaetigten Vergleichstreffer. Naechster Weg: Handfeuerwaffe ins Inventar/ausruesten (Status-
+  Bildschirm-Sequenz blind gescheitert: Menue blieb offen, mode=2) oder einen Spielstand mit Handfeuerwaffe + Zombie.
+* Das live geladene Zombie-Overlay (Stage 0 Raum 20) ist nicht EMOVL10_S0.BIN/EMZ0.BIN (Bytes @0x80103568/628/0x80102BE8
+  verschieden; Dateisuche ueber die ersten 0x200 Bytes fand keinen Treffer) - welche Datei es ist und ob dort P2 die Maske
+  loescht (S0: P0 "nur Beine", kein Loescher gefunden; live: Maske 0 ab P1 Bild ~30), ist nicht geklaert. Fuer den Port
+  (S0-Modell "nur Beine" -> TIEF trifft) KEINE Aenderung: sie wuerde den Nutzerpunkt verschaerfen.
+* Moebel-Liste: Zuordnung aus Hintergrundbildern (PORT-WAHL, Form RE2-Flag); Raeume ohne Zombies/ohne Inselzellen sind nicht
+  gelistet; ROOM1140 [13] "Leiste am Tuergang" ist die Tuerschwelle (hinter ihr steht nie ein Gegner, harmlos).
+* vgamepad-Laeufe (RE2-Messung) erscheinen parallelen Port-exes als "Xbox 360 Controller" - Skript-Laeufe ersetzen die
+  Pad-Bits, interaktive Titel-/Menue-Haken koennten Eingaben sehen; waehrend der Integration keine RE2-GDB-Laeufe fahren.
 
 ## Fuer den Nutzer
 
-(folgt)
+* Keine neuen Assets, keine Sprachdateien, keine Aenderung an shared_assets/PSX. Neue Datendatei im Quellbaum:
+  engine/src/gen/treffer_r39_moebel.inc (Moebel-Liste, Generator tools/r39_treffer_moebel_gen.py).
+* Ueber den Tisch schiessen: geht jetzt in allen gelisteten Raeumen (1010, 1020, 1070, 10D0, 10E0, 1110, 1140, 11F0, 1220,
+  1250, 30D0 + Elza-Varianten) fuer Tische, Pulte, Betten, Stuehle, Theken, Baenke, Kisten, Rohre, Eimer; Regale, Saeulen,
+  Maschinen und Waende sperren weiter (wie RE2: Zellen ohne Flag 0x80 sind durchlaessig).
+* Zielhilfe: nur noch Gegner mit freier Sichtlinie (RE2 FUN_80042144 @0x800422a8-b0); ein Gegner hinter einer Wand/um die
+  Ecke wird nicht angevisiert, auch wenn er naeher ist; ohne sichtbaren Gegner dreht Leon sich nicht.
+* Halb aufstehende Zombies (Punkt 1): Gemessen trifft EBEN einen vom Sturz aufstehenden Zombie erst ab Clip-Bild 55 des
+  Aufsteh-Clips (letztes Drittel), TIEF (D-Pad unten halten) die Beine ab dem ersten Bild; Zombies, die vom Fressen oder aus
+  der Liege aufstehen, sind mit EBEN jederzeit treffbar. RE2 Retail live gemessen (DuckStation, Spielstand _4): der gestuerzte
+  Zombie traegt bis Bild 55 GAR KEINE Trefferteile (w0 bits 26-28 = 0) - dort trifft weder EBEN noch TIEF; ab Bild 55 Beine+
+  Rumpf. Der Port ist damit nicht strenger als RE2 (TIEF trifft sogar frueher). Deshalb hier keine Code-Aenderung; die
+  Zielhoehe faellt in RE1.5 und RE2 beim Loslassen des D-Pads auf EBEN zurueck (@0x800332bc-c8 / @0x8004378c-b4).
+  Bedienhinweis: fuer einen gestuerzten Zombie D-Pad UNTEN gedrueckt halten, solange R1 gehalten wird.
