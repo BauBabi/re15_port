@@ -545,3 +545,19 @@ Danach nur ein Kommentar in karte_r39.c (Werkzeugpfad) berichtigt, neu gebaut:
 ctest --test-dir re15_port/build -R "^(unit_r39_karten|integration_r39_karten)" --timeout 900 --output-on-failure
 100% tests passed, 0 tests failed out of 6
 ```
+
+## Nachbesserung 2 (nach Abnahme 1, 2026-10-18 ~22:30)
+Grundlage: analysis/befunde_runde39/G_abnahme_1.md (Mangel N1) und der ORCHESTRATOR-ENTSCHEID dazu: die begehbare
+Suedwest-Kammer von ROOM1210 wird samt Durchgang auf B2 DAZUGEZEICHNET - aus der Kollision (SCA-Waende, Form wie
+B1/ROOM1000), keine Wahlfrage an den Nutzer (Memory reai-v2-original-oder-nicht, Beta -> Retail: RE2 zeichnet jede
+begehbare Flaeche). Die Abweichung von mapB2_correct.png wird unten "Fuer den Nutzer" benannt (Bild vorher/nachher).
+Riegel-Soll: markerflaeche 1210 = 0 Punkte neben der Zeichnung (vorher 1693 von 10387); echte exe am Abnahme-Weg
+(Spielstand 1210, W1,U4,W5, RE15_INV_OPEN_AT=200#1210) Ring in der Zeichnung; uebrige Blaetter pixelgleich zu Abnahme 1.
+Arbeitsordner der Messungen: Scratchpad `nb2/` (nicht im Baum).
+
+### Fortschritt
+- [ ] Messung vorher (Sonde markerflaeche 1210, echte exe am Abnahme-Weg) - nicht wiederholt, wo die Abnahme gemessen hat
+- [ ] RE: Kammer + Durchgang aus der SCA von ROOM1210 (Offsets), Begehbarkeit im Original (SCD-Kollisionsschalter?)
+- [ ] Umsetzung: Zone 1 von ROOM1210/1211 + Schema-Zeichnung auf B2
+- [ ] Messung nachher (Sonde, echte exe, Sweep aller Blaetter gegen Abnahme 1)
+- [ ] Riegel, Bau, gezielte Tests, Abschluss
