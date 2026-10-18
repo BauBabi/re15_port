@@ -294,3 +294,15 @@ Wiederholung noetig. Keine volle Suite im Spurbaum (VERTRAG); die faehrt der Orc
   Aufnahme noetig.
 - Bedienung: keine Aenderung. Jede Sprachzeile ohne Datei steht jetzt im debug.log (`[voice] ROOM.... msg N: keine
   Aufnahme (<Pfad>)`), Umordnungen als `[voice] ROOM.... msg N <- mainNN.wav (Runde 39 Spur A, Nutzer-Reihenfolge)`.
+
+## 9. Nachbesserung 1 (Abnahme 0 bestanden bb285672; Nutzer-Nachtrag 2, AUFTRAG.md 2026-10-18 09:48)
+
+Fortsetzung ab 09:50 im selben Baum (HEAD 275a322c = Merge master 32ab1f97 mit main22.wav + Nachtrag 2).
+Drei Maengel/Auftraege der Abnahme (A_abnahme_0.md §6.2 + Orchestrator):
+- M1 NUTZER-VORGABE "er Port kann die Stimme ruhig lauter anheben das es passt." -> Port-Anhebung ueber den 4x-Deckel
+  hinaus; FORM aus dem Bestand gemessen (§9.1-§9.4).
+- M2 NUTZER-VORGABE "das SIR, sir! habe ich ... mit main22 ergänzt." -> ROOM1150 msg 29 <- main22.wav (§9.5).
+- M3 "Ändere es zu unwanted followers im Text bei 11B0." -> Text ist schon so; mit [msgtext]-Zeile belegt (§9.6).
+
+### 9.0 Stand / Fortschritt (neueste zuerst)
+- 09:56 Zensus des Bestands gestartet, Spracherkennung main22 gestartet, Dossier-Abschnitt angelegt.
