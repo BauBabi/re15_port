@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 10:25: WELLE 1 IN MASTER: merge c71fa144 (A+B+C+L, 237/237 gezielte Tests in der Integration), Hauptbaum
+  configure+build gruen, exe re15_port/build/platform/pc/re15_pc.exe 10:20:06, Startlauf exit 0. Spur A Nachbesserung 1
+  (wf_45b12abc-f7d, Irons-Pegel + main22) laeuft noch -> eigener Merge spaeter. WELLE 2 GESTARTET auf master c71fa144
+  (Baeume r39_{treffer,gegner,zustand,elza}), je Spur ein Lauf, Resume nur mit args `{"welle": ["<X>"], "slots": 1,
+  "max_nach": 1, "basis": "c71fa144"}`: D treffer wf_a1200483-99d, E gegner wf_8c3955b1-9ff, F zustand wf_5a65713f-27b,
+  H elza wf_7e1608d3-5a9. Welle-1-Baeume (toene/inventar/optik) koennen nach dem A-Nachtrag entfernt werden (stimmen
+  bleibt bis zum zweiten Merge).
 * 2026-10-18 10:19: Integration Welle 1 KOMPLETT (fc7a0231 = A+B+C+L): Bau gruen, A-Tests 93/93 (ctest -j 3, 749 s), zusammen
   mit B+C+L 237/237 ohne Wiederholung. Spur A Nachbesserung 1 (wf_45b12abc-f7d) laeuft noch - nach ihrer Abnahme erneut
   mergen, bauen, A-Tests. Naechster Schritt: Integration -> master, Hauptbaum-exe (nur wenn der Nutzer nicht spielt).
