@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 12:06: SITZUNGSLIMIT (~11:08, Reset 12:00) beendete die vier Bau-Agenten der Welle 2 und die Abnahme der
+  A-Nachbesserung (deren Bau-Agent war fertig: ad16c58f, Stufe-2-Lautheits-Boden T=985/R=2040/C=21759 aus dem Zensus der
+  216 synchro-Dateien, 1150 msg 29 <- main22, 94/94 Tests). Reste gesichert: treffer ff1649c1, gegner 9ddf0bbc, zustand
+  87180698 (UNGEPRUEFT), elza sauber (08f3094d). Fortsetzung 12:05: A Abnahme 1 (modus abnahme, runde0 1) wf_63fe7405-030;
+  D wf_6e5db63e-eef, E wf_413d6880-3a4, F wf_d11dbab6-b20, H wf_3b62557a-59b mit stand-Texten (args woertlich in
+  orchestrator/args_welle2_forts.json). Waechter neu.
 * 2026-10-18 10:25: WELLE 1 IN MASTER: merge c71fa144 (A+B+C+L, 237/237 gezielte Tests in der Integration), Hauptbaum
   configure+build gruen, exe re15_port/build/platform/pc/re15_pc.exe 10:20:06, Startlauf exit 0. Spur A Nachbesserung 1
   (wf_45b12abc-f7d, Irons-Pegel + main22) laeuft noch -> eigener Merge spaeter. WELLE 2 GESTARTET auf master c71fa144
