@@ -12,7 +12,7 @@
 #                     -> ROOM1190/1191 (3174,-11182) Cut 0 -> sub13 setzt die Hunde in den Schacht), Viereck-Druck; (4,0xF3)
 #                     Strom aus dem Spielstand, die Zielscheiben-Bits (5,4)/(5,5) per RE15_SET_FLAG_AT (Bank 5 ist
 #                     raumlokal) -> sub01 @0x02468 startet sub10 (der echte Ausloeser). Gemessen: Anker @0x02796 einmal
-#                     (Schrank), @0x0286A/@0x0288C je dreimal (Luke je Hund, zu = auf + 20), Kreuzkorrelation je Ton.
+#                     (Schrank), @0x0286A/@0x0288C je dreimal (Luke je Hund, zu = auf + 21: Evt_next @0x0287E zwischen den For-Schleifen), Kreuzkorrelation je Ton.
 cmake_minimum_required(VERSION 3.16)
 set(_tag "r39_toene_${TEIL}")
 foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_KREUZ_TOOL RE15_TOENE39 WORKDIR TEIL)

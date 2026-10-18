@@ -13,7 +13,7 @@
  *   gitter     P2 ROOM1190 sub10 ueber den ECHTEN Ausloeser (sub01 @0x02468: (4,0xF3)=1, (3,0x6F)=0, Bank-5-Bits
  *              4,5 = 1, 6,7 = 0 -> Evt_exec sub10): je Hund (3x Gosub sub11) ein Gitter-auf-Ton (Satz 1) im Bild
  *              des ersten Aufschwung-Schritts der Luke obj 4 (@0x0286A For) und ein Gitter-zu-Ton (Satz 2) im Bild
- *              der Ruhelage (@0x0288C Member_set(5,0)), 20 Bilder spaeter (10 + 10 Evt_next)
+ *              der Ruhelage (@0x0288C Member_set(5,0)), 21 Bilder spaeter (10 + Evt_next @0x0287E + 10)
  *   schrank    P3 ROOM1190 sub10: genau ein Regal-Ton (Satz 3) im Bild des ersten Fahrschritts des Schranks obj 5
  *              (@0x02796 Work_set(3,5) -> @0x0279E For 20 {Add_speed, 2x Evt_next}), 20 Bilder nach Cut 8, Fahrt
  *              3920 -> 1920, Cut 11 danach
