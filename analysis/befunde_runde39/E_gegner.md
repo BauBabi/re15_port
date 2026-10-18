@@ -546,3 +546,24 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
 - include/re15_gegner_r39.h: Kopf (1) neu (Zensus, Nachtrag 3, Dispatch-Beleg, P228 @0x8006ee48), `RE15_R39_PARKPLATZ_RAUM`
   ersetzt durch `RE15_R39_AFFEN_TYP 0x27u`.
 - enemy_ai_common.c / test_r35_affen.c: nur die Kommentare der vorhandenen Haken-Zeilen ("ROOM11C0" -> "jeder 0x27").
+
+### Fortsetzung (2026-10-18 17:05, vierter Agent nach dem Sitzungslimit; Stand 5ecd8f07 = 0705d967 + Merge master)
+- Vorgefunden: Baum sauber; 0705d967 WAR gebaut (exe 14:55, test_r39_gegner_1141.exe 14:56) und gemessen: ctest-Lauf 14:57
+  des Vorgaengers (113 Unit-Tests, Regex scratchpad e_nb2/regex_unit.txt) -> 112 gruen, **unit_maggot_ai rot**
+  (`FAIL(1): HP must seed to 180, got 360`); die vier unit_r39_gegner_1141_* gruen (ablauf1141: vorher 16 Treffer / 15
+  Flinches je Gorilla, nachher 31 / 10, Kill-Flags, (4,0xF2) = 0, Johns Abgang, Dachtuer -> 0x17 in beiden Laeufen).
+- Neu gebaut nach dem Merge (local_build.sh configure + build, 795 Schritte, LOCAL-BUILD-OK 17:2x).
+- `ctest -j4 -R "^unit_.*(maggot|affen|1141|11c0|dining1141|elzaems|griff_gorilla|r39_gegner|zombieki_affen)"`:
+  `99% tests passed, 1 tests failed out of 72` — wieder nur unit_maggot_ai.
+
+#### Befund D — unit_maggot_ai (Original-Riegel des Gorilla-INIT) rot durch die Typ-Regel
+- Ursache: test_maggot_ai.c setzt keinen Raum (g_current_room_id bleibt 0) und prueft (1) die Original-Saat
+  `m->hp != 180` (@0x8011f514, `sh v0,154(a1)` @0x80117104). Mit dem Raum-Tor 0x11C0 war der Haken dort durchsichtig;
+  seit der Typ-Regel verdoppelt er auch hier (360). Teil (2f) blieb gruen, weil der Riegel hp = 180 von Hand setzt
+  (Akku 360 - 180 >= 36 -> Flinch) — also zufaellig, nicht weil er die Original-Antwort misst.
+- Aenderung: test_maggot_ai.c `re15_r39_gegner_enable(0)` am Anfang von main (+ include, 2 Zeilen, Kommentar "Runde 39
+  Spur E") — wie test_r35_affen.c room_boot: der Original-Riegel misst den Original-INIT und den Original-Flinch je
+  Treffer; die NUTZER-VORGABE misst test_r39_gegner / test_r39_gegner_1141 (je vorher/nachher im selben Lauf).
+  Kein Gorilla wird in test_maggot_ai ueber HP getoetet ((3) setzt hp = -1 direkt) — nichts an der Energie nachzuziehen.
+- Nachher: `ctest -R "^unit_maggot_ai$"` -> `100% tests passed, 0 tests failed out of 1`.
+
