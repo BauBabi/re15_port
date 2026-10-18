@@ -15,7 +15,8 @@ cmake_minimum_required(VERSION 3.16)
 #   B  ohne Masken (RE15_NO_PRI=1)                         -> der Zombie liegt wirklich im Wandfenster
 #   C  mit Masken, Zombie 1 hinter die Kamera gesetzt (RE15_GEGNER_POS=1,-14000,-11000,1024@5#1101)
 # Pruefung: A laedt die Leon-Masken ("[pri] ROOM1101: Masken der Leon-Variante MASKS/ROOM1100.MSK", Cut 1 mit
-# Masken und Atlas), im Wandfenster x 168..191 y 126..149 ist A gleich C (0 Punkte > 24) und B nicht (> 0).
+# Masken und Atlas), im Wandfenster x 171..191 y 126..149 ist A gleich C (0 Punkte > 24) und B nicht (> 0).
+# (Runde 39 Spur L: Fenster ab Spalte 171 = gemalte Wand im Sockelband; 168..170 ist der hintere Gang, s. test_r37_pri1100_marke.cmake.)
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PPM_TOOL=<probe_r36_ppm_diff> -DWORKDIR=<dir> -P <diese Datei>
 # =============================================================================
@@ -87,7 +88,7 @@ set(_n_masken "${CMAKE_MATCH_1}")
 
 # probe_r36_ppm_diff <a> <b> x0 y0 x1 y1 schwelle -> "n=<Pixel mit Kanaldifferenz > schwelle> max=<..>"
 function(ppm_diff _out _a _b)
-    execute_process(COMMAND "${RE15_PPM_TOOL}" "${_a}" "${_b}" 168 126 192 150 24
+    execute_process(COMMAND "${RE15_PPM_TOOL}" "${_a}" "${_b}" 171 126 192 150 24
                     RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
     if(NOT _rv EQUAL 0)
         message(FATAL_ERROR "r37_pri1100_elza: PPM-Werkzeug exit=${_rv}: ${_o}")
@@ -98,7 +99,7 @@ endfunction()
 
 ppm_diff(_n_a "${_ppm_a}" "${_ppm_c}")
 ppm_diff(_n_b "${_ppm_b}" "${_ppm_c}")
-message(STATUS "r37_pri1100_elza: ROOM1101 Cut 1 masks=${_n_masken}; Wandfenster x168..191 y126..149, Punkte > 24 "
+message(STATUS "r37_pri1100_elza: ROOM1101 Cut 1 masks=${_n_masken}; Wandfenster x171..191 y126..149, Punkte > 24 "
                "gegen 'ohne Zombie': mit Masken=${_n_a} ohne Masken=${_n_b}")
 if(NOT _n_b GREATER 0)
     message(FATAL_ERROR "r37_pri1100_elza: ohne Masken liegt kein Zombie im Wandfenster - leeres Gruen")

@@ -13,7 +13,10 @@ cmake_minimum_required(VERSION 3.16)
 #   B  ohne Masken (RE15_NO_PRI=1), sonst wie A
 #   C  mit Masken, Zombie 1 hinter die Kamera gesetzt (RE15_GEGNER_POS ...,-14000,-11000 — z groesser als der
 #      Kameraort z=-13608, also nicht im Bild) = das Wandfenster OHNE Zombie
-# Im WANDFENSTER rechts der Ecke (x 168..191, y 126..149; ganz in der Silhouette, 576 von 576 Maskenpunkten)
+# Im WANDFENSTER rechts der Ecke (x 171..191, y 126..149; ganz in der GEMALTEN Wand - Runde 39 Spur L: die Spalten 168..170
+# sind im Sockelband der hintere Gang jenseits der gemalten Ecke (optik_r39.c k_fenster, Wand ab Spalte 171); dort liegt
+# der Zombie zu Recht sichtbar, wie Leon an der Marke F741. Bis Runde 38 x 168..191, 576 von 576 Maskenpunkten der
+# ueberlangen Quader-Masken)
 #   A gegen C: 0 Punkte mit Kanaldifferenz > 24 (Schwelle wie probe_r36_ppm_diff: Atlas-Rundung < 8)
 #             -> kein Teil des Zombies wird ueber die Wand gemalt
 #   B gegen C: > 0 Punkte -> der Zombie liegt wirklich hinter diesem Wandstueck (sonst waere das Gruen leer)
@@ -74,7 +77,7 @@ file(REMOVE "${_exe_kopie}")
 
 # probe_r36_ppm_diff <a> <b> x0 y0 x1 y1 schwelle -> "n=<Pixel mit Kanaldifferenz > schwelle> max=<..>"
 function(ppm_diff _out _a _b)
-    execute_process(COMMAND "${RE15_PPM_TOOL}" "${_a}" "${_b}" 168 126 192 150 24
+    execute_process(COMMAND "${RE15_PPM_TOOL}" "${_a}" "${_b}" 171 126 192 150 24
                     RESULT_VARIABLE _rv OUTPUT_VARIABLE _o TIMEOUT 60)
     if(NOT _rv EQUAL 0)
         message(FATAL_ERROR "r37_pri1100: PPM-Werkzeug exit=${_rv}: ${_o}")
@@ -87,7 +90,7 @@ ppm_diff(_n_f892_a   "${_ppm_f892_a}"  "${_ppm_ohne_c}")
 ppm_diff(_n_f892_b   "${_ppm_f892_b}"  "${_ppm_ohne_c}")
 ppm_diff(_n_spawn_a  "${_ppm_spawn_a}" "${_ppm_ohne_c}")
 ppm_diff(_n_spawn_b  "${_ppm_spawn_b}" "${_ppm_ohne_c}")
-message(STATUS "r37_pri1100: Wandfenster x168..191 y126..149, Punkte > 24 gegen 'ohne Zombie': "
+message(STATUS "r37_pri1100: Wandfenster x171..191 y126..149, Punkte > 24 gegen 'ohne Zombie': "
                "F892 mit Masken=${_n_f892_a} ohne Masken=${_n_f892_b} | Spawnlage (F240) mit Masken=${_n_spawn_a} ohne Masken=${_n_spawn_b}")
 if(NOT _n_f892_b GREATER 0 OR NOT _n_spawn_b GREATER 0)
     message(FATAL_ERROR "r37_pri1100: ohne Masken liegt kein Zombie im Wandfenster - leeres Gruen")
