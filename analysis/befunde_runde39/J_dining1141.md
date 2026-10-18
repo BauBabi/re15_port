@@ -703,3 +703,29 @@ Pegel 559", 0 Fehler. Gegenprobe Riegel: `integration_r39_dining1141_d` per -DAU
 - **Kamera nach Johns Abgang:** vorher blieb die Kamera auf der leeren Suedwest-Ecke stehen, waehrend Elza zur Dachtuer ging;
   jetzt zeigt sie Elza und folgt ihr wie gewohnt.
 - Keine Entscheidungsfrage offen. Paket-Gate: keine neue Datei unter shared_assets/ (Programme in gen/dining_r39_programme.inc).
+
+### 9.9 Merge-Folge bei Spur E und Testlaeufe am Endstand (gezielt, keine volle Suite)
+- Erster Lauf aller Unit-Riegel (Stand ee3cd7c2): `ctest -R "^(unit_|prop_|probe_)" -j 8 --timeout 600` ->
+  "99% tests passed, 1 tests failed out of 842" - rot nur `unit_r39_gegner_1141_ablauf1141` (Spur E): der Riegel fuhr 1141 noch
+  ueber "Gemaelde -> Szene" ("FEHLER: [vorher] Phase H -> Gemaelde -> BEFREIUNG: Kampf laeuft"); seit J Nachbesserung 1
+  (Nutzer-Nachtrag 4) startet die Szene erst am Riegel der Dachtuer. Kein Fehler der Nachbesserung 2, eine Folge des Merges
+  (master traegt E, aber noch nicht J).
+- Integration (Stand ee3cd7c2): `ctest -R "integration_r39_dining1141|integration_r38_dining1141|integration_r39_gegner_1141|integration_r37_elzaems_elza1141|integration_r38_affen3" -j 4 --timeout 3600`
+  -> "93% tests passed, 1 tests failed out of 14" (integration_r39_dining1141_d Passed 358.65 sec, integration_r39_dining1141_kampf
+  Passed 303.52 sec, integration_r38_dining1141_s Passed 646.76 sec, w/r/z/l/a/d, affen3 (3), elzaems_elza1141 gruen); rot nur
+  `integration_r39_gegner_1141` (Spur E): 0 Treffer-Zeilen - derselbe Wegplan "bis zum Gemaelde", die Gorillas brechen nie ein.
+  Der Kopf dieses Riegels sagt selbst: "aendert eine spaetere Spur die Szene, ist der Wegplan bei der Integration nachzuziehen".
+- Nachgezogen (b5a42cca, Dateien der Spur E, je Kommentar "Runde 39 Spur J"): Unit `bis_zum_kampf` wartet den Rolladen ab,
+  drueckt den Riegel und schliesst msg 12 (Muster test_r38_dining1141.c bis_zur_ecke); Integration: Wegplan wie
+  integration_r39_dining1141_d bis zum Riegel; Szenenende gemessen (scratchpad `j39n2/e_mess`, pm 0 ab F3655, vorher ~F2700),
+  Schuetze und Ende um +960 verschoben (RE15_INPUT_SCRIPT_START 2760 -> 3720, RE15_EXIT_AT 4500 -> 5460, Kampfdauer gleich).
+  Danach `ctest -R "unit_r39_gegner|unit_r39_dining1141|integration_r39_gegner_1141" -j 6 --timeout 1200` ->
+  "100% tests passed, 0 tests failed out of 24" (ablauf1141: [nachher] 31/31 Treffer bis zum Tod, 10/10 Flinches;
+  integration_r39_gegner_1141 Passed 303.05 sec: "OK - INIT 360 x 4, 33 Treffer-Zeilen (FLINCH 10 nur bei akku >= 36, OHNE
+  ZUCKEN 23), Flinch-Beginne im state.txt 10"; Johns Treffer laufen dort durch dieselbe Regel).
+- Alle Unit-Riegel am Endstand: siehe 9.10.
+- OFFEN fuer die Integration: die beiden E-Riegel tragen jetzt den J-Ablauf; zieht Spur E sie in ihrem Zweig weiter, die
+  Fassung aus b5a42cca uebernehmen (sonst sind sie nach dem Merge wieder rot).
+- Fuer den Nutzer (Ergaenzung zu 9.8): die Entscheidungsfragen aus 8.6 entfallen - der Nutzer-Nachtrag 4 ist eindeutig ("ab und
+  an schiessen und ihre Aufmerksamkeit erhalten"), die Regel steht oben in einfachen Worten; Gorillas greifen John weiterhin
+  nicht an (die Angriffe des Originals wirken nur auf den Spieler, 8.5).
