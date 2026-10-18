@@ -136,8 +136,31 @@ void re15_r39_hund_riegel_setzen(re15_actor_t *pl)
 
 int re15_r39_hund_riegel_vom_hund(void) { return s_hund_riegel; }
 
+/* ---------------------------------------------------------------- Messhaken (nur Messlaeufe, Nachbesserung 2) --
+ * RE15_R39_MESS_SPIELER_HP=<n> (env-gegatet wie RE15_R38F_GORILLAS_TOT; KEIN Spielverhalten, ohne Env nie aktiv):
+ * am Kopf jedes KI-Bildes (re15_r39_hund_riegel_tick = Kopf von re15_enemy_ai_run_all) die Spieler-HP auf mindestens
+ * n heben; jeder aufgefuellte Abzug steht mit Bildnummer in gegner_r39.log. Zweck: ein STEHENDER Skript-Schuetze
+ * (RE15_INPUT_SCRIPT) haelt den ganzen Gorilla-Kampf ROOM1141 mit 2 x 360 Energie durch, damit der Ablauf Tod ->
+ * Kill-Flags -> sub01 -> Johns Abgang an der exe messbar ist (ohne Haken stirbt die stehende Elza nach ~1850
+ * Kampfbildern; ein Spieler weicht aus). n >= 50 haelt auch den Luft-Finisher fern: sein Commit verlangt player.hp < 50
+ * (`lh v0,0(a2)` player.hp @0x80118cec / `slti v0,v0,50` @0x80118cf4 / `beq` @0x80118cf8). Die uebrigen Gorilla-
+ * Abzuege: Biss `addiu v0,v0,-6` @0x80118468, Heavy `addiu v0,v0,-12` @0x801187bc — zwei Gorillas in einem Bild
+ * hoechstens 24, mit n = 100 bleibt die HP also ueber 50. */
+static void r39_mess_spieler_hp(void)
+{
+    static int n = -2;
+    if (n == -2) { const char *e = getenv("RE15_R39_MESS_SPIELER_HP"); n = (e && *e) ? atoi(e) : -1;
+                   if (n > 0) re15_r39_log("messhaken RE15_R39_MESS_SPIELER_HP=%d aktiv (nur Messlauf)", n); }
+    if (n <= 0) return;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!pl->active || pl->hp < 0 || pl->hp >= n) return;
+    re15_r39_log("messhaken F%u spieler hp %d -> %d (Abzug %d aufgefuellt)", r39_bild(), (int)pl->hp, n, n - (int)pl->hp);
+    pl->hp = (int16_t)n;
+}
+
 void re15_r39_hund_riegel_tick(void)
 {
+    r39_mess_spieler_hp();   /* Messhaken RE15_R39_MESS_SPIELER_HP (nur mit Env), s. oben */
     if (!s_hund_riegel) return;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     /* Ende der Spieler-Reaktion = @0x8003f8b0-b4 (Zustand 1 + +0x1D3 := 0). Port: der NORMAL-Prolog loescht

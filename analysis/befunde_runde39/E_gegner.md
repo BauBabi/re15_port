@@ -83,6 +83,10 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 
 ## Punkt 1 — Parking-Lot-Gorillas: doppelte Energie, Flinch erst nach 3 Handfeuerwaffen-Treffern (Energie)
 
+> **Stand Nachbesserung 2 (Nutzer-Nachtrag 3 "generell")**: die Regel gilt fuer JEDEN Gorilla Typ 0x27 (ROOM11C0 Leon und
+> ROOM1141 Elza = alle 0x27-Raeume des Zensus), es gibt kein Raum-Tor 0x11C0 mehr (`re15_r39_affen_regel`, Konstante
+> `RE15_R39_AFFEN_TYP 0x27u`). Die Abschnitte unten beschreiben den ersten Bau (Raum-Tor); Ersatz s. "Nachbesserung 2".
+
 ### RE-Belege (Original, selbst gelesen)
 - **HP-Saat** (STAGE1.BIN ohne Kopf, Datei-Offset = Adresse - 0x80100000): INIT FUN_80116f50
   `jal 0x8001af20` (rng) @0x801170cc, `lui a0,0x8012 / addiu a0,a0,-4044` = 0x8011f034 @0x801170d4-d8,
@@ -113,7 +117,8 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   sieht den Treffer also im selben Bild.
 
 ### Umsetzung
-- Neue Datei engine/src/gegner_r39.c + include/re15_gegner_r39.h (Konstanten: RE15_R39_PARKPLATZ_RAUM 0x11C0,
+- Neue Datei engine/src/gegner_r39.c + include/re15_gegner_r39.h (Konstanten: RE15_R39_PARKPLATZ_RAUM 0x11C0 — seit
+  Nachbesserung 2 ersetzt durch RE15_R39_AFFEN_TYP 0x27u,
   RE15_R39_AFFEN_HP_TABELLE 180 @0x8011f514, RE15_R39_AFFEN_HP_FAKTOR 2 = NUTZER-VORGABE, RE15_R39_PISTOLE_SCHADEN 12
   @0x8006ee44, RE15_R39_ZUCK_TREFFER 3 = NUTZER-VORGABE, Schwelle 36).
 - Haken enemy_ai_common.c (je 1 Zeile, Kommentar "Runde 39 Spur E"): INIT `e->hp = re15_r39_affen_hp_init(e, 180)`;
@@ -373,17 +378,18 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 
 ## Fuer den Nutzer
 - Neue Assets / Sprachdateien / Paket-Gate: keine (nur Code + Tests; shared_assets unveraendert).
-- Bedienung: Parking-Lot-Gorillas (nur ROOM11C0, Leon — Elzas Parking Lot 11C1 hat Hunde) haben 360 statt 180 Energie und
-  zucken erst beim 3. Pistolentreffer (36 Energie seit dem letzten Zucken); jeder 3. Treffer ist damit zugleich der
-  Vergeltungs-Sprung des Originals (3-Treffer-Zaehler @0x8011b194-98). Dazwischen: Blut + Treffer-Ton, der Gorilla laeuft
-  weiter. Schrotflinte und Magnum zucken sofort (>= 36), Messer erst beim 6. Treffer. ROOM1141 bleibt beim Original (180,
-  jeder Treffer zuckt).
+- Bedienung (Stand Nachbesserung 2): ALLE Gorillas (Leons Parking Lot ROOM11C0 und Elzas Briefing Room ROOM1141 — die
+  einzigen Raeume mit Gorillas; Elzas Parking Lot 11C1 hat Hunde) haben 360 statt 180 Energie und zucken erst beim 3.
+  Handfeuerwaffen-Treffer (36 Energie seit dem letzten Zucken; Leons Pistole und Elzas SIG P228 je 12); jeder 3. Treffer ist
+  damit zugleich der Vergeltungs-Sprung des Originals (3-Treffer-Zaehler @0x8011b194-98). Dazwischen: Blut + Treffer-Ton,
+  der Gorilla laeuft weiter. Schrotflinte und Magnum zucken sofort (>= 36), Messer erst beim 6. Treffer. Ein Gorilla braucht
+  31 statt 16 Handfeuerwaffen-Treffer. Die kleinen Affen (Stage 3-5) sind unveraendert.
 - Hunde (RE2-KI): waehrend der eigenen Treffer-Reaktion (22 Bilder Flinch, Niederschlag) beisst kein zweiter Hund; danach
   sofort wieder. Gilt in allen Hunde-Raeumen (1190, 11C1, ...). Der toedliche Biss und das Fressen sind unveraendert.
 - Liegende Zombies (1010/1011, 1220/1221): sie liegen still, bis der Spieler naeher als 3000 im 90-Grad-Sichtkegel vor ihnen
   steht (RE1.5-Original Block B), dann kriechen sie heran; naeher als 1300 greifen sie wie im RE2-Original.
-- Entscheidungsfrage: Soll die 3-Treffer-Schwelle auch fuer die Gorillas in ROOM1141 gelten? (Wortlaut "beim Parking Lot"
-  -> nur 11C0 umgesetzt.)
+- Entscheidungsfrage (erledigt, Nutzer-Nachtrag 3 2026-10-18: "Zu 2. ja, wir machen das Gorilla Verhalten generell so.")
+  -> Nachbesserung 2: Regel fuer alle 0x27.
 
 ## Nachbesserung 1 (2026-10-18, nach Abnahme 0 — Mangel M1)
 
@@ -581,5 +587,29 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
   Das Skript taugte nicht als Kampf: nach jedem Loslassen von R1 dreht Elza ~12 Bilder auf das Ziel (ac=6), das Quadrat
   nach 12 Bildern faellt vor die Anschlag-Bereitschaft (ac=8 ab Bild ~16) und wird verworfen — 10 Schuesse in 1300 Bildern,
   Elza 100 -> 28 (F4360). Lauf abgebrochen (eigene PID 74648 der Messkopie, Stop-Process).
+- **ROOM1141, Versuch 2 (n1141_b, Skript `W10` + 45 x `W0.1,M0.7,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6` = R1 gehalten, alle drei
+  Schuesse neu zielen)**: 30 Schuesse, 28 Treffer (27 auf G2, 1 auf G3), Auswertung scratchpad e_nb2c/auswert2.py:
+  `treffer-zeilen 28 FLINCH 9 OHNE 19 regelwidrig 0` — G2 F3084 348 OHNE / F3106 336 OHNE / **F3128 324 FLINCH akku 36** /
+  F3193 312 OHNE / F3432 300 OHNE / **F3474 288 FLINCH** / ... / **F4585 36 FLINCH** (jeder dritte Treffer, 9 x). Elza
+  (steht) 100 -> 88 (F3212) -> 82 -> 70 -> 64 -> 58 -> 46 -> 34 -> 28 -> 22 -> 16 -> 4 -> **-2 (F4756, tot)** — 12 Gorilla-
+  Angriffe (Biss -6 `addiu v0,v0,-6` @0x80118468, Heavy -12 `addiu v0,v0,-12` @0x801187bc). G2 bleibt bei 36, G3 bei 348.
+  Der Lauf haengt danach im Tod (frame_count steht bei F5017, EXIT_AT nie) -> eigene PID 70712 beendet.
+- **ROOM1141, Versuch 3 mit Elzas Schrotflinte (n1141_s, `RE15_GIVE=0x43:1,0x08:7,0x16:63 RE15_EQUIP=8`)**: Schaden 38 (Zeile
+  0x27 Waffe 8, re15_damage.c s_wpn_dmg_maggot[8]) >= 36 -> jeder Treffer FLINCH (F3084 G2 322 akku 38, F3087 G3 322, F3117,
+  F3124, F3150, F3273 — "andere Waffen entsprechend ihrem Schaden" an der exe bestaetigt). Nach 7 Schuss kein Nachladen
+  (Statusspalte bx=-1: die gegebenen 0x16-Patronen wurden fuer das Magazin nicht gefunden — Mess-Aufbau, nicht diese Spur),
+  Elza tot F4639 -> PID 8160 beendet. Nicht weiter verfolgt.
+- **Folgerung**: mit einem STEHENDEN Skript-Schuetzen ist der Kampf gegen zwei Gorillas mit je 360 Energie an der exe nicht
+  bis zum Ende zu fahren (ein Spieler weicht aus; Munition fuer 62 Treffer liegt auf Elzas Weg reichlich: Zensus
+  analysis/story_leon_elza/census.json, H.GUN BULLETS 0x15 in 1001/1011/1021/1051/1071/10E1/10F1/1191/11D1/11F1/1211 —
+  zusammen 405 Schuss, dazu Remington 0x08 (10F1), Beretta 0x05 (11D1), Ingram 0x0C (1191), MC51 0x13 (1111)). Fuer die
+  Pflicht-Messung "bis zum Tod beider Gorillas und Johns Abgang" darum ein MESSHAKEN (nur mit Env, kein Spielverhalten):
+  `RE15_R39_MESS_SPIELER_HP=<n>` hebt am Kopf jedes KI-Bildes die Spieler-HP auf mindestens n (gegner_r39.c
+  r39_mess_spieler_hp, aufgerufen aus re15_r39_hund_riegel_tick = Kopf von re15_enemy_ai_run_all, KEINE neue Zeile in einer
+  gemeinsamen Datei); jeder Ausgleich steht mit Bild in gegner_r39.log. n = 100 haelt auch den Luft-Finisher (-600) fern:
+  dessen Commit verlangt player.hp < 50 (selbst disassembliert: `lbu v1,149(v0)` == 0x13 @0x80118cd4-cdc, `lh v0,0(a2)`
+  player.hp @0x80118cec / `slti v0,v0,50` @0x80118cf4 / `beq v0,zero` @0x80118cf8, hit_react == 0 @0x80118d04-0c,
+  a804(0x1388,0xc0) @0x80118d18, +0x1dc == 0 @0x80118d34-3c, `sb v0,5(v1)` = Sub 8 @0x80118d44, Se 7 @0x80118d64).
+
 
 
