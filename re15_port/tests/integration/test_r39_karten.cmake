@@ -117,6 +117,30 @@ else()
     set(_fehler "${_fehler} 1090-kein-marker")
 endif()
 
+# ---- T: Teilzustaende (Nachbesserung 1, Abnahme-Mangel M3) ------------------------------------------------------
+# Je Ort ALLEIN besucht und aktuell (kein Nachbar gezeichnet, kein Etagenplan): die Doppelwand-Korrektur darf die eigene
+# Wandlinie nur loeschen, wenn der Nachbar mit der Ersatzlinie gezeichnet wird. Vorher (Stand 40328436, Abnahme 0):
+# ROOM1000 Nord-WC ohne Westwand x207 + Unterkante y138, 1070 ohne Westwand x196, 1010 Zone 0 ohne beide Seitenwaende.
+foreach(_t "TN;1000;650;50" "TW;1070;160;6145" "TZ;1010;3650;-3950")
+    list(GET _t 0 _tn)
+    list(GET _t 1 _tr)
+    list(GET _t 2 _tx)
+    list(GET _t 3 _tz)
+    karten_lauf(${_tn} ${_tr} "${_tr};${_tx};0;${_tz};0;besucht:${_tr}:${_tx}:${_tz}"
+                RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=60 "RE15_EXIT_AT=200#${_tr}")
+    if(NOT EXISTS "${_basis_wd}_${_tn}/karte.bmp")
+        set(_fehler "${_fehler} teil-${_tn}-kein-abzug")
+        continue()
+    endif()
+    execute_process(COMMAND "${RE15_PROBE}" offen "${_basis_wd}_${_tn}/karte.bmp"
+                    RESULT_VARIABLE _rvo OUTPUT_VARIABLE _outo)
+    string(STRIP "${_outo}" _outo)
+    message(STATUS "r39_karten[${_tn}] ROOM${_tr} allein: ${_outo}")
+    if(NOT _rvo EQUAL 0)
+        set(_fehler "${_fehler} teil-${_tn}-offen")
+    endif()
+endforeach()
+
 file(REMOVE "${_exe_kopie}")
 if(NOT "${_fehler}" STREQUAL "")
     message(FATAL_ERROR "r39_karten: ROT bei:${_fehler}")

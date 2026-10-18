@@ -17,6 +17,8 @@
  *                                          aufgedeckt) - Messwerkzeug, kein Urteil
  *   marker <hexraum> <x> <z> <band> [y]    Kartenpfad wie im Spiel: Raum betreten, Karte oeffnen,
  *                                          gezeigtes Blatt, Zone, Marker + Kachel-Index darunter
+ *   pruef teil|treppen|marker              Nachbesserung 1 (Abnahme 0, M3 / M4+M1 / M5) - Riegel
+ *   offen <bmp>                            Abzug der echten exe: offene Raumseiten (Koerper am Grund)
  * ========================================================================== */
 #include <stddef.h>
 #include <stdio.h>
@@ -506,15 +508,23 @@ static int teil_pruef_b1(void)
                 if (z && z->page == 0 && z->zid == zb) sb = z->synth;
             }
             if (kind >= 4) {
+                int frei = 1;
                 treppen++;
                 for (d = -2; d <= 2; d++) {
                     int r2;
-                    for (r2 = -2; r2 <= 2; r2 += 2)
-                        if (!r39b1_in(sa, kind == 4 ? mx + d : mx + r2, kind == 4 ? my + r2 : my + d, 1)) ok = 0;
+                    for (r2 = -2; r2 <= 2; r2 += 2) {
+                        int x = kind == 4 ? mx + d : mx + r2, y = kind == 4 ? my + r2 : my + d;
+                        if (!r39b1_in(sa, x, y, 1)) ok = 0;
+                        /* Nachbesserung 1 (Abnahme-Mangel M2): keine Sprosse BERUEHRT die Randlinie - jeder
+                         * Nachbar eines Sprossenpixels liegt im Innenraum (vorher (145,165): unterste Sprosse
+                         * (143..147,167) Pixel an Pixel auf der Unterkante y168). */
+                        if (!r39b1_in(sa, x - 1, y, 1) || !r39b1_in(sa, x + 1, y, 1) ||
+                            !r39b1_in(sa, x, y - 1, 1) || !r39b1_in(sa, x, y + 1, 1)) frei = 0;
+                    }
                 }
-                snprintf(t, sizeof t, "Treppe (%d,%d) kind %d: alle Sprossen im Innenraum der Zeichnung synth %d", mx, my,
-                         kind, sa);
-                CHECK(t, ok && sa == R39B1_10A0);
+                snprintf(t, sizeof t, "Treppe (%d,%d) kind %d: alle Sprossen im Innenraum der Zeichnung synth %d, keine "
+                         "beruehrt die Randlinie", mx, my, kind, sa);
+                CHECK(t, ok && frei && sa == R39B1_10A0);
                 continue;
             }
             tueren++;
@@ -630,6 +640,14 @@ static int klasse_rgb(int r, int g, int b)
     return 7;
 }
 
+/* Bewusste Abweichungen von der Soll-Haelfte (Nachbesserung 1, Dossier G_karten.md): Kasten = alte und neue Lage
+ * des Symbols (dort wird nicht verglichen), (mx,my,kind) = das neue Symbol, das im Abzug stehen muss. */
+static const struct { int seite, x0, y0, x1, y1, mx, my, kind; const char *warum; } k_abw[] = {
+    { 4, 138, 145, 146, 149, 140, 147, 4, "M4: 1060 3F auf der Projektion der Band-8-Treppe @0x00D72" },
+    { 4, 154,  96, 161, 101, 156,  98, 4, "M5: 1170 Zone 1 3F auf dem Lauf @0x0137A/@0x0138E" },
+    { 4, 166, 104, 170, 109, 168, 106, 5, "M1: 3F-Treppe y106 statt y107 (1 statt 3 Beruehrpixel)" },
+};
+
 static int teil_sollbild(int argc, char **argv)
 {
     FILE *f;
@@ -665,14 +683,33 @@ static int teil_sollbild(int argc, char **argv)
     for (y = 0; y < h; y++)
         for (x = 0; x < w; x++) {
             unsigned char *p = px + ((size_t)y * (size_t)w + (size_t)x) * 3u;   /* B,G,R */
-            int ist = klasse_rgb(p[2], p[1], p[0]), s = soll[y][x];
+            int ist = klasse_rgb(p[2], p[1], p[0]), s = soll[y][x], a, weg = 0;
             if (ist == 7 || s == 7) continue;
+            for (a = 0; a < (int)(sizeof k_abw / sizeof k_abw[0]); a++)
+                if (k_abw[a].seite == seite && x >= k_abw[a].x0 && x <= k_abw[a].x1 && y >= k_abw[a].y0 &&
+                    y <= k_abw[a].y1) weg = 1;
+            if (weg) continue;
             gepr++;
             if (ist != s) {
                 diff++;
                 if (gez < 10) { printf("   Abweichung (%d,%d): ist %d soll %d\n", x, y, ist, s); gez++; }
             }
         }
+    /* die neuen Treppensymbole an ihren Projektionen (Nachbesserung 1): 3 Sprossen x 5 Pixel Treppenklasse */
+    for (k = 0; k < (int)(sizeof k_abw / sizeof k_abw[0]); k++) {
+        int d, r2, treffer = 0;
+        if (k_abw[k].seite != seite) continue;
+        for (d = -2; d <= 2; d++)
+            for (r2 = -2; r2 <= 2; r2 += 2) {
+                int xx = k_abw[k].kind == 4 ? k_abw[k].mx + d : k_abw[k].mx + r2;
+                int yy = k_abw[k].kind == 4 ? k_abw[k].my + r2 : k_abw[k].my + d;
+                unsigned char *p = px + ((size_t)yy * (size_t)w + (size_t)xx) * 3u;
+                if (klasse_rgb(p[2], p[1], p[0]) == 5) treffer++;
+            }
+        printf("   Abweichung von der Vorlage (Nachbesserung 1, %s): Treppe jetzt (%d,%d), %d von 15 Sprossenpixeln\n",
+               k_abw[k].warum, k_abw[k].mx, k_abw[k].my, treffer);
+        if (treffer != 15) diff++;
+    }
     free(px);
     printf("Blatt %d (%s): %d Kartenpixel verglichen, %d Abweichungen gegen das Soll der Nutzer-Vorlage\n", seite, argv[2],
            gepr, diff);
@@ -681,13 +718,20 @@ static int teil_sollbild(int argc, char **argv)
     return 0;
 }
 
+static int teil_pruef_teil(void);      /* Nachbesserung 1, unten */
+static int teil_pruef_treppen(void);
+static int teil_pruef_marker(void);
+
 static int teil_pruef(int argc, char **argv)
 {
     const char *was = argc > 2 ? argv[2] : "";
     g_fail = 0;
     if (!strcmp(was, "1090")) teil_pruef_1090();
     else if (!strcmp(was, "b1")) teil_pruef_b1();
-    else { printf("FAIL: pruef 1090|b1\n"); return 2; }
+    else if (!strcmp(was, "teil")) teil_pruef_teil();         /* Nachbesserung 1, M3 */
+    else if (!strcmp(was, "treppen")) teil_pruef_treppen();   /* Nachbesserung 1, M4/M5/M1 */
+    else if (!strcmp(was, "marker")) teil_pruef_marker();     /* Nachbesserung 1, M5 */
+    else { printf("FAIL: pruef 1090|b1|teil|treppen|marker\n"); return 2; }
     printf(g_fail ? "FEHLER\n" : "OK\n");
     return g_fail;
 }
@@ -741,6 +785,377 @@ static int teil_doppelwand(int argc, char **argv)
     return n ? 1 : 0;
 }
 
+/* =====================================================================================================
+ * NACHBESSERUNG 1 (Abnahme 0, Maengel M1..M5) - Dossier G_karten.md "Nachbesserung 1"
+ * ===================================================================================================== */
+
+/* Klassen-Kompositor der ECHTEN Op-Liste (wie G_karten_werkzeug/komp.py): die Liste wird von hinten gerastert
+ * (inv_render_pc.c), frueher eingetragen liegt oben. 0 = Grund (keine Karten-Op), 1 = Raumkoerper, 2 = Wandlinie,
+ * 4 = Tuer, 5 = Treppe, 9 = sonstiger Kachel-Texel. Kachel-Texel aus DATA/MAP0<p+1>.PIX (ohne die Schwenk-Tilgung
+ * des PC-Renderers - die nimmt nur Tuerschwenke weg und gehoert zum Abzug der echten exe, integration_r39_karten). */
+static unsigned char s_kl[240][320];
+static void komposit(int seite, int n)
+{
+    int i;
+    memset(s_kl, 0, sizeof s_kl);
+    if (!pix_laden(seite)) return;
+    for (i = n - 1; i >= 0; i--) {
+        const re15_inv_op_t *o = &s_ops[i];
+        int x, y, k = 0;
+        if (o->kind == RE15_INV_OP_SPRT && o->page == RE15_INV_PAGE_MAP4) {
+            for (y = 0; y < o->h; y++)
+                for (x = 0; x < o->w; x++) {
+                    int X = o->x + x, Y = o->y + y, t;
+                    if (X < 0 || X >= 320 || Y < 0 || Y >= 240) continue;
+                    t = s_pix[((o->v + y) & 255) * 256 + ((o->u + x) & 255)];
+                    if (t == 0) continue;
+                    if (t == 1 && o->clut == RE15_INV_CLUT_MAP_UNBESUCHT) continue;   /* 0x0000 = durchsichtig */
+                    s_kl[Y][X] = (unsigned char)(t == 1 ? 1 : t == 4 ? 2 : 9);
+                }
+            continue;
+        }
+        if (o->kind != RE15_INV_OP_FILL) continue;
+        if (o->abe && ((o->r == 32 && o->g == 104) || (o->r == 104 && o->g == 8))) k = 1;   /* 0x81A4 / 0x842D */
+        else if (!o->abe && o->r == 176 && o->g == 176 && o->b == 176) k = 2;                 /* RE15_KARTE_WAND */
+        else if (!o->abe && o->r == 224 && o->g == 168 && o->b == 40) k = 4;
+        else if (!o->abe && o->r == 240 && o->g == 240 && o->b == 216) k = 5;
+        if (!k) continue;
+        for (y = 0; y < o->h; y++)
+            for (x = 0; x < o->w; x++) {
+                int X = o->x + x, Y = o->y + y;
+                if (X >= 0 && X < 320 && Y >= 0 && Y < 240) s_kl[Y][X] = (unsigned char)k;
+            }
+    }
+}
+
+/* Raumkoerper, der 4-nachbarlich direkt an den Grund grenzt = OFFENE Raumseite, im Kasten (x0..x1, y0..y1). */
+static int offen_zaehlen(int x0, int y0, int x1, int y1, int *bx, int *by)
+{
+    int x, y, n = 0;
+    for (y = y0; y <= y1; y++)
+        for (x = x0; x <= x1; x++) {
+            if (x < 1 || x > 318 || y < 1 || y > 238 || s_kl[y][x] != 1) continue;
+            if (!s_kl[y][x - 1] || !s_kl[y][x + 1] || !s_kl[y - 1][x] || !s_kl[y + 1][x]) {
+                if (!n && bx) { *bx = x; *by = y; }
+                n++;
+            }
+        }
+    return n;
+}
+
+/* Kartenschirm fuer <seite> OHNE Aufdecken: nur die per re15_map_zone_update betretenen Orte sind besucht, der letzte
+ * ist aktuell (wie probe_r36_karte "besucht:"), kein Etagenplan im Besitz. */
+static int baue_teil(int seite)
+{
+    re15_inv_screen_open();
+    g_inv_screen.substate = 1;
+    g_inv_screen.item_state = 1;
+    g_inv_screen.map_page = (uint8_t)seite;
+    return re15_inv_screen_build(&g_inv_screen, s_ops, RE15_INV_MAX_OPS);
+}
+
+typedef struct { const char *was; unsigned raum; int32_t x, z; int seite; int band; } r39_ort_t;
+
+static void orte_betreten(const r39_ort_t *const *o, int n)
+{
+    int i;
+    re15_map_visited_reset();
+    for (i = 0; i < n; i++) {
+        if (!betrete(o[i]->raum, o[i]->x, o[i]->z, o[i]->band)) continue;
+        re15_map_zone_update(o[i]->raum, o[i]->x, o[i]->z);
+    }
+}
+
+/* Welt-Punkt in der Zone, die Rechteck <rect> von Blatt <seite> zeichnet (Mitte ihrer Weltbox), fuer Paar-Zustaende.
+ * Gast-Zeilen (Treppenhaus auf fremder Etage): das Band, dessen Etagen-Zeile auf dieses Blatt fuehrt. */
+static int rect_ort(int seite, int rect, r39_ort_t *o)
+{
+    int i, b;
+    for (i = 0; i < re15_map_zone_count(); i++) {
+        const re15_map_zone_t *zn = re15_map_zone_by_index(i);
+        const re15_map_zone_t *zh;
+        int32_t mx, mz;
+        int band = 0;
+        if (!zn || zn->page != (unsigned)seite || zn->rect != (unsigned)rect) continue;
+        mx = (zn->wx0 + zn->wx1) / 2; mz = (zn->wz0 + zn->wz1) / 2;
+        zh = re15_map_zone_at(zn->room, mx, mz);
+        if (!zh || zh->idx != zn->idx) continue;
+        {   /* Etagen-Zeilen (Treppenhaus, Gast-Zeile): das Band, dessen Zeile auf DIESES Blatt fuehrt - nur dann ist
+             * die Zeichnung dort gezeichnet (Etagen-Bit, re15_map_visited_mark_at). Ohne Etagen-Zeile: Band 0. */
+            int fp, fr, hat = 0;
+            band = -1;
+            for (b = 0; b < 10; b++)
+                if (re15_map_floor_lookup(zn->room, zn->idx, b, &fp, &fr)) {
+                    hat = 1;
+                    if (band < 0 && fp == seite && fr == rect) band = b;
+                }
+            if (!hat) band = 0;
+            if (band < 0) continue;
+        }
+        o->was = "Traeger"; o->raum = zn->room; o->x = mx; o->z = mz; o->seite = seite; o->band = band;
+        return 1;
+    }
+    return 0;
+}
+
+/* ---- M3: Doppelwand-Korrektur nur mit gezeichnetem Traeger (Teilzustaende) ---------------------------------- */
+static int teil_pruef_teil(void)
+{
+    /* die Orte der Abnahme (G_abnahme_0.md Abschnitt 6, allein.sh) - je Ort ALLEIN besucht und aktuell */
+    static const r39_ort_t ALLEIN[] = {
+        { "1050", 0x1050, 20600, 12350, 2, 0 },     { "1020", 0x1020, -4000, -18000, 2, 0 },
+        { "1040", 0x1040, -20083, -3559, 2, 0 },    { "1070", 0x1070, 160, 6145, 2, 0 },
+        { "1030", 0x1030, 1172, -12558, 2, 0 },     { "1010 Zone 0", 0x1010, 3650, -3950, 2, 0 },
+        { "1010 Zone 1", 0x1010, 3650, 6900, 2, 0 }, { "1080", 0x1080, -13650, -900, 2, 0 },
+        { "1000 Ostraum", 0x1000, 21850, -13400, 2, 0 }, { "1000 Nord-WC", 0x1000, 650, 50, 2, 0 },
+        { "1000 Sued-WC", 0x1000, 650, 3250, 2, 0 }, { "1110", 0x1110, -2400, -5000, 3, 0 },
+        { "1210", 0x1210, -26400, -2200, 1, 0 },    { "1220 Zone 0", 0x1220, -22400, -6500, 1, 0 },
+        { "1220 Zone 2", 0x1220, -22400, -14000, 1, 0 },
+    };
+    char t[300];
+    int i, n, k;
+    printf("=== M3: Raeume bleiben geschlossen, wenn der Nachbar mit der Ersatzlinie nicht gezeichnet ist ===\n");
+    /* (a) STATISCH: jede bedingte Korrektur hat einen Traeger, dessen Kachel auf der Ersatzlinie Index 4 traegt */
+    for (k = 0; k < re15_karte_r39_korrektur_zahl(); k++) {
+        int pg, rc, c, r, w, h, neu, tr, rx, ry, rw, rh, d, ok = 0;
+        static const int D[5][2] = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 }, { 0, 0 } };
+        re15_karte_r39_korrektur(k, &pg, &rc, &c, &r, &w, &h, &neu, &tr);
+        if (tr == 255) continue;
+        re15_map_rect_geometry((unsigned)pg, (unsigned)rc, &rx, &ry, &rw, &rh);
+        for (d = 0; d < 5 && !ok; d++) {
+            int x, y, alle = 1;
+            for (y = ry + r; y < ry + r + h; y++)
+                for (x = rx + c; x < rx + c + w; x++)
+                    if (texel(pg, tr, x + D[d][0], y + D[d][1]) != 4) alle = 0;
+            ok = alle;
+        }
+        snprintf(t, sizeof t, "Korrektur %d (Blatt %d r%d Spalte %d Zeile %d %dx%d): Traeger r%d traegt die Ersatzlinie "
+                 "(Index 4 auf jeder Zeile)", k, pg, rc, c, r, w, h, tr);
+        CHECK(t, ok);
+    }
+    /* (b) JEDER ORT ALLEIN: kein Raumkoerper grenzt an den Grund (vorher, Stand 40328436: 1070 34 / 1010 je 30 /
+     *     1000 38/23/9 / 1020 15 / 1040 14 / 1220 je 16 / 1080 8 / 1050 1 - offen.py an den Abzuegen der Abnahme) */
+    for (i = 0; i < (int)(sizeof ALLEIN / sizeof ALLEIN[0]); i++) {
+        const r39_ort_t *o = &ALLEIN[i];
+        int bx = 0, by = 0, of, soll = 0;
+        orte_betreten(&o, 1);
+        n = baue_teil(o->seite);
+        komposit(o->seite, n);
+        of = offen_zaehlen(40, 40, 300, 210, &bx, &by);
+        /* ROOM1210: im Abzug der echten exe nimmt die Schwenk-Tilgung des Renderers (inv_render_pc.c) auf x187 bei y71/y77
+         * Texel weg (VORHER 2, NEU 4 offene Pixel, G39nb1/al_1210_*); ohne ROOM11E0 schliesst dort nur der Tuerbalken
+         * x186 y72..76 - in jedem Spielstand ist 11E0 vorher gezeichnet (einziger Zugang). Ohne Tilgung (hier) 0. */
+        if (o->raum == 0x1210) soll = 4;
+        snprintf(t, sizeof t, "%s allein (Blatt %d): %d Koerperpixel am Grund (soll <= %d)%s", o->was, o->seite, of, soll,
+                 of ? "" : "");
+        if (of > soll) snprintf(t + strlen(t), sizeof t - strlen(t), ", erstes (%d,%d)", bx, by);
+        CHECK(t, of <= soll);
+        if (o->raum == 0x1210) {
+            int y, tuer = 0;
+            for (y = 72; y <= 76; y++) if (s_kl[y][186] == 4) tuer++;
+            snprintf(t, sizeof t, "1210 allein: Tuerbalken 11E0<->1210 auf x186 y72..76 gezeichnet (%d von 5) - Grund fuer "
+                     "die IMMER-Korrektur B2 r3", tuer);
+            CHECK(t, tuer == 5);
+        }
+    }
+    /* (c) PAAR-ZUSTAND: Ort + Traeger besucht -> die Korrektur greift (keine Doppelwand): jedes korrigierte Pixel ist
+     *     keine Wandlinie mehr, die Ersatzlinie daneben steht. */
+    for (k = 0; k < re15_karte_r39_korrektur_zahl(); k++) {
+        int pg, rc, c, r, w, h, neu, tr, rx, ry, rw, rh, x, y, weg = 0, ges = 0, ersatz = 0;
+        r39_ort_t a, b;
+        const r39_ort_t *paar[2];
+        re15_karte_r39_korrektur(k, &pg, &rc, &c, &r, &w, &h, &neu, &tr);
+        if (tr == 255 || neu == 4) continue;
+        if (!rect_ort(pg, rc, &a) || !rect_ort(pg, tr, &b)) {
+            snprintf(t, sizeof t, "Korrektur %d: Orte zu r%d / r%d gefunden", k, rc, tr);
+            CHECK(t, 0);
+            continue;
+        }
+        paar[0] = &b; paar[1] = &a;
+        orte_betreten(paar, 2);
+        n = baue_teil(pg);
+        komposit(pg, n);
+        re15_map_rect_geometry((unsigned)pg, (unsigned)rc, &rx, &ry, &rw, &rh);
+        for (y = ry + r; y < ry + r + h; y++)
+            for (x = rx + c; x < rx + c + w; x++) {
+                int d, e = 0;
+                ges++;
+                if (s_kl[y][x] != 2) weg++;
+                for (d = -1; d <= 1; d += 2)
+                    if (s_kl[y][x + d] == 2 || s_kl[y][x + d] == 4 || s_kl[y + d][x] == 2 || s_kl[y + d][x] == 4 ||
+                        (neu == 0 && (s_kl[y][x] == 2 || s_kl[y][x] == 4))) e = 1;
+                ersatz += e;
+            }
+        snprintf(t, sizeof t, "Korrektur %d (Blatt %d r%d) mit Traeger r%d besucht: %d/%d Pixel ohne eigene Wandlinie, "
+                 "%d/%d mit Ersatzlinie daneben", k, pg, rc, tr, weg, ges, ersatz, ges);
+        CHECK(t, (neu == 0 || weg == ges) && ersatz == ges);
+    }
+    /* (d) ROOM1000 Schema-Kanten: Paare Ostraum+1050 (Westkante x207), Ostraum+1090 (Oberkante y89),
+     *     Nord-WC+Sued-WC (Unterkante y138) - mit Traeger entfaellt die eigene Kante, ohne steht sie (b). */
+    {
+        static const r39_ort_t OST = { "1000 Ostraum", 0x1000, 21850, -13400, 2, 0 },
+                               NORD = { "1000 Nord-WC", 0x1000, 650, 50, 2, 0 },
+                               SUED = { "1000 Sued-WC", 0x1000, 650, 3250, 2, 0 },
+                               R1050 = { "1050", 0x1050, 20600, 12350, 2, 0 },
+                               R1090 = { "1090 Hof", 0x1090, -10000, 6000, 2, 1 };
+        const r39_ort_t *p1[2] = { &R1050, &OST }, *p2[2] = { &R1090, &OST }, *p3[2] = { &SUED, &NORD };
+        int x, y, w207 = 0, w89 = 0, w138 = 0;
+        orte_betreten(p1, 2); n = baue_teil(2); komposit(2, n);
+        for (y = 90; y <= 120; y++) w207 += (s_kl[y][207] == 2);
+        orte_betreten(p2, 2); n = baue_teil(2); komposit(2, n);
+        for (x = 208; x <= 220; x++) w89 += (s_kl[89][x] == 2);
+        orte_betreten(p3, 2); n = baue_teil(2); komposit(2, n);
+        for (x = 208; x <= 220; x++) w138 += (s_kl[138][x] == 2);
+        snprintf(t, sizeof t, "ROOM1000 mit Traeger: Wandpixel auf x207 (Ostraum+1050) %d, y89 (Ostraum+1090) %d, y138 "
+                 "(Nord-WC+Sued-WC) %d - alle 0 (eine Linie, die des Nachbarn)", w207, w89, w138);
+        CHECK(t, w207 == 0 && w89 == 0 && w138 == 0);
+    }
+    return g_fail;
+}
+
+/* ---- M4/M5: Treppensymbole liegen auf der Projektion ihrer STAIR-AOTs --------------------------------------------
+ * Je Treppenhaus und Blatt: die STAIR-AOT-Mitten (Aot_set sce 12/13 aus dem geladenen RDT, g_aot) mit der Zeile
+ * DIESES Blatts projiziert (re15_map_zone_marker = Formel FUN_800473f8 @0x8004741c-0x80047528); ein Lauf = zwei
+ * Enden gleicher Achse (sce) mit <1000 Abstand quer. Jedes Treppensymbol (kind 4/5) des Raums auf dem Blatt muss
+ * hoechstens 2 px (Chebyshev, = sein 5x5-Kasten) von einer Projektion oder einem Lauf entfernt liegen.
+ * Vorher (Bbox-Streckung): 1F 1060 (122,144) gegen (127,144) = 5 px, 10A0 B2 (183,112) gegen (186,112) usw. */
+static int abstand_strecke(int px, int py, int ax, int ay, int bx, int by)
+{
+    int best = 9999, s, n = abs(bx - ax) > abs(by - ay) ? abs(bx - ax) : abs(by - ay);
+    if (n < 1) n = 1;
+    for (s = 0; s <= n; s++) {
+        int x = ax + (bx - ax) * s / n, y = ay + (by - ay) * s / n;
+        int d = abs(px - x) > abs(py - y) ? abs(px - x) : abs(py - y);
+        if (d < best) best = d;
+    }
+    return best;
+}
+
+static int teil_pruef_treppen(void)
+{
+    static const struct { unsigned raum; int zidx; int seite; int band; } F[] = {
+        { 0x1060, 0, 2, 0 }, { 0x1060, 0, 3, 4 }, { 0x1060, 0, 4, 8 },
+        { 0x10A0, 0, 2, 8 }, { 0x10A0, 0, 1, 1 }, { 0x10A0, 0, 0, 4 },
+        { 0x1170, 1, 4, 0 },
+    };
+    char t[300];
+    int f;
+    printf("=== M4/M5: Treppensymbole auf den Projektionen ihrer STAIR-AOTs ===\n");
+    for (f = 0; f < (int)(sizeof F / sizeof F[0]); f++) {
+        const re15_map_zone_t *zr = re15_map_zone_fuer(F[f].raum, F[f].zidx, (unsigned)F[f].seite);
+        int16_t px[16], py[16];
+        int sce[16], np = 0, k, rx = 0, ry = 0, rw = 1, rh = 1, nm, symbole = 0;
+        int32_t ax[16], az[16];
+        if (!zr) { snprintf(t, sizeof t, "ROOM%04X Zone %d hat eine Zeile auf Blatt %d", F[f].raum, F[f].zidx, F[f].seite);
+                   CHECK(t, 0); continue; }
+        if (!betrete(F[f].raum, 0, 0, F[f].band)) { CHECK("Raum geladen", 0); continue; }
+        if (zr->rect == 255) re15_map_zone_synth(zr, &rx, &ry, &rw, &rh, 0, 0);
+        else re15_map_rect_geometry(zr->page, zr->rect, &rx, &ry, &rw, &rh);
+        for (k = 0; k < RE15_AOT_MAX && np < 16; k++) {
+            const re15_aot_t *a = &g_aot.slots[k];
+            if (!a->active || a->type != RE15_AOT_TYPE_STAIR) continue;
+            if (a->x < zr->wx0 || a->x > zr->wx1 || a->z < zr->wz0 || a->z > zr->wz1) continue;   /* andere Zone */
+            re15_map_zone_marker(zr, a->x, a->z, rx, ry, rw, rh, &px[np], &py[np]);
+            ax[np] = a->x; az[np] = a->z; sce[np] = g_aot.stair_params[k].axis;
+            np++;
+        }
+        nm = re15_map_mark_count();
+        { int p; for (p = 0; p < 13; p++) re15_map_debug_reveal_page((unsigned)p); }   /* Marken sichtbar */
+        for (k = 0; k < nm; k++) {
+            int pg, rc, mx, my, kind, za, zb, j, j2, best = 9999;
+            if (!re15_map_mark_get(k, &pg, &rc, &mx, &my, &kind)) continue;
+            re15_map_mark_zonen(k, &za, &zb);
+            if (pg != F[f].seite || kind < 4 || za != zr->zid) continue;
+            for (j = 0; j < np; j++) {
+                int d = abs(mx - px[j]) > abs(my - py[j]) ? abs(mx - px[j]) : abs(my - py[j]);
+                if (d < best) best = d;
+                for (j2 = j + 1; j2 < np; j2++) {
+                    int quer = (sce[j] == 13) ? abs((int)(ax[j] - ax[j2])) : abs((int)(az[j] - az[j2]));
+                    if (sce[j] != sce[j2] || quer >= 1000) continue;
+                    d = abstand_strecke(mx, my, px[j], py[j], px[j2], py[j2]);
+                    if (d < best) best = d;
+                }
+            }
+            symbole++;
+            snprintf(t, sizeof t, "ROOM%04X Blatt %d: Treppensymbol (%d,%d) kind %d liegt %d px von der Projektion seines "
+                     "Laufs (soll <= 2)", F[f].raum, F[f].seite, mx, my, kind, best);
+            CHECK(t, best <= 2);
+        }
+        snprintf(t, sizeof t, "ROOM%04X Blatt %d: %d Treppensymbole, %d STAIR-AOTs", F[f].raum, F[f].seite, symbole, np);
+        CHECK(t, symbole > 0 && np > 0);
+    }
+    return g_fail;
+}
+
+/* ---- M5 (+ M4): in KEINER begehbaren Lage steht der Marker neben der Zeichnung --------------------------------
+ * Sonde markerflaeche (echter Kollisionsloeser, echter Kartenpfad mit Klemmung) - vorher laut Abnahme 0 Abschnitt 5:
+ * 1030 63/2288, 1110 8/1237, 1170 Zone 1 51/311, 1060 4/155 (+4/104, 4/104), 10A0 B2 8/140; Dach (Zone 1) 12/186. */
+static int teil_pruef_marker(void)
+{
+    static const struct { unsigned raum; int band; int32_t x, z, y; int min; } M[] = {
+        { 0x1030, 0, -26214, -3861, 0, 2000 },
+        { 0x1060, 0, 26000, 25300, 0, 150 }, { 0x1060, 4, 26000, 25300, -7200, 100 }, { 0x1060, 8, 26000, 25300, -14400, 100 },
+        { 0x10A0, 1, 21200, 25500, -1800, 130 }, { 0x10A0, 8, 26200, 24800, -14400, 80 },
+        { 0x1110, 0, -2400, -5000, 0, 1200 }, { 0x1110, 0, -8000, -1500, 0, 140 }, { 0x1110, 0, -8000, 4500, 0, 170 },
+        { 0x1111, 0, -2400, -5000, 0, 1200 },
+        { 0x1170, 0, -21225, -18870, 0, 300 }, { 0x1170, 4, -15000, -25700, -7200, 180 },
+        { 0x10C0, 0, 300, 9550, 0, 900 }, { 0x1120, 0, 150, 9550, 0, 900 },
+    };
+    char t[300];
+    int i, gepr;
+    printf("=== M5: Marker in jeder begehbaren Lage auf der Zeichnung ===\n");
+    for (i = 0; i < (int)(sizeof M / sizeof M[0]); i++) {
+        int aus = markerflaeche(M[i].raum, M[i].band, M[i].x, M[i].z, M[i].y, 100, 3, 0, &gepr);
+        snprintf(t, sizeof t, "ROOM%04X Band %d Saat (%d,%d): %d von %d begehbaren Rasterpunkten neben der Zeichnung",
+                 M[i].raum, M[i].band, M[i].x, M[i].z, aus, gepr);
+        CHECK(t, aus == 0 && gepr >= M[i].min);
+    }
+    return g_fail;
+}
+
+/* offen <bmp>: Abzug der echten exe (RE15_INV_FB_SHOT) - Raumkoerper (rot/gruen) 4-nachbarlich am Grund im
+ * Kartenfeld x40..300 y40..210 (G_karten_werkzeug/nb1/offen.py). Riegel M3 in integration_r39_karten. */
+static int teil_offen(int argc, char **argv)
+{
+    FILE *f;
+    unsigned char hdr[54], *px;
+    int w, h, x, y, n = 0, bx = -1, by = -1;
+    long off;
+    if (argc < 3) { printf("FAIL: offen <bmp>\n"); return 2; }
+    f = fopen(argv[2], "rb");
+    if (!f || fread(hdr, 1, 54, f) != 54) { printf("FAIL: %s nicht lesbar\n", argv[2]); if (f) fclose(f); return 1; }
+    off = hdr[10] | (hdr[11] << 8) | (hdr[12] << 16) | ((long)hdr[13] << 24);
+    w = hdr[18] | (hdr[19] << 8); h = hdr[22] | (hdr[23] << 8);
+    if (w != 320 || h != 240) { printf("FAIL: %dx%d\n", w, h); fclose(f); return 1; }
+    px = (unsigned char *)malloc((size_t)w * (size_t)h * 3u);
+    fseek(f, off, SEEK_SET);
+    for (y = 0; y < h; y++) {
+        int stride = (w * 3 + 3) & ~3;
+        if (fread(px + (size_t)(h - 1 - y) * (size_t)w * 3u, 1, (size_t)w * 3u, f) != (size_t)w * 3u) break;
+        fseek(f, stride - w * 3, SEEK_CUR);
+    }
+    fclose(f);
+#define R39_PX(xx, yy) (px + ((size_t)(yy) * (size_t)w + (size_t)(xx)) * 3u)   /* B,G,R */
+#define R39_GRUND(p) ((p)[2] == 0 && (p)[1] == 16)
+#define R39_KOERPER(p) (((p)[2] == 16 && (p)[1] == 56) || ((p)[2] == 48 && (p)[1] == 8))
+    for (y = 40; y < 210; y++)
+        for (x = 40; x < 300; x++) {
+            if (!R39_KOERPER(R39_PX(x, y))) continue;
+            if (R39_GRUND(R39_PX(x - 1, y)) || R39_GRUND(R39_PX(x + 1, y)) || R39_GRUND(R39_PX(x, y - 1)) ||
+                R39_GRUND(R39_PX(x, y + 1))) {
+                if (bx < 0) { bx = x; by = y; }
+                n++;
+            }
+        }
+#undef R39_PX
+#undef R39_GRUND
+#undef R39_KOERPER
+    free(px);
+    printf("%s: %d Koerperpixel am Grund (offene Raumseite)%s\n", argv[2], n, n ? "" : "");
+    if (n) printf("   erstes bei (%d,%d)\nFAIL\n", bx, by); else printf("OK\n");
+    return n ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "";
@@ -752,6 +1167,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "sollbild")) return teil_sollbild(argc, argv);
     if (!strcmp(teil, "doppelwand")) return teil_doppelwand(argc, argv);
     if (!strcmp(teil, "markerflaeche")) return teil_markerflaeche(argc, argv);
+    if (!strcmp(teil, "offen")) return teil_offen(argc, argv);
     printf("FAIL: unbekannter Teil '%s'\n", teil);
     (void)g_fail;
     return 2;

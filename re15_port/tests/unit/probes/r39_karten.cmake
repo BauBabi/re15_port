@@ -11,8 +11,16 @@
 #                            Gang-Abschnitt gleichmaessig 2,08..2,38 px je 1000 Einheiten (RE2 /450), Querversatz <= 1,
 #                            Schritt <= 2, EINE Zone; Tuerdurchgang <= 3 px Sprung
 #   integration_r39_karten   (nur mit re15_pc) echte exe: Sweep aller Blaetter - B2/1F/2F/3F gegen die Soll-Haelften der
-#                            Vorlagen (0 Abweichungen), B1..3F ohne Doppelwand; ROOM1090 oben am Nutzerpunkt: Marker-Ring
-#                            im Rot des aktuellen Raums
+#                            Vorlagen (0 Abweichungen; 3F mit den drei begruendeten Treppen-Abweichungen der Nachbesserung 1),
+#                            B1..3F ohne Doppelwand; ROOM1090 oben am Nutzerpunkt: Marker-Ring im Rot des aktuellen Raums;
+#                            Nachbesserung 1 (M3): Teilzustaende (ROOM1000 Nord-WC, 1070, 1010 je allein) ohne offene Raumseite
+# Nachbesserung 1 (Abnahme 0, Dossier G_karten.md "Nachbesserung 1"):
+#   unit_r39_karten_teil     M3: jede Doppelwand-Korrektur hat einen Traeger mit Ersatzlinie (Kachel-Index 4); jeder korrigierte
+#                            Ort ALLEIN besucht bleibt geschlossen (Klassenbild der echten Op-Liste: kein Raumkoerper am Grund;
+#                            vorher 1070 34, 1010 je 30, ROOM1000 38/23/9 ...); Ort + Traeger besucht: keine Doppelwand
+#   unit_r39_karten_treppen  M4/M5/M1: jedes Treppensymbol der Treppenhaeuser 1060/10A0 und von 1170 Zone 1 liegt <= 2 px von der
+#                            Projektion seines STAIR-AOT-Laufs (Zeile des Blatts, Formel FUN_800473f8); vorher bis 5 px
+#   unit_r39_karten_marker   M5: 1030/1060/10A0/1110/1170 Z1/10C0/1120 - kein begehbarer Rasterpunkt neben der Zeichnung
 add_executable(probe_r39_karten ${CMAKE_CURRENT_LIST_DIR}/../test_r39_karten.c)
 target_link_libraries(probe_r39_karten PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r39_karten PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/..)
@@ -23,7 +31,11 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r39_karten_1090 COMMAND probe_r39_karten pruef 1090)
 add_test(NAME unit_r39_karten_b1 COMMAND probe_r39_karten pruef b1)
-set_tests_properties(unit_r39_karten_1090 unit_r39_karten_b1 PROPERTIES TIMEOUT 600)
+add_test(NAME unit_r39_karten_teil COMMAND probe_r39_karten pruef teil)
+add_test(NAME unit_r39_karten_treppen COMMAND probe_r39_karten pruef treppen)
+add_test(NAME unit_r39_karten_marker COMMAND probe_r39_karten pruef marker)
+set_tests_properties(unit_r39_karten_1090 unit_r39_karten_b1 unit_r39_karten_teil unit_r39_karten_treppen
+                     unit_r39_karten_marker PROPERTIES TIMEOUT 600)
 
 if(TARGET re15_pc AND TARGET probe_r36_karte)
     add_test(NAME integration_r39_karten
