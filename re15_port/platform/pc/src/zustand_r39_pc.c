@@ -6,7 +6,7 @@
  * tatsaechlich geladenen Modell-Index uebergibt (main.c s_player_model_idx, sonst Charakter-Nibble).
  *
  * Spielerhaut (Slot 0) aus der aktuellen PLD neu laden = der Haut-Upload des Spieler-Ladens des Originals
- * (FUN_800314b0 -> FUN_8004ee78 Slot 0x17 @0x800316c8) — die Kleidung ohne Blut-Decals (NUTZER-VORGABE:
+ * (FUN_800314b0 -> FUN_8004ee78 Slot 0x17 @0x800315b0/@0x80031814; Wund-Builder FUN_80037c1c @0x800316c8/@0x800318cc) — die Kleidung ohne Blut-Decals (NUTZER-VORGABE:
  * volle Heilung = ganze Kleidung; das Original loescht die Decals nie, blood_decals.md). Familie wie der
  * Spielstart / pc_sync_player_model: PL%02X aus der unteren Nibble von DAT_800aca5c (`andi v0,a0,0xf`
  * @0x8003976c; Leon 0, Elza 4; Tabelle @0x80073f70, Leser FUN_800314b0 @0x800314d4) bzw. der geladene

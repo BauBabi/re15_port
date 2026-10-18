@@ -6,7 +6,7 @@
  *      FORM (PORT-WAHL, belegt): "vollstaendig" = die HP erreichen den Wert des Heilsprays (`sh s0`,
  *      s0 = 100 @0x8004ae14, + Westen-Bonus des Ports); die Wiederherstellung ist der Spieler-Lade-Pfad
  *      des Originals (FUN_800314b0: Wund-Builder FUN_80037c1c nullt Level+Akku, Haut-Upload FUN_8004ee78
- *      Slot 0x17 @0x800316c8) — derselbe Weg, auf dem ein Spielstand ohne Blut geladen wird.
+ *      Slot 0x17 @0x800315b0/@0x80031814; Wund-Builder FUN_80037c1c @0x800316c8/@0x800318cc) — derselbe Weg, auf dem ein Spielstand ohne Blut geladen wird.
  *   2. Gift zieht Energie wie RE2 Retail (Beta -> Retail: der RE1.5-Takt @0x80031e44-ecc, -2 HP alle
  *      121 Bilder, ist die Beta-Form; Zielform RE2 PSX.EXE FUN_8003bfac @0x8003c12c-180: alle 31 Bilder
  *      -1 HP bis HP 1) und das EKG zeigt den Gift-Zustand in der RE2-Farbe (Tabelle @0x800ab160, Eintrag

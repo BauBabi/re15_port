@@ -295,7 +295,7 @@ Aenderung: F_belege/build_6_configure.log + build_6.log (`=== LOCAL-BUILD-OK`, e
   pc_sync_player_model in main.c geschrieben, statt in eine eigene PC-Datei der Spur (Vorbild dining_r38_pc.c).
 - Messung vorher: `git diff master -- re15_port/platform/pc/main.c` = +25 Zeilen (Kommentar 5 + Funktion 18 + Haken 2).
 - Beleg (Form unveraendert, keine neue Konstante): Slot-0-Upload der PLD-TIM = Haut-Upload des Spieler-Ladens FUN_800314b0 ->
-  FUN_8004ee78 Slot 0x17 @0x800316c8; Familie PL%02X aus der unteren Nibble von DAT_800aca5c (`andi v0,a0,0xf` @0x8003976c,
+  FUN_8004ee78 Slot 0x17 @0x800315b0/@0x80031814; Wund-Builder FUN_80037c1c @0x800316c8/@0x800318cc; Familie PL%02X aus der unteren Nibble von DAT_800aca5c (`andi v0,a0,0xf` @0x8003976c,
   Tabelle @0x80073f70, Leser @0x800314d4).
 - Aenderung: neue Datei `platform/pc/src/zustand_r39_pc.c` (re15_pc_zustand_r39_haut_neu(int modell); GLOB
   platform/pc/CMakeLists.txt:43 -> Configure neu). main.c traegt nur noch den 2-Zeilen-Haken im Blut-Decal-Sync, der den

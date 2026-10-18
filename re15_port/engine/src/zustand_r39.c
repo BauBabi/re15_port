@@ -20,7 +20,7 @@
  * 2. KLEIDUNG (NUTZER-VORGABE): volle Heilung -> ganze Kleidung. Im Original loescht Heilung nichts
  *    (blood_decals.md: Writer auf 0x800b10ec nur Builder FUN_80037c1c + Akku FUN_80037edc); erst der
  *    Spieler-Lade-Pfad FUN_800314b0 baut Tabelle (FUN_80037c1c) und Haut (FUN_8004ee78, Slot 0x17
- *    @0x800316c8) neu. FORM: "vollstaendig" = HP >= 100 (`sh s0`, s0 = 100 @0x8004ae14, der Wert des
+ *    @0x800315b0/@0x80031814; Builder-Aufrufe @0x800316c8/@0x800318cc) neu. FORM: "vollstaendig" = HP >= 100 (`sh s0`, s0 = 100 @0x8004ae14, der Wert des
  *    Heilsprays) + Westen-Bonus des Ports; Ausloeser = der Heil-Applier (Tabelle @0x80010fbc, Port
  *    re15_item_use_apply), Wiederherstellung = Tabelle nullen + Haut neu laden (= Spieler-Laden).
  * 3. EKG: RE1.5-Farbtabelle @0x8007622c hat fuer Gift (Eintrag 3) 20 ff 20 = dasselbe Gruen wie FINE
