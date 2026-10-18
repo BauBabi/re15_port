@@ -10,7 +10,7 @@
  *   ablauf    echte VM + Statusschirm: Aktionstaste am liegenden Roy -> sub07 (Ereignis 7) parkt an @0x00E64
  *             Message_on 18, KEINE Nachricht offen, Leser auf der Titelseite (Bildsatz 30, 6 Seiten, Liste Platz 0 =
  *             Dokument 5) -> "filed"-Meldung mit Id 0x4D -> Bit (9,68). Danach laeuft sub07 weiter; die Kartenkette
- *             steht ERST am Evt_end (@0x00E82) an: Eintrag ROOM10F1 (Blatt 3 / Rechteck 9) -> Folge ROOM1211 (Blatt 1
+ *             kommt SOFORT nach dem Leser (Runde 39 Spur H; vorher erst am Evt_end @0x00E82): Eintrag ROOM10F1 (Blatt 3 / Rechteck 9) -> Folge ROOM1211 (Blatt 1
  *             / Rechteck 3), zeitgesteuert, schliesst. Zweites Untersuchen: wieder das Tagebuch, NUR LESEN (Liste
  *             bleibt 1 Eintrag, keine Meldung, kein Hinweis).
  *   karte     Ziele in der normalen Karte: vor dem Lesen keine; danach Comms (3/9) + Prison (1/3), Blaetter 3 und 1
@@ -377,23 +377,21 @@ static void teil_ablauf(void)
     PRUEF(re15_game_flag_get(9, RE15_TAGEBUCH_R38_BIT) == 1, "Bestaetigen -> Bit (9,68)");
     n = 0;
     while (n++ < 300 && re15_menu_gameplay_frozen()) bild(0, 0);
-    PRUEF(!re15_menu_gameplay_frozen() && s_hint_gesehen < 0, "Schirm zu nach %d Bildern, noch KEIN Hinweis", n);
-    /* sub07 laeuft weiter: Evt_next, Aufrichten, Sleep 30, Plc_ret, Aot_reset -> erst dann die Kette */
-    /* Je Bild: wo stand der Faden zu Bildbeginn? Die VM laeuft im Bild VOR dem Haken (bild()), die Anforderung
-     * faellt also in das Bild, in dem der Faden sein Evt_end @0x00E82 ausfuehrt — davor in keinem. */
-    int im_ereignis_bis = -1, off_davor = -1;
-    for (int f = 0; f < 200 && s_hint_gesehen < 0; f++) {
-        const long o = faden_zwischen(0x00E64, 0x00E82);
-        if (o >= 0) { im_ereignis_bis = s_bild; off_davor = (int)o; }
-        bild(0, 0);
-    }
-    const long off_danach = faden_zwischen(0x00E64, 0x00E82);
+    PRUEF(!re15_menu_gameplay_frozen() && s_hint_gesehen < 0, "Schirm zu nach %d Bildern, Hinweis noch nicht angefordert", n);
+    /* RUNDE 39 SPUR H (Nutzer: "nach aufnehmen von Roys Diary muss direkt die Karte kommen ... noch bevor das Spiel zum
+     * bewegen wieder zurueckgegeben wird"): die Kette wird im ERSTEN freien Bild angefordert (tagebuch_r38.c
+     * leser_zu_pruefen, vor re15_map_hint_pending im game_step); der Faden parkt dabei noch auf dem Message_on @0x00E64 —
+     * kein Evt_next, kein Aufrichten (@0x00E6A), kein Plc_ret (@0x00E76) davor. Vorher: erst am Evt_end @0x00E82. */
+    const long off_vor = faden_zwischen(0x00E64, 0x00E82);
+    bild(0, 0);
+    const long off_bei = faden_zwischen(0x00E64, 0x00E82);
     const int k1 = re15_map_hint_eintrag_fuer(RE15_TAGEBUCH_R38_RAUM, RE15_TAGEBUCH_R38_ZIEL1_RAUM);
     const int k2 = re15_map_hint_eintrag_fuer(RE15_TAGEBUCH_R38_RAUM, RE15_TAGEBUCH_R38_ZIEL2_RAUM);
-    PRUEF(im_ereignis_bis > 0 && s_hint_gesehen == k1 && s_hint_bild == im_ereignis_bis && off_danach < 0,
-          "Kette (Eintrag %d) erst in Bild %d: zu Bildbeginn stand sub07 noch bei @0x%05X, danach kein Faden mehr bis "
-          "@0x00E82 (Evt_end ausgefuehrt); in keinem Bild davor", s_hint_gesehen, s_hint_bild, off_davor);
-    PRUEF(g_aot.slots[5].active && g_aot.slots[5].event_id == 7, "Slot 5 wieder scharf -> Ereignis 7 (@0x00E78)");
+    PRUEF(s_hint_gesehen == k1 && s_hint_bild == s_bild - 1 && off_vor == 0x00E64 && off_bei == 0x00E64 &&
+          re15_tagebuch_r38_hinweis_faellig(),
+          "Kette (Eintrag %d) im ERSTEN freien Bild %d angefordert; sub07 parkt auf @0x%05lX (Message_on), nicht am Evt_end",
+          s_hint_gesehen, s_hint_bild, off_bei);
+    PRUEF(re15_menu_gameplay_frozen(), "Hinweis-Schirm angenommen: Spiel steht wieder (keine Steuerung dazwischen)");
     /* der Hinweis-Schirm: Ziel 1, dann (Zeit) Ziel 2, dann zu */
     int p1 = -1, r1 = -1, p2 = -1, r2 = -1, s1 = 0, s2 = 0;
     n = 0;
@@ -409,6 +407,17 @@ static void teil_ablauf(void)
     PRUEF(p2 == 1 && r2 == 3 && s2 > 100, "Hinweis 2 (Folge %d): Blatt %d Rechteck %d (Prison ROOM1211), %d Bilder",
           k2, p2, r2, s2);
     PRUEF(!re15_menu_gameplay_frozen() && !re15_menu_map_hint_active(), "Kette zu Ende, Schirm zu (%d Bilder)", n);
+    /* Runde 39 Spur H: ERST JETZT laeuft sub07 hinter dem Message_on weiter (Evt_next, Aufrichten @0x00E6A, Sleep 30,
+     * Plc_ret @0x00E76, Aot_reset @0x00E78, Evt_end @0x00E82). */
+    PRUEF(faden_zwischen(0x00E64, 0x00E82) == 0x00E64 && re15_tagebuch_r38_hinweis_faellig(),
+          "nach dem Hinweis: sub07 parkt noch auf dem Message_on (@0x%05lX), die Freigabe faellt in den naechsten VM-Schritt",
+          faden_zwischen(0x00E64, 0x00E82));
+    bild(0, 0);   /* der Haken liefert jetzt 1: PC hinter das Message_on, Evt_next/Plc_motion/Plc_flg/Sleep im selben Schritt */
+    PRUEF(faden_zwischen(0x00E64, 0x00E82) > 0x00E64 && !re15_tagebuch_r38_hinweis_faellig(),
+          "ein Bild spaeter: sub07 hinter dem Message_on (@0x%05lX), Kette abgehakt", faden_zwischen(0x00E64, 0x00E82));
+    for (int f = 0; f < 200 && faden_zwischen(0x00E64, 0x00E82) >= 0; f++) bild(0, 0);
+    PRUEF(faden_zwischen(0x00E64, 0x00E82) < 0, "sub07 bis zum Evt_end @0x00E82 durchgelaufen");
+    PRUEF(g_aot.slots[5].active && g_aot.slots[5].event_id == 7, "Slot 5 wieder scharf -> Ereignis 7 (@0x00E78)");
 
     /* ---- zweites Untersuchen: wieder das Tagebuch, nur lesen ---- */
     s_hint_gesehen = -1;

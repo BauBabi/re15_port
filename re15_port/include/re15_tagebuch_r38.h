@@ -100,15 +100,17 @@ extern "C" {
  * angefordert); 1 = fertig, der Aufrufer schiebt den PC um 4 weiter (Message_on uebersprungen). */
 int  re15_tagebuch_r38_message_on(const scd_thread_t *t);
 
-/* Haken in game_step_common.c VOR der Annahme der Hinweis-Anforderung: fordert die Kartenkette an, sobald das
- * Ereignis des ersten Lesens sein Evt_end erreicht hat. */
+/* Haken in game_step_common.c VOR der Annahme der Hinweis-Anforderung: fordert die Kartenkette an, sobald der
+ * Dokument-Schirm des ersten Lesens samt Rueckblende durch ist (Runde 39 Spur H, NUTZER-VORGABE: Karte direkt nach dem
+ * Tagebuch, bevor das Spiel zurueckgegeben wird; der Faden parkt solange auf dem Message_on @0x00E64 — vorher erst am
+ * Evt_end @0x00E82). Form = RE2 Opcode 0x84 @0x800591C4 (Dossier analysis/befunde_runde39/H_elza.md). */
 void re15_tagebuch_r38_tick(void);
 
 /* Haken in menu_common.c (Dokument-Aufnahme): Listenplatz von `doc`, wenn es schon in der FILE-Liste steht,
  * sonst -1 (dann haengt der Aufrufer es an). */
 int  re15_tagebuch_r38_listenplatz(int doc);
 
-/* Fuer Riegel/Protokoll: 1 = Kartenkette wartet auf das Evt_end. */
+/* Fuer Riegel/Protokoll: 1 = Kartenkette angefordert, der Faden wartet auf den Hinweis-Schirm (Runde 39 Spur H). */
 int  re15_tagebuch_r38_hinweis_faellig(void);
 
 #ifdef __cplusplus

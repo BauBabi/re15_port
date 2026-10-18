@@ -1,0 +1,28 @@
+{
+  "_hinweis": "Spur A Nachbesserung 1 nach Nutzer-Nachtrag 2 (AUFTRAG.md 09:48). Baum r39_stimmen HEAD 275a322c (Merge master mit Nachtrag + main22.wav). Resume nur mit GENAU diesen args.",
+  "welle": ["A"], "slots": 1, "max_nach": 1, "basis": "3e49ff87",
+  "modus": {"A": "nachbesserung"},
+  "runde0": {"A": 0},
+  "bau": {"A": {
+    "status": "fertig",
+    "zusammenfassung": "Abnahme 0 BESTANDEN (bb285672). Tabelle (Raum, Nachricht) -> Nutzer-Datei in engine/src/stimmen_r39.c + include/re15_stimmen_r39.h, 4-Zeilen-Haken audio_pc.c re15_voice_load_clip, Sperre fremder Dateien (11B0 13/14, 1171 2). Zuordnung: 1050 msg 22-24 <- main09-11, 1150 msg 22-28 <- main15-21 (msg 29 OHNE Datei), 11B0 msg 20/21 <- main13/14, 1171 msg 3 <- main02. Form RE2 xa_on @0x80058028. Baum-HEAD jetzt 275a322c = Merge master (AUFTRAG.md Nachtrag 2 + synchro/STAGE1/room1150/main22.wav) in r39/stimmen; Vergleichsbasis = master.",
+    "commits": ["90d6395e fix(r39-stimmen)", "ae74e92c", "d3899208", "bc3b3585", "336e78a8", "71182900", "bb285672 doc Abnahme 0", "275a322c Merge master"],
+    "suite": "100% tests passed, 0 tests failed out of 93 (ctest -R r39_stimmen|synchro_stimme|voice_ausreden|audio_sperren|r30_tuer_stimme|r34n_f_leiche_stimme|r36_elza_|r38_elzaintro|r38_rekorder|r38_werkstatt11b0|r38_heliport1171|r36_szenenleon|r35_cut1150|r36_szene1150|r34n_d_adaruf|r35_inventar1050|r27_ada_cutscene_1050|ada_eintritt_1050|r38_kleinkram_irons)",
+    "offene_punkte": ["Irons' Zeilen 1150 main18-21 -47 dBFS, Port-Deckel 4x -> 10-12 dB unter BGM MAIN1E (Nutzer hat entschieden, s. Maengel 1)", "1150 msg 29 ohne Datei (Nutzer hat main22.wav geliefert, s. Maengel 2)"]
+  }},
+  "abn": {"A": {
+    "bestanden": false,
+    "bericht": "analysis/befunde_runde39/A_abnahme_0.md (bestanden) + Nutzer-Nachtrag 2 in AUFTRAG.md",
+    "urteile": [
+      {"punkt": "1 ROOM1050 main09-11", "urteil": "erfuellt", "beleg": "Abnahme 0: [voice] ROOM1050 msg 22/23/24 <- main09/10/11, Korrelation 0,994/0,981/0,938"},
+      {"punkt": "2 ROOM1150 Sterbeszene", "urteil": "erfuellt", "beleg": "Abnahme 0: msg 22..28 <- main15..21 im Ton; msg 29 ohne Datei; Irons 10-12 dB unter BGM (Hinweis)"},
+      {"punkt": "3 ROOM11B0 msg 20/21", "urteil": "erfuellt", "beleg": "Abnahme 0: main13 0,905, main14 0,957; Text msg 21 = 'unwanted followers' = Aufnahme"},
+      {"punkt": "4 ROOM1171 msg 3", "urteil": "erfuellt", "beleg": "Abnahme 0: main02 an msg 3 Korrelation 0,933; Nutzer: 'Zu 1171, passt.'"}
+    ],
+    "maengel": [
+      "NUTZER-NACHTRAG 2 (AUFTRAG.md 2026-10-18 09:48, woertlich: 'er Port kann die Stimme ruhig lauter anheben das es passt.'): Irons' Zeilen ROOM1150 main18-21 (rms 0,0040-0,0046 = -47 dBFS, 22 dB leiser als Leons main15-17) sollen in der Sterbeszene hoerbar passen. NUTZER-VORGABE = Port-Anhebung ueber den 4x-Deckel (audio_pc.c re15_voice_load_clip Level-floor Z.2372-2374, Port-Regel seit 2026-08: WARUM 4x? Commit/Begruendung lesen) hinaus. FORM MESSEN, nicht raten: Ziel-Pegel aus dem Bestand ableiten (Zensus aller synchro-WAVs: rms/Spitze je Datei; Leons Zeilen derselben Szene 0,055-0,061 als Bezug), Anhebung mit Spitzenbegrenzung (kein Clipping, Spitze belegen), Regel fuer ALLE zu leisen Dateien (Irons' alte main05/07/09/12/13 haben dieselbe Klasse) statt Sonderfall; nachher messen: Irons' Stimme in der Sterbeszene nicht mehr unter der BGM MAIN1E (Stimme/Rest-Verhaeltnis wie Leon +4,7 dB oder begruendet), keine Uebersteuerung, Leon unveraendert; Riegel (Unit: Regel am Dateibestand; Integration 1150: Pegel-Verhaeltnis). Jede Konstante aus der Messung im Code-Kommentar und in der Commit-Message belegt.",
+      "NUTZER-NACHTRAG 2: 'Du hast recht, das SIR, sir! habe ich vergessen und jetzt mit main22 ergänzt.' -> neue Datei synchro/STAGE1/room1150/main22.wav (2026-10-18 09:45, 144024 B, im Baum nach dem Merge 275a322c) = ROOM1150 msg 29 'Leon: SIR, Sir?!'. Tabelle stimmen_r39.c um 1150 msg 29 <- main22.wav erweitern, Inhalt der Datei pruefen (Erkennung/Diktat wie Dossier §1), Riegel nachziehen (unit_r39_stimmen_tabelle/_lader, integration_r39_stimmen_1150 mit msg 29 im Mitschnitt, Zeile 'keine Aufnahme' darf nicht mehr erscheinen), Dossier §1/§4 ergaenzen. Datei NICHT umbenennen/aendern.",
+      "NUTZER-NACHTRAG 2: 'Ändere es zu unwanted followers im Text bei 11B0.' - Der Szenentext msg 21 lautet BEREITS 'I just want to make sure / we don't have any unwanted followers.' (tools/r36_j/szene11b0_bauen.py:286, engine/src/gen/szl11b0_szene.inc:134). NICHTS aendern; im Dossier mit der [msgtext]-Zeile eines Laufs festhalten (Abschnitt 'Fuer den Nutzer': Text war schon so)."
+    ]
+  }}
+}

@@ -6,6 +6,17 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 10:19: Integration Welle 1 KOMPLETT (fc7a0231 = A+B+C+L): Bau gruen, A-Tests 93/93 (ctest -j 3, 749 s), zusammen
+  mit B+C+L 237/237 ohne Wiederholung. Spur A Nachbesserung 1 (wf_45b12abc-f7d) laeuft noch - nach ihrer Abnahme erneut
+  mergen, bauen, A-Tests. Naechster Schritt: Integration -> master, Hauptbaum-exe (nur wenn der Nutzer nicht spielt).
+* 2026-10-18 10:06: Integration Welle 1, Stufe B+C+L (Bau 09:32): gezielte Tests 144/144 gruen (ctest -j 3, 1954 s, keine
+  Wiederholung noetig; Regex in scratchpad/integ_regex_bcl.txt der Sitzung). Jetzt: Bau mit A (fc7a0231) + A-Tests (93).
+* 2026-10-18 09:49: Nutzer-Nachtrag 2 (AUFTRAG.md 09:48, 32ab1f97): Irons lauter = Port darf ueber 4x anheben (Form messen);
+  1150 msg 29 <- neue Datei main22.wav; 11B0 "unwanted followers" steht schon so (szene11b0_bauen.py:286) - nichts zu
+  aendern; 1171 passt. master in r39/stimmen gemergt (275a322c), Spur A NACHBESSERUNG 1 gestartet: wf_45b12abc-f7d
+  (args woertlich in orchestrator/args_a_nach1.json: modus nachbesserung, abn = die drei Nachtrag-Punkte als Maengel).
+  Danach r39/stimmen erneut in die Integration mergen. Welle-1-Integration (B+C+L gebaut 09:32, A gemergt fc7a0231,
+  noch nicht gebaut): B/C/L-Tests laufen seit 09:33 (-j 3).
 * 2026-10-18 09:34: Spur A stimmen BESTANDEN (Abnahme 0, bb285672; Bau 90d6395e): Ursache = Lader sucht main<MSG-ID>.wav,
   Nutzer legte mit der naechsten freien Nummer ab; Tabelle (Raum, Nachricht) -> Datei (stimmen_r39.c): 1050 msg 22-24 <-
   main09-11, 1150 msg 22-28 <- main15-21, 11B0 msg 20/21 <- main13/14, 1171 msg 3 <- main02 (Form RE2 xa_on @0x80058028),
