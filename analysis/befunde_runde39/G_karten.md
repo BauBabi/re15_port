@@ -236,17 +236,83 @@ die AUSGELIEFERTE @0x800768c8, ihre Westkante liegt 2 px neben der gemalten Kach
 ## RE-Belege
 (siehe je Punkt: P2, B1-R, P1-M; 1F/2F/3F/B2 = NUTZER-VORGABE, Form = rechte Haelften der Vorlagen, M1/M2)
 
-## Umsetzung
-(folgt)
+## Umsetzung (alle Dateien)
+* `engine/src/karte_r39.c` + `include/re15_karte_r39.h` (NEU): Kachel-Korrekturen 1F/2F/3F/B2 nach den Vorlagen
+  (Vorgaenger ba258ae4, 19 Texel-Rechtecke + 5 Schema-Kanten, je mit Seiten-Tabelle @0x80076840 / MAP0x.PIX), dazu
+  Runde 39 B1: Hinweis-Ziel auf einer Schema-Zeichnung (re15_karte_r39_ziel_rect / _schema_ziel), Gast-Zeichnung nur
+  auf der aktuellen Etage aktuell (re15_karte_r39_etage_hier).
+* `engine/src/re15_map_zones.h` (Karten-Code, Spur G): Marken 1F/2F/3F/B2 (Vorgaenger), Zeilen ROOM1090/1091 je Ebene
+  (P2), Blatt 0 komplett als Schema (B1-U: Zonen, s_map_synth 3..10, s_map_synth_cells 3..20, 8 Marken, Etagenzeile),
+  NEU 1160/1161 und 11D0 Zone 1, Zeilen 10C0/1120/10E0 (P1-M). Jede Konstante mit Offset/Adresse im Kommentar.
+* `engine/src/re15_inv_screen.c` (Haken "Runde 39 Spur G"): 4 Kachel-Haken (Vorgaenger), Schema-Kanten-Haken
+  (Deklaration vor die Anweisung gezogen), Schema-Durchgang: Rot je Zone + Etage, Umriss bei Plan-Besitz,
+  Hinweis-Ziel blinkt.
+* `engine/src/map_hint_common.c` (Haken): Zielzone darf Schema sein, Ziel-Rechteck 128 + synth.
+* Keine Assets, kein Patch an shared_assets, keine Sprachdateien.
 
-## Messung nachher
-(folgt)
+## Messung nachher (Zusammenfassung, Einzelheiten je Punkt oben)
+* 1F/2F/3F/B2: echte exe, Sweep - je Blatt 0 Abweichungen gegen das Soll-Klassenbild (56 207/56 234/56 214/56 216
+  verglichene Kartenpixel), 0 Doppelwand-Pixel auf B1..3F (vorher 1F 188, B2 30) - N1, integration_r39_karten.
+* ROOM1090 (Punkt 2): 0 von 1225 (oben) / 590 (Hof) Rasterpunkten neben der Kachel, Leon und Elza (vorher 160);
+  echte exe am Nutzerpunkt: Ring (183,72), ringsum rot 36, gruen 0 (vorher Ring (186,83) im gruenen Nachbarraum).
+* B1: alle Orte 0 Rasterpunkte neben der Zeichnung (vorher 1160 588/588); Gang gleichmaessig 2,13..2,29 px je 1000
+  Einheiten (vorher 0,62..3,56), Tuer-Spruenge 1..5 px (vorher bis 25) - B1-M1/B1-N.
+* Stage 1 gesamt: neben der Zeichnung 1225 -> s. P1-M (10C0 123 -> 0, 1120 77 -> 0, 10E0 26 -> 0).
 
 ## Tests
-(folgt)
+NEU (probes/r39_karten.cmake, Quelle test_r39_karten.c + r39_karte_b1.h + r39_karten_soll.inc):
+* `unit_r39_karten_1090` - P2: 1090/1091 beide Ebenen, Nutzerpunkt, Tuer -> 1050 an ihrer Marke. VORHER-Stand
+  (Zeilen ohne Kalibrierung): obere Ebene 160 Punkte daneben -> ROT.
+* `unit_r39_karten_b1` - B1: Marker auf der eigenen Zeichnung (14 Orte inkl. Elza, 1160, Kammer, Absatz), Tueren auf
+  der gemeinsamen Linie beider Zeichnungen, Treppen im Innenraum, Gang-Gleichmass, Tuer-Spruenge <= 3 px,
+  Hinweis-Ziel 11C0 blinkt auf der Schema-Zeichnung. Gegen den Kopf von 10876ebb gebaut: 1160 + 5 Gang-Wege + 5 Tueren
+  ROT (Tabelle B1-M1).
+* `integration_r39_karten` - echte exe: Sweep B2/1F/2F/3F gegen die Soll-Haelften, Doppelwand B1..3F, ROOM1090-Marker
+  im Rot. Auf die linken Haelften der Vorlagen (= Stand 1038dc15) angewandt: sollbild 93/322/53/98 Abweichungen,
+  doppelwand 30/188/0/0 -> ROT.
+ANGEPASSTE Riegel anderer Runden - je dieselbe ABSICHT, uebertragen von der gemalten B1-Kachel auf die
+Schema-Zeichnung (die Kachel-Rechtecke 0..6 von Blatt 0 werden nicht mehr gezeichnet, Nutzer: "Die Karte von B1 ist
+noch ziemlicher schrott"):
+* test_r35_karte.c `teil_r1230` (Gang an 6 Punkten NUR die Gang-Zeichnung, Marker darauf; 10A0 Band 4 NUR der Absatz);
+  test_r35_karte.cmake Lauf A Kasten (124,67)-(158,173) statt Ring (120,60)-(175,131); Lauf D (Vorgaenger 716eda1d):
+  Kasten ab x186 statt x187 und test_r35_karte.c 1210-Tuer <= 4 px statt 3 - die Vorlage mapB2_correct.png legt die
+  11E0-Tuer auf die Flur-Ostwand x186 (vorher x187 = Doppelwand daneben), die Wand-Bedingung bleibt.
+* test_r36_karte.c Riegel 1-4 (Treppe 10A0 B1, Marker 11D0, 1190 Halle/Ostkammer, Tuer 11B0/11C0): Schema-Zustand und
+  -Zellen statt rect_state/Texel; Marke 11D0<->Gang jetzt zid 25/30; "1260-Tuer an der Suedwand" ersetzt durch das
+  Ostende des Sued-Gangs (die 1260-Wege sind Bodenloecher, B1-R) und die Ankunft aus 1260 in der Kammer (Zone 1).
+* test_r36_karte.cmake Laeufe A-D: Kaesten auf die Schema-Lage (Absatz 141..158 x 153..168, Tuer 11B0/11C0 x161..165
+  y94, Halle 70..131 x 116..150, Ostkammer 133..149 x 110..139).
+* test_r36_kartenitems.c (Blatt 0): Plan-Besitz zeigt unbesuchte Orte als UMRISS ohne Koerper (Wandlinien mehr,
+  Koerper gleich) statt Kacheln der Zeile 498.
+* test_r35_cut10f0.c / test_r38_tagebuch.c: Ziel ROOM11C0 = Blatt 0 Pseudo-Rechteck 136 (128 + synth 8) statt rect 4.
+* test_map_synth.c: Kartenfeld = Huelle der ORIGINAL-Rechtecke aller 13 Seiten-Tabellen x 39..293 y 44..206 statt der
+  Port-Annahme 90..240 / 50..200 (B1s eigene Original-Kachel r1 begann schon bei x 76).
+GEZIELTER LAUF: siehe Abschnitt "Suite" unten (Summenzeile woertlich).
 
 ## OFFEN
-(folgt)
+* 1210 (B2): die Suedwest-Kammer (z < -20140, x -26928..-22428) ist begehbar, aber weder im Original noch in der
+  Vorlage mapB2_correct.png gemalt - dort steht der Marker neben der Kachel (207 von 1141 Rasterpunkten). Entscheidung
+  des Nutzers (s.u.).
+* 1170 Zone 1 (3F/Dach, 51/311), 1110 (2F, 8/1237): die gemalte L-Form passt unter dem gesetzten Spiegel nicht zur
+  Raumform (P1-M) - braucht eine Orientierungs-Messung (Tuer-/Treppen-Symbole beider Blaetter), nicht geraten.
+* 1030 (1F, 63/2288): AUSGELIEFERTE Zeile @0x800768c8, Westkante 2 px neben der gemalten Kachel - Original-Abweichung,
+  nicht angefasst.
+* 1060 (4) / 10A0 B2 (8): Treppenhaus-Kacheln kleiner als das nominale Rechteck; nicht angefasst, weil ihre
+  Treppenmarken an der bisherigen Abbildung haengen.
+* Membership-Rand 11D0-Kammer: die Weltbox ist um ZONE_SLACK eingezogen; in einem 100-Einheiten-Streifen an ihrer
+  West-/Nordwand gilt der Zwinger als aktuell (Marker steht trotzdem richtig - beide Zonen haben dieselbe Abbildung).
 
 ## Fuer den Nutzer
-(folgt)
+* B1 ist neu gezeichnet: aus der Kollision der Raeume und ihren Tueren, im RE2-Massstab, Waende als EINE Linie, Tueren
+  auf der gemeinsamen Wand, Treppen im Treppenhaus. Der Gang ist kein Ring mehr, sondern sein echter S-Verlauf; das
+  Parkdeck 11C0 ist ein Ring um seine Insel; der Zwinger ohne Strom (ROOM1160) hat jetzt Karte und Marker; die
+  Kanal-Leiterkammer im Zwinger (nur aus der Kanalisation erreichbar) ist ein eigener kleiner Raum. Bild:
+  analysis/befunde_runde39/G_karten_bilder/b1_nachher_sweep_x3.png / b1_echtlauf_1230_x3.png.
+* Die beiden Wege nach ROOM1260 (Kanaldeckel in 11B0, Leiterloch im Zwinger) sind Bodenloecher und haben deshalb KEIN
+  Tuersymbol auf der Wand (vorher standen dort Tuermarken an Waenden, an denen es keine Tuer gibt).
+* Rot wird jetzt nur der Teil eines Raums, in dem du stehst (1190 Halle/Ostkammer, ROOM1000 Ostraum/WCs) - wie du es
+  fuer 1190 in Runde 36 und fuer ROOM1000 am 2026-09-13 beschrieben hast.
+* Entscheidungsfrage: ROOM1210 hat im Suedwesten eine begehbare Kammer, die weder das Original noch deine Vorlage
+  mapB2_correct.png zeichnet. Soll sie auf B2 als eigener kleiner Raum dazukommen (dann steht der Marker dort im Raum),
+  oder bleibt B2 genau wie deine Vorlage?
+* Keine neuen Assets, keine Sprachdateien.
