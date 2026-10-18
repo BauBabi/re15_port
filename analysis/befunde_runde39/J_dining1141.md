@@ -469,3 +469,25 @@ Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r
   Bild, F1750 Messer gezogen, F1860 John an der Tuer).
 - Unit am Endstand, Regex wie 8.3 -> "100% tests passed, 0 tests failed out of 122".
 - Gesamt Integration (erster + zweiter Durchgang, gleicher Code fuer alle Nicht-1141-Riegel): 15 von 15 gruen.
+
+
+### 8.8 Nutzer-Nachtrag 7 (20:28, waehrend dieser Nachbesserung in den Baum committet: 363626f4)
+Wortlaut: "Nein, die Animation beim follow me in room 1141 von John ist schon wieder falsch... die soll so aussehen wie in
+room 1171, die du jetzt korrigiert hast..." Orchestrator (Belege Spur K): das korrigierte Heranwinken in 1171 = Original
+Plc_motion(0,2) @0x014CE = RBJ-Record 1 (Marker 0x2 = John) Clip 2 von ROOM1171, 96 Bilder.
+- Beleg selbst nachgelesen: ROOM1171 sub02 @0x014BA `2b 00 00 00` msg 0 "Elza, hurry up!", @0x014BE `2e 02 00 00`,
+  @0x014CE `3f 00 02 00`, @0x014D2 `09 0a 3c 00`; RBJ von ROOM1171: RDT+0x5C = 0x188C, Kopf total 0x408C, 2 Records:
+  rec 0 Prefix 0x8 Marker 0x1 (Spieler), rec 1 Prefix 0x1088 EDD 0x3E34 Marker 0x2 (Gegner 0 = John); der Port-Parser
+  re15_emd_parse_rbj_record liest rec 1 mit 3 Clips, Clip 2 = 96 Bilder (Riegel phase_h, Logzeile im Lauf).
+- Umsetzung (751e3f4d): msg 52 + Work_set(2,0) + Plc_motion(0,2) + Sleep 60 (Form ROOM1171 @0x014BA..@0x014D2) + Sleep 40
+  (100 >= 99 Bilder msg 52 / 96 Clip). ROOM1141 hat diesen Clip nicht (seine RBJ-Records tragen die Gesten 15..24): Leihe
+  fuer die Dauer der Geste - Anker WINK (ENTRIEGELN39 +0x048C) parst Record 1 der ROOM1171-RBJ gegen Johns Skelett (wie
+  enemy_common.c rbj_resolve_slot), Haken in re15_actor_rbj_anim/_skel (enemy_common.c, je 2 Zeilen) geben ihn nur bei
+  John Zustand 4/Sub 0/Clip 2 heraus; Plattform liest STAGE1/ROOM1171.RDT einmal (dining_r39_pc.c, Muster cut10f0_pc.c).
+  Der Armschwung Clip 17 (vorheriger Stand dieser Nachbesserung) ist damit ersetzt.
+- Gemessen (Lauf wink, Kurzweg wie pist): `[rbj] ROOM1141: Animationsblock von ROOM1171 fuer Johns Heranwinken gelesen
+  (16540 B)`, `F3014 John winkt heran: RBJ ROOM1171 Record 1 Clip 2 geliehen (96 Bilder, 3 Clips)`, msg 52 F3015..F3113
+  mit s1=0 mo=2, John laeuft F3116 los; Bild `j39n1/wink.png`/`wink_zoom.png`: John winkt mit dem linken Arm mehrmals heran
+  (Arm vor - Hand zurueck, F3036..F3092), in der rechten Hand die Pistole gesenkt, keine Waffe auf Elza.
+- Spur K hat in 1171 den RBJ-Kanal-Cache berichtigt (18940e95, Slot ohne Record belegt keinen Platz); die Leihe hier geht
+  am Cache vorbei - bei der Integration zusammen ansehen.
