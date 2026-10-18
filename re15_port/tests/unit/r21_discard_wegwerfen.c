@@ -295,11 +295,13 @@ static int teil_a_b(void)
            "             je 3 Faelle (Ja / Nein / nicht getragen) + %d Gegenproben\n",
            faelle, RE15_DISCARD_SITE_COUNT, items, mit_gegenprobe);
     PRUEFE(faelle == RE15_DISCARD_SITE_COUNT, "nicht alle Benutzungsstellen gefahren");
-    /* 8 seit Runde 25: die Yellow Keycard 0x39 ist raus. Ihre einzige Benutzungsstelle
-     * (ROOM11E0/11E1 msg 9) haengt an einem Kartenleser, den der ausgelieferte Stand nie
-     * installiert — flag(3,139) steht ab Bild 0 eines neuen Spiels (ROOM1240 @0x0055A),
-     * also nimmt main00 @0x01576 den Else-Zweig und setzt @0x016C0 eine fertige Tuer. */
-    PRUEFE(items == 8, "erwartet 8 Gegenstaende, gezaehlt %d", items);
+    /* 8 seit Runde 25: die Yellow Keycard 0x39 war raus. Ihre Benutzungsstelle (ROOM11E0 msg 9)
+     * haengt bei LEON an einem Kartenleser, den der ausgelieferte Stand nie installiert —
+     * flag(3,139) steht ab Bild 0 eines neuen Leon-Spiels (ROOM1240 @0x0055A), also nimmt
+     * main00 @0x01576 den Else-Zweig und setzt @0x016C0 eine fertige Tuer.
+     * 9 seit Runde 39 Spur C: E5 je Szenario-Variante — bei ELZA lebt der Leser (ROOM1241
+     * @0x0055A setzt (3,0x6F), nicht (3,0x8B)), ROOM11E1 msg 5 mit Gate (3,139) ist ihre Stelle. */
+    PRUEFE(items == 9, "erwartet 9 Gegenstaende, gezaehlt %d", items);
     PRUEFE(mit_gegenprobe == faelle, "nicht jeder Fall hatte eine Gegenprobe");
     return faelle;
 }
