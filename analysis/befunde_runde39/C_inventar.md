@@ -84,3 +84,31 @@ eigenem Modal-Text.
   Leon-/Elza-RDT sind getrennte Dateien (Raumlader `addu a0,a0,v0` @0x800397ec, Elza = Leon-Datei + 1,
   re15_gameflow.h) -> der Leon-Setzer kann in Elzas Spiel nie laufen. Der E5-Riegel klappte die Variante weg
   (`basisraum(r) = r[:-1] + "x"`) und strich damit auch Elzas Panel.
+
+## 1. Messung vorher (Stand 3e49ff87 + nur die Messschiene RE15_INV_LOG, exe-Messkopie `re15_pc_r39c_mess.exe`)
+
+Lade-Weg: Spielstand mit dem Kartenwerkzeug `probe_r37_feuerloescher_karte` + CONTINUE
+(`RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0`), Eingabe `RE15_PRESS`/`RE15_PAD_AT`/`RE15_INPUT_SCRIPT`,
+Logs `RE15_MSG_LOG=1` + neue Messschiene `RE15_INV_LOG=1` (`[inv-r39]` Inventar/Kiste bei jeder Aenderung,
+`[inv-r39-menu]` Menue-/Nachrichten-/Wegwerf-Zustand mit Bildnummer). Lauf-Skript `C_belege/lauf.sh`.
+
+* **P1 Spind ROOM1000** (Leon, Karte `1000 20900 -1100 3072` = vor dem Spind, Pruefpunkt 620 voraus (20900,-480) im
+  Rechteck x 20500..21300 z -800..0; Stehflaeche `probe_r34n_e_dokumente stand 1000`: z <= -900):
+  `[feuerloescher] ROOM1000: Spind Slot 3 (Item 0x31 @0x00C24) -> Raumtext msg 0`, je Druck
+  `[msgtext] room=1000 id=0 "Nothing unusual."`, Inventar unveraendert (03:15,15:50). -> heute nur der Text.
+* **P2 Memory Card aufnehmen** (Leon ROOM1010, Karte `1010 2800 -1300 0 give:0x21:3`, Regal-Zone Slot 10):
+  `F0 inv=03:15,15:50,21:3,...` -> nach Ja `F198 inv=03:15,15:50,21:3,21:3,...` = **zweiter Platz** (reproduziert).
+* **P2 Kombinieren** (Karte `leer give:0x21:3 give:0x21:2`, START F120, ITEM F140, Platz 0 F150 (st 4 F158),
+  COMBINE F159 (cmd 3), F161 st 7, zweiter Cursor F163 -> 1, Bestaetigen F165): `F165 st=6` = Matcher ohne Paar,
+  Inventar bleibt `21:3,21:2` (Bild `C_belege/p2_kombinieren_vorher.png`).
+* **P2 Kiste** (Karte `leer give:0x21:3 kiste:0x21:2`, `RE15_BOX_SHOT=1`): `F34 inv=21:5 box=-` — die ITEM BOX
+  legt Memory Cards SCHON zusammen (Gate re15_itembox.c `box_is_ammo` = 0x15..0x21).
+* **P3 Elza Statusschirm** (Karte `1001 20900 -1100 3072 elza`, START F120, Bild F145): oben links Leons
+  Polizeiausweis "POLICE Leon S. Kennedy" mit Leons Foto (`C_belege/p3_elza_status_vorher.png`). (ROOM1011 ging
+  nicht: dort laeuft beim Betreten Roys Szene.)
+* **P4 gelbe Karte Elza ROOM11E1** (Karte `11E1 10400 4250 0 elza give:0x39:1 flag:9:0x8A`, Kartenleser Slot 4
+  (10650,3850) 800x800): F101 msg 7 (Ja) -> F403 msg 9 "You've used the Yellow Keycard." -> F492 msg 0 "Enter the
+  first number." (Tastenfeld) -> Code-Bits (5,13..16) per `RE15_SET_FLAG_AT=...@560` (die vier Ziffer-Riegel, sub01
+  @0x01A76..@0x01A82) -> F561 msg 5 "You've opened the lock." -> F701 zu. **`wegwerf=0` in jedem Bild, Inventar
+  behaelt `39:1`** (reproduziert: keine Abfrage, Karte bleibt). Ohne Code-Riegel (vier falsche Ziffern): msg 4
+  "Wrong code, try again." und zurueck zu msg 7 — der Lesepfad ist intakt.

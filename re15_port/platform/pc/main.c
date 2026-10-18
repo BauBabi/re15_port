@@ -147,6 +147,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_objpoly_r38.h"  /* Runde 38 Spur W: Polygon-Schranken des Objektzeichners (Rolladen ROOM20A0) */
 #include "re15_objabe_r38.h"   /* Runde 38 Spur W: halbtransparente Raum-Objekte (Attribut-Bit 0x2, ABR, STP) */
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen der Wasserzombies (Bank, Pose, Schatten) */
+#include "re15_inventar_r39.h"  /* Runde 39 Spur C: Spind 1000, Stapeln, Status-Bild, Messschiene RE15_INV_LOG */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -7861,6 +7862,7 @@ re_title:;
             }
             { extern void re15_spinnen_r38_log_frame(unsigned);            /* Runde 38 Spur R: Messschiene */
               re15_spinnen_r38_log_frame((unsigned)g_engine.frame_count); } /* RE15_SPINNEN_LOG (env-gegatet) */
+            re15_inventar_r39_log_frame((unsigned)g_engine.frame_count);   /* Runde 39 Spur C: RE15_INV_LOG (env-gegatet) */
             /* DEATH PRESENTATION (byte-true FUN_8003694c): fade the scene to black over the 0x78 death
              * timer (g_death_fade), then show the YOU DIED graphic (YOUDIED.TIM) for ~2s before the RE
              * continue = reload the current room. (Original: YOU DIED -> title; the port has no title
