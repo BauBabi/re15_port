@@ -197,6 +197,23 @@ Pegel (Mitschnitt n2, `p39/pegel.py`):
 RE2-Wert derselben XA-Stimme 0x0B in ROOM1020 (@0x01960 `5f 64`), die ROOM11D0 mit 70 spielt - RE2 regelt dieselbe Stimme je
 Raum. Damit: 1041 0,417 (-7,6 dB) < 1131 0,833 (-1,6 dB) < 1141 1,0. Nachmessung mit 100: Abschnitt 4.3.
 
+### 4.3 Riegel-Laeufe am Endstand (Bau nach 4699f778, Xa_vol 1131 = 100): integration_r39_johnruf1041_a/_b
+Werkzeug `test_r39_johnruf1041 pegel` (Referenz = Datei genau wie der Port sie laedt: Resampling Q16, Spitzen-Boden,
+Stufe 2; g am besten Versatz +-3 Takte um die Startzeile `[voice] Start ROOM.. Id .. CD_VOL .. capTick N`):
+| Lauf | Zeile | Takt | rho | g gemessen | Soll Xa/120 | Verhaeltnis |
+|---|---|---|---|---|---|---|
+| a (lauf_a_88b2bda7) | 1041 help03 (Id 55) | 649 | 0,953 | 0,4179 | 0,4167 | 1,003 |
+| a | 1041 help02 (Id 54) | 711 | 0,556 | 0,4201 | 0,4167 | 1,008 |
+| a | 1041 main40 (Id 40) | 801 | 0,932 | 1,0021 | 1,0000 | 1,002 |
+| b (lauf_b_3ca86312) | 1131 help02 (Id 54) | 649 | 0,975 | 0,8331 | 0,8333 | 1,000 |
+| b | 1141 help03 (Spur J, Id 55) | 1466 | 0,908 | 1,0007 | 1,0000 | 1,001 |
+1131 mit 100: Musik MAIN01 davor RMS 979, Ruf-Fenster RMS 2001 (+6,2 dB), danach 522. Lauf a: Folge help03 -> help02 ->
+msg 40 + main40 -> Karte (Eintrag 5) -> Schirm -> zu -> Fenster -> FF01, Gier bei msg 40 = 923 (Soll 924), Abzug des
+Hinweis-Schirms `karte.bmp` (scratchpad `p39/karte_a.png`): "POLICE STATION 3F", ROOM1141 rot gefuellt (Blinkphase),
+1061 `entry=FF01 ... [unveraendert, laeuft durch]`. Lauf b: MAIN01 nach dem Laden in 1121, genau ein Ruf in 1131 mit
+CD_VOL 13652, 1141 `entry=FF56 -> MAIN16` und kein "NICHT angewandt", "John gerettet" direkt hinter dem MAIN16-Stopp
+(sub01 @0x00C06), 1171 `entry=5572 -> MAIN32`, keine `[johnruf]`-Zeile und kein FF01 mehr.
+
 ## 5. Tests
 
 ## 6. OFFEN
