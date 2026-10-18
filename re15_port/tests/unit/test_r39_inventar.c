@@ -429,28 +429,37 @@ static void teil_stapeln(void)
     CHECK(g_inv.slots[0].id == 0x21 && g_inv.slots[0].qty == 3 && g_inv.slots[1].id == 0x21 && g_inv.slots[1].qty == 2,
           "M Start: Platz 0 = 21:3, Platz 1 = 21:2 (ist %02X:%u, %02X:%u)", (unsigned)g_inv.slots[0].id,
           (unsigned)g_inv.slots[0].qty, (unsigned)g_inv.slots[1].id, (unsigned)g_inv.slots[1].qty);
+    /* Die Tasten fallen wie im Spiel-Lauf (Messung): START F120 -> offen F129; Viereck F139 (10 Bilder nach dem
+     * Oeffnen, die Einblendung nimmt vorher keine Taste); Viereck 2 Bilder nach st 1; rechts 1 Bild nach st 4;
+     * Viereck 2 Bilder nach cmd 3; rechts 2 nach st 7; Viereck 2 nach cur2 1. */
     bild(RE15_PAD_BIT_START, RE15_PAD_BIT_START, 0);
     int f_offen = -1, f_sub3 = -1, f_st4 = -1, f_cmd3 = -1, f_st7 = -1, f_cur2 = -1, f_fertig = -1, bild0 = s_bild;
     for (int f = 0; f < 120 && f_offen < 0; f++) { bild(0, 0, 0); if (re15_menu_is_open()) f_offen = s_bild - bild0; }
     CHECK(f_offen >= 0, "M START -> Statusschirm offen nach %d Bildern", f_offen);
+    for (int f = 0; f < 10; f++) bild(0, 0, 0);
     bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE, 0);
     for (int f = 0; f < 60 && f_sub3 < 0; f++) { if (g_inv_screen.substate == 3) f_sub3 = s_bild - bild0; else bild(0, 0, 0); }
     for (int f = 0; f < 60 && g_inv_screen.item_state != 1; f++) bild(0, 0, 0);
     CHECK(f_sub3 >= 0 && g_inv_screen.item_state == 1, "M Viereck -> ITEM-Liste (sub 3 nach %d, st %u)", f_sub3,
           (unsigned)g_inv_screen.item_state);
+    for (int f = 0; f < 2; f++) bild(0, 0, 0);
     bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE, 0);
     for (int f = 0; f < 60 && f_st4 < 0; f++) { if (g_inv_screen.item_state == 4) f_st4 = s_bild - bild0; else bild(0, 0, 0); }
     CHECK(f_st4 >= 0 && g_inv_screen.item_cursor == 0, "M Platz 0 gewaehlt -> Befehle (st 4 nach %d, cur %u)", f_st4,
           (unsigned)g_inv_screen.item_cursor);
+    bild(0, 0, 0);
     bild(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT, 0);
     for (int f = 0; f < 10 && f_cmd3 < 0; f++) { if (g_inv_screen.action_dir == 3) f_cmd3 = s_bild - bild0; else bild(0, 0, 0); }
     CHECK(f_cmd3 >= 0, "M rechts -> COMBINE (cmd 3 nach %d, @0x800c64c0-Cluster)", f_cmd3);
+    for (int f = 0; f < 2; f++) bild(0, 0, 0);
     bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE, 0);
     for (int f = 0; f < 30 && f_st7 < 0; f++) { if (g_inv_screen.item_state == 7) f_st7 = s_bild - bild0; else bild(0, 0, 0); }
     CHECK(f_st7 >= 0, "M Viereck -> zweiter Cursor (st 7 nach %d)", f_st7);
+    for (int f = 0; f < 2; f++) bild(0, 0, 0);
     bild(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT, 0);
     for (int f = 0; f < 10 && f_cur2 < 0; f++) { if (g_inv_screen.second_cursor == 1) f_cur2 = s_bild - bild0; else bild(0, 0, 0); }
     CHECK(f_cur2 >= 0, "M rechts -> zweiter Cursor Platz 1 (nach %d)", f_cur2);
+    for (int f = 0; f < 2; f++) bild(0, 0, 0);
     bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE, 0);
     for (int f = 0; f < 60 && f_fertig < 0; f++) {
         if (g_inv.slots[0].qty == 5 && g_inv.slots[1].id == 0) f_fertig = s_bild - bild0; else bild(0, 0, 0);
