@@ -274,6 +274,16 @@ Umgebungsvariablen des Aufrufers, absolute Asset-Pfade, kein Fenster):
 Messmodi ohne add_test: `spawns <raum>`, `mess_aufsteher eben|tief [gap]`, `mess_fresser eben|tief [gap]`.
 
 Gezielter Lauf (keine volle Suite):
+```
+Lauf 1  ctest --test-dir build -R "r39_treffer|r36_schuss|r38_spinnen|r38_spiderman|r16_trefferhoehe|r16_aufstehen|re2_hit|r36_zombieki_sicht|r16_liegende|unit_aim_|dog_aim" --timeout 600
+        95% tests passed, 1 tests failed out of 20   (Total Test time (real) = 236.92 sec)
+        -> integration_r36_schuss rot: Lauf "tisch_re15" (Python ueber den Konferenztisch, RE1.5-KI) erwartete "KEIN Platz verliert
+           HP" = genau das Verhalten, das der Nutzer abgestellt haben will. Erwartung umgedreht (Platz 4/5 verlieren HP) und ein
+           Lauf tisch_re15_alt (RE15_TREFFER_ALT=1: der byte-true RE1.5-Strahl sperrt weiter) ergaenzt (tests/integration/
+           test_r36_schuss.cmake, r36_exe nimmt ${ARGN} als Umgebung).
+Lauf 2  ctest --test-dir build -R "integration_r36_schuss|unit_r39_treffer" --timeout 600
+        100% tests passed, 0 tests failed out of 5   (Total Test time (real) = 140.01 sec)
+```
 
 ## OFFEN
 
