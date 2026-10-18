@@ -6,6 +6,8 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 13:02: Integrationsbaum 9e7bab74 (A1+B+C+L) gebaut, A-Tests 94/94 gruen (ctest -j 3, 725 s) - Merge der
+  A-Nachbesserung verifiziert. Welle 2 laeuft (D/E/F/H).
 * 2026-10-18 12:52: Hauptbaum auf master 6926409c neu gebaut (exe 12:50:47, Startlauf exit 0, EXIT_AT erreicht). Welle-1-Baeume
   r39_{toene,inventar,optik,stimmen} + Zweige entfernt (alle in master; 141 GB frei). Integrationsbaum r39_integration
   (9e7bab74) bleibt fuer Welle 2; dort laeuft die Gegenprobe der 94 A-Tests nach dem A1-Merge.
