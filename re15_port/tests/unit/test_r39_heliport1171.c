@@ -21,7 +21,12 @@
  *   szene     ganze Szene (Elza, Standard-KI): Johns Kanal + Clip-Laenge je Plc_motion-Schritt = Original
  *             (Sub 0 -> RBJ rec1, Sub 2 -> eigene Bank), "Elza, hurry up!" = RBJ rec1 Clip 2 (96 Bilder), nicht 50
  *   leon1170  Gegenprobe Leon ROOM1170: kein Aktor bindet einen RBJ-Record ueber den Cache (Elliot ausgenommen, Kraehen
- *             ohne Record) — vorher wie nachher dieselbe Bankwahl */
+ *             ohne Record) — vorher wie nachher dieselbe Bankwahl
+ * "Auch sonst" (Dossier Abschnitt 6, jede Szenen-Animation Johns gegen das Original):
+ *   initpose  K2: bis zum ersten Plc_motion INIT-Pose = Loco-Paar Clip 2 Bild 0 (f314(+0x84,+0x16c) @0x8011debc-c4)
+ *   eskorte   K2-Gegenprobe: ohne Gegner posiert die Eskorte-EXEC ab dem 1. Takt die eigene Bank (@0x8004f384-8c)
+ *   saatbild  K3: jeder Plc_motion-Saattakt posiert Bild 0 bzw. fc-1 (@0x80050cec-d4c), Halten ab Bild fc-1
+ *   schub     K4: Schub-Bit-Takt posiert noch Clip 0x12 (@0x80052af4 vor @0x80052b44), dann Clip 0x11 rueckw. 9..0 */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -43,6 +48,9 @@
 #include "re15_roy_r37.h"
 #include "re15_elzaems_r37.h"
 #include "re15_npckante_r38.h"
+#include "re15_heliport1171_r39.h"   /* K2 Merker, RE15_R39K_INIT_CLIP/_BILD */
+#include "re15_szenenleon_r36.h"     /* RE15_SZL_MODUS_SCHUB, Clips 0x11/0x12 */
+#include "re15_anim_select.h"        /* re15_actor_anim_reverse */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -431,6 +439,171 @@ static void teil_leon1170(void)
     PRUEF(re15_actor_rbj_anim(1) == NULL, "Slot 1 ohne RBJ-Kanal ueber den Cache (rec1 Marker 0x2 = Elliot, ausgenommen O3)");
 }
 
+/* ==== "Auch sonst" (Dossier Abschnitt 6): K2 INIT-Pose, K3 Plc_motion-Saatbild, K4 Schub Phase 5 -> 6 ============ */
+
+/* Szene starten wie teil_szene (Elza, Standard-KI, (3,0xC2)=1 wie ROOM1141 sub02 @0x00C20); Rueckgabe Johns Slot. */
+static int szene_starten(void)
+{
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_game_state_init();
+    re15_elzaems_r37_reset();
+    g_gameflow.character = 4;
+    re15_game_flag_set(3, 0xC2, 1);
+    static const uint8_t typen[] = { K_KRAEHE_TYP, K_JOHN_TYP };
+    if (room_boot(0x1171, 2300, -7200, 14365, 1024, 0, typen, 2, RE15_EMS_ARCHIV_ELZA) != 0) return -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == K_JOHN_TYP) return s;
+    return -1;
+}
+
+/* Das GERENDERTE Bild (anim_select_common.c: Slot = anim_frame, rueckwaerts fc-1-anim_frame). */
+static int gerendert(const re15_actor_t *a)
+{
+    int len = re15_actor_clip_len(a);
+    if (len < 1) return -1;
+    int m = (int)a->anim_frame % len;
+    return re15_actor_anim_reverse(a) ? (len - 1 - m) : m;
+}
+
+/* initpose (K2): bis zum ersten Plc_motion @0x01416 zeigt John die INIT-Pose = Loco-Paar Clip 2 Bild 0
+ * (+0x94 = 2 @0x8011de7c, +0x95 = 0 @0x8011de8c, f314(+0x84,+0x16c) @0x8011debc-c4); die Eskorte bleibt bei Kraehen
+ * < 15000 in der DECIDE 0x8004f100 ohne anim_set. Danach (state 4) gilt der Executor-Kanal. */
+static void teil_initpose(void)
+{
+    printf("== initpose ==\n");
+    int john = szene_starten();
+    PRUEF(john == 1, "John = Aktor %d", john);
+    if (john < 0) return;
+    re15_actor_t *j = &g_actors[john];
+    int vor = 0, falsch = 0, erste4 = -1, nach_loco = -1, f;
+    for (f = 0; f < 600 && erste4 < 0; f++) {
+        frame();
+        if (j->state == 4) { erste4 = f; nach_loco = re15_actor_uses_loco_bank(j); break; }
+        int ok = (j->state == 1 && re15_actor_uses_loco_bank(j) && !re15_actor_uses_own_bank(j) &&
+                  j->motion == RE15_R39K_INIT_CLIP && re15_actor_clip_len(j) == K_LOCO_C2_KLETTERN &&
+                  gerendert(j) == RE15_R39K_INIT_BILD && re15_r39k_init_pose(j));
+        vor++;
+        if (!ok) {
+            if (falsch++ < 3)
+                printf("    Bild %d: st %d mo %d af %d loco %d own %d len %d Bild %d\n", f, j->state, j->motion,
+                       j->anim_frame, re15_actor_uses_loco_bank(j), re15_actor_uses_own_bank(j), re15_actor_clip_len(j),
+                       gerendert(j));
+        }
+    }
+    PRUEF(vor >= 200 && falsch == 0,
+          "vor dem ersten Plc_motion %d Bilder INIT-Pose Loco Clip 2 (%d Bilder) Bild 0, eigene Bank nie (%d abweichend)",
+          vor, K_LOCO_C2_KLETTERN, falsch);
+    PRUEF(erste4 > 0 && nach_loco == 0 && !re15_r39k_init_pose(j) && j->sub_state_1 == 0 &&
+          re15_actor_clip_len(j) == K_RBJ_C0,
+          "Plc_motion(0,0,0) @0x01416 (Bild %d): Merker geloest, Sub 0 posiert RBJ rec1 Clip 0 (%d Bilder)",
+          erste4, re15_actor_clip_len(j));
+}
+
+/* eskorte (K2, Gegenprobe): ohne Gegner in 15000 laeuft die Eskorte-EXEC (+0x9 = 0, Tabelle @0x8012181c[0]) und
+ * posiert aus der EIGENEN Bank (Stehen @0x8004f384-8c) — der Merker loest sich im ersten Eskorte-Takt. */
+static void teil_eskorte(void)
+{
+    printf("== eskorte ==\n");
+    int john = szene_starten();
+    if (john < 0) { PRUEF(0, "Szene"); return; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)                  /* Kraehen weg: 0x800509e4 zaehlt nur aktive (@0x80050a4c) */
+        if (g_actors[s].active && g_actors[s].type == K_KRAEHE_TYP) g_actors[s].active = 0;
+    re15_actor_t *j = &g_actors[john];
+    frame();                                                  /* INIT 0x8011dd98 */
+    int init_loco = re15_actor_uses_loco_bank(j), init_bild = gerendert(j);
+    PRUEF(j->state == 1 && init_loco && init_bild == 0 && re15_actor_clip_len(j) == K_LOCO_C2_KLETTERN,
+          "INIT-Bild: Loco Clip 2 Bild 0 (st %d, loco %d, Bild %d)", j->state, init_loco, init_bild);
+    int own = 0, loco = 0;
+    for (int f = 1; f < 30; f++) {
+        frame();
+        if (re15_actor_uses_own_bank(j) && !re15_r39k_init_pose(j)) own++;
+        if (re15_actor_uses_loco_bank(j)) loco++;
+    }
+    PRUEF(j->state == 1 && (j->grid_id & 0x0f) == 0 && own == 29 && loco == 0,
+          "ohne Gegner: Eskorte-EXEC posiert ab dem 1. Takt die eigene Bank (%d/29), nie mehr Loco (%d)", own, loco);
+}
+
+/* Johns Plc_motion-Fenster (PC auf der Sleep-Zeile hinter dem Befehl; das erste Bild im Fenster ist der Saattakt). */
+typedef struct { int lo, hi, rueck, fc; const char *was; int erstes, bilder, abw, halte_bild; } saat_t;
+
+/* saatbild (K3): der Saattakt POSIERT Bild 0 (rueckwaerts fc-1) — Phase 0 @0x80050cec-d0c faellt in f314 @0x80050d4c,
+ * f314 posiert +0x95 (@0x8001f35c-36c) und schiebt erst danach vor (@0x8001f618-1c); +0x6 = 2 im Takt, der fc-1
+ * posiert (@0x80050da4). Erwartet je Fenster-Bild k: Bild min(k, fc-1) (rueckwaerts gespiegelt), Halten ab k = fc-1. */
+static void teil_saatbild(void)
+{
+    printf("== saatbild ==\n");
+    int john = szene_starten();
+    if (john < 0) { PRUEF(0, "Szene"); return; }
+    saat_t st[] = {
+        { 0x0141A, 0x0141E, 0, K_RBJ_C0, "Plc_motion(0,0,0) @0x01416" },
+        { 0x01426, 0x0142A, 1, K_RBJ_C0, "Plc_motion(0,0,0) @0x0141E + Plc_flg 0x80" },
+        { 0x0142E, 0x01432, 0, K_OWN_C6, "Plc_motion(2,6,0) @0x0142A" },
+        { 0x014CA, 0x014CE, 1, K_OWN_C6, "Plc_motion(2,6,0) @0x014C2 + Plc_flg 0x80" },
+        { 0x014D2, 0x014D6, 0, K_RBJ_C2, "Plc_motion(0,2,0) @0x014CE Heran-Winken" },
+        { 0x0152A, 0x0152E, 0, K_RBJ_C0, "Plc_motion(0,0,0) @0x01526" },
+        { 0x01536, 0x0153A, 1, K_RBJ_C0, "Plc_motion(0,0,0) @0x0152E + Plc_flg 0x80" },
+    };
+    const int n = (int)(sizeof st / sizeof st[0]);
+    for (int i = 0; i < n; i++) { st[i].erstes = -1; st[i].bilder = 0; st[i].abw = 0; st[i].halte_bild = -1; }
+    re15_actor_t *j = &g_actors[john];
+    for (int f = 0; f < 2400 && !g_room_change.pending; f++) {
+        frame();
+        int pc = -1;
+        for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST && pc < 0; s++) {
+            int o = stelle_von(s);
+            for (int i = 0; i < n && o >= 0; i++) if (o >= st[i].lo && o < st[i].hi) pc = i;
+        }
+        if (pc < 0) continue;
+        saat_t *w = &st[pc];
+        int k = w->bilder++;
+        int soll = (k < w->fc - 1) ? k : w->fc - 1;
+        if (w->rueck) soll = w->fc - 1 - soll;
+        int ist = gerendert(j);
+        if (k == 0) w->erstes = ist;
+        if (ist != soll || re15_actor_clip_len(j) != w->fc) w->abw++;
+        if (j->sub_state_2 == 2 && w->halte_bild < 0) w->halte_bild = k;
+    }
+    for (int i = 0; i < n; i++) {
+        int halte_soll = (st[i].bilder >= st[i].fc) ? st[i].fc - 1 : -1;
+        PRUEF(st[i].bilder > 0 && st[i].erstes == (st[i].rueck ? st[i].fc - 1 : 0) && st[i].abw == 0 &&
+              st[i].halte_bild == halte_soll,
+              "%s: Saattakt Bild %d (soll %d), %d Fensterbilder, %d abweichend, Halten ab Fensterbild %d (soll %d)",
+              st[i].was, st[i].erstes, st[i].rueck ? st[i].fc - 1 : 0, st[i].bilder, st[i].abw, st[i].halte_bild,
+              halte_soll);
+    }
+}
+
+/* schub (K4): Plc_dest(0,0x13,0x14) @0x01572. Im Bit-Takt der Phase 5 (Bit (5,0x14) von sub03 @0x015EE) posiert John
+ * noch Clip 0x12 (anim_set @0x80052af4 vor der Bit-Abfrage @0x80052b44); Clip 0x11 rueckwaerts beginnt im naechsten
+ * Takt mit Bild 9 (Phase 6 @0x80052b84-98) und endet nach 10 Takten mit Bild 0 (+0x6 = 7). */
+static void teil_schub(void)
+{
+    printf("== schub ==\n");
+    int john = szene_starten();
+    if (john < 0) { PRUEF(0, "Szene"); return; }
+    re15_actor_t *j = &g_actors[john];
+    int vor5 = 0, t = -1, bit_mo = -1, bit_rueck = -1, folge_ok = 1, folge_n = 0, ende7 = -1;
+    for (int f = 0; f < 2400 && !g_room_change.pending; f++) {
+        frame();
+        if (j->state != 4 || j->sub_state_1 != RE15_SZL_MODUS_SCHUB) { if (t >= 0 && ende7 < 0) ende7 = -2; continue; }
+        if (t < 0) {
+            if (j->sub_state_2 == 5) vor5 = 1;
+            else if (vor5 && j->sub_state_2 == 6) { t = f; bit_mo = j->motion; bit_rueck = re15_actor_anim_reverse(j); }
+            continue;
+        }
+        int k = f - t;                                        /* 1..10 = Phase-6-Takte */
+        if (k >= 1 && k <= 10) {
+            folge_n++;
+            if (j->motion != RE15_SZL_CLIP_ANSATZ || !re15_actor_anim_reverse(j) || gerendert(j) != 10 - k) folge_ok = 0;
+            if (k == 10 && j->sub_state_2 == 7) ende7 = k;
+        }
+    }
+    PRUEF(t > 0 && bit_mo == RE15_SZL_CLIP_SCHUB && bit_rueck == 0,
+          "Bit-Takt (Bild %d): posiert noch Clip 0x%X vorwaerts (Clip %d, rueckw. %d)", t, RE15_SZL_CLIP_SCHUB, bit_mo, bit_rueck);
+    PRUEF(folge_n == 10 && folge_ok && ende7 == 10,
+          "Phase 6: Clip 0x11 rueckwaerts Bild 9..0 in 10 Takten (%d Takte, Folge %s), +0x6 = 7 im 10. Takt (%d)",
+          folge_n, folge_ok ? "ok" : "FALSCH", ende7);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -438,6 +611,10 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "binder")   || !strcmp(teil, "alle")) teil_binder();
     if (!strcmp(teil, "szene")    || !strcmp(teil, "alle")) teil_szene();
     if (!strcmp(teil, "leon1170") || !strcmp(teil, "alle")) teil_leon1170();
+    if (!strcmp(teil, "initpose") || !strcmp(teil, "alle")) teil_initpose();
+    if (!strcmp(teil, "eskorte")  || !strcmp(teil, "alle")) teil_eskorte();
+    if (!strcmp(teil, "saatbild") || !strcmp(teil, "alle")) teil_saatbild();
+    if (!strcmp(teil, "schub")    || !strcmp(teil, "alle")) teil_schub();
     printf("%s: %s (%d Fehler)\n", "test_r39_heliport1171", g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

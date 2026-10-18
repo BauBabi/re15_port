@@ -11,6 +11,11 @@
 #   unit_r39_heliport1171_binder    Slots ohne Record verdraengen den Record nicht (1171 John, 10D0 Marvin, 1170 Elliot aus)
 #   unit_r39_heliport1171_szene     Johns Kanal + Clip-Laenge je Plc_motion-Schritt = Original, "Elza, hurry up!" = 96
 #   unit_r39_heliport1171_leon1170  Gegenprobe Leon ROOM1170: keine Bindung ueber den Cache (wie vorher)
+# "Auch sonst" (Dossier Abschnitt 6 — jede Szenen-Animation Johns gegen das Original):
+#   unit_r39_heliport1171_initpose  K2 INIT-Pose = Loco-Paar Clip 2 Bild 0 bis zum ersten Plc_motion (@0x8011debc-c4)
+#   unit_r39_heliport1171_eskorte   K2-Gegenprobe: Eskorte-EXEC ohne Gegner posiert ab dem 1. Takt die eigene Bank
+#   unit_r39_heliport1171_saatbild  K3 Plc_motion-Saattakt posiert Bild 0 / fc-1 (@0x80050cec-d4c), Halten ab fc-1
+#   unit_r39_heliport1171_schub     K4 Schub-Bit-Takt posiert noch Clip 0x12 (@0x80052af4 vor @0x80052b44)
 add_executable(test_r39_heliport1171 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_heliport1171.c)
 target_link_libraries(test_r39_heliport1171 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_heliport1171 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -19,7 +24,7 @@ target_compile_definitions(test_r39_heliport1171 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_heliport1171 PRIVATE m)
 endif()
-foreach(_teil banken binder szene leon1170)
+foreach(_teil banken binder szene leon1170 initpose eskorte saatbild schub)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r39_heliport1171_${_teil}_wd)
     add_test(NAME unit_r39_heliport1171_${_teil} COMMAND test_r39_heliport1171 ${_teil})
     set_tests_properties(unit_r39_heliport1171_${_teil} PROPERTIES TIMEOUT 300
