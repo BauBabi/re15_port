@@ -20,7 +20,8 @@
 #include "re15_messer.h"           /* RE15_MESSER_ID / RE15_MESSER_NICHTS */
 #include "re15_inventar_r36.h"     /* RE15_R36_GRANATE_ERSTE/_LETZTE */
 #include "re15_audio.h"            /* re15_audio_prime_weapon */
-#include "re15_damage.h"           /* re15_player_equipped_weapon / _set_equipped_weapon (aca5d) */
+#include "re15_damage.h"           /* re15_player_equipped_weapon / _set_equipped_weapon (aca5d), re15_ai_arc_test */
+#include "re15_elza_r36.h"         /* re15_elza_se_hook / RE15_ELZA_TON_SCHUSS (Johns Schuss-Ton, Runde 36 L / 38 H) */
 
 #include "gen/dining_r39_programme.inc"
 
@@ -33,14 +34,21 @@ const uint8_t *re15_dining_r39_haemmern(void)   { return k_r39j_p_haemmern; }
 const uint8_t *re15_dining_r39_entriegeln(void) { return k_r39j_p_entriegeln; }
 const uint8_t *re15_dining_r39_rolltor(void)    { return k_r39j_p_rolltor; }
 
+/* SCHUETZE39 liegt beschreibbar: der Anker ZIEL traegt vor dem Plc_dest die Lage des naechsten Gorillas ein. */
+static uint8_t s_schuetze[sizeof k_r39j_p_schuetze];
+int      g_re15_r39j_anker_n = 0;
+unsigned g_re15_r39j_schuss_zaehler = 0, g_re15_r39j_treffer_zaehler = 0;
+const uint8_t *re15_dining_r39_schuetze(void) { return s_schuetze; }
+
 const uint8_t *re15_dining_r39_programm(int nr, int *out_len)
 {
-    static const struct { const uint8_t *b; int n; } p[3] = {
+    static const struct { const uint8_t *b; int n; } p[4] = {
         { k_r39j_p_haemmern,   (int)sizeof k_r39j_p_haemmern   },
         { k_r39j_p_entriegeln, (int)sizeof k_r39j_p_entriegeln },
         { k_r39j_p_rolltor,    (int)sizeof k_r39j_p_rolltor    },
+        { k_r39j_p_schuetze,   (int)sizeof k_r39j_p_schuetze   },
     };
-    if (nr < 0 || nr >= 3) { if (out_len) *out_len = 0; return NULL; }
+    if (nr < 0 || nr >= 4) { if (out_len) *out_len = 0; return NULL; }
     if (out_len) *out_len = p[nr].n;
     return p[nr].b;
 }
@@ -91,7 +99,97 @@ void re15_dining_r39_w_beginn(int entity, int clip)
 #endif
 }
 
-void re15_dining_r39_w_tick(void)
+/* ============================ N4.3: John schiesst (Faden SCHUETZE39) ============================
+ * Original-Form: ROOM1021 sub02 @0x020C6 Plc_motion(2,6) Zielen, @0x020CA Sleep 110, @0x020CE/@0x020D6 Plc_motion(2,7)
+ * Feuer-Clip (eigene Bank Clip 7) im Abstand Sleep 30 (@0x020D2), @0x020EA/@0x020EE (2,6) rueckwaerts Senken. Der Ton
+ * kommt ein Bild nach dem Feuer-Clip (Verzug 1 wie elza_r36.c P4, RE2 ROOM1010 sub30 @0x02676/sub31 @0x0268E) aus
+ * RE15_ELZA_TON_SCHUSS (RE2 ROOM4040 Satz 0x0A = Johns Schuss in 1021, Runde 38 H). Treffer = Schaden der Handfeuerwaffe
+ * auf den Gorilla, mit den Schreibern des Schuss-Treffers (re15_damage.c re15_player_weapon_fire: +0x9a -= dmg, +0x93 |= 1,
+ * +0x7 = 0 @0x80012428, +0x4 = 2/3 @0x80012520, +0x5 = Waffen-Id @0x800124bc); danach kriecht der Gorilla eine Weile auf John
+ * zu (Aufmerksamkeit, Lenkziel im Gorilla-B[3] statt Elza). */
+static int     s_ziel_slot = -1;
+static int     s_schuss_offen = 0;
+static int16_t s_aufmerksam[RE15_ACTOR_MAX];
+
+static re15_actor_t *john_aktor(void)
+{
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == RE15_R38F_JOHN_TYP) return &g_actors[s];
+    return NULL;
+}
+
+static int gorilla_lebt(const re15_actor_t *g)
+{
+    return g->active && g->type == RE15_R38F_GORILLA_TYP && g->hp >= 0 && g->state != 3;
+}
+
+void re15_dining_r39_pc(const uint8_t *pc)
+{
+    if (!pc || pc < s_schuetze || pc >= s_schuetze + sizeof s_schuetze) return;
+    const int off = (int)(pc - s_schuetze);
+    if (off == RE15_R39J_SCHUETZE_OFF_ZIEL) {
+        const re15_actor_t *j = john_aktor();
+        int beste = -1; long best_d = 0x7fffffffL;
+        for (int s = 1; j && s < RE15_ACTOR_MAX; s++) {
+            const re15_actor_t *g = &g_actors[s];
+            if (!gorilla_lebt(g)) continue;
+            const long dx = (long)g->x - j->x, dz = (long)g->z - j->z;
+            const long d = labs(dx) + labs(dz);
+            if (d < best_d) { best_d = d; beste = s; }
+        }
+        s_ziel_slot = beste;
+        if (beste > 0) {   /* Plc_dest-Operand x @+4 / z @+6 (scd_vm.c op_plc_dest scd_read_le_s16(&pc[4]/&pc[6])) */
+            const int16_t x = (int16_t)g_actors[beste].x, z = (int16_t)g_actors[beste].z;
+            s_schuetze[off + 4] = (uint8_t)(x & 0xFF); s_schuetze[off + 5] = (uint8_t)((uint16_t)x >> 8);
+            s_schuetze[off + 6] = (uint8_t)(z & 0xFF); s_schuetze[off + 7] = (uint8_t)((uint16_t)z >> 8);
+        }
+    } else if (off == RE15_R39J_SCHUETZE_OFF_FEUER1 || off == RE15_R39J_SCHUETZE_OFF_FEUER2) {
+        s_schuss_offen = 1;   /* Verzug 1: Ton + Treffer im naechsten Bild (re15_dining_r39_tick) */
+    }
+}
+
+static void schuss(void)
+{
+    extern int re15_enemy_waffen_schaden(const re15_actor_t *e, int weapon_id);   /* re15_damage.c, Haken */
+    g_re15_r39j_schuss_zaehler++;
+    if (re15_elza_se_hook) re15_elza_se_hook(RE15_ELZA_TON_SCHUSS);
+    re15_actor_t *j = john_aktor();
+    re15_actor_t *g = (s_ziel_slot > 0 && s_ziel_slot < RE15_ACTOR_MAX) ? &g_actors[s_ziel_slot] : NULL;
+    int treffer = 0;
+    if (j && g && gorilla_lebt(g) && re15_ai_arc_test(j, g->x, g->z, RE15_R39J_TREFFER_KEGEL) == 0) {
+        const int dmg = re15_enemy_waffen_schaden(g, RE15_R39J_WAFFE_JOHN);
+        g->hp = (int16_t)(g->hp - dmg);                        /* +0x9a -= dmg */
+        g->hit_react |= 0x1;                                   /* +0x93 |= 1 */
+        if (((((int32_t)g->rot_y - (int32_t)j->rot_y) + 0x400) & 0xfff) < 0x800)
+            g->hit_react |= 0x80;                              /* Ruecken-Treffer wie beim Spieler, Peilung von John */
+        g->sub_state_3 = 0;                                    /* +0x7 = 0 (@0x80012428) */
+        g->state = (uint8_t)((g->hp >= 0) ? 2 : 3);            /* +0x4 HURT/DEATH (@0x80012520) */
+        g->anim_flags &= (uint16_t)~0x80u;
+        g->sub_state_2 = 1;                                    /* waagerecht (Zielhoehe 0) */
+        g->sub_state_1 = (uint8_t)RE15_R39J_WAFFE_JOHN;        /* +0x5 = Waffen-Id (@0x800124bc) */
+        s_aufmerksam[s_ziel_slot] = RE15_R39J_AUFMERKSAM_BILDER;
+        g_re15_r39j_treffer_zaehler++;
+        treffer = 1;
+    }
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[dining39] F%u John schiesst (Schuss %u) auf Gorilla Slot %d: %s\n", (unsigned)g_engine.frame_count,
+            g_re15_r39j_schuss_zaehler, s_ziel_slot, treffer ? "Treffer, Aufmerksamkeit" : "daneben (nicht im Kegel / tot)");
+#endif
+}
+
+void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z)
+{
+    if (slot <= 0 || slot >= RE15_ACTOR_MAX || s_aufmerksam[slot] <= 0 || !x || !z) return;
+    if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_aufmerksam[slot] = 0; return; }
+    const re15_actor_t *j = john_aktor();
+    if (!j || j->x <= -29000) return;
+    *x = j->x;
+    *z = j->z;
+}
+
+int re15_dining_r39_aufmerksam(int slot) { return (slot > 0 && slot < RE15_ACTOR_MAX) ? s_aufmerksam[slot] : 0; }
+
+static void w_halten(void)
 {
     if (s_w_clip < 0) return;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -104,6 +202,15 @@ void re15_dining_r39_w_tick(void)
     extern int re15_player_wbank_clip_fc(int clip);   /* player_common.c: W-Bank-EDD-Laengen */
     const int fc = re15_player_wbank_clip_fc(s_w_clip);
     if (fc >= 1 && (int)pl->anim_frame > fc - 1) pl->anim_frame = (uint16_t)(fc - 1);   /* halten: Phase 2 (@0x80050fec) */
+}
+
+void re15_dining_r39_tick(void)
+{
+    w_halten();
+    if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_schuss_offen = 0; return; }
+    if (s_schuss_offen) { s_schuss_offen = 0; schuss(); }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (s_aufmerksam[s] > 0) s_aufmerksam[s]--;
 }
 
 int re15_dining_r39_w_clip(void) { return s_w_clip; }
@@ -150,7 +257,13 @@ int re15_dining_r39_waffe_waehlen(void)
 void re15_dining_r39_install(uint16_t room_id, int phase_h)
 {
     s_w_clip = -1;
+    s_schuss_offen = 0;
+    s_ziel_slot = -1;
+    memset(s_aufmerksam, 0, sizeof s_aufmerksam);
+    g_re15_r39j_anker_n = 0;
     if (room_id != RE15_R38F_RAUM_1141) return;
+    memcpy(s_schuetze, k_r39j_p_schuetze, sizeof s_schuetze);   /* Ziel-Operand frisch */
+    g_re15_r39j_anker_n = 1;
     re15_game_flag_set(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT, 0);   /* kein Gemaelde-Programm beim Eintritt */
     meldung(RE15_R39J_MSG_REAKTION, k_r39j_msg50, sizeof k_r39j_msg50);
     meldung(RE15_R39J_MSG_PUH,      k_r39j_msg51, sizeof k_r39j_msg51);

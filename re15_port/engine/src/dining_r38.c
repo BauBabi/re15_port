@@ -276,6 +276,9 @@ const uint8_t *re15_dining_r38_evt_exec(uint16_t room_id, uint8_t sub_id, const 
         log_f("ROOM1141 sub00 @0x00B02 Evt_exec sub02 -> Klopf-Schleife (Phase H)");
         return re15_dining_r39_haemmern();   /* Runde 39 Spur J: Klopfen + help01..05 + Elzas Reaktion statt HAEMMERN */
     }
+    /* Runde 39 Spur J (Nachbesserung 1 N4.3): ENTRIEGELN39 startet Johns Schuetzen-Faden per Evt_exec sub 30 (ROOM1141 hat
+     * sub00..sub06, die Nummer ist im RDT frei). */
+    if (room_id == RE15_R38F_RAUM_1141 && sub_id == RE15_R39J_SUB_SCHUETZE && !orig) return re15_dining_r39_schuetze();
     return orig;
 }
 

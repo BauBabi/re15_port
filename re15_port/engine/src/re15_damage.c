@@ -725,6 +725,9 @@ static int re15_re15_import_owns(uint8_t type)
     return re15_re15_re2z_import_owns((unsigned)type);
 }
 
+/* Runde 39 Spur J (Nachbesserung 1 N4.3): Johns Schuss auf einen Gorilla in ROOM1141 = die Spalte der Handfeuerwaffe
+ * derselben Zeile (@0x8006e0d0 + Typ*0x58 + Waffe*4; Gorilla Spalte 3 @0x8006ee44 = 12). Definition unter der Zeilenwahl. */
+int re15_enemy_waffen_schaden(const re15_actor_t *e, int weapon_id);
 /* actor -> its byte-true damage row (@0x8006e0d0 + type*0x58). */
 static const uint16_t *re15_enemy_dmg_row(const re15_actor_t *e)
 {
@@ -780,6 +783,11 @@ static const uint16_t *re15_enemy_dmg_row(const re15_actor_t *e)
         case 0x26: case 0x2d: return s_wpn_dmg_immune;   /* all-zero rows = weapon-immune */
         default:   return s_player_wpn_dmg_zombie;                  /* fallback (unrouted combat types) */
     }
+}
+int re15_enemy_waffen_schaden(const re15_actor_t *e, int weapon_id)   /* Runde 39 Spur J N4.3 */
+{
+    const uint16_t *r = e ? re15_enemy_dmg_row(e) : NULL;
+    return (r && weapon_id >= 0 && weapon_id < 22) ? (int)r[weapon_id] : 0;
 }
 /* ============================================================================================
  * ⛔ RE2-FLAVOR — (2) DIE START-HP (+0x156) AUS DEN RE2-EM-MODULEN

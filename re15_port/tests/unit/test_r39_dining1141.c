@@ -663,6 +663,38 @@ static void teil_phase_h(void)
         PRUEF(r.msg_id == RE15_R38F_MSG_1141_SPERRE && !r.raumwechsel, "Dachtuer waehrend des Kampfs: msg %d, kein Raumwechsel", r.msg_id);
         for (int f = 0; f < 200; f++) { uint16_t e = (g_scd.message_active && (f % 15) == 0) ? RE15_PAD_BIT_SQUARE : 0; frame(e, e); }
     }
+    {   /* Nachbesserung 1 N4.3: John schiesst ab und an (Faden SCHUETZE39, Form ROOM1021 @0x020C6..@0x020F2) */
+        const unsigned s0 = g_re15_r39j_schuss_zaehler, t0 = g_re15_r39j_treffer_zaehler;
+        int hp0[RE15_ACTOR_MAX], gesehen_zielen = 0, gesehen_feuer = 0, auf = 0, ziel_john = 0;
+        long b_feuer = -1, b_zielen = -1;
+        for (int s = 0; s < RE15_ACTOR_MAX; s++) hp0[s] = g_actors[s].hp;
+        for (int f = 0; f < 1200 && g_re15_r39j_schuss_zaehler < s0 + 2; f++) {
+            frame(0, 0);
+            if (john->state == 4 && john->sub_state_1 == 2 && john->motion == 6 && !(john->anim_flags & 0x80) && b_zielen < 0) {
+                gesehen_zielen = 1; b_zielen = s_bild; }
+            if (john->state == 4 && john->sub_state_1 == 2 && john->motion == 7 && b_feuer < 0) { gesehen_feuer = 1; b_feuer = s_bild; }
+            for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+                if (re15_dining_r39_aufmerksam(s) > 0) {
+                    auf = 1;
+                    int32_t zx = pl->x, zz = pl->z;
+                    re15_dining_r39_affe_ziel(s, &zx, &zz);
+                    if (zx == john->x && zz == john->z) ziel_john = 1;
+                }
+            }
+        }
+        int getroffen = 0;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP && g_actors[s].hp < hp0[s]) getroffen++;
+        printf("    John: Zielen Bild %ld, Feuer-Clip Bild %ld, Schuesse %u, Treffer %u\n", b_zielen, b_feuer,
+               g_re15_r39j_schuss_zaehler - s0, g_re15_r39j_treffer_zaehler - t0);
+        PRUEF(gesehen_zielen && gesehen_feuer && b_feuer > b_zielen,
+              "N4.3: John zielt (eigene Bank Clip 6, ROOM1021 @0x020C6) und feuert (Clip 7, @0x020CE)");
+        PRUEF(g_re15_r39j_schuss_zaehler >= s0 + 2, "N4.3: zwei Schuesse je Salve (@0x020CE/@0x020D6): %u",
+              g_re15_r39j_schuss_zaehler - s0);
+        PRUEF(g_re15_r39j_treffer_zaehler > t0 && getroffen > 0,
+              "N4.3: Treffer am Gorilla (Energie gesunken bei %d Gorilla(s)), Schaden der Handfeuerwaffe", getroffen);
+        PRUEF(auf && ziel_john, "N4.3: der getroffene Gorilla beachtet John (Lenkziel = Johns Lage)");
+    }
     /* Gorillas tot (Kill-Flags pc[7] 0xCB/0xCC, Bank 7 — wie RE15_R38F_GORILLAS_TOT, KEINE Schusszahl) */
     pl->x = -3000; pl->z = -9000; pl->rot_y = 0;
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) re15_actor_free(s);

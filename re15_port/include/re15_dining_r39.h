@@ -48,6 +48,18 @@
                                          * Kanal +0x170/+0x174 = W-Bank (@0x80036be4/@0x80036c04); Form ROOM3060 sub03
                                          * @0x010BE `3f 02 06 00`                                                        */
 #define RE15_R39J_W_CLIP_HEBEN   6      /* W-Bank Clip 6 = RAISE (Gun-FSM sub0 / Melee @0x80034ee8)                       */
+/* N4.3 (NUTZER-VORGABE Nachtrag 4 "John sollte auch ab und an mal auf die Gorillas schiessen ... und dann ihre
+ * Aufmerksamkeit erhalten"; Johns Zeile msg 11 "I'll try to distract them"): Faden SCHUETZE39 in Original-Form der Schuesse
+ * auf Roy (ROOM1021 sub02 @0x020C6..@0x020F2). Treffer/Ton/Aufmerksamkeit am Anker FEUER (dining_r39.c).              */
+#define RE15_R39J_SUB_SCHUETZE   30     /* Evt_exec-Nummer (< RE15_RDT_MAX_SUB_SCD 32; ROOM1141 hat sub00..sub06)          */
+#define RE15_R39J_SCHUETZE_BANK  5      /* (5,0x11) = Salve laeuft; ENTRIEGELN39 wartet nach dem Kampf darauf              */
+#define RE15_R39J_SCHUETZE_BIT   0x11
+#define RE15_R39J_WAFFE_JOHN     3      /* Schaden = Spalte 3 (Handfeuerwaffe) der Zeile @0x8006e0d0 + Typ*0x58: Gorilla
+                                         * @0x8006ee44 = 12 (Runde 39 Spur E)                                             */
+#define RE15_R39J_TREFFER_KEGEL  0xC8   /* Treffer, wenn der Gorilla im Kegel +-0xC8 vor John steht = Auto-Zielfenster der
+                                         * Pistole (Gun-FSM sub0 `ori a1,zero,0xc8` @0x80032fe0, FUN_8001a8f8) - PORT-WAHL */
+#define RE15_R39J_AUFMERKSAM_BILDER 180 /* so lange kriecht der getroffene Gorilla auf John zu = eine Salvenpause (Sleep 90
+                                         * + 90, Takt RE2 ROOM1060 sub05 +0x58/+0x5E) - PORT-WAHL "Aufmerksamkeit"           */
 
 /* ---- Port-Bank 0x3E (Se_on pc[1]; frei: 0x0E/0x3A/0x3B/0x3C/0x3D sind vergeben, Dossier 3) ------------------------ */
 #define RE15_R39J_SE_BANK        0x3E
@@ -93,8 +105,17 @@ int re15_dining_r39_waffe_waehlen(void);
  * (0x80050f00 auf +0x170/+0x174). _tick je Bild (game_step_common.c, Haken), _clip fuer den Zeichner (main.c, Haken):
  * -1 = aus. Endet, sobald ein anderer Plc-Befehl Clip oder Kommandowort des Spielers aendert. */
 void re15_dining_r39_w_beginn(int entity, int clip);
-void re15_dining_r39_w_tick(void);
+void re15_dining_r39_tick(void);   /* je Bild: W-Clip halten, Schuss (Verzug 1), Aufmerksamkeit */
 int  re15_dining_r39_w_clip(void);
+/* N4.3: Faden SCHUETZE39 (Evt_exec sub 30 in ROOM1141, Haken dining_r38.c), Anker im VM-Takt (scd_vm.c, Haken),
+ * Lenkziel eines Gorillas (enemy_ai_common.c Gorilla B[3], Haken): John statt Elza, solange er Johns Treffer
+ * "beachtet". g_re15_r39j_anker_n != 0, solange der Faden in diesem Raum liegt (Wachposten des VM-Hakens). */
+const uint8_t *re15_dining_r39_schuetze(void);
+void re15_dining_r39_pc(const uint8_t *pc);
+void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);
+extern int      g_re15_r39j_anker_n;
+extern unsigned g_re15_r39j_schuss_zaehler, g_re15_r39j_treffer_zaehler;
+int  re15_dining_r39_aufmerksam(int slot);   /* Restbilder (Riegel) */
 /* Se_on-Zweig (dining_r38.c re15_dining_r38_se_on): 1 = Port-Bank 0x3E erledigt. */
 int re15_dining_r39_se_on(unsigned bank, int satz);
 /* audio_pc.c re15_voice_load_clip: ROOM1141 Id 53..57 -> Stamm "help01".."help05"; sonst unveraendert. */
@@ -107,7 +128,7 @@ void re15_dining_r39_messhaken(void);
 extern void (*re15_dining_r39_se_hook)(int satz);
 
 /* ---- Pruefhaken (Riegel) --------------------------------------------------------------------------------------- */
-const uint8_t *re15_dining_r39_programm(int nr, int *out_len);   /* 0 HAEMMERN39 1 ENTRIEGELN39 2 ROLLTOR39 */
+const uint8_t *re15_dining_r39_programm(int nr, int *out_len);   /* 0 HAEMMERN39 1 ENTRIEGELN39 2 ROLLTOR39 3 SCHUETZE39 */
 const uint8_t *re15_dining_r39_text(int nr, int *out_len);       /* 0 msg 50 1 msg 51 2 msg 52 */
 const uint8_t *re15_dining_r39_klopfton(int *out_len);           /* DOOR0F-Tonteil (TORSE-Aufbau) */
 extern unsigned g_re15_r39j_se_zaehler[3];   /* Se_on der Bank 0x3E: [0] Klopfen [1] Glas [2] Hilferuf */

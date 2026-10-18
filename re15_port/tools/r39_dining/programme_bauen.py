@@ -63,6 +63,9 @@ DOOR0F_DATEI = 48076            # Dateigroesse laut derselben Tabelle
 MERKER_BANK, MERKER_BIT = 5, 0x10  # RE15_R39J_MERKER_BANK/_BIT: Gemaelde-Programm laeuft (Nachbesserung 1 M1); Bank 5 =
                                 #   Skript-Merker (ROOM1141 sub03/sub04 @0x00FA4/@0x00FB6 nutzen Bit 0/1, sonst keins)
 MSG52_REST = 30                # RE15_R39J_MSG52_REST: Sleep nach Johns Folge-Geste (Abnahme H3: msg 52 stand 99 Bilder)
+SCHUETZE_BANK, SCHUETZE_BIT = 5, 0x11  # RE15_R39J_SCHUETZE_BANK/_BIT: Johns Salve laeuft (Nachbesserung 1 N4.3)
+SUB_SCHUETZE = 30               # RE15_R39J_SUB_SCHUETZE: Evt_exec-Nummer des Fadens SCHUETZE39 (< RE15_RDT_MAX_SUB_SCD 32;
+                                #   ROOM1141 hat sub00..sub06; Port-Nummer wie ROOM1131 Ereignis 29, Runde 38)
 
 D1141 = R.RDT["1141"]
 
@@ -347,6 +350,8 @@ def baue_entriegeln39():
     op([0x46, 0x02, 0x01, 0x31, R.MSG_1141_SPERRE, 0x00, 0xFF, 0xFF, 0x00, 0x00],
        "Aot_reset Slot 2 (Riegel im Rechteck der Dachtuer) -> msg 41 (Runde 38)")
     R.kopie("1141", 0x00F4E, 0x00FA2, [0x22, 0x02, 0x07, 0x00], "(sub02-Schluss: Steuerung zurueck, Gorillas, John in die Ecke)")
+    op([0x04, 0xFF, 0x18, SUB_SCHUETZE], "Evt_exec(0xFF, 0x18, %d) = Faden SCHUETZE39 (John schiesst ab und an; Form sub00 @0x00B02 "
+                                         "`04 ff 18 02`) - Nachbesserung 1 N4.3" % SUB_SCHUETZE)
     xp = {R.ORIG_ELZA: R.ELZA_PLATZ, R.ORIG_JOHN: R.JOHN_PLATZ,
           (-1300, -15500): (R.ELZA_PLATZ[0] + R.BLICK_DX, R.ELZA_PLATZ[1]),
           (-850, -13350): (R.JOHN_PLATZ[0] + R.BLICK_DX, R.JOHN_PLATZ[1])}
@@ -369,6 +374,7 @@ def baue_entriegeln39():
         sys.exit("ABBRUCH: %d statt 12 Koordinaten umgesetzt" % getauscht)
     # ---- Gorillas tot -> Punkt 8, dann Doppeltuer frei und Johns Abgang (Runde 38) ----
     R.warte(4, 0xF2, 1, "Gorillas leben (sub01 @0x00C0C loescht (4,0xF2))")
+    warte_solange(SCHUETZE_BANK, SCHUETZE_BIT, "Johns letzte Salve zu Ende (N4.3)")
     sleep(30, "Sleep 30 (Form ROOM1021 sub06 @0x021FE)")
     nach_dem_kampf()
     op([0x46, 0x00, 0x02, 0x31] + list(D1141[0x00A52 + 14:0x00A52 + 20]),
@@ -400,6 +406,73 @@ def baue_entriegeln39():
     R.set_flag(2, 0x07, 0, "Set(2,7)=0 (Form sub06 @0x010C8)")
     R.set_flag(1, 0x1B, 0, "Set(1,0x1B)=0 (Form sub06 @0x010CC)")
     op([0x01, 0x00], "Evt_end = sub05 @0x00FE6")
+    return list(prog)
+
+
+def ifel_f2(zeilen_fn, c):
+    """Ifel_ck { Ck(4,0xF2)==1 <Zeilen> } Endif - Gorillas leben noch (sub00 @0x00B4A `21 04 f2 01`); Ifel-Form sub01
+    @0x00BFE (Laenge = Ck + Rumpf + Endif), Endif sub01 @0x00C10."""
+    kopf = len(prog)
+    op(b"\x06\x00\x00\x00", "Ifel_ck (Laenge s.u.) (Form sub01 @0x00BFE): %s" % c)
+    op(b"\x21\x04\xf2\x01", "  Ck(4,0xF2)==1 = sub00 @0x00B4A (Gorillas leben)")
+    zeilen_fn()
+    op(b"\x08\x00", "Endif = sub01 @0x00C10")
+    laenge = sum(len(b) for b, _ in prog[kopf + 1:])
+    prog[kopf] = (b"\x06\x00" + struct.pack("<H", laenge), prog[kopf][1].replace("(Laenge s.u.)", "Laenge %d" % laenge))
+
+
+ANKER = {}
+
+
+def anker(name):
+    ANKER[name] = sum(len(b) for b, _ in prog)
+
+
+def baue_schuetze39():
+    """Nachbesserung 1 N4.3 (NUTZER-VORGABE Nachtrag 4: "John sollte auch ab und an mal auf die Gorillas schiessen in
+    ROOM 1141 und dann ihre Aufmerksamkeit erhalten"; Johns eigene Zeile msg 11 "I'll try to distract them"). Eigener
+    Faden (Evt_exec aus ENTRIEGELN39, sobald John in seiner Ecke steht), solange die Gorillas leben: Pause, Drehung zum
+    naechsten Gorilla (Ziel traegt dining_r39.c am Anker ZIEL ein), Zielen, zwei Schuesse, Senken - die Original-Folge
+    von Johns Schuessen auf Roy, ROOM1021 sub02 @0x020C6..@0x020F2. Treffer, Ton und Aufmerksamkeit setzt dining_r39.c
+    an den Ankern FEUER (Verzug 1 wie der Schuss-Ton der Runde 36 L, RE2 ROOM1010 sub30)."""
+    del prog[:]
+    ANKER.clear()
+    sleep(60, "Sleep 60 (John ist eben in der Ecke; Form ROOM1171 sub02 @0x014D2 `09 0a 3c 00`)")
+    kopf = len(prog)
+    op(b"\x0f\x04\x00\x00", "While (Laenge s.u.) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`")
+    op(b"\x21\x04\xf2\x01", "  Ck(4,0xF2)==1 = sub00 @0x00B4A (Gorillas leben)")
+    sleep(90, "Sleep 90 (PORT-WAHL \"ab und an\": Takt der Ruf-Schleife, RE2 ROOM1060 sub05 +0x58)")
+    sleep(90, "Sleep 90 (RE2 ROOM1060 sub05 +0x5E)")
+
+    def salve():
+        R.set_flag(SCHUETZE_BANK, SCHUETZE_BIT, 1, "  Set(5,0x11)=1 Salve laeuft (ENTRIEGELN39 wartet nach dem Kampf darauf)")
+        R.work_npc(0, "  Work_set(2,0)+Nop John (sub02 @0x00C5C)")
+        anker("ZIEL")
+        R.dest(9, 1, (0, 0), "  Plc_dest TURN John -> naechster Gorilla (Form sub02 @0x00E94 `40 00 09 01 ..`; Ziel x/z traegt "
+                             "dining_r39.c am Anker ZIEL ein)")
+        op([0x18, 0x04], "  Gosub sub04 = sub02 @0x00D06 (warten, bis John ausgerichtet ist)")
+        op([0x3F, 0x02, 0x06, 0x00], "  Plc_motion(2,6) Zielen = ROOM1021 sub02 @0x020C6 (eigene Bank Clip 6)")
+        sleep(110, "  Sleep 110 = ROOM1021 sub02 @0x020CA `09 0a 6e 00`")
+
+        def schuss(n):
+            def zeilen():
+                anker("FEUER%d" % n)
+                op([0x3F, 0x02, 0x07, 0x00], "    Plc_motion(2,7) Feuer-Clip = ROOM1021 sub02 @0x%05X (eigene Bank Clip 7; Anker FEUER%d)"
+                   % (0x020CE if n == 1 else 0x020D6, n))
+                sleep(30, "    Sleep 30 = ROOM1021 sub02 @0x020D2 `09 0a 1e 00`")
+            return zeilen
+        ifel_f2(schuss(1), "erster Schuss")
+        ifel_f2(schuss(2), "zweiter Schuss")
+        R.work_npc(0, "  Work_set(2,0)+Nop John")
+        op([0x3F, 0x02, 0x06, 0x00], "  Plc_motion(2,6) = ROOM1021 sub02 @0x020EA (senken)")
+        op([0x43, 0x00, 0x80, 0x00], "  Plc_flg 0x80 rueckwaerts = ROOM1021 sub02 @0x020EE")
+        sleep(20, "  Sleep 20 = ROOM1021 sub02 @0x020F2 `09 0a 14 00`")
+        R.set_flag(SCHUETZE_BANK, SCHUETZE_BIT, 0, "  Set(5,0x11)=0 Salve fertig")
+    ifel_f2(salve, "Salve nur, solange die Gorillas leben")
+    op(b"\x10\x00", "Ewhile = ROOM1141 sub03 @0x00FB2")
+    laenge = sum(len(b) for b, _ in prog[kopf + 1:])
+    prog[kopf] = (b"\x0f\x04" + struct.pack("<H", laenge), prog[kopf][1].replace("Laenge s.u.", "Laenge %d bis hinter das Ewhile" % laenge))
+    op([0x01, 0x00], "Evt_end (Gorillas tot)")
     return list(prog)
 
 
@@ -467,7 +540,7 @@ def carr(f, name, b):
 def main():
     pruefen = "--pruefen" in sys.argv
     programme = [("k_r39j_p_haemmern", baue_haemmern39()), ("k_r39j_p_entriegeln", baue_entriegeln39()),
-                 ("k_r39j_p_rolltor", baue_rolltor39())]
+                 ("k_r39j_p_rolltor", baue_rolltor39()), ("k_r39j_p_schuetze", baue_schuetze39())]
     baue_texte()
     ton = klopfton()
     f = io.StringIO()
@@ -484,6 +557,9 @@ def main():
         f.write(" */\n")
         carr(f, name, b)
         f.write("\n")
+    for k in sorted(ANKER):
+        f.write("#define RE15_R39J_SCHUETZE_OFF_%s 0x%04X   /* Anker im Faden SCHUETZE39 (dining_r39.c) */\n" % (k, ANKER[k]))
+    f.write("\n")
     for name, b, beschr in TEXTE:
         f.write("/* %s */\n" % beschr.replace("*/", "* /"))
         carr(f, name, b)

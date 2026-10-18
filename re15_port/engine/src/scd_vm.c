@@ -793,6 +793,9 @@ void scd_vm_tick(void)
             if (g_re15_elzatoene_anker_n) re15_elzatoene_r38_pc(t->pc);
             /* Runde 39 Spur B: Schublade 11F0, Gitter + Schrank 1190 (Wachposten = Ankerzahl, sonst 0). */
             if (g_re15_toene39_anker_n) re15_toene_r39_pc(t->pc);
+            /* Runde 39 Spur J (Nachbesserung 1 N4.3): Anker in Johns Schuetzen-Faden ROOM1141 (Ziel eintragen, Schuss). */
+            { extern int g_re15_r39j_anker_n; extern void re15_dining_r39_pc(const uint8_t *pc);
+              if (g_re15_r39j_anker_n) re15_dining_r39_pc(t->pc); }
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
