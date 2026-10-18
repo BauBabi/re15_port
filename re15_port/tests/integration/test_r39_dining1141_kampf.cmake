@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.16)
 # mal auf die Gorillas schiessen in ROOM 1141 und dann ihre Aufmerksamkeit erhalten"). Echte exe, echter Weg mit Elza
 # (1131 -> 1141 wie integration_r39_dining1141_d), Pistole im Inventar, Gorillas LEBEND (kein RE15_R38F_GORILLAS_STARR); Elza
 # geht nach der Szene neben John (Lage L3 der Abnahme 1) und wehrt sich nicht - die Gorillas packen sie, John schiesst.
+# Elzas Energie haelt der Messhaken RE15_R39_MESS_SPIELER_HP=100 der Spur E (gegner_r39.c, nur mit Env; wie integration_r39_
+# gegner_1141): ohne ihn starb Elza in einem Lauf bei F5389 (Lauf lauf_7796af7a) und die exe wartete im Todesbild bis zur
+# Zeitgrenze - gemessen wird hier Johns Seite, nicht Elzas Ueberleben.
 # Dossier analysis/befunde_runde39/J_dining1141.md Abschnitt 9, Code engine/src/dining_r39.c, Konstanten include/re15_dining_r39.h.
 # Geprueft (debug.log, state.txt, RE15_R39J_LOG):
 #   (a) Treffer auch, waehrend Elza im Griff ist (state.txt gr=1), auf den Gorilla, der sie NICHT haelt; Fehlschuesse nur
@@ -97,13 +100,13 @@ if(NOT AUSWERTEN)
     file(MAKE_DIRECTORY "${_lauf}")
     file(WRITE "${_lauf}/wegplan.txt" "${_plan}")
     set(WORKDIR "${_lauf}")
-    re15_start_spiel(_rv 3000
+    re15_start_spiel(_rv 1500
         RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
         RE15_MSG_LOG=1 RE15_SE_DEBUG=1 RE15_STATE_LOG=state.txt RE15_R39J_LOG=r39.txt
         "RE15_WEGPLAN=${_lauf}/wegplan.txt" RE15_WEGPLAN_LOG=wegplan_log.txt
         "RE15_EXIT_AT=5500#1141"
         "RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78" "RE15_GIVE=0x43:1,0x03:15,0x15:50" "RE15_DEBUG_JUMP=1131@gp"
-        "RE15_PLAYER_POS=-1300,-13900,0" "RE15_R38F_GORILLAS_TOT=2400"
+        "RE15_PLAYER_POS=-1300,-13900,0" "RE15_R38F_GORILLAS_TOT=2400" "RE15_R39_MESS_SPIELER_HP=100"
         "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
     message(STATUS "r39_dining1141_kampf: exit=${_rv}, ${_lauf}")
@@ -111,6 +114,10 @@ endif()
 
 if(NOT EXISTS "${_lauf}/debug.log" OR NOT EXISTS "${_lauf}/state.txt" OR NOT EXISTS "${_lauf}/r39.txt")
     message(FATAL_ERROR "r39_dining1141_kampf: debug.log/state.txt/r39.txt fehlt (${_lauf})")
+endif()
+file(STRINGS "${_lauf}/debug.log" _ex REGEX "\\[flow\\] EXIT_AT: ")
+if(NOT _ex)
+    message(FATAL_ERROR "r39_dining1141_kampf: RE15_EXIT_AT nicht erreicht (Haenger/Tod?) ${_lauf}")
 endif()
 
 # Schuesse aus debug.log: "[dining39] F<n> John schiesst (Schuss <k>) auf Gorilla Slot <s>: Treffer... | daneben - <Grund>"
