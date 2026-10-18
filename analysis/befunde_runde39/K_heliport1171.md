@@ -905,3 +905,11 @@ Pause-Tor @0x80112120 (-> @0x8011221c). Zustandstabelle `table 0x8012111c`: [0] 
   RE1.5-KI-Modus auch 10C0/10C1/1120/1121/1170: INIT-Takt, Tod, Leiche). Gezielte Tests aller Kraehen-Raeume gruen (13.10).
 - enemy_ai_common.c ist auch Datei der Spuren D/E: die NB2-Haken liegen in re15_crow_flight2_sub und am Ende der
   Kraehen-Wurzel (keine Ueberschneidung mit Zombie-/Hunde-/Gorilla-Code).
+- Folgen fuer Elza und John (Pose-Strom, gerendert, Lade-Weg `vorher_laden` gegen `nach2_laden`, `K39nb2/laeufe_cmp.py`):
+  Elza 22 Laeufe, John 19 Laeufe, je dieselbe Lauf-Folge (gleiche Clips in gleicher Reihenfolge), 19 bzw. 16 Laeufe mit
+  identischer Bildfolge, um 8-10 Bilder verschoben. Anders nur Halte-Laeufe: Elza Clip 2/52 (Warten auf den Griff) 41 -> 51
+  Bilder, zwei Gang-Laeufe je 1 Bild kuerzer (58 -> 57, 71 -> 70); John INIT-Pose 221 -> 231, Heran-Winken-Halt 128 -> 127,
+  Clip 2/52 39 -> 38. Ursache der 1-Bild-Unterschiede: vorher fiel die tote Kraehe 2 (die im falschen SPIN um Elza kreiste)
+  bei (1262,7030) neben Elza und schob sie F372-F377 von (1166,7438) nach (1181,7676); jetzt fliegt sie in Phase 2
+  geradeaus und stirbt bei (864,-457) (Leiche y -7600, Boden -7200) — Elza bleibt bei (1164,7435), der folgende Gang ist
+  um diese 240 Einheiten kuerzer. John: Heran-Winken weiter RBJ rec1 Clip 2 (96 Bilder) 0..95 + Halt (>= 96, Riegel gruen).
