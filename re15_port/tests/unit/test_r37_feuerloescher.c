@@ -398,14 +398,21 @@ static void teil_raum(void)
           "R 1091: Slot 3 msg 29 (Loescher), Slot 5 bleibt msg 20 (Schuppen, Runde 36)");
 
     /* 1000 / 1001 */
+    /* Runde 39 Spur C (inventar_r39.c, NACH diesem Installer): Slot 3 traegt erst die Handgun-Munition (Item 0x15
+     * x30, Bit (9,69), Satzform ROOM1001 @0x00C24), der Raumtext msg 0 zieht unveraendert in Slot 11 und bleibt erst
+     * mit (9,69)=1 in Slot 3 (Riegel unit_r39_inventar_spind). Das Loescher-Bit (9,0x86) aendert daran nichts. */
     start(&r00, 0, 0, 0, 0, NULL, NULL, 0, 1);
-    a = &g_aot.slots[3];
+    a = &g_aot.slots[11];
     CHECK(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == 0 && a->sce_flags == 0x31 && a->band == 0 &&
           a->x - a->half_w == 20500 && a->x + a->half_w == 21300 && a->z - a->half_h == -800 && a->z + a->half_h == 0,
-          "R 1000 (Leon): Spind Slot 3 -> Raumtext msg 0, Rechteck der Original-Aufnahme (20500,-800) 800x800");
+          "R 1000 (Leon): Spind-Raumtext msg 0 (Slot 11 seit Runde 39), Rechteck der Original-Aufnahme (20500,-800) 800x800");
+    CHECK(g_aot.slots[3].active && g_aot.slots[3].type == RE15_AOT_TYPE_ITEM && g_aot.item_params[3].item_type == 0x15 &&
+          g_aot.item_params[3].taken_bit == 69,
+          "R 1000 (Leon): Slot 3 = Handgun-Munition 0x15 Bit (9,69) (Runde 39 Spur C), kein Loescher (0x31) mehr");
     start(&r00, 0, 0, 0, 0, K_GENOMMEN, NULL, 0, 1);
-    CHECK(g_aot.slots[3].active && g_aot.slots[3].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[3].event_id == 0,
-          "R 1000 (Leon), Loescher schon genommen: Spind ebenfalls msg 0");
+    CHECK(g_aot.slots[11].active && g_aot.slots[11].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[11].event_id == 0 &&
+          g_aot.slots[3].type == RE15_AOT_TYPE_ITEM && g_aot.item_params[3].item_type == 0x15,
+          "R 1000 (Leon), Loescher schon genommen: Spind ebenfalls Munition + msg 0 (Slot 11)");
     start(&r01, 0, 0, 0, 0, NULL, NULL, 1, 1);
     CHECK(g_aot.slots[3].active && g_aot.slots[3].type == RE15_AOT_TYPE_ITEM && g_aot.item_params[3].item_type == 0x15 &&
           g_aot.item_params[3].amount == 30 && g_aot.item_params[3].taken_bit == 0x86,
@@ -574,10 +581,27 @@ static void teil_spind(void)
     g_scd.message_active = 0; re15_pauseflags_clear();
     druck();
     for (int f = 0; f < 20; f++) scd_vm_tick();
+    /* Runde 39 Spur C: der ERSTE Druck holt die Handgun-Munition (Aufnahme-Modal 0x15, Slot 3), erst danach
+     * antwortet der Raumtext msg 0 (Slot 11) — Riegel unit_r39_inventar_spind B/C. */
+    {
+        uint8_t typ = 0; int wahl = 0, w = 0;
+        while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && w++ < 800) re15_item_modal_tick(0, 0);
+        re15_item_modal_prompt(&typ, &wahl);
+        CHECK(re15_item_modal_active() && typ == 0x15 && !g_scd.message_active,
+              "S 1000 erster Druck am Spind: Aufnahme-Modal Handgun-Munition 0x15 (Runde 39), noch kein Text (msg %d, Modal %d)",
+              (int)g_scd.message_active, re15_item_modal_active());
+        w = 0;
+        while (re15_item_modal_active() && w++ < 1600) re15_item_modal_tick(0x4000u, 0);
+    }
+    for (int f = 0; f < 20; f++) scd_vm_tick();
+    g_scd.message_active = 0; re15_pauseflags_clear();
+    druck();
+    for (int f = 0; f < 20; f++) scd_vm_tick();
     CHECK(!re15_item_modal_active() && g_scd.message_active && g_scd.message_id == 0,
-          "S 1000 Druck am Spind: Raumtext msg 0 \"Nothing unusual.\", kein Aufnahme-Modal (msg %d, Modal %d)",
+          "S 1000 zweiter Druck am Spind: Raumtext msg 0 \"Nothing unusual.\", kein Aufnahme-Modal (msg %d, Modal %d)",
           (int)g_scd.message_id, re15_item_modal_active());
-    CHECK(!re15_game_flag_get(9, 0x86) && menge(RE15_FL37_ITEM) == 0, "S 1000: kein Loescher aus dem Spind");
+    CHECK(!re15_game_flag_get(9, 0x86) && menge(RE15_FL37_ITEM) == 0 && re15_game_flag_get(9, 69) && menge(0x15) == 15,
+          "S 1000: kein Loescher aus dem Spind; Munition 0x15 x%d und (9,69)=1 (Runde 39)", menge(0x15));
 }
 
 /* ========================================================================================== leer */

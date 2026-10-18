@@ -74,21 +74,27 @@ stattdessen in der Anzahl der Benutzungsstellen, und die ist hier ausgezaehlt.
          liegt. Leser-Sub = der Sub, der per `Evt_exec` den Sub startet, welcher das
          Panel scharf macht (`Set(5,2,1)`; Bank 5 = Panel-Arbeitsspeicher). Damit bleibt
          die Pliers-Stelle von ROOM11E0/11E1 (msg 12, eigener Sub) unberuehrt.
-      E5 KOLLISIONS-RIEGEL ueber ALLE RDT, sonst wird die Zeile VERWORFEN (fail-closed):
-         genau EIN Basisraum mit `Set(zone,bit,1)` und das muss der Panel-Raum selbst
-         sein; NULL loeschende Schreiber `Set(zone,bit,!=1)`; NULL indizierte Schreiber
-         (0x59, LAB_8003fe90 - Bit kommt aus work_vars, statisch nicht aufloesbar) in
-         derselben Bank. Gemessen: flag(3,50) 1 Basisraum/0/0 OK, flag(3,137)
-         1 Basisraum/0/0 OK, flag(3,139) **2 Basisraeume** (ROOM11Ex + ROOM124x
-         @0x0055A, der Neuspiel-Startraum) -> ROOM11E0/11E1 msg 9 FLIEGEN RAUS.
+      E5 KOLLISIONS-RIEGEL ueber ALLE RDT DERSELBEN SZENARIO-VARIANTE, sonst wird die
+         Zeile VERWORFEN (fail-closed): genau EIN Raum mit `Set(zone,bit,1)` und das muss
+         der Panel-Raum selbst sein; NULL loeschende Schreiber `Set(zone,bit,!=1)`; NULL
+         indizierte Schreiber (0x59, LAB_8003fe90 - Bit kommt aus work_vars, statisch nicht
+         aufloesbar) in derselben Bank. Runde 39 Spur C: die Varianten xxx0 (Leon) und
+         xxx1 (Elza) sind getrennte Dateien (Raumlader @0x800397ec `addu a0,a0,v0`,
+         Elza = Leon + 1, alle 120 Raeume paarweise) - ein Setzer der anderen Variante kann
+         nie laufen und zaehlt nicht. Gemessen: flag(3,50) 1 Raum/0/0 OK, flag(3,137)
+         1 Raum/0/0 OK, flag(3,139): Leon **2 Raeume** (ROOM11E0 + ROOM1240 @0x0055A, der
+         Neuspiel-Startraum) -> ROOM11E0 msg 9 FLIEGT RAUS; Elza 1 Raum (ROOM11E1 @0x01A8A;
+         ROOM1241 @0x0055A traegt `22 03 6f 01`) -> ROOM11E1 msg 9 -> msg 5 wird umgehaengt.
          0x59 kommt im ganzen Bestand nur mit Bank 5 vor (ROOM1030/1031).
 
-      Zu E5/ROOM1240: `Set(3,139,1)` @0x0055A steht ab dem ersten Bild eines neuen
-      Spiels. Ein Gate `flag(3,139)==1` waere dort das SCHLIMMSTE - die Abfrage kaeme
-      sofort. Und der Leser ist dann ohnehin tot: ROOM11E0 main00 @0x01576 nimmt den
-      Else-Zweig und installiert @0x016C0 eine fertige Tuer statt des Kartenlesers.
-      Die Yellow Keycard hat im ausgelieferten Stand also KEINE erreichbare
+      Zu E5/ROOM1240 (LEON): `Set(3,139,1)` @0x0055A steht ab dem ersten Bild eines
+      neuen Leon-Spiels. Ein Gate `flag(3,139)==1` waere dort das SCHLIMMSTE - die
+      Abfrage kaeme sofort. Und der Leser ist dann ohnehin tot: ROOM11E0 main00 @0x01576
+      nimmt den Else-Zweig und installiert @0x016C0 eine fertige Tuer statt des
+      Kartenlesers. Die Yellow Keycard hat bei Leon also KEINE erreichbare
       Benutzungsstelle - eine Eigenschaft der Daten, nicht der Wegwerf-Abfrage.
+      Bei ELZA lebt der Leser (ROOM11E1 main00 dieselben Bytes, aber flag(3,139) bleibt 0
+      bis zum richtigen Code @0x01A8A) - ihre Stelle ist ROOM11E1 msg 5 mit Gate (3,139).
 
 Ausgabe je Eintrag: (room_id, msg_id, item_id, gate_zone, gate_bit). room_id ist die Zahl
 aus dem Dateinamen (ROOM10D0 -> 0x10D0), also genau g_current_room_id. Beide
@@ -249,6 +255,7 @@ def main():
     n_roh_muster  = 0
 
     def basisraum(r): return r[:-1] + "x"
+    def variante(r):  return r[-1]            # Runde 39 Spur C: '0' = Leon-Datei, '1' = Elza-Datei
 
     for p in rdts:
         d = open(p, "rb").read()
@@ -277,7 +284,7 @@ def main():
                     elif op == 0x22:                 # (E5) Set(zone,bit,val)
                         key = (d[pc+1], d[pc+2])
                         if d[pc+3] == 1:
-                            setz1[key].add(basisraum(room))
+                            setz1[key].add(room)                 # Runde 39 Spur C: je VARIANTE
                             setz1_stellen[key].append((room, pc))
                         else:
                             setz_loesch[key].append((room, pc, d[pc+3]))
@@ -344,20 +351,31 @@ def main():
     panel_ok, panel_tot = {}, {}
     for room, pa in sorted(panels.items()):
         z, b = pa["gate_zone"], pa["gate_bit"]
-        eigen, fremd = basisraum(room), sorted(setz1[(z, b)] - {basisraum(room)})
+        # Runde 39 Spur C: E5 je SZENARIO-VARIANTE (xxx0 = Leon, xxx1 = Elza). Die Varianten sind
+        # getrennte Dateien, der Raumlader addiert die Figur auf die Raumnummer (@0x800397ec
+        # `addu a0,a0,v0`, Elza = Leon-Datei + 1; alle 120 Raeume liegen paarweise vor) - ein
+        # Setzer in Leons Datei (ROOM1240 @0x0055A `22 03 8b 01`) kann in Elzas Spiel nie laufen
+        # (ROOM1241 @0x0055A traegt `22 03 6f 01`). Vorher klappte basisraum() beide Varianten
+        # zusammen und strich damit auch Elzas Panel ROOM11E1 (AUFTRAG Runde 39, gelbe Karte).
+        eigen = room
+        fremd = sorted(r for r in setz1[(z, b)]
+                       if variante(r) == variante(room) and basisraum(r) != basisraum(room))
+        loesch = [t for t in setz_loesch[(z, b)] if variante(t[0]) == variante(room)]
+        idx = [t for t in idx59[z] if variante(t[0]) == variante(room)]
         grund = None
         if fremd:
             grund = ("E5: flag(%d,%d) wird auch ausserhalb gesetzt (%s) - kein Marker "
                      "dieses Panels" % (z, b, ", ".join("%s @0x%05X" % (r, o)
-                     for r, o in setz1_stellen[(z, b)] if basisraum(r) != eigen)))
+                     for r, o in setz1_stellen[(z, b)]
+                     if variante(r) == variante(room) and basisraum(r) != basisraum(room))))
         elif eigen not in setz1[(z, b)]:
             grund = "E5: flag(%d,%d) wird nirgends auf 1 gesetzt" % (z, b)
-        elif setz_loesch[(z, b)]:
+        elif loesch:
             grund = ("E5: flag(%d,%d) wird geloescht (%s) - nicht einmalig" % (z, b,
-                     ", ".join("%s @0x%05X val=%d" % t for t in setz_loesch[(z, b)])))
-        elif idx59[z]:
+                     ", ".join("%s @0x%05X val=%d" % t for t in loesch)))
+        elif idx:
             grund = ("E5: Bank %d hat indizierte Schreiber 0x59 (%s) - statisch nicht "
-                     "aufloesbar" % (z, ", ".join("%s @0x%05X" % t for t in idx59[z])))
+                     "aufloesbar" % (z, ", ".join("%s @0x%05X" % t for t in idx)))
         (panel_tot if grund else panel_ok)[room] = dict(pa, grund=grund)
 
     ad_zeilen = list(gewaehlt)          # die (A)-(D)-Zeilen VOR dem Umhaengen
@@ -439,8 +457,8 @@ def main():
     w(" * anzufahren, ohne eine Raumnummer in den Test zu schreiben.")
     w(" * `tot` = 1: Panel vom Kollisions-Riegel E5 verworfen, KEINE Wegwerf-Stelle -")
     w(" * gate_zone/gate_bit stehen dort trotzdem (das GEMESSENE Erfolgs-Bit), damit der")
-    w(" * Riegel den ausgelieferten Startzustand nachstellen kann (flag(3,139) steht ab")
-    w(" * Bild 0, ROOM1240 @0x0055A). */")
+    w(" * Riegel den ausgelieferten Startzustand nachstellen kann (flag(3,139) steht bei")
+    w(" * LEON ab Bild 0, ROOM1240 @0x0055A; Elzas ROOM11E1 lebt - Runde 39 Spur C). */")
     w("typedef struct { uint16_t room; uint8_t leser_sub; uint8_t vorzeitig_msg;")
     w("                 uint8_t erfolg_sub; uint8_t ausloeser_msg; uint8_t item;")
     w("                 uint8_t gate_zone; uint8_t gate_bit;")

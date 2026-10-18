@@ -5,6 +5,7 @@
  */
 #include <string.h>
 #include "re15_inventory.h"
+#include "re15_inventar_r39.h" /* Runde 39 Spur C: Stapelregel "alles mit einer Zahl" (re15_inventar_r39_stapelt) */
 #include "re15_inv_ui.h"       /* die VERBATIM ausgelieferten EXE-Bytes [0x80074a8c,0x800762a0):
                                * hier gebraucht fuer die Eigenschaftstabelle @0x80074da8 */
 #include "re15_inv_screen.h"   /* wave 5: icon-cache cell art maintenance (the original's
@@ -358,7 +359,7 @@ int re15_pickup_stapelt_nutzer(uint8_t item_id)
  * (@0x8001df14 Vorpruefung + @0x8001e054 bltz) unveraendert. */
 int re15_pickup_passt_nutzer(uint8_t item_id, uint8_t menge)
 {
-    if (!re15_pickup_stapelt_nutzer(item_id) || menge == 0) return 0;
+    if (!re15_inventar_r39_stapelt(item_id) || menge == 0) return 0;   /* Runde 39 Spur C: alles mit Zahl */
     int ziel = re15_inv_find_item(item_id);            /* FUN_8004dfec @0x8004dfec */
     if (ziel < 0) return 0;
     return ((int)g_inv.slots[ziel].qty + (int)menge) <= inv_obergrenze(item_id);
@@ -378,7 +379,7 @@ int re15_pickup_passt_nutzer(uint8_t item_id, uint8_t menge)
 int re15_inv_grant_stapeln_nutzer(uint8_t item_id, uint8_t menge)
 {
     if (item_id == 0 || menge == 0) return -1;              /* wie re15_inv_grant */
-    if (!re15_pickup_stapelt_nutzer(item_id))
+    if (!re15_inventar_r39_stapelt(item_id))                /* Runde 39 Spur C: alles mit Zahl (re15_inventar_r39.h) */
         return re15_inv_grant(item_id, menge);              /* byte-true Insert, unveraendert */
 
     int ziel = re15_inv_find_item(item_id);                 /* FUN_8004dfec @0x8004dfec */
