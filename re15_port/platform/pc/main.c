@@ -147,6 +147,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_objpoly_r38.h"  /* Runde 38 Spur W: Polygon-Schranken des Objektzeichners (Rolladen ROOM20A0) */
 #include "re15_objabe_r38.h"   /* Runde 38 Spur W: halbtransparente Raum-Objekte (Attribut-Bit 0x2, ABR, STP) */
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen der Wasserzombies (Bank, Pose, Schatten) */
+#include "re15_gegner_r39.h"       /* Runde 39 Spur E: Gorilla-/Affen-Schatten auf +0x1ba (@0x80116f30 / @0x80110c78) */
 #include "re15_inventar_r39.h"  /* Runde 39 Spur C: Spind 1000, Stapeln, Status-Bild, Messschiene RE15_INV_LOG */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
@@ -9867,6 +9868,7 @@ re_title:;
                     if (npc->type == RE15_HUNDESCHATTEN_TYP) nsh_y = re15_hundeschatten_y(npc);
                     { int32_t ky; if (re15_npckante_schatten_y(npc, &ky)) nsh_y = ky; }   /* Runde 38 Spur M: +0x1ba @0x8011dd78 */
                     re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
+                    re15_r39_schatten_y(npc, &nsh_y);            /* Runde 39 Spur E: Gorilla 0x27 / Affe 0x29 -> +0x1ba (`lh a1,442` @0x80116f30 / @0x80110c78) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
