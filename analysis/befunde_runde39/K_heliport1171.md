@@ -33,6 +33,8 @@ bearbeitet — nicht anfassen. Spur J aendert nur den Uebergang 1141 -> 1171 (Mu
   Riegel elza/kraehen + Integrationsblock, Gegenprobe am alten Motor rot, gezielte Tests gruen (12.10).
 - 2026-10-18 ab ~22:00: NACHBESSERUNG 2 (Abnahme 1, Maengel M1 HOVER-Phase 0, M2 SPIN-Phase 2 der Ereignis-Kraehen;
   Abschnitt 13).
+  Erledigt bis ~23:50: M1/M2 belegt + umgesetzt, eigener Befund N1 (Wand-Pass der Kraehen-Wurzel) belegt + umgesetzt,
+  Riegel flug/wand + Integrationsblock (alter Motor ROT), Lade-Weg + echter Weg nachgemessen, 258 + 24 gezielte Tests gruen.
 ## 1. Messung vorher
 
 Gebauter Stand 1038dc15 (eigener Baum, `local_build.sh configure` + `build`), Messkopie `re15_pc_k39_v1.exe`.
@@ -673,6 +675,12 @@ Maengel aus `K_abnahme_1.md` §8: M1 Ereignis-Kraehen ROOM1171 HOVER 0x80115130 
 Einstiegstakt), M2 SPIN 0x801153ac Phase 2 (Port dreht die Gier weiter). Baum sauber, HEAD 97b42ad2 (Code-Stand 86956b9c).
 Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher (fortlaufend unten).
 
+| Mangel | Ursache (Port) | vorher (Lade-Weg / echter Weg) | Beleg (Original) | Aenderung | nachher (Lade-Weg / echter Weg) |
+|---|---|---|---|---|---|
+| M1 HOVER-Phase 0 | Phase-0-Block fiel im selben Takt in f314, Lenkung, y += vvel, pos_advance, Kontakt | Zyklus 10, 10/10 Phase-0-Takte mit neuem Bild und Bewegung (F2 `(-9813,-5651,r3980) -> (-9639,-5605,r3930)`); Griff F95 / F161 | Phase 0 `j 0x801152cc` @0x801151d8 (Epilog) nach Clip-Setzer @0x8011516c, +0x8c @0x80115170, +0x1e4 @0x8011518c-bc, +0x6++ @0x801151d4-dc; f314 erst Phase 1 @0x801151e8 | `break` nach dem Phase-0-Block | Zyklus 11, 0/10 Aenderungen, `67:0 68:0 69:0 70:1 ... 78:9 79:9 80:0` (echter Weg) = Abnahme-Ableitung; Griff F105 / F170 |
+| M2 SPIN-Phase 2 | `rot_y += 60` vor der Phasen-Unterscheidung | 108/109 bzw. 123/123 Phase-2-Takte +60 | Gier +60 @0x80115460-6c nur im Phase-1-Rumpf; Phase 2 @0x801154d0-e8 -> Schwanz @0x801154ec | Drehung in den Phase-1-Zweig | 0/109, 0/123 Phase-2-Takte mit Drehung; Phase 0/1 je +60 |
+| N1 (eigener Befund) Wand-Pass | Wand-Pass der Kraehen-Wurzel nur in Zustand 1 | Westwand-Kraehe startet bei (-9700,-7680) IN Zelle #37 (Band 4) | Wurzel: `jalr` @0x801121b4, ohne Sprung `jal 0x8003b0a4` @0x80112204 (Radius 200 @0x80112200, Maske 4 @0x801121fc), +0x1d1 @0x80112218; Tor Wort0 Bit 3 @0x8003b134-44 | `re15_r39k_kraehe_wandpass` nach jedem Nicht-1-Zustand | INIT-Takt `(-9700,-7680) -> (-8842,-7623)`, F1-F4 Kreis-Schub, sonst keine Klemmung in 1171 |
+
 ### 13.1 M1 — Ereignis-Kraehen: HOVER 0x80115130 Phase 0 (Einstiegstakt ohne Posieren/Bewegung)
 
 **Ursache (Port).** `enemy_ai_common.c` `re15_crow_flight2_sub` Fall 1 (HOVER, seit 74121bb81): der Phase-0-Block setzt
@@ -897,8 +905,8 @@ Pause-Tor @0x80112120 (-> @0x8011221c). Zustandstabelle `table 0x8012111c`: [0] 
 
 - Unveraendert aus 12.7: Ton der Opferphasen P1/P2 einen Takt spaet (heliport1171_r38.c; SE @0x80115c3c/@0x80115ca4 im
   Takt des letzten f314 @0x80115c20/@0x80115c88), Hund 0x20 zeichnet das Bild nach dem Vorschub, Eskorte-EXEC-Saattakt
-  (NPC), H5 (RBJ-Cache-Grenze 1040/1041), H6 (ignorierte Dateien `re15_port/build_bisect/`, Messkopie
-  `re15_port/build/platform/pc/re15_pc_r35e_haken_685df09f.exe` bei der Integration entfernen).
+  (NPC), H5 (RBJ-Cache-Grenze 1040/1041). H6 ERLEDIGT (NB2): `re15_port/build_bisect/` (1,9 GB) und die liegengebliebene
+  Messkopie `re15_port/build/platform/pc/re15_pc_r35e_haken_685df09f.exe` (beides ignoriert) im Spurbaum geloescht.
 - Zustand 1 (ACTIVE, normale Kraehen, nicht ROOM1171-Ereignis): der vorhandene Wand-Pass klemmt mit dem Band aus dem
   y NACH der Bewegung (`re15_collision_constrain_enemy(..., e->y, 4u)` = -(y/1800)), das Original mit +0x82 aus dem
   Pre-Pass VOR dem Zustand (@0x80112154). Unterschied nur im Takt, in dem eine Kraehe eine 1800er-Bandgrenze kreuzt;
