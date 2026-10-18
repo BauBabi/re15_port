@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 18:57: master-Regression gefunden (von Spur I gemeldet) und behoben: unit_r38_itemorte_raum seit Welle 2 rot
+  - Spur H stellte das Loescher-Band auf Spielerband(y)+1 um, der Runde-38-K-Riegel schrieb fuer 1030 noch Band 1 fest;
+  Verhalten richtig (integration_r38_itemorte / r37_feuerloescher / r39_elza_loescher gruen), Riegel auf Band 2 (96ab793c).
+  Danach ALLE schnellen Tests in master: unit_/prop_/probe_ 822/822 (ctest -j 6, 673 s). Neue Regel (Memory
+  reai-v2-gezielte-integration-querbezug): vor jedem master-Merge zusaetzlich alle 822 schnellen Tests im Integrationsbaum.
 * 2026-10-18 17:06: MONATS-/SITZUNGSLIMIT (~14:58, Reset 17:00) beendete G/I/J/K und die E-Nachbesserung 2 nach ~35 min.
   Gesichert: karten-Reste 716eda1d (UNGEPRUEFT); K hatte einen Probe-Merge von r39/integration (MERGE_HEAD 4e2177bd) offen
   -> abgebrochen; master (Welle 1+2) in alle fuenf Baeume gemergt (dining1141: AUFTRAG.md-Konflikt, beide Seiten behalten).
