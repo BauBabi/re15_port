@@ -856,3 +856,84 @@ Punkte 1-4 (Abnahme 2: erfuellt) nicht verschlechtern.
 - Fuer Bild 3556 rechnet RE2: Vorbild z -23132, a1 = -23132 + 450 + 25600 = 2918 >= t1 = 900 + 2000 = 2900 -> Bit 1;
   z - Vorbild = -24973 + 23132 < 0 -> z = -24600 + (450 + 1000 + 1) = **-23149** (innen). x: Zelle 1 spannt die Raumbreite,
   Vorbild innerhalb -> unveraendert. Elza bliebe im Raum.
+
+### Mangel 2 (Befund E (a)) — Messung vorher (Versuch 5 bildgleich nachgefahren)
+- Lauf scratchpad e_nb3/v5_vorher mit der exe VOR der Wache (e_nb3/exe_vorher.exe = Stand 53acd32a ohne Haken; Aufbau
+  n1141_m: Wegplan e_nb2/wegplan_1141.txt, `RE15_GIVE=0x43:1,0x04:99,0x15:60`, Messhaken HP 100, Skript
+  e_nb2c/schuss_nachher4.txt ab Spielbild 2760, `RE15_EXIT_AT=4700`) -> exit 0, bildgleich mit n1141_m:
+  F4623 G3 (-6982,-9649) Sub 7/2 (Vergeltungs-Sprung), G2 (-6632,-9948); **F4624 G3 (-12218,-9837)**, G2 (-6611,-9865);
+  F4625/F4626 G3 (-12218,-10051)/(-12218,-10265) = an der Aussenkante der Westwand (Zelle 0) entlang.
+- ROOM1141-SCA selbst gelesen (scratchpad e_nb3/sca.py, RDT+0x20 -> 0x570, 5 Quadranten-Listen zu je denselben 19 Zellen):
+  Zelle 0 Typ 1 u0 0xff x -10600..-8600 z -25550..1850 (Westwand, 2000 dick), Zelle 1 x -10600..16700 z -25600..-23600
+  (Suedwand), Zelle 8 x -8600..-6550 z -23600..-22100, Zelle 13 x -9000..-5300 z -7200..-6700 (Rolltor), Kreise 14-18.
+
+### Mangel 2 — RE-Belege (selbst disassembliert)
+- RE1.5 Koerper-Stoss FUN_8002aec4 (pusher a0 = s3, pushee a1 = s2; im Tick des Gestossenen ueber b544): Radien
+  `lhu t4,6(s6)` / `lhu t4,6(s5)` @0x8002af40-54, R = r1 + r2 @0x8002b174, Schnelltest `sltu v0,a2,v0` @0x8002b194/@0x8002b1c0,
+  dist SquareRoot0 `jal 0x80065f60` @0x8002b1d8, pen = R - dist `subu s0,s0,a2` @0x8002b1e4 (`blez` @0x8002b1e8), Hoehenband
+  `lhu a0,8(s5)` / `lhu v1,8(s6)` / `slt` @0x8002b208-228, Versatz dx*pen/(dist+1) @0x8002b22c-260 / dz @0x8002b264-2a0.
+  QUERUNGS-ZWEIG @0x8002b268-40c: nur wenn die Vorbild-Hoehe +0x42 (`lh v0,66(s2)` @0x8002b268) AUSSERHALB des Bandes lag
+  (@0x8002b2a4-b0), dann je Achse nur, wenn der Gestossene in diesem Bild die Koordinate des Stossenden UEBERQUERT hat
+  (X: `lh a1,64(s2)` @0x8002b2b8, Tests @0x8002b2d0-300; Z: `lhu t2,68(s2)` @0x8002b2cc, Tests @0x8002b378-3a8) -> Ausstoss
+  +/-2r (@0x8002b308-364 / @0x8002b3b0-40c). Bild 4624: Vorbild (-6982,-9649), vor dem Stoss (-6982,~-9862), Stossender
+  (-6611,-9865): X unveraendert, Z -9649 -> -9862 bleibt noerdlich von -9865 -> KEINE Ueberquerung -> normaler Stoss
+  pen = 3200 - 371 = 2829 -> x -9803. Der Zweig haette Bild 4624 also auch portiert nicht verhindert.
+- RE1.5 Gorilla-Wurzel: Stoss `jal 0x8002aec4` / b544 @0x80116e40-54, Klemme `lw v0,120(a0)` @0x80116e64, Maske
+  `ori a2,zero,0x4` @0x80116e68, Radius `lhu a1,6(v0)` @0x80116e6c, `jal 0x8003b0a4` @0x80116e70 (Port 0x27-Zweig:
+  re15_enemy_body_push_tail + re15_enemy_sca_clamp_band(e, mag_ox, mag_oz, 4)). FUN_8003bca8 naehere Kante @0x8003bcec-cfc:
+  Ost -8600 + 1600 + 18 = -6982 (Abstand 2821), West -10600 - 1600 - 18 = -12218 (2415) -> Code 2 (Z-Pen 13305 gegen die
+  Bewegung -188), `ax < az` -> X auf die naehere = WESTkante **-12218**.
+- RE2 RETAIL Koerper-Stoss: Spielerseite FUN_800355c4 (`jal 0x800355c4` @0x80026628), Gegnerseite 0x80035530 (keine Ghidra-
+  Funktion, nur Overlay-Aufrufer: `jal 0x80035530` @0x8010062c EMZ0.BIN = Zombie-Wurzel, ebenso EMD0G_MOD0.BIN Datei 0x7c,
+  EMOVL10/21, EMS25/26): Ausrichtung FUN_80035408 @0x80035544, Schleife ueber die Entity-Liste 0x800cfe14..[0x800ce334],
+  `jal 0x80034d0c` @0x80035590 (a0 = andere, a1 = selbst). FUN_80034d0c = derselbe Stoss je Segmentpaar (pen = R - dist,
+  Hoehenband, Querungs-Zweig mit Vorbild-Hoehe +0x46 / X +0x44 / Z +0x48 wie RE1.5) plus eine Begrenzung auf +/-100 je
+  Achse NUR fuer einen Stossenden mit Wort-Bit 0x100000 (`lui v1,0x10` / `and` @0x8003504c-54, @0x8003505c-a8; in RE2 selbst
+  fehlerhaft: bei x > 100 wird z = 100 gesetzt, `addiu a2,zero,100` @0x80035084). Einen "Ziel-frei"-Test gibt es nicht:
+  **RE2 verhindert den Durchstoss NICHT im Stoss**, sondern in der Wandklemme danach: Zombie-Wurzel `jal 0x8003567c`
+  @0x80100638 (a1 = 1024) -> FUN_8004c1bc -> Rechteck-Routine FUN_8004c900 (Seite nach der Vorbild-Lage, s. Mangel 1):
+  Bild 4624 in RE2: Vorbild x -6982, a0 = -6982 + 1600 + 10600 = 5218 >= t2 = 3200 + 2000 = 5200 -> Bit 2, x - Vorbild < 0
+  -> x = -9600 + (1600 + 1000 + 1) = **-6999** (Ostseite = im Raum).
+
+### Umsetzung (Nachbesserung 3)
+- **Beta -> Retail, kleinste belegte Form** (eine Regel fuer beide Maengel, gegner_r39.c (5) "Querungs-Wache"): die RE1.5-
+  Klemme bleibt Byte fuer Byte (alle bisherigen Lagen unveraendert, die Runde-35-Original-Riegel messen weiter RE1.5);
+  NUR wenn ihr Ergebnis eine solide Rechteckzelle DURCHQUERT (Strecke Vorbild-Lage -> Ergebnis schneidet das offene Innere,
+  Vorbild nicht in der Zelle; Band/Maske/Typ 1 wie collision_constrain_impl), gilt fuer diese Zelle die RE2-Regel
+  FUN_8004c900: Code aus der Vorbild-Lage (@0x8004c91c-a8), Achse(n) mit Bit auf Mitte -/+ (r + w/2 + 1) zur Herkunftsseite
+  (@0x8004c9e0-ca50). Vorbild-Code 0 (Vorbild schon in der aufgeblasenen Zelle, z.B. Landung ueber einem Auto) -> RE2 nimmt
+  dort die RE1.5-Regel (FUN_8004c858 @0x8004c9b8) -> nichts. Bleibt nach hoechstens 4 Durchgaengen eine Querung, gilt die
+  Vorbild-Lage (Form der Runde-38-T-Invariante re15_r38_griff_durch_wand bzw. des RE1.5-Blocks push_rect Code 0).
+  - Gorilla 0x27: re15_r39_affen_querung(e, mag_ox, mag_oz) direkt nach re15_enemy_sca_clamp_band im 0x27-Zweig
+    (enemy_ai_common.c, 1 Zeile; Vorbild = Lage am Tick-Anfang = Spiegel +0x40/+0x44 @0x8001d11c-54; Radius
+    hit_radius_min = Kasten @0x80121350 1600, Maske 4 @0x80116e68, Band +0x82 = e->floor). Bei Korrektur Kontakt +0x90 /
+    +0x1b4 fuer die korrigierte Lage neu (FUN_8001bf04-Code wie @0x8003b4b8-ec).
+  - Spieler im Gorilla-Opfer-Haken (0x27 Wurf/Finisher, 0x29 Griff = der wurf-Pfad): re15_r39_wurf_querung(pl, wurf_alt_x,
+    wurf_alt_z) direkt nach re15_player_body_and_walls (game_step_common.c:2508, 1 Zeile + include; Vorbild = Lage am
+    Bild-Anfang = Spiegel +0x40/+0x44, Radius 450 = DAT_80073e94[+6] @0x80031d6c, Maske 1 @0x80031d74, Band = Klemmband).
+    Damit gilt die Runde-38-T-Invariante jetzt auch fuer den einzigen Griff, den der T-Waechter in re15_victim_place
+    ausliess (`vg_ty != 0x27u`, enemy_ai_common.c:1576).
+- Gemeinsame Dateien: enemy_ai_common.c +1 Zeile (0x27-Zweig), game_step_common.c +1 Zeile (Klammer um den wurf-Aufruf) +1
+  include (game_step_common.c steht nicht in VERTRAG §1.3 — kein anderer Spur-Punkt dort; Hinweis an die Integration),
+  test_r38_griff_alle.c +4 Zeilen (ein Tabellenfall, Auftrag "T-Invariantensonde erweitern").
+- Konstanten: 450 (@0x80031d6c, DAT_80073e94[+6] = 0x01c2, PSX.EXE Datei 0x6469a), Maske 1 (@0x80031d74), Maske 4
+  (@0x80116e68), +1 / w/2 / r (@0x8004c9e0-f0, @0x8004ca30-38), Code-Randfaelle (@0x8004c968-a8). Keine neue Zahl.
+- Mess-Schiene (kein Verhalten): RE15_R39_MESS_STATIONEN=1 (+ RE15_R39_GEGNER_LOG=1) und je Korrektur eine Zeile
+  "querung F.. gorilla|spieler zelle code vorbild re15 -> neu" in gegner_r39.log.
+
+### Riegel (Nachbesserung 3)
+- `unit_r39_gegner_querung_wand1141` (test_r39_gegner_querung.c): Kampf-Lage ROOM1141 (sub00 @0x00B54/@0x00B68), beide
+  Gorillas ruhig, Gestossener (-6982,-9915), Stossender (-6611,-9865) = Versuch-5-Versetzung; ein echtes Spielbild:
+  vorher (Haken aus) **(-12218,-10292)**, 90/90 Bilder hinter der Westwand (Softlock); nachher **(-6999,-10292)**, Kontakt
+  0x88 (Ostseite), 90/90 Bilder im Raum. Sonde mit den Versuch-5-Zahlen: (-12218,-9848) -> (-6999,-9848); RE1.5-Ergebnis auf
+  der Herkunftsseite bleibt unberuehrt.
+- `unit_r39_gegner_querung_frei1141` (Gegenprobe): dieselbe Versetzung im freien Raum ((1129,-20550)/(1500,-20500)): Stoss
+  findet statt (-> (-1675,-20927)), 60 Bilder beide Gorillas + Elza Bild fuer Bild gleich mit Haken aus/an.
+- `unit_r39_gegner_querung_wurf1141`: Versuch-6-Lage (Gorilla (-2066,-21976) Blick 389 Sub 15 Phase 2, Elza (-362,-23142)):
+  Anker im Latch **(1060,-24101) = exe-Messung**; vorher Bild 24/25 Elza (-2144,-26068)/(-613,-26068), 50 Bilder ausserhalb;
+  nachher 0 ausserhalb, 0 hinter einer Wand, kleinstes z -23150.
+- `unit_r39_gegner_t_gorilla1141` = die Runde-38-T-Invariantensonde test_r38_griff_alle.c, neuer Fall gorilla1141_sued
+  (Elza-Archiv CDEMD1, Ck(4,0xF2)=1, Elza (-362,-23142) Blick 389, Gorilla 2065 dahinter, Zwang Sub 15, ECHTER Verbindungs-
+  test): Latch Bild 15, Anker (1058,-24107), 74 Griffbilder, 0 ausserhalb, 0 hinter einer Wand. MUTATIONSPROBE (Wache aus,
+  re15_r39_gegner_enable(0) am Anfang von fall_laufen, nicht committet): **FAIL — 50 ausserhalb, 50 hinter einer Wand**
+  (Bild 39 Spieler (-2143,-26068)).
