@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 20:46: Spur E Nachbesserung 3 BESTANDEN (Abnahme 3; Fix 0ed55507): Befund E behoben - Querungs-Wache (RE2-Klemme
+  FUN_8004c900 nach Vorbild-Lage, nur bei Querung einer soliden Zelle) fuer die Gorilla-Klemme und die Spielerin im Gorilla-
+  Opfer-Pfad; Versuch 6 Elza 45 -> 0 Bilder ausserhalb, Versuch 5 Gorilla 77 -> 0; 168 Unit + 15 Integration. In die
+  Integration gemergt (faee9887). Hinweis: Wache gilt nur in den Gorilla-Pfaden; alle anderen Klemmen RE1.5 byte-true (fuer
+  alle Klemmen waere es je 1 Zeile). Jetzt Integration (E2+E3+I+Textfix) bauen + alle schnellen Tests + Gorilla-/Funk-/
+  Schluessel-Integrationen (Regex scratchpad/integ_regex_e3i.txt), dann master + Hauptbaum-exe.
 * 2026-10-18 19:41: Spur I funk10f1 BESTANDEN (Abnahme 0 ohne Maengel; Fix c95c4976): Szene beim ersten Betreten 10F1 durch die
   Kartenleser-Tuer (Ereignis 27, Bit (9,70) in k_port[]), Gesten aus ROOM1031 sub13 (@0x029A4-c2, @0x02A32, @0x02A00), msg 40-42,
   98+3 Tests. In die Integration gemergt (68bfe620, konfliktfrei; Integration enthaelt jetzt auch E2, nicht in master).
