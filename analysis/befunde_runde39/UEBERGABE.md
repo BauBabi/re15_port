@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 07:20: WOCHENLIMIT beendete um ~03:10 alle vier Bau-Agenten der Welle 1 ("weekly limit, resets Oct 23";
+  danach Kontowechsel, Modell Fable 5.1). Dossiers + wip-Commits lagen vor (A 3, B 4, C 3, L 3 Commits); Reste als
+  UNGEPRUEFT gesichert (inventar dfde7745, optik 9bd581fe). Nutzer-Nachtrag (cb7d7855): 1141 Punkt 5 = JOHN, nicht Roy;
+  NEUER Punkt "Gorilla-Schatten beim Sprung" -> Spur E (VERTRAG, r39_kopf.js). Welle 1 FORTGESETZT mit stand-Texten,
+  neue Laeufe (args woertlich in orchestrator/args_welle1_forts.json): A wf_04388b3a-a3c, B wf_59e6e9bb-274,
+  C wf_d5013a11-cfa, L wf_ccdd741a-c8e. Waechter neu geschaltet.
 * 2026-10-18 02:36: WELLE 1 GESTARTET auf master 3e49ff87 (nach Release v0.8.26 754f67ad), je Spur ein eigener Lauf von
   orchestrator/r39.js (Waechter je Lauf). Resume nur mit IDENTISCHEN args `{"welle": ["<X>"], "slots": 1, "max_nach": 1,
   "basis": "3e49ff87"}`: A stimmen wf_28cb3826-7cd, B toene wf_6b21d705-6d7, C inventar wf_5fada65b-ca3,
