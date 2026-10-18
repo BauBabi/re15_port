@@ -1,0 +1,516 @@
+/* test_r39_treffer.c — Runde 39 Spur D "treffer" (Dossier analysis/befunde_runde39/D_treffer.md).
+ *
+ * Nutzer (AUFTRAG.md): (1) "Zombies die halb am aufstehen sind, sind nicht treffbar. Das ist so im Original
+ * Resident Evil 2 auf jeden Fall nicht." (2) "Zombies sind ueber den Tisch hinweg nicht treffbar. Das darf so
+ * nicht sein" (3) "Das Auto Aim darf nicht gelten fuer Gegner die der Spieler sonst garnicht sehen koennte ..."
+ *
+ * Mess- und Riegelmodi (Aufruf: test_r39_treffer <modus> [...]):
+ *   spawns <raum-hex>            Zensus der Sce_em_set-Spawns eines Raums (Typ, Lage, grid) — reine Messung
+ *   mess_aufsteher <eben|tief> [gap]   RE2-KI, ROOM1140: Boden-Aufsteher EXEC[5] P6/P7 (Clip 8/9) unter Dauerfeuer
+ *                                (Pistole, Abstand `gap`, Standard 6): je Schuss Clip-Bild, Teile-Maske, HP -> Treffer
+ *   mess_fresser <eben|tief> [gap]     RE2-KI, ROOM1140: Fresser-Aufsteher EXEC[8] P3/P4 (Clip 0x15) unter Dauerfeuer
+ *   tisch                        Riegel Punkt 2 (echter Spielschritt ROOM1140): Pistole ueber den Konferenztisch [6],
+ *                                im freien Gang, Gegenprobe alter Stand (Moebel-Liste aus)
+ *   zielhilfe                    Riegel Punkt 3: ROOM1100 (L-Flur) Zielhilfe ueberspringt den Zombie hinter der Wand;
+ *                                ROOM1140 Zielhilfe ueber den Tisch; Gegenproben alter Stand
+ *   moebel                       Riegel der Moebel-Liste gegen die RDT-Bytes (Art 3, Geometrie, keine Huelle, Elza-Paar,
+ *                                Obermenge der Runde-36-Tabelle k_r36_moebel)
+ *   aufsteher                    Riegel Punkt 1 (RE2-KI, ROOM1140): s. Dossier "Umsetzung"
+ */
+#include "re15_rdt.h"
+#include "re15_scd.h"
+#include "re15_actor.h"
+#include "re15_aot.h"
+#include "re15_room.h"
+#include "re15_enemy_ai.h"
+#include "re15_enemy.h"
+#include "re15_ai_flavor.h"
+#include "re15_player.h"
+#include "re15_damage.h"
+#include "re15_camera.h"
+#include "re15_game_step.h"
+#include "re15_collision.h"
+#include "re15_inventory.h"
+#include "re15_msg.h"
+#include "re15_emd.h"
+#include "re15_ems.h"
+#include "re2_ems.h"
+#include "re15_treffer_r39.h"
+#include "re15_schuss_r36.h"
+#include "re15_zombieki_r36.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifndef RE15_ASSET_PSX_DIR
+#define RE15_ASSET_PSX_DIR "shared_assets/PSX"
+#endif
+#ifndef RE15_ASSET_RE2_DIR
+#define RE15_ASSET_RE2_DIR "shared_assets/RE2"
+#endif
+
+static int fails = 0;
+#define CHECK(c, ...) do { if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } } while (0)
+
+extern void re15_player_aim_reset(void);
+extern void re15_player_set_aim_clip_len(int fc);
+extern int  re15_player_aim_elevation(void);
+extern int  re15_re2z_last_hit_handler(void);
+
+static re15_rdt_t         s_rdt;
+static re15_camera_view_t s_cam;
+static re15_game_ctx_t    s_ctx;
+static uint8_t           *s_rdt_buf = NULL;
+
+static uint8_t *slurp(const char *p, size_t *n)
+{
+    FILE *f = fopen(p, "rb"); if (!f) return NULL;
+    fseek(f, 0, SEEK_END); long sz = ftell(f); fseek(f, 0, SEEK_SET);
+    if (sz <= 0) { fclose(f); return NULL; }
+    uint8_t *b = (uint8_t *)malloc((size_t)sz);
+    if (b && fread(b, 1, (size_t)sz, f) != (size_t)sz) { free(b); b = NULL; }
+    fclose(f); if (b) *n = (size_t)sz; return b;
+}
+
+static uint8_t *s_re2_ems = NULL; static size_t s_re2_n = 0;
+static int load_bank_re2(uint8_t type)
+{
+    if (!s_re2_ems) s_re2_ems = slurp(RE15_ASSET_RE2_DIR "/CDEMD0.EMS", &s_re2_n);
+    if (!s_re2_ems) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return 1;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return 0;
+    if (re2_ems_load_bank(s_re2_ems, s_re2_n, (int)type, eb, NULL) == 0) {
+        eb->buf = NULL; eb->ok = 1; return 1;
+    }
+    eb->type = 0; return 0;
+}
+
+static int rdt_load(unsigned room)
+{
+    char p[256]; size_t n = 0;
+    snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/STAGE%u/ROOM%04X.RDT", (room >> 12) & 0xfu, room);
+    if (s_rdt_buf) { free(s_rdt_buf); s_rdt_buf = NULL; }
+    s_rdt_buf = slurp(p, &n);
+    if (!s_rdt_buf) { printf("FAIL: %s nicht lesbar\n", p); fails++; return 0; }
+    if (re15_rdt_parse(s_rdt_buf, n, &g_room_rdt) != 0) { printf("FAIL: RDT-Parse %s\n", p); fails++; return 0; }
+    g_room_rdt_ok = 1;
+    s_rdt = g_room_rdt;
+    g_current_room_id = room;
+    return 1;
+}
+
+static void frame(uint16_t cur, uint16_t edge)
+{
+    const unsigned char *raw; int len, id;
+    re15_msg_tick(&raw, &len, &id);
+    s_ctx.pad_current = cur; s_ctx.pad_pressed = edge;
+    scd_vm_tick();
+    re15_game_step(&s_ctx);
+}
+
+static int32_t s_px, s_pz; static int16_t s_pry;
+static void pin_player(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->hp = 100; pl->x = s_px; pl->z = s_pz; pl->y = 0; pl->rot_y = s_pry;
+}
+static void face(int32_t tx, int32_t tz)
+{
+    s_pry = (int16_t)(((int)re15_atan2_q12(tz - s_pz, tx - s_px) - 0x400) & 0x0fff);
+}
+
+static int is_zombie(uint8_t t)
+{
+    return t == 0x10 || t == 0x11 || t == 0x12 || t == 0x13 || t == 0x16 || t == 0x18;
+}
+
+/* Raum laden, SCD 120 Takte (Spawns), Spieler + Pistole aufsetzen, RE2-Baenke der Zombie-Typen laden.
+ * Rueckgabe: Zahl der aktiven Gegner. */
+static int bringup(unsigned room, re15_ai_flavor_t flavor)
+{
+    if (!rdt_load(room)) return -1;
+    memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
+    re15_ai_flavor_set(flavor);
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    re15_player_cmd_reset(); re15_player_aim_reset();
+    re15_damage_seed_rng(0x2545f491u);
+    re15_schuss_r36_sichtlinie_reset();
+    re15_treffer_r39_zaehler_reset();
+    if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
+    if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
+    g_scd.work_vars[10] = 0;
+    for (int i = 0; i < 120; i++) scd_vm_tick();
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    re15_collision_set_band(0);
+    re15_inv_load_briefing();
+    int n = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active) continue;
+        n++;
+        if (flavor == RE15_AI_FLAVOR_RE2 && is_zombie(e->type)) load_bank_re2(e->type);
+    }
+    re15_player_set_aim_clip_len(12);
+    re15_player_set_equipped_weapon(3);                       /* Pistole = RE1.5-Waffe 3 -> RE2-Zeile 3 */
+    { int es = re15_inv_equipped_slot();
+      if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 250; }
+    return n;
+}
+
+/* ersten aufrechten Zombie behalten, alle anderen Gegner deaktivieren; Rueckgabe Slot */
+static int keep_one_zombie(void)
+{
+    int slot = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active) continue;
+        if (slot < 0 && (e->type == 0x10 || e->type == 0x11)) slot = s;
+    }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
+    return slot;
+}
+
+static int frame_slot(const re15_actor_t *e)
+{
+    int fc = re15_actor_clip_len(e);
+    if (fc <= 0) return (int)e->anim_frame;
+    return (int)(e->anim_frame % (uint32_t)fc);
+}
+
+static void aim(int *f, int down)
+{
+    uint16_t cur = (uint16_t)(RE15_PAD_BIT_R1 | (down ? RE15_PAD_BIT_DOWN : 0));
+    for (int k = 0; k < 40 && !re15_player_aim_ready(); k++, (*f)++) { pin_player(); frame(cur, 0); }
+    CHECK(re15_player_aim_ready() && re15_player_aim_elevation() == (down ? -1 : 0),
+          "Zielen nicht bereit (ready=%d elev=%d)", re15_player_aim_ready(), re15_player_aim_elevation());
+}
+
+/* ------------------------------------------------------------------------------------------------- spawns */
+static int mode_spawns(unsigned room)
+{
+    int n = bringup(room, RE15_AI_FLAVOR_RE2);
+    printf("ROOM%04X: %d aktive Gegner\n", room, n);
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (!e->active) continue;
+        printf("  slot %2d typ 0x%02x grid 0x%02x st=%u/%u/%u @(%d,%d,y=%d) rot=%d hp=%d floor=%u\n",
+               s, e->type, e->grid_id, e->state, e->sub_state_1, e->sub_state_2, e->x, e->z, e->y,
+               (int)e->rot_y, (int)e->hp, (unsigned)e->floor);
+    }
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------- Aufsteher-Messung */
+/* Den Zombie WACH machen und mit dem Flinch-Wort 0x501 (@0x801050A4-AC) in EXEC[5] schicken (r16-Harness). */
+static void wake_and_knock(re15_actor_t *e)
+{
+    for (int k = 0; k < 3; k++) { pin_player(); frame(0, 0); }
+    e->state = 1; e->grid_id = 0; e->sub_state_1 = 1; e->sub_state_2 = 0; e->hp = 2000;
+    e->re2z_f10e &= (uint16_t)~0x4001u;
+    re15_ai_set_state_word(e, 0x501);
+}
+static int tick_until(re15_actor_t *e, int *f, unsigned s1, unsigned s2, int max)
+{
+    for (int k = 0; k < max; k++, (*f)++) {
+        pin_player(); frame(0, 0);
+        if (e->state == 1 && e->sub_state_1 == s1 && e->sub_state_2 == s2) return 1;
+    }
+    return 0;
+}
+
+typedef struct { int shots, hits, first_hit_slot, last_miss_slot, stood_f; int hits_lt55, miss_ge55, shots_lt55, shots_ge55; } dauer_t;
+
+/* Dauerfeuer, solange der Zombie in EXEC[`exec`] ist (+ `tail` Bilder danach). Je Schuss eine Zeile. */
+static dauer_t dauerfeuer(re15_actor_t *e, int *f, int down, int gap, unsigned exec, int tail)
+{
+    dauer_t r; memset(&r, 0, sizeof r); r.first_hit_slot = -1; r.last_miss_slot = -1; r.stood_f = -1;
+    uint16_t hold = (uint16_t)(RE15_PAD_BIT_R1 | (down ? RE15_PAD_BIT_DOWN : 0));
+    int hp_last = e->hp, k = 0, after = 0;
+    for (; k < 4000; k++, (*f)++) {
+        pin_player();
+        int in_exec = (e->state == 1 && e->sub_state_1 == exec);
+        if (!in_exec) { if (r.stood_f < 0) r.stood_f = *f; if (++after > tail) break; }
+        int fire = (k % gap == 0);
+        unsigned s2b = e->sub_state_2; int slotb = frame_slot(e); unsigned mob = (unsigned)e->motion;
+        unsigned partsb = (unsigned)e->re2z_parts;
+        frame((uint16_t)(hold | (fire ? RE15_PAD_BIT_SQUARE : 0)), (uint16_t)(fire ? RE15_PAD_BIT_SQUARE : 0));
+        int hit = (e->hp < hp_last);
+        if (fire) {
+            r.shots++;
+            if (hit) { r.hits++; if (r.first_hit_slot < 0) r.first_hit_slot = slotb; }
+            else r.last_miss_slot = slotb;
+            if (in_exec) {
+                if (slotb < 55) { r.shots_lt55++; if (hit) r.hits_lt55++; }
+                else            { r.shots_ge55++; if (!hit) r.miss_ge55++; }
+            }
+            printf("  %s f%-4d st=%u/%u/%u mo=0x%02x bild=%3d maske=%u elev=%+d hp %d->%d %s hnd=%d\n",
+                   hit ? "HIT " : "miss", *f, e->state, e->sub_state_1, s2b, mob, slotb, partsb,
+                   re15_player_aim_elevation(), hp_last, (int)e->hp, in_exec ? "" : "(steht)",
+                   re15_re2z_last_hit_handler());
+        }
+        hp_last = e->hp;
+        if (e->hp < 0) break;
+    }
+    printf("  SUMME %s: %d Schuesse, %d Treffer; in EXEC[%u] Bild<55: %d/%d Treffer, Bild>=55: %d/%d Fehl; "
+           "erster Treffer Bild %d, aufgestanden f%d\n", down ? "TIEF" : "EBEN", r.shots, r.hits, exec,
+           r.hits_lt55, r.shots_lt55, r.miss_ge55, r.shots_ge55, r.first_hit_slot, r.stood_f);
+    return r;
+}
+
+static int mode_mess_aufsteher(int down, int gap)
+{
+    printf("== mess_aufsteher %s gap=%d (RE2-KI, ROOM1140, Pistole) ==\n", down ? "TIEF" : "EBEN", gap);
+    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 1;
+    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 1;
+    re15_actor_t *e = &g_actors[slot];
+    s_px = e->x - 1500; s_pz = e->z; face(e->x, e->z); pin_player();
+    int f = 0;
+    wake_and_knock(e);
+    CHECK(tick_until(e, &f, 5, 6, 3000), "P6 nicht erreicht");
+    aim(&f, down);
+    printf("  PRE f%d st=%u/%u/%u mo=0x%02x bild=%d maske=%u hp=%d dist=%d\n", f, e->state, e->sub_state_1,
+           e->sub_state_2, (unsigned)e->motion, frame_slot(e), (unsigned)e->re2z_parts, (int)e->hp,
+           (int)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]));
+    dauerfeuer(e, &f, down, gap, 5u, 40);
+    return 0;
+}
+
+static int mode_mess_fresser(int down, int gap)
+{
+    printf("== mess_fresser %s gap=%d (RE2-KI, ROOM1140, Fresser EXEC[8]) ==\n", down ? "TIEF" : "EBEN", gap);
+    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 1;
+    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 1;
+    re15_actor_t *e = &g_actors[slot];
+    s_px = e->x - 1500; s_pz = e->z; face(e->x, e->z); pin_player();
+    int f = 0;
+    for (int k = 0; k < 3; k++, f++) { pin_player(); frame(0, 0); }
+    aim(&f, down);
+    printf("  PRE f%d st=%u/%u/%u mo=0x%02x bild=%d maske=%u hp=%d 1d3=0x%02x\n", f, e->state, e->sub_state_1,
+           e->sub_state_2, (unsigned)e->motion, frame_slot(e), (unsigned)e->re2z_parts, (int)e->hp,
+           (unsigned)e->re2z_self1d3);
+    dauerfeuer(e, &f, down, gap, 8u, 40);
+    return 0;
+}
+
+/* ------------------------------------------------------------------------------------------------ tisch */
+/* Gegner stehend wach machen (0x101) und je Bild an (zx,zz) festhalten; Spieler an (px,pz) mit Blick auf ihn;
+ * `shots` Schuesse EBEN im Abstand 20. Rueckgabe Treffer; *verworfen = Sichtlinien-Verwuerfe, *zelle = letzte Zelle. */
+static int schiessen(re15_actor_t *e, int32_t px, int32_t pz, int32_t zx, int32_t zz, int shots,
+                     int *verworfen, int *zelle)
+{
+    int f = 0, hits = 0, v0 = re15_schuss_r36_sichtlinie_verworfen();
+    s_px = px; s_pz = pz; face(zx, zz);
+    e->state = 1; e->grid_id = 0; e->sub_state_1 = 1; e->sub_state_2 = 0; e->hp = 2000;
+    e->re2z_f10e &= (uint16_t)~0x4001u;
+    re15_ai_set_state_word(e, 0x101);
+    e->x = zx; e->z = zz;
+    re15_player_aim_reset();
+    for (int k = 0; k < 3; k++, f++) { pin_player(); e->x = zx; e->z = zz; frame(0, 0); }
+    aim(&f, 0);
+    int hp_last = e->hp; *zelle = -1;
+    for (int k = 0; k < shots * 20; k++, f++) {
+        pin_player(); e->x = zx; e->z = zz; e->y = 0;
+        int fire = (k % 20 == 0);
+        frame((uint16_t)(RE15_PAD_BIT_R1 | (fire ? RE15_PAD_BIT_SQUARE : 0)), (uint16_t)(fire ? RE15_PAD_BIT_SQUARE : 0));
+        if (fire) {
+            int lz = re15_treffer_r39_los_letzte_zelle();
+            if (lz >= 0) *zelle = lz;
+            if (e->hp < hp_last) hits++;
+        }
+        hp_last = e->hp;
+    }
+    *verworfen = re15_schuss_r36_sichtlinie_verworfen() - v0;
+    return hits;
+}
+
+static int mode_tisch(void)
+{
+    printf("== tisch: ROOM1140 Konferenztisch [6] 12100x6100 @(-4650,-17450), RE2-KI, Pistole EBEN ==\n");
+    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 1;
+    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 1;
+    re15_actor_t *e = &g_actors[slot];
+    int v, z, h;
+    /* A: ueber den Tisch — Spieler (1400,-10300) suedlich, Zombie (1400,-19000) noerdlich der Platte */
+    re15_treffer_r39_moebel_aus(0);
+    h = schiessen(e, 1400, -10300, 1400, -19000, 5, &v, &z);
+    printf("  A ueber den Tisch, Moebel-Liste AN : %d/5 Treffer, Sichtlinie verworfen %d, letzte Zelle %d, Moebel uebersprungen %u\n",
+           h, v, z, re15_treffer_r39_zaehler(2));
+    CHECK(h == 5, "A: ueber den Tisch nur %d/5 Treffer (Nutzer: 'ueber den Tisch hinweg nicht treffbar. Das darf so nicht sein')", h);
+    CHECK(v == 0, "A: Sichtlinie verwarf %d Schuesse ueber den Tisch", v);
+    /* A': Gegenprobe alter Stand (jede Art-3-Zelle sperrt, FUN_8003dcc4 ohne Ausnahme) */
+    re15_treffer_r39_moebel_aus(1);
+    h = schiessen(e, 1400, -10300, 1400, -19000, 5, &v, &z);
+    printf("  A' ueber den Tisch, Moebel-Liste AUS: %d/5 Treffer, Sichtlinie verworfen %d, letzte Zelle %d\n", h, v, z);
+    CHECK(h == 0 && v == 5 && z == 6, "A': alter Stand muss ueber den Tisch 0 Treffer / 5 Verwuerfe an Zelle 6 liefern (h=%d v=%d z=%d)", h, v, z);
+    re15_treffer_r39_moebel_aus(0);
+    /* B: freier Gang westlich des Tischs — Spieler (-6700,-12000), Zombie (-6700,-20000) */
+    h = schiessen(e, -6700, -12000, -6700, -20000, 5, &v, &z);
+    printf("  B freier Gang: %d/5 Treffer, verworfen %d, letzte Zelle %d\n", h, v, z);
+    CHECK(h == 5 && v == 0, "B: freier Gang %d/5 Treffer, verworfen %d", h, v);
+    /* C: Wand — Spieler im Raum (-2500,-10300), Zombie in der Tuernische (-7200,-3000): Strahl kreuzt den Huellenblock [3]
+     *    (x -5750..16700, z -7800..1750, Art 3, kein Moebel) -> gesperrt, mit und ohne Liste */
+    h = schiessen(e, -2500, -10300, -7200, -3000, 5, &v, &z);
+    printf("  C hinter dem Huellenblock [3]: %d/5 Treffer, verworfen %d, letzte Zelle %d\n", h, v, z);
+    CHECK(h == 0 && v == 5 && z == 3, "C: Wand muss sperren (h=%d v=%d zelle=%d, soll 0/5/3)", h, v, z);
+    return 0;
+}
+
+/* -------------------------------------------------------------------------------------------- zielhilfe */
+static void fake_zombie(int slot, int32_t x, int32_t z)
+{
+    re15_actor_t *e = &g_actors[slot];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x10; e->state = 1; e->sub_state_1 = 1; e->hp = 100;
+    e->hit_radius_min = 400; e->x = x; e->z = z; e->y = 0; e->floor = 0;
+}
+static int ziel_slot(int32_t radius)
+{
+    int32_t tx = 0, tz = 0;
+    if (!re15_player_aim_target(radius, &tx, &tz)) return -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].x == tx && g_actors[s].z == tz) return s;
+    return -2;
+}
+
+static int mode_zielhilfe(void)
+{
+    printf("== zielhilfe ==\n");
+    /* ROOM1100, L-Flur: Spieler (-14000,-13000) am Suedende des N-S-Gangs (x -15600..-12600). Zombie A (-18500,-24500) im
+     * Nordwest-Gang hinter der Wandzelle [2] (x -17600..-15600, z -23200..-12100), Abstand 12349; Zombie B (-14000,-26000)
+     * am Nordende des N-S-Gangs, frei sichtbar, Abstand 13000 (weiter weg als A). */
+    if (!rdt_load(0x1100)) return 1;
+    re15_actor_init();
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = -14000; pl->z = -13000; pl->y = 0; pl->floor = 0;
+    fake_zombie(2, -18500, -24500);
+    fake_zombie(3, -14000, -26000);
+    re15_treffer_r39_zielhilfe_aus(0); re15_treffer_r39_moebel_aus(0);
+    CHECK(re15_treffer_r39_los_blockiert(pl, &g_actors[2]) == 1 && re15_treffer_r39_los_letzte_zelle() == 2,
+          "1100: Strahl zu A muss an Wandzelle [2] sperren (zelle=%d)", re15_treffer_r39_los_letzte_zelle());
+    CHECK(re15_treffer_r39_los_blockiert(pl, &g_actors[3]) == 0, "1100: Strahl zu B muss frei sein (zelle=%d)",
+          re15_treffer_r39_los_letzte_zelle());
+    int zs = ziel_slot(30000);
+    printf("  1100 Zielhilfe NEU: Ziel = Slot %d (A=2 hinter der Wand, naeher; B=3 sichtbar, weiter)\n", zs);
+    CHECK(zs == 3, "1100: Zielhilfe muss den sichtbaren B (3) nehmen, nahm %d (Nutzer: 'nicht ... um die Ecke ... Wand davor')", zs);
+    g_actors[3].active = 0;
+    zs = ziel_slot(30000);
+    printf("  1100 nur der verdeckte A: Ziel = %d (soll -1 = kein Ziel)\n", zs);
+    CHECK(zs == -1, "1100: nur der verdeckte A darf KEIN Ziel sein (RE2 FUN_80042144 @0x800422a8-b0), war %d", zs);
+    g_actors[3].active = 1;
+    re15_treffer_r39_zielhilfe_aus(1);
+    zs = ziel_slot(30000);
+    printf("  1100 Zielhilfe ALT (ohne Sichtlinie, FUN_8003703c): Ziel = %d (soll 2 = der naechste)\n", zs);
+    CHECK(zs == 2, "1100: Gegenprobe alter Stand muss den naechsten A (2) nehmen, nahm %d", zs);
+    re15_treffer_r39_zielhilfe_aus(0);
+    /* ROOM1140: ueber den Tisch wird angevisiert (Moebel durchlaessig), hinter dem Huellenblock nicht */
+    if (!rdt_load(0x1140)) return 1;
+    re15_actor_init();
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 1400; pl->z = -10300; pl->y = 0; pl->floor = 0;
+    fake_zombie(2, 1400, -19000);
+    zs = ziel_slot(30000);
+    printf("  1140 ueber den Tisch: Ziel = %d (soll 2)\n", zs);
+    CHECK(zs == 2, "1140: Zombie ueber den Tisch muss Ziel sein, war %d", zs);
+    re15_treffer_r39_moebel_aus(1);
+    zs = ziel_slot(30000);
+    printf("  1140 ueber den Tisch, Moebel-Liste AUS: Ziel = %d (soll -1)\n", zs);
+    CHECK(zs == -1, "1140: ohne Moebel-Liste sperrt der Tisch die Zielhilfe (war %d)", zs);
+    re15_treffer_r39_moebel_aus(0);
+    pl->x = -2500; pl->z = -10300; g_actors[2].x = -7200; g_actors[2].z = -3000;
+    zs = ziel_slot(30000);
+    printf("  1140 hinter dem Huellenblock [3]: Ziel = %d (soll -1)\n", zs);
+    CHECK(zs == -1, "1140: Zombie hinter dem Huellenblock darf kein Ziel sein (war %d)", zs);
+    return 0;
+}
+
+/* ----------------------------------------------------------------------------------------------- moebel */
+static int mode_moebel(void)
+{
+    int n = 0;
+    const re15_treffer_r39_moebel_t *t = re15_treffer_r39_moebel_tabelle(&n);
+    printf("== moebel: %d Eintraege ==\n", n);
+    CHECK(n > 0, "Moebel-Tabelle leer");
+    unsigned last_room = 0;
+    for (int i = 0; i < n; i++) {
+        const re15_treffer_r39_moebel_t *m = &t[i];
+        if (m->room != last_room) { if (!rdt_load(m->room)) return 1; last_room = m->room; }
+        int found = -1;
+        for (int c = 0; c < g_room_rdt.sca_rgn[0] && c < g_room_rdt.sca_count; c++) {
+            const re15_sca_entry_t *s = &g_room_rdt.sca[c];
+            if (s->x == m->x && s->z == m->z && s->width == m->w && s->density == m->d) { found = c; break; }
+        }
+        CHECK(found >= 0, "ROOM%04X [%d] %s: keine Zelle mit dieser Geometrie", m->room, m->idx, m->was);
+        if (found < 0) continue;
+        const re15_sca_entry_t *s = &g_room_rdt.sca[found];
+        CHECK((s->floor & 0x0f) == 3, "ROOM%04X [%d] %s: Art-Nibble %u != 3", m->room, m->idx, m->was, s->floor & 0x0f);
+        CHECK(s->type == m->type && (s->floor >> 4) == m->band, "ROOM%04X [%d]: Form/Band weichen ab", m->room, m->idx);
+        CHECK(re15_treffer_r39_zelle_moebel(m->room, s) == 1, "ROOM%04X [%d]: Laufzeit-Zuordnung findet die Zelle nicht", m->room, m->idx);
+        /* keine Huelle: die Zelle beruehrt die Band-Bounding-Box nicht (Toleranz 150 wie r39_treffer_inseln_bild.py) */
+        int32_t x0 = 0x7fffffff, z0 = 0x7fffffff, x1 = -0x7fffffff, z1 = -0x7fffffff;
+        for (int c = 0; c < g_room_rdt.sca_rgn[0] && c < g_room_rdt.sca_count; c++) {
+            const re15_sca_entry_t *q = &g_room_rdt.sca[c];
+            if ((q->floor >> 4) != m->band) continue;
+            if (q->x < x0) x0 = q->x; if (q->z < z0) z0 = q->z;
+            if (q->x + (int32_t)q->width > x1) x1 = q->x + (int32_t)q->width;
+            if (q->z + (int32_t)q->density > z1) z1 = q->z + (int32_t)q->density;
+        }
+        int huelle = (s->x <= x0 + 150) || (s->z <= z0 + 150) || (s->x + (int32_t)s->width >= x1 - 150) ||
+                     (s->z + (int32_t)s->density >= z1 - 150);
+        CHECK(!huelle, "ROOM%04X [%d] %s: beruehrt die Huelle (Wand), darf kein Moebel sein", m->room, m->idx, m->was);
+        /* Leon-Raum: die Elza-Variante muss (bei byte-gleicher Zelle) als eigener Eintrag folgen */
+        if ((m->room & 1u) == 0) {
+            int ok = (i + 1 < n) && t[i + 1].room == (uint16_t)(m->room + 1) && t[i + 1].x == m->x && t[i + 1].z == m->z;
+            char p[256]; size_t nn = 0;
+            snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/STAGE%u/ROOM%04X.RDT", (m->room >> 12) & 0xfu, m->room + 1);
+            uint8_t *eb = slurp(p, &nn);
+            if (eb) { CHECK(ok, "ROOM%04X [%d]: Elza-Variante ROOM%04X fehlt in der Liste", m->room, m->idx, m->room + 1); free(eb); }
+        }
+    }
+    /* Obermenge der Runde-36-Tabelle (zombieki_r36.c k_r36_moebel: Zellen mit belegter Oberkante) */
+    static const unsigned k_r36_rooms[] = { 0x1010, 0x1220 };
+    for (unsigned r = 0; r < sizeof k_r36_rooms / sizeof k_r36_rooms[0]; r++) {
+        if (!rdt_load(k_r36_rooms[r])) return 1;
+        for (int c = 0; c < g_room_rdt.sca_rgn[0] && c < g_room_rdt.sca_count; c++) {
+            const re15_sca_entry_t *s = &g_room_rdt.sca[c];
+            int grund = 0;
+            if (re15_r36_zelle_oberkante(s, &grund) == 0) continue;
+            CHECK(re15_treffer_r39_zelle_moebel(k_r36_rooms[r], s) == 1,
+                  "ROOM%04X Zelle %d (k_r36_moebel, Oberkante belegt) fehlt in der r39-Moebelliste", k_r36_rooms[r], c);
+        }
+    }
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- aufsteher */
+static int mode_aufsteher(void)
+{
+    printf("== aufsteher (Riegel Punkt 1) ==\n");
+    /* wird nach der Umsetzung gefuellt (Dossier D_treffer.md 'Umsetzung') */
+    return 0;
+}
+
+int main(int argc, char **argv)
+{
+    const char *m = (argc > 1) ? argv[1] : "";
+    int rc = 0;
+    if (!strcmp(m, "spawns") && argc > 2)      rc = mode_spawns((unsigned)strtoul(argv[2], NULL, 16));
+    else if (!strcmp(m, "mess_aufsteher"))     rc = mode_mess_aufsteher(argc > 2 && !strcmp(argv[2], "tief"), argc > 3 ? atoi(argv[3]) : 6);
+    else if (!strcmp(m, "mess_fresser"))       rc = mode_mess_fresser(argc > 2 && !strcmp(argv[2], "tief"), argc > 3 ? atoi(argv[3]) : 6);
+    else if (!strcmp(m, "tisch"))              rc = mode_tisch();
+    else if (!strcmp(m, "zielhilfe"))          rc = mode_zielhilfe();
+    else if (!strcmp(m, "moebel"))             rc = mode_moebel();
+    else if (!strcmp(m, "aufsteher"))          rc = mode_aufsteher();
+    else { printf("Modus? spawns|mess_aufsteher|mess_fresser|tisch|zielhilfe|moebel|aufsteher\n"); return 2; }
+    if (rc) return rc;
+    if (fails) { printf("\n%d FAIL(s)\n", fails); return 1; }
+    printf("\nPASS test_r39_treffer %s\n", m);
+    return 0;
+}

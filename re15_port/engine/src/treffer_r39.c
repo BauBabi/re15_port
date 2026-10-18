@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* enemy_ai_common.c (Runde 36 Spur F): der Kreuzungstest von FUN_8003dcc4 fuer EINE Zelle (/0x12, beide Diagonalen). */
-extern int re15_r36_los_zelle_kreuzt(int32_t ex, int32_t ez, int32_t px, int32_t pz, const re15_sca_entry_t *c);
+#include "re15_zombieki_r36.h" /* re15_r36_los_zelle_kreuzt: der Kreuzungstest von FUN_8003dcc4 fuer EINE Zelle (Runde 36 F) */
 
 static const re15_treffer_r39_moebel_t s_moebel[] = {
 #include "gen/treffer_r39_moebel.inc"

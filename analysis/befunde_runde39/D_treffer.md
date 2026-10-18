@@ -97,6 +97,30 @@ Vorher (P0..P7 < Bild 55) Maske = nur Beine (0x04000000, @0x801032B8-EC). Applie
 TIEF (row 6 = [01 02 00], Beine zuerst) trifft ihn die ganze Zeit (Nahbox < 4100). Port: `re2z_frame_slot(e) == 55`
 (enemy_ai_re2_zombie.c:2508) und `re15_re2_gun_probe` (re15_damage.c:1933) — nachzumessen (Schritt 2).
 
+### B6 — Zielhoehe (D-Pad) ist in RE1.5 UND RE2 NICHT klebrig: Loslassen = MITTE (eigener Disasm, Fortsetzung 12:xx)
+
+Hypothese der Fortsetzung war: "RE2 haelt TIEF nach dem Loslassen, der Port (RE1.5-FSM) faellt sofort auf EBEN zurueck —
+deshalb trifft der Nutzer den Aufsteher in RE2, im Port nicht". WIDERLEGT, bevor Code geschrieben wurde:
+* RE1.5 Halte-FSM @0x800331e4-0x800332d8 (PSX.EXE): `lw v1,-14488(v1)` = HELD 0x800ac768 / `andi 0x100` (R1) sonst
+  `ori v0,zero,0x3` = Senken @0x800331f8-200; `andi 0x10` (HOCH) -> `andi 0x1fff / ori 0x8000 / sh 0x800acaec`
+  @0x80033228-38; `andi 0x20` (TIEF) -> `ori 0x2000` @0x80033270-84; **`andi v0,v0,0x30` / `bne v0,zero,0x800332dc`
+  @0x8003329c-a0 (weder HOCH noch TIEF gehalten) -> `andi 0x1fff / ori 0x4000 / sh` @0x800332bc-c8 = MITTE**. Port
+  player_common.c:1160-1166 (`elev = pad&UP ? 1 : pad&DOWN ? -1 : 0` je Bild) ist dazu byte-true.
+* RE2 Halte-Unterzustand B (Funktion @0x8004362c, s1 = a3 = HELD-Pad `addu s1,a3,zero` @0x80043684, R1-Test `andi
+  v0,s1,0x100` @0x800436f0 sonst Sub 3 @0x800436fc-704): `andi v0,s1,0x10` (HOCH) -> `ori 0x8000` + `sh v0,340(s0)`
+  @0x80043738-4c; `andi v0,s1,0x20` (TIEF) -> `ori 0x2000` @0x8004376c-80; **`andi v0,s1,0x30` @0x80043754 /
+  `bne v0,zero,0x800437d0` @0x80043784 / sonst `lhu 340 / andi 0x1fff / ori 0x4000 / sh v0,340(s0)` @0x8004378c-b4 =
+  MITTE**. Der erste Unterzustand A (@0x80043540-0x80043604) kennt nur die Uebergaenge nach TIEF/HOCH (+0x6 = 1,
+  @0x80043590-a8 / @0x800435e8-600) hinter der Bildschwelle DAT_800a6d78/79[(Waffe-1)*3] (@0x80043574-84 / @0x800435cc-dc).
+=> Die Zielhoehe faellt in beiden Originalen beim Loslassen auf EBEN zurueck; der Port weicht hier nicht ab. Punkt 1 ist
+   damit NICHT ueber die Spieler-FSM erklaerbar — Messung am Port (Schritt 2) entscheidet, was der Nutzer erlebt.
+
+### B7 — Aufsteher-Treffer FUN_80107A78: der Exit stellt die Teile-Maske her (Port: nicht noetig)
+
+enemy_ai_re2_zombie.c:7338 vermerkt `word0 |= 0x0C000000 @0x80107EA8-B0` als "nicht portiert". Der Exit stellt zugleich
++0x22C mit +0x6+1 wieder her (@0x80107E70/EB8) -> EXEC[5] P8 (`|= 3` @0x80103730-38) bzw. EXEC[8] P5; die Maske wird im Port
+im Folgetakt durch P8 gesetzt. Kein Fenster, in dem der Port abweicht (der Zombie steht beim Exit).
+
 ## Messung vorher
 
 (folgt)
