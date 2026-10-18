@@ -1,6 +1,9 @@
 # Runde 39 — Spur L "optik" (Dossier, fortlaufend)
 
-Baum: `.claude/worktrees/r39_optik` (Zweig `r39/optik`, Basis 3e49ff87). Stand: angelegt 2026-10-18.
+Baum: `.claude/worktrees/r39_optik` (Zweig `r39/optik`, Basis 3e49ff87). Stand: angelegt 2026-10-18; Fortsetzung nach dem
+Sitzungslimit (Vorgaenger-Commits 7df36c6e..9bd581fe) ab 07:10: Punkt 1 gebaut/belegt/gemessen/geriegelt, Punkt 2 komplett,
+gezielter Lauf 64/64 gruen (Abschnitt Tests). Messordner ausserhalb des Baums: Scratchpad `L39/` (`runs/<name>/`, Skripte;
+Kopien der urteilstragenden Skripte und Bilder in `L_optik_bilder/`).
 
 ## Punkte (Wortlaut des Nutzers, AUFTRAG.md)
 1. "Ich habe noch mal einen Marker mit F9 gemacht. Leon ist immer noch vom Boden überdeckt an den einen Streifen."
@@ -300,7 +303,17 @@ Punkt 2:
 ### Gezielter Lauf (KEINE volle Suite im Spurbaum; `ctest -j 3 --timeout 1200`), -R woertlich:
 `^(unit_r39_optik_.*|integration_r39_optik_.*|unit_r37_pri1100_.*|integration_r37_pri1100_.*|unit_r37_masken36_.*|integration_r37_masken36_.*|unit_pri_hashes|integration_pri_masken|unit_r38_itemorte_.*|integration_r38_itemorte|unit_r36_schluessel_.*|integration_r36_schluessel.*|unit_r35_cut10f0_.*|integration_r35_cut10f0|unit_r22_10f0_figur|unit_r36_klettern_10f0_.*|unit_r36_szenenleon_abgang10f0|unit_r37_feuerloescher_.*|integration_r37_feuerloescher|unit_r37_kistenregel_.*|integration_r37_kistenregel|integration_item_name_census|unit_r38_dining1141_schluessel1011)$`
 
-Ergebnis: (folgt)
+Ergebnis (Baum-Stand nach allen Anpassungen, zweiter kompletter Lauf, `ctest_ziel2.log`):
+**`100% tests passed, 0 tests failed out of 64`** (ctest exit 0; u.a. integration_r38_itemorte 421,9 s,
+integration_r39_optik_schluessel 227,6 s, integration_r37_pri1100_marke 69,7 s, _elza 93,9 s, integration_r39_optik_marke
+41,9 s). Erster Lauf derselben Liste davor: `94% tests passed, 4 tests failed out of 64` — die vier Roten waren
+integration_r37_pri1100_marke/_elza (Wandfenster enthielt die Spalten 168..170 = hinterer Gang, s.o.), integration_r38_itemorte
+(V3/V5: Cut-6-Schwellen der alten Groesse) und integration_r39_optik_schluessel (Leon-Laeufe ohne RE15_TITLE_SHOT_AF blieben
+im Titel -> Zeitueberschreitung); alle vier nach der Anpassung einzeln (2/2 + 2/2) und im zweiten Gesamtlauf gruen.
+Messzeilen der Riegel: `integration_r39_optik_marke: Streifen x166..172: Leon gezeichnet (A/C)=140, Maske ueber Leon (A/B)=1 |
+Wand x173..180: Maske an (A/B)=95, Leon sichtbar (A/C)=0`; `integration_r39_optik_schluessel`: Leon Skala 1 `7 Pixel, Huelle
+x136..140`, Skala 3 `69 Pixel, Huelle x408..421`, Elza Skala 1 `5 Pixel, Huelle x137..140`, Skala 3 `63 Pixel, Huelle x408..423`
+(Werkzeug probe_r38_itemorte_kontrast, AUSSEN je 0), Aufnahme `[schluessel] PARKING LOT KEY genommen` / `PRISON KEY genommen`.
 
 ## OFFEN
 * Keine offenen Teilpunkte der zwei Nutzer-Punkte. Nicht Teil dieser Spur: die zweite Marke `befund_1090_F1357_marke1.bmp`
