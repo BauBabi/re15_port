@@ -196,28 +196,32 @@ k_lauf(b2_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd
 pruef(B2 _b2 "[schluessel] ROOM10F0: PARKING LOT KEY (Item 0x45, Bit (9,82)) Prop obj 4 bei (1358,-2495,-3400) rot (3072,0,2048), Zone Slot 8")
 pruef(B2 _b2 "oid=0x04 pos=(1358,-2495,-3400) rot=(3072,0,2048)")
 k_lauf(b2_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd}" _b2o)
-k_bild(B2 b2_mit b2_ohne 131 75 145 87 40)
+# Runde 39 Spur L ("kleiner/subtiler"): Schluessel-Huelle = oberes Quartil der RE2-Bildlaenge (Park 4,46 px, Prison 5,78 px,
+# gen/itemorte_r38_lage.inc RE15_R39L_*). Schwellen = ~60 % der Messung 2026-10-18 (Dossier analysis/befunde_runde39/L_optik.md
+# Punkt 2): Skala 1 Park 7 Pixel / Sum|dL| 506, Prison 5 / 317; Skala 3 Park 69 / 3731, Prison 63 / 3960. Runde-38-Werte in
+# den Kommentaren darunter zur Einordnung.
+k_bild(B2 b2_mit b2_ohne 131 75 145 87 4)
 # Kontrast des Parking Lot Key (abgenommener Stand, Abnahme 0: 55 Pixel, Sum|dL| ~3430) = Bezug fuer B3.
-k_kontrast(B2K b2_mit b2_ohne 131 75 145 87 40 2700 _dl_park1)
+k_kontrast(B2K b2_mit b2_ohne 131 75 145 87 4 300 _dl_park1)
 k_lauf(b3_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd}" _b3)
 pruef(B3 _b3 "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,0,0), Zone Slot 8")
 k_lauf(b3_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd}" _b3o)
-k_bild(B3 b3_mit b3_ohne 131 75 145 87 22)
+k_bild(B3 b3_mit b3_ohne 131 75 145 87 3)
 # B3K "gut sichtbar" bei Skala 1 (Nachbesserung 1): RE2 Small Key (ROOM10F0.RDT MD1 @0x001650, flach @0x00706) gemessen
 # 2026-10-17 (Massstab 5,3032, gen/itemorte_r38_lage.inc) 27 Pixel, Sum|dL| 1627 (Cabin Key vorher 14 / 502), Parking Lot Key 55 / 3428 -> 47 %.
-k_kontrast(B3K b3_mit b3_ohne 131 75 145 87 22 1300 _dl_prison1)
+k_kontrast(B3K b3_mit b3_ohne 131 75 145 87 3 190 _dl_prison1)
 k_verhaeltnis(B3V "${_dl_prison1}" "${_dl_park1}" 38)
 # B4: der Prison Key in der Fenstergroesse, in der gespielt wird — RE15_WINDOW_SCALE=3 (960x720, 3D in Fensteraufloesung,
 # render_pc.c Fenster = groesste ganze Skala <= 90 % des Bildschirms). Fenster = B3-Fenster x 3. Gemessen 2026-10-17
 # (Small Key): 217 Pixel, Sum|dL| 11899, Huelle x 397..432 y 236..250, aussen 0 (Cabin Key vorher 112 / 3193).
 k_lauf(b4_mit  10F1 "10F1;0;4000;1024;cut:5;elza" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4)
 k_lauf(b4_ohne 10F1 "10F1;0;4000;1024;cut:5;elza;flag:9:83" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b4o)
-k_bild(B4 b4_mit b4_ohne 393 225 437 263 180)
-k_kontrast(B4K b4_mit b4_ohne 393 225 437 263 180 9500 _dl_prison3)
+k_bild(B4 b4_mit b4_ohne 393 225 437 263 36)
+k_kontrast(B4K b4_mit b4_ohne 393 225 437 263 36 2300 _dl_prison3)
 # B5: Parking Lot Key bei Skala 3 = Bezug fuer B4 (gemessen 491 Pixel, Sum|dL| 28852; Prison Key 11899 -> 41 %).
 k_lauf(b5_mit  10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b5)
 k_lauf(b5_ohne 10F0 "10F0;0;4000;1024;cut:5;flag:9:71;flag:3:94;flag:9:82" "W3" 120 "${_fd};RE15_WINDOW_SCALE=3" _b5o)
-k_kontrast(B5K b5_mit b5_ohne 393 225 437 263 400 23000 _dl_park3)
+k_kontrast(B5K b5_mit b5_ohne 393 225 437 263 40 2200 _dl_park3)
 k_verhaeltnis(B4V "${_dl_prison3}" "${_dl_park3}" 33)
 
 # --- A: Aufnahme ROOM1030 vor dem Pfeiler; dritter Druck = Monitor-Satz aus Slot 20 -------------------------------------

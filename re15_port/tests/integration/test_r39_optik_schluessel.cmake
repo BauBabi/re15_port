@@ -114,16 +114,20 @@ pruef(E1 _dbg_elza_s1_mit "[pl] Spieler-Familie PL04")
 pruef(E1 _dbg_elza_s1_mit "[schluessel] ROOM10F1: PRISON KEY (Item 0x42, Bit (9,83)) Prop obj 4 bei (1358,-2495,-3400) rot (1024,0,0), Zone Slot 8")
 pruef(E3 _dbg_elza_s3_mit "[pl] Spieler-Familie PL04")
 
-# Mindest-Pixel = ~60 % der Messung 2026-10-18 (Dossier Punkt 2 "Messung nachher"); Huelle <= RE2-Median aufgerundet + 1.
-mass(leon_s1 "${_ppm_leon_s1_mit}" "${_ppm_leon_s1_ohne}" 131 75 145 87 @LEON_S1_MIN@ 6)
-mass(leon_s3 "${_ppm_leon_s3_mit}" "${_ppm_leon_s3_ohne}" 393 225 437 263 @LEON_S3_MIN@ 18)
-mass(elza_s1 "${_ppm_elza_s1_mit}" "${_ppm_elza_s1_ohne}" 131 75 145 87 @ELZA_S1_MIN@ 6)
-mass(elza_s3 "${_ppm_elza_s3_mit}" "${_ppm_elza_s3_ohne}" 393 225 437 263 @ELZA_S3_MIN@ 18)
+# Mindest-Pixel = ~60 % der Messung 2026-10-18 (Dossier Punkt 2 "Messung nachher": Leon 7 / 69 Pixel, Elza 5 / 63 bei
+# Skala 1 / 3; Runde 38: 55 / 491 bzw. 27 / 217); Huelle <= RE2-Quartil aufgerundet + 1 (gemessen 5 / 14 bzw. 4 / 16).
+mass(leon_s1 "${_ppm_leon_s1_mit}" "${_ppm_leon_s1_ohne}" 131 75 145 87 4 6)
+mass(leon_s3 "${_ppm_leon_s3_mit}" "${_ppm_leon_s3_ohne}" 393 225 437 263 40 18)
+mass(elza_s1 "${_ppm_elza_s1_mit}" "${_ppm_elza_s1_ohne}" 131 75 145 87 3 6)
+mass(elza_s3 "${_ppm_elza_s3_mit}" "${_ppm_elza_s3_ohne}" 393 225 437 263 36 18)
 
 # Aufnahme unveraendert: vor der Pinnwand (1300,-2900) Blick -z (rot 1024), Aktion -> Modal -> Ja (Skript wie Runde 38 K1/K2).
-lauf(aufnahme_leon 1 "RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=700#10F0")
+# Skript-Zeitachse = Spielbilder (RE15_INPUT_SCRIPT_BASIS=spiel), Start nach dem Sprung (Bild 250) bzw. nach GOTO_ROOM.
+lauf(aufnahme_leon 1 "RE15_DEBUG_JUMP=10F0@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_SET_FLAG=9:71,3:94;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F0")
 pruef(A1 _dbg_aufnahme_leon "[schluessel] PARKING LOT KEY genommen: Item 0x45, Bit (9,82)")
-lauf(aufnahme_elza 1 "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1;RE15_GOTO_ROOM=10F1;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=700#10F1")
+# Elza: RE15_GOTO_ROOM wendet RE15_PLAYER_POS nicht an (Spawn an der Tuer) -> Sprung ueber RE15_DEBUG_JUMP nach der Auswahl
+# (bleibt Elza, "[pl] Spieler-Familie PL04"; gemessen 2026-10-18: "[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS").
+lauf(aufnahme_elza 1 "RE15_TITLE_CONFIRM_MS=1500;RE15_PSELECT_AUTO=1;RE15_PSELECT_AUTO_SWITCH=1;RE15_DEBUG_JUMP=10F1@250;RE15_PLAYER_POS=1300,-2900,1024;RE15_FORCE_CUT=5;RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=300;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4;RE15_EXIT_AT=600#10F1")
 pruef(A2 _dbg_aufnahme_elza "[pl] Spieler-Familie PL04")
 pruef(A2 _dbg_aufnahme_elza "[schluessel] PRISON KEY genommen: Item 0x42, Bit (9,83)")
 file(REMOVE "${_exe_kopie}")

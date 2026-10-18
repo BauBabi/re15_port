@@ -241,8 +241,28 @@ Aufhebe-Zone (Slot 8, (798,-3600) 1000x1000) bleiben Runde 38. RE2 hat keinen HA
   RE2-Median (+-0,5 px) und < 9 Spalten"; Integrations-Schwellen `tests/integration/test_r38_itemorte.cmake` B2..B5 auf
   die neue Groesse (s. Tests).
 
-### Messung nachher
-(folgt)
+### Messung nachher (Baum neu gebaut mit den erzeugten Dateien, Messkopie `re15_pc_r39l_mess.exe`; Laeufe `runs/k_fin_*`,
+Werkzeuge `probe_r38_itemorte_kontrast` / `key_diff.py`, gleiche Fenster wie vorher, AUSSEN je 0)
+
+| Lauf | Pixel (vorher) | Huelle Breite x Hoehe (vorher) | Sum|dL| (vorher) |
+|---|---|---|---|
+| Leon Parking Lot Key, Skala 1 | 7 (55) | 5 x 2 (12 x 7) | 506 (3428) |
+| Leon, Skala 3 (960x720) | 69 (491) | 14 x 8 (36 x 23) | 3731 (28852) |
+| Leon, Skala 4 (1280x960) | 125 | 18 x 11 | 6311 |
+| Elza Prison Key, Skala 1 | 5 (27) | 4 x 2 (12 x 5) | 317 (1627) |
+| Elza, Skala 3 | 63 (217) | 16 x 10 (36 x 15) | 3960 (11899) |
+| Elza, Skala 4 | 118 | 22 x 14 | 5524 |
+
+Huellenbreite im 320er Bild: Park 4,46 px (Soll 4,45), Prison 5,77 px (Soll 5,78) = 37 % / 48 % der Runde-38-Breite; in der
+Fenstergroesse des Nutzers (Skala 3) ist der Parking Lot Key 14 Pixel, der Prison Key 16 Pixel breit — beide schmaler als
+die angehefteten Zettel (21 Pixel), beide mit lesbarer Form (Klinge + Kopf bzw. Ring + Schaft; Bilder
+`L_optik_bilder/p2_leon_s3_*`, `p2_elza_s3_*`). Elza-Laeufe als Elza (`[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`).
+
+**Aufnahme unveraendert** (Zone Slot 8 (798,-3600) 1000x1000, Lage (1358,-2495,-3400)): Leon vor der Pinnwand (1300,-2900)
+Blick -z, Skript `W1,A0.1,W3.5,A0.1,W4` (Zeitachse Spielbilder, Start 300): `[schluessel] PARKING LOT KEY genommen: Item
+0x45, Bit (9,82)`; Elza ebenso (PL04, Sprung per RE15_DEBUG_JUMP nach der Auswahl - RE15_GOTO_ROOM wendet RE15_PLAYER_POS
+nicht an): `[schluessel] PRISON KEY genommen: Item 0x42, Bit (9,83)`, `Prison Key genommen -> Flag (4,0xEC) = 1` (Laeufe
+`k_fin_auf_leon`, `k_fin_auf_elza2`).
 
 ## Tests
 
