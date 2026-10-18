@@ -16,9 +16,11 @@
 #   unit_r39_gegner_hund_re15       RE1.5-Flavor: zwei Hunde im Biss-Bild, nur einer zieht ab (acae7-Tor @0x8010f294, Original nativ)
 #   unit_r39_gegner_kriecher_*_re15 dieselbe Kriecher-Messung im RE1.5-Flavor (Block B nativ, Sub 5 -> Wort 1)
 #   unit_r39_gegner_schatten        Quad-Hoehe 0x27/0x29 = +0x1ba (@0x80116f30 / @0x80110c78), andere Typen unveraendert;
-#                                   grid&0x20 (Szenen-Gorillas geparkt/im Wagen) = Root-Skip @0x80116df4-f8 -> KEIN Schatten
+#                                   Szenen-Gorillas grid 0x30 ebenso (Schwanz @0x80116f20-38 auf jedem Pfad); Region-Viereck
+#                                   des RDT je Cut == Original-RAM DAT_800ac790, Punkt-im-Viereck (FUN_80014368) wie Original
 #   integration_r39_gegner_schatten echte exe ROOM11C0: waehrend des Gorilla-Sprungs (Sub 7) Quad-Y = Boden-Y je Bild
-#                                   (gegner_r39.log), Koerper-Y darueber; Framedumps der Sprungbilder
+#                                   (gegner_r39.log), Koerper-Y darueber; Szenen-Gorillas: Quad auf -3600, Cut-13-Fenster
+#                                   leer, Cut-12-Fenster nur der Wagen-Gorilla (Region-Cull wie FUN_8001b064 @0x8001b224)
 #   integration_r39_gegner_hunde1190 echte exe ROOM1190 (Hunde-Luke, Szene sub10): kein zweiter HP-Abzug durch einen
 #                                   Hundebiss innerhalb der 22 Bilder Spieler-Flinch nach einem Biss (state.log)
 add_executable(test_r39_gegner ${CMAKE_CURRENT_SOURCE_DIR}/test_r39_gegner.c)

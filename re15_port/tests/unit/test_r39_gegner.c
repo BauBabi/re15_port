@@ -27,8 +27,10 @@
  *                 Clip 5) und er kommt naeher (RE1.5 Block B @0x80104718-48)
  *   kriecher_1220 dasselbe fuer die zwei 0x16-Kriecher in ROOM1220 (Elza-Raum 1221 = gleiche Spawns @0x00F2A/0x00F3E)
  *   schatten      Quad-Hoehe des NPC-Schattens: 0x27/0x29 mit Koerper-Y ueber dem Boden -> +0x1ba (dog_floor_y);
- *                 Hund/Zombie unveraendert; vorher Koerper-Y. Root-Skip: Szenen-Gorillas mit grid&0x20 (geparkt
- *                 y=-20000 / im Wagen y=-2500) bekommen KEINEN Schatten (`andi 0x20 / bne` @0x80116df4-f8)
+ *                 Hund/Zombie unveraendert; vorher Koerper-Y. Szenen-Gorillas (grid 0x30, geparkt y=-20000 / im Wagen
+ *                 y=-2500) ebenso auf +0x1ba = -3600 (der Schwanz @0x80116f20-38 laeuft auf jedem Pfad; Nachbesserung 1).
+ *                 Region-Cull wie das Original: Region-Viereck des RDT je Cut 0/1/3/4/5/12/13 == DAT_800ac790 der
+ *                 Runde-35-Savestates, Punkt-im-Viereck (FUN_80014368) fuer beide Szenen-Positionen == Original-RAM
  *   hund_re15     RE1.5-Flavor: zwei RE1.5-Hunde im selben Biss-Bild — das Original gatet den Biss auf acae7 == 0
  *                 (@0x8010f294) vor dem Schaden (@0x8010f2c4-d0); nur der erste zieht -10 ab. Kein Haken beteiligt.
  *   kriecher_1010_re15 / kriecher_1220_re15  dieselbe Kriecher-Messung im RE1.5-Flavor: Block B ist dort nativ
@@ -594,6 +596,10 @@ static void teil_kriecher_1220(void) { re15_game_state_init(); kriecher_messen(R
 static void teil_kriecher_1220_re15(void) { re15_game_state_init(); kriecher_messen(RE15_AI_FLAVOR_RE15, 0x1220, 0x16, -23500, -9700, 0, -25398, -6739, -25398, -6739); }
 
 /* ================================================================== 4: Schatten ============================= */
+/* Nachbesserung 1 (M1 der Abnahme 0): der Schatten-Schwanz der Gorilla-Wurzel laeuft auf JEDEM Pfad (Root-Skip
+ * `andi 0x20 / bne` @0x80116df4-f8 springt nur ueber Gehirn + Push-out auf 0x80116e88; der Schwanz liegt @0x80116f20-38;
+ * STAGE3 0x29: `bne` @0x80110b40 -> 0x80110bd0, Schwanz @0x80110c68-80). Sichtbar wird der Quad nur ueber den Region-
+ * Cull in FUN_8001b064 (`lw a1,DAT_800ac790` @0x8001b180 / `jal 0x80014368` @0x8001b224 / `beq` @0x8001b22c). */
 static void teil_schatten(void)
 {
     re15_actor_t e; memset(&e, 0, sizeof e);
@@ -609,14 +615,12 @@ static void teil_schatten(void)
     e.type = 0x29; { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 1 && y == -3600, "kleiner Affe 0x29: Quad-Y = +0x1ba (STAGE3 @0x80110c78)"); }
     e.type = 0x20; { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 0 && y == e.y, "Hund 0x20: nicht angefasst (Runde 35 H eigener Weg)"); }
     e.type = 0x10; { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 0 && y == e.y, "Zombie 0x10: nicht angefasst"); }
-    /* Root-Skip: grid-Bit 0x20 (`lbu v0,9(v1) / andi 0x20 / bne` @0x80116dec-f8) -> die Wurzel samt Schatten-Schwanz
-     * laeuft nicht -> KEIN Schatten; der Quad des Zeichners bleibt unberuehrt (kein Quad auf -3600 ueber dem Wagen-Gorilla) */
+    /* Original-Lage der Szenen-Gorillas (grid 0x30): der Schwanz laeuft, Quad auf +0x1ba = -3600 (Original-RAM s020
+     * t=34.89: y=-2500, +0x1ba=-3600, Ecken 1700/1800) - kein Sonderweg (der Root-Skip-Haken war am Byte falsch) */
     e.type = 0x27; e.grid_id = 0x30; e.y = -2500; e.dog_floor_y = -3600;
-    { int32_t y = e.y; PRUEF(re15_r39_schatten_aus(&e) == 1 && re15_r39_schatten_y(&e, &y) == 0 && y == e.y,
-                              "Szenen-Gorilla grid 0x30 (im Wagen y=-2500, +0x1ba=-3600): Root-Skip @0x80116df4-f8 -> kein Schatten, Quad-Y unberuehrt (%d)", (int)y); }
-    e.grid_id = 0x10; PRUEF(re15_r39_schatten_aus(&e) == 0, "Kampf-Gorilla grid 0x10: Wurzel laeuft -> Schatten");
-    e.type = 0x29; e.grid_id = 0x20; PRUEF(re15_r39_schatten_aus(&e) == 1, "kleiner Affe 0x29 mit grid&0x20: Root-Skip STAGE3 @0x80110b3c-40 -> kein Schatten");
-    e.type = 0x20; e.grid_id = 0x20; PRUEF(re15_r39_schatten_aus(&e) == 0, "Hund 0x20 mit grid&0x20: nicht angefasst");
+    { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 1 && y == -3600,
+                              "Szenen-Gorilla grid 0x30 im Wagen (y=-2500): Quad auf +0x1ba = %d wie im Original (Schwanz @0x80116f20-38 auf jedem Pfad)", (int)y); }
+    e.type = 0x29; e.grid_id = 0x20; { int32_t y = e.y; PRUEF(re15_r39_schatten_y(&e, &y) == 1 && y == -3600, "kleiner Affe 0x29 mit grid&0x20: Quad auf +0x1ba (STAGE3 Schwanz @0x80110c68-80 auf jedem Pfad)"); }
     /* Szenen-Layout ROOM11C0 (ohne Flag 4/0x40): beide 0x27 kommen mit grid 0x30 und y=-20000 aus dem RDT (@0x01784/@0x01798) */
     re15_game_state_init();
     if (room_boot(0x11C0, -22604, 0, 14455, 0, 0, 0, 3) != 0) return;
@@ -625,8 +629,39 @@ static void teil_schatten(void)
         PRUEF(a && b && (a->grid_id & 0x20) && (b->grid_id & 0x20) && a->y == -20000 && b->y == -20000,
               "ROOM11C0 Szene: beide Gorillas grid 0x%02x/0x%02x, y=%d/%d (RDT `e0 b1` = -20000, +0x1ba = -3600)",
               a ? a->grid_id : 0, b ? b->grid_id : 0, a ? (int)a->y : 0, b ? (int)b->y : 0);
-        PRUEF(a && b && re15_r39_schatten_aus(a) == 1 && re15_r39_schatten_aus(b) == 1,
-              "ROOM11C0 Szene: geparkte Gorillas ohne Schatten (Root-Skip; vorher Quad am Koerper -20000 bzw. nach dem ersten Haken auf -3600)");
+        if (a && b) {
+            int32_t qa = a->y, qb = b->y;
+            PRUEF(re15_r39_schatten_y(a, &qa) == 1 && qa == -3600 && re15_r39_schatten_y(b, &qb) == 1 && qb == -3600,
+                  "ROOM11C0 Szene: geparkte Gorillas Quad auf +0x1ba = %d/%d (Original-RAM s001 t=6.11: +0x1ba=-3600)", (int)qa, (int)qb);
+            PRUEF(a->state == 1 && b->state == 1,
+                  "ROOM11C0 Szene: INIT im Spawn-Bild trotz grid 0x30 (Sce_em_set loescht Bit 0x20 @0x8004256c-70 vor dem jalr @0x8004259c): Zustand %d/%d (Original-RAM s001: 1/1)", a->state, b->state);
+        }
+        /* Region-Cull = der Mechanismus, der im Original ueber den gezeichneten Quad entscheidet (FUN_8001b064
+         * @0x8001b180/@0x8001b224/@0x8001b22c, Punkt-im-Viereck ueber (x,z) ohne Hoehe). Zonen aus dem RDT
+         * (re15_rdt_get_region_quad = FUN_80014324 -> DAT_800ac790) gegen die Original-RAM-Werte der Runde-35-
+         * Savestates (orig_scene/r3: DAT_800ac790 -> 20-Byte-Zone, Ecken @+4..+0x12) und das Ergebnis fuer die
+         * beiden Szenen-Positionen (-1220,-21568) = Gorilla 1 geparkt und im Wagen, (-554,-25423) = Gorilla 2. */
+        static const struct { int cut; int16_t xs[4], zs[4]; int p1, p2; const char *sav; } zonen[] = {
+            {  0, {  1530,  17586, 10768,     0 }, {      0,      0, -32750, -32590 }, 0, 0, "s001 t=6.11"  },
+            {  1, {-30301, -28200,  1800,  2603 }, {   4702,  27002,  29703,   4502 }, 0, 0, "s002 t=7.64"  },
+            {  3, {-29901, -29300, -2098, -3693 }, { -20799,  19505,  19505, -20298 }, 0, 0, "s004 t=10.69" },
+            {  4, {-30500, -29700, -2897, -2899 }, { -28901,  19803,  20704, -29900 }, 0, 0, "s005 t=12.19" },
+            { 13, {-24200, -24502, 12901, 13004 }, { -18102,   5700,   5200, -17901 }, 0, 0, "s007-s019"    },
+            { 12, {-23700, -24502,  5401,  5504 }, { -21102,  -1300,  -1300, -25401 }, 1, 0, "s020 t=34.89" },
+            {  5, {-21767, -18463, 18004, 20301 }, { -31201,  -3298,  -3300, -32700 }, 1, 1, "s022 t=37.92" },
+        };
+        for (size_t i = 0; i < sizeof zonen / sizeof zonen[0]; i++) {
+            int16_t xs[4] = {0, 0, 0, 0}, zs[4] = {0, 0, 0, 0};
+            int ok = re15_rdt_get_region_quad(&s_rdt, zonen[i].cut, xs, zs);
+            PRUEF(ok && memcmp(xs, zonen[i].xs, sizeof xs) == 0 && memcmp(zs, zonen[i].zs, sizeof zs) == 0,
+                  "ROOM11C0 Cut %d: Region-Viereck des RDT (%d,%d)(%d,%d)(%d,%d)(%d,%d) == Original-RAM DAT_800ac790 (%s)",
+                  zonen[i].cut, xs[0], zs[0], xs[1], zs[1], xs[2], zs[2], xs[3], zs[3], zonen[i].sav);
+            int r1 = re15_aot_point_in_quad(-1220, -21568, xs, zs), r2 = re15_aot_point_in_quad(-554, -25423, xs, zs);
+            int f1 = re15_aot_point_in_quad_fun80014368(-1220, -21568, xs, zs), f2 = re15_aot_point_in_quad_fun80014368(-554, -25423, xs, zs);
+            PRUEF(r1 == zonen[i].p1 && r2 == zonen[i].p2 && f1 == r1 && f2 == r2,
+                  "ROOM11C0 Cut %d: Punkt-im-Viereck (FUN_80014368) Gorilla 1 (-1220,-21568) = %d/%d (Original %d), Gorilla 2 (-554,-25423) = %d/%d (Original %d)",
+                  zonen[i].cut, r1, f1, zonen[i].p1, r2, f2, zonen[i].p2);
+        }
     }
     /* Kampf-Layout: `44 01 27 10 00 ..` @0x017E8 -> grid 0x10, pc[4] = 0 -> +0x1ba = 0 (steht bei y = 0); die
      * Szenen-Variante `44 01 27 30 02 ..` @0x01784 traegt 2 -> -3600 (Sce_em_set -(pc[4]*1800) @0x800421d4-0x80042210). */
@@ -634,7 +669,7 @@ static void teil_schatten(void)
     if (room_boot(0x11C0, -9013, 0, -15461, 0, 5, 3, 3) != 0) return;
     re15_actor_t *g = aktor_vom_typ(0x27, 0);
     if (g) {
-        PRUEF((g->grid_id & 0x20) == 0 && re15_r39_schatten_aus(g) == 0, "ROOM11C0 Kampf: grid 0x%02x, Wurzel laeuft -> Schatten", g->grid_id);
+        PRUEF((g->grid_id & 0x20) == 0, "ROOM11C0 Kampf: grid 0x%02x (Gehirn laeuft)", g->grid_id);
         int32_t boden = g->dog_floor_y;
         int32_t y = boden - 1500;   /* wie im Flug */
         g->y = y;

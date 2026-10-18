@@ -9793,7 +9793,6 @@ re_title:;
                      * nicht zeichnen) wirft keinen Schatten an den Fuss der Rueckwand. */
                     if (npc->type == 0x21 && npc->state == 4 && npc->crow_hide) crow_no_record = 1;
                     if (re15_r38_sm_schatten_aus(npc)) crow_no_record = 1;   /* Runde 38 Spur T: +0xBC/+0xBE = 0 @0x80115370-74 */
-                    if (re15_r39_schatten_aus(npc)) crow_no_record = 1;      /* Runde 39 Spur E: Gorilla 0x27 / Affe 0x29 mit grid&0x20 = Root-Skip @0x80116df4-f8 -> kein Schatten-Schwanz */
                     /* HUND 0x20 - EIGENE Lachen-Maschine, genau wie die Kraehe:
                      * RE2 0x80104A2C faerbt den Record auf 0x00BFBF10 (@0x80104A50-84) und
                      * laesst rec+4/+6 90 Takte lang um 8 wachsen (@0x80104A8C-C0);

@@ -16,9 +16,18 @@
 # Schatten-Zeilen mit Koerper-Y != Boden-Y (der Gorilla war in der Luft und wurde gezeichnet); (c) in JEDER dieser
 # Zeilen quad_y == boden_y (Quad auf +0x1ba, nicht am Koerper). Vorher (Basisstand c71fa144, derselbe Aufbau):
 # Quad-Y = Koerper-Y, Framedumps F1355..F1385 zeigen den Blob unter dem fliegenden Gorilla (Dossier).
-# (d) Root-Skip: fuer die Szenen-Gorillas mit grid 0x30 (geparkt y=-20000 aus dem RDT @0x01784, im Wagen y=-2500 per
-# Member_set @0x0198E) wird KEIN Schatten gezeichnet (`andi v0,v0,0x20 / bne` @0x80116df4-f8 ueberspringt die ganze
-# Wurzel samt Schatten-Schwanz) — keine "schatten "-Zeile mit koerper_y=-20000/-2500, dafuer "schatten_aus"-Zeilen.
+# (d) Original-Lage der Szenen-Gorillas (grid 0x30; Nachbesserung 1, M1 der Abnahme 0): der Schatten-Schwanz der Wurzel
+# laeuft auf JEDEM Pfad (`andi 0x20 / bne` @0x80116df4-f8 springt nur auf 0x80116e88, der Schwanz liegt @0x80116f20-38),
+# also tragen auch der geparkte (y=-20000, RDT @0x01784) und der Wagen-Gorilla (y=-2500, Member_set @0x0198E) einen Quad
+# auf +0x1ba = -3600 (Original-RAM s001/s020). Gezeichnet wird er nur, wenn (x,z) im Region-Viereck des Cuts liegt
+# (FUN_8001b064 `lw a1,DAT_800ac790` @0x8001b180 / `jal 0x80014368` @0x8001b224 / `beq` @0x8001b22c; Port:
+# npc_region_culled). Original-RAM: Cut 13 beide Positionen aussen (s007-s019), Cut 12 nur (-1220,-21568) innen (s020),
+# Cut 5 beide innen (s022). Geprueft: (d1) jede "schatten"-Zeile eines grid-30-Gorillas hat quad_y == boden_y, und
+# mindestens 10 davon liegen auf -3600; (d2) im Cut-13-Fenster (nach dem Cut_chg-Bild, das wie im Original noch mit dem
+# alten Viereck cullt) keine solche Zeile; (d3) im Cut-12-Fenster nur Zeilen mit koerper_y=-2500 (der Wagen-Gorilla; der
+# geparkte bleibt aussen). Gemessen (Messvariante 2026-10-18): Cut 12 Bildschirmband (120..214, 107..130) in der
+# Klappenoeffnung, Cut 5 x = -692..-22 links ausserhalb des Bildes - nichts davon sichtbar, wie in den Originalbildern
+# s020/s022-s026.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r39_gegner_schatten.cmake
 # =============================================================================
@@ -105,16 +114,69 @@ endif()
 if(_fehler)
     message(FATAL_ERROR "${_tag}: Quad-Y != Boden-Y in Luft-Bildern:${_fehler}")
 endif()
-# (d) Root-Skip: geparkte/Wagen-Gorillas (grid 0x30) ohne Schatten
-file(STRINGS "${_dir}/gegner_r39.log" _park REGEX "^schatten .*koerper_y=-(20000|2500) ")
-list(LENGTH _park _n_park)
-if(_n_park GREATER 0)
-    list(GET _park 0 _park0)
-    message(FATAL_ERROR "${_tag}: Schatten-Quad fuer geparkte/Wagen-Gorillas gezeichnet (${_n_park} Zeilen, z.B. [${_park0}]; Root-Skip @0x80116df4-f8)")
+# (d) Original-Lage der Szenen-Gorillas (grid 0x30): Quad auf +0x1ba, Region-Cull je Cut wie das Original
+file(STRINGS "${_dir}/gegner_r39.log" _szene REGEX "^schatten F[0-9]+ slot=[0-9]+ typ=27 grid=30 ")
+list(LENGTH _szene _n_szene)
+if(_n_szene LESS 10)
+    message(FATAL_ERROR "${_tag}: zu wenige Schatten-Zeilen der Szenen-Gorillas grid 0x30 (${_n_szene} < 10) - der Schwanz @0x80116f20-38 laeuft im Original auf jedem Pfad")
 endif()
-file(STRINGS "${_dir}/gegner_r39.log" _aus REGEX "^schatten_aus ")
-list(LENGTH _aus _n_aus)
-if(_n_aus LESS 1)
-    message(FATAL_ERROR "${_tag}: keine schatten_aus-Zeile — die Szenen-Gorillas haetten grid 0x30 (Root-Skip) tragen muessen")
+file(STRINGS "${_dir}/debug.log" _cc13 REGEX "\\[scd F[0-9]+\\] Cut_chg\\(13\\)")
+file(STRINGS "${_dir}/debug.log" _cc12 REGEX "\\[scd F[0-9]+\\] Cut_chg\\(12\\)")
+file(STRINGS "${_dir}/debug.log" _cc5  REGEX "\\[scd F[0-9]+\\] Cut_chg\\(5\\)")
+if(NOT _cc13 OR NOT _cc12 OR NOT _cc5)
+    message(FATAL_ERROR "${_tag}: Cut_chg(13)/(12)/(5) der Szene nicht im debug.log")
 endif()
-message(STATUS "${_tag}: OK — ${_n_sprung} Sprung-Bilder (Sub 7/8), ${_n_luft} Luft-Bilder mit Quad-Y == Boden-Y (+0x1ba @0x80116f30), ${_n_aus} Root-Skip-Bilder ohne Schatten (grid 0x30), ${_dir}")
+list(GET _cc13 0 _l)
+string(REGEX MATCH "F([0-9]+)" _m "${_l}")
+set(_f13 "${CMAKE_MATCH_1}")
+list(GET _cc12 0 _l)
+string(REGEX MATCH "F([0-9]+)" _m "${_l}")
+set(_f12 "${CMAKE_MATCH_1}")
+set(_f5 -1)
+foreach(_l IN LISTS _cc5)
+    string(REGEX MATCH "F([0-9]+)" _m "${_l}")
+    if(CMAKE_MATCH_1 GREATER _f12)
+        set(_f5 "${CMAKE_MATCH_1}")
+        break()
+    endif()
+endforeach()
+if(_f5 LESS 0 OR NOT _f12 GREATER _f13)
+    message(FATAL_ERROR "${_tag}: Cut-Folge 13 -> 12 -> 5 der Szene nicht gefunden (F${_f13} / F${_f12} / F${_f5})")
+endif()
+set(_n_3600 0)
+set(_n_wagen 0)
+set(_fehler_d "")
+foreach(_l IN LISTS _szene)
+    if(_l MATCHES "^schatten F([0-9]+) .*koerper_y=(-?[0-9]+) boden_y=(-?[0-9]+) quad_y=(-?[0-9]+)")
+        set(_f "${CMAKE_MATCH_1}")
+        set(_ky "${CMAKE_MATCH_2}")
+        set(_by "${CMAKE_MATCH_3}")
+        set(_qy "${CMAKE_MATCH_4}")
+        if(NOT _qy EQUAL _by)
+            string(APPEND _fehler_d " [d1 Quad != +0x1ba: ${_l}]")
+        endif()
+        if(_qy EQUAL -3600)
+            math(EXPR _n_3600 "${_n_3600} + 1")
+        endif()
+        if(_f GREATER _f13 AND _f LESS _f12)
+            string(APPEND _fehler_d " [d2 Cut 13 (Original-RAM s007-s019: beide aussen): ${_l}]")
+        endif()
+        if(_f GREATER _f12 AND _f LESS _f5)
+            if(NOT _ky EQUAL -2500)
+                string(APPEND _fehler_d " [d3 Cut 12 (Original-RAM s020: nur der Wagen-Gorilla innen): ${_l}]")
+            else()
+                math(EXPR _n_wagen "${_n_wagen} + 1")
+            endif()
+        endif()
+    endif()
+endforeach()
+if(_fehler_d)
+    message(FATAL_ERROR "${_tag}: Original-Lage der Szenen-Gorillas verletzt:${_fehler_d}")
+endif()
+if(_n_3600 LESS 10)
+    message(FATAL_ERROR "${_tag}: zu wenige Quad-Zeilen der Szenen-Gorillas auf -3600 (${_n_3600} < 10)")
+endif()
+if(_n_wagen LESS 10)
+    message(FATAL_ERROR "${_tag}: im Cut-12-Fenster (F${_f12}..F${_f5}) zu wenige Quad-Zeilen des Wagen-Gorillas (${_n_wagen} < 10; Original-RAM s020/s021: (-1220,-21568) innen)")
+endif()
+message(STATUS "${_tag}: OK - ${_n_sprung} Sprung-Bilder (Sub 7/8), ${_n_luft} Luft-Bilder mit Quad-Y == Boden-Y (+0x1ba @0x80116f30), Szenen-Gorillas ${_n_szene} Quad-Zeilen (${_n_3600} auf -3600; Cut 13 keine, Cut 12 ${_n_wagen} Wagen-Zeilen; Region-Cull wie FUN_8001b064 @0x8001b224), ${_dir}")

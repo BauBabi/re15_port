@@ -55,7 +55,7 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   Original-Riegel misst die unveraenderte Basis (sie gilt weiter in ROOM1141), die Vorgabe misst test_r39_gegner.
   Danach 20/20 r35_affen gruen (s. Tests).
 
-#### Befund B — der Schatten-Haken des Vorgaengers zeichnete Phantom-/Schwebe-Schatten (Root-Skip fehlte)
+#### Befund B — der Schatten-Haken des Vorgaengers zeichnete Phantom-/Schwebe-Schatten (Root-Skip fehlte) — ⛔ WIDERLEGT (Abnahme 0 M1, s. "Nachbesserung 1")
 - Gemessen (gegner_r39.log des gruenen Schatten-Laufs, Zeilen mit Koerper-Y != Boden-Y je Slot/Zustand):
   `29x slot=2 st=1/0 koerper=-20000 boden=-3600`, `29x slot=3 ... -20000/-3600`, `35x slot=2 st=1/0 koerper=-2500 boden=-3600`,
   `311x slot=3 st=1/0 koerper=-2500 boden=-3600`, dazu 24x slot=3 st=1/7 (der Sprung, boden=0). Die Szenen-Gorillas stehen
@@ -63,21 +63,23 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   und per `Member_set 01=-2500` @0x0198E/@0x01996 im Wagen (J_affen.md: Original t=34.89 sitzt der Gorilla sichtbar in der
   Heckklappe). Mit dem ersten Haken lag ihr Quad auf -3600: 1,1 m UEBER dem Wagen-Gorilla bzw. auf dem Dach unter dem
   geparkten — zwei neue sichtbare Fehler.
-- Original (selbst disassembliert, STAGE1.BIN): Gorilla-Wurzel FUN_80116db8 `lw v1,-14460(v1)` (g_entity) @0x80116de4,
-  `lbu v0,9(v1)` @0x80116dec, **`andi v0,v0,0x20` @0x80116df4 / `bne v0,zero,0x80116e88` @0x80116df8** -> mit grid-Bit 0x20
-  wird die GANZE Wurzel uebersprungen, also auch der Schatten-Schwanz `lh a1,442(v0)` @0x80116f30 / `jal 0x8001b064`
-  @0x80116f34 / `addiu a0,a0,176` @0x80116f38. Die Szenen-Variante traegt grid 0x30 (Bit 0x20 gesetzt) bis
-  `Member_set 0C=16` @0x01A3A/@0x01AC6 (+0x9 := 0x10) — zusammen mit `01=0` und `13=0` (@0x01A32/@0x01A3E: y = +0x1ba = 0).
-  Kleiner Affe 0x29 (STAGE3.BIN FUN_80110b10): `lbu v0,9(v1)` @0x80110b34 / `andi 0x20` @0x80110b3c / `bne` @0x80110b40,
-  Schwanz `lh a1,442(v0)` @0x80110c78 / `jal 0x8001b064` @0x80110c7c / `addiu a0,a0,176` @0x80110c80 — gleiches Muster.
-- Fix: `re15_r39_schatten_aus(npc)` (0x27/0x29 mit grid&0x20 -> 1) als zweiter Haken in main.c neben
-  `re15_r38_sm_schatten_aus` (`crow_no_record = 1`, 1 Zeile); `re15_r39_schatten_y` laesst grid&0x20 unberuehrt.
-  Logzeilen jetzt mit Bildnummer (`schatten F.. slot=.. grid=..`, `schatten_aus F.. ..`).
+- Damalige Deutung (FALSCH, Abnahme 0 §4.2, in Nachbesserung 1 selbst nachdisassembliert): "`andi v0,v0,0x20` @0x80116df4 /
+  `bne v0,zero,0x80116e88` @0x80116df8 ueberspringt die GANZE Wurzel samt Schatten-Schwanz". Das Sprungziel 0x80116e88 liegt
+  IN der Funktion vor dem Schwanz @0x80116f20-38, der auf jedem Pfad laeuft (STAGE3 0x29: `bne` @0x80110b40 -> 0x80110bd0,
+  Schwanz @0x80110c68-80). Die Logzeilen oben waren keine sichtbaren Fehler: in Cut 5 liegen die Quads links ausserhalb des
+  Bildes (x = -692..-22), in Cut 12 im schwarzen Innenraum der Klappenoeffnung (Band 120..214 x 107..130) — Details,
+  Original-RAM-Tabelle und Bildvergleich in "Nachbesserung 1".
+- Der daraus gebaute Root-Skip-Haken `re15_r39_schatten_aus` (Stand c3823fa4) ist in Nachbesserung 1 wieder entfernt;
+  `re15_r39_schatten_y` setzt den Quad fuer 0x27/0x29 immer auf +0x1ba (Original-Lage). Logzeilen mit Bildnummer bleiben.
 
 #### Befund C — integration_r39_gegner_hunde1190 lief in den Timeout: Leon stirbt
 - Beide Laeufe (11:08 und 12:16) bildgleich: Bisse F685 (-20), F720, F753, F833, **F1042 (hp 0), F1074 (hp -20 = Tod)**,
   danach CONTINUE -> der raumgebundene `RE15_EXIT_AT=2600#1190` kam nie, 2 x 480 s. Fix: `RE15_EXIT_AT=1000` (ohne Raum),
   Timeout 300 s, Pruefung (d) "Leon lebt am Ende"; der Lauf misst die vier Bisse F685/720/753/833.
+
+### 2026-10-18 13:20 — Nachbesserung 1 (dritter Agent, nach Abnahme 0 = E_abnahme_0.md, Mangel M1)
+- Stand vorgefunden: HEAD 8338a13e (c3823fa4 + Abnahme-Bericht), Baum sauber, exe 12:44. Abnahme 0: Punkte 1-4 erfuellt,
+  M1 = die Root-Skip-Behauptung von Befund B ist am Byte falsch. Bearbeitung: Abschnitt "Nachbesserung 1" am Ende.
 
 ## Punkt 1 — Parking-Lot-Gorillas: doppelte Energie, Flinch erst nach 3 Handfeuerwaffen-Treffern (Energie)
 
@@ -224,10 +226,13 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 - Geprueft, nicht geaendert: Hund 0x20 (Runde 35 H, +0x1ba @0x8010d91c / RE2 +0x1C2 @0x800268c8), RE2-Spinne 0x25
   (Sprung Sub 7 P5 @0x80100E50 ist waagerecht: Thrust + Vorschub, kein +0x38-Schreiber; Decken-/Wasserwege fuehren
   +0x1C2 selbst, Runde 38 R) — kein Luft-Schatten-Fall.
-- **Root-Skip (Fortsetzung, Befund B)**: `re15_r39_schatten_aus` — 0x27/0x29 mit +0x9 & 0x20 (`andi v0,v0,0x20 / bne`
-  @0x80116df4-f8; STAGE3 @0x80110b3c-40) bekommen KEINEN Schatten (die Wurzel samt Schatten-Schwanz laeuft im Original
-  nicht): Szenen-Gorillas geparkt (-20000) und im Wagen (-2500) — vorher Quad am Koerper, nach dem ersten Haken auf -3600.
-  Haken main.c `if (re15_r39_schatten_aus(npc)) crow_no_record = 1;` (neben Runde 38 T). Gilt fuer ROOM11C0 und 1141.
+- **Szenen-Gorillas (grid 0x30) — Original-Lage (Nachbesserung 1, ersetzt den Root-Skip des Zwischenstands c3823fa4)**:
+  kein Sonderweg. Der Schatten-Schwanz laeuft auf jedem Pfad der Wurzel (@0x80116f20-38; Root-Skip @0x80116df4-f8 springt
+  nur ueber Gehirn-Dispatch + Push-out auf 0x80116e88), der Quad liegt auf +0x1ba = -3600 mit Ecken 1700/1800 (INIT
+  @0x801171e8/f0 im Spawn-Bild: Sce_em_set loescht Bit 0x20 @0x8004256c-70 vor dem `jalr` @0x8004259c, zurueck
+  @0x80042604-08); ob er gezeichnet wird, entscheidet der Region-Cull des Cuts in FUN_8001b064 (`lw a1,DAT_800ac790`
+  @0x8001b180 / `jal 0x80014368` @0x8001b224 / `beq` @0x8001b22c), den der Port schon traegt (main.c npc_region_culled).
+  Entfernt: `re15_r39_schatten_aus` (gegner_r39.c, re15_gegner_r39.h) und die Hakenzeile in main.c.
 
 ## Messungen (Riegel test_r39_gegner, jeder Teil misst "vorher" = Haken aus und "nachher" im selben Lauf)
 
@@ -316,18 +321,21 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   Koerper (F1365: Quad links oben in Koerperhoehe, der stehende Gorilla in der Mitte hat seinen auf dem Boden).
 - unit_r39_gegner_schatten: 0x27 mit Koerper -5200 ueber Boden -3600: vorher Quad-Y = -5200, nachher -3600; 0x29
   ebenso; Hund/Zombie unveraendert. ROOM11C0 Kampf-Variante (`44 01 27 10 00 ..` pc[4] = 0): +0x1ba = 0 = Quad-Y.
-  Fortsetzung: grid 0x30 (Wagen y=-2500/+0x1ba -3600) -> `schatten_aus == 1`, Quad unberuehrt; ROOM11C0 Szenen-Layout
-  (ohne Flag 4/0x40): beide Gorillas `grid 0x30, y=-20000` -> kein Schatten; Kampf-Layout grid 0x10 -> Schatten auf 0.
+  Nachbesserung 1: grid 0x30 (Wagen y=-2500 / geparkt y=-20000) -> Quad auf +0x1ba = -3600 wie im Original-RAM; ROOM11C0-
+  Szene: Zustand 1 (INIT im Spawn-Bild); Region-Viereck des RDT je Cut 0/1/3/4/5/12/13 == DAT_800ac790 der Savestates,
+  Punkt-im-Viereck fuer (-1220,-21568)/(-554,-25423) = Original-RAM (Cut 0/1/3/4/13: 0/0, Cut 12: 1/0, Cut 5: 1/1), die
+  beiden Port-Fassungen des Tests (re15_aot_point_in_quad / _fun80014368) gleich; Kampf-Layout grid 0x10 -> Schatten auf 0.
 - **Echte exe (integration_r39_gegner_schatten, gruen 12:27, Lauf lauf_5613f23f)**: Sprung-Bilder F1362-F1385 (24 Zeilen
-  `schatten F.. slot=3 grid=10 st=1/7 koerper_y=-720..-4680 boden_y=0 quad_y=0`), alle Quad-Y == Boden-Y; 595
-  `schatten_aus`-Zeilen F185-F1110 (die Szenen-Gorillas grid 0x30 vor ihrer Freigabe — kein Quad mehr). Framedump
+  `schatten F.. slot=3 grid=10 st=1/7 koerper_y=-720..-4680 boden_y=0 quad_y=0`), alle Quad-Y == Boden-Y. (Die 595
+  `schatten_aus`-Zeilen dieses Laufs gehoerten zum entfernten Root-Skip-Haken; Stand nach Nachbesserung 1 s. dort.) Framedump
   `E_gegner_bilder/nachher_sprung_F1370.png` (Gorilla in der Luft ueber dem Auto, der Schatten-Blob liegt auf dem
   Asphalt) gegen `vorher_sprung_F1365.png` (Blob in Koerperhoehe).
 
 ## Tests (Namen, Ergebnis)
 - tests/unit/probes/r39_gegner.cmake -> test_r39_gegner.c, Teile: unit_r39_gegner_affen_hp, _affen_zucken, _affen_schuss,
   _hund_riegel, _hund_re15, _kriecher_1010, _kriecher_1220, _kriecher_1010_re15, _kriecher_1220_re15, _schatten;
-  Integration: integration_r39_gegner_schatten (echte exe ROOM11C0, Sprung + Root-Skip), integration_r39_gegner_hunde1190
+  Integration: integration_r39_gegner_schatten (echte exe ROOM11C0, Sprung + Original-Lage der Szenen-Gorillas, Nachbesserung 1),
+  integration_r39_gegner_hunde1190
   (echte exe ROOM1190, vier Bisse, Riegel-Protokoll, Leon lebt).
 - Beruehrte Testgruppen des Diffs: r35_affen (Gorilla-Original-Riegel, test_r35_affen.c mit `re15_r39_gegner_enable(0)`).
 - Zwischenstand 12:34 (`ctest -R "unit_r39_gegner|unit_r35_affen"`): `100% tests passed, 0 tests failed out of 30`;
@@ -366,3 +374,64 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   steht (RE1.5-Original Block B), dann kriechen sie heran; naeher als 1300 greifen sie wie im RE2-Original.
 - Entscheidungsfrage: Soll die 3-Treffer-Schwelle auch fuer die Gorillas in ROOM1141 gelten? (Wortlaut "beim Parking Lot"
   -> nur 11C0 umgesetzt.)
+
+## Nachbesserung 1 (2026-10-18, nach Abnahme 0 — Mangel M1)
+
+### M1 — der Root-Skip-Haken trug eine am Byte falsche Mechanismus-Behauptung
+- **Ursache**: Befund B deutete `lbu v0,9(v1)` @0x80116dec / `andi v0,v0,0x20` @0x80116df4 / `bne v0,zero,0x80116e88`
+  @0x80116df8 als Sprung ueber die ganze Wurzel samt Schatten-Schwanz. Selbst nachdisassembliert (`re15_disasm.py dis
+  0x80116db8 104`, STAGE1.BIN): das Sprungziel 0x80116e88 (`lui a1,0x800b` / `lw a1,g_entity` @0x80116e8c) liegt IN der
+  Funktion; von dort prueft @0x80116e94-ea0 grid&0x40 (-> 0x80116f20) bzw. rechnet @0x80116ea8-f1c die +0x1d8-Formel, und
+  der Schwanz @0x80116f20-38 (`lw v0,g_entity` @0x80116f24 / `lh a1,442(v0)` @0x80116f30 / `jal 0x8001b064` @0x80116f34 /
+  `addiu a0,a0,176` @0x80116f38) laeuft auf JEDEM Pfad — auch ueber das Pause-Bit `bne` @0x80116dd8. Uebersprungen werden
+  nur der Gehirn-Dispatch (`jalr` @0x80116e20, Tabelle 0x801213c8) und Push-out/Kollision (@0x80116e28-e84: 0x8002b498,
+  0x8002aec4, 0x8002b544, 0x8003b0a4). STAGE3 0x29 ebenso: `bne` @0x80110b40 -> 0x80110bd0, Schwanz @0x80110c68-80
+  (`lh a1,442(v0)` @0x80110c78 / `jal 0x8001b064` @0x80110c7c). Die Abnahme hat recht; die falsche Aussage stand in
+  gegner_r39.c, re15_gegner_r39.h (4), main.c-Haken, Dossier Befund B / Punkt 4 und Riegel (d).
+- **INIT im Spawn-Bild** (warum die Szenen-Gorillas trotz grid 0x30 in Zustand 1 stehen): Sce_em_set schreibt das grid-Byte
+  zuerst OHNE Bit 0x20 (`andi v0,v1,0xdf` @0x8004256c / `sb v0,9(s0)` @0x80042570), ruft die Wurzel (`jalr` @0x8004259c,
+  s4 = v1&0x20 @0x800425a0) und setzt das Bit danach zurueck (`or v0,v0,s4` @0x80042604 / `sb v0,9(s0)` @0x80042608).
+  Der Port macht es genauso (enemy_ai_common.c re15_enemy_spawn_root, Runde 35 J); die Ecken 1700/1800 schreibt der INIT
+  (@0x801171e8/f0, Port re15_r36_affen_lache_init).
+- **Original-RAM (Runde-35-Savestates orig_scene/r3, Pool 0x800acc2c Stride 0x1f4, Cut 0x800b0fe4, Zone DAT_800ac790 ->
+  20 Byte mit Ecken @+4..+0x12; eigene Lesung scratchpad e_nb1/zone_read.py mit re15_ss.Ram)**:
+
+  | Savestate | Cut | Gorilla 1 (slot1) | Gorilla 2 (slot2) | +0x1ba | +0xbc/+0xbe | Zone (x,z) x4 | FUN_80014368 G1 / G2 |
+  |---|---|---|---|---|---|---|---|
+  | s001 t=6.11 | 0 | 1/0/0/0 grid 30 (-1220,-20000,-21568) | 1/0/0/0 grid 30 (-554,-20000,-25423) | -3600 | 1700/1800 | (1530,0)(17586,0)(10768,-32750)(0,-32590) | 0 / 0 |
+  | s002 t=7.64 | 1 | dito | dito | -3600 | 1700/1800 | (-30301,4702)(-28200,27002)(1800,29703)(2603,4502) | 0 / 0 |
+  | s004 t=10.69 | 3 | dito | dito | -3600 | 1700/1800 | (-29901,-20799)(-29300,19505)(-2098,19505)(-3693,-20298) | 0 / 0 |
+  | s005 t=12.19 | 4 | dito | dito | -3600 | 1700/1800 | (-30500,-28901)(-29700,19803)(-2897,20704)(-2899,-29900) | 0 / 0 |
+  | s007-s019 | 13 | dito | dito | -3600 | 1700/1800 | (-24200,-18102)(-24502,5700)(12901,5200)(13004,-17901) | 0 / 0 |
+  | s020 t=34.89 | 12 | (-1220,-2500,-21568) im Wagen | (-554,-2500,-25423) | -3600 | 1700/1800 | (-23700,-21102)(-24502,-1300)(5401,-1300)(5504,-25401) | **1** / 0 |
+  | s021 t=36.41 | 12 | (-3617,0,-17798) grid 10 | (-1220,-2500,-21568) im Wagen | 0 / -3600 | 1700/1800 | dito | 1 / **1** |
+  | s022-s026 | 5 | (-3617,0,-17798) | (-1220,-2500,-21568) im Wagen | 0 / -3600 | 1700/1800 | (-21767,-31201)(-18463,-3298)(18004,-3300)(20301,-32700) | 1 / **1** |
+
+  Der Mechanismus, der im Original ueber den Quad entscheidet, ist der Region-Cull in FUN_8001b064 selbst: `lw a1,DAT_800ac790`
+  @0x8001b180, `jal 0x80014368` @0x8001b224, `beq v0,zero,0x8001b364` @0x8001b22c — Punkt-im-Viereck ueber (x,z) der Entity
+  (FUN_80014368 liest `lw v0,8(a0)` = z @0x80014370 und `lw v0,0(a0)` = x @0x80014384, die Hoehe nie; Zonenecken `lh 4/6/8/10/
+  12/14/16/18(a1)`). Geparkt (Cuts 0/1/3/4/13) also kein Quad; im Wagen (Cut 12, Cut 5) ein Quad auf -3600 mit Ecken 1700/1800.
+  (DAT_800ac790 schreibt nur der Cut-Apply @0x80021c0c aus FUN_80014324 — Port: re15_rdt_get_region_quad.)
+- **Messung vorher (Port, Stand c3823fa4)**: Root-Skip-Haken aktiv — 595 `schatten_aus`-Zeilen (kein Quad fuer grid 0x30),
+  darunter die Cut-12-/Cut-5-Bilder, in denen das Original den Quad ausgibt (Abweichung vom Original, wenn auch unsichtbar).
+- **Messung: Port ohne Root-Skip, Quad auf +0x1ba (Messvarianten mess1/mess2, nicht committet; Aufbau wie
+  integration_r39_gegner_schatten, in mess2 dazu eine temporaere main.c-Logzeile der Bildschirmecken nsx/nsy)**: 404 Quad-
+  Zeilen der grid-30-Gorillas, nach Cut (state.log `cam` je Bild): cam 5 direkt nach dem Debug-Sprung F185-F212 beide geparkt
+  (28+28 — ein Debug-Sprung-Artefakt: im Original ist vor Cut 13 nie Cut 5 aktiv, Reihe 0 -> 1 -> 3 -> 4 -> 13), cam 13 nur das
+  Cut_chg-Bild F213 (altes Viereck, wie das Original im Anforderungsbild), cam 12 F764-F798 Gorilla 1 im Wagen (35) und
+  F800-F879 Gorilla 2 im Wagen (80; davor bei (-554,-25423) aussen — wie s020), cam 5 F880-F1110 Gorilla 2 im Wagen (231).
+  Der Port-Cull (re15_rdt_get_region_quad / re15_aot_point_in_quad) trifft also je Cut dieselbe Entscheidung wie FUN_80014368.
+  Bildschirmecken (320x240, cx/cy = 160/120): Cut 12 Band sx 120..214 / sy 107..130 = Klappenoeffnung (schwarzer Innenraum,
+  Gorilla-Koerper, davor die Heckklappe Objekt 0); Cut 5 sx -173..-22 (Wagen-Position) bzw. -441..-128 / -692..-299
+  (geparkt) = links ausserhalb des Bildes. Framedumps F785/F860 (Cut 12) und F935/F1010 (Cut 5) gegen die Originalbilder
+  s020/s021 und s024/s026 (3x vergroessert, scratchpad e_nb1/): kein Blob auf dem weissen Klappenrahmen, keine dunkle Scheibe
+  ueber den Wagen — Port und Original gleich. Die "zwei neuen sichtbaren Fehler" aus Befund B waren Logzeilen, keine Pixel.
+- **Aenderung**: `re15_r39_schatten_aus` gestrichen (gegner_r39.c, re15_gegner_r39.h, main.c-Hakenzeile weg; main.c-Diff
+  dieser Spur damit nur noch der +0x1ba-Haken); `re15_r39_schatten_y` setzt den Quad fuer 0x27/0x29 IMMER auf +0x1ba (auch
+  grid&0x20) = die Original-Lage; Kommentare tragen die wirklichen Bytes (Schwanz auf jedem Pfad, Region-Cull
+  @0x8001b180/b224/b22c, INIT im Spawn-Bild @0x8004256c-70/@0x8004259c/@0x80042604-08, Ecken 1700/1800 @0x801171e8/f0).
+  Riegel: unit_r39_gegner_schatten prueft die Original-Lage (grid 0x30 -> -3600; ROOM11C0-Szene: Zustand 1 + Quad -3600;
+  Region-Viereck des RDT je Cut 0/1/3/4/5/12/13 == DAT_800ac790 der Savestates; Punkt-im-Viereck fuer beide Szenen-
+  Positionen == Original-RAM, beide Port-Fassungen gleich); integration_r39_gegner_schatten (d1-d3) misst an der exe:
+  grid-30-Quads auf +0x1ba (>= 10 auf -3600), Cut-13-Fenster leer, Cut-12-Fenster nur der Wagen-Gorilla.
+- **Messung nachher**: (wird nach Bau und Lauf ergaenzt)

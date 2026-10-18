@@ -150,31 +150,35 @@ int re15_r39_kriecher_weckt(const re15_actor_t *e, const re15_actor_t *pl)
 }
 
 /* ================================================================ (4) Schatten auf der Boden-Referenz ===== */
-/* Root-Skip (selbst disassembliert 2026-10-18): die Gorilla-Wurzel FUN_80116db8 prueft `lbu v0,9(v1)` @0x80116dec /
- * `andi v0,v0,0x20` @0x80116df4 / `bne v0,zero,0x80116e88` @0x80116df8 — mit grid-Bit 0x20 (Szenen-Variante
- * `44 01 27 30 ..` @0x01784: geparkt y=-20000 aus dem RDT, dann `Member_set 01=-2500` @0x0198E/@0x01996 im Wagen)
- * laeuft die GANZE Wurzel samt Schatten-Schwanz (@0x80116f30-38) nicht; erst `Member_set 0C=16` (+0x9 := 0x10,
- * @0x01A3A/@0x01AC6) mit 01=0 / 13=0 (y = +0x1ba = 0) gibt sie frei. Kleiner Affe 0x29 ebenso: STAGE3.BIN
- * FUN_80110b10 `lbu v0,9(v1)` @0x80110b34 / `andi 0x20` @0x80110b3c / `bne` @0x80110b40, Schwanz @0x80110c78-80.
- * Der Port zeichnet den NPC-Schatten im Zeichner (main.c) unabhaengig vom Gehirn — ohne diese Sperre laege der
- * Quad des Wagen-Gorillas (y=-2500) auf +0x1ba = -3600, 1,1 m UEBER ihm, und der des geparkten (-20000) auf dem Dach. */
-int re15_r39_schatten_aus(const re15_actor_t *npc)
-{
-    if (!s_an || !npc) return 0;
-    if (npc->type != 0x27u && npc->type != 0x29u) return 0;
-    if ((npc->grid_id & 0x20u) == 0) return 0;
-    re15_r39_log("schatten_aus F%u slot=%d typ=%02x grid=%02x st=%d/%d koerper_y=%d boden_y=%d (Root-Skip @0x80116df4-f8)",
-                 r39_bild(), r39_slot(npc), npc->type, npc->grid_id, npc->state, npc->sub_state_1, (int)npc->y, (int)npc->dog_floor_y);
-    return 1;
-}
-
+/* Original (STAGE1.BIN, selbst disassembliert; Nachbesserung 1 nach Abnahme 0 M1): die Gorilla-Wurzel FUN_80116db8
+ * erreicht den Schatten-Schwanz `lw v0,g_entity` @0x80116f24 / `lh a1,442(v0)` @0x80116f30 / `jal 0x8001b064`
+ * @0x80116f34 / `addiu a0,a0,176` @0x80116f38 auf JEDEM Pfad: das Pause-Bit (`bne` @0x80116dd8) und der Root-Skip
+ * `lbu v0,9(v1)` @0x80116dec / `andi v0,v0,0x20` @0x80116df4 / `bne v0,zero,0x80116e88` @0x80116df8 springen nur
+ * ueber den Gehirn-Dispatch (`jalr` @0x80116e20, Tabelle 0x801213c8) und Push-out/Kollision (@0x80116e28-e84) auf
+ * 0x80116e88; von dort geht es ueber grid&0x40 (@0x80116e9c-ea0 -> 0x80116f20) bzw. die +0x1d8-Formel (@0x80116ea8-
+ * f1c) in den Schwanz @0x80116f20. Kleiner Affe 0x29 ebenso (STAGE3.BIN FUN_80110b10: `bne` @0x80110b40 -> 0x80110bd0,
+ * Schwanz @0x80110c68-80 mit `lh a1,442(v0)` @0x80110c78 / `jal 0x8001b064` @0x80110c7c).
+ * Die Szenen-Gorillas (grid 0x30: geparkt y=-20000 aus dem RDT @0x01784, im Wagen y=-2500 per Member_set @0x0198E)
+ * geben ihren Quad also ebenfalls aus: Hoehe +0x1ba = -3600 (Sce_em_set pc[4]=2), Ecken +0xbc/+0xbe = 1700/1800
+ * (INIT @0x801171e8/f0; der INIT laeuft im Spawn-Bild, weil Sce_em_set das Bit 0x20 vor dem Wurzelaufruf loescht:
+ * `andi v0,v1,0xdf` @0x8004256c / `sb v0,9(s0)` @0x80042570 / `jalr` @0x8004259c, zurueck `or v0,v0,s4` @0x80042604
+ * / `sb` @0x80042608). Original-RAM (Runde-35-Savestates orig_scene/r3, Pool 0x800acc2c Stride 0x1f4): t=6.11 Zustand
+ * 1/0/0/0, grid 0x30, y=-20000, +0x1ba=-3600, +0xbc/+0xbe=1700/1800; t=34.89 (Cut 12) y=-2500, +0x1ba=-3600.
+ * Ob der Quad ins Bild kommt, entscheidet FUN_8001b064 selbst: `lw a1,DAT_800ac790` @0x8001b180 (Region-Viereck des
+ * aktiven Cuts, FUN_80014324 -> @0x80021c0c) / `jal 0x80014368` @0x8001b224 / `beq v0,zero,0x8001b364` @0x8001b22c =
+ * Punkt-im-Viereck ueber (x,z) der Entity (FUN_80014368 liest `lw v0,8(a0)` = z @0x80014370, `lw v0,0(a0)` = x
+ * @0x80014384, die Hoehe nie). Original-RAM: geparkt (-1220,-21568)/(-554,-25423) in den Cuts 0/1/3/4/13 = 0 (kein
+ * Quad); Cut 12 (-1220,-21568) = 1, (-554,-25423) = 0; Cut 5 beide = 1. Der Port cullt den NPC-Schatten mit demselben
+ * Viereck (main.c npc_region_culled, re15_rdt_get_region_quad) und zeichnet die zugelassenen Quads: Cut 12 als Band
+ * (120..214, 107..130) in der Klappenoeffnung (schwarzer Innenraum, Gorilla, Heckklappe davor), Cut 5 bei x = -692..-22
+ * links ausserhalb des Bildes - wie im Original nichts davon sichtbar (E_gegner.md Nachbesserung 1). Deshalb KEIN
+ * Sonderweg fuer grid&0x20; der Root-Skip-Haken des Zwischenstands c3823fa4 war am Byte falsch und ist entfernt. */
 int re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y)
 {
     if (!s_an || !npc || !y) return 0;
     if (npc->type != 0x27u && npc->type != 0x29u) return 0;
-    if (npc->grid_id & 0x20u) return 0;   /* Root-Skip: kein Schatten (re15_r39_schatten_aus), Quad bleibt unberuehrt */
     int32_t alt = *y;
-    *y = (int32_t)npc->dog_floor_y;    /* +0x1ba: `lh a1,442(v0)` @0x80116f30 (0x27) / @0x80110c78 (0x29) */
+    *y = (int32_t)npc->dog_floor_y;    /* +0x1ba: `lh a1,442(v0)` @0x80116f30 (0x27) / @0x80110c78 (0x29), auf jedem Pfad */
     if (alt != *y)
         re15_r39_log("schatten F%u slot=%d typ=%02x grid=%02x st=%d/%d koerper_y=%d boden_y=%d quad_y=%d",
                      r39_bild(), r39_slot(npc), npc->type, npc->grid_id, npc->state, npc->sub_state_1,
