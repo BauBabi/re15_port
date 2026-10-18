@@ -239,3 +239,15 @@ Alle Bilder = VM-Takte ab dem Raumaufbau (scd_room_reenter), Spion am Plattform-
   Schublade spielt den Ton bei JEDEM Oeffnen (RE1.5 zeigt die Schublade auch nach dem Nehmen der Patronen erneut; RE2 oeffnet eine
   leere Schublade nicht, sondern zeigt nur Text). Stand: Ton bei jedem Oeffnen, weil das Bild das Oeffnen zeigt.
 * Bedienung: nichts Neues; die Toene erklingen an den vorhandenen Stellen (Schreibtisch untersuchen; Raetsel loesen).
+
+### 5.1 Gezielter Lauf (Bau 9abec648, 2026-10-18)
+```
+ctest --test-dir re15_port/build -R "r39_toene|scd_opcodes|11f0|1190|r38_elzatoene" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 31
+Total Test time (real) = 549.33 sec
+```
+31 Tests: unit_r39_toene_{schublade,gitter,schrank,bank,signatur}, integration_r39_toene_{schublade,schublade_elza,szene,szene_elza}
+(33-51 s je Lauf), dazu die Gruppen der beruehrten Module/Raeume: unit_scd_opcodes (scd_vm.c-Haken), ROOM11F0 (unit_gen_11f0_*,
+unit_prop_texel_key_11f0, unit_11f0_cut_after_puzzle, unit_r26_panel_11f0, unit_abtastphase_11f0), ROOM1190 (unit_re2_room1190_ab,
+unit_1190_weste, unit_1190_ruestung, unit_r36_karte_r1190, unit_r36_ziel1190, integration_r36_ziel1190_scheiben) und die
+Anker-Nachbarn unit/integration_r38_elzatoene_* (dieselbe Hakenkette in scd_vm.c). Keine volle Suite im Spurbaum (VERTRAG).
