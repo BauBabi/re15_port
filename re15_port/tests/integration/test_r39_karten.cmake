@@ -1,0 +1,124 @@
+cmake_minimum_required(VERSION 3.16)
+# =============================================================================
+# KARTEN DER POLIZEISTATION MIT DER ECHTEN EXE (Runde 39, Spur G "karten").
+#
+# Dossier analysis/befunde_runde39/G_karten.md. Nutzer (AUFTRAG.md):
+#   1. "Bei den Maps des Police Departement passt es noch nicht so ganz. [...] map3F_correct.png, map2F_correct.png,
+#      map1F_correct.png, mapB2_correct.png. Dort ist immer links, wie es bei uns aussieht und rechts wie es eigentlich
+#      aussehen sollte. Keine Doppelwaende, Tuer immer genau auf Wand platziert, treppen nicht in der Wand platziert usw.
+#      [...] Die Karte von B1 ist noch ziemlicher schrott."
+#   2. "In ROOM 1090 ist Leons Positionsmarker der Map ausserhalb des aktuellen Raums."
+#
+# Lauf S (Sweep): Spielstand in ROOM1190, LOAD GAME, Kartenschirm, RE15_MAP_SHOT_SWEEP zieht alle 13 Blaetter ab.
+#   - Blaetter 1..4 (B2/1F/2F/3F): Klassenbild gegen die SOLL-Haelfte der Nutzer-Vorlage (probe_r39_karten sollbild,
+#     r39_karten_soll.inc) - 0 Abweichungen;
+#   - Blaetter 0..4: keine Doppelwand (Koerper|Wand|Wand|Koerper) - probe_r39_karten doppelwand.
+# Lauf M (1090): Spielstand am Punkt des Nutzers (befund.log F1126..F1351: R1090 (-12528,-9000,959), obere Ebene),
+#   Kartenschirm (Blatt 2F): der Marker-Ring steht im ROT des aktuellen Raums (7x7 um die Ring-Mitte: rot >= 8, kein
+#   Gruen eines fremden Raums). Vorher: Ring (186,83) im gruenen Nachbarraum (linke Haelfte von map2F_correct.png).
+#
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PROBE=<probe_r39_karten> -DRE15_PROBE36=<probe_r36_karte>
+#               -DWORKDIR=<dir> -P <diese Datei>
+# =============================================================================
+foreach(_v RE15_PC_EXE RE15_PROBE RE15_PROBE36)
+    if(NOT ${_v} OR NOT EXISTS "${${_v}}")
+        message(FATAL_ERROR "r39_karten: ${_v} fehlt: '${${_v}}'")
+    endif()
+endforeach()
+if(NOT WORKDIR)
+    message(FATAL_ERROR "r39_karten: WORKDIR fehlt")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+
+string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
+# Eigener exe-Name neben der exe (Asset-Wurzel = exe-Verzeichnis); Praefix nur DIESES Tests. Endung wie die Quelle.
+get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
+get_filename_component(_exe_ext "${RE15_PC_EXE}" LAST_EXT)
+set(_exe_kopie "${_exe_dir}/re15_pc_r39g_karten_${_lauf_id}${_exe_ext}")
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+set(_basis_wd "${WORKDIR}/lauf_${_lauf_id}")
+set(_fehler "")
+
+function(karten_lauf _name _oeffnen_raum _karte_args)
+    set(WORKDIR "${_basis_wd}_${_name}")
+    file(MAKE_DIRECTORY "${WORKDIR}")
+    execute_process(COMMAND "${RE15_PROBE36}" karte "re15_card.mcr" ${_karte_args}
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+    if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r39_karten[${_name}]: Spielstand nicht geschrieben (exit=${_rvk})\n${_outk}")
+    endif()
+    re15_start_spiel(_rv 240
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+        RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+        "RE15_INV_OPEN_AT=40#${_oeffnen_raum}"
+        ${ARGN}
+        "${_exe_kopie}")
+    set(_rv_${_name} ${_rv} PARENT_SCOPE)
+endfunction()
+
+# ---- S: Sweep aller Blaetter aus ROOM1190 ----------------------------------------------------------------------
+karten_lauf(S 1190 "1190;3174;0;-11182;0" RE15_MAP_SHOT_SWEEP=s)
+foreach(_s 00 01 02 03 04)
+    if(NOT EXISTS "${_basis_wd}_S/s${_s}.bmp")
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r39_karten[S]: kein Abzug s${_s}.bmp (exit=${_rv_S}, ${_basis_wd}_S)")
+    endif()
+endforeach()
+foreach(_s 1 2 3 4)
+    execute_process(COMMAND "${RE15_PROBE}" sollbild "${_basis_wd}_S/s0${_s}.bmp" ${_s}
+                    RESULT_VARIABLE _rv OUTPUT_VARIABLE _out)
+    string(STRIP "${_out}" _out)
+    message(STATUS "r39_karten[S] Blatt ${_s}: ${_out}")
+    if(NOT _rv EQUAL 0)
+        set(_fehler "${_fehler} soll-${_s}")
+    endif()
+endforeach()
+foreach(_s 0 1 2 3 4)
+    execute_process(COMMAND "${RE15_PROBE}" doppelwand "${_basis_wd}_S/s0${_s}.bmp"
+                    RESULT_VARIABLE _rv OUTPUT_VARIABLE _out)
+    string(STRIP "${_out}" _out)
+    message(STATUS "r39_karten[S] Blatt ${_s}: ${_out}")
+    if(NOT _rv EQUAL 0)
+        set(_fehler "${_fehler} doppelwand-${_s}")
+    endif()
+endforeach()
+
+# ---- M: ROOM1090 obere Ebene am Punkt des Nutzers ----------------------------------------------------------------
+karten_lauf(M 1090 "1090;-12528;-9000;959;0;besucht:1090:-12528:959:5"
+            RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=60 "RE15_EXIT_AT=200#1090")
+if(NOT EXISTS "${_basis_wd}_M/karte.bmp")
+    file(REMOVE "${_exe_kopie}")
+    message(FATAL_ERROR "r39_karten[M]: kein Kartenabzug (exit=${_rv_M}, ${_basis_wd}_M)")
+endif()
+execute_process(COMMAND "${RE15_PROBE36}" marker "${_basis_wd}_M/karte.bmp" 150 50 250 130
+                RESULT_VARIABLE _rvm OUTPUT_VARIABLE _outm)
+string(STRIP "${_outm}" _outm)
+message(STATUS "r39_karten[M] ${_outm}")
+if(_rvm EQUAL 0 AND _outm MATCHES "^MARKER ([0-9]+) ([0-9]+)")
+    set(_mx ${CMAKE_MATCH_1})
+    set(_my ${CMAKE_MATCH_2})
+    math(EXPR _x0 "${_mx} - 3")
+    math(EXPR _y0 "${_my} - 3")
+    math(EXPR _x1 "${_mx} + 3")
+    math(EXPR _y1 "${_my} + 3")
+    execute_process(COMMAND "${RE15_PROBE36}" farben "${_basis_wd}_M/karte.bmp" ${_x0} ${_y0} ${_x1} ${_y1}
+                    RESULT_VARIABLE _rvf OUTPUT_VARIABLE _outf)
+    string(STRIP "${_outf}" _outf)
+    message(STATUS "r39_karten[M] um den Ring: ${_outf}")
+    if(_outf MATCHES "rot=([0-9]+) besucht=([0-9]+)")
+        if(CMAKE_MATCH_1 LESS 8 OR NOT CMAKE_MATCH_2 EQUAL 0)
+            set(_fehler "${_fehler} 1090-marker-ausserhalb")
+        endif()
+    else()
+        set(_fehler "${_fehler} 1090-farben")
+    endif()
+else()
+    set(_fehler "${_fehler} 1090-kein-marker")
+endif()
+
+file(REMOVE "${_exe_kopie}")
+if(NOT "${_fehler}" STREQUAL "")
+    message(FATAL_ERROR "r39_karten: ROT bei:${_fehler}")
+endif()
+message(STATUS "r39_karten: OK")
