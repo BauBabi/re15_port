@@ -6,6 +6,10 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:20: Fable-MONATSLIMIT ("monthly spend limit") beendete die vier Welle-3-Bau-Agenten nach ~30 s (keine Commits,
+  Baeume sauber). Nutzer stellte das Modell auf Opus 5.5 (default). Welle 3 NEU gestartet (gleiche args, basis 1038dc15):
+  G karten wf_96165e9e-aa5, I funk10f1 wf_02f632c1-c4e, J dining1141 wf_78e6cc10-215, K heliport1171 wf_2e231bdd-63d.
+  Commit-Attribution ab jetzt "Claude Opus 5.5". Integrationstest H+F+D (238) laeuft seit 14:04 in r39_integration.
 * 2026-10-18 14:19: WELLE 3 GESTARTET auf master 1038dc15 (= Welle 1 + A1; Welle 2 liegt nur in r39_integration 4e2177bd,
   deren H+F+D-Tests laufen dort noch, E-Tests danach). Baeume r39_{karten,funk10f1,dining1141,heliport1171}, je Spur ein
   Lauf, Resume nur mit args `{"welle": ["<X>"], "slots": 1, "max_nach": 1, "basis": "1038dc15"}`: G karten wf_3fcc8bff-38e,
