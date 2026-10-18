@@ -97,3 +97,42 @@ Bild Sub-6-Clip-1 zwischen TURN-Ankunft und WALK-Start; das Original setzt in Su
 +0x8f := 7 (@0x800517f0: `sb v1(=1),148(v0)` @0x80051854, `sb v0(=7),143(v1)` @0x80051874), die Frage ist nur, ob
 der SCD-Poll (sub14 `Ck(5,32)` @0x02A62) im Original VOR dem Dispatcher des Folgebilds laeuft — eigener RE-Punkt,
 nicht Teil des Wortlauts.
+
+### Punkt 2 — Nach Roys Tagebuch sofort die Karte mit Markern
+Werkzeug: Spielstand vor dem liegenden Roy (`probe_r36_elza_karte re15_card.mcr 1011 -1900 6830 3072 4:0xF1 4:0xFA
+3:0x74`, Elza), `RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_NO_INTRO=1 RE15_NOAUDIO=1
+RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_SCD_TRACE=1 RE15_FADE_LOG=1 RE15_STATE_LOG=state.txt`,
+`RE15_PRESS=square@60,right@200..350,square@380,square@480` (untersuchen, 6x blaettern, schliessen, "filed"
+bestaetigen), Bildserie 470-560/1, `RE15_EXIT_AT=1100#1011`; eigene exe-Kopien `re15_pc_abn_h2.exe` (neu) /
+`re15_pc_abn_b2.exe` (v0.8.26). Laufordner `abn/p2_neu/`, `abn/p2_basis/`.
+
+| Bild | **neu** (debug.log / Helligkeit der Bilder / STATE_LOG) | **basis v0.8.26** |
+|---|---|---|
+| F60/F61 | Viereck → sub07: Aot_reset @0x0E4E, Work_set, Plc_motion(1,11) @0x0E5C, Sleep 30 | gleich |
+| F91 | `[scd] F91 @0x0E64 op=0x2B` + `[tagebuch] ROOM1011 msg 18 -> Roys Diary (… erstes Mal: ablegen)` — Faden parkt | gleich |
+| F478 | Dokument-Schirm, "The Roys Diary has been filed." (Bild) | gleich |
+| F480-F485 | Abblende des Dokument-Schirms 11.8 → 0.3; F486-F489 schwarz | gleich |
+| F487 | STATE_LOG pst=1 mo=210 (Statusschirm-Abbau `sb zero,0x800aca58` @0x8001cbdc → cmd 0; r38-Stand, OFFEN im Dossier) | gleich |
+| F490-F494 | Rueckblende Raum 1.4 / 5.7 / 24.6 / 37.4 / 37.4 (Spiel eingefroren, s_stage 4/5) | gleich |
+| **F494** | `[scd] F494 @0x0E64 op=0x2B` (Faden parkt weiter) + **`[tagebuch] Leser zu: Bit (9,68)=1, Kartenkette sofort (Runde 39 Spur H): Eintrag 3 (ROOM10F1 Blatt 3 Rechteck 9) -> Folge 4 (ROOM1211 Blatt 1 Rechteck 3)`** | `[tagebuch] Leser zu: … Kartenkette nach dem Evt_end` + `@0x0E68 op=0x02` (Faden laeuft weiter) |
+| F495-F497 | **Oeffnen-Blende des Hinweises** 8.7 / 2.3 / 0.2; F498-F505 schwarz | **F495 `@0x0E6A op=0x3F` Plc_motion(1,11)+0x80 (Aufrichten), Sleep 30 — Raum 32 Bilder sichtbar (37.4) bis F525** |
+| **F504 / F507-F510** | **`[hint] F504 begin`**, Karte blendet ein 0.6 → 47.4 (Bild F507/F512: "POLICE STATION 2F", Marker-Rechteck, blinkend) | F525 `@0x0E76 Plc_ret`, `@0x0E82 Evt_end` + `[tagebuch] Evt_end erreicht: Kartenkette …`; F526-F536 Blende; **F535 `[hint] begin`**, Karte ab F541 |
+| F622 / F740 | Folge-Hinweis 3 → 4 (Prison) / schliessen | F653 / F771 |
+| **F754/F755** | `[tagebuch] Hinweis zu: Faden laeuft hinter dem Message_on weiter`, `@0x0E68`; **F755 `@0x0E6A` Plc_motion(1,11)+0x80 = Aufrichten ERST JETZT**; F785 Plc_ret @0x0E76, Aot_reset @0x0E78, Evt_end @0x0E82 | (Aufrichten lag VOR der Karte) |
+| msg 18 | kein `[msgtext] room=1011 id=18` (Code-Nachricht bleibt ersetzt) | gleich |
+
+STATE_LOG neu, nur Aenderungen: F61 pst=4 mo=200 … F487 pst=1 mo=210 … (unveraendert bis) F754 pst=1 mo=200, F755 pst=4,
+F785 pst=1 pm=1. Position (-1857,6552,rot 3072) in allen Bildern gleich. Zwischen Tagebuch (F494) und Karte (F504)
+laeuft kein Spieler-Tick: F487-F493 Statusschirm-Stufen 4/5 (`re15_menu_gameplay_frozen`), F494 Annahme der Anforderung
+im game_step VOR dem Spieler-Tick (game_step_common.c:1328-1331, danach `frozen` → return vor Zeile 1729), F495-F753
+Hinweis-Schirm. **Kein Bild mit Steuerung vor der Karte.** Basis: 31 Bilder Raum mit laufender Szene (Aufrichten,
+Plc_ret, pm=1 ab F525) VOR der Karte — der Nutzer-Befund; der Fix (Anforderung beim Schliessen des Dokument-Schirms
+statt am Evt_end, Faden parkt auf dem Message_on) erklaert ihn vollstaendig.
+Beobachtungen (kein Mangel des Punkts): (a) zwischen Dokument-Abblende und Hinweis-Blende sind 5 Bilder Rueckblende des
+Raums sichtbar (F490-F494, davon 2 voll hell = 1/15 s) — RE2-Form (Status-Task startet aus dem Spielbild, kein
+Verketten zweier Schirme); der Nutzer sieht also kurz den Raum, aber keine Szene und keine Steuerung. (b) Der Kamera-Cut
+dieses Spielstands zeigt in F490-F494 den Tisch, Elza ist nicht im Bild — in der Basis genauso (F492-F520), Eigenheit
+des Cuts/Spielstands, nicht der Spur. (c) F754: ein Bild Idle-FSM (pst=1) zwischen Hinweis-Ende und Plc_motion — der
+r38-Stand hatte dieselbe Luecke (Basis F494→F495), liegt NACH der Karte.
+**Urteil Punkt 2: erfuellt** (Karte mit Marker direkt nach dem Schliessen des Tagebuchs, vor jeder Rueckgabe der
+Steuerung; Zeitpunkt NUTZER-VORGABE, Form RE2 0x84 wie gekennzeichnet).
