@@ -110,7 +110,7 @@ motion(CLIP_HALTEN, "Plc_motion(0,11)  Arm vorn auf die Konsole = Elzas Druck au
 flg(0x04, "Plc_flg(0,4)  Pose halten (@0x029A8)")
 sleep(20, "Sleep 20  Hand erreicht die Taste (@0x029AC)")
 marke["ZEILE1"] = len(prog)
-message(MSG_HALLO, "Message_on 40  Elza: Hello, anyone, can you hear me? / We Need help!  (NUTZER-VORGABE)")
+message(MSG_HALLO, "Message_on 40  Elza: Hello, anyone, can you hear me? / We need help!  (NUTZER-VORGABE)")
 sleep(100, "Sleep 100  Zeile gesprochen, Taste gehalten (Elzas Zeilentakt @0x02A14)")
 marke["LOSLASSEN"] = len(prog)
 motion(CLIP_ARM, "Plc_motion(0,0)  Arm senken (@0x029BE)")
@@ -123,7 +123,7 @@ sleep(5, "Sleep 5  (@0x02A36)")
 neck_umsehen("Plc_neck Modus 4  3 Schwuenge: horchen/sich umsehen, keine Antwort (@0x02A3A)")
 sleep(100, "Sleep 100  (@0x02A44)")
 marke["ZEILE3"] = len(prog)
-message(MSG_KAPUTT, "Message_on 42  Elza: Uhh, this Thing is broken!  (NUTZER-VORGABE)")
+message(MSG_KAPUTT, "Message_on 42  Elza: Uhh, this thing is broken!  (NUTZER-VORGABE)")
 motion(CLIP_STIRN, "Plc_motion(0,12)  Hand an die Stirn (@0x02A00)")
 sleep(100, "Sleep 100  (@0x02A04)")
 marke["SCHWANZ"] = len(prog)
@@ -138,9 +138,9 @@ op([0x01, 0x00], "Evt_end  (@0x02A58)")
 ELZA_KOPF = bytes([0x04, 0x00, 0x05, 0x01]) + T.enc("Elza") + bytes([0x16, 0x05, 0x00, 0x00])
 ENDE = bytes([0x04, 0x01, 0x01, 0x63])
 NACHRICHTEN = [   # (id, [Zeilen])  -- NUTZER-VORGABE woertlich (AUFTRAG.md); Umbruch = Port-Satz unter dem Budget
-    (MSG_HALLO,  ["Hello, anyone, can you hear me?", "We Need help!"]),
+    (MSG_HALLO,  ["Hello, anyone, can you hear me?", "We need help!"]),
     (MSG_PUNKTE, ["..."]),
-    (MSG_KAPUTT, ["Uhh, this Thing is broken!"]),
+    (MSG_KAPUTT, ["Uhh, this thing is broken!"]),
 ]
 
 
