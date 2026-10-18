@@ -561,3 +561,40 @@ Arbeitsordner der Messungen: Scratchpad `nb2/` (nicht im Baum).
 - [ ] Umsetzung: Zone 1 von ROOM1210/1211 + Schema-Zeichnung auf B2
 - [ ] Messung nachher (Sonde, echte exe, Sweep aller Blaetter gegen Abnahme 1)
 - [ ] Riegel, Bau, gezielte Tests, Abschluss
+
+### N1 Messung vorher (Stand b1da8c01/0c1ded3c, Bau der Abnahme; die Abnahme-Zahlen bestaetigt, nicht neu erhoben)
+`probe_r39_karten markerflaeche 1210 0 -25800 -2200 0 100 1` (echter Kollisionsloeser, jeder Rasterpunkt):
+`10387 begehbare Rasterpunkte, 10387 geprueft, Marker x 191..224 y 74..128, ausserhalb der Zeichnung 1693` - alle in der
+Kammer (Beispiele Welt (-25128,-26240) -> (193,128) Index 0). `probe_r39_karten marker 1210 -25500 -21700 0 0`:
+`Zone Blatt 1 rect 3 zid 34, Marker (192,118), Kachel-Index am Marker 0` = Ring (191,117) der echten exe (Abnahme
+Abschnitt 6, Sonde = exe + (1,1)). `probe_r39_karten flut 1210 0 -25500 -21700 450 100`: die Kammer haengt an der
+Flurflaeche (10387 Punkte, eine Komponente), Kammer-Mitten x -26828..-22928, z -26240..-20440; Durchgang z -22040..-21340.
+
+### N1 RE-Belege (selbst gelesen)
+* **Begehbar im Original, eigene Kameras.** ROOM1210.RDT RVD (Zeiger RDT+0x28 = 0x188, 20 B je Eintrag): @0x002DC
+  Schnitt 5->6 genau in der Oeffnung (x -22000..-21300, z -23500..-19500), @0x002F0 Schnitt-6-Bereich (x -28600..-17300,
+  z -27800..-17200), @0x00304 6->5 (x -21200..-20300), @0x00318 6->7 in der Kammer (z -24260..-23419), @0x0032C
+  Schnitt-7-Bereich, @0x00340 7->6. Das Original fuehrt fuer die Kammer ZWEI eigene Kameraschnitte (6, 7) - sie ist ein
+  gewollter, begehbarer Teil von ROOM1210, kein Kollisionsloch.
+* **Keine Sperre im Skript.** main00 (@0x01CC6..@0x01E9C, Laengen wie scd_opcode_size_at): sechs Door_aot_set 0x3B
+  (@0x01CC6 -> ROOM11E0, @0x01CE6/@0x01D06/@0x01D26/@0x01D46/@0x01D66 -> ROOM1220 Schnitte 0/2/4/6/8 = die FUENF Zellen)
+  - fuer die Suedwest-Zelle gibt es KEINE Tuer; Obj_model_set 0x2D @0x01E4E Objekt 0 an (-21750,0,-20760) rot 1216 =
+  `2d 00 00 00 01 00 0a 00 10 00 0a ab 00 00 e8 ae 00 00 c0 04 ...` mit Kollisionsbox 0 (Bytes 22..33 = 0) = die
+  aufgeschwenkte Zellentuer am oberen Ende der Oeffnung; kein 0x37/0x38 (SCA-Schalter) in main00/sub00..02.
+* **Die Kammer ist die dritte West-Zelle, offen.** Seiten-Tabelle B2 @0x800762F4 (10 Eintraege, selbst gelesen): r4
+  (187,78) / r5 (187,95) West-Zellen, r6/r7/r8 (212,78/95/112) Ost-Zellen von ROOM1220; an der Stelle (187,112) fehlt die
+  sechste. ROOM1210-Zeile @0x800769B8 = `b1 00 8c 00 c0 09 ca 08` = (177,140,2496,2250), MAP02.PIX r3 uv(96,48) malt dort
+  nichts (Index 0 auf x186..200 y113..128). RE1.5 unfertig -> Beta -> Retail (Orchestrator-Entscheid).
+* **Waende -> Linien** (FUN_800473f8 @0x8004741c-0x80047528 mit der Zeile @0x800769B8, nb2/proj.py; gemalte Linien
+  MAP02.PIX Index 4, selbst gelesen):
+  - West @0x01BEC x -28908..-27358 -> px 184..188 -> Linie x186 = Ostwand von r9 (10A0 B2, Index 4 auf x186 y101..121);
+  - Nord @0x01BF8 z -19898..-17948 -> py 114..110 -> Linie y112 = Unterkante von r5 (Index 4 x187..200) + r9 (186,112);
+  - Sued @0x01BE0 z -28496..-26696 (x -28928..-16328, dieselbe Zelle unter dem Flur) -> py 132..129 -> Linie y129 = die
+    Flur-Unterkante von r3 (Index 4 ab x201);
+  - Ost @0x01C40 x -22397..-21185 z -27560..-22520 und Flur-Westwand @0x01BC8 x -22150..-21090 z -20746..-4084 -> px
+    200..203 -> Linie x201 = r3 Spalte 14 (Index 4 auf y110..129);
+  - Oeffnung: @0x01BC8 endet bei z -20746 -> py 116, @0x01C40 beginnt bei z -22520 -> py 120 -> Durchgang = x201 y117..119.
+  - Hindernisse IN der Kammer (keine Waende, Memory reai-v2-hindernis-ist-keine-wand): @0x01C64 x -28208..-25652
+    z -27794..-23402 (Pritsche), @0x01C58 x -25291..-21644 z -20795..-18995 (Bank an der Nordwand), Kreis @0x01C4C.
+  - Marker: Kammer-Mitten x -26828..-22928 -> px 189..199, z -20440..-26240 -> py 115..128 = im Innenraum x187..200
+    y113..128; Durchgang z -21196..-22070 -> py 117..119.
