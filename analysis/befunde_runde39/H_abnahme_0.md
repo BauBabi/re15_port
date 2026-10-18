@@ -54,3 +54,46 @@ Original-Gesetz ist: 51/558 auf dem Spielerband).
 * Tests je Punkt vorhanden und messend (s. §0).
 
 (Fortsetzung: §3 Messungen je Punkt, §4 Urteile, §5 Maengel — werden nach jedem gemessenen Punkt ergaenzt.)
+
+## 3. Messungen je Punkt (selbst, an der exe)
+
+### Punkt 1 — ROOM1031 erste Szene: Hand nur einmal heben
+Werkzeug: `analysis/befunde_runde38/E_elzaintro_werkzeug/e_lauf.sh` (Neues Spiel ueber Titel + Figurenwahl Elza,
+`RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, `RE15_NO_INTRO=1`, eigene exe-Kopie `re15_pc_r38e_<pid>.exe`), dazu
+`RE15_SCD_TRACE=1 RE15_STATE_LOG=state.txt RE15_ANIM_TRACE=anim.txt`, Bildserie `RE15_FRAMEDUMP=440-560/2` (Skala 1,
+Waechter `e_waechter.py` benennt je Raumabschnitt um), `RE15_EXIT_AT=600#1031`. Auswertung je Bild (Scratchpad
+`abn/abn_p1.py`: ROOM1031-Block = letzter Block von state.txt/anim.txt, Bildnummern wie im Dossier; `abn/p1_neu/`,
+`abn/p1_basis/`). Zwei Laeufe: **neu** = exe dieses Baums (HEAD), **basis** = v0.8.26-Paket-exe
+(`release/pkg-win/re15_port_v0.8.26/re15_pc.exe`, sha256 a5a1c016…, als Kopie neben der Baum-exe, gleiche Assets).
+
+| Bild | SCD (beide Laeufe gleich) | **neu**: pst / mo / Pose (anim mo clip cur slot rev) | **basis v0.8.26** |
+|---|---|---|---|
+| F445 | Cut_chg(4) | pst=1 mo=210 (Settle, cur 0) | gleich |
+| F446-F450 | Selbsttuer-Blende, pf=FF000007 | mo=210 (kein Spieler-Tick) | gleich |
+| **F451** | **Plc_motion(0,11)+Plc_flg 0x04** @0x029A4/@0x029A8 | **pst=4 mo=11, clip 11 fc 2 cur 0 slot 0** | **pst=4 mo=210** (Latch 1 ueberschreibt Clip 11) |
+| F452-F490 | Sleep/Plc_neck/Sleep | mo=11, cur 1..39, **slot 1 konstant** (Haltepose, Schleife) — 39 Ticks, 0 abweichend | **mo=200** (Latch 2, Idle) ab F452 — Clip 11 nie posiert |
+| **F491** | **Plc_motion(0,0)+Plc_flg 0x80** @0x029BE/@0x029C2 | mo=0 clip 0 fc 20 cur 0 **slot 19 rev=1** (Senken beginnt) | gleich (slot 19 rev=1 = Arm springt per Blende nach oben = "Hub 1" der Basis) |
+| F492-F510 | | slot 18 → 0 rueckwaerts; F511-F520 slot 0 gehalten (30 Bilder rev=1, 0 vorwaerts) | gleich |
+| **F521** | **Cut_chg(6)** @0x029CA + Plc_dest(0,9) @0x029CC | **mo=105 clip 5 cur 0** (TURN-Sub-Init) | **mo=0 clip 0 cur 30 slot 10 rev=0** → F522-F528 slot 11..17 = **Clip 0 VORWAERTS, Arm steigt erneut ("Hub 2")**, erst F529 mo=105 |
+| F522-F530 | | mo=105 cur 1..9 (Drehung mit Lauf-Clip) | s.o. |
+| F531 | | mo=1 clip 1 cur 1 (EIN Bild Sub-6-Pose, Blende 7 → optisch 1/8-Schritt; vorher ebenso) | gleich (mo=1) |
+| F532-F560 | Plc_dest(0,4) | mo=105 cur 0..28 (Gang zum Gitter) | gleich |
+
+Zaehlung (Skript): neu — "Haltephase F452..F490: 39 Ticks mo=11/pst=4, abweichend: []", "Senken F491..F520: 30 Bilder
+Clip 0 rueckwaerts", "**Clip 0 VORWAERTS ab dem Senken bis F560: 0 Bilder**"; basis — "Haltephase: 0 Ticks mo=11
+(452..: pst=4 mo=200)", "**Clip 0 VORWAERTS: 8 Bilder F521..F528 (slot 10..17)**".
+Bilder (Ausschnitt um Elza, je 2. Bild): `abn/p1_neu_cut4.png` — F450 Arm unten, F452-F458 Arm steigt (7-Bild-Blende),
+F460-F490 Arm oben statisch, F492-F508 Arm sinkt, F510-F520 unten; `abn/p1_neu_cut6.png` — F522-F560 Drehung + Gang,
+Arme in Laufhaltung, **kein zweiter Hub**. Basis: `abn/p1_basis_cut4.png` — F452-F490 Arm UNTEN (der erste Hub fehlt),
+F492-F498 Arm oben (Schnapp), sinkt bis F510; `abn/p1_basis_cut6.png` — **F522-F528 Arm erneut oben (zum Gitter
+gestreckt)**, ab F530 Gang. Die Basis zeigt damit genau "hebt 2x, laesst einmal fallen"; der Fix erklaert BEIDE Hube:
+(1a) Latch 1/2 ueberschrieb Clip 11 im Bild des Plc_motion — Kommandowort 4 (`sb v1(=4),4(v0)` @0x80041bb0) macht
+sie hinfaellig, weil der Dispatcher ab dann nur noch 0x80073f90[4] laeuft; (1b) der Walker liess Clip 0 vorwaerts
+weiterlaufen, waehrend die Original-Subs 4/5/9 in Phase 0 Clip 5 setzen (@0x80030b58/@0x80030d90/@0x800313a4 — selbst
+disassembliert, s. §1).
+**Urteil Punkt 1: erfuellt.** Ein Heben (F451, 7-Bild-Blende), 40 Bilder halten, ein Senken (F491), danach Drehung
+und Gang ohne weiteren Hub — Nutzer-Wortlaut zum Original. Rest-Notiz (kein Mangel des Punkts, vorher ebenso): F531 ein
+Bild Sub-6-Clip-1 zwischen TURN-Ankunft und WALK-Start; das Original setzt in Sub 6 Phase 0 ebenfalls +0x94 := 1 /
++0x8f := 7 (@0x800517f0: `sb v1(=1),148(v0)` @0x80051854, `sb v0(=7),143(v1)` @0x80051874), die Frage ist nur, ob
+der SCD-Poll (sub14 `Ck(5,32)` @0x02A62) im Original VOR dem Dispatcher des Folgebilds laeuft — eigener RE-Punkt,
+nicht Teil des Wortlauts.
