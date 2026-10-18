@@ -215,6 +215,29 @@ CD_VOL 13652, 1141 `entry=FF56 -> MAIN16` und kein "NICHT angewandt", "John gere
 (sub01 @0x00C06), 1171 `entry=5572 -> MAIN32`, keine `[johnruf]`-Zeile und kein FF01 mehr.
 
 ## 5. Tests
+Neu (tests/unit/probes/r39_johnruf1041.cmake, tests/unit/test_r39_johnruf1041.c, tests/integration/test_r39_johnruf1041.cmake):
+| Test | misst | Nutzer-Punkt |
+|---|---|---|
+| unit_r39_johnruf1041_texte | msg 40 dekodiert = "Elza: Oh, no, this is John! He is in trouble, I have to help him!", Form ROOM1041 msg 2 | Satz |
+| unit_r39_johnruf1041_programme | RUF1041: Set(2,7) zuerst, help03/help02 mit Xa_vol 50, Plc_dest Modus 9 zur Treppe, Xa_vol 120 vor msg 40, msg 40 -> 59 -> Set(9,97) -> frei; Pause >= 59 Bilder; 54 B Original-Zeilen bytegleich mit ROOM1041.RDT sub11; RUF1131: Xa_vol 100 > 50, keine Pad-Sperre | leise, Satz, Karte, Musik, 1131 |
+| unit_r39_johnruf1041_stimme | (1041/1131, 53..57) -> room1141/help01..05; 40 -> room1041/main40; 1141/Leon unveraendert | Rufe, Stimme |
+| unit_r39_johnruf1041_xa | 0x5F nur in den Programmen (pc+2), sonst op_unknown (pc+1); CD_VOL 0x3FFF*vol/120; Raumaufbau 120 | leise/lauter |
+| unit_r39_johnruf1041_ablauf | 1041 am VM mit allen Installern: nur mit (4,0xF0)=1/Bit 97=0; Sperre ab Bild 1, kein freies Bild bis Bit 97; Stimmen 55/54 mit 50, 40 mit 120; Blick 923 (Soll 924); Hinweis Eintrag 5 nach msg 40, Schirm Blatt 4 Rechteck 6; Bit 97 nach dem Schliessen, frei im selben Bild; Musik-Anstoss Raum 0x04; Wiederbetreten ohne Wiederholung | alle 1041-Saetze |
+| unit_r39_johnruf1041_musik | Weiche 0xFF01 fuer 1041/1061/1121/1131/1031, -1 fuer 1141 und STAGE2; Sperre nur Slot 0; Kartenziel 1141 aktiv; Kampf (F2=1) haelt Bit 97, Rettung loescht es + Tabellen-Musik einmal; Laden in der Phase (1061) | Musik, Rettung, Laden |
+| unit_r39_johnruf1041_ruf1131 | Flanke Bit 97 setzt den Ruf zurueck; ohne Phase / F0=0 kein Ruf; ein Ruf help02 mit 100, keine Sperre; Wiederbetreten kein zweiter | 1131 |
+| unit_r39_johnruf1041_leon | Leon ROOM1040 mit denselben Flags: nichts, Weiche -1 | Leon unveraendert |
+| integration_r39_johnruf1041_a | echte exe, Spielstand 1021 + CONTINUE, Tueren 1021 -> 1041 -> 1061: Folge, Blick, FB_SHOT, FF01 in 1041 und 1061, Pegel 3 Zeilen | 1041-Saetze, Musik |
+| integration_r39_johnruf1041_b | echte exe, Spielstand 1121 mit Bit 97: MAIN01 nach dem Laden, 1131 ein Ruf (Pegel 100), 1141 MAIN16 + Rufe 120, Rettung hinter dem MAIN16-Stopp, 1171 MAIN32 | 1131, Rettung, Laden |
+Angepasst: tests/unit/test_r36_kartenbits.c k_port[] + Bit 97; tests/unit/test_r38_tagebuch.c teil_karte: Tabelle hat 6
+Eintraege (+ ROOM1041 -> ROOM1141 hinter den Eintraegen der Spur G) - vorher pinnte er 5.
+
+Laeufe (Bau am Endstand, gezielt, keine volle Suite):
+- `ctest --test-dir re15_port/build -R "r39_johnruf1041" --timeout 3600 --output-on-failure -j 2` ->
+  "100% tests passed, 0 tests failed out of 10" (integration a 90,20 s, b 326,89 s).
+- ALLE Unit-/Prop-/Sonden-Riegel `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" --timeout 600 -j 4` ->
+  "99% tests passed, 1 tests failed out of 850" (1370 s); rot nur unit_r38_tagebuch_karte = Pin der Hinweis-Tabelle auf 5
+  Eintraege (mein Eintrag 5 ist neu) -> Riegel nachgezogen (3e772251), danach
+  `ctest --test-dir re15_port/build -R "unit_r38_tagebuch" --timeout 600` -> "100% tests passed, 0 tests failed out of 4".
 
 ## 6. OFFEN
 - Spur J (parallel, Zweig r39/dining1141): entfernt Elzas Reaktion msg 50 in 1141 (Nachtrag 10). In diesem Baum laeuft sie
