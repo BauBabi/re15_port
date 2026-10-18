@@ -442,3 +442,11 @@ Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r
 - Neue Sprachdateien wie bisher moeglich: main50/51/52.wav (Texte jetzt "trouble" / "gorilla" klein).
 - Entscheidungsfragen: (1) Soll ein Gorilla John auch angreifen koennen (dann braucht John Treffer-/Todesverhalten, das
   RE1.5 nicht hat)? Jetzt: nur Zuwenden/Hinkriechen. (2) Takt "ab und an": jetzt alle ~12 s eine Salve - passt das?
+- Integration erster Durchgang (Stand 25e1e2d5 + Lenkziel-Pruefung, `ctest -R "integration_r39_dining1141_d|integration_r38_dining1141|integration_r35_cut10f0|integration_r38_heliport1171_weg_re15|integration_r39_stimmen_1171|integration_r38_rekorder|integration_r38_elzaintro_stimme|integration_r37_elzaems_elza1141|integration_r36_elza_schuss" -j 2`):
+  "87% tests passed, 2 tests failed out of 15" - rot NUR r39 D und r38 S: beim Umbau der Wegplaene war der vierte
+  Druck am Gemaelde ("ja") verloren gegangen (Lauf r39 D: msg 13 1869 Bilder offen, (3,0x6A) blieb 0). Behoben 4aaece87;
+  alle 13 anderen gruen (cut10f0 302 s, rekorder 304 s, r38 R/W/Z/L/A/D, elzaintro, heliport_weg, stimmen_1171,
+  elzaems_elza1141, elza_schuss).
+- Nach dem Cut-7-Schnitt (fe0c7a97) Unit erneut (Regex oben): "100% tests passed, 0 tests failed out of 122".
+- Port-Bank 0x3E (Hinweis H7 der Abnahme): master enthaelt Spur I (68bfe620); ausser dining_r39 belegt keine Datei 0x3E
+  (`git grep` auf master: nur 0x3A Spur 36 J) - kein Konflikt.
