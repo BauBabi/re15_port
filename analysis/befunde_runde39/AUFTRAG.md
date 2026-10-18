@@ -105,3 +105,10 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
 - "Zu 4. 15 Schuss - die Halbierung." (Spur C: Spind ROOM1000 = 15 Schuss -> bleibt)
 - "Zu 5. Ja, alles was ein Zahlenammount hat, soll stapelbar sein, auch in der Kiste." (Spur C: Granaten stapeln; die Kiste
   nutzt dieselbe Regel re15_inventar_r39_stapelt, re15_itembox.c:102 -> erfuellt, nichts zu tun)
+
+## Nachtrag 4 des Nutzers (woertlich, 2026-10-18 19:25, ROOM1141 - fuer Spur J)
+
+- Bei ROOM 1141 soll Elza das Rolltor öffnen und dann noch ganz normal laufen können.
+- Erst wenn sie danach die Tür entriegelt soll die Cutscene losgehen mit John. Am besten rennt sie dann bis zur Szene mit den anderen Kamera, die nicht mehr Richtung Tür zeigt, dreht sich dann zur Tür und hebt die Waffe. Dann kommt alles das, was jetzt schon drin ist. Tür knallen, sicht auf John usw.
+- John sollte auch ab und an mal auf die Gorillas schießen in ROOM 1141 und dann ihre Aufmerksamkeit erhalten, sonst ist es komisch
+- John sollte am Ende der Cutscene in ROOM 1141, bevor sie den Raum verlassen nicht die Waffe auf Elza richten, sondern das heranwinken/Folge Animation abspielen stattdessen....
