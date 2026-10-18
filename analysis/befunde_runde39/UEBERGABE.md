@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:19: WELLE 3 GESTARTET auf master 1038dc15 (= Welle 1 + A1; Welle 2 liegt nur in r39_integration 4e2177bd,
+  deren H+F+D-Tests laufen dort noch, E-Tests danach). Baeume r39_{karten,funk10f1,dining1141,heliport1171}, je Spur ein
+  Lauf, Resume nur mit args `{"welle": ["<X>"], "slots": 1, "max_nach": 1, "basis": "1038dc15"}`: G karten wf_3fcc8bff-38e,
+  I funk10f1 wf_2873e9d0-624, J dining1141 wf_af6323a2-e39, K heliport1171 wf_dcbbfeac-cdc. Danach: Welle 2 -> master +
+  Hauptbaum-exe, Welle-2-Baeume entfernen; Welle 3 in die Integration, volle Suite, Release v0.8.27.
 * 2026-10-18 14:14: Spur E gegner BESTANDEN nach Nachbesserung 1 (Fix f20734fa): Parking-Lot-Gorillas ROOM11C0 HP 360
   (Saat 180 @0x8011f514 x2) + Flinch erst ab 36 Energie (= 3 Pistolentreffer a 12 @0x8006ee44; NUTZER-VORGABE), Ein-
   Angreifer-Riegel der RE2-Hunde (ori 0x80 @0x801051f8; 11C1 Doppelbiss F1008/F1019 weg), Kriecher 0x81 in 1010/1011 +
