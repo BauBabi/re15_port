@@ -78,8 +78,10 @@ void re15_karte_r39_fenster(const void *zone, int wx, int wz, int *lo_x, int *hi
  * (RE2: jede Raum-Kachel traegt die Tuer auf ihrer eigenen Wand). Belege in karte_r39.c. NULL = unveraendert. */
 void re15_karte_r39_tuer_lage(const void *inv_screen, unsigned page, int kind, int *mx, int *my);
 
-/* Riegel-Zugriff: Zahl der Texel-Korrekturen und ein Eintrag. traeger = Rechteck derselben Seite,
- * dessen Wandlinie die geloeschte ersetzt; 255 = gilt immer (Nachbesserung 1, M3). */
+/* Riegel-Zugriff: Zahl der Texel-Korrekturen und ein Eintrag. traeger = 0..63 Rechteck derselben Seite,
+ * dessen Wandlinie die geloeschte ersetzt (gilt nur mit ihm); 255 = gilt immer (Nachbesserung 1, M3);
+ * 128 + s / 192 + s = Schema-Zeichnung s (Umriss zaehlt / nur mit Koerper, Nachbesserung 2);
+ * 64 + t = gilt nur, wenn Rechteck t NICHT gezeichnet wird (R39_OHNE, Nachbesserung 3). */
 int re15_karte_r39_korrektur_zahl(void);
 int re15_karte_r39_korrektur(int i, int *page, int *rect, int *c, int *r, int *w, int *h, int *neu, int *traeger);
 
