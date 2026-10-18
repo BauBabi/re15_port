@@ -16,7 +16,7 @@ Wortlaut des Nutzers:
       "echt" (echter Kampfausgang) und "vorher/nachher" (Szene + Kampf identisch)
 - [x] RE-Gate (6 Adressen selbst disassembliert, alle RDT-Zitate selbst gelesen)
 - [x] Vertrag / Pfade / Nebenwirkungen
-- [x] Modulgruppen 133/133, 11C0/11B0-Nachbarn an der exe (7 gruen, integration_r39_stimmen_11b0 haengt -> M1)
+- [x] Modulgruppen 133/133, 11C0/11B0-Nachbarn an der exe (9 gruen, integration_r39_stimmen_11b0 2x rot -> M1)
 - [x] Urteil: Nutzer-Punkt erfuellt; NICHT bestanden wegen M1 (Gate Tests/Nebenwirkungen)
 
 ## 1. Riegel der Spur (selbst gefahren, Spurbaum, gezielt)
@@ -117,6 +117,10 @@ Selbst gefahren (Spurbaum, `-R "^integration_r39_stimmen_11b0$"` innerhalb des N
 ```
 ctest: `8/8 Test #1009: integration_r39_stimmen_11b0 ......***Failed  600.39 sec` — `r39_stimmen_11b0: Text msg 20 fehlt im Log:
 Marvin: But, hold on\.\.\.` (test_r39_stimmen.cmake:179); Summe des Nachbar-Laufs `88% tests passed, 1 tests failed out of 8`.
+Einzeln nachgefahren (`-R "^integration_r39_stimmen_11b0$"`, ohne Parallel-Last aus diesem Baum): identisch
+`1/1 Test #1009: integration_r39_stimmen_11b0 .....***Failed  600.38 sec`, dieselbe Meldung; debug.log
+`re15_port/build/r39_stimmen_wd/lauf_11b0_328f3a09/debug.log` wieder `[parkplatz] F0 ... Programm SZENE` und
+`F60 ... Tuer im Kampf -> msg 40` — deterministisch, keine Last-Folge.
 Ursache (selbst gemessen, Pruefstand SP `abn0/pruef/abn0_inkons.c`, gleiche Flags, einmal mit, einmal ohne Spur O gelinkt):
 ```
 == nachher (mit Spur O)
@@ -187,7 +191,8 @@ Werkzeug `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` auf `info/Re1.5
   unit_r35_affen_szene, unit_r39_gegner_1141_ablauf1141 = echter Gorilla-Tod -> Kill-Bits in 1141, unit_r38_dining1141_*).
 - 11C0/11B0-Nachbarn an der exe (`-j 2`): integration_r37_szene11c0 Passed 135,8 s, integration_r38_montage 115,1 s,
   integration_r36_szene1150 125,4 s, integration_r36_schluessel 124,0 s, integration_r39_gegner_schatten 67,5 s,
-  integration_r35_cut1150 575,4 s, integration_r38_werkstatt11b0 175,0 s — gruen; **integration_r39_stimmen_11b0 haengt in
+  integration_r35_cut1150 575,4 s, integration_r38_werkstatt11b0 175,0 s, dazu einzeln integration_r35_granate (Lauf
+  "raute" in 11C0) 165,1 s und integration_r35_cut10f0 (Teil E endet in 11C0) 242,9 s — gruen; **integration_r39_stimmen_11b0 haengt in
   ROOM11C0 (Abschnitt 2.7, Mangel M1)**.
 - Weitere Nebenwirkung geprueft: Kartenmarker-Zug (re15_inv_screen.c `tuer_anziehen`, nur DOOR-Slots auf Grundriss-Blaettern)
   greift waehrend der Sperre an der 11C0-Tuer nicht — kosmetisch, wie bei jeder Original-Text-Tuer (z. B. 11B0 Slot 1 ohne
@@ -202,7 +207,7 @@ Werkzeug `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` auf `info/Re1.5
 - RE-Gate: **haelt** (Abschnitt 3; 6 Adressen + alle RDT-Zitate selbst gelesen, 0 Rate-Woerter, NUTZER-VORGABE/PORT-WAHL
   gekennzeichnet, Fix erklaert den gemessenen Befund).
 - Vertrag (Ressourcen/Pfade): **haelt** (Abschnitt 4; Id 40, kein Bank-9-Bit, nur erlaubte Pfade, Haken 2-4 Zeilen).
-- Tests/Nebenwirkungen: **haelt NICHT** — Spur-Riegel 7 + 4 gruen, Modulgruppen 133/133, sieben 11C0/11B0-Nachbarn gruen, aber
+- Tests/Nebenwirkungen: **haelt NICHT** — Spur-Riegel 7 + 4 gruen, Modulgruppen 133/133, neun 11C0/11B0-Nachbarn gruen, aber
   `integration_r39_stimmen_11b0` (Spur A; dort laut A_stimmen.md:260 `Passed 102,39 s`) haengt mit Spur O in ROOM11C0 (M1). Der Querbezug-Lauf des
   Bau-Agenten umfasste nur unit_/prop_/probe_ und sechs 11C0-Integrationen ohne diesen Riegel.
 
@@ -218,6 +223,11 @@ Werkzeug `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` auf `info/Re1.5
   `re15_parkplatz_r39_kampf`/Installer), sonst `orig` zurueckgeben; Riegel fuer (4,64)=0/(3,67)=1 (keine Sperre, Tuer ->
   ROOM11B0) und `integration_r39_stimmen_11b0` danach gruen messen. Unabhaengig davon kann der Orchestrator die Karte des
   Spur-A-Riegels in den widerspruchsfreien Nach-Kampf-Zustand bringen (zusaetzlich `4:64`) — das ist Spur A's Datei.
+  Vorschlag selbst gegengeprueft (nur Scratchpad, Baum unveraendert): Kopie von parkplatz_r39.c mit der einen Zeile
+  `if (sub_id == RE15_R39O_SUB_SZENE && re15_game_flag_get(RE15_R39O_ENDE_BANK, RE15_R39O_ENDE_BIT)) return orig;`
+  (SP `abn0/pruef/parkplatz_r39_vorschlag.c`) vor die Bibliothek gelinkt: Zustand (4,64)=0/(3,67)=1 -> Slot 0 bleibt
+  `typ 1`, Druck -> Raumwechsel ROOM11B0; normaler Kampf (Pruefstand "echt") -> Text im Kampf, ENDE, msg 7, ROOM11B0,
+  `echt: 0 Fehler`.
 
 ## 9. Hinweise (ausserhalb der Spur O, kein Abnahme-Mangel)
 - **H1 Kill-Bit-Zeitpunkt im Port spaeter als im Original.** Original: der Gorilla-Bodentod setzt das Kill-Bit im ERSTEN
