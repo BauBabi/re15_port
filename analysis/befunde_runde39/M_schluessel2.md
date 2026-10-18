@@ -2,9 +2,12 @@
 
 Baum `.claude/worktrees/r39_schluessel2` (Zweig `r39/schluessel2`, Basis f70f6ec4). Vorstand: Spur L Punkt 2
 (`L_optik.md` Punkt 2, `L_abnahme_0.md` 3.x) — Schluessel 10F0/10F1 auf RE2-Bildgroesse (oberes Quartil `RE2_QUANTIL = 0.75`).
-Messwerkzeuge (Scratchpad, nicht im Repo): `r39_m_schluessel2/mess.sh` (Sprung-Weg wie `integration_r39_optik_schluessel`),
-`mess_continue.sh` (Spielstand + CONTINUE wie `integration_r38_itemorte` k_lauf), Auswerter `probe_r38_itemorte_kontrast`
-(Pixel mit |dR|+|dG|+|dB| > 30 zwischen "mit" und "ohne" (Taken-Bit gesetzt), Huelle, Sum|dL|, AUSSEN).
+Messwerkzeuge (Kopien in `M_bilder/`, Aufruf `bash mess.sh <exe-kopie> <ordner> [skalen]`): `mess.sh` (Sprung-Weg wie
+`integration_r39_optik_schluessel`), `mess_continue.sh` (Spielstand + CONTINUE wie `integration_r38_itemorte` k_lauf),
+`mess_r38.sh` (Szenen B2/B3/V3/V5 der Runde-38-Abnahme), `mess_aufnahme.sh` (Aufnahme Leon/Elza + Skala 2); Auswerter
+`probe_r38_itemorte_kontrast` (Pixel mit |dR|+|dG|+|dB| > 30 zwischen "mit" und "ohne" (Taken-Bit gesetzt), Huelle,
+Sum|dL|, AUSSEN). Messkopien der exe neben der exe des Baums: `re15_pc_r39m_vorher.exe` (Basis), `_nach.exe` (nur stetige
+Regel), `_nach2.exe` (Endstand).
 
 ## Punkt (Wortlaut des Nutzers, AUFTRAG.md Nachtrag 5, 2026-10-18 19:29)
 1. "Und die Schlüssel im Communicationsroom sind immer noch zu groß, die sollten maximal halb so groß sein."
@@ -40,15 +43,16 @@ Bild), Prison s 2,5623, 5,770 x 2,868 px; `--schreiben` erzeugt die committeten 
 Zeilenenden; `git diff` leer) — der Generator liest seine eigene Ausgabe nicht (Fixpunkt).
 
 **Grenze "maximal halb so gross" in den Messgroessen (Skala 3):** Parking Lot Key Huelle <= 7 x 4, Prison Key <= 8 x 5
-(Skala 4: <= 9 x 5 bzw. 11 x 7); Flaeche (Pixelzahl) dann ~1/4 (~17 bzw. ~16 Pixel bei Skala 3).
+(Skala 4: <= 9 x 5 bzw. 11 x 7); die Flaeche (Pixelzahl) faellt damit auf hoechstens etwa ein Viertel.
 
 ## Belege (Form der Nutzer-Vorgabe, Werkzeug-Kette)
 
 * **Zahl = NUTZER-VORGABE, kein RE-Wert:** Faktor 0,5 linear (`NUTZER_FAKTOR_M = 0.5` in
   `tools/r38_itemorte/itemorte_export.py`, `RE15_R39M_FAKTOR100 50` in `gen/itemorte_r38_lage.inc`) auf den Stand Spur L
   (RE2-Quartil-Groesse). "maximal halb so gross" ist eine OBERGRENZE: 0,5 linear haelt sie fuer beide Lesarten (Laenge 0,5;
-  Flaeche 0,25 <= 0,5). Genommen wird der GROESSTE Massstab, der sie einhaelt — "halb so gross", nicht kleiner, weil der
-  Schluessel sichtbar und aufnehmbar bleiben muss (Runde 38 "gut sichtbar", Runde 39 L "kleiner/subtiler").
+  Flaeche 0,25 <= 0,5). Genommen wird das GROESSTE Bild, das sie einhaelt (groesste zulaessige Stufe des GTE-Rasters,
+  s.u.) — nicht kleiner als noetig, weil der Schluessel sichtbar und aufnehmbar bleiben muss (Runde 38 "gut sichtbar",
+  Runde 39 L "kleiner/subtiler"); der Massstab ist die Mitte des Intervalls, das genau dieses Bild zeichnet.
 * **Form: Bildgroesse linear im Massstab.** Der Massstab steckt nur in den Ecken des gelieferten MD1 (@0x44, Runde 38 K;
   `schluessel_r36.c:359` liefert `re15_itemorte_r38_schluessel_md1`, kein Laufzeit-Massstab — `re15_itemorte_r38_schluessel_massstab`
   lesen nur Riegel). Die Projektion ist die GTE-RTPS `MAC0=(((H*20000h/SZ3)+1)/2)*IR1+OFX, SX2=MAC0/10000h`
@@ -89,7 +93,8 @@ Werkzeug mit nur der stetigen Regel (gezeichnete Huelle <= 0,5 x Spur L): Park s
 | Elza Skala 4 | 28 | x 547..556 y 322..328 (10 x 7) | 1215 | 22 x 14 -> 45 % / 50 % |
 
 (CONTINUE-Weg Skala 3/4 bitgleich.) Der Parking Lot Key ist in der HOEHE nicht halbiert (6 statt <= 4 Zeilen bei 960x720)
-und als Form zerfallen (Bild `vergleich_vor_nach.png`: Kopf als senkrechter Strich, Klinge fast weg). Die stetige Huelle
+und als Form zerfallen (Bild `M_bilder/m_s3_s4_vorher_stetig_maske_x8.png`, Spalten Spur L | Maske | stetige Regel |
+Maske: Kopf als senkrechter Strich, Klinge fast weg). Die stetige Huelle
 sagt das nicht voraus -> Mechanismus gesucht statt Zahl gedreht.
 
 ### Mechanismus: ganzzahlige Bildschirm-Ecken (GTE RTPT -> GPU-Polygon), gemessen und disassembliert
@@ -126,7 +131,9 @@ sagt das nicht voraus -> Mechanismus gesucht statt Zahl gedreht.
   `re15_camera_compose_view_bone`; `sicht` + RTPS + UNR-Tabelle `unr[i] = max(0,(0x40000/(i+0x100)+1)/2-0x101)` wie
   `re15_math.c`) trifft alle vier TRILOG-Vierecke Ecke fuer Ecke. Verlauf ueber s (Park, Mitte unveraendert):
   2 x 1 fuer s 0,7206..0,8941, 2 x 2 fuer 0,8941..1,2147, 3 x 2 fuer 1,2147..1,2207, 4 x 2 ab 1,2207 — ein 3 x 1-Viereck
-  gibt es an dieser Stelle nicht. Prison: 2 x 2 fuer 0,8135..1,1223, **3 x 2 fuer 1,1223..1,3286**, 4 x 2 ab 1,3286.
+  gibt es an dieser Stelle nicht. Prison: 2 x 2 fuer 0,8135..1,1223, **3 x 2 fuer 1,1223..1,3286**, 4 x 2 ab 1,3286
+  (Abtastschritt dieses Verlaufs 0,0005 x s_L; die Bisektion des Werkzeugs auf GLEICHE Ecken: Park 0,7195..0,8931,
+  Prison 1,1338..1,2809, s. Umsetzung).
 
 ## Umsetzung (Endstand, Commit f21c2ee8 + Abschluss)
 
@@ -141,8 +148,9 @@ bisher). Keine gemeinsame Datei angefasst, keine Bank-9-Bits, keine Nachrichten-
     Ganzzahl wie der Port-Prop-Zeichner (`gte_ecken`: pc_prop_rot_q12 fuer Vielfache von 1024 — `re15_trig_lut` dort
     selbst ausgelesen 0/+-4096 —, `re15_camera_compose_view_bone` Q12 mit einem `>> 12`, `objpoly_r38.c` `sicht` + RTPS
     mit IR-/SZ3-Saettigung, `gte_divide` = `re15_gte_divide` mit UNR-Tabelle `unr[i] = max(0,(0x40000/(i+0x100)+1)/2
-    - 0x101)`, Bildmitte 160/120 = `const int cx = 160, cy = 120` main.c:2077). Original: FUN_80022f0c RTPT @0x80022fb0,
-    SXY ins Polygon @0x80022fd8..e0.
+    - 0x101)`, Bildmitte 160/120 = `const int cx = 160, cy = 120` main.c:2077 = Original SetGeomOffset @0x8001643c
+    `ori a0,zero,0xa0` / @0x80016440 `jal 0x80066d60` / @0x80016444 `ori a1,zero,0x78`, selbst disassembliert). Original:
+    FUN_80022f0c RTPT @0x80022fb0, SXY ins Polygon @0x80022fd8..e0.
   - `s_oben` = groesster Massstab, der beide Grenzen haelt (Bisektion 40 Schritte, 0,1 x s_L .. 0,6 x s_L);
     `s_unten` = kleinster Massstab mit DENSELBEN ganzzahligen Ecken (Bisektion); geliefert `s = (s_unten + s_oben)/2` —
     jeder Massstab im Intervall zeichnet dasselbe Bild (gleiche ganzzahlige Ecken, gleiche UV), die Mitte haelt Abstand zu
@@ -164,8 +172,8 @@ bisher). Keine gemeinsame Datei angefasst, keine Bank-9-Bits, keine Nachrichten-
   - `--schreiben` erzeugt `gen/itemorte_r38_lage.inc` (RE15_R38K_PARK_S10000 24100 -> **8063**, RE15_R38K_PRISON_S10000
     25623 -> **12073**; neu `RE15_R39M_FAKTOR100 50`, je Schluessel `RE15_R39M_*_{SL_10000, L_BREITE/L_HOEHE/BREITE/HOEHE_PX1000,
     L_GTE_X0/Y0/B/H, GTE_X0/Y0/B/H, S_UNTEN_10000, S_OBEN_10000, MX100000, MZ100000}`; `RE15_R39L_*` beschreiben weiter den
-    Spur-L-Stand) und `gen/itemorte_r38_md1.inc` (die zwei MD1, nur die Ecken @0x44). Zwei Laeufe -> md5 gleich
-    (lage 491ce53f..., md1 44cf8b8c...): Fixpunkt, der Generator liest seine Ausgabe nicht.
+    Spur-L-Stand) und `gen/itemorte_r38_md1.inc` (die zwei MD1, nur die Ecken @0x44). Zwei Laeufe des Endstands -> md5
+    gleich (lage c289f40a..., md1 bb8c307a...; `git diff` leer): Fixpunkt, der Generator liest seine Ausgabe nicht.
 
 ## Messung nachher (Endstand, exe 4e0ead5b = `re15_pc_r39m_nach2.exe`, dieselben Laeufe wie "vorher")
 
@@ -193,3 +201,100 @@ der Parking Lot Key ist ein kleiner heller Schaft mit dunklem Kopfende in der ri
 zu einem senkrechten Strich gemacht), der Prison Key ein kleiner Ring mit Schaft — beide deutlich kleiner als die Zettel.
 Bei 320x240 (Skala 1) sind die Bilder mit und ohne Schluessel BITGLEICH (groesste Abweichung im Fenster 0, aussen 0;
 GTE-Vierecke 2 x 1 / 3 x 2 Bildpunkte): der Schluessel setzt dort keinen Bildpunkt mehr (vorher 7 / 5 Pixel).
+
+Skala 2 (640x480, nachgemessen fuer kleine Bildschirme; Sprung-Weg, CONTINUE bitgleich): Leon vorher 36 Pixel / x 272..280
+y 159..164 (9 x 6) / 1942 -> nachher 5 / x 275..277 y 161..162 (**3 x 2**) / 331 (33 % / 33 %); Elza vorher 26 / x 272..282
+y 159..165 (11 x 7) / 1500 -> nachher 9 / x 273..278 y 161..163 (**6 x 3**) / 504 (55 % / 43 %). Die Prison-Breite liegt bei
+640x480 einen Bildpunkt ueber der Haelfte, obwohl das GTE-Viereck genau halb ist (3 statt 6 Bildpunkte im 320er Raster):
+bei Spur L zeigten 11 der 12 Fensterspalten des Vierecks einen Unterschied > 30, jetzt alle 6. Bei 960x720 (Spielgroesse
+des Nutzers; Abnahme-Massstab der Spur L und dieses Auftrags) 50 % / 50 %, bei 1280x960 45 % / 50 %.
+
+**Aufnahme (echter Lade-Weg, `mess_aufnahme.sh`, Spielstand vor der Pinnwand (1300,-2900) Blick -z, Aktion -> Modal -> Ja,
+dritter Druck an derselben Stelle):** Leon `CONTINUE: resumed in room 10f0`, `Spieler-Familie PL00`,
+`[schluessel] PARKING LOT KEY genommen: Item 0x45, Bit (9,82)`, danach `[msgtext] room=10f0 id=4 "Several files from past
+cases.Nothing useful here."`; Elza `resumed in room 10f1`, `PL04`, `[schluessel] PRISON KEY genommen: Item 0x42, Bit (9,83)`,
+`[schluessel] Prison Key genommen -> Flag (4,0xEC) = 1 (Zelle ROOM1211)`, danach msg 4. Dazu gruen: `integration_r38_itemorte`
+K1/K2 (CONTINUE), `integration_r39_optik_schluessel` A1/A2 (Sprung), `integration_r36_schluessel` (s.u.).
+
+Endstand-exe nach dem letzten Bau (nur Kommentare der erzeugten Dateien geaendert, Commit d080c50d): `.text` und `.data`
+md5-gleich zur gemessenen `re15_pc_r39m_nach2.exe` (02595202... / 58e1af2f...); `.rdata` unterscheidet sich nur im
+Bau-Zeitstempel des Befund-Log-Kopfs ("20:25:37" statt "20:00:23"), dazu PE-Zeitstempel/Pruefsumme.
+
+## Tests (NEU registriert nur in `tests/unit/probes/r39_schluessel2.cmake`; keine CMakeLists angefasst)
+
+Neu (Mechanik je Grenze, plus echte exe):
+* `unit_r39_schluessel2_halb` — (1) am gelieferten Netz: MD1 + Prop-Lage/-Drehung durch die Engine-Kamera Cut 5, jeder
+  sichtbare Texel abgetastet; Stand Spur L aus dem RE2-Modell (info/re2leon) mit den Werkzeug-Ecken `rint((v - Mitte) x s)`.
+  Gemessen: Park 1,468 x 0,976 gegen 4,416 x 2,926 px (33,2 % / 33,4 %), Prison 2,706 x 1,327 gegen 5,748 x 2,844 px
+  (47,1 % / 46,6 %); Mitte unveraendert; 2221 / 1565 Abtastpunkte wie Spur L; geliefertes MD1 == RE2-Modell mit genau diesen
+  Ecken (alle anderen Bytes gleich).
+* `unit_r39_schluessel2_raster` — (2) mit den ECHTEN Engine-Funktionen (`re15_camera_build_view`, `re15_camera_compose_view_bone`,
+  `re15_objpoly_r38_tri_mesh`, Drehung wie `pc_prop_rot_q12`): Spur L 6 x 3 / 6 x 4, geliefert 2 x 1 (137,80) / 3 x 2 (136,80)
+  == Werkzeug; knapp ueber S_OBEN Park 2 x 2 (GTE verletzt), Prison 3 x 2 mit Huelle ueber der stetigen Grenze; an beiden
+  Intervall-Enden dieselben ganzzahligen Ecken.
+* `unit_r39_schluessel2_konst` — Faktor 50 (NUTZER-VORGABE), Huellen/Vierecke <= 0,5 x Spur L, Basis == Spur-L-Abnahme
+  (24100 / 25623, RE15_R39L_*), Lage (1358,-2495,-3400), Drehung, Zone (798,-3600) 1000x1000, Slot 8, Licht 0x0010.
+* `integration_r39_schluessel2` — ECHTER Lade-Weg (Spielstand + CONTINUE), Skala 3: RE15_TRILOG-Ecken == Kopf (R), Huelle
+  <= 7 x 4 / 8 x 5 und sichtbar (Pixel/Sum|dL| >= 5/240 bzw. 9/450), AUSSEN 0 (H/S). Messzeilen (Endstand, `ctest -V`):
+  `r39_schluessel2[R_park]: GTE-Viereck x 137..139 y 80..81 (2 x 1), Soll (137,80) 2 x 1`,
+  `r39_schluessel2[R_prison]: GTE-Viereck x 136..139 y 80..82 (3 x 2), Soll (136,80) 3 x 2`,
+  `ok   H_leon: Huelle 4 x 3 <= 7 x 4, 9 Pixel / Sum|dL| 403 >= 5 / 240, aussen 0`,
+  `ok   H_elza: Huelle 8 x 5 <= 8 x 5, 16 Pixel / Sum|dL| 748 >= 9 / 450, aussen 0`.
+
+Nachgezogen (gewollte Verhaltensaenderung = NUTZER-VORGABE Nachtrag 5, Begruendung im Kopf jeder Datei):
+* `unit_r38_itemorte_lage` (`tests/unit/test_r38_itemorte.c`): "Huelle == RE2-Quartil +-0,5" -> "Huelle == Spur-M-Huelle
+  +-0,1 und <= 0,5 x Spur L + 0,05"; "Massstab > 1" -> "Massstab <= 0,5 x Spur-L-Massstab" (der Parking Lot Key liegt mit
+  0,8063 unter der RE2-Weltgroesse, weil erst das 2 x 1-Viereck die Hoehe halbiert).
+* `unit_r39_optik_schluessel` (`tests/unit/test_r39_optik.c`): die Massstab-Pruefung der Spur L liest den Spur-L-Massstab
+  `RE15_R39M_*_SL_10000` (der gelieferte ist seitdem hoechstens 0,5 x davon); RE2-Quartil-Nachrechnung und MD1-Spanne/s = 152 unveraendert.
+* `integration_r39_optik_schluessel` (`tests/integration/test_r39_optik_schluessel.cmake`): Skala 3 Breite <= 7 / 8 (halbe
+  Spur-L-Messung), Mindestpixel 5 / 9 (~60 % der neuen Messung 9 / 16); Skala 1 Mindestzahl 0 (gemessen 0 Pixel), das
+  Auswerte-Muster laesst die leere Huelle "x320..-1" zu. Aufnahme A1/A2 unveraendert.
+* `integration_r38_itemorte` (`tests/integration/test_r38_itemorte.cmake`): B2/B3 (Skala 1) nur noch AUSSEN == 0 (0 Pixel
+  gemessen), B3V (Prison/Park bei Skala 1, jetzt 0/0) entfaellt, B4V bleibt (jetzt 186 %); B4/B4K 36/2300 -> 9/450, B5K
+  40/2200 -> 5/240, V3 6 -> 1 (gemessen 2), V5 7 -> 1 (gemessen 3). Aufnahme K1/K2 unveraendert.
+
+### Gezielter Lauf (KEINE volle Suite im Spurbaum), `ctest -j 2 --timeout 1200 --output-on-failure`, -R woertlich:
+`^(unit_r39_schluessel2_.*|integration_r39_schluessel2|unit_r39_optik_schluessel|integration_r39_optik_schluessel|unit_r38_itemorte_.*|integration_r38_itemorte|unit_r36_schluessel_.*|integration_r36_schluessel.*|unit_r38_cursor_.*|integration_r38_cursor|unit_r35_cut10f0_.*|integration_r35_cut10f0|unit_r22_10f0_figur|unit_r36_klettern_10f0_.*|unit_r37_feuerloescher_.*|integration_r37_feuerloescher|integration_item_name_census)$`
+
+Ergebnis (Stand f21c2ee8 = Endstand ohne die Kommentar-Commits, `ctest_ziel1.log`): **`100% tests passed, 0 tests failed out
+of 45`** (ctest exit 0, 777 s; u.a. integration_r38_itemorte 306,6 s, integration_r39_optik_schluessel 221,5 s,
+integration_r37_feuerloescher 334,7 s, integration_r35_cut10f0 252,7 s, integration_r38_cursor 176,8 s (E/F: Schluessel-
+Vorderseite weiter gezeichnet), integration_r36_schluessel 110,8 s, integration_r36_schluessel_befreiung 79,2 s,
+integration_r39_schluessel2 40,2 s). Gruppen nach `git diff master --name-only` + `git grep -l` auf 10F0/Schluessel/
+itemorte in re15_port/tests (gen/itemorte_r38_*.inc -> r38_itemorte, r39_optik, r36_schluessel, r38_cursor, r37_feuerloescher;
+Raum 10F0/10F1 -> r35_cut10f0, r22_10f0, r36_klettern_10f0; Item-Namen -> item_name_census).
+Nach dem letzten Bau (Kommentare): `ctest -V -R "^(unit_r39_schluessel2_.*|integration_r39_schluessel2)$"` ->
+**`100% tests passed, 0 tests failed out of 4`** (40,6 s).
+
+Querbezug (Memory reai-v2-gezielte-integration-querbezug): `ctest -j 6 --timeout 600 --output-on-failure -R "^(unit_|prop_|probe_)"`
+im Endstand -> **`100% tests passed, 0 tests failed out of 825`** (1214 s; die langen sind die Release-/Android-Skript-Riegel
+unit_r35_android_bash_mutanten 1056 s, unit_r38_releaseskript_* 421..955 s).
+
+## OFFEN
+* Keine offenen Teilpunkte des Nutzer-Punkts.
+* Integration: `tools/r38_itemorte/itemorte_export.py` + `gen/itemorte_r38_*.inc` (Runde 38 K / Spur L) und die Riegel
+  `test_r38_itemorte.c/.cmake`, `test_r39_optik.c`, `test_r39_optik_schluessel.cmake` sind gewollt geaendert — bei Konflikten
+  diese Fassung nehmen (Begruendung oben). Spur I (funk10f1, Szene in ROOM10F1): falls ihre Riegel Bilder der Pinnwand
+  ROOM10F1 vergleichen, ist der Prison Key dort jetzt kleiner (GTE-Viereck 3 x 2 statt 6 x 4).
+* PSX-Ziel nicht gebaut (kein PSn00bSDK auf dieser Maschine) — keine Code-Aenderung, nur die erzeugten Daten.
+* Volle Suite: faehrt der Orchestrator im Integrationsbaum.
+
+## Fuer den Nutzer
+* **Schluessel im Communications Room (ROOM10F0 Leon / ROOM10F1 Elza), "maximal halb so gross":** beide haengen an
+  derselben Stelle der Pinnwand, gleich gedreht, gleiche Aufhebe-Stelle — nur kleiner. Bei 960x720 (so spielst du):
+  - Prison Key (Elza): genau halb so gross — 16 x 10 -> 8 x 5 Pixel (Ring + Schaft weiter zu erkennen).
+  - Parking Lot Key (Leon): 14 x 8 -> 4 x 3 Pixel, also etwa ein Drittel. Der Grund ist die PlayStation-Technik: so kleine
+    Objekte zeichnet das Spiel mit Ecken auf ganzen Bildpunkten des 320x240-Bildes. Vorher war der Schluessel dort 6 x 3
+    Bildpunkte gross; die naechste moegliche Stufe ueber dem jetzigen 2 x 1 waere 2 x 2 gewesen — Hoehe 2 von vorher 3,
+    also zwei Drittel statt hoechstens halb, und der Kopf stand dann als senkrechter Strich da (gemessen 4 x 6 Pixel).
+    2 x 1 ist die groesste Stufe, die hoechstens halb so gross ist.
+* In einem 320x240-Fenster (Fensterskala 1) ist von den Schluesseln nichts mehr zu sehen: ihre Vierecke sind dort nur
+  noch 2 x 1 bzw. 3 x 2 Bildpunkte gross, die Bilder mit und ohne Schluessel sind dort bitgleich (vorher 7 bzw. 5
+  Bildpunkte Unterschied). Bei 640x480 (Fensterskala 2) sind sie zu sehen (5 bzw. 9 Pixel); dort ist der Prison Key 6 statt
+  11 Pixel breit — einen Bildpunkt mehr als die Haelfte, weil das Raster bei dieser Groesse keine halben Bildpunkte kennt.
+  Das Aufheben an der Pinnwand funktioniert unveraendert (Leon und Elza gemessen).
+* Hebel, falls sie dir jetzt zu klein sind: die eine Zahl `NUTZER_FAKTOR_M` (0,5) in
+  `re15_port/tools/r38_itemorte/itemorte_export.py` (Werkzeug neu laufen lassen mit `--schreiben`); der Parking Lot Key
+  bekommt die naechste Stufe (2 x 2) erst ab einem Faktor von 2/3.
+* Neue Assets fuer das Paket-Gate: keine (nur Werkzeug + erzeugte `gen/itemorte_r38_*.inc`). Sprachdateien: keine.
