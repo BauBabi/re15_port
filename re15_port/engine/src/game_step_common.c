@@ -438,7 +438,7 @@ void re15_player_cmd_zero(void)
     s_hit_flinch = 0; s_hit_kb = 0;
     s_react_pose = 0; s_react_clip = 0;   /* Raumwechsel/Reset: der Spieler-Loader FUN_800314b0
                                            * setzt die Bank ohnehin neu */
-    s_ev_reach = 0;
+    s_ev_reach = 0; re15_r39k_reach_aus();   /* Runde 39 Spur K NB1: auch ein anstehender Sub-6-Start ist weg */
     s_prev_hp = -1;
     { extern void re15_spinnen_r38_gift_cmd0(void);   /* Runde 38 Spur R: Gift-Zaehler 0x800acc27 := 0, */
       re15_spinnen_r38_gift_cmd0(); }                 /* `sb zero,-13273(at)` @0x8003196c (cmd-0-Handler) */
