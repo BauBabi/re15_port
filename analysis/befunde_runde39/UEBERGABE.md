@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 13:33: Spur H elza BESTANDEN (Abnahme 0 086a75dd; Fix 564810c0): 1031 Hand einmal (Latch @0x80041bb0 +
+  Lauf-Clip am Walker-Sub-Init @0x800313a4/@0x80030b58/@0x80030d90 - gilt fuer JEDE Spieler-Plc_dest-Ausrichtung), Karte
+  sofort nach Roys Tagebuch (Faden parkt auf Message_on @0x00E64; RE2 Opcode 0x84 @0x800591C4), Loescher-Prop 1090/1091
+  auf Spielerband+1 (Zensus 558 Null-Boxen, Vorgaenger-Behauptung berichtigt); 144+3+9 Tests. In die Integration gemergt
+  (66d351f1, konfliktfrei). Hinweise: 5 Bilder Rueckblende vor der Karte (RE2-Form); 1 Bild Sub-6-Pose zwischen TURN und
+  WALK (vorher ebenso, eigener RE-Punkt); Sichtpruefung anderer Szenen durch die Walker-Aenderung in der Integration.
 * 2026-10-18 13:02: Integrationsbaum 9e7bab74 (A1+B+C+L) gebaut, A-Tests 94/94 gruen (ctest -j 3, 725 s) - Merge der
   A-Nachbesserung verifiziert. Welle 2 laeuft (D/E/F/H).
 * 2026-10-18 12:52: Hauptbaum auf master 6926409c neu gebaut (exe 12:50:47, Startlauf exit 0, EXIT_AT erreicht). Welle-1-Baeume
