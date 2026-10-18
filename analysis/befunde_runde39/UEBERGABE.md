@@ -6,6 +6,15 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 22:20: (a) Integration +M (8d936dc1, Bau 21:45): 849/850 (alle unit_/prop_/probe_ + Schluessel-/10F0-/10F1-Integrationen,
+  1907 s). Rot nur unit_r35_android_bash_mutanten: "[FEHLER] AEQUIVALENT-Eintrag passt zu keinem gleichwertigen Mutanten mehr:
+  A (( rc == 0 )): == -> <=" - release/ und android/ seit 96ab793c unveraendert, um 21:40 gruen -> Last-Verdacht (G/J/K
+  parallel), Einzel-Wiederholung laeuft (bmpe64ywq). (b) Spur G Abnahme 1: 1 Mangel N1 (ROOM1210-Suedwest-Kammer begehbar,
+  nicht gezeichnet, Marker daneben) -> ORCHESTRATOR-ENTSCHEID dazuzeichnen (RE2 zeichnet jede begehbare Flaeche, Punkt 1b);
+  Nachbesserung 2 wf_0dcedfba-bac (args_g_nach2.json). (c) Nutzer-Nachtrag 8 (d1e9211e): Aufnahmen 1141 main12-14 + 10F1
+  main06/main08; main12 sagt "Roy" (Text bleibt John); Kollision 1141 msg 12/13/14 -> neue Spur N stimmen3 (startet auf
+  master nach der Integration), Spur J misst msg 50-52. J hat Nachtrag 7 in Nachbesserung 1 eingebaut (f744e5ad 22:13);
+  K Nachbesserung 1 fertig (dc4ab998 22:04), Abnahme 1 laeuft.
 * 2026-10-18 21:44: Integration E2+E3+I+Funktext (r39/integration): 860/860 gruen (alle unit_/prop_/probe_ + E/I-Gruppen,
   ctest -j 4, 2927 s, Ende 21:40:40). Danach Spur M gemergt (8d936dc1); Bau + M-Gruppe + alle schnellen Tests laufen,
   dann master + Hauptbaum-exe. G/J/K laufen weiter (G Abnahme 1, J und K Nachbesserung 1).
