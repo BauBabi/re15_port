@@ -180,3 +180,17 @@ loaded room1091.rdt`, **`[feuerloescher] ROOM1091: Loescher liegt leer am Boden 
 Zone Slot 3 Untersuchen msg 29`** — der Installer (und damit das Band Spielerband(y)+1 = 2) laeuft auch beim
 Tuer-Eintritt; Elza steht nach der Tuer bei (−10100,−1800,4200) rot 3072 auf **Band 1** (CLIMB_TRACE `band=1`,
 `rc_bnd=-1800`), d.h. dieselben Gate-Eingaben wie im Spielstand am Loescher. Fussweg-Lauf zum Loescher: s.u.
+
+**Fussweg zum Loescher — Laeufe `abn_H_elza/p3_weg2_neu` / `p3_weg2_bas`** (Skript `p3_weg2.sh`): Spielstand am
+erreichbaren Messpunkt (0,250) Blick +X (Form der Laeufe F/I des r37-Riegels, Elza, Zombies 0xF8-0xFB erledigt),
+Eingabeskript `W1,R0.36,W0.5,XU0.27,W0.5,R1.06,W0.5,XU0.33,W0.5,R0.35,W0.5,A0.3,W2` (Drehung +96/Tick, Rennen 191/Tick —
+aus dem Kalibrierlauf `p3_tuer_kal` gemessen): Elza rennt (0,250) → (−72,−1342) → (1918,−1432), dreht auf Blick ~1088
+(schraeg zum Loescher bei (2500,−1300): Sondenpunkt dx ≈ −660, dz ≈ −930) und drueckt Viereck (T241/T242).
+**neu:** `T241 pad=8000 pos=(1918,-1800,-1432) rot=5184 band=1 sub=0 kind=0x00 obj=-1` — kein Aufstieg, bis zum
+Laufende sub=0. **basis v0.8.26:** `T242 pad=8000 … sub=9 kind=0x81 obj=4` → T272 `pos=(1918,-3600,-2580) band=2`
+(Elza "klettert" auf Band 2, eine Etage ueber dem Boden, und steht danach dort) — der Nutzer-Befund auf dem Fussweg.
+(Ein erster Versuch mit Tuer-Eintritt + Lauf quer ueber den Platz, `p3_weg_neu`, scheiterte am Messaufbau: direkt
+hinter der Tuer blockiert ein Hindernis, und das Viereck an der Startstelle oeffnete die Tuer zurueck nach 1051 —
+daher der Fussweg vom Messpunkt (0,250); die Tuer selbst ist mit `p3_tuer` belegt.)
+**Urteil Punkt 3: erfuellt** (Elza klettert am Loescher/Autowrack nicht mehr — Spielstand, Fussweg; Leon 1090 ebenso;
+Untersuchen/Aufnehmen unveraendert).
