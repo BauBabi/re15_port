@@ -602,13 +602,15 @@ static void teil_phase_h(void)
         if (bild_steht < 0 && abs(pl->x - RE15_R39J_ELZA_VORNE_X) < 150 && abs(pl->z - RE15_R39J_ELZA_VORNE_Z) < 150) bild_steht = s_bild;
         if (bild_heben < 0 && re15_dining_r39_w_clip() == RE15_R39J_W_CLIP_HEBEN) {
             bild_heben = s_bild; cut_beim_heben = s_shown; w_vorwaerts_beim_heben = !(pl->anim_flags & 0x80);
+            elza_in_cut7 = (s_shown == RE15_R39J_CUT_ELZA) && sichtbar(RE15_R39J_CUT_ELZA, pl);
         }
         if (bild_heben >= 0 && bild_senken < 0 && re15_dining_r39_w_clip() == RE15_R39J_W_CLIP_HEBEN && (pl->anim_flags & 0x80))
             bild_senken = s_bild;
         /* Blick Johns waehrend msg 9..11 (Punkt 7) */
         if (g_scd.message_active && g_scd.message_id >= 9 && g_scd.message_id <= 11) { blick_n++; if (!ausgerichtet(john, pl, 160)) blick_fehl++; }
         if (bild_john_da < 0 && john->x > -29000) { bild_john_da = s_bild; cut_beim_auftauchen = s_shown; }
-        if (bild_cut7 < 0 && s_shown == RE15_R39J_CUT_ELZA) { bild_cut7 = s_bild; elza_in_cut7 = sichtbar(RE15_R39J_CUT_ELZA, pl); }
+        /* Nachbesserung 1: der Schnitt auf Cut 7 kommt, wenn Elza ins Bild laeuft (Bildkante); 'vorne auf Elza' gilt beim Heben */
+        if (bild_cut7 < 0 && s_shown == RE15_R39J_CUT_ELZA) bild_cut7 = s_bild;
         if (bild_cut6 < 0 && s_shown == RE15_R39J_CUT_TUER && bild_john_da > 0) { bild_cut6 = s_bild; john_in_cut6 = sichtbar(RE15_R39J_CUT_TUER, john); }
         if (bild_cut6 < 0 && john->x > -29000 && sichtbar(s_shown, john)) john_sichtbar_vor_cut6++;
         if (g_scd.player_mode == 2) pm2 = 1;
@@ -639,7 +641,7 @@ static void teil_phase_h(void)
           "N4.2: Waffe heben = Plc_motion(2,6) W-Bank-Clip 6 vorwaerts, nachdem sie steht, bei Kamera Cut 7 (Bild %ld)", bild_heben);
     PRUEF(bild_auf > bild_heben, "N4.2: erst Waffe heben (Bild %ld), dann Tuer auf (Bild %ld)", bild_heben, bild_auf);
     PRUEF(bild_senken > bild_cut6, "N4.2: Waffe runter (Bild %ld) erst nach dem Blick auf John (Cut 6 ab %ld)", bild_senken, bild_cut6);
-    PRUEF(bild_cut7 > ja_bild && elza_in_cut7, "Punkt 2: Kamera vorne auf Elza (Cut 7, Elza im Bild) ab Bild %ld", bild_cut7);
+    PRUEF(bild_cut7 > ja_bild && elza_in_cut7, "Punkt 2: Kamera vorne auf Elza (Cut 7 ab Bild %ld, Elza im Bild beim Heben)", bild_cut7);
     PRUEF(bild_auf >= bild_cut7 && bild_john_da >= bild_auf && cut_beim_auftauchen == RE15_R39J_CUT_ELZA,
           "Punkt 2: waehrend die Tuer aufgeht (Bild %ld) kommt John herein, Kamera zeigt Cut %d (Elza)", bild_auf, cut_beim_auftauchen);
     PRUEF(bild_zu > bild_auf && bild_cut6 > bild_zu, "Punkt 2: Tuer-zu-Ton (Bild %ld), DANACH Kamera auf die Tuer (Cut 6, Bild %ld)",
