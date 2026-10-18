@@ -10,7 +10,7 @@
 #
 # Aufbau (Runde 35 Spur J, Lauf A2): ROOM11C0 per Debug-Sprung (RE15_DEBUG_JUMP=11C0@240), Leon am Szenen-Start
 # (-22604,14455), keine Eingabe; die Szene laeuft, Gorilla Platz 3 macht einen Fernsprung (Sub 7, Basislauf ab F1352,
-# 39 Bilder). Gemessen wird gegner_r39.log (RE15_R39_LOG=1): eine Zeile je gezeichnetem Gorilla-Bild, in dem Koerper-Y
+# 39 Bilder). Gemessen wird gegner_r39.log (RE15_R39_GEGNER_LOG=1): eine Zeile je gezeichnetem Gorilla-Bild, in dem Koerper-Y
 # != Boden-Y ist ("schatten slot=.. koerper_y=.. boden_y=.. quad_y=..").
 # Geprueft: (a) im state.log gibt es Bilder mit einem 0x27 in Sub 7 (der Sprung fand statt); (b) mindestens 10
 # Schatten-Zeilen mit Koerper-Y != Boden-Y (der Gorilla war in der Luft und wurde gezeichnet); (c) in JEDER dieser
@@ -56,14 +56,14 @@ set(_exe_kopie "${_exe_dir}/re15_pc_r39e_schatten_${_lauf_id}${_exe_ext}")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 # keine Umgebung des Aufrufers erben
-foreach(_v RE15_AI_FLAVOR RE15_R39_LOG RE15_FRAMEDUMP RE15_INPUT_SCRIPT RE15_INPUT_SCRIPT_START RE15_PLAYER_POS)
+foreach(_v RE15_AI_FLAVOR RE15_R39_GEGNER_LOG RE15_FRAMEDUMP RE15_INPUT_SCRIPT RE15_INPUT_SCRIPT_START RE15_PLAYER_POS)
     unset(ENV{${_v}})
 endforeach()
 set(WORKDIR "${_dir}")
 set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
          RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
          RE15_DEBUG_JUMP=11C0@240 "RE15_PLAYER_POS=-22604,14455,0"
-         RE15_STATE_LOG=state.log RE15_R39_LOG=1
+         RE15_STATE_LOG=state.log RE15_R39_GEGNER_LOG=1
          "RE15_FRAMEDUMP=1340-1400/10:fd_" "RE15_EXIT_AT=1500#11C0")
 re15_start_spiel(_rv 420 ${_env} "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
