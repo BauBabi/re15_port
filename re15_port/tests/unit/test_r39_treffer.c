@@ -15,7 +15,14 @@
  *                                ROOM1140 Zielhilfe ueber den Tisch; Gegenproben alter Stand
  *   moebel                       Riegel der Moebel-Liste gegen die RDT-Bytes (Art 3, Geometrie, keine Huelle, Elza-Paar,
  *                                Obermenge der Runde-36-Tabelle k_r36_moebel)
- *   aufsteher                    Riegel Punkt 1 (RE2-KI, ROOM1140): s. Dossier "Umsetzung"
+ *   aufsteher                    Riegel Punkt 1 (Nachbesserung 1, Abnahme-0 M1): dieselben Laeufe wie mess_aufsteher /
+ *                                mess_fresser, aber mit CHECKs. (a) Sturz-Aufsteher EXEC[5] EBEN: Maske vor Clip-Bild 55
+ *                                == 1 (nur Beine @0x801032B8-FC), 0 Treffer vor Bild 55 (EBEN-Zeile [2,0,0] = Rumpf,
+ *                                DAT_800a6db4+9+3, Maskentor @0x800413C4-D8), erster Treffer in EXEC[5] >= Bild 55 bei
+ *                                Maske 3 (@0x801036D0-F0) ueber FUN_80107A78; (b) TIEF: Treffer vor Bild 55 bei Maske 1
+ *                                (DOWN-Zeile [1,2,4] = DAT_800a6db4+6, Beine zuerst); (c) Fresser-Aufsteher EXEC[8]
+ *                                EBEN: Treffer vor Bild 55 bei Maske 3; (d) Gegenprobe: dieselbe Pose wie (a) bei
+ *                                Bild 11, Maske per Sonde auf 3 -> EBEN trifft (nur die Maske sperrt, nicht Fenster/Box).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -229,12 +236,22 @@ static int tick_until(re15_actor_t *e, int *f, unsigned s1, unsigned s2, int max
     return 0;
 }
 
-typedef struct { int shots, hits, first_hit_slot, last_miss_slot, stood_f; int hits_lt55, miss_ge55, shots_lt55, shots_ge55; } dauer_t;
+typedef struct {
+    int shots, hits, first_hit_slot, last_miss_slot, stood_f;
+    int hits_lt55, miss_ge55, shots_lt55, shots_ge55;      /* nur Schuesse, die in EXEC[exec] fielen */
+    /* Nachbesserung 1 (Riegel aufsteher), ebenfalls nur Schuesse in EXEC[exec]: */
+    int      shots_exec, hits_exec;
+    int      first_hit_exec_slot;                           /* Clip-Bild des ersten Treffers in EXEC[exec], -1 = keiner */
+    unsigned parts_lt55_or;                                 /* OR der Teile-Masken (word0>>26&7) bei Schuessen vor Bild 55 */
+    unsigned parts_first_hit;                               /* Teile-Maske beim ersten Treffer in EXEC[exec] */
+    int      hnd_first_hit;                                 /* re15_re2z_last_hit_handler() beim ersten Treffer, -1 = keiner */
+} dauer_t;
 
 /* Dauerfeuer, solange der Zombie in EXEC[`exec`] ist (+ `tail` Bilder danach). Je Schuss eine Zeile. */
 static dauer_t dauerfeuer(re15_actor_t *e, int *f, int down, int gap, unsigned exec, int tail)
 {
     dauer_t r; memset(&r, 0, sizeof r); r.first_hit_slot = -1; r.last_miss_slot = -1; r.stood_f = -1;
+    r.first_hit_exec_slot = -1; r.hnd_first_hit = -1;
     uint16_t hold = (uint16_t)(RE15_PAD_BIT_R1 | (down ? RE15_PAD_BIT_DOWN : 0));
     int hp_last = e->hp, k = 0, after = 0;
     for (; k < 4000; k++, (*f)++) {
@@ -251,7 +268,15 @@ static dauer_t dauerfeuer(re15_actor_t *e, int *f, int down, int gap, unsigned e
             if (hit) { r.hits++; if (r.first_hit_slot < 0) r.first_hit_slot = slotb; }
             else r.last_miss_slot = slotb;
             if (in_exec) {
-                if (slotb < 55) { r.shots_lt55++; if (hit) r.hits_lt55++; }
+                r.shots_exec++;
+                if (hit) {
+                    r.hits_exec++;
+                    if (r.first_hit_exec_slot < 0) {
+                        r.first_hit_exec_slot = slotb; r.parts_first_hit = partsb;
+                        r.hnd_first_hit = re15_re2z_last_hit_handler();
+                    }
+                }
+                if (slotb < 55) { r.shots_lt55++; r.parts_lt55_or |= partsb; if (hit) r.hits_lt55++; }
                 else            { r.shots_ge55++; if (!hit) r.miss_ge55++; }
             }
             printf("  %s f%-4d st=%u/%u/%u mo=0x%02x bild=%3d maske=%u elev=%+d hp %d->%d %s hnd=%d\n",
@@ -265,32 +290,39 @@ static dauer_t dauerfeuer(re15_actor_t *e, int *f, int down, int gap, unsigned e
     printf("  SUMME %s: %d Schuesse, %d Treffer; in EXEC[%u] Bild<55: %d/%d Treffer, Bild>=55: %d/%d Fehl; "
            "erster Treffer Bild %d, aufgestanden f%d\n", down ? "TIEF" : "EBEN", r.shots, r.hits, exec,
            r.hits_lt55, r.shots_lt55, r.miss_ge55, r.shots_ge55, r.first_hit_slot, r.stood_f);
+    printf("  SUMME EXEC[%u]: %d Schuesse, %d Treffer; Masken vor Bild 55 OR=%u; erster Treffer in EXEC Bild %d "
+           "(Maske %u, hnd %d)\n", exec, r.shots_exec, r.hits_exec, r.parts_lt55_or, r.first_hit_exec_slot,
+           r.parts_first_hit, r.hnd_first_hit);
     return r;
 }
 
-static int mode_mess_aufsteher(int down, int gap)
+/* Sturz-Aufsteher: ROOM1140 (RE2-KI), einen Zombie behalten, Spieler 1500 davor, per 0x501 in EXEC[5] schicken, bis P6
+ * ticken, zielen (EBEN/TIEF), Dauerfeuer. Rueckgabe 1 = gemessen (*out), 0 = Aufbau gescheitert (FAIL gezaehlt). */
+static int lauf_aufsteher(int down, int gap, dauer_t *out)
 {
-    printf("== mess_aufsteher %s gap=%d (RE2-KI, ROOM1140, Pistole) ==\n", down ? "TIEF" : "EBEN", gap);
-    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 1;
-    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 1;
+    printf("== aufsteher %s gap=%d (RE2-KI, ROOM1140, Pistole, Sturz-Aufsteher EXEC[5]) ==\n", down ? "TIEF" : "EBEN", gap);
+    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 0;
+    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 0;
     re15_actor_t *e = &g_actors[slot];
     s_px = e->x - 1500; s_pz = e->z; face(e->x, e->z); pin_player();
     int f = 0;
     wake_and_knock(e);
-    CHECK(tick_until(e, &f, 5, 6, 3000), "P6 nicht erreicht");
+    int p6 = tick_until(e, &f, 5, 6, 3000);
+    CHECK(p6, "P6 nicht erreicht"); if (!p6) return 0;
     aim(&f, down);
     printf("  PRE f%d st=%u/%u/%u mo=0x%02x bild=%d maske=%u hp=%d dist=%d\n", f, e->state, e->sub_state_1,
            e->sub_state_2, (unsigned)e->motion, frame_slot(e), (unsigned)e->re2z_parts, (int)e->hp,
            (int)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]));
-    dauerfeuer(e, &f, down, gap, 5u, 40);
-    return 0;
+    *out = dauerfeuer(e, &f, down, gap, 5u, 40);
+    return 1;
 }
 
-static int mode_mess_fresser(int down, int gap)
+/* Fresser-Aufsteher: der ROOM1140-Fresser (EXEC[8] P3/P4, Clip 0x15) unter Dauerfeuer. */
+static int lauf_fresser(int down, int gap, dauer_t *out)
 {
-    printf("== mess_fresser %s gap=%d (RE2-KI, ROOM1140, Fresser EXEC[8]) ==\n", down ? "TIEF" : "EBEN", gap);
-    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 1;
-    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 1;
+    printf("== fresser %s gap=%d (RE2-KI, ROOM1140, Fresser-Aufsteher EXEC[8]) ==\n", down ? "TIEF" : "EBEN", gap);
+    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 0;
+    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 0;
     re15_actor_t *e = &g_actors[slot];
     s_px = e->x - 1500; s_pz = e->z; face(e->x, e->z); pin_player();
     int f = 0;
@@ -299,8 +331,18 @@ static int mode_mess_fresser(int down, int gap)
     printf("  PRE f%d st=%u/%u/%u mo=0x%02x bild=%d maske=%u hp=%d 1d3=0x%02x\n", f, e->state, e->sub_state_1,
            e->sub_state_2, (unsigned)e->motion, frame_slot(e), (unsigned)e->re2z_parts, (int)e->hp,
            (unsigned)e->re2z_self1d3);
-    dauerfeuer(e, &f, down, gap, 8u, 40);
-    return 0;
+    *out = dauerfeuer(e, &f, down, gap, 8u, 40);
+    return 1;
+}
+
+static int mode_mess_aufsteher(int down, int gap)
+{
+    dauer_t r; return lauf_aufsteher(down, gap, &r) ? 0 : 1;
+}
+
+static int mode_mess_fresser(int down, int gap)
+{
+    dauer_t r; return lauf_fresser(down, gap, &r) ? 0 : 1;
 }
 
 /* ------------------------------------------------------------------------------------------------ tisch */
@@ -499,10 +541,100 @@ static int mode_moebel(void)
 }
 
 /* --------------------------------------------------------------------------------------------- aufsteher */
+#define HND_GETUP 7   /* re15_re2z_last_hit_handler(): FUN_80107A78 (re2z_getup_hurt), Weiche +0x21A&0x10 @0x80105014-38 */
+
+/* Riegel Punkt 1 (Nachbesserung 1, Abnahme-0 M1). Pinnt das RE2-Modell B5 am Port-Spielschritt (RE2-KI, ROOM1140):
+ *  (a) Sturz-Aufsteher EXEC[5] mit EBEN: Teile-Maske vor Clip-Bild 55 = 1 (nur Beine: `lui a2,0xf3ff` @0x801032B8 /
+ *      `and` @0x801032DC / `lui v0,0x400 / or` @0x801032E8-EC / `sw v1,0(s2)` @0x801032FC), 0 Treffer vor Bild 55 (EBEN-
+ *      Zeile 3 des Pistolen-Records = [2,0,0] Rumpf, DAT_800a6db4+9+3; Maskentor `lw v0,0(s2)` @0x800413C4 / `srl 26`
+ *      @0x800413CC / `andi 7` @0x800413D4 / `beq` @0x800413D8), erster Treffer in EXEC[5] erst ab Bild 55 (Rumpf-Bit
+ *      `lbu v1,333(s2)` / `addiu v0,zero,55` / `bne` @0x801036D0-D8, `lui v1,0xc00 / or / sw` @0x801036DC-F0) bei
+ *      Maske 3 ueber FUN_80107A78.
+ *  (b) TIEF: Treffer vor Bild 55 bei Maske 1 (DOWN-Record @0x800A6618 = 00 04 02 01 -> Zeile 6 = [1,2,4] DAT_800a6db4+6,
+ *      Beine zuerst).
+ *  (c) Fresser-Aufsteher EXEC[8] mit EBEN: Treffer vor Bild 55 bei Maske 3 (EXEC[8] setzt nie "nur Beine").
+ * Die Zahlen (Schuesse/Treffer/Bilder) stehen als Messung im Dossier; die CHECKs sind Schwellen, keine Bildnummern. */
+/* (d) Gegenprobe "die Maske ist die einzige Sperre": Aufbau wie lauf_aufsteher EBEN bis zum ersten Schuss in P7
+ * (Clip-Bild 11, Maske 1); unmittelbar vor dem Schuss wird die Teile-Maske per Sonde auf 3 gesetzt (das tut das Original
+ * erst bei Bild 55 @0x801036D0-F0). Trifft EBEN dann, sind Hoehenfenster und XZ-Box (FUN_800410CC) in dieser Pose erfuellt
+ * und allein die Maske (Zeile [2,0,0] gegen Maske 1) sperrte in (a). Rueckgabe 1 = gemessen. */
+static int lauf_gegenprobe_maske(int *bild, int *hit, int *hnd)
+{
+    printf("== gegenprobe EBEN: Pose wie (a), Maske vor dem ersten Schuss per Sonde auf 3 ==\n");
+    *bild = -1; *hit = 0; *hnd = -1;
+    if (bringup(0x1140, RE15_AI_FLAVOR_RE2) < 0) return 0;
+    int slot = keep_one_zombie(); CHECK(slot >= 0, "kein Zombie"); if (slot < 0) return 0;
+    re15_actor_t *e = &g_actors[slot];
+    s_px = e->x - 1500; s_pz = e->z; face(e->x, e->z); pin_player();
+    int f = 0;
+    wake_and_knock(e);
+    int p6 = tick_until(e, &f, 5, 6, 3000);
+    CHECK(p6, "P6 nicht erreicht"); if (!p6) return 0;
+    aim(&f, 0);
+    *bild = frame_slot(e);
+    int ok = (e->state == 1 && e->sub_state_1 == 5 && *bild < 55 && e->re2z_parts == 1u);
+    CHECK(ok, "Gegenprobe: Ausgangslage nicht wie (a) (st=%u/%u/%u bild=%d maske=%u)", e->state, e->sub_state_1,
+          e->sub_state_2, *bild, (unsigned)e->re2z_parts);
+    if (!ok) return 0;
+    int hp0 = e->hp;
+    e->re2z_parts = 3u;                                            /* SONDE: Rumpf-Bit vorzeitig (Original: Bild 55) */
+    pin_player();
+    frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE), RE15_PAD_BIT_SQUARE);
+    f++;
+    *hit = (e->hp < hp0); *hnd = re15_re2z_last_hit_handler();
+    printf("  %s f%-4d st=%u/%u/%u mo=0x%02x bild=%3d maske=3(Sonde) elev=%+d hp %d->%d hnd=%d\n", *hit ? "HIT " : "miss", f,
+           e->state, e->sub_state_1, e->sub_state_2, (unsigned)e->motion, *bild, re15_player_aim_elevation(), hp0, (int)e->hp, *hnd);
+    return 1;
+}
+
 static int mode_aufsteher(void)
 {
-    printf("== aufsteher (Riegel Punkt 1) ==\n");
-    /* wird nach der Umsetzung gefuellt (Dossier D_treffer.md 'Umsetzung') */
+    printf("== aufsteher (Riegel Punkt 1: RE2-KI, ROOM1140, Spielschritt) ==\n");
+    dauer_t a, b, c; memset(&a, 0, sizeof a); memset(&b, 0, sizeof b); memset(&c, 0, sizeof c);
+    a.first_hit_exec_slot = b.first_hit_exec_slot = c.first_hit_exec_slot = -1;
+    /* (a) Sturz-Aufsteher, Zielhoehe EBEN */
+    if (lauf_aufsteher(0, 6, &a)) {
+        CHECK(a.shots_lt55 >= 4, "(a) EBEN: nur %d Schuesse vor Clip-Bild 55 in EXEC[5] (Messung braucht >= 4)", a.shots_lt55);
+        CHECK(a.parts_lt55_or == 1u, "(a) EBEN: Teile-Maske vor Bild 55 OR=%u, soll 1 = nur Beine (@0x801032B8-FC)", a.parts_lt55_or);
+        CHECK(a.hits_lt55 == 0, "(a) EBEN traf den Sturz-Aufsteher %d/%d-mal vor Clip-Bild 55 - RE2: Zeile [2,0,0] (Rumpf) gegen "
+              "Maske 1 (nur Beine) = kein Teil (DAT_800a6db4+9+3, Tor @0x800413C4-D8)", a.hits_lt55, a.shots_lt55);
+        CHECK(a.shots_ge55 >= 1, "(a) EBEN: kein Schuss ab Bild 55 in EXEC[5] (%d)", a.shots_ge55);
+        CHECK(a.first_hit_exec_slot >= 55, "(a) EBEN: erster Treffer in EXEC[5] bei Clip-Bild %d, soll >= 55 (Rumpf-Bit "
+              "@0x801036D0-F0; -1 = gar keiner)", a.first_hit_exec_slot);
+        CHECK(a.parts_first_hit == 3u, "(a) EBEN: Maske beim ersten Treffer %u, soll 3 (Beine+Rumpf)", a.parts_first_hit);
+        CHECK(a.hnd_first_hit == HND_GETUP, "(a) EBEN: erster Treffer nahm Handler %d, soll %d = FUN_80107A78 (@0x80105014-38)",
+              a.hnd_first_hit, HND_GETUP);
+    }
+    /* (b) Sturz-Aufsteher, Zielhoehe TIEF (D-Pad unten gehalten) */
+    if (lauf_aufsteher(1, 6, &b)) {
+        CHECK(b.shots_lt55 >= 1, "(b) TIEF: kein Schuss vor Bild 55 in EXEC[5]");
+        CHECK(b.hits_lt55 >= 1, "(b) TIEF traf den Sturz-Aufsteher vor Bild 55 nicht (%d/%d) - DOWN-Zeile [1,2,4] "
+              "(DAT_800a6db4+6, Record @0x800A6618) trifft die Beine (Maske 1)", b.hits_lt55, b.shots_lt55);
+        CHECK(b.first_hit_exec_slot >= 0 && b.first_hit_exec_slot < 55, "(b) TIEF: erster Treffer in EXEC[5] bei Bild %d, soll < 55",
+              b.first_hit_exec_slot);
+        CHECK(b.parts_first_hit == 1u, "(b) TIEF: Maske beim ersten Treffer %u, soll 1 (nur Beine)", b.parts_first_hit);
+        CHECK(b.hnd_first_hit == HND_GETUP, "(b) TIEF: erster Treffer nahm Handler %d, soll %d = FUN_80107A78", b.hnd_first_hit, HND_GETUP);
+    }
+    /* (c) Fresser-Aufsteher EXEC[8], Zielhoehe EBEN */
+    if (lauf_fresser(0, 6, &c)) {
+        CHECK(c.first_hit_exec_slot >= 0 && c.first_hit_exec_slot < 55, "(c) Fresser EBEN: erster Treffer in EXEC[8] bei Bild %d, "
+              "soll vor 55 (Maske 3, kein 'nur Beine' in EXEC[8])", c.first_hit_exec_slot);
+        CHECK(c.parts_first_hit == 3u, "(c) Fresser EBEN: Maske beim ersten Treffer %u, soll 3", c.parts_first_hit);
+        CHECK(c.hnd_first_hit == HND_GETUP, "(c) Fresser EBEN: erster Treffer nahm Handler %d, soll %d = FUN_80107A78", c.hnd_first_hit, HND_GETUP);
+    }
+    /* (d) Gegenprobe: nur die Maske sperrt */
+    int gb = -1, gh = 0, gn = -1;
+    if (lauf_gegenprobe_maske(&gb, &gh, &gn)) {
+        CHECK(gh, "(d) Gegenprobe: mit Maske 3 traf EBEN den Aufsteher bei Bild %d NICHT - dann sperrt nicht die Maske, sondern "
+              "Hoehenfenster/Box (FUN_800410CC), und (a) belegt das RE2-Modell nicht", gb);
+        CHECK(gn == HND_GETUP, "(d) Gegenprobe: Treffer nahm Handler %d, soll %d = FUN_80107A78", gn, HND_GETUP);
+    }
+    printf("  RIEGEL: (a) EBEN %d/%d Treffer vor Bild 55 (Masken OR=%u), erster Treffer in EXEC[5] Bild %d (Maske %u, hnd %d); "
+           "(b) TIEF %d/%d vor 55, erster Bild %d (Maske %u); (c) Fresser EBEN erster Treffer in EXEC[8] Bild %d (Maske %u); "
+           "(d) Maske-3-Sonde bei Bild %d: %s (hnd %d)\n",
+           a.hits_lt55, a.shots_lt55, a.parts_lt55_or, a.first_hit_exec_slot, a.parts_first_hit, a.hnd_first_hit,
+           b.hits_lt55, b.shots_lt55, b.first_hit_exec_slot, b.parts_first_hit, c.first_hit_exec_slot, c.parts_first_hit,
+           gb, gh ? "Treffer" : "kein Treffer", gn);
     return 0;
 }
 
