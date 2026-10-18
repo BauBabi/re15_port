@@ -193,6 +193,9 @@ Gezielte Laeufe (Spurbaum, KEINE volle Suite):
 - Modulgruppen (unit), `-R "r39_parkplatz11c0|^unit_r35_affen_|^unit_r36_karte_tuer11c0$|^unit_r35_cut1150_|^unit_r36_szene1150_|^unit_r37_szene11c0_|^unit_r38_montage_|^unit_r39_gegner_|^unit_r36_schluessel_|^unit_r38_dining1141_|^unit_r39_funk10f1_|^unit_r39_stimmen_|^unit_scd_|^unit_aot_|^unit_msg_dialog$|^unit_door_seq$|^unit_synchro_stimme$|^unit_voice_ausreden$|^unit_se_voice_machine$|^prop_scd_pc_advance$|^unit_maggot_|^unit_r38_affen3_|^unit_r38_griff_gorilla$|^unit_r36_zombieki_affen" -E "^integration_" -j 6`
   -> `100% tests passed, 0 tests failed out of 126` (darin unit_r35_affen_szene = Szenen-Gang bitgleich mit der GDB-Spur des
   Originals: die Gosub-Huelle aendert die Szene nicht).
+- Querbezug vor dem Abschluss (Memory reai-v2-gezielte-integration-querbezug), ALLE unit_/prop_/probe_:
+  `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 6 --timeout 900` -> `100% tests passed, 0 tests failed out of 844`
+  (875 s).
 
 ## OFFEN
 - Keine offenen Punkte dieser Spur.
