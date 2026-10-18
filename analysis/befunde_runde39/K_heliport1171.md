@@ -99,3 +99,7 @@ die Szene durch und zeigt den Fehler zum ersten Mal.
   des LOCO-Paars (Bank 0); +0x9 & 0x40 -> +0x4 = 4 / +0x5 = 6 @0x8011df1c/2c.
 - Eskorte 0x8011df40: naechster lebender Gegner < 15000 (`ori a0,zero,0x3a98` @0x8011df48, `jal 0x800509e4` @0x8011df54)
   -> +0x9 = 1 @0x8011df94; Dispatch +0x9 & 0xF ueber @0x8012181c: [1] = 0x8004f100 (nur DECIDE, kein anim_set).
+- 2026-10-18 ~14:50: Fix 18940e95 (RBJ-Cache) gebaut + gemessen (Abschnitt 4). Vorher-Bau fuer die Gegenproben laeuft in
+  re15_port/build_bisect: dafuer steht enemy_common.c VORUEBERGEHEND auf 1038dc15 in der Arbeitskopie. Steht beim Lesen
+  ein ` M re15_port/engine/src/enemy_common.c` ohne Rueckmeldung hier: `git checkout -- re15_port/engine/src/enemy_common.c`
+  (der Fix ist in 18940e95 committet), NICHT committen.
