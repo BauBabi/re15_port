@@ -218,3 +218,13 @@ Gezielte Laeufe (Spurbaum, KEINE volle Suite):
 - **Alte Spielstaende:** wer in einer frueheren Fassung mitten im Kampf hinausgegangen ist, findet beim Wiederbetreten den
   Kampf wie im Original weiterlaufend vor (Gorillas, Ada im Wagen) — jetzt mit gesperrter Tuer bis zum Kampfende.
 - Keine Entscheidungsfragen.
+
+## Nachbesserung 1 (nach Abnahme 0, `O_abnahme_0.md`; Basis HEAD 72c76540)
+
+Stand:
+- [ ] M1 Messung vorher (Riegel-Teil `ende_gesetzt` am alten Stand rot; exe-Lauf mit der Spur-A-Karte)
+- [ ] M1 RE-Beleg (Freigabeweg sub01 @0x0182E/@0x01842, Setzer von (3,67) im RDT-Zensus)
+- [ ] M1 Aenderung (SZENE nur bei (3,67)==0)
+- [ ] M1 Messung nachher (unit, integration Teil I, `integration_r39_stimmen_11b0`)
+- [ ] Hinweise H1/H2/H3 der Abnahme eingeordnet
+- [ ] gezielte Tests + alle unit_/prop_/probe_
