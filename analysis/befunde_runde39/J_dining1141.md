@@ -172,13 +172,13 @@ SCA (RDT +0x20, 5 x 19 Saetze zu 12 B, re15_rdt.h re15_sca_entry_t; `j39b/sca.py
   `re15_port/platform/pc/src/dining_r39_pc.c` (Bank 0x3E: Klopfen DOOR0F, Glas GLAS1090 0x21, Hilferufe ueber den
   Sprach-Pfad), `re15_port/tools/r39_dining/programme_bauen.py` -> `re15_port/engine/src/gen/dining_r39_programme.inc`
   (HAEMMERN39 620 B, BEFREIUNG39 1496 B, Texte, DOOR0F-Tonteil 10888 B bytegleich; Werkzeug nutzt die Helfer der Runde 38).
-- HAKEN (Kommentar "Runde 39 Spur J"): dining_r38.c (Include; Evt_exec -> HAEMMERN39; Ereignis 6 -> BEFREIUNG39; Se_on
+- HAKEN (Kommentar "Runde 39 Spur J"): scd_vm.c op_message_on (Warte-Zeile msg 58, 2 Zeilen); dining_r38.c (Include; Evt_exec -> HAEMMERN39; Ereignis 6 -> BEFREIUNG39; Se_on
   -> Bank 0x3E; Installer-Ende -> re15_dining_r39_install; Messhaken), dining_r38_pc.c (Init 1 Zeile), audio_pc.c
   (help-Stamm 2 Zeilen in re15_voice_load_clip; Punkt 9: `if (!s_bgm_pending)` vor dem Lautstaerke-Switch in
   ss_seq_ctl_ex), tests/unit/test_r36_kartenbits.c k_port[] (Bit 94). KEIN Asset-Patch, keine neue Datei unter
   shared_assets/ (Klopf-Tonteil als gen/*.inc).
 - Ressourcen: Bank 9 Bit 94 (Reaktion); Bit 95 nicht gebraucht. Nachrichten 50/51/52 (Text), 53..57 = Sprach-Ids der
-  help-Dateien (ohne Text). Port-Bank 0x3E (frei in master: 0x0E/0x3A/0x3B/0x3C/0x3D vergeben; Spur B nutzt TOENE39.VBS).
+  help-Dateien (ohne Text), 58 = Warte-Zeile (ohne Text, Punkt 6). Port-Bank 0x3E (frei in master: 0x0E/0x3A/0x3B/0x3C/0x3D vergeben; Spur B nutzt TOENE39.VBS).
 
 ### 3.2 Ablauf neu (je Nutzer-Punkt)
 | Punkt | Mechanik | Beleg / Form |
@@ -188,7 +188,7 @@ SCA (RDT +0x20, 5 x 19 Saetze zu 12 B, re15_rdt.h re15_sca_entry_t; `j39b/sca.py
 | 3 | kein Se_on(0x3D,..) = main42 "Help me out." mehr | Abschnitt 1.2 |
 | 4 | je Runde: 3 x Se_on(0x3E,0) (Sleep 5), Sleep 30, Se_on(0x3E,0x30+k) mit k = 3,1,4,2,5 (PORT-WAHL Mix), Sleep 90, Sleep 90; jede Ton-Zeile in Ifel Ck(3,0x6A)==0 | RE2 ROOM1090 @0x02BB0..@0x02BC0, RE2 ROOM1060 sub05 +0x2E/+0x58/+0x5E, Abschnitt 2.4 |
 | 5 | nach dem ersten Ruf: Ifel Ck(9,94)==0 { Set(2,7)=1, Plc_neck Elza -> Dachtuer, Sleep 10, msg 50, Sleep 90, Set(9,94)=1, Plc_neck aus, Set(2,7)=0 } | sub02 @0x00C26/@0x00C42/@0x00C4C/@0x00D0A/@0x00F30/@0x00F4E; RE2 1060 +0x58 |
-| 6 | vor sub02 @0x00DC6 Sleep 20 / @0x00DCA msg 6: Se_on(0x3E,0x21), Sleep 5, Se_on(0x3E,0x21) | Abschnitt 2.3 |
+| 6 | vor sub02 @0x00DC6 Sleep 20 / @0x00DCA msg 6: Message_on 58 (Warte-Zeile ohne Text, s.u.), Se_on(0x3E,0x21), Sleep 5, Se_on(0x3E,0x21) | Abschnitt 2.3; Warte-Zeile: Lauf n1 zeigte den Glasbruch F1917 mitten in Johns Sprachzeile zu msg 5 (main05.wav 6,7 s, msg 5 offen F1818..F2017, msg 6 erst F2019 - der Port oeffnet die naechste Nachricht erst nach der Sprachzeile, scd_vm.c Stimmen-Riegel). msg 58 parkt im selben Riegel und wird danach vom Haken re15_dining_r39_message_on verbraucht (scd_vm.c 1 Zeile) - der Glasbruch klingt am Ende von Johns Satz, unmittelbar vor "What was that?!"; ohne Sprachdatei laeuft die Zeile sofort durch |
 | 7 | nach @0x00E94 (John TURN zu Elza, Bit 1) Gosub sub04 | Abschnitt 2.2 |
 | 8 | nach dem Tod der Gorillas + Sleep 30: Cut 8, Sperre, Elza Pos_set (-6000,-20000) + Blick 1547 zu John, Kopf/Drehung zueinander, msg 51 + Johns Gesten (0,15)/(0,15 rueckw.)/(0,23), Plc_motion(2,6), msg 52, (2,6) rueckwaerts; dann Abgang Runde 38 | sub02 @0x00C24..@0x00C76, @0x00CB0..@0x00CD0, @0x00C78..@0x00C9C; ROOM1171 @0x014C2 |
 | 9 | audio_pc.c ss_seq_ctl_ex: waehrend `s_bgm_pending` wird Sce_bgm_control nur gelatcht | Abschnitt 2.1 |
