@@ -44,15 +44,16 @@ von der unverwundeten Figur) — der Nutzerpunkt ist reproduziert. Bilder: F_bel
   `andi 0xfffd` @0x8004af8c) enthaelt KEINEN Store auf 0x800b10ec. RE2 Retail kennt keine Blut-Decals — dort gibt
   es nichts, was zurueckgesetzt werden muesste. => Punkt 1 ist **NUTZER-VORGABE** (PORT-WAHL), kein Original-Verhalten.
 - **FORM der Vorgabe, belegt:** "vollstaendig geheilt" = die HP erreichen den Wert, den das Heilspray schreibt:
-  `sh s0` mit s0 = 100 (`addiu s0,zero,100` @0x8004ae14; absolute Heilung der Ids 0x22/0x2a/0x2d, Port
+  `sh s0` mit s0 = 100 (`ori s0,zero,0x64` @0x8004ae14, Rohbytes `64 00 10 34` = 0x34100064: op 0x0D ORI, rs zero, rt s0,
+  imm 0x64 — Nachbesserung 1 / H2: vorher als `addiu` zitiert; absolute Heilung der Ids 0x22/0x2a/0x2d, Port
   item_use_common.c s_heal[].set) + der Westen-Bonus des Ports (re15_vest_hp_bonus, scd_room_setup.c). Additive
   Heilungen (0x23/0x24/0x27..0x2c/0x2e, ohne Kappung @0x8004afa8-b0) zaehlen, sobald HP >= dieser Wert. Die Nuss 0x2f
   (absolut 0x4d = 77 @0x8004b028) ist nie voll.
 - **Wiederherstellung = der Spieler-Lade-Pfad des Originals:** FUN_800314b0 baut die Wund-Tabelle neu (Builder
   FUN_80037c1c @0x800316c8/@0x800318cc) und laedt die Spielerhaut (FUN_8004ee78, Slot 0x17) frisch aus der PLD —
   genau so verliert ein geladener Spielstand im Original sein Blut (blood_decals.md §5.6). Der Port tut nach der
-  vollen Heilung dasselbe: Tabelle nullen (re15_wound_reset) + Slot-0-Upload der PLD-TIM (main.c
-  pc_player_skin_reload, Familie PL%02X aus DAT_800aca5c: Leon 0, Elza 4 — Tabelle @0x80073f70, Leser
+  vollen Heilung dasselbe: Tabelle nullen (re15_wound_reset) + Slot-0-Upload der PLD-TIM (platform/pc/src/
+  zustand_r39_pc.c re15_pc_zustand_r39_haut_neu, seit Nachbesserung 1; Familie PL%02X aus DAT_800aca5c: Leon 0, Elza 4 — Tabelle @0x80073f70, Leser
   FUN_800314b0 @0x800314d4). Der Waffen-Composite legt sich ueber die Slot-0-Generation wieder auf
   (render_pc.c s_slot0_generation, main.c s_wpn_gen).
 - Warum nicht nur die Tabelle nullen: render_pc.c re15_render_pc_wound_blit kopiert die Damage-Bank IN die
@@ -63,9 +64,12 @@ von der unverwundeten Figur) — der Nutzerpunkt ist reproduziert. Bilder: F_bel
 - `engine/src/zustand_r39.c` re15_zustand_r39_heilung(id): nach dem Applier (Haken am Ende von
   re15_item_use_apply, item_use_common.c, 2 Zeilen): HP >= re15_zustand_r39_hp_voll() (= 100 @0x8004ae14 +
   Weste) -> re15_wound_reset() + Anforderung "Haut neu".
-- `platform/pc/main.c`: pc_player_skin_reload() (PLD-TIM der aktuellen Familie/des Modellwechsel-Index ueber
-  pc_read_pl_part -> re15_render_pc_upload_tim_slot(&tim, 0)); Abholung im Blut-Decal-Sync-Block (2 Zeilen) vor
-  der Generationspruefung. Log: `[r39-zustand] Heilung 0x22: HP 100 >= 100 voll -> Wund-Tabelle genullt (hatte
+- `platform/pc/src/zustand_r39_pc.c` (Nachbesserung 1; vorher als 19-Zeilen-Funktion pc_player_skin_reload in main.c =
+  Mangel M1): re15_pc_zustand_r39_haut_neu(modell) laedt die PLD-TIM der Familie/des Modellwechsel-Index (lose Teildatei
+  PLD/PLxx.TIM, sonst Container-Schnitt re15_pld_part aus PLD/PLxx.PLD — PL01/Weste gibt es nur so) und laedt sie in
+  Slot 0 (re15_render_pc_upload_tim_slot kopiert; danach wird nur der gelesene Puffer freigegeben). `platform/pc/main.c`:
+  2-Zeilen-Haken im Blut-Decal-Sync-Block vor der Generationspruefung, uebergibt s_player_model_idx (sonst
+  Charakter-Nibble, wie pc_sync_player_model). Log: `[r39-zustand] Heilung 0x22: HP 100 >= 100 voll -> Wund-Tabelle genullt (hatte
   Wunden), Spielerhaut neu` / `[r39-zustand] Spielerhaut PL00.TIM neu geladen (...) - Kleidung ganz`.
 - Beide Szenarien: die Mechanik ist figur-unabhaengig (Elza = Familie PL04, Panels aus LUT-Zeile 4 nur beim Blit).
 ### 1.4 Messung nachher (Stand 87180698 gebaut = build_4.log, Messkopie re15_pc_r39f_stand3.exe, F_belege/lauf3.sh)
@@ -244,7 +248,7 @@ Gezielte Laeufe (keine volle Suite im Spurbaum, VERTRAG):
   (@0x800aad58, 80 Spalten {y,h} u8, Hub 4..36 um Grundlinie 15, Zeichner FUN_800754ac x = base_x + 12 + Spalte,
   y = base_y + 2 + y); sie passt nicht ohne erfundene Skalierung in den RE1.5-Rahmen (77 Spalten, Hub 39..55 um 47,
   "Poison"-Wort im Fenster) -> nicht uebernommen, Entscheidungsfrage in 5.
-- PSX-Plattform: der Haut-Neuaufbau ist im PC-Backend (main.c pc_player_skin_reload) umgesetzt; platform/psx pollt
+- PSX-Plattform: der Haut-Neuaufbau ist im PC-Backend (platform/pc/src/zustand_r39_pc.c) umgesetzt; platform/psx pollt
   re15_zustand_r39_haut_neu_abholen nicht (PSX-Build-Luecke) — dort wuerde nur die Wund-Tabelle genullt, die Decals
   blieben bis zum naechsten Spieler-Laden (FUN_800314b0) im VRAM.
 - RE2-Takt-Zaehler (s_takt) wird bei neuem Spiel/Laden nicht genullt — RE2 kennt dafuer keinen Schreiber (Writer:
@@ -256,9 +260,10 @@ Gezielte Laeufe (keine volle Suite im Spurbaum, VERTRAG):
 
 ## 5. Fuer den Nutzer
 - Keine neuen Assets, keine neuen Sprachdateien (Paket-Gate unveraendert). Neue Daten: keine (gen/ unveraendert).
-- Verhalten: volle Heilung (Heilspray, G+G+R, G+R+R, oder eine Mischung/Kraeuter, die die HP auf >= 100 bringt) stellt
-  die Kleidung von Leon und Elza sofort wieder her (NUTZER-VORGABE; das Original behielt die Blut-Decals bis zum naechsten
-  Laden). Gift zieht wie in RE2 alle 31 Bilder (etwa jede Sekunde) 1 HP ab, in jedem Spielerzustand, nie unter 1 HP, nicht
+- Verhalten: volle Heilung (Heilspray, G+G+R, G+R+R, oder eine Mischung/Kraeuter, die die HP auf >= 100 bringt; mit
+  R.P.D.-Weste >= 105) stellt die Kleidung von Leon und Elza sofort wieder her — auch die Weste (PL01) (NUTZER-VORGABE; das
+  Original behielt die Blut-Decals bis zum naechsten Laden). Nachbesserung 1: mit angelegter Weste stuerzte der Stand
+  87180698 bei der vollen Heilung ab (free() auf den Container-Schnitt) — behoben und per Riegel gesichert. Gift zieht wie in RE2 alle 31 Bilder (etwa jede Sekunde) 1 HP ab, in jedem Spielerzustand, nie unter 1 HP, nicht
   waehrend der Statusschirm offen ist; Gegengift/Blaues Kraut/Mischungen mit Blau beenden es. Das EKG im Statusschirm ist
   unter Gift magenta (RE2-Farbe ff 20 ff) mit dem Wort "Poison".
 - ENTSCHEIDUNGSFRAGE: soll die EKG-Spur unter Gift zusaetzlich die RE2-POISON-WELLE (eigene, unregelmaessige Zackenfolge,
@@ -275,3 +280,65 @@ Gezielte Laeufe (keine volle Suite im Spurbaum, VERTRAG):
   Wellen-Zeiger @0x800ab180 / @0x80076214 aus den EXE-Dateien nachgelesen (F_belege/ekg_wellen.txt).
 - Bau: build_4.log (nichts neu zu bauen, exe = 11:06 = der Stand 87180698). Messung nachher 1.4 / 2.4.
 - Riegel geschrieben und gefahren (3), Dossier abgeschlossen; Endstand = Commit fix(r39-zustand).
+
+## Nachbesserung 1 (nach Abnahme 0, F_abnahme_0.md; Sitzung 3, ab ~12:55)
+Vorgehen: Abnahmebericht, Dossier und `git log --stat master..HEAD` gelesen; keine vorliegende Messung wiederholt. Bau nach der
+Aenderung: F_belege/build_6_configure.log + build_6.log (`=== LOCAL-BUILD-OK`, exe 13:05:50). Messkopien: re15_pc_r39f_nb1_vorher.exe
+(= exe 11:06 = Code 87180698, VOR der Aenderung kopiert) und re15_pc_r39f_nb1.exe (neu); Werkzeug test_r39_zustand_nb1(b).exe.
+
+### M1 — 19-Zeilen-Funktion in platform/pc/main.c (Vertrag 1.3: main.c nur A/B, gemeinsame Dateien 1-5 Zeilen)
+- Ursache: pc_player_skin_reload wurde in der Endphase der Sitzung 1 (Sitzungslimit, Reste 87180698) direkt neben
+  pc_sync_player_model in main.c geschrieben, statt in eine eigene PC-Datei der Spur (Vorbild dining_r38_pc.c).
+- Messung vorher: `git diff master -- re15_port/platform/pc/main.c` = +25 Zeilen (Kommentar 5 + Funktion 18 + Haken 2).
+- Beleg (Form unveraendert, keine neue Konstante): Slot-0-Upload der PLD-TIM = Haut-Upload des Spieler-Ladens FUN_800314b0 ->
+  FUN_8004ee78 Slot 0x17 @0x800316c8; Familie PL%02X aus der unteren Nibble von DAT_800aca5c (`andi v0,a0,0xf` @0x8003976c,
+  Tabelle @0x80073f70, Leser @0x800314d4).
+- Aenderung: neue Datei `platform/pc/src/zustand_r39_pc.c` (re15_pc_zustand_r39_haut_neu(int modell); GLOB
+  platform/pc/CMakeLists.txt:43 -> Configure neu). main.c traegt nur noch den 2-Zeilen-Haken im Blut-Decal-Sync, der den
+  tatsaechlich geladenen Modell-Index uebergibt (s_player_model_idx, sonst g_gameflow.character & 0x0F — dieselbe Wahl wie
+  die alte Funktion). Kommentar-Verweise in re15_zustand_r39.h und probes/r39_zustand.cmake nachgezogen.
+- Messung nachher: `git diff master -- re15_port/platform/pc/main.c` = **+2 Zeilen** (nur der Haken, Kommentar "Runde 39 Spur F").
+
+### Dabei gefunden: Absturz bei voller Heilung MIT R.P.D.-Weste (Modell PL01) — behoben
+- Befund beim Verschieben: pc_read_pl_part (main.c:653) liefert die TIM entweder als malloc'd Teildatei ODER als Zeiger IN den
+  resident gehaltenen Container (`cb + off`, Kommentar "nicht freigeben" main.c:650). Der Baum liefert PL00.TIM und PL04.TIM
+  lose, **PL01 (Weste) nur als Container PLD/PL01.PLD** (`ls shared_assets/PSX/PLD`). Die Fassung 87180698 rief `free(tb)` auf
+  den Rueckgabezeiger — fuer Leon/Elza ohne Weste harmlos (lose Datei), mit Weste ein free() mitten in den Containerpuffer.
+  Die Abnahme hat genau diesen Fall nicht gemessen (nur PL00/PL04, Handgun, GL).
+- Messung vorher (re15_pc_r39f_nb1_vorher.exe; Karte ROOM1130 Leon, HP 20, Heilspray Platz 0, **Flag(3,0x75)** -> beim
+  CONTINUE rekonstruiert re15_savedata_restore work_vars[0x10] = 1 und der Boot laedt PL01; lauf4.sh weste_v_w (8 Panels
+  Stufe 2) / weste_v_o (ohne)): debug.log `[pld] Spielermodell -> PLD/PL01.PLD (Mesh 17 Teile, Textur 384x256) [R.P.D.-Ruestung
+  an]`, `CONTINUE: resumed in room 1130 (hp=20)`, Spray `Heilung 0x22: HP 105 >= 105 voll -> Wund-Tabelle genullt (hatte
+  Wunden), Spielerhaut neu`, `[pl-part] PL01.TIM aus PLD/PL01.PLD geschnitten (+91012, 99872 B)`, `Spielerhaut PL01.TIM neu
+  geladen (384x256)` — und dort ENDET das Log (96 Zeilen; die letzten vier Zeilen stehen doppelt), kein weiteres `[walk]`,
+  kein EXIT_AT, **kein fd_000650.ppm, exit 127**; beide Laeufe identisch. Bild 150 w vs o = 1093 Pixel (Wunden auf der Weste
+  sichtbar). Der Prozess stirbt also unmittelbar nach dem free() des Schnittzeigers (das Spiel lief bis Bild 375 normal).
+- Aenderung (zustand_r39_pc.c): Lesereihenfolge wie pc_read_pl_part (Teildatei, sonst re15_pld_part(RE15_PLD_TIM) auf dem
+  Container, Grenzen geprueft), Upload kopiert (render_pc.c re15_render_pc_upload_tim_slot: eigener RGBA-malloc), danach
+  wird NUR der gelesene Puffer freigegeben (Teildatei oder ganzer Container), nie der Schnittzeiger.
+- Messung nachher (re15_pc_r39f_nb1.exe, weste_n_w / weste_n_o, gleiche Karte): `Spielerhaut PL01.TIM neu geladen (384x256,
+  Container PLD/PL01.PLD) - Kleidung ganz`, Lauf bis `EXIT_AT: Bild 700` (108 Zeilen), **exit 0**; Bild 150 w vs o = 1093 Pixel,
+  **Bild 650 w vs o = 0 Pixel** (Kasten 177..247 / 81..205). Schwelle mit Weste: Spray setzt 100 + Bonus 5 = 105
+  (item_use_common.c:62, Bonus re15_vest_hp_bonus) = re15_zustand_r39_hp_voll -> voll.
+- Riegel: integration_r39_zustand_kleidung faehrt jetzt SECHS Laeufe (Leon PL00, Elza PL04, Leon mit Weste PL01 je w/o);
+  der Westen-Lauf verlangt zusaetzlich `[pld] Spielermodell -> PLD/PL01.PLD` beim Boot und `Container PLD/PL01.PLD` in der
+  Spielerhaut-Zeile (= der Container-Pfad ist wirklich gelaufen) sowie `HP 105 >= 105 voll`. Werkzeug `test_r39_zustand karte`:
+  13. Argument Story-Flags ("3:0x75"), in die Karte geschrieben (re15_savedata_capture kopiert g_game.flags).
+
+### H1 — unversionierte Messreste
+- Die 7 Dateien (g_nachher.out, g_unter.out, k_n_{leon,elza}_{o,w}.out = Auswerter-Ausgaben der Messung 1.4/2.4,
+  laeufe/g_vorher/ekg_zoom_1560.png = der in 2.4 zitierte Vergleichs-Zoom) sind mit 8a6ea425 versioniert; "Baum sauber" gilt
+  jetzt fuer Index UND Arbeitsbaum (git status --porcelain leer vor dem Abschluss-Commit).
+
+### H2 — Mnemonic @0x8004ae14
+- Dossier 1.2 korrigiert: `ori s0,zero,0x64` (Rohbytes `64 00 10 34`, Dekodierung 0x34100064 = ORI zero -> s0, imm 0x64).
+  Code und Tests zitieren nur "s0 = 100 @0x8004ae14" (kein Mnemonic) — unveraendert richtig.
+
+### H3 / H4 / H5 — offen, kein Mangel (unveraendert)
+- H3 EKG-Wellenform: Entscheidungsfrage an den Nutzer (Abschnitt 5) bleibt; keine erfundene Skalierung.
+- H4 PSX: re15_pc_zustand_r39_haut_neu ist PC-Backend; platform/psx muesste re15_zustand_r39_haut_neu_abholen pollen und die
+  PLD-TIM per LoadImage neu in den VRAM-Slot laden (PSX-Build-Luecke, nicht baubar/messbar hier) — Abschnitt 4.
+- H5 Takt-Zaehler ohne Produktions-Reset: RE2 kennt keinen Schreiber; ohne Folge (jeder Gifttreffer setzt 30).
+
+### Tests der Nachbesserung
+- (ctest-Zeilen folgen unten, sobald die Laeufe fertig sind)
