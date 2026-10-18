@@ -205,6 +205,20 @@ Doppeltuer im Kampf, Rolladen-Ton 0x3B, Tuer-Toene 0x0E 0/1, Dachtuer -> 1171.
 Hinweis Messtechnik: RE15_FRAMEDUMP nummeriert je Raum (g_engine.frame_count beginnt beim Eintritt neu) - der lange Lauf in
 1171 hat die 1141-Bilder bis F1500 ueberschrieben; der Riegel-Lauf (4.2) endet deshalb 300 Bilder nach dem Eintritt in 1171.
 
+### 4.2 Riegel-Lauf integration_r39_dining1141_d (Stand d74fc937, Lauf lauf_beaaee4e, 320 s)
+Alle Pruefungen gruen (Auswertung mit dem korrigierten Skript per -DAUSWERTEN, siehe 5). Bilder je 10 Takte:
+- Tuer-Auftritt (Bogen `j39b/int_tuer.png`): F1240/F1260 Cut 5, Elza geht in den Raum und dreht sich zum Gang (der Gang und
+  die Dachtuer sind durch die Rolladen-Oeffnung zu sehen, John ist NICHT dort); F1270..F1330 Cut 7 = Elza von vorn mit
+  Balken; F1340/F1350 Cut 6 = John steht vor der Dachtuer; F1360..F1420 Cut 5, John laeuft aus dem Gang zu Elza.
+- Gespraech nach dem Kampf (Bogen `j39b/int_dialog.png`): Text "John: Puuuh, that was close! I thought / we end up as
+  Gorilla meal...." und "John: Elza, follow me, I think I might / have found a way out of here!" im Bild; BEFUND: mit Elza
+  bei (-6000,-20000) stand sie in Cut 8 VOR John (Bildlage 217 vs 194, Tiefe 3302 vs 5437) und verdeckte seine Gesten.
+  Behoben: Elza (-5800,-21500), 1750 oestlich von John: Bildlage Elza x 145, John x 194, nebeneinander; ausserhalb von
+  Johns Bahn (x > BAHN_X_MAX -6450), SCA frei (naechste Zelle 850). Nachmessung 4.3.
+- Riegel-Skript-Fehler gefunden und behoben: CMake kennt nur CMAKE_MATCH_1..9; mit 11 Gruppen waren Blick/b67 leer und die
+  Blick-Pruefung lief ins Leere (0 von 0). Jetzt Hauptteil 8 Gruppen + b67/blick einzeln; Auswertung desselben Laufs:
+  msg 9/10 0 von 268 Bildern ueber 160 Einheiten, msg 51 Blick 0, (9,67) = 1, Cut 7 verlassen.
+
 ## 5. Tests
 
 ## 6. OFFEN
