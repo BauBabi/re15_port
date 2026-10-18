@@ -556,11 +556,13 @@ Riegel-Soll: markerflaeche 1210 = 0 Punkte neben der Zeichnung (vorher 1693 von 
 Arbeitsordner der Messungen: Scratchpad `nb2/` (nicht im Baum).
 
 ### Fortschritt
-- [ ] Messung vorher (Sonde markerflaeche 1210, echte exe am Abnahme-Weg) - nicht wiederholt, wo die Abnahme gemessen hat
-- [ ] RE: Kammer + Durchgang aus der SCA von ROOM1210 (Offsets), Begehbarkeit im Original (SCD-Kollisionsschalter?)
-- [ ] Umsetzung: Zone 1 von ROOM1210/1211 + Schema-Zeichnung auf B2
-- [ ] Messung nachher (Sonde, echte exe, Sweep aller Blaetter gegen Abnahme 1)
-- [ ] Riegel, Bau, gezielte Tests, Abschluss
+- [x] Messung vorher (Sonde markerflaeche 1210, echte exe am Abnahme-Weg) - a6ba2ff0
+- [x] RE: Kammer + Durchgang aus der SCA von ROOM1210 (Offsets), Begehbarkeit im Original (Kameras 6/7, kein Schalter
+      fuer Leon; Elza: sub00 schliesst) - a6ba2ff0 + unten
+- [x] Umsetzung: Zone 1 von ROOM1210/1211 + Schema-Zeichnung auf B2 + Durchgang; Querbalken-Fenster (184 Punkte) - 8dcd780d
+- [x] Messung nachher (Sonde, echte exe Lauf K, Sweep aller Blaetter gegen Abnahme 1) - d29ee63b + unten
+- [x] Riegel + Gegenprobe (Kammer/Fenster abgeschaltet -> ROT)
+- [ ] gezielte Tests, Abschluss
 
 ### N1 Messung vorher (Stand b1da8c01/0c1ded3c, Bau der Abnahme; die Abnahme-Zahlen bestaetigt, nicht neu erhoben)
 `probe_r39_karten markerflaeche 1210 0 -25800 -2200 0 100 1` (echter Kollisionsloeser, jeder Rasterpunkt):
@@ -598,3 +600,65 @@ Flurflaeche (10387 Punkte, eine Komponente), Kammer-Mitten x -26828..-22928, z -
     z -27794..-23402 (Pritsche), @0x01C58 x -25291..-21644 z -20795..-18995 (Bank an der Nordwand), Kreis @0x01C4C.
   - Marker: Kammer-Mitten x -26828..-22928 -> px 189..199, z -20440..-26240 -> py 115..128 = im Innenraum x187..200
     y113..128; Durchgang z -21196..-22070 -> py 117..119.
+
+### N1 Befund beim Nachmessen: 184 der 1693 Punkte liegen NICHT in der Kammer
+Nach dem Einbau der Kammer meldete `markerflaeche 1210 ... 100 1` noch **184** Punkte neben der Zeichnung - alle im
+QUERBALKEN des T-Flurs: Marker (191..200,79) und (213..224,79), Welt z -3440 (Beispiel (-26328,-3440) -> (191,79), Index 0).
+Nachgebildet mit nb2/aussen1210.py (Zeile + Klemmung + MAP02.PIX r3) = exakt dieselben 184. Die Abnahme hatte sie der
+Kammer zugerechnet (1693 = Kammer 1509 + Querbalken 184). URSACHE: die Kachel r3 malt den Balken GESTAUCHT - Linien y70 und
+y78 (MAP02.PIX r3 Zeilen 0/8, Index 4; y78 mit T-Oeffnung x202..211 Index 1), die Waende liegen mit der Original-Zeile
+@0x800769B8 11,7 px auseinander (Mitten: Nord @0x01B8C z 466 -> py 70, Sued @0x01BD4 z -4994 -> py 82). Der suedlichste
+begehbare Streifen (Mitte bis z -3470 = Innenseite @0x01BD4 z -3920 + Spielerradius 450; py 79 ab z -3337) landet
+damit 1 px UNTER der Linie y78 - in den Zellen r4/r6 von ROOM1220 (fremder Raum). Gleiche Fehlerklasse (Marker neben der
+eigenen Zeichnung), derselbe Raum, vorbestehend (Original-Zeile + Original-Kunst; das Original klemmt gar nicht).
+Eine Neu-Eichung der Zeile hilft nicht: kein linearer Massstab trifft Balken UND Flur/Kammer (Balken 8 px gemalt fuer
+11,7 px Welt), und 1220 teilt den Rahmen.
+
+### N1 Umsetzung (Dateien, Konstanten)
+* `engine/src/re15_map_zones.h`: Zonen `{ 0x1210/0x1211, -25858, -25196, -23628, -21398, 1, 255, 1, 112, 177, 140, 2496,
+  2250, 0, 0, 12, 0 }` = Zone 1 (zid 112 neu, frei). Zeile = die des Flurs @0x800769B8 (ein Raum, ein Rahmen; gemessen:
+  Marker an der Zonengrenze stetig, (-22128) -> (200,118) Zone 1, (-22127) -> (201,118) Zone 0). Weltbox =
+  Innenflaeche um ZONE_SLACK 1500 eingezogen (wie 11D0 Zone 1): West -27358 (@0x01BEC), Nord -19898 (@0x01BF8), Sued
+  -26696 (@0x01BE0), Ost -22128 = letzte Weltlage mit px 200 (FUN_800473f8: px(-22128) = 200, px(-22127) = 201 = die
+  gemalte Flur-Westwand). Besucht-Bit: zone_bit idx 1 = 2n+1 von ROOM1210 (bisher ungenutzt; alte Spielstaende: 0).
+  `s_map_synth` synth 12 = `{ 186, 112, 15, 18, 21, 1, 0,0,0,0,0,0 }` (keine Affine - Marker per Zeile), Zelle 21 =
+  `{ 186, 112, 15, 18 }`: Linien x186 / y112 / y129 liegen auf den gemalten (r9 Ostwand, r5 Unterkante, r3 Flur-
+  Unterkante), die Zelle endet bei x200.
+* `engine/src/karte_r39.c`: s_korr `{ 1, 3, 14, 47, 1, 3, 1, R39_SCHEMA(12) }` = DURCHGANG x201 y117..119 (r3 Spalte 14
+  Zeilen 47..49, Index 4 -> Koerper), Traeger = die Kammer (ohne sie bliebe hinter der Luecke Grund); s_kanten
+  `{ 1, 186, 112, 15, 18, 3, 3 }` = Ostkante der Kammer entfaellt, wenn r3 gezeichnet wird (eine Linie: x201). NEU
+  `re15_karte_r39_fenster` + Tabelle s_fenster: ROOM1210/1211 Zone 0, Welt z > -4084 (Nordende @0x01BC8) ausserhalb der
+  Flurspanne x -21090 (@0x01BC8) .. -17696 (@0x01C04): Klemmfenster = gemalter Balken r3 x187..226 y70..78 (wirksam nur
+  y <= 78). R39_SCHEMA nach oben gezogen (vor s_korr).
+* `engine/src/re15_inv_screen.c`: EIN Haken `re15_karte_r39_fenster(zn, world_x, world_z, &lo_x, &hi_x, &lo_y, &hi_y);`
+  direkt nach re15_karte_fahrstuhl_fenster (Kommentar "Runde 39 Spur G"). `include/re15_karte_r39.h`: Deklaration.
+* Keine Assets, kein Patch an shared_assets, keine Bank-9-Bits, keine Nachrichten-Ids, keine Sprachdateien.
+
+### N1 Messung nachher
+* Sonde (Bau 8dcd780d): `markerflaeche 1210 0 -25800 -2200 0 100 1` -> `10387 begehbare Rasterpunkte, 10387 geprueft,
+  Marker x 189..224 y 74..128, ausserhalb der Zeichnung 0` (vorher 1693). Elza ROOM1211: Kammer offen (Flags (4,0xEC) +
+  (4,0xFC)) 0 von 10391; Kammer zu (Flags 0, sub00 Sca_id_set Zelle 15): Flur 0 von 8783, Kammer 0 von 2022.
+  Zonengrenze im Durchgang (z -21700): x -22200/-22128 -> (200,118) Zone 1; -22127/-22000/-21800 -> (201,118) Zone 0;
+  -21600/-21300 -> (202,118); -21000 -> (203,118) - stetig, kein Sprung.
+* ECHTE exe, Weg der Abnahme (integration_r39_karten Lauf K: Spielstand 1210 Flur (-19500,0,-21700) rot 2048, 11E0 + 1210
+  besucht, LOAD GAME, RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT=W1,U4,W5, RE15_INV_OPEN_AT=200#1210, FB_SHOT):
+  `letzte Spielerlage: x=-25500 z=-21700` (wie Abnahme), `MARKER 191 117` (Ring-Mitte, wie Abnahme), um den Ring
+  `rot=36 besucht=0` (vorher: Blau), Kasten Kammer+Durchgang offen 0, Doppelwand 0. Bild
+  `G_karten_bilder/b2_kammer_echtlauf_vorher_nachher_x4.png` (links Abnahme-1-Abzug w1210b, rechts Lauf K).
+* Sweep aller 13 Blaetter (Lauf S) gegen den Sweep der Abnahme 1 (G39abn1/neu_S): s00, s02..s12 **0** Pixel verschieden;
+  s01 (B2) 249 Pixel, alle im Kasten x186..201 y113..129 (= Kammer + Durchgang). Bild
+  `G_karten_bilder/b2_kammer_soll_nachher_x4.png` (links mapB2_correct.png rechts, rechts Sweep).
+* B2 gegen die Vorlage (sollbild): 55935 Kartenpixel ausserhalb der Kammer, 0 Abweichungen; Kammer 272 von 272 Pixeln
+  wie die Zeichnung aus der SCA. Doppelwand B1..3F je 0.
+
+### N1 Riegel und Gegenprobe
+* `unit_r39_karten_marker` + ROOM1210 (Dichte 1) und ROOM1211 (offen / zu: Flur / zu: Kammer) je 0 neben der Zeichnung.
+* `unit_r39_karten_teil` (a) Durchgang = Koerper an einer Zelle der Kammer; (e) fuenf Zustaende: Flur allein (Kammer
+  ungezeichnet, x201 y117..119 Wand 3/3), Flur+Kammer aktuell Kammer / aktuell Flur (Linien 65/65, Durchgang 3/3,
+  Innenraum 224/224, x200 keine zweite Linie, offen 0), Kammer allein (Ostkante x200 18/18, offen 0), Umriss mit B2-Plan
+  (Linien 34/34, Durchgang durchsichtig 3/3, x200 frei).
+* `integration_r39_karten` + Lauf K (s.o.), sollbild-Kasten der Kammer gegen die Zeichnung aus der SCA.
+* GEGENPROBE (Kammer-Zonen und Fenster voruebergehend auf Raum 0x9210/0x9211 gestellt, nur gebaut und die Sonde
+  gefahren, danach zurueckgesetzt und neu gebaut): `pruef marker` ROT - 1210 1693 von 10387, 1211 offen 1693 von 10391,
+  1211 zu: Flur 184 von 8783, Kammer 2022 von 2022; `pruef teil` ROT - Flur+Kammer Linien 17/65, Durchgang 0/3, Innenraum
+  0/224; Kammer allein x200 0/18.
