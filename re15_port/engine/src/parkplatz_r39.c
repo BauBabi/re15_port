@@ -114,6 +114,16 @@ const uint8_t *re15_parkplatz_r39_evt_exec(uint16_t room_id, uint8_t sub_id, con
     if (sub_id != RE15_R39O_SUB_SZENE && sub_id != RE15_R39O_SUB_ENDE) return orig;
     if (!re15_parkplatz_r39_anker_ok()) return orig;
     if (sub_id == RE15_R39O_SUB_SZENE) {
+        /* Nur sperren, wenn die Freigabe noch kommen kann (Abnahme 0 M1). Die EINZIGE Freigabe ist sub01 @0x0182E
+         * `21 03 43 00` Ck(3,67)==0 -> @0x01842 `04 ff 18 03` Evt_exec sub03 (Programm ENDE); (3,67) setzt allein sub03
+         * @0x01B02 `22 03 43 01` (Zensus 240 RDTs, kein Loescher). Ist (3,67) schon 1 (Spielstand/Debug-Flags mit
+         * (4,64)=0), greift sie nie mehr: Original-sub02, die Tuer bleibt die Original-Tuer. Nach sub02 @0x0184E
+         * Set(4,64)=1 ist das genau "Kampf laeuft" (sub00 @0x017C8/@0x017D0) = re15_parkplatz_r39_kampf()/Installer. */
+        if (re15_game_flag_get(RE15_R39O_ENDE_BANK, RE15_R39O_ENDE_BIT)) {
+            log_f("ROOM11C0 sub01 @0x01824 Evt_exec sub02 bei (3,67)=1 -> keine Sperre (Freigabe sub01 @0x0182E "
+                  "Ck(3,67)==0 greift nie), Original-sub02");
+            return orig;
+        }
         g_re15_r39o_szene_zaehler++;
         log_f("ROOM11C0 sub01 @0x01824 Evt_exec sub02 -> Programm SZENE (Tuer Slot 0 -> Text msg 40, Gosub sub02)");
         return k_r39o_p_szene;

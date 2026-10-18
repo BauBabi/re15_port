@@ -14,8 +14,11 @@ cmake_minimum_required(VERSION 3.16)
 #   N  LEON nach dem Kampf ((4,64)=1, (3,67)=1): Tuer ist die Original-Tuer, Druck -> ROOM11B0, kein Eingriff.
 #   E  ELZA 11B1 -> 11C1 (Hunde, kein Begleiter): Tuer bleibt Tuer, Druck -> zurueck nach ROOM11B1 (die fuenf Hunde nimmt
 #      WEGPLAN GEGNERWEG heraus, damit kein Biss den Druck schluckt — die Tuer haengt an keinem Gegner).
+#   I  LEON (4,64)=0, (3,67)=1 (Karte des Spur-A-Riegels integration_r39_stimmen_11b0; Abnahme 0 M1): keine Sperre -
+#      die Freigabe sub01 @0x0182E Ck(3,67)==0 griffe nie. i1 Aot_on(0) in Bild 60 der Szene -> ROOM11B0; i2 Szene
+#      durch, zu Fuss zur Tuer, Druck -> ROOM11B0.
 # Geprueft werden debug.log, state.txt und wegplan_log.txt.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_schluessel_karte> -DWORKDIR=<dir> -DTEIL=K|W|N|E
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_schluessel_karte> -DWORKDIR=<dir> -DTEIL=K|W|N|E|I
 #         -P test_r39_parkplatz11c0.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -285,6 +288,55 @@ ENDE
     pruef_nicht(E _d "[parkplatz]")
     pruef(E _d "DOOR FIRE slot=0 rect=(-25100,17250")
     pruef(E _d "EXIT_AT: Bild 200 in Raum 11b1")
+endif()
+
+# --- I: (4,64)=0, (3,67)=1 (Abnahme 0 M1) ----------------------------------------------------------------------------
+# Flag-Zustand der Karte von integration_r39_stimmen_11b0 (Spur A, test_r39_stimmen.cmake:97 `3:0x43 3:0x82 4:0xf3`, Lage
+# (-25100,15000) Blick 1024): die Ende-Szene gilt als gelaufen, die Ada-Szene nicht. sub01 @0x01824 startet sub02 wie im
+# Original; die einzige Freigabe sub01 @0x0182E Ck(3,67)==0 -> @0x01842 griffe nie -> KEINE Sperre (parkplatz_r39.c).
+#   i1  Weg des Spur-A-Riegels: Aot_on(0) in Bild 60 der Szene (RE15_FIRE_AOT=0@60#11c0) -> Tuer -> ROOM11B0
+#   i2  Szene laeuft durch, Gegner weg, zu Fuss zur Tuer (Wege wie K), Druck -> Tuer -> ROOM11B0
+if(TEIL STREQUAL "I")
+    set(_karte_i 11C0 -25100 15000 1024 flag:3:67 flag:3:0x82 flag:4:0xF3)
+    lauf(i1 "${_karte_i}" "RAUM 11B0
+WARTE 30
+ENDE
+" "RE15_FIRE_AOT=0@60#11c0;RE15_EXIT_AT=200#11b0" _d _st _wp)
+    pruef(I1 _d "CONTINUE: resumed in room 11c0")
+    pruef(I1 _d "ROOM11C0 sub01 @0x01824 Evt_exec sub02 bei (3,67)=1 -> keine Sperre")
+    pruef(I1 _d "room=11c0 Evt_exec sub=2 ")
+    pruef_nicht(I1 _d "Programm SZENE")
+    pruef(I1 _d "[fire-aot] slot=0 at F60")
+    pruef(I1 _d "DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)")
+    pruef(I1 _d "loaded room11b0.rdt")
+    pruef_nicht(I1 _d "Tuer im Kampf -> msg 40")
+    pruef(I1 _d "EXIT_AT: Bild 200 in Raum 11b0")
+    lauf(i2 "${_karte_i}" "RAUM 11C0
+AOTS
+FLAG 4 64
+FLAG 3 67
+GEGNERWEG
+GEHE -15893 -6270 300
+GEHE -15893 12430 300
+GEHE -25100 16600 150
+BLICK 3072
+AOTS
+AKTION
+RAUM 11B0
+WARTE 30
+ENDE
+" "RE15_EXIT_AT=200#11b0" _d _st _wp)
+    pruef(I2 _d "ROOM11C0 sub01 @0x01824 Evt_exec sub02 bei (3,67)=1 -> keine Sperre")
+    pruef_nicht(I2 _d "Programm SZENE")
+    pruef(I2 _d "letterbox closed -> gameplay")
+    pruef(I2 _wp "AOT slot 0 typ 1 ev 0 flags 0x31 band 0 mitte (-25100,17250)")
+    pruef_nicht(I2 _wp "AOT slot 0 typ 5 ")
+    pruef(I2 _wp "FLAG (4,64) = 1")
+    pruef(I2 _wp "FLAG (3,67) = 1")
+    pruef(I2 _d "DOOR FIRE slot=0 rect=(-25100,17250,hw=2000,hh=1350) target_cut=1 spawn=(-25552,0,-25331)")
+    pruef(I2 _d "loaded room11b0.rdt")
+    pruef_nicht(I2 _d "Tuer im Kampf -> msg 40")
+    pruef(I2 _d "EXIT_AT: Bild 200 in Raum 11b0")
 endif()
 
 file(REMOVE "${_exe_kopie}")

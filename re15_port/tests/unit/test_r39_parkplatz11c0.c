@@ -371,11 +371,16 @@ static void teil_programme(void)
           d[0x01798 + 7] == RE15_R39O_KILL_2, "sub00 Gorillas Typ 0x27 mit Kill-Flag 0x60/0x61 (pc[7])");
     g_current_room_id = RE15_R39O_RAUM;
     PRUEF(re15_parkplatz_r39_anker_ok(), "Anker (FNV main00-Tuer + sub00..sub03) im ausgelieferten RDT");
+    re15_game_state_init();   /* (3,67)=0: die Freigabe sub01 @0x0182E kann noch greifen */
     PRUEF(re15_parkplatz_r39_evt_exec(RE15_R39O_RAUM, 2, s_rdt.sub_scd[2]) == p0 &&
           re15_parkplatz_r39_evt_exec(RE15_R39O_RAUM, 3, s_rdt.sub_scd[3]) == p1 &&
           re15_parkplatz_r39_evt_exec(RE15_R39O_RAUM, 7, s_rdt.sub_scd[7]) == s_rdt.sub_scd[7] &&
           re15_parkplatz_r39_evt_exec(0x11C1, 2, s_rdt.sub_scd[2]) == s_rdt.sub_scd[2],
           "Evt_exec-Haken: 11C0 sub02 -> SZENE, sub03 -> ENDE, sub07 und andere Raeume unveraendert");
+    re15_game_flag_set(RE15_R39O_ENDE_BANK, RE15_R39O_ENDE_BIT, 1);
+    PRUEF(re15_parkplatz_r39_evt_exec(RE15_R39O_RAUM, 2, s_rdt.sub_scd[2]) == s_rdt.sub_scd[2],
+          "Evt_exec-Haken bei (3,67)=1: sub02 bleibt das Original (keine Sperre; Abnahme 0 M1)");
+    re15_game_state_init();
 }
 
 /* ---- Teil: kampf (echter Weg ab dem Tuer-Spawn) --------------------------------------------------------------- */

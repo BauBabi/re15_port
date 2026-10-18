@@ -28,7 +28,9 @@
  *
  * ABLAUF IM PORT
  *   Erster Besuch:  sub01 @0x01824 Evt_exec sub02 -> Programm SZENE (gen/parkplatz_r39_programme.inc):
- *                   Aot_reset Slot 0 -> MESSAGE msg 40, Gosub sub02 (Szene unveraendert aus dem RDT).
+ *                   Aot_reset Slot 0 -> MESSAGE msg 40, Gosub sub02 (Szene unveraendert aus dem RDT) — nur bei
+ *                   (3,67)==0: die einzige Freigabe sub01 @0x0182E Ck(3,67)==0 -> @0x01842 muss noch greifen koennen
+ *                   (Abnahme 0 M1; bei (3,67)=1 und (4,64)=0 = Spielstand/Debug-Flags: Original-sub02, keine Sperre).
  *   Wiedereintritt: (4,64)==1 && (3,67)==0 nach dem Init-Lauf -> derselbe Aot_reset aus C (re15_aot_retype).
  *   Kampf-Ende:     sub01 @0x01842 Evt_exec sub03 -> Programm ENDE: Aot_reset Slot 0 -> DOOR (Nutzlast main00
  *                   @0x01712+14), Gosub sub03 (Szene unveraendert; Aot_on(0) @0x01C08 findet die Tuer).
@@ -71,7 +73,8 @@ int re15_parkplatz_r39_anker_ok(void);
 /* Raumaufbau NACH dem Init-Lauf (scd_room_setup.c Blockende, platform/pc/main.c Boot-/CONTINUE-Weg): Text 40 einsetzen;
  * bei Wiedereintritt im Kampf Slot 0 -> MESSAGE 40 (derselbe Aot_reset wie Programm SZENE). */
 void re15_parkplatz_r39_install(uint16_t room_id);
-/* op_evt_exec-Haken: sub02 -> Programm SZENE, sub03 -> Programm ENDE (nur ROOM11C0 mit gueltigen Ankern), sonst orig. */
+/* op_evt_exec-Haken: sub02 -> Programm SZENE (nur bei (3,67)==0), sub03 -> Programm ENDE (nur ROOM11C0 mit gueltigen
+ * Ankern), sonst orig. */
 const uint8_t *re15_parkplatz_r39_evt_exec(uint16_t room_id, uint8_t sub_id, const uint8_t *orig);
 /* MESSAGE-AOT-Weg (re15_scd_show_message): ROOM11C0 msg 40 reiht die Stimme ein (Ordnerregel main40.wav). */
 void re15_parkplatz_r39_stimme(uint16_t room_id, uint8_t msg_id);

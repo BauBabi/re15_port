@@ -17,7 +17,8 @@ ROOM11C0.RDT (shared_assets/PSX/STAGE1, main_scd @0x1710, sub_scd @0x1758):
          sub03 @0x01B02 Set(3,67)=1 ... @0x01C08 Aot_on(0) = die Tuer feuert)
 PROGRAMME (ersetzen das Ziel des jeweiligen Evt_exec; die Szenen selbst laufen UNVERAENDERT als Gosub aus dem RDT —
 Form Gosub-Huelle: Runde 38 F SZENE1021 "Gosub sub02 + Aot_set", Gosub @0x8003fc04):
-  SZENE  Aot_reset Slot 0 -> MESSAGE msg 40, dann Gosub sub02.
+  SZENE  Aot_reset Slot 0 -> MESSAGE msg 40, dann Gosub sub02. Der Haken (engine/src/parkplatz_r39.c) liefert SZENE nur
+         bei (3,67)==0 — sonst griffe die einzige Freigabe sub01 @0x0182E Ck(3,67)==0 nie (Abnahme 0 M1).
          Form der Zeile: ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00` (RE1.5 Tuer -> Text) und RE2 ROOM7040
          sub06 @0x0185A `46 00 04 31 01 00 00 00 ff ff` (RE2: Tuer -> Text in der Kampf-Beginn-Szene, vor der Rueckgabe
          der Steuerung). Die Zeile steht vor dem Gosub: sub02 sperrt den Pad in DERSELBEN Runde (@0x01856 `22 02 07 01`,
