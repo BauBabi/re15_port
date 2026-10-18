@@ -262,9 +262,11 @@ Rueckfall tuer_1131 am Zustand statt am (nicht mehr moeglichen) Hinausgehen waeh
 D und A -> Verweis auf integration_r39_dining1141_d (Pruefungen uebernommen), S mit Wegplan WARTE 900 und Ende 5800#1141;
 test_r36_kartenbits k_port[] + Bit 94.
 
-Gezielter Lauf Unit (Endstand, ctest -R wortlich):
-`unit_r39_dining1141|unit_r38_dining1141|unit_r36_kartenbits|unit_rotor_bgm_pin|unit_r35_cut10f0|unit_synchro_stimme|unit_voice_ausreden|unit_r39_stimmen|unit_r38_rekorder|unit_r38_elzaintro_stimme|unit_se_bank_routing|unit_se_voice_machine|unit_r30_tuer_stimme|unit_audio`
--> "100% tests passed, 0 tests failed out of 38".
+Gezielter Lauf Unit (Endstand nach der Warte-Zeile, ctest -R woertlich; Gruppen je beruehrtem Modul: dining_r38/39,
+Kartenbits, audio_pc.c BGM/Stimme/SE, scd_vm.c op_message_on-Haken):
+`unit_r39_dining1141|unit_r38_dining1141|unit_r36_kartenbits|unit_rotor_bgm_pin|unit_r35_cut10f0|unit_synchro_stimme|unit_voice_ausreden|unit_r39_stimmen|unit_r38_rekorder|unit_r38_elzaintro_stimme|unit_se_bank_routing|unit_se_voice_machine|unit_r30_tuer_stimme|unit_audio|unit_r34n_f_leiche_stimme|unit_r38_tagebuch|unit_r38_elzatoene`
+-> "100% tests passed, 0 tests failed out of 50".
+Integration integration_r39_dining1141_d (Endstand): "Passed 340.14 sec" (Abschnitt 4.4).
 
 ## 6. OFFEN
 - Spur K (Welle 3, parallel): Johns Plc_motion(2,6) (eigene Bank, Clip 6) ist im Original die Geste zu "Elza, hurry up!"
