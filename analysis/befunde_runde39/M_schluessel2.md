@@ -64,6 +64,11 @@ Zeilenenden; `git diff` leer) — der Generator liest seine eigene Ausgabe nicht
   `camera_common.c` `fov_to_screen_dist` (fov >> 7). Die Pinnwand-Ebene (z = -3400, Schluessel flach darauf) liegt im
   Nutzer-Cut 5 bei vz ~13000 fast auf einer Tiefe; den Rest (Tiefenunterschied ueber die Schluesselflaeche, gerundete
   Ecken) rechnet das Werkzeug am GEZEICHNETEN Netz genau (Bisektion, s.u.).
+* **Zweite Grenze: das GTE-Raster (ganzzahlige Bildschirm-Ecken).** Gemessen und disassembliert im Abschnitt
+  "Zwischenstand 1 / Mechanismus": der Objekt-Zeichner FUN_80022f0c schreibt die RTPT-Ergebnisse SXY0..2 als ganze Zahlen
+  ins GPU-Polygon (`@0x80022fb0 4a280030` RTPT, `@0x80022fd8 08 00 8c e9 / 14 00 8d e9 / 20 00 8e e9` swc2 nach +8/+0x14/
+  +0x20); der Port tut dasselbe (`objpoly_r38.c`, TRILOG-Ecken). Bei 2..6 Bildpunkten Groesse entscheidet dieses Raster,
+  wie gross der Schluessel gezeichnet wird -> "maximal halb so gross" gilt auch fuer das GTE-Viereck.
 * **Lage bleibt:** das Werkzeug zentriert das MD1 auf die Mitte des sichtbaren Texel-Rechtecks (mx, mz) und skaliert um diese
   Mitte; `pos = round(mitte)` (Sehstrahl der Nutzer-Marke x Wand z -3400) haengt nicht von s ab -> Lage (1358,-2495,-3400),
   Drehung (3072,0,2048) bzw. (1024,0,0), flaches Licht 0x0010 und Aufhebe-Zone (798,-3600) 1000x1000 / Slot 8 unveraendert.
