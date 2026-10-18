@@ -276,6 +276,13 @@ check_tree() {           # $1 = fertiger Paketordner
         [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-37-Lifte waeren stumm)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
     done
+    # Seit Runde 39 (Spur B, toene_r39_pc.c): Mini-Bank TOENE39.VBS = Schubladen-Ton ROOM11F0/11F1 (RE2 ROOM1130 0x28),
+    # Gitter-Toene der Hunde-Luke ROOM1190/1191 (RE1.5 ROOM2060 0x0E/0x0D) und Schrank-Ton 1190/1191 (RE2 ROOM1120 0x0C).
+    # Fehlt sie, sind Schublade, Luke und Schrank still stumm (Abnahme B H6).
+    for rs in TOENE39.VBS; do
+        [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-39-Toene waeren stumm)"
+        cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
+    done
     # Seit Runde 36 (Spur O, PRI): die Masken-Erzeugnisse der Nutzer-PRIs fuer ROOM10F0 Cut 2 (Absperrung) und ROOM1100
     # (Wandfuss) liegen im kopierten PSX-Baum (shared_assets/PSX/MASKS); fehlen sie, verdeckt die Absperrung Marvin nicht.
     for rs in MASKS/ROOM10F0.MSK MASKS/ROOM10F0_PRI02.TIM MASKS/ROOM1100.MSK MASKS/ROOM1100_PRI01.TIM MASKS/ROOM1100_PRI02.TIM; do

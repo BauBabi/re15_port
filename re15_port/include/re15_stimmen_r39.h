@@ -16,6 +16,10 @@
  * mit Original-Id 3; der Nutzer hat seine Aufnahmen mit der NAECHSTEN FREIEN DATEINUMMER des Ordners in
  * Szenenreihenfolge abgelegt (e2cc7673, 2026-10-16). Keine Datei heisst wie die Id ihrer Zeile -> stumm.
  *
+ * NACHTRAG 2 (2026-10-18 09:48, Nachbesserung 1): ROOM1150 msg 29 "Leon: SIR, Sir?!" <- main22.wav (Nutzer: "das SIR,
+ * sir! habe ich vergessen und jetzt mit main22 ergänzt"); die Pegel-Anhebung ueber 4x hinaus steht in
+ * re15_stimmen_pegel_r39.h (Stufe 2 des Laders).
+ *
  * ZUORDNUNG = NUTZER-VORGABE (seine Dateien, seine Reihenfolge). Gemessen je Datei (Dossier §1): Windows-
  * Spracherkennung (Diktat + Wahl unter den Raum-Saetzen) und MFCC/DTW gegen seine Roh-Exporte
  * synchro/unused/STAGE1/room<RAUM>/MiniMax_<Zeit>_<Sprecher>.wav (gleicher Satz 1,26-1,85, anderer >= 2,2).

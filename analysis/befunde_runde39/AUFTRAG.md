@@ -74,3 +74,17 @@ Neuer Punkt (Ende der erneut gesendeten Liste):
 
 Ablauf erneut bestaetigt: "Baue erst einmal fertig, nutze diese und baue das Stück für Stück, damit nicht zu viel
 Tokens verbrannt werden, wenn das Limit erreicht ist."
+
+## Nachtrag 2 des Nutzers (woertlich, 2026-10-18 09:48, Antwort auf die Hinweise der Spur A Stimmen)
+
+- "er Port kann die Stimme ruhig lauter anheben das es passt." (Irons' Zeilen ROOM1150 main18-21, -47 dBFS)
+- "Du hast recht, das SIR, sir! habe ich vergessen und jetzt mit main22 ergänzt." (synchro/STAGE1/room1150/main22.wav,
+  Datei vom 2026-10-18 09:45 = Zeile msg 29 "Leon: SIR, Sir?!")
+- "Ändere es zu unwanted followers im Text bei 11B0."
+- "Zu 1171, passt."
+
+Orchestrator (Nachbesserung 1 der Spur A): (1) Port-Anhebung von Irons' Dateien ueber den 4x-Deckel hinaus =
+NUTZER-VORGABE; "dass es passt" ist zu MESSEN (Bezug: Leons Zeilen derselben Szene / BGM MAIN1E), keine geratene Zahl.
+(2) Tabelle: ROOM1150 msg 29 <- main22.wav (Nutzer legt weiter mit der naechsten freien Nummer ab). (3) ROOM11B0 msg 21
+lautet schon "I just want to make sure / we don't have any unwanted followers." (tools/r36_j/szene11b0_bauen.py:286,
+gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aendern; dem Nutzer gemeldet. (4) erledigt.
