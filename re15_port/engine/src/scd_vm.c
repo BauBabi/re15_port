@@ -1872,6 +1872,8 @@ static int op_message_on(scd_thread_t *t)
     /* Runde 38 Spur G: ROOM1011 msg 18 (Roys Zettel "0513", sub07 @0x00E64) -> Roys Diary statt der Nachricht;
      * 2 = parken, solange der Leser laeuft (include/re15_tagebuch_r38.h). */
     { const int tb = re15_tagebuch_r38_message_on(t); if (tb == 2) return 2; if (tb == 1) { t->pc += 4; return 1; } }
+    { extern int re15_dining_r39_message_on(const uint8_t *pc);   /* Runde 39 Spur J: 1141 msg 58 = nur auf die Sprachzeile warten */
+      if (re15_dining_r39_message_on(t->pc)) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text

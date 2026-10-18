@@ -33,6 +33,8 @@
 #define RE15_R39J_MSG_FOLGEN     52     /* "John: Elza, follow me, ..."                                                */
 #define RE15_R39J_HILFE_ID0      53     /* Sprach-Ids 53..57 = synchro/STAGE1/room1141/help01..05.wav (ohne Text)     */
 #define RE15_R39J_HILFE_N        5
+#define RE15_R39J_MSG_STIMME_WARTEN 58  /* Port-Zeile ohne Text: op_message_on parkt, solange eine Sprachzeile laeuft
+                                         * (scd_vm.c Stimmen-Riegel), dann verbraucht der Haken sie (Punkt 6)       */
 
 /* ---- Port-Bank 0x3E (Se_on pc[1]; frei: 0x0E/0x3A/0x3B/0x3C/0x3D sind vergeben, Dossier 3) ------------------------ */
 #define RE15_R39J_SE_BANK        0x3E
@@ -72,6 +74,8 @@ const uint8_t *re15_dining_r39_befreiung(void);
 int re15_dining_r39_se_on(unsigned bank, int satz);
 /* audio_pc.c re15_voice_load_clip: ROOM1141 Id 53..57 -> Stamm "help01".."help05"; sonst unveraendert. */
 void re15_dining_r39_stamm(unsigned room_id, int voice_id, char *stamm, size_t n);
+/* op_message_on (scd_vm.c, nach dem Stimmen-Riegel): 1 = (ROOM1141, msg 58) verbraucht - eine reine Warte-Zeile. */
+int re15_dining_r39_message_on(const uint8_t *pc);
 /* Messschiene RE15_R39J_LOG=<datei> (env-gegatet, je Bild aus re15_dining_r38_messhaken). */
 void re15_dining_r39_messhaken(void);
 /* Plattform-Ton (platform/pc/src/dining_r39_pc.c): bank 0x3E, satz wie oben. */

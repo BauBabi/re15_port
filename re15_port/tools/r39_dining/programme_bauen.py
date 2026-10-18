@@ -43,6 +43,7 @@ SATZ_KLOPFEN = 0x00             # RE15_R39J_SATZ_KLOPFEN  DOOR0F Satz 0
 SATZ_GLAS = 0x21                # RE15_R39J_SATZ_GLAS     RE2 ROOM1090 @0x02BB0 `36 02 21 ..`
 SATZ_HILFE0 = 0x31              # RE15_R39J_SATZ_HILFE0   0x31..0x35 = help01..05
 MSG_REAKTION, MSG_PUH, MSG_FOLGEN = 50, 51, 52
+MSG_STIMME_WARTEN = 58          # RE15_R39J_MSG_STIMME_WARTEN (Port-Warte-Zeile, Punkt 6)
 BIT_REAKTION = 94               # RE15_R39J_BIT_REAKTION (Bank 9, VERTRAG 1.1)
 MIX = (3, 1, 4, 2, 5)           # PORT-WAHL "im Mix": Reihenfolge der help-Dateien je Durchlauf; die erste Runde ruft
                                 #   help03 (1,57 s) - die Reaktion kommt nach Sleep 90 (3 s) sicher hinter dem Ruf
@@ -257,6 +258,9 @@ def baue_befreiung39():
     R.ersetze_bei("1141", 0x00E80, [0x29, 0x00], [0x29, 0x05], "Cut_chg 5 (wie @0x00D08)")
     # Punkt 6: Glasbruch vor "What was that?!" (msg 6 @0x00DCA), vor dem Original-Sleep 20 @0x00DC6
     einfuegen_vor("1141", 0x00DC6, [
+        (bytes([0x2B, MSG_STIMME_WARTEN, 0x00, 0x00]), "Message_on 58 = Port-Warte-Zeile ohne Text: op_message_on parkt, "
+                                                       "bis Johns Sprachzeile zu msg 5 endet (Stimmen-Riegel scd_vm.c), dann "
+                                                       "verbraucht re15_dining_r39_message_on sie (Form sub02 @0x00D9E `2b 05 00 00`)"),
         (bytes([0x36, BANK, SATZ_GLAS] + [0] * 9), "Se_on(0x3E,0x21) Glasbruch = RE2 ROOM1090 sub15 @0x02BB0 (Satz 0x21, "
                                                    "GLAS1090) - NUTZER-VORGABE Punkt 6"),
         (bytes([0x09, 0x0A, 0x05, 0x00]), "Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC"),

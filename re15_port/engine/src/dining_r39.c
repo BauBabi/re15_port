@@ -100,6 +100,16 @@ int re15_dining_r39_se_on(unsigned bank, int satz)
     return 1;
 }
 
+/* Punkt 6: "Vor Elzas 'What was that?' ... Scheiben zerspringen". Die Szene zeigt msg 5 (John) mit Sprachzeile; der Port
+ * oeffnet die naechste Nachricht erst, wenn die Sprachzeile zu Ende ist (op_message_on Stimmen-Riegel). Damit der Glasbruch
+ * unmittelbar VOR Elzas Zeile klingt und nicht mitten in Johns Satz, wartet BEFREIUNG39 mit `2b 3a 00 00` (msg 58) auf
+ * das Ende der laufenden Sprachzeile: der Riegel in op_message_on parkt, danach verbraucht dieser Haken die Zeile (kein
+ * Text). Ohne Sprachzeile laeuft sie sofort durch. */
+int re15_dining_r39_message_on(const uint8_t *pc)
+{
+    return pc && (g_current_room_id & 0xFFFFu) == RE15_R38F_RAUM_1141 && pc[1] == RE15_R39J_MSG_STIMME_WARTEN;
+}
+
 /* ROOM1141 Sprach-Id 53..57 -> synchro/STAGE1/room1141/help01..05.wav (Nutzer-Dateien, unveraendert; Zuordnung im Code,
  * VERTRAG 1.2). Jede andere (Raum, Id) bleibt beim Stamm "mainNN". */
 void re15_dining_r39_stamm(unsigned room_id, int voice_id, char *stamm, size_t n)

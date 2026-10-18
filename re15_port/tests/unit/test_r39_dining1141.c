@@ -356,6 +356,16 @@ static void teil_programme(void)
         const int ig = finde(b, nb, g, 24, 0), i6 = finde(b, nb, m6, 8, 0);
         PRUEF(ig > 0 && i6 == ig + 28, "BEFREIUNG39 Punkt 6: Glasbruch x2 (RE2 ROOM1090 @0x02BB0..@0x02BC0) direkt vor Sleep 20 + "
                                        "msg 6 \"What was that?!\" (@+%04X, msg 6 @+%04X)", ig, i6 + 4);
+        PRUEF(ig >= 4 && b[ig - 4] == 0x2B && b[ig - 3] == RE15_R39J_MSG_STIMME_WARTEN && b[ig - 2] == 0 && b[ig - 1] == 0,
+              "BEFREIUNG39 Punkt 6: davor Message_on 58 = Warten auf das Ende von Johns Sprachzeile (msg 5)");
+        static const uint8_t pc58[4] = { 0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00 }, pc6[4] = { 0x2B, 0x06, 0x00, 0x00 };
+        const unsigned alt_raum = g_current_room_id;
+        g_current_room_id = 0x1141u;
+        const int v58 = re15_dining_r39_message_on(pc58), v6 = re15_dining_r39_message_on(pc6);
+        g_current_room_id = 0x1140u;
+        const int v58l = re15_dining_r39_message_on(pc58);
+        g_current_room_id = alt_raum;
+        PRUEF(v58 == 1 && v6 == 0 && v58l == 0, "Warte-Zeile: (1141, 58) verbraucht, msg 6 und (1140, 58) nicht");
     }
     {   /* Punkt 7: Johns Plc_dest Modus 9 zu Elzas Platz (Bit 1), unmittelbar danach Gosub sub04, vor msg 9 */
         const int16_t ex = RE15_R38F_ELZA_PLATZ_X, ez = RE15_R38F_ELZA_PLATZ_Z;
