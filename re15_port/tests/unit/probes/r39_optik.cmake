@@ -18,12 +18,31 @@
 add_executable(test_r39_optik ${CMAKE_CURRENT_LIST_DIR}/../test_r39_optik.c)
 target_link_libraries(test_r39_optik PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_optik PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(test_r39_optik PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+target_compile_definitions(test_r39_optik PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_RE2_DIR="${CMAKE_SOURCE_DIR}/../info/re2leon")
 if(NOT WIN32)
     target_link_libraries(test_r39_optik PRIVATE m)
 endif()
-foreach(_teil kappen ecke leon elza)
+#   unit_r39_optik_schluessel  Punkt 2 (Schluessel 10F0/10F1 "kleiner/subtiler"): Bildlaenge = Median der RE2-Bildlaenge
+#                          desselben Modells an seinen RE2-Platzierungen (aus info/re2leon mit der Engine-Kamera
+#                          nachgerechnet == gen/itemorte_r38_lage.inc), Massstab < Runde 38, Huelle 3..9 px, MD1-Spanne/s =
+#                          RE2-Modell 152, Lage/Drehung/Aufhebe-Zone unveraendert.
+foreach(_teil kappen ecke leon elza schluessel)
     add_test(NAME unit_r39_optik_${_teil} COMMAND test_r39_optik ${_teil}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_optik_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
+
+#   integration_r39_optik_marke  (nur mit re15_pc) die echte exe an der Lage der Marke F741: im Streifen jenseits der
+#                          gemalten Ecke (x 166..172) ist Leon gezeichnet (A gegen C > 0) und die Masken malen dort nichts
+#                          ueber ihn (A gegen B <= 1); in der Wand (x 173..180) sind die Masken an (A gegen B > 0) und Leon
+#                          bleibt verdeckt (A gegen C == 0). Vorher: 134 Streifenpunkte der Maske ueber Leon.
+if(TARGET re15_pc AND TARGET probe_r36_ppm_diff)
+    add_test(NAME integration_r39_optik_marke
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r36_ppm_diff>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_optik_marke_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_optik_marke.cmake)
+    set_tests_properties(integration_r39_optik_marke PROPERTIES TIMEOUT 600)
+endif()

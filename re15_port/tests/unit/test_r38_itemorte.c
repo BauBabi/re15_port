@@ -7,7 +7,8 @@
  *   lage      Loescher: das gezeichnete Netz (MD1 stehend mit Prop-Drehung/-Lage) liegt im Nutzer-Cut ROOM1030 Cut 0 AUF
  *             der Marke (Mitte +-1 px, Spalten der Marke), Rueckseite 15 vor der triangulierten Pfeilerflaeche x -2688,
  *             ganz auf ihrer z-Spanne. Schluessel: JEDER sichtbare Texel (CLUT-Farbe != 0) des gezeichneten Netzes
- *             liegt im Nutzer-Cut ROOM10F0 Cut 5 in der Marke und fuellt sie (>= 9 von 11 Spalten); Licht flach (0x0010,
+ *             liegt im Nutzer-Cut ROOM10F0 Cut 5 in der Marke; Breite der gezeichneten Huelle = RE2-Median (Runde 39
+ *             Spur L "kleiner/subtiler", bis Runde 38: fuellt die Marke >= 9 von 11 Spalten); Licht flach (0x0010,
  *             RE2 Obj_model_set @0x80055320 aus pc[12..13], ROOM6150 @0x02C98 / ROOM1050 @0x01274)
  *   raum      Raumstart 1030 (Prop + Zone Slot 14, Monitor-Satz nach 20), 1031/1050/1051 kein Loescher; 10F0/10F1 Prop +
  *             Zone Slot 8, Satz msg 4 nach 15; mit Taken-Bit nichts; Installer idempotent
@@ -352,8 +353,16 @@ static void teil_lage(void)
         CHECK(sicht > 0 && ausser == 0,
               "L ROOM%04X: alle sichtbaren Texel in der Marke x %d..%d y %d..%d (+-0,5/+1,5 px, Massstab-Regel Runde 36 N)",
               (unsigned)r->id, KS_MX0, KS_MX1, KS_MY0, KS_MY1);
-        CHECK(x1 - x0 >= 9.0,
-              "L ROOM%04X: \"gut sichtbar\" = der Schluessel fuellt die Marke (%.1f von 11 Spalten)", (unsigned)r->id, x1 - x0);
+        /* Runde 39 Spur L (NUTZER-VORGABE "kleiner/subtiler, nicht so riesig"; Dossier analysis/befunde_runde39/L_optik.md
+         * Punkt 2): die gezeichnete Huelle ist so breit, wie RE2 Retail dasselbe Modell an seinen eigenen Platzierungen
+         * im Mittel zeigt (Median L_nat*H/vz, gen/itemorte_r38_lage.inc RE15_R39L_*_ZIEL_PX100; Riegel unit_r39_optik_
+         * schluessel rechnet ihn aus den RE2-Dateien nach). Bis Runde 38: "fuellt die Marke" (>= 9 von 11 Spalten). */
+        {
+            double ziel = (i == 0 ? RE15_R39L_PARK_ZIEL_PX100 : RE15_R39L_PRISON_ZIEL_PX100) / 100.0;
+            CHECK(fabs((x1 - x0) - ziel) <= 0.5 && x1 - x0 < 9.0,
+                  "L ROOM%04X: Runde 39 L \"kleiner/subtiler\" = gezeichnete Huelle %.2f px breit == RE2-Median %.2f (+-0,5), "
+                  "nicht mehr die ganze Marke (< 9 von 11 Spalten)", (unsigned)r->id, x1 - x0, ziel);
+        }
         CHECK(re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42) > 10000,
               "L ROOM%04X: Massstab %d/10000 > 1 (RE2-Groesse waere 2..3 Bildpunkte)", (unsigned)r->id,
               re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42));

@@ -15,6 +15,13 @@
  *                          Masken-OT @0x80039650-60): jenseits der gemalten Ecke deckt NICHTS mehr (roh: >0), hinter
  *                          der Wand bleibt er verdeckt.
  *   test_r39_optik elza    ROOM1101 zeichnet die Masken von ROOM1100 (re15_pri_masken_raum) -> dieselben Fenster.
+ *
+ * Punkt 2 (Nutzer): "Der Schluessel im Raum 10F0 und 10F1 sollte schon kleiner/subtiler sein, wie er dran haengt, nicht
+ * so riesig."
+ *   test_r39_optik schluessel  FORM der Groesse (Beta -> Retail): Bildlaenge der gezeichneten Huelle = Median der
+ *                          RE2-Bildlaenge L_nat*H/vz desselben Modells an seinen RE2-Platzierungen (aus den RE2-Dateien
+ *                          mit der Engine-Kamera nachgerechnet == gen/itemorte_r38_lage.inc); Massstab kleiner als
+ *                          Runde 38, Huelle 3..9 px; MD1-Spanne/s = RE2-Modell 152; Lage/Drehung/Zone unveraendert.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +35,11 @@
 #include "re15_bss.h"
 #include "re15_pri1100_r37.h"
 #include "re15_optik_r39.h"
+#include "re15_md1.h"
+#include "re15_itemorte_r38.h"
+#ifndef RE15_RE2_DIR
+#error RE15_RE2_DIR fehlt (info/re2leon)
+#endif
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
@@ -351,6 +363,108 @@ static void teil_elza(void)
     teil_leon(0x1101);
 }
 
+/* ---------------------------------------------------------------------------------------------------------------- */
+/* Punkt 2: Schluessel an der Pinnwand ROOM10F0/10F1 "kleiner/subtiler" (NUTZER-VORGABE) — FORM: Bildlaenge wie RE2      */
+/* Retail dasselbe Modell an seinen eigenen Platzierungen im Mittel zeigt (Median L_nat*H/vz ueber die RE2-Kameras, die */
+/* den Schluessel im Bild haben). Hier aus den RE2-Dateien (info/re2leon) mit der Engine-Kamera nachgerechnet.          */
+typedef struct { const char *rdt; long off; } re2_platz_t;
+
+/* RE2 Obj_model_set (0x2D): Ursprung pc[14..19]; Kamera-Saetze @ u32 RDT+0x24, Anzahl RDT+1, 32 B wie RE1.5 (memcpy in
+ * re15_camera_cut_t: +0 flag, +2 fov, +4 from, +0x10 to, +0x1C pri). */
+static double re2_median_px(const re2_platz_t *pl, int npl, double l_nat, int *n_out, char *liste, size_t ln)
+{
+    double px[64]; int n = 0, i, j; size_t lp = 0;
+    liste[0] = 0;
+    for (i = 0; i < npl; i++) {
+        char pfad[700]; size_t sz = 0; uint8_t *b; int16_t p[3]; uint32_t cam; int nc, ci;
+        snprintf(pfad, sizeof pfad, "%s/%s", RE15_RE2_DIR, pl[i].rdt);
+        b = slurp(pfad, &sz);
+        if (!b || (size_t) pl[i].off + 20 > sz || b[pl[i].off] != 0x2D) {
+            printf("  FEHLER: %s @0x%lX kein Obj_model_set\n", pfad, pl[i].off); g_fail = 1; free(b); continue;
+        }
+        memcpy(p, b + pl[i].off + 14, 6);
+        nc = b[1]; memcpy(&cam, b + 0x24, 4);
+        for (ci = 0; ci < nc; ci++) {
+            re15_camera_cut_t cut; re15_camera_view_t v; double sx, sy, vz;
+            if ((size_t) cam + 32u * (size_t) (ci + 1) > sz) break;
+            memcpy(&cut, b + cam + 32 * ci, 32);
+            if (re15_camera_build_view(&cut, &v) != 0) continue;
+            if (!proj(&v, p[0], p[1], p[2], &sx, &sy, &vz)) continue;
+            if (sx < 0 || sx >= 320 || sy < 0 || sy >= 240) continue;
+            if (n < 64) px[n++] = l_nat * v.fov_screen_dist / vz;
+            if (lp < ln - 40) lp += (size_t) snprintf(liste + lp, ln - lp, "%s C%d %.2f; ", pl[i].rdt + 8, ci, l_nat * v.fov_screen_dist / vz);
+        }
+        free(b);
+    }
+    for (i = 1; i < n; i++) { double t = px[i]; for (j = i; j > 0 && px[j - 1] > t; j--) px[j] = px[j - 1]; px[j] = t; }
+    if (n_out) *n_out = n;
+    if (!n) return -1;
+    return (n % 2) ? px[n / 2] : (px[n / 2 - 1] + px[n / 2]) / 2.0;
+}
+
+static void md1_x_spanne(const uint8_t *m, int sz, int *x0, int *x1)
+{
+    static re15_md1_t md; int i;
+    *x0 = 32767; *x1 = -32768;
+    if (!m || re15_md1_parse(m, sz, &md) != 0 || md.mesh_count < 1) return;
+    for (i = 0; i < md.meshes[0].tri_vertex_count; i++) {
+        int x = md.meshes[0].tri_vertices[i].x;
+        if (x < *x0) *x0 = x;
+        if (x > *x1) *x1 = x;
+    }
+}
+
+static void teil_schluessel(void)
+{
+    static const re2_platz_t park[] = { { "PL0/RDT/ROOM6150.RDT", 0x2C98 } };
+    static const re2_platz_t prison[] = { { "PL0/RDT/ROOM10F0.RDT", 0x0706 }, { "PL0/RDT/ROOM20E0.RDT", 0x18F8 },
+                                          { "PL0/RDT/ROOM20E0.RDT", 0x1A96 }, { "PL0/RDT/ROOM2020.RDT", 0x1C1E } };
+    char t[400], liste[1200]; int n, x0, x1, sz; double med; int32_t lp[3]; int16_t lr[3];
+    printf("== r39_optik schluessel: Parking Lot Key / Prison Key an der Pinnwand - RE2-Bildgroesse (Median) ==\n");
+    /* RE2-Beleg aus den Dateien: P. Room Key (ROOM6150 @0x2C98), Small Key (10F0 @0x706, 20E0 @0x18F8/@0x1A96, 2020 @0x1C1E) */
+    med = re2_median_px(park, 1, RE15_R39L_PARK_LNAT100 / 100.0, &n, liste, sizeof liste);
+    printf("  Park:   %s-> Median %.2f px (%d Kameras)\n", liste, med, n);
+    snprintf(t, sizeof t, "Park: RE2-Median %.2f px aus %d Kameras == RE15_R39L_PARK_ZIEL_PX100 %d / RE2_KAMERAS %d",
+             med, n, RE15_R39L_PARK_ZIEL_PX100, RE15_R39L_PARK_RE2_KAMERAS);
+    CHECK(t, n == RE15_R39L_PARK_RE2_KAMERAS && fabs(med * 100.0 - RE15_R39L_PARK_ZIEL_PX100) <= 1.0);
+    med = re2_median_px(prison, 4, RE15_R39L_PRISON_LNAT100 / 100.0, &n, liste, sizeof liste);
+    printf("  Prison: %s-> Median %.2f px (%d Kameras)\n", liste, med, n);
+    snprintf(t, sizeof t, "Prison: RE2-Median %.2f px aus %d Kameras == RE15_R39L_PRISON_ZIEL_PX100 %d / RE2_KAMERAS %d",
+             med, n, RE15_R39L_PRISON_ZIEL_PX100, RE15_R39L_PRISON_RE2_KAMERAS);
+    CHECK(t, n == RE15_R39L_PRISON_RE2_KAMERAS && fabs(med * 100.0 - RE15_R39L_PRISON_ZIEL_PX100) <= 1.0);
+    /* kleiner als Runde 38, gezeichnete Huelle am Ziel, aber sichtbar (>= 3 px) und nicht mehr die ganze Marke (< 9 px) */
+    snprintf(t, sizeof t, "Park: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-2/100), 300 <= Huelle < 900",
+             RE15_R38K_PARK_S10000, RE15_R39L_PARK_S38_10000, RE15_R39L_PARK_HUELLE_PX100, RE15_R39L_PARK_ZIEL_PX100);
+    CHECK(t, RE15_R38K_PARK_S10000 < RE15_R39L_PARK_S38_10000 && RE15_R38K_PARK_S10000 > 10000 &&
+             abs(RE15_R39L_PARK_HUELLE_PX100 - RE15_R39L_PARK_ZIEL_PX100) <= 2 &&
+             RE15_R39L_PARK_HUELLE_PX100 >= 300 && RE15_R39L_PARK_HUELLE_PX100 < 900);
+    snprintf(t, sizeof t, "Prison: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-2/100), 300 <= Huelle < 900",
+             RE15_R38K_PRISON_S10000, RE15_R39L_PRISON_S38_10000, RE15_R39L_PRISON_HUELLE_PX100, RE15_R39L_PRISON_ZIEL_PX100);
+    CHECK(t, RE15_R38K_PRISON_S10000 < RE15_R39L_PRISON_S38_10000 && RE15_R38K_PRISON_S10000 > 10000 &&
+             abs(RE15_R39L_PRISON_HUELLE_PX100 - RE15_R39L_PRISON_ZIEL_PX100) <= 2 &&
+             RE15_R39L_PRISON_HUELLE_PX100 >= 300 && RE15_R39L_PRISON_HUELLE_PX100 < 900);
+    /* die gelieferten MD1 tragen den Massstab: x-Spanne der Ecken / s = RE2-Modellbreite 152 (P. Room Key +-76, Runde 38 K 2.6;
+     * Small Key gemessen 152) */
+    md1_x_spanne(re15_itemorte_r38_schluessel_md1(0x45, &sz), sz, &x0, &x1);
+    snprintf(t, sizeof t, "Park-MD1 (%d B): Ecken x %d..%d -> Spanne/s = %.1f (RE2-Modell 152)", sz, x0, x1,
+             (x1 - x0) * 10000.0 / RE15_R38K_PARK_S10000);
+    CHECK(t, sz > 0 && fabs((x1 - x0) * 10000.0 / RE15_R38K_PARK_S10000 - 152.0) <= 2.0);
+    md1_x_spanne(re15_itemorte_r38_schluessel_md1(0x42, &sz), sz, &x0, &x1);
+    snprintf(t, sizeof t, "Prison-MD1 (%d B): Ecken x %d..%d -> Spanne/s = %.1f (RE2-Modell 152)", sz, x0, x1,
+             (x1 - x0) * 10000.0 / RE15_R38K_PRISON_S10000);
+    CHECK(t, sz > 0 && fabs((x1 - x0) * 10000.0 / RE15_R38K_PRISON_S10000 - 152.0) <= 2.0);
+    /* Lage, Drehung und Aufhebe-Zone unveraendert (Runde 38 K: Marke key_location.bmp, Zone Slot 8) -> Aufnahme wie bisher */
+    CHECK("Park: Lage (1358,-2495,-3400) rot (3072,0,2048) wie Runde 38",
+          re15_itemorte_r38_schluessel_lage(0x45, lp, lr) && lp[0] == 1358 && lp[1] == -2495 && lp[2] == -3400 &&
+          lr[0] == 3072 && lr[1] == 0 && lr[2] == 2048);
+    CHECK("Prison: Lage (1358,-2495,-3400) rot (1024,0,0) wie Runde 38",
+          re15_itemorte_r38_schluessel_lage(0x42, lp, lr) && lp[0] == 1358 && lp[1] == -2495 && lp[2] == -3400 &&
+          lr[0] == 1024 && lr[1] == 0 && lr[2] == 0);
+    CHECK("Aufhebe-Rechteck (798,-3600) 1000x1000, Slot 8 wie Runde 38",
+          RE15_R38K_KS_RECT_X == 798 && RE15_R38K_KS_RECT_Z == -3600 && RE15_R38K_KS_RECT_W == 1000 &&
+          RE15_R38K_KS_RECT_D == 1000 && RE15_R38K_SCHL_SLOT == 8);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -358,6 +472,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "ecke")   || !strcmp(teil, "alle")) teil_ecke();
     if (!strcmp(teil, "leon")   || !strcmp(teil, "alle")) teil_leon(0x1100);
     if (!strcmp(teil, "elza")   || !strcmp(teil, "alle")) teil_elza();
+    if (!strcmp(teil, "schluessel") || !strcmp(teil, "alle")) teil_schluessel();
     printf(g_fail ? "r39_optik: FEHLER\n" : "r39_optik: OK\n");
     return g_fail ? 1 : 0;
 }
