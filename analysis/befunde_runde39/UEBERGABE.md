@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 00:16: Nutzer-Nachtrag 10 (02dc7917): Elza - Johns Ruf ab 1041 (leise), Satz msg 40 dort (Stimme room1041/main40.wav =
+  Kopie von room1141/main50), Karte mit 1141-Marker, Panikphase mit Leons Schlussmusik bis zur Rettung, 1131 lauterer Ruf,
+  1141 ohne Reaktion (J, Nachtrag in J-Baum 3f0ef678), Zombie-Durchbrueche 10C1/1061/1071/1031, Hund durchs Fenster 1121.
+  Bank-9-Bit 97 = Elza-Panikphase (P setzt), 95 an Q. Spuren: P johnruf1041 (Baum r39/dining1141 + master, b1309110)
+  wf_65368d68-882 args {"welle": ["P"], "slots": 1, "max_nach": 1, "basis": "b1309110"}; Q elzazombies (02dc7917)
+  wf_c0587ec2-cb8 args {"welle": ["Q"], "slots": 1, "max_nach": 1, "basis": "02dc7917"}; R hund1121 (Baum angelegt) startet,
+  sobald G oder K fertig ist (hoechstens 6 Laeufe). Aktiv: G, J, K, O, P, Q.
 * 2026-10-18 23:00: Spur J Abnahme 1: alles erfuellt ausser N4.3 (Johns Schuesse holen die Gorilla-Aufmerksamkeit nur in 6/16 Salven;
   Ursachen a-c im Bericht J_abnahme_1.md 0aa7b194) -> Nachbesserung 2 wf_9b31e40f-c3f (args_j_nach2.json): zuerst master
   mergen (E2/E3-Gorilla-Regel + Querungs-Wache, Stimmen main50-52), Stimmen messen, N4.3 neu messen und beheben, Regel fuer
