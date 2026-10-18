@@ -6,17 +6,20 @@
  * engine/src/gen/dining_r39_programme.inc (tools/r39_dining/programme_bauen.py).
  *
  * Teile (Aufruf: test_r39_dining1141 <teil>):
- *   texte      Port-Texte 50/51/52 dekodiert = Wortlaut des Nutzers (Punkte 5 und 8)
+ *   texte      Port-Texte 50/51/52 dekodiert = Wortlaut des Nutzers (Punkte 5 und 8, Nachtrag 6 klein geschrieben)
  *   programme  Programm-Bytes je Punkt: HAEMMERN39 ohne Zombie-Stoehnen 0x3C/0x0B und ohne "Help me out." 0x3D (1, 3),
- *              Klopfen dreifach + help01..05 je Runde im Mix (4), Reaktion msg 50 unter Ck(9,94) (5); BEFREIUNG39 mit
+ *              Klopfen dreifach + help01..05 je Runde im Mix (4), Reaktion msg 50 unter Ck(9,94) nach Merker/Pad-Sperre
+ *              (5, M1), Schleife bis Ck(4,0xC3) (N4.1); ENTRIEGELN39 = sub05 + Rennen + Cut 7 + Waffe heben (N4.2) +
  *              Tuer-Auftritt (2), Glasbruch vor msg 6 (6), Gosub sub04 nach Johns Drehung vor msg 9 (7), msg 51/52 mit
- *              Gesten nach dem Kampf (8); Lagen/Saetze = Kopf-Konstanten
+ *              Gesten nach dem Kampf, Clip 17 statt (2,6) (8, M2), John im Schnittbild von Cut 8 (M3); ROLLTOR39 (N4.1)
  *   stamm      Sprach-Stamm: ROOM1141 Id 53..57 -> help01..05, alles andere unveraendert
  *   phase_h    ROOM1141 mit Elza am VM: John ab Bild 0 nicht im Raum; Klopfen/Hilferufe als Ton (Takt), Reaktion msg 50
- *              genau einmal; Gemaelde -> Rolladen, Elza in Cut 7 von vorn, Tuer auf, John innen vor der Tuer, Tuer zu,
- *              Cut 6 mit John (erstes Erscheinen nur am Kameraschnitt); Szene mit Glasbruch vor msg 6 und Johns Blick zu
- *              Elza ab msg 9; Sperre msg 41; Gorillas tot -> Cut 8, msg 51 (Gesten 15/23) und msg 52 (Heranwinken
- *              Sub 2 Clip 6), Johns Abgang, Riegel offen
+ *              genau einmal; Gemaelde -> Rolladen -> frei laufen, Klopfen weiter (N4.1); Riegel -> msg 12, Elza rennt,
+ *              Cut 7, Waffe heben (Pistole aus dem Inventar), Tuer auf, John innen vor der Tuer, Tuer zu, Cut 6 mit John,
+ *              Waffe senken (N4.2); Szene mit Glasbruch vor msg 6 und Johns Blick zu Elza ab msg 9; Sperre msg 41; John
+ *              schiesst, Treffer, Aufmerksamkeit (N4.3); Gorillas tot -> Cut 8, msg 51 (Gesten 15/23) und msg 52
+ *              (Clip 17, M2), kein Sprung (M3), Johns Abgang, Riegel offen
+ *   fenster    Gemaelde im Fenster erster Ruf..Reaktion (M1), Wiederbetreten mit offenem Rolladen, Messer-Fall
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
