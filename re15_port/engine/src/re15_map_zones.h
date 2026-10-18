@@ -554,13 +554,13 @@ static const re15_map_mark_t s_map_marks[] = {
     {  0,  0,  139,   76, 2, 106,  26, 1 },
     {  0,  0,  157,  113, 2, 107, 255, 0 },
     {  1,  0,  105,  109, 2,  31,  32, 1 },
-    {  1,  0,  165,  139, 0,  31,  33, 1 },
+    {  1,  0,  165,  138, 0,  31,  33, 1 },   /* Runde 39 Spur G: y139 -> y138 auf die Wand (Vorlage mapB2_correct.png) */
     /* Runde 35 Spur G: ALLE sechs Tueren von ROOM1210 auf dem T-Korridor (rect 3), je auf
      * der gemalten Nische (G_karte.md B4): 11E0 x187 y72..76 (1210.RDT @0x1CC6), Zellen
      * West x201 (rect 4 Nische y80..84 @0x1CE6, rect 5 y97..101 @0x1D26), Zellen Ost x212
      * (rect 6 y89..93 @0x1D06, rect 7 y106..110 @0x1D46, rect 8 y123..127 @0x1D66).
      * Vorher: 5 Marken, davon (206,95) quer mitten im Gang und 3 der 5 Zellentueren fehlten. */
-    {  1,  3,  187,   74, 3,  34,  31, 1 },
+    {  1,  3,  186,   74, 3,  34,  31, 1 },   /* Runde 39 Spur G: x187 -> x186 auf die Flur-Ostwand (mapB2_correct.png) */
     {  1,  3,  201,   82, 3,  34,  35, 1 },
     {  1,  3,  212,   91, 1,  34, 102, 1 },
     {  1,  3,  201,   99, 3,  34, 103, 1 },
@@ -568,8 +568,8 @@ static const re15_map_mark_t s_map_marks[] = {
     {  1,  3,  212,  125, 1,  34, 105, 1 },
     {  1,  9,  176,  101, 2,  10,  31, 1 },
     {  1,  9,  177,  101, 0,  10, 255, 0 },
-    {  1,  9,  177,  115, 4,  10, 255, 0 },
-    {  1,  9,  186,  112, 4,  10, 255, 0 },
+    {  1,  9,  173,  115, 4,  10, 255, 0 },   /* Runde 39 Spur G: x177 -> x173 (Sprossen x171..175, mapB2_correct.png) */
+    {  1,  9,  183,  112, 4,  10, 255, 0 },   /* Runde 39 Spur G: x186 -> x183, nicht mehr in der Wand x186 (mapB2_correct.png) */
     /* ⛔ GESTRICHEN (Runde 30, karten-marken.md §4b / §5 Schritt 3a): EINE MARKE OHNE
      * EIGENE ZONENZEILE HAT KEIN BESUCHT-BIT UND KEINEN TRAEGER - sie kann nur an einem
      * FREMDEN haengen. Die fuenf Zeilen (1, 255, 131, 77 / 134, 133 / 138, 133 /
@@ -625,27 +625,27 @@ static const re15_map_mark_t s_map_marks[] = {
      * wird also gar nicht gezeichnet; das Rechteck 5, an dem sie hingen, gehoert
      * seit Runde 10 ROOM1090 (Zonenzeile oben, zid 22). Die Marken erschienen damit
      * auf der Kachel eines FREMDEN Raums. */
-    {  2,  6,  187,  100, 4,  10, 255, 0 },
-    {  2,  6,  196,   99, 4,  10, 255, 0 },
+    {  2,  6,  183,  100, 4,  10, 255, 0 },   /* Runde 39 Spur G: x187 -> x183 (Sprossen x181..185, map1F_correct.png) */
+    {  2,  6,  194,   99, 4,  10, 255, 0 },   /* Runde 39 Spur G: x196 -> x194, nicht mehr in der Wand x197 (map1F_correct.png) */
     {  2,  6,  197,   92, 1,  10,   6, 1 },  /* 2026-09-12: dieselbe physische
                                                * Tuer wie 1050->10A0 (197,98);
                                                * Punkt auf bemalter Flaeche
                                                * BEIDER Kacheln (Rect 6 UND 0) */
     /* (171,77) entfernt: Marke der 10F0-Ausweich-Gastzeile auf Rect 8 -
      * die "Tuer, die gar nicht existiert" (Nutzer 2026-09-12). */
-    {  2, 10,  120,  151, 3,   7,   5, 0 },
-    {  2, 10,  127,  144, 4,   7, 255, 0 },
-    {  2, 10,  135,  146, 4,   7, 255, 0 },
+    {  2, 10,  119,  151, 3,   7,   5, 0 },   /* Runde 39 Spur G: x120 -> x119 auf die Wand (map1F_correct.png) */
+    {  2, 10,  122,  144, 4,   7, 255, 0 },   /* Runde 39 Spur G: x127 -> x122 (Sprossen x120..124, map1F_correct.png) */
+    {  2, 10,  133,  146, 4,   7, 255, 0 },   /* Runde 39 Spur G: x135 -> x133, nicht mehr in der Wand x136 (map1F_correct.png) */
     {  3,  0,  113,  143, 2,  12, 255, 0 },
     {  3,  0,  135,  126, 1,  12,  13, 1 },
     {  3,  1,  118,  149, 1,   7,  12, 1 },
-    {  3,  1,  126,  144, 4,   7, 255, 0 },
-    {  3,  1,  134,  146, 4,   7, 255, 0 },
+    {  3,  1,  121,  144, 4,   7, 255, 0 },   /* Runde 39 Spur G: x126 -> x121 (Sprossen x119..123, map2F_correct.png) */
+    {  3,  1,  132,  146, 4,   7, 255, 0 },   /* Runde 39 Spur G: x134 -> x132, nicht mehr in der Wand x135 (map2F_correct.png) */
     {  3,  3,  141,  105, 0,  13,  14, 1 },
     {  3,  3,  199,  149, 1,  13,  16, 1 },
     {  3,  5,  188,  128, 3,  17,  17, 1 },
     {  3,  5,  188,  139, 3,  17,  17, 1 },
-    {  3,  6,  188,  118, 3,  16,  17, 0 },
+    {  3,  6,  186,  118, 3,  16,  17, 0 },   /* Runde 39 Spur G: x188 -> x186 auf die Wand (map2F_correct.png) */
     /* ⛔ NEU GESETZT (Runde 30, Nutzer 2026-09-27: "2F ist jetzt unten eine Tuer
      * eingezeichnet auf der Karte die es nicht gibt"): die Tuer ROOM1090 (obere
      * Ebene) -> ROOM1100. Tuer-Datensatz ROOM1090.RDT @0x0213A:
@@ -685,10 +685,10 @@ static const re15_map_mark_t s_map_marks[] = {
      * Zonenzeile; die Nummer 22 wurde in Runde 10 an ROOM1090 vergeben, die Marke
      * hing seitdem am Besucht-Bit von ROOM1090 und am Rechteck des Treppenhauses. */
     {  4,  3,  159,   99, 4,  24, 255, 0 },
-    {  4,  3,  168,  106, 5,  24, 255, 0 },
+    {  4,  3,  168,  107, 5,  24, 255, 0 },   /* Runde 39 Spur G: y106 -> y107, Sprossen y105..109 frei von der Wand y103/104 (map3F_correct.png) */
     {  4,  4,  145,   84, 3,  19,  21, 1 },
     {  4,  4,  160,  152, 1,  19,  20, 1 },
-    {  4,  4,  168,   89, 2,  19,  24, 1 },
+    {  4,  4,  166,   89, 2,  19,  24, 1 },   /* Runde 39 Spur G: x168 -> x166, Balken x164..168 endet vor der Ecke x169 (map3F_correct.png) */
     {  4,  5,  131,  146, 2,  18, 255, 0 },
     {  4,  5,  153,  126, 1,  18,  19, 1 },
     {  4,  6,  164,  110, 0,  20,  24, 1 },

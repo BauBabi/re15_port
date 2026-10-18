@@ -40,6 +40,7 @@
                                   * ARCHIV der Originalbytes (s. emit_file_list). */
 #include "re15_files.h"          /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
+#include "re15_karte_r39.h"      /* Runde 39 Spur G: Kachel-Korrekturen nach den Nutzer-Vorlagen */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Name + CHECK-Text der Id 0x43 (Dining Room Key) */
@@ -2629,6 +2630,9 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                                 &rx, &ry, &rw, &rh)) continue;
                     if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
                         continue;
+                    if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
+                            st->hint_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
+                            rx, ry, rw, rh, ru, rv, 128, 128, 128))
                     sprt(&e, RE15_INV_PAGE_MAP4,
                          st->hint_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
                          rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
@@ -2653,6 +2657,9 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                                 &rx, &ry, &rw, &rh)) continue;
                     if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
                         continue;
+                    if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i,   /* Runde 39 Spur G */
+                            st->ziel_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
+                            rx, ry, rw, rh, ru, rv, 128, 128, 128))
                     sprt(&e, RE15_INV_PAGE_MAP4,
                          st->ziel_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
                          rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
@@ -2751,6 +2758,8 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                          * auf genau den bemalten Texeln — dasselbe Ergebnis wie der
                          * Schleier, aber mit RE2s Mechanismus statt einer zweiten Op.
                          * (Tint 128 ist neutral: mod5(t5,128) == t5.) */
+                        if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i, clut_kachel,
+                                rx, ry, rw, rh, ru, rv, cr, cg, cb))   /* Runde 39 Spur G */
                         sprt(&e, RE15_INV_PAGE_MAP4, clut_kachel,
                              rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
                     } else {
@@ -2807,7 +2816,9 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                             if (tw <= 0 || th <= 0) continue;
                             /* Schleier entfaellt auch hier — die Aktuell-Zeile
                              * 502 traegt 680808+STP selbst (s. ganzes Rechteck). */
-                            sprt(&e, RE15_INV_PAGE_MAP4, clut_teil,
+                            if (!re15_karte_r39_kachel(e.ops, &e.n, e.max, st->map_page, i, clut_teil,
+                                    tx, ty, tw, th, ru + (tx - rx), rv + (ty - ry), tr, tg, tb))
+                            sprt(&e, RE15_INV_PAGE_MAP4, clut_teil,   /* Runde 39 Spur G: Haken oben */
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
                                  tr, tg, tb, 1);
@@ -2953,6 +2964,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                     if (!re15_map_synth_cell(erste + k2, &cx, &cy, &cw, &ch)) continue;
                     for (s2 = 0; s2 < 4; s2++) {
                         int laenge = (s2 < 2) ? cw : ch;
+                        if (re15_karte_r39_kante_weg(st->map_page, cx, cy, cw, ch, s2)) continue;   /* Runde 39 Spur G */
                         int lauf = -1, t;
                         for (t = 0; t <= laenge; t++) {
                             int frei = 0;
