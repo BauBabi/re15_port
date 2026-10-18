@@ -22,6 +22,11 @@
 #                                   Ankunftsbild = Gang-/Dreh-Pose, M2 Spieler-Schub Bit-Takt Clip 0x12 / Phase 6 / Phase 7
 #   unit_r39_heliport1171_kraehen   M3b Ereignis-Kraehen zeichnen das zuletzt posierte Bild (0x80115d94 posiert nicht):
 #                                   INIT Bild 0, ORIENT Clip 8 ab Bild 0, Landebild = Fall-Pose, FINISH 0..11, Leiche Bild 11
+# NACHBESSERUNG 2 (Abnahme 1, M1/M2 + eigener Befund N1; Dossier Abschnitt 13):
+#   unit_r39_heliport1171_flug      M1 HOVER 0x80115130 Phase 0 endet den Takt (`j 0x801152cc` @0x801151d8): Bild, Lage, Gier
+#                                   stehen, Zyklus 11; M2 SPIN 0x801153ac Gier +60 nur Phase 0/1 (@0x80115460-6c)
+#   unit_r39_heliport1171_wand      N1 Wand-Pass FUN_8003b0a4 der Kraehen-Wurzel nach JEDEM Zustand (@0x80112204): die
+#                                   Ereignis-Kraehe aus der Westwand-Zelle wird im INIT-Takt hinausgeschoben
 add_executable(test_r39_heliport1171 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_heliport1171.c)
 target_link_libraries(test_r39_heliport1171 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_heliport1171 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -30,7 +35,7 @@ target_compile_definitions(test_r39_heliport1171 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_heliport1171 PRIVATE m)
 endif()
-foreach(_teil banken binder szene leon1170 initpose eskorte saatbild schub elza kraehen)
+foreach(_teil banken binder szene leon1170 initpose eskorte saatbild schub elza kraehen flug wand)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r39_heliport1171_${_teil}_wd)
     add_test(NAME unit_r39_heliport1171_${_teil} COMMAND test_r39_heliport1171 ${_teil})
     set_tests_properties(unit_r39_heliport1171_${_teil} PROPERTIES TIMEOUT 300

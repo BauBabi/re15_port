@@ -29,7 +29,10 @@
  *   schub     K4: Schub-Bit-Takt posiert noch Clip 0x12 (@0x80052af4 vor @0x80052b44), dann Clip 0x11 rueckw. 9..0
  * Nachbesserung 1 (Abnahme 0, Dossier Abschnitt 12):
  *   elza      M1/M3a/M2: Elzas Sub 6 (Clip 1 Bild 0..15, kein Einzelbild, Ankunftsbild = Gang-Pose), Spieler-Schub-Ausgang
- *   kraehen   M3b: die Ereignis-Kraehen zeichnen das zuletzt posierte Bild (ORIENT ab 0, Landung, FINISH 0..11, Leiche 11) */
+ *   kraehen   M3b: die Ereignis-Kraehen zeichnen das zuletzt posierte Bild (ORIENT ab 0, Landung, FINISH 0..11, Leiche 11)
+ * Nachbesserung 2 (Abnahme 1, Dossier Abschnitt 13):
+ *   flug      M1: HOVER-Phase-0-Takt ohne Posieren/Bewegung (Zyklus 11), M2: SPIN-Phase 2 ohne Gier-Drehung
+ *   wand      N1: Wand-Pass der Kraehen-Wurzel nach jedem Zustand — Ereignis-Kraehe im INIT-Takt aus der Wandzelle */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -619,6 +622,7 @@ typedef struct {
     int16_t mo; int32_t af; uint8_t frac, rev, walk; int8_t erc, ph;         /* Elza */
     int16_t j_mo; int j_bild, j_ss1, j_ss2;                                   /* John */
     int16_t k_mo[2]; int32_t k_af[2]; uint8_t k_st[2], k_ss1[2], k_ss3[2];    /* Kraehen */
+    uint8_t k_ss2[2]; int32_t k_x[2], k_y[2], k_z[2]; int16_t k_rot[2];       /* Kraehen (NB2: Lage, Gier, +0x6) */
 } k_zeile_t;
 static k_zeile_t s_z[K_BILDER];
 static int s_nz = 0;
@@ -691,6 +695,7 @@ static int szene_protokoll(int *john_out, int kraehe[2])
             const re15_actor_t *k = &g_actors[kraehe[i]];
             z->k_mo[i] = k->motion; z->k_af[i] = k->anim_frame; z->k_st[i] = k->state;
             z->k_ss1[i] = k->sub_state_1; z->k_ss3[i] = k->sub_state_3;
+            z->k_ss2[i] = k->sub_state_2; z->k_x[i] = k->x; z->k_y[i] = k->y; z->k_z[i] = k->z; z->k_rot[i] = k->rot_y;
         }
     }
     *john_out = john;
@@ -801,6 +806,115 @@ static void teil_kraehen(void)
     PRUEF(leiche_ok == 2, "Leiche haelt Clip 0x0a Bild 11 (%d von 2)", leiche_ok);
 }
 
+/* ==== NACHBESSERUNG 2 (Abnahme 1, Dossier Abschnitt 13): Flugbahn der Ereignis-Kraehen ================================ */
+
+/* flug (M1/M2). HOVER 0x80115130 (@0x80121220[1]): Phase 0 setzt Clip 4 / +0x8c / +0x1e4 / +0x6 = 1 und springt mit
+ * `j 0x801152cc` @0x801151d8 in den Epilog — kein f314 (@0x801151e8), keine Lenkung (@0x80115238), kein pos_advance
+ * (@0x80115240), kein Kontakt (@0x80115254). Im Phase-0-Takt bleiben also gezeichnetes Bild, Lage und Gier stehen; das
+ * erste Phase-1-f314 posiert Clip 4 Bild 0; Zyklus = Clip-4-Laenge (10) + 1 Halt-Takt = 11.
+ * SPIN 0x801153ac (@0x80121220[3]): Gier +60 (`lhu`/`addiu 60`/`sh` @0x80115460-6c) nur im Phase-1-Rumpf (Phase 0 faellt
+ * hinein); Phase 2 (@0x801154d0-e8, Zeitgeber 40 @0x801154cc -> 41 Takte) springt in den Schwanz @0x801154ec. */
+static void teil_flug(void)
+{
+    printf("== flug ==\n");
+    int john = -1, kraehe[2];
+    if (szene_protokoll(&john, kraehe) != 0) { PRUEF(0, "Szene"); return; }
+    for (int i = 0; i < 2; i++) {
+        int halt = 0, halt_falsch = 0, bild0 = 0, abst_n = 0, abst_falsch = 0, letzt = -1, griff = -1;
+        int sp2 = 0, sp2_falsch = 0, sp1 = 0, sp1_falsch = 0, lauf = 0, laeufe41 = 0, laeufe_falsch = 0;
+        for (int f = 1; f < s_nz; f++) {
+            const k_zeile_t *v = &s_z[f - 1], *n = &s_z[f];
+            if (griff < 0 && n->k_st[i] == 4 && n->k_ss1[i] == 2) griff = f;
+            /* M1: Phase-0-Takt HOVER */
+            if (v->k_st[i] == 4 && v->k_ss1[i] == 1 && v->k_ss2[i] == 0 && n->k_st[i] == 4 && n->k_ss1[i] == 1) {
+                halt++;
+                if (n->k_mo[i] != v->k_mo[i] || n->k_af[i] != v->k_af[i] || n->k_x[i] != v->k_x[i] || n->k_y[i] != v->k_y[i] ||
+                    n->k_z[i] != v->k_z[i] || n->k_rot[i] != v->k_rot[i]) {
+                    if (halt_falsch++ < 3)
+                        printf("  Kraehe Slot %d Halt-Takt Bild %d: Pose %d/%d -> %d/%d, Lage (%d,%d,%d,r%d) -> (%d,%d,%d,r%d)\n",
+                               kraehe[i], f, v->k_mo[i], (int)v->k_af[i], n->k_mo[i], (int)n->k_af[i], v->k_x[i], v->k_y[i],
+                               v->k_z[i], v->k_rot[i], n->k_x[i], n->k_y[i], n->k_z[i], n->k_rot[i]);
+                }
+                if (f + 1 < s_nz && s_z[f + 1].k_st[i] == 4 && s_z[f + 1].k_ss1[i] == 1 &&
+                    s_z[f + 1].k_mo[i] == 4 && s_z[f + 1].k_af[i] == 0) bild0++;
+                if (letzt >= 0 && griff < 0) { abst_n++; if (f - letzt != 11) abst_falsch++; }
+                letzt = f;
+            }
+            /* M2: SPIN — Phase-2-Takt (vorher ss1 3 / ss2 2) dreht nicht, jeder andere SPIN-Takt +60 */
+            const int war_p2 = (v->k_st[i] == 4 && v->k_ss1[i] == 3 && v->k_ss2[i] == 2);
+            if (war_p2) {
+                sp2++; lauf++;
+                if (n->k_rot[i] != v->k_rot[i]) sp2_falsch++;
+                if (n->k_st[i] == 4 && n->k_ss1[i] == 1) { if (lauf == 41) laeufe41++; else laeufe_falsch++; lauf = 0; }
+            } else {
+                if (n->k_st[i] == 4 && n->k_ss1[i] == 3) {
+                    sp1++;
+                    if ((int16_t)(n->k_rot[i] - v->k_rot[i]) != 60) sp1_falsch++;
+                }
+                lauf = 0;
+            }
+        }
+        printf("  Kraehe Slot %d: HOVER-Halt-Takte %d (Pose/Lage veraendert %d, danach Clip 4 Bild 0 %d), Abstand 11: %d von %d; "
+               "Griff Bild %d; SPIN Phase 2 %d Takte (Gier veraendert %d), Laeufe 41 Takte %d (andere %d), Phase 0/1 %d Takte "
+               "(nicht +60 %d)\n", kraehe[i], halt, halt_falsch, bild0, abst_n - abst_falsch, abst_n, griff, sp2, sp2_falsch,
+               laeufe41, laeufe_falsch, sp1, sp1_falsch);
+        PRUEF(halt >= 8 && halt_falsch == 0 && bild0 == halt,
+              "M1 Kraehe Slot %d: im HOVER-Phase-0-Takt bleiben Bild, Lage und Gier stehen (`j 0x801152cc` @0x801151d8), danach "
+              "Clip 4 Bild 0 (@0x801151e8) — %d Takte, %d veraendert, %d mit Bild 0", kraehe[i], halt, halt_falsch, bild0);
+        PRUEF(abst_n >= 7 && abst_falsch == 0, "M1 Kraehe Slot %d: HOVER-Zyklus 11 Bilder (Clip 4 = 10 + Halt) — %d von %d",
+              kraehe[i], abst_n - abst_falsch, abst_n);
+        PRUEF(sp2 >= 40 && sp2_falsch == 0 && laeufe41 >= 1 && laeufe_falsch == 0,
+              "M2 Kraehe Slot %d: SPIN-Phase 2 dreht nicht (@0x801154d0-e8 -> @0x801154ec), 41 Takte je Lauf — %d Takte, %d "
+              "gedreht, Laeufe %d/%d", kraehe[i], sp2, sp2_falsch, laeufe41, laeufe_falsch);
+        PRUEF(sp1 >= 30 && sp1_falsch == 0, "M2 Kraehe Slot %d: SPIN-Phase 0/1 Gier +60 (@0x80115460-6c) — %d Takte, %d anders",
+              kraehe[i], sp1, sp1_falsch);
+    }
+}
+
+/* wand (N1). Kraehen-Wurzel 0x80112020: nach dem Zustand (`jalr` @0x801121b4) ohne Sprung der Wand-Pass FUN_8003b0a4
+ * @0x80112204 (Radius 200 @0x80112200, Maske 4 @0x801121fc, Band +0x82 @0x80112154) — auch im INIT-Takt (0x8011224c).
+ * Die Ereignis-Kraehe von sub07 @0x016F0 spawnt bei (-9700,-7680) in Band 4 IN der Westwand-Zelle (Rechteck
+ * (-12242,-10442, 3240x27648), Band 4, u0 0xff) und wird im INIT-Takt hinausgeschoben: Rechteck-Schub FUN_8003bca8
+ * (alte = neue Lage, +0x40/+0x44 = Spawn @0x800421a0-b8 -> Achse kleinster Eindringtiefe: x = -9002 + 200 + 0x12) ->
+ * (-8784,-7680), dann Kreis-Zelle (-8912,-9020, 1476) FUN_8003d6a8 -> (-8842,-7623). Die zweite (-9970,-5680) spawnt in
+ * Band 5 (keine Zellen) und bleibt. Der Unit-Lauf laedt dafuer den Raum in g_room_rdt wie der Raumaufbau. */
+static void teil_wand(void)
+{
+    printf("== wand ==\n");
+    int john = szene_starten();
+    if (john < 0) { PRUEF(0, "Szene"); return; }
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;          /* wie re15_room_load: der Wand-Pass klemmt gegen g_room_rdt */
+    int kr[2], nk = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX && nk < 2; s++) if (g_actors[s].active && g_actors[s].type == K_KRAEHE_TYP) kr[nk++] = s;
+    if (nk != 2) { PRUEF(0, "2 Ereignis-Kraehen (%d)", nk); g_room_rdt_ok = 0; return; }
+    int32_t x0[2], z0[2]; uint8_t st0[2];
+    for (int i = 0; i < 2; i++) { x0[i] = g_actors[kr[i]].x; z0[i] = g_actors[kr[i]].z; st0[i] = g_actors[kr[i]].state; }
+    frame();                                        /* INIT-Takt (Zustand 0 -> 4) */
+    int wand = -1, frei = -1;
+    for (int i = 0; i < 2; i++) {
+        const re15_actor_t *k = &g_actors[kr[i]];
+        printf("  Kraehe Slot %d: Spawn (%d,%d) Zustand %d -> nach dem INIT-Takt (%d,%d) Zustand %d, Band %d\n", kr[i], x0[i],
+               z0[i], st0[i], k->x, k->z, k->state, (int)k->floor);
+        if (x0[i] == -9700 && z0[i] == -7680) wand = i;
+        if (x0[i] == -9970 && z0[i] == -5680) frei = i;
+    }
+    /* Soll = EIN Durchlauf des Resolvers mit den Wurzel-Argumenten (Radius 200, Band +0x82 dieses Takts, Maske 4, alte Lage =
+     * Spawn-Lage) — der Pass laeuft genau einmal je Takt; die Kreis-Zelle schiebt danach wieder in den Rand des Rechtecks
+     * zurueck, das klemmt erst der naechste Takt (gemessen: Kreis-Schub F1-F4, RE15_COLL_TRACE). */
+    int32_t sx = -9700, sz = -7680;
+    const int band = wand >= 0 ? (int)g_actors[kr[wand]].floor : -1;
+    (void)re15_collision_constrain_contact_band(&s_rdt, -9700, -7680, &sx, &sz, 200, band, 4u, NULL, NULL);
+    printf("  ein Resolver-Durchlauf ab (-9700,-7680), Band %d: (%d,%d)\n", band, sx, sz);
+    PRUEF(wand >= 0 && st0[wand] == 0 && band == 4 && g_actors[kr[wand]].x == sx && g_actors[kr[wand]].z == sz &&
+          sx == -8842 && sz == -7623,
+          "N1: Kraehe aus der Westwand-Zelle im INIT-Takt hinausgeschoben (Wand-Pass @0x80112204 nach INIT 0x8011224c): "
+          "(-9700,-7680) -> (%d,%d), Soll ein Durchlauf (%d,%d) = (-8842,-7623)", wand >= 0 ? g_actors[kr[wand]].x : 0,
+          wand >= 0 ? g_actors[kr[wand]].z : 0, sx, sz);
+    PRUEF(frei >= 0 && g_actors[kr[frei]].x == -9970 && g_actors[kr[frei]].z == -5680,
+          "N1: Kraehe in Band 5 bleibt an ihrer Spawn-Lage (-9970,-5680)");
+    g_room_rdt_ok = 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -814,6 +928,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "schub")    || !strcmp(teil, "alle")) teil_schub();
     if (!strcmp(teil, "elza")     || !strcmp(teil, "alle")) teil_elza();      /* Nachbesserung 1: M1/M2/M3a */
     if (!strcmp(teil, "kraehen")  || !strcmp(teil, "alle")) teil_kraehen();   /* Nachbesserung 1: M3b */
+    if (!strcmp(teil, "flug")     || !strcmp(teil, "alle")) teil_flug();      /* Nachbesserung 2: M1/M2 */
+    if (!strcmp(teil, "wand")     || !strcmp(teil, "alle")) teil_wand();      /* Nachbesserung 2: N1 */
     printf("%s: %s (%d Fehler)\n", "test_r39_heliport1171", g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }
