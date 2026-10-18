@@ -6,6 +6,9 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 12:52: Hauptbaum auf master 6926409c neu gebaut (exe 12:50:47, Startlauf exit 0, EXIT_AT erreicht). Welle-1-Baeume
+  r39_{toene,inventar,optik,stimmen} + Zweige entfernt (alle in master; 141 GB frei). Integrationsbaum r39_integration
+  (9e7bab74) bleibt fuer Welle 2; dort laeuft die Gegenprobe der 94 A-Tests nach dem A1-Merge.
 * 2026-10-18 12:50: Spur A Nachbesserung 1 BESTANDEN (Abnahme 1 dfbcf43b; Fix ad16c58f): Stufe-2-Lautheits-Boden
   stimmen_pegel_r39.c (T=985 R=2040 C=21759 aus dem Zensus aller 216 synchro-Dateien; nur Irons' 10 Dateien 6,9-12,6x,
   206 bitgleich; Irons in der Sterbeszene -0,1/-4,5/-4,9/+17,1 dB statt -10..-12 dB, 0 geklemmt), 1150 msg 29 <- main22,
