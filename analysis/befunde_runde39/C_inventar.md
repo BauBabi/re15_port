@@ -18,6 +18,12 @@ eigenem Modal-Text.
   Runde 37 I (feuerloescher_r37.c Spind-Umwidmung), Runde 25 (discard, E5), Runde 30/35 (Memory Card, Stapelregel).
 - 02:37 Baum gebaut (`local_build.sh configure` + `build`, LOCAL-BUILD-OK).
 - 03:xx RE-Belege der vier Punkte gesammelt (Abschnitt 2), Zensus-Werkzeug `re15_port/tools/r39_inventar/zensus_mengen.py`.
+- 03:10 Messung vorher (Abschnitt 1), Modul inventar_r39.c/.h ohne Haken, Messschiene RE15_INV_LOG; Sitzungslimit, der
+  Orchestrator sicherte die Haken als dfde7745 (ungeprueft).
+- 07:08 Fortsetzung (neue Sitzung): Haken geprueft, Status-Bild je Figur, E5 je Variante + discard_sites.inc neu, Bit 69
+  in k_port[] (Abschnitt 3); Bau LOCAL-BUILD-OK; Messung nachher P1-P4 (Abschnitt 4).
+- 07:4x Riegel test_r39_inventar (4 Unit + 4 Integration) + Bild-Sonde, Alt-Riegel r21/r26/r37 nachgezogen; gezielte
+  ctest-Laeufe (Abschnitt 5).
 
 ## 2. RE-Belege (selbst gelesen, Bytes/Adressen)
 
