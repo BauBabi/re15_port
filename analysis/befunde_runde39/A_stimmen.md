@@ -215,9 +215,14 @@ weiter `clip loaded: main01..12.wav` (14 Clips); keine Sperrzeile (msg 13/14 kom
 Mitschnitt (Abschnitt 11B0): main13 ab F2126 korr 0,905 faktor 1,40 (3/3) | main14 ab F2680 0,957 / 1,44 (7/7) |
 Regel-Gegenprobe main01 ab F28 0,924, main12 ab F2026 0,944 (wie vorher).
 
-### 5.4 P4 ROOM1171 (Elza) — Integration §6 (Lauf dieser Fortsetzung)
-Siehe §6.2 (Teil 1171): erwartet `[voice] ROOM1171 msg 3 <- main02.wav` + `clip loaded: main02.wav`, main02 im Fenster
-F1063.. (Clip 68 Bilder endet vor dem Tuer-AOT nach F1143), msg 0/1 weiter main00/01, keine Anforderung von msg 2.
+### 5.4 P4 ROOM1171 (Elza; Lauf der Integration §6.2, Teil 1171, gleicher Weg wie §3.4)
+debug.log: `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`; msg 0 `clip loaded: main00.wav`, msg 1 `clip loaded:
+main01.wav` (Ordnerregel, wie vorher); **`[msg] room=1171 id=3` -> `[voice] ROOM1171 msg 3 <- main02.wav (Runde 39 Spur
+A, Nutzer-Reihenfolge)` + `clip loaded: main02.wav (32000 Hz x1 -> 99841 @44100 Hz)`**; keine Zeile fuer msg 2; danach
+`[aot] DOOR FIRE slot=1` -> ROOM10B1 (Abschnitt 10B1, EXIT 60).
+Mitschnitt (Abschnitt 1171, 1144 Bilder): main02 ab F1065 (lag 2) korr 0,933 faktor 1,49 Konsistenz 4/4 — der Clip
+(68 Bilder) endet bei ~F1133, VOR dem Tuer-AOT (nach F1143): die Zeile spielt ganz; main00 ab F512 0,967, main01 ab
+F754 0,935 (wie vorher).
 
 ## 6. Tests (Registrierung NUR tests/unit/probes/r39_stimmen.cmake)
 

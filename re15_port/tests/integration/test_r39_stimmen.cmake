@@ -74,9 +74,9 @@ if(TEIL STREQUAL "1050")
         RE15_PRESS=square@150 "RE15_EXIT_AT=600#1050")
     set(_abschnitt 2)                        # Abschnitte: Startraum (bis zum Sprung F120), 1000, 1050
     set(_zeilen "22;9;23;10;24;11")          # msg;datei
-    set(_texte "22;Woman: Hello\\? Anyone\\? Please, get me out of here!"
-               "23;Leon: Another civilian survivor\\."
-               "24;Leon: I have to help her!")
+    set(_texte "22|Woman: Hello\\? Anyone\\? Please, get me out of here!"
+               "23|Leon: Another civilian survivor\\."
+               "24|Leon: I have to help her!")
     set(_mindest_korr 0.5)
 elseif(TEIL STREQUAL "1150")
     karte(RE15_KARTE_1150 1130 nach10f0 ersteszene)
@@ -85,15 +85,15 @@ elseif(TEIL STREQUAL "1150")
         "RE15_EXIT_AT=1250#1150")
     set(_abschnitt 1)                        # Abschnitte: 1130, 1150
     set(_zeilen "22;15;23;16;24;17;25;18;26;19;27;20;28;21")
-    set(_texte "22;Leon: Sir!" "25;Irons: Leon\\.\\.\\. I\\.\\.\\. I'm proud to have an officer as dependable as you!"
-               "28;Irons: Get them out of here\\.\\.\\. Leon\\.\\.\\." "29;Leon: SIR, Sir\\?!")
+    set(_texte "22|Leon: Sir!" "25|Irons: Leon\\.\\.\\. I\\.\\.\\. I'm proud to have an officer as dependable as you!"
+               "28|Irons: Get them out of here\\.\\.\\. Leon\\.\\.\\." "29|Leon: SIR, Sir\\?!")
     set(_mindest_korr 0.12)                  # BGM MAIN1E liegt ueber Irons' leisen Zeilen (Dossier §5)
 elseif(TEIL STREQUAL "11b0")
     karte(RE15_KARTE_ELZA 11c0 -25100 15000 1024 3:0x43 3:0x82 4:0xf3)
     set(_lauf ${_gemeinsam} ${_karten} "RE15_FIRE_AOT=0@60#11c0" "RE15_EXIT_AT=30#1260")
     set(_abschnitt 1)                        # Abschnitte: 11C0, 11B0, 1260
     set(_zeilen "20;13;21;14;1;1;12;12")
-    set(_texte "20;Marvin: But, hold on\\.\\.\\." "21;Marvin: I just want to make sure we don't have any unwanted followers\\.")
+    set(_texte "20|Marvin: But, hold on\\.\\.\\." "21|Marvin: I just want to make sure we don't have any unwanted followers\\.")
     set(_mindest_korr 0.5)
 elseif(TEIL STREQUAL "1171")
     karte(RE15_KARTE_ELZA 1131 2700 15300 1024 3:194)
@@ -102,7 +102,7 @@ elseif(TEIL STREQUAL "1171")
         "RE15_FIRE_AOT=5@60#1171" "RE15_EXIT_AT=60#10b1")
     set(_abschnitt 1)                        # Abschnitte: 1131, 1171, 10B1
     set(_zeilen "3;2;0;0;1;1")
-    set(_texte "3;John: Alright, let's get down from here!")
+    set(_texte "")                            # Original-Nachrichten loggen kein [msgtext]; Text = RDT msg 3, Riegel unit_r39_stimmen_tabelle
     set(_mindest_korr 0.5)
 else()
     fail("unbekannter TEIL '${TEIL}'")
@@ -135,6 +135,10 @@ if(TEIL STREQUAL "1171")
     if(NOT _m2 EQUAL 0)
         message(FATAL_ERROR "${_tag}: msg 2 wurde angefordert (${_m2} Zeilen) - das Skript zeigt sie nie")
     endif()
+    zeilen("${_dbg}" "\\[msg\\] room=1171 id=3 " _m3)
+    if(NOT _m3 GREATER 0)
+        message(FATAL_ERROR "${_tag}: msg 3 'Alright, let's get down from here!' wurde nie gezeigt")
+    endif()
 endif()
 if(TEIL STREQUAL "1150")
     zeilen("${_dbg}" "\\[voice\\] ROOM1150 msg 29: keine Aufnahme" _m29)
@@ -149,10 +153,10 @@ if(TEIL STREQUAL "11b0")
     endif()
 endif()
 
-# Texte der Szene (RE15_MSG_LOG [msgtext])
+# Texte der Szene (RE15_MSG_LOG [msgtext]); Trenner "|" (ein ";" wuerde die CMake-Liste zerlegen)
 foreach(_t ${_texte})
-    string(REGEX REPLACE "^([0-9]+);(.*)$" "\\1" _id "${_t}")
-    string(REGEX REPLACE "^([0-9]+);(.*)$" "\\2" _re "${_t}")
+    string(REGEX REPLACE "^([0-9]+)\\|(.*)$" "\\1" _id "${_t}")
+    string(REGEX REPLACE "^([0-9]+)\\|(.*)$" "\\2" _re "${_t}")
     zeilen("${_dbg}" "\\[msgtext\\] room=${TEIL} id=${_id} \"${_re}\"" _n)
     if(NOT _n GREATER 0)
         message(FATAL_ERROR "${_tag}: Text msg ${_id} fehlt im Log: ${_re}")

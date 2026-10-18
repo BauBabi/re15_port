@@ -18,6 +18,8 @@
 #include "re15_adaruf.h"
 #include "re15_irons_tod.h"
 #include "re15_szenenleon_r36.h"
+#include "re15_rdt.h"
+#include "re15_msg.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -145,6 +147,28 @@ static int teil_tabelle(void)
         CHECK(c && bytes(c, n2, 0x126E, "2b0dffff") && bytes(c, n2, 0x1298, "2b0dffff") && bytes(c, n2, 0x106C, "2c070131"),
               "ROOM11B0.RDT sub03 @0x0126E/@0x01298 = Message_on 13, main00 @0x0106C Aot_set Platz 7 (msg 14)");
         free(c);
+    }
+    /* Wortlaut der Original-Nachrichten, dekodiert wie im Spiel (re15_msg_load_room_block + re15_msg_get_text):
+     * die gesperrten Ids sind Untersuchungstexte / eine nie gezeigte Zeile, die Zieldatei spricht etwas anderes. */
+    {
+        static const struct { unsigned raum; int id; const char *text; } k_text[] = {
+            { 0x1171, 3, "John: Alright, let's get down from here!" },
+            { 0x1171, 2, "John: C'mon, give me a hand!" },
+            { 0x11B0, 13, "It doesn't seem like you could move this on your own." },
+            { 0x11B0, 14, "The shutter is tightly sealed in place." },
+        };
+        for (unsigned i = 0; i < sizeof k_text / sizeof k_text[0]; i++) {
+            long rn = 0; uint8_t *rb = rdt(k_text[i].raum, &rn);
+            static re15_rdt_t rd; memset(&rd, 0, sizeof rd);
+            const char *t = NULL;
+            if (rb && re15_rdt_parse(rb, (size_t)rn, &rd) >= 0 && rd.messages) {
+                re15_msg_load_room_block(rd.messages, rd.messages_size);
+                t = re15_msg_get_text(k_text[i].id);
+            }
+            CHECK(t && !strcmp(t, k_text[i].text), "ROOM%04X msg %d = \"%s\" (ist \"%s\")", k_text[i].raum, k_text[i].id,
+                  k_text[i].text, t ? t : "(null)");
+            free(rb);
+        }
     }
 
     /* (4) Sperre: die Datei gehoert einer anderen Zeile -> stumm */
