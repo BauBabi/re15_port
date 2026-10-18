@@ -492,7 +492,7 @@ Plc_motion(0,2) @0x014CE = RBJ-Record 1 (Marker 0x2 = John) Clip 2 von ROOM1171,
 - Spur K hat in 1171 den RBJ-Kanal-Cache berichtigt (18940e95, Slot ohne Record belegt keinen Platz); die Leihe hier geht
   am Cache vorbei - bei der Integration zusammen ansehen.
 
-- **Endstand nach Nachtrag 7 (751e3f4d, Bau 2026-10-18 ~22:45):**
+- **Endstand nach Nachtrag 7 (751e3f4d, Bau 2026-10-18 21:47 - exe 21:47:36, Commit 751e3f4d 21:48:38, die Riegel-Laeufe unten vor f744e5ad 22:13:31; berichtigt in Nachbesserung 2 nach Hinweis H6 der Abnahme 1, vorher hier "~22:45"):**
   `ctest -R "integration_r39_dining1141_d|integration_r38_dining1141_s" -j 2` -> "100% tests passed, 0 tests failed out of 2"
   (D Passed 643.52 sec, S Passed 1103.82 sec unter Parallellast); Unit, Regex wie 8.3 -> "100% tests passed, 0 tests failed
   out of 122". Damit gesamt am Endstand gruen: Unit 122/122, Integration 15/15 (die 13 Nicht-D/S-Riegel aus dem ersten
@@ -511,3 +511,102 @@ Abschnitt "Fuer den Nutzer" einfach beschreiben (keine Entscheidungsfrage). (3) 
 
 ### 9.0 Stand / Fortschritt
 - 23:00 Baum sauber auf 0aa7b194 (Abnahme 1), master = 8286bcb6. Dossier-Abschnitt angelegt.
+- 23:02 Merge master 8286bcb6 -> 25611933 (Konflikte AUFTRAG.md: Fassung master + Orchestrator-Hinweis 14:27 aus dem Zweig;
+  test_r36_kartenbits.c: beide Zeilen Bit 94 J / Bit 70 I; enemy_ai_common.c, game_step_common.c, scd_vm.c automatisch, an
+  verschiedenen Stellen: E-Haken HURT/Querung, I Ereignis 27). configure + build LOCAL-BUILD-OK.
+- 23:05-23:20 Messung vorher am gemergten Stand (Laeufe v_a, v_l, v_l2, v_l3; 9.1).
+- 23:40 Umsetzung dccd5f8c (9.3); 23:44 Laeufe n_a, n_l, n_l2, n_l3 gestartet.
+- H6 erledigt: Uhrzeit in 8.8 aus den Commit-Zeiten berichtigt (751e3f4d 21:48:38, exe 21:47:36, f744e5ad 22:13:31).
+
+### 9.1 Messung vorher (gemergter Stand 25611933, echte exe; Messordner scratchpad `j39n2/`, nicht committet)
+Werkzeug `j39n2/lauf.sh` (eigene exe-Kopie `re15_pc_j39n2_<name>.exe`, Umgebung wie Abnahme 1 `J39abn1/lauf.sh`, dazu
+RE15_R39_GEGNER_LOG fuer Spur E), Auswertung `salven.py` (je Schuss: Ziel, Elzas Griff gr=, Zustand des Ziels, Peilung rel in
+der Konvention von re15_ai_arc_test mit atan2_q12 aus actor_locomotion.c, Kamera, John im Bild per Projektion),
+`aufmerk.py` (Aufmerksamkeits-Episoden), `stimme_xkorr.py` (Kreuzkorrelation Sprachdatei gegen Mitschnitt).
+Laeufe: v_a = Abnahme-Lauf A (echter Weg 1131 -> 1141 -> 1171, Messer, Gorillas starr + Messhaken 600), v_l/v_l2/v_l3 =
+Abnahme-Laeufe L/L2/L3 (Pistole im Inventar, lebende Gorillas, RE15_R38F_GORILLAS_TOT=2400).
+
+**Stimmen (Nachtrag 8), Lauf v_a** (debug.log + Mitschnitt, 1141: Takt = F + 3659 aus `Se_on ... F35 tick=3694`):
+
+| Zeile | `[voice] clip loaded` | offen (r39.txt) | Kreuzkorrelation im Zeilenfenster |
+|---|---|---|---|
+| msg 50 Elza | main50.wav (32000 Hz x1) | F176..F356 (181 Bilder = Laenge der Aufnahme 180,1 Takte) | rho 0,903 bei Takt 3834 (Haelften 0,920/0,886; Median 0,004) |
+| msg 51 John | main51.wav | F4000..F4174 (175) | rho 1,000 bei Takt 7658 (Haelften 1,000/1,000) |
+| msg 52 John | main52.wav | F4176..F4304 (129) | rho 1,000 bei Takt 7834 (Haelften 1,000/1,000) |
+| Gegenproben | main51 im Fenster von msg 50: rho 0,043; main50 im Fenster von msg 51: 0,033 | | |
+
+Die Original-Zeilen bleiben stumm: `[voice] ROOM1141 msg 13: keine Aufnahme (synchro/STAGE1/room1141/main13.wav) - Zeile
+bleibt stumm` (Gemaelde) und dasselbe fuer msg 12 (Schloss); msg 14 (Tisch) kommt im Weg nicht vor, `synchro/STAGE1/room1141/`
+hat nach der Umbenennung keine main12/13/14.wav mehr, die alten Takes liegen unter `synchro/unused/`.
+Befunde: (S1) die Pad-Sperre der Reaktion endet nach `Sleep 90` (F266), Elza spricht bis F356 weiter, waehrend der Spieler
+schon laeuft; (S2) msg 52 wartet richtig auf das Ende von main51 (Stimmen-Riegel), aber John rennt nach `Sleep 60 + 40` los
+(`[scd F4275] Cut_chg(7)`, r39.txt F4276 s1=5), seine Zeile laeuft bis F4304 - er rennt mitten im Satz weg.
+
+**Kamera nach Johns Abgang (neu gefunden, Lauf v_a und Abnahme-Lauf A):** r39.txt `anz=8` von F4418 bis F6200, waehrend Elza
+von (-5800,-21500) ueber (-6000,-12000) zur Dachtuer (-7227,-1054) geht; die Bilder `J39abn1/l_a/fd_005900..006100` zeigen nur
+die leere Suedwest-Ecke (`j39n2/abn_a_ende.png`). Ursache: Cut_chg(7) fuer Johns Abgang merkt den ANGEZEIGTEN Cut (scd_vm.c
+op_cut_chg @0x800402c0/@0x800402e4) = Cut 8 des Gespraechs; das Programmende `2a 00 3c 01` (Cut_old, Cut_auto 1) kehrt zu Cut 8
+zurueck. RVD ROOM1141 (RDT+0x28 -> @0x01A8, 20 B je Satz, selbst geparst): Gruppe Cut 8 = nur Satz 22 `01 ff 08 00 fc d6 64 9c ..`
+= der Gruppenkopf, den der Zonen-Scan ueberspringt (rdt_common.c re15_rdt_apply_zones_as_aots: erster Satz je cam_from) - aus
+Cut 8 fuehrt kein Wechsel. Eingefuehrt mit dem Gespraech in Cut 8 (b2a2f267, Punkt 8); vorher (Runde 38) lag vor Cut 7 der
+Kampf-Cut. Die Abnahmen bewerteten nur das Gespraech, nicht die Bilder danach.
+
+**M1 (N4.3) am gemergten Stand** (`salven.py`; Spur E: 360 Energie, Treffer unter 36 Energie ohne Zucken, gegner_r39.log
+`affen treffer ... OHNE ZUCKEN (zurueck in 1/3/1/0)`):
+
+| Lauf | Salven | ohne Treffer | Treffer ohne sichtbare Zuwendung | mit Zuwendung |
+|---|---|---|---|---|
+| v_l | 5 (F3771..F5255) | 4: alle gr=1 (Elza im Griff), Ziel Sub 2/3 (kein Angriff), rel -45..-1 (im Kegel 0xC8) | 1 (F5255: 2 x 29 Bilder, Lage (-6982,-9488) fest) | 0 |
+| v_l2 | 6 | 1 (F4137: rel -597/-612, Ziel lief waehrend der 110 Zielbilder aus dem Kegel) | 4 (Gorilla 3 bei x -6982: je 29 Bilder, Drehung 3157 -> 3123) | 1 (F3765: Gorilla 2 6513 -> 3276 in 149 Bildern) |
+| v_l3 | 5 | 2 (F3771 Ziel im Griff-Sub 15 = Greifer; F4142 gr=1, Ziel Sub 2) | 2 (F4513, F5262 je 29 Bilder) | 1 (F4890: 89 Bilder, 10355 -> 9241; F5292 dazu 179 Bilder, 13356 -> 3125) |
+
+Zusammen 16 Salven: 7 ohne Treffer (5 x gr=1 auf ein Ziel, das NICHT angriff = Mangel (a); 1 x Kegel = (b); 1 x Greifer),
+6 Treffer ohne Zuwendung, 3 mit Zuwendung. Nach dem Merge zuckt kein Gorilla mehr bei Johns ersten zwei Treffern (H3 bestaetigt);
+die Aufmerksamkeit haengt nicht am Zucken - sie endet aber am ersten Prueftakt nach 29 Bildern.
+Ursache (c), gemessen am Zustands-Log v_l2 F4515..F4545 (Gorilla 3, `state.txt`): nach dem Treffer B[3] (ss1=3, Clip 5), der
+Gorilla rueckt 1876 nach Sueden und wieder zurueck, die Drehung bleibt bei 3157 -> 3123 (Peilung zu John 2005, 1120 daneben)
+- er dreht nicht zu John, obwohl der B[3]-Lenkschritt 6..37 je Bild (@0x80117d1c-34) in 30 Bildern 180..1110 erlaubt. Das
+Lenkziel kommt aus `re15_r36_affen_padsuche_ziel` (Runde 36 F): ist dessen Umweg aktiv (`s_r36_padsuche_aktiv`), steuert B[3]
+den UMWEG-Punkt an statt John; der Umweg wird mit der Lage des SPIELERS geplant (`r36_uw_route(e, pl, slot)`) und waehrend der
+Aufmerksamkeit nicht neu bewertet (A[3] laeuft nicht, `ab_nur_b`). x -6982 = Westwand x -8600 (SCA `x -10600..-8600`) + Radius
+1618 des Gorillas (`sca.py`: naechste Zelle 1618) - der Gorilla kommt in x nicht naeher als 553 an John (x -7535) heran.
+Dazu der Prueftakt: nach 30 Bildern ohne 300 Fortschritt war die Aufmerksamkeit vorbei - auch wenn er sich noch drehte.
+John im Bild: Cut 0 zeigt Johns Ecke (Projektion (122,90..117), Tiefe ~13000), Cut 1/2/5 nicht (hinter der Kamera). In v_l und
+v_l3 fielen die ersten Schuesse in Cut 0, John stand aber hinter den Gorillas, die Elza packten (`j39n2/v_l_schuss1.png`).
+
+### 9.2 RE-Belege (diese Sitzung selbst gelesen)
+- **Nachziehen der Waffe (b):** `re15_disasm.py dis 0x80033eec`: Gun-FSM Sub 5 (Wechsel aufs naechste Ziel, Schreiber der 5
+  in HOLD @0x800332f8): Phase 0 `ori v0,zero,0x7` / `sb v0,-13597(at)` (+0x8f = 7), `jal 0x80037250` mit `ori a0,zero,0x7530`
+  (Zielsuche 30000 @0x80033f50/@0x80033f54); Phase >= 1 @0x80033f84: `ori a1,zero,0xc8` @0x80033f90, `jal 0x8001a8f8`
+  @0x80033f94 (a0 = Ziel+0x34 @0x80033f98) = Drehung zum Ziel je Bild um hoechstens 0xC8; @0x80033fa8 `andi v0,v0,0x100`
+  (Taste noch gehalten, sonst aca5a = 3 Senken @0x80033fbc), `jal 0x8001a9cc` @0x80033fcc mit `ori a1,zero,0x64` @0x80033fb0
+  (ausgerichtet -> aca5a = 1 HOLD @0x80033fe4), `jal 0x8001f314` @0x80033ff8 (Haltebild der W-Bank). Dieselbe Drehung beim
+  Zielbeginn: Sub 0 `ori a1,zero,0xc8` @0x80032fe0 / `jal 0x8001a8f8` @0x80032fec. Aufrufer von FUN_8001a8f8 im ganzen PSX.EXE
+  (jal-Suche 0x0C006A3E): 0x80032fec, 0x80033f94, 0x80034134, 0x80034fbc, 0x80035620.
+  Port: re15_enemy_steer_point (enemy_ai_common.c) = FUN_8001a8f8-Kern (`8001a958..8001a9b0`, Kommentar in player_common.c).
+- **Zugewandt (c):** Gorilla A[3] `a804(0xbb8,0x180)` @0x80117a60-74 (enemy_ai_common.c re15_dog_arc(e, pl, 3000, 384)) =
+  Biss-Kegel +-0x180; B[3]-Lenkschritt `(rng & 0x1f) + 6` @0x80117d1c-34, `jal 0x8001a8f8` @0x80117d50.
+- **Kein Abbruch des Griffs durch Dritte (a):** der Wurf laeuft im SPIELER-Takt: Opfer-Handler 0x8011c118 als Kommando 5
+  (`jalr v0` @0x80031cb4, re15_affen.h (6d)), Phasen P0..P7, Freigabe nur in P7 0x8011c384 (aca58 = 1, +0x93 = 0); der Greifer
+  haelt Bit 0x1000 von Phase 3 bis Phase 4 (@0x8011ac34-38 setzen, @0x8011ad8c-94 loeschen). Ein Treffer auf den Greifer wuerde
+  Sub 15 abbrechen, ohne dass Bit 0x1000 je geloescht wird - das Original hat dafuer keinen Weg (der Spieler kann im Griff nicht
+  schiessen). Deshalb bleibt der Greifer ausgenommen; der ANDERE Gorilla ist frei treffbar.
+- **Kamera am Ende:** RVD @0x01A8 Satz 0 `01 ff 00 00 fc d6 64 9c fc d6 cc de b8 0b cc de b8 0b 64 9c` = Gruppe Cut 0, Viereck
+  (-10500,-25500)..(3000,-8500), enthaelt Elzas Gespraechslage (-5800,-21500) (Kampf davor: Lauf v_a F3977 `anz=0` bei
+  (-5636,-18958)); Satz 22 `01 ff 08 00 fc d6 64 9c fc d6 8c bf 24 fa 8c bf 24 fa 64 9c` einziger Satz der Gruppe Cut 8.
+  Original-Form fuer das Szenenende: ROOM1141 sub02 @0x00E80 `29 00` (Cut_chg in die Kamera von Elzas Lage) vor @0x00F56
+  `3c 01` Cut_auto 1; scd_vm.c op_cut_old: Cut_old stellt DAT_800b3f7b her (@0x8004033c), den beim letzten Cut_chg angezeigten Cut.
+- **Stimmen ausreden lassen:** der Port oeffnet eine Zeile erst nach dem Ende der laufenden Sprachzeile (scd_vm.c op_message_on,
+  `g_re15_voice_laeuft`/`g_re15_voice_restbilder` aus audio_pc.c re15_audio_tick); dieselbe Warte-Zeile msg 58 traegt schon den
+  Glasbruch (Punkt 6). Ohne Aufnahme laeuft sie sofort durch (Riegel `fenster`/`phase_h`).
+
+### 9.3 Umsetzung (Commit dccd5f8c)
+
+| Mangel | Aenderung | Datei / Konstante |
+|---|---|---|
+| M1 (a) | `schuss()` ohne `re15_player_victim_state() == 0`; Grund je Fehlschuss im Log (tot / im Angriff / nicht im Kegel). Ziel = naechster lebender Gorilla, der nicht angreift (`ziel_waehlen`), sonst der naechste lebende; im Zielen neu waehlen, wenn das Ziel tot ist oder angreift | dining_r39.c |
+| M1 (b) | Anker ZIELEN (Plc_motion(2,6) Zielen) .. SENKEN (Plc_motion(2,6) rueckwaerts) in SCHUETZE39; dazwischen dreht John je Bild um hoechstens `RE15_R39J_NACHFUEHREN` 0xC8 zum Ziel (re15_enemy_steer_point) | programme_bauen.py, gen/*.inc (OFF_ZIELEN 0x002E, OFF_SENKEN 0x005E), re15_dining_r39.h @0x80033f90/@0x80033f94 |
+| M1 (c) | Gorilla-B[3]-Haken: `re15_dining_r39_affe_ziel` liefert 1 = John, dann Lenkziel John OHNE Pad-Umweg; Fortschritts-Takt (30 Bilder / 300) erst ab Zuwendung `RE15_R39J_ZUGEWANDT` 0x180, je Treffer neu; Log "zugewandt" / "vorbei - festgeklemmt" | dining_r39.c, enemy_ai_common.c (Haken, 3 Zeilen umgestellt), re15_dining_r39.h @0x80117a60-74 |
+| Stimmen | HAEMMERN39: nach msg 50 + Sleep 90 `2b 3a 00 00` (msg 58) vor Set(9,94)=1 / Pad frei; ENTRIEGELN39: nach msg 52 + Sleep 60 + 40 `2b 3a 00 00` vor Plc_neck aus / Abgang | programme_bauen.py |
+| Kamera | Programmende `29 00 3c 01` (Cut_chg 0 + Cut_auto 1) statt `2a 00 3c 01` | programme_bauen.py, `RE15_R39J_CUT_ENDE` 0 (RVD @0x01A8 Satz 0 / Satz 22) |
+| Messschiene | r39.txt `zl=<zielt>/<Ziel-Slot>` vor `blick=` (die Riegel-Regex endet weiter auf `blick=`) | dining_r39.c |
