@@ -19,6 +19,7 @@
 #include "re15_player.h"       /* RE15_PAD_BIT_*                                  */
 #include "re15_engine.h"       /* re15_pad_virtual_word (confirm/cancel roles)    */
 #include "re15_audio.h"        /* re15_audio_core_se — SE bank 4 (§6)             */
+#include "re15_inventar_r39.h"  /* Runde 39 Spur C: Stapelregel (re15_inventar_r39_stapelt)   */
 
 re15_itembox_t g_itembox;
 
@@ -98,7 +99,7 @@ static uint8_t box_ammo_cap(uint8_t id)
 /* RE1.5 ammo id gate 0x15..0x21 (`sltiu id,0x22` @0x80049124 + weapon bound
  * 0x15 @0x80047d54, RE1.5-EXE) — stands in for RE2's box-ammo gate
  * id ∈ 0x14..0x1f (@0x80070490-94). [RE1.5-adapted] */
-static int box_is_ammo(uint8_t id) { return re15_item_is_ammo(id); }
+static int box_is_ammo(uint8_t id) { return re15_inventar_r39_stapelt(id); }   /* Runde 39 Spur C: + Wurfgranaten (Obergrenze 250), Fenster 0x15..0x21 unveraendert */
 
 static void clear_slot(re15_inv_slot_t *s)
 {

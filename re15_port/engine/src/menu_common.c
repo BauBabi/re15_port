@@ -950,6 +950,11 @@ static int exchange_match(void)
         int r35 = re15_werfer_paar(idA, idB, &s_x_result, &s_x_pic);
         if (r35) return r35;
     }
+    {   /* Runde 39 Spur C: gleiche Gegenstaende mit Zahl ohne eigenen Selbst-Satz (0x21, 0x09..0x0B) -> Aktion 5 */
+        extern int re15_inventar_r39_paar(int a, int b, uint8_t *result, uint8_t *pic);
+        int r39 = re15_inventar_r39_paar(a, b, &s_x_result, &s_x_pic);
+        if (r39) return r39;
+    }
     cnt   = xu8(X_PROP_TBL + (uint32_t)idA * 12u + 9u);
     plist = xu32(X_PROP_TBL + (uint32_t)idA * 12u + 4u);   /* PSX address in the blob */
     if (cnt == 0) return 0;                      /* beq @0x8004e9ec */
