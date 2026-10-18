@@ -124,5 +124,17 @@ typedef struct { char art; uint16_t raum; int takt; int wert; } re15_r39q_folge_
 int  re15_elzazombies_r39_folge_n(void);
 const re15_r39q_folge_t *re15_elzazombies_r39_folge(int i);
 void re15_elzazombies_r39_reset(void);   /* RAM-Zustand loeschen (Riegel/Sonden) */
+/* Nur fuer Riegel/Sonden: 0 = Stand vor Spur Q (keine Flanke, kein Nachspawn) als Gegenprobe im selben Binary. */
+void re15_elzazombies_r39_enable(int an);
+/* MESSUNG je Montage-Schnitt (Raum, Cut) und Zombie: Abstand zur Bodenprojektion der Kamera im ersten/letzten Bild des
+ * Abschnitts, Lagen, Abschnitts-Bild des Einzelstopps (0 = nie). debug.log `[elzazombies-r39] ROOMxxxx Cut c Bild n: ...`
+ * beim Ende jedes Abschnitts. Reset beim Start der Kette. */
+typedef struct { uint16_t raum; uint8_t cut, aktor, bit; int b0, b1; int32_t d0, d1, x0, z0, x1, z1; int halt; } re15_r39q_spur_t;
+int  re15_elzazombies_r39_spuren(const re15_r39q_spur_t **out);
+void re15_elzazombies_r39_abschnitt_beenden(void);   /* Riegel: laufenden Abschnitt schliessen (exe: Raumwechsel) */
+int  re15_elzazombies_r39_hp_min(void);              /* kleinste Spieler-HP ueber die Kette */
+/* Freigabe der 1061-Kopien (Nachspawn): Spielerlage beim Erreichen der Etage, kleinster Abstand einer Kopie; Ergebnis =
+ * Zahl der freigegebenen Kopien (0 = noch keine Freigabe). */
+int  re15_elzazombies_r39_freigabe(int32_t *px, int32_t *pz, int32_t *dmin);
 
 #endif /* RE15_ELZAZOMBIES_R39_H */

@@ -260,6 +260,9 @@ static int     s_1031_knall_off = -1; /* Lage des Original-Se_on @0x02862 im Lau
 static int     s_takt = 0;
 static uint8_t s_halt_1061 = 0;       /* Nachspawn 1061: Kopien gehalten bis Etage 4 */
 static uint8_t s_halt[RE15_ACTOR_MAX];/* von DIESER Regel angehalten (nur diese gibt frei) */
+static int     s_an = 1;              /* Pruefhaken: 0 = Stand vor Spur Q (Gegenprobe der Riegel) */
+static int     s_hp_kette = 1 << 30;  /* kleinste Spieler-HP ueber die ganze Kette */
+static int32_t s_frei_px = 0, s_frei_pz = 0, s_frei_dmin = -1; static int s_frei_n = 0;   /* Freigabe 1061 */
 
 static void log_q(const char *was)
 {
@@ -303,7 +306,7 @@ static const kamera_t *kamera(uint16_t raum, int cut)
     for (int i = 0; i < N_KAMERAS; i++) if (k_kameras[i].raum == raum && (int)k_kameras[i].cut == cut) return &k_kameras[i];
     return NULL;
 }
-typedef struct { uint16_t raum; uint8_t cut, aktor, bit; int b0, b1; int32_t d0, d1, x0, z0, x1, z1; int halt; } spur_t;
+typedef re15_r39q_spur_t spur_t;
 static spur_t s_spur[64];
 static int s_n_spur = 0, s_offen_von = 0, s_bild = 0, s_hp_min = 1 << 30;
 static const kamera_t *s_offen = NULL;
@@ -585,7 +588,7 @@ static void start_kette(void)
     s_rueck_raum = (uint16_t)g_current_room_id;
     s_rueck_x = pl->x; s_rueck_y = pl->y; s_rueck_z = pl->z; s_rueck_gier = pl->rot_y; s_rueck_cut = g_scd.cam_id;
     s_folge_n = 0; s_takt = 0; s_folge_gegner = -1; s_folge_cut = -1;
-    s_n_spur = 0; s_offen = NULL; s_hp_min = 1 << 30;
+    s_n_spur = 0; s_offen = NULL; s_hp_min = 1 << 30; s_hp_kette = 1 << 30;
     umzug_vorbereiten();
     knallbank_laden();
     s_zustand = RE15_R39Q_AUFTAKT;
@@ -643,6 +646,7 @@ static void montage_takt(void)
     {
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         if (pl->hp < s_hp_min) s_hp_min = pl->hp;
+        if (pl->hp < s_hp_kette) s_hp_kette = pl->hp;
     }
     const double fx = (double)k->zx - k->kx, fz = (double)k->zz - k->kz;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
@@ -699,6 +703,16 @@ static void halten_1061(void)
     }
     if (auf_etage) {
         s_halt_1061 = 0;
+        s_frei_px = pl->x; s_frei_pz = pl->z; s_frei_dmin = -1; s_frei_n = 0;
+        for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+            const re15_actor_t *a = &g_actors[i];
+            int kopie = 0;
+            for (int b = 0; b < RE15_R39Q_N_10E1; b++) if (a->em_flag_id == BIT_1061(b)) kopie = 1;
+            if (!a->active || !kopie) continue;
+            const int32_t d = (int32_t)lround(sqrt((double)(a->x - pl->x) * (a->x - pl->x) + (double)(a->z - pl->z) * (a->z - pl->z)));
+            if (s_frei_dmin < 0 || d < s_frei_dmin) s_frei_dmin = d;
+            s_frei_n++;
+        }
 #ifdef RE15_PLATFORM_PC
         double dmin = 1e9;
         for (int i = 1; i < RE15_ACTOR_MAX; i++) {
@@ -724,7 +738,7 @@ void re15_elzazombies_r39_tick(void)
     s_takt++;
     /* Flanke (9,97) 0 -> 1 im Spiel. Laden setzt s_alt (re15_elzazombies_r39_geladen), ein geladenes Bit ist keine Flanke. */
     const int b = re15_game_flag_get(RE15_R39Q_PANIK_BANK, RE15_R39Q_PANIK_BIT) ? 1 : 0;
-    if (s_alt == 0 && b == 1 && ist_elza() && !re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)) {
+    if (s_an && s_alt == 0 && b == 1 && ist_elza() && !re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)) {
         s_ausstehend = 1;
 #ifdef RE15_PLATFORM_PC
         fprintf(stderr, "[elzazombies-r39] Flanke (9,97) 0->1 in ROOM%04X Takt %d -> Montage ausstehend\n",
@@ -779,7 +793,7 @@ void re15_elzazombies_r39_tick(void)
 
 static void nachspawn(uint16_t room_id)
 {
-    if (!ist_elza() || !re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)) return;
+    if (!s_an || !ist_elza() || !re15_game_flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)) return;
     if (room_id != RE15_R39Q_RAUM_1061 && room_id != RE15_R39Q_RAUM_1031) return;
     if (starten(1) < 0) return;
     if (room_id == RE15_R39Q_RAUM_1061) {
@@ -854,4 +868,14 @@ void re15_elzazombies_r39_reset(void)
     s_rueck_raum = 0; s_rueck_x = s_rueck_y = s_rueck_z = 0; s_rueck_gier = 0; s_rueck_cut = 0;
     s_1031_knall_off = -1; s_takt = 0; s_halt_1061 = 0; memset(s_halt, 0, sizeof s_halt);
     s_folge_n = 0; s_folge_gegner = -1; s_folge_cut = -1; s_n_spur = 0; s_offen = NULL;
+    s_hp_kette = 1 << 30; s_frei_px = s_frei_pz = 0; s_frei_dmin = -1; s_frei_n = 0;
+}
+void re15_elzazombies_r39_enable(int an) { s_an = an ? 1 : 0; }
+int  re15_elzazombies_r39_spuren(const re15_r39q_spur_t **out) { if (out) *out = s_spur; return s_n_spur; }
+void re15_elzazombies_r39_abschnitt_beenden(void) { abschnitt_schliessen(); }
+int  re15_elzazombies_r39_hp_min(void) { return s_hp_kette; }
+int  re15_elzazombies_r39_freigabe(int32_t *px, int32_t *pz, int32_t *dmin)
+{
+    if (px) *px = s_frei_px; if (pz) *pz = s_frei_pz; if (dmin) *dmin = s_frei_dmin;
+    return s_frei_n;
 }
