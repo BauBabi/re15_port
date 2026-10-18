@@ -6,6 +6,9 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 21:44: Integration E2+E3+I+Funktext (r39/integration): 860/860 gruen (alle unit_/prop_/probe_ + E/I-Gruppen,
+  ctest -j 4, 2927 s, Ende 21:40:40). Danach Spur M gemergt (8d936dc1); Bau + M-Gruppe + alle schnellen Tests laufen,
+  dann master + Hauptbaum-exe. G/J/K laufen weiter (G Abnahme 1, J und K Nachbesserung 1).
 * 2026-10-18 21:22: Spur M schluessel2 BESTANDEN (Abnahme 0 ohne Maengel; Fix 50e8be0e): NUTZER_FAKTOR_M 0,5 + GTE-Raster-
   Grenze (ganzzahlige SXY @0x80022fd8) - 960x720: Parking Lot Key 14x8 -> 4x3, Prison Key 16x10 -> 8x5; Aufnahme unveraendert;
   45 + 825 Tests. NOCH NICHT gemergt: der laufende Integrationstest (E2+E3+I, b3a110bhv) liest test_r38_itemorte.cmake und
