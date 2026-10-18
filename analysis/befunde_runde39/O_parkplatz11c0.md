@@ -11,9 +11,9 @@ Zuteilung (VERTRAG.md): Port-Message-Id 11C0 = 40 (1.2); Bank-9-Bit 96 nur, wenn
 ## Stand
 - [x] Messung vorher (echter Weg 11B0 -> Tuer -> 11C0, Szene, Kampf, Tuer)
 - [x] RE-Belege (Tuer-AOT, Kampf-Beginn/-Ende im RDT/SCD, Aot_reset/Aot_on/sce-Handler, RE2-Form)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
+- [x] Umsetzung (Programme SZENE/ENDE + Installer + Stimme, Haken je 1 Zeile)
+- [x] Messung nachher (nach1-3 + integration K/W/N/E; Szene/Kampf bitgleich vor/nach)
+- [x] Tests (unit 7, integration 4; Modulgruppen; alle unit_/prop_/probe_)
 
 ## Messung vorher (Basis fa2c0e7e, exe `re15_pc_r39o_mess.exe` = Kopie der gebauten exe)
 
@@ -84,7 +84,7 @@ mitten im Kampf verlassen und Ada mit den Gorillas zuruecklassen; keine Sperre, 
 
 ### 3. RE2 Retail (Beta -> Retail) — wie RE2 eine Tuer waehrend eines Pflichtkampfes / mit wartendem Begleiter sperrt
 Zensus ueber alle 250 RDTs `info/re2leon/PL0/RDT` (eigenes Werkzeug `O_belege/re2_tuer_msg_zensus.py`, Ergebnis
-`O_belege/re2_tuer_msg_zensus.txt`, RE2-SCD-Walker `analysis/nutzer_batch_2026-08-27/tools/re2_scd_walk.py`): 53 Stellen,
+`O_belege/re2_tuer_msg_zensus.txt`, RE2-SCD-Walker `analysis/nutzer_batch_2026-08-27/tools/re2_scd_walk.py`): 54 Stellen in 37 Raeumen,
 an denen RE2 eine Tuer durch einen Text ersetzt — ALLE als MESSAGE-AOT (sce 4) auf dem Tuer-Slot/-Rechteck, alle Texte in
 Erzaehlform (`fa 02 ...`, kein Sprecherkopf).
 - **ROOM7040 (Pflichtkampf):** INIT sub00 @0x010FE Door_aot_set Slot 0 (Nutzlast Ziel `f4 98 00 00 c9 a5`). MAIN sub06
