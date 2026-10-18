@@ -6,6 +6,14 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 09:40: Spur L optik BESTANDEN (Abnahme 0, 9c149629; Bau 9726b606): Westwand-Masken ROOM1100/1101 Cut 1/2 enden
+  an der GEMALTEN Ecke (Original hat dort keine Masken, pri @0x60C/@0x610 FF FF FF FF; Vorbild ROOM1030 Cut 3 Maske 2 endet an
+  der gemalten Kante; Nutzer-Marke F741: Streifen 134 -> 1 Punkt), Schluessel 10F0/10F1 auf RE2-Bildgroesse (oberes Quartil
+  L_nat*H/vz der RE2-Platzierungen; Leon 491 -> 69 px, Elza 217 -> 63 px bei 960x720), 64/64 gezielte Tests. In die
+  Integration gemergt (5ba0cc96, konfliktfrei; r37_pri1100-/r38_itemorte-Riegel = gewollte Anpassungen). FUER DEN NUTZER:
+  H1 Prison Key jetzt 16 px breit (Hebel RE2_QUANTIL in tools/r38_itemorte/itemorte_export.py, Max 1,0 = 26 px); H2 bei Elza
+  bleiben 37 Punkte auf der Sockel-Kantenlinie 171/172 (Wandbasis, Streuung der Original-Masken); H3 zweite Marke
+  befund_1090_F1357 = Kartenbildschirm (Positionsmarke ausserhalb) -> Spur G. Integrationsbaum: configure+build gestartet.
 * 2026-10-18 09:02: Spur C inventar BESTANDEN (Abnahme 0, 103347cc; Bau a78ee047): Spind 1000 Munition 0x15 x15 Bit (9,69),
   Stapeln aller Mengen-Items (sltiu 0x22 @0x80049124, Obergrenze 250 @0x80074DA8, Aktion 5 @0x8004e664), Elza-Status
   STPIC_04 (DEBUG.BIN FUN_800c01c4), Yellow Keycard: Abfrage nach dem Code (Gate (3,139) @0x01A8A, Generator-E5 je
