@@ -207,13 +207,53 @@ RE1.5-Rahmen (77 Spalten, Hub 39..55 bei Grundlinie 47, das Wort "Poison" liegt 
 die Gift-Spur zeigt die RE1.5-Welle (Tabelle 3) in der RE2-Farbe. Siehe 5 (Entscheidungsfrage).
 
 ## 3. Tests
-(folgt)
+Neue Riegel (probes/r39_zustand.cmake, GLOB; keine Aenderung an tests/unit/CMakeLists.txt oder tests/integration/CMakeLists.txt):
+- `unit_r39_zustand` (tests/unit/test_r39_zustand.c): A Kleidung-Mechanik (Heil-Applier -> HP voll nullt die Wund-Tabelle
+  + Haut-Anforderung; Teilheilung/Nuss lassen die Wunden stehen; Leon + Elza; additive Mischung bis >= 100; Gegengift),
+  B Gift im echten Spielschritt ROOM1130 (Takte in Bild 30/61/92/123 zu -1 HP ohne Flinch/Clip/Rueckstoss, Pause haelt
+  den Zaehler, Kommando 0 nullt ihn nicht, Untergrenze HP 1, Gegengift beendet), C EKG (32 Linien Gift = ff 20 ff - 08 01 08
+  * i, FINE unveraendert 20 ff 20 Maske 02, Klassifikator Gift vor HP). Ausgabe: ALLE PRUEFUNGEN GRUEN (18 Pruefungen).
+  Das Programm ist zugleich das Werkzeug der Echtlauf-Riegel (karte / bild / ekg / hp).
+- `integration_r39_zustand_kleidung` (tests/integration/test_r39_zustand_kleidung.cmake): vier Laeufe der echten exe
+  (Leon ROOM1130 / Elza ROOM1131, mit/ohne Wunden, Spray ueber den Statusschirm): Bild 150 w vs o >= 300 Pixel,
+  Bild 650 w vs o == 0 Pixel, Log-Zeilen Heilung/Spielerhaut.
+- `integration_r39_zustand_gift` (tests/integration/test_r39_zustand_gift.cmake): Lauf G (HP 100, Gift Bild 300, Statusschirm
+  1500, Framedumps 1540-1600): hp-Auswerter (-1 je Takt, erster Takt 330, alle Abstaende 31, >= 30 Takte, letztes
+  Spielbild 1499) + ekg-Auswerter (Kasten x26..103/y118..140: magenta > 0, gruen = gelb = rot = 0 in 1540/1560/1580);
+  Lauf U (HP 5): genau 4 Takte, HP-Minimum 1.
+- Angepasst (Runde 38 Spur R, RE1.5-Form -> RE2-Form): unit_r38_spinnen B/B3/B4/B5 und der pruef_log-Auswerter der
+  integration_r38_spinnen_echtlauf (gz = RE2-Zaehler 0 -> 30 mit HP -1, Periode 31).
+
+Gezielte Laeufe (keine volle Suite im Spurbaum, VERTRAG):
+CTEST_R39_PLATZHALTER
+CTEST_MODULE_PLATZHALTER
 
 ## 4. OFFEN
-(folgt)
+- EKG-WELLENFORM unter Gift: der Port zeigt die RE1.5-Welle (Tabelle 3 @0x80075cec, bytegleich mit den Tabellen 1/2/4/5 =
+  die gemeinsame "nicht FINE"-Welle der Beta) in der RE2-POISON-Farbe. RE2 hat fuer POISON eine eigene Welle
+  (@0x800aad58, 80 Spalten {y,h} u8, Hub 4..36 um Grundlinie 15, Zeichner FUN_800754ac x = base_x + 12 + Spalte,
+  y = base_y + 2 + y); sie passt nicht ohne erfundene Skalierung in den RE1.5-Rahmen (77 Spalten, Hub 39..55 um 47,
+  "Poison"-Wort im Fenster) -> nicht uebernommen, Entscheidungsfrage in 5.
+- PSX-Plattform: der Haut-Neuaufbau ist im PC-Backend (main.c pc_player_skin_reload) umgesetzt; platform/psx pollt
+  re15_zustand_r39_haut_neu_abholen nicht (PSX-Build-Luecke) — dort wuerde nur die Wund-Tabelle genullt, die Decals
+  blieben bis zum naechsten Spieler-Laden (FUN_800314b0) im VRAM.
+- RE2-Takt-Zaehler (s_takt) wird bei neuem Spiel/Laden nicht genullt — RE2 kennt dafuer keinen Schreiber (Writer:
+  Op 32 @0x80020140, Takt @0x8003c154/64, Skript Poison_clr @0x800591b0/@0x8005933c); ohne Folge, weil jeder Gifttreffer
+  ihn auf 30 setzt (@0x80020138-40) und das Inventar-Gegengift nur das Giftwort loescht (@0x8006b1e8).
+- re15_spinnen_r38_gift_tick (RE1.5-Beta-Form @0x80031e44-ecc) bleibt als dokumentierter, ungenutzter Code in spinnen_r38.c.
+- Gift-Messung nur mit Leon gefahren: Takt (Spieler-Aktor status_flags/hp) und EKG (Statusschirm) haben keinen
+  Figurenzweig; die Kleidung ist fuer beide Figuren gemessen.
 
 ## 5. Fuer den Nutzer
-(folgt)
+- Keine neuen Assets, keine neuen Sprachdateien (Paket-Gate unveraendert). Neue Daten: keine (gen/ unveraendert).
+- Verhalten: volle Heilung (Heilspray, G+G+R, G+R+R, oder eine Mischung/Kraeuter, die die HP auf >= 100 bringt) stellt
+  die Kleidung von Leon und Elza sofort wieder her (NUTZER-VORGABE; das Original behielt die Blut-Decals bis zum naechsten
+  Laden). Gift zieht wie in RE2 alle 31 Bilder (etwa jede Sekunde) 1 HP ab, in jedem Spielerzustand, nie unter 1 HP, nicht
+  waehrend der Statusschirm offen ist; Gegengift/Blaues Kraut/Mischungen mit Blau beenden es. Das EKG im Statusschirm ist
+  unter Gift magenta (RE2-Farbe ff 20 ff) mit dem Wort "Poison".
+- ENTSCHEIDUNGSFRAGE: soll die EKG-Spur unter Gift zusaetzlich die RE2-POISON-WELLE (eigene, unregelmaessige Zackenfolge,
+  @0x800aad58) zeigen? Das erfordert eine Umrechnung in den RE1.5-Monitor (77 statt 80 Spalten, Hub 17 statt 32 Pixel,
+  Wort "Poison" im Fenster) — eine Port-Wahl ohne Original-Form; derzeit RE1.5-Welle in RE2-Farbe.
 
 ## Fortsetzung (Sitzung 2, ab ~12:10 — der Vorgaenger wurde ~11:08 vom Sitzungslimit beendet)
 - 87180698 (vom Orchestrator gesicherte Reste) Zeile fuer Zeile gegen die Belege gelesen: Haken game_step_common.c
