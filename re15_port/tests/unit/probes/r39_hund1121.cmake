@@ -9,6 +9,7 @@
 #                                    zu, Landung SE 10, danach Sub 2 RUN, Schatten erst diesseits der Glasebene
 #   unit_r39_hund1121_re15           RE1.5-KI-Modus: grid 0x40 wartet, Freigabe 0x43, Sprung, Ausgang Zustand 1, Glas
 #   unit_r39_hund1121_einmal         Wiedereintritt / ohne (9,97): kein Ereignis
+#   unit_r39_hund1121_treffer        Treffer auf der Bruestung vor dem Absprung: Luft-Treffer faellt, kein Glas, Wand zu
 #   unit_r39_hund1121_startmaschine  RE2 Sub 14: Phase 0 wartet, Phase 1 faellt in den Rumpf, 8 Anlaufbilder
 #   integration_r39_hund1121         echte exe, Elza-Spielstand + CONTINUE am Ankunftsplatz von Tuer 0, echter Weg durchs
 #                                    Band: Log-Kette, Bilder (Hund im Fenster), Mitschnitt (Knall); Gegenlaeufe ohne (9,97),
@@ -21,7 +22,7 @@ target_compile_definitions(test_r39_hund1121 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_hund1121 PRIVATE m)
 endif()
-foreach(_r39r_teil ereignis sprung re15 einmal startmaschine)
+foreach(_r39r_teil ereignis sprung re15 einmal treffer startmaschine)
     add_test(NAME unit_r39_hund1121_${_r39r_teil} COMMAND test_r39_hund1121 ${_r39r_teil})
     set_tests_properties(unit_r39_hund1121_${_r39r_teil} PROPERTIES TIMEOUT 240)
 endforeach()

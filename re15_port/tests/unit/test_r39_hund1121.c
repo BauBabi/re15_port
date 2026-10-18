@@ -14,6 +14,8 @@
  *   re15          RE1.5-KI-Modus: Spawn grid 0x40 -> Zustand 4 Sub 0 (wartet), Freigabe grid 0x43, Sprung, Landung,
  *                 Ausgang Zustand 1; Glas im Durchgang.
  *   einmal        nach dem Sprung: Wiedereintritt ohne Ereignis; ohne (9,97) kein Ereignis; Leon ROOM1120 nicht.
+ *   treffer       Treffer auf der Bruestung vor dem Absprung: Luft-Bit, RE2-Luft-Treffer bringt den Hund auf den Boden,
+ *                 kein Glas, Wand wieder fest.
  *   startmaschine RE2 Sub 14 direkt: Phase 0 wartet 60 Bilder (kein +7-Schreiber @0x80102CD4-F4), Phase 1 bewegt im
  *                 selben Bild (@0x80102D20 -> @0x80102D24), Absprung nach 8 Anlaufbildern (+0x158 = 8 @0x80101398).
  * Werkzeuge (kein Riegel, fuer den Integrationshaken):
@@ -373,6 +375,38 @@ static int pruef_einmal(void)
 }
 
 /* ============================================================================================ */
+/* Treffer auf der Bruestung (vor dem Absprung): der RE2-Applier schreibt das ganze Wort +4..+7 = 2/0/0/0 und dann +5 =
+ * Waffen-Zeile (`sw v0,4(s1)` @0x80047288, `sb s5,5(s1)` @0x80047324). Erwartet: Luft-Bit (Port-Wahl, Header des Takts),
+ * RE2-Luft-Treffer P1 (@0x801034C8) bringt den Hund auf den Boden, kein Glasbruch, Wand wieder fest. */
+static int pruef_treffer(void)
+{
+    grund(RE15_AI_FLAVOR_RE2);
+    if (raum_laden(RE15_R39R_RAUM) != 0) return fail(80, "ROOM1121.RDT");
+    if (esp_registrieren() != 0) return fail(81, "RE2-ESP");
+    if (hundebank_laden() != 0) return fail(82, "Hundebank");
+    re15_game_flag_set(RE15_R39R_PANIK_BANK, RE15_R39R_PANIK_BIT, 1);
+    if (ausloesen() != 0) return fail(83, "Ausloeser");
+    spieler(4986, 4000);
+    const int hs = RE15_R39R_EM + 1;
+    re15_actor_t *h = &g_actors[hs];
+    for (int f = 0; f < 5; f++) bild();                 /* T0..T4: Freigabe in T2, Anlauf laeuft */
+    if (h->sub_state_1 != 14 || h->sub_state_2 != 0 || h->y != RE15_R39R_Y) return fail(84, "Anlauf auf der Bruestung");
+    h->state = 2; h->sub_state_1 = 2; h->sub_state_2 = 0; h->sub_state_3 = 0; h->hp -= 10;
+    int boden = -1;
+    for (int f = 0; f < 120 && boden < 0; f++) { bild(); if (h->y == h->dog_floor_y) boden = f; }
+    printf("Treffer in T4: Boden nach %d Bildern bei (%d,%d,%d), Zustand %d Sub %d, Phase %d, Glas %d, Knalle %d\n", boden,
+           (int)h->x, (int)h->y, (int)h->z, h->state, h->sub_state_1, re15_hund1121_r39_phase(),
+           re15_hund1121_r39_glas_takt(), s_knall_n);
+    if (boden < 0) return fail(85, "Hund faellt nach dem Treffer auf seinen Boden (RE2 HURT P1 @0x801034C8)");
+    if (re15_hund1121_r39_phase() != RE15_R39R_FERTIG || re15_hund1121_r39_glas_takt() >= 0 || s_knall_n != 0)
+        return fail(86, "Sprung abgebrochen: kein Glas, kein Knall");
+    for (int r = 0; r < RE15_R39R_WAND_REGIONEN; r++)
+        if (wand_u0(r) != 0xFF) return fail(87, "Band-1-Rueckwand wieder fest");
+    printf("OK treffer\n");
+    return 0;
+}
+
+/* ============================================================================================ */
 static int pruef_startmaschine(void)
 {
     grund(RE15_AI_FLAVOR_RE2);
@@ -491,9 +525,10 @@ int main(int argc, char **argv)
     if (!strcmp(t, "re15"))          return pruef_re15();
     if (!strcmp(t, "einmal"))        return pruef_einmal();
     if (!strcmp(t, "startmaschine")) return pruef_startmaschine();
+    if (!strcmp(t, "treffer"))       return pruef_treffer();
     if (!strcmp(t, "karte"))         return werkzeug_karte(argc, argv);
     if (!strcmp(t, "mitschnitt"))    return werkzeug_mitschnitt(argc, argv);
     if (!strcmp(t, "bild"))          return werkzeug_bild(argc, argv);
-    printf("Aufruf: ereignis | sprung | re15 | einmal | startmaschine | karte ... | mitschnitt ... | bild ...\n");
+    printf("Aufruf: ereignis | sprung | re15 | einmal | treffer | startmaschine | karte ... | mitschnitt ... | bild ...\n");
     return 2;
 }

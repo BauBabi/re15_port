@@ -223,6 +223,28 @@ void re15_hund1121_r39_tick(void)
         s_phase = RE15_R39R_FERTIG;
         return;
     }
+    /* Treffer, solange der Hund noch auf der Bruestung steht (y ueber seinem Boden +0x1C2): RE2s eigener Luft-Treffer-
+     * Zweig (HURT/DEATH P0 liest +0x219 @0x8010341C-28, P1 0x801034C8 faellt mit +40/Bild bis +0x1C2 @0x80103504) braucht
+     * das Luft-Bit, das Phase 0 der Startmaschine loescht (`sb zero,537` @0x80102CDC). PORT-WAHL nach der RE1.5-Regel
+     * "ueber dem Boden = in der Luft" (Hunde-HURT/DEATH-Dispatcher @0x80110928-2c); sonst bliebe der Hund auf
+     * Bruestungshoehe stehen (RE2s Daten stellen keinen Hund erhoeht auf). Der RE1.5-Hund faellt dort von selbst. */
+    if (s_re2 && (h->state == 2 || h->state == 3) && h->sub_state_2 == 0 && h->sub_state_3 == 0 &&
+        h->y < (int32_t)h->dog_floor_y && !h->re2d_air219) {
+        h->re2d_air219 = 1;
+        logf_("[hund1121] Treffer ueber dem Boden (y %d, Zustand %d, Takt %d): Luft-Treffer %d %d", (int)h->y,
+              (int)h->state, s_takt, 0, 0);
+    }
+    const int im_skript = s_re2 ? (h->state == RE15_R39R_RE2_STATE && h->sub_state_1 == RE15_R39R_RE2_SUB)
+                                : (h->state == 4);
+    const int getroffen = (h->state == 2 || h->state == 3);
+    if (s_glas < 0 && (s_phase == RE15_R39R_GESPAWNT ? getroffen : !im_skript)) {
+        /* Vor dem Glas aus dem Sprung geholt (Treffer): kein Glasbruch mehr, Wand zu, normaler Gegner. */
+        logf_("[hund1121] Sprung abgebrochen in Phase %d (Zustand %d Sub %d), Takt %d %d", s_phase, (int)h->state,
+              (int)h->sub_state_1, s_takt, 0);
+        wand_schliessen(h);
+        s_phase = RE15_R39R_FERTIG;
+        return;
+    }
     if (s_phase == RE15_R39R_GESPAWNT) {
         if (s_re2 && h->state == 1) {
             /* ROOM21A0 sub07 @0x020FE..0x0210A: Member_set +4 = 1, +5 = 14, +6 = 0, +7 = 0 (Pos/Dir stehen aus dem Spawn). */
