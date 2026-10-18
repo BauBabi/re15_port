@@ -51,6 +51,7 @@
 #include "re15_scd.h"        /* re15_game_flag_set */
 #include "re15_emd.h"
 #include "re15_to_re2.h"     /* re15_to_re2_plc_dest_clip (BO Tier-3 A2) */
+#include "re15_elza_r39.h"   /* Runde 39 Spur H: Sub-Init-Clip der Spieler-Walk-Subs 4/5/9 (@0x80030b58/@0x80030d90/@0x800313a4) */
 #include <stdlib.h>          /* abs */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>           /* fprintf for walker diagnostic logging */
@@ -226,6 +227,12 @@ void re15_actor_step_walk(re15_actor_t *a)
             if (bclip >= 0) re15_actor_set_motion(a, (int16_t)bclip);
             a->walk_fsm = 2;   /* kein Align-State — direkt in den Slew+Advance-Body */
         } else {
+            /* Runde 39 Spur H (ROOM1031 sub13, zweiter Hub): die Spieler-Subs 4/5/9 setzen ihren Clip in Phase 0
+             * (+0x94 := 5, +0x95 := 0, +0x8f := 7 @0x80030b58-6c / @0x80030d90-a4 / @0x800313a4-b8) und posieren ihn
+             * in der Align-Phase jedes Bild (anim_set @0x80030bf8 / @0x80031494) — nicht erst in Phase 2. Vorher lief
+             * hier der VORIGE Clip vorwaerts weiter (Plc_dest nullt +0x1c4 @0x80041c4c): Clip 0 slot 10..17 = Arm
+             * steigt erneut (include/re15_elza_r39.h). */
+            (void)re15_elza_r39_plc_walk_init(a);
             a->walk_fsm = 1;   /* fall through to state 1 this tick (no freeze) */
         }
     }
@@ -263,7 +270,10 @@ void re15_actor_step_walk(re15_actor_t *a)
         plc_yaw_slew(a, target, PLC_YAW_SLEW_INIT);   /* FUN_8001aac4, a2=0x60 @0x80030ba4 */
         if (delta >= -PLC_CONV_THRESHOLD && delta < PLC_CONV_THRESHOLD) {   /* Runde 35 Spur J: FUN_8001ab9c halboffen ((b-r+k)&0xfff) < 2k, `slt v0,v1,v0` @0x8001abfc */
             a->walk_fsm = 2;
-            /* A2: the walk/run EDD clip starts ONLY now (active stepping) — the
+            /* A2 (ueberholt fuer den SPIELER, Runde 39 Spur H): der Clip laeuft seit dem Sub-Init (Phase 0,
+             * oben) schon in der Align-Phase; hier bleibt fuer Modus 4/9 derselbe Clip (kein Neustart,
+             * Phase 1 -> 2 setzt nur die Phase @0x80030b94) und fuer RUN der Wechsel 5 -> 0 @0x80030dd8/@0x80030de0.
+             * Alter Text: the walk/run EDD clip starts ONLY now (active stepping) — the
              * actor STOOD through the align phase. PSX Plc_dest sets no motion;
              * the walker does, here. Matches Elliot stand 217020→walk 217022.
              * NPC-Slots: Clip 5 der ENTITY-EIGENEN Bank (NPC-Walk-Sub-INIT

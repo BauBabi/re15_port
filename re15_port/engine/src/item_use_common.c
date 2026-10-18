@@ -66,5 +66,7 @@ void re15_item_use_apply(uint8_t id)
                                                         * Belege scd_room_setup.c) */
         else        pl->hp = (int16_t)(pl->hp + h->add); /* raw add, NO clamp (@0x8004afa8-b0) */
         if (h->cure) pl->status_flags &= (uint16_t)~0x2u; /* clear poison @0x8004af8c */
+        { extern int re15_zustand_r39_heilung(uint8_t);          /* Runde 39 Spur F: volle HP -> ganze Kleidung */
+          (void)re15_zustand_r39_heilung(id); }                  /* (NUTZER-VORGABE, zustand_r39.c) */
     }
 }
