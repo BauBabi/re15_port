@@ -180,6 +180,41 @@ ROOM10D1 main00 @0x01026 Ck(3,0x32)==0 legt dort einen Text-Platz statt der Tuer
 | integration_r39_funk10f1_leon | Leon ROOM10F0 ((9,71)=1): keine Funkszene, keine Leihe von ROOM1031 | gruen (8,6 s) |
 | unit_r36_kartenbits | k_port[] + Bit 70 (im Original frei) | gruen |
 
+## 6. Nebenwirkungen (gemessen, gezielte Laeufe; Scratch `vorher_fremd.log` / `nachher_fremd.log`)
+Jeder Elza-Lauf, der ROOM10F1 ueber scd_room_reenter betritt (Tuer, Debug-Sprung, GOTO), sieht jetzt beim ersten Mal die
+Funkszene. Gemessen am Stand fe2c1935..1f0e16bd (vorher):
+| Riegel | Befund mit Szene | Ursache | Anpassung |
+|---|---|---|---|
+| integration_r36_dachkiste (elza) | "Tuer slot 1 nach ROOM1091 nicht ausgeloest" | Lauf setzt Elza per RE15_PLAYER_POS auf (-7125,4950); die Szene startete dort und ihr Gang zur Konsole blieb an der Mitteltrennwand bei (-3118,2902) haengen (climb.txt T9742.. pm=2 mo=105) | `RE15_SET_FLAG=9:70` |
+| integration_r36_klettern (B_elza_10f1) | kein Schieben/Klettern/Tuer | GOTO 10F1 -> Szene lief, danach startete das Weg-Skript vom Konsolenplatz statt von der Tuer | `RE15_SET_FLAG=9:71,9:70` |
+| integration_r39_optik_schluessel (A2 aufnahme_elza) | "fehlt '[schluessel] PRISON KEY genommen'" | Szene startete bei (1300,-2900), Pad gesperrt, Aufnahme-Druck verpufft | `RE15_SET_FLAG=9:70` |
+| integration_r38_cursor (F) | gruen (200 s) | — | keine |
+Muster: Runde 35 K setzte fuer Leons 10F0-Szene ebenso `RE15_SET_FLAG=9:71` in diese Riegel. Diese Laeufe pruefen den
+Tritt/Klettern/Schluessel, nicht die Szene; die Szene selbst messen die eigenen Riegel (§5).
+Unit-Gruppe der beruehrten Module/Raeume (95 Tests, -R im Abschnitt 7): 94 gruen, rot nur **unit_r38_itemorte_raum**
+(Pruefung "R 1030: Loescher-Prop obj 5 ... band == 1", test_r38_itemorte.c:386) — NICHT Spur I: ROOM1030, das Band setzt seit
+08f3094d (Runde 39 Spur H, Punkt 3) `re15_elza_r39_prop_band_ueber_boden(g->y)` statt 1 (feuerloescher_r37.c:185); die
+10F1-Pruefungen desselben Tests sind gruen, und Spur I beruehrt weder 1030 noch den Loescher (Installer kehrt bei room !=
+0x10F1 sofort zurueck). -> OFFEN fuer die Integration.
+
+## 7. OFFEN
+- unit_r38_itemorte_raum rot seit 08f3094d (Spur H) — siehe §6; Riegel oder Band-Regel bei der Integration abgleichen.
+- Sprachdateien fehlen (Nutzer-Produktion): bis dahin bleiben die drei Zeilen stumm (die Anforderung je Zeile ist gemessen).
+- Kein Haken im Boot-/CONTINUE-Weg (bewusst, §3): ein kuenstlicher Spielstand IN ROOM10F1 (nur per Werkzeug) startet keine Szene.
+
+## 8. Fuer den Nutzer
+- **Sprachdateien** (automatisch eingebunden, synchro/README.md): `synchro/STAGE1/room10F1/main40.wav` = "Hello, anyone, can you
+  hear me? We Need help!", `main41.wav` = "..." (optional, z.B. Atmen/Seufzen; ohne Datei bleibt die Zeile stumm),
+  `main42.wav` = "Uhh, this Thing is broken!". Der Ordner `room10F1` existiert noch nicht.
+- **Neue Assets fuer das Paket-Gate**: keine (nur Code + gen/funk10f1_r39_szene.inc; shared_assets unveraendert).
+- **Ablauf**: Elza betritt ROOM10F1 zum ersten Mal (Kartenleser-Tuer aus ROOM10D1) -> Balken, sie dreht sich nach rechts,
+  geht zur Konsole, drueckt (Elzas Rolltor-Schalter-Geste aus ihrer ersten Szene ROOM1031) und spricht Zeile 1, laesst los,
+  "..." mit Hand an der Huefte und Umsehen, "Uhh, this Thing is broken!" mit der Hand an der Stirn; danach ist sie frei.
+  Beim naechsten Betreten keine Szene (Bit (9,70) im Spielstand).
+- **Schreibweise**: die Zeilen stehen woertlich wie im Auftrag ("We Need help!", "this Thing") — wenn "We need help!" /
+  "this thing" gemeint ist, ist das eine Zeile im Generator (tools/r39_funk10f1/szene_bauen.py).
+- **Kamera**: Cut 0 (Tuer) -> Cut 1 (die Konsole von Norden, Elzas linke Seite mit dem Druck-Arm im Bild).
+
 ## Stand
 - [x] Messung vorher (Szene fehlt)
 - [ ] RE-Belege (Raum/Form/Bibliothek stehen; Clip-Wahl am Bild offen)
