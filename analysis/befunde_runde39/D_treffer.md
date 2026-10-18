@@ -228,9 +228,36 @@ neuer Stand: "ziel slot=2 typ=10 @(5105,15408)" = der sichtbare im Ostgang; Slot
   continue;` vor der Abstandswahl (RE1.5 FUN_8003703c hatte keine Sichtlinie, B3) + Logzeile am Ende.
 * Fortsetzung (diese Sitzung): `extern`-Deklaration durch `re15_zombieki_r36.h` ersetzt; Zielwahl-Log; RE15_TREFFER_ALT.
 
+### Punkt 1 (halb aufstehende Zombies) — KEINE Code-Aenderung, Beleg + Riegel
+
+Gemessen (Spielschritt, RE2-KI, ROOM1140): nur der STURZ-Aufsteher (EXEC[5], Zombie nach Flinch-Sturz 0x501) ist mit EBEN vor
+Clip-Bild 55 nicht treffbar; mit TIEF (D-Pad unten gehalten) ab dem ersten Bild; Fresser-Aufsteher (EXEC[8]) und Liege-Spawns
+(Maske 3) sind mit EBEN treffbar. RE2 Retail dazu:
+* EXE-Applier FUN_800410CC: `lw v0,0(s2)` @0x800413c4 / `srl v0,v0,26` @0x800413cc / `andi s6,v0,0x7` @0x800413d4 /
+  `beq s6,zero,0x80041774` @0x800413d8 — ohne Trefferteile ist der Zombie kein Kandidat; EBEN waehlt Zeile 3 = [2,0,0]
+  (Rumpf), TIEF Zeile 6 = [1,2,0] (Beine zuerst) (Maskentabelle DAT_800a6db4, @0x8004141c-4e4).
+* Overlay EMZ0/EMOVL10_S0 (statisch, B5): Sturz P0 setzt "nur Beine" (@0x801032b8-fc), Rumpf erst bei Clip-Bild 55
+  (@0x801036d0-f0) bzw. P8 (@0x80103730-38) -> EBEN trifft erst ab Bild 55, TIEF die Beine.
+* RE2 LIVE (DuckStation-GDB, SLUS-00748_4, anderes Overlay als S0): Maske in EXEC[5] P2..P7 bis Bild 54 = 0, ab Bild 55 = 3
+  -> dort trifft bis Bild 55 GAR NICHTS (auch TIEF nicht). Der Port ist also nicht restriktiver als RE2; die Nutzer-
+  Aussage "in RE2 ist das auf jeden Fall nicht so" bestaetigt sich fuer den Sturz-Aufsteher nicht.
+* Zielhoehe faellt beim Loslassen in RE1.5 und RE2 auf EBEN zurueck (B6) — keine Port-Abweichung.
+NUTZER-VORGABE greift nur, soweit RE2 nicht belegt ist (AUFTRAG) — RE2 ist belegt; Riegel `unit_r39_treffer_aufsteher`
+pinnt das Verhalten (a/b/c). Offen bleibt die Variante "Maske 0 statt 1" des Live-Overlays (OFFEN).
+
 ## Messung nachher
 
-(folgt)
+### Spielschritt (test_r39_treffer, dieselben Szenen wie "Messung vorher")
+
+* Punkt 2 `tisch`: A ueber den Tisch 5/5 (vorher 0/5), B frei 5/5, C Wand [3] 0/5 mit 5 Verwuerfen (unveraendert) — PASS.
+* Punkt 3 `zielhilfe`: ROOM1100 Ziel = sichtbarer B (vorher A hinter der Wand), nur A -> kein Ziel, Gegenprobe alter Stand = A;
+  ROOM1140 ueber den Tisch Ziel ja (Liste aus: nein), hinter [3] kein Ziel — PASS.
+* Punkt 1 `aufsteher`: (a) Sturz-Aufsteher EBEN 0 Treffer vor Bild 55, erster Treffer ab Bild 55 (gemessen 59); (b) TIEF trifft
+  vor Bild 55 (Bild 11); (c) Fresser-Aufsteher EBEN trifft (Bild 11) — PASS (= unveraenderter Port-Stand, s. Umsetzung Punkt 1).
+
+### Echte exe: s. "Echte exe" oben (1250: 0/6 -> 6/6; 1180: Ziel hinter der Wand -> sichtbarer). ROOM1140-Dauerfeuer am
+Nutzerweg (lauf_aufsteher1140/_b): der Fresser (Slot 2, 50 HP) wird nach dem Aufstehen mit EBEN getroffen (4 Treffer bis zum
+Tod); ein Sturz-Aufsteher trat am Nutzerweg nicht auf (die 50-HP-Fresser sterben vor dem Sturz).
 
 ## Tests
 
