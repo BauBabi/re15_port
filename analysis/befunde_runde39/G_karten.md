@@ -739,8 +739,74 @@ Tuerbalken auf einer gezeichneten Wand (Einzelzustaende 1050/1040 ohne 1030; die
 Arbeitsordner der Messungen: Scratchpad `nb3/` (nicht im Baum); Werkzeuge kommen nach `G_karten_werkzeug/nb3/`.
 
 ### Fortschritt
-- [ ] Messung vorher (echter Tuerweg 1090 -> 1050, Einzelzustand 1040; Sonde ueber ALLE Tuermarken x Einzelzustaende)
-- [ ] RE: wie RE2 Retail Tuersymbole eines ungezeichneten Raums behandelt; Linien x186/x187, x118/x119 aus MAP03.PIX
+- [x] Messung vorher (echter Tuerweg 1090 -> 1050, Einzelzustand 1040 an der echten exe) - unten
+- [x] RE: wie RE2 Retail Tuersymbole eines ungezeichneten Raums behandelt; Linien x186/x187, x118/x119 aus MAP03.PIX - unten
+- [ ] Sonde ueber ALLE Tuermarken x Zustaende (Teilmengen der beteiligten Raeume, mit/ohne Plan)
 - [ ] Umsetzung
 - [ ] Messung nachher (echte exe + Sonde), Riegel + Gegenprobe
 - [ ] gezielte Tests, Abschluss
+
+### N2 Messung vorher (Stand 4ea5e62c, Bau "ninja: no work to do" = exe der Abnahme 2)
+Werkzeuge `G_karten_werkzeug/nb3/`: lauf_nb3.sh (= lauf.sh der Abnahme 2, eigene exe-Kopie re15_pc_g39nb3_<id>.exe),
+tueren_bmp.py (Kriterium wie tuer2.py der Abnahme: Balken schwebt, wenn ein Ende auf dem Grund liegt oder quer daneben
+ein Wandpixel steht). Arbeitsordner Scratchpad `nb3/`.
+* (a) ECHTER TUERWEG Hof ROOM1090 -> ROOM1050 (Spielstand `1090 -10100 -1800 4200 1024 besucht:10F0:8400:-350
+  besucht:1090:-13600:1300:5 besucht:1090:-10100:4200:1`, LOAD GAME, `RE15_INPUT_SCRIPT=W1,U0.3,W0.3,A0.1,W8`,
+  Karte 40 Bilder nach der Ankunft): debug.log `[aot] DOOR FIRE slot=0 rect=(-10080,3060,hw=2350,hh=800) target_cut=6
+  spawn=(19850,0,-22300)`, `[room] PC loaded room1050.rdt`; tueren_bmp.py: `6 Tuerbalken, schwebend 1 -
+  x186..186 y150..154 Enden [0, 0] Wand quer 5 SCHWEBT`. Klassenbild (W Wand, B Koerper, D Tuer, . Grund):
+  ```
+       x180   x187
+  y144 .......WWWWWWWW
+  y149 .......WBBBBBBB
+  y150 ......DWBBBBBBB      <- Balken x186 y150..154 LINKS neben der 1050-Westwand x187, im Grund
+  y154 ......DWBBBBBBB
+  y155 .......WWWWWWWW
+  ```
+* (b) ROOM1040 allein (Spielstand (-21008,0,-13134), nur 1040 besucht): `3 Tuerbalken, schwebend 1 - x119..119
+  y127..131 Enden [0, 0] Wand quer 5 SCHWEBT`: Balken x119 RECHTS neben der 1040-Ostwand x118 (W x118 y125..134).
+* Beides wie in der Abnahme 2 (Abschnitt 6), am selben Bau selbst reproduziert.
+
+### N2 RE-Belege (selbst gelesen / disassembliert)
+* **Die Kacheln (MAP03.PIX, Seiten-Tabelle 1F @0x8007636C, 12 B je Eintrag; G_karten_werkzeug/kachel.py + schwenk.py =
+  die Schwenk-Tilgung des Renderers):** r0 ROOM1050 (180,69,32,96) uv(0,32) hat im Westen einen Stich y144..155 mit der
+  Westwand x187 (Index 4 y144..155; der gemalte RE1.5-Schwenk x187..192 y147..151 wird vom Renderer getilgt);
+  r4 ROOM1030 (119,125,72,64) uv(184,56) hat die Ostwand x186 (Index 4 ab y144) und im Westen einen Stich y125..134 mit
+  der Westwand x119; r2 ROOM1040 (102,77,24,80) uv(88,48) hat im Osten den Stich y125..134 mit der Ostwand x118. Die
+  Korrekturen s_korr (karte_r39.c, Nachbesserung 1 M3) loeschen x187 y145..154 (r0 Spalte 7 Zeilen 76..85) und x118
+  y126..133 (r2 Spalte 16 Zeilen 49..56) NUR, wenn ihr Traeger r4 (ROOM1030) gezeichnet wird - dann ist x186 bzw. x119
+  die eine Wand. Ohne r4 bleibt die eigene Linie x187 bzw. x118 stehen.
+* **Die Marken** `{ 2, 4, 186, 152, 3, 4, 6, 1 }` / `{ 2, 4, 119, 129, 3, 4, 5, 1 }` (re15_map_zones.h:753/730) liegen auf
+  der r4-Linie (x186 / x119), sind aber per auf_partner 1 schon sichtbar, wenn nur der Partner (zid2 6 = 1050 bzw. 5 =
+  1040) besucht ist: re15_map_zones.c re15_map_mark_get prueft dann nur, ob ein GEZEICHNETES Rechteck den Punkt im KASTEN
+  enthaelt - r0 (x180..211) bzw. r2 (x102..125) tun das, ihre Kachel traegt dort aber Index 0. Der Kopfkommentar der
+  Tabelle verlangt fuer auf_partner 1 "die Marke liegt auf der GEMALTEN Flaeche des Partners" - fuer diese zwei Marken
+  stimmt das nur, solange r4 gezeichnet ist.
+* **RE1.5** malt immer alle Rechtecke einer Seite (FUN_80046fd8 Schleife @0x800472fc-0x800473e0) und fuehrt keine
+  Tuermarken - die Tuer 1030<->1050 ist dort nur der gemalte Schwenk in r0; Massstab fuer die Port-Marken ist RE2
+  (Nutzer 2026-09-02: RE2-Kartenstil, re15_inv_screen.c RE2_TUER_*).
+* **RE2 Retail (Beta -> Retail): jede Raum-Kachel traegt die Tuer auf ihrer EIGENEN Wand.** nb3/re2_tueren.py liest
+  info/re2leon/PSX.EXE Area-Tabelle @0x800aaa38 (Area 2 = RPD 1F: RoomTable 0x800aa388, 18 Raeume, MAPS_005.TIM) und die
+  Kartenseite: die Tuer zwischen Raum [1] (@0x800aa398, uv(24,80) 32x25, Schirm (99,139)) und Raum [0] (@0x800aa388,
+  uv(0,112) 92x90, Schirm (127,92)) ist ZWEIMAL gemalt - Raum 1 Index 3 auf x125..126 y147..154 an seiner Ostwand x126,
+  Raum 0 Index 3 auf x127..128 y147..154 an seiner Westwand x127 (das jeweils andere Sprite hat dort Index 0):
+  ```
+        x120     x133        Raum 1          Raum 0
+  y146  1111114....          ......4111111
+  y147  1111133....          ......3311111   <- Tuerhaelfte je Raum, auf der eigenen Wand
+  y154  1111133....          ......3311111
+  y155  1111114....          ......4111111
+  ```
+  Ebenso alle Tueren zwischen zwei Raeumen der Area 2 (0/2 x125..128 y117..120, 0/10 x181..184 y165..168, 2/9, 3/4, 5/6,
+  7/8, 7/9, 10/11, 12/13, 15/11, 15/16, 17/11): je Raum eine Haelfte an der eigenen Wand. Gezeichnet wird ein
+  Raum-Sprite mit seinen Tuerhaelften nur als Ganzes (FUN_8006e120 Raumschleife): Plan-Bit `lbu a1,-21955(at)`
+  (0x800aaa3d+8*Area) @0x8006e660, `jal 0x80077360` auf Bank 0x800d4924 @0x8006e66c; besucht `lbu a1,12(s1)` @0x8006e67c /
+  @0x8006e730, `jal 0x80077360` auf 0x800d490c (a0 = 0x800d4924 - 24) @0x8006e688 / @0x8006e73c; ohne Plan und unbesucht
+  `beq v0,zero,0x8006e768` @0x8006e744 = kein Sprite; mit Plan unbesucht CLUT 498 `addiu s5,zero,498` @0x8006e71c
+  (Umriss); `jal 0x8008f828` (GetClut) @0x8006e750, `jal 0x8008f918` (AddPrim) @0x8006e760. Es gibt kein eigenes
+  Tuer-Prim (analysis/karte_2026-08-31/C_re2_karte.md 3.1). => In RE2 steht eine Tuer IMMER auf der Wand des Raums, der
+  gezeichnet wird; ist nur einer der beiden Raeume gezeichnet, steht sie auf DESSEN Wand.
+* Folgerung fuer den Port (eine Linie im Vollzustand nach den Vorlagen, Nachbesserung 1 M3): die Tuermarke gehoert auf
+  die Linie, die TATSAECHLICH gezeichnet wird - die gemeinsame (Traeger-)Linie, wenn die Korrektur greift, sonst die
+  eigene Linie des gezeichneten Nachbarn (x187 bzw. x118). Sichtbarkeit unveraendert (RE2 zeigt die Tuer mit jedem der
+  beiden Raeume; der Nutzer hat fehlende Tueren an genau dieser Wand schon einmal gemeldet - Runde 7, ROOM1050).
