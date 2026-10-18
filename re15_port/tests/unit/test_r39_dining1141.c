@@ -733,6 +733,7 @@ static void teil_phase_h(void)
     re15_game_flag_set(7, 0xCC, 1);
     int m51 = -1, m52 = -1, geste15 = 0, geste23 = 0, wink = 0, cut8 = 0, blick51 = -1, park = -1, k = 0, elza_verschoben = 0;
     int zielt_auf_elza = 0, sprung_max = 0, sprung_bild = -1, vor_cut = s_shown;
+    int vor_geht = 0;
     int32_t vor_jx = john->x, vor_jz = john->z;
     long min_d2 = -1;
     int vor_sicht = 0, park_cut_vorher = -1, park_cut = -1, park_sicht = 1, sicht_cut7 = 0;
@@ -744,8 +745,10 @@ static void teil_phase_h(void)
         {   /* Nachbesserung 1 M3 (Runde-38-Pruefung "John springt nie"): Schritt je Bild ohne Kameraschnitt, im Bild */
             const int dx = (int)(john->x - vor_jx), dz = (int)(john->z - vor_jz);
             const int schritt = abs(dx) > abs(dz) ? abs(dx) : abs(dz);
-            const int geht = (john->state == 4 && (john->sub_state_1 == 4 || john->sub_state_1 == 5 ||
-                                                   john->sub_state_1 == 7 || john->sub_state_1 == 8));   /* Walk-Subs 0x80076ca0 */
+            const int geht_jetzt = (john->state == 4 && (john->sub_state_1 == 4 || john->sub_state_1 == 5 ||
+                                                         john->sub_state_1 == 7 || john->sub_state_1 == 8));   /* Walk-Subs 0x80076ca0 */
+            const int geht = geht_jetzt || vor_geht;   /* letzter Laufschritt faellt ins Ankunftsbild (Sub 5 -> 6) */
+            vor_geht = geht_jetzt;
             if (!geht && s_shown == vor_cut && john->x > -29000 && vor_jx > -29000 && sichtbar(s_shown, john) && schritt > sprung_max) {
                 sprung_max = schritt; sprung_bild = (int)s_bild; }
             vor_jx = john->x; vor_jz = john->z; vor_cut = s_shown;
