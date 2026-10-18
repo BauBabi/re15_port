@@ -37,6 +37,7 @@
 #include "re15_elza_r36.h"  /* Runde 36 Spur L: re15_elza_stimme_datei (main16.5.wav) */
 #include "re15_elzaintro_r38.h"  /* Runde 38 Spur E: Elzas Montage ROOM1241 -> Aufnahmen room1240 */
 #include "re15_rekorder_r38.h"  /* Runde 38 Spur J: re15_rekorder_r38_stimme (Irons_Rekorder_Sound.wav) */
+#include "re15_stimmen_r39.h"   /* Runde 39 Spur A: Nutzer-Reihenfolge der Port-Szenen */
 #include "re15_aufschliessen_r36.h"  /* Runde 36 Spur G: Satz-TOC der Mini-Bank KARTSE.VBS */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Port-Bank 0x3A = RE2-Schlossbank SCHLOSS1010 */
@@ -2247,6 +2248,8 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     /* Runde 36 Spur L: Sonderdatei je (Raum, Id) — Nutzer-Aufnahme synchro/STAGE1/room1011/main16.5.wav (re15_elza_r36.h). */
     char stamm[24]; snprintf(stamm, sizeof stamm, "main%02d", voice_id);
     { const char *sd = re15_elza_stimme_datei((unsigned)room, voice_id); if (sd) snprintf(stamm, sizeof stamm, "%s", sd); }
+    /* Runde 39 Spur A: Nutzer-Reihenfolge der Port-Szenen 1050/1150/11B0/1171; -1 = Datei gehoert einer anderen Zeile (re15_stimmen_r39.h). */
+    if (re15_stimmen_r39_stamm((unsigned)room, voice_id, stamm, sizeof stamm) < 0) return 0;
     re15_rekorder_r38_stimme((unsigned)room, voice_id, reldir, sizeof reldir, stamm, sizeof stamm);   /* Runde 38 Spur J: ROOM1100/1101 Id 40 */
     snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
     wav = re15_pc_read_base(path, &wsz);
@@ -2262,6 +2265,7 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     if (!wav && re15_elzaintro_r38_stimme_pfad((unsigned)room, voice_id, stamm, path, sizeof path) &&
         (wav = re15_pc_read_base(path, &wsz)) != NULL)
         fprintf(stderr, "[voice] ROOM%04X msg %d <- %s (Runde 38 Spur E)\n", (unsigned)room, voice_id, path);
+    if (!wav) re15_stimmen_r39_fehlt((unsigned)room, voice_id, path);   /* Runde 39 Spur A: Messschiene "welche Datei fehlt" */
     int rate, ch, bits, dbytes, fmt_tag;
     const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes, &fmt_tag);
     if (!data || dbytes < 2 || ch < 1) { free(wav); return 0; }

@@ -295,11 +295,13 @@ static int teil_a_b(void)
            "             je 3 Faelle (Ja / Nein / nicht getragen) + %d Gegenproben\n",
            faelle, RE15_DISCARD_SITE_COUNT, items, mit_gegenprobe);
     PRUEFE(faelle == RE15_DISCARD_SITE_COUNT, "nicht alle Benutzungsstellen gefahren");
-    /* 8 seit Runde 25: die Yellow Keycard 0x39 ist raus. Ihre einzige Benutzungsstelle
-     * (ROOM11E0/11E1 msg 9) haengt an einem Kartenleser, den der ausgelieferte Stand nie
-     * installiert — flag(3,139) steht ab Bild 0 eines neuen Spiels (ROOM1240 @0x0055A),
-     * also nimmt main00 @0x01576 den Else-Zweig und setzt @0x016C0 eine fertige Tuer. */
-    PRUEFE(items == 8, "erwartet 8 Gegenstaende, gezaehlt %d", items);
+    /* 8 seit Runde 25: die Yellow Keycard 0x39 war raus. Ihre Benutzungsstelle (ROOM11E0 msg 9)
+     * haengt bei LEON an einem Kartenleser, den der ausgelieferte Stand nie installiert —
+     * flag(3,139) steht ab Bild 0 eines neuen Leon-Spiels (ROOM1240 @0x0055A), also nimmt
+     * main00 @0x01576 den Else-Zweig und setzt @0x016C0 eine fertige Tuer.
+     * 9 seit Runde 39 Spur C: E5 je Szenario-Variante — bei ELZA lebt der Leser (ROOM1241
+     * @0x0055A setzt (3,0x6F), nicht (3,0x8B)), ROOM11E1 msg 5 mit Gate (3,139) ist ihre Stelle. */
+    PRUEFE(items == 9, "erwartet 9 Gegenstaende, gezaehlt %d", items);
     PRUEFE(mit_gegenprobe == faelle, "nicht jeder Fall hatte eine Gegenprobe");
     return faelle;
 }
@@ -2384,8 +2386,10 @@ static void teil_r(void)
     printf("  R5 NICHT-REGRESSION: %d Stellen ohne Gate (unveraendert), %d mit Gate,"
            " %d Panels gestrichen\n", ohne_gate, mit_gate, tot);
     PRUEFE(ohne_gate == 10, "erwartet 10 Stellen ohne Gate, gezaehlt %d", ohne_gate);
-    PRUEFE(mit_gate == 4, "erwartet 4 Stellen mit Gate, gezaehlt %d", mit_gate);
-    PRUEFE(lebend == 4 && tot == 2, "erwartet 4 lebende + 2 gestrichene Panels,"
+    /* Runde 39 Spur C: E5 je Szenario-Variante (gen_discard_sites.py) -> ROOM11E1 (Elza) lebt, Gate (3,139)
+     * @0x01A8A; ROOM11E0 (Leon) bleibt gestrichen (ROOM1240 @0x0055A). 4 -> 5 Stellen mit Gate, 2 -> 1 tot. */
+    PRUEFE(mit_gate == 5, "erwartet 5 Stellen mit Gate, gezaehlt %d", mit_gate);
+    PRUEFE(lebend == 5 && tot == 1, "erwartet 5 lebende + 1 gestrichenes Panel,"
            " gezaehlt %d + %d", lebend, tot);
     PRUEFE(r1 == lebend, "nur %d von %d Panels haben den Gate-0-Fall belegt", r1, lebend);
     PRUEFE(r2 == lebend, "nur %d von %d Panels haben den Gate-1-Fall belegt", r2, lebend);

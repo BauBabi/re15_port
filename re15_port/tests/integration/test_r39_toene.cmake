@@ -1,0 +1,201 @@
+# Runde 39 Spur B "toene" — INTEGRATION an der ECHTEN exe. Dossier analysis/befunde_runde39/B_toene.md.
+# Registrierung: tests/unit/probes/r39_toene.cmake. Aufruf:
+#   cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_elza_karte> -DRE15_KREUZ_TOOL=<probe_r39_toene_kreuz>
+#         -DRE15_TOENE39=<TOENE39.VBS> -DWORKDIR=<dir> -DTEIL=<schublade|schublade_elza|szene|szene_elza> -P ...
+# Wege (VERTRAG: Story-/Raum-Punkte ueber den echten Weg; Figur aus dem Spielstand, xxx1-Raum = Elza):
+#   schublade[_elza]  Spielstand ROOM11E0/11E1 vor Tuer 0 (Door_aot_set @0x01512: Rechteck (-27100,-10300) 4000 x 1500,
+#                     -> ROOM11F0/11F1 (250,250) Blick 0x400), Viereck-Druck (RE15_PAD_AT, dieselbe Flanke wie der
+#                     Spieler, Vorwaerts-620-Trefftest @0x80042bd0), in 11F0 der Schreibtisch AOT 13 (RE15_FIRE_AOT,
+#                     derselbe Handler-Pfad @0x800430F0 wie der Aktionsdruck) -> sub19. Gemessen: Anker @0x017B6 genau
+#                     einmal, im Bild von Cut_chg(11), Kreuzkorrelation des Schubladen-Tons (Satz 0) an diesem Bild.
+#   szene[_elza]      Spielstand ROOM1180/1181 vor Tuer 2 (Door_aot_set @0x00A54: Rechteck (-9266,8888) 2297 x 934,
+#                     -> ROOM1190/1191 (3174,-11182) Cut 0 -> sub13 setzt die Hunde in den Schacht), Viereck-Druck; (4,0xF3)
+#                     Strom aus dem Spielstand, die Zielscheiben-Bits (5,4)/(5,5) per RE15_SET_FLAG_AT (Bank 5 ist
+#                     raumlokal) -> sub01 @0x02468 startet sub10 (der echte Ausloeser). Gemessen: Anker @0x02796 einmal
+#                     (Schrank), @0x0286A/@0x0288C je dreimal (Luke je Hund, zu = auf + 21: Evt_next @0x0287E zwischen den For-Schleifen), Kreuzkorrelation je Ton.
+cmake_minimum_required(VERSION 3.16)
+set(_tag "r39_toene_${TEIL}")
+foreach(_v RE15_PC_EXE RE15_KARTE_TOOL RE15_KREUZ_TOOL RE15_TOENE39 WORKDIR TEIL)
+    if(NOT ${_v})
+        message(FATAL_ERROR "${_tag}: ${_v} fehlt")
+    endif()
+endforeach()
+include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
+set(WORKDIR "${WORKDIR}/lauf_${TEIL}_${_lauf_id}")
+file(MAKE_DIRECTORY "${WORKDIR}")
+# Messkopie unter eigenem Namen neben der exe (Asset-Wurzel = exe-Verzeichnis; Muster test_r34n_b_cursor.cmake).
+get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
+set(_exe "${_exe_dir}/re15_pc_r39b_${_lauf_id}.exe")
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
+
+macro(fail)
+    file(REMOVE "${_exe}")
+    message(FATAL_ERROR "${_tag}: ${ARGN} (${WORKDIR})")
+endmacro()
+
+macro(karte _raum _x _z _gier)
+    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" ${_raum} ${_x} ${_z} ${_gier} ${ARGN}
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+    if(NOT _rvk EQUAL 0)
+        fail("Kartenwerkzeug exit=${_rvk}\n${_outk}")
+    endif()
+endmacro()
+
+macro(lauf _timeout)
+    re15_start_spiel(_rv ${_timeout} ${ARGN} "${_exe}")
+    if("${_rv}" STREQUAL "1" OR "${_rv}" STREQUAL "-1" OR NOT EXISTS "${WORKDIR}/debug.log")
+        message(STATUS "${_tag}: Lauf ohne Ergebnis (exit=${_rv}) -> EIN Wiederholungsversuch")
+        file(REMOVE "${WORKDIR}/debug.log" "${WORKDIR}/cap.raw")
+        re15_start_spiel(_rv ${_timeout} ${ARGN} "${_exe}")
+    endif()
+    if(NOT EXISTS "${WORKDIR}/debug.log")
+        fail("kein debug.log (exit=${_rv})")
+    endif()
+endmacro()
+
+# Bilder der Anker-Ausfuehrung: debug.log "[toene39] F<n> ROOM<raum> Anker @0x<off> -> Ton <t>" -> Liste _out
+macro(anker_bilder _raum _off _out)
+    set(${_out} "")
+    file(STRINGS "${WORKDIR}/debug.log" _al REGEX "\\[toene39\\] F[0-9]+ ROOM${_raum} Anker @0x${_off} -> Ton")
+    foreach(_l ${_al})
+        string(REGEX MATCH "\\[toene39\\] F([0-9]+) " _m "${_l}")
+        list(APPEND ${_out} "${CMAKE_MATCH_1}")
+    endforeach()
+endmacro()
+
+# Kreuzkorrelation: _quelle an Bild _bild -> _k (Korrelation), _g (Gegenprobe 60 Bilder frueher)
+macro(kreuz _exit _quelle _bild _k _g)
+    execute_process(COMMAND "${RE15_KREUZ_TOOL}" "${WORKDIR}/cap.raw" ${_exit} "${_quelle}" ${_bild}
+                    RESULT_VARIABLE _rvx OUTPUT_VARIABLE _outx ERROR_VARIABLE _errx)
+    if(NOT _rvx EQUAL 0)
+        fail("Kreuzkorrelation exit=${_rvx}: ${_outx} ${_errx}")
+    endif()
+    message(STATUS "${_tag}: ${_errx}${_outx}")
+    string(REGEX MATCH "korrelation (-?[0-9.]+)" _rk "${_outx}")
+    set(${_k} "${CMAKE_MATCH_1}")
+    string(REGEX MATCH "gegenprobe (-?[0-9.]+)" _rg "${_outx}")
+    set(${_g} "${CMAKE_MATCH_1}")
+endmacro()
+
+macro(pruefe_tuer _raum)
+    file(STRINGS "${WORKDIR}/debug.log" _tl REGEX "\\[toene39\\] ROOM${_raum}: [0-9]+ Anker armiert")
+    list(LENGTH _tl _ntl)
+    if(_ntl EQUAL 0)
+        fail("ROOM${_raum} nicht betreten (kein Anker-Scan im debug.log) - Tuer nicht gefeuert?")
+    endif()
+endmacro()
+
+set(_basis RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+           RE15_AUDIO_CAP_SYNC=cap.raw RE15_SE_DEBUG=1)
+
+if(TEIL MATCHES "^schublade")
+    if(TEIL STREQUAL "schublade_elza")
+        set(_r0 11E1)
+        set(_r1 11F1)
+    else()
+        set(_r0 11E0)
+        set(_r1 11F0)
+    endif()
+    # Vor Tuer 0 (Rechteck z -10300..-8800): Spieler (-25100,-8300) Blick 0x400 = -z, Vorwaertspunkt 620 davor liegt im Satz.
+    karte(${_r0} -25100 -8300 1024)
+    lauf(600 ${_basis} "RE15_PAD_AT=60:A" "RE15_FIRE_AOT=13@200#${_r1}" "RE15_EXIT_AT=400#${_r1}")
+    pruefe_tuer(${_r1})
+    anker_bilder(${_r1} 017B6 _a)
+    list(LENGTH _a _na)
+    if(NOT _na EQUAL 1)
+        fail("Schubladen-Anker ROOM${_r1} ${_na}x (soll 1) — sub19 nicht erreicht?")
+    endif()
+    list(GET _a 0 _a0)
+    # Cut_chg(11) im selben Bild wie der Ton (RE2: Se_on @0x8005218c und Schnitt @0x800521d8 im selben Handler-Aufruf).
+    file(STRINGS "${WORKDIR}/debug.log" _cl REGEX "\\[scd F${_a0}\\] Cut_chg\\(11\\)")
+    list(LENGTH _cl _ncl)
+    if(NOT _ncl EQUAL 1)
+        fail("Cut_chg(11) nicht im Bild ${_a0} des Tons (${_ncl} Zeilen)")
+    endif()
+    kreuz(400 "vbs:${RE15_TOENE39}:0" ${_a0} _k _g)
+    if(_k LESS 0.7 OR _g GREATER 0.2)
+        fail("Schubladen-Ton nicht im Mitschnitt: Korrelation ${_k} (>= 0.7), Gegenprobe ${_g} (<= 0.2)")
+    endif()
+    message(STATUS "${_tag}: OK — Schubladen-Ton ROOM${_r1} in Bild ${_a0} = Cut_chg(11) (Korrelation ${_k}, Gegenprobe ${_g})")
+
+elseif(TEIL MATCHES "^szene")
+    if(TEIL STREQUAL "szene_elza")
+        set(_r0 1181)
+        set(_r1 1191)
+    else()
+        set(_r0 1180)
+        set(_r1 1190)
+    endif()
+    # Vor Tuer 2 (Rechteck z 8888..9822): Spieler (-8117,10300) Blick 0x400 = -z. (4,0xF3) = Strom im Spielstand.
+    karte(${_r0} -8117 10300 1024 4:0xF3)
+    lauf(900 ${_basis} "RE15_PAD_AT=60:A" "RE15_SET_FLAG_AT=5:4,5:5@300" "RE15_EXIT_AT=620#${_r1}")
+    pruefe_tuer(${_r1})
+    anker_bilder(${_r1} 02796 _s)
+    anker_bilder(${_r1} 0286A _auf)
+    anker_bilder(${_r1} 0288C _zu)
+    list(LENGTH _s _ns)
+    list(LENGTH _auf _nauf)
+    list(LENGTH _zu _nzu)
+    if(NOT _ns EQUAL 1 OR NOT _nauf EQUAL 3 OR NOT _nzu EQUAL 3)
+        fail("Anker: Schrank ${_ns}x (soll 1), Luke auf ${_nauf}x / zu ${_nzu}x (soll 3/3) — sub10 nicht gelaufen?")
+    endif()
+    list(GET _s 0 _s0)
+    # Cut 8 zwanzig Bilder vor dem Schrank-Ton (Sleep 20 @0x02792), Cut 11 sechzig danach (40 Fahrt + Sleep 20 @0x027DC).
+    math(EXPR _c8 "${_s0} - 20")
+    math(EXPR _c11 "${_s0} + 60")
+    file(STRINGS "${WORKDIR}/debug.log" _l8 REGEX "\\[scd F${_c8}\\] Cut_chg\\(8\\)")
+    file(STRINGS "${WORKDIR}/debug.log" _l11 REGEX "\\[scd F${_c11}\\] Cut_chg\\(11\\)")
+    list(LENGTH _l8 _n8)
+    list(LENGTH _l11 _n11)
+    if(NOT _n8 EQUAL 1 OR NOT _n11 EQUAL 1)
+        fail("Schrank-Ton Bild ${_s0}: Cut_chg(8) in Bild ${_c8} ${_n8}x, Cut_chg(11) in Bild ${_c11} ${_n11}x (soll je 1)")
+    endif()
+    foreach(_k 0 1 2)
+        list(GET _auf ${_k} _ak)
+        list(GET _zu ${_k} _zk)
+        math(EXPR _d "${_zk} - ${_ak}")
+        # 10 Aufschwung-Bilder (For @0x0286A) + Evt_next @0x0287E zwischen den Schleifen + 10 Rueckschwung-Bilder (For @0x02880)
+        # -> Member_set(5,0) @0x0288C im 21. Bild nach dem For (Unit-Riegel: 134 -> 155).
+        if(NOT _d EQUAL 21)
+            fail("Hund ${_k}: Zu-Ton ${_d} Bilder nach dem Auf-Ton (soll 21 = 10 + Evt_next @0x0287E + 10)")
+        endif()
+        if(NOT _ak GREATER _c11)
+            fail("Hund ${_k}: Aufschwung (Bild ${_ak}) vor Cut 11 (Bild ${_c11})")
+        endif()
+    endforeach()
+    kreuz(620 "vbs:${RE15_TOENE39}:3" ${_s0} _ks _gs)
+    if(_ks LESS 0.5 OR _gs GREATER 0.2)
+        fail("Schrank-Ton nicht im Mitschnitt: Korrelation ${_ks} (>= 0.5 ueber der Raummusik), Gegenprobe ${_gs} (<= 0.2)")
+    endif()
+    # Gitter-Toene unter dem Hunde-SE 5 (snd0, "SE-Stimme 7", 29120 Samples = 0,66 s, gestartet bei Cut 11 und je Hund ~2
+    # Bilder nach dem Zu-Ton, debug.log "[se] Stimme: se=5"): der Anschlag des Auf-Tons (11 Bilder nach dem Bellen) liegt
+    # noch unter dem Bellen, der Ausklang des Zu-Tons unter dem naechsten. GEMESSEN (Lauf 714bab17, Leon; Elza c3c8be81
+    # bytegleich): Auf ganze Welle 0.495/0.576/0.563 (Anschlag allein 0.26..0.33), Zu Anschlag 0..100 ms 0.591/0.605/0.943
+    # (ganze Welle 0.412/0.417/0.835); Rauschboden ohne Ton (Bilder 380/400/560/580) 0.006..0.042. Riegel: Auf ganze Welle
+    # >= 0.35, Zu Anschlag >= 0.5 - je Faktor > 8 ueber dem Rauschboden, unter dem kleinsten gemessenen Wert.
+    set(_kmin_auf 2)
+    set(_kmin_zu 2)
+    foreach(_k 0 1 2)
+        list(GET _auf ${_k} _ak)
+        list(GET _zu ${_k} _zk)
+        kreuz(620 "vbs:${RE15_TOENE39}:1" ${_ak} _ka _ga)
+        kreuz(620 "vbs:${RE15_TOENE39}:2" "${_zk}:0:100" _kz _gz)
+        if(_ka LESS _kmin_auf)
+            set(_kmin_auf ${_ka})
+        endif()
+        if(_kz LESS _kmin_zu)
+            set(_kmin_zu ${_kz})
+        endif()
+        if(_ga GREATER 0.2 OR _gz GREATER 0.2)
+            fail("Hund ${_k}: Gegenprobe ${_ga}/${_gz} (<= 0.2)")
+        endif()
+    endforeach()
+    if(_kmin_auf LESS 0.35 OR _kmin_zu LESS 0.5)
+        fail("Gitter-Toene nicht in allen drei Schwuengen im Mitschnitt: min. Korrelation auf ${_kmin_auf} (>= 0.35, ganze Welle) / zu ${_kmin_zu} (>= 0.5, Anschlag 0..100 ms)")
+    endif()
+    message(STATUS "${_tag}: OK — Schrank-Ton ROOM${_r1} Bild ${_s0} (Korrelation ${_ks}), Luke auf ${_auf} / zu ${_zu} (min. ${_kmin_auf}/${_kmin_zu})")
+else()
+    fail("unbekannter TEIL '${TEIL}'")
+endif()
+file(REMOVE "${_exe}")

@@ -449,14 +449,18 @@ int main(void)
         PRUEFE("C6 voller Stapel + volles Gitter: nichts gutgeschrieben", gesamt(0x15) == vor);
     }
     /* C7 MEMORY CARD (0x21): liegt zwar im Id-Fenster 0x15..0x21, traegt in der
-     * ausgelieferten Tabelle aber den Null-Satz @0x80074c88 im Feld +4 — keine Munition. */
+     * ausgelieferten Tabelle aber den Null-Satz @0x80074c88 im Feld +4 — keine Munition.
+     * Runde 39 Spur C (NUTZER-VORGABE "alles mit einer Zahl ... muss stapelbar sein"): die
+     * Aufnahme stapelt sie trotzdem (re15_inventar_r39_stapelt, Form RE2 Ink Ribbon
+     * @0x800A9DB8 `1e 05 1e ff`); der byte-true Helfer re15_pickup_stapelt_nutzer bleibt 0. */
     re15_inv_init();
     {
         modal_fahren(0x21, 2, 0);
         modal_fahren(0x21, 2, 0);
         int n = 0;
         for (int i = 0x15; i <= 0x20; i++) n += re15_pickup_stapelt_nutzer((uint8_t)i);
-        PRUEFE("C7a Memory Card stapelt nicht (zwei Plaetze)", plaetze(0x21) == 2);
+        PRUEFE("C7a Memory Card stapelt (EIN Platz, 2 + 2 = 4; Runde 39 Spur C)",
+               plaetze(0x21) == 1 && gesamt(0x21) == 4);
         PRUEFE("C7b re15_pickup_stapelt_nutzer(0x21) == 0",
                re15_pickup_stapelt_nutzer(0x21) == 0);
         PRUEFE("C7c aber alle zwoelf Sorten 0x15..0x20 stapeln", n == 12);

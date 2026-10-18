@@ -70,6 +70,7 @@
 #include "re15_elzatoene_r38.h" /* Runde 38 Spur H: Schuss 1041 statt Text, Roys Stoehnen 1021 (elzatoene_r38.c) */
 #include "re15_tagebuch_r38.h" /* Runde 38 Spur G: ROOM1011 msg 18 -> Roys Diary (tagebuch_r38.c) */
 #include "re15_dining_r38.h" /* Runde 38 Spur F: Programme 1140/1141/1021, Tuer 1131, Phase H 1141 (dining_r38.c) */
+#include "re15_toene_r39.h"  /* Runde 39 Spur B: Toene Schublade 11F0, Gitter + Schrank 1190 (toene_r39.c) */
 
 scd_vm_t g_scd;
 
@@ -203,6 +204,8 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_rekorder_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
     /* Runde 38 Spur H: Anker ROOM1041 @0x02200 (Text -> Schuss) und ROOM1021 @0x020B2 (Roys Stoehnen), re15_elzatoene_r38.h. */
     re15_elzatoene_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 39 Spur B: Anker ROOM11F0/11F1 @0x017B6 (Schublade), ROOM1190/1191 @0x02796/@0x0286A/@0x0288C (re15_toene_r39.h). */
+    re15_toene_r39_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -788,6 +791,8 @@ void scd_vm_tick(void)
             if (g_re15_rekorder_anker_n && re15_rekorder_r38_pc(t) == 2) break;
             /* Runde 38 Spur H: Roys Stoehnen am Gang-Anker ROOM1021 @0x020B2 (Wachposten = Ankerzahl, sonst 0). */
             if (g_re15_elzatoene_anker_n) re15_elzatoene_r38_pc(t->pc);
+            /* Runde 39 Spur B: Schublade 11F0, Gitter + Schrank 1190 (Wachposten = Ankerzahl, sonst 0). */
+            if (g_re15_toene39_anker_n) re15_toene_r39_pc(t->pc);
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
