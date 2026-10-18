@@ -250,3 +250,34 @@ weitergerannt); danach greift er an (Tuer-Lauf E: Elza hp 100 -> 80 -> 75).
   Tuer-Weg scd_room_setup.c, `F40 ROOM1121 scharf`) -> derselbe Weg: `F271 Ausloeser` .. `F316 fertig ... Zustand 1 Sub 2`.
 * RE1.5-KI live (RE15_AI_FLAVOR=1.5): `behavior=0x40`, `RE1.5: Zustand 4 Sub 0 wartet auf grid 0x43`, Glas F163 bei
   y -1907, zwei Knalle, `fertig T32 ... Zustand 1 Sub 2`.
+
+## Tests
+| Test | misst |
+|---|---|
+| unit_r39_hund1121_ereignis | Tor (9,97) / (7,0xAE) / Raum, Slot 4 AUTO 30 sat 0x41 auf Leons Band, 56 Programm-Bytes, AOT-Scan -> VM: Wand Band 1 u0 0, Hund (5400,-1827,12100) 0x418 Kill 0xAE, (7,0xAE) = 1, Slot 4 sce 0; Leon 1120 ohne Hund |
+| unit_r39_hund1121_sprung | RE2-Hirn + echte RE2-Bank: Warten ohne Wandschub, Freigabe-Schritt, Absprung T9 SE 3, Steigflug gegen unabhaengige Rechnung, Scheitel, Clip 21, Glas im Durchgangsbild, 13 Splitter, Knall +3/+8 Satz 0x21, Schatten aus nur jenseits z 11200, Wand wieder fest, Landung SE 10, danach Sub 2 |
+| unit_r39_hund1121_re15 | RE1.5-KI: grid 0x40 -> Zustand 4, Freigabe 0x43 in T2, Ausgang Zustand 1, Glas + 2 Knalle |
+| unit_r39_hund1121_einmal | Wiedereintritt ohne Ereignis; ohne (9,97) ohne Ereignis |
+| unit_r39_hund1121_startmaschine | RE2 Sub 14 direkt: Phase 0 wartet 60 Bilder, Phase 1 faellt in den Rumpf, Absprung nach 8 Anlaufbildern |
+| integration_r39_hund1121 | echte exe, Elza: Lauf A (CONTINUE: Kette, Mitschnitt, Bild), B (ohne 97), C (0xAE gesetzt), D (Leon 1120), E (Tuer-Weg 1061 -> 1121) |
+
+Ergebnisse: siehe T1/T2 unten.
+
+## OFFEN
+* Integration mit Spur P (setzt/loescht (9,97)): hier per Spielstand-Flag gemessen; im Spielablauf kommt das Bit aus P.
+* Zone-7-Bit 0xAE, Ereignis 30 und AOT-Slot 4 in ROOM1121 bei der Integration gegen Spur Q pruefen (Q baut Zombie-
+  Durchbrueche mit eigenen Spawns; falls Q ebenfalls 0xAE belegt: Zensus R6 liefert weitere freie Bits 0xA0-0xA3, 0xAF).
+* +0x1C0 Bit 2 (@0x80102CE8 / @0x80102D18) nicht modelliert — Leser nur in der offenen Kopf-/Part-Verfolgung (U2).
+* PSX-Ziel: Ereignis, Hund, Zeitlinie laufen in der Engine; Splitter-Zeichner und Knall sind PC-Plattform
+  (glas1120_pc.c, wie Runde 35 M).
+* Verhalten nach dem Sprung: einmalig wie Leons Fensterkraehe der Runde 35 — verlaesst Elza ROOM1121, ohne den Hund zu
+  erlegen, ist er beim naechsten Betreten nicht mehr da (kein Raum-Skript spawnt ihn; das Zone-7-Bit sperrt das Ereignis).
+
+## Fuer den Nutzer
+* Ablauf: Elza in der Panikphase (nach Johns Ruf in ROOM1041, Spur P) durch ROOM1121 — im langen Gang (Kamera Richtung
+  Fenster) springt beim Durchlaufen des Querbands ein Hund durch das schon zerbrochene Fenster: er steht kurz in der
+  rechten Scheibe, setzt an, springt mit RE2-Glassplittern und zwei Glasknallen (wie Leons Kraehe) in den Gang, landet
+  und greift als normaler Hund an. Nur einmal; ohne Panikphase kein Hund; Leons ROOM1120 unveraendert.
+* Neue Assets fuer das Paket-Gate: KEINE (benutzt shared_assets/RE2/GLAS1090.* der Runde 35, CDEMD0.EMS, ENEMSE.VBS).
+* Sprachdateien: keine.
+* Messhaken: RE15_HUND1121_LOG=<datei> (Ereigniskette neben der exe).
