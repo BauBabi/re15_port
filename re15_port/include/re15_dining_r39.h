@@ -61,6 +61,8 @@
                                          * Pistole (Gun-FSM sub0 `ori a1,zero,0xc8` @0x80032fe0, FUN_8001a8f8) - PORT-WAHL */
 #define RE15_R39J_AUFMERKSAM_BILDER 180 /* so lange kriecht der getroffene Gorilla auf John zu = eine Salvenpause (Sleep 90
                                          * + 90, Takt RE2 ROOM1060 sub05 +0x58/+0x5E) - PORT-WAHL "Aufmerksamkeit"           */
+#define RE15_R39J_AUFMERKSAM_NAH 2000   /* naeher an John: Aufmerksamkeit vorbei = Gorilla-Kasten 1600 (@0x80121356, Runde 36 F)
+                                         * + 400 Abstand, damit er John nicht schiebt - PORT-WAHL                     */
 
 /* ---- Port-Bank 0x3E (Se_on pc[1]; frei: 0x0E/0x3A/0x3B/0x3C/0x3D sind vergeben, Dossier 3) ------------------------ */
 #define RE15_R39J_SE_BANK        0x3E
@@ -114,6 +116,7 @@ int  re15_dining_r39_w_clip(void);
 const uint8_t *re15_dining_r39_schuetze(void);
 void re15_dining_r39_pc(const uint8_t *pc);
 void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z);
+int  re15_dining_r39_affe_jagt_john(int slot);   /* 1 = Gorilla im Hirn-Kopf auf Jagd B[3] zu John */
 extern int      g_re15_r39j_anker_n;
 extern unsigned g_re15_r39j_schuss_zaehler, g_re15_r39j_treffer_zaehler;
 int  re15_dining_r39_aufmerksam(int slot);   /* Restbilder (Riegel) */

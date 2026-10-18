@@ -8930,6 +8930,10 @@ static void re15_maggot_ai_tick(int slot)
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 @0x80117300 */
         e->dog_dist = (int16_t)dist;                          /* +0x1d4 @0x80117314 */
         int ab_nur_b = 0, ab = 0;                             /* Runde 35 Spur J (10): A-Wechsel -> B[neu] im selben Tick @0x80117358-78 */
+        { extern int re15_dining_r39_affe_jagt_john(int slot);   /* Runde 39 Spur J N4.3: nach Johns Treffer kriecht */
+          if (re15_dining_r39_affe_jagt_john(slot)) {            /* der Gorilla zu John (B[3], ohne Elza-Angriffe A[*]) */
+              if (e->sub_state_1 != 3) { re15_dog_sub(e, 3); e->sub_state_3 = 0; }
+              ab_nur_b = 1; } }
     ab_b:
         switch (e->sub_state_1) {
         case 0:   /* A[0] 0x80117484 + B[0] idle-wander 0x80117574 (clip 0x16) */

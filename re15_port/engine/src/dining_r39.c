@@ -125,6 +125,16 @@ static int gorilla_lebt(const re15_actor_t *g)
     return g->active && g->type == RE15_R38F_GORILLA_TYP && g->hp >= 0 && g->state != 3;
 }
 
+/* Ein Gorilla mitten im Angriff (Zustand 1, Sub 5 Biss / 6 Wucht / 7 Sprung / 9 / 15 Aufbaeumen-Griff mit laufender
+ * Phase +0x6 != 0) oder in der Luft (+0x1e0) wird weder getroffen noch umgelenkt: das Original kennt keinen Dritten, der
+ * einen Angriff auf den Spieler unterbricht (Griff/Opferzustand des Spielers, re15_player_victim_*). */
+static int gorilla_im_angriff(const re15_actor_t *g)
+{
+    if (g->mag_airborne) return 1;
+    if (g->state != 1 || g->sub_state_2 == 0) return 0;
+    return g->sub_state_1 == 5 || g->sub_state_1 == 6 || g->sub_state_1 == 7 || g->sub_state_1 == 9 || g->sub_state_1 == 15;
+}
+
 void re15_dining_r39_pc(const uint8_t *pc)
 {
     if (!pc || pc < s_schuetze || pc >= s_schuetze + sizeof s_schuetze) return;
@@ -158,7 +168,9 @@ static void schuss(void)
     re15_actor_t *j = john_aktor();
     re15_actor_t *g = (s_ziel_slot > 0 && s_ziel_slot < RE15_ACTOR_MAX) ? &g_actors[s_ziel_slot] : NULL;
     int treffer = 0;
-    if (j && g && gorilla_lebt(g) && re15_ai_arc_test(j, g->x, g->z, RE15_R39J_TREFFER_KEGEL) == 0) {
+    extern int re15_player_victim_state(void);
+    if (j && g && gorilla_lebt(g) && !gorilla_im_angriff(g) && re15_player_victim_state() == 0 &&
+        re15_ai_arc_test(j, g->x, g->z, RE15_R39J_TREFFER_KEGEL) == 0) {
         const int dmg = re15_enemy_waffen_schaden(g, RE15_R39J_WAFFE_JOHN);
         g->hp = (int16_t)(g->hp - dmg);                        /* +0x9a -= dmg */
         g->hit_react |= 0x1;                                   /* +0x93 |= 1 */
@@ -190,6 +202,26 @@ void re15_dining_r39_affe_ziel(int slot, int32_t *x, int32_t *z)
 }
 
 int re15_dining_r39_aufmerksam(int slot) { return (slot > 0 && slot < RE15_ACTOR_MAX) ? s_aufmerksam[slot] : 0; }
+
+/* Gorilla-Hirn (enemy_ai_common.c, Kopf von Zustand 1, Haken): waehrend der Aufmerksamkeit kriecht der getroffene Gorilla
+ * im Jagd-Ablauf B[3] auf John zu (Lenkziel oben) und trifft keine Angriffs-Entscheidung gegen Elza (A[3]/A[4]: Biss,
+ * Aufbaeumen, Sprung - die greifen den SPIELER, re15_player_*). Steht er John naeher als RE15_R39J_AUFMERKSAM_NAH, ist die
+ * Aufmerksamkeit vorbei und das Original-Hirn uebernimmt wieder (Elza). PORT-WAHL "Aufmerksamkeit erhalten".
+ */
+int re15_dining_r39_affe_jagt_john(int slot)
+{
+    if (slot <= 0 || slot >= RE15_ACTOR_MAX || s_aufmerksam[slot] <= 0) return 0;
+    const re15_actor_t *g = &g_actors[slot];
+    const re15_actor_t *j = john_aktor();
+    if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141 || !j || j->x <= -29000 || g->type != RE15_R38F_GORILLA_TYP) {
+        s_aufmerksam[slot] = 0;
+        return 0;
+    }
+    const long dx = (long)g->x - j->x, dz = (long)g->z - j->z;
+    if (dx * dx + dz * dz < (long)RE15_R39J_AUFMERKSAM_NAH * RE15_R39J_AUFMERKSAM_NAH) { s_aufmerksam[slot] = 0; return 0; }
+    if (gorilla_im_angriff(g)) return 0;   /* laufender Angriff/Sprung spielt zu Ende, danach Jagd zu John */
+    return 1;
+}
 
 /* Der gezeichnete W-Bank-Clip. Schusswaffe: Clip 6 (RAISE, Gun-FSM sub0) = die Original-Form ROOM3060 @0x010BE. Messer
  * (Waffen-Id < 3, Klassenweiche @0x80074030): ein Messer, das noch nicht in der Hand ist, kommt im Original ueber DRAW
