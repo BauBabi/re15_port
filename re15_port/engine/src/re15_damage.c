@@ -34,6 +34,7 @@
 #include "re15_door_seq.h"   /* re15_door_rotmatrix = RE2 libgte RotMatrix @0x8008e1f4 (Runde 34 B4) */
 #include "re15_enemy_ai_re2_zellenarm.h" /* re15_re2arm_owns (RE2-GL-Applier-Kandidat, Runde 34 B4) */
 #include "re15_schuss_r36.h" /* re15_schuss_r36_sichtlinie_blockiert — FUN_8001b9b4 @0x80012168 (Runde 36 C) */
+#include "re15_treffer_r39.h" /* re15_treffer_r39_zielhilfe_verdeckt — RE2 FUN_80042144 @0x800422a8 (Runde 39 D) */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht kein Ziel (@0x8003710c / @0x80111C14-20) */
 #include "re15_spinnen_r38.h"  /* Runde 38 Integration: Schachtspinne ohne Band (@0x800120e4-ec), Latch im Schacht */
 
@@ -1095,6 +1096,11 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
                                                  * toward EVERY combat enemy (weapon-immune ivies/etc. still
                                                  * lock the reticle; the non-combat types have no box). */
         if (e->state == 7 || e->hp < 0) continue;
+        /* Runde 39 Spur D (Nutzer: "Auto Aim ... nicht ... um die Ecke ... Wand davor"): RE2 Retail prueft in der
+         * Zielhilfe FUN_80042144 je Kandidat die Sichtlinie `jal 0x80050858` @0x800422a8 (a2 = Flagmaske 0x80,
+         * a3 = 1) und ueberspringt Verdeckte (`bne v0,zero,0x800422f4` @0x800422b0); RE1.5s FUN_8003703c hat keine
+         * (Beta -> Retail). Port: derselbe Strahl wie der Schuss, Moebel durchlaessig (treffer_r39.c). */
+        if (re15_treffer_r39_zielhilfe_verdeckt(pl, e)) continue;
         uint32_t d = (uint32_t)re15_enemy_player_dist(e, pl);
         /* NEAREST enemy ALL-AROUND — byte-true FUN_8003703c @0x8003703c: the auto-aim latch computes
          * ONLY SquareRoot0(dx^2+dz^2) and keeps the smallest (3 flag-priority buckets); it has NO
