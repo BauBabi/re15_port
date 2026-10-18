@@ -744,7 +744,7 @@ Arbeitsordner der Messungen: Scratchpad `nb3/` (nicht im Baum); Werkzeuge kommen
 - [x] Sonde ueber ALLE Tuermarken x Zustaende (Teilmengen der beteiligten Raeume, mit/ohne Plan) - unten
 - [x] Umsetzung (re15_karte_r39_tuer_lage; B2 1210-Westende ohne 11E0, Nebenbefund) - 5ce60f2e, df42c697
 - [x] Messung nachher (echte exe + Sonde), Riegel + Gegenprobe - unten
-- [ ] gezielte Tests, Abschluss
+- [x] gezielte Tests (100/100, danach 7/7), Abschluss
 
 ### N2 Messung vorher (Stand 4ea5e62c, Bau "ninja: no work to do" = exe der Abnahme 2)
 Werkzeuge `G_karten_werkzeug/nb3/`: lauf_nb3.sh (= lauf.sh der Abnahme 2, eigene exe-Kopie re15_pc_g39nb3_<id>.exe),
@@ -797,8 +797,9 @@ ein Wandpixel steht). Arbeitsordner Scratchpad `nb3/`.
   y154  1111133....          ......3311111
   y155  1111114....          ......4111111
   ```
-  Ebenso alle Tueren zwischen zwei Raeumen der Area 2 (0/2 x125..128 y117..120, 0/10 x181..184 y165..168, 2/9, 3/4, 5/6,
-  7/8, 7/9, 10/11, 12/13, 15/11, 15/16, 17/11): je Raum eine Haelfte an der eigenen Wand. Gezeichnet wird ein
+  Ebenso JEDE der 19 Tueren zwischen zwei Raeumen der Area 2 (Paare 0/1, 0/2, 0/10, 1/4, 2/9, 3/4, 4/5, 5/6, 5/7, 7/8,
+  7/9, 10/11, 10/12, 11/15, 11/17, 12/13, 12/14 zweimal, 15/16): je Raum eine Haelfte an der eigenen Wand; einseitig
+  nur die Aussentuer von Raum 0 (x151..158 y171..173). Gezeichnet wird ein
   Raum-Sprite mit seinen Tuerhaelften nur als Ganzes (FUN_8006e120 Raumschleife): Plan-Bit `lbu a1,-21955(at)`
   (0x800aaa3d+8*Area) @0x8006e660, `jal 0x80077360` auf Bank 0x800d4924 @0x8006e66c; besucht `lbu a1,12(s1)` @0x8006e67c /
   @0x8006e730, `jal 0x80077360` auf 0x800d490c (a0 = 0x800d4924 - 24) @0x8006e688 / @0x8006e73c; ohne Plan und unbesucht
@@ -918,3 +919,55 @@ blinkt bis (4,0xFC); B2 dadurch waehlbar, re15_map_ziel_blatt_frei).
   "1210 allein ... x187 (0 von 5) ... auf x186 (5)". An den Abzuegen der echten exe: `tuerbild` auf den Vorher-Abzuegen
   `Balken x186..186 y150..154 SCHWEBT (Wand quer 5)` / `Balken x119..119 y127..131 SCHWEBT (Wand quer 5)` -> FAIL,
   `wand` auf dem Vorher-Abzug NZ `WAND 0 von 7`.
+
+### Nachbesserung 3 - Uebersicht
+| Mangel | Ursache | Beleg | Aenderung | vorher -> nachher |
+|---|---|---|---|---|
+| N2 (a) Tuer 1030<->1050 ohne ROOM1030 | Marke auf der 1030-Linie x186 (eine Wand im Vollzustand), per auf_partner schon mit 1050 sichtbar; ohne 1030 greift die Korrektur r0 x187 nicht (M3) und die 1050-Linie x187 steht | Kachel MAP03.PIX r0/r4 (Seiten-Tabelle 1F @0x8007636C), s_korr r0 Spalte 7 Zeilen 76..85; RE2: Tuer je Raum-Kachel auf der eigenen Wand (RoomTable @0x800aa388, Raum 1 @0x800aa398 x125..126 / Raum 0 x127..128; FUN_8006e120 @0x8006e66c/@0x8006e688/@0x8006e760) | re15_karte_r39_tuer_lage: Tuer auf der Ersatzlinie nur mit gezeichnetem Traeger, sonst auf der eigenen Linie (Haken Tuer-Zeichner + tuer_anziehen) | echter Tuerweg 1090 -> 1050: x186 SCHWEBT (Enden Grund, Wand quer 5) -> x187 in der Wand, ok |
+| N2 (b) Tuer 1030<->1040 ohne ROOM1030 | dasselbe an r2 x118 / r4 x119 | s_korr r2 Spalte 16 Zeilen 49..56 | dieselbe Regel | 1040 allein: x119 SCHWEBT -> x118 in der Wand, ok |
+| Nebenbefund: B2-Westende ROOM1210/1211 ohne ROOM11E0 | R39_IMMER-Korrektur r3 x187 y72..76 + Schwenk-Tilgung (S_WACHS 10) nimmt die 9-px-Westwand x187 y71..77 mit; erreichbar als Hinweis-Ziel nach Roys Tagebuch (B2 r3 blinkt bis (4,0xFC)) | MAP02.PIX r3 @0x80076318 Spalte 0 Zeilen 0..8 Index 4; inv_render_pc.c Schwellen; RE2-Hinweiszeichner FUN_8006F1C4 `bne s4,a2` @0x8006f4e8 -> GetClut @0x8006f608 (Ziel-Sprite als Ganzes) | Koerper x187 y72..76 nur mit r0; NEU R39_OHNE(0): x187 y71..77 Wand ohne r0; Tuer 11E0<->1210 folgt der Linie | echte exe B2 nach dem Tagebuch: Westwand 0/7 (rote Phase 7 Koerperpixel am Grund) -> 7/7, offen 0 |
+
+### OFFEN (Stand Nachbesserung 3)
+* Aus N2 bleibt nichts offen: an der echten exe 0 schwebende Tueren in allen 42 abziehbaren Einzelzustaenden (die zwei
+  Treffer 1090-Eckpixel und 1130-Ringrest wie in der Abnahme 2 "kein Schweben"), Sonde 0 von 798 Zustaenden.
+* Vorbestehend und unveraendert (Hinweise der Abnahmen 1/2): Kerben (187,71)/(187,77) der Schwenk-Tilgung am Tuerbalken
+  11E0<->1210 im Vollzustand (mit ROOM11E0 gezeichnet; Vorlage mapB2_correct.png gleich); Kachel-Klemmung reserve 4
+  (H2); 1130-Wandnasen (H4); 11A0 Band 1 auf Blatt 6; 10B0/1260 ohne Kartenblatt.
+* Der Zustandsraum der Sonde sind besuchte Teilmengen (mit/ohne Plan) und die Hinweis-Zielkacheln allein; Hinweis-Ziel
+  PLUS besuchte Nachbarn ist dieselbe Kachel mit gezeichnetem Nachbarn (= Vollzustand dieser Wand, schon geprueft).
+
+### Fuer den Nutzer (Nachbesserung 3)
+* **1F: die Tueren der Eingangshalle stehen jetzt auch dann auf der Wand, wenn du die Halle noch nicht betreten hast.**
+  Vom Hof ueber die Tuer nach ROOM1050 (der normale erste Weg ins 1F, der Plan liegt ja erst in der Halle) schwebte die
+  Tuer zur Halle einen Pixel links NEBEN der 1050-Wand im Leeren; ebenso in ROOM1040 rechts neben der Ostwand. Jetzt
+  sitzt sie in der Wand des Raums, der gezeichnet ist - so macht es auch Resident Evil 2 (jeder Raum traegt die Tuer auf
+  seiner eigenen Wand). Sobald die Halle gezeichnet ist, steht die Tuer wie in deiner Vorlage map1F_correct.png auf der
+  EINEN gemeinsamen Wand - dabei rueckt sie um einen Pixel mit der Wand mit. Bilder:
+  analysis/befunde_runde39/G_karten_bilder/n2_tuer_1030_1050_vorher_nachher_x6.png und n2_tuer_1030_1040_vorher_nachher_x6.png
+  (links vorher, rechts jetzt).
+* **B2 bei Elza nach Roys Tagebuch:** das Gefaengnis (ROOM1211) blinkt als Ziel auf B2; solange du den Gang davor
+  (ROOM11E1) noch nicht kennst, fehlte an seinem linken Ende die Wand (7 Pixel offen). Jetzt geschlossen. Bild:
+  analysis/befunde_runde39/G_karten_bilder/n2_b2_zielkachel_1211_vorher_nachher_x6.png.
+* Sonst aendert sich nichts: alle 13 Kartenblaetter im aufgedeckten Zustand und ROOM1090 sind pixelgleich zur Abnahme 2,
+  der Marker springt an keiner Tuer anders (132 Tuerpaare gleich).
+* Keine neuen Assets, keine Sprachdateien, keine neuen Flags/Nachrichten, keine Entscheidungsfrage.
+
+### Nachbesserung 3 - Bau und gezielte Tests (KEINE volle Suite)
+Bau `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`. Gezielter Lauf (die Gruppen der
+Nachbesserung 2 - alle Karten-/Hinweis-/Inventar-Gruppen, die der Diff beruehrt, + unit_1210_; mit `ctest -N` gegen alle
+Namen mit karte/map/hinweis/rundlauf abgeglichen: keiner fehlt), 2026-10-19 ~01:35..01:47, `-j 4`:
+```
+ctest --test-dir re15_port/build -R "^(unit_map_|unit_karte_|unit_r30_karte|unit_r30_hinweis|unit_r33_karte|unit_r35_karte|unit_r35_cut10f0|integration_r35_cut10f0|unit_r36_karte|unit_r36_kartenbits|unit_r36_kartenitems|integration_r36_karte|integration_r36_kartenitems_bild|unit_r38_tagebuch|integration_r38_tagebuch|unit_r39_karten|integration_r39_karten|integration_r39_elza_karte|unit_r39_inventar|integration_r39_inventar|integration_map_uebergang|integration_map_raum_live|integration_r35_karte|unit_inv_|unit_r26_inventar|unit_r35_inventar1050|integration_r35_inventar1050|unit_r36_inventar|integration_r36_inventar|unit_r38_kleinkram_inventar|integration_r38_kleinkram_inventar|unit_pri_inventar_riegel|unit_r30_android_n1_inventar_cmd|unit_1210_)" -j 4 --timeout 900 --output-on-failure
+100% tests passed, 0 tests failed out of 100
+```
+Danach nur der Kopfkommentar von re15_karte_r39.h (Traeger-Kodierung) ergaenzt, neu gebaut, Spur-G-Riegel nachgefahren:
+```
+ctest --test-dir re15_port/build -R "^(unit_r39_karten|integration_r39_karten)" -V --timeout 900
+100% tests passed, 0 tests failed out of 7
+```
+(darin `r39_karten[NA] ... Balken x187..187 y150..154 ok`, `r39_karten[NB] ... Balken x118..118 y127..131 ok`,
+`r39_karten[NZ] ... WAND 7 von 7 (x187 y71..77)`).
+Vertrag: keine Bank-9-Bits, keine Nachrichten-Ids, keine Slots; gemeinsame Datei re15_inv_screen.c zwei Haken je eine
+Zeile ("Runde 39 Spur G"); karte_r39.c/re15_karte_r39.h = Karten-Code der Spur; kein getenv; keine Aenderung an
+release/, platform/android/, shared_assets/, CMakeLists.txt; neue Tests nur ueber probes/r39_karten.cmake
+(integration_r39_karten-Skript mit cmake_minimum_required, exe-Kopie je Lauf, eigener Laufordner je Lauf).
