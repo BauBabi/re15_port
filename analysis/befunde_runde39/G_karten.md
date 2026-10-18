@@ -411,6 +411,10 @@ offen.py: alle 0 ausser 1110 4 (VORHER 4) und 1210 4 (VORHER 2)
 * MESSUNG NACHHER (Sonde, Bau ~21:10): Projektion der STAIR-AOT-Mitten (probe_r39_karten marker) -
   1F 1060 (123,144)/(132,146), 2F (122,144)/(131,146), 3F (140,147), 1F 10A0 (184,99)/(193,98), B2 (182,110), alle IM
   5x5-Kasten ihres Symbols (vorher 2..5 px daneben); markerflaeche 1060 Band 0/4/8 0/0/0, 10A0 Band 1/4/8 0/0/0
-  (vorher 4/4/4, 8/0/0). Tueren (Mitte des Tuer-Rechtecks): 1060 1F (118,152) Marke (119,151); 10A0 1F (197,91) Marke
-  (197,92); Tuerwechsel-Sprung 1060 -> 1040 / 10C0 / 1120: 7 -> 4, 5 -> 2, 6 -> 3 px; 10A0 B2 -> 11E0: 9 -> 0 px (beide
-  Seiten jetzt x173; der Vorlagen-Balken liegt x174..179 - 1 px daneben, Vorlagenform, nicht angefasst).
+  (vorher 4/4/4, 8/0/0). Tueren (Mitte des Tuer-Rechtecks, Sonde = echter Kartenpfad MIT der Klemmung
+  re15_inv_screen.c re15_inv_map_marker "reserve = 4" ins nominale Rechteck und tuer_anziehen): 1060 1F (123,152) /
+  2F (122,152) / 3F (140,155), 10A0 1F (197,92) = Marke, B2 (174,105). Die Formel selbst laege auf der Wand (1060 1F
+  (118,152), B2 (173,101)); die 4-px-Reserve der Kachel-Klemmung haelt den Marker von der West-/Nordkante des NOMINALEN
+  Rechtecks fern (vorbestehend, gilt fuer jede Kachel, nicht angefasst). Tuerwechsel-Sprung (Ankunft im Nachbarraum,
+  dessen Zeile unveraendert): 1060 -> 1040 7 -> 8, -> 10C0 5 -> 6, -> 1120 6 -> 7 (je +1 px in y: die Wandzeile legt
+  die Tuermitte z 25400 auf y152, die Bbox auf y151 = die Zeile von 1040); 10A0 B2 -> 11E0 9 -> 6.
