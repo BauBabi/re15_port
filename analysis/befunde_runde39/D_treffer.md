@@ -123,7 +123,40 @@ im Folgetakt durch P8 gesetzt. Kein Fenster, in dem der Port abweicht (der Zombi
 
 ## Messung vorher
 
-(folgt)
+### Messung vorher — Stand c71fa144 + ungeprueftes ff1649c1, gemessen 12:3x (test_r39_treffer, echter Spielschritt)
+
+Harness: `test_r39_treffer <modus>` (tests/unit/test_r39_treffer.c, RDT + Sce_em_set-Spawns + RE2-Baenke + re15_game_step,
+Pistole = RE1.5-Waffe 3, Pad R1/SQUARE; Spielerposition gepinnt, Blick von der Zielhilfe gedreht). Rohdaten im Scratchpad
+(m_*.txt), Kernzeilen hier.
+
+**Punkt 1 (RE2-KI, ROOM1140, Fresser-Zombie Slot 2 Typ 0x10 per 0x501 in EXEC[5], Abstand 1498, gap 6):**
+```
+EBEN: PRE f161 st=1/5/7 mo=0x08 bild=11 maske=1 ; Bild 11,17,23,29,35,41,47,53 -> 8x miss (maske=1, Zeile 3 = [2,0,0])
+      f209 bild=59 maske=3 -> HIT (hnd=7 = FUN_80107A78), danach steht er (0x101) und wird normal getroffen
+      SUMME: 15 Schuesse, 4 Treffer; in EXEC[5] Bild<55: 0/8 Treffer
+TIEF: f161 bild=11 maske=1 -> HIT (Zeile 6 = [1,2,0], Beine) ; SUMME 7 Schuesse, 4 Treffer, Bild<55: 1/1
+Fresser-Aufsteher EXEC[8] P4 (Clip 0x15, maske=3): EBEN f15 bild=11 -> HIT (hnd=7); 4/7 (jeder 2. Schuss faellt in die
+      Treffer-Reaktion = +0x93-Latch, Original @0x800124f0 / Freigabe @0x80105fa4)
+```
+=> Der Port verhaelt sich exakt wie das RE2-Modell B5: der STURZ-Aufsteher (EXEC[5], Maske nur Beine bis Clip-Bild 55) ist
+mit EBEN nicht treffbar, mit TIEF durchgehend; Fresser-/Liege-Aufsteher (Maske 3) sind mit EBEN treffbar. Die Zielhoehe
+faellt beim Loslassen des D-Pads in RE1.5 UND RE2 auf EBEN zurueck (B6). Ob RE2 Retail den Sturz-Aufsteher mit EBEN wirklich
+nicht trifft, wird LIVE gemessen (DuckStation-GDB, D_belege/re2_mess/, s. u.).
+
+**Punkt 2 (RE2-KI, ROOM1140, Spieler (1400,-10300) suedlich des Konferenztischs [6], Zombie gepinnt (1400,-19000) noerdlich,
+5 Schuesse EBEN, gap 45, Zombie vor jedem Schuss auf 0x101):**
+```
+A' alter Stand (Moebel-Liste AUS = FUN_8003dcc4 ohne Ausnahme): 0/5 Treffer, Sichtlinie verworfen 5x, sperrende Zelle [6]
+A  neuer Stand (Moebel-Liste AN):                               5/5 Treffer, 0 Verwuerfe, Zelle [6] 64x uebersprungen
+B  freier Gang (-6700,-12000) -> (-6700,-20000):                 5/5, 0 Verwuerfe
+C  Huellenblock [3] (-2500,-10300) -> (-7200,-3000):             0/5, 5 Verwuerfe, Zelle [3] (Wand bleibt Wand)
+```
+**Punkt 3 (re15_player_aim_target auf echter RDT-Geometrie, Aktoren gesetzt):** ROOM1100 L-Flur, Spieler (-14000,-13000),
+A (-18500,-24500) hinter Wand [1]/[2] Abstand 12349, B (-14000,-26000) sichtbar Abstand 13000:
+```
+alter Stand (Zielhilfe ohne Sichtlinie, FUN_8003703c): Ziel = A (der naechste, hinter der Wand)
+neuer Stand: Ziel = B; nur A aktiv -> kein Ziel; ROOM1140: ueber den Tisch Ziel = ja (Liste aus: nein), hinter [3]: kein Ziel
+```
 
 ## Umsetzung
 

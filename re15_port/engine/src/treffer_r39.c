@@ -18,6 +18,17 @@ static const re15_treffer_r39_moebel_t s_moebel[] = {
 static int      s_moebel_aus = 0, s_ziel_aus = 0;
 static int      s_letzte_zelle = -1;
 static unsigned s_zaehler[3];
+static int      s_alt_init = 0;
+
+/* Mess-Sonde RE15_TREFFER_ALT=1 (nur Umgebungsvariable, kein Spielverhalten): alter Stand (Moebel sperren, Zielhilfe
+ * ohne Sichtlinie) in derselben exe, fuer die Vorher/Nachher-Messung am Echtlauf. Einmal je Prozess gelesen. */
+static void alt_sonde_init(void)
+{
+    if (s_alt_init) return;
+    s_alt_init = 1;
+    const char *a = getenv("RE15_TREFFER_ALT");
+    if (a && *a && *a != '0') { s_moebel_aus = 1; s_ziel_aus = 1; }
+}
 
 /* Messschiene RE15_TREFFER_LOG=<datei> (env-gegatet, reine Diagnose): eine Zeile je Sperre/Uebersprung. */
 static FILE *s_log = NULL;
@@ -44,6 +55,7 @@ const re15_treffer_r39_moebel_t *re15_treffer_r39_moebel_tabelle(int *n)
 
 int re15_treffer_r39_zelle_moebel(unsigned room, const re15_sca_entry_t *c)
 {
+    alt_sonde_init();
     if (s_moebel_aus || !c) return 0;
     for (size_t i = 0; i < sizeof s_moebel / sizeof s_moebel[0]; i++) {
         const re15_treffer_r39_moebel_t *m = &s_moebel[i];
@@ -90,11 +102,30 @@ int re15_treffer_r39_los_blockiert(const re15_actor_t *von, const re15_actor_t *
  * `bne v0,zero,0x800422f4` = naechstes Wesen. Hier mit demselben Strahl wie der Spieler-Schuss. */
 int re15_treffer_r39_zielhilfe_verdeckt(const re15_actor_t *pl, const re15_actor_t *e)
 {
+    alt_sonde_init();
     if (s_ziel_aus) return 0;
     if (!re15_treffer_r39_los_blockiert(pl, e)) return 0;
     s_zaehler[0]++;
     log_zeile("zielhilfe_verdeckt", pl, e, s_letzte_zelle, 0);
     return 1;
+}
+
+/* Messschiene: das Ergebnis der Zielhilfe (Slot des Gewinners, -1 = keiner) — eine Zeile je Wechsel. */
+void re15_treffer_r39_log_ziel(int slot)
+{
+    static int s_letztes = -2;
+    if (slot == s_letztes) return;
+    s_letztes = slot;
+    if (!s_log_init) { const char *p = getenv("RE15_TREFFER_LOG"); s_log_init = 1; if (p && *p) s_log = fopen(p, "a"); }
+    if (!s_log) return;
+    if (slot >= 0) {
+        const re15_actor_t *e = &g_actors[slot];
+        fprintf(s_log, "F%u R%04X ziel slot=%d typ=%02x @(%d,%d) st=%u/%u/%u\n", (unsigned)g_engine.frame_count,
+                (unsigned)g_current_room_id, slot, e->type, e->x, e->z, e->state, e->sub_state_1, e->sub_state_2);
+    } else {
+        fprintf(s_log, "F%u R%04X ziel keiner\n", (unsigned)g_engine.frame_count, (unsigned)g_current_room_id);
+    }
+    fflush(s_log);
 }
 
 int      re15_treffer_r39_los_letzte_zelle(void) { return s_letzte_zelle; }

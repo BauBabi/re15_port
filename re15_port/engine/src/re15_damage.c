@@ -1109,6 +1109,7 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
          * divergence — it stopped the player turning to an enemy off to the side/behind. */
         if (d < bd) { bd = d; best = s2; }
     }
+    re15_treffer_r39_log_ziel(best);                 /* Runde 39 Spur D: Messschiene RE15_TREFFER_LOG */
     if (best < 0) return 0;
     *tx = g_actors[best].x; *tz = g_actors[best].z;
     return 1;

@@ -58,6 +58,7 @@ extern void re15_player_aim_reset(void);
 extern void re15_player_set_aim_clip_len(int fc);
 extern int  re15_player_aim_elevation(void);
 extern int  re15_re2z_last_hit_handler(void);
+extern int  re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);   /* re15_damage.c (FUN_8003703c) */
 
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
@@ -113,10 +114,12 @@ static void frame(uint16_t cur, uint16_t edge)
 }
 
 static int32_t s_px, s_pz; static int16_t s_pry;
+static int s_pin_rot = 1;   /* 0 = Blick NICHT pinnen (die Zielhilfe dreht den Spieler selbst, FUN_8001a8f8) */
 static void pin_player(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->hp = 100; pl->x = s_px; pl->z = s_pz; pl->y = 0; pl->rot_y = s_pry;
+    pl->hp = 100; pl->x = s_px; pl->z = s_pz; pl->y = 0;
+    if (s_pin_rot) pl->rot_y = s_pry;
 }
 static void face(int32_t tx, int32_t tz)
 {
@@ -307,26 +310,30 @@ static int schiessen(re15_actor_t *e, int32_t px, int32_t pz, int32_t zx, int32_
                      int *verworfen, int *zelle)
 {
     int f = 0, hits = 0, v0 = re15_schuss_r36_sichtlinie_verworfen();
-    s_px = px; s_pz = pz; face(zx, zz);
+    const int gap = 45;                                    /* laenger als die Treffer-Reaktion (+0x93-Latch) */
+    s_px = px; s_pz = pz; face(zx, zz); s_pin_rot = 1; pin_player();
     e->state = 1; e->grid_id = 0; e->sub_state_1 = 1; e->sub_state_2 = 0; e->hp = 2000;
     e->re2z_f10e &= (uint16_t)~0x4001u;
     re15_ai_set_state_word(e, 0x101);
     e->x = zx; e->z = zz;
     re15_player_aim_reset();
     for (int k = 0; k < 3; k++, f++) { pin_player(); e->x = zx; e->z = zz; frame(0, 0); }
+    s_pin_rot = 0;                                         /* ab hier dreht die Zielhilfe den Spieler (echter Weg) */
     aim(&f, 0);
     int hp_last = e->hp; *zelle = -1;
-    for (int k = 0; k < shots * 20; k++, f++) {
+    for (int k = 0; k < shots * gap; k++, f++) {
         pin_player(); e->x = zx; e->z = zz; e->y = 0;
-        int fire = (k % 20 == 0);
+        int fire = (k % gap == 0);
+        if (fire) { re15_ai_set_state_word(e, 0x101); e->hit_react = 0; }   /* jeder Schuss trifft einen Gehenden */
         frame((uint16_t)(RE15_PAD_BIT_R1 | (fire ? RE15_PAD_BIT_SQUARE : 0)), (uint16_t)(fire ? RE15_PAD_BIT_SQUARE : 0));
         if (fire) {
             int lz = re15_treffer_r39_los_letzte_zelle();
-            if (lz >= 0) *zelle = lz;
+            if (lz >= 0 && g_room_rdt.sca_rgn[0] > 0) *zelle = lz % g_room_rdt.sca_rgn[0];   /* Partitionen wiederholen die Zellen */
             if (e->hp < hp_last) hits++;
         }
         hp_last = e->hp;
     }
+    s_pin_rot = 1;
     *verworfen = re15_schuss_r36_sichtlinie_verworfen() - v0;
     return hits;
 }
@@ -393,8 +400,10 @@ static int mode_zielhilfe(void)
     fake_zombie(2, -18500, -24500);
     fake_zombie(3, -14000, -26000);
     re15_treffer_r39_zielhilfe_aus(0); re15_treffer_r39_moebel_aus(0);
-    CHECK(re15_treffer_r39_los_blockiert(pl, &g_actors[2]) == 1 && re15_treffer_r39_los_letzte_zelle() == 2,
-          "1100: Strahl zu A muss an Wandzelle [2] sperren (zelle=%d)", re15_treffer_r39_los_letzte_zelle());
+    {   int bl = re15_treffer_r39_los_blockiert(pl, &g_actors[2]);
+        int lz = re15_treffer_r39_los_letzte_zelle(); int lzi = (lz >= 0) ? lz % g_room_rdt.sca_rgn[0] : -1;
+        CHECK(bl == 1 && (lzi == 1 || lzi == 2), "1100: Strahl zu A muss an der Wand [1]/[2] sperren (zelle=%d)", lzi);
+        CHECK(lz < 0 || !re15_treffer_r39_zelle_moebel(0x1100, &g_room_rdt.sca[lz]), "1100: sperrende Zelle ist als Moebel gelistet"); }
     CHECK(re15_treffer_r39_los_blockiert(pl, &g_actors[3]) == 0, "1100: Strahl zu B muss frei sein (zelle=%d)",
           re15_treffer_r39_los_letzte_zelle());
     int zs = ziel_slot(30000);

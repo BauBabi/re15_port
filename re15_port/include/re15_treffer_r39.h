@@ -60,6 +60,9 @@ int re15_treffer_r39_los_blockiert(const re15_actor_t *von, const re15_actor_t *
  * Zielhilfe verdeckt (ueberspringen). */
 int re15_treffer_r39_zielhilfe_verdeckt(const re15_actor_t *pl, const re15_actor_t *e);
 
+/* Messschiene RE15_TREFFER_LOG: Gewinner der Zielhilfe (Slot, -1 = keiner); Haken am Ende von re15_player_aim_target. */
+void re15_treffer_r39_log_ziel(int slot);
+
 /* Die Moebel-Tabelle (fuer den Riegel unit_r39_treffer_moebel). */
 const re15_treffer_r39_moebel_t *re15_treffer_r39_moebel_tabelle(int *n);
 
