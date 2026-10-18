@@ -17,6 +17,14 @@ bearbeitet — nicht anfassen. Spur J aendert nur den Uebergang 1141 -> 1171 (Mu
 - 2026-10-18 14:25: Messung vorher (eigener Bau 1038dc15, Lade-Weg) — Johns Clips je Szenenschritt, Ursache gefunden
   (RBJ-Kanal-Cache des Ports von den Kraehen belegt), Original-Mechanismus disassembliert (Abschnitte 1/2).
 
+- 2026-10-18 17:06 (FORTSETZUNG nach Sitzungslimit, neuer Agent): Probe-Merge war abgebrochen, statt dessen master gemergt
+  (b35c66bd = Welle 1+2 inkl. Spur H Walker-Sub-Init und Spur A Stimme 1171 msg 3). Baum sauber, kein MERGE_HEAD.
+  `local_build.sh configure` + `build` auf b35c66bd: `LOCAL-BUILD-OK (configure)` / `LOCAL-BUILD-OK (build)` (exe 17:06).
+  Kern-Riegel auf dem gemergten Stand:
+  `ctest --test-dir re15_port/build -R "r39_heliport1171|r38_heliport1171|r39_stimmen_(tabelle|1171)|crow|kraehe|rbj" --timeout 900 -j 3 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 32` (170 s).
+  Naechster Schritt: "Auch sonst" — jede Szenen-Animation in 1171 (John UND Elza) gegen das Original (Abschnitt 6).
+
 ## 1. Messung vorher
 
 Gebauter Stand 1038dc15 (eigener Baum, `local_build.sh configure` + `build`), Messkopie `re15_pc_k39_v1.exe`.
