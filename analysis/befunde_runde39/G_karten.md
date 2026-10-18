@@ -331,7 +331,7 @@ VORHER-Messungen der Abnahme werden NICHT wiederholt.
 
 ### Fortschritt
 - [x] M3 (hoch, Regression): Doppelwand-Korrekturen nur, wenn die verbleibende Linie gezeichnet wird (Code + Echtlauf, Riegel folgt)
-- [ ] M4 (mittel): Treppenhaeuser 1060/10A0 - Abbildung zu den verschobenen Treppensymbolen
+- [x] M4 (mittel): Treppenhaeuser 1060/10A0 - Abbildung zu den verschobenen Treppensymbolen (Zeilen aus den Waenden, Riegel folgt)
 - [ ] M5 (mittel): Marker neben der Zeichnung 1210/1170 Z1/1030/1110/1060/10A0 B2
 - [ ] M1 (gering): 3F-Treppe (168,107) auf Linie y110
 - [ ] M2 (gering): B1 10A0-Treppe auf der Unterkante y168
@@ -379,3 +379,38 @@ offen.py: alle 0 ausser 1110 4 (VORHER 4) und 1210 4 (VORHER 2)
   1210: die Kachel hat auf x187 bei y71 und y77 Index 0 (VORHER wie NEU offen); der Tuerbalken steht jetzt (Vorlage)
   auf x186, so liegen statt zwei Tuer- jetzt zwei Koerperpixel an den Luecken. ROOM1210 erreicht man nur durch
   ROOM11E0 (dessen Ostwand x186 dann gezeichnet ist) - im Spiel kein Teilzustand ohne Traeger.
+
+### M4 Marker auf der Treppe neben den verschobenen Treppensymbolen (1060 1F/2F, 10A0 1F/B2)
+* URSACHE: die Vorlagen ruecken die Treppensymbole aus der Wand; die Abbildung der beiden Treppenhaeuser blieb die
+  Bbox-Streckung auf das NOMINALE Rechteck (24x24), gemalt sind 18x22 (1060, 10A0 1F) bzw. 17x21 (10A0 B2). Dadurch lag
+  der ganze Raum 3..4 px nach rechts versetzt: die Treppen-Projektion landete auf dem alten (= in die Wand gerueckten)
+  Symbolort, und 4 (1060 je Etage) bzw. 8 (10A0 B2) begehbare Rasterpunkte neben der Kachel (M5).
+* MESSUNG VORHER: Abnahme 0 Abschnitt 7 (nicht wiederholt): Projektion der STAIR-AOT-Mitten 1F 1060 (127,144)/(135,146)
+  gegen die Symbole (122,144)/(133,146), 2F (126,144)/(134,146) gegen (121,144)/(132,146), 1F 10A0 (187,100)/(196,99)
+  gegen (183,100)/(194,99), B2 (177,115)/(186,112 Wandpixel) gegen (173,115)/(183,112); echte exe Ring (126,143).
+  Eigene Sonde markerflaeche (alle_raeume.py, Stand ad1f5cd7): 1060 Band 0/4/8 je 4 ausserhalb, 10A0 Band 1 8 (x187).
+* RE-BELEGE: Original-Zeilen PSX.EXE @0x800768b0 + 8*Index (selbst gelesen, t_addr 0x80010000):
+  1060 @0x800768E0 = `00 00 00 00 01 00 01 00`, 10A0 @0x80076900 = `00 00 00 00 01 00 01 00` (Stubs - das Original hat
+  fuer beide Treppenhaeuser KEINE Zeile; Gegenprobe ausgeliefert: 1020 @0x800768C0 (100,136,2287,2287), 1030 @0x800768C8
+  (108,194,2428,2229), 1040 @0x800768D0 (94,193,2080,2320), 1070 @0x800768E8 (79,205,2229,2088)). Formel FUN_800473f8
+  (@0x8004741c-0x80047528, Abnahme Abschnitt 1 selbst disassembliert). STAIR-AOTs = SCD Aot_set (0x2C) sce 12/13,
+  Band = pc[4] (G_karten_werkzeug/nb1/treppen_aot.py, Parser wie tools/gen_map_zones.py):
+  ROOM1060.RDT @0x00D72 Band 8 (25150,22000), @0x00D86/@0x00D9A Band 6, @0x00DAE Band 4 (21400,22850), @0x00DC2 Band 4
+  (25150,22000), @0x00DD6/@0x00DEA Band 2, @0x00DFE Band 0 (21400,22850); ROOM10A0.RDT @0x00E40 Band 8 (21450,21650),
+  @0x00E54/@0x00E68 Band 6, @0x00E7C Band 4 (25350,22350), @0x00E90 Band 4 (21450,20650), @0x00EA4/@0x00EB8 Band 3,
+  @0x00ECC Band 1 (25350,22350).
+* UMSETZUNG (re15_map_zones.h, PORT-ERGAENZUNG wie 10C0/1120/10E0): Zeile je Blatt aus den vier Waenden (Wandflaeche
+  -> gemalte Linie, Spiegel unveraendert; s am exakten Massstab gewaehlt, nb1/fit2.py, Reste 0):
+  1060 1F (260,14,2511,2516) / 2F (259,14,2511,2516) / 3F (277,17,2511,2516), Spiegel 1,1 - Waende x 26900 @0x004B8,
+  19800 @0x004D0, z 18200 @0x004E8, 26950 @0x004C4; 10A0 1F (57,228,2493,2517) / B2 (54,234,2346,2397), Spiegel 0,0 -
+  Waende x 19850 @0x005DC, 27000 @0x005E8, z 26300 @0x005D0, 17550 @0x00630. Die Treppensymbole der Vorlagen bleiben.
+  3F (Vorlage unveraendert, Symbol (144,147) = alte Bbox-Projektion): die Marke folgt der Projektion der Band-8-Treppe
+  (25150,22000) @0x00D72 -> (140,147) - derselbe Lauf, den der Nutzer auf 1F/2F an x122/x121 gelegt hat (Marker im
+  Treppenhaus 3F sonst 4 px neben dem Symbol). Abweichung von map3F_correct.png an dieser einen Marke - siehe "Fuer den
+  Nutzer".
+* MESSUNG NACHHER (Sonde, Bau ~21:10): Projektion der STAIR-AOT-Mitten (probe_r39_karten marker) -
+  1F 1060 (123,144)/(132,146), 2F (122,144)/(131,146), 3F (140,147), 1F 10A0 (184,99)/(193,98), B2 (182,110), alle IM
+  5x5-Kasten ihres Symbols (vorher 2..5 px daneben); markerflaeche 1060 Band 0/4/8 0/0/0, 10A0 Band 1/4/8 0/0/0
+  (vorher 4/4/4, 8/0/0). Tueren (Mitte des Tuer-Rechtecks): 1060 1F (118,152) Marke (119,151); 10A0 1F (197,91) Marke
+  (197,92); Tuerwechsel-Sprung 1060 -> 1040 / 10C0 / 1120: 7 -> 4, 5 -> 2, 6 -> 3 px; 10A0 B2 -> 11E0: 9 -> 0 px (beide
+  Seiten jetzt x173; der Vorlagen-Balken liegt x174..179 - 1 px daneben, Vorlagenform, nicht angefasst).

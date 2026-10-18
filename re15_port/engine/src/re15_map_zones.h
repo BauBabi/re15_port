@@ -71,8 +71,20 @@ static const re15_map_zone_t s_map_zones[] = {
      * die waren schon exakt. */
     { 0x1050,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    51,  2428,  2322, 1, 1,   0, 0 },
     { 0x1051,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    51,  2428,  2322, 1, 1,   0, 0 },
-    { 0x1060,  17800,  16200,  28900,  28950,  2,  10, 0,   7,     0,     0,     0,     0, 1, 1,   0, 0 },
-    { 0x1061,  17800,  16200,  28900,  28950,  2,  10, 0,   7,     0,     0,     0,     0, 1, 1,   0, 0 },
+    /* Runde 39 Spur G, Nachbesserung 1 (Abnahme-Mangel M4): Treppenhaus ROOM1060 - die Vorlagen
+     * map1F/2F_correct.png ruecken die Treppensymbole aus der Wand (1F x127 -> x122, x135 -> x133); die
+     * Bbox-Streckung auf das NOMINALE Rechteck (24x24, gemalt 18x22) legte den Marker auf der Treppe 2..5 px
+     * daneben (gemessen: STAIR-AOT (25150,22000) -> (127,144), Symbol (122,144)) und 4 von 155 begehbaren
+     * Rasterpunkten neben die Kachel. Original-Zeile @0x800768b0 + 6*8 = @0x800768E0 ist ein Stub (Stage-1-
+     * Index 6 = 0x1060>>4 & 0xF); ersetzt durch eine Zeile fuer die Formel FUN_800473f8 (@0x8004741c-0x80047528),
+     * PORT-ERGAENZUNG wie 10C0/1120/10E0: Wandflaeche -> gemalte Linie (MAP03.PIX uv(168,16), Spiegel 1,1 wie
+     * bisher): x 26900 @0x004B8 -> 119, 19800 @0x004D0 -> 136; z 18200 @0x004E8 -> 134, 26950 @0x004C4 -> 155
+     * (Reste 0; s = am exakten Massstab 2^20*17/7100 bzw. 2^20*21/8750 gewaehlt, G39nb1/fit2.py).
+     * Gegenproben: STAIR-AOT-Mitten (ROOM1060.RDT Aot_set sce 13) (25150,22000) @0x00DD6 -> (123,144) und
+     * (21400,22850) @0x00DFE -> (132,146) liegen in den 5x5-Kaesten der Vorlagen-Symbole (122,144)/(133,146);
+     * Tuer -> ROOM1040 (Mitte (27100,25400), Rechteck (26600,24300) 1000x2200) -> (118,152), Marke (119,151). */
+    { 0x1060,  17800,  16200,  28900,  28950,  2,  10, 0,   7,   260,    14,  2511,  2516, 1, 1,   0, 0 },
+    { 0x1061,  17800,  16200,  28900,  28950,  2,  10, 0,   7,   260,    14,  2511,  2516, 1, 1,   0, 0 },
     { 0x1070,  -1856,  -1568,  23074,  17224,  2,   3, 0,   8,    79,   205,  2229,  2088, 0, 0,   0, 0 },
     { 0x1071,  -1856,  -1568,  23074,  17224,  2,   3, 0,   8,    79,   205,  2229,  2088, 0, 0,   0, 0 },
     /* Runde 35 Spur G (Nutzer: "Beim Elevator ROOM 1080 bewegt sich auf der Map der Player
@@ -96,8 +108,15 @@ static const re15_map_zone_t s_map_zones[] = {
      * gemalte Innenraum, 7 px je Achse. Klemmfenster: re15_karte_fahrstuhl_fenster. */
     { 0x1080, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 0 },
     { 0x1081, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 0 },
-    { 0x10A0,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x10A1,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* Runde 39 Spur G, Nachbesserung 1 (M4): Treppenhaus ROOM10A0 wie ROOM1060 - Vorlage map1F_correct.png
+     * Treppen x187 -> x183, x196 -> x194; Bbox-Streckung legte die STAIR-AOT (21450,21650) auf (187,100).
+     * Original-Zeile @0x800768b0 + 10*8 = @0x80076900 ist ein Stub. Zeile aus den Waenden (MAP03.PIX uv(128,16),
+     * Spiegel 0,0 wie bisher): x 19850 @0x005DC -> 180, 27000 @0x005E8 -> 197; z 26300 @0x005D0 -> 88,
+     * 17550 @0x00630 -> 109 (Reste 0). Gegenproben: Aot_set sce 13 (21450,21650) @0x00E40 -> (184,99) im Kasten
+     * von (183,100), (25350,22350) @0x00E68 -> (193,98) im Kasten von (194,99); Tuer -> ROOM1050 (Mitte
+     * (27050,24900), Rechteck (26700,23900) 700x2000) -> (197,91), Marke (197,92). */
+    { 0x10A0,  17850,  15550,  29100,  28300,  2,   6, 0,  10,    57,   228,  2493,  2517, 0, 0,   0, 0 },
+    { 0x10A1,  17850,  15550,  29100,  28300,  2,   6, 0,  10,    57,   228,  2493,  2517, 0, 0,   0, 0 },
     /* ⛔ ROOM1090 FEHLTE GANZ AUF DER KARTE (Nutzer 2026-09-13: "Fuer ROOM 1090 fehlt noch
      * das Kartenstueck"). Die Ursache war keine fehlende Kunst: s_map_floors fuehrte vier
      * Etagenzeilen fuer 0x1090/0x1091, s_map_zones aber keine einzige - damit gab
@@ -495,12 +514,22 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x6021, -13050, -19750,   4500,  -3550, 12,   5, 1,  98,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x6030, -29061, -28706,    678, -17910, 12,   7, 0,  99,   243,   137,  2161,  2304, 0, 0,   0, 0 },
     { 0x6031, -29061, -28706,    678, -17910, 12,   7, 0,  99,   243,   137,  2161,  2304, 0, 0,   0, 0 },
-    { 0x1060,  17800,  16200,  28900,  28950,  3,   1, 0,   7,     0,     0,     0,     0, 1, 1,   0, 1 },
-    { 0x1061,  17800,  16200,  28900,  28950,  3,   1, 0,   7,     0,     0,     0,     0, 1, 1,   0, 1 },
-    { 0x1060,  17800,  16200,  28900,  28950,  4,   1, 0,   7,     0,     0,     0,     0, 1, 1,   0, 1 },
-    { 0x1061,  17800,  16200,  28900,  28950,  4,   1, 0,   7,     0,     0,     0,     0, 1, 1,   0, 1 },
-    { 0x10A0,  17850,  15550,  29100,  28300,  1,   9, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x10A1,  17850,  15550,  29100,  28300,  1,   9, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
+    /* Runde 39 Spur G, Nachbesserung 1 (M4): Gast-Zeilen der Treppenhaeuser wie ihre Hauptzeilen aus den Waenden.
+     * 1060 2F (Blatt 3 rect 1 = s_map_rectfix, MAP04.PIX uv(168,16) an (118,134)): x 26900 -> 118, 19800 -> 135,
+     *   z 18200 -> 134, 26950 -> 155; Treppen (25150,22000) -> (122,144), (21400,22850) -> (131,146) in den Kaesten
+     *   der Vorlage (121,144)/(132,146).
+     * 1060 3F (Blatt 4 rect 1 (136,137), MAP05.PIX uv(168,16)): x -> 136/153, z -> 137/158; Treppe Band 8
+     *   (25150,22000) @0x00D72 -> (140,147) - die Marke folgt ihr (s_map_marks, 3F unveraendert in der Vorlage).
+     * 10A0 B2 (Blatt 1 rect 9 (170,101), MAP02.PIX uv(128,16), 17x21 gemalt): x 19850 -> 170, 27000 -> 186,
+     *   z 26300 -> 101, 17550 -> 121; Treppen (21450,20650) @0x00E90 -> (174,114) im Kasten von (173,115),
+     *   (25350,22350) @0x00ECC -> (182,110) im Kasten von (183,112). Vorher Bbox: 8 von 140 Rasterpunkten neben
+     *   der Kachel (x187), Treppe (186,112) auf der Wand. */
+    { 0x1060,  17800,  16200,  28900,  28950,  3,   1, 0,   7,   259,    14,  2511,  2516, 1, 1,   0, 1 },
+    { 0x1061,  17800,  16200,  28900,  28950,  3,   1, 0,   7,   259,    14,  2511,  2516, 1, 1,   0, 1 },
+    { 0x1060,  17800,  16200,  28900,  28950,  4,   1, 0,   7,   277,    17,  2511,  2516, 1, 1,   0, 1 },
+    { 0x1061,  17800,  16200,  28900,  28950,  4,   1, 0,   7,   277,    17,  2511,  2516, 1, 1,   0, 1 },
+    { 0x10A0,  17850,  15550,  29100,  28300,  1,   9, 0,  10,    54,   234,  2346,  2397, 0, 0,   0, 1 },
+    { 0x10A1,  17850,  15550,  29100,  28300,  1,   9, 0,  10,    54,   234,  2346,  2397, 0, 0,   0, 1 },
     /* ROOM1090, obere Ebene (Dachterrasse) - GAST-ZEILE auf Blatt 3, gleiche Zonen-Nummer
      * wie die Hauptzeile, sichtbar ueber das ETAGEN-Bit. Dass der Raum zwei Ebenen hat, ist
      * gemessen: die 16 Kamerasaetze (@+0x24 -> Dateioffset 0x60, 32 B je Satz) sind 8
@@ -738,7 +767,9 @@ static const re15_map_mark_t s_map_marks[] = {
     {  3,  7,  199,  114, 2,  22,  16, 1 },
     {  3,  9,  156,   83, 1,  15,  13, 1 },
     {  4,  1,  136,  152, 1,   7,  18, 1 },
-    {  4,  1,  144,  147, 4,   7, 255, 0 },
+    {  4,  1,  140,  147, 4,   7, 255, 0 },   /* Runde 39 Spur G, Nachbesserung 1 (M4): x144 -> x140 = Projektion der
+                                               * STAIR-AOT Band 8 (25150,22000) @0x00D72 mit der Wandzeile (vorher
+                                               * Bbox-Projektion); derselbe Lauf wie 1F (122,144) / 2F (121,144). */
     /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): (4, 1, 148, 137, 0, 22) - die Tuer
      * ROOM1160 -> ROOM1180 (ROOM1160.RDT @0x007C6). ROOM1160 fuehrt keine
      * Zonenzeile; die Nummer 22 wurde in Runde 10 an ROOM1090 vergeben, die Marke
