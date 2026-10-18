@@ -567,3 +567,19 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
   Kein Gorilla wird in test_maggot_ai ueber HP getoetet ((3) setzt hp = -1 direkt) — nichts an der Energie nachzuziehen.
 - Nachher: `ctest -R "^unit_maggot_ai$"` -> `100% tests passed, 0 tests failed out of 1`.
 
+#### Messung nachher an der exe (Stand db069f14, gebaut 17:2x)
+- **ROOM11C0 (Leon), Gegenprobe der Typ-Regel**: Aufbau wie E_abnahme_1.md §1 (Messkopie `re15_pc_e_nb2c_11c0.exe`, Arbeitsordner
+  scratchpad e_nb2c/n11c0; `RE15_SET_FLAG=4:0x40 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-6729,-12800,1486 RE15_EQUIP=3`,
+  `RE15_INPUT_SCRIPT=M1.5` + 14 x `,MA0.1,M0.6` ab Spielbild 290, `RE15_EXIT_AT=900`) -> exit 0. gegner_r39.log:
+  `affen init slot=2/3 raum=11c0 typ=27 hp=360 (tabelle 180 @0x8011f514, regel 1)`; `affen treffer F335 slot=2 raum=11c0 hp=348
+  akku=12 -> OHNE ZUCKEN` / `F379 hp=336 akku=24 -> OHNE ZUCKEN` / `F440 hp=324 akku=36 -> FLINCH (Schwelle 36)` / `F462 hp=312
+  akku=12 -> OHNE ZUCKEN` — bildgleich mit Abnahme 1 (F335/F379/F440/F462): der Wechsel Raum-Tor -> Typ-Regel aendert 11C0 nicht.
+- **ROOM1141 (Elza), Versuch 1 (scratchpad e_nb2c/n1141_a, Skript `W10` + 140 x `W0.1,M0.4,MA0.1,M0.3`)**: Raumaufbau und
+  BEFREIUNG-Spawn `affen init slot=2/3 raum=1141 typ=27 hp=360 (... regel 1)` (je zweimal: Raumaufbau, danach Phase H heraus,
+  dann BEFREIUNG). Treffer F3075 G2 360->348 OHNE ZUCKEN, F3561 336 OHNE, F3615/F3669 G3 348/336 OHNE, **F3723 G3 324 akku 36
+  FLINCH** (Clip 7 F3723-F3735), **F3858 G2 324 akku 36 FLINCH**, F4047/F4101 G3 312/300 OHNE, F4344/F4398 G2 312/300 OHNE.
+  Das Skript taugte nicht als Kampf: nach jedem Loslassen von R1 dreht Elza ~12 Bilder auf das Ziel (ac=6), das Quadrat
+  nach 12 Bildern faellt vor die Anschlag-Bereitschaft (ac=8 ab Bild ~16) und wird verworfen — 10 Schuesse in 1300 Bildern,
+  Elza 100 -> 28 (F4360). Lauf abgebrochen (eigene PID 74648 der Messkopie, Stop-Process).
+
+
