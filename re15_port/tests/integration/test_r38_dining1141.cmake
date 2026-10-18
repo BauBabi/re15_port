@@ -430,9 +430,17 @@ WARTE 60
 AKTION
 WARTE 60
 AKTION
-WARTE 60
+WARTE 200
+GEHE -7350 -8500 150
+GEHE -7350 -7600 150
+GEHE -7250 -1000 80
+BLICK 3072
 AKTION
-WARTE 120
+WARTE 40
+AKTION
+WARTE 40
+AKTION
+WARTE 60
 GEHE -7900 -15000 150
 GEHE -7900 -17750 80
 BLICK 2048
@@ -452,7 +460,8 @@ ENDE
 ")
     set(_env_s "${_nach1021};RE15_GIVE=0x43:1;RE15_DEBUG_JUMP=1131@gp;RE15_PLAYER_POS=-1300,-13900,0;RE15_R38F_GORILLAS_TOT=600;RE15_R38F_GORILLAS_STARR=1;RE15_R38F_SICHT=sicht_")
     # Runde 39 Spur J: Ende 5800 statt 4450 - Tuer-Auftritt (+~250 Bilder) und Johns Zeilen 51/52 (+~350) verlaengern 1141
-    # (gemessen Lauf n1: Elza an der Dachtuer F5602).
+    # (gemessen Lauf n1: Elza an der Dachtuer F5602). Nachbesserung 1 (Nutzer-Nachtrag 4): nach dem Rolladen laeuft Elza
+    # frei, die Szene startet erst am Riegel der Dachtuer (Weg oben: 200 freie Bilder, Gang, Riegel, msg 12).
     f_lauf(sa ELZA "5800#1141" "${_weg_s}" "${_env_s}" _sa _wpsa)
     f_lauf(sb ELZA "5800#1141" "${_weg_s}" "${_env_s};RE15_R38F_JOHN_AUS=1" _sb _wpsb)
     pruef(S _sa "ROOM1141 Phase H: John auf dem Dach (geparkt")   # Runde 39 Spur J Punkt 2 (dining_r39.c)
