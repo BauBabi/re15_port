@@ -161,18 +161,22 @@ void re15_inventar_r39_log_frame(unsigned frame)
     static int s_an = -1;
     static re15_inv_slot_t s_inv[RE15_INV_MAX_SLOTS], s_box[RE15_BOX_SLOTS];
     static int s_eq = -2, s_raum = -1;
-    static int s_m[9] = { -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    static int s_m[12] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
     if (s_an < 0) s_an = getenv("RE15_INV_LOG") ? 1 : 0;
     if (!s_an) return;
-    {   /* Menue-, Nachrichten- und Wegwerf-Zustand — nur zur Einstellung der Eingabe-Bilder der Riegel */
-        const int m[9] = { re15_menu_is_open(), (int)g_inv_screen.substate, (int)g_inv_screen.item_state,
-                           (int)g_inv_screen.item_cursor, (int)g_inv_screen.second_cursor,
-                           (int)g_inv_screen.action_dir, (int)g_scd.message_active, (int)g_scd.message_id,
-                           re15_discard_active() };
+    {   /* Menue-, Nachrichten- und Wegwerf-Zustand — nur zur Einstellung der Eingabe-Bilder der Riegel.
+         * fsm/sel = Dialog-Zustand (0 TYPING, 1 PAGE_WAIT, 2 PAGE_TIMED, 3 SELECT) / Ja-Nein sichtbar,
+         * bereit = Wegwerf-Abfrage fertig getippt (re15_discard_ready). */
+        const int m[12] = { re15_menu_is_open(), (int)g_inv_screen.substate, (int)g_inv_screen.item_state,
+                            (int)g_inv_screen.item_cursor, (int)g_inv_screen.second_cursor,
+                            (int)g_inv_screen.action_dir, (int)g_scd.message_active, (int)g_scd.message_id,
+                            re15_discard_active(), (int)g_scd.message_fsm, (int)g_scd.message_select,
+                            re15_discard_active() ? re15_discard_ready() : 0 };
         if (memcmp(m, s_m, sizeof m)) {
             memcpy(s_m, m, sizeof m);
-            fprintf(stderr, "[inv-r39-menu] F%u offen=%d sub=%d st=%d cur=%d cur2=%d cmd=%d msg=%d/%d wegwerf=%d\n",
-                    frame, m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]);
+            fprintf(stderr, "[inv-r39-menu] F%u offen=%d sub=%d st=%d cur=%d cur2=%d cmd=%d msg=%d/%d wegwerf=%d "
+                            "fsm=%d sel=%d bereit=%d\n",
+                    frame, m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
         }
     }
     if (!memcmp(s_inv, g_inv.slots, sizeof s_inv) && !memcmp(s_box, g_itembox.slots, sizeof s_box) &&

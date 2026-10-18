@@ -112,3 +112,62 @@ Logs `RE15_MSG_LOG=1` + neue Messschiene `RE15_INV_LOG=1` (`[inv-r39]` Inventar/
   @0x01A76..@0x01A82) -> F561 msg 5 "You've opened the lock." -> F701 zu. **`wegwerf=0` in jedem Bild, Inventar
   behaelt `39:1`** (reproduziert: keine Abfrage, Karte bleibt). Ohne Code-Riegel (vier falsche Ziffern): msg 4
   "Wrong code, try again." und zurueck zu msg 7 — der Lesepfad ist intakt.
+
+## 3. Umsetzung (Fortsetzung 07:08–, nach dem Sitzungslimit des Vorgaengers)
+
+Die vom Orchestrator gesicherten Reste (dfde7745) wurden Zeile fuer Zeile gegen Abschnitt 2 geprueft und uebernommen:
+* `inventory_common.c` (2 Zeilen): `re15_pickup_passt_nutzer` / `re15_inv_grant_stapeln_nutzer` fragen
+  `re15_inventar_r39_stapelt` statt `re15_pickup_stapelt_nutzer` (das alte Fenster "0x15..0x21 GESCHNITTEN mit eigenem
+  Satz" liess 0x21 heraus). `re15_pickup_stapelt_nutzer` selbst bleibt (byte-true Helfer, Riegel probe_r26 C7b).
+* `menu_common.c exchange_match` (5 Zeilen): nach dem Werfer-Paar (Runde 35) das Port-Paar `re15_inventar_r39_paar`
+  (gleiche Id, stapelbar, OHNE eigenen Selbst-Satz -> Aktion 5, Ergebnis = Id, Bild 0). Der Executor-Fall 5
+  (@0x8004e664 -> x_reload @0x8004e324/@0x8004e430) ist unveraendert; er liest s_x_pic nicht.
+* `re15_itembox.c box_is_ammo` (1 Zeile): dasselbe Praedikat (Fenster 0x15..0x21 unveraendert, + Granaten 0x09..0x0B).
+* `scd_room_setup.c` + `platform/pc/main.c` (je 1 Installer-Zeile NACH dining_r38, Boot-/CONTINUE-Weg wie Runde 38).
+
+Neu in dieser Sitzung:
+* **(3) `platform/pc/src/inv_render_pc.c`**: `stpic_laden()` laedt `ITEM/STPIC_<k>.TIM` mit k =
+  `re15_inventar_r39_stpic_index()` (work_vars[0x10] = untere Nibble von DAT_800aca5c nach dem Raumlader-Merge
+  @0x80039784; Rueckfall g_gameflow.character) statt fest STPIC_00; `stpic_refresh()` in `re15_inv_render_pc_draw`
+  laedt den Block neu, wenn sich die Figur im selben Prozess aendert (Titel -> neues Spiel). Log-Zeile
+  `[inv] Status-Bild ITEM/STPIC_04.TIM (Figur 4, Runde 39 Spur C)`.
+* **(4) `tools/gen_discard_sites.py`**: E5 je SZENARIO-VARIANTE (`variante(r) = r[-1]`): ein Setzer der anderen Variante
+  kann nie laufen (Raumlader @0x800397ec `addu a0,a0,v0`, Elza = Leon-Datei + 1; alle 120 Raeume liegen paarweise vor,
+  selbst gezaehlt). Neu erzeugt `engine/src/gen/discard_sites.inc`: **ROOM11E1 msg 9 -> msg 5, Gate flag(3,139)==1
+  (`Set` @0x01A8A), Ausloeser sub19 @0x01F86** = 15. Stelle; ROOM11E0 bleibt gestrichen (ROOM1240 @0x0055A `22 03 8b
+  01` = Leons Startraum). `tests/unit/r21_discard_wegwerfen.c` TEIL R: Sollwerte 5 Stellen mit Gate, 5 lebende + 1
+  gestrichenes Panel (vorher 4/4+2), mit Kommentar.
+* **(1) Bit 69**: `tests/unit/test_r36_kartenbits.c k_port[]` + `RE15_R39C_MUNITION_BIT` (VERTRAG 1.1).
+* Messschiene `[inv-r39-menu]` um `fsm=<Dialog-Zustand> sel=<Ja/Nein sichtbar> bereit=<Abfrage getippt>` erweitert
+  (env-gegatet, kein Spielverhalten).
+* Sonde `probe_r34n_e_dokumente aots 1000` (gebauter Stand): Slot 3 `ITEM item=0x15 x30 bit=69 prop=255
+  x[20500..21300] z[-800..0]`, Slot 11 `MESSAGE x[20500..21300] z[-800..0]`, erster freier Slot 12 — die PORT-WAHL
+  Slot 11 ist belegt-frei wie im Kopf beschrieben.
+
+Konstanten (alle in `include/re15_inventar_r39.h` mit Adresse/Offset): Spind-Satz ROOM1001 @0x00C24..@0x00C39, Bit 69
+(VERTRAG), msg 0 @0x0D22, Slot 11 (PORT-WAHL), Stapel-Obergrenze 250 (`fa` @0x80074DA8+id*12, Zeilen 0x09/0x0A/0x0B/0x21),
+Aktion 5 (@0x8004e664; RE2 Ink Ribbon `1e 05 1e ff` @0x800A9DB8), STPIC-Basis 0x2c (@0x80073ad8).
+
+## 4. Messung nachher (gebauter Stand 0eca7720+, Messkopie `re15_pc_r39c_mess.exe`, Laeufe `C_belege/lauf.sh`;
+Bestaetigen = VIERECK (byte-true virtuell 0x4000 @0x80028570; Kreuz = Abbruch/0x8000))
+
+* **P1 Spind** `lauf.sh m1_nachher "1000 20900 -1100 3072" 560 … RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4,A0.1,W4,A0.1,W4`:
+  `[inventar-r39] ROOM1000 Spind: Slot 3 Aufnahme Item 0x15 x30 Bit (9,69) (Form ROOM1001 @0x00C24), Raumtext msg 0 ->
+  Slot 11`; Druck 1 (F~90) Modal, Druck 2 (F~198) Ja -> `[inv-r39] F198 … inv=03:15,15:65` (15:50 + 15: 30 im Satz,
+  Nutzer-Halbierung), Druck 3 -> `[msgtext] room=1000 id=0 "Nothing unusual."` (genau 1x; Druck 4 schliesst).
+  Wiederbetreten mit (9,69)=1 (`m1b_nachher`, Karte `flag:9:69`): `Munition schon genommen (9,69)=1 -> Slot 3 Raumtext
+  msg 0`, Inventar unveraendert, erster Druck -> msg 0. Taken-Bit nach der Aufnahme: Riegel unit_r39_inventar_spind B.
+* **P2 Aufnahme** `m2_nachher` (1010, give:0x21:3): `F0 inv=…,21:3` -> `F198 inv=03:15,15:50,21:6,00:0` = EIN Platz
+  (vorher zweiter Platz 21:3,21:3).
+* **P2 Kombinieren** `m2b_nachher` (leer give:0x21:3 give:0x21:2, RE15_PRESS=start@120,square@139,square@149,right@158,
+  square@160,right@162,square@164): F139 sub 3, F149 st 3, F158 cmd 3 (COMBINE = rechts, Cluster @0x800c64c0), F160 st 7,
+  F162 cur2 1, `[inventar-r39] Kombinieren: Item 0x21 Platz 0 + 1 -> Aktion 5 …` -> `[inv-r39] F164 … inv=21:5,00:0`
+  (vorher F165 st=6 ohne Paar).
+* **P2 Kiste**: unveraendert (verschmolz schon, 1. Messung); Riegel unit_r39_inventar_stapeln K.
+* **P3 Elza Statusschirm** `m3_nachher` (1001 elza, start@120, Framedump 145): `[inv] Status-Bild ITEM/STPIC_04.TIM
+  (Figur 4, Runde 39 Spur C)`, Bild `C_belege/p3_elza_status_nachher.png` = "RACCOON CITY DRIVER LICENSE Elza Walker"
+  mit Elzas Foto oben links (vorher Leons Polizeiausweis, `p3_elza_status_vorher.png`).
+* **P4 gelbe Karte** `m4_nachher` (11E1 elza give:0x39:1 flag:9:0x8A; Leser-Prompt msg 7 F101, Ja per Viereck, Code-Bits
+  per RE15_SET_FLAG_AT): nach dem Ja `[msgtext] room=11e1 id=5 "You've opened the lock."` und
+  `[inv-r39-menu] F822 … msg=1/5 wegwerf=1` = die Abfrage ist an msg 5 ARMIERT (vorher `wegwerf=0` in jedem Bild).
+  Ja-Antwort + Karte weg: Lauf mit erweiterter Schiene (fsm/sel/bereit) s.u. / Riegel unit_r39_inventar_discard W.
