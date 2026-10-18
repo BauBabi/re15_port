@@ -363,7 +363,7 @@ Nachtrag 6 (N6: "He is in trouble", "gorilla meal" klein).
 | N4.2 Port | Spieler-Plc_motion(2,c) in 1141 = W-Bank-Clip c einmal + halten (dining_r39.c re15_dining_r39_w_*; Haken scd_vm.c op_plc_motion, game_step_common.c Takt, main.c Zeichner wie der Modus-6-Override). Der Port spielte fuer pc[1] != 0 die PL00-Bank | wie oben |
 | N4.3 | Faden SCHUETZE39 (116 B, Evt_exec sub 30): Salve = TURN zum naechsten Gorilla (Anker ZIEL), (2,6) Zielen, Sleep 110, (2,7) zweimal im Abstand 30, (2,6) rueckwaerts, Sleep 20; Pause Sleep 90+90. Schuss: Ton RE15_ELZA_TON_SCHUSS, Treffer im Kegel +-0xC8 mit Handfeuerwaffen-Schaden 12, Gorilla kriecht 180 Bilder auf John zu | ROOM1021 sub02 @0x020C6..@0x020F2; Schaden @0x8006ee44; Treffer-Schreiber @0x80012428/@0x80012520/@0x800124bc; Kegel @0x80032fe0; Gorilla-Lenkziel @0x80117d4c |
 | M1 | Reaktion: While Ck(5,0x10)==1 (Merker, synchron beim Ausloesen von Ereignis 6 gesetzt, ROLLTOR39 loescht ihn) + While Ck(2,7)==1, dann Ifel Ck(4,0xC3)==0 { Set(2,7)=1 ... } im selben Takt | Formen sub03 @0x00FA8, sub02 @0x00C26 |
-| M2/N4.4 | msg 52 + John Plc_motion(0,17) (Armschwung), Sleep 50, (0,23), Sleep 20, Sleep 30 (Rest der Standzeit, Abnahme H3: 99 Bilder); kein (2,6) mehr im Gespraech | 1141 sub02 @0x00DBA..@0x00DC6 (John), ROOM3070 sub03 @0x03724 "Hurry up! They're coming!" |
+| M2/N4.4 | msg 52 + John Plc_motion(0,17) (Armschwung), Sleep 50, (0,23), Sleep 20, Sleep 30 (Rest der Standzeit, Abnahme H3: 99 Bilder); kein (2,6) mehr im Gespraech. **Ersetzt durch Nutzer-Nachtrag 7 (8.8): Plc_motion(0,2) = ROOM1171 RBJ Record 1 Clip 2, Sleep 60 + 40** | 1141 sub02 @0x00DBA..@0x00DC6 (John), ROOM3070 sub03 @0x03724 "Hurry up! They're coming!" |
 | M3 | John Pos_set (-7550,-21500) direkt nach Cut_chg 8, vor Sleep 1 | sub02 @0x00C24..@0x00C3E |
 | N6 | msg 50 "...He is in trouble, ...", msg 51 "...gorilla meal...." | Nutzer-Nachtrag 6 |
 Gemeinsame Dateien (je 1-3 Zeilen, Kommentar "Runde 39 Spur J"): scd_vm.c (op_plc_motion, VM-Anker), game_step_common.c,
@@ -411,7 +411,7 @@ Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r
 | Mangel | Ursache (vorher gemessen) | Beleg | Aenderung | nachher gemessen |
 |---|---|---|---|---|
 | M1 | Reaktion nur unter Ck(9,94); Gemaelde-Frage friert die VM (Pausemaske 0xff80 -> RE15_PAUSE_SCD, scd_vm.c @0x8003f040), nach "ja" lief HAEMMERN in die Reaktion waehrend der Rolladen fuhr (Abnahme Lauf F: msg 50 F291) | Pausemaske `2b 0d 80 ff` sub06 @0x00FE8; Frame-Runner @0x8003f040-4c | Merker (5,0x10) synchron bei Ereignis 6, Reaktion wartet auf Merker + (2,7), nur bei Ck(4,0xC3)==0 | Lauf f: Rolladen F250..F470, msg 50 F481; unit fenster |
-| M2/N4.4 | msg 52 mit Plc_motion(2,6) = Johns Zielen (eigene Bank Clip 6) | ROOM1021 @0x020C6 (Zielen vor dem Schuss), ROOM1141 @0x00C78 (zielt auf die Eintretende, msg 1 "sorry") | Clip 17 (1141 @0x00DBA..@0x00DC6, ROOM3070 @0x03724) | Lauf pist: msg 52 F3015 mo=17, kein (2,6) im Gespraech |
+| M2/N4.4 | msg 52 mit Plc_motion(2,6) = Johns Zielen (eigene Bank Clip 6) | ROOM1021 @0x020C6 (Zielen vor dem Schuss), ROOM1141 @0x00C78 (zielt auf die Eintretende, msg 1 "sorry"); Nachtrag 7: ROOM1171 @0x014CE + RBJ rec1 Clip 2 | erst Clip 17, nach Nachtrag 7 das Heranwinken aus 1171 (geliehen, 8.8) | Lauf wink: msg 52 F3015 mo=2 (96 Bilder), kein (2,6) im Gespraech |
 | M3 | Pos_set John hinter Sleep 1/10/5 (16 Bilder nach dem Schnitt) | Abnahme Lauf B F4358 -> F4359 | Pos_set direkt nach Cut_chg 8 | Lauf pist: Schnitt und Pos_set im selben Bild F2873; Riegel "kein Sprung" (Unit + Integration) |
 | N4.1 | Gemaelde startete die ganze Szene | AUFTRAG Nachtrag 4 | ROLLTOR39, Phase H bis (4,0xC3) | Lauf n1: frei laufen F~1000..F1599, 18 Schlaege |
 | N4.2 | Szene ohne Riegel/Rennen/Waffe | sub05 @0x00FC8..@0x00FDC; ROOM3060 @0x010BE; 0x80073e30[2]; W-Bank @0x80036be4/@0x80036c04; Messer-DRAW @0x80035538 | ENTRIEGELN39 + W-Clip-Maschine | Laeufe n1/pist/mess: msg 12, Rennen, Cut 7, Pistole hoch / Messer gezogen, Senken nach Cut 6 |
@@ -441,7 +441,7 @@ Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r
   aus dem Inventar, die dabei ausgeruestet wird; ohne Schusswaffe zieht sie das Messer) -> Tuer auf/zu -> Kamera auf John
   an der Tuer -> Elza senkt die Waffe -> Szene wie bisher -> im Kampf **schiesst John ab und an** (zwei Schuesse je Salve,
   Pistolenschaden; der getroffene Gorilla wendet sich John zu) -> John: "Puuuh..." -> "Elza, follow me..." mit dem
-  **Armschwung** (die Geste des Originals zu "Hurry up! They're coming!") statt Zielen -> Abgang.
+  **Heranwinken aus 1171** (dieselbe Geste wie dort zu "Elza, hurry up!", Nachtrag 7) statt Zielen -> Abgang.
 - Neue Sprachdateien wie bisher moeglich: main50/51/52.wav (Texte jetzt "trouble" / "gorilla" klein).
 - Entscheidungsfragen: (1) Soll ein Gorilla John auch angreifen koennen (dann braucht John Treffer-/Todesverhalten, das
   RE1.5 nicht hat)? Jetzt: nur Zuwenden/Hinkriechen. (2) Takt "ab und an": jetzt alle ~12 s eine Salve - passt das?
