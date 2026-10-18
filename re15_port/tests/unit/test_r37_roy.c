@@ -381,7 +381,7 @@ static int spur(const char *pfad, const char *raum)
         FILE *g = fopen(pfad, "r");
         PRUEF(g != NULL, "Spur lesbar");
         if (!g) return 1;
-        char zz[256]; int n = 0, c15 = 0, c15ok = 0, c2 = 0, c2ok = 0, c2init = 0, uhr = 0;
+        char zz[256]; int n = 0, c15 = 0, c15ok = 0, c2 = 0, c2ok = 0, c2init = 0, uhr = 0, anders = 0;
         while (fgets(zz, sizeof zz, g)) {
             unsigned bild, cur; int akt, typ, mo, clip, fcc, slot, fcu, loco, rev;
             if (sscanf(zz, "%u %d %d %d %d %d %u %d %d %d %d", &bild, &akt, &typ, &mo, &clip, &fcc, &cur, &slot,
@@ -392,8 +392,12 @@ static int spur(const char *pfad, const char *raum)
             /* Runde 39 Spur K: Elliots INIT (Wurzel 0x8011d6d4, Tabelle @0x80072cc8) posiert das LOCO-Paar Clip 2 Bild 0
              * (+0x94 = 2 @0x8011d930, f314(+0x84,+0x16c) @0x8011d978) — die Zeilen VOR dem ersten Executor-Takt sind
              * deshalb Loco Clip 2 (50) Bild 0; alle uebrigen Clip-2-Zeilen weiter eigene Bank 1 (52). */
+            /* Runde 39 Spur K NB1 (Hinweis H3 der Abnahme 0): die INIT-Form gilt nur als zusammenhaengender Lauf AB der
+             * ersten Elliot-Zeile — nach der ersten anderen Zeile waere sie ein Wiederaufleben des Merkers. */
+            int init_form = (mo == 2 && fcc == 50 && loco == 1 && slot == 0);
             if (mo == 2)  { c2++;  if (fcc == 52) c2ok++;
-                            else if (fcc == 50 && loco == 1 && slot == 0) { c2ok++; c2init++; } }
+                            else if (init_form && !anders) { c2ok++; c2init++; } }
+            if (!init_form) anders = 1;
         }
         fclose(g);
         /* Uhr != Bild bei Elliots Gesten ist der VORBESTEHENDE Leon-Stand (O3-Ausnahme: der Takt liest Clip 15 der
