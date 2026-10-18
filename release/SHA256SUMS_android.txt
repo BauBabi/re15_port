@@ -1,1 +1,1 @@
-99bb5d5937220d6a0f3bef05bd60fd0d327fd458d3032827056ae8a3137d2137 *re15_port_v0.8.25_android.apk
+fbb262e3943b0eb74ff75af2081a7bfcda2e75554e789c787efc8f4f7a7be71f *re15_port_v0.8.26_android.apk
