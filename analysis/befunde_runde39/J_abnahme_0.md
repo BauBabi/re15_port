@@ -12,7 +12,8 @@ Messordner (nicht committet): scratchpad `jabn/` (Laeufe `l_a`, `l_b`, `l_e`, ..
 - 19:06-19:13 Lauf A (echter Weg 1131 -> 1141 -> 1171 mit Elza, 1300 freie Bilder Warten in 1141) ausgewertet.
 - 19:13-19:27 Lauf B (dichte Bilder), Laeufe E/F (Gemaelde vor/nach dem ersten Ruf), Gegenprobe-Bau V (ohne
   Punkt-9-Haken), Laeufe V/W, Lauf G (Wiederbetreten) ausgewertet.
-- ab 19:21 gezielte Integrationsriegel (13 Tests, -j 2) — Abschnitt 5.
+- 19:21-19:40 gezielte Integrationsriegel (13 Tests, -j 2): 13/13 gruen — Abschnitt 5.
+- 19:26 (waehrend der Abnahme) Nutzer-Nachtrag 4 zu ROOM1141 in AUFTRAG.md committet — Abschnitt 5a.
 
 ## 1. Bau und gezielte Tests
 - `bash re15_port/tools/local_build.sh configure` + `build`: `LOCAL-BUILD-OK (build)`, `ninja: no work to do` — die exe
@@ -27,7 +28,7 @@ Messordner (nicht committet): scratchpad `jabn/` (Laeufe `l_a`, `l_b`, `l_e`, ..
   unit_r38_heliport1171|unit_scd_flag_fade"` -> **100% tests passed, 0 tests failed out of 60**.
   `test_r39_dining1141 phase_h` direkt: 0 Fehler (Ausgabe: Reaktion Bild 170 genau einmal, Cut 7 ab 1307, John da 1312,
   Tuer zu 1354, Cut 6 ab 1382, Glas 1970 vor msg 6 1991, Blick msg 9..11 0 von 297 daneben, msg 51 3220 / msg 52 3350).
-- Integration: siehe Abschnitt 5 (nachgetragen).
+- Integration (gezielt, 13 Riegel): 13/13 gruen — Abschnitt 5.
 
 ## 2. RE-Gate: Stichproben selbst gelesen (richtige Binaerdatei, Sprungziel)
 | # | Zitat im Diff | selbst gelesen | Befund |
@@ -161,8 +162,8 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
 - Sichtbarer Sprung (Lauf B, r39.txt + `jabn/b_sprung.png`): Cut 8 ab F4343 angezeigt, Elza wird im selben Bild
   umgesetzt; John steht bis F4358 bei (-7535,-21362) und springt in F4359 auf (-7550,-21500) (138 Einheiten), **16 Bilder
   nach dem Schnitt, im Bild** (`Pos_set John an seinen Platz im Kampf ... - beim Kamerawechsel`, Listing +0x04BA, steht
-  hinter Sleep 1/10/5 der Elza-Zeilen). Mit eingefrorenen Gorillas klein; steht John im echten Kampf weiter weg, wird
-  der Sprung groesser (Mangel M3).
+  hinter Sleep 1/10/5 der Elza-Zeilen). Gemessen mit eingefrorenen Gorillas (138 Einheiten); steht John nach einem
+  echten Kampf weiter von (-7550,-21500) weg, waere der Sprung entsprechend groesser (nicht gemessen) (Mangel M3).
 - Nebenbefund: msg 52 steht noch 20 Bilder (F4584..F4603), waehrend die Kamera schon auf Cut 7 schneidet und John
   losrennt.
 - **Urteil: teilweise** (Zeilen, Reihenfolge, Blick, Abgang danach: erfuellt; Animation zu msg 52: Mangel M2).
@@ -201,6 +202,17 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
   | A (mit Haken, WARTE 1300) | Takt 10365 | Pegel 0 | 559 | wie W |
   r39.txt V == W komplett (5644 Zeilen, `cmp`). Damit ist belegt: der Haken ist die einzige Ursache des Unterschieds,
   und ohne ihn kommen die ~2 s Panik-Musik (MAIN16) beim Betreten von 1171 zurueck — der Fix erklaert den Befund.
+
+## 5. Gezielte Integrationsriegel (an diesem Baum, `ctest -R ... --timeout 3600 -j 2`, unter Fremdlast anderer Spuren)
+Regex: `integration_r39_dining1141_d|integration_r38_dining1141|integration_r35_cut10f0|integration_r38_heliport1171_weg_re15|
+integration_r39_stimmen_1171|integration_r38_rekorder|integration_r38_elzaintro_stimme` (13 Tests: Spur-Riegel, alle
+R38-dining-Teile, BGM-Wechsel 10F0, Weg nach 1171, Stimmen-Pfad).
+Ergebnis: **100% tests passed, 0 tests failed out of 13** (Total 1131,8 s): integration_r38_rekorder 201,8 s,
+integration_r35_cut10f0 240,5 s, integration_r38_dining1141_r 194,4 s, _s 641,5 s, _w 178,5 s, _l 50,8 s, _z 127,1 s,
+_a 0,16 s und _d 0,13 s (Platzhalter, Hinweis H4), integration_r38_elzaintro_stimme 130,6 s,
+**integration_r39_dining1141_d 322,4 s**, integration_r39_stimmen_1171 58,2 s, integration_r38_heliport1171_weg_re15 58,7 s.
+Kein roter Riegel, kein Nachfahren noetig. (Die Riegel pruefen M1 und M2 nicht: phase_h loest die Gemaelde-Frage erst
+nach 900 Bildern aus; integration_r39_dining1141_d prueft zu msg 52 nur `s1=2 mo=6`, nicht die Darstellung.)
 
 ## 5a. Nachtrag 4 des Nutzers (AUFTRAG.md, 2026-10-18 19:25 — NACH der Abgabe 19:01, waehrend dieser Abnahme in den
 Zweig committet: 4d7c7b34, 2f889c9f, 18f4306a, f60715a8)
@@ -245,18 +257,16 @@ Nicht Teil der geprueften Abgabe; Stand der gebauten exe dazu (fuer die Nachbess
   die Frage (`2b 0d 80 ff`, Maske 0xff80) haelt den Faden im Sleep 90 an, nach "Yes" laeuft er in die Reaktion.
   Abhilfe-Richtung: Reaktion zusaetzlich unter Ck(3,0x6A)==0 (oder Bit 94 beim "Yes" setzen) + Riegel "Gemaelde im
   Fenster F75..F165" in unit_r39_dining1141_phase_h.
-- **M2 (Punkt 8, "passende Animationen"):** Johns Geste zu msg 52 "Elza, follow me, ..." ist Plc_motion(2,6): der rechte
-  Arm schnellt waagerecht hoch und richtet 42 Bilder (1,4 s) die Pistole starr auf Elzas Kopf (`jabn/b_waffe.png`),
-  vom Nutzer im Nachtrag 4 (19:25) woertlich zurueckgewiesen ("nicht die Waffe auf Elza richten, sondern das
-  heranwinken/Folge Animation"),
-  kein Heranwinken, keine Geste Richtung Ausgang (`jabn/b_wink1.png` F4502..F4544, `b_wink2.png`). Es ist dieselbe
-  Port-Darstellung, die das Original in 1171 zu "Elza, hurry up!" abruft (@0x014C2 `3f 02 06 00` + @0x014C6 `43 00 80 00`)
-  und an der der Nutzer in diesem Auftrag eine "komische Kletter Animation statt der ran wink Animation" bemaengelt
-  (Original 1171 sub02: @0x014C2 (2,6), @0x014C6 rueckwaerts, Sleep 20, @0x014CE `3f 00 02 00` (0,2), Sleep 60 — ob der
-  Nutzer (2,6) oder das folgende (0,2) meint, ist offen); der Bau-Agent fuehrt die Zuordnung von Johns Bank 2 selbst
-  als offen (Spur K). Fuer msg 52 ist damit keine passende Animation belegt, und die gemessene Darstellung (Zeigearm auf
-  Elzas Kopf) ist keine Folgen-Geste. Abhilfe-Richtung: Ergebnis der Spur K abwarten/uebernehmen und die Geste am Bild neu abnehmen, sonst
-  eine belegte Folgen-/Wink-Geste waehlen.
+- **M2 (Punkt 8, "passende Animationen"):** Johns Geste zu msg 52 "Elza, follow me, ..." ist Plc_motion(2,6): der
+  rechte Arm schnellt in 6 Bildern waagerecht hoch und richtet 42 Bilder (1,4 s) die Pistole starr auf Elzas Kopf, dann
+  faellt er zurueck (`jabn/b_wink1.png` F4502..F4544, `b_wink2.png`, Ausschnitt `b_waffe.png`). Kein Heranwinken, keine
+  Geste Richtung Ausgang. Der Nutzer weist genau das im Nachtrag 4 (19:25) woertlich zurueck: "John sollte am Ende der
+  Cutscene ... nicht die Waffe auf Elza richten, sondern das heranwinken/Folge Animation abspielen stattdessen".
+  Es ist dieselbe Port-Darstellung, die das Original in 1171 zu "Elza, hurry up!" abruft (sub02 @0x014C2 `3f 02 06 00`,
+  @0x014C6 `43 00 80 00` rueckwaerts, Sleep 20, @0x014CE `3f 00 02 00` (0,2), Sleep 60), wo der Nutzer eine "komische
+  Kletter Animation statt der ran wink Animation" bemaengelt (Spur K; ob (2,6) oder (0,2) gemeint ist, ist offen); der
+  Bau-Agent fuehrt die Zuordnung von Johns Bank 2 selbst als offen. Abhilfe-Richtung: eine belegte Heranwink-/Folgen-
+  Geste fuer John (mit Spur K abstimmen) und am Bild neu abnehmen.
 - **M3 (Punkt 8, klein):** John springt 16 Bilder nach dem Schnitt auf Cut 8 sichtbar um 138 Einheiten (Lauf B r39.txt
   F4358 (-7535,-21362) -> F4359 (-7550,-21500), Cut 8 angezeigt seit F4343; Bild `jabn/b_sprung.png`): `Pos_set John`
   (Listing BEFREIUNG39 +0x04BA) steht hinter Sleep 1/10/5 der Elza-Zeilen, nicht im Schnittbild. Die Runde-38-Pruefung
@@ -292,7 +302,7 @@ Nicht Teil der geprueften Abgabe; Stand der gebauten exe dazu (fuer die Nachbess
 | N4.1-N4.4 (Nachtrag 4, 19:25, nach der Abgabe) | nicht erfuellt | Abschnitt 5a — offen fuer die Nachbesserung; N4.4 = M2 |
 
 Gates: RE-Gate gehalten (6 Stichproben stimmen, keine Rate-Woerter, Kennzeichnung NUTZER-VORGABE/PORT-WAHL vorhanden);
-Fix-erklaert-Befund fuer Punkt 9 per Gegenprobe V/W belegt; Vertrag gehalten (Hinweis H2 audio_pc.c). Tests: siehe
-Abschnitt 5.
+Fix-erklaert-Befund fuer Punkt 9 per Gegenprobe V/W belegt; Vertrag gehalten (Hinweis H2 audio_pc.c). Tests: Unit 60/60,
+Integration 13/13 gruen (Abschnitte 1, 5).
 **bestanden = false** (Punkte 5 und 8 nur teilweise: M1, M2, M3).
 
