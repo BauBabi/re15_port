@@ -77,6 +77,14 @@ op=2 capTick 4939 (John frei), op=1 capTick 5792 (Gorilla-Einbruch @0x00E5C), op
 @0x011D6). Mitschnitt-RMS (30-Takt-Fenster): 6880 1553, 6910 881, 6940 3,6, danach 0 (MAIN16 aus) bis zur Tuer, ab 8110 MAIN32
 (RMS 300-1300). In DIESEM Weg spielt beim Eintritt in 1171 also MAIN32 (der Titel des Raums), nicht MAIN16 — Abschnitt 4.9 klaert,
 was der Nutzer als "kurz Panik Musik" hoert.
+### 1.6 Punkte 2, 5, 6, 8 im selben Lauf v0 (debug.log, Abschnitt 1141)
+- Punkt 2: `[dining] F283 ROOM1141 Phase H: John im Dachgang hinter dem Rolladen (-7124,0,-6150) Blick 1024` - John steht ab
+  dem ersten Bild zwischen Rolladen und Dachtuer und kommt beim Hochfahren durch das Tor heraus.
+- Punkt 5: Nachrichten in 1141 in Folge 13, 40, 3, 4 ... 11 - keine Reaktion Elzas auf Klopfen/Hilferuf.
+- Punkt 6: 0 Glas-Toene vor msg 6.
+- Punkt 8: F3247 Messhaken (Gorillas tot), F3277 `Cut_chg(7)` + `Plc_dest(slot=1 mode=0x05 dest=(-7350,-7600))` - John
+  rennt 30 Bilder nach dem Kampf ohne ein Wort aus dem Raum.
+
 ### 1.5 Punkt 9 nachgemessen (Lauf v0, Mitschnitt je Bild): der Hall der Panik-Musik ist MAIN16, entmutet von 1171
 Mitschnitt-RMS je Bild (Takt = 1470 Abtastwerte): 8128..8136 = 0, **8138 = 735, 8140 = 2263**, 8142 2119, 8144 1352 ...
 abklingend bis 8196..8202 = 61..81, ab **8204** steigt MAIN32 (279, 302, 429 ...). `[bgm] Sce_bgm_control slot=0 op=1 capTick=8139`
