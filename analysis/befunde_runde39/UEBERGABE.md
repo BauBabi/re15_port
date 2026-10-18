@@ -6,7 +6,7 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-18 09:52: Nutzer-Nachtrag 2 (AUFTRAG.md 09:48, 32ab1f97): Irons lauter = Port darf ueber 4x anheben (Form messen);
+* 2026-10-18 09:49: Nutzer-Nachtrag 2 (AUFTRAG.md 09:48, 32ab1f97): Irons lauter = Port darf ueber 4x anheben (Form messen);
   1150 msg 29 <- neue Datei main22.wav; 11B0 "unwanted followers" steht schon so (szene11b0_bauen.py:286) - nichts zu
   aendern; 1171 passt. master in r39/stimmen gemergt (275a322c), Spur A NACHBESSERUNG 1 gestartet: wf_45b12abc-f7d
   (args woertlich in orchestrator/args_a_nach1.json: modus nachbesserung, abn = die drei Nachtrag-Punkte als Maengel).
