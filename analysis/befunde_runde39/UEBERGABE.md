@@ -6,7 +6,7 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-18 19:58: Spur I funk10f1 BESTANDEN (Abnahme 0 ohne Maengel; Fix c95c4976): Szene beim ersten Betreten 10F1 durch die
+* 2026-10-18 19:41: Spur I funk10f1 BESTANDEN (Abnahme 0 ohne Maengel; Fix c95c4976): Szene beim ersten Betreten 10F1 durch die
   Kartenleser-Tuer (Ereignis 27, Bit (9,70) in k_port[]), Gesten aus ROOM1031 sub13 (@0x029A4-c2, @0x02A32, @0x02A00), msg 40-42,
   98+3 Tests. In die Integration gemergt (68bfe620, konfliktfrei; Integration enthaelt jetzt auch E2, nicht in master).
   FUER DEN NUTZER: Sprachdateien synchro/STAGE1/room10F1/main40.wav ("Hello, anyone, ..."), main41.wav ("...", optional),
