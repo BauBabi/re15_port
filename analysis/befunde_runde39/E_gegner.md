@@ -164,6 +164,36 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   Quad-Y = dog_floor_y (+0x1ba, @0x80116f30 / @0x80110c78). Messung: Framedump je Sprungbild + Log Koerper-Y /
   Boden-Y / Quad-Y (RE15_R39_LOG).
 
+## Messungen (Riegel test_r39_gegner, jeder Teil misst "vorher" = Haken aus und "nachher" im selben Lauf)
+
+### Punkt 1 (unit_r39_gegner_affen_hp / affen_zucken / affen_schuss, ROOM11C0 Kampf-Layout, Gorilla geparkt Sub 0)
+- vorher: HP 180/180 (Tabelle); jeder Pistolentreffer (Resolver-Schreibsatz, 12) -> Clip 7 (12 Bilder), Exit Sub 3/3/7:
+  `hp 180->168 Clip7=1 Sub 3 | 168->156 Clip7=1 Sub 3 | 156->144 Clip7=1 Sub 7`. Echter Schuss (Pad R1 + Kreuz,
+  re15_player_weapon_fire): dieselben drei Flinches, je -12.
+- nachher: HP 360/360 (ROOM1141: 180). Treffer 1/2: KEIN Clip 7, Zustand 1 / Sub 0 bleibt (Merker), je ein
+  Blut-Effekt (fx 0->1->2), +0x93 = 0; Treffer 3 (36 Energie): Clip 7, 12 Bilder, Exit Sub 7 (Sprung; Runde 35:
+  3 Treffer -> Sprung); HP 360 -> 324. Echter Schuss: `360->348 Clip7=0 | 348->336 Clip7=0 | 336->324 Clip7=1`.
+  Schrotflinte (Zeile 8 = 38 >= 36): Reaktion sofort (Spur 1, Clip 8/9), 312 -> 274.
+
+### Punkt 2 (unit_r39_gegner_hund_riegel; zwei RE2-Hunde im Flug am Spieler, echte EM020-Bank, Kiefer 600 vor dem Spieler)
+- vorher: Bild 1: `hp 100 -> 80 (Hund 1) -> 60 (Hund 2)` — beide beissen IM SELBEN BILD, PL+0x1D3 = 0x00 (kein Riegel)
+  = der Nutzer-Befund.
+- nachher: `hp 100 -> 80 (Hund 1) -> 80 (Hund 2)`, PL+0x1D3 = 0x80, Hund 2 ohne Kontakt (+0x21E = 0); waehrend
+  +0x93&1 bleibt der Riegel; nach dem Loeschen von +0x93 (NORMAL-Prolog @0x80031964 = RE2 @0x8003f8b4) ist er frei
+  und ein Hund beisst wieder (-20); ein fremder Riegel (Zombie-Griff) wird vom Hunde-Tick nicht geloescht.
+- Echte exe ROOM1190 (Basislauf c71fa144, RE15_DEBUG_JUMP=1190@250 + RE15_FORCE_EVENT=10@400, Leon steht am Spawn):
+  6 Bisse F685/720/749/829/942/1000 (je -20), Abstaende 35/29/80/113/58 Bilder — in DIESEM Lauf kein Paar innerhalb
+  der 22 Flinch-Bilder; der parallele Fall entsteht, wenn zwei Hunde im selben Flug treffen (Unit-Riegel oben).
+  Der RE1.5-Flavor-Hund prueft schon im Original +0x93 == 0 vor dem Biss (`acae7==0` @0x8010f294) — dort gab es den
+  Doppelbiss nie; der Nutzer spielt RE2-KI.
+
+### Punkt 4 (Basislauf c71fa144, ROOM11C0 Szene, RE15_FRAMEDUMP 1340-1400/5)
+- state.log: Gorilla Platz 3 in Sub 7 (Fernsprung) F1352 fuer 39 Bilder. Framedumps F1355/F1365/F1375/F1385
+  (E_gegner_bilder/vorher_sprung_F*.png): der Schatten-Quad des springenden Gorillas haengt in der Luft unter dem
+  Koerper (F1365: Quad links oben in Koerperhoehe, der stehende Gorilla in der Mitte hat seinen auf dem Boden).
+- unit_r39_gegner_schatten: 0x27 mit Koerper -5200 ueber Boden -3600: vorher Quad-Y = -5200, nachher -3600; 0x29
+  ebenso; Hund/Zombie unveraendert. ROOM11C0 Kampf-Variante (`44 01 27 10 00 ..` pc[4] = 0): +0x1ba = 0 = Quad-Y.
+
 ## OFFEN
 - (wird fortlaufend gepflegt)
 

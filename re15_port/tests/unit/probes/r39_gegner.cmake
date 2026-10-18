@@ -1,0 +1,47 @@
+# Runde 39 Spur E "gegner" — Parking-Lot-Gorillas (HP x2, Flinch erst nach 3 x 12 Energie), kein paralleler
+# Hundebiss (RE2-Ein-Angreifer-Riegel PL+0x1D3), liegende Zombies kriechen (RE1.5-Wecker im RE2-WAIT),
+# Gorilla-/Affen-Schatten auf +0x1ba. Dossier analysis/befunde_runde39/E_gegner.md,
+# Code engine/src/gegner_r39.c + include/re15_gegner_r39.h (Haken: enemy_ai_common.c, enemy_ai_re2_dog.c,
+# enemy_ai_re2_zombie.c, platform/pc/main.c).
+#
+#   unit_r39_gegner_affen_hp        ROOM11C0: beide 0x27 mit 360 (vorher 180 @0x8011f514); ROOM1141 bleibt 180
+#   unit_r39_gegner_affen_zucken    Resolver-Treffer 12 (@0x8006ee44): Flinch (Clip 7) erst beim 3. Treffer, Zustand/
+#                                   Unterzustaende bleiben, +0x93 frei; Schrotflinte 38 reagiert sofort
+#   unit_r39_gegner_affen_schuss    dieselbe Kette ueber den echten Pistolenschuss (Pad R1 + Kreuz), 360 -> 324
+#   unit_r39_gegner_hund_riegel     zwei RE2-Hunde im Flug: nur der erste beisst (-20), PL+0x1D3 |= 0x80
+#                                   (@0x801051f8-0x80105200), Tor @0x80104e5c-68; nach der Reaktion frei (@0x8003f8b4)
+#   unit_r39_gegner_kriecher_1010   ROOM1010 Cut 4, RE2-KI: 0x81-Kriecher liegt fern, kriecht ab < 3000 in Sicht
+#                                   (RE1.5 Block B @0x80104718-48)
+#   unit_r39_gegner_kriecher_1220   dasselbe fuer die 0x16-Kriecher in ROOM1220/1221
+#   unit_r39_gegner_schatten        Quad-Hoehe 0x27/0x29 = +0x1ba (@0x80116f30 / @0x80110c78), andere Typen unveraendert
+#   integration_r39_gegner_schatten echte exe ROOM11C0: waehrend des Gorilla-Sprungs (Sub 7) Quad-Y = Boden-Y je Bild
+#                                   (gegner_r39.log), Koerper-Y darueber; Framedumps der Sprungbilder
+#   integration_r39_gegner_hunde1190 echte exe ROOM1190 (Hunde-Luke, Szene sub10): kein zweiter HP-Abzug durch einen
+#                                   Hundebiss innerhalb der 22 Bilder Spieler-Flinch nach einem Biss (state.log)
+add_executable(test_r39_gegner ${CMAKE_CURRENT_SOURCE_DIR}/test_r39_gegner.c)
+target_link_libraries(test_r39_gegner PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r39_gegner PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r39_gegner PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r39_gegner PRIVATE m)
+endif()
+foreach(_teil affen_hp affen_zucken affen_schuss hund_riegel kriecher_1010 kriecher_1220 schatten)
+    add_test(NAME unit_r39_gegner_${_teil} COMMAND test_r39_gegner ${_teil})
+    set_tests_properties(unit_r39_gegner_${_teil} PROPERTIES TIMEOUT 240)
+endforeach()
+
+if(TARGET re15_pc)
+    add_test(NAME integration_r39_gegner_schatten
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_gegner_schatten_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_gegner_schatten.cmake)
+    set_tests_properties(integration_r39_gegner_schatten PROPERTIES TIMEOUT 900)
+    add_test(NAME integration_r39_gegner_hunde1190
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_gegner_hunde1190_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_gegner_hunde1190.cmake)
+    set_tests_properties(integration_r39_gegner_hunde1190 PROPERTIES TIMEOUT 900)
+endif()
