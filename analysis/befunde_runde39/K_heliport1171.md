@@ -28,6 +28,9 @@ bearbeitet — nicht anfassen. Spur J aendert nur den Uebergang 1141 -> 1171 (Mu
 - 2026-10-18 17:15-19:05: "Auch sonst" abgearbeitet (Abschnitt 6): K2 INIT-Pose, K3 Plc_motion-Saatbild, K4 Schub
   Phase 5 -> 6 gemessen, im Original belegt, umgesetzt (6d027394), nachgemessen, Gegenprobe Leon 1170, Riegel
   (d2d97a88, 696a282f), Gegenprobe der Riegel am alten Motor, Bilder, gezielte Tests gruen (Abschnitt 11).
+- 2026-10-18 19:40-21:00: NACHBESSERUNG 1 (Abnahme 0, Maengel M1-M3; Abschnitt 12): Elzas Sub-6-Saattakt + Start nach
+  dem Dispatcher-Bild (M1/M3a), Spieler-Schub Phase 5 -> 6 -> 7 (M2), Kraehen zeichnen das zuletzt posierte Bild (M3b);
+  Riegel elza/kraehen + Integrationsblock, Gegenprobe am alten Motor rot, gezielte Tests gruen (12.10).
 ## 1. Messung vorher
 
 Gebauter Stand 1038dc15 (eigener Baum, `local_build.sh configure` + `build`), Messkopie `re15_pc_k39_v1.exe`.
