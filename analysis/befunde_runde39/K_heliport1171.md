@@ -426,6 +426,14 @@ Bit-Takt (Spieler-Pfad, K4-Klasse), M3 (a) Einzelbilder Clip 1 Bild 1 zwischen T
 (b) Kraehen-Animationen der Szene gegen das Original. Baum sauber, HEAD a2d1e1dc, exe 18:59 = Code-Stand 6d027394.
 Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher (fortlaufend unten).
 
+| Mangel | Ursache (Port) | vorher (Lade-Weg) | Beleg (Original) | Aenderung | nachher (Lade-Weg) |
+|---|---|---|---|---|---|
+| M1 Elzas Sub-6-Saatbild | begin + Takt im selben Bild schoben sofort auf Bild 1 | Clip 1 je Bild 1..15 (15), F37/F186/F591/F669/F943 | Phase 0 @0x80051844-74 faellt in f314 @0x8005188c; f314 posiert +0x95 @0x8001f35c vor +0x95++ @0x8001f618-1c | re15_r39k_reach_takt: Saattakt = Bild 0 / Blende 7 ohne Vorschub | Clip 1 Bild 0..15 (16) ab F38/F186/F592/F670/F945 |
+| M1/M3a Startbild nach Dispatcher-Ankunft | begin im Ankunfts-/Phase-7-Bild ueberschrieb dessen Pose | Ankunftsbild = Clip 1 Bild 1; Einzelbilder F1/F840/F846 | Ankunft +0x5 = 6 @0x80030cf0 (nach f314 @0x80030c78) / @0x800313ec (vor f314 @0x80031494); Dispatcher @0x8003068c-ac einmal je Bild; SCD @0x8001cdec vor @0x8001ce0c; While @0x8003f840 / Evt_end @0x8003f22c kehren mit 1 zurueck; Plc_dest @0x80041c14-1c | Ankunft/Phase 7 -> Sub 6 ab dem Folgebild; folgt ein Plc_dest, kein Sub-6-Bild; Walker-Init haelt Bild 0 auch bei gleichem Clip | Ankunftsbild = Gang-/Dreh-Pose; keine Einzelbilder; Drehen F841 ab Bild 0 |
+| M2 Elzas Schub-Ruecklauf | Bit-Takt setzte Clip 0x11 rueckwaerts sofort | F933 Clip 17 rueckw. 9 (John Clip 18), F943 Clip 1 Bild 1 | f314 @0x80052af4 vor Bit-Abfrage @0x80052b44; Phase 6 a2 = 1 @0x80052b8c / f314 @0x80052b98; Phase 7 @0x80052bc0 ohne anim_set, +0x5 = 6 @0x80052be0 | Saat in Phase 6, Phase 7 haelt Bild 0, Sub 6 ab dem Folgebild | F933 Clip 18, F934-F943 9..0, F944 haelt 0, F945 Clip 1 Bild 0 = John |
+| M3a Einzelbilder TURN -> WALK | wie Zeile 2 | s.o. | s.o.: im Original KEIN Sub-6-Bild (nicht "Bild 0 statt 1") | s.o. | s.o. |
+| M3b Kraehen | Renderer zeigte motion/anim_frame NACH dem Vorschub | ORIENT 1..7,0; Landebild Clip 0x0a Bild 0; Leiche Bild 12; INIT Bild 1 | Clip-Setzer 0x80115d94 (@0x80115da0/db0/dc4) posiert nicht; f314 posiert vor dem Vorschub; Landung @0x801148f4 ohne f314; FINISH f314 @0x8011493c 12x; Zustand 7 0x801157e8 ohne f314; Effekt-Matrix aus der Zeichenschleife @0x8001d108 | +0x94/+0x95/+0x8f-Tabelle je Slot (heliport1171_r39.c), Aktorfelder = zuletzt posiert | INIT Bild 0, ORIENT 0..7, Landebild Fall-Pose, FINISH 0..11, Leiche Bild 11 |
+
 ### 12.1 M1 + M3(a) — Elzas Sub 6 (Event-Reach) nach Ankunft/Wurf/Schub, Einzelbilder zwischen Gang und Drehen
 
 **Ursache (Port).** `re15_player_event_reach_begin` (game_step_common.c) setzte Clip 1 / Bild 0, und der Event-Reach-Takt
