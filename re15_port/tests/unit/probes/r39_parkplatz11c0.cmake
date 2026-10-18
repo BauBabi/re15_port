@@ -12,6 +12,8 @@
 #                                          Raumwechsel, Leon steuerbar; Gorillas tot -> Tuer zurueck, msg 7, Raumwechsel
 #   unit_r39_parkplatz11c0_wiedereintritt  Kampfzustand beim Eintritt: Sperre vor dem ersten Bild, Ende wie oben
 #   unit_r39_parkplatz11c0_nachher         nach dem Kampf: Tuer normal
+#   unit_r39_parkplatz11c0_ende_gesetzt    (4,64)=0/(3,67)=1 (Abnahme 0 M1): keine Sperre, Tuer -> ROOM11B0
+#   unit_r39_parkplatz11c0_echt            echter Kampfausgang (Abnahme 0 H2): Treffer bis zum Tod -> ENDE -> ROOM11B0
 #   unit_r39_parkplatz11c0_elza            ROOM11C1 (Elza) unberuehrt
 #   unit_r39_parkplatz11c0_fremd           geaendertes RDT: Anker greifen nicht, Original-Ablauf
 #   integration_r39_parkplatz11c0_k|w|n|e  echte exe (test_r39_parkplatz11c0.cmake): Speicherkarte 11B0 -> Tuer -> 11C0,
@@ -25,7 +27,7 @@ target_compile_definitions(test_r39_parkplatz11c0 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_parkplatz11c0 PRIVATE m)
 endif()
-foreach(_teil texte programme kampf wiedereintritt nachher elza fremd)
+foreach(_teil texte programme kampf wiedereintritt nachher ende_gesetzt echt elza fremd)
     add_test(NAME unit_r39_parkplatz11c0_${_teil} COMMAND test_r39_parkplatz11c0 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_parkplatz11c0_${_teil} PROPERTIES TIMEOUT 300)

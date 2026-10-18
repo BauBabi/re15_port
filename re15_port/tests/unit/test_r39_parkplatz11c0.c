@@ -20,6 +20,11 @@
  *   wiedereintritt (4,64)=1, (3,67)=0 (alter Spielstand / Sprung): Slot 0 VOR dem ersten Bild = Text; Druck -> msg 40;
  *                  Gorillas tot -> Tuer zurueck, Ende-Szene, Raumwechsel
  *   nachher        (4,64)=1, (3,67)=1 (Kampf vorbei): Slot 0 = Tuer, Druck -> Raumwechsel ROOM11B0, kein Text
+ *   ende_gesetzt   (4,64)=0, (3,67)=1 (Karte des Spur-A-Riegels integration_r39_stimmen_11b0; Abnahme 0 M1): KEINE
+ *                  Sperre - die Freigabe sub01 @0x0182E Ck(3,67)==0 griffe nie; Aot_on(0) in der Szene und Druck
+ *                  nach dem Kampf -> ROOM11B0
+ *   echt           echter Kampfausgang (Abnahme 0 H2): Pistolen-Treffer bis zum Tod, Kill-Bits nur vom Todes-Commit
+ *                  der Engine -> Programm ENDE, msg 7, Ende-Szene -> ROOM11B0
  *   elza           ROOM11C1 (Elza, Hunde, kein Begleiter) mit denselben Flags: Slot 0 = Tuer, Druck -> Raumwechsel
  *   fremd          ein geaendertes RDT (1 Byte in sub02): Anker greifen nicht -> Original-Ablauf (keine Sperre)
  */
@@ -447,6 +452,147 @@ static void teil_nachher(void)
           "Tuer nach dem Kampf: Raumwechsel ROOM%04X, kein Text", (unsigned)r.ziel);
 }
 
+/* ---- Teil: ende_gesetzt ((4,64)=0, (3,67)=1 — Abnahme 0 M1) ------------------------------------------------------- */
+/* Flag-Zustand der Karte von integration_r39_stimmen_11b0 (Spur A, test_r39_stimmen.cmake:97 `3:0x43 3:0x82 4:0xf3`, Lage
+ * (-25100,15000) Blick 1024): (3,67)=1 = die Ende-Szene gilt als gelaufen, (4,64)=0 = die Ada-Szene nicht. Im Spielablauf
+ * nicht erreichbar (RDT-Zensus 240 Raeume: (3,67) setzt nur sub03 @0x01B02, (4,64) nur sub02 @0x0184E, keiner loescht),
+ * wohl aber ueber Spielstaende/Debug-Flags. Original: sub01 @0x01820/@0x01824 startet sub02; die EINZIGE Freigabe sub01
+ * @0x0182E `21 03 43 00` Ck(3,67)==0 -> @0x01842 Evt_exec sub03 (Programm ENDE) greift nie — wer hier sperrt, sperrt fuer
+ * den ganzen Besuch. Erwartung: kein Programm SZENE (Original-sub02), Slot 0 bleibt die Original-Tuer — in der Szene
+ * (Aot_on(0) in Bild 60 wie RE15_FIRE_AOT=0@60#11c0 des Spur-A-Riegels) und nach dem Tod beider Gorillas (Druck). */
+static void ende_gesetzt_flags(void)
+{
+    re15_game_state_init();
+    re15_game_flag_set(RE15_R39O_ENDE_BANK, RE15_R39O_ENDE_BIT, 1);   /* Karte 3:0x43 (= sub03 @0x01B02)            */
+    re15_game_flag_set(3, 0x82, 1);                                    /* Karte 3:0x82 (test_r39_stimmen.cmake:97)    */
+    re15_game_flag_set(4, 0xF3, 1);                                    /* Karte 4:0xf3 (test_r39_stimmen.cmake:97)    */
+}
+static void teil_ende_gesetzt(void)
+{
+    printf("== ende_gesetzt ==\n");
+    const unsigned s0 = g_re15_r39o_szene_zaehler, v0 = g_re15_r39o_stimme_zaehler;
+    /* (a) die Szene laeuft an, Aot_on(0) in Bild 60 */
+    ende_gesetzt_flags();
+    const unsigned e0 = g_re15_r39o_eintritt_zaehler;
+    if (room_boot(RE15_R39O_RAUM, -25100, 15000, 1024, 0) != 0) return;
+    PRUEF(g_re15_r39o_eintritt_zaehler == e0 && slot0_tuer(), "vor dem ersten Bild: Slot 0 = Tuer, kein Installer-Eingriff");
+    frame(0, 0);
+    PRUEF(re15_game_flag_get(RE15_R39O_ADA_BANK, RE15_R39O_ADA_BIT) == 1 && re15_game_flag_get(2, 7) == 1,
+          "erstes Bild: sub01 @0x01824 startet sub02 wie im Original ((4,64)=1 @0x0184E, Pad-Sperre @0x01856)");
+    PRUEF(g_re15_r39o_szene_zaehler == s0, "erstes Bild: KEIN Programm SZENE ((3,67)=1: Freigabe @0x0182E greift nie)");
+    int tuer_ok = slot0_tuer();
+    for (int f = 1; f < 60; f++) { frame(0, 0); if (!slot0_tuer()) tuer_ok = 0; }
+    PRUEF(tuer_ok, "Bild 0..59 der Szene: Slot 0 durchgehend die Original-Tuer (main00 @0x01712)");
+    g_room_change.pending = 0;
+    re15_aot_fire_slot(RE15_R39O_TUER_SLOT);   /* = RE15_FIRE_AOT=0@60#11c0 (aot_common.c, Pfad von Aot_on @0x800407bc) */
+    int text40 = 0, wechsel = 0, ziel = -1;
+    for (int f = 0; f < 240; f++) {
+        if (g_scd.message_active && g_scd.message_id == RE15_R39O_MSG_SPERRE) text40 = 1;
+        if (g_room_change.pending) { wechsel = 1; ziel = (int)g_room_change.room_id; break; }
+        frame(0, 0);
+    }
+    PRUEF(wechsel && ziel == 0x11B0 && !text40, "Aot_on(0) in Bild 60: Raumwechsel ROOM%04X, kein Text msg 40",
+          (unsigned)(ziel < 0 ? 0 : ziel));
+    /* (b) die Szene bis zur Rueckgabe der Steuerung, dann beide Gorillas tot, dann die Tuer */
+    ende_gesetzt_flags();
+    if (room_boot(RE15_R39O_RAUM, -25100, 15000, 1024, 0) != 0) return;
+    int f_frei = -1;
+    tuer_ok = 1;
+    for (int f = 0; f < 4000; f++) {
+        frame(0, 0);
+        if (!slot0_tuer()) tuer_ok = 0;
+        if (g_scd.message_active && (f % 15) == 0) frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+        if (f > 5 && re15_game_flag_get(2, 7) == 0) { f_frei = f; break; }
+    }
+    PRUEF(f_frei > 0, "Steuerung zurueck (sub02 @0x01ACE Set(2,7)=0) in Bild %d", f_frei);
+    PRUEF(tuer_ok && slot0_tuer(), "die ganze Szene ueber: Slot 0 = Original-Tuer");
+    PRUEF(n_typ(RE15_R39O_GORILLA_TYP) == 2 && !re15_parkplatz_r39_kampf(),
+          "zwei Gorillas (sub00 @0x01784/@0x01798), 'Kampf laeuft' (sub00 @0x017C8/@0x017D0) falsch: (3,67)=1");
+    for (int f = 0; f < 60 && g_scd.player_mode != 0; f++) frame(0, 0);
+    const unsigned d0 = g_re15_r39o_ende_zaehler;
+    const int n = gorillas_tot();
+    for (int f = 0; f < 120; f++) frame(0, 0);
+    PRUEF(n == 2 && g_re15_r39o_ende_zaehler == d0,
+          "Gorillas tot (Kill-Bits (7,0x60)/(7,0x61)): kein Programm ENDE (sub01 @0x0182E Ck(3,67)==0 falsch)");
+    PRUEF(slot0_tuer(), "danach: Slot 0 = Tuer");
+    druck_t r = druecke(TUER_X, TUER_Z, TUER_ROT, 240);
+    PRUEF(r.raumwechsel && r.ziel == 0x11B0 && r.msg_id != RE15_R39O_MSG_SPERRE,
+          "Druck an der Tuer: Raumwechsel ROOM%04X, kein Text", (unsigned)(r.ziel < 0 ? 0 : r.ziel));
+    PRUEF(g_re15_r39o_szene_zaehler == s0 && g_re15_r39o_stimme_zaehler == v0,
+          "in beiden Laeufen kein Programm SZENE, keine Stimme msg 40");
+}
+
+/* ---- Teil: echt (Abnahme 0 H2: echter Kampfausgang, Kill-Bits NUR vom Todes-Commit der Engine) --------------------- */
+/* Die anderen Teile beenden den Kampf per Abkuerzung (gorillas_tot setzt die Kill-Bits). Hier treffen Pistolen-Schuesse
+ * mit dem Schreibsatz des Resolvers (FUN_80011f50 @0x80012420-2c, Muster test_r39_gegner_1141.c treffer(): +0x5 Waffe,
+ * +0x6 = 1, +0x7 = 0, hp -= Schaden, +0x93 |= 1, +0x4 = 2 bzw. 3 bei hp < 0 `bgez` @0x80012528) die FREIEN Gorillas bis
+ * zum Tod; die Kill-Bits setzt allein die Engine (Gorilla-Tod STAGE1.BIN @0x8011b8f4 `jal 0x8004ef90`). Danach muss die
+ * Tuer frei werden (Programm ENDE), msg 7 laufen und die Ende-Szene nach ROOM11B0 gehen. Pruefstand der Abnahme 0
+ * (O_abnahme_0.md 2.3), hier als Riegel. */
+#define ECHT_WAFFE   3    /* Leons Pistole (test_r39_gegner_1141.c: "Pistole: ... Waffe 3")                              */
+#define ECHT_SCHADEN 12   /* Zeile 0x27 @0x8006ee38 + 3*4 = @0x8006ee44 = 12 (re15_damage.c s_wpn_dmg_maggot[3])          */
+static void treffer_echt(re15_actor_t *g)
+{
+    g->sub_state_1 = (uint8_t)ECHT_WAFFE; g->sub_state_2 = 1; g->sub_state_3 = 0;
+    g->hp = (int16_t)(g->hp - ECHT_SCHADEN); g->hit_react |= 1;
+    g->state = (g->hp >= 0) ? 2 : 3;
+}
+static void teil_echt(void)
+{
+    printf("== echt ==\n");
+    re15_game_state_init();
+    if (room_boot(RE15_R39O_RAUM, -25279, 17268, 0x11FB, 0) != 0) return;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int f_frei = -1;
+    for (int f = 0; f < 4000; f++) {
+        frame(0, 0);
+        if (g_scd.message_active && (f % 15) == 0) frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+        if (f > 5 && re15_game_flag_get(2, 7) == 0) { f_frei = f; break; }
+    }
+    for (int f = 0; f < 60 && g_scd.player_mode != 0; f++) frame(0, 0);
+    PRUEF(f_frei > 0 && slot0_text(), "Szene vorbei (Bild %d), Slot 0 = Text msg 40", f_frei);
+    PRUEF(re15_game_flag_get(RE15_R39O_KILL_BANK, RE15_R39O_KILL_1) == 0 &&
+          re15_game_flag_get(RE15_R39O_KILL_BANK, RE15_R39O_KILL_2) == 0, "vor dem Kampf: Kill-Bits (7,0x60)/(7,0x61) = 0");
+    druck_t r = druecke(TUER_X, TUER_Z, TUER_ROT, 240);   /* Gorillas FREI (nicht eingefroren) */
+    PRUEF(r.msg_id == RE15_R39O_MSG_SPERRE && !r.raumwechsel, "Kampf (Gorillas frei): Tuer -> msg %d, kein Raumwechsel", r.msg_id);
+    re15_actor_t *g[2] = { NULL, NULL };
+    int ng = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX && ng < 2; s++)
+        if (g_actors[s].active && g_actors[s].type == RE15_R39O_GORILLA_TYP) g[ng++] = &g_actors[s];
+    PRUEF(ng == 2, "zwei Gorillas im Kampf");
+    if (ng != 2) return;
+    printf("    Gorillas: HP %d / %d, em_flag 0x%02X / 0x%02X\n", g[0]->hp, g[1]->hp, g[0]->em_flag_id, g[1]->em_flag_id);
+    int tr[2] = { 0, 0 }, tot[2] = { -1, -1 }, msg7 = 0, ziel = -1;
+    long f_flags = -1, f_ende = -1, f_tuer = -1, f_wechsel = -1;
+    const unsigned e0 = g_re15_r39o_ende_zaehler;
+    g_room_change.pending = 0;
+    for (int f = 0; f < 9000; f++) {
+        for (int i = 0; i < 2; i++) {
+            re15_actor_t *e = g[i];
+            if (!e->active || e->hp < 0 || e->state == 3 || e->state == 7) continue;
+            if ((e->hit_react & 1) == 0 && (e->state == 1 || e->state == 2)) { treffer_echt(e); tr[i]++; }
+        }
+        if (pl->hp < 60 && pl->hp >= 0) pl->hp = 100;   /* Leon am Leben halten (wie RE15_R39_MESS_SPIELER_HP) */
+        frame(0, 0);
+        if (g_scd.message_active && (f % 15) == 0) frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+        for (int i = 0; i < 2; i++) if (tot[i] < 0 && (g[i]->state == 3 || g[i]->state == 7 || g[i]->hp < 0)) tot[i] = f;
+        if (f_flags < 0 && re15_game_flag_get(RE15_R39O_KILL_BANK, RE15_R39O_KILL_1) &&
+            re15_game_flag_get(RE15_R39O_KILL_BANK, RE15_R39O_KILL_2)) f_flags = f;
+        if (f_ende < 0 && g_re15_r39o_ende_zaehler == e0 + 1) { f_ende = f; if (slot0_tuer()) f_tuer = f; }
+        if (g_scd.message_active && g_scd.message_id == 7) msg7 = 1;
+        if (g_room_change.pending) { f_wechsel = f; ziel = (int)g_room_change.room_id; break; }
+    }
+    printf("    Treffer bis Tod: %d / %d (Tod Bild %d / %d), Kill-Bits Bild %ld, ENDE Bild %ld, Tuer Bild %ld, Wechsel Bild %ld\n",
+           tr[0], tr[1], tot[0], tot[1], f_flags, f_ende, f_tuer, f_wechsel);
+    PRUEF(tot[0] >= 0 && tot[1] >= 0, "beide Gorillas durch Pistolen-Treffer tot");
+    PRUEF(f_flags >= 0, "Kill-Bits (7,0x60)/(7,0x61) vom Todes-Commit der Engine gesetzt (Bild %ld)", f_flags);
+    PRUEF(f_ende >= 0 && f_tuer == f_ende, "Programm ENDE startet (Bild %ld), Slot 0 im selben Bild wieder die Tuer", f_ende);
+    PRUEF(msg7, "msg 7 \"Ada: Okay, it's over now.\" (sub03 @0x01B68)");
+    PRUEF(f_wechsel >= 0 && ziel == 0x11B0, "Ende-Szene geht durch die Tuer -> ROOM%04X (Bild %ld; sub03 @0x01C08 Aot_on(0))",
+          (unsigned)(ziel < 0 ? 0 : ziel), f_wechsel);
+    PRUEF(re15_game_flag_get(RE15_R39O_ENDE_BANK, RE15_R39O_ENDE_BIT) == 1, "(3,67) = 1 (sub03 @0x01B02)");
+}
+
 /* ---- Teil: elza -------------------------------------------------------------------------------------------- */
 static void teil_elza(void)
 {
@@ -498,6 +644,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "kampf"))          teil_kampf();
     if (alle || !strcmp(teil, "wiedereintritt")) teil_wiedereintritt();
     if (alle || !strcmp(teil, "nachher"))        teil_nachher();
+    if (alle || !strcmp(teil, "ende_gesetzt"))   teil_ende_gesetzt();
+    if (alle || !strcmp(teil, "echt"))           teil_echt();
     if (alle || !strcmp(teil, "elza"))           teil_elza();
     if (alle || !strcmp(teil, "fremd"))          teil_fremd();
     re15_door_seq_setze_laeufer(NULL);
