@@ -283,3 +283,22 @@ Slots (anim_select_common.c), "Original" = was FUN_8001f314 im selben Takt posie
 Nebenwirkungen im selben Lauf: Pose-Strom ALLER anderen Aktoren (Elza, Kraehen) vorher/nachher bytegleich
 (md5 65b9f910b1e43bd3b5f6fef2582ce04a beide), Zustandslog ohne Johns Klammer 1138/1138 Zeilen gleich.
 - 17:29: Vorher-Bau fuer die Gegenproben K2-K4 in re15_port/build_bisect: enemy_ai_common.c/szenenleon_r36.c/scd_room_setup.c stehen VORUEBERGEHEND auf b35c66bd in der Arbeitskopie. Steht beim Lesen ein ' M' auf diesen Dateien ohne Rueckmeldung hier: `git checkout HEAD -- re15_port/engine/src/enemy_ai_common.c re15_port/engine/src/szenenleon_r36.c re15_port/engine/src/scd_room_setup.c` (K2-K4 sind in 6d027394 committet), NICHT committen.
+- Vorher-Bau erledigt (17:29): re15_port/build_bisect = b35c66bd-Stand der drei Dateien, Arbeitskopie danach mit
+  `git checkout HEAD -- ...` zurueckgesetzt, `git status --porcelain` leer.
+
+### 6.6 Gegenprobe Leon ROOM1170 (vorher build_bisect = b35c66bd, nachher build = 6d027394)
+
+Weg wie integration_r37_roy_leon1170 (Neuspiel -> Montage ROOM1240 -> Tuer -> ROOM1170, RE15_FPS=240,
+RE15_EXIT_AT=1200#1170), beide exit 0, ROOM1170 geladen. Pose-Strom 4360 Zeilen (Leon 4043, Elliot 317):
+- **Leon bytegleich** (md5 der Leon-Zeilen c23ba5ea vorher = nachher); Zustandslog ohne Elliots Klammer 4043/4043
+  Zeilen gleich. VORHER-md5 des ganzen Pose-Stroms 3848a27f / state.log e6e98cb7 = dieselben Werte wie in Abschnitt 4
+  (1038dc15 + K1) — Welle 1+2 hat 1170 nicht veraendert.
+- **Elliot 24 von 317 Zeilen anders, alle durch K2/K3 erklaert:**
+  - F884-F889: INIT-Pose Loco Clip 2 (fc 50) Bild 0 statt eigene Clip 2 (fc 52). Elliot (Typ 0x47) hat die Wurzel
+    0x8011d6d4 (Tabelle @0x80072cc8, gesetzt `sw v0,11464(at)` @0x8011e94c) und deren INIT posiert das Loco-Paar
+    (+0x94 = 2 @0x8011d930, `jal 0x8001f314` @0x8011d978). Er steht dort mit g=40 schon in state 4 / Sub 6 / Phase 0,
+    der Executor laeuft in diesen 6 Bildern aber nicht (Zustandslog: ss2 bleibt 0) — also bleibt im Original die
+    INIT-Pose stehen, der Merker loest erst mit dem ersten Executor-Takt.
+  - F920-F1200: Plc_motion(0,15,0) "Hey!" ab Bild 0 statt 1, rueckwaerts ab 19 statt 18 (K3). Bei RE15_FPS=240 posiert
+    der Renderer anim_frame>>1, darum [0,0,1,1,..] statt [0,1,1,2,..].
+  Das Zustandslog weicht nur in Elliots af ab (44 Zeilen, z.B. `st=4 ss1=6 ss2=0 g=40 mo=2 af=1` -> `af=0`).
