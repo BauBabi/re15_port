@@ -73,7 +73,91 @@ Handbahn je Bild (`elza_gesten.py bahn`, Modellraum, Hoehe ueber der Sohle):
 | 1141 c25 | 28 | vorgebeugt, beide Haende vorn ~1583 | nicht benutzt |
 | 1151 c17 | 40 | L 438 / 1651 (vorgebeugt, Hand vorn-unten auf Tischhoehe), Bild 19 | nicht benutzt |
 
-(Abschnitt wird fortgeschrieben: Clip-Wahl am Bild, Umsetzung, Messung nachher.)
+### 2.4 Was Elza in ROOM1031 sub13 mit Clip 11/0 tut: sie DRUECKT den Rolltor-Notschalter
+- Standort der Szene: Member_set @0x02994 `34 00 d7 cc` (x -13097), @0x02998 `34 02 a1 aa` (z -21855), @0x0299C `34 04 00 04`
+  (Gierung 1024 = Blick -Z). Direkt vor ihr (z <= -21922) liegt Aot_set Slot 7 @0x01D88 `2c 07 01 31 00 00 4a c8 6c 9d 72 05
+  f2 0c 02 00 ...` = Text msg 2 "The emergency shutters have already been activated." (x -14262..-12868, z -25236..-21922).
+  Wandzelle davor: SCA-Zelle 30 x -15518..-12566, z -24134..-22694 (Abstand Elza -> Wandflaeche 839).
+- Messung am gebauten Stand (Lauf `e1031b`: Neues Spiel Elza, `RE15_PSELECT_AUTO(_SWITCH)`, Bilder F440..F545/15, Scratch
+  `e1031_blatt.png`, angesehen): F455..F485 Cut 4 — Elza streckt den Arm nach vorn auf den Schaltkasten an der Wand und haelt
+  ihn (Clip 11 + Plc_flg 4), F500..F515 Arm sinkt (Clip 0 rueckwaerts), F530 Cut 6: das Rolltor ist unten, Zombies dahinter.
+  => Clip 11 (+ halten) / Clip 0 rueckwaerts ist Elzas ORIGINALE "auf ein Geraet druecken"-Geste.
+- Clip 12 (50 Bilder) = Hand an die Stirn (Streifen `s1031_c12.png`: Bild 12..36 Hand an der Stirn) — im Original direkt nach
+  dem Rolltor-Druck @0x02A00 vor "That was close ...". Clip 9 (24 Bilder) = Hand an die Huefte (`s1031_c9.png`), im Original
+  @0x02A32 vor dem Umsehen Plc_neck 4 nach "Hey, is anyone here?!" (niemand antwortet).
+
+### 2.5 Clip-Wahl (Nutzer Punkt 4: "Suche die dir passenden Animationen dafür heraus") — Begruendung
+| Moment | Wahl | Warum (Beleg) | verworfen |
+|---|---|---|---|
+| zur Konsole gehen | Plc_dest Modus 9/4/9 (Lauf-Clip der Spieler-Walk-Subs, Spur-H-Init @0x80030b58/@0x800313a4) | Elzas eigener Gang in 1031 sub13 @0x029CC..@0x029E0 | — |
+| "drauf drueckt" | Clip 11 + Plc_flg 4 (halten), danach Clip 0 + Plc_flg 0x80 | ihr Druck auf den Rolltor-Notschalter (§2.4) — dieselbe Handlung "Taste an einem Geraet druecken" | 1151 c17 (vorgebeugt, Hand vorn-unten, unbenutzt, zweite Haelfte Zurueckweichen), 1141 c25 (vorgebeugt-statisch, unbenutzt), 1031 c0 vorwaerts allein (Zeigegeste der Dialoge) |
+| Zeile 1 sprechen | waehrend des Haltens (Message_on 20 Bilder nach dem Griff) | Sprechtaste gedrueckt halten, Zeilentakt Sleep 100 wie @0x02A14 | erst loslassen, dann sprechen |
+| "..." | Clip 9 (Hand an die Huefte) + Plc_neck Modus 4 (3 Schwuenge) | Elzas Original-Reaktion auf "keine Antwort" nach "Hey, is anyone here?!" @0x02A32..@0x02A44 | Plc_neck 2+4 (Kopfschuetteln Leon/Ada) |
+| "Uhh, this Thing is broken!" | Clip 12 (Hand an die Stirn) | Elzas "Uff"-Geste @0x02A00 | Clip 4 (Arm seitlich), Clip 6 (Arm hoch) |
+Gestenquelle: Record 0 von ROOM1031 (13 Clips); ROOM10F1 hat keinen Block -> Leihe (Muster Runde 35 K ROOM10F0 <- ROOM11B0).
+
+## 3. Umsetzung (Dateien, Konstanten)
+- NEU `re15_port/include/re15_funk10f1_r39.h` (Konstanten mit Beleg/Kennzeichnung), `re15_port/engine/src/funk10f1_r39.c`
+  (Installer, Ereignis-Weiche, Nachrichten, Leih-Quelle, Pruefhaken), `re15_port/engine/src/gen/funk10f1_r39_szene.inc`
+  (Programm 208 B / 53 Opcodes + msg 40/41/42; ERZEUGT von `re15_port/tools/r39_funk10f1/szene_bauen.py`, der jede Vorlage gegen
+  die ROOM1031-Bytes prueft und die Zeilenbreite gegen das Korpus-Budget 285 px misst: msg 40 = 250/93 px, msg 41 = 46 px,
+  msg 42 = 210 px). Werkzeuge `tools/r39_funk10f1/elza_gesten.py` (Elza-Posenstreifen/-Katalog/-Handbahn, PL04-Basis),
+  `tools/r39_funk10f1/grundriss_10f1.py` (Draufsicht Zellen/Zonen/Kameras).
+- Haken (je 1-2 Zeilen, Kommentar "Runde 39 Spur I"): `engine/src/scd_room_setup.c` Installer am ENDE des Blocks;
+  `engine/src/scd_vm.c` scd_event_fire (`re15_funk10f1_r39_ereignis`, nach Runde 38 F); `platform/pc/src/cut10f0_pc.c`
+  Leih-Quelle (`if (!quelle) quelle = re15_funk10f1_r39_rbj_quelle(room_id)`) + Logzeile; `tests/unit/test_r36_kartenbits.c`
+  k_port[] Bit 70.
+- KEIN Haken im Boot-/CONTINUE-Weg (platform/pc/main.c): ROOM10F1 hat keinen Speicherpunkt (re15_savepoint.c: 1070/1120/1150/
+  ...), ein Spielstand IN 10F1 entsteht im Spiel nicht; der einzige Weg hinein ist die Tuer aus ROOM10D1 (§2.1). Ein Start
+  der Gehszene von einer beliebigen Ladeposition koennte an Zellen haengen bleiben (Pad gesperrt) — deshalb bewusst nur
+  ueber scd_room_reenter (Tuer, Debug-Sprung, GOTO).
+- Konstanten: Bit (9,70) VERTRAG 1.1; Ids 40/41/42 VERTRAG 1.2; Ereignis 27 (frei: belegt 2..6, 13, 20..26, 28, 29);
+  Ankunftsbit 0x20 = ROOM1031 @0x029CC/@0x02A62; Clips 11/0/9/12 = ROOM1031 rec0 (§2.3/2.4); Kamera Cut 1 (§2.1, Bild).
+  PORT-WAHL (Lage, belegt aus Kollision/Zone/Bild): Weg (6250,2900) -> (6250,5900) -> Platz (6900,6400), Blick (7400,6400).
+
+### 3.1 Platz und Weg (PORT-WAHL, Form belegt)
+- "Rechts": Eintritt Gierung 2048 (-X) -> rechts = +Z (§2.1). Der erste Wegpunkt liegt bei z 2900 (+Z), die erste Gehgierung
+  ist 2693 (gemessen, §4) = zwischen 2048 und 3072.
+- Spielerradius gegen Zellen GEMESSEN: Teleport nach (6950,3150) -> Spieler steht bei (6932,3150) (Zelle 10 Kante x 7400 ->
+  Radius 468); (6350,4550) -> (6343,4550) (Zelle 13 Kante 6800 -> 457). Weg mit > 468 Abstand zu jeder Zelle (Riegel misst
+  das an 3 x 101 Punkten).
+- Platz (6900,6400): zwischen den Konsolentischen 13 (z <= 5300) und 12 (z >= 7500) direkt vor dem Konsolenfuss (x 7400,
+  500 Abstand); Pruefpunkt 620 vor dem Spieler (7520,6400) liegt in Slot 2 msg 0 (x 7000..7800) = "das Kommunikationssystem".
+  Bildwahl (Scratch `st_blatt.png`, Cut 1): (6932,6400) = Elza an der Konsole mit Telefon/Tastatur/Monitoren, gut im Bild;
+  (6932,3150) zu klein an der Tuerseite; (6343,4550) vor dem Tisch statt an der Konsole; (6750,9900) ausserhalb des Bildes.
+- Kamera: Cut 0 beim Eintritt (Tuer), waehrend des Gehens Cut_auto 1 (RVD 0->1 bei z 2900..3900 -> Cut 1), am Platz Cut_chg 1
+  (Cut 1 sieht die Konsole von Norden; Elzas linke Seite mit dem Druck-Arm zur Kamera).
+
+## 4. Messung nachher (gebauter Stand fe2c1935, configure + build `LOCAL-BUILD-OK`)
+### 4.1 Lauf n1 (Elza, `RE15_GOTO_ROOM=10F1`, STATE_LOG + ANIM_TRACE + MSG_LOG, Bilder F0..F720/10; Scratch `laeufe/n1`)
+- debug.log: `[funk10f1] F30 ROOM10F1: Funkszene gestartet (Ereignis 27, Faden 10, Flag (9,70)=0)`, `[rbj] Animationsblock von
+  ROOM1031 geliehen (26760 B, Runde 39 Spur I)`, `[rbj] room 10F1 cinematic overlay: 13 clips, 316 kf`; Plc_dest (6250,2900)
+  Modus 9 -> 4, (6250,5900) 4, (6900,6400) 4, (7400,6400) 9; `[scd F127] Cut_chg(1)`; Plc_motion 11 + Plc_flg 0x0004;
+  `[msgtext] room=10f1 id=40 "Elza: Hello, anyone, can you hear me? We Need help!"`; F247 Plc_motion 0 + Plc_flg 0x0080; id=41
+  "Elza: ..." + Plc_motion 9; id=42 "Elza: Uhh, this Thing is broken!" + Plc_motion 12.
+- state.txt: Gang ab dem ersten Bild mit rot=2693 (rechts: zwischen 2048 und 3072), (7854,456) -> (6292,2831) F66, Kamera
+  Cut 0 -> Cut 1 ab F74 (RVD), (6250,5827) F106, Platz (6862,6368) F122, Drehung auf rot=4057 (Osten); F130..F247 mo=11 bei
+  (6862,6368) cam=1, msg 40 aktiv F~150..F248 (Druck gehalten WAEHREND der Zeile); F250 mo=0 (Senken); F282..F377 mo=9 msg 41;
+  F386..F481 mo=12 msg 42; F482 mo=200 (Ruhe) pm=1, ab F498 pm=0 (Spieler frei), Kamera bleibt Cut 1.
+- ANIM_TRACE Spieler (Bild: Motion Clip Bilder ... rueckwaerts): F0 210/1 (Ankunftspose) -> F6 105/5 (Gang, mit Drehung) ->
+  ... -> F127 11/11 fc 2 -> F247 0/0 fc 20 cur 19 rueckwaerts=1 -> F277 9/9 fc 24 -> F382 12/12 fc 50 -> F482 200 (Ruhe).
+- Bilder (angesehen, Scratch `n1_a.png`/`n1_b.png`/`n1_zoom.png`/`n1_balken.png`): F30 Elza an der Tuer dreht sich nach rechts
+  (zur Kamera), F50 geht, F70..F110 Cut 1 den Gang entlang, F130/F140 linker Arm vorn auf dem Bedienfeld der Konsole (unter
+  den Monitoren), F160/F200 Untertitel zweizeilig "Elza: Hello, anyone, can you hear me? / We Need help!" bei gehaltener Hand,
+  F250 Arm sinkt, F300/F340 "Elza: ..." Hand an der Huefte, Kopf dreht (Umsehen), F400/F420 "Elza: Uhh, this Thing is broken!"
+  Hand an der Stirn, F480 Ende; Balken oben/unten waehrend der Szene (F200), danach keine (F500).
+
+### 4.2 Lauf echt2 = ECHTER WEG durch die Tuer + zweites Betreten (Scratch `laeufe/echt2`)
+`RE15_TITLE_SHOT_CHAR=1 RE15_GOTO_ROOM=10D1 RE15_SET_FLAG=3:50 RE15_FIRE_AOT=0@40#10d1 RE15_DEBUG_JUMP=10f1@620
+RE15_EXIT_AT=700#10f1 RE15_AUDIO_CAP_SYNC=cap.raw`, Stellvertreter `synchro/STAGE1/room10F1/main40.wav` (= room1031/main19.wav)
+im Laufordner. (Ohne (3,50) ist die Tuer zu: `[msgtext] room=10d1 id=6 "Communication Room"It's electronically locked..."` —
+ROOM10D1 main00 @0x01026 Ck(3,0x32)==0 legt dort einen Text-Platz statt der Tuer; (3,50) = Kartenleser benutzt.)
+- `[fire-aot] slot=0 at F40 (Raum 10D1)` -> `[tuer] Sequenz Archiv 2 DOOR13 ...` -> `[room] PC loaded room10f1.rdt` ->
+  `[funk10f1] F40 ROOM10F1: Funkszene gestartet` -> Leihe ROOM1031 -> msg 40 + `[voice] clip loaded: main40.wav (32000 Hz x1 ->
+  111104 @44100 Hz)` -> msg 41 + `[voice] ROOM10F1 msg 41: keine Aufnahme (synchro/STAGE1/room10f1/main41.wav) - Zeile bleibt
+  stumm` -> msg 42 + dito main42.wav. => Stimme je Zeile angefordert; liegt die Datei da, spielt sie.
+- `[debug-menu] AUTO-JUMP -> ROOM10F1 (Frame 620)` (Raum neu aufgebaut, (9,70)=1): danach 0 Zeilen `Plc_dest|Message_on|funk10f1`,
+  state.txt F1..F700 (8400,-350) mo=211 pm=0 msg(a=0) — Bilder `echt2_wieder.png`: Elza steht an der Tuer, keine Balken.
 
 ## Stand
 - [x] Messung vorher (Szene fehlt)
