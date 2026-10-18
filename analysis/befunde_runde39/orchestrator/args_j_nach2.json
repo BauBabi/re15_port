@@ -1,0 +1,160 @@
+{
+ "_hinweis": "Spur J Nachbesserung 2 nach Abnahme 1 (M1 N4.3 Aufmerksamkeit) + Merge master + Stimmen main50-52. Baum r39_dining1141 HEAD 0aa7b194. Resume nur mit GENAU diesen args.",
+ "welle": [
+  "J"
+ ],
+ "slots": 1,
+ "max_nach": 1,
+ "basis": "1038dc15",
+ "modus": {
+  "J": "nachbesserung"
+ },
+ "runde0": {
+  "J": 1
+ },
+ "bau": {
+  "J": {
+   "status": "fertig",
+   "zusammenfassung": "Nachbesserung 1 Spur J (ROOM1141), Dossier analysis/befunde_runde39/J_dining1141.md Abschnitt 8. Gemessen auf dem echten Weg mit Elza (Laeufe n1/pist/mess/f/auf2/wink, Bildboegen in scratchpad j39n1).\nM1: Gemaelde-Frage friert die VM ein (Pausemaske `2b 0d 80 ff`, @0x8003f040), danach lief die Reaktion ins Rolltor. Jetzt Merker (5,0x10), synchron bei Ereignis 6 gesetzt, plus Warten auf (2,7), nur bei Ck(4,0xC3)==0. Lauf f: msg 50 kommt F481 nach dem Rolltor (vorher F291).\nM2/N4.4 und Nachtrag 7: (2,6) ist Johns Zielen (ROOM1021 @0x020C6). Zu msg 52 jetzt das Heranwinken aus 1171 (@0x014CE, RBJ Record 1 Clip 2 von ROOM1171, 96 Bilder, fuer die Geste geliehen). Lauf wink zeigt das Heranwinken.\nM3: John wird im Schnittbild von Cut 8 gesetzt. Sprung-Riegel gruen.\nN4.1: Gemaelde = ROLLTOR39, danach laeuft Elza frei. Phase H und Klopfen dauern bis Ck(4,0xC3) (main00 @0x00A76).\nN4.2: Riegel = sub05 @0x00FC8 (msg 12). ENTRIEGELN39: Elza rennt, Schnitt auf Cut 7 bei z < -9775, Drehung zur Tuer, dann hebt sie die Waffe mit Plc_motion(2,6) (ROOM3060 @0x010BE). Spieler-Sub 0x80073e30[2] spielt aus der W-Bank (@0x80036be4/@0x80036c04). Schusswaffe aus dem Inventar, sonst Messer per DRAW 0x0D (@0x80035538).\nN4.3: Faden SCHUETZE39 in Original-Form (ROOM1021 @0x020C6..@0x020F2) mit Schaden @0x8006ee44. Treffer, dann jagt der Gorilla John (PORT-WAHL).\nN6: \"trouble\" und \"gorilla\" jetzt klein geschrieben.",
+   "commits": [
+    "d96a8454",
+    "37329e77",
+    "3263b432",
+    "0e3a7bcc",
+    "1ee1422a",
+    "35fa62f6",
+    "3f8e7532",
+    "32095597",
+    "2299482e",
+    "5bb0e395",
+    "6b6adad8",
+    "25e1e2d5",
+    "731df2b6",
+    "e1d1eddd",
+    "c8d4282b",
+    "fe0c7a97",
+    "a4e4e83e",
+    "4aaece87",
+    "dea300d7",
+    "09f318d9",
+    "6b8c7f69",
+    "dba84aaf",
+    "fab5ef1a",
+    "751e3f4d",
+    "d2a12878",
+    "03526d48",
+    "f744e5ad"
+   ],
+   "suite": "Unit am Endstand, ctest -R \"unit_r39_dining1141|unit_r38_dining1141|unit_r36_kartenbits|unit_maggot|unit_r35_affen|unit_r38_affen3|unit_r36_zombieki_affen|unit_r38_griff_gorilla|unit_rotor_bgm_pin|unit_r35_cut10f0|unit_synchro_stimme|unit_voice_ausreden|unit_r39_stimmen|unit_r38_rekorder|unit_r38_elzaintro_stimme|unit_se_bank_routing|unit_se_voice_machine|unit_r30_tuer_stimme|unit_audio|unit_r34n_f_leiche_stimme|unit_r38_tagebuch|unit_r38_elzatoene|unit_msg_dialog|unit_action_msg_gate|unit_r38_heliport1171|unit_scd_flag_fade|unit_damage|unit_weapon_select|unit_aim_all_around|unit_aim_lower_exit|unit_plc_back_yaw_1090|unit_r30_android_n3_plc_aim|unit_r36_elza|unit_r39_gegner\" -> \"100% tests passed, 0 tests failed out of 122\". Integration am Endstand, ctest -R \"integration_r39_dining1141_d|integration_r38_dining1141_s\" -> \"100% tests passed, 0 tests failed out of 2\". Vorher ctest -R \"integration_r39_dining1141_d|integration_r38_dining1141|integration_r35_cut10f0|integration_r38_heliport1171_weg_re15|integration_r39_stimmen_1171|integration_r38_rekorder|integration_r38_elzaintro_stimme|integration_r37_elzaems_elza1141|integration_r36_elza_schuss\": die 13 uebrigen Tests gruen. Rot waren nur D und S, weil der Wegplan ein \"ja\" am Gemaelde verloren hatte; behoben in 4aaece87, danach beide gruen. Keine volle Suite.",
+   "offene_punkte": [
+    "N4.3 Aufmerksamkeit ist PORT-WAHL: der getroffene Gorilla dreht zu John und kriecht zu ihm. Kommt er in 30 Bildern nicht 300 naeher (Tisch oder zweiter Gorilla im Weg, Lauf auf2), endet das, und er nimmt wieder Elza. Gorillas greifen John nicht an. Takt Pause 90+90, Trefferkegel +-0xC8 und Dauer 180 haben kein Original-Vorbild. Entscheidungsfrage an den Nutzer.",
+    "Gemeinsame Dateien ausserhalb von VERTRAG 1.3 fuer J, je 1-5 Zeilen, Kommentar 'Runde 39 Spur J', nur in ROOM1141 aktiv: enemy_ai_common.c (2 Haken im Gorilla-Hirn), enemy_common.c (RBJ-Leihe, 2x2 Zeilen), game_step_common.c, platform/pc/main.c, re15_damage.c, scd_vm.c. Bei der Integration mit Spur E (Nachbesserung 3, Gorilla in 1141) und Spur K (Fix des RBJ-Kanal-Cache 18940e95) zusammen ansehen.",
+    "Spieler-Plc_motion(2,c) als W-Bank-Clip gilt im Port nur in ROOM1141. ROOM3060 @0x010BE und ROOM3061 @0x011DE tragen dieselbe Form und zeigen im Port weiter PL00-Clip 6. Eigener Punkt fuer spaeter.",
+    "audio_pc.c-Haken (Punkt 9, help-Stamm) ist laut VERTRAG Spur A/B zugeteilt: bei der Integration zusammenfuehren (Hinweis H2 der Abnahme).",
+    "Klopf-Klang bleibt die Wahl RE2 DOOR0F-Holzschlag (RE2 hat keinen Tuer-Klopfton); Abnahme durch Anhoeren liegt beim Nutzer."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/scd_vm.c",
+    "re15_port/engine/src/game_step_common.c",
+    "re15_port/platform/pc/main.c",
+    "re15_port/engine/src/enemy_ai_common.c",
+    "re15_port/engine/src/enemy_common.c",
+    "re15_port/engine/src/re15_damage.c",
+    "re15_port/engine/src/dining_r38.c",
+    "re15_port/platform/pc/src/audio_pc.c",
+    "re15_port/tests/unit/test_r38_dining1141.c",
+    "re15_port/tests/integration/test_r38_dining1141.cmake"
+   ],
+   "neue_assets": [],
+   "sprachdateien": [
+    "synchro/STAGE1/room1141/main50.wav (optional, fehlt): Elza: Oh, no, this is John! He is in trouble, I have to help him!",
+    "synchro/STAGE1/room1141/main51.wav (optional, fehlt): John: Puuuh, that was close! I thought we end up as gorilla meal....",
+    "synchro/STAGE1/room1141/main52.wav (optional, fehlt): John: Elza, follow me, I think I might have found a way out of here!",
+    "help01..05.wav unveraendert genutzt (Sprach-Ids 53..57)"
+   ]
+  }
+ },
+ "abn": {
+  "J": {
+   "bestanden": false,
+   "urteile": [
+    {
+     "punkt": "1 Keine Zombie-Geraeusche in 1141",
+     "urteil": "erfuellt",
+     "beleg": "Laeufe A, P und L, debug.log-Abschnitt 1141: 0 Zeilen mit Se_on bank 0x3C/0x3D bzw. 60/61 und 0x main42. Zu hoeren sind nur Klopfen (18x bank 62/0), help01..05 (6x), Glas (2x), Rolladen 0x3B (3x) und DOOR1A (2x2), im Kampf zusaetzlich die Gorilla-Stimmen der EM27-Bank."
+    },
+    {
+     "punkt": "2 John kommt durch die Tuer; Kamera vorne auf Elza, Tuer-zu-Ton, dann Kamera auf die Tuer mit John",
+     "urteil": "erfuellt",
+     "beleg": "Lauf P: Cut_chg(7) F1707 (angezeigt F1708). Tuer-auf-Ton bei ~F1781. John wird F1784 bei (-7350,-1300) gesetzt, hinter der Kamera. Tuer-zu-Ton bei ~F1827, Cut_chg(6) F1853: John steht schon an der Tuer (Bild p_tuer.png). Mitschnitt: Tuer auf bei Takt 5452..5468 (Spitze 11320), Tuer zu bei Takt 5492..5504. In keinem Bild ist John vor Cut 6 zu sehen."
+    },
+    {
+     "punkt": "3 Kein 'shout'-Voiceover fuer John",
+     "urteil": "erfuellt",
+     "beleg": "0 Zeilen bank=0x3D bzw. main42.wav im Abschnitt 1141 der Laeufe A, P und L."
+    },
+    {
+     "punkt": "4 help01..05 im Mix mit Abstaenden, dazwischen mehrfaches Klopfen",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: Reihenfolge help03 F75, help01 F395, help04 F615, help02 F1024, help05 F1244, help03 F1464. Vor jedem Ruf 3 Schlaege im Abstand von 5 Bildern, Abstand zwischen den Rufen 220 Bilder. Das laeuft weiter, bis die Tuer entriegelt wird (F1599). Die Schlaege sind ueber MAIN16 hoerbar (Takt 5093/5098/5103, Spitze ~11k bei Grund 1-2k)."
+    },
+    {
+     "punkt": "5 Elzas Reaktion beim ersten Hoeren (M1 der Abnahme 0)",
+     "urteil": "erfuellt",
+     "beleg": "Laeufe A/A0: msg 50 'He is in trouble' offen F176..F275, genau einmal (9,94). Lauf F (Fenster aus M1): Rolladen F250..F470, msg 50 erst ab F481 (vorher F291). Lauf E (Gemaelde vor dem ersten Ruf): msg 50 F381 nach dem Rolladen. Lauf R (schnellster Spieler): Reaktion vor dem Entriegeln (F685). Lauf G2 (Wiederbetreten): keine zweite Reaktion."
+    },
+    {
+     "punkt": "6 Glasbruch vor 'What was that?!'",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: msg 5 zu F2538, Glas F2538/F2543 (Takt 6206, RMS 8-10k, Spitze 28672) nach der Stille am Ende von Johns Satz. msg 6 oeffnet F2564."
+    },
+    {
+     "punkt": "7 John schaut ab 'some kind of gorilla' zu Elza",
+     "urteil": "erfuellt",
+     "beleg": "Laeufe A und P, r39.txt: msg 9 (169 Bilder) und msg 10 (99 Bilder) mit |blick| <= 10/4096. Erst die letzten 12 Bilder von msg 11 weichen ab, weil John loslaeuft (Original sub02 @0x00F8E)."
+    },
+    {
+     "punkt": "8 Zwei Zeilen Johns nach dem Gorilla-Tod mit passenden Animationen (M2/M3)",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: msg 51 F4000..F4098 mit Gesten (0,15)/(0,23), msg 52 F4120..F4218 mit (0,2) = Heranwinken. Log: 'John winkt heran: RBJ ROOM1171 Record 1 Clip 2 geliehen (96 Bilder)'. Blick 0, 0 Bilder mit Sub 2 Clip 6 (Waffe auf Elza). Groesster Sprung 0, Pos_set im Schnittbild F3978. Bilder a_gespraech.png, a_wink_zoom.png."
+    },
+    {
+     "punkt": "9 Keine Panik-Musik beim Wechsel 1141 -> 1171",
+     "urteil": "erfuellt",
+     "beleg": "Werkzeug 'test_r39_dining1141 pegel' auf A/P: Pegel 0 bei Takt 10010..10035, danach 559 (MAIN32). Mitschnitt zeigt Tuer-Toene, Stille, MAIN32 ab Takt 10034, kein MAIN16-Nachhall. audio_pc.c ist seit Abnahme 0 unveraendert, die Gegenprobe V/W von dort gilt weiter."
+    },
+    {
+     "punkt": "N4.1 Rolltor oeffnen und danach normal laufen",
+     "urteil": "erfuellt",
+     "beleg": "Lauf A: Rolladen F981..F1214, ab F1215 pm=0, Elza geht frei zur Dachtuer und das Klopfen laeuft weiter. Lauf G2: raus nach 1131 und zurueck; Phase H laeuft weiter, Rolladen offen, das Entriegeln funktioniert."
+    },
+    {
+     "punkt": "N4.2 Szene erst nach dem Entriegeln: Elza rennt zur anderen Kamera, dreht sich zur Tuer, hebt die Waffe (Schusswaffe aus dem Inventar, sonst Messer)",
+     "urteil": "erfuellt",
+     "beleg": "Laeufe A/P/Q/A2: Riegel -> msg 12. Elza rennt (mo=100, 200 Einheiten/Bild), Schnitt auf Cut 7 F1708 ohne Cut-0-Blitz, Drehung F1722..F1740 auf rot 3101. Gehobene Waffe: A Messer per DRAW, P Browning aus dem Inventar, Q die ausgeruestete Schrotflinte. Danach Tuer auf/zu, Cut 6 mit John, Waffe senken."
+    },
+    {
+     "punkt": "N4.3 John schiesst ab und an auf die Gorillas und erhaelt ihre Aufmerksamkeit",
+     "urteil": "teilweise",
+     "beleg": "Drei Laeufe mit lebenden Gorillas (L, L2, L3), 16 Salven alle ~12,4 s. Davon 6 ohne Treffer: 5x weil Elza im Griff war (schuss() verlangt re15_player_victim_state()==0, auch fuer den Gorilla, der sie nicht haelt; Ziel lag nachgerechnet im Kegel), 1x lief das Ziel waehrend der 110 Zielbilder aus dem Kegel. 4 Treffer ohne jede Zuwendung (Gorilla klemmt bei x -6982, rot 3157->3163), 2 nur mit Drehung, 4 mit Drehung und sichtbarem Heranruecken. John ist beim Schiessen nie im Bild."
+    },
+    {
+     "punkt": "N4.4 / Nachtrag 7: Heranwinken wie in 1171 statt Waffe auf Elza",
+     "urteil": "erfuellt",
+     "beleg": "Clip ROOM1171 RBJ rec1 Clip 2 selbst geparst: Marker 0x2, Clips [20,30,96]; John ist in 1141 und 1171 Typ 0x49. Leih-Log bei F4119. a_wink_zoom.png zeigt dieselbe Bewegung wie K39abn1/hurry_up_head_vs_v0826.png. 0 Bilder mit Sub 2 Clip 6."
+    },
+    {
+     "punkt": "N6 'trouble'/'gorilla' klein geschrieben",
+     "urteil": "erfuellt",
+     "beleg": "msgtext in A/P/F/E/R: 'He is in trouble, I have to help him!' und 'we end up as gorilla meal....'. Bilder f_m1.png und a_gespraech.png."
+    }
+   ],
+   "maengel": [
+    "M1 (N4.3, mittel): Johns Schuesse holen die Aufmerksamkeit der Gorillas im echten Kampf nur selten. Drei Laeufe mit lebenden Gorillas (L/L2/L3, 16 Salven): 6 Salven ohne Treffer, 4 Treffer ohne jede Zuwendung, 2 nur Drehung, 4 mit Drehung und Heranruecken. Ursachen: (a) schuss() in dining_r39.c wertet keinen Treffer, solange re15_player_victim_state() != 0 ist, auch nicht auf den Gorilla, der Elza nicht haelt. Das betrifft 5 von 16 Salven: L F3771/F4142/F4513 und L3 F3771/F4142, jeweils mit state.txt gr=1; das Ziel lag nachgerechnet im Kegel und nicht im Angriffs-Sub. (b) Die Richtung wird nur vor den 110 Zielbildern bestimmt (L2 F4137, rel -599/-612). (c) Ein am Rand x -6982 festhaengender Gorilla wird trotz Aufmerksamkeit weder gedreht noch bewegt (L2 Gorilla 3: 8 Treffer, rot 3157->3163) und nach 29 Bildern wieder freigegeben. John ist nie im Bild. Diese Regel steht nicht in 'Fuer den Nutzer' (Dossier 8.6). Nachpruefen: J39abn1/lauf.sh l2 plan_l2.txt \"5800#1141\" \"3400-5800/5:fd_\" \"RE15_GIVE=0x43:1,0x03:15,0x15:50\" RE15_R38F_GORILLAS_TOT=2400, dann debug.log 'John schiesst', state.txt (Slot 2/3 r/@ und gr=) und aufmerk.py auswerten.",
+    "ORCHESTRATOR (Pflicht zuerst): `git merge master` in den Baum (master 8286bcb6 = Welle 1+2 + Runde 39 E Nachbesserung 2/3 [Gorilla-Regel HP 360 / Flinch ab 36 fuer ALLE 0x27 inkl. 1141, Querungs-Wache gegen Wand-Durchstoss in 1141], I funk10f1, M schluessel2, Nutzer-Nachtrag 8 + 9). Konflikte in gemeinsamen Dateien (enemy_ai_common.c, enemy_common.c, game_step_common.c, main.c, re15_damage.c, scd_vm.c, audio_pc.c) beidseitig aufloesen; bauen (configure). DANN: (1) STIMMEN (Nachtrag 8): die Nutzer-Dateien liegen jetzt als synchro/STAGE1/room1141/main50.wav (Elza 'Oh, no, this is John!...', neuer Take sagt John), main51.wav (John 'Puuuh, that was close!...'), main52.wav (John 'Elza, follow me...') im Baum = Ordnerregel, KEINE Tabellenzeile in stimmen_r39.c noetig; am echten Weg messen: '[voice] clip loaded: main50/51/52.wav' zu msg 50/51/52, Ton-Mitschnitt (Kreuzkorrelation im Zeilenfenster), Riegel (Integration D: Stimme je Zeile geladen; KEIN Hash/Dauer-Pin auf Nutzer-Dateien). Die Original-Zeilen 12/13/14 (Schloss/Gemaelde/Tisch) haben keine Datei mehr und bleiben stumm - gegenpruefen. (2) M1 N4.3 nach dem Merge NEU messen (H3: mit 360 Energie und Flinch-Schwelle 36 zucken Johns Treffer 2x12 nicht - die Aufmerksamkeit darf nicht am Zucken haengen) und beheben: (a) John schiesst auch, waehrend Elza gepackt ist, auf den Gorilla, der sie NICHT haelt (und - wenn belegbar sinnvoll - auf den, der sie haelt; Form begruenden), (b) Richtung waehrend der Zielbilder nachfuehren, (c) festhaengender Gorilla (Rand x -6982): Zuwendung muss sichtbar sein (Drehung zu John) oder die Aufmerksamkeit endet nachvollziehbar - im echten Kampf in L/L2/L3-Lagen: Mehrheit der Salven mit sichtbarer Zuwendung, John beim Schiessen wenigstens einmal im Bild (Kamera-Cut oder Bildausschnitt belegen), Querungs-Wache bleibt wirksam (kein Gorilla/keine Elza durch Waende). Die Aufmerksamkeits-Regel (PORT-WAHL, Takt/Kegel/Dauer) im Dossier 'Fuer den Nutzer' in einfachen Worten beschreiben - KEINE Entscheidungsfrage an den Nutzer (Nutzer-Vorgabe Nachtrag 4 ist eindeutig: 'ab und an schiessen und ihre Aufmerksamkeit erhalten'). (3) H6: Uhrzeit im Dossier 8.8 aus date/Commit korrigieren. Vor dem Abschluss ALLE unit_/prop_/probe_ + integration_r39_dining1141_d + integration_r38_dining1141* + integration_r39_gegner_1141 (E-Riegel, muss nach dem Merge gruen bleiben)."
+   ],
+   "bericht": "Bericht: C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r39_dining1141\\analysis\\befunde_runde39\\J_abnahme_1.md (Commit 0aa7b194, nur diese Datei). Messordner, nicht committet: C:\\Users\\MJOEDI~1\\AppData\\Local\\Temp\\claude\\c--workspace-git-reAi-v2\\c41eae99-e724-4cb3-afb9-119709f20a9d\\scratchpad\\J39abn1\n\nBau: local_build.sh configure + build OK, 'ninja: no work to do'. Der Generator bestaetigt dining_r39_programme.inc (--pruefen ok).\n\nGemessen an der echten exe, jeweils mit eigener exe-Kopie:\n- A, P: echter Weg 1131 -> 1141 -> 1171 mit Elza, A nur mit Messer, P mit Pistole im Inventar.\n- A0, A2: Frueh-Teil bzw. dichte Bilder von A.\n- F, E, R: M1-Fenster, Gemaelde vor dem ersten Ruf, schnellster Weg zum Riegel.\n- G2: Wiederbetreten.\n- Q: ausgeruestete Schrotflinte.\n- L, L2, L3: lebende Gorillas.\n\nErfuellt sind die Punkte 1-9, N4.1, N4.2, N4.4/Nachtrag 7 und N6. Die Maengel der Abnahme 0 sind behoben:\n- M1: Die Reaktion kommt nie mehr waehrend einer Szene (Lauf F: msg 50 F481 statt F291).\n- M2: John winkt mit Clip 2 aus RBJ rec1 von ROOM1171 heran, 96 Bilder, selbst geparst; das Bild entspricht Spur K.\n- M3: Kein sichtbarer Sprung mehr (groesster Schritt 0).\n\nN4.3 ist nur teilweise erfuellt: Im echten Kampf zeigt nur 6 von 16 Salven eine sichtbare Zuwendung (Mangel M1).\n\nRE-Gate: 8 Stichproben selbst gelesen, alle stimmen.\n- Plc_motion(2,c) des Spielers: Tabelle 0x80073f90[4] = 0x80030660, dann 0x80073e30[2] = 0x80050f00 auf Kanal +0x170/+0x174 (W-Bank-Lader @0x80036be4/@0x80036c04).\n- Schaden @0x8006ee44 = 12.\n- RBJ-Lader @0x8001b404.\n- DRAW-Clip 0xD @0x8003558c.\n- Kegel 0xC8 @0x80032fe0.\n- Alle zitierten RDT-Bytes von 1141/1171/3060/1021.\nIm Diff keine Rate-Woerter; PORT-WAHL und NUTZER-VORGABE sind gekennzeichnet.\n\nVertrag: Pfade erlaubt, Bank 9 nur Bit 94, Nachrichten-Ids 50..58. Kleine Haken ausserhalb der Zuteilung 1.3 (audio_pc.c, enemy_ai_common.c, enemy_common.c, game_step_common.c, re15_damage.c) sind offengelegt; siehe Hinweis H2.\n\nWeitere Hinweise:\n- H3: Spur E unterdrueckt das Zucken am HURT-Eintritt. Das greift auch fuer Johns Zustand-2-Treffer: 2 x 12 = 24 liegt unter der Schwelle 36. N4.3 nach der Integration mit 360 Energie neu messen.\n- H5: msg 12 wartet auf einen laufenden Hilferuf, 0,6 s.\n- H6: Die Uhrzeit im Dossier 8.8 ist falsch.",
+   "suite": "Gezielt, keine volle Suite im Spurbaum: Unit 164/164 gruen (Regex aus J39abn1/regex_unit.txt). Integration 18/18 gruen in 636,7 s (integration_r39_dining1141_d, alle integration_r38_dining1141_*, r35_cut10f0, r38_heliport1171_weg_re15, r39_stimmen_1171, r38_rekorder, r38_elzaintro_stimme, r37_elzaems_elza1141, r36_elza_schuss, r38_affen3*)."
+  }
+ }
+}

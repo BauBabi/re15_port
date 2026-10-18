@@ -6,6 +6,10 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 23:00: Spur J Abnahme 1: alles erfuellt ausser N4.3 (Johns Schuesse holen die Gorilla-Aufmerksamkeit nur in 6/16 Salven;
+  Ursachen a-c im Bericht J_abnahme_1.md 0aa7b194) -> Nachbesserung 2 wf_9b31e40f-c3f (args_j_nach2.json): zuerst master
+  mergen (E2/E3-Gorilla-Regel + Querungs-Wache, Stimmen main50-52), Stimmen messen, N4.3 neu messen und beheben, Regel fuer
+  den Nutzer beschreiben. Aktiv: G wf_0dcedfba-bac, J wf_9b31e40f-c3f, K wf_52b88a82-72c, O wf_d7e17c17-d93.
 * 2026-10-18 22:45: Hauptbaum-exe 22:31 aus ecfe0f0f, Smoke gruen (1030@250, EXIT_AT, exit 0; ohne RE15_TITLE_SHOT_AF haengt die exe
   im Titelmenue = kein Fehler). Spur K Abnahme 1: 2 Maengel (Kraehen HOVER Phase 0 @0x80115130 ohne f314/Bewegung, SPIN
   Phase 2 @0x801154d0 ohne Gier+60) -> Nachbesserung 2 wf_52b88a82-72c (args_k_nach2.json; abn.K.suite enthaelt
