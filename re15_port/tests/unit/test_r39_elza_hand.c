@@ -84,17 +84,58 @@ int main(void)
           m1, m2, l1, l2);
     PRUEF(pl->state == 4 && (pl->anim_flags & 0x04u), "Kommandowort bleibt 4, Schleifen-Flag 0x04 steht (Haltepose Clip 11)");
 
-    /* (b) Gegenprobe: kein Plc_motion -> die Latch laeuft byte-true weiter (cmd 0 -> Fall 0) */
+    /* (b) Gegenprobe: Szene (player_mode 2) OHNE Plc_motion -> die Latch laeuft byte-true weiter (cmd 0 -> Fall 0);
+     * der pm-2-Zweig ersetzt die Pose nicht (holt nur 105/100 zurueck, player_common.c). */
     frisch();
-    g_scd.player_mode = 0;
     re15_player_room_entry_pose();
     re15_player_tick(&s_view, 0);
     const int g1 = (int)pl->motion;
     re15_player_tick(&s_view, 0);
     const int g2 = (int)pl->motion;
     PRUEF(g1 == MOTION_SETTLE && g2 == MOTION_IDLE && re15_player_entry_pose_latch() == 0,
-          "ohne Plc_motion: Tick 1 = %d (Settle, cmd 0), Tick 2 = %d (Idle-Uebergabe Fall 0 @0x80032088), Latch zu",
+          "Szene ohne Plc_motion: Tick 1 = %d (Settle, cmd 0), Tick 2 = %d (Idle-Uebergabe Fall 0 @0x80032088), Latch zu",
           g1, g2);
+    /* (c) gewoehnliches Spiel (player_mode 0): der Pad-/Idle-Zweig ersetzt Settle schon im Latch-1-Bild durch den
+     * Fall-0-Zustand (200); die Latch schliesst ohne zweiten Store (probe_r16_tuer1040, player_common.c Latch 2). */
+    frisch();
+    g_scd.player_mode = 0;
+    re15_player_room_entry_pose();
+    re15_player_tick(&s_view, 0);
+    const int h1 = (int)pl->motion;
+    re15_player_tick(&s_view, 0);
+    const int h2 = (int)pl->motion;
+    PRUEF(h1 == MOTION_IDLE && h2 == MOTION_IDLE && re15_player_entry_pose_latch() == 0 && pl->state != 4,
+          "Spiel ohne Plc_motion: Tick 1 = %d, Tick 2 = %d (Idle-Zweig), Latch zu, Kommandowort %d", h1, h2, (int)pl->state);
+
+    /* (d) PUNKT 1b — Sub-Init der Spieler-Walk-Subs (Cut_chg(6) @0x029CA + Plc_dest(0,9,0x20,..) @0x029CC nach dem
+     * Senken): der Walker setzt am Init (walk_fsm 0) sofort Clip 5 der PLW-Bank (Sentinel 105), Bild 0, Blende 7
+     * (TURN @0x800313a4-b8, WALK @0x80030b58-6c, RUN @0x80030d90-a4) — vorher lief Clip 0 vorwaerts weiter (slot
+     * 10..17 = zweiter Hub). Hier: Spieler nach dem rueckwaerts gehaltenen Clip 0 (Plc_flg 0x80), dann Plc_dest-Wirkung
+     * (op_plc_dest-Spielerpfad: state 4, walk_mode, +0x1c4 := 0, walk_active, walk_fsm 0) und EIN Walker-Tick. */
+    static const int modi[3] = { 0x09, 0x04, 0x05 };
+    for (int i = 0; i < 3; i++) {
+        frisch();
+        pl->state = 4; pl->sub_state_2 = 0;
+        re15_actor_set_motion(pl, 0);
+        pl->anim_flags = 0x80; pl->anim_frame = 29; pl->anim_frac = 0;   /* Clip 0 rueckwaerts, Ende gehalten (F520) */
+        pl->walk_dest_x = (int16_t)(pl->x + 4000); pl->walk_dest_z = (int16_t)pl->z;   /* Ziel quer zur Blickrichtung */
+        pl->walk_mode = (uint8_t)modi[i]; pl->walk_flag_bit = 0x20; pl->anim_flags = 0;   /* +0x1c4 := 0 @0x80041c4c */
+        pl->walk_active = 1; pl->walk_fsm = 0;
+        re15_actor_step_walk(pl);
+        PRUEF(pl->motion == 105 && pl->anim_frame == 0 && pl->anim_frac == 7 && pl->walk_fsm >= 1 && pl->walk_active,
+              "Plc_dest Modus 0x%02X, erster Walker-Tick: Motion %d (soll 105 = PLW Clip 5, +0x94 := 5), Bild %d (+0x95 := 0), "
+              "Blende %d (+0x8f := 7), walk_fsm %d (Align) — kein Clip 0 vorwaerts mehr",
+              modi[i], (int)pl->motion, (int)pl->anim_frame, (int)pl->anim_frac, (int)pl->walk_fsm);
+    }
+    /* Gegenprobe: ein Nicht-Spieler-Aktor bleibt unveraendert (NPC-Clips kommen aus der Tabelle @0x80076ca0, nicht
+     * aus @0x80073e30) */
+    {
+        re15_actor_t *n = &g_actors[3];
+        memset(n, 0, sizeof *n);
+        n->active = 1; n->type = 0x47; n->motion = 2; n->walk_mode = 0x09; n->walk_active = 1; n->walk_fsm = 0;
+        n->walk_dest_x = 4000; n->walk_dest_z = 0; n->rot_y = 2048;
+        PRUEF(re15_elza_r39_plc_walk_init(n) == 0 && n->motion == 2, "Nicht-Spieler: Sub-Init greift nicht (Motion bleibt %d)", (int)n->motion);
+    }
 
     printf("hand: %d Pruefungen, %d FAIL\n", g_checks, g_fail);
     return g_fail ? 1 : 0;

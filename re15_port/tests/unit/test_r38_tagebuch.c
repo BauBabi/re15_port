@@ -409,8 +409,12 @@ static void teil_ablauf(void)
     PRUEF(!re15_menu_gameplay_frozen() && !re15_menu_map_hint_active(), "Kette zu Ende, Schirm zu (%d Bilder)", n);
     /* Runde 39 Spur H: ERST JETZT laeuft sub07 hinter dem Message_on weiter (Evt_next, Aufrichten @0x00E6A, Sleep 30,
      * Plc_ret @0x00E76, Aot_reset @0x00E78, Evt_end @0x00E82). */
-    PRUEF(faden_zwischen(0x00E64, 0x00E82) >= 0 && !re15_tagebuch_r38_hinweis_faellig(),
-          "nach dem Hinweis: sub07 steht noch im Ereignis (@0x%05lX), Kette abgehakt", faden_zwischen(0x00E64, 0x00E82));
+    PRUEF(faden_zwischen(0x00E64, 0x00E82) == 0x00E64 && re15_tagebuch_r38_hinweis_faellig(),
+          "nach dem Hinweis: sub07 parkt noch auf dem Message_on (@0x%05lX), die Freigabe faellt in den naechsten VM-Schritt",
+          faden_zwischen(0x00E64, 0x00E82));
+    bild(0, 0);   /* der Haken liefert jetzt 1: PC hinter das Message_on, Evt_next/Plc_motion/Plc_flg/Sleep im selben Schritt */
+    PRUEF(faden_zwischen(0x00E64, 0x00E82) > 0x00E64 && !re15_tagebuch_r38_hinweis_faellig(),
+          "ein Bild spaeter: sub07 hinter dem Message_on (@0x%05lX), Kette abgehakt", faden_zwischen(0x00E64, 0x00E82));
     for (int f = 0; f < 200 && faden_zwischen(0x00E64, 0x00E82) >= 0; f++) bild(0, 0);
     PRUEF(faden_zwischen(0x00E64, 0x00E82) < 0, "sub07 bis zum Evt_end @0x00E82 durchgelaufen");
     PRUEF(g_aot.slots[5].active && g_aot.slots[5].event_id == 7, "Slot 5 wieder scharf -> Ereignis 7 (@0x00E78)");

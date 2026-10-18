@@ -10,8 +10,12 @@
  * (ROOM1091 obj 2 @0x02202 Band 2 auf Spielerband 1; ROOM1010 @0x00930 Band 1 auf Spielerband 0).
  *
  *   zensus    alle Obj_model_set-Records (Opcode 0x2D) der 240 RDTs: Band pc[4] gegen Spielerband(y) = -(y/0x708)
- *             (re15_collision_band_from_y); Null-Box-Records (h = 0) liegen NIE auf dem Spielerband ihrer Hoehe
- *             (Verteilung wird gedruckt); Riegel fuer die Regel re15_elza_r39_prop_band_ueber_boden
+ *             (re15_collision_band_from_y). GEMESSEN (nicht wie zuerst angenommen "nie auf dem Spielerband"): von 558
+ *             Null-Box-Records liegen 291 auf Spielerband + 1 (haeufigster Wert), 51 AUF dem Spielerband (z.B.
+ *             ROOM1040 obj 1-3, ROOM1190 obj 7-11, ROOM4050 obj 4/5 — Eigenheit des Originals, climb_common.c bildet
+ *             sie unveraendert ab). Riegel: die drei Vorlagen-Records ROOM1091 obj 2 @0x02202 / ROOM1090 @0x0237E
+ *             (Null-Box am selben Wagen) und ROOM1010 @0x00930 (Item-Prop, Vorlage des Port-Loeschers) tragen
+ *             Spielerband + 1, und +1 ist der haeufigste Abstand — die Form der Regel re15_elza_r39_prop_band_ueber_boden
  *   loescher  echter Raumstart mit allen Port-Installern (scd_room_reenter), Elza ROOM1091 und Leon ROOM1090 (Feuer aus,
  *             Loescher abgelegt): der Loescher obj 5 steht auf Band 2 (Spielerband 1 + 1); die Aktions-Sonde startet
  *             an der gemessenen Stelle (1880,-1300) in KEINER der vier Blickrichtungen den Aufstieg; die Original-Kiste
@@ -114,6 +118,7 @@ static int teil_zensus(void)
     int null_n = 0, box_n = 0;
     int null_hist[16] = {0}, box_hist[16] = {0};      /* Index = diff + 8, diff = Band - Spielerband(y) */
     int null_auf_spielerband = 0;
+    int v1091 = -99, v1090 = -99, v1010 = -99;   /* Band - Spielerband der drei Vorlagen-Records */
     for (int stage = 1; stage <= 6; stage++) {
         char dir[512];
         snprintf(dir, sizeof dir, "%s/STAGE%d", RE15_ASSET_PSX_DIR, stage);
@@ -137,6 +142,11 @@ static int teil_zensus(void)
                 int diff = q->band - pband;
                 if (diff < -8) diff = -8; if (diff > 7) diff = 7;
                 const int nullbox = (q->hx == 0 && q->hy == 0 && q->hz == 0);
+                /* Vorlagen (RDT-Bytes selbst gelesen): ROOM1091/1090 obj 2 am Wagen y -2653 (Spielerband 1) Band 2;
+                 * ROOM1010 obj 0 First Aid Spray y -1600 (Spielerband 0) Band 1 — jeweils Spielerband(y) + 1 */
+                if (strcmp(nm, "ROOM1091.RDT") == 0 && q->off == 0x02202 && nullbox && q->y == -2653) v1091 = diff;
+                if (strcmp(nm, "ROOM1090.RDT") == 0 && q->off == 0x0237E && nullbox && q->y == -2653) v1090 = diff;
+                if (strcmp(nm, "ROOM1010.RDT") == 0 && q->off == 0x00930 && nullbox && q->y == -1600) v1010 = diff;
                 if (nullbox) {
                     null_n++; null_hist[diff + 8]++;
                     if (diff == 0) {
@@ -161,9 +171,18 @@ static int teil_zensus(void)
     for (int i = 0; i < 16; i++) if (box_hist[i]) printf("  %+d:%d", i - 8, box_hist[i]);
     printf("\n");
     PRUEF(raeume == 240 && recs > 100, "%d RDT gelesen (soll 240), %d Records", raeume, recs);
-    PRUEF(null_n > 0 && null_auf_spielerband == 0,
-          "Null-Box-Records des Originals liegen NIE auf dem Spielerband ihrer Hoehe (%d Records, %d auf dem Spielerband)",
-          null_n, null_auf_spielerband);
+    printf("  %d Null-Box-Records AUF dem Spielerband (Eigenheit des Originals: FUN_8002da4c @0x8002da8c-a0 traefe sie "
+           "schraeg; der Port bildet Original-Records unveraendert ab)\n", null_auf_spielerband);
+    PRUEF(v1091 == 1 && v1090 == 1 && v1010 == 1,
+          "Vorlagen: ROOM1091 obj 2 @0x02202 (%+d), ROOM1090 @0x0237E (%+d), ROOM1010 @0x00930 (%+d) = Spielerband + 1",
+          v1091, v1090, v1010);
+    {
+        int mx = 0;
+        for (int i = 0; i < 16; i++) if (i != 9 && null_hist[i] > mx) mx = null_hist[i];
+        PRUEF(null_n > 0 && null_hist[9] > mx && null_hist[9] > null_hist[8],
+              "Spielerband + 1 ist der haeufigste Abstand der Null-Box-Records (%d von %d; auf dem Spielerband %d)",
+              null_hist[9], null_n, null_hist[8]);
+    }
     PRUEF(re15_elza_r39_prop_band_ueber_boden(-1800) == 2 && re15_elza_r39_prop_band_ueber_boden(0) == 1 &&
           re15_elza_r39_prop_band_ueber_boden(-2122) == 2,
           "Regel: Band(y=-1800) = 2 (ROOM1091 obj 2 @0x02202), Band(y=0) = 1 (ROOM1010 @0x00930), Band(y=-2122) = 2");
@@ -191,8 +210,12 @@ static void raum_start(unsigned room, int elza)
 {
     re15_actor_init();
     re15_aot_init();
-    scd_vm_init();
+    scd_vm_init();            /* memset(&g_scd) — wischt auch die Bankbits, daher die Flags ERST jetzt */
     re15_climb_reset();
+    if (!elza) {
+        /* Leon ROOM1090: Feuer aus (3,0x81), Loescher genommen (9,0x86) + benutzt (3,0x85), nicht im Inventar -> liegt */
+        re15_game_flag_set(9, 0x86, 1); re15_game_flag_set(3, 0x85, 1); re15_game_flag_set(3, 0x81, 1);
+    }
     g_gameflow.character = elza ? 4 : 0;
     g_current_room_id = room;
     g_room_change.pending = 0;
@@ -269,8 +292,7 @@ static int teil_loescher(void)
 {
     /* Elza ROOM1091: Loescher liegt immer (Runde 37 I 3.4), Untersuchen Slot 3 */
     loescher_raum(1, 0x1091, 1, 3);
-    /* Leon ROOM1090: Feuer aus (3,0x81), Loescher genommen (9,0x86) + benutzt (3,0x85), nicht im Inventar -> liegt, Slot 6 */
-    re15_game_flag_set(9, 0x86, 1); re15_game_flag_set(3, 0x85, 1); re15_game_flag_set(3, 0x81, 1);
+    /* Leon ROOM1090 (Flags in raum_start): Loescher liegt, Untersuchen Slot 6 */
     loescher_raum(1, 0x1090, 0, 6);
     return g_fail ? 1 : 0;
 }

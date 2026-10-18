@@ -15,7 +15,14 @@ Baum `.claude/worktrees/r39_elza`, Zweig `r39/elza`, Basis c71fa144 (master nach
 - Dossier angelegt, Pflichtlektuere AUFTRAG/VERTRAG gelesen, Vorrunden E_elzaintro / G_tagebuch (r38), I_feuerloescher
   (r37), A_klettern (r36) gelesen.
 - Bau des Baums (configure + build) OK; exe 10:27.
-- Messung vorher + RE-Belege aller drei Punkte (s. Abschnitte); Umsetzung folgt.
+- Messung vorher + RE-Belege aller drei Punkte (s. Abschnitte); Umsetzung 08f3094d (vor Bau/Messung).
+- FORTSETZUNG (zweite Sitzung, ab 11:55): configure + build (neue Datei elza_r39.c) OK. Erster Testlauf deckte auf:
+  (a) der Zensus-Riegel "Null-Box nie auf dem Spielerband" ist FALSCH (51 von 558 Records liegen auf dem Spielerband) —
+  Riegel und Belegtext berichtigt, die Regel bleibt PORT-WAHL in der Form der drei Vorlagen-Records; (b) die
+  Vorlagen-Hoehen waren falsch zitiert ("Bodenhoehe -1800/0" — die Records stehen bei y -2653 bzw. -1600, Band jeweils
+  Spielerband(y) + 1); (c) NACH dem Latch-Fix hebt Elza die Hand in Cut 6 ERNEUT (Clip 0 vorwaerts waehrend der
+  Plc_dest-Align-Phase) -> Punkt 1b: Sub-Init-Clip der Spieler-Walk-Subs (s. Punkt 1). Alles gemessen, umgesetzt,
+  Riegel gruen (Abschnitt Tests).
 
 ## Punkt 1 — ROOM1031 erste Szene: Hand nur einmal heben
 ### Messung vorher
@@ -86,9 +93,63 @@ F452 Latch 2 mit 200. Clip 11 wird nie posiert.
 * ANIM_TRACE-Spalten (anim_select_common.c:135): Bild, Slot, Typ, Motion, Clip, fc, cur, Slot_res, Len, Loco, Reverse.
 
 ### Umsetzung
-(folgt)
+**1a — Eintritts-Latch vs. Kommandowort 4** (`engine/src/player_common.c` Haken vor der Latch, 1 Zeile;
+`engine/src/elza_r39.c` `re15_elza_r39_latch_hinfaellig`, `include/re15_elza_r39.h`): steht das Kommandowort +0x4 des
+Spielers auf 4 (`RE15_R39H_KOMMANDOWORT_PLC`, Plc_motion `sb v1(=4),4(v0)` @0x80041bb0), ist die ausstehende zweistufige
+Latch (cmd 0 @0x80031c10-c24 / Fall 0 @0x80032074-b4) hinfaellig — der Dispatcher FUN_80031c44 (`lbu v1,-13736(v1)`
+@0x80031c8c, Tabelle @0x80073f90, `jalr v0` @0x80031cb4) laeuft ab dann nur noch [4] = 0x80030660. Kein Konstanten-Wert
+ausser dem Kommandowort 4.
+
+**1b — Sub-Init-Clip der Spieler-Walk-Subs (NEU, gemessen erst nach 1a)**: Nach dem Senken (Plc_motion(0,0)+0x80
+@0x029BE/@0x029C2) folgt `Cut_chg(6)` @0x029CA + `Plc_dest(0,9,0x20,-9097,-21855)` @0x029CC (`40 00 09 20 77 dc a1 aa`).
+Messung p1n (nur 1a, ANIM_TRACE Spieler): F491..F520 Clip 0 rueckwaerts (slot 19 -> 0, dann 0 gehalten), **F521..F528
+Clip 0 VORWAERTS cur 30..37 = slot 10..17 (der Arm steigt erneut!)**, erst F529 Clip 5 (105, Laufen). Ursache: der
+Plc_dest-Handler nullt +0x1c4 (`sh zero,452(a1)` @0x80041c4c, Port op_plc_dest ebenso), der Walker des Ports liess den
+Spieler in der Align-Phase (walk_fsm 1) "stehen" und setzte den Lauf-Clip erst beim Uebergang in Phase 2 — der globale
+Advancer lief den alten Clip 0 derweil vorwaerts (Modulo 20 -> slot 10..17). Im Original setzen die Spieler-Subs der
+Tabelle @0x80073e30 ihren Clip in **Phase 0** (selbst disassembliert, `re15_disasm.py dis`):
+* TURN Sub 9 @0x80031360: `sb v0(=1),0(a0)` Phase := 1 @0x80031398, **`sb v0(=5),-13592(at)` +0x94 := 5 @0x800313a4**,
+  `sb zero,-13591(at)` +0x95 := 0 @0x800313b0, `sb v0(=7),-13597(at)` +0x8f := 7 @0x800313b8; Phase 1: `jal 0x8001ab9c`
+  arc_test Kegel 0x60 @0x800313d0/d4; Ankunft -> Sub := 6 @0x800313ec, Phase := 0 @0x800313f4, Flag `jal 0x8004ef90`
+  @0x800313f8; sonst Slew `jal 0x8001aac4` 0x60 @0x8003143c/40; **`jal 0x8001f314` anim_set(PLW-Paar 0x800acbc4/c8, 0,
+  0x200) @0x80031494 in JEDEM Bild** — der Lauf-Clip wird waehrend der Drehung posiert und advanced.
+* WALK Sub 4 @0x80030af0: +0x8c := 0x4b @0x80030b44, Phase := 1 @0x80030b4c, **+0x94 := 5 @0x80030b58**, +0x95 := 0
+  @0x80030b64, +0x8f := 7 @0x80030b6c; Phase 1 (Align): arc_test 0x15e @0x80030b80/84, Phase := 2 @0x80030b94, Slew
+  0x60 @0x80030ba4, **anim_set @0x80030bf8** jedes Bild; Phase 2: Slew 0x30 @0x80030c58, Vortrieb `jal 0x800245d8`
+  @0x80030c5c.
+* RUN Sub 5 @0x80030d28: +0x8c := 0xc8 @0x80030d7c, **+0x94 := 5 @0x80030d90**, +0x95 := 0 @0x80030d9c, +0x8f := 7
+  @0x80030da4; Phase 2: +0x94 := 0 @0x80030dd8, +0x95 := 0 @0x80030de0.
++0x94 = 5 der PLW-Bank = Port-Sentinel 105 (`RE15_MOTION_WALK`, `re15_to_re2_plc_dest_clip(0x04)` mit RBJ-Overlay —
+dieselbe Aufloesung, die der Walker in Phase 2 benutzt). Umsetzung: `re15_elza_r39_plc_walk_init` (elza_r39.c) — nur
+Spieler, nur Modus 4/5/9: `re15_actor_set_motion(105)`, `anim_frame = 0`, `anim_frac = 7`, `anim_freeze = 0`; Haken in
+`actor_locomotion.c re15_actor_step_walk` am Walker-Init (walk_fsm 0, nicht-rueckwaerts-Zweig, 1 Aufruf). Der
+Phase-2-Pfad bleibt (Modus 4/9 derselbe Clip = kein Neustart, wie @0x80030b94 nur die Phase; RUN 5 -> 0 @0x80030dd8).
+Nicht-Spieler (nur Elliot 0x47 erreicht diesen Walker) unveraendert. Der alte Kommentar "the actor STOOD through the
+align phase" ist damit fuer den Spieler ueberholt und im Code so vermerkt.
+
 ### Messung nachher
-(folgt)
+Lauf p1n2 (Neues Spiel Elza, `e_lauf.sh`, ANIM_TRACE + STATE_LOG + Bildserie 440-540/2, exe mit 1a + 1b;
+Scratchpad p1n2/, Montagen `montage_p1n2_cut4.png` (Ausschnitt Elza, 2x) und `montage_p1n2_cut6.png`):
+
+| Bild | Pose-Strom Spieler (ANIM_TRACE: mo clip fc cur slot rev) | Bild |
+|---|---|---|
+| F445..F450 | mo=210 clip 1 cur 0 (Settle; F446-450 pf=FF000007 pausiert) | Arm unten |
+| **F451** | **mo=11 clip 11 fc 2 cur 0 slot 0**, pst=4 (Plc_motion(0,11) @0x029A4 im selben Bild) | Blende beginnt |
+| F452..F490 | mo=11 cur 1..39 **slot 1 konstant** (Haltepose, Schleife 0x04) | **Arm oben, statisch** (F454-F490) |
+| F491 | mo=0 clip 0 fc 20 cur 0 **slot 19 rev=1** (Plc_motion(0,0)+0x80 @0x029BE/@0x029C2) | Senken beginnt |
+| F492..F510 | slot 18 .. 0 rueckwaerts | Arm sinkt |
+| F511..F520 | mo=0 slot 0 rev=1 gehalten | Arm unten |
+| **F521** | **mo=105 clip 5 fc 30 cur 0** (Cut_chg(6) @0x029CA + Plc_dest(0,9) @0x029CC, TURN-Sub-Init) | Cut 6: Drehung mit Lauf-Clip |
+| F522..F530 | mo=105 cur 1..9 | laeuft an |
+| F531 | mo=1 clip 1 cur 1 (1 Bild Sub 6 nach der TURN-Ankunft, s. OFFEN) | |
+| F532.. | mo=105 cur 0.. (Plc_dest(0,4) @0x029D6, WALK) | Elza geht zum Gitter |
+
+STATE_LOG (Spieler): F445 pst=1 mo=210, F446-F450 pf=FF000007, **F451-F490 pst=4 mo=11**, F491-F520 pst=4 mo=0,
+ab F521 mo=105. Bilder: `montage_p1n2_cut4.png` F450 Arm unten -> F452-F458 Arm steigt (7-Bild-Blende) -> F458..F490
+oben -> F492..F508 sinkt -> F512..F520 unten; `montage_p1n2_cut6.png` F522..F540 Drehung + Gang, **kein zweiter Hub**.
+Damit: **ein Heben (F451), ein Senken (F491), kein weiteres** = Nutzer-Wortlaut zum Original. Vorher (v0.8.26, Messung
+vorher + p1n): Hub 1 erst bei F491 (Blende auf slot 19), Fall F492-F510, **Hub 2 F521-F528 (Clip 0 vorwaerts slot
+10..17)** — genau "hebt 2x, laesst einmal fallen".
 
 ## Punkt 2 — Nach Roys Tagebuch sofort die Karte mit Markern
 ### Messung vorher
@@ -131,9 +192,44 @@ der Rueckgabe des Spiels.
   aus dem noch dunklen Bild — gemessen in "Messung nachher" (Helligkeit je Bild).
 
 ### Umsetzung
-(folgt)
+`engine/src/tagebuch_r38.c` (Runde-38-Modul, Zustandsautomat erweitert: FREI -> LESER -> **HINWEIS** -> FREI, bzw. ZU):
+`leser_zu_pruefen()` laeuft im `re15_tagebuch_r38_tick` (game_step_common.c VOR `re15_map_hint_pending`) und im
+Message_on-Haken; sobald der Dokument-Schirm samt Rueckblende durch ist (`!re15_menu_doc_active() &&
+!re15_menu_gameplay_frozen()`) und das Tagebuch in diesem Lauf abgelegt wurde (Bit (9,68) neu), wird die Kartenkette
+SOFORT angefordert (`re15_map_hint_request(k)`, k = Eintrag ROOM10F1 -> Folge ROOM1211, Runde 38 G) und der Faden bleibt
+auf dem Message_on @0x00E64 geparkt (Haken liefert 2), bis `re15_map_hint_pending() < 0 && !re15_menu_map_hint_active()
+&& !re15_menu_gameplay_frozen()` — erst dann Rueckgabe 1 (PC hinter das Message_on: Evt_next @0x00E68, Plc_motion(1,11)
++0x80 @0x00E6A/@0x00E6E = Elza richtet sich auf, Sleep 30, Plc_ret @0x00E76, Aot_reset @0x00E78, Evt_end @0x00E82).
+Die alte Evt_end-Kette (`s_kette`/`faden_im_ereignis`) ist entfernt; `re15_tagebuch_r38_hinweis_faellig()` = Zustand
+HINWEIS. Keine neue Konstante. Form = RE2-Opcode 0x84 (Anforderung @0x800591e8, Status-Task-Start im naechsten Bild
+@0x80025BA8-E0), Zeitpunkt = NUTZER-VORGABE. Riegel der Runde 38 angepasst (`tests/unit/test_r38_tagebuch.c` ablauf,
+`tests/integration/test_r38_tagebuch.cmake` lesen: Kette sofort nach dem Leser, Faden erst nach dem Hinweis).
+
 ### Messung nachher
-(folgt)
+Lauf p2n (Spielstand vor Roy wie oben, `RE15_PRESS=square@60,right@200..350,square@380,square@480`, STATE_LOG,
+FADE_LOG, Bildserie 470-530/1; Scratchpad p2n/, `montage_p2.png`) und `integration_r39_elza_karte` (debug.log):
+
+| Bild | Ereignis |
+|---|---|
+| F91 | Message_on @0x0E64 geparkt, `[tagebuch] ROOM1011 msg 18 -> Roys Diary (... erstes Mal: ablegen)` |
+| F480..F485 | Abblende des Dokument-Schirms (Helligkeit 11.8 -> 0.3), F486..F489 schwarz |
+| F490..F494 | Rueckblende des Statusschirms (-0x1800/7 @0x8001cc00-18): 1.4 / 5.7 / 24.6 / 37.4 / 37.4 = Raum sichtbar |
+| **F494** | `[scd] F494 slot=10 @0x0E64 op=0x2B` (Faden parkt) + `[tagebuch] Leser zu: Bit (9,68)=1, Kartenkette sofort (Runde 39 Spur H): Eintrag 3 (ROOM10F1 Blatt 3 Rechteck 9) -> Folge 4 (ROOM1211 Blatt 1 Rechteck 3)` — Anforderung im selben game_step angenommen |
+| F495..F497 | Oeffnen-Blende des Hinweises (Stufe 1): 8.7 / 2.3 / 0.2; F498..F505 schwarz |
+| **F504** | `[hint] F504 begin (Zaehler 10, Richtung 1)`; F506..F510 Karte blendet ein (0.6 -> 47.4) |
+| F622 | `[hint] F622 Folge-Hinweis 3 -> 4 (Zeit)` (Prison) |
+| F740 | `[hint] F740 schliessen` |
+| **F754** | `[scd] F754 slot=10 @0x0E64 op=0x2B` + `[tagebuch] Hinweis zu: Faden laeuft hinter dem Message_on weiter` |
+| F755 | `@0x0E6A op=0x3F` Plc_motion(1,11)+0x80 — ERST JETZT richtet Elza sich auf; F785 `@0x0E76 op=0x42` Plc_ret, `@0x0E82 op=0x01` Evt_end |
+
+Spielerzustand (STATE_LOG) F487..F754 unveraendert (pst=1 mo=210, kein Spieler-Tick: F494 nimmt die Anforderung VOR dem
+Spieler-Tick an, ab F495 `re15_menu_gameplay_frozen()`), d.h. **zwischen Tagebuch und Karte gibt es kein Bild mit
+Steuerung** und keine Szene (vorher: 41 Bilder Raum mit Aufrichten + Plc_ret). Sichtbar bleibt die 5-Bild-Rueckblende
+des Dokument-Schirms (F490-F494, Raum 2 Bilder voll hell) vor der Oeffnen-Blende des Hinweises — das ist die Form des
+RE2-Status-Tasks (er startet im naechsten Bild aus dem sichtbaren Spielbild @0x80025BA8-E0; ein Verketten zweier
+Statusschirme ohne Rueckblende kennt RE2 nicht). Die Erwartung der ersten Sitzung ("Oeffnen-Blende startet aus dem
+noch dunklen Bild") traf NICHT zu: `re15_menu_gameplay_frozen()` bleibt waehrend der Rueckblende wahr, die Anforderung
+faellt erst in das Bild nach deren Ende.
 
 ## Punkt 3 — ROOM1091: Elza klettert nicht aufs Autowrack
 ### Messung vorher
@@ -188,17 +284,90 @@ kind=0x81 obj=3` — derselbe Defekt, nur bei Leon erst nach dem Loeschen.
   Die kletterbare Kiste obj 0 (@0x021BE / @0x0216E) traegt Band 1 = Spielerband und Box h(900,900,900). ROOM1010 @0x00930
   (First Aid Spray, Vorlage des Port-Loeschers): Band 1 bei Bodenhoehe 0 (= Spielerband 0) — also ebenfalls Spielerband + 1.
   Zensus ueber alle 240 RDTs: s. Umsetzung (probe_r39_elza_zensus).
+* BERICHTIGT (zweite Sitzung, RDT-Bytes selbst gelesen): die Vorlagen stehen NICHT auf Bodenhoehe. ROOM1091 @0x02202 =
+  ROOM1090 @0x0237E: `2d 02 00 00 02 00 08 00 10 00 6a 09 a3 f5 2e ff 40 00 40 07 00..00` -> obj 2, Typ 0, **Band 2**,
+  Flags 0x0008, Attribut 0x0010, Position (2410, **-2653**, -210) am Wagen, Box h(0,0,0); Spielerband(-2653) =
+  -(-2653/0x708) = 1 -> Band = Spielerband(y) + 1. ROOM1010 @0x00930: `2d 00 00 00 01 00 0a 00 00 00 c8 00 c0 f9 7c 15
+  00 00 0c 0c 00..00` -> obj 0, **Band 1**, Flags 0x000A, Position (200, **-1600**, 5500), h(0,0,0); Spielerband(-1600)
+  = 0 -> ebenfalls +1. Die Regel lautet also "Band = Spielerband der EIGENEN Hoehe + 1".
+* ZENSUS WIDERLEGT die erste Fassung "Null-Box-Records liegen NIE auf dem Spielerband" (unit_r39_elza_klettern_zensus,
+  alle 240 RDTs, 672 Obj_model_set-Records, 0 Walk-Abbrueche): 558 Null-Box-Records, Verteilung Band - Spielerband(y):
+  -8:6 -6:6 -4:8 -3:6 -2:46 -1:22 **+0:51** **+1:291** +2:74 +3:36 +4:6 +5:4 +7:2 (mit Box: -8:2 -1:12 +0:77 +1:19 +2:4).
+  51 Original-Records liegen AUF dem Spielerband (ROOM1040/1041 obj 1-3, ROOM1110/1111 obj 2, ROOM1190/1191 obj 7-11/15,
+  ROOM11A0/11A1 obj 1, ROOM1200/1201 obj 0/1, ROOM2060/2061 obj 0/1, ROOM3050/3051 obj 2, ROOM3071 obj 1, ROOM4040/4041
+  obj 3, ROOM4050/4051 obj 4/5, ROOM5030/5031 obj 6/8/9, ROOM5060/5061 obj 3/8) — fuer sie traefe FUN_8002da4c aus
+  schraeger Lage (Eigenheit des Originals, im Port unveraendert abgebildet, climb_common.c nicht angefasst). +1 ist mit
+  291/558 der haeufigste Abstand, und die drei Vorlagen (am selben Wagen bzw. die Item-Prop-Vorlage des Port-Loeschers)
+  tragen +1. Die Regel ist damit **PORT-WAHL in der Form der Vorlagen-Records**, kein "Original-Gesetz".
 
 ### Umsetzung
-(folgt)
+`engine/src/elza_r39.c` `re15_elza_r39_prop_band_ueber_boden(y) = re15_collision_band_from_y(y) + 1` (Spielerband =
+-(y/0x708), re15_collision.c:186); `engine/src/feuerloescher_r37.c` Installer: `props[i].band = ...(g->y)` statt fest
+`RE15_FL37_PROP_BAND = 1` (Makro entfernt, `include/re15_feuerloescher_r37.h`). Wirkung: ROOM1090/1091 (y -1800,
+Spielerband 1) Band 2; ROOM1030 (y -2122, Spielerband 1) Band 2 — der r37-Riegel `unit_r37_feuerloescher_raum` erwartete
+dort "Band 1" und wurde auf 2 gesetzt (Begruendung im Test). Das Band wird im Port nur von der Klettersonde
+(climb_common.c:103 @0x8002d370, :153/:201 Standobjekt +1), vom AOT-Objekt-Band-Vergleich (aot_common.c:525/1435/1761
+@0x8002bf38) und von Protokollen gelesen; die Untersuchen-/Aufnahme-Plaetze des Loeschers tragen ihr eigenes AOT-Band
+(`g->band`, unveraendert). Die Original-Kiste obj 0 (Box 900, Band 1) bleibt kletterbar.
+
 ### Messung nachher
-(folgt)
+* `integration_r39_elza_loescher` (Elza ROOM1091, Spielstand neben dem leeren Loescher, `RE15_INPUT_SCRIPT=W1,A0.3,W3`,
+  CLIMB_TRACE): rot 1024: `T91 room=1091 pm=0 pad=8000 pos=(1880,-1800,-1300) rot=1024 band=1 sub=0 kind=0x00 ph=0 obj=-1`
+  (vorher `sub=9 kind=0x81 obj=4`), 0 Zeilen `sub=[1-9]` in allen Viereck-Bildern; rot 3072 ebenso; rot 0: kein Aufstieg
+  und `[msgtext] room=1091 id=29` ("It's an empty fire extinguisher.") — Untersuchen-Platz unveraendert.
+  `[feuerloescher] ROOM1091: Loescher liegt leer am Boden obj 5 bei (2500,-1800,-1300) rot_y 3250, Zone Slot 3`.
+* `unit_r39_elza_klettern_loescher` (echter Raumstart mit allen Port-Installern): Elza ROOM1091 **Loescher Band 2**,
+  Null-Box h 0/0 Flags 0x000B, Sonde (1880,-1300) rot 0/1024/2048/3072 -> `sub=0 kind=0x00 obj=-1` (0/4), Kiste obj 0
+  (h 900, Band 1) -> `sub=9 kind=0x81 obj=0`, Slot 3 MESSAGE steht; Leon ROOM1090 (Feuer aus (3,0x81), (9,0x86),
+  (3,0x85)): dasselbe, Slot 6.
+* Leon ROOM1090 an der exe (Scratchpad p3n_leon/, Spielstand mit (9,0x86)/(3,0x85)/(3,0x81), Viereck rot 1024/3072/0):
+  `[p3n leon rot 1024] rc=0 resumed=1 loescher=1 pad8000=9 sub9=0 msg29=0`, `[p3n leon rot 3072] ... sub9=0 msg29=0`,
+  `[p3n leon rot 0] ... sub9=0 msg29=1`; CLIMB_TRACE rot 1024: `T91 room=1090 pm=0 pad=8000 pos=(1880,-1800,-1300)
+  rot=1024 band=1 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200` (vorher `sub=9 kind=0x81 obj=3`) — Leon klettert am
+  Loescher ebenfalls nicht mehr, Untersuchen (msg 29) bei rot 0 wie bisher.
 
 ## Tests
-(folgt)
+Neu (`tests/unit/probes/r39_elza.cmake`, GLOB; nur dort registriert):
+* `unit_r39_elza_hand` (`tests/unit/test_r39_elza_hand.c`): (a) Latch scharf + Plc_motion(0,11) vor dem ersten
+  Spieler-Tick -> zwei Ticks Motion 11/11, Latch 0 (vorher 210/200); (b) Szene ohne Plc_motion -> 210 dann 200 (Fall 0
+  @0x80032088); (c) Spiel (pm 0) -> Idle-Zweig; (d) Punkt 1b: Walker-Init Modus 9/4/5 -> Motion 105, Bild 0, Blende 7,
+  walk_fsm 1; Nicht-Spieler unberuehrt. 11 Pruefungen.
+* `unit_r39_elza_klettern_zensus` / `_loescher` (`tests/unit/test_r39_elza_klettern.c`): Zensus (Vorlagen +1, +1
+  haeufigster Abstand, Verteilung gedruckt) / Raumstart Elza 1091 + Leon 1090 (s. Messung nachher).
+* `integration_r39_elza_hand` / `_karte` / `_loescher` (`tests/integration/test_r39_elza.cmake`, exe-Kopie
+  `re15_pc_r39elza_<teil>`, Laufordner `r39_elza_wd_<teil>/<lauf>`): hand = STATE_LOG (Motion 11 ab Plc_motion, 0 danach)
+  + ANIM_TRACE (Clip 0 nur rueckwaerts bis Cut_chg(6), ab dort Clip 5, nie Clip 0 vorwaerts); karte = Hinweis-Beginn vor
+  Plc_motion/Plc_ret/Evt_end, Faden erst nach dem Hinweis, keine msg 18; loescher = rot 1024/3072/0 ohne sub=9, msg 29.
+Angepasst: `unit_r38_tagebuch_ablauf` + `integration_r38_tagebuch_lesen` (neuer Zeitpunkt der Kette),
+`unit_r37_feuerloescher_raum` (ROOM1030 Band 2).
+
+Gezielte Laeufe (KEINE volle Suite):
+* (A) `ctest --test-dir re15_port/build -R "^unit_(r39_elza|r38_tagebuch|r37_feuerloescher|r36_klettern|elliot|plc_|npc_back|1090|r35_cut|r36_szene|r37_roy|r38_heliport|r34n_d_adaruf|r33_tuer1120|r35_affen|r38_szenenschutz|r38_dining|tor_1170|r30_android|stair_1170|door_1170|irons_neck|sicherung_1150|room1150|map_1090|re2_room1090|re2z_bump)" --timeout 600 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 129** (Walker-Haken: alle Szenen-/Walker-Riegel der Vorrunden gruen).
+* (B) `ctest --test-dir re15_port/build -R "^integration_r39_elza_(hand|karte|loescher)$" --timeout 1200 --output-on-failure`
+  -> INTEG_ZEILE
+* (C) INTEG_R38_ZEILE
 
 ## OFFEN
-(folgt)
+* Punkt 1: ein Bild Sub 6 (mo=1 = Sub-6-Clip 1) zwischen TURN-Ankunft (F530) und WALK-Start (F532) — Reihenfolge
+  VM-Poll (Gosub 0x0e) vs. Spieler-Dispatcher im Port; vorher ebenso (p1n F531), kein Hub, Arm bleibt unten. Nicht Teil
+  des Wortlauts; eigener RE-Punkt (Dispatcher-Reihenfolge @0x80031c44 vs. SCD-Tick).
+* Punkt 1b aendert die Align-Phase JEDES Spieler-Plc_dest (Modus 4/5/9): der Lauf-Clip laeuft ab dem Init (byte-true zu
+  @0x80030b58/@0x80030d90/@0x800313a4), vorher stand der Spieler. 129 Szenen-/Walker-Riegel gruen; die Sichtpruefung
+  anderer Szenen (1150, 1170, 1090-Rettung) steht dem Integrationsbaum/Nutzer zu.
+* Punkt 2: die 5 Bilder Rueckblende des Dokument-Schirms vor der Hinweis-Blende (RE2-Form). Wer die Karte ohne jeden
+  Blick auf den Raum will, braeuchte einen Port-eigenen Mechanismus (Rueckblende ueberspringen) ohne RE2-Vorbild — nicht
+  umgesetzt. Ausserdem (r38-Stand, unveraendert): beim Schliessen des Dokument-Schirms steht der Spieler auf pst=1
+  mo=210 (Settle), obwohl der Faden noch unter Plc-Kontrolle parkt — Herkunft nicht untersucht.
+* Punkt 3: 51 Original-Null-Box-Records liegen auf dem Spielerband (Liste oben) — byte-true unveraendert; ob eine davon
+  im Spiel erreichbar und damit "kletterbar" ist, ist nicht gemessen (Runde 36 A: 3091 obj 1 statisch unerreichbar).
 
 ## Fuer den Nutzer
-(folgt)
+* Keine neuen Assets, keine Sprachdateien, keine Paket-Gate-Aenderung (nur Code + Tests).
+* Elza ROOM1031, erste Szene: Hand hebt sich einmal (Blende ueber 7 Bilder), bleibt 40 Bilder oben, senkt sich, dann
+  dreht sie sich mit Lauf-Clip zum Gitter — kein zweiter Hub.
+* Roys Tagebuch: nach dem Ablegen ("filed") kommt die Karte (Communications Room, dann Prison) direkt nach der
+  Abblende des Dokuments; Elza richtet sich erst danach auf. Dazwischen kurz (5 Bilder) der Raum in der Rueckblende.
+* Loescher in 1090/1091 (und 1030): kein Klettern mehr aus schraeger Lage; Untersuchen/Aufnehmen wie bisher.
+* Nebenwirkung Punkt 1b: in allen Szenen mit skriptgesteuertem Spieler-Lauf beginnt der Lauf-Clip schon waehrend der
+  Drehung (wie im Original), nicht erst nach ihr.
