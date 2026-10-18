@@ -17,3 +17,25 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r39_zustand COMMAND test_r39_zustand)
 set_tests_properties(unit_r39_zustand PROPERTIES TIMEOUT 300)
+
+#   integration_r39_zustand_kleidung   echte exe (Leon ROOM1130, Elza ROOM1131): Spielstand mit Wunden + Heilspray,
+#                                      CONTINUE, Spray ueber den Statusschirm -> Framedump 650 == Lauf ohne Wunden
+#                                      (Textur der Figur), Bild 150 != (Wunden vorher sichtbar).
+#   integration_r39_zustand_gift       echte exe: Messschiene RE15_R39_GIFT_AT/RE15_R39_LOG -> -1 HP alle 31 Bilder
+#                                      ab Bild 330, Untergrenze HP 1; Statusschirm-Framedump: EKG-Spur magenta.
+if(TARGET re15_pc)
+    add_test(NAME integration_r39_zustand_kleidung
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_TOOL=$<TARGET_FILE:test_r39_zustand>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_zustand_kleidung_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_zustand_kleidung.cmake)
+    set_tests_properties(integration_r39_zustand_kleidung PROPERTIES TIMEOUT 900)
+    add_test(NAME integration_r39_zustand_gift
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_TOOL=$<TARGET_FILE:test_r39_zustand>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_zustand_gift_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_zustand_gift.cmake)
+    set_tests_properties(integration_r39_zustand_gift PROPERTIES TIMEOUT 900)
+endif()

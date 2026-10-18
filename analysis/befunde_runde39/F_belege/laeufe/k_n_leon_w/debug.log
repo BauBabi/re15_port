@@ -4,11 +4,6 @@
 [render] SDL-Renderer software, Videotreiber windows, ABR2 (B-F) NICHT unterstuetzt -> Rueckfall BLEND
 [audio] RE15_NOAUDIO set -> audio disabled
 [pad] kein Controller gefunden (Tastatur bleibt aktiv)
-[pad] Diese Sitzung ist eine REMOTEDESKTOP-Sitzung. RDP leitet Gamepads nicht
-[pad] weiter — ein am Client (z.B. Steam Deck) steckendes Pad ist hier unsichtbar.
-[pad] Abhilfe: re15_port/tools/re15_pad_bridge_host.py auf DIESEM Rechner starten
-[pad] und re15_pad_bridge_client.py auf dem Client. Der Host legt dann ueber ViGEm
-[pad] ein virtuelles Pad an, das SDL wie ein echtes sieht.
 [fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
 [boot] room RDT: STAGE1/ROOM1130.RDT (198108 bytes)
 [rdt] nCut=10 nDoor=0 nItem=0 zones=26 main_scd=314B sub=3 props=1
@@ -49,8 +44,6 @@
 [light] cut 2 tint=(128,128,128)
 [pri] cut=2 pri_offset=0x54C masks=0 fg_atlas=0
 [tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
-[inv-r39-menu] F0 offen=0 sub=0 st=0 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
-[inv-r39] F0 R1130 eq=128 inv=22:1,00:0,00:0,00:0,00:0,00:0,00:0,00:0,00:0,00:0,00:0 box=-
 [walk] F0 cut=2 mo=200 af=0 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
 [wound] sync: applied=1 ok=1 gen=1 slotgen=9
@@ -89,30 +82,20 @@
 [framedump] 320x240 -> fd_000150.ppm
 [walk] F180 cut=2 mo=214 af=73 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [r38q] F200 Inventar-Ton Satz 6 (Oeffnen)
-[inv-r39-menu] F209 offen=1 sub=0 st=0 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
 [inv] Status-Bild ITEM/STPIC_00.TIM (Figur 0, Runde 39 Spur C)
 [inv] Sicherung im Statusschirm: Icon-Tile 0x40 weicht in 0 von 1200 Bytes ab, Bild-Block 0x40 in 0 von 12288 Bytes
 [walk] F210 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [walk] F240 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
-[inv-r39-menu] F260 offen=1 sub=3 st=0 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
-[inv-r39-menu] F268 offen=1 sub=3 st=1 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
 [walk] F270 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
-[inv-r39-menu] F300 offen=1 sub=3 st=3 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
 [walk] F300 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
-[inv-r39-menu] F308 offen=1 sub=3 st=4 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
 [walk] F330 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
-[inv-r39-menu] F340 offen=1 sub=3 st=5 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
 [walk] F360 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [r39-zustand] Heilung 0x22: HP 100 >= 100 voll -> Wund-Tabelle genullt (hatte Wunden), Spielerhaut neu
-[inv-r39-menu] F375 offen=1 sub=3 st=6 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
-[inv-r39] F375 R1130 eq=128 inv=00:0,00:0,00:0,00:0,00:0,00:0,00:0,00:0,00:0,00:0,00:0 box=-
 [r39-zustand] Spielerhaut PL00.TIM neu geladen (384x256) - Kleidung ganz
-[inv-r39-menu] F383 offen=1 sub=3 st=1 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
 [walk] F390 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [walk] F420 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [walk] F450 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [walk] F480 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
-[inv-r39-menu] F507 offen=0 sub=0 st=0 cur=0 cur2=0 cmd=0 msg=0/0 wegwerf=0 fsm=0 sel=0 bereit=0
 [walk] F510 cut=2 mo=210 af=0 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [walk] F540 cut=2 mo=200 af=26 frz=0 | pl pos=(-1024,0,-3336) rot=856
 [walk] F570 cut=2 mo=200 af=56 frz=0 | pl pos=(-1024,0,-3336) rot=856

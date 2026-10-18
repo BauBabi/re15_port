@@ -9,7 +9,7 @@ Baum `.claude/worktrees/r39_zustand`, Zweig `r39/zustand`, Basis c71fa144 (maste
    Resident Evil 2. Zumindest zeigt er es vom EKG her nicht so an. Da ist noch ein Fehler."
 
 ## Fortschritt (fortlaufend, neueste unten)
-- 12:xx Baum geprueft (status leer, HEAD c71fa144), AUFTRAG/VERTRAG gelesen, Vorrunde R_spinnen.md (Gift) und
+- 10:2x Baum geprueft (status leer, HEAD c71fa144), AUFTRAG/VERTRAG gelesen, Vorrunde R_spinnen.md (Gift) und
   Runde-36 B_kleidung.md (Kleidung) gelesen. Bau configure+build gruen (F_belege/build_0.log).
 - Messung vorher beider Punkte (Abschnitte 1.1 / 2.1): Kleidung bleibt nach Vollheilung blutig (787/603 Pixel),
   Gift = RE1.5-Takt -2/121, EKG-Spur gruen wie FINE.
@@ -68,8 +68,22 @@ von der unverwundeten Figur) — der Nutzerpunkt ist reproduziert. Bilder: F_bel
   der Generationspruefung. Log: `[r39-zustand] Heilung 0x22: HP 100 >= 100 voll -> Wund-Tabelle genullt (hatte
   Wunden), Spielerhaut neu` / `[r39-zustand] Spielerhaut PL00.TIM neu geladen (...) - Kleidung ganz`.
 - Beide Szenarien: die Mechanik ist figur-unabhaengig (Elza = Familie PL04, Panels aus LUT-Zeile 4 nur beim Blit).
-### 1.4 Messung nachher
-(folgt)
+### 1.4 Messung nachher (Stand 87180698 gebaut = build_4.log, Messkopie re15_pc_r39f_stand3.exe, F_belege/lauf3.sh)
+Derselbe Aufbau wie 1.1 (Spielstand HP 20 + Heilspray im Platz 0, CONTINUE, Spray ueber den echten Statusschirm
+START/SQUARE/SQUARE/SQUARE/START, Heilung in Bild 375, Framedumps 150/650), je Figur einmal mit allen 8 Panels Stufe 2
+(`_w`) und einmal ohne Wunden (`_o`), Mass = `test_r39_zustand bild` im Figurenkasten x177..247 / y81..205:
+
+| Lauf | Bild 150 (vor dem Spray) w vs o | Bild 650 (nach dem Spray) w vs o | debug.log |
+|---|---|---|---|
+| Leon k_n_leon_w / k_n_leon_o | 737 Pixel (Kasten 192,96-231,179), ausserhalb 0 | **0 Pixel** (vorher 787) | `Heilung 0x22: HP 100 >= 100 voll -> Wund-Tabelle genullt (hatte Wunden), Spielerhaut neu` / `Spielerhaut PL00.TIM neu geladen (384x256) - Kleidung ganz` |
+| Elza k_n_elza_w / k_n_elza_o | 462 Pixel (193,110-223,180), ausserhalb 0 | **0 Pixel** (vorher 603) | dito, `Spielerhaut PL04.TIM neu geladen` |
+
+Gegenprobe im Spray-Lauf selbst (Leon w, Bild 150 vs 650): 4526 Pixel verschieden (Pose + Kleidung) — die Kleidung
+nach dem Spray ist pixelgleich mit der nie verwundeten Figur. Vor der Heilung sind die Wunden weiterhin sichtbar
+(737/462 wie in 1.1), d.h. der Wund-Pfad der Runde 36 ist unveraendert. Bilder: F_belege/laeufe/k_n_*/fd_000{150,650}.ppm.
+Waffen-Composite: der Slot-0-Upload bumpt s_slot0_generation (render_pc.c:2562), der Composite-Block in main.c
+(`gen != s_wpn_gen`) baut die Waffe danach neu auf — in den Laeufen ohne Ausruestung (eq=128) nicht sichtbar, Mechanik
+im Code gelesen (render_pc.c:2549-2562, main.c Composite-Watch).
 
 ## 2. Punkt 2 — Gift zieht Energie wie RE2, EKG zeigt es
 ### 2.1 Messung vorher (gebauter Stand + Messschiene RE15_R39_GIFT_AT/RE15_R39_LOG, Messkopie re15_pc_r39f_stand1.exe)
@@ -158,8 +172,39 @@ Gift nie fertig gebaut. **Beta -> Retail: RE2 ist die Zielform** (Nutzer: "so wi
   (je Bild hp/status/Zaehler/cond). Messschiene RE15_SPINNEN_LOG (Spur R) traegt in `gz=` jetzt den RE2-Zaehler.
 - Tests der Runde 38 (unit_r38_spinnen B/B3/B4, pruef_log der integration_r38_spinnen_echtlauf) auf die RE2-Form
   umgestellt (Periode 31, -1 HP, Zaehler 30 am Treffer, kein Kommando-0-Reset).
-### 2.4 Messung nachher
-(folgt)
+### 2.4 Messung nachher (Stand 87180698 gebaut, Messkopie re15_pc_r39f_stand3.exe, F_belege/lauf3.sh)
+Aufbau wie 2.1 (Leon ROOM1130, Gift per Messhaken im Bild 300, RE15_R39_LOG=gift.log, START im Bild 1500, Framedumps
+1540..1600) + Lauf g_unter mit HP 5 (Untergrenze):
+
+| Lauf | `test_r39_zustand hp gift.log` |
+|---|---|
+| g_nachher (HP 100) | 38 Takte, Summe 38, **Abzug min 1 max 1**, erster Takt **F330**, **Abstaende 31: 37 von 37**, HP-Minimum 62 (F1477), Giftbilder 1200, letztes Bild F1499 |
+| g_unter (HP 5) | 4 Takte (F330 5->4, F361 4->3, F392 3->2, **F423 2->1**), HP-Minimum **1**, danach bis F900 kein Abzug (`slti v0,v0,0x2 / bne` @0x8003c174-78) |
+
+= die RE2-Form @0x8003c12c-180 (vorher: -2 alle 121, erster Takt sofort). Erster Takt im Bild 330 = 30 Bilder nach
+dem Messhaken, weil der Haken den Zaehler im selben Spielerschritt VOR der Abfrage setzt (30 -> 29 im Bild 300, 0 im
+Bild 330); am Spinnen-Treffer setzt Op 32 den Zaehler im ESP-Takt NACH dem Spielerschritt (@0x8001ce0c < @0x8001ce2c),
+dort also 31 Bilder (unit_r38_spinnen B3/B5 lassen 0 oder 1 Takt in 60 Bildern zu). Im Statusschirm (ab F1500) gibt es
+keine Logzeile und keinen Takt: re15_game_step kehrt bei re15_menu_gameplay_frozen vor dem Spieler-Dispatcher um
+(game_step_common.c:1343, unveraendertes Port-Verhalten; der RE2-Takt gehoert zum Spielertask FUN_8003bfac, der im
+RE2-Inventar nicht laeuft — nicht separat disassembliert, Spielwelt steht dort erkennbar).
+EKG (`test_r39_zustand ekg`, Kasten x26..103 / y118..140 = die Linien x = sweep-i-6 @0x80048c34-44, y = 82+39..55):
+
+| Bild | g_nachher | g_vorher / g_gesund (2.1) |
+|---|---|---|
+| 1540 | hell 23, **magenta 23**, gruen 0 | — |
+| 1560 | hell 33, **magenta 27**, gruen 0, sonst 6 (dunkle Schwanzlinien) | — |
+| 1580 | hell 19, **magenta 19**, gruen 0 | — |
+| 1600 | hell 5, **magenta 5**, gruen 0 | hell 1, gruen 1, magenta 0 (beide) |
+
+Zoom F_belege/laeufe/g_nachher/ekg_zoom_1560.png (magenta Spur + "Poison") gegen g_vorher/ekg_zoom_1560.png (gruen):
+die Spur traegt jetzt die RE2-POISON-Farbe @0x800ab178 (Kopf hell, Schwanz abgedunkelt 08 01 08 je Linie).
+**Wellenform (gemessen, F_belege/ekg_wellen.txt):** RE1.5 hat nur ZWEI Wellen — Tabelle 0 (FINE @0x80075774) und
+eine gemeinsame fuer alle anderen Zustaende (Tabellen 1..5 @0x8007592c/ae4/cec/ea4/0x8007605c sind bytegleich; Gift =
+Tabelle 3); RE2 hat je Zustand eine eigene (5 Zeiger @0x800ab180, POISON @0x800aad58: 80 Spalten {y,h} u8, mehrere
+unregelmaessige Zacken, Hub 4..36 bei Grundlinie 15). Die RE2-Welle passt nicht ohne erfundene Skalierung in den
+RE1.5-Rahmen (77 Spalten, Hub 39..55 bei Grundlinie 47, das Wort "Poison" liegt im Fenster): NICHT uebernommen,
+die Gift-Spur zeigt die RE1.5-Welle (Tabelle 3) in der RE2-Farbe. Siehe 5 (Entscheidungsfrage).
 
 ## 3. Tests
 (folgt)
@@ -169,3 +214,13 @@ Gift nie fertig gebaut. **Beta -> Retail: RE2 ist die Zielform** (Nutzer: "so wi
 
 ## 5. Fuer den Nutzer
 (folgt)
+
+## Fortsetzung (Sitzung 2, ab ~12:10 — der Vorgaenger wurde ~11:08 vom Sitzungslimit beendet)
+- 87180698 (vom Orchestrator gesicherte Reste) Zeile fuer Zeile gegen die Belege gelesen: Haken game_step_common.c
+  (Spieler-Takt hinter dem Pause-bltz, Abzug aus s_prev_hp), item_use_common.c (Heil-Applier -> re15_zustand_r39_heilung
+  im `if (h)`-Zweig), re15_inv_screen.c (EKG-Farbe hinter den drei Farbzeilen, i = 0 Kopf wie RE2 s1 = 31..0 nach
+  `addiu s1,s1,-0x1` @0x800755a4: Farbe = base - step * s1 @0x800755c0-5e0, Kopf = base), spinnen_r38.c (Zaehler 30
+  am Giftklumpen), main.c (pc_player_skin_reload: PL%02X aus s_player_model_idx/character wie pc_sync_player_model,
+  pc_read_pl_part -> Slot 0; Abholung vor der Generationspruefung). RE2-Tabellenbytes @0x800ab160-7d und die
+  Wellen-Zeiger @0x800ab180 / @0x80076214 aus den EXE-Dateien nachgelesen (F_belege/ekg_wellen.txt).
+- Bau: build_4.log (nichts neu zu bauen, exe = 11:06 = der Stand 87180698). Messung nachher 1.4 / 2.4.
