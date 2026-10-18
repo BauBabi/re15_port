@@ -415,3 +415,10 @@ Stand: alle drei "Auch sonst"-Abweichungen Johns (K2 INIT-Pose, K3 Saatbild, K4 
 statt Klettern) sind gegen die Original-Instruktionen belegt, umgesetzt, nachgemessen (Abschnitte 4, 6.5, 6.6) und mit
 Riegeln gesichert, die am alten Motor rot werden (Abschnitte 5, 6.7). Jede Zeile von Johns Pose-Strom in 1171 entspricht
 jetzt der Original-Herleitung (Tabelle 6.5).
+
+## 12. Nachbesserung 1 (nach Abnahme 0, 2026-10-18 ab ~19:40)
+
+Maengel aus `K_abnahme_0.md` §6: M1 Elzas Event-Reach-Saatbild (Spieler-Pfad, K3-Klasse), M2 Elzas Schub-Ruecklauf im
+Bit-Takt (Spieler-Pfad, K4-Klasse), M3 (a) Einzelbilder Clip 1 Bild 1 zwischen TURN-Ankunft und naechstem Gang,
+(b) Kraehen-Animationen der Szene gegen das Original. Baum sauber, HEAD a2d1e1dc, exe 18:59 = Code-Stand 6d027394.
+Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher (fortlaufend unten).
