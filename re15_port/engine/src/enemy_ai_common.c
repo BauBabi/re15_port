@@ -6609,8 +6609,13 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
         {   /* Runde 39 Spur K NB1: der Effekt liest die Teil-2-Matrix (+0x188 + 408), die die Zeichenschleife des VORIGEN
              * Bildes zusammengesetzt hat (jal 0x8001e8c8 @0x8001d108 nach der Logik @0x8001ce04-34) — also die Pose VOR dem
              * f314 dieses Takts (@0x8011536c). */
-            re15_actor_t vorbild = *e;
-            if (re15_crow_anim(e)) re15_r38i_orient_blut(&vorbild);   /* Runde 38 Spur I: Umlauf -> 0x80019700(0x1000, Teil 2) @0x80115394 */
+            const int16_t v_mo = e->motion; const int32_t v_af = e->anim_frame; const uint8_t v_fr = e->anim_frac;
+            if (re15_crow_anim(e)) {   /* Runde 38 Spur I: Umlauf -> 0x80019700(0x1000, Teil 2) @0x80115394 */
+                const int16_t n_mo = e->motion; const int32_t n_af = e->anim_frame; const uint8_t n_fr = e->anim_frac;
+                e->motion = v_mo; e->anim_frame = v_af; e->anim_frac = v_fr;   /* Pose des vorigen Bildes (s.o.) */
+                re15_r38i_orient_blut(e);
+                e->motion = n_mo; e->anim_frame = n_af; e->anim_frac = n_fr;
+            }
         }
         break;
 
