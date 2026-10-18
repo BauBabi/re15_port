@@ -67,3 +67,58 @@ Zeilenenden; `git diff` leer) — der Generator liest seine eigene Ausgabe nicht
 * **Lage bleibt:** das Werkzeug zentriert das MD1 auf die Mitte des sichtbaren Texel-Rechtecks (mx, mz) und skaliert um diese
   Mitte; `pos = round(mitte)` (Sehstrahl der Nutzer-Marke x Wand z -3400) haengt nicht von s ab -> Lage (1358,-2495,-3400),
   Drehung (3072,0,2048) bzw. (1024,0,0), flaches Licht 0x0010 und Aufhebe-Zone (798,-3600) 1000x1000 / Slot 8 unveraendert.
+
+## Zwischenstand 1: stetige Regel (Commit 84348b07) — gemessen, NICHT ausreichend
+
+Werkzeug mit nur der stetigen Regel (gezeichnete Huelle <= 0,5 x Spur L): Park s 2,4100 -> 1,1992 (Huelle 2,212 x 1,485 px
+= 49,6 % / 49,7 %), Prison s 2,5623 -> 1,2809 (2,878 x 1,429 px = 49,9 % / 49,8 %). Gebaut (exe 19:42, Messkopie
+`re15_pc_r39m_nach.exe`), gleiche Laeufe wie vorher:
+
+| Lauf | Pixel | Huelle (B x H) | Sum|dL| | gegen vorher |
+|---|---|---|---|---|
+| Leon Skala 1 | **0** | - | 0 | 7 Pixel -> unsichtbar |
+| Leon Skala 3 | 13 | x 413..416 y 241..246 (**4 x 6**) | 589 | 14 x 8 -> Breite 29 %, **Hoehe 75 %** |
+| Leon Skala 4 | 24 | x 550..555 y 322..328 (6 x 7) | 1163 | 18 x 11 -> 33 % / **64 %** |
+| Elza Skala 1 | **0** | - | 0 | 5 Pixel -> unsichtbar |
+| Elza Skala 3 | 16 | x 410..417 y 242..246 (8 x 5) | 748 | 16 x 10 -> 50 % / 50 % |
+| Elza Skala 4 | 28 | x 547..556 y 322..328 (10 x 7) | 1215 | 22 x 14 -> 45 % / 50 % |
+
+(CONTINUE-Weg Skala 3/4 bitgleich.) Der Parking Lot Key ist in der HOEHE nicht halbiert (6 statt <= 4 Zeilen bei 960x720)
+und als Form zerfallen (Bild `vergleich_vor_nach.png`: Kopf als senkrechter Strich, Klinge fast weg). Die stetige Huelle
+sagt das nicht voraus -> Mechanismus gesucht statt Zahl gedreht.
+
+### Mechanismus: ganzzahlige Bildschirm-Ecken (GTE RTPT -> GPU-Polygon), gemessen und disassembliert
+* **Gemessen (Port):** `RE15_TRILOG=tri.log@133,77,144,86` (Messschiene render_pc.c, protokolliert jedes eingereihte
+  texturierte Dreieck mit den Ecken, die `re15_render_textured_tri_lit` als `int` bekommt), Bild 150, Skala 3:
+  - Parking Lot Key Spur L: Ecken (135,79) (141,79) (141,82) (135,82), Mitte (138,81) = Viereck **6 x 3** (320er Raster)
+  - Parking Lot Key stetige Regel (s 1,1992): (137,80) (139,80) (139,82) (137,82), Mitte (138,81) = **2 x 2**
+  - Prison Key Spur L: (135,79) (141,79) (141,83) (135,83) = **6 x 4**; stetige Regel (s 1,2809): (136,80) (139,80)
+    (139,82) (136,82) = **3 x 2**
+  UV je Dreieck unveraendert (Park u 0..127 v 192..255, Prison u 0..127 v 128..191, Mitte (63,224) bzw. (63,160)).
+  Die Textur (128 x 64 Texel, Seitenverhaeltnis 2:1) wird also beim Parking Lot Key in ein 2 x 2-Viereck gezogen:
+  Breite 1/3, Hoehe 2/3 von Spur L -> 4 x 6 Pixel. Die ganze Fenster-Aufloesung (Skala 3) rastert nur die Flaechen
+  feiner; die ECKEN liegen auf dem 320 x 240-Raster (`render_pc.c` `t->v[k].position.x = (float)x0 + ab`).
+* **Original (RE1.5 PSX.EXE, selbst gelesen):** der Objekt-Zeichner FUN_80022f0c rechnet RTPT und schreibt die
+  GANZZAHLIGEN Bildschirm-Ecken SXY0..2 unmittelbar ins GPU-Polygon (POLY_GT3: xy0 +8, xy1 +0x14, xy2 +0x20):
+  ```
+  80022fb0: 4a280030   RTPT
+  80022fd4: addu t4,a1,zero          ; t4 = Polygon
+  80022fd8: e98c0008   swc2 SXY0, 8(t4)
+  80022fdc: e98d0014   swc2 SXY1, 0x14(t4)
+  80022fe0: e98e0020   swc2 SXY2, 0x20(t4)
+  80022fec: 4b400006   NCLIP
+  80023010: bltz v0,0x80023080       ; MAC0 < 0 -> verwerfen
+  80023020: 4b58002d   AVSZ3
+  ```
+  (Bytes `@0x80022fd8: 08 00 8c e9 14 00 8d e9 20 00 8e e9`, `@0x80022fec: 06 00 40 4b`.) RTPS/RTPT liefert SX2 =
+  MAC0/10000h als ganze Zahl (psx-spx `geometrytransformationenginegte.md:418`). Der Port bildet das in `objpoly_r38.c`
+  (`re15_objpoly_r38_rtps`, UNR-Division `re15_gte_divide`) nach — die TRILOG-Ecken oben SIND diese Werte.
+* **Folge:** Ein Objekt dieser Groesse (Spur L: 6 x 3 Pixel im 320er Bild) kann nur in ganzen Pixeln halbiert werden.
+  Die stetige Regel trifft beim Parking Lot Key das Viereck 2 x 2 — die Hoehe springt durch das Raster von 3 auf 2 statt
+  auf 1,5. Die Groesse, die der Spieler sieht, entscheidet das GTE-Viereck, nicht die stetige Huelle.
+* **Nachrechnung im Werkzeug (exakt):** dieselbe Ganzzahl-Kette in Python (Kamera-Satz R/T/H aus
+  `probe_r34n_e_dokumente` wie bisher; Prop-Drehung pc_prop_rot_q12 fuer Vielfache von 1024; Zusammensetzung
+  `re15_camera_compose_view_bone`; `sicht` + RTPS + UNR-Tabelle `unr[i] = max(0,(0x40000/(i+0x100)+1)/2-0x101)` wie
+  `re15_math.c`) trifft alle vier TRILOG-Vierecke Ecke fuer Ecke. Verlauf ueber s (Park, Mitte unveraendert):
+  2 x 1 fuer s 0,7206..0,8941, 2 x 2 fuer 0,8941..1,2147, 3 x 2 fuer 1,2147..1,2207, 4 x 2 ab 1,2207 — ein 3 x 1-Viereck
+  gibt es an dieser Stelle nicht. Prison: 2 x 2 fuer 0,8135..1,1223, **3 x 2 fuer 1,1223..1,3286**, 4 x 2 ab 1,3286.
