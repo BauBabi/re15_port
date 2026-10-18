@@ -66,9 +66,9 @@ Nachtrag 5, 2026-10-18 19:29, woertlich): "Und die Schlüssel im Communicationsr
 maximal halb so groß sein."
   ZAHL = NUTZER-VORGABE, KEIN RE-Wert: NUTZER_FAKTOR_M = 0,5 (linear) auf den Stand Spur L (RE2-Quartil-Groesse, oben).
   FORM: die GEZEICHNETE Huelle (Raster wie Port/Riegel) im Nutzer-Cut ist in Breite UND Hoehe hoechstens 0,5 x die
-  gezeichnete Huelle des Spur-L-Massstabs (Flaeche ~1/4); genommen wird der GROESSTE Massstab, der beide Grenzen
-  einhaelt (Bisektion) — "maximal halb so gross", nicht kleiner: der Schluessel bleibt an der Pinnwand sichtbar und
-  aufnehmbar. Die Bildgroesse ist linear im Massstab: s steckt nur in den Ecken des MD1 (@0x44), die GTE projiziert
+  gezeichnete Huelle des Spur-L-Massstabs (Flaeche ~1/4); gesucht wird das GROESSTE Bild, das die Grenzen einhaelt
+  (Bisektion; zweite Grenze und Wahl im Intervall unter GTE-RASTER) — "maximal halb so gross", nicht kleiner als noetig:
+  der Schluessel bleibt an der Pinnwand sichtbar und aufnehmbar. Die Bildgroesse ist linear im Massstab: s steckt nur in den Ecken des MD1 (@0x44), die GTE projiziert
   SX2 = OFX + IR1 * H/SZ3 (psx-spx geometrytransformationenginegte.md:418, RTPS), H = fov >> 7 (RE1.5 @0x80021e68
   `lhu a0,2(v0)` Kamera-Satz +2, @0x80021e70 `srl a0,a0,7` im Verzoegerungsplatz von `jal 0x80066c30` = SetGeomScreen
   `gte_ldH a0` @0x80066c30; ebenso @0x80046120..28), und die Pinnwand liegt im Nutzer-Cut fast auf einer Tiefe (vz
@@ -544,7 +544,7 @@ def schluessel_rechnen(name, raum, cut, mk):
     # s_oben = groesster Massstab, der beide haelt (Bisektion, 40 Schritte, zwischen 0,1 x s_l und (Faktor + 0,1) x s_l);
     # s_unten = kleinster Massstab mit DENSELBEN ganzzahligen Ecken wie bei s_oben (Bisektion); geliefert wird die Mitte
     # (dasselbe Bild wie s_oben, groesster Abstand zu den Sprungstellen des Rasters).
-    s_l, sk_l, hg_l, neu_l = s, sk, hg, neu
+    s_l, hg_l, neu_l = s, hg, neu
     pos_i = [int(v) for v in pos]
     rot_i = (RX, RY, RZ)
     grenze_b = NUTZER_FAKTOR_M * (hg_l[1] - hg_l[0])
@@ -599,7 +599,7 @@ def schluessel_rechnen(name, raum, cut, mk):
                 huelle=(min(sxs), max(sxs), min(sys_), max(sys_)), ecken_neu=neu, breite=breite, tiefe=tiefe,
                 det_oben=det_oben, huelle_gezeichnet=hg, schritte=schritte,
                 s38=s38, hg38=hg38, breite_nat=breite_nat, re2=re2, ziel=ziel, ziel_median=ziel_median,
-                s_l=s_l, hg_l=hg_l, md1_l=bytes(sk_l), grenze_b=grenze_b, grenze_h=grenze_h, mx=mx, mz=mz, V=V, faces=faces,
+                s_l=s_l, hg_l=hg_l, grenze_b=grenze_b, grenze_h=grenze_h, mx=mx, mz=mz,
                 ge_l=ge_l, gv_l=gv_l, ge=st["ge"], gv=st["gv"], s_oben=s_oben, s_unten=s_unten, bindet=bindet,
                 gv_drueber=st_drueber["gv"], hg_drueber=st_drueber["hg"])
 
@@ -722,7 +722,7 @@ def main():
               "#define RE15_R38K_%s_ROT_X    %d" % (N, k["rot"][0]),
               "#define RE15_R38K_%s_ROT_Y    %d" % (N, k["rot"][1]),
               "#define RE15_R38K_%s_ROT_Z    %d" % (N, k["rot"][2]),
-              "#define RE15_R38K_%s_S10000   %d   /* Massstab x 10000 (Sonden/Riegel); Runde 39 Spur M: 0,5 x Spur L */"
+              "#define RE15_R38K_%s_S10000   %d   /* Massstab x 10000 (Sonden/Riegel); Runde 39 Spur M: hoechstens 0,5 x Spur L */"
               % (N, int(round(k["s"] * 10000))),
               "/* Runde 39 Spur L (kleiner/subtiler): Bildlaenge der gezeichneten Huelle = oberes Quartil (75. Perzentil, linear"
               " interpoliert) der RE2-Bildlaenge",
@@ -737,8 +737,9 @@ def main():
               "#define RE15_R39L_%s_RE2_KAMERAS  %d" % (N, len(k["re2"])),
               "#define RE15_R39L_%s_LNAT100      %d   /* sichtbare Modell-Laenge bei s = 1, Einheiten x 100 */"
               % (N, int(round(k["breite_nat"] * 100))),
-              "/* Runde 39 Spur M (NUTZER-VORGABE Nachtrag 5 \"maximal halb so gross\", 0,5 x RE2-Quartil-Groesse = Spur L): groesster",
-              " * Massstab, bei dem die gezeichnete Huelle in Breite UND Hoehe hoechstens RE15_R39M_FAKTOR100/100 x die Spur-L-Huelle ist. */",
+              "/* Runde 39 Spur M (NUTZER-VORGABE Nachtrag 5 \"maximal halb so gross\", 0,5 x RE2-Quartil-Groesse = Spur L): das groesste",
+              " * Bild, dessen gezeichnete Huelle UND GTE-Viereck in Breite und Hoehe hoechstens RE15_R39M_FAKTOR100/100 x Spur L sind;",
+              " * geliefert die Mitte des Massstab-Intervalls gleicher ganzzahliger Ecken (S_UNTEN..S_OBEN). */",
               "#define RE15_R39M_%s_SL_10000          %d   /* Spur-L-Massstab x 10000 (Basis) */" % (N, int(round(k["s_l"] * 10000))),
               "#define RE15_R39M_%s_L_BREITE_PX1000   %d   /* gezeichnete Huelle Spur L, Breite, Pixel x 1000 */"
               % (N, int(round((k["hg_l"][1] - k["hg_l"][0]) * 1000))),
@@ -767,7 +768,7 @@ def main():
               % (N, int(round(k["mx"] * 100000))),
               "#define RE15_R39M_%s_MZ100000   %d   /* ... (z) */" % (N, int(round(k["mz"] * 100000))), ""]
         M1 += ["/* SCHLUESSEL %s: RE2-MD1 (md5 %s), nur die Ecken @0x44 skaliert (s = %.4f, Runde 39 Spur M: NUTZER-VORGABE"
-               " 0,5 x Spur L %.4f (RE2-Bildgroesse), Runde 38: %.4f) und verschoben. */" % (N, k["md1_md5"], k["s"], k["s_l"], k["s38"]),
+               " hoechstens 0,5 x Spur L, s_L %.4f = RE2-Bildgroesse; Runde 38: %.4f) und verschoben. */" % (N, k["md1_md5"], k["s"], k["s_l"], k["s38"]),
                blob("k_r38k_%s_md1" % k["name"], k["md1"]), ""]
     L += ["#define RE15_R39L_RE2_QUANTIL100  %d   /* Perzentil der RE2-Bildlaengen (oberes Quartil), x 100 */" % int(round(RE2_QUANTIL * 100)),
           "#define RE15_R39M_FAKTOR100       %d   /* NUTZER-VORGABE Nachtrag 5 (\"maximal halb so gross\"), 0,5 x Spur L, x 100 - kein RE-Wert */"

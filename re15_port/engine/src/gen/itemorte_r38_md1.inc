@@ -1,7 +1,7 @@
 /* AUTOMATISCH ERZEUGT von re15_port/tools/r38_itemorte/itemorte_export.py --schreiben - nicht von Hand.
  * Runde 38 Spur K: die zwei RE2-Schluessel-MD1 fuer die Pinnwand ROOM10F0/10F1 (Lage: itemorte_r38_lage.inc). */
 
-/* SCHLUESSEL PARK: RE2-MD1 (md5 3c9176ee9bbb7e91b7c9433d6fe5c371), nur die Ecken @0x44 skaliert (s = 0.8063, Runde 39 Spur M: NUTZER-VORGABE 0,5 x Spur L 2.4100 (RE2-Bildgroesse), Runde 38: 6.4636) und verschoben. */
+/* SCHLUESSEL PARK: RE2-MD1 (md5 3c9176ee9bbb7e91b7c9433d6fe5c371), nur die Ecken @0x44 skaliert (s = 0.8063, Runde 39 Spur M: NUTZER-VORGABE hoechstens 0,5 x Spur L, s_L 2.4100 = RE2-Bildgroesse; Runde 38: 6.4636) und verschoben. */
 static const unsigned char k_r38k_park_md1[236] = {
     0xbc,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x02,0x00,0x00,0x00,0x38,0x00,0x00,0x00,
     0x05,0x00,0x00,0x00,0x60,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x80,0x00,0x00,0x00,
@@ -20,7 +20,7 @@ static const unsigned char k_r38k_park_md1[236] = {
     0x00,0xc0,0xc0,0x78,0x3f,0xe0,0x80,0x00,0x00,0xff,0x00,0x00,
 };
 
-/* SCHLUESSEL PRISON: RE2-MD1 (md5 c5d49ef60b6b111ecac53a19652f3278), nur die Ecken @0x44 skaliert (s = 1.2073, Runde 39 Spur M: NUTZER-VORGABE 0,5 x Spur L 2.5623 (RE2-Bildgroesse), Runde 38: 5.3032) und verschoben. */
+/* SCHLUESSEL PRISON: RE2-MD1 (md5 c5d49ef60b6b111ecac53a19652f3278), nur die Ecken @0x44 skaliert (s = 1.2073, Runde 39 Spur M: NUTZER-VORGABE hoechstens 0,5 x Spur L, s_L 2.5623 = RE2-Bildgroesse; Runde 38: 5.3032) und verschoben. */
 static const unsigned char k_r38k_prison_md1[236] = {
     0xbc,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x02,0x00,0x00,0x00,0x38,0x00,0x00,0x00,
     0x05,0x00,0x00,0x00,0x60,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x80,0x00,0x00,0x00,
