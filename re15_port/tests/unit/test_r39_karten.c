@@ -190,17 +190,14 @@ static int teil_marker(int argc, char **argv)
     marker_t m;
     unsigned rid;
     int band, y = 0;
-    if (argc < 6) { printf("FAIL: marker <hexraum> <x> <z> <band> [y]
-"); return 2; }
+    if (argc < 6) { printf("FAIL: marker <hexraum> <x> <z> <band> [y]\n"); return 2; }
     rid = (unsigned)strtoul(argv[2], NULL, 16);
     band = atoi(argv[5]);
     if (argc > 6) y = atoi(argv[6]);
-    if (!betrete(rid, atoi(argv[3]), atoi(argv[4]), band)) { printf("FAIL: Raum
-"); return 1; }
+    if (!betrete(rid, atoi(argv[3]), atoi(argv[4]), band)) { printf("FAIL: Raum\n"); return 1; }
     miss_marker(rid, atoi(argv[3]), y, atoi(argv[4]), &m);
     printf("ROOM%04X (%d,%d,%d) Band %d (Spieler-Band %d): Blatt %d, Zone Blatt %d rect %d zid %d "
-           "etage %d, Marker (%d,%d), Kachel-Index am Marker %d
-", rid, atoi(argv[3]), y,
+           "etage %d, Marker (%d,%d), Kachel-Index am Marker %d\n", rid, atoi(argv[3]), y,
            atoi(argv[4]), band, re15_map_player_band(), m.page, m.zpage, m.zrect, m.zid, m.etage,
            m.mx, m.my, m.tex);
     return 0;

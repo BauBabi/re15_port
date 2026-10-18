@@ -10,13 +10,19 @@ Baum: .claude/worktrees/r39_karten (Zweig r39/karten, Basis 1038dc15). Start 202
    ist noch ziemlicher schrott."
 2. "In ROOM 1090 ist Leons Positionsmarker der Map außerhalb des aktuellen Raums."
 
-## Fortschritt
-- [x] Bestand lesen (Karten-Code, Memory, Runde 36/33/27-28)
-- [ ] Messung vorher (FB_SHOT je Etage, Marker 1090)
-- [ ] RE-Belege
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
+## Fortschritt (gegen die Commits abgeglichen, Fortsetzung 2026-10-18 ~17:10)
+- [x] Bestand lesen (Karten-Code, Memory, Runde 36/33/27-28) - 997a2cec
+- [x] Messung vorher 1F/2F/3F/B2 (M1/M2: Vorlagen = 3x-Abzuege unseres Stands, Soll-Unterschiede je Blatt) - 97dca68e
+- [x] Umsetzung 1F/2F/3F/B2: Kachel-Korrekturen engine/src/karte_r39.c + Marken re15_map_zones.h (4 Haken
+      re15_inv_screen.c) - ba258ae4 (vom Kompositor gegen das Soll gerechnet, NICHT gebaut/gemessen)
+- [x] Reste des Limit-Abbruchs 716eda1d: test_r35_karte.c/.cmake (1210-Tuer 11E0 x187->x186) + test_r39_karten.c
+      (Sonde marker) - die Sonde kompilierte NICHT (Zeilenumbrueche in drei String-Literalen), Fortsetzung
+      behoben; Bau (configure+build) gruen
+- [ ] Messung vorher B1 + Marker ROOM1090
+- [ ] RE-Belege B1/1090
+- [ ] Umsetzung B1 + 1090
+- [ ] Messung nachher je Etage (FB_SHOT gegen die Soll-Haelfte) + Marker-Lage je Raum (Leon + Elza)
+- [ ] Tests (test_r39_karten + angepasste r35-Riegel begruenden)
 
 ## Messung vorher
 
