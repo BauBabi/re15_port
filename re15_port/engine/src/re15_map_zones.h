@@ -237,7 +237,7 @@ static const re15_map_zone_t s_map_zones[] = {
      *  - EIN Massstab fuer das Blatt: RE2 Retail FUN_8006e120 x = (x+28000)/450 (`lui v0,0x91a2` @0x8006e1dc,
      *    `ori v0,v0,0xb3c5` @0x8006e1e8, `sra v1,v1,8` @0x8006e20c, z negiert `subu v0,zero,v0` @0x8006e268) als
      *    Affine 65536/450 -> 146; der Marker rechnet mit DERSELBEN Affine (re15_map_zone_abbildung), also steht er
-     *    in jeder begehbaren Lage in der Zeichnung seines Orts (Selbstprobe b1_plan.py: 0 von 23548 daneben);
+     *    in jeder begehbaren Lage in der Zeichnung seines Orts (Selbstprobe b1_plan.py: 0 von 23699 Rasterpunkten daneben);
      *  - Wandlinien zweier Orte bis 3 px Abstand werden EINE Linie ("Keine Doppelwaende").
      * Rechnung: analysis/befunde_runde39/G_karten_werkzeug/b1_plan.py (Lagen, Zellen, Affinen, Marken).
      * Weltboxen = Zonen-Zugehoerigkeit (je Raum EINE Zone, ausser 1190 Halle/Ostkammer). */

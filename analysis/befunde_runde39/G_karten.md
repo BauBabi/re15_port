@@ -23,7 +23,8 @@ Baum: .claude/worktrees/r39_karten (Zweig r39/karten, Basis 1038dc15). Start 202
 - [x] B1 neu als Schema-Zeichnung aus Kollision + Tueren (B1-M1/R/U/N) - 99a166ca, 7eb1f744
 - [x] Marker-Pruefung ueber alle Raeume der Stage 1 (P1-M), Zeilen 10C0/1120/10E0 - 9ed100c3, 64ee6338
 - [x] Riegel unit_r39_karten_1090 / _b1, integration_r39_karten; alte B1-Riegel umgestellt (Abschnitt Tests) - 4dda19b4
-- [ ] Messung vorher B1 "wie man sich bewegt" (Bau mit dem Kopf von 10876ebb), Echtlauf-Abzug B1, Abschluss
+- [x] Messung vorher B1 "wie man sich bewegt" (Bau mit dem Kopf von 10876ebb), Echtlauf-Abzug B1 - 6d23aa53
+- [x] Gezielter Lauf 66/66 gruen, Dossier abgeschlossen
 
 ## Messung vorher
 
@@ -287,7 +288,13 @@ noch ziemlicher schrott"):
 * test_r35_cut10f0.c / test_r38_tagebuch.c: Ziel ROOM11C0 = Blatt 0 Pseudo-Rechteck 136 (128 + synth 8) statt rect 4.
 * test_map_synth.c: Kartenfeld = Huelle der ORIGINAL-Rechtecke aller 13 Seiten-Tabellen x 39..293 y 44..206 statt der
   Port-Annahme 90..240 / 50..200 (B1s eigene Original-Kachel r1 begann schon bei x 76).
-GEZIELTER LAUF: siehe Abschnitt "Suite" unten (Summenzeile woertlich).
+GEZIELTER LAUF (Bau nach 64ee6338 + Kommentar-Korrektur, 2026-10-18 ~19:05; KEINE volle Suite):
+```
+ctest --test-dir re15_port/build -R "^(unit_(map_|karte_|r30_karte|r30_hinweis|r33_karte|r35_karte|r35_cut10f0|r36_karte|r36_kartenbits|r36_kartenitems|r38_tagebuch|r39_karten|r39_inventar_status)|integration_(r39_karten|r35_karte|r35_karte_fahrstuhl|r36_karte|map_raum_live|map_uebergang|r36_kartenitems_bild|r38_tagebuch_karte|r39_elza_karte|r39_inventar_status))" --timeout 900
+100% tests passed, 0 tests failed out of 66
+```
+(danach nur ein Kommentar in re15_map_zones.h berichtigt, neu gebaut, unit_r39_karten_*: 100% tests passed, 0 tests
+failed out of 2)
 
 ## OFFEN
 * 1210 (B2): die Suedwest-Kammer (z < -20140, x -26928..-22428) ist begehbar, aber weder im Original noch in der
