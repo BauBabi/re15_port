@@ -511,11 +511,12 @@ Abschnitt "Fuer den Nutzer" einfach beschreiben (keine Entscheidungsfrage). (3) 
 
 ### 9.0 Stand / Fortschritt
 - 23:00 Baum sauber auf 0aa7b194 (Abnahme 1), master = 8286bcb6. Dossier-Abschnitt angelegt.
-- 23:02 Merge master 8286bcb6 -> 25611933 (Konflikte AUFTRAG.md: Fassung master + Orchestrator-Hinweis 14:27 aus dem Zweig;
+- 23:02 Merge master (8286bcb6 + Orchestrator-Doku 28dad473 UEBERGABE/args_j_nach2) -> 25611933 (Konflikte AUFTRAG.md: Fassung master + Orchestrator-Hinweis 14:27 aus dem Zweig;
   test_r36_kartenbits.c: beide Zeilen Bit 94 J / Bit 70 I; enemy_ai_common.c, game_step_common.c, scd_vm.c automatisch, an
   verschiedenen Stellen: E-Haken HURT/Querung, I Ereignis 27). configure + build LOCAL-BUILD-OK.
-- 23:05-23:20 Messung vorher am gemergten Stand (Laeufe v_a, v_l, v_l2, v_l3; 9.1).
-- 23:40 Umsetzung dccd5f8c (9.3); 23:44 Laeufe n_a, n_l, n_l2, n_l3 gestartet.
+- 23:06-23:13 Messung vorher am gemergten Stand (Laeufe v_a, v_l, v_l2, v_l3, gestartet 23:06:41; 9.1).
+- 23:23 Umsetzung dccd5f8c (9.3, Commit 23:23:21); Laeufe n_a, n_l, n_l2, n_l3 gestartet 23:23:32 (Uhrzeiten aus `git log` / Dateizeiten).
+- 23:32 Riegel (05bc9a4d), 23:34 Riegel `kampf` (ee3cd7c2), 23:35 Dossier 9.4-9.8 (ec02857e); 23:34 gezielte Suite gestartet (9.5).
 - H6 erledigt: Uhrzeit in 8.8 aus den Commit-Zeiten berichtigt (751e3f4d 21:48:38, exe 21:47:36, f744e5ad 22:13:31).
 
 ### 9.1 Messung vorher (gemergter Stand 25611933, echte exe; Messordner scratchpad `j39n2/`, nicht committet)
