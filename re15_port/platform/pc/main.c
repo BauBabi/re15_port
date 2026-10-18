@@ -4990,6 +4990,8 @@ re_title:;
     re15_kartenitems_r36_install((uint16_t)g_current_room_id);   /* Runde 36 Spur N: Lageplan-Karte, derselbe Grund */
     re15_dining_r38_install((uint16_t)g_current_room_id);        /* Runde 38 Spur F: 1011/1021/1131/1141, derselbe Grund (Boot-/CONTINUE-Weg) */
     re15_inventar_r39_install((uint16_t)g_current_room_id);      /* Runde 39 Spur C: Spind ROOM1000, derselbe Grund (Boot-/CONTINUE-Weg) */
+    { extern void re15_johnruf_r39_install(uint16_t);   /* Runde 39 Spur P: 1041/1131 + Xa_vol-Init, derselbe Grund (Boot-/CONTINUE-Weg) */
+      re15_johnruf_r39_install((uint16_t)g_current_room_id); }
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

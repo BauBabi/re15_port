@@ -72,6 +72,7 @@
 #include "re15_dining_r38.h" /* Runde 38 Spur F: Programme 1140/1141/1021, Tuer 1131, Phase H 1141 (dining_r38.c) */
 #include "re15_toene_r39.h"  /* Runde 39 Spur B: Toene Schublade 11F0, Gitter + Schrank 1190 (toene_r39.c) */
 #include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Funkszene ROOM10F1, Ereignis 27 (funk10f1_r39.c) */
+#include "re15_johnruf_r39.h"  /* Runde 39 Spur P: RE2 Xa_vol 0x5F + Sprach-/Warte-Zeilen 1041/1131 (johnruf_r39.c) */
 
 scd_vm_t g_scd;
 
@@ -432,6 +433,8 @@ static void register_opcodes(void)
      * Port-Programm des Rolltors (PC-Schranke in rolltor_1050.c); fuer RDT-Bytecode bleibt es
      * op_unknown-gleich (pc+1, s_opcode_sizes[0x62] = 1). */
     s_op_table[RE15_ROLLTOR_OP_ITEM_LOST] = re15_rolltor_op_item_lost;
+    s_op_table[RE15_R39P_XA_OPCODE] = re15_johnruf_r39_op_xa_vol;   /* Runde 39 Spur P: RE2 Xa_vol (@0x80058090) nur in den
+                                        * Port-Programmen RUF1041/RUF1131 (PC-Schranke), sonst op_unknown (pc+1) */
     {   /* Runde 34 Nacht G2: 0x45 Col_chg_set — Tabelle @0x800745bc -> 0x800428d4 ->
          * FUN_800396a8 (Sichtbarkeit je Maskengruppe, masken_gruppen.c / re15_masken_gruppen.h). */
         extern int op_col_chg_set(scd_thread_t *t);
@@ -1879,6 +1882,8 @@ static int op_message_on(scd_thread_t *t)
     { const int tb = re15_tagebuch_r38_message_on(t); if (tb == 2) return 2; if (tb == 1) { t->pc += 4; return 1; } }
     { extern int re15_dining_r39_message_on(const uint8_t *pc);   /* Runde 39 Spur J: 1141 msg 58 = nur auf die Sprachzeile warten */
       if (re15_dining_r39_message_on(t->pc)) { t->pc += 4; return 1; } }
+    { const int jr = re15_johnruf_r39_message_on(t->pc);   /* Runde 39 Spur P: Rufe 1041/1131 (nur Stimme), Karte 1041 (parkt) */
+      if (jr == 2) return 2; if (jr == 1) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text
