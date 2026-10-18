@@ -304,3 +304,50 @@ im Rahmen der Regeln R0-R3; D/A Verweis-Stubs).
   "Elza, follow me..." (Heranwinken wie zu "Elza, hurry up!" in 1171) -> John geht durch den Gang aufs Dach.
 - Paket-Gate: KEINE neue Datei unter shared_assets/ (Klopf-Ton als gen/dining_r39_programme.inc eingebettet).
 
+
+## 8. Nachbesserung 1 (nach Abnahme 0, `J_abnahme_0.md`; Start 2026-10-18 ~20:10)
+
+Maengel: M1 (Reaktion msg 50 im Fenster Gemaelde-Frage F75..F165 -> erscheint in der Rolladen-Szene), M2 (msg 52: John
+richtet per Plc_motion(2,6) die Pistole auf Elza statt heranzuwinken), M3 (John springt 16 Bilder nach dem Schnitt auf
+Cut 8 sichtbar 138 Einheiten), dazu Nutzer-Nachtrag 4 (N4.1 Rolltor oeffnen und danach frei laufen, N4.2 Szene erst nach
+dem Entriegeln der Dachtuer: Elza rennt zur anderen Kamera, dreht sich zur Tuer, hebt die Waffe - Schusswaffe aus dem
+Inventar, sonst das Messer; N4.3 John schiesst ab und an auf die Gorillas und zieht ihre Aufmerksamkeit; N4.4 = M2) und
+Nachtrag 6 (N6: "He is in trouble", "gorilla meal" klein).
+
+### 8.0 Plan und RE-Belege vor dem Code (diese Sitzung gelesen)
+- **N4.1/N4.2 Mechanik "Tuer entriegeln" = Original sub05.** ROOM1141 main00 @0x00A72 `06 00 3c 00` Ifel Ck(4,0xC3)==0
+  @0x00A76 `21 04 c3 00`: Dachtuer Slot 1 sce 0 (@0x00A7A `3b 01 00 31 ..`, nicht begehbar) + @0x00A9A `2c 02 03 31 ..
+  ff 00 18 05 ..` Slot 2 = Ereignis 5 im Tuer-Rechteck; sub05 @0x00FC8 `46 02 00 00 ..` Aot_reset Slot 2, @0x00FD2
+  `22 04 c3 01` Set(4,0xC3)=1, @0x00FD6 `2b 0c ff ff` msg 12 "You've opened the lock.", @0x00FDA Evt_next, @0x00FDC
+  `46 01 02 31 ..` Slot 1 -> Tuer. = das "Entriegeln" des Nutzers. Neuer Ablauf: Gemaelde (Ereignis 6) = nur Rolladen
+  mit Ton, danach Steuerung zurueck (Form sub06 @0x010C8..@0x010D6 Set(2,7)=0, Set(1,0x1B)=0, Cut_auto 1, Plc_ret);
+  Klopfen/Rufe laufen weiter, solange die Dachtuer verriegelt ist (While Ck(4,0xC3)==0 statt (3,0x6A); Form der
+  Bedingung main00 @0x00A76); Ereignis 5 in Phase H = Programm ENTRIEGELN39 (sub05-Zeilen, dann die Szene).
+  Phase H = (4,0xF0)=1 und (4,0xC3)=0 (vorher (3,0x6A)=0): beim Wiederbetreten mit offenem Rolladen laeuft wieder die
+  Klopf-Schleife (sub00 @0x00B02 Evt_exec sub02), der Rolladen bleibt offen (sub00 Else-Zweig @0x00BC2..).
+- **N4.2 "hebt die Waffe" = Plc_motion(2,6) auf dem SPIELER.** Original-Form ROOM3060 sub03 @0x010BA `2e 01 00 00` +
+  @0x010BE `3f 02 06 00` (Leon hebt vor den Hunden die Waffe), Sleep 40 @0x010C2; vorher @0x0108E `40 00 09 00 ..`
+  Plc_dest TURN zum Ziel. Handler @0x80041b90 schreibt +0x5 = pc[1] = 2; Spieler-Executor 0x80030660 waehlt den Sub ueber
+  `lbu v0,-13735(v0)` = 0x800aca59 @0x8003068c, Tabelle `addiu at,at,15920` = 0x80073e30 @0x8003069c: [2] = 0x80050f00
+  (dieselbe Play-once/Hold-FSM wie bei den NPCs) auf dem Kanal +0x170/+0x174 = Spieler 0x800acbc4/0x800acbc8 = die
+  W-Bank (PLW): der Waffen-Lader schreibt genau diese Zeiger (@0x80036be4 `sw v0,-13368(at)` = 0x800acbc8,
+  @0x80036c04 `sw v0,-13372(at)` = 0x800acbc4). W-Bank Clip 6 = RAISE (player_common.c Gun-FSM sub0 / Melee @0x80034ee8),
+  rueckwaerts (Plc_flg 0x80, Form ROOM1021 @0x020EA/@0x020EE) = Senken. Der Port spielt fuer pc[1] != 0 bisher die
+  PL00-Bank (scd_vm.c op_plc_motion `anim_use_pl00`), nicht die W-Bank -> Port-Maschine noetig (nur ROOM1141, Haken).
+  Waffe in der Hand: FUN_80036b68 @0x80036c08 haengt die Waffe der Id aca5d immer an (main.c "WEAPON-IN-HAND"), Messer =
+  Id 1 (Rueckfall bei Ausruest-Platz 0x80, @0x8004666c/@0x80046688). NUTZER-VORGABE (Nachtrag 4): Schusswaffe aus dem
+  Inventar (die ausgeruestete, sonst eine aus dem Inventar), sonst das Messer.
+- **M2/N4.4 Heranwinken = RBJ-Geste Clip 17 (Sub 0).** (2,6) ist Johns Ziel-Clip: ROOM1021 sub02 @0x020C6 `3f 02 06 00`
+  (zielen) / @0x020CE, @0x020D6 `3f 02 07 00` (Feuer-Clip, Schuss auf Roy) / @0x020EA+@0x020EE (2,6) rueckwaerts
+  (senken); ROOM1141 @0x00C78 (2,6) vor msg 0 "Elza: John, wait!" / msg 1 "...sorry, ..." = John zielt auf die
+  Eintretende. Die Dringlichkeits-/Folge-Geste des Originals ist Clip 17 der Gestenbibliothek (Armschwung bis ganz
+  seitlich, D_adaruf.md 3.5): ROOM3070 sub03 @0x03724 `3f 00 11 00` "Leon: Hurry up! They're coming!", ROOM4000 sub09
+  @0x0191A "Leon: Go on ahead! / I'll take care of this!"; John selbst spielt Clip 17 in 1141 (@0x00DBA zu msg 5) - der
+  Clip liegt also in seinem 1141-RBJ-Satz.
+- **N4.3 John schiesst = Original-Form ROOM1021 sub02** (oben) + Schuss-Ton RE15_ELZA_TON_SCHUSS (RE2 ROOM4040 Satz 0x0A,
+  Runde 36 L / Runde 38 H, Verzug 1 = RE2 ROOM1010 sub30) ; Original-Zeile msg 11 "John: Elza, I'll try to distract
+  them, ..." = genau das Ablenken. Aufmerksamkeit/Rhythmus = NUTZER-VORGABE, Form im Abschnitt Umsetzung.
+- **M1:** Reaktion nur, solange die Dachtuer verriegelt ist und keine Szene laeuft (Gemaelde-Programm setzt beim
+  Ausloesen synchron einen Merker, die Reaktion wartet darauf) - Riegel "Gemaelde im Fenster".
+- **M3:** John im Schnittbild von Cut 8 setzen (Pos_set neben Elzas Pos_set vor Sleep 1) + Sprung-Riegel.
+- **N6:** msg 50 "He is in trouble, ...", msg 51 "... gorilla meal....".
