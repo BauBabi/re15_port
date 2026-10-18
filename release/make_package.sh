@@ -721,17 +721,21 @@ PY
 # Kopierminuten von genau den geprueften Bytes genommen wurde.
 # Runde 4 (Gegenpruefung R3 B3): CRC32 + Groesse allein halten eine CRC-gleiche Faelschung nicht fest
 # (r3_zip_kennung_sonde.sh: 1 Byte + 4 Ausgleichsbytes in RE15DOOR/P07G.DO2, CRC32/Groesse gleich, sha256
-# anders -> "= gepruefte APK", apksigner DOES NOT VERIFY). Stufe 2: den Satz zusammenfuehren (zip -s 0 -
-# unzip liest keine Split-Saetze), die APK mit unzip ENTPACKEN (prueft dabei ihre CRC32) und ihre sha256 mit
-# der der geprueften Kopie vergleichen. Zip/unzip bekommen Windows-Pfade (cygpath -m): das zip aus
-# /c/msys64/usr/bin hat eine eigene Einhaengetabelle, in der /tmp NICHT der Temp-Ordner von Git-Bash ist
-# (gemessen: "zip error: Nothing to do!"). Temp-Platz ~ Groesse des Satzes; Rueckgabe != 0 bei jedem Fehler.
+# anders -> "= gepruefte APK", apksigner DOES NOT VERIFY). Stufe 2: die APK aus dem Satz ENTPACKEN und ihre
+# Groesse, CRC32 und sha256 mit der geprueften Kopie vergleichen.
+# Release v0.8.26 (2026-10-18, gemessen): Stufe 2 lief bis dahin ueber `zip -s 0` (zusammenfuehren) + unzip.
+# Info-ZIP zip 3.0 (msys2) verliert dabei das DRITTE Volume, sobald ein Eintrag ueber mehr als zwei Volumes
+# reicht: APK 402740385 B, komprimiert 193791732 B in z01+z02+zip -> zusammengefuehrt 188743797 B (= z01 + z02 +
+# Katalog), unzip "invalid compressed data to inflate" - obwohl der Satz heil war (roh verkettet und mit zlib
+# entpackt: CRC32 78a3ba0e, sha256 = Pruefkopie). v0.8.25 hatte zwei Volumes und lief durch. Stufe 2 entpackt
+# deshalb selbst: Volumes in Reihenfolge roh verketten, den Local Header ueber den Katalog finden (Start-Volume
+# + Offset), den Strom mit zlib entpacken (Methode 8; 0 = gespeichert), Groesse/CRC32/sha256 gegen die Kennung.
+# Ohne zip/unzip/Temp-Ordner (die Einhaenge-Falle des msys-zip entfaellt mit); Rueckgabe != 0 bei jedem Fehler.
 verify_apk_im_zip() {    # $1 = .zip (letztes Volume), $2 = Eintragsname, $3 = "sha256 crc32 groesse"
-    local satz="$1" name="$2" kennung="$3" tmp tmp_n rc=0 liste="" sha_ist=""
-    "$PY" - "$satz" "$name" "$kennung" <<'PY' || return 1
-import struct, sys
+    "$PY" - "$1" "$2" "$3" <<'PY' || return 1
+import hashlib, os, struct, sys, zlib
 last, name, kennung = sys.argv[1], sys.argv[2].encode("utf-8"), sys.argv[3].split()
-crc_soll, n_soll = int(kennung[1], 16), int(kennung[2])
+sha_soll, crc_soll, n_soll = kennung[0], int(kennung[1], 16), int(kennung[2])
 d = open(last, "rb").read()
 i = d.rfind(b"PK\x05\x06")
 if i < 0: sys.exit("APK-Satz: kein End-of-Central-Directory")
@@ -740,42 +744,47 @@ if cd_disk != disk or here != total: sys.exit("APK-Satz: Katalog nicht vollstaen
 p, treffer = cd_off, []
 for _ in range(total):
     if d[p:p + 4] != b"PK\x01\x02": sys.exit("APK-Satz: Katalog kaputt")
-    crc, _cs, usize = struct.unpack("<III", d[p + 16:p + 28])
-    nlen, xlen, klen = struct.unpack("<HHH", d[p + 28:p + 34])
-    treffer.append((d[p + 46:p + 46 + nlen], crc, usize))
+    meth, = struct.unpack("<H", d[p + 10:p + 12])
+    crc, csize, usize = struct.unpack("<III", d[p + 16:p + 28])
+    nlen, xlen, klen, disk_start = struct.unpack("<HHHH", d[p + 28:p + 36])
+    rel_off, = struct.unpack("<I", d[p + 42:p + 46])
+    treffer.append((d[p + 46:p + 46 + nlen], crc, usize, csize, meth, disk_start, rel_off))
     p += 46 + nlen + xlen + klen
 if len(treffer) != 1 or treffer[0][0] != name:
     sys.exit("APK-Satz: erwartet genau den Eintrag %r, Katalog: %r" % (name, [t[0] for t in treffer]))
-_n, crc, usize = treffer[0]
+_n, crc, usize, csize, meth, disk_start, rel_off = treffer[0]
 if (crc, usize) != (crc_soll, n_soll):
     sys.exit("APK-Satz: Eintrag hat CRC32 %08x / %d B, gepruefte APK %08x / %d B - NICHT die gepruefte Datei"
              % (crc, usize, crc_soll, n_soll))
 print("   APK-Satz, Katalog: genau %s, CRC32 %08x, %d B = gepruefte Kennung" % (name.decode("utf-8"), crc, usize))
+# Stufe 2: Volumes 1..disk (.z01, .z02, ...) + das letzte (.zip) roh verketten und den Eintrag selbst entpacken
+if 0xFFFFFFFF in (csize, usize, rel_off): sys.exit("APK-Satz: ZIP64-Eintrag - diese Pruefung kennt nur 32-Bit-Felder")
+stamm = os.path.splitext(last)[0]
+vols = ["%s.z%02d" % (stamm, k) for k in range(1, disk + 1)] + [last]
+fehlt = [v for v in vols if not os.path.isfile(v)]
+if fehlt: sys.exit("APK-Satz: Volumes fehlen: %r" % fehlt)
+start = sum(os.path.getsize(v) for v in vols[:disk_start]) + rel_off
+roh = b"".join(open(v, "rb").read() for v in vols)
+if roh[start:start + 4] != b"PK\x03\x04":
+    sys.exit("APK-Satz: kein Local Header am Katalog-Offset (Volume %d + %d B)" % (disk_start + 1, rel_off))
+lnlen, lxlen = struct.unpack("<HH", roh[start + 26:start + 30])
+a = start + 30 + lnlen + lxlen
+daten = roh[a:a + csize]
+if len(daten) != csize: sys.exit("APK-Satz: komprimierte Daten kuerzer als der Katalog (%d von %d B)" % (len(daten), csize))
+if meth == 8:
+    z = zlib.decompressobj(-15)
+    apk = z.decompress(daten) + z.flush()
+    if not z.eof: sys.exit("APK-Satz: Deflate-Strom endet nicht")
+elif meth == 0:
+    apk = daten
+else:
+    sys.exit("APK-Satz: Kompressionsmethode %d unbekannt" % meth)
+crc_ist, sha_ist = zlib.crc32(apk) & 0xFFFFFFFF, hashlib.sha256(apk).hexdigest()
+if (len(apk), crc_ist, sha_ist) != (n_soll, crc_soll, sha_soll):
+    sys.exit("APK-Satz: entpackt %d B, CRC32 %08x, sha256 %s - gepruefte APK %d B, %08x, %s - NICHT die gepruefte Datei"
+             % (len(apk), crc_ist, sha_ist, n_soll, crc_soll, sha_soll))
+print("   APK im Split-Satz = gepruefte APK (aus %d Volumes entpackt: sha256 %s... = Pruefkopie)" % (len(vols), sha_ist[:16]))
 PY
-    tmp="$(mktemp -d "${TMPDIR:-/tmp}/re15_apk_satz.XXXXXX")" || { echo "APK-Satz: kein Temp-Ordner" >&2; return 1; }
-    # ab hier NUR der Windows-Pfad (zip, unzip, rm): mktemp/cygpath/rm koennen aus verschiedenen MSYS-Laufzeiten stammen
-    tmp_n="$tmp"
-    if command -v cygpath >/dev/null 2>&1; then tmp_n="$(cygpath -m "$tmp")" || tmp_n="$tmp"; fi
-    zip -q -s 0 "$satz" --out "$tmp_n/ganz.zip" || rc=$?
-    if (( rc == 0 )); then liste="$(unzip -Z1 "$tmp_n/ganz.zip")" || rc=$?; fi
-    if (( rc == 0 )) && [[ "$liste" != "$name" ]]; then
-        rm -rf "$tmp_n"
-        echo "APK-Satz: zusammengefuehrt enthaelt er [$(echo $liste)] statt genau $name" >&2
-        return 1
-    fi
-    # alle Eintraege nach stdout = genau der eine (eben geprueft) - kein Namensmuster, das unzip auswerten wuerde
-    if (( rc == 0 )); then sha_ist="$(unzip -p "$tmp_n/ganz.zip" | sha256sum)" || rc=$?; fi
-    rm -rf "$tmp_n"
-    if (( rc != 0 )); then
-        echo "APK-Satz: zusammenfuehren (zip -s 0) oder entpacken (unzip) fehlgeschlagen (rc=$rc)" >&2
-        return 1
-    fi
-    sha_ist="${sha_ist%% *}"
-    if [[ "$sha_ist" != "${kennung%% *}" ]]; then
-        echo "APK-Satz: die entpackte APK hat sha256 $sha_ist, die gepruefte ${kennung%% *} - NICHT die gepruefte Datei" >&2
-        return 1
-    fi
-    echo "   APK im Split-Satz = gepruefte APK (entpackt: sha256 ${sha_ist:0:16}... = Pruefkopie)"
 }
 
 # --- Linux / Steam Deck ------------------------------------------------------
