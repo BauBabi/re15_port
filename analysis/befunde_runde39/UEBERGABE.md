@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 19:30: Integration mit E-Nachbesserung 2 + Logschalter-Fix (3fe9e358): 842/842 gruen (alle unit_/prop_/probe_ +
+  Gorilla-/1141-/Zustand-Gift-Integrationen, ctest -j 4, 1438 s). NICHT nach master vor E-Nachbesserung 3 (Befund E: Wand-
+  Durchstoss in 1141, laeuft wf_676d6740-b2f) - doppelte Energie verlaengert den Kampf = mehr Stoss-Gelegenheiten. Nutzer-
+  Nachtrag 4 (1141: Rolltor frei, Szene erst beim Entriegeln, Elza hebt Waffe aus dem Inventar sonst Messer, John schiesst
+  auf die Gorillas + zieht Aufmerksamkeit, Heranwinken am Ende) in AUFTRAG.md (master + Baum r39_dining1141) -> Spur J
+  Nachbesserung, sobald deren Abnahme 0 (wf_7cea9b87-5d9) fertig ist.
 * 2026-10-18 19:04: Spur E Nachbesserung 2 BESTANDEN (Abnahme 2; Fix b963e6bb): Gorilla-Regel fuer alle 0x27 (Zensus: nur
   ROOM11C0 + ROOM1141), 1141 mit Elza: 360 Energie, Flinch bei akku 36, 31. Treffer toetet, Szene bis Johns Abgang;
   unit_maggot_ai (Original-Riegel) misst den Original-INIT mit Haken aus. Integration: ff auf master 3640d6c1, Merge
