@@ -200,5 +200,29 @@ Raum. Damit: 1041 0,417 (-7,6 dB) < 1131 0,833 (-1,6 dB) < 1141 1,0. Nachmessung
 ## 5. Tests
 
 ## 6. OFFEN
+- Spur J (parallel, Zweig r39/dining1141): entfernt Elzas Reaktion msg 50 in 1141 (Nachtrag 10). In diesem Baum laeuft sie
+  noch (Lauf n2: `[msgtext] room=1141 id=50`). Bei der Integration gilt J; dieser Baum aendert in 1141 nichts (Weiche nimmt
+  1141 aus, Rufe dort Standard 120, keine Zeile in dining_r39.c).
+- Spuren Q/R lesen Bank 9 Bit 97 (RE15_R39P_BIT_BANK/RE15_R39P_BIT_PANIK in include/re15_johnruf_r39.h). Startet Q eine
+  Szene (Montage) an der steigenden Flanke, oeffnet das Musikfenster nach der Form der Runde 35 K erst, wenn keine Szene mehr
+  laeuft ((1,27)/(2,7) aus); faellt Qs erstes Szenenbild NACH dem Tick dieses Bildes, beginnt MAIN01 ein Bild vor der Montage -
+  bei der Integration am gemeinsamen Lauf ansehen.
+- Der lautere Ruf in 1131 kommt einmal je Panikphase und Sitzung (Merker im Speicher, Bit 97 steht im Spielstand): wer in der
+  Phase speichert und spaeter in 1131 laedt bzw. hineingeht, hoert ihn nach dem Laden ein weiteres Mal. Ein dauerhafter Merker
+  braeuchte ein zweites Bank-9-Bit (VERTRAG 1.1: nur 97 an P).
+- Gemeinsame Dateien ausserhalb der VERTRAG-1.3-Liste fuer P: game_step_common.c (1 Zeile), map_hint_common.c (Include +
+  Eintrag), main.c (2 Zeilen). Alle mit Kommentar "Runde 39 Spur P".
 
 ## 7. Fuer den Nutzer
+- Ablauf jetzt (Elza): nach der Szene mit John in 1021 (John bleibt zurueck und ist danach weg) -> beim ersten Betreten des
+  Gangs 1041 ruft John zweimal LEISE um Hilfe ("Help!", dann "Please help!") -> Elza dreht sich zur Treppe -> "Oh, no, this is
+  John! He is in trouble, I have to help him!" (deine Aufnahme room1041/main40.wav) -> die Karte geht auf und markiert ROOM1141
+  (3F) -> danach laeuft Leons Panikmusik nach Irons' Tod (MAIN01) in allen Raeumen bis zu John; im Flur 1131 ruft John noch
+  einmal "Please help!", deutlich lauter -> in 1141 alles wie bisher (eigene Musik des Raums) -> sind beide Gorillas tot, hoert
+  die Panikmusik auf, danach normale Raummusik.
+- Lautstaerken (RE2-Werte, gemessen im Mitschnitt): 1041 leise = 42 % (-7,6 dB) des normalen Pegels, 1131 = 83 % (-1,6 dB),
+  1141 = 100 %. Neue Sprachdateien: keine noetig. Elzas Satz in 1041 = `synchro/STAGE1/room1041/main40.wav` (liegt). Die Rufe
+  sind deine Dateien `synchro/STAGE1/room1141/help02.wav` / `help03.wav` (unveraendert, Zuordnung im Code). Moechtest du in 1041
+  oder 1131 andere Rufe (z.B. help01 "Hello? ... Please help!"), genuegt ein Wort.
+- Paket-Gate: KEINE neue Datei unter shared_assets/ oder synchro/ (Programme als engine/src/gen/johnruf_r39_programme.inc).
+- Bedienhinweis: die Karte schliesst nach ~4 s von selbst oder mit START; danach hast du die Steuerung.
