@@ -66,15 +66,20 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   HURT. Der Schuss faellt im Spieler-Schritt VOR `re15_enemy_ai_run_all` (game_step_common.c:2414), der Gorilla-Tick
   sieht den Treffer also im selben Bild.
 
-### Umsetzung (geplant -> s. Protokoll unten)
-- Neue Datei engine/src/gegner_r39.c + include/re15_gegner_r39.h; Haken (je 1 Zeile) in enemy_ai_common.c
-  (INIT-HP, HURT-Eintritt, Zustands-Merker am Tick-Ende).
-- HP: NUTZER-VORGABE x2 -> 360 (= 2 x Tabellenwert @0x8011f514), nur ROOM11C0 (g_current_room_id).
-- Flinch-Schwelle: Schadens-Akkumulator seit dem letzten Flinch (hp_ref - hp); Flinch (Spur 0/1/2 wie bisher), wenn
-  >= 3 x 12 = 36 (= 3 x @0x8006ee44); darunter: Treffer OHNE Zucken = Blut (wie der Original-Luftschuss ohne
-  Flinch @0x80118b78-bd0) + Se 3, Zustand/Unterzustaende aus dem Merker des letzten Gehirn-Ticks zurueck,
-  +0x93 = 0 wie der Flinch-Exit @0x8011b178 (sonst bliebe der Einmal-Riegel zu und der Gorilla waere unverwundbar).
-  Andere Waffen "entsprechend ihrem Schaden": Schrotflinte 38/50, Magnum 40 >= 36 -> Flinch sofort.
+### Umsetzung
+- Neue Datei engine/src/gegner_r39.c + include/re15_gegner_r39.h (Konstanten: RE15_R39_PARKPLATZ_RAUM 0x11C0,
+  RE15_R39_AFFEN_HP_TABELLE 180 @0x8011f514, RE15_R39_AFFEN_HP_FAKTOR 2 = NUTZER-VORGABE, RE15_R39_PISTOLE_SCHADEN 12
+  @0x8006ee44, RE15_R39_ZUCK_TREFFER 3 = NUTZER-VORGABE, Schwelle 36).
+- Haken enemy_ai_common.c (je 1 Zeile, Kommentar "Runde 39 Spur E"): INIT `e->hp = re15_r39_affen_hp_init(e, 180)`;
+  HURT-Wurzel `case 2` zuerst `if (re15_r39_affen_zucken_unterdruecken(e)) break;`; Tick-Ende vor dem ROOT-Post-Pass
+  `re15_r39_affen_merken(e)` (merkt +0x5/+0x6/+0x7 des Gehirn-Ticks); Blut-Zwilling `re15_r39_affen_blut` neben
+  re15_maggot_gore (Blut + Se 3 wie der Flinch-Eintritt @0x8011b0bc-138).
+- Akku = hp_ref - hp (hp_ref = HP beim INIT bzw. beim letzten Flinch). Treffer unter 36 (nicht Krit +0x93&0x40, nicht
+  toedlich): Zustand 1 mit den gemerkten Unterzustaenden, +0x93 = 0 (@0x8011b178), Blut, Runde-35-Zaehler +1
+  (jeder Treffer zaehlt -> der 3. Treffer flincht UND springt, wie Runde 35 "3 Treffer -> Sprung"). Treffer >= 36:
+  Flinch wie bisher (Spur nach Waffen-Zeile @0x801214a8), hp_ref neu.
+- Der Schuss faellt im Spieler-Schritt vor run_all (game_step_common.c:2414): der Gorilla-Tick sieht Zustand 2 im
+  selben Bild, der Flinch-Clip 7 wird nie gesetzt (gemessen: Clip 7 = 0, Zustand 1 nach 0 Bildern).
 
 ## Punkt 2 — Kein paralleler Hundebiss (ROOM1190, RE2-Hundemodul)
 
@@ -112,12 +117,16 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 - Spieler-Seite im Port: cmd-2-Flinch 22 Bilder (PL00-Clip 8/9), Exit `pl->state = 1` (game_step_common.c:1599-1611),
   der NORMAL-Prolog loescht +0x93 (`pl->hit_react = 0` @0x80031964, :1626) im Folgebild; Knockdown-Exit kd_ende.
 
-### Umsetzung (geplant)
-- Boden-Biss: `pl->re2z_self1d3 |= 0x80` (@0x801051f8-0x80105200) + Merker "Riegel vom Hund gesetzt".
-- Kontakt-Tor + Flug-Tor: zusaetzlich `pl->re2z_self1d3 & 0x80` (@0x80104e5c-68 / @0x80104d84-94).
-- Freigabe: Port-Zwilling von @0x8003f8b4 = Ende der Spieler-Reaktion. Im Port endet sie, wenn der NORMAL-Prolog
-  +0x93 Bit 1 loescht (@0x80031964) — Freigabe-Tick je Bild (Haken in re15_enemy_ai_run_all), nur fuer den vom Hund
-  gesetzten Riegel (Zombie-/Arm-Riegel bleiben bei ihren eigenen Loeschern).
+### Umsetzung
+- enemy_ai_re2_dog.c (je 1 Zeile): Boden-Biss `re15_r39_hund_riegel_setzen(pl)` = `pl->re2z_self1d3 |= 0x80`
+  (@0x801051f8-0x80105200) + Besitzer-Merker; Angriffs-Tor re2d_attack_decide `|| re15_r39_hund_riegel(pl)` (-4,
+  @0x80104d84-94); Kontakt-Tor re2d_contact `|| re15_r39_hund_riegel(pl)` (@0x80104e5c-68).
+- Freigabe `re15_r39_hund_riegel_tick()` je Bild am Kopf von re15_enemy_ai_run_all (enemy_ai_common.c, 1 Zeile):
+  Port-Zwilling von @0x8003f8b4 (Zustand 1 + PL+0x1D3 := 0) = der NORMAL-Prolog hat +0x93 Bit 1 geloescht
+  (@0x80031964) und weder Flinch (cmd 2, 22 Bilder) noch Niederschlag (cmd 4/5) laeuft; nur fuer den vom Hund
+  gesetzten Riegel (Zombie-Griff @0x80102754-60 / Arme loeschen ihren selbst).
+- Toedlicher Biss unveraendert (Latch + Opfer-FSM, re15_player_is_grabbed). RE1.5-KI-Hund: unveraendert, prueft im
+  Original +0x93 == 0 (@0x8010f294).
 
 ## Punkt 3 — Liegende Zombies (0x81) kriechen (ROOM1010/1011, 1220/1221)
 
@@ -135,10 +144,14 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   liegen, bis der Spieler auf < 1300 im Sektor steht (Griff) oder sie anschiesst — sie **kriechen nie los**.
   Der Nutzer vergleicht mit dem RE1.5-Original (DuckStation): dort kriechen sie ab 3000.
 
-### Umsetzung (geplant)
-- NUTZER-VORGABE "kriechen wie im Original" in RE1.5-Form: im RE2-WAIT (re2z_crawl_decide_wait) nach dem byte-true
-  RE2-Griff-Wecker der RE1.5-Wecker Block B (dist < 0xbb8 @0x80104718 && arc 0x200 @0x8010472C-34 -> Wort 1
-  @0x80104738/48) -> RE2-Kriech-Lokomotion (Wort 1 = 0x80101210 P0). Das Totstellen bleibt (bis zur Naehe).
+### Umsetzung
+- NUTZER-VORGABE "kriechen wie im Original" in RE1.5-Form: enemy_ai_re2_zombie.c re2z_crawl (Kriecher-Wurzel
+  0x80101210, decide-dann-exec) zwischen DECIDE und EXEC (2 Zeilen): `if (e->sub_state_1 == 2 &&
+  re15_r39_kriecher_weckt(e, pl)) re15_ai_set_state_word(e, 1u);` — erst der byte-true RE2-Griff-Wecker DECIDE[2]
+  (0x101), dann, wenn der Kriecher noch wartet, der RE1.5-Wecker Block B (`re15_r39_kriecher_weckt`: ai_dist <
+  0xbb8 @0x80104718, arc 0x200 @0x8010472C-34 -> Wort 1 @0x80104738/48). EXEC liest +0x5 frisch (@0x80101254) und
+  betritt die Lokomotion P0 (@0x80103064) im selben Tick. Das Totstellen bleibt, bis der Spieler in Sicht und
+  naeher als 3000 ist; Treffer (HURT-P2) und Griff wie bisher.
 
 ## Punkt 4 — Gorilla-Schatten beim Sprung auf dem Boden
 
@@ -159,10 +172,14 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   NPC-Kante (Runde 38 M), Wasserzombie (Runde 38 U), Kraehe. Der Gorilla (0x27) und der kleine Affe (0x29) fallen
   auf npc->y -> beim Sprung (y steigt bis zu +0x1ba - 1600 im Rear-Up / Ballistik) haengt der Blob unter dem Koerper.
 
-### Umsetzung (geplant)
-- Haken (1 Zeile) in main.c hinter der Wasserzombie-Zeile: `re15_r39_schatten_y(npc, &nsh_y)` -> fuer 0x27 und 0x29
-  Quad-Y = dog_floor_y (+0x1ba, @0x80116f30 / @0x80110c78). Messung: Framedump je Sprungbild + Log Koerper-Y /
-  Boden-Y / Quad-Y (RE15_R39_LOG).
+### Umsetzung
+- Haken (1 Zeile) platform/pc/main.c hinter `re15_wasserzombie_schatten_y`: `re15_r39_schatten_y(npc, &nsh_y)` ->
+  fuer 0x27 und 0x29 Quad-Y = dog_floor_y (+0x1ba, @0x80116f30 / @0x80110c78); Hund (Runde 35 H), Kraehe, NPC-Kante,
+  Wasserzombie behalten ihre Wege. Mess-Schiene RE15_R39_LOG=1 -> gegner_r39.log: je gezeichnetem Bild mit
+  Koerper-Y != Boden-Y eine Zeile `schatten slot=.. koerper_y=.. boden_y=.. quad_y=..`.
+- Geprueft, nicht geaendert: Hund 0x20 (Runde 35 H, +0x1ba @0x8010d91c / RE2 +0x1C2 @0x800268c8), RE2-Spinne 0x25
+  (Sprung Sub 7 P5 @0x80100E50 ist waagerecht: Thrust + Vorschub, kein +0x38-Schreiber; Decken-/Wasserwege fuehren
+  +0x1C2 selbst, Runde 38 R) — kein Luft-Schatten-Fall.
 
 ## Messungen (Riegel test_r39_gegner, jeder Teil misst "vorher" = Haken aus und "nachher" im selben Lauf)
 
@@ -186,6 +203,17 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   der 22 Flinch-Bilder; der parallele Fall entsteht, wenn zwei Hunde im selben Flug treffen (Unit-Riegel oben).
   Der RE1.5-Flavor-Hund prueft schon im Original +0x93 == 0 vor dem Biss (`acae7==0` @0x8010f294) — dort gab es den
   Doppelbiss nie; der Nutzer spielt RE2-KI.
+
+### Punkt 3 (unit_r39_gegner_kriecher_1010 / _1220, RE2-KI, echte RDTs, RE2-Bank EM010/EM016)
+- ROOM1010 Cut 4 (Suedtuer, Spawns @0x0A12/@0x0A26): Kriecher (950,-1700). Spieler fern am Tuer-Ziel (dist 3510,
+  im Sichtkegel): liegt (Wort 0x201, Clip 23). Spieler 2500 davor (arc 0): **vorher** 120 Bilder lang Sub 2 / Clip 23,
+  Weg 0 (RE2-WAIT, nur der Griff-Wecker < 1300 — der Nutzer-Befund); **nachher** im ersten Bild Wort 1 (RE1.5 Block B),
+  Kriech-Lokomotion Clip 5, Weg 1653 Einheiten in 120 Bildern bis auf 849 an den Spieler (dann RE2-Griff Sub 1 =
+  byte-true Kriecher-DECIDE[0]).
+- ROOM1220 Cut 0 (sub00 `Switch 0x0a` Case 0 @0x00F24, Spawns @0x00F2A/@0x00F3E, Typ 0x16): Kriecher (-23500,-9700)
+  (der erste liegt vom Spawn-Schub bei (-25398,-6739)); dieselbe Messung: vorher Weg 0, nachher Weg 1657.
+  ROOM1011/1221 (Elza) tragen dieselben Spawn-Zeilen (@0x00ACE/@0x00AE2 bzw. identische sub00) — derselbe Code-Pfad
+  (re2z_crawl, typ-unabhaengig).
 
 ### Punkt 4 (Basislauf c71fa144, ROOM11C0 Szene, RE15_FRAMEDUMP 1340-1400/5)
 - state.log: Gorilla Platz 3 in Sub 7 (Fernsprung) F1352 fuer 39 Bilder. Framedumps F1355/F1365/F1375/F1385
