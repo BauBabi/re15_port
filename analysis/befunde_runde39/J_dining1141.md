@@ -187,6 +187,24 @@ SCA (RDT +0x20, 5 x 19 Saetze zu 12 B, re15_rdt.h re15_sca_entry_t; `j39b/sca.py
 
 ## 4. Messung nachher
 
+### 4.1 Lauf n1 (echte exe Stand 46916d79, echter Weg mit Elza 1131 -> 1141 -> 1171, Wegplan `j39b/weg_n1.txt`)
+`lauf.sh n1` mit RE15_SET_FLAG (Nach-1021-Flags), RE15_GIVE=0x43:1, RE15_DEBUG_JUMP=1131@gp, RE15_R38F_GORILLAS_TOT=600
+(Kill-Flags, keine Schusszahl), RE15_R39J_LOG, RE15_AUDIO_CAP_SYNC. Auswertung debug.log (Abschnitt 1141) + r39.txt + Mitschnitt:
+| Punkt | Messung | Vorher (v0) |
+|---|---|---|
+| 1, 3 | 0 Zeilen `Se_on bank=0x3C` / `0x3D`, kein `clip loaded: main42.wav` | 0x3C 0A/0B/0B + 0x3D je Runde |
+| 4 | Klopfen F35/F40/F45, F355/F360/F365 ... (je 5 Bilder), help03 F75, help01 F395, help04 F615; `[voice] clip loaded: help03.wav (32000 Hz ...)`; Pegel je Schlag RMS 2475 im Schlagbild, Spitze ~7900 (Musik dort RMS ~200, Spitze ~1000), Hilferuf RMS 3348 | kein Klopfen |
+| 5 | Nachrichten 1141 in Folge: **50**, 13, 40, 3..11, 51, 52; msg 50 offen F176..F274 (nach help03 F75), (9,94) danach 1 | erste Nachricht 13 |
+| 2 | r39.txt: F1264 angezeigt Cut 7 (Elza (-7806,-12768)), John springt im selben Bild von (-30000,-30000) nach (-7350,-1300) = hinter der Kamera; F1334 Cut 6 mit John an der Tuer (70 Bilder = 43 + 27); F1354 Cut 5, John laeuft heraus | John im Dachgang ab Bild 0 |
+| 6 | `Se_on bank=0x3E id=0x21 ... GLAS1090` F1917 und F1922, msg 6 danach | kein Ton |
+| 7 | Blickfehler Johns zu Elza (Port-Yaw, atan2(-dz,dx)): msg 9 F2386..F2554 und msg 10 F2556..F2654 je **+23** (2 Grad); msg 11 +23 bis F2790, ab F2791 laeuft er (Original sub02 @0x00F8E RUN in die Ecke) | msg 9..11 +117 Grad |
+| 8 | F3433 Cut 8, Elza (-6000,-20000) Blick 1549; msg 51 F3470 Blickfehler +2, Johns Clip (0,15); msg 52 F3600 mit Sub 2 Clip 6; F3680 Cut 7, F3802 John geparkt (vorher (-7350,-914) hinter der Kamera), F3817 Cut 8 | John lief ohne Wort hinaus |
+| 9 | Mitschnitt: Tuer-zu-Ton F9442..9468 (DOOR1A Ton 1 = 0,89 s), **Takte 9473..9498 Pegel 0**, MAIN32 ab 9502 (Werkzeug `test_r39_dining1141 pegel`) | v0 Takte 8169..8194 Pegel **345** (MAIN16), Werkzeug meldet FEHLER |
+Runde-38-Regressionen im selben Lauf: `[msgtext] room=1141 id=41 "I cannot leave him alone with those monsters."` an der
+Doppeltuer im Kampf, Rolladen-Ton 0x3B, Tuer-Toene 0x0E 0/1, Dachtuer -> 1171.
+Hinweis Messtechnik: RE15_FRAMEDUMP nummeriert je Raum (g_engine.frame_count beginnt beim Eintritt neu) - der lange Lauf in
+1171 hat die 1141-Bilder bis F1500 ueberschrieben; der Riegel-Lauf (4.2) endet deshalb 300 Bilder nach dem Eintritt in 1171.
+
 ## 5. Tests
 
 ## 6. OFFEN
