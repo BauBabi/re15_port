@@ -783,3 +783,17 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
   0 regelwidrig), je Gorilla 30 x 12 bis 0, 10 x FLINCH (jeder dritte), Tod mit dem 31.; Voll-Ablauf an der exe in v11/v12:
   Tod beider Gorillas -> John bricht 102 Bilder spaeter auf und parkt (F6815 / F7775); unit ablauf1141: Flags, (4,0xF2) = 0,
   Abgang, Dachtuer -> 0x17 mit 360.
+
+## Nachbesserung 3 (2026-10-18, nach Abnahme 2 — Befund E: Elza/Gorilla durch Waende ROOM1141)
+Auftrag (Orchestrator, args_e_nach3.json): Mangel 1 = Befund E (b) Elza ausserhalb des Raums nach dem Gorilla-Pin/Wurf
+(Versuch 6, F3555 -> F3556, Suedwand); Mangel 2 = Befund E (a) Gorilla hinter der Westwand (Versuch 5, F4623 -> F4624,
+Koerper-Stoss Gorilla gegen Gorilla) -> Softlock, weil der Kampf in 1141 im Port Pflicht ist (Runde 38 F). Je Mangel:
+Schreiber finden, Original + RE2 lesen, Ursache korrigieren bzw. Invariante (Runde 38 T) belegt durchsetzen, Riegel.
+Punkte 1-4 (Abnahme 2: erfuellt) nicht verschlechtern.
+
+### Protokoll
+- 19:2x Start (fuenfter Agent). Baum sauber, HEAD 98822214. Pflichtlektuere AUFTRAG/VERTRAG/E_abnahme_2/Dossier-Befund E,
+  Runde 38 T (T_spiderman.md: Wandwaechter re15_r38_griff_durch_wand, Riegel unit_r38_griff_*).
+- Cherry-pick 3fe9e358 aus r39/integration (Logschalter RE15_R39_LOG -> RE15_R39_GEGNER_LOG, Namenskollision mit Spur F) ->
+  0a9076e9, damit neue Riegel denselben Schalternamen tragen wie der Integrationsstand (gleiche Aenderung auf beiden Seiten =
+  konfliktfreier Merge).
