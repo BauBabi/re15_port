@@ -16,7 +16,7 @@ cmake_minimum_required(VERSION 3.16)
 #   stapeln  C Leon ROOM1010 mit 21:3, Regal-Aufnahme Memory Card x3 -> 21:6 auf EINEM Platz (kein zweiter "21:")
 #            D Leon ROOM1010 leer + 21:3 + 21:2, START -> ITEM -> Platz 0 -> COMBINE -> Platz 1 -> Ja -> 21:5, Platz 1 leer
 #   status   E Elza ROOM1001, START, Framedump Bild 145: "[inv] Status-Bild ITEM/STPIC_04.TIM (Figur 4" und der Block
-#              bei (14,26) == STPIC_04 (>= 90 % der Texel, Zeilen 0..79 = Driver License), nicht == STPIC_00 (< 50 %)
+#              bei (14,26) == STPIC_04 (>= 90 % der Texel, Zeilen 0..62 = Driver License), nicht == STPIC_00 (< 50 %)
 #            F Leon ROOM1000 dasselbe: STPIC_00 geladen, Block == STPIC_00
 #   discard  G Elza ROOM11E1 mit Yellow Keycard + (9,0x8A): Leser -> Ja -> msg 9 -> Tastenfeld -> Code-Bits per
 #              RE15_SET_FLAG_AT -> msg 5 -> Wegwerf-Abfrage (wegwerf=1, bereit) -> Ja -> Inventar ohne 39:1
@@ -70,17 +70,28 @@ macro(pruef_nicht _name _text _muster)
         message(STATUS "ok   ${_name}: nicht da '${_muster}'")
     endif()
 endmacro()
-# Anzahl der Vorkommen eines Musters muss == _soll sein.
-macro(pruef_anzahl _name _text _muster _soll)
-    string(REGEX MATCHALL "${_muster}" _treffer "${${_text}}")
-    list(LENGTH _treffer _n)
+# Anzahl der Vorkommen eines TEXT-Musters muss == _soll sein (kein Regex: Backslash-Escapes ueberleben die
+# Argument-Ersetzung nicht, `[`/`]` waeren Zeichenklassen).
+function(pruef_anzahl _name _text _muster _soll)
+    set(_rest "${${_text}}")
+    set(_n 0)
+    string(LENGTH "${_muster}" _ml)
+    while(TRUE)
+        string(FIND "${_rest}" "${_muster}" _p)
+        if(_p LESS 0)
+            break()
+        endif()
+        math(EXPR _n "${_n}+1")
+        math(EXPR _p "${_p}+${_ml}")
+        string(SUBSTRING "${_rest}" ${_p} -1 _rest)
+    endwhile()
     if(NOT _n EQUAL ${_soll})
-        list(APPEND _fehler "${_name}: '${_muster}' ${_n}x (Soll ${_soll})")
+        set(_fehler "${_fehler};${_name}: '${_muster}' ${_n}x (Soll ${_soll})" PARENT_SCOPE)
         message(STATUS "FAIL ${_name}: '${_muster}' ${_n}x (Soll ${_soll})")
     else()
         message(STATUS "ok   ${_name}: '${_muster}' ${_n}x")
     endif()
-endmacro()
+endfunction()
 
 # Ein Lauf: Karte schreiben, exe starten (CONTINUE), debug.log lesen. _extra = ;-Liste KEY=WERT.
 function(c_lauf _name _raum _kartenargs _ende _extra _out)
@@ -137,12 +148,12 @@ if(TEIL STREQUAL "spind")
     c_lauf(a 1000 "1000;20900;-1100;3072" 560 "${_env_skript}" _a)
     pruef(A1 _a "[inventar-r39] ROOM1000 Spind: Slot 3 Aufnahme Item 0x15 x30 Bit (9,69) (Form ROOM1001 @0x00C24), Raumtext msg 0 -> Slot 11")
     pruef(A2 _a "[inv-r39] F198 R1000 eq=128 inv=03:15,15:65,00:0")
-    pruef_anzahl(A3 _a "\\[msgtext\\] room=1000 id=0 \"Nothing unusual\\.\"" 1)
+    pruef_anzahl(A3 _a "[msgtext] room=1000 id=0 \"Nothing unusual.\"" 1)
     pruef_nicht(A4 _a "15:80")
     c_lauf(b 1000 "1000;20900;-1100;3072;flag:9:69" 300 "RE15_INPUT_SCRIPT_BASIS=spiel;RE15_INPUT_SCRIPT_START=60;RE15_INPUT_SCRIPT=W1,A0.1,W3.5,A0.1,W4" _b)
     pruef(B1 _b "[inventar-r39] ROOM1000 Spind: Munition schon genommen (9,69)=1 -> Slot 3 Raumtext msg 0")
     pruef(B2 _b "[msgtext] room=1000 id=0 \"Nothing unusual.\"")
-    pruef_anzahl(B3 _b "\\[inv-r39\\] F[0-9]+ R1000" 1)
+    pruef_anzahl(B3 _b "[inv-r39] F" 1)
     pruef_nicht(B4 _b "Slot 3 Aufnahme Item 0x15")
 
 elseif(TEIL STREQUAL "stapeln")
@@ -161,8 +172,10 @@ elseif(TEIL STREQUAL "status")
     c_lauf(e 1001 "1001;20900;-1100;3072;elza" 160 "RE15_PRESS=start@120;RE15_FRAMEDUMP=145:status.ppm" _e)
     pruef(E1 _e "[inv] Status-Bild ITEM/STPIC_04.TIM (Figur 4, Runde 39 Spur C)")
     pruef(E2 _e "[inv-r39-menu] F129 offen=1")
-    c_bild(E3 "${_basis}_e/status.ppm" STPIC_04.TIM 80 _e04)
-    c_bild(E4 "${_basis}_e/status.ppm" STPIC_00.TIM 80 _e00)
+    # Der Schirm zeichnet die Zeilen 0..62 des Blocks (der Ausweis; ab Zeile 63 liegt im Original die CONDITION-Tafel
+    # darueber) — gemessen am Dump: Zeilen 0..62 >= 95 % Treffer, 63..102 < 10 %.
+    c_bild(E3 "${_basis}_e/status.ppm" STPIC_04.TIM 63 _e04)
+    c_bild(E4 "${_basis}_e/status.ppm" STPIC_00.TIM 63 _e00)
     if(_e04 LESS 90)
         list(APPEND _fehler "E3: Elza-Block == STPIC_04 nur ${_e04} % (Soll >= 90)")
     endif()
@@ -171,27 +184,32 @@ elseif(TEIL STREQUAL "status")
     endif()
     c_lauf(f 1000 "1000;20900;-1100;3072" 160 "RE15_PRESS=start@120;RE15_FRAMEDUMP=145:status.ppm" _f)
     pruef(F1 _f "[inv] Status-Bild ITEM/STPIC_00.TIM (Figur 0, Runde 39 Spur C)")
-    c_bild(F2 "${_basis}_f/status.ppm" STPIC_00.TIM 80 _f00)
+    c_bild(F2 "${_basis}_f/status.ppm" STPIC_00.TIM 63 _f00)
     if(_f00 LESS 90)
         list(APPEND _fehler "F2: Leon-Block == STPIC_00 nur ${_f00} % (Soll >= 90)")
     endif()
 
 elseif(TEIL STREQUAL "discard")
-    # G: Bildnummern aus C_belege/m4_nachher2 (Leser-Prompt: Tippen bis Bild ~470, Ja-Nein sichtbar ab fsm=3).
-    c_lauf(g 11E1 "11E1;10400;4250;0;elza;give:0x39:1;flag:9:0x8A" 1300
-           "RE15_PRESS=square@100,square@500,square@600,square@700,square@1100;RE15_SET_FLAG_AT=5:13,5:14,5:15,5:16@800" _g)
+    # G: Bildnummern aus C_belege (Lauf m4c_nachher): msg 7 hat vier Seiten (fsm 1 = Seitenende F127/F260/F304, Ja/Nein
+    # fsm 3 ab F386), Ja F420 -> msg 9 F423 (zu F501) -> Tastenfeld msg 0 F502 (zu F561) -> Code-Bits F600 -> sub19
+    # msg 5 F601 mit wegwerf=1 -> zu F700 (Karte 39:0 = Zaehler @0x80051810) -> Abfrage getippt (bereit=1 F788) ->
+    # Ja F1000 -> Inventar ohne 0x39.
+    c_lauf(g 11E1 "11E1;10400;4250;0;elza;give:0x39:1;flag:9:0x8A" 1100
+           "RE15_PRESS=square@100,square@140,square@270,square@320,square@420,square@500,square@560,square@700,square@1000;RE15_SET_FLAG_AT=5:13,5:14,5:15,5:16@600" _g)
     pruef(G1 _g "[inv-r39] F0 R11E1 eq=128 inv=03:15,15:50,39:1,00:0")
     pruef(G2 _g "[msgtext] room=11e1 id=7 \"A card reader.")
     pruef(G3 _g "[msgtext] room=11e1 id=9 \"You've used the Yellow Keycard.\"")
     pruef(G4 _g "[msgtext] room=11e1 id=5 \"You've opened the lock.\"")
-    pruef(G5 _g "wegwerf=1 ")
-    pruef(G6 _g "wegwerf=1 fsm=0 sel=0 bereit=1")
-    pruef(G7 _g "R11E1 eq=128 inv=03:15,15:50,00:0,00:0")
+    pruef(G5 _g "msg=1/5 wegwerf=1 ")
+    pruef(G6 _g "wegwerf=1 fsm=6 sel=0 bereit=1")
+    pruef(G7 _g "R11E1 eq=128 inv=03:15,15:50,39:0,00:0")
+    pruef(G8 _g "[inv-r39] F1000 R11E1 eq=128 inv=03:15,15:50,00:0,00:0")
+    pruef_nicht(G9 _g "[inv-r39-menu] F423 offen=0 sub=0 st=0 cur=0 cur2=0 cmd=0 msg=1/9 wegwerf=1")
     c_lauf(h 11E0 "11E0;10400;4250;0;give:0x39:1;flag:9:0x8A;flag:3:139" 400
            "RE15_PRESS=square@100,square@200,square@300" _h)
     pruef_nicht(H1 _h "[msgtext] room=11e0 id=7")
     pruef_nicht(H2 _h "wegwerf=1")
-    pruef_anzahl(H3 _h "\\[inv-r39\\] F[0-9]+ R11E0" 1)
+    pruef_anzahl(H3 _h "[inv-r39] F" 1)
     pruef(H4 _h "inv=03:15,15:50,39:1,00:0")
 else()
     message(FATAL_ERROR "r39_inventar: unbekannter TEIL '${TEIL}'")
