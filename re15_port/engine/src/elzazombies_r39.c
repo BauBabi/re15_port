@@ -22,6 +22,7 @@
 #include "re15_map_hint.h"     /* re15_map_hint_pending */
 #include "re15_room.h"         /* g_room_change */
 #include "re15_scd.h"
+#include "re15_stair.h"        /* re15_stair_active: Treppe zu Ende = Etage erreicht */
 #include <math.h>
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
@@ -683,7 +684,11 @@ static void halten_1061(void)
     if (!s_halt_1061) return;
     if ((uint16_t)g_current_room_id != RE15_R39Q_RAUM_1061) { s_halt_1061 = 0; return; }
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    const int auf_etage = re15_collision_band_from_y(pl->y) == RE15_R39Q_ETAGE_1061;
+    /* ERREICHT = auf Etage 4 UND die Treppe ist zu Ende (re15_stair_active = 0: Phase 2 "finalise, commit band, return to
+     * normal state", stair_common.c, Handler LAB_80038850). Gemessen (Lauf t5/t6): das Band springt schon MITTEN im
+     * Treppen-Clip auf 4 (bei z 23503, Ankunft z 24568) — frei ab dort, liefen die Kopien ~1 s, bevor Elza die Steuerung
+     * hatte, und standen bei der Ankunft schon halb heran (Bild 540). */
+    const int auf_etage = re15_collision_band_from_y(pl->y) == RE15_R39Q_ETAGE_1061 && !re15_stair_active();
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *a = &g_actors[i];
         int kopie = 0;
