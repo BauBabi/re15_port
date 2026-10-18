@@ -62,3 +62,15 @@ f4412ec1 / a0619152 committet, Messreihen + Pruefung fehlen), NACHLAUF analysis/
   (main02..08), synchro/STAGE1/room1241.
 - Karten-Vorlagen: map1F_correct.png, map2F_correct.png, map3F_correct.png, mapB2_correct.png (Repo-Wurzel bzw. nutzer/ - beim
   Start der Runde suchen und committen).
+
+## Nachtrag des Nutzers (woertlich, 2026-10-18 ~07:00, nach dem Wochenlimit-Abbruch der Welle 1)
+
+Zur Rueckfrage ROOM1141 Punkt 5 ("Oh, no, this is Roy! ..."): "Das ist natürlich John, nicht Roy. Roy ist nur unten in
+den ROOM 1021 aktiv." -> Elzas Zeile lautet "Oh, no, this is John! He is in Trouble, I have to help him!" (Spur J).
+
+Neuer Punkt (Ende der erneut gesendeten Liste):
+- Die Gorillas haben beim springen direkt ihren Schatten unter dem beim.
+  (Orchestrator: Spur E - der Schatten haengt beim Sprung mit in der Luft unter dem Koerper statt auf dem Boden zu bleiben.)
+
+Ablauf erneut bestaetigt: "Baue erst einmal fertig, nutze diese und baue das Stück für Stück, damit nicht zu viel
+Tokens verbrannt werden, wenn das Limit erreicht ist."
