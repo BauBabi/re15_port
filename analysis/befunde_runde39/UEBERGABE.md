@@ -6,7 +6,7 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-18 21:15: Spur M schluessel2 BESTANDEN (Abnahme 0 ohne Maengel; Fix 50e8be0e): NUTZER_FAKTOR_M 0,5 + GTE-Raster-
+* 2026-10-18 21:22: Spur M schluessel2 BESTANDEN (Abnahme 0 ohne Maengel; Fix 50e8be0e): NUTZER_FAKTOR_M 0,5 + GTE-Raster-
   Grenze (ganzzahlige SXY @0x80022fd8) - 960x720: Parking Lot Key 14x8 -> 4x3, Prison Key 16x10 -> 8x5; Aufnahme unveraendert;
   45 + 825 Tests. NOCH NICHT gemergt: der laufende Integrationstest (E2+E3+I, b3a110bhv) liest test_r38_itemorte.cmake und
   test_r39_optik_schluessel.cmake, die M aendert -> erst danach mergen, bauen, M-Gruppe fahren. FUER DEN NUTZER: bei 320x240
