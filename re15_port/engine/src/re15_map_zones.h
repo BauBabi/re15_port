@@ -299,6 +299,13 @@ static const re15_map_zone_t s_map_zones[] = {
      * Rahmen. Bisher hatte 1160 KEINE Zeile: weder Marker noch Zeichnung, solange der Strom aus ist. */
     { 0x11D0, -11500, -23100,   5000, -11500,  0, 255, 0,  30,     0,     0,     0,     0, 0, 0,   9, 0 },
     { 0x11D1, -11500, -23100,   5000, -11500,  0, 255, 0,  30,     0,     0,     0,     0, 0, 0,   9, 0 },
+    /* Runde 39 Spur G: ROOM11D0 Zone 1 = Kammer der Kanal-Leiter (begehbar x 1550..6050 z -23050..-19450, nur aus
+     * ROOM1260 erreichbar: 1260 slot 3 -> Spawn (3900,-22000); gegen den Zwinger dicht durch @0x008C0 (x 1050..1550)
+     * und @0x008B4 (z -19350..-18850)). zid 111 = naechste freie (Hoechstwert vorher 110). Weltbox um ZONE_SLACK
+     * (1500, re15_map_zones.c) gegen den Zwinger eingezogen: x ab 2101 (Zwinger-Mitten <= 600), z bis -19901
+     * (Zwinger-Mitten >= -18400) - sonst griffe der kleinere Kasten mit seinem Rand in den Zwinger. */
+    { 0x11D0,   2101, -23100,   6100, -19901,  0, 255, 1, 111,     0,     0,     0,     0, 0, 0,  11, 0 },
+    { 0x11D1,   2101, -23100,   6100, -19901,  0, 255, 1, 111,     0,     0,     0,     0, 0, 0,  11, 0 },
     { 0x1160,  -8550, -23100,   5050, -11500,  0, 255, 0,  30,     0,     0,     0,     0, 0, 0,   9, 0 },
     { 0x1161,  -8550, -23100,   5050, -11500,  0, 255, 0,  30,     0,     0,     0,     0, 0, 0,   9, 0 },
     { 0x11E0, -32312, -30800,  31100,  31150,  1,   0, 0,  31,    91,   157,  2304,  2240, 0, 0,   0, 0 },
@@ -873,18 +880,16 @@ static const re15_map_mark_t s_map_marks[] = {
      * (der Gang ist auf B1 immer zuerst betreten). Tuer-Datensaetze: 1180 slot 2 @0x00A54 <-> 1190 slot 4 @0x028B2,
      * 1230 slot 4 @0x00CE6 (Ruhe-Satz slot 6 @0x00BC4 sce 0) <-> 1190 slot 6 @0x02B1C, 1180 slot 3 @0x00A74 <->
      * 11B0 slot 0 @0x00F64, 1180 slot 1 @0x00A34 <-> 10A0 slot 1 @0x00DDA/@0x00DFE, 1180 slot 0 @0x009EE/@0x00A12
-     * <-> 11D0 slot 0 @0x011E2 / 1160 slot 0 @0x007C6, 11B0 slot 1 @0x00FAA <-> 11C0 slot 0 @0x01712; 11D0 -> 1260
-     * slot 1 @0x01228 in der Ostwand des Sued-Gangs (@0x008C0). Treppen = Aot_set
-     * sce 13 Band 4 @0x00E7C / @0x00E90 (ROOM10A0.RDT), in den Innenraum des Absatzes geklemmt. Der Kanaldeckel
-     * 11B0 -> 1260 (slot 5 @0x01010, Trigger = Kreiszelle @0x00EA4 mitten im Raum) ist keine Wandtuer und bekommt
-     * keine Marke. */
+     * <-> 11D0 slot 0 @0x011E2 / 1160 slot 0 @0x007C6, 11B0 slot 1 @0x00FAA <-> 11C0 slot 0 @0x01712. Treppen = Aot_set
+     * sce 13 Band 4 @0x00E7C / @0x00E90 (ROOM10A0.RDT) = die Projektionen ihrer Mitten. Die beiden Wege nach ROOM1260
+     * sind BODENLOECHER, keine Wandtueren, und bekommen keine Marke: 11B0 slot 5 @0x01010 (Trigger = Kreiszelle
+     * @0x00EA4 mitten in der Werkstatt) und 11D0 slot 1 @0x01228 (Trigger = Kreiszelle @0x00A10 in der Kammer). */
     {  0, 255,  127,  115, 2,  25,  26, 0 },   /* Gang <-> 1190 Halle */
     {  0, 255,  146,  109, 2,  25, 110, 0 },   /* Gang (1230) <-> 1190 Ostkammer */
     {  0, 255,  158,   72, 1,  25,  28, 0 },   /* Gang <-> 11B0 */
     {  0, 255,  145,  153, 2,  25,  10, 0 },   /* Gang <-> 10A0 B1-Absatz */
     {  0, 255,  136,  173, 2,  25,  30, 0 },   /* Gang <-> 11D0 / 1160 */
     {  0, 255,  163,   94, 2,  28,  29, 0 },   /* 11B0 <-> 11C0 */
-    {  0, 255,  138,  185, 1,  30, 255, 0 },   /* 11D0 -> 1260 */
     {  0, 255,  154,  162, 4,  10, 255, 0 },   /* 10A0 Treppe 6<->4 (1F)  @0x00E7C */
     {  0, 255,  145,  165, 4,  10, 255, 0 },   /* 10A0 Treppe 4<->3 (B2)  @0x00E90 */
 };
@@ -1036,8 +1041,9 @@ static const re15_map_synth_t s_map_synth[] = {
     { 132, 109,  19,  32, 10, 1, 146, 0, 103, 0, -146,  84 },  /* synth 6:  1190 Ostkammer */
     { 158,  69,  65,  26, 11, 1, 146, 0, 219, 0, -146,  35 },  /* synth 7:  11B0 */
     { 158,  94,  90,  78, 12, 4, 146, 0, 220, 0, -146, 134 },  /* synth 8:  11C0 Ring */
-    { 110, 162,  38,  27, 16, 4, 146, 0, 136, 0, -146, 137 },  /* synth 9:  11D0 = 1160 */
-    { 141, 153,  18,  16, 20, 1, 146, 0,  98, 0, -146, 212 },  /* synth 10: 10A0 B1-Absatz */
+    { 110, 162,  38,  27, 16, 3, 146, 0, 136, 0, -146, 137 },  /* synth 9:  11D0 = 1160 */
+    { 141, 153,  18,  16, 19, 1, 146, 0,  98, 0, -146, 212 },  /* synth 10: 10A0 B1-Absatz */
+    { 138, 180,  12,   9, 20, 1, 146, 0, 136, 0, -146, 137 },  /* synth 11: 11D0 Leiter-Kammer (Zone 1) */
 };
 typedef struct { short x, y, w, h; } re15_map_synth_cell_t;
 static const re15_map_synth_cell_t s_map_synth_cells[] = {
@@ -1050,8 +1056,9 @@ static const re15_map_synth_cell_t s_map_synth_cells[] = {
     { 132, 109,  19,  32 },                                                     /* 1190 Ostkammer (6) */
     { 158,  69,  65,  26 },                                                     /* 11B0 (7) */
     { 158,  94,  90,  22 }, { 180, 116,  14,  34 }, { 230, 116,  18,  34 }, { 180, 150,  68,  22 },   /* 11C0 (8) */
-    { 110, 162,  16,  19 }, { 132, 173,  16,   8 }, { 110, 181,  38,   1 }, { 110, 182,  29,   7 },   /* 11D0 (9) */
+    { 110, 162,  16,  19 }, { 132, 173,  16,   8 }, { 110, 181,  29,   8 },   /* 11D0 (9) */
     { 141, 153,  18,  16 },                                                     /* 10A0 B1 (10) */
+    { 138, 180,  12,   9 },                                                     /* 11D0 Kammer (11) */
 };
 /* ACHTUNG - ERSATZ-SEITENTABELLE. Das Original fuehrt fuer Blatt 3 (2F)
  * die Tabelle von Blatt 2 (1F): verschiedene Adressen (@0x8007636C /

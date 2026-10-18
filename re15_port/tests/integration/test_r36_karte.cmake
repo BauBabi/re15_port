@@ -106,28 +106,31 @@ endmacro()
 # besucht (ihre Ankunftspunkte), damit die Tuer-Marke 11B0<->11C0 auf B1 gezeichnet wird.
 karte_lauf(A "1230;-358;0;-6536;1024;besucht:11B0:-26483:-18094;besucht:11C0:-25552:-25331;besucht:1230:-358:-6536"
            "W1,A0.3,W1,A0.3" 10A0)
-farben(A tr 153 114 168 134)
-pruefe(A tr_sprosse GREATER_EQUAL 25 "B1: Treppensprossen im 10A0-Absatz (rect 6) - ${tr_sprosse} Pixel (vorher 0)")
-farben(A tw 171 100 175 100)
-pruefe(A tw_gelb EQUAL 5 "B1: Tuer 11B0/11C0 als waagerechter Balken x171..175 auf der Wandzeile y100 - ${tw_gelb} von 5")
-farben(A to 173 96 173 99)
-farben(A tu 173 101 173 104)
+# Runde 39 Spur G: B1 ist Schema-Zeichnung (re15_map_zones.h B1-Kopf) - der 10A0-Absatz liegt auf (141..158,153..168)
+# (synth 10), die Tuer 11B0/11C0 auf der gemeinsamen Wandlinie y94 bei x161..165 (Marke (163,94)).
+farben(A tr 141 153 158 168)
+pruefe(A tr_sprosse GREATER_EQUAL 25 "B1: Treppensprossen im 10A0-Absatz (Schema-Zeichnung) - ${tr_sprosse} Pixel")
+farben(A tw 161 94 165 94)
+pruefe(A tw_gelb EQUAL 5 "B1: Tuer 11B0/11C0 als waagerechter Balken x161..165 auf der Wandlinie y94 - ${tw_gelb} von 5")
+farben(A to 163 90 163 93)
+farben(A tu 163 95 163 98)
 math(EXPR _quer "${to_gelb} + ${tu_gelb}")
-pruefe(A _quer EQUAL 0 "B1: KEIN senkrechter Balken quer durch die Wand bei x173 (vorher y98..102) - ${_quer}")
+pruefe(A _quer EQUAL 0 "B1: KEIN senkrechter Balken quer durch die Wand bei x163 - ${_quer}")
 
 # ---- B: P2 Marker ROOM11D0 an der Tuer ------------------------------------------------------
 # ROOM1230 vor der 11D0-Tuer (slot 0 @0x00B12, Trigger (-6041,-17561) 2409x1444; nach Ck(4,243)
 # @0x00AEA fuehrt sie nach 11D0), Rueck-Spawn (-4729,-16018), Blick -z.
 karte_lauf(B "1230;-4729;0;-16018;1024;besucht:1230:-4729:-16018;flag:4:243"
            "W1,A0.3,W1,A0.3" 11D0)
-execute_process(COMMAND "${RE15_PROBE}" marker "${_basis}_B/karte.bmp" 96 118 151 179
+execute_process(COMMAND "${RE15_PROBE}" marker "${_basis}_B/karte.bmp" 108 160 150 190
                 RESULT_VARIABLE _rvm OUTPUT_VARIABLE _outm)
 string(STRIP "${_outm}" _outm)
 message(STATUS "r36_karte[B] ${_outm}")
 if(_rvm EQUAL 0 AND _outm MATCHES "^MARKER ([0-9]+) ([0-9]+)")
     set(_my ${CMAKE_MATCH_2})
-    # Tuermarke (129,124) auf der Oberkante; Ring-Mitte = Marker - 1 (TEX.TIM @0x14910).
-    pruefe(B _my LESS_EQUAL 133 "11D0: Marker-Ring y ${_my} direkt unter der Tuer y124 (vorher Mitte ~y150)")
+    # Runde 39 Spur G: Tuermarke Gang<->11D0 (136,173) auf der Oberkante der Zwinger-Zeichnung; Ring-Mitte =
+    # Marker - 1 (TEX.TIM @0x14910).
+    pruefe(B _my LESS_EQUAL 178 "11D0: Marker-Ring y ${_my} direkt unter der Tuer y173")
 else()
     pruefe(B 0 EQUAL 1 "11D0: Marker im Abzug gefunden")
 endif()
@@ -139,11 +142,12 @@ endif()
 # ROOM1230 vor der Haupthallen-Tuer (slot 2 @0x00B54, Trigger (-9266,8888) 2297x934), Rueck-Spawn
 # (-8133,10226), Blick -z.
 karte_lauf(C "1230;-8133;0;10226;1024;besucht:1230:-8133:10226" "W1,A0.3,W1,A0.3" 1190)
-farben(C h 77 77 142 113)
-farben(C o 145 70 158 103)
+# Runde 39 Spur G: Halle = Schema-Zeichnung (69..132,115..151), Ostkammer (132..150,109..140), je Innenraum gezaehlt.
+farben(C h 70 116 131 150)
+farben(C o 133 110 149 139)
 math(EXPR _o_alles "${o_rot} + ${o_besucht}")
-pruefe(C h_rot GREATER_EQUAL 200 "1190 Haupthalle: rot in rect 1 - ${h_rot}")
-pruefe(C _o_alles EQUAL 0 "1190 Haupthalle: rect 2 (Ostkammer) ungezeichnet - ${_o_alles}")
+pruefe(C h_rot GREATER_EQUAL 200 "1190 Haupthalle: rot in der Hallen-Zeichnung - ${h_rot}")
+pruefe(C _o_alles EQUAL 0 "1190 Haupthalle: Ostkammer ungezeichnet - ${_o_alles}")
 
 # ---- D: P3 1190 Ostkammer ---------------------------------------------------------------------
 # ROOM1230 vor der Ostkammer-Tuer (slot 4 @0x00CE6, Trigger (-1052,11694) 2297x934; Else-Zweig
@@ -153,11 +157,11 @@ pruefe(C _o_alles EQUAL 0 "1190 Haupthalle: rect 2 (Ostkammer) ungezeichnet - ${
 # erledigt gesetzt (flag 7:136 / 7:137), wie nach dem Kampf.
 karte_lauf(D "1230;142;0;13001;1024;besucht:1230:142:13001;flag:3:137;flag:7:136;flag:7:137"
            "W1,A0.3,W1,A0.3" 1190)
-farben(D o 145 70 158 103)
-farben(D h 77 77 142 113)
+farben(D o 133 110 149 139)
+farben(D h 70 116 131 150)
 math(EXPR _h_alles "${h_rot} + ${h_besucht}")
-pruefe(D o_rot GREATER_EQUAL 100 "1190 Ostkammer: rot in rect 2 - ${o_rot}")
-pruefe(D _h_alles EQUAL 0 "1190 Ostkammer: rect 1 (Haupthalle) ungezeichnet - ${_h_alles}")
+pruefe(D o_rot GREATER_EQUAL 100 "1190 Ostkammer: rot in der Ostkammer-Zeichnung - ${o_rot}")
+pruefe(D _h_alles EQUAL 0 "1190 Ostkammer: Haupthalle ungezeichnet - ${_h_alles}")
 
 # ---- E: P5 ROOM1110 Teilbereiche -------------------------------------------------------------
 # ROOM1100 vor der 1110-Tuer (slot 1 @0x009BA, Trigger (-27330,-11736) 900x1600), Rueck-Spawn

@@ -397,12 +397,37 @@ static int teil_markerflaeche(int argc, char **argv)
                          atoi(argv[6]), st, dichte, 1, NULL) < 0 ? 1 : 0;
 }
 
+/* weg <hexraum> <band> <y> <x0> <z0> <x1> <z1> <n>: der Spieler laeuft geradlinig von (x0,z0) nach (x1,z1) in n
+ * Schritten (Zone je Schritt per re15_map_zone_update wie game_step_common), je Schritt der echte Kartenpfad.
+ * Ausgabe je Schritt: Welt, Blatt, Zone (idx), Marker. Misst "wie man sich bewegt": Pixel je Schritt, Spruenge. */
+static int teil_weg(int argc, char **argv)
+{
+    unsigned rid; int band, n, k;
+    int32_t y, x0, z0, x1, z1;
+    if (argc < 10) { printf("FAIL: weg <hexraum> <band> <y> <x0> <z0> <x1> <z1> <n>\n"); return 2; }
+    rid = (unsigned)strtoul(argv[2], NULL, 16); band = atoi(argv[3]); y = atoi(argv[4]);
+    x0 = atoi(argv[5]); z0 = atoi(argv[6]); x1 = atoi(argv[7]); z1 = atoi(argv[8]); n = atoi(argv[9]);
+    if (n < 1) n = 1;
+    if (!betrete(rid, x0, z0, band)) { printf("FAIL: Raum\n"); return 1; }
+    for (k = 0; k <= n; k++) {
+        marker_t m;
+        int32_t wx = x0 + (int32_t)(((int64_t)(x1 - x0) * k) / n);
+        int32_t wz = z0 + (int32_t)(((int64_t)(z1 - z0) * k) / n);
+        const re15_map_zone_t *zn;
+        miss_marker(rid, wx, y, wz, &m);
+        zn = re15_map_zone_current();
+        printf("weg %d %d %d %d %d %d %d %d\n", k, wx, wz, m.page, zn ? zn->idx : -1, zn ? zn->zid : -1, m.mx, m.my);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "";
     if (!strcmp(teil, "ops")) return teil_ops(argc, argv);
     if (!strcmp(teil, "marker")) return teil_marker(argc, argv);
     if (!strcmp(teil, "flut")) return teil_flut(argc, argv);
+    if (!strcmp(teil, "weg")) return teil_weg(argc, argv);
     if (!strcmp(teil, "markerflaeche")) return teil_markerflaeche(argc, argv);
     printf("FAIL: unbekannter Teil '%s'\n", teil);
     (void)g_fail;

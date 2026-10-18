@@ -19,6 +19,7 @@
  *   fahrstuhl Riegel Punkt 1   b2  Riegel Punkt 2   r1230  Riegel Punkt 3
  *   r1210     Riegel Punkt 4
  * ========================================================================== */
+#include "r39_karte_b1.h"   /* Runde 39 Spur G: B1 als Schema-Zeichnung */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -437,21 +438,23 @@ static int teil_r1230(void)
     for (r = 0; r < 2; r++)
         for (i = 0; i < (int)(sizeof P / sizeof P[0]); i++) {
             miss(R[r], P[i].x, P[i].z, 0, &m);
-            snprintf(t, sizeof t, "ROOM%04X %s: Blatt 0 (B1), aktuell NUR rect 0 (ist Blatt %d, "
-                     "%d Rect(s))", R[r], P[i].was, m.page, m.ncur);
-            CHECK(t, m.zone && m.page == 0 && nur_aktuell(&m, 0));
-            snprintf(t, sizeof t, "ROOM%04X %s: Marker (%d,%d) auf dem gemalten Gang (rect 0)",
+            /* Runde 39 Spur G: B1 ist Schema-Zeichnung (r39_karte_b1.h) - dieselbe Absicht an der Zeichnung des
+             * Gangs (synth 4) statt an der gemalten Ring-Kachel rect 0. */
+            snprintf(t, sizeof t, "ROOM%04X %s: Blatt 0 (B1), aktuell NUR die Gang-Zeichnung (ist Blatt %d, "
+                     "%d gemalte Rect(s))", R[r], P[i].was, m.page, m.ncur);
+            CHECK(t, m.zone && m.page == 0 && r39b1_nur_aktuell(R39B1_GANG, 0));
+            snprintf(t, sizeof t, "ROOM%04X %s: Marker (%d,%d) auf der Gang-Zeichnung",
                      R[r], P[i].was, m.mx, m.my);
-            CHECK(t, marker_auf_kunst(&m, 0));
+            CHECK(t, r39b1_in(R39B1_GANG, m.mx, m.my, 0));
         }
     /* Gegenprobe: das Blatt von 11E0 (B2) ist es NICHT mehr */
     miss(0x1230, -8133, 10226, 0, &m);
     CHECK("ROOM1230 zeigt NICHT mehr Blatt 1 (B2 = Blatt von 11E0)", m.page != 1);
-    /* 10A0 auf B1 (Band 4) = rect 6 */
+    /* 10A0 auf B1 (Band 4) = Zeichnung des B1-Absatzes (Runde 39 Spur G: synth 10 statt rect 6) */
     miss(0x10A0, 21200, 25500, 4, &m);
-    snprintf(t, sizeof t, "ROOM10A0 Band 4 (Ankunft aus 1180/1230): Blatt 0 rect 6 (ist Blatt %d)",
+    snprintf(t, sizeof t, "ROOM10A0 Band 4 (Ankunft aus 1180/1230): Blatt 0, NUR die Absatz-Zeichnung (ist Blatt %d)",
              m.page);
-    CHECK(t, m.page == 0 && nur_aktuell(&m, 6));
+    CHECK(t, m.page == 0 && r39b1_nur_aktuell(R39B1_10A0, 0));
     printf(g_fail ? "FEHLER\n" : "OK\n");
     return g_fail;
 }

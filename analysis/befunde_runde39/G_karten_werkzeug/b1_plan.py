@@ -51,7 +51,7 @@ def tuer(rid, slot, ziel):
         if d['slot'] == slot and d['dest'] == ziel: return d
     raise KeyError((hex(rid), slot, hex(ziel)))
 
-G = {n: lade(n) for n in ('1180', '1190H', '1190O', '11B0', '11B0E', '11C0', '11D0', '10A0')}
+G = {n: lade(n) for n in ('1180', '1190H', '1190O', '11B0', '11B0E', '11C0', '11D0', '11D0K', '10A0')}
 
 # ---------------------------------------------------------------------------------------------------------
 # ORTE: Zellen in Weltkoordinaten des EIGENEN Raums (Wandflaechen; x0,x1,z0,z1). Herkunft je Zeile.
@@ -78,6 +78,10 @@ ORTE = {
     # Die Kammer x 1550..5750 z -23050..-19350 hinter @0x008C0/@0x008B4 ist nicht begehbar (Tuer -> ROOM1260).
     '11d0': dict(raum=0x11D0, zellen=[(-11500, -4900, -23100, -11500), (-8500, 1050, -23100, -20000),
                                        (-1700, 5000, -20000, -16500)]),
+    # ROOM11D0 Kammer der Kanal-Leiter (Zone 1): nur aus ROOM1260 erreichbar (1260 slot 3 -> Spawn (3900,-22000)),
+    # gegen den Zwinger dicht (Waende @0x008C0 x 1050..1550, @0x008B4 z -19350..-18850); der "Tuer"-Trigger
+    # -> 1260 (slot 1 @0x01228) liegt auf dem Kreis @0x00A10 (1800..3300, -22750..-21250) = Bodenloch, keine Wandtuer.
+    'kammer': dict(raum=0x11D0, zellen=[bb['11D0K']]),
     # ROOM10A0 B1-Absatz (Band 4) samt beiden Treppenlaeufen: Aot_set sce 13 Band 4 @0x00E7C (24000,20100,2700,4500)
     # und @0x00E90 (20100,19500,2700,2300).
     '10a0': dict(raum=0x10A0, zellen=[(bb['10A0'][0], bb['10A0'][1], 19500, bb['10A0'][3])]),
@@ -145,6 +149,7 @@ for (a, ra, sa, sei, b, rb, sb) in PAARE:
         t = (w11b0 - ORTE['11c0']['zellen'][0][0], t[1])
     lage.setdefault(b, t)
     tueren.append(dict(a=a, b=b, ra=ra, rb=rb, sa=sa, sb=sb, seite=sei, TA=TA, TB=TB, tab=tab, tba=tba))
+lage['kammer'] = lage['11d0']            # ROOM11D0 Zone 1: derselbe Raumrahmen wie Zone 0
 print('LAGE (Rahmen ROOM1180):', lage)
 
 # ---------------------------------------------------------------------------------------------------------
@@ -254,13 +259,8 @@ for t in tueren:
                 lo, hi = max(ca[2], cb[2]) + 3, min(ca[3], cb[3]) - 3
                 if lo <= hi and lo - 3 <= my <= hi + 3: my = min(max(my, lo), hi)
     marken.append(dict(von=a, nach=b, x=mx, y=my, kind=kind, raum=t['ra'], slot=t['sa']))
-# ROOM11D0 -> ROOM1260 (Door_aot_set slot 1 @0x01228 ROOM11D0.RDT, Trigger x 1700..3500 z -22900..-21100): der
-# Trigger liegt hinter der Ostwand des Sued-Gangs (@0x008C0 x 1050..1550) - man oeffnet die Tuer von Westen her,
-# also sitzt sie IN dieser Wand: Ostrand der Zelle 2, laengs = Trigger-Mitte z.
-d1260 = tuer(0x11D0, 1, 0x1260)
-c = ORTE['11d0']['pz_roh'][1]     # Sued-Gang (vor der Zerlegung: Zelle 2 der Ortsliste)
-marken.append(dict(von='11d0', nach=None, x=c[1], y=min(max(py('11d0', d1260['lz']), c[2] + 3), c[3] - 3),
-                   kind=1, raum=0x11D0, slot=1))
+# ROOM11D0 -> ROOM1260 und ROOM11B0 -> ROOM1260 sind Bodenloecher (Kreiszellen @0x00A10 bzw. @0x00EA4 unter dem
+# Trigger) - keine Wandtuer, keine Marke.
 # Treppen ROOM10A0 Band 4 (sce 13 = Achse Z -> waagerechte Sprossen, kind 4): Mitten, in den Innenraum geklemmt
 for (sx, sz, quelle) in ((25350, 22350, '@0x00E7C'), (21450, 20650, '@0x00E90')):
     c = ORTE['10a0']['pz'][0]
@@ -301,7 +301,7 @@ for n, o in ORTE.items():
 # ---------------------------------------------------------------------------------------------------------
 # SELBSTPROBE: jeder begehbare Rasterpunkt (Flut r 0) eines Orts faellt mit SEINER Affine in seine Zellen?
 QUELLE = {'gang': ['1180'], 'halle': ['1190H'], 'ost': ['1190O'], '11b0': ['11B0', '11B0E'], '11c0': ['11C0'],
-          '11d0': ['11D0'], '10a0': ['10A0']}
+          '11d0': ['11D0'], 'kammer': ['11D0K'], '10a0': ['10A0']}
 for n, qs in QUELLE.items():
     aus = 0; ges = 0
     for q in qs:
@@ -314,7 +314,7 @@ for n, qs in QUELLE.items():
 
 # ---------------------------------------------------------------------------------------------------------
 # C-ZEILEN (re15_map_zones.h): s_map_synth ab Index 3 (synth = Index+1), s_map_synth_cells ab Index 3
-REIHE = ['gang', 'halle', 'ost', '11b0', '11c0', '11d0', '10a0']
+REIHE = ['gang', 'halle', 'ost', '11b0', '11c0', '11d0', '10a0', 'kammer']
 erste = 3
 print('/* s_map_synth */')
 for idx, n in enumerate(REIHE):
@@ -329,7 +329,7 @@ for n in REIHE:
     print('    ' + ' '.join('{ %3d, %3d, %3d, %3d },' % (c[0], c[2], c[1] - c[0] + 1, c[3] - c[2] + 1) for c in ORTE[n]['pz'])
           + '   /* %s */' % n)
 
-ZID = {'gang': 25, 'halle': 26, 'ost': 110, '11b0': 28, '11c0': 29, '11d0': 30, '10a0': 10}
+ZID = {'gang': 25, 'halle': 26, 'ost': 110, '11b0': 28, '11c0': 29, '11d0': 30, '10a0': 10, 'kammer': 111}
 print('/* s_map_marks Blatt 0 */')
 for m in marken:
     z2 = ZID[m['nach']] if m['nach'] else 255

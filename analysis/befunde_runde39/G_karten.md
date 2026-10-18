@@ -116,8 +116,76 @@ ROOM1091 (Elza): dieselben Zahlen
 Nutzerpunkt (-12528,-9000,959): Blatt 3 rect 7, Marker (184,73), Kachel-Index 1 (Querband)
 ```
 
+## B1 (Punkt 1, zweiter Teil) - "Die Karte von B1 ist noch ziemlicher schrott"
+
+### B1-M1 Messung vorher (Stand 10876ebb)
+* Abzug Blatt 0 (Sweep, alles aufgedeckt): `G_karten_bilder/b1_vorher_sweep_x2.png` - die gemalte Original-Kunst
+  MAP01.PIX (Liste @0x800762a0, 7 Rechtecke): der Gang als RING um die Ostkammer, die anderen Orte als Kaesten.
+* Die Zeichnung ist ein SCHEMA, der Marker wurde ihr nachgebogen: der Gang 1180/1230 (Original-Zeile @0x80076970 /
+  @0x800769c8 = Stub 00 00 00 00 01 00 01 00) lief in FUENF Zonen, je auf einen gemalten Streifen gestreckt
+  (Runde 35: sx/sy z.B. 4950/547 im Suedbein, 1915/408 im Nordteil = 1 px je 212 bzw. 2570 Einheiten - quer zur
+  Laufrichtung fast 10x schneller als laengs). 11C0 (ein RING um eine Insel, s.u.) als Rechteck mit der Zeile von
+  11B0; 11D0 als Kasten, dessen Streckungs-Box von Hand an die gemalten Waende gelegt war.
+* ROOM1160 (der Zwinger OHNE Strom - ROOM1180 main00 `21 04 f3 00` Ck(4,243) @0x009EA waehlt fuer Tuer-Slot 0
+  Ziel 0x16 = 1160 @0x009EE, sonst 0x1d = 11D0 @0x00A12) hatte KEINE Zonenzeile: `markerflaeche 1160` 588/588
+  Rasterpunkte ohne Zeichnung, kein Marker, solange der Strom aus ist.
+* Wie man sich bewegt (Grundriss aus der Kollision, b1_layout.py, Bild `G_karten_bilder/b1_lageplan_welt.png`):
+  der Gang ist ein S (Nordarm, Querarm mit Westbein zur Halle, Laengsgang an der Ostseite, Versatz, Suedbein zum
+  Zwinger), die Ostkammer liegt IN der Schleife, 11B0 und 11C0 beide oestlich an der Gang-Ostwand, 11C0 ist ein
+  Fahrring um eine Insel, 11D0 ein U mit eigener, nur aus ROOM1260 erreichbarer Leiter-Kammer.
+
+### B1-R RE-Belege / Herleitung
+* Begehbare Flaeche je Ort mit dem ECHTEN Kollisionsloeser: `probe_r39_karten flut <raum> <band> <x> <z> 0` =
+  re15_collision_constrain_contact_band (Port von FUN_8003b0a4 mit push_rect/push_circle/push_diag2..7), Raster 100,
+  Saaten = Ankunftspunkte der Tueren. Ergebnisse (Mitten, +-50 = Wandflaeche): Gang x -9492..5508 z -16377..31023
+  (Laeufe s. b1_plan.py), Halle (1190) x -23104..4596 z -26404..-10304, Ostkammer (1190) x 14096..21296
+  z -25404..-11504, 11B0 West x -27100..-22200 + Werkstatt x -21400..1700 (z -26700..-15400; Trennwand @0x00E8C/
+  @0x00EC8, sub00 `37 03 0c 00` @0x0118C macht @0x00EC8 nach "Reservestrom an" nicht-fest), 11C0 x -27400..12400
+  z -17000..17700 mit Insel (groesstes leeres Rechteck x -11900..4700 z -7200..8300), 11D0 x -11450..4950
+  z -23050..-11550, 11D0-Kammer x 1550..6050 z -23050..-19450 (Saat = 1260-Ankunft (3900,-22000)), 10A0 Band 4
+  x 19850..26950 z 21650..26250 (+ Treppenlaeufe Aot_set sce 13 Band 4 @0x00E7C/@0x00E90).
+* Lage je Tuerpaar (Wand auf Wand, Tuermitten laengs der Wand): 1180 slot 2 @0x00A54 <-> 1190 slot 4 @0x028B2,
+  1230 slot 4 @0x00CE6 <-> 1190 slot 6 @0x02B1C, 1180 slot 3 @0x00A74 <-> 11B0 slot 0 @0x00F64, 1180 slot 1
+  @0x00A34 <-> 10A0 slot 1 @0x00DDA, 1180 slot 0 @0x009EE/@0x00A12 <-> 11D0 slot 0 @0x011E2 / 1160 slot 0 @0x007C6,
+  11B0 slot 1 @0x00FAA <-> 11C0 slot 0 @0x01712. Alle Paare gegenlaeufig (Spawn->Trigger), keine Drehung.
+  Lagen im 1180-Rahmen: Halle (-11118,19727), Ostkammer (-19404,23627) (die beiden 1190-Bereiche liegen im eigenen
+  Rahmen 8286/3900 anders als am Gang), 11B0 (32708,45764), 10A0 (-21427,-33627), 11D0=1160 (-4537,73), 11C0
+  (33008,1264) - 11C0 ohne Gang-Tuer mit der Westwand auf der von 11B0 (Original: r3/r4 beide x 168 @0x800762a0).
+* Massstab: RE2 Retail FUN_8006e120 `lui v0,0x91a2` @0x8006e1dc / `ori v0,v0,0xb3c5` @0x8006e1e8 / `addiu a0,a0,28000`
+  @0x8006e1ec / `sra v1,v1,8` @0x8006e20c / z `subu v0,zero,v0` @0x8006e268 = (x+28000)/450 (0x91A2B3C5/2^40 = 1/450),
+  EIN Massstab fuer alle Raeume (Beta -> Retail) -> Affine 65536/450 = 145,6 -> 146.
+* Die beiden Wege nach ROOM1260 sind BODENLOECHER: 11B0 slot 5 @0x01010 Trigger (-895,-21121,1667,1667) = Kreiszelle
+  @0x00EA4 (gleiche Masse), 11D0 slot 1 @0x01228 Trigger (1700,-22900,1800,1800) ueber Kreiszelle @0x00A10
+  (1800..3300, -22750..-21250) - keine Wandtueren, also keine Wandmarke.
+
+### B1-U Umsetzung
+* `re15_map_zones.h`: Blatt-0-Zonen auf Schema-Zeichnungen (rect 255, synth 4..11): Gang 1180/1181/1230/1231 EINE
+  Zone (statt fuenf), Halle/Ostkammer, 11B0, 11C0, 11D0 + NEU 1160/1161 (zid 30), NEU 11D0 Zone 1 Kammer (zid 111,
+  Weltbox um ZONE_SLACK eingezogen), 10A0 Gast-Zeile; Etagenzeile 10A0 Band 4 -> (0, 255); s_map_synth Index 3..10,
+  s_map_synth_cells Index 3..20 (je Ort disjunkt - die Fuellung mischt halbtransparent, Ueberdeckungen mischten
+  doppelt, im ersten Abzug gemessen); 8 neue Blatt-0-Marken (6 Tueren auf der gemeinsamen Linie, 2 Treppen =
+  exakte Projektionen ihrer AOT-Mitten), die 8 alten entfernt. Rechnung + Selbstprobe: b1_plan.py.
+* `re15_inv_screen.c` (Schema-Durchgang, 3 Haken): (a) unbesuchte Schema-Zeichnung als UMRISS, wenn der Plan des
+  Blattes gehoert (wie die Kacheln, RE2 Zeile 498 @0x8006E71C); (b) Kartenhinweis-Ziel auf einer Schema-Zeichnung
+  blinkt (rote Phase = aktuell, sonst Umriss) - ROOM11C0 "PARKING LOT" nach der ROOM10F0-Szene; (c) ROT NUR FUER
+  DIE ZONE, IN DER MAN STEHT (wie die Kacheln, re15_map_rect_state) und Gast-Zeichnung nur auf ihrer Etage - die
+  Raum-Regel stammte aus dem Grundriss-Modus und widersprach dem Nutzer (1190 "2 separate Bereich ... sauber
+  getrennt", Runde 36; ROOM1000 "es soll immer nur der markiert ... in dem man auch drin ist", 2026-09-13).
+* `map_hint_common.c` (2 Haken): Zielzone darf eine Schema-Zone sein; Ziel-"Rechteck" = 128 + synth
+  (RE15_KARTE_R39_SCHEMA_RECT, re15_karte_r39.h).
+* `karte_r39.c`: re15_karte_r39_ziel_rect / _schema_ziel / _etage_hier.
+
+### B1-N Messung nachher
+`markerflaeche` (echter Kartenpfad an jedem 3. begehbaren Rasterpunkt, Spielerradius 450):
+```
+ROOM1180/1181/1230  1707/1707/1764 geprueft, ausserhalb 0      ROOM1190 Halle 3770, Ostkammer 734 (1191 dito), 0
+ROOM11B0 West 406 + Werkstatt 1588, 0                         ROOM11C0/11C1 5706, 0
+ROOM11D0 601, 0   ROOM1160/1161 588, 0 (vorher 588 ausserhalb) ROOM10A0/10A1 Band 4 138, 0
+```
+Abzug Blatt 0 (Sweep): `G_karten_bilder/b1_nachher_sweep_x3.png`.
+
 ## RE-Belege
-(B1 folgt)
+(siehe je Punkt: P2, B1-R; 1F/2F/3F/B2 = NUTZER-VORGABE, Form = rechte Haelften der Vorlagen, M1/M2)
 
 ## Umsetzung
 (folgt)

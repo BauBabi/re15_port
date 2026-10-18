@@ -2906,7 +2906,8 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                         rs2 = RE15_MAP_RECT_VISITED;
                     cur2 = re15_map_zone_current();
                     if (cur2 && cur2->room == zg->room && cur2->idx == zg->idx &&
-                        (!zg->etage || re15_map_zone_etage_besucht(zg)))
+                        (!zg->etage || re15_map_zone_etage_besucht(zg)) &&
+                        re15_karte_r39_etage_hier(zg, st->map_page))   /* Runde 39 Spur G */
                         rs2 = RE15_MAP_RECT_CURRENT;
                 }
                 /* ⛔ ROT GEHOERT DEM RAUM, NICHT DER EINZELNEN ZEICHNUNG.
@@ -2918,8 +2919,14 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                  * Rot wird deshalb jede BESUCHTE Zeichnung des Raums, in dem der
                  * Spieler steht. Das Besucht-Bit bleibt pro Zeichnung, damit ein
                  * noch nicht betretener zweiter Bereich nicht vorzeitig auftaucht. */
-                if (rs2 == RE15_MAP_RECT_VISITED && akt && akt->room == zn2->room)
-                    rs2 = RE15_MAP_RECT_CURRENT;
+                /* Runde 39 Spur G: ROT NUR FUER DIE ZONE, IN DER MAN STEHT - wie die Kacheln
+                 * (re15_map_rect_state: Raum UND idx). Die Raum-Regel darueber stammt aus dem
+                 * Grundriss-Modus (ROOM2080 ist heute eine gemalte Kachel); Schema-Zeichnungen tragen
+                 * heute nur ROOM1000 und B1, und fuer beide hat der Nutzer das verlangt: ROOM1190 "Das
+                 * muss als 2 separate Bereich in der Map eingeblendet sein und sauber getrennt" (Runde 36,
+                 * Riegel unit_r36_karte_r1190) und ROOM1000 "es soll immer nur der markiert und geladen
+                 * werden, in dem man auch drin ist" (2026-09-13). */
+                (void)akt;
                 /* ⛔ IM STOCK-MODUS GAR NICHT ZEICHNEN. RE15_MAP_STOCK=1 heisst "zeig
                  * mir die Karte des Originals" - dazu gehoert die gemalte Kunst und die
                  * ausgelieferte Rechteckliste (@0x80076840 + 8*seite), NICHT unser
@@ -2931,8 +2938,13 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                 /* Runde 39 Spur G: mit dem Plan des Blattes (re15_map_owned_page, wie die Kacheln oben) zeigt
                  * auch eine UNBESUCHTE Schema-Zeichnung ihren Umriss - Koerper durchsichtig wie
                  * RE15_KARTE_UNBESUCHT (0x0000). Noetig, seit B1 ganz aus Schema-Zeichnungen besteht. */
-                if (rs2 == RE15_MAP_RECT_UNVISITED &&
-                    !(nur_rand && re15_map_owned_page((unsigned)st->map_page))) continue;
+                {   /* Runde 39 Spur G: Kartenhinweis-Ziel auf einer Schema-Zeichnung (B1) - rote Phase wie
+                     * CLUT 502 (aktuell), Umriss-Phase wie CLUT 498 (nur Wandlinie), immer gezeichnet. */
+                    int zp = re15_karte_r39_schema_ziel(st, (unsigned)st->map_page, zn2->synth);
+                    if (zp) rs2 = (zp == 1) ? RE15_MAP_RECT_CURRENT : RE15_MAP_RECT_UNVISITED;
+                    if (rs2 == RE15_MAP_RECT_UNVISITED &&
+                        !(nur_rand && (zp || re15_map_owned_page((unsigned)st->map_page)))) continue;
+                }
                 /* ⛔ JEDE ZEICHNUNG GENAU EINMAL - AUCH UEBER DIE DURCHGAENGE HINWEG
                  * (Runde 30, GEMESSEN mit unit_r30_karte_nutzerstand, Spieler in
                  * ROOM1000/z0: Blatt 2 Op 108 UND Op 109, beide FILL (207,89) 15x33).

@@ -20,6 +20,10 @@
  *   karte     Hinweiskette K1 -> K2, beide Ziele bis zum Besuch, Runde-33-Eintrag unveraendert
  *   bgm       Tabellenweiche vor/nach der Szene, Raum 0x1C, andere Stage, besuchter Parkplatz
  */
+#include "re15_karte_r39.h"   /* Runde 39 Spur G: Ziel auf einer B1-Schema-Zeichnung */
+/* Runde 39 Spur G: ROOM11C0 liegt auf B1 nicht mehr auf der gemalten Kachel rect 4, sondern auf seiner
+ * Schema-Zeichnung synth 8 - das Hinweis-System fuehrt sie als Pseudo-Rechteck 128 + 8 (re15_karte_r39.h). */
+#define R39_11C0_ZIEL (RE15_KARTE_R39_SCHEMA_RECT + 8)
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -554,7 +558,7 @@ static void teil_karte(void)
           re15_map_hint_zeitgesteuert(k1) && re15_map_hint_zeitgesteuert(k2),
           "Kette K1 -> K2 -> Ende, beide zeitgesteuert");
     int p1 = -1, r1 = -1, p2 = -1, r2 = -1;
-    PRUEF(re15_map_hint_ziel(k1, &p1, &r1) && p1 == 0 && r1 == 4, "K1 Ziel ROOM11C0 = Blatt %d Rechteck %d (Hauptzeile)", p1, r1);
+    PRUEF(re15_map_hint_ziel(k1, &p1, &r1) && p1 == 0 && r1 == R39_11C0_ZIEL, "K1 Ziel ROOM11C0 = Blatt %d Rechteck %d (Hauptzeile)", p1, r1);
     PRUEF(re15_map_hint_ziel(k2, &p2, &r2) && p2 == 4 && r2 == 2, "K2 Ziel ROOM1150 = Blatt %d Rechteck %d (Hauptzeile)", p2, r2);
     PRUEF(RE15_CUT10F0_HINWEIS_PERIODEN * re15_map_hint_periode() == 234, "Hinweisdauer 3 x 78 = 234 VBlank-Schritte");
     /* vor der Szene: keine Ziele */
@@ -565,8 +569,8 @@ static void teil_karte(void)
     int a0 = re15_map_ziel_aktiv_n(0, &zp, &zr); int p0 = zp, q0 = zr;
     int a1 = re15_map_ziel_aktiv_n(1, &zp, &zr); int p_1 = zp, q_1 = zr;
     int a2 = re15_map_ziel_aktiv_n(2, &zp, &zr);
-    PRUEF(a0 && p0 == 0 && q0 == 4 && a1 && p_1 == 4 && q_1 == 2 && !a2,
-          "nach der Szene: Ziel 0 = ROOM11C0 (0/4), Ziel 1 = ROOM1150 (4/2), kein drittes");
+    PRUEF(a0 && p0 == 0 && q0 == R39_11C0_ZIEL && a1 && p_1 == 4 && q_1 == 2 && !a2,
+          "nach der Szene: Ziel 0 = ROOM11C0 (0/Schema 136), Ziel 1 = ROOM1150 (4/2), kein drittes");
     PRUEF(re15_map_ziel_blatt_frei(0) && re15_map_ziel_blatt_frei(4), "Blaetter 0 und 4 fuer die Karte frei");
     /* ROOM1150 NACH der Szene betreten (Raumaufbau -> Latch (9,72)) -> nur noch 11C0; ROOM11C0 besucht -> nichts mehr */
     re15_cut10f0_install(0x1151);                                  /* Elzas Variante: kein Latch */
@@ -577,8 +581,8 @@ static void teil_karte(void)
     /* Nachbesserung 1: "Parkplatz erreicht" = ORIGINAL-Flag (4,64) der Ankunftsszene (ROOM11C0 sub02 @0x0184E),
      * NICHT das Besucht-Bit der Zone — das setzt jeder Raumaufbau, auch der Montage-Schnitt der Spur L. */
     re15_map_zone_update(0x11C0, -10000, 0);
-    PRUEF(re15_map_ziel_aktiv_n(0, &zp, &zr) && zp == 0 && zr == 4,
-          "Raumaufbau ROOM11C0 allein (Montage-Schnitt, Zone besucht): die Kachel blinkt weiter");
+    PRUEF(re15_map_ziel_aktiv_n(0, &zp, &zr) && zp == 0 && zr == R39_11C0_ZIEL,
+          "Raumaufbau ROOM11C0 allein (Montage-Schnitt, Zone besucht): die Zeichnung blinkt weiter");
     re15_game_flag_set(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT, 1);
     PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "Ankunftsszene ROOM11C0 gestartet ((4,64)=1) -> kein Ziel mehr");
 
@@ -598,7 +602,7 @@ static void teil_karte(void)
     re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
     a0 = re15_map_ziel_aktiv_n(0, &zp, &zr); p0 = zp; q0 = zr;
     a1 = re15_map_ziel_aktiv_n(1, &zp, &zr); p_1 = zp; q_1 = zr;
-    PRUEF(a0 && p0 == 0 && q0 == 4 && a1 && p_1 == 4 && q_1 == 2,
+    PRUEF(a0 && p0 == 0 && q0 == R39_11C0_ZIEL && a1 && p_1 == 4 && q_1 == 2,
           "echter Weg: nach der Szene blinken ROOM11C0 (%d/%d) UND das schon frueher besuchte ROOM1150 (%d/%d, aktiv %d)",
           p0, q0, p_1, q_1, a1);
     re15_cut10f0_install(0x10D0);                                  /* andere Raeume: kein Latch */

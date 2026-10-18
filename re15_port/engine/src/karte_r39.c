@@ -208,3 +208,32 @@ int re15_karte_r39_kachel(void *ops_v, int *n, int max, unsigned page, int rect,
     }
     return 1;
 }
+
+/* ---- Kartenhinweis-Ziel auf einer Schema-Zeichnung (B1, Runde 39 Spur G) ---------------------------------- */
+int re15_karte_r39_ziel_rect(int rect, int synth)
+{
+    return (rect == 255 && synth > 0) ? RE15_KARTE_R39_SCHEMA_RECT + synth : rect;
+}
+
+int re15_karte_r39_schema_ziel(const void *inv_screen, unsigned page, int synth)
+{
+    const re15_inv_screen_t *st = (const re15_inv_screen_t *)inv_screen;
+    const int r = RE15_KARTE_R39_SCHEMA_RECT + synth;
+    if (!st || synth <= 0) return 0;
+    /* dieselben drei Quellen und dieselbe Vorrangregel wie die Kachel-Schleife (Hinweis vor Ziel) */
+    if (st->hint_aktiv)
+        return (st->hint_page == page && st->hint_rect == r) ? (st->hint_rot ? 1 : 2) : 0;
+    if ((st->ziel_aktiv && st->ziel_page == page && st->ziel_rect == r) ||
+        (st->ziel2_aktiv && st->ziel2_page == page && st->ziel2_rect == r))
+        return st->ziel_rot ? 1 : 2;
+    return 0;
+}
+
+int re15_karte_r39_etage_hier(const void *zone, unsigned page)
+{
+    const re15_map_zone_t *zn = (const re15_map_zone_t *)zone;
+    int fp, fr;
+    if (!zn || !zn->etage) return 1;
+    if (!re15_map_floor_lookup(zn->room, zn->idx, re15_map_player_band(), &fp, &fr)) return 0;
+    return (unsigned)fp == page;
+}

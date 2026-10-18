@@ -44,6 +44,24 @@ int re15_karte_r39_kachel(void *ops, int *n, int max, unsigned page, int rect, i
  * (cx,cy,cw,ch) auf Blatt <page> NICHT gezeichnet wird (Doppelwand laut Vorlage). */
 int re15_karte_r39_kante_weg(unsigned page, int cx, int cy, int cw, int ch, int seite);
 
+/* ---- B1 als Schema-Zeichnung (Runde 39 Spur G): Kartenhinweis-Ziel auf einer Schema-Zeichnung ----
+ * Das Hinweis-/Ziel-System (map_hint_common.c, RE2 FUN_8006F1C4) fuehrt sein Ziel als (Blatt, Rechteck) und
+ * zeichnet die Kachel dieses Rechtecks blinkend. Seit B1 nur noch Schema-Zeichnungen traegt, liegt ein Ziel dort
+ * (ROOM11C0 "PARKING LOT" nach der ROOM10F0-Szene) auf KEINEM Rechteck. Es wird deshalb als Pseudo-Rechteck
+ * 128 + synth gefuehrt (gemalte Rechtecke sind < 64, 255 = keins) und vom Schema-Zeichner blinkend gemalt. */
+#define RE15_KARTE_R39_SCHEMA_RECT 128
+/* Rechteck einer Zielzone fuer die Hinweis-Tabelle: zn->rect, bei einer Schema-Zone 128 + synth. */
+int re15_karte_r39_ziel_rect(int rect, int synth);
+/* Ist die Schema-Zeichnung <synth> auf Blatt <page> gerade Hinweis-/Kartenziel? 0 nein, 1 rote Phase,
+ * 2 Umriss-Phase (wie CLUT 502 / 498 der Kachel, re15_inv_screen.c Kartenhinweis). */
+int re15_karte_r39_schema_ziel(const void *inv_screen, unsigned page, int synth);
+
+/* Ist die Zeichnung der Zone <zone> (re15_map_zone_t*) auf Blatt <page> die der AKTUELLEN Etage? Haupt-Zeilen
+ * immer; eine Gast-Zeile (Etagen-Zeichnung, z.B. ROOM10A0 auf B1) nur, wenn das Band des Spielers per
+ * re15_map_floor_lookup auf dieses Blatt fuehrt - dieselbe Regel wie die Kacheln in re15_map_rect_state
+ * ("Auf einer Etagen-Umschaltung ist NUR das Rechteck dieser Etage aktuell"). */
+int re15_karte_r39_etage_hier(const void *zone, unsigned page);
+
 /* Riegel-Zugriff: Zahl der Texel-Korrekturen und ein Eintrag. */
 int re15_karte_r39_korrektur_zahl(void);
 int re15_karte_r39_korrektur(int i, int *page, int *rect, int *c, int *r, int *w, int *h, int *neu);
