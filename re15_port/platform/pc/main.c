@@ -149,6 +149,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen der Wasserzombies (Bank, Pose, Schatten) */
 #include "re15_gegner_r39.h"       /* Runde 39 Spur E: Gorilla-/Affen-Schatten auf +0x1ba (@0x80116f30 / @0x80110c78) */
 #include "re15_inventar_r39.h"  /* Runde 39 Spur C: Spind 1000, Stapeln, Status-Bild, Messschiene RE15_INV_LOG */
+#include "re15_parkplatz_r39.h" /* Runde 39 Spur O: Tuersperre ROOM11C0 (Boot-/CONTINUE-Weg, Messhaken RE15_R39O_*) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -4990,6 +4991,7 @@ re_title:;
     re15_kartenitems_r36_install((uint16_t)g_current_room_id);   /* Runde 36 Spur N: Lageplan-Karte, derselbe Grund */
     re15_dining_r38_install((uint16_t)g_current_room_id);        /* Runde 38 Spur F: 1011/1021/1131/1141, derselbe Grund (Boot-/CONTINUE-Weg) */
     re15_inventar_r39_install((uint16_t)g_current_room_id);      /* Runde 39 Spur C: Spind ROOM1000, derselbe Grund (Boot-/CONTINUE-Weg) */
+    re15_parkplatz_r39_install((uint16_t)g_current_room_id);     /* Runde 39 Spur O: ROOM11C0 Text 40 + Sperre im Kampf, derselbe Grund */
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -5207,6 +5209,7 @@ re_title:;
           if (s_kill_at >= 0 && (int)g_engine.frame_count == s_kill_at) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1; }  /* dead = hp<0 */
         { extern void re15_r37a_gegner_pos_haken(void); re15_r37a_gegner_pos_haken(); }  /* Runde 37 Spur A: Messhaken RE15_GEGNER_POS (re15_pri1100_r37.h) */
         re15_dining_r38_messhaken();   /* Runde 38 Spur F: Messhaken RE15_R38F_GORILLAS_TOT (re15_dining_r38.h) */
+        re15_parkplatz_r39_messhaken(); /* Runde 39 Spur O: Messhaken RE15_R39O_GORILLAS_STARR/_TOT (re15_parkplatz_r39.h) */
 
         /* DEBUG: RE15_INV_SHOT=<path> — wave-1 acceptance harness: force-open the status
          * screen at frame 30 (briefing loadout = the mzd_inv_open.sav items); the render
