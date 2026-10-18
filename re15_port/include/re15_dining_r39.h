@@ -88,7 +88,7 @@
 #define RE15_R39J_CUT_ENDE       0      /* Kamera nach Johns Abgang: RVD ROOM1141 (RDT+0x28 -> @0x01A8) Satz 0 `01 ff 00 00 fc d6
                                          * 64 9c ..` = Gruppe Cut 0 mit dem Viereck x -10500..3000 z -25500..-8500 um Elzas
                                          * Gespraechslage; die Gruppe Cut 8 hat nur ihren Kopf (Satz 22 `01 ff 08 00`), aus
-                                         * Cut 8 fuehrt kein Wechsel. Form ROOM1141 sub02 @0x00E80 `29 ..` vor @0x00F56
+                                         * Cut 8 fuehrt kein Wechsel. Form ROOM1141 sub02 @0x00E80 `29 00` vor @0x00F56
                                          * Cut_auto 1 (vorher Cut_old = zurueck auf Cut 8, die Kamera blieb stehen)          */
 
 /* ---- Port-Bank 0x3E (Se_on pc[1]; frei: 0x0E/0x3A/0x3B/0x3C/0x3D sind vergeben, Dossier 3) ------------------------ */
