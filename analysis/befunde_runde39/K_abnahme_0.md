@@ -6,7 +6,11 @@ master ist seither 2 Commits weiter: 37011982 doc, 96ab793c test_r38_itemorte). 
 die Spur-Dateien = `git diff master...HEAD` (15 Dateien). Abnahme-Laeufe im Scratchpad `K39abn0/`, eigene exe-Kopien
 `re15_pc_k39abn0_*.exe`, kein taskkill.
 
-(Bericht wird fortlaufend geschrieben — Abschnitte, die noch "OFFEN" tragen, sind noch nicht gemessen.)
+**Ergebnis: NICHT bestanden.** Der Kernbefund ist behoben und belegt (John winkt bei "Elza, hurry up!" mit RBJ rec1 Clip 2
+statt des Kletter-Clips; am Nutzerweg mit der v0.8.26-exe nachgestellt und mit HEAD gegengemessen). "Auch sonst" ist nur fuer
+John abgearbeitet: Elza zeigt in derselben Szene zwei belegte Ein-Bild-Abweichungen derselben Klassen, die K fuer John
+behoben hat (M1, M2), und der Rest der Szene (Einzelbilder TURN->WALK, Kraehen) ist nicht gegen das Original geprueft (M3).
+RE-Gate, Vertrag und Riegel halten. Punkt 1: **teilweise**.
 
 ## 0. Bau und Riegel (selbst gefahren)
 * `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `... build` -> 764/764 Schritte,
@@ -55,6 +59,7 @@ Werkzeug `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` (dis/table/byte
 | Behauptung (Diff/Dossier) | Selbst gefundene Bytes/Instruktionen | Urteil |
 |---|---|---|
 | K1 Binder FUN_8001b3f8: RBJ = Raumkopf+0x5C @0x8001b404, Recordzahl @0x8001b420, Marker @0x8001b438, Gegner-Bits ohne Grenze, Stride 500, +0x180 @0x8001b4a0, +0x184 @0x8001b4bc, Zaehler @0x8001b4c4 | `8001b404 lw a2,92(v0)` / `8001b40c beq a2,zero` / `8001b410 addu a3,zero,zero` (EINMAL vor der Record-Schleife) / `8001b420 lbu t2,4(a2)` / `8001b438 lw a0,0(v1)` / Bit 0 -> `8001b450 sw v0,0(t3)` (0x800acbd4) / Bit-Schleife `8001b470 andi v0,a0,0x1`, Stride `sll 5; subu; sll 2; addu; sll 2` = 500 / `8001b4a0 sw t1,0(at)` (0x800acdac+500*a3) / `8001b4bc sw v0,0(at)` (0x800acdb0+...) / `8001b4c0 bne a0,zero,0x8001b470` + Delay `8001b4c4 addiu a3,a3,1`; kein Vergleich gegen eine Kapazitaet, kein Typ-Test | stimmt (Nebenbefund: a3 laeuft ueber ALLE Records weiter — fuer ROOM1171 rec0 = 0x1, rec1 = 0x2 -> Gegner 0 = John, wie behauptet) |
+| Binder EINMAL beim Raumaufbau nach den Spawns: `jal 0x8003ef6c` @0x80039a00, `jal 0x8001b3f8` @0x80039a08 | `80039a00 jal 0x8003ef6c` / `80039a08 jal 0x8001b3f8` | stimmt |
 | Sub 0 0x80050cb8 (Tabelle @0x80076ca0[0]): Phase 0 @0x80050cec-d0c faellt in den Rumpf @0x80050d34; f314(+0x180,+0x184, a2=+0x1C4>>7) @0x80050d4c; Doppelschritt @0x80050d70/88; HOLD @0x80050da4; LOOP @0x80050dbc-c8 | `table 0x80076ca0`: [0] 0x80050cb8 / `80050cec sb v0(=1),6(a0)` / `80050cfc sb v0(=7),143(v1)` / `80050d0c sb zero,149(v0)` / `80050d30 sb zero,143(v1)` (No-Blend) / danach OHNE Sprung `80050d40 lw a0,384(v0)` / `80050d44 lbu a2,452(v0)` / `80050d48 lw a1,388(v0)` / `80050d4c jal 0x8001f314` + Delay `srl a2,a2,7` / `80050d70 andi v0,a2,0x8` -> `80050d88 jal 0x8001f314` / `80050da4 sb v0(=2),6(v1)` / `80050dbc andi v0,v0,0x4` -> `80050dc8 sb v0(=1),6(v1)` | stimmt |
 | f314 posiert ZUERST (+0x95 @0x8001f35c, rueckwaerts @0x8001f344-54, +0x168 @0x8001f36c), Vorschub erst am Ende von FUN_8001f3bc @0x8001f618-1c, Ende @0x8001f63c | `8001f324 lbu v0,148(t0)` / `8001f344 lbu v0,149(t0); ... subu v0,t1,v0; addiu v0,v0,-1` (rueckwaerts) / `8001f35c lbu v0,149(t0)` / `8001f36c sw a2,360(t0)` / `8001f38c jal 0x8001f3bc` ... `8001f610 lbu v0,149(v1)` / `8001f618 addiu v0,v0,1` / `8001f61c sb v0,149(v1)` / `8001f624 sltu v0,v0,s4` / `8001f638 ori v0,zero,0x1` / `8001f63c sb zero,149(v1)` | stimmt |
 | K2 John-INIT 0x8011dd98 (Tabelle @0x80121808[0]; Typ-Eintrag @0x80072cd0 gesetzt @0x8011e954-5c): +0x94 = 2 @0x8011de7c, +0x95 = 0 @0x8011de8c, +0x8f = 0 @0x8011de9c, f314(+0x84,+0x16c,a2=0,a3=0x200) @0x8011debc-c8 | `table 0x80121808`: [0] 0x8011dd98, [1] 0x8011df40, [4] 0x80050be8 / `8011e954 addiu v0,v0,-9112` (=0x8011dc68) + `8011e95c sw v0,11472(at)` (0x80072cd0) / `8011de78 ori v0,zero,0x2` / `8011de7c sb v0,148(v1)` / `8011de8c sb zero,149(v0)` / `8011de9c sb zero,143(v0)` / `8011deb8 addu a2,zero,zero` / `8011debc lw a0,132(v0)` / `8011dec0 lw a1,364(v0)` / `8011dec4 jal 0x8001f314` / `8011dec8 ori a3,zero,0x200` | stimmt |
@@ -93,7 +98,12 @@ Kletter-Clip @0x800526a0) zurueck; mit K1 bekommt John rec1 (Original-Binder ohn
   `re15_pc_r39k_<teil>_<zufall>` (wird geloescht), RE15_*-Umgebung des Aufrufers wird geloescht, `cmake_minimum_required`
   im -P-Skript, `m` unter Nicht-Windows gelinkt, keine .exe-/Backslash-Pfade. OK.
 * Gezielte Tests selbst gefahren: Unit/Probe NPC-Familie (Regex des Bau-Agenten, `-E "^integration_"`): **206/206 gruen**
-  (17 s); Spur-Riegel 8/8 + 2/2 (§0).
+  (17 s); Spur-Riegel 8/8 + 2/2 (§0); Integration (echte exe) der beruehrten Module/Raeume (NPC-INIT/Executor/Schub/RBJ in
+  beiden Szenarien) `ctest -R "^integration_(r37_roy_leon1170|r37_roy_szene1011|r37_roy_szene1021|r38_werkstatt11b0|
+  r36_szenenleon|r35_cut10f0|r38_heliport1171_weg_re2|r38_heliport1171_laden|r39_stimmen_1171|r38_dining1141_d|r36_szene1150|
+  r35_cut1150|r39_stimmen_1050|r37_elzaems_elza1141|r39_stimmen_11b0|r38_montage)$" -j 2 --timeout 1200`:
+  **`100% tests passed, 0 tests failed out of 16`** (dining1141_d 287 s, cut10f0 270 s, cut1150 562 s, werkstatt11b0 152 s,
+  szenenleon 162 s, ...). Keine volle Suite (VERTRAG).
 
 ## 4. Messung Nutzer-Punkt (selbst, an der exe)
 
@@ -161,13 +171,13 @@ sha256 a5a1c016...), gleiche Assets, kein SOFTWARE_RENDER.
 
 ### 4.3 "Auch sonst ... die Animationen hier": die UEBRIGEN Szenen-Animationen in 1171 (Elza, Kraehen)
 Elza (Aktor 0) im selben Szenen-Abschnitt, HEAD, echter Weg (`runs.py runA_neu/anim.txt 0 4`); im Lade-Weg dieselben
-Befunde an den um 66 Bilder frueheren Stellen (F1, F37, F186, F591, F669, F840, F846, F933, F943). K hat an Elza nichts
+Befunde an den um 66 bzw. 67 Bilder frueheren Stellen (F1, F37, F186, F591, F669, F840, F846, F933, F943). K hat an Elza nichts
 geaendert (Nicht-John-Zeilen HEAD = b35c66bd bytegleich, 4.1):
 
 | Bild (echter Weg) | Elza posiert (HEAD) | Original (selbst disassembliert) | Befund |
 |---|---|---|---|
 | F104-F118, F252-F266, F657-F671, F735-F749, F1009-F1023 | Sub 6 (Event-Reach) Clip 1 Bild **1..15** (15 Bilder), danach Clip 2 ab 0 | Sub 6 0x800517f0 (Spieler-Tabelle `table 0x80073e30`: [6] = 0x800517f0, dieselbe wie NPC [6]): Phase 0 `80051844 sb v1(=1),6(a0)` / `80051854 sb v1,148(v0)` (+0x94 = 1) / `80051864 sb zero,149(v0)` / `80051874 sb v0(=7),143(v1)` und OHNE Sprung `8005188c jal 0x8001f314` (+0x170/+0x174) -> der Saattakt posiert **Bild 0**, Clip 1 = 0..15 (16 Bilder) | **Abweichung, K3-Klasse** — Port: `game_step_common.c re15_player_event_reach_tick` schiebt im Saattakt vor (`pl->anim_frame++` vor dem Posieren). Seit Runde 38 bekannt: `analysis/befunde_runde38/I_heliport1171.md` Abschnitt 3 "Uebernommene Konvention: Modus 6 ... Original ... zeigt dort Bild 0; Port: Bild 1 im Umlaufbild. Ein Bild Versatz" (= F252 nach dem Kraehen-Wurf) |
-| F999 / F1000-F1008 | Schub: Clip 17 rueckwaerts **ab dem Bit-Takt F999** (9..0 bis F1008); John (HEAD) erst ab F1000 | dieselbe Sub 0x80052864 (`table 0x80073e30`: [19] = 0x80052864): Bit-Takt posiert noch Clip 0x12 (`80052af4 jal 0x8001f314` vor `80052b44 jal 0x8004efe4`), Clip 0x11 rueckwaerts erst in Phase 6 (`80052b98`) | **Abweichung, K4-Klasse** — Port: `szenenleon_r36.c re15_szl_schub_spieler_tick` Fall 5 setzt `sp_clip(p, RE15_SZL_CLIP_ANSATZ, 1, 0)` noch im Bit-Takt. Seit K4 laufen Elza und John beim Loslassen um 1 Bild versetzt |
+| F999-F1008 (Elza) / F1000-F1009 (John) | Schub: Elza Clip 17 rueckwaerts **ab dem Bit-Takt F999** (9..0 bis F1008); John (HEAD) erst ab F1000 | dieselbe Sub 0x80052864 (`table 0x80073e30`: [19] = 0x80052864): Bit-Takt posiert noch Clip 0x12 (`80052af4 jal 0x8001f314` vor `80052b44 jal 0x8004efe4`), Clip 0x11 rueckwaerts erst in Phase 6 (`80052b98`) | **Abweichung, K4-Klasse** — Port: `szenenleon_r36.c re15_szl_schub_spieler_tick` Fall 5 setzt `sp_clip(p, RE15_SZL_CLIP_ANSATZ, 1, 0)` noch im Bit-Takt. Seit K4 laufen Elza und John beim Loslassen um 1 Bild versetzt |
 | F68, F906, F912 | je EIN Bild Clip 1 Bild 1 zwischen TURN (mo 105) und WALK/TURN | ungeklaert (Reihenfolge SCD-Poll vs. Dispatcher, Spur H "eigener RE-Punkt") | offen, nicht untersucht |
 | Kraehen (Aktoren 2/3) | unveraendert seit Runde 38 | vom Bau-Agenten NICHT gegen das Original verglichen (nur "vorher = nachher bytegleich") | ungeprueft |
 
@@ -178,8 +188,87 @@ Abweichungen ist eine Ein-Bild-Verschiebung (bei 30 Bildern/s und Blende +0x8f =
 Massstab des Projekts (byte-true, jede Abweichung mit Adresse) sind es offene, belegte Fehler genau in dem Bereich, den der
 Nutzer bemaengelt.
 
-## 5. Urteile
-OFFEN
+### 4.4 Nebenwirkung Leon-Szenario (K2/K3 sind global fuer alle NPCs)
+`cmake -P tests/integration/test_r37_roy.cmake -DTEIL=leon1170` (echter Weg Neuspiel -> Montage ROOM1240 -> Tuer -> ROOM1170,
+RE15_FPS=240, EXIT_AT 1200#1170) einmal mit der HEAD-exe, einmal mit `build_bisect/platform/pc/re15_pc.exe` (b35c66bd-Motor),
+Spurwerkzeug = HEAD-`test_r37_roy.exe`: beide `OK`. Pose-Strom je 4360 Zeilen: **Leon (Aktor 0) bytegleich** (md5 c23ba5ea
+beide), Elliot (Aktor 1) **24 Zeilen** anders — F884-F889 INIT-Pose Loco 2/50 Bild 0 statt eigene 2/52 (`[enemy-diag] ...
+type=0x47 model=elliot ... motion=2 anim_frame=0 clips=24` statt `anim_frame=1 clips=6`), ab F920 "Hey!"-Geste Clip 15 ab
+Bild 0 (bei 240 Bildern/s `0,0,1,1,..` statt `0,1,1,2,..`). Deckt sich mit Dossier 6.6.
 
-## 6. Maengel
-OFFEN
+### 4.5 Erklaert der Fix den Befund?
+Ja. v0.8.26-Zustandslog des echten Wegs (`K39abn0/runB_v0826/state.txt`) F70 in 1171: Kraehe 3 `st=4 ss1=0` (Sub 0) — der
+Renderer fragt jeden Aktor in state 4/Sub 0 nach dem RBJ-Kanal, der Slot ohne Record belegte einen der 2 Cache-Plaetze
+dauerhaft (bis zum Raumwechsel; F530 sind beide Kraehen schon `st=7`). John `st=4 ss1=0 mo=2` bei "Elza, hurry up!" bekam
+keinen Platz -> Rueckfall auf die Container-Bank, deren Clip 2 der Kletter-Clip ist (`+0x94 = 2` @0x800526a0, 50 Bilder).
+Mit K1 belegen Slots ohne Record keinen Platz mehr; John bindet rec1 wie der Original-Binder (§2).
+
+## 5. Urteile
+
+| Punkt (Wortlaut) | Urteil | Beleg |
+|---|---|---|
+| 1a "Wenn John in Room 1171 sagt - "Elza hurry up" macht er so eine komische Kletter Animation statt der ran wink Animation, die er im Original nicht macht." | **erfuellt** | Nutzerweg (1141 -> 1171 -> Tor) mit der v0.8.26-exe nachgestellt: F530-F657 mo 2 / fc 50 = Kletter-Clip, Bild zeigt das Einknicken (`K39abn0/hurry_up_neu_vs_v0826.png`). HEAD: RBJ rec1 Clip 2 (96 Bilder) 0..95, Bild zeigt Drehen + Heranwinken. Ursache (Cache von Kraehen belegt) und Original-Mechanismus (Binder FUN_8001b3f8 ohne Grenze, Sub 0 auf +0x180/+0x184) selbst disassembliert (§2), Fix erklaert den Befund (§4.5), Riegel unit/integration gruen und am alten Motor rot (§0). |
+| 1b "Auch sonst scheinen die Animationen hier noch nicht ganz zu passen." (VERTRAG: "uebrige Szenen-Animationen 1171") | **teilweise** | John: alle Abweichungen behoben und belegt — K1 (auch die anderen Gesten kamen aus Bank 0 Clip 0/34 statt RBJ Clip 0/20), K2 INIT-Pose, K3 Saattakt, K4 Schub (§4.1/4.2, Disasm §2). Elza in derselben Szene: zwei belegte, gemessene Abweichungen offen (Event-Reach-Saatbild, Schub-Ruecklauf im Bit-Takt; §4.3), Einzelbilder TURN->WALK ungeklaert, Kraehen nie gegen das Original geprueft. Der Bau-Agent hat Elzas Abweichungen selbst gefunden und als "nicht Johns Animation" offen gelassen. |
+| **Punkt 1 gesamt** | **teilweise** | Kernbefund erfuellt; "Auch sonst" nur fuer John abgearbeitet. |
+
+Gates: RE-Gate **haelt** (alle Stichproben stimmen, keine Guess-Tells, Konstanten mit Adresse bzw. als Port-Merker
+gekennzeichnet). Vertrag **haelt** (Pfade, keine Bits/Ids, kleine kommentierte Haken; Hinweis H1/H2). Riegel **vorhanden
+und messend** (8 Unit + 2 Integration gruen, am alten Motor rot). Nebenwirkungen: Leon 1170 bytegleich bis auf Elliots
+INIT-/Gestenbilder (§4.4), John 1141 Gesten ab Bild 0 (§4.2), NPC-Familie Unit/Probe 206/206.
+
+## 6. Maengel (nummeriert, nachpruefbar)
+
+**M1 — Elzas Event-Reach-Saatbild in der 1171-Szene (K3-Klasse, Spieler-Pfad).** Gemessen (echter Weg, HEAD,
+`K39abn0/runA_neu/anim.txt`, Aktor 0): Sub-6-Clip 1 laeuft F104-F118, F252-F266, F657-F671, F735-F749, F1009-F1023 jeweils
+**Bild 1..15** (15 Bilder); Lade-Weg ebenso (F37, F186, F591, F669, F943). Original: Spieler-Tabelle @0x80073e30[6] =
+0x800517f0, Phase 0 `80051854 sb v1(=1),148` / `80051864 sb zero,149` / `80051874 sb v0(=7),143` faellt ohne Sprung in
+`8005188c jal 0x8001f314` -> der Saattakt posiert **Bild 0**, Clip 1 = 0..15. Port: `engine/src/game_step_common.c`
+`re15_player_event_reach_tick` erhoeht `anim_frame` vor dem Posieren. Das Dossier fuehrt genau das als OFFEN (6.3/8), Runde 38
+Spur I nannte es "Uebernommene Konvention ... Ein Bild Versatz". Pruefung nach Behebung: Clip-1-Laeufe Elzas in 1171 beginnen
+mit Bild 0 und haben 16 Bilder; Riegel am alten Stand rot.
+
+**M2 — Elzas Schub-Ruecklauf beginnt im Bit-Takt (K4-Klasse, Spieler-Pfad); seit K4 laeuft sie 1 Bild vor John.**
+Gemessen: Elza Clip 17 rueckwaerts F999-F1008 (Bit-Takt F999), John F1000-F1009. Original: dieselbe Sub 0x80052864
+(Spieler-Tabelle @0x80073e30[19]) posiert im Bit-Takt noch Clip 0x12 (`80052af4 jal 0x8001f314` vor `80052b44 jal
+0x8004efe4`), Clip 0x11 rueckwaerts erst in Phase 6 (`80052b8c ori a2,zero,0x1` / `80052b98 jal 0x8001f314`). Port:
+`engine/src/szenenleon_r36.c` `re15_szl_schub_spieler_tick` Fall 5 ruft `sp_clip(p, RE15_SZL_CLIP_ANSATZ, 1, 0)` im
+Bit-Takt. Pruefung: Elza zeigt im Bit-Takt Clip 18, ihr Clip-17-Ruecklauf 9..0 beginnt im selben Bild wie Johns.
+
+**M3 — "Auch sonst" fuer den Rest der Szene nicht untersucht.** (a) Elza zeigt je EIN Bild Clip 1 Bild 1 zwischen
+TURN-Ankunft und naechstem Gang (echter Weg F68, F906, F912; Lade-Weg F1, F840, F846) — ob das Original dort ein Sub-6-Bild
+zeigt (Reihenfolge SCD-Takt vs. Spieler-Dispatcher @0x80031c44, Spur H "eigener RE-Punkt"), ist nicht belegt; falls ja,
+waere es Bild 0, nicht 1 (M1). (b) Die Animationen der beiden Ereignis-Kraehen (Griff, Wurf, Tod) wurden vom Bau-Agenten nur
+"vorher = nachher" verglichen, nie gegen das Original. Beides gehoert zu "uebrige Szenen-Animationen 1171" (VERTRAG 0) bzw.
+"die Animationen hier" (Nutzer); entweder belegen/beheben oder dem Nutzer ausdruecklich als Rest vorlegen.
+
+Kein Mangel am Kernbefund (1a): Heran-Winken statt Klettern ist umgesetzt, belegt und gemessen.
+
+### Hinweise (keine Maengel, fuer Integration/Nachlauf)
+* **H1 Globale Wirkung.** K2/K3/K4 gelten fuer ALLE NPCs beider Szenarien (gemeinsamer NPC-INIT/Executor/Schub): jede
+  Plc_motion-Geste beginnt ein Bild frueher (Bild 0 bzw. fc-1), jede NPC-INIT zeigt bis zum ersten anim_set Loco Clip 2 Bild 0.
+  Gemessen: Leon 1170 bytegleich, Elliot 24 Zeilen (§4.4); John 1141 Gesten ab Bild 0 (§4.2). Spur J (1141, gleiche Welle)
+  sieht das automatisch; wer dort Gesten-Bildfolgen pinnt, muss mit Bild 0 rechnen.
+* **H2 Gemeinsame Dateien.** enemy_ai_common.c ist im VERTRAG 1.3 D/E zugeteilt, enemy_common.c/szenenleon_r36.c gar nicht;
+  K traegt dort nur kleine, kommentierte Haken (der groesste: Rumpf von re15_npc_sub_motion). Textkonflikt-Risiko jetzt nur
+  scd_room_setup.c (Installer-Zeile) mit r39/funk10f1.
+* **H3 Fremder Riegel.** `test_r37_roy.c spur` zaehlt JEDE Elliot-Zeile mo 2 / fc 50 / loco 1 / Slot 0 als INIT-Pose, nicht
+  nur die Zeilen vor dem ersten Executor-Takt — ein spaeteres Wiederaufleben des Merkers fiele dort nicht auf (heute keines:
+  `merker_pop.py` ueber alle Laeufe 0). Besser: nur einen zusammenhaengenden Lauf ab der ersten Elliot-Zeile zulassen.
+* **H4 Riegel-Meldung.** `integration_r39_heliport1171`: der Kletterzaehler startet erst nach dem ersten RBJ-Clip-0-Bild;
+  am Motor VOR K1 meldet er "Kletter-Clip 0", obwohl 128 Kletter-Bilder gerendert werden (rot wird er ueber "Heran-Winken 0").
+  Robuster: mo 2 / fc 50 im Fenster von Plc_motion(0,2,0) zaehlen.
+* **H5 Restgrenze des Caches.** `RE15_RBJ_CACHE_MAX 2` bleibt fuer Slots MIT Record; ROOM1040/1041 (Marker 0x7E = Gegner 0..5
+  an rec0) bindet im Original 6 Aktoren (Binder ohne Grenze). Nicht 1171, vorbestehend (Dossier 3).
+* **H6 Aufraeumen.** `re15_port/build_bisect/` (Vorher-Baeume des Bau-Agenten) und die liegengebliebene Messkopie
+  `re15_port/build/platform/pc/re15_pc_r35e_haken_173bda57.exe` (18:42, fremder Testlauf) sind ignorierte Dateien —
+  bei der Integration entfernen. Meine Kopien `re15_pc_k39abn0_{A,B}.exe` sind entfernt.
+
+## 7. Ergebnis
+* Punkt 1 (Wortlaut): **teilweise** — 1a Kletter -> Heran-Winken **erfuellt**; 1b "Auch sonst ... die Animationen hier"
+  **teilweise** (John vollstaendig, Elza M1/M2 offen, Rest M3 ungeprueft).
+* Gates: RE-Gate haelt, Vertrag haelt, Riegel vorhanden/messend/am alten Motor rot, gezielte Tests gruen (206 Unit/Probe,
+  10 Spur-Riegel, 16 Integration).
+* **bestanden = false** (Maengel M1-M3). Naechster Schritt fuer die Spur: Spieler-Pendants zu K3/K4 (Event-Reach-Saattakt
+  @0x80051844-8c, Schub Phase 5 -> 6 @0x80052af4/@0x80052b44/@0x80052b98) fuer Elza umsetzen und mit Riegeln sichern, die
+  Einzelbilder TURN->WALK und die Kraehen-Animationen der Szene gegen das Original belegen — oder vom Nutzer entscheiden
+  lassen, dass "Auch sonst" nur John meinte.
