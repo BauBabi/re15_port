@@ -58,7 +58,11 @@
 /* Prop-Pool-Id: in allen drei Raeumen frei (ROOM1030 nOmodel 1 + Lageplan obj 15, Runde 38; ROOM1090/1091
  * nOmodel 4 + Schrot obj 4 = RE15_R35I_SCHROT_OBJ); TIM-Slot RE15_TIM_SLOT_PROP(5) = 9. */
 #define RE15_FL37_OBJ             5
-#define RE15_FL37_PROP_BAND       1      /* wie die Item-Props des Originals (ROOM1010 @0x00930 pc[4])      */
+/* RE15_FL37_PROP_BAND (fest 1) ENTFERNT — Runde 39 Spur H: das Band kommt je Lage aus
+ * re15_elza_r39_prop_band_ueber_boden(y) = Spielerband des Bodens + 1 (Null-Box-Requisiten des Originals: ROOM1091
+ * obj 2 @0x02202 Band 2 auf Spielerband 1; ROOM1010 @0x00930 Band 1 auf Spielerband 0). Fest 1 = Spielerband in
+ * ROOM1090/1091 liess FUN_8002d2c0 @0x8002d364-70 den Loescher als Kletterobjekt zu (FUN_8002da4c @0x8002da8c-a0
+ * trifft eine Null-Box mit Rand -112 vorzeichenlos aus schraeger Lage). include/re15_elza_r39.h.                 */
 #define RE15_FL37_PROP_FLAGS      0x000B /* 0x000A | 1 (@0x80040998), ROOM1010 @0x00930 pc[6..7] `0a 00`    */
 #define RE15_FL37_PROP_ATTR       0x0000 /* NCCT-Raumlicht wie ROOM1010 @0x00930 pc[8..9] `00 00`           */
 

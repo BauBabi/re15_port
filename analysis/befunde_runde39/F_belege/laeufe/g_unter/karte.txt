@@ -1,0 +1,1 @@
+Karte re15_card.mcr: Raum 1130 char 0 pos (-1024,0,-3336) rot 856 hp 5 inv - wunden 0 0 0 0 0 0 0 0

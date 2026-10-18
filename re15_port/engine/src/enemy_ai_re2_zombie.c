@@ -62,6 +62,7 @@
 #include "re15_actor.h"
 #include "re15_math.h"       /* re15_vector_normal — MatrixNormal_0-Zwilling */
 #include "re15_ai_flavor.h"
+#include "re15_gegner_r39.h"   /* Runde 39 Spur E: RE1.5-Kriech-Wecker (@0x80104718-48) als Ausgang des RE2-WAIT */
 #include "re15_zombieki_r36.h"   /* Runde 36 Spur F: Sicht-Bit */
 #include "re15_zombieaktiv_r37.h" /* Runde 37 Spur H: RE1.5 grid 0x00 -> RE2-Deskriptor 6 */
 #include "re15_re2zombie_r37.h"   /* Runde 37 Spur L: 0x201-Produzenten (Sonden-Schalter) */
@@ -3689,6 +3690,9 @@ static void re2z_crawl(int slot, re15_actor_t *e, re15_actor_t *pl)
     case 1: break;                                                  /* 0x801025E4 = jr ra */
     default: re2z_crawl_decide_wait(e, pl); break;                  /* [2] 0x80103A70 */
     }
+    /* Runde 39 Spur E: der wartende Kriecher (sub 2, RE2 ohne Distanz-Wecker) kriecht wie im RE1.5-Original los
+     * (Block B @0x80104718-48: dist < 0xbb8 && arc 0x200 -> Wort 1); +0x5 wird vom EXEC frisch gelesen (@0x80101254). */
+    if (e->sub_state_1 == 2 && re15_r39_kriecher_weckt(e, pl)) re15_ai_set_state_word(e, 1u);
     switch (e->sub_state_1) {                                       /* EXEC   @0x8010C918 */
     case 0: re2z_crawl_exec_move(e); break;                         /* 0x80103024 */
     case 1: re2z_exec_grab(e, pl); break;                           /* 0x801025EC — DIESELBE
