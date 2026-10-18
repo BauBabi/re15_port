@@ -1,0 +1,19 @@
+DuckStation gestartet {'48656'}
+GDB verbunden
+Stopp: b'S02'
+stage 0 room 20 PL -25970 -12509 yaw -17765 aim 4001
+Zombie @8011c778 id 10 w0=0c000001 w4=00010101 pos (-26505,0,-19509) hp=1500 223=18
+Z0 800410cc: b'OK'
+Z0 80043b04: b'OK'
+Z0 80048a0c: b'OK'
+nach Umruesten: equipped slot d5bf8=0 PL+0x10E=000f inv0=0fff0100 inv3=07fa0000 mode=02
+Abstand beim Zielen: 5742, Zombie w4=00010101
+   0 herz    t=  0.63 Z w0=0c000001 maske=3 w4=00010101 clip=02 bild= 38 rate=00 hp=1500 d223=  1 21A=0000 1D3=00 10E=0006 y=0 dist=5742 | L aim=4001 w4=00010001 14c=00000102 yaw=-17765 ziel=800cfbf8 pos=(-25970,-12509) zpos=(-26381,-18237)
+  20 herz    t= 13.18 Z w0=0c000001 maske=3 w4=00010101 clip=02 bild= 38 rate=00 hp=1500 d223=  1 21A=0000 1D3=00 10E=0006 y=0 dist=5742 | L aim=4001 w4=00010001 14c=00000102 yaw=-17765 ziel=800cfbf8 pos=(-25970,-12509) zpos=(-26381,-18237)
+  40 herz    t= 25.71 Z w0=0c000001 maske=3 w4=00010101 clip=02 bild= 38 rate=00 hp=1500 d223=  1 21A=0000 1D3=00 10E=0006 y=0 dist=5742 | L aim=4001 w4=00010001 14c=00000102 yaw=-17765 ziel=800cfbf8 pos=(-25970,-12509) zpos=(-26381,-18237)
+  60 herz    t= 38.27 Z w0=0c000001 maske=3 w4=00010101 clip=02 bild= 38 rate=00 hp=1500 d223=  1 21A=0000 1D3=00 10E=0006 y=0 dist=5742 | L aim=4001 w4=00010001 14c=00000102 yaw=-17765 ziel=800cfbf8 pos=(-25970,-12509) zpos=(-26381,-18237)
+  80 herz    t= 50.74 Z w0=0c000001 maske=3 w4=00010101 clip=02 bild= 38 rate=00 hp=1500 d223=  1 21A=0000 1D3=00 10E=0006 y=0 dist=5742 | L aim=4001 w4=00010001 14c=00000102 yaw=-17765 ziel=800cfbf8 pos=(-25970,-12509) zpos=(-26381,-18237)
+ 100 herz    t= 63.25 Z w0=0c000001 maske=3 w4=00010101 clip=02 bild= 38 rate=00 hp=1500 d223=  1 21A=0000 1D3=00 10E=0006 y=0 dist=5742 | L aim=4001 w4=00010001 14c=00000102 yaw=-17765 ziel=800cfbf8 pos=(-25970,-12509) zpos=(-26381,-18237)
+ 120 herz    t= 75.80 Z w0=0c000001 maske=3 w4=00010101 clip=02 bild= 38 rate=00 hp=1500 d223=  1 21A=0000 1D3=00 10E=0006 y=0 dist=5742 | L aim=4001 w4=00010001 14c=00000102 yaw=-17765 ziel=800cfbf8 pos=(-25970,-12509) zpos=(-26381,-18237)
+Stopps: 128 Pad-Schuesse: 390
+settings.ini zurueckgeschrieben (EnableGDBServer wie vorher)

@@ -1,0 +1,19 @@
+lauf_tisch1250_neu: 941 Bilder, letztes PL F700 pad=0000 (-12000,-1000) rot=-1800
+Treffer (HP faellt): 6
+  F162 slot 5 typ 11 st=2/3/1 g=00 mo=2 af=34 hp 250->234 d=4550 pad=8800
+  F197 slot 5 typ 11 st=2/3/1 g=00 mo=2 af=0 hp 234->219 d=4550 pad=8800
+  F232 slot 5 typ 11 st=2/3/1 g=00 mo=2 af=41 hp 219->204 d=4550 pad=8800
+  F267 slot 5 typ 11 st=2/3/1 g=00 mo=2 af=0 hp 204->189 d=4550 pad=8800
+  F302 slot 5 typ 11 st=2/3/1 g=00 mo=2 af=41 hp 189->174 d=4550 pad=8800
+  F337 slot 5 typ 11 st=2/3/1 g=00 mo=2 af=28 hp 174->159 d=4550 pad=8800
+treffer.log: {'frei': 69, 'ziel': 1}
+  F118 R1250 ziel slot=5 typ=11 @(-16568,-1019) st=1/1/1
+  F118 R1250 frei von=(-12000,-1000) nach=(-17090,-6332) slot=1 zelle=-1 moebel_uebersprungen=8
+  F118 R1250 frei von=(-12000,-1000) nach=(-16763,-5168) slot=2 zelle=-1 moebel_uebersprungen=4
+  F118 R1250 frei von=(-12000,-1000) nach=(-17074,-3463) slot=3 zelle=-1 moebel_uebersprungen=4
+  F118 R1250 frei von=(-12000,-1000) nach=(-16551,-2057) slot=4 zelle=-1 moebel_uebersprungen=4
+  F118 R1250 frei von=(-12000,-1000) nach=(-16568,-1019) slot=5 zelle=-1 moebel_uebersprungen=4
+  F118 R1250 frei von=(-12000,-1000) nach=(-16568,677) slot=6 zelle=-1 moebel_uebersprungen=4
+  F118 R1250 frei von=(-12000,-1000) nach=(-16968,1991) slot=7 zelle=-1 moebel_uebersprungen=4
+  F119 R1250 frei von=(-12000,-1000) nach=(-17060,-6348) slot=1 zelle=-1 moebel_uebersprungen=8
+  ... 61 weitere

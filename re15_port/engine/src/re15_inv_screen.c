@@ -2031,6 +2031,8 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
             o->r = (uint8_t)((mask & 1) ? (br - fade) : br);
             o->g = (uint8_t)((mask & 2) ? (bg - fade) : bg);
             o->b = (uint8_t)((mask & 4) ? (bb - fade) : bb);
+            { extern int re15_zustand_r39_ekg_farbe(int, int, uint8_t *, uint8_t *, uint8_t *);   /* Runde 39 Spur F: */
+              (void)re15_zustand_r39_ekg_farbe((int)st->cond, i, &o->r, &o->g, &o->b); }        /* Gift = RE2 @0x800ab178 */
         }
         /* condition-change WIPE prims (DAT_800b25d4=1/2, FUN_80048a44 @0x80048cc0+;
          * heal-use feedback, wave 2). Mode 1 = 32 VERTICAL LineF2 sweeping right:

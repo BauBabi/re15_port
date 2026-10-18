@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "re15_player.h"
+#include "re15_elza_r39.h"   /* Runde 39 Spur H: Eintritts-Latch vs. Kommandowort 4 (@0x80041bb0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* WELLE B: RE2-Flavor-Gates im Anim-Advancer (Clip-Pin-Konflikte) */
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
@@ -901,6 +902,12 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * (Kommandowort 4, sb v1(=4),4(v0) @0x80041bb0). Genau deshalb fiel der Defekt nur
      * bei einer Cutscene nach dem Raumwechsel auf - dort ersetzt kein Pad-/Idle-Zweig
      * die Pose (player_common.c pm-2-Zweig holt nur 105/100 zurueck). */
+    /* Runde 39 Spur H (Punkt 1, ROOM1031 sub13): ein Plc_motion schreibt das Kommandowort +0x4 := 4 (@0x80041bb0);
+     * der Dispatcher FUN_80031c44 (@0x80031c8c-cb4, Tabelle @0x80073f90) laeuft ab dann [4] = 0x80030660 — cmd 0
+     * (@0x80031c10-c24) und die Fall-0-Uebergabe (@0x80032074-b4) kommen nicht mehr an die Reihe. Gemessen: nach der
+     * Selbsttuer-Blende (RE15_PAUSE_PLAYER, Gate @0x80031c54) traf Latch 1 erst im Bild des Plc_motion(0,11) @0x029A4
+     * (F451) und ueberschrieb Clip 11 (2-Bilder-Haltepose) mit 210, Latch 2 (F452) mit 200 (include/re15_elza_r39.h). */
+    if (s_entry_pose_step && re15_elza_r39_latch_hinfaellig((int)p->state)) s_entry_pose_step = 0;
     if (s_entry_pose_step == 1) {
         p->motion            = RE15_MOTION_IDLE_SETTLE;   /* +0x94 = 1 @0x80031c10 */
         p->anim_frame        = 0;                         /* +0x95 = 0 @0x80031c18 */

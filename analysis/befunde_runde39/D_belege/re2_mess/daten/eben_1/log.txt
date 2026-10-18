@@ -1,0 +1,12 @@
+DuckStation gestartet {'30980'}
+GDB verbunden
+Stopp: b'S02'
+stage 0 room 20 PL -25970 -12509 yaw -17765 aim 4001
+Zombie @8011c778 id 10 w0=0c000001 w4=00010101 pos (-26804,0,-19925) hp=1000 223=18
+Z0 800410cc: b'OK'
+Z0 80043b04: b'OK'
+Z0 80103568: b'OK'
+Z0 80103628: b'OK'
+kein Stopp in 30 s
+Stopps: 0 Pad-Schuesse: 59
+settings.ini zurueckgeschrieben (EnableGDBServer wie vorher)

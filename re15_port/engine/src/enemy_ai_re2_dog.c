@@ -62,6 +62,7 @@
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 / re15_atan2_q12 */
 #include "re15_damage.h"     /* re15_ai_arc_test (==FUN_80015614), re15_enemy_bone_world_pos */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / victim shims / re15_actor_clip_len */
+#include "re15_gegner_r39.h" /* Runde 39 Spur E: Ein-Angreifer-Riegel PL+0x1D3&0x80 (@0x801051f8-0x80105200 / @0x80104e5c-68) */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
 #include "re15_emd.h"        /* re15_emd_get_keyframe_speed (Griff-Anker 0x80015b94) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Hundebiss-Wundstempel am RE2-Boden-Biss */
@@ -517,7 +518,7 @@ static int re2d_attack_decide(re15_actor_t *e, re15_actor_t *pl)
     if (pl->floor != e->floor) return 0;                   /* @0x80104D54-60 */
     if (re2d_sector(e, pl, (int)e->rot_y & 0xfff, 256) != 0)   /* 0x80015758(yaw,256) @0x80104D68-7C */
         return -1;
-    if (re15_player_is_grabbed()) return -4;               /* PL+0x1D3&0x80 @0x80104D84-90 */
+    if (re15_player_is_grabbed() || re15_r39_hund_riegel(pl)) return -4;   /* PL+0x1D3&0x80 @0x80104D84-90; Runde 39 Spur E: das Byte selbst */
     if (pl->hp < 21) {                                     /* slti 21 @0x80104D98-A4 */
         /* 0x80015910(self,PL)==0 → 1 (Delay-Slot v0=1 @0x80104DB8); sonst Fatigue<600 → −2 */
         if (!re15_ai_facing_aligned(e, pl)) return 1;      /* MAPPING: 15910-Richtungs-Kollaps
@@ -542,7 +543,7 @@ static int re2d_attack_decide(re15_actor_t *e, re15_actor_t *pl)
 static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->re2d_bite21e != 0) return (int)e->re2d_bite21e; /* @0x80104E4C-54 */
-    if (re15_player_is_grabbed()) return 0;                /* PL+0x1D3&0x80 @0x80104E5C-68 */
+    if (re15_player_is_grabbed() || re15_r39_hund_riegel(pl)) return 0;   /* PL+0x1D3&0x80 @0x80104E5C-68; Runde 39 Spur E: das Byte selbst */
     /* KIEFER-NAEHE — byte-true nachgezogen 2026-08-21 (vorher: Wurzel-Distanz-Naeherung, die
      * den toedlichen Biss praktisch unerreichbar machte; Messreihe in der Fix-Notiz).
      * Original: `lw a1,408(s0)` @0x80104E10  -> a1 = *(self+0x198) = Part-Pool
@@ -623,6 +624,7 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
          * Schaden ist schon oben gefallen (800401d4); die Spieler-Hit-Reaktion läuft über die
          * Port-Hit-Chain (hit_react), der Claim über den Grab-Pin unterbleibt (kein Latch). */
         pl->hit_react |= 0x1;
+        re15_r39_hund_riegel_setzen(pl);                   /* Runde 39 Spur E: PL+0x1D3 |= 0x80 (`ori v1,v1,0x80` @0x801051f8 / `sb v1,467(a0)` @0x80105200) */
         re15_kleidung_hundebiss(e, pl, RE2D_BISS_SCHADEN); /* Runde 36 Spur B: RE1.5-Biss-Stempel @0x8010f33c-64 (Panel 05 07 04 06 @0x80121014, +0x32) je 10 HP (@0x8010f2c8) am RE2-Boden-Biss */
     } else {
         /* Toedlicher Boden-Biss: `bltz v0,0x80104fb4` @0x80104F90 -> `jal 0x80105204`

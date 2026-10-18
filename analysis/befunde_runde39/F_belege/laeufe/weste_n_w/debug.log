@@ -1,0 +1,108 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[render] SDL-Renderer software, Videotreiber windows, ABR2 (B-F) NICHT unterstuetzt -> Rueckfall BLEND
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] kein Controller gefunden (Tastatur bleibt aktiv)
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1130.RDT (198108 bytes)
+[rdt] nCut=10 nDoor=0 nItem=0 zones=26 main_scd=314B sub=3 props=1
+[esp] room 1130: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 17 meshes
+[w01] PL00W01 weapon-track: 15 bones, 14 clips, 222 kf
+[w03] PL00W03 gun-track: 15 bones, 14 clips, 248 kf
+[wpn] loaded 21/21 PL00W** in-hand meshes (textured from body-skin slot 0)
+[skel] PL00: 15 bones, 24 clips, 712 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1130.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 222 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 248 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL00W**.PLW
+[messer] Startinventar Charakter 0: 03 x15 15 x50 | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 10 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1130 = (-2200,0,-2150) yaw=0
+[scd] thread start slot=0 first_op=0x3B
+[pld] Spielermodell -> PLD/PL01.PLD (Mesh 17 Teile, Textur 384x256)  [R.P.D.-Ruestung an]
+[save] CONTINUE: resumed in room 1130 (hp=20)
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-1240,0,16300) rot=(0,3072,0)
+[scd] thread start slot=1 first_op=0x06
+[light] cut 2 tint=(128,128,128)
+[pri] cut=2 pri_offset=0x54C masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[walk] F0 cut=2 mo=200 af=0 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[wound] sync: applied=1 ok=1 gen=1 slotgen=10
+[walk] F30 cut=2 mo=200 af=30 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F60 cut=2 mo=200 af=60 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[bone]  0: rel=(0,-1810,0) world=(-1024,-1810,-3336)
+[F60] cut=2 sd=208
+  cut.pos=(-1051,-3424,-7672)
+  cut.target=(-5346,1253,8695)
+  cut.fov=26684
+  VT=(2968,1388,7830)
+  VR0=(3969,0,1041) VR1=(278,3953,-1061) VR2=(-1005,1094,3830)
+  Player=(-1024,0,-3336) rot_y=856
+  pose[0].trans=(0,-1810,0)
+  bone_world=(-1024,-1810,-3336)
+  combined_trans=(1127,435,4478)
+  combined_rot[0..2]=(-1,0,4101)
+  proj sx=212 sy=140
+[bone]  1: rel=(-29,-1829,0) world=(-1032,-1829,-3308)
+[bone]  2: rel=(-28,-1709,-192) world=(-1217,-1709,-3358)
+[bone]  3: rel=(-15,-972,-216) world=(-1237,-972,-3377)
+[bone]  4: rel=(-71,-159,-255) world=(-1289,-159,-3332)
+[bone]  5: rel=(-26,-1704,191) world=(-846,-1704,-3263)
+[bone]  6: rel=(-13,-967,221) world=(-814,-967,-3268)
+[bone]  7: rel=(-67,-159,257) world=(-793,-159,-3207)
+[bone]  8: rel=(-98,-2514,0) world=(-1049,-2514,-3242)
+[bone]  9: rel=(-59,-2502,-369) world=(-1396,-2502,-3373)
+[bone] 10: rel=(-122,-2083,-413) world=(-1455,-2083,-3323)
+[bone] 11: rel=(-12,-1692,-452) world=(-1465,-1692,-3439)
+[bone] 12: rel=(-59,-2502,369) world=(-683,-2502,-3186)
+[bone] 13: rel=(-122,-2083,406) world=(-663,-2083,-3116)
+[bone] 14: rel=(-11,-1691,439) world=(-603,-1691,-3215)
+[walk] F90 cut=2 mo=200 af=90 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F120 cut=2 mo=214 af=13 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F150 cut=2 mo=214 af=43 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[framedump] 320x240 -> fd_000150.ppm
+[walk] F180 cut=2 mo=214 af=73 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[r38q] F200 Inventar-Ton Satz 6 (Oeffnen)
+[inv] Status-Bild ITEM/STPIC_01.TIM (Figur 1, Runde 39 Spur C)
+[inv] Sicherung im Statusschirm: Icon-Tile 0x40 weicht in 0 von 1200 Bytes ab, Bild-Block 0x40 in 0 von 12288 Bytes
+[walk] F210 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F240 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F270 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F300 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F330 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F360 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[r39-zustand] Heilung 0x22: HP 105 >= 105 voll -> Wund-Tabelle genullt (hatte Wunden), Spielerhaut neu
+[r39-zustand] Spielerhaut PL01.TIM neu geladen (384x256, Container PLD/PL01.PLD) - Kleidung ganz
+[walk] F390 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F420 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F450 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F480 cut=2 mo=214 af=92 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F510 cut=2 mo=210 af=0 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F540 cut=2 mo=200 af=26 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F570 cut=2 mo=200 af=56 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F600 cut=2 mo=200 af=86 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F630 cut=2 mo=211 af=0 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[framedump] 320x240 -> fd_000650.ppm
+[walk] F660 cut=2 mo=211 af=30 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[walk] F690 cut=2 mo=211 af=60 frz=0 | pl pos=(-1024,0,-3336) rot=856
+[flow] EXIT_AT: Bild 700 in Raum 1130 erreicht -> exit
