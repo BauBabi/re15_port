@@ -111,9 +111,10 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
   F290..F385 Text ueber dem hochfahrenden Rolladen). Ursache im Programm (Listing HAEMMERN39 +0x007A): die Reaktion
   steht nur unter `Ck(9,94)==0`, nicht unter `Ck(3,0x6A)==0` wie jede Klopf-/Ruf-Zeile; die Gemaelde-Frage
   (`2b 0d 80 ff`, Pausemaske 0xff80) haelt den HAEMMERN-Faden im `Sleep 90` nach dem ersten Ruf an, nach dem "Yes" laeuft
-  er weiter in die Reaktion. Fenster = Gemaelde-Frage geoeffnet zwischen erstem Ruf (F75) und Reaktion (F165); wer von
-  der Doppeltuer direkt zum Gemaelde geht, ist nach ~150 Bildern dort (Lauf A: 98 + 47 Bilder Weg + Drehung) — also
-  genau im Fenster. Gegenprobe Lauf E (Frage schon bei F33, vor dem ersten Ruf): kein Klopfen, kein Ruf, keine Reaktion
+  er weiter in die Reaktion. Fenster = Gemaelde-Frage geoeffnet zwischen erstem Ruf (F75) und Reaktion (F165). Wegzeit
+  von der Doppeltuer bis zur offenen Frage in Lauf A: 158 Bilder im Gehen (F1512 -> F1670: 98 + 47 Bilder Weg, 8 Drehung,
+  2 Taste); Steuerung hat Elza ab F1..F6 -> wer direkt hingeht, oeffnet die Frage um F164 (Fensterkante), wer rennt,
+  deutlich frueher (mitten im Fenster). Gegenprobe Lauf E (Frage schon bei F33, vor dem ersten Ruf): kein Klopfen, kein Ruf, keine Reaktion
   (Schleife wird nach dem "Yes" gar nicht betreten) — dort richtig. Pad-Sperre bleibt in Lauf F erhalten (state.txt
   pm=2 durchgehend ab F249, Balken (1,0x1B)), es ist "nur" die Zeile zur falschen Zeit.
 - **Urteil: teilweise** — im normalen Ablauf erfuellt, aber die Reaktion kommt nach dem Befreien, wenn der Spieler im
@@ -146,8 +147,10 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
 - Gesten (r39.txt + Lauf B je 2 Bilder): msg 51 `s1=0 mo=15` (F4375..F4470) dann `mo=23` — Bild `jabn/b_puh.png`: John
   dreht sich zu Elza, Hand vor der Brust, Hand an die Huefte (Gesten des Originals zu msg 1 "I'm glad to see you're still
   alive", sub02 @0x00CB8/@0x00CCC). msg 52 `s1=2 mo=6` (F4495..F4580) — Bild `jabn/b_wink1.png`/`b_wink2.png`: John reisst
-  den rechten Arm in 6 Bildern waagerecht hoch und haelt ihn **42 Bilder (1,4 s) starr auf Elzas Kopfhoehe** (im Bild
-  endet die Hand an ihrem Gesicht), dann faellt der Arm in 6 Bildern zurueck. Kein Heranwinken.
+  den rechten Arm in 6 Bildern waagerecht hoch und haelt ihn **42 Bilder (1,4 s) starr auf Elzas Kopfhoehe** — in der
+  Hand die Pistole, Lauf an Elzas Kopf (Ausschnitt `jabn/b_waffe.png` F4510/F4540) —, dann faellt der Arm in 6 Bildern
+  zurueck. Kein Heranwinken. Der Nutzer hat genau das inzwischen selbst bemaengelt (AUFTRAG.md Nachtrag 4, 19:25: "John
+  sollte am Ende der Cutscene ... nicht die Waffe auf Elza richten, sondern das heranwinken/Folge Animation abspielen").
 - Diese Geste ist Plc_motion(2,6) — dieselbe Port-Darstellung, die das Original in ROOM1171 zu "Elza, hurry up!" spielt
   (@0x014BA `2b 00 00 00`, @0x014C2 `3f 02 06 00`, @0x014C6 `43 00 80 00`, danach @0x014CE `3f 00 02 00` = (0,2),
   selbst gelesen); an genau dieser Stelle bemaengelt der Nutzer in 1171 eine "komische Kletter Animation statt der ran
@@ -199,6 +202,16 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
   r39.txt V == W komplett (5644 Zeilen, `cmp`). Damit ist belegt: der Haken ist die einzige Ursache des Unterschieds,
   und ohne ihn kommen die ~2 s Panik-Musik (MAIN16) beim Betreten von 1171 zurueck — der Fix erklaert den Befund.
 
+## 5a. Nachtrag 4 des Nutzers (AUFTRAG.md, 2026-10-18 19:25 — NACH der Abgabe 19:01, waehrend dieser Abnahme in den
+Zweig committet: 4d7c7b34, 2f889c9f, 18f4306a, f60715a8)
+Nicht Teil der geprueften Abgabe; Stand der gebauten exe dazu (fuer die Nachbesserung):
+| Nachtrag-4-Punkt (Wortlaut gekuerzt) | Stand b2a2f267 | Beleg |
+|---|---|---|
+| N4.1 "Elza soll das Rolltor oeffnen und dann noch ganz normal laufen koennen" | nicht erfuellt | Lauf A state.txt: nach dem "Yes" (msg 13 zu F1858) `pm=2` von F1860 bis F3698 ohne Unterbrechung — Rolladen, Tuer-Auftritt und Szene laufen am Stueck |
+| N4.2 Szene erst nach dem Entriegeln der Tuer; Elza rennt zur anderen Kamera, dreht sich zur Tuer, hebt die Waffe (ohne Schusswaffe im Inventar das Messer) | nicht erfuellt | BEFREIUNG39 +0x00C8..+0x00DE: `Plc_dest WALK` (Modus 4) + TURN, kein Entriegeln, kein Waffe-Heben; Bild `jabn/b_tuer.png` (Elza steht mit gesenkten Armen) |
+| N4.3 John schiesst ab und an auf die Gorillas und zieht ihre Aufmerksamkeit | nicht erfuellt | BEFREIUNG39: John RUN in die Ecke + Gosub sub04, danach nur die Warteschleife `Do / Evt_next / Edwhile Ck(4,0xF2)==1` (+0x046E); kein Schuss-Befehl in dining_r38/r39 (`grep -i schiess|schuss|plc_gun|shoot` leer) |
+| N4.4 John soll am Ende nicht die Waffe auf Elza richten, sondern heranwinken/Folge-Animation | nicht erfuellt | = Mangel M2 (`jabn/b_waffe.png`) |
+
 ## 6. Vertrag (VERTRAG.md Runde 39)
 - Pfade (`git diff master...HEAD --name-only`): nur `analysis/befunde_runde39/{AUFTRAG.md (Orchestrator-Hinweis),
   J_dining1141.md}` und `re15_port/{engine/src,include,platform/pc/src,tests/unit,tests/integration,tools/r39_dining}`.
@@ -226,14 +239,16 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
 - **M1 (Punkt 5, mittel):** Elzas Reaktion msg 50 erscheint NACH dem Befreien, mitten in der Rolladen-Szene, wenn der
   Spieler die Gemaelde-Frage zwischen dem ersten Ruf (F75) und dem Reaktionsbeginn (F165) oeffnet und "Yes" waehlt.
   Nachpruefen: `jabn/lauf.sh f plan_f.txt "1400#1141" "0-1400/5:fd_" RE15_DEBUG_JUMP=1141@gp
-  RE15_PLAYER_POS=-8150,-10250,2048` -> r39.txt `F250 6a=1`, `F291 msg=1/50`; Bild `jabn/f_race.png`. Wer von der
-  Doppeltuer direkt zum Gemaelde geht, steht nach ~150 Bildern davor (Lauf A Weg 98 + 47 Bilder) — mitten im Fenster.
+  RE15_PLAYER_POS=-8150,-10250,2048` -> r39.txt `F250 6a=1`, `F291 msg=1/50`; Bild `jabn/f_race.png`. Zu Fuss von
+  der Doppeltuer oeffnet man die Frage um F164 (Lauf-A-Wegzeit 158 Bilder), rennend deutlich frueher — im Fenster.
   Ursache: HAEMMERN39 +0x007A `06 00 36 00 / 21 09 5e 00` prueft nur (9,94), nicht (3,0x6A) wie jede Klopf-/Ruf-Zeile;
   die Frage (`2b 0d 80 ff`, Maske 0xff80) haelt den Faden im Sleep 90 an, nach "Yes" laeuft er in die Reaktion.
   Abhilfe-Richtung: Reaktion zusaetzlich unter Ck(3,0x6A)==0 (oder Bit 94 beim "Yes" setzen) + Riegel "Gemaelde im
   Fenster F75..F165" in unit_r39_dining1141_phase_h.
 - **M2 (Punkt 8, "passende Animationen"):** Johns Geste zu msg 52 "Elza, follow me, ..." ist Plc_motion(2,6): der rechte
-  Arm schnellt waagerecht hoch und zeigt 42 Bilder (1,4 s) starr auf Elzas Kopf (im Bild endet die Hand an ihrem Gesicht),
+  Arm schnellt waagerecht hoch und richtet 42 Bilder (1,4 s) die Pistole starr auf Elzas Kopf (`jabn/b_waffe.png`),
+  vom Nutzer im Nachtrag 4 (19:25) woertlich zurueckgewiesen ("nicht die Waffe auf Elza richten, sondern das
+  heranwinken/Folge Animation"),
   kein Heranwinken, keine Geste Richtung Ausgang (`jabn/b_wink1.png` F4502..F4544, `b_wink2.png`). Es ist dieselbe
   Port-Darstellung, die das Original in 1171 zu "Elza, hurry up!" abruft (@0x014C2 `3f 02 06 00` + @0x014C6 `43 00 80 00`)
   und an der der Nutzer in diesem Auftrag eine "komische Kletter Animation statt der ran wink Animation" bemaengelt
@@ -261,4 +276,23 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
 - H6 (nicht gemessen): help01..05 laufen ueber den Sprach-Kanal; ein Untersuchungstext waehrend eines Rufs wartet im
   Stimmen-Riegel bis zu dessen Ende (help01 = 3,42 s). In Runde 38 galt dasselbe fuer main42 (0,95 s).
 - H7 Port-Bank 0x3E mit Spur I abgleichen.
+
+## 9. Urteil
+| Punkt | Urteil | Kurzbeleg |
+|---|---|---|
+| 1 Zombie-Geraeusche weg | erfuellt | Lauf A: 0x Bank 0x3C/0x3D im Abschnitt 1141; Gorillas in Phase H heraus |
+| 2 John durch die Tuer, Kamera Elza -> Tuer-Toene -> Tuer mit John | erfuellt | Lauf A/B: Cut 7 F2144, Tuer auf F2148, John F2149 hinter der Kamera, Tuer zu ~F2191, Cut 6 F2219 mit John; `b_tuer.png` |
+| 3 kein "shout" | erfuellt | 0x main42 / 0x3D |
+| 4 help01..05 im Mix + mehrfaches Klopfen | erfuellt | Lauf A: 3,1,4,2,5 (+ Wiederholung), je 3 Schlaege Abstand 5, hoerbar im Mitschnitt |
+| 5 Elzas Reaktion beim ersten Hoeren | teilweise | normal erfuellt (einmal, Lauf A/G); Lauf F: Reaktion nach dem "Yes" mitten in der Rolladen-Szene (M1) |
+| 6 Glasbruch vor "What was that?!" | erfuellt | Lauf A: Glas F2903/F2908, msg 6 F2929, Stille davor |
+| 7 John schaut ab msg 9 zu Elza | erfuellt | Lauf A: blick -22 (1,9 Grad) msg 9..11; `a_blick.png` |
+| 8 zwei Zeilen Johns mit passenden Animationen | teilweise | Zeilen/Blick/Ablauf ja; Geste zu msg 52 = John richtet 1,4 s die Pistole auf Elzas Kopf, vom Nutzer im Nachtrag 4 woertlich zurueckgewiesen (M2); sichtbarer Sprung Johns nach Cut 8 (M3) |
+| 9 keine Panik-Musik 1141 -> 1171 | erfuellt | Laeufe A/W Pegel 0, Gegenprobe V ohne Haken Pegel 496 (MAIN16) |
+| N4.1-N4.4 (Nachtrag 4, 19:25, nach der Abgabe) | nicht erfuellt | Abschnitt 5a — offen fuer die Nachbesserung; N4.4 = M2 |
+
+Gates: RE-Gate gehalten (6 Stichproben stimmen, keine Rate-Woerter, Kennzeichnung NUTZER-VORGABE/PORT-WAHL vorhanden);
+Fix-erklaert-Befund fuer Punkt 9 per Gegenprobe V/W belegt; Vertrag gehalten (Hinweis H2 audio_pc.c). Tests: siehe
+Abschnitt 5.
+**bestanden = false** (Punkte 5 und 8 nur teilweise: M1, M2, M3).
 
