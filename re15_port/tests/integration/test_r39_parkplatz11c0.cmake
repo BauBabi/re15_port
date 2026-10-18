@@ -295,7 +295,10 @@ endif()
 # (-25100,15000) Blick 1024): die Ende-Szene gilt als gelaufen, die Ada-Szene nicht. sub01 @0x01824 startet sub02 wie im
 # Original; die einzige Freigabe sub01 @0x0182E Ck(3,67)==0 -> @0x01842 griffe nie -> KEINE Sperre (parkplatz_r39.c).
 #   i1  Weg des Spur-A-Riegels: Aot_on(0) in Bild 60 der Szene (RE15_FIRE_AOT=0@60#11c0) -> Tuer -> ROOM11B0
-#   i2  Szene laeuft durch, Gegner weg, zu Fuss zur Tuer (Wege wie K), Druck -> Tuer -> ROOM11B0
+#   i2  Szene bis zur Rueckgabe der Steuerung, Gegner weg, zu Fuss zur Tuer (Wege wie K), Druck -> Tuer -> ROOM11B0.
+#       Am CONTINUE-Weg kuerzt der vorbestehende Boot-Haken "door-3 self-reentry FALLBACK" (platform/pc/main.c, Frame-
+#       Cap Bild 900; nicht Spur O) die Szene: er laeuft main00+sub00 neu, mit (4,64)=1/(3,67)=1 nimmt sub00 den
+#       Nach-Kampf-Zweig (@0x017C8/@0x017D0, keine Gegner). Die Pruefungen gelten mit und ohne diesen Haken.
 if(TEIL STREQUAL "I")
     set(_karte_i 11C0 -25100 15000 1024 flag:3:67 flag:3:0x82 flag:4:0xF3)
     lauf(i1 "${_karte_i}" "RAUM 11B0
