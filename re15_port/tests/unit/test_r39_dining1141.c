@@ -352,6 +352,12 @@ static void teil_programme(void)
         const uint8_t walk[8] = { 0x40, 0x00, 0x05, 0x00, (uint8_t)ex, (uint8_t)((uint16_t)ex >> 8), (uint8_t)ez, (uint8_t)((uint16_t)ez >> 8) };
         const int iw = finde(b, nb, walk, 8, 0);
         PRUEF(iw > 0 && iw < i7, "ENTRIEGELN39 N4.2: Elza RUN (%d,%d) vor Cut 7 (rennt zur anderen Kamera)", ex, ez);
+        {   /* Schnitt auf Cut 7, sobald Elza in dessen Bild laeuft: While Member_cmp(z >= ELZA_CUT7_Z) direkt vor Cut_chg 7 */
+            const int16_t cz = RE15_R39J_ELZA_CUT7_Z;
+            const uint8_t w7[12] = { 0x0F, 0x06, 0x0A, 0x00, 0x3E, 0x00, 0x02, 0x02, (uint8_t)cz, (uint8_t)((uint16_t)cz >> 8), 0x02, 0x00 };
+            const int iz7 = finde(b, nb, w7, 12, iw > 0 ? iw : 0);
+            PRUEF(iz7 > iw && iz7 + 14 == i7, "ENTRIEGELN39 N4.2: Cut 7 erst, wenn Elza suedlich z %d laeuft (Member_cmp-Schleife @+%04X)", cz, iz7);
+        }
         /* N4.2: Programm beginnt mit sub05 @0x00FC8..@0x00FDB bytegleich (Riegel-Slot aus, (4,0xC3)=1, msg 12, Evt_next) */
         static const uint8_t sub05[20] = { 0x46, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0x04, 0xC3, 0x01, 0x2B, 0x0C, 0xFF, 0xFF, 0x02, 0x00 };
         PRUEF(nb > 20 && !memcmp(b, sub05, 20), "ENTRIEGELN39 N4.2: Anfang = ROOM1141 sub05 @0x00FC8..@0x00FDB (msg 12 \"You've opened the lock.\")");
@@ -621,6 +627,9 @@ static void teil_phase_h(void)
     PRUEF(msg12, "N4.2: Riegel -> msg 12 \"You've opened the lock.\" (sub05 @0x00FD6)");
     PRUEF(re15_game_flag_get(4, 0xC3) == 1, "N4.2: (4,0xC3) = 1 (sub05 @0x00FD2)");
     PRUEF(gerannt && bild_steht > 0, "N4.2: Elza rennt vom Riegel in den Raum (Bild %ld am Ziel)", bild_steht);
+    {   int cut0 = 0; for (int i = 0; i < n_cuts_lauf; i++) if (cuts_lauf[i] == 0) cut0 = 1;
+        PRUEF(!cut0 && n_cuts_lauf > 0 && cuts_lauf[n_cuts_lauf - 1] == RE15_R39J_CUT_ELZA,
+              "N4.2: Kamera beim Lauf ohne Cut 0 an der Zonengrenze (Lauf n1: 3 Bilder Cut 0 vor Cut 7), endet auf Cut 7"); }
     {
         const int w = re15_player_equipped_weapon();
         PRUEF(w >= 3 && w != 9 && w != 10 && w != 11 && re15_inv_find_item((uint8_t)w) >= 0,

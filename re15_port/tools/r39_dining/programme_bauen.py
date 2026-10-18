@@ -62,6 +62,7 @@ DOOR0F_CK = 0xDB                # RE2 @0x8009A5D4 +8: Pruefsumme Ton (XOR erstes
 DOOR0F_DATEI = 48076            # Dateigroesse laut derselben Tabelle
 MERKER_BANK, MERKER_BIT = 5, 0x10  # RE15_R39J_MERKER_BANK/_BIT: Gemaelde-Programm laeuft (Nachbesserung 1 M1); Bank 5 =
                                 #   Skript-Merker (ROOM1141 sub03/sub04 @0x00FA4/@0x00FB6 nutzen Bit 0/1, sonst keins)
+ELZA_CUT7_Z = -9775             # RE15_R39J_ELZA_CUT7_Z = RE15_R38F_CUT7_AUS_Z: suedlich davon ist Elza im Bild von Cut 7
 MSG52_REST = 30                # RE15_R39J_MSG52_REST: Sleep nach Johns Folge-Geste (Abnahme H3: msg 52 stand 99 Bilder)
 SCHUETZE_BANK, SCHUETZE_BIT = 5, 0x11  # RE15_R39J_SCHUETZE_BANK/_BIT: Johns Salve laeuft (Nachbesserung 1 N4.3)
 SUB_SCHUETZE = 30               # RE15_R39J_SUB_SCHUETZE: Evt_exec-Nummer des Fadens SCHUETZE39 (< RE15_RDT_MAX_SUB_SCD 32;
@@ -227,9 +228,18 @@ def tuer_auftritt():
     R.dest(5, 0, ELZA_VORNE, "Plc_dest RUN Elza vom Riegel in den Raum (%d,%d) (Spieler-RUN Form ROOM1021 sub02 @0x02046 "
                              "`40 00 05 20`; Bit 0 = Warte-Bit von sub03) - NUTZER-VORGABE \"rennt sie dann bis zur Szene mit "
                              "den anderen Kamera\"" % ELZA_VORNE)
+    # Lauf n1: mit Kamera-Automatik bis zur Ankunft zeigte die Zonengrenze kurz vor dem Ziel 3 Bilder Cut 0 (F1719..F1721),
+    # dann erst der Schnitt auf Cut 7. Jetzt schneidet das Skript auf Cut 7, sobald Elza in dessen Bild laeuft.
+    kette = bytes([0x3E, 0x00, 0x02, 0x02]) + s16(ELZA_CUT7_Z)
+    op(bytes([0x0F, len(kette)]) + struct.pack("<H", len(kette) + 4),
+       "While Kette %d B, Block %d B (Form ROOM1141 sub03 @0x00FA8; Kette wie Runde 38 while_elza_in_bahn)" % (len(kette), len(kette) + 4))
+    op(kette, "  Member_cmp Elza z >= %d (Id 2 = z +0x3c @0x8004139c, Operator 2 = >= @0x8004130c; Form ROOM1040 sub05 "
+              "@0x018C0): noch nicht im Bild von Cut 7 (Bildgrenze RE15_R38F_CUT7_AUS_Z, Satz @0x00140)" % ELZA_CUT7_Z)
+    op(b"\x02\x00", "  Evt_next + Nop (Form sub03 @0x00FB0)")
+    op(b"\x10\x00", "Ewhile (Form sub03 @0x00FB2)")
+    R.cut_chg(CUT_ELZA, "Cut_chg 7 = Kamera am Gangende, Blick nach Sueden: Elza laeuft ins Bild, Dachtuer hinter der Kamera "
+                        "(Form sub02 @0x00C24 `29 07`) - NUTZER-VORGABE \"rennt ... bis zur Szene mit den anderen Kamera\"")
     op([0x18, 0x03], "Gosub sub03 = sub02 @0x00CE0 (warten, bis Elza steht)")
-    R.cut_chg(CUT_ELZA, "Cut_chg 7 = Kamera am Gangende, Blick nach Sueden: Elza von vorn, Dachtuer hinter der Kamera "
-                        "(Form sub02 @0x00C24 `29 07`)")
     R.dest(9, 0, JOHN_TUER, "Plc_dest TURN Elza zur Dachtuer (Form sub02 @0x00CE2 `40 00 09 00 ..` / ROOM3060 sub03 @0x0108E)")
     op([0x18, 0x03], "Gosub sub03 = sub02 @0x00CEA")
     op([0x3F, 0x02, 0x06, 0x00], "Plc_motion(2,6) Elza hebt die Waffe = ROOM3060 sub03 @0x010BE `3f 02 06 00` (Spieler-Sub 2 "
