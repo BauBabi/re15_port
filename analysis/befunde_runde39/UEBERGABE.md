@@ -6,7 +6,7 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-18 09:12: Spur C inventar BESTANDEN (Abnahme 0, 103347cc; Bau a78ee047): Spind 1000 Munition 0x15 x15 Bit (9,69),
+* 2026-10-18 09:02: Spur C inventar BESTANDEN (Abnahme 0, 103347cc; Bau a78ee047): Spind 1000 Munition 0x15 x15 Bit (9,69),
   Stapeln aller Mengen-Items (sltiu 0x22 @0x80049124, Obergrenze 250 @0x80074DA8, Aktion 5 @0x8004e664), Elza-Status
   STPIC_04 (DEBUG.BIN FUN_800c01c4), Yellow Keycard: Abfrage nach dem Code (Gate (3,139) @0x01A8A, Generator-E5 je
   Szenario-Variante); Alt-Riegel r21/r26/r37 nachgezogen. In die Integration gemergt (905e0f6d, konfliktfrei). FUER DEN
