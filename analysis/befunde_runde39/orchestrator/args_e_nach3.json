@@ -1,0 +1,27 @@
+{
+  "_hinweis": "Spur E Nachbesserung 3: Befund E aus Nachbesserung 2 (Gorilla/Elza durch Waende ROOM1141). Baum r39_gegner HEAD 98822214. Resume nur mit GENAU diesen args.",
+  "welle": ["E"], "slots": 1, "max_nach": 1, "basis": "c71fa144",
+  "modus": {"E": "nachbesserung"},
+  "runde0": {"E": 2},
+  "bau": {"E": {
+    "status": "fertig",
+    "zusammenfassung": "Abnahme 2 BESTANDEN (98822214; Fix b963e6bb): Gorilla-Regel fuer alle 0x27 (Zensus: ROOM11C0 + ROOM1141), 1141 mit Elza 360 Energie, Flinch bei akku 36, Szene bis Johns Abgang. Dossier E_gegner.md Abschnitt 'Befund E' (Z. ~634ff): (a) Gorilla G3 durch die 2000 dicke Westwand (Versuch 5 F4623->F4624: Koerper-Stoss Gorilla gegen Gorilla FUN_8002aec4 @0x8002b1d8-260 pen 2829 -> x -9803 jenseits der Wandmitte -9600, Wandklemme FUN_8003bca8 nimmt die NAEHERE Kante @0x8003bcec-cfc -> x -12218 ausserhalb); (b) Elza durch die Suedwand (Versuch 6 F3555->F3556: Gorilla G3 Sub 15 Rear-up-Pin, Elza im Opfer-Clip mo=1, (-2715,-23132) -> (-2144,-26068) = Aussenkante; der reine Koerper-Stoss reicht nicht ueber die Wandmitte -24600 - der Schreiber ist NICHT ermittelt).",
+    "commits": ["b963e6bb fix(r39-gegner): Nachbesserung 2", "98822214 doc Abnahme 2"],
+    "suite": "Abnahme 2: 149 Unit + 15 Integration gruen",
+    "offene_punkte": ["Befund E (a) Gorilla hinter der Westwand -> Kampf endet nie; (b) Elza ausserhalb des Raums nach Pin/Wurf"]
+  }},
+  "abn": {"E": {
+    "bestanden": false,
+    "bericht": "analysis/befunde_runde39/E_abnahme_2.md (bestanden) + Befund E im Dossier",
+    "urteile": [
+      {"punkt": "1 Gorillas HP x2 + Flinch nach 3 Treffern (alle 0x27)", "urteil": "erfuellt", "beleg": "Abnahme 2"},
+      {"punkt": "2 Kein paralleler Hundebiss", "urteil": "erfuellt", "beleg": "Abnahme 2"},
+      {"punkt": "3 Liegende Zombies kriechen", "urteil": "erfuellt", "beleg": "Abnahme 2"},
+      {"punkt": "4 Gorilla-Schatten beim Sprung am Boden", "urteil": "erfuellt", "beleg": "Abnahme 2"}
+    ],
+    "maengel": [
+      "BEFUND E (b) - ELZA AUSSERHALB DES RAUMS (Versuch 6 n1141_sued, F3555 -> F3556: Gorilla G3 Sub 15 Rear-up-Pin, Elza mo=1, (-2715,-23132) -> (-2144,-26068) = Aussenkante der 2000 dicken Suedwand Zelle 1 z -25600..-23600). Das verletzt die NUTZER-INVARIANTE aus Runde 38 (AUFTRAG Runde 38 Spur T, woertlich: 'der Spieler ... verschwindet ... wenn sie einen Angreifen. Sowas darf GARNICHT passieren, bei keinen Gegner.'; Riegel/Invariante analysis/befunde_runde38/T_*.md). SCHRITT 1: den Schreiber finden, der Elza in F3556 ueber die Wandmitte -24600 setzt (Pin-/Wurf-Platzierung der Runde-35-/36-Gorilla-Haken, Opfer-Wurzelbewegung, Koerper-Stoss, Wandklemme) - bildgenau mit RE15_ENEMY_DBG/RE15_STATE_LOG, Positions-Schreiber im Port per Debug-Haken; Original-Gegenstueck disassemblieren (Gorilla-Pin/Wurf im STAGE1-Overlay, Spieler-Opfer-Platzierung, Wandklemme fuer den Spieler). SCHRITT 2: ist es ein Port-Fehler (Abweichung vom Original), an der Ursache korrigieren; ist es Original-Verhalten, RE2-Retail-Form pruefen (Beta -> Retail) und die Runde-38-T-Invariante (Spieler bleibt auf begehbarem Boden innerhalb des Raums) fuer den Gorilla-Pin/Wurf durchsetzen - Form aus dem Original/RE2 belegen, PORT-WAHL nur mit Begruendung. Riegel: Gorilla-Pin/Wurf an der Wand (1141 Suedwand-Lage aus Versuch 6) -> Elza bleibt im Raum, und die vorhandene T-Invariantensonde um den Gorilla erweitern.",
+      "BEFUND E (a) - GORILLA HINTER DER WESTWAND (Versuch 5, F4623 -> F4624; Mechanismus im Dossier belegt: Koerper-Stoss Gorilla gegen Gorilla pen 2829 > halbe Wanddicke, Wandklemme FUN_8003bca8 waehlt die naehere Kante @0x8003bcec-cfc -> Gorilla ausserhalb). Im Port ist der Kampf in 1141 PFLICHT (Runde 38 F, NUTZER-VORGABE: Tueren gesperrt bis beide Gorillas tot, 'I cannot leave him alone with those monsters') -> ein Gorilla ausserhalb = SOFTLOCK. SCHRITT 1: RE2-Retail-Gegenstueck lesen (Koerper-Stoss zwischen Gegnern + Wandklemme in RE2: verhindert RE2 das Durchschieben - z.B. Klemme gegen die alte Position/Bewegungsrichtung, Stoss nur wenn das Ziel frei ist, Querungs-Zweig @0x8002b268ff auch im Port portieren?). SCHRITT 2: Beta -> Retail: verhindert RE2 es, die RE2-Form uebernehmen (Adressen); verhindert auch RE2 es nicht, den Softlock trotzdem ausschliessen (der Kampf ist Port-Pflicht) mit der kleinsten belegten Form (z.B. der im Original vorhandene, im Port nicht portierte Querungs-Zweig @0x8002b268-2cc, oder Wandklemme relativ zur Position VOR dem Stoss) als PORT-WAHL mit Begruendung im Dossier. Riegel: Gorilla-gegen-Gorilla-Stoss an der Westwand (Lage aus Versuch 5) -> Gorilla bleibt im Raum; Gegenprobe: Stoss im freien Raum unveraendert; 11C0 und die r38-T-Invariante gruen."
+    ]
+  }}
+}

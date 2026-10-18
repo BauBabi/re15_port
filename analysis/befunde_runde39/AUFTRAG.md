@@ -99,3 +99,20 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
 - "Zu 4. 15 Schuss - die Halbierung." (Spur C: Spind ROOM1000 = 15 Schuss -> bleibt)
 - "Zu 5. Ja, alles was ein Zahlenammount hat, soll stapelbar sein, auch in der Kiste." (Spur C: Granaten stapeln; die Kiste
   nutzt dieselbe Regel re15_inventar_r39_stapelt, re15_itembox.c:102 -> erfuellt, nichts zu tun)
+
+## Nachtrag 4 des Nutzers (woertlich, 2026-10-18 19:25, ROOM1141 - fuer Spur J)
+
+- Bei ROOM 1141 soll Elza das Rolltor öffnen und dann noch ganz normal laufen können.
+- Erst wenn sie danach die Tür entriegelt soll die Cutscene losgehen mit John. Am besten rennt sie dann bis zur Szene mit den anderen Kamera, die nicht mehr Richtung Tür zeigt, dreht sich dann zur Tür und hebt die Waffe. Dann kommt alles das, was jetzt schon drin ist. Tür knallen, sicht auf John usw.
+- John sollte auch ab und an mal auf die Gorillas schießen in ROOM 1141 und dann ihre Aufmerksamkeit erhalten, sonst ist es komisch
+- John sollte am Ende der Cutscene in ROOM 1141, bevor sie den Raum verlassen nicht die Waffe auf Elza richten, sondern das heranwinken/Folge Animation abspielen stattdessen....
+- (Nachschub 19:25) "Oder falls Elza keine Waffe ausgerüstet hat eben das Messer...." (zu Punkt 2: hebt die Waffe - ohne ausgeruestete Waffe das Messer)
+- (Nachschub 19:25) "Ich meine mit ausgerüstet - keine Waffe im Inventar hat" -> Regel fuer Punkt 2: hat Elza eine Schusswaffe im INVENTAR, hebt sie diese (die ausgeruestete; ist keine ausgeruestet, eine aus dem Inventar), auch wenn sie nicht ausgeruestet ist; nur ohne jede Schusswaffe im Inventar hebt sie das Messer.
+- (Nachschub 19:26) "Falls sie irgendeine Waffe im Inventar hat, hebt sie halt diese."
+
+## Nachtrag 5 des Nutzers (woertlich, 2026-10-18 19:29)
+
+- Und die Schlüssel im Communicationsroom sind immer noch zu groß, die sollten maximal halb so groß sein.
+  (Orchestrator: Spur L Punkt 2 hatte die Schluessel 10F0/10F1 auf RE2-Bildgroesse gebracht - Leon 69 px, Elza 63 px bei
+  960x720, Hebel RE2_QUANTIL in tools/r38_itemorte/itemorte_export.py. NUTZER-VORGABE jetzt: hoechstens halb so gross wie
+  dieser Stand (Faktor 0,5 linear) -> neue Spur M "schluessel2".)

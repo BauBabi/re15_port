@@ -25,6 +25,7 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | 3 | G | karten / r39_karten | Karten 1F/2F/3F/B2 nach map*_correct.png, B1 neu; 1090-Marker im Raum |
 | 3 | I | funk10f1 / r39_funk10f1 | neue Elza-Szene 10F1 am Kommunikationssystem (3 Zeilen) |
 | 3 | J | dining1141 / r39_dining1141 | ROOM1141 Umbau (8 Unterpunkte); kurze Panik-Musik beim Wechsel 1141 -> 1171 |
+| 3+ | M | schluessel2 / r39_schluessel2 | Schluessel 10F0/10F1 hoechstens halb so gross (Nachtrag 5) |
 | 3 | K | heliport1171 / r39_heliport1171 | John 1171 "Elza hurry up": Heran-Winken statt Klettern; uebrige Szenen-Animationen 1171 |
 
 ## 1. Ressourcen

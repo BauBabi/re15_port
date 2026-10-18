@@ -6,6 +6,21 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 19:30: Integration mit E-Nachbesserung 2 + Logschalter-Fix (3fe9e358): 842/842 gruen (alle unit_/prop_/probe_ +
+  Gorilla-/1141-/Zustand-Gift-Integrationen, ctest -j 4, 1438 s). NICHT nach master vor E-Nachbesserung 3 (Befund E: Wand-
+  Durchstoss in 1141, laeuft wf_676d6740-b2f) - doppelte Energie verlaengert den Kampf = mehr Stoss-Gelegenheiten. Nutzer-
+  Nachtrag 4 (1141: Rolltor frei, Szene erst beim Entriegeln, Elza hebt Waffe aus dem Inventar sonst Messer, John schiesst
+  auf die Gorillas + zieht Aufmerksamkeit, Heranwinken am Ende) in AUFTRAG.md (master + Baum r39_dining1141) -> Spur J
+  Nachbesserung, sobald deren Abnahme 0 (wf_7cea9b87-5d9) fertig ist.
+* 2026-10-18 19:04: Spur E Nachbesserung 2 BESTANDEN (Abnahme 2; Fix b963e6bb): Gorilla-Regel fuer alle 0x27 (Zensus: nur
+  ROOM11C0 + ROOM1141), 1141 mit Elza: 360 Energie, Flinch bei akku 36, 31. Treffer toetet, Szene bis Johns Abgang;
+  unit_maggot_ai (Original-Riegel) misst den Original-INIT mit Haken aus. Integration: ff auf master 3640d6c1, Merge
+  58b8591f, Logschalter-Kollision E/F getrennt (RE15_R39_GEGNER_LOG, 3fe9e358). Bau + alle schnellen Tests + Gorilla-/1141-
+  Integrationen laufen (Regex scratchpad/integ_regex_e2.txt). ⛔ BEFUND E (vor dem Release klaeren): in 1141 kann der
+  Original-Koerperstoss (Gorilla gegen Gorilla, R 3200, Kasten @0x80121350; Wandklemme FUN_8003bca8 nimmt die naehere Kante
+  @0x8003bcec-cfc) einen Gorilla durch die 2000 dicke Westwand schieben -> Kampf endet nie (Versuch 5: x -12218); einmal
+  Elza im Rear-up-Pin hinter der Suedwand (z -26068). Doppelte Energie macht es wahrscheinlicher. Naechster Weg: RE2-
+  Gegenstueck (Koerperstoss + Wandklemme) lesen, Pin-Fall bildgenau messen.
 * 2026-10-18 18:57: master-Regression gefunden (von Spur I gemeldet) und behoben: unit_r38_itemorte_raum seit Welle 2 rot
   - Spur H stellte das Loescher-Band auf Spielerband(y)+1 um, der Runde-38-K-Riegel schrieb fuer 1030 noch Band 1 fest;
   Verhalten richtig (integration_r38_itemorte / r37_feuerloescher / r39_elza_loescher gruen), Riegel auf Band 2 (96ab793c).
