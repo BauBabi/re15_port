@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 17:06: MONATS-/SITZUNGSLIMIT (~14:58, Reset 17:00) beendete G/I/J/K und die E-Nachbesserung 2 nach ~35 min.
+  Gesichert: karten-Reste 716eda1d (UNGEPRUEFT); K hatte einen Probe-Merge von r39/integration (MERGE_HEAD 4e2177bd) offen
+  -> abgebrochen; master (Welle 1+2) in alle fuenf Baeume gemergt (dining1141: AUFTRAG.md-Konflikt, beide Seiten behalten).
+  Fortsetzung 17:05 mit stand je Spur (args woertlich in orchestrator/args_welle3_forts.json): G wf_23e44d81-e5a,
+  I wf_fcd48678-b0e, J wf_7cea9b87-5d9, K wf_4e57956b-fad, E2 wf_0f038a8e-3ac (modus nachbesserung, runde0 1).
 * 2026-10-18 14:53: WELLE 2 IN MASTER: merge 82fc487d (D+E+F+H; Integration 238/238 + E-Gruppe 85/85, ctest -j 3), Hauptbaum
   configure+build gruen, exe 14:51:13, Startlauf exit 0 (direct3d, ABR2 ok). Baeume r39_{treffer,zustand,elza} entfernt;
   r39_gegner bleibt (E-Nachbesserung 2 laeuft), r39_integration bleibt fuer Welle 3.
