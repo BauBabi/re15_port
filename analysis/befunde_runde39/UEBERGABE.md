@@ -6,6 +6,14 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:03: Spur D treffer BESTANDEN nach Nachbesserung 1 (Abnahme 1 f0eec254; Fix bd0f0471): (1) Aufsteher = RE2
+  byte-true - Sturz-Aufsteher bis Clip-Bild 55 nur Beine-Maske (@0x801032b8-fc, @0x801036d0-f0, Maskentor @0x800413c4-d8),
+  EBEN-Schuss trifft erst ab Bild 55, TIEF jederzeit; Port war schon so, Riegel misst jetzt (17 CHECKs); (2) Schuss ueber
+  Moebel: RE2-Flag-Praxis (FUN_80050858 @0x800508bc-c8), Moebel-Liste PORT-WAHL (218 Zellen, 11 Leon-Raeume + Elza),
+  ROOM1250 0/6 -> 6/6 Treffer; (3) Zielhilfe nur bei Sichtlinie (ROOM1180: Ziel hinter Wand -> sichtbarer Zombie); 28/28
+  Tests. In die Integration gemergt (6de53176, konfliktfrei). FUER DEN NUTZER (Entscheidung): Punkt 1 ist in RE2 genau so
+  (Nutzer-Annahme "in RE2 nicht so" widerlegt) - RE2 behalten oder NUTZER-VORGABE "Aufsteher auch in Normalhoehe treffbar"
+  (Nutzerwert, kein RE-Wert); Granate prallt weiter am Tisch ab; Kleinzellen (Lampe/Stativ/Loescher) durchlaessig.
 * 2026-10-18 13:46: Spur F zustand BESTANDEN nach Nachbesserung 1 (Abnahme 1 07312f9a; Fix 8c9c104e): volle Heilung = ganze
   Kleidung (Wund-Tabelle genullt + Spielerhaut neu wie FUN_800314b0, Schwelle 100 @0x8004ae14 / Weste 105; dabei Heap-
   Absturz bei Vollheilung MIT Weste (free auf Container-Schnittzeiger) gefunden und behoben), Gift -1 HP alle 31 Bilder wie
