@@ -36,10 +36,13 @@
  * Ort allein besucht, verlor z.B. ROOM1070 seine ganze Westwand x196 (34 px), ROOM1010 beide Seitenwaende
  * (G_abnahme_0.md Abschnitt 6). Die Vorlagen zeigen den Zustand "alle Raeume gezeichnet"; ist der Nachbar nicht
  * gezeichnet, gibt es keine Doppelwand, und die eigene Linie bleibt stehen (= Stand vor Runde 39).
- * R39_IMMER: kein Wandverlust moeglich (Loch fuellen; Linie innerhalb DESSELBEN Rechtecks verschoben; Tuerbalken
- * auf der Ersatzlinie, der mit dem Raum selbst gezeichnet wird). */
+ * R39_IMMER: kein Wandverlust moeglich (Loch fuellen; Linie innerhalb DESSELBEN Rechtecks verschoben).
+ * (Nachbesserung 3: der B2-Tuerbalken 11E0<->1210 war hier gefuehrt - er traegt jetzt den Traeger r0, s.u.) */
 #define R39_IMMER 255
 #define R39_SCHEMA(s) (128 + (s))   /* Traeger = Schema-Zeichnung <s> (zone.synth) derselben Seite */
+/* Nachbesserung 3 (Abnahme 2, N2): die Korrektur gilt nur, wenn Rechteck <t> derselben Seite NICHT gezeichnet wird -
+ * die eigene, vom PC-Renderer mit dem Tuerschwenk getilgte Wandlinie steht dann wieder (Eintrag B2 r3 unten). */
+#define R39_OHNE(t) (64 + (t))
 /* Traeger = Schema-Zeichnung <s> MIT KOERPER (besucht/aktuell bzw. rote Hinweis-Phase) - ein Umriss (Plan, unbesucht)
  * zaehlt NICHT: hinter einem Durchgang laege sonst nur der leere Umriss (Nachbesserung 2, Zustand Flur + Plan). */
 #define R39_SCHEMA_KOERPER(s) (192 + (s))
@@ -95,9 +98,20 @@ static const r39_korr_t s_korr[] = {
     /* r3 (187,70,64,80) uv(96,48) @0x80076318, r4 (187,78,16,24) uv(72,32) @0x80076324,
      * r5 (187,95,16,24) uv(72,32) @0x80076330: Westwand x187 neben der Ostwand des Flurs r0
      * (x186) -> Koerper (r3 nur y72..76, wo vorher die Tuermarke stand).
-     * r3 y72..76: auf x186 steht die Tuer 11E0<->1210 (s_map_marks), die mit ROOM1210 gezeichnet wird - immer.
+     * r3 y72..76: auf x186 steht die Tuer 11E0<->1210 (s_map_marks) - Traeger r0 (ROOM11E0) x186 (Index 4 ab y70).
      * Traeger r4: r0 (ROOM11E0) x186 16/16; r5 y96..100 r0 (ROOM11E0), y101..111 r9 (ROOM10A0 B2). */
-    { 1,  3,  0,  2, 1,  5, 1, R39_IMMER },
+    /* Nachbesserung 3 (Abnahme 2, N2): bis hier R39_IMMER - richtig nur, solange ROOM11E0 mitgezeichnet wird. Ohne r0
+     * stand die Querbalken-Westseite OFFEN: die Kachel MAP02.PIX r3 uv(96,48) traegt die Westwand x187 y70..78 (Spalte 0,
+     * Zeilen 0..8 Index 4) samt gemaltem RE1.5-Schwenk x187..192 y72..76; der 9 px kurze Lauf faellt unter die
+     * Wachs-Schwelle der Schwenk-Tilgung (inv_render_pc.c re15_schwenke_entfernen: WAND 4, S_SAAT 4, S_WACHS 10,
+     * MAX_AUSD 10) und geht mit dem Schwenk: x187 y71..77 durchsichtig. GEMESSEN an der echten exe (Dossier
+     * "Nachbesserung 3"): Kartenhinweis nach Roys Tagebuch (flag (9,68), Ziel ROOM1211 Zone 0 = B2 r3 blinkt bis
+     * (4,0xFC), map_hint_common.c s_hints), ROOM11E0 ungezeichnet -> x187 y71..77 Grund. RE2 Retail: jede Raum-Kachel
+     * traegt ihre eigene Wand samt Tuerhaelfte (RoomTable @0x800aa388, Raum 1 @0x800aa398 Ostwand x126 / Raum 0 Westwand
+     * x127). Darum: Koerper x187 y72..76 nur mit r0 (die eine Wand ist dann x186), sonst die eigene Linie x187 y71..77
+     * wieder als Wand (die Tuer folgt ihr, re15_karte_r39_tuer_lage). (187,71)/(187,77) mit r0 = unveraendert. */
+    { 1,  3,  0,  2, 1,  5, 1,  0 },
+    { 1,  3,  0,  1, 1,  7, 4, R39_OHNE(0) },
     { 1,  4,  0,  1, 1, 16, 1,  0 },
     { 1,  5,  0,  1, 1,  5, 1,  0 },
     { 1,  5,  0,  6, 1, 11, 1,  9 },
@@ -178,6 +192,7 @@ static int schema_gezeichnet(const re15_inv_screen_t *st, unsigned page, int syn
 /* Ohne Schirmzustand (st == NULL, Werkzeug-Aufruf) gilt jede Korrektur - der Zustand der Vorlagen. */
 static int traeger_gezeichnet(const re15_inv_screen_t *st, unsigned page, unsigned char t)
 {
+    if (t >= 64 && t < 128) return st ? !kachel_gezeichnet(st, page, t - 64) : 0;   /* R39_OHNE (Nachbesserung 3) */
     if (t == R39_IMMER || !st) return 1;
     if (t >= 192) return schema_gezeichnet(st, page, t - 192, 0);   /* Nachbesserung 2: mit Koerper */
     if (t >= 128) return schema_gezeichnet(st, page, t - 128, 1);
@@ -215,8 +230,12 @@ int re15_karte_r39_korrektur_zahl(void) { return R39_KORR_N; }
  * Geometrie (keine neue Konstante): der um eine Spalte bzw. Zeile quer verschobene 5-px-Balken liegt GANZ in den
  * geloeschten Texeln der Korrektur (s_korr, Seiten-Tabelle @0x80076840 + 8*Seite). Treffer: 1F r0 x187 y145..154
  * (Traeger r4 = ROOM1030) fuer die Tuer (186,152) und 1F r2 x118 y126..133 (Traeger r4) fuer (119,129) - tuer_korr.py.
- * Die drei anderen Tueren an bedingten Korrekturen (1F (163,81)/(163,106) an r8/r7, (119,151) an r2 y144..154) sind
- * nur mit ihrem Traeger sichtbar (eigenes Rechteck r1 bzw. r10) und bleiben deshalb stehen; R39_IMMER verschiebt nie. */
+ * Dazu B2 r3 x187 y72..76 (Traeger r0 = ROOM11E0) fuer die Tuer (186,74) - nur ohne 11E0 (ROOM1210/1220 erreicht man
+ * nur durch ROOM11E0: Door_aot_set nach 1210 nur in ROOM11E0.RDT @0x015A2/@0x016C4 und ROOM1220.RDT @0x00DD2..@0x00E52,
+ * nach 1220 nur in ROOM1210.RDT @0x01CE6..@0x01D66; nb3/tuer_quellen.py) - dort dann auf der wiederhergestellten
+ * Westwand x187 (R39_OHNE(0)). Die drei anderen Tueren an bedingten Korrekturen (1F (163,81)/(163,106) an r8/r7,
+ * (119,151) an r2 y144..154) sind nur mit ihrem Traeger sichtbar (eigenes Rechteck r1 bzw. r10) und bleiben deshalb
+ * stehen; R39_IMMER verschiebt nie. */
 void re15_karte_r39_tuer_lage(const void *inv_screen, unsigned page, int kind, int *mx, int *my)
 {
     const re15_inv_screen_t *st = (const re15_inv_screen_t *)inv_screen;

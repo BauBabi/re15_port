@@ -756,6 +756,7 @@ static int teil_sollbild(int argc, char **argv)
 static int teil_pruef_teil(void);      /* Nachbesserung 1, unten */
 static int teil_pruef_treppen(void);
 static int teil_pruef_marker(void);
+static int teil_pruef_tueren(void);     /* Nachbesserung 3, N2 */
 
 static int teil_pruef(int argc, char **argv)
 {
@@ -766,6 +767,7 @@ static int teil_pruef(int argc, char **argv)
     else if (!strcmp(was, "teil")) teil_pruef_teil();         /* Nachbesserung 1, M3 */
     else if (!strcmp(was, "treppen")) teil_pruef_treppen();   /* Nachbesserung 1, M4/M5/M1 */
     else if (!strcmp(was, "marker")) teil_pruef_marker();     /* Nachbesserung 1, M5 */
+    else if (!strcmp(was, "tueren")) teil_pruef_tueren();     /* Nachbesserung 3, N2 */
     else { printf("FAIL: pruef 1090|b1|teil|treppen|marker\n"); return 2; }
     printf(g_fail ? "FEHLER\n" : "OK\n");
     return g_fail;
@@ -958,6 +960,25 @@ static int teil_pruef_teil(void)
         re15_karte_r39_korrektur(k, &pg, &rc, &c, &r, &w, &h, &neu, &tr);
         if (tr == 255) continue;
         re15_map_rect_geometry((unsigned)pg, (unsigned)rc, &rx, &ry, &rw, &rh);
+        if (tr >= 64 && tr < 128) {
+            /* Nachbesserung 3: R39_OHNE(t) - fehlt Rechteck t, steht die EIGENE Linie wieder: jedes Pixel ist in der Kachel
+             * des Rechtecks selbst Index 4 (gemalte Wand), und t traegt direkt daneben die Linie, die mit t die eine ist. */
+            int x, y, roh = (neu == 4), nb = 0;
+            for (y = ry + r; y < ry + r + h; y++)
+                for (x = rx + c; x < rx + c + w; x++) if (texel(pg, rc, x, y) != 4) roh = 0;
+            for (d = 0; d < 4 && !nb; d++) {
+                int alle = 1;
+                for (y = ry + r; y < ry + r + h; y++)
+                    for (x = rx + c; x < rx + c + w; x++)
+                        if (texel(pg, tr - 64, x + D[d][0], y + D[d][1]) != 4) alle = 0;
+                nb = alle;
+            }
+            snprintf(t, sizeof t, "Korrektur %d (Blatt %d r%d Spalte %d Zeile %d %dx%d): ohne r%d die eigene gemalte Linie "
+                     "(Index 4: %s), r%d traegt daneben die gemeinsame (%s)", k, pg, rc, c, r, w, h, tr - 64, roh ? "ja" : "NEIN",
+                     tr - 64, nb ? "ja" : "NEIN");
+            CHECK(t, roh && nb);
+            continue;
+        }
         if (tr >= 128) {
             /* Nachbesserung 2 (N1): Traeger = Schema-Zeichnung (128 + synth, mit Koerper 192 + synth). Ein DURCHGANG:
              * jedes geoeffnete Pixel grenzt 4-nachbarlich an eine Zelle dieser Zeichnung - die Luecke fuehrt in sie hinein. */
@@ -1008,20 +1029,20 @@ static int teil_pruef_teil(void)
         n = baue_teil(o->seite);
         komposit(o->seite, n);
         of = offen_zaehlen(40, 40, 300, 210, &bx, &by);
-        /* ROOM1210: im Abzug der echten exe nimmt die Schwenk-Tilgung des Renderers (inv_render_pc.c) auf x187 bei y71/y77
-         * Texel weg (VORHER 2, NEU 4 offene Pixel, G39nb1/al_1210_*); ohne ROOM11E0 schliesst dort nur der Tuerbalken
-         * x186 y72..76 - in jedem Spielstand ist 11E0 vorher gezeichnet (einziger Zugang). Ohne Tilgung (hier) 0. */
-        if (o->raum == 0x1210) soll = 4;
+        /* ROOM1210 (Nachbesserung 3): ohne ROOM11E0 steht die eigene Westwand x187 y71..77 wieder (R39_OHNE(0)), die Tuer
+         * folgt ihr (re15_karte_r39_tuer_lage) - geschlossen auch im Abzug der echten exe (vorher 4 offene Pixel: die
+         * Schwenk-Tilgung nahm x187 y71..77 weg, G39nb1/al_1210_*). Der Zustand selbst ist im Spiel nicht erreichbar. */
         snprintf(t, sizeof t, "%s allein (Blatt %d): %d Koerperpixel am Grund (soll <= %d)%s", o->was, o->seite, of, soll,
                  of ? "" : "");
         if (of > soll) snprintf(t + strlen(t), sizeof t - strlen(t), ", erstes (%d,%d)", bx, by);
         CHECK(t, of <= soll);
         if (o->raum == 0x1210) {
-            int y, tuer = 0;
-            for (y = 72; y <= 76; y++) if (s_kl[y][186] == 4) tuer++;
-            snprintf(t, sizeof t, "1210 allein: Tuerbalken 11E0<->1210 auf x186 y72..76 gezeichnet (%d von 5) - Grund fuer "
-                     "die IMMER-Korrektur B2 r3", tuer);
-            CHECK(t, tuer == 5);
+            int y, tuer = 0, fremd = 0, wand = 0;
+            for (y = 72; y <= 76; y++) { tuer += (s_kl[y][187] == 4); fremd += (s_kl[y][186] != 0); }
+            wand = (s_kl[71][187] == 2) + (s_kl[77][187] == 2);
+            snprintf(t, sizeof t, "1210 allein (Nachbesserung 3): Tuerbalken 11E0<->1210 auf der EIGENEN Westwand x187 y72..76 "
+                     "(%d von 5), Wand x187 y71/y77 %d/2, auf x186 nichts (%d)", tuer, wand, fremd);
+            CHECK(t, tuer == 5 && wand == 2 && fremd == 0);
         }
     }
     /* (c) PAAR-ZUSTAND: Ort + Traeger besucht -> die Korrektur greift (keine Doppelwand): jedes korrigierte Pixel ist
@@ -1493,6 +1514,214 @@ static int teil_tueren(int argc, char **argv)
     return s_t3_nfund ? 1 : 0;
 }
 
+/* zielbild <seite> <ziel_rect> <rot> <x0> <y0> <x1> <y1> <hexraum> <x> <z> [band]: Messung (Nachbesserung 3) - Ort
+ * besucht und aktuell, dazu eine Zielkachel wie nach einem Kartenhinweis (g_inv_screen.ziel_*, menu_common.c "ZIELRAUM IN
+ * DER NORMALEN KARTE"), rot = Blinkphase (1 = CLUT 502, 0 = 498). Klassenbild im Kasten + offene Raumseiten darin. */
+static int teil_zielbild(int argc, char **argv)
+{
+    r39_ort_t o;
+    const r39_ort_t *l[1];
+    int seite, zr, rot, x0, y0, x1, y1, n, x, y, bx = 0, by = 0, of;
+    if (argc < 11) { printf("FAIL: zielbild <seite> <ziel_rect> <rot> <x0> <y0> <x1> <y1> <hexraum> <x> <z> [band]\n"); return 2; }
+    seite = atoi(argv[2]); zr = atoi(argv[3]); rot = atoi(argv[4]);
+    x0 = atoi(argv[5]); y0 = atoi(argv[6]); x1 = atoi(argv[7]); y1 = atoi(argv[8]);
+    o.was = "Ort"; o.raum = (unsigned)strtoul(argv[9], NULL, 16); o.x = atoi(argv[10]); o.z = argc > 11 ? atoi(argv[11]) : 0;
+    o.seite = seite; o.band = argc > 12 ? atoi(argv[12]) : 0;
+    l[0] = &o;
+    orte_betreten(l, 1);
+    re15_inv_screen_open();
+    g_inv_screen.substate = 1;
+    g_inv_screen.item_state = 1;
+    g_inv_screen.map_page = (uint8_t)seite;
+    g_inv_screen.ziel_aktiv = 1; g_inv_screen.ziel_page = (uint8_t)seite; g_inv_screen.ziel_rect = (uint8_t)zr;
+    g_inv_screen.ziel_rot = (uint8_t)rot;
+    n = re15_inv_screen_build(&g_inv_screen, s_ops, RE15_INV_MAX_OPS);
+    komposit(seite, n);
+    printf("     ");
+    for (x = x0; x <= x1; x++) printf("%d", x % 10);
+    printf("\n");
+    for (y = y0; y <= y1; y++) {
+        printf("%4d ", y);
+        for (x = x0; x <= x1; x++) putchar(".BW?DS???X"[s_kl[y][x] < 10 ? s_kl[y][x] : 3]);
+        printf("\n");
+    }
+    of = offen_zaehlen(x0, y0, x1, y1, &bx, &by);
+    printf("offene Raumseite im Kasten: %d Koerperpixel am Grund%s\n", of, of ? "" : "");
+    if (of) printf("   erstes (%d,%d)\n", bx, by);
+    return 0;
+}
+
+#include "re15_map_hint.h"   /* re15_map_hint_anzahl / re15_map_hint_ziel (Nachbesserung 3, Zielkacheln) */
+
+/* Klassenbild-Zeichen fuer die Ausgabe: . Grund, B Koerper, W Wand, D Tuer, S Treppe, ? sonst */
+static char t3_z(int c) { return c == 0 ? '.' : c == 1 ? 'B' : c == 2 ? 'W' : c == 4 ? 'D' : c == 5 ? 'S' : '?'; }
+
+/* Spalte (senk) bzw. Zeile eines Balkens: Zahl der Pixel mit Klasse <kl> an x/y a..b */
+static int t3_zaehl(int senk, int fix, int a, int b, int kl)
+{
+    int i, n = 0;
+    for (i = a; i <= b; i++) n += ((senk ? s_kl[i][fix] : s_kl[fix][i]) == kl);
+    return n;
+}
+
+/* pruef tueren: Riegel Nachbesserung 3 (Abnahme 2, N2). */
+static int teil_pruef_tueren(void)
+{
+    static const r39_ort_t R1050 = { "1050", 0x1050, 20600, 12350, 2, 0 }, R1040 = { "1040", 0x1040, -20083, -3559, 2, 0 },
+                           R1030 = { "1030", 0x1030, 1172, -12558, 2, 0 }, R1020 = { "1020", 0x1020, -4000, -18000, 2, 0 },
+                           R1190 = { "1190", 0x1190, 3174, -11182, 0, 0 };
+    char t[400];
+    int k, n, h, y;
+    printf("=== Nachbesserung 3 (N2): jede gezeichnete Tuer liegt auf einer gezeichneten Wand - in jedem Kartenzustand ===\n");
+    /* (a) alle Zustaende der Blaetter B1..3F (t3_blatt): vorher 3 Befunde - 1F x186 y150..154 (38 Zustaende) und x119
+     *     y127..131 (17) ohne ROOM1030, B2 x186 y72..76 ohne ROOM11E0 (21; im Spiel unerreichbar, nb3/tuer_quellen.py) */
+    t3_alle(0, 4, 0);
+    for (k = 0; k < s_t3_nfund; k++) t3_fund_drucken(k);
+    snprintf(t, sizeof t, "Blaetter B1..3F: %d Zustaende (jede Teilmenge der beteiligten Orte, jeder davon aktuell, ohne/mit "
+             "Plan), %d gezeichnete Tuerbalken - schwebend oder neben der Wand: %d (vorher 3)", s_t3_zustaende, s_t3_balken,
+             s_t3_nfund);
+    CHECK(t, s_t3_nfund == 0 && s_t3_zustaende >= 700 && s_t3_balken >= 3000);
+    /* (b) die beiden Zustaende der Abnahme 2 einzeln, Pixel fuer Pixel */
+    {
+        const r39_ort_t *a1[1] = { &R1050 }, *a2[1] = { &R1040 }, *a3[2] = { &R1050, &R1030 }, *a4[2] = { &R1040, &R1030 };
+        int tu, da, en, ko;
+        orte_betreten(a1, 1); n = baue_teil(2); komposit(2, n);
+        tu = t3_zaehl(1, 187, 150, 154, 4); da = 5 - t3_zaehl(1, 186, 150, 154, 0);
+        en = (s_kl[149][187] == 2) + (s_kl[155][187] == 2);
+        snprintf(t, sizeof t, "1050 allein (ROOM1030 ungezeichnet): Tuer 1030<->1050 auf der 1050-Westwand x187 y150..154 %d/5, "
+                 "Enden (187,149)/(187,155) Wand %d/2, x186 y150..154 frei (%d belegt; vorher 5 Tuerpixel im Grund)", tu, en, da);
+        CHECK(t, tu == 5 && en == 2 && da == 0);
+        orte_betreten(a2, 1); n = baue_teil(2); komposit(2, n);
+        tu = t3_zaehl(1, 118, 127, 131, 4); da = 5 - t3_zaehl(1, 119, 127, 131, 0);
+        en = (s_kl[126][118] == 2) + (s_kl[132][118] == 2);
+        snprintf(t, sizeof t, "1040 allein (ROOM1030 ungezeichnet): Tuer 1030<->1040 auf der 1040-Ostwand x118 y127..131 %d/5, "
+                 "Enden (118,126)/(118,132) Wand %d/2, x119 y127..131 frei (%d belegt)", tu, en, da);
+        CHECK(t, tu == 5 && en == 2 && da == 0);
+        /* mit ROOM1030 (Vollzustand dieser Wand): die eine Wand ist die 1030-Linie, die Tuer bleibt dort (Vorlage) */
+        orte_betreten(a3, 2); n = baue_teil(2); komposit(2, n);
+        tu = t3_zaehl(1, 186, 150, 154, 4); ko = t3_zaehl(1, 187, 150, 154, 1);
+        snprintf(t, sizeof t, "1050 + 1030: Tuer auf x186 y150..154 %d/5 (wie map1F_correct.png), x187 Koerper %d/5 (eine Wand)", tu, ko);
+        CHECK(t, tu == 5 && ko == 5);
+        orte_betreten(a4, 2); n = baue_teil(2); komposit(2, n);
+        tu = t3_zaehl(1, 119, 127, 131, 4); ko = t3_zaehl(1, 118, 127, 131, 1);
+        snprintf(t, sizeof t, "1040 + 1030: Tuer auf x119 y127..131 %d/5, x118 Koerper %d/5 (eine Wand)", tu, ko);
+        CHECK(t, tu == 5 && ko == 5);
+    }
+    /* (c) jede Zielkachel eines Kartenhinweises ALLEIN gezeichnet (Spieler auf einem anderen Blatt, nichts daneben
+     *     besucht, rote Blinkphase): geschlossen. Vorher ROOM1211 (Roys Tagebuch, Ziel bis (4,0xFC)): B2 r3 Westseite x187
+     *     y72..76 Koerper am Grund - an der echten exe x187 y71..77 Grund (Schwenk-Tilgung). */
+    for (h = 0; h < re15_map_hint_anzahl(); h++) {
+        int pg = -1, rc = -1, x0 = 0, y0 = 0, w = 0, hh = 0, of, bx = 0, by = 0, ok = 0, zi;
+        const r39_ort_t *wo[1];
+        if (!re15_map_hint_ziel(h, &pg, &rc) || pg < 0) continue;
+        if (rc < 64) ok = re15_map_rect_geometry((unsigned)pg, (unsigned)rc, &x0, &y0, &w, &hh);
+        else
+            for (zi = 0; zi < re15_map_zone_count() && !ok; zi++) {
+                const re15_map_zone_t *zs = re15_map_zone_by_index(zi);
+                if (zs && zs->page == (unsigned)pg && zs->synth == rc - RE15_KARTE_R39_SCHEMA_RECT)
+                    ok = re15_map_zone_synth(zs, &x0, &y0, &w, &hh, NULL, NULL);
+            }
+        if (!ok) continue;
+        wo[0] = (pg == 2) ? &R1190 : &R1020;
+        orte_betreten(wo, 1);
+        re15_inv_screen_open();
+        g_inv_screen.substate = 1; g_inv_screen.item_state = 1; g_inv_screen.map_page = (uint8_t)pg;
+        g_inv_screen.ziel_aktiv = 1; g_inv_screen.ziel_page = (uint8_t)pg; g_inv_screen.ziel_rect = (uint8_t)rc;
+        g_inv_screen.ziel_rot = 1;
+        n = re15_inv_screen_build(&g_inv_screen, s_ops, RE15_INV_MAX_OPS);
+        komposit(pg, n);
+        of = offen_zaehlen(x0 - 1, y0 - 1, x0 + w, y0 + hh, &bx, &by);
+        snprintf(t, sizeof t, "Hinweis %d: Zielkachel Blatt %d Rechteck %d (%d,%d %dx%d) allein gezeichnet: %d Koerperpixel am "
+                 "Grund", h, pg, rc, x0, y0, w, hh, of);
+        if (of) snprintf(t + strlen(t), sizeof t - strlen(t), ", erstes (%d,%d)", bx, by);
+        CHECK(t, of == 0);
+        if (pg == 1 && rc == 3) {   /* ROOM1211: die eigene Westwand x187 y71..77 steht (R39_OHNE(0)) */
+            int wnd = t3_zaehl(1, 187, 71, 77, 2);
+            printf("     x187 y70..78: ");
+            for (y = 70; y <= 78; y++) putchar(t3_z(s_kl[y][187]));
+            printf("\n");
+            snprintf(t, sizeof t, "Hinweis %d (ROOM1211, Roys Tagebuch): B2 r3 Westwand x187 y71..77 %d/7 Wand ohne ROOM11E0", h, wnd);
+            CHECK(t, wnd == 7);
+        }
+        g_inv_screen.ziel_aktiv = 0;
+    }
+    return g_fail;
+}
+
+/* tuerbild <bmp> [x0 y0 x1 y1]: Abzug der echten exe (RE15_INV_FB_SHOT) - schwebende Tuerbalken wie tuer2.py der Abnahme 2
+ * (nb3/tueren_bmp.py): ein gelber Balken (224,168,40) schwebt, wenn ein Ende laengs auf dem Grund (0,16,*) liegt oder quer
+ * direkt daneben ein Wandpixel (176,176,176) steht. Nur Balken, die ganz im Kasten liegen (Default Kartenfeld). */
+static int teil_tuerbild(int argc, char **argv)
+{
+    FILE *f;
+    unsigned char hdr[54], *px;
+    static unsigned char kl[240][320], gesehen[240][320];
+    int w, h, x, y, kx0 = 40, ky0 = 40, kx1 = 299, ky1 = 209, nb = 0, nsch = 0;
+    long off;
+    if (argc < 3) { printf("FAIL: tuerbild <bmp> [x0 y0 x1 y1]\n"); return 2; }
+    if (argc >= 7) { kx0 = atoi(argv[3]); ky0 = atoi(argv[4]); kx1 = atoi(argv[5]); ky1 = atoi(argv[6]); }
+    f = fopen(argv[2], "rb");
+    if (!f || fread(hdr, 1, 54, f) != 54) { printf("FAIL: %s nicht lesbar\n", argv[2]); if (f) fclose(f); return 1; }
+    off = hdr[10] | (hdr[11] << 8) | (hdr[12] << 16) | ((long)hdr[13] << 24);
+    w = hdr[18] | (hdr[19] << 8); h = hdr[22] | (hdr[23] << 8);
+    if (w != 320 || h != 240) { printf("FAIL: %dx%d\n", w, h); fclose(f); return 1; }
+    px = (unsigned char *)malloc((size_t)w * (size_t)h * 3u);
+    fseek(f, off, SEEK_SET);
+    for (y = 0; y < h; y++) {
+        int stride = (w * 3 + 3) & ~3;
+        if (fread(px + (size_t)(h - 1 - y) * (size_t)w * 3u, 1, (size_t)w * 3u, f) != (size_t)w * 3u) break;
+        fseek(f, stride - w * 3, SEEK_CUR);
+    }
+    fclose(f);
+    for (y = 0; y < h; y++)
+        for (x = 0; x < w; x++) {
+            const unsigned char *p = px + ((size_t)y * (size_t)w + (size_t)x) * 3u;   /* B,G,R */
+            int r = p[2], g = p[1], b = p[0], k = 7;
+            if (r == 0 && g == 16) k = 0;
+            else if ((r == 16 && g == 56) || (r == 48 && g == 8)) k = 1;
+            else if (r == 176 && g == 176 && b == 176) k = 2;
+            else if (r == 224 && g == 168 && b == 40) k = 4;
+            kl[y][x] = (unsigned char)k; gesehen[y][x] = 0;
+        }
+    free(px);
+    for (y = 1; y < 239; y++)
+        for (x = 1; x < 319; x++) {
+            int sx[64], sy[64], n = 0, i, a, minx = x, maxx = x, miny = y, maxy = y, schwebt = 0, wq = 0;
+            if (kl[y][x] != 4 || gesehen[y][x]) continue;
+            sx[0] = x; sy[0] = y; n = 1; gesehen[y][x] = 1;
+            for (i = 0; i < n; i++) {
+                static const int N4[4][2] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+                int d;
+                for (d = 0; d < 4; d++) {
+                    int qx = sx[i] + N4[d][0], qy = sy[i] + N4[d][1];
+                    if (qx < 1 || qx > 318 || qy < 1 || qy > 238 || kl[qy][qx] != 4 || gesehen[qy][qx] || n >= 64) continue;
+                    gesehen[qy][qx] = 1; sx[n] = qx; sy[n] = qy; n++;
+                    if (qx < minx) minx = qx;
+                    if (qx > maxx) maxx = qx;
+                    if (qy < miny) miny = qy;
+                    if (qy > maxy) maxy = qy;
+                }
+            }
+            if (minx < kx0 || maxx > kx1 || miny < ky0 || maxy > ky1) continue;
+            nb++;
+            if (maxx - minx >= maxy - miny) {
+                if (kl[miny][minx - 1] == 0 || kl[miny][maxx + 1] == 0) schwebt = 1;
+                for (a = minx; a <= maxx; a++) wq += (kl[miny - 1][a] == 2) + (kl[miny + 1][a] == 2);
+            } else {
+                if (kl[miny - 1][minx] == 0 || kl[maxy + 1][minx] == 0) schwebt = 1;
+                for (a = miny; a <= maxy; a++) wq += (kl[a][minx - 1] == 2) + (kl[a][minx + 1] == 2);
+            }
+            if (wq) schwebt = 1;
+            if (schwebt) {
+                nsch++;
+                printf("   SCHWEBT: Balken x%d..%d y%d..%d (Wand quer %d)\n", minx, maxx, miny, maxy, wq);
+            }
+        }
+    printf("%s: %d Tuerbalken im Kasten, schwebend %d\n", argv[2], nb, nsch);
+    printf(nsch ? "FAIL\n" : "OK\n");
+    return nsch ? 1 : 0;
+}
+
 /* offen <bmp> [x0 y0 x1 y1]: Abzug der echten exe (RE15_INV_FB_SHOT) - Raumkoerper (rot/gruen) 4-nachbarlich am Grund
  * im Kartenfeld x40..299 y40..209 bzw. im Kasten (G_karten_werkzeug/nb1/offen.py). Riegel M3 in integration_r39_karten.
  * Nachbesserung 2: Kasten um die ROOM1210-Kammer - die vorbestehenden Kerben (187,71)/(187,77) der Schwenk-Tilgung am
@@ -1558,6 +1787,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "markerflaeche")) return teil_markerflaeche(argc, argv);
     if (!strcmp(teil, "offen")) return teil_offen(argc, argv);
     if (!strcmp(teil, "tueren")) return teil_tueren(argc, argv);   /* Nachbesserung 3 */
+    if (!strcmp(teil, "zielbild")) return teil_zielbild(argc, argv);   /* Nachbesserung 3, Messung */
+    if (!strcmp(teil, "tuerbild")) return teil_tuerbild(argc, argv);   /* Nachbesserung 3, echte exe */
     printf("FAIL: unbekannter Teil '%s'\n", teil);
     (void)g_fail;
     return 2;
