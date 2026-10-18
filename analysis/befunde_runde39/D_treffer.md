@@ -14,9 +14,11 @@ Baum `.claude/worktrees/r39_treffer`, Zweig `r39/treffer`, Basis c71fa144 (maste
 - [x] Schritt 0: Lektuere (AUFTRAG/VERTRAG, Runde-16-Dossiers aufstehen-schuss/trefferhoehe/liegende-und-aufstehen,
       Runde-38 c939ce5d Zielhilfe/Band-Tore, Memory hit-latch-93 / tiefe-aus-kollision / kollisionszellen-sind-waende)
 - [x] Schritt 1: RE-Belege Mechanik (RE1.5 + RE2, alles selbst disassembliert/gedumpt, s. "RE-Belege")
-- [x] Schritt 2: Messung vorher je Punkt (Spielschritt + echte exe + RE2 live)
+- [x] Schritt 2: Messung vorher je Punkt (Spielschritt + echte exe; der RE2-Live-Versuch blieb OHNE Beleg, s. OFFEN)
 - [x] Schritt 3: Umsetzung (Punkt 2/3 Code, Punkt 1 Beleg)
 - [x] Schritt 4: Messung nachher, Tests (gezielter ctest s. "Tests"), Abschluss
+- [x] Nachbesserung 1 (Abnahme 0 vom 2026-10-18, M1-M3): Riegel `unit_r39_treffer_aufsteher` misst (feb58565), Dossier
+      berichtigt, RE2-Live-Befund nach OFFEN; Abschnitt "Nachbesserung 1"
 
 ## RE-Belege (Mechanik)
 
@@ -94,7 +96,8 @@ EXEC[5] P7 @0x80103628-754 (EMOVL10_S0.BIN): Radius +0x9A/+0x9C/+0x90/+0x92 +10 
 @0x801036d0-d8 -> NUR bei Clip-Bild 55 `lui v1,0xc00 / or / sw v0,0(s2)` @0x801036dc-f0 (Maske Beine+Rumpf zurueck).
 Vorher (P0..P7 < Bild 55) Maske = nur Beine (0x04000000, @0x801032B8-EC). Applier-Zeile EBEN bei dy=0: row 3, Satz
 `DAT_800a6db4+9+3` = [02 00 00] -> Treffer nur mit Rumpf-Bit -> **EBEN trifft den Aufsteher in RE2 erst ab Bild 55**,
-TIEF (row 6 = [01 02 00], Beine zuerst) trifft ihn die ganze Zeit (Nahbox < 4100). Port: `re2z_frame_slot(e) == 55`
+TIEF (DOWN-Record @0x800A6618 = 00 04 02 01 ohne Flag 8 -> row 6 ohne +9 = [01 02 04], Beine zuerst; Abnahme 0 A3)
+trifft ihn die ganze Zeit (Nahbox < 4100). Port: `re2z_frame_slot(e) == 55`
 (enemy_ai_re2_zombie.c:2508) und `re15_re2_gun_probe` (re15_damage.c:1933) — nachzumessen (Schritt 2).
 
 ### B6 — Zielhoehe (D-Pad) ist in RE1.5 UND RE2 NICHT klebrig: Loslassen = MITTE (eigener Disasm, Fortsetzung 12:xx)
@@ -134,14 +137,16 @@ Pistole = RE1.5-Waffe 3, Pad R1/SQUARE; Spielerposition gepinnt, Blick von der Z
 EBEN: PRE f161 st=1/5/7 mo=0x08 bild=11 maske=1 ; Bild 11,17,23,29,35,41,47,53 -> 8x miss (maske=1, Zeile 3 = [2,0,0])
       f209 bild=59 maske=3 -> HIT (hnd=7 = FUN_80107A78), danach steht er (0x101) und wird normal getroffen
       SUMME: 15 Schuesse, 4 Treffer; in EXEC[5] Bild<55: 0/8 Treffer
-TIEF: f161 bild=11 maske=1 -> HIT (Zeile 6 = [1,2,0], Beine) ; SUMME 7 Schuesse, 4 Treffer, Bild<55: 1/1
+TIEF: f161 bild=11 maske=1 -> HIT (Zeile 6 = [1,2,4], Beine) ; SUMME 7 Schuesse, 4 Treffer, Bild<55: 1/1
 Fresser-Aufsteher EXEC[8] P4 (Clip 0x15, maske=3): EBEN f15 bild=11 -> HIT (hnd=7); 4/7 (jeder 2. Schuss faellt in die
       Treffer-Reaktion = +0x93-Latch, Original @0x800124f0 / Freigabe @0x80105fa4)
 ```
 => Der Port verhaelt sich exakt wie das RE2-Modell B5: der STURZ-Aufsteher (EXEC[5], Maske nur Beine bis Clip-Bild 55) ist
 mit EBEN nicht treffbar, mit TIEF durchgehend; Fresser-/Liege-Aufsteher (Maske 3) sind mit EBEN treffbar. Die Zielhoehe
 faellt beim Loslassen des D-Pads in RE1.5 UND RE2 auf EBEN zurueck (B6). Ob RE2 Retail den Sturz-Aufsteher mit EBEN wirklich
-nicht trifft, wird LIVE gemessen (DuckStation-GDB, D_belege/re2_mess/, s. u.).
+nicht trifft, sollte LIVE gemessen werden (DuckStation-GDB, D_belege/re2_mess/, s. u.) — der Versuch blieb OHNE Beleg (kein
+einziger Treffer der Messkette, Overlay nicht identifiziert; Abnahme 0 M3): der Beleg fuer Punkt 1 ist allein die statische
+Kette B5 (von der Abnahme unabhaengig nachgelesen, D_abnahme_0.md §1.3), gepinnt durch den Riegel (Nachbesserung 1).
 
 **Punkt 2 (RE2-KI, ROOM1140, Spieler (1400,-10300) suedlich des Konferenztischs [6], Zombie gepinnt (1400,-19000) noerdlich,
 5 Schuesse EBEN, gap 45, Zombie vor jedem Schuss auf 0x101):**
@@ -159,6 +164,11 @@ neuer Stand: Ziel = B; nur A aktiv -> kein Ziel; ROOM1140: ueber den Tisch Ziel 
 ```
 
 ### RE2-Retail LIVE (DuckStation-GDB + vgamepad, Spielstand SLUS-00748_4.sav = Stage 0 Raum 20, ein Zombie id 0x10)
+
+⛔ KEIN BELEG (Abnahme 0 M3, Nachbesserung 1): dieser Abschnitt ist das Protokoll eines Versuchs. Die Messkette hat in
+1130/1064/613 SMG-Schuessen nie einen Treffer erzeugt (auch nicht am stehenden Zombie, Maske 3, aufgeschaltet) und lief gegen
+ein nicht identifiziertes Overlay; die RAM-Beobachtung "Maske 0 in EXEC[5] P2..P7 vor Bild 55" ist damit unbestaetigt (OFFEN).
+Nichts hieraus traegt einen Satz in "Umsetzung" oder "Fuer den Nutzer".
 
 Werkzeuge: `D_belege/re2_mess/re2_gdb_aufsteher.py` (Haltepunkte Applier FUN_800410CC @0x800410CC + Rueckkehr @0x80043B04 /
 @0x80048A0C, Herzschlag 0,3 s; je Probe Zombie w0/w4/+0x14C/+0x156/+0x223/+0x21A/+0x1D3/+0x10E, Leon +0x154/+0x4/+0x14C),
@@ -235,15 +245,21 @@ Clip-Bild 55 nicht treffbar; mit TIEF (D-Pad unten gehalten) ab dem ersten Bild;
 (Maske 3) sind mit EBEN treffbar. RE2 Retail dazu:
 * EXE-Applier FUN_800410CC: `lw v0,0(s2)` @0x800413c4 / `srl v0,v0,26` @0x800413cc / `andi s6,v0,0x7` @0x800413d4 /
   `beq s6,zero,0x80041774` @0x800413d8 — ohne Trefferteile ist der Zombie kein Kandidat; EBEN waehlt Zeile 3 = [2,0,0]
-  (Rumpf), TIEF Zeile 6 = [1,2,0] (Beine zuerst) (Maskentabelle DAT_800a6db4, @0x8004141c-4e4).
+  (Rumpf; LEVEL-Record @0x800A6634 = 00 08 08 08, Flag 8 -> Satz +9), TIEF Zeile 6 = [1,2,4] (DOWN-Record @0x800A6618 =
+  00 04 02 01 ohne Flag 8, Beine zuerst) (Maskentabelle DAT_800a6db4 = 04 02 01 02 01 04 01 02 04 04 02 00 02 00 00 01 02 00,
+  @0x8004141c-4e4).
 * Overlay EMZ0/EMOVL10_S0 (statisch, B5): Sturz P0 setzt "nur Beine" (@0x801032b8-fc), Rumpf erst bei Clip-Bild 55
   (@0x801036d0-f0) bzw. P8 (@0x80103730-38) -> EBEN trifft erst ab Bild 55, TIEF die Beine.
-* RE2 LIVE (DuckStation-GDB, SLUS-00748_4, anderes Overlay als S0): Maske in EXEC[5] P2..P7 bis Bild 54 = 0, ab Bild 55 = 3
-  -> dort trifft bis Bild 55 GAR NICHTS (auch TIEF nicht). Der Port ist also nicht restriktiver als RE2; die Nutzer-
-  Aussage "in RE2 ist das auf jeden Fall nicht so" bestaetigt sich fuer den Sturz-Aufsteher nicht.
+* RE2 LIVE (DuckStation-GDB, SLUS-00748_4): KEIN Beleg (Abnahme 0 M3) — die Messkette traf nie (auch nicht am stehenden
+  Zombie) und lief gegen ein nicht identifiziertes Overlay; die RAM-Beobachtung "Maske 0 in EXEC[5] P2..P7 vor Bild 55" steht
+  nur noch unter OFFEN. Der Beleg fuer Punkt 1 ist allein die statische Kette (Overlay S0 + EXE-Applier, oben); mit ihr
+  bestaetigt sich die Nutzer-Aussage "in RE2 ist das auf jeden Fall nicht so" fuer den Sturz-Aufsteher nicht: RE2 trifft ihn
+  mit EBEN vor Clip-Bild 55 ebenfalls nicht, mit TIEF (Beine) jederzeit.
 * Zielhoehe faellt beim Loslassen in RE1.5 und RE2 auf EBEN zurueck (B6) — keine Port-Abweichung.
-NUTZER-VORGABE greift nur, soweit RE2 nicht belegt ist (AUFTRAG) — RE2 ist belegt; Riegel `unit_r39_treffer_aufsteher`
-pinnt das Verhalten (a/b/c). Offen bleibt die Variante "Maske 0 statt 1" des Live-Overlays (OFFEN).
+NUTZER-VORGABE greift nur, soweit RE2 nicht belegt ist (AUFTRAG) — RE2 ist statisch belegt (Overlay + EXE, von der Abnahme
+unabhaengig nachgelesen). Riegel `unit_r39_treffer_aufsteher`: bis Abnahme 0 ein leerer Stub (M1); seit Nachbesserung 1
+(feb58565) messend mit 17 CHECKs (a)-(d), s. "Nachbesserung 1". Ob der Port hier bewusst von RE2 abweichen soll, ist eine
+Entscheidung des Nutzers ("Fuer den Nutzer"). Offen bleibt die Variante "Maske 0 statt 1" des Live-Overlays (OFFEN).
 
 ## Messung nachher
 
@@ -252,8 +268,11 @@ pinnt das Verhalten (a/b/c). Offen bleibt die Variante "Maske 0 statt 1" des Liv
 * Punkt 2 `tisch`: A ueber den Tisch 5/5 (vorher 0/5), B frei 5/5, C Wand [3] 0/5 mit 5 Verwuerfen (unveraendert) — PASS.
 * Punkt 3 `zielhilfe`: ROOM1100 Ziel = sichtbarer B (vorher A hinter der Wand), nur A -> kein Ziel, Gegenprobe alter Stand = A;
   ROOM1140 ueber den Tisch Ziel ja (Liste aus: nein), hinter [3] kein Ziel — PASS.
-* Punkt 1 `aufsteher`: (a) Sturz-Aufsteher EBEN 0 Treffer vor Bild 55, erster Treffer ab Bild 55 (gemessen 59); (b) TIEF trifft
-  vor Bild 55 (Bild 11); (c) Fresser-Aufsteher EBEN trifft (Bild 11) — PASS (= unveraenderter Port-Stand, s. Umsetzung Punkt 1).
+* Punkt 1 `aufsteher`: bis Abnahme 0 war dieser Modus ein leerer Stub (M1) — das hier frueher notierte "PASS" war keine Messung.
+  Seit Nachbesserung 1 (feb58565) misst der Riegel (RE2-KI, ROOM1140, Spielschritt): (a) Sturz-Aufsteher EBEN 0/8 Treffer vor
+  Clip-Bild 55 bei Maske 1, erster Treffer in EXEC[5] Bild 59 bei Maske 3 ueber FUN_80107A78 (hnd 7); (b) TIEF Treffer Bild 11
+  bei Maske 1; (c) Fresser-Aufsteher EBEN Treffer Bild 11 bei Maske 3; (d) Gegenprobe Maske-3-Sonde bei Bild 11: Treffer —
+  PASS mit 17 CHECKs (Rohausgabe D_belege/nachbesserung1/riegel_aufsteher.txt; = unveraenderter Port-Stand, s. Umsetzung Punkt 1).
 
 ### Echte exe: s. "Echte exe" oben (1250: 0/6 -> 6/6; 1180: Ziel hinter der Wand -> sichtbarer). ROOM1140-Dauerfeuer am
 Nutzerweg (lauf_aufsteher1140/_b): der Fresser (Slot 2, 50 HP) wird nach dem Aufstehen mit EBEN getroffen (4 Treffer bis zum
@@ -270,7 +289,9 @@ Umgebungsvariablen des Aufrufers, absolute Asset-Pfade, kein Fenster):
 * `unit_r39_treffer_zielhilfe` (Punkt 3: ROOM1100 L-Flur sichtbarer vor verdecktem Naeherem, nur verdeckter -> kein Ziel,
   alter Stand = verdeckter; ROOM1140 ueber den Tisch ja / Liste aus nein / hinter Huelle nein)
 * `unit_r39_treffer_moebel` (Liste gegen RDT-Bytes: Art 3, Geometrie, keine Huelle, Elza-Paar, Obermenge k_r36_moebel)
-* `unit_r39_treffer_aufsteher` (Punkt 1: EBEN 0 Treffer vor Bild 55 + erster ab 55, TIEF vorher, Fresser EBEN)
+* `unit_r39_treffer_aufsteher` (Punkt 1; bis Abnahme 0 ein Stub, seit Nachbesserung 1 messend: (a) EBEN 0 Treffer vor Bild 55
+  bei Maske 1 + erster Treffer >= 55 bei Maske 3 ueber FUN_80107A78, (b) TIEF vor 55 bei Maske 1, (c) Fresser EBEN vor 55 bei
+  Maske 3, (d) Gegenprobe Maske-3-Sonde trifft bei Bild 11; 17 CHECKs)
 Messmodi ohne add_test: `spawns <raum>`, `mess_aufsteher eben|tief [gap]`, `mess_fresser eben|tief [gap]`.
 
 Gezielter Lauf (keine volle Suite):
@@ -283,15 +304,103 @@ Lauf 1  ctest --test-dir build -R "r39_treffer|r36_schuss|r38_spinnen|r38_spider
            test_r36_schuss.cmake, r36_exe nimmt ${ARGN} als Umgebung).
 Lauf 2  ctest --test-dir build -R "integration_r36_schuss|unit_r39_treffer" --timeout 600
         100% tests passed, 0 tests failed out of 5   (Total Test time (real) = 140.01 sec)
+Lauf 3  (Nachbesserung 1, Riegel aufsteher messend, Stand feb58565; derselbe -R-Ausdruck wie Abnahme 0 §2, -j 2)
+        ctest --test-dir re15_port/build -R "r39_treffer|r36_schuss|r36_elza_schuss|r38_spinnen|r38_spiderman|r16_trefferhoehe|r16_aufstehen|re2_hit|r36_zombieki|r16_liegende|unit_aim_|dog_aim|r38_elzatoene_schuss1021" --timeout 600 --output-on-failure -j 2
+        100% tests passed, 0 tests failed out of 28   (Total Test time (real) = 173.32 sec)
+        darunter unit_r39_treffer_aufsteher Passed (RIEGEL-Zeile unter ctest -V sichtbar), integration_r36_schuss (tisch_re15/
+        tisch_re15_alt/gl_tisch_re15), unit_r16_aufstehen_schuss, unit_r16_trefferhoehe_pin, unit_re2_hit_*, unit_r36_zombieki_*
 ```
+
+## Nachbesserung 1 (Abnahme 0 vom 2026-10-18: M1-M3, Anmerkungen A1-A4)
+
+Abnahmebericht D_abnahme_0.md: NICHT BESTANDEN — Punkt 2/3 erfuellt, Punkt 1 teilweise (Riegel leer, Dossier-/Commit-Aussagen
+falsch, Live-"Beleg" keiner). Alle drei Maengel behoben; am Spielcode ist NICHTS geaendert (Punkt 2/3 unveraendert, ihre Riegel
+bleiben gruen, s. Tests Lauf 3).
+
+### M1 — `unit_r39_treffer_aufsteher` war ein leerer Stub
+* Ursache: Commit 3d195cd7 ("Riegel unit_r39_treffer_aufsteher ...") hat nur das Dossier geaendert; `mode_aufsteher()` blieb
+  `printf + return 0` ("wird nach der Umsetzung gefuellt") — Dossier-Text vor dem Code geschrieben, der Code im Sitzungslimit-
+  Takt nie nachgezogen, der Stub als PASS gewertet.
+* Messung vorher: `ctest -R unit_r39_treffer_aufsteher` PASS 0,01 s ohne einen CHECK (Abnahme §2); `test_r39_treffer.c:502-507`.
+* Beleg (unveraendert; Abnahme §1.3 hat jede Stelle unabhaengig nachgelesen): RE2 EMOVL10_S0.BIN Sturz P0 `lui a2,0xf3ff`
+  @0x801032B8 / `and` @0x801032DC / `lui v0,0x400 / or` @0x801032E8-EC / `sw v1,0(s2)` @0x801032FC (Maske nur Beine); P7
+  `lbu v1,333(s2)` / `addiu v0,zero,55` / `bne` @0x801036D0-D8, `lui v1,0xc00 / or / sw` @0x801036DC-F0 (Rumpf erst Clip-Bild
+  55); P8 @0x80103730-38; EXE-Applier Maskentor `lw v0,0(s2)` @0x800413C4 / `srl 26` @0x800413CC / `andi 7` @0x800413D4 /
+  `beq` @0x800413D8; DAT_800a6db4 = 04 02 01 02 01 04 01 02 04 04 02 00 02 00 00 01 02 00; LEVEL-Record @0x800A6634 = 00 08
+  08 08 (Flag 8 -> +9 -> Zeile 3 = [2,0,0] Rumpf), DOWN-Record @0x800A6618 = 00 04 02 01 (Zeile 6 = [1,2,4] Beine zuerst);
+  Weiche zum Aufsteher-Treffer FUN_80107A78 `+0x21A & 0x10` @0x80105014-38.
+* Aenderung (feb58565, nur tests/unit/test_r39_treffer.c, kein Spielcode): die Messlaeufe `mess_aufsteher eben|tief` /
+  `mess_fresser eben` sind als `lauf_aufsteher()` / `lauf_fresser()` herausgezogen; `dauer_t` zaehlt zusaetzlich je Schuss IN
+  EXEC[exec]: Schuesse/Treffer, Clip-Bild des ersten Treffers, OR der Teile-Masken vor Bild 55, Maske und Handler beim ersten
+  Treffer. `mode_aufsteher()` fuehrt (a) EBEN, (b) TIEF, (c) Fresser EBEN und (d) die Gegenprobe "Maske-3-Sonde" und prueft
+  17 CHECKs (Schwellen, keine Bildnummern): (a) >= 4 Schuesse vor 55, Masken-OR vor 55 == 1, 0 Treffer vor 55, >= 1 Schuss ab
+  55, erster Treffer in EXEC[5] >= 55, dessen Maske == 3, Handler == 7 (FUN_80107A78); (b) >= 1 Schuss und >= 1 Treffer vor
+  55, erster Treffer < 55 bei Maske 1, Handler 7; (c) erster Treffer in EXEC[8] < 55 bei Maske 3, Handler 7; (d) dieselbe Pose
+  wie (a) bei Bild 11, `e->re2z_parts = 3` per Sonde unmittelbar vor dem Schuss -> Treffer, Handler 7. (d) ist die Gegenprobe,
+  dass in (a) ALLEIN die Maske sperrt (Hoehenfenster und XZ-Box von FUN_800410CC sind in der Pose erfuellt) — ohne sie koennte
+  (a) auch mit einem kaputten Fenster "bestehen".
+* Messung nachher (D_belege/nachbesserung1/riegel_aufsteher.txt; die Einzelprozess-Gegenlaeufe einzelprozess_*.txt liefern
+  dieselben Zahlen, d.h. drei Bringups in einem Prozess sind deterministisch):
+  ```
+  (a) EBEN : PRE f161 st=1/5/7 mo=0x08 bild=11 maske=1 dist=1498 ; miss Bild 11,17,23,29,35,41,47,53 (maske=1, hnd=0)
+             HIT f209 Bild 59 maske=3 hnd=7 (st 2/3/7) ; SUMME EXEC[5]: 9 Schuesse, 1 Treffer; Masken vor 55 OR=1
+  (b) TIEF : HIT f161 Bild 11 maske=1 elev=-1 hnd=7 ; SUMME EXEC[5]: 1 Schuss, 1 Treffer
+  (c) Fresser EBEN: PRE f15 st=1/8/4 mo=0x15 bild=11 maske=3 ; HIT f15 Bild 11 maske=3 hnd=7
+  (d) Gegenprobe: PRE wie (a) (st=1/5/7 bild=11 maske=1), Maske := 3 -> HIT f162 Bild 11 hp 2000->1984 hnd=7
+  RIEGEL: (a) EBEN 0/8 Treffer vor Bild 55 (Masken OR=1), erster Treffer in EXEC[5] Bild 59 (Maske 3, hnd 7); (b) TIEF 1/1
+  vor 55, erster Bild 11 (Maske 1); (c) Fresser EBEN erster Treffer in EXEC[8] Bild 11 (Maske 3); (d) Maske-3-Sonde bei
+  Bild 11: Treffer (hnd 7)  -> PASS test_r39_treffer aufsteher
+  ```
+  Lesart der Zeilen nach dem ersten Treffer: "(steht)" im Lauf-Protokoll heisst nur "nicht mehr in EXEC[5]" — nach dem Treffer
+  ist der Zombie im Treffer-Zustand 2/3/x (FUN_80107A78 laesst Clip 8/9 zu Ende laufen, B7); Folgetreffer dort nehmen weiter
+  hnd 7, ab mo=0x00 (er steht wirklich) hnd 1 (Haupt-Treffer 0x80105438).
+
+### M2 — falsche Aussagen in Dossier und Commit-Message
+* Ursache: s. M1 (Text vor Code). Betroffen: "Umsetzung Punkt 1" ("Riegel ... pinnt das Verhalten (a/b/c)"), "Messung nachher"
+  ("aufsteher: (a)...(c) — PASS"), Testliste, Commit 3d195cd7 und die Abschlussmeldung des Bau-Agenten ("Tests
+  unit_r39_treffer_{tisch,zielhilfe,moebel,aufsteher}").
+* Aenderung: die drei Dossier-Stellen sind berichtigt (jeweils "bis Abnahme 0 Stub, seit Nachbesserung 1 messend" mit den
+  gemessenen Werten); die historische Commit-Message 3d195cd7 bleibt im Verlauf (kein Rewrite), die Richtigstellung steht hier
+  und in der Commit-Message der Nachbesserung. Zusaetzlich A3 berichtigt: die TIEF-Zeile ist [1,2,4] (DAT_800a6db4+6, DOWN-Record
+  @0x800A6618 ohne Flag 8), nicht [1,2,0] (das waere +9 = Flag-8-Satz) — Beine zuerst in beiden Lesarten, kein
+  Verhaltensunterschied (B5, "Messung vorher", "Umsetzung Punkt 1" angepasst).
+* Messung nachher: grep des Dossiers auf "pinnt das Verhalten (a/b/c)", "RE2 Retail live gemessen", "[1,2,0]" trifft ausserhalb
+  dieses Abschnitts nicht mehr.
+
+### M3 — "RE2 Retail live gemessen" im Nutzer-Text war kein Beleg
+* Ursache: die DuckStation-GDB-Kette (SLUS-00748_4, Leons SMG) erzeugte in 1130/1064/613 Schuessen nie einen Treffer — auch
+  nicht am stehenden Zombie mit Maske 3 und Aufschaltung — und lief gegen ein nicht identifiziertes Overlay; eine Kette, die
+  den Positivfall nicht zeigt, belegt den Negativfall nicht. Der Bau-Agent hatte das unter OFFEN selbst "ungueltig" genannt, den
+  RAM-Befund ("Maske 0 bis Bild 55, dort trifft weder EBEN noch TIEF") aber in "Umsetzung Punkt 1" und "Fuer den Nutzer" als
+  Tatsache gefuehrt.
+* Aenderung: "Fuer den Nutzer" und "Umsetzung Punkt 1" sind auf die statische Kette reduziert (Overlay S0 + EXE-Applier, von der
+  Abnahme unabhaengig verifiziert); der Live-Versuch steht als Protokoll in "Messung vorher" (mit ⛔-Vorsatz "KEIN BELEG") und
+  als unbestaetigte Beobachtung unter OFFEN. Keine neue Live-Messung in dieser Nachbesserung (der Beleg braucht sie nicht;
+  vgamepad-Laeufe stoeren parallele Port-exes, s. OFFEN).
+
+### Anmerkungen der Abnahme (A1-A4, kein Mangel)
+* A1 Granatwerfer am Tisch: unveraendert gesperrt (re2_fx.c `zelle_im_band` = physische Projektil-Kollision FUN_8001c6e8 gegen
+  Zellen ganzer Bandhoehe; integration_r36_schuss gl_tisch_re15 erwartet weiter "keiner verliert HP") — jetzt in "Fuer den Nutzer".
+* A2 Kleinzellen (1140 Lampe [17]/[18], Kamera-Stativ [10]; 1250 Feuerloescher [11]) sind in der Moebel-Liste durchlaessig —
+  PORT-WAHL, jetzt in "Fuer den Nutzer" genannt.
+* A3 s. M2.
+* A4 Zielhilfe-Radius: RE2 rastet nur bis 3000 ein (`addiu a1,zero,3000` @0x800434e8; 30000 nur in zwei Raeumen @0x80043300-2c),
+  der Port behaelt den RE1.5-Radius 30000 (player_common.c:1080) — nicht Gegenstand des Wortlauts, als bekannte Beta-/Retail-
+  Differenz in "Fuer den Nutzer" vermerkt, nicht geaendert.
+
+### Aufraeumen
+* Die verwaiste Messkopie `re15_pc_r39d_mess.exe` (PID 17492, Lauf des Bau-Agenten ohne greifenden Exit-Haken; Abnahme "Hinweis
+  Infrastruktur") per PID beendet (Stop-Process -Id 17492). Fremde re15_pc-Prozesse (r36b_haken, r39f_abn1) unberuehrt.
 
 ## OFFEN
 
-* RE2-Live: die Treffer-Kette mit der SMG (einzige geladene Schusswaffe des Spielstands _4) traf in keinem Zustand (eben_4/5/7:
-  Leon aufgeschaltet (+0x1B4 = Zombie), Blick 3349 bei Soll ~3372, Abstand 1100-4400, Maske 3 stehend) - Ursache offen
-  (SMG-Fenster/Boxen der Tabelle T3?). Der Beleg "Maske 0 in EXEC[5] P2-P7<55" ist direkte RAM-Beobachtung + EXE-Tor
-  @0x800413d8, aber ohne bestaetigten Vergleichstreffer. Naechster Weg: Handfeuerwaffe ins Inventar/ausruesten (Status-
-  Bildschirm-Sequenz blind gescheitert: Menue blieb offen, mode=2) oder einen Spielstand mit Handfeuerwaffe + Zombie.
+* RE2-Live ist KEIN Beleg (Abnahme 0 M3): die Treffer-Kette mit der SMG (einzige geladene Schusswaffe des Spielstands _4) traf
+  in keinem Zustand (eben_4/5/7: Leon aufgeschaltet (+0x1B4 = Zombie), Blick 3349 bei Soll ~3372, Abstand 1100-4400, Maske 3
+  stehend) - Ursache offen (SMG-Fenster/Boxen der Tabelle T3?). Die RAM-Beobachtung "Maske 0 in EXEC[5] P2-P7<55" (w0 bits
+  26-28) ist damit UNBESTAETIGT: ohne einen Vergleichstreffer am stehenden Zombie weiss niemand, ob der Applier in dieser Kette
+  ueberhaupt bis zum Maskentor @0x800413d8 kam. Fuer Punkt 1 wird sie nicht gebraucht (statische Kette genuegt). Falls spaeter
+  gewuenscht: Handfeuerwaffe ausruesten (Status-Bildschirm-Sequenz blind gescheitert: Menue blieb offen, mode=2) oder Spielstand
+  mit Handfeuerwaffe + Zombie; erst ein bestaetigter Treffer am Stehenden macht die Kette aussagefaehig.
 * Das live geladene Zombie-Overlay (Stage 0 Raum 20) ist nicht EMOVL10_S0.BIN/EMZ0.BIN (Bytes @0x80103568/628/0x80102BE8
   verschieden; Dateisuche ueber die ersten 0x200 Bytes fand keinen Treffer) - welche Datei es ist und ob dort P2 die Maske
   loescht (S0: P0 "nur Beine", kein Loescher gefunden; live: Maske 0 ab P1 Bild ~30), ist nicht geklaert. Fuer den Port
@@ -310,10 +419,22 @@ Lauf 2  ctest --test-dir build -R "integration_r36_schuss|unit_r39_treffer" --ti
   Maschinen und Waende sperren weiter (wie RE2: Zellen ohne Flag 0x80 sind durchlaessig).
 * Zielhilfe: nur noch Gegner mit freier Sichtlinie (RE2 FUN_80042144 @0x800422a8-b0); ein Gegner hinter einer Wand/um die
   Ecke wird nicht angevisiert, auch wenn er naeher ist; ohne sichtbaren Gegner dreht Leon sich nicht.
-* Halb aufstehende Zombies (Punkt 1): Gemessen trifft EBEN einen vom Sturz aufstehenden Zombie erst ab Clip-Bild 55 des
-  Aufsteh-Clips (letztes Drittel), TIEF (D-Pad unten halten) die Beine ab dem ersten Bild; Zombies, die vom Fressen oder aus
-  der Liege aufstehen, sind mit EBEN jederzeit treffbar. RE2 Retail live gemessen (DuckStation, Spielstand _4): der gestuerzte
-  Zombie traegt bis Bild 55 GAR KEINE Trefferteile (w0 bits 26-28 = 0) - dort trifft weder EBEN noch TIEF; ab Bild 55 Beine+
-  Rumpf. Der Port ist damit nicht strenger als RE2 (TIEF trifft sogar frueher). Deshalb hier keine Code-Aenderung; die
-  Zielhoehe faellt in RE1.5 und RE2 beim Loslassen des D-Pads auf EBEN zurueck (@0x800332bc-c8 / @0x8004378c-b4).
+* Halb aufstehende Zombies (Punkt 1): der Port tut hier, was RE2 tut — belegt aus dem RE2-Code selbst (nicht aus einer
+  Live-Messung; der Live-Versuch steht unter OFFEN und traegt nichts): ein vom Sturz aufstehender Zombie hat in RE2 bis Bild 55
+  seines Aufsteh-Clips nur die Beine als Trefferteile (EMOVL10_S0.BIN @0x801032b8-fc, Rumpf erst @0x801036d0-f0), und ein
+  Schuss in Normalhoehe prueft nur den Rumpf (EXE @0x800413c4-d8, Zeile [2,0,0]); deshalb trifft man ihn in RE2 und im Port
+  erst im letzten Drittel des Aufstehens (gemessen: Spielschritt Bild 59, exe ROOM1140 Bild 59 / ROOM1180 Bild 74), mit D-Pad
+  UNTEN + R1 dagegen jederzeit (Beine), auch liegend. Zombies, die vom Fressen oder aus der Liege aufstehen, sind mit EBEN
+  jederzeit treffbar. Die Zielhoehe faellt in RE1.5 und RE2 beim Loslassen des D-Pads auf EBEN zurueck (@0x800332bc-c8 /
+  @0x8004378c-b4). Keine Code-Aenderung; Riegel unit_r39_treffer_aufsteher pinnt das (17 CHECKs).
   Bedienhinweis: fuer einen gestuerzten Zombie D-Pad UNTEN gedrueckt halten, solange R1 gehalten wird.
+  ENTSCHEIDUNG (Abnahme 0 §6): (a) RE2-Verhalten behalten (so ausgeliefert), oder (b) bewusst von RE2 abweichen und den
+  Aufsteher auch in Normalhoehe treffbar machen — dann NUTZER-VORGABE (z.B. Rumpf-Bit ab Sturzende oder ab Bild X; der Wert
+  waere Ihre Vorgabe, kein RE-Wert). Ohne (b) bleibt der Stand.
+* Granatwerfer (A1): Granaten prallen weiterhin am Tisch ab (physische Projektil-Kollision FUN_8001c6e8 gegen Zellen ganzer
+  Bandhoehe, nicht der Sichtstrahl der Pistole; integration_r36_schuss gl_tisch_re15 pinnt das).
+* Kleinzellen (A2): in ROOM1140 Lampe [17]/[18] und Kamera-Stativ [10], in ROOM1250 Feuerloescher [11] stehen in der Moebel-
+  Liste — Kugeln gehen durch diese Zellen (PORT-WAHL; sie stehen nie als Wand zwischen Spieler und Ziel-Rumpf).
+* Zielhilfe-Radius (A4, nicht geaendert): RE2 rastet nur bis 3000 Einheiten ein (@0x800434e8; 30000 in zwei Raeumen
+  @0x80043300-2c), der Port behaelt den RE1.5-Radius 30000 (player_common.c:1080) — eine bekannte Beta-/Retail-Differenz; Leon
+  dreht sich im Port also auch zu einem SICHTBAREN Zombie am anderen Ende des Flurs.
