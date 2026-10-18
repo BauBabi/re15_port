@@ -1,0 +1,115 @@
+{
+ "_hinweis": "Spur K Nachbesserung 2 nach Abnahme 1 (M1 Kraehen-HOVER Phase 0, M2 SPIN Phase 2). Baum r39_heliport1171 HEAD 97b42ad2. Resume nur mit GENAU diesen args.",
+ "welle": [
+  "K"
+ ],
+ "slots": 1,
+ "max_nach": 1,
+ "basis": "1038dc15",
+ "modus": {
+  "K": "nachbesserung"
+ },
+ "runde0": {
+  "K": 1
+ },
+ "bau": {
+  "K": {
+   "status": "fertig",
+   "zusammenfassung": "Gemessen wurden Elzas Pose-Strom und der Pose-Strom der Ereignis-Kraehen in ROOM1171 (Lade-Weg und echter Weg 1131->1141->1171->Tor), dazu die SCD-Spur. Jede Zeile wurde gegen die selbst disassemblierten Original-Instruktionen geprueft.\nM1: Sub 6 0x800517f0, Phase 0 (+0x94=1 @0x80051854, +0x95=0 @0x80051864, +0x8f=7 @0x80051874) faellt in f314 @0x8005188c. Clip 1 laeuft jetzt Bild 0..15 (16 Bilder) statt 1..15.\nM3a: Die Ankunft setzt +0x5=6 im Dispatcher, beim Gang nach f314 (@0x80030c78 -> @0x80030cf0), beim Drehen vor f314 (@0x800313ec / @0x80031494). Sub 6 laeuft also fruehestens im Folgebild. Dort laeuft zuerst das SCD (@0x8001cdec, vor dem Dispatcher @0x8001ce0c): While @0x8003f840 und Evt_end @0x8003f22c kehren mit 1 zurueck, und der naechste Plc_dest setzt +0x5 neu (@0x80041c14-1c). Im Original gibt es dort also kein Sub-6-Bild. Die Einzelbilder (F1/F840/F846) sind weg, das Ankunftsbild zeigt die Gang- bzw. Drehpose.\nM2: Spieler-Schub 0x80052864 posiert im Bit-Takt noch Clip 0x12 (@0x80052af4 vor @0x80052b44). Clip 0x11 rueckwaerts kommt erst in Phase 6 (@0x80052b98), Phase 7 haelt die Pose. Elza laesst jetzt im selben Bild los wie John (F933/F934-943/F944/F945).\nM3b: Der Clip-Setzer 0x80115d94 (@0x80115da0/db0/dc4) posiert nicht, f314 posiert vor dem Vorschub. Die Landung (@0x801148f4) ruft kein f314, FINISH (@0x8011493c) posiert 0..11, Zustand 7 ruft kein f314. Damit beginnt ORIENT bei Bild 0 (vorher 1), das Landebild zeigt die Fallpose, die Leiche haelt Bild 11 (vorher 12). Der ORIENT-Effekt nimmt die Pose des vorigen Bildes (Zeichenschleife @0x8001d108).\nUmsetzung in heliport1171_r39.c (Saat-Zustand, Kraehen-Tabelle +0x94/+0x95/+0x8f) plus kleine Haken in den gemeinsamen Dateien. Zwei Nebenfunde mit behoben: Die Walker-Init (Spur H) posiert jetzt Bild 0 auch bei gleichem Clip, und der Kommando-Reset loescht einen anstehenden Sub-6-Start sowie Sub 0x13.\nNeue Riegel: unit elza/kraehen und ein Block im Integrationstest weg/laden; alle werden am alten Motor rot. Vier fremde Riegel sind mit Beleg angepasst. John ist bytegleich zum Abnahme-Stand, ebenso Leon und Elliot in ROOM1170; die Zeitachse des Kraehen-Hirns ist unveraendert.",
+   "commits": [
+    "7ec96a2b wip(r39-heliport1171): Nachbesserung 1 begonnen (M1-M3 aus Abnahme 0)",
+    "92f13d3b wip(r39-heliport1171): NB1 M1/M2/M3a - Spieler-Sub 6 Saattakt Bild 0, Start nach dem Dispatcher-Bild, Schub Ph5->6/7 (gebaut, ungemessen)",
+    "cb17bb39 wip(r39-heliport1171): NB1 Dispatcher-Bild bis zum Render halten, Walker-Init posiert Bild 0 auch bei gleichem Clip",
+    "ee062f07 wip(r39-heliport1171): Dossier 12.1 M1/M3a Ursache, Messung vorher, Beleg, Aenderung",
+    "3220318e wip(r39-heliport1171): NB1 fremder Riegel unit_plc_back_yaw_1090 - Ankunftsbild posiert noch Modus 8",
+    "0b133e27 wip(r39-heliport1171): NB1 M3b - Kraehen zeichnen das zuletzt POSIERTE Bild (f314 posiert vor dem Vorschub)",
+    "ba9dfefc wip(r39-heliport1171): NB1 Riegel unit_r39_heliport1171_elza (M1/M2/M3a) und _kraehen (M3b)",
+    "7834b815 wip(r39-heliport1171): NB1 Integration misst Elza (M1/M2/M3a) und die Kraehen (M3b) im Pose-Strom",
+    "9bd1e6b9 wip(r39-heliport1171): Dossier 12.1-12.3 (Messung nachher M1/M3a, M2, M3b) + Kletterzaehler robust (Hinweis H4)",
+    "7b7a59a1 wip(r39-heliport1171): NB1 Hinweis H3 - test_r37_roy spur laesst die INIT-Form nur als Lauf ab der ersten Elliot-Zeile zu",
+    "7418edb1 wip(r39-heliport1171): Notiz Gegenprobe NB1-Riegel (Arbeitskopie voruebergehend auf a2d1e1dc)",
+    "9dc277a5 wip(r39-heliport1171): Gegenprobe NB1-Riegel am alten Motor rot (elza 4, kraehen 4 Fehler), Arbeitskopie sauber",
+    "74899e82 wip(r39-heliport1171): Dossier 12.4 Riegel, 12.5 Wirkung ausserhalb 1171",
+    "f6a0b815 wip(r39-heliport1171): NB1 ORIENT-Umlauf-Effekt mit der Pose vor dem f314 am ECHTEN Aktor (statt Stapelkopie)",
+    "29da5923 wip(r39-heliport1171): Dossier 12.6 echter Weg am Endstand (Elza, Kraehen, John)",
+    "fb8f3f03 wip(r39-heliport1171): Dossier 12.7 OFFEN, 12.8 Fuer den Nutzer, 12.9 Integration",
+    "5fabbcdb wip(r39-heliport1171): Dossier Stand-Liste um Nachbesserung 1 ergaenzt",
+    "c7cbc7c3 wip(r39-heliport1171): Dossier 12 Uebersichtstabelle je Mangel (Ursache/vorher/Beleg/Aenderung/nachher)",
+    "bc308be9 wip(r39-heliport1171): NB1 Kommando-Reset loescht auch einen anstehenden Sub-6-Start",
+    "86956b9c wip(r39-heliport1171): NB1 Kommando-Reset beendet auch den Spieler-Schub (Sub 0x13)",
+    "dc4ab998 fix(r39-heliport1171): Nachbesserung 1 - Elzas Sub 6/Schub und die Kraehen in ROOM1171 = Original (M1-M3 der Abnahme 0)"
+   ],
+   "suite": "Unit/Probe: ctest --test-dir re15_port/build -R \"npc|marvin|ada|elliot|irons|sherry|ben|annette|roy|john|1170|1171|10d0|11b0|1150|1050|1090|1141|szenenleon|werkstatt|schub|cine|cutscene|eintritt|plc|gest|rbj|neck|kopf|escort|eskorte|10f0|cut10f0|kendo|npckante|montage|elza|crow|kraehe|walk|reach|stair|idle|player|push|tuer|door|10c0|1120|fenster\" -E \"^integration_\" --timeout 600 -j 4 --output-on-failure -> \"100% tests passed, 0 tests failed out of 250\". Integration: ctest --test-dir re15_port/build -R \"^integration_.*(1171|1170|1141|1150|1050|1090|10d0|11b0|10f0|1031|1021|1011|szene|cut|montage|elza|roy|stimmen|werkstatt|heliport|dining|story|intro|vollstart|schrift|sperre|inventar1050|toene|1100|kraehe|eintritt|beretta|marvin|ada|irons|plattform|fenster)\" --timeout 1200 -j 3 --output-on-failure -> \"99% tests passed, 1 tests failed out of 73\". Der rote Test war integration_r38_dining1141_s: Teillauf sb brach mit exit=1 bei Bild 1061 in ROOM1131 ab, unter Last durch parallele Spuren. Einzeln nachgefahren mit -R \"^integration_r38_dining1141_s$\" -> \"100% tests passed, 0 tests failed out of 1\"; im Lauf davor (gleiche Spieler-Aenderung) war er gruen. Die 11 Kraehen-/1171-Tests nach dem Neubau: -R \"^integration_(r35_fenster|r36_elza_fenster|r37_elzaems_elza10c1kraehe|r37_elzaems_leon10c0kraehe|r37_roy_leon1170|r38_heliport1171_weg_re2|r38_heliport1171_weg_re15|r38_heliport1171_laden|r39_heliport1171_weg|r39_heliport1171_laden|r39_stimmen_1171)$\" -> \"100% tests passed, 0 tests failed out of 11\".",
+   "offene_punkte": [
+    "Ton der Kraehen-Opferphasen P1/P2 kommt 1 Bild (33 ms) zu spaet (heliport1171_r38.c): Das Original spielt Se_on 0x03020001 im Takt, dessen f314 das letzte Bild posiert (P1 @0x80115c20/@0x80115c28 -> SE @0x80115c3c, P2 @0x80115c88 -> SE @0x80115ca4). Die Animation ist davon unberuehrt; der Riegel test_r38_heliport1171 szene_* pinnt die jetzige Port-Lage.",
+    "Der Hund 0x20 (re15_dog_clip/re15_dog_anim) zeichnet wie bisher die Kraehe das Bild NACH dem Vorschub, gleiche Klasse wie M3b. Er kommt in ROOM1171 nicht vor und ist nicht angefasst.",
+    "Eskorte-EXEC-Saattakt (NPC, Dossier Abschnitt 8): Stehen @0x8004f354/64 mit f314 @0x8004f38c, Gehen @0x8004f524/34 mit f314 @0x8004f5c8. Laeuft in ROOM1171 nie; betroffen waeren folgende NPCs (z.B. Ada 1090).",
+    "H5 aus der Abnahme: Die RBJ-Cache-Grenze von 2 Plaetzen fuer Slots MIT Record trifft ROOM1040/1041; vorbestehend.",
+    "H6 aus der Abnahme: re15_port/build_bisect und die Messkopie re15_pc_r35e_haken_173bda57.exe in build/platform/pc bei der Integration entfernen (beides ignorierte Dateien).",
+    "Fuer die Integration: neue kleine Haken ('Runde 39 Spur K NB1') in game_step_common.c, actor_locomotion.c, player_common.c, elza_r39.c (Datei der Spur H), szenenleon_r36.c und enemy_ai_common.c; keine neue .c-Datei. In scd_room_setup.c bleibt die Installer-Zeile unveraendert. Spur J (ROOM1141) sieht geaenderte Ankunftsbilder von Elza und John: Einzelbild F1305 weg, Drehen beginnt mit Bild 0."
+   ],
+   "gemeinsame_dateien": [
+    "re15_port/engine/src/game_step_common.c",
+    "re15_port/engine/src/actor_locomotion.c",
+    "re15_port/engine/src/player_common.c",
+    "re15_port/engine/src/elza_r39.c",
+    "re15_port/engine/src/szenenleon_r36.c",
+    "re15_port/engine/src/enemy_ai_common.c",
+    "re15_port/tests/unit/test_plc_back_yaw_1090.c",
+    "re15_port/tests/unit/probe_crow_death.c",
+    "re15_port/tests/unit/test_r38_heliport1171.c",
+    "re15_port/tests/unit/test_r37_roy.c"
+   ],
+   "neue_assets": [],
+   "sprachdateien": []
+  }
+ },
+ "abn": {
+  "K": {
+   "bestanden": false,
+   "urteile": [
+    {
+     "punkt": "1a: \"Wenn John in Room 1171 sagt - \"Elza hurry up\" macht er so eine komische Kletter Animation statt der ran wink Animation, die er im Original nicht macht.\"",
+     "urteil": "erfuellt",
+     "beleg": "Selbst gemessen auf dem echten Weg (1131 -> 1141 -> Dachtuer -> 1171 -> Tor Slot 5 -> Szene -> 10B1) mit einer Kopie der Endstand-exe (sha256 cc5086f4, Lauf scratchpad K39abn1/echtA, EXIT 0). F530-F657 zeigt RBJ rec1 Clip 2 (fc 96) Bild 0..95; v0.8.26 zeigt an derselben Stelle mo 2 / fc 50 = Kletter-Clip. Bildvergleich K39abn1/hurry_up_head_vs_v0826.png: HEAD dreht sich und winkt heran, v0.8.26 knickt ein. Johns 1082 Pose-Zeilen sind bytegleich mit dem Stand von Abnahme 0 (md5 c0350dd2)."
+    },
+    {
+     "punkt": "1b: \"Auch sonst scheinen die Animationen hier noch nicht ganz zu passen.\" (VERTRAG: uebrige Szenen-Animationen 1171)",
+     "urteil": "teilweise",
+     "beleg": "Elza: M1/M2/M3a aus Abnahme 0 sind behoben und belegt. Sub 6 laeuft jetzt Bild 0..15 ab dem Folgebild der Ankunft, die Einzelbilder sind weg, beim Schub kommt im Bit-Takt Clip 18 und der Ruecklauf startet im selben Bild wie bei John. Selbst disassembliert: Sub 6 @0x80051844-8c, Gang @0x80030c78/@0x80030cf0, Drehen @0x800313ec/@0x80031494, Bildfolge @0x8001cdec/ce04/ce0c, SCD-Rueckgaben While @0x8003f840 / Evt_end @0x8003f22c, Schub @0x80052af4/b44/b98/bc0-bf0. Kraehen: Die Posier-Reihenfolge (M3b) stimmt jetzt; 1081 von 1082 Bildern sind gegenueber vorher um genau ein Bild zurueckgesetzt, das Landebild zeigt die Fall-Pose, die Leiche haelt Bild 11. Weiterhin falsch, gegen STAGE1.BIN und den Ghidra-Dump geprueft: HOVER 0x80115130 Phase 0 (Port posiert und fliegt im Einstiegstakt) und SPIN 0x801153ac Phase 2 (Port dreht die Gier weiter). Siehe Maengel."
+    },
+    {
+     "punkt": "Punkt 1 gesamt",
+     "urteil": "teilweise",
+     "beleg": "Kernbefund erfuellt. 'Auch sonst': John und Elza sind wie im Original, die Kraehen-Phasen HOVER und SPIN weichen ab."
+    },
+    {
+     "punkt": "Gate RE (Adressen, Guess-Tells, Fix erklaert Befund)",
+     "urteil": "erfuellt",
+     "beleg": "Zehn Stichproben in Abschnitt 2 des Berichts plus Rueckwaerts-Gang @0x800312b0/@0x80031318, Kraehen-INIT/ASCEND/HOVER/SPIN und Opfer-Hook 0x80115b80, alle selbst auf PSX.EXE (md5 b55fdaa5, ungepatchter Stub @0x80026e4c) und STAGE1.BIN disassembliert. Alle Zitate des Diffs stimmen. 0 Guess-Tells, kein neuer Env-Schalter. Port-Zustaende (s_reach_saat, s_sp = 8) sind als solche gekennzeichnet. Jeder Fix erklaert den gemessenen Befund (vorher/nachher am echten Weg)."
+    },
+    {
+     "punkt": "Gate Vertrag (Pfade, Ressourcen, gemeinsame Dateien)",
+     "urteil": "erfuellt",
+     "beleg": "23 Dateien: keine release/, platform/android/, shared_assets/PSX/ und keine Test-CMakeLists. Keine Bank-9-Bits, Nachrichten-Ids oder Sprachdateien. Gemeinsame Dateien nur ueber kleine kommentierte Haken (Hinweis H1: game_step_common.c, actor_locomotion.c, player_common.c, szenenleon_r36.c, enemy_ai_common.c und elza_r39.c der Spur H stehen nicht in VERTRAG 1.3 fuer K). Die vier geaenderten fremden Riegel tragen Belege, selbst nachgeprueft."
+    },
+    {
+     "punkt": "Gate Riegel (vorhanden, messend, Gegenprobe)",
+     "urteil": "erfuellt",
+     "beleg": "Gegenprobe selbst: alter Motor a2d1e1dc per git archive im Scratchpad, dazu die neuen Testquellen. unit elza meldet 4 Fehler, unit kraehen 4 Fehler (EXIT 1). Am Endstand sind die 10 Spur-Unit-Teile gruen, ebenso integration_r39_heliport1171_weg und _laden. Johns Kletter-/Winken-Riegel ist unveraendert."
+    },
+    {
+     "punkt": "Gezielte Tests / Nebenwirkungen beide Szenarien",
+     "urteil": "erfuellt",
+     "beleg": "Unit/Probe ueber die beruehrten Module: 267 von 267 gruen. Integration: 30 von 30 gruen (941,7 s; 1141, 1150, 1050, 10F0, 11B0, 1021, 1011, 1031, 1170, 1171, Kraehen-/Fenster-Raeume, Spur-H-Tests), kein Nachfahren noetig. Leon und Elliot in ROOM1170 sind bytegleich zum Stand von Abnahme 0 (md5 c23ba5ea / 98e3583e). Die Zeitachse des Kraehen-Hirns ist gleich (1083 von 1083 Bildern)."
+    }
+   ],
+   "maengel": [
+    "M1 - Ereignis-Kraehen ROOM1171, HOVER-Phase 0 (vorbestehend seit 74121bb81, von NB1 bei 'Kraehen = Original' uebersehen). Im Original (STAGE1.BIN, FLIGHT-2-Tabelle @0x80121220[1] = 0x80115130) setzt Phase 0 nur den Clip (@0x8011516c jal 0x80115d94), +0x8c = 0xb4 (@0x80115170) und +0x1e4 (@0x8011518c), erhoeht +0x6 und springt mit `j 0x801152cc` (@0x801151d8) in den Epilog. In diesem Takt gibt es KEIN f314, keine Lenkung 0x8001a8f8, kein pos_advance und keine Kontaktpruefung. Das passiert erst in Phase 1 ab @0x801151e8 (Ghidra STAGE1_full/FUN_80115130.c: if/else-if). Der Port (enemy_ai_common.c:6589-6605) faellt im Phase-0-Takt in re15_crow_anim, Lenkung, y+=vvel, re15_crow_advance und den Kontakt. Gemessen (K39abn1/echtA, Kraehe 2): HOVER-Bilder 68:0 69:1 ... 77:9 78:0 ..., also ein Zyklus von 10 Bildern ohne Halt. Nach den Instruktionen muesste die Folge F67 0, F68 0 (Halt), F69 0, F70 1 ... F78 9, F79 9 (Halt), F80 0 lauten, ein Zyklus von 11 Bildern, im Halt-Takt ohne Bewegung. Die Port-Kraehe bewegt sich also in jedem 11. Takt zu viel; der Griff-Zeitpunkt (F162/F173) kann sich dadurch verschieben. Pruefung: HOVER-Zyklus 11 mit gehaltenem Bild, keine Positionsaenderung im Halt-Takt, Riegel ist am jetzigen Stand rot, Griff-/Wurf-Bildnummern in den 1171-Riegeln nachziehen.",
+    "M2 - Ereignis-Kraehen ROOM1171, SPIN-Phase 2 dreht die Gier weiter (vorbestehend seit 74121bb81). Im Original (0x801153ac = @0x80121220[3]) steht Gier +60 (@0x80115460-6c) nur im Phase-1-Rumpf, in den Phase 0 hineinfaellt. Phase 2 (@0x801154d0-e8) zaehlt nur den Zeitgeber herunter und springt in den Schwanz @0x801154ec (Ghidra FUN_801153ac.c: Fall 2 `goto LAB_801154ec` an +0x6a += 0x3c vorbei). Im Port steht `e->rot_y += 60` (enemy_ai_common.c:6624) vor der Phasen-Unterscheidung. Gemessen (echtA, Kraehe 2, ss2 = 2): Gier F254 5511 -> F294 7911, also +60 je Bild ueber 41 Bilder. Im Original bliebe die Gier stehen; die Kraehe flaege dann 41 Bilder geradeaus statt im Kreis. Das ist Flugbahn, kein Clip-Bild, gehoert aber zum Kraehen-Ablauf nach dem Wurf, den Abnahme 0 M3(b) gegen das Original verlangt hat. Pruefung: Gier in den ss2=2-Bildern konstant, dazu ein Riegel."
+   ],
+   "bericht": "Abnahme 1 der Spur K heliport1171: nicht bestanden. Bericht: C:/workspace/git/reAi_v2/.claude/worktrees/r39_heliport1171/analysis/befunde_runde39/K_abnahme_1.md (Commits f590a88c Zwischenstand und 97b42ad2 'doc(r39-heliport1171): Abnahme 1', beide aendern nur diese Datei).\n\nNachbesserung 1 ist richtig umgesetzt und belegt.\n- **John (Kernbefund):** Er winkt Elza bei \"Elza, hurry up!\" heran (RBJ rec1 Clip 2, 96 Bilder) statt zu klettern. Am Nutzerweg gegen v0.8.26 gemessen; Bild: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/K39abn1/hurry_up_head_vs_v0826.png. Johns Pose-Strom ist bytegleich zum Stand von Abnahme 0.\n- **Elza:** Sub 6 beginnt mit Bild 0 (16 Bilder) im Bild nach der Ankunft. Die Einzelbilder zwischen Drehen und Gang sind weg; im Original gibt es dort gar kein Sub-6-Bild. Das ist selbst belegt: Das SCD laeuft vor dem Dispatcher, While und Evt_end liefern 1 = weiter im selben Takt, der naechste Plc_dest ersetzt +0x5. Beim Schub kommt im Bit-Takt Clip 18, der Ruecklauf startet im selben Bild wie bei John.\n- **Kraehen:** Gezeichnet wird jetzt das zuletzt posierte Bild (ORIENT ab 0, Landebild = Fall-Pose, Leiche Bild 11). Die Zeitachse des Kraehen-Hirns ist unveraendert.\n\nGates:\n- **RE-Gate:** haelt. Zehn Stichproben plus weitere habe ich selbst disassembliert (PSX.EXE ungepatcht, STAGE1.BIN); alle Zitate stimmen, 0 Guess-Tells.\n- **Vertrag:** haelt, mit Hinweis H1: Haken in fremden gemeinsamen Dateien, darunter elza_r39.c der Spur H.\n- **Riegel:** Gegenprobe selbst gefahren. Alter Motor a2d1e1dc mit den neuen Testquellen im Scratchpad gebaut: elza meldet 4 Fehler, kraehen 4 Fehler.\n\nTests (gezielt, keine volle Suite):\n- Spur-Unit 10 von 10, Spur-Integration 2 von 2.\n- Unit/Probe der beruehrten Module 267 von 267.\n- Integration 30 von 30, beide Szenarien.\n- Leon und Elliot in ROOM1170 sind bytegleich.\n\nNicht erfuellt ist 'Auch sonst' bei den Ereignis-Kraehen, beides vorbestehend und bei der Pruefung 'Kraehen = Original' uebersehen:\n- **M1, HOVER-Phase 0 (0x80115130):** Im Original nur Einrichten, kein f314 und keine Bewegung. Der Port posiert und fliegt in diesem Takt; dadurch flattert die Kraehe in 10 statt 11 Bildern ohne Halt und bewegt sich in jedem 11. Takt einen Schritt zu viel.\n- **M2, SPIN-Phase 2 (0x801154d0):** Im Original aendert sich die Gier dort nicht. Der Port dreht weiter +60 je Bild ueber 41 Bilder.\n\nHinweise: H2 Ton der Opferphasen P1/P2 einen Takt spaet (Ton, die Bildfolge P0-P4 stimmt), H3 Hund/Eskorte nicht in 1171, H4 Aufraeumen von build_bisect und re15_pc_r35e_haken_685df09f.exe. Meine Messkopie der exe ist entfernt; am Code habe ich nichts geaendert.",
+   "suite": "Gezielt, keine volle Suite.\n- Spur-Unit: ctest -R \"^unit_r39_heliport1171_\" -> 10/10.\n- Spur-Integration: ctest -R \"^integration_r39_heliport1171_\" -j 2 -> 2/2.\n- Unit/Probe der beruehrten Module: Regex des Bau-Agenten plus anim|dest|locom|motion|dispatch|1031|1021|1011|10b1|1100|1040|wurf|opfer|victim|grab, -E ^integration_ -> 267/267 (29,5 s).\n- Integration: 30 Tests -> 30/30 (941,7 s, -j 3): r38_heliport1171_laden/weg_re15/weg_re2, r39_stimmen_1171/11b0/1150/1050, r37_roy_leon1170/szene1011/szene1021, r37_elzaems_elza1141/elza11b1/leon10c0kraehe/elza10c1kraehe, r38_dining1141_d, r38_werkstatt11b0, r35_cut10f0, r36_szene1150, r37_sperre1050, r39_elza_hand/karte/loescher, r38_elzaintro_stimme, r38_elzaintro_stimme, r38_elzatoene_szene1021, r35_fenster, r36_elza_fenster, r38_montage, r36_szenenleon, r38_szenenschutz, r38_tagebuch_karte.\n- Gegenprobe: alter Motor a2d1e1dc mit neuen Testquellen -> unit elza 4 Fehler, kraehen 4 Fehler (EXIT 1)."
+  }
+ }
+}

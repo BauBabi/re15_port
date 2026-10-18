@@ -1,10 +1,11 @@
-# Runde 39 Spur E "gegner" — Parking-Lot-Gorillas (HP x2, Flinch erst nach 3 x 12 Energie), kein paralleler
+# Runde 39 Spur E "gegner" — Gorillas 0x27 (HP x2, Flinch erst nach 3 x 12 Energie; seit Nachbesserung 2 fuer ALLE
+# Gorillas, Nutzer-Nachtrag 3), kein paralleler
 # Hundebiss (RE2-Ein-Angreifer-Riegel PL+0x1D3), liegende Zombies kriechen (RE1.5-Wecker im RE2-WAIT),
 # Gorilla-/Affen-Schatten auf +0x1ba. Dossier analysis/befunde_runde39/E_gegner.md,
 # Code engine/src/gegner_r39.c + include/re15_gegner_r39.h (Haken: enemy_ai_common.c, enemy_ai_re2_dog.c,
 # enemy_ai_re2_zombie.c, platform/pc/main.c).
 #
-#   unit_r39_gegner_affen_hp        ROOM11C0: beide 0x27 mit 360 (vorher 180 @0x8011f514); ROOM1141 bleibt 180
+#   unit_r39_gegner_affen_hp        ROOM11C0: beide 0x27 mit 360 (vorher 180 @0x8011f514); Regel am Typ, nicht am Raum
 #   unit_r39_gegner_affen_zucken    Resolver-Treffer 12 (@0x8006ee44): Flinch (Clip 7) erst beim 3. Treffer, Zustand/
 #                                   Unterzustaende bleiben, +0x93 frei; Schrotflinte 38 reagiert sofort
 #   unit_r39_gegner_affen_schuss    dieselbe Kette ueber den echten Pistolenschuss (Pad R1 + Kreuz), 360 -> 324
@@ -23,6 +24,14 @@
 #                                   leer, Cut-12-Fenster nur der Wagen-Gorilla (Region-Cull wie FUN_8001b064 @0x8001b224)
 #   integration_r39_gegner_hunde1190 echte exe ROOM1190 (Hunde-Luke, Szene sub10): kein zweiter HP-Abzug durch einen
 #                                   Hundebiss innerhalb der 22 Bilder Spieler-Flinch nach einem Biss (state.log)
+#   Nachbesserung 2 (test_r39_gegner_1141.c, ROOM1141 mit Elza = der zweite 0x27-Raum des Zensus):
+#   unit_r39_gegner_1141_hp1141     Kampf-Lage sub00 @0x00B54/@0x00B68: HP 180 -> 360; Regel haengt am Typ (11C0/1141/2000)
+#   unit_r39_gegner_1141_zucken1141 Elzas SIG P228 (Waffe 4, 12 @0x8006ee48), drei echte Schuesse: Flinch erst beim dritten
+#   unit_r39_gegner_1141_ablauf1141 Phase H -> Gemaelde -> BEFREIUNG -> Kampf bis zum Tod beider Gorillas (vorher 16 / nachher
+#                                   31 Treffer je Gorilla) -> Kill-Flags (7,0xCB)/(7,0xCC) -> sub01 (4,0xF2)=0 -> Johns Abgang
+#   unit_r39_gegner_1141_affe29     Gegenprobe kleiner Affe 0x29 (ROOM3040): HP und Treffer-Antwort gleich mit Haken aus/an
+#   integration_r39_gegner_1141     echte exe ROOM1141 mit Elza: beide 0x27 mit 360 (BEFREIUNG), jeder P228-Treffer nach der
+#                                   Schwelle 36, beide Gorillas OHNE 12 / OHNE 24 / FLINCH 36, Flinch nur nach FLINCH-Eintrag
 add_executable(test_r39_gegner ${CMAKE_CURRENT_SOURCE_DIR}/test_r39_gegner.c)
 target_link_libraries(test_r39_gegner PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_gegner PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -35,6 +44,41 @@ foreach(_teil affen_hp affen_zucken affen_schuss hund_riegel hund_re15 kriecher_
     add_test(NAME unit_r39_gegner_${_teil} COMMAND test_r39_gegner ${_teil})
     set_tests_properties(unit_r39_gegner_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()
+
+add_executable(test_r39_gegner_1141 ${CMAKE_CURRENT_SOURCE_DIR}/test_r39_gegner_1141.c)
+target_link_libraries(test_r39_gegner_1141 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r39_gegner_1141 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r39_gegner_1141 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r39_gegner_1141 PRIVATE m)
+endif()
+foreach(_teil hp1141 zucken1141 ablauf1141 affe29)
+    add_test(NAME unit_r39_gegner_1141_${_teil} COMMAND test_r39_gegner_1141 ${_teil})
+    set_tests_properties(unit_r39_gegner_1141_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
+
+# Nachbesserung 3 (test_r39_gegner_querung.c, Befund E ROOM1141): RE1.5-Wandklemme FUN_8003bca8 stellt einen Aktor jenseits
+# der Wandmitte an die AUSSENkante (@0x8003bcec-cfc); Port: RE2-Retail-Regel FUN_8004c900 (Seite nach der Vorbild-Lage
+# +0x118/+0x11a, @0x8004c930-ca50) nur fuer eine durchquerte solide Rechteckzelle (gegner_r39.c (5)).
+#   unit_r39_gegner_querung_wand1141 Gorilla gegen Gorilla an der Westwand (Versuch 5): vorher hinter der Wand, nachher im Raum
+#   unit_r39_gegner_querung_frei1141 Gegenprobe Stoss im freien Raum: Bild fuer Bild gleich mit Haken aus/an
+#   unit_r39_gegner_querung_wurf1141 Gorilla-Wurf an der Suedwand (Versuch 6): vorher Elza z -26068, nachher Runde-38-T-Invariante
+#   unit_r39_gegner_t_gorilla1141    die Runde-38-T-Invariantensonde (test_r38_griff_alle.c) um den 1141-Gorilla erweitert
+add_executable(test_r39_gegner_querung ${CMAKE_CURRENT_SOURCE_DIR}/test_r39_gegner_querung.c)
+target_link_libraries(test_r39_gegner_querung PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r39_gegner_querung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r39_gegner_querung PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r39_gegner_querung PRIVATE m)
+endif()
+foreach(_teil wand1141 frei1141 wurf1141)
+    add_test(NAME unit_r39_gegner_querung_${_teil} COMMAND test_r39_gegner_querung ${_teil})
+    set_tests_properties(unit_r39_gegner_querung_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
+add_test(NAME unit_r39_gegner_t_gorilla1141 COMMAND test_r38_griff_alle gorilla1141_sued)   # Ziel aus probes/r38_spiderman.cmake
+set_tests_properties(unit_r39_gegner_t_gorilla1141 PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
 
 if(TARGET re15_pc)
     add_test(NAME integration_r39_gegner_schatten
@@ -49,4 +93,11 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_gegner_hunde1190_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_gegner_hunde1190.cmake)
     set_tests_properties(integration_r39_gegner_hunde1190 PROPERTIES TIMEOUT 900)
+    # Nachbesserung 2: Gorilla-Regel an der exe in ROOM1141 mit Elza (echter Weg 1131 -> 1141, BEFREIUNG, P228-Kampf bis F3900)
+    add_test(NAME integration_r39_gegner_1141
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_gegner_1141_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_gegner_1141.cmake)
+    set_tests_properties(integration_r39_gegner_1141 PROPERTIES TIMEOUT 1200)
 endif()

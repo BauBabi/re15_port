@@ -44,6 +44,7 @@
 #include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Heliport ROOM1171 (heliport1171_r38.c) */
 #include "re15_dining_r38.h" /* Runde 38 Spur F: Dining Room Key 1011/1131, Roys Leiche 1021, John 1141 (dining_r38.c) */
 #include "re15_inventar_r39.h" /* Runde 39 Spur C: Spind ROOM1000 erst Munition, dann Text (inventar_r39.c) */
+#include "re15_funk10f1_r39.h" /* Runde 39 Spur I: Funkszene ROOM10F1 (funk10f1_r39.c) */
 
 extern scd_vm_t g_scd;
 
@@ -499,6 +500,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_r38i_install((uint16_t)g_current_room_id);          /* Runde 38 Spur I: Kraehen-Rueckgriff weg (re15_heliport1171_r38.h) */
     re15_dining_r38_install((uint16_t)g_current_room_id);     /* Runde 38 Spur F: 1011 Schluessel, 1021 Text, 1131 Tuer, 1141 Phase H (re15_dining_r38.h) */
     re15_inventar_r39_install((uint16_t)g_current_room_id);   /* Runde 39 Spur C: Spind ROOM1000 Munition (Form ROOM1001 @0x00C24), NACH feuerloescher_r37 */
+    re15_funk10f1_r39_install((uint16_t)g_current_room_id);   /* Runde 39 Spur I: Funkszene ROOM10F1, (9,70)=0 -> Ereignis 27 (re15_funk10f1_r39.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

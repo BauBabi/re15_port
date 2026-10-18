@@ -67,7 +67,7 @@
 #include "re15_emd.h"
 #include "re15_ems.h"
 #include "re15_affen.h"
-#include "re15_gegner_r39.h"   /* Runde 39 Spur E: re15_r39_gegner_enable(0) — die Parking-Lot-NUTZER-VORGABEN (HP x2, Flinch-Schwelle) sind in diesem ORIGINAL-Riegel durchsichtig */
+#include "re15_gegner_r39.h"   /* Runde 39 Spur E: re15_r39_gegner_enable(0) — die Gorilla-NUTZER-VORGABEN (HP x2, Flinch-Schwelle; alle 0x27) sind in diesem ORIGINAL-Riegel durchsichtig */
 #include "re15_anim_select.h"
 
 #include <math.h>
@@ -151,7 +151,7 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     g_game = flags_vorher;
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
-    re15_r39_gegner_enable(0);   /* Runde 39 Spur E: dieser Riegel misst den ORIGINAL-Mechanismus in ROOM11C0 (HP 180 @0x8011f514, Flinch je Treffer, Sprung beim 3.); die NUTZER-VORGABE fuer den Parking Lot (gegner_r39.c) ist hier aus — ihr Riegel ist test_r39_gegner */
+    re15_r39_gegner_enable(0);   /* Runde 39 Spur E: dieser Riegel misst den ORIGINAL-Mechanismus in ROOM11C0 gegen die DuckStation-Savestates (HP 180 @0x8011f514, Flinch je Treffer, Sprung beim 3.); die NUTZER-VORGABE fuer alle Gorillas 0x27 (gegner_r39.c, Nachbesserung 2) liegt darueber und ist hier aus — ihr Riegel ist test_r39_gegner */
     re15_player_cmd_reset();
     re15_pauseflags_clear();
     g_letterbox_level = 0;

@@ -115,6 +115,14 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
 - (Nachschub 19:25) "Oder falls Elza keine Waffe ausgerüstet hat eben das Messer...." (zu Punkt 2: hebt die Waffe - ohne ausgeruestete Waffe das Messer)
 - (Nachschub 19:25) "Ich meine mit ausgerüstet - keine Waffe im Inventar hat" -> Regel fuer Punkt 2: hat Elza eine Schusswaffe im INVENTAR, hebt sie diese (die ausgeruestete; ist keine ausgeruestet, eine aus dem Inventar), auch wenn sie nicht ausgeruestet ist; nur ohne jede Schusswaffe im Inventar hebt sie das Messer.
 - (Nachschub 19:26) "Falls sie irgendeine Waffe im Inventar hat, hebt sie halt diese."
+
+## Nachtrag 5 des Nutzers (woertlich, 2026-10-18 19:29)
+
+- Und die Schlüssel im Communicationsroom sind immer noch zu groß, die sollten maximal halb so groß sein.
+  (Orchestrator: Spur L Punkt 2 hatte die Schluessel 10F0/10F1 auf RE2-Bildgroesse gebracht - Leon 69 px, Elza 63 px bei
+  960x720, Hebel RE2_QUANTIL in tools/r38_itemorte/itemorte_export.py. NUTZER-VORGABE jetzt: hoechstens halb so gross wie
+  dieser Stand (Faktor 0,5 linear) -> neue Spur M "schluessel2".)
+
 ## Nachtrag 6 des Nutzers (woertlich, 19:46)
 - Antwort auf die Rueckfragen der Spur I: "1. ok, zu 2. nein, korrekt soll es geschrieben werden." -> Funkszene: "We need help!",
   "Uhh, this thing is broken!" (umgesetzt). Orchestrator: dieselbe Regel fuer neue Nutzer-Zeilen der Spur J ("He is in
@@ -131,3 +139,51 @@ bzw. Energie-Abfrage ausloesen oder abwarten); die Integration zieht die Energie
   Nachtrag 4 Punkt 4) = GENAU dieser Clip (ROOM1171 RBJ rec1 Clip 2), in 1141 aus ROOM1171 geliehen (Muster Spur I: RBJ-Leihe
   "[rbj] ... von ROOM1031 geliehen", platform/pc/src/cut10f0_pc.c); den Cache-Fix aus K beachten (bei der Integration zusammen).
   Riegel: Clip-Folge Johns bei "follow me" = 1171-Clip (Bildzahl 96, Quelle ROOM1171), kein Waffe-auf-Elza-Clip.
+
+## Nachtrag 8 des Nutzers (woertlich, 2026-10-18 zwischen 22:01 = Ordner-mtime room1141 und 22:19 = d1e9211e)
+- "So, ich habe jetzt die voiceovers ergänzt die fehlen in room 1141: Oh, no, this is Roy! He is in Trouble, I have to help him! ist main 12, Puuuh, that was close! I thought we end up as Gorilla meal…. ist main13 und Elza, follow me, I think I might have found a way out of here! ist main14."
+- "Außerdem habe ich die voiceovers für ROOM 10F1 ergänzt, mit main06 und main08."
+  Orchestrator (selbst gemessen 22:10-22:16, Windows-Spracherkennung System.Speech en-US: Diktat + Zwangswahl unter den
+  Raum-Saetzen; Skript scratchpad/stimmen_n8/erkenne.ps1). Dateien unveraendert uebernommen (32 kHz, 16 bit, mono):
+  room1141/main12 4,97 s (21:43), main13 5,83 s (21:55), main14 4,28 s (21:59); room10F1/main06 4,46 s (21:23),
+  main08 2,82 s (21:40); Roh-Takes synchro/unused/STAGE1/room1141 + room10F1.
+  | Datei | Diktat | Zwangswahl | Zeile im Port |
+  |---|---|---|---|
+  | 1141/main12 | "All know this is rolling he's in trouble I have to help in" | "Oh, no, this is ROY! ..." 0,823 (die John-Fassung nicht unter den Alternativen) | ROOM1141 msg 50 (Spur J, tools/r39_dining/programme_bauen.py:524 "Elza: Oh, no, this is John! / He is in trouble, I have to help him!") |
+  | 1141/main13 | "Path that was coals are that we end up as goal of nearly" | - | ROOM1141 msg 51 (:527 "John: Puuuh, that was close! I thought / we end up as gorilla meal....") |
+  | 1141/main14 | "Goals at fall league and armada fouled away all of you" | "Elza, follow me, I think I might have found a way out of here!" 0,664 | ROOM1141 msg 52 (:530) |
+  | 10F1/main06 | "Carlyle anyone can hear me we need help" | "Hello, anyone, can you hear me? We need help!" 0,772 | ROOM10F1 msg 40 (Spur I) |
+  | 10F1/main08 | "At this thing is broken" | - | ROOM10F1 msg 42 (Spur I; msg 41 "..." bleibt ohne Stimme) |
+  - main12 SAGT "Roy", der Text sagt "John" (Nutzer-Entscheid Nachtrag 1, 1141 = John). Der Text bleibt John; der Nutzer ist
+    informiert. Eine neue Aufnahme unter DEMSELBEN Dateinamen braucht keine Code-Aenderung.
+    Nutzer (woertlich, vor 22:23:46 = 2b0446a9): "ja, ich meine john...." -> Text John bestaetigt; main12 bleibt zugeordnet, bis eine John-Aufnahme
+    unter demselben Namen kommt (auch der Roh-Take 21:47:45 sagt Roy, Wahl 0,607).
+    Neuer Take 22:26:29 (Nutzer: "ich mache eine neuen take fuer main12"): room1141/main12.wav 6,00 s, Diktat "All know who
+    this is john losing troubled I have to help in", Wahl JOHN 0,784 -> passt zum Text. Der alte Take liegt jetzt unter
+    synchro/unused/STAGE1/room1141/main12.wav (vom Nutzer verschoben).
+- Nutzer (woertlich, zwischen 22:27:30 = eddbbc0d und 22:30:07 = 1e8cf44c; die Commit-Message 1e8cf44c nennt
+  faelschlich 22:40): "Ich habe main12 ersetzt. Benenne meine neuen voiceovers um, entsprechend der Nummer die du
+  brauchst, also auch die Dateien. Ich sehe ja nicht an welcher stelle mit welchen Namen die neuen Texte stehen."
+  Orchestrator: per git mv umbenannt (ausdruecklicher Nutzer-Auftrag, ersetzt fuer diese Dateien VERTRAG 1.2 "nie umbenennen"):
+  room1141/main12 -> main50, main13 -> main51, main14 -> main52; room10F1/main06 -> main40, main08 -> main42. Damit gilt die
+  Ordnerregel (main<MSG-ID>): KEINE Tabellenzeilen in stimmen_r39.c, keine Sperre noetig (room1141 hat keine main12-14 mehr,
+  die Original-Zeilen 12-14 bleiben stumm wie zuvor). SPUR N ENTFAELLT. Spur J: misst nur noch, dass msg 50/51/52 im neuen
+  Ablauf main50/51/52 spielen (keine Aenderung an stimmen_r39.c). Kuenftig nennt der Orchestrator dem Nutzer fuer jede neue
+  Port-Zeile den Dateinamen (synchro/STAGE<n>/room<ID>/main<MSG-ID>.wav) bzw. benennt gelieferte Dateien selbst um.
+  - KOLLISION: ROOM1141.RDT (msg_sec 0x10E4, re15_port/tools/rdt_msgdump.py) hat Original-Zeilen id 12 @0x13B6 "You've opened
+    the lock.", id 13 @0x13D1 "A beautiful painting.There's a switch below. / Will you push it?", id 14 @0x1417 "It's a big
+    table." Nach der Ordnerregel (synchro/README.md: main<MSG-ID>) spielten main12/13/14 dort - beim Entriegeln, am Gemaelde,
+    am Tisch. Sie muessen stumm bleiben. Die Tabelle engine/src/stimmen_r39.c (Spur A) sperrt das von selbst: eine Zeile
+    (Raum, msg, datei) macht die gleichnamige msg <datei> stumm (re15_stimmen_r39_stamm, zweite Schleife, "[voice] ... stumm").
+    ROOM10F1 hat Original-Ids 0..5 (I_funk10f1.md: msg_sec @0x1168, 6 Stueck) - keine Kollision.
+  - Zuteilung: neue Spur N "stimmen3" (10F1 msg 40/42 <- main06/main08 + 1141-Zeilen 50/51/52 <- main12/13/14, die 12/13/14
+    sperren; Riegel; Messung am echten Weg). Spur J (Nachbesserung 2): dieselben drei 1141-Zeilen in stimmen_r39.c eintragen
+    (bei der Integration gilt die Fassung der Spur N) und die Wiedergabe von msg 50/51/52 im neuen 1141-Ablauf messen.
+
+## Nachtrag 9 des Nutzers (woertlich, 2026-10-18 waehrend des Smoke-Laufs smoke_w3a 22:33-22:38)
+- "Ah, eine Sache fehlt mir noch - bei room11C0, während der Kampf gegen die Gorillas noch läuft, soll bei Leon der Text kommen \"I cannot leave Ada alone here with those monsters!\". Wenn Leon versucht durch die Tür aus dem Raum raus zu gehen."
+  Orchestrator: ROOM11C0.RDT msg_sec 0x1C84 hat Original-Zeilen 0..9 (msg 5 "Leon: Ada, you hide inside that patrol car.",
+  msg 6 "Ada: O-okay, I'll do that...", Kampf, msg 7 "Ada: Okay, it's over now."); Nutzer-Aufnahmen room11C0/main00-08.
+  Vorbild Runde 38 F ROOM1141 (Tueren gesperrt solange die Gorillas leben, msg 41 "I cannot leave him alone with those
+  monsters.", include/re15_dining_r38.h RE15_R38F_MSG_1141_SPERRE). Neue Spur O "parkplatz11c0"; Port-Message-Id 11C0 = 40
+  (Sprachdatei spaeter synchro/STAGE1/room11C0/main40.wav).

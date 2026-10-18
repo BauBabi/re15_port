@@ -83,6 +83,10 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 
 ## Punkt 1 — Parking-Lot-Gorillas: doppelte Energie, Flinch erst nach 3 Handfeuerwaffen-Treffern (Energie)
 
+> **Stand Nachbesserung 2 (Nutzer-Nachtrag 3 "generell")**: die Regel gilt fuer JEDEN Gorilla Typ 0x27 (ROOM11C0 Leon und
+> ROOM1141 Elza = alle 0x27-Raeume des Zensus), es gibt kein Raum-Tor 0x11C0 mehr (`re15_r39_affen_regel`, Konstante
+> `RE15_R39_AFFEN_TYP 0x27u`). Die Abschnitte unten beschreiben den ersten Bau (Raum-Tor); Ersatz s. "Nachbesserung 2".
+
 ### RE-Belege (Original, selbst gelesen)
 - **HP-Saat** (STAGE1.BIN ohne Kopf, Datei-Offset = Adresse - 0x80100000): INIT FUN_80116f50
   `jal 0x8001af20` (rng) @0x801170cc, `lui a0,0x8012 / addiu a0,a0,-4044` = 0x8011f034 @0x801170d4-d8,
@@ -113,7 +117,8 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   sieht den Treffer also im selben Bild.
 
 ### Umsetzung
-- Neue Datei engine/src/gegner_r39.c + include/re15_gegner_r39.h (Konstanten: RE15_R39_PARKPLATZ_RAUM 0x11C0,
+- Neue Datei engine/src/gegner_r39.c + include/re15_gegner_r39.h (Konstanten: RE15_R39_PARKPLATZ_RAUM 0x11C0 — seit
+  Nachbesserung 2 ersetzt durch RE15_R39_AFFEN_TYP 0x27u,
   RE15_R39_AFFEN_HP_TABELLE 180 @0x8011f514, RE15_R39_AFFEN_HP_FAKTOR 2 = NUTZER-VORGABE, RE15_R39_PISTOLE_SCHADEN 12
   @0x8006ee44, RE15_R39_ZUCK_TREFFER 3 = NUTZER-VORGABE, Schwelle 36).
 - Haken enemy_ai_common.c (je 1 Zeile, Kommentar "Runde 39 Spur E"): INIT `e->hp = re15_r39_affen_hp_init(e, 180)`;
@@ -332,6 +337,9 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   Asphalt) gegen `vorher_sprung_F1365.png` (Blob in Koerperhoehe).
 
 ## Tests (Namen, Ergebnis)
+- Nachbesserung 2: test_r39_gegner_1141.c (unit_r39_gegner_1141_hp1141 / _zucken1141 / _ablauf1141 / _affe29),
+  integration_r39_gegner_1141 (test_r39_gegner_1141.cmake), test_maggot_ai.c mit Haken aus — Laeufe/Summenzeilen in
+  "Tests (Nachbesserung 2, ...)".
 - tests/unit/probes/r39_gegner.cmake -> test_r39_gegner.c, Teile: unit_r39_gegner_affen_hp, _affen_zucken, _affen_schuss,
   _hund_riegel, _hund_re15, _kriecher_1010, _kriecher_1220, _kriecher_1010_re15, _kriecher_1220_re15, _schatten;
   Integration: integration_r39_gegner_schatten (echte exe ROOM11C0, Sprung + Original-Lage der Szenen-Gorillas, Nachbesserung 1),
@@ -351,6 +359,8 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
   @0x80031964 = RE2 @0x8003f8b4).
 
 ## OFFEN
+- Nachbesserung 2: Befund E (Gorilla/Elza durch 2000 dicke Waende, Original-Mechanik), RE15_R39_LOG-Namensgleichheit mit
+  Spur F, Abhaengigkeit des 1141-Exe-Riegels vom Runde-38-F-Ablauf — Details "OFFEN (Nachbesserung 2)".
 - (Nachbesserung 1, Hinweis, kein Punkt dieser Spur) DAT_800ac790 ist beim Raumeintritt bis zum ersten Cut-Apply stale
   (@0x80021c0c schreibt es, der Eintritt resolviert nur DAT_800ac794); das Original cullt in diesem Fenster Schatten und
   NPC-Zeichnung mit dem alten Viereck (bei 11C0 s000/s001: Garbage-Viereck, Spieler aussen). Der Port nimmt am Eintritt das
@@ -373,17 +383,22 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
 
 ## Fuer den Nutzer
 - Neue Assets / Sprachdateien / Paket-Gate: keine (nur Code + Tests; shared_assets unveraendert).
-- Bedienung: Parking-Lot-Gorillas (nur ROOM11C0, Leon — Elzas Parking Lot 11C1 hat Hunde) haben 360 statt 180 Energie und
-  zucken erst beim 3. Pistolentreffer (36 Energie seit dem letzten Zucken); jeder 3. Treffer ist damit zugleich der
-  Vergeltungs-Sprung des Originals (3-Treffer-Zaehler @0x8011b194-98). Dazwischen: Blut + Treffer-Ton, der Gorilla laeuft
-  weiter. Schrotflinte und Magnum zucken sofort (>= 36), Messer erst beim 6. Treffer. ROOM1141 bleibt beim Original (180,
-  jeder Treffer zuckt).
+- Bedienung (Stand Nachbesserung 2): ALLE Gorillas (Leons Parking Lot ROOM11C0 und Elzas Briefing Room ROOM1141 — die
+  einzigen Raeume mit Gorillas; Elzas Parking Lot 11C1 hat Hunde) haben 360 statt 180 Energie und zucken erst beim 3.
+  Handfeuerwaffen-Treffer (36 Energie seit dem letzten Zucken; Leons Pistole und Elzas SIG P228 je 12); jeder 3. Treffer ist
+  damit zugleich der Vergeltungs-Sprung des Originals (3-Treffer-Zaehler @0x8011b194-98). Dazwischen: Blut + Treffer-Ton,
+  der Gorilla laeuft weiter. Schrotflinte und Magnum zucken sofort (>= 36), Messer erst beim 6. Treffer. Ein Gorilla braucht
+  31 statt 16 Handfeuerwaffen-Treffer. Die kleinen Affen (Stage 3-5) sind unveraendert.
+- ROOM1141 (Elza): der Gorilla-Kampf dauert damit gut doppelt so lange (62 P228-Treffer fuer beide). Munition liegt auf
+  Elzas Weg reichlich (H.GUN BULLETS zusammen 405 Schuss, dazu Remington, Beretta, Ingram, MC51); der Ausweg ueber das
+  Dachschloss (Original) bleibt. Hinweis: in langen Kaempfen kann ein Gorilla (oder Elza im Pin) durch eine Wand gedrueckt
+  werden (Befund E, Original-Mechanik, wird weiter untersucht).
 - Hunde (RE2-KI): waehrend der eigenen Treffer-Reaktion (22 Bilder Flinch, Niederschlag) beisst kein zweiter Hund; danach
   sofort wieder. Gilt in allen Hunde-Raeumen (1190, 11C1, ...). Der toedliche Biss und das Fressen sind unveraendert.
 - Liegende Zombies (1010/1011, 1220/1221): sie liegen still, bis der Spieler naeher als 3000 im 90-Grad-Sichtkegel vor ihnen
   steht (RE1.5-Original Block B), dann kriechen sie heran; naeher als 1300 greifen sie wie im RE2-Original.
-- Entscheidungsfrage: Soll die 3-Treffer-Schwelle auch fuer die Gorillas in ROOM1141 gelten? (Wortlaut "beim Parking Lot"
-  -> nur 11C0 umgesetzt.)
+- Entscheidungsfrage (erledigt, Nutzer-Nachtrag 3 2026-10-18: "Zu 2. ja, wir machen das Gorilla Verhalten generell so.")
+  -> Nachbesserung 2: Regel fuer alle 0x27.
 
 ## Nachbesserung 1 (2026-10-18, nach Abnahme 0 — Mangel M1)
 
@@ -472,3 +487,544 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
     10 x unit_r39_gegner_*, integration_r39_gegner_schatten, integration_r39_gegner_hunde1190).
   - Messkopien: eigene `re15_pc_e_mess.exe` (Messvarianten) nach der Messung geloescht; die Messvarianten selbst sind nicht
     committet (Diff: nur die beiden Zeilen in gegner_r39.c bzw. die Logzeile in main.c, beide aus dem .orig restauriert).
+
+## Nachbesserung 2 (2026-10-18, nach Abnahme 1 — Nutzer-Nachtrag 3)
+
+Auftrag (Orchestrator, Mangel 1 der Abnahme 1): AUFTRAG.md Nachtrag 3 (2026-10-18 14:25) woertlich "Zu 2. ja, wir machen
+das Gorilla Verhalten generell so." -> HP x2 und Flinch erst nach 3 Handfeuerwaffen-Treffern (Akku-Schwelle 36) fuer ALLE
+Gorillas Typ 0x27 in allen Raeumen und beiden Szenarien; Raum-Tor `re15_r39_affen_parkplatz` auf den Typ allein; Zensus
+aller 0x27-Raeume; ROOM1141 (Elza) Gorilla-Szene muss lauffaehig bleiben; kleine Affen 0x29 unveraendert.
+
+### Protokoll
+- 2026-10-18 Start: Baum sauber, HEAD 2486a028 (Merge master dc330054 in r39/gegner), `git diff master --name-only` =
+  nur Pfade dieser Spur. Pflichtlektuere AUFTRAG.md (inkl. Nachtrag 3), VERTRAG.md, E_abnahme_1.md, dieses Dossier gelesen.
+
+### Mangel 1 — die Gorilla-Regel galt nur in ROOM11C0 (Raum-Tor)
+
+**Ursache**: `re15_r39_affen_parkplatz(e)` = `type 0x27 && g_current_room_id == 0x11C0` (Stand 2486a028) — nach dem
+Wortlaut "beim Parking Lot" gebaut; Nutzer-Nachtrag 3 (2026-10-18 14:25) entscheidet "generell".
+
+**Zensus Sce_em_set Typ 0x27, alle 240 RDTs beider Szenarien** (`scd_dump_room.py` je RDT, Feld 3 = Typ; Skript
+scratchpad e_nb2/zensus27.sh): Treffer nur in
+- ROOM11C0 (Leon, Parking Lot): @0x01784 `44 01 27 30 02 ..` / @0x01798 `44 02 27 30 02 ..` (Szene, grid 0x30),
+  @0x017E8 `44 01 27 10 00 ..` / @0x017FC `44 02 27 10 00 ..` (Kampf, grid 0x10, Flag 4/0x40).
+- ROOM1141 (Elza, Briefing Room): sub00 @0x00B1A `44 01 27 30 00 00 00 cb ..` / @0x00B2E `44 02 27 30 .. cc ..` (Szene,
+  Zweig Ck(4,0xF0) @0x00AFE), @0x00B54 `44 01 27 10 .. cb 38 e6 .. b8 d9` = (-6600,-9800) / @0x00B68 `44 02 27 10 .. cc 52 ea
+  .. da b2` = (-5550,-19750) (Kampf, Zweig Ck(4,0xF2) @0x00B4A). Der Port-Ablauf BEFREIUNG (Runde 38 F,
+  gen/dining_r38_programme.inc Zeile 607-609) setzt dieselben beiden Szenen-Saetze.
+- Gegenprobe 0x29 (kleine Affen): ROOM3040/3041, 4000, 4040/4041, 4080/4081, 5000/5001, 5031, 50A0/50A1, 50B0, 5100/5101.
+- Vollstaendigkeit: der Walker brach nur in 34 RDTs ab — alle 34 sind Stummel zu 4 Byte (ROOM1270/1271, 20C0-20F1, 30F0/1,
+  4060/1, 40C0-40F1, 5150-5171, 6050-6071). Roh-Byte-Gegenprobe (`44 ?? 27 <grid>` ueber alle Dateibytes): ausser den 8
+  Saetzen oben nur Treffer in Nicht-SCD-Daten (ROOM11B0 @0xdefe `44 00 27 00 17 00 27 00 ..` = u16-Tabelle, ROOM1260/2000/
+  2010/2020 @0x2xxxx `44 03 27 00 10 d0 0b ff ..` = Bilddaten), keiner in einer SCD-Region.
+- Dispatch: Typ 0x27 -> Wurzel 0x80116db8 nur ueber die STAGE1-Registrierung `lui v0,0x8011 / addiu v0,v0,28088`
+  @0x8011e900-04, `sw v0,11336(at)` = 0x80072c48 = 0x80072bac + 0x27*4 @0x8011e90c (re15_disasm.py dis 0x8011e900; im
+  PSX.EXE-Abbild ist der Platz 0 = Laufzeit-Registrierung).
+Damit sind "alle Gorillas" = die zwei in 11C0 (Leon) und die zwei in 1141 (Elza).
+
+**RE-Belege, selbst gelesen (re15_disasm.py)**:
+- HP-Zeile `read 0x8011f514 16 --w 2` = 16 x 180; INIT FUN_80116f50 `dis 0x80116f50 30` + `dis 0x801170b8 24`: Saat
+  `lhu v0,0(v0)` @0x801170fc / `sh v0,154(a1)` @0x80117104, OHNE hp-Bedingung (einziger Zweig im INIT ist grid&1 `beq`
+  @0x80116f80 -> Wort 0x101 @0x80116f88-8c). Der Port-INIT fuehrt `if (e->hp <= 0)`; Sce_em_set setzt hp = 0 (scd_vm.c
+  op_sce_em_set "Leave hp at the struct-cleared 0"), im Spiel laeuft der Haken also bei jedem Spawn.
+- Schaden Zeile 0x27 `read 0x8006ee38 22 --w 2` = [0,0,7,0,30,0,12,0,12,0,28,..] = Schritt 4 Byte je Waffe: Messer 7
+  @0x8006ee3c, Pistole (Waffe 3) 12 @0x8006ee44, **Elzas SIG P228 (Waffe 4, Item 0x04 aus ROOM1051) 12 @0x8006ee48**.
+  Die Schwelle 36 = 3 x 12 gilt damit fuer Leons und Elzas Handfeuerwaffe gleich.
+- Spur-Tabelle `read 0x801214a8 22 --w 4`: Waffen 0-6, 12, 14, 19, 20 -> 0x8011b018 (Boden-Flinch Clip 7), 7/8/13/21 ->
+  0x8011b1ec, 9-11/15-18 -> 0x8011b400 — die P228 flincht wie die Pistole auf Spur 0.
+- Resolver `dis 0x80012500 12`: `lh v1,154(s1)` @0x80012520 / `ori v0,zero,0x2` @0x80012524 / `bgez v1,0x80012420`
+  @0x80012528 / `sb v0,4(s1)` @0x8001252c — hp >= 0 bleibt HURT (2), erst hp < 0 ist der Tod. Ein Gorilla braucht mit
+  12er-Treffern 180/12 + 1 = 16 (Original) bzw. 360/12 + 1 = 31 Treffer (Nutzer-Vorgabe).
+
+**Messung vorher (exe Stand 2486a028, neu gebaut; Elza, echter Weg ROOM1131 -> Tuer -> ROOM1141)**: Aufbau wie
+integration_r38_dining1141_d bis zum Kampf (RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78, RE15_GIVE=0x43:1,0x04:15,
+0x15:120, RE15_EQUIP=4, RE15_DEBUG_JUMP=1131@gp, RE15_PLAYER_POS=-1300,-13900,0, RE15_WEGPLAN 1131 Schluessel/Tuer -> 1141
+Phase H -> Gemaelde; danach RE15_INPUT_SCRIPT `M1.5` + 40 x `MA0.1,M0.6` ab Spielbild 2760, RE15_PSELECT_AUTO(_SWITCH)=1,
+RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_nb2/lauf.sh, Auswertung e_nb2/auswert.py):
+- debug.log: `[messer] Startinventar Charakter 4`, `[give] item 4 x15`, `[equip] RE15_EQUIP -> item 4 (slot 1)`, `[dining]
+  F283 ROOM1141 Phase H`, `F854 Gemaelde -> Programm BEFREIUNG`, `[elzaems] Typ 0x27 aus EMD/CDEMD1.EMS Sektor 893`.
+- gegner_r39.log: `affen init slot=2/3 raum=1141 hp=180` (Raumaufbau, danach nimmt Phase H sie heraus) und erneut slot 2/3
+  hp=180 (BEFREIUNG-Spawn).
+- state.txt: Steuerung zurueck ~F2632, Gorillas jagen ab F2800; Schuesse F2805 ... (Magazin 15 -> 0, Nachladen); Treffer
+  **F3163 G2 180 -> 168 Clip 7**, F3498 168 -> 156 Clip 7, F3520 156 -> 144 Clip 7, F3542 144 -> 132 Clip 7, F3603 G3
+  180 -> 168 Clip 7, F3625 168 -> 156 Clip 7 — **jeder P228-Treffer flincht, HP 180** (ROOM1141 hatte die Regel nicht).
+  Elza 100 -> 88 (F3241, schwerer Biss -12) -> 82 -> 76 -> 70.
+
+**Aenderung (Code)**:
+- engine/src/gegner_r39.c: `re15_r39_affen_parkplatz` -> `re15_r39_affen_regel(e)` = Haken an && `e->type ==
+  RE15_R39_AFFEN_TYP` (0x27); kein Raum mehr. Logzeilen tragen Raum + Bild (`affen init ... raum= typ= hp= regel=`,
+  `affen treffer F.. slot= raum= hp= akku= -> FLINCH|OHNE ZUCKEN`).
+- Akku-Bezug (PORT-WAHL der Buchfuehrung, jetzt fuer jeden 0x27 in jedem Riegel wirksam): `re15_r39_affen_merken` setzt den
+  Bezug am Tick-Ende neu, wenn noch keiner gesetzt ist oder die HP ueber ihm liegen (ein Gorilla verliert HP nur — HP ueber
+  dem Bezug heisst: der Platz traegt einen Aktor, der den INIT dieses Hakens nicht durchlief, z. B. eine Sonde mit gesetzter
+  HP). Im Spiel setzt der INIT den Bezug (Sce_em_set -> hp 0 -> INIT im Spawn-Bild).
+- include/re15_gegner_r39.h: Kopf (1) neu (Zensus, Nachtrag 3, Dispatch-Beleg, P228 @0x8006ee48), `RE15_R39_PARKPLATZ_RAUM`
+  ersetzt durch `RE15_R39_AFFEN_TYP 0x27u`.
+- enemy_ai_common.c / test_r35_affen.c: nur die Kommentare der vorhandenen Haken-Zeilen ("ROOM11C0" -> "jeder 0x27").
+
+### Fortsetzung (2026-10-18 17:05, vierter Agent nach dem Sitzungslimit; Stand 5ecd8f07 = 0705d967 + Merge master)
+- Vorgefunden: Baum sauber; 0705d967 WAR gebaut (exe 14:55, test_r39_gegner_1141.exe 14:56) und gemessen: ctest-Lauf 14:57
+  des Vorgaengers (113 Unit-Tests, Regex scratchpad e_nb2/regex_unit.txt) -> 112 gruen, **unit_maggot_ai rot**
+  (`FAIL(1): HP must seed to 180, got 360`); die vier unit_r39_gegner_1141_* gruen (ablauf1141: vorher 16 Treffer / 15
+  Flinches je Gorilla, nachher 31 / 10, Kill-Flags, (4,0xF2) = 0, Johns Abgang, Dachtuer -> 0x17 in beiden Laeufen).
+- Neu gebaut nach dem Merge (local_build.sh configure + build, 795 Schritte, LOCAL-BUILD-OK 17:2x).
+- `ctest -j4 -R "^unit_.*(maggot|affen|1141|11c0|dining1141|elzaems|griff_gorilla|r39_gegner|zombieki_affen)"`:
+  `99% tests passed, 1 tests failed out of 72` — wieder nur unit_maggot_ai.
+
+#### Befund D — unit_maggot_ai (Original-Riegel des Gorilla-INIT) rot durch die Typ-Regel
+- Ursache: test_maggot_ai.c setzt keinen Raum (g_current_room_id bleibt 0) und prueft (1) die Original-Saat
+  `m->hp != 180` (@0x8011f514, `sh v0,154(a1)` @0x80117104). Mit dem Raum-Tor 0x11C0 war der Haken dort durchsichtig;
+  seit der Typ-Regel verdoppelt er auch hier (360). Teil (2f) blieb gruen, weil der Riegel hp = 180 von Hand setzt
+  (Akku 360 - 180 >= 36 -> Flinch) — also zufaellig, nicht weil er die Original-Antwort misst.
+- Aenderung: test_maggot_ai.c `re15_r39_gegner_enable(0)` am Anfang von main (+ include, 2 Zeilen, Kommentar "Runde 39
+  Spur E") — wie test_r35_affen.c room_boot: der Original-Riegel misst den Original-INIT und den Original-Flinch je
+  Treffer; die NUTZER-VORGABE misst test_r39_gegner / test_r39_gegner_1141 (je vorher/nachher im selben Lauf).
+  Kein Gorilla wird in test_maggot_ai ueber HP getoetet ((3) setzt hp = -1 direkt) — nichts an der Energie nachzuziehen.
+- Nachher: `ctest -R "^unit_maggot_ai$"` -> `100% tests passed, 0 tests failed out of 1`.
+
+#### Messung nachher an der exe (Stand db069f14, gebaut 17:2x)
+- **ROOM11C0 (Leon), Gegenprobe der Typ-Regel**: Aufbau wie E_abnahme_1.md §1 (Messkopie `re15_pc_e_nb2c_11c0.exe`, Arbeitsordner
+  scratchpad e_nb2c/n11c0; `RE15_SET_FLAG=4:0x40 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-6729,-12800,1486 RE15_EQUIP=3`,
+  `RE15_INPUT_SCRIPT=M1.5` + 14 x `,MA0.1,M0.6` ab Spielbild 290, `RE15_EXIT_AT=900`) -> exit 0. gegner_r39.log:
+  `affen init slot=2/3 raum=11c0 typ=27 hp=360 (tabelle 180 @0x8011f514, regel 1)`; `affen treffer F335 slot=2 raum=11c0 hp=348
+  akku=12 -> OHNE ZUCKEN` / `F379 hp=336 akku=24 -> OHNE ZUCKEN` / `F440 hp=324 akku=36 -> FLINCH (Schwelle 36)` / `F462 hp=312
+  akku=12 -> OHNE ZUCKEN` — bildgleich mit Abnahme 1 (F335/F379/F440/F462): der Wechsel Raum-Tor -> Typ-Regel aendert 11C0 nicht.
+- **ROOM1141 (Elza), Versuch 1 (scratchpad e_nb2c/n1141_a, Skript `W10` + 140 x `W0.1,M0.4,MA0.1,M0.3`)**: Raumaufbau und
+  BEFREIUNG-Spawn `affen init slot=2/3 raum=1141 typ=27 hp=360 (... regel 1)` (je zweimal: Raumaufbau, danach Phase H heraus,
+  dann BEFREIUNG). Treffer F3075 G2 360->348 OHNE ZUCKEN, F3561 336 OHNE, F3615/F3669 G3 348/336 OHNE, **F3723 G3 324 akku 36
+  FLINCH** (Clip 7 F3723-F3735), **F3858 G2 324 akku 36 FLINCH**, F4047/F4101 G3 312/300 OHNE, F4344/F4398 G2 312/300 OHNE.
+  Das Skript taugte nicht als Kampf: nach jedem Loslassen von R1 dreht Elza ~12 Bilder auf das Ziel (ac=6), das Quadrat
+  nach 12 Bildern faellt vor die Anschlag-Bereitschaft (ac=8 ab Bild ~16) und wird verworfen — 10 Schuesse in 1300 Bildern,
+  Elza 100 -> 28 (F4360). Lauf abgebrochen (eigene PID 74648 der Messkopie, Stop-Process).
+- **ROOM1141, Versuch 2 (n1141_b, Skript `W10` + 45 x `W0.1,M0.7,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6` = R1 gehalten, alle drei
+  Schuesse neu zielen)**: 30 Schuesse, 28 Treffer (27 auf G2, 1 auf G3), Auswertung scratchpad e_nb2c/auswert2.py:
+  `treffer-zeilen 28 FLINCH 9 OHNE 19 regelwidrig 0` — G2 F3084 348 OHNE / F3106 336 OHNE / **F3128 324 FLINCH akku 36** /
+  F3193 312 OHNE / F3432 300 OHNE / **F3474 288 FLINCH** / ... / **F4585 36 FLINCH** (jeder dritte Treffer, 9 x). Elza
+  (steht) 100 -> 88 (F3212) -> 82 -> 70 -> 64 -> 58 -> 46 -> 34 -> 28 -> 22 -> 16 -> 4 -> **-2 (F4756, tot)** — 12 Gorilla-
+  Angriffe (Biss -6 `addiu v0,v0,-6` @0x80118468, Heavy -12 `addiu v0,v0,-12` @0x801187bc). G2 bleibt bei 36, G3 bei 348.
+  Der Lauf haengt danach im Tod (frame_count steht bei F5017, EXIT_AT nie) -> eigene PID 70712 beendet.
+- **ROOM1141, Versuch 3 mit Elzas Schrotflinte (n1141_s, `RE15_GIVE=0x43:1,0x08:7,0x16:63 RE15_EQUIP=8`)**: Schaden 38 (Zeile
+  0x27 Waffe 8, re15_damage.c s_wpn_dmg_maggot[8]) >= 36 -> jeder Treffer FLINCH (F3084 G2 322 akku 38, F3087 G3 322, F3117,
+  F3124, F3150, F3273 — "andere Waffen entsprechend ihrem Schaden" an der exe bestaetigt). 7 Schuss bis F3734 (mg 7 -> 0),
+  danach kein Nachladen mehr: Elza wird ab F3528 alle 37-60 Bilder gebissen (88 -> ... -> -2 F4378, 16 Angriffe) und kommt
+  aus der Treffer-Reaktion nicht zum Nachladen (die Statusspalte bx zaehlt nur 0x15, -1 = keine H.GUN BULLETS — kein Befund).
+  Lauf haengt danach im Tod -> PID 8160 beendet. Nicht weiter verfolgt.
+- **Folgerung**: mit einem STEHENDEN Skript-Schuetzen ist der Kampf gegen zwei Gorillas mit je 360 Energie an der exe nicht
+  bis zum Ende zu fahren (ein Spieler weicht aus; Munition fuer 62 Treffer liegt auf Elzas Weg reichlich: Zensus
+  analysis/story_leon_elza/census.json, H.GUN BULLETS 0x15 in 1001/1011/1021/1051/1071/10E1/10F1/1191/11D1/11F1/1211 —
+  zusammen 405 Schuss, dazu Remington 0x08 (10F1), Beretta 0x05 (11D1), Ingram 0x0C (1191), MC51 0x13 (1111)). Fuer die
+  Pflicht-Messung "bis zum Tod beider Gorillas und Johns Abgang" darum ein MESSHAKEN (nur mit Env, kein Spielverhalten):
+  `RE15_R39_MESS_SPIELER_HP=<n>` hebt am Kopf jedes KI-Bildes die Spieler-HP auf mindestens n (gegner_r39.c
+  r39_mess_spieler_hp, aufgerufen aus re15_r39_hund_riegel_tick = Kopf von re15_enemy_ai_run_all, KEINE neue Zeile in einer
+  gemeinsamen Datei); jeder Ausgleich steht mit Bild in gegner_r39.log. n = 100 haelt auch den Luft-Finisher (-600) fern:
+  dessen Commit verlangt player.hp < 50 (selbst disassembliert: `lbu v1,149(v0)` == 0x13 @0x80118cd4-cdc, `lh v0,0(a2)`
+  player.hp @0x80118cec / `slti v0,v0,50` @0x80118cf4 / `beq v0,zero` @0x80118cf8, hit_react == 0 @0x80118d04-0c,
+  a804(0x1388,0xc0) @0x80118d18, +0x1dc == 0 @0x80118d34-3c, `sb v0,5(v1)` = Sub 8 @0x80118d44, Se 7 @0x80118d64).
+- **ROOM1141, Versuch 4 mit Messhaken (n1141_h, RE15_R39_MESS_SPIELER_HP=100, sonst wie Versuch 2)**: bis F4585 bildgleich mit
+  Versuch 2 (gleiche Treffer/Flinch-Bilder), Elza bleibt bei >= 88; danach ist das Magazin leer (mg 0, Reserve 105) und das
+  Nachladen (Anschlag-Zustand ac=13 ab F4656) wird von jedem Biss abgebrochen: G2 beisst ab F4757 alle 50-58 Bilder
+  (`messhaken F.. spieler hp 94 -> 100`, 58 Ausgleiche bis F7914) — eine Biss-Schleife gegen den stehenden Schuetzen.
+  Kein weiterer Schuss -> abgebrochen (eigene PID 74492).
+- **ROOM1141, Versuch 5 (n1141_m: Messhaken + `RE15_GIVE=0x43:1,0x04:99,0x15:60` = 99 Schuss im Magazin, Skript `W10` + 80 x
+  `W0.1,M0.6` + 6 x `MA0.1,M0.3`, EXIT_AT 11200 -> erreicht)**: 36 Treffer-Zeilen, alle regelkonform; **G2 stirbt**: F5406
+  hp 0 akku 36 FLINCH (hp >= 0 bleibt HURT, `bgez v1` @0x80012528), der 31. Treffer F5496 -> `st=7` hp -12. **G3 bleibt bei
+  288 und ist ab F4624 AUSSERHALB des Raums** (x = -12218, Westwand-Zelle 0 = x -10600..-8600), wo er bis F11200 in Sub 4
+  an der Aussenkante entlangschiebt (Elza trifft ihn nie wieder; Kampf endet nie, John wartet) -> Raum nicht abschliessbar.
+
+#### Befund E — Gorilla durch die 2000 dicke Westwand gedrueckt (Versuch 5, F4623 -> F4624), Mechanismus belegt
+- Bildfolge (state.txt n1141_m, Gorilla G3 = Platz 3 im Vergeltungs-Sprung Sub 7/Phase 2, Hoehe aus gegner_r39.log
+  `schatten F..`): F4622 (-7368,-9243) y -3420; F4623 (-6982,-9649) y -3000; **F4624 (-12218,-9837)**. G2 (Platz 3 tickt
+  nach Platz 2) steht F4624 bei (-6611,-9865). ROOM1141 SCA (Kopf @0x570, 5 x 19 Zellen): Zelle 0 = Westwand x -10600..-8600,
+  z -25550..1850, Typ 1, u0 0xff (2000 dick).
+- Kette, Schritt fuer Schritt nachgerechnet (alle Funktionen sind Byte-Ports, Original selbst disassembliert):
+  1. Gorilla-Kasten @0x80121350 = {0,-1440,0,1600,1440,1600} (Radius 1600, Halbhoehe 1440, Versatz -1440; `read 0x80121350 6`).
+  2. Koerper-Stoss Gorilla gegen Gorilla (FUN_8002aec4 aus der Wurzel @0x80116e40-54; Port re15_enemy_body_push_tail):
+     dist = SquareRoot0 `jal 0x80065f60` @0x8002b1d8, pen = R - dist @0x8002b1e4 (`blez s0` @0x8002b1e8), Hoehenband
+     `lhu a0,8(s5)` / `lhu v1,8(s6)` / `slt` @0x8002b208-228 (|dy| < 1440 + 1440 = 2880): F4623 dy = -3000 -> KEIN Stoss,
+     F4624 dy ~ -2520 -> Stoss. Versatz x = dx*pen/(dist+1) (`mult s1,s0` / `div v0,a2` @0x8002b22c-260): dx = -6982 -
+     (-6611) = -371, dz = 2, dist = 371, R = 3200, pen = 2829 -> **x -2821** -> G3 bei x = -9803 (jenseits der Wandmitte -9600).
+     Der Querungs-Zweig fuer "Eintritt von oben" (Vorbild-Y +0x42 `lh v0,66(s2)` @0x8002b268, Achsentests alte X +0x40
+     `lh a1,64(s2)` @0x8002b2b8 / alte Z +0x44 `lhu t2,68(s2)` @0x8002b2cc) greift NUR, wenn G3 in diesem Bild die X- bzw.
+     Z-Koordinate von G2 ueberquert hat — hier nicht (x -6982 -> -6982, z -9649 -> -9863 gegen -9865) -> normaler Stoss wie
+     im Port (der Zweig ist im Port nicht portiert, aendert dieses Bild aber nicht).
+  3. Wandklemme FUN_8003b0a4 -> Rechteck-Ausstoss FUN_8003bca8 (Port re15_collision.c push_rect): t1 = (w + x + r) - pos + 18
+     @0x8003bcc4-ce0, a0 = (x - r) - pos - 18 @0x8003bcd4-ce8, `slt v0,-a0,t1` / `beq` / `addu t1,a0,zero` @0x8003bcec-cfc =
+     die NAEHERE erweiterte Kante gewinnt: Ost -8600 + 1600 + 18 = -6982 (Abstand 2821), West -10600 - 1600 - 18 = -12218
+     (Abstand 2415) -> **x = -12218** (genau der gemessene Wert; -6982 ist die Ostkante, an die G3 in F4623 geschoben wurde).
+- Folge: G3 steht hinter der Westwand ausserhalb des begehbaren Raums, seine Wandklemme haelt ihn an der Aussenkante. Das
+  ist der Original-Mechanismus (Stoss 2821 > halbe Wanddicke 1000 + Radius-Rest), KEIN Fehler dieser Spur; die doppelte
+  Energie verlaengert den Kampf (31 statt 16 Treffer je Gorilla, doppelt so viele Vergeltungs-Spruenge = Stoss-Gelegenheiten)
+  und macht ihn wahrscheinlicher. Im Original-Ablauf (E16: "John: Elza, I'll try to distract them, while you try to get out
+  of here") ist der Kampf nicht noetig — Schloss Slot 2 -> sub05 @0x00FD2 Set(4,0xC3)=1 + Aot_reset Slot 1 @0x00FDC macht
+  die Dachtuer scharf; ob der Gang dorthin waehrend des Kampfes frei ist (Rolladen-Zelle 13: x -9000..-5300, z -7200..-6700),
+  entscheidet der Runde-38-F-Ablauf (kein Punkt dieser Spur). -> OFFEN, Entscheidungsfrage an den Nutzer.
+- Gegenprobe "kommt das auch mit 180 vor?": Stoss-Spruenge > 1000 je Bild gibt es in JEDEM Lauf, auch im Vorher-Lauf
+  v1141_vorher (F3536 G3 (-6982,-9418) -> (-7368,-6254)); dort blieben sie im Raum.
+
+- **ROOM1141, Versuch 6 (n1141_sued: wie Versuch 5, Wegplan danach `GEHE -6200 -14000 / -6200 -20000 / -1000 -20500`, also
+  Elza in die freie Suedflaeche)**: 3 Treffer (G2 F3431 OHNE 12 / F3453 OHNE 24 / F3522 FLINCH 36), dann wirft der Gorilla
+  Elza (mo=1) gegen die Suedwand und **Elza landet ausserhalb des Raums**: F3555 z = -23132 (= Innenkante -23600 + 450 + 18,
+  Spieler-Radius 450), F3556 (-2715,-23132) -> **(-2144,-26068)** = Aussenkante -25600 - 450 - 18 (Zelle 1 = Suedwand
+  z -25600..-23600, 2000 dick) — die Endlage ist der Rechteck-Ausstoss FUN_8003bca8 zur naeheren Kante (@0x8003bcec-cfc),
+  diesmal fuer die Spielerin. Lage davor: G3 in Sub 15 (Rear-up-Pin, Elza im Opfer-Clip mo=1), F3555 G3 (-2551,-21646) /
+  Elza (-2715,-23132) Abstand 1495, F3556 G3 (-2359,-21777). Der reine Koerper-Stoss (R = 450 + 1600 = 2050, pen ~680)
+  reicht fuer die Wandmitte -24600 NICHT — welcher Schreiber Elza in diesem Bild ueber die Mitte setzt (Pin-/Wurf-Platzierung
+  der Runde-35-Haken oder Opfer-Wurzelbewegung), ist NICHT ermittelt (OFFEN). Danach 159 Schuss ins Leere, abgebrochen
+  (eigene PID 59416).
+
+- **ROOM1141, Versuch 7 = drei Varianten von Versuch 5 (nur die Anfangs-Wartezeit des Skripts W9 / W11 / W12, sonst
+  gleich; Laufordner n1141_v9/_v11/_v12, EXIT_AT 11500 -> erreicht, exit 0)** — der Kampf ist chaotisch, die Varianten
+  streuen ihn, ohne die Regel zu beruehren:
+  | Lauf | Treffer-Zeilen (FLINCH/OHNE) | regelwidrig | Tod (state.txt Zustand 3/7) | Johns Abgang (Platz 1 Typ 0x49) |
+  |---|---|---|---|---|
+  | v9 | 45 (15/30) | 0 | G3 F6027; G2 lebt (Munition 99 + 60 verschossen) | — |
+  | **v11** | **60 (20/40)** | 0 | **G3 F5739, G2 F6576** | **F6678 los (Szene pm=2), Gang x -7351 z -21363 -> -975, F6815 geparkt (-30000,-30000)** |
+  | **v12** | **60 (20/40)** | 0 | **G2 F5304, G3 F7536** | **F7638 los, F7775 geparkt (-30000,-30000)** |
+  Je Gorilla 30 Treffer-Zeilen = 30 nicht-toedliche P228-Treffer (360 -> 0), davon 10 x FLINCH (genau jeder dritte, akku 36),
+  der 31. Treffer toetet (hp -12 < 0, `bgez v1` @0x80012528) — wie unit_r39_gegner_1141_ablauf1141 (31 Treffer, 10 Flinches).
+  Vom zweiten Tod bis zu Johns Aufbruch je 102 Bilder (v11 6576 -> 6678, v12 7536 -> 7638), in beiden Laeufen gleich.
+  Die Zwischenglieder (Kill-Flags (7,0xCB)/(7,0xCC) vom Todes-Commit, sub01 @0x00BEE-@0x00C14 `Ck(4,0xF2)` / `Ck(7,0xCB)` /
+  `Ck(7,0xCC)` -> `Set 22 04 f2 00` @0x00C0C) zeigt das Zustands-Log der exe nicht; gemessen sind sie im selben Engine-Weg
+  von unit_r39_gegner_1141_ablauf1141 (Tod Bild 1787 -> Flags 1858 -> (4,0xF2) = 0 Bild 1859 -> John geparkt 2026). Johns
+  Weg fuehrt durch den Gang hinter der Rolladen-Zelle 13 (z -7200..-6700), die nach dem Gemaelde abgeschaltet ist (sub00
+  `Ifel_ck` Ck(3,0x6A) @0x00B80-84, Else @0x00BBE: `Sca_id_set 37 0n 0d 00` @0x00BC2-@0x00BD2 + `Sca_floor_set`
+  @0x00BD6-@0x00BE6, alle 5 Baender). **Damit laeuft der Ablauf
+  "Gorillas brechen ein -> Kampf -> Tod beider Gorillas -> sub01 -> John geht" an der exe mit 2 x 360 Energie durch.**
+  Elza (Messhaken) blieb bei 100 (v11: Ausgleiche im Log, jeder <= 12).
+
+#### Neuer Exe-Riegel integration_r39_gegner_1141 (gruen)
+- Aufbau = Versuch 5 bis Spielbild 3900 (bildgleich: F3081/F3105/F3129 Platz 2, F3513/F3756/F3780 Platz 3). Lauf 17:57-18:01
+  (erste Fassung, EXIT_AT 3900; die Endfassung laeuft bis 4500 und verlangt das Muster fuer mindestens EINEN Gorilla, s. u.):
+  `ctest --test-dir re15_port/build -R "^integration_r39_gegner_1141$" --timeout 1200 --output-on-failure` ->
+  `100% tests passed, 0 tests failed out of 1` (259,95 s). gegner_r39.log des Laufs: Messhaken aktiv, 4 x `affen init
+  ... raum=1141 typ=27 hp=360 (... regel 1)`, Treffer-Zeilen wie Versuch 5; cap.raw und die Messkopie loescht der Test.
+- **Endfassung** (EXIT_AT 4500, Muster fuer mindestens einen Gorilla, Kopf mit Integrations-Hinweis), Lauf 18:2x:
+  `ctest --test-dir re15_port/build -R "^integration_r39_gegner_1141$" --timeout 1200 --output-on-failure -V` ->
+  `r39_gegner_1141: OK — INIT 360 x 4, 20 Treffer-Zeilen (FLINCH 6 nur bei akku >= 36, OHNE ZUCKEN 14), Flinch-Beginne im
+  state.txt 6` und `100% tests passed, 0 tests failed out of 1` (274,16 s) — genau die aus Versuch 5 bis F4500 erwarteten Werte.
+
+#### Riegel, die Gorillas toeten — gegen die neue Energie geprueft
+- integration_r38_dining1141_{w,z,d,l,s,r,a} toeten die Gorillas NICHT ueber HP, sondern ueber den Runde-38-Messhaken
+  RE15_R38F_GORILLAS_TOT (dining_r38.c: nach n freien Kampfbildern "Gorillas heraus", Flags (7,0xCB)/(7,0xCC) = 1) und
+  frieren sie mit RE15_R38F_GORILLAS_STARR ein (grid|0x20 = Root-Skip) — energieunabhaengig, nichts nachzuziehen.
+  Lauf 17:41-17:56 (`ctest -j2 -R "^integration_r38_dining1141_"`): `100% tests passed, 0 tests failed out of 7` (871,8 s;
+  _z 114 s, _w 187 s, _l 45 s, _d 276 s, _r 191 s, _s 548 s, _a 290 s).
+- unit_r38_dining1141_* (10 Teile) gruen im Unit-Lauf (s. Tests); unit_r38_dining1141_abgang toetet ueber Kill-Flags, nicht HP.
+- Der einzige Riegel, der die Gorillas ueber HP-Treffer bis zum Tod fuehrt, ist unit_r39_gegner_1141_ablauf1141 (neu,
+  vorher 16 / nachher 31 Treffer je Gorilla, zugeschnitten auf 360 = 2 x 180 @0x8011f514 und `bgez` @0x80012528).
+- unit_maggot_ai (Original-Riegel, Befund D) setzt hp = -1 direkt fuer den Tod.
+
+#### Warum der Voll-Ablauf an der exe KEIN Riegel ist
+- Versuch 7 zeigt den Voll-Ablauf (Tod beider Gorillas -> Johns Abgang) in zwei von drei Varianten; welche Variante
+  durchlaeuft, entscheidet der chaotische Kampf (v9: Munition 159 Schuss alle, G2 lebt; Versuch 5: G3 hinter der Westwand,
+  Befund E). Ein Riegel darauf faellt bei jeder Aenderung an Kampf-/Szenen-Timing um (Spur J baut ROOM1141 in Welle 3 um)
+  — darum misst integration_r39_gegner_1141 die REGEL an der exe (INIT 360, Schwelle je Treffer, Flinch nur nach FLINCH-
+  Eintrag; Bild 4500 mit 600 Bildern Spielraum) und unit_r39_gegner_1141_ablauf1141 den Voll-Ablauf ueber dieselben
+  Engine-Wege (SCD-VM, BEFREIUNG, Resolver-Schreibsatz, Todes-Commit, sub01, Abgang) deterministisch.
+- Nachstellen von Versuch 7 v11: scratchpad e_nb2c/lauf2.sh mit `E_GIVE="0x43:1,0x04:99,0x15:60"
+  E_EXTRA="RE15_R39_MESS_SPIELER_HP=100"`, Skript `W11` + 80 x (`W0.1,M0.6` + 6 x `MA0.1,M0.3`) ab Spielbild 2760,
+  EXIT_AT 11500; Auswertung e_nb2c/auswert2.py (Treffer/Flinch/Tod/John).
+
+### Tests (Nachbesserung 2, Spurbaum, gezielt — keine volle Suite)
+- Unit, Endstand (Messhaken + Typ-Regel + Original-Riegel-Haken), 18:0x:
+  `ctest --test-dir re15_port/build -j4 -R "^(unit_(r39_gegner|r35_affen|r38_affen3|r38_dining1141|maggot|r36_zombieki_affen|
+  r37_beretta|r37_elzaems|r38_griff|r38_szenenschutz_alle|r34_reaktion|r36_tueren|r37_fahrstuhl|1090_fire_pin|adult_spider_ai|
+  ai_flavor_mixed|cockroach_ai|collision_layers|enemy_attack_reach|enemy_body_push|irons_neck_1150|item_use|member|r35_werfer|
+  r37_sperre1050|re15_re2z_gore_se|re2_hybrid_rig|re2_spider_ai|re2_zombie_ai|writher_kill_flag|r35_granate|r37_szene11c0|
+  r36_karte_tuer11c0|r36_szene1150_dialog11c0|r35_cut1150_montage_11c0)|r31_trefferboxen)" --timeout 600 --output-on-failure`
+  (Ausdruck = scratchpad e_nb2c/regex_unit.txt, eine Zeile) -> **`100% tests passed, 0 tests failed out of 119`** (16,9 s).
+  Nach der letzten Kopf-Kommentarzeile (re15_gegner_r39.h, Messhaken-Hinweis) neu gebaut (LOCAL-BUILD-OK) und derselbe
+  Ausdruck erneut: **`100% tests passed, 0 tests failed out of 119`** (18,0 s).
+  Darin: unit_r39_gegner_* (10), unit_r39_gegner_1141_{hp1141,zucken1141,ablauf1141,affe29}, unit_r35_affen_* (20),
+  unit_r38_affen3_* (11), unit_r38_dining1141_* (10), unit_maggot_ai/_bone_square/_zone_leap, unit_r37_elzaems_*, unit_r38_griff_*.
+- Integration, Endstand, 18:03-18:11: `ctest --test-dir re15_port/build -j1 -R "^integration_(r39_gegner_schatten|
+  r39_gegner_hunde1190|r37_elzaems_elza1141|r37_szene11c0|r38_affen3|r38_affen3_decke|r38_affen3_tor)$" --timeout 1200
+  --output-on-failure` -> **`100% tests passed, 0 tests failed out of 7`** (495,5 s).
+- Integration dining1141, 17:41-17:56: `ctest --test-dir re15_port/build -j2 -R "^integration_r38_dining1141_" --timeout 3600
+  --output-on-failure` -> **`100% tests passed, 0 tests failed out of 7`** (871,8 s; Engine-Stand = Endstand, danach nur
+  Test-Registrierung neu konfiguriert).
+- Integration neu: `ctest --test-dir re15_port/build -R "^integration_r39_gegner_1141$" --timeout 1200 --output-on-failure -V`
+  -> **`100% tests passed, 0 tests failed out of 1`** (274,2 s).
+- Zusammen 119 Unit + 15 Integration gezielt gruen; die volle Suite faehrt der Orchestrator im Integrationsbaum.
+
+### OFFEN (Nachbesserung 2)
+- **Befund E (Hinweis, nicht diese Regel)**: in ROOM1141 kann der Original-Koerper-Stoss (Gorilla/Gorilla R 3200, Kasten
+  @0x80121350) einen Gorilla ueber die Mitte der 2000 dicken Westwand schieben; die Original-Wandklemme FUN_8003bca8 nimmt die
+  naehere Kante (@0x8003bcec-cfc) und stellt ihn AUSSERHALB ab (Versuch 5: G3 bei x -12218, Kampf endet nie). Ebenso landete
+  Elza im Rear-up-Pin hinter der Suedwand (Versuch 6, z -26068; der Schreiber, der sie ueber die Wandmitte setzt, ist NICHT
+  ermittelt). Mechanik des Originals (beide Funktionen Byte-Ports, Zahlen nachgerechnet); die doppelte Energie verlaengert den
+  Kampf (31 statt 16 Treffer je Gorilla) und macht es wahrscheinlicher. Elza kann den Raum dabei weiter ueber das Dachschloss
+  verlassen (Original sub05 @0x00FC8-@0x00FDC, Gang offen nach Sca_id_set @0x00BC2-@0x00BD2) — ausser sie steht selbst
+  ausserhalb. Naechster RE-Weg: das RE2-Gegenstueck (Koerper-Stoss + Wandklemme in ghidra_re2_Leon.txt) lesen, ob Retail den
+  Durchstoss verhindert (Beta -> Retail), und den Elza-Fall (Pin-Platzierung Runde 35 J) mit RE15_ENEMY_DBG bildgenau messen.
+- Spur F und Spur E lesen beide `RE15_R39_LOG`: E als Schalter (Datei gegner_r39.log), F (zustand_r39.c:58) als DATEINAME —
+  mit `RE15_R39_LOG=1` legt F eine Datei "1" an (harmlos, in jedem Laufordner sichtbar). Bei der Integration einen der beiden
+  Namen trennen (Hinweis an den Orchestrator; keine Aenderung in fremden Dateien).
+- integration_r39_gegner_1141 haengt am Runde-38-F-Ablauf (Wegplan bis zum Gemaelde, Kampfbeginn ~F2632-F3060): wenn Spur J
+  (Welle 3) die 1141-Szene umbaut, ist der Wegplan/EXIT_AT bei der Integration nachzuziehen (600 Bilder Spielraum eingebaut).
+
+### Ergebnis Nachbesserung 2 (Mangel 1 der Abnahme 1)
+- **Ursache**: Raum-Tor `re15_r39_affen_parkplatz` = `type 0x27 && g_current_room_id == 0x11C0` (Stand 2486a028) nach dem
+  Wortlaut "beim Parking Lot"; Nutzer-Nachtrag 3 (2026-10-18 14:25) entscheidet "generell".
+- **Messung vorher** (exe 2486a028, Elza ROOM1141 ueber 1131 -> Tuer, v1141_vorher): `affen init ... raum=1141 hp=180`, jeder
+  P228-Treffer flincht (F3163/F3498/F3520/F3542 G2, F3603/F3625 G3, je Clip 7). Unit vorher-Teile: 180 / Clip 7 je Schuss /
+  16 Treffer bis zum Tod.
+- **Beleg**: HP-Saat `sh v0,154(a1)` @0x80117104 aus Zeile 0x27 @0x8011f514 = 16 x 180 (ohne hp-Bedingung); Pistole 12
+  @0x8006ee44, P228 12 @0x8006ee48; Spur-Tabelle @0x801214a8 (Waffe 4 -> Boden-Flinch 0x8011b018); Resolver `bgez v1`
+  @0x80012528; Dispatch 0x27 -> 0x80116db8 nur ueber @0x8011e900-0c; Zensus Sce_em_set 0x27 = ROOM11C0 + ROOM1141 (beide
+  Szenarien), 0x29 in 3040/3041/4000/4040/4041/4080/4081/5000/5001/5031/50A0/50A1/50B0/5100/5101.
+- **Aenderung**: `re15_r39_affen_regel(e)` = Haken an && Typ 0x27 (RE15_R39_AFFEN_TYP), kein Raum; Akku-Bezug am Tick-Ende
+  fuer Aktoren ohne INIT (PORT-WAHL der Buchfuehrung); Logzeilen mit Raum/Bild; Kommentare/Kopf/Dossier ohne Parkplatz-
+  Sonderregel; Original-Riegel test_maggot_ai.c `re15_r39_gegner_enable(0)` (Befund D); Messhaken RE15_R39_MESS_SPIELER_HP
+  (nur Messlauf). Neue Riegel: test_r39_gegner_1141.c (hp1141 / zucken1141 / ablauf1141 / affe29),
+  test_r39_gegner_1141.cmake (integration_r39_gegner_1141). 0x29 unveraendert (affe29 Bild fuer Bild gleich, affen3 gruen).
+- **Messung nachher**: ROOM11C0 bildgleich mit Abnahme 1 (F335/F379 OHNE, F440 FLINCH akku 36); ROOM1141 Elza: INIT
+  hp=360 (beide Gorillas, Raumaufbau + BEFREIUNG), jede Treffer-Zeile regelkonform (Versuche 2/5/7: 28/36/45/60/60 Zeilen,
+  0 regelwidrig), je Gorilla 30 x 12 bis 0, 10 x FLINCH (jeder dritte), Tod mit dem 31.; Voll-Ablauf an der exe in v11/v12:
+  Tod beider Gorillas -> John bricht 102 Bilder spaeter auf und parkt (F6815 / F7775); unit ablauf1141: Flags, (4,0xF2) = 0,
+  Abgang, Dachtuer -> 0x17 mit 360.
+
+## Nachbesserung 3 (2026-10-18, nach Abnahme 2 — Befund E: Elza/Gorilla durch Waende ROOM1141)
+Auftrag (Orchestrator, args_e_nach3.json): Mangel 1 = Befund E (b) Elza ausserhalb des Raums nach dem Gorilla-Pin/Wurf
+(Versuch 6, F3555 -> F3556, Suedwand); Mangel 2 = Befund E (a) Gorilla hinter der Westwand (Versuch 5, F4623 -> F4624,
+Koerper-Stoss Gorilla gegen Gorilla) -> Softlock, weil der Kampf in 1141 im Port Pflicht ist (Runde 38 F). Je Mangel:
+Schreiber finden, Original + RE2 lesen, Ursache korrigieren bzw. Invariante (Runde 38 T) belegt durchsetzen, Riegel.
+Punkte 1-4 (Abnahme 2: erfuellt) nicht verschlechtern.
+
+### Protokoll
+- 19:07 Start (fuenfter Agent). Baum sauber, HEAD 98822214. Pflichtlektuere AUFTRAG/VERTRAG/E_abnahme_2/Dossier-Befund E,
+  Runde 38 T (T_spiderman.md: Wandwaechter re15_r38_griff_durch_wand, Riegel unit_r38_griff_*).
+- Cherry-pick 3fe9e358 aus r39/integration (Logschalter RE15_R39_LOG -> RE15_R39_GEGNER_LOG, Namenskollision mit Spur F) ->
+  0a9076e9, damit neue Riegel denselben Schalternamen tragen wie der Integrationsstand (gleiche Aenderung auf beiden Seiten =
+  konfliktfreier Merge).
+- 19:09 gebaut (Stand 0a9076e9), 19:1x Mess-Schiene "Stationen" (gegner_r39.c r39_mess_stationen, nur mit
+  RE15_R39_GEGNER_LOG=1 + RE15_R39_MESS_STATIONEN=1; liest die Runde-27-Stationen OPFER/SCHUB/KLEMME/ENDE des Vorbildes
+  am Kopf von re15_enemy_ai_run_all; KEIN Spielverhalten), gebaut, Versuch 6 nachgefahren (53acd32a).
+- 19:29 exe ohne Wache gesichert (scratchpad e_nb3/exe_vorher.exe), Versuch 5 vorher; Querungs-Wache + 2 Haken (7fb46d07),
+  Riegel test_r39_gegner_querung + T-Sonde-Fall (Mutationsprobe), Dossier Mangel 2 (8d4fd431).
+- 19:35-20:03 exe-Messungen nachher (Versuch 6, Versuch 5 bis F11200 / F14000, Versuch 7 v11 bytegleich), gezielte Tests
+  (Unit 168/168, Integration 15/15), Ganzzahl-Vortest (34460f3d, Ausgaben identisch). 20:05 Abschluss.
+
+### Mangel 1 (Befund E (b)) — Messung vorher (Versuch 6 bildgleich nachgefahren)
+- Lauf scratchpad e_nb3/v6_vorher (lauf.sh = e_nb2c/lauf3.sh mit RE15_R39_GEGNER_LOG; Wegplan e_nb2c/wegplan_sued.txt,
+  `RE15_GIVE=0x43:1,0x04:99,0x15:60`, Messhaken `RE15_R39_MESS_SPIELER_HP=100`, Skript e_nb2c/schuss_sued.txt ab Spielbild
+  3300, `RE15_EXIT_AT=3600`) -> exit 0, state.txt bildgleich mit n1141_sued: F3555 PL(-2715,-23132), **F3556 PL(-2144,-26068)**.
+- Stationen (Zeile "stationen F<n+1> (Vorbild)" = Bild n), Wurf = Opfer-Clip 1 (mo=1), Anker (1060,-24101), Blick 389:
+
+| Bild | Clip-Bild | OPFER (Platzierung) | SCHUB | KLEMME = Bildende |
+|---|---|---|---|---|
+| 3552 | 31 | (-3087,-23504) | = | (-3087,-23132) |
+| 3554 | 33 | (-2715,-24266) | = | (-2715,-23132) |
+| **3556** | **35** | **(-2144,-24973)** | **=** | **(-2144,-26068)** |
+| 3557 | 36 | (-613,-25309) | = | (-613,-26068) |
+| 3558.. | 37.. (>= 0x25: keine Platzierung) | (-613,-26068) | = | = |
+
+- **Schreiber, Bild 3556**: (1) die Opfer-Platzierung des Gorilla-Wurfs (re15_player_victim_tick -> re15_victim_place,
+  Clip 1 Bild 35 < 0x25) setzt Elza absolut auf z -24973 = 373 hinter die Mitte (-24600) der Suedwand (Zelle 1, z -25600..
+  -23600); (2) der Koerper-Schub bewegt nichts (SCHUB = OPFER); (3) die Spieler-Wandklemme im Schwanz (re15_player_body_
+  and_walls -> re15_collision_constrain = FUN_8003b0a4 -> push_rect = FUN_8003bca8) nimmt die naehere aufgeblasene Kante:
+  innen -23600 + 450 + 18 = -23132 (Abstand 1841), aussen -25600 - 450 - 18 = -26068 (Abstand 1095) -> **-26068**. Schon der
+  Anker (1060,-24101) liegt IN der Wandzelle (501 tief); Bild 3552/3554 (Platzierung 96 bzw. 334 vor der Mitte) klemmt die
+  Innenkante, Bild 3556 kippt.
+- Der Runde-38-T-Waechter (re15_r38_griff_durch_wand) laeuft in re15_victim_place NICHT fuer 0x27 (`vg_ty != 0x27u`,
+  enemy_ai_common.c:1576 "0x27 klemmt im Spieler-Schwanz @0x80031d70") — der Gorilla-Wurf ist der einzige Griff ohne
+  Querungs-Pruefung (0x29 ebenso: eigener Haken re15_affen3_opfer_tick, Schwanz-Klemme).
+
+### Mangel 1 — RE-Belege (selbst disassembliert, re15_disasm.py / re2_disasm.py)
+- RE1.5 Gorilla-Opfer-Haken 0x8011c118 P2 @0x8011c268: `lbu v0,0(a0)` (Spieler-Clip-Bild 0x800acae9) / `sltiu v0,v0,0x25`
+  @0x8011c278 / `beq v0,zero` @0x8011c27c / `lw a1,-13364(a1)` (0x800acbcc) / `lw a2,-13360(a2)` (0x800acbd0) / `jal 0x8001ad68`
+  @0x8011c294 mit `addiu a0,a0,-149` = 0x800aca54 (Spieler) -> danach anim_set @0x8011c2b0.
+- FUN_8001ad68: Wurzel FUN_8001ae38 @0x8001ad84, RotMatrixY(+0x6a) @0x8001addc, ApplyMatrix @0x8001adec, x = (s16)+0xa0 +
+  off.x (`lh v0,160(s1)` / `sw v0,52(s1)` @0x8001adf4-ae04), z = (s16)+0xa2 + off.z (@0x8001ae08-18) — absolut, ohne Klemme.
+- Anker: Pin-Latch @0x8011ac00-18 `addiu s1,s0,-424` = 0x800aca54, `jal 0x8001ac38` @0x8011ac18; FUN_8001ac38 = Lage des
+  Greifers minus RotY(+0x6a) * Wurzel(Bank +0x84/+0x16c @0x8001ac64-68) (`sh v0,160(a0)` @0x8001acfc), Kopie auf den Spieler
+  — Port re15_affen_pin_anker (affen_11c0.c (5)) = dieselbe Rechnung.
+- Spieler-Schwanz FUN_80031c44: Koerper-Schub `jal 0x8002b544` @0x80031cbc, Wandklemme `jal 0x8003b0a4` @0x80031d70 (Maske
+  `ori a2,zero,0x1` @0x80031d74, Radius `lhu a1,6(v0)` @0x80031d6c = DAT_80073e94[+6] = 0x01c2 = 450, PSX.EXE Datei 0x6469a),
+  Bezug = Spiegel +0x40/+0x44 (game_step_common.c Kopf des Schwanzes); Port game_step_common.c:2508 (wurf-Pfad) = dieselbe
+  Reihenfolge Platzierung -> Schub -> Klemme.
+- Ergebnis: **Original-Mechanismus**, kein Port-Fehler — mit demselben Zustand (Gorilla pinnt mit dem Anker in der Wand)
+  setzt das Original Elza genauso an die Aussenkante (die Zahlen sind die der Byte-Ports; 1095 < 1841 -> Aussenkante).
+- RE2 RETAIL (Beta -> Retail): RE2 hat keinen Gorilla; seine Wandklemme fuer Spieler UND Gegner ist FUN_8003567c ->
+  FUN_8004c1bc (`jal 0x8004c1bc` @0x800356d0, Maske a1|0x1000000 @0x800356c4), die Rechteck-Routine waehlt sie ueber die
+  Tabelle @0x800a737c (`lhu v0,8(s0)` / `andi 0xf` / `lw v0,29564(at)` @0x8004c418-34, `jalr v0` @0x8004c448): [0] =
+  FUN_8004c900. Diese entscheidet die Seite NICHT nach der naeheren Kante, sondern nach der Vorbild-Lage +0x118/+0x11a
+  (`lh v0,280(a3)` @0x8004c930, `lh v0,282(a3)` @0x8004c94c), die FUN_8003567c nach JEDER Klemme schreibt (`lw v0,132(s0)` /
+  `lw v1,140(s0)` / `sh v0,280(s0)` / `sh v1,282(s0)` @0x800356ec-f8):
+  t2 = 2r + w (@0x8004c91c-20), a0 = Vorbild.x + r - cell.x (@0x8004c930-3c), Code-Bit 2 = (a0 >= t2) (`sltu`/`xori`/`sll`
+  @0x8004c940-48); Z ebenso Bit 1 (@0x8004c94c-64); Randfaelle a0 == -1 / t2+1 -> 2, a1 == -1 / t1+1 -> 1 (@0x8004c968-a8).
+  Code 0 (Vorbild in BEIDEN Achsen innerhalb) -> FUN_8004c858 (@0x8004c9b8) = die RE1.5-Regel (naehere Kante, Code-Bits
+  FUN_8004ca68). Bit 2: x = cell.x + w/2 (@0x8004c9f8) -/+ (r + w/2 + 1) (@0x8004c9e0-f0), Minus wenn x - Vorbild.x >= 0
+  (`bltz a1` @0x8004c9f4, `subu` @0x8004ca00 / `addu` @0x8004ca04, `sw v0,132(a3)` @0x8004ca08); Bit 1 ebenso fuer z
+  (@0x8004ca18-50). RE2 stellt den Aktor also immer auf die Seite, VON DER ER KAM.
+- Fuer Bild 3556 rechnet RE2: Vorbild z -23132, a1 = -23132 + 450 + 25600 = 2918 >= t1 = 900 + 2000 = 2900 -> Bit 1;
+  z - Vorbild = -24973 + 23132 < 0 -> z = -24600 + (450 + 1000 + 1) = **-23149** (innen). x: Zelle 1 spannt die Raumbreite,
+  Vorbild innerhalb -> unveraendert. Elza bliebe im Raum.
+
+### Mangel 2 (Befund E (a)) — Messung vorher (Versuch 5 bildgleich nachgefahren)
+- Lauf scratchpad e_nb3/v5_vorher mit der exe VOR der Wache (e_nb3/exe_vorher.exe = Stand 53acd32a ohne Haken; Aufbau
+  n1141_m: Wegplan e_nb2/wegplan_1141.txt, `RE15_GIVE=0x43:1,0x04:99,0x15:60`, Messhaken HP 100, Skript
+  e_nb2c/schuss_nachher4.txt ab Spielbild 2760, `RE15_EXIT_AT=4700`) -> exit 0, bildgleich mit n1141_m:
+  F4623 G3 (-6982,-9649) Sub 7/2 (Vergeltungs-Sprung), G2 (-6632,-9948); **F4624 G3 (-12218,-9837)**, G2 (-6611,-9865);
+  F4625/F4626 G3 (-12218,-10051)/(-12218,-10265) = an der Aussenkante der Westwand (Zelle 0) entlang.
+- ROOM1141-SCA selbst gelesen (scratchpad e_nb3/sca.py, RDT+0x20 -> 0x570, 5 Quadranten-Listen zu je denselben 19 Zellen):
+  Zelle 0 Typ 1 u0 0xff x -10600..-8600 z -25550..1850 (Westwand, 2000 dick), Zelle 1 x -10600..16700 z -25600..-23600
+  (Suedwand), Zelle 8 x -8600..-6550 z -23600..-22100, Zelle 13 x -9000..-5300 z -7200..-6700 (Rolltor), Kreise 14-18.
+
+### Mangel 2 — RE-Belege (selbst disassembliert)
+- RE1.5 Koerper-Stoss FUN_8002aec4 (pusher a0 = s3, pushee a1 = s2; im Tick des Gestossenen ueber b544): Radien
+  `lhu t4,6(s6)` / `lhu t4,6(s5)` @0x8002af40-54, R = r1 + r2 @0x8002b174, Schnelltest `sltu v0,a2,v0` @0x8002b194/@0x8002b1c0,
+  dist SquareRoot0 `jal 0x80065f60` @0x8002b1d8, pen = R - dist `subu s0,s0,a2` @0x8002b1e4 (`blez` @0x8002b1e8), Hoehenband
+  `lhu a0,8(s5)` / `lhu v1,8(s6)` / `slt` @0x8002b208-228, Versatz dx*pen/(dist+1) @0x8002b22c-260 / dz @0x8002b264-2a0.
+  QUERUNGS-ZWEIG @0x8002b268-40c: nur wenn die Vorbild-Hoehe +0x42 (`lh v0,66(s2)` @0x8002b268) AUSSERHALB des Bandes lag
+  (@0x8002b2a4-b0), dann je Achse nur, wenn der Gestossene in diesem Bild die Koordinate des Stossenden UEBERQUERT hat
+  (X: `lh a1,64(s2)` @0x8002b2b8, Tests @0x8002b2d0-300; Z: `lhu t2,68(s2)` @0x8002b2cc, Tests @0x8002b378-3a8) -> Ausstoss
+  +/-2r (@0x8002b308-364 / @0x8002b3b0-40c). Bild 4624: Vorbild (-6982,-9649), vor dem Stoss (-6982,~-9862), Stossender
+  (-6611,-9865): X unveraendert, Z -9649 -> -9862 bleibt noerdlich von -9865 -> KEINE Ueberquerung -> normaler Stoss
+  pen = 3200 - 371 = 2829 -> x -9803. Der Zweig haette Bild 4624 also auch portiert nicht verhindert.
+- RE1.5 Gorilla-Wurzel: Stoss `jal 0x8002aec4` / b544 @0x80116e40-54, Klemme `lw v0,120(a0)` @0x80116e64, Maske
+  `ori a2,zero,0x4` @0x80116e68, Radius `lhu a1,6(v0)` @0x80116e6c, `jal 0x8003b0a4` @0x80116e70 (Port 0x27-Zweig:
+  re15_enemy_body_push_tail + re15_enemy_sca_clamp_band(e, mag_ox, mag_oz, 4)). FUN_8003bca8 naehere Kante @0x8003bcec-cfc:
+  Ost -8600 + 1600 + 18 = -6982 (Abstand 2821), West -10600 - 1600 - 18 = -12218 (2415) -> Code 2 (Z-Pen 13305 gegen die
+  Bewegung -188), `ax < az` -> X auf die naehere = WESTkante **-12218**.
+- RE2 RETAIL Koerper-Stoss: Spielerseite FUN_800355c4 (`jal 0x800355c4` @0x80026628), Gegnerseite 0x80035530 (keine Ghidra-
+  Funktion, nur Overlay-Aufrufer: `jal 0x80035530` @0x8010062c EMZ0.BIN = Zombie-Wurzel, ebenso EMD0G_MOD0.BIN Datei 0x7c,
+  EMOVL10/21, EMS25/26): Ausrichtung FUN_80035408 @0x80035544, Schleife ueber die Entity-Liste 0x800cfe14..[0x800ce334],
+  `jal 0x80034d0c` @0x80035590 (a0 = andere, a1 = selbst). FUN_80034d0c = derselbe Stoss je Segmentpaar (pen = R - dist,
+  Hoehenband, Querungs-Zweig mit Vorbild-Hoehe +0x46 / X +0x44 / Z +0x48 wie RE1.5) plus eine Begrenzung auf +/-100 je
+  Achse NUR fuer einen Stossenden mit Wort-Bit 0x100000 (`lui v1,0x10` / `and` @0x8003504c-54, @0x8003505c-a8; in RE2 selbst
+  fehlerhaft: bei x > 100 wird z = 100 gesetzt, `addiu a2,zero,100` @0x80035084). Einen "Ziel-frei"-Test gibt es nicht:
+  **RE2 verhindert den Durchstoss NICHT im Stoss**, sondern in der Wandklemme danach: Zombie-Wurzel `jal 0x8003567c`
+  @0x80100638 (a1 = 1024) -> FUN_8004c1bc -> Rechteck-Routine FUN_8004c900 (Seite nach der Vorbild-Lage, s. Mangel 1):
+  Bild 4624 in RE2: Vorbild x -6982, a0 = -6982 + 1600 + 10600 = 5218 >= t2 = 3200 + 2000 = 5200 -> Bit 2, x - Vorbild < 0
+  -> x = -9600 + (1600 + 1000 + 1) = **-6999** (Ostseite = im Raum).
+
+### Umsetzung (Nachbesserung 3)
+- **Beta -> Retail, kleinste belegte Form** (eine Regel fuer beide Maengel, gegner_r39.c (5) "Querungs-Wache"): die RE1.5-
+  Klemme bleibt Byte fuer Byte (alle bisherigen Lagen unveraendert, die Runde-35-Original-Riegel messen weiter RE1.5);
+  NUR wenn ihr Ergebnis eine solide Rechteckzelle DURCHQUERT (Strecke Vorbild-Lage -> Ergebnis schneidet das offene Innere,
+  Vorbild nicht in der Zelle; Band/Maske/Typ 1 wie collision_constrain_impl), gilt fuer diese Zelle die RE2-Regel
+  FUN_8004c900: Code aus der Vorbild-Lage (@0x8004c91c-a8), Achse(n) mit Bit auf Mitte -/+ (r + w/2 + 1) zur Herkunftsseite
+  (@0x8004c9e0-ca50). Vorbild-Code 0 (Vorbild schon in der aufgeblasenen Zelle, z.B. Landung ueber einem Auto) -> RE2 nimmt
+  dort die RE1.5-Regel (FUN_8004c858 @0x8004c9b8) -> nichts. Bleibt nach hoechstens 4 Durchgaengen eine Querung, gilt die
+  Vorbild-Lage (Form der Runde-38-T-Invariante re15_r38_griff_durch_wand bzw. des RE1.5-Blocks push_rect Code 0).
+  - Gorilla 0x27: re15_r39_affen_querung(e, mag_ox, mag_oz) direkt nach re15_enemy_sca_clamp_band im 0x27-Zweig
+    (enemy_ai_common.c, 1 Zeile; Vorbild = Lage am Tick-Anfang = Spiegel +0x40/+0x44 @0x8001d11c-54; Radius
+    hit_radius_min = Kasten @0x80121350 1600, Maske 4 @0x80116e68, Band +0x82 = e->floor). Bei Korrektur Kontakt +0x90 /
+    +0x1b4 fuer die korrigierte Lage neu (FUN_8001bf04-Code wie @0x8003b4b8-ec).
+  - Spieler im Gorilla-Opfer-Haken (0x27 Wurf/Finisher, 0x29 Griff = der wurf-Pfad): re15_r39_wurf_querung(pl, wurf_alt_x,
+    wurf_alt_z) direkt nach re15_player_body_and_walls (game_step_common.c:2508, 1 Zeile + include; Vorbild = Lage am
+    Bild-Anfang = Spiegel +0x40/+0x44, Radius 450 = DAT_80073e94[+6] @0x80031d6c, Maske 1 @0x80031d74, Band = Klemmband).
+    Damit gilt die Runde-38-T-Invariante jetzt auch fuer den einzigen Griff, den der T-Waechter in re15_victim_place
+    ausliess (`vg_ty != 0x27u`, enemy_ai_common.c:1576).
+- Gemeinsame Dateien: enemy_ai_common.c +1 Zeile (0x27-Zweig), game_step_common.c +1 Zeile (Klammer um den wurf-Aufruf) +1
+  include (game_step_common.c steht nicht in VERTRAG §1.3 — kein anderer Spur-Punkt dort; Hinweis an die Integration),
+  test_r38_griff_alle.c +4 Zeilen (ein Tabellenfall, Auftrag "T-Invariantensonde erweitern").
+- Konstanten: 450 (@0x80031d6c, DAT_80073e94[+6] = 0x01c2, PSX.EXE Datei 0x6469a), Maske 1 (@0x80031d74), Maske 4
+  (@0x80116e68), +1 / w/2 / r (@0x8004c9e0-f0, @0x8004ca30-38), Code-Randfaelle (@0x8004c968-a8). Keine neue Zahl.
+- Mess-Schiene (kein Verhalten): RE15_R39_MESS_STATIONEN=1 (+ RE15_R39_GEGNER_LOG=1) und je Korrektur eine Zeile
+  "querung F.. gorilla|spieler zelle code vorbild re15 -> neu" in gegner_r39.log.
+
+### Riegel (Nachbesserung 3)
+- `unit_r39_gegner_querung_wand1141` (test_r39_gegner_querung.c): Kampf-Lage ROOM1141 (sub00 @0x00B54/@0x00B68), beide
+  Gorillas ruhig, Gestossener (-6982,-9915), Stossender (-6611,-9865) = Versuch-5-Versetzung; ein echtes Spielbild:
+  vorher (Haken aus) **(-12218,-10292)**, 90/90 Bilder hinter der Westwand (Softlock); nachher **(-6999,-10292)**, Kontakt
+  0x88 (Ostseite), 90/90 Bilder im Raum. Sonde mit den Versuch-5-Zahlen: (-12218,-9848) -> (-6999,-9848); RE1.5-Ergebnis auf
+  der Herkunftsseite bleibt unberuehrt.
+- `unit_r39_gegner_querung_frei1141` (Gegenprobe): dieselbe Versetzung im freien Raum ((1129,-20550)/(1500,-20500)): Stoss
+  findet statt (-> (-1675,-20927)), 60 Bilder beide Gorillas + Elza Bild fuer Bild gleich mit Haken aus/an.
+- `unit_r39_gegner_querung_wurf1141`: Versuch-6-Lage (Gorilla (-2066,-21976) Blick 389 Sub 15 Phase 2, Elza (-362,-23142)):
+  Anker im Latch **(1060,-24101) = exe-Messung**; vorher Bild 24/25 Elza (-2144,-26068)/(-613,-26068), 50 Bilder ausserhalb;
+  nachher 0 ausserhalb, 0 hinter einer Wand, kleinstes z -23150.
+- `unit_r39_gegner_t_gorilla1141` = die Runde-38-T-Invariantensonde test_r38_griff_alle.c, neuer Fall gorilla1141_sued
+  (Elza-Archiv CDEMD1, Ck(4,0xF2)=1, Elza (-362,-23142) Blick 389, Gorilla 2065 dahinter, Zwang Sub 15, ECHTER Verbindungs-
+  test): Latch Bild 15, Anker (1058,-24107), 74 Griffbilder, 0 ausserhalb, 0 hinter einer Wand. MUTATIONSPROBE (Wache aus,
+  re15_r39_gegner_enable(0) am Anfang von fall_laufen, nicht committet): **FAIL — 50 ausserhalb, 50 hinter einer Wand**
+  (Bild 39 Spieler (-2143,-26068)).
+
+### Messung nachher an der exe (Stand 7fb46d07, exe 19:3x = scratchpad e_nb3/exe_nachher.exe)
+- Auswerter scratchpad e_nb3/aussen.py (letztes Segment von state.txt = ROOM1141; "ausserhalb" = x < -8600 (Westwand
+  innen), z < -23600 (Suedwand innen) oder x > 14700, fuer Elza und jeden Gorilla t=27).
+- **Versuch 6 nachher** (e_nb3/v6_nachher, Aufbau wie v6_vorher, `RE15_EXIT_AT=4500`): exit 0; bis F3555 bildgleich mit
+  vorher (F3554/F3555 PL(-2715,-23132)); gegner_r39.log:
+  `querung F3556 spieler zelle=1 code=1 vorbild=(-2715,-23132) re15=(-2144,-26068) -> (-2144,-23149) (RE2 FUN_8004c900)`,
+  `querung F3557 spieler ... re15=(-613,-26068) -> (-613,-23149)`; state.txt F3556 PL(-2144,-23149), F3557..F3562
+  PL(-613,-23149). Im weiteren Kampf noch zwei Wuerfe gegen die Suedwand (F3744/F3745, F4228/F4229 je -26068 -> -23149) und
+  ein GORILLA, den derselbe Mechanismus durch die Suedwand gestellt haette: `querung F4030 gorilla slot=3 zelle=1 code=1
+  vorbild=(-1799,-21982) re15=(-1326,-27218) -> (-1326,-21999)` (-27218 = -25600 - 1600 - 18; -21999 = -24600 + 2601).
+  aussen.py: **Elza 0 / Gorillas 0 Bilder ausserhalb** (F1..F4500). Vorher (v6_vorher bis F3600): Elza 45 Bilder ausserhalb
+  (F3556..F3600 bei z -26068).
+- **Versuch 5 nachher** (e_nb3/v5_nachher, Aufbau wie v5_vorher, `RE15_EXIT_AT=11200`): exit 0; bis F4623 bildgleich;
+  `querung F4624 gorilla slot=3 zelle=0 code=2 vorbild=(-6982,-9649) re15=(-12218,-9837) -> (-6999,-9837) (RE2 FUN_8004c900)`
+  = genau der vorhergesagte Wert. aussen.py ueber F1..F11200: **Elza 0 / Gorillas 0 Bilder ausserhalb** (vorher, v5_vorher
+  bis F4700: G3 77 Bilder bei x -12218). G3 stirbt F6732 (`st 1 -> 3`, hp -12, 31. Treffer), G2 lebt bei F11200 (hp 168,
+  16 Treffer, Sub 3 Jagd bei (1461,-10818) = IM Raum): der stehende Skript-Schuetze hat seine 159 Schuss (99 + 60)
+  verschossen — dieselbe Grenze des Messaufbaus wie Versuch 7 v9 (Nachbesserung 2), kein Softlock.
+- **Versuch 5 nachher mit mehr Munition** (e_nb3/v5_nachher_mun, `RE15_GIVE=0x43:1,0x04:99,0x15:240`, `RE15_EXIT_AT=14000`):
+  dieselbe Korrektur F4624, aussen.py 0 / 0 bis F14000; G3 tot F6732; G2 (hp 168) jagt (Sub 3) die stehende Elza, die ab
+  ~F5200 im Gang hinter dem abgeschalteten Rolltor steht ((-6218,-3344), Zelle 13 per Sca_id_set aus), und schiebt sich an
+  der Suedkante von Zelle 9 entlang (z -10818 = -9200 - 1600 - 18, x -3117 -> 1461); der Skript-Schuetze verschiesst 204
+  Schuss ohne weiteren Treffer. Gorilla-Jagd ohne Wegsuche (direkte Steuerung) gegen eine Spielerin, die sich nicht bewegt
+  — Grenze des Messaufbaus, beide Gorillas IM Raum; ein Spieler, der aus dem Gang tritt, erreicht G2.
+- **Versuch 7 v11 nachher** (e_nb3/v11_nachher, Aufbau wie Nachbesserung 2 v11, `RE15_EXIT_AT=11500`): exit 0, **0 Korrekturen,
+  state.txt BYTEGLEICH** mit n1141_v11 der Nachbesserung 2 (14220 Zeilen, `cmp`): G3 tot F5739, G2 tot F6576, John geparkt
+  (-30000,-30000) — der durchlaufende Ablauf ist von der Wache unberuehrt.
+- integration_r39_gegner_1141 (Laufordner lauf_*, EXIT_AT 4500): 0 Zeilen "querung" — die Riegel-Strecke der Nachbesserung 2
+  bleibt bildgleich (gruen, s. Tests).
+
+### Tests (Nachbesserung 3, Spurbaum, gezielt — keine volle Suite)
+- Unit (Ausdruck = scratchpad e_nb3/regex_unit.txt, eine Zeile):
+  `^(unit_.*(maggot|affen|gorilla|1141|11c0|r39_gegner|dining|elzaems|szene11c0|griff|hund|dog|kriech|crawl|schatten|body_push|victim|bissarm|wurf|wand|spiderman).*|unit_(r37_beretta|r38_szenenschutz_alle|r34_reaktion|r36_tueren|r37_fahrstuhl|1090_fire_pin|adult_spider_ai|ai_flavor_mixed|cockroach_ai|collision_layers|enemy_attack_reach|irons_neck_1150|item_use|member|r35_werfer|r37_sperre1050|re15_re2z_gore_se|re2_hybrid_rig|re2_spider_ai|re2_zombie_ai|writher_kill_flag|r35_granate|slope_collision).*|prop_sca_collision|r31_trefferboxen|r30_hund_hitbox_stauchung)$`
+  `ctest --test-dir re15_port/build -j3 -R "<Ausdruck>" --timeout 600 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 168`** (Endstand nach dem Ganzzahl-Vortest, 15,59 s; derselbe Ausdruck vor dem
+  Vortest ebenfalls 168/168). Darin die neuen unit_r39_gegner_querung_{wand1141,frei1141,wurf1141} und
+  unit_r39_gegner_t_gorilla1141, alle unit_r38_griff_* (11 Faelle, T-Invariante), unit_r35_affen_*, unit_r39_gegner_*,
+  unit_r39_gegner_1141_*, unit_maggot_ai*, unit_r37_bissarm_*, unit_r34_wurf, unit_enemy_body_push, prop_sca_collision.
+  Der Ganzzahl-Vortest in r39_quert ist reine Beschleunigung: die Ausgaben der vier neuen Riegel sind vor/nach Bau identisch
+  (`diff` querung_alt.txt / querung_neu.txt).
+- Integration: `ctest --test-dir re15_port/build -j2 -R "^integration_(r39_gegner_1141|r39_gegner_schatten|r39_gegner_hunde1190|r37_elzaems_elza1141|r37_szene11c0|r38_affen3|r38_affen3_decke|r38_affen3_tor|r38_dining1141_.*)$" --timeout 3600 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 15`** (1195,20 s; dining1141_d 266,7 s, _s 531,2 s, _a 276,5 s, _r 187,5 s,
+  _w 178,7 s, _z 113,0 s, _l 43,7 s, r37_szene11c0 116,8 s, r39_gegner_1141 268,2 s, affen3_tor 89,7 s, affen3_decke 92,9 s,
+  elzaems_elza1141 11,4 s, r39_gegner_schatten 58,7 s, affen3 84,3 s, r39_gegner_hunde1190 42,2 s). Kein Fenster-Haken
+  musste nachgefahren werden.
+
+### OFFEN (Nachbesserung 3)
+- Geltungsbereich der Wache = genau die beiden Befund-E-Pfade: Klemme des Gorillas 0x27 und Klemme der Spielerin im
+  Gorilla-Opfer-Haken (0x27 Wurf/Finisher, 0x29 Griff). Die uebrigen Klemmen (Spielerin im Normal-/Treffer-Zweig gegen den
+  Koerper-Stoss eines Gegners, die eigene Klemme der kleinen Affen 0x29 und aller anderen Gegner) bleiben RE1.5 Byte fuer
+  Byte. Dieselbe Mechanik-Klasse ist dort moeglich (Stoss/Platzierung jenseits der Mitte einer Zelle), in KEINEM Messlauf
+  dieser Runde beobachtet (Versuche 5/6/7, v5/v6/v11 nachher, Abnahme-2-Laeufe: ausserhalb nur in den beiden Befund-E-
+  Pfaden). Die RE2-Regel ist fuer jeden Pfad dieselbe Zeile (re15_r39_querung_sonde-Kern) — Hinweis an den Orchestrator.
+- Integration: game_step_common.c steht nicht in VERTRAG §1.3 (+2 Zeilen: Klammer um den wurf-Aufruf, include);
+  test_r38_griff_alle.c (Runde-38-T-Datei) +4 Zeilen (ein Tabellenfall, Auftrag "T-Invariantensonde erweitern"), registriert
+  aus probes/r39_gegner.cmake (unit_r39_gegner_t_gorilla1141). Der Logschalter-Cherry-pick 0a9076e9 (= 3fe9e358 der
+  Integration) merged konfliktfrei (gleiche Aenderung auf beiden Seiten).
+
+### Fuer den Nutzer (Nachbesserung 3)
+- **ROOM1141 (Elza gegen die zwei Gorillas):** ein Gorilla kann Elza mit seinem Wurf nicht mehr durch die Wand aus dem Raum
+  werfen, und ein Gorilla, der auf den anderen springt, wird nicht mehr durch die Wand nach draussen gedrueckt (vorher stand
+  er dann hinter der Westwand, der Kampf war nicht mehr zu beenden). Beides kam vom Original-Wandausstoss des Prototyps (er
+  schiebt immer zur naeheren Wandseite, auch wenn das die Aussenseite ist); RE2 hat genau das korrigiert — der Port nutzt jetzt
+  in diesen Faellen die RE2-Regel (zurueck auf die Seite, von der man kam). Alle anderen Bewegungen bleiben wie bisher.
+- Keine neuen Spieldateien, keine Sprachdateien, nichts am Paket-Gate. Keine Entscheidungsfrage.
+- Selbst pruefen: als Elza im 1141-Kampf an der Sued- oder Westwand stehen bleiben und sich vom Gorilla packen/werfen lassen.
+
+### Ergebnis Nachbesserung 3 (je Mangel der Abnahme 2)
+- **Mangel 1 — Befund E (b), Elza ausserhalb nach dem Gorilla-Wurf.** Ursache: der Wurf (Opfer-Clip 1, absolute Platzierung
+  ad68 @0x8011c294 fuer Clip-Bild < 0x25 @0x8011c278) setzt Elza in Bild 3556 auf z -24973 (373 hinter der Mitte der Suedwand,
+  Anker (1060,-24101) liegt selbst in der Wand); die Spieler-Klemme @0x80031d70 (FUN_8003b0a4 -> FUN_8003bca8, naehere Kante
+  @0x8003bcec-cfc) stellt sie an die Aussenkante -26068. Original-Mechanismus (Port = Byte-Port derselben Funktionen in derselben
+  Reihenfolge), der Runde-38-T-Waechter liess den Gorilla aus (`vg_ty != 0x27u`). Messung vorher: Stationen OPFER (-2144,-24973)
+  -> KLEMME (-2144,-26068), 45 Bilder ausserhalb. Beleg/Form: RE2 FUN_8004c900 (@0x8004c930-ca50, Vorbild +0x118/+0x11a
+  @0x800356f4-f8). Aenderung: re15_r39_wurf_querung nach der Klemme des wurf-Pfads. Messung nachher: F3556/F3557 ->
+  (-2144,-23149)/(-613,-23149), 0 Bilder ausserhalb bis F4500; Riegel wurf1141 + T-Sonde gorilla1141_sued (Mutationsprobe rot).
+- **Mangel 2 — Befund E (a), Gorilla hinter der Westwand (Softlock).** Ursache: Koerper-Stoss Gorilla gegen Gorilla
+  FUN_8002aec4 (pen 2829 @0x8002b1e4, Querungs-Zweig @0x8002b268-40c greift nicht: keine Ueberquerung) -> x -9803 jenseits
+  der Wandmitte -> RE1.5-Klemme naehere Kante -> -12218. RE2 hat denselben Stoss (FUN_80034d0c, kein Ziel-frei-Test) und
+  verhindert den Durchstoss in der Klemme (FUN_8004c900). Messung vorher: F4624 (-12218,-9837), 77 Bilder ausserhalb bis F4700.
+  Aenderung: re15_r39_affen_querung nach re15_enemy_sca_clamp_band im 0x27-Zweig. Messung nachher: F4624 -> (-6999,-9837),
+  0 Bilder ausserhalb bis F11200 / F14000; Riegel wand1141 (vorher 90/90 draussen, nachher 90/90 drinnen) + Gegenprobe
+  frei1141 (60 Bilder gleich); 11C0 und die T-Invariante gruen (unit_r38_griff_* 11/11, unit_r35_affen_*, r37_szene11c0,
+  r39_gegner_schatten); der durchlaufende Ablauf v11 bytegleich.
+- Punkte 1-4 (Abnahme 2 erfuellt) unveraendert: ihre Riegel gruen (unit_r39_gegner_* 10, unit_r39_gegner_1141_* 4,
+  integration_r39_gegner_{1141,schatten,hunde1190}).

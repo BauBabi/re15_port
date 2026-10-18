@@ -25,6 +25,9 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | 3 | G | karten / r39_karten | Karten 1F/2F/3F/B2 nach map*_correct.png, B1 neu; 1090-Marker im Raum |
 | 3 | I | funk10f1 / r39_funk10f1 | neue Elza-Szene 10F1 am Kommunikationssystem (3 Zeilen) |
 | 3 | J | dining1141 / r39_dining1141 | ROOM1141 Umbau (8 Unterpunkte); kurze Panik-Musik beim Wechsel 1141 -> 1171 |
+| 3+ | M | schluessel2 / r39_schluessel2 | Schluessel 10F0/10F1 hoechstens halb so gross (Nachtrag 5) |
+| - | N | (entfallen) | Nachtrag 8: Nutzer liess die Dateien auf die Message-Ids umbenennen (main50-52, main40/42) - Ordnerregel genuegt |
+| 3+ | O | parkplatz11c0 / r39_parkplatz11c0 | ROOM11C0: Tueren waehrend des Gorilla-Kampfes gesperrt + Leon-Text (Nachtrag 9) |
 | 3 | K | heliport1171 / r39_heliport1171 | John 1171 "Elza hurry up": Heran-Winken statt Klettern; uebrige Szenen-Animationen 1171 |
 
 ## 1. Ressourcen
@@ -33,12 +36,12 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 Bank 9 traegt im Original die ITEM-TAKEN-Bits; Port-Bits stehen im Riegel `tests/unit/test_r36_kartenbits.c` (k_port[]).
 Nach Runde 38 frei in Original UND Port (2026-10-18, selbst nachpruefen): 69, 70, 94, 95, 96, 97.
 Zuteilung: **C = 69** (Munition im Spind ROOM1000), **I = 70** (Funkszene 10F1 gesehen), **J = 94, 95**.
-96 und 97 vergibt der Orchestrator auf Anfrage (im Dossier begruenden). Jedes neu belegte Bit traegt die Spur in
+96 bekommt **O**, nur wenn kein Original-Flag reicht; 97 vergibt der Orchestrator auf Anfrage (im Dossier begruenden). Jedes neu belegte Bit traegt die Spur in
 k_port[] ein (kleiner Haken, eine Zeile).
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
 Port-Ids liegen hinter den Original-Nachrichten eines Raums; vorhandene Port-Ids per grep `MSG_ID` (include/, gen/)
-ausschliessen. Zuteilung: **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
+ausschliessen. Zuteilung: **O**: 11C0 Id 40; **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
 das Aufnahme-Modal einen eigenen Text braucht (Id 40). Alle anderen Spuren: nur vorhandene Nachrichten.
 Sprachdateien (synchro/) folgen der Message-Id (synchro/README.md) — eine Id, zu der der Nutzer schon eine WAV hat,
 nie umwidmen. Nutzer-Dateien unter synchro/ werden NIE umbenannt oder veraendert (Zuordnung im Code).

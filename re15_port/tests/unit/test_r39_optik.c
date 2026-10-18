@@ -23,6 +23,9 @@
  *                          mit der Engine-Kamera nachgerechnet == gen/itemorte_r38_lage.inc; Quartil statt Median, weil
  *                          der Median den Prison Key zum 23-Pixel-Fleck machte - Dossier Punkt 2); Massstab kleiner als
  *                          Runde 38, Huelle 3..9 px; MD1-Spanne/s = RE2-Modell 152; Lage/Drehung/Zone unveraendert.
+ *                          Runde 39 Spur M (NUTZER-VORGABE Nachtrag 5 "maximal halb so gross", M_schluessel2.md): der
+ *                          GELIEFERTE Massstab ist seitdem 0,5 x dieser RE2-Quartil-Groesse; die Spur-L-Werte hier sind die
+ *                          Basis (Spur-L-Massstab = RE15_R39M_*_SL_10000), das Halbieren pruefen unit_r39_schluessel2_*.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -440,16 +443,18 @@ static void teil_schluessel(void)
              med, n, RE15_R39L_PRISON_ZIEL_PX100, RE15_R39L_PRISON_RE2_KAMERAS);
     CHECK(t, n == RE15_R39L_PRISON_RE2_KAMERAS && fabs(med * 100.0 - RE15_R39L_PRISON_ZIEL_PX100) <= 2.0);
     /* kleiner als Runde 38 (12 Spalten), gezeichnete Huelle am Ziel (+-0,06 px Abtastraster), sichtbar (>= 3 px) und nicht
-     * mehr die ganze Marke (< 9 px); Prison ueber dem RE2-Median (der machte ihn zum 23-Pixel-Fleck, Dossier Punkt 2) */
-    snprintf(t, sizeof t, "Park: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-6/100), 300 <= Huelle < 900",
-             RE15_R38K_PARK_S10000, RE15_R39L_PARK_S38_10000, RE15_R39L_PARK_HUELLE_PX100, RE15_R39L_PARK_ZIEL_PX100);
-    CHECK(t, RE15_R38K_PARK_S10000 < RE15_R39L_PARK_S38_10000 && RE15_R38K_PARK_S10000 > 10000 &&
+     * mehr die ganze Marke (< 9 px); Prison ueber dem RE2-Median (der machte ihn zum 23-Pixel-Fleck, Dossier Punkt 2).
+     * Runde 39 Spur M: geprueft wird der Spur-L-Massstab (RE15_R39M_*_SL_10000 = Basis); geliefert wird 0,5 x davon
+     * (RE15_R38K_*_S10000, unit_r39_schluessel2_halb/_konst). */
+    snprintf(t, sizeof t, "Park: Spur-L-Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-6/100), 300 <= Huelle < 900",
+             RE15_R39M_PARK_SL_10000, RE15_R39L_PARK_S38_10000, RE15_R39L_PARK_HUELLE_PX100, RE15_R39L_PARK_ZIEL_PX100);
+    CHECK(t, RE15_R39M_PARK_SL_10000 < RE15_R39L_PARK_S38_10000 && RE15_R39M_PARK_SL_10000 > 10000 &&
              abs(RE15_R39L_PARK_HUELLE_PX100 - RE15_R39L_PARK_ZIEL_PX100) <= 6 &&
              RE15_R39L_PARK_HUELLE_PX100 >= 300 && RE15_R39L_PARK_HUELLE_PX100 < 900);
-    snprintf(t, sizeof t, "Prison: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-6/100), 300 <= Huelle < 900, Ziel > Median %d",
-             RE15_R38K_PRISON_S10000, RE15_R39L_PRISON_S38_10000, RE15_R39L_PRISON_HUELLE_PX100, RE15_R39L_PRISON_ZIEL_PX100,
+    snprintf(t, sizeof t, "Prison: Spur-L-Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-6/100), 300 <= Huelle < 900, Ziel > Median %d",
+             RE15_R39M_PRISON_SL_10000, RE15_R39L_PRISON_S38_10000, RE15_R39L_PRISON_HUELLE_PX100, RE15_R39L_PRISON_ZIEL_PX100,
              RE15_R39L_PRISON_MEDIAN_PX100);
-    CHECK(t, RE15_R38K_PRISON_S10000 < RE15_R39L_PRISON_S38_10000 && RE15_R38K_PRISON_S10000 > 10000 &&
+    CHECK(t, RE15_R39M_PRISON_SL_10000 < RE15_R39L_PRISON_S38_10000 && RE15_R39M_PRISON_SL_10000 > 10000 &&
              abs(RE15_R39L_PRISON_HUELLE_PX100 - RE15_R39L_PRISON_ZIEL_PX100) <= 6 &&
              RE15_R39L_PRISON_HUELLE_PX100 >= 300 && RE15_R39L_PRISON_HUELLE_PX100 < 900 &&
              RE15_R39L_PRISON_ZIEL_PX100 > RE15_R39L_PRISON_MEDIAN_PX100);

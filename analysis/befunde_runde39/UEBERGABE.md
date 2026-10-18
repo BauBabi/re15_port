@@ -6,6 +6,79 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 23:00: Spur J Abnahme 1: alles erfuellt ausser N4.3 (Johns Schuesse holen die Gorilla-Aufmerksamkeit nur in 6/16 Salven;
+  Ursachen a-c im Bericht J_abnahme_1.md 0aa7b194) -> Nachbesserung 2 wf_9b31e40f-c3f (args_j_nach2.json): zuerst master
+  mergen (E2/E3-Gorilla-Regel + Querungs-Wache, Stimmen main50-52), Stimmen messen, N4.3 neu messen und beheben, Regel fuer
+  den Nutzer beschreiben. Aktiv: G wf_0dcedfba-bac, J wf_9b31e40f-c3f, K wf_52b88a82-72c, O wf_d7e17c17-d93.
+* 2026-10-18 22:45: Hauptbaum-exe 22:31 aus ecfe0f0f, Smoke gruen (1030@250, EXIT_AT, exit 0; ohne RE15_TITLE_SHOT_AF haengt die exe
+  im Titelmenue = kein Fehler). Spur K Abnahme 1: 2 Maengel (Kraehen HOVER Phase 0 @0x80115130 ohne f314/Bewegung, SPIN
+  Phase 2 @0x801154d0 ohne Gier+60) -> Nachbesserung 2 wf_52b88a82-72c (args_k_nach2.json; abn.K.suite enthaelt
+  "r38_elzaintro_stimme" doppelt = so uebergeben). Nutzer-Nachtrag 9 (fa2c0e7e): 11C0 Tueren im Gorilla-Kampf gesperrt +
+  "I cannot leave Ada alone here with those monsters!" -> Spur O parkplatz11c0, Baum auf fa2c0e7e, Lauf wf_d7e17c17-d93,
+  args {"welle": ["O"], "slots": 1, "max_nach": 1, "basis": "fa2c0e7e"}. Gemergte Baeume gegner/funk10f1/schluessel2
+  entfernt. Aktiv: G wf_0dcedfba-bac, J wf_7cea9b87-5d9, K wf_52b88a82-72c, O wf_d7e17c17-d93.
+* 2026-10-18 22:30: MASTER ecfe0f0f = Integration E2+E3+I+M (unit_r35_android_bash_mutanten einzeln gruen 22:29, 585 s -> der
+  rote Lauf war Last). Nutzer-Nachtrag 8 erledigt ohne Spur: neuer Take main12 sagt John (eddbbc0d); auf Nutzer-Auftrag
+  umbenannt (1e8cf44c): room1141/main12-14 -> main50-52, room10F1/main06/main08 -> main40/main42 = Ordnerregel, keine
+  Tabelle, keine Sperre; SPUR N ENTFAELLT. Spur J misst msg 50-52 (bei ihrer Nachbesserung/Integration: master mergen).
+  Hauptbaum-exe wird gebaut. Offen: G Nachbesserung 2 (wf_0dcedfba-bac), J (wf_7cea9b87-5d9, Abnahme 1 nach NB1
+  f744e5ad), K (wf_4e57956b-fad, Abnahme 1 nach NB1 dc4ab998).
+* 2026-10-18 22:20: (a) Integration +M (8d936dc1, Bau 21:45): 849/850 (alle unit_/prop_/probe_ + Schluessel-/10F0-/10F1-Integrationen,
+  1907 s). Rot nur unit_r35_android_bash_mutanten: "[FEHLER] AEQUIVALENT-Eintrag passt zu keinem gleichwertigen Mutanten mehr:
+  A (( rc == 0 )): == -> <=" - release/ und android/ seit 96ab793c unveraendert, um 21:40 gruen -> Last-Verdacht (G/J/K
+  parallel), Einzel-Wiederholung laeuft (bmpe64ywq). (b) Spur G Abnahme 1: 1 Mangel N1 (ROOM1210-Suedwest-Kammer begehbar,
+  nicht gezeichnet, Marker daneben) -> ORCHESTRATOR-ENTSCHEID dazuzeichnen (RE2 zeichnet jede begehbare Flaeche, Punkt 1b);
+  Nachbesserung 2 wf_0dcedfba-bac (args_g_nach2.json). (c) Nutzer-Nachtrag 8 (d1e9211e): Aufnahmen 1141 main12-14 + 10F1
+  main06/main08; main12 sagt "Roy" (Text bleibt John); Kollision 1141 msg 12/13/14 -> neue Spur N stimmen3 (startet auf
+  master nach der Integration), Spur J misst msg 50-52. J hat Nachtrag 7 in Nachbesserung 1 eingebaut (f744e5ad 22:13);
+  K Nachbesserung 1 fertig (dc4ab998 22:04), Abnahme 1 laeuft.
+* 2026-10-18 21:44: Integration E2+E3+I+Funktext (r39/integration): 860/860 gruen (alle unit_/prop_/probe_ + E/I-Gruppen,
+  ctest -j 4, 2927 s, Ende 21:40:40). Danach Spur M gemergt (8d936dc1); Bau + M-Gruppe + alle schnellen Tests laufen,
+  dann master + Hauptbaum-exe. G/J/K laufen weiter (G Abnahme 1, J und K Nachbesserung 1).
+* 2026-10-18 21:22: Spur M schluessel2 BESTANDEN (Abnahme 0 ohne Maengel; Fix 50e8be0e): NUTZER_FAKTOR_M 0,5 + GTE-Raster-
+  Grenze (ganzzahlige SXY @0x80022fd8) - 960x720: Parking Lot Key 14x8 -> 4x3, Prison Key 16x10 -> 8x5; Aufnahme unveraendert;
+  45 + 825 Tests. NOCH NICHT gemergt: der laufende Integrationstest (E2+E3+I, b3a110bhv) liest test_r38_itemorte.cmake und
+  test_r39_optik_schluessel.cmake, die M aendert -> erst danach mergen, bauen, M-Gruppe fahren. FUER DEN NUTZER: bei 320x240
+  sind beide Schluessel unsichtbar (Aufnahme geht), bei 640x480 Prison Key 6 statt 11 px; Hebel NUTZER_FAKTOR_M.
+* 2026-10-18 20:50: Spur E Nachbesserung 3 BESTANDEN (Abnahme 3; Fix 0ed55507): Befund E behoben - Querungs-Wache (RE2-Klemme
+  FUN_8004c900 nach Vorbild-Lage, nur bei Querung einer soliden Zelle) fuer die Gorilla-Klemme und die Spielerin im Gorilla-
+  Opfer-Pfad; Versuch 6 Elza 45 -> 0 Bilder ausserhalb, Versuch 5 Gorilla 77 -> 0; 168 Unit + 15 Integration. In die
+  Integration gemergt (faee9887). Hinweis: Wache gilt nur in den Gorilla-Pfaden; alle anderen Klemmen RE1.5 byte-true (fuer
+  alle Klemmen waere es je 1 Zeile). Jetzt Integration (E2+E3+I+Textfix) bauen + alle schnellen Tests + Gorilla-/Funk-/
+  Schluessel-Integrationen (Regex scratchpad/integ_regex_e3i.txt), dann master + Hauptbaum-exe.
+* 2026-10-18 19:41: Spur I funk10f1 BESTANDEN (Abnahme 0 ohne Maengel; Fix c95c4976): Szene beim ersten Betreten 10F1 durch die
+  Kartenleser-Tuer (Ereignis 27, Bit (9,70) in k_port[]), Gesten aus ROOM1031 sub13 (@0x029A4-c2, @0x02A32, @0x02A00), msg 40-42,
+  98+3 Tests. In die Integration gemergt (68bfe620, konfliktfrei; Integration enthaelt jetzt auch E2, nicht in master).
+  FUER DEN NUTZER: Sprachdateien synchro/STAGE1/room10F1/main40.wav ("Hello, anyone, ..."), main41.wav ("...", optional),
+  main42.wav ("Uhh, this Thing is broken!") fehlen; Schreibweise "We Need help!"/"this Thing" woertlich - Kleinschreibung?
+* 2026-10-18 19:31: Nutzer-Nachtrag 5 (44b4e5a3): Schluessel 10F0/10F1 hoechstens halb so gross -> neue Spur M schluessel2
+  (r39_kopf.js/VERTRAG f70f6ec4, Baum r39_schluessel2 auf f70f6ec4), Lauf wf_6a2be5eb-568, args `{"welle": ["M"], "slots": 1,
+  "max_nach": 1, "basis": "f70f6ec4"}`.
+* 2026-10-18 19:30: Integration mit E-Nachbesserung 2 + Logschalter-Fix (3fe9e358): 842/842 gruen (alle unit_/prop_/probe_ +
+  Gorilla-/1141-/Zustand-Gift-Integrationen, ctest -j 4, 1438 s). NICHT nach master vor E-Nachbesserung 3 (Befund E: Wand-
+  Durchstoss in 1141, laeuft wf_676d6740-b2f) - doppelte Energie verlaengert den Kampf = mehr Stoss-Gelegenheiten. Nutzer-
+  Nachtrag 4 (1141: Rolltor frei, Szene erst beim Entriegeln, Elza hebt Waffe aus dem Inventar sonst Messer, John schiesst
+  auf die Gorillas + zieht Aufmerksamkeit, Heranwinken am Ende) in AUFTRAG.md (master + Baum r39_dining1141) -> Spur J
+  Nachbesserung, sobald deren Abnahme 0 (wf_7cea9b87-5d9) fertig ist.
+* 2026-10-18 19:04: Spur E Nachbesserung 2 BESTANDEN (Abnahme 2; Fix b963e6bb): Gorilla-Regel fuer alle 0x27 (Zensus: nur
+  ROOM11C0 + ROOM1141), 1141 mit Elza: 360 Energie, Flinch bei akku 36, 31. Treffer toetet, Szene bis Johns Abgang;
+  unit_maggot_ai (Original-Riegel) misst den Original-INIT mit Haken aus. Integration: ff auf master 3640d6c1, Merge
+  58b8591f, Logschalter-Kollision E/F getrennt (RE15_R39_GEGNER_LOG, 3fe9e358). Bau + alle schnellen Tests + Gorilla-/1141-
+  Integrationen laufen (Regex scratchpad/integ_regex_e2.txt). ⛔ BEFUND E (vor dem Release klaeren): in 1141 kann der
+  Original-Koerperstoss (Gorilla gegen Gorilla, R 3200, Kasten @0x80121350; Wandklemme FUN_8003bca8 nimmt die naehere Kante
+  @0x8003bcec-cfc) einen Gorilla durch die 2000 dicke Westwand schieben -> Kampf endet nie (Versuch 5: x -12218); einmal
+  Elza im Rear-up-Pin hinter der Suedwand (z -26068). Doppelte Energie macht es wahrscheinlicher. Naechster Weg: RE2-
+  Gegenstueck (Koerperstoss + Wandklemme) lesen, Pin-Fall bildgenau messen.
+* 2026-10-18 18:57: master-Regression gefunden (von Spur I gemeldet) und behoben: unit_r38_itemorte_raum seit Welle 2 rot
+  - Spur H stellte das Loescher-Band auf Spielerband(y)+1 um, der Runde-38-K-Riegel schrieb fuer 1030 noch Band 1 fest;
+  Verhalten richtig (integration_r38_itemorte / r37_feuerloescher / r39_elza_loescher gruen), Riegel auf Band 2 (96ab793c).
+  Danach ALLE schnellen Tests in master: unit_/prop_/probe_ 822/822 (ctest -j 6, 673 s). Neue Regel (Memory
+  reai-v2-gezielte-integration-querbezug): vor jedem master-Merge zusaetzlich alle 822 schnellen Tests im Integrationsbaum.
+* 2026-10-18 17:06: MONATS-/SITZUNGSLIMIT (~14:58, Reset 17:00) beendete G/I/J/K und die E-Nachbesserung 2 nach ~35 min.
+  Gesichert: karten-Reste 716eda1d (UNGEPRUEFT); K hatte einen Probe-Merge von r39/integration (MERGE_HEAD 4e2177bd) offen
+  -> abgebrochen; master (Welle 1+2) in alle fuenf Baeume gemergt (dining1141: AUFTRAG.md-Konflikt, beide Seiten behalten).
+  Fortsetzung 17:05 mit stand je Spur (args woertlich in orchestrator/args_welle3_forts.json): G wf_23e44d81-e5a,
+  I wf_fcd48678-b0e, J wf_7cea9b87-5d9, K wf_4e57956b-fad, E2 wf_0f038a8e-3ac (modus nachbesserung, runde0 1).
 * 2026-10-18 14:53: WELLE 2 IN MASTER: merge 82fc487d (D+E+F+H; Integration 238/238 + E-Gruppe 85/85, ctest -j 3), Hauptbaum
   configure+build gruen, exe 14:51:13, Startlauf exit 0 (direct3d, ABR2 ok). Baeume r39_{treffer,zustand,elza} entfernt;
   r39_gegner bleibt (E-Nachbesserung 2 laeuft), r39_integration bleibt fuer Welle 3.
