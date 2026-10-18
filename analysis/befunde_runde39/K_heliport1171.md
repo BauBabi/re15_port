@@ -590,3 +590,39 @@ Lauf `K39nb1/echt2` (Befehl wie Abnahme `K39abn0/lauf.sh` mit `RE15_FIRE_AOT=5@6
   F491 haelt Clip 4 (vorher Clip 0x0a Bild 0); FINISH Clip 0x0a 0..11; Leiche Bild 11 (vorher 12). Gerenderter Clip je Bild
   sonst identisch mit dem Abnahme-Lauf (1081 von 1082 Bildern je Kraehe, die Ausnahme ist genau das Landebild).
 - John: alle 1082 Zeilen bytegleich mit dem Abnahme-Lauf `runA_neu`.
+
+### 12.7 OFFEN nach Nachbesserung 1 (mit Adressen, nicht Teil der Maengel M1-M3)
+
+- **Ton der Opfer-Phasen P1/P2 einen Takt spaet** (heliport1171_r38.c, Runde 38 I): Original spielt Se_on 0x03020001 im
+  Takt, dessen f314 das letzte Bild posiert (P1 f314 @0x80115c20, `beq v0,zero` @0x80115c28, SE @0x80115c3c; P2 f314
+  @0x80115c88, SE @0x80115ca4); der Port erkennt den Umlauf erst im Folgetakt (`++s_bild >= Laenge`) — die Animation ist
+  davon unberuehrt (Clip 1 Bild 0 im selben Bild wie das Original), nur der Ton liegt 1 Bild (33 ms) spaet. Der Riegel
+  test_r38_heliport1171 `szene_*` pinnt die Port-Lage (SE im ersten Clip-1-Bild).
+- **Hund 0x20** (re15_dog_clip/re15_dog_anim, enemy_ai_common.c) zeichnet wie vorher die Kraehe das Bild NACH dem Vorschub
+  (gleiche Klasse wie M3b); nicht in ROOM1171, nicht angefasst.
+- **Eskorte-EXEC-Saattakt** (Abschnitt 8, unveraendert offen; NPC, nicht in ROOM1171).
+- **H5** (RBJ-Cache-Grenze fuer Slots MIT Record, ROOM1040/1041) und **H6** (build_bisect + liegengebliebene Messkopie
+  re15_pc_r35e_haken_173bda57.exe im build/, ignorierte Dateien) bei der Integration.
+
+### 12.8 Fuer den Nutzer (Nachbesserung 1)
+
+- Neue Assets: keine. Sprachdateien: keine. Bedienung: unveraendert. Entscheidungsfragen: keine.
+- Sichtbar in ROOM1171 (und ueberall, wo dieselben Original-Ablaeufe laufen):
+  1. Elza: nach jedem Ankommen (Gang, Drehen) und nach dem Kraehen-Wurf beginnt ihre Halte-Geste mit dem ersten Bild und
+     im Bild NACH der Ankunft; im Ankunftsbild selbst steht noch der letzte Schritt. Folgt sofort der naechste Gang, gibt es
+     kein eingeschobenes Halte-Bild mehr (vorher je ein Bild "Arm-Ansatz" zwischen Drehen und Gehen).
+  2. Elza und John lassen den Container beim Loslassen im selben Bild los (vorher Elza ein Bild frueher).
+  3. Die Kraehen zeigen jedes Bild ihrer Animationen ab dem ersten (vorher immer eins voraus); beim Aufschlag bleibt im
+     Landebild die Fallhaltung, die tote Kraehe liegt im Original-Endbild (11 statt 12 des Lande-Clips).
+- Leon ist mitbetroffen, wo er per Skript laeuft (gleiche Spieler-Tabelle im Original): Ankunft/Halte-Geste wie Punkt 1
+  (z.B. ROOM1090 Rueckwaerts-Gang, Riegel unit_plc_back_yaw_1090); Leon ROOM1170 (Riegel-Weg) bytegleich.
+
+### 12.9 Hinweise fuer die Integration (Nachbesserung 1)
+
+- Neue Haken (je "Runde 39 Spur K NB1", 1-6 Zeilen): game_step_common.c (Include, begin/_naechstes_bild/end/clip/Takt),
+  actor_locomotion.c (Ankunft -> _naechstes_bild, Bildanfang im Walker-Takt), player_common.c (pm-2-Leerlauf nicht im
+  Dispatcher-Bild), elza_r39.c (Spur H: Walker-Init motion_init_delay = 1), szenenleon_r36.c (Spieler-Schub Ph 5/6/7),
+  enemy_ai_common.c (Kraehen-Clip/Anim/Bild-8/ORIENT-Effekt). Logik in heliport1171_r39.c (+ Header). Keine neue .c-Datei.
+- Fremde Riegel geaendert: test_plc_back_yaw_1090.c, probe_crow_death.c, test_r38_heliport1171.c, test_r37_roy.c (12.4).
+- Spur J (ROOM1141) sieht Elzas/Johns Ankunfts-Bilder geaendert (Einzelbild F1305 weg, Drehen ab Bild 0); wer dort
+  Spieler-Posen pinnt, rechnet mit Sub 6 ab dem Folgebild der Ankunft.
