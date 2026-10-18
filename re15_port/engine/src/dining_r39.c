@@ -112,6 +112,7 @@ void re15_dining_r39_w_beginn(int entity, int clip)
 static int     s_ziel_slot = -1;
 static int     s_schuss_offen = 0;
 static int16_t s_aufmerksam[RE15_ACTOR_MAX];
+static int32_t s_auf_abstand[RE15_ACTOR_MAX];   /* Abstand zu John am letzten Prueftakt (Fortschritt der Jagd) */
 
 static re15_actor_t *john_aktor(void)
 {
@@ -182,6 +183,7 @@ static void schuss(void)
         g->sub_state_2 = 1;                                    /* waagerecht (Zielhoehe 0) */
         g->sub_state_1 = (uint8_t)RE15_R39J_WAFFE_JOHN;        /* +0x5 = Waffen-Id (@0x800124bc) */
         s_aufmerksam[s_ziel_slot] = RE15_R39J_AUFMERKSAM_BILDER;
+        s_auf_abstand[s_ziel_slot] = (int32_t)(labs((long)g->x - j->x) + labs((long)g->z - j->z));
         g_re15_r39j_treffer_zaehler++;
         treffer = 1;
     }
@@ -262,8 +264,20 @@ void re15_dining_r39_tick(void)
     w_halten();
     if ((g_current_room_id & 0xFFFFu) != RE15_R38F_RAUM_1141) { s_schuss_offen = 0; return; }
     if (s_schuss_offen) { s_schuss_offen = 0; schuss(); }
-    for (int s = 1; s < RE15_ACTOR_MAX; s++)
-        if (s_aufmerksam[s] > 0) s_aufmerksam[s]--;
+    const re15_actor_t *j = john_aktor();
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        if (s_aufmerksam[s] <= 0) continue;
+        s_aufmerksam[s]--;
+        /* Kein Fortschritt (Tisch, zweiter Gorilla, Wand): alle RE15_R39J_AUFMERKSAM_TAKT Bilder muss der Abstand zu John um
+         * RE15_R39J_AUFMERKSAM_SCHRITT kleiner geworden sein, sonst ist die Aufmerksamkeit vorbei (kein Kriechen auf der
+         * Stelle) - PORT-WAHL, gemessen Lauf auf2: festgeklemmt 180 Bilder bei Abstand 6600 +-80. */
+        if (j && s_aufmerksam[s] > 0 && (RE15_R39J_AUFMERKSAM_BILDER - s_aufmerksam[s]) % RE15_R39J_AUFMERKSAM_TAKT == 0) {
+            const re15_actor_t *g = &g_actors[s];
+            const int32_t d = (int32_t)(labs((long)g->x - j->x) + labs((long)g->z - j->z));
+            if (d > s_auf_abstand[s] - RE15_R39J_AUFMERKSAM_SCHRITT) s_aufmerksam[s] = 0;
+            else s_auf_abstand[s] = d;
+        }
+    }
 }
 
 

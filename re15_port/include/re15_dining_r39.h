@@ -63,6 +63,8 @@
                                          * + 90, Takt RE2 ROOM1060 sub05 +0x58/+0x5E) - PORT-WAHL "Aufmerksamkeit"           */
 #define RE15_R39J_AUFMERKSAM_NAH 2000   /* naeher an John: Aufmerksamkeit vorbei = Gorilla-Kasten 1600 (@0x80121356, Runde 36 F)
                                          * + 400 Abstand, damit er John nicht schiebt - PORT-WAHL                     */
+#define RE15_R39J_AUFMERKSAM_TAKT 30    /* Prueftakt der Jagd: alle 30 Bilder ...                                         */
+#define RE15_R39J_AUFMERKSAM_SCHRITT 300 /* ... mindestens 300 naeher an John, sonst vorbei (festgeklemmt) - PORT-WAHL  */
 
 /* ---- Port-Bank 0x3E (Se_on pc[1]; frei: 0x0E/0x3A/0x3B/0x3C/0x3D sind vergeben, Dossier 3) ------------------------ */
 #define RE15_R39J_SE_BANK        0x3E
