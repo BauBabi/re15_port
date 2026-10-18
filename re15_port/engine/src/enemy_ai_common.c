@@ -14743,6 +14743,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * +0x82 dort unangetastet); band_from_y hob den Apex (~4680) ins leere Band 2 =
              * voellig ungeklemmt -> Gorilla landete in Auto-Taschen (diag_gorilla_stuck.md §2). */
             re15_enemy_sca_clamp_band(e, mag_ox, mag_oz, 4u);
+            re15_r39_affen_querung(e, mag_ox, mag_oz);   /* Runde 39 Spur E (Nachbesserung 3): kein Durchstoss, RE2 FUN_8004c900 (gegner_r39.c (5)) */
         }
         else if (t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b ||
                  t == 0x4d) {

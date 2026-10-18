@@ -58,6 +58,28 @@ foreach(_teil hp1141 zucken1141 ablauf1141 affe29)
     set_tests_properties(unit_r39_gegner_1141_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
 
+# Nachbesserung 3 (test_r39_gegner_querung.c, Befund E ROOM1141): RE1.5-Wandklemme FUN_8003bca8 stellt einen Aktor jenseits
+# der Wandmitte an die AUSSENkante (@0x8003bcec-cfc); Port: RE2-Retail-Regel FUN_8004c900 (Seite nach der Vorbild-Lage
+# +0x118/+0x11a, @0x8004c930-ca50) nur fuer eine durchquerte solide Rechteckzelle (gegner_r39.c (5)).
+#   unit_r39_gegner_querung_wand1141 Gorilla gegen Gorilla an der Westwand (Versuch 5): vorher hinter der Wand, nachher im Raum
+#   unit_r39_gegner_querung_frei1141 Gegenprobe Stoss im freien Raum: Bild fuer Bild gleich mit Haken aus/an
+#   unit_r39_gegner_querung_wurf1141 Gorilla-Wurf an der Suedwand (Versuch 6): vorher Elza z -26068, nachher Runde-38-T-Invariante
+#   unit_r39_gegner_t_gorilla1141    die Runde-38-T-Invariantensonde (test_r38_griff_alle.c) um den 1141-Gorilla erweitert
+add_executable(test_r39_gegner_querung ${CMAKE_CURRENT_SOURCE_DIR}/test_r39_gegner_querung.c)
+target_link_libraries(test_r39_gegner_querung PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r39_gegner_querung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r39_gegner_querung PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r39_gegner_querung PRIVATE m)
+endif()
+foreach(_teil wand1141 frei1141 wurf1141)
+    add_test(NAME unit_r39_gegner_querung_${_teil} COMMAND test_r39_gegner_querung ${_teil})
+    set_tests_properties(unit_r39_gegner_querung_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
+add_test(NAME unit_r39_gegner_t_gorilla1141 COMMAND test_r38_griff_alle gorilla1141_sued)   # Ziel aus probes/r38_spiderman.cmake
+set_tests_properties(unit_r39_gegner_t_gorilla1141 PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
+
 if(TARGET re15_pc)
     add_test(NAME integration_r39_gegner_schatten
              COMMAND "${CMAKE_COMMAND}"
