@@ -697,6 +697,23 @@ static void teil_phase_h(void)
         PRUEF(g_re15_r39j_treffer_zaehler > t0 && getroffen > 0,
               "N4.3: Treffer am Gorilla (Energie gesunken bei %d Gorilla(s)), Schaden der Handfeuerwaffe", getroffen);
         PRUEF(auf && ziel_john, "N4.3: der getroffene Gorilla beachtet John (Lenkziel = Johns Lage)");
+        {   /* Jagd zu John (Kopf von Zustand 1): fern -> 1; John naeher als RE15_R39J_AUFMERKSAM_NAH -> 0 und vorbei */
+            int sl = -1;
+            for (int s2 = 1; s2 < RE15_ACTOR_MAX; s2++) if (re15_dining_r39_aufmerksam(s2) > 0) sl = s2;
+            int fern = -1, nah = -1, danach = -1;
+            if (sl > 0) {
+                re15_actor_t *g = &g_actors[sl];
+                const int32_t gx = g->x, gz = g->z; const uint8_t st = g->state, s1 = g->sub_state_1, s2v = g->sub_state_2;
+                g->state = 1; g->sub_state_1 = 3; g->sub_state_2 = 1; g->mag_airborne = 0;
+                fern = re15_dining_r39_affe_jagt_john(sl);
+                g->x = john->x + 500; g->z = john->z;
+                nah = re15_dining_r39_affe_jagt_john(sl);
+                danach = re15_dining_r39_aufmerksam(sl);
+                g->x = gx; g->z = gz; g->state = st; g->sub_state_1 = s1; g->sub_state_2 = s2v;
+            }
+            PRUEF(sl > 0 && fern == 1 && nah == 0 && danach == 0, "N4.3: Gorilla %d jagt John (fern %d), neben John vorbei (%d, Rest %d)",
+                  sl, fern, nah, danach);
+        }
     }
     /* Gorillas tot (Kill-Flags pc[7] 0xCB/0xCC, Bank 7 — wie RE15_R38F_GORILLAS_TOT, KEINE Schusszahl) */
     pl->x = -3000; pl->z = -9000; pl->rot_y = 0;
