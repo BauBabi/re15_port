@@ -174,3 +174,75 @@ Ergebnisse (eigener Baum, Stand 0b468a87):
 - 2026-10-18 14:58: Probe-Merge gegen r39/integration (Welle 2 inkl. Spur H Walker-Fix 564810c0) NUR in der Arbeitskopie
   (`git merge --no-commit --no-ff r39/integration`), Bau in re15_port/build_bisect, danach `git merge --abort`. Steht beim
   Lesen ein MERGE_HEAD im Baum, hat das Sitzungslimit die Probe unterbrochen: `git merge --abort`, nichts davon committen.
+
+## 6. "Auch sonst" — jede Szenen-Animation Johns in 1171 gegen das Original (Fortsetzung 2026-10-18)
+
+### 6.1 Messung (gemergter Stand b35c66bd, Lade-Weg wie Abschnitt 1, RE15_ANIM_TRACE + RE15_STATE_LOG)
+
+Johns Pose-Strom (Aktor 1, Typ 0x49) Zeile fuer Zeile gegen die Original-Instruktionen. "Port posiert" = GERENDERTE
+Slots (anim_select_common.c), "Original" = was FUN_8001f314 im selben Takt posiert (Herleitung 6.2).
+
+| Bild | Skript (sub02) | Port posiert | Original | Befund |
+|---|---|---|---|---|
+| F0-F220 | INIT, Eskorte +0x9=1 (Kraehen < 15000, nur DECIDE 0x8004f100) | eigene Bank Clip 2 (52) Bild **1** gehalten | **Loco-Paar** Clip 2 (50) Bild **0** gehalten | **K2** |
+| F221-F260 | Plc_motion(0,0,0) @0x01416 | RBJ Clip 0 (20): 1,2..19, haelt ab F239 | 0,1..19, haelt ab F240 | **K3** |
+| F261-F280 | Plc_motion(0,0,0) + Plc_flg 0x80 | 18..0 | 19..0 | **K3** |
+| F281-F443 | Plc_motion(2,6,0) @0x0142A | eigene Clip 6 (10): 1..9 | 0..9 | **K3** |
+| F444-F463 | Plc_motion(2,6,0) + 0x80 @0x014C2 | 8..0 | 9..0 | **K3** |
+| F464-F591 | Plc_motion(0,2,0) @0x014CE (Heran-Winken) | RBJ Clip 2 (96): 1..95 | 0..95 | **K3** |
+| F592-F609 | Plc_dest(0,9,1) Sub 9 | eigene Clip 5 (30) 0..17 | dito (Sub 9 +0x94=5 @0x80051d38-3c, +0x95=0 @0x80051d4c, f314(+0x170,+0x174) @0x80051e9c-ea4) | ok |
+| F610-F663 | Plc_dest(0,4,1) Sub 4 | eigene Clip 5 0..23, Ankunft | dito | ok |
+| F664-F685 | Plc_dest(0,9,1) Sub 9 | eigene Clip 5 0..21 | dito | ok |
+| F686-F745 | Plc_motion(0,0,0) @0x01526 | RBJ Clip 0: 1..19 | 0..19 | **K3** |
+| F746-F775 | + 0x80 @0x0152E | 18..0 | 19..0 | **K3** |
+| F776-F791 | Plc_dest(0,9,1) Sub 9 | eigene Clip 5 0..15 | dito | ok |
+| F792-F846 | Sub 6 (Ankunft) | eigene Clip 1 (16) 0..15, dann Clip 2 (52) | dito (+0x94=1 @0x80051854, f314 @0x80051884-8c; +0x94=2 @0x800518c4-c8, f314 @0x800518e8-f0) | ok |
+| F847-F932 | Plc_dest(0,0x13,0x14) Schub Ph 0..5 | eigene Clip 5 Bild 0; Loco Clip 17 (10) 0..9; Loco Clip 18 (25) x3 | dito | ok |
+| F933 | Ph 5, Bit (5,0x14) gesetzt | **Loco Clip 17 rueckw. Bild 9** | **Loco Clip 18** (Pose aus anim_set @0x80052af4 VOR der Bit-Abfrage @0x80052b44) | **K4** |
+| F934-F943 | Ph 6 | Clip 17 rueckw. 9..0 | 9..0 | ok |
+| F944 | Ph 7 (kein anim_set) | Clip 17 Bild 0 gehalten | dito | ok |
+| F945- | Sub 6 | Clip 1 0..15, Clip 2 | dito | ok |
+
+### 6.2 RE-Belege
+
+- **f314 posiert ZUERST, dann Vorschub** (selbst nachdisassembliert): Bildzeiger = Clipbasis + 4*(+0x95)
+  (lbu v0,149(t0) @0x8001f35c, rueckwaerts fc-(+0x95)-1 @0x8001f344-54), sw a2,360(t0) (+0x168) @0x8001f36c,
+  Pose in FUN_8001f3bc (jal @0x8001f38c), ERST an dessen Ende addiu v0,v0,1 / sb v0,149(v1) @0x8001f618-1c;
+  sltu v0,v0,s4 @0x8001f624, sonst sb zero,149(v1) @0x8001f63c + Rueckgabe 1.
+- **K2 INIT-Pose** (alle NPC-INITs, nicht nur John): ori v0,zero,0x2 / sb v0,148(v1) (+0x94=2) @0x8011de78-7c,
+  sb zero,149(v0) (+0x95=0) @0x8011de8c, sb zero,143(v0) (+0x8f=0) @0x8011de9c, addu a2,zero,zero @0x8011deb8,
+  lw a0,132(v0) (+0x84) / lw a1,364(v0) (+0x16c) / jal 0x8001f314 / ori a3,zero,0x200 @0x8011debc-c8. Dasselbe
+  Muster (+0x95=0, +0x8f=0, a2=0, a3=0x200, Loco-Paar) in ALLEN NPC-INITs (eigener Scan, scratchpad init_check.py):
+  STAGE1 @0x8011c808/@0x8011cdd8/@0x8011d3e4/@0x8011d978/@0x8011dec4/@0x8011e49c, STAGE3 @0x8011c520/@0x8011caf8,
+  STAGE5 @0x8011c1a0/@0x8011c770/@0x8011cd34/@0x8011d30c/@0x8011d978. Danach Eskorte 0x8011df40: Gegner < 15000
+  (ori a0,zero,0x3a98 @0x8011df48, jal 0x800509e4 @0x8011df54) -> +0x9 = 1 @0x8011df94 -> Tabelle @0x8012181c[1] =
+  0x8004f100 = DECIDE ohne jal 0x8001f314 (scan bis jr ra @0x8004f1fc). Die Wurzel 0x8011dc68 ruft ausser dem
+  Zustands-Dispatch (jalr @0x8011dd08) kein anim_set (Calls 0x8001bd60/0x80039e7c/0x8002b498/0x8002aec4/0x8002b544/
+  0x8003b0a4/0x80037358/0x8001b38c/0x8001b064). Die Pose steht also bis F220 auf Loco Clip 2 Bild 0. Die Eskorte-EXEC
+  (+0x9=0) posiert dagegen aus der eigenen Bank (Stehen lw a0,368(v0) / lw a1,372(v0) @0x8004f384-88) — die
+  Port-Regel "state 1 = eigene Bank" stimmt fuer die EXEC, nicht fuer die INIT-Pose davor.
+  Bild (scratchpad k_tools/john_init_posen.png, Posenkette von emd_ansichtsblatt.py): Loco Clip 2 Bild 0 = aufrecht,
+  symmetrisch, Arme haengend; eigene Clip 2 Bild 1 = Leerlauf mit geneigtem Kopf und angewinkelten Armen.
+- **K3 Plc_motion-Saatbild** (Sub 0 0x80050cb8; Subs 1/2/3 0x80050ddc/0x80050f00/0x80051024 gleich gebaut):
+  Phase 0 sb v0(=1),6(a0) @0x80050cec, sb v0(=7),143(v1) @0x80050cfc, sb zero,149(v0) @0x80050d0c, No-Blend
+  +0x1C4&0x40 -> sb zero,143(v1) @0x80050d30, faellt OHNE Sprung in den Phase-1-Rumpf @0x80050d34:
+  jal 0x8001f314 @0x80050d4c (a0=+0x180 @0x80050d40, a1=+0x184 @0x80050d48, a2=+0x1C4>>7 @0x80050d44/50) ->
+  im Saat-Takt wird Bild 0 (rueckwaerts fc-1) POSIERT. Doppelschritt +0x1C4&8 @0x80050d70 -> zweiter f314 @0x80050d88;
+  Ende -> +0x6 = 2 @0x80050da4, LOOP +0x1C4&4 -> +0x6 = 1 @0x80050dc8. Der Port-Handler (enemy_ai_common.c
+  re15_npc_sub_motion) schob im Saat-Takt sofort vor (Bild 1) und ignorierte den Vorhalte-Takt, den op_plc_motion
+  seit b06f2a8f (Runde 26: "die Pose-FSM faehrt die Phase-0-Kette ... und posiert im selben Bild Bild 0") setzt
+  (motion_init_delay = 1, scd_vm.c) — beim Spieler wird er verbraucht (player_common.c), beim NPC nie.
+- **K4 Schub Phase 5 -> 6** (0x80052864): Phase 5 @0x80052ab4: +0x95==1 -> SE @0x80052ad8, jal 0x8001f314 (Loco,
+  a2=0) @0x80052af4 = die Pose dieses Takts, Bildwort&0x2000 -> 0x800369f8 @0x80052b24, DANACH Bit-Abfrage
+  jal 0x8004efe4 (0x800b1028, +0x1C3) @0x80052b44 -> sb v0(=6),6(v1) @0x80052b60, +0x94 = 0x11 @0x80052b6c-70,
+  +0x95 = 0 @0x80052b80 (Delay-Slot von j 0x80052bf4 = Ausgang, kein weiteres anim_set). Erst Phase 6 @0x80052b84
+  posiert Clip 0x11 rueckwaerts (ori a2,zero,0x1 @0x80052b8c, jal 0x8001f314 @0x80052b98). Der Port setzte den
+  Clip 0x11 schon im Bit-Takt (szenenleon_r36.c re15_szl_schub_npc Fall 5) -> Clip 17 ein Bild zu frueh, Bild 9 doppelt.
+
+### 6.3 Nicht in Johns 1171-Szene, nur festgehalten (OFFEN, kein Eingriff)
+- Eskorte-EXEC-Saaten (Stehen/Gehen/Drehen/Nah/Laufen, re15_npc_escort_exec) setzen +0x95=0 ohne Vorhalte-Takt ->
+  dieselbe Ein-Bild-Vorausklasse wie K3 (Original: Saat z.B. @0x8004f354/64 und f314 @0x8004f38c im selben Takt). In
+  1171 laeuft die EXEC nie (John bleibt bis zum ersten Plc_motion in +0x9=1).
+- Elza (Spieler) in derselben Szene: Einzelbilder Clip 1 Bild 1 zwischen TURN und WALK (F1, F840, F846) und der
+  Schub-Ruecklauf ein Bild frueh (F933) — Spieler-Walker (Spur H Welle 2, dort als eigener RE-Punkt vermerkt) bzw.
+  Spieler-Schub (Runde 36 J); nicht Johns Animation.
