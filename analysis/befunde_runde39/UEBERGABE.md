@@ -6,6 +6,9 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:53: WELLE 2 IN MASTER: merge 82fc487d (D+E+F+H; Integration 238/238 + E-Gruppe 85/85, ctest -j 3), Hauptbaum
+  configure+build gruen, exe 14:51:13, Startlauf exit 0 (direct3d, ABR2 ok). Baeume r39_{treffer,zustand,elza} entfernt;
+  r39_gegner bleibt (E-Nachbesserung 2 laeuft), r39_integration bleibt fuer Welle 3.
 * 2026-10-18 14:38: Integration Welle 2 Stufe H+F+D (Bau 14:03, 6de53176): 238/238 gezielte Tests gruen (ctest -j 3, 2016 s).
   Jetzt Bau mit E (4e2177bd) + E-Gruppe (Regex scratchpad/integ_regex_e.txt); danach Welle 2 -> master + Hauptbaum-exe,
   E-Nachbesserung 2 (Gorillas generell) als eigener Folge-Merge.
