@@ -768,7 +768,7 @@ static int teil_pruef(int argc, char **argv)
     else if (!strcmp(was, "treppen")) teil_pruef_treppen();   /* Nachbesserung 1, M4/M5/M1 */
     else if (!strcmp(was, "marker")) teil_pruef_marker();     /* Nachbesserung 1, M5 */
     else if (!strcmp(was, "tueren")) teil_pruef_tueren();     /* Nachbesserung 3, N2 */
-    else { printf("FAIL: pruef 1090|b1|teil|treppen|marker\n"); return 2; }
+    else { printf("FAIL: pruef 1090|b1|teil|treppen|marker|tueren\n"); return 2; }
     printf(g_fail ? "FEHLER\n" : "OK\n");
     return g_fail;
 }
@@ -1712,14 +1712,40 @@ static int teil_tuerbild(int argc, char **argv)
                 for (a = miny; a <= maxy; a++) wq += (kl[a][minx - 1] == 2) + (kl[a][minx + 1] == 2);
             }
             if (wq) schwebt = 1;
-            if (schwebt) {
-                nsch++;
-                printf("   SCHWEBT: Balken x%d..%d y%d..%d (Wand quer %d)\n", minx, maxx, miny, maxy, wq);
-            }
+            nsch += schwebt;
+            printf("   Balken x%d..%d y%d..%d %s (Wand quer %d)\n", minx, maxx, miny, maxy,
+                   schwebt ? "SCHWEBT" : "ok", wq);
         }
     printf("%s: %d Tuerbalken im Kasten, schwebend %d\n", argv[2], nb, nsch);
     printf(nsch ? "FAIL\n" : "OK\n");
     return nsch ? 1 : 0;
+}
+
+/* wand <bmp> <x> <y0> <y1>: Abzug der echten exe - Wandpixel (176,176,176) der Spalte x auf y0..y1 (Nachbesserung 3:
+ * B2 ROOM1210/1211 Westwand x187 y71..77 im Hinweis-Zustand ohne ROOM11E0). Ausgabe "WAND <n> von <m>". */
+static int teil_wand(int argc, char **argv)
+{
+    FILE *f;
+    unsigned char hdr[54], pxl[3];
+    int w, h, x, y0, y1, y, n = 0;
+    long off;
+    if (argc < 6) { printf("FAIL: wand <bmp> <x> <y0> <y1>\n"); return 2; }
+    x = atoi(argv[3]); y0 = atoi(argv[4]); y1 = atoi(argv[5]);
+    f = fopen(argv[2], "rb");
+    if (!f || fread(hdr, 1, 54, f) != 54) { printf("FAIL: %s nicht lesbar\n", argv[2]); if (f) fclose(f); return 1; }
+    off = hdr[10] | (hdr[11] << 8) | (hdr[12] << 16) | ((long)hdr[13] << 24);
+    w = hdr[18] | (hdr[19] << 8); h = hdr[22] | (hdr[23] << 8);
+    if (w != 320 || h != 240 || x < 0 || x >= w || y0 < 0 || y1 >= h || y1 < y0) {
+        printf("FAIL: Groesse/Kasten\n"); fclose(f); return 1;
+    }
+    for (y = y0; y <= y1; y++) {
+        long zeile = (long)(h - 1 - y) * (long)((w * 3 + 3) & ~3);
+        fseek(f, off + zeile + (long)x * 3, SEEK_SET);
+        if (fread(pxl, 1, 3, f) == 3 && pxl[2] == 176 && pxl[1] == 176 && pxl[0] == 176) n++;
+    }
+    fclose(f);
+    printf("WAND %d von %d (x%d y%d..%d)\n", n, y1 - y0 + 1, x, y0, y1);
+    return 0;
 }
 
 /* offen <bmp> [x0 y0 x1 y1]: Abzug der echten exe (RE15_INV_FB_SHOT) - Raumkoerper (rot/gruen) 4-nachbarlich am Grund
@@ -1789,6 +1815,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "tueren")) return teil_tueren(argc, argv);   /* Nachbesserung 3 */
     if (!strcmp(teil, "zielbild")) return teil_zielbild(argc, argv);   /* Nachbesserung 3, Messung */
     if (!strcmp(teil, "tuerbild")) return teil_tuerbild(argc, argv);   /* Nachbesserung 3, echte exe */
+    if (!strcmp(teil, "wand")) return teil_wand(argc, argv);           /* Nachbesserung 3, echte exe */
     printf("FAIL: unbekannter Teil '%s'\n", teil);
     (void)g_fail;
     return 2;

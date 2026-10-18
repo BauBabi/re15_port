@@ -16,6 +16,9 @@ cmake_minimum_required(VERSION 3.16)
 # Lauf M (1090): Spielstand am Punkt des Nutzers (befund.log F1126..F1351: R1090 (-12528,-9000,959), obere Ebene),
 #   Kartenschirm (Blatt 2F): der Marker-Ring steht im ROT des aktuellen Raums (7x7 um die Ring-Mitte: rot >= 8, kein
 #   Gruen eines fremden Raums). Vorher: Ring (186,83) im gruenen Nachbarraum (linke Haelfte von map2F_correct.png).
+# Laeufe NA/NB/NZ (Nachbesserung 3, Abnahme 2 N2): Tuer immer auf der Wand des gezeichneten Raums - echter Tuerweg
+#   Hof 1090 -> 1050 und 1040 allein ohne ROOM1030 (Balken auf x187 bzw. x118, probe_r39_karten tuerbild); B2 nach
+#   Roys Tagebuch (Ziel ROOM1211) ohne ROOM11E0: Westwand x187 y71..77 steht (probe_r39_karten wand).
 # Lauf K (Nachbesserung 2, Abnahme 1 N1): der Weg der Abnahme - Leon laeuft aus dem ROOM1210-Flur durch die Oeffnung in
 #   die Suedwest-Kammer; der Ring steht in ihrer Zeichnung (x187..200 y113..128), ringsum ROT, Kammer geschlossen, keine
 #   Doppelwand. Vorher: Ring (191,117) im Blau links der Flurwand x201. Blatt 1 im Sweep: die Kammer (x186..201 y113..129)
@@ -216,6 +219,72 @@ else()
             set(_fehler "${_fehler} kammer-${_prn}")
         endif()
     endforeach()
+endif()
+
+# ---- N: Tuer immer genau auf der Wand (Nachbesserung 3, Abnahme 2 Mangel N2) -----------------------------------
+# NA = der echte Tuerweg der Abnahme 2: Hof ROOM1090 -> Tuer slot 0 -> ROOM1050 (10F0/1090 besucht, ROOM1030 noch nicht
+# = der normale erste Stand auf 1F, der 1F-Plan liegt in ROOM1030). NB = ROOM1040 allein. VORHER (Stand 4ea5e62c):
+# Tuer 1030<->1050 x186 y150..154 schwebt links neben der 1050-Westwand x187, 1030<->1040 x119 y127..131 rechts neben der
+# 1040-Ostwand x118 (Enden auf dem Grund). Soll: der Balken steht auf der eigenen Wand des gezeichneten Raums (x187 bzw.
+# x118; RE2 Retail: jede Raum-Kachel traegt die Tuer auf ihrer eigenen Wand, RoomTable @0x800aa388/@0x800aa398).
+# NZ = Kartenhinweis nach Roys Tagebuch (flag (9,68); Ziel ROOM1211 = B2 r3 blinkt bis (4,0xFC)), Spieler in ROOM1020,
+# per RUNTER auf B2 geblaettert (Reihenfolge B2 B1 1F, B1 unbekannt): die Westwand x187 y71..77 von ROOM1210/1211 steht,
+# obwohl ROOM11E0 nicht gezeichnet ist. VORHER: x187 y71..77 Grund (Schwenk-Tilgung, karte_r39.c R39_OHNE(0)).
+foreach(_n "NA;1050;1090;-10100;-1800;4200;1024;besucht:10F0:8400:-350;besucht:1090:-13600:1300:5;besucht:1090:-10100:4200:1"
+           "NB;1040;1040;-21008;0;-13134;0;besucht:1040:-21008:-13134:0")
+    list(GET _n 0 _nn)
+    list(GET _n 1 _nr)
+    list(SUBLIST _n 2 -1 _nk)
+    if(_nn STREQUAL "NA")
+        karten_lauf(${_nn} ${_nr} "${_nk}" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT=W1,U0.3,W0.3,A0.1,W8
+                    RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=60 "RE15_EXIT_AT=300#${_nr}")
+        set(_nbox 180 140 195 160)
+        set(_nsoll "Balken x187..187 y150..154 ok")
+    else()
+        karten_lauf(${_nn} ${_nr} "${_nk}" RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=60 "RE15_EXIT_AT=300#${_nr}")
+        set(_nbox 112 122 126 137)
+        set(_nsoll "Balken x118..118 y127..131 ok")
+    endif()
+    if(NOT EXISTS "${_basis_wd}_${_nn}/karte.bmp")
+        set(_fehler "${_fehler} tuer-${_nn}-kein-abzug")
+        continue()
+    endif()
+    if(_nn STREQUAL "NA")
+        file(STRINGS "${_basis_wd}_${_nn}/debug.log" _nl REGEX "PC loaded room1050")
+        if(NOT _nl)
+            set(_fehler "${_fehler} tuer-NA-kein-tuerweg")
+        endif()
+    endif()
+    foreach(_kasten "${_nbox}" "40;40;299;209")
+        execute_process(COMMAND "${RE15_PROBE}" tuerbild "${_basis_wd}_${_nn}/karte.bmp" ${_kasten}
+                        RESULT_VARIABLE _rvt OUTPUT_VARIABLE _outt)
+        string(STRIP "${_outt}" _outt)
+        message(STATUS "r39_karten[${_nn}] ROOM${_nr} Tueren (${_kasten}): ${_outt}")
+        if(NOT _rvt EQUAL 0)
+            set(_fehler "${_fehler} tuer-${_nn}-schwebt")
+        endif()
+    endforeach()
+    execute_process(COMMAND "${RE15_PROBE}" tuerbild "${_basis_wd}_${_nn}/karte.bmp" ${_nbox} OUTPUT_VARIABLE _outt)
+    string(FIND "${_outt}" "${_nsoll}" _npos)
+    if(_npos LESS 0)
+        set(_fehler "${_fehler} tuer-${_nn}-nicht-auf-eigener-wand")
+    endif()
+endforeach()
+karten_lauf(NZ 1020 "1020;-4000;0;-18000;0;besucht:1020:-4000:-18000:0;flag:9:68"
+            RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT=W1.5,D0.1,W3 RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=150
+            "RE15_EXIT_AT=400#1020")
+if(NOT EXISTS "${_basis_wd}_NZ/karte.bmp")
+    set(_fehler "${_fehler} ziel1211-kein-abzug")
+else()
+    file(STRINGS "${_basis_wd}_NZ/debug.log" _nzl REGEX "\\[inv\\] Blatt 1:")
+    execute_process(COMMAND "${RE15_PROBE}" wand "${_basis_wd}_NZ/karte.bmp" 187 71 77 OUTPUT_VARIABLE _outw)
+    string(STRIP "${_outw}" _outw)
+    message(STATUS "r39_karten[NZ] B2 nach Roys Tagebuch, Westwand ROOM1211: ${_outw}")
+    if(NOT _nzl)
+        set(_fehler "${_fehler} ziel1211-nicht-auf-b2")
+    elseif(NOT _outw MATCHES "^WAND 7 von 7")
+        set(_fehler "${_fehler} ziel1211-westwand-offen")
+    endif()
 endif()
 
 file(REMOVE "${_exe_kopie}")

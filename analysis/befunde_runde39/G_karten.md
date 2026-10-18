@@ -741,8 +741,8 @@ Arbeitsordner der Messungen: Scratchpad `nb3/` (nicht im Baum); Werkzeuge kommen
 ### Fortschritt
 - [x] Messung vorher (echter Tuerweg 1090 -> 1050, Einzelzustand 1040 an der echten exe) - unten
 - [x] RE: wie RE2 Retail Tuersymbole eines ungezeichneten Raums behandelt; Linien x186/x187, x118/x119 aus MAP03.PIX - unten
-- [ ] Sonde ueber ALLE Tuermarken x Zustaende (Teilmengen der beteiligten Raeume, mit/ohne Plan)
-- [ ] Umsetzung
+- [x] Sonde ueber ALLE Tuermarken x Zustaende (Teilmengen der beteiligten Raeume, mit/ohne Plan) - unten
+- [x] Umsetzung (re15_karte_r39_tuer_lage; B2 1210-Westende ohne 11E0, Nebenbefund) - 3f0d.., df42c697
 - [ ] Messung nachher (echte exe + Sonde), Riegel + Gegenprobe
 - [ ] gezielte Tests, Abschluss
 
@@ -810,3 +810,60 @@ ein Wandpixel steht). Arbeitsordner Scratchpad `nb3/`.
   die Linie, die TATSAECHLICH gezeichnet wird - die gemeinsame (Traeger-)Linie, wenn die Korrektur greift, sonst die
   eigene Linie des gezeichneten Nachbarn (x187 bzw. x118). Sichtbarkeit unveraendert (RE2 zeigt die Tuer mit jedem der
   beiden Raeume; der Nutzer hat fehlende Tueren an genau dieser Wand schon einmal gemeldet - Runde 7, ROOM1050).
+
+### N2 Sonde ueber alle Zustaende (Messung vorher, Bau ohne den Fix)
+`probe_r39_karten tueren 0 4` (neu, test_r39_karten.c t3_blatt): je Tuermarke der Blaetter B1..3F die Orte, deren
+Zeichnung den Balken +-3 px beruehrt, plus die Orte ihrer zid/zid2; JEDE nichtleere Teilmenge besucht, jeder davon einmal
+aktuell, ohne/mit Plan des Blatts (Bank 9: 78/77/89/88/87, gen/kartenitems_r36.inc) - 798 Zustaende, 3498 gezeichnete
+Balken; Kriterium wie tuer2.py (Ende auf Grund / Wand quer daneben, quer erst ab 3 von 5 wegen der ungetilgten RE1.5-
+Schwenke im Op-Listen-Bild) plus "unter dem Balken < 4 von 5 Wand". VORHER 3 Befunde:
+```
+Blatt 1 Balken x186..186 y72..76: Ende auf Grund nicht auf der Wand in 21 Zustaenden, z.B. 1210(-19352,-13637)
+Blatt 2 Balken x119..119 y127..131: Ende auf Grund Wand quer daneben nicht auf der Wand in 17 Zustaenden, z.B. 1040(-24176,2824)
+Blatt 2 Balken x186..186 y150..154: Ende auf Grund Wand quer daneben nicht auf der Wand in 38 Zustaenden, z.B. 1050(19400,-4272)
+```
+Die beiden 1F-Befunde sind N2 (a)/(b) - alle 38 bzw. 17 Zustaende ohne gezeichnetes ROOM1030. Der B2-Befund (Tuer
+11E0<->1210) tritt nur ohne gezeichnetes ROOM11E0 auf: im Spiel nicht als besuchter Zustand erreichbar -
+nb3/tuer_quellen.py: Door_aot_set nach ROOM1210 nur in ROOM11E0.RDT @0x015A2/@0x016C4 und ROOM1220.RDT
+@0x00DD2/@0x00DF2/@0x00E12/@0x00E32/@0x00E52, nach ROOM1220 nur in ROOM1210.RDT @0x01CE6..@0x01D66 (Elza: 11E1/1221/1211
+dieselben Offsets). Tuer-Korrektur-Nachbarschaft (nb3/tuer_korr.py): 8 Tuermarken liegen direkt neben geloeschten
+Texeln einer Korrektur - die zwei N2-Marken (Traeger r4 = ROOM1030, eigenes Rechteck ebenfalls r4), drei mit dem
+eigenen Rechteck als Traeger (1F (163,81)/(163,106) an r8/r7, (119,151) an r2 - nur mit ihm sichtbar, also nie
+schwebend), drei an R39_IMMER (B2 (186,74), 3F (145,84)/(153,126)).
+
+### N2 Nebenbefund beim Durchgehen der Zustaende: Westende ROOM1210/1211 offen, wenn ROOM11E0 fehlt (Hinweis-Zustand)
+Die Korrektur `{ 1, 3, 0, 2, 1, 5, 1, R39_IMMER }` (B2 r3 x187 y72..76 -> Koerper, ba258ae4) war als "immer" gefuehrt,
+weil ROOM1210 nur durch ROOM11E0 erreichbar ist. Es gibt aber einen ERREICHBAREN Zustand, in dem r3 OHNE r0 gezeichnet
+wird: der Kartenhinweis nach Roys Tagebuch (Elza; map_hint_common.c s_hints Eintrag 4: Ziel ROOM1211 Zone 0 = B2 r3,
+blinkt bis (4,0xFC); B2 dadurch waehlbar, re15_map_ziel_blatt_frei).
+* Kachel (kachel.py/schwenk.py): MAP02.PIX r3 uv(96,48) @0x80076318 traegt die Westwand x187 y70..78 (Spalte 0 Zeilen
+  0..8 Index 4) mit dem gemalten Schwenk x187..192 y72..76; die Schwenk-Tilgung des PC-Renderers (inv_render_pc.c
+  re15_schwenke_entfernen, `const int WAND = 4, S_SAAT = 4, S_WACHS = 10, MAX_AUSD = 10`) nimmt den nur 9 px langen
+  Lauf mit: x187 y71..77 durchsichtig (im Vollzustand schliesst die 11E0-Ostwand x186, Kerben (187,71)/(187,77) =
+  bekannter Hinweis der Abnahme 1).
+* ECHTE exe (lauf_nb3.sh, Spielstand ROOM1020 (-4000,0,-18000) + flag:9:68, LOAD GAME, Karte, `RE15_INPUT_SCRIPT=
+  W1.5,D0.1,W3` = einmal RUNTER von 1F -> B2 (Reihenfolge B2 B1 1F, menu_common.c ORDER; B1 unbekannt), Abzug Bild 150):
+  debug.log `[inv] Blatt 1: 6 RE1.5-Tuerschwenke entfernt (79 Pixel)`; x187 y70..78 = Wand, 7x Grund (0,16,88), Wand -
+  die Westseite der blinkenden Zielkachel ist OFFEN. Sonde (`probe_r39_karten zielbild 1 3 1 ...`, rote Phase, ohne
+  Tilgung): x187 y72..76 Koerper am Grund (5 Pixel).
+* RE2: die Raum-Kachel des Ziels traegt ihre eigene Wand (FUN_8006F1C4 zeichnet im Hinweis das Ziel-Sprite als Ganzes;
+  RoomTable @0x800aa388 - jede Kachel mit eigener Wand + Tuerhaelfte, s.o.).
+
+### N2 Umsetzung (Dateien, Konstanten)
+* `engine/src/karte_r39.c` NEU `re15_karte_r39_tuer_lage(st, page, kind, &mx, &my)`: eine Tuermarke, deren um eine
+  Spalte/Zeile quer verschobener 5-px-Balken GANZ in den geloeschten Texeln einer bedingten Korrektur liegt (s_korr,
+  neu != 4, Traeger != R39_IMMER), steht nur dann auf der Ersatzlinie, wenn der Traeger gezeichnet wird (dasselbe Gatter
+  traeger_gezeichnet wie die Korrektur, Nachbesserung 1 M3); sonst eine Spalte weiter auf der eigenen Linie, die dann
+  noch steht. Keine neue Konstante - Geometrie aus s_korr + Seiten-Tabelle @0x80076840. Treffer: 1F (186,152) -> x187
+  ohne r4 (r0 Spalte 7 Zeilen 76..85 = x187 y145..154), 1F (119,129) -> x118 ohne r4 (r2 Spalte 16 Zeilen 49..56 =
+  x118 y126..133), B2 (186,74) -> x187 ohne r0 (r3 Spalte 0 Zeilen 2..6).
+* `engine/src/karte_r39.c` s_korr B2: `{ 1, 3, 0, 2, 1, 5, 1, 0 }` (Traeger r0 statt R39_IMMER) und NEU
+  `{ 1, 3, 0, 1, 1, 7, 4, R39_OHNE(0) }` = x187 y71..77 Wand, wenn r0 (ROOM11E0) NICHT gezeichnet wird (die gemalte
+  Linie Spalte 0 Zeilen 1..7 Index 4, die die Tilgung nahm). NEU `R39_OHNE(t)` = 64 + t im Traeger-Feld,
+  traeger_gezeichnet liefert dafuer "t nicht gezeichnet" (ohne Schirmzustand: nie). Vollzustand (r0 gezeichnet):
+  dieselben Texel wie vorher.
+* `engine/src/re15_inv_screen.c`: ZWEI Haken je eine Zeile "Runde 39 Spur G" - Tuer-Zeichner (nach re15_map_mark_get)
+  und tuer_anziehen (Marker-Zug zur Tuer, derselbe Punkt wie der gezeichnete Balken; wirkt nur auf Schema-Zonen, keine
+  der drei Treffer-Tueren ist eine - Zug-Ziel unveraendert).
+* `include/re15_karte_r39.h`: Deklaration.
+* Sichtbarkeit der Marken unveraendert (re15_map_mark_get): RE2 zeigt die Tuer mit JEDEM der beiden Raeume.

@@ -27,6 +27,12 @@
 #   unit_r39_karten_teil     + (e) Kammer: Linien auf den gemalten (x186/y112/y129), Durchgang x201 y117..119 nur mit
 #                            gezeichneter Kammer, keine zweite Linie x200, geschlossen in fuenf Zustaenden (auch Umriss)
 #   integration_r39_karten   + Lauf K (Abnahme-Weg 1210 Flur -> Kammer, Ring im Rot der Kammer), Sweep-Kammer gegen SCA
+# Nachbesserung 3 (Abnahme 2, N2 - Tuer immer genau auf der Wand):
+#   unit_r39_karten_tueren   jede Tuermarke der Blaetter B1..3F in JEDEM Zustand ihrer beteiligten Orte (Teilmengen x
+#                            aktueller Ort x Plan, 798 Zustaende): kein gezeichneter Balken mit Ende auf dem Grund, mit
+#                            Wand quer daneben oder neben der Wand (vorher 3: 1F 1030<->1050 / 1030<->1040 ohne 1030,
+#                            B2 11E0<->1210 ohne 11E0); 1050/1040 allein pixelgenau; Hinweis-Zielkacheln allein geschlossen
+#   integration_r39_karten   + Laeufe NA (echter Tuerweg 1090 -> 1050), NB (1040 allein), NZ (B2 nach Roys Tagebuch)
 add_executable(probe_r39_karten ${CMAKE_CURRENT_LIST_DIR}/../test_r39_karten.c)
 target_link_libraries(probe_r39_karten PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r39_karten PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/..)
@@ -40,8 +46,9 @@ add_test(NAME unit_r39_karten_b1 COMMAND probe_r39_karten pruef b1)
 add_test(NAME unit_r39_karten_teil COMMAND probe_r39_karten pruef teil)
 add_test(NAME unit_r39_karten_treppen COMMAND probe_r39_karten pruef treppen)
 add_test(NAME unit_r39_karten_marker COMMAND probe_r39_karten pruef marker)
+add_test(NAME unit_r39_karten_tueren COMMAND probe_r39_karten pruef tueren)
 set_tests_properties(unit_r39_karten_1090 unit_r39_karten_b1 unit_r39_karten_teil unit_r39_karten_treppen
-                     unit_r39_karten_marker PROPERTIES TIMEOUT 600)
+                     unit_r39_karten_marker unit_r39_karten_tueren PROPERTIES TIMEOUT 600)
 
 if(TARGET re15_pc AND TARGET probe_r36_karte)
     add_test(NAME integration_r39_karten
