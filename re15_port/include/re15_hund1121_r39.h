@@ -32,7 +32,8 @@
  *
  * ABLAUF: Raumaufbau (scd_room_setup.c + platform/pc/main.c Boot-/CONTINUE-Weg) -> re15_hund1121_r39_install: ROOM1121,
  * (9,97) = 1, Zone-7-Bit 0xAE = 0 -> AOT-Slot 4 als AUTO-Ereignis 30 auf Leons Band. Spieler im Band -> AOT-Scan ->
- * scd_event_fire(30) -> Port-Programm: Sce_em_set (Hund) + Set(7,0xAE,1) + Aot_reset(4) + Evt_end. re15_hund1121_r39_tick
+ * scd_event_fire(30) -> Port-Programm: 5 x Sca_id_set (Band-1-Rueckwand frei) + Sce_em_set (Hund) + Set(7,0xAE,1) +
+ * Aot_reset(4) + Evt_end. re15_hund1121_r39_tick
  * (game_step_common.c, vor der KI) faehrt die Skript-Schritte von ROOM21A0 sub07 und den Glasbruch.
  */
 #ifndef RE15_HUND1121_R39_H
@@ -83,6 +84,17 @@ extern "C" {
 
 /* Glasebene = Rueckwand z 11200 (SCA-Zelle (-2700,11200,11350,2000), Runde 35 M §1). */
 #define RE15_R39R_GLAS_Z          11200
+
+/* Die Rueckwand in Fensterhoehe: ROOM1121.RDT SCA @0x2FC (Kopf `50 da 0e cb`, 5 Regionen zu je 39 Zellen), Region r
+ * Index 15 = `56 2c d0 07 74 f5 c0 2b 01 ff 00 13` (x -2700 w 11350, z 11200 d 2000, u0 0xFF, floor 0x13 = Band 1) @0x003C8 /
+ * @0x0059C / @0x00770 / @0x00944 / @0x00B18. Der Hund steht mit y -1827 in Band 1 (re15_collision_band_from_y =
+ * -(y/0x708)) — ohne Freigabe schiebt ihn die Wandklemme FUN_8003b0a4 im Spawn-Bild auf z 11200 - Radius (gemessen 10682).
+ * FORM der Freigabe: RE2 ROOM21A0 sub07 @0x020F6 `37 11 00 00` (Sca_id_set auf das Hindernis VOR dem Sprung) in der
+ * RE1.5-Satzform von ROOM1130 sub02 @0x00AC8..@0x00AD8 `37 0r 0a 00` (je Region ein Satz, Handler LAB_8004175c: u0 :=
+ * Wert, Bit 0 = fest). PORT-WAHL: wieder zu (u0 = Originalwert), sobald der Hund mit seinem Radius diesseits der Wand
+ * ist — sonst stuende die ganze Rueckwand in Band 1 offen (x -2700..8650, nicht nur das Fenster). */
+#define RE15_R39R_WAND_INDEX      15
+#define RE15_R39R_WAND_REGIONEN   5
 
 /* RE2-Skriptform ROOM21A0 sub07 / Hundemodul (s. Kopf). */
 #define RE15_R39R_RE2_STATE       1      /* @0x020FE `34 02 01 00` (+4)                                         */

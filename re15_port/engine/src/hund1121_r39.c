@@ -9,6 +9,8 @@
 #include "re15_aot.h"
 #include "re15_scd.h"
 #include "re15_rumble.h"
+#include "re15_room.h"         /* g_room_rdt (Wandzellen) */
+#include "re15_rdt.h"
 #include "re15_ai_flavor.h"
 #include "re15_engine.h"        /* g_engine.frame_count (Messschiene) */
 #include "re2_fx.h"
@@ -27,7 +29,10 @@ static int s_glas = -1;
 static int s_splitter = 0;
 static int s_knalle = 0;
 static int s_re2 = 1;
-static uint8_t s_prog[36];
+static uint8_t s_prog[56];
+static int s_wand_offen = 0;                       /* 1 = Sca_id_set hat die Band-1-Rueckwand freigegeben        */
+static uint8_t s_wand_u0[RE15_R39R_WAND_REGIONEN]; /* Originalwerte (0xFF, ROOM1121.RDT @0x003D1 ...)            */
+static int s_wand_ok = 0;                          /* 1 = Region r Index 15 ist die Band-1-Rueckwand (geprueft)  */
 
 int re15_hund1121_r39_phase(void)     { return s_phase; }
 int re15_hund1121_r39_slot(void)      { return s_slot; }
@@ -53,7 +58,40 @@ static void logf_(const char *fmt, int a, int b, int c, int d, int e)
 
 static void s16_setzen(uint8_t *p, int32_t v) { p[0] = (uint8_t)(v & 0xff); p[1] = (uint8_t)((v >> 8) & 0xff); }
 
+/* Die Band-1-Rueckwand je Region (Adressierung wie sca_entry_at in scd_vm.c: Region-Basis + Index). */
+static re15_sca_entry_t *wand_zelle(int region)
+{
+    if (!g_room_rdt.sca || region < 0 || region >= RE15_R39R_WAND_REGIONEN) return NULL;
+    int base = 0;
+    for (int i = 0; i < region; i++) base += g_room_rdt.sca_rgn[i];
+    const int fi = base + RE15_R39R_WAND_INDEX;
+    if (fi < 0 || fi >= g_room_rdt.sca_count) return NULL;
+    return (re15_sca_entry_t *)&g_room_rdt.sca[fi];
+}
+static int wand_pruefen(void)
+{
+    for (int r = 0; r < RE15_R39R_WAND_REGIONEN; r++) {
+        const re15_sca_entry_t *c = wand_zelle(r);
+        if (!c || c->x != -2700 || c->z != RE15_R39R_GLAS_Z || c->width != 11350 || c->density != 2000 ||
+            (c->floor >> 4) != 1) return 0;
+        s_wand_u0[r] = c->u0;
+    }
+    return 1;
+}
+static void wand_schliessen(const re15_actor_t *h)
+{
+    if (!s_wand_offen) return;
+    for (int r = 0; r < RE15_R39R_WAND_REGIONEN; r++) {
+        re15_sca_entry_t *c = wand_zelle(r);
+        if (c) c->u0 = s_wand_u0[r];
+    }
+    s_wand_offen = 0;
+    logf_("[hund1121] Wand Band 1 wieder zu (u0 0x%02X), Hund z %d Radius %d %d %d", (int)s_wand_u0[0],
+          h ? (int)h->z : 0, h ? (int)h->hit_radius_min : 0, 0, 0);
+}
+
 /* ---- Port-Programm (RE1.5-Opcodes, laeuft in der vorhandenen VM) ----------------------------------
+ *   5 x Sca_id_set(Region r, Index 15, 0): die Band-1-Rueckwand frei (Herleitung RE15_R39R_WAND_INDEX im Header).
  *   Sce_em_set (20 B, Handler FUN_800420a0; Satzform wie ROOM1120 main00 @0x00D0C `44 00 21 00 00 00 00 a7 ...`):
  *     Gegner-Slot 4, Typ 0x20, Verhalten 0 (RE2-Hirn; die Sub-14-Freigabe macht der Takt wie ROOM21A0 sub07) bzw. 0x40
  *     (RE1.5-Hirn, INIT @0x8010db88-98), pc[4] = 0 (Boden 0), Kill-Flag pc[7] = 0xAE, Lage/Richtung s. Header.
@@ -64,18 +102,24 @@ static void s16_setzen(uint8_t *p, int32_t v) { p[0] = (uint8_t)(v & 0xff); p[1]
 static void programm_bauen(void)
 {
     memset(s_prog, 0, sizeof s_prog);
-    s_prog[0] = 0x44;
-    s_prog[1] = RE15_R39R_EM;
-    s_prog[2] = 0x20;
-    s_prog[3] = re15_ai_re2_for_type(0x20u) ? 0x00 : RE15_R39R_RE15_GRID;
-    s_prog[7] = RE15_R39R_KILL;
-    s16_setzen(&s_prog[8],  RE15_R39R_X);
-    s16_setzen(&s_prog[10], RE15_R39R_Y);
-    s16_setzen(&s_prog[12], RE15_R39R_Z);
-    s16_setzen(&s_prog[16], RE15_R39R_DIR);
-    s_prog[20] = 0x22; s_prog[21] = re15_em_status_zone(); s_prog[22] = RE15_R39R_KILL; s_prog[23] = 0x01;
-    s_prog[24] = 0x46; s_prog[25] = RE15_R39R_SLOT;    /* sce 0, Flags 0, Nutzlast 0 */
-    s_prog[34] = 0x01; s_prog[35] = 0x00;
+    uint8_t *p = s_prog;
+    /* 5 x Sca_id_set(Region r, Index 15, 0) — Satzform ROOM1130 sub02 @0x00AC8 `37 00 0a 00` .. @0x00AD8 `37 04 0a 00`. */
+    for (int r = 0; r < RE15_R39R_WAND_REGIONEN; r++, p += 4) {
+        p[0] = 0x37; p[1] = (uint8_t)r; p[2] = RE15_R39R_WAND_INDEX; p[3] = 0x00;
+    }
+    p[0] = 0x44;
+    p[1] = RE15_R39R_EM;
+    p[2] = 0x20;
+    p[3] = re15_ai_re2_for_type(0x20u) ? 0x00 : RE15_R39R_RE15_GRID;
+    p[7] = RE15_R39R_KILL;
+    s16_setzen(&p[8],  RE15_R39R_X);
+    s16_setzen(&p[10], RE15_R39R_Y);
+    s16_setzen(&p[12], RE15_R39R_Z);
+    s16_setzen(&p[16], RE15_R39R_DIR);
+    p += 20;
+    p[0] = 0x22; p[1] = re15_em_status_zone(); p[2] = RE15_R39R_KILL; p[3] = 0x01; p += 4;
+    p[0] = 0x46; p[1] = RE15_R39R_SLOT; p += 10;        /* sce 0, Flags 0, Nutzlast 0 */
+    p[0] = 0x01; p[1] = 0x00;
 }
 
 const uint8_t *re15_hund1121_r39_programm(int *out_len)
@@ -90,6 +134,7 @@ static int schon_gesprungen(void) { return re15_game_flag_get(re15_em_status_zon
 void re15_hund1121_r39_install(uint16_t room_id)
 {
     s_phase = RE15_R39R_AUS; s_slot = -1; s_takt = -1; s_glas = -1; s_splitter = 0; s_knalle = 0; s_re2 = 1;
+    s_wand_offen = 0; s_wand_ok = 0;
     if (room_id != RE15_R39R_RAUM) return;
     if (!re15_game_flag_get(RE15_R39R_PANIK_BANK, RE15_R39R_PANIK_BIT) || schon_gesprungen()) {
         logf_("[hund1121] ROOM1121 aus: (9,97)=%d (%d,0x%02X)=%d %d",
@@ -107,16 +152,20 @@ void re15_hund1121_r39_install(uint16_t room_id)
     g_aot.slots[RE15_R39R_SLOT].band = 0;               /* Gang = Band 0 (Boden y 0) */
     re15_aot_retype(RE15_R39R_SLOT, RE15_FENSTER_SCE, RE15_FENSTER_SAT, RE15_FENSTER_P0,
                     (uint16_t)((RE15_R39R_EREIGNIS << 8) | (RE15_FENSTER_P1 & 0xff)), 0);
+    s_wand_ok = wand_pruefen();
     s_phase = RE15_R39R_SCHARF;
     logf_("[hund1121] ROOM1121 scharf: Slot %d Band x %d..%d z %d..%d", RE15_R39R_SLOT,
           RE15_FENSTER_ZONE_X0, RE15_FENSTER_ZONE_X1, RE15_FENSTER_ZONE_Z0, RE15_FENSTER_ZONE_Z1);
+    logf_("[hund1121] Wand Band 1 Region 0..4 Index %d: gefunden %d u0 0x%02X %d %d", RE15_R39R_WAND_INDEX,
+          s_wand_ok, (int)s_wand_u0[0], 0, 0);
 }
 
 const uint8_t *re15_hund1121_r39_ereignis(uint16_t room_id, uint8_t event_id)
 {
     if (room_id != RE15_R39R_RAUM || event_id != RE15_R39R_EREIGNIS) return NULL;
-    if (s_phase != RE15_R39R_SCHARF || schon_gesprungen()) return NULL;
+    if (s_phase != RE15_R39R_SCHARF || schon_gesprungen() || !s_wand_ok) return NULL;
     programm_bauen();
+    s_wand_offen = 1;                                   /* die ersten 5 Saetze geben die Wand frei */
     logf_("[hund1121] Ausloeser: Spieler (%d,%d) im Band, Ereignis %d, Verhalten 0x%02X %d",
           (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
           RE15_R39R_EREIGNIS, (int)s_prog[3], 0);
@@ -170,6 +219,7 @@ void re15_hund1121_r39_tick(void)
     }
     if (!h->active || h->type != 0x20) {               /* erlegt/entfernt, bevor die Kette durch ist */
         logf_("[hund1121] Hund weg in Phase %d, Takt %d %d %d %d", s_phase, s_takt, 0, 0, 0);
+        wand_schliessen(NULL);
         s_phase = RE15_R39R_FERTIG;
         return;
     }
@@ -203,7 +253,12 @@ void re15_hund1121_r39_tick(void)
         const int d = s_takt - s_glas;
         if (d == RE15_R39R_T_KNALL1 || d == RE15_R39R_T_KNALL2) knall();
     }
-    if (s_knalle >= 2 && h->y >= 0) {
+    if (s_wand_offen && h->z + (int32_t)h->hit_radius_min < RE15_R39R_GLAS_Z) wand_schliessen(h);
+    /* durch = beide Knalle und der Hund hat den Sprung verlassen (RE2: Sub 14 -> 2 @0x80102E2C; RE1.5: Zustand 4 ->
+     * Wort 0x201 @0x8011162c). */
+    const int gelandet = s_re2 ? (h->sub_state_1 != RE15_R39R_RE2_SUB) : (h->state != 4);
+    if (s_knalle >= 2 && gelandet) {
+        wand_schliessen(h);
         s_phase = RE15_R39R_FERTIG;
         logf_("[hund1121] fertig T%d: Hund (%d,%d) Zustand %d Sub %d", s_takt, (int)h->x, (int)h->z,
               (int)h->state, (int)h->sub_state_1);
