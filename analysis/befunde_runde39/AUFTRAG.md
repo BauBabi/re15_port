@@ -155,6 +155,14 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
     Neuer Take 22:26:29 (Nutzer: "ich mache eine neuen take fuer main12"): room1141/main12.wav 6,00 s, Diktat "All know who
     this is john losing troubled I have to help in", Wahl JOHN 0,784 -> passt zum Text. Der alte Take liegt jetzt unter
     synchro/unused/STAGE1/room1141/main12.wav (vom Nutzer verschoben).
+- Nutzer 22:40 (woertlich): "Ich habe main12 ersetzt. Benenne meine neuen voiceovers um, entsprechend der Nummer die du
+  brauchst, also auch die Dateien. Ich sehe ja nicht an welcher stelle mit welchen Namen die neuen Texte stehen."
+  Orchestrator: per git mv umbenannt (ausdruecklicher Nutzer-Auftrag, ersetzt fuer diese Dateien VERTRAG 1.2 "nie umbenennen"):
+  room1141/main12 -> main50, main13 -> main51, main14 -> main52; room10F1/main06 -> main40, main08 -> main42. Damit gilt die
+  Ordnerregel (main<MSG-ID>): KEINE Tabellenzeilen in stimmen_r39.c, keine Sperre noetig (room1141 hat keine main12-14 mehr,
+  die Original-Zeilen 12-14 bleiben stumm wie zuvor). SPUR N ENTFAELLT. Spur J: misst nur noch, dass msg 50/51/52 im neuen
+  Ablauf main50/51/52 spielen (keine Aenderung an stimmen_r39.c). Kuenftig nennt der Orchestrator dem Nutzer fuer jede neue
+  Port-Zeile den Dateinamen (synchro/STAGE<n>/room<ID>/main<MSG-ID>.wav) bzw. benennt gelieferte Dateien selbst um.
   - KOLLISION: ROOM1141.RDT (msg_sec 0x10E4, re15_port/tools/rdt_msgdump.py) hat Original-Zeilen id 12 @0x13B6 "You've opened
     the lock.", id 13 @0x13D1 "A beautiful painting.There's a switch below. / Will you push it?", id 14 @0x1417 "It's a big
     table." Nach der Ordnerregel (synchro/README.md: main<MSG-ID>) spielten main12/13/14 dort - beim Entriegeln, am Gemaelde,
