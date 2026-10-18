@@ -472,3 +472,14 @@ Zuteilung VERTRAG.md §0: Spur E = genau diese vier Punkte. Keine Bank-9-Bits, k
     10 x unit_r39_gegner_*, integration_r39_gegner_schatten, integration_r39_gegner_hunde1190).
   - Messkopien: eigene `re15_pc_e_mess.exe` (Messvarianten) nach der Messung geloescht; die Messvarianten selbst sind nicht
     committet (Diff: nur die beiden Zeilen in gegner_r39.c bzw. die Logzeile in main.c, beide aus dem .orig restauriert).
+
+## Nachbesserung 2 (2026-10-18, nach Abnahme 1 — Nutzer-Nachtrag 3)
+
+Auftrag (Orchestrator, Mangel 1 der Abnahme 1): AUFTRAG.md Nachtrag 3 (2026-10-18 14:25) woertlich "Zu 2. ja, wir machen
+das Gorilla Verhalten generell so." -> HP x2 und Flinch erst nach 3 Handfeuerwaffen-Treffern (Akku-Schwelle 36) fuer ALLE
+Gorillas Typ 0x27 in allen Raeumen und beiden Szenarien; Raum-Tor `re15_r39_affen_parkplatz` auf den Typ allein; Zensus
+aller 0x27-Raeume; ROOM1141 (Elza) Gorilla-Szene muss lauffaehig bleiben; kleine Affen 0x29 unveraendert.
+
+### Protokoll
+- 2026-10-18 Start: Baum sauber, HEAD 2486a028 (Merge master dc330054 in r39/gegner), `git diff master --name-only` =
+  nur Pfade dieser Spur. Pflichtlektuere AUFTRAG.md (inkl. Nachtrag 3), VERTRAG.md, E_abnahme_1.md, dieses Dossier gelesen.
