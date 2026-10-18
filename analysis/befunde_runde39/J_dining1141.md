@@ -388,3 +388,18 @@ Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r
   **Clip 17** F3015..F3113 und Clip 23, John laeuft F3115 los (msg 52 weg: H3 behoben), geparkt F3250.
 - **Lauf mess** (wie pist, ohne Schusswaffe): `Elza hebt Waffe 1 (... Messer)`, DRAW 0x0D F340..F356 (Messer ueber den
   Koerper gezogen), dann Messer-Bereitschaft gehalten (`mess_heben.png`).
+- **Lauf f** (M1-Fenster der Abnahme nachgestellt: `jabn/plan_f.txt`, Debug-Sprung 1141, Elza vor dem Gemaelde): erster Ruf,
+  Frage msg 13 F133..F248, "ja" -> (3,0x6A) F250, Rolladen-Szene pm=2 F250..F470, **msg 50 erst F481** (vorher F291 mitten
+  im Hochfahren), Wortlaut mit "trouble" (`f_neu.png`: F290/F380 Rolladen faehrt, F465 oben, F485 Text bei offenem Rolladen).
+- **Lauf auf / auf2** (wie pist, Gorillas NICHT eingefroren): Treffer F2368/F2398 auf Gorilla Slot 2 (Energie 180 -> 168
+  -> 156). auf (nur Lenkziel in B[3]): Abstand zu John 6545 -> 6848 in 180 Bildern = keine Wirkung, weil die
+  A-Entscheidungen bei Elzas Naehe (2000) Angriffe waehlen. auf2 (Jagd B[3] ohne A-Entscheidungen, 25e1e2d5): der Gorilla
+  dreht zu John (rot 2655 -> 1079 = Richtung John), kriecht, bleibt aber am zweiten Gorilla/Tisch haengen (x -6982 fest,
+  Abstand 6600 +-80, `auf2.png`/`auf2_zoom.png`); danach (Aufmerksamkeit aus) Biss/Aufbaeumen gegen Elza. Folge: Jagd endet,
+  wenn der Gorilla in 30 Bildern nicht 300 naeher an John ist (kein Kriechen auf der Stelle, Commit danach).
+
+### 8.3 Tests (gezielt, keine volle Suite)
+- Unit (Module des Diffs: dining_r38/39, Kartenbits, Gorilla-KI enemy_ai_common.c, Schaden re15_damage.c, Spieler-Ziel-/
+  Plc-Pfad, Ton/Stimme/BGM audio_pc.c, Nachrichten-FSM, Elza-Anker r36, Heliport 1171), Regex woertlich:
+  `unit_r39_dining1141|unit_r38_dining1141|unit_r36_kartenbits|unit_maggot|unit_r35_affen|unit_r38_affen3|unit_r36_zombieki_affen|unit_r38_griff_gorilla|unit_rotor_bgm_pin|unit_r35_cut10f0|unit_synchro_stimme|unit_voice_ausreden|unit_r39_stimmen|unit_r38_rekorder|unit_r38_elzaintro_stimme|unit_se_bank_routing|unit_se_voice_machine|unit_r30_tuer_stimme|unit_audio|unit_r34n_f_leiche_stimme|unit_r38_tagebuch|unit_r38_elzatoene|unit_msg_dialog|unit_action_msg_gate|unit_r38_heliport1171|unit_scd_flag_fade|unit_damage|unit_weapon_select|unit_aim_all_around|unit_aim_lower_exit|unit_plc_back_yaw_1090|unit_r30_android_n3_plc_aim|unit_r36_elza|unit_r39_gegner`
+  -> "100% tests passed, 0 tests failed out of 122".
