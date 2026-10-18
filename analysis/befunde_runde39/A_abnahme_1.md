@@ -267,3 +267,40 @@ Beide Maengel aendern kein Verhalten und keinen Messwert; kein Nutzer-Punkt und 
    nutzt int64 (libgcc) wie andere Engine-Dateien.
 7. Leons main14 der ersten Irons-Szene ("Yes sir...") ist mit -10,7 dB unter der BGM die leiseste Zeile dieser Szene (rms 0,038
    FS, ueber T, Stufe 2 greift nicht) — Nutzer-Datei, nicht Gegenstand dieser Spur.
+
+## 7. Gates und Urteil
+
+### 7.1 Gezielte Testgruppe (Regex Dossier §9.7, `ctest --test-dir re15_port/build -R "..." --timeout 1500 -j1 --output-on-failure`)
+Lauf 12:10:xx-12:47:15, sequenziell, WAEHREND meiner eigenen Messlaeufe (1050/1150/v1150/11b0/1171/e1150*) und fremder exe-Kopien
+anderer Spuren (`re15_pc_r39fg_haken_*`, `re15_pc_r36j_haken_*` in der Prozessliste) = Last:
+**`100% tests passed, 0 tests failed out of 94` (Total Test time (real) = 2206.72 sec), CTEST_EXIT=0.** Kein roter Haken, keine
+Wiederholung noetig. Darunter unit_r39_stimmen_tabelle/pegel/lader, integration_r39_stimmen_1050 35,1 s / 1150 57,8 s /
+11b0 107,1 s / 1171 58,2 s, integration_r38_elzaintro_stimme 124,9 s, r38_rekorder, r38_werkstatt11b0, r38_heliport1171 (3),
+r36_elza_* (5 Integrationen), r36_szenenleon, r35_cut1150, r36_szene1150, r38_kleinkram (3). Log: Scratchpad ctest_gruppe.log.
+
+### 7.2 Gates
+| Gate | Ergebnis |
+|---|---|
+| Bau (local_build.sh configure+build) | OK; exe 10:17:40 = HEAD-Code (§1), traegt den Stufe-2-String |
+| RE-Gate (Konstanten mit Herkunft: T/R/C aus dem Bestand = PORT-WAHL in der Form, NUTZER-VORGABE im Grund; 3+ Adressen selbst disassembliert; keine Guess-Tells; kein Env-Schalter) | haelt (§2); Zensus unabhaengig reproduziert (§3) |
+| Fix erklaert den Befund (Vorher master-exe / Nachher Spur-exe am selben Weg, gleiche Bilder) | ja (§4.2): Irons 4,0x -> 7,9-12,8x, msg 29 stumm -> main22; Leon bitgleich |
+| Nutzer-Punkte 1-4 + Nachtrag 2 (M1 Irons lauter, M2 main22, M3 Text) am echten Weg gemessen | alle erfuellt (§4) |
+| Vertrag (Pfade, Ressourcen, kleine Haken, Linux-/Parallel-Form, Merge konfliktfrei) | haelt (§5.1) |
+| Tests der Spur (Unit 3/3, Integration 4/4, je Punkt messend) + Gruppe 94/94 | gruen (§5.2, §7.1) |
+| Nebenwirkungen (erste Irons-Szene, Nachbarraeume, Elza-Varianten, Dateien ausserhalb des GLOBs, Uebersteuerung) | keine unerwuenschten (§5.3): klemm 0 in allen Abschnitten |
+
+### 7.3 Urteil je Nutzer-Punkt (gegen den Wortlaut, AUFTRAG.md inkl. Nachtrag 2)
+| Punkt | Wortlaut (gekuerzt) | Urteil | Beleg |
+|---|---|---|---|
+| 1 | 1050: Voiceover vor der Ada-Rettung (main09-11) spielt nicht | **erfuellt** | §4.1: msg 22/23/24 <- main09/10/11, Mitschnitt korr 0,994/0,981/0,938, am echten Weg; unveraendert seit Abnahme 0 |
+| 2 | 1150: Voiceovers der Sterbeszene nicht drin; Nachtrag 2: "ruhig lauter anheben, dass es passt", "SIR, sir! ... mit main22 ergaenzt" | **erfuellt** (Hinweis 6.2/1) | §4.2: 8/8 Zeilen im Ton (msg 29 <- main22 korr 0,828), Irons 12,80/9,20/7,86/11,60x statt 4x (+5,6..+9,2 dB), main18 auf Leons Niveau, main21 +17 dB, main19/20 -4,5/-4,9 dB (Transient-begrenzt, dem Nutzer gemeldet), 0 geklemmte Abtastwerte, Leon bitgleich; Vorher/Nachher am selben Weg |
+| 3 | 11B0: "But hold on" + "... unexpected Visitors" fehlen; Nachtrag 2: Text "unwanted followers" | **erfuellt** | §4.3: msg 20 <- main13 (0,905), msg 21 <- main14 (0,957); `[msgtext] id=21 "... unwanted followers."` — Text ist schon so, Aufnahme spricht ihn |
+| 4 | "Alright, let's get down from here" ohne Voiceover | **erfuellt** | §4.4: Elza PL04, msg 3 <- main02 (0,933), Clip endet vor dem Tuer-AOT; msg 2 nie angefordert |
+
+### 7.4 Gesamturteil
+**BESTANDEN.** Alle vier Punkte und die drei Auftraege des Nachtrags 2 am gebauten Stand (HEAD ad16c58f, exe = HEAD-Code), am
+echten Weg, mit eigener exe-Kopie, eigenem Zensus und eigenem Auswerter gemessen; Vorher/Nachher mit der master-exe erklaert den
+Befund; RE-Gate, Vertrag, Tests (3 + 4 + 94/94) und Nebenwirkungen (inkl. erster Irons-Szene, die kein Gruppen-Test mit Ton
+abdeckt) halten. Zwei kleine Dokumentations-Maengel (§6.1: "hoechstens 2,1x"-Satz, NOAUDIO-Beleg) aendern kein Verhalten und
+keinen Messwert — in der Integration oder einer Dossier-Korrektur mit je einer Zeile zu beheben. Offen sind Nutzer-Entscheidungen
+(§6.2/1: main19/main20 bleiben ~4,5 dB unter der Musik, Neuexport).
