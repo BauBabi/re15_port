@@ -5,6 +5,7 @@
  * analysis/befunde_runde38/F_dining1141.md. Muster: schluessel_r36.c (Gegenstand, Tuer-Handler RE2 LAB_80051514).
  */
 #include "re15_dining_r38.h"
+#include "re15_dining_r39.h"   /* Runde 39 Spur J: Phase-H-Programme, Port-Bank 0x3E, Texte 50..52 */
 
 #include <stddef.h>
 #include <string.h>
@@ -263,6 +264,7 @@ void re15_dining_r38_install(uint16_t room_id)
     else if (room_id == RE15_R38F_RAUM_1021) meldung(RE15_R38F_MSG_1021_LEICHE, k_r38f_msg1021_leiche, sizeof k_r38f_msg1021_leiche);
     else if (room_id == RE15_R38F_RAUM_1131) tuer_1131();
     else if (room_id == RE15_R38F_RAUM_1141) raum_1141();
+    re15_dining_r39_install(room_id, s_phase_h);   /* Runde 39 Spur J: Texte 50..52; Phase H: John auf dem Dach */
 }
 
 /* ============================ Programme ============================ */
@@ -270,7 +272,7 @@ const uint8_t *re15_dining_r38_evt_exec(uint16_t room_id, uint8_t sub_id, const 
 {
     if (room_id == RE15_R38F_RAUM_1141 && sub_id == RE15_R38F_SUB_SZENE && phase_h_bedingung(room_id)) {
         log_f("ROOM1141 sub00 @0x00B02 Evt_exec sub02 -> Klopf-Schleife (Phase H)");
-        return k_r38f_p_haemmern;
+        return re15_dining_r39_haemmern();   /* Runde 39 Spur J: Klopfen + help01..05 + Elzas Reaktion statt HAEMMERN */
     }
     return orig;
 }
@@ -286,7 +288,7 @@ const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id)
         { int n = 0; const uint8_t *ton = re15_szl_tuerton(&n);
           if (!re15_audio_re2_tuer_laden(ton, n)) log_f("Tuerbank DOOR1A nicht geladen (kein Audiogeraet?)"); }
         log_f("ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG");
-        return k_r38f_p_befreiung;
+        return re15_dining_r39_befreiung();   /* Runde 39 Spur J: John durch die Tuer, Glas, Blick, Zeilen 51/52 */
     }
     if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_GEMAELDE && (anker(room_id) & A_ROLL1141))
         return k_r38f_p_roll1141;
@@ -327,6 +329,7 @@ const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id)
 int re15_dining_r38_se_on(unsigned bank, int satz)
 {
     int k;
+    if (re15_dining_r39_se_on(bank, satz)) return 1;   /* Runde 39 Spur J: Port-Bank 0x3E */
     if (bank == RE15_R38F_SE_BANK_ROLLADEN)     k = 0;
     else if (bank == RE15_R38F_SE_BANK_KLOPFEN) k = 1;
     else if (bank == RE15_R38F_SE_BANK_HILFE)   k = 2;
@@ -344,6 +347,7 @@ int re15_dining_r38_se_on(unsigned bank, int satz)
  * Johns Abgang ohne Kampf-Eingaben (der Zaehler laeuft ab dem Ende der Szene, unabhaengig von der Dauer davor). */
 void re15_dining_r38_messhaken(void)
 {
+    re15_dining_r39_messhaken();   /* Runde 39 Spur J: RE15_R39J_LOG */
 #ifdef RE15_PLATFORM_PC
     static int s_init = 0, s_n = -1, s_done = 0, s_kampf = 0, s_starr = 0;
     if (!s_init) { const char *e = getenv("RE15_R38F_GORILLAS_TOT"); s_init = 1; if (e && *e) s_n = atoi(e);
