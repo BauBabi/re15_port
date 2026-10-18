@@ -1583,16 +1583,16 @@ static void re2d_sub13_flee(re15_actor_t *e)
 static void re2d_windowjump_launch(re15_actor_t *e, int vy)
 {
     switch (e->sub_state_3) {
-    case 0:                                                /* @0x80102CD4 */
-        e->sub_state_3 = 1;
-        e->re2z_self1d3 |= 0x80u;                          /* @0x80102CD4-EC */
-        e->re2d_air219 = 0; e->re2d_wound22d = 0;          /* @0x80102CDC-E0 */
+    case 0:                                                /* @0x80102CD4-F4: WARTEN — die Phase hat KEINEN +7-Schreiber; */
+        e->re2z_self1d3 |= 0x80u;                          /* @0x80102CD4-EC */   /* Runde 39 Spur R: frei nur per Member_set +7=1 */
+        e->re2d_air219 = 0; e->re2d_wound22d = 0;          /* @0x80102CDC-E0 */   /* (ROOM21A0 sub07 @0x02122, Setter @0x80055D00) */
         break;
     case 1:
         e->sub_state_3 = 2;                                /* sb 2,7 @0x80102D04-0C */
         re2d_launch(e, 65, vy);                            /* 0x80101380(65,−320) @0x80102CF8-08 */
-        break;
-    default:
+        /* Runde 39 Spur R: FALLTHRU @0x80102D20 -> Phase-2-Rumpf @0x80102D24 im selben Bild */
+        /* fall through */
+    case 2:
         re2d_move(e, 0);                                   /* @0x80102D24 */
         re2d_advance(e, 0x200);                            /* @0x80102D38 */
         if (--e->re2z_t158 == 0) {                         /* @0x80102D40-54 */
