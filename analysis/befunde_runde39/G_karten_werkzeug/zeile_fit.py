@@ -7,11 +7,15 @@ import numpy as np
 def tdiv(a, b):  # C-Division (Richtung 0)
     q = abs(a) // abs(b)
     return q if (a >= 0) == (b > 0) else -q
-def fx(w, s, o): return tdiv((((w + 32000) * 10 * s) >> 20) + 5, 10) + o
-def fz(w, s, o): return -tdiv((((w + 32000) * 10 * s) >> 20) + 5, 10) + o
+# re15_map_zone_marker (Zeilen-Pfad): t = ((((w+32000)*10*s)>>20)+5)/10; px = (flip_x ? -t : t) + ox,
+# py = (flip_z ? t2 : -t2) + oy (Spiegel fuer gedrehte Raumrahmen, re15_map_zones.c)
+FLIP = {'x': 0, 'z': 0}
+def _t(w, s): return tdiv((((w + 32000) * 10 * s) >> 20) + 5, 10)
+def fx(w, s, o): return (-_t(w, s) if FLIP['x'] else _t(w, s)) + o
+def fz(w, s, o): return (_t(w, s) if FLIP['z'] else -_t(w, s)) + o
 def fit(paare, achse):
     W = np.array([p[0] for p in paare], float); P = np.array([p[1] for p in paare], float)
-    sgn = 1 if achse == 'x' else -1
+    sgn = (-1 if FLIP['x'] else 1) if achse == 'x' else (1 if FLIP['z'] else -1)
     A = np.vstack([sgn * (W + 32000) / 2**20, np.ones_like(W)]).T
     (s, o), *_ = np.linalg.lstsq(A, P, rcond=None)
     best = None
@@ -25,6 +29,7 @@ def fit(paare, achse):
 if __name__ == '__main__':
     import sys, json
     d = json.loads(sys.argv[1])
+    FLIP['x'] = d.get('flip_x', 0); FLIP['z'] = d.get('flip_z', 0)
     for achse in ('x', 'z'):
         sc, s, o, res = fit(d[achse], achse)
         print(f'{achse}: s {s} o {o} (Einheiten/px {2**20/s:.1f}) Reste {res} max {sc[0]}')

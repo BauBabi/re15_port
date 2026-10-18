@@ -7,12 +7,13 @@ import gen_map_zones as GZ
 probe = sys.argv[1]
 nur = set(int(a, 16) for a in sys.argv[2:])
 saaten = {}
-for rid in range(0x1000, 0x1270, 0x10):
+STUFEN = [int(a) for a in os.environ.get('R39_STAGES', '1').split(',')]
+for rid in [s0 * 0x1000 + k * 0x10 for s0 in STUFEN for k in range(0x30)]:
     r = GZ.read_rdt(rid)
     if not r: continue
     for d in r[1]:
         ziel = d['dest']
-        if not (0x1000 <= ziel < 0x1270): continue
+        if (ziel >> 12) not in STUFEN: continue
         band = (-d['ny']) // 1800 if d['ny'] < 0 else 0
         saaten.setdefault((ziel, band), []).append((d['nx'], d['nz'], d['ny'], rid))
 ges = 0

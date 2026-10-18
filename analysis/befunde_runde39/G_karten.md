@@ -184,8 +184,25 @@ ROOM11D0 601, 0   ROOM1160/1161 588, 0 (vorher 588 ausserhalb) ROOM10A0/10A1 Ban
 ```
 Abzug Blatt 0 (Sweep): `G_karten_bilder/b1_nachher_sweep_x3.png`.
 
+## P1-M "Und natuerlich muss der Spielermarker da entsprechend passen" (1F/2F/3F/B2)
+Pruefung ueber ALLE Raeume der Stage 1 (`alle_raeume.py <probe>`: Saaten = Ankunftspunkte aller Tueren, je Raum/Band
+`markerflaeche`; Stand nach P2, vor B1):
+```
+ausserhalb der Zeichnung: 1030 63/2288  1060 4/155  10A0(B2) 8/140  10C0 123/999  10E0 26/1199  1110 8/1237
+                          1120 77/1080  1170(Zone 1, 3F) 51/311  1090(oben) 160/1225 [P2]  1160 588/588 [B1]
+                          alle anderen 0 (1000 1010 1020 1040 1050 1080 10A0 10D0 10F0 1100 1130 1140 1150 1180 1190
+                          11B0 11D0 11E0 11F0 1200 1220 1230); 10B0/1260 ohne Blatt (nicht Polizeistation)
+```
+Ursache bei 10C0/1120/1060/10A0(B2): die Bbox-Streckung bildet den Raum auf das NOMINALE Rechteck ab - die Liste
+@0x80076840 fuehrt Groessen auf 8 aufgerundet, gemalt ist weniger (gemessen ueber alle 40 Rechtecke der Blaetter 1..5:
+rechts 0..24, unten 0..20 px frei; 2F rect 0 gemalt x 102..135 von 102..141). 1110/10E0/1170(Zone 1): die gemalte
+L-Form deckt sich nicht mit der Raumform unter dem gesetzten Spiegel (Runden 30/36 von Hand gesetzt) - offen, s.u.
+1030: AUSGELIEFERTE Zeile @0x800768c8 legt die Westkante 2 px links neben die gemalte Kachel.
+UMGESETZT (Methode wie P2, Zeile je Raum aus Wand-Paaren): 10C0 (ox 191 oy 59 sx 2415 sy 2324, Spiegel 1,1) und 1120
+(ox 204 oy 60 sx 2277 sy 2372) - Belege im Kommentar der Zeilen (re15_map_zones.h), Reste <= 1 px.
+
 ## RE-Belege
-(siehe je Punkt: P2, B1-R; 1F/2F/3F/B2 = NUTZER-VORGABE, Form = rechte Haelften der Vorlagen, M1/M2)
+(siehe je Punkt: P2, B1-R, P1-M; 1F/2F/3F/B2 = NUTZER-VORGABE, Form = rechte Haelften der Vorlagen, M1/M2)
 
 ## Umsetzung
 (folgt)
