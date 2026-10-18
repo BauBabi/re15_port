@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 12:50: Spur A Nachbesserung 1 BESTANDEN (Abnahme 1 dfbcf43b; Fix ad16c58f): Stufe-2-Lautheits-Boden
+  stimmen_pegel_r39.c (T=985 R=2040 C=21759 aus dem Zensus aller 216 synchro-Dateien; nur Irons' 10 Dateien 6,9-12,6x,
+  206 bitgleich; Irons in der Sterbeszene -0,1/-4,5/-4,9/+17,1 dB statt -10..-12 dB, 0 geklemmt), 1150 msg 29 <- main22,
+  11B0-Text belegt; 94/94 Tests. Zwei Doku-Maengel vom Orchestrator nachgezogen (82640397). Merges: Integration 9e7bab74,
+  master 6926409c; Hauptbaum-Bau laeuft. FUER DEN NUTZER: main19/main20 ("not going to make it" / "one last favor") bleiben 4,5-4,9 dB
+  unter der BGM, weil je ein 0,2-0,5-ms-Knall die Anhebung ohne Clipping begrenzt - Neuexport dieser zwei Dateien waere der Weg.
 * 2026-10-18 12:06: SITZUNGSLIMIT (~11:08, Reset 12:00) beendete die vier Bau-Agenten der Welle 2 und die Abnahme der
   A-Nachbesserung (deren Bau-Agent war fertig: ad16c58f, Stufe-2-Lautheits-Boden T=985/R=2040/C=21759 aus dem Zensus der
   216 synchro-Dateien, 1150 msg 29 <- main22, 94/94 Tests). Reste gesichert: treffer ff1649c1, gegner 9ddf0bbc, zustand
