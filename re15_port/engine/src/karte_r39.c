@@ -198,6 +198,47 @@ int re15_karte_r39_kante_weg(const void *inv_screen, unsigned page, int cx, int 
 
 int re15_karte_r39_korrektur_zahl(void) { return R39_KORR_N; }
 
+/* ---- Die Tuer folgt der Linie (Nachbesserung 3, Abnahme 2 Mangel N2) ----------------------------------------------
+ * "Tuer immer genau auf Wand platziert" (Nutzer, AUFTRAG.md). Eine Tuermarke (s_map_marks, re15_map_zones.h) auf der
+ * ERSATZLINIE einer Doppelwand-Korrektur steht im Vollzustand (Vorlagen) auf der einen Wand des Traegers. Wird der
+ * Traeger NICHT gezeichnet, greift die Korrektur nicht (traeger_gezeichnet, Nachbesserung 1 M3) und die eigene Linie
+ * des korrigierten Rechtecks steht noch - dann gehoert die Tuer dorthin, sonst schwebt sie eine Spalte daneben im Grund.
+ * Gemessen (echte exe, Stand 4ea5e62c, Dossier G_karten.md "Nachbesserung 3"): Hof ROOM1090 -> Tuer -> ROOM1050
+ * (`DOOR FIRE slot=0`, `PC loaded room1050.rdt`): Balken 1030<->1050 x186 y150..154 links neben der 1050-Westwand x187;
+ * ROOM1040 allein: 1030<->1040 x119 y127..131 rechts neben der 1040-Ostwand x118 - Enden auf dem Grund.
+ * BELEG RE2 Retail (Beta -> Retail; die Port-Tuer ist das RE2-Symbol, re15_inv_screen.c RE2_TUER_*): jede Raum-Kachel
+ * traegt die Tuer auf ihrer EIGENEN Wand, beide Raeume je eine Haelfte (info/re2leon/PSX.EXE Area 2 = RPD 1F,
+ * RoomTable @0x800aa388: Raum 1 @0x800aa398 Index 3 x125..126 y147..154 an seiner Ostwand x126, Raum 0 @0x800aa388
+ * x127..128 an seiner Westwand x127; MAPS_005.TIM), gezeichnet nur mit dem Raum-Sprite (FUN_8006e120: Plan
+ * `jal 0x80077360` @0x8006e66c, besucht @0x8006e688/@0x8006e73c, AddPrim `jal 0x8008f918` @0x8006e760) - dort steht eine
+ * Tuer immer auf der Wand des Raums, der gezeichnet wird (G_karten_werkzeug/nb3/re2_tueren.py).
+ * Geometrie (keine neue Konstante): der um eine Spalte bzw. Zeile quer verschobene 5-px-Balken liegt GANZ in den
+ * geloeschten Texeln der Korrektur (s_korr, Seiten-Tabelle @0x80076840 + 8*Seite). Treffer: 1F r0 x187 y145..154
+ * (Traeger r4 = ROOM1030) fuer die Tuer (186,152) und 1F r2 x118 y126..133 (Traeger r4) fuer (119,129) - tuer_korr.py.
+ * Die drei anderen Tueren an bedingten Korrekturen (1F (163,81)/(163,106) an r8/r7, (119,151) an r2 y144..154) sind
+ * nur mit ihrem Traeger sichtbar (eigenes Rechteck r1 bzw. r10) und bleiben deshalb stehen; R39_IMMER verschiebt nie. */
+void re15_karte_r39_tuer_lage(const void *inv_screen, unsigned page, int kind, int *mx, int *my)
+{
+    const re15_inv_screen_t *st = (const re15_inv_screen_t *)inv_screen;
+    int i, d, senk = (kind == 1 || kind == 3);
+    if (!st || !mx || !my || kind < 0 || kind > 3) return;
+    for (i = 0; i < R39_KORR_N; i++) {
+        const r39_korr_t *k = &s_korr[i];
+        int rx, ry, rw, rh, x0, y0, x1, y1;
+        if (k->page != page || k->neu == 4 || k->traeger == R39_IMMER) continue;
+        if (!re15_map_rect_geometry(page, k->rect, &rx, &ry, &rw, &rh)) continue;
+        x0 = rx + k->c; y0 = ry + k->r; x1 = x0 + k->w - 1; y1 = y0 + k->h - 1;
+        for (d = -1; d <= 1; d += 2) {
+            int bx0 = senk ? *mx + d : *mx - 2, bx1 = senk ? *mx + d : *mx + 2;
+            int by0 = senk ? *my - 2 : *my + d, by1 = senk ? *my + 2 : *my + d;
+            if (bx0 < x0 || bx1 > x1 || by0 < y0 || by1 > y1) continue;
+            if (traeger_gezeichnet(st, page, k->traeger)) return;   /* Korrektur greift: die eine Wand des Traegers */
+            if (senk) *mx += d; else *my += d;                      /* sonst die eigene Linie, die noch steht */
+            return;
+        }
+    }
+}
+
 int re15_karte_r39_korrektur(int i, int *page, int *rect, int *c, int *r, int *w, int *h, int *neu, int *traeger)
 {
     if (i < 0 || i >= R39_KORR_N) return 0;

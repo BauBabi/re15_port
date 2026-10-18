@@ -777,6 +777,7 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
             if (g < 0) g = 0;
             if (g > 256) g = 256;
             if (!re15_map_mark_get(beste, &mpg, &mrc, &smx, &smy, &kind)) return;
+            re15_karte_r39_tuer_lage(&g_inv_screen, (unsigned)mpg, kind, &smx, &smy);   /* Runde 39 Spur G */
             *mx = (int16_t)(*mx + ((smx - *mx) * g) / 256);
             *my = (int16_t)(*my + ((smy - *my) * g) / 256);
         }
@@ -2284,6 +2285,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
             int mpage, mrect, mx, my, kind, row;
             if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
             if (mpage != (int)st->map_page) continue;
+            re15_karte_r39_tuer_lage(st, (unsigned)mpage, kind, &mx, &my);   /* Runde 39 Spur G: Tuer folgt der Linie */
             {
                 /* ---- RE1.5-TUERSYMBOL statt eines eigenen Balkens -------------------
                  * Nutzer 2026-08-31: "ich haette gerne die Resident Evil 1.5 Tuer

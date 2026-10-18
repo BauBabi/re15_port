@@ -829,6 +829,7 @@ static int teil_doppelwand(int argc, char **argv)
  * 4 = Tuer, 5 = Treppe, 9 = sonstiger Kachel-Texel. Kachel-Texel aus DATA/MAP0<p+1>.PIX (ohne die Schwenk-Tilgung
  * des PC-Renderers - die nimmt nur Tuerschwenke weg und gehoert zum Abzug der echten exe, integration_r39_karten). */
 static unsigned char s_kl[240][320];
+static int s_kl_ohne_tueren = 0;   /* Nachbesserung 3: 1 = Tuerbalken nicht rastern (was liegt UNTER dem Balken?) */
 static void komposit(int seite, int n)
 {
     int i;
@@ -852,7 +853,7 @@ static void komposit(int seite, int n)
         if (o->kind != RE15_INV_OP_FILL) continue;
         if (o->abe && ((o->r == 32 && o->g == 104) || (o->r == 104 && o->g == 8))) k = 1;   /* 0x81A4 / 0x842D */
         else if (!o->abe && o->r == 176 && o->g == 176 && o->b == 176) k = 2;                 /* RE15_KARTE_WAND */
-        else if (!o->abe && o->r == 224 && o->g == 168 && o->b == 40) k = 4;
+        else if (!o->abe && o->r == 224 && o->g == 168 && o->b == 40) k = s_kl_ohne_tueren ? 0 : 4;   /* NB3 */
         else if (!o->abe && o->r == 240 && o->g == 240 && o->b == 216) k = 5;
         if (!k) continue;
         for (y = 0; y < o->h; y++)
@@ -1276,6 +1277,222 @@ static int teil_pruef_marker(void)
     return g_fail;
 }
 
+/* =====================================================================================================
+ * NACHBESSERUNG 3 (Abnahme 2, Mangel N2) - "Tuer immer genau auf Wand platziert", in JEDEM Kartenzustand
+ * =====================================================================================================
+ * Vorher (Abnahme 2 Abschnitt 6, selbst reproduziert, Dossier G_karten.md "Nachbesserung 3"): solange ROOM1030 nicht
+ * gezeichnet ist, schweben seine Tueren neben der Wand des Nachbarn - 1030<->1050 x186 y150..154 neben der 1050-Westwand
+ * x187, 1030<->1040 x119 y127..131 neben der 1040-Ostwand x118 (Enden auf dem Grund, Wand quer daneben).
+ * RE2 Retail (Beta -> Retail) malt jede Tuer in BEIDE Raum-Kacheln, je auf die EIGENE Wand (Area 2 RoomTable @0x800aa388:
+ * Raum 1 @0x800aa398 x125..126 / Raum 0 @0x800aa388 x127..128 y147..154, MAPS_005.TIM; nb3/re2_tueren.py) - eine Tuer
+ * steht dort immer auf der Wand des Raums, der gezeichnet wird.
+ *
+ * Zustandsraum je Tuermarke: die Orte des Blatts, deren Zeichnung (Kachel-Kasten bzw. Schema-Kasten) den Balken +-3 px
+ * beruehrt, dazu die Orte ihrer beiden Zonen (zid/zid2) - jede nichtleere Teilmenge besucht, jeder davon einmal der
+ * aktuelle (zuletzt betreten, oben gezeichnet), ohne und mit dem Plan des Blatts (Bank 9: B1 78, B2 77, 1F 89, 2F 88,
+ * 3F 87 - gen/kartenitems_r36.inc k_r36k_lage). In jedem Zustand werden ALLE gezeichneten Tuerbalken des Blatts
+ * geprueft (Klassenbild der echten Op-Liste, komposit()):
+ *   (a) ein Ende laengs auf dem Grund                                  -> schwebt
+ *   (b) quer daneben eine Wandlinie (>= 3 der 5 Nachbarpixel einer Seite) -> schwebt neben der Wand
+ *   (c) unter dem Balken (Bild ohne Tuer-Ops) weniger als 4 von 5 Wandpixeln -> nicht auf der Wand
+ * (b) zaehlt erst ab 3: die Kachel traegt noch die gemalten RE1.5-Schwenke (die tilgt erst der PC-Renderer,
+ * inv_render_pc.c re15_schwenke_entfernen), deren Laibung quer an einem Pixel anliegen kann. */
+#define T3_MAXORT 5
+typedef struct { int zi; r39_ort_t o; } t3_ort_t;
+
+/* Besuchsort einer Zone: Mitte der Weltbox, sonst der erste Punkt eines 9x9-Rasters der Box, der in genau diese Zone
+ * faellt (re15_map_zone_at, kleinste Box gewinnt); Band wie rect_ort. 0 = kein Ort. */
+static int zone_ort(int zi, r39_ort_t *o)
+{
+    const re15_map_zone_t *zn = re15_map_zone_by_index(zi);
+    int gx, gz, b, band = -1, hat = 0, fp, fr;
+    if (!zn) return 0;
+    for (gz = -1; gz < 9; gz++)
+        for (gx = -1; gx < 9; gx++) {
+            int32_t x, z;
+            if ((gx < 0) != (gz < 0)) continue;
+            x = gx < 0 ? (zn->wx0 + zn->wx1) / 2 : zn->wx0 + (int32_t)(((int64_t)(zn->wx1 - zn->wx0) * (2 * gx + 1)) / 18);
+            z = gz < 0 ? (zn->wz0 + zn->wz1) / 2 : zn->wz0 + (int32_t)(((int64_t)(zn->wz1 - zn->wz0) * (2 * gz + 1)) / 18);
+            if (re15_map_zone_at(zn->room, x, z) != zn) continue;
+            for (b = 0; b < 10; b++)
+                if (re15_map_floor_lookup(zn->room, zn->idx, b, &fp, &fr)) {
+                    hat = 1;
+                    if (band < 0 && fp == (int)zn->page && fr == (int)zn->rect) band = b;
+                }
+            if (!hat) band = 0;
+            if (band < 0) return 0;
+            o->was = "Ort"; o->raum = zn->room; o->x = x; o->z = z; o->seite = zn->page; o->band = band;
+            return 1;
+        }
+    return 0;
+}
+
+static int t3_kasten_nah(const re15_map_zone_t *zn, int mx, int my)
+{
+    int x, y, w, h;
+    if (!re15_map_zone_kasten(zn, &x, &y, &w, &h)) return 0;
+    return mx + 3 >= x && mx - 3 < x + w && my + 3 >= y && my - 3 < y + h;
+}
+
+typedef struct { int x, y, w, h; } t3_balken_t;
+static unsigned char s_kl_tuer[240][320];   /* Klassenbild MIT Tueren */
+static unsigned char s_kl_unter[240][320];  /* ohne Tuer-Ops */
+
+/* Ein gezeichneter Balken: Befund-Bits 1 = Ende auf Grund, 2 = Wand quer daneben, 4 = nicht auf der Wand. */
+static int t3_balken_befund(const t3_balken_t *b, int *wq, int *unter)
+{
+    int senk = (b->h > b->w), i, n = senk ? b->h : b->w, f = 0, l = 0, r = 0, u = 0;
+    int ax = b->x, ay = b->y, ex = senk ? b->x : b->x + b->w - 1, ey = senk ? b->y + b->h - 1 : b->y;
+    int vx = senk ? ax : ax - 1, vy = senk ? ay - 1 : ay, hx = senk ? ex : ex + 1, hy = senk ? ey + 1 : ey;
+    if (vx < 0 || vy < 0 || hx > 319 || hy > 239 || ax < 1 || ay < 1 || ex > 318 || ey > 238) return 0;
+    if (s_kl_tuer[vy][vx] == 0 || s_kl_tuer[hy][hx] == 0) f |= 1;
+    for (i = 0; i < n; i++) {
+        int x = senk ? ax : ax + i, y = senk ? ay + i : ay;
+        if (senk) { l += (s_kl_tuer[y][x - 1] == 2); r += (s_kl_tuer[y][x + 1] == 2); }
+        else      { l += (s_kl_tuer[y - 1][x] == 2); r += (s_kl_tuer[y + 1][x] == 2); }
+        u += (s_kl_unter[y][x] == 2);
+    }
+    if (l >= 3 || r >= 3) f |= 2;
+    if (u < n - 1) f |= 4;
+    if (wq) *wq = l > r ? l : r;
+    if (unter) *unter = u;
+    return f;
+}
+
+typedef struct { int seite, x, y, w, h, befund; char zustand[160]; int zahl; } t3_fund_t;
+#define T3_FUND_MAX 64
+static t3_fund_t s_t3_fund[T3_FUND_MAX];
+static int s_t3_nfund = 0, s_t3_zustaende = 0, s_t3_balken = 0;
+static const int k_t3_planbit[5] = { 78, 77, 89, 88, 87 };   /* gen/kartenitems_r36.inc k_r36k_lage: B1 B2 1F 2F 3F */
+
+/* Einen Zustand bauen und alle gezeichneten Tuerbalken des Blatts pruefen. */
+static void t3_zustand(int seite, const t3_ort_t *orte, int nz, int maske, int cur, int plan)
+{
+    const r39_ort_t *liste[T3_MAXORT];
+    char name[160];
+    int j, nl = 0, n, i, len = 0;
+    for (j = 0; j < nz; j++) if ((maske & (1 << j)) && j != cur) liste[nl++] = &orte[j].o;
+    liste[nl++] = &orte[cur].o;
+    orte_betreten(liste, nl);
+    if (plan) re15_game_flag_set(9, k_t3_planbit[seite], 1);
+    n = baue_teil(seite);
+    s_kl_ohne_tueren = 1; komposit(seite, n); memcpy(s_kl_unter, s_kl, sizeof s_kl);
+    s_kl_ohne_tueren = 0; komposit(seite, n); memcpy(s_kl_tuer, s_kl, sizeof s_kl);
+    if (plan) re15_game_flag_set(9, k_t3_planbit[seite], 0);
+    s_t3_zustaende++;
+    name[0] = 0;
+    for (j = 0; j < nl && len < 140; j++)
+        len += snprintf(name + len, sizeof name - (size_t)len, "%s%04X(%d,%d)", j ? "+" : "", liste[j]->raum,
+                        (int)liste[j]->x, (int)liste[j]->z);
+    if (plan && len < 150) snprintf(name + len, sizeof name - (size_t)len, " +Plan");
+    for (i = 0; i < n; i++) {
+        const re15_inv_op_t *o = &s_ops[i];
+        t3_balken_t b;
+        int f, k, x, y, sichtbar = 0;
+        if (o->kind != RE15_INV_OP_FILL || o->abe || o->r != 224 || o->g != 168 || o->b != 40) continue;
+        b.x = o->x; b.y = o->y; b.w = o->w; b.h = o->h;
+        for (y = b.y; y < b.y + b.h; y++)
+            for (x = b.x; x < b.x + b.w; x++)
+                if (x >= 0 && x < 320 && y >= 0 && y < 240 && s_kl_tuer[y][x] == 4) sichtbar++;
+        if (!sichtbar) continue;
+        s_t3_balken++;
+        f = t3_balken_befund(&b, NULL, NULL);
+        if (!f) continue;
+        for (k = 0; k < s_t3_nfund; k++)
+            if (s_t3_fund[k].seite == seite && s_t3_fund[k].x == b.x && s_t3_fund[k].y == b.y &&
+                s_t3_fund[k].befund == f) break;
+        if (k == s_t3_nfund && s_t3_nfund < T3_FUND_MAX) {
+            t3_fund_t *t = &s_t3_fund[s_t3_nfund++];
+            t->seite = seite; t->x = b.x; t->y = b.y; t->w = b.w; t->h = b.h; t->befund = f; t->zahl = 0;
+            snprintf(t->zustand, sizeof t->zustand, "%s", name);
+        }
+        if (k < T3_FUND_MAX) s_t3_fund[k].zahl++;
+    }
+}
+
+/* Alle Zustaende eines Blatts (je Tuermarke ihre Orte, doppelte Ortsmengen nur einmal). */
+static void t3_blatt(int seite, int laut)
+{
+    static int gesehen[512][T3_MAXORT + 1];
+    static int mpg[512], mrc[512], mmx[512], mmy[512], mkd[512], mza[512], mzb[512];
+    int ngesehen = 0, k, nmark = re15_map_mark_count(), p;
+    /* Basislage aller Marken: alles aufgedeckt (re15_map_mark_get liefert nur sichtbare) */
+    re15_map_visited_reset();
+    for (p = 0; p < 13; p++) re15_map_debug_reveal_page((unsigned)p);
+    for (k = 0; k < nmark && k < 512; k++) {
+        mpg[k] = -1;
+        if (!re15_map_mark_get(k, &mpg[k], &mrc[k], &mmx[k], &mmy[k], &mkd[k])) { mpg[k] = -1; continue; }
+        re15_map_mark_zonen(k, &mza[k], &mzb[k]);
+    }
+    for (k = 0; k < nmark && k < 512; k++) {
+        t3_ort_t orte[T3_MAXORT];
+        int nz = 0, zi, j, maske, cur, plan, ids[T3_MAXORT], t, neu;
+        if (mpg[k] != seite || mkd[k] > 3) continue;
+        for (zi = 0; zi < re15_map_zone_count() && nz < T3_MAXORT; zi++) {
+            const re15_map_zone_t *zn = re15_map_zone_by_index(zi);
+            int dup = 0;
+            if (!zn || zn->page != (unsigned)seite || (zn->room & 1u)) continue;   /* Leon-Zeile (Elza teilt die Bits) */
+            if (!t3_kasten_nah(zn, mmx[k], mmy[k]) && zn->zid != mza[k] && zn->zid != mzb[k]) continue;
+            for (j = 0; j < nz; j++) {
+                const re15_map_zone_t *zo = re15_map_zone_by_index(orte[j].zi);
+                if (zo->room == zn->room && zo->idx == zn->idx && zo->rect == zn->rect) dup = 1;
+            }
+            if (dup || !zone_ort(zi, &orte[nz].o)) continue;
+            orte[nz].zi = zi; nz++;
+        }
+        if (!nz) continue;
+        for (j = 0; j < nz; j++) ids[j] = orte[j].zi;   /* dieselbe Ortsmenge schon gefahren? */
+        neu = 1;
+        for (t = 0; t < ngesehen && neu; t++) {
+            int gleich = (gesehen[t][0] == nz);
+            for (j = 0; j < nz && gleich; j++) gleich = (gesehen[t][j + 1] == ids[j]);
+            if (gleich) neu = 0;
+        }
+        if (!neu) continue;
+        if (ngesehen < 512) {
+            gesehen[ngesehen][0] = nz;
+            for (j = 0; j < nz; j++) gesehen[ngesehen][j + 1] = ids[j];
+            ngesehen++;
+        }
+        if (laut) {
+            printf("  Marke %d (%d,%d) kind %d zid %d/%d: %d Orte", k, mmx[k], mmy[k], mkd[k], mza[k], mzb[k], nz);
+            for (j = 0; j < nz; j++) printf(" %04X/%d", orte[j].o.raum, re15_map_zone_by_index(orte[j].zi)->idx);
+            printf("\n");
+        }
+        for (maske = 1; maske < (1 << nz); maske++)
+            for (cur = 0; cur < nz; cur++) {
+                if (!(maske & (1 << cur))) continue;
+                for (plan = 0; plan < 2; plan++) t3_zustand(seite, orte, nz, maske, cur, plan);
+            }
+    }
+}
+
+static void t3_alle(int von, int bis, int laut)
+{
+    int s;
+    s_t3_nfund = s_t3_zustaende = s_t3_balken = 0;
+    for (s = von; s <= bis; s++) t3_blatt(s, laut);
+}
+
+static void t3_fund_drucken(int k)
+{
+    const t3_fund_t *t = &s_t3_fund[k];
+    printf("   Blatt %d Balken x%d..%d y%d..%d:%s%s%s in %d Zustaenden, z.B. %s\n", t->seite, t->x, t->x + t->w - 1, t->y,
+           t->y + t->h - 1, (t->befund & 1) ? " Ende auf Grund" : "", (t->befund & 2) ? " Wand quer daneben" : "",
+           (t->befund & 4) ? " nicht auf der Wand" : "", t->zahl, t->zustand);
+}
+
+/* tueren [von bis]: Messung - alle Zustaende der Blaetter von..bis (Default 0..4 = Polizeistation), jeder Befund. */
+static int teil_tueren(int argc, char **argv)
+{
+    int k, von = argc > 2 ? atoi(argv[2]) : 0, bis = argc > 3 ? atoi(argv[3]) : 4;
+    t3_alle(von, bis, 1);
+    printf("Blaetter %d..%d: %d Zustaende, %d gezeichnete Tuerbalken geprueft, %d Befunde\n", von, bis, s_t3_zustaende,
+           s_t3_balken, s_t3_nfund);
+    for (k = 0; k < s_t3_nfund; k++) t3_fund_drucken(k);
+    return s_t3_nfund ? 1 : 0;
+}
+
 /* offen <bmp> [x0 y0 x1 y1]: Abzug der echten exe (RE15_INV_FB_SHOT) - Raumkoerper (rot/gruen) 4-nachbarlich am Grund
  * im Kartenfeld x40..299 y40..209 bzw. im Kasten (G_karten_werkzeug/nb1/offen.py). Riegel M3 in integration_r39_karten.
  * Nachbesserung 2: Kasten um die ROOM1210-Kammer - die vorbestehenden Kerben (187,71)/(187,77) der Schwenk-Tilgung am
@@ -1340,6 +1557,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "doppelwand")) return teil_doppelwand(argc, argv);
     if (!strcmp(teil, "markerflaeche")) return teil_markerflaeche(argc, argv);
     if (!strcmp(teil, "offen")) return teil_offen(argc, argv);
+    if (!strcmp(teil, "tueren")) return teil_tueren(argc, argv);   /* Nachbesserung 3 */
     printf("FAIL: unbekannter Teil '%s'\n", teil);
     (void)g_fail;
     return 2;

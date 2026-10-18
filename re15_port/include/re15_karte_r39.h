@@ -72,6 +72,12 @@ int re15_karte_r39_etage_hier(const void *zone, unsigned page);
  * keine Wirkung. Belege je Eintrag in karte_r39.c. */
 void re15_karte_r39_fenster(const void *zone, int wx, int wz, int *lo_x, int *hi_x, int *lo_y, int *hi_y);
 
+/* Nachbesserung 3 (Abnahme 2, N2): Lage einer Tuermarke (kind 0..3, mx/my aus s_map_marks) so, wie sie in DIESEM
+ * Schirm (inv_screen = re15_inv_screen_t*) gezeichnet wird - auf der Ersatzlinie einer Doppelwand-Korrektur nur,
+ * wenn deren Traeger gezeichnet wird, sonst eine Spalte/Zeile weiter auf der eigenen Linie, die dann noch steht
+ * (RE2: jede Raum-Kachel traegt die Tuer auf ihrer eigenen Wand). Belege in karte_r39.c. NULL = unveraendert. */
+void re15_karte_r39_tuer_lage(const void *inv_screen, unsigned page, int kind, int *mx, int *my);
+
 /* Riegel-Zugriff: Zahl der Texel-Korrekturen und ein Eintrag. traeger = Rechteck derselben Seite,
  * dessen Wandlinie die geloeschte ersetzt; 255 = gilt immer (Nachbesserung 1, M3). */
 int re15_karte_r39_korrektur_zahl(void);
