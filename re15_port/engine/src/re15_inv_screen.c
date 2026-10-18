@@ -2928,7 +2928,11 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                  * war als Referenz unbrauchbar. */
                 if (re15_map_stock_mode()) continue;
                 if (!re15_map_ebene_schema()) continue;      /* Messschiene */
-                if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
+                /* Runde 39 Spur G: mit dem Plan des Blattes (re15_map_owned_page, wie die Kacheln oben) zeigt
+                 * auch eine UNBESUCHTE Schema-Zeichnung ihren Umriss - Koerper durchsichtig wie
+                 * RE15_KARTE_UNBESUCHT (0x0000). Noetig, seit B1 ganz aus Schema-Zeichnungen besteht. */
+                if (rs2 == RE15_MAP_RECT_UNVISITED &&
+                    !(nur_rand && re15_map_owned_page((unsigned)st->map_page))) continue;
                 /* ⛔ JEDE ZEICHNUNG GENAU EINMAL - AUCH UEBER DIE DURCHGAENGE HINWEG
                  * (Runde 30, GEMESSEN mit unit_r30_karte_nutzerstand, Spieler in
                  * ROOM1000/z0: Blatt 2 Op 108 UND Op 109, beide FILL (207,89) 15x33).
@@ -2966,8 +2970,8 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                     if (!re15_map_synth_cell(erste + k2, &cx, &cy, &cw, &ch)) continue;
                     for (s2 = 0; s2 < 4; s2++) {
                         int laenge = (s2 < 2) ? cw : ch;
-                        if (re15_karte_r39_kante_weg(st->map_page, cx, cy, cw, ch, s2)) continue;   /* Runde 39 Spur G */
                         int lauf = -1, t;
+                        if (re15_karte_r39_kante_weg(st->map_page, cx, cy, cw, ch, s2)) continue;   /* Runde 39 Spur G */
                         for (t = 0; t <= laenge; t++) {
                             int frei = 0;
                             if (t < laenge) {

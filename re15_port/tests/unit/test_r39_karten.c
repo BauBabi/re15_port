@@ -277,19 +277,30 @@ static void flut_bbox(int32_t *x0, int32_t *x1, int32_t *z0, int32_t *z1, int *l
         }
 }
 
-/* flut <hexraum> <band> <x> <z> <r> [schritt]: Bbox + Zeilen-Laeufe (von +z nach -z). */
+/* flut <hexraum> <band> <x> <z> <r> [schritt] [bild.pgm]: Bbox + Zeilen-Laeufe (von +z nach -z). */
 static int teil_flut(int argc, char **argv)
 {
     unsigned rid; int band, r, st = 100, n, gz, leck;
     int32_t x0, x1, z0, z1;
     char alt[600] = "", neu[600];
-    if (argc < 7) { printf("FAIL: flut <hexraum> <band> <x> <z> <r> [schritt]\n"); return 2; }
+    if (argc < 7) { printf("FAIL: flut <hexraum> <band> <x> <z> <r> [schritt] [bild.pgm]\n"); return 2; }
     rid = (unsigned)strtoul(argv[2], NULL, 16); band = atoi(argv[3]); r = atoi(argv[6]);
     if (argc > 7) st = atoi(argv[7]);
     if (!betrete(rid, atoi(argv[4]), atoi(argv[5]), band)) { printf("FAIL: Raum\n"); return 1; }
     n = flut(band, atoi(argv[4]), atoi(argv[5]), r, st);
     if (n <= 0) { printf("FAIL: Saat (%s,%s) Band %d r %d nicht begehbar\n", argv[4], argv[5], band, r); return 1; }
     flut_bbox(&x0, &x1, &z0, &z1, &leck);
+    if (argc > 8) {   /* Rasterbild (PGM, Zeile 0 = kleinstes z), Kopf traegt Ursprung + Schritt */
+        FILE *f = fopen(argv[8], "wb");
+        if (f) {
+            fprintf(f, "P5\n# x0 %d z0 %d schritt %d\n%d %d\n255\n", s_flx0, s_flz0, st, s_flnx, s_flnz);
+            for (gz = 0; gz < s_flnz; gz++) {
+                int gx;
+                for (gx = 0; gx < s_flnx; gx++) fputc(s_fl[gz][gx] ? 255 : 0, f);
+            }
+            fclose(f);
+        }
+    }
     printf("ROOM%04X Band %d r %d Schritt %d: %d Punkte, Mitten x %d..%d z %d..%d%s\n", rid, band, r, st, n,
            x0, x1, z0, z1, leck ? " LECKT" : "");
     for (gz = s_flnz - 1; gz >= 0; gz--) {
