@@ -49,14 +49,14 @@ static const uint8_t k_r39p_p_ruf1041[94] = {
 
 /* k_r39p_p_ruf1131: 18 Byte
  *   +0000 09 0a 1e 00                          Sleep 30 (Elza ist eben durch die Tuer; RE2 ROOM1060 sub05 +0x2E)
- *   +0004 5f 46                                Xa_vol(70) = RE2-Opcode 0x5F (Verteiler @0x800a74c8[0x5F] -> 0x80058090: `lbu v1,1(v0)` / `sw v1,0x5b50(at)`, pc += 2) - "schon etwas lauter" (NUTZER-VORGABE; Wert = RE2 ROOM11D0.RDT @0x01F7A `5f 46`, derselbe RE2-Satz wie 50)
+ *   +0004 5f 64                                Xa_vol(100) = RE2-Opcode 0x5F (Verteiler @0x800a74c8[0x5F] -> 0x80058090: `lbu v1,1(v0)` / `sw v1,0x5b50(at)`, pc += 2) - "schon etwas lauter" (NUTZER-VORGABE; Wert = RE2 ROOM1020.RDT @0x01960 `5f 64`, dieselbe XA-Stimme 0x0B wie ROOM11D0 @0x01F7A mit 70; Wahl gemessen, Dossier 4.2)
  *   +0006 2b 36 00 00                          Message_on 54 = Sprach-Zeile help02.wav OHNE Text (Port; Form `2b id 00 00` wie sub11 @0x02224; der Stimmen-Riegel in op_message_on laesst den vorigen Ruf ausreden) - "das please help von John auch noch mal"
  *   +000A 09 0a 5a 00                          Sleep 90 (RE2 ROOM1060 sub05 +0x58; der Ruf ist vor dem Zuruecksetzen aus)
  *   +000E 5f 78                                Xa_vol(120) = RE2-Opcode 0x5F (Verteiler @0x800a74c8[0x5F] -> 0x80058090: `lbu v1,1(v0)` / `sw v1,0x5b50(at)`, pc += 2) - zurueck auf den Standard (Form RE2 ROOM1010 sub22)
  *   +0010 01 00                                Evt_end (keine Szene: Elza laeuft waehrenddessen weiter)
  */
 static const uint8_t k_r39p_p_ruf1131[18] = {
-    0x09,0x0a,0x1e,0x00,0x5f,0x46,0x2b,0x36,0x00,0x00,0x09,0x0a,0x5a,0x00,0x5f,0x78,
+    0x09,0x0a,0x1e,0x00,0x5f,0x64,0x2b,0x36,0x00,0x00,0x09,0x0a,0x5a,0x00,0x5f,0x78,
     0x01,0x00,
 };
 

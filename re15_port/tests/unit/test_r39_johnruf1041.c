@@ -7,7 +7,7 @@
  * Teile (Aufruf: test_r39_johnruf1041 <teil>):
  *   texte      msg 40 dekodiert = Wortlaut des Nutzers (Nachtrag 10, Schreibung Nachtrag 6 = derselbe Satz wie Spur J msg 50)
  *   programme  Programm-Bytes: Reihenfolge Rufe leise (Xa_vol 50) -> Drehen -> Xa_vol 120 -> msg 40 -> Karte (59) -> Bit 97 ->
- *              Steuerung zurueck; 1131: Xa_vol 70 -> help02 -> Pause >= Ruflaenge -> Xa_vol 120; Original-Zeilen bytegleich
+ *              Steuerung zurueck; 1131: Xa_vol 100 -> help02 -> Pause >= Ruflaenge -> Xa_vol 120; Original-Zeilen bytegleich
  *              mit ROOM1041.RDT sub11; Kopf-Konstanten = Werkzeug
  *   stimme     Sprach-Ordner/Stamm: (1041|1131, 53..57) -> room1141/help01..05, alles andere unveraendert
  *   xa         Opcode 0x5F: nur in den Programmen RE2 Xa_vol (Wert < 0x80, pc += 2), sonst op_unknown (pc += 1); CD_VOL =
@@ -17,7 +17,7 @@
  *              der Schirm zu ist, dann Bit 97 und Steuerung zurueck; Musikfenster + Raummusik-Anstoss; kein zweites Mal
  *   musik      Weiche/Sperre: 0xFF01 in STAGE1 ausser ROOM1141, nur im Fenster; Rettung ((4,0xF0)=0 und (4,0xF2)=0) loescht
  *              Bit 97 und stoesst die Tabellen-Musik an; waehrend des Kampfs ((4,0xF2)=1) bleibt sie; Kartenziel aktiv
- *   ruf1131    ROOM1131 in der Panikphase: Ruf help02 mit Xa_vol 70, einmal je Phase; ohne Bit 97 / nach der Rettung keiner
+ *   ruf1131    ROOM1131 in der Panikphase: Ruf help02 mit Xa_vol 100, einmal je Phase; ohne Bit 97 / nach der Rettung keiner
  *   leon       Leon ROOM1040 mit denselben Flags: kein Programm, Weiche -1
  */
 #include "re15_rdt.h"
@@ -39,6 +39,7 @@
 #include "re15_inventory.h"
 #include "re15_map_hint.h"
 #include "re15_johnruf_r39.h"
+#include "re15_stimmen_pegel_r39.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -76,7 +77,7 @@ static size_t             s_rawsz = 0;
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
 static re15_game_ctx_t    s_ctx;
-static int                s_shown = 0, s_bild = 0;
+static int                s_shown = 0, s_bild = 0, s_cine_was = 0;
 static uint16_t           s_rdt_raum = 0;
 static uint64_t           s_uhr = 1000000;
 
@@ -117,6 +118,13 @@ static void bild(uint16_t pressed, uint16_t held)
     scd_vm_tick();
     re15_actor_step_all_walkers();
     re15_letterbox_tick(re15_game_flag_get(1, 27));
+    {   /* Szenen-Modus wie platform/pc/main.c (Muster test_r39_dining1141.c): (1,27)/(2,7) -> player_mode 2 */
+        int cine = re15_cine_active();
+        if (cine) { g_scd.player_mode = 2; g_scd.letterbox_countdown = -1; }
+        else if (s_cine_was) g_scd.letterbox_countdown = 15;
+        s_cine_was = cine;
+        if (g_scd.letterbox_countdown > 0 && --g_scd.letterbox_countdown == 0) g_scd.player_mode = 0;
+    }
     re15_msg_tick(&raw, &len, &id);
     if (re15_cam_present_tick()) s_shown = (int)g_scd.cam_id;
     s_ctx.active_cut = s_shown;
@@ -147,10 +155,10 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot)
     g_gameflow.character = (room & 0xFu) ? 4 : 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
-    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    pl->state = 1; pl->motion = 0; pl->floor = 0; pl->y = 0;   /* Normalzustand wie test_r39_dining1141.c */
     pl->x = px; pl->z = pz; pl->rot_y = rot;
     re15_collision_set_band(0);
-    s_shown = 0; s_bild = 0; s_n_st = 0; s_hint_nr = -1; s_hint_bild = -1;
+    s_shown = 0; s_bild = 0; s_n_st = 0; s_hint_nr = -1; s_hint_bild = -1; s_cine_was = 0;
     g_scd.player_mode = 0; g_scd.letterbox_countdown = 0;
     re15_map_hint_room_scan(s_raw, (int)s_rawsz, room);
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
@@ -273,7 +281,7 @@ static void teil_programme(void)
             if (p[o] == 0x09 && rf >= 0 && reset < 0) sl += p[o + 2] | p[o + 3] << 8;
         }
         PRUEF(rf >= 0 && xarf == RE15_R39P_XA_LAUTER && xarf > RE15_R39P_XA_LEISE,
-              "RUF1131: help%02d mit Xa_vol %d (> %d in 1041, RE2 ROOM11D0 @0x01F7A)", RE15_R39P_RUF1131, xarf, RE15_R39P_XA_LEISE);
+              "RUF1131: help%02d mit Xa_vol %d (> %d in 1041, RE2 ROOM1020 @0x01960)", RE15_R39P_RUF1131, xarf, RE15_R39P_XA_LEISE);
         PRUEF(reset > rf && sl >= 59 && p[n - 2] == 0x01, "danach Pause %d Bilder >= 59, Xa_vol 120, Evt_end - keine Pad-Sperre", sl);
         int sperre2 = 0;
         for (o = 0; o + 3 < n; o++) if (p[o] == 0x22 && p[o + 1] == 2 && p[o + 2] == 7) sperre2 = 1;
@@ -512,9 +520,110 @@ static void teil_leon(void)
     PRUEF(re15_johnruf_r39_bgm_eintrag(0, 0x04) < 0 && !re15_johnruf_r39_fenster(), "Weiche -1 (Leons Musik unveraendert)");
 }
 
+/* ================================================================== pegel (Werkzeug fuer die Integrations-Riegel)
+ * test_r39_johnruf1041 pegel <cap.raw> <wav> <capTick> <xa_vol>
+ * Misst im RE15_AUDIO_CAP_SYNC-Mitschnitt (Stereo int16, 44100 Hz, 1470 Werte je Spielbild) die Verstaerkung einer
+ * Sprachzeile, die laut debug.log ("[voice] Start ROOM.. Id .. CD_VOL .. capTick N", audio_pc.c re15_voice_play) bei Takt N
+ * startet. Referenz = die Datei genau so, wie der Port sie laedt (audio_pc.c re15_voice_load_clip: lineares Resampling Q16
+ * auf 44100 Hz, Spitzen-Boden 14745 mit Deckel 4x, dann re15_stimmen_pegel_r39 Stufe 2). Gemessen wird
+ * g = <Mitschnitt, Referenz> / <Referenz, Referenz> am besten Versatz innerhalb +-3 Takten; Soll = xa_vol / 120 (RE2
+ * FUN_80013ac8 relativ zum Standard 120 = CD_VOL 0x3FFF, Mischer (smp * CD_VOL) >> 14). Rueckgabe 0 = |g/Soll - 1| <= 10 %. */
+static int16_t *wav_laden(const char *p, long *n_out)
+{
+    size_t n = 0;
+    uint8_t *b = slurp(p, &n);
+    if (!b || n < 44) { free(b); return NULL; }
+    int ch = 0, bits = 0; long rate = 0; const uint8_t *data = NULL; long dlen = 0;
+    for (size_t o = 12; o + 8 <= n;) {
+        const uint32_t len = (uint32_t)b[o + 4] | (uint32_t)b[o + 5] << 8 | (uint32_t)b[o + 6] << 16 | (uint32_t)b[o + 7] << 24;
+        if (!memcmp(b + o, "fmt ", 4)) { ch = b[o + 10]; rate = (long)(b[o + 12] | b[o + 13] << 8 | b[o + 14] << 16); bits = b[o + 22]; }
+        if (!memcmp(b + o, "data", 4)) { data = b + o + 8; dlen = (long)len; if (o + 8 + len > n) dlen = (long)(n - o - 8); break; }
+        o += 8 + len + (len & 1);
+    }
+    if (!data || bits != 16 || ch < 1 || rate <= 0) { free(b); return NULL; }
+    const long src_n = dlen / 2 / ch;
+    const int16_t *src = (const int16_t *)data;
+    const long out_n = (long)((int64_t)src_n * 44100 / rate);
+    int16_t *pcm = (int16_t *)malloc((size_t)out_n * sizeof(int16_t));
+    if (!pcm) { free(b); return NULL; }
+    for (long i = 0; i < out_n; i++) {              /* audio_pc.c re15_voice_load_clip, Resampling Q16 */
+        const int64_t sp = (int64_t)i * rate * 65536 / 44100;
+        const int64_t si = sp >> 16; const int frac = (int)(sp & 0xffff);
+        const int64_t s0 = si * ch, s1 = (si + 1 < src_n ? si + 1 : si) * ch;
+        int32_t a, c;
+        if (ch == 1) { a = src[s0]; c = src[s1]; } else { a = (src[s0] + src[s0 + 1]) / 2; c = (src[s1] + src[s1 + 1]) / 2; }
+        pcm[i] = (int16_t)(a + (((c - a) * frac) >> 16));
+    }
+    free(b);
+    int32_t peak = 1;
+    for (long i = 0; i < out_n; i++) { int32_t a = pcm[i] < 0 ? -pcm[i] : pcm[i]; if (a > peak) peak = a; }
+    if (peak < 14745) {                             /* audio_pc.c Spitzen-Boden ~45 % FS, Deckel 4x */
+        int g = 14745 * 256 / peak; if (g > 4 * 256) g = 4 * 256;
+        for (long i = 0; i < out_n; i++) {
+            int32_t s = (pcm[i] * g) >> 8;
+            if (s > 32767) s = 32767; else if (s < -32768) s = -32768;
+            pcm[i] = (int16_t)s;
+        }
+    }
+    (void)re15_stimmen_pegel_r39(pcm, out_n, NULL, NULL);   /* Runde 39 Spur A Stufe 2 (wie der Port) */
+    *n_out = out_n;
+    return pcm;
+}
+
+static int teil_pegel(int argc, char **argv)
+{
+    if (argc < 6) { printf("pegel <cap.raw> <wav> <capTick> <xa_vol>\n"); return 2; }
+    size_t cn = 0;
+    uint8_t *cb = slurp(argv[2], &cn);
+    long rn = 0;
+    int16_t *ref = wav_laden(argv[3], &rn);
+    const long takt = atol(argv[4]);
+    const int xa = atoi(argv[5]);
+    if (!cb || !ref || rn <= 0) { printf("  FEHLER: Mitschnitt oder WAV nicht lesbar\n"); return 1; }
+    const int16_t *cs = (const int16_t *)cb;
+    const long cap_n = (long)(cn / 4);
+    double rr = 0;
+    for (long i = 0; i < rn; i++) rr += (double)ref[i] * ref[i];
+    double best_rho = -2, best_g = 0; long best_o = 0;
+    for (long d = -3 * 1470; d <= 3 * 1470; d++) {
+        const long o = takt * 1470 + d;
+        if (o < 0 || o + rn > cap_n) continue;
+        double cr = 0, cc = 0;
+        for (long i = 0; i < rn; i++) {
+            const double m = 0.5 * ((double)cs[2 * (o + i)] + (double)cs[2 * (o + i) + 1]);
+            cr += m * ref[i]; cc += m * m;
+        }
+        const double rho = cr / (sqrt(cc * rr) + 1e-9);
+        if (rho > best_rho) { best_rho = rho; best_g = cr / (rr + 1e-9); best_o = d; }
+        if (d % 7 == 0 && d < 3 * 1470) d += 6;   /* grob in Schritten von 7 Werten ... */
+    }
+    /* ... dann fein um den besten Wert */
+    {
+        const long mitte = best_o;
+        for (long d = mitte - 7; d <= mitte + 7; d++) {
+            const long o = takt * 1470 + d;
+            if (o < 0 || o + rn > cap_n) continue;
+            double cr = 0, cc = 0;
+            for (long i = 0; i < rn; i++) {
+                const double m = 0.5 * ((double)cs[2 * (o + i)] + (double)cs[2 * (o + i) + 1]);
+                cr += m * ref[i]; cc += m * m;
+            }
+            const double rho = cr / (sqrt(cc * rr) + 1e-9);
+            if (rho > best_rho) { best_rho = rho; best_g = cr / (rr + 1e-9); best_o = d; }
+        }
+    }
+    const double soll = (double)xa / 120.0;
+    const double v = best_g / soll;
+    printf("pegel %s Takt %ld Versatz %+ld Werte: rho %.3f g %.4f Soll %.4f (Xa_vol %d / 120) Verhaeltnis %.3f\n",
+           argv[3], takt, best_o, best_rho, best_g, soll, xa, v);
+    free(cb); free(ref);
+    return (best_rho >= 0.3 && v > 0.9 && v < 1.1) ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "";
+    if (!strcmp(teil, "pegel"))          return teil_pegel(argc, argv);
     if (!strcmp(teil, "texte"))          teil_texte();
     else if (!strcmp(teil, "programme")) teil_programme();
     else if (!strcmp(teil, "stimme"))    teil_stimme();

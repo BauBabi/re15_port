@@ -2410,7 +2410,9 @@ static void re15_voice_play(uint16_t room, int voice_id)
      * channel = voice id (the r<room>_m<id> key). */
     re15_xa_set_filter((uint8_t)(room & 0xFF), (uint8_t)voice_id);
     { extern unsigned re15_johnruf_r39_xa_cdvol(void);   /* Runde 39 Spur P: RE2 Xa_vol (0x800d5b50 -> DsMix @0x80013b34), Standard 120 = 0x3FFF */
-      s_xa.cd_vol_l = s_xa.cd_vol_r = (uint16_t)re15_johnruf_r39_xa_cdvol(); }
+      s_xa.cd_vol_l = s_xa.cd_vol_r = (uint16_t)re15_johnruf_r39_xa_cdvol();
+      if (getenv("RE15_SE_DEBUG")) fprintf(stderr, "[voice] Start ROOM%04X Id %d CD_VOL %u capTick %ld\n", (unsigned)room, voice_id,
+                                         (unsigned)s_xa.cd_vol_l, s_cap_ticks); }   /* Messschiene (Riegel r39_johnruf1041 pegel) */
     re15_xa_read_s(s_voice_clip[voice_id].pcm, s_voice_clip[voice_id].len);
 }
 /* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */

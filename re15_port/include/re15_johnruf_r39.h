@@ -22,7 +22,7 @@
  *             dann Set(9,97)=1.
  *   Panikphase  Bit 97 = 1: MAIN01 (Leons Panikmusik nach Irons' Tod, Runde 35 K) in allen STAGE1-Raeumen ausser ROOM1141
  *             (dort die eigene Musik MAIN16 der Spur J, wie 11C0 bei Leon), Sce_bgm_control der Raumskripte an Slot 0 gilt
- *             dann nicht. ROOM1131: einmal je Phase der Ruf help02 lauter (Xa_vol 70), Programm RUF1131.
+ *             dann nicht. ROOM1131: einmal je Phase der Ruf help02 lauter (Xa_vol 100), Programm RUF1131.
  *   Rettung   (4,0xF0) = 0 und (4,0xF2) = 0 (ROOM1141 sub02 @0x00C18 loescht F0, sub01 @0x00C0C loescht F2 = beide
  *             Gorillas tot, @0x00C06 MAIN16 Stop) -> Bit 97 = 0, Fenster zu, Raummusik = Tabelle.
  *
@@ -62,7 +62,10 @@
 #define RE15_R39P_XA_NORMAL      120    /* RE2-Standard: FUN_800128c4 @0x80012958 `li v0,0x78`, je Raum-Skript-Init
                                          * FUN_80052f3c @0x80053014 `addiu v0,zero,120` / @0x80053038 `sw v0,0x5b50(at)`  */
 #define RE15_R39P_XA_LEISE       50     /* "leise" 1041: RE2 ROOM11D0.RDT sub09 @0x01F84 `5f 32` (Stimme aus dem Off)       */
-#define RE15_R39P_XA_LAUTER      70     /* "etwas lauter" 1131: RE2 ROOM11D0.RDT sub09 @0x01F7A `5f 46` (derselbe Satz)    */
+#define RE15_R39P_XA_LAUTER      100    /* "etwas lauter" 1131: RE2 ROOM1020.RDT sub02 @0x01960 `5f 64` = dieselbe XA-Stimme
+                                         * 0x0B, die ROOM11D0 @0x01F7A mit 70 spielt (RE2 regelt sie je Raum). 100 statt 70
+                                         * GEMESSEN (Dossier 4.2): in 1131 laeuft MAIN01; mit 70 laege der Ruf nur +2,9 dB ueber
+                                         * der Musik (1041 leise: +4,2 dB ueber dem Raumklang), mit 100 +5,9 dB                  */
 #define RE15_R39P_XA_GRENZE      0x80   /* Handler nimmt nur Werte < 0x80 an: @0x800580a0 `sltiu v0,v1,0x80`               */
 #define RE15_R39P_CD_VOL_VOLL    0x3FFF /* Port-Mischer: CD_VOL bei Standard 120 (audio_pc.c re15_xa_init = CD_initvol)    */
 

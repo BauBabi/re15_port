@@ -26,3 +26,23 @@ foreach(_teil texte programme stimme xa ablauf musik ruf1131 leon)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_johnruf1041_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+# INTEGRATION (echte exe, Elza, Spielstand + CONTINUE, echte Tueren; tests/integration/test_r39_johnruf1041.cmake):
+#   integration_r39_johnruf1041_a  1021 -> 1041: Rufe leise (Pegel Xa 50/120 im Mitschnitt), msg 40 + main40, Drehung zur
+#                                  Treppe, Karte 1141 (FB_SHOT), Bit 97 + MAIN01; -> 1061: MAIN01 laeuft durch
+#   integration_r39_johnruf1041_b  Spielstand 1121 in der Panikphase: MAIN01 nach dem Laden; 1131 Ruf lauter (Pegel Xa 100),
+#                                  einmal; 1141 unveraendert (MAIN16, Rufe 120); Kampfende -> Bit 97 aus; 1171 MAIN32
+if(TARGET re15_pc AND TARGET probe_r36_elza_karte)
+    foreach(_teil a b)
+        add_test(NAME integration_r39_johnruf1041_${_teil}
+            COMMAND ${CMAKE_COMMAND}
+                -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                -DRE15_WERKZEUG=$<TARGET_FILE:test_r39_johnruf1041>
+                -DRE15_KARTE_ELZA=$<TARGET_FILE:probe_r36_elza_karte>
+                -DRE15_SYNCHRO=${CMAKE_SOURCE_DIR}/../synchro
+                -DWORKDIR=${CMAKE_BINARY_DIR}/r39_johnruf1041_wd
+                -DTEIL=${_teil}
+                -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_johnruf1041.cmake)
+        set_tests_properties(integration_r39_johnruf1041_${_teil} PROPERTIES TIMEOUT 3600)
+    endforeach()
+endif()

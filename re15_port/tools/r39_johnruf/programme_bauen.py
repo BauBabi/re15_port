@@ -17,8 +17,8 @@ PROGRAMME (NUTZER-VORGABE Nachtrag 10, Ablauf des Orchestrators in AUFTRAG.md)
            zwei LEISE Hilferufe Johns (help03, help02 "Please help!"; RE2 Xa_vol 50 = ROOM11D0.RDT @0x01F84), Elza dreht
            sich zur Treppe, Xa_vol 120 (Standard), msg 40 "Elza: Oh, no, this is John! ...", Warte-Zeile 59 = Karte mit
            ROOM1141 (Kartenhinweis, Faden parkt bis zum Schliessen), dann Set(9,97)=1 = Panikphase, Steuerung zurueck.
-  RUF1131  ROOM1131 (Flur vor 1141) in der Panikphase: ein Hilferuf help02 "Please help!", LAUTER als in 1041 (RE2 Xa_vol 70 =
-           ROOM11D0.RDT @0x01F7A, derselbe RE2-Satz wie 50), ohne Szene (Elza laeuft weiter).
+  RUF1131  ROOM1131 (Flur vor 1141) in der Panikphase: ein Hilferuf help02 "Please help!", LAUTER als in 1041 (RE2 Xa_vol 100 =
+           ROOM1020.RDT @0x01960 `5f 64`, Begruendung Dossier 4.2), ohne Szene (Elza laeuft weiter).
 """
 import importlib.util, io, os, struct, sys
 
@@ -42,7 +42,10 @@ HILFE_ID0 = 53                  # RE15_R39P_HILFE_ID0       Sprach-Ids 53..57 = 
 MSG_KARTE = 59                  # RE15_R39P_MSG_KARTE       Port-Warte-Zeile ohne Text: Kartenhinweis + Parken
 BIT_PANIK = 97                  # RE15_R39P_BIT_PANIK       Bank 9 (VERTRAG 1.1: P = 97)
 XA_LEISE = 50                   # RE15_R39P_XA_LEISE        RE2 ROOM11D0.RDT @0x01F84 `5f 32`
-XA_LAUTER = 70                  # RE15_R39P_XA_LAUTER       RE2 ROOM11D0.RDT @0x01F7A `5f 46`
+XA_LAUTER = 100                 # RE15_R39P_XA_LAUTER       RE2 ROOM1020.RDT sub02 @0x01960 `5f 64` (dieselbe XA-Stimme
+                                #   0x0B wie ROOM11D0 @0x01F7A mit 70 - RE2 regelt dieselbe Stimme je Raum; 100 statt 70
+                                #   GEMESSEN: in 1131 laeuft MAIN01, mit 70 laege der Ruf nur +2,9 dB ueber der Musik gegen
+                                #   +4,2 dB des leisen Rufs in 1041 ueber dessen Raumklang - Dossier 4.2)
 XA_NORMAL = 120                 # RE15_R39P_XA_NORMAL       RE2-Standard @0x80012958 / @0x80053014 (`li v0,0x78`)
 RUF1041 = (3, 2)                # RE15_R39P_RUF1041_A/_B    help03, dann help02 ("Please help!") - PORT-WAHL, Dossier 3
 RUF1131 = 2                     # RE15_R39P_RUF1131         help02 "Please help!" ("das please help ... noch mal")
@@ -135,8 +138,8 @@ def baue_ruf1041():
 def baue_ruf1131():
     del prog[:]
     sleep(30, "Sleep 30 (Elza ist eben durch die Tuer; RE2 ROOM1060 sub05 +0x2E)")
-    xa_vol(XA_LAUTER, "- \"schon etwas lauter\" (NUTZER-VORGABE; Wert = RE2 ROOM11D0.RDT @0x01F7A `5f 46`, derselbe RE2-Satz "
-                      "wie 50)")
+    xa_vol(XA_LAUTER, "- \"schon etwas lauter\" (NUTZER-VORGABE; Wert = RE2 ROOM1020.RDT @0x01960 `5f 64`, dieselbe XA-Stimme "
+                      "0x0B wie ROOM11D0 @0x01F7A mit 70; Wahl gemessen, Dossier 4.2)")
     ruf(RUF1131, "- \"das please help von John auch noch mal\"")
     sleep(90, "Sleep 90 (RE2 ROOM1060 sub05 +0x58; der Ruf ist vor dem Zuruecksetzen aus)")
     xa_vol(XA_NORMAL, "- zurueck auf den Standard (Form RE2 ROOM1010 sub22)")
