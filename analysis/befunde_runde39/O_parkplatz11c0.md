@@ -165,10 +165,48 @@ die Tuer (die Original-Ende-Szene nimmt sie selbst, beim naechsten Besuch ist si
 und Gorillas sind Bild fuer Bild unveraendert (nach2/nach3); Elza unberuehrt (Riegel `elza`, integration E).
 
 ## Tests
-(offen)
+
+Riegel (registriert NUR in `re15_port/tests/unit/probes/r39_parkplatz11c0.cmake`):
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r39_parkplatz11c0_texte | msg 40 dekodiert = "I cannot leave Ada alone here with those monsters!"; `04 02 .. 1a 01 00`, genau ein 0x08, kein 0x05/0x16 (kein Sprecherkopf); breiteste Zeile 202 px <= 271; keine Ja/Nein-Frage | gruen |
+| unit_r39_parkplatz11c0_programme | SZENE-/ENDE-Bytes; Zeilenform = ROOM11B0 sub01 @0x01216; ENDE-Nutzlast = main00 @0x01712+14; alle Kopf-Konstanten gegen die RDT-Bytes (sub00/01/02/03, main00); Anker; Evt_exec-Haken nur 11C0 sub02/sub03 | gruen |
+| unit_r39_parkplatz11c0_kampf | ECHTE Szene ab dem Tuer-Spawn (-25279,17268) Blick 0x11FB: Bild 1 = SZENE, Slot 0 Text, (4,64)=1 + Pad-Sperre in derselben Runde; durchgehend Text bis zur Rueckgabe (Bild 1043); 2 Gorillas; Druck an der Tuer -> msg 40, Stimme eingereiht, kein Raumwechsel; danach 30 Bilder UP: 2022 Einheiten = steuerbar; zweiter Druck -> wieder msg 40; Kill-Bits -> sub03 = ENDE im selben Bild, Slot 0 = Tuer -> 0x1B (-25552,0,-25331), (3,67)=1, msg 7, Raumwechsel ROOM11B0 (Aot_on(0) @0x01C08) | gruen |
+| unit_r39_parkplatz11c0_wiedereintritt | (4,64)=1/(3,67)=0: Slot 0 VOR dem ersten Bild Text (Installer), 2 Gorillas neu, keine Szene; Druck -> msg 40; Ende wie oben | gruen |
+| unit_r39_parkplatz11c0_nachher | (3,67)=1: Tuer normal, keine Gorillas, Druck -> ROOM11B0, kein Text | gruen |
+| unit_r39_parkplatz11c0_elza | ROOM11C1 mit (4,64)=0 und =1: Tuer, kein Eingriff, keine Gorillas/Ada, Druck -> ROOM11B1 | gruen |
+| unit_r39_parkplatz11c0_fremd | 1 Byte in sub02 geaendert: Anker greift nicht, keine Sperre, Original-Subs | gruen |
+| integration_r39_parkplatz11c0_k | echte exe, Karte 11B0 -> Tuer -> 11C0, Szene, Kampf (Gorillas eingefroren), Tuer -> msg 40 (`Tuer im Kampf -> msg 40`, Zustands-Log `msg(a=1 fsm=1 id=40` > 20 Bilder, Stimme angefragt `synchro/STAGE1/room11c0/main40.wav`), kein DOOR FIRE vor dem Kampfende, weg von der Tuer (steuerbar), Kampfende -> ENDE, msg 7, `DOOR FIRE slot=0 ... spawn=(-25552,0,-25331)`, `loaded room11b0`; 5 Framedumps | gruen (131 s) |
+| integration_r39_parkplatz11c0_w | echte exe, Wiedereintritt im Kampfzustand: Installer-Zeile, `AOT slot 0 typ 5 ev 40`, Druck -> msg 40, kein DOOR FIRE, EXIT_AT in 11C0 | gruen (41 s) |
+| integration_r39_parkplatz11c0_e | echte exe, ELZA 11B1 -> 11C1: `AOT slot 0 typ 1`, kein `[parkplatz]`, Tuer -> zurueck nach 11B1 | gruen (34 s) |
+
+Bild: `O_belege/nach_k_msg40_F1865.png` (Framedump RE15_WINDOW_SCALE=1, Lauf integration K: Leon an der Parkplatz-Tuer,
+Textfenster "I cannot leave Ada alone here / with those monsters!"), `nach_k_msg40_F1775.png` (Schreibmaschine laeuft).
+
+Gezielte Laeufe (Spurbaum, KEINE volle Suite):
+- `ctest --test-dir re15_port/build -R "integration_r39_parkplatz11c0" --timeout 1800` -> `100% tests passed, 0 tests failed out of 3`
+- Modulgruppen (unit), `-R "r39_parkplatz11c0|^unit_r35_affen_|^unit_r36_karte_tuer11c0$|^unit_r35_cut1150_|^unit_r36_szene1150_|^unit_r37_szene11c0_|^unit_r38_montage_|^unit_r39_gegner_|^unit_r36_schluessel_|^unit_r38_dining1141_|^unit_r39_funk10f1_|^unit_r39_stimmen_|^unit_scd_|^unit_aot_|^unit_msg_dialog$|^unit_door_seq$|^unit_synchro_stimme$|^unit_voice_ausreden$|^unit_se_voice_machine$|^prop_scd_pc_advance$|^unit_maggot_|^unit_r38_affen3_|^unit_r38_griff_gorilla$|^unit_r36_zombieki_affen" -E "^integration_" -j 6`
+  -> `100% tests passed, 0 tests failed out of 126` (darin unit_r35_affen_szene = Szenen-Gang bitgleich mit der GDB-Spur des
+  Originals: die Gosub-Huelle aendert die Szene nicht).
 
 ## OFFEN
-(offen)
+- Keine offenen Punkte dieser Spur.
+- Hinweis an Spur J / Orchestrator (nicht Spur O): ROOM1141 msg 41 ("I cannot leave him alone with those monsters.",
+  Runde 38 F) laeuft ebenfalls ueber den MESSAGE-AOT-Weg, der im Port KEINE Stimme einreiht (scd_vm.c
+  re15_scd_show_message, nur Message_on ruft scd_queue_voice). Eine kuenftige `synchro/STAGE1/room1141/main41.wav` bliebe
+  dort stumm; fuer 11C0 msg 40 ist das mit `re15_parkplatz_r39_stimme` geloest (gemessen: die Datei wird angefragt).
 
 ## Fuer den Nutzer
-(offen)
+- **Sprachdatei:** `synchro/STAGE1/room11C0/main40.wav` = Leon: "I cannot leave Ada alone here with those monsters!"
+  (Ordnerregel main<MESSAGE-ID>.wav, Message-Id 40). Sie spielt, sobald sie dort liegt — nichts einzutragen (gemessen: der
+  Port fragt beim Text genau diese Datei an, heute `[voice] ROOM11C0 msg 40: keine Aufnahme ... - Zeile bleibt stumm`).
+- **Neue Assets fuer das Paket-Gate:** keine (Text und Programme stehen im Code, `engine/src/gen/parkplatz_r39_programme.inc`).
+- **So sieht es aus:** nach "Leon: Ada, you hide inside that patrol car." / "Ada: O-okay, I'll do that..." ist die
+  Parkplatz-Tuer gesperrt; wer sie benutzt, bekommt das Textfenster "I cannot leave Ada alone here / with those monsters!"
+  (Leons Gedanke, ohne "Leon:"-Kopf — dieselbe Form wie Elzas "I cannot leave him alone with those monsters." in ROOM1141
+  und wie RE2s Tuertext im Pflichtkampf "I can't put my friends in danger..."), Leon bleibt im Raum und frei steuerbar.
+  Sind beide Gorillas tot, laeuft die Original-Szene ("Ada: Okay, it's over now." ...) und geht selbst durch die Tuer;
+  danach ist die Tuer wieder normal. Elzas Parkplatz (ROOM11C1, Hunde) ist unveraendert.
+- **Alte Spielstaende:** wer in einer frueheren Fassung mitten im Kampf hinausgegangen ist, findet beim Wiederbetreten den
+  Kampf wie im Original weiterlaufend vor (Gorillas, Ada im Wagen) — jetzt mit gesperrter Tuer bis zum Kampfende.
+- Keine Entscheidungsfragen.
