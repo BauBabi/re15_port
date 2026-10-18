@@ -18,7 +18,7 @@ static const re15_stimmen_r39_t k_tabelle[] = {
                             * Diktat "Another civilian survivor" 0,935 */
     { 0x1050u, 24, 11 },   /* +0x80 `2b 18 00 00` "Leon: I have to help her!"                          main11 1,358 s,
                             * Diktat "I have to help her" 0,871 */
-    /* Punkt 2 — ROOM1150 Irons' Tod (irons_tod_1150.c k_p_szene, Runde 35 Spur L); msg 29 "SIR, Sir?!" hat keine Datei */
+    /* Punkt 2 — ROOM1150 Irons' Tod (irons_tod_1150.c k_p_szene, Runde 35 Spur L); msg 29 seit Nachtrag 2 mit main22 */
     { 0x1150u, 22, 15 },   /* OP_MSG(22) "Leon: Sir!"                                  main15 0,720 s, DTW Leon 23:09:46 1,428 */
     { 0x1150u, 23, 16 },   /* OP_MSG(23) "Leon: Sir, the communication system ..."     main16 5,747 s, Diktat "... the
                             * communication system can't be fixed | to use the patrol car ..." */
@@ -29,6 +29,10 @@ static const re15_stimmen_r39_t k_tabelle[] = {
                             * not going to make that I'm sorry" */
     { 0x1150u, 27, 20 },   /* OP_MSG(27) "Irons: Please... one last favor..."          main20 6,049 s, Wahl 0,892 */
     { 0x1150u, 28, 21 },   /* OP_MSG(28) "Irons: Get them out of here... Leon..."      main21 2,601 s, Wahl 0,765 */
+    { 0x1150u, 29, 22 },   /* OP_MSG(29) "Leon: SIR, Sir?!"  main22 2,218 s — NUTZER-NACHTRAG 2 (2026-10-18 09:45, 32ab1f97:
+                            * "das SIR, sir! habe ich ... mit main22 ergänzt"); gemessen (Dossier §9.5): zwei Rufe in der
+                            * Huellkurve 0,15-0,55 s / 1,55-2,00 s (main15 "Sir!" = ein Ruf 0,10-0,50 s), Diktat "Slur" |
+                            * "tour/sure/sur", F0 ~298 Hz = Leons Ruf wie main15 (281 Hz; Irons 89-121 Hz) */
     /* Punkt 3 — ROOM11B0 Marvin (gen/szl11b0_szene.inc, Runde 36 Spur J / Runde 38 Spur C) */
     { 0x11B0u, 20, 13 },   /* +0x0008 `2b 14 00 00` "Marvin: But, hold on..."                main13 1,707 s, DTW Marvin
                             * 16:45:42 1,686 / 16:45:25 1,756 / 15:59:15 1,849 (Diktat der drei: "But hold on") */

@@ -13,6 +13,8 @@ Wortlaut: `AUFTRAG.md`, Zuteilung: `VERTRAG.md` (Spur A, Welle 1).
 4. "Bei "Alright, let's get down from here" fehlt aus irgendeinen Grund mal wieder das Voiceover."
 
 ## Stand / Fortschritt (neueste zuerst)
+- 10:57 NACHBESSERUNG 1 ABGESCHLOSSEN (§9): Stufe 2 Lautheits-Boden (T=985 R=2040 C=21759 aus dem Zensus), 1150 msg 29
+  <- main22, 11B0-Text belegt; Unit 3/3, Integration 4/4, gezielte Gruppe 94/94 am endgueltigen Bau (§9.7).
 - 09:05 ABGESCHLOSSEN: alle vier Punkte gemessen vorher/nachher am echten Weg (§3/§5), Riegel gruen (§6: Unit 2/2,
   Integration 4/4, gezielte Module 93/93), Dossier vollstaendig; letzter Commit fix(r39-stimmen).
 - 07:40 Fortsetzung: Vorgaenger-Laeufe ausgewertet (§3 vollstaendig, §5 nachher 1050/1150/11B0), Riegel gebaut
@@ -273,7 +275,8 @@ r35_cut1150|r36_szene1150|r34n_d_adaruf|r35_inventar1050|r27_ada_cutscene_1050|a
 Wiederholung noetig. Keine volle Suite im Spurbaum (VERTRAG); die faehrt der Orchestrator in der Integration.
 
 ## 7. OFFEN
-- (keins fuer die vier Punkte; Nutzer-Fragen §8)
+- (keins fuer die vier Punkte; Nutzer-Fragen §8 — die beiden Entscheidungsfragen dort sind mit Nachtrag 2 beantwortet
+  und in §9 umgesetzt: Irons lauter = Stufe 2, msg 29 = main22.wav)
 
 ## 8. Fuer den Nutzer
 - Neue Assets: keine (keine Aenderung unter synchro/ oder shared_assets/; Paket-Gate unveraendert). Sprachdateien: keine
@@ -294,3 +297,226 @@ Wiederholung noetig. Keine volle Suite im Spurbaum (VERTRAG); die faehrt der Orc
   Aufnahme noetig.
 - Bedienung: keine Aenderung. Jede Sprachzeile ohne Datei steht jetzt im debug.log (`[voice] ROOM.... msg N: keine
   Aufnahme (<Pfad>)`), Umordnungen als `[voice] ROOM.... msg N <- mainNN.wav (Runde 39 Spur A, Nutzer-Reihenfolge)`.
+
+## 9. Nachbesserung 1 (Abnahme 0 bestanden bb285672; Nutzer-Nachtrag 2, AUFTRAG.md 2026-10-18 09:48)
+
+Fortsetzung ab 09:50 im selben Baum (HEAD 275a322c = Merge master 32ab1f97 mit main22.wav + Nachtrag 2).
+Drei Maengel/Auftraege der Abnahme (A_abnahme_0.md §6.2 + Orchestrator):
+- M1 NUTZER-VORGABE "er Port kann die Stimme ruhig lauter anheben das es passt." -> Port-Anhebung ueber den 4x-Deckel
+  hinaus; FORM aus dem Bestand gemessen (§9.1-§9.4).
+- M2 NUTZER-VORGABE "das SIR, sir! habe ich ... mit main22 ergänzt." -> ROOM1150 msg 29 <- main22.wav (§9.5).
+- M3 "Ändere es zu unwanted followers im Text bei 11B0." -> Text ist schon so; mit [msgtext]-Zeile belegt (§9.6).
+
+### 9.0 Stand / Fortschritt (neueste zuerst)
+- 10:57 Gezielte Gruppe (94 Tests, Regex §6.3 + neuer Unit-Riegel) am endgueltigen Bau: 100 % gruen (§9.7); Dossier
+  abgeschlossen; Abschluss-Commit fix(r39-stimmen).
+- 10:19 Neubau mit T=985/R=2040/C=21759 (9f5e13a4): Unit 3/3 gruen (pegel 282 Pruefungen, Herleitung am Bestand min
+  1162 / median 2040 / Spitze 21759), Lader 21/21 (Irons 12,80/9,32/7,74/11,60, msg 29 -> main22 1,08); Gruppe gestartet.
+- 10:17 Integration 4/4 gruen (1050 35,0 s, 1150 56,4 s, 11b0 102,2 s, 1171 58,0 s; Bau 5a402341/T=1163, fuer die
+  Szenen gleichwertig), Messung nachher §9.4.
+- 10:13 Konstanten korrigiert (T 1163 -> 985: Riegel am Bestand kippte room2000/main02 um ein LSB; C 21759, R 2040),
+  Dossier §9.1/§9.2/§9.6 geschrieben; Integration (4 Teile) laeuft mit dem T=1163-Bau (Irons-Zeilen davon unberuehrt).
+- 10:07 Code gebaut (5a402341 + Kommentar-Fix), Unit: tabelle 14 Zeilen gruen, lader gruen (Irons 7,4-12,6x), pegel ROT
+  (room2000/main02 an der Schwelle, s. 10:35).
+- 09:56 Zensus des Bestands gestartet, Spracherkennung main22 gestartet, Dossier-Abschnitt angelegt.
+
+### 9.1 M1 — Zensus des Bestands: die FORM der Anhebung wird gemessen, nicht geraten
+
+Werkzeug (Scratchpad, nicht im Repo): `r39A/zensus.py` (numpy) ueber ALLE 216 Dateien `synchro/STAGE<n>/room<RAUM>/
+main<NN>.wav` (ohne `synchro/unused/`): Rate/Kanaele/Bits, Dauer, Spitze |x|max, Effektivwert rms (ganze Datei),
+aktiver rms (20-ms-Fenster > -30 dB unter dem lautesten Fenster), Rauschteppich (10. Perzentil der 20-ms-Fenster),
+Crest = Spitze/rms, und die Stufe 1 des Laders nachgerechnet (audio_pc.c re15_voice_load_clip "Level-floor": Ziel
+14745 = 45 % Spitze, Deckel 4x; eingefuehrt mit aa346af1 2026-06-28, Kommentar dort: "cap the gain so near-silent
+clips don't blow up their noise floor"). `r39A/ableiten.py` leitet daraus die Konstanten ab. Tabelle: `r39A/zensus.csv`.
+
+Befund — der Bestand ist ZWEIKLASSIG (Werte in Vollaussteuerung FS):
+| Klasse | Dateien | rms | Spitze | Crest | Stufe 1 | rms nach Stufe 1 |
+|---|---|---|---|---|---|---|
+| auf Pegel | 206 (alle Sprecher ausser Irons, alle Raeume) | 0,034-0,092 | 0,21-0,66 | 4,5-13,4 | 1,00-3,00x (nie am Deckel; room1170/main00-03 48 kHz 2,71-3,00x, Abnahme 1 §3) | 0,0355-0,0995 |
+| leise | 10 = ALLE Irons-Dateien room1150 main02/05/07/09/12/13/18/19/20/21 | 0,0040-0,0062 | 0,053-0,096 | 12,5-20,6 | alle 4,00x (Deckel) | 0,0159-0,0247 |
+Zwischen den Klassen liegt eine Luecke: 0,0247 (Irons main05 nach Stufe 1) .. 0,0355 (room2000/main02). Keine Datei der
+normalen Klasse beruehrt den 4x-Deckel; genau die zehn Irons-Dateien bleiben an ihm haengen.
+
+Irons' neue Zeilen (Sterbeszene) im Einzelnen (32000 Hz mono 16 bit):
+| Datei | Dauer | Spitze | rms | Crest | |x| 99,9 % | Stufe 1 -> rms | F0 |
+|---|---|---|---|---|---|---|---|
+| main18 | 6,049 s | 0,0528 (bei 2,96 s) | 0,00398 | 13,3 | 0,0273 | 4,00x -> 0,0159 | 89 Hz |
+| main19 | 5,224 s | 0,0746 (bei 4,25 s) | 0,00415 | 18,0 | 0,0377 | 4,00x -> 0,0166 | 89 Hz |
+| main20 | 6,049 s | 0,0898 (bei 2,97 s) | 0,00436 | 20,6 | 0,0385 | 4,00x -> 0,0175 | 115 Hz |
+| main21 | 2,601 s | 0,0574 (bei 0,81 s) | 0,00459 | 12,5 | 0,0358 | 4,00x -> 0,0184 | 121 Hz |
+Leons Zeilen derselben Szene: main15 rms 0,0612 Spitze 0,356 (Stufe 1 1,26x), main16 0,0560 / 0,549 (1,00x), main17
+0,0553 / 0,406 (1,11x), main22 0,0607 / 0,418 (1,07x). Die Spitze der Irons-Dateien ist ein EINZELNER Transient: der
+99,9-%-Wert von |x| liegt bei 0,027-0,039, die Spitze 2-3x darueber — darum entscheidet bei ihnen die Spitzenbegrenzung,
+nicht das Lautheitsziel (§9.3).
+
+Rauschteppich (10. Perzentil der 20-ms-Fenster): Irons' Dateien 0,00046-0,00061 FS — dasselbe ABSOLUTE Niveau wie Leons
+Dateien (0,0003-0,0013); Irons' Sprache liegt also 22 dB tiefer im selben Rauschen (SNR ~28 dB statt ~47 dB). Nach der
+Anhebung (6,9-12,6x) liegt sein Teppich bei 0,0034-0,0077 FS (-49 .. -42 dBFS); in der Sterbeszene 16-20 dB unter der
+BGM (rms 0,05-0,08 FS, §9.2). Das ist der gemessene Preis der NUTZER-VORGABE; der alte Deckel-Grund ("noise floor") ist
+damit beziffert, nicht ignoriert.
+
+Herleitung der drei Konstanten (alle aus dem Bestand; Werte der 16-bit-Skala, wie der Lader sie ganzzahlig rechnet —
+Riegel unit_r39_stimmen_pegel druckt sie mit):
+- T (Schwelle "zu leise") = 985 (0,0301 FS) = MITTE DER LUECKE zwischen den Klassen: 808 (room1150/main05 nach Stufe 1,
+  lauteste Datei der leisen Klasse) .. 1162 (room2000/main02, leiseste Datei auf Spitzenpegel); zu beiden 18 % Abstand.
+  Erste Herleitung war T = 1163 = der Randwert selbst (Zensus-Gleitkomma 0,03550 x 32768 = 1163,3): der Riegel am
+  Bestand zeigte sofort, dass die ganzzahlige Rechnung des Laders fuer room2000/main02 1162 liefert — ein LSB unter der
+  Schwelle, die Datei (auf Pegel!) waere mit 1,47x angehoben worden. Eine Schwelle gehoert in die Luecke, nicht auf
+  ihren Rand (das Resampling auf Geraeterate verschiebt rms um < 1 %, die Luecke traegt 18 %).
+- R (Ziel) = 2040 (0,0623 FS) = Median des rms der 206 Dateien auf Spitzenpegel (Quartile 0,0518 / 0,0624 / 0,0719;
+  Leons 1150-Zeilen 0,056-0,077 liegen mittendrin) — "Mitte des Bestands", dieselbe Idee wie das Ziel der Stufe 1
+  ("~45% full-scale, matches the loud clips"). Am heutigen Bestand entscheidet R nicht (alle zehn Dateien laufen vorher
+  in C); R traegt kuenftige leise Dateien mit normalem Crest.
+- C (Spitzen-Deckel) = 21759 (0,664 FS) = Spitze der lautesten gelieferten Datei room1240/main05.wav (48 kHz 24 bit
+  stereo, Leons Vorspann): kein angehobener Clip wird in der Spitze lauter als das, was der Port heute schon ungeklemmt
+  mit BGM mischt. Der Mischer (audio_pc.c :482-486) summiert die Stimme mit cd_vol 0x3FFF>>14 = 1,0 (RE2 CD_initvol) und
+  klemmt erst die SUMME auf int16 — darum ist "Spitze <= 32767 je Datei" KEIN Schutz vor Uebersteuerung, C muss Platz
+  fuer die BGM lassen (§9.2).
+Vorschau der Regel (ableiten.py) = die zehn Irons-Dateien, alle Spitzen-begrenzt: main02 9,3x, main05 6,9x, main07
+7,7x, main09 7,0x, main12 7,5x, main13 9,1x, main18 12,6x, main19 8,9x, main20 7,4x, main21 11,6x (rms danach
+0,032-0,053 FS).
+
+### 9.2 M1 — BGM MAIN1E in der Sterbeszene (Mitschnitt lauf_1150_cd62ee6a, VOR der Aenderung; `r39A/bgm_spitze.py`)
+Abschnitt ROOM1150 (1251 Bilder): max |x| 18246 = 0,557 FS, KEIN Abtastwert am Anschlag, rms 1946. Luecken zwischen den
+Zeilen (nur BGM/SE, kein Clip aktiv): F452-465 Spitze 0,105 FS rms 0,024 | F630-648 0,135 / 0,038 | F790-806 0,276 /
+0,079 | F970-989 0,201 / 0,064 | F1100-1119 0,481 / 0,123 (Schwell vor msg 29). Zeilenfenster mit Irons (4x-Stand):
+F466-559 Spitze 0,290, F649-739 0,423, F807-899 0,412. Mit C = 0,664 FS bleibt die Summe Stimme + BGM in den
+Irons-Fenstern unter 0,664 + 0,276 = 0,94 FS — die Integration zaehlt die geklemmten Werte je Zeilenfenster (muss 0 sein).
+
+### 9.3 M1 — Umsetzung: Stufe 2 "Lautheits-Boden" (Regel fuer ALLE leisen Dateien, kein Sonderfall)
+- NEU `re15_port/include/re15_stimmen_pegel_r39.h` (Herleitung, Regel, Konstanten T/R/C mit Quelle) und NEU
+  `re15_port/engine/src/stimmen_pegel_r39.c`: `re15_stimmen_pegel_r39(pcm, n, stamm, info)` misst rms (ganzzahlig,
+  isqrt64, kein libm) und Spitze; ist rms < T: Faktor g = R*256/rms (Q8), begrenzt auf C*256/Spitze (Spitzenbegrenzung);
+  wendet g an (int64-Multiplikation, Klemme unerreichbar, da |x|*g/256 <= C); misst nachher; Logzeile
+  `[voice] pegel <stamm>.wav: rms a -> b (xF), spitze s -> z (Spitzenbegrenzung C) (Runde 39 Spur A Stufe 2: T= R= C=)`
+  (nur PC, nur wenn angehoben — das Fehlen der Zeile ist der Beleg "unveraendert"). rms >= T: bitgleich, Faktor 256.
+- Haken `platform/pc/src/audio_pc.c` re15_voice_load_clip: eine Aufrufzeile + Kommentar "Runde 39 Spur A (Nachbesserung
+  1)" direkt nach dem Stufe-1-Block ("Level-floor", unveraendert: Ziel 14745, Deckel 4x) und vor dem Eintrag in
+  s_voice_clip; plus die include-Zeile. Stufe 1 bleibt, wie sie ist — die 206 Dateien auf Pegel sehen keine Aenderung.
+- Warum der 4x-Deckel da war (aa346af1, Kommentar im Code): "cap the gain so near-silent clips don't blow up their
+  noise floor". Seine Aufgabe uebernimmt jetzt die Spitzenbegrenzung C (eine Datei kann nie lauter werden als die
+  lauteste gelieferte); der Rauschpreis ist beziffert (§9.1: -49..-42 dBFS, 16-20 dB unter der BGM) und vom Nutzer in
+  Kauf genommen (NUTZER-VORGABE "ruhig lauter anheben").
+- Tabelle stimmen_r39.c: Zeile `{ 0x1150, 29, 22 }` (M2, §9.5). Header re15_stimmen_r39.h: Nachtrag 2 vermerkt.
+- synchro/README.md: Absatz zum Pegel beschreibt beide Stufen (Projekt-Doku, keine Nutzer-Aufnahme geaendert).
+- Konstanten (jede mit Quelle, §9.1): T = 985 (Mitte der Luecke 808..1162), R = 2040 (Median der 206 Dateien auf
+  Pegel), C = 21759 (Spitze room1240/main05). Stufe-1-Konstanten 14745 / 4x: audio_pc.c, aa346af1 (unveraendert).
+  Form (Lautheit = Effektivwert, Deckel = Spitze): aus dem Bestand gemessen, nicht aus dem Original — RE1.5/RE2 haben
+  keinen Lader fuer WAV-Aufnahmen; die XA-Stimmen des RE2-Retail sind fertig gemischt (xa_on @0x80058028 startet nur
+  den Stream, §2) — PORT-WAHL in der Form, NUTZER-VORGABE im Grund.
+
+### 9.4 M1 — Messung nachher: Sterbeszene ROOM1150 am echten Weg (integration_r39_stimmen_1150, Lauf lauf_1150_79e3dc5e,
+exe 10:28; Spielstand + CONTINUE in ROOM1130, Aktion an der Tuer -> ROOM1150; Auswertung probe_r39_stimmen_auswertung fit,
+Abschnitt 1, Fenster ab Message_on, lag +1 wie vorher)
+| Zeile | Datei | korr vorher -> nachher | Faktor vorher -> nachher | Stimme rms | Rest rms (BGM/SE) | Stimme/Rest nachher | vorher (Abnahme §4.2) | klemm |
+|---|---|---|---|---|---|---|---|---|
+| 22 Leon "Sir!" | main15 | 0,999 -> 0,999 | 1,27 -> 1,27 | 2488 | 89 | +28,9 dB | +28 dB | 0 |
+| 23 Leon | main16 | 0,864 -> 0,864 | 1,00 -> 1,00 | 1788 | 1041 | +4,7 dB | +4,7 dB | 0 |
+| 24 Leon | main17 | 0,702 -> 0,702 | 1,18 -> 1,18 | 2129 | 2162 | -0,1 dB | -0,2 dB | 0 |
+| 25 Irons "proud" | main18 | 0,294 -> **0,701** | 4,00 -> **12,80** | 1642 | 1669 | **-0,1 dB** | -10,3 dB | 0 |
+| 26 Irons "not going to make it" | main19 | 0,243 -> **0,510** | 3,88 -> **9,20** | 1226 | 2067 | **-4,5 dB** | -12,1 dB | 0 |
+| 27 Irons "one last favor" | main20 | 0,285 -> **0,494** | 4,12 -> **7,86** | 1104 | 1945 | **-4,9 dB** | -10,6 dB | 0 |
+| 28 Irons "Get them out" | main21 | 0,927 -> **0,990** | 4,00 -> **11,60** | 1733 | 242 | +17,1 dB | +7,7 dB | 0 |
+| 29 Leon "SIR, Sir?!" | main22 | (stumm) -> **0,828** | — -> 1,09 | 2107 | 1428 | +3,4 dB | (keine Datei) | 0 |
+Message_on-Bilder unveraendert (22 F26, 23 F212, 24 F386, 25 F466, 26 F649, 27 F807, 28 F990, 29 F1120); Segment-
+Konsistenz 11/11, 10/10, 12/12, 5/5 (Irons), 3/3 (main22). debug.log: je Irons-Zeile genau eine Stufe-2-Zeile, z.B.
+`[voice] pegel main18.wav: rms 513 -> 1641 (x3.19), spitze 6800 -> 21754 (Spitzenbegrenzung C)` (main19 533 -> 1241
+x2.32, main20 562 -> 1087 x1.93, main21 598 -> 1733 x2.89 — der Stufe-2-Faktor auf dem Stufe-1-Ergebnis; Gesamtfaktor
+= 4 x das); KEINE pegel-Zeile fuer main15/16/17/22 (Leon unveraendert, bitgleich zu vorher: dieselben Korrelationen und
+Faktoren auf drei Stellen). Uebersteuerung: 0 Abtastwerte am Anschlag in jedem Zeilenfenster (Spitze der Summe < 32767).
+Endgueltiger Bau (T=985/R=2040/C=21759, Gruppenlauf lauf_1150_6bbcb2ce 10:53): alle Werte der Tabelle BITGLEICH
+(frame-locked, deterministisch); die Stufe-2-Zeilen lauten dort `[voice] pegel main18.wav: rms 513 -> 1641 (x3.19),
+spitze 6800 -> 21754 (Spitzenbegrenzung C) (Runde 39 Spur A Stufe 2: T=985 R=2040 C=21759)` usw.; die Teile 1050/11b0/
+1171 desselben Gruppenlaufs tragen KEINE pegel-Zeile (0/0/0: keine andere Datei wird von Stufe 2 beruehrt).
+Urteil "passt": Irons liegt jetzt auf Leons Niveau derselben Szene (main18 -0,1 dB wie Leons main17 -0,1 dB) bzw. bei
+den zwei Zeilen mit dem extremen Crest (main19/20: 18,0/20,6) 4,5-4,9 dB unter der BGM statt 10-12 dB — BEGRUENDET
+durch die Spitzenbegrenzung: beide Dateien haben einen einzelnen Transienten (0,075/0,090 FS) 20x ueber ihrer Sprache;
+ohne Clipping ist mehr nicht moeglich (ein Begrenzer/Kompressor, der den Transienten abschneidet, waere ein neuer
+Mechanismus und ist nicht beauftragt). Will der Nutzer diese zwei Zeilen noch lauter, hilft nur ein Neuexport ohne den
+Transienten (§9.8).
+
+### 9.5 M2 — ROOM1150 msg 29 "Leon: SIR, Sir?!" <- main22.wav (NUTZER-NACHTRAG 2)
+Datei `synchro/STAGE1/room1150/main22.wav` (32ab1f97, 2026-10-18 09:48, 144024 B; RIFF/WAVE PCM 16 bit mono 32000 Hz,
+Lavf59.2, 2,218 s). NICHT umbenannt, nicht veraendert (VERTRAG §1.2). Inhalt gemessen (unabhaengig vom Nutzer-Wort):
+- Huellkurve (50-ms-Raster, > -20 dB unter dem Maximum): ZWEI Rufe 0,15-0,55 s und 1,55-2,00 s mit 1 s Pause — "SIR,
+  ... Sir?!"; main15 "Sir!" (0,720 s) hat EINEN Ruf 0,10-0,50 s derselben Form.
+- Windows-Spracherkennung en-US, freies Diktat: zwei Phrasen, 'Slur' (0,00-0,79 s; Alternativen slur/star/slower) und
+  'tour' (Alternativen sure/sur/so are) — beide das kurze Wort "Sir" (die Abnahme diktierte main15 ebenso als "So are").
+  Zwangswahl unter den Saetzen der Szene liefert fuer so kurze Rufe nichts (auch nicht fuer main15 — Methode traegt
+  hier nicht).
+- Stimmlage: F0-Median ~298 Hz = Leons Ruf wie main15 (281 Hz); Leons Sprechzeilen 183-192 Hz, Irons 89-121 Hz.
+- Pegel: rms 0,0607, Spitze 0,418 (Leons Klasse) -> Stufe 1 1,07x, Stufe 2 greift nicht.
+- Zeile: irons_tod_1150.c Z.134 `OP_MSG(29)` = k_msg29 "Leon: SIR, Sir?!" (Z.660), die letzte Zeile der Szene; sie
+  hatte 7 Dateien fuer 8 Zeilen (Abnahme §6.2 Hinweis 2) — jetzt 8/8.
+Umsetzung: Tabelle `{ 0x1150, 29, 22 }`; Riegel: unit_r39_stimmen_tabelle (14 Zeilen, Datei vorhanden RIFF/WAVE,
+`{0x1150,29}` aus der "Regel bleibt"-Liste nach k_soll, Ersatz 1150 msg 30), unit_r39_stimmen_lader (msg 29 spielt
+main22 korr 1,000 Faktor 1,09; die Pruefung "msg 29 stumm" entfaellt), integration_r39_stimmen_1150 (msg 29 in
+_zeilen, `[msgtext] id=29 "Leon: SIR, Sir?!"`, Zuordnungszeile genau einmal, Mitschnitt korr 0,828 ab F1120, und die
+Zeile `keine Aufnahme (synchro/STAGE1/room1150/main29.wav)` darf NICHT mehr erscheinen). Lauf §9.4: `[voice] ROOM1150
+msg 29 <- main22.wav (Runde 39 Spur A, Nutzer-Reihenfolge)` + `clip loaded: main22.wav (32000 Hz x1 -> 97793 @44100 Hz)`.
+
+### 9.7 Tests der Nachbesserung 1 (Registrierung NUR tests/unit/probes/r39_stimmen.cmake; alle am endgueltigen Bau 10:19)
+- NEU `unit_r39_stimmen_pegel` (test_r39_stimmen.c Teil `pegel`, Bestandsliste aus CMake `file(GLOB
+  .../synchro/STAGE*/room*/main*.wav)` beim Configure -> r39_stimmen_bestand.txt, RE15_R39_BESTAND): 216 Dateien
+  (16/24-bit, mono/stereo, 22050-48000 Hz) gelesen, Stufe 1 nachgebildet (14745/4x), Stufe 2 = die echte Funktion:
+  282 Pruefungen, 0 Fehler — genau die 10 Irons-Dateien angehoben (6,89x..12,57x, alle Spitzen-begrenzt, Spitze
+  21718..21756 <= C), jede angehobene war am 4x-Deckel (g1 = 1024), idempotent (zweite Anwendung Faktor 256), 206
+  Dateien bitgleich (memcmp), Leon ROOM1150 main15/16/17/22 ausdruecklich unberuehrt, Herleitung mitgedruckt (206 auf
+  Pegel: rms min 1162, median 2040, groesste Spitze 21759 = room1240/main05). Hinweiszeile, falls eine kuenftige
+  Datei die Spitze C uebersteigt (dann C neu ableiten) — kein Riegel-Rot auf Nutzer-Lieferungen.
+- `unit_r39_stimmen_tabelle`: 14 Zeilen (29 -> main22), Datei vorhanden, Message_on-Stellen, Sperren, "Regel bleibt"
+  (1150 msg 30 statt 29): gruen.
+- `unit_r39_stimmen_lader` (echter audio_pc.c, RE15_AUDIO_CAP_SYNC): 21 bestanden — Irons msg 25..28 Faktor 12,80 /
+  9,32 / 7,74 / 11,60 (Band 6..16, Stufe 2 am echten Lader nach Resampling), alle anderen 1,00..1,97 (Band 0,9..2,1 =
+  "Leon unveraendert"), msg 29 -> main22 korr 1,000 Faktor 1,08; Sperren/Regel wie vorher.
+- `integration_r39_stimmen_1150` (erweitert): msg 29 in der Zeilenliste + `[msgtext] id=29 "Leon: SIR, Sir?!"`;
+  `keine Aufnahme` darf nicht mehr vorkommen (0); je Irons-Datei genau eine Stufe-2-Zeile mit "(Spitzenbegrenzung C)",
+  fuer main15/16/17/22 keine; Irons Pegelfaktor-Median 6..16 und Stimme/Rest >= 45 % (Schwelle zwischen vorher
+  25..31 % und nachher >= 55 %), Leon/Ada-Zeilen Median 0,5..2,1; in JEDEM Zeilenfenster 0 Abtastwerte am Anschlag
+  (Werkzeug probe_r39_stimmen_auswertung druckt jetzt `stimme <v> rest <q> klemm <z>`). Die Teile 1050/11b0/1171
+  pruefen die neuen Felder ebenfalls (Band 0,5..2,1, klemm 0) — unveraendert gruen.
+- Ergebnis `ctest --test-dir re15_port/build -R "unit_r39_stimmen|integration_r39_stimmen"`: Unit `100% tests passed,
+  0 tests failed out of 3`; Integration `100% tests passed, 0 tests failed out of 4` (1050 35,14 s, 1150 56,50 s,
+  11b0 102,50 s, 1171 58,01 s im Gruppenlauf).
+- Gezielte Gruppe der beruehrten Module (statt voller Suite, VERTRAG), Regex wie §6.3:
+  `ctest --test-dir re15_port/build -R "r39_stimmen|synchro_stimme|voice_ausreden|audio_sperren|r30_tuer_stimme|
+  r34n_f_leiche_stimme|r36_elza_|r38_elzaintro|r38_rekorder|r38_werkstatt11b0|r38_heliport1171|r36_szenenleon|
+  r35_cut1150|r36_szene1150|r34n_d_adaruf|r35_inventar1050|r27_ada_cutscene_1050|ada_eintritt_1050|
+  r38_kleinkram_irons" --timeout 1500 -j1` (94 Tests = 93 wie Abnahme 0 + unit_r39_stimmen_pegel; Lauf 10:19-10:56,
+  endgueltiger Bau): **`100% tests passed, 0 tests failed out of 94`** (Total Test time (real) = 2248.26 sec).
+  Kein Flattern, keine Wiederholung noetig. Die Szenen-Riegel mit Irons' alten Zeilen (r35_cut1150, r36_szene1150,
+  r38_kleinkram_irons) laufen mit RE15_NOAUDIO=1 (Lader aus) und belegen die Anhebung NICHT; Beleg fuer die erste Szene
+  ist die Messung der Abnahme 1 (A_abnahme_1.md §5.3, Lauf e1150e: main05/07/09/12/13 6,9-9,2x, klemm 0).
+- Linux-/Parallel-Form: neue Dateien ohne libm (isqrt64), Testlisten-Pfad aus CMake, exe-Kopien mit Praefix je Teil
+  wie bisher, keine geerbten RE15_*; der Pegel-Riegel liest nur Dateien (kein Fenster, kein Geraet).
+
+### 9.9 OFFEN (Nachbesserung 1)
+- keins. Hinweise an den Nutzer in §9.8 (zwei Irons-Zeilen bleiben wegen ihres Transienten 4,5-4,9 dB unter der BGM;
+  Neuexport waere der Weg zu mehr).
+
+### 9.8 Fuer den Nutzer (Nachbesserung 1)
+- Neue Assets: keine (Ihre main22.wav ist schon im Repo, unveraendert; Paket-Gate unveraendert; shared_assets unberuehrt).
+  Sprachdateien: room1150/main22.wav spielt jetzt als letzte Zeile der Sterbeszene ("SIR, Sir?!").
+- Irons' Pegel: der Port hebt seine zehn Dateien (room1150 main02/05/07/09/12/13 der ersten Szene und main18-21 der
+  Sterbeszene) jetzt 6,9-12,6x an statt 4x — so weit, wie es ohne Uebersteuerung geht (Spitze = lauteste gelieferte
+  Datei). In der Sterbeszene ist "Leon... I'm proud..." damit so laut wie Leons Zeilen (gleich laut wie die Musik), "Get
+  them out of here" deutlich darueber; "But... I'm not going to make it" und "Please... one last favor" bleiben 4,5-4,9
+  dB unter der Musik, weil jede dieser beiden Dateien EINEN Knall (Transient bei 4,25 s bzw. 2,97 s) hat, der 20x
+  lauter ist als die Sprache — er begrenzt die Anhebung. Wenn diese zwei noch lauter sollen: neu exportieren (bei der
+  Erzeugung ohne den Transienten, oder mit normaler Aussteuerung wie Leons Dateien, dann passt der Port nichts an).
+- 11B0: der Text von msg 21 lautet schon "I just want to make sure / we don't have any unwanted followers." (so auch
+  Ihre Aufnahme main14) — nichts geaendert, Beleg §9.6.
+- Bedienung: keine Aenderung. Jede Stufe-2-Anhebung steht im debug.log als `[voice] pegel ...`.
+
+### 9.6 M3 — ROOM11B0 msg 21: "unwanted followers" steht schon so im Text (nichts geaendert)
+Nutzer: "Ändere es zu unwanted followers im Text bei 11B0." Der Szenentext ist bereits so: gen/szl11b0_szene.inc:134
+`/* msg 21 Marvin: I just want to make sure / we don't have any unwanted followers. */` (Quelle tools/r36_j/
+szene11b0_bauen.py:286 — die Datei liegt nicht im Baum, nur ihr Erzeugnis). Beleg aus einem Lauf der echten exe
+(lauf_11b0_b1551704, debug.log Z.564/566, RE15_MSG_LOG):
+`[msgtext] room=11b0 id=21 "Marvin: I just want to make sure we don't have any unwanted followers."` gefolgt von
+`[voice] ROOM11B0 msg 21 <- main14.wav (Runde 39 Spur A, Nutzer-Reihenfolge)`; Z.501/503: `[msgtext] room=11b0 id=20
+"Marvin: But, hold on..."` + `msg 20 <- main13.wav`. Die Aufnahme main14 spricht denselben Wortlaut (Dossier §1,
+Abnahme §3: Kandidat "unexpected visitors" angeboten und nicht gewaehlt). Riegel: integration_r39_stimmen_11b0 prueft
+den Wortlaut von msg 20/21 im Log (unveraendert gruen); im Gruppenlauf des endgueltigen Baus (lauf_11b0_40ef5bc6,
+debug.log Z.564) steht dieselbe Zeile `[msgtext] room=11b0 id=21 "Marvin: I just want to make sure we don't have any
+unwanted followers."`.
