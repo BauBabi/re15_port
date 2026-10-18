@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 00:32: Spur G Abnahme 2: N1 (1210-Kammer) erfuellt; neuer Mangel N2 - Tuermarken 1030<->1050/1040 schweben, solange 1030
+  nicht gezeichnet ist (vorbestehend, Nutzerpunkt "Tuer immer genau auf Wand") -> Nachbesserung 3 wf_3e8b0d3e-35e
+  (args_g_nach3.json). Integration: r39/integration ff auf master 131c6289, Spur K gemergt (14270601, Konflikt
+  scd_room_setup.c: Installer-Zeilen I + K beide behalten), Bau ok 00:31; Tests K-Gruppe + Querbezuege + alle
+  unit_/prop_/probe_ (889, Regex scratchpad/integ_regex_k.txt) laufen (b2tehp1rd). Aktiv: G, J, O, P, Q, R.
 * 2026-10-19 00:26: Spur K heliport1171 BESTANDEN (Abnahme 2; Fix 9ca95a72): HOVER-Phase 0 @0x801151d8 ohne f314/Bewegung, SPIN-Phase 2
   ohne Gier +60 (@0x80115460-6c nur Phase 0/1), Wand-Pass FUN_8003b0a4 der Kraehen-Wurzel nach jedem Zustand (@0x80112204);
   Griff 9-10 Bilder spaeter, Heranwinken RBJ rec1 Clip 2 unveraendert. Integration mit G (sobald bestanden). Nutzer-Nachtrag
