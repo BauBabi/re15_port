@@ -347,3 +347,33 @@ Registriert nur in `re15_port/tests/unit/probes/r39_heliport1171.cmake` (keine C
   Executor-Takt sind seit K2 Elliots INIT-Pose = Loco Clip 2 (50) Bild 0 (Wurzel 0x8011d6d4, Tabelle @0x80072cc8, INIT
   +0x94 = 2 @0x8011d930, f314(+0x84,+0x16c) @0x8011d978). Die Bedingung laesst jetzt genau diese Form zu (fc 50, loco 1,
   Slot 0) und meldet sie ("davon INIT-Pose 6"); jede andere Clip-2-Zeile muss weiter Bank 1 (52) sein.
+
+## 8. OFFEN (kein Teil von Johns 1171-Szene; mit Adressen fuer eine spaetere Runde)
+
+- **Eskorte-EXEC-Saattakt** (re15_npc_escort_exec, enemy_ai_common.c): die fuenf Exec-Subs setzen Clip/+0x95 = 0 und
+  rufen re15_npc_anim OHNE Vorhalte-Takt -> im Saattakt Bild 1 statt 0 (dieselbe Klasse wie K3). Original: Saat und f314
+  im selben Takt, z.B. Stehen +0x94 = 2 @0x8004f354 / +0x95 = 0 @0x8004f364 / `jal 0x8001f314` @0x8004f38c, Gehen
+  +0x94 = 5 @0x8004f524 / +0x95 = 0 @0x8004f534 / f314 @0x8004f5c8. In ROOM1171 laeuft die EXEC nie (John bleibt bis zum
+  ersten Plc_motion in +0x9 = 1); betrifft folgende NPCs (Ada 1090 u.a.). Nicht angefasst, um den Eingriff auf Johns
+  Szene zu begrenzen.
+- **Elza (Spieler) in derselben Szene** — nicht Johns Animation, eigener Code (Spieler-Walker Spur H Welle 2, Spieler-
+  Schub Runde 36 J): Einzelbilder Clip 1 Bild 1 zwischen TURN und WALK (F1, F840, F846; Spur H hat genau das als
+  "eigener RE-Punkt" vermerkt), Clip 1 nach jeder Ankunft ab Bild 1 statt 0 (F37, F591, F669, F943 = Event-Reach-Saattakt
+  0x800517f0 @0x80051844-8c), Schub-Ruecklauf ab dem Bit-Takt (F933, wie K4). Die Spieler-Tabelle @0x80073e30 teilt sich
+  [0..3] = 0x80050cb8.., [6] = 0x800517f0 und [19] = 0x80052864 mit der NPC-Tabelle — K3/K4 gelten dort ebenso, der Port
+  fuehrt den Spieler aber ueber eigene Pfade (game_step_common.c, szenenleon_r36.c Spieler-Teil).
+
+## 9. Fuer den Nutzer
+
+- Neue Assets: keine (kein Paket-Gate-Eintrag). Sprachdateien: keine. Bedienung: unveraendert. Entscheidungsfragen: keine.
+- Sichtbar in ROOM1171 (Elza, Dach):
+  1. "Elza, hurry up!": John senkt die Waffe und winkt Elza heran (RBJ rec1 Clip 2, 96 Bilder) — kein Klettern mehr (K1).
+  2. Die Gesten davor und bei "We need to get this thing off of here!" sind die Original-Gesten (RBJ rec1 Clip 0, 20 Bilder,
+     vor und zurueck) statt eines fremden Bank-0-Clips (K1).
+  3. Vor seiner ersten Geste steht John in der Original-Grundhaltung (aufrecht, Arme haengend) statt in der Leerlauf-
+     Haltung (K2; sichtbar, sobald Kamera 4 auf ihn schaltet, Bild K_belege/k2_initpose_F208-224.png).
+  4. Jede Geste beginnt mit ihrem ersten Bild — vorher sprang der Port ueber das erste Bild (K3).
+  5. Beim gemeinsamen Schieben beginnt Johns Ruecklauf im Takt des Originals (K4).
+- Dieselben Original-Regeln gelten fuer alle NPCs, weil das Original sie fuer alle gleich ausfuehrt (K2 in allen NPC-INITs,
+  K3 im gemeinsamen Executor). Beispiel Leon ROOM1170: Leon bytegleich; Elliot zeigt beim Eintritt 6 Bilder die
+  Grundhaltung (INIT @0x8011d978) und sein "Hey!" beginnt mit Bild 0.
