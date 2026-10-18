@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:27: Nutzer-Nachtrag 3 (dc330054): Aufsteher RE2 bleibt, EKG bleibt, Spind 15 bleibt, Stapeln auch Kiste =
+  schon erfuellt (re15_itembox.c:102 nutzt re15_inventar_r39_stapelt); GORILLAS GENERELL -> Spur E Nachbesserung 2
+  wf_6101b819-29c (args woertlich in orchestrator/args_e_nach2.json; r39/gegner vorher auf master gemergt 2486a028).
+  Hinweis an Spur J in deren Baum-AUFTRAG committet (Gorilla-Tod in 1141 nicht an Schusszahl binden). Danach r39/gegner
+  erneut in die Integration.
 * 2026-10-18 14:20: Fable-MONATSLIMIT ("monthly spend limit") beendete die vier Welle-3-Bau-Agenten nach ~30 s (keine Commits,
   Baeume sauber). Nutzer stellte das Modell auf Opus 5.5 (default). Welle 3 NEU gestartet (gleiche args, basis 1038dc15):
   G karten wf_96165e9e-aa5, I funk10f1 wf_02f632c1-c4e, J dining1141 wf_78e6cc10-215, K heliport1171 wf_2e231bdd-63d.

@@ -1,0 +1,26 @@
+{
+  "_hinweis": "Spur E Nachbesserung 2 nach Nutzer-Nachtrag 3 (AUFTRAG.md 2026-10-18 14:25): Gorilla-Verhalten generell. Baum r39_gegner HEAD 2486a028 (Merge master). Resume nur mit GENAU diesen args.",
+  "welle": ["E"], "slots": 1, "max_nach": 1, "basis": "c71fa144",
+  "modus": {"E": "nachbesserung"},
+  "runde0": {"E": 1},
+  "bau": {"E": {
+    "status": "fertig",
+    "zusammenfassung": "Abnahme 1 BESTANDEN (37ecfc1c; Fix f20734fa). Punkt 1: Parking-Lot-Gorillas ROOM11C0 HP x2 (Saat 180 @0x8011f514 -> 360) + Flinch erst ab 36 Energie (= 3 Pistolentreffer a 12 @0x8006ee44; NUTZER-VORGABE), Gate in engine/src/gegner_r39.c re15_r39_affen_parkplatz(e) = type 0x27 && g_current_room_id == RE15_R39_PARKPLATZ_RAUM (0x11C0). Punkt 2 Ein-Angreifer-Riegel RE2-Hunde, Punkt 3 Kriecher 0x81, Punkt 4 Gorilla-Schatten +0x1ba - alle bestanden. Baum-HEAD jetzt 2486a028 = Merge master (Welle 1 + A1 + Nachtrag 3) in r39/gegner.",
+    "commits": ["f20734fa fix(r39-gegner): Nachbesserung 1", "c3823fa4 fix(r39-gegner): Bau", "37ecfc1c doc Abnahme 1", "2486a028 Merge master"],
+    "suite": "ctest -R \"r39_gegner|r35_affen|schatten|affen3\": 100% tests passed, 0 tests failed out of 49",
+    "offene_punkte": ["Entscheidungsfrage HP x2 / 3-Treffer auch fuer die ROOM1141-Gorillas - Nutzer hat entschieden: generell (s. Maengel)"]
+  }},
+  "abn": {"E": {
+    "bestanden": false,
+    "bericht": "analysis/befunde_runde39/E_abnahme_1.md (bestanden) + Nutzer-Nachtrag 3 in AUFTRAG.md",
+    "urteile": [
+      {"punkt": "1 Parking-Lot-Gorillas HP x2 + Flinch nach 3 Handgun-Treffern", "urteil": "teilweise", "beleg": "Abnahme 1: ROOM11C0 erfuellt; Nutzer-Nachtrag 3 verlangt dasselbe Verhalten fuer ALLE Gorillas"},
+      {"punkt": "2 Kein paralleler Hundebiss", "urteil": "erfuellt", "beleg": "Abnahme 1"},
+      {"punkt": "3 Liegende Zombies kriechen", "urteil": "erfuellt", "beleg": "Abnahme 1"},
+      {"punkt": "4 Gorilla-Schatten beim Sprung am Boden", "urteil": "erfuellt", "beleg": "Abnahme 1"}
+    ],
+    "maengel": [
+      "NUTZER-NACHTRAG 3 (AUFTRAG.md 2026-10-18 14:25, woertlich: 'Zu 2. ja, wir machen das Gorilla Verhalten generell so.'): HP x2 und Flinch erst nach 3 Handfeuerwaffen-Treffern (Akku-Schwelle 36 Energie) gelten fuer ALLE Gorillas Typ 0x27 in allen Raeumen und beiden Szenarien, nicht nur ROOM11C0. Das Raum-Gate re15_r39_affen_parkplatz (engine/src/gegner_r39.c) auf den Typ allein umstellen (Name/Kommentare/Log/Dossier nachziehen: keine 'Parkplatz'-Sonderregel mehr). ZENSUS: alle Raeume mit Sce_em_set Typ 0x27 (scd_dump_room.py, beide Szenarien) belegen und je Raum messen (HP-Init 360 im Log, Flinch erst ab 36 Energie). Pflicht: ROOM1141 (Elza) mit der Gorilla-Szene - der Ablauf (Gorillas brechen ein, Kampf, Tod beider Gorillas -> sub01 loescht (4,0xF2), John geht; Runde 38 F dining1141, Riegel test_r38_dining1141*) muss mit der doppelten Energie lauffaehig bleiben: Riegel, die Gorillas toeten, gegen die neue Energie nachziehen und begruenden. NICHT veraendern: die kleinen Affen Typ 0x29 (Stage 3, Runde 38 S) - nur 0x27. Riegel: unit/integration fuer mindestens einen weiteren Gorilla-Raum neben 11C0 (1141 Elza), Gegenprobe Typ 0x29 unveraendert; alle bisherigen r39_gegner/r35_affen/r38_dining1141/affen3-Riegel gruen."
+    ]
+  }}
+}
