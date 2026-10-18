@@ -670,7 +670,16 @@ gelegt (3 Koerperpixel am Grund = offene Seite). Neuer Traeger-Typ `R39_SCHEMA_K
 zaehlt nur eine Zeichnung MIT Koerper (besucht/aktuell, Hinweis nur in der roten Phase), kein Plan-Umriss. Damit bleibt die
 Flur-Westwand bis zum ersten Betreten der Kammer geschlossen (Plan zeigt die Kammer als geschlossenen Umriss an der Wand);
 danach Durchgang offen. Riegel unit_r39_karten_teil (e) Zustaende 5 (alles Umriss: x201 y117..119 Wand 3/3) und 6 (Flur
-aktuell + Plan: Wand 3/3, Umriss leer, offen 0).
+aktuell + Plan: Wand 3/3, Umriss leer, offen 0). GEGENPROBE (Traeger voruebergehend wieder R39_SCHEMA(12), gebaut, Sonde,
+zurueckgesetzt und neu gebaut): Zustand 5 `x201 y117..119 Wand 0/3`, Zustand 6 `Wand 0/3 ... offene Seite 3` -> ROT; mit
+R39_SCHEMA_KOERPER 3/3 bzw. offen 0.
+
+### N1 Sicht am ECHTEN Fenster (Skill re15-port-visual-verify)
+nb2/gdi_k.sh = derselbe Abnahme-Weg (Spielstand 1210 Flur, LOAD GAME, W1,U4,W5, Karte bei Bild 200) mit dem
+Direct3D-Renderer (`[render] SDL-Renderer direct3d`), Kartenschirm offen gehalten, `ffmpeg -f gdigrab -i hwnd=<Fenster der
+exe-Kopie>`: debug.log `F600 ... pl pos=(-25500,0,-21700)`; gdigrab-Bild gegen den FB-Abzug derselben Sitzung 320x240
+deckungsgleich bis auf 13 Pixel im Kasten (189..193,115..119) = Blinkphase des Rings (wie Abnahme 1 bei 1090). Ausschnitt:
+`G_karten_bilder/b2_kammer_gdigrab_x4.png` (Kammer rot, Ring darin, Durchgang in der Flurwand).
 
 ### Nachbesserung 2 - Uebersicht
 | Mangel | Ursache | Beleg | Aenderung | vorher -> nachher |
