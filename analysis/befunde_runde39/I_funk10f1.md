@@ -1,4 +1,4 @@
-# Runde 39 — Spur I "funk10f1": Elza-Funkszene ROOM10F1 (Dossier, laufend)
+# Runde 39 — Spur I "funk10f1": Elza-Funkszene ROOM10F1 (Dossier)
 
 Baum `.claude/worktrees/r39_funk10f1`, Zweig `r39/funk10f1`, Basis 1038dc15, Merge master 1600e580 (Welle 1+2, darin
 Spur H: Walker-Sub-Init @0x800313a4/@0x80030b58/@0x80030d90). Start 2026-10-18; Fortsetzung ab 17:05 (Vorgaenger nur
@@ -180,6 +180,18 @@ ROOM10D1 main00 @0x01026 Ck(3,0x32)==0 legt dort einen Text-Platz statt der Tuer
 | integration_r39_funk10f1_leon | Leon ROOM10F0 ((9,71)=1): keine Funkszene, keine Leihe von ROOM1031 | gruen (8,6 s) |
 | unit_r36_kartenbits | k_port[] + Bit 70 (im Original frei) | gruen |
 
+### 5.1 Gezielte Laeufe (KEINE volle Suite), woertlich
+1. Eigene Riegel + Testgruppen aller beruehrten Module/Raeume (scd_vm/scd_room_setup/Aot/Nachricht/Stimme, Tueren, Karte,
+   ROOM10F0/10F1-Riegel der Runden 34-39, Leons 10F0-Szene (cut10f0_pc.c-Haken), CONTINUE-Wege 10F1), `-j3`, Stand 92bdb7eb:
+   `ctest --test-dir re15_port/build -R "^(unit_r39_funk10f1_.*|integration_r39_funk10f1_.*|unit_r36_kartenbits|unit_scd_.*|unit_aot_.*|unit_msg_dialog|unit_synchro_stimme|unit_r30_tuer.*|unit_r33_karte_.*|unit_r34n_d_adaruf_.*|unit_r35_cut10f0_.*|unit_r36_dachkiste_.*|unit_r36_kartenitems|unit_r36_klettern_.*|unit_r36_objfall|unit_r36_schluessel_.*|unit_r38_cursor_.*|unit_r38_itemorte_(lage|aufnahme|sicht)|unit_r38_tagebuch_.*|unit_r39_elza_.*|unit_r39_optik_.*|unit_r39_toene_.*|unit_r38_dining1141_.*|unit_npc_scd_pose|prop_scd_pc_advance|unit_se_voice_machine|unit_voice_ausreden|unit_door_seq|unit_action_msg_gate|integration_r35_cut10f0|integration_r36_schluessel|integration_r38_itemorte)$" -j3 --timeout 1500`
+   -> **100% tests passed, 0 tests failed out of 98** (darin integration_r35_cut10f0 240 s, integration_r36_schluessel 84 s,
+   integration_r38_itemorte 352 s, integration_r39_funk10f1_echt 65 s / _zweit 16 s / _leon 8 s).
+2. Die drei angepassten Elza-Laeufe: `ctest --test-dir re15_port/build -R "^(integration_r36_klettern|integration_r36_dachkiste|integration_r39_optik_schluessel)$" -j3 --timeout 1200`
+   -> **100% tests passed, 0 tests failed out of 3**.
+3. integration_r38_cursor lief MIT der Szene gruen (`3/4 Test #806: integration_r38_cursor ... Passed 200.05 sec`, Lauf vorher_fremd) — unveraendert.
+4. Ausserhalb: `unit_r38_itemorte_raum` rot (vorbestehend seit 08f3094d, Spur H; §6/§7) — daher in Lauf 1 nur
+   `unit_r38_itemorte_(lage|aufnahme|sicht)`.
+
 ## 6. Nebenwirkungen (gemessen, gezielte Laeufe; Scratch `vorher_fremd.log` / `nachher_fremd.log`)
 Jeder Elza-Lauf, der ROOM10F1 ueber scd_room_reenter betritt (Tuer, Debug-Sprung, GOTO), sieht jetzt beim ersten Mal die
 Funkszene. Gemessen am Stand fe2c1935..1f0e16bd (vorher):
@@ -189,6 +201,7 @@ Funkszene. Gemessen am Stand fe2c1935..1f0e16bd (vorher):
 | integration_r36_klettern (B_elza_10f1) | kein Schieben/Klettern/Tuer | GOTO 10F1 -> Szene lief, danach startete das Weg-Skript vom Konsolenplatz statt von der Tuer | `RE15_SET_FLAG=9:71,9:70` |
 | integration_r39_optik_schluessel (A2 aufnahme_elza) | "fehlt '[schluessel] PRISON KEY genommen'" | Szene startete bei (1300,-2900), Pad gesperrt, Aufnahme-Druck verpufft | `RE15_SET_FLAG=9:70` |
 | integration_r38_cursor (F) | gruen (200 s) | — | keine |
+Nachher (Stand 92bdb7eb, `ctest -R "^(integration_r36_klettern|integration_r36_dachkiste|integration_r39_optik_schluessel)$" -j3`): **100% tests passed, 0 tests failed out of 3** (optik_schluessel 226 s, klettern 517 s, dachkiste 1409 s unter Last).
 Muster: Runde 35 K setzte fuer Leons 10F0-Szene ebenso `RE15_SET_FLAG=9:71` in diese Riegel. Diese Laeufe pruefen den
 Tritt/Klettern/Schluessel, nicht die Szene; die Szene selbst messen die eigenen Riegel (§5).
 Unit-Gruppe der beruehrten Module/Raeume (95 Tests, -R im Abschnitt 7): 94 gruen, rot nur **unit_r38_itemorte_raum**
@@ -215,9 +228,17 @@ Unit-Gruppe der beruehrten Module/Raeume (95 Tests, -R im Abschnitt 7): 94 gruen
   "this thing" gemeint ist, ist das eine Zeile im Generator (tools/r39_funk10f1/szene_bauen.py).
 - **Kamera**: Cut 0 (Tuer) -> Cut 1 (die Konsole von Norden, Elzas linke Seite mit dem Druck-Arm im Bild).
 
-## Stand
-- [x] Messung vorher (Szene fehlt)
-- [ ] RE-Belege (Raum/Form/Bibliothek stehen; Clip-Wahl am Bild offen)
-- [ ] Umsetzung
-- [ ] Messung nachher
-- [ ] Tests
+## Stand (Abschluss)
+- [x] Messung vorher (Szene fehlt, §1)
+- [x] RE-Belege (Raum/Kommunikationssystem/rechts §2.1, Elzas Szenenform §2.2, Bibliothek §2.3, Druck = Rolltor-Schalter §2.4,
+      Clip-Wahl §2.5)
+- [x] Umsetzung (§3, Generator + gen/*.inc, 3 Haken + k_port)
+- [x] Messung nachher (§4: GOTO-Lauf, echter Tuer-Weg, zweites Betreten, Bilder, Ton-Mitschnitt)
+- [x] Tests (§5: 4 Unit-Teile + 3 Integrationsteile eigen, gezielte Gruppen 98/98 + 3/3 gruen)
+
+| Nutzer-Punkt | erfuellt durch | Beleg |
+|---|---|---|
+| 1 Szene beim Betreten, rechts zur Konsole, druecken, "Hello, anyone, can you hear me? We Need help!" | Ereignis 27 beim Raumaufbau, Weg nach rechts (+Z) zur Konsole, Clip 11 gehalten WAEHREND msg 40, Stimme main40 | §4.1-4.3, unit szene, integration echt |
+| 2 "..." | msg 41 mit Hand an der Huefte + Umsehen | §4.1, Gestenfolge 9 nach 0 |
+| 3 "Uhh, this Thing is broken!" | msg 42 mit Hand an der Stirn | §4.1, Gestenfolge 12 |
+| 4 passende Animationen | Elzas eigene Original-Gesten aus ROOM1031 sub13 (Druck auf den Rolltor-Schalter, Keine-Antwort-Form, Stirn) | §2.4/§2.5, unit form (bytegleich) |
