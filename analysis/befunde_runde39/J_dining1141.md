@@ -34,7 +34,10 @@ Ressourcen (VERTRAG 1.1/1.2): Bank-9-Bits 94, 95; Nachrichten-Ids 1141 50-59.
   (Punkt 1/3/4); nach dem ersten Ruf Elzas Satz Id 50 (Punkt 5, Bank 9 Bit 94 = einmal); Gemaelde -> Rolladen hoch ->
   Kamera auf Elza, Tuer auf/zu, Kamera auf die Dachtuer mit John (Punkt 2); Glasbruch vor msg 6 (Punkt 6); Blick
   Johns ab msg 9 (Punkt 7, RE Plc_dest Mode 9 / Turn-Sub); nach dem Tod der Gorillas Johns Zeilen Id 51/52 mit
-  Gesten, dann Abgang (Punkt 8, Bank 9 Bit 95 = gesagt); Musik beim Wechsel 1141 -> 1171 (Punkt 9).
+  Gesten, dann Abgang (Punkt 8; Bit 95 wurde nicht gebraucht); Musik beim Wechsel 1141 -> 1171 (Punkt 9).
+- Fortsetzung 1 Ende (~20:15): Modul dining_r39 gebaut und gemessen (Laeufe n1, p5, Riegel-Laeufe), Befund Gespraechslage
+  behoben (Elza neben John), Glasbruch an Johns Satzende (Warte-Zeile msg 58), Runde-38-Riegel an den neuen Ablauf angepasst.
+  Gezielt gruen: Unit 50/50, Integration 14/14 + integration_r39_dining1141_d.
 
 ## 1. Messung vorher
 
@@ -267,6 +270,12 @@ Kartenbits, audio_pc.c BGM/Stimme/SE, scd_vm.c op_message_on-Haken):
 `unit_r39_dining1141|unit_r38_dining1141|unit_r36_kartenbits|unit_rotor_bgm_pin|unit_r35_cut10f0|unit_synchro_stimme|unit_voice_ausreden|unit_r39_stimmen|unit_r38_rekorder|unit_r38_elzaintro_stimme|unit_se_bank_routing|unit_se_voice_machine|unit_r30_tuer_stimme|unit_audio|unit_r34n_f_leiche_stimme|unit_r38_tagebuch|unit_r38_elzatoene`
 -> "100% tests passed, 0 tests failed out of 50".
 Integration integration_r39_dining1141_d (Endstand): "Passed 340.14 sec" (Abschnitt 4.4).
+Gezielter Lauf Integration (Endstand, ctest -R woertlich; Module dining_r38 (alle Teile), audio_pc.c BGM-Wechsel
+(r35_cut10f0) und Sprach-Pfad (elzaintro, rekorder, r39_stimmen)):
+`integration_r38_dining1141|integration_r35_cut10f0|integration_r39_stimmen|integration_r38_rekorder|integration_r38_elzaintro_stimme`
+-> "100% tests passed, 0 tests failed out of 14" (darin integration_r38_dining1141_s Passed 663 s: zwei Laeufe mit
+Rueckleser je Bild, John erscheint in keinem Bild von 1141 ohne Bewegung oder Kameraschnitt - der Tuer-Auftritt bleibt
+im Rahmen der Regeln R0-R3; D/A Verweis-Stubs).
 
 ## 6. OFFEN
 - Spur K (Welle 3, parallel): Johns Plc_motion(2,6) (eigene Bank, Clip 6) ist im Original die Geste zu "Elza, hurry up!"
@@ -274,8 +283,9 @@ Integration integration_r39_dining1141_d (Endstand): "Passed 340.14 sec" (Abschn
   Geste zu "Elza, follow me" (Form ROOM1141 sub02 @0x00C78/@0x00C94). Aendert Spur K die Kanal-/Bankzuordnung von Johns
   eigener Bank, wirkt das auch hier - bei der Integration gemeinsam ansehen (VERTRAG 1.4).
 - Port-Bank 0x3E: in master frei; falls Spur I (10F1) in derselben Welle eine Port-Bank anlegt, bei der Integration abgleichen.
-- integration_r38_dining1141_s (zwei Laeufe mit Rueckleser je Bild, ~2 x 1 GB): Wegplan und Endbild auf den laengeren Ablauf
-  gezogen (WARTE 900, 5800#1141); Lauf siehe Abschnitt 5.
+- synchro/STAGE1/room1141/main42.wav (Runde-38-Schnitt "Help me out.") wird nicht mehr gespielt; Datei und Runde-38-Code
+  bleiben unangetastet (kein Nutzer-Asset, aber im Runde-38-Werkzeug referenziert).
+- Bank 9 Bit 95 (VERTRAG J) nicht gebraucht - frei fuer die naechste Runde.
 
 ## 7. Fuer den Nutzer
 - Neue Texte ohne Aufnahme (Sprachdateien nach synchro/README.md, der Port spielt sie automatisch, sobald sie liegen):
