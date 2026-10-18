@@ -4,7 +4,7 @@ Baum `.claude/worktrees/r39_elza`, Zweig `r39/elza`, HEAD 564810c0 (5 Commits ue
 Commits de4d7b74/3eda01a4 sind reine Dokumente — der `git diff master`-Eintrag "UEBERGABE.md/args_welle2_forts.json
 geloescht" ist KEINE Aenderung der Spur, sondern der Vorsprung von master; `git diff <merge-base>` enthaelt nur die
 16 Spur-Dateien). Abnahme-Werkzeuge: eigene exe-Kopien `re15_pc_abn_*.exe` neben der exe, Laeufe im Scratchpad
-`abn/`, kein taskkill.
+`abn_H_elza/`, kein taskkill.
 
 ## 0. Bau und Riegel (selbst gefahren)
 * `local_build.sh configure` + `build`: LOCAL-BUILD-OK. Die vorhandene exe (12:28) war laut ninja aktuell; zur
@@ -62,8 +62,8 @@ Werkzeug: `analysis/befunde_runde38/E_elzaintro_werkzeug/e_lauf.sh` (Neues Spiel
 `RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1`, `RE15_NO_INTRO=1`, eigene exe-Kopie `re15_pc_r38e_<pid>.exe`), dazu
 `RE15_SCD_TRACE=1 RE15_STATE_LOG=state.txt RE15_ANIM_TRACE=anim.txt`, Bildserie `RE15_FRAMEDUMP=440-560/2` (Skala 1,
 Waechter `e_waechter.py` benennt je Raumabschnitt um), `RE15_EXIT_AT=600#1031`. Auswertung je Bild (Scratchpad
-`abn/abn_p1.py`: ROOM1031-Block = letzter Block von state.txt/anim.txt, Bildnummern wie im Dossier; `abn/p1_neu/`,
-`abn/p1_basis/`). Zwei Laeufe: **neu** = exe dieses Baums (HEAD), **basis** = v0.8.26-Paket-exe
+`abn_H_elza/abn_p1.py`: ROOM1031-Block = letzter Block von state.txt/anim.txt, Bildnummern wie im Dossier; `abn_H_elza/p1_neu/`,
+`abn_H_elza/p1_basis/`). Zwei Laeufe: **neu** = exe dieses Baums (HEAD), **basis** = v0.8.26-Paket-exe
 (`release/pkg-win/re15_port_v0.8.26/re15_pc.exe`, sha256 a5a1c016…, als Kopie neben der Baum-exe, gleiche Assets).
 
 | Bild | SCD (beide Laeufe gleich) | **neu**: pst / mo / Pose (anim mo clip cur slot rev) | **basis v0.8.26** |
@@ -82,10 +82,10 @@ Waechter `e_waechter.py` benennt je Raumabschnitt um), `RE15_EXIT_AT=600#1031`. 
 Zaehlung (Skript): neu — "Haltephase F452..F490: 39 Ticks mo=11/pst=4, abweichend: []", "Senken F491..F520: 30 Bilder
 Clip 0 rueckwaerts", "**Clip 0 VORWAERTS ab dem Senken bis F560: 0 Bilder**"; basis — "Haltephase: 0 Ticks mo=11
 (452..: pst=4 mo=200)", "**Clip 0 VORWAERTS: 8 Bilder F521..F528 (slot 10..17)**".
-Bilder (Ausschnitt um Elza, je 2. Bild): `abn/p1_neu_cut4.png` — F450 Arm unten, F452-F458 Arm steigt (7-Bild-Blende),
-F460-F490 Arm oben statisch, F492-F508 Arm sinkt, F510-F520 unten; `abn/p1_neu_cut6.png` — F522-F560 Drehung + Gang,
-Arme in Laufhaltung, **kein zweiter Hub**. Basis: `abn/p1_basis_cut4.png` — F452-F490 Arm UNTEN (der erste Hub fehlt),
-F492-F498 Arm oben (Schnapp), sinkt bis F510; `abn/p1_basis_cut6.png` — **F522-F528 Arm erneut oben (zum Gitter
+Bilder (Ausschnitt um Elza, je 2. Bild): `abn_H_elza/p1_neu_cut4.png` — F450 Arm unten, F452-F458 Arm steigt (7-Bild-Blende),
+F460-F490 Arm oben statisch, F492-F508 Arm sinkt, F510-F520 unten; `abn_H_elza/p1_neu_cut6.png` — F522-F560 Drehung + Gang,
+Arme in Laufhaltung, **kein zweiter Hub**. Basis: `abn_H_elza/p1_basis_cut4.png` — F452-F490 Arm UNTEN (der erste Hub fehlt),
+F492-F498 Arm oben (Schnapp), sinkt bis F510; `abn_H_elza/p1_basis_cut6.png` — **F522-F528 Arm erneut oben (zum Gitter
 gestreckt)**, ab F530 Gang. Die Basis zeigt damit genau "hebt 2x, laesst einmal fallen"; der Fix erklaert BEIDE Hube:
 (1a) Latch 1/2 ueberschrieb Clip 11 im Bild des Plc_motion — Kommandowort 4 (`sb v1(=4),4(v0)` @0x80041bb0) macht
 sie hinfaellig, weil der Dispatcher ab dann nur noch 0x80073f90[4] laeuft; (1b) der Walker liess Clip 0 vorwaerts
@@ -104,7 +104,7 @@ Werkzeug: Spielstand vor dem liegenden Roy (`probe_r36_elza_karte re15_card.mcr 
 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_SCD_TRACE=1 RE15_FADE_LOG=1 RE15_STATE_LOG=state.txt`,
 `RE15_PRESS=square@60,right@200..350,square@380,square@480` (untersuchen, 6x blaettern, schliessen, "filed"
 bestaetigen), Bildserie 470-560/1, `RE15_EXIT_AT=1100#1011`; eigene exe-Kopien `re15_pc_abn_h2.exe` (neu) /
-`re15_pc_abn_b2.exe` (v0.8.26). Laufordner `abn/p2_neu/`, `abn/p2_basis/`.
+`re15_pc_abn_b2.exe` (v0.8.26). Laufordner `abn_H_elza/p2_neu/`, `abn_H_elza/p2_basis/`.
 
 | Bild | **neu** (debug.log / Helligkeit der Bilder / STATE_LOG) | **basis v0.8.26** |
 |---|---|---|
@@ -136,3 +136,40 @@ des Cuts/Spielstands, nicht der Spur. (c) F754: ein Bild Idle-FSM (pst=1) zwisch
 r38-Stand hatte dieselbe Luecke (Basis F494→F495), liegt NACH der Karte.
 **Urteil Punkt 2: erfuellt** (Karte mit Marker direkt nach dem Schliessen des Tagebuchs, vor jeder Rueckgabe der
 Steuerung; Zeitpunkt NUTZER-VORGABE, Form RE2 0x84 wie gekennzeichnet).
+
+### Punkt 3 — ROOM1091/1090: kein Klettern am Loescher (Autowrack)
+Werkzeug (`abn_H_elza/p3_lauf.sh`): Spielstand neben dem leeren Loescher wie Lauf C des r37-Riegels
+(`probe_r37_feuerloescher_karte re15_card.mcr 1091 1880 -1300 <rot> y:-1800 cut:6 elza flag:7:0xf8..0xfb`; Leon:
+`1090 1880 -1300 1024 y:-1800 cut:6 flag:3:0x81 flag:9:0x86 flag:3:0x85`), `RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1
+RE15_CARD_SLOT=0`, Eingabeskript `RE15_INPUT_SCRIPT=W1,A0.3,W3` (`_BASIS=spiel`, `_START=60` → Viereck F90-F98),
+`RE15_CLIMB_TRACE=climb.txt RE15_MSG_LOG=1 RE15_EXIT_AT=200`, Bildserie 84-200/4; exe-Kopien `re15_pc_abn_p3_<name>.exe`.
+
+| Lauf | exe | Trace-Zeile beim Viereck (T91) | Ergebnis |
+|---|---|---|---|
+| Elza 1091 rot 1024 | **neu** | `pos=(1880,-1800,-1300) rot=1024 band=1 sub=0 kind=0x00 obj=-1` | **kein Aufstieg** (0/9 Viereck-Bilder mit sub≠0); Bild: Elza bleibt am Boden, Untersuchen-Text "It's a burnt-out shed." (`abn_H_elza/p3_neu1024_voll.png`) |
+| Elza 1091 rot 3072 | neu | `rot=3072 band=1 sub=0 obj=-1` | kein Aufstieg (0/9) |
+| Elza 1091 rot 0 | neu | `rot=0 band=1 sub=0 obj=-1` | kein Aufstieg; `[msgtext] room=1091 id=29 "It's an empty fire extinguisher."` (Untersuchen-Platz unveraendert) |
+| Elza 1091 rot 1024 | **basis v0.8.26** | `rot=1024 band=1 sub=9 kind=0x81 ph=0 obj=4`, T92 mo=230, T93 mo=231 | **Aufstieg**: T91-T121 sub=9 Band 1, T122-T142 sub=9 **Band 2**, ab T143 sub=0 Band 2 — Elza steht danach auf Band 2; Bild `abn_H_elza/p3_bas1024_voll.png`: F100-F132 Kletteranimation am Wrack, danach erhoeht |
+| Elza 1091 rot 3072 | basis | `rot=3072 … sub=9 kind=0x81 obj=4` | Aufstieg (52 Trace-Zeilen sub=9) |
+| Leon 1090 rot 1024 | **neu** | `room=1090 … band=1 sub=0 obj=-1` | kein Aufstieg (Loescher liegt: `[feuerloescher] ROOM1090: Loescher liegt leer am Boden obj 5 …`) |
+| Leon 1090 rot 1024 | basis | `room=1090 … sub=9 kind=0x81 obj=3` | Aufstieg (derselbe Defekt bei Leon) |
+
+Mechanik (selbst nachvollzogen, §1): der Port-Loescher ist eine Null-Box auf Band 1; der Spieler steht am Wagen auf
+Band 1 (y −1800 → −(y/0x708) = 1). Band-Gate @0x8002d364-70 wahr → Reichweite FUN_8002d1e8 (box-unabhaengig) →
+FUN_8002da4c mit hx = 0, Rand −112: `lhu` vorzeichenlos + `sltu` → Treffer genau aus schraeger Lage (|dx| ≥ 112 UND
+|dz| ≥ 112: rot 1024/3072 ja, rot 0/2048 nein) → Substate 9. Mit Band 2 (= Spielerband(y) + 1, Form der drei
+Vorlagen-Records ROOM1091 obj 2 / ROOM1090 obj 2 / ROOM1010 obj 0, Bytes selbst gelesen) faellt der Loescher am
+Band-Gate durch — der Fix erklaert den Befund in allen vier gemessenen Faellen (Elza 1024/3072, Leon 1024; Basis
+klettert, neu nicht; rot 0 unveraendert msg 29). Kennzeichnung PORT-WAHL ist korrekt: der Zensus (selbst gerechnet)
+zeigt 51/558 Original-Null-Box-Records AUF dem Spielerband, also kein Original-Gesetz; +1 ist mit 291/558 die haeufigste
+Form und die der Vorlagen am selben Wagen.
+Nebenwirkungen: (a) ROOM1030 (stehender Loescher, y −2122 → Spielerband 1) bekommt Band 2 — der r37-Riegel
+`unit_r37_feuerloescher_raum` wurde entsprechend auf "Band 2" gesetzt (Begruendung im Test); das Band lesen nur
+Klettersonde, AOT-Objekt-Band-Vergleich und Protokolle (Dossier), der Untersuchen-/Aufnahme-Platz traegt sein eigenes
+AOT-Band → gemessen: Aufnahme/Untersuchen unveraendert (Riegel r37 gruen, s. §0/§4). (b) Von einer Band-2-Standflaeche
+aus (Spieler auf einem Tritt, Band = Tritt-Band + 1 @0x80031cfc-0c) waere das Band-Gate wieder wahr — die einzige
+Band-2-Standflaeche in 1090/1091 ist die Kiste obj 0 (@0x021BE, Typ 4, Box 900) bei (−8136,4753), ~11 800 Einheiten vom
+Loescher (2500,−1300) entfernt, weit ausserhalb der Reichweite 563 + 900 (FUN_8002d1e8 @0x8002d204/@0x8002d280); nur
+ein ueber den ganzen Platz geschobener Tritt koennte das aendern — dieselbe Eigenheit gilt fuer das Original-Wrack obj 2
+(Band 2). Kein Mangel, als Hinweis vermerkt.
+Der echte Weg (Tuer 1051 → 1091) folgt unten (Lauf `p3_tuer`).
