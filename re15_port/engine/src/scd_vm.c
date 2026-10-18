@@ -2396,6 +2396,8 @@ static int op_plc_motion(scd_thread_t *t)
     if (slot == RE15_ACTOR_SLOT_PLAYER) {
         extern void re15_player_event_reach_end(void);
         re15_player_event_reach_end();
+        { extern void re15_dining_r39_w_beginn(int entity, int clip);   /* Runde 39 Spur J: 1141 Plc_motion(2,c) = W-Bank */
+          re15_dining_r39_w_beginn((int)entity, (int)motion_id); }
     }
     re15_actor_set_motion(&g_actors[slot], (int16_t)motion_id);
     /* Player animation-bank select (see re15_actor.h + memory anim_bank_selection_mechanism for

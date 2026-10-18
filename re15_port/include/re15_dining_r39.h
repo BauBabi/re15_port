@@ -36,6 +36,19 @@
 #define RE15_R39J_MSG_STIMME_WARTEN 58  /* Port-Zeile ohne Text: op_message_on parkt, solange eine Sprachzeile laeuft
                                          * (scd_vm.c Stimmen-Riegel), dann verbraucht der Haken sie (Punkt 6)       */
 
+/* ---- Nachbesserung 1 (J_dining1141.md Abschnitt 8) ------------------------------------------------------------- */
+#define RE15_R39J_MERKER_BANK    5      /* (5,0x10) = Gemaelde-Programm ROLLTOR39 laeuft: dining_r38.c setzt ihn SYNCHRON
+                                         * beim Ausloesen von Ereignis 6, ROLLTOR39 loescht ihn am Ende; Elzas Reaktion
+                                         * wartet darauf (M1). Bank 5 = Skript-Merker (ROOM1141 sub03/sub04 @0x00FA4/
+                                         * @0x00FB6 nutzen nur Bit 0/1)                                                  */
+#define RE15_R39J_MERKER_BIT     0x10
+#define RE15_R39J_MSG52_REST     30     /* Sleep nach Johns Folge-Geste: msg 52 stand 99 Bilder (Abnahme H3), Geste 50+20 */
+#define RE15_R39J_EREIGNIS_RIEGEL 5     /* main00 @0x00A9A `2c 02 03 31 .. 18 05` -> sub05 = Dachtuer entriegeln (N4.2) */
+#define RE15_R39J_W_SUB          2      /* Plc_motion pc[1] = 2 auf dem Spieler = Sub 0x80073e30[2] = 0x80050f00 auf dem
+                                         * Kanal +0x170/+0x174 = W-Bank (@0x80036be4/@0x80036c04); Form ROOM3060 sub03
+                                         * @0x010BE `3f 02 06 00`                                                        */
+#define RE15_R39J_W_CLIP_HEBEN   6      /* W-Bank Clip 6 = RAISE (Gun-FSM sub0 / Melee @0x80034ee8)                       */
+
 /* ---- Port-Bank 0x3E (Se_on pc[1]; frei: 0x0E/0x3A/0x3B/0x3C/0x3D sind vergeben, Dossier 3) ------------------------ */
 #define RE15_R39J_SE_BANK        0x3E
 #define RE15_R39J_SATZ_KLOPFEN   0x00   /* RE2 DOOR0F.DO2 Tonteil Satz 0 = Holzschlag (Treppe Holz), Archiv-Tabelle RE2
@@ -67,9 +80,21 @@
 /* ---- Haken ------------------------------------------------------------------------------------------------------- */
 /* Ende von re15_dining_r38_install (scd_room_setup.c Blockende + Boot/CONTINUE): Texte 50..52, Phase H: John parken. */
 void re15_dining_r39_install(uint16_t room_id, int phase_h);
-/* Phase-H-Programme statt HAEMMERN/BEFREIUNG der Runde 38 (dining_r38.c). */
+/* Phase-H-Programme statt HAEMMERN/BEFREIUNG der Runde 38 (dining_r38.c): Klopf-Schleife (Evt_exec sub02), Gemaelde
+ * (Ereignis 6: nur Rolladen, danach frei laufen) und Riegel der Dachtuer (Ereignis 5: die Szene mit John). */
 const uint8_t *re15_dining_r39_haemmern(void);
-const uint8_t *re15_dining_r39_befreiung(void);
+const uint8_t *re15_dining_r39_rolltor(void);
+const uint8_t *re15_dining_r39_entriegeln(void);
+/* Beim Ausloesen des Riegels (Ereignis 5): die Waffe, die Elza hebt (NUTZER-VORGABE Nachtrag 4: Schusswaffe aus dem
+ * Inventar - die ausgeruestete, sonst die erste im Inventar, die dann ausgeruestet wird -, ohne Schusswaffe das Messer).
+ * Rueckgabe = Waffen-Id (aca5d). */
+int re15_dining_r39_waffe_waehlen(void);
+/* Spieler-Plc_motion(2,c) in ROOM1141 (scd_vm.c op_plc_motion, Haken): W-Bank-Clip c einmal spielen und halten
+ * (0x80050f00 auf +0x170/+0x174). _tick je Bild (game_step_common.c, Haken), _clip fuer den Zeichner (main.c, Haken):
+ * -1 = aus. Endet, sobald ein anderer Plc-Befehl Clip oder Kommandowort des Spielers aendert. */
+void re15_dining_r39_w_beginn(int entity, int clip);
+void re15_dining_r39_w_tick(void);
+int  re15_dining_r39_w_clip(void);
 /* Se_on-Zweig (dining_r38.c re15_dining_r38_se_on): 1 = Port-Bank 0x3E erledigt. */
 int re15_dining_r39_se_on(unsigned bank, int satz);
 /* audio_pc.c re15_voice_load_clip: ROOM1141 Id 53..57 -> Stamm "help01".."help05"; sonst unveraendert. */
@@ -82,7 +107,7 @@ void re15_dining_r39_messhaken(void);
 extern void (*re15_dining_r39_se_hook)(int satz);
 
 /* ---- Pruefhaken (Riegel) --------------------------------------------------------------------------------------- */
-const uint8_t *re15_dining_r39_programm(int nr, int *out_len);   /* 0 HAEMMERN39 1 BEFREIUNG39 */
+const uint8_t *re15_dining_r39_programm(int nr, int *out_len);   /* 0 HAEMMERN39 1 ENTRIEGELN39 2 ROLLTOR39 */
 const uint8_t *re15_dining_r39_text(int nr, int *out_len);       /* 0 msg 50 1 msg 51 2 msg 52 */
 const uint8_t *re15_dining_r39_klopfton(int *out_len);           /* DOOR0F-Tonteil (TORSE-Aufbau) */
 extern unsigned g_re15_r39j_se_zaehler[3];   /* Se_on der Bank 0x3E: [0] Klopfen [1] Glas [2] Hilferuf */

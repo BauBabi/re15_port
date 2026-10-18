@@ -108,7 +108,9 @@ static int phase_h_bedingung(uint16_t room_id)
 {
     if (room_id != RE15_R38F_RAUM_1141) return 0;
     if (!re15_game_flag_get(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT)) return 0;
-    if (re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT)) return 0;
+    /* Runde 39 Spur J (Nachbesserung 1 N4.1): Phase H dauert, bis Elza die Dachtuer entriegelt ((4,0xC3), sub05 @0x00FD2),
+     * nicht nur bis zum Rolladen ((3,0x6A)) - nach dem Rolladen laeuft sie frei, John klopft weiter. */
+    if (re15_game_flag_get(4, 0xC3)) return 0;
     const int alle = A_ROLL1141 | A_SUB02_05 | A_SUB00 | A_MAIN00;
     return (anker(room_id) & alle) == alle;
 }
@@ -282,13 +284,21 @@ const uint8_t *re15_dining_r38_ereignis(uint16_t room_id, uint8_t event_id)
     if (room_id == RE15_R38F_RAUM_1140 && event_id == RE15_R38F_1140_EREIGNIS && (anker(room_id) & A_ROLL1140))
         return k_r38f_p_roll1140;
     if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_GEMAELDE && phase_h_bedingung(room_id)) {
-        /* Gemaelde in Phase H: BEFREIUNG (Rolladen hoch mit Ton, John kommt heraus, Szene, Sperre, Abgang). Die
-         * Tuerbank laedt schon hier den Tonteil der Dachtuer (DOOR1A, gen/tuer_zuordnung.inc S064 ROOM1141 Slot 1)
-         * fuer Johns Abgang am Ende. */
+        /* Runde 39 Spur J (Nachbesserung 1): Gemaelde in Phase H = nur Rolladen hoch mit Ton, danach frei laufen (N4.1).
+         * Merker (5,0x10) SYNCHRON beim Ausloesen: Elzas Reaktion wartet, bis ROLLTOR39 ihn am Ende loescht (M1). */
+        re15_game_flag_set(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT, 1);
+        log_f("ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm ROLLTOR39 (Merker (5,0x10) = 1)");
+        return re15_dining_r39_rolltor();
+    }
+    if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R39J_EREIGNIS_RIEGEL && phase_h_bedingung(room_id)) {
+        /* Runde 39 Spur J (Nachbesserung 1 N4.2): Riegel der Dachtuer in Phase H = die Szene (John kommt herein, Kampf,
+         * Gespraech, Abgang). Die Tuerbank laedt den Tonteil der Dachtuer (DOOR1A, gen/tuer_zuordnung.inc S064 ROOM1141
+         * Slot 1) fuer Johns Auftritt und Abgang; die Waffe, die Elza hebt, wird jetzt gewaehlt. */
         { int n = 0; const uint8_t *ton = re15_szl_tuerton(&n);
           if (!re15_audio_re2_tuer_laden(ton, n)) log_f("Tuerbank DOOR1A nicht geladen (kein Audiogeraet?)"); }
-        log_f("ROOM1141 Gemaelde (Ereignis 6) in Phase H -> Programm BEFREIUNG");
-        return re15_dining_r39_befreiung();   /* Runde 39 Spur J: John durch die Tuer, Glas, Blick, Zeilen 51/52 */
+        (void)re15_dining_r39_waffe_waehlen();
+        log_f("ROOM1141 Riegel der Dachtuer (Ereignis 5) in Phase H -> Programm ENTRIEGELN39");
+        return re15_dining_r39_entriegeln();
     }
     if (room_id == RE15_R38F_RAUM_1141 && event_id == RE15_R38F_1141_EREIGNIS_GEMAELDE && (anker(room_id) & A_ROLL1141))
         return k_r38f_p_roll1141;

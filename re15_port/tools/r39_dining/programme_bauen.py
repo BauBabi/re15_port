@@ -10,20 +10,20 @@ re15_port/shared_assets/PSX/STAGE1/ROOM1141.RDT, vor dem Kopieren geprueft) oder
 Opcode-Form (Vorbild je Zeile im Listing). Dossier: analysis/befunde_runde39/J_dining1141.md; Konstanten:
 include/re15_dining_r39.h (der Riegel test_r39_dining1141 prueft beide gegeneinander).
 
-PROGRAMME
-  HAEMMERN39  ROOM1141 Phase H (Evt_exec sub02 @0x00B02 beim Betreten, statt HAEMMERN der Runde 38). John ist NICHT im
-              Raum (auf dem Dach, Punkt 2; der Installer parkt ihn). Schleife solange der Notrolladen zu ist
-              (While Ck(3,0x6A)==0, Form sub03 @0x00FA8): je Runde mehrfaches Klopfen gegen die Tuer (Punkt 4: RE2
-              DOOR0F Satz 0 dreimal, Abstand Sleep 5 = Form RE2 ROOM1090 @0x02BB0/@0x02BBC/@0x02BC0), Sleep 30
-              (RE2 ROOM1060 sub05 +0x2E), ein Hilferuf help01..05 (Punkt 4, Reihenfolge MIX), Sleep 90 + Sleep 90
-              (RE2 ROOM1060 sub05 +0x58/+0x5E). KEIN Zombie-Stoehnen (RE2 1060 Satz 0x0B, Punkt 1), KEIN "Help me out."
-              (main42, Punkt 3). Nach dem ERSTEN Hilferuf (Bank 9 Bit 94 noch 0) Elzas Reaktion (Punkt 5): Pad-Sperre,
-              Kopf zur Dachtuer, Port-Nachricht 50, Bit 94.
-  BEFREIUNG39 ROOM1141 Ereignis 6 in Phase H (Gemaelde): Rolladen hoch mit Ton (wie Runde 38), dann Punkt 2: Elza tritt
-              in den Raum und dreht sich zum Gang, Kamera vorne auf Elza (Cut 7), Tuer auf, John innen vor die Tuer,
-              Tuer zu, Kamera auf die Tuer (Cut 6, John steht schon da), Kamera Cut 5, John laeuft heraus; Szene der
-              Runde 38 mit Punkt 6 (Glasbruch vor msg 6) und Punkt 7 (Skript wartet auf Johns Drehung vor msg 9);
-              nach dem Tod der Gorillas Punkt 8 (zwei Zeilen Johns mit Gesten), dann Johns Abgang (Runde 38).
+PROGRAMME (Nachbesserung 1: Ablauf nach Nutzer-Nachtrag 4)
+  HAEMMERN39   ROOM1141 Phase H (Evt_exec sub02 @0x00B02 beim Betreten, statt HAEMMERN der Runde 38). John ist NICHT im
+               Raum (auf dem Dach, Punkt 2; der Installer parkt ihn). Schleife solange die Dachtuer von innen verriegelt
+               ist (While Ck(4,0xC3)==0 = main00 @0x00A76; vorher bis zum Rolladen): je Runde mehrfaches Klopfen (Punkt 4:
+               RE2 DOOR0F Satz 0 dreimal, Abstand Sleep 5 = RE2 ROOM1090 @0x02BB0/@0x02BBC/@0x02BC0), Sleep 30 (RE2 ROOM1060
+               sub05 +0x2E), ein Hilferuf help01..05 (Punkt 4, Reihenfolge MIX), Sleep 90 + Sleep 90 (+0x58/+0x5E). Nach dem
+               ERSTEN Hilferuf (Bank 9 Bit 94 noch 0) Elzas Reaktion (Punkt 5), erst wenn keine Szene laeuft (Merker
+               (5,0x10) des Gemaelde-Programms, Pad-Sperre (2,7)) und nur solange die Dachtuer verriegelt ist (M1).
+  ENTRIEGELN39 ROOM1141 Ereignis 5 (Riegel der Dachtuer) in Phase H: sub05 (msg 12 "You've opened the lock."), dann
+               Elza rennt zur Kamera Cut 7, dreht sich zur Tuer, hebt die Waffe (N4.2), Tuer auf, John innen vor die Tuer,
+               Tuer zu, Kamera auf die Tuer (Cut 6, John steht schon da), Cut 5, Elza senkt die Waffe, John laeuft heraus;
+               Szene der Runde 38 mit Punkt 6 (Glasbruch vor msg 6) und Punkt 7 (Skript wartet auf Johns Drehung vor msg 9);
+               nach dem Tod der Gorillas Punkt 8 (zwei Zeilen Johns mit Gesten, Folge-Geste Clip 17), dann Johns Abgang.
+  ROLLTOR39    ROOM1141 Ereignis 6 (Gemaelde) in Phase H: Rolladen hoch mit Ton (Runde 38), danach Steuerung zurueck (N4.1).
 """
 import importlib.util, io, os, struct, sys
 
@@ -60,6 +60,9 @@ TUER_ZU_BILDER = 27             # DOOR1A Ton 1 = VAG 3, 0,89 s ("0.89 (53)") bei
 DOOR0F_TON = 0x2A88             # RE2 @0x8009A5D4 Halbwort 0 (gen/re2_tuer_tabelle.inc DOOR0F)
 DOOR0F_CK = 0xDB                # RE2 @0x8009A5D4 +8: Pruefsumme Ton (XOR erstes Byte je 512 B, re2_tuer_ton.py)
 DOOR0F_DATEI = 48076            # Dateigroesse laut derselben Tabelle
+MERKER_BANK, MERKER_BIT = 5, 0x10  # RE15_R39J_MERKER_BANK/_BIT: Gemaelde-Programm laeuft (Nachbesserung 1 M1); Bank 5 =
+                                #   Skript-Merker (ROOM1141 sub03/sub04 @0x00FA4/@0x00FB6 nutzen Bit 0/1, sonst keins)
+MSG52_REST = 30                # RE15_R39J_MSG52_REST: Sleep nach Johns Folge-Geste (Abnahme H3: msg 52 stand 99 Bilder)
 
 D1141 = R.RDT["1141"]
 
@@ -76,30 +79,52 @@ def se39(satz, c):
     op([0x36, BANK, satz] + [0] * 9, "Se_on(0x3E,0x%02X) %s (Form wie die Port-Baenke der Runde 38: `36 bank satz` + 9 x 0)" % (satz, c))
 
 
-def ifel_6a(inner, c):
-    R.ifel_6a(bytes(inner), c)
+def ifel_c3(inner, c):
+    """Ifel_ck { Ck(4,0xC3)==0  <inner> } Endif - Nachbesserung 1 (N4.1): Klopfen und Rufe laufen, solange die Dachtuer von
+    innen verriegelt ist (Bedingung = ROOM1141 main00 @0x00A76 `21 04 c3 00`, die den Riegel-Slot 2 baut), nicht mehr nur
+    bis zum Rolladen. Ifel-Form sub01 @0x00BFE (Laenge = Ck + Rumpf + Endif), Endif sub01 @0x00C10."""
+    rumpf = 4 + len(inner) + 2
+    op(b"\x06\x00" + struct.pack("<H", rumpf), "Ifel_ck Laenge %d (Form sub01 @0x00BFE)" % rumpf)
+    op(b"\x21\x04\xc3\x00", "  Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt, John draussen)")
+    op(bytes(inner), "  " + c)
+    op(b"\x08\x00", "Endif = sub01 @0x00C10")
 
 
 def sleep(n, c):
     R.sleep(n, c)
 
 
+def warte_solange(bank, bit, c):
+    """While Ck(bank,bit)==1 { Evt_next } - Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00` + Ck + `02 00` + @0x00FB2 `10 00`
+    (dort Ck(5,0)==0); hier mit Wert 1 (Ck pc[3] = Sollwert, sub00 @0x00AFE `21 04 f0 01`)."""
+    op(b"\x0f\x04\x08\x00", "While Laenge 8 (Form sub03 @0x00FA8): %s" % c)
+    op(bytes([0x21, bank, bit, 0x01]), "  Ck(%d,0x%02X)==1" % (bank, bit))
+    op(b"\x02\x00", "  Evt_next + Nop (Form sub03 @0x00FB0)")
+    op(b"\x10\x00", "Ewhile (Form sub03 @0x00FB2)")
+
+
 def klopfen_gruppe():
     """Punkt 4: mehrfaches Klopfen = RE2 DOOR0F Satz 0 dreimal, Abstand 5 Bilder (Form RE2 ROOM1090 @0x02BB0 Se_on /
-    @0x02BBC `09 0a 05 00` Sleep 5 / @0x02BC0 Se_on). Jeder Schlag in Ifel Ck(3,0x6A)==0: das "ja" am Gemaelde
-    (sub06 @0x00FF6) beendet das Klopfen sofort."""
+    @0x02BBC `09 0a 05 00` Sleep 5 / @0x02BC0 Se_on). Jeder Schlag in Ifel Ck(4,0xC3)==0: das Entriegeln der Dachtuer
+    (sub05 @0x00FD2 `22 04 c3 01`) beendet das Klopfen sofort."""
     for k in range(3):
-        ifel_6a([0x36, BANK, SATZ_KLOPFEN] + [0] * 9,
-                "Se_on(0x3E,0) Klopfen %d/3 = RE2 DOOR0F Satz 0 (Holzschlag)" % (k + 1))
+        ifel_c3([0x36, BANK, SATZ_KLOPFEN] + [0] * 9, "Se_on(0x3E,0) Klopfen %d/3 = RE2 DOOR0F Satz 0 (Holzschlag)" % (k + 1))
         if k < 2:
             sleep(5, "Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC `09 0a 05 00`")
 
 
 def reaktion():
-    """Punkt 5: einmal (Bank 9 Bit 94) nach dem ersten Hilferuf beim Betreten. Formen aus ROOM1141 sub02."""
+    """Punkt 5: einmal (Bank 9 Bit 94) nach dem ersten Hilferuf beim Betreten. Formen aus ROOM1141 sub02.
+    Nachbesserung 1 (M1): erst warten, bis keine Szene laeuft - das Gemaelde-Programm ROLLTOR39 haelt den Merker
+    (5,0x10) (gesetzt SYNCHRON beim Ausloesen von Ereignis 6 in dining_r38.c, geloescht am Programmende), jede andere
+    Szene haelt die Pad-Sperre (2,7) (sub02 @0x00C26 / sub06 @0x01004); und nur, solange die Dachtuer verriegelt ist
+    (John ist dann noch draussen; nach dem Entriegeln waere die Zeile falsch)."""
     rumpf_start = len(prog)
     op([0x21, 0x09, BIT_REAKTION, 0x00], "  Ck(9,94)==0 (Elza hat noch nicht reagiert; Ck-Form sub00 @0x00B84 `21 03 6a 00`)")
-    R.set_flag(2, 0x07, 1, "  Set(2,7)=1 Pad-Sperre = sub02 @0x00C26")
+    warte_solange(MERKER_BANK, MERKER_BIT, "Gemaelde-Programm laeuft (Merker, Nachbesserung 1 M1)")
+    warte_solange(2, 0x07, "eine Szene haelt die Pad-Sperre (sub02 @0x00C26 Set(2,7)=1)")
+    innen_start = len(prog)
+    R.set_flag(2, 0x07, 1, "  Set(2,7)=1 Pad-Sperre = sub02 @0x00C26 (im selben Takt wie die Pruefungen davor: kein Fenster)")
     R.work_player("  Work_set(1,0)+Nop Elza = sub02 @0x00C2E")
     op(b"\x41\x01" + s16(JOHN_TUER[0]) + s16(0) + s16(JOHN_TUER[1]) + b"\x64\x00",
        "  Plc_neck Elza -> Dachtuer (%d,%d) Tempo 100 (Form sub02 @0x00C42 `41 01 x 0 z 64 00`)" % JOHN_TUER)
@@ -109,6 +134,11 @@ def reaktion():
     R.set_flag(9, BIT_REAKTION, 1, "  Set(9,94)=1 Reaktion gesehen (VERTRAG 1.1)")
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "  Plc_neck aus = sub02 @0x00F30 `41 00 00 00 00 00 00 00 64 00`")
     R.set_flag(2, 0x07, 0, "  Set(2,7)=0 = sub02 @0x00F4E")
+    innen = sum(len(b) for b, _ in prog[innen_start:]) + 2 + 4
+    prog.insert(innen_start, (b"\x21\x04\xc3\x00", "  Ck(4,0xC3)==0 = main00 @0x00A76 (Dachtuer noch verriegelt)"))
+    prog.insert(innen_start, (b"\x06\x00" + struct.pack("<H", innen),
+                              "  Ifel_ck Laenge %d (Form sub01 @0x00BFE): nur solange John draussen ist" % innen))
+    op(b"\x08\x00", "  Endif = sub01 @0x00C10")
     rumpf = sum(len(b) for b, _ in prog[rumpf_start:]) + 2
     prog.insert(rumpf_start, (b"\x06\x00" + struct.pack("<H", rumpf),
                               "Ifel_ck Laenge %d (Form sub01 @0x00BFE: Laenge = Ck + Rumpf + Endif)" % rumpf))
@@ -121,11 +151,12 @@ def baue_haemmern39():
     sleep(30, "Sleep 30 (Elza ist eben herein; RE2 ROOM1060 sub05 +0x2E `09 0a 1e 00`)")
     kopf = len(prog)
     op(b"\x0f\x04\x00\x00", "While (Laenge s.u.) = Form ROOM1141 sub03 @0x00FA8 `0f 04 08 00`")
-    op(b"\x21\x03\x6a\x00", "  Ck(3,0x6A)==0 (Schleife laeuft, solange der Notrolladen zu ist; sub00 @0x00B84)")
+    op(b"\x21\x04\xc3\x00", "  Ck(4,0xC3)==0 (Schleife laeuft, solange die Dachtuer verriegelt ist; main00 @0x00A76) - "
+                            "Nachbesserung 1 N4.1: vorher Ck(3,0x6A)==0 (nur bis zum Rolladen)")
     for i, h in enumerate(MIX):
         klopfen_gruppe()
         sleep(30, "Sleep 30 = RE2 ROOM1060 sub05 +0x2E")
-        ifel_6a([0x36, BANK, SATZ_HILFE0 + h - 1] + [0] * 9,
+        ifel_c3([0x36, BANK, SATZ_HILFE0 + h - 1] + [0] * 9,
                 "Se_on(0x3E,0x%02X) Hilferuf help%02d.wav (NUTZER-VORGABE Punkt 4; Sprach-Pfad wie main42)" % (SATZ_HILFE0 + h - 1, h))
         sleep(90, "Sleep 90 = RE2 ROOM1060 sub05 +0x58")
         if i == 0:
@@ -135,7 +166,7 @@ def baue_haemmern39():
     laenge = sum(len(b) for b, _ in prog[kopf + 1:])
     prog[kopf] = (b"\x0f\x04" + struct.pack("<H", laenge),
                   prog[kopf][1].replace("Laenge s.u.", "Laenge %d bis hinter das Ewhile" % laenge))
-    op([0x01, 0x00], "Evt_end (Rolladen offen: Klopfen und Hilferufe sind zu Ende)")
+    op([0x01, 0x00], "Evt_end (Dachtuer entriegelt: Klopfen und Hilferufe sind zu Ende)")
     return list(prog)
 
 
@@ -155,18 +186,53 @@ def einfuegen_nach(raum, off, zeilen):
         prog.insert(i + k, z)
 
 
+def baue_rolltor39():
+    """Nachbesserung 1 N4.1 (NUTZER-VORGABE "Elza soll das Rolltor oeffnen und dann noch ganz normal laufen koennen"):
+    Ereignis 6 (Gemaelde) in Phase H = ROOM1141 sub06 mit dem Rolladen-Ton der Runde 38 und OHNE die Gorilla-Bloecke
+    (in Phase H sind die Gorillas heraus); am Ende gibt sub06 selbst die Steuerung zurueck (@0x010C8..@0x010D6). Danach
+    Merker (5,0x10) aus (Nachbesserung 1 M1; dining_r38.c setzt ihn beim Ausloesen)."""
+    del prog[:]
+    R.kopie("1141", 0x00FE8, 0x0100E, [0x2B, 0x0D, 0x80, 0xFF], "(sub06: Gemaelde-Frage; Ja-Zweig)")
+    i_ifel = idx_bei("1141", 0x00FEE)
+    if prog[i_ifel][0] != bytes([0x06, 0x00, 0xE8, 0x00]):
+        sys.exit("ABBRUCH: Ifel sub06 @0x00FEE")
+    R.rolladen_ton_a()
+    R.kopie("1141", 0x01032, 0x0107C, [0x2E, 0x03, 0x00], "(Work_set Prop 0 = Rolladen; Bewegung bytegleich)")
+    R.rolladen_ton_b()
+    R.kopie("1141", 0x0107C, 0x010A4, [0x37, 0x00, 0x0D, 0x00], "(Sca-Saetze: Rolladen-Zellen frei)")
+    R.kopie("1141", 0x010C8, 0x010DA, [0x22, 0x02, 0x07, 0x00],
+            "(sub06-Schluss: Pad-Sperre/Balken aus, Cut_auto 1, Plc_ret Spieler, Endif - Steuerung zurueck)")
+    i_end = len(prog) - 1
+    if prog[i_end][0] != b"\x08\x00":
+        sys.exit("ABBRUCH: sub06 @0x010D8 Endif erwartet")
+    R.set_flag(MERKER_BANK, MERKER_BIT, 0, "Set(5,0x10)=0 Merker 'Gemaelde-Programm laeuft' aus (Nachbesserung 1 M1; "
+                                           "Form Set sub03 @0x00FA4 `22 05 00 00`)")
+    op([0x01, 0x00], "Evt_end = sub06 @0x010DA")
+    laenge = sum(len(b) for b, _ in prog[i_ifel + 1:i_end + 1])
+    prog[i_ifel] = (b"\x06\x00" + struct.pack("<H", laenge),
+                    prog[i_ifel][1] + "  -> Laenge 0xE8 -> 0x%X (Ja-Zweig mit Ton, ohne Gorilla-Bloecke @0x0100E/@0x010A4)" % laenge)
+    return list(prog)
+
+
 def tuer_auftritt():
-    """Punkt 2 (NUTZER-VORGABE): Kamera vorne auf Elza waehrend die Tuer aufgeht, Tuer-zu-Ton, dann Kamera auf die Tuer,
-    John steht schon da."""
+    """Punkt 2 (NUTZER-VORGABE) mit Nachbesserung 1 N4.2: nach dem Entriegeln rennt Elza bis zur anderen Kamera (Cut 7,
+    Blick nach Sueden, nicht mehr zur Tuer), dreht sich zur Tuer und hebt die Waffe; dann Tuer auf/zu, Kamera auf die Tuer
+    (John steht schon da)."""
+    R.set_flag(2, 0x07, 1, "Set(2,7)=1 Pad-Sperre (Form sub06 @0x01004)")
+    R.set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken (Form sub06 @0x01008)")
     R.work_player("Work_set(1,0)+Nop Elza (sub02 @0x00CD4)")
-    R.dest(4, 0, ELZA_VORNE, "Plc_dest WALK Elza in den Raum (%d,%d) (Form sub02 @0x00CD8 `40 00 04 00 ..`) - im Bild von "
-                             "Cut 7 (Dossier 2.5)" % ELZA_VORNE)
+    R.dest(5, 0, ELZA_VORNE, "Plc_dest RUN Elza vom Riegel in den Raum (%d,%d) (Spieler-RUN Form ROOM1021 sub02 @0x02046 "
+                             "`40 00 05 20`; Bit 0 = Warte-Bit von sub03) - NUTZER-VORGABE \"rennt sie dann bis zur Szene mit "
+                             "den anderen Kamera\"" % ELZA_VORNE)
     op([0x18, 0x03], "Gosub sub03 = sub02 @0x00CE0 (warten, bis Elza steht)")
-    R.dest(9, 0, JOHN_TUER, "Plc_dest TURN Elza zur Dachtuer (Form sub02 @0x00CE2 `40 00 09 00 ..`)")
-    op([0x18, 0x03], "Gosub sub03 = sub02 @0x00CEA")
     R.cut_chg(CUT_ELZA, "Cut_chg 7 = Kamera am Gangende, Blick nach Sueden: Elza von vorn, Dachtuer hinter der Kamera "
                         "(Form sub02 @0x00C24 `29 07`)")
-    sleep(5, "Sleep 5 = ROOM1171 sub02 @0x0140E nach Cut_chg @0x0140C (das neue Bild steht, bevor die Tuer klingt)")
+    R.dest(9, 0, JOHN_TUER, "Plc_dest TURN Elza zur Dachtuer (Form sub02 @0x00CE2 `40 00 09 00 ..` / ROOM3060 sub03 @0x0108E)")
+    op([0x18, 0x03], "Gosub sub03 = sub02 @0x00CEA")
+    op([0x3F, 0x02, 0x06, 0x00], "Plc_motion(2,6) Elza hebt die Waffe = ROOM3060 sub03 @0x010BE `3f 02 06 00` (Spieler-Sub 2 "
+                                 "0x80073e30[2] = 0x80050f00 auf +0x170/+0x174 = W-Bank @0x80036be4/@0x80036c04, Clip 6 = RAISE; "
+                                 "Waffe gewaehlt beim Ausloesen, dining_r39.c) - NUTZER-VORGABE Nachtrag 4")
+    sleep(40, "Sleep 40 = ROOM3060 sub03 @0x010C2 `09 0a 28 00`")
     R.se_on(R.BANK_TUER, 0, "Se_on(0x0E,0) DOOR1A Satz 0 = Tuer auf (Dachtuer 1141 = DOOR1A, tuer_zuordnung.inc S064; Form "
                             "ROOM10D0 sub21 @0x01A02)")
     R.work_npc(0, "Work_set(2,0)+Nop John (sub02 @0x00C5C)")
@@ -181,16 +247,25 @@ def tuer_auftritt():
     R.cut_chg(CUT_TUER, "Cut_chg 6 = Dachgang mit Dachtuer: John steht schon da (NUTZER-VORGABE)")
     sleep(20, "Sleep 20 = sub02 @0x00DC6 `09 0a 14 00`")
     R.cut_chg(5, "Cut_chg 5 = Blick nach Norden auf Rolladen und Gang (Runde 38: @0x00D08 -> 5): John laeuft heraus")
+    R.work_player("Work_set(1,0)+Nop Elza")
+    op([0x3F, 0x02, 0x06, 0x00], "Plc_motion(2,6) = ROOM1021 sub02 @0x020EA (Waffe senken: Clip 6 rueckwaerts) - es ist John")
+    op([0x43, 0x00, 0x80, 0x00], "Plc_flg 0x80 rueckwaerts = ROOM1021 sub02 @0x020EE `43 00 80 00`")
 
 
 def nach_dem_kampf():
     """Punkt 8 (NUTZER-VORGABE Wortlaut): nach dem Tod der Gorillas zwei Zeilen Johns mit Gesten, dann sein Abgang.
-    Aufbau = ROOM1141 sub02 @0x00C24..@0x00C76 (Szenenbeginn: Kamera, Sperre, Elza Pos_set, Kopf/Drehung zueinander),
-    Erleichterung = Johns Gesten zu msg 1 "I'm glad to see you're still alive" (@0x00CB4..@0x00CD0), Heranwinken =
-    Plc_motion(2,6) wie zu "Elza, hurry up!" ROOM1171 @0x014C2 und wie @0x00C78/@0x00C94."""
+    Aufbau = ROOM1141 sub02 @0x00C24..@0x00C76 (Szenenbeginn: Kamera, Sperre, Pos_set, Kopf/Drehung zueinander),
+    Erleichterung = Johns Gesten zu msg 1 "I'm glad to see you're still alive" (@0x00CB4..@0x00CD0).
+    Nachbesserung 1: M3 - John steht im Schnittbild von Cut 8 schon an seinem Platz (Pos_set im selben Takt wie Elzas
+    Pos_set, vor Sleep 1); M2/N4.4 - zu msg 52 die Folge-Geste Clip 17 (Armschwung) statt Plc_motion(2,6) (= Zielen,
+    ROOM1021 @0x020C6): Johns eigene Folge aus 1141 sub02 @0x00DBA..@0x00DC6 (Clip 17, Sleep 50, Clip 23, Sleep 20), die
+    Bibliotheks-Geste des Originals zu "Hurry up! They're coming!" (ROOM3070 sub03 @0x03724)."""
     R.cut_chg(CUT_GESPRAECH, "Cut_chg 8 = Suedwest-Ecke, John und Elza im Bild (Form sub02 @0x00C24 `29 07`)")
     R.set_flag(2, 0x07, 1, "Set(2,7)=1 = sub02 @0x00C26")
     R.set_flag(1, 0x1B, 1, "Set(1,0x1B)=1 Balken = sub02 @0x00C2A")
+    R.work_npc(0, "Work_set(2,0)+Nop John (Form sub02 @0x00C5C)")
+    R.pos_set(ECKE, "Pos_set John an seinen Platz im Kampf (Ziel sub02 @0x00F8E) IM SCHNITTBILD (Nachbesserung 1 M3: vorher "
+                    "erst hinter Sleep 1/10/5 = 16 Bilder nach dem Schnitt sichtbar)")
     R.work_player("Work_set(1,0)+Nop Elza = sub02 @0x00C2E")
     R.pos_set(ELZA_NACH, "Pos_set Elza (%d,%d) = sub02 @0x00C32 (dort (-7600,-17600) beim Kamerawechsel)" % ELZA_NACH)
     op([0x34, 0x04] + list(s16(ELZA_BLICK_JOHN)),
@@ -202,7 +277,6 @@ def nach_dem_kampf():
     R.dest(9, 0, ECKE, "Plc_dest TURN Elza -> John = sub02 @0x00C50")
     sleep(5, "Sleep 5 = sub02 @0x00C58")
     R.work_npc(0, "Work_set(2,0)+Nop John = sub02 @0x00C5C")
-    R.pos_set(ECKE, "Pos_set John an seinen Platz im Kampf (Ziel sub02 @0x00F8E) - beim Kamerawechsel")
     op(b"\x41\x01" + s16(ELZA_NACH[0]) + s16(0) + s16(ELZA_NACH[1]) + b"\x64\x00", "Plc_neck John -> Elza = sub02 @0x00C60")
     sleep(5, "Sleep 5 = sub02 @0x00C6A")
     R.dest(9, 1, ELZA_NACH, "Plc_dest TURN John -> Elza = sub02 @0x00C6E")
@@ -217,31 +291,28 @@ def nach_dem_kampf():
     sleep(50, "Sleep 50 = sub02 @0x00CC8")
     op([0x3F, 0x00, 0x17, 0x00], "Plc_motion(0,23) = sub02 @0x00CCC")
     sleep(20, "Sleep 20 = sub02 @0x00CD0")
-    # Zeile 2 + Heranwinken (sub02 @0x00C78..@0x00C9C, ROOM1171 @0x014C2)
-    op([0x3F, 0x02, 0x06, 0x00], "Plc_motion(2,6) Heranwinken = sub02 @0x00C78 / ROOM1171 sub02 @0x014C2 (\"Elza, hurry up!\")")
-    sleep(10, "Sleep 10 = sub02 @0x00C7C")
-    op([0x2B, MSG_FOLGEN, 0x00, 0x00], "Message_on 52 \"John: Elza, follow me, ...\" (Form sub02 @0x00C80 `2b 00 00 00`)")
-    sleep(40, "Sleep 40 = sub02 @0x00C8C `09 0a 28 00`")
-    op([0x3F, 0x02, 0x06, 0x00], "Plc_motion(2,6) = sub02 @0x00C94")
-    op([0x43, 0x00, 0x80, 0x00], "Plc_flg 0x80 (rueckwaerts: Arm sinkt) = sub02 @0x00C98")
-    sleep(40, "Sleep 40 = sub02 @0x00C9C `09 0a 28 00`")
+    # Zeile 2 + Folge-Geste (Nachbesserung 1 M2/N4.4)
+    op([0x2B, MSG_FOLGEN, 0x00, 0x00], "Message_on 52 \"John: Elza, follow me, ...\" (Form sub02 @0x00D9E `2b 05 00 00`)")
+    R.work_npc(0, "Work_set(2,0)+Nop John = sub02 @0x00DA2")
+    op([0x3F, 0x00, 0x11, 0x00], "Plc_motion(0,17) Folge-Geste Armschwung = sub02 @0x00DBA (John) / ROOM3070 sub03 @0x03724 "
+                                 "\"Hurry up! They're coming!\" (Nachbesserung 1 M2: statt (2,6) = Zielen)")
+    sleep(50, "Sleep 50 = sub02 @0x00DBE `09 0a 32 00`")
+    op([0x3F, 0x00, 0x17, 0x00], "Plc_motion(0,23) = sub02 @0x00DC2 (Hand zurueck)")
+    sleep(20, "Sleep 20 = sub02 @0x00DC6 `09 0a 14 00`")
+    sleep(MSG52_REST, "Sleep %d = Rest der Standzeit von msg 52 (Abnahme H3: Text offen F4505..F4603 = 99 Bilder; "
+                      "50 + 20 + %d = 100 >= 99): John laeuft erst los, wenn die Zeile weg ist" % (MSG52_REST, MSG52_REST))
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "Plc_neck aus (John) = sub02 @0x00F80")
     R.work_player("Work_set(1,0)+Nop Elza")
     op(b"\x41\x00" + b"\x00" * 6 + b"\x64\x00", "Plc_neck aus (Elza) = sub02 @0x00F30")
 
 
-def baue_befreiung39():
+def baue_entriegeln39():
+    """Nachbesserung 1 N4.2: Ereignis 5 (Riegel der Dachtuer, main00 @0x00A9A) in Phase H. Zuerst die Original-Zeilen von
+    sub05 (Riegel-Slot aus, (4,0xC3)=1, msg 12 "You've opened the lock."), dann die Szene: Tuer-Auftritt (oben), Szene der
+    Runde 38 mit Punkt 6/7, Kampf, Punkt 8, Johns Abgang. Die Dachtuer (Slot 1) wird erst nach Johns Abgang scharf."""
     del prog[:]
-    # ---- sub06: Frage am Gemaelde, "ja" -> Rolladen hoch (mit Ton), ohne die Gorilla-Bloecke (wie Runde 38) ----
-    R.kopie("1141", 0x00FE8, 0x0100E, [0x2B, 0x0D, 0x80, 0xFF], "(sub06: Gemaelde-Frage; Ja-Zweig)")
-    i_ifel = idx_bei("1141", 0x00FEE)
-    if prog[i_ifel][0] != bytes([0x06, 0x00, 0xE8, 0x00]):
-        sys.exit("ABBRUCH: Ifel sub06 @0x00FEE")
-    R.rolladen_ton_a()
-    R.kopie("1141", 0x01032, 0x0107C, [0x2E, 0x03, 0x00], "(Work_set Prop 0 = Rolladen; Bewegung bytegleich)")
-    R.rolladen_ton_b()
-    R.kopie("1141", 0x0107C, 0x010A4, [0x37, 0x00, 0x0D, 0x00], "(Sca-Saetze: Rolladen-Zellen frei)")
-    # ---- Punkt 2: John kommt durch die Tuer ----
+    R.kopie("1141", 0x00FC8, 0x00FDC, [0x46, 0x02, 0x00, 0x00],
+            "(sub05: Riegel-Slot 2 aus, Set(4,0xC3)=1, msg 12 \"You've opened the lock.\", Evt_next)")
     tuer_auftritt()
     # ---- Szenen-Flags, Gorillas geparkt, John laeuft zu seinem Platz (wie Runde 38) ----
     R.kopie("1141", 0x00C18, 0x00C24, [0x22, 0x04, 0xF0, 0x00], "(sub02: Set(4,0xF0)=0 / (4,0xF2)=1 / (3,0xC2)=1)")
@@ -328,13 +399,7 @@ def baue_befreiung39():
     op([0x3C, 0x01], "Cut_auto 1 (Form ROOM1150 @0x010F4)")
     R.set_flag(2, 0x07, 0, "Set(2,7)=0 (Form sub06 @0x010C8)")
     R.set_flag(1, 0x1B, 0, "Set(1,0x1B)=0 (Form sub06 @0x010CC)")
-    op([0x08, 0x00], "Endif = Ende des Ja-Zweigs (Form sub06 @0x010D8)")
-    op([0x01, 0x00], "Evt_end = sub06 @0x010DA")
-    laenge = sum(len(b) for b, _ in prog[i_ifel + 1:-1])
-    if laenge > 0xFFFF:
-        sys.exit("ABBRUCH: Ja-Zweig %d Byte" % laenge)
-    prog[i_ifel] = (b"\x06\x00" + struct.pack("<H", laenge),
-                    prog[i_ifel][1] + "  -> Laenge 0xE8 -> 0x%X (Ja-Zweig mit Ton, Tuer-Auftritt, Szene, Sperre, Gespraech, Abgang)" % laenge)
+    op([0x01, 0x00], "Evt_end = sub05 @0x00FE6")
     return list(prog)
 
 
@@ -363,11 +428,11 @@ def baue_texte():
     msg1 = D1141[0x0111D:0x0111D + 66]
     if msg1[:4] != bytes([0x04, 0x00, 0x05, 0x07]):
         sys.exit("ABBRUCH: ROOM1141 msg 1 @0x0111D Sprecherfarbe John")
-    text("k_r39j_msg50", ("Elza:", 0x01), ["Elza: Oh, no, this is John!", "He is in Trouble, I have to help him!"],
-         "ROOM1141 msg 50: NUTZER-VORGABE Punkt 5 (Nachtrag 2026-10-18: John, nicht Roy); Form msg 2 @0x0115F "
+    text("k_r39j_msg50", ("Elza:", 0x01), ["Elza: Oh, no, this is John!", "He is in trouble, I have to help him!"],
+         "ROOM1141 msg 50: NUTZER-VORGABE Punkt 5 (Nachtrag 2026-10-18: John, nicht Roy; Nachtrag 6: \"trouble\" klein); Form msg 2 @0x0115F "
          "(Elza = Farbe 1 `05 01`), Zeilenumbruch `08` wie msg 2")
-    text("k_r39j_msg51", ("John:", 0x07), ["John: Puuuh, that was close! I thought", "we end up as Gorilla meal...."],
-         "ROOM1141 msg 51: NUTZER-VORGABE Punkt 8 (Nutzer: \"meal\" + Auslassungszeichen + Punkt = vier Punkte; die Schrift hat kein Auslassungszeichen); "
+    text("k_r39j_msg51", ("John:", 0x07), ["John: Puuuh, that was close! I thought", "we end up as gorilla meal...."],
+         "ROOM1141 msg 51: NUTZER-VORGABE Punkt 8 (Nutzer: \"meal\" + Auslassungszeichen + Punkt = vier Punkte; die Schrift hat kein Auslassungszeichen; Nachtrag 6: \"gorilla\" klein); "
          "Form msg 1 @0x0111D (John = Farbe 7 `05 07`)")
     text("k_r39j_msg52", ("John:", 0x07), ["John: Elza, follow me, I think I might", "have found a way out of here!"],
          "ROOM1141 msg 52: NUTZER-VORGABE Punkt 8; Form msg 1 @0x0111D")
@@ -401,7 +466,8 @@ def carr(f, name, b):
 
 def main():
     pruefen = "--pruefen" in sys.argv
-    programme = [("k_r39j_p_haemmern", baue_haemmern39()), ("k_r39j_p_befreiung", baue_befreiung39())]
+    programme = [("k_r39j_p_haemmern", baue_haemmern39()), ("k_r39j_p_entriegeln", baue_entriegeln39()),
+                 ("k_r39j_p_rolltor", baue_rolltor39())]
     baue_texte()
     ton = klopfton()
     f = io.StringIO()
