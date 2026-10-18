@@ -8,10 +8,11 @@ Messordner (nicht committet): scratchpad `jabn/` (Laeufe `l_a`, `l_b`, `l_e`, ..
 `bogen.py`/`crop.py` (Bilder)).
 
 ## 0. Stand der Abnahme (fortlaufend)
-- 19:03 Bericht angelegt; Bau (configure + build) gestartet.
-- 19:10 Bau gruen, Unit-Gruppen 60/60 gruen, RE-Stichproben (4 Adressen) selbst disassembliert/gelesen.
-- 19:35 Lauf A (echter Weg 1131 -> 1141 -> 1171 mit Elza, 1300 freie Bilder Warten in 1141) ausgewertet.
-- 19:55 Lauf B (dichte Bilder), Laeufe E/F (Gemaelde vor/nach dem ersten Ruf) ausgewertet; Gegenprobe Punkt 9 laeuft.
+- 19:03 Bericht angelegt; Bau (configure + build) gruen; Unit-Gruppen 60/60 gruen; RE-Stichproben selbst gelesen.
+- 19:06-19:13 Lauf A (echter Weg 1131 -> 1141 -> 1171 mit Elza, 1300 freie Bilder Warten in 1141) ausgewertet.
+- 19:13-19:27 Lauf B (dichte Bilder), Laeufe E/F (Gemaelde vor/nach dem ersten Ruf), Gegenprobe-Bau V (ohne
+  Punkt-9-Haken), Laeufe V/W, Lauf G (Wiederbetreten) ausgewertet.
+- ab 19:21 gezielte Integrationsriegel (13 Tests, -j 2) — Abschnitt 5.
 
 ## 1. Bau und gezielte Tests
 - `bash re15_port/tools/local_build.sh configure` + `build`: `LOCAL-BUILD-OK (build)`, `ninja: no work to do` — die exe
@@ -100,7 +101,7 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
   Nachtrag (John statt Roy). Offen F176..F274 (r39.txt), 101 Bilder nach dem ersten Ruf help03 (F75). In 1495 Bildern
   Phase H **genau einmal**; danach `b94=1`. Bild: `jabn/a_reakt.png` (F180..F270: Text im Spielbild, Elza an der
   Doppeltuer, Kopf zur Dachtuer).
-- Wiederbetreten / Rennen zum Gemaelde: Abschnitt 4 (eigene Laeufe).
+- Wiederbetreten (Lauf G, Abschnitt 4): beim zweiten Betreten keine zweite Reaktion (`b94=1`) — richtig.
 
 - **Wettlauf gemessen (Lauf F, eigener Lauf):** `lauf.sh f plan_f.txt "1400#1141" ... RE15_DEBUG_JUMP=1141@gp
   RE15_PLAYER_POS=-8150,-10250,2048` (Elza vor dem Gemaelde, Phase-H-Flags wie oben; Wegplan: WARTE 100, dann AKTION
@@ -148,8 +149,9 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
   den rechten Arm in 6 Bildern waagerecht hoch und haelt ihn **42 Bilder (1,4 s) starr auf Elzas Kopfhoehe** (im Bild
   endet die Hand an ihrem Gesicht), dann faellt der Arm in 6 Bildern zurueck. Kein Heranwinken.
 - Diese Geste ist Plc_motion(2,6) — dieselbe Port-Darstellung, die das Original in ROOM1171 zu "Elza, hurry up!" spielt
-  (@0x014BA `2b 00 00 00`, @0x014C2 `3f 02 06 00`, @0x014C6 `43 00 80 00`, selbst gelesen) und die der Nutzer in
-  diesem Auftrag fuer 1171 als "komische Kletter Animation statt der ran wink Animation" zurueckweist (Spur K). Der
+  (@0x014BA `2b 00 00 00`, @0x014C2 `3f 02 06 00`, @0x014C6 `43 00 80 00`, danach @0x014CE `3f 00 02 00` = (0,2),
+  selbst gelesen); an genau dieser Stelle bemaengelt der Nutzer in 1171 eine "komische Kletter Animation statt der ran
+  wink Animation" (Spur K; ob (2,6) oder (0,2) gemeint ist, ist offen). Der
   Bau-Agent fuehrt das selbst als OFFEN. Solange nicht geklaert ist, ob der Port Johns Bank 2 / Clip 6 richtig zuordnet,
   ist "passende Animationen" fuer msg 52 nicht belegt; die gemessene Darstellung (starrer Zeigearm auf Elzas Kopf) passt
   nicht zu "follow me".
@@ -172,7 +174,30 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
 - Mechanismus selbst gelesen (Stichprobe 1): Original laedt die neue Musik vor dem SCD-Init; der Haken in
   ss_seq_ctl_ex latcht waehrend `s_bgm_pending` nur — der Befund (op=1 von 1171 trifft den noch geladenen MAIN16)
   wird damit erklaert. Gegenprobe ohne den Haken: Abschnitt 4.
-- **Urteil: erfuellt** (vorbehaltlich Gegenprobe 4).
+- **Urteil: erfuellt** (Gegenprobe Abschnitt 4: ohne den Haken kehrt MAIN16 zurueck, mit ihm Stille).
+
+## 4. Gegenproben (eigene Laeufe)
+- **Lauf E** (Gemaelde vor dem ersten Ruf, `RE15_DEBUG_JUMP=1141@gp`, Elza vor dem Gemaelde, AKTION ab F31): Frage
+  F33..F148, "Yes" -> kein Klopfen, kein Ruf, keine Reaktion (r39.txt `se=0/0/0`, `b94=0`), Szene laeuft normal
+  (Cut 7 F432, Cut 6 F507, msg 40..). Richtig: Elza hat noch nichts gehoert.
+- **Lauf F** (Gemaelde nach dem ersten Ruf, vor der Reaktion): Reaktion nach dem Befreien — siehe Punkt 5 / Mangel M1.
+- **Lauf G** (Wiederbetreten in Phase H nach der Reaktion; `RE15_DEBUG_JUMP=1141@gp`, Spawn (-7600,-17600), Flags wie
+  oben + (9,66) fuer die offene Tuer 1131): 1. Besuch msg 50 einmal (debug.log Z. 900), WARTE 400, Doppeltuer -> 1131,
+  zurueck -> 1141; 2. Besuch 800 Bilder: Klopfen + help03 F75 / help01 F295 / help04 F515 / help02 F735, **keine msg 50**
+  (`b94=1`, kein `[msgtext] room=1141 id=50` nach Z. 1059). Reaktion genau einmal: bestaetigt.
+- **Laeufe V/W (Punkt 9, Fix erklaert Befund?):** V = exe aus einer Quellkopie des Stands b2a2f267, in der NUR der
+  Punkt-9-Haken (`if (!s_bgm_pending)` in ss_seq_ctl_ex, 3 Zeilen) entfernt ist (scratchpad `jabn/v_src`, eigener
+  Bau `jabn/v_build`, Kopie `re15_pc_jabn_v.exe` neben der Baum-exe); W = die gebaute exe; beide mit demselben Wegplan
+  (`plan_v.txt` = Riegel-Wegplan, WARTE 420). Spielzustand V == W (r39.txt bytegleich bis Zeile 3561, `cmp`);
+  1141-Eintritt: Mitschnitt V == W (Takt fuer Takt gleich, der alte 1131-Titel lief dort schon mit voller Lautstaerke).
+  1171-Eintritt (Werkzeug des Riegels `test_r39_dining1141 pegel <lauf>` + `cap.py`):
+  | Lauf | op=1 1171 | Takte op+30..op+55 | Takte op+70..op+100 | Verlauf |
+  |---|---|---|---|---|
+  | W (mit Haken) | Takt 9476 | **Pegel 0** | 559 (MAIN32) | Tuer-zu-Ton 9474..9500, Stille 9504..9531, MAIN32 ab 9534 |
+  | V (ohne Haken) | Takt 9478 | **Pegel 496 -> FEHLER** | 559 (MAIN32) | nach dem Tuer-zu-Ton bleibt RMS 700..1100 bis 9512, klingt bis 9536 aus (= MAIN16, ~60 Bilder), dann MAIN32 (Werte ab 9540 wie W) |
+  | A (mit Haken, WARTE 1300) | Takt 10365 | Pegel 0 | 559 | wie W |
+  r39.txt V == W komplett (5644 Zeilen, `cmp`). Damit ist belegt: der Haken ist die einzige Ursache des Unterschieds,
+  und ohne ihn kommen die ~2 s Panik-Musik (MAIN16) beim Betreten von 1171 zurueck — der Fix erklaert den Befund.
 
 ## 6. Vertrag (VERTRAG.md Runde 39)
 - Pfade (`git diff master...HEAD --name-only`): nur `analysis/befunde_runde39/{AUFTRAG.md (Orchestrator-Hinweis),
@@ -196,4 +221,44 @@ Ergebnis: rv=0, 358 s; 1131 -> (Tuer) -> 1141 -> (Dachtuer) -> 1171. Bildnummern
   Ecke, Sperre msg 41 an beiden Tueren, Abgang im Cut 7 ohne Schub/Sichtsprung, Riegel (4,0xC3), Ziele 0x17/0x13,
   Wiederbetreten) — **nicht** uebernommen ist die R38-Pruefung "John springt nie (groesster Schritt je Bild)"; der neue
   Ablauf setzt John absichtlich hinter der Kamera um (Tuer-Auftritt, geprueft), aber auch sichtbar nach Cut 8 (Mangel M3).
+
+## 7. Maengel (nummeriert, nachpruefbar)
+- **M1 (Punkt 5, mittel):** Elzas Reaktion msg 50 erscheint NACH dem Befreien, mitten in der Rolladen-Szene, wenn der
+  Spieler die Gemaelde-Frage zwischen dem ersten Ruf (F75) und dem Reaktionsbeginn (F165) oeffnet und "Yes" waehlt.
+  Nachpruefen: `jabn/lauf.sh f plan_f.txt "1400#1141" "0-1400/5:fd_" RE15_DEBUG_JUMP=1141@gp
+  RE15_PLAYER_POS=-8150,-10250,2048` -> r39.txt `F250 6a=1`, `F291 msg=1/50`; Bild `jabn/f_race.png`. Wer von der
+  Doppeltuer direkt zum Gemaelde geht, steht nach ~150 Bildern davor (Lauf A Weg 98 + 47 Bilder) — mitten im Fenster.
+  Ursache: HAEMMERN39 +0x007A `06 00 36 00 / 21 09 5e 00` prueft nur (9,94), nicht (3,0x6A) wie jede Klopf-/Ruf-Zeile;
+  die Frage (`2b 0d 80 ff`, Maske 0xff80) haelt den Faden im Sleep 90 an, nach "Yes" laeuft er in die Reaktion.
+  Abhilfe-Richtung: Reaktion zusaetzlich unter Ck(3,0x6A)==0 (oder Bit 94 beim "Yes" setzen) + Riegel "Gemaelde im
+  Fenster F75..F165" in unit_r39_dining1141_phase_h.
+- **M2 (Punkt 8, "passende Animationen"):** Johns Geste zu msg 52 "Elza, follow me, ..." ist Plc_motion(2,6): der rechte
+  Arm schnellt waagerecht hoch und zeigt 42 Bilder (1,4 s) starr auf Elzas Kopf (im Bild endet die Hand an ihrem Gesicht),
+  kein Heranwinken, keine Geste Richtung Ausgang (`jabn/b_wink1.png` F4502..F4544, `b_wink2.png`). Es ist dieselbe
+  Port-Darstellung, die das Original in 1171 zu "Elza, hurry up!" abruft (@0x014C2 `3f 02 06 00` + @0x014C6 `43 00 80 00`)
+  und an der der Nutzer in diesem Auftrag eine "komische Kletter Animation statt der ran wink Animation" bemaengelt
+  (Original 1171 sub02: @0x014C2 (2,6), @0x014C6 rueckwaerts, Sleep 20, @0x014CE `3f 00 02 00` (0,2), Sleep 60 — ob der
+  Nutzer (2,6) oder das folgende (0,2) meint, ist offen); der Bau-Agent fuehrt die Zuordnung von Johns Bank 2 selbst
+  als offen (Spur K). Fuer msg 52 ist damit keine passende Animation belegt, und die gemessene Darstellung (Zeigearm auf
+  Elzas Kopf) ist keine Folgen-Geste. Abhilfe-Richtung: Ergebnis der Spur K abwarten/uebernehmen und die Geste am Bild neu abnehmen, sonst
+  eine belegte Folgen-/Wink-Geste waehlen.
+- **M3 (Punkt 8, klein):** John springt 16 Bilder nach dem Schnitt auf Cut 8 sichtbar um 138 Einheiten (Lauf B r39.txt
+  F4358 (-7535,-21362) -> F4359 (-7550,-21500), Cut 8 angezeigt seit F4343; Bild `jabn/b_sprung.png`): `Pos_set John`
+  (Listing BEFREIUNG39 +0x04BA) steht hinter Sleep 1/10/5 der Elza-Zeilen, nicht im Schnittbild. Die Runde-38-Pruefung
+  "John springt nie" ist beim Ersetzen von unit_r38_dining1141_phase_h nicht uebernommen worden. Abhilfe-Richtung: John
+  im selben Bild wie Elza setzen (vor den Sleeps) + Sprung-Riegel im angezeigten Bild.
+
+## 8. Hinweise (keine Maengel)
+- H1 Klopf-Klang: RE2 DOOR0F-Holzschlag (Treppe Holz), dreifach — Wahl des Bau-Agenten mangels RE2-Tuerklopfton; am
+  Mitschnitt kurz und tief (Abklingen -20 dB nach 34..35 ms, 94..99 % Energie unter 1 kHz), ueber MAIN16 hoerbar.
+  Klangabnahme durch den Nutzer (RE2_SOUND_LISTE: ROOM205 "Zombies smashing through wood", ROOM207/209/20A "Door sounds"
+  waeren Alternativen zum Anhoeren).
+- H2 audio_pc.c ist VERTRAG-seitig A/B zugeteilt; J-Haken (5 Zeilen) bei der Integration mit A/B zusammenfuehren.
+- H3 msg 52 steht noch 20 Bilder, waehrend die Kamera auf Cut 7 schneidet und John losrennt (F4584..F4603).
+- H4 Runde-38-Riegel D/A und phase_h/abgang sind Platzhalter ("ok: ersetzt"); Pruefungen in R39 uebernommen ausser
+  "John springt nie" (M3).
+- H5 Glasbruch: zweiter Se_on startet dieselbe Welle neu (keine Ueberlagerung) — Form wie RE2.
+- H6 (nicht gemessen): help01..05 laufen ueber den Sprach-Kanal; ein Untersuchungstext waehrend eines Rufs wartet im
+  Stimmen-Riegel bis zu dessen Ende (help01 = 3,42 s). In Runde 38 galt dasselbe fuer main42 (0,95 s).
+- H7 Port-Bank 0x3E mit Spur I abgleichen.
 
