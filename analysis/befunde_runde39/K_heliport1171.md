@@ -303,3 +303,47 @@ RE15_EXIT_AT=1200#1170), beide exit 0, ROOM1170 geladen. Pose-Strom 4360 Zeilen 
     der Renderer anim_frame>>1, darum [0,0,1,1,..] statt [0,1,1,2,..].
   Das Zustandslog weicht nur in Elliots af ab (44 Zeilen, z.B. `st=4 ss1=6 ss2=0 g=40 mo=2 af=1` -> `af=0`).
 - 18:12: Gegenprobe der neuen Riegel: enemy_ai_common.c/szenenleon_r36.c/scd_room_setup.c stehen VORUEBERGEHEND auf b35c66bd (Bau re15_port/build_bisect mit den NEUEN Testquellen). Steht beim Lesen ein ' M' auf diesen Dateien ohne Rueckmeldung hier: `git checkout HEAD -- re15_port/engine/src/enemy_ai_common.c re15_port/engine/src/szenenleon_r36.c re15_port/engine/src/scd_room_setup.c`, NICHT committen.
+- 18:14: Gegenprobe-Bau fertig, Arbeitskopie mit `git checkout HEAD -- ...` zurueckgesetzt, `git status --porcelain` leer.
+
+### 6.7 Gegenprobe der neuen Riegel und Bilder
+
+Neue Testquellen gegen den ALTEN Motor (build_bisect = enemy_ai_common.c/szenenleon_r36.c/scd_room_setup.c von b35c66bd):
+- `initpose`: FEHLER "221 Bilder ... (221 abweichend)"; `eskorte`: FEHLER "INIT-Bild: Loco Clip 2 Bild 0 (st 1, loco 0,
+  Bild 1)"; `saatbild`: 7 FEHLER ("Saattakt Bild 1 (soll 0)" bzw. "Bild 18 (soll 19)" / "Bild 8 (soll 9)" in allen sieben
+  Fenstern); `schub`: FEHLER "Bit-Takt (Bild 933): ... (Clip 17, rueckw. 1)"; `szene` (K1) OK.
+- `integration_r39_heliport1171_laden` gegen build_bisect: ROT — "INIT-Pose Loco 2/50 Bild 0 0, eigene 2/52 vorher 221",
+  "Saattakte 7 (falsch: F221:0/0/20/0:Bild1;F261:0/0/20/1:Bild18;F281:6/6/10/0:Bild1;F444:6/6/10/1:Bild8;
+  F464:2/2/96/0:Bild1;F686:0/0/20/0:Bild1;F746:...)".
+- Derselbe Stand (6d027394) im build/: alle gruen (Abschnitt 7).
+
+Bilder (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, beschleunigter Renderer, Lade-Weg):
+- `K_belege/k2_initpose_F208-224.png`: oben VORHER (b35c66bd), unten NACHHER (6d027394), F208..F224 je 4 Bilder. Kamera 4
+  schaltet bei F218 auf John: F220 VORHER Leerlauf-Haltung (Kopf geneigt, Arme angewinkelt), NACHHER die INIT-Pose (aufrecht,
+  symmetrisch, Arme haengend); F224 = erste Geste (RBJ Clip 0). In Kamera 0/1 davor ist John nicht im Bild.
+- `K_belege/k2_john_posen_loco2b0_vs_eigen2b1.png`: die beiden Posen direkt aus CDEMD0 Typ 0x49 (Posenkette
+  emd_ansichtsblatt.py; Loco Clip 2 Keyframe 66 gegen eigene Bank Clip 2 Bild 1 Keyframe 38).
+K3/K4 sind Ein-Bild-Verschiebungen; ihr Beleg ist der Pose-Strom (6.5), nicht ein Bild.
+
+## 7. Tests (Stand nach K2-K4)
+
+Registriert nur in `re15_port/tests/unit/probes/r39_heliport1171.cmake` (keine CMakeLists.txt angefasst):
+- Unit `test_r39_heliport1171.c`, Teile `banken binder szene leon1170` (K1, Abschnitt 5) und NEU (Abschnitt 6):
+  - `initpose` (K2): ganze Szene; bis zum ersten Plc_motion jede Zeile state 1, re15_actor_uses_loco_bank = 1,
+    uses_own_bank = 0, Clip 2 an Loco-Laenge 50, gerendertes Bild 0, Merker aktiv (221 Bilder); im Plc_motion-Bild (221)
+    Merker geloest, Sub 0 an RBJ rec1 Clip 0 (20).
+  - `eskorte` (K2-Gegenprobe): Kraehen inaktiv -> INIT-Bild Loco Clip 2 Bild 0, danach 29/29 Takte eigene Bank
+    (Eskorte-EXEC Stehen @0x8004f384-8c), nie mehr Loco.
+  - `saatbild` (K3): je Plc_motion-Fenster (PC auf der Sleep-Zeile) Fensterbild k -> gerendert min(k,fc-1) bzw.
+    gespiegelt; Saattakt Bild 0 / fc-1; +0x6 = 2 genau ab k = fc-1 (@0x80050da4); sieben Fenster.
+  - `schub` (K4): Bit-Takt der Phase 5 (Bild 933) posiert Clip 0x12 vorwaerts, danach 10 Takte Clip 0x11 rueckwaerts
+    9..0, +0x6 = 7 im 10. Takt.
+- Integration `test_r39_heliport1171.cmake` (`weg`, `laden`, echte exe, Elza): zusaetzlich zu Abschnitt 5 jetzt
+  INIT-Pose Loco 2/50 Bild 0 vor dem ersten Plc_motion (>= 150 Bilder, eigene 2/52 = 0), Kletter-Clip 2/50 nur NACH dem
+  ersten Plc_motion gezaehlt (= 0), alle sieben Plc_motion-Laeufe beginnen mit Bild 0 / fc-1, Schub: Clip 17 rueckwaerts
+  folgt direkt auf Clip 18 und laeuft 9,8,..,0. Gemessen weg: INIT 226, laden: INIT 221; je Saattakte 7 (falsch: keine),
+  Schub [9,8,7,6,5,4,3,2,1,0], Heran-Winken 128, Kletter 0, RBJ-Clip 0 150, Bank-0-Clip 0 0, eigener Clip 6 183.
+- Fremder Riegel angepasst (eine Bedingung, mit Beleg): `tests/unit/test_r37_roy.c` `spur 1170` (= integration_r37_roy_
+  leon1170, Runde 37 K) verlangte fuer ALLE Clip-2-Zeilen Elliots die eigene Bank (52). Die 6 Zeilen vor dem ersten
+  Executor-Takt sind seit K2 Elliots INIT-Pose = Loco Clip 2 (50) Bild 0 (Wurzel 0x8011d6d4, Tabelle @0x80072cc8, INIT
+  +0x94 = 2 @0x8011d930, f314(+0x84,+0x16c) @0x8011d978). Die Bedingung laesst jetzt genau diese Form zu (fc 50, loco 1,
+  Slot 0) und meldet sie ("davon INIT-Pose 6"); jede andere Clip-2-Zeile muss weiter Bank 1 (52) sein.
