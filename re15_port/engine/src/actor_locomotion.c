@@ -436,8 +436,10 @@ void re15_actor_step_walk(re15_actor_t *a)
          * Schritt. PL00W01 Clip 1 (16 Bilder) und Clip 2 (52) haben NULL Fussaufsetzer —
          * der byte-true Halt macht also keinen Schritt mehr. */
         if (a == &g_actors[RE15_ACTOR_SLOT_PLAYER]) {
-            extern void re15_player_event_reach_begin(void);   /* game_step_common.c: Sub 6 */
-            re15_player_event_reach_begin();                   /* @0x800aca59 := 6, Phase := 0 */
+            /* Runde 39 Spur K NB1: die Ankunft schreibt +0x5 = 6 im Dispatcher HINTER dessen f314 (@0x80030c78 ->
+             * @0x80030cf0; Drehen @0x800313ec / f314 @0x80031494) — Sub 6 laeuft erst im naechsten Bild. */
+            extern void re15_player_event_reach_begin_naechstes_bild(void);   /* game_step_common.c: Sub 6 */
+            re15_player_event_reach_begin_naechstes_bild();                   /* @0x800aca59 := 6, Phase := 0 */
         } else if (a->motion == 100 || a->motion == 105 || a->motion == 5) {
             /* NICHT-SPIELER (nur noch Elliot 0x47 erreicht diesen Walker): unveraendert —
              * ihr Halt kommt aus der NPC-Sub-Tabelle 0x80076ca0, nicht aus 0x80073e30. */

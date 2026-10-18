@@ -46,4 +46,25 @@ int  re15_r39k_init_pose(const re15_actor_t *a);
 /* Raumaufbau (scd_room_setup.c, Installer-Block): alle Merker loeschen. */
 void re15_r39k_install(uint16_t room);
 
+/* NACHBESSERUNG 1 — SPIELER-SUB 6 (Event-Reach 0x800517f0, Spieler-Tabelle @0x80073e30[6] = NPC-Tabelle @0x80076ca0[6]).
+ * M1 Saattakt: Phase 0 `sb v1(=1),6(a0)` @0x80051844, `sb v1,148(v0)` (+0x94 = 1) @0x80051854, `sb zero,149(v0)`
+ *    (+0x95 = 0) @0x80051864, `sb v0(=7),143(v1)` (+0x8f = 7) @0x80051874 faellt OHNE Sprung in den Phase-1-Rumpf
+ *    @0x80051878: `jal 0x8001f314` (+0x170/+0x174, a2 = 0) @0x8005188c posiert Bild 0 (f314 posiert +0x95
+ *    @0x8001f35c-36c, Vorschub erst @0x8001f618-1c). Clip 1 = Bild 0..15 (16 Takte); im Takt, der Bild 15 posiert,
+ *    liefert f314 1 -> +0x6 = 2 (`addu v1,v1,v0` / `sb v1,6(a0)` @0x800518a8-b0); Phase 2 @0x800518b4 setzt +0x94 = 2
+ *    @0x800518c8 / +0x8f = 7 @0x800518d8 und posiert im selben Takt Clip 2 Bild 0 (f314 @0x800518f0).
+ * M1/M3a Startbild: setzt der SPIELER-DISPATCHER selbst +0x5 = 6 (Plc_dest-Ankunft: Gang `sb v0(=6),-13735(at)`
+ *    @0x80030cf0 hinter dessen f314 @0x80030c78, Drehen @0x800313ec vor dessen f314 @0x80031494, Lauf @0x80030f44,
+ *    rueckwaerts @0x800311a8/@0x80031318; Schub Phase 7 @0x80052be0), laeuft Sub 6 erst im NAECHSTEN Bild: der
+ *    Dispatcher FUN_80031c44 (@0x8001ce0c) dispatcht +0x5 einmal je Bild (@0x8003068c-ac). Davor laeuft in jedem Bild
+ *    das SCD (`jal 0x8003f038` @0x8001cdec -> scd_execute_scripts @0x8003f088); erfuellt dort die Warteschleife
+ *    (While @0x8003f6f4 kehrt mit 1 zurueck @0x8003f840, Evt_end im Gosub mit 1 @0x8003f22c) und der naechste
+ *    Plc_dest setzt +0x4/+0x5/+0x6 neu (@0x80041c14-1c), kommt Sub 6 gar nicht an die Reihe — kein Clip-1-Bild.
+ *    Setzt dagegen das SCD selbst Modus 6 (Plc_dest @0x80041c18 vor dem Dispatcher), posiert Phase 0 im selben Bild. */
+void re15_r39k_reach_saat(int naechstes_bild);   /* Sub 6 beginnt: 0 = Phase 0 in diesem Bild, 1 = erst im naechsten */
+void re15_r39k_reach_aus(void);                  /* Sub 6 ersetzt (Plc-Befehl, Kommando-Reset)                       */
+int  re15_r39k_reach_wartet(void);               /* 1 = +0x5 = 6 steht, Sub 6 lief noch nicht (Dispatcher-Bild)       */
+/* Im Event-Reach-Takt (game_step_common.c) VOR dem Vorschub: 1 = Takt verbraucht (Warten bzw. Phase 0 = Bild 0). */
+int  re15_r39k_reach_takt(re15_actor_t *pl);
+
 #endif /* RE15_HELIPORT1171_R39_H */
