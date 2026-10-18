@@ -2384,8 +2384,10 @@ static void teil_r(void)
     printf("  R5 NICHT-REGRESSION: %d Stellen ohne Gate (unveraendert), %d mit Gate,"
            " %d Panels gestrichen\n", ohne_gate, mit_gate, tot);
     PRUEFE(ohne_gate == 10, "erwartet 10 Stellen ohne Gate, gezaehlt %d", ohne_gate);
-    PRUEFE(mit_gate == 4, "erwartet 4 Stellen mit Gate, gezaehlt %d", mit_gate);
-    PRUEFE(lebend == 4 && tot == 2, "erwartet 4 lebende + 2 gestrichene Panels,"
+    /* Runde 39 Spur C: E5 je Szenario-Variante (gen_discard_sites.py) -> ROOM11E1 (Elza) lebt, Gate (3,139)
+     * @0x01A8A; ROOM11E0 (Leon) bleibt gestrichen (ROOM1240 @0x0055A). 4 -> 5 Stellen mit Gate, 2 -> 1 tot. */
+    PRUEFE(mit_gate == 5, "erwartet 5 Stellen mit Gate, gezaehlt %d", mit_gate);
+    PRUEFE(lebend == 5 && tot == 1, "erwartet 5 lebende + 1 gestrichenes Panel,"
            " gezaehlt %d + %d", lebend, tot);
     PRUEFE(r1 == lebend, "nur %d von %d Panels haben den Gate-0-Fall belegt", r1, lebend);
     PRUEFE(r2 == lebend, "nur %d von %d Panels haben den Gate-1-Fall belegt", r2, lebend);

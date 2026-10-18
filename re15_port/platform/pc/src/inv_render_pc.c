@@ -55,6 +55,7 @@ extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Icon + Bild der zwei Schluessel (0x42/0x45) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Icon + Bild des Dining Room Key (0x43) */
 #include "re15_kiste2feld_r37.h" /* Runde 37 Spur R: 2-Feld-Symbol (Kiste) + Haelften je Zelle (Gitter) */
+#include "re15_inventar_r39.h"   /* Runde 39 Spur C: Status-Bild je Figur (STPIC_<k>.TIM) */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -192,6 +193,36 @@ static void karten_cluts_bauen(void)
     s_clut[RE15_INV_CLUT_MAP_UNBESUCHT][1] = RE15_KARTE_UNBESUCHT;
 }
 
+/* Runde 39 Spur C: das Status-Bild (Ausweis + Foto) der GEWAEHLTEN Figur in die Icon-Seite laden; der Index
+ * folgt dem Spielermodell (work_vars[0x10] = untere Nibble von DAT_800aca5c nach dem Raumlader-Merge
+ * @0x80039784, re15_inventar_r39_stpic_index). Ein Figurwechsel im selben Prozess (Titel -> neues Spiel)
+ * laedt nur diesen Block neu (stpic_refresh in re15_inv_render_pc_draw). */
+static int s_stpic_index = -1;
+static int stpic_laden(void)
+{
+    uint8_t *buf; int sz; re15_tim_t tim; char pfad[32];
+    const int k = re15_inventar_r39_stpic_index();
+    re15_inventar_r39_stpic_pfad(k, pfad, (int)sizeof pfad);
+    buf = load_cd(pfad, &sz);
+    if (!buf) { fprintf(stderr, "[inv] %s missing\n", pfad); return -1; }
+    if (re15_tim_parse(buf, sz, &tim) != 0 || tim.bpp != 8 || !tim.has_clut) { free(buf); return -1; }
+    {
+        const uint8_t *px = (const uint8_t *)tim.pixels;
+        int y;
+        for (y = 0; y < tim.height && 150 + y < 256; y++)
+            memcpy(s_icon8[150 + y], px + y * tim.width, (tim.width < 116) ? tim.width : 116);
+        memcpy(s_clut[9], tim.clut, 256 * sizeof(uint16_t));   /* STPIC CLUT (0,485) */
+    }
+    free(buf);
+    s_stpic_index = k;
+    fprintf(stderr, "[inv] Status-Bild %s (Figur %d, Runde 39 Spur C)\n", pfad, k);
+    return 1;
+}
+static void stpic_refresh(void)
+{
+    if (s_ready == 1 && s_stpic_index != re15_inventar_r39_stpic_index()) (void)stpic_laden();
+}
+
 static int inv_assets_init(void)
 {
     uint8_t *buf; int sz;
@@ -283,22 +314,10 @@ static int inv_assets_init(void)
     }
     free(buf);
 
-    /* ITEM/STPIC_00.TIM: 8bpp 58hw x 103 -> (640,406) = page v150+, CLUT -> (0,485).
-     * Leon (character @0x800ACA5C = 0) -> STPIC_00 (selector @0x800C01C4, blocker Q2). */
-    buf = load_cd("ITEM/STPIC_00.TIM", &sz);
-    if (!buf) { fprintf(stderr, "[inv] STPIC_00.TIM missing\n"); return s_ready; }
-    if (re15_tim_parse(buf, sz, &tim) != 0 || tim.bpp != 8 || !tim.has_clut) {
-        free(buf); return s_ready;
-    }
-    {
-        const uint8_t *px = (const uint8_t *)tim.pixels;
-        int y;
-        for (y = 0; y < tim.height && 150 + y < 256; y++)
-            memcpy(s_icon8[150 + y], px + y * tim.width,
-                   (tim.width < 116) ? tim.width : 116);
-        memcpy(s_clut[9], tim.clut, 256 * sizeof(uint16_t));   /* STPIC CLUT (0,485) */
-    }
-    free(buf);
+    /* ITEM/STPIC_<k>.TIM: 8bpp 58hw x 103 -> (640,406) = page v150+, CLUT -> (0,485).
+     * Runde 39 Spur C: k = Figur (selector DEBUG.BIN FUN_800c01c4 @0x800c01d0 lbu DAT_800aca5c, Tabelle
+     * @0x80073ad8 = Datei-Id 0x2c + k; re15_inventar_r39.h) — Leon 0 (Polizeiausweis), Elza 4 (Driver License). */
+    if (stpic_laden() != 1) return s_ready;
 
     /* DATA/ITEMALL.PIX: headerless 72 x 1200B (40x30 8bpp) icon tiles. */
     s_itemall = load_cd("DATA/ITEMALL.PIX", &s_itemall_size);
@@ -1386,6 +1405,7 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
     int i, x, y;
     static int s_inv_frame = -1;      /* n-th inv-rendered frame (debug hooks below) */
     if (inv_assets_init() != 1) return -1;
+    stpic_refresh();                  /* Runde 39 Spur C: Status-Bild der aktuellen Figur */
     s_inv_frame++;
     {   /* debug: RE15_INV_DUMP=<path> writes the display list once (op-diff harness);
          * RE15_INV_DUMP_AT=<n> delays the dump to the n-th inv-rendered frame (wave 4:
