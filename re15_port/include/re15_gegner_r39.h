@@ -90,7 +90,15 @@ int     re15_r39_kriecher_weckt(const re15_actor_t *e, const re15_actor_t *pl); 
 /* (4) Schatten */
 int     re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y);        /* 0x27/0x29 (auch grid&0x20): Quad-Y = +0x1ba */
 
-/* Mess-Schiene (kein Spielverhalten): RE15_R39_LOG=1 -> gegner_r39.log im Arbeitsordner. Messhaken (nur Messlauf, Nachbesserung 2):
+/* (5) Querungs-Wache (Nachbesserung 3, Befund E): nach der RE1.5-Wandklemme (FUN_8003b0a4 -> FUN_8003bca8, naehere Kante
+ *     @0x8003bcec-cfc) die RE2-Retail-Regel FUN_8004c900 (Seite nach der Vorbild-Lage +0x118/+0x11a, @0x8004c930-ca50),
+ *     NUR fuer eine durchquerte solide Rechteckzelle; Rest-Querung -> Vorbild-Lage (Runde-38-T-Form). Belege gegner_r39.c (5). */
+void    re15_r39_affen_querung(re15_actor_t *e, int32_t vx, int32_t vz);    /* Gorilla 0x27 nach re15_enemy_sca_clamp_band */
+void    re15_r39_wurf_querung(re15_actor_t *pl, int32_t vx, int32_t vz);    /* Spieler im Gorilla-Opfer-Haken nach @0x80031d70 */
+int     re15_r39_querung_sonde(int32_t r, int band, uint32_t maske, int32_t vx, int32_t vz, int32_t *x, int32_t *z);
+
+/* Mess-Schiene (kein Spielverhalten): RE15_R39_GEGNER_LOG=1 -> gegner_r39.log im Arbeitsordner (RE15_R39_MESS_STATIONEN=1:
+ * Spielerlage an den Stationen des Vorbildes, Nachbesserung 3). Messhaken (nur Messlauf, Nachbesserung 2):
  * RE15_R39_MESS_SPIELER_HP=<n> hebt die Spieler-HP je KI-Bild auf >= n (gegner_r39.c r39_mess_spieler_hp; Begruendung im Dossier). */
 void    re15_r39_log(const char *fmt, ...);
 

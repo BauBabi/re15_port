@@ -792,8 +792,67 @@ Schreiber finden, Original + RE2 lesen, Ursache korrigieren bzw. Invariante (Run
 Punkte 1-4 (Abnahme 2: erfuellt) nicht verschlechtern.
 
 ### Protokoll
-- 19:2x Start (fuenfter Agent). Baum sauber, HEAD 98822214. Pflichtlektuere AUFTRAG/VERTRAG/E_abnahme_2/Dossier-Befund E,
+- 19:07 Start (fuenfter Agent). Baum sauber, HEAD 98822214. Pflichtlektuere AUFTRAG/VERTRAG/E_abnahme_2/Dossier-Befund E,
   Runde 38 T (T_spiderman.md: Wandwaechter re15_r38_griff_durch_wand, Riegel unit_r38_griff_*).
 - Cherry-pick 3fe9e358 aus r39/integration (Logschalter RE15_R39_LOG -> RE15_R39_GEGNER_LOG, Namenskollision mit Spur F) ->
   0a9076e9, damit neue Riegel denselben Schalternamen tragen wie der Integrationsstand (gleiche Aenderung auf beiden Seiten =
   konfliktfreier Merge).
+- 19:09 gebaut (Stand 0a9076e9), 19:2x Mess-Schiene "Stationen" (gegner_r39.c r39_mess_stationen, nur mit
+  RE15_R39_GEGNER_LOG=1 + RE15_R39_MESS_STATIONEN=1; liest die Runde-27-Stationen OPFER/SCHUB/KLEMME/ENDE des Vorbildes
+  am Kopf von re15_enemy_ai_run_all; KEIN Spielverhalten), gebaut, Versuch 6 nachgefahren.
+
+### Mangel 1 (Befund E (b)) — Messung vorher (Versuch 6 bildgleich nachgefahren)
+- Lauf scratchpad e_nb3/v6_vorher (lauf.sh = e_nb2c/lauf3.sh mit RE15_R39_GEGNER_LOG; Wegplan e_nb2c/wegplan_sued.txt,
+  `RE15_GIVE=0x43:1,0x04:99,0x15:60`, Messhaken `RE15_R39_MESS_SPIELER_HP=100`, Skript e_nb2c/schuss_sued.txt ab Spielbild
+  3300, `RE15_EXIT_AT=3600`) -> exit 0, state.txt bildgleich mit n1141_sued: F3555 PL(-2715,-23132), **F3556 PL(-2144,-26068)**.
+- Stationen (Zeile "stationen F<n+1> (Vorbild)" = Bild n), Wurf = Opfer-Clip 1 (mo=1), Anker (1060,-24101), Blick 389:
+
+| Bild | Clip-Bild | OPFER (Platzierung) | SCHUB | KLEMME = Bildende |
+|---|---|---|---|---|
+| 3552 | 31 | (-3087,-23504) | = | (-3087,-23132) |
+| 3554 | 33 | (-2715,-24266) | = | (-2715,-23132) |
+| **3556** | **35** | **(-2144,-24973)** | **=** | **(-2144,-26068)** |
+| 3557 | 36 | (-613,-25309) | = | (-613,-26068) |
+| 3558.. | 37.. (>= 0x25: keine Platzierung) | (-613,-26068) | = | = |
+
+- **Schreiber, Bild 3556**: (1) die Opfer-Platzierung des Gorilla-Wurfs (re15_player_victim_tick -> re15_victim_place,
+  Clip 1 Bild 35 < 0x25) setzt Elza absolut auf z -24973 = 373 hinter die Mitte (-24600) der Suedwand (Zelle 1, z -25600..
+  -23600); (2) der Koerper-Schub bewegt nichts (SCHUB = OPFER); (3) die Spieler-Wandklemme im Schwanz (re15_player_body_
+  and_walls -> re15_collision_constrain = FUN_8003b0a4 -> push_rect = FUN_8003bca8) nimmt die naehere aufgeblasene Kante:
+  innen -23600 + 450 + 18 = -23132 (Abstand 1841), aussen -25600 - 450 - 18 = -26068 (Abstand 1095) -> **-26068**. Schon der
+  Anker (1060,-24101) liegt IN der Wandzelle (501 tief); Bild 3552/3554 (Platzierung 96 bzw. 334 vor der Mitte) klemmt die
+  Innenkante, Bild 3556 kippt.
+- Der Runde-38-T-Waechter (re15_r38_griff_durch_wand) laeuft in re15_victim_place NICHT fuer 0x27 (`vg_ty != 0x27u`,
+  enemy_ai_common.c:1576 "0x27 klemmt im Spieler-Schwanz @0x80031d70") — der Gorilla-Wurf ist der einzige Griff ohne
+  Querungs-Pruefung (0x29 ebenso: eigener Haken re15_affen3_opfer_tick, Schwanz-Klemme).
+
+### Mangel 1 — RE-Belege (selbst disassembliert, re15_disasm.py / re2_disasm.py)
+- RE1.5 Gorilla-Opfer-Haken 0x8011c118 P2 @0x8011c268: `lbu v0,0(a0)` (Spieler-Clip-Bild 0x800acae9) / `sltiu v0,v0,0x25`
+  @0x8011c278 / `beq v0,zero` @0x8011c27c / `lw a1,-13364(a1)` (0x800acbcc) / `lw a2,-13360(a2)` (0x800acbd0) / `jal 0x8001ad68`
+  @0x8011c294 mit `addiu a0,a0,-149` = 0x800aca54 (Spieler) -> danach anim_set @0x8011c2b0.
+- FUN_8001ad68: Wurzel FUN_8001ae38 @0x8001ad84, RotMatrixY(+0x6a) @0x8001addc, ApplyMatrix @0x8001adec, x = (s16)+0xa0 +
+  off.x (`lh v0,160(s1)` / `sw v0,52(s1)` @0x8001adf4-ae04), z = (s16)+0xa2 + off.z (@0x8001ae08-18) — absolut, ohne Klemme.
+- Anker: Pin-Latch @0x8011ac00-18 `addiu s1,s0,-424` = 0x800aca54, `jal 0x8001ac38` @0x8011ac18; FUN_8001ac38 = Lage des
+  Greifers minus RotY(+0x6a) * Wurzel(Bank +0x84/+0x16c @0x8001ac64-68) (`sh v0,160(a0)` @0x8001acfc), Kopie auf den Spieler
+  — Port re15_affen_pin_anker (affen_11c0.c (5)) = dieselbe Rechnung.
+- Spieler-Schwanz FUN_80031c44: Koerper-Schub `jal 0x8002b544` @0x80031cbc, Wandklemme `jal 0x8003b0a4` @0x80031d70 (Maske
+  `ori a2,zero,0x1` @0x80031d74, Radius `lhu a1,6(v0)` @0x80031d6c = DAT_80073e94[+6] = 0x01c2 = 450, PSX.EXE Datei 0x6469a),
+  Bezug = Spiegel +0x40/+0x44 (game_step_common.c Kopf des Schwanzes); Port game_step_common.c:2508 (wurf-Pfad) = dieselbe
+  Reihenfolge Platzierung -> Schub -> Klemme.
+- Ergebnis: **Original-Mechanismus**, kein Port-Fehler — mit demselben Zustand (Gorilla pinnt mit dem Anker in der Wand)
+  setzt das Original Elza genauso an die Aussenkante (die Zahlen sind die der Byte-Ports; 1095 < 1841 -> Aussenkante).
+- RE2 RETAIL (Beta -> Retail): RE2 hat keinen Gorilla; seine Wandklemme fuer Spieler UND Gegner ist FUN_8003567c ->
+  FUN_8004c1bc (`jal 0x8004c1bc` @0x800356d0, Maske a1|0x1000000 @0x800356c4), die Rechteck-Routine waehlt sie ueber die
+  Tabelle @0x800a737c (`lhu v0,8(s0)` / `andi 0xf` / `lw v0,29564(at)` @0x8004c418-34, `jalr v0` @0x8004c448): [0] =
+  FUN_8004c900. Diese entscheidet die Seite NICHT nach der naeheren Kante, sondern nach der Vorbild-Lage +0x118/+0x11a
+  (`lh v0,280(a3)` @0x8004c930, `lh v0,282(a3)` @0x8004c94c), die FUN_8003567c nach JEDER Klemme schreibt (`lw v0,132(s0)` /
+  `lw v1,140(s0)` / `sh v0,280(s0)` / `sh v1,282(s0)` @0x800356ec-f8):
+  t2 = 2r + w (@0x8004c91c-20), a0 = Vorbild.x + r - cell.x (@0x8004c930-3c), Code-Bit 2 = (a0 >= t2) (`sltu`/`xori`/`sll`
+  @0x8004c940-48); Z ebenso Bit 1 (@0x8004c94c-64); Randfaelle a0 == -1 / t2+1 -> 2, a1 == -1 / t1+1 -> 1 (@0x8004c968-a8).
+  Code 0 (Vorbild in BEIDEN Achsen innerhalb) -> FUN_8004c858 (@0x8004c9b8) = die RE1.5-Regel (naehere Kante, Code-Bits
+  FUN_8004ca68). Bit 2: x = cell.x + w/2 (@0x8004c9f8) -/+ (r + w/2 + 1) (@0x8004c9e0-f0), Minus wenn x - Vorbild.x >= 0
+  (`bltz a1` @0x8004c9f4, `subu` @0x8004ca00 / `addu` @0x8004ca04, `sw v0,132(a3)` @0x8004ca08); Bit 1 ebenso fuer z
+  (@0x8004ca18-50). RE2 stellt den Aktor also immer auf die Seite, VON DER ER KAM.
+- Fuer Bild 3556 rechnet RE2: Vorbild z -23132, a1 = -23132 + 450 + 25600 = 2918 >= t1 = 900 + 2000 = 2900 -> Bit 1;
+  z - Vorbild = -24973 + 23132 < 0 -> z = -24600 + (450 + 1000 + 1) = **-23149** (innen). x: Zelle 1 spannt die Raumbreite,
+  Vorbild innerhalb -> unveraendert. Elza bliebe im Raum.

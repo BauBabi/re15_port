@@ -10,6 +10,7 @@
 #include "re15_damage.h"      /* re15_ai_arc_test */
 #include "re15_enemy_ai.h"    /* re15_player_hit_flinch_active / re15_player_knockdown_active */
 #include "re15_room.h"        /* g_current_room_id */
+#include "re15_game_step.h"   /* re15_schritt_station_hole (Mess-Schiene Stationen, Nachbesserung 3) */
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -158,9 +159,36 @@ static void r39_mess_spieler_hp(void)
     pl->hp = (int16_t)n;
 }
 
+/* ---------------------------------------------------------------- Mess-Schiene Stationen (Nachbesserung 3) ---
+ * RE15_R39_MESS_STATIONEN=1 (zusaetzlich zu RE15_R39_GEGNER_LOG; KEIN Spielverhalten): am Kopf jedes KI-Bildes die
+ * Spielerlage an den Stationen des VORBILDES (game_step_common.c, Runde 27): OPFER = nach der Opfer-Platzierung
+ * (re15_player_victim_tick), SCHUB = nach dem Koerper-Schub, KLEMME = nach der Wandklemme, ENDE = Bildende; dazu die
+ * Opfer-Lage (Clip/Bild/Anker/Blick). Nur solange der Gorilla-Opfer-Haken den Spieler besitzt (und ein Bild danach).
+ * Zweck: belegen, WELCHER Schreiber Elza im 1141-Wurf ueber die Wandmitte setzt (Befund E (b)). */
+static void r39_mess_stationen(void)
+{
+    static int an = -2; static int vorher = 0;
+    if (an == -2) { const char *e = getenv("RE15_R39_MESS_STATIONEN"); an = (e && *e && *e != '0') ? 1 : 0; }
+    if (an <= 0) return;
+    int jetzt = re15_player_victim_gorilla();
+    if (!jetzt && !vorher) return;
+    vorher = jetzt;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int32_t ox = 0, oz = 0, sx = 0, sz = 0, kx = 0, kz = 0, ex = 0, ez = 0;
+    int o = re15_schritt_station_hole(RE15_SCHRITT_OPFER, &ox, &oz);
+    int sc = re15_schritt_station_hole(RE15_SCHRITT_SCHUB, &sx, &sz);
+    int k = re15_schritt_station_hole(RE15_SCHRITT_KLEMME, &kx, &kz);
+    int en = re15_schritt_station_hole(RE15_SCHRITT_ENDE, &ex, &ez);
+    re15_r39_log("stationen F%u (Vorbild) opfer=(%d,%d)%s schub=(%d,%d)%s klemme=(%d,%d)%s ende=(%d,%d)%s mo=%d bild=%d "
+                 "anker=(%d,%d) rot=%d gorilla_opfer=%d", r39_bild(), (int)ox, (int)oz, o ? "" : "?", (int)sx, (int)sz,
+                 sc ? "" : "?", (int)kx, (int)kz, k ? "" : "?", (int)ex, (int)ez, en ? "" : "?", (int)pl->motion,
+                 (int)pl->anim_frame, (int)pl->anchor_x, (int)pl->anchor_z, (int)pl->rot_y, jetzt);
+}
+
 void re15_r39_hund_riegel_tick(void)
 {
     r39_mess_spieler_hp();   /* Messhaken RE15_R39_MESS_SPIELER_HP (nur mit Env), s. oben */
+    r39_mess_stationen();    /* Mess-Schiene RE15_R39_MESS_STATIONEN (nur mit Env), s. oben */
     if (!s_hund_riegel) return;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     /* Ende der Spieler-Reaktion = @0x8003f8b0-b4 (Zustand 1 + +0x1D3 := 0). Port: der NORMAL-Prolog loescht
@@ -217,4 +245,178 @@ int re15_r39_schatten_y(const re15_actor_t *npc, int32_t *y)
                      r39_bild(), r39_slot(npc), npc->type, npc->grid_id, npc->state, npc->sub_state_1,
                      (int)npc->y, (int)npc->dog_floor_y, (int)*y);
     return 1;
+}
+
+/* ================================================================ (5) Querungs-Wache (Nachbesserung 3) ===== */
+/* Befund E (Nachbesserung 2, E_gegner.md): die RE1.5-Wandklemme FUN_8003b0a4 -> Rechteck-Ausstoss FUN_8003bca8 nimmt
+ * die NAEHERE der beiden um den Radius aufgeblasenen Kanten (`slt v0,-a0,t1` / `beq` / `addu t1,a0,zero`
+ * @0x8003bcec-cfc; Port re15_collision.c push_rect, `if (-pxm < penX) penX = pxm`). Steht ein Aktor nach Platzierung/
+ * Stoss jenseits der Mitte einer soliden Rechteckzelle, stellt sie ihn an die AUSSENkante: (a) Gorilla G3 ROOM1141
+ * Westwand (Koerper-Stoss FUN_8002aec4, pen 2829 -> x -9803, Klemme -> -12218), (b) Elza im Gorilla-Wurf Suedwand
+ * (Opfer-Platzierung ad68 @0x8011c294 -> z -24973, Klemme -> -26068; Mess-Schiene Stationen, Dossier Nachbesserung 3).
+ * RE2 RETAIL hat genau das behoben (Beta -> Retail): die Rechteck-Routine FUN_8004c900 (Tabelle @0x800a737c[0],
+ * `lw v0,29564(at)` @0x8004c434 / `jalr v0` @0x8004c448 in FUN_8004c1bc) entscheidet die Seite nach der VORBILD-Lage
+ * +0x118/+0x11a (`lh v0,280(a3)` @0x8004c930 / `lh v0,282(a3)` @0x8004c94c; geschrieben nach jeder Klemme
+ * `sh v0,280(s0)` / `sh v1,282(s0)` @0x800356f4-f8 in FUN_8003567c = Spieler UND Gegner, Zombie-Wurzel `jal 0x8003567c`
+ * @0x80100638 EMZ0.BIN): lag die Vorbild-Lage in X ausserhalb der aufgeblasenen Zelle (`sltu`/`xori`/`sll`
+ * @0x8004c940-48, Randfaelle -1 / t2+1 @0x8004c968-7c), kommt x auf die Seite, von der der Aktor kam: Mitte
+ * cell.x + w/2 (@0x8004c9f8) -/+ (r + w/2 + 1) (@0x8004c9e0-f0) je nach Vorzeichen von x - Vorbild (`bltz`
+ * @0x8004c9f4, @0x8004c9fc-ca08); Z ebenso (@0x8004c94c-64, @0x8004c984-a8, @0x8004ca18-50). Nur wenn die Vorbild-
+ * Lage in BEIDEN Achsen innerhalb lag, rechnet RE2 die naehere Kante wie RE1.5 (FUN_8004c858 @0x8004c9b8 ->
+ * FUN_8004ca68). FORM (kleinste belegte): die RE1.5-Klemme bleibt Byte fuer Byte; NUR wenn ihr Ergebnis eine solide
+ * Rechteckzelle durchquert (Strecke Vorbild -> Ergebnis schneidet das Innere, Vorbild ausserhalb), gilt fuer diese Zelle
+ * die RE2-Regel. Bleibt danach noch eine Querung (zwei Zellen, Ecke), gilt die Vorbild-Lage - die Form der Runde-38-T-
+ * Invariante (re15_r38_griff_durch_wand) und des RE1.5-Blocks `*lx = prevx` (push_rect code 0). */
+#include "re15_collision.h"   /* re15_collision_debug_band */
+
+#define RE15_R39_SPIELER_R     450   /* DAT_80073e94[+6] = 0x01c2 (PSX.EXE Datei 0x6469a), `lhu a1,6(v0)` @0x80031d6c */
+#define RE15_R39_MASKE_SPIELER 1u    /* `ori a2,zero,0x1` @0x80031d74 */
+#define RE15_R39_MASKE_GEGNER  4u    /* `ori a2,zero,0x4` @0x80116e68 (Gorilla-Wurzel) */
+
+static int r39_zelle_ok(const re15_sca_entry_t *c, int band, uint32_t maske)
+{
+    return c->type == 1 && band == (int)(c->floor >> 4) && (maske & c->u0) != 0;   /* wie collision_constrain_impl */
+}
+
+/* Strecke (x0,z0)->(x1,z1) schneidet das OFFENE Innere der Zelle; ein Start im geschlossenen Rechteck zaehlt nicht
+ * (ein schon ueberlappender Aktor, z.B. Landung ueber einem Auto, hat keine Herkunftsseite). */
+static int r39_quert(const re15_sca_entry_t *c, int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    const double ax = (double)c->x, az = (double)c->z;
+    const double bx = ax + (double)c->width, bz = az + (double)c->density;
+    if ((double)x0 >= ax && (double)x0 <= bx && (double)z0 >= az && (double)z0 <= bz) return 0;
+    const double p[2] = { (double)x0, (double)z0 };
+    const double d[2] = { (double)x1 - (double)x0, (double)z1 - (double)z0 };
+    const double lo0[2] = { ax, az }, hi0[2] = { bx, bz };
+    double lo = 0.0, hi = 1.0;
+    for (int a = 0; a < 2; a++) {
+        if (d[a] == 0.0) { if (p[a] <= lo0[a] || p[a] >= hi0[a]) return 0; continue; }
+        double t0 = (lo0[a] - p[a]) / d[a], t1 = (hi0[a] - p[a]) / d[a];
+        if (t0 > t1) { double t = t0; t0 = t1; t1 = t; }
+        if (t0 > lo) lo = t0;
+        if (t1 < hi) hi = t1;
+        if (!(lo < hi)) return 0;
+    }
+    return 1;
+}
+
+/* RE2 FUN_8004c900: Code aus der Vorbild-Lage (Bit 1 = ausserhalb in X, Bit 0 = ausserhalb in Z). */
+static unsigned r39_re2_code(const re15_sca_entry_t *c, int32_t r, int32_t vx, int32_t vz)
+{
+    const uint32_t t2 = (uint32_t)(2 * r + (int32_t)c->width);       /* `sll v0,a0,1 / addu t2,v0,v1` @0x8004c91c-20 */
+    const uint32_t t1 = (uint32_t)(2 * r + (int32_t)c->density);     /* @0x8004c928-2c */
+    const uint32_t a0 = (uint32_t)(vx + r - (int32_t)c->x);          /* @0x8004c930-3c */
+    const uint32_t a1 = (uint32_t)(vz + r - (int32_t)c->z);          /* @0x8004c94c-58 */
+    unsigned code = (a0 >= t2 ? 2u : 0u) | (a1 >= t1 ? 1u : 0u);    /* @0x8004c940-48 / @0x8004c95c-64 */
+    if (a0 == 0xffffffffu || a0 == t2 + 1u) code = 2u;               /* @0x8004c968-7c */
+    if (a1 == 0xffffffffu || a1 == t1 + 1u) code = 1u;               /* @0x8004c984-a8 */
+    return code;
+}
+
+/* RE2 FUN_8004c900: Lage auf die Herkunftsseite (Vorzeichen von Lage - Vorbild). */
+static void r39_re2_seite(const re15_sca_entry_t *c, int32_t r, unsigned code, int32_t vx, int32_t vz,
+                          int32_t *x, int32_t *z)
+{
+    if (code & 2u) {
+        const int32_t h = (int32_t)(c->width >> 1);                  /* `srl v1,v1,1` @0x8004c9e8 */
+        const int32_t t = r + h + 1;                                 /* `addu` / `addiu t2,v0,1` @0x8004c9ec-f0 */
+        const int32_t m = (int32_t)c->x + h;                         /* `addu v0,a0,v1` @0x8004c9f8 */
+        *x = (*x - vx >= 0) ? m - t : m + t;                         /* `bltz a1` @0x8004c9f4, @0x8004ca00 / @0x8004ca04 */
+    }
+    if (code & 1u) {
+        const int32_t h = (int32_t)(c->density >> 1);                /* @0x8004ca30 */
+        const int32_t t = r + h + 1;                                 /* @0x8004ca34-38 */
+        const int32_t m = (int32_t)c->z + h;                         /* @0x8004ca40 */
+        *z = (*z - vz >= 0) ? m - t : m + t;                         /* `bltz a1` @0x8004ca3c, @0x8004ca48 / @0x8004ca4c */
+    }
+}
+
+/* Kern: korrigiert (x,z) nach der RE1.5-Klemme; 1 = korrigiert. *zelle = Index der letzten Querungszelle. */
+static int r39_querung(int32_t r, int band, uint32_t maske, int32_t vx, int32_t vz, int32_t *x, int32_t *z,
+                       int *zelle, unsigned *code_out, int *rueckfall)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.sca || g_room_rdt.sca_count <= 0 || band < 0) return 0;
+    if (*x == vx && *z == vz) return 0;
+    int korr = 0;
+    for (int pass = 0; pass < 4; pass++) {
+        int gefunden = -1; unsigned code = 0;
+        for (int i = 0; i < g_room_rdt.sca_count; i++) {
+            const re15_sca_entry_t *c = &g_room_rdt.sca[i];
+            if (!r39_zelle_ok(c, band, maske) || !r39_quert(c, vx, vz, *x, *z)) continue;
+            code = r39_re2_code(c, r, vx, vz);
+            if (code != 0u) { gefunden = i; break; }
+        }
+        if (gefunden < 0) break;
+        r39_re2_seite(&g_room_rdt.sca[gefunden], r, code, vx, vz, x, z);
+        if (zelle) *zelle = gefunden;
+        if (code_out) *code_out = code;
+        korr = 1;
+    }
+    /* Rest-Querung (auch Zellen, deren Vorbild-Code 0 ist): Vorbild-Lage halten. */
+    for (int i = 0; i < g_room_rdt.sca_count; i++) {
+        const re15_sca_entry_t *c = &g_room_rdt.sca[i];
+        if (!r39_zelle_ok(c, band, maske) || !r39_quert(c, vx, vz, *x, *z)) continue;
+        *x = vx; *z = vz; korr = 1;
+        if (rueckfall) *rueckfall = 1;
+        if (zelle) *zelle = i;
+        break;
+    }
+    return korr;
+}
+
+/* FUN_8001bf04 (Richtungs-Code, Port re15_collision.c coll_contact_dir) fuer die korrigierte Lage - derselbe Wert, den
+ * FUN_8003b0a4 nach dem Push-Handler fuer die getroffene Zelle schreibt (@0x8003b4b8-dc / @0x8003b4ec). */
+static int32_t r39_richtung(int32_t px, int32_t pz, const re15_sca_entry_t *e)
+{
+    uint32_t ax = (uint32_t)(px - ((int32_t)e->x + (int32_t)e->width));
+    uint32_t bx = (uint32_t)(px -  (int32_t)e->x);
+    unsigned cx = ((ax & 0x80000000u) | ((bx & 0x80000000u) >> 1)) >> 30;
+    if (cx == 2) {
+        uint32_t az = (uint32_t)(pz - ((int32_t)e->z + (int32_t)e->density));
+        uint32_t bz = (uint32_t)(pz -  (int32_t)e->z);
+        unsigned cz = ((az & 0x80000000u) | ((bz & 0x80000000u) >> 1)) >> 30;
+        if (cz == 0) return 0x400;
+        if (cz == 3) return 0xc00;
+        return 0xf00;
+    }
+    if (cx == 0) return 0x800;
+    if (cx == 3) return 0x000;
+    return 0xf00;
+}
+
+void re15_r39_affen_querung(re15_actor_t *e, int32_t vx, int32_t vz)
+{
+    if (!s_an || !e || e->type != RE15_R39_AFFEN_TYP) return;
+    int32_t x = e->x, z = e->z; int zelle = -1, rf = 0; unsigned code = 0;
+    if (!r39_querung((int32_t)e->hit_radius_min, (int)e->floor, RE15_R39_MASKE_GEGNER, vx, vz, &x, &z, &zelle, &code, &rf))
+        return;
+    re15_r39_log("querung F%u gorilla slot=%d zelle=%d code=%u vorbild=(%d,%d) re15=(%d,%d) -> (%d,%d)%s", r39_bild(),
+                 r39_slot(e), zelle, code, (int)vx, (int)vz, (int)e->x, (int)e->z, (int)x, (int)z,
+                 rf ? " (Rest-Querung: Vorbild)" : " (RE2 FUN_8004c900)");
+    e->x = x; e->z = z;
+    if (zelle >= 0 && !rf) {                                          /* Kontakt fuer die korrigierte Lage */
+        const re15_sca_entry_t *c = &g_room_rdt.sca[zelle];
+        e->ai_contact = (uint8_t)((r39_richtung(x, z, c) >> 4) + 8 + (c->u1 & 3));      /* @0x8003b4c0-dc */
+        e->coll_cell_attr = (uint16_t)((uint16_t)c->u1 | ((uint16_t)c->floor << 8));    /* @0x8003b4ec */
+    }
+}
+
+void re15_r39_wurf_querung(re15_actor_t *pl, int32_t vx, int32_t vz)
+{
+    if (!s_an || !pl) return;
+    int32_t x = pl->x, z = pl->z; int zelle = -1, rf = 0; unsigned code = 0;
+    if (!r39_querung(RE15_R39_SPIELER_R, re15_collision_debug_band(), RE15_R39_MASKE_SPIELER, vx, vz, &x, &z,
+                     &zelle, &code, &rf))
+        return;
+    re15_r39_log("querung F%u spieler zelle=%d code=%u vorbild=(%d,%d) re15=(%d,%d) -> (%d,%d)%s", r39_bild(), zelle, code,
+                 (int)vx, (int)vz, (int)pl->x, (int)pl->z, (int)x, (int)z,
+                 rf ? " (Rest-Querung: Vorbild)" : " (RE2 FUN_8004c900)");
+    pl->x = x; pl->z = z;
+}
+
+/* Sonde/Riegel: der Kern ohne Aktor (dieselbe Regel). */
+int re15_r39_querung_sonde(int32_t r, int band, uint32_t maske, int32_t vx, int32_t vz, int32_t *x, int32_t *z)
+{
+    if (!s_an) return 0;
+    return r39_querung(r, band, maske, vx, vz, x, z, NULL, NULL, NULL);
 }
