@@ -6,7 +6,7 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
-* 2026-10-18 20:46: Spur E Nachbesserung 3 BESTANDEN (Abnahme 3; Fix 0ed55507): Befund E behoben - Querungs-Wache (RE2-Klemme
+* 2026-10-18 20:50: Spur E Nachbesserung 3 BESTANDEN (Abnahme 3; Fix 0ed55507): Befund E behoben - Querungs-Wache (RE2-Klemme
   FUN_8004c900 nach Vorbild-Lage, nur bei Querung einer soliden Zelle) fuer die Gorilla-Klemme und die Spielerin im Gorilla-
   Opfer-Pfad; Versuch 6 Elza 45 -> 0 Bilder ausserhalb, Versuch 5 Gorilla 77 -> 0; 168 Unit + 15 Integration. In die
   Integration gemergt (faee9887). Hinweis: Wache gilt nur in den Gorilla-Pfaden; alle anderen Klemmen RE1.5 byte-true (fuer
