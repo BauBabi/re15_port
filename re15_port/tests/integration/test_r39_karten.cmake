@@ -203,7 +203,11 @@ else()
     # der Abnahme 1, nicht Teil von N1); doppelwand: ganzes Blatt.
     foreach(_pr "offen;184;110;203;131" "doppelwand")
         list(GET _pr 0 _prn)
-        list(SUBLIST _pr 1 -1 _pra)
+        list(LENGTH _pr _prl)
+        set(_pra "")
+        if(_prl GREATER 1)
+            list(SUBLIST _pr 1 -1 _pra)
+        endif()
         execute_process(COMMAND "${RE15_PROBE}" ${_prn} "${_basis_wd}_K/karte.bmp" ${_pra}
                         RESULT_VARIABLE _rvp OUTPUT_VARIABLE _outp)
         string(STRIP "${_outp}" _outp)
