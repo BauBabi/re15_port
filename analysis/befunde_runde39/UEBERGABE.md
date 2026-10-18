@@ -6,6 +6,9 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 19:31: Nutzer-Nachtrag 5 (44b4e5a3): Schluessel 10F0/10F1 hoechstens halb so gross -> neue Spur M schluessel2
+  (r39_kopf.js/VERTRAG f70f6ec4, Baum r39_schluessel2 auf f70f6ec4), Lauf wf_6a2be5eb-568, args `{"welle": ["M"], "slots": 1,
+  "max_nach": 1, "basis": "f70f6ec4"}`.
 * 2026-10-18 19:30: Integration mit E-Nachbesserung 2 + Logschalter-Fix (3fe9e358): 842/842 gruen (alle unit_/prop_/probe_ +
   Gorilla-/1141-/Zustand-Gift-Integrationen, ctest -j 4, 1438 s). NICHT nach master vor E-Nachbesserung 3 (Befund E: Wand-
   Durchstoss in 1141, laeuft wf_676d6740-b2f) - doppelte Energie verlaengert den Kampf = mehr Stoss-Gelegenheiten. Nutzer-
