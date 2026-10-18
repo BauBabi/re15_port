@@ -6,6 +6,12 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 22:30: MASTER ecfe0f0f = Integration E2+E3+I+M (unit_r35_android_bash_mutanten einzeln gruen 22:29, 585 s -> der
+  rote Lauf war Last). Nutzer-Nachtrag 8 erledigt ohne Spur: neuer Take main12 sagt John (eddbbc0d); auf Nutzer-Auftrag
+  umbenannt (1e8cf44c): room1141/main12-14 -> main50-52, room10F1/main06/main08 -> main40/main42 = Ordnerregel, keine
+  Tabelle, keine Sperre; SPUR N ENTFAELLT. Spur J misst msg 50-52 (bei ihrer Nachbesserung/Integration: master mergen).
+  Hauptbaum-exe wird gebaut. Offen: G Nachbesserung 2 (wf_0dcedfba-bac), J (wf_7cea9b87-5d9, Abnahme 1 nach NB1
+  f744e5ad), K (wf_4e57956b-fad, Abnahme 1 nach NB1 dc4ab998).
 * 2026-10-18 22:20: (a) Integration +M (8d936dc1, Bau 21:45): 849/850 (alle unit_/prop_/probe_ + Schluessel-/10F0-/10F1-Integrationen,
   1907 s). Rot nur unit_r35_android_bash_mutanten: "[FEHLER] AEQUIVALENT-Eintrag passt zu keinem gleichwertigen Mutanten mehr:
   A (( rc == 0 )): == -> <=" - release/ und android/ seit 96ab793c unveraendert, um 21:40 gruen -> Last-Verdacht (G/J/K
