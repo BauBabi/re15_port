@@ -31,6 +31,8 @@ bearbeitet — nicht anfassen. Spur J aendert nur den Uebergang 1141 -> 1171 (Mu
 - 2026-10-18 19:40-21:00: NACHBESSERUNG 1 (Abnahme 0, Maengel M1-M3; Abschnitt 12): Elzas Sub-6-Saattakt + Start nach
   dem Dispatcher-Bild (M1/M3a), Spieler-Schub Phase 5 -> 6 -> 7 (M2), Kraehen zeichnen das zuletzt posierte Bild (M3b);
   Riegel elza/kraehen + Integrationsblock, Gegenprobe am alten Motor rot, gezielte Tests gruen (12.10).
+- 2026-10-18 ab ~22:00: NACHBESSERUNG 2 (Abnahme 1, Maengel M1 HOVER-Phase 0, M2 SPIN-Phase 2 der Ereignis-Kraehen;
+  Abschnitt 13).
 ## 1. Messung vorher
 
 Gebauter Stand 1038dc15 (eigener Baum, `local_build.sh configure` + `build`), Messkopie `re15_pc_k39_v1.exe`.
@@ -664,3 +666,9 @@ Stand: M1 (Sub-6-Saatbild), M2 (Schub-Ruecklauf), M3a (Einzelbilder = im Origina
 zeichnen das zuletzt posierte Bild: INIT/ORIENT ab Bild 0, Landebild = Fall-Pose, Leiche Bild 11) sind gegen die
 Original-Instruktionen belegt, umgesetzt, am Lade- und am echten Weg nachgemessen und mit Riegeln gesichert, die am alten
 Motor rot werden. Johns Zeilen sind in beiden Wegen bytegleich zum Abnahme-Stand.
+
+## 13. Nachbesserung 2 (nach Abnahme 1, 2026-10-18 ab ~22:00)
+
+Maengel aus `K_abnahme_1.md` §8: M1 Ereignis-Kraehen ROOM1171 HOVER 0x80115130 Phase 0 (Port posiert und fliegt im
+Einstiegstakt), M2 SPIN 0x801153ac Phase 2 (Port dreht die Gier weiter). Baum sauber, HEAD 97b42ad2 (Code-Stand 86956b9c).
+Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher (fortlaufend unten).
