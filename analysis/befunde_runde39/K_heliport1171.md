@@ -839,6 +839,26 @@ Pause-Tor @0x80112120 (-> @0x8011221c). Zustandstabelle `table 0x8012111c`: [0] 
 - Riegel mit Bildnummern: alle 1171-Riegel messen RELATIV zum Griff/Wurf (test_r38_heliport1171 `szene_*`: Warten =
   Griff + 1, Wurf = Griff + 1 + 60, Modus 6 = Wurf + 30; test_r39_heliport1171 `elza`/`kraehen`: Laeufe/Folgen ohne feste
   Bildnummer; Integration: Elza F = John F) -> nichts nachzuziehen, alle gruen (13.6).
+- Folgen fuer Elza und John (Pose-Strom, gerendert, Lade-Weg `vorher_laden` gegen `nach2_laden`, `K39nb2/laeufe_cmp.py`):
+  Elza 22 Laeufe, John 19 Laeufe, je dieselbe Lauf-Folge (gleiche Clips in gleicher Reihenfolge), 19 bzw. 16 Laeufe mit
+  identischer Bildfolge, um 8-10 Bilder verschoben. Anders nur Halte-Laeufe: Elza Clip 2/52 (Warten auf den Griff) 41 -> 51
+  Bilder, zwei Gang-Laeufe je 1 Bild kuerzer (58 -> 57, 71 -> 70); John INIT-Pose 221 -> 231, Heran-Winken-Halt 128 -> 127,
+  Clip 2/52 39 -> 38. Ursache der 1-Bild-Unterschiede: vorher fiel die tote Kraehe 2 (die im falschen SPIN um Elza kreiste)
+  bei (1262,7030) neben Elza und schob sie F372-F377 von (1166,7438) nach (1181,7676); jetzt fliegt sie in Phase 2
+  geradeaus und stirbt bei (864,-457) (Leiche y -7600, Boden -7200) — Elza bleibt bei (1164,7435), der folgende Gang ist
+  um diese 240 Einheiten kuerzer. John: Heran-Winken weiter RBJ rec1 Clip 2 (96 Bilder) 0..95 + Halt (>= 96, Riegel gruen).
+- ECHTER WEG am Endstand (exe sha256 9729d461..., Messkopie `re15_pc_k39nb2_echt.exe`, Befehl = Abnahme `K39abn1/lauf.sh`
+  mit `RE15_FIRE_AOT=5@60#1171`, ohne Framedump; Lauf `K39nb2/echt`, EXIT 0, debug.log `DOOR FIRE slot=0` (1131 -> 1141),
+  `slot=1` (1141 -> 1171), `slot=5` (Tor), `PC loaded room10b1.rdt`): Abschnitt ROOM1171 = 4.
+  - M1: Kraehe 2 `67:0 68:0 69:0 70:1 ... 78:9 79:9 80:0 ... 89:9 90:9 91:0` = genau die Folge, die Abnahme 1 aus den
+    Instruktionen abgeleitet hat ("F67 0, F68 0 (Halt), F69 0, F70 1 ... F78 9, F79 9 (Halt), F80 0"); Phase-0-Takte 10,
+    0/10 mit Bild- oder Lage-/Gier-Aenderung, Abstand 11 (9 von 9). Kraehe 3 `76:9 77:9 78:0 ... 87:9 88:9 89:0`.
+    Griff Kraehe 2 F170 (Abnahme-Lauf echtA F161), Kraehe 3 F178 (F172).
+  - M2: SPIN-Phase-2-Takte 109 / 123 ohne Gier-Aenderung (echtA: 108 / 123 mit +60).
+  - N1: erste state.txt-Zeile Kraehe 3 `@(-8842,-7623,r0)` (echtA `(-9700,-7680)`); Integrationsblock trocken gegen
+    `K39nb2/echt` GRUEN.
+  - Elza 25 Laeufe / John 19 Laeufe, je dieselbe Lauf-Folge wie echtA, 22 bzw. 16 bitgleich um 0/7/8/9 Bilder verschoben;
+    "Elza, hurry up!": John F539-F665 RBJ rec1 Clip 2 (fc 96) Bild 0..95 + Halt (127 Bilder; echtA F530-F657, 128).
 
 ### 13.6 Tests (Riegel) und Gegenprobe
 
@@ -905,26 +925,6 @@ Pause-Tor @0x80112120 (-> @0x8011221c). Zustandstabelle `table 0x8012111c`: [0] 
   RE1.5-KI-Modus auch 10C0/10C1/1120/1121/1170: INIT-Takt, Tod, Leiche). Gezielte Tests aller Kraehen-Raeume gruen (13.10).
 - enemy_ai_common.c ist auch Datei der Spuren D/E: die NB2-Haken liegen in re15_crow_flight2_sub und am Ende der
   Kraehen-Wurzel (keine Ueberschneidung mit Zombie-/Hunde-/Gorilla-Code).
-- Folgen fuer Elza und John (Pose-Strom, gerendert, Lade-Weg `vorher_laden` gegen `nach2_laden`, `K39nb2/laeufe_cmp.py`):
-  Elza 22 Laeufe, John 19 Laeufe, je dieselbe Lauf-Folge (gleiche Clips in gleicher Reihenfolge), 19 bzw. 16 Laeufe mit
-  identischer Bildfolge, um 8-10 Bilder verschoben. Anders nur Halte-Laeufe: Elza Clip 2/52 (Warten auf den Griff) 41 -> 51
-  Bilder, zwei Gang-Laeufe je 1 Bild kuerzer (58 -> 57, 71 -> 70); John INIT-Pose 221 -> 231, Heran-Winken-Halt 128 -> 127,
-  Clip 2/52 39 -> 38. Ursache der 1-Bild-Unterschiede: vorher fiel die tote Kraehe 2 (die im falschen SPIN um Elza kreiste)
-  bei (1262,7030) neben Elza und schob sie F372-F377 von (1166,7438) nach (1181,7676); jetzt fliegt sie in Phase 2
-  geradeaus und stirbt bei (864,-457) (Leiche y -7600, Boden -7200) — Elza bleibt bei (1164,7435), der folgende Gang ist
-  um diese 240 Einheiten kuerzer. John: Heran-Winken weiter RBJ rec1 Clip 2 (96 Bilder) 0..95 + Halt (>= 96, Riegel gruen).
-- ECHTER WEG am Endstand (exe sha256 9729d461..., Messkopie `re15_pc_k39nb2_echt.exe`, Befehl = Abnahme `K39abn1/lauf.sh`
-  mit `RE15_FIRE_AOT=5@60#1171`, ohne Framedump; Lauf `K39nb2/echt`, EXIT 0, debug.log `DOOR FIRE slot=0` (1131 -> 1141),
-  `slot=1` (1141 -> 1171), `slot=5` (Tor), `PC loaded room10b1.rdt`): Abschnitt ROOM1171 = 4.
-  - M1: Kraehe 2 `67:0 68:0 69:0 70:1 ... 78:9 79:9 80:0 ... 89:9 90:9 91:0` = genau die Folge, die Abnahme 1 aus den
-    Instruktionen abgeleitet hat ("F67 0, F68 0 (Halt), F69 0, F70 1 ... F78 9, F79 9 (Halt), F80 0"); Phase-0-Takte 10,
-    0/10 mit Bild- oder Lage-/Gier-Aenderung, Abstand 11 (9 von 9). Kraehe 3 `76:9 77:9 78:0 ... 87:9 88:9 89:0`.
-    Griff Kraehe 2 F170 (Abnahme-Lauf echtA F161), Kraehe 3 F178 (F172).
-  - M2: SPIN-Phase-2-Takte 109 / 123 ohne Gier-Aenderung (echtA: 108 / 123 mit +60).
-  - N1: erste state.txt-Zeile Kraehe 3 `@(-8842,-7623,r0)` (echtA `(-9700,-7680)`); Integrationsblock trocken gegen
-    `K39nb2/echt` GRUEN.
-  - Elza 25 Laeufe / John 19 Laeufe, je dieselbe Lauf-Folge wie echtA, 22 bzw. 16 bitgleich um 0/7/8/9 Bilder verschoben;
-    "Elza, hurry up!": John F539-F665 RBJ rec1 Clip 2 (fc 96) Bild 0..95 + Halt (127 Bilder; echtA F530-F657, 128).
 
 ### 13.10 Abschluss Nachbesserung 2 — gezielte Tests am Endstand (build/, Motor 21bb3788, Riegel 60cc4367/480d8e4a)
 
