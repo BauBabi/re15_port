@@ -419,6 +419,18 @@ static void teil_phase_h(void)
     PRUEF(re15_dining_r38_phase_h() == 1, "Phase H erkannt ((4,0xF0)=1, (3,0x6A)=0, Anker bytegleich)");
     PRUEF(john->active && john->type == RE15_R38F_JOHN_TYP && john->x == RE15_R39J_PARK_X && john->z == RE15_R39J_PARK_Z,
           "Bild 0: John (Typ 0x%02X) geparkt (%d,%d) = auf dem Dach, nicht im Dachgang (Punkt 2)", john->type, john->x, john->z);
+    {   /* Der Zeichenweg (platform/pc/main.c npc_region_culled, PSX FUN_80014324) zeichnet einen NPC nur innerhalb des
+         * Viereck-Ankers des angezeigten Cuts: der geparkte John darf in keinem Cut-Viereck liegen. */
+        int drin = 0, mit = 0;
+        for (int c = 0; c < (int)s_rdt.cut_count; c++) {
+            int16_t xs[4], zs[4];
+            if (!re15_rdt_get_region_quad(&s_rdt, c, xs, zs)) continue;
+            mit++;
+            if (re15_aot_point_in_quad(RE15_R39J_PARK_X, RE15_R39J_PARK_Z, xs, zs)) { drin++; printf("    Park-Lage im Viereck von Cut %d\n", c); }
+        }
+        PRUEF(mit == (int)s_rdt.cut_count && drin == 0, "geparkter John in keinem der %d Cut-Vierecke (%d mit Viereck) = nie gezeichnet",
+              (int)s_rdt.cut_count, mit);
+    }
     /* 900 Bilder Phase H: Ton-Takt, Reaktion einmal */
     int msg50 = 0, msg_sonst = 0, last = -1, pad_gesperrt_bei_50 = 0;
     long bild50 = -1;
@@ -515,6 +527,17 @@ static void teil_phase_h(void)
     PRUEF(blick_n > 0 && blick_fehl == 0, "Punkt 7: John blickt waehrend msg 9..11 zu Elza (%d von %d Bildern daneben, Kegel 160)",
           blick_fehl, blick_n);
     PRUEF(frei_bild > 0, "Steuerung nach der Szene zurueck (Bild %ld)", frei_bild);
+    {   /* Runde 38 weiter gueltig: Rolladen-Ton in der Folge von ROOM1131 sub02; nach dem "ja" kein Klopfen/Hilferuf mehr */
+        int r0 = -1, r1 = -1, r2 = -1, danach = 0;
+        for (int i = se_vorher; i < s_n_se; i++) {
+            if (s_se[i].bank == 0x3B && s_se[i].satz == 0x0C && r0 < 0) r0 = i;
+            if (s_se[i].bank == 0x3B && s_se[i].satz == 0x0A && r1 < 0) r1 = i;
+            if (s_se[i].bank == 0x3B && s_se[i].satz == 0x0B && r2 < 0) r2 = i;
+            if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz != RE15_R39J_SATZ_GLAS && s_se[i].bild > ja_bild) danach++;
+        }
+        PRUEF(r0 >= 0 && r1 > r0 && r2 > r1, "Rolladen-Ton 0x3B 0x0C, 0x0A, 0x0B in der Folge von ROOM1131 sub02 (Runde 38)");
+        PRUEF(danach == 0, "nach dem \"ja\" kein Klopfen/Hilferuf mehr (%d)", danach);
+    }
     /* Kampf: Gorillas einfrieren, John in die Ecke, Sperre */
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
         if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) g_actors[s].grid_id |= 0x20;
@@ -522,12 +545,19 @@ static void teil_phase_h(void)
     PRUEF(abs(john->x - RE15_R39J_ECKE_X) < 400 && abs(john->z - RE15_R39J_ECKE_Z) < 400, "John in der Ecke (%d,%d)", john->x, john->z);
     PRUEF(g_aot.slots[0].active && g_aot.slots[0].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[0].event_id == RE15_R38F_MSG_1141_SPERRE,
           "Sperre: Doppeltuer zeigt msg 41 solange die Gorillas leben (Runde 38)");
+    {
+        druck_t r = druecke(-7250, -250 - 620, 3072, 200);   /* Dachtuer: Vorwaerts-Punkt (-7250,-250), Blick +Z */
+        PRUEF(r.msg_id == RE15_R38F_MSG_1141_SPERRE && !r.raumwechsel, "Dachtuer waehrend des Kampfs: msg %d, kein Raumwechsel", r.msg_id);
+        for (int f = 0; f < 200; f++) { uint16_t e = (g_scd.message_active && (f % 15) == 0) ? RE15_PAD_BIT_SQUARE : 0; frame(e, e); }
+    }
     /* Gorillas tot (Kill-Flags pc[7] 0xCB/0xCC, Bank 7 — wie RE15_R38F_GORILLAS_TOT, KEINE Schusszahl) */
     pl->x = -3000; pl->z = -9000; pl->rot_y = 0;
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == RE15_R38F_GORILLA_TYP) re15_actor_free(s);
     re15_game_flag_set(7, 0xCB, 1);
     re15_game_flag_set(7, 0xCC, 1);
-    int m51 = -1, m52 = -1, geste15 = 0, geste23 = 0, wink = 0, cut8 = 0, blick51 = -1, park = -1, k = 0;
+    int m51 = -1, m52 = -1, geste15 = 0, geste23 = 0, wink = 0, cut8 = 0, blick51 = -1, park = -1, k = 0, elza_verschoben = 0;
+    long min_d2 = -1;
+    int vor_sicht = 0, park_cut_vorher = -1, park_cut = -1, park_sicht = 1, sicht_cut7 = 0;
     long b51 = -1, b52 = -1, b_run = -1;
     last = -1;
     for (int f = 0; f < 4000; f++) {
@@ -543,7 +573,15 @@ static void teil_phase_h(void)
         if (b51 >= 0 && b52 < 0 && john->sub_state_1 == 0 && john->motion == 23) geste23 = 1;
         if (b51 >= 0 && john->sub_state_1 == 2 && john->motion == 6) wink = 1;
         if (b52 >= 0 && b_run < 0 && john->state == 4 && john->sub_state_1 == 5) b_run = s_bild;
-        if (john->x <= -29000 && park < 0 && b52 >= 0) { park = (int)s_bild; break; }
+        if (b_run >= 0 && john->x > -29000) {   /* Runde 38 Nachbesserung 1 M3 weiter gueltig: kein Schub, Abstand im Bild */
+            if (abs(pl->x - RE15_R39J_ELZA_NACH_X) > 50 || abs(pl->z - RE15_R39J_ELZA_NACH_Z) > 50) elza_verschoben++;
+            const long ddx = john->x - pl->x, ddz = john->z - pl->z;
+            const long d2 = ddx * ddx + ddz * ddz;
+            if (sichtbar(s_shown, john) && (min_d2 < 0 || d2 < min_d2)) min_d2 = d2;
+        }
+        if (b52 >= 0 && park < 0 && john->x > -29000) { vor_sicht = sichtbar(s_shown, john); park_cut_vorher = s_shown;
+                                                         if (s_shown == 7 && sichtbar(7, john)) sicht_cut7 = 1; }
+        if (john->x <= -29000 && park < 0 && b52 >= 0) { park = (int)s_bild; park_cut = park_cut_vorher; park_sicht = vor_sicht; break; }
     }
     PRUEF(cut8, "Punkt 8: Kamera Cut 8 (Suedwest-Ecke) nach dem Tod der Gorillas");
     PRUEF(abs(pl->x - RE15_R39J_ELZA_NACH_X) < 200 && abs(pl->z - RE15_R39J_ELZA_NACH_Z) < 200, "Punkt 8: Elza bei (%d,%d)", pl->x, pl->z);
@@ -552,8 +590,31 @@ static void teil_phase_h(void)
     PRUEF(geste15 && geste23, "Punkt 8: zu msg 51 Johns Gesten Clip 15 und 23 (Form sub02 @0x00CB8/@0x00CCC)");
     PRUEF(wink, "Punkt 8: zu msg 52 Heranwinken Sub 2 Clip 6 (Form sub02 @0x00C78 / ROOM1171 @0x014C2)");
     PRUEF(b_run > b52, "Punkt 8: John laeuft erst nach msg 52 los (Bild %ld)", b_run);
+    PRUEF(elza_verschoben == 0, "Abgang: Elza wird nicht verschoben (Runde 38 M3, %d Bilder)", elza_verschoben);
+    PRUEF(min_d2 < 0 || min_d2 > 900L * 900L, "Abgang: John im Bild nie naeher als 900 an Elza (Runde 38 M3; min %ld)",
+          min_d2 < 0 ? -1L : (long)sqrt((double)min_d2));
     PRUEF(park > 0 && re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG) == 1 && re15_game_flag_get(4, 0xC3) == 1,
           "Abgang: John fort (Bild %d), (9,67) = 1, Riegel (4,0xC3) = 1", park);
+    PRUEF(park_cut == 7 && !park_sicht && sicht_cut7, "Abgang wie Runde 38: geparkt waehrend Cut 7 (Cut %d), im Bild davor nicht "
+          "sichtbar, vorher sichtbar durch Cut 7 gelaufen", park_cut);
+    for (int f = 0; f < 60 && g_scd.player_mode != 0; f++) frame(0, 0);
+    for (int f = 0; f < 5; f++) frame(0, 0);
+    PRUEF(g_scd.player_mode == 0 && g_scd.cut_auto_enabled && s_shown != 7, "Steuerung frei, Kamera-Automatik an, Cut 7 verlassen (Cut %d)",
+          s_shown);
+    PRUEF(g_aot.slots[1].active && g_aot.slots[1].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[1].dest_room == 0x17 &&
+          g_aot.slots[0].active && g_aot.slots[0].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[0].dest_room == 0x13,
+          "Dachtuer Slot 1 -> 0x17 (ROOM1171), Doppeltuer Slot 0 -> 0x13 (ROOM1131)");
+    {
+        druck_t r = druecke(-7250, -250 - 620, 3072, 200);
+        PRUEF(r.raumwechsel && r.ziel == 0x1171, "Dachtuer -> ROOM%04X (soll 1171)", (unsigned)r.ziel);
+    }
+    re15_game_state_t g = g_game;
+    if (room_boot(RE15_R38F_RAUM_1141, -7600, -17600, 0, 0) != 0) return;
+    g_game = g;
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    int john_da = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == RE15_R38F_JOHN_TYP) john_da = 1;
+    PRUEF(!john_da && re15_dining_r38_phase_h() == 0, "Wiederbetreten: kein John, keine Phase H");
 }
 
 /* ---- Teil: pegel (Werkzeug des Riegels integration_r39_dining1141_d, Punkt 9) --------------------------------------

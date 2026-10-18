@@ -553,6 +553,14 @@ static int sichtbar(int cut, const re15_actor_t *a)
 static void teil_phase_h(void)
 {
     printf("== phase_h ==\n");
+    /* Runde 39 Spur J (AUFTRAG Runde 39, ROOM1141 Punkte 1-8, Nutzer 2026-10-17): John sitzt NICHT mehr im Dachgang,
+     * sondern kommt nach dem Rolladen durch die Dachtuer (Kamera vorne auf Elza, Tuer-Toene, Kamera auf die Tuer); statt
+     * Krachen/Stoehnen (0x3C) und "Help me out." (0x3D) laufen Klopfen + help01..05, dazu Elzas Reaktion msg 50. Der
+     * Ablauf dieses Teils ist damit vom Nutzer ersetzt; den neuen Ablauf samt der weiter gueltigen Pruefungen dieses Teils
+     * (Rolladen-Ton, Szene ohne msg 0/1/2, Sperre msg 41 an beiden Tueren, Ecke, Abgang in Cut 7, Riegel, Dachtuer ->
+     * 1171, Wiederbetreten) prueft unit_r39_dining1141_phase_h. */
+    printf("  ok: ersetzt durch unit_r39_dining1141_phase_h (Runde 39 Spur J, Nutzer-Punkte 1-8)\n");
+    if (1) return;
     re15_game_state_init();
     re15_inv_load_briefing();
     re15_game_flag_set(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT, 1);     /* (4,0xF0): ROOM1021 sub02 @0x01FE0 */
@@ -896,6 +904,11 @@ static void abgang_lage(const abgang_lage_t *L)
 static void teil_abgang(void)
 {
     printf("== abgang ==\n");
+    /* Runde 39 Spur J (Punkt 8): nach dem Tod der Gorillas steht Elza fuer Johns zwei Zeilen an einer festen Lage
+     * (Pos_set wie sub02 @0x00C32, (-6000,-20000), ausserhalb von Johns Bahn BAHN_*); die sechs Lagen dieses Teils kann
+     * es nicht mehr geben. Kein Schub und Abstand > KOERPER_R im Bild prueft unit_r39_dining1141_phase_h. */
+    printf("  ok: ersetzt durch unit_r39_dining1141_phase_h (Runde 39 Spur J, Punkt 8)\n");
+    if (1) return;
     static const abgang_lage_t lagen[] = {
         /* die vier Lagen der Abnahme (E10 in der Bahn, E5/E6/E7 im Dachgang/an der Dachtuer hinter der Kamera von Cut 7) */
         { "E10 Suedteil auf Johns Weg",      -7418, -14952, 3072, -5600, -14952 },
@@ -919,12 +932,14 @@ static void teil_weg1131(void)
     pl->x = -7980; pl->z = -17750; pl->rot_y = 2048;   /* vor der Doppeltuer (Slot 0 x -9100..-8100, z -19750..-15750) */
     for (int f = 0; f < 10; f++) frame(0, 0);
     PRUEF(in_bahn(pl->x, pl->z), "Elza vor der Doppeltuer (%d,%d) steht in Johns sichtbarer Bahn", pl->x, pl->z);
+    /* Runde 39 Spur J (Punkt 8): nach dem Tod der Gorillas folgen Johns zwei Zeilen und sein Abgang unter Pad-Sperre — Elza
+     * kann waehrend des Wartens nicht mehr hinausgehen (die Doppeltuer wird erst danach wieder Tuer). Geprueft wird der
+     * Rueckfall in tuer_1131 (dining_r38.c) direkt am Zustand "Szene gelaufen, Gorillas tot, John noch da", wie ihn ein
+     * Spielstand aus dieser Lage liefert, und danach der Endzustand. */
     gorillas_tot();
-    for (int f = 0; f < 120; f++) frame(0, 0);
-    PRUEF(s_shown != 7 && g_scd.player_mode == 0, "Gorillas tot, Elza in der Bahn: kein Abgang, Steuerung frei");
-    druck_t r = druecke(-7980, -17750, 2048, 200);
-    PRUEF(r.raumwechsel && r.ziel == 0x1131, "Doppeltuer -> ROOM%04X (soll 1131)", (unsigned)r.ziel);
-    PRUEF(re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG) == 0, "John beim Hinausgehen noch nicht fort ((9,67) = 0)");
+    re15_game_flag_set(RE15_R38F_F2_BANK, RE15_R38F_F2_BIT, 0);   /* sub01 @0x00C0C */
+    PRUEF(re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG) == 0 && re15_game_flag_get(3, 0xC2) == 1,
+          "Zustand: Szene gelaufen (3,0xC2) = 1, Gorillas tot, John noch nicht fort ((9,67) = 0)");
     /* Raumaufbau 1131 (room_boot behaelt die Flags; die Installer-Regel tuer_1131 laeuft darin) */
     if (room_boot(RE15_R38F_RAUM_1131, -1300, -13950, 0, 0) != 0) return;   /* Ruecksprung-Spawn aus 1141 */
     PRUEF(re15_game_flag_get(9, RE15_R38F_BIT_JOHN_WEG) == 1 && re15_game_flag_get(4, 0xC3) == 1,
