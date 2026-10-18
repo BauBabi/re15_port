@@ -50,6 +50,7 @@
 #include "re15_player.h"       /* RE15_PLAYER_MOTION_BACK_PL00 */
 #include "re15_to_re2.h"       /* re15_to_re2_plc_dest_clip */
 #include "re15_anim_select.h"  /* re15_actor_anim_select — die Bank-Aufloesung */
+#include "re15_heliport1171_r39.h"   /* Runde 39 Spur K NB1: re15_r39k_reach_takt (Sub-6-Takt) */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -421,6 +422,7 @@ int main(void)
 
             int in8 = 0, ticks8 = 0, af_max8 = -1, mo_after = -1, af_after_max = -1;
             int steps = 0, last_slot = -1, post = 0;
+            int ankunft_fr = -1;   /* Runde 39 Spur K NB1: Bild, in dem der Walker die Ankunft meldet */
             for (int fr = 0; fr < 500; fr++) {
                 /* Reihenfolge wie im echten Loop (platform/pc/main.c): scd_vm_tick ->
                  * re15_actor_step_all_walkers (@main.c:3708) -> re15_game_step, in dem
@@ -432,6 +434,9 @@ int main(void)
                     /* Sub 6 besitzt +0x95 (player_common.c) — hier kein Advance. */
                 } else if (p2->motion_init_delay > 0) p2->motion_init_delay--;
                 else { p2->anim_frame++; if (p2->anim_frac > 0) p2->anim_frac--; }
+                /* Runde 39 Spur K NB1: der Sub-6-Takt von re15_game_step (Saat Clip 1 / Bild 0, game_step_common.c) —
+                 * die Ankunft setzt +0x5 = 6 im Dispatcher (@0x80031318), Sub 6 Phase 0 laeuft im Folgebild. */
+                re15_r39k_reach_takt(p2);
                 re15_aot_scan(p2->x, p2->z, (uint8_t)g_scd.cam_id);
 
                 int on_back = (p2->motion == RE15_PLAYER_MOTION_BACK_PL00);
@@ -446,9 +451,14 @@ int main(void)
                     last_slot = slot;
                 }
                 if (in8 && !p2->walk_active) {          /* nach der Ankunft */
-                    if (mo_after < 0) mo_after = (int)p2->motion;
-                    if (on_back && (int)p2->anim_frame > af_after_max)
-                        af_after_max = (int)p2->anim_frame;
+                    /* Runde 39 Spur K NB1: im ANKUNFTSBILD posiert Modus 8 noch seinen Rueckwaerts-Clip (f314 @0x800312b0
+                     * VOR der Ankunft @0x800312fc-80031318); "danach" beginnt mit dem Folgebild (Sub 6 Phase 0). */
+                    if (ankunft_fr < 0) ankunft_fr = fr;
+                    if (fr > ankunft_fr) {
+                        if (mo_after < 0) mo_after = (int)p2->motion;
+                        if (on_back && (int)p2->anim_frame > af_after_max)
+                            af_after_max = (int)p2->anim_frame;
+                    }
                     if (++post >= 60) break;
                 }
             }

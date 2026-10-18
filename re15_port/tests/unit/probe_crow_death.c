@@ -1,12 +1,14 @@
 /* probe_crow_death.c — REGRESSION (ctest): Nutzer-Reports 2026-08-03:
  * (a) abgeschossene Kraehen ANIMIEREN im Port weiter, wenn sie tot am Boden liegen
  *     (Original: state 7 hat KEINEN f314-Call -> Pose friert am FINISH-Ende ein,
- *     Freeze-Frame 12 des Land-Clips 0x0a; crow_death_pool.md §1.2/1.3),
+ *     Freeze-Frame 11 des Land-Clips 0x0a; crow_death_pool.md §1.2/1.3 — Runde 39 Spur K NB1: die 12 FINISH-f314
+ *     @0x8011493c POSIEREN +0x95 = 0..11 (`lbu v0,149(t0)` @0x8001f35c VOR +0x95++ @0x8001f618-1c); die alte
+ *     "Frame 12" war +0x95 NACH dem letzten Aufruf, nie gezeichnet),
  * (b) die Blutlache unter der abgeschossenen Kraehe fehlt (Original: Corpse-Handler
  *     0x80115830 faerbt den Boden-Schatten um (0x00ffff38 @0x80115880-c8) und waechst
  *     +0xbc/+0xbe um +10/Tick fuer 51 Ticks @0x8011589c-ac/@0x8011585c-60).
  * Messung: ROOM1170 Re-Entry-Roster, naechste Kraehe erschiessen —
- *   Lauf A: weapon 3 (Normal-Lane 0x80114738) -> state 7 sub 0, frame==12 eingefroren,
+ *   Lauf A: weapon 3 (Normal-Lane 0x80114738) -> state 7 sub 0, frame==11 eingefroren,
  *           Lache waechst Basis+510 (51 Ticks x +10), danach konstant, crow_pool=1;
  *   Lauf B: weapon 7 (GIB-Lane 0x801149c4)   -> state 7 sub 1 (Pool-WIPE): Schatten 1x1,
  *           kein Pool, Koerper verborgen (crow_hide), flags|=0x42 (@0x80114acc/ae8). */
@@ -113,7 +115,7 @@ static void run_death(const re15_rdt_t *rdt, int weapon)
     uint16_t base_w = e->crow_shadow_w;   /* letzter ACTIVE-Tail-Wert = Lachen-Basis (§1.4) */
 
     /* 300 Corpse-Ticks: motion/anim_frame-Verlauf. Original: state 7 enthaelt KEINEN
-     * f314-Call -> frame bleibt konstant (eingefroren am FINISH-Ende, Frame 12). */
+     * f314-Call -> frame bleibt konstant (eingefroren am FINISH-Ende, zuletzt posiert Frame 11). */
     int changes = 0, minf = 9999, maxf = -1; int f_prev = e->anim_frame;
     for (int f = 0; f < 300; f++) {
         scd_vm_tick(); re15_enemy_ai_run_all(1); re15_actors_anim_advance();
@@ -135,8 +137,9 @@ static void run_death(const re15_rdt_t *rdt, int weapon)
     if (weapon == 3) {
         CHECK(e->sub_state_1 == 0, "(w3) Normal-Lane endet sub 0 (a0=0 @0x80114964), got %d",
               e->sub_state_1);
-        CHECK(e->motion == 0x0a && e->anim_frame == 12,
-              "(w3) Freeze auf Land-Clip 0x0a Frame 12 (FINISH-Bilanz §1.2), got motion=%d frame=%d",
+        CHECK(e->motion == 0x0a && e->anim_frame == 11,
+              "(w3) Freeze auf Land-Clip 0x0a Frame 11 (12 FINISH-f314 @0x8011493c posieren 0..11, Runde 39 K NB1), "
+              "got motion=%d frame=%d",
               e->motion, e->anim_frame);
         CHECK(e->rot_z == 0, "(w3) rot_z=0 beim Land (@0x801148f8), got %d", e->rot_z);
         CHECK(e->crow_pool == 1, "(w3) Lache aktiv (0x00ffff38 @0x80115880-c8)");
