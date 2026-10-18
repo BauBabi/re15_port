@@ -17,7 +17,8 @@ CUE = r"C:\Users\mjoedicke\Downloads\ePSXe2018\re2leon.cue"
 INI = os.path.expandvars(r"%LOCALAPPDATA%\DuckStation\settings.ini")
 PORT = 2345
 PL, ETAB = 0x800CFBF8, 0x800CFE18
-BP_APPLIER, BP_RET, BP_P6, BP_P7 = 0x800410CC, 0x80043B04, 0x80103568, 0x80103628
+REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", ".."))
+BP_APPLIER, BP_RET, BP_RET3 = 0x800410CC, 0x80043B04, 0x80048A0C   # Rueckkehr T3: nach `jal 0x800410cc` @0x80048a04 + Delay-Slot
 BP_ZIEL = 0x80042144          # Zielwahl FUN_80042144 (R1-Druck: `jal` @0x800434e4 / @0x8004332c) - Diagnose, ob R1 ankommt
 HOLD_MS = float(os.getenv("R2_HOLD_MS", "120"))   # Viereck-Haltezeit je Schuss (SMG id 15 = Dauerfeuer: laenger halten)
 
@@ -98,16 +99,20 @@ class Pad(threading.Thread):
         import vgamepad as vg
         s.vg, s.B = vg, vg.XUSB_BUTTON; s.pad = vg.VX360Gamepad(); s.tief = tief; s.on = False; s.stop = False; s.shots = 0
     def run(s):
+        # Tastensonde (re2_gdb_tastensonde.py, daten/tasten_1): in diesem Spielstand feuert KREUZ (vgamepad A), nicht Viereck;
+        # die SMG (id 15, Tabelle T3 @0x800a7068, Feuer 0x80047c6c) feuert, solange die Taste gehalten wird.
         while not s.stop:
             if s.on:
                 s.pad.press_button(s.B.XUSB_GAMEPAD_RIGHT_SHOULDER)
                 if s.tief: s.pad.press_button(s.B.XUSB_GAMEPAD_DPAD_DOWN)
-                s.pad.press_button(s.B.XUSB_GAMEPAD_X); s.pad.update(); time.sleep(HOLD_MS / 1000.0)
-                s.pad.release_button(s.B.XUSB_GAMEPAD_X); s.pad.update(); s.shots += 1; time.sleep(0.38)
+                s.pad.press_button(s.B.XUSB_GAMEPAD_A); s.pad.update(); s.shots += 1; time.sleep(0.2)
             else:
                 time.sleep(0.05)
     def frei(s):
         s.pad.reset(); s.pad.update()
+    def tippen(s, taste, halten=0.2, pause=0.5):
+        s.pad.press_button(taste); s.pad.update(); time.sleep(halten)
+        s.pad.release_button(taste); s.pad.update(); time.sleep(pause)
 
 
 def main():
@@ -148,25 +153,62 @@ def main():
         g.wmem(z + 0x156, struct.pack("<h", hp))
         L("Zombie @%08x id %02x w0=%08x w4=%08x pos (%d,%d,%d) hp=%d 223=%d" % (z, g.mem(z + 8, 1)[0], g.u32(z), g.u32(z + 4),
           g.s32(z + 0x38), g.s32(z + 0x3C), g.s32(z + 0x40), g.s16(z + 0x156), struct.unpack("<b", g.mem(z + 0x223, 1))[0]))
-        for bp in (BP_APPLIER, BP_RET, BP_P6, BP_P7, BP_ZIEL):
+        for bp in (BP_APPLIER, BP_RET, BP_RET3):
             L("Z0 %08x:" % bp, g.cmd("Z0,%x,4" % bp))
         txt = open(os.path.join(out, "stops.txt"), "w")
+        # Overlay identifizieren: 2 KiB ab 0x80100000 live gegen alle COMMON/BIN/*.BIN (Lage im File gesucht)
+        try:
+            live = g.mem(0x80100000, 0x800)
+            bdir = os.path.join(REPO, "info", "re2leon", "COMMON", "BIN")
+            for fn in sorted(os.listdir(bdir)):
+                if not fn.upper().endswith(".BIN"): continue
+                data = open(os.path.join(bdir, fn), "rb").read()
+                k = data.find(live[:0x200])
+                if k >= 0: L("Overlay: %s @file+0x%x (2 KiB gleich: %s)" % (fn, k, data[k:k + 0x800] == live))
+        except Exception as ex:
+            L("Overlay-Suche:", ex)
+        if os.getenv("R2_EQUIP", "") == "shotgun":
+            # Schrotflinte (id 7) liegt im Spielstand in Slot 3 (0x800d4a3c + 12: 07 05 00 00); Munition auf 250 setzen und
+            # ueber den Status-Bildschirm ausruesten: START, DOWN, RIGHT, Kreuz (Menue), Kreuz (Equip), START (zu).
+            g.wmem(0x800d4a3c + 12 + 1, bytes([250]))
+            g.sk.sendall(b"$c#63"); time.sleep(0.5)
+            B = pad.B
+            for taste, h, p in ((B.XUSB_GAMEPAD_START, 0.2, 1.2), (B.XUSB_GAMEPAD_DPAD_DOWN, 0.2, 0.5), (B.XUSB_GAMEPAD_DPAD_RIGHT, 0.2, 0.5),
+                                (B.XUSB_GAMEPAD_A, 0.2, 0.8), (B.XUSB_GAMEPAD_A, 0.2, 1.0), (B.XUSB_GAMEPAD_START, 0.2, 1.2),
+                                (B.XUSB_GAMEPAD_B, 0.2, 0.8)):
+                pad.tippen(taste, h, p)
+            g.sk.sendall(b""); time.sleep(0.3)
+            try: g.recv(1)
+            except TimeoutError: pass
+            g.cmd("?")
+            L("nach Umruesten: equipped slot d5bf8=%d PL+0x10E=%04x inv0=%s inv3=%s mode=%02x" % (
+                g.mem(0x800d5bf8, 1)[0], g.u16(PL + 0x10E), g.mem(0x800d4a3c, 4).hex(), g.mem(0x800d4a3c + 12, 4).hex(), g.mem(0x800DF348, 1)[0]))
+        # Zielwahl-Radius des Halte-Handlers A ist 3000 (`addiu a1,zero,3000` @0x800434e8, nur einmal je Zielen,
+        # +0x16B-Latch @0x800434d0/f0): erst zielen/feuern, wenn der Zombie naeher als 2600 ist.
+        warten0 = time.time()
+        while time.time() - warten0 < 90:
+            d0 = int(((g.s32(z + 0x38) - g.s32(PL + 0x38)) ** 2 + (g.s32(z + 0x40) - g.s32(PL + 0x40)) ** 2) ** 0.5)
+            if d0 < 2600: break
+            g.sk.sendall(b"$c#63"); time.sleep(0.4); g.sk.sendall(b""); time.sleep(0.2)
+            try: g.recv(1)
+            except TimeoutError: pass
+            g.cmd("?")
+        L("Abstand beim Zielen: %d, Zombie w4=%08x" % (d0, g.u32(z + 4)))
+        g.wmem(z + 0x223, bytes([int(os.getenv("R2_POISE", "1")) & 0xff]))   # Sturz beim ersten Treffer (Flinch-Tor +0x223)
         pad.on = True
         n = 0; t0 = time.time(); hp_prev = hp
         while n < max_stops and time.time() - t0 < max_s:
             g.sk.sendall(b"$c#63")
             try:
-                r = g.recv(1.5)
+                r = g.recv(0.3)
             except TimeoutError:
                 g.sk.sendall(b""); time.sleep(0.3)
                 try: g.recv(2)                                          # Stopp-Paket des ^C (falls eines kommt)
                 except TimeoutError: pass
-                g.cmd("?")                                              # Herzschlag: anhalten, Leon lesen, weiter
-                L("  herz t=%6.2f L w4=%08x aim=%04x 14c=%08x 10E=%04x 16B=%d yaw=%d pos=(%d,%d) | Z w4=%08x hp=%d pos=(%d,%d) pad-schuesse=%d" % (
-                    time.time() - t0, g.u32(PL + 4), g.u16(PL + 0x154), g.u32(PL + 0x14C), g.u16(PL + 0x10E), g.mem(PL + 0x16B, 1)[0],
-                    g.s16(PL + 0x76), g.s32(PL + 0x38), g.s32(PL + 0x40), g.u32(z + 4), g.s16(z + 0x156), g.s32(z + 0x38), g.s32(z + 0x40), pad.shots))
-                continue
-            pc = g.pc()
+                g.cmd("?")                                              # Herzschlag: anhalten, abtasten, weiter
+                pc = -1
+            else:
+                pc = g.pc()
             e = g.mem(z, 0x230)
             w0, w4 = struct.unpack_from("<II", e, 0)
             c14c = struct.unpack_from("<I", e, 0x14C)[0]
@@ -177,19 +219,20 @@ def main():
             zx, zy, zz = struct.unpack_from("<iii", e, 0x38)
             aim = g.u16(PL + 0x154); pw4 = g.u32(PL + 4); p14c = g.u32(PL + 0x14C)
             px, pz = g.s32(PL + 0x38), g.s32(PL + 0x40)
-            tag = {BP_APPLIER: "SCHUSS", BP_RET: "nachher", BP_P6: "P6", BP_P7: "P7", BP_ZIEL: "ZIEL"}.get(pc, "?%08x" % pc)
+            pyaw, pziel = g.s16(PL + 0x76), g.u32(PL + 0x1B4)          # Blick, Zielzeiger der Zielhilfe (+0x1B4)
+            tag = "herz" if pc == -1 else {BP_APPLIER: "SCHUSS", BP_RET: "nachher", BP_RET3: "nachher"}.get(pc, "?%08x" % pc)
             dist = int(((zx - px) ** 2 + (zz - pz) ** 2) ** 0.5)
             treffer = "  <<< TREFFER %d" % (hp_prev - hpz) if hpz < hp_prev else ""
-            line = "%4d %-7s t=%6.2f Z w0=%08x maske=%u w4=%08x clip=%02x bild=%3u rate=%02x hp=%4d d223=%3d 21A=%04x 1D3=%02x 10E=%04x y=%d dist=%d | L aim=%04x w4=%08x 14c=%08x%s" % (
+            line = "%4d %-7s t=%6.2f Z w0=%08x maske=%u w4=%08x clip=%02x bild=%3u rate=%02x hp=%4d d223=%3d 21A=%04x 1D3=%02x 10E=%04x y=%d dist=%d | L aim=%04x w4=%08x 14c=%08x yaw=%d ziel=%08x pos=(%d,%d) zpos=(%d,%d)%s" % (
                 n, tag, time.time() - t0, w0, (w0 >> 26) & 7, w4, c14c & 0xff, (c14c >> 8) & 0xff, (c14c >> 16) & 0xff,
-                hpz, r223, f21a, d1d3, f10e, zy, dist, aim, pw4, p14c, treffer)
+                hpz, r223, f21a, d1d3, f10e, zy, dist, aim, pw4, p14c, pyaw, pziel, px, pz, zx, zz, treffer)
             txt.write(line + "\n"); txt.flush()
-            if tag in ("SCHUSS", "nachher", "ZIEL") or hpz < hp_prev or n % 25 == 0: L(line)
+            if tag in ("SCHUSS", "nachher") or hpz < hp_prev or (w4 & 0xff00) == 0x0500 or n % 20 == 0: L(line)
             hp_prev = hpz
             n += 1
             if hpz < 0: L("Zombie tot"); break
         pad.on = False; pad.frei()
-        for bp in (BP_APPLIER, BP_RET, BP_P6, BP_P7, BP_ZIEL): g.cmd("z0,%x,4" % bp)
+        for bp in (BP_APPLIER, BP_RET, BP_RET3): g.cmd("z0,%x,4" % bp)
         g.sk.sendall(b"$c#63"); time.sleep(0.2)
         L("Stopps:", n, "Pad-Schuesse:", pad.shots)
         for p in eigene: subprocess.run(["taskkill", "/PID", p], capture_output=True)

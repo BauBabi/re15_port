@@ -160,7 +160,33 @@ neuer Stand: Ziel = B; nur A aktiv -> kein Ziel; ROOM1140: ueber den Tisch Ziel 
 
 ## Umsetzung
 
-(folgt)
+### Punkt 2 + 3 (Sichtlinie des Schusses, Zielhilfe) — Dateien, Konstanten, Form
+
+* `engine/src/treffer_r39.c` + `include/re15_treffer_r39.h` (neu, Vorgaenger ff1649c1, hier geprueft und ergaenzt):
+  - `re15_treffer_r39_los_blockiert(von, nach)` = FUN_8001b9b4-Zwilling (Regionen 3..0 `ori s0,zero,0x3` @0x8001ba08 /
+    `addiu s0,s0,-1` @0x8001ba38, je Region FUN_8003dcc4(.., 0xf00, 0x300) @0x8001ba1c-24: Band == Ursprung+0x82, Art-Nibble 3,
+    Kreuzungstest beider Diagonalen /0x12 = `re15_r36_los_zelle_kreuzt` aus enemy_ai_common.c), ABER Moebel-Zellen werden
+    uebersprungen — die FORM von RE2 FUN_80050858 (`lhu v1,8(t1)` @0x800508bc / `and v0,v1,fp` @0x800508c4 / `beq
+    v0,zero,0x800508b0` @0x800508c8: Zelle ohne Flagtreffer = naechste Zelle), die der RE2-Schuss-Applier mit Maske 0x80 ruft
+    (`addiu a2,zero,128` @0x800412e0 / `addiu a3,zero,1` @0x800412ec / `jal` @0x800412f0).
+  - `re15_treffer_r39_zelle_moebel(room, zelle)`: Zuordnung ueber Raum + (x,z,w,d) gegen `gen/treffer_r39_moebel.inc` (218
+    Eintraege, 11 Leon-Raeume + Elza-Varianten, Generator tools/r39_treffer_moebel_gen.py, Inhalt aus den Hintergrundbildern
+    je Cut: D_belege/zellen/ROOM*_inseln_*.png — Tische, Pulte, Betten, Stuehle, Theken, Baenke, Kisten/Kartons, Rohre am
+    Boden, Eimer, Topfpflanzen; Regale/Maschinen/Saeulen/Waende bleiben sperrend). Jeder Eintrag ist eine Art-3-INSEL-Zelle
+    (nicht an der Huelle), Riegel unit_r39_treffer_moebel; die Runde-36-Moebel mit belegter Oberkante (k_r36_moebel,
+    zombieki_r36.c: 1010 Tisch #5 + Stuhlkreise, 1220 Betten) sind Teilmenge (Riegel).
+    PORT-WAHL (als solche gekennzeichnet): RE1.5s Designer haben das Attribut in ROOM1020 fuer Moebel benutzt (Art 2) und
+    sonst pauschal Art 3 gesetzt (unfertiger Beta-Datenstand); RE2 setzt bei ~16 % der Zellen das Flag nicht. Die Liste ist
+    die RE2-Praxis auf den RE1.5-Daten — welche Zelle ein Moebel IST, steht in keiner Zahl, nur im Bild.
+  - `re15_treffer_r39_zielhilfe_verdeckt(pl, e)`: die RE2-Kandidatenbedingung der Zielhilfe (FUN_80042144 `jal 0x80050858`
+    @0x800422a8, `bne v0,zero,0x800422f4` @0x800422b0 = verdeckter Kandidat wird uebersprungen) mit demselben Strahl.
+  - Sonden: `re15_treffer_r39_moebel_aus` / `_zielhilfe_aus` (alter Stand im selben Lauf), Mess-Sonde RE15_TREFFER_ALT=1
+    (nur Umgebungsvariable: beides aus = alter Stand, fuer die exe-Vorher/Nachher-Messung), Messschiene RE15_TREFFER_LOG=<datei>
+    (Zeilen `sperre`/`frei`/`zielhilfe_verdeckt`/`ziel slot=`), Zaehler fuer die Riegel.
+* Haken (gemeinsame Dateien, je 1-5 Zeilen): `schuss_r36.c re15_schuss_r36_sichtlinie_blockiert` ruft den Zwilling mit
+  Moebel-Ausnahme statt der Regionen-Schleife; `re15_damage.c re15_player_aim_target`: `if (re15_treffer_r39_zielhilfe_verdeckt(pl, e))
+  continue;` vor der Abstandswahl (RE1.5 FUN_8003703c hatte keine Sichtlinie, B3) + Logzeile am Ende.
+* Fortsetzung (diese Sitzung): `extern`-Deklaration durch `re15_zombieki_r36.h` ersetzt; Zielwahl-Log; RE15_TREFFER_ALT.
 
 ## Messung nachher
 
