@@ -13,7 +13,7 @@ Messordner (nicht committet): scratchpad `jabn/` (Laeufe `l_a`, `l_b`, `l_e`, ..
 - 19:13-19:27 Lauf B (dichte Bilder), Laeufe E/F (Gemaelde vor/nach dem ersten Ruf), Gegenprobe-Bau V (ohne
   Punkt-9-Haken), Laeufe V/W, Lauf G (Wiederbetreten) ausgewertet.
 - 19:21-19:40 gezielte Integrationsriegel (13 Tests, -j 2): 13/13 gruen — Abschnitt 5.
-- 19:26 (waehrend der Abnahme) Nutzer-Nachtrag 4 zu ROOM1141 in AUFTRAG.md committet — Abschnitt 5a.
+- 19:26 / 19:46 (waehrend der Abnahme) Nutzer-Nachtraege 4 und 6 zu ROOM1141 in AUFTRAG.md committet — Abschnitt 5a.
 
 ## 1. Bau und gezielte Tests
 - `bash re15_port/tools/local_build.sh configure` + `build`: `LOCAL-BUILD-OK (build)`, `ninja: no work to do` — die exe
@@ -214,8 +214,8 @@ _a 0,16 s und _d 0,13 s (Platzhalter, Hinweis H4), integration_r38_elzaintro_sti
 Kein roter Riegel, kein Nachfahren noetig. (Die Riegel pruefen M1 und M2 nicht: phase_h loest die Gemaelde-Frage erst
 nach 900 Bildern aus; integration_r39_dining1141_d prueft zu msg 52 nur `s1=2 mo=6`, nicht die Darstellung.)
 
-## 5a. Nachtrag 4 des Nutzers (AUFTRAG.md, 2026-10-18 19:25 — NACH der Abgabe 19:01, waehrend dieser Abnahme in den
-Zweig committet: 4d7c7b34, 2f889c9f, 18f4306a, f60715a8)
+## 5a. Nachtraege 4 und 6 des Nutzers (AUFTRAG.md, 2026-10-18 19:25 / 19:46 — NACH der Abgabe 19:01, waehrend dieser
+Abnahme in den Zweig committet: 4d7c7b34, 2f889c9f, 18f4306a, f60715a8, b6f25fdf)
 Nicht Teil der geprueften Abgabe; Stand der gebauten exe dazu (fuer die Nachbesserung):
 | Nachtrag-4-Punkt (Wortlaut gekuerzt) | Stand b2a2f267 | Beleg |
 |---|---|---|
@@ -223,6 +223,7 @@ Nicht Teil der geprueften Abgabe; Stand der gebauten exe dazu (fuer die Nachbess
 | N4.2 Szene erst nach dem Entriegeln der Tuer; Elza rennt zur anderen Kamera, dreht sich zur Tuer, hebt die Waffe (ohne Schusswaffe im Inventar das Messer) | nicht erfuellt | BEFREIUNG39 +0x00C8..+0x00DE: `Plc_dest WALK` (Modus 4) + TURN, kein Entriegeln, kein Waffe-Heben; Bild `jabn/b_tuer.png` (Elza steht mit gesenkten Armen) |
 | N4.3 John schiesst ab und an auf die Gorillas und zieht ihre Aufmerksamkeit | nicht erfuellt | BEFREIUNG39: John RUN in die Ecke + Gosub sub04, danach nur die Warteschleife `Do / Evt_next / Edwhile Ck(4,0xF2)==1` (+0x046E); kein Schuss-Befehl in dining_r38/r39 (`grep -i schiess|schuss|plc_gun|shoot` leer) |
 | N4.4 John soll am Ende nicht die Waffe auf Elza richten, sondern heranwinken/Folge-Animation | nicht erfuellt | = Mangel M2 (`jabn/b_waffe.png`) |
+| N6 (Nachtrag 6, 19:46, b6f25fdf): neue Nutzer-Zeilen korrekt schreiben ("He is in trouble", "gorilla meal") | nicht erfuellt | Lauf A debug.log: `[msgtext] room=1141 id=50 "Elza: Oh, no, this is John! He is in Trouble, I have to help him!"`, `id=51 "... we end up as Gorilla meal...."`; Bilder `jabn/a_reakt.png`, `a_dialog.png` (Gross-T / Gross-G) |
 
 ## 6. Vertrag (VERTRAG.md Runde 39)
 - Pfade (`git diff master...HEAD --name-only`): nur `analysis/befunde_runde39/{AUFTRAG.md (Orchestrator-Hinweis),
@@ -299,7 +300,7 @@ Nicht Teil der geprueften Abgabe; Stand der gebauten exe dazu (fuer die Nachbess
 | 7 John schaut ab msg 9 zu Elza | erfuellt | Lauf A: blick -22 (1,9 Grad) msg 9..11; `a_blick.png` |
 | 8 zwei Zeilen Johns mit passenden Animationen | teilweise | Zeilen/Blick/Ablauf ja; Geste zu msg 52 = John richtet 1,4 s die Pistole auf Elzas Kopf, vom Nutzer im Nachtrag 4 woertlich zurueckgewiesen (M2); sichtbarer Sprung Johns nach Cut 8 (M3) |
 | 9 keine Panik-Musik 1141 -> 1171 | erfuellt | Laeufe A/W Pegel 0, Gegenprobe V ohne Haken Pegel 496 (MAIN16) |
-| N4.1-N4.4 (Nachtrag 4, 19:25, nach der Abgabe) | nicht erfuellt | Abschnitt 5a — offen fuer die Nachbesserung; N4.4 = M2 |
+| N4.1-N4.4, N6 (Nachtraege 4/6, 19:25/19:46, nach der Abgabe) | nicht erfuellt | Abschnitt 5a — offen fuer die Nachbesserung; N4.4 = M2; N6: "Trouble"/"Gorilla" klein schreiben |
 
 Gates: RE-Gate gehalten (6 Stichproben stimmen, keine Rate-Woerter, Kennzeichnung NUTZER-VORGABE/PORT-WAHL vorhanden);
 Fix-erklaert-Befund fuer Punkt 9 per Gegenprobe V/W belegt; Vertrag gehalten (Hinweis H2 audio_pc.c). Tests: Unit 60/60,
