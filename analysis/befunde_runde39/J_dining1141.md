@@ -518,7 +518,10 @@ Abschnitt "Fuer den Nutzer" einfach beschreiben (keine Entscheidungsfrage). (3) 
 - 23:23 Umsetzung dccd5f8c (9.3, Commit 23:23:21); Laeufe n_a, n_l, n_l2, n_l3 gestartet 23:23:32 (Uhrzeiten aus `git log` / Dateizeiten).
 - 23:32 Riegel (05bc9a4d), 23:34 Riegel `kampf` (ee3cd7c2), 23:35 Dossier 9.4-9.8 (ec02857e); 23:34 gezielte Suite gestartet (9.5).
 - 23:38-23:49 Integration gezielt (13 von 14, rot nur der E-Riegel, Merge-Folge, 9.9); 23:57 E-Riegel nachgezogen (b5a42cca),
-  gruen; 23:58-00:10 alle Unit-Riegel am Endstand 842/842 (9.10).
+  gruen; 23:58-00:10 alle Unit-Riegel 842/842 (9.10).
+- 00:11 Nutzer-Nachtrag 10 vom Orchestrator in den Baum committet (3f0ef678); 00:14 umgesetzt (11d366a9, 9.11), 00:21 Riegel
+  (35ac16f1); 00:34 Johns Schuss vor die Gegner-KI (6161ac63, 9.12); 00:34-01:15 Unit 842/842 und Integration 14/14 am
+  Endstand; 01:16 Riegel `kampf` mit Messhaken (cc2715b8), Lauf bis 01:21: 1/1 (9.13). Uhrzeiten aus `git log`.
 - H6 erledigt: Uhrzeit in 8.8 aus den Commit-Zeiten berichtigt (751e3f4d 21:48:38, exe 21:47:36, f744e5ad 22:13:31).
 
 ### 9.1 Messung vorher (gemergter Stand 25611933, echte exe; Messordner scratchpad `j39n2/`, nicht committet)
@@ -699,9 +702,10 @@ Pegel 559", 0 Fehler. Gegenprobe Riegel: `integration_r39_dining1141_d` per -DAU
   Gemessen in drei Kampflaeufen: 30 von 30 Schuessen treffen, nach 14 von 15 Salven dreht sich der getroffene Gorilla zu John
   und geht auf ihn zu; steht Elza im suedlichen Teil des Raums nahe bei John (Kamera mit Blick auf die Doppeltuer),
   sieht man John schiessen.
-- **Deine Aufnahmen main50/51/52** laufen an ihren Zeilen (Elza "Oh, no, this is John! ...", John "Puuuh ..." und "Elza, follow
-  me ..."), jede ganz. Neu: Elza spricht ihren Satz zu Ende, bevor du wieder steuerst, und John rennt erst los, wenn er "... a
-  way out of here!" fertig gesagt hat. Die alten Zeilen 12/13/14 (Schloss, Gemaelde, Tisch) bleiben stumm.
+- **Deine Aufnahmen main51/52** laufen an ihren Zeilen (John "Puuuh ..." und "Elza, follow me ..."), jede ganz; John rennt
+  erst los, wenn er "... a way out of here!" fertig gesagt hat. main50 (Elza "Oh, no, this is John! ...") lief bis Nachtrag 10
+  in 1141 ebenfalls ganz (Elza sprach aus, bevor du wieder steuerst); seit Nachtrag 10 kommt dieser Satz nicht mehr in 1141,
+  sondern in ROOM1041 (Spur P, 9.11). Die alten Zeilen 12/13/14 (Schloss, Gemaelde, Tisch) bleiben stumm.
 - **Kamera nach Johns Abgang:** vorher blieb die Kamera auf der leeren Suedwest-Ecke stehen, waehrend Elza zur Dachtuer ging;
   jetzt zeigt sie Elza und folgt ihr wie gewohnt.
 - Keine Entscheidungsfrage offen. Paket-Gate: keine neue Datei unter shared_assets/ (Programme in gen/dining_r39_programme.inc).
@@ -732,7 +736,7 @@ Pegel 559", 0 Fehler. Gegenprobe Riegel: `integration_r39_dining1141_d` per -DAU
   an schiessen und ihre Aufmerksamkeit erhalten"), die Regel steht oben in einfachen Worten; Gorillas greifen John weiterhin
   nicht an (die Angriffe des Originals wirken nur auf den Spieler, 8.5).
 
-### 9.10 Endstand (Code b5a42cca, gezielt gruen)
+### 9.10 Zwischenstand vor Nachtrag 10 (Code b5a42cca, gezielt gruen; Endstand siehe 9.13)
 - Alle Unit-Riegel am Endstand (Lauf 23:58:02..00:10:24): `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 8 --timeout 600`
   -> "100% tests passed, 0 tests failed out of 842".
 - Integration am Endstand: `ctest -R "integration_r39_dining1141|integration_r38_dining1141|integration_r39_gegner_1141|integration_r37_elzaems_elza1141|integration_r38_affen3" -j 4 --timeout 3600`
@@ -741,3 +745,63 @@ Pegel 559", 0 Fehler. Gegenprobe Riegel: `integration_r39_dining1141_d` per -DAU
   -DAUSWERTEN auf seinem ctest-Lauf lauf_7fd8ea61: "alle Pruefungen gruen". Zwischen den Laeufen nur Kommentar (re15_dining_r39.h
   `29 00`) und Riegel-Dateien geaendert, kein Verhalten.
 - Volle Suite: nicht im Spurbaum (VERTRAG), faehrt der Orchestrator in der Integration.
+
+### 9.11 Nutzer-Nachtrag 10 (waehrend dieser Nachbesserung in den Baum committet: 3f0ef678, 00:11)
+Wortlaut (Ausschnitt, AUFTRAG.md): "Im ROOM 1141 soll alles so bleiben wie bisher, nur eben ohne die "Oh, no, this is John! He is
+in Trouble, I have to help him!" Cutscene." Orchestrator: "Spur J: 1141 bleibt, nur OHNE Elzas Reaktion (msg 50 entfaellt in
+1141)"; die Zeile, die leisen Rufe in 1041, Karte und Panikmusik baut Spur P "johnruf1041" (Port-Id 40 in 1041, Kopie der
+Aufnahme synchro/STAGE1/room1041/main40.wav).
+- Messung vorher (Lauf n_a, Stand dccd5f8c): msg 50 offen F176..F356 mit main50.wav, Pad-Sperre F166..F371, (9,94) = 1.
+- Umsetzung (11d366a9): HAEMMERN39 ohne den Reaktions-Block (Ifel Ck(9,94)==0, Warten auf Merker (5,0x10) und Pad-Sperre,
+  Set(2,7)=1, Plc_neck, msg 50, Sleep 90, Warte-Zeile msg 58, Set(9,94)=1, Plc_neck aus, Set(2,7)=0) - Klopfen und Rufe
+  unveraendert; msg 50 wird in 1141 nicht mehr installiert (Text bleibt fuer den Riegel `texte` und zur Weiterverwendung,
+  re15_dining_r39_text(0)); Bit 94 wird nicht mehr gesetzt, bleibt in k_port[] reserviert (aeltere Spielstaende); der Merker
+  (5,0x10) bleibt (ROLLTOR39 setzt/loescht ihn, ohne Leser). synchro/STAGE1/room1141/main50.wav bleibt unangetastet
+  (Nutzer-Datei, in 1141 ungenutzt).
+- Messung nachher: Lauf n10_a0 (EXIT 700#1141) - keine Nachricht bis zum Gemaelde (erste Nachricht msg 13 F676), pm = 0 von F1
+  bis F676, (9,94) = 0, Rufe help03 F75 / help01 F295 / help04 F515 mit je drei Schlaegen davor (Abstand jetzt 220 Bilder ohne
+  die Reaktion); Bilder `j39n2/n10_frueh.png` F100..F600 ohne Textfenster, F680 Gemaelde-Text. Lauf n10_a (echter Weg bis 1171):
+  `integration_r39_dining1141_d` per -DAUSWERTEN gruen; msg 51 F3886..F4060 / msg 52 F4062..F4190, Kreuzkorrelation main51
+  rho 1,000 (Takt 7531), main52 rho 1,000 (Takt 7707); main50 im Fenster F150..F700: rho 0,063 (nicht da); Kamera Cut 0 ab
+  F4333; Punkt 9 Pegel 0 / 559.
+- Folge fuer den E-Riegel `integration_r39_gegner_1141`: die Szene endet ohne die Reaktion bei F3438 (Messlauf `j39n2/e_mess2`,
+  vorher F3655) - START 3500, EXIT 5240 (gleicher Abstand 65 nach dem Szenenende, gleiche Kampfdauer 1740 Bilder).
+- Riegel: `unit_r39_dining1141_programme` (HAEMMERN39 ohne msg 50, ohne Ck/Set(9,94), ohne Pad-Sperre), `_phase_h` (900 Bilder
+  ohne Nachricht und ohne Pad-Sperre, (9,94) = 0), `_fenster` (Gemaelde gleich nach dem ersten Ruf: Rolladen, frei, keine msg 50;
+  Wiederbetreten ohne msg 50), `integration_r39_dining1141_d` (erste Nachricht in 1141 = msg 13, kein main50.wav, kein
+  "Oh, no, this is John!" im Abschnitt 1141).
+- Fuer den Nutzer: In ROOM1141 kommt Elzas Satz nicht mehr; beim Betreten klopft John und ruft wie bisher, alles Weitere ist
+  unveraendert. Der Satz kommt kuenftig in ROOM1041 (Spur P).
+
+### 9.12 Johns Schuss vor der Gegner-KI (6161ac63)
+- Gemessen (integration_r39_gegner_1141, Lauf lauf_eb59fc78 am Stand nach Nachtrag 10): rot an Spur Es Pruefung (c) - state.txt
+  10 Flinch-Beginne (Zustand 2 + Clip 7) gegen 9 FLINCH-Eintraege; der zusaetzliche Beginn F3904 Platz 2 = Johns Schuss 2
+  (`[dining39] F3904 John schiesst (Schuss 2) auf Gorilla Slot 2: Treffer`), state.txt F3904 `[2 ... st=2 ... mo=7 ...]` (Clip 7
+  noch vom Flinch F3869), F3905 `st=1` mit "OHNE ZUCKEN" im gegner_r39.log.
+- Ursache: re15_dining_r39_tick (Schuss, Treffer-Schreiber +0x4 = 2) lief NACH re15_enemy_ai_run_all (game_step_common.c); der
+  Gorilla stand am Bildende in Zustand 2 und wurde erst im Folgebild von der HURT-Wurzel verarbeitet. Der Spieler-Resolver
+  (re15_player_weapon_fire im Spieler-Takt, game_step_common.c vor dem KI-Sammelaufruf) trifft VOR der KI, sein Treffer wird im
+  selben Bild verarbeitet (Spuren Es Pruefung (c) beruht darauf: ein Treffer unter der Schwelle zeigt nie Zustand 2 am Bildende).
+  Johns Schuss folgt jetzt derselben Reihenfolge wie der Spieler-Treffer im Port.
+- Aenderung: der Haken `re15_dining_r39_tick()` steht jetzt unmittelbar vor dem KI-Sammelaufruf (neben re15_fenster1120_tick,
+  ebenfalls "vor der KI"); weiterhin 1 Zeile. W-Clip-Halten (Spieler-Takt lief davor) und Johns Nachzielen (der NPC-Sub 2 dreht
+  nicht) unveraendert: Unit `phase_h` (b) wieder "groesster Schritt 200, im Kegel nach 5 Bildern".
+
+### 9.13 Endstand nach Nachtrag 10 und Haken-Umzug (Code 6161ac63, Riegel cc2715b8; gezielt, keine volle Suite)
+- M1 am Endstand (Laeufe f_l / f_l2 / f_l3, Wegplaene wie 9.1, `salven.py`/`aufmerk.py`): 15 Salven, 30 von 30 Schuessen
+  getroffen (8 davon mit Elza im Griff: f_l 2, f_l3 6), 15 von 15 Salven mit "John zugewandt"; Annaeherungen f_l 5878->2797,
+  4086->2522, 9268->2525, 8146->2528; f_l2 6576->2793, 9542->2533, 9394->2579, 9387->2531, 9388->2529, 9393->6368 (Laufende);
+  f_l3: der Gorilla steht schon bei ~3400 am Tisch/zweiten Gorilla fest, dreht sich zu John und gibt nach 30 Bildern auf
+  ("festgeklemmt", 59-84 Bilder je Episode) - die Zuwendung ist sichtbar, das Ende nachvollziehbar. John im Bild (Cut 0): f_l
+  Salven 1-2, f_l3 alle 10 Schuesse.
+- Alle Unit-Riegel (Lauf 00:34:28..00:53:28): `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 6 --timeout 600`
+  -> "100% tests passed, 0 tests failed out of 842".
+- Integration (Lauf 00:34:23..01:15:17): `ctest --test-dir re15_port/build -R "integration_r39_dining1141|integration_r38_dining1141|integration_r39_gegner_1141|integration_r37_elzaems_elza1141|integration_r38_affen3" -j 4 --timeout 3600`
+  -> "100% tests passed, 0 tests failed out of 14" (integration_r39_gegner_1141 Passed 355.77 sec, integration_r39_dining1141_d
+  Passed 417.47 sec, integration_r38_dining1141_s Passed 756.34 sec, r/w/z/l/a/d, affen3 (3), elzaems_elza1141; der Riegel
+  `kampf` Passed 2453.21 sec, weil Elza in diesem Lauf bei F5389 starb und die exe im Todesbild bis zur Zeitgrenze stand - die
+  Pruefungen liefen auf den Daten bis dahin gruen).
+- Danach Riegel `kampf` mit dem Messhaken der Spur E fuer Elzas Energie und EXIT_AT-Pflicht (cc2715b8):
+  `ctest --test-dir re15_port/build -R "^integration_r39_dining1141_kampf$" --timeout 1800` -> "100% tests passed, 0 tests failed
+  out of 1" (Passed 300.61 sec; "10 Schuesse, 10 Treffer", 6 Treffer bei gr=1, 5 von 5 Treffer-Salven mit Zuwendung, 10 Schuesse
+  bei Cut 0, Querungs-Wache 0 Bilder; EXIT_AT Bild 5500 erreicht).
