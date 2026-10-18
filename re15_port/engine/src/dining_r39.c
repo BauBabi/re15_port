@@ -127,8 +127,12 @@ void re15_dining_r39_messhaken(void)
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
         if (g_actors[s].active && g_actors[s].type == RE15_R38F_JOHN_TYP) { j = &g_actors[s]; break; }
     const re15_actor_t *e = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    /* Blick Johns zu Elza: Abweichung in der Konvention von re15_ai_arc_test (re15_damage.c: ausgerichtet, wenn
+     * atan2_q12(dz,dx) == rot_y + 1024), auf -2048..2047 gefaltet. */
+    int blick = 0;
+    if (j) blick = (((int)re15_atan2_q12(e->z - j->z, e->x - j->x) - ((int)j->rot_y + 1024)) % 4096 + 4096 + 2048) % 4096 - 2048;
     fprintf(s_f, "F%u cam=%d anz=%d msg=%d/%d john=%d (%d,%d) rot=%d st=%d s1=%d s2=%d mo=%d elza=(%d,%d) rot=%d "
-                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d\n",
+                 "6a=%d f2=%d b94=%d b67=%d se=%u/%u/%u hilfe=%d blick=%d\n",
             (unsigned)g_engine.frame_count, (int)g_scd.cam_id, (int)g_scd.work_vars[0x0A],
             (int)g_scd.message_active, (int)g_scd.message_id,
             j ? 1 : 0, j ? (int)j->x : 0, j ? (int)j->z : 0, j ? (int)(j->rot_y & 0xFFF) : 0,
@@ -136,7 +140,7 @@ void re15_dining_r39_messhaken(void)
             (int)e->x, (int)e->z, (int)(e->rot_y & 0xFFF),
             re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT), re15_game_flag_get(RE15_R38F_F2_BANK, RE15_R38F_F2_BIT),
             re15_game_flag_get(9, RE15_R39J_BIT_REAKTION), re15_game_flag_get(9, 67),
-            g_re15_r39j_se_zaehler[0], g_re15_r39j_se_zaehler[1], g_re15_r39j_se_zaehler[2], g_re15_r39j_hilfe_letzte);
+            g_re15_r39j_se_zaehler[0], g_re15_r39j_se_zaehler[1], g_re15_r39j_se_zaehler[2], g_re15_r39j_hilfe_letzte, blick);
     fflush(s_f);
 #endif
 }

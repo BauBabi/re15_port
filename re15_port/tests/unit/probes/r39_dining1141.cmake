@@ -29,6 +29,7 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dini
     add_test(NAME integration_r39_dining1141_d
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_R39J_WERKZEUG=$<TARGET_FILE:test_r39_dining1141>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_dining1141_d_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dining1141.cmake)
     set_tests_properties(integration_r39_dining1141_d PROPERTIES TIMEOUT 3600)

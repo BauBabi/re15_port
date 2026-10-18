@@ -41,6 +41,7 @@
 #include "re15_dining_r38.h"
 #include "re15_dining_r39.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -555,6 +556,44 @@ static void teil_phase_h(void)
           "Abgang: John fort (Bild %d), (9,67) = 1, Riegel (4,0xC3) = 1", park);
 }
 
+/* ---- Teil: pegel (Werkzeug des Riegels integration_r39_dining1141_d, Punkt 9) --------------------------------------
+ * Aufruf: test_r39_dining1141 pegel <laufordner>. Liest <lauf>/debug.log: nach "loaded room1171.rdt" das erste
+ * "[bgm] Sce_bgm_control slot=0 op=1 ... capTick=N" (= ROOM1171 main00 @0x011D6). Aus <lauf>/cap.raw (RE15_AUDIO_CAP_SYNC,
+ * 16 bit Stereo, 1470 Abtastwerte je Takt) der Pegel in den Takten N+30..N+55: nach dem Tuer-zu-Ton (DOOR1A Ton 1 = 0,89 s
+ * = 27 Takte) und vor dem Ende der 60-Takte-Ausblendung. Gemessen vor dem Fix (Lauf v0, Dossier 1.5): 230..480 = MAIN16 aus
+ * 1141; nach dem Fix 0. Und N+70..N+100: MAIN32 laeuft (Lauf n1: 277..524). */
+static void teil_pegel(int argc, char **argv)
+{
+    printf("== pegel ==\n");
+    if (argc < 3) { printf("  FEHLER: Aufruf test_r39_dining1141 pegel <lauf>\n"); g_fail++; return; }
+    char p[1024]; snprintf(p, sizeof p, "%s/debug.log", argv[2]);
+    FILE *f = fopen(p, "rb");
+    if (!f) { printf("  FEHLER: %s fehlt\n", p); g_fail++; return; }
+    char z[4096]; int in1171 = 0; long n = -1;
+    while (fgets(z, sizeof z, f)) {
+        if (strstr(z, "loaded room1171.rdt")) in1171 = 1;
+        const char *c = in1171 ? strstr(z, "[bgm] Sce_bgm_control slot=0 op=1 ") : NULL;
+        if (c && (c = strstr(c, "capTick=")) != NULL) { n = atol(c + 8); break; }
+    }
+    fclose(f);
+    PRUEF(n > 0, "ROOM1171 main00 Sce_bgm_control op=1 bei Takt %ld", n);
+    if (n <= 0) return;
+    snprintf(p, sizeof p, "%s/cap.raw", argv[2]);
+    size_t sz = 0; uint8_t *raw = slurp(p, &sz);
+    if (!raw) { printf("  FEHLER: %s fehlt\n", p); g_fail++; return; }
+    const int16_t *x = (const int16_t *)raw; const long paare = (long)(sz / 4);
+    double e1 = 0, e2 = 0; long n1 = 0, n2 = 0;
+    for (long t = n + 30; t <= n + 55; t++)
+        for (long k = t * 1470; k < (t + 1) * 1470 && k < paare; k++) { double v = (x[2*k] + x[2*k+1]) * 0.5; e1 += v * v; n1++; }
+    for (long t = n + 70; t <= n + 100; t++)
+        for (long k = t * 1470; k < (t + 1) * 1470 && k < paare; k++) { double v = (x[2*k] + x[2*k+1]) * 0.5; e2 += v * v; n2++; }
+    free(raw);
+    const int r1 = n1 ? (int)(sqrt(e1 / (double)n1)) : -1, r2 = n2 ? (int)(sqrt(e2 / (double)n2)) : -1;
+    printf("    Takte %ld..%ld Pegel %d, Takte %ld..%ld Pegel %d\n", n + 30, n + 55, r1, n + 70, n + 100, r2);
+    PRUEF(n1 > 0 && r1 < 60, "Punkt 9: nach dem Tuer-zu-Ton keine Musik aus 1141 (Pegel %d < 60; vorher 230..480)", r1);
+    PRUEF(n2 > 0 && r2 > 150, "Punkt 9: danach laeuft der Raum-Titel MAIN32 (Pegel %d > 150)", r2);
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2) { printf("Aufruf: test_r39_dining1141 <texte|programme|stamm|phase_h>\n"); return 2; }
@@ -562,6 +601,7 @@ int main(int argc, char **argv)
     else if (!strcmp(argv[1], "programme")) teil_programme();
     else if (!strcmp(argv[1], "stamm")) teil_stamm();
     else if (!strcmp(argv[1], "phase_h")) teil_phase_h();
+    else if (!strcmp(argv[1], "pegel")) teil_pegel(argc, argv);
     else { printf("unbekannter Teil %s\n", argv[1]); return 2; }
     printf("%s: %d Fehler\n", argv[1], g_fail);
     return g_fail ? 1 : 0;
