@@ -77,8 +77,10 @@ mitten im Kampf verlassen und Ada mit den Gorillas zuruecklassen; keine Sperre, 
 - **Message_on** LAB_800404f4: @0x80040504 `lbu a2,1(v0)` (msg), @0x80040508 `lhu a3,2(v0)`, @0x80040518 `jal 0x80027e68`,
   @0x8004051c `sll a3,a3,16` — derselbe Aufruf wie der MESSAGE-Handler (a1 = 0x300 @0x80040500).
 - RE1.5-eigene Form "Tuer -> Text": ROOM11B0 sub01 @0x01216 `46 01 01 31 0f 00 ff ff 00 00` (Aot_reset Slot 1 -> sce 1
-  msg 15, Maske 0xffff); "Text -> Tuer": ROOM1141 sub05 @0x00FDC `46 01 02 31 ..` (Nutzlast = Ziel x/y/z des
-  Door_aot_set). Runde 38 F hat 1141 genau so gesperrt (`tools/r38_dining/programme_bauen.py:322-325`, Ruecknahme :352).
+  msg 15, Maske 0xffff); ebenso ROOM11B1 sub01 @0x011C0 `46 01 01 31 0e 00 ff ff 00 00` (Elzas Parkplatz-Tuer ohne Strom
+  -> Text msg 14, je Spielbild aus sub01 unter Ck(4,0xF3)==0 @0x011A0); "Text -> Tuer": ROOM1141 sub05 @0x00FDC
+  `46 01 02 31 ..` (Nutzlast = Ziel x/y/z des Door_aot_set). Runde 38 F hat 1141 genau so gesperrt
+  (`tools/r38_dining/programme_bauen.py:322-325`, Ruecknahme :352).
 
 ### 3. RE2 Retail (Beta -> Retail) — wie RE2 eine Tuer waehrend eines Pflichtkampfes / mit wartendem Begleiter sperrt
 Zensus ueber alle 250 RDTs `info/re2leon/PL0/RDT` (eigenes Werkzeug `O_belege/re2_tuer_msg_zensus.py`, Ergebnis
@@ -106,10 +108,61 @@ Erzaehlform (`fa 02 ...`, kein Sprecherkopf).
   Wortlaut = NUTZER-VORGABE "I cannot leave Ada alone here with those monsters!".
 
 ## Umsetzung
-(offen)
 
-## Messung nachher
-(offen)
+### Ablauf (alles an Original-Stellen des Raums, die Szenen selbst laufen UNVERAENDERT aus dem RDT)
+| Zeitpunkt | Mechanik | Beleg / Form |
+|---|---|---|
+| Erster Besuch, Szene beginnt | sub01 @0x01824 Evt_exec sub02 -> Port-Programm **SZENE** = `46 00 01 31 28 00 ff ff 00 00` (Aot_reset Slot 0 -> MESSAGE msg 40, Maske 0xffff) + `18 02` Gosub sub02 + `01 00` | Zeile: ROOM11B0 sub01 @0x01216; Stelle: RE2 ROOM7040 sub06 @0x0185A (in der Kampf-Beginn-Szene vor der Rueckgabe der Steuerung). sub02 sperrt den Pad in DERSELBEN Runde (@0x01856, drittes Opcode) und gibt ihn erst @0x01ACE zurueck — die Sperre vor dem Gosub wirkt wie eine direkt vor @0x01ACE. Gosub-Huelle wie Runde 38 F SZENE1021 |
+| Kampf laeuft | Slot 0 = MESSAGE msg 40 (Typ 5 im Port) — Druck an der Tuer zeigt den Text (MESSAGE-Handler 0x80043084 = re15_scd_show_message, Maske 0xffff0000 friert die Welt wie jeder Examine-Text), kein Raumwechsel | Aot_reset LAB_80040738; sce-Tabelle PTR_8007469c[1] |
+| Wiedereintritt im Kampf ((4,64)=1, (3,67)=0) | Installer nach dem Init-Lauf: derselbe Aot_reset aus C (`re15_aot_retype(0, 1, 0x31, 40, 0xffff, 0)`), Muster dining_r38.c tuer_1131 | Bedingung = sub00 @0x017C8/@0x017D0 (Original-Zweig "Kampf laeuft weiter") |
+| Kampf-Ende | sub01 @0x01842 Evt_exec sub03 -> Port-Programm **ENDE** = `46 00 02 31 30 9c 00 00 0d 9d` (Aot_reset Slot 0 -> TUER, Nutzlast = main00 @0x01712+14) + `18 03` Gosub sub03 + `01 00` | Zeile: ROOM1141 sub05 @0x00FDC; Stelle: RE2 ROOM7040 sub07 @0x01ACC; MUSS vor sub03 @0x01C08 Aot_on(0) stehen (@0x8004082c `jalr` auf den aktuellen Handler) |
+| nach dem Kampf | (3,67)=1: kein Eingriff, die Tuer ist die Original-Tuer | sub00 @0x017CC |
+| Elza ROOM11C1 | kein Eingriff (Raum-Id 0x11C1, 5 Hunde, kein Begleiter) | ROOM11C1 sub00 @0x016F8.. |
+| fremdes RDT | FNV-Anker main00-Tuer (@0x01712, 32 B) + sub00..sub03 (@0x01768, 1188 B) — weicht ein Byte ab, bleibt alles Original | Muster dining_r38.c |
+| Stimme | MESSAGE-AOT-Weg (re15_scd_show_message) reiht im Port KEINE Stimme ein (nur Message_on). Haken: fuer ROOM11C0 msg 40 dieselbe Einreihung wie scd_queue_voice -> `synchro/STAGE1/room11C0/main40.wav` spielt nach der Ordnerregel, sobald sie liegt | PORT-WAHL (synchro = eigene Produktion, keine Byte-true-Frage); Messung nachher: `[voice] ROOM11C0 msg 40: keine Aufnahme (synchro/STAGE1/room11c0/main40.wav)` |
+
+Kein Bank-9-Bit (VERTRAG 1.1, 96 bleibt frei): Beginn/Ende tragen Original-Flags (4,64)/(3,67) und die Kill-Bits (7,0x60)/(7,0x61).
+
+### Dateien
+- NEU `re15_port/include/re15_parkplatz_r39.h` (alle Konstanten mit @0x-Beleg), `re15_port/engine/src/parkplatz_r39.c`
+  (Installer, Evt_exec-Haken, Stimme, Anker, Messhaken).
+- GENERIERT `re15_port/engine/src/gen/parkplatz_r39_programme.inc` von `re15_port/tools/r39_parkplatz/programme_bauen.py`
+  (prueft 17 Byte-Stellen des RDT, dass es genau EINE Tuer gibt und kein Aot_reset/Aot_set auf eine Tuer, baut SZENE/ENDE
+  mit Listing, den Text mit Breitenpruefung 202/139 px <= 271 und die FNV-Anker; `--pruefen` vergleicht nur).
+- HAKEN (je 1 Zeile, Kommentar "Runde 39 Spur O"): `engine/src/scd_vm.c` op_evt_exec (hinter dem Runde-38-F-Haken) und
+  re15_scd_show_message (vor re15_dialog_open_mask); `engine/src/scd_room_setup.c` Installer am Blockende;
+  `platform/pc/main.c` Boot-/CONTINUE-Installer (hinter re15_inventar_r39_install) + Messhaken (hinter
+  re15_dining_r38_messhaken). Je ein `#include`.
+- Messhaken (env-gegatet, kein Spielverhalten): `RE15_R39O_GORILLAS_STARR=1` (Gorillas im Kampf einfrieren, grid|0x20 =
+  Member_set 0x0C=0x30 @0x800410b8 wie sub02 @0x01A58), `RE15_R39O_GORILLAS_TOT=<n>` (nach n freien Kampfbildern die
+  Gorillas heraus + genau ihre Kill-Bits (7,0x60)/(7,0x61), STAGE1.BIN @0x8011b8e8-f4). Muster Runde 38 F.
+
+### Konstanten (include/re15_parkplatz_r39.h)
+| Konstante | Wert | Beleg |
+|---|---|---|
+| RE15_R39O_MSG_SPERRE | 40 | VERTRAG 1.2 (11C0 Id 40; Original 0..9, Port 10..14 = irons_tod_1150.c) |
+| RE15_R39O_TUER_SLOT / _ZIEL_RAUM | 0 / 0x1B | main00 @0x01712 pc[1] / +23 |
+| RE15_R39O_ZIEL_X/Y/Z | -25552 / 0 / -25331 | main00 @0x01712+14 `30 9c 00 00 0d 9d` |
+| RE15_R39O_SAT / _MASKE | 0x31 / 0xFFFF | main00 @0x01715; ROOM11B0 sub01 @0x01219 / @0x0121C |
+| RE15_R39O_SCE_MESSAGE / _TUER | 1 / 2 | PTR_8007469c[1] = 0x80043084, [2] = 0x800430bc |
+| RE15_R39O_SUB_SZENE / _ENDE | 2 / 3 | sub01 @0x01824 `04 0a 18 02` / @0x01842 `04 ff 18 03` |
+| RE15_R39O_ADA_BANK/BIT | 4 / 64 | sub02 @0x0184E, sub01 @0x01820 |
+| RE15_R39O_ENDE_BANK/BIT | 3 / 67 | sub03 @0x01B02, sub01 @0x0182E, sub00 @0x017D0 |
+| RE15_R39O_KILL_BANK / _1 / _2 | 7 / 0x60 / 0x61 | sub01 @0x01836/@0x0183E; sub00 @0x01784+7/@0x01798+7 |
+| RE15_R39O_GORILLA_TYP | 0x27 | sub00 @0x01784 pc[2] |
+| Text msg 40 | `04 02 25 00 3f 3d 4a 4a 4b 50 ... 08 53 45 50 44 ... 1a 01 00` | NUTZER-VORGABE; Form ROOM1090 msg 7 @0x28E6 |
+
+## Messung nachher (Stand 6bbc46d0 + Riegel, exe `re15_pc_r39o_mess.exe`; Auszuege `O_belege/nach*`)
+| Lauf | Aufbau | gemessen |
+|---|---|---|
+| nach1 | wie vor2, aber Gorillas LEBEND (RE15_R39O_GORILLAS_STARR=1), Ton-Mitschnitt RE15_AUDIO_CAP_SYNC (Stimmen laufen), Kampfende RE15_R39O_GORILLAS_TOT=1100 | F6 `[parkplatz] ... Evt_exec sub02 -> Programm SZENE`; msg 0..6 mit main00..06.wav; F1107 Steuerung zurueck; F1120/F1740/F1930 `AOT slot 0 typ 5 ev 40` (Text statt Tuer), (4,64)=1, (3,67)=0. F1741 AKTION bei (-25016,16556) Blick 3095: `[parkplatz] F1741 ROOM11C0 Tuer im Kampf -> msg 40 ...`, `[voice] ROOM11C0 msg 40: keine Aufnahme (synchro/STAGE1/room11c0/main40.wav)`; Zustands-Log `msg(a=1 fsm=1 id=40` F1742..F1867 (zweiter Druck F1804 schaltet weiter, dritter F1867 schliesst); **kein DOOR FIRE, kein Raumwechsel**. Danach GEHE (-20000,12000) angekommen F2050 = **Leon steuerbar**. F2207 Messhaken Kill-Bits -> `Evt_exec sub03 -> Programm ENDE` im selben Bild, msg 7/8/9 (main07/08 + main09), `DOOR FIRE slot=0 ... spawn=(-25552,0,-25331)` -> `loaded room11b0` = **nach dem Kampf geht die Tuer** (die Ende-Szene geht selbst hindurch). |
+| nach2 | GENAU vor2 (Plan + Env RE15_NOAUDIO=1), neuer Stand | Szene identisch: `Evt_exec sub=7` F1088, `letterbox closed` F1102 (vor2: F1088/F1102). **state.txt 11C0 F1..F1738 bitgleich mit vor2 (1738/1738 Bilder)**; F1739 derselbe Druck -> statt `DOOR FIRE slot=0` jetzt `Tuer im Kampf -> msg 40`; der Lauf bleibt danach im Raum (die Gorillas sind dort per GEGNERWEG weg, ihre Kill-Bits aber nicht gesetzt — der Kampf ist laut Original-Flags nicht vorbei, die Tuer bleibt zu; abgebrochen nach 15 min). |
+| nach3 | GENAU vor1 (Gorillas leben, Leon geht zu Fuss und stirbt unterwegs) | **state.txt bitgleich mit vor1, 2746/2746 Bilder** (Szene, Gorilla-Verhalten, Treffer, Tod, CONTINUE): Kampf und Gorillas unveraendert. |
+| int K/W/E | Riegel integration_r39_parkplatz11c0_k/w/e (s. Tests) | s. Tests |
+
+Bewertung: waehrend des Kampfes zeigt die (einzige) Tuer den Text, Leon bleibt im Raum und steuerbar; nach dem Kampf geht
+die Tuer (die Original-Ende-Szene nimmt sie selbst, beim naechsten Besuch ist sie normal, Riegel `nachher`); Szene, Kampf
+und Gorillas sind Bild fuer Bild unveraendert (nach2/nach3); Elza unberuehrt (Riegel `elza`, integration E).
 
 ## Tests
 (offen)
