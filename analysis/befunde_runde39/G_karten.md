@@ -323,3 +323,16 @@ failed out of 2)
   mapB2_correct.png zeichnet. Soll sie auf B2 als eigener kleiner Raum dazukommen (dann steht der Marker dort im Raum),
   oder bleibt B2 genau wie deine Vorlage?
 * Keine neuen Assets, keine Sprachdateien.
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-18 ~20:00)
+Grundlage: analysis/befunde_runde39/G_abnahme_0.md (Maengel M1..M5). Messwerkzeuge der Abnahme liegen im Scratchpad
+`G39abn0/` (allein.sh, allein_ausw.py, lauf.sh, VORHER-exe vorher_build) und werden fuer "nachher" wiederverwendet; die
+VORHER-Messungen der Abnahme werden NICHT wiederholt.
+
+### Fortschritt
+- [ ] M3 (hoch, Regression): Doppelwand-Korrekturen nur, wenn die verbleibende Linie gezeichnet wird
+- [ ] M4 (mittel): Treppenhaeuser 1060/10A0 - Abbildung zu den verschobenen Treppensymbolen
+- [ ] M5 (mittel): Marker neben der Zeichnung 1210/1170 Z1/1030/1110/1060/10A0 B2
+- [ ] M1 (gering): 3F-Treppe (168,107) auf Linie y110
+- [ ] M2 (gering): B1 10A0-Treppe auf der Unterkante y168
+- [ ] Bau, gezielte Tests, Abschluss
