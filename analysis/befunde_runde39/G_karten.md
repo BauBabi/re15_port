@@ -198,8 +198,19 @@ Ursache bei 10C0/1120/1060/10A0(B2): die Bbox-Streckung bildet den Raum auf das 
 rechts 0..24, unten 0..20 px frei; 2F rect 0 gemalt x 102..135 von 102..141). 1110/10E0/1170(Zone 1): die gemalte
 L-Form deckt sich nicht mit der Raumform unter dem gesetzten Spiegel (Runden 30/36 von Hand gesetzt) - offen, s.u.
 1030: AUSGELIEFERTE Zeile @0x800768c8 legt die Westkante 2 px links neben die gemalte Kachel.
-UMGESETZT (Methode wie P2, Zeile je Raum aus Wand-Paaren): 10C0 (ox 191 oy 59 sx 2415 sy 2324, Spiegel 1,1) und 1120
-(ox 204 oy 60 sx 2277 sy 2372) - Belege im Kommentar der Zeilen (re15_map_zones.h), Reste <= 1 px.
+UMGESETZT (Methode wie P2, Zeile je Raum aus Wand-Paaren, Spiegel 1,1 wie bisher): 10C0 (ox 191 oy 59 sx 2415
+sy 2324), 1120 (ox 204 oy 60 sx 2277 sy 2372), 10E0 (ox 199 oy 18 sx 2468 sy 2492) - Belege (SCA-Offsets, gemalte Linien)
+im Kommentar der Zeilen (re15_map_zones.h), Reste <= 1 px. GEGENPROBE an den Tueren (Trigger-Mitte mit der neuen Zeile
+gegen die von frueheren Runden an die GEMALTEN Tuersymbole gesetzten Marken): 10C0->10D0 (-7600,-2250) -> (135,125),
+Marke (135,126); 10C0->1060 -> (119,151), Marke (118,149); 10C0->1080 -> (114,144), Marke (113,143); 1120->1130 ->
+(153,126), Marke (153,126); 1120->1080 -> (132,147), Marke (131,146); 1120->1060 -> (136,154), Marke (136,152);
+10E0->10D0 (-8050,4300) -> (143,104), Marke (141,105) - alle <= 2 px: die Kunst ist massstabsgerecht, nur die
+Streckung auf das nominale Rechteck war falsch.
+NICHT umgesetzt (OFFEN, s.u.): 1060 (4) und 10A0 B2 (8) - Treppenhaeuser, deren Treppenmarken an der bisherigen
+Abbildung haengen; 1110 (8), 1170 Zone 1 (51) - die gemalte Form passt unter dem gesetzten Spiegel nicht zur Raumform
+(1110: Nordnase der Welt liegt gespiegelt rechts oben, gemalt ist links oben; 1170 Zone 1: Welt-L oben+rechts, Kachel
+links+unten = 180 Grad gedreht, Spiegel 0,0) - braucht eine eigene Orientierungs-Messung; 1030 (63) - die Zeile ist
+die AUSGELIEFERTE @0x800768c8, ihre Westkante liegt 2 px neben der gemalten Kachel (Original-Abweichung).
 
 ## RE-Belege
 (siehe je Punkt: P2, B1-R, P1-M; 1F/2F/3F/B2 = NUTZER-VORGABE, Form = rechte Haelften der Vorlagen, M1/M2)

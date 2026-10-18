@@ -425,6 +425,7 @@ static int teil_weg(int argc, char **argv)
  * RIEGEL (Runde 39 Spur G)
  * ===================================================================================================== */
 #include "r39_karte_b1.h"
+#include "re15_karte_r39.h"
 #include "r39_karten_soll.inc"
 
 /* ---- Punkt 2: ROOM1090 - der Marker steht in jeder begehbaren Lage auf der Zeichnung der Ebene ---------------
@@ -590,6 +591,26 @@ static int teil_pruef_b1(void)
                      a.my, b.mx, b.my, a.page, b.page, abs(a.mx - b.mx) + abs(a.my - b.my));
             CHECK(t, a.page == 0 && b.page == 0 && abs(a.mx - b.mx) + abs(a.my - b.my) <= 3);
         }
+    }
+    /* (e) Kartenhinweis-Ziel ROOM11C0 "PARKING LOT" (nach der ROOM10F0-Szene, map_hint_common.c) liegt jetzt auf einer
+     *     Schema-Zeichnung: Pseudo-Rechteck 128 + 8, die Zeichnung blinkt - rote Phase = Fuellung AKTUELL, Umriss-Phase =
+     *     nur Wandlinie (RE2 FUN_8006F1C4 @0x8006F510-14 / @0x8006F5DC, wie die Kachel), auch UNBESUCHT. */
+    {
+        int rot, umriss;
+        re15_map_visited_reset();
+        betrete(0x10F0, -5000, 5000, 0);
+        re15_inv_screen_open();
+        g_inv_screen.substate = 1; g_inv_screen.item_state = 1; g_inv_screen.map_page = 0;
+        g_inv_screen.ziel_aktiv = 1; g_inv_screen.ziel_page = 0;
+        g_inv_screen.ziel_rect = (uint8_t)(RE15_KARTE_R39_SCHEMA_RECT + R39B1_11C0);
+        g_inv_screen.ziel_rot = 1;
+        rot = r39b1_zustand(R39B1_11C0);
+        g_inv_screen.ziel_rot = 0;
+        umriss = r39b1_zustand(R39B1_11C0);
+        snprintf(t, sizeof t, "Hinweis-Ziel 11C0 (unbesucht) auf B1: rote Phase Fuellung AKTUELL (%d, soll 2), Umriss-Phase "
+                 "ohne Fuellung (%d, soll 0)", rot, umriss);
+        CHECK(t, rot == 2 && umriss == 0);
+        g_inv_screen.ziel_aktiv = 0;
     }
     return g_fail;
 }
