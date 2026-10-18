@@ -652,6 +652,18 @@ RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_
 - Gegenprobe "kommt das auch mit 180 vor?": Stoss-Spruenge > 1000 je Bild gibt es in JEDEM Lauf, auch im Vorher-Lauf
   v1141_vorher (F3536 G3 (-6982,-9418) -> (-7368,-6254)); dort blieben sie im Raum.
 
+#### Riegel, die Gorillas toeten — gegen die neue Energie geprueft
+- integration_r38_dining1141_{w,z,d,l,s,r,a} toeten die Gorillas NICHT ueber HP, sondern ueber den Runde-38-Messhaken
+  RE15_R38F_GORILLAS_TOT (dining_r38.c: nach n freien Kampfbildern "Gorillas heraus", Flags (7,0xCB)/(7,0xCC) = 1) und
+  frieren sie mit RE15_R38F_GORILLAS_STARR ein (grid|0x20 = Root-Skip) — energieunabhaengig, nichts nachzuziehen.
+  Lauf 17:41-17:56 (`ctest -j2 -R "^integration_r38_dining1141_"`): `100% tests passed, 0 tests failed out of 7` (871,8 s;
+  _z 114 s, _w 187 s, _l 45 s, _d 276 s, _r 191 s, _s 548 s, _a 290 s).
+- unit_r38_dining1141_* (10 Teile) gruen im Unit-Lauf (s. Tests); unit_r38_dining1141_abgang toetet ueber Kill-Flags, nicht HP.
+- Der einzige Riegel, der die Gorillas ueber HP-Treffer bis zum Tod fuehrt, ist unit_r39_gegner_1141_ablauf1141 (neu,
+  vorher 16 / nachher 31 Treffer je Gorilla, zugeschnitten auf 360 = 2 x 180 @0x8011f514 und `bgez` @0x80012528).
+- unit_maggot_ai (Original-Riegel, Befund D) setzt hp = -1 direkt fuer den Tod.
+
+
 
 
 

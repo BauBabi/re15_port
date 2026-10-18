@@ -30,6 +30,8 @@
 #   unit_r39_gegner_1141_ablauf1141 Phase H -> Gemaelde -> BEFREIUNG -> Kampf bis zum Tod beider Gorillas (vorher 16 / nachher
 #                                   31 Treffer je Gorilla) -> Kill-Flags (7,0xCB)/(7,0xCC) -> sub01 (4,0xF2)=0 -> Johns Abgang
 #   unit_r39_gegner_1141_affe29     Gegenprobe kleiner Affe 0x29 (ROOM3040): HP und Treffer-Antwort gleich mit Haken aus/an
+#   integration_r39_gegner_1141     echte exe ROOM1141 mit Elza: beide 0x27 mit 360 (BEFREIUNG), jeder P228-Treffer nach der
+#                                   Schwelle 36, beide Gorillas OHNE 12 / OHNE 24 / FLINCH 36, Flinch nur nach FLINCH-Eintrag
 add_executable(test_r39_gegner ${CMAKE_CURRENT_SOURCE_DIR}/test_r39_gegner.c)
 target_link_libraries(test_r39_gegner PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_gegner PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -69,4 +71,11 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_gegner_hunde1190_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_gegner_hunde1190.cmake)
     set_tests_properties(integration_r39_gegner_hunde1190 PROPERTIES TIMEOUT 900)
+    # Nachbesserung 2: Gorilla-Regel an der exe in ROOM1141 mit Elza (echter Weg 1131 -> 1141, BEFREIUNG, P228-Kampf bis F3900)
+    add_test(NAME integration_r39_gegner_1141
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_gegner_1141_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_gegner_1141.cmake)
+    set_tests_properties(integration_r39_gegner_1141 PROPERTIES TIMEOUT 1200)
 endif()
