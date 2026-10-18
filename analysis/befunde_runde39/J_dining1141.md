@@ -240,6 +240,13 @@ Alle Pruefungen gruen (Auswertung mit dem korrigierten Skript per -DAUSWERTEN, s
   help him!" im Bild von Cut 0 (Elza an der Doppeltuer), danach geht das Spiel weiter.
 - Generator-Gegenprobe: `programme_bauen.py --pruefen` fuer dining_r39_programme.inc und dining_r38_programme.inc: ok.
 
+### 4.4 Endstand mit Warte-Zeile (Commit 2d7ff566, Lauf lauf_32c2298f, integration_r39_dining1141_d Passed 340 s)
+- Punkt 6: msg 5 (John, Sprachzeile main05.wav) offen bis F2022; `[msg] room=1141 id=58` parkt bis dahin; Glasbruch F2023 und
+  F2028 (Se_on 0x3E/0x21, Takte 5546/5551); msg 6 "What was that?!" ab F2049 (= Sleep 5 + Sleep 20 nach dem ersten Glas).
+  Vorher (n1): Glas F1917 mitten in Johns Satz, msg 6 erst F2019.
+- Unveraendert: Punkt 2 John erstmals F1269 bei angezeigtem Cut 7, Cut 6 ab F1339 mit John an der Tuer; Punkt 7 0 von 268;
+  Punkt 9 Pegel Takte 9365..9390 = 0, danach MAIN32 559.
+
 ## 5. Tests
 Neu (tests/unit/probes/r39_dining1141.cmake, tests/unit/test_r39_dining1141.c, tests/integration/test_r39_dining1141.cmake):
 | Test | misst | Punkte |
