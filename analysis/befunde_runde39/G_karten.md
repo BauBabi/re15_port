@@ -742,7 +742,7 @@ Arbeitsordner der Messungen: Scratchpad `nb3/` (nicht im Baum); Werkzeuge kommen
 - [x] Messung vorher (echter Tuerweg 1090 -> 1050, Einzelzustand 1040 an der echten exe) - unten
 - [x] RE: wie RE2 Retail Tuersymbole eines ungezeichneten Raums behandelt; Linien x186/x187, x118/x119 aus MAP03.PIX - unten
 - [x] Sonde ueber ALLE Tuermarken x Zustaende (Teilmengen der beteiligten Raeume, mit/ohne Plan) - unten
-- [x] Umsetzung (re15_karte_r39_tuer_lage; B2 1210-Westende ohne 11E0, Nebenbefund) - 3f0d.., df42c697
+- [x] Umsetzung (re15_karte_r39_tuer_lage; B2 1210-Westende ohne 11E0, Nebenbefund) - 5ce60f2e, df42c697
 - [ ] Messung nachher (echte exe + Sonde), Riegel + Gegenprobe
 - [ ] gezielte Tests, Abschluss
 
@@ -846,8 +846,11 @@ blinkt bis (4,0xFC); B2 dadurch waehlbar, re15_map_ziel_blatt_frei).
   debug.log `[inv] Blatt 1: 6 RE1.5-Tuerschwenke entfernt (79 Pixel)`; x187 y70..78 = Wand, 7x Grund (0,16,88), Wand -
   die Westseite der blinkenden Zielkachel ist OFFEN. Sonde (`probe_r39_karten zielbild 1 3 1 ...`, rote Phase, ohne
   Tilgung): x187 y72..76 Koerper am Grund (5 Pixel).
-* RE2: die Raum-Kachel des Ziels traegt ihre eigene Wand (FUN_8006F1C4 zeichnet im Hinweis das Ziel-Sprite als Ganzes;
-  RoomTable @0x800aa388 - jede Kachel mit eigener Wand + Tuerhaelfte, s.o.).
+* RE2 (selbst disassembliert, re2_disasm.py): der Hinweis-Zeichner FUN_8006F1C4 zeichnet das ZIEL-Sprite als Ganzes,
+  besucht oder nicht - `bne s4,a2,0x8006f518` @0x8006f4e8 (Zielraum), Blinkphase `lbu v0,0x5c19(v0)` @0x8006f4f4, rote
+  Phase `j 0x8006f604` @0x8006f510 mit `addiu s2,s2,1` (CLUT +1), Umriss `addiu s2,zero,498` @0x8006f5dc, beide ->
+  `jal 0x8008f828` (GetClut) @0x8006f608 -> AddPrim. Das Sprite traegt seine eigene Wand und Tuerhaelfte (RoomTable
+  @0x800aa388, s.o.) - eine Zielkachel ist in RE2 deshalb immer geschlossen.
 
 ### N2 Umsetzung (Dateien, Konstanten)
 * `engine/src/karte_r39.c` NEU `re15_karte_r39_tuer_lage(st, page, kind, &mx, &my)`: eine Tuermarke, deren um eine
