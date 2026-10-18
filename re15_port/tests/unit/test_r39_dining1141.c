@@ -40,6 +40,7 @@
 #include "re15_tim.h"
 #include "re15_dining_r38.h"
 #include "re15_dining_r39.h"
+#include "re15_damage.h"   /* re15_player_equipped_weapon (Nachbesserung 1 N4.2) */
 
 #include <math.h>
 #include <stdio.h>
@@ -243,8 +244,8 @@ static void teil_texte(void)
 {
     printf("== texte ==\n");
     static const char *const soll[3] = {
-        "Elza: Oh, no, this is John! He is in Trouble, I have to help him!",
-        "John: Puuuh, that was close! I thought we end up as Gorilla meal....",
+        "Elza: Oh, no, this is John! He is in trouble, I have to help him!",
+        "John: Puuuh, that was close! I thought we end up as gorilla meal....",
         "John: Elza, follow me, I think I might have found a way out of here!",
     };
     for (int i = 0; i < 3; i++) {
@@ -289,7 +290,7 @@ static void teil_programme(void)
     static zeile_t zh[1024], zb[2048];
     const int kh = h ? zerlege(h, nh, zh, 1024) : -1;
     const int kb = b ? zerlege(b, nb, zb, 2048) : -1;
-    PRUEF(kh > 0 && kb > 0, "HAEMMERN39 %d B / BEFREIUNG39 %d B opcode-genau zerlegbar", nh, nb);
+    PRUEF(kh > 0 && kb > 0, "HAEMMERN39 %d B / ENTRIEGELN39 %d B opcode-genau zerlegbar", nh, nb);
     if (kh <= 0 || kb <= 0) return;
     /* Punkte 1/3: kein Se_on der Runde-38-Baenke 0x3C (Krachen/Stoehnen RE2 1060) / 0x3D ("Help me out." main42) */
     int alt = 0, klopf = 0, hilfe[6] = { 0 }, reihe[64], nreihe = 0, takt_ok = 1, letzter_klopf = -1;
@@ -331,33 +332,64 @@ static void teil_programme(void)
         const int erster = finde(h, nh, h1, 3, 0);
         PRUEF(erster > 0 && erster < a, "HAEMMERN39: Reaktion nach dem ersten Hilferuf (help%02d)", reihe[0]);
     }
-    /* BEFREIUNG39 */
+    /* ENTRIEGELN39 (Nachbesserung 1: die Szene am Riegel der Dachtuer, frueher BEFREIUNG39) */
     {   /* Punkt 2: Cut 7 -> Tuer auf (0x0E,0) -> Pos_set John innen vor die Tuer + Dir_set -> Tuer zu (0x0E,1) -> Cut 6 */
         const int16_t tx = RE15_R39J_JOHN_TUER_X, tz = RE15_R39J_JOHN_TUER_Z;
         const uint8_t c7[2] = { 0x29, RE15_R39J_CUT_ELZA }, auf[3] = { 0x36, 0x0E, 0x00 }, zu[3] = { 0x36, 0x0E, 0x01 };
         const uint8_t pos[8] = { 0x32, 0x00, (uint8_t)tx, (uint8_t)((uint16_t)tx >> 8), 0, 0, (uint8_t)tz, (uint8_t)((uint16_t)tz >> 8) };
         const uint8_t dir[8] = { 0x33, 0x00, 0x00, 0x00, (uint8_t)RE15_R39J_JOHN_TUER_YAW, (uint8_t)(RE15_R39J_JOHN_TUER_YAW >> 8), 0, 0 };
         const uint8_t c6[2] = { 0x29, RE15_R39J_CUT_TUER };
-        const int i7 = finde(b, nb, c7, 2, 0x0C8), ia = finde(b, nb, auf, 3, i7 > 0 ? i7 : 0);
+        const int i7 = finde(b, nb, c7, 2, 0), ia = finde(b, nb, auf, 3, i7 > 0 ? i7 : 0);
         const int ip = finde(b, nb, pos, 8, ia > 0 ? ia : 0), id = finde(b, nb, dir, 8, ip > 0 ? ip : 0);
         const int iz = finde(b, nb, zu, 3, id > 0 ? id : 0), i6 = finde(b, nb, c6, 2, iz > 0 ? iz : 0);
         PRUEF(i7 > 0 && ia > i7 && ip > ia && id > ip && iz > id && i6 > iz,
-              "BEFREIUNG39 Punkt 2: Cut 7 @+%04X, Tuer auf @+%04X, John Pos_set (%d,%d) @+%04X + Dir_set %d, Tuer zu @+%04X, Cut 6 @+%04X",
+              "ENTRIEGELN39 Punkt 2: Cut 7 @+%04X, Tuer auf @+%04X, John Pos_set (%d,%d) @+%04X + Dir_set %d, Tuer zu @+%04X, Cut 6 @+%04X",
               i7, ia, tx, tz, ip, RE15_R39J_JOHN_TUER_YAW, iz, i6);
         const int16_t ex = RE15_R39J_ELZA_VORNE_X, ez = RE15_R39J_ELZA_VORNE_Z;
-        const uint8_t walk[8] = { 0x40, 0x00, 0x04, 0x00, (uint8_t)ex, (uint8_t)((uint16_t)ex >> 8), (uint8_t)ez, (uint8_t)((uint16_t)ez >> 8) };
+        const uint8_t walk[8] = { 0x40, 0x00, 0x05, 0x00, (uint8_t)ex, (uint8_t)((uint16_t)ex >> 8), (uint8_t)ez, (uint8_t)((uint16_t)ez >> 8) };
         const int iw = finde(b, nb, walk, 8, 0);
-        PRUEF(iw > 0 && iw < i7, "BEFREIUNG39 Punkt 2: Elza WALK (%d,%d) vor Cut 7 (Bild von vorn)", ex, ez);
+        PRUEF(iw > 0 && iw < i7, "ENTRIEGELN39 N4.2: Elza RUN (%d,%d) vor Cut 7 (rennt zur anderen Kamera)", ex, ez);
+        /* N4.2: Programm beginnt mit sub05 @0x00FC8..@0x00FDB bytegleich (Riegel-Slot aus, (4,0xC3)=1, msg 12, Evt_next) */
+        static const uint8_t sub05[20] = { 0x46, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0x22, 0x04, 0xC3, 0x01, 0x2B, 0x0C, 0xFF, 0xFF, 0x02, 0x00 };
+        PRUEF(nb > 20 && !memcmp(b, sub05, 20), "ENTRIEGELN39 N4.2: Anfang = ROOM1141 sub05 @0x00FC8..@0x00FDB (msg 12 \"You've opened the lock.\")");
+        /* N4.2: nach Cut 7 TURN zur Tuer, dann Spieler-Plc_motion(2,6) (Form ROOM3060 @0x010BA/@0x010BE + Sleep 40 @0x010C2), vor Tuer auf */
+        const uint8_t heben[12] = { 0x2E, 0x01, 0x00, 0x00, 0x3F, RE15_R39J_W_SUB, RE15_R39J_W_CLIP_HEBEN, 0x00, 0x09, 0x0A, 0x28, 0x00 };
+        const uint8_t turn[4] = { 0x40, 0x00, 0x09, 0x00 };
+        const int it = finde(b, nb, turn, 4, i7 > 0 ? i7 : 0), ih = finde(b, nb, heben + 4, 8, it > 0 ? it : 0);
+        PRUEF(it > i7 && ih > it && ih < ia, "ENTRIEGELN39 N4.2: Cut 7 -> TURN zur Tuer @+%04X -> Plc_motion(2,6) + Sleep 40 @+%04X -> Tuer auf @+%04X",
+              it, ih, ia);
+        const uint8_t senken[8] = { 0x3F, RE15_R39J_W_SUB, RE15_R39J_W_CLIP_HEBEN, 0x00, 0x43, 0x00, 0x80, 0x00 };
+        const int is = finde(b, nb, senken, 8, i6 > 0 ? i6 : 0);
+        PRUEF(is > i6, "ENTRIEGELN39 N4.2: Waffe senken = Plc_motion(2,6) + Plc_flg 0x80 (ROOM1021 @0x020EA/@0x020EE) nach Cut 6 (@+%04X)", is);
+    }
+    {   /* N4.1: ROLLTOR39 = Gemaelde-Frage, Rolladen mit Ton, Steuerung zurueck (sub06 @0x010C8..@0x010D8), Merker aus */
+        int nr = 0;
+        const uint8_t *r = re15_dining_r39_programm(2, &nr);
+        static const uint8_t frage[4] = { 0x2B, 0x0D, 0x80, 0xFF }, ende[12] = { 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1B, 0x00, 0x3C, 0x01, 0x2E, 0x01 };
+        const uint8_t merker_aus[6] = { 0x22, RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT, 0x00, 0x01, 0x00 };
+        static const uint8_t ton[3] = { 0x36, 0x3B, 0x0C }, john[2] = { 0x2E, 0x02 }, c7r[2] = { 0x29, 0x07 };
+        PRUEF(r && nr > 40 && !memcmp(r, frage, 4) && finde(r, nr, ton, 3, 0) > 0 && finde(r, nr, ende, 12, 0) > 0 &&
+              !memcmp(r + nr - 6, merker_aus, 6) && finde(r, nr, john, 2, 0) < 0 && finde(r, nr, c7r, 2, 0) < 0,
+              "ROLLTOR39 N4.1: Frage msg 13, Rolladen-Ton, Steuerung zurueck, Merker (5,0x10) aus, kein John/kein Cut 7 (%d B)", nr);
+        /* N4.1/M1: HAEMMERN39 laeuft bis zum Entriegeln; die Reaktion wartet auf Merker und Pad-Sperre */
+        static const uint8_t schleife[4] = { 0x21, 0x04, 0xC3, 0x00 };
+        const uint8_t warte_m[8] = { 0x0F, 0x04, 0x08, 0x00, 0x21, RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT, 0x01 };
+        static const uint8_t warte_p[8] = { 0x0F, 0x04, 0x08, 0x00, 0x21, 0x02, 0x07, 0x01 };
+        const uint8_t m50[4] = { 0x2B, RE15_R39J_MSG_REAKTION, 0x00, 0x00 };
+        const int iwm = finde(h, nh, warte_m, 8, 0), iwp = finde(h, nh, warte_p, 8, 0), i50 = finde(h, nh, m50, 4, 0);
+        PRUEF(nh > 14 && !memcmp(h + 14, schleife, 4), "HAEMMERN39 N4.1: While Ck(4,0xC3)==0 (main00 @0x00A76) statt bis zum Rolladen");
+        PRUEF(iwm > 0 && iwp > iwm && i50 > iwp && finde(h, nh, schleife, 4, iwp) < i50,
+              "HAEMMERN39 M1: Reaktion wartet auf Merker (5,0x10) und Pad-Sperre (2,7), dann Ck(4,0xC3)==0, dann msg 50");
     }
     {   /* Punkt 6: zwei Se_on(0x3E,0x21) mit Sleep 5 dazwischen unmittelbar vor `09 0a 14 00` + Message_on 6 */
         const uint8_t g[24] = { 0x36, RE15_R39J_SE_BANK, RE15_R39J_SATZ_GLAS, 0,0,0,0,0,0,0,0,0, 0x09, 0x0A, 0x05, 0x00,
                                 0x36, RE15_R39J_SE_BANK, RE15_R39J_SATZ_GLAS, 0,0,0,0,0 };
         const uint8_t m6[8] = { 0x09, 0x0A, 0x14, 0x00, 0x2B, 0x06, 0x00, 0x00 };
         const int ig = finde(b, nb, g, 24, 0), i6 = finde(b, nb, m6, 8, 0);
-        PRUEF(ig > 0 && i6 == ig + 28, "BEFREIUNG39 Punkt 6: Glasbruch x2 (RE2 ROOM1090 @0x02BB0..@0x02BC0) direkt vor Sleep 20 + "
+        PRUEF(ig > 0 && i6 == ig + 28, "ENTRIEGELN39 Punkt 6: Glasbruch x2 (RE2 ROOM1090 @0x02BB0..@0x02BC0) direkt vor Sleep 20 + "
                                        "msg 6 \"What was that?!\" (@+%04X, msg 6 @+%04X)", ig, i6 + 4);
         PRUEF(ig >= 4 && b[ig - 4] == 0x2B && b[ig - 3] == RE15_R39J_MSG_STIMME_WARTEN && b[ig - 2] == 0 && b[ig - 1] == 0,
-              "BEFREIUNG39 Punkt 6: davor Message_on 58 = Warten auf das Ende von Johns Sprachzeile (msg 5)");
+              "ENTRIEGELN39 Punkt 6: davor Message_on 58 = Warten auf das Ende von Johns Sprachzeile (msg 5)");
         static const uint8_t pc58[4] = { 0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00 }, pc6[4] = { 0x2B, 0x06, 0x00, 0x00 };
         const unsigned alt_raum = g_current_room_id;
         g_current_room_id = 0x1141u;
@@ -375,22 +407,32 @@ static void teil_programme(void)
         int it = -1, k = 0;
         for (int i = finde(b, nb, t, 10, 0); i >= 0; i = finde(b, nb, t, 10, i + 1)) { it = i; k++; }
         const int i9 = finde(b, nb, m9, 4, 0);
-        PRUEF(k == 2 && it > 0 && i9 > it, "BEFREIUNG39 Punkt 7: John TURN -> Elza + Gosub sub04 auch vor msg 9 (%d Stellen, "
+        PRUEF(k == 2 && it > 0 && i9 > it, "ENTRIEGELN39 Punkt 7: John TURN -> Elza + Gosub sub04 auch vor msg 9 (%d Stellen, "
                                            "letzte @+%04X, msg 9 @+%04X)", k, it, i9);
     }
     {   /* Punkt 8: nach der Warteschleife (4,0xF2): Cut 8, msg 51 + Gesten (0,15)/(0,23), Plc_motion(2,6), msg 52 */
         const uint8_t w[4] = { 0x21, 0x04, 0xF2, 0x01 }, c8[2] = { 0x29, RE15_R39J_CUT_GESPRAECH };
         const uint8_t m51[4] = { 0x2B, RE15_R39J_MSG_PUH, 0, 0 }, m52[4] = { 0x2B, RE15_R39J_MSG_FOLGEN, 0, 0 };
-        const uint8_t g15[4] = { 0x3F, 0x00, 0x0F, 0x00 }, g23[4] = { 0x3F, 0x00, 0x17, 0x00 }, wink[4] = { 0x3F, 0x02, 0x06, 0x00 };
+        const uint8_t g15[4] = { 0x3F, 0x00, 0x0F, 0x00 }, g23[4] = { 0x3F, 0x00, 0x17, 0x00 }, wink[4] = { 0x3F, 0x00, 0x11, 0x00 };
+        const uint8_t ziel[4] = { 0x3F, 0x02, 0x06, 0x00 };
         const int iw = finde(b, nb, w, 4, 0), i8 = finde(b, nb, c8, 2, iw > 0 ? iw : 0);
         const int i51 = finde(b, nb, m51, 4, i8 > 0 ? i8 : 0), i15 = finde(b, nb, g15, 4, i51 > 0 ? i51 : 0);
-        const int i23 = finde(b, nb, g23, 4, i15 > 0 ? i15 : 0), iwk = finde(b, nb, wink, 4, i23 > 0 ? i23 : 0);
-        const int i52 = finde(b, nb, m52, 4, iwk > 0 ? iwk : 0);
-        PRUEF(iw > 0 && i8 > iw && i51 > i8 && i15 > i51 && i23 > i15 && iwk > i23 && i52 > iwk,
-              "BEFREIUNG39 Punkt 8: Gorillas tot -> Cut 8 -> msg 51 + Gesten 15/23 -> Heranwinken (2,6) -> msg 52");
+        const int i23 = finde(b, nb, g23, 4, i15 > 0 ? i15 : 0), i52 = finde(b, nb, m52, 4, i23 > 0 ? i23 : 0);
+        const int iwk = finde(b, nb, wink, 4, i52 > 0 ? i52 : 0);
+        PRUEF(iw > 0 && i8 > iw && i51 > i8 && i15 > i51 && i23 > i15 && i52 > i23 && iwk > i52,
+              "ENTRIEGELN39 Punkt 8: Gorillas tot -> Cut 8 -> msg 51 + Gesten 15/23 -> msg 52 + Folge-Geste Clip 17 (M2)");
         const uint8_t run[4] = { 0x40, 0x00, 0x05, 0x01 };
         const int ir = finde(b, nb, run, 4, i52 > 0 ? i52 : 0);
-        PRUEF(ir > i52, "BEFREIUNG39 Punkt 8: Johns Abgang (RUN) erst NACH msg 52");
+        PRUEF(ir > iwk, "ENTRIEGELN39 Punkt 8: Johns Abgang (RUN) erst NACH msg 52 und der Geste");
+        const int iz = finde(b, nb, ziel, 4, i8 > 0 ? i8 : 0);
+        PRUEF(iz < 0 || iz > ir, "ENTRIEGELN39 M2/N4.4: kein Plc_motion(2,6) (= Zielen, ROOM1021 @0x020C6) zwischen Cut 8 und Johns Abgang");
+        /* M3: John Pos_set an seinen Platz im selben Takt wie der Schnitt (vor dem ersten Sleep nach Cut_chg 8) */
+        const int16_t jx = RE15_R39J_ECKE_X, jz = RE15_R39J_ECKE_Z;
+        const uint8_t jpos[8] = { 0x32, 0x00, (uint8_t)jx, (uint8_t)((uint16_t)jx >> 8), 0, 0, (uint8_t)jz, (uint8_t)((uint16_t)jz >> 8) };
+        static const uint8_t sl[2] = { 0x09, 0x0A };
+        const int ijp = finde(b, nb, jpos, 8, i8 > 0 ? i8 : 0), isl = finde(b, nb, sl, 2, i8 > 0 ? i8 : 0);
+        PRUEF(ijp > i8 && ijp < isl, "ENTRIEGELN39 M3: John Pos_set (%d,%d) @+%04X im Schnittbild von Cut 8 (vor dem ersten Sleep @+%04X)",
+              jx, jz, ijp, isl);
     }
 }
 
@@ -491,22 +533,69 @@ static void teil_phase_h(void)
         if (re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT)) ja_bild = s_bild;
     }
     PRUEF(ja_bild >= 0, "Gemaelde: \"ja\" -> (3,0x6A) = 1 in Bild %ld", ja_bild);
-    /* Tuer-Auftritt und Szene bis zur Rueckgabe der Steuerung */
+    /* Nachbesserung 1 N4.1: nach dem Rolladen gibt ROLLTOR39 die Steuerung zurueck, John bleibt draussen, es klopft weiter */
+    long frei_nach_rolladen = -1;
+    int merker_an = 0;
+    for (int f = 0; f < 600 && frei_nach_rolladen < 0; f++) {
+        frame(0, 0);
+        if (re15_game_flag_get(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT)) merker_an = 1;
+        if (g_scd.player_mode == 0 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 0x1B) &&
+            !re15_game_flag_get(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT) && s_bild > ja_bild + 30) frei_nach_rolladen = s_bild;
+    }
+    PRUEF(merker_an && frei_nach_rolladen > 0, "N4.1: nach dem Rolladen Steuerung frei (Bild %ld), Merker (5,0x10) war an und ist "
+          "wieder aus", frei_nach_rolladen);
+    PRUEF(re15_dining_r38_phase_h() == 1 && re15_game_flag_get(4, 0xC3) == 0 && john->x == RE15_R39J_PARK_X,
+          "N4.1: Phase H laeuft weiter (Dachtuer verriegelt), John draussen (geparkt)");
+    {   /* frei laufen: 200 Bilder vorwaerts gehen, Elza bewegt sich; das Klopfen laeuft weiter */
+        const int32_t x0 = pl->x, z0 = pl->z;
+        const int se0 = s_n_se;
+        pl->rot_y = 3072;
+        for (int f = 0; f < 260; f++) frame(RE15_PAD_BIT_UP, f == 0 ? RE15_PAD_BIT_UP : 0);
+        const long weg = (long)labs((long)(pl->x - x0)) + (long)labs((long)(pl->z - z0));
+        int klopf = 0;
+        for (int i = se0; i < s_n_se; i++) if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz == RE15_R39J_SATZ_KLOPFEN) klopf++;
+        for (int f = 0; f < 400 && klopf == 0; f++) {
+            frame(0, 0);
+            for (int i = se0; i < s_n_se; i++) if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz == RE15_R39J_SATZ_KLOPFEN) klopf++;
+        }
+        PRUEF(weg > 300, "N4.1: Elza laeuft nach dem Rolladen frei (Weg %ld)", weg);
+        PRUEF(klopf > 0, "N4.1: John klopft weiter, solange die Dachtuer verriegelt ist (%d Schlaege)", klopf);
+    }
+    /* Nachbesserung 1 N4.2: Riegel der Dachtuer (Ereignis 5) - msg 12, dann die Szene */
+    /* Elzas Inventar ist hier leer (Elza-Starttabelle @0x80074bc4 ohne Messer, re15_messer.h): eine Pistole hineinlegen,
+     * nicht ausgeruestet - die Regel des Nutzers verlangt, dass sie diese hebt (Fall Messer: Teil fenster). */
+    (void)re15_inv_grant(0x03, 15);
+    int waffe_vorher = re15_player_equipped_weapon();
+    printf("    Inventar beim Entriegeln:"); for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) printf(" %02x/%u", g_inv.slots[i].id, g_inv.slots[i].qty); printf("\n");
+    druck_t riegel = druecke(-7250, -250 - 620, 3072, 1);
+    PRUEF(!riegel.raumwechsel, "Riegel: kein Raumwechsel beim Entriegeln");
+    int msg12 = 0;
     int msgs[64], n_msg = 0, pm2 = 0;
     long frei_bild = -1, bild_auf = -1, bild_zu = -1, bild_cut6 = -1, bild_cut7 = -1, bild_john_da = -1, bild_msg6 = -1;
-    long bild_glas2 = -1;
-    int cut_beim_auftauchen = -1, john_sichtbar_vor_cut6 = 0, elza_in_cut7 = 0, john_in_cut6 = 0;
-    int blick9 = -1, blick_fehl = 0, blick_n = 0;
+    long bild_glas2 = -1, bild_heben = -1, bild_senken = -1, bild_steht = -1;
+    int cut_beim_auftauchen = -1, john_sichtbar_vor_cut6 = 0, elza_in_cut7 = 0, john_in_cut6 = 0, cut_beim_heben = -1;
+    int blick9 = -1, blick_fehl = 0, blick_n = 0, gerannt = 0, cuts_lauf[16], n_cuts_lauf = 0, w_vorwaerts_beim_heben = 0;
     last = -1;
     for (int f = 0; f < 6000; f++) {
-        frame(0, 0);
+        uint16_t e = (g_scd.message_active && g_scd.message_id == 12 && (f % 15) == 0) ? RE15_PAD_BIT_SQUARE : 0;
+        frame(e, e);
         if (g_scd.message_active && (int)g_scd.message_id != last) {
             last = (int)g_scd.message_id;
             if (n_msg < 64) msgs[n_msg++] = last;
+            if (last == 12) msg12 = 1;
             if (last == 6) bild_msg6 = s_bild;
             if (last == 9) blick9 = ausgerichtet(john, pl, 128);
         }
         if (!g_scd.message_active) last = -1;
+        if (g_scd.player_mode == 2 && bild_steht < 0 && labs((long)pl->z + 870L) > 1000L) gerannt = 1;
+        if (bild_cut7 < 0 && n_cuts_lauf < 16 && (n_cuts_lauf == 0 || cuts_lauf[n_cuts_lauf - 1] != s_shown) && bild_heben < 0)
+            cuts_lauf[n_cuts_lauf++] = s_shown;
+        if (bild_steht < 0 && abs(pl->x - RE15_R39J_ELZA_VORNE_X) < 150 && abs(pl->z - RE15_R39J_ELZA_VORNE_Z) < 150) bild_steht = s_bild;
+        if (bild_heben < 0 && re15_dining_r39_w_clip() == RE15_R39J_W_CLIP_HEBEN) {
+            bild_heben = s_bild; cut_beim_heben = s_shown; w_vorwaerts_beim_heben = !(pl->anim_flags & 0x80);
+        }
+        if (bild_heben >= 0 && bild_senken < 0 && re15_dining_r39_w_clip() == RE15_R39J_W_CLIP_HEBEN && (pl->anim_flags & 0x80))
+            bild_senken = s_bild;
         /* Blick Johns waehrend msg 9..11 (Punkt 7) */
         if (g_scd.message_active && g_scd.message_id >= 9 && g_scd.message_id <= 11) { blick_n++; if (!ausgerichtet(john, pl, 160)) blick_fehl++; }
         if (bild_john_da < 0 && john->x > -29000) { bild_john_da = s_bild; cut_beim_auftauchen = s_shown; }
@@ -522,8 +611,22 @@ static void teil_phase_h(void)
         if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz == RE15_R39J_SATZ_GLAS) bild_glas2 = s_se[i].bild;
     }
     printf("    Nachrichten:"); for (int i = 0; i < n_msg; i++) printf(" %d", msgs[i]); printf("\n");
-    printf("    Cut 7 ab Bild %ld, Tuer auf %ld, John da %ld (angezeigter Cut %d), Tuer zu %ld, Cut 6 ab %ld\n",
-           bild_cut7, bild_auf, bild_john_da, cut_beim_auftauchen, bild_zu, bild_cut6);
+    printf("    Kameras beim Lauf:"); for (int i = 0; i < n_cuts_lauf; i++) printf(" %d", cuts_lauf[i]); printf("\n");
+    printf("    Elza steht %ld, Cut 7 ab Bild %ld, Waffe hoch %ld (Cut %d), Tuer auf %ld, John da %ld (angezeigter Cut %d), "
+           "Tuer zu %ld, Cut 6 ab %ld, Waffe runter %ld\n", bild_steht, bild_cut7, bild_heben, cut_beim_heben, bild_auf,
+           bild_john_da, cut_beim_auftauchen, bild_zu, bild_cut6, bild_senken);
+    PRUEF(msg12, "N4.2: Riegel -> msg 12 \"You've opened the lock.\" (sub05 @0x00FD6)");
+    PRUEF(re15_game_flag_get(4, 0xC3) == 1, "N4.2: (4,0xC3) = 1 (sub05 @0x00FD2)");
+    PRUEF(gerannt && bild_steht > 0, "N4.2: Elza rennt vom Riegel in den Raum (Bild %ld am Ziel)", bild_steht);
+    {
+        const int w = re15_player_equipped_weapon();
+        PRUEF(w >= 3 && w != 9 && w != 10 && w != 11 && re15_inv_find_item((uint8_t)w) >= 0,
+              "N4.2: Elza hebt eine Schusswaffe aus dem Inventar (Waffe %d, vorher %d)", w, waffe_vorher);
+    }
+    PRUEF(bild_heben > bild_steht && cut_beim_heben == RE15_R39J_CUT_ELZA && w_vorwaerts_beim_heben,
+          "N4.2: Waffe heben = Plc_motion(2,6) W-Bank-Clip 6 vorwaerts, nachdem sie steht, bei Kamera Cut 7 (Bild %ld)", bild_heben);
+    PRUEF(bild_auf > bild_heben, "N4.2: erst Waffe heben (Bild %ld), dann Tuer auf (Bild %ld)", bild_heben, bild_auf);
+    PRUEF(bild_senken > bild_cut6, "N4.2: Waffe runter (Bild %ld) erst nach dem Blick auf John (Cut 6 ab %ld)", bild_senken, bild_cut6);
     PRUEF(bild_cut7 > ja_bild && elza_in_cut7, "Punkt 2: Kamera vorne auf Elza (Cut 7, Elza im Bild) ab Bild %ld", bild_cut7);
     PRUEF(bild_auf >= bild_cut7 && bild_john_da >= bild_auf && cut_beim_auftauchen == RE15_R39J_CUT_ELZA,
           "Punkt 2: waehrend die Tuer aufgeht (Bild %ld) kommt John herein, Kamera zeigt Cut %d (Elza)", bild_auf, cut_beim_auftauchen);
@@ -537,16 +640,16 @@ static void teil_phase_h(void)
     PRUEF(blick_n > 0 && blick_fehl == 0, "Punkt 7: John blickt waehrend msg 9..11 zu Elza (%d von %d Bildern daneben, Kegel 160)",
           blick_fehl, blick_n);
     PRUEF(frei_bild > 0, "Steuerung nach der Szene zurueck (Bild %ld)", frei_bild);
-    {   /* Runde 38 weiter gueltig: Rolladen-Ton in der Folge von ROOM1131 sub02; nach dem "ja" kein Klopfen/Hilferuf mehr */
+    {   /* Runde 38 weiter gueltig: Rolladen-Ton in der Folge von ROOM1131 sub02; nach dem Entriegeln kein Klopfen/Hilferuf */
         int r0 = -1, r1 = -1, r2 = -1, danach = 0;
         for (int i = se_vorher; i < s_n_se; i++) {
             if (s_se[i].bank == 0x3B && s_se[i].satz == 0x0C && r0 < 0) r0 = i;
             if (s_se[i].bank == 0x3B && s_se[i].satz == 0x0A && r1 < 0) r1 = i;
             if (s_se[i].bank == 0x3B && s_se[i].satz == 0x0B && r2 < 0) r2 = i;
-            if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz != RE15_R39J_SATZ_GLAS && s_se[i].bild > ja_bild) danach++;
+            if (s_se[i].bank == RE15_R39J_SE_BANK && s_se[i].satz != RE15_R39J_SATZ_GLAS && bild_steht > 0 && s_se[i].bild > bild_steht) danach++;
         }
         PRUEF(r0 >= 0 && r1 > r0 && r2 > r1, "Rolladen-Ton 0x3B 0x0C, 0x0A, 0x0B in der Folge von ROOM1131 sub02 (Runde 38)");
-        PRUEF(danach == 0, "nach dem \"ja\" kein Klopfen/Hilferuf mehr (%d)", danach);
+        PRUEF(danach == 0, "nach dem Entriegeln kein Klopfen/Hilferuf mehr (%d)", danach);
     }
     /* Kampf: Gorillas einfrieren, John in die Ecke, Sperre */
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
@@ -566,6 +669,8 @@ static void teil_phase_h(void)
     re15_game_flag_set(7, 0xCB, 1);
     re15_game_flag_set(7, 0xCC, 1);
     int m51 = -1, m52 = -1, geste15 = 0, geste23 = 0, wink = 0, cut8 = 0, blick51 = -1, park = -1, k = 0, elza_verschoben = 0;
+    int zielt_auf_elza = 0, sprung_max = 0, sprung_bild = -1, vor_cut = s_shown;
+    int32_t vor_jx = john->x, vor_jz = john->z;
     long min_d2 = -1;
     int vor_sicht = 0, park_cut_vorher = -1, park_cut = -1, park_sicht = 1, sicht_cut7 = 0;
     long b51 = -1, b52 = -1, b_run = -1;
@@ -573,6 +678,15 @@ static void teil_phase_h(void)
     for (int f = 0; f < 4000; f++) {
         frame(0, 0);
         if (s_shown == RE15_R39J_CUT_GESPRAECH) cut8 = 1;
+        {   /* Nachbesserung 1 M3 (Runde-38-Pruefung "John springt nie"): Schritt je Bild ohne Kameraschnitt, im Bild */
+            const int dx = (int)(john->x - vor_jx), dz = (int)(john->z - vor_jz);
+            const int schritt = abs(dx) > abs(dz) ? abs(dx) : abs(dz);
+            const int geht = (john->state == 4 && (john->sub_state_1 == 4 || john->sub_state_1 == 5 ||
+                                                   john->sub_state_1 == 7 || john->sub_state_1 == 8));   /* Walk-Subs 0x80076ca0 */
+            if (!geht && s_shown == vor_cut && john->x > -29000 && vor_jx > -29000 && sichtbar(s_shown, john) && schritt > sprung_max) {
+                sprung_max = schritt; sprung_bild = (int)s_bild; }
+            vor_jx = john->x; vor_jz = john->z; vor_cut = s_shown;
+        }
         if (g_scd.message_active && (int)g_scd.message_id != last) {
             last = (int)g_scd.message_id;
             if (last == RE15_R39J_MSG_PUH) { m51 = k++; b51 = s_bild; blick51 = ausgerichtet(john, pl, 128); }
@@ -581,7 +695,8 @@ static void teil_phase_h(void)
         if (!g_scd.message_active) last = -1;
         if (b51 >= 0 && b52 < 0 && john->sub_state_1 == 0 && john->motion == 15) geste15 = 1;
         if (b51 >= 0 && b52 < 0 && john->sub_state_1 == 0 && john->motion == 23) geste23 = 1;
-        if (b51 >= 0 && john->sub_state_1 == 2 && john->motion == 6) wink = 1;
+        if (b52 >= 0 && john->sub_state_1 == 0 && john->motion == 17) wink = 1;   /* Nachbesserung 1 M2: Clip 17 */
+        if (b51 >= 0 && b_run < 0 && john->sub_state_1 == 2 && john->motion == 6) zielt_auf_elza++;
         if (b52 >= 0 && b_run < 0 && john->state == 4 && john->sub_state_1 == 5) b_run = s_bild;
         if (b_run >= 0 && john->x > -29000) {   /* Runde 38 Nachbesserung 1 M3 weiter gueltig: kein Schub, Abstand im Bild */
             if (abs(pl->x - RE15_R39J_ELZA_NACH_X) > 50 || abs(pl->z - RE15_R39J_ELZA_NACH_Z) > 50) elza_verschoben++;
@@ -594,11 +709,14 @@ static void teil_phase_h(void)
         if (john->x <= -29000 && park < 0 && b52 >= 0) { park = (int)s_bild; park_cut = park_cut_vorher; park_sicht = vor_sicht; break; }
     }
     PRUEF(cut8, "Punkt 8: Kamera Cut 8 (Suedwest-Ecke) nach dem Tod der Gorillas");
+    PRUEF(sprung_max <= 40, "M3: John springt nie im Bild (groesster Schritt je Bild ohne Schnitt und ohne Lauf-Sub %d, Bild %d; Abnahme: 138)",
+          sprung_max, sprung_bild);
     PRUEF(abs(pl->x - RE15_R39J_ELZA_NACH_X) < 200 && abs(pl->z - RE15_R39J_ELZA_NACH_Z) < 200, "Punkt 8: Elza bei (%d,%d)", pl->x, pl->z);
     PRUEF(m51 == 0 && m52 == 1 && b52 > b51, "Punkt 8: msg 51 (Bild %ld) vor msg 52 (Bild %ld)", b51, b52);
     PRUEF(blick51 == 1, "Punkt 8: John blickt bei msg 51 zu Elza");
     PRUEF(geste15 && geste23, "Punkt 8: zu msg 51 Johns Gesten Clip 15 und 23 (Form sub02 @0x00CB8/@0x00CCC)");
-    PRUEF(wink, "Punkt 8: zu msg 52 Heranwinken Sub 2 Clip 6 (Form sub02 @0x00C78 / ROOM1171 @0x014C2)");
+    PRUEF(wink, "Punkt 8 / M2: zu msg 52 die Folge-Geste Clip 17 (John 1141 @0x00DBA, ROOM3070 @0x03724)");
+    PRUEF(zielt_auf_elza == 0, "M2/N4.4: John richtet im Gespraech nie die Waffe auf Elza (Sub 2 Clip 6: %d Bilder)", zielt_auf_elza);
     PRUEF(b_run > b52, "Punkt 8: John laeuft erst nach msg 52 los (Bild %ld)", b_run);
     PRUEF(elza_verschoben == 0, "Abgang: Elza wird nicht verschoben (Runde 38 M3, %d Bilder)", elza_verschoben);
     PRUEF(min_d2 < 0 || min_d2 > 900L * 900L, "Abgang: John im Bild nie naeher als 900 an Elza (Runde 38 M3; min %ld)",
@@ -625,6 +743,87 @@ static void teil_phase_h(void)
     int john_da = 0;
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == RE15_R38F_JOHN_TYP) john_da = 1;
     PRUEF(!john_da && re15_dining_r38_phase_h() == 0, "Wiederbetreten: kein John, keine Phase H");
+}
+
+/* ---- Teil: fenster (Nachbesserung 1, M1 + N4.1) ---------------------------------------------------------------------
+ * Abnahme 0 Lauf F: Gemaelde-Frage zwischen erstem Hilferuf (F75) und Reaktion (F165) geoeffnet, "ja" -> msg 50 erschien
+ * mitten in der Rolladen-Szene. Jetzt: die Reaktion wartet, bis ROLLTOR39 fertig ist (Merker (5,0x10), Pad-Sperre (2,7)),
+ * und kommt dann genau einmal, solange die Dachtuer verriegelt ist. Danach Wiederbetreten mit offenem Rolladen (Phase H
+ * weiter: Klopfen, kein Gemaelde, Riegel = Ereignis 5, keine zweite Reaktion) und Entriegeln von dort. */
+static void teil_fenster(void)
+{
+    printf("== fenster ==\n");
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_game_flag_set(RE15_R38F_F0_BANK, RE15_R38F_F0_BIT, 1);
+    if (room_boot(RE15_R38F_RAUM_1141, -8300, -10250, 2048, 0) != 0) return;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *john = &g_actors[1];
+    long ruf = -1;
+    for (int f = 0; f < 400 && ruf < 0; f++) { frame(0, 0); if (g_re15_r39j_se_zaehler[2] > 0) ruf = s_bild; }
+    for (int f = 0; f < 5; f++) frame(0, 0);
+    PRUEF(ruf > 0 && !g_scd.message_active && re15_game_flag_get(9, RE15_R39J_BIT_REAKTION) == 0,
+          "erster Hilferuf Bild %ld, Reaktion noch nicht da (Fenster der Abnahme F75..F165)", ruf);
+    /* Gemaelde im Fenster: Quadrat, Frage, "ja" */
+    pl->x = -8300; pl->z = -10250; pl->rot_y = 2048;
+    long ja = -1, b50 = -1, frei = -1, merker_bei_50 = -1, roll_bei_50 = -1;
+    int n50 = 0, last = -1, merker_gesehen = 0;
+    for (int f = 0; f < 1500; f++) {
+        uint16_t e = (f == 0 || (g_scd.message_active && g_scd.message_id == 13 && (f % 20) == 0)) ? RE15_PAD_BIT_SQUARE : 0;
+        frame(e, e);
+        if (ja < 0 && re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT)) ja = s_bild;
+        if (re15_game_flag_get(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT)) merker_gesehen = 1;
+        /* Ende des Gemaelde-Programms ROLLTOR39 = Merker wieder aus (letzte Zeile vor Evt_end) */
+        if (ja > 0 && frei < 0 && merker_gesehen && !re15_game_flag_get(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT)) frei = s_bild;
+        if (g_scd.message_active && (int)g_scd.message_id != last) {
+            last = (int)g_scd.message_id;
+            if (last == RE15_R39J_MSG_REAKTION) {
+                n50++; b50 = s_bild;
+                merker_bei_50 = re15_game_flag_get(RE15_R39J_MERKER_BANK, RE15_R39J_MERKER_BIT);
+                roll_bei_50 = re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT) && !re15_game_flag_get(1, 0x1B);
+            }
+        }
+        if (!g_scd.message_active) last = -1;
+    }
+    printf("    Ruf %ld, ja %ld, Rolladen-Programm zu Ende %ld, msg 50 ab %ld (%d mal)\n", ruf, ja, frei, b50, n50);
+    PRUEF(ja > ruf && merker_gesehen, "Gemaelde im Fenster: \"ja\" Bild %ld nach dem ersten Ruf, Merker (5,0x10) gesetzt", ja);
+    PRUEF(n50 == 1, "M1: Reaktion genau einmal (%d)", n50);
+    PRUEF(b50 > frei && frei > ja && merker_bei_50 == 0 && roll_bei_50 == 1,
+          "M1: Reaktion erst nach der Rolladen-Szene (ROLLTOR39 zu Ende Bild %ld, msg 50 Bild %ld, Merker dabei %ld, Balken aus)",
+          frei, b50, merker_bei_50);
+    PRUEF(re15_game_flag_get(9, RE15_R39J_BIT_REAKTION) == 1 && john->x == RE15_R39J_PARK_X, "Reaktion gesehen, John weiter draussen");
+    /* Wiederbetreten mit offenem Rolladen (Phase H laeuft weiter, N4.1) */
+    re15_game_state_t g = g_game;
+    if (room_boot(RE15_R38F_RAUM_1141, -7600, -17600, 0, 0) != 0) return;
+    g_game = g;
+    john = &g_actors[1];
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const unsigned klopf0 = g_re15_r39j_se_zaehler[0];
+    int n50b = 0;
+    for (int f = 0; f < 400; f++) {
+        frame(0, 0);
+        if (g_scd.message_active && g_scd.message_id == RE15_R39J_MSG_REAKTION) n50b++;
+    }
+    PRUEF(re15_dining_r38_phase_h() == 1 && john->active && john->x == RE15_R39J_PARK_X,
+          "Wiederbetreten mit offenem Rolladen: Phase H, John geparkt");
+    PRUEF(g_re15_r39j_se_zaehler[0] > klopf0 && n50b == 0, "Wiederbetreten: Klopfen laeuft (%u Schlaege), keine zweite Reaktion",
+          g_re15_r39j_se_zaehler[0] - klopf0);
+    PRUEF(!g_aot.slots[3].active,
+          "Wiederbetreten: kein Gemaelde-Ereignis mehr (sub00 setzt Slot 3 nur bei (3,0x6A)=0, @0x00B84/@0x00B88)");
+    {   /* Entriegeln aus dem Wiederbetreten heraus */
+        druck_t r = druecke(-7250, -250 - 620, 3072, 1);
+        int msg12 = 0, john_da = 0;
+        for (int f = 0; f < 1500 && !john_da; f++) {
+            uint16_t e = (g_scd.message_active && g_scd.message_id == 12 && (f % 15) == 0) ? RE15_PAD_BIT_SQUARE : 0;
+            frame(e, e);
+            if (g_scd.message_active && g_scd.message_id == 12) msg12 = 1;
+            if (john->x > -29000) john_da = 1;
+        }
+        PRUEF(re15_player_equipped_weapon() == 1, "N4.2: ohne Schusswaffe im Inventar hebt Elza das Messer (Waffe %d)",
+              re15_player_equipped_weapon());
+        PRUEF(!r.raumwechsel && msg12 && john_da && re15_game_flag_get(4, 0xC3) == 1,
+              "Entriegeln nach dem Wiederbetreten: msg 12, (4,0xC3) = 1, John kommt herein");
+    }
 }
 
 /* ---- Teil: pegel (Werkzeug des Riegels integration_r39_dining1141_d, Punkt 9) --------------------------------------
@@ -672,6 +871,7 @@ int main(int argc, char **argv)
     else if (!strcmp(argv[1], "programme")) teil_programme();
     else if (!strcmp(argv[1], "stamm")) teil_stamm();
     else if (!strcmp(argv[1], "phase_h")) teil_phase_h();
+    else if (!strcmp(argv[1], "fenster")) teil_fenster();
     else if (!strcmp(argv[1], "pegel")) teil_pegel(argc, argv);
     else { printf("unbekannter Teil %s\n", argv[1]); return 2; }
     printf("%s: %d Fehler\n", argv[1], g_fail);

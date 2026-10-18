@@ -821,9 +821,18 @@ static int bis_zur_ecke(void)
         ja = re15_game_flag_get(RE15_R38F_6A_BANK, RE15_R38F_6A_BIT);
     }
     if (!ja) return 0;
+    /* Runde 39 Spur J, Nachbesserung 1 (Nutzer-Nachtrag 4): das Gemaelde oeffnet nur den Rolladen, danach laeuft Elza frei;
+     * die Szene mit John startet erst am Riegel der Dachtuer (Ereignis 5, main00 @0x00A9A -> sub05). Erst die Rolladen-Szene
+     * abwarten, dann den Riegel druecken (Vorwaerts-Punkt (-7250,-250) im Rechteck @0x00A9A, Blick +Z) und msg 12 schliessen. */
+    { int pm = 0, f1 = 0;
+      for (int f = 0; f < 1200 && !f1; f++) { frame(0, 0); if (g_scd.player_mode == 2) pm = 1; if (pm && g_scd.player_mode == 0) f1 = 1; }
+      if (!f1) return 0; }
+    (void)druecke(-7250, -250 - 620, 3072, 1);
+    for (int f = 0; f < 300 && !re15_game_flag_get(4, 0xC3); f++) frame(0, 0);
+    if (!re15_game_flag_get(4, 0xC3)) return 0;
     int pm2 = 0, frei = 0;
     for (int f = 0; f < 4000 && !frei; f++) {
-        frame(0, 0);
+        { uint16_t e = (g_scd.message_active && g_scd.message_id == 12 && (f % 15) == 0) ? RE15_PAD_BIT_SQUARE : 0; frame(e, e); }
         if (g_scd.player_mode == 2) pm2 = 1;
         if (pm2 && g_scd.player_mode == 0 && !g_scd.message_active && f > 200) frei = 1;
     }

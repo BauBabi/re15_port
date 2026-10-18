@@ -9,6 +9,8 @@
 #   unit_r39_dining1141_stamm      help01..05 = Sprach-Ids 53..57 nur in ROOM1141
 #   unit_r39_dining1141_phase_h    ROOM1141 am VM mit allen Installern: John auf dem Dach, Klopfen/Hilferufe + Reaktion,
 #                                  Tuer-Auftritt mit Kameraschnitten, Glasbruch, Blick ab msg 9, Zeilen 51/52, Abgang
+#   unit_r39_dining1141_fenster    Nachbesserung 1: Gemaelde im Fenster erster Ruf..Reaktion -> Reaktion erst nach der Rolladen-
+#                                  Szene, genau einmal (M1); Wiederbetreten mit offenem Rolladen + Entriegeln (N4.1/N4.2)
 #   integration_r39_dining1141_d   echte exe, echter Weg mit Elza 1131 -> 1141 -> 1171 (Ton-Mitschnitt, Messschiene
 #                                  RE15_R39J_LOG, debug.log): alle Punkte 1-9 am Lauf, Punkt 9 am Mitschnitt
 add_executable(test_r39_dining1141 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_dining1141.c)
@@ -19,7 +21,7 @@ target_compile_definitions(test_r39_dining1141 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r39_dining1141 PRIVATE m)
 endif()
-foreach(_teil texte programme stamm phase_h)
+foreach(_teil texte programme stamm phase_h fenster)
     add_test(NAME unit_r39_dining1141_${_teil} COMMAND test_r39_dining1141 ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_dining1141_${_teil} PROPERTIES TIMEOUT 300)
