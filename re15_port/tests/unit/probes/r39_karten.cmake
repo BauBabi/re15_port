@@ -21,6 +21,12 @@
 #   unit_r39_karten_treppen  M4/M5/M1: jedes Treppensymbol der Treppenhaeuser 1060/10A0 und von 1170 Zone 1 liegt <= 2 px von der
 #                            Projektion seines STAIR-AOT-Laufs (Zeile des Blatts, Formel FUN_800473f8); vorher bis 5 px
 #   unit_r39_karten_marker   M5: 1030/1060/10A0/1110/1170 Z1/10C0/1120 - kein begehbarer Rasterpunkt neben der Zeichnung
+# Nachbesserung 2 (Abnahme 1, N1 - ROOM1210 Suedwest-Kammer auf B2 gezeichnet):
+#   unit_r39_karten_marker   + ROOM1210/1211 an JEDEM Rasterpunkt 0 neben der Zeichnung (vorher 1693 von 10387), Elza mit
+#                            offener und geschlossener Kammer (sub00 Sca_id_set, Flags (4,0xEC)/(4,0xFC))
+#   unit_r39_karten_teil     + (e) Kammer: Linien auf den gemalten (x186/y112/y129), Durchgang x201 y117..119 nur mit
+#                            gezeichneter Kammer, keine zweite Linie x200, geschlossen in fuenf Zustaenden (auch Umriss)
+#   integration_r39_karten   + Lauf K (Abnahme-Weg 1210 Flur -> Kammer, Ring im Rot der Kammer), Sweep-Kammer gegen SCA
 add_executable(probe_r39_karten ${CMAKE_CURRENT_LIST_DIR}/../test_r39_karten.c)
 target_link_libraries(probe_r39_karten PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r39_karten PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/..)

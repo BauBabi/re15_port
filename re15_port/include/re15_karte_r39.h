@@ -66,6 +66,12 @@ int re15_karte_r39_schema_ziel(const void *inv_screen, unsigned page, int synth)
  * ("Auf einer Etagen-Umschaltung ist NUR das Rechteck dieser Etage aktuell"). */
 int re15_karte_r39_etage_hier(const void *zone, unsigned page);
 
+/* Nachbesserung 2 (Abnahme 1, N1): Klemmfenster des Markers = GEMALTER Innenraum (samt Wandlinie) fuer einen
+ * Weltbereich einer Zone (zone = re15_map_zone_t*, Weltlage wx/wz). Engt lo/hi des Kachel-Klemmers in
+ * re15_inv_map_marker ein (Haken "Runde 39 Spur G" neben re15_karte_fahrstuhl_fenster); ausserhalb der Tabelle
+ * keine Wirkung. Belege je Eintrag in karte_r39.c. */
+void re15_karte_r39_fenster(const void *zone, int wx, int wz, int *lo_x, int *hi_x, int *lo_y, int *hi_y);
+
 /* Riegel-Zugriff: Zahl der Texel-Korrekturen und ein Eintrag. traeger = Rechteck derselben Seite,
  * dessen Wandlinie die geloeschte ersetzt; 255 = gilt immer (Nachbesserung 1, M3). */
 int re15_karte_r39_korrektur_zahl(void);

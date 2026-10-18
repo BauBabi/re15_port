@@ -16,6 +16,10 @@ cmake_minimum_required(VERSION 3.16)
 # Lauf M (1090): Spielstand am Punkt des Nutzers (befund.log F1126..F1351: R1090 (-12528,-9000,959), obere Ebene),
 #   Kartenschirm (Blatt 2F): der Marker-Ring steht im ROT des aktuellen Raums (7x7 um die Ring-Mitte: rot >= 8, kein
 #   Gruen eines fremden Raums). Vorher: Ring (186,83) im gruenen Nachbarraum (linke Haelfte von map2F_correct.png).
+# Lauf K (Nachbesserung 2, Abnahme 1 N1): der Weg der Abnahme - Leon laeuft aus dem ROOM1210-Flur durch die Oeffnung in
+#   die Suedwest-Kammer; der Ring steht in ihrer Zeichnung (x187..200 y113..128), ringsum ROT, Kammer geschlossen, keine
+#   Doppelwand. Vorher: Ring (191,117) im Blau links der Flurwand x201. Blatt 1 im Sweep: die Kammer (x186..201 y113..129)
+#   wird statt gegen die Vorlage gegen ihre Zeichnung aus der SCA verglichen (probe_r39_karten sollbild, kammer_soll).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PROBE=<probe_r39_karten> -DRE15_PROBE36=<probe_r36_karte>
 #               -DWORKDIR=<dir> -P <diese Datei>
@@ -140,6 +144,75 @@ foreach(_t "TN;1000;650;50" "TW;1070;160;6145" "TZ;1010;3650;-3950")
         set(_fehler "${_fehler} teil-${_tn}-offen")
     endif()
 endforeach()
+
+# ---- K: ROOM1210 Suedwest-Kammer (Nachbesserung 2, Abnahme 1 Mangel N1) = der Weg der Abnahme ------------------
+# Spielstand im Flur (-19500,0,-21700), Blick West, ROOM11E0 + ROOM1210 besucht; LOAD GAME; Leon laeuft durch die Oeffnung
+# (Flur-Westwand @0x01BC8 endet z -20746, Kammer-Ostwand @0x01C40 beginnt z -22520) in die Kammer; Kartenschirm bei Bild
+# 200. VORHER (Abnahme 1): debug.log pos=(-25500,0,-21700), Ring (191,117) im Blau links der Flurwand x201.
+# Soll: Ring im Innenraum der Kammer-Zeichnung x187..200 y113..128, ringsum ROT (aktuell), keine offene Raumseite.
+karten_lauf(K 1210 "1210;-19500;0;-21700;2048;besucht:11E0:0:0;besucht:1210:-19500:-21700"
+            RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT=W1,U4,W5 "RE15_INV_OPEN_AT=200#1210"
+            RE15_INV_FB_SHOT=karte.bmp RE15_INV_FB_SHOT_AT=60 "RE15_EXIT_AT=400#1210")
+if(NOT EXISTS "${_basis_wd}_K/karte.bmp")
+    set(_fehler "${_fehler} kammer-kein-abzug")
+else()
+    set(_kx "")
+    if(EXISTS "${_basis_wd}_K/debug.log")
+        file(STRINGS "${_basis_wd}_K/debug.log" _kpos REGEX "pl pos=\\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\)")
+        if(_kpos)
+            list(GET _kpos -1 _kletzt)
+            if(_kletzt MATCHES "pl pos=\\((-?[0-9]+),(-?[0-9]+),(-?[0-9]+)\\)")
+                set(_kx ${CMAKE_MATCH_1})
+                set(_kz ${CMAKE_MATCH_3})
+            endif()
+        endif()
+    endif()
+    message(STATUS "r39_karten[K] letzte Spielerlage: x=${_kx} z=${_kz}")
+    if("${_kx}" STREQUAL "" OR NOT _kx LESS -22200)
+        set(_fehler "${_fehler} kammer-nicht-erreicht")
+    endif()
+    execute_process(COMMAND "${RE15_PROBE36}" marker "${_basis_wd}_K/karte.bmp" 175 60 235 140
+                    RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+    string(STRIP "${_outk}" _outk)
+    message(STATUS "r39_karten[K] ${_outk}")
+    if(_rvk EQUAL 0 AND _outk MATCHES "^MARKER ([0-9]+) ([0-9]+)")
+        set(_mx ${CMAKE_MATCH_1})
+        set(_my ${CMAKE_MATCH_2})
+        if(_mx LESS 187 OR _mx GREATER 200 OR _my LESS 113 OR _my GREATER 128)
+            set(_fehler "${_fehler} kammer-ring-ausserhalb(${_mx},${_my})")
+        endif()
+        math(EXPR _x0 "${_mx} - 3")
+        math(EXPR _y0 "${_my} - 3")
+        math(EXPR _x1 "${_mx} + 3")
+        math(EXPR _y1 "${_my} + 3")
+        execute_process(COMMAND "${RE15_PROBE36}" farben "${_basis_wd}_K/karte.bmp" ${_x0} ${_y0} ${_x1} ${_y1}
+                        RESULT_VARIABLE _rvf OUTPUT_VARIABLE _outf)
+        string(STRIP "${_outf}" _outf)
+        message(STATUS "r39_karten[K] um den Ring: ${_outf}")
+        if(_outf MATCHES "rot=([0-9]+) besucht=([0-9]+)")
+            if(CMAKE_MATCH_1 LESS 8 OR NOT CMAKE_MATCH_2 EQUAL 0)
+                set(_fehler "${_fehler} kammer-ring-nicht-im-rot")
+            endif()
+        else()
+            set(_fehler "${_fehler} kammer-farben")
+        endif()
+    else()
+        set(_fehler "${_fehler} kammer-kein-marker")
+    endif()
+    # offen: Kasten um Kammer + Durchgang (die vorbestehenden Kerben (187,71)/(187,77) am Tuerbalken 11E0<->1210 = Hinweis
+    # der Abnahme 1, nicht Teil von N1); doppelwand: ganzes Blatt.
+    foreach(_pr "offen;184;110;203;131" "doppelwand")
+        list(GET _pr 0 _prn)
+        list(SUBLIST _pr 1 -1 _pra)
+        execute_process(COMMAND "${RE15_PROBE}" ${_prn} "${_basis_wd}_K/karte.bmp" ${_pra}
+                        RESULT_VARIABLE _rvp OUTPUT_VARIABLE _outp)
+        string(STRIP "${_outp}" _outp)
+        message(STATUS "r39_karten[K] ${_prn}: ${_outp}")
+        if(NOT _rvp EQUAL 0)
+            set(_fehler "${_fehler} kammer-${_prn}")
+        endif()
+    endforeach()
+endif()
 
 file(REMOVE "${_exe_kopie}")
 if(NOT "${_fehler}" STREQUAL "")

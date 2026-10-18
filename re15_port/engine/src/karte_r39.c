@@ -39,6 +39,7 @@
  * R39_IMMER: kein Wandverlust moeglich (Loch fuellen; Linie innerhalb DESSELBEN Rechtecks verschoben; Tuerbalken
  * auf der Ersatzlinie, der mit dem Raum selbst gezeichnet wird). */
 #define R39_IMMER 255
+#define R39_SCHEMA(s) (128 + (s))   /* Traeger = Schema-Zeichnung <s> (zone.synth) derselben Seite */
 typedef struct { unsigned char page, rect, c, r, w, h, neu, traeger; } r39_korr_t;
 
 static const r39_korr_t s_korr[] = {
@@ -97,6 +98,12 @@ static const r39_korr_t s_korr[] = {
     { 1,  4,  0,  1, 1, 16, 1,  0 },
     { 1,  5,  0,  1, 1,  5, 1,  0 },
     { 1,  5,  0,  6, 1, 11, 1,  9 },
+    /* Nachbesserung 2 (Abnahme 1, N1): DURCHGANG in die Suedwest-Kammer von ROOM1210 (Zone 1, Schema synth 12,
+     * re15_map_zones.h). r3 Spalte 14 = x201 (Flur-Westwand, Index 4 auf y110..129), Zeilen 47..49 = y117..119: die
+     * Oeffnung zwischen dem Ende der Flur-Westwand @0x01BC8 (z -20746 -> py116) und dem Anfang der Kammer-Ostwand
+     * @0x01C40 (z -22520 -> py120), FUN_800473f8 mit der Zeile @0x800769B8 -> Koerper. Traeger = die Kammer selbst:
+     * ohne ihre Zeichnung bliebe hinter der Luecke nur Grund (offene Raumseite, Abnahme 0 M3). */
+    { 1,  3, 14, 47, 1,  3, 1, R39_SCHEMA(12) },
 };
 #define R39_KORR_N ((int)(sizeof s_korr / sizeof s_korr[0]))
 
@@ -105,13 +112,15 @@ static const r39_korr_t s_korr[] = {
  * (Suedwand von r5 y88), Unterkante des Nord-WC y138 (Oberkante des Sued-WC y139).
  * traeger wie bei s_korr (Nachbesserung 1, M3): x206 = r0 (ROOM1050) Index 4 auf x206 y89..153 (65/65),
  * y88 = r5 (ROOM1090 Hof) Index 4 auf x207..221 (15/15), y139 = die Schema-Zeichnung des Sued-WC (synth 3,
- * s_map_synth[2]). Gemessen ohne Traeger (je Ort allein besucht): Ostraum 41, Nord-WC 26, Sued-WC 12 Wandpixel weg. */
-#define R39_SCHEMA(s) (128 + (s))   /* Traeger = Schema-Zeichnung <s> (zone.synth) derselben Seite */
+ * s_map_synth[2]). Gemessen ohne Traeger (je Ort allein besucht): Ostraum 41, Nord-WC 26, Sued-WC 12 Wandpixel weg.
+ * Nachbesserung 2 (N1): die Ostkante der ROOM1210-Suedwest-Kammer (Zelle (186,112) 15x18, Spalte x200) entfaellt, wenn
+ * r3 (ROOM1210) gezeichnet wird - dessen Flur-Westwand x201 (Index 4, y110..129) ist die eine Linie dazwischen. */
 typedef struct { unsigned char page; short cx, cy, cw, ch; unsigned char seite, traeger; } r39_kante_t;
 static const r39_kante_t s_kanten[] = {
     { 2, 207,  89, 15, 33, 0, 5 }, { 2, 207,  89, 15, 33, 2, 0 },
     { 2, 207, 123, 15, 16, 2, 0 }, { 2, 207, 123, 15, 16, 1, R39_SCHEMA(3) },
     { 2, 207, 139, 15, 15, 2, 0 },
+    { 1, 186, 112, 15, 18, 3, 3 },
 };
 
 /* ---- Wird der Traeger gezeichnet? (Nachbesserung 1, M3) -------------------------------------------------------
@@ -310,6 +319,42 @@ int re15_karte_r39_schema_ziel(const void *inv_screen, unsigned page, int synth)
         (st->ziel2_aktiv && st->ziel2_page == page && st->ziel2_rect == r))
         return st->ziel_rot ? 1 : 2;
     return 0;
+}
+
+/* ---- Klemmfenster = gemalter Innenraum je Weltbereich (Nachbesserung 2, Abnahme 1 N1) --------------------------
+ * ROOM1210/1211 Zone 0, QUERBALKEN des T-Flurs: die Kachel MAP02.PIX r3 uv(96,48) @0x80076318 malt ihn GESTAUCHT -
+ * Linien y70 und y78 (Index 4, 8 px Abstand), die Waende liegen 11,7 px auseinander (Mitten @0x01B8C z 466 -> py 70,
+ * @0x01BD4 z -4994 -> py 82; FUN_800473f8 mit der Original-Zeile @0x800769B8). Der suedlichste begehbare Streifen
+ * des Balkens (Mitte bis z -3470 = Innenseite @0x01BD4 z -3920 + Spielerradius 450) projiziert auf py 79 = IN die
+ * Zellen r4/r6 von ROOM1220 unter der Linie y78 (gemessen: 184 von 10387 Rasterpunkten, Marker (191..200,79) und
+ * (213..224,79), nb2/aussen1210.py = probe markerflaeche). Das Fenster haelt den Marker dort auf dem gemalten Balken
+ * samt Linien = r3 Spalten 0..39 / Zeilen 0..8: x187..226, y70..78 (Index 4 auf y70, y78 ausser der T-Oeffnung
+ * x202..211, und x226; dazwischen Index 1). Wirksam ist nur y <= 78 - x liegt per Kachel-Klemmung (reserve 4) ohnehin
+ * in 191..224 (Balken-Mitten x -26426..-12188 -> px 190..224). Es gilt NUR ausserhalb der Flurspanne -
+ * zwischen den Flur-Innenseiten x -21090 (@0x01BC8) und -17696 (@0x01C04) laeuft der Flur durch die T-Oeffnung
+ * (x202..211, Index 1 ab y78) nach unten weiter; nordlich von z -4084 (Nordende @0x01BC8) = im Balken. */
+typedef struct { unsigned short room; unsigned char idx; int wx0, wz0, wx1, wz1; short x0, y0, x1, y1; } r39_fenster_t;
+static const r39_fenster_t s_fenster[] = {
+    { 0x1210, 0, -40000, -4084, -21090, 40000, 187, 70, 226, 78 },
+    { 0x1210, 0, -17696, -4084,  40000, 40000, 187, 70, 226, 78 },
+    { 0x1211, 0, -40000, -4084, -21090, 40000, 187, 70, 226, 78 },
+    { 0x1211, 0, -17696, -4084,  40000, 40000, 187, 70, 226, 78 },
+};
+
+void re15_karte_r39_fenster(const void *zone, int wx, int wz, int *lo_x, int *hi_x, int *lo_y, int *hi_y)
+{
+    const re15_map_zone_t *zn = (const re15_map_zone_t *)zone;
+    unsigned i;
+    if (!zn) return;
+    for (i = 0; i < sizeof s_fenster / sizeof s_fenster[0]; i++) {
+        const r39_fenster_t *f = &s_fenster[i];
+        if (f->room != zn->room || f->idx != zn->idx) continue;
+        if (wx < f->wx0 || wx > f->wx1 || wz < f->wz0 || wz > f->wz1) continue;
+        if (*lo_x < f->x0) *lo_x = f->x0;
+        if (*hi_x > f->x1) *hi_x = f->x1;
+        if (*lo_y < f->y0) *lo_y = f->y0;
+        if (*hi_y > f->y1) *hi_y = f->y1;
+    }
 }
 
 int re15_karte_r39_etage_hier(const void *zone, unsigned page)

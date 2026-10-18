@@ -18,7 +18,8 @@
  *   marker <hexraum> <x> <z> <band> [y]    Kartenpfad wie im Spiel: Raum betreten, Karte oeffnen,
  *                                          gezeigtes Blatt, Zone, Marker + Kachel-Index darunter
  *   pruef teil|treppen|marker              Nachbesserung 1 (Abnahme 0, M3 / M4+M1 / M5) - Riegel
- *   offen <bmp>                            Abzug der echten exe: offene Raumseiten (Koerper am Grund)
+ *   offen <bmp> [x0 y0 x1 y1]              Abzug der echten exe: offene Raumseiten (Koerper am Grund)
+ *   Nachbesserung 2 (Abnahme 1, N1): pruef teil (e) / pruef marker - ROOM1210 Suedwest-Kammer
  * ========================================================================== */
 #include <stddef.h>
 #include <stdio.h>
@@ -58,6 +59,11 @@ static uint8_t *slurp(const char *pfad, size_t *n)
     fclose(f); *n = (size_t)sz; return b;
 }
 
+/* Spielstands-Flags, die betrete() NACH scd_vm_init (das die Flags loescht) und VOR dem Raumskript setzt
+ * (Nachbesserung 2: ROOM1211 sub00 schliesst die Suedwest-Kammer, bis (4,0xEC) und (4,0xFC) gesetzt sind). */
+static const unsigned char (*s_betrete_flags)[2] = NULL;
+static int s_betrete_nflags = 0;
+
 /* Dieselbe Kette wie test_map_raum_live.c / test_r36_karte.c betrete(). */
 static int betrete(unsigned rid, int32_t px, int32_t pz, int band)
 {
@@ -71,6 +77,9 @@ static int betrete(unsigned rid, int32_t px, int32_t pz, int band)
     if (!s_roh) return 0;
     if (re15_rdt_parse(s_roh, n, &s_rdt) < 0) return 0;
     scd_vm_init();
+    {   int f;
+        for (f = 0; f < s_betrete_nflags; f++) re15_game_flag_set(s_betrete_flags[f][0], s_betrete_flags[f][1], 1);
+    }
     re15_actor_init();
     re15_aot_init();
     re15_enemy_reset();
@@ -648,11 +657,24 @@ static const struct { int seite, x0, y0, x1, y1, mx, my, kind; const char *warum
     { 4, 166, 104, 170, 109, 168, 106, 5, "M1: 3F-Treppe y106 statt y107 (1 statt 3 Beruehrpixel)" },
 };
 
+/* Nachbesserung 2 (Abnahme 1, N1): die ROOM1210-Suedwest-Kammer weicht BEWUSST von mapB2_correct.png ab - die Vorlage
+ * kennt sie nicht, das Original zeichnet sie nicht (MAP02.PIX r3, Zeile @0x800769B8), begehbar ist sie (eigene Kameras 6/7,
+ * RVD @0x002DC..@0x00340); Orchestrator-Entscheid Beta -> Retail. Im Kasten x186..201 y113..129 gilt statt der Vorlage die
+ * Zeichnung aus der SCA: Linien x186 (@0x01BEC) und y129 (@0x01BE0), x201 = Flur-Westwand mit dem Durchgang y117..119
+ * (@0x01BC8 endet z -20746, @0x01C40 beginnt z -22520), innen Koerper. Liefert die Soll-Klasse, -1 ausserhalb. */
+static int kammer_soll(int seite, int x, int y)
+{
+    if (seite != 1 || x < 186 || x > 201 || y < 113 || y > 129) return -1;
+    if (x == 186 || y == 129) return 2;
+    if (x == 201) return (y >= 117 && y <= 119) ? 1 : 2;
+    return 1;
+}
+
 static int teil_sollbild(int argc, char **argv)
 {
     FILE *f;
     unsigned char hdr[54], *px;
-    int w, h, x, y, seite, i, k, diff = 0, gez = 0, gepr = 0;
+    int w, h, x, y, seite, i, k, diff = 0, gez = 0, gepr = 0, kgepr = 0, kdiff = 0;
     long off;
     const unsigned short *rle = NULL;
     int nrle = 0;
@@ -683,7 +705,15 @@ static int teil_sollbild(int argc, char **argv)
     for (y = 0; y < h; y++)
         for (x = 0; x < w; x++) {
             unsigned char *p = px + ((size_t)y * (size_t)w + (size_t)x) * 3u;   /* B,G,R */
-            int ist = klasse_rgb(p[2], p[1], p[0]), s = soll[y][x], a, weg = 0;
+            int ist = klasse_rgb(p[2], p[1], p[0]), s = soll[y][x], a, weg = 0, ks = kammer_soll(seite, x, y);
+            if (ks >= 0) {   /* Nachbesserung 2: Kammer gegen ihre Zeichnung aus der SCA, nicht gegen die Vorlage */
+                kgepr++;
+                if (ist != ks) {
+                    kdiff++;
+                    if (gez < 10) { printf("   Kammer (%d,%d): ist %d soll %d\n", x, y, ist, ks); gez++; }
+                }
+                continue;
+            }
             if (ist == 7 || s == 7) continue;
             for (a = 0; a < (int)(sizeof k_abw / sizeof k_abw[0]); a++)
                 if (k_abw[a].seite == seite && x >= k_abw[a].x0 && x <= k_abw[a].x1 && y >= k_abw[a].y0 &&
@@ -711,6 +741,11 @@ static int teil_sollbild(int argc, char **argv)
         if (treffer != 15) diff++;
     }
     free(px);
+    if (kgepr) {
+        printf("   Abweichung von der Vorlage (Nachbesserung 2, N1): ROOM1210 Suedwest-Kammer x186..201 y113..129 - %d von %d "
+               "Pixeln wie die Zeichnung aus der SCA\n", kgepr - kdiff, kgepr);
+        diff += kdiff;
+    }
     printf("Blatt %d (%s): %d Kartenpixel verglichen, %d Abweichungen gegen das Soll der Nutzer-Vorlage\n", seite, argv[2],
            gepr, diff);
     if (diff != 0 || gepr < 20000) { printf("FAIL\n"); return 1; }
@@ -922,6 +957,36 @@ static int teil_pruef_teil(void)
         re15_karte_r39_korrektur(k, &pg, &rc, &c, &r, &w, &h, &neu, &tr);
         if (tr == 255) continue;
         re15_map_rect_geometry((unsigned)pg, (unsigned)rc, &rx, &ry, &rw, &rh);
+        if (tr >= 128) {
+            /* Nachbesserung 2 (N1): Traeger = Schema-Zeichnung (128 + synth). Ein DURCHGANG: jedes geoeffnete Pixel
+             * grenzt 4-nachbarlich an eine Zelle dieser Zeichnung - die Luecke fuehrt in sie hinein. */
+            int z2, x, y, alle = 1, hat = 0;
+            for (z2 = 0; z2 < re15_map_zone_count() && !hat; z2++) {
+                const re15_map_zone_t *zs = re15_map_zone_by_index(z2);
+                int sx, sy, sw, sh, erste, nz, q;
+                if (!zs || zs->page != (unsigned)pg || zs->synth != tr - 128) continue;
+                if (!re15_map_zone_synth(zs, &sx, &sy, &sw, &sh, &erste, &nz)) continue;
+                hat = 1;
+                for (y = ry + r; y < ry + r + h; y++)
+                    for (x = rx + c; x < rx + c + w; x++) {
+                        int dran = 0;
+                        for (q = 0; q < nz; q++) {
+                            int cx, cy, cw, ch, e2;
+                            static const int N4[4][2] = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
+                            if (!re15_map_synth_cell(erste + q, &cx, &cy, &cw, &ch)) continue;
+                            for (e2 = 0; e2 < 4; e2++) {
+                                int ax = x + N4[e2][0], ay = y + N4[e2][1];
+                                if (ax >= cx && ax < cx + cw && ay >= cy && ay < cy + ch) dran = 1;
+                            }
+                        }
+                        if (!dran || neu != 1) alle = 0;
+                    }
+            }
+            snprintf(t, sizeof t, "Korrektur %d (Blatt %d r%d Spalte %d Zeile %d %dx%d): Durchgang in die Schema-Zeichnung "
+                     "synth %d (jedes Pixel Koerper, 4-nachbarlich an einer ihrer Zellen)", k, pg, rc, c, r, w, h, tr - 128);
+            CHECK(t, hat && alle);
+            continue;
+        }
         for (d = 0; d < 5 && !ok; d++) {
             int x, y, alle = 1;
             for (y = ry + r; y < ry + r + h; y++)
@@ -965,7 +1030,7 @@ static int teil_pruef_teil(void)
         r39_ort_t a, b;
         const r39_ort_t *paar[2];
         re15_karte_r39_korrektur(k, &pg, &rc, &c, &r, &w, &h, &neu, &tr);
-        if (tr == 255 || neu == 4) continue;
+        if (tr == 255 || tr >= 128 || neu == 4) continue;   /* Schema-Traeger (Durchgang): Block (e) */
         if (!rect_ort(pg, rc, &a) || !rect_ort(pg, tr, &b)) {
             snprintf(t, sizeof t, "Korrektur %d: Orte zu r%d / r%d gefunden", k, rc, tr);
             CHECK(t, 0);
@@ -1009,6 +1074,66 @@ static int teil_pruef_teil(void)
         snprintf(t, sizeof t, "ROOM1000 mit Traeger: Wandpixel auf x207 (Ostraum+1050) %d, y89 (Ostraum+1090) %d, y138 "
                  "(Nord-WC+Sued-WC) %d - alle 0 (eine Linie, die des Nachbarn)", w207, w89, w138);
         CHECK(t, w207 == 0 && w89 == 0 && w138 == 0);
+    }
+    /* (e) NACHBESSERUNG 2 (Abnahme 1, N1): ROOM1210 Suedwest-Kammer = Zone 1, Schema synth 12 (186,112) 15x18 auf B2.
+     *     Soll (Waende aus der SCA, Dossier "Nachbesserung 2"): Linien x186 / y112 / y129 auf den gemalten Linien, Ostseite
+     *     = die Flur-Westwand x201 der Kachel r3 mit dem Durchgang y117..119; keine zweite Linie auf x200; geschlossen. */
+    {
+        static const r39_ort_t FLUR = { "1210 Flur", 0x1210, -19500, -21700, 1, 0 },
+                               KAMMER = { "1210 Kammer", 0x1210, -25500, -21700, 1, 0 };
+        const r39_ort_t *s1[1] = { &FLUR }, *s2[2] = { &FLUR, &KAMMER }, *s3[2] = { &KAMMER, &FLUR }, *s4[1] = { &KAMMER };
+        const r39_ort_t *const *zst[2] = { s2, s3 };
+        int x, y, z, bx = 0, by = 0, of, wand, luecke, innen, x200;
+        /* Zustand 1: nur der Flur - Kammer ungezeichnet, Westwand ohne Luecke (Korrektur ohne Traeger aus) */
+        orte_betreten(s1, 1); n = baue_teil(1); komposit(1, n);
+        luecke = innen = 0;
+        for (y = 117; y <= 119; y++) luecke += (s_kl[y][201] == 2);
+        for (y = 113; y <= 128; y++) for (x = 187; x <= 200; x++) innen += (s_kl[y][x] != 0);
+        snprintf(t, sizeof t, "1210 Flur allein: Kammer ungezeichnet (%d Pixel in x187..200 y113..128, soll 0), Flur-Westwand "
+                 "x201 y117..119 geschlossen (%d/3 Wand)", innen, luecke);
+        CHECK(t, innen == 0 && luecke == 3);
+        /* Zustaende 2/3: Flur + Kammer besucht, aktuell Kammer bzw. Flur */
+        for (z = 0; z < 2; z++) {
+            orte_betreten(zst[z], 2); n = baue_teil(1); komposit(1, n);
+            wand = luecke = innen = x200 = 0;
+            for (y = 112; y <= 129; y++) wand += (s_kl[y][186] == 2);                      /* West 18 */
+            for (x = 186; x <= 201; x++) wand += (s_kl[112][x] == 2) + (s_kl[129][x] == 2);   /* Nord + Sued 32 */
+            for (y = 112; y <= 129; y++) if (y < 117 || y > 119) wand += (s_kl[y][201] == 2); /* Ost ohne Durchgang 15 */
+            for (y = 117; y <= 119; y++) luecke += (s_kl[y][201] == 1);
+            for (y = 113; y <= 128; y++) for (x = 187; x <= 200; x++) innen += (s_kl[y][x] == 1);
+            for (y = 113; y <= 128; y++) x200 += (s_kl[y][200] == 2);
+            of = offen_zaehlen(184, 110, 203, 131, &bx, &by);
+            snprintf(t, sizeof t, "1210 Flur + Kammer, aktuell %s: Wandlinien %d/65 (x186, y112, y129, x201 ohne Durchgang), "
+                     "Durchgang x201 y117..119 Koerper %d/3, Innenraum Koerper %d/224, zweite Linie auf x200 %d (soll 0), "
+                     "offene Seite %d", z ? "Flur" : "Kammer", wand, luecke, innen, x200, of);
+            CHECK(t, wand == 65 && luecke == 3 && innen == 224 && x200 == 0 && of == 0);
+        }
+        /* Zustand 4 (Gatter-Gegenprobe): nur die Kammer - ohne r3 zeichnet sie ihre Ostkante selbst auf x200 */
+        orte_betreten(s4, 1); n = baue_teil(1); komposit(1, n);
+        x200 = 0;
+        for (y = 112; y <= 129; y++) x200 += (s_kl[y][200] == 2);
+        of = offen_zaehlen(184, 110, 203, 131, &bx, &by);
+        snprintf(t, sizeof t, "1210 Kammer allein (r3 ungezeichnet): Ostkante x200 %d/18 Wand, offene Seite %d", x200, of);
+        CHECK(t, x200 == 18 && of == 0);
+        /* Zustand 5: nichts besucht, Spieler auf einem anderen Blatt (ROOM1050, 1F), B2-Plan im Besitz (Bank 9 Bit 77) -
+         * Flur und Kammer als Umriss, die Luecke bleibt durchsichtig (Zeile 498: Koerper 0x0000) */
+        {
+            static const r39_ort_t R1050 = { "1050", 0x1050, 20600, 12350, 2, 0 };
+            const r39_ort_t *s5[1] = { &R1050 };
+            orte_betreten(s5, 1);
+        }
+        re15_map_visited_reset();
+        re15_game_flag_set(9, 77, 1);
+        n = baue_teil(1); komposit(1, n);
+        wand = luecke = x200 = 0;
+        for (y = 112; y <= 129; y++) wand += (s_kl[y][186] == 2);
+        for (x = 186; x <= 201; x++) wand += (s_kl[129][x] == 2);
+        for (y = 117; y <= 119; y++) luecke += (s_kl[y][201] == 0);
+        for (y = 113; y <= 128; y++) x200 += (s_kl[y][200] == 2);
+        snprintf(t, sizeof t, "1210 + Kammer als Umriss (B2-Plan, unbesucht): Linien x186/y129 %d/34, Durchgang offen %d/3, "
+                 "zweite Linie x200 %d (soll 0)", wand, luecke, x200);
+        CHECK(t, wand == 34 && luecke == 3 && x200 == 0);
+        re15_game_flag_set(9, 77, 0);
     }
     return g_fail;
 }
@@ -1110,18 +1235,51 @@ static int teil_pruef_marker(void)
                  M[i].raum, M[i].band, M[i].x, M[i].z, aus, gepr);
         CHECK(t, aus == 0 && gepr >= M[i].min);
     }
+    /* NACHBESSERUNG 2 (Abnahme 1, N1): ROOM1210 an JEDEM Rasterpunkt (Dichte 1) - vorher 1693 von 10387: Suedwest-Kammer
+     * 1509 (Marker im Blau links der Flurwand x201) + Querbalken-Suedstreifen 184 (Marker y79 in den Zellen r4/r6).
+     * Elza ROOM1211: sub00 schliesst die Kammer (Sca_id_set @0x01E0E/@0x01E5A, Zelle 15 @0x01C34), solange (4,0xEC) oder
+     * (4,0xFC) fehlt - gemessen ohne Flags zwei Teile (Flur 8783, Kammer 2022), mit beiden eine Flaeche. */
+    {
+        static const unsigned char OFFEN[2][2] = { { 4, 0xEC }, { 4, 0xFC } };
+        static const struct { unsigned raum; int32_t x, z; int min, flags; const char *was; } K[] = {
+            { 0x1210, -25800,  -2200, 10000, 0, "Leon, ganzer Raum" },
+            { 0x1211, -25800,  -2200, 10000, 1, "Elza, Kammer offen (4,0xEC)+(4,0xFC)" },
+            { 0x1211, -25800,  -2200,  8000, 0, "Elza, Kammer zu: Flur" },
+            { 0x1211, -25500, -21700,  2000, 0, "Elza, Kammer zu: Kammer" },
+        };
+        for (i = 0; i < (int)(sizeof K / sizeof K[0]); i++) {
+            int aus;
+            s_betrete_flags = K[i].flags ? OFFEN : NULL;
+            s_betrete_nflags = K[i].flags ? 2 : 0;
+            aus = markerflaeche(K[i].raum, 0, K[i].x, K[i].z, 0, 100, 1, 0, &gepr);
+            snprintf(t, sizeof t, "ROOM%04X (%s) Saat (%d,%d), JEDER Rasterpunkt: %d von %d neben der Zeichnung", K[i].raum,
+                     K[i].was, K[i].x, K[i].z, aus, gepr);
+            CHECK(t, aus == 0 && gepr >= K[i].min);
+        }
+        s_betrete_flags = NULL;
+        s_betrete_nflags = 0;
+    }
     return g_fail;
 }
 
-/* offen <bmp>: Abzug der echten exe (RE15_INV_FB_SHOT) - Raumkoerper (rot/gruen) 4-nachbarlich am Grund im
- * Kartenfeld x40..300 y40..210 (G_karten_werkzeug/nb1/offen.py). Riegel M3 in integration_r39_karten. */
+/* offen <bmp> [x0 y0 x1 y1]: Abzug der echten exe (RE15_INV_FB_SHOT) - Raumkoerper (rot/gruen) 4-nachbarlich am Grund
+ * im Kartenfeld x40..299 y40..209 bzw. im Kasten (G_karten_werkzeug/nb1/offen.py). Riegel M3 in integration_r39_karten.
+ * Nachbesserung 2: Kasten um die ROOM1210-Kammer - die vorbestehenden Kerben (187,71)/(187,77) der Schwenk-Tilgung am
+ * Tuerbalken 11E0<->1210 (G_abnahme_1.md Abschnitt 2, Hinweis) liegen ausserhalb. */
 static int teil_offen(int argc, char **argv)
 {
     FILE *f;
     unsigned char hdr[54], *px;
-    int w, h, x, y, n = 0, bx = -1, by = -1;
+    int w, h, x, y, n = 0, bx = -1, by = -1, kx0 = 40, ky0 = 40, kx1 = 299, ky1 = 209;
     long off;
-    if (argc < 3) { printf("FAIL: offen <bmp>\n"); return 2; }
+    if (argc < 3) { printf("FAIL: offen <bmp> [x0 y0 x1 y1]\n"); return 2; }
+    if (argc >= 7) {
+        kx0 = atoi(argv[3]); ky0 = atoi(argv[4]); kx1 = atoi(argv[5]); ky1 = atoi(argv[6]);
+        if (kx0 < 1) kx0 = 1;
+        if (ky0 < 1) ky0 = 1;
+        if (kx1 > 318) kx1 = 318;
+        if (ky1 > 238) ky1 = 238;
+    }
     f = fopen(argv[2], "rb");
     if (!f || fread(hdr, 1, 54, f) != 54) { printf("FAIL: %s nicht lesbar\n", argv[2]); if (f) fclose(f); return 1; }
     off = hdr[10] | (hdr[11] << 8) | (hdr[12] << 16) | ((long)hdr[13] << 24);
@@ -1138,8 +1296,8 @@ static int teil_offen(int argc, char **argv)
 #define R39_PX(xx, yy) (px + ((size_t)(yy) * (size_t)w + (size_t)(xx)) * 3u)   /* B,G,R */
 #define R39_GRUND(p) ((p)[2] == 0 && (p)[1] == 16)
 #define R39_KOERPER(p) (((p)[2] == 16 && (p)[1] == 56) || ((p)[2] == 48 && (p)[1] == 8))
-    for (y = 40; y < 210; y++)
-        for (x = 40; x < 300; x++) {
+    for (y = ky0; y <= ky1; y++)
+        for (x = kx0; x <= kx1; x++) {
             if (!R39_KOERPER(R39_PX(x, y))) continue;
             if (R39_GRUND(R39_PX(x - 1, y)) || R39_GRUND(R39_PX(x + 1, y)) || R39_GRUND(R39_PX(x, y - 1)) ||
                 R39_GRUND(R39_PX(x, y + 1))) {

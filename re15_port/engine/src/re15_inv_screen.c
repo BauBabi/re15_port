@@ -873,6 +873,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 if (hi_y < lo_y) { lo_y = hi_y = ry + rh / 2; }
                 /* Runde 35 Spur G (Nachbesserung 1): Fahrstuhlkabine - Fenster = gemalter Innenraum */
                 re15_karte_fahrstuhl_fenster(zn->room, rx, ry, &lo_x, &hi_x, &lo_y, &hi_y);
+                re15_karte_r39_fenster(zn, world_x, world_z, &lo_x, &hi_x, &lo_y, &hi_y);   /* Runde 39 Spur G */
                 if (*mx < lo_x) *mx = (int16_t)lo_x;
                 if (*mx > hi_x) *mx = (int16_t)hi_x;
                 if (*my < lo_y) *my = (int16_t)lo_y;

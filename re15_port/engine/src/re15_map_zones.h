@@ -401,6 +401,20 @@ static const re15_map_zone_t s_map_zones[] = {
      *   idx3 z -18175 = -19675 + 1500 .. -13425 | idx4 z -26750 .. -21375 = -19875 - 1500. */
     { 0x1210, -28928, -28640,  -9776,   1366,  1,   3, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1211, -28928, -28640,  -9776,   1366,  1,   3, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    /* Runde 39 Spur G, Nachbesserung 2 (Abnahme 1, Mangel N1): ROOM1210 ZONE 1 = die SUEDWEST-KAMMER (dritte
+     * West-Zelle, offen zum Flur). Begehbar im Original: zwei eigene Kameraschnitte 6/7 (RVD ROOM1210.RDT @0x002DC
+     * Schnitt 5->6 in der Oeffnung, @0x002F0/@0x00318/@0x0032C), keine Tuer (main00 Door_aot_set nur @0x01CC6..
+     * @0x01D66), kein Sca_id_set in Leons Skript. Weder die Kachel MAP02.PIX r3 noch die Zeile @0x800769B8 noch
+     * mapB2_correct.png zeichnen sie (RE1.5 unfertig) - Beta -> Retail: gezeichnet als Schema (synth 12), Marker mit
+     * DERSELBEN Zeile wie der Flur (177,140,2496,2250) = @0x800769B8 - ein Raum, ein Rahmen, kein Sprung.
+     * WELTBOX = Innenflaeche, um ZONE_SLACK (1500) eingezogen (wie 11D0 Zone 1): West x -27358 = Innenseite @0x01BEC,
+     * Nord z -19898 = @0x01BF8, Sued z -26696 = @0x01BE0. Ost x -22128: dort wechselt die Zeile von Spalte 200 auf
+     * die gemalte Flur-Westwand x201 (FUN_800473f8: px(-22128) = 200, px(-22127) = 201) - die Kammer endet, wo ihre
+     * Zeichnung endet; der Durchgang x201 gehoert zum Flur (Zone 0). Elza 0x1211: dieselbe Kammer; dort schliesst
+     * sub00 die Oeffnung, bis (4,0xEC) und (4,0xFC) gesetzt sind (ROOM1211.RDT Sca_id_set @0x01E0E/@0x01E5A auf
+     * Zelle 15 = @0x01C34 x -22224..-21292 z -22928..-20330, u0 00 -> ff). */
+    { 0x1210, -25858, -25196, -23628, -21398,  1, 255, 1, 112,   177,   140,  2496,  2250, 0, 0,  12, 0 },
+    { 0x1211, -25858, -25196, -23628, -21398,  1, 255, 1, 112,   177,   140,  2496,  2250, 0, 0,  12, 0 },
     { 0x1220, -27611, -10225, -21836,  -4500,  1,   4, 0,  35,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1221, -27611, -10225, -21836,  -4500,  1,   4, 0,  35,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1220, -17075, -10225, -11311,  -4525,  1,   6, 1, 102,   177,   140,  2496,  2250, 0, 0,   0, 0 },
@@ -1133,6 +1147,14 @@ static const re15_map_synth_t s_map_synth[] = {
     { 110, 162,  38,  27, 16, 3, 146, 0, 136, 0, -146, 137 },  /* synth 9:  11D0 = 1160 */
     { 141, 153,  18,  16, 19, 1, 146, 0,  98, 0, -146, 212 },  /* synth 10: 10A0 B1-Absatz */
     { 138, 180,  12,   9, 20, 1, 146, 0, 136, 0, -146, 137 },  /* synth 11: 11D0 Leiter-Kammer (Zone 1) */
+    /* Runde 39 Spur G, Nachbesserung 2: ROOM1210 Suedwest-Kammer (Zone 1) auf B2. KEINE Affine (A = D = 0): der Marker
+     * rechnet mit der Zeile der Zone = @0x800769B8 wie der Flur. Kasten/Zelle aus den Waenden (FUN_800473f8, Zeile
+     * @0x800769B8): West @0x01BEC px 184..188 -> Linie x186 (= Ostwand r9, MAP02.PIX Index 4), Nord @0x01BF8 py 110..114
+     * -> y112 (= Unterkante r5), Sued @0x01BE0 py 129..132 -> y129 (= Flur-Unterkante r3); Ost = die gemalte
+     * Flur-Westwand x201 (r3 Spalte 14, @0x01C40 px 200..203) - die Zelle endet bei x200, ihre Ostkante entfaellt mit
+     * gezeichnetem r3 (karte_r39.c s_kanten), der Durchgang y117..119 (@0x01BC8 endet z -20746 -> py116, @0x01C40 beginnt
+     * z -22520 -> py120) oeffnet r3 (karte_r39.c s_korr). Keine Doppelwand: jede Linie liegt auf der gemalten. */
+    { 186, 112,  15,  18, 21, 1,   0, 0,   0, 0,    0,   0 },  /* synth 12: ROOM1210 Suedwest-Kammer (Zone 1) */
 };
 typedef struct { short x, y, w, h; } re15_map_synth_cell_t;
 static const re15_map_synth_cell_t s_map_synth_cells[] = {
@@ -1148,6 +1170,7 @@ static const re15_map_synth_cell_t s_map_synth_cells[] = {
     { 110, 162,  16,  19 }, { 132, 173,  16,   8 }, { 110, 181,  29,   8 },   /* 11D0 (9) */
     { 141, 153,  18,  16 },                                                     /* 10A0 B1 (10) */
     { 138, 180,  12,   9 },                                                     /* 11D0 Kammer (11) */
+    { 186, 112,  15,  18 },                                                     /* ROOM1210 Kammer (12), Index 21 */
 };
 /* ACHTUNG - ERSATZ-SEITENTABELLE. Das Original fuehrt fuer Blatt 3 (2F)
  * die Tabelle von Blatt 2 (1F): verschiedene Adressen (@0x8007636C /
