@@ -27,6 +27,7 @@
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
+#include <stdlib.h>
 #endif
 
 #include "gen/knall_bank.inc"   /* k_knall_bank: Satz 0 Tuerknall (RE2 ROOM1060 Se_on 0x0a), Satz 1 Knall ROOM1030 Tone 7 */
@@ -770,15 +771,21 @@ void re15_elzazombies_r39_tick(void)
         }
     }
     if (s_zustand != RE15_R39Q_AUS) {
+        /* MESS-HAKEN RE15_R39Q_KNALL_STUMM (kein Spielverhalten, Form Leons RE15_IT_KNALL_STUMM): Signal verbrauchen, aber
+         * nicht spielen — die Differenz zweier RE15_AUDIO_CAP_SYNC-Mitschnitte (mit/ohne) ist genau der Knall. */
+        int stumm = 0;
+#ifdef RE15_PLATFORM_PC
+        stumm = getenv("RE15_R39Q_KNALL_STUMM") ? 1 : 0;
+#endif
         if (re15_game_flag_get(5, RE15_R39Q_SIG_KNALL_TUER)) {
             re15_game_flag_set(5, RE15_R39Q_SIG_KNALL_TUER, 0);
-            re15_audio_re2_tuer_se(KNALL_SE_TUER);
+            if (!stumm) re15_audio_re2_tuer_se(KNALL_SE_TUER);
             log_q("Signal (5,28): Tuerknall (Knall-Bank Satz 0)");
             folge('K', KNALL_SE_TUER);
         }
         if (re15_game_flag_get(5, RE15_R39Q_SIG_KNALL_1030)) {
             re15_game_flag_set(5, RE15_R39Q_SIG_KNALL_1030, 0);
-            re15_audio_re2_tuer_se(KNALL_SE_1030);
+            if (!stumm) re15_audio_re2_tuer_se(KNALL_SE_1030);
             log_q("Signal (5,29): Knall wie ROOM1030 (Knall-Bank Satz 1)");
             folge('K', KNALL_SE_1030);
         }

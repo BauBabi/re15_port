@@ -34,3 +34,26 @@ foreach(_teil zensus kette_45 kette_05 kette_00 kette_21 nach1061 nach1031 ohne)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r39_elzazombies_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+# INTEGRATION (echte exe, tests/integration/test_r39_elzazombies.cmake; Arbeitsordner r39_elzazombies_wd_<teil>, nicht der
+# Target-Name):
+#   integration_r39_elzazombies_kette   Spielstand 1041 + (9,97) bei Bild 200: ganze Kette im debug.log, Kopien naeher an der
+#                                       Kamera, HP 100, Rueckkehr an die gemerkte Stelle
+#   integration_r39_elzazombies_knall   zwei RE15_AUDIO_CAP_SYNC-Mitschnitte (mit/ohne RE15_R39Q_KNALL_STUMM): zwei hoerbare
+#                                       Tuerknaelle
+#   integration_r39_elzazombies_treppe  echter Weg Tuer 1041 -> 1061, Treppe A + B: Kopien an der Westseite gehalten, frei bei
+#                                       der Ankunft (z 24568), Abstand >= 4000; Bild ankunft.ppm
+#   integration_r39_elzazombies_ohne    Leon 1040 + Flanke: nichts; Elza mit (9,97) im Spielstand: keine Flanke
+if(TARGET re15_pc)
+    foreach(_teil kette knall treppe ohne)
+        add_test(NAME integration_r39_elzazombies_${_teil}
+            COMMAND ${CMAKE_COMMAND}
+                -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                -DRE15_KARTE=$<TARGET_FILE:probe_r39_elzazombies_karte>
+                -DRE15_AUSWERTER=$<TARGET_FILE:test_r39_elzazombies>
+                -DWORKDIR=${CMAKE_BINARY_DIR}/r39_elzazombies_wd
+                -DTEIL=${_teil}
+                -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_elzazombies.cmake)
+        set_tests_properties(integration_r39_elzazombies_${_teil} PROPERTIES TIMEOUT 1200)
+    endforeach()
+endif()

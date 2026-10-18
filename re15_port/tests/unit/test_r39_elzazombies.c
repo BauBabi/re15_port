@@ -626,9 +626,53 @@ static void teil_ohne(void)
     g_gameflow.character = 4;
 }
 
+/* ================================================================================================================== */
+/* auswerten_ton <laut.raw> <stumm.raw>: integration_r39_elzazombies_knall — zwei RE15_AUDIO_CAP_SYNC-Mitschnitte desselben  */
+/* Laufs, einmal mit RE15_R39Q_KNALL_STUMM (Signal verbraucht, nicht gespielt). Je Spielbild 1470 Stereo-Abtastungen s16  */
+/* (audio_pc.c, Offset = Bild * 1470). Die Differenz = die Knaelle der Kette (Satz 0: Auftakt 1041, Ende 1061).          */
+/* ================================================================================================================== */
+static int auswerten_ton(const char *pa, const char *pb)
+{
+    size_t na = 0, nb = 0;
+    uint8_t *a = slurp(pa, &na), *b = slurp(pb, &nb);
+    if (!a || !b) { printf("  FEHLER: Mitschnitt fehlt (%s / %s)
+", pa, pb); return 1; }
+    const size_t F = 1470 * 4;
+    size_t n = (na < nb ? na : nb) / F;
+    int gruppen = 0, g_von = -10, g_bis = -10, lang_ok = 0; double g_max = 0;
+    for (size_t f = 0; f < n; f++) {
+        const int16_t *x = (const int16_t *)(a + f * F), *y = (const int16_t *)(b + f * F);
+        double e = 0; for (size_t i = 0; i < F / 2; i++) { double d = (double)x[i] - y[i]; e += d * d; }
+        e = sqrt(e / (double)(F / 2));
+        if (e <= 0) continue;
+        if ((int)f - g_bis > 3) {
+            if (g_bis >= 0) { printf("  Knall Bilder %d..%d (%d), Differenz-RMS max %.0f
+", g_von, g_bis, g_bis - g_von + 1, g_max);
+                              if (g_bis - g_von + 1 >= 20 && g_max >= 1000) lang_ok++; }
+            gruppen++; g_von = (int)f; g_max = 0;
+        }
+        g_bis = (int)f; if (e > g_max) g_max = e;
+    }
+    if (g_bis >= 0) { printf("  Knall Bilder %d..%d (%d), Differenz-RMS max %.0f
+", g_von, g_bis, g_bis - g_von + 1, g_max);
+                      if (g_bis - g_von + 1 >= 20 && g_max >= 1000) lang_ok++; }
+    PRUEF(gruppen == 2 && lang_ok == 2, "zwei hoerbare Tuerknaelle (Knall-Bank Satz 0) in der Kette: %d Gruppen, %d >= 20 Bilder und RMS >= 1000",
+          gruppen, lang_ok);
+    free(a); free(b);
+    return g_fail;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
+    if (!strcmp(teil, "auswerten_ton")) {
+        if (argc < 4) { printf("auswerten_ton <laut.raw> <stumm.raw>
+"); return 2; }
+        int f = auswerten_ton(argv[2], argv[3]);
+        printf("%s: %d Fehler
+", teil, f);
+        return f ? 1 : 0;
+    }
     int alle = !strcmp(teil, "alle");
     if (alle || !strcmp(teil, "zensus"))    teil_zensus();
     if (alle || !strcmp(teil, "kette_45"))  { teil_kette(4, 5, 1); teil_kette(4, 5, 0); }
