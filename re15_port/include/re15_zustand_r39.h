@@ -38,7 +38,7 @@ unsigned re15_zustand_r39_gift_takte(void);
  * (>= 100 + Westen-Bonus), werden die Wund-Tabelle genullt (re15_wound_reset) und der Haut-Neuaufbau
  * angefordert. Rueckgabe 1 = Kleidung wiederhergestellt. */
 int  re15_zustand_r39_heilung(uint8_t item_id);
-/* Plattform (main.c, Blut-Decal-Sync): 1 genau einmal je Anforderung -> Spielerhaut (Slot 0) aus der
+/* Plattform (main.c-Haken im Blut-Decal-Sync -> zustand_r39_pc.c): 1 genau einmal je Anforderung -> Spielerhaut (Slot 0) aus der
  * PLD neu laden. */
 int  re15_zustand_r39_haut_neu_abholen(void);
 /* Test: steht eine Anforderung an (ohne sie abzuholen)? */

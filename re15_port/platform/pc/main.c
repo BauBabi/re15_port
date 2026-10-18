@@ -1387,29 +1387,6 @@ static int pc_sync_player_model(re15_md1_t *pl_md1);
 static void pc_player_model_sync_cb(void)
 { if (s_player_md1_ref) (void)pc_sync_player_model(s_player_md1_ref); }
 
-/* Runde 39 Spur F: Spielerhaut (Slot 0) aus der aktuellen PLD neu laden = der Haut-Upload des
- * Spieler-Ladens (FUN_800314b0 -> FUN_8004ee78 Slot 0x17 @0x800316c8) — die Kleidung ohne Blut-Decals.
- * Danach bumpt der Upload die Slot-0-Generation: der Waffen-Composite legt sich wieder auf, der
- * Blut-Decal-Sync findet die (schon genullte) Wund-Tabelle leer. Familie wie pc_sync_player_model /
- * der Spielstart (PL%02X aus DAT_800aca5c: Leon 0, Elza 4; Modellwechsel-Index, wenn gesetzt). */
-static void pc_player_skin_reload(void)
-{
-    char stem[8];
-    snprintf(stem, sizeof stem, "PL%02X",
-             (unsigned)(s_player_model_idx ? s_player_model_idx : (g_gameflow.character & 0x0F)));
-    int tsz = 0;
-    uint8_t *tb = pc_read_pl_part(stem, RE15_PLD_TIM, &tsz);
-    re15_tim_t nt;
-    if (tb && tsz > 0 && re15_tim_parse(tb, tsz, &nt) == 0) {
-        re15_render_pc_upload_tim_slot(&nt, 0);
-        fprintf(stderr, "[r39-zustand] Spielerhaut %s.TIM neu geladen (%dx%d) - Kleidung ganz\n",
-                stem, nt.width, nt.height);
-    } else {
-        fprintf(stderr, "[r39-zustand] Spielerhaut %s.TIM NICHT neu ladbar\n", stem);
-    }
-    free(tb);
-}
-
 /* Liefert 1, wenn Mesh/Textur getauscht wurden. */
 static int pc_sync_player_model(re15_md1_t *pl_md1)
 {
@@ -9459,8 +9436,8 @@ re_title:;
                                       if (s_wdbg > 0) { extern void re15_wound_debug_all(int);
                                                         re15_wound_debug_all(s_wdbg); } }
                 }
-                { extern int re15_zustand_r39_haut_neu_abholen(void);   /* Runde 39 Spur F: volle Heilung -> */
-                  if (re15_zustand_r39_haut_neu_abholen()) pc_player_skin_reload(); }   /* Haut neu (s. oben) */
+                { extern int re15_zustand_r39_haut_neu_abholen(void); extern void re15_pc_zustand_r39_haut_neu(int);   /* Runde 39 Spur F: volle Heilung -> Haut neu */
+                  if (re15_zustand_r39_haut_neu_abholen()) re15_pc_zustand_r39_haut_neu(s_player_model_idx ? s_player_model_idx : (g_gameflow.character & 0x0F)); }   /* (zustand_r39_pc.c) */
                 unsigned wsg = re15_render_pc_slot0_generation();
                 if (re15_wound_generation() != s_wnd_gen || wsg != s_wnd_slot_gen) {
                     int ok = 1, any = 0;

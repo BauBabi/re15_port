@@ -10,15 +10,20 @@ cmake_minimum_required(VERSION 3.16)
 # der PLD neu laden (= Spieler-Lade-Pfad FUN_800314b0 / FUN_8004ee78 Slot 0x17). Die Mechanik misst
 # unit_r39_zustand A; dieser Riegel misst, was nur die exe zeigt: die TEXTUR der Figur nach dem Spray.
 #
-# Vier Laeufe (ROOM1130 Leon / ROOM1131 Elza, Lage (-1024,0,-3336) rot 856, Cut 2 wie integration_r36_kleidung_bild,
-# HP 20, Inventar Platz 0 = Heilspray 0x22), CONTINUE, Spray ueber den ECHTEN Statusschirm (RE15_PAD_AT
-# 200 START, 260/300/340 SQUARE = ITEM / Kommandokranz / USE, 500 START; Heilung in Bild 375), Framedumps Bild 150
-# (vor dem Spray) und 650 (danach):
+# Sechs Laeufe (ROOM1130 Leon / ROOM1131 Elza / ROOM1130 Leon mit R.P.D.-Weste, Lage (-1024,0,-3336) rot 856, Cut 2
+# wie integration_r36_kleidung_bild, HP 20, Inventar Platz 0 = Heilspray 0x22), CONTINUE, Spray ueber den ECHTEN
+# Statusschirm (RE15_PAD_AT 200 START, 260/300/340 SQUARE = ITEM / Kommandokranz / USE, 500 START; Heilung in Bild 375),
+# Framedumps Bild 150 (vor dem Spray) und 650 (danach):
 #   w  alle 8 Wund-Panels Stufe 2        o  ohne Wunden
+# Weste (Nachbesserung 1): Karte mit Flag(3,0x75) -> re15_savedata_restore rekonstruiert work_vars[0x10] = 1, der
+# CONTINUE-Boot laedt PL01 (main.c pc_player_model_sync_cb, "[pld] Spielermodell -> PLD/PL01.PLD"); PL01.TIM liegt NUR
+# im Container PLD/PL01.PLD -> die Haut-Wiederherstellung (platform/pc/src/zustand_r39_pc.c) geht ueber den
+# Container-Schnitt (re15_pld_part). Spray mit Weste = HP 105 (100 + Bonus 5, item_use_common.c) = voll.
 # Mass (`test_r39_zustand bild`, Figurenkasten x177..247 / y81..205 wie r36):
 #   Bild 150: w vs o  >= 300 Pixel verschieden (die Wunden sind VOR dem Spray sichtbar; gemessen 737 Leon / 462 Elza)
 #   Bild 650: w vs o  == 0 Pixel verschieden (nach dem Spray ist die Kleidung ganz; vorher 787 / 603)
-#   debug.log: "[r39-zustand] Heilung 0x22: HP 100 >= 100 voll" + "Spielerhaut PL0x.TIM neu geladen".
+#   debug.log: "[r39-zustand] Heilung 0x22: HP <voll> >= <voll> voll" + "Spielerhaut PLxx.TIM neu geladen"
+#   (Weste: "Container PLD/PL01.PLD" in dieser Zeile + "[pld] Spielermodell -> PLD/PL01.PLD" beim Boot).
 #
 # Parallel-/Linux-fest: eigene exe-Kopie mit Praefix r39fk, eigener Laufordner je Lauf, keine ererbten Umgebungs-
 # werte (spiel_lauf.cmake setzt und loescht sie). SDL_ASSERT=always_ignore wie r36.
@@ -50,10 +55,10 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 set(_fehler "")
 
 # Ein Lauf: Spielstand (Werkzeug karte), CONTINUE, Spray per Pad-Skript, Framedumps 150/650.
-function(r39fk_lauf _name _raum _chr _wund)
+function(r39fk_lauf _name _raum _chr _wund _flags)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
-    execute_process(COMMAND "${RE15_TOOL}" karte re15_card.mcr "${_raum}" "${_chr}" -1024 0 -3336 856 20 "${_wund}" "22:1" 2
+    execute_process(COMMAND "${RE15_TOOL}" karte re15_card.mcr "${_raum}" "${_chr}" -1024 0 -3336 856 20 "${_wund}" "22:1" 2 "${_flags}"
                     WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
     if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
         message(FATAL_ERROR "r39_zustand_kleidung[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
@@ -82,22 +87,34 @@ function(r39fk_bild _was _a _b _min)
     endif()
 endfunction()
 
-foreach(_fig "leon;1130;0" "elza;1131;4")
+# name;raum;char;flags;HP voll;PLxx  — Weste: Flag(3,0x75), HP 105 (100 + Bonus 5), Modell PL01 (Container)
+foreach(_fig "leon;1130;0;-;100;00" "elza;1131;4;-;100;04" "weste;1130;0;3:0x75;105;01")
     list(GET _fig 0 _n)
     list(GET _fig 1 _raum)
     list(GET _fig 2 _chr)
-    r39fk_lauf("${_n}_w" "${_raum}" "${_chr}" "alle:2")
-    r39fk_lauf("${_n}_o" "${_raum}" "${_chr}" "-")
+    list(GET _fig 3 _flags)
+    list(GET _fig 4 _hpvoll)
+    list(GET _fig 5 _pl)
+    r39fk_lauf("${_n}_w" "${_raum}" "${_chr}" "alle:2" "${_flags}")
+    r39fk_lauf("${_n}_o" "${_raum}" "${_chr}" "-" "${_flags}")
     set(_w "${_basis}_${_n}_w")
     set(_o "${_basis}_${_n}_o")
     r39fk_bild("${_n} Bild 150 (Wunden sichtbar, >= 300)" "${_w}/fd_000150.ppm" "${_o}/fd_000150.ppm" 300)
     r39fk_bild("${_n} Bild 650 (nach dem Spray, == 0)"     "${_w}/fd_000650.ppm" "${_o}/fd_000650.ppm" 0)
     file(READ "${_w}/debug.log" _log)
-    if(NOT _log MATCHES "\\[r39-zustand\\] Heilung 0x22: HP 100 >= 100 voll")
-        set(_fehler "${_fehler}\n  ${_n}: debug.log ohne '[r39-zustand] Heilung 0x22: HP 100 >= 100 voll'")
+    if(NOT _log MATCHES "\\[r39-zustand\\] Heilung 0x22: HP ${_hpvoll} >= ${_hpvoll} voll")
+        set(_fehler "${_fehler}\n  ${_n}: debug.log ohne '[r39-zustand] Heilung 0x22: HP ${_hpvoll} >= ${_hpvoll} voll'")
     endif()
-    if(NOT _log MATCHES "\\[r39-zustand\\] Spielerhaut PL0[04]\\.TIM neu geladen")
-        set(_fehler "${_fehler}\n  ${_n}: debug.log ohne '[r39-zustand] Spielerhaut PL0x.TIM neu geladen'")
+    if(NOT _log MATCHES "\\[r39-zustand\\] Spielerhaut PL${_pl}\\.TIM neu geladen")
+        set(_fehler "${_fehler}\n  ${_n}: debug.log ohne '[r39-zustand] Spielerhaut PL${_pl}.TIM neu geladen'")
+    endif()
+    if(_pl STREQUAL "01")   # Weste: Modell beim Boot geladen + Haut aus dem Container-Schnitt (kein loses PL01.TIM)
+        if(NOT _log MATCHES "\\[pld\\] Spielermodell -> PLD/PL01\\.PLD")
+            set(_fehler "${_fehler}\n  ${_n}: debug.log ohne '[pld] Spielermodell -> PLD/PL01.PLD' (Weste nicht geladen)")
+        endif()
+        if(NOT _log MATCHES "Spielerhaut PL01\\.TIM neu geladen \\([0-9]+x[0-9]+, Container PLD/PL01\\.PLD\\)")
+            set(_fehler "${_fehler}\n  ${_n}: Spielerhaut PL01.TIM nicht aus dem Container PLD/PL01.PLD geschnitten")
+        endif()
     endif()
 endforeach()
 
@@ -105,4 +122,4 @@ file(REMOVE "${_exe}")
 if(NOT _fehler STREQUAL "")
     message(FATAL_ERROR "r39_zustand_kleidung: FEHLER${_fehler}")
 endif()
-message(STATUS "r39_zustand_kleidung: GRUEN (Leon + Elza: Wunden vor dem Spray sichtbar, nach dem Spray 0 Pixel Differenz)")
+message(STATUS "r39_zustand_kleidung: GRUEN (Leon + Elza + Leon mit Weste/PL01-Container: Wunden vor dem Spray sichtbar, nach dem Spray 0 Pixel Differenz)")

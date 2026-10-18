@@ -1,7 +1,8 @@
 # Runde 39 Spur F "zustand" — volle Heilung = ganze Kleidung; Gift zieht Energie wie RE2 (EKG).
 #
 # Dossier: analysis/befunde_runde39/F_zustand.md; Code: engine/src/zustand_r39.c, include/re15_zustand_r39.h,
-# Haken in game_step_common.c, spinnen_r38.c, item_use_common.c, re15_inv_screen.c, platform/pc/main.c.
+# Haken in game_step_common.c, spinnen_r38.c, item_use_common.c, re15_inv_screen.c, platform/pc/main.c (2 Zeilen);
+# PC-Seite der Haut-Wiederherstellung: platform/pc/src/zustand_r39_pc.c (Nachbesserung 1).
 #
 #   unit_r39_zustand   Mechanik (Wund-Tabelle nach voller/teilweiser Heilung, RE2-Gift-Takt im Spielschritt,
 #                      EKG-Farbe des Gift-Zustands); das Programm ist zugleich das Werkzeug der Echtlauf-Riegel

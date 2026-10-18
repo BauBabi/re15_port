@@ -9,7 +9,7 @@
  *   C  EKG: Linienfarben des Statusschirms fuer Gift = RE2 POISON @0x800ab178-7d (ff 20 ff / 08 01 08 je Linie),
  *      FINE unveraendert (RE1.5 @0x8007622c).
  * Werkzeug-Teile fuer die Echtlauf-Riegel (tests/integration/test_r39_zustand_*.cmake):
- *   karte <datei> <raum-hex> <char 0|4> <x> <y> <z> <rot> <hp> <wundspec> <inv> [cut]
+ *   karte <datei> <raum-hex> <char 0|4> <x> <y> <z> <rot> <hp> <wundspec> <inv> [cut] [flags bank:bit,... | -]
  *         Spielstand Slot 0 (v9 mit wounds[8][2]); wundspec wie test_r36_kleidung ("-" | "alle:N" | "5:1,7:1");
  *         inv = "22:1,03:15" (Id hex : Menge dezimal, Slot 0.., "-" = leer).
  *   bild  <a.ppm> <b.ppm> <min_diff> <x0> <y0> <x1> <y1>   Pixel-Differenz zweier Framedumps (wie r36)
@@ -99,9 +99,25 @@ static void inventar_setzen(const char *spec)
         while (*q == ',' || *q == ' ') q++;
     }
 }
+/* Nachbesserung 1: Story-Flags in die Karte ("bank:bit[,bank:bit]", Zahlen wie strtol base 0) — z.B. "3:0x75" =
+ * R.P.D.-Weste: re15_savedata_restore rekonstruiert daraus work_vars[0x10] = 1 (Modell PL01, nur als Container
+ * PLD/PL01.PLD ausgeliefert), und der CONTINUE-Boot laedt das Modell (main.c pc_player_model_sync_cb). */
+static void flags_setzen(const char *spec)
+{
+    if (!spec || strcmp(spec, "-") == 0) return;
+    const char *q = spec;
+    while (*q) {
+        int bank = (int)strtol(q, (char **)&q, 0);
+        while (*q == ':' || *q == ' ') q++;
+        int bit = (int)strtol(q, (char **)&q, 0);
+        if (bank >= 0 && bank < 32 && bit >= 0 && bit < 256) re15_game_flag_set((uint8_t)bank, (uint8_t)bit, 1);
+        while (*q && *q != ',') q++;
+        while (*q == ',' || *q == ' ') q++;
+    }
+}
 static int teil_karte(int argc, char **argv)
 {
-    if (argc < 12) { printf("karte <datei> <raum-hex> <char> <x> <y> <z> <rot> <hp> <wundspec> <inv> [cut]\n"); return 2; }
+    if (argc < 12) { printf("karte <datei> <raum-hex> <char> <x> <y> <z> <rot> <hp> <wundspec> <inv> [cut] [flags]\n"); return 2; }
     const char *path = argv[2];
     unsigned room = (unsigned)strtoul(argv[3], NULL, 16);
     int chr = atoi(argv[4]);
@@ -116,6 +132,7 @@ static int teil_karte(int argc, char **argv)
     inventar_setzen(argv[11]);
     g_scd.cam_id = (uint8_t)((argc > 12) ? atoi(argv[12]) : 0);
     wunden_setzen(argv[10]);
+    if (argc > 13) flags_setzen(argv[13]);
     re15_savedata_t sd; re15_savedata_capture(&sd, 0, 1);
     if (re15_memcard_save(path, 0, &sd, chr ? "ELZA  R39F " : "LEON  R39F ") != 0) {
         printf("FAIL: Karte %s nicht schreibbar\n", path); return 1;
@@ -123,6 +140,7 @@ static int teil_karte(int argc, char **argv)
     printf("Karte %s: Raum %04X char %d pos (%d,%d,%d) rot %d hp %d inv %s wunden", path, room, chr,
            (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y, (int)pl->hp, argv[11]);
     for (int p = 0; p < 8; p++) printf(" %u", sd.wounds[p][0]);
+    if (argc > 13 && strcmp(argv[13], "-") != 0) printf(" flags %s", argv[13]);
     printf("\n");
     return 0;
 }
