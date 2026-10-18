@@ -13,6 +13,8 @@ Wortlaut: `AUFTRAG.md`, Zuteilung: `VERTRAG.md` (Spur A, Welle 1).
 4. "Bei "Alright, let's get down from here" fehlt aus irgendeinen Grund mal wieder das Voiceover."
 
 ## Stand / Fortschritt (neueste zuerst)
+- 09:05 ABGESCHLOSSEN: alle vier Punkte gemessen vorher/nachher am echten Weg (§3/§5), Riegel gruen (§6: Unit 2/2,
+  Integration 4/4, gezielte Module 93/93), Dossier vollstaendig; letzter Commit fix(r39-stimmen).
 - 07:40 Fortsetzung: Vorgaenger-Laeufe ausgewertet (§3 vollstaendig, §5 nachher 1050/1150/11B0), Riegel gebaut
   (unit tabelle 143/143, lader 21/21), Integration (4 Teile, echte exe) gestartet; Ordner-Frage 11B0 geklaert (§4.3),
   Irons-Pegel gemessen (§8), "mal wieder" bisectiert (§3.4).
@@ -245,7 +247,30 @@ F754 0,935 (wie vorher).
 Schwellen: `[voice] ROOM.. msg N <- mainNN.wav`-Zeile genau einmal + `clip loaded` + `[msgtext]`-Wortlaut; Mitschnitt je
 Zeile korr >= 0,5 (1150: >= 0,12 wegen BGM) UND Pegelfaktor-Median 0,5..4,5 UND Segment-Konsistenz >= 60 %. Keine
 geerbten RE15_*-Variablen (werden im Skript geloescht), exe-Kopie `re15_pc_r39a_<teil>_<id>.exe`, eigener Laufordner.
-Ergebnis: siehe Abschnitt "6.3 Lauf" (wird nach dem Lauf nachgetragen).
+Ergebnis (ctest -R "integration_r39_stimmen", echte exe, 07:55-08:20; Werte aus den STATUS-Zeilen der Laeufe):
+- `integration_r39_stimmen_1050` Passed 35,07 s: `main09.wav@F171 korr 0.994 median 1.97 kons 8/8; main10.wav@F303 korr
+  0.981 median 1.20 kons 3/3; main11.wav@F413 korr 0.938 median 1.00 kons 2/2`; Zuordnungszeilen 22/23/24 je genau einmal,
+  `[msgtext]` 22/23/24 im Wortlaut.
+- `integration_r39_stimmen_1150` Passed 56,36 s: `main15.wav@F26 korr 0.999 median 1.27 kons 1/1; main16.wav@F212 korr
+  0.864 median 1.00 kons 11/11; main17.wav@F386 korr 0.702 median 1.21 kons 4/4; main18.wav@F466 korr 0.294 median 3.90
+  kons 11/11; main19.wav@F649 korr 0.243 median 3.99 kons 10/10; main20.wav@F807 korr 0.285 median 4.07 kons 12/12;
+  main21.wav@F990 korr 0.927 median 4.01 kons 5/5`; msg 29 "keine Aufnahme" genau einmal; Texte 22/25/28/29.
+- `integration_r39_stimmen_11b0` Passed 102,39 s: `main13.wav@F2124 korr 0.905 median 1.40 kons 3/3; main14.wav@F2678 korr
+  0.957 median 1.44 kons 7/7; main01.wav@F26 korr 0.924 median 1.00 kons 8/8; main12.wav@F2024 korr 0.944 median 1.13
+  kons 5/5`; keine Sperrzeile; Texte 20/21.
+- `integration_r39_stimmen_1171` Passed 58,17 s (Elza PL04): `main02.wav@F1063 korr 0.933 median 1.50 kons 4/4;
+  main00.wav@F510 korr 0.967 median 1.16 kons 3/3; main01.wav@F752 korr 0.935 median 1.30 kons 5/5`; `[msg] room=1171
+  id=3` vorhanden, keine Anforderung von msg 2.
+(Erster Lauf des Skripts scheiterte an sich selbst: CMake zerlegt ";" in Listenelementen -> Trenner "|"; Original-
+Nachrichten loggen kein `[msgtext]` -> fuer 1171 zaehlt `[msg] id=3`, der Wortlaut steht im Unit-Riegel.)
+
+### 6.3 Gezielte Tests der beruehrten Module (statt voller Suite, VERTRAG)
+`ctest --test-dir re15_port/build -R "r39_stimmen|synchro_stimme|voice_ausreden|audio_sperren|r30_tuer_stimme|
+r34n_f_leiche_stimme|r36_elza_|r38_elzaintro|r38_rekorder|r38_werkstatt11b0|r38_heliport1171|r36_szenenleon|
+r35_cut1150|r36_szene1150|r34n_d_adaruf|r35_inventar1050|r27_ada_cutscene_1050|ada_eintritt_1050|r38_kleinkram_irons"
+--timeout 1500` (93 Tests, davon 21 Integration; Lauf 08:25-09:02, einzeln/sequenziell, keine geerbten RE15_*):
+**`100% tests passed, 0 tests failed out of 93`** (Total Test time (real) = 2219.39 sec). Kein Flattern, keine
+Wiederholung noetig. Keine volle Suite im Spurbaum (VERTRAG); die faehrt der Orchestrator in der Integration.
 
 ## 7. OFFEN
 - (keins fuer die vier Punkte; Nutzer-Fragen §8)
