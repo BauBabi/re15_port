@@ -64,6 +64,7 @@ void re15_r39k_install(uint16_t room);
 void re15_r39k_reach_saat(int naechstes_bild);   /* Sub 6 beginnt: 0 = Phase 0 in diesem Bild, 1 = erst im naechsten */
 void re15_r39k_reach_aus(void);                  /* Sub 6 ersetzt (Plc-Befehl, Kommando-Reset)                       */
 int  re15_r39k_reach_wartet(void);               /* 1 = +0x5 = 6 steht, Sub 6 lief noch nicht (Dispatcher-Bild)       */
+void re15_r39k_reach_bildanfang(void);           /* Walker-Takt des naechsten Bildes (Spieler nicht angehalten)       */
 /* Im Event-Reach-Takt (game_step_common.c) VOR dem Vorschub: 1 = Takt verbraucht (Warten bzw. Phase 0 = Bild 0). */
 int  re15_r39k_reach_takt(re15_actor_t *pl);
 

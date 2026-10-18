@@ -476,6 +476,8 @@ void re15_actor_step_all_walkers(void)
         const uint32_t pause_bit = (i == RE15_ACTOR_SLOT_PLAYER) ? RE15_PAUSE_PLAYER  /* @0x80031c78 */
                                                                  : RE15_PAUSE_AI;     /* @0x8011c5c0 */
         if (g_re15_pauseflags & pause_bit) continue;
+        if (i == RE15_ACTOR_SLOT_PLAYER) { extern void re15_r39k_reach_bildanfang(void);   /* Runde 39 Spur K NB1: */
+            re15_r39k_reach_bildanfang(); }   /* das Dispatcher-Bild (+0x5 = 6) ist vorbei -> Sub 6 laeuft in diesem Bild */
         if (g_actors[i].active && g_actors[i].walk_active) {
             re15_actor_step_walk(&g_actors[i]);
         }

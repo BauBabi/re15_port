@@ -19,6 +19,8 @@ int re15_elza_r39_plc_walk_init(re15_actor_t *a)
         a->anim_frame  = 0;      /* +0x95 := 0 (@0x80030b64 / @0x80030d9c / @0x800313b0) — auch bei gleichem Clip */
         a->anim_frac   = 7;      /* +0x8f := 7 (@0x80030b6c / @0x80030da4 / @0x800313b8) — Blende aus der Vor-Pose */
         a->anim_freeze = 0;      /* Port-Halt einer vorigen Ankunft; das Original kennt keinen Halt, der Clip laeuft */
+        a->motion_init_delay = 1; /* Runde 39 Spur K NB1: Phase 0 faellt in den f314-Rumpf (@0x80030bf8 / @0x80030e4c / @0x80031494) und
+                                   * posiert Bild 0 auch bei GLEICHEM Clip (Gang -> Drehen ohne Sub-6-Bild dazwischen) */
     }
     return 1;
 }

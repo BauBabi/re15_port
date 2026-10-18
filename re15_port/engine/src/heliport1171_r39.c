@@ -45,19 +45,24 @@ void re15_r39k_install(uint16_t room)
  * Belege: include/re15_heliport1171_r39.h (M1/M3a). Der Port fuehrt Sub 6 in game_step_common.c
  * (re15_player_event_reach_*); hier liegt nur der Saat-Zustand.
  * =================================================================================================================== */
-static int s_reach_saat = 0;   /* 0 = Sub 6 laeuft (oder aus) / 1 = Phase 0 im naechsten Takt / 2 = erst im naechsten Bild */
+static int s_reach_saat = 0;   /* 0 = Sub 6 laeuft (oder aus) / 1 = Phase 0 im naechsten Event-Reach-Takt /
+                                * 2 = Dispatcher-Bild: +0x5 = 6 steht, Sub 6 laeuft erst im naechsten Bild */
 
 void re15_r39k_reach_saat(int naechstes_bild) { s_reach_saat = naechstes_bild ? 2 : 1; }
 void re15_r39k_reach_aus(void)                { s_reach_saat = 0; }
 int  re15_r39k_reach_wartet(void)             { return s_reach_saat == 2; }
 
+void re15_r39k_reach_bildanfang(void)
+{
+    /* Naechstes Bild, Spieler nicht angehalten (Gate @0x80031c78, wie der Walker-Takt): der Dispatcher wird jetzt Sub 6
+     * aufrufen (@0x8003068c-ac) — es sei denn, das SCD dieses Bildes hat +0x5 schon neu gesetzt (re15_r39k_reach_aus). */
+    if (s_reach_saat == 2) s_reach_saat = 1;
+}
+
 int re15_r39k_reach_takt(re15_actor_t *pl)
 {
-    if (s_reach_saat == 2) {             /* Bild, in dem der Dispatcher +0x5 = 6 setzte: dessen Gang-/Dreh-/Schub-Pose
-                                          * steht (f314 @0x80030c78 / @0x80031494, Phase 7 ohne anim_set) */
-        s_reach_saat = 1;
-        return 1;
-    }
+    if (s_reach_saat == 2) return 1;     /* Dispatcher-Bild: dessen Gang-/Dreh-/Schub-Pose steht (f314 @0x80030c78 /
+                                          * @0x80031494, Phase 7 ohne anim_set) */
     if (s_reach_saat != 1 || !pl) return 0;
     s_reach_saat = 0;
     re15_szl_schub_spieler_ende();       /* ein gehaltener Schub-Ausgang (Phase 7) ist mit +0x5 = 6 vorbei */
