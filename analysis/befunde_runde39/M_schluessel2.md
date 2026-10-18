@@ -122,3 +122,69 @@ sagt das nicht voraus -> Mechanismus gesucht statt Zahl gedreht.
   `re15_math.c`) trifft alle vier TRILOG-Vierecke Ecke fuer Ecke. Verlauf ueber s (Park, Mitte unveraendert):
   2 x 1 fuer s 0,7206..0,8941, 2 x 2 fuer 0,8941..1,2147, 3 x 2 fuer 1,2147..1,2207, 4 x 2 ab 1,2207 — ein 3 x 1-Viereck
   gibt es an dieser Stelle nicht. Prison: 2 x 2 fuer 0,8135..1,1223, **3 x 2 fuer 1,1223..1,3286**, 4 x 2 ab 1,3286.
+
+## Umsetzung (Endstand, Commit f21c2ee8 + Abschluss)
+
+Nur Werkzeug + erzeugte Dateien, KEIN Engine-Code (das MD1 traegt den Massstab, `schluessel_r36.c:359` liefert es wie
+bisher). Keine gemeinsame Datei angefasst, keine Bank-9-Bits, keine Nachrichten-Ids, kein Asset.
+
+* `re15_port/tools/r38_itemorte/itemorte_export.py` (Runde-38/39-Werkzeug, Kopf um "RUNDE 39 SPUR M" erweitert):
+  - `NUTZER_FAKTOR_M = 0.5` — NUTZER-VORGABE Nachtrag 5 ("maximal halb so gross"), 0,5 x RE2-Quartil-Groesse (Stand Spur
+    L), linear in Breite und Hoehe; ausdruecklich KEIN RE-Wert.
+  - Zwei Grenzen, je Breite UND Hoehe <= 0,5 x Spur L: (1) stetige gezeichnete Huelle (Raster 48/480 wie bisher);
+    (2) GTE-Viereck = Ausdehnung der GANZZAHLIGEN Bildschirm-Ecken aller MD1-Ecken, nachgerechnet Ganzzahl fuer
+    Ganzzahl wie der Port-Prop-Zeichner (`gte_ecken`: pc_prop_rot_q12 fuer Vielfache von 1024 — `re15_trig_lut` dort
+    selbst ausgelesen 0/+-4096 —, `re15_camera_compose_view_bone` Q12 mit einem `>> 12`, `objpoly_r38.c` `sicht` + RTPS
+    mit IR-/SZ3-Saettigung, `gte_divide` = `re15_gte_divide` mit UNR-Tabelle `unr[i] = max(0,(0x40000/(i+0x100)+1)/2
+    - 0x101)`, Bildmitte 160/120 = `const int cx = 160, cy = 120` main.c:2077). Original: FUN_80022f0c RTPT @0x80022fb0,
+    SXY ins Polygon @0x80022fd8..e0.
+  - `s_oben` = groesster Massstab, der beide Grenzen haelt (Bisektion 40 Schritte, 0,1 x s_L .. 0,6 x s_L);
+    `s_unten` = kleinster Massstab mit DENSELBEN ganzzahligen Ecken (Bisektion); geliefert `s = (s_unten + s_oben)/2` —
+    jeder Massstab im Intervall zeichnet dasselbe Bild (gleiche ganzzahlige Ecken, gleiche UV), die Mitte haelt Abstand zu
+    den Sprungstellen. Lage, Drehung, flaches Licht, Aufhebe-Zone: unveraendert (Riegel `unit_r39_schluessel2_konst`).
+  - Werkzeug-Ausgabe (Endstand, `python re15_port/tools/r38_itemorte/itemorte_export.py`):
+    ```
+    park:   Runde 39 M: NUTZER-VORGABE Faktor 0.50; stetige Grenze 2.230 x 1.493 px (Spur L 4.461 x 2.985), GTE-Viereck
+            Spur L x 135..141 y 79..82 = 6 x 3 -> Grenze 3.0 x 1.5
+            -> s_oben 0.8931 (darueber bindet GTE-Raster: GTE 2 x 2, Huelle 1.653 x 1.110), s_unten 0.7195 -> s 0.8063
+            (33.5 % von Spur L): GTE-Ecken [(137,81),(137,80),(139,81),(139,80),(138,81)] = x 137..139 y 80..81 (2 x 1),
+            gezeichnete Huelle 1.483 x 0.995 px (33.2 % / 33.3 %), sichtbar 92 x 58 Einheiten
+    prison: ... GTE-Viereck Spur L x 135..141 y 79..83 = 6 x 4 -> Grenze 3.0 x 2.0
+            -> s_oben 1.2809 (darueber bindet stetig: GTE 3 x 2, Huelle 2.891 x 1.429), s_unten 1.1338 -> s 1.2073
+            (47.1 % von Spur L): GTE-Ecken [(139,80),(139,82),(136,80),(136,82),(138,81)] = x 136..139 y 80..82 (3 x 2),
+            gezeichnete Huelle 2.716 x 1.338 px (47.1 % / 46.6 %), sichtbar 168 x 79 Einheiten
+    ```
+    Warum der Parking Lot Key bei 1/3 landet: an seiner Stelle gibt es zwischen 2 x 1 und 2 x 2 kein 3 x 1-Viereck (Verlauf
+    oben); 2 x 2 hat die Hoehe 2 > 1,5 = halbe Spur-L-Hoehe 3. Der Prison Key trifft mit 3 x 2 genau die Haelfte von 6 x 4.
+  - `--schreiben` erzeugt `gen/itemorte_r38_lage.inc` (RE15_R38K_PARK_S10000 24100 -> **8063**, RE15_R38K_PRISON_S10000
+    25623 -> **12073**; neu `RE15_R39M_FAKTOR100 50`, je Schluessel `RE15_R39M_*_{SL_10000, L_BREITE/L_HOEHE/BREITE/HOEHE_PX1000,
+    L_GTE_X0/Y0/B/H, GTE_X0/Y0/B/H, S_UNTEN_10000, S_OBEN_10000, MX100000, MZ100000}`; `RE15_R39L_*` beschreiben weiter den
+    Spur-L-Stand) und `gen/itemorte_r38_md1.inc` (die zwei MD1, nur die Ecken @0x44). Zwei Laeufe -> md5 gleich
+    (lage 491ce53f..., md1 44cf8b8c...): Fixpunkt, der Generator liest seine Ausgabe nicht.
+
+## Messung nachher (Endstand, exe 4e0ead5b = `re15_pc_r39m_nach2.exe`, dieselben Laeufe wie "vorher")
+
+| Lauf | Pixel (vorher) | Huelle B x H (vorher) | Sum|dL| (vorher) | Anteil B / H | Grenze "halb" |
+|---|---|---|---|---|---|
+| Leon Parking Lot Key, Skala 3 (960x720) | 9 (69) | x 413..416 y 241..243 = **4 x 3** (14 x 8) | 403 (3731) | 29 % / 38 % | <= 7 x 4: **ja** |
+| Leon, Skala 4 (1280x960) | 13 (125) | x 550..555 y 322..324 = 6 x 3 (18 x 11) | 571 (6311) | 33 % / 27 % | <= 9 x 5: ja |
+| Leon, Skala 1 (320x240) | 0 (7) | - (5 x 2) | 0 (506) | - | (unsichtbar) |
+| Elza Prison Key, Skala 3 | 16 (63) | x 410..417 y 242..246 = **8 x 5** (16 x 10) | 748 (3960) | 50 % / 50 % | <= 8 x 5: **ja** |
+| Elza, Skala 4 | 28 (118) | x 547..556 y 322..328 = 10 x 7 (22 x 14) | 1215 (5524) | 45 % / 50 % | <= 11 x 7: ja |
+| Elza, Skala 1 | 0 (5) | - (4 x 2) | 0 (317) | - | (unsichtbar) |
+
+AUSSEN je 0; Elza-Laeufe `Spieler-Familie PL04`. ECHTER Lade-Weg (Spielstand + CONTINUE, `mess_continue.sh`, Bild 100,
+`CONTINUE: resumed in room 10f0`/`10f1`): Skala 3 Leon 9 / x 413..416 y 241..243 / 403, Elza 16 / x 410..417 y 242..246 /
+748; Skala 4 Leon 13 / 6 x 3 / 571, Elza 28 / 10 x 7 / 1215 — bitgleich zum Sprung-Weg. Szenen der Runde-38-Abnahme
+(`mess_r38.sh`, CONTINUE, Skala 1): Cut 5 Park 0 (vorher 7 / 506), Prison 0 (vorher 5 / 317); Cut 6 (zweite Kamera auf
+die Pinnwand) Park 2 Pixel / 111 (vorher 11 / 458), Prison 3 / 94 (vorher 13 / 646).
+RE15_TRILOG des Endstands (Riegel `integration_r39_schluessel2` R): Park-Ecken (137,80) (139,80) (139,81) (137,81) Mitte
+(138,81) = 2 x 1, Prison (136,80) (139,80) (139,82) (136,82) Mitte (138,81) = 3 x 2 — wie das Werkzeug und
+`unit_r39_schluessel2_raster` (Engine-Funktionen).
+
+Augenschein (`M_bilder/m_s3_s4_vorher_stetig_endstand_x8.png`: Spalten Spur L | nur stetige Regel | Endstand, Zeilen Leon
+Skala 3/4, Elza Skala 3/4; `M_bilder/m_s3_pinnwand_vorher_endstand_x2.png`: die Pinnwand bei 960x720, vorher | nachher):
+der Parking Lot Key ist ein kleiner heller Schaft mit dunklem Kopfende in der richtigen Lage (die stetige Regel hatte ihn
+zu einem senkrechten Strich gemacht), der Prison Key ein kleiner Ring mit Schaft — beide deutlich kleiner als die Zettel.
+Bei 320x240 (Skala 1) zeichnen die 2 x 1 / 3 x 2 Bildpunkte nur durchsichtige Texel (Punktabtastung wie die PSX-GPU):
+der Schluessel ist dort nicht mehr zu sehen (vorher 7 / 5 Pixel).
