@@ -47,8 +47,18 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1011,  -4400,   1450,   6600,  10350,  2,   7, 1, 100,   244,    20,  2287,  2319, 1, 1,   0, 0 },
     { 0x1020, -28874, -28532,  -1044,  -3990,  2,   1, 0,   3,   100,   136,  2287,  2287, 0, 0,   0, 0 },
     { 0x1021, -28874, -28532,  -1044,  -3990,  2,   1, 0,   3,   100,   136,  2287,  2287, 0, 0,   0, 0 },
-    { 0x1030, -27992, -31110,   4560,     16,  2,   4, 0,   4,   108,   194,  2428,  2229, 0, 0,   0, 0 },
-    { 0x1031, -27992, -31110,   4560,     16,  2,   4, 0,   4,   108,   194,  2428,  2229, 0, 0,   0, 0 },
+    /* Runde 39 Spur G, Nachbesserung 1 (Abnahme-Mangel M5): ROOM1030. AUSGELIEFERT @0x800768C8 =
+     * 6c 00 c2 00 7c 09 b5 08 = (108,194,2428,2229). Gegen die eigene Kunst (MAP03.PIX r4 uv(184,56)) liegt sie
+     * bis 5 px daneben - Waende ROOM1030.RDT Band 0 -> gemalte Linie mit der ausgelieferten Zeile: z -1784 @0x01A70
+     * -> y130 (gemalt 125), -5212 @0x01A40 -> 137 (134), -10568 @0x01A10 -> 148 (144), -22771 @0x01AE8 -> 174 (173);
+     * x -26732 @0x01A4C -> 120 (119), -19254 @0x01A34 -> 138 (136), 2398 @0x01A1C -> 188 (186). Folge: 63 von 2288
+     * begehbaren Rasterpunkten (Westfluegel, z -4710) neben der Kachel. Eine Zeile mit DENSELBEN Offsets (108,194)
+     * und den an den acht Waenden gemessenen Massstaeben trifft alle auf <= 1 px (G_karten_werkzeug/zeile_fit.py):
+     * sx 2428 -> 2403, sy 2229 -> 2373. Beta -> Retail: das Original rechnet hier mit einem Massstab, der zur
+     * eigenen Zeichnung nicht passt (unfertig); Ziel ist RE2, dessen Marker per Konstruktion auf der Kunst liegt
+     * (FUN_8006e120, ein Massstab /450 @0x8006e1dc-0x8006e20c). PORT-KORREKTUR, Offsets unveraendert. */
+    { 0x1030, -27992, -31110,   4560,     16,  2,   4, 0,   4,   108,   194,  2403,  2373, 0, 0,   0, 0 },
+    { 0x1031, -27992, -31110,   4560,     16,  2,   4, 0,   4,   108,   194,  2403,  2373, 0, 0,   0, 0 },
     { 0x1040, -32762, -19208, -15590,  24856,  2,   2, 0,   5,    94,   193,  2080,  2320, 0, 0,   0, 0 },
     { 0x1041, -32762, -19208, -15590,  24856,  2,   2, 0,   5,    94,   193,  2080,  2320, 0, 0,   0, 0 },
     /* ROOM1050 -> Rect 0, spiegelverkehrt eingemessen 2026-09-12 (karte-1050.md;
@@ -206,8 +216,15 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x10F1,  -9800,  -5400,  11300,  16800,  3,   9, 0,  15,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x1100, -29200, -29100, -10500,  -7400,  3,   6, 0,  16,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x1101, -29200, -29100, -10500,  -7400,  3,   6, 0,  16,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x1110, -15850,  -7650,  14950,   7600,  3,   5, 0,  17,     0,     0,     0,     0, 1, 1,   0, 0 },
-    { 0x1111, -15850,  -7650,  14950,   7600,  3,   5, 0,  17,     0,     0,     0,     0, 1, 1,   0, 0 },
+    /* Runde 39 Spur G, Nachbesserung 1 (M5): ROOM1110, Original-Zeile @0x80076938 = Stub 00 00 00 00 01 00 01 00.
+     * Die Bbox-Streckung legte den Tuergang nach ROOM1100 (Welt x -3250..-950, z -6650..-4000) auf x187 = neben die
+     * Ostwand x186 (8 von 1237 Rasterpunkten). Zeile aus den Waenden des Evidence-Raums (MAP04.PIX s_map_rectfix[5]
+     * uv(184,48), Spiegel 1,1 wie bisher): x 12650 @0x00734 -> 146, -3250 @0x0071C -> 186; z -6650 @0x00788 -> 114,
+     * 5100 @0x00728 -> 144 (Reste 0). Gegenproben: Ostwand der kleinen Raeume x -13850 @0x007A0 -> 212 = gemalte
+     * Ostlinie; der Tuergang (-2650,-6150..-4050) -> (184,115..120) = genau der gemalte Tuerschwenk x181..186
+     * y115..120 der Kachel (Lage UND Spiegel bestaetigt). */
+    { 0x1110, -15850,  -7650,  14950,   7600,  3,   5, 0,  17,   258,    49,  2638,  2677, 1, 1,   0, 0 },
+    { 0x1111, -15850,  -7650,  14950,   7600,  3,   5, 0,  17,   258,    49,  2638,  2677, 1, 1,   0, 0 },
     /* Runde 39 Spur G: wie ROOM10C0 (dieselbe Kachel-Form auf 3F, MAP05.PIX uv(128,16) = rect 5 (120,119,40,40), gemalt
      * x 120..153): vorher 77 von 1080 Rasterpunkten neben der Kachel. Waende ROOM1120.RDT Band 0 -> Linie: x 6650
      * @0x00338 -> 120, -8500 @0x00350 -> 153, 3500 @0x00320 -> 127, -700 @0x00314 -> 136 (Reste 0); z -5800 @0x00344 ->
@@ -222,8 +239,16 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1151, -28658, -27884, -14330,  -9560,  4,   2, 0,  21,   111,   130,  2296,  2312, 0, 0,   0, 0 },
     { 0x1170, -13430, -10910,  15658,  17746,  5,   1, 0,  23,   100,   206,  2280,  2268, 0, 0,   0, 0 },
     { 0x1171, -13430, -10910,  15658,  17746,  5,   1, 0,  23,   100,   206,  2280,  2268, 0, 0,   0, 0 },
-    { 0x1170, -28900, -28841,  -8784, -17070,  5,   0, 1,  24,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x1171, -28900, -28841,  -8784, -17070,  5,   0, 1,  24,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* Runde 39 Spur G, Nachbesserung 1 (M5): ROOM1170 Zone 1 (Treppenaufgang zum Dach). Die ausgelieferte Zeile
+     * @0x80076968 (100,206,2280,2268) gehoert Zone 0 (Hof); fuer Zone 1 legte die Bbox-Streckung den Westarm 5..10 px
+     * neben die gemalte L-Form (3F: 51 von 311 Rasterpunkten neben der Kachel, Dach 12 von 186). Die L-Form passt mit
+     * Spiegel 0,0 (NICHT gedreht): Band 0 = Kopfband (x -26926..-20000) + Arm nach Sueden (x -24183..-20000), Band 4 =
+     * Streifen nach Osten (x -20471..-10432, z -24434..-27134) = gemalter Unterarm. Zeile aus den Waenden ROOM1170.RDT:
+     * x -26926 @0x00B70, -24183 @0x00B94, -20000 @0x00B64, -20471 @0x00BF4, -10432 @0x00BD0; z -18272 @0x00B58,
+     * -24434 @0x00BE8, -26881 @0x00B7C, -27134 @0x00BDC -> gemalte Linien (Reste <= 1). Dach (Blatt 5 rect 0 (140,80),
+     * MAP06.PIX uv(192,16)): x -> 140/147/157/157/181, z -> 80/94/101/101. */
+    { 0x1170, -28900, -28841,  -8784, -17070,  5,   0, 1,  24,   128,   113,  2597,  2511, 0, 0,   0, 0 },
+    { 0x1171, -28900, -28841,  -8784, -17070,  5,   0, 1,  24,   128,   113,  2597,  2511, 0, 0,   0, 0 },
     /* Runde 35 Spur G (Nutzer: "In ROOM 1230 bekomme ich die Map von ROOM 11E0").
      * ROOM1230 IST ROOM1180 (Variante desselben Ortes): alle Tuer-Datensaetze identisch
      * (1180 @0x9EE..0xA94 == 1230 @0xAEE..0xBC4), gleiche SCA-Huelle; der Seiten-Setzer
@@ -564,8 +589,13 @@ static const re15_map_zone_t s_map_zones[] = {
      * 1F-Kachel ist unvermessen - OFFEN in karte-1010.md 5.3. */
     { 0x10F0,  -9800,  -5400,  11300,  16800,  2,   8, 0,  15,     0,     0,     0,     0, 1, 1,   0, 1 },
     { 0x10F1,  -9800,  -5400,  11300,  16800,  2,   8, 0,  15,     0,     0,     0,     0, 1, 1,   0, 1 },
-    { 0x1170, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x1171, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,     0,     0,     0,     0, 0, 0,   0, 1 },
+    /* Runde 39 Spur G, Nachbesserung 1 (M5): ROOM1170 Zone 1 auf 3F (Blatt 4 rect 3 (152,89), MAP05.PIX uv(192,16) =
+     * dieselbe Zeichnung wie auf dem Dach, +12/+9 versetzt): dieselben neun Waende -> 152/159/169/169/193 bzw.
+     * 89/103/110/110 (Reste <= 1). Treppen (Aot_set sce 12/13): Band 0 (-25670,-20645) @0x0137A -> (156,95),
+     * Band 2 (-25640,-23425) @0x0138E -> (156,101), (-23295,-26155) @0x013A2 -> (162,108), Band 4 (-20690,-25595)
+     * @0x013B6 -> (168,107). */
+    { 0x1170, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,   140,   122,  2597,  2511, 0, 0,   0, 1 },
+    { 0x1171, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,   140,   122,  2597,  2511, 0, 0,   0, 1 },
     /* Runde 36 Spur M: die beiden 11A0-Gast-Zeilen (Blatt 6 rect 2, etage 1) sind ENTFALLEN -
      * Blatt 6 rect 2 ist jetzt die HAUPTzeile von ROOM11A0 (s.o. bei ROOM1190). */
     { 0x4070, -14950, -28550,  -2100, -15750, 11,   3, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
@@ -774,8 +804,17 @@ static const re15_map_mark_t s_map_marks[] = {
      * ROOM1160 -> ROOM1180 (ROOM1160.RDT @0x007C6). ROOM1160 fuehrt keine
      * Zonenzeile; die Nummer 22 wurde in Runde 10 an ROOM1090 vergeben, die Marke
      * hing seitdem am Besucht-Bit von ROOM1090 und am Rechteck des Treppenhauses. */
-    {  4,  3,  159,   99, 4,  24, 255, 0 },
-    {  4,  3,  168,  107, 5,  24, 255, 0 },   /* Runde 39 Spur G: y106 -> y107, Sprossen y105..109 frei von der Wand y103/104 (map3F_correct.png) */
+    {  4,  3,  156,   98, 4,  24, 255, 0 },   /* Runde 39 Spur G, Nachbesserung 1 (M5): x159/y99 = Bbox-Projektion der
+                                               * Laufmitte; mit der Wandzeile liegt der Lauf Band 0 -> 2 (@0x0137A
+                                               * (156,95) .. @0x0138E (156,101)) auf x156, Mitte y98. */
+    {  4,  3,  168,  106, 5,  24, 255, 0 },   /* Runde 39 Spur G, Nachbesserung 1 (Abnahme-Mangel M1): y106 wie vor
+                                               * Runde 39. Die Vorlage map3F_correct.png verschiebt die Treppe um EIN
+                                               * Vorlagenpixel = 1/3 Spielpixel (Sprossen y104,33..109,33) - bei 1x
+                                               * nicht darstellbar: y105..109 (y107) stellte alle drei Sprossen auf die
+                                               * Linie y110 (x166 auf den Tuerbalken 1130/1170), y104..108 (y106) beruehrt
+                                               * nur mit (170,104) die Wandecke (170,103); Blockmitten-Abtastung der
+                                               * Vorlage (Abnahme 0) = y104..108. Projektion der Band-4-Treppe @0x013B6
+                                               * mit der Wandzeile: y107 (9 Waende) bzw. y106 (5 Waende) - beide im Kasten. */
     {  4,  4,  145,   84, 3,  19,  21, 1 },
     {  4,  4,  160,  152, 1,  19,  20, 1 },
     {  4,  4,  166,   89, 2,  19,  24, 1 },   /* Runde 39 Spur G: x168 -> x166, Balken x164..168 endet vor der Ecke x169 (map3F_correct.png) */
@@ -937,7 +976,11 @@ static const re15_map_mark_t s_map_marks[] = {
     {  0, 255,  136,  173, 2,  25,  30, 0 },   /* Gang <-> 11D0 / 1160 */
     {  0, 255,  163,   94, 2,  28,  29, 0 },   /* 11B0 <-> 11C0 */
     {  0, 255,  154,  162, 4,  10, 255, 0 },   /* 10A0 Treppe 6<->4 (1F)  @0x00E7C */
-    {  0, 255,  145,  165, 4,  10, 255, 0 },   /* 10A0 Treppe 4<->3 (B2)  @0x00E90 */
+    {  0, 255,  145,  164, 4,  10, 255, 0 },   /* 10A0 Treppe 4<->3 (B2)  @0x00E90 - Nachbesserung 1 (Abnahme-Mangel M2):
+                                               * y165 -> y164. Projektion der Mitte (21450,20650) = (145,165); deren
+                                               * unterste Sprosse (143..147,167) lag Pixel an Pixel auf der Unterkante
+                                               * y168 der Absatz-Zeichnung (Zelle (141,153,18,16)). y164: Sprossen y162/
+                                               * 164/166, eine Zeile Abstand zu y168; die Projektion bleibt im Kasten. */
 };
 
 /* INNENWAENDE in Karten-Pixeln: Linie (x0,y0)-(x1,y1) im Rechteck der Zone.

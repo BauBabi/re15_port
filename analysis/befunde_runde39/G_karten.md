@@ -332,9 +332,9 @@ VORHER-Messungen der Abnahme werden NICHT wiederholt.
 ### Fortschritt
 - [x] M3 (hoch, Regression): Doppelwand-Korrekturen nur, wenn die verbleibende Linie gezeichnet wird (Code + Echtlauf, Riegel folgt)
 - [x] M4 (mittel): Treppenhaeuser 1060/10A0 - Abbildung zu den verschobenen Treppensymbolen (Zeilen aus den Waenden, Riegel folgt)
-- [ ] M5 (mittel): Marker neben der Zeichnung 1210/1170 Z1/1030/1110/1060/10A0 B2
-- [ ] M1 (gering): 3F-Treppe (168,107) auf Linie y110
-- [ ] M2 (gering): B1 10A0-Treppe auf der Unterkante y168
+- [x] M5 (mittel): Marker neben der Zeichnung - 1030/1110/1170 Z1 Zeilen aus den Waenden, 1060/10A0 ueber M4; 1210 Nutzerfrage
+- [x] M1 (gering): 3F-Treppe (168,107) auf Linie y110 -> (168,106)
+- [x] M2 (gering): B1 10A0-Treppe auf der Unterkante y168 -> (145,164)
 - [ ] Bau, gezielte Tests, Abschluss
 
 ### M3 Doppelwand-Korrektur oeffnet Raeume in Teilzustaenden (Regression)
@@ -418,3 +418,49 @@ offen.py: alle 0 ausser 1110 4 (VORHER 4) und 1210 4 (VORHER 2)
   Rechtecks fern (vorbestehend, gilt fuer jede Kachel, nicht angefasst). Tuerwechsel-Sprung (Ankunft im Nachbarraum,
   dessen Zeile unveraendert): 1060 -> 1040 7 -> 8, -> 10C0 5 -> 6, -> 1120 6 -> 7 (je +1 px in y: die Wandzeile legt
   die Tuermitte z 25400 auf y152, die Bbox auf y151 = die Zeile von 1040); 10A0 B2 -> 11E0 9 -> 6.
+
+### M5 Marker weiter neben der Zeichnung (1030, 1110, 1170 Zone 1, 1060/10A0, 1210)
+Messung vorher = Abnahme 0 Abschnitt 5 (nicht wiederholt): 1210 207/1141, 1170 Zone 1 51/311, 1030 63/2288, 1110 8/1237,
+1060 4/155, 10A0 Band 1 8/140. Werkzeug je Raum: Waende (SCA-Zelle, Innenflaeche, Datei-Offset) -> gemalte Linie der
+Kachel (Kachel-Index 4), Zeile fuer FUN_800473f8 per kleinsten Quadraten (zeile_fit.py), Gegenprobe an Tueren/Treppen.
+* 1060 / 10A0: ueber M4 (Zeilen aus den Waenden) - 0 ausserhalb auf allen Baendern.
+* 1030: AUSGELIEFERTE Zeile @0x800768C8 = `6c 00 c2 00 7c 09 b5 08` (108,194,2428,2229) - selbst gelesen. Gegen die eigene
+  Kachel (MAP03.PIX r4 uv(184,56)) liegt sie bis 5 px daneben: z -1784 @0x01A70 -> y130 (gemalt 125), -5212 @0x01A40 ->
+  137 (134), -10568 @0x01A10 -> 148 (144), -22771 @0x01AE8 -> 174 (173); x -26732 @0x01A4C -> 120 (119), -19254 @0x01A34
+  -> 138 (136), 2398 @0x01A1C -> 188 (186). Die 63 Punkte sind der Westfluegel (Welt z -4710 -> y136 unter der gemalten
+  Suedwand y134). Mit DENSELBEN Offsets (108,194) und den an den acht Waenden gemessenen Massstaeben sx 2403 / sy 2373
+  treffen alle Waende auf <= 1 px. Beta -> Retail: die ausgelieferte Zeile passt nicht zur eigenen Zeichnung (unfertig);
+  RE2 bildet mit EINEM Massstab ab (FUN_8006e120 /450, @0x8006e1dc-@0x8006e20c, Abnahme 0 Abschnitt 1), seine Kunst
+  ist darauf gezeichnet - der Marker liegt dort per Konstruktion auf der Zeichnung. PORT-KORREKTUR nur der Massstaebe.
+* 1110: Original-Zeile @0x80076938 = Stub. Die Bbox-Streckung legte den Tuergang nach 1100 (Welt x -3250..-950,
+  z -6650..-4000) auf x187 neben die Ostwand x186. Zeile aus den Waenden des Evidence-Raums (Spiegel 1,1 unveraendert):
+  x 12650 @0x00734 -> 146, -3250 @0x0071C -> 186; z -6650 @0x00788 -> 114, 5100 @0x00728 -> 144 => (258,49,2638,2677).
+  Gegenproben: Ostwand der kleinen Raeume x -13850 @0x007A0 -> 212 = gemalte Ostlinie; Tuergang (-2650,-6150..-4050)
+  -> (184,115..120) = genau der gemalte Tuerschwenk x181..186 y115..120 (Lage und Spiegel bestaetigt - die Vermutung
+  "L-Form passt unter dem Spiegel nicht" aus dem Bau galt nur fuer die Bbox).
+* 1170 Zone 1: die ausgelieferte Zeile @0x80076968 (100,206,2280,2268) gehoert Zone 0; Zone 1 hatte die Bbox. Die
+  gemalte L-Form (MAP05/06.PIX uv(192,16)) passt mit Spiegel 0,0 - Band 0 Kopfband + Arm nach Sueden, Band 4 Streifen
+  nach Osten = Unterarm (die "180 Grad gedreht"-Vermutung des Baus sah nur Band 0). Neun Waende (x -26926 @0x00B70,
+  -24183 @0x00B94, -20000 @0x00B64, -20471 @0x00BF4, -10432 @0x00BD0; z -18272 @0x00B58, -24434 @0x00BE8, -26881
+  @0x00B7C, -27134 @0x00BDC) -> 3F (140,122,2597,2511), Dach (128,113,2597,2511), Reste <= 1. Treppen 3F: Lauf Band 0 -> 2
+  @0x0137A (156,95) .. @0x0138E (156,101): Marke (159,99) (Bbox-Projektion der Laufmitte) -> (156,98); Band 4 @0x013B6
+  -> (168,107) bzw. (168,106) (M1). Dach: Marke (156,97) gegen (156,98) - bleibt.
+* 1210 (207/1141): die Suedwest-Kammer ist begehbar, aber weder im Original (MAP02.PIX r3) noch in mapB2_correct.png
+  gezeichnet - Zielkonflikt Vorlage gegen Marker; NICHT eigenmaechtig dazugezeichnet, Entscheidungsfrage an den Nutzer
+  bleibt (s. "Fuer den Nutzer").
+* MESSUNG NACHHER (Sonde markerflaeche, alle_raeume.py, Bau ~21:35): 1030 0/2288, 1110 0/1237 (+ kleine Raeume 0/150,
+  0/180), 1170 Zone 1 3F 0/311, Dach 0/186 (vorher 12), 1060 0/0/0, 10A0 0/0/0.
+
+### M1 3F-Treppe (168,107): alle Sprossen auf der Linie y110
+* Die Vorlage verschiebt die Treppe um 1/3 Spielpixel; je nach 3x-Phase ergibt die Abtastung y104..108 (Abnahme,
+  Blockmitten) oder y105..109 (Bau). Bei 1x passen 5 Sprossenzeilen in die 6 freien Zeilen y104..109 nicht mit Abstand
+  zu beiden Linien. Gezaehlt: y107 = 3 Beruehrpixel (alle Sprossen auf y110, x166 auf dem Tuerbalken 1130/1170), y106 =
+  1 Beruehrpixel ((170,104) unter der Wandecke (170,103)). Die Projektion der Band-4-Treppe @0x013B6 mit der neuen
+  Zeile liegt je nach Wandsatz auf y106/y107 - beide im Kasten. Entscheidung: (168,106) (weniger Beruehrung,
+  Blockmitten-Abtastung der Vorlage). Riegel-Soll entsprechend.
+
+### M2 B1-Treppe 10A0 (145,165) auf der Unterkante y168
+* Projektion der Mitte (21450,20650) @0x00E90 = (145,165); unterste Sprosse (143..147,167) Pixel an Pixel auf der
+  Unterkante y168 der Absatz-Zelle (141,153,18,16). Marke -> (145,164): Sprossen y162/164/166, eine Zeile Abstand; die
+  Projektion bleibt im 5x5-Kasten (Riegel r36 Treppe <= 1 px haelt). Riegel unit_r39_karten_b1 prueft jetzt "keine
+  Sprosse beruehrt die Randlinie" (Nachbarpixel jeder Sprosse im Innenraum).
