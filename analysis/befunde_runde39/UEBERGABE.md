@@ -6,6 +6,11 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-19 00:26: Spur K heliport1171 BESTANDEN (Abnahme 2; Fix 9ca95a72): HOVER-Phase 0 @0x801151d8 ohne f314/Bewegung, SPIN-Phase 2
+  ohne Gier +60 (@0x80115460-6c nur Phase 0/1), Wand-Pass FUN_8003b0a4 der Kraehen-Wurzel nach jedem Zustand (@0x80112204);
+  Griff 9-10 Bilder spaeter, Heranwinken RBJ rec1 Clip 2 unveraendert. Integration mit G (sobald bestanden). Nutzer-Nachtrag
+  11 (0377959a/14c0d454): Zombies in 1041 statt 1071 (Q-Baum cceb31ef/50e00d74). Spur R hund1121 gestartet wf_db73ffe8-91e,
+  args {"welle": ["R"], "slots": 1, "max_nach": 1, "basis": "02dc7917"}. Aktiv: G, J, O, P, Q, R.
 * 2026-10-19 00:16: Nutzer-Nachtrag 10 (02dc7917): Elza - Johns Ruf ab 1041 (leise), Satz msg 40 dort (Stimme room1041/main40.wav =
   Kopie von room1141/main50), Karte mit 1141-Marker, Panikphase mit Leons Schlussmusik bis zur Rettung, 1131 lauterer Ruf,
   1141 ohne Reaktion (J, Nachtrag in J-Baum 3f0ef678), Zombie-Durchbrueche 10C1/1061/1071/1031, Hund durchs Fenster 1121.
