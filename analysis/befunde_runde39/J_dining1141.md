@@ -143,7 +143,47 @@ re15_audio_re2_glas_se, EDT @0x84 Satz 0x21). Im Original-1141 klingt vor msg 6 
   (Form RE2 ROOM1090 @0x02BB0/@0x02BBC/@0x02BC0: Se_on, Sleep 5, Se_on). Tonteil bytegleich als gen/*.inc.
 
 
+### 2.5 Punkt 2/8 - Kameras und Lagen (RID ROOM1141, SCA, Projektion H = persp>>7 = 208)
+RID-Saetze (RDT +0x24, 0x20 B je Cut): Cut 5 (-7266,-3806,-17278) -> Norden (Rolladen, Gemaelde, durch die Rolladen-Oeffnung
+der Gang); Cut 6 (-8292,-838,-6606) -> Norden = Dachgang mit Dachtuer; Cut 7 (-7465,-3024,-9613) -> Sueden (vom Gangende
+in den Raum: der Gang und die Dachtuer liegen HINTER der Kamera); Cut 8 (-2824,-1295,-18232) -> Suedwesten (Ecke).
+"Kamera vorne auf Elza" = Cut 7: das einzige nach Sueden blickende Bild am Gang; Elza muss dafuer in seinem Kegel stehen
+und nach Norden blicken. Bildlage (scratchpad `j39b/proj.py`, Fuss y=0 / Kopf y=-1700): Elza (-7800,-12800) -> (208,234) /
+(215,147) = ganz im Bild; am Gemaelde (-8000,-10250) waere sie 50 Grad neben der Achse (nicht im Bild). Cut 5 zeigt die
+Dachtuer (-7350,-1300) durch die Rolladen-Oeffnung (118,106) in 16000 Tiefe - deshalb NICHT Cut 5 waehrend die Tuer
+aufgeht. John innen vor der Dachtuer (-7350,-1300) in Cut 6 -> Fuss (170,188), Kopf (170,121). Nach dem Kampf: John in
+seiner Ecke (-7550,-21500) (Ziel sub02 @0x00F8E) und Elza (-6000,-20000) beide im Bild von Cut 8 ((194,200) / (217,232)).
+SCA (RDT +0x20, 5 x 19 Saetze zu 12 B, re15_rdt.h re15_sca_entry_t; `j39b/sca.py`): alle vier Lagen frei
+(naechste Zelle 800 / 1050 / 2171 / 600). Tuerton-Laengen DOOR1A (tueren_02_re2.md 4): Ton 0 = 1,43 s, Ton 1 = 0,89 s.
+
 ## 3. Umsetzung
+
+### 3.1 Dateien (Commit 46916d79)
+- NEU `re15_port/include/re15_dining_r39.h` (alle Konstanten mit Beleg), `re15_port/engine/src/dining_r39.c` (Programme,
+  Texte 50..52, Installer: John in Phase H geparkt, Port-Bank 0x3E, Sprach-Stamm help01..05, Messschiene RE15_R39J_LOG),
+  `re15_port/platform/pc/src/dining_r39_pc.c` (Bank 0x3E: Klopfen DOOR0F, Glas GLAS1090 0x21, Hilferufe ueber den
+  Sprach-Pfad), `re15_port/tools/r39_dining/programme_bauen.py` -> `re15_port/engine/src/gen/dining_r39_programme.inc`
+  (HAEMMERN39 620 B, BEFREIUNG39 1496 B, Texte, DOOR0F-Tonteil 10888 B bytegleich; Werkzeug nutzt die Helfer der Runde 38).
+- HAKEN (Kommentar "Runde 39 Spur J"): dining_r38.c (Include; Evt_exec -> HAEMMERN39; Ereignis 6 -> BEFREIUNG39; Se_on
+  -> Bank 0x3E; Installer-Ende -> re15_dining_r39_install; Messhaken), dining_r38_pc.c (Init 1 Zeile), audio_pc.c
+  (help-Stamm 2 Zeilen in re15_voice_load_clip; Punkt 9: `if (!s_bgm_pending)` vor dem Lautstaerke-Switch in
+  ss_seq_ctl_ex), tests/unit/test_r36_kartenbits.c k_port[] (Bit 94). KEIN Asset-Patch, keine neue Datei unter
+  shared_assets/ (Klopf-Tonteil als gen/*.inc).
+- Ressourcen: Bank 9 Bit 94 (Reaktion); Bit 95 nicht gebraucht. Nachrichten 50/51/52 (Text), 53..57 = Sprach-Ids der
+  help-Dateien (ohne Text). Port-Bank 0x3E (frei in master: 0x0E/0x3A/0x3B/0x3C/0x3D vergeben; Spur B nutzt TOENE39.VBS).
+
+### 3.2 Ablauf neu (je Nutzer-Punkt)
+| Punkt | Mechanik | Beleg / Form |
+|---|---|---|
+| 1 | HAEMMERN39 spielt kein Se_on(0x3C,0x0B) (Stoehnen) und kein (0x3C,0x0A) mehr | Abschnitt 1.1 |
+| 2 | Phase H: John geparkt (-30000,-30000) statt im Gang; BEFREIUNG39 nach dem Rolladen: Elza WALK (-7800,-12800) + Gosub sub03, TURN zur Tuer + sub03, Cut 7, DOOR1A Satz 0, John Pos_set (-7350,-1300) + Dir_set 1024, Sleep 43, DOOR1A Satz 1, Sleep 27, MAIN Stop, Cut 6, Sleep 20, Cut 5, John RUN an seinen Platz | Formen sub02 @0x00CD8/@0x00CE0/@0x00CE2/@0x00CEA, @0x00C24, ROOM10D0 sub21 @0x01A02/@0x01D9E, ROOM10D0 @0x01AC4, sub01 @0x00C06, sub02 @0x00DC6; Laengen Abschnitt 2.5 |
+| 3 | kein Se_on(0x3D,..) = main42 "Help me out." mehr | Abschnitt 1.2 |
+| 4 | je Runde: 3 x Se_on(0x3E,0) (Sleep 5), Sleep 30, Se_on(0x3E,0x30+k) mit k = 3,1,4,2,5 (PORT-WAHL Mix), Sleep 90, Sleep 90; jede Ton-Zeile in Ifel Ck(3,0x6A)==0 | RE2 ROOM1090 @0x02BB0..@0x02BC0, RE2 ROOM1060 sub05 +0x2E/+0x58/+0x5E, Abschnitt 2.4 |
+| 5 | nach dem ersten Ruf: Ifel Ck(9,94)==0 { Set(2,7)=1, Plc_neck Elza -> Dachtuer, Sleep 10, msg 50, Sleep 90, Set(9,94)=1, Plc_neck aus, Set(2,7)=0 } | sub02 @0x00C26/@0x00C42/@0x00C4C/@0x00D0A/@0x00F30/@0x00F4E; RE2 1060 +0x58 |
+| 6 | vor sub02 @0x00DC6 Sleep 20 / @0x00DCA msg 6: Se_on(0x3E,0x21), Sleep 5, Se_on(0x3E,0x21) | Abschnitt 2.3 |
+| 7 | nach @0x00E94 (John TURN zu Elza, Bit 1) Gosub sub04 | Abschnitt 2.2 |
+| 8 | nach dem Tod der Gorillas + Sleep 30: Cut 8, Sperre, Elza Pos_set (-6000,-20000) + Blick 1547 zu John, Kopf/Drehung zueinander, msg 51 + Johns Gesten (0,15)/(0,15 rueckw.)/(0,23), Plc_motion(2,6), msg 52, (2,6) rueckwaerts; dann Abgang Runde 38 | sub02 @0x00C24..@0x00C76, @0x00CB0..@0x00CD0, @0x00C78..@0x00C9C; ROOM1171 @0x014C2 |
+| 9 | audio_pc.c ss_seq_ctl_ex: waehrend `s_bgm_pending` wird Sce_bgm_control nur gelatcht | Abschnitt 2.1 |
 
 ## 4. Messung nachher
 
