@@ -133,6 +133,23 @@ Nutzerpunkt (-12528,-9000,959): Blatt 3 rect 7, Marker (184,73), Kachel-Index 1 
   Zwinger), die Ostkammer liegt IN der Schleife, 11B0 und 11C0 beide oestlich an der Gang-Ostwand, 11C0 ist ein
   Fahrring um eine Insel, 11D0 ein U mit eigener, nur aus ROOM1260 erreichbarer Leiter-Kammer.
 
+* GEMESSEN "wie man sich bewegt" (b1_weg.py: geradlinig durch die Gang-Abschnitte je 100 Einheiten durch den echten
+  Kartenpfad; Tuer = Marker im Trigger der einen Seite gegen Marker an der Ankunft der anderen; frische Prozesse).
+  VORHER = Bau mit dem Zonen-Kopf von 10876ebb (build_bisect), NACHHER = dieser Stand:
+```
+Weg (Gang 1180)        Welt    vorher px/1000  quer  max.Schritt  Zonen     nachher px/1000  quer  max  Zonen
+Suedbein n. Norden     8100        0.62         0      1         [108]          2.22          0    1   [25]
+Versatz n. Osten      10100        3.56         8     14         [107,108]      2.28          0    1   [25]
+Laengsgang n. Norden  34300        1.14         0      1         [25,109]       2.22          0    1   [25]
+Querarm n. Westen     14000        2.00         7     13         [25,106]       2.29          0    1   [25]
+Westbein n. Sueden     3750        2.40         0      1         [106]          2.13          0    1   [25]
+Tuer-Sprung (px)   Gang->Halle 7->3  Gang->Ostk. 10->1  Gang->11B0 25->5  Gang->10A0 12->2  Gang->11D0 8->3
+                   11B0->11C0 1->1   Halle->Gang 8->2   11C0->11B0 6->5
+```
+  Vorher lief der Marker im Suedbein 0,6 px je 1000 Einheiten, im Versatz 3,6 - also 6x so schnell -, sprang beim
+  Wechsel der fuenf Gang-Abschnitte bis 14 px und an der 11B0-Tuer 25 px. Genau das meint "da passt nichts so richtig
+  zusammen mit dem wie man sich bewegt".
+
 ### B1-R RE-Belege / Herleitung
 * Begehbare Flaeche je Ort mit dem ECHTEN Kollisionsloeser: `probe_r39_karten flut <raum> <band> <x> <z> 0` =
   re15_collision_constrain_contact_band (Port von FUN_8003b0a4 mit push_rect/push_circle/push_diag2..7), Raster 100,
@@ -181,7 +198,12 @@ ROOM1180/1181/1230  1707/1707/1764 geprueft, ausserhalb 0      ROOM1190 Halle 37
 ROOM11B0 West 406 + Werkstatt 1588, 0                         ROOM11C0/11C1 5706, 0
 ROOM11D0 601, 0   ROOM1160/1161 588, 0 (vorher 588 ausserhalb) ROOM10A0/10A1 Band 4 138, 0
 ```
-Abzug Blatt 0 (Sweep): `G_karten_bilder/b1_nachher_sweep_x3.png`.
+Abzug Blatt 0 (Sweep): `G_karten_bilder/b1_nachher_sweep_x3.png`; ECHTER WEG (Spielstand ROOM1230 an der 11D0-Tuer,
+Gang/Halle/11B0/11D0 besucht, LOAD GAME, Kartenschirm, RE15_INV_FB_SHOT): `G_karten_bilder/b1_echtlauf_1230_x3.png` -
+Gang rot, besuchte Orte gruen, Ostkammer/11C0 unbesucht ungezeichnet, Tuerbalken auf den gemeinsamen Linien, Marker an
+der 11D0-Tuer. Gesamtschiene integration_map_uebergang (alle Stages, gleicher Bau gegen den Kopf von 10876ebb):
+Uebergaenge 149 -> 151 (1160 neu), ueber 8 px 64 -> 62, Median/Mittel/Schlimmster 6/17/91 unveraendert; Tueren
+durchschritten 184 -> 187, richtig rot 181 -> 184; Symbole Identitaet 120 -> 129, ohne Marke 49 -> 44.
 
 ## P1-M "Und natuerlich muss der Spielermarker da entsprechend passen" (1F/2F/3F/B2)
 Pruefung ueber ALLE Raeume der Stage 1 (`alle_raeume.py <probe>`: Saaten = Ankunftspunkte aller Tueren, je Raum/Band
