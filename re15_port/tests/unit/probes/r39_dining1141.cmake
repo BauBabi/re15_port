@@ -14,6 +14,9 @@
 #   integration_r39_dining1141_d   echte exe, echter Weg mit Elza 1131 -> 1141 (Gemaelde, frei laufen, Riegel, Szene, John
 #                                  schiesst) -> 1171 (Ton-Mitschnitt, Messschiene
 #                                  RE15_R39J_LOG, debug.log): alle Punkte 1-9 am Lauf, Punkt 9 am Mitschnitt
+#   integration_r39_dining1141_kampf  Nachbesserung 2 (Abnahme 1 M1): echter Weg, Pistole, Gorillas LEBEND, Elza neben John:
+#                                  Treffer auch bei Elza im Griff (a), kein Schuss ausser Kegel (b), Zuwendung je Treffer-Salve (c),
+#                                  John beim Schiessen in Cut 0, Querungs-Wache
 add_executable(test_r39_dining1141 ${CMAKE_CURRENT_LIST_DIR}/../test_r39_dining1141.c)
 target_link_libraries(test_r39_dining1141 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r39_dining1141 PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -36,4 +39,12 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dini
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_dining1141_d_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dining1141.cmake)
     set_tests_properties(integration_r39_dining1141_d PROPERTIES TIMEOUT 3600)
+endif()
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dining1141_kampf.cmake)
+    add_test(NAME integration_r39_dining1141_kampf
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_dining1141_kampf_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_dining1141_kampf.cmake)
+    set_tests_properties(integration_r39_dining1141_kampf PROPERTIES TIMEOUT 3600)
 endif()
