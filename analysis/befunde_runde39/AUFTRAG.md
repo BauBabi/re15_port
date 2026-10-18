@@ -181,3 +181,26 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   Vorbild Runde 38 F ROOM1141 (Tueren gesperrt solange die Gorillas leben, msg 41 "I cannot leave him alone with those
   monsters.", include/re15_dining_r38.h RE15_R38F_MSG_1141_SPERRE). Neue Spur O "parkplatz11c0"; Port-Message-Id 11C0 = 40
   (Sprachdatei spaeter synchro/STAGE1/room11C0/main40.wav).
+
+## Nachtrag 10 des Nutzers (woertlich, 2026-10-19 zwischen 23:46 und 00:06)
+- "Eine letzte Änderung - Ich möchte das die Hilferufe von John erstmalig bereits erstmalig leise im ROOM 1040 kommen, nachdem John verschwunden ist. Also die Hilferufe sollen leise sein. dann soll bereits von Elza kommen: Oh, no, this is John! He is in Trouble, I have to help him! - nicht erst in ROOM 1041. Kopiere mir auch das voicefile stattdessen dort hin. Dann soll die Karte aufgehen und den ROOM 1141 markieren. Danach soll wieder die gleiche Panische finale Musik kommen wie bei Leon zum Ende - wenn Irons stirbt und er zu den gorillas muss. Wenn wir uns den Flur 1131 näheren, könnte das please help von John auch noch mal kommen, aber schon etwas lauter. Im ROOM 1141 soll alles so bleiben wie bisher, nur eben ohne die "Oh, no, this is John! He is in Trouble, I have to help him!" Cutscene."
+- "Und auch hier sollen jetzt Zombies durchbrechen - einmal in den Flur hinein von 10C1 aus - so viele wie im medical room - also 10E1 am Leben gelassen wurden., die sollen dann, wenn man in ROOM 1061 die Etage von unten über die Treppe erreicht aber möglichst weit weg an der Seite stehen. Dann das gleiche nochmal wie bei Leon in den ROOM 1071, falls die Zombies nicht besiegt wurden und im ROOM 1031 über die Absperrung/Das Rollo, so wie bei der cutscene."
+- "Und dann möchte ich, das in ROOM 1121, dort wo bei Leon die Krähe durch das Fenster fliegt, beim Durchlauf ein Hunde durch das Fenster rein springt."
+- "Die panische Musik hört auf, sobald man John gerettet hat. Der Rest bleibt normal."
+  Orchestrator (Lesart + Zuteilung, keine Rueckfrage):
+  - Elza-Raeume sind die ROOMxxx1-Varianten: "ROOM 1040" = ROOM1041 (Elza); "nicht erst in ROOM 1041" meint 1141 (dort sagt
+    Elza den Satz bisher, Spur J msg 50). ROOM1041.RDT msg_sec 0x2248: id 0 Rollo-Schalter, 1 Aufzug, 2 "Elza: What was that!?",
+    3 "gunshot" (Runde 38 H: Schuss-Ton statt Text @0x02200). Elzas Satz in 1041 = Port-Id 40; die Stimme liegt als Kopie
+    synchro/STAGE1/room1041/main40.wav (= room1141/main50.wav, sha256 a2a0b166..., Nutzer: "Kopiere mir auch das voicefile").
+  - Ablauf (Orchestrator-Festlegung der Reihenfolge): John verschwindet in 1041 -> leise Hilferufe (help01..05, Johns Stimme) ->
+    Elza msg 40 -> Karte geht auf, ROOM1141 markiert -> Panikphase beginnt: Bank-9-Bit 97 gesetzt + Leons Schlussmusik (die
+    BGM nach Irons' Tod auf dem Weg zu den Gorillas) -> Zombie-Durchbrueche (Montage wie Leon nach Irons' Tod) -> Elza laeuft
+    -> 1121 Hund durchs Fenster -> Annaeherung Flur 1131: lauterer Hilferuf -> 1141 wie bisher OHNE die Reaktion ->
+    John gerettet (Gorilla-Kampf vorbei) -> Bit 97 geloescht, Panikmusik aus, Rest normal.
+  - Spur P "johnruf1041" (Baum auf r39/dining1141 + master): 1041-Ablauf, Karte, Panikmusik Start/Ende, 1131-Ruf, Bit 97.
+  - Spur Q "elzazombies" (Baum auf master): Durchbrueche 10C1 -> Flur (so viele wie in 10E1 am Leben), Aufstellung 1061
+    (Ankunft von unten ueber die Treppe: moeglichst weit weg an der Seite), 1071 wie bei Leon (falls nicht besiegt), 1031 ueber
+    die Absperrung/das Rollo wie in der Cutscene; Ausloeser = Bit 97 (steigende Flanke).
+  - Spur R "hund1121" (Baum auf master): Hund springt in ROOM1121 durchs Fenster, an der Stelle von Leons Kraehe in ROOM1120,
+    beim Durchlauf in der Panikphase.
+  - Spur J: 1141 bleibt, nur OHNE Elzas Reaktion ("Oh, no, this is John! ..." msg 50 entfaellt in 1141).

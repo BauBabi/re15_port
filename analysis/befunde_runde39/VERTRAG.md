@@ -28,6 +28,9 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 | 3+ | M | schluessel2 / r39_schluessel2 | Schluessel 10F0/10F1 hoechstens halb so gross (Nachtrag 5) |
 | - | N | (entfallen) | Nachtrag 8: Nutzer liess die Dateien auf die Message-Ids umbenennen (main50-52, main40/42) - Ordnerregel genuegt |
 | 3+ | O | parkplatz11c0 / r39_parkplatz11c0 | ROOM11C0: Tueren waehrend des Gorilla-Kampfes gesperrt + Leon-Text (Nachtrag 9) |
+| 4 | P | johnruf1041 / r39_johnruf1041 | Elza: Johns Ruf ab 1041, Satz + Karte, Panikmusik bis zur Rettung, 1131-Ruf (Nachtrag 10) |
+| 4 | Q | elzazombies / r39_elzazombies | Elza: Zombie-Durchbrueche 10C1/1061/1071/1031 in der Panikphase (Nachtrag 10) |
+| 4 | R | hund1121 / r39_hund1121 | Elza: Hund durchs Fenster in 1121 (Nachtrag 10) |
 | 3 | K | heliport1171 / r39_heliport1171 | John 1171 "Elza hurry up": Heran-Winken statt Klettern; uebrige Szenen-Animationen 1171 |
 
 ## 1. Ressourcen
@@ -35,13 +38,13 @@ Spuren; nach jeder Welle Integration + gezielte Tests, volle Suite einmal am End
 ### 1.1 Bank-9-Bits (gespeichert mit g_game.flags)
 Bank 9 traegt im Original die ITEM-TAKEN-Bits; Port-Bits stehen im Riegel `tests/unit/test_r36_kartenbits.c` (k_port[]).
 Nach Runde 38 frei in Original UND Port (2026-10-18, selbst nachpruefen): 69, 70, 94, 95, 96, 97.
-Zuteilung: **C = 69** (Munition im Spind ROOM1000), **I = 70** (Funkszene 10F1 gesehen), **J = 94, 95**.
+Zuteilung: **C = 69** (Munition im Spind ROOM1000), **I = 70** (Funkszene 10F1 gesehen), **J = 94** (95 seit Nachtrag 10 an Q), **P = 97** (Elza-Panikphase: gesetzt beim 1041-Ruf, geloescht bei Johns Rettung; Q und R lesen es).
 96 bekommt **O**, nur wenn kein Original-Flag reicht; 97 vergibt der Orchestrator auf Anfrage (im Dossier begruenden). Jedes neu belegte Bit traegt die Spur in
 k_port[] ein (kleiner Haken, eine Zeile).
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
 Port-Ids liegen hinter den Original-Nachrichten eines Raums; vorhandene Port-Ids per grep `MSG_ID` (include/, gen/)
-ausschliessen. Zuteilung: **O**: 11C0 Id 40; **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
+ausschliessen. Zuteilung: **P**: 1041 Id 40 (Stimme room1041/main40.wav liegt), 1131 nur Stimmen ohne Text; **O**: 11C0 Id 40; **I**: 10F1 Ids 40-44; **J**: 1141 Ids 50-59 (40-49 hat Runde 38 F); **C**: 1000 nur, wenn
 das Aufnahme-Modal einen eigenen Text braucht (Id 40). Alle anderen Spuren: nur vorhandene Nachrichten.
 Sprachdateien (synchro/) folgen der Message-Id (synchro/README.md) — eine Id, zu der der Nutzer schon eine WAV hat,
 nie umwidmen. Nutzer-Dateien unter synchro/ werden NIE umbenannt oder veraendert (Zuordnung im Code).
