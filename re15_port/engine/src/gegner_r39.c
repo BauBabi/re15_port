@@ -42,10 +42,14 @@ void re15_r39_log(const char *fmt, ...)
     fputc('\n', lf); fflush(lf);
 }
 
-/* ================================================================ (1) Gorilla ROOM11C0 ================= */
+/* ================================================================ (1) Gorilla 0x27 (alle Raeume) ========= */
+/* Nachbesserung 2 (Nutzer-Nachtrag 3, AUFTRAG.md 2026-10-18: "Zu 2. ja, wir machen das Gorilla Verhalten generell so."):
+ * kein Raum-Tor mehr — die Regel haengt allein am Typ 0x27 (Wurzel 0x80116db8, Dispatch-Platz 0x80072c48 @0x8011e900-0c).
+ * Zensus: Sce_em_set 0x27 nur in ROOM11C0 (Leon) und ROOM1141 (Elza), Kopf re15_gegner_r39.h (1). */
 typedef struct { uint8_t ok, sub1, sub2, sub3; } r39_merk_t;
 static r39_merk_t s_merk[RE15_ACTOR_MAX];
 static int16_t    s_hp_ref[RE15_ACTOR_MAX];     /* HP beim letzten Flinch (bzw. INIT) = Bezug des Akkus */
+static uint8_t    s_ref_ok[RE15_ACTOR_MAX];     /* Bezug gesetzt (INIT oder erstes Tick-Ende) */
 
 static int r39_slot(const re15_actor_t *e)
 {
@@ -53,25 +57,30 @@ static int r39_slot(const re15_actor_t *e)
     return (e && s >= 0 && s < RE15_ACTOR_MAX) ? s : -1;
 }
 
-int re15_r39_affen_parkplatz(const re15_actor_t *e)
+int re15_r39_affen_regel(const re15_actor_t *e)
 {
-    return s_an && e && e->type == 0x27u && g_current_room_id == RE15_R39_PARKPLATZ_RAUM;
+    return s_an && e && e->type == RE15_R39_AFFEN_TYP;
 }
 
 int16_t re15_r39_affen_hp_init(const re15_actor_t *e, int16_t tabelle)
 {
     int s = r39_slot(e);
     int16_t hp = tabelle;
-    if (re15_r39_affen_parkplatz(e)) hp = (int16_t)(tabelle * RE15_R39_AFFEN_HP_FAKTOR);   /* 360 */
-    if (s >= 0) { s_hp_ref[s] = hp; memset(&s_merk[s], 0, sizeof s_merk[s]); }
-    re15_r39_log("affen init slot=%d raum=%04x hp=%d (tabelle %d @0x8011f514)", s, g_current_room_id, (int)hp, (int)tabelle);
+    if (re15_r39_affen_regel(e)) hp = (int16_t)(tabelle * RE15_R39_AFFEN_HP_FAKTOR);   /* 360 */
+    if (s >= 0) { s_hp_ref[s] = hp; s_ref_ok[s] = 1; memset(&s_merk[s], 0, sizeof s_merk[s]); }
+    re15_r39_log("affen init slot=%d raum=%04x typ=%02x hp=%d (tabelle %d @0x8011f514, regel %d)", s, g_current_room_id,
+                 e ? e->type : 0, (int)hp, (int)tabelle, re15_r39_affen_regel(e));
     return hp;
 }
 
 void re15_r39_affen_merken(const re15_actor_t *e)
 {
     int s = r39_slot(e);
-    if (s < 0 || e->state != 1) return;
+    if (s < 0) return;
+    /* Bezug des Akkus (PORT-WAHL der Buchfuehrung): ein Gorilla verliert HP nur; HP ueber dem Bezug = der Platz traegt
+     * einen Aktor, der den INIT dieses Hakens nicht durchlief (Sonde/Riegel mit gesetzter HP) -> Bezug neu. */
+    if (!s_ref_ok[s] || e->hp > s_hp_ref[s]) { s_hp_ref[s] = e->hp; s_ref_ok[s] = 1; }
+    if (e->state != 1) return;
     s_merk[s].ok = 1; s_merk[s].sub1 = e->sub_state_1; s_merk[s].sub2 = e->sub_state_2; s_merk[s].sub3 = e->sub_state_3;
 }
 
@@ -87,12 +96,13 @@ int re15_r39_affen_akku(const re15_actor_t *e)
 int re15_r39_affen_zucken_unterdruecken(re15_actor_t *e)
 {
     int s = r39_slot(e);
-    if (s < 0 || !re15_r39_affen_parkplatz(e)) return 0;
+    if (s < 0 || !re15_r39_affen_regel(e)) return 0;
     if (e->state != 2 || e->sub_state_3 != 0) return 0;
     if (e->hp < 0 || (e->hit_react & 0x40u)) return 0;
     int akku = (int)s_hp_ref[s] - (int)e->hp;
     if (!s_merk[s].ok || akku >= RE15_R39_ZUCK_SCHWELLE) {
-        re15_r39_log("affen treffer slot=%d hp=%d akku=%d -> FLINCH (Schwelle %d)", s, (int)e->hp, akku, RE15_R39_ZUCK_SCHWELLE);
+        re15_r39_log("affen treffer F%u slot=%d raum=%04x hp=%d akku=%d -> FLINCH (Schwelle %d)", r39_bild(), s,
+                     g_current_room_id, (int)e->hp, akku, RE15_R39_ZUCK_SCHWELLE);
         s_hp_ref[s] = e->hp;                               /* Flinch wie bisher; Akku neu ab hier */
         return 0;
     }
@@ -103,8 +113,8 @@ int re15_r39_affen_zucken_unterdruecken(re15_actor_t *e)
     e->hit_react = 0;
     re15_affen_treffer_zaehlen(e);
     re15_r39_affen_blut(e);
-    re15_r39_log("affen treffer slot=%d hp=%d akku=%d -> OHNE ZUCKEN (zurueck in 1/%d/%d/%d)", s, (int)e->hp, akku,
-                 e->sub_state_1, e->sub_state_2, e->sub_state_3);
+    re15_r39_log("affen treffer F%u slot=%d raum=%04x hp=%d akku=%d -> OHNE ZUCKEN (zurueck in 1/%d/%d/%d)", r39_bild(), s,
+                 g_current_room_id, (int)e->hp, akku, e->sub_state_1, e->sub_state_2, e->sub_state_3);
     return 1;
 }
 

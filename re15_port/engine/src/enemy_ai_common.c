@@ -43,7 +43,7 @@
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_affen3_r38.h"   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
-#include "re15_gegner_r39.h"   /* Runde 39 Spur E: Parking-Lot-Gorillas (HP x2, Flinch-Schwelle), Hunde-Riegel-Tick */
+#include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
@@ -8738,7 +8738,7 @@ static void re15_maggot_gore(re15_actor_t *e)
 {
     re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);
 }
-/* Runde 39 Spur E: Treffer ohne Zucken (ROOM11C0) = Blut + Se 3 wie der Flinch-Eintritt @0x8011b0bc-138 */
+/* Runde 39 Spur E: Treffer ohne Zucken (jeder Gorilla 0x27) = Blut + Se 3 wie der Flinch-Eintritt @0x8011b0bc-138 */
 void re15_r39_affen_blut(re15_actor_t *e) { re15_maggot_gore(e); re15_audio_room_se(3); }
 /* FUN_8001a9cc(&playerX, tol) — signed arc residue: 0 iff |bearing-rot_y| < tol (mod 0x1000),
  * else +tol when the wrapped residue <= 0x800, -tol beyond (decompile FUN_8001a9cc.c). The A[3]
@@ -8890,7 +8890,7 @@ static void re15_maggot_ai_tick(int slot)
 
     switch (e->state) {
     case 0:   /* INIT 0x80116f50 */
-        if (e->hp <= 0) e->hp = re15_r39_affen_hp_init(e, 180);   /* +0x9a=180 (HP tab @0x8011f034 row, rng col @0x801170cc-104); Runde 39 Spur E: ROOM11C0 x2 */
+        if (e->hp <= 0) e->hp = re15_r39_affen_hp_init(e, 180);   /* +0x9a=180 (HP tab @0x8011f034 row, rng col @0x801170cc-104); Runde 39 Spur E: x2 fuer jeden 0x27 */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;  /* clear @0x80116f9c-fcc */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be = player @0x80116fd0-ffc */
         e->state = 1;
@@ -9425,7 +9425,7 @@ static void re15_maggot_ai_tick(int slot)
 
     case 2: {  /* HURT root 0x8011af5c (audit #2). take_damage/weapon-fire left +0x5 = the weapon
                 * reaction lane, +0x6 = hit-dir, +0x7 = 0 (phase). */
-        if (re15_r39_affen_zucken_unterdruecken(e)) break;    /* Runde 39 Spur E: ROOM11C0 unter 3 x 12 Energie kein Flinch */
+        if (re15_r39_affen_zucken_unterdruecken(e)) break;    /* Runde 39 Spur E: unter 3 x 12 Energie kein Flinch (jeder 0x27) */
         if (e->mag_airborne) {                                /* ballistic settle c1a4(0,0,-50,+0x1ba) @0x8011af6c-88 */
             if (re15_maggot_ballistic(e, 0, 0, -50) != 0) {
                 e->mag_airborne = 0;                          /* @0x8011afa0 */
@@ -9593,7 +9593,7 @@ static void re15_maggot_ai_tick(int slot)
         break;
     }
 
-    re15_r39_affen_merken(e);   /* Runde 39 Spur E: Unterzustaende des Gehirns fuer den Treffer ohne Zucken (ROOM11C0) */
+    re15_r39_affen_merken(e);   /* Runde 39 Spur E: Unterzustaende des Gehirns + Akku-Bezug fuer den Treffer ohne Zucken (jeder 0x27) */
     /* ROOT-Post-Pass @0x80116e40-44: `jal 0x8002aec4(a0=SPIELER 0x800aca54, a1=Gorilla)` —
      * der GORILLA wird JEDEN Tick aus der Spieler-Ellipse herausgeschoben (Rueckgabe
      * +0x1d2 hat keinen Leser — Voll-Scan, nur der Positions-Effekt zaehlt). Der Spieler

@@ -483,3 +483,66 @@ aller 0x27-Raeume; ROOM1141 (Elza) Gorilla-Szene muss lauffaehig bleiben; kleine
 ### Protokoll
 - 2026-10-18 Start: Baum sauber, HEAD 2486a028 (Merge master dc330054 in r39/gegner), `git diff master --name-only` =
   nur Pfade dieser Spur. Pflichtlektuere AUFTRAG.md (inkl. Nachtrag 3), VERTRAG.md, E_abnahme_1.md, dieses Dossier gelesen.
+
+### Mangel 1 — die Gorilla-Regel galt nur in ROOM11C0 (Raum-Tor)
+
+**Ursache**: `re15_r39_affen_parkplatz(e)` = `type 0x27 && g_current_room_id == 0x11C0` (Stand 2486a028) — nach dem
+Wortlaut "beim Parking Lot" gebaut; Nutzer-Nachtrag 3 (2026-10-18 14:25) entscheidet "generell".
+
+**Zensus Sce_em_set Typ 0x27, alle 240 RDTs beider Szenarien** (`scd_dump_room.py` je RDT, Feld 3 = Typ; Skript
+scratchpad e_nb2/zensus27.sh): Treffer nur in
+- ROOM11C0 (Leon, Parking Lot): @0x01784 `44 01 27 30 02 ..` / @0x01798 `44 02 27 30 02 ..` (Szene, grid 0x30),
+  @0x017E8 `44 01 27 10 00 ..` / @0x017FC `44 02 27 10 00 ..` (Kampf, grid 0x10, Flag 4/0x40).
+- ROOM1141 (Elza, Briefing Room): sub00 @0x00B1A `44 01 27 30 00 00 00 cb ..` / @0x00B2E `44 02 27 30 .. cc ..` (Szene,
+  Zweig Ck(4,0xF0) @0x00AFE), @0x00B54 `44 01 27 10 .. cb 38 e6 .. b8 d9` = (-6600,-9800) / @0x00B68 `44 02 27 10 .. cc 52 ea
+  .. da b2` = (-5550,-19750) (Kampf, Zweig Ck(4,0xF2) @0x00B4A). Der Port-Ablauf BEFREIUNG (Runde 38 F,
+  gen/dining_r38_programme.inc Zeile 607-609) setzt dieselben beiden Szenen-Saetze.
+- Gegenprobe 0x29 (kleine Affen): ROOM3040/3041, 4000, 4040/4041, 4080/4081, 5000/5001, 5031, 50A0/50A1, 50B0, 5100/5101.
+- Vollstaendigkeit: der Walker brach nur in 34 RDTs ab — alle 34 sind Stummel zu 4 Byte (ROOM1270/1271, 20C0-20F1, 30F0/1,
+  4060/1, 40C0-40F1, 5150-5171, 6050-6071). Roh-Byte-Gegenprobe (`44 ?? 27 <grid>` ueber alle Dateibytes): ausser den 8
+  Saetzen oben nur Treffer in Nicht-SCD-Daten (ROOM11B0 @0xdefe `44 00 27 00 17 00 27 00 ..` = u16-Tabelle, ROOM1260/2000/
+  2010/2020 @0x2xxxx `44 03 27 00 10 d0 0b ff ..` = Bilddaten), keiner in einer SCD-Region.
+- Dispatch: Typ 0x27 -> Wurzel 0x80116db8 nur ueber die STAGE1-Registrierung `lui v0,0x8011 / addiu v0,v0,28088`
+  @0x8011e900-04, `sw v0,11336(at)` = 0x80072c48 = 0x80072bac + 0x27*4 @0x8011e90c (re15_disasm.py dis 0x8011e900; im
+  PSX.EXE-Abbild ist der Platz 0 = Laufzeit-Registrierung).
+Damit sind "alle Gorillas" = die zwei in 11C0 (Leon) und die zwei in 1141 (Elza).
+
+**RE-Belege, selbst gelesen (re15_disasm.py)**:
+- HP-Zeile `read 0x8011f514 16 --w 2` = 16 x 180; INIT FUN_80116f50 `dis 0x80116f50 30` + `dis 0x801170b8 24`: Saat
+  `lhu v0,0(v0)` @0x801170fc / `sh v0,154(a1)` @0x80117104, OHNE hp-Bedingung (einziger Zweig im INIT ist grid&1 `beq`
+  @0x80116f80 -> Wort 0x101 @0x80116f88-8c). Der Port-INIT fuehrt `if (e->hp <= 0)`; Sce_em_set setzt hp = 0 (scd_vm.c
+  op_sce_em_set "Leave hp at the struct-cleared 0"), im Spiel laeuft der Haken also bei jedem Spawn.
+- Schaden Zeile 0x27 `read 0x8006ee38 22 --w 2` = [0,0,7,0,30,0,12,0,12,0,28,..] = Schritt 4 Byte je Waffe: Messer 7
+  @0x8006ee3c, Pistole (Waffe 3) 12 @0x8006ee44, **Elzas SIG P228 (Waffe 4, Item 0x04 aus ROOM1051) 12 @0x8006ee48**.
+  Die Schwelle 36 = 3 x 12 gilt damit fuer Leons und Elzas Handfeuerwaffe gleich.
+- Spur-Tabelle `read 0x801214a8 22 --w 4`: Waffen 0-6, 12, 14, 19, 20 -> 0x8011b018 (Boden-Flinch Clip 7), 7/8/13/21 ->
+  0x8011b1ec, 9-11/15-18 -> 0x8011b400 — die P228 flincht wie die Pistole auf Spur 0.
+- Resolver `dis 0x80012500 12`: `lh v1,154(s1)` @0x80012520 / `ori v0,zero,0x2` @0x80012524 / `bgez v1,0x80012420`
+  @0x80012528 / `sb v0,4(s1)` @0x8001252c — hp >= 0 bleibt HURT (2), erst hp < 0 ist der Tod. Ein Gorilla braucht mit
+  12er-Treffern 180/12 + 1 = 16 (Original) bzw. 360/12 + 1 = 31 Treffer (Nutzer-Vorgabe).
+
+**Messung vorher (exe Stand 2486a028, neu gebaut; Elza, echter Weg ROOM1131 -> Tuer -> ROOM1141)**: Aufbau wie
+integration_r38_dining1141_d bis zum Kampf (RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78, RE15_GIVE=0x43:1,0x04:15,
+0x15:120, RE15_EQUIP=4, RE15_DEBUG_JUMP=1131@gp, RE15_PLAYER_POS=-1300,-13900,0, RE15_WEGPLAN 1131 Schluessel/Tuer -> 1141
+Phase H -> Gemaelde; danach RE15_INPUT_SCRIPT `M1.5` + 40 x `MA0.1,M0.6` ab Spielbild 2760, RE15_PSELECT_AUTO(_SWITCH)=1,
+RE15_R39_LOG=1, RE15_EXIT_AT=3700; Lauf scratchpad e_nb2/v1141_vorher, Skript e_nb2/lauf.sh, Auswertung e_nb2/auswert.py):
+- debug.log: `[messer] Startinventar Charakter 4`, `[give] item 4 x15`, `[equip] RE15_EQUIP -> item 4 (slot 1)`, `[dining]
+  F283 ROOM1141 Phase H`, `F854 Gemaelde -> Programm BEFREIUNG`, `[elzaems] Typ 0x27 aus EMD/CDEMD1.EMS Sektor 893`.
+- gegner_r39.log: `affen init slot=2/3 raum=1141 hp=180` (Raumaufbau, danach nimmt Phase H sie heraus) und erneut slot 2/3
+  hp=180 (BEFREIUNG-Spawn).
+- state.txt: Steuerung zurueck ~F2632, Gorillas jagen ab F2800; Schuesse F2805 ... (Magazin 15 -> 0, Nachladen); Treffer
+  **F3163 G2 180 -> 168 Clip 7**, F3498 168 -> 156 Clip 7, F3520 156 -> 144 Clip 7, F3542 144 -> 132 Clip 7, F3603 G3
+  180 -> 168 Clip 7, F3625 168 -> 156 Clip 7 — **jeder P228-Treffer flincht, HP 180** (ROOM1141 hatte die Regel nicht).
+  Elza 100 -> 88 (F3241, schwerer Biss -12) -> 82 -> 76 -> 70.
+
+**Aenderung (Code)**:
+- engine/src/gegner_r39.c: `re15_r39_affen_parkplatz` -> `re15_r39_affen_regel(e)` = Haken an && `e->type ==
+  RE15_R39_AFFEN_TYP` (0x27); kein Raum mehr. Logzeilen tragen Raum + Bild (`affen init ... raum= typ= hp= regel=`,
+  `affen treffer F.. slot= raum= hp= akku= -> FLINCH|OHNE ZUCKEN`).
+- Akku-Bezug (PORT-WAHL der Buchfuehrung, jetzt fuer jeden 0x27 in jedem Riegel wirksam): `re15_r39_affen_merken` setzt den
+  Bezug am Tick-Ende neu, wenn noch keiner gesetzt ist oder die HP ueber ihm liegen (ein Gorilla verliert HP nur — HP ueber
+  dem Bezug heisst: der Platz traegt einen Aktor, der den INIT dieses Hakens nicht durchlief, z. B. eine Sonde mit gesetzter
+  HP). Im Spiel setzt der INIT den Bezug (Sce_em_set -> hp 0 -> INIT im Spawn-Bild).
+- include/re15_gegner_r39.h: Kopf (1) neu (Zensus, Nachtrag 3, Dispatch-Beleg, P228 @0x8006ee48), `RE15_R39_PARKPLATZ_RAUM`
+  ersetzt durch `RE15_R39_AFFEN_TYP 0x27u`.
+- enemy_ai_common.c / test_r35_affen.c: nur die Kommentare der vorhandenen Haken-Zeilen ("ROOM11C0" -> "jeder 0x27").

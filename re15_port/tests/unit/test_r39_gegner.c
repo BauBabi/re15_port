@@ -11,7 +11,8 @@
  *
  * Teile (Aufruf: test_r39_gegner <teil>); jeder Teil misst zuerst "vorher" (re15_r39_gegner_enable(0) = die
  * Haken dieser Spur sind durchsichtig) und dann "nachher" im selben Lauf:
- *   affen_hp      ROOM11C0 Kampf-Layout: beide 0x27 starten mit 360 (vorher 180 = @0x8011f514); ROOM1141 bleibt 180
+ *   affen_hp      ROOM11C0 Kampf-Layout: beide 0x27 starten mit 360 (vorher 180 = @0x8011f514); seit Nachbesserung 2 jeder
+ *                 0x27 in jedem Raum (ROOM1141 mit Elza: test_r39_gegner_1141.c), 0x29 nicht
  *   affen_zucken  Treffer wie der Resolver (@0x80012fd4-13020, 12 Energie @0x8006ee44): vorher Flinch (Clip 7) bei
  *                 jedem Treffer; nachher Treffer 1/2 ohne Clip 7 (Zustand 1, Unterzustaende bleiben, +0x93 = 0,
  *                 Blut = ESP-Effekt), Treffer 3 Flinch Clip 7 -> Exit Sub 7 (Runde 35: 3 Treffer -> Sprung);
@@ -235,13 +236,16 @@ static void teil_affen_hp(void)
               an ? "nachher" : "vorher", soll, (int)a->hp, (int)b->hp);
         PRUEF(re15_r39_affen_akku(a) == 0, "[%s] Energie-Akku startet bei 0", an ? "nachher" : "vorher");
     }
-    /* ROOM1141 (dieselben 0x27, grid 0x30/0x10) bleibt beim Tabellenwert — Nutzer: nur der Parking Lot */
+    /* Nachbesserung 2 (Nutzer-Nachtrag 3 "generell"): ROOM1141 (dieselben 0x27, grid 0x30/0x10) verdoppelt ebenso —
+     * die Regel haengt am Typ, nicht am Raum (Raum-Messung mit Elza: test_r39_gegner_1141.c) */
     re15_r39_gegner_enable(1);
     g_current_room_id = 0x1141;
     re15_actor_t dummy; memset(&dummy, 0, sizeof dummy); dummy.type = 0x27;
-    PRUEF(re15_r39_affen_hp_init(&dummy, 180) == 180, "ROOM1141: Gorilla-HP bleibt 180 (nur ROOM11C0 verdoppelt)");
+    PRUEF(re15_r39_affen_hp_init(&dummy, 180) == 360, "ROOM1141: 2 x 180 = 360 (NUTZER-VORGABE, alle Gorillas)");
     g_current_room_id = 0x11C0;
     PRUEF(re15_r39_affen_hp_init(&dummy, 180) == 360, "ROOM11C0: 2 x 180 = 360 (NUTZER-VORGABE)");
+    dummy.type = 0x29;
+    PRUEF(re15_r39_affen_hp_init(&dummy, 105) == 105 && !re15_r39_affen_regel(&dummy), "kleiner Affe 0x29: Regel aus, Tabellenwert bleibt");
 }
 
 /* ================================================================== 1b: Flinch-Schwelle (Resolver-Schreibsatz) == */
