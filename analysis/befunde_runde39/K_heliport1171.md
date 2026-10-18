@@ -99,7 +99,67 @@ die Szene durch und zeigt den Fehler zum ersten Mal.
   des LOCO-Paars (Bank 0); +0x9 & 0x40 -> +0x4 = 4 / +0x5 = 6 @0x8011df1c/2c.
 - Eskorte 0x8011df40: naechster lebender Gegner < 15000 (`ori a0,zero,0x3a98` @0x8011df48, `jal 0x800509e4` @0x8011df54)
   -> +0x9 = 1 @0x8011df94; Dispatch +0x9 & 0xF ueber @0x8012181c: [1] = 0x8004f100 (nur DECIDE, kein anim_set).
-- 2026-10-18 ~14:50: Fix 18940e95 (RBJ-Cache) gebaut + gemessen (Abschnitt 4). Vorher-Bau fuer die Gegenproben laeuft in
+- 2026-10-18 14:41: Fix 18940e95 (RBJ-Cache) gebaut + gemessen (Abschnitt 4). Vorher-Bau fuer die Gegenproben laeuft in
   re15_port/build_bisect: dafuer steht enemy_common.c VORUEBERGEHEND auf 1038dc15 in der Arbeitskopie. Steht beim Lesen
   ein ` M re15_port/engine/src/enemy_common.c` ohne Rueckmeldung hier: `git checkout -- re15_port/engine/src/enemy_common.c`
   (der Fix ist in 18940e95 committet), NICHT committen.
+- 2026-10-18 14:43-14:55: Vorher-Bau re15_port/build_bisect (enemy_common.c von 1038dc15, danach zurueckgesetzt —
+  Arbeitskopie wieder sauber), Gegenproben gefahren (Abschnitte 4/5), Riegel 0b468a87.
+
+## 3. Umsetzung
+
+`re15_port/engine/src/enemy_common.c` `rbj_resolve_slot` (3 Zeilen, Kommentar "Runde 39 Spur K"): ein Aktor-Slot OHNE
+Record (`rec < 0` nach Marker-Scan und dem 10F0-Alias) gibt -1 zurueck, BEVOR er einen der zwei Cache-Plaetze nimmt.
+Vorher wurde er "negativ gecacht" und belegte einen Platz. Original: FUN_8001b3f8 bindet nur Marker-Bits und hat keine
+Kapazitaetsgrenze (@0x8001b470-c4) — ein Slot ohne Bit bekommt nichts und verdraengt nichts. Kosten: der Marker-Scan
+(<= 8 u32-Lesungen) laeuft fuer Slots ohne Record bei jeder Abfrage neu.
+Census der ausgelieferten RDTs (scratchpad rbjzensus.py, alle 6 Stages): hoechstens 2 Gegner-Bindungen je Raum ausser
+ROOM1040/1041 (Marker 0x7E = Gegner 0..5 an rec0) — dort aendert sich nichts, weil nur Slots OHNE Record anders
+behandelt werden.
+
+KEIN neuer Quelltext ausser den Riegeln; kein Haken in den Wave-3-Dateien anderer Spuren.
+
+## 4. Messung nachher
+
+Gleicher Lade-Weg, Stand 18940e95 (Messkopie, exit 0, Szene bis ROOM10B1, Bildzahlen unveraendert):
+
+| Bild | Skript | VORHER (1038dc15) | NACHHER (18940e95) |
+|---|---|---|---|
+| F221-F260 | Plc_motion(0,0,0) @0x01416 | Bank 0 Clip 0 / 34 | **RBJ rec1 Clip 0 / 20** (Bild 1..19, haelt 19) |
+| F261-F280 | + Plc_flg 0x80 | Bank 0 Clip 0 / 34 rueckw. | **RBJ rec1 Clip 0 / 20 rueckw.** (18..0) |
+| F281-F463 | Plc_motion(2,6,0) (+0x80) | eigene Clip 6 / 10 | eigene Clip 6 / 10 (unveraendert) |
+| F464-F591 | Plc_motion(0,2,0) @0x014CE | **Bank 0 Clip 2 / 50 = Klettern** | **RBJ rec1 Clip 2 / 96 = Heran-Winken** |
+| F686-F775 | Plc_motion(0,0,0) x2 (+0x80) | Bank 0 Clip 0 / 34 | **RBJ rec1 Clip 0 / 20** |
+
+Bilder (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, beschleunigter Renderer, F440-F528 je 8 Bilder):
+`K_belege/vorher_hurry_up_F440-528.png` — F480-F504 hebt John ein Bein, geht in die Hocke und richtet sich wieder auf (der
+Kletter-Clip "Kante hoch"); `K_belege/nachher_hurry_up_F440-528.png` — John senkt die Waffe (eigene Clip 6 rueckwaerts),
+dreht sich zur Kamera und winkt Elza mit erhobenem Arm heran (F504-F520).
+
+Gegenprobe Leon ROOM1170 (echter Weg wie integration_r37_roy_leon1170: Neuspiel -> Montage ROOM1240 -> Tuer -> ROOM1170,
+RE15_FPS=240, EXIT_AT 1200#1170; Elliot geladen): Pose-Strom (4360 Zeilen, Leon 4043 / Elliot 317) und state.log
+VORHER (build_bisect) und NACHHER BYTEGLEICH (md5 3848a27f... / e6e98cb7...).
+
+## 5. Tests
+
+Registriert nur in `re15_port/tests/unit/probes/r39_heliport1171.cmake`:
+- `test_r39_heliport1171.c` (Unit, ausgelieferte RDT/Archive, Bilder in main.c-Reihenfolge PLUS die RBJ-Abfrage des
+  Renderers = main.c Executor-Kanal-Render, Slot-Reihenfolge, ohne Typ-Tor): Teile `banken`, `binder` (1171 John nach den
+  Kraehen und nach 19 Slots ohne Record; Gegenprobe ROOM10D0 Marvin rec1; ROOM1170 Elliot bleibt ausgenommen), `szene`
+  (sieben Plc_motion-Schritte Johns: Sub/Clip/Kanal-Laenge/Richtung = Original; kein Bild an der Kletter-Laenge 50; Szene
+  bis ROOM10B1), `leon1170`.
+- `tests/integration/test_r39_heliport1171.cmake` (echte exe, Elza): `weg` (ROOM1131 -> Flurtuer Slot 3 -> ROOM1171 ->
+  Selbst-Tuer Slot 5 -> Szene -> ROOM10B1) und `laden`; misst den Pose-Strom RE15_ANIM_TRACE im Szenen-Abschnitt.
+
+Ergebnisse (eigener Baum, Stand 0b468a87):
+- `ctest --test-dir re15_port/build -R "unit_r39_heliport1171" --timeout 600 --output-on-failure` ->
+  `100% tests passed, 0 tests failed out of 4`
+- `ctest --test-dir re15_port/build -R "integration_r39_heliport1171" --timeout 900 --output-on-failure -V` ->
+  `100% tests passed, 0 tests failed out of 2` (weg 65,1 s / laden 53,6 s; je Heran-Winken 128 Bilder, Kletter 0, RBJ-Clip 0
+  150, Bank-0-Clip-0 0, eigener Clip 6 183)
+- GEGENPROBE vorher (1038dc15, build_bisect): Unit `FEHLER (10 Fehler)` — binder 4 (John/Marvin ohne Record-Kanal),
+  szene 6 ("Laenge 34", "Laenge 50", 128 Kletter-Bilder); Integration laden ROT: "rendert nicht RBJ rec1 Clip 2 (96 Bilder:
+  0) bzw. noch den Bank-0-Kletter-Clip (50 Bilder: 128)".
+- Nachbarn (Unit/Probe der Module/Raeume mit NPC-RBJ-Kanal):
+  `ctest --test-dir re15_port/build -R "^(unit|probe)_.*(marvin|ada|1050|1150|r36_elza|roy|elzaems|szene11c0|dining1141|elzatoene|kleinkram|montage|r39_toene|werkstatt11b0|lane_b1|eintritt|gegnerzahl|schluessel|cut1150|szene1150|npc|10d0|1141|1171|10b1|rbj|cine)|^eintritt_pose_einmal$|^r19_marke1_10d0_c1$" --timeout 600 -j 4`
+  -> `100% tests passed, 0 tests failed out of 157`
