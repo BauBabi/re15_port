@@ -368,3 +368,23 @@ platform/pc/main.c, enemy_ai_common.c (Gorilla-Lenkziel B[3]), re15_damage.c (re
 VERTRAG-1.3-Verzeichnis fuer J: enemy_ai_common.c (D/E), game_step_common.c, main.c, re15_damage.c - bei der Integration
 mit Spur E (Nachbesserung 3, Gorilla in 1141) abgleichen.
 Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r38_dining1141 bis_zur_ecke (Riegel druecken).
+
+### 8.2 Messung nachher (echte exe; Messordner scratchpad `j39n1/`, nicht committet)
+- **Lauf n1** (Stand 37329e77, echter Weg 1131 -> 1141 -> 1171 mit Elza, nur Schluessel = ohne Schusswaffe; Wegplan
+  `plan_n1.txt` = Riegel-Weg): 1141-Nachrichten in Folge 50 (einmal), 13 (Gemaelde), **12** ("You've opened the lock."),
+  40, 3..11, 41, 51, 52; Wortlaut msg 50 "He is in trouble", msg 51 "gorilla meal" (N6). Gemaelde F788 -> ROLLTOR39,
+  danach frei (Wegplan geht durch die Rolladen-Oeffnung zur Dachtuer), Klopfen weiter (18 Schlaege im Raum), Riegel
+  F1599 -> ENTRIEGELN39. Elza dreht an der Tuer (F1644..F1664), rennt (Cut 6 -> Cut 5 Kamera-Automatik, F1668..F1716),
+  Cut 7 ab F1724 (Cut 0 hoechstens ein Bild an der Zonengrenze F1720), Drehung zur Tuer F1724..F1744, Waffe heben F1743,
+  John hinter der Kamera F1784, Cut 6 mit John F1856, Senken F1873, Cut 5 John laeuft heraus (Bogen `n1_lauf.png`).
+  Befund: mit dem Messer zeigte Clip 6 die leere Hand (`n1_hand.png` F1756) -> Messer kalt = DRAW 0x0D (35fa62f6).
+- **Lauf pist** (Kurzweg ab Phase H2: Debug-Sprung 1141, Rolladen offen, Reaktion gesehen, Elza im Gang, RE15_GIVE
+  Pistole 0x03 + Munition; Riegel, Kampf mit eingefrorenen Gorillas, Messhaken 900): `Dachtuer entriegelt: Elza hebt
+  Waffe 3 (vorher 1, Schusswaffe)` (aus dem Inventar ausgeruestet), Plc_motion(2,6) F340: Pistole beidhaendig hoch,
+  gehalten bis Cut 6 (`pist_heben.png` F340..F440). John: TURN F2240, Zielen (2,6) F2250, Feuer (2,7) F2360 + F2388,
+  `John schiesst (Schuss 1/2) auf Gorilla Slot 2: Treffer, Aufmerksamkeit`, zweite Salve F2729/F2759; Kamera folgt Elza
+  (Cut 0), John ist dabei nicht im Bild (`pist_schuss.png`). Gespraech: Cut 8 ab F2873, John im selben Bild von
+  (-7535,-21362) auf (-7550,-21500) (M3: kein sichtbarer Sprung mehr), msg 51 F2895 (Clip 15/23), msg 52 F3015..F3114 mit
+  **Clip 17** F3015..F3113 und Clip 23, John laeuft F3115 los (msg 52 weg: H3 behoben), geparkt F3250.
+- **Lauf mess** (wie pist, ohne Schusswaffe): `Elza hebt Waffe 1 (... Messer)`, DRAW 0x0D F340..F356 (Messer ueber den
+  Koerper gezogen), dann Messer-Bereitschaft gehalten (`mess_heben.png`).
