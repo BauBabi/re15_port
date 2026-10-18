@@ -225,8 +225,18 @@ Neue Riegel (probes/r39_zustand.cmake, GLOB; keine Aenderung an tests/unit/CMake
   integration_r38_spinnen_echtlauf (gz = RE2-Zaehler 0 -> 30 mit HP -1, Periode 31).
 
 Gezielte Laeufe (keine volle Suite im Spurbaum, VERTRAG):
-CTEST_R39_PLATZHALTER
-CTEST_MODULE_PLATZHALTER
+- `ctest --test-dir re15_port/build -R "r39_zustand" --timeout 900 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 3`** (unit_r39_zustand 0.01 s, integration_r39_zustand_kleidung 119.09 s,
+  integration_r39_zustand_gift 100.35 s; F_belege/ctest_r39_zustand_final.log). Erster Lauf derselben Gruppe
+  (ctest_r39_zustand.log): 67 % — Skriptfehler im Gift-Riegel (CMake fuellt nur CMAKE_MATCH_0..9, die 10. Gruppe
+  "letztes Bild" war leer), Messwerte darin identisch (38 Takte, F330, 37/37, magenta 23/27/19, U 4 Takte HP 1);
+  Regex auf 9 Gruppen -> `-R "^integration_r39_zustand_gift$"`: `100% tests passed, 0 tests failed out of 1`
+  (ctest_r39_zustand_gift2.log).
+- `ctest --test-dir re15_port/build -R "r38_spinnen|r36_kleidung|unit_item_use|unit_inv_fsm|unit_wound_accumulator|r39_inventar_status|unit_inv_grant|unit_em_status_persist|unit_r36_blut_pin" --timeout 900 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 26`** (F_belege/ctest_module.log; darunter unit_r38_spinnen mit den
+  umgestellten B/B3/B4/B5-Pruefungen, integration_r38_spinnen_echtlauf 113.91 s mit dem RE2-Auswerter (gz 0 -> 30, HP -1,
+  Periode 31), integration_r36_kleidung_bild/spielweg/hundeweg, unit_item_use, unit_inv_fsm, unit_wound_accumulator,
+  unit/integration_r39_inventar_status).
 
 ## 4. OFFEN
 - EKG-WELLENFORM unter Gift: der Port zeigt die RE1.5-Welle (Tabelle 3 @0x80075cec, bytegleich mit den Tabellen 1/2/4/5 =
@@ -264,3 +274,4 @@ CTEST_MODULE_PLATZHALTER
   pc_read_pl_part -> Slot 0; Abholung vor der Generationspruefung). RE2-Tabellenbytes @0x800ab160-7d und die
   Wellen-Zeiger @0x800ab180 / @0x80076214 aus den EXE-Dateien nachgelesen (F_belege/ekg_wellen.txt).
 - Bau: build_4.log (nichts neu zu bauen, exe = 11:06 = der Stand 87180698). Messung nachher 1.4 / 2.4.
+- Riegel geschrieben und gefahren (3), Dossier abgeschlossen; Endstand = Commit fix(r39-zustand).
