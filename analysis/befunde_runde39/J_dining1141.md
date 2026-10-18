@@ -351,3 +351,20 @@ Nachtrag 6 (N6: "He is in trouble", "gorilla meal" klein).
   Ausloesen synchron einen Merker, die Reaktion wartet darauf) - Riegel "Gemaelde im Fenster".
 - **M3:** John im Schnittbild von Cut 8 setzen (Pos_set neben Elzas Pos_set vor Sleep 1) + Sprung-Riegel.
 - **N6:** msg 50 "He is in trouble, ...", msg 51 "... gorilla meal....".
+
+### 8.1 Umsetzung (Commits 37329e77, 3263b432, 0e3a7bcc)
+| Mangel | Aenderung | Beleg / Form |
+|---|---|---|
+| N4.1 | Ereignis 6 in Phase H = ROLLTOR39 (224 B): sub06 @0x00FE8..@0x0100E, Rolladen-Ton (Runde 38), Bewegung @0x01032..@0x0107C, Sca @0x0107C..@0x010A4, Schluss @0x010C8..@0x010D8 (Pad/Balken aus, Cut_auto 1, Plc_ret = Steuerung zurueck), Merker aus, Evt_end. Phase H und HAEMMERN39 laufen bis Ck(4,0xC3) (statt (3,0x6A)); beim Wiederbetreten mit offenem Rolladen klopft John weiter | main00 @0x00A76, sub00 Else @0x00BC2 |
+| N4.2 | Ereignis 5 (Riegel) in Phase H = ENTRIEGELN39: sub05 @0x00FC8..@0x00FDA (msg 12), Pad/Balken, Elza RUN (-7800,-12800), Cut 7, TURN zur Tuer, **Plc_motion(2,6) + Sleep 40** (Waffe heben), Tuer auf/John/Tuer zu (wie bisher), Cut 6, Cut 5, **(2,6) + Plc_flg 0x80** (senken); Waffe beim Ausloesen gewaehlt (re15_dining_r39_waffe_waehlen): Schusswaffe im Inventar (ausgeruestet oder erste), sonst Messer Id 1 | ROOM3060 sub03 @0x010BA/@0x010BE/@0x010C2; Spieler-Sub 0x80073e30[2] = 0x80050f00 (@0x8003068c/@0x8003069c), Kanal +0x170/+0x174 = W-Bank (@0x80036be4/@0x80036c04); ROOM1021 @0x020EA/@0x020EE; Messer-Rueckfall @0x8004666c |
+| N4.2 Port | Spieler-Plc_motion(2,c) in 1141 = W-Bank-Clip c einmal + halten (dining_r39.c re15_dining_r39_w_*; Haken scd_vm.c op_plc_motion, game_step_common.c Takt, main.c Zeichner wie der Modus-6-Override). Der Port spielte fuer pc[1] != 0 die PL00-Bank | wie oben |
+| N4.3 | Faden SCHUETZE39 (116 B, Evt_exec sub 30): Salve = TURN zum naechsten Gorilla (Anker ZIEL), (2,6) Zielen, Sleep 110, (2,7) zweimal im Abstand 30, (2,6) rueckwaerts, Sleep 20; Pause Sleep 90+90. Schuss: Ton RE15_ELZA_TON_SCHUSS, Treffer im Kegel +-0xC8 mit Handfeuerwaffen-Schaden 12, Gorilla kriecht 180 Bilder auf John zu | ROOM1021 sub02 @0x020C6..@0x020F2; Schaden @0x8006ee44; Treffer-Schreiber @0x80012428/@0x80012520/@0x800124bc; Kegel @0x80032fe0; Gorilla-Lenkziel @0x80117d4c |
+| M1 | Reaktion: While Ck(5,0x10)==1 (Merker, synchron beim Ausloesen von Ereignis 6 gesetzt, ROLLTOR39 loescht ihn) + While Ck(2,7)==1, dann Ifel Ck(4,0xC3)==0 { Set(2,7)=1 ... } im selben Takt | Formen sub03 @0x00FA8, sub02 @0x00C26 |
+| M2/N4.4 | msg 52 + John Plc_motion(0,17) (Armschwung), Sleep 50, (0,23), Sleep 20, Sleep 30 (Rest der Standzeit, Abnahme H3: 99 Bilder); kein (2,6) mehr im Gespraech | 1141 sub02 @0x00DBA..@0x00DC6 (John), ROOM3070 sub03 @0x03724 "Hurry up! They're coming!" |
+| M3 | John Pos_set (-7550,-21500) direkt nach Cut_chg 8, vor Sleep 1 | sub02 @0x00C24..@0x00C3E |
+| N6 | msg 50 "...He is in trouble, ...", msg 51 "...gorilla meal...." | Nutzer-Nachtrag 6 |
+Gemeinsame Dateien (je 1-3 Zeilen, Kommentar "Runde 39 Spur J"): scd_vm.c (op_plc_motion, VM-Anker), game_step_common.c,
+platform/pc/main.c, enemy_ai_common.c (Gorilla-Lenkziel B[3]), re15_damage.c (re15_enemy_waffen_schaden). NICHT im
+VERTRAG-1.3-Verzeichnis fuer J: enemy_ai_common.c (D/E), game_step_common.c, main.c, re15_damage.c - bei der Integration
+mit Spur E (Nachbesserung 3, Gorilla in 1141) abgleichen.
+Riegel: unit_r39_dining1141_fenster (neu), _phase_h/_programme erweitert, test_r38_dining1141 bis_zur_ecke (Riegel druecken).
