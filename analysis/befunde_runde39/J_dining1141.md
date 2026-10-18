@@ -230,5 +230,28 @@ Alle Pruefungen gruen (Auswertung mit dem korrigierten Skript per -DAUSWERTEN, s
 ## 5. Tests
 
 ## 6. OFFEN
+- Spur K (Welle 3, parallel): Johns Plc_motion(2,6) (eigene Bank, Clip 6) ist im Original die Geste zu "Elza, hurry up!"
+  (ROOM1171 sub02 @0x014C2); der Nutzer sah sie im Port in 1171 als "komische Kletter Animation". Punkt 8 benutzt dieselbe
+  Geste zu "Elza, follow me" (Form ROOM1141 sub02 @0x00C78/@0x00C94). Aendert Spur K die Kanal-/Bankzuordnung von Johns
+  eigener Bank, wirkt das auch hier - bei der Integration gemeinsam ansehen (VERTRAG 1.4).
+- Port-Bank 0x3E: in master frei; falls Spur I (10F1) in derselben Welle eine Port-Bank anlegt, bei der Integration abgleichen.
+- integration_r38_dining1141_s (zwei Laeufe mit Rueckleser je Bild, ~2 x 1 GB): Wegplan und Endbild auf den laengeren Ablauf
+  gezogen (WARTE 900, 5800#1141); Lauf siehe Abschnitt 5.
 
 ## 7. Fuer den Nutzer
+- Neue Texte ohne Aufnahme (Sprachdateien nach synchro/README.md, der Port spielt sie automatisch, sobald sie liegen):
+  `synchro/STAGE1/room1141/main50.wav` = "Elza: Oh, no, this is John! He is in Trouble, I have to help him!",
+  `main51.wav` = "John: Puuuh, that was close! I thought we end up as Gorilla meal....",
+  `main52.wav` = "John: Elza, follow me, I think I might have found a way out of here!".
+- Die Hilferufe sind deine Dateien help01..05.wav (unveraendert, Zuordnung im Code). Reihenfolge je Durchlauf
+  help03, help01, help04, help02, help05; zwischen zwei Rufen dreimal Klopfen.
+- Klopfen: RE2 hat keinen eigenen Klopf-Ton an einer Tuer (alle Raumbaenke und Tuerarchive vermessen, Dossier 2.4). Genommen
+  ist RE2s trockener Holzschlag aus dem Tuerarchiv DOOR0F (Holztreppe), dreimal kurz hintereinander. Gefaellt der Klang nicht,
+  bitte sagen (oder eine eigene Klopf-Datei nennen).
+- Glasbruch vor "What was that?!" = RE2s Fensterscheibe aus der Kraehen-Szene (derselbe Klang wie das Fenster in 1120).
+- Ablauf jetzt: Eintritt -> Klopfen + Hilferuf -> Elzas Satz (einmal) -> Gemaelde -> Rolladen hoch -> Elza tritt zurueck,
+  Kamera von vorn auf Elza, Tuer auf und zu -> Kamera auf die Dachtuer, John steht dort -> er laeuft zu Elza -> Szene wie
+  bisher (Glasbruch vor msg 6) -> Kampf -> John: "Puuuh..." (Gesten wie zu "I'm glad to see you're still alive") ->
+  "Elza, follow me..." (Heranwinken wie zu "Elza, hurry up!" in 1171) -> John geht durch den Gang aufs Dach.
+- Paket-Gate: KEINE neue Datei unter shared_assets/ (Klopf-Ton als gen/dining_r39_programme.inc eingebettet).
+
