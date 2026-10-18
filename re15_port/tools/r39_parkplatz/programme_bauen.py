@@ -45,7 +45,7 @@ D = open(RDT_PFAD, "rb").read()
 MSG_SPERRE = 40         # RE15_R39O_MSG_SPERRE   VERTRAG 1.2 (11C0 Id 40)
 TUER_SLOT = 0           # RE15_R39O_TUER_SLOT    main00 @0x01712 pc[1]
 SAT = 0x31              # RE15_R39O_SAT          main00 @0x01715 pc[3] (Door_aot_set) = 11B0 sub01 @0x01219 pc[3]
-MASKE = 0xFFFF          # RE15_R39O_MASKE        11B0 sub01 @0x0121A..1D Nutzlast +2 (alle ausgelieferten sce-1-Saetze)
+MASKE = 0xFFFF          # RE15_R39O_MASKE        11B0 sub01 @0x0121C..1D = Nutzlast +2 (alle ausgelieferten sce-1-Saetze)
 SUB_SZENE = 2           # RE15_R39O_SUB_SZENE    sub01 @0x01824 `04 0a 18 02`
 SUB_ENDE = 3            # RE15_R39O_SUB_ENDE     sub01 @0x01842 `04 ff 18 03`
 
