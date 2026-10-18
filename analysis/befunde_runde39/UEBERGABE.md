@@ -6,6 +6,13 @@ Verfahren wie Runde 38 (`analysis/befunde_runde38/UEBERGABE.md` §2-§4), Releas
 Zeiten IMMER aus der Uhr (Get-Date/date) oder der Commit-Zeit, nie schaetzen.
 
 ## ✅ Fortschritt (neueste zuerst)
+* 2026-10-18 14:14: Spur E gegner BESTANDEN nach Nachbesserung 1 (Fix f20734fa): Parking-Lot-Gorillas ROOM11C0 HP 360
+  (Saat 180 @0x8011f514 x2) + Flinch erst ab 36 Energie (= 3 Pistolentreffer a 12 @0x8006ee44; NUTZER-VORGABE), Ein-
+  Angreifer-Riegel der RE2-Hunde (ori 0x80 @0x801051f8; 11C1 Doppelbiss F1008/F1019 weg), Kriecher 0x81 in 1010/1011 +
+  1220/1221 (Wecker sltiu 0xbb8 @0x80104718, echte Tuer), Gorilla-Schatten im Sprung auf +0x1ba (Original-Lage, Schwanz
+  @0x80116f20-38 auf jedem Pfad; der Root-Skip-Haken der Abnahme 0 war falsch und ist raus); 49/49 Tests. In die
+  Integration gemergt (4e2177bd, konfliktfrei; H+F+D-Tests laufen noch auf dem Bau davor) -> ALLE VIER Spuren der Welle 2 drin. FUER DEN NUTZER: HP x2 / 3-Treffer auch fuer die 1141-Gorillas
+  (Wortlaut "beim Parking Lot" -> nur 11C0)? NACHLAUF: Gorilla-Schattengroesse Original 1700/1800, Port 500/600.
 * 2026-10-18 14:03: Spur D treffer BESTANDEN nach Nachbesserung 1 (Abnahme 1 f0eec254; Fix bd0f0471): (1) Aufsteher = RE2
   byte-true - Sturz-Aufsteher bis Clip-Bild 55 nur Beine-Maske (@0x801032b8-fc, @0x801036d0-f0, Maskentor @0x800413c4-d8),
   EBEN-Schuss trifft erst ab Bild 55, TIEF jederzeit; Port war schon so, Riegel misst jetzt (17 CHECKs); (2) Schuss ueber
