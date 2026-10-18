@@ -517,6 +517,8 @@ Abschnitt "Fuer den Nutzer" einfach beschreiben (keine Entscheidungsfrage). (3) 
 - 23:06-23:13 Messung vorher am gemergten Stand (Laeufe v_a, v_l, v_l2, v_l3, gestartet 23:06:41; 9.1).
 - 23:23 Umsetzung dccd5f8c (9.3, Commit 23:23:21); Laeufe n_a, n_l, n_l2, n_l3 gestartet 23:23:32 (Uhrzeiten aus `git log` / Dateizeiten).
 - 23:32 Riegel (05bc9a4d), 23:34 Riegel `kampf` (ee3cd7c2), 23:35 Dossier 9.4-9.8 (ec02857e); 23:34 gezielte Suite gestartet (9.5).
+- 23:38-23:49 Integration gezielt (13 von 14, rot nur der E-Riegel, Merge-Folge, 9.9); 23:57 E-Riegel nachgezogen (b5a42cca),
+  gruen; 23:58-00:10 alle Unit-Riegel am Endstand 842/842 (9.10).
 - H6 erledigt: Uhrzeit in 8.8 aus den Commit-Zeiten berichtigt (751e3f4d 21:48:38, exe 21:47:36, f744e5ad 22:13:31).
 
 ### 9.1 Messung vorher (gemergter Stand 25611933, echte exe; Messordner scratchpad `j39n2/`, nicht committet)
@@ -729,3 +731,13 @@ Pegel 559", 0 Fehler. Gegenprobe Riegel: `integration_r39_dining1141_d` per -DAU
 - Fuer den Nutzer (Ergaenzung zu 9.8): die Entscheidungsfragen aus 8.6 entfallen - der Nutzer-Nachtrag 4 ist eindeutig ("ab und
   an schiessen und ihre Aufmerksamkeit erhalten"), die Regel steht oben in einfachen Worten; Gorillas greifen John weiterhin
   nicht an (die Angriffe des Originals wirken nur auf den Spieler, 8.5).
+
+### 9.10 Endstand (Code b5a42cca, gezielt gruen)
+- Alle Unit-Riegel am Endstand (Lauf 23:58:02..00:10:24): `ctest --test-dir re15_port/build -R "^(unit_|prop_|probe_)" -j 8 --timeout 600`
+  -> "100% tests passed, 0 tests failed out of 842".
+- Integration am Endstand: `ctest -R "integration_r39_dining1141|integration_r38_dining1141|integration_r39_gegner_1141|integration_r37_elzaems_elza1141|integration_r38_affen3" -j 4 --timeout 3600`
+  -> 13 von 14 gruen (9.9), der eine rote E-Riegel nach dem Nachziehen gruen: `ctest -R "unit_r39_gegner|unit_r39_dining1141|integration_r39_gegner_1141" -j 6 --timeout 1200`
+  -> "100% tests passed, 0 tests failed out of 24". Der D-Riegel mit dem Endstand-Skript (nur Variablenname H7 geaendert) per
+  -DAUSWERTEN auf seinem ctest-Lauf lauf_7fd8ea61: "alle Pruefungen gruen". Zwischen den Laeufen nur Kommentar (re15_dining_r39.h
+  `29 00`) und Riegel-Dateien geaendert, kein Verhalten.
+- Volle Suite: nicht im Spurbaum (VERTRAG), faehrt der Orchestrator in der Integration.
