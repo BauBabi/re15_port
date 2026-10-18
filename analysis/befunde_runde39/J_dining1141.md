@@ -227,7 +227,37 @@ Alle Pruefungen gruen (Auswertung mit dem korrigierten Skript per -DAUSWERTEN, s
   Blick-Pruefung lief ins Leere (0 von 0). Jetzt Hauptteil 8 Gruppen + b67/blick einzeln; Auswertung desselben Laufs:
   msg 9/10 0 von 268 Bildern ueber 160 Einheiten, msg 51 Blick 0, (9,67) = 1, Cut 7 verlassen.
 
+### 4.3 Riegel-Lauf integration_r39_dining1141_d am Endstand der Programme (Lauf lauf_3f843286, Passed 325 s)
+- Punkt 2: "John erstmals im Raum: F1269 anz=7 (-7350,-1300); erstes Bild Cut 6 danach: F1339 (-7350,-1300); Cut 7 ab F1264"
+  (Sleep 5 nach Cut_chg 7: John kommt 5 Bilder NACH dem Bildwechsel, hinter der Kamera).
+- Punkt 7: msg 9/10 0 von 268 Bildern ueber 160 Einheiten Blickfehler.
+- Punkt 8 (Bogen `j39b/int2_dialog.png`): Cut 8, Elza links / John rechts im Bild, beide einander zugewandt; zu msg 51 Johns
+  Gesten (Hand zur Brust/hoch), zu msg 52 streckt John den Arm nach Elza aus (Plc_motion(2,6) = Heranwinken/Zeigen, KEIN
+  Klettern - anders als der Nutzer-Befund in 1171, Spur K); Blick msg 51/52 179 Bilder = 0, danach dreht er zum Abgang;
+  F3680 Cut 7, John laeuft auf die Kamera zu.
+- Punkt 9: Werkzeug pegel "Takte 9426..9451 Pegel 0, Takte 9466..9496 Pegel 559".
+- Punkt 5 (eigener Kurzlauf p5, Bogen `j39b/p5.png`): F176..F274 "Elza: Oh, no, this is John! / He is in Trouble, I have to
+  help him!" im Bild von Cut 0 (Elza an der Doppeltuer), danach geht das Spiel weiter.
+- Generator-Gegenprobe: `programme_bauen.py --pruefen` fuer dining_r39_programme.inc und dining_r38_programme.inc: ok.
+
 ## 5. Tests
+Neu (tests/unit/probes/r39_dining1141.cmake, tests/unit/test_r39_dining1141.c, tests/integration/test_r39_dining1141.cmake):
+| Test | misst | Punkte |
+|---|---|---|
+| unit_r39_dining1141_texte | msg 50/51/52 dekodiert = Wortlaut, Dialogform msg 2 | 5, 8 |
+| unit_r39_dining1141_programme | Bytes: kein 0x3C/0x3D, 15 Schlaege mit Sleep 5, help01..05 je einmal im Mix, Ck(9,94) -> msg 50 -> Set(9,94) nach dem ersten Ruf; Cut 7 -> Tuer auf -> Pos_set/Dir_set John -> Tuer zu -> Cut 6; Glas x2 direkt vor msg 6; Gosub sub04 nach Johns TURN vor msg 9; Cut 8 -> 51 + Gesten -> (2,6) -> 52 -> RUN | 1-8 |
+| unit_r39_dining1141_stamm | Id 53..57 -> help01..05 nur in 1141 | 4 |
+| unit_r39_dining1141_phase_h | VM-Lauf: John geparkt und in keinem Cut-Viereck (nie gezeichnet), Reaktion einmal mit Pad-Sperre, Klopfen/Rufe, Tuer-Auftritt (John erst bei angezeigtem Cut 7, Tuer-zu VOR Cut 6, John im ersten Bild von Cut 6 sichtbar, vorher nie), Glas vor msg 6, Blick msg 9..11 (re15_ai_arc_test Kegel 160), Ecke, Sperre beide Tueren, Gespraech (Cut 8, Elza-Lage, Blick, Clips 15/23, Sub 2 Clip 6), Abgang (kein Schub, > 900 im Bild, Parken in Cut 7), Dachtuer -> 1171, Wiederbetreten | 1-8 + Runde 38 |
+| integration_r39_dining1141_d | echte exe, echter Weg mit Elza, debug.log + RE15_R39J_LOG + Mitschnitt (Werkzeug pegel) | 1-9 |
+Angepasst (vom Nutzer geaenderter Ablauf, Begruendung im Code): unit_r38_dining1141_phase_h und _abgang -> Verweis auf
+unit_r39_dining1141_phase_h (die weiter gueltigen Pruefungen sind dorthin uebernommen); unit_r38_dining1141_weg1131 prueft den
+Rueckfall tuer_1131 am Zustand statt am (nicht mehr moeglichen) Hinausgehen waehrend des Wartens; integration_r38_dining1141
+D und A -> Verweis auf integration_r39_dining1141_d (Pruefungen uebernommen), S mit Wegplan WARTE 900 und Ende 5800#1141;
+test_r36_kartenbits k_port[] + Bit 94.
+
+Gezielter Lauf Unit (Endstand, ctest -R wortlich):
+`unit_r39_dining1141|unit_r38_dining1141|unit_r36_kartenbits|unit_rotor_bgm_pin|unit_r35_cut10f0|unit_synchro_stimme|unit_voice_ausreden|unit_r39_stimmen|unit_r38_rekorder|unit_r38_elzaintro_stimme|unit_se_bank_routing|unit_se_voice_machine|unit_r30_tuer_stimme|unit_audio`
+-> "100% tests passed, 0 tests failed out of 38".
 
 ## 6. OFFEN
 - Spur K (Welle 3, parallel): Johns Plc_motion(2,6) (eigene Bank, Clip 6) ist im Original die Geste zu "Elza, hurry up!"
