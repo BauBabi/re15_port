@@ -116,3 +116,8 @@ gen/szl11b0_szene.inc:134) - Text und Aufnahme stimmen ueberein, nichts zu aende
   (Orchestrator: Spur L Punkt 2 hatte die Schluessel 10F0/10F1 auf RE2-Bildgroesse gebracht - Leon 69 px, Elza 63 px bei
   960x720, Hebel RE2_QUANTIL in tools/r38_itemorte/itemorte_export.py. NUTZER-VORGABE jetzt: hoechstens halb so gross wie
   dieser Stand (Faktor 0,5 linear) -> neue Spur M "schluessel2".)
+
+## Nachtrag 6 des Nutzers (woertlich, 19:46)
+- Antwort auf die Rueckfragen der Spur I: "1. ok, zu 2. nein, korrekt soll es geschrieben werden." -> Funkszene: "We need help!",
+  "Uhh, this thing is broken!" (umgesetzt). Orchestrator: dieselbe Regel fuer neue Nutzer-Zeilen der Spur J ("He is in
+  trouble", "gorilla meal") - korrekte Gross-/Kleinschreibung.
