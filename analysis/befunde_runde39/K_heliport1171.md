@@ -282,3 +282,4 @@ Slots (anim_select_common.c), "Original" = was FUN_8001f314 im selben Takt posie
 
 Nebenwirkungen im selben Lauf: Pose-Strom ALLER anderen Aktoren (Elza, Kraehen) vorher/nachher bytegleich
 (md5 65b9f910b1e43bd3b5f6fef2582ce04a beide), Zustandslog ohne Johns Klammer 1138/1138 Zeilen gleich.
+- 17:29: Vorher-Bau fuer die Gegenproben K2-K4 in re15_port/build_bisect: enemy_ai_common.c/szenenleon_r36.c/scd_room_setup.c stehen VORUEBERGEHEND auf b35c66bd in der Arbeitskopie. Steht beim Lesen ein ' M' auf diesen Dateien ohne Rueckmeldung hier: `git checkout HEAD -- re15_port/engine/src/enemy_ai_common.c re15_port/engine/src/szenenleon_r36.c re15_port/engine/src/scd_room_setup.c` (K2-K4 sind in 6d027394 committet), NICHT committen.
