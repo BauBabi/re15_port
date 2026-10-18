@@ -6592,6 +6592,8 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
             e->crow_vvel = (int16_t)(e->crow_mode & 0x3f);             /* @0x80115188 */
             if (e->crow_vert_err < 2000) e->crow_vvel = (int16_t)(-e->crow_vvel);  /* @0x801151a4 */
             e->sub_state_2 = 1;
+            break;   /* Runde 39 Spur K NB2: `j 0x801152cc` @0x801151d8 = Epilog — kein f314 (@0x801151e8), keine Lenkung,
+                      * kein pos_advance, kein Kontakt im Phase-0-Takt (Bild und Lage bleiben stehen) */
         }
         if (re15_crow_anim(e)) e->sub_state_2 = 0;                      /* clip done -> next half-cycle */
         re15_enemy_steer_point(e, player->x, player->z, 0x32);          /* @0x801151f4 rate 50 */
@@ -6621,8 +6623,10 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
 
     case 3:   /* SPIN 0x801153ac: spin the yaw, timer -> back to HOVER */
         if (e->sub_state_2 == 0) { re15_audio_room_se(0); re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_vvel = -30; e->crow_timer = 32; e->sub_state_2 = 1; }   /* Runde 38 Spur I: Se(0) @0x801153f8 (a0=0 @0x801153fc) */
-        e->rot_y = (int16_t)(e->rot_y + 60);                           /* @0x80115460 yaw += 60 */
         if (e->sub_state_2 == 1) {
+            e->rot_y = (int16_t)(e->rot_y + 60);   /* @0x80115460-6c yaw += 60 — Runde 39 Spur K NB2: nur im Phase-1-Rumpf
+                                                    * (Phase 0 faellt hinein); Phase 2 @0x801154d0-e8 springt an ihr vorbei
+                                                    * in den Schwanz @0x801154ec */
             if (e->crow_timer == 0) { e->sub_state_2 = 2; e->crow_vvel = 10; e->crow_timer = 40; }  /* @0x801154b4/c4 */
             else e->crow_timer--;
         } else {
