@@ -1,0 +1,360 @@
+# Runde 39 — Spur F "zustand" (2026-10-18)
+
+Baum `.claude/worktrees/r39_zustand`, Zweig `r39/zustand`, Basis c71fa144 (master nach Integration Welle 1).
+
+## Auftrag (Wortlaut, AUFTRAG.md)
+1. "Wenn der Spieler verletzt wurde, hat dann kaputte Klamotten und heilt sich aber wieder vollständig - zum Beispiel
+   mit Heilspray - dann muss er auch wieder die ganzen Klamotten haben."
+2. "Der "Poison" Zustand ist zwar jetzt da, aber er zieht keine Energie ab Stück für Stück, so wie im Originalen
+   Resident Evil 2. Zumindest zeigt er es vom EKG her nicht so an. Da ist noch ein Fehler."
+
+## Fortschritt (fortlaufend, neueste unten)
+- 10:2x Baum geprueft (status leer, HEAD c71fa144), AUFTRAG/VERTRAG gelesen, Vorrunde R_spinnen.md (Gift) und
+  Runde-36 B_kleidung.md (Kleidung) gelesen. Bau configure+build gruen (F_belege/build_0.log).
+- Messung vorher beider Punkte (Abschnitte 1.1 / 2.1): Kleidung bleibt nach Vollheilung blutig (787/603 Pixel),
+  Gift = RE1.5-Takt -2/121, EKG-Spur gruen wie FINE.
+- Bestand gelesen: Gift-Takt = RE1.5-Form (spinnen_r38.c re15_spinnen_r38_gift_tick, -2 HP alle 121 Bilder,
+  @0x80031e44-ecc), gerufen NUR im Kommando-1-Prolog (game_step_common.c:1712). EKG: RE1.5-Farbtabelle
+  @0x8007622c, Eintrag 3 (Gift) = 20 ff 20 = GRUEN wie FINE. Kleidung = Blut-Decal-Wundtabelle (re15_damage.c
+  s_wounds[8]) + VRAM-Blit in die Slot-0-Basis (render_pc.c re15_render_pc_wound_blit schreibt in
+  s_slot0_base_rgba, also KEINE unversehrte Kopie mehr); Heilung loescht im Original nichts (blood_decals.md).
+
+- 12:55-13:40 Nachbesserung 1 (Abschnitt am Ende): M1 behoben (zustand_r39_pc.c, main.c +2), dabei Absturz 0xC0000374 bei
+  Vollheilung mit Weste gefunden/behoben/geriegelt, H1/H2 erledigt, ctest 3/3 + 39/39.
+
+## 1. Punkt 1 — volle Heilung = ganze Kleidung
+### 1.1 Messung vorher (gebauter Stand c71fa144 + Messschiene, Messkopie re15_pc_r39f_stand1.exe)
+Aufbau (F_belege/lauf2.sh): Spielstand per Werkzeug `test_r39_zustand karte` (ROOM1130 Leon / ROOM1131 Elza, Lage
+(-1024,0,-3336) rot 856 Cut 2 wie test_r36_kleidung_bild, HP 20, Inventar Slot 0 = First Aid Spray 0x22), CONTINUE,
+Heilspray ueber den echten Statusschirm (RE15_PAD_AT=200:S,260:A,300:A,340:A,500:S: START oeffnet, SQUARE = ITEM,
+SQUARE = Kommandokranz, SQUARE = USE, START schliesst; Menue-Zustaende aus RE15_INV_LOG: st 1 -> 3 (F300) -> 4 (F308)
+-> 5 (F340) -> 6 (F375) -> 1 (F383), Schirm zu F507), Framedumps Bild 150 (vorher) und 650 (nachher), je einmal mit
+allen 8 Wund-Panels Stufe 2 und einmal ohne Wunden; Mass = Pixel-Differenz im Figurenkasten x177..247 / y81..205
+(`test_r39_zustand bild`, wie r36).
+
+| Lauf | HP (state.log) | Pixel-Differenz mit/ohne Wunden Bild 150 | Bild 650 (nach dem Spray, HP 100) |
+|---|---|---|---|
+| Leon k_v_leon_w / k_v_leon_o | 20 -> 100 in F375 | 737 (Kasten 192,96-231,179) | **787** (183,89-227,178) |
+| Elza k_v_elza_w / k_v_elza_o | 20 -> 100 in F375 | 462 (193,110-223,180) | **603** (191,101-226,180) |
+
+Befund: die Heilung setzt die HP auf 100, die Blut-Decals bleiben auf der Kleidung (Bild 650 unterscheidet sich weiter
+von der unverwundeten Figur) — der Nutzerpunkt ist reproduziert. Bilder: F_belege/laeufe/k_v_*_{w,o}/fd_000650.png.
+### 1.2 RE-Belege (Adressen, Bytes)
+- **Original RE1.5 loescht bei Heilung nichts** (analysis/blood_decals.md §5, Writer-Zensus auf die Wund-Tabelle
+  @0x800b10ec: nur der Builder FUN_80037c1c (`addiu s1,s1,4332` @0x80037c30 = 0x800b10ec, Level+Akku := 0) und der
+  Akkumulator FUN_80037edc (`addiu a3,a3,4332` @0x80037ef4, Schwelle 0x78 @0x80037f14, Clamp 2 @0x80037f50). Der
+  Heil-Applier FUN_8004adcc @0x8004adcc-0x8004b070 (Tabelle @0x80010fbc, s0 = 100 @0x8004ae14, Gift-Loeschung
+  `andi 0xfffd` @0x8004af8c) enthaelt KEINEN Store auf 0x800b10ec. RE2 Retail kennt keine Blut-Decals — dort gibt
+  es nichts, was zurueckgesetzt werden muesste. => Punkt 1 ist **NUTZER-VORGABE** (PORT-WAHL), kein Original-Verhalten.
+- **FORM der Vorgabe, belegt:** "vollstaendig geheilt" = die HP erreichen den Wert, den das Heilspray schreibt:
+  `sh s0` mit s0 = 100 (`ori s0,zero,0x64` @0x8004ae14, Rohbytes `64 00 10 34` = 0x34100064: op 0x0D ORI, rs zero, rt s0,
+  imm 0x64 — Nachbesserung 1 / H2: vorher als `addiu` zitiert; absolute Heilung der Ids 0x22/0x2a/0x2d, Port
+  item_use_common.c s_heal[].set) + der Westen-Bonus des Ports (re15_vest_hp_bonus, scd_room_setup.c). Additive
+  Heilungen (0x23/0x24/0x27..0x2c/0x2e, ohne Kappung @0x8004afa8-b0) zaehlen, sobald HP >= dieser Wert. Die Nuss 0x2f
+  (absolut 0x4d = 77 @0x8004b028) ist nie voll.
+- **Wiederherstellung = der Spieler-Lade-Pfad des Originals:** FUN_800314b0 baut die Wund-Tabelle neu (Builder
+  FUN_80037c1c @0x800316c8/@0x800318cc) und laedt die Spielerhaut (FUN_8004ee78, Slot 0x17) frisch aus der PLD —
+  genau so verliert ein geladener Spielstand im Original sein Blut (blood_decals.md §5.6). Der Port tut nach der
+  vollen Heilung dasselbe: Tabelle nullen (re15_wound_reset) + Slot-0-Upload der PLD-TIM (platform/pc/src/
+  zustand_r39_pc.c re15_pc_zustand_r39_haut_neu, seit Nachbesserung 1; Familie PL%02X aus DAT_800aca5c: Leon 0, Elza 4 — Tabelle @0x80073f70, Leser
+  FUN_800314b0 @0x800314d4). Der Waffen-Composite legt sich ueber die Slot-0-Generation wieder auf
+  (render_pc.c s_slot0_generation, main.c s_wpn_gen).
+- Warum nicht nur die Tabelle nullen: render_pc.c re15_render_pc_wound_blit kopiert die Damage-Bank IN die
+  Slot-0-Basis (s_slot0_base_rgba, in place) — die Basis ist danach nicht mehr unversehrt; nur ein frischer
+  Upload der PLD-TIM stellt die Kleidung her (gemessen 1.1: nach dem Spray blieben 787/603 Pixel Blut).
+
+### 1.3 Umsetzung
+- `engine/src/zustand_r39.c` re15_zustand_r39_heilung(id): nach dem Applier (Haken am Ende von
+  re15_item_use_apply, item_use_common.c, 2 Zeilen): HP >= re15_zustand_r39_hp_voll() (= 100 @0x8004ae14 +
+  Weste) -> re15_wound_reset() + Anforderung "Haut neu".
+- `platform/pc/src/zustand_r39_pc.c` (Nachbesserung 1; vorher als 19-Zeilen-Funktion pc_player_skin_reload in main.c =
+  Mangel M1): re15_pc_zustand_r39_haut_neu(modell) laedt die PLD-TIM der Familie/des Modellwechsel-Index (lose Teildatei
+  PLD/PLxx.TIM, sonst Container-Schnitt re15_pld_part aus PLD/PLxx.PLD — PL01/Weste gibt es nur so) und laedt sie in
+  Slot 0 (re15_render_pc_upload_tim_slot kopiert; danach wird nur der gelesene Puffer freigegeben). `platform/pc/main.c`:
+  2-Zeilen-Haken im Blut-Decal-Sync-Block vor der Generationspruefung, uebergibt s_player_model_idx (sonst
+  Charakter-Nibble, wie pc_sync_player_model). Log: `[r39-zustand] Heilung 0x22: HP 100 >= 100 voll -> Wund-Tabelle genullt (hatte
+  Wunden), Spielerhaut neu` / `[r39-zustand] Spielerhaut PL00.TIM neu geladen (...) - Kleidung ganz`.
+- Beide Szenarien: die Mechanik ist figur-unabhaengig (Elza = Familie PL04, Panels aus LUT-Zeile 4 nur beim Blit).
+### 1.4 Messung nachher (Stand 87180698 gebaut = build_4.log, Messkopie re15_pc_r39f_stand3.exe, F_belege/lauf3.sh)
+Derselbe Aufbau wie 1.1 (Spielstand HP 20 + Heilspray im Platz 0, CONTINUE, Spray ueber den echten Statusschirm
+START/SQUARE/SQUARE/SQUARE/START, Heilung in Bild 375, Framedumps 150/650), je Figur einmal mit allen 8 Panels Stufe 2
+(`_w`) und einmal ohne Wunden (`_o`), Mass = `test_r39_zustand bild` im Figurenkasten x177..247 / y81..205:
+
+| Lauf | Bild 150 (vor dem Spray) w vs o | Bild 650 (nach dem Spray) w vs o | debug.log |
+|---|---|---|---|
+| Leon k_n_leon_w / k_n_leon_o | 737 Pixel (Kasten 192,96-231,179), ausserhalb 0 | **0 Pixel** (vorher 787) | `Heilung 0x22: HP 100 >= 100 voll -> Wund-Tabelle genullt (hatte Wunden), Spielerhaut neu` / `Spielerhaut PL00.TIM neu geladen (384x256) - Kleidung ganz` |
+| Elza k_n_elza_w / k_n_elza_o | 462 Pixel (193,110-223,180), ausserhalb 0 | **0 Pixel** (vorher 603) | dito, `Spielerhaut PL04.TIM neu geladen` |
+
+Gegenprobe im Spray-Lauf selbst (Leon w, Bild 150 vs 650): 4526 Pixel verschieden (Pose + Kleidung) — die Kleidung
+nach dem Spray ist pixelgleich mit der nie verwundeten Figur. Vor der Heilung sind die Wunden weiterhin sichtbar
+(737/462 wie in 1.1), d.h. der Wund-Pfad der Runde 36 ist unveraendert. Bilder: F_belege/laeufe/k_n_*/fd_000{150,650}.ppm.
+Waffen-Composite: der Slot-0-Upload bumpt s_slot0_generation (render_pc.c:2562), der Composite-Block in main.c
+(`gen != s_wpn_gen`) baut die Waffe danach neu auf — in den Laeufen ohne Ausruestung (eq=128) nicht sichtbar, Mechanik
+im Code gelesen (render_pc.c:2549-2562, main.c Composite-Watch).
+
+## 2. Punkt 2 — Gift zieht Energie wie RE2, EKG zeigt es
+### 2.1 Messung vorher (gebauter Stand + Messschiene RE15_R39_GIFT_AT/RE15_R39_LOG, Messkopie re15_pc_r39f_stand1.exe)
+Aufbau (F_belege/lauf.sh g_vorher / g_gesund): Leon ROOM1130, HP 100, Gift-Bit 0x2 (0x800acaec = status_flags) im Bild
+300 gesetzt, HP je Bild protokolliert, Statusschirm mit START im Bild 1500, Framedumps 1540..1600.
+
+| | Takte (Bild: HP) |
+|---|---|
+| g_vorher | F301: 98, F422: 96, F543: 94, F664: 92, F785: 90, F906: 88, F1027: 86, F1148: 84, F1269: 82, F1390: 80 |
+| g_gesund | kein Abzug (HP 100 bis F1500) |
+
+= die RE1.5-Form (-2 HP alle 121 Bilder, erster Takt sofort @0x80031e74, Zaehler 0x78 @0x80031e78), nicht die
+RE2-Form (-1 HP alle 31 Bilder, s. 2.2). Statusschirm (F_belege/laeufe/g_vorher/fd_001600.png vs g_gesund): die
+EKG-Spur ist in BEIDEN Laeufen gleich gruen (Pixelfarben der Spur (16,112,24)/(16,80,24)/..., Farbtabelle @0x8007622c
+Eintrag 3 = 20 ff 20 wie Eintrag 0); Bild-Differenz vergiftet/gesund liegt NUR im Wort (x54..95, y143..152: "Fine" gruen
+vs "Poison" magenta, 304 Pixel). Vom EKG her zeigt der Port das Gift also nicht — der Nutzerpunkt ist reproduziert.
+### 2.2 RE-Belege (Adressen, Bytes)
+**RE1.5 (Beta, Stand Runde 38):** Gift-Wirkung im Kommando-1-Handler 0x80031de8 @0x80031e44-ecc: `lhu 0x800acaec /
+andi 0x7 / beq` (kein Gift -> Ende), Zaehler 0x800acc27 -1, war 0 -> Zaehler 0x78 (8 bei Bit 0x4), HP -2, HP < 0 ->
+1. Periode 121 Bilder, -2 HP; laeuft nur im Kommando 1 (nicht in Griff/Flinch/Treppe). Der Gift-Wuerfel des
+Spielerzweigs ist tot (a0 = 0x0A an beiden `jal 0x8001af20` @0x80012e78/e80, R_spinnen.md 1.4) — RE1.5 hat das
+Gift nie fertig gebaut. **Beta -> Retail: RE2 ist die Zielform** (Nutzer: "so wie im Originalen Resident Evil 2").
+
+**RE2 Retail (PSX.EXE Leon, ghidra_re2_Leon.txt, selbst disassembliert):**
+- Spieler-Takt FUN_8003bfac, jedes Bild VOR dem Zustands-Dispatch (`lbu v0,0x4(s0)` @0x8003c188 /
+  `jalr` ueber PTR_LAB_800a4030), Pause-Tor `DAT_800cfbdc < 0 -> return` @0x8003bfac-c0 (= Port RE15_PAUSE_PLAYER /
+  bltz @0x80031c78):
+  ```
+  8003c12c 0d 80 02 3c  lui   v0,0x800d
+  8003c130 10 fe 42 94  lhu   v0,-0x1f0(v0)   = DAT_800cfe10 (Gift-Wort)
+  8003c138 12 00 40 10  beq   v0,zero,LAB_8003c184          kein Gift -> Ende
+  8003c144 12 fe 63 90  lbu   v1,-0x1ee(v1)   = DAT_800cfe12 (Takt-Zaehler)
+  8003c14c ff 00 62 24  addiu v0,v1,0xff      ; 8003c154 sb v0,-0x1ee(at)   Zaehler - 1 (u8)
+  8003c158 0a 00 60 14  bne   v1,zero,LAB_8003c184 ; 8003c15c 1e 00 02 24 _li v0,0x1e   lief noch -> Ende
+  8003c164 12 fe 22 a0  sb    v0,-0x1ee(at)   Zaehler := 30
+  8003c168 56 01 02 86  lh    v0,0x156(s0)    HP
+  8003c174 02 00 42 28  slti  v0,v0,0x2 ; 8003c178 bne v0,zero,LAB_8003c184   HP < 2 -> Ende (Untergrenze 1)
+  8003c17c ff ff 62 24  _addiu v0,v1,-0x1 ; 8003c180 56 01 02 a6 sh v0,0x156(s0)   HP := HP - 1
+  ```
+  Periode 31 Bilder (30 .. 0, Abzug bei 0), -1 HP, nie unter 1, keine weiteren Stores (kein Kommando-/Zustandswort,
+  kein SE) = der Takt ist kein Treffer. Laeuft in JEDEM Spielerzustand (Griff, Flinch, Zielen, Treppe), nur die Pause
+  haelt ihn an.
+- Vergiftung = Op 32 der Raum-ESP (FUN_8001f530, Giftkugel der Spinne, Spinnen-sub `andi 0x8` @0x80020118):
+  `li v0,0x1518` @0x80020120 / `sh v0,-0x1f0(at)` @0x80020130 (0x800cfe10 := 5400 = "Gift an"; der Wert wird
+  nirgends heruntergezaehlt, alle 18 Leser pruefen nur != 0), **`li v1,0x1e` @0x80020138 / `sb v1,-0x1ee(at)`
+  @0x80020140 (0x800cfe12 := 30)** -> erster Abzug 31 Bilder nach dem Treffer. Weitere Giftquellen 0x80021e98 /
+  0x80023bf0 (FUN_80021a48, andere ESP-Ops) gibt es in RE1.5 nicht.
+- Heilung: Inventar FUN_8006affc `sh zero` 0x800cfe10 @0x8006b1e8 (Blaues Kraut/Mischungen, EKG-Wischmodus 3
+  @0x8006b1e0); Skript Poison_clr @0x800591a8/@0x80059334 (+ 0x800cfe12 := 0 @0x800591b0/@0x8005933c),
+  Poison_ck @0x8005930c (`sltu v0,zero,v0`). Port: Gegengift 0x23 / Blau 0x26 / Mischungen loeschen das
+  RE1.5-Bit @0x8004af8c (vorhanden, item_use_common.c).
+- Statusschirm-Klassifikator FUN_80069538 @0x80069538-80069584: `lhu 0x800cfe10` @0x80069544, != 0 -> **4 = POISON
+  vor allem anderen**; sonst HP (0x800cfd4e) > max/2 (0x800cfd5a >> 1) -> 0 FINE, >= 0x29 -> 1, >= 0x15 -> 2, sonst 3.
+  (RE1.5 FUN_8004ed6c ebenso: Bit 1 -> 3 vor den Schwellen 80/20 @0x800112b4/b5.) Auch in RE2 verraet der Schirm
+  waehrend des Gifts die HP nicht — er zeigt POISON.
+- EKG-Farben RE2 FUN_800754ac (Aufruf `jal FUN_80069538` @0x8006a6d8 -> `move a0,v0` -> `jal FUN_800754ac`
+  @0x8006a6e0): Linie i (iVar6 = 32 .. 1, Kopf hell) Farbe = `(&DAT_800ab160)[cond*6 + c] - (&DAT_800ab163)[cond*6 + c]
+  * i`. Tabelle @0x800ab160 (selbst gelesen):
+  | cond | Bytes @ | r g b / dr dg db | |
+  |---|---|---|---|
+  | 0 FINE | 800ab160 | 20 ff 20 / 01 08 01 | gruen |
+  | 1 CAUTION | 800ab166 | ff ff 20 / 08 08 01 | gelb |
+  | 2 CAUTION | 800ab16c | ff 80 20 / 08 04 01 | orange |
+  | 3 DANGER | 800ab172 | ff 20 20 / 08 01 01 | rot |
+  | **4 POISON** | **800ab178** | **ff 20 ff / 08 01 08** | **magenta** |
+  Wellenformen @0x800ab180 (5 Zeiger, 0x1d001000-Stil {y,h}-Bytepaare).
+- RE1.5-EKG (Port-Statusschirm, FUN_80048a44): Farbtabelle @0x8007622c, 4 Bytes {r,g,b,Fade-Maske} je Zustand
+  (selbst gelesen): [0] 20 ff 20 02, [1] 80 80 20 07, [2] 20 ff 20 07, **[3] 20 ff 20 02** (Gift = dasselbe Gruen wie
+  FINE), [4] 20 20 20 07, [5] 20 20 20 07; Wellenform-Zeiger @0x80076214 (6 Eintraege). Gemessen (2.1): die Spur ist
+  vergiftet und gesund pixelgleich.
+
+### 2.3 Umsetzung
+- `engine/src/zustand_r39.c` re15_zustand_r39_spieler_takt(pl, aktiv) = die RE2-Instruktionsfolge
+  @0x8003c130-180 1:1 (Gift-Wort = RE1.5-Bit 0x2 von status_flags; Zaehler s_takt = 0x800cfe12; -1 HP bei 0,
+  dann 30; `slti 2` Untergrenze). Haken in game_step_common.c neben dem Zopf-Haken (hinter dem Pause-bltz
+  @0x80031c78, vor der Zweigkette), aktiv = rdt_ok && !RE15_PAUSE_PLAYER; der Abzug wird aus dem Treffer-Detektor
+  s_prev_hp herausgenommen (wie Runde 38 N1). Der alte RE1.5-Aufruf im Kommando-1-Prolog ist entfernt
+  (re15_spinnen_r38_gift_tick bleibt als dokumentierte Beta-Form im Code, ungenutzt).
+- re15_zustand_r39_gift_setzen() (= `sb 0x1e` @0x80020140): Haken am Giftklumpen-Treffer in spinnen_r38.c
+  (1 Zeile hinter `status_flags |= 0x2`). Kommando 0 nullt den RE2-Zaehler nicht (RE2 hat keinen solchen Schreiber;
+  der RE1.5-Zaehler-Reset @0x8003196c betrifft nur die Beta-Form).
+- EKG: re15_zustand_r39_ekg_farbe(cond, i): fuer cond 3 (Gift) die RE2-POISON-Farbe @0x800ab178-7d
+  (r = 0xff - 8 i, g = 0x20 - i, b = 0xff - 8 i); Haken in re15_inv_screen.c hinter den drei Farbzeilen der
+  32 LineF2 (2 Zeilen). FINE/CAUTION/DANGER bleiben die RE1.5-Tabelle (s. OFFEN).
+- Messschiene (env, kein Verhalten): RE15_R39_GIFT_AT=<bild> (Gift-Bit + Zaehler 30 wie Op 32), RE15_R39_LOG=<datei>
+  (je Bild hp/status/Zaehler/cond). Messschiene RE15_SPINNEN_LOG (Spur R) traegt in `gz=` jetzt den RE2-Zaehler.
+- Tests der Runde 38 (unit_r38_spinnen B/B3/B4, pruef_log der integration_r38_spinnen_echtlauf) auf die RE2-Form
+  umgestellt (Periode 31, -1 HP, Zaehler 30 am Treffer, kein Kommando-0-Reset).
+### 2.4 Messung nachher (Stand 87180698 gebaut, Messkopie re15_pc_r39f_stand3.exe, F_belege/lauf3.sh)
+Aufbau wie 2.1 (Leon ROOM1130, Gift per Messhaken im Bild 300, RE15_R39_LOG=gift.log, START im Bild 1500, Framedumps
+1540..1600) + Lauf g_unter mit HP 5 (Untergrenze):
+
+| Lauf | `test_r39_zustand hp gift.log` |
+|---|---|
+| g_nachher (HP 100) | 38 Takte, Summe 38, **Abzug min 1 max 1**, erster Takt **F330**, **Abstaende 31: 37 von 37**, HP-Minimum 62 (F1477), Giftbilder 1200, letztes Bild F1499 |
+| g_unter (HP 5) | 4 Takte (F330 5->4, F361 4->3, F392 3->2, **F423 2->1**), HP-Minimum **1**, danach bis F900 kein Abzug (`slti v0,v0,0x2 / bne` @0x8003c174-78) |
+
+= die RE2-Form @0x8003c12c-180 (vorher: -2 alle 121, erster Takt sofort). Erster Takt im Bild 330 = 30 Bilder nach
+dem Messhaken, weil der Haken den Zaehler im selben Spielerschritt VOR der Abfrage setzt (30 -> 29 im Bild 300, 0 im
+Bild 330); am Spinnen-Treffer setzt Op 32 den Zaehler im ESP-Takt NACH dem Spielerschritt (@0x8001ce0c < @0x8001ce2c),
+dort also 31 Bilder (unit_r38_spinnen B3/B5 lassen 0 oder 1 Takt in 60 Bildern zu). Im Statusschirm (ab F1500) gibt es
+keine Logzeile und keinen Takt: re15_game_step kehrt bei re15_menu_gameplay_frozen vor dem Spieler-Dispatcher um
+(game_step_common.c:1343, unveraendertes Port-Verhalten; der RE2-Takt gehoert zum Spielertask FUN_8003bfac, der im
+RE2-Inventar nicht laeuft — nicht separat disassembliert, Spielwelt steht dort erkennbar).
+EKG (`test_r39_zustand ekg`, Kasten x26..103 / y118..140 = die Linien x = sweep-i-6 @0x80048c34-44, y = 82+39..55):
+
+| Bild | g_nachher | g_vorher / g_gesund (2.1) |
+|---|---|---|
+| 1540 | hell 23, **magenta 23**, gruen 0 | — |
+| 1560 | hell 33, **magenta 27**, gruen 0, sonst 6 (dunkle Schwanzlinien) | — |
+| 1580 | hell 19, **magenta 19**, gruen 0 | — |
+| 1600 | hell 5, **magenta 5**, gruen 0 | hell 1, gruen 1, magenta 0 (beide) |
+
+Zoom F_belege/laeufe/g_nachher/ekg_zoom_1560.png (magenta Spur + "Poison") gegen g_vorher/ekg_zoom_1560.png (gruen):
+die Spur traegt jetzt die RE2-POISON-Farbe @0x800ab178 (Kopf hell, Schwanz abgedunkelt 08 01 08 je Linie).
+**Wellenform (gemessen, F_belege/ekg_wellen.txt):** RE1.5 hat nur ZWEI Wellen — Tabelle 0 (FINE @0x80075774) und
+eine gemeinsame fuer alle anderen Zustaende (Tabellen 1..5 @0x8007592c/ae4/cec/ea4/0x8007605c sind bytegleich; Gift =
+Tabelle 3); RE2 hat je Zustand eine eigene (5 Zeiger @0x800ab180, POISON @0x800aad58: 80 Spalten {y,h} u8, mehrere
+unregelmaessige Zacken, Hub 4..36 bei Grundlinie 15). Die RE2-Welle passt nicht ohne erfundene Skalierung in den
+RE1.5-Rahmen (77 Spalten, Hub 39..55 bei Grundlinie 47, das Wort "Poison" liegt im Fenster): NICHT uebernommen,
+die Gift-Spur zeigt die RE1.5-Welle (Tabelle 3) in der RE2-Farbe. Siehe 5 (Entscheidungsfrage).
+
+## 3. Tests
+Neue Riegel (probes/r39_zustand.cmake, GLOB; keine Aenderung an tests/unit/CMakeLists.txt oder tests/integration/CMakeLists.txt):
+- `unit_r39_zustand` (tests/unit/test_r39_zustand.c): A Kleidung-Mechanik (Heil-Applier -> HP voll nullt die Wund-Tabelle
+  + Haut-Anforderung; Teilheilung/Nuss lassen die Wunden stehen; Leon + Elza; additive Mischung bis >= 100; Gegengift),
+  B Gift im echten Spielschritt ROOM1130 (Takte in Bild 30/61/92/123 zu -1 HP ohne Flinch/Clip/Rueckstoss, Pause haelt
+  den Zaehler, Kommando 0 nullt ihn nicht, Untergrenze HP 1, Gegengift beendet), C EKG (32 Linien Gift = ff 20 ff - 08 01 08
+  * i, FINE unveraendert 20 ff 20 Maske 02, Klassifikator Gift vor HP). Ausgabe: ALLE PRUEFUNGEN GRUEN (18 Pruefungen).
+  Das Programm ist zugleich das Werkzeug der Echtlauf-Riegel (karte / bild / ekg / hp).
+- `integration_r39_zustand_kleidung` (tests/integration/test_r39_zustand_kleidung.cmake): sechs Laeufe der echten exe
+  (Leon ROOM1130 / Elza ROOM1131 / Leon mit R.P.D.-Weste = PL01 aus dem Container, seit Nachbesserung 1; je mit/ohne
+  Wunden, Spray ueber den Statusschirm): Bild 150 w vs o >= 300 Pixel, Bild 650 w vs o == 0 Pixel, Log-Zeilen
+  Heilung/Spielerhaut (Weste: HP 105, `[pld] Spielermodell -> PLD/PL01.PLD`, `Container PLD/PL01.PLD`).
+- `integration_r39_zustand_gift` (tests/integration/test_r39_zustand_gift.cmake): Lauf G (HP 100, Gift Bild 300, Statusschirm
+  1500, Framedumps 1540-1600): hp-Auswerter (-1 je Takt, erster Takt 330, alle Abstaende 31, >= 30 Takte, letztes
+  Spielbild 1499) + ekg-Auswerter (Kasten x26..103/y118..140: magenta > 0, gruen = gelb = rot = 0 in 1540/1560/1580);
+  Lauf U (HP 5): genau 4 Takte, HP-Minimum 1.
+- Angepasst (Runde 38 Spur R, RE1.5-Form -> RE2-Form): unit_r38_spinnen B/B3/B4/B5 und der pruef_log-Auswerter der
+  integration_r38_spinnen_echtlauf (gz = RE2-Zaehler 0 -> 30 mit HP -1, Periode 31).
+
+Gezielte Laeufe (keine volle Suite im Spurbaum, VERTRAG):
+- `ctest --test-dir re15_port/build -R "r39_zustand" --timeout 900 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 3`** (unit_r39_zustand 0.01 s, integration_r39_zustand_kleidung 119.09 s,
+  integration_r39_zustand_gift 100.35 s; F_belege/ctest_r39_zustand_final.log). Erster Lauf derselben Gruppe
+  (ctest_r39_zustand.log): 67 % — Skriptfehler im Gift-Riegel (CMake fuellt nur CMAKE_MATCH_0..9, die 10. Gruppe
+  "letztes Bild" war leer), Messwerte darin identisch (38 Takte, F330, 37/37, magenta 23/27/19, U 4 Takte HP 1);
+  Regex auf 9 Gruppen -> `-R "^integration_r39_zustand_gift$"`: `100% tests passed, 0 tests failed out of 1`
+  (ctest_r39_zustand_gift2.log).
+- `ctest --test-dir re15_port/build -R "r38_spinnen|r36_kleidung|unit_item_use|unit_inv_fsm|unit_wound_accumulator|r39_inventar_status|unit_inv_grant|unit_em_status_persist|unit_r36_blut_pin" --timeout 900 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 26`** (F_belege/ctest_module.log; darunter unit_r38_spinnen mit den
+  umgestellten B/B3/B4/B5-Pruefungen, integration_r38_spinnen_echtlauf 113.91 s mit dem RE2-Auswerter (gz 0 -> 30, HP -1,
+  Periode 31), integration_r36_kleidung_bild/spielweg/hundeweg, unit_item_use, unit_inv_fsm, unit_wound_accumulator,
+  unit/integration_r39_inventar_status).
+
+## 4. OFFEN
+- EKG-WELLENFORM unter Gift: der Port zeigt die RE1.5-Welle (Tabelle 3 @0x80075cec, bytegleich mit den Tabellen 1/2/4/5 =
+  die gemeinsame "nicht FINE"-Welle der Beta) in der RE2-POISON-Farbe. RE2 hat fuer POISON eine eigene Welle
+  (@0x800aad58, 80 Spalten {y,h} u8, Hub 4..36 um Grundlinie 15, Zeichner FUN_800754ac x = base_x + 12 + Spalte,
+  y = base_y + 2 + y); sie passt nicht ohne erfundene Skalierung in den RE1.5-Rahmen (77 Spalten, Hub 39..55 um 47,
+  "Poison"-Wort im Fenster) -> nicht uebernommen, Entscheidungsfrage in 5.
+- PSX-Plattform: der Haut-Neuaufbau ist im PC-Backend (platform/pc/src/zustand_r39_pc.c) umgesetzt; platform/psx pollt
+  re15_zustand_r39_haut_neu_abholen nicht (PSX-Build-Luecke) — dort wuerde nur die Wund-Tabelle genullt, die Decals
+  blieben bis zum naechsten Spieler-Laden (FUN_800314b0) im VRAM.
+- RE2-Takt-Zaehler (s_takt) wird bei neuem Spiel/Laden nicht genullt — RE2 kennt dafuer keinen Schreiber (Writer:
+  Op 32 @0x80020140, Takt @0x8003c154/64, Skript Poison_clr @0x800591b0/@0x8005933c); ohne Folge, weil jeder Gifttreffer
+  ihn auf 30 setzt (@0x80020138-40) und das Inventar-Gegengift nur das Giftwort loescht (@0x8006b1e8).
+- re15_spinnen_r38_gift_tick (RE1.5-Beta-Form @0x80031e44-ecc) bleibt als dokumentierter, ungenutzter Code in spinnen_r38.c.
+- Gift-Messung nur mit Leon gefahren: Takt (Spieler-Aktor status_flags/hp) und EKG (Statusschirm) haben keinen
+  Figurenzweig; die Kleidung ist fuer beide Figuren gemessen.
+
+## 5. Fuer den Nutzer
+- Keine neuen Assets, keine neuen Sprachdateien (Paket-Gate unveraendert). Neue Daten: keine (gen/ unveraendert).
+- Verhalten: volle Heilung (Heilspray, G+G+R, G+R+R, oder eine Mischung/Kraeuter, die die HP auf >= 100 bringt; mit
+  R.P.D.-Weste >= 105) stellt die Kleidung von Leon und Elza sofort wieder her — auch die Weste (PL01) (NUTZER-VORGABE; das
+  Original behielt die Blut-Decals bis zum naechsten Laden). Nachbesserung 1: mit angelegter Weste stuerzte der Stand
+  87180698 bei der vollen Heilung ab (free() auf den Container-Schnitt) — behoben und per Riegel gesichert. Gift zieht wie in RE2 alle 31 Bilder (etwa jede Sekunde) 1 HP ab, in jedem Spielerzustand, nie unter 1 HP, nicht
+  waehrend der Statusschirm offen ist; Gegengift/Blaues Kraut/Mischungen mit Blau beenden es. Das EKG im Statusschirm ist
+  unter Gift magenta (RE2-Farbe ff 20 ff) mit dem Wort "Poison".
+- ENTSCHEIDUNGSFRAGE: soll die EKG-Spur unter Gift zusaetzlich die RE2-POISON-WELLE (eigene, unregelmaessige Zackenfolge,
+  @0x800aad58) zeigen? Das erfordert eine Umrechnung in den RE1.5-Monitor (77 statt 80 Spalten, Hub 17 statt 32 Pixel,
+  Wort "Poison" im Fenster) — eine Port-Wahl ohne Original-Form; derzeit RE1.5-Welle in RE2-Farbe.
+
+## Fortsetzung (Sitzung 2, ab ~12:10 — der Vorgaenger wurde ~11:08 vom Sitzungslimit beendet)
+- 87180698 (vom Orchestrator gesicherte Reste) Zeile fuer Zeile gegen die Belege gelesen: Haken game_step_common.c
+  (Spieler-Takt hinter dem Pause-bltz, Abzug aus s_prev_hp), item_use_common.c (Heil-Applier -> re15_zustand_r39_heilung
+  im `if (h)`-Zweig), re15_inv_screen.c (EKG-Farbe hinter den drei Farbzeilen, i = 0 Kopf wie RE2 s1 = 31..0 nach
+  `addiu s1,s1,-0x1` @0x800755a4: Farbe = base - step * s1 @0x800755c0-5e0, Kopf = base), spinnen_r38.c (Zaehler 30
+  am Giftklumpen), main.c (pc_player_skin_reload: PL%02X aus s_player_model_idx/character wie pc_sync_player_model,
+  pc_read_pl_part -> Slot 0; Abholung vor der Generationspruefung). RE2-Tabellenbytes @0x800ab160-7d und die
+  Wellen-Zeiger @0x800ab180 / @0x80076214 aus den EXE-Dateien nachgelesen (F_belege/ekg_wellen.txt).
+- Bau: build_4.log (nichts neu zu bauen, exe = 11:06 = der Stand 87180698). Messung nachher 1.4 / 2.4.
+- Riegel geschrieben und gefahren (3), Dossier abgeschlossen; Endstand = Commit fix(r39-zustand).
+
+## Nachbesserung 1 (nach Abnahme 0, F_abnahme_0.md; Sitzung 3, ab ~12:55)
+Vorgehen: Abnahmebericht, Dossier und `git log --stat master..HEAD` gelesen; keine vorliegende Messung wiederholt. Bau nach der
+Aenderung: F_belege/build_6_configure.log + build_6.log (`=== LOCAL-BUILD-OK`, exe 13:05:50). Messkopien: re15_pc_r39f_nb1_vorher.exe
+(= exe 11:06 = Code 87180698, VOR der Aenderung kopiert) und re15_pc_r39f_nb1.exe (neu); Werkzeug test_r39_zustand_nb1(b).exe.
+
+### M1 — 19-Zeilen-Funktion in platform/pc/main.c (Vertrag 1.3: main.c nur A/B, gemeinsame Dateien 1-5 Zeilen)
+- Ursache: pc_player_skin_reload wurde in der Endphase der Sitzung 1 (Sitzungslimit, Reste 87180698) direkt neben
+  pc_sync_player_model in main.c geschrieben, statt in eine eigene PC-Datei der Spur (Vorbild dining_r38_pc.c).
+- Messung vorher: `git diff master -- re15_port/platform/pc/main.c` = +25 Zeilen (Kommentar 5 + Funktion 18 + Haken 2).
+- Beleg (Form unveraendert, keine neue Konstante): Slot-0-Upload der PLD-TIM = Haut-Upload des Spieler-Ladens FUN_800314b0 ->
+  FUN_8004ee78 Slot 0x17 @0x800316c8; Familie PL%02X aus der unteren Nibble von DAT_800aca5c (`andi v0,a0,0xf` @0x8003976c,
+  Tabelle @0x80073f70, Leser @0x800314d4).
+- Aenderung: neue Datei `platform/pc/src/zustand_r39_pc.c` (re15_pc_zustand_r39_haut_neu(int modell); GLOB
+  platform/pc/CMakeLists.txt:43 -> Configure neu). main.c traegt nur noch den 2-Zeilen-Haken im Blut-Decal-Sync, der den
+  tatsaechlich geladenen Modell-Index uebergibt (s_player_model_idx, sonst g_gameflow.character & 0x0F — dieselbe Wahl wie
+  die alte Funktion). Kommentar-Verweise in re15_zustand_r39.h und probes/r39_zustand.cmake nachgezogen.
+- Messung nachher: `git diff master -- re15_port/platform/pc/main.c` = **+2 Zeilen** (nur der Haken, Kommentar "Runde 39 Spur F").
+
+### Dabei gefunden: Absturz bei voller Heilung MIT R.P.D.-Weste (Modell PL01) — behoben
+- Befund beim Verschieben: pc_read_pl_part (main.c:653) liefert die TIM entweder als malloc'd Teildatei ODER als Zeiger IN den
+  resident gehaltenen Container (`cb + off`, Kommentar "nicht freigeben" main.c:650). Der Baum liefert PL00.TIM und PL04.TIM
+  lose, **PL01 (Weste) nur als Container PLD/PL01.PLD** (`ls shared_assets/PSX/PLD`). Die Fassung 87180698 rief `free(tb)` auf
+  den Rueckgabezeiger — fuer Leon/Elza ohne Weste harmlos (lose Datei), mit Weste ein free() mitten in den Containerpuffer.
+  Die Abnahme hat genau diesen Fall nicht gemessen (nur PL00/PL04, Handgun, GL).
+- Messung vorher (re15_pc_r39f_nb1_vorher.exe; Karte ROOM1130 Leon, HP 20, Heilspray Platz 0, **Flag(3,0x75)** -> beim
+  CONTINUE rekonstruiert re15_savedata_restore work_vars[0x10] = 1 und der Boot laedt PL01; lauf4.sh weste_v_w (8 Panels
+  Stufe 2) / weste_v_o (ohne)): debug.log `[pld] Spielermodell -> PLD/PL01.PLD (Mesh 17 Teile, Textur 384x256) [R.P.D.-Ruestung
+  an]`, `CONTINUE: resumed in room 1130 (hp=20)`, Spray `Heilung 0x22: HP 105 >= 105 voll -> Wund-Tabelle genullt (hatte
+  Wunden), Spielerhaut neu`, `[pl-part] PL01.TIM aus PLD/PL01.PLD geschnitten (+91012, 99872 B)`, `Spielerhaut PL01.TIM neu
+  geladen (384x256)` — und dort ENDET das Log (96 Zeilen; die letzten vier Zeilen stehen doppelt), kein weiteres `[walk]`,
+  kein EXIT_AT, **kein fd_000650.ppm**, exit 127 (bash); beide Laeufe identisch. Bild 150 w vs o = 1093 Pixel (Wunden auf
+  der Weste sichtbar). Dritter Lauf weste_v_w2 ohne Testlast aus PowerShell (Start-Process, gleiche Karte/Umgebung):
+  **ExitCode -1073740940 = 0xC0000374 = STATUS_HEAP_CORRUPTION** nach 23 s, Log endet nach `[walk] F360` + Heilung +
+  `[pl-part] PL01.TIM ... geschnitten` + `Spielerhaut PL01.TIM neu geladen` (kein Ereignisprotokoll-Eintrag, kein eigener
+  Handler in main.c). Der Prozess stirbt also am free() des Schnittzeigers (das Spiel lief bis Bild 375 normal).
+- Aenderung (zustand_r39_pc.c): Lesereihenfolge wie pc_read_pl_part (Teildatei, sonst re15_pld_part(RE15_PLD_TIM) auf dem
+  Container, Grenzen geprueft), Upload kopiert (render_pc.c re15_render_pc_upload_tim_slot: eigener RGBA-malloc), danach
+  wird NUR der gelesene Puffer freigegeben (Teildatei oder ganzer Container), nie der Schnittzeiger.
+- Messung nachher (re15_pc_r39f_nb1.exe, weste_n_w / weste_n_o, gleiche Karte): `Spielerhaut PL01.TIM neu geladen (384x256,
+  Container PLD/PL01.PLD) - Kleidung ganz`, Lauf bis `EXIT_AT: Bild 700` (108 Zeilen), **exit 0**; Bild 150 w vs o = 1093 Pixel,
+  **Bild 650 w vs o = 0 Pixel** (Kasten 177..247 / 81..205). Schwelle mit Weste: Spray setzt 100 + Bonus 5 = 105
+  (item_use_common.c:62, Bonus re15_vest_hp_bonus) = re15_zustand_r39_hp_voll -> voll.
+- Riegel: integration_r39_zustand_kleidung faehrt jetzt SECHS Laeufe (Leon PL00, Elza PL04, Leon mit Weste PL01 je w/o);
+  der Westen-Lauf verlangt zusaetzlich `[pld] Spielermodell -> PLD/PL01.PLD` beim Boot und `Container PLD/PL01.PLD` in der
+  Spielerhaut-Zeile (= der Container-Pfad ist wirklich gelaufen) sowie `HP 105 >= 105 voll`. Werkzeug `test_r39_zustand karte`:
+  13. Argument Story-Flags ("3:0x75"), in die Karte geschrieben (re15_savedata_capture kopiert g_game.flags).
+
+### H1 — unversionierte Messreste
+- Die 7 Dateien (g_nachher.out, g_unter.out, k_n_{leon,elza}_{o,w}.out = Auswerter-Ausgaben der Messung 1.4/2.4,
+  laeufe/g_vorher/ekg_zoom_1560.png = der in 2.4 zitierte Vergleichs-Zoom) sind mit 8a6ea425 versioniert; "Baum sauber" gilt
+  jetzt fuer Index UND Arbeitsbaum (git status --porcelain leer vor dem Abschluss-Commit).
+
+### H2 — Mnemonic @0x8004ae14
+- Dossier 1.2 korrigiert: `ori s0,zero,0x64` (Rohbytes `64 00 10 34`, Dekodierung 0x34100064 = ORI zero -> s0, imm 0x64).
+  Code und Tests zitieren nur "s0 = 100 @0x8004ae14" (kein Mnemonic) — unveraendert richtig.
+
+### H3 / H4 / H5 — offen, kein Mangel (unveraendert)
+- H3 EKG-Wellenform: Entscheidungsfrage an den Nutzer (Abschnitt 5) bleibt; keine erfundene Skalierung.
+- H4 PSX: re15_pc_zustand_r39_haut_neu ist PC-Backend; platform/psx muesste re15_zustand_r39_haut_neu_abholen pollen und die
+  PLD-TIM per LoadImage neu in den VRAM-Slot laden (PSX-Build-Luecke, nicht baubar/messbar hier) — Abschnitt 4.
+- H5 Takt-Zaehler ohne Produktions-Reset: RE2 kennt keinen Schreiber; ohne Folge (jeder Gifttreffer setzt 30).
+
+### Tests der Nachbesserung (gezielt, keine volle Suite; nach dem Bau build_6)
+- `ctest --test-dir re15_port/build -R "r39_zustand" --timeout 900 --output-on-failure` ->
+  **`100% tests passed, 0 tests failed out of 3`** (unit_r39_zustand 0.02 s, integration_r39_zustand_kleidung 174.83 s =
+  jetzt sechs Laeufe inkl. Weste/PL01-Container, integration_r39_zustand_gift 98.70 s; F_belege/ctest_r39_zustand_nb1.log).
+  Im Riegel-Laufordner (lauf_c86f5a71_weste_w/_o): `[pld] Spielermodell -> PLD/PL01.PLD`, `Heilung 0x22: HP 105 >= 105 voll`,
+  `Spielerhaut PL01.TIM neu geladen (384x256, Container PLD/PL01.PLD)`, EXIT_AT 700.
+- `ctest --test-dir re15_port/build -R "r38_spinnen|r36_kleidung|unit_item_use|unit_inv_fsm|unit_wound_accumulator|r39_inventar_status|unit_inv_grant|unit_em_status_persist|unit_r36_blut_pin|unit_scd_zone2_pauseflags|r38_zopf|weste|ruestung" --timeout 900 --output-on-failure`
+  -> **`100% tests passed, 0 tests failed out of 39`** (F_belege/ctest_module_nb1.log; = die 35 der Abnahme + unit_weste_effekt,
+  unit_1190_weste, unit_1190_ruestung, integration_weste_load_pin wegen des Westen-/Modellpfads). Kein Flattern, keine
+  Wiederholung noetig. Die von der Abnahme als erfuellt bewerteten Punkte bleiben gruen (gift/kleidung/spinnen/kleidung-r36).
+- Baum nach dem Abschluss-Commit: `git status --porcelain` leer (Index und Arbeitsbaum).

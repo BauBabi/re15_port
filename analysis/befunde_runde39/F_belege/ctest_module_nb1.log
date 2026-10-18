@@ -1,0 +1,84 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r39_zustand/re15_port/build
+      Start  41: unit_inv_fsm
+ 1/39 Test  #41: unit_inv_fsm ........................   Passed    0.01 sec
+      Start  64: unit_em_status_persist
+ 2/39 Test  #64: unit_em_status_persist ..............   Passed    0.01 sec
+      Start  78: unit_inv_grant
+ 3/39 Test  #78: unit_inv_grant ......................   Passed    0.01 sec
+      Start  82: unit_item_use
+ 4/39 Test  #82: unit_item_use .......................   Passed    0.01 sec
+      Start  88: unit_weste_effekt
+ 5/39 Test  #88: unit_weste_effekt ...................   Passed    0.02 sec
+      Start 114: unit_wound_accumulator
+ 6/39 Test #114: unit_wound_accumulator ..............   Passed    0.01 sec
+      Start 229: unit_scd_zone2_pauseflags
+ 7/39 Test #229: unit_scd_zone2_pauseflags ...........   Passed    0.02 sec
+      Start 254: unit_1190_weste
+ 8/39 Test #254: unit_1190_weste .....................   Passed    0.03 sec
+      Start 255: unit_1190_ruestung
+ 9/39 Test #255: unit_1190_ruestung ..................   Passed    0.02 sec
+      Start 307: integration_weste_load_pin
+10/39 Test #307: integration_weste_load_pin ..........   Passed    6.14 sec
+      Start 612: unit_r36_kleidung_griff_re2
+11/39 Test #612: unit_r36_kleidung_griff_re2 .........   Passed    0.03 sec
+      Start 613: unit_r36_kleidung_griff_re15
+12/39 Test #613: unit_r36_kleidung_griff_re15 ........   Passed    0.04 sec
+      Start 614: unit_r36_kleidung_hund
+13/39 Test #614: unit_r36_kleidung_hund ..............   Passed    0.02 sec
+      Start 615: unit_r36_kleidung_kraehe
+14/39 Test #615: unit_r36_kleidung_kraehe ............   Passed    0.03 sec
+      Start 616: unit_r36_kleidung_lut
+15/39 Test #616: unit_r36_kleidung_lut ...............   Passed    0.01 sec
+      Start 617: integration_r36_kleidung_bild
+16/39 Test #617: integration_r36_kleidung_bild .......   Passed   65.88 sec
+      Start 618: integration_r36_kleidung_spielweg
+17/39 Test #618: integration_r36_kleidung_spielweg ...   Passed   31.90 sec
+      Start 619: integration_r36_kleidung_hundeweg
+18/39 Test #619: integration_r36_kleidung_hundeweg ...   Passed   47.50 sec
+      Start 637: unit_r36_blut_pin_eben
+19/39 Test #637: unit_r36_blut_pin_eben ..............   Passed    0.09 sec
+      Start 638: unit_r36_blut_pin_tief
+20/39 Test #638: unit_r36_blut_pin_tief ..............   Passed    0.05 sec
+      Start 639: unit_r36_blut_pin_mg
+21/39 Test #639: unit_r36_blut_pin_mg ................   Passed    0.11 sec
+      Start 640: unit_r36_blut_pin_rip
+22/39 Test #640: unit_r36_blut_pin_rip ...............   Passed    0.04 sec
+      Start 641: unit_r36_blut_pin_arm
+23/39 Test #641: unit_r36_blut_pin_arm ...............   Passed    0.03 sec
+      Start 642: unit_r36_blut_pin_burst
+24/39 Test #642: unit_r36_blut_pin_burst .............   Passed    0.04 sec
+      Start 643: unit_r36_blut_pin_glied
+25/39 Test #643: unit_r36_blut_pin_glied .............   Passed    0.03 sec
+      Start 644: unit_r36_blut_pin_kriecher
+26/39 Test #644: unit_r36_blut_pin_kriecher ..........   Passed    0.14 sec
+      Start 645: unit_r36_blut_pin_kriecher5
+27/39 Test #645: unit_r36_blut_pin_kriecher5 .........   Passed    0.19 sec
+      Start 903: unit_r38_spinnen
+28/39 Test #903: unit_r38_spinnen ....................   Passed    0.46 sec
+      Start 904: integration_r38_spinnen_echtlauf
+29/39 Test #904: integration_r38_spinnen_echtlauf ....   Passed  113.32 sec
+      Start 932: unit_r38_zopf_libgte
+30/39 Test #932: unit_r38_zopf_libgte ................   Passed    0.02 sec
+      Start 933: unit_r38_zopf_init
+31/39 Test #933: unit_r38_zopf_init ..................   Passed    0.01 sec
+      Start 934: unit_r38_zopf_ruhe
+32/39 Test #934: unit_r38_zopf_ruhe ..................   Passed    0.01 sec
+      Start 935: unit_r38_zopf_drehung
+33/39 Test #935: unit_r38_zopf_drehung ...............   Passed    0.01 sec
+      Start 936: unit_r38_zopf_laufen
+34/39 Test #936: unit_r38_zopf_laufen ................   Passed    0.01 sec
+      Start 937: unit_r38_zopf_freeze
+35/39 Test #937: unit_r38_zopf_freeze ................   Passed    0.01 sec
+      Start 938: unit_r38_zopf_original
+36/39 Test #938: unit_r38_zopf_original ..............   Passed    0.01 sec
+      Start 939: integration_r38_zopf
+37/39 Test #939: integration_r38_zopf ................   Passed  113.11 sec
+      Start 942: unit_r39_inventar_status
+38/39 Test #942: unit_r39_inventar_status ............   Passed    0.01 sec
+      Start 946: integration_r39_inventar_status
+39/39 Test #946: integration_r39_inventar_status .....   Passed   22.95 sec
+
+100% tests passed, 0 tests failed out of 39
+
+Total Test time (real) = 402.43 sec
+exit=0
