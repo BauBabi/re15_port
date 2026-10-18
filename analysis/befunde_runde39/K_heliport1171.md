@@ -25,6 +25,9 @@ bearbeitet — nicht anfassen. Spur J aendert nur den Uebergang 1141 -> 1171 (Mu
   -> `100% tests passed, 0 tests failed out of 32` (170 s).
   Naechster Schritt: "Auch sonst" — jede Szenen-Animation in 1171 (John UND Elza) gegen das Original (Abschnitt 6).
 
+- 2026-10-18 17:15-19:05: "Auch sonst" abgearbeitet (Abschnitt 6): K2 INIT-Pose, K3 Plc_motion-Saatbild, K4 Schub
+  Phase 5 -> 6 gemessen, im Original belegt, umgesetzt (6d027394), nachgemessen, Gegenprobe Leon 1170, Riegel
+  (d2d97a88, 696a282f), Gegenprobe der Riegel am alten Motor, Bilder, gezielte Tests gruen (Abschnitt 11).
 ## 1. Messung vorher
 
 Gebauter Stand 1038dc15 (eigener Baum, `local_build.sh configure` + `build`), Messkopie `re15_pc_k39_v1.exe`.
@@ -390,3 +393,25 @@ Registriert nur in `re15_port/tests/unit/probes/r39_heliport1171.cmake` (keine C
   Gemessen auf diesem Stand: integration_r38_dining1141_{w,z,d,l,s,r,a} gruen. Wer in 1141 eigene Gesten-Bildfolgen
   pinnt, sieht jede Plc_motion-Geste ab Bild 0 (vorher Bild 1).
 - Spur A (Stimme 1171 msg 3) unberuehrt: integration_r39_stimmen_1171 gruen.
+
+## 11. Abschluss — gezielte Tests auf dem Endstand (build/, Motor 6d027394, Riegel d2d97a88 + 696a282f (r37_roy) + Kopfkommentar der Integration im Schlusscommit)
+
+Keine volle Suite (VERTRAG). Woertlich:
+- Kern (eigene + 1171/Kraehen/RBJ/r38_heliport1171/r39_stimmen_1171):
+  `ctest --test-dir re15_port/build -R "r39_heliport1171|r38_heliport1171|r39_stimmen_(tabelle|1171)|crow|kraehe|rbj" --timeout 900 -j 3 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 36`
+- NPC-Familie Unit/Probe (jedes Modul/jeder Raum mit NPC-INIT, Plc_motion-Executor, Schub, Eskorte):
+  `ctest --test-dir re15_port/build -R "npc|marvin|ada|elliot|irons|sherry|ben|annette|roy|john|1170|1171|10d0|11b0|1150|1050|1090|1141|szenenleon|werkstatt|schub|cine|cutscene|eintritt|plc|gest|rbj|neck|kopf|escort|eskorte|10f0|cut10f0|kendo|npckante|montage|elza|crow|kraehe" -E "^integration_" --timeout 600 -j 4 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 206`
+- NPC-Familie Integration (echte exe):
+  `ctest --test-dir re15_port/build -R "^integration_.*(npc|marvin|ada|elliot|irons|sherry|ben|annette|roy|john|1170|1171|10d0|11b0|1150|1050|1090|1141|szenenleon|werkstatt|schub|cine|cutscene|eintritt|plc|gest|rbj|neck|kopf|escort|eskorte|10f0|cut10f0|kendo|npckante|montage|elza|crow|kraehe)" --timeout 1200 -j 3 --output-on-failure`
+  -> `100% tests passed, 0 tests failed out of 65`
+- Verlauf: ein erster Lauf derselben Integrationsgruppe (63 ohne die eigenen) hatte 4 rote Eintraege — schrift1150 und
+  irons_tisch_licht mit exit=-1 (die exe wurde in diesem Moment von meinem eigenen Test-Bau neu gelinkt, 17:36:10),
+  elza_vollstart (Zeitablauf-Lauf unter Last, Szenenende=0; einzeln Szenenende=1) und r37_roy_leon1170 (fremder Riegel,
+  Abschnitt 7 angepasst). Einzeln nachgefahren: `100% tests passed, 0 tests failed out of 6` (inkl. weg/laden).
+
+Stand: alle drei "Auch sonst"-Abweichungen Johns (K2 INIT-Pose, K3 Saatbild, K4 Schub-Uebergang) und K1 (Heran-Winken
+statt Klettern) sind gegen die Original-Instruktionen belegt, umgesetzt, nachgemessen (Abschnitte 4, 6.5, 6.6) und mit
+Riegeln gesichert, die am alten Motor rot werden (Abschnitte 5, 6.7). Jede Zeile von Johns Pose-Strom in 1171 entspricht
+jetzt der Original-Herleitung (Tabelle 6.5).

@@ -11,6 +11,14 @@
 #   = 50 Bilder (Kletter-Clip, +0x94 = 2 @0x800526a0); Plc_motion(0,0,0) @0x01416/@0x0141E/@0x01526/@0x0152E = RBJ rec1
 #   Clip 0 = 20 Bilder — NICHT Bank 0 Clip 0 = 34; Plc_motion(2,6,0) @0x0142A/@0x014C2 = eigene Bank Clip 6 = 10 Bilder.
 # Gegenprobe vor dem Fix (1038dc15, build_bisect): motion 2 rendert 50 Bilder, motion 0 rendert 34 -> ROT.
+# "Auch sonst" (Dossier Abschnitt 6) — zusaetzlich gemessen:
+#   K2 INIT-Pose: vor dem ersten Plc_motion Loco Clip 2 (50) Bild 0 (+0x94 = 2 @0x8011de7c, +0x95 = 0 @0x8011de8c,
+#      f314(+0x84,+0x16c) @0x8011debc-c4), nie eigene Bank Clip 2 (52); der Kletter-Clip 2/50 zaehlt erst DANACH.
+#   K3 Saattakt: jeder der sieben Plc_motion-Laeufe beginnt mit Bild 0 bzw. fc-1 (Phase 0 @0x80050cec-d0c faellt in
+#      f314 @0x80050d4c; f314 posiert +0x95 @0x8001f35c-36c, Vorschub erst @0x8001f618-1c).
+#   K4 Schub: Clip 17 rueckwaerts folgt DIREKT auf Clip 18 und laeuft 9..0 (Bit-Takt posiert noch Clip 0x12
+#      @0x80052af4 vor der Bit-Abfrage @0x80052b44; Clip 0x11 erst in Phase 6 @0x80052b98).
+# Gegenprobe K2-K4 (b35c66bd-Motor, build_bisect): "INIT-Pose Loco 2/50 Bild 0 0, eigene 2/52 vorher 221" -> ROT.
 #
 #   weg    Spielstand ROOM1131 (Elza, (3,0xC2)=1 wie nach ROOM1141 sub02 @0x00C20) vor der Flurtuer Slot 3, Aktionstaste
 #          -> ROOM1171 (Cut 8, kein Ereignis), Selbst-Tuer Slot 5 (@0x012F0) per RE15_FIRE_AOT -> Szenario 0 -> sub07
