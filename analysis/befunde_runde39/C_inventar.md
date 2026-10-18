@@ -180,3 +180,57 @@ Bestaetigen = VIERECK (byte-true virtuell 0x4000 @0x80028570; Kreuz = Abbruch/0x
   `[inv-r39-menu] F1000 … wegwerf=0`, **`[inv-r39] F1000 R11E1 … inv=03:15,15:50,00:0`** = die Yellow Keycard ist
   weg (vorher: `wegwerf=0` in jedem Bild, `39:1` bleibt). Gegenprobe Leon (ROOM11E0 mit (3,139) wie nach ROOM1240):
   kein Leser-Prompt, keine Abfrage (Riegel unit_r39_inventar_discard L, integration_r39_inventar_discard H).
+
+## 5. Tests (neu: `tests/unit/probes/r39_inventar.cmake`, `tests/unit/test_r39_inventar.c`,
+`tests/unit/probe_r39_inventar_bild.c`, `tests/integration/test_r39_inventar.cmake`; je Nutzer-Punkt ein Unit- und ein
+Integrations-Riegel, der die MECHANIK misst)
+
+| Riegel | misst |
+|---|---|
+| unit_r39_inventar_spind (15 Pruefungen) | ROOM1000 Slot 3 = Item 0x15 x30 Bit (9,69) prop 0xFF auf dem Original-Rechteck, Text msg 0 in Slot 11; Druck -> Modal 0x15 -> Ja -> 0x15 x15 auf EINEM Platz, (9,69)=1, Zone weg; zweiter Druck -> msg 0 "Nothing unusual."; Wiederbetreten mit (9,69): Text in Slot 3, keine Munition, Druck -> msg 0; Elza ROOM1001 = Original (Slot 3 Item 0x15 x30 Bit 0x86), Slot 11 leer |
+| unit_r39_inventar_stapeln (20) | Zensus 0x01..0x47: Regel == Daten (16 Ids: 0x15..0x21 + Granaten 0x09..0x0B mit Obergrenze 250, 0 Abweichungen), Selbst-Saetze (0x15 ja @0x80074CCC, 0x21/0x09..0x0B keiner), Gutschrift 3+3 -> 6 ein Platz, Obergrenze 250, Paar-Matcher (0x21+0x21 -> 5, 0x15 bleibt Original, verschiedene Ids 0), ITEM BOX 2+3 -> 5, **echter Menue-Weg** START/ITEM/Platz 0/COMBINE/Platz 1/Ja -> 21:5, Platz 1 leer |
+| unit_r39_inventar_status (8) | Index 0/4/1 -> STPIC_00/04/01, Rueckfall ausser Tabelle; TIM-Geometrie beider Dateien; 04 != 00; Varianten 00=01=02, 04=05=06 |
+| unit_r39_inventar_discard (16) | Tabelle: 11E1 msg 5 Gate (3,139) ist die 0x39-Stelle, 11E0 keine, 15 Stellen, Panel 11E1 lebt / 11E0 tot; Vorentscheid Gate/Besitz; **echter Weg Elza 11E1**: Leser sub20 -> msg 7 Ja -> msg 9 (keine Abfrage) -> Code-Bits -> sub19 Set(3,0x8B) msg 5 -> Abfrage 0x39 -> Ja -> Karte weg; Leon 11E0 mit (3,139): kein Leser, keine Abfrage |
+| integration_r39_inventar_spind | echte exe, Spielstand + CONTINUE: Installer-Zeile, 15:50 -> 15:65 bei F198, msg 0 genau 1x; mit (9,69): "schon genommen", Inventar unveraendert, msg 0 |
+| integration_r39_inventar_stapeln | 21:3 + Regal-Aufnahme -> 21:6 EIN Platz; COMBINE per Tasten -> Aktion-5-Zeile + 21:5,00:0 bei F164 |
+| integration_r39_inventar_status | Elza: `[inv] Status-Bild ITEM/STPIC_04.TIM (Figur 4…)`, Framedump-Block (14,26) 128x63 == STPIC_04 (Soll >= 90 %, gemessen 100 %) und != STPIC_00 (Soll < 50 %, gemessen 8 %); Leon: STPIC_00 == 100 % |
+| integration_r39_inventar_discard | Elza 11E1 ueber den echten Weg (9 Tastendruecke + Code-Bits): msg 7/9/0/5, `msg=1/5 wegwerf=1`, `39:0`, `bereit=1`, Ja -> `F1000 … inv=03:15,15:50,00:0`; Leon 11E0 mit (3,139): kein msg 7, keine Abfrage, Karte bleibt |
+
+Alt-Riegel nachgezogen (Sollwerte der Runde 39, mit Kommentar): `r21_discard_wegwerfen.c` (9 Gegenstaende; TEIL R 5 Gates,
+5 lebend + 1 tot), `probe_r26_inventar.c` C7a (Memory Card stapelt: ein Platz, 2+2=4), `test_r37_feuerloescher.c` R/S 1000
+(Slot 3 Munition, Text Slot 11; erster Druck Modal 0x15, zweiter msg 0). `test_r36_kartenbits.c` k_port[] + Bit 69.
+
+Ergebnisse (Windows, Spurbaum, gezielt — keine volle Suite):
+* `ctest --test-dir re15_port/build -R "unit_r39_inventar"`: **100% tests passed, 0 tests failed out of 4**
+* `ctest … -R "integration_r39_inventar" -j2`: erster Lauf 2/4 (stapeln, status gruen; spind/discard rot NUR durch den
+  Regex-Zaehler des Skripts — `\[` ueberlebt die CMake-Argument-Ersetzung nicht, Protokolle selbst waren korrekt), nach
+  dem Umbau auf einen Text-Zaehler `… -R "integration_r39_inventar_(spind|discard)" -j2`: **100% tests passed, 0 tests
+  failed out of 2**
+* Module, die der Diff beruehrt: `ctest … -R "unit_(r21_discard|r26_inventar|r36_kartenbits|r37_feuerloescher|r37_kiste|
+  r37_kistenregel|r38_itemorte|r38_kleinkram|r35_inhalt|r35_inventar1050|r35_werfer|r36_inventar|r36_dachkiste|
+  r37_codepanel|item_stack|savepoint|em_status|debug_menu|pri_inventar)"`: erst **92% tests passed, 4 tests failed out
+  of 51** (r21 "8 Gegenstaende", r26 C7a, r37 R/S 1000 = die drei Alt-Riegel mit Sollwerten der Vorrunden), nach dem
+  Nachziehen `… -R "unit_(r21_discard|r26_inventar|r37_feuerloescher)"`: **100% tests passed, 0 tests failed out of 11**
+
+## 6. OFFEN
+* Der Wortlaut "obwohl ich gesagt habe discard" liess sich auf v0.8.26 NICHT als Abfrage reproduzieren: fuer die Yellow
+  Keycard gab es in keinem Bild eine Wegwerf-Abfrage (`wegwerf=0`, Messung vorher P4) — die Zeile stammt vermutlich von
+  einer anderen Karte (Blue/Red Keycard haben die Abfrage seit Runde 25). Jetzt kommt die Abfrage bei Elza nach dem
+  richtigen Code in ROOM11E1 ("You've opened the lock."), und Ja entfernt die Karte. Antwortet man Nein, bleibt sie
+  (RE2 fragt einmal; der Leser ist danach eine Tuer, main00 @0x01576 Else-Zweig).
+* Linux: die neuen Riegel sind statisch auf Portabilitaet geprueft (keine .exe-/Backslash-Pfade, `m` gelinkt,
+  cmake_minimum_required, Text-Zaehler statt Regex), aber nur unter Windows gefahren (Spurbaum).
+* Granaten 0x09..0x0B fallen unter dieselbe Regel (Zahl = Anzahl, Obergrenze 250 wie Munition) — im Spiel gibt es nur
+  EINE Granaten-Ausgabe (Port ROOM1150), die Regel wirkt dort also erst mit der ITEM BOX / einem zweiten Stapel.
+
+## 7. Fuer den Nutzer
+* Neue Assets fuer das Paket-Gate: **keine** (STPIC_04.TIM liegt auf der Original-CD unter ITEM/, war schon im Paket;
+  keine neuen gen/*.inc ausser dem neu erzeugten discard_sites.inc). Sprachdateien: keine.
+* Bedienung: ROOM1000 Spind (Leon) — erster Druck: Aufnahme-Modal "Handgun Bullets" (im Satz 30 wie in Elzas
+  ROOM1001, im Beutel 15 wegen der Port-Halbierung jeder Welt-Aufnahme, Nutzer-Entscheidung 2026-09-20), danach
+  "Nothing unusual." (der einzige Text des Raums = die gemeinte Zeile "Nothing useful"). Memory Cards stapeln bei
+  Aufnahme, COMBINE (Viereck/rechts im Befehls-Kreuz) und in der ITEM BOX bis 250. Elzas Statusschirm zeigt ihre
+  Raccoon-City-Driver-License mit Foto. Yellow Keycard: nach dem richtigen Code in B2 (ROOM11E1) fragt das Spiel
+  "Will you discard …?" — Ja = weg.
+* Entscheidungsfragen: (1) Soll die Spind-Munition 30 statt 15 geben (dann waere diese Aufnahme die einzige ohne die
+  Halbierung)? (2) Sollen Granaten-Stapel wie Munition zaehlen (jetzt: ja, Regel "alles mit einer Zahl")?
