@@ -23,8 +23,8 @@ target_compile_definitions(test_r39_optik PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SO
 if(NOT WIN32)
     target_link_libraries(test_r39_optik PRIVATE m)
 endif()
-#   unit_r39_optik_schluessel  Punkt 2 (Schluessel 10F0/10F1 "kleiner/subtiler"): Bildlaenge = Median der RE2-Bildlaenge
-#                          desselben Modells an seinen RE2-Platzierungen (aus info/re2leon mit der Engine-Kamera
+#   unit_r39_optik_schluessel  Punkt 2 (Schluessel 10F0/10F1 "kleiner/subtiler"): Bildlaenge = oberes Quartil der RE2-
+#                          Bildlaenge desselben Modells an seinen RE2-Platzierungen (aus info/re2leon mit der Engine-Kamera
 #                          nachgerechnet == gen/itemorte_r38_lage.inc), Massstab < Runde 38, Huelle 3..9 px, MD1-Spanne/s =
 #                          RE2-Modell 152, Lage/Drehung/Aufhebe-Zone unveraendert.
 foreach(_teil kappen ecke leon elza schluessel)
@@ -45,4 +45,18 @@ if(TARGET re15_pc AND TARGET probe_r36_ppm_diff)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_optik_marke_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_optik_marke.cmake)
     set_tests_properties(integration_r39_optik_marke PROPERTIES TIMEOUT 600)
+endif()
+
+#   integration_r39_optik_schluessel  (nur mit re15_pc) Leon ROOM10F0 / Elza ROOM10F1 (PL04) Cut 5 bei Fensterskala 1 und 3:
+#                          Schluessel-Huelle hoechstens 6 bzw. 18 px breit (vorher 12 / 36), aber gezeichnet (Mindestpixel aus
+#                          der Messung), nichts ausserhalb des Pinnwand-Fensters; Aufnahme an der Pinnwand unveraendert
+#                          ("[schluessel] ... genommen").
+if(TARGET re15_pc AND TARGET probe_r38_itemorte_kontrast)
+    add_test(NAME integration_r39_optik_schluessel
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KONTRAST_TOOL=$<TARGET_FILE:probe_r38_itemorte_kontrast>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r39_optik_schluessel_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r39_optik_schluessel.cmake)
+    set_tests_properties(integration_r39_optik_schluessel PROPERTIES TIMEOUT 1200)
 endif()

@@ -47,13 +47,19 @@ RUNDE 39 SPUR L "optik" (Dossier analysis/befunde_runde39/L_optik.md, Punkt 2) �
   "Der Schluessel im Raum 10F0 und 10F1 sollte schon kleiner/subtiler sein, wie er dran haengt, nicht so riesig."
   Der Runde-38-Massstab (groesster Wert, bei dem der Schluessel die 11x9-Marke fuellt: 735 x 468 bzw. 736 x 345 Einheiten,
   12 Bildspalten) war 5..6 x die RE2-Modellgroesse. FORM der neuen Groesse (Beta -> Retail, RE2 = Vorbild): jeder
-  Schluessel erscheint im Nutzer-Cut so gross, wie RE2 Retail DASSELBE Modell an seinen eigenen Platzierungen im Mittel
-  zeigt — Median der Bildlaenge L_nat * H / vz ueber alle RE2-Kameras, die den Schluessel im Bild haben (L_nat = sichtbare
-  Modell-Laenge bei s = 1, H = fov >> 7 wie camera_common.c, vz = Kamera-Tiefe des Objektursprungs; Kamera-Saetze der
-  RE2-RDT @0x64 + 32*cut, Aufbau wie RE1.5: +2 fov, +4 from, +0x10 to). Platzierungen = die Obj_model_set (0x2D) der
-  beiden Modelle in RE2 Retail (Runde 38 K 2.7/9.3), Ursprung pc[14..19]. Lage, Drehung, Mitte auf dem Sehstrahl der
-  Marke, Zone: unveraendert (Runde 38). Der Massstab wird so gesetzt, dass die GEZEICHNETE Huelle (wie Port/Riegel) im
-  Nutzer-Cut diese Bildlaenge hat (Nachiteration, da die Projektion nicht exakt linear in s ist).
+  Schluessel erscheint im Nutzer-Cut so gross, wie RE2 Retail DASSELBE Modell an seinen eigenen Platzierungen in den
+  NAEHEREN Kameras zeigt — oberes Quartil (75. Perzentil, linear interpoliert) der Bildlaenge L_nat * H / vz ueber alle
+  RE2-Kameras, die den Schluessel im Bild haben (L_nat = sichtbare Modell-Laenge bei s = 1, H = fov >> 7 wie
+  camera_common.c, vz = Kamera-Tiefe des Objektursprungs; Kamera-Saetze der RE2-RDT @0x64 + 32*cut, Aufbau wie RE1.5:
+  +2 fov, +4 from, +0x10 to). Platzierungen = die Obj_model_set (0x2D) der beiden Modelle in RE2 Retail (Runde 38 K
+  2.7/9.3), Ursprung pc[14..19]. WARUM das obere Quartil und nicht der Median (Dossier Punkt 2, gemessen 2026-10-18 an der
+  exe bei Fensterskala 3): die Pinnwand wird aus EINER fernen Kamera gesehen (vz ~13000, ferner als 11 der 13 RE2-Kameras);
+  RE2 laesst den Spieler den Schluessel in den naeheren Kameras finden. Beim Median (Small Key 4,26 px) war der Prison Key
+  ein 23-Pixel-Fleck ohne Ring (Sum|dL| 890), beim Quartil (5,78 px) ein lesbarer Schluessel (63 Pixel, 16 breit, Sum|dL|
+  3960); das RE2-Maximum (9,00 px, 120 Pixel, 26 breit) waere noch 72 % der Runde-38-Breite - nicht "nicht so riesig".
+  Lage, Drehung, Mitte auf dem Sehstrahl der Marke, Zone: unveraendert (Runde 38). Der Massstab wird so gesetzt, dass die
+  GEZEICHNETE Huelle (wie Port/Riegel) im Nutzer-Cut diese Bildlaenge hat (Nachiteration, da die Projektion nicht exakt
+  linear in s ist; Toleranz 0,06 px wegen des Abtastrasters).
 
 Aufruf: python re15_port/tools/r38_itemorte/itemorte_export.py [--schreiben]
 """
@@ -168,6 +174,16 @@ def re2_bildgroessen(name, l_nat):
 def median(w):
     w = sorted(w); n = len(w)
     return w[n // 2] if n % 2 else (w[n // 2 - 1] + w[n // 2]) / 2.0
+
+
+RE2_QUANTIL = 0.75                   # oberes Quartil (Kopf des Skripts; Riegel unit_r39_optik_schluessel rechnet es nach)
+
+
+def quantil(w, q):
+    """Perzentil mit linearer Interpolation (wie numpy.percentile Standard): pos = (n-1)*q."""
+    w = sorted(w); n = len(w)
+    pos = (n - 1) * q; lo = int(math.floor(pos)); hi = min(lo + 1, n - 1)
+    return w[lo] + (w[hi] - w[lo]) * (pos - lo)
 
 
 def marke(datei):
@@ -417,15 +433,25 @@ def schluessel_rechnen(name, raum, cut, mk):
     breite_nat = float(ecken[:, 0].max() - ecken[:, 0].min())       # sichtbare Laenge bei s = 1
     re2 = re2_bildgroessen(name, breite_nat)
     assert len(re2) >= 1, "keine RE2-Kamera zeigt den Schluessel"
-    ziel = median([p for *_r, p in re2])
+    ziel = quantil([p for *_r, p in re2], RE2_QUANTIL)
+    ziel_median = median([p for *_r, p in re2])
+    # Messhilfe (nur fuer Vergleichslaeufe, nie fuer die erzeugten Dateien): --ziel-<name>=<px> ersetzt den RE2-Median.
+    for a in sys.argv[1:]:
+        if a.startswith("--ziel-%s=" % name):
+            ziel = float(a.split("=", 1)[1]); print("           ACHTUNG Messhilfe: Ziel %s = %.2f px (statt RE2-Median)" % (name, ziel))
     s = s38 * ziel / (hg38[1] - hg38[0])
-    for _ in range(4):
+    best = None
+    for _ in range(12):
         sk, neu = md1_skaliert(s)
         hg = huelle_gezeichnet(sk)
+        abw = abs((hg[1] - hg[0]) - ziel)
+        if best is None or abw < best[0]:
+            best = (abw, s, sk, neu, hg)
+        if abw < 0.01:
+            break
         s *= ziel / (hg[1] - hg[0])
-    sk, neu = md1_skaliert(s)
-    hg = huelle_gezeichnet(sk)
-    assert abs((hg[1] - hg[0]) - ziel) < 0.02, "Huelle nicht am Ziel"
+    _abw, s, sk, neu, hg = best
+    assert _abw < 0.06, "Huelle nicht am Ziel (%.3f px daneben)" % _abw
     assert hg[0] >= x0 - 0.5 and hg[1] <= x1 + 1.5 and hg[2] >= y0 - 0.5 and hg[3] <= y1 + 1.5, "Huelle nicht in der Marke"
     # Kontrolle mit den GERUNDETEN Werten: sichtbare Huelle im Bild
     sxs, sys_ = [], []
@@ -439,7 +465,7 @@ def schluessel_rechnen(name, raum, cut, mk):
                 rot=(RX, RY, RZ), seite_y=seite_y, wick=wick, mitte=mitte, sichtbar=len(pts),
                 huelle=(min(sxs), max(sxs), min(sys_), max(sys_)), ecken_neu=neu, breite=breite, tiefe=tiefe,
                 det_oben=det_oben, huelle_gezeichnet=hg, schritte=schritte,
-                s38=s38, hg38=hg38, breite_nat=breite_nat, re2=re2, ziel=ziel)
+                s38=s38, hg38=hg38, breite_nat=breite_nat, re2=re2, ziel=ziel, ziel_median=ziel_median)
 
 
 def loescher_rechnen(mk):
@@ -490,9 +516,10 @@ def main():
                  k["s"], k["breite"], k["tiefe"], *k["pos"], *k["rot"], *k["huelle"]))
         print("           Ecken neu", k["ecken_neu"], "| gezeichnete Huelle (gerundete Ecken, Raster 48/480) x %.2f..%.2f y %.2f..%.2f,"
               " %d Verkleinerungsschritte" % (*k["huelle_gezeichnet"], k["schritte"]))
-        print("           Runde 39 L: Runde-38-Massstab %.4f (Huelle %.2f px breit) -> RE2-Median %.2f px aus %d Kameras -> s %.4f"
-              " (sichtbar %.0f x %.0f Einheiten, L_nat %.1f)" % (k["s38"], k["hg38"][1] - k["hg38"][0], k["ziel"], len(k["re2"]),
-                                                                k["s"], k["breite"], k["tiefe"], k["breite_nat"]))
+        print("           Runde 39 L: Runde-38-Massstab %.4f (Huelle %.2f px breit) -> RE2 oberes Quartil %.2f px (Median %.2f) aus"
+              " %d Kameras -> s %.4f (sichtbar %.0f x %.0f Einheiten, L_nat %.1f, gezeichnete Huelle %.2f px)"
+              % (k["s38"], k["hg38"][1] - k["hg38"][0], k["ziel"], k["ziel_median"], len(k["re2"]),
+                 k["s"], k["breite"], k["tiefe"], k["breite_nat"], k["huelle_gezeichnet"][1] - k["huelle_gezeichnet"][0]))
         for rdt, off, ci, vz, px in k["re2"]:
             print("             RE2 %s @0x%04X Cut %d: vz %.0f -> %.2f px" % (rdt[8:16], off, ci, vz, px))
     rx1 = min(int(round(ks[0]["pos"][0])) + 500, SLOT12_X0 - 2)
@@ -547,13 +574,14 @@ def main():
               "#define RE15_R38K_%s_ROT_Z    %d" % (N, k["rot"][2]),
               "#define RE15_R38K_%s_S10000   %d   /* Massstab x 10000 (Sonden/Riegel); Runde 39 Spur L: RE2-Bildgroesse */"
               % (N, int(round(k["s"] * 10000))),
-              "/* Runde 39 Spur L (kleiner/subtiler): Bildlaenge der gezeichneten Huelle = Median der RE2-Bildlaenge"
-              " L_nat*H/vz desselben Modells",
-              " * an seinen %d RE2-Kameras (%s); Runde-38-Massstab %.4f fuellte die Marke (%.2f px breit). */"
-              % (len(k["re2"]), ", ".join("%s C%d %.2f" % (r[8:16], c, p) for r, _o, c, _vz, p in k["re2"]),
-                 k["s38"], k["hg38"][1] - k["hg38"][0]),
+              "/* Runde 39 Spur L (kleiner/subtiler): Bildlaenge der gezeichneten Huelle = oberes Quartil (75. Perzentil, linear"
+              " interpoliert) der RE2-Bildlaenge",
+              " * L_nat*H/vz desselben Modells an seinen %d RE2-Kameras (%s; Median %.2f);"
+              % (len(k["re2"]), ", ".join("%s C%d %.2f" % (r[8:16], c, p) for r, _o, c, _vz, p in k["re2"]), k["ziel_median"]),
+              " * Runde-38-Massstab %.4f fuellte die Marke (%.2f px breit). */" % (k["s38"], k["hg38"][1] - k["hg38"][0]),
               "#define RE15_R39L_%s_S38_10000    %d   /* Runde-38-Massstab x 10000 (Marke gefuellt) */" % (N, int(round(k["s38"] * 10000))),
-              "#define RE15_R39L_%s_ZIEL_PX100   %d   /* RE2-Median der Bildlaenge, Pixel x 100 */" % (N, int(round(k["ziel"] * 100))),
+              "#define RE15_R39L_%s_ZIEL_PX100   %d   /* RE2 oberes Quartil der Bildlaenge, Pixel x 100 */" % (N, int(round(k["ziel"] * 100))),
+              "#define RE15_R39L_%s_MEDIAN_PX100 %d   /* RE2-Median der Bildlaenge, Pixel x 100 (nur zur Einordnung) */" % (N, int(round(k["ziel_median"] * 100))),
               "#define RE15_R39L_%s_HUELLE_PX100 %d   /* gezeichnete Huelle im Nutzer-Cut, Pixel x 100 */"
               % (N, int(round((k["huelle_gezeichnet"][1] - k["huelle_gezeichnet"][0]) * 100))),
               "#define RE15_R39L_%s_RE2_KAMERAS  %d" % (N, len(k["re2"])),
@@ -562,6 +590,7 @@ def main():
         M1 += ["/* SCHLUESSEL %s: RE2-MD1 (md5 %s), nur die Ecken @0x44 skaliert (s = %.4f, Runde 39 Spur L: RE2-Bildgroesse,"
                " Runde 38: %.4f) und verschoben. */" % (N, k["md1_md5"], k["s"], k["s38"]),
                blob("k_r38k_%s_md1" % k["name"], k["md1"]), ""]
+    L += ["#define RE15_R39L_RE2_QUANTIL100  %d   /* Perzentil der RE2-Bildlaengen (oberes Quartil), x 100 */" % int(round(RE2_QUANTIL * 100)), ""]
     L += ["/* Aufhebe-Rechteck der Schluessel (beide Varianten derselbe Ort): 1000 x 1000 um (x_Marke, Wand %d + %d),"
           % (WAND_Z, ZONE_VOR_WAND),
           " * rechts vor Slot 12 (x ab %d) beendet. */" % SLOT12_X0,

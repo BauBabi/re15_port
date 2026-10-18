@@ -18,9 +18,10 @@
  *
  * Punkt 2 (Nutzer): "Der Schluessel im Raum 10F0 und 10F1 sollte schon kleiner/subtiler sein, wie er dran haengt, nicht
  * so riesig."
- *   test_r39_optik schluessel  FORM der Groesse (Beta -> Retail): Bildlaenge der gezeichneten Huelle = Median der
+ *   test_r39_optik schluessel  FORM der Groesse (Beta -> Retail): Bildlaenge der gezeichneten Huelle = oberes Quartil der
  *                          RE2-Bildlaenge L_nat*H/vz desselben Modells an seinen RE2-Platzierungen (aus den RE2-Dateien
- *                          mit der Engine-Kamera nachgerechnet == gen/itemorte_r38_lage.inc); Massstab kleiner als
+ *                          mit der Engine-Kamera nachgerechnet == gen/itemorte_r38_lage.inc; Quartil statt Median, weil
+ *                          der Median den Prison Key zum 23-Pixel-Fleck machte - Dossier Punkt 2); Massstab kleiner als
  *                          Runde 38, Huelle 3..9 px; MD1-Spanne/s = RE2-Modell 152; Lage/Drehung/Zone unveraendert.
  */
 #include <stdio.h>
@@ -399,7 +400,11 @@ static double re2_median_px(const re2_platz_t *pl, int npl, double l_nat, int *n
     for (i = 1; i < n; i++) { double t = px[i]; for (j = i; j > 0 && px[j - 1] > t; j--) px[j] = px[j - 1]; px[j] = t; }
     if (n_out) *n_out = n;
     if (!n) return -1;
-    return (n % 2) ? px[n / 2] : (px[n / 2 - 1] + px[n / 2]) / 2.0;
+    {   /* oberes Quartil, linear interpoliert (wie itemorte_export.py quantil(): pos = (n-1)*q) */
+        double pos = (n - 1) * (RE15_R39L_RE2_QUANTIL100 / 100.0);
+        int lo = (int) floor(pos), hi = lo + 1 < n ? lo + 1 : lo;
+        return px[lo] + (px[hi] - px[lo]) * (pos - lo);
+    }
 }
 
 static void md1_x_spanne(const uint8_t *m, int sz, int *x0, int *x1)
@@ -420,36 +425,47 @@ static void teil_schluessel(void)
     static const re2_platz_t prison[] = { { "PL0/RDT/ROOM10F0.RDT", 0x0706 }, { "PL0/RDT/ROOM20E0.RDT", 0x18F8 },
                                           { "PL0/RDT/ROOM20E0.RDT", 0x1A96 }, { "PL0/RDT/ROOM2020.RDT", 0x1C1E } };
     char t[400], liste[1200]; int n, x0, x1, sz; double med; int32_t lp[3]; int16_t lr[3];
-    printf("== r39_optik schluessel: Parking Lot Key / Prison Key an der Pinnwand - RE2-Bildgroesse (Median) ==\n");
+    printf("== r39_optik schluessel: Parking Lot Key / Prison Key an der Pinnwand - RE2-Bildgroesse (oberes Quartil, %d. Perzentil) ==\n",
+           RE15_R39L_RE2_QUANTIL100);
     /* RE2-Beleg aus den Dateien: P. Room Key (ROOM6150 @0x2C98), Small Key (10F0 @0x706, 20E0 @0x18F8/@0x1A96, 2020 @0x1C1E) */
     med = re2_median_px(park, 1, RE15_R39L_PARK_LNAT100 / 100.0, &n, liste, sizeof liste);
-    printf("  Park:   %s-> Median %.2f px (%d Kameras)\n", liste, med, n);
-    snprintf(t, sizeof t, "Park: RE2-Median %.2f px aus %d Kameras == RE15_R39L_PARK_ZIEL_PX100 %d / RE2_KAMERAS %d",
+    printf("  Park:   %s-> Quartil %.2f px (%d Kameras)\n", liste, med, n);
+    snprintf(t, sizeof t, "Park: RE2 oberes Quartil %.2f px aus %d Kameras == RE15_R39L_PARK_ZIEL_PX100 %d / RE2_KAMERAS %d",
              med, n, RE15_R39L_PARK_ZIEL_PX100, RE15_R39L_PARK_RE2_KAMERAS);
-    CHECK(t, n == RE15_R39L_PARK_RE2_KAMERAS && fabs(med * 100.0 - RE15_R39L_PARK_ZIEL_PX100) <= 1.0);
+    /* Toleranz 2/100 px: das Werkzeug nimmt int(sqrt) fuer SquareRoot0 und rechnet die Projektion in double */
+    CHECK(t, n == RE15_R39L_PARK_RE2_KAMERAS && fabs(med * 100.0 - RE15_R39L_PARK_ZIEL_PX100) <= 2.0);
     med = re2_median_px(prison, 4, RE15_R39L_PRISON_LNAT100 / 100.0, &n, liste, sizeof liste);
-    printf("  Prison: %s-> Median %.2f px (%d Kameras)\n", liste, med, n);
-    snprintf(t, sizeof t, "Prison: RE2-Median %.2f px aus %d Kameras == RE15_R39L_PRISON_ZIEL_PX100 %d / RE2_KAMERAS %d",
+    printf("  Prison: %s-> Quartil %.2f px (%d Kameras)\n", liste, med, n);
+    snprintf(t, sizeof t, "Prison: RE2 oberes Quartil %.2f px aus %d Kameras == RE15_R39L_PRISON_ZIEL_PX100 %d / RE2_KAMERAS %d",
              med, n, RE15_R39L_PRISON_ZIEL_PX100, RE15_R39L_PRISON_RE2_KAMERAS);
-    CHECK(t, n == RE15_R39L_PRISON_RE2_KAMERAS && fabs(med * 100.0 - RE15_R39L_PRISON_ZIEL_PX100) <= 1.0);
-    /* kleiner als Runde 38, gezeichnete Huelle am Ziel, aber sichtbar (>= 3 px) und nicht mehr die ganze Marke (< 9 px) */
-    snprintf(t, sizeof t, "Park: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-2/100), 300 <= Huelle < 900",
+    CHECK(t, n == RE15_R39L_PRISON_RE2_KAMERAS && fabs(med * 100.0 - RE15_R39L_PRISON_ZIEL_PX100) <= 2.0);
+    /* kleiner als Runde 38 (12 Spalten), gezeichnete Huelle am Ziel (+-0,06 px Abtastraster), sichtbar (>= 3 px) und nicht
+     * mehr die ganze Marke (< 9 px); Prison ueber dem RE2-Median (der machte ihn zum 23-Pixel-Fleck, Dossier Punkt 2) */
+    snprintf(t, sizeof t, "Park: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-6/100), 300 <= Huelle < 900",
              RE15_R38K_PARK_S10000, RE15_R39L_PARK_S38_10000, RE15_R39L_PARK_HUELLE_PX100, RE15_R39L_PARK_ZIEL_PX100);
     CHECK(t, RE15_R38K_PARK_S10000 < RE15_R39L_PARK_S38_10000 && RE15_R38K_PARK_S10000 > 10000 &&
-             abs(RE15_R39L_PARK_HUELLE_PX100 - RE15_R39L_PARK_ZIEL_PX100) <= 2 &&
+             abs(RE15_R39L_PARK_HUELLE_PX100 - RE15_R39L_PARK_ZIEL_PX100) <= 6 &&
              RE15_R39L_PARK_HUELLE_PX100 >= 300 && RE15_R39L_PARK_HUELLE_PX100 < 900);
-    snprintf(t, sizeof t, "Prison: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-2/100), 300 <= Huelle < 900",
-             RE15_R38K_PRISON_S10000, RE15_R39L_PRISON_S38_10000, RE15_R39L_PRISON_HUELLE_PX100, RE15_R39L_PRISON_ZIEL_PX100);
+    snprintf(t, sizeof t, "Prison: Massstab %d < Runde 38 %d; Huelle %d == Ziel %d (+-6/100), 300 <= Huelle < 900, Ziel > Median %d",
+             RE15_R38K_PRISON_S10000, RE15_R39L_PRISON_S38_10000, RE15_R39L_PRISON_HUELLE_PX100, RE15_R39L_PRISON_ZIEL_PX100,
+             RE15_R39L_PRISON_MEDIAN_PX100);
     CHECK(t, RE15_R38K_PRISON_S10000 < RE15_R39L_PRISON_S38_10000 && RE15_R38K_PRISON_S10000 > 10000 &&
-             abs(RE15_R39L_PRISON_HUELLE_PX100 - RE15_R39L_PRISON_ZIEL_PX100) <= 2 &&
-             RE15_R39L_PRISON_HUELLE_PX100 >= 300 && RE15_R39L_PRISON_HUELLE_PX100 < 900);
+             abs(RE15_R39L_PRISON_HUELLE_PX100 - RE15_R39L_PRISON_ZIEL_PX100) <= 6 &&
+             RE15_R39L_PRISON_HUELLE_PX100 >= 300 && RE15_R39L_PRISON_HUELLE_PX100 < 900 &&
+             RE15_R39L_PRISON_ZIEL_PX100 > RE15_R39L_PRISON_MEDIAN_PX100);
     /* die gelieferten MD1 tragen den Massstab: x-Spanne der Ecken / s = RE2-Modellbreite 152 (P. Room Key +-76, Runde 38 K 2.6;
      * Small Key gemessen 152) */
-    md1_x_spanne(re15_itemorte_r38_schluessel_md1(0x45, &sz), sz, &x0, &x1);
+    {   /* (Reihenfolge: erst das MD1 holen - sz wird im Aufruf gesetzt, die Argument-Auswertung ist nicht geordnet) */
+        const uint8_t *mb = re15_itemorte_r38_schluessel_md1(0x45, &sz);
+        md1_x_spanne(mb, sz, &x0, &x1);
+    }
     snprintf(t, sizeof t, "Park-MD1 (%d B): Ecken x %d..%d -> Spanne/s = %.1f (RE2-Modell 152)", sz, x0, x1,
              (x1 - x0) * 10000.0 / RE15_R38K_PARK_S10000);
     CHECK(t, sz > 0 && fabs((x1 - x0) * 10000.0 / RE15_R38K_PARK_S10000 - 152.0) <= 2.0);
-    md1_x_spanne(re15_itemorte_r38_schluessel_md1(0x42, &sz), sz, &x0, &x1);
+    {
+        const uint8_t *mb = re15_itemorte_r38_schluessel_md1(0x42, &sz);
+        md1_x_spanne(mb, sz, &x0, &x1);
+    }
     snprintf(t, sizeof t, "Prison-MD1 (%d B): Ecken x %d..%d -> Spanne/s = %.1f (RE2-Modell 152)", sz, x0, x1,
              (x1 - x0) * 10000.0 / RE15_R38K_PRISON_S10000);
     CHECK(t, sz > 0 && fabs((x1 - x0) * 10000.0 / RE15_R38K_PRISON_S10000 - 152.0) <= 2.0);

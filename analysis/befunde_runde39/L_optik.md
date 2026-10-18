@@ -153,16 +153,96 @@ t=140 DECKT] [48:(171,111)5x46 t=140 DECKT] [49:(173,63)1x48 t=144 DECKT] [50:(1
 1x42 t=148 DECKT]` - alle Rechtecke am Kasten beginnen jetzt in der Wand (x >= 173 oberhalb Zeile 111, x >= 171 im
 Sockelband); vorher begannen 45..51 bei 166..172.
 
-## Punkt 2 — Schluessel an der Pinnwand ROOM10F0/10F1
+**Echter Weg** (ohne FORCE_CUT, Lauf `weg2_nachher` = Wiederholung von `weg2_vorher`: Start (-14700,-21800) rot 1024,
+`RE15_INPUT_SCRIPT=U0.9,R0.5,U0.6`, Kamera waehlt Cut 1 selbst): Leon am Suedende des Flurs VOR der Ecke (-15132,-23033)
+rot 2464 — vorher `[48:(167,63)5x90 t=148 DECKT] [49:(167,71)4x81 t=152 DECKT]`, nachher **`keine Maske am Koerper`**
+(befund.log F240, Lage und Kasten x144..168,y110..151 bitgleich).
 
-### Messung vorher
-(in Arbeit)
+**Nebenwirkungen**: nur ROOM1100/1101 Cut 1 und 2 tragen Fenster (`k_fenster[]`); alle anderen Raeume/Cuts laufen durch
+`re15_optik_r39_kappen` unveraendert (Riegel `kappen`: ROOM1100 Cut 0 / ROOM1110 Cut 1 -> -1 / unveraendert). In der Wand
+selbst aendert sich kein Punkt und keine Tiefe (Riegel `ecke`: Cut 1 / Cut 2 Wandpunkte verloren 0, Tiefe anders 0, dazu
+0). Elza ROOM1101 = derselbe Masken-Raum (Riegel `elza`, integration_r37_pri1100_elza im gezielten Lauf).
 
-### RE-Belege
+## Punkt 2 — Schluessel an der Pinnwand ROOM10F0/10F1 ("kleiner/subtiler, wie er dran haengt, nicht so riesig")
+
+### Messung vorher (exe des Baums 03:05 = Stand v0.8.26, Messkopie `re15_pc_r39l_mess.exe`; Laeufe `runs/k_vor_*`)
+Szene der Runde-38-Abnahme: ROOM10F0 (Leon, `RE15_DEBUG_JUMP=10F0@250 RE15_PLAYER_POS=0,4000,1024 RE15_FORCE_CUT=5
+RE15_SET_FLAG=9:71,3:94`) bzw. ROOM10F1 (Elza, `RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_TITLE_CONFIRM_MS=1500
+RE15_GOTO_ROOM=10F1 ...`, debug.log `[pl] Spieler-Familie PL04`), Bild 150, "ohne" = Aufnahme-Bit (9,82) bzw. (9,83) gesetzt
+(kein Prop). Differenz mit/ohne im Pinnwand-Fenster (|dR|+|dG|+|dB| > 30, `key_diff.py`):
+
+| Lauf | Pixel | Huelle (Breite x Hoehe) | Sum|dL| |
+|---|---|---|---|
+| Leon Parking Lot Key, Skala 1 | 55 | x 132..143 (12) y 78..84 (7) | 3428 |
+| Leon, Skala 3 (960x720, so spielt der Nutzer) | 491 | x 397..432 (36) y 233..255 (23) | 28852 |
+| Elza Prison Key (RE2 Small Key), Skala 1 | 27 | x 132..143 (12) y 79..83 (5) | 1627 |
+| Elza, Skala 3 | 217 | x 397..432 (36) y 236..250 (15) | 11899 |
+
+(bitgleich zur Runde-38-Abnahme: 55 / 491 / 27 / 217). Die Schluessel fuellen die 11x9-Marke des Nutzers ganz (12 Spalten,
+Runde-38-Regel "groesster Massstab, bei dem alle sichtbaren Texel in der Marke liegen": s 6,4636 bzw. 5,3032 = sichtbar
+735 x 468 bzw. 736 x 345 Einheiten). Im Hintergrund (BG ROOM10F0 Cut 5, Pinnwand Spalten 107..149 / Zeilen 62..86) sind
+die angehefteten Blaetter ~7 x 10 Bildpunkte gross - der Schluessel war BREITER als ein Blatt Papier an derselben Wand.
+Das ist "riesig".
+
+### RE-Belege (RE2 Retail = Vorbild, Beta -> Retail; Bytes selbst gelesen, `re2_schluessel_screen.py`, Werkzeug-Ausgabe)
+Das Original RE1.5 hat an der Pinnwand kein Objekt (Runde 36/38); die Schluesselmodelle sind RE2-Modelle (P. Room Key
+ROOM6150.RDT MD1 @0x4FBC, Small Key ROOM10F0.RDT MD1 @0x1650; Runde 38 K 2.6/9.3). Wie gross RE2 diese Modelle dem
+Spieler zeigt, steht in RE2s eigenen Platzierungen (Obj_model_set 0x2D, Ursprung pc[14..19]; Kamera-Saetze der RE2-RDT
+@0x64 + 32*cut, Aufbau wie RE1.5 `+2 fov, +4 from, +0x10 to`, H = fov >> 7 wie `camera_common.c`):
+
+| RE2-Satz | Ursprung | Kameras mit dem Schluessel im Bild: vz -> Bildlaenge L_nat*H/vz |
+|---|---|---|
+| P. Room Key ROOM6150 @0x2C98 `2d 08 .. 10 00 ba f1 b0 f8 b6 bc` | (-3654,-1872,-17226) | Cut 8 vz 6039 -> 4,84 px; Cut 9 vz 8863 -> 3,30 px |
+| Small Key ROOM10F0 @0x0706 `2d 04 .. 10 00 25 b3 59 fd 23 a0` | (-19675,-679,-24541) | Cut 0 7977 -> 3,62; Cut 1 6487 -> 4,45 |
+| Small Key ROOM20E0 @0x18F8 | (-22150,-1600,-22050) | Cut 0 6098 -> 4,74; Cut 1 7163 -> 4,03; Cut 4 9957 -> 2,90 |
+| Small Key ROOM20E0 @0x1A96 | (-21100,-1300,-13600) | Cut 3 4043 -> 7,14; Cut 5 3207 -> 9,00; Cut 6 4233 -> 6,82 |
+| Small Key ROOM2020 @0x1C1E | (-9350,-1400,-19050) | Cut 1 13341 -> 2,67; Cut 5 17678 -> 2,28; Cut 6 8376 -> 4,26 |
+
+L_nat = sichtbare Modell-Laenge bei s = 1 (P. Room Key 113,7, Small Key 138,8 Einheiten). RE2 zeigt einen Schluessel also
+mit 2,3..9,0 Bildpunkten Laenge (320er Bild), **Median P. Room Key 4,07 px (2 Kameras), Small Key 4,26 px (11 Kameras)**.
+Unsere 11,9 px waren das 2,8-fache des RE2-Medians (und mehr als RE2s Maximum 9,0).
+
+**Gewaehlte FORM (NUTZER-VORGABE "kleiner/subtiler" + RE2 als Vorbild):** jeder Schluessel erscheint im Nutzer-Cut
+(ROOM10F0/10F1 Cut 5, Pinnwand bei vz ~13000) so lang, wie RE2 DASSELBE Modell in seinen NAEHEREN Kameras zeigt = **oberes
+Quartil (75. Perzentil, linear interpoliert) der RE2-Bildlaengen: Parking Lot Key 4,46 px, Prison Key 5,78 px** (Median
+4,07 / 4,26; Maximum 4,84 / 9,00). Begruendung aus der Messung (Prison Key = RE2 Small Key, Elza, Fensterskala 3 = 960x720,
+so spielt der Nutzer; Differenz mit/ohne im Pinnwand-Fenster, `key_diff.py`, Bilder `L_optik_bilder/p2_elza_s3_*.png`):
+
+| Ziel-Bildlaenge (320er) | RE2-Statistik | Pixel (Skala 3) | Huelle | Sum|dL| | Augenschein (x2-Bild) |
+|---|---|---|---|---|---|
+| 11,96 (Runde 38) | - (Marke gefuellt) | 217 | 36 x 15 | 11899 | grosser Schluessel, breiter als die Zettel |
+| 9,00 | Maximum (ROOM20E0 Cut 5, Spieler steht daneben) | 120 | 26 x 12 | 6534 | Schluessel, so breit wie ein Zettel = 72 % der alten Breite |
+| 6,82 | drittgroesste Kamera | 78 | 19 x 10 | 4560 | kleiner Schluessel mit Ring |
+| **5,78** | **oberes Quartil** | **63** | **16 x 10** | **3960** | **kleiner Schluessel, Ring und Schaft lesbar** |
+| 4,26 | Median | 23 | 12 x 5 | 890 | grauer Fleck, kein Ring - nicht mehr als Schluessel lesbar |
+
+Der Median scheitert an "weiter sichtbar" (die Pinnwand wird aus EINER Kamera gesehen, die ferner ist als 11 der 13
+RE2-Kameras; RE2 laesst den Spieler den Schluessel in den NAEHEREN Kameras finden - deren Mass ist das obere Quartil), das
+Maximum an "nicht so riesig". Beim Parking Lot Key (bold gezeichnete Klinge + Kopf) ist der Unterschied Median/Quartil
+klein (4,07 -> 4,46 px): schon beim Median war er bei Skala 3 ein lesbarer kleiner Schluessel (43 Pixel, 14 x 6,
+`p2_leon_s3_re2median_4.07px_x2.png`). Nicht gewaehlt: RE2-Weltgroesse (s = 1: 2,2 px, auch bei Skala 3 nur 7 px - Runde
+38 "nicht gut sichtbar"). Lage (Mitte auf dem Sehstrahl der Nutzer-Marke), Drehung, Licht (flach 0x0010 wie RE2) und
+Aufhebe-Zone (Slot 8, (798,-3600) 1000x1000) bleiben Runde 38. RE2 hat keinen HAENGENDEN Schluessel als Vorbild
+(geprueft: 20E0 @0x1A96 liegt auf einem Tisch, 2020 @0x1C1E auf einem Schreibtisch, 10F0 @0x0706 auf einer Bank; Bilder
+`re2_*_schluessel_x5.png` im Scratchpad) - die Groesse ist deshalb die einzige RE2-Groesse, die uebertragbar ist.
 
 ### Umsetzung
+* `re15_port/tools/r38_itemorte/itemorte_export.py` (Runde-38-Werkzeug) um die Runde-39-Regel erweitert: liest die RE2-
+  Platzierungen und Kameras aus `info/re2leon`, rechnet je Modell das obere Quartil (`RE2_QUANTIL = 0.75`, linear
+  interpoliert) und setzt s so, dass die GEZEICHNETE Huelle (Raster wie Port/Riegel) im Nutzer-Cut diese Breite hat
+  (Nachiteration bis 0,01 px, Toleranz 0,06 px wegen des Abtastrasters): **Park s 6,4636 -> 2,4100 (sichtbar 274 x 174
+  Einheiten = 27 x 17 cm, gezeichnete Huelle 4,46 px), Prison s 5,3032 -> 2,5623 (356 x 167 Einheiten = 36 x 17 cm,
+  Huelle 5,77 px)** (Werkzeug-Ausgabe `tool_final.log`). `--schreiben` erzeugt `gen/itemorte_r38_lage.inc` (S10000 neu; neue Konstanten
+  `RE15_R39L_{PARK,PRISON}_{S38_10000,ZIEL_PX100,MEDIAN_PX100,HUELLE_PX100,RE2_KAMERAS,LNAT100}`,
+  `RE15_R39L_RE2_QUANTIL100 75`) und `gen/itemorte_r38_md1.inc` (die zwei MD1, nur Ecken @0x44). Kein Engine-Code aendert
+  sich; `schluessel_r36.c` liefert wie bisher das erzeugte MD1. Messhilfe `--ziel-<park|prison>=<px>` (nur fuer
+  Vergleichslaeufe, s. Tabelle oben).
+* Riegel angepasst: `tests/unit/test_r38_itemorte.c` (lage): "fuellt die Marke (>= 9 von 11 Spalten)" -> "Huelle ==
+  RE2-Median (+-0,5 px) und < 9 Spalten"; Integrations-Schwellen `tests/integration/test_r38_itemorte.cmake` B2..B5 auf
+  die neue Groesse (s. Tests).
 
 ### Messung nachher
+(folgt)
 
 ## Tests
 

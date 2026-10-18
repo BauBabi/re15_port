@@ -355,13 +355,14 @@ static void teil_lage(void)
               (unsigned)r->id, KS_MX0, KS_MX1, KS_MY0, KS_MY1);
         /* Runde 39 Spur L (NUTZER-VORGABE "kleiner/subtiler, nicht so riesig"; Dossier analysis/befunde_runde39/L_optik.md
          * Punkt 2): die gezeichnete Huelle ist so breit, wie RE2 Retail dasselbe Modell an seinen eigenen Platzierungen
-         * im Mittel zeigt (Median L_nat*H/vz, gen/itemorte_r38_lage.inc RE15_R39L_*_ZIEL_PX100; Riegel unit_r39_optik_
-         * schluessel rechnet ihn aus den RE2-Dateien nach). Bis Runde 38: "fuellt die Marke" (>= 9 von 11 Spalten). */
+         * in den naeheren Kameras zeigt (oberes Quartil von L_nat*H/vz, gen/itemorte_r38_lage.inc RE15_R39L_*_ZIEL_PX100;
+         * Riegel unit_r39_optik_schluessel rechnet es aus den RE2-Dateien nach). Bis Runde 38: "fuellt die Marke"
+         * (>= 9 von 11 Spalten). */
         {
             double ziel = (i == 0 ? RE15_R39L_PARK_ZIEL_PX100 : RE15_R39L_PRISON_ZIEL_PX100) / 100.0;
             CHECK(fabs((x1 - x0) - ziel) <= 0.5 && x1 - x0 < 9.0,
-                  "L ROOM%04X: Runde 39 L \"kleiner/subtiler\" = gezeichnete Huelle %.2f px breit == RE2-Median %.2f (+-0,5), "
-                  "nicht mehr die ganze Marke (< 9 von 11 Spalten)", (unsigned)r->id, x1 - x0, ziel);
+                  "L ROOM%04X: Runde 39 L \"kleiner/subtiler\" = gezeichnete Huelle %.2f px breit == RE2 oberes Quartil %.2f "
+                  "(+-0,5), nicht mehr die ganze Marke (< 9 von 11 Spalten)", (unsigned)r->id, x1 - x0, ziel);
         }
         CHECK(re15_itemorte_r38_schluessel_massstab(i == 0 ? 0x45 : 0x42) > 10000,
               "L ROOM%04X: Massstab %d/10000 > 1 (RE2-Groesse waere 2..3 Bildpunkte)", (unsigned)r->id,
