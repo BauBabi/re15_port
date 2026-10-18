@@ -158,6 +158,46 @@ alter Stand (Zielhilfe ohne Sichtlinie, FUN_8003703c): Ziel = A (der naechste, h
 neuer Stand: Ziel = B; nur A aktiv -> kein Ziel; ROOM1140: ueber den Tisch Ziel = ja (Liste aus: nein), hinter [3]: kein Ziel
 ```
 
+### RE2-Retail LIVE (DuckStation-GDB + vgamepad, Spielstand SLUS-00748_4.sav = Stage 0 Raum 20, ein Zombie id 0x10)
+
+Werkzeuge: `D_belege/re2_mess/re2_gdb_aufsteher.py` (Haltepunkte Applier FUN_800410CC @0x800410CC + Rueckkehr @0x80043B04 /
+@0x80048A0C, Herzschlag 0,3 s; je Probe Zombie w0/w4/+0x14C/+0x156/+0x223/+0x21A/+0x1D3/+0x10E, Leon +0x154/+0x4/+0x14C),
+`re2_gdb_tastensonde.py`, `re2_stops_auswerten.py`; Rohdaten `daten/<lauf>/stops.txt`, `log.txt`.
+Befunde der Vorlaeufe (eben_1..5, tasten_1):
+* In diesem Spielstand/dieser Belegung feuert KREUZ (vgamepad A), nicht Viereck (`daten/tasten_1/log.txt`: bei A sofort
+  `feuer_T3` 0x80047c6c + Applier; Leons Waffe +0x10E = 0x000f = SMG id 15, Tabelle T3 @0x800a7068 [A 0x8004326c, B'
+  0x800479d8, Feuer 0x80047c6c]; die Handfeuerwaffen-Tabelle T_gun @0x800a7048 = [A, B 0x8004362c, Feuer 0x80043908]).
+* Zielwahl der Zielhilfe im Halte-Handler A: `jal 0x80042144` mit **a1 = 3000** (`addiu a1,zero,3000` @0x800434e8) und nur
+  EINMAL je Zielen (+0x16B-Latch `lb v0,363(s0)` @0x800434d0 / `sb 1,363` @0x800434f0); 30000 nur in den Raeumen
+  0x800d481c == 0xA0003/0x40006 (@0x80043300-2c). eben_4: Zielen bei 7000 Abstand -> keine Aufschaltung, Leon feuerte starr.
+* Die geladene Overlay-Kopie @0x80100000 ist NICHT EMOVL10_S0.BIN (= EMZ0.BIN): Bytes @0x80103568/@0x80103628/@0x80102BE8
+  live != Datei (tasten_1/log.txt). Die S0-Adressen der Phasen-Handler (B5) gelten fuer dieses Overlay nicht; die Messung
+  stuetzt sich deshalb nur auf EXE-Haltepunkte + RAM.
+* **Teile-Maske live (w0 bits 26-28): stehend 3; EXEC[5] P1 anfangs 1 (w0=0x04001001), ab P1 Bild ~30 und in P2/P3
+  (liegend, Clip 0x16)/P6/P7 (Clip 9) bis Bild 54: 0 (w0=0x00000001); ab P7 Bild 55: 3 (w0=0x0c00....)** — d.h. in RE2
+  Retail (dieses Overlay) hat der gestuerzte Zombie waehrend Liegen und Aufstehen bis Clip-Bild 55 GAR KEINE Trefferteile
+  (weder Beine noch Rumpf), das S0-Modell "nur Beine" (B5) ist dort nicht das, was der Applier liest.
+* eben_4/5: 1130 bzw. 1064 SMG-Schuesse, HP 1500 unveraendert in ALLEN Zustaenden (auch stehend bei 1100-1400 Abstand,
+  Maske 3, Zielen bei 2383 im Radius) -> die SMG-Kette traf nie; Messkette ohne bestaetigten Treffer ungueltig. Naechster
+  Lauf: Schrotflinte (Slot 3, id 7) per Status-Bildschirm ausruesten (R2_EQUIP=shotgun), Munition per RAM 250.
+
+### Echte exe (re15_pc_r39d_mess.exe = Bau 12:5x dieses Baums, Muster test_r30_cut_blitz: RE15_DEBUG_JUMP=<raum>@240,
+RE15_TITLE_SHOT_AF=2, RE15_PLAYER_POS, RE15_EQUIP=3, RE15_INPUT_SCRIPT ab Bild 330, RE15_STATE_LOG + RE15_TREFFER_LOG;
+Werkzeuge D_belege/exe_mess/exe_lauf.sh + exe_auswerten.py, Logs *_treffer.log / *_auswertung.txt dort)
+
+**Punkt 2 — ROOM1250 (Kantine), Spieler (-12000,-1000) oestlich der Tischzelle [7] (x -16150..-14150, z -5700..2650),
+sieben stehende Zombies (grid 0) bei x -18200 westlich davon, 6 Schuesse Pistole EBEN im Abstand 1 s:**
+```
+alter Stand (RE15_TREFFER_ALT=1): 0 Treffer, treffer.log 6x "sperre ... zelle=79" (= Partition 3, Zelle [7] = Tisch)
+neuer Stand:                      6 Treffer (Slot 5 hp 250->234->219->204->189->174->159), je Kandidat "frei ... moebel_uebersprungen=4"
+```
+**Punkt 3 — ROOM1180 (Flur), Spieler (3800,6000) im Ostgang, nur R1 (Zielen):**
+```
+alter Stand: "ziel slot=1 typ=10 @(-582,12718)" = der naechste Zombie HINTER der Wandzelle [6] (x 976..2190, z -4188..12299)
+neuer Stand: "ziel slot=2 typ=10 @(5105,15408)" = der sichtbare im Ostgang; Slot 1 und 3 je Bild "zielhilfe_verdeckt
+             zelle=51/47" (= [6] bzw. [2], Huellenwaende)
+```
+
 ## Umsetzung
 
 ### Punkt 2 + 3 (Sichtlinie des Schusses, Zielhilfe) — Dateien, Konstanten, Form
