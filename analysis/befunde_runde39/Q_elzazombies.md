@@ -206,8 +206,28 @@ Neue Riegel (re15_port/tests/unit/probes/r39_elzazombies.cmake):
 * integration_r39_elzazombies_kette / _knall / _treppe / _ohne — echte exe (s. 4.1, 4.2, 4.4, 4.5).
 Gezielter Lauf (00:5x): `ctest -R "r39_elzazombies"` -> "100% tests passed, 0 tests failed out of 12".
 
-## 6. OFFEN
-(offen)
+## 6. OFFEN (fuer die Integration, keine Luecke im Spurbaum)
+* Spur P setzt (9,97) (VERTRAG 1.1). Meine Kette startet bei der steigenden Flanke, sobald keine Szene laeuft
+  (re15_cine_active = 0, player_mode != 2, keine Karten-Anforderung). Mit P zusammen zu pruefen: (a) P's 1041-Szene darf
+  beim Wiedereintritt durch meine Rueckkehr-Tuer nicht neu starten (P's eigenes Gesehen-Flag); (b) P's Panikmusik: laeuft
+  sie ab dem Bit, klingt sie ueber die Montage-Raeume (Raumwechsel per Tuersatz wie jede Tuer); wartet sie auf "keine
+  Szene" (wie Leons MAIN01-Fenster, cut_10f0.c), beginnt sie erst nach der Rueckkehr — P's Wahl; (c) Ereignis 30 und
+  Bank-5-Bits 28/29 nur zustandsgebunden belegt (jede Abfrage prueft Raum UND Zustand).
+* Spur R (Hund 1121): falls R einen Zone-7-Tot-Bit braucht, nicht 124..133/144/145 (hier belegt, Zensus 2.4).
+* Ankunft von OBEN (1121 -> 1061 Etage 8 -> 6 -> 4, Treppe A endet an der Westseite): die Kopien stehen dort, wo sie von
+  unten "moeglichst weit weg" sind, und werden auf Etage 4 ebenso frei. Vom Nutzer nicht verlangt (nur "von unten").
 
 ## 7. Fuer den Nutzer
-(offen)
+* Lesart (aus 2.2/2.3, dokumentiert): "in den Flur hinein von 10C1 aus" = das Treppenhaus ROOM1061 auf Etage 2F, die
+  Zombies kommen durch die Tuer von 10C1 herein (10C1 selbst hat nur Kraehen und liegt nicht auf Elzas Weg 1041 -> 1061 ->
+  1121). "das gleiche nochmal wie bei Leon in den ROOM 1071" = Leons 1070-Schritt fuer 1071: leben dort noch Zombies,
+  Tuerknall, sie erscheinen in der Lobby 1031 Cut 7 vor der 1071-Tuer. "ueber die Absperrung/Das Rollo, so wie bei der
+  cutscene" = die Original-Szene von 1031 (sub08): Knall, das Notfall-Rollo bricht, Zombies kriechen darunter durch (Cut 12).
+* Ablauf in der Panikphase: nach der Karte (Spur P) eine kurze Pause, Tuerknall, Schnitt ins Treppenhaus 2F (die
+  Ueberlebenden aus dem Medical Room an der 10C1-Tuer, sie gehen auf die Kamera zu), Tuerknall, Lobby Cut 7 (falls 1071-
+  Zombies leben), Knall, das Rollo bricht, Kriecher, zurueck an Elzas Stelle in 1041. Leben in 10E1/1071 keine Zombies
+  mehr, entfaellt der jeweilige Schnitt (wie bei Leon). Steigt Elza spaeter von unten die Treppe hinauf, stehen die
+  Zombies am 2F-Absatz links unter dem Fenster (am weitesten weg vom Treppenkopf) und kommen erst los, wenn sie oben ist.
+* Keine neuen Assets, keine Sprachdateien. Zeiten (Pause 60, Knall -> Schnitt 45, Schnittlaengen 175/175) = Leons Montage.
+* Entscheidungsfrage (optional): Sollen die Zombies am 2F-Absatz auch bei Ankunft von OBEN (Rueckweg aus 1121) "weit weg"
+  stehen? Dann wuerden sie fuer diesen Fall an die Tuer-Seite gestellt.
